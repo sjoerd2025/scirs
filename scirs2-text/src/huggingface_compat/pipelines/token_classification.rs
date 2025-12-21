@@ -76,7 +76,12 @@ impl TokenClassificationPipeline {
             "barbara",
         ];
         if common_first_names.contains(&word_lower.as_str())
-            || (word.len() > 2 && word.chars().next().unwrap().is_uppercase())
+            || (word.len() > 2
+                && word
+                    .chars()
+                    .next()
+                    .expect("Operation failed")
+                    .is_uppercase())
         {
             return "PERSON".to_string();
         }

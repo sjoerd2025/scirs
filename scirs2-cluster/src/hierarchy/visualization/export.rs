@@ -65,8 +65,8 @@ impl<F: Float> DendrogramPlot<F> {
     /// ```rust,no_run
     /// # use scirs2_cluster::hierarchy::visualization::{DendrogramPlot, DendrogramConfig};
     /// # let plot: DendrogramPlot<f64> = todo!(); // Assume plot exists
-    /// let html = plot.to_html().unwrap();
-    /// std::fs::write("dendrogram.html", html).unwrap();
+    /// let html = plot.to_html().expect("Operation failed");
+    /// std::fs::write("dendrogram.html", html).expect("Operation failed");
     /// ```
     pub fn to_html(&self) -> Result<String>
     where
@@ -184,10 +184,22 @@ fn export_to_svg_with_config<F: Float + FromPrimitive + Debug + std::fmt::Displa
 
     // Draw branches
     for branch in &plot.branches {
-        let x1 = (branch.start.0.to_f64().unwrap() - min_x.to_f64().unwrap()) * scale_x + padding;
-        let y1 = (branch.start.1.to_f64().unwrap() - min_y.to_f64().unwrap()) * scale_y + padding;
-        let x2 = (branch.end.0.to_f64().unwrap() - min_x.to_f64().unwrap()) * scale_x + padding;
-        let y2 = (branch.end.1.to_f64().unwrap() - min_y.to_f64().unwrap()) * scale_y + padding;
+        let x1 = (branch.start.0.to_f64().expect("Operation failed")
+            - min_x.to_f64().expect("Operation failed"))
+            * scale_x
+            + padding;
+        let y1 = (branch.start.1.to_f64().expect("Operation failed")
+            - min_y.to_f64().expect("Operation failed"))
+            * scale_y
+            + padding;
+        let x2 = (branch.end.0.to_f64().expect("Operation failed")
+            - min_x.to_f64().expect("Operation failed"))
+            * scale_x
+            + padding;
+        let y2 = (branch.end.1.to_f64().expect("Operation failed")
+            - min_y.to_f64().expect("Operation failed"))
+            * scale_y
+            + padding;
 
         svg.push_str(&format!(
             r#"<line x1="{:.2}" y1="{:.2}" x2="{:.2}" y2="{:.2}" stroke="{}" class="branch"/>"#,
@@ -199,8 +211,11 @@ fn export_to_svg_with_config<F: Float + FromPrimitive + Debug + std::fmt::Displa
     // Draw leaves
     if plot.config.show_labels {
         for leaf in &plot.leaves {
-            let x = (leaf.position.0 - min_x.to_f64().unwrap()) * scale_x + padding;
-            let y = (leaf.position.1 - min_y.to_f64().unwrap()) * scale_y + padding + 15.0;
+            let x =
+                (leaf.position.0 - min_x.to_f64().expect("Operation failed")) * scale_x + padding;
+            let y = (leaf.position.1 - min_y.to_f64().expect("Operation failed")) * scale_y
+                + padding
+                + 15.0;
 
             svg.push_str(&format!(
                 r#"<text x="{:.2}" y="{:.2}" class="leaf-label" fill="{}" text-anchor="middle">{}</text>"#,
@@ -394,21 +409,21 @@ fn export_to_json<F: Float + FromPrimitive + Debug + std::fmt::Display>(
     // Branches
     json.push_str("  \"branches\": [\n");
     for (i, branch) in plot.branches.iter().enumerate() {
-        writeln!(&mut json, "    {{").unwrap();
+        writeln!(&mut json, "    {{").expect("Operation failed");
         writeln!(
             &mut json,
             "      \"start\": [{}, {}],",
             branch.start.0, branch.start.1
         )
-        .unwrap();
+        .expect("Operation failed");
         writeln!(
             &mut json,
             "      \"end\": [{}, {}],",
             branch.end.0, branch.end.1
         )
-        .unwrap();
-        writeln!(&mut json, "      \"distance\": {},", branch.distance).unwrap();
-        writeln!(&mut json, "      \"color\": \"{}\"", branch.color).unwrap();
+        .expect("Operation failed");
+        writeln!(&mut json, "      \"distance\": {},", branch.distance).expect("Operation failed");
+        writeln!(&mut json, "      \"color\": \"{}\"", branch.color).expect("Operation failed");
         json.push_str("    }");
         if i < plot.branches.len() - 1 {
             json.push(',');
@@ -420,16 +435,16 @@ fn export_to_json<F: Float + FromPrimitive + Debug + std::fmt::Display>(
     // Leaves
     json.push_str("  \"leaves\": [\n");
     for (i, leaf) in plot.leaves.iter().enumerate() {
-        writeln!(&mut json, "    {{").unwrap();
+        writeln!(&mut json, "    {{").expect("Operation failed");
         writeln!(
             &mut json,
             "      \"position\": [{}, {}],",
             leaf.position.0, leaf.position.1
         )
-        .unwrap();
-        writeln!(&mut json, "      \"label\": \"{}\",", leaf.label).unwrap();
-        writeln!(&mut json, "      \"color\": \"{}\",", leaf.color).unwrap();
-        writeln!(&mut json, "      \"data_index\": {}", leaf.data_index).unwrap();
+        .expect("Operation failed");
+        writeln!(&mut json, "      \"label\": \"{}\",", leaf.label).expect("Operation failed");
+        writeln!(&mut json, "      \"color\": \"{}\",", leaf.color).expect("Operation failed");
+        writeln!(&mut json, "      \"data_index\": {}", leaf.data_index).expect("Operation failed");
         json.push_str("    }");
         if i < plot.leaves.len() - 1 {
             json.push(',');

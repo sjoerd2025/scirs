@@ -311,7 +311,7 @@ mod tests {
         let result = quick_compatibility_check();
         assert!(result.is_ok());
 
-        let score = result.unwrap();
+        let score = result.expect("Test: operation failed");
         assert!(score >= 0.0 && score <= 1.0);
 
         // For a beta library, we expect reasonable compatibility

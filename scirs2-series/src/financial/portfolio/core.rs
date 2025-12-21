@@ -116,7 +116,7 @@ impl<F: Float + Clone> Portfolio<F> {
     ///
     /// let weights = array![0.6, 0.4];
     /// let names = vec!["AAPL".to_string(), "GOOGL".to_string()];
-    /// let portfolio = Portfolio::new(weights, names).unwrap();
+    /// let portfolio = Portfolio::new(weights, names).expect("Operation failed");
     /// ```
     pub fn new(weights: Array1<F>, asset_names: Vec<String>) -> Result<Self> {
         if weights.len() != asset_names.len() {
@@ -127,7 +127,7 @@ impl<F: Float + Clone> Portfolio<F> {
         }
 
         let weight_sum = weights.sum();
-        let tolerance = F::from(0.01).unwrap();
+        let tolerance = F::from(0.01).expect("Failed to convert constant to float");
         if (weight_sum - F::one()).abs() > tolerance {
             return Err(TimeSeriesError::InvalidInput(
                 "Portfolio weights must sum to approximately 1.0".to_string(),
@@ -160,7 +160,7 @@ impl<F: Float + Clone> Portfolio<F> {
     /// use scirs2_series::financial::portfolio::core::Portfolio;
     ///
     /// let names = vec!["AAPL".to_string(), "GOOGL".to_string(), "MSFT".to_string()];
-    /// let portfolio: Portfolio<f64> = Portfolio::equal_weight(3, names).unwrap();
+    /// let portfolio: Portfolio<f64> = Portfolio::equal_weight(3, names).expect("Operation failed");
     /// assert_eq!(portfolio.weights[0], 1.0/3.0);
     /// ```
     pub fn equal_weight(n_assets: usize, asset_names: Vec<String>) -> Result<Self> {
@@ -177,7 +177,7 @@ impl<F: Float + Clone> Portfolio<F> {
             });
         }
 
-        let weight = F::one() / F::from(n_assets).unwrap();
+        let weight = F::one() / F::from(n_assets).expect("Failed to convert to float");
         let weights = Array1::from_elem(n_assets, weight);
 
         Self::new(weights, asset_names)
@@ -248,7 +248,7 @@ impl<F: Float + Clone> Portfolio<F> {
 
         // Check sum constraint
         let weight_sum = self.weights.sum();
-        let tolerance = F::from(0.01).unwrap();
+        let tolerance = F::from(0.01).expect("Failed to convert constant to float");
         if (weight_sum - F::one()).abs() > tolerance {
             return Err(TimeSeriesError::InvalidInput(
                 "Portfolio weights must sum to approximately 1.0".to_string(),
@@ -308,9 +308,9 @@ impl<F: Float + Clone> Portfolio<F> {
 /// use scirs2_series::financial::portfolio::core::calculate_portfolio_returns;
 /// use scirs2_core::ndarray::{array, Array2};
 ///
-/// let returns = Array2::from_shape_vec((3, 2), vec![0.01, 0.02, -0.01, 0.01, 0.015, -0.005]).unwrap();
+/// let returns = Array2::from_shape_vec((3, 2), vec![0.01, 0.02, -0.01, 0.01, 0.015, -0.005]).expect("Operation failed");
 /// let weights = array![0.6, 0.4];
-/// let portfolio_returns = calculate_portfolio_returns(&returns, &weights).unwrap();
+/// let portfolio_returns = calculate_portfolio_returns(&returns, &weights).expect("Operation failed");
 /// ```
 pub fn calculate_portfolio_returns<F: Float + Clone>(
     asset_returns: &scirs2_core::ndarray::Array2<F>, // rows: time, cols: assets
@@ -345,7 +345,7 @@ mod tests {
     fn test_portfolio_creation() {
         let weights = arr1(&[0.6, 0.4]);
         let names = vec!["AAPL".to_string(), "GOOGL".to_string()];
-        let portfolio = Portfolio::new(weights, names).unwrap();
+        let portfolio = Portfolio::new(weights, names).expect("Operation failed");
 
         assert_eq!(portfolio.num_assets(), 2);
         assert_eq!(portfolio.get_weight("AAPL"), Some(0.6));
@@ -355,7 +355,8 @@ mod tests {
     #[test]
     fn test_equal_weight_portfolio() {
         let names = vec!["A".to_string(), "B".to_string(), "C".to_string()];
-        let portfolio: Portfolio<f64> = Portfolio::equal_weight(3, names).unwrap();
+        let portfolio: Portfolio<f64> =
+            Portfolio::equal_weight(3, names).expect("Operation failed");
 
         assert_eq!(portfolio.num_assets(), 3);
         for weight in portfolio.weights.iter() {
@@ -367,7 +368,7 @@ mod tests {
     fn test_portfolio_validation() {
         let weights = arr1(&[0.6, 0.4]);
         let names = vec!["A".to_string(), "B".to_string()];
-        let portfolio = Portfolio::new(weights, names).unwrap();
+        let portfolio = Portfolio::new(weights, names).expect("Operation failed");
 
         assert!(portfolio.validate().is_ok());
     }
@@ -393,10 +394,12 @@ mod tests {
     #[test]
     fn test_calculate_portfolio_returns() {
         let asset_returns =
-            Array2::from_shape_vec((3, 2), vec![0.01, 0.02, -0.01, 0.01, 0.015, -0.005]).unwrap();
+            Array2::from_shape_vec((3, 2), vec![0.01, 0.02, -0.01, 0.01, 0.015, -0.005])
+                .expect("Operation failed");
         let weights = arr1(&[0.6, 0.4]);
 
-        let portfolio_returns = calculate_portfolio_returns(&asset_returns, &weights).unwrap();
+        let portfolio_returns =
+            calculate_portfolio_returns(&asset_returns, &weights).expect("Operation failed");
 
         assert_eq!(portfolio_returns.len(), 3);
 

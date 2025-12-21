@@ -282,9 +282,9 @@ fn validate_sinusoid_estimation() -> SignalResult<TestResult> {
         .psd
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i_, _)| i_)
-        .unwrap();
+        .expect("Operation failed");
 
     let estimated_freq = result.frequencies[peak_idx];
     let true_freq = 50.0;
@@ -343,8 +343,8 @@ fn validate_multitone_estimation() -> SignalResult<TestResult> {
         let end_idx = (expected_idx + search_range).min(result.psd.len() - 1);
 
         let peak_idx = (start_idx..=end_idx)
-            .max_by(|&a, &b| result.psd[a].partial_cmp(&result.psd[b]).unwrap())
-            .unwrap();
+            .max_by(|&a, &b| result.psd[a].partial_cmp(&result.psd[b]).expect("Operation failed"))
+            .expect("Operation failed");
 
         let detected_freq = result.frequencies[peak_idx];
         detected_frequencies.push(detected_freq);
@@ -873,9 +873,9 @@ fn validate_enhanced_sinusoid_estimation() -> SignalResult<TestResult> {
             .psd
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(i_, _)| i_)
-            .unwrap();
+            .expect("Operation failed");
 
         let estimated_freq = result.frequencies[peak_idx];
         let freq_error = ((estimated_freq - freq) / freq).abs();

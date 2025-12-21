@@ -151,11 +151,11 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
             // Check if improved
             let improved = match es_state.config.mode {
                 EarlyStoppingMode::Min => {
-                    monitor_value + F::from(es_state.config.min_delta).unwrap()
+                    monitor_value + F::from(es_state.config.min_delta).expect("Failed to convert to float")
                         < es_state.best_value
                 }
                 EarlyStoppingMode::Max => {
-                    monitor_value - F::from(es_state.config.min_delta).unwrap()
+                    monitor_value - F::from(es_state.config.min_delta).expect("Failed to convert to float")
                         > es_state.best_value
             if improved {
                 if self.config.verbose > 0 {

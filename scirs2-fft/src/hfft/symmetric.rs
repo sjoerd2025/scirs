@@ -113,7 +113,7 @@ pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
 
                 // Copy back to the original _array
                 let view2 = array2.view();
-                let flat = view2.as_slice().unwrap();
+                let flat = view2.as_slice().expect("Operation failed");
                 if let Some(target) = array.as_slice_mut() {
                     target.copy_from_slice(flat);
                 }
@@ -183,7 +183,7 @@ where
 
     // Check DC component is real (or close to it)
     if !shape.is_empty() && !array.is_empty() {
-        let dc_val = &array.as_slice().unwrap()[0];
+        let dc_val = &array.as_slice().expect("Operation failed")[0];
         if dc_val.im.abs() > tol {
             return false;
         }
@@ -196,7 +196,7 @@ where
     // Simple implementation for 1D arrays
     if shape.len() == 1 && shape[0] > 1 {
         let n = shape[0];
-        let data = array.as_slice().unwrap();
+        let data = array.as_slice().expect("Operation failed");
         for i in 1..n / 2 + 1 {
             if i < n && (n - i) < n {
                 let a = &data[i];
@@ -218,7 +218,7 @@ where
         let array2 = array
             .to_owned()
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
+            .expect("Operation failed");
 
         // Check first row
         for j in 1..cols / 2 + 1 {

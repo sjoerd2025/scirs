@@ -24,7 +24,7 @@ fn main() {
         println!("CUDA is available!");
 
         // Get available CUDA devices
-        let devices = get_cuda_devices().unwrap();
+        let devices = get_cuda_devices().expect("Operation failed");
         println!("Found {} CUDA device(s):", devices.len());
 
         for (idx, device) in devices.iter().enumerate() {
@@ -40,7 +40,7 @@ fn main() {
         scirs2_fft::sparse_fft_gpu_memory::AllocationStrategy::CacheBySize,
         1024 * 1024 * 1024, // 1 GB limit
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // 1. Create a signal with a few frequency components
     let n = 1024;
@@ -51,7 +51,8 @@ fn main() {
     // 2. Compute regular CPU sparse FFT for comparison
     println!("\nComputing regular CPU sparse FFT for comparison...");
     let cpu_start = std::time::Instant::now();
-    let cpu_result = sparse_fft(&signal, 6, Some(SparseFFTAlgorithm::Sublinear), None).unwrap();
+    let cpu_result = sparse_fft(&signal, 6, Some(SparseFFTAlgorithm::Sublinear), None)
+        .expect("Operation failed");
     let cpu_elapsed = cpu_start.elapsed();
 
     println!(
@@ -71,7 +72,7 @@ fn main() {
         Some(SparseFFTAlgorithm::Sublinear),
         None,
     )
-    .unwrap();
+    .expect("Operation failed");
     let cuda_elapsed = cuda_start.elapsed();
 
     println!(
@@ -162,8 +163,8 @@ fn main() {
 
     // CPU
     let cpu_start = std::time::Instant::now();
-    let _large_cpu_result =
-        sparse_fft(&large_signal, 6, Some(SparseFFTAlgorithm::Sublinear), None).unwrap();
+    let _large_cpu_result = sparse_fft(&large_signal, 6, Some(SparseFFTAlgorithm::Sublinear), None)
+        .expect("Operation failed");
     let cpu_elapsed = cpu_start.elapsed();
 
     // CUDA
@@ -175,7 +176,7 @@ fn main() {
         Some(SparseFFTAlgorithm::Sublinear),
         None,
     )
-    .unwrap();
+    .expect("Operation failed");
     let cuda_elapsed = cuda_start.elapsed();
 
     println!("  CPU  elapsed time: {cpu_elapsed:?}");
@@ -246,7 +247,7 @@ fn create_comparison_plot(
 
     // Compute full spectrum for comparison
     let signal_complex: Vec<Complex64> = signal.iter().map(|&x| Complex64::new(x, 0.0)).collect();
-    let full_spectrum = scirs2_fft::fft(&signal_complex, None).unwrap();
+    let full_spectrum = scirs2_fft::fft(&signal_complex, None).expect("Operation failed");
     let full_magnitudes: Vec<f64> = full_spectrum.iter().map(|c| c.norm()).collect();
 
     // Full FFT trace
@@ -267,7 +268,11 @@ fn create_comparison_plot(
     let cpu_values: Vec<_> = cpu_indices
         .iter()
         .map(|&idx| {
-            let pos = cpu_result.indices.iter().position(|&i| i == idx).unwrap();
+            let pos = cpu_result
+                .indices
+                .iter()
+                .position(|&i| i == idx)
+                .expect("Operation failed");
             cpu_result.values[pos].norm()
         })
         .collect();
@@ -286,7 +291,11 @@ fn create_comparison_plot(
     let cuda_values: Vec<_> = cuda_indices
         .iter()
         .map(|&idx| {
-            let pos = cuda_result.indices.iter().position(|&i| i == idx).unwrap();
+            let pos = cuda_result
+                .indices
+                .iter()
+                .position(|&i| i == idx)
+                .expect("Operation failed");
             cuda_result.values[pos].norm()
         })
         .collect();

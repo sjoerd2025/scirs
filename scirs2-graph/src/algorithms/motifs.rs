@@ -71,7 +71,7 @@ where
             for (j, node_j) in neighbors_i.iter().enumerate() {
                 for node_k in neighbors_i.iter().skip(j + 1) {
                     if graph.has_edge(node_j, node_k) {
-                        let mut triangles_guard = triangles.lock().unwrap();
+                        let mut triangles_guard = triangles.lock().expect("Operation failed");
                         let mut triangle = vec![node_i.clone(), node_j.clone(), node_k.clone()];
                         triangle.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
@@ -85,7 +85,7 @@ where
         }
     });
 
-    triangles.into_inner().unwrap()
+    triangles.into_inner().expect("Operation failed")
 }
 
 #[allow(dead_code)]
@@ -253,7 +253,7 @@ where
                                     ];
                                     path.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
-                                    let mut paths_guard = paths.lock().unwrap();
+                                    let mut paths_guard = paths.lock().expect("Operation failed");
                                     if !paths_guard.iter().any(|p| p == &path) {
                                         paths_guard.push(path);
                                     }
@@ -266,7 +266,7 @@ where
         }
     });
 
-    paths.into_inner().unwrap()
+    paths.into_inner().expect("Operation failed")
 }
 
 /// Find bi-fan motifs (2 nodes connected to the same 2 other nodes)
@@ -306,7 +306,7 @@ where
                                 vec![node1.clone(), node2.clone(), fan1.clone(), fan2.clone()];
                             bi_fan.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
-                            let mut bi_fans_guard = bi_fans.lock().unwrap();
+                            let mut bi_fans_guard = bi_fans.lock().expect("Operation failed");
                             if !bi_fans_guard.iter().any(|bf| bf == &bi_fan) {
                                 bi_fans_guard.push(bi_fan);
                             }
@@ -317,7 +317,7 @@ where
         }
     });
 
-    bi_fans.into_inner().unwrap()
+    bi_fans.into_inner().expect("Operation failed")
 }
 
 /// Find feed-forward loop motifs (3 nodes with specific directed pattern)
@@ -351,7 +351,7 @@ where
                             let mut ffl = vec![node_a.clone(), node_b.clone(), node_c.clone()];
                             ffl.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
-                            let mut ffls_guard = ffls.lock().unwrap();
+                            let mut ffls_guard = ffls.lock().expect("Operation failed");
                             if !ffls_guard.iter().any(|f| f == &ffl) {
                                 ffls_guard.push(ffl);
                             }
@@ -362,7 +362,7 @@ where
         }
     });
 
-    ffls.into_inner().unwrap()
+    ffls.into_inner().expect("Operation failed")
 }
 
 /// Find bi-directional motifs (mutual connections between pairs of nodes)
@@ -386,7 +386,7 @@ where
                 let mut motif = vec![node1.clone(), node2.clone()];
                 motif.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
-                let mut bidirectionals_guard = bidirectionals.lock().unwrap();
+                let mut bidirectionals_guard = bidirectionals.lock().expect("Operation failed");
                 if !bidirectionals_guard.iter().any(|m| m == &motif) {
                     bidirectionals_guard.push(motif);
                 }
@@ -394,7 +394,7 @@ where
         }
     });
 
-    bidirectionals.into_inner().unwrap()
+    bidirectionals.into_inner().expect("Operation failed")
 }
 
 /// Advanced motif counting with frequency analysis

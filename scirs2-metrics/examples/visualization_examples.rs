@@ -28,7 +28,7 @@ fn main() {
     let y_true = array![0, 1, 2, 0, 1, 2, 0, 1, 2];
     let y_pred = array![0, 2, 1, 0, 0, 2, 1, 1, 2];
 
-    let (cm_, _labels) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+    let (cm_, _labels) = confusion_matrix(&y_true, &y_pred, None).expect("Operation failed");
     println!("Confusion Matrix:\n{cm_:?}");
 
     // Create a visualizer for the confusion matrix
@@ -55,7 +55,7 @@ fn main() {
     let y_score = array![0.1, 0.8, 0.7, 0.3, 0.9, 0.2, 0.6, 0.3, 0.8];
 
     // Compute ROC curve
-    let (fpr, tpr, thresholds) = roc_curve(&y_true_binary, &y_score).unwrap();
+    let (fpr, tpr, thresholds) = roc_curve(&y_true_binary, &y_score).expect("Operation failed");
     println!("ROC Curve Points: {} points", fpr.len());
 
     // Create a visualizer for the ROC curve
@@ -75,7 +75,7 @@ fn main() {
 
     // Compute precision-recall curve
     let (precision, recall, pr_thresholds) =
-        precision_recall_curve(&y_true_binary, &y_score).unwrap();
+        precision_recall_curve(&y_true_binary, &y_score).expect("Operation failed");
     println!("Precision-Recall Curve Points: {} points", precision.len());
 
     // Create a visualizer for the precision-recall curve
@@ -99,7 +99,7 @@ fn main() {
 
     // Compute calibration curve
     let (prob_true, prob_pred_, _counts) =
-        calibration_curve(&y_true_binary, &y_score, Some(5)).unwrap();
+        calibration_curve(&y_true_binary, &y_score, Some(5)).expect("Operation failed");
     println!("Calibration Curve Points: {} points", prob_true.len());
 
     // Create a visualizer for the calibration curve
@@ -137,7 +137,7 @@ fn main() {
     // Create a visualizer for the learning curve
     let lc_viz =
         helpers::visualize_learning_curve(train_sizes, train_scores, val_scores, "Accuracy")
-            .unwrap();
+            .expect("Operation failed");
 
     // Print what would be rendered
     let metadata = lc_viz.get_metadata();
@@ -196,7 +196,8 @@ fn main() {
 
     // Create a correlation matrix (for example)
     let correlation_matrix =
-        Array2::from_shape_vec((3, 3), vec![1.0, 0.8, 0.3, 0.8, 1.0, 0.5, 0.3, 0.5, 1.0]).unwrap();
+        Array2::from_shape_vec((3, 3), vec![1.0, 0.8, 0.3, 0.8, 1.0, 0.5, 0.3, 0.5, 1.0])
+            .expect("Operation failed");
 
     // Create a heatmap visualizer
     let heatmap_viz = helpers::visualize_heatmap(

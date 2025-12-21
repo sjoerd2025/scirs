@@ -566,28 +566,28 @@ mod tests {
 
     #[test]
     fn test_version_parsing() {
-        let version = Version::parse("1.2.3").unwrap();
+        let version = Version::parse("1.2.3").expect("Operation failed");
         assert_eq!(version.to_string(), "1.2.3");
 
-        let version = Version::parse("1.2.3-alpha.1").unwrap();
+        let version = Version::parse("1.2.3-alpha.1").expect("Operation failed");
         assert_eq!(version.to_string(), "1.2.3-alpha.1");
         assert_eq!(version.prerelease(), Some("alpha.1"));
         assert!(version.is_prerelease());
 
-        let version = Version::parse("1.2.3+build.123").unwrap();
+        let version = Version::parse("1.2.3+build.123").expect("Operation failed");
         assert_eq!(version.buildmetadata(), Some("build.123"));
 
-        let version = Version::parse("v1.2.3").unwrap();
+        let version = Version::parse("v1.2.3").expect("Operation failed");
         assert_eq!(version.to_string(), "1.2.3");
     }
 
     #[test]
     fn test_version_comparison() {
-        let v1_0_0 = Version::parse("1.0.0").unwrap();
-        let v1_0_1 = Version::parse("1.0.1").unwrap();
-        let v1_1_0 = Version::parse("1.1.0").unwrap();
-        let v2_0_0 = Version::parse("2.0.0").unwrap();
-        let v1_0_0_alpha = Version::parse("1.0.0-alpha").unwrap();
+        let v1_0_0 = Version::parse("1.0.0").expect("Operation failed");
+        let v1_0_1 = Version::parse("1.0.1").expect("Operation failed");
+        let v1_1_0 = Version::parse("1.1.0").expect("Operation failed");
+        let v2_0_0 = Version::parse("2.0.0").expect("Operation failed");
+        let v1_0_0_alpha = Version::parse("1.0.0-alpha").expect("Operation failed");
 
         assert!(v1_0_0 < v1_0_1);
         assert!(v1_0_1 < v1_1_0);
@@ -597,7 +597,7 @@ mod tests {
 
     #[test]
     fn test_version_increments() {
-        let mut version = Version::parse("1.2.3-alpha+build").unwrap();
+        let mut version = Version::parse("1.2.3-alpha+build").expect("Operation failed");
 
         version.increment_patch();
         assert_eq!(version.to_string(), "1.2.4");
@@ -611,39 +611,39 @@ mod tests {
 
     #[test]
     fn test_version_constraints() {
-        let constraint = VersionConstraint::constraint(">=1.2.0").unwrap();
-        let version = Version::parse("1.2.3").unwrap();
+        let constraint = VersionConstraint::constraint(">=1.2.0").expect("Operation failed");
+        let version = Version::parse("1.2.3").expect("Operation failed");
         assert!(constraint.matches(&version));
 
-        let constraint = VersionConstraint::constraint("^1.2.0").unwrap();
-        let version = Version::parse("1.5.0").unwrap();
+        let constraint = VersionConstraint::constraint("^1.2.0").expect("Operation failed");
+        let version = Version::parse("1.5.0").expect("Operation failed");
         assert!(constraint.matches(&version));
-        let version = Version::parse("2.0.0").unwrap();
+        let version = Version::parse("2.0.0").expect("Operation failed");
         assert!(!constraint.matches(&version));
 
-        let constraint = VersionConstraint::constraint("~1.2.0").unwrap();
-        let version = Version::parse("1.2.5").unwrap();
+        let constraint = VersionConstraint::constraint("~1.2.0").expect("Operation failed");
+        let version = Version::parse("1.2.5").expect("Operation failed");
         assert!(constraint.matches(&version));
-        let version = Version::parse("1.3.0").unwrap();
+        let version = Version::parse("1.3.0").expect("Operation failed");
         assert!(!constraint.matches(&version));
     }
 
     #[test]
     fn test_version_range() {
-        let min = Version::parse("1.0.0").unwrap();
-        let max = Version::parse("2.0.0").unwrap();
+        let min = Version::parse("1.0.0").expect("Operation failed");
+        let max = Version::parse("2.0.0").expect("Operation failed");
         let range = VersionRange::new(Some(min), Some(max));
 
-        let version = Version::parse("1.5.0").unwrap();
+        let version = Version::parse("1.5.0").expect("Operation failed");
         assert!(range.contains(&version));
 
-        let version = Version::parse("0.9.0").unwrap();
+        let version = Version::parse("0.9.0").expect("Operation failed");
         assert!(!range.contains(&version));
 
-        let version = Version::parse("2.0.0").unwrap();
+        let version = Version::parse("2.0.0").expect("Operation failed");
         assert!(!range.contains(&version));
 
-        let version = Version::parse("1.5.0-alpha").unwrap();
+        let version = Version::parse("1.5.0-alpha").expect("Operation failed");
         assert!(!range.contains(&version));
 
         let range = range.with_prerelease();
@@ -662,9 +662,9 @@ mod tests {
 
     #[test]
     fn test_compatibility() {
-        let v1_0_0 = Version::parse("1.0.0").unwrap();
-        let v1_2_0 = Version::parse("1.2.0").unwrap();
-        let v2_0_0 = Version::parse("2.0.0").unwrap();
+        let v1_0_0 = Version::parse("1.0.0").expect("Operation failed");
+        let v1_2_0 = Version::parse("1.2.0").expect("Operation failed");
+        let v2_0_0 = Version::parse("2.0.0").expect("Operation failed");
 
         assert!(v1_0_0.is_compatible_with(&v1_2_0));
         assert!(v1_2_0.is_compatible_with(&v1_0_0));
@@ -675,14 +675,14 @@ mod tests {
     #[test]
     fn test_prerelease_comparison() {
         let versions = vec![
-            Version::parse("1.0.0-alpha").unwrap(),
-            Version::parse("1.0.0-alpha.1").unwrap(),
-            Version::parse("1.0.0-alpha.beta").unwrap(),
-            Version::parse("1.0.0-beta").unwrap(),
-            Version::parse("1.0.0-beta.2").unwrap(),
-            Version::parse("1.0.0-beta.11").unwrap(),
-            Version::parse("1.0.0-rc.1").unwrap(),
-            Version::parse("1.0.0").unwrap(),
+            Version::parse("1.0.0-alpha").expect("Operation failed"),
+            Version::parse("1.0.0-alpha.1").expect("Operation failed"),
+            Version::parse("1.0.0-alpha.beta").expect("Operation failed"),
+            Version::parse("1.0.0-beta").expect("Operation failed"),
+            Version::parse("1.0.0-beta.2").expect("Operation failed"),
+            Version::parse("1.0.0-beta.11").expect("Operation failed"),
+            Version::parse("1.0.0-rc.1").expect("Operation failed"),
+            Version::parse("1.0.0").expect("Operation failed"),
         ];
 
         let mut sortedversions = versions.clone();

@@ -944,7 +944,7 @@ mod tests {
         let retrieved = manager.get_snapshot("s1");
         assert!(retrieved.is_some(), "Snapshot 's1' should exist");
         assert_eq!(
-            retrieved.unwrap().id,
+            retrieved.expect("Operation failed").id,
             "s1",
             "Retrieved snapshot should have ID 's1'"
         );
@@ -1135,8 +1135,8 @@ mod tests {
         // Main thread: Wait for other threads to complete
         barrier.wait();
 
-        thread1.join().unwrap();
-        thread2.join().unwrap();
+        thread1.join().expect("Operation failed");
+        thread2.join().expect("Operation failed");
     }
 
     #[test]
@@ -1235,8 +1235,8 @@ mod tests {
         // Main thread: Wait for other threads to complete
         barrier.wait();
 
-        thread1.join().unwrap();
-        thread2.join().unwrap();
+        thread1.join().expect("Operation failed");
+        thread2.join().expect("Operation failed");
 
         println!("Thread safety test with isolated collectors completed successfully");
     }

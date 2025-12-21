@@ -6,7 +6,7 @@ use scirs2_core::ndarray::array;
 #[test]
 fn test_sigmoid_basic() {
     let a = array![[0.0_f64, 1.0], [-1.0, 2.0]];
-    let result = sigmoid(&a.view()).unwrap();
+    let result = sigmoid(&a.view()).expect("Test: operation failed");
 
     // sigmoid(0) should be 0.5
     assert!((result[[0, 0]] - 0.5).abs() < 1e-10);
@@ -21,7 +21,7 @@ fn test_sigmoid_basic() {
 #[test]
 fn test_softmax_basic() {
     let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-    let result = softmax(&a.view(), Some(1)).unwrap();
+    let result = softmax(&a.view(), Some(1)).expect("Test: operation failed");
 
     // Each row should sum to 1
     for i in 0..2 {

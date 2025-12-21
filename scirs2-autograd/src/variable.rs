@@ -55,7 +55,7 @@
 //! use std::error::Error;
 //!
 //! let dir = "/tmp/rust-autograd/test/model_persistence";
-//! fs::create_dir_all(dir).unwrap();
+//! fs::create_dir_all(dir).expect("Operation failed");
 //! let path = format!("{}/model.json", dir);
 //! let mut rng = ag::ndarray_ext::ArrayRng::<f64>::default();
 //!
@@ -64,10 +64,10 @@
 //! env.slot().name("b").set(rng.standard_normal(&[2, 3]));
 //!
 //! // save
-//! env.save(&path).unwrap();
+//! env.save(&path).expect("Operation failed");
 //!
 //! // load it
-//! let loaded_env = ag::VariableEnvironment::<f64>::load(&path).unwrap();
+//! let loaded_env = ag::VariableEnvironment::<f64>::load(&path).expect("Operation failed");
 //!
 //! // alternatively, it's possible to initialize the existing env
 //! let mut new_env = ag::VariableEnvironment::<f64>::new();
@@ -424,7 +424,8 @@ fn iter<F: Float>(
         if ent.0.namespace_id == ns.name() {
             Some((
                 ent.0.variable_name.deref(),
-                ns.get_array_by_name(ent.0.variable_name.deref()).unwrap(),
+                ns.get_array_by_name(ent.0.variable_name.deref())
+                    .expect("Operation failed"),
             ))
         } else {
             None
@@ -614,8 +615,8 @@ impl<'env, F: Float> VariableEnvironment<F> {
             .iter()
             .map(|(fullname, &vid)| {
                 let mut split = fullname.split("\u{0001}");
-                let namespace_id = split.next().unwrap().to_owned();
-                let var_name = split.next().unwrap().to_owned();
+                let namespace_id = split.next().expect("Operation failed").to_owned();
+                let var_name = split.next().expect("Operation failed").to_owned();
                 let fullname = FullName {
                     namespace_id,
                     variable_name: var_name,
@@ -844,7 +845,7 @@ fn save_and_load() {
     use std::fs;
 
     let dir = "/tmp/rust-autograd/test/save_and_load";
-    fs::create_dir_all(dir).unwrap();
+    fs::create_dir_all(dir).expect("Operation failed");
     let path = format!("{}/model.json", dir);
     let mut rng = ndarray_ext::ArrayRng::<f64>::default();
 
@@ -853,11 +854,11 @@ fn save_and_load() {
     env.slot().name("b").set(rng.standard_normal(&[2, 3]));
 
     // save
-    env.save(&path).unwrap();
+    env.save(&path).expect("Operation failed");
 
     // load and assert
     {
-        let loaded_env = VariableEnvironment::<f64>::load(&path).unwrap();
+        let loaded_env = VariableEnvironment::<f64>::load(&path).expect("Operation failed");
 
         // Check structure equality
         assert_eq!(env.name_to_id, loaded_env.name_to_id);
@@ -865,7 +866,7 @@ fn save_and_load() {
         // Now manually compare array values since RefCell<NdArray> doesn't implement AbsDiffEq
         for (vid, array) in env.iter() {
             let loaded_env_map: HashMap<_, _> = loaded_env.iter().collect();
-            let loaded_array = loaded_env_map.get(&vid).unwrap();
+            let loaded_array = loaded_env_map.get(&vid).expect("Operation failed");
 
             // Compare arrays by borrowing them and comparing elements
             let arr1 = array.borrow();
@@ -897,7 +898,7 @@ fn save_and_init() {
     use std::fs;
 
     let dir = "/tmp/rust-autograd/test/save_and_init";
-    fs::create_dir_all(dir).unwrap();
+    fs::create_dir_all(dir).expect("Operation failed");
     let path = format!("{}/model.json", dir);
     let mut rng = ndarray_ext::ArrayRng::<f64>::default();
 
@@ -909,11 +910,11 @@ fn save_and_init() {
         env.run(|g| {
             let _a_ = g.variable(a);
             let _b_ = g.variable(b);
-            g.env().save(&path).unwrap();
+            g.env().save(&path).expect("Operation failed");
         });
     }
 
-    env.initialize(&path).unwrap();
+    env.initialize(&path).expect("Operation failed");
 }
 
 // ============================================================================
@@ -939,8 +940,8 @@ fn save_and_init() {
 /// // Thread-safe operations
 /// let env = SafeVariableEnvironment::new();
 /// let arr = scirs2_core::ndarray::arr2(&[[1.0, 2.0], [3.0, 4.0]]).into_dyn();
-/// let var_id = env.set_variable(arr).unwrap();
-/// env.backward(var_id).unwrap();
+/// let var_id = env.set_variable(arr).expect("Operation failed");
+/// env.backward(var_id).expect("Operation failed");
 /// ```
 #[derive(Clone)]
 pub struct SafeVariableEnvironment<F: Float + Send + Sync> {

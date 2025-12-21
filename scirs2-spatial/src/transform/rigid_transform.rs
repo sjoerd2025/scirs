@@ -81,7 +81,7 @@ impl RigidTransform {
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
-    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).expect("Operation failed");
     /// ```
     pub fn from_rotation_and_translation(
         rotation: Rotation,
@@ -123,7 +123,7 @@ impl RigidTransform {
     ///     [0.0, 0.0, 1.0, 3.0],
     ///     [0.0, 0.0, 0.0, 1.0]
     /// ];
-    /// let transform = RigidTransform::from_matrix(&matrix.view()).unwrap();
+    /// let transform = RigidTransform::from_matrix(&matrix.view()).expect("Operation failed");
     /// ```
     pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if matrix.shape() != [4, 4] {
@@ -184,7 +184,7 @@ impl RigidTransform {
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
-    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).expect("Operation failed");
     /// let matrix = transform.as_matrix();
     /// // Should be a 4x4 identity matrix with the last column containing the translation
     /// ```
@@ -224,7 +224,7 @@ impl RigidTransform {
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
-    /// let transform = RigidTransform::from_rotation_and_translation(rotation.clone(), &translation.view()).unwrap();
+    /// let transform = RigidTransform::from_rotation_and_translation(rotation.clone(), &translation.view()).expect("Operation failed");
     /// let retrieved_rotation = transform.rotation();
     /// ```
     pub fn rotation(&self) -> &Rotation {
@@ -245,7 +245,7 @@ impl RigidTransform {
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
-    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).expect("Operation failed");
     /// let retrieved_translation = transform.translation();
     /// ```
     pub fn translation(&self) -> &Array1<f64> {
@@ -309,7 +309,7 @@ impl RigidTransform {
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
-    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).expect("Operation failed");
     /// let points = array![[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]];
     /// let transformed = transform.apply_multiple(&points.view());
     /// ```
@@ -348,7 +348,7 @@ impl RigidTransform {
     ///
     /// let rotation = Rotation::identity();
     /// let translation = array![1.0, 2.0, 3.0];
-    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+    /// let transform = RigidTransform::from_rotation_and_translation(rotation, &translation.view()).expect("Operation failed");
     /// let inverse = transform.inv();
     /// ```
     pub fn inv(&self) -> SpatialResult<RigidTransform> {
@@ -381,11 +381,11 @@ impl RigidTransform {
     /// let t1 = RigidTransform::from_rotation_and_translation(
     ///     Rotation::identity(),
     ///     &array![1.0, 0.0, 0.0].view()
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// let t2 = RigidTransform::from_rotation_and_translation(
     ///     Rotation::identity(),
     ///     &array![0.0, 1.0, 0.0].view()
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// let combined = t1.compose(&t2);
     /// // Should have a translation of [1.0, 1.0, 0.0]
     /// ```
@@ -422,7 +422,8 @@ impl RigidTransform {
     /// ```
     pub fn identity() -> RigidTransform {
         RigidTransform {
-            rotation: Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view()).unwrap(),
+            rotation: Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view())
+                .expect("Operation failed"),
             translation: Array1::<f64>::zeros(3),
         }
     }
@@ -443,7 +444,7 @@ impl RigidTransform {
     /// use scirs2_spatial::transform::RigidTransform;
     /// use scirs2_core::ndarray::array;
     ///
-    /// let transform = RigidTransform::from_translation(&array![1.0, 2.0, 3.0].view()).unwrap();
+    /// let transform = RigidTransform::from_translation(&array![1.0, 2.0, 3.0].view()).expect("Operation failed");
     /// let point = array![0.0, 0.0, 0.0];
     /// let transformed = transform.apply(&point.view());
     /// // Should be [1.0, 2.0, 3.0]
@@ -457,7 +458,8 @@ impl RigidTransform {
         }
 
         Ok(RigidTransform {
-            rotation: Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view()).unwrap(),
+            rotation: Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view())
+                .expect("Operation failed"),
             translation: translation.to_owned(),
         })
     }
@@ -506,7 +508,7 @@ mod tests {
     fn test_rigid_transform_identity() {
         let identity = RigidTransform::identity();
         let point = array![1.0, 2.0, 3.0];
-        let transformed = identity.apply(&point.view()).unwrap();
+        let transformed = identity.apply(&point.view()).expect("Operation failed");
 
         assert_relative_eq!(transformed[0], point[0], epsilon = 1e-10);
         assert_relative_eq!(transformed[1], point[1], epsilon = 1e-10);
@@ -516,10 +518,11 @@ mod tests {
     #[test]
     fn test_rigid_transform_translation_only() {
         let translation = array![1.0, 2.0, 3.0];
-        let transform = RigidTransform::from_translation(&translation.view()).unwrap();
+        let transform =
+            RigidTransform::from_translation(&translation.view()).expect("Operation failed");
 
         let point = array![0.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view()).unwrap();
+        let transformed = transform.apply(&point.view()).expect("Operation failed");
 
         assert_relative_eq!(transformed[0], translation[0], epsilon = 1e-10);
         assert_relative_eq!(transformed[1], translation[1], epsilon = 1e-10);
@@ -529,11 +532,11 @@ mod tests {
     #[test]
     fn test_rigid_transform_rotation_only() {
         // 90 degrees rotation around Z axis
-        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
         let transform = RigidTransform::from_rotation(rotation);
 
         let point = array![1.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view()).unwrap();
+        let transformed = transform.apply(&point.view()).expect("Operation failed");
 
         // 90 degrees rotation around Z axis of [1, 0, 0] should give [0, 1, 0]
         assert_relative_eq!(transformed[0], 0.0, epsilon = 1e-10);
@@ -544,13 +547,14 @@ mod tests {
     #[test]
     fn test_rigid_transform_rotation_and_translation() {
         // 90 degrees rotation around Z axis and translation by [1, 2, 3]
-        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
         let translation = array![1.0, 2.0, 3.0];
         let transform =
-            RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+            RigidTransform::from_rotation_and_translation(rotation, &translation.view())
+                .expect("Operation failed");
 
         let point = array![1.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view()).unwrap();
+        let transformed = transform.apply(&point.view()).expect("Operation failed");
 
         // 90 degrees rotation around Z axis of [1, 0, 0] should give [0, 1, 0]
         // Then translate by [1, 2, 3] to get [1, 3, 3]
@@ -567,10 +571,10 @@ mod tests {
             [0.0, 0.0, 1.0, 3.0],
             [0.0, 0.0, 0.0, 1.0]
         ];
-        let transform = RigidTransform::from_matrix(&matrix.view()).unwrap();
+        let transform = RigidTransform::from_matrix(&matrix.view()).expect("Operation failed");
 
         let point = array![1.0, 0.0, 0.0];
-        let transformed = transform.apply(&point.view()).unwrap();
+        let transformed = transform.apply(&point.view()).expect("Operation failed");
 
         // This matrix represents a 90-degree rotation around Z and translation by [1, 2, 3]
         // So [1, 0, 0] -> [0, 1, 0] -> [1, 3, 3]
@@ -582,10 +586,11 @@ mod tests {
     #[test]
     fn test_rigid_transform_as_matrix() {
         // Create a transform and verify its matrix representation
-        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
         let translation = array![1.0, 2.0, 3.0];
         let transform =
-            RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+            RigidTransform::from_rotation_and_translation(rotation, &translation.view())
+                .expect("Operation failed");
 
         let matrix = transform.as_matrix();
 
@@ -615,17 +620,20 @@ mod tests {
     #[test]
     fn test_rigid_transform_inverse() {
         // Create a transform and verify its inverse
-        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
         let translation = array![1.0, 2.0, 3.0];
         let transform =
-            RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+            RigidTransform::from_rotation_and_translation(rotation, &translation.view())
+                .expect("Operation failed");
 
-        let inverse = transform.inv().unwrap();
+        let inverse = transform.inv().expect("Operation failed");
 
         // Apply transform and then its inverse to a point
         let point = array![1.0, 2.0, 3.0];
-        let transformed = transform.apply(&point.view()).unwrap();
-        let back = inverse.apply(&transformed.view()).unwrap();
+        let transformed = transform.apply(&point.view()).expect("Operation failed");
+        let back = inverse
+            .apply(&transformed.view())
+            .expect("Operation failed");
 
         // Should get back to the original point
         assert_relative_eq!(back[0], point[0], epsilon = 1e-10);
@@ -634,30 +642,30 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assert_relative_eq! failed at line 662: left=2.22e-16, right=1.0"]
     fn test_rigid_transform_composition() {
         // Create two transforms and compose them
         let t1 = RigidTransform::from_rotation_and_translation(
-            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap(),
+            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed"),
             &array![1.0, 0.0, 0.0].view(),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let t2 = RigidTransform::from_rotation_and_translation(
-            rotation_from_euler(PI / 2.0, 0.0, 0.0, "xyz").unwrap(),
+            rotation_from_euler(PI / 2.0, 0.0, 0.0, "xyz").expect("Operation failed"),
             &array![0.0, 1.0, 0.0].view(),
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let composed = t1.compose(&t2).unwrap();
+        let composed = t1.compose(&t2).expect("Operation failed");
 
         // Apply the composed transform to a point
         let point = array![1.0, 0.0, 0.0];
-        let transformed = composed.apply(&point.view()).unwrap();
+        let transformed = composed.apply(&point.view()).expect("Operation failed");
 
         // Apply the transforms individually
-        let intermediate = t1.apply(&point.view()).unwrap();
-        let transformed2 = t2.apply(&intermediate.view()).unwrap();
+        let intermediate = t1.apply(&point.view()).expect("Operation failed");
+        let transformed2 = t2.apply(&intermediate.view()).expect("Operation failed");
 
         // The composed transform and individual transforms should produce the same result
         assert_relative_eq!(transformed[0], transformed2[0], epsilon = 1e-10);
@@ -667,14 +675,17 @@ mod tests {
 
     #[test]
     fn test_rigid_transform_multiple_points() {
-        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rotation = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
         let translation = array![1.0, 2.0, 3.0];
         let transform =
-            RigidTransform::from_rotation_and_translation(rotation, &translation.view()).unwrap();
+            RigidTransform::from_rotation_and_translation(rotation, &translation.view())
+                .expect("Operation failed");
 
         let points = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
 
-        let transformed = transform.apply_multiple(&points.view()).unwrap();
+        let transformed = transform
+            .apply_multiple(&points.view())
+            .expect("Operation failed");
 
         // Check that we get the correct transformed points
         assert_eq!(transformed.shape(), points.shape());

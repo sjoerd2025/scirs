@@ -71,7 +71,8 @@ mod tests {
 
     #[test]
     fn test_advanced_memory_intelligence_creation() {
-        let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
+        let memory_intelligence =
+            AdvancedMemoryIntelligence::<f32>::new().expect("Operation failed");
         // Test successful creation - we can't easily test the internals due to Arc<Mutex<>>
         // but we can verify the struct was created without panicking
         drop(memory_intelligence);
@@ -79,7 +80,8 @@ mod tests {
 
     #[test]
     fn test_cache_performance_prediction() {
-        let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
+        let memory_intelligence =
+            AdvancedMemoryIntelligence::<f32>::new().expect("Operation failed");
         let workload = WorkloadCharacteristics {
             operation_types: vec![MemoryOperationType::MatrixMultiplication],
             datasizes: vec![TensorShape {
@@ -95,14 +97,15 @@ mod tests {
         let prediction = memory_intelligence.predict_cache_performance(&access_pattern);
         assert!(prediction.is_ok());
 
-        let result = prediction.unwrap();
+        let result = prediction.expect("Operation failed");
         assert!(result.hit_rate >= 0.0 && result.hit_rate <= 1.0);
         assert!(result.confidence >= 0.0 && result.confidence <= 1.0);
     }
 
     #[test]
     fn test_compression_algorithm_selection() {
-        let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
+        let memory_intelligence =
+            AdvancedMemoryIntelligence::<f32>::new().expect("Operation failed");
         let data = Array2::zeros((100, 100));
         let constraints = CompressionConstraints::default();
 
@@ -112,7 +115,8 @@ mod tests {
 
     #[test]
     fn test_numa_optimization() {
-        let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
+        let memory_intelligence =
+            AdvancedMemoryIntelligence::<f32>::new().expect("Operation failed");
         let workload = WorkloadCharacteristics {
             operation_types: vec![MemoryOperationType::MatrixMultiplication],
             datasizes: vec![TensorShape {
@@ -130,19 +134,21 @@ mod tests {
 
     #[test]
     fn test_bandwidth_monitoring() {
-        let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
+        let memory_intelligence =
+            AdvancedMemoryIntelligence::<f32>::new().expect("Operation failed");
 
         let result = memory_intelligence.monitor_bandwidth_saturation();
         assert!(result.is_ok());
 
-        let prediction = result.unwrap();
+        let prediction = result.expect("Operation failed");
         assert!(prediction.saturation_level >= 0.0 && prediction.saturation_level <= 1.0);
         assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);
     }
 
     #[test]
     fn test_comprehensive_analysis() {
-        let memory_intelligence = AdvancedMemoryIntelligence::<f32>::new().unwrap();
+        let memory_intelligence =
+            AdvancedMemoryIntelligence::<f32>::new().expect("Operation failed");
         let workload = WorkloadCharacteristics {
             operation_types: vec![MemoryOperationType::MatrixMultiplication],
             datasizes: vec![TensorShape {
@@ -158,7 +164,7 @@ mod tests {
         let result = memory_intelligence.comprehensive_analysis(&workload, &data.view());
         assert!(result.is_ok());
 
-        let report = result.unwrap();
+        let report = result.expect("Operation failed");
         assert!(report.optimization_score >= 0.0 && report.optimization_score <= 1.0);
         assert!(report.confidence >= 0.0 && report.confidence <= 1.0);
         assert!(!report.recommendations.is_empty());

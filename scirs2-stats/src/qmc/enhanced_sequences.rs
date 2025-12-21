@@ -387,7 +387,7 @@ where
                 }
             }
 
-            point[dim] = F::from(result as f64 / (1u64 << 32) as f64).unwrap();
+            point[dim] = F::from(result as f64 / (1u64 << 32) as f64).expect("Operation failed");
         }
 
         Ok(point)
@@ -406,7 +406,7 @@ where
         for dim in 0..self.dimension {
             // Use prime base for this dimension
             let base = self.get_prime(dim);
-            point[dim] = F::from(self.radical_inverse(index, base)).unwrap();
+            point[dim] = F::from(self.radical_inverse(index, base)).expect("Operation failed");
         }
 
         Ok(point)
@@ -424,7 +424,7 @@ where
         let base = self.smallest_prime_geq(self.dimension as u32);
 
         for dim in 0..self.dimension {
-            point[dim] = F::from(self.radical_inverse(index, base)).unwrap();
+            point[dim] = F::from(self.radical_inverse(index, base)).expect("Operation failed");
         }
 
         Ok(point)
@@ -621,7 +621,7 @@ where
         for _ in 0..num_test_points {
             let mut test_point = Array1::zeros(d);
             for j in 0..d {
-                test_point[j] = F::from(rng.random::<f64>()).unwrap();
+                test_point[j] = F::from(rng.random::<f64>()).expect("Operation failed");
             }
 
             let mut count = 0;
@@ -639,7 +639,7 @@ where
             }
 
             let volume: F = test_point.iter().fold(F::one(), |acc, &x| acc * x);
-            let expected = volume.to_f64().unwrap() * n as f64;
+            let expected = volume.to_f64().expect("Operation failed") * n as f64;
             let discrepancy = (count as f64 - expected).abs() / n as f64;
             max_discrepancy = max_discrepancy.max(discrepancy);
         }

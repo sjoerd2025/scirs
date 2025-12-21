@@ -134,7 +134,7 @@ impl WeightInitializer {
         let std_dev = (1.0 / fan_in as f64).sqrt();
         Array::random_bulk(
             Ix2(fan_out, fan_in),
-            Normal::new(0.0, std_dev).unwrap(),
+            Normal::new(0.0, std_dev).expect("Operation failed"),
             &mut rng,
         )
     }
@@ -144,7 +144,7 @@ impl WeightInitializer {
         let mut rng = seeded_rng(seed);
         Array::random_bulk(
             Ix2(fan_out, fan_in),
-            Uniform::new(-limit, limit).unwrap(),
+            Uniform::new(-limit, limit).expect("Operation failed"),
             &mut rng,
         )
     }
@@ -166,7 +166,7 @@ impl WeightInitializer {
         // Generate random matrix
         let random_matrix = Array::random_bulk(
             Ix2(fan_out, fan_in),
-            Normal::new(0.0, 1.0).unwrap(),
+            Normal::new(0.0, 1.0).expect("Operation failed"),
             &mut rng,
         );
 
@@ -266,7 +266,7 @@ impl DataAugmentor {
     /// Add Gaussian noise to data
     pub fn add_noise(&self, data: &Array1<f64>, noise_std: f64) -> Array1<f64> {
         let mut rng = seeded_rng(self.seed);
-        let noise_dist = Normal::new(0.0, noise_std).unwrap();
+        let noise_dist = Normal::new(0.0, noise_std).expect("Operation failed");
 
         data + &Array::random_bulk(data.raw_dim(), noise_dist, &mut rng)
     }
@@ -277,7 +277,7 @@ impl DataAugmentor {
         let keep_prob = 1.0 - dropout_rate;
 
         data.mapv(|x| {
-            if rng.sample(Uniform::new(0.0, 1.0).unwrap()) < keep_prob {
+            if rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) < keep_prob {
                 x / keep_prob // Scale to maintain expected value
             } else {
                 0.0
@@ -288,7 +288,8 @@ impl DataAugmentor {
     /// Random scaling augmentation
     pub fn random_scale(&self, data: &Array1<f64>, scale_range: (f64, f64)) -> Array1<f64> {
         let mut rng = seeded_rng(self.seed);
-        let scale_factor = rng.sample(Uniform::new(scale_range.0, scale_range.1).unwrap());
+        let scale_factor =
+            rng.sample(Uniform::new(scale_range.0, scale_range.1).expect("Operation failed"));
         data * scale_factor
     }
 
@@ -299,7 +300,7 @@ impl DataAugmentor {
         }
 
         let mut rng = seeded_rng(self.seed);
-        let angle = rng.sample(Uniform::new(-max_angle, max_angle).unwrap());
+        let angle = rng.sample(Uniform::new(-max_angle, max_angle).expect("Operation failed"));
 
         let cos_angle = angle.cos();
         let sin_angle = angle.sin();
@@ -399,7 +400,8 @@ pub mod hyperopt {
                     self.param_ranges
                         .iter()
                         .map(|(name, (min, max))| {
-                            let value = rng.sample(Uniform::new(*min, *max).unwrap());
+                            let value =
+                                rng.sample(Uniform::new(*min, *max).expect("Operation failed"));
                             (name.clone(), value)
                         })
                         .collect()
@@ -536,7 +538,7 @@ pub mod active_learning {
             n_samples: usize,
         ) -> Vec<T> {
             let mut scored_candidates = candidates.to_vec();
-            scored_candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+            scored_candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
             scored_candidates
                 .into_iter()

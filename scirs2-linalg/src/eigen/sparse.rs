@@ -82,7 +82,7 @@ pub trait SparseMatrix<F> {
 ///
 /// // This is a placeholder example - actual implementation pending
 /// // let sparsematrix = create_sparsematrix();
-/// // let (w, v) = lanczos(&sparsematrix, 5, "largest", 0.0, 100, 1e-6).unwrap();
+/// // let (w, v) = lanczos(&sparsematrix, 5, "largest", 0.0, 100, 1e-6).expect("Operation failed");
 /// ```
 ///
 /// # Note
@@ -122,7 +122,7 @@ where
     // Random initial vector
     let mut rng = scirs2_core::random::rng();
     for i in 0..n {
-        v_curr[i] = F::from(rng.random::<f64>()).unwrap();
+        v_curr[i] = F::from(rng.random::<f64>()).expect("Operation failed");
     }
 
     // Normalize initial vector
@@ -204,7 +204,7 @@ fn check_lanczos_convergence<F: Float>(_alpha: &[F], beta: &[F], k: usize, tol: 
     let recent_betas = &beta[beta.len().saturating_sub(k)..];
     recent_betas
         .iter()
-        .all(|&b| b < tol * F::from(10.0).unwrap())
+        .all(|&b| b < tol * F::from(10.0).expect("Operation failed"))
 }
 
 // Helper function to solve tridiagonal eigenvalue problem
@@ -268,7 +268,7 @@ fn qr_algorithm_tridiagonal<F: Float + NumAssign + Sum + 'static>(
     let mut q_total = Array2::<F>::eye(n);
 
     let max_iterations = 1000;
-    let tolerance = F::from(1e-12).unwrap();
+    let tolerance = F::from(1e-12).expect("Operation failed");
 
     for _iter in 0..max_iterations {
         // Check for convergence
@@ -310,7 +310,7 @@ fn qr_decomposition_tridiagonal<F: Float + NumAssign + Sum>(
         let a = r[[i, i]];
         let b = r[[i + 1, i]];
 
-        if b.abs() > F::from(1e-15).unwrap() {
+        if b.abs() > F::from(1e-15).expect("Operation failed") {
             let (c, s) = givens_rotation(a, b);
 
             // Apply rotation to R
@@ -327,7 +327,7 @@ fn qr_decomposition_tridiagonal<F: Float + NumAssign + Sum>(
 // Helper function for Givens rotation
 #[allow(dead_code)]
 fn givens_rotation<F: Float>(a: F, b: F) -> (F, F) {
-    if b.abs() < F::from(1e-15).unwrap() {
+    if b.abs() < F::from(1e-15).expect("Operation failed") {
         (F::one(), F::zero())
     } else {
         let r = (a * a + b * b).sqrt();
@@ -387,21 +387,21 @@ fn select_eigenvalues<F: Float>(
 
     match which {
         "largest" | "LM" => {
-            indices_and_values.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+            indices_and_values.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         }
         "smallest" | "SM" => {
-            indices_and_values.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            indices_and_values.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
         }
         "target" | "nearest" => {
             indices_and_values.sort_by(|a, b| {
                 let dist_a = (a.1 - target).abs();
                 let dist_b = (b.1 - target).abs();
-                dist_a.partial_cmp(&dist_b).unwrap()
+                dist_a.partial_cmp(&dist_b).expect("Operation failed")
             });
         }
         _ => {
             // Default to largest
-            indices_and_values.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+            indices_and_values.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         }
     }
 
@@ -437,7 +437,7 @@ fn select_eigenvalues<F: Float>(
 ///
 /// // This is a placeholder example - actual implementation pending
 /// // let sparsematrix = create_sparsematrix();
-/// // let (w, v) = arnoldi(&sparsematrix, 3, 1.5, 100, 1e-6).unwrap();
+/// // let (w, v) = arnoldi(&sparsematrix, 3, 1.5, 100, 1e-6).expect("Operation failed");
 /// ```
 ///
 /// # Note
@@ -479,7 +479,7 @@ where
     // Random initial vector
     let mut rng = scirs2_core::random::rng();
     for v_elem in &mut v_vectors[0] {
-        *v_elem = F::from(rng.random::<f64>()).unwrap();
+        *v_elem = F::from(rng.random::<f64>()).expect("Operation failed");
     }
 
     // Normalize initial vector
@@ -589,7 +589,7 @@ fn check_arnoldi_convergence<F: Float>(hmatrix: &Array2<F>, m: usize, k: usize, 
         let row = m - 1 - i;
         let col = m - 2 - i;
         if row < hmatrix.nrows() && col < hmatrix.ncols() {
-            hmatrix[[row, col]].abs() < tol * F::from(10.0).unwrap()
+            hmatrix[[row, col]].abs() < tol * F::from(10.0).expect("Operation failed")
         } else {
             true
         }
@@ -626,7 +626,7 @@ fn qr_algorithm_complex<F: Float + NumAssign + Sum + 'static>(
     let mut q_total = Array2::<Complex<F>>::eye(n);
 
     let max_iterations = 1000;
-    let tolerance = F::from(1e-12).unwrap();
+    let tolerance = F::from(1e-12).expect("Operation failed");
 
     for _iter in 0..max_iterations {
         // Check for convergence (simplified)
@@ -707,7 +707,7 @@ fn householder_vector_complex<F: Float + NumAssign + Sum>(
         v.mapv_inplace(|z| z / norm_v);
     }
 
-    let tau = Complex::new(F::from(2.0).unwrap(), F::zero());
+    let tau = Complex::new(F::from(2.0).expect("Operation failed"), F::zero());
 
     (v, tau)
 }
@@ -776,14 +776,14 @@ fn select_closest_real_eigenvalues<F: Float>(
     let mut real_eigenvals: Vec<(usize, F)> = eigenvals
         .iter()
         .enumerate()
-        .filter(|(_, z)| z.im.abs() < F::from(1e-10).unwrap())
+        .filter(|(_, z)| z.im.abs() < F::from(1e-10).expect("Operation failed"))
         .map(|(i, z)| (i, z.re))
         .collect();
 
     real_eigenvals.sort_by(|a, b| {
         let dist_a = (a.1 - target).abs();
         let dist_b = (b.1 - target).abs();
-        dist_a.partial_cmp(&dist_b).unwrap()
+        dist_a.partial_cmp(&dist_b).expect("Operation failed")
     });
 
     real_eigenvals
@@ -808,7 +808,7 @@ fn select_closest_complex_eigenvalues<F: Float>(
         })
         .collect();
 
-    eigenvals_with_dist.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    eigenvals_with_dist.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
     eigenvals_with_dist
         .into_iter()
@@ -842,7 +842,7 @@ fn select_closest_complex_eigenvalues<F: Float>(
 /// use scirs2_linalg::eigen::sparse::{eigs_gen, SparseMatrix};
 ///
 /// // This is a placeholder example - actual implementation pending
-/// // let (w, v) = eigs_gen(&sparse_a, &sparse_b, 4, "smallest", 0.0, 100, 1e-6).unwrap();
+/// // let (w, v) = eigs_gen(&sparse_a, &sparse_b, 4, "smallest", 0.0, 100, 1e-6).expect("Operation failed");
 /// ```
 ///
 /// # Note
@@ -892,7 +892,7 @@ where
 /// use scirs2_linalg::eigen::sparse::{svds, SparseMatrix};
 ///
 /// // This is a placeholder example - actual implementation pending
-/// // let (s, u, vt) = svds(&sparsematrix, 6, "largest", 100, 1e-6).unwrap();
+/// // let (s, u, vt) = svds(&sparsematrix, 6, "largest", 100, 1e-6).expect("Operation failed");
 /// ```
 ///
 /// # Note
@@ -938,7 +938,7 @@ where
 ///
 /// // This is a placeholder example - actual implementation pending
 /// // let dense = Array2::eye(1000);
-/// // let sparse = dense_to_sparse(&dense.view(), 1e-12).unwrap();
+/// // let sparse = dense_to_sparse(&dense.view(), 1e-12).expect("Operation failed");
 /// ```
 ///
 /// # Note

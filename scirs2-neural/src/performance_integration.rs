@@ -249,7 +249,7 @@ impl UnifiedPerformanceManager {
             energy_limit: None,
             batch_size: a.shape()[0],
         let results = self.execute_optimized("matmul", &[a, b], context)?;
-        Ok(results.into_iter().next().unwrap())
+        Ok(results.into_iter().next().expect("Operation failed"))
     /// Execute convolution with best available optimization
     pub fn optimized_conv2d(
         input: &ArrayD<f32>,
@@ -391,7 +391,7 @@ impl UnifiedPerformanceManager {
             OptimizationChoice::TPU => {
                 if self.tpu_runtime.is_some() {
                     let tpu_op = self.convert_to_tpu_operation(operation_type)?;
-                    let results = self.tpu_runtime.as_mut().unwrap().compile_and_execute(&tpu_op, inputs)?;
+                    let results = self.tpu_runtime.as_mut().expect("Operation failed").compile_and_execute(&tpu_op, inputs)?;
                     Ok(results
                         .into_iter()
                         .map(|arr| arr.mapv(|x| F::from(x).unwrap_or(F::zero())))
@@ -793,7 +793,7 @@ impl PerformanceMonitor {
             *strategy_performance
                 .or_insert(0.0) += score;
         strategy_performance
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
     /// Get unified statistics
     pub fn get_unified_stats(&self) -> UnifiedStats {
         let total_operations = self.total_operations;
@@ -901,7 +901,7 @@ mod tests {
         assert_eq!(format!("{}", OptimizationChoice::JIT), "JIT Compiled");
         assert_eq!(format!("{}", OptimizationChoice::TPU), "TPU");
     fn test_operation_size_estimation() {
-        let manager = UnifiedPerformanceManager::new().unwrap();
+        let manager = UnifiedPerformanceManager::new().expect("Operation failed");
         let size = manager.estimate_operation_size(&context);
         assert_eq!(size, 100 * 200 + 200 * 150 + 100 * 150); // inputs + outputs
     fn test_serial_matmul() {
@@ -909,6 +909,6 @@ mod tests {
         let b = Array::ones((4, 5)).into_dyn();
         let result = manager.serial_matmul(&a, &b);
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert_eq!(result.shape(), &[3, 5]);
         assert_eq!(result[[0, 0]], 4.0); // sum of 1*1 for 4 elements

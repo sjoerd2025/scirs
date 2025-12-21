@@ -526,7 +526,7 @@ where
                 let ratio = rsnew / previous_residual;
 
                 // If progress is slow for multiple iterations, we might need to reset
-                if ratio > F::from(0.9).unwrap() {
+                if ratio > F::from(0.9).expect("Operation failed") {
                     successive_slow_progress += 1;
                 } else {
                     successive_slow_progress = 0;
@@ -769,13 +769,13 @@ mod tests {
             &matrix.view(),
             8,
             QuantizationMethod::Symmetric,
-            file_path.to_str().unwrap(),
+            file_path.to_str().expect("Operation failed"),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0f32, 2.0, 3.0];
-        let y = chunked.apply(&x.view()).unwrap();
+        let y = chunked.apply(&x.view()).expect("Operation failed");
 
         // Compute expected result with regular matrix multiplication
         let expected = matrix.dot(&x);
@@ -803,16 +803,18 @@ mod tests {
             &matrix.view(),
             8,
             QuantizationMethod::Symmetric,
-            file_path.to_str().unwrap(),
+            file_path.to_str().expect("Operation failed"),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Load the chunked quantized matrix from file
-        let loaded = ChunkedQuantizedMatrix::from_file(file_path.to_str().unwrap()).unwrap();
+        let loaded =
+            ChunkedQuantizedMatrix::from_file(file_path.to_str().expect("Operation failed"))
+                .expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0f32, 2.0, 3.0];
-        let y = loaded.apply(&x.view()).unwrap();
+        let y = loaded.apply(&x.view()).expect("Operation failed");
 
         // Compute expected result with regular matrix multiplication
         let expected = matrix.dot(&x);
@@ -840,9 +842,9 @@ mod tests {
             &matrix.view(),
             8,
             QuantizationMethod::Symmetric,
-            file_path.to_str().unwrap(),
+            file_path.to_str().expect("Operation failed"),
         )
-        .unwrap()
+        .expect("Operation failed")
         .symmetric()
         .positive_definite();
 
@@ -852,7 +854,7 @@ mod tests {
         // Solve using out-of-core conjugate gradient
         let x = chunked
             .solve_conjugate_gradient(&b, 100, 1e-6, false)
-            .unwrap();
+            .expect("Operation failed");
 
         // Compute residual
         let ax = matrix.dot(&x);

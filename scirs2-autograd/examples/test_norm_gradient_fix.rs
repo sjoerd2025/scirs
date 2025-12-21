@@ -13,7 +13,7 @@ fn main() {
         let norm = frobenius_norm(matrix);
 
         // Expected norm: sqrt(3^2 + 4^2) = 5.0
-        let norm_result = norm.eval(ctx).unwrap();
+        let norm_result = norm.eval(ctx).expect("Operation failed");
         println!("Frobenius norm result: {}", norm_result[[]]);
         assert!(
             (norm_result[[]] - 5.0).abs() < 1e-6,
@@ -23,7 +23,7 @@ fn main() {
         // Test gradient
         let grads = grad(&[norm], &[matrix]);
         let grad_tensor = &grads[0];
-        let grad_result = grad_tensor.eval(ctx).unwrap();
+        let grad_result = grad_tensor.eval(ctx).expect("Operation failed");
         // Expected gradient: [3/5, 4/5; 0, 0] = [0.6, 0.8; 0, 0]
         println!("Gradient: {:.6}", grad_result);
         assert!(
@@ -50,7 +50,7 @@ fn main() {
         let spec_norm = spectral_norm(&diag_matrix);
 
         // Expected spectral norm: max(5, 3) = 5.0
-        let spec_result = spec_norm.eval(ctx).unwrap();
+        let spec_result = spec_norm.eval(ctx).expect("Operation failed");
         println!("Spectral norm result: {}", spec_result[[]]);
         assert!(
             (spec_result[[]] - 5.0).abs() < 1e-3,
@@ -60,7 +60,7 @@ fn main() {
         // Test gradient
         let spec_grads = grad(&[spec_norm], &[diag_matrix]);
         let grad_tensor = &spec_grads[0];
-        let grad_result = grad_tensor.eval(ctx).unwrap();
+        let grad_result = grad_tensor.eval(ctx).expect("Operation failed");
         // Expected gradient: [1, 0; 0, 0] (derivative w.r.t. largest element)
         println!("Spectral gradient: {:.6}", grad_result);
         assert!(
@@ -87,7 +87,7 @@ fn main() {
         let nuc_norm = nuclear_norm(&diag_matrix2);
 
         // Expected nuclear norm: |2| + |-3| = 5.0
-        let nuc_result = nuc_norm.eval(ctx).unwrap();
+        let nuc_result = nuc_norm.eval(ctx).expect("Operation failed");
         println!("Nuclear norm result: {}", nuc_result[[]]);
         assert!(
             (nuc_result[[]] - 5.0).abs() < 1e-6,
@@ -97,7 +97,7 @@ fn main() {
         // Test gradient
         let nuc_grads = grad(&[nuc_norm], &[diag_matrix2]);
         let grad_tensor = &nuc_grads[0];
-        let grad_result = grad_tensor.eval(ctx).unwrap();
+        let grad_result = grad_tensor.eval(ctx).expect("Operation failed");
         // Expected gradient: sign(diag) = [1, 0; 0, -1]
         println!("Nuclear gradient: {:.6}", grad_result);
         assert!(

@@ -204,7 +204,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> TemporalGraph<N, E
                             edge.target.clone(),
                             edge.weight.clone(),
                         )
-                        .unwrap();
+                        .expect("Test: operation failed");
                 }
             }
         }
@@ -343,7 +343,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> TemporalGraph<N, E
         });
 
         while let Some(current_path) = queue.pop_front() {
-            let current_node = current_path.nodes.last().unwrap();
+            let current_node = current_path.nodes.last().expect("Operation failed");
 
             if current_node == target {
                 paths.push(current_path);
@@ -495,7 +495,8 @@ where
                 for path in &paths {
                     for k in 1..(path.nodes.len() - 1) {
                         let intermediate = &path.nodes[k];
-                        *centrality.get_mut(intermediate).unwrap() += 1.0 / paths.len() as f64;
+                        *centrality.get_mut(intermediate).expect("Operation failed") +=
+                            1.0 / paths.len() as f64;
                     }
                 }
             }
@@ -521,7 +522,7 @@ mod tests {
 
     #[test]
     fn test_time_interval() {
-        let interval = TimeInterval::new(100, 200).unwrap();
+        let interval = TimeInterval::new(100, 200).expect("Operation failed");
 
         assert_eq!(interval.duration(), 100);
         assert!(interval.contains(TimeInstant::new(150)));
@@ -534,14 +535,16 @@ mod tests {
 
     #[test]
     fn test_interval_overlap() {
-        let interval1 = TimeInterval::new(100, 200).unwrap();
-        let interval2 = TimeInterval::new(150, 250).unwrap();
-        let interval3 = TimeInterval::new(300, 400).unwrap();
+        let interval1 = TimeInterval::new(100, 200).expect("Operation failed");
+        let interval2 = TimeInterval::new(150, 250).expect("Operation failed");
+        let interval3 = TimeInterval::new(300, 400).expect("Operation failed");
 
         assert!(interval1.overlaps(&interval2));
         assert!(!interval1.overlaps(&interval3));
 
-        let intersection = interval1.intersection(&interval2).unwrap();
+        let intersection = interval1
+            .intersection(&interval2)
+            .expect("Operation failed");
         assert_eq!(intersection.start.time, 150);
         assert_eq!(intersection.end.time, 200);
 
@@ -552,14 +555,16 @@ mod tests {
     fn test_temporal_graph_creation() {
         let mut tgraph: TemporalGraph<&str, f64> = TemporalGraph::new();
 
-        let interval1 = TimeInterval::new(0, 100).unwrap();
-        let interval2 = TimeInterval::new(50, 150).unwrap();
+        let interval1 = TimeInterval::new(0, 100).expect("Operation failed");
+        let interval2 = TimeInterval::new(50, 150).expect("Operation failed");
 
         tgraph.add_node("A", interval1);
         tgraph.add_node("B", interval2);
 
-        let edge_interval = TimeInterval::new(60, 90).unwrap();
-        tgraph.add_edge("A", "B", 1.0, edge_interval).unwrap();
+        let edge_interval = TimeInterval::new(60, 90).expect("Operation failed");
+        tgraph
+            .add_edge("A", "B", 1.0, edge_interval)
+            .expect("Operation failed");
 
         // Test snapshot at different times
         let snapshot_at_70 = tgraph.snapshot_at(TimeInstant::new(70));
@@ -575,12 +580,14 @@ mod tests {
     fn test_temporal_connectivity() {
         let mut tgraph: TemporalGraph<i32, f64> = TemporalGraph::new();
 
-        let node_interval = TimeInterval::new(0, 200).unwrap();
+        let node_interval = TimeInterval::new(0, 200).expect("Operation failed");
         tgraph.add_node(1, node_interval);
         tgraph.add_node(2, node_interval);
 
-        let edge_interval = TimeInterval::new(50, 150).unwrap();
-        tgraph.add_edge(1, 2, 1.0, edge_interval).unwrap();
+        let edge_interval = TimeInterval::new(50, 150).expect("Operation failed");
+        tgraph
+            .add_edge(1, 2, 1.0, edge_interval)
+            .expect("Operation failed");
 
         // Test connectivity at different times
         assert!(!tgraph.are_connected_at(&1, &2, TimeInstant::new(30)));
@@ -592,11 +599,13 @@ mod tests {
     fn test_change_times() {
         let mut tgraph: TemporalGraph<&str, f64> = TemporalGraph::new();
 
-        let interval1 = TimeInterval::new(0, 100).unwrap();
-        let interval2 = TimeInterval::new(50, 150).unwrap();
+        let interval1 = TimeInterval::new(0, 100).expect("Operation failed");
+        let interval2 = TimeInterval::new(50, 150).expect("Operation failed");
 
         tgraph.add_node("A", interval1);
-        tgraph.add_edge("A", "B", 1.0, interval2).unwrap();
+        tgraph
+            .add_edge("A", "B", 1.0, interval2)
+            .expect("Operation failed");
 
         let change_times = tgraph.change_times();
         let times: Vec<u64> = change_times.iter().map(|t| t.time).collect();
@@ -611,21 +620,36 @@ mod tests {
     fn test_temporal_reachability() {
         let mut tgraph: TemporalGraph<i32, f64> = TemporalGraph::new();
 
-        let node_interval = TimeInterval::new(0, 300).unwrap();
+        let node_interval = TimeInterval::new(0, 300).expect("Operation failed");
         for i in 1..=4 {
             tgraph.add_node(i, node_interval);
         }
 
         // Create a temporal path: 1 -> 2 -> 3 -> 4
         tgraph
-            .add_edge(1, 2, 1.0, TimeInterval::new(10, 50).unwrap())
-            .unwrap();
+            .add_edge(
+                1,
+                2,
+                1.0,
+                TimeInterval::new(10, 50).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
         tgraph
-            .add_edge(2, 3, 1.0, TimeInterval::new(60, 100).unwrap())
-            .unwrap();
+            .add_edge(
+                2,
+                3,
+                1.0,
+                TimeInterval::new(60, 100).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
         tgraph
-            .add_edge(3, 4, 1.0, TimeInterval::new(110, 150).unwrap())
-            .unwrap();
+            .add_edge(
+                3,
+                4,
+                1.0,
+                TimeInterval::new(110, 150).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
 
         let reachable = temporal_reachability(&tgraph, &1, TimeInstant::new(0), 200);
 
@@ -647,21 +671,36 @@ mod tests {
     fn test_temporal_paths() {
         let mut tgraph: TemporalGraph<&str, f64> = TemporalGraph::new();
 
-        let node_interval = TimeInterval::new(0, 200).unwrap();
+        let node_interval = TimeInterval::new(0, 200).expect("Operation failed");
         for &node in &["A", "B", "C"] {
             tgraph.add_node(node, node_interval);
         }
 
         // Direct path and indirect path
         tgraph
-            .add_edge("A", "C", 1.0, TimeInterval::new(10, 50).unwrap())
-            .unwrap();
+            .add_edge(
+                "A",
+                "C",
+                1.0,
+                TimeInterval::new(10, 50).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
         tgraph
-            .add_edge("A", "B", 1.0, TimeInterval::new(20, 60).unwrap())
-            .unwrap();
+            .add_edge(
+                "A",
+                "B",
+                1.0,
+                TimeInterval::new(20, 60).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
         tgraph
-            .add_edge("B", "C", 1.0, TimeInterval::new(70, 110).unwrap())
-            .unwrap();
+            .add_edge(
+                "B",
+                "C",
+                1.0,
+                TimeInterval::new(70, 110).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
 
         let paths = tgraph.temporal_paths(&"A", &"C", TimeInstant::new(0), 150);
 
@@ -678,17 +717,27 @@ mod tests {
     fn test_edge_count_at_time() {
         let mut tgraph: TemporalGraph<i32, f64> = TemporalGraph::new();
 
-        let node_interval = TimeInterval::new(0, 200).unwrap();
+        let node_interval = TimeInterval::new(0, 200).expect("Operation failed");
         tgraph.add_node(1, node_interval);
         tgraph.add_node(2, node_interval);
         tgraph.add_node(3, node_interval);
 
         tgraph
-            .add_edge(1, 2, 1.0, TimeInterval::new(10, 50).unwrap())
-            .unwrap();
+            .add_edge(
+                1,
+                2,
+                1.0,
+                TimeInterval::new(10, 50).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
         tgraph
-            .add_edge(2, 3, 1.0, TimeInterval::new(30, 70).unwrap())
-            .unwrap();
+            .add_edge(
+                2,
+                3,
+                1.0,
+                TimeInterval::new(30, 70).expect("Operation failed"),
+            )
+            .expect("Test: operation failed");
 
         assert_eq!(tgraph.edge_count_at(TimeInstant::new(5)), 0);
         assert_eq!(tgraph.edge_count_at(TimeInstant::new(40)), 2);

@@ -72,7 +72,10 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> HistoryBuffer<F>
             .iter()
             .rev()
             .take(n)
-            .map(|dp| (dp.true_value - dp.predicted_value).abs() < F::from(0.001).unwrap())
+            .map(|dp| {
+                (dp.true_value - dp.predicted_value).abs()
+                    < F::from(0.001).expect("Failed to convert constant to float")
+            })
             .collect()
     }
 
@@ -90,7 +93,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> HistoryBuffer<F>
             .collect();
 
         let sum = recent_errors.iter().cloned().sum::<F>();
-        Some(sum / F::from(window).unwrap())
+        Some(sum / F::from(window).expect("Failed to convert to float"))
     }
 
     pub fn calculate_moving_variance(&self, window: usize) -> Option<F> {
@@ -106,12 +109,13 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> HistoryBuffer<F>
             .map(|dp| dp.error)
             .collect();
 
-        let mean = recent_errors.iter().cloned().sum::<F>() / F::from(window).unwrap();
+        let mean = recent_errors.iter().cloned().sum::<F>()
+            / F::from(window).expect("Failed to convert to float");
         let variance = recent_errors
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .sum::<F>()
-            / F::from(window - 1).unwrap();
+            / F::from(window - 1).expect("Failed to convert to float");
 
         Some(variance)
     }
@@ -131,9 +135,10 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> HistoryBuffer<F>
         }
 
         let errors: Vec<F> = self.data.iter().map(|dp| dp.error).collect();
-        let mean = errors.iter().cloned().sum::<F>() / F::from(errors.len()).unwrap();
+        let mean =
+            errors.iter().cloned().sum::<F>() / F::from(errors.len()).expect("Operation failed");
         let variance = errors.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-            / F::from(errors.len() - 1).unwrap();
+            / F::from(errors.len() - 1).expect("Operation failed");
         let std_dev = variance.sqrt();
 
         self.data

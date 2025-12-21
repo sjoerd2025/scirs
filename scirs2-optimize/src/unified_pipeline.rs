@@ -835,12 +835,12 @@ mod tests {
 
         // Create optimizer without MPI for testing
         let mut optimizer: UnifiedOptimizer<crate::distributed::MockMPI> =
-            UnifiedOptimizer::new(config, None).unwrap();
+            UnifiedOptimizer::new(config, None).expect("Operation failed");
 
         // Register tunable parameters
         optimizer
             .register_tunable_parameter("step_size", TunableParameter::new(0.01, 0.001, 0.1))
-            .unwrap();
+            .expect("Operation failed");
 
         // This would run the actual optimization in a full test
         // For now, just test that the setup works

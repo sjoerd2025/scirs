@@ -1048,7 +1048,7 @@ impl MechanicalIntegrator {
         }
 
         let initial_energy = self.energy_history[0];
-        let current_energy = *self.energy_history.last().unwrap();
+        let current_energy = *self.energy_history.last().expect("Operation failed");
         let relative_drift = (current_energy - initial_energy).abs() / initial_energy.max(1e-12);
 
         let max_energy = self
@@ -1360,7 +1360,7 @@ mod tests {
 
         let mut integrator = MechanicalIntegrator::new(config, properties);
 
-        let result = integrator.step(0.0, &state).unwrap();
+        let result = integrator.step(0.0, &state).expect("Operation failed");
 
         // After one time step, position should have changed
         assert!(result.state.position[0] > 0.0);
@@ -1385,7 +1385,9 @@ mod tests {
 
         // Integrate for several steps
         for i in 0..100 {
-            let result = integrator.step(i as f64 * 0.001, &current_state).unwrap();
+            let result = integrator
+                .step(i as f64 * 0.001, &current_state)
+                .expect("Operation failed");
             current_state = result.state;
         }
 

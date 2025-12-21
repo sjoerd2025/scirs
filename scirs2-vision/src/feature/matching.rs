@@ -561,7 +561,7 @@ impl KdTree {
         if points.len() == 1 {
             let axis = depth % points[0].1.len();
             return Self {
-                point: Some(points.into_iter().next().unwrap()),
+                point: Some(points.into_iter().next().expect("Operation failed")),
                 axis,
                 left: None,
                 right: None,
@@ -614,7 +614,7 @@ impl KdTree {
                         a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)
                     })
                     .map(|(i_, _)| i_)
-                    .unwrap();
+                    .expect("Operation failed");
 
                 if distance < neighbors[max_idx].1 {
                     neighbors[max_idx] = (*idx, distance);
@@ -1705,7 +1705,9 @@ mod tests {
         let (desc1, desc2) = create_test_descriptors();
         let matcher = BruteForceMatcher::new_default();
 
-        let matches = matcher.match_descriptors(&desc1, &desc2).unwrap();
+        let matches = matcher
+            .match_descriptors(&desc1, &desc2)
+            .expect("Operation failed");
         assert!(!matches.is_empty());
 
         // Check that we have valid matches
@@ -1727,7 +1729,9 @@ mod tests {
         };
         let matcher = BruteForceMatcher::new(config);
 
-        let dist = matcher.compute_distance(&vec1, &vec2).unwrap();
+        let dist = matcher
+            .compute_distance(&vec1, &vec2)
+            .expect("Operation failed");
         assert!(dist > 0.0);
 
         let config = BruteForceConfig {
@@ -1736,7 +1740,9 @@ mod tests {
         };
         let matcher = BruteForceMatcher::new(config);
 
-        let dist = matcher.compute_distance(&vec1, &vec2).unwrap();
+        let dist = matcher
+            .compute_distance(&vec1, &vec2)
+            .expect("Operation failed");
         assert!(dist > 0.0);
     }
 
@@ -1745,7 +1751,9 @@ mod tests {
         let (desc1, desc2) = create_test_descriptors();
         let matcher = RatioTestMatcher::new_default();
 
-        let matches = matcher.match_descriptors(&desc1, &desc2).unwrap();
+        let matches = matcher
+            .match_descriptors(&desc1, &desc2)
+            .expect("Operation failed");
 
         // All returned matches should pass the ratio test
         for m in &matches {

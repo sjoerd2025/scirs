@@ -192,7 +192,6 @@ impl NumericalStabilityTester {
     }
 
     /// Test basic statistical functions for numerical stability
-    #[ignore = "timeout"]
     fn test_basic_statistics(&mut self) {
         // Test mean with various data types
         self.test_mean_stability();
@@ -307,7 +306,7 @@ impl NumericalStabilityTester {
 
         // Test with normal-like data (kurtosis should be near 3)
         let normaldata: Vec<f64> = (0..10000).map(|_| {
-            let normal = Normal::new(0.0, 1.0).unwrap();
+            let normal = Normal::new(0.0, 1.0).expect("Operation failed");
             normal.sample(&mut self.rng)
         }).collect();
         
@@ -1008,7 +1007,7 @@ mod tests {
     fn test_stable_mean_with_cancellation() {
         // Test mean with potential cancellation issues
         let data = vec![1e15, -1e15, 1.0, 2.0, 3.0];
-        let result = NumericalStabilityFixes::stable_mean(&data).unwrap();
+        let result = NumericalStabilityFixes::stable_mean(&data).expect("Operation failed");
         let expected = 6.0 / 5.0; // (0 + 1 + 2 + 3) / 5
         assert!((result - expected).abs() < 1e-10);
     }
@@ -1016,7 +1015,7 @@ mod tests {
     #[test]
     fn test_stable_variance() {
         let data = vec![1e12, 1e12 + 1.0, 1e12 + 2.0, 1e12 + 3.0];
-        let result = NumericalStabilityFixes::stable_variance(&data, 1).unwrap();
+        let result = NumericalStabilityFixes::stable_variance(&data, 1).expect("Operation failed");
         assert!(result > 0.0 && result.is_finite());
     }
 
@@ -1024,7 +1023,7 @@ mod tests {
     fn test_stable_correlation() {
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
-        let result = NumericalStabilityFixes::stable_correlation(&x, &y).unwrap();
+        let result = NumericalStabilityFixes::stable_correlation(&x, &y).expect("Operation failed");
         assert!((result - 1.0).abs() < 1e-12);
     }
 
@@ -1061,7 +1060,7 @@ mod tests {
         let x = vec![1e15, 1.0];
         let y = vec![1e-15, 1.0];
         
-        let result = EnhancedPrecisionArithmetic::enhanced_dot_product(&x, &y).unwrap();
+        let result = EnhancedPrecisionArithmetic::enhanced_dot_product(&x, &y).expect("Operation failed");
         let expected = 1.0 + 1.0; // 1e15 * 1e-15 + 1.0 * 1.0 = 1 + 1 = 2
         
         assert!((result - expected).abs() < 1e-10);
@@ -1069,12 +1068,12 @@ mod tests {
 
     #[test]
     fn test_matrix_condition_number() {
-        let well_conditioned = Array2::from_shape_vec((2, 2), vec![4.0, 1.0, 1.0, 3.0]).unwrap();
-        let condition = NumericalStabilityFixes::matrix_condition_number(&well_conditioned).unwrap();
+        let well_conditioned = Array2::from_shape_vec((2, 2), vec![4.0, 1.0, 1.0, 3.0]).expect("Operation failed");
+        let condition = NumericalStabilityFixes::matrix_condition_number(&well_conditioned).expect("Operation failed");
         assert!(condition.is_finite() && condition > 0.0);
         
-        let ill_conditioned = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0001]).unwrap();
-        let condition2 = NumericalStabilityFixes::matrix_condition_number(&ill_conditioned).unwrap();
+        let ill_conditioned = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0001]).expect("Operation failed");
+        let condition2 = NumericalStabilityFixes::matrix_condition_number(&ill_conditioned).expect("Operation failed");
         assert!(condition2 > condition);
     }
 
@@ -1084,6 +1083,6 @@ mod tests {
         
         let result = IntegratedStabilityFixes::enhanced_mean(&problematicdata);
         assert!(result.is_ok());
-        assert!(result.unwrap().is_finite());
+        assert!(result.expect("Operation failed").is_finite());
     }
 }

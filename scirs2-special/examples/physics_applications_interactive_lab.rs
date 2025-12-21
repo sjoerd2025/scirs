@@ -1408,9 +1408,9 @@ fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> 
     let max_idx = intensity
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     println!("\n🎯 First diffraction maximum:");
     println!("   Position: v = {:.2}", t_range[max_idx]);

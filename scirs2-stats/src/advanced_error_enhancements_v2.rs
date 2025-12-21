@@ -593,7 +593,7 @@ impl AdvancedErrorEngine {
             }
         }
 
-        causes.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        causes.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         causes
     }
 
@@ -751,7 +751,7 @@ fn bootstrap_augment(data: &Array1<f64>, targetsize: usize) -> Array1<f64> {
     let mut augmented = Vec::with_capacity(targetsize);
     
     for _ in 0..targetsize {
-        let sample = data.as_slice().unwrap().choose(&mut rng).unwrap();
+        let sample = data.as_slice().expect("Operation failed").choose(&mut rng).expect("Operation failed");
         augmented.push(*sample);
     }
     

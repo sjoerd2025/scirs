@@ -169,7 +169,8 @@ where
                 // Apply range factor
                 let mut range_exp_args = vec![T::zero(); simd_width];
                 for i in 0..simd_width {
-                    range_exp_args[i] = range_diffs_sq.as_slice().unwrap()[i] * range_factor;
+                    range_exp_args[i] =
+                        range_diffs_sq.as_slice().expect("Operation failed")[i] * range_factor;
                 }
 
                 // Compute exponential (approximation for SIMD)
@@ -540,18 +541,34 @@ fn simd_diffusion_row<T>(
         let grad_w = T::simd_sub(&west_array.view(), &center_array.view());
 
         // Compute diffusion coefficients
-        let coeff_n = compute_diffusion_coeff(grad_n.as_slice().unwrap(), kappa_sq, option);
-        let coeff_s = compute_diffusion_coeff(grad_s.as_slice().unwrap(), kappa_sq, option);
-        let coeff_e = compute_diffusion_coeff(grad_e.as_slice().unwrap(), kappa_sq, option);
-        let coeff_w = compute_diffusion_coeff(grad_w.as_slice().unwrap(), kappa_sq, option);
+        let coeff_n = compute_diffusion_coeff(
+            grad_n.as_slice().expect("Operation failed"),
+            kappa_sq,
+            option,
+        );
+        let coeff_s = compute_diffusion_coeff(
+            grad_s.as_slice().expect("Operation failed"),
+            kappa_sq,
+            option,
+        );
+        let coeff_e = compute_diffusion_coeff(
+            grad_e.as_slice().expect("Operation failed"),
+            kappa_sq,
+            option,
+        );
+        let coeff_w = compute_diffusion_coeff(
+            grad_w.as_slice().expect("Operation failed"),
+            kappa_sq,
+            option,
+        );
 
         // Update values
         for i in 0..simd_width {
             if x_start + i < width {
-                let flux = coeff_n[i] * grad_n.as_slice().unwrap()[i]
-                    + coeff_s[i] * grad_s.as_slice().unwrap()[i]
-                    + coeff_e[i] * grad_e.as_slice().unwrap()[i]
-                    + coeff_w[i] * grad_w.as_slice().unwrap()[i];
+                let flux = coeff_n[i] * grad_n.as_slice().expect("Operation failed")[i]
+                    + coeff_s[i] * grad_s.as_slice().expect("Operation failed")[i]
+                    + coeff_e[i] * grad_e.as_slice().expect("Operation failed")[i]
+                    + coeff_w[i] * grad_w.as_slice().expect("Operation failed")[i];
                 output_row[x_start + i] = center_vals[i] + lambda * flux;
             }
         }
@@ -1108,7 +1125,8 @@ mod tests {
     fn test_bilateral_filter() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = simd_bilateral_filter(input.view(), 1.0, 2.0, Some(3)).unwrap();
+        let result =
+            simd_bilateral_filter(input.view(), 1.0, 2.0, Some(3)).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1116,7 +1134,8 @@ mod tests {
     fn test_anisotropic_diffusion() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = simd_anisotropic_diffusion(input.view(), 5, 2.0, 0.1, 1).unwrap();
+        let result =
+            simd_anisotropic_diffusion(input.view(), 5, 2.0, 0.1, 1).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1125,7 +1144,8 @@ mod tests {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
         let guide = input.clone();
 
-        let result = simd_guided_filter(input.view(), guide.view(), 1, 0.1).unwrap();
+        let result =
+            simd_guided_filter(input.view(), guide.view(), 1, 0.1).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1134,8 +1154,8 @@ mod tests {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
         let guide = array![[1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [3.0, 3.0, 3.0]];
 
-        let result =
-            simd_joint_bilateral_filter(input.view(), guide.view(), 1.0, 2.0, Some(3)).unwrap();
+        let result = simd_joint_bilateral_filter(input.view(), guide.view(), 1.0, 2.0, Some(3))
+            .expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1148,7 +1168,7 @@ mod tests {
             [13.0, 14.0, 15.0, 16.0]
         ];
 
-        let result = simd_adaptive_median_filter(input.view(), 5).unwrap();
+        let result = simd_adaptive_median_filter(input.view(), 5).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
         // The outlier should be replaced by a value closer to its neighbors
         assert!(result[(1, 1)] < 20.0);

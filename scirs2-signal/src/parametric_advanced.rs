@@ -562,7 +562,7 @@ fn music_spectrum(
         .map(|(&val, vec)| (val, vec.to_owned()))
         .collect();
 
-    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
     // Split into signal and noise subspaces
     let noise_eigenvectors: Vec<Array1<f64>> = eigen_pairs
@@ -680,7 +680,7 @@ fn esprit_estimation(signal: &Array1<f64>, n_signals: usize) -> SignalResult<Hig
         .map(|(&val, vec)| (val, vec.to_owned()))
         .collect();
 
-    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
     // Signal subspace matrix
     let mut signal_subspace = Array2::zeros((model_order, n_signals));
@@ -853,7 +853,7 @@ mod tests {
         }
 
         let config = AdvancedParametricConfig::default();
-        let result = estimate_var_model(&data, order, &config).unwrap();
+        let result = estimate_var_model(&data, order, &config).expect("Operation failed");
 
         assert_eq!(result.order, order);
         assert_eq!(result.n_vars, n_vars);
@@ -878,7 +878,7 @@ mod tests {
             HighResolutionMethod::MUSIC,
             512,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(result.method, HighResolutionMethod::MUSIC);
         assert_eq!(result.n_signals, 2);
@@ -895,14 +895,14 @@ mod tests {
         let x = Array2::ones((n_regressors, n_obs));
 
         // Test Ridge regression
-        let ridge_result =
-            estimate_var_coefficients(&y, &x, RegularizationMethod::Ridge, 0.1).unwrap();
+        let ridge_result = estimate_var_coefficients(&y, &x, RegularizationMethod::Ridge, 0.1)
+            .expect("Operation failed");
 
         assert_eq!(ridge_result.dim(), (n_regressors, 2));
 
         // Test LASSO regression
-        let lasso_result =
-            estimate_var_coefficients(&y, &x, RegularizationMethod::Lasso, 0.1).unwrap();
+        let lasso_result = estimate_var_coefficients(&y, &x, RegularizationMethod::Lasso, 0.1)
+            .expect("Operation failed");
 
         assert_eq!(lasso_result.dim(), (2, n_regressors)); // LASSO returns different shape than Ridge
     }

@@ -10,6 +10,12 @@ use scirs2_core::numeric::{Float, NumCast};
 use scirs2_core::random::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Gamma distribution structure
 pub struct Gamma<F: Float + Send + Sync> {
     /// Shape parameter (k or α) - determines the shape of the distribution
@@ -40,7 +46,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// ```
     /// use scirs2_stats::distributions::gamma::Gamma;
     ///
-    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).expect("test/example should not fail");
     /// ```
     pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
         if shape <= F::zero() {
@@ -56,8 +62,8 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         }
 
         // Convert to f64 for rand_distr
-        let shape_f64 = <f64 as NumCast>::from(shape).unwrap();
-        let scale_f64 = <f64 as NumCast>::from(scale).unwrap();
+        let shape_f64 = NumCast::from(shape).expect("Failed to convert to f64");
+        let scale_f64 = NumCast::from(scale).expect("Failed to convert to f64");
 
         // rand_distr uses shape and scale parameters directly
         // FIXED: Previous bug passed 1.0/scale_f64 (rate), but rand_distr expects scale
@@ -89,7 +95,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// ```
     /// use scirs2_stats::distributions::gamma::Gamma;
     ///
-    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).expect("test/example should not fail");
     /// let pdf_at_one = gamma.pdf(1.0);
     /// assert!((pdf_at_one - 0.3678794).abs() < 1e-6);
     /// ```
@@ -139,7 +145,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// ```
     /// use scirs2_stats::distributions::gamma::Gamma;
     ///
-    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).expect("test/example should not fail");
     /// let cdf_at_one = gamma.cdf(1.0);
     /// assert!((cdf_at_one - 0.26424).abs() < 1e-5);
     /// ```
@@ -184,8 +190,8 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// ```
     /// use scirs2_stats::distributions::gamma::Gamma;
     ///
-    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
-    /// let x = gamma.ppf(0.5).unwrap();
+    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).expect("test/example should not fail");
+    /// let x = gamma.ppf(0.5).expect("test/example should not fail");
     /// assert!((x - 1.678).abs() < 1e-3);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -205,21 +211,21 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
 
         // For a few common cases where shape is a positive integer
         // we can use exact formulas
-        if self.shape == F::from(1.0).unwrap() {
+        if self.shape == const_f64::<F>(1.0) {
             // For shape=1 (exponential), the quantile is -scale * ln(1-p)
             // For exponential: CDF = 1 - exp(-λx), so x = -ln(1-p)/λ
             let result = -self.scale * (F::one() - p).ln();
             return Ok(result + self.loc);
         }
 
-        if self.shape == F::from(2.0).unwrap() {
+        if self.shape == const_f64::<F>(2.0) {
             // For shape=2, use known values for common cases
-            if p == F::from(0.5).unwrap() && self.scale == F::one() {
-                return Ok(F::from(1.678346).unwrap() + self.loc);
+            if p == const_f64::<F>(0.5) && self.scale == F::one() {
+                return Ok(const_f64::<F>(1.678346) + self.loc);
             }
 
             // For shape=2, simple approximation based on Erlang distribution
-            let result = -self.scale * (F::one() - p.sqrt()).ln() * F::from(2.0).unwrap();
+            let result = -self.scale * (F::one() - p.sqrt()).ln() * const_f64::<F>(2.0);
             return Ok(result + self.loc);
         }
 
@@ -232,7 +238,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         // We use a simple Newton-Raphson iteration
         for _ in 0..20 {
             let cdf_x = self.cdf(x);
-            if (cdf_x - p).abs() < F::from(1e-8).unwrap() {
+            if (cdf_x - p).abs() < const_f64::<F>(1e-8) {
                 return Ok(x);
             }
 
@@ -248,7 +254,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
 
             // Ensure we stay in valid domain
             if x <= self.loc {
-                x = self.loc + F::from(1e-10).unwrap();
+                x = self.loc + const_f64::<F>(1e-10);
             }
         }
 
@@ -270,8 +276,8 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// ```
     /// use scirs2_stats::distributions::gamma::Gamma;
     ///
-    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
-    /// let samples = gamma.rvs(1000).unwrap();
+    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).expect("test/example should not fail");
+    /// let samples = gamma.rvs(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     #[inline]
@@ -295,8 +301,8 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// ```
     /// use scirs2_stats::distributions::gamma::Gamma;
     ///
-    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
-    /// let samples = gamma.rvs_vec(1000).unwrap();
+    /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).expect("test/example should not fail");
+    /// let samples = gamma.rvs_vec(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     #[inline]
@@ -308,7 +314,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
 
             for _ in 0..size {
                 let sample = self.rand_distr.sample(&mut rng);
-                samples.push(F::from(sample).unwrap() + self.loc);
+                samples.push(const_f64::<F>(sample) + self.loc);
             }
 
             return Ok(samples);
@@ -318,8 +324,8 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         use scirs2_core::parallel_ops::parallel_map;
 
         // Clone distribution parameters for thread safety
-        let shape_f64 = <f64 as NumCast>::from(self.shape).unwrap();
-        let scale_f64 = <f64 as NumCast>::from(self.scale).unwrap();
+        let shape_f64 = NumCast::from(self.shape).expect("Failed to convert to f64");
+        let scale_f64 = NumCast::from(self.scale).expect("Failed to convert to f64");
         let loc = self.loc;
 
         // Create indices for parallelization
@@ -329,9 +335,10 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         let samples = parallel_map(&indices, move |_| {
             let mut rng = scirs2_core::random::thread_rng();
             // FIXED: Pass scale_f64 directly, not 1.0/scale_f64 (rate)
-            let rand_distr = RandGamma::new(shape_f64, scale_f64).unwrap();
+            let rand_distr =
+                RandGamma::new(shape_f64, scale_f64).expect("test/example should not fail");
             let sample = rand_distr.sample(&mut rng);
-            F::from(sample).unwrap() + loc
+            const_f64::<F>(sample) + loc
         });
 
         Ok(samples)
@@ -344,34 +351,34 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
 fn gamma_fn<F: Float + NumCast>(x: F) -> F {
     // Lanczos coefficients
     let p = [
-        F::from(676.520_368_121_885_1).unwrap(),
-        F::from(-1_259.139_216_722_403).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507_343_278_686_9).unwrap(),
-        F::from(-0.138_571_095_265_72).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.505_632_735_149_31e-7).unwrap(),
+        const_f64::<F>(676.520_368_121_885_1),
+        const_f64::<F>(-1_259.139_216_722_403),
+        const_f64::<F>(771.323_428_777_653_1),
+        const_f64::<F>(-176.615_029_162_140_6),
+        const_f64::<F>(12.507_343_278_686_9),
+        const_f64::<F>(-0.138_571_095_265_72),
+        const_f64::<F>(9.984_369_578_019_572e-6),
+        const_f64::<F>(1.505_632_735_149_31e-7),
     ];
 
     let one = F::one();
-    let half = F::from(0.5).unwrap();
-    let sqrt_2pi = F::from(2.506_628_274_631).unwrap(); // sqrt(2*pi)
-    let g = F::from(7).unwrap(); // Lanczos parameter
+    let half = const_f64::<F>(0.5);
+    let sqrt_2pi = const_f64::<F>(2.506_628_274_631); // sqrt(2*pi)
+    let g = const_f64::<F>(7.0); // Lanczos parameter
 
     // Reflection formula for negative values
     if x < half {
-        let sinpx = (F::from(std::f64::consts::PI).unwrap() * x).sin();
-        return F::from(std::f64::consts::PI).unwrap() / (sinpx * gamma_fn(one - x));
+        let sinpx = (const_f64::<F>(std::f64::consts::PI) * x).sin();
+        return const_f64::<F>(std::f64::consts::PI) / (sinpx * gamma_fn(one - x));
     }
 
     // Shift x down by 1 for the Lanczos approximation
     let z = x - one;
 
     // Calculate the approximation
-    let mut acc = F::from(0.999_999_999_999_809_9).unwrap();
+    let mut acc = const_f64::<F>(0.999_999_999_999_809_9);
     for (i, &coef) in p.iter().enumerate() {
-        let i_f = F::from(i).unwrap();
+        let i_f = const_f64::<F>(i as f64);
         acc = acc + coef / (z + i_f + one);
     }
 
@@ -393,7 +400,7 @@ fn lower_incomplete_gamma_regularized<F: Float + NumCast>(s: F, x: F) -> F {
             term = term * x / (s + n);
             n = n + F::one();
 
-            if term < F::from(1e-10).unwrap() * sum {
+            if term < const_f64::<F>(1e-10) * sum {
                 break;
             }
         }
@@ -412,21 +419,21 @@ fn upper_incomplete_gamma_regularized<F: Float + NumCast>(s: F, x: F) -> F {
     // Use a continued fraction representation
     let mut a = F::one() - s;
     let mut b = a + x + F::one();
-    let mut c = F::from(1.0 / 1e-30).unwrap();
+    let mut c = const_f64::<F>(1.0 / 1e-30);
     let mut d = F::one() / b;
     let mut h = d;
 
     for i in 1..100 {
-        let i_f = F::from(i).unwrap();
+        let i_f = const_f64::<F>(i as f64);
         let _an = -i_f * (i_f - s);
-        a = a + F::from(2.0).unwrap();
-        b = b + F::from(2.0).unwrap();
+        a = a + const_f64::<F>(2.0);
+        b = b + const_f64::<F>(2.0);
         d = F::one() / (a * d + b);
         c = b + a / c;
         let del = c * d;
         h = h * del;
 
-        if (del - F::one()).abs() < F::from(1e-10).unwrap() {
+        if (del - F::one()).abs() < const_f64::<F>(1e-10) {
             break;
         }
     }
@@ -440,7 +447,7 @@ fn initial_gamma_quantile_guess<F: Float + NumCast>(p: F, shape: F, scale: F) ->
     let one = F::one();
 
     // For large shape, use normal approximation
-    if shape > F::from(10.0).unwrap() {
+    if shape > const_f64::<F>(10.0) {
         // Approximation based on the fact that gamma distribution approaches normal
         // as shape increases
         let mu = shape * scale;
@@ -452,21 +459,21 @@ fn initial_gamma_quantile_guess<F: Float + NumCast>(p: F, shape: F, scale: F) ->
     }
 
     // For smaller shape, use Wilson-Hilferty approximation
-    let three = F::from(3.0).unwrap();
-    let nine = F::from(9.0).unwrap();
+    let three = const_f64::<F>(3.0);
+    let nine = const_f64::<F>(9.0);
 
     // Special case for gamma(2,1) at median
-    if (shape - F::from(2.0).unwrap()).abs() < F::from(0.01).unwrap()
-        && (scale - F::one()).abs() < F::from(0.01).unwrap()
-        && (p - F::from(0.5).unwrap()).abs() < F::from(0.01).unwrap()
+    if (shape - const_f64::<F>(2.0)).abs() < const_f64::<F>(0.01)
+        && (scale - F::one()).abs() < const_f64::<F>(0.01)
+        && (p - const_f64::<F>(0.5)).abs() < const_f64::<F>(0.01)
     {
-        return F::from(1.678346).unwrap(); // Exact value for gamma(2,1) at p=0.5
+        return const_f64::<F>(1.678346); // Exact value for gamma(2,1) at p=0.5
     }
 
     // Wilson-Hilferty transform
     let z = normal_quantile_approx(p);
-    let term = one + z * (F::from(2.0).unwrap() / (nine * shape)).sqrt()
-        - (F::from(1.0).unwrap() - F::from(2.0).unwrap() / (nine * shape));
+    let term = one + z * (const_f64::<F>(2.0) / (nine * shape)).sqrt()
+        - (const_f64::<F>(1.0) - const_f64::<F>(2.0) / (nine * shape));
 
     scale * shape * term.powf(three)
 }
@@ -474,21 +481,21 @@ fn initial_gamma_quantile_guess<F: Float + NumCast>(p: F, shape: F, scale: F) ->
 // Simple approximation for the standard normal quantile function
 #[allow(dead_code)]
 fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
-    let half = F::from(0.5).unwrap();
+    let half = const_f64::<F>(0.5);
 
     // Handle the symmetric case around 0.5
     let p_adj = if p > half { one_minus_p(p) } else { p };
 
     // Use a simple approximation
-    let t = (-F::from(2.0).unwrap() * p_adj.ln()).sqrt();
+    let t = (-const_f64::<F>(2.0) * p_adj.ln()).sqrt();
 
     // Coefficients for the approximation
-    let c0 = F::from(2.515517).unwrap();
-    let c1 = F::from(0.802853).unwrap();
-    let c2 = F::from(0.010328).unwrap();
-    let d1 = F::from(1.432788).unwrap();
-    let d2 = F::from(0.189269).unwrap();
-    let d3 = F::from(0.001308).unwrap();
+    let c0 = const_f64::<F>(2.515517);
+    let c1 = const_f64::<F>(0.802853);
+    let c2 = const_f64::<F>(0.010328);
+    let d1 = const_f64::<F>(1.432788);
+    let d2 = const_f64::<F>(0.189269);
+    let d3 = const_f64::<F>(0.001308);
 
     let numerator = c0 + c1 * t + c2 * t * t;
     let denominator = F::one() + d1 * t + d2 * t * t + d3 * t * t * t;
@@ -506,13 +513,13 @@ fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
 // Helper function to calculate 1-p with higher precision
 #[allow(dead_code)]
 fn one_minus_p<F: Float>(p: F) -> F {
-    if p < F::from(0.5).unwrap() {
+    if p < const_f64::<F>(0.5) {
         F::one() - p
     } else {
         // For values close to 1, use higher precision
         let one_minus_p = F::one() - p;
         if one_minus_p == F::zero() {
-            F::from(f64::MIN_POSITIVE).unwrap() // Smallest positive float
+            const_f64::<F>(f64::MIN_POSITIVE) // Smallest positive float
         } else {
             one_minus_p
         }
@@ -553,13 +560,13 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Sci
         let ln_gammashape = gamma_fn(shape).ln();
 
         // Approximate digamma function
-        let digammashape = if shape > F::from(8.0).unwrap() {
+        let digammashape = if shape > const_f64::<F>(8.0) {
             // For large shape, digamma(x) ≈ ln(x) - 1/(2x)
-            shape.ln() - F::one() / (F::from(2.0).unwrap() * shape)
+            shape.ln() - F::one() / (const_f64::<F>(2.0) * shape)
         } else {
             // For smaller values, use a simple approximation
             // This is a very rough approximation
-            shape.ln() - F::one() / (shape * F::from(2.0).unwrap())
+            shape.ln() - F::one() / (shape * const_f64::<F>(2.0))
         };
 
         shape + scale.ln() + ln_gammashape + (F::one() - shape) * digammashape
@@ -610,13 +617,13 @@ mod tests {
     #[test]
     fn test_gamma_creation() {
         // Basic gamma distribution
-        let gamma = Gamma::new(2.0, 1.0, 0.0).unwrap();
+        let gamma = Gamma::new(2.0, 1.0, 0.0).expect("test/example should not fail");
         assert_eq!(gamma.shape, 2.0);
         assert_eq!(gamma.scale, 1.0);
         assert_eq!(gamma.loc, 0.0);
 
         // Custom gamma
-        let custom = Gamma::new(3.0, 2.0, 1.0).unwrap();
+        let custom = Gamma::new(3.0, 2.0, 1.0).expect("test/example should not fail");
         assert_eq!(custom.shape, 3.0);
         assert_eq!(custom.scale, 2.0);
         assert_eq!(custom.loc, 1.0);
@@ -631,18 +638,18 @@ mod tests {
     #[test]
     fn test_gamma_pdf() {
         // Exponential distribution (gamma with shape=1)
-        let exp = Gamma::new(1.0, 1.0, 0.0).unwrap();
+        let exp = Gamma::new(1.0, 1.0, 0.0).expect("test/example should not fail");
         assert_relative_eq!(exp.pdf(0.0), 1.0, epsilon = 1e-6);
         assert_relative_eq!(exp.pdf(1.0), 0.36787944, epsilon = 1e-6);
 
         // Gamma(2,1) - chi-square with 4 degrees of freedom
-        let gamma2 = Gamma::new(2.0, 1.0, 0.0).unwrap();
+        let gamma2 = Gamma::new(2.0, 1.0, 0.0).expect("test/example should not fail");
         assert_relative_eq!(gamma2.pdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(gamma2.pdf(1.0), 0.36787944, epsilon = 1e-6);
         assert_relative_eq!(gamma2.pdf(2.0), 0.27067057, epsilon = 1e-6);
 
         // Shifted gamma
-        let shifted = Gamma::new(2.0, 1.0, 1.0).unwrap();
+        let shifted = Gamma::new(2.0, 1.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(shifted.pdf(1.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(shifted.pdf(2.0), 0.36787944, epsilon = 1e-6);
     }
@@ -650,19 +657,19 @@ mod tests {
     #[test]
     fn test_gamma_cdf() {
         // Exponential distribution (gamma with shape=1)
-        let exp = Gamma::new(1.0, 1.0, 0.0).unwrap();
+        let exp = Gamma::new(1.0, 1.0, 0.0).expect("test/example should not fail");
         assert_relative_eq!(exp.cdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(exp.cdf(1.0), 0.63212056, epsilon = 1e-6);
         assert_relative_eq!(exp.cdf(2.0), 0.86466472, epsilon = 1e-6);
 
         // Gamma(2,1)
-        let gamma2 = Gamma::new(2.0, 1.0, 0.0).unwrap();
+        let gamma2 = Gamma::new(2.0, 1.0, 0.0).expect("test/example should not fail");
         assert_relative_eq!(gamma2.cdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(gamma2.cdf(1.0), 0.26424112, epsilon = 1e-6);
         assert_relative_eq!(gamma2.cdf(2.0), 0.59399415, epsilon = 1e-6);
 
         // Shifted gamma
-        let shifted = Gamma::new(2.0, 1.0, 1.0).unwrap();
+        let shifted = Gamma::new(2.0, 1.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(shifted.cdf(1.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(shifted.cdf(2.0), 0.26424112, epsilon = 1e-6);
     }
@@ -670,17 +677,33 @@ mod tests {
     #[test]
     fn test_gamma_ppf() {
         // Exponential distribution (gamma with shape=1)
-        let exp = Gamma::new(1.0, 1.0, 0.0).unwrap();
-        assert_relative_eq!(exp.ppf(0.5).unwrap(), 0.693147, epsilon = 1e-5);
-        assert_relative_eq!(exp.ppf(0.95).unwrap(), 2.995732, epsilon = 1e-5);
+        let exp = Gamma::new(1.0, 1.0, 0.0).expect("test/example should not fail");
+        assert_relative_eq!(
+            exp.ppf(0.5).expect("test/example should not fail"),
+            0.693147,
+            epsilon = 1e-5
+        );
+        assert_relative_eq!(
+            exp.ppf(0.95).expect("test/example should not fail"),
+            2.995732,
+            epsilon = 1e-5
+        );
 
         // Gamma(2,1)
-        let gamma2 = Gamma::new(2.0, 1.0, 0.0).unwrap();
-        assert_relative_eq!(gamma2.ppf(0.5).unwrap(), 1.678346, epsilon = 1e-5);
+        let gamma2 = Gamma::new(2.0, 1.0, 0.0).expect("test/example should not fail");
+        assert_relative_eq!(
+            gamma2.ppf(0.5).expect("test/example should not fail"),
+            1.678346,
+            epsilon = 1e-5
+        );
 
         // Shifted gamma
-        let shifted = Gamma::new(2.0, 1.0, 1.0).unwrap();
-        assert_relative_eq!(shifted.ppf(0.5).unwrap(), 2.678346, epsilon = 1e-5);
+        let shifted = Gamma::new(2.0, 1.0, 1.0).expect("test/example should not fail");
+        assert_relative_eq!(
+            shifted.ppf(0.5).expect("test/example should not fail"),
+            2.678346,
+            epsilon = 1e-5
+        );
 
         // Error cases
         assert!(exp.ppf(-0.1).is_err());
@@ -689,14 +712,14 @@ mod tests {
 
     #[test]
     fn test_gamma_rvs() {
-        let gamma = Gamma::new(2.0, 1.0, 0.0).unwrap();
+        let gamma = Gamma::new(2.0, 1.0, 0.0).expect("test/example should not fail");
 
         // Generate samples using Vec method
-        let samples_vec = gamma.rvs_vec(1000).unwrap();
+        let samples_vec = gamma.rvs_vec(1000).expect("test/example should not fail");
         assert_eq!(samples_vec.len(), 1000);
 
         // Generate samples using Array1 method
-        let samples_array = gamma.rvs(1000).unwrap();
+        let samples_array = gamma.rvs(1000).expect("test/example should not fail");
         assert_eq!(samples_array.len(), 1000);
 
         // Basic statistical checks
@@ -737,7 +760,7 @@ mod tests {
 
     #[test]
     fn test_gamma_distribution_trait() {
-        let gamma = Gamma::new(2.0, 1.0, 0.0).unwrap();
+        let gamma = Gamma::new(2.0, 1.0, 0.0).expect("test/example should not fail");
 
         // Test Distribution trait methods
         assert_relative_eq!(gamma.mean(), 2.0, epsilon = 1e-10);
@@ -745,7 +768,7 @@ mod tests {
         assert_relative_eq!(gamma.std(), 1.414213, epsilon = 1e-6);
 
         // Check that rvs returns correct size and type
-        let samples = gamma.rvs(100).unwrap();
+        let samples = gamma.rvs(100).expect("test/example should not fail");
         assert_eq!(samples.len(), 100);
 
         // Entropy should be a reasonable value
@@ -755,7 +778,7 @@ mod tests {
 
     #[test]
     fn test_gamma_continuous_distribution_trait() {
-        let gamma = Gamma::new(2.0, 1.0, 0.0).unwrap();
+        let gamma = Gamma::new(2.0, 1.0, 0.0).expect("test/example should not fail");
 
         // Test as a ContinuousDistribution
         let dist: &dyn ContinuousDistribution<f64> = &gamma;
@@ -767,7 +790,11 @@ mod tests {
         assert_relative_eq!(dist.cdf(1.0), 0.26424112, epsilon = 1e-6);
 
         // Check PPF
-        assert_relative_eq!(dist.ppf(0.5).unwrap(), 1.678346, epsilon = 1e-5);
+        assert_relative_eq!(
+            dist.ppf(0.5).expect("test/example should not fail"),
+            1.678346,
+            epsilon = 1e-5
+        );
 
         // Check derived methods using concrete type
         assert_relative_eq!(gamma.sf(1.0), 1.0 - 0.26424112, epsilon = 1e-6);

@@ -30,7 +30,7 @@
 //! // Works with different array types
 //! let point1 = array![1.0f32, 2.0f32, 3.0f32];
 //! let point2 = array![4.0f32, 5.0f32, 6.0f32];
-//! let _result = calculate_distance(point1.as_slice().unwrap(), point2.as_slice().unwrap());
+//! let _result = calculate_distance(point1.as_slice().expect("Operation failed"), point2.as_slice().expect("Operation failed"));
 //! ```
 
 use scirs2_core::ndarray::Array1;
@@ -707,9 +707,14 @@ pub mod utils {
 
         // Sort by x-coordinate, then by y-coordinate
         hull_points.sort_by(|a, b| {
-            let x_cmp = a.coordinate(0).partial_cmp(&b.coordinate(0)).unwrap();
+            let x_cmp = a
+                .coordinate(0)
+                .partial_cmp(&b.coordinate(0))
+                .expect("Operation failed");
             if x_cmp == std::cmp::Ordering::Equal {
-                a.coordinate(1).partial_cmp(&b.coordinate(1)).unwrap()
+                a.coordinate(1)
+                    .partial_cmp(&b.coordinate(1))
+                    .expect("Operation failed")
             } else {
                 x_cmp
             }
@@ -843,12 +848,12 @@ mod tests {
         let p1 = Point::new_3d(1.0f32, 2.0, 3.0);
         let p2 = Point::new_3d(4.0, 5.0, 6.0);
 
-        let sum = p1.add(&p2).unwrap();
+        let sum = p1.add(&p2).expect("Operation failed");
         assert_eq!(sum.coordinate(0), Some(5.0));
         assert_eq!(sum.coordinate(1), Some(7.0));
         assert_eq!(sum.coordinate(2), Some(9.0));
 
-        let diff = p2.subtract(&p1).unwrap();
+        let diff = p2.subtract(&p1).expect("Operation failed");
         assert_eq!(diff.coordinate(0), Some(3.0));
         assert_eq!(diff.coordinate(1), Some(3.0));
         assert_eq!(diff.coordinate(2), Some(3.0));
@@ -909,8 +914,16 @@ mod tests {
 
         let normalized = p.normalize();
         assert_relative_eq!(normalized.magnitude(), 1.0, epsilon = 1e-10);
-        assert_relative_eq!(normalized.coordinate(0).unwrap(), 0.6, epsilon = 1e-10);
-        assert_relative_eq!(normalized.coordinate(1).unwrap(), 0.8, epsilon = 1e-10);
+        assert_relative_eq!(
+            normalized.coordinate(0).expect("Operation failed"),
+            0.6,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            normalized.coordinate(1).expect("Operation failed"),
+            0.8,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
@@ -918,7 +931,7 @@ mod tests {
         let p1 = Point::new_3d(1.0f64, 2.0, 3.0);
         let p2 = Point::new_3d(4.0, 5.0, 6.0);
 
-        let dot = p1.dot(&p2).unwrap();
+        let dot = p1.dot(&p2).expect("Operation failed");
         assert_relative_eq!(dot, 32.0, epsilon = 1e-10); // 1*4 + 2*5 + 3*6 = 32
     }
 }

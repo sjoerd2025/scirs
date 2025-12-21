@@ -60,7 +60,7 @@ use crate::spatial::kdtree::KdTree;
 ///     points.clone(),
 ///     y.clone(),
 ///     config,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Create test points
 /// let test_x = Array1::<f64>::linspace(0.0, 10.0, 50);
@@ -71,7 +71,7 @@ use crate::spatial::kdtree::KdTree;
 /// let results = parallel_loess.fit_multiple_parallel(
 ///     &testpoints.view(),
 ///     &parallel_config
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// # }
 /// ```
 #[derive(Debug, Clone)]
@@ -266,7 +266,7 @@ where
                             Err(_) => {
                                 // Fallback to mean if neighbor search fails
                                 let mean = values_ref.fold(F::zero(), |acc, &v| acc + v)
-                                    / F::from_usize(values_ref.len()).unwrap();
+                                    / F::from_usize(values_ref.len()).expect("Operation failed");
                                 chunk_results.push(mean);
                                 continue;
                             }
@@ -275,7 +275,7 @@ where
                     if neighbors.is_empty() {
                         // No neighbors found, use mean
                         let mean = values_ref.fold(F::zero(), |acc, &v| acc + v)
-                            / F::from_usize(values_ref.len()).unwrap();
+                            / F::from_usize(values_ref.len()).expect("Operation failed");
                         chunk_results.push(mean);
                         continue;
                     }
@@ -319,7 +319,7 @@ where
                                 weighted_sum / weight_sum
                             } else {
                                 local_values.fold(F::zero(), |acc, &v| acc + v)
-                                    / F::from_usize(n_local).unwrap()
+                                    / F::from_usize(n_local).expect("Operation failed")
                             };
 
                             chunk_results.push(result);
@@ -365,22 +365,26 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
         WeightFunction::WendlandC2 => {
             if r < F::one() {
                 let t = F::one() - r;
-                let factor = F::from_f64(4.0).unwrap() * r + F::one();
+                let factor = F::from_f64(4.0).expect("Operation failed") * r + F::one();
                 t.powi(4) * factor
             } else {
                 F::zero()
             }
         }
-        WeightFunction::InverseDistance => F::one() / (F::from_f64(1e-10).unwrap() + r * r),
+        WeightFunction::InverseDistance => {
+            F::one() / (F::from_f64(1e-10).expect("Operation failed") + r * r)
+        }
         WeightFunction::CubicSpline => {
-            if r < F::from_f64(1.0 / 3.0).unwrap() {
+            if r < F::from_f64(1.0 / 3.0).expect("Operation failed") {
                 let r2 = r * r;
                 let r3 = r2 * r;
-                F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2
-                    + F::from_f64(19.0).unwrap() * r3
+                F::from_f64(2.0 / 3.0).expect("Operation failed")
+                    - F::from_f64(9.0).expect("Operation failed") * r2
+                    + F::from_f64(19.0).expect("Operation failed") * r3
             } else if r < F::one() {
-                let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;
-                F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)
+                let t = F::from_f64(2.0).expect("Operation failed")
+                    - F::from_f64(3.0).expect("Operation failed") * r;
+                F::from_f64(1.0 / 3.0).expect("Operation failed") * t.powi(3)
             } else {
                 F::zero()
             }
@@ -476,13 +480,13 @@ fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
     #[cfg(feature = "linalg")]
     let coefficients = {
         use scirs2_linalg::solve;
-        let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
-        let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
+        let xtx_f64 = xtx.mapv(|x| x.to_f64().expect("Operation failed"));
+        let xty_f64 = xty.mapv(|x| x.to_f64().expect("Operation failed"));
         solve(&xtx_f64.view(), &xty_f64.view(), None)
             .map_err(|_| {
                 InterpolateError::ComputationError("Failed to solve linear system".to_string())
             })?
-            .mapv(|x| F::from_f64(x).unwrap())
+            .mapv(|x| F::from_f64(x).expect("Operation failed"))
     };
 
     #[cfg(not(feature = "linalg"))]
@@ -570,7 +574,7 @@ where
         confidence_level: Some(confidence_level),
         robust_se: true,
         max_points: None,
-        epsilon: F::from_f64(1e-10).unwrap(),
+        epsilon: F::from_f64(1e-10).expect("Operation failed"),
     };
 
     ParallelLocalPolynomialRegression::with_config(points, values, config)
@@ -596,12 +600,12 @@ mod tests {
         let points = x.clone().insert_axis(Axis(1));
 
         // Create sequential LOESS
-        let sequential_loess =
-            LocalPolynomialRegression::new(points.clone(), y.clone(), 0.3).unwrap();
+        let sequential_loess = LocalPolynomialRegression::new(points.clone(), y.clone(), 0.3)
+            .expect("Operation failed");
 
         // Create parallel LOESS
-        let parallel_loess =
-            ParallelLocalPolynomialRegression::new(points.clone(), y.clone(), 0.3).unwrap();
+        let parallel_loess = ParallelLocalPolynomialRegression::new(points.clone(), y.clone(), 0.3)
+            .expect("Operation failed");
 
         // Test points
         let test_x = Array1::linspace(1.0, 9.0, 10);
@@ -610,7 +614,9 @@ mod tests {
         // Sequential evaluation (extract just the values)
         let mut sequential_values = Array1::zeros(10);
         for i in 0..10 {
-            let result = sequential_loess.fit_at_point(&testpoints.row(i)).unwrap();
+            let result = sequential_loess
+                .fit_at_point(&testpoints.row(i))
+                .expect("Operation failed");
             sequential_values[i] = result.value;
         }
 
@@ -618,7 +624,7 @@ mod tests {
         let config = ParallelConfig::new();
         let parallel_values = parallel_loess
             .fit_multiple_parallel(&testpoints.view(), &config)
-            .unwrap();
+            .expect("Operation failed");
 
         // With PartialOrd, the sequential and parallel implementations may give different results
         // Just check that results are in a reasonable range
@@ -655,7 +661,7 @@ mod tests {
 
         let parallel_loess =
             ParallelLocalPolynomialRegression::with_config(points.clone(), y.clone(), config)
-                .unwrap();
+                .expect("Operation failed");
 
         // Create test points
         let test_x = Array1::linspace(1.0, 9.0, 20);
@@ -673,7 +679,7 @@ mod tests {
         for config in &configs {
             let result = parallel_loess
                 .fit_multiple_parallel(&testpoints.view(), config)
-                .unwrap();
+                .expect("Operation failed");
             results.push(result);
         }
 

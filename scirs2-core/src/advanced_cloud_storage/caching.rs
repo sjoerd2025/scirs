@@ -690,10 +690,10 @@ mod tests {
         };
 
         // Put data in cache
-        cache.put("test_key".to_string(), data.clone(), metadata).unwrap();
+        cache.put("test_key".to_string(), data.clone(), metadata).expect("Operation failed");
 
         // Get data from cache
-        let cached_data = cache.get("test_key").unwrap();
+        let cached_data = cache.get("test_key").expect("Operation failed");
         assert_eq!(cached_data, Some(data));
     }
 
@@ -713,12 +713,12 @@ mod tests {
             encryption: None,
         };
 
-        cache.put("test_key".to_string(), data, metadata).unwrap();
+        cache.put("test_key".to_string(), data, metadata).expect("Operation failed");
 
-        let removed = cache.remove("test_key").unwrap();
+        let removed = cache.remove("test_key").expect("Operation failed");
         assert!(removed);
 
-        let cached_data = cache.get("test_key").unwrap();
+        let cached_data = cache.get("test_key").expect("Operation failed");
         assert_eq!(cached_data, None);
     }
 
@@ -727,10 +727,10 @@ mod tests {
         let mut cache = IntelligentCacheSystem::new();
         let initial_layers = cache.cache_layers.len();
 
-        cache.add_cache_layer(CacheLayerType::SSD, 2048).unwrap();
+        cache.add_cache_layer(CacheLayerType::SSD, 2048).expect("Operation failed");
 
         assert_eq!(cache.cache_layers.len(), initial_layers + 1);
-        assert_eq!(cache.cache_layers.last().unwrap().layer_type, CacheLayerType::SSD);
-        assert_eq!(cache.cache_layers.last().unwrap().capacity_mb, 2048);
+        assert_eq!(cache.cache_layers.last().expect("Operation failed").layer_type, CacheLayerType::SSD);
+        assert_eq!(cache.cache_layers.last().expect("Operation failed").capacity_mb, 2048);
     }
 }

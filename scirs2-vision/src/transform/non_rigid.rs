@@ -636,7 +636,8 @@ mod tests {
         let target_points = source_points.clone();
 
         // Create the thin-plate spline
-        let tps = ThinPlateSpline::new(&source_points, &target_points, None).unwrap();
+        let tps =
+            ThinPlateSpline::new(&source_points, &target_points, None).expect("Operation failed");
 
         // Test some points
         let test_points = [(25.0, 25.0), (75.0, 75.0), (10.0, 90.0)];
@@ -666,7 +667,8 @@ mod tests {
         target_points[4] = (60.0, 40.0); // Move the center point
 
         // Create the thin-plate spline
-        let tps = ThinPlateSpline::new(&source_points, &target_points, None).unwrap();
+        let tps =
+            ThinPlateSpline::new(&source_points, &target_points, None).expect("Operation failed");
 
         // Corner points should map exactly
         for i in 0..4 {
@@ -699,7 +701,8 @@ mod tests {
         let sigma = 10.0; // Smooth deformation
         let seed = Some(42); // Fixed seed for reproducibility
 
-        let elastic = ElasticDeformation::new(width, height, alpha, sigma, seed).unwrap();
+        let elastic =
+            ElasticDeformation::new(width, height, alpha, sigma, seed).expect("Operation failed");
 
         // Test that points are moved
         let original_point = (50.0, 50.0);
@@ -711,7 +714,8 @@ mod tests {
         assert!(transformed.1 >= 30.0 && transformed.1 <= 70.0);
 
         // Test reproducibility with same seed
-        let elastic2 = ElasticDeformation::new(width, height, alpha, sigma, seed).unwrap();
+        let elastic2 =
+            ElasticDeformation::new(width, height, alpha, sigma, seed).expect("Operation failed");
         let transformed2 = elastic2.transform_point(original_point);
 
         // Should get exactly the same result with the same seed

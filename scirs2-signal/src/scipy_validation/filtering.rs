@@ -453,7 +453,7 @@ mod tests {
     fn test_filter_stability() {
         let result = test_filter_stability(FilterType::Lowpass, 4, 0.25);
         assert!(result.is_ok());
-        let test_result = result.unwrap();
+        let test_result = result.expect("Operation failed");
         assert!(test_result.passed);
     }
 
@@ -461,7 +461,7 @@ mod tests {
     fn test_impulse_response() {
         let result = test_filter_impulse_response(FilterType::Lowpass, 4, 0.25, 64);
         assert!(result.is_ok());
-        let test_result = result.unwrap();
+        let test_result = result.expect("Operation failed");
         assert!(test_result.passed);
     }
 }

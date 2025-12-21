@@ -316,8 +316,8 @@ impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
         }
 
         for i in 1..segments {
-            alpha[i] = (T::from_f64(3.0).unwrap() * (y[i + 1] - y[i]) / h[i])
-                - (T::from_f64(3.0).unwrap() * (y[i] - y[i - 1]) / h[i - 1]);
+            alpha[i] = (T::from_f64(3.0).expect("Operation failed") * (y[i + 1] - y[i]) / h[i])
+                - (T::from_f64(3.0).expect("Operation failed") * (y[i] - y[i - 1]) / h[i - 1]);
         }
 
         // Solve tridiagonal system
@@ -328,7 +328,8 @@ impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
         l[0] = T::one();
 
         for i in 1..(n - 1) {
-            l[i] = T::from_f64(2.0).unwrap() * (x[i + 1] - x[i - 1]) - h[i - 1] * mu[i - 1];
+            l[i] = T::from_f64(2.0).expect("Operation failed") * (x[i + 1] - x[i - 1])
+                - h[i - 1] * mu[i - 1];
             mu[i] = h[i] / l[i];
             z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
         }
@@ -345,9 +346,11 @@ impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
         for i in 0..segments {
             coeffs[[i, 0]] = y[i]; // a_i
             coeffs[[i, 1]] = (y[i + 1] - y[i]) / h[i]
-                - h[i] * (c[i + 1] + T::from_f64(2.0).unwrap() * c[i]) / T::from_f64(3.0).unwrap(); // b_i
+                - h[i] * (c[i + 1] + T::from_f64(2.0).expect("Operation failed") * c[i])
+                    / T::from_f64(3.0).expect("Operation failed"); // b_i
             coeffs[[i, 2]] = c[i]; // c_i
-            coeffs[[i, 3]] = (c[i + 1] - c[i]) / (T::from_f64(3.0).unwrap() * h[i]);
+            coeffs[[i, 3]] =
+                (c[i + 1] - c[i]) / (T::from_f64(3.0).expect("Operation failed") * h[i]);
             // d_i
         }
 
@@ -497,9 +500,9 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
             .fold(T::infinity(), |a, b| if a < b { a } else { b });
 
         let uncertainty = if min_distance.is_finite() {
-            min_distance * T::from_f64(0.1).unwrap() // 10% of distance as uncertainty
+            min_distance * T::from_f64(0.1).expect("Operation failed") // 10% of distance as uncertainty
         } else {
-            T::from_f64(1.0).unwrap() // Default uncertainty
+            T::from_f64(1.0).expect("Operation failed") // Default uncertainty
         };
 
         Ok((prediction, uncertainty))
@@ -601,7 +604,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingRBFInterpolator<T> {
         }
 
         // Add regularization for numerical stability
-        let regularization = T::from_f64(1e-10).unwrap();
+        let regularization = T::from_f64(1e-10).expect("Operation failed");
         for i in 0..n {
             rbf_matrix[[i, i]] = rbf_matrix[[i, i]] + regularization;
         }
@@ -648,7 +651,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingRBFInterpolator<T> {
             }
 
             // Check for zero pivot
-            if aug[[k, k]].abs() < T::from_f64(1e-12).unwrap() {
+            if aug[[k, k]].abs() < T::from_f64(1e-12).expect("Operation failed") {
                 return Err(InterpolateError::ComputationError(
                     "Singular matrix".to_string(),
                 ));
@@ -751,7 +754,8 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
             .map(|&c| (c - x).abs())
             .fold(T::infinity(), |a, b| if a < b { a } else { b });
 
-        let uncertainty = self.rbf_kernel(min_distance) * T::from_f64(0.5).unwrap();
+        let uncertainty =
+            self.rbf_kernel(min_distance) * T::from_f64(0.5).expect("Operation failed");
 
         Ok((prediction, uncertainty))
     }
@@ -793,7 +797,7 @@ pub fn make_streaming_rbf_interpolator<T: Float + Debug + FromPrimitive + Zero>(
     config: Option<StreamingConfig>,
     kernel_width: Option<T>,
 ) -> StreamingRBFInterpolator<T> {
-    let width = kernel_width.unwrap_or_else(|| T::from_f64(1.0).unwrap());
+    let width = kernel_width.unwrap_or_else(|| T::from_f64(1.0).expect("Operation failed"));
     StreamingRBFInterpolator::new(config.unwrap_or_default(), width)
 }
 
@@ -986,13 +990,13 @@ mod tests {
         ];
 
         for point in points {
-            interpolator.add_point(point).unwrap();
+            interpolator.add_point(point).expect("Operation failed");
         }
 
-        interpolator.update_model().unwrap();
+        interpolator.update_model().expect("Operation failed");
 
         // Test prediction
-        let prediction = interpolator.predict(1.5).unwrap();
+        let prediction = interpolator.predict(1.5).expect("Operation failed");
         assert!(prediction > 1.0 && prediction < 4.0);
 
         let stats = interpolator.get_stats();
@@ -1022,19 +1026,20 @@ mod tests {
         ];
 
         for point in points {
-            interpolator.add_point(point).unwrap();
+            interpolator.add_point(point).expect("Operation failed");
         }
 
-        interpolator.update_model().unwrap();
+        interpolator.update_model().expect("Operation failed");
 
         // Test prediction
-        let prediction = interpolator.predict(0.5).unwrap();
+        let prediction = interpolator.predict(0.5).expect("Operation failed");
         assert!(prediction > 0.0 && prediction < 1.0);
     }
 
     #[test]
     fn test_ensemble_interpolator() {
-        let ensemble = make_ensemble_streaming_interpolator::<f64>(None, None).unwrap();
+        let ensemble =
+            make_ensemble_streaming_interpolator::<f64>(None, None).expect("Operation failed");
 
         // Test basic functionality
         assert_eq!(ensemble.methods.len(), 2);

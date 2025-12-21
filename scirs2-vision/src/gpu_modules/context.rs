@@ -183,7 +183,7 @@ mod tests {
         // Should succeed with at least CPU backend
         assert!(result.is_ok());
 
-        let ctx = result.unwrap();
+        let ctx = result.expect("Operation failed");
         println!("GPU backend: {}", ctx.backend_name());
     }
 
@@ -206,7 +206,7 @@ mod tests {
         let cpu_ctx = GpuVisionContext::with_backend(GpuBackend::Cpu);
         assert!(cpu_ctx.is_ok());
 
-        let ctx = cpu_ctx.unwrap();
+        let ctx = cpu_ctx.expect("Operation failed");
         assert_eq!(ctx.backend(), GpuBackend::Cpu);
         assert!(!ctx.is_gpu_available());
     }

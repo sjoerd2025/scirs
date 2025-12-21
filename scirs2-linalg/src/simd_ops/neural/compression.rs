@@ -550,7 +550,7 @@ where
         Self {
             kl_weight: T::one(),
             num_samples: 10,
-            epsilon: T::from(0.001).unwrap(),
+            epsilon: T::from(0.001).expect("Operation failed"),
         }
     }
 }

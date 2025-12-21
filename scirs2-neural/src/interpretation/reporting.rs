@@ -164,7 +164,7 @@ fn generate_feature_visualizations<F>(
     visualizations.insert("activation_maximization".to_string(), input.clone());
     visualizations.insert(
         "gradient_ascent".to_string(),
-        input.mapv(|x| x * F::from(0.5).unwrap()),
+        input.mapv(|x| x * F::from(0.5).expect("Failed to convert constant to float")),
     );
     Ok(visualizations)
 /// Compute confidence estimates for interpretation results
@@ -512,7 +512,7 @@ fn compute_high_activation_score<F>(input: &ArrayD<F>) -> f64
     let mean_val = input.mean_or(F::zero()).to_f64().unwrap_or(0.0);
     let max_val = input.iter().fold(F::zero(), |acc, &x| acc.max(x)).to_f64().unwrap_or(0.0);
     // Score based on how much of the input has high activation values
-    let threshold = F::from(mean_val + 0.5 * (max_val - mean_val)).unwrap();
+    let threshold = F::from(mean_val + 0.5 * (max_val - mean_val)).expect("Operation failed");
     let high_count = input.iter().filter(|&&x| x > threshold).count();
     let total_count = input.len();
     if total_count > 0 {
@@ -522,7 +522,7 @@ fn compute_high_activation_score<F>(input: &ArrayD<F>) -> f64
 fn compute_low_activation_score<F>(input: &ArrayD<F>) -> f64
     let min_val = input.iter().fold(F::zero(), |acc, &x| acc.min(x)).to_f64().unwrap_or(0.0);
     // Score based on how much of the _input has low activation values
-    let threshold = F::from(mean_val - 0.5 * (mean_val - min_val)).unwrap();
+    let threshold = F::from(mean_val - 0.5 * (mean_val - min_val)).expect("Operation failed");
     let low_count = input.iter().filter(|&&x| x < threshold).count();
         low_count as f64 / total_count as f64
 /// Compute activation variance as a concept score
@@ -534,7 +534,7 @@ fn compute_activation_variance<F>(input: &ArrayD<F>) -> f64
             let diff = x - mean_val;
             diff * diff
         })
-        .fold(F::zero(), |acc, x| acc + x) / F::from(input.len()).unwrap();
+        .fold(F::zero(), |acc, x| acc + x) / F::from(input.len()).expect("Operation failed");
     // Normalize variance to [0, 1] range
     let normalized_variance = variance.to_f64().unwrap_or(0.0);
     normalized_variance.min(1.0)
@@ -570,7 +570,7 @@ mod tests {
         };
         let confidence = compute_confidence_estimates(&report);
         assert!(confidence.is_ok());
-        let conf_estimates = confidence.unwrap();
+        let conf_estimates = confidence.expect("Operation failed");
         assert!(conf_estimates.overall_confidence > 0.0);
         assert!(conf_estimates.method_confidence.contains_key("saliency"));
     fn test_report_summary() {

@@ -365,12 +365,12 @@ impl<F: Float + Debug + 'static + scirs2_core::ndarray::ScalarOperand + scirs2_c
         // Apply brightness adjustment
         if let Some(bright_factor) = brightness {
             let factor =
-                F::from(1.0 + rng().random_range(-bright_factor..=bright_factor)).unwrap();
+                F::from(1.0 + rng().random_range(-bright_factor..=bright_factor)).expect("Operation failed");
             result = result * factor;
         // Apply contrast adjustment
         if let Some(contrast_factor) = contrast {
                 F::from(1.0 + rng().random_range(-contrast_factor..=contrast_factor))
-                    .unwrap();
+                    .expect("Operation failed");
             let mean = result.mean_or(F::zero());
             result = (result - mean) * factor + mean;
         // Clamp values to valid range [0..1] (assuming normalized images)
@@ -405,7 +405,7 @@ impl<F: Float + Debug + 'static + scirs2_core::ndarray::ScalarOperand + scirs2_c
         // Simplified elastic deformation implementation
         // In practice, this would involve complex displacement field generation
             // Apply simple noise as a placeholder for elastic deformation
-            let noise_factor = F::from(0.01).unwrap();
+            let noise_factor = F::from(0.01).expect("Failed to convert constant to float");
                 let noise_val = rng().random_range(-0.05..=0.05);
             result = result + noise * noise_factor;
     /// Apply MixUp augmentation to a batch
@@ -414,7 +414,7 @@ impl<F: Float + Debug + 'static + scirs2_core::ndarray::ScalarOperand + scirs2_c
         if batch_size < 2 {
             return Ok((images.clone(), labels.clone()));
         let lambda = self.sample_beta_distribution(alpha)?;
-        let lambda_f = F::from(lambda).unwrap_or(F::from(0.5).unwrap());
+        let lambda_f = F::from(lambda).unwrap_or(F::from(0.5).expect("Failed to convert constant to float"));
         // Create random permutation of indices
         let mut indices: Vec<usize> = (0..batch_size).collect();
             let j = rng().random_range(0..batch_size);
@@ -467,7 +467,7 @@ impl<F: Float + Debug + 'static + scirs2_core::ndarray::ScalarOperand + scirs2_c
                 .assign(&patch);
             // Mix labels based on cut area ratio
             let actual_lambda = (cut_height * cut_width) as f64 / (height * width) as f64;
-            let lambda_f = F::from(1.0 - actual_lambda).unwrap_or(F::from(0.5).unwrap());
+            let lambda_f = F::from(1.0 - actual_lambda).unwrap_or(F::from(0.5).expect("Failed to convert constant to float"));
             let y_i = labels.slice(scirs2_core::ndarray::s![i, ..]);
             let y_j = labels.slice(scirs2_core::ndarray::s![j, ..]);
                 .slice_mut(scirs2_core::ndarray::s![i, ..])
@@ -574,28 +574,28 @@ mod tests {
         manager.add_image_transform(ImageAugmentation::RandomHorizontalFlip { probability: 1.0 });
         let input =
             Array4::<f64>::from_shape_fn((2, 3, 4, 4), |(____)| scirs2_core::random::random()).into_dyn();
-        let result = manager.augment_images(&input).unwrap();
+        let result = manager.augment_images(&input).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
         assert!(manager.stats.samples_processed > 0);
     fn test_random_crop() {
         let manager = AugmentationManager::<f64>::new(None);
         let input = Array4::<f64>::ones((2, 3, 8, 8)).into_dyn();
-        let result = manager.random_crop(&input, 4, 4, None).unwrap();
+        let result = manager.random_crop(&input, 4, 4, None).expect("Operation failed");
         assert_eq!(result.shape(), &[2, 3, 4, 4]);
     fn test_color_jitter() {
         let input = Array4::<f64>::from_elem((1, 3, 4, 4), 0.5).into_dyn();
         let result = manager
             .color_jitter(&input, Some(0.2), Some(0.2), None, None)
-            .unwrap();
+            .expect("Operation failed");
     fn test_gaussian_noise() {
         let input = Array4::<f64>::zeros((2, 3, 4, 4)).into_dyn();
-        let result = manager.gaussian_noise(&input, 0.0, 0.1, 1.0).unwrap();
+        let result = manager.gaussian_noise(&input, 0.0, 0.1, 1.0).expect("Operation failed");
     fn test_random_erasing() {
             .random_erasing(&input, 1.0, (0.1, 0.3), (0.5, 2.0), 0.0)
     fn test_mixup() {
         let images = Array4::<f64>::ones((4, 3, 8, 8)).into_dyn();
         let labels = Array2::<f64>::from_elem((4, 10), 1.0).into_dyn();
-        let (mixed_images, mixed_labels) = manager.apply_mixup(&images, &labels, 1.0).unwrap();
+        let (mixed_images, mixed_labels) = manager.apply_mixup(&images, &labels, 1.0).expect("Operation failed");
         assert_eq!(mixed_images.shape(), images.shape());
         assert_eq!(mixed_labels.shape(), labels.shape());
         assert!(manager.stats.transform_counts.contains_key("MixUp"));
@@ -624,7 +624,7 @@ mod tests {
         let mut manager = AugmentationManager::<f64>::new(None);
         manager.add_image_transform(ImageAugmentation::RandomHorizontalFlip { probability: 0.5 });
         let input = Array4::<f64>::ones((2, 3, 4, 4)).into_dyn();
-        let _ = manager.augment_images(&input).unwrap();
+        let _ = manager.augment_images(&input).expect("Operation failed");
         let stats = manager.get_statistics();
         assert_eq!(stats.samples_processed, 2);
         assert!(stats.processing_time_ms >= 0.0);

@@ -27,7 +27,7 @@ fn bench_memory_usage(c: &mut Criterion) {
                     edge_probability,
                     &mut scirs2_core::random::rng(),
                 )
-                .unwrap();
+                .expect("Test: operation failed");
                 let stats = MemoryProfiler::profile_graph(&graph);
                 black_box(stats.total_bytes)
             });
@@ -41,17 +41,17 @@ fn bench_memory_usage(c: &mut Criterion) {
                     edge_probability,
                     &mut scirs2_core::random::rng(),
                 )
-                .unwrap();
+                .expect("Test: operation failed");
                 let edges: Vec<_> = (0..graph.node_count())
                     .flat_map(|u| {
                         graph
                             .neighbors(&u)
-                            .unwrap()
+                            .expect("Test: operation failed")
                             .into_iter()
                             .map(move |v| (u, v, 1.0))
                     })
                     .collect();
-                let csr = CSRGraph::from_edges(n, edges).unwrap();
+                let csr = CSRGraph::from_edges(n, edges).expect("Test: operation failed");
                 black_box(csr.memory_usage())
             });
         });
@@ -65,13 +65,13 @@ fn bench_memory_usage(c: &mut Criterion) {
                     edge_probability,
                     &mut scirs2_core::random::rng(),
                 )
-                .unwrap();
+                .expect("Test: operation failed");
 
                 for u in 0..graph.node_count() {
-                    for v in graph.neighbors(&u).unwrap() {
+                    for v in graph.neighbors(&u).expect("Test: operation failed") {
                         if u <= v {
                             // Avoid duplicates for undirected
-                            bitpacked.add_edge(u, v).unwrap();
+                            bitpacked.add_edge(u, v).expect("Test: operation failed");
                         }
                     }
                 }
@@ -92,30 +92,37 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
     let m = 5; // Average degree of 10
 
     // Generate test graph
-    let graph = generators::barabasi_albert_graph(n, m, &mut scirs2_core::random::rng()).unwrap();
+    let graph = generators::barabasi_albert_graph(n, m, &mut scirs2_core::random::rng())
+        .expect("Test: operation failed");
 
     // Create different representations
     let edges: Vec<_> = (0..graph.node_count())
         .flat_map(|u| {
             graph
                 .neighbors(&u)
-                .unwrap()
+                .expect("Test: operation failed")
                 .into_iter()
                 .map(move |v| (u, v, 1.0))
         })
         .collect();
 
-    let csr = CSRGraph::from_edges(n, edges.clone()).unwrap();
+    let csr = CSRGraph::from_edges(n, edges.clone()).expect("Test: operation failed");
 
     let mut bitpacked = BitPackedGraph::new(n, false);
     for (u, v, _) in &edges {
         if u <= v {
-            bitpacked.add_edge(*u, *v).unwrap();
+            bitpacked.add_edge(*u, *v).expect("Test: operation failed");
         }
     }
 
     let adj_lists: Vec<Vec<_>> = (0..n)
-        .map(|u| graph.neighbors(&u).unwrap().into_iter().collect())
+        .map(|u| {
+            graph
+                .neighbors(&u)
+                .expect("Test: operation failed")
+                .into_iter()
+                .collect()
+        })
         .collect();
     let compressed = CompressedAdjacencyList::from_adjacency(adj_lists);
 
@@ -124,7 +131,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
         b.iter(|| {
             let mut sum = 0;
             for node in 0..n {
-                for neighbor in graph.neighbors(&node).unwrap() {
+                for neighbor in graph.neighbors(&node).expect("Test: operation failed") {
                     sum += neighbor;
                 }
             }
@@ -184,14 +191,14 @@ fn bench_edge_queries(c: &mut Criterion) {
 
     // Generate test graph
     let graph = generators::erdos_renyi_graph(n, edge_probability, &mut scirs2_core::random::rng())
-        .unwrap();
+        .expect("Test: operation failed");
 
     // Create bit-packed representation
     let mut bitpacked = BitPackedGraph::new(n, false);
     for u in 0..graph.node_count() {
-        for v in graph.neighbors(&u).unwrap() {
+        for v in graph.neighbors(&u).expect("Test: operation failed") {
             if u <= v {
-                bitpacked.add_edge(u, v).unwrap();
+                bitpacked.add_edge(u, v).expect("Test: operation failed");
             }
         }
     }
@@ -242,7 +249,7 @@ fn bench_construction_time(c: &mut Criterion) {
     for size in sizes {
         let edges: Vec<(usize, usize, f64)> =
             generators::barabasi_albert_graph(size, 3, &mut scirs2_core::random::rng())
-                .unwrap()
+                .expect("Test: operation failed")
                 .edges()
                 .into_iter()
                 .map(|edge| (edge.source, edge.target, edge.weight))
@@ -259,7 +266,7 @@ fn bench_construction_time(c: &mut Criterion) {
                         graph.add_node(i);
                     }
                     for &(u, v, w) in edges {
-                        graph.add_edge(u, v, w).unwrap();
+                        graph.add_edge(u, v, w).expect("Test: operation failed");
                     }
                     black_box(graph)
                 });
@@ -272,7 +279,8 @@ fn bench_construction_time(c: &mut Criterion) {
             &edges,
             |b, edges: &Vec<(usize, usize, f64)>| {
                 b.iter(|| {
-                    let csr = CSRGraph::from_edges(size, edges.clone()).unwrap();
+                    let csr =
+                        CSRGraph::from_edges(size, edges.clone()).expect("Test: operation failed");
                     black_box(csr)
                 });
             },
@@ -286,7 +294,8 @@ fn bench_construction_time(c: &mut Criterion) {
                 b.iter(|| {
                     let edges_opt: Vec<_> =
                         edges.iter().map(|&(u, v, w)| (u, v, Some(w))).collect();
-                    let hybrid = HybridGraph::auto_select(size, edges_opt, false).unwrap();
+                    let hybrid = HybridGraph::auto_select(size, edges_opt, false)
+                        .expect("Test: operation failed");
                     black_box(hybrid)
                 });
             },
@@ -310,7 +319,7 @@ fn bench_fragmentation_analysis(c: &mut Criterion) {
             |b, &n| {
                 let graph =
                     generators::barabasi_albert_graph(n, 5, &mut scirs2_core::random::rng())
-                        .unwrap();
+                        .expect("Test: operation failed");
                 b.iter(|| {
                     let report = MemoryProfiler::analyze_fragmentation(&graph);
                     black_box(report.fragmentation_ratio)

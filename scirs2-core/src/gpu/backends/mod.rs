@@ -599,20 +599,20 @@ mod tests {
     #[test]
     fn test_check_backend_installation_cpu() {
         // CPU should always be available
-        let result = check_backend_installation(GpuBackend::Cpu).unwrap();
+        let result = check_backend_installation(GpuBackend::Cpu).expect("Operation failed");
         assert!(result);
     }
 
     #[test]
     fn test_check_backend_installation_wgpu() {
         // WebGPU should always be available through wgpu crate
-        let result = check_backend_installation(GpuBackend::Wgpu).unwrap();
+        let result = check_backend_installation(GpuBackend::Wgpu).expect("Operation failed");
         assert!(result);
     }
 
     #[test]
     fn test_check_backend_installation_metal() {
-        let result = check_backend_installation(GpuBackend::Metal).unwrap();
+        let result = check_backend_installation(GpuBackend::Metal).expect("Operation failed");
         #[cfg(target_os = "macos")]
         assert!(result);
         #[cfg(not(target_os = "macos"))]
@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     fn test_initialize_optimal_backend() {
-        let backend = initialize_optimal_backend().unwrap();
+        let backend = initialize_optimal_backend().expect("Operation failed");
 
         // Should return a valid backend
         match backend {
@@ -652,7 +652,7 @@ mod tests {
         let result = get_device_info(GpuBackend::Cpu, 0);
 
         assert!(result.is_ok());
-        let info = result.unwrap();
+        let info = result.expect("Operation failed");
         assert_eq!(info.backend, GpuBackend::Cpu);
         assert_eq!(info.device_name, "CPU");
         assert!(!info.supports_tensors);
@@ -751,7 +751,7 @@ mod tests {
             .any(|d: &GpuInfo| d.backend == GpuBackend::Cuda)
         {
             // If CUDA is available, it should be preferred
-            let optimal = initialize_optimal_backend().unwrap();
+            let optimal = initialize_optimal_backend().expect("Operation failed");
             if result
                 .devices
                 .iter()

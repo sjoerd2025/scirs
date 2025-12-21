@@ -270,8 +270,8 @@ fn print_ascii_visualization_circle(
         (path[0][1] / 10.0 * SIZE as f64) as usize,
     );
     let (goal_x, goal_y) = (
-        (path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
-        (path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
+        (path.last().expect("Operation failed")[0] / 10.0 * SIZE as f64) as usize,
+        (path.last().expect("Operation failed")[1] / 10.0 * SIZE as f64) as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {
@@ -353,8 +353,8 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
         (path[0][1] / 10.0 * SIZE as f64) as usize,
     );
     let (goal_x, goal_y) = (
-        (path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
-        (path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
+        (path.last().expect("Operation failed")[0] / 10.0 * SIZE as f64) as usize,
+        (path.last().expect("Operation failed")[1] / 10.0 * SIZE as f64) as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {

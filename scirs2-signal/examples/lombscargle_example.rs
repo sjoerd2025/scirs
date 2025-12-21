@@ -67,8 +67,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("  Number of frequency points: {}", frequencies.len());
     println!(
         "  Frequency range: {:.1} to {:.1} Hz",
-        frequencies.first().unwrap(),
-        frequencies.last().unwrap()
+        frequencies.first().expect("Operation failed"),
+        frequencies.last().expect("Operation failed")
     );
 
     // Calculate significance levels
@@ -136,7 +136,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         // Find the maximum power
         let max_power = power.iter().fold(0.0_f64, |a, &b| a.max(b));
-        let max_idx = power.iter().position(|&p| p == max_power).unwrap();
+        let max_idx = power
+            .iter()
+            .position(|&p| p == max_power)
+            .expect("Operation failed");
         let max_freq = frequencies[max_idx];
 
         println!(

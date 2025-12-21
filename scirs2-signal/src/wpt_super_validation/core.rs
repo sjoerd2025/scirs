@@ -40,7 +40,7 @@ use std::time::Instant;
 /// use scirs2_signal::wpt_super_validation::{run_advanced_wpt_validation, AdvancedWptValidationConfig};
 ///
 /// let config = AdvancedWptValidationConfig::default();
-/// let results = run_advanced_wpt_validation(&config).unwrap();
+/// let results = run_advanced_wpt_validation(&config).expect("Operation failed");
 ///
 /// match results.overall_status {
 ///     ValidationStatus::Pass => println!("All validations passed!"),
@@ -242,7 +242,7 @@ mod tests {
         let result = run_advanced_wpt_validation(&config);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert_eq!(validation.overall_status, ValidationStatus::Pass);
     }
 
@@ -258,7 +258,7 @@ mod tests {
         let result = run_basic_wpt_validation(&config);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert_eq!(validation.energy_ratio, 1.0);
         assert!(validation.max_reconstruction_error < 1e-10);
     }

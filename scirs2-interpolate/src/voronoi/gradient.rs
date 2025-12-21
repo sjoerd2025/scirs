@@ -214,7 +214,7 @@ where
     let mut gradient = Array1::zeros(dim);
 
     // Use central differences for better accuracy
-    let h = F::from(1e-6).unwrap(); // Step size
+    let h = F::from(1e-6).expect("Failed to convert constant to float"); // Step size
 
     // Compute the center value
     let center_value = match interpolator.interpolate(query) {

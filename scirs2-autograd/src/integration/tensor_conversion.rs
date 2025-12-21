@@ -116,7 +116,7 @@ impl TensorConverter {
         // Convert data types
         let converted_data: Vec<F2> = data
             .iter()
-            .map(|&x| F2::from(x.to_f64().unwrap()).unwrap())
+            .map(|&x| F2::from(x.to_f64().expect("Operation failed")).expect("Operation failed"))
             .collect();
 
         Ok(Tensor::from_vec(converted_data, shape, graph))
@@ -155,7 +155,7 @@ impl TensorConverter {
         // Create dummy data matching the shape for testing
         let total_elements: usize = shape.iter().product();
         let data: Vec<F> = (0..total_elements)
-            .map(|i| F::from(i + 1).unwrap())
+            .map(|i| F::from(i + 1).expect("Failed to convert to float"))
             .collect();
 
         Array::from_shape_vec(IxDyn(&shape), data).map_err(|e| {
@@ -241,7 +241,7 @@ impl TensorConverter {
         let mut bytes = Vec::with_capacity(data.len() * std::mem::size_of::<F>());
 
         for value in data {
-            let value_f64 = value.to_f64().unwrap();
+            let value_f64 = value.to_f64().expect("Operation failed");
             bytes.extend_from_slice(&value_f64.to_le_bytes());
         }
 
@@ -271,7 +271,7 @@ impl TensorConverter {
                 IntegrationError::TensorConversion("Failed to convert bytes to f64".to_string())
             })?;
             let value_f64 = f64::from_le_bytes(bytes);
-            let value_f = F::from(value_f64).unwrap();
+            let value_f = F::from(value_f64).expect("Failed to convert to float");
             values.push(value_f);
         }
 
@@ -449,14 +449,16 @@ mod tests {
             // Use constant tensor which properly preserves shape
             let tensor = convert_to_tensor(
                 scirs2_core::ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0])
-                    .unwrap(),
+                    .expect("Failed to convert"),
                 g,
             );
 
             // Get shape from evaluated tensor
-            let actualshape = tensor.eval(g).unwrap().shape().to_vec();
+            let actualshape = tensor.eval(g).expect("Operation failed").shape().to_vec();
 
-            let metadata = converter.extract_metadata(&tensor).unwrap();
+            let metadata = converter
+                .extract_metadata(&tensor)
+                .expect("Operation failed");
             assert_eq!(metadata.shape, actualshape);
             assert!(metadata.dtype.contains("f32"));
             assert_eq!(metadata.memory_layout, MemoryLayout::RowMajor);
@@ -472,11 +474,13 @@ mod tests {
             let converter = TensorConverter::new();
             let tensor_f32 = convert_to_tensor(
                 scirs2_core::ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0])
-                    .unwrap(),
+                    .expect("Failed to convert"),
                 g,
             );
 
-            let tensor_f64 = converter.convert_precision(&tensor_f32, g).unwrap();
+            let tensor_f64 = converter
+                .convert_precision(&tensor_f32, g)
+                .expect("Operation failed");
             assert_eq!(tensor_f64.shape(), tensor_f32.shape());
             // Just check the shape matches, avoid data access issues
             assert_eq!(tensor_f64.shape(), vec![2, 2]);
@@ -488,12 +492,12 @@ mod tests {
         crate::run(|g| {
             let tensor = convert_to_tensor(
                 scirs2_core::ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0])
-                    .unwrap(),
+                    .expect("Failed to convert"),
                 g,
             );
             let converter = TensorConverter::new();
 
-            let view = converter.create_view(&tensor).unwrap();
+            let view = converter.create_view(&tensor).expect("Operation failed");
             assert_eq!(view.shape, vec![2, 2]);
             // Since data() returns empty, just check shape
             assert_eq!(view.shape.len(), 2);
@@ -506,15 +510,18 @@ mod tests {
             let data = vec![1.0f32, 2.0, 3.0, 4.0];
             let shape = [2, 2];
             let tensor = convert_to_tensor(
-                scirs2_core::ndarray::Array::from_shape_vec((2, 2), data.clone()).unwrap(),
+                scirs2_core::ndarray::Array::from_shape_vec((2, 2), data.clone())
+                    .expect("Operation failed"),
                 g,
             );
 
             let converter = TensorConverter::new();
-            let ndarray = converter.to_ndarray(&tensor).unwrap();
+            let ndarray = converter.to_ndarray(&tensor).expect("Operation failed");
             assert_eq!(ndarray.shape(), &[2, 2]);
 
-            let tensor_back = converter.from_ndarray(ndarray, g).unwrap();
+            let tensor_back = converter
+                .from_ndarray(ndarray, g)
+                .expect("Operation failed");
             assert_eq!(tensor_back.shape(), tensor.shape());
         });
     }
@@ -525,7 +532,7 @@ mod tests {
             let tensor = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
 
             // Test conversion to JSON format
-            let json_data = convert_tensor_to(&tensor, "json").unwrap();
+            let json_data = convert_tensor_to(&tensor, "json").expect("Operation failed");
             assert!(!json_data.is_empty());
 
             // Test precision conversion (function returns () currently)

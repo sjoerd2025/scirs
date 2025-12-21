@@ -206,11 +206,11 @@ mod tests {
         let extrapolator = make_linear_extrapolator(0.0, 10.0, 0.0, 10.0, 1.0, 1.0);
 
         // Test lower extrapolation
-        let result = extrapolator.extrapolate(-5.0).unwrap();
+        let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
         assert_abs_diff_eq!(result, -5.0, epsilon = 1e-10);
 
         // Test upper extrapolation
-        let result = extrapolator.extrapolate(15.0).unwrap();
+        let result = extrapolator.extrapolate(15.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 15.0, epsilon = 1e-10);
     }
 
@@ -226,11 +226,11 @@ mod tests {
         );
 
         // Test lower extrapolation
-        let result = extrapolator.extrapolate(-5.0).unwrap();
+        let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 5.0, epsilon = 1e-10);
 
         // Test upper extrapolation
-        let result = extrapolator.extrapolate(15.0).unwrap();
+        let result = extrapolator.extrapolate(15.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 15.0, epsilon = 1e-10);
     }
 
@@ -239,11 +239,11 @@ mod tests {
         let extrapolator = make_zeros_extrapolator(0.0, 10.0);
 
         // Test lower extrapolation
-        let result = extrapolator.extrapolate(-5.0).unwrap();
+        let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 0.0, epsilon = 1e-10);
 
         // Test upper extrapolation
-        let result = extrapolator.extrapolate(15.0).unwrap();
+        let result = extrapolator.extrapolate(15.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 0.0, epsilon = 1e-10);
     }
 

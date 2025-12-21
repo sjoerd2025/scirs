@@ -475,7 +475,7 @@ mod tests {
 
     #[test]
     fn test_crank_nicolson_solver_creation() {
-        let solver = CrankNicolsonSolver::new(100, 50).unwrap();
+        let solver = CrankNicolsonSolver::new(100, 50).expect("Operation failed");
         assert_eq!(solver.n_space, 100);
         assert_eq!(solver.n_time, 50);
         assert!((solver.theta - 0.5).abs() < 1e-10);
@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_crank_nicolson_black_scholes() {
-        let solver = CrankNicolsonSolver::new(100, 100).unwrap();
+        let solver = CrankNicolsonSolver::new(100, 100).expect("Operation failed");
 
         let option = FinancialOption {
             option_type: OptionType::Call,
@@ -495,7 +495,9 @@ mod tests {
             dividend_yield: 0.0,
         };
 
-        let price = solver.solve_black_scholes(&option, 0.2).unwrap();
+        let price = solver
+            .solve_black_scholes(&option, 0.2)
+            .expect("Operation failed");
 
         // Compare with Black-Scholes analytical solution
         let bs_price = crate::specialized::finance::pricing::black_scholes::black_scholes_price(
@@ -519,14 +521,14 @@ mod tests {
 
     #[test]
     fn test_adi_solver_creation() {
-        let solver = ADISolver::new(50, 50, 100).unwrap();
+        let solver = ADISolver::new(50, 50, 100).expect("Operation failed");
         assert_eq!(solver.n_x, 50);
         assert_eq!(solver.n_y, 50);
     }
 
     #[test]
     fn test_adi_2d_diffusion() {
-        let solver = ADISolver::new(21, 21, 50).unwrap();
+        let solver = ADISolver::new(21, 21, 50).expect("Operation failed");
 
         // Gaussian initial condition
         let mut initial = Array2::<f64>::zeros((21, 21));
@@ -540,7 +542,7 @@ mod tests {
 
         let result = solver
             .solve_2d_diffusion((-1.0, 1.0), (-1.0, 1.0), 0.1, 0.1, 0.1, &initial)
-            .unwrap();
+            .expect("Operation failed");
 
         // After diffusion, center should have decreased, but sum should be conserved (approximately)
         assert!(result[[10, 10]] < initial[[10, 10]]);
@@ -556,7 +558,7 @@ mod tests {
         let c = Array1::from_vec(vec![-1.0, -1.0, 0.0]);
         let d = Array1::from_vec(vec![1.0, 0.0, 1.0]);
 
-        let x = thomas_algorithm(&a, &b, &c, &d).unwrap();
+        let x = thomas_algorithm(&a, &b, &c, &d).expect("Operation failed");
 
         // Solution should be x = [1, 1, 1]
         assert!((x[0] - 1.0).abs() < 1e-10);
@@ -566,7 +568,7 @@ mod tests {
 
     #[test]
     fn test_high_order_solver() {
-        let solver = HighOrderFDSolver::new(101, 100).unwrap();
+        let solver = HighOrderFDSolver::new(101, 100).expect("Operation failed");
 
         // Initial Gaussian
         let mut initial = Array1::<f64>::zeros(101);
@@ -577,7 +579,7 @@ mod tests {
 
         let result = solver
             .solve_diffusion((-1.0, 1.0), 0.01, 0.1, &initial)
-            .unwrap();
+            .expect("Operation failed");
 
         // Peak should decrease due to diffusion
         assert!(result[50] < initial[50]);
@@ -585,7 +587,7 @@ mod tests {
 
     #[test]
     fn test_operator_splitting() {
-        let solver = OperatorSplittingSolver::new(50, 50).unwrap();
+        let solver = OperatorSplittingSolver::new(50, 50).expect("Operation failed");
 
         // Simple linear reaction: R(u) = -u
         let reaction = |u: f64| -u;
@@ -595,7 +597,7 @@ mod tests {
 
         let result = solver
             .solve_reaction_diffusion((-1.0, 1.0), 0.1, 0.1, reaction, &initial)
-            .unwrap();
+            .expect("Operation failed");
 
         // Both diffusion and decay should occur
         assert!(result[25] < initial[25]);
@@ -603,7 +605,7 @@ mod tests {
 
     #[test]
     fn test_crank_nicolson_put_option() {
-        let solver = CrankNicolsonSolver::new(100, 100).unwrap();
+        let solver = CrankNicolsonSolver::new(100, 100).expect("Operation failed");
 
         let option = FinancialOption {
             option_type: OptionType::Put,
@@ -615,7 +617,9 @@ mod tests {
             dividend_yield: 0.0,
         };
 
-        let price = solver.solve_black_scholes(&option, 0.2).unwrap();
+        let price = solver
+            .solve_black_scholes(&option, 0.2)
+            .expect("Operation failed");
 
         let bs_price = crate::specialized::finance::pricing::black_scholes::black_scholes_price(
             100.0,

@@ -74,7 +74,7 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
             "accuracy",
             Box::new(|_preds, _targets| {
                 // Temporarily return a fixed value to test if this is the cause of stack overflow
-                Ok(F::from(0.8).unwrap())
+                Ok(F::from(0.8).expect("Failed to convert constant to float"))
             }),
         )
     }
@@ -85,8 +85,8 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
             "precision",
             Box::new(|preds, targets| {
                 // Convert to 1D f64 arrays safely
-                let preds_1d = preds.to_shape(preds.len()).unwrap();
-                let targets_1d = targets.to_shape(targets.len()).unwrap();
+                let preds_1d = preds.to_shape(preds.len()).expect("Operation failed");
+                let targets_1d = targets.to_shape(targets.len()).expect("Operation failed");
 
                 let preds_f64: Vec<f64> = preds_1d
                     .iter()
@@ -103,7 +103,7 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
                 let pos_label = 1.0;
                 let result =
                     crate::classification::precision_score(&targets_arr, &preds_arr, pos_label)?;
-                Ok(F::from(result).unwrap())
+                Ok(F::from(result).expect("Failed to convert to float"))
             }),
         )
     }
@@ -114,8 +114,8 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
             "recall",
             Box::new(|preds, targets| {
                 // Convert to 1D f64 arrays safely
-                let preds_1d = preds.to_shape(preds.len()).unwrap();
-                let targets_1d = targets.to_shape(targets.len()).unwrap();
+                let preds_1d = preds.to_shape(preds.len()).expect("Operation failed");
+                let targets_1d = targets.to_shape(targets.len()).expect("Operation failed");
 
                 let preds_f64: Vec<f64> = preds_1d
                     .iter()
@@ -132,7 +132,7 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
                 let pos_label = 1.0;
                 let result =
                     crate::classification::recall_score(&targets_arr, &preds_arr, pos_label)?;
-                Ok(F::from(result).unwrap())
+                Ok(F::from(result).expect("Failed to convert to float"))
             }),
         )
     }
@@ -143,8 +143,8 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
             "f1_score",
             Box::new(|preds, targets| {
                 // Convert to 1D f64 arrays safely
-                let preds_1d = preds.to_shape(preds.len()).unwrap();
-                let targets_1d = targets.to_shape(targets.len()).unwrap();
+                let preds_1d = preds.to_shape(preds.len()).expect("Operation failed");
+                let targets_1d = targets.to_shape(targets.len()).expect("Operation failed");
 
                 let preds_f64: Vec<f64> = preds_1d
                     .iter()
@@ -160,7 +160,7 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
 
                 let pos_label = 1.0;
                 let result = crate::classification::f1_score(&targets_arr, &preds_arr, pos_label)?;
-                Ok(F::from(result).unwrap())
+                Ok(F::from(result).expect("Failed to convert to float"))
             }),
         )
     }
@@ -175,7 +175,7 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
                 let targets_u32 = targets.mapv(|x| x.to_f64().unwrap_or(0.0).round() as u32);
                 let preds_f64 = preds.mapv(|x| x.to_f64().unwrap_or(0.0));
                 let result = crate::classification::roc_auc_score(&targets_u32, &preds_f64)?;
-                Ok(F::from(result).unwrap())
+                Ok(F::from(result).expect("Failed to convert to float"))
             }),
         )
     }

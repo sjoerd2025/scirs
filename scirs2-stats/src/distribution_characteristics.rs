@@ -50,13 +50,13 @@ where
 ///
 /// // Unimodal data
 /// let data = array![1, 2, 2, 3, 2, 4, 5];
-/// let unimodal_result = mode(&data.view(), ModeMethod::Unimodal).unwrap();
+/// let unimodal_result = mode(&data.view(), ModeMethod::Unimodal).expect("Operation failed");
 /// assert_eq!(unimodal_result.values, vec![2]);
 /// assert_eq!(unimodal_result.counts, vec![3]);
 ///
 /// // Multimodal data
 /// let multidata = array![1, 2, 2, 3, 3, 4];
-/// let multimodal_result = mode(&multidata.view(), ModeMethod::MultiModal).unwrap();
+/// let multimodal_result = mode(&multidata.view(), ModeMethod::MultiModal).expect("Operation failed");
 /// assert_eq!(multimodal_result.values, vec![2, 3]);
 /// assert_eq!(multimodal_result.counts, vec![2, 2]);
 /// ```
@@ -135,12 +135,12 @@ where
 ///
 /// // Uniform distribution (maximum entropy)
 /// let uniform = array![1, 2, 3, 4, 5, 6];
-/// let entropy_uniform = entropy(&uniform.view(), Some(2.0)).unwrap();
+/// let entropy_uniform = entropy(&uniform.view(), Some(2.0)).expect("Operation failed");
 /// assert!((entropy_uniform - 2.58496).abs() < 1e-5);
 ///
 /// // Less uniform distribution (lower entropy)
 /// let less_uniform = array![1, 1, 1, 2, 3, 4];
-/// let entropy_less = entropy(&less_uniform.view(), Some(2.0)).unwrap();
+/// let entropy_less = entropy(&less_uniform.view(), Some(2.0)).expect("Operation failed");
 /// assert!(entropy_less < entropy_uniform);
 /// ```
 #[allow(dead_code)]
@@ -202,11 +202,11 @@ where
 /// let p = array![0.5f64, 0.5];
 /// let q = array![0.9f64, 0.1];
 ///
-/// let div = kl_divergence(&p.view(), &q.view()).unwrap();
+/// let div = kl_divergence(&p.view(), &q.view()).expect("Operation failed");
 /// assert!((div - 0.5108256238).abs() < 1e-10);
 ///
 /// // Identical distributions have zero divergence
-/// let same = kl_divergence(&p.view(), &p.view()).unwrap();
+/// let same = kl_divergence(&p.view(), &p.view()).expect("Operation failed");
 /// assert!(same == 0.0);
 /// ```
 #[allow(dead_code)]
@@ -233,7 +233,7 @@ where
     let q_sum: F = q.iter().cloned().sum();
 
     let one = F::one();
-    let tol = F::from(1e-10).unwrap();
+    let tol = F::from(1e-10).expect("Failed to convert constant to float");
 
     if (p_sum - one).abs() > tol || (q_sum - one).abs() > tol {
         return Err(StatsError::InvalidArgument(
@@ -287,7 +287,7 @@ where
 /// let p = array![0.5f64, 0.5];
 /// let q = array![0.9f64, 0.1];
 ///
-/// let cross_ent = cross_entropy(&p.view(), &q.view()).unwrap();
+/// let cross_ent = cross_entropy(&p.view(), &q.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cross_entropy<F>(p: &ArrayView1<F>, q: &ArrayView1<F>) -> StatsResult<F>
@@ -313,7 +313,7 @@ where
     let q_sum: F = q.iter().cloned().sum();
 
     let one = F::one();
-    let tol = F::from(1e-10).unwrap();
+    let tol = F::from(1e-10).expect("Failed to convert constant to float");
 
     if (p_sum - one).abs() > tol || (q_sum - one).abs() > tol {
         return Err(StatsError::InvalidArgument(
@@ -383,7 +383,7 @@ where
 ///
 /// // Calculate skewness with 95% confidence interval
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
-/// let result = skewness_ci(&data.view(), false, None, None, Some(42)).unwrap();
+/// let result = skewness_ci(&data.view(), false, None, None, Some(42)).expect("Operation failed");
 /// println!("Skewness: {} (95% CI: {}, {})", result.estimate, result.lower, result.upper);
 /// ```
 #[allow(dead_code)]
@@ -419,7 +419,7 @@ where
         ));
     }
 
-    let conf = confidence.unwrap_or(F::from(0.95).unwrap());
+    let conf = confidence.unwrap_or(F::from(0.95).expect("Failed to convert constant to float"));
     let n_boot = n_bootstrap.unwrap_or(1000);
 
     if conf <= F::zero() || conf >= F::one() {
@@ -449,12 +449,12 @@ where
 
     // Calculate percentile indices
     let alpha = (F::one() - conf) / (F::one() + F::one());
-    let lower_idx = (alpha * F::from(bootstrap_skew.len()).unwrap())
+    let lower_idx = (alpha * F::from(bootstrap_skew.len()).expect("Operation failed"))
         .to_usize()
-        .unwrap();
-    let upper_idx = ((F::one() - alpha) * F::from(bootstrap_skew.len()).unwrap())
+        .expect("Operation failed");
+    let upper_idx = ((F::one() - alpha) * F::from(bootstrap_skew.len()).expect("Operation failed"))
         .to_usize()
-        .unwrap();
+        .expect("Operation failed");
 
     // Get percentile values
     let lower = bootstrap_skew.get(lower_idx).cloned().unwrap_or(F::zero());
@@ -491,7 +491,7 @@ where
 ///
 /// // Calculate kurtosis with 95% confidence interval
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
-/// let result = kurtosis_ci(&data.view(), true, false, None, None, Some(42)).unwrap();
+/// let result = kurtosis_ci(&data.view(), true, false, None, None, Some(42)).expect("Operation failed");
 /// println!("Kurtosis: {} (95% CI: {}, {})", result.estimate, result.lower, result.upper);
 /// ```
 #[allow(dead_code)]
@@ -528,7 +528,7 @@ where
         ));
     }
 
-    let conf = confidence.unwrap_or(F::from(0.95).unwrap());
+    let conf = confidence.unwrap_or(F::from(0.95).expect("Failed to convert constant to float"));
     let n_boot = n_bootstrap.unwrap_or(1000);
 
     if conf <= F::zero() || conf >= F::one() {
@@ -558,12 +558,12 @@ where
 
     // Calculate percentile indices
     let alpha = (F::one() - conf) / (F::one() + F::one());
-    let lower_idx = (alpha * F::from(bootstrap_kurt.len()).unwrap())
+    let lower_idx = (alpha * F::from(bootstrap_kurt.len()).expect("Operation failed"))
         .to_usize()
-        .unwrap();
-    let upper_idx = ((F::one() - alpha) * F::from(bootstrap_kurt.len()).unwrap())
+        .expect("Operation failed");
+    let upper_idx = ((F::one() - alpha) * F::from(bootstrap_kurt.len()).expect("Operation failed"))
         .to_usize()
-        .unwrap();
+        .expect("Operation failed");
 
     // Get percentile values
     let lower = bootstrap_kurt.get(lower_idx).cloned().unwrap_or(F::zero());
@@ -587,7 +587,7 @@ mod tests {
     #[test]
     fn test_mode_unimodal() {
         let data = array![1, 2, 2, 3, 2, 4, 5];
-        let result = mode(&data.view(), ModeMethod::Unimodal).unwrap();
+        let result = mode(&data.view(), ModeMethod::Unimodal).expect("Operation failed");
         assert_eq!(result.values.len(), 1);
         assert_eq!(result.values[0], 2);
         assert_eq!(result.counts[0], 3);
@@ -596,7 +596,7 @@ mod tests {
     #[test]
     fn test_mode_multimodal() {
         let data = array![1, 2, 2, 3, 3, 4];
-        let result = mode(&data.view(), ModeMethod::MultiModal).unwrap();
+        let result = mode(&data.view(), ModeMethod::MultiModal).expect("Operation failed");
         assert_eq!(result.values.len(), 2);
         assert_eq!(result.values, vec![2, 3]);
         assert_eq!(result.counts, vec![2, 2]);
@@ -606,17 +606,17 @@ mod tests {
     fn test_entropy() {
         // Uniform distribution (maximum entropy)
         let uniform = array![1, 2, 3, 4, 5, 6];
-        let entropy_uniform = entropy(&uniform.view(), Some(2.0)).unwrap();
+        let entropy_uniform = entropy(&uniform.view(), Some(2.0)).expect("Operation failed");
         assert_relative_eq!(entropy_uniform, 2.58496, epsilon = 1e-5);
 
         // Less uniform distribution (lower entropy)
         let less_uniform = array![1, 1, 1, 2, 3, 4];
-        let entropy_less = entropy(&less_uniform.view(), Some(2.0)).unwrap();
+        let entropy_less = entropy(&less_uniform.view(), Some(2.0)).expect("Operation failed");
         assert!(entropy_less < entropy_uniform);
 
         // Single value (zero entropy)
         let single = array![1, 1, 1, 1, 1];
-        let entropy_single = entropy(&single.view(), Some(2.0)).unwrap();
+        let entropy_single = entropy(&single.view(), Some(2.0)).expect("Operation failed");
         assert_relative_eq!(entropy_single, 0.0, epsilon = 1e-10);
     }
 
@@ -626,15 +626,15 @@ mod tests {
         let p = array![0.5f64, 0.5];
         let q = array![0.9f64, 0.1];
 
-        let div = kl_divergence(&p.view(), &q.view()).unwrap();
+        let div = kl_divergence(&p.view(), &q.view()).expect("Operation failed");
         assert_relative_eq!(div, 0.5108256238, epsilon = 1e-10);
 
         // KL divergence is not symmetric
-        let div_reverse = kl_divergence(&q.view(), &p.view()).unwrap();
+        let div_reverse = kl_divergence(&q.view(), &p.view()).expect("Operation failed");
         assert!(div != div_reverse);
 
         // Identical distributions have zero divergence
-        let same = kl_divergence(&p.view(), &p.view()).unwrap();
+        let same = kl_divergence(&p.view(), &p.view()).expect("Operation failed");
         assert_relative_eq!(same, 0.0, epsilon = 1e-10);
     }
 
@@ -644,11 +644,11 @@ mod tests {
         let p = array![0.5f64, 0.5];
         let q = array![0.9f64, 0.1];
 
-        let cross_ent = cross_entropy(&p.view(), &q.view()).unwrap();
+        let cross_ent = cross_entropy(&p.view(), &q.view()).expect("Operation failed");
 
         // Cross entropy equals entropy(p) + KL(p||q)
         let entropy_p = -0.5f64 * (0.5f64.ln()) - 0.5 * (0.5f64.ln());
-        let kl = kl_divergence(&p.view(), &q.view()).unwrap();
+        let kl = kl_divergence(&p.view(), &q.view()).expect("Operation failed");
 
         assert_relative_eq!(cross_ent, entropy_p + kl, epsilon = 1e-10);
     }
@@ -656,10 +656,11 @@ mod tests {
     #[test]
     fn test_skewness_ci() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
-        let result = skewness_ci(&data.view(), false, None, Some(100), Some(42)).unwrap();
+        let result =
+            skewness_ci(&data.view(), false, None, Some(100), Some(42)).expect("Operation failed");
 
         // Check that the estimate is correct
-        let direct_skew = skew(&data.view(), false, None).unwrap();
+        let direct_skew = skew(&data.view(), false, None).expect("Operation failed");
         assert_relative_eq!(result.estimate, direct_skew, epsilon = 1e-10);
 
         // Check confidence interval contains the estimate
@@ -673,10 +674,11 @@ mod tests {
     #[test]
     fn test_kurtosis_ci() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
-        let result = kurtosis_ci(&data.view(), true, false, None, Some(100), Some(42)).unwrap();
+        let result = kurtosis_ci(&data.view(), true, false, None, Some(100), Some(42))
+            .expect("Operation failed");
 
         // Check that the estimate is correct
-        let direct_kurt = kurtosis(&data.view(), true, false, None).unwrap();
+        let direct_kurt = kurtosis(&data.view(), true, false, None).expect("Operation failed");
         assert_relative_eq!(result.estimate, direct_kurt, epsilon = 1e-10);
 
         // Check confidence interval contains the estimate

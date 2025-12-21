@@ -126,7 +126,7 @@ pub fn shape1(&[usize]: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
 /// let b = array![10, 20, 30];
-/// let (a_broad, b_broad) = broadcast_arrays(a.view(), b.view()).unwrap();
+/// let (a_broad, b_broad) = broadcast_arrays(a.view(), b.view()).expect("Operation failed");
 /// assert_eq!(a_broad.shape(), &[2, 3]);
 /// assert_eq!(b_broad.shape(), &[2, 3]);
 /// ```
@@ -224,7 +224,7 @@ where
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
 /// let b = array![10, 20, 30];
-/// let result = broadcast_apply(a.view(), b.view(), |x, y| x + y).unwrap();
+/// let result = broadcast_apply(a.view(), b.view(), |x, y| x + y).expect("Operation failed");
 /// assert_eq!(result.shape(), &[2, 3]);
 /// assert_eq!(result[[0, 0]], 11);
 /// assert_eq!(result[[1, 2]], 36);
@@ -294,7 +294,7 @@ mod tests {
         let a = array![[1, 2, 3], [4, 5, 6]];
         let b = array![10, 20, 30];
 
-        let (a_broad, b_broad) = broadcast_arrays(a.view(), b.view()).unwrap();
+        let (a_broad, b_broad) = broadcast_arrays(a.view(), b.view()).expect("Operation failed");
         assert_eq!(a_broad.shape(), &[2, 3]);
         assert_eq!(b_broad.shape(), &[2, 3]);
         assert_eq!(a_broad[[0, 0]], 1);
@@ -309,7 +309,7 @@ mod tests {
         let b = array![10, 20, 30];
 
         // Test addition
-        let result = broadcast_apply(a.view(), b.view(), |x, y| x + y).unwrap();
+        let result = broadcast_apply(a.view(), b.view(), |x, y| x + y).expect("Operation failed");
         assert_eq!(result.shape(), &[2, 3]);
         assert_eq!(result[[0, 0]], 11);
         assert_eq!(result[[0, 1]], 22);
@@ -319,7 +319,7 @@ mod tests {
         assert_eq!(result[[1, 2]], 36);
 
         // Test multiplication
-        let result = broadcast_apply(a.view(), b.view(), |x, y| x * y).unwrap();
+        let result = broadcast_apply(a.view(), b.view(), |x, y| x * y).expect("Operation failed");
         assert_eq!(result.shape(), &[2, 3]);
         assert_eq!(result[[0, 0]], 10);
         assert_eq!(result[[0, 1]], 40);

@@ -454,8 +454,8 @@ mod tests {
     #[test]
     fn test_dct_v() {
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let dct_v_result = dct_v(&x).unwrap();
-        let idct_v_result = idct_v(&dct_v_result).unwrap();
+        let dct_v_result = dct_v(&x).expect("Operation failed");
+        let idct_v_result = idct_v(&dct_v_result).expect("Operation failed");
 
         // Type V transforms have known numerical instability due to the
         // mismatch between FFT-based forward transform and direct computation
@@ -484,8 +484,8 @@ mod tests {
     #[test]
     fn test_dst_v() {
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let dst_v_result = dst_v(&x).unwrap();
-        let idst_v_result = idst_v(&dst_v_result).unwrap();
+        let dst_v_result = dst_v(&x).expect("Operation failed");
+        let idst_v_result = idst_v(&dst_v_result).expect("Operation failed");
 
         // Check inverse property - Type V transforms have known numerical instability
         // Just check we get something in the right ballpark
@@ -508,15 +508,15 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // Test all DCT types V-VIII
-        let _ = dct_v(&x).unwrap();
-        let _ = dct_vi(&x).unwrap();
-        let _ = dct_vii(&x).unwrap();
-        let _ = dct_viii(&x).unwrap();
+        let _ = dct_v(&x).expect("Operation failed");
+        let _ = dct_vi(&x).expect("Operation failed");
+        let _ = dct_vii(&x).expect("Operation failed");
+        let _ = dct_viii(&x).expect("Operation failed");
 
         // Test all DST types V-VIII
-        let _ = dst_v(&x).unwrap();
-        let _ = dst_vi(&x).unwrap();
-        let _ = dst_vii(&x).unwrap();
-        let _ = dst_viii(&x).unwrap();
+        let _ = dst_v(&x).expect("Operation failed");
+        let _ = dst_vi(&x).expect("Operation failed");
+        let _ = dst_vii(&x).expect("Operation failed");
+        let _ = dst_viii(&x).expect("Operation failed");
     }
 }

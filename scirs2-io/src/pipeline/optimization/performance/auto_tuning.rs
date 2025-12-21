@@ -233,7 +233,7 @@ mod tests {
             numa_topology: NumaTopology::default(),
         };
 
-        let features = tuner.extract_features(&system_metrics, &[], 1024).unwrap();
+        let features = tuner.extract_features(&system_metrics, &[], 1024).expect("Operation failed");
         assert_eq!(features.len(), 8);
     }
 

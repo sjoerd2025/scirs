@@ -275,7 +275,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         let start_time = Instant::now();
 
         // Allocate GPU memory using advanced-optimized pool
-        let mut memory_pool = self.memory_pool.lock().unwrap();
+        let mut memory_pool = self.memory_pool.lock().expect("Operation failed");
         let y_gpu = memory_pool.allocate_solution_vector(y.len())?;
         let k1_gpu = memory_pool.allocate_derivative_vector(y.len())?;
         let k2_gpu = memory_pool.allocate_derivative_vector(y.len())?;
@@ -288,7 +288,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         self.transfer_to_gpu_optimized(&y_gpu, y)?;
 
         // Launch advanced-optimized RK4 kernel with adaptive block sizing
-        let mut kernel_cache = self.kernel_cache.lock().unwrap();
+        let mut kernel_cache = self.kernel_cache.lock().expect("Operation failed");
         let kernel_name = "advanced_rk4_kernel";
         let optimal_config =
             self.get_or_optimize_kernel_config(&mut kernel_cache, kernel_name, y.len())?;
@@ -320,7 +320,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         self.update_kernel_performance(kernel_name, execution_time, &optimal_config)?;
 
         // Deallocate GPU memory back to pool for reuse
-        let mut memory_pool = self.memory_pool.lock().unwrap();
+        let mut memory_pool = self.memory_pool.lock().expect("Operation failed");
         memory_pool.deallocate(y_gpu.id)?;
         memory_pool.deallocate(k1_gpu.id)?;
         memory_pool.deallocate(k2_gpu.id)?;
@@ -343,11 +343,16 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
     ) -> IntegrateResult<(Array1<F>, F, bool)> {
         // Perform two steps: one full step and two half steps
         let y1 = self.advanced_rk4_step(t, y, h, &f)?;
-        let y_half1 = self.advanced_rk4_step(t, y, h / F::from(2.0).unwrap(), &f)?;
+        let y_half1 = self.advanced_rk4_step(
+            t,
+            y,
+            h / F::from(2.0).expect("Failed to convert constant to float"),
+            &f,
+        )?;
         let y2 = self.advanced_rk4_step(
-            t + h / F::from(2.0).unwrap(),
+            t + h / F::from(2.0).expect("Failed to convert constant to float"),
             &y_half1.view(),
-            h / F::from(2.0).unwrap(),
+            h / F::from(2.0).expect("Failed to convert constant to float"),
             &f,
         )?;
 
@@ -355,18 +360,24 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         let error = self.advanced_gpu_error_estimate(&y1.view(), &y2.view(), rtol, atol)?;
 
         // Determine step acceptance and new step size
-        let safety_factor = F::from(0.9).unwrap();
+        let safety_factor = F::from(0.9).expect("Failed to convert constant to float");
         let error_tolerance = F::one();
 
         if error <= error_tolerance {
             // Accept step with error-based step size update
-            let factor = safety_factor * (error_tolerance / error).powf(F::from(0.2).unwrap());
-            let new_h = h * factor.min(F::from(2.0).unwrap()).max(F::from(0.5).unwrap());
+            let factor = safety_factor
+                * (error_tolerance / error)
+                    .powf(F::from(0.2).expect("Failed to convert constant to float"));
+            let new_h = h * factor
+                .min(F::from(2.0).expect("Failed to convert constant to float"))
+                .max(F::from(0.5).expect("Failed to convert constant to float"));
             Ok((y2, new_h, true))
         } else {
             // Reject step and reduce step size
-            let factor = safety_factor * (error_tolerance / error).powf(F::from(0.25).unwrap());
-            let new_h = h * factor.max(F::from(0.1).unwrap());
+            let factor = safety_factor
+                * (error_tolerance / error)
+                    .powf(F::from(0.25).expect("Failed to convert constant to float"));
+            let new_h = h * factor.max(F::from(0.1).expect("Failed to convert constant to float"));
             Ok((y.to_owned(), new_h, false))
         }
     }
@@ -380,7 +391,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         h: F,
         config: &KernelConfiguration,
     ) -> IntegrateResult<()> {
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
 
         // Launch kernel with optimal thread configuration
         context
@@ -413,7 +424,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         h: F,
         config: &KernelConfiguration,
     ) -> IntegrateResult<()> {
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
 
         context
             .launch_kernel(
@@ -446,7 +457,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         h: F,
         config: &KernelConfiguration,
     ) -> IntegrateResult<()> {
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
 
         context
             .launch_kernel(
@@ -479,7 +490,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         h: F,
         config: &KernelConfiguration,
     ) -> IntegrateResult<()> {
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
 
         context
             .launch_kernel(
@@ -514,7 +525,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         h: F,
         config: &KernelConfiguration,
     ) -> IntegrateResult<()> {
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
 
         context
             .launch_kernel(
@@ -545,20 +556,26 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         gpu_block: &MemoryBlock<F>,
         data: &ArrayView1<F>,
     ) -> IntegrateResult<()> {
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
 
         // Use optimal transfer strategy based on data size
         if data.len() > 10000 {
             // Use asynchronous transfer for large data
             context
-                .transfer_async_host_to_device(&gpu_block.gpu_ptr, data.as_slice().unwrap())
+                .transfer_async_host_to_device(
+                    &gpu_block.gpu_ptr,
+                    data.as_slice().expect("Operation failed"),
+                )
                 .map_err(|e| {
                     IntegrateError::ComputationError(format!("GPU transfer failed: {e:?}"))
                 })?;
         } else {
             // Use synchronous transfer for small data
             context
-                .transfer_host_to_device(&gpu_block.gpu_ptr, data.as_slice().unwrap())
+                .transfer_host_to_device(
+                    &gpu_block.gpu_ptr,
+                    data.as_slice().expect("Operation failed"),
+                )
                 .map_err(|e| {
                     IntegrateError::ComputationError(format!("GPU transfer failed: {e:?}"))
                 })?;
@@ -572,7 +589,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         &self,
         gpu_block: &MemoryBlock<F>,
     ) -> IntegrateResult<Array1<F>> {
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
 
         let mut result = vec![F::zero(); gpu_block.size];
 
@@ -685,7 +702,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         atol: F,
     ) -> IntegrateResult<F> {
         // Allocate GPU memory for error computation
-        let mut memory_pool = self.memory_pool.lock().unwrap();
+        let mut memory_pool = self.memory_pool.lock().expect("Operation failed");
         let y1_gpu = memory_pool.allocate_temporary_vector(y1.len())?;
         let y2_gpu = memory_pool.allocate_temporary_vector(y2.len())?;
         let error_gpu = memory_pool.allocate_temporary_vector(y1.len())?;
@@ -696,7 +713,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         self.transfer_to_gpu_optimized(&y2_gpu, y2)?;
 
         // Launch error computation kernel
-        let context = self.context.lock().unwrap();
+        let context = self.context.lock().expect("Operation failed");
         context
             .launch_kernel(
                 "error_estimate",
@@ -721,7 +738,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         let error = error_vec.iter().fold(F::zero(), |acc, &x| acc.max(x));
 
         // Cleanup GPU memory
-        let mut memory_pool = self.memory_pool.lock().unwrap();
+        let mut memory_pool = self.memory_pool.lock().expect("Operation failed");
         memory_pool.deallocate(y1_gpu.id)?;
         memory_pool.deallocate(y2_gpu.id)?;
         memory_pool.deallocate(error_gpu.id)?;
@@ -736,7 +753,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         execution_time: Duration,
         config: &KernelConfiguration,
     ) -> IntegrateResult<()> {
-        let mut cache = self.kernel_cache.lock().unwrap();
+        let mut cache = self.kernel_cache.lock().expect("Operation failed");
 
         let perf_data =
             cache
@@ -1059,7 +1076,7 @@ mod tests {
 
     #[test]
     fn test_gpu_memory_pool_allocation() {
-        let mut pool = AdvancedGPUMemoryPool::<f64>::new().unwrap();
+        let mut pool = AdvancedGPUMemoryPool::<f64>::new().expect("Operation failed");
 
         // Test basic allocation
         let block1 = pool.allocate_solution_vector(1000);

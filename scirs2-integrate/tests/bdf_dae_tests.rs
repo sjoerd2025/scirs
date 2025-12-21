@@ -52,7 +52,7 @@ fn test_bdf_semi_explicit_linear() {
     };
 
     // Solve the system
-    let result = bdf_semi_explicit_dae(f, g, t_span, x0, y0, options).unwrap();
+    let result = bdf_semi_explicit_dae(f, g, t_span, x0, y0, options).expect("Operation failed");
 
     // Check the results
     assert!(result.success);
@@ -132,7 +132,8 @@ fn test_bdf_semi_explicit_pendulum() {
     };
 
     // Solve the system
-    let result = bdf_semi_explicit_dae(f, g_constraint, t_span, x0, lambda0, options).unwrap();
+    let result = bdf_semi_explicit_dae(f, g_constraint, t_span, x0, lambda0, options)
+        .expect("Operation failed");
 
     // Check the results
     assert!(result.success);
@@ -220,7 +221,7 @@ fn test_bdf_implicit_dae_simple() {
     };
 
     // Solve the system
-    let result = bdf_implicit_dae(f, t_span, y0, y_prime0, options).unwrap();
+    let result = bdf_implicit_dae(f, t_span, y0, y_prime0, options).expect("Operation failed");
 
     // Check the results
     assert!(result.success);
@@ -307,7 +308,7 @@ fn test_bdf_implicit_dae_rlc_circuit() {
     };
 
     // Solve the system
-    let result = bdf_implicit_dae(f, t_span, y0, y_prime0, options).unwrap();
+    let result = bdf_implicit_dae(f, t_span, y0, y_prime0, options).expect("Operation failed");
 
     // Check the results
     assert!(result.success);

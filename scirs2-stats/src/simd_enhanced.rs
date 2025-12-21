@@ -716,7 +716,7 @@ where
                 last_used: std::time::Instant::now(),
             }
         } else if datasize < 1000 {
-            if data_variance < F::from(1.0).unwrap() {
+            if data_variance < F::from(1.0).expect("Operation failed") {
                 OptimalAlgorithm {
                     name: "SimdBasic".to_string(),
                     instruction_set: InstructionSet::AVX,
@@ -764,7 +764,7 @@ where
 
         if data.len() < elements_per_line {
             // Data fits in one cache line, use simple algorithm
-            Ok(data.iter().copied().sum::<F>() / F::from(data.len()).unwrap())
+            Ok(data.iter().copied().sum::<F>() / F::from(data.len()).expect("Operation failed"))
         } else {
             // Use cache-blocked algorithm
             let mut sum = F::zero();
@@ -776,7 +776,7 @@ where
                 count += chunk.len();
             }
 
-            Ok(sum / F::from(count).unwrap())
+            Ok(sum / F::from(count).expect("Operation failed"))
         }
     }
 
@@ -810,7 +810,7 @@ where
             sum_sq_diff = sum_sq_diff + diff * diff;
         }
 
-        let n = F::from(data.len() - ddof).unwrap();
+        let n = F::from(data.len() - ddof).expect("Operation failed");
         Ok(sum_sq_diff / n)
     }
 

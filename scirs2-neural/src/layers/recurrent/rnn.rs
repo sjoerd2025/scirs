@@ -69,13 +69,13 @@ impl RecurrentActivation {
 /// use scirs2_core::random::SeedableRng;
 /// // Create an RNN layer with 10 input features and 20 hidden units
 /// let mut rng = scirs2_core::random::rng();
-/// let rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
+/// let rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).expect("Operation failed");
 /// // Forward pass with a batch of 2 samples, sequence length 5, and 10 features
 /// let batch_size = 2;
 /// let seq_len = 5;
 /// let input_size = 10;
 /// let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
-/// let output = rnn.forward(&input).unwrap();
+/// let output = rnn.forward(&input).expect("Operation failed");
 /// // Output should have dimensions [batch_size, seq_len, hidden_size]
 /// assert_eq!(output.shape(), &[batch_size, seq_len, 20]);
 pub struct RNN<F: Float + Debug + Send + Sync> {
@@ -235,15 +235,17 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
 
         for b in 0..batch_size {
             let x_b = x.slice(scirs2_core::ndarray::s![b, ..]);
-            let x_view: ArrayView1<F> = x_b.into_dimensionality().unwrap();
+            let x_view: ArrayView1<F> = x_b.into_dimensionality().expect("Operation failed");
             let h_b = h.slice(scirs2_core::ndarray::s![b, ..]);
-            let h_view: ArrayView1<F> = h_b.into_dimensionality().unwrap();
+            let h_view: ArrayView1<F> = h_b.into_dimensionality().expect("Operation failed");
 
             for i in 0..self.hidden_size {
                 let wih_row = self.weight_ih.slice(scirs2_core::ndarray::s![i, ..]);
-                let wih_view: ArrayView1<F> = wih_row.into_dimensionality().unwrap();
+                let wih_view: ArrayView1<F> =
+                    wih_row.into_dimensionality().expect("Operation failed");
                 let whh_row = self.weight_hh.slice(scirs2_core::ndarray::s![i, ..]);
-                let whh_view: ArrayView1<F> = whh_row.into_dimensionality().unwrap();
+                let whh_view: ArrayView1<F> =
+                    whh_row.into_dimensionality().expect("Operation failed");
 
                 // SIMD dot products for weight-vector multiplication
                 let ih_sum = self.bias_ih[i] + F::simd_dot(&wih_view, &x_view);
@@ -354,7 +356,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
             h = self
                 .step(&x_t_view, &h_view)?
                 .into_dimensionality::<Ix2>()
-                .unwrap();
+                .expect("Operation failed");
             // Store hidden state
             for b in 0..batch_size {
                 for i in 0..self.hidden_size {
@@ -411,7 +413,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
 
     fn update(&mut self, learningrate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
-        let small_change = F::from(0.001).unwrap();
+        let small_change = F::from(0.001).expect("Failed to convert constant to float");
         let lr = small_change * learningrate;
         // Update weights and biases
         for w in self.weight_ih.iter_mut() {
@@ -511,14 +513,14 @@ mod tests {
             RecurrentActivation::Tanh, // activation
             &mut rng,
         )
-        .unwrap();
+        .expect("Operation failed");
         // Create a batch of input data
         let batch_size = 2;
         let seq_len = 5;
         let input_size = 10;
         let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
         // Forward pass
-        let output = rnn.forward(&input).unwrap();
+        let output = rnn.forward(&input).expect("Operation failed");
         // Check output shape
         assert_eq!(output.shape(), &[batch_size, seq_len, 20]);
     }

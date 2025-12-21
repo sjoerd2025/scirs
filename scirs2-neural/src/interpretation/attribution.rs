@@ -259,7 +259,7 @@ fn compute_model_gradients<F, M>(
 #[allow(dead_code)]
 fn compute_numerical_gradient<F>(
     _target_class: Option<usize>,
-    let epsilon = F::from(1e-5).unwrap();
+    let epsilon = F::from(1e-5).expect("Failed to convert constant to float");
     let mut gradient = ArrayD::zeros(input.raw_dim());
     // Parallel computation for efficiency
     let shape = input.shape().to_vec();
@@ -291,7 +291,7 @@ fn compute_numerical_gradient<F>(
                 let f_plus = compute_enhanced_pseudo_output(&input_plus);
                 let f_minus = compute_enhanced_pseudo_output(&input_minus);
                 // Compute gradient using central difference
-                (f_plus - f_minus) / (F::from(2.0).unwrap() * epsilon)
+                (f_plus - f_minus) / (F::from(2.0).expect("Failed to convert constant to float") * epsilon)
         // Copy values back to gradient array
         for (i, &val) in gradient_values.iter().enumerate() {
             let mut indices = vec![0; shape.len()];
@@ -319,7 +319,7 @@ fn compute_numerical_gradient<F>(
             let f_plus = compute_enhanced_pseudo_output(&input_plus);
             let f_minus = compute_enhanced_pseudo_output(&input_minus);
             // Compute gradient using central difference
-            let grad_val = (f_plus - f_minus) / (F::from(2.0).unwrap() * epsilon);
+            let grad_val = (f_plus - f_minus) / (F::from(2.0).expect("Failed to convert constant to float") * epsilon);
                 *grad_elem = grad_val;
     Ok(gradient.mapv(|x| x.abs()))
 /// Enhanced pseudo output computation with more realistic neural network patterns
@@ -333,11 +333,11 @@ fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
     // Layer 1: Linear transformation with activation
     let mut layer1_sum = F::zero();
     for (i, &val) in input_flat.iter().enumerate() {
-        let weight = F::from((i as f64 * 0.1).sin()).unwrap();
+        let weight = F::from((i as f64 * 0.1).sin()).expect("Operation failed");
         layer1_sum = layer1_sum + val * weight;
     let layer1_out = layer1_sum.tanh();
     // Layer 2: Non-linear transformation
-    let mean_val = input.sum() / F::from(len).unwrap();
+    let mean_val = input.sum() / F::from(len).expect("Failed to convert to float");
     let variance = {
         let sum_sq_diff = input_flat
             .iter()
@@ -345,16 +345,16 @@ fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
                 let diff = x - mean_val;
                 diff * diff
             .fold(F::zero(), |acc, x| acc + x);
-        sum_sq_diff / F::from(len).unwrap()
+        sum_sq_diff / F::from(len).expect("Failed to convert to float")
     // Layer 3: Complex activation pattern
-    let sigmoid_response = F::one() / (F::one() + (-layer1_out * F::from(2.0).unwrap()).exp());
+    let sigmoid_response = F::one() / (F::one() + (-layer1_out * F::from(2.0).expect("Failed to convert constant to float")).exp());
     let gaussian_like = (-variance).exp();
-    let periodic_component = (mean_val * F::from(3.14159).unwrap()).sin();
+    let periodic_component = (mean_val * F::from(3.14159).expect("Failed to convert constant to float")).sin();
     // Final output combining multiple patterns
-    sigmoid_response * F::from(0.4).unwrap() +
-    gaussian_like * F::from(0.3).unwrap() +
-    periodic_component * F::from(0.2).unwrap() +
-    (layer1_out * layer1_out) * F::from(0.1).unwrap()
+    sigmoid_response * F::from(0.4).expect("Failed to convert constant to float") +
+    gaussian_like * F::from(0.3).expect("Failed to convert constant to float") +
+    periodic_component * F::from(0.2).expect("Failed to convert constant to float") +
+    (layer1_out * layer1_out) * F::from(0.1).expect("Failed to convert constant to float")
 /// Compute pseudo output value for numerical gradient computation (kept for compatibility)
 #[allow(dead_code)]
 fn compute_pseudo_output_value<F>(input: &ArrayD<F>) -> F
@@ -364,7 +364,7 @@ fn compute_pseudo_output_value<F>(input: &ArrayD<F>) -> F
 fn compute_adaptive_numerical_gradient<F>(
     // Adaptive step size based on _input magnitude
     let input_magnitude = (_input.mapv(|x| x * x).sum()).sqrt();
-    let base_epsilon = F::from(1e-5).unwrap();
+    let base_epsilon = F::from(1e-5).expect("Failed to convert constant to float");
     let adaptive_epsilon = if input_magnitude > F::zero() {
         base_epsilon / input_magnitude.max(F::one())
         base_epsilon
@@ -393,7 +393,7 @@ fn compute_adaptive_numerical_gradient<F>(
         let f_plus = compute_pseudo_output_value(&input_plus);
         let f_minus = compute_pseudo_output_value(&input_minus);
         // Compute gradient using central difference with adaptive step
-        let grad_val = (f_plus - f_minus) / (F::from(2.0).unwrap() * local_epsilon);
+        let grad_val = (f_plus - f_minus) / (F::from(2.0).expect("Failed to convert constant to float") * local_epsilon);
         if let Some(grad_elem) = gradient.get_mut(&indices[..]) {
             *grad_elem = grad_val;
 /// Optimized integrated gradients with model integration
@@ -420,12 +420,12 @@ pub fn compute_integrated_gradients_optimized<F, M>(
 fn compute_integrated_gradients_parallel<F, M>(
     baseline: &ArrayD<F>,
     diff: &ArrayD<F>,
-    let step_size = F::one() / F::from(num_steps - 1).unwrap();
+    let step_size = F::one() / F::from(num_steps - 1).expect("Failed to convert to float");
     // Compute gradients in parallel
     let gradients: Result<Vec<ArrayD<F>>> = (0..num_steps)
         .into_par_iter()
         .map(|i| {
-            let alpha = F::from(i).unwrap() * step_size;
+            let alpha = F::from(i).expect("Failed to convert to float") * step_size;
             let interpolated_input = baseline + diff * alpha;
             compute_model_gradients(model, &interpolated_input, target_class, config)
         })
@@ -435,7 +435,7 @@ fn compute_integrated_gradients_parallel<F, M>(
     let mut integrated_gradients = Array::zeros(input.raw_dim());
     for (i, gradient) in gradient_list.iter().enumerate() {
         let weight = if i == 0 || i == num_steps - 1 {
-            F::from(0.5).unwrap() * step_size
+            F::from(0.5).expect("Failed to convert constant to float") * step_size
         } else {
             step_size
         };
@@ -457,23 +457,23 @@ fn compute_integrated_gradients_gaussian_model<F, M>(
                 weights.push(1.0 / num_steps as f64);
             (nodes, weights)
     for (&node, &weight) in nodes.iter().zip(weights.iter()) {
-        let alpha = F::from(node).unwrap();
+        let alpha = F::from(node).expect("Failed to convert to float");
         let interpolated_input = baseline + diff * alpha;
         let gradient = compute_model_gradients(model, &interpolated_input, target_class, config)?;
-        let weight_f = F::from(weight).unwrap();
+        let weight_f = F::from(weight).expect("Failed to convert to float");
         integrated_gradients = integrated_gradients + gradient * weight_f;
 /// Simpson's rule integration with model
 #[allow(dead_code)]
 fn compute_integrated_gradients_simpson_model<F, M>(
     let n = if num_steps % 2 == 0 { num_steps + 1 } else { num_steps };
-    let h = F::one() / F::from(n - 1).unwrap();
+    let h = F::one() / F::from(n - 1).expect("Failed to convert to float");
     for i in 0..n {
-        let alpha = F::from(i).unwrap() / F::from(n - 1).unwrap();
+        let alpha = F::from(i).expect("Failed to convert to float") / F::from(n - 1).expect("Failed to convert to float");
         let weight = if i == 0 || i == n - 1 {
             F::one()
         } else if i % 2 == 1 {
-            F::from(4.0).unwrap(), F::from(2.0).unwrap()
-    let simpson_factor = h / F::from(3.0).unwrap();
+            F::from(4.0).expect("Failed to convert constant to float"), F::from(2.0).expect("Failed to convert constant to float")
+    let simpson_factor = h / F::from(3.0).expect("Failed to convert constant to float");
     Ok(diff * integrated_gradients * simpson_factor)
 /// Adaptive integration with model
 #[allow(dead_code)]
@@ -481,12 +481,12 @@ fn compute_integrated_gradients_adaptive_model<F, M>(
     let mut last_gradient = Array::zeros(input.raw_dim());
     let mut adaptive_weight_sum = F::zero();
     for i in 0..num_steps {
-        let alpha = F::from(i as f64 / (num_steps - 1) as f64).unwrap();
+        let alpha = F::from(i as f64 / (num_steps - 1) as f64).expect("Operation failed");
         let current_gradient = compute_model_gradients(model, &interpolated_input, target_class, config)?;
         let gradient_change = if i == 0 {
             let diff_grad = &current_gradient - &last_gradient;
             let change_magnitude = (diff_grad.mapv(|x| x * x).sum()).sqrt();
-            F::one() + change_magnitude * F::from(0.1).unwrap()
+            F::one() + change_magnitude * F::from(0.1).expect("Failed to convert constant to float")
         integrated_gradients = integrated_gradients + &current_gradient * gradient_change;
         adaptive_weight_sum = adaptive_weight_sum + gradient_change;
         last_gradient = current_gradient;
@@ -618,9 +618,9 @@ pub fn compute_shap_attribution<F>(
                 F::zero()
         });
         // Compute marginal contribution (simplified)
-        let marginal_contribution = input * &coalition_mask * F::from(0.1).unwrap();
+        let marginal_contribution = input * &coalition_mask * F::from(0.1).expect("Failed to convert constant to float");
         total_attribution = total_attribution + marginal_contribution;
-    Ok(total_attribution / F::from(num_samples).unwrap())
+    Ok(total_attribution / F::from(num_samples).expect("Failed to convert to float"))
 /// Compute Layer-wise Relevance Propagation attribution
 #[allow(dead_code)]
 pub fn compute_lrp_attribution<F>(
@@ -632,19 +632,19 @@ pub fn compute_lrp_attribution<F>(
         LRPRule::Epsilon => {
             // Basic epsilon rule
             if let Some(gradient) = interpreter.get_cached_gradients("input_gradient") {
-                let eps = F::from(epsilon).unwrap();
+                let eps = F::from(epsilon).expect("Failed to convert to float");
                 let denominator = gradient.mapv(|x| x + eps.copysign(x));
                 Ok(input * gradient / denominator)
                 Ok(input.clone())
         LRPRule::Gamma { gamma } => {
             // Gamma rule for handling negative weights
-                let gamma_val = F::from(*gamma).unwrap();
+                let gamma_val = F::from(*gamma).expect("Failed to convert to float");
                 let positive_part = gradient.mapv(|x| x.max(F::zero()));
                 let negative_part = gradient.mapv(|x| x.min(F::zero()));
                 Ok(input * (positive_part * (F::one() + gamma_val) + negative_part)), LRPRule::AlphaBeta { alpha, beta } => {
             // Alpha-beta rule
-                let alpha_val = F::from(*alpha).unwrap();
-                let beta_val = F::from(*beta).unwrap();
+                let alpha_val = F::from(*alpha).expect("Failed to convert to float");
+                let beta_val = F::from(*beta).expect("Failed to convert to float");
                 Ok(input * (positive_part * alpha_val - negative_part * beta_val))
         LRPRule::ZPlus => {
             // z+ rule - only positive activations
@@ -652,8 +652,8 @@ pub fn compute_lrp_attribution<F>(
                 Ok(positive_input * gradient)
                 Ok(input.mapv(|x| x.max(F::zero()))), LRPRule::ZB { low, high } => {
             // zB rule with bounds
-                let low_val = F::from(*low).unwrap();
-                let high_val = F::from(*high).unwrap();
+                let low_val = F::from(*low).expect("Failed to convert to float");
+                let high_val = F::from(*high).expect("Failed to convert to float");
                 let clamped_input = input.mapv(|x| x.max(low_val).min(high_val));
                 Ok(clamped_input * gradient)
 /// Create baseline input based on baseline method
@@ -663,13 +663,13 @@ pub fn create_baseline<F>(input: &ArrayD<F>, baseline: &BaselineMethod) -> Resul
         BaselineMethod::Zero => Ok(Array::zeros(_input.raw_dim())),
         BaselineMethod::Random { seed: _ } => {
             // Generate random baseline (simplified)
-            Ok(input.mapv(|_| F::from(scirs2_core::random::random::<f64>()).unwrap())), BaselineMethod::GaussianBlur { sigma: _ } => {
+            Ok(input.mapv(|_| F::from(scirs2_core::random::random::<f64>()).expect("Operation failed"))), BaselineMethod::GaussianBlur { sigma: _ } => {
             // Gaussian blur baseline (simplified - just add small noise)
-            Ok(input.mapv(|x| x + F::from(scirs2_core::random::random::<f64>() * 0.1).unwrap())), BaselineMethod::TrainingMean => {
+            Ok(input.mapv(|x| x + F::from(scirs2_core::random::random::<f64>() * 0.1).expect("Operation failed"))), BaselineMethod::TrainingMean => {
             // Training mean baseline (simplified - use zeros)
             Ok(Array::zeros(input.raw_dim())), BaselineMethod::Custom(custom_baseline) => {
             // Convert f32 custom baseline to F type
-            let converted_baseline = custom_baseline.mapv(|x| F::from(x).unwrap());
+            let converted_baseline = custom_baseline.mapv(|x| F::from(x).expect("Failed to convert to float"));
             // Ensure dimensions match
             if converted_baseline.raw_dim() == input.raw_dim() {
                 Ok(converted_baseline)
@@ -686,7 +686,7 @@ fn resize_attribution<F>(_attribution: &ArrayD<F>, targetdim: IxDyn) -> Result<A
     let target_ndim = target_dim.ndim();
     if attr_ndim == 2 && target_ndim == 3 {
         let target_view = target_dim.as_array_view();
-        let target_slice = target_view.as_slice().unwrap();
+        let target_slice = target_view.as_slice().expect("Operation failed");
         let channels = target_slice[0];
         let height = target_slice[1];
         let width = target_slice[2];
@@ -700,7 +700,7 @@ fn resize_attribution<F>(_attribution: &ArrayD<F>, targetdim: IxDyn) -> Result<A
         let attrshape = attribution.shape();
         // Copy elements up to the minimum size in each dimension
         for idx in scirs2_core::ndarray::indices(&target_dim) {
-            let idx_slice = idx.as_slice().unwrap();
+            let idx_slice = idx.as_slice().expect("Operation failed");
             let mut attr_idx = vec![0; attr_ndim];
             // Map indices, clamping to attribution bounds
             for (i, &target_idx) in idx_slice.iter().enumerate() {
@@ -722,12 +722,12 @@ pub fn compute_smoothgrad_attribution<F>(
     use scirs2_core::random::prelude::*;
 use statrs::statistics::Statistics;
     let mut rng = rng();
-    let noise_std_f = F::from(noise_std).unwrap();
+    let noise_std_f = F::from(noise_std).expect("Failed to convert to float");
     let mut accumulated_attribution = ArrayD::zeros(input.raw_dim());
         // Add Gaussian noise to input
         let noise: ArrayD<F> = input.mapv(|_| {
             let gaussian: f64 = rng.sample(scirs2_core::random::StandardNormal);
-            F::from(gaussian * noise_std).unwrap()
+            F::from(gaussian * noise_std).expect("Failed to convert to float")
         let noisy_input = input + &noise;
         // Compute attribution for noisy input
         let attribution = match base_method {
@@ -738,7 +738,7 @@ use statrs::statistics::Statistics;
                 // For other methods, fall back to saliency
         accumulated_attribution = accumulated_attribution + attribution;
     // Average the attributions
-    let num_samples_f = F::from(num_samples).unwrap();
+    let num_samples_f = F::from(num_samples).expect("Failed to convert to float");
     Ok(accumulated_attribution / num_samples_f)
 /// Compute Input x Gradient attribution
 #[allow(dead_code)]
@@ -758,7 +758,7 @@ pub fn compute_expected_gradients_attribution<F>(
                 // Gaussian noise around input
                 input.mapv(|x| {
                     let noise: f64 = rng.sample(scirs2_core::random::StandardNormal);
-                    x + F::from(noise * 0.1).unwrap()
+                    x + F::from(noise * 0.1).expect("Failed to convert to float")
                 })
             1 => {
                 // Uniform random in input range
@@ -766,12 +766,12 @@ pub fn compute_expected_gradients_attribution<F>(
                 let input_max = input.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
                 input.mapv(|_| {
                     let rand_val = rng.random::<f64>();
-                    input_min + (input_max - input_min) * F::from(rand_val).unwrap()
+                    input_min + (input_max - input_min) * F::from(rand_val).expect("Failed to convert to float")
             2 => {
                 // Zero baseline
                 ArrayD::zeros(input.raw_dim())
                 // Blurred version of input
-                input.mapv(|x| x * F::from(0.5 + 0.5 * rng.random::<f64>()).unwrap())
+                input.mapv(|x| x * F::from(0.5 + 0.5 * rng.random::<f64>()).expect("Operation failed"))
         // Compute integrated gradients with respect to this reference
         let attribution = compute_integrated_gradients(
             interpreter,
@@ -781,7 +781,7 @@ pub fn compute_expected_gradients_attribution<F>(
             target_class,
         )?;
     // Average over all references
-    let num_references_f = F::from(num_references).unwrap();
+    let num_references_f = F::from(num_references).expect("Failed to convert to float");
     Ok(accumulated_attribution / num_references_f)
 /// Compute Gradient x Input with enhanced normalization
 #[allow(dead_code)]
@@ -791,7 +791,7 @@ pub fn compute_enhanced_gradient_x_input_attribution<F>(
     // Element-wise multiplication with input
     let raw_attribution = input * &gradient;
     // Apply saturation-based normalization to handle extreme values
-    let saturation_threshold = F::from(0.95).unwrap();
+    let saturation_threshold = F::from(0.95).expect("Failed to convert constant to float");
     let attribution_magnitude = (raw_attribution.mapv(|x| x * x).sum()).sqrt();
     if attribution_magnitude > F::zero() {
         let normalized_attribution = &raw_attribution / attribution_magnitude;
@@ -879,13 +879,13 @@ mod tests {
     fn test_baseline_creation() {
         let input = Array::ones((2, 3, 4)).into_dyn();
         // Test zero baseline
-        let zero_baseline = create_baseline::<f64>(&input, &BaselineMethod::Zero).unwrap();
+        let zero_baseline = create_baseline::<f64>(&input, &BaselineMethod::Zero).expect("Operation failed");
         assert_eq!(zero_baseline.sum(), 0.0);
         // Test custom baseline
         let custom_data = Array::ones((2, 3, 4))
             .mapv(|x: f64| x as f32 * 0.5)
         let custom_baseline =
-            create_baseline::<f64>(&input, &BaselineMethod::Custom(custom_data)).unwrap();
+            create_baseline::<f64>(&input, &BaselineMethod::Custom(custom_data)).expect("Operation failed");
         assert!((custom_baseline.sum() - 12.0).abs() < 1e-10);
     fn test_attribution_method_variants() {
         let method1 = AttributionMethod::Saliency;
@@ -935,7 +935,7 @@ pub fn compute_smoothgrad_attribution_optimized<F, M>(
             let mut rng = rng();
             input.mapv(|_| {
                 let gaussian: f64 = rng.sample(StandardNormal);
-                F::from(gaussian).unwrap() * noise_std_f
+                F::from(gaussian).expect("Failed to convert to float") * noise_std_f
     // Compute attributions in parallel
     let attributions: Result<Vec<ArrayD<F>>> = if config.parallel {
         noise_samples
@@ -963,7 +963,7 @@ fn concatenate_attribution_results<F>(
         return Err(NeuralError::ComputationError(
             "No attribution results to concatenate".to_string(),
     if results.len() == 1 {
-        return Ok(results.into_iter().next().unwrap());
+        return Ok(results.into_iter().next().expect("Operation failed"));
     // For simplicity, just return the first result concatenated with the others
     // In a real implementation, this would properly concatenate along the batch dimension
     let mut combined = results[0].clone();
@@ -1009,9 +1009,9 @@ pub fn generate_attribution_report<F, M>(
     let std_dev = variance.sqrt();
     let min = attribution.iter().fold(F::infinity(), |a, &b| a.min(b));
     let max = attribution.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
-    let threshold = F::from(1e-6).unwrap();
+    let threshold = F::from(1e-6).expect("Failed to convert constant to float");
     let near_zero_count = attribution.iter().filter(|&&x| x.abs() < threshold).count();
-    let sparsity = F::from(near_zero_count as f64 / attribution.len() as f64).unwrap();
+    let sparsity = F::from(near_zero_count as f64 / attribution.len() as f64).expect("Operation failed");
     let positive_sum = attribution.iter().filter(|&&x| x > F::zero()).fold(F::zero(), |acc, &x| acc + x);
     let negative_sum = attribution.iter().filter(|&&x| x < F::zero()).fold(F::zero(), |acc, &x| acc + x);
     let statistics = AttributionStatistics {
@@ -1023,7 +1023,7 @@ pub fn generate_attribution_report<F, M>(
         positive_sum,
         negative_sum,
     // Validate attribution (simplified check)
-    let validation_passed = attribution.iter().all(|x| x.is_finite()) && attribution.sum().abs() > F::from(1e-10).unwrap();
+    let validation_passed = attribution.iter().all(|x| x.is_finite()) && attribution.sum().abs() > F::from(1e-10).expect("Failed to convert constant to float");
     Ok(AttributionReport {
         attribution,
         statistics,

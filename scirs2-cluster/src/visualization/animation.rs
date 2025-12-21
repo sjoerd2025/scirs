@@ -419,7 +419,7 @@ impl StreamingVisualizer {
             return Ok(StreamingFrame {
                 timestamp: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_secs_f64(),
                 points: Array2::zeros((0, 0)),
                 labels: Array1::zeros(0),
@@ -458,7 +458,7 @@ impl StreamingVisualizer {
         Ok(StreamingFrame {
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_secs_f64(),
             points,
             labels,
@@ -661,14 +661,15 @@ mod tests {
         let config = IterativeAnimationConfig::default();
         let mut recorder = IterativeAnimationRecorder::new(config);
 
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        let centroids = Array2::from_shape_vec((2, 2), vec![2.0, 3.0, 6.0, 7.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![2.0, 3.0, 6.0, 7.0]).expect("Operation failed");
 
         recorder
             .record_frame(data.view(), &labels, Some(&centroids), Some(10.0))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(recorder.get_frames().len(), 1);
         assert_eq!(recorder.get_frames()[0].iteration, 0);
@@ -682,7 +683,7 @@ mod tests {
         let point = Array1::from_vec(vec![1.0, 2.0]);
         visualizer.add_data_point(point, 0);
 
-        let frame = visualizer.generate_frame().unwrap();
+        let frame = visualizer.generate_frame().expect("Operation failed");
         assert_eq!(frame.points.nrows(), 1);
         assert_eq!(frame.labels[0], 0);
     }

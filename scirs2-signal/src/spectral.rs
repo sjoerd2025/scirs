@@ -96,8 +96,8 @@ fn get_window(_windowtype: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
 /// ```
 /// use scirs2_signal::get_window_simd_ultra;
 ///
-/// let hann_window = get_window_simd_ultra("hann", 1024, 0.0).unwrap();
-/// let kaiser_window = get_window_simd_ultra("kaiser", 512, 8.6).unwrap();
+/// let hann_window = get_window_simd_ultra("hann", 1024, 0.0).expect("Operation failed");
+/// let kaiser_window = get_window_simd_ultra("kaiser", 512, 8.6).expect("Operation failed");
 /// ```
 pub fn get_window_simd_ultra(
     window_type: &str,
@@ -1088,7 +1088,8 @@ mod tests {
         let x: Vec<f64> = t.iter().map(|&t| (2.0 * PI * f * t).sin()).collect();
 
         // Compute periodogram
-        let (freqs, psd) = periodogram(&x, Some(fs), None, None, None, None).unwrap();
+        let (freqs, psd) =
+            periodogram(&x, Some(fs), None, None, None, None).expect("Operation failed");
 
         // Find the peak frequency
         let mut max_idx = 0;
@@ -1125,8 +1126,8 @@ mod tests {
         });
 
         // Compute Welch's periodogram
-        let (freqs, psd) =
-            welch(&x, Some(fs), None, Some(256), Some(128), None, None, None).unwrap();
+        let (freqs, psd) = welch(&x, Some(fs), None, Some(256), Some(128), None, None, None)
+            .expect("Operation failed");
 
         // Find the peak frequency
         let mut max_idx = 0;
@@ -1166,7 +1167,7 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert!(!freqs.is_empty());
@@ -1226,7 +1227,7 @@ mod tests {
             None,
             Some("psd"),
         )
-        .unwrap();
+        .expect("Operation failed");
         let (_, _, mag_values) = spectrogram(
             &x,
             Some(fs),
@@ -1238,7 +1239,7 @@ mod tests {
             None,
             Some("magnitude"),
         )
-        .unwrap();
+        .expect("Operation failed");
         let (_, _, phase_values) = spectrogram(
             &x,
             Some(fs),
@@ -1250,7 +1251,7 @@ mod tests {
             None,
             Some("phase"),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert!(!psd_values.is_empty());

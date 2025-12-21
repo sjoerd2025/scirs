@@ -46,10 +46,10 @@ use std::ops::{Add, Div, Mul, Sub};
 /// let data = Array1::from(vec![1.0, 2.0, 3.0, 4.0]);
 /// let indices = Array1::from(vec![0, 1, 0, 1]);
 /// let indptr = Array1::from(vec![0, 2, 4]);
-/// let matrix = CsrArray::new(data, indices, indptr, (2, 2)).unwrap();
+/// let matrix = CsrArray::new(data, indices, indptr, (2, 2)).expect("Operation failed");
 ///
 /// // Find the 2 largest eigenvalues in magnitude
-/// let result = eigs(&matrix, Some(2), Some("LM"), None).unwrap();
+/// let result = eigs(&matrix, Some(2), Some("LM"), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigs<T, S>(
@@ -237,7 +237,7 @@ where
         h_matrix[[j + 1, j]] = norm_w;
 
         // Check for breakdown
-        if norm_w < T::from(options.tol).unwrap() {
+        if norm_w < T::from(options.tol).expect("Operation failed") {
             converged = true;
             break;
         }
@@ -284,7 +284,7 @@ where
     let mut residuals = Array1::zeros(eigenvalues.len());
     for k in 0..eigenvalues.len() {
         // For a proper implementation, compute ||A*x - lambda*x||
-        residuals[k] = T::from(options.tol).unwrap(); // Placeholder
+        residuals[k] = T::from(options.tol).expect("Operation failed"); // Placeholder
     }
 
     Ok(EigenResult {
@@ -431,7 +431,8 @@ mod tests {
         let data = vec![2.0, 1.0, 1.0]; // 3 non-zero elements
         let indices = vec![0, 1, 1]; // Column indices for each element
         let indptr = vec![0, 2, 3]; // Row pointers: row 0 has 2 elements, row 1 has 1 element
-        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2))
+            .expect("Operation failed");
 
         let result = eigs(&matrix, Some(1), Some("LM"), None);
 
@@ -444,10 +445,11 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
-        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2))
+            .expect("Operation failed");
 
         let vector = Array1::from_vec(vec![1.0, 2.0]);
-        let result = matrix_vector_multiply(&matrix, &vector).unwrap();
+        let result = matrix_vector_multiply(&matrix, &vector).expect("Operation failed");
 
         // Expected: [1*1 + 2*2, 3*1 + 4*2] = [5, 11]
         assert_eq!(result.len(), 2);
@@ -461,16 +463,18 @@ mod tests {
         let data = vec![2.0, 1.0, 1.0, 2.0];
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
-        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2))
+            .expect("Operation failed");
 
-        let is_sym = is_approximately_symmetric(&matrix).unwrap();
+        let is_sym = is_approximately_symmetric(&matrix).expect("Operation failed");
         assert!(is_sym);
     }
 
     #[test]
     fn test_solve_hessenberg_simple() {
-        let h = Array2::from_shape_vec((2, 2), vec![3.0, 1.0, 0.0, 2.0]).unwrap();
-        let (eigenvals, eigenvecs) = solve_hessenberg_eigenproblem(&h, 2, "LM").unwrap();
+        let h = Array2::from_shape_vec((2, 2), vec![3.0, 1.0, 0.0, 2.0]).expect("Operation failed");
+        let (eigenvals, eigenvecs) =
+            solve_hessenberg_eigenproblem(&h, 2, "LM").expect("Operation failed");
 
         assert_eq!(eigenvals.len(), 2);
         assert_eq!(eigenvecs.len(), 2);

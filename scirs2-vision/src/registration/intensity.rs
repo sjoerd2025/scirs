@@ -593,7 +593,7 @@ mod tests {
         let img1 = create_test_image(10, 10, 0);
         let img2 = create_test_image(10, 10, 1);
 
-        let ssd = compute_ssd(&img1, &img2).unwrap();
+        let ssd = compute_ssd(&img1, &img2).expect("Operation failed");
         assert!(ssd > 0.0);
     }
 
@@ -602,7 +602,7 @@ mod tests {
         let img1 = create_test_image(10, 10, 0);
         let img2 = create_test_image(10, 10, 0); // Same image
 
-        let ncc = compute_ncc(&img1, &img2).unwrap();
+        let ncc = compute_ncc(&img1, &img2).expect("Operation failed");
         assert!(ncc <= 0.0); // Should be close to -1 (perfect correlation)
     }
 
@@ -631,7 +631,7 @@ mod tests {
         let img1 = create_test_image(20, 20, 0);
         let img2 = create_test_image(20, 20, 1);
 
-        let mi = compute_mutual_information(&img1, &img2).unwrap();
+        let mi = compute_mutual_information(&img1, &img2).expect("Operation failed");
         assert!(mi.is_finite());
     }
 
@@ -645,7 +645,7 @@ mod tests {
         let result = compute_gradient(&img1, &img2, &transform, &config);
         assert!(result.is_ok());
 
-        let (gradient_cost, _cost_value) = result.unwrap();
+        let (gradient_cost, _cost_value) = result.expect("Operation failed");
         assert_eq!(gradient_cost.len(), 6);
     }
 }

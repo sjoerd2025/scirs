@@ -33,8 +33,8 @@ use std::fmt::Debug;
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let esd = energy_spectral_density(&psd, fs).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let esd = energy_spectral_density(&psd, fs).expect("Operation failed");
 ///
 /// // ESD is proportional to PSD but scaled by the sample interval
 /// ```
@@ -89,8 +89,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let norm_psd = normalized_psd(&psd).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let norm_psd = normalized_psd(&psd).expect("Operation failed");
 ///
 /// // Sum of normalized PSD should be approximately 1.0
 /// let sum: f64 = norm_psd.iter().sum();
@@ -153,8 +153,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let centroid = spectral_centroid(&psd, &freqs).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let centroid = spectral_centroid(&psd, &freqs).expect("Operation failed");
 ///
 /// // Basic sanity check - centroid should be finite
 /// assert!(centroid.is_finite());
@@ -242,8 +242,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let spread = spectral_spread(&psd, &freqs, None).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let spread = spectral_spread(&psd, &freqs, None).expect("Operation failed");
 ///
 /// // Spread should be non-negative
 /// assert!(spread >= 0.0);
@@ -339,8 +339,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let skewness = spectral_skewness(&psd, &freqs, None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn spectral_skewness<T, U>(
@@ -450,8 +450,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).expect("Operation failed");
 ///
 /// // Kurtosis should be greater than or equal to -2.0 (theoretical lower bound)
 /// assert!(kurtosis >= -2.0);
@@ -563,8 +563,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd_) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let flatness = spectral_flatness(&psd).unwrap();
+/// let (psd_) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let flatness = spectral_flatness(&psd).expect("Operation failed");
 ///
 /// // Flatness should be between 0 and 1
 /// assert!(flatness >= 0.0 && flatness <= 1.0);
@@ -641,10 +641,10 @@ where
 /// let signal2 = vec![0.0, 1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd1_) = periodogram(&signal1, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let (psd2_) = periodogram(&signal2, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
+/// let (psd1_) = periodogram(&signal1, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let (psd2_) = periodogram(&signal2, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
 ///
-/// let flux = spectral_flux(&psd1, &psd2, "l2").unwrap();
+/// let flux = spectral_flux(&psd1, &psd2, "l2").expect("Operation failed");
 ///
 /// // Flux should be non-negative
 /// assert!(flux >= 0.0);
@@ -741,8 +741,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let rolloff = spectral_rolloff(&psd, &freqs, 0.85).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let rolloff = spectral_rolloff(&psd, &freqs, 0.85).expect("Operation failed");
 ///
 /// // Basic sanity check - rolloff should be finite
 /// assert!(rolloff.is_finite());
@@ -838,8 +838,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd_) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let crest = spectral_crest(&psd).unwrap();
+/// let (psd_) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let crest = spectral_crest(&psd).expect("Operation failed");
 ///
 /// // Crest factor should be greater than or equal to 1.0
 /// assert!(crest >= 1.0);
@@ -904,8 +904,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let decrease = spectral_decrease(&psd, &freqs).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let decrease = spectral_decrease(&psd, &freqs).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn spectral_decrease<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
@@ -994,8 +994,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let slope = spectral_slope(&psd, &freqs).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let slope = spectral_slope(&psd, &freqs).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn spectral_slope<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
@@ -1087,8 +1087,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let contrast = spectral_contrast(&psd, &freqs, 4).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let contrast = spectral_contrast(&psd, &freqs, 4).expect("Operation failed");
 ///
 /// assert_eq!(contrast.len(), 4);
 /// ```
@@ -1170,7 +1170,7 @@ where
 
         // Get and sort PSD values in this band
         let mut band_psd: Vec<f64> = band_indices.iter().map(|&idx| psd_f64[idx]).collect();
-        band_psd.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        band_psd.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Calculate percentiles
         let n = band_psd.len();
@@ -1224,8 +1224,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let bandwidth = spectral_bandwidth(&psd, &freqs, -3.0).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let bandwidth = spectral_bandwidth(&psd, &freqs, -3.0).expect("Operation failed");
 ///
 /// // Basic sanity check - bandwidth should be finite
 /// assert!(bandwidth.is_finite());
@@ -1300,7 +1300,7 @@ where
     }
 
     // Sort crossings to find the outermost ones
-    crossings.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    crossings.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Calculate bandwidth as the difference between the outermost crossings
     let bandwidth = crossings[crossings.len() - 1] - crossings[0];
@@ -1330,8 +1330,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let (dominant_freq, magnitude) = dominant_frequency(&psd, &freqs).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let (dominant_freq, magnitude) = dominant_frequency(&psd, &freqs).expect("Operation failed");
 ///
 /// // Basic sanity check - just verify function succeeds
 /// assert!(dominant_freq.is_finite());
@@ -1378,7 +1378,7 @@ where
     let (max_idx, &max_val) = psd_f64
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .unwrap_or((0, &0.0));
 
     let dominant_freq = freqs_f64[max_idx];
@@ -1408,8 +1408,8 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let peaks = dominant_frequencies(&psd, &freqs, 3, 0.5).unwrap();
+/// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).expect("Operation failed");
+/// let peaks = dominant_frequencies(&psd, &freqs, 3, 0.5).expect("Operation failed");
 ///
 /// // There might be fewer than n peaks if not enough can be found
 /// assert!(peaks.len() <= 3);
@@ -1491,7 +1491,7 @@ where
     }
 
     // Sort by magnitude (descending)
-    peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     // Select the top n peaks with the given minimum _separation
     let mut selected_peaks = Vec::new();
@@ -1539,7 +1539,7 @@ mod tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let fs = 100.0; // Sample rate in Hz
 
-        let esd = energy_spectral_density(&psd, fs).unwrap();
+        let esd = energy_spectral_density(&psd, fs).expect("Operation failed");
 
         // Check scaling by sample interval (1/fs)
         for (i, &p) in psd.iter().enumerate() {
@@ -1554,7 +1554,7 @@ mod tests {
         // Create a simple PSD
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
 
-        let norm_psd = normalized_psd(&psd).unwrap();
+        let norm_psd = normalized_psd(&psd).expect("Operation failed");
 
         // Check sum is 1.0
         let sum: f64 = norm_psd.iter().sum();
@@ -1576,7 +1576,7 @@ mod tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let centroid = spectral_centroid(&psd, &freqs).unwrap();
+        let centroid = spectral_centroid(&psd, &freqs).expect("Operation failed");
 
         // For symmetric PSD with peak in the middle, centroid should be at the middle frequency
         assert_relative_eq!(centroid, 3.0, epsilon = 1e-10);
@@ -1585,7 +1585,7 @@ mod tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let centroid = spectral_centroid(&psd, &freqs).unwrap();
+        let centroid = spectral_centroid(&psd, &freqs).expect("Operation failed");
 
         // Centroid should be biased toward higher frequencies
         assert!(centroid > 3.0);
@@ -1599,7 +1599,7 @@ mod tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let spread = spectral_spread(&psd, &freqs, None).unwrap();
+        let spread = spectral_spread(&psd, &freqs, None).expect("Operation failed");
 
         // Spread should be positive
         assert!(spread > 0.0);
@@ -1608,7 +1608,7 @@ mod tests {
         let psd = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let spread = spectral_spread(&psd, &freqs, None).unwrap();
+        let spread = spectral_spread(&psd, &freqs, None).expect("Operation failed");
 
         // Spread should be very small for narrow PSD
         assert!(spread < 0.1);
@@ -1621,7 +1621,7 @@ mod tests {
         // Create a flat PSD (white noise-like)
         let psd = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
 
-        let flatness = spectral_flatness(&psd).unwrap();
+        let flatness = spectral_flatness(&psd).expect("Operation failed");
 
         // Flatness should be close to 1.0 for flat PSD
         assert_relative_eq!(flatness, 1.0, epsilon = 1e-10);
@@ -1629,7 +1629,7 @@ mod tests {
         // Create a PSD with a single peak (tone-like)
         let psd = vec![0.01, 0.01, 0.01, 1.0, 0.01, 0.01, 0.01];
 
-        let flatness = spectral_flatness(&psd).unwrap();
+        let flatness = spectral_flatness(&psd).expect("Operation failed");
 
         // Flatness should be close to 0.0 for peak PSD
         assert!(flatness < 0.3);
@@ -1641,9 +1641,9 @@ mod tests {
         let psd1 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let psd2 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
 
-        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();
-        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();
-        let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();
+        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").expect("Operation failed");
+        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").expect("Operation failed");
+        let flux_max = spectral_flux(&psd1, &psd2, "max").expect("Operation failed");
 
         // Flux should be 0.0 for identical PSDs
         assert_relative_eq!(flux_l1, 0.0, epsilon = 1e-10);
@@ -1654,9 +1654,9 @@ mod tests {
         let psd1 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let psd2 = vec![0.0, 1.0, 2.0, 3.0, 4.0, 3.0, 2.0];
 
-        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();
-        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();
-        let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();
+        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").expect("Operation failed");
+        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").expect("Operation failed");
+        let flux_max = spectral_flux(&psd1, &psd2, "max").expect("Operation failed");
 
         // Flux should be positive for different PSDs
         assert!(flux_l1 > 0.0);
@@ -1672,7 +1672,7 @@ mod tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 0.1, 0.1, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let rolloff = spectral_rolloff(&psd, &freqs, 0.95).unwrap();
+        let rolloff = spectral_rolloff(&psd, &freqs, 0.95).expect("Operation failed");
 
         // Rolloff should be in the lower frequency range
         assert!(rolloff <= 4.0);
@@ -1681,7 +1681,7 @@ mod tests {
         let psd = vec![0.1, 0.1, 0.1, 0.1, 3.0, 4.0, 5.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let rolloff = spectral_rolloff(&psd, &freqs, 0.95).unwrap();
+        let rolloff = spectral_rolloff(&psd, &freqs, 0.95).expect("Operation failed");
 
         // Rolloff should be in the higher frequency range
         assert!(rolloff >= 5.0);

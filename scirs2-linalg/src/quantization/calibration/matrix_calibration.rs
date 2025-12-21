@@ -94,8 +94,8 @@ where
     // Calculate moving averages to find stable min/max
     if values.len() <= windowsize {
         // Not enough data for moving average, fall back to min-max
-        let min_val = *values.first().unwrap();
-        let max_val = *values.last().unwrap();
+        let min_val = *values.first().expect("Operation failed");
+        let max_val = *values.last().expect("Operation failed");
         create_params_from_range(bits, min_val, max_val, symmetric)
     } else {
         // Calculate moving averages
@@ -374,7 +374,10 @@ where
         // Calculate moving averages to find stable min/max
         let (col_min, col_max) = if values.len() <= windowsize {
             // Not enough data for moving average, fall back to min-max
-            (*values.first().unwrap(), *values.last().unwrap())
+            (
+                *values.first().expect("Operation failed"),
+                *values.last().expect("Operation failed"),
+            )
         } else {
             // Calculate moving averages
             let min_val = values.iter().take(windowsize).sum::<f32>() / windowsize as f32;

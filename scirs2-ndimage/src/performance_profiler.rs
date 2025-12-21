@@ -255,7 +255,7 @@ impl PerformanceProfiler {
 
     /// Start real-time performance monitoring
     pub fn start_monitoring(&self) -> NdimageResult<()> {
-        let mut active = self.monitoring_active.lock().unwrap();
+        let mut active = self.monitoring_active.lock().expect("Operation failed");
         if *active {
             return Ok(()); // Already monitoring
         }
@@ -267,9 +267,9 @@ impl PerformanceProfiler {
         let monitoring_active = Arc::clone(&self.monitoring_active);
 
         thread::spawn(move || {
-            while *monitoring_active.lock().unwrap() {
+            while *monitoring_active.lock().expect("Operation failed") {
                 let current_memory = get_current_memory_usage();
-                let mut tracker = memory_tracker.lock().unwrap();
+                let mut tracker = memory_tracker.lock().expect("Operation failed");
                 tracker.update_memory_usage(current_memory);
                 drop(tracker);
 
@@ -284,10 +284,10 @@ impl PerformanceProfiler {
         let monitoring_active = Arc::clone(&self.monitoring_active);
 
         thread::spawn(move || {
-            while *monitoring_active.lock().unwrap() {
+            while *monitoring_active.lock().expect("Operation failed") {
                 {
-                    let records = timing_records.read().unwrap();
-                    let mut aggregator = metrics_aggregator.lock().unwrap();
+                    let records = timing_records.read().expect("Operation failed");
+                    let mut aggregator = metrics_aggregator.lock().expect("Operation failed");
                     aggregator.updatemetrics(&records);
                 }
 
@@ -300,7 +300,7 @@ impl PerformanceProfiler {
 
     /// Stop performance monitoring
     pub fn stop_monitoring(&self) {
-        let mut active = self.monitoring_active.lock().unwrap();
+        let mut active = self.monitoring_active.lock().expect("Operation failed");
         *active = false;
     }
 
@@ -323,14 +323,18 @@ impl PerformanceProfiler {
             data_type: std::any::type_name::<T>().to_string(),
             execution_time,
             memory_allocated,
-            memory_peak: self.memory_tracker.lock().unwrap().peak_usage,
+            memory_peak: self
+                .memory_tracker
+                .lock()
+                .expect("Operation failed")
+                .peak_usage,
             simd_utilization: self.estimate_simd_utilization(operation_name, input.len()),
             cache_hit_ratio: self.estimate_cache_hit_ratio(input.len()),
             timestamp: Instant::now(),
             metadata,
         };
 
-        let mut records = self.timing_records.write().unwrap();
+        let mut records = self.timing_records.write().expect("Operation failed");
         let operation_records = records
             .entry(operation_name.to_string())
             .or_insert_with(Vec::new);
@@ -346,10 +350,10 @@ impl PerformanceProfiler {
 
     /// Generate comprehensive performance report
     pub fn generate_performance_report(&self) -> PerformanceReport {
-        let _records = self.timing_records.read().unwrap();
-        let aggregator = self.metrics_aggregator.lock().unwrap();
-        let optimizer = self.optimizer.lock().unwrap();
-        let memory_tracker = self.memory_tracker.lock().unwrap();
+        let _records = self.timing_records.read().expect("Operation failed");
+        let aggregator = self.metrics_aggregator.lock().expect("Operation failed");
+        let optimizer = self.optimizer.lock().expect("Operation failed");
+        let memory_tracker = self.memory_tracker.lock().expect("Operation failed");
 
         PerformanceReport {
             operationmetrics: aggregator.operationmetrics.clone(),
@@ -367,7 +371,7 @@ impl PerformanceProfiler {
         &self,
         operation_name: &str,
     ) -> Vec<OptimizationRecommendation> {
-        let optimizer = self.optimizer.lock().unwrap();
+        let optimizer = self.optimizer.lock().expect("Operation failed");
         optimizer
             .recommendations
             .iter()
@@ -412,8 +416,8 @@ impl PerformanceProfiler {
             }
 
             let avg_time = timings.iter().sum::<Duration>() / timings.len() as u32;
-            let min_time = timings.iter().min().unwrap().clone();
-            let max_time = timings.iter().max().unwrap().clone();
+            let min_time = timings.iter().min().expect("Operation failed").clone();
+            let max_time = timings.iter().max().expect("Operation failed").clone();
             let avg_memory = memory_usages.iter().sum::<usize>() / memory_usages.len();
 
             results.push(BenchmarkResult {
@@ -509,8 +513,16 @@ impl MetricsAggregator {
         let execution_times: Vec<Duration> = timings.iter().map(|t| t.execution_time).collect();
         let avg_execution_time =
             execution_times.iter().sum::<Duration>() / execution_times.len() as u32;
-        let min_execution_time = execution_times.iter().min().unwrap().clone();
-        let max_execution_time = execution_times.iter().max().unwrap().clone();
+        let min_execution_time = execution_times
+            .iter()
+            .min()
+            .expect("Operation failed")
+            .clone();
+        let max_execution_time = execution_times
+            .iter()
+            .max()
+            .expect("Operation failed")
+            .clone();
 
         let avg_memory_usage =
             timings.iter().map(|t| t.memory_allocated).sum::<usize>() / timings.len();
@@ -790,7 +802,7 @@ mod tests {
         let profiler = PerformanceProfiler::new(config);
 
         // Test that profiler can be created without errors
-        assert!(!(*profiler.monitoring_active.lock().unwrap()));
+        assert!(!(*profiler.monitoring_active.lock().expect("Operation failed")));
     }
 
     #[test]
@@ -809,7 +821,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let records = profiler.timing_records.read().unwrap();
+        let records = profiler.timing_records.read().expect("Operation failed");
         assert!(records.contains_key("test_operation"));
         assert_eq!(records["test_operation"].len(), 1);
     }

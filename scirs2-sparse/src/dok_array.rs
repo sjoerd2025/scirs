@@ -536,11 +536,21 @@ mod tests {
         let mut array = DokArray::<f64>::new((3, 3));
 
         // Set some values
-        array.set(0, 0, 1.0).unwrap();
-        array.set(0, 2, 2.0).unwrap();
-        array.set(1, 2, 3.0).unwrap();
-        array.set(2, 0, 4.0).unwrap();
-        array.set(2, 1, 5.0).unwrap();
+        array
+            .set(0, 0, 1.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(0, 2, 2.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 2, 3.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(2, 0, 4.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(2, 1, 5.0)
+            .expect("Test: failed to set array element");
 
         assert_eq!(array.nnz(), 5);
 
@@ -553,7 +563,9 @@ mod tests {
         assert_eq!(array.get(2, 1), 5.0);
 
         // Set a value to zero should remove it
-        array.set(0, 0, 0.0).unwrap();
+        array
+            .set(0, 0, 0.0)
+            .expect("Test: failed to set array element");
         assert_eq!(array.nnz(), 4);
         assert_eq!(array.get(0, 0), 0.0);
 
@@ -568,7 +580,8 @@ mod tests {
         let cols = vec![0, 2, 2, 0, 1];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let array = DokArray::from_triplets(&rows, &cols, &data, (3, 3)).unwrap();
+        let array = DokArray::from_triplets(&rows, &cols, &data, (3, 3))
+            .expect("Test: failed to create DokArray from triplets");
 
         assert_eq!(array.nnz(), 5);
         assert_eq!(array.get(0, 0), 1.0);
@@ -584,12 +597,13 @@ mod tests {
         let cols = vec![0, 2, 2, 0, 1];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let array = DokArray::from_triplets(&rows, &cols, &data, (3, 3)).unwrap();
+        let array = DokArray::from_triplets(&rows, &cols, &data, (3, 3))
+            .expect("Test: failed to create DokArray from triplets");
         let dense = array.to_array();
 
         let expected =
             Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
-                .unwrap();
+                .expect("Test: failed to create array from shape vec");
 
         assert_eq!(dense, expected);
     }
@@ -598,7 +612,7 @@ mod tests {
     fn test_dok_array_from_array() {
         let dense =
             Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
-                .unwrap();
+                .expect("Test: failed to create array from shape vec");
 
         let array = DokArray::from_array(&dense);
 
@@ -613,15 +627,25 @@ mod tests {
     #[test]
     fn test_dok_array_add() {
         let mut array1 = DokArray::<f64>::new((2, 2));
-        array1.set(0, 0, 1.0).unwrap();
-        array1.set(0, 1, 2.0).unwrap();
-        array1.set(1, 0, 3.0).unwrap();
+        array1
+            .set(0, 0, 1.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(0, 1, 2.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(1, 0, 3.0)
+            .expect("Test: failed to set array element");
 
         let mut array2 = DokArray::<f64>::new((2, 2));
-        array2.set(0, 0, 4.0).unwrap();
-        array2.set(1, 1, 5.0).unwrap();
+        array2
+            .set(0, 0, 4.0)
+            .expect("Test: failed to set array element");
+        array2
+            .set(1, 1, 5.0)
+            .expect("Test: failed to set array element");
 
-        let result = array1.add(&array2).unwrap();
+        let result = array1.add(&array2).expect("Test: array addition failed");
         let dense_result = result.to_array();
 
         assert_eq!(dense_result[[0, 0]], 5.0);
@@ -633,19 +657,37 @@ mod tests {
     #[test]
     fn test_dok_array_mul() {
         let mut array1 = DokArray::<f64>::new((2, 2));
-        array1.set(0, 0, 1.0).unwrap();
-        array1.set(0, 1, 2.0).unwrap();
-        array1.set(1, 0, 3.0).unwrap();
-        array1.set(1, 1, 4.0).unwrap();
+        array1
+            .set(0, 0, 1.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(0, 1, 2.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(1, 0, 3.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(1, 1, 4.0)
+            .expect("Test: failed to set array element");
 
         let mut array2 = DokArray::<f64>::new((2, 2));
-        array2.set(0, 0, 5.0).unwrap();
-        array2.set(0, 1, 6.0).unwrap();
-        array2.set(1, 0, 7.0).unwrap();
-        array2.set(1, 1, 8.0).unwrap();
+        array2
+            .set(0, 0, 5.0)
+            .expect("Test: failed to set array element");
+        array2
+            .set(0, 1, 6.0)
+            .expect("Test: failed to set array element");
+        array2
+            .set(1, 0, 7.0)
+            .expect("Test: failed to set array element");
+        array2
+            .set(1, 1, 8.0)
+            .expect("Test: failed to set array element");
 
         // Element-wise multiplication
-        let result = array1.mul(&array2).unwrap();
+        let result = array1
+            .mul(&array2)
+            .expect("Test: array multiplication failed");
         let dense_result = result.to_array();
 
         assert_eq!(dense_result[[0, 0]], 5.0);
@@ -657,19 +699,35 @@ mod tests {
     #[test]
     fn test_dok_array_dot() {
         let mut array1 = DokArray::<f64>::new((2, 2));
-        array1.set(0, 0, 1.0).unwrap();
-        array1.set(0, 1, 2.0).unwrap();
-        array1.set(1, 0, 3.0).unwrap();
-        array1.set(1, 1, 4.0).unwrap();
+        array1
+            .set(0, 0, 1.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(0, 1, 2.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(1, 0, 3.0)
+            .expect("Test: failed to set array element");
+        array1
+            .set(1, 1, 4.0)
+            .expect("Test: failed to set array element");
 
         let mut array2 = DokArray::<f64>::new((2, 2));
-        array2.set(0, 0, 5.0).unwrap();
-        array2.set(0, 1, 6.0).unwrap();
-        array2.set(1, 0, 7.0).unwrap();
-        array2.set(1, 1, 8.0).unwrap();
+        array2
+            .set(0, 0, 5.0)
+            .expect("Test: failed to set array element");
+        array2
+            .set(0, 1, 6.0)
+            .expect("Test: failed to set array element");
+        array2
+            .set(1, 0, 7.0)
+            .expect("Test: failed to set array element");
+        array2
+            .set(1, 1, 8.0)
+            .expect("Test: failed to set array element");
 
         // Matrix multiplication
-        let result = array1.dot(&array2).unwrap();
+        let result = array1.dot(&array2).expect("Test: array dot product failed");
         let dense_result = result.to_array();
 
         // [1 2] [5 6] = [1*5 + 2*7, 1*6 + 2*8] = [19, 22]
@@ -683,14 +741,26 @@ mod tests {
     #[test]
     fn test_dok_array_transpose() {
         let mut array = DokArray::<f64>::new((2, 3));
-        array.set(0, 0, 1.0).unwrap();
-        array.set(0, 1, 2.0).unwrap();
-        array.set(0, 2, 3.0).unwrap();
-        array.set(1, 0, 4.0).unwrap();
-        array.set(1, 1, 5.0).unwrap();
-        array.set(1, 2, 6.0).unwrap();
+        array
+            .set(0, 0, 1.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(0, 1, 2.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(0, 2, 3.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 0, 4.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 1, 5.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 2, 6.0)
+            .expect("Test: failed to set array element");
 
-        let transposed = array.transpose().unwrap();
+        let transposed = array.transpose().expect("Test: array transpose failed");
 
         assert_eq!(transposed.shape(), (3, 2));
         assert_eq!(transposed.get(0, 0), 1.0);
@@ -704,17 +774,37 @@ mod tests {
     #[test]
     fn test_dok_array_slice() {
         let mut array = DokArray::<f64>::new((3, 3));
-        array.set(0, 0, 1.0).unwrap();
-        array.set(0, 1, 2.0).unwrap();
-        array.set(0, 2, 3.0).unwrap();
-        array.set(1, 0, 4.0).unwrap();
-        array.set(1, 1, 5.0).unwrap();
-        array.set(1, 2, 6.0).unwrap();
-        array.set(2, 0, 7.0).unwrap();
-        array.set(2, 1, 8.0).unwrap();
-        array.set(2, 2, 9.0).unwrap();
+        array
+            .set(0, 0, 1.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(0, 1, 2.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(0, 2, 3.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 0, 4.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 1, 5.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 2, 6.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(2, 0, 7.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(2, 1, 8.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(2, 2, 9.0)
+            .expect("Test: failed to set array element");
 
-        let slice = array.slice((0, 2), (1, 3)).unwrap();
+        let slice = array
+            .slice((0, 2), (1, 3))
+            .expect("Test: array slice failed");
 
         assert_eq!(slice.shape(), (2, 2));
         assert_eq!(slice.get(0, 0), 2.0);
@@ -726,21 +816,33 @@ mod tests {
     #[test]
     fn test_dok_array_sum() {
         let mut array = DokArray::<f64>::new((2, 3));
-        array.set(0, 0, 1.0).unwrap();
-        array.set(0, 1, 2.0).unwrap();
-        array.set(0, 2, 3.0).unwrap();
-        array.set(1, 0, 4.0).unwrap();
-        array.set(1, 1, 5.0).unwrap();
-        array.set(1, 2, 6.0).unwrap();
+        array
+            .set(0, 0, 1.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(0, 1, 2.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(0, 2, 3.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 0, 4.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 1, 5.0)
+            .expect("Test: failed to set array element");
+        array
+            .set(1, 2, 6.0)
+            .expect("Test: failed to set array element");
 
         // Sum all elements
-        match array.sum(None).unwrap() {
+        match array.sum(None).expect("Test: array sum failed") {
             SparseSum::Scalar(sum) => assert_eq!(sum, 21.0),
             _ => panic!("Expected scalar sum"),
         }
 
         // Sum along rows (axis 0)
-        match array.sum(Some(0)).unwrap() {
+        match array.sum(Some(0)).expect("Test: array sum failed") {
             SparseSum::SparseArray(sum_array) => {
                 assert_eq!(sum_array.shape(), (1, 3));
                 assert_eq!(sum_array.get(0, 0), 5.0);
@@ -751,7 +853,7 @@ mod tests {
         }
 
         // Sum along columns (axis 1)
-        match array.sum(Some(1)).unwrap() {
+        match array.sum(Some(1)).expect("Test: array sum failed") {
             SparseSum::SparseArray(sum_array) => {
                 assert_eq!(sum_array.shape(), (2, 1));
                 assert_eq!(sum_array.get(0, 0), 6.0);

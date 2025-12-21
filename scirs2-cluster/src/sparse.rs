@@ -154,7 +154,7 @@ impl<F: Float + FromPrimitive> SparseDistanceMatrix<F> {
         }
 
         // Sort by distance and take k nearest
-        all_neighbors.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        all_neighbors.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
         all_neighbors.truncate(k);
 
         all_neighbors
@@ -323,7 +323,7 @@ impl<F: Float + FromPrimitive + Debug + PartialOrd> SparseHierarchicalClustering
         match self.linkage_method {
             LinkageMethod::Single => {
                 // For single linkage, MST _edges directly give the dendrogram
-                mst_edges.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap());
+                mst_edges.sort_by(|a, b| a.2.partial_cmp(&b.2).expect("Operation failed"));
             }
             _ => {
                 // For other methods, we would need more complex processing
@@ -345,10 +345,10 @@ impl<F: Float + FromPrimitive + Debug + PartialOrd> SparseHierarchicalClustering
             let cluster_j = cluster_map[j];
 
             // Record merge in linkage matrix
-            linkage_matrix[[step, 0]] = F::from(cluster_i).unwrap();
-            linkage_matrix[[step, 1]] = F::from(cluster_j).unwrap();
+            linkage_matrix[[step, 0]] = F::from(cluster_i).expect("Failed to convert to float");
+            linkage_matrix[[step, 1]] = F::from(cluster_j).expect("Failed to convert to float");
             linkage_matrix[[step, 2]] = *distance;
-            linkage_matrix[[step, 3]] = F::from(2).unwrap(); // Size starts at 2, would need to track actual sizes
+            linkage_matrix[[step, 3]] = F::from(2).expect("Failed to convert constant to float"); // Size starts at 2, would need to track actual sizes
 
             // Update cluster mapping
             cluster_map.insert(*i, next_cluster_id);
@@ -419,7 +419,7 @@ where
         }
 
         // Sort by distance and keep k nearest
-        distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        distances.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
         distances.truncate(k);
 
         // Add to sparse matrix
@@ -499,8 +499,12 @@ mod tests {
     fn test_sparse_distance_matrix_add_distance() {
         let mut sparse_matrix = SparseDistanceMatrix::new(3, 0.0);
 
-        sparse_matrix.add_distance(0, 1, 2.0).unwrap();
-        sparse_matrix.add_distance(1, 2, 3.0).unwrap();
+        sparse_matrix
+            .add_distance(0, 1, 2.0)
+            .expect("Operation failed");
+        sparse_matrix
+            .add_distance(1, 2, 3.0)
+            .expect("Operation failed");
 
         assert_eq!(sparse_matrix.get_distance(0, 1), 2.0);
         assert_eq!(sparse_matrix.get_distance(1, 0), 2.0); // Symmetric
@@ -513,7 +517,7 @@ mod tests {
     fn test_sparse_from_dense() {
         let dense =
             Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 5.0, 1.0, 0.0, 2.0, 5.0, 2.0, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         let sparse = SparseDistanceMatrix::from_dense(dense.view(), 1.5);
 
@@ -528,9 +532,15 @@ mod tests {
     fn test_neighbors_within_distance() {
         let mut sparse_matrix = SparseDistanceMatrix::new(4, f64::INFINITY);
 
-        sparse_matrix.add_distance(0, 1, 1.0).unwrap();
-        sparse_matrix.add_distance(0, 2, 2.5).unwrap();
-        sparse_matrix.add_distance(0, 3, 0.5).unwrap();
+        sparse_matrix
+            .add_distance(0, 1, 1.0)
+            .expect("Operation failed");
+        sparse_matrix
+            .add_distance(0, 2, 2.5)
+            .expect("Operation failed");
+        sparse_matrix
+            .add_distance(0, 3, 0.5)
+            .expect("Operation failed");
 
         let neighbors = sparse_matrix.neighbors_within_distance(0, 2.0);
 
@@ -538,7 +548,7 @@ mod tests {
         assert_eq!(neighbors.len(), 2);
 
         let mut neighbor_distances: Vec<f64> = neighbors.iter().map(|(_, d)| *d).collect();
-        neighbor_distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        neighbor_distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         assert_eq!(neighbor_distances, vec![0.5, 1.0]);
     }
 
@@ -546,10 +556,18 @@ mod tests {
     fn test_k_nearest_neighbors() {
         let mut sparse_matrix = SparseDistanceMatrix::new(5, f64::INFINITY);
 
-        sparse_matrix.add_distance(0, 1, 3.0).unwrap();
-        sparse_matrix.add_distance(0, 2, 1.0).unwrap();
-        sparse_matrix.add_distance(0, 3, 2.0).unwrap();
-        sparse_matrix.add_distance(0, 4, 4.0).unwrap();
+        sparse_matrix
+            .add_distance(0, 1, 3.0)
+            .expect("Operation failed");
+        sparse_matrix
+            .add_distance(0, 2, 1.0)
+            .expect("Operation failed");
+        sparse_matrix
+            .add_distance(0, 3, 2.0)
+            .expect("Operation failed");
+        sparse_matrix
+            .add_distance(0, 4, 4.0)
+            .expect("Operation failed");
 
         let knn = sparse_matrix.k_nearest_neighbors(0, 2);
 
@@ -561,10 +579,11 @@ mod tests {
 
     #[test]
     fn test_sparse_knn_graph() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0])
+            .expect("Operation failed");
 
-        let sparse_graph = sparse_knn_graph(data.view(), 2, Metric::Euclidean).unwrap();
+        let sparse_graph =
+            sparse_knn_graph(data.view(), 2, Metric::Euclidean).expect("Operation failed");
 
         // Each point should have 2 neighbors
         // Total edges = 4 points * 2 neighbors = 8, but some may be duplicates when symmetrized
@@ -574,10 +593,11 @@ mod tests {
 
     #[test]
     fn test_sparse_epsilon_graph() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 5.0, 5.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 5.0, 5.0])
+            .expect("Operation failed");
 
-        let sparse_graph = sparse_epsilon_graph(data.view(), 1.0, Metric::Euclidean).unwrap();
+        let sparse_graph =
+            sparse_epsilon_graph(data.view(), 1.0, Metric::Euclidean).expect("Operation failed");
 
         // Points (0,0), (0.5,0), and (0,0.5) should be connected
         // Point (5,5) should be isolated
@@ -591,8 +611,12 @@ mod tests {
     #[test]
     fn test_to_dense() {
         let mut sparse_matrix = SparseDistanceMatrix::new(3, f64::INFINITY);
-        sparse_matrix.add_distance(0, 1, 2.0).unwrap();
-        sparse_matrix.add_distance(1, 2, 3.0).unwrap();
+        sparse_matrix
+            .add_distance(0, 1, 2.0)
+            .expect("Operation failed");
+        sparse_matrix
+            .add_distance(1, 2, 3.0)
+            .expect("Operation failed");
 
         let dense = sparse_matrix.to_dense();
 

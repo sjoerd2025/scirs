@@ -62,7 +62,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("mode_n_product_1", size),
             &(&tensor_3d, &matrix),
             |b, (t, m)| {
-                b.iter(|| mode_n_product(black_box(&t.view()), black_box(&m.view()), 0).unwrap())
+                b.iter(|| {
+                    mode_n_product(black_box(&t.view()), black_box(&m.view()), 0)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -70,7 +73,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("mode_n_product_2", size),
             &(&tensor_3d, &matrix),
             |b, (t, m)| {
-                b.iter(|| mode_n_product(black_box(&t.view()), black_box(&m.view()), 1).unwrap())
+                b.iter(|| {
+                    mode_n_product(black_box(&t.view()), black_box(&m.view()), 1)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -78,7 +84,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("mode_n_product_3", size),
             &(&tensor_3d, &matrix),
             |b, (t, m)| {
-                b.iter(|| mode_n_product(black_box(&t.view()), black_box(&m.view()), 2).unwrap())
+                b.iter(|| {
+                    mode_n_product(black_box(&t.view()), black_box(&m.view()), 2)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -88,7 +97,8 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             &(&tensor_3d, &vector),
             |b, (t, v)| {
                 b.iter(|| {
-                    tensor_vector_contract(black_box(&t.view()), black_box(&v.view()), 0).unwrap()
+                    tensor_vector_contract(black_box(&t.view()), black_box(&v.view()), 0)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -100,7 +110,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
                 BenchmarkId::new("tensor_tensor_contract", size),
                 &tensor_4d,
                 |b, t| {
-                    b.iter(|| tensor_contract_axes(black_box(&t.view()), &[0, 2], &[1, 3]).unwrap())
+                    b.iter(|| {
+                        tensor_contract_axes(black_box(&t.view()), &[0, 2], &[1, 3])
+                            .expect("Operation failed")
+                    })
                 },
             );
         }
@@ -111,7 +124,8 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             &(&tensor_3d, &tensor_3d),
             |b, (t1, t2)| {
                 b.iter(|| {
-                    tensor_inner_product(black_box(&t1.view()), black_box(&t2.view())).unwrap()
+                    tensor_inner_product(black_box(&t1.view()), black_box(&t2.view()))
+                        .expect("Operation failed")
                 })
             },
         );
@@ -124,7 +138,8 @@ fn bench_tensor_contraction(c: &mut Criterion) {
                 &(&tensor_3d, &tensor_3d),
                 |b, (t1, t2)| {
                     b.iter(|| {
-                        tensor_outer_product(black_box(&t1.view()), black_box(&t2.view())).unwrap()
+                        tensor_outer_product(black_box(&t1.view()), black_box(&t2.view()))
+                            .expect("Operation failed")
                     })
                 },
             );
@@ -158,7 +173,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
                         "ij,jk->ik",
                         &[black_box(&a.view()), black_box(&matrix_b.view())],
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -168,7 +183,10 @@ fn bench_einsum_operations(c: &mut Criterion) {
             BenchmarkId::new("einsum_matvec", size),
             &(&matrix_a, &vector),
             |b, (m, v)| {
-                b.iter(|| einsum("ij,j->i", &[black_box(&m.view()), black_box(&v.view())]).unwrap())
+                b.iter(|| {
+                    einsum("ij,j->i", &[black_box(&m.view()), black_box(&v.view())])
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -182,21 +200,21 @@ fn bench_einsum_operations(c: &mut Criterion) {
                         "ij,ij->ij",
                         &[black_box(&a.view()), black_box(&matrix_b.view())],
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
 
         // Trace: ii->
         group.bench_with_input(BenchmarkId::new("einsum_trace", size), &matrix_a, |b, m| {
-            b.iter(|| einsum("ii->", &[black_box(&m.view())]).unwrap())
+            b.iter(|| einsum("ii->", &[black_box(&m.view())]).expect("Operation failed"))
         });
 
         // Transpose: ij->ji
         group.bench_with_input(
             BenchmarkId::new("einsum_transpose", size),
             &matrix_a,
-            |b, m| b.iter(|| einsum("ij->ji", &[black_box(&m.view())]).unwrap()),
+            |b, m| b.iter(|| einsum("ij->ji", &[black_box(&m.view())]).expect("Operation failed")),
         );
 
         // Tensor contraction: ijk,jkl->il
@@ -211,7 +229,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
                             "ijk,jkl->il",
                             &[black_box(&t1.view()), black_box(&t2.view())],
                         )
-                        .unwrap()
+                        .expect("Operation failed")
                     })
                 },
             );
@@ -228,7 +246,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
                             "ijk,ikl->ijl",
                             &[black_box(&t1.view()), black_box(&t2.view())],
                         )
-                        .unwrap()
+                        .expect("Operation failed")
                     })
                 },
             );
@@ -248,7 +266,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
                             black_box(&v2.view()),
                         ],
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -274,7 +292,7 @@ fn bench_hosvd_operations(c: &mut Criterion) {
 
         // Higher-Order SVD (3D tensor)
         group.bench_with_input(BenchmarkId::new("hosvd_3d", size), &tensor_3d, |b, t| {
-            b.iter(|| hosvd(black_box(&t.view())).unwrap())
+            b.iter(|| hosvd(black_box(&t.view())).expect("Operation failed"))
         });
 
         // Higher-Order SVD with truncation
@@ -283,7 +301,10 @@ fn bench_hosvd_operations(c: &mut Criterion) {
             BenchmarkId::new("hosvd_3d_truncated", size),
             &(&tensor_3d, &truncation_ranks),
             |b, (t, ranks)| {
-                b.iter(|| hosvd_truncated(black_box(&t.view()), black_box(ranks)).unwrap())
+                b.iter(|| {
+                    hosvd_truncated(black_box(&t.view()), black_box(ranks))
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -291,13 +312,17 @@ fn bench_hosvd_operations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("st_hosvd_3d", size),
             &(&tensor_3d, &truncation_ranks),
-            |b, (t, ranks)| b.iter(|| st_hosvd(black_box(&t.view()), black_box(ranks)).unwrap()),
+            |b, (t, ranks)| {
+                b.iter(|| {
+                    st_hosvd(black_box(&t.view()), black_box(ranks)).expect("Operation failed")
+                })
+            },
         );
 
         // 4D HOSVD (smaller sizes only)
         if size <= 20 {
             group.bench_with_input(BenchmarkId::new("hosvd_4d", size), &tensor_4d, |b, t| {
-                b.iter(|| hosvd(black_box(&t.view())).unwrap())
+                b.iter(|| hosvd(black_box(&t.view())).expect("Operation failed"))
             });
         }
 
@@ -307,8 +332,8 @@ fn bench_hosvd_operations(c: &mut Criterion) {
             &tensor_3d,
             |b, t| {
                 b.iter(|| {
-                    let decomp = hosvd(black_box(&t.view())).unwrap();
-                    hosvd_reconstruct(&decomp).unwrap()
+                    let decomp = hosvd(black_box(&t.view())).expect("Operation failed");
+                    hosvd_reconstruct(&decomp).expect("Operation failed")
                 })
             },
         );
@@ -337,7 +362,10 @@ fn bench_tucker_decomposition(c: &mut Criterion) {
             BenchmarkId::new("tucker_als", size),
             &(&tensor_3d, &tucker_ranks),
             |b, (t, ranks)| {
-                b.iter(|| tucker_als(black_box(&t.view()), black_box(ranks), 50, 1e-8).unwrap())
+                b.iter(|| {
+                    tucker_als(black_box(&t.view()), black_box(ranks), 50, 1e-8)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -346,7 +374,10 @@ fn bench_tucker_decomposition(c: &mut Criterion) {
             BenchmarkId::new("tucker_hooi", size),
             &(&tensor_3d, &tucker_ranks),
             |b, (t, ranks)| {
-                b.iter(|| tucker_hooi(black_box(&t.view()), black_box(ranks), 50, 1e-8).unwrap())
+                b.iter(|| {
+                    tucker_hooi(black_box(&t.view()), black_box(ranks), 50, 1e-8)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -357,7 +388,7 @@ fn bench_tucker_decomposition(c: &mut Criterion) {
             |b, (t, ranks)| {
                 b.iter(|| {
                     tucker_with_hosvd_init(black_box(&t.view()), black_box(ranks), 50, 1e-8)
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
@@ -368,9 +399,9 @@ fn bench_tucker_decomposition(c: &mut Criterion) {
             &(&tensor_3d, &tucker_ranks),
             |b, (t, ranks)| {
                 b.iter(|| {
-                    let decomp =
-                        tucker_als(black_box(&t.view()), black_box(ranks), 20, 1e-6).unwrap();
-                    tucker_reconstruct(&decomp).unwrap()
+                    let decomp = tucker_als(black_box(&t.view()), black_box(ranks), 20, 1e-6)
+                        .expect("Operation failed");
+                    tucker_reconstruct(&decomp).expect("Operation failed")
                 })
             },
         );
@@ -382,9 +413,9 @@ fn bench_tucker_decomposition(c: &mut Criterion) {
             &(&tensor_3d, &tucker_ranks, &matrix),
             |b, (t, ranks, m)| {
                 b.iter(|| {
-                    let decomp =
-                        tucker_als(black_box(&t.view()), black_box(ranks), 10, 1e-6).unwrap();
-                    tucker_ttm(&decomp, black_box(&m.view()), 0).unwrap()
+                    let decomp = tucker_als(black_box(&t.view()), black_box(ranks), 10, 1e-6)
+                        .expect("Operation failed");
+                    tucker_ttm(&decomp, black_box(&m.view()), 0).expect("Operation failed")
                 })
             },
         );
@@ -413,7 +444,9 @@ fn bench_tensor_train_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("tt_svd_3d", size),
             &(&tensor_3d, &tt_ranks),
-            |b, (t, ranks)| b.iter(|| tt_svd(black_box(&t.view()), black_box(ranks)).unwrap()),
+            |b, (t, ranks)| {
+                b.iter(|| tt_svd(black_box(&t.view()), black_box(ranks)).expect("Operation failed"))
+            },
         );
 
         // Tensor Train decomposition via ALS
@@ -421,7 +454,10 @@ fn bench_tensor_train_decomposition(c: &mut Criterion) {
             BenchmarkId::new("tt_als_3d", size),
             &(&tensor_3d, &tt_ranks),
             |b, (t, ranks)| {
-                b.iter(|| tt_als(black_box(&t.view()), black_box(ranks), 50, 1e-8).unwrap())
+                b.iter(|| {
+                    tt_als(black_box(&t.view()), black_box(ranks), 50, 1e-8)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -431,8 +467,9 @@ fn bench_tensor_train_decomposition(c: &mut Criterion) {
             &(&tensor_3d, &tt_ranks),
             |b, (t, ranks)| {
                 b.iter(|| {
-                    let tt_decomp = tt_svd(black_box(&t.view()), black_box(ranks)).unwrap();
-                    tt_round(&tt_decomp, 1e-8).unwrap()
+                    let tt_decomp =
+                        tt_svd(black_box(&t.view()), black_box(ranks)).expect("Operation failed");
+                    tt_round(&tt_decomp, 1e-8).expect("Operation failed")
                 })
             },
         );
@@ -443,7 +480,11 @@ fn bench_tensor_train_decomposition(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("tt_svd_4d", size),
                 &(&tensor_4d, &tt_ranks_4d),
-                |b, (t, ranks)| b.iter(|| tt_svd(black_box(&t.view()), black_box(ranks)).unwrap()),
+                |b, (t, ranks)| {
+                    b.iter(|| {
+                        tt_svd(black_box(&t.view()), black_box(ranks)).expect("Operation failed")
+                    })
+                },
             );
         }
 
@@ -453,8 +494,9 @@ fn bench_tensor_train_decomposition(c: &mut Criterion) {
             &(&tensor_3d, &tt_ranks),
             |b, (t, ranks)| {
                 b.iter(|| {
-                    let tt_decomp = tt_svd(black_box(&t.view()), black_box(ranks)).unwrap();
-                    tt_reconstruct(&tt_decomp).unwrap()
+                    let tt_decomp =
+                        tt_svd(black_box(&t.view()), black_box(ranks)).expect("Operation failed");
+                    tt_reconstruct(&tt_decomp).expect("Operation failed")
                 })
             },
         );
@@ -465,9 +507,11 @@ fn bench_tensor_train_decomposition(c: &mut Criterion) {
             &(&tensor_3d, &tt_ranks),
             |b, (t, ranks)| {
                 b.iter(|| {
-                    let tt1 = tt_svd(black_box(&t.view()), black_box(ranks)).unwrap();
-                    let tt2 = tt_svd(black_box(&t.view()), black_box(ranks)).unwrap();
-                    tt_add(&tt1, &tt2).unwrap()
+                    let tt1 =
+                        tt_svd(black_box(&t.view()), black_box(ranks)).expect("Operation failed");
+                    let tt2 =
+                        tt_svd(black_box(&t.view()), black_box(ranks)).expect("Operation failed");
+                    tt_add(&tt1, &tt2).expect("Operation failed")
                 })
             },
         );
@@ -495,7 +539,9 @@ fn bench_cp_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cp_als", size),
             &(&tensor_3d, cp_rank),
-            |b, (t, &rank)| b.iter(|| cp_als(black_box(&t.view()), rank, 100, 1e-8).unwrap()),
+            |b, (t, &rank)| {
+                b.iter(|| cp_als(black_box(&t.view()), rank, 100, 1e-8).expect("Operation failed"))
+            },
         );
 
         // CP decomposition with random initialization
@@ -503,7 +549,10 @@ fn bench_cp_decomposition(c: &mut Criterion) {
             BenchmarkId::new("cp_als_random_init", size),
             &(&tensor_3d, cp_rank),
             |b, (t, &rank)| {
-                b.iter(|| cp_als_random_init(black_box(&t.view()), rank, 100, 1e-8, None).unwrap())
+                b.iter(|| {
+                    cp_als_random_init(black_box(&t.view()), rank, 100, 1e-8, None)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -512,7 +561,10 @@ fn bench_cp_decomposition(c: &mut Criterion) {
             BenchmarkId::new("cp_als_hosvd_init", size),
             &(&tensor_3d, cp_rank),
             |b, (t, &rank)| {
-                b.iter(|| cp_als_hosvd_init(black_box(&t.view()), rank, 100, 1e-8).unwrap())
+                b.iter(|| {
+                    cp_als_hosvd_init(black_box(&t.view()), rank, 100, 1e-8)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -522,8 +574,9 @@ fn bench_cp_decomposition(c: &mut Criterion) {
             &(&tensor_3d, cp_rank),
             |b, (t, &rank)| {
                 b.iter(|| {
-                    let cp_decomp = cp_als(black_box(&t.view()), rank, 50, 1e-6).unwrap();
-                    cp_reconstruct(&cp_decomp).unwrap()
+                    let cp_decomp =
+                        cp_als(black_box(&t.view()), rank, 50, 1e-6).expect("Operation failed");
+                    cp_reconstruct(&cp_decomp).expect("Operation failed")
                 })
             },
         );
@@ -535,8 +588,9 @@ fn bench_cp_decomposition(c: &mut Criterion) {
             &(&tensor_3d, cp_rank, &matrix),
             |b, (t, &rank, m)| {
                 b.iter(|| {
-                    let cp_decomp = cp_als(black_box(&t.view()), rank, 20, 1e-6).unwrap();
-                    cp_ttm(&cp_decomp, black_box(&m.view()), 0).unwrap()
+                    let cp_decomp =
+                        cp_als(black_box(&t.view()), rank, 20, 1e-6).expect("Operation failed");
+                    cp_ttm(&cp_decomp, black_box(&m.view()), 0).expect("Operation failed")
                 })
             },
         );
@@ -547,8 +601,9 @@ fn bench_cp_decomposition(c: &mut Criterion) {
             &(&tensor_3d, cp_rank),
             |b, (t, &rank)| {
                 b.iter(|| {
-                    let mut cp_decomp = cp_als(black_box(&t.view()), rank, 20, 1e-6).unwrap();
-                    cp_normalize(&mut cp_decomp).unwrap()
+                    let mut cp_decomp =
+                        cp_als(black_box(&t.view()), rank, 20, 1e-6).expect("Operation failed");
+                    cp_normalize(&mut cp_decomp).expect("Operation failed")
                 })
             },
         );
@@ -577,7 +632,10 @@ fn bench_tensor_networks(c: &mut Criterion) {
             BenchmarkId::new("mps_decomposition", size),
             &(&tensor_3d, &bond_dims),
             |b, (t, dims)| {
-                b.iter(|| mps_decomposition(black_box(&t.view()), black_box(dims)).unwrap())
+                b.iter(|| {
+                    mps_decomposition(black_box(&t.view()), black_box(dims))
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -585,14 +643,22 @@ fn bench_tensor_networks(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("mpo_application", size),
             &(&tensor_3d, &matrix),
-            |b, (t, m)| b.iter(|| mpo_apply(black_box(&t.view()), black_box(&m.view())).unwrap()),
+            |b, (t, m)| {
+                b.iter(|| {
+                    mpo_apply(black_box(&t.view()), black_box(&m.view())).expect("Operation failed")
+                })
+            },
         );
 
         // Tree Tensor Network contraction
         group.bench_with_input(
             BenchmarkId::new("ttn_contraction", size),
             &tensor_3d,
-            |b, t| b.iter(|| tree_tensor_network_contract(black_box(&t.view())).unwrap()),
+            |b, t| {
+                b.iter(|| {
+                    tree_tensor_network_contract(black_box(&t.view())).expect("Operation failed")
+                })
+            },
         );
 
         // PEPS (Projected Entangled Pair States) operations (2D only)
@@ -601,13 +667,13 @@ fn bench_tensor_networks(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("peps_contraction", size),
                 &matrix_2d,
-                |b, m| b.iter(|| peps_contraction(black_box(&m.view())).unwrap()),
+                |b, m| b.iter(|| peps_contraction(black_box(&m.view())).expect("Operation failed")),
             );
         }
 
         // Tensor network simplification
         group.bench_with_input(BenchmarkId::new("tn_simplify", size), &tensor_3d, |b, t| {
-            b.iter(|| tensor_network_simplify(black_box(&t.view())).unwrap())
+            b.iter(|| tensor_network_simplify(black_box(&t.view())).expect("Operation failed"))
         });
     }
 
@@ -636,7 +702,7 @@ fn bench_batch_tensor_operations(c: &mut Criterion) {
                 |b, (t, w)| {
                     b.iter(|| {
                         batch_tensormatrix_multiply(black_box(&t.view()), black_box(&w.view()))
-                            .unwrap()
+                            .expect("Operation failed")
                     })
                 },
             );
@@ -645,7 +711,11 @@ fn bench_batch_tensor_operations(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("batch_contract_{}x{}", batchsize, size), size),
                 &batch_tensor,
-                |b, t| b.iter(|| batch_tensor_contract(black_box(&t.view())).unwrap()),
+                |b, t| {
+                    b.iter(|| {
+                        batch_tensor_contract(black_box(&t.view())).expect("Operation failed")
+                    })
+                },
             );
 
             // Batch mode-n product
@@ -654,7 +724,8 @@ fn bench_batch_tensor_operations(c: &mut Criterion) {
                 &(&batch_tensor, &weightmatrix),
                 |b, (t, w)| {
                     b.iter(|| {
-                        batch_mode_n_product(black_box(&t.view()), black_box(&w.view()), 1).unwrap()
+                        batch_mode_n_product(black_box(&t.view()), black_box(&w.view()), 1)
+                            .expect("Operation failed")
                     })
                 },
             );
@@ -663,7 +734,11 @@ fn bench_batch_tensor_operations(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("batch_normalize_{}x{}", batchsize, size), size),
                 &batch_tensor,
-                |b, t| b.iter(|| batch_tensor_normalize(black_box(&t.view())).unwrap()),
+                |b, t| {
+                    b.iter(|| {
+                        batch_tensor_normalize(black_box(&t.view())).expect("Operation failed")
+                    })
+                },
             );
         }
     }
@@ -691,7 +766,8 @@ fn bench_tensor_memory_efficiency(c: &mut Criterion) {
             |b, t| {
                 b.iter(|| {
                     let _copy = t.clone();
-                    mode_n_product(black_box(&t.view()), &Array2::eye(size), 0).unwrap()
+                    mode_n_product(black_box(&t.view()), &Array2::eye(size), 0)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -699,7 +775,12 @@ fn bench_tensor_memory_efficiency(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("tensor_no_copy", size),
             &tensor_3d,
-            |b, t| b.iter(|| mode_n_product(black_box(&t.view()), &Array2::eye(size), 0).unwrap()),
+            |b, t| {
+                b.iter(|| {
+                    mode_n_product(black_box(&t.view()), &Array2::eye(size), 0)
+                        .expect("Operation failed")
+                })
+            },
         );
 
         // Memory-efficient Tucker decomposition
@@ -710,7 +791,7 @@ fn bench_tensor_memory_efficiency(c: &mut Criterion) {
             |b, (t, ranks)| {
                 b.iter(|| {
                     tucker_memory_efficient(black_box(&t.view()), black_box(ranks), 20, 1e-6)
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
@@ -719,7 +800,12 @@ fn bench_tensor_memory_efficiency(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("tensor_streaming", size),
             &tensor_3d,
-            |b, t| b.iter(|| tensor_streaming_operation(black_box(&t.view()), size / 2).unwrap()),
+            |b, t| {
+                b.iter(|| {
+                    tensor_streaming_operation(black_box(&t.view()), size / 2)
+                        .expect("Operation failed")
+                })
+            },
         );
     }
 

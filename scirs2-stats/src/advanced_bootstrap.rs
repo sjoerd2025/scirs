@@ -466,8 +466,10 @@ where
                             let indices_slice = &local_indices[indices_start..indices_start + n];
 
                             // Convert data to f32 for SIMD processing
-                            let data_f32: Vec<f32> =
-                                data.iter().map(|&x| x.to_f64().unwrap() as f32).collect();
+                            let data_f32: Vec<f32> = data
+                                .iter()
+                                .map(|&x| x.to_f64().expect("Operation failed") as f32)
+                                .collect();
 
                             // Bandwidth-saturated SIMD gather
                             let mut gathered_values = vec![0.0f32; n];
@@ -480,7 +482,7 @@ where
                     } else {
                         // Scalar fallback for small arrays or no AVX2
                         for &idx in &local_indices {
-                            local_values.push(data[idx].to_f64().unwrap() as f32);
+                            local_values.push(data[idx].to_f64().expect("Operation failed") as f32);
                         }
                     }
 
@@ -492,7 +494,7 @@ where
                         // Convert back to F type for statistic computation
                         let mut resample = Array1::zeros(n);
                         for (i, &val) in values_slice.iter().enumerate() {
-                            resample[i] = F::from(val as f64).unwrap();
+                            resample[i] = F::from(val as f64).expect("Failed to convert to float");
                         }
 
                         let statistic = statistic_fn(&resample.view())?.into();
@@ -537,15 +539,18 @@ where
                 resample_values.clear();
                 if capabilities.has_avx2() && n >= 8 {
                     // Ultra-optimized SIMD gather with prefetching
-                    let data_f32: Vec<f32> =
-                        data.iter().map(|&x| x.to_f64().unwrap() as f32).collect();
+                    let data_f32: Vec<f32> = data
+                        .iter()
+                        .map(|&x| x.to_f64().expect("Operation failed") as f32)
+                        .collect();
 
                     for bootstrap_idx in 0..current_chunk_size {
                         let indices_start = bootstrap_idx * n;
                         let indices_slice = &resample_indices[indices_start..indices_start + n];
 
                         for &idx in indices_slice {
-                            resample_values.push(F::from(data_f32[idx]).unwrap());
+                            resample_values
+                                .push(F::from(data_f32[idx]).expect("Failed to convert to float"));
                         }
                     }
                 } else {
@@ -832,7 +837,8 @@ where
             // Apply tapering weights
             for i in 0..copy_length {
                 let weight = self.compute_taper_weight(i, copy_length, taper_function);
-                let value = data[start_idx + i] * F::from(weight).unwrap();
+                let value =
+                    data[start_idx + i] * F::from(weight).expect("Failed to convert to float");
 
                 if pos + i < resample.len() {
                     resample[pos + i] = resample[pos + i] + value;
@@ -888,7 +894,7 @@ where
 
             for j in 0..n {
                 let exp_sample = -self.rng.random::<f64>().ln(); // Exponential(1) sample
-                weights[j] = F::from(exp_sample).unwrap();
+                weights[j] = F::from(exp_sample).expect("Failed to convert to float");
                 weight_sum = weight_sum + weights[j];
             }
 
@@ -900,7 +906,9 @@ where
             // Create weighted resample
             let mut resample = Array1::zeros(n);
             for j in 0..n {
-                resample[j] = data[j] * weights[j] * F::from(n).unwrap(); // Scale by n
+                resample[j] =
+                    data[j] * weights[j] * F::from(n).expect("Failed to convert to float");
+                // Scale by n
             }
 
             bootstrap_samples[i] = statistic_fn(&resample.view())?.into();
@@ -958,7 +966,7 @@ where
                     }
                 };
 
-                resample[j] = data[j] * F::from(multiplier).unwrap();
+                resample[j] = data[j] * F::from(multiplier).expect("Failed to convert to float");
             }
 
             bootstrap_samples[i] = statistic_fn(&resample.view())?.into();
@@ -1060,7 +1068,7 @@ where
             let u1 = self.rng.random::<f64>();
             let u2 = self.rng.random::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            sample[i] = F::from(mean + std * z).unwrap();
+            sample[i] = F::from(mean + std * z).expect("Failed to convert to float");
         }
 
         Ok(sample)
@@ -1073,7 +1081,7 @@ where
         for i in 0..n {
             let u = self.rng.random::<f64>();
             let x = -u.ln() / rate;
-            sample[i] = F::from(x).unwrap();
+            sample[i] = F::from(x).expect("Failed to convert to float");
         }
 
         Ok(sample)
@@ -1096,7 +1104,7 @@ where
             let u1 = self.rng.random::<f64>();
             let u2 = self.rng.random::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            sample[i] = F::from((mean + std * z).max(0.0)).unwrap();
+            sample[i] = F::from((mean + std * z).max(0.0)).expect("Operation failed");
         }
 
         Ok(sample)
@@ -1111,7 +1119,7 @@ where
             let x = self.rng.random::<f64>().powf(1.0 / alpha);
             let y = self.rng.random::<f64>().powf(1.0 / beta);
             let value = x / (x + y);
-            sample[i] = F::from(value).unwrap();
+            sample[i] = F::from(value).expect("Failed to convert to float");
         }
 
         Ok(sample)
@@ -1163,8 +1171,10 @@ where
 
         // Basic bootstrap method
         let basic = (
-            F::from(2.0).unwrap() * original_statistic - sorted_samples[upper_idx.min(n - 1)],
-            F::from(2.0).unwrap() * original_statistic - sorted_samples[lower_idx],
+            F::from(2.0).expect("Failed to convert constant to float") * original_statistic
+                - sorted_samples[upper_idx.min(n - 1)],
+            F::from(2.0).expect("Failed to convert constant to float") * original_statistic
+                - sorted_samples[lower_idx],
         );
 
         // Bias-corrected intervals (simplified)
@@ -1247,7 +1257,7 @@ where
                     z * z * z
                 })
                 .fold(F::zero(), |acc, x| acc + x);
-            skew_sum / F::from(samples.len()).unwrap()
+            skew_sum / F::from(samples.len()).expect("Operation failed")
         } else {
             F::zero()
         };
@@ -1261,7 +1271,8 @@ where
                     z * z * z * z
                 })
                 .fold(F::zero(), |acc, x| acc + x);
-            kurt_sum / F::from(samples.len()).unwrap() - F::from(3.0).unwrap()
+            kurt_sum / F::from(samples.len()).expect("Operation failed")
+                - F::from(3.0).expect("Failed to convert constant to float")
         } else {
             F::zero()
         };
@@ -1287,11 +1298,13 @@ where
         _original_statistic: F,
     ) -> StatsResult<QualityMetrics<F>> {
         let std_error = self.compute_std(samples);
-        let mc_std_error = std_error / F::from((samples.len() as f64).sqrt()).unwrap();
+        let mc_std_error =
+            std_error / F::from((samples.len() as f64).sqrt()).expect("Operation failed");
 
         Ok(QualityMetrics {
             mc_standard_error: mc_std_error,
-            coverage_probability: F::from(self.config.confidence_level).unwrap(),
+            coverage_probability: F::from(self.config.confidence_level)
+                .expect("Failed to convert to float"),
             efficiency: None,    // Would require analytical comparison
             stability: F::one(), // Simplified
         })
@@ -1315,7 +1328,7 @@ where
         if data.is_empty() {
             F::zero()
         } else {
-            data.sum() / F::from(data.len()).unwrap()
+            data.sum() / F::from(data.len()).expect("Operation failed")
         }
     }
 
@@ -1330,7 +1343,7 @@ where
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(data.len() - 1).unwrap();
+            / F::from(data.len() - 1).expect("Operation failed");
 
         variance.sqrt()
     }
@@ -1508,7 +1521,9 @@ mod tests {
         };
 
         let mut processor = AdvancedBootstrapProcessor::new(config);
-        let result = processor.bootstrap(&data.view(), mean_fn).unwrap();
+        let result = processor
+            .bootstrap(&data.view(), mean_fn)
+            .expect("Operation failed");
 
         assert_eq!(result.n_successful, 100);
         assert!(result.bootstrap_samples.len() == 100);
@@ -1516,7 +1531,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_stratifiedbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let strata = vec![0, 0, 1, 1, 2, 2]; // Three strata
@@ -1532,14 +1546,13 @@ mod tests {
                 ..Default::default()
             }),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(result.n_successful, 50);
         assert!(matches!(result.method, BootstrapType::Stratified { .. }));
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_moving_blockbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
@@ -1550,25 +1563,24 @@ mod tests {
             Some(3),  // block length
             Some(50), // n_bootstrap
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(result.n_successful, 50);
         assert!(result.effective_samplesize.is_some());
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_circular_blockbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = circular_block_bootstrap(&data.view(), mean_fn, Some(2), Some(30)).unwrap();
+        let result = circular_block_bootstrap(&data.view(), mean_fn, Some(2), Some(30))
+            .expect("Operation failed");
 
         assert_eq!(result.n_successful, 30);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_confidence_intervals() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
@@ -1581,7 +1593,9 @@ mod tests {
         };
 
         let mut processor = AdvancedBootstrapProcessor::new(config);
-        let result = processor.bootstrap(&data.view(), mean_fn).unwrap();
+        let result = processor
+            .bootstrap(&data.view(), mean_fn)
+            .expect("Operation failed");
 
         let ci = &result.confidence_intervals;
         assert!(ci.percentile.0 <= ci.percentile.1);
@@ -1589,7 +1603,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_bootstrap_diagnostics() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         let var_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {
@@ -1605,7 +1618,9 @@ mod tests {
         };
 
         let mut processor = AdvancedBootstrapProcessor::new(config);
-        let result = processor.bootstrap(&data.view(), var_fn).unwrap();
+        let result = processor
+            .bootstrap(&data.view(), var_fn)
+            .expect("Operation failed");
 
         assert!(result.diagnostics.convergence_info.converged);
         assert!(

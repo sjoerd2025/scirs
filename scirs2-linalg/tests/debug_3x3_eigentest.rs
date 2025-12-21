@@ -10,7 +10,7 @@ fn debug_3x3_eigenvalue_computation() {
     println!("Matrix A:");
     println!("{:?}", a);
 
-    let (eigenvalues, eigenvectors) = eigh(&a.view(), None).unwrap();
+    let (eigenvalues, eigenvectors) = eigh(&a.view(), None).expect("Test: operation failed");
 
     println!("Eigenvalues: {:?}", eigenvalues);
     println!("Eigenvectors:");

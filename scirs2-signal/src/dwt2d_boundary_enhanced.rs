@@ -368,7 +368,7 @@ pub fn waverec2_enhanced(
     }
 
     // Start from the deepest level
-    let mut current_data = decompositions.last().unwrap().decomposition.ll.clone();
+    let mut current_data = decompositions.last().expect("Operation failed").decomposition.ll.clone();
 
     // Reconstruct level by level
     for enhanced_decomp in decompositions.iter().rev() {
@@ -777,7 +777,7 @@ where
                 let val1 = data[[0, j - ext_cols]];
                 let val2 = data[[1, j - ext_cols]];
                 let slope = val2 - val1;
-                extended[[ext_rows - 1 - i, j]] = val1 - slope * T::from(i + 1).unwrap();
+                extended[[ext_rows - 1 - i, j]] = val1 - slope * T::from(i + 1).expect("Operation failed");
             }
         } else {
             for j in ext_cols..ext_cols + _cols {
@@ -791,7 +791,7 @@ where
                 let val1 = data[[_rows - 2, j - ext_cols]];
                 let val2 = data[[_rows - 1, j - ext_cols]];
                 let slope = val2 - val1;
-                extended[[ext_rows + _rows + i, j]] = val2 + slope * T::from(i + 1).unwrap();
+                extended[[ext_rows + _rows + i, j]] = val2 + slope * T::from(i + 1).expect("Operation failed");
             }
         } else {
             for j in ext_cols..ext_cols + _cols {
@@ -809,7 +809,7 @@ where
                     let val1 = data[[i - ext_rows, 0]];
                     let val2 = data[[i - ext_rows, 1]];
                     let slope = val2 - val1;
-                    extended[[i, ext_cols - 1 - j]] = val1 - slope * T::from(j + 1).unwrap();
+                    extended[[i, ext_cols - 1 - j]] = val1 - slope * T::from(j + 1).expect("Operation failed");
                 } else {
                     extended[[i, ext_cols - 1 - j]] = extended[[i, ext_cols]];
                 }
@@ -827,7 +827,7 @@ where
                     let val1 = data[[i - ext_rows, _cols - 2]];
                     let val2 = data[[i - ext_rows, _cols - 1]];
                     let slope = val2 - val1;
-                    extended[[i, ext_cols + _cols + j]] = val2 + slope * T::from(j + 1).unwrap();
+                    extended[[i, ext_cols + _cols + j]] = val2 + slope * T::from(j + 1).expect("Operation failed");
                 } else {
                     extended[[i, ext_cols + _cols + j]] = extended[[i, ext_cols + _cols - 1]];
                 }
@@ -939,7 +939,7 @@ where
     }
 
     if sample_count > 0 {
-        let avg_edge_strength = total_edge_strength / T::from(sample_count).unwrap();
+        let avg_edge_strength = total_edge_strength / T::from(sample_count).expect("Operation failed");
         Ok(avg_edge_strength.to_f64().unwrap_or(0.0))
     } else {
         Ok(0.0)
@@ -979,7 +979,7 @@ where
     T: Float + NumCast + Debug + Zero + Copy,
 {
     // For simplicity, remove mean (could be enhanced with linear trend removal)
-    let mean = data.iter().fold(T::zero(), |acc, &x| acc + x) / T::from(_data.len()).unwrap();
+    let mean = data.iter().fold(T::zero(), |acc, &x| acc + x) / T::from(_data.len()).expect("Operation failed");
     Ok(_data.mapv(|x| x - mean))
 }
 
@@ -1000,7 +1000,7 @@ where
     // Apply tapering to edges
     for i in 0..rows {
         for j in 0..cols {
-            let mut weight = T::from(1.0).unwrap();
+            let mut weight = T::from(1.0).expect("Operation failed");
 
             // Distance from edges
             let dist_top = i;

@@ -399,7 +399,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_rmsprop(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_rmsprop(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should converge to zero
         assert!(result.success || result.fun < 1e-4);
@@ -423,7 +424,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_rmsprop(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_rmsprop(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Centered RMSProp should converge
         assert!(result.success || result.fun < 1e-4);
@@ -444,7 +446,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_rmsprop(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_rmsprop(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // RMSProp with momentum should help convergence
         assert!(result.success || result.fun < 1e-3);
@@ -464,7 +467,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_graves_rmsprop(grad_func, x0, data_provider, options).unwrap();
+        let result = minimize_graves_rmsprop(grad_func, x0, data_provider, options)
+            .expect("Operation failed");
 
         // Graves' variant should also work well (very relaxed tolerance)
         assert!(result.fun < 1.0);
@@ -492,8 +496,8 @@ mod tests {
             let x0_clone = x0.clone();
             let data_provider_clone = Box::new(InMemoryDataProvider::new(vec![1.0; 50]));
 
-            let result =
-                minimize_rmsprop(grad_func_clone, x0_clone, data_provider_clone, options).unwrap();
+            let result = minimize_rmsprop(grad_func_clone, x0_clone, data_provider_clone, options)
+                .expect("Operation failed");
 
             // All decay rates should lead to reasonable convergence
             assert!(result.fun < 1e-2, "Failed with decay rate {}", decay_rate);

@@ -349,7 +349,7 @@ fn regular_hexagon(_radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
         vertices.push(_y);
     }
 
-    Array2::from_shape_vec((6, 2), vertices).unwrap()
+    Array2::from_shape_vec((6, 2), vertices).expect("Operation failed")
 }
 
 /// Create a simple star polygon (5-pointed)
@@ -372,7 +372,7 @@ fn create_star_polygon() -> Array2<f64> {
         vertices.push(y);
     }
 
-    Array2::from_shape_vec((10, 2), vertices).unwrap()
+    Array2::from_shape_vec((10, 2), vertices).expect("Operation failed")
 }
 
 /// Print polygon vertices (limited to first few vertices for readability)

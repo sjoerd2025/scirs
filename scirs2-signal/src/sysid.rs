@@ -44,7 +44,7 @@ use scirs2_core::ndarray::s;
 // let t = Array1::linspace(0.0, (n-1) as f64 / fs, n);
 //
 // // Create chirp input signal
-// let input_vec = chirp(t.as_slice().unwrap(), 1.0, t[t.len()-1], 20.0, "linear", 0.0)?;
+// let input_vec = chirp(t.as_slice().expect("Operation failed"), 1.0, t[t.len()-1], 20.0, "linear", 0.0)?;
 // let input = Array1::from(input_vec);
 //
 // // Simulate system output (simple first-order system)
@@ -562,7 +562,7 @@ fn estimate_freq_response_welch(
 
     // Get input auto-power spectral density
     let (_, pxx) = welch(
-        input.as_slice().unwrap(),
+        input.as_slice().expect("Operation failed"),
         Some(fs),
         Some(&config.window),
         Some(nfft),
@@ -578,7 +578,7 @@ fn estimate_freq_response_welch(
 
     // Also need output auto-spectral density for coherence
     let (_, pyy) = welch(
-        output.as_slice().unwrap(),
+        output.as_slice().expect("Operation failed"),
         Some(fs),
         Some(&config.window),
         Some(nfft),
@@ -760,7 +760,7 @@ fn estimate_freq_response_h2(
     let (freqs, pxy) =
         cross_spectral_density_welch(input, output, fs, nfft, overlap, &config.window)?;
     let (_, pyy) = welch(
-        output.as_slice().unwrap(),
+        output.as_slice().expect("Operation failed"),
         Some(fs),
         Some(&config.window),
         Some(nfft),
@@ -770,7 +770,7 @@ fn estimate_freq_response_h2(
         None,
     )?;
     let (_, pxx) = welch(
-        input.as_slice().unwrap(),
+        input.as_slice().expect("Operation failed"),
         Some(fs),
         Some(&config.window),
         Some(nfft),
@@ -1701,7 +1701,7 @@ pub fn estimate_robust_scale(
 ) -> SignalResult<f64> {
     let residuals = target - &regressor.dot(parameters);
     let mut abs_residuals: Vec<f64> = residuals.iter().map(|&r: &f64| r.abs()).collect();
-    abs_residuals.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    abs_residuals.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Median absolute deviation (MAD)
     let median_idx = abs_residuals.len() / 2;
@@ -1753,7 +1753,7 @@ fn calculate_robust_fit(
 #[allow(dead_code)]
 fn calculate_median(data: &Array1<f64>) -> f64 {
     let mut sorted: Vec<f64> = data.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = sorted.len();
     if n.is_multiple_of(2) {
@@ -1795,7 +1795,7 @@ mod tests {
             1,
             TfEstimationMethod::LeastSquares,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Should estimate something reasonable
         assert!(result.fit_percentage > 30.0); // Lower threshold for noisy estimation
@@ -1813,7 +1813,8 @@ mod tests {
             signal[i] = 0.5 * signal[i - 1] + 0.3 * signal[i - 2] + 0.1 * (i as f64).sin();
         }
 
-        let result = identify_ar_model(&signal, 5, ARMethod::Burg, OrderSelection::AIC).unwrap();
+        let result = identify_ar_model(&signal, 5, ARMethod::Burg, OrderSelection::AIC)
+            .expect("Operation failed");
 
         // Should identify a reasonable model
         assert!(result.model_order.0 <= 5);
@@ -1837,7 +1838,7 @@ mod tests {
         // Train with multiple epochs
         for _ in 0..100 {
             for (regression, output) in &test_data {
-                let _ = rls.update(regression, *output).unwrap();
+                let _ = rls.update(regression, *output).expect("Operation failed");
             }
         }
 
@@ -1852,7 +1853,7 @@ mod tests {
         let actual = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let predicted = Array1::from_vec(vec![1.1, 1.9, 3.1, 3.9, 5.1]);
 
-        let validation = validate_model(&predicted, &actual, 2, false).unwrap();
+        let validation = validate_model(&predicted, &actual, 2, false).expect("Operation failed");
 
         assert!(validation.fit_percentage > 90.0); // Should be high for close match
         assert!(validation.r_squared > 0.9);
@@ -1875,7 +1876,7 @@ mod tests {
             FreqResponseMethod::Periodogram,
             &config,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(!result.frequencies.is_empty());
         assert_eq!(result.frequency_response.len(), result.frequencies.len());

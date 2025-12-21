@@ -497,7 +497,7 @@ mod tests {
         let y_true = array![1, 0, 1, 1, 0];
         let ypred = array![1, 0, 0, 1, 0];
 
-        let result = metric.compute(&y_true, &ypred).unwrap();
+        let result = metric.compute(&y_true, &ypred).expect("Operation failed");
         assert_eq!(result, 0.8);
         assert!(metric.higher_is_better());
     }
@@ -508,7 +508,7 @@ mod tests {
         let y_true = array![1.0, 2.0, 3.0];
         let ypred = array![1.1, 2.1, 2.9];
 
-        let result = metric.compute(&y_true, &ypred).unwrap();
+        let result = metric.compute(&y_true, &ypred).expect("Operation failed");
         // MSE = ((1.0-1.1)² + (2.0-2.1)² + (3.0-2.9)²) / 3 = (0.01 + 0.01 + 0.01) / 3 = 0.01
         assert!((result - 0.01).abs() < 1e-10);
         assert!(!metric.higher_is_better());
@@ -525,18 +525,28 @@ mod tests {
         let ypred_cls = array![1, 0, 0, 1, 0];
         let cls_results = suite
             .evaluate_classification(&y_true_cls, &ypred_cls)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(cls_results.results().len(), 1);
-        assert_eq!(cls_results.get("test_accuracy").unwrap().value, 0.8);
+        assert_eq!(
+            cls_results
+                .get("test_accuracy")
+                .expect("Operation failed")
+                .value,
+            0.8
+        );
 
         // Test regression
         let y_true_reg = array![1.0, 2.0, 3.0];
         let ypred_reg = array![1.1, 2.1, 2.9];
-        let reg_results = suite.evaluate_regression(&y_true_reg, &ypred_reg).unwrap();
+        let reg_results = suite
+            .evaluate_regression(&y_true_reg, &ypred_reg)
+            .expect("Operation failed");
 
         assert_eq!(reg_results.results().len(), 1);
-        assert!((reg_results.get("test_mse").unwrap().value - 0.01).abs() < 1e-10);
+        assert!(
+            (reg_results.get("test_mse").expect("Operation failed").value - 0.01).abs() < 1e-10
+        );
     }
 
     #[test]
@@ -557,7 +567,7 @@ mod tests {
         results.add_result("metric1", 0.8, true); // higher is better
         results.add_result("metric2", 0.2, false); // lower is better
 
-        let best = results.best_result().unwrap();
+        let best = results.best_result().expect("Operation failed");
         // Both metrics are equally good in their respective directions
         // but metric1 should be selected as it comes first
         assert_eq!(best.name, "metric1");

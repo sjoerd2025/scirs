@@ -239,8 +239,8 @@ impl<F: IntegrateFloat> Default for ODEOptions<F> {
     fn default() -> Self {
         ODEOptions {
             method: ODEMethod::default(),
-            rtol: F::from_f64(1e-3).unwrap(),
-            atol: F::from_f64(1e-6).unwrap(),
+            rtol: F::from_f64(1e-3).expect("Operation failed"),
+            atol: F::from_f64(1e-6).expect("Operation failed"),
             h0: None,
             max_steps: 500,
             max_step: None,

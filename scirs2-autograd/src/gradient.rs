@@ -325,12 +325,16 @@ impl<'graph, F: Float> GradientMap<'graph, F> {
 
     #[inline]
     fn get_mut(&mut self, key: TensorID) -> &mut GradientInfo<'graph, F> {
-        self.inner.get_mut(&key).unwrap()
+        self.inner.get_mut(&key).expect("Operation failed")
     }
 
     #[inline]
     fn push_grad(&mut self, key: TensorID, grad: Tensor<'graph, F>) {
-        self.inner.get_mut(&key).unwrap().gradients.push(grad);
+        self.inner
+            .get_mut(&key)
+            .expect("Operation failed")
+            .gradients
+            .push(grad);
     }
 }
 
@@ -369,7 +373,11 @@ fn has_child_on_path<T: Float>(
 ) -> bool {
     let inner = parent.inner();
     for child in inner.get_backprop_inputs() {
-        if path.get(&child.id).unwrap().on_backprop_path {
+        if path
+            .get(&child.id)
+            .expect("Operation failed")
+            .on_backprop_path
+        {
             return true;
         }
     }

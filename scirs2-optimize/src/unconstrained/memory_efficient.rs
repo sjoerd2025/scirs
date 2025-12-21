@@ -63,7 +63,7 @@ impl MemoryPool {
         // Try to reuse an existing array of the right size
         for i in 0..self.array_pool.len() {
             if self.array_pool[i].len() == size {
-                return self.array_pool.remove(i).unwrap();
+                return self.array_pool.remove(i).expect("Operation failed");
             }
         }
         // If no suitable array found, create a new one
@@ -168,7 +168,7 @@ where
 
     // Ensure initial point is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     let mut f = fun(&x.view()).into();
@@ -326,7 +326,7 @@ where
 
     // Final check for bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Use original function for final value
@@ -531,7 +531,8 @@ mod tests {
         options.chunk_size = 32; // Small chunks
         options.max_history = 5; // Limited history
 
-        let result = minimize_memory_efficient_lbfgs(quadratic, x0, &options).unwrap();
+        let result =
+            minimize_memory_efficient_lbfgs(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // Should converge to origin

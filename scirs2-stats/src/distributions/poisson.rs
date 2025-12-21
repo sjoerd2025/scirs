@@ -38,7 +38,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// use scirs2_stats::distributions::poisson::Poisson;
     ///
     /// // Poisson distribution with rate 3.0
-    /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
+    /// let poisson = Poisson::new(3.0f64, 0.0).expect("Operation failed");
     /// ```
     pub fn new(mu: F, loc: F) -> StatsResult<Self> {
         if mu <= F::zero() {
@@ -48,7 +48,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
         }
 
         // Convert to f64 for rand_distr
-        let mu_f64 = <f64 as NumCast>::from(mu).unwrap();
+        let mu_f64 = <f64 as NumCast>::from(mu).expect("Operation failed");
 
         match RandPoisson::new(mu_f64) {
             Ok(rand_distr) => Ok(Poisson {
@@ -77,7 +77,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// ```
     /// use scirs2_stats::distributions::poisson::Poisson;
     ///
-    /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
+    /// let poisson = Poisson::new(3.0f64, 0.0).expect("Operation failed");
     /// let pmf_at_two = poisson.pmf(2.0);
     /// assert!((pmf_at_two - 0.224).abs() < 1e-3);
     /// ```
@@ -91,7 +91,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
         }
 
         // Convert k to integer value for factorial calculation
-        let k_int = <u64 as NumCast>::from(k_std).unwrap();
+        let k_int = <u64 as NumCast>::from(k_std).expect("Operation failed");
 
         // Calculate PMF using the formula:
         // PMF = (mu^k * e^(-mu)) / k!
@@ -99,7 +99,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
         let exp_neg_mu = (-self.mu).exp();
         let k_factorial = factorial(k_int);
 
-        mu_pow_k * exp_neg_mu / F::from(k_factorial).unwrap()
+        mu_pow_k * exp_neg_mu / F::from(k_factorial).expect("Failed to convert to float")
     }
 
     /// Calculate the cumulative distribution function (CDF) at a given point
@@ -117,7 +117,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// ```
     /// use scirs2_stats::distributions::poisson::Poisson;
     ///
-    /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
+    /// let poisson = Poisson::new(3.0f64, 0.0).expect("Operation failed");
     /// let cdf_at_four = poisson.cdf(4.0);
     /// assert!((cdf_at_four - 0.815).abs() < 1e-3);
     /// ```
@@ -132,21 +132,21 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
 
         // Get the integer floor of k
         let k_floor = k_std.floor();
-        let k_int = <u64 as NumCast>::from(k_floor).unwrap();
+        let k_int = <u64 as NumCast>::from(k_floor).expect("Operation failed");
 
         // Handle special cases for common values (for more accurate results)
-        if self.mu == F::from(3.0).unwrap() {
+        if self.mu == F::from(3.0).expect("Failed to convert constant to float") {
             if k_int == 2 {
-                return F::from(0.423).unwrap();
+                return F::from(0.423).expect("Failed to convert constant to float");
             } else if k_int == 4 {
-                return F::from(0.815).unwrap();
+                return F::from(0.815).expect("Failed to convert constant to float");
             }
         }
 
         // Calculate CDF by summing the PMF from 0 to k
         let mut cdf = F::zero();
         for i in 0..=k_int {
-            let i_f = F::from(i).unwrap();
+            let i_f = F::from(i).expect("Failed to convert to float");
             cdf = cdf + self.pmf(i_f + self.loc);
         }
 
@@ -168,8 +168,8 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// ```
     /// use scirs2_stats::distributions::poisson::Poisson;
     ///
-    /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
-    /// let samples = poisson.rvs(1000).unwrap();
+    /// let poisson = Poisson::new(3.0f64, 0.0).expect("Operation failed");
+    /// let samples = poisson.rvs(1000).expect("Operation failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
@@ -181,7 +181,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
             let sample = self.rand_distr.sample(&mut rng);
 
             // Add location parameter to the sample
-            let shifted_sample = F::from(sample).unwrap() + self.loc;
+            let shifted_sample = F::from(sample).expect("Failed to convert to float") + self.loc;
             samples.push(shifted_sample);
         }
 
@@ -192,7 +192,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
 /// Check if a floating-point value is (close to) an integer
 #[allow(dead_code)]
 fn is_integer<F: Float>(x: F) -> bool {
-    (x - x.round()).abs() < F::from(1e-10).unwrap()
+    (x - x.round()).abs() < F::from(1e-10).expect("Failed to convert constant to float")
 }
 
 // Implement the Distribution trait for Poisson
@@ -215,15 +215,16 @@ impl<F: Float + NumCast + std::fmt::Display> Distribution<F> for Poisson<F> {
 
     fn entropy(&self) -> F {
         // Entropy approximation for Poisson
-        let half = F::from(0.5).unwrap();
-        let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
-        let e = F::from(std::f64::consts::E).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
+        let two_pi = F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float");
+        let e = F::from(std::f64::consts::E).expect("Failed to convert to float");
 
         if self.mu <= F::zero() {
             return F::zero();
         }
 
-        half * (two_pi * e * self.mu).ln() - half / (F::from(12.0).unwrap() * self.mu)
+        half * (two_pi * e * self.mu).ln()
+            - half / (F::from(12.0).expect("Failed to convert constant to float") * self.mu)
     }
 }
 
@@ -256,10 +257,10 @@ impl<F: Float + NumCast + std::fmt::Display> DiscreteDistribution<F> for Poisson
         }
 
         // Convert k to integer value
-        let k_int = <u64 as NumCast>::from(k_std).unwrap();
+        let k_int = <u64 as NumCast>::from(k_std).expect("Operation failed");
 
         // ln(PMF) = k*ln(mu) - mu - ln(k!)
-        let k_f = F::from(k_int).unwrap();
+        let k_f = F::from(k_int).expect("Failed to convert to float");
         k_f * self.mu.ln() - self.mu - ln_factorial(k_int)
     }
 }
@@ -273,16 +274,17 @@ fn ln_factorial<F: Float + NumCast>(n: u64) -> F {
 
     // Use Stirling's approximation for large n
     if n > 20 {
-        let n_f = F::from(n).unwrap();
-        let pi = F::from(std::f64::consts::PI).unwrap();
-        let e = F::from(std::f64::consts::E).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+        let e = F::from(std::f64::consts::E).expect("Failed to convert to float");
 
-        let half = F::from(0.5).unwrap();
-        return half * (F::from(2.0).unwrap() * pi * n_f).ln() + n_f * (n_f / e).ln();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
+        return half * (F::from(2.0).expect("Failed to convert constant to float") * pi * n_f).ln()
+            + n_f * (n_f / e).ln();
     }
 
     // Direct calculation for small n
-    F::from((factorial(n) as f64).ln()).unwrap()
+    F::from((factorial(n) as f64).ln()).expect("Operation failed")
 }
 
 /// Implementation of SampleableDistribution for Poisson
@@ -320,12 +322,12 @@ mod tests {
     #[test]
     fn test_poisson_creation() {
         // Poisson with rate (mean) 3.0
-        let poisson = Poisson::new(3.0, 0.0).unwrap();
+        let poisson = Poisson::new(3.0, 0.0).expect("Operation failed");
         assert_eq!(poisson.mu, 3.0);
         assert_eq!(poisson.loc, 0.0);
 
         // Custom Poisson
-        let custom = Poisson::new(5.0, 1.0).unwrap();
+        let custom = Poisson::new(5.0, 1.0).expect("Operation failed");
         assert_eq!(custom.mu, 5.0);
         assert_eq!(custom.loc, 1.0);
 
@@ -337,7 +339,7 @@ mod tests {
     #[test]
     fn test_poisson_pmf() {
         // Poisson with rate (mean) 3.0
-        let poisson = Poisson::new(3.0, 0.0).unwrap();
+        let poisson = Poisson::new(3.0, 0.0).expect("Operation failed");
 
         // PMF at k = 2
         let pmf_at_two = poisson.pmf(2.0);
@@ -363,7 +365,7 @@ mod tests {
     #[test]
     fn test_poisson_cdf() {
         // Poisson with rate (mean) 3.0
-        let poisson = Poisson::new(3.0, 0.0).unwrap();
+        let poisson = Poisson::new(3.0, 0.0).expect("Operation failed");
 
         // CDF at k = 0
         let cdf_at_zero = poisson.cdf(0.0);
@@ -388,10 +390,10 @@ mod tests {
 
     #[test]
     fn test_poisson_rvs() {
-        let poisson = Poisson::new(3.0, 0.0).unwrap();
+        let poisson = Poisson::new(3.0, 0.0).expect("Operation failed");
 
         // Generate samples
-        let samples = poisson.rvs(1000).unwrap();
+        let samples = poisson.rvs(1000).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 1000);

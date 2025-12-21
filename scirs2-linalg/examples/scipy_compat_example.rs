@@ -30,15 +30,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // QR decomposition
     let (q, r) = compat::qr(&a.view(), false, None, "full", false, true)?;
     println!("\nQR decomposition (scipy.linalg.qr style):");
-    println!("Q =\n{}", q.unwrap());
+    println!("Q =\n{}", q.expect("Operation failed"));
     println!("R =\n{}", r);
 
     // SVD decomposition
     let (u, s, vt) = compat::svd(&a.view(), true, true, false, true, "gesdd")?;
     println!("\nSVD decomposition (scipy.linalg.svd style):");
-    println!("U =\n{}", u.unwrap());
+    println!("U =\n{}", u.expect("Operation failed"));
     println!("S =\n{}", s);
-    println!("Vt =\n{}", vt.unwrap());
+    println!("Vt =\n{}", vt.expect("Operation failed"));
 
     // Cholesky decomposition (for positive definite matrix)
     let l = compat::cholesky(&a.view(), true, false, true)?;

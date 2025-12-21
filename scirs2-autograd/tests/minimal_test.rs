@@ -28,13 +28,15 @@ fn test_minimal_matmul() {
             .feed(b, b_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("Result of A * B:\n{:?}", result);
 
         // Expected result: [[19, 22], [43, 50]]
         let expected = array![[19.0, 22.0], [43.0, 50.0]];
-        let result_2d = result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
+        let result_2d = result
+            .into_dimensionality::<ag::ndarray::Ix2>()
+            .expect("Test: operation failed");
         let diff = (result_2d - &expected).mapv(|x: f32| x.abs()).sum();
 
         println!("Difference from expected: {}", diff);

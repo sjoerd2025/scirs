@@ -44,7 +44,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     [0.001, 0.002, 1.0]
 /// ];
 ///
-/// let transformed = perspective_transform(&image, &matrix, None, None, None, None).unwrap();
+/// let transformed = perspective_transform(&image, &matrix, None, None, None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn perspective_transform<T>(
@@ -319,7 +319,8 @@ where
                 let r_sq = dx * dx + dy * dy;
 
                 if r_sq > T::zero() {
-                    k_matrix[[i, j]] = r_sq * (r_sq.ln() / T::from_f64(2.0).unwrap());
+                    k_matrix[[i, j]] =
+                        r_sq * (r_sq.ln() / T::from_f64(2.0).expect("Operation failed"));
                 }
             } else {
                 k_matrix[[i, j]] = lambda;
@@ -502,8 +503,8 @@ where
             // Bilinear interpolation
             let y0 = src_y.floor();
             let x0 = src_x.floor();
-            let y1 = (y0 + T::one()).min(T::from_usize(src_h - 1).unwrap());
-            let x1 = (x0 + T::one()).min(T::from_usize(src_w - 1).unwrap());
+            let y1 = (y0 + T::one()).min(T::from_usize(src_h - 1).expect("Operation failed"));
+            let x1 = (x0 + T::one()).min(T::from_usize(src_w - 1).expect("Operation failed"));
 
             let dy = src_y - y0;
             let dx = src_x - x0;
@@ -540,7 +541,8 @@ mod tests {
         // Identity perspective matrix
         let matrix = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
 
-        let result = perspective_transform(&input, &matrix, None, None, None, None).unwrap();
+        let result = perspective_transform(&input, &matrix, None, None, None, None)
+            .expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -563,7 +565,7 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
     }
@@ -576,7 +578,8 @@ mod tests {
         let transform_fn =
             |arr: &Array2<f64>, _level: usize| -> NdimageResult<Array2<f64>> { Ok(arr.clone()) };
 
-        let result = pyramid_transform(&input, transform_fn, Some(3), None, None, None).unwrap();
+        let result = pyramid_transform(&input, transform_fn, Some(3), None, None, None)
+            .expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 

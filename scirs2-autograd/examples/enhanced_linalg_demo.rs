@@ -15,10 +15,10 @@ fn main() {
             g,
         );
 
-        let n1 = norm1(&a).eval(g).unwrap();
-        let n2 = norm2(&a).eval(g).unwrap();
-        let ninf = norminf(&a).eval(g).unwrap();
-        let nfro = normfro(&a).eval(g).unwrap();
+        let n1 = norm1(&a).eval(g).expect("Operation failed");
+        let n2 = norm2(&a).eval(g).expect("Operation failed");
+        let ninf = norminf(&a).eval(g).expect("Operation failed");
+        let nfro = normfro(&a).eval(g).expect("Operation failed");
 
         println!(
             "  1-norm (max column sum): {}",
@@ -45,10 +45,13 @@ fn main() {
         );
 
         let (eigenvalues, eigenvectors) = eigh(&sym);
-        let vals = eigenvalues.eval(g).unwrap();
-        let vecs = eigenvectors.eval(g).unwrap();
+        let vals = eigenvalues.eval(g).expect("Operation failed");
+        let vecs = eigenvectors.eval(g).expect("Operation failed");
 
-        println!("  Eigenvalues: {:?}", vals.as_slice().unwrap());
+        println!(
+            "  Eigenvalues: {:?}",
+            vals.as_slice().expect("Operation failed")
+        );
         println!(
             "  First eigenvector: [{:.3}, {:.3}, {:.3}]",
             vecs[[0, 0]],
@@ -60,8 +63,8 @@ fn main() {
         println!("\n3. Matrix Exponential:");
         let rot = convert_to_tensor(array![[0.0_f64, -1.0], [1.0, 0.0]], g);
 
-        let exp_pade = expm2(&rot).eval(g).unwrap();
-        let exp_eigen = expm3(&rot).eval(g).unwrap();
+        let exp_pade = expm2(&rot).eval(g).expect("Operation failed");
+        let exp_eigen = expm3(&rot).eval(g).expect("Operation failed");
 
         println!("  Using Padé approximation:");
         println!("    [[{:.3}, {:.3}],", exp_pade[[0, 0]], exp_pade[[0, 1]]);
@@ -76,7 +79,9 @@ fn main() {
         let pd_matrix = convert_to_tensor(array![[4.0_f64, 2.0], [2.0, 3.0]], g);
         let b = convert_to_tensor(array![1.0_f64, 2.0], g);
 
-        let x = cholesky_solve(&pd_matrix, &b).eval(g).unwrap();
+        let x = cholesky_solve(&pd_matrix, &b)
+            .eval(g)
+            .expect("Operation failed");
         println!("  Solution x: [{:.3}, {:.3}]", x[0], x[1]);
 
         // Verify: A*x = b
@@ -84,7 +89,7 @@ fn main() {
             pd_matrix,
             convert_to_tensor(x.clone().insert_axis(scirs2_core::ndarray::Axis(1)), g),
         );
-        let ax_flat = ax.eval(g).unwrap();
+        let ax_flat = ax.eval(g).expect("Operation failed");
         println!(
             "  Verification A*x: [{:.3}, {:.3}]",
             ax_flat[[0, 0]],
@@ -97,7 +102,9 @@ fn main() {
         let b_syl = convert_to_tensor(array![[3.0_f64, 0.0], [0.0, 4.0]], g);
         let c_syl = convert_to_tensor(array![[1.0_f64, 2.0], [3.0, 4.0]], g);
 
-        let x_syl = solve_sylvester(&a_syl, &b_syl, &c_syl).eval(g).unwrap();
+        let x_syl = solve_sylvester(&a_syl, &b_syl, &c_syl)
+            .eval(g)
+            .expect("Operation failed");
         println!("  Solution X:");
         println!("    [[{:.3}, {:.3}],", x_syl[[0, 0]], x_syl[[0, 1]]);
         println!("     [{:.3}, {:.3}]]", x_syl[[1, 0]], x_syl[[1, 1]]);
@@ -107,8 +114,8 @@ fn main() {
         let mat = convert_to_tensor(array![[1.0_f64, 2.0], [3.0, 4.0]], g);
 
         let (u, p) = polar(&mat);
-        let u_val = u.eval(g).unwrap();
-        let p_val = p.eval(g).unwrap();
+        let u_val = u.eval(g).expect("Operation failed");
+        let p_val = p.eval(g).expect("Operation failed");
 
         println!("  Unitary part U:");
         println!("    [[{:.3}, {:.3}],", u_val[[0, 0]], u_val[[0, 1]]);
@@ -124,7 +131,9 @@ fn main() {
         let e2 = convert_to_tensor(array![[5.0_f64, 6.0], [7.0, 8.0]], g);
 
         // Matrix multiplication
-        let matmul_result = einsum("ij,jk->ik", &[&e1, &e2]).eval(g).unwrap();
+        let matmul_result = einsum("ij,jk->ik", &[&e1, &e2])
+            .eval(g)
+            .expect("Operation failed");
         println!("  Matrix multiplication (ij,jk->ik):");
         println!(
             "    [[{:.0}, {:.0}],",
@@ -138,12 +147,14 @@ fn main() {
         );
 
         // Trace - compute manually for now
-        let e1_array = e1.eval(g).unwrap();
+        let e1_array = e1.eval(g).expect("Operation failed");
         let trace_val = e1_array[[0, 0]] + e1_array[[1, 1]];
         println!("  Trace: {:.0}", trace_val);
 
         // Element-wise multiplication
-        let hadamard = einsum("ij,ij->ij", &[&e1, &e2]).eval(g).unwrap();
+        let hadamard = einsum("ij,ij->ij", &[&e1, &e2])
+            .eval(g)
+            .expect("Operation failed");
         println!("  Element-wise multiplication (ij,ij->ij):");
         println!("    [[{:.0}, {:.0}],", hadamard[[0, 0]], hadamard[[0, 1]]);
         println!("     [{:.0}, {:.0}]]", hadamard[[1, 0]], hadamard[[1, 1]]);
@@ -153,7 +164,9 @@ fn main() {
         let k1 = convert_to_tensor(array![[1.0_f64, 2.0]], g);
         let k2 = convert_to_tensor(array![[3.0_f64], [4.0]], g);
 
-        let kron_result = kronecker_product(&k1, &k2).eval(g).unwrap();
+        let kron_result = kronecker_product(&k1, &k2)
+            .eval(g)
+            .expect("Operation failed");
         println!("  kron([1, 2], [3; 4]):");
         println!(
             "    [[{:.0}, {:.0}],",

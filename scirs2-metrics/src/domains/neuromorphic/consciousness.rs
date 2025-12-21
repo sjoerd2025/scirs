@@ -459,7 +459,8 @@ impl<F: Float> ConsciousnessSimulator<F> {
         let attention_strength = self.attention_systems.get_attention_strength();
 
         // Combine measures for overall consciousness level
-        (workspace_activity + phi_value + attention_strength) / F::from(3.0).unwrap()
+        (workspace_activity + phi_value + attention_strength)
+            / F::from(3.0).expect("Failed to convert constant to float")
     }
 }
 
@@ -526,7 +527,7 @@ impl<F: Float> GlobalWorkspaceTheory<F> {
                 .iter()
                 .map(|c| c.activation)
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(self.global_workspace.contents.len()).unwrap()
+                / F::from(self.global_workspace.contents.len()).expect("Operation failed")
         }
     }
 }
@@ -537,8 +538,8 @@ impl<F: Float> GlobalWorkspace<F> {
         Self {
             contents: Vec::new(),
             capacity: 7, // Miller's magic number
-            competition_threshold: F::from(0.5).unwrap(),
-            broadcasting_strength: F::from(1.0).unwrap(),
+            competition_threshold: F::from(0.5).expect("Failed to convert constant to float"),
+            broadcasting_strength: F::from(1.0).expect("Failed to convert constant to float"),
         }
     }
 
@@ -546,7 +547,7 @@ impl<F: Float> GlobalWorkspace<F> {
     pub fn add_content(&mut self, representation: &[F], source: String) -> Result<()> {
         let content = WorkspaceContent {
             representation: representation.to_vec(),
-            activation: F::from(0.8).unwrap(), // Default activation
+            activation: F::from(0.8).expect("Failed to convert constant to float"), // Default activation
             source,
             content_type: ContentType::Sensory("visual".to_string()),
             duration: 0,
@@ -573,12 +574,12 @@ impl<F: Float> IntegratedInformationTheory<F> {
         // Simplified phi calculation
         // In practice, this would involve complex computations
         // of information integration across the system
-        Ok(F::from(0.3).unwrap())
+        Ok(F::from(0.3).expect("Failed to convert constant to float"))
     }
 
     /// Get current phi value
     pub fn get_current_phi(&self) -> F {
-        F::from(0.3).unwrap() // Simplified
+        F::from(0.3).expect("Failed to convert constant to float") // Simplified
     }
 }
 
@@ -612,7 +613,7 @@ impl<F: Float> AttentionSystems<F> {
 
     /// Get attention strength
     pub fn get_attention_strength(&self) -> F {
-        F::from(0.7).unwrap() // Simplified
+        F::from(0.7).expect("Failed to convert constant to float") // Simplified
     }
 }
 
@@ -675,7 +676,7 @@ impl<F: Float> HigherOrderThoughtSystem<F> {
             higher_order_thoughts: Vec::new(),
             thought_monitor: ThoughtMonitor {
                 monitored_thoughts: Vec::new(),
-                monitoring_strength: F::from(0.5).unwrap(),
+                monitoring_strength: F::from(0.5).expect("Failed to convert constant to float"),
                 patterns: HashMap::new(),
             },
             recursive_thinker: RecursiveThinking {
@@ -693,7 +694,7 @@ impl<F: Float> BottomUpAttention<F> {
         Self {
             saliency_map: Vec::new(),
             attention_weights: Vec::new(),
-            threshold: F::from(0.5).unwrap(),
+            threshold: F::from(0.5).expect("Failed to convert constant to float"),
         }
     }
 
@@ -737,7 +738,7 @@ impl<F: Float> SustainedAttention<F> {
     pub fn new() -> Self {
         Self {
             attention_duration: 0,
-            vigilance_level: F::from(0.8).unwrap(),
+            vigilance_level: F::from(0.8).expect("Failed to convert constant to float"),
             fatigue_parameters: HashMap::new(),
         }
     }
@@ -751,7 +752,7 @@ impl<F: Float> SustainedAttention<F> {
 impl<F: Float> ConflictMonitor<F> {
     pub fn new() -> Self {
         Self {
-            threshold: F::from(0.5).unwrap(),
+            threshold: F::from(0.5).expect("Failed to convert constant to float"),
             current_conflict: F::zero(),
             conflict_history: Vec::new(),
         }
@@ -761,7 +762,7 @@ impl<F: Float> ConflictMonitor<F> {
 impl<F: Float> CognitiveControl<F> {
     pub fn new() -> Self {
         Self {
-            control_strength: F::from(0.7).unwrap(),
+            control_strength: F::from(0.7).expect("Failed to convert constant to float"),
             parameters: HashMap::new(),
             active_signals: Vec::new(),
         }
@@ -773,7 +774,7 @@ impl<F: Float> TaskSwitcher<F> {
         Self {
             current_task: "default".to_string(),
             task_queue: Vec::new(),
-            switching_cost: F::from(0.1).unwrap(),
+            switching_cost: F::from(0.1).expect("Failed to convert constant to float"),
         }
     }
 }

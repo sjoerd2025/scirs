@@ -21,10 +21,19 @@ fn main() {
         let c = matmul(a, b);
 
         println!("Testing matmul gradients:");
-        println!("a shape: {:?}", a.eval(g).unwrap().shape());
-        println!("b shape: {:?}", b.eval(g).unwrap().shape());
-        println!("c shape: {:?}", c.eval(g).unwrap().shape());
-        println!("c =\n{:?}", c.eval(g).unwrap());
+        println!(
+            "a shape: {:?}",
+            a.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "b shape: {:?}",
+            b.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "c shape: {:?}",
+            c.eval(g).expect("Operation failed").shape()
+        );
+        println!("c =\n{:?}", c.eval(g).expect("Operation failed"));
 
         // Test gradient of entire c with respect to a and b
         println!("\nGradient of entire c:");

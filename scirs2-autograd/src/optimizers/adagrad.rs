@@ -22,7 +22,7 @@ impl<F: Float> AdaGrad<F> {
         env: &mut VariableEnvironment<F>,
     ) -> AdaGrad<F> {
         Self::new(
-            F::from(0.01).unwrap(),
+            F::from(0.01).expect("Failed to convert constant to float"),
             var_id_list,
             env,
             adagrad_namespace_id,

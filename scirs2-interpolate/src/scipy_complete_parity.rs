@@ -521,7 +521,7 @@ impl<T: InterpolationFloat> PPoly<T> {
                 // Derivative of x^(row+nu) is (row+nu)!/(row)! * x^row
                 let mut factor = T::one();
                 for k in (row + 1)..=(row + nu) {
-                    factor = factor * T::from_usize(k).unwrap();
+                    factor = factor * T::from_usize(k).expect("Operation failed");
                 }
                 new_coeffs[[row, col]] = self.coefficients[[row + nu, col]] * factor;
             }
@@ -546,7 +546,7 @@ impl<T: InterpolationFloat> PPoly<T> {
                 // Antiderivative of x^(row-nu) is x^row / (row-nu+1)!*(row)!
                 let mut factor = T::one();
                 for k in (row - nu + 1)..=row {
-                    factor = factor / T::from_usize(k).unwrap();
+                    factor = factor / T::from_usize(k).expect("Operation failed");
                 }
                 new_coeffs[[row, col]] = self.coefficients[[row - nu, col]] * factor;
             }
@@ -650,8 +650,8 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
             SciPyBoundaryCondition::Natural => CubicSpline::new(x, y)?,
             SciPyBoundaryCondition::NotAKnot => CubicSpline::new_not_a_knot(x, y)?,
             SciPyBoundaryCondition::Clamped(left, right) => {
-                let left_t = T::from_f64(*left).unwrap();
-                let right_t = T::from_f64(*right).unwrap();
+                let left_t = T::from_f64(*left).expect("Operation failed");
+                let right_t = T::from_f64(*right).expect("Operation failed");
                 CubicSpline::new_clamped(x, y, left_t, right_t)?
             }
             SciPyBoundaryCondition::Periodic => CubicSpline::new_periodic(x, y)?,
@@ -757,7 +757,7 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
     ) -> InterpolateResult<Vec<T>> {
         // This would implement root-finding for spline(x) - _y = 0
         // Simplified implementation for now
-        let roots = self.inner.find_roots(T::from_f64(1e-10).unwrap(), 100)?;
+        let roots = self.inner.find_roots(T::from_f64(1e-10).expect("Operation failed"), 100)?;
         Ok(roots)
     }
 }
@@ -909,12 +909,12 @@ mod tests {
             Some("not-a-knot"),
             Some(true),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let test_points = array![0.5, 1.5, 2.5, 3.5];
         let result = spline
             .__call__(&test_points.view(), Some(0), Some(true))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.len(), 4);
         for &val in result.iter() {
@@ -928,10 +928,10 @@ mod tests {
         let coeffs = array![[0.0, 1.0], [0.0, -2.0], [1.0, 1.0]]; // [constant, linear, quadratic]
         let breakpoints = array![0.0, 1.0, 2.0];
 
-        let ppoly = PPoly::new(coeffs, breakpoints, None).unwrap();
+        let ppoly = PPoly::new(coeffs, breakpoints, None).expect("Operation failed");
 
         let test_points = array![0.5, 1.5];
-        let result = ppoly.__call__(&test_points.view()).unwrap();
+        let result = ppoly.__call__(&test_points.view()).expect("Operation failed");
 
         assert_relative_eq!(result[0], 0.25, epsilon = 1e-10); // 0.5^2 = 0.25
         assert_relative_eq!(result[1], 1.25, epsilon = 1e-10); // (1.5-1)^2 + 1 = 1.25
@@ -939,7 +939,7 @@ mod tests {
 
     #[test]
     fn test_compatibility_report() {
-        let report = validate_scipy_parity::<f64>().unwrap();
+        let report = validate_scipy_parity::<f64>().expect("Operation failed");
 
         assert!(report.total_methods > 0);
         assert!(report.completion_percentage >= 0.0);

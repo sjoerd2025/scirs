@@ -222,7 +222,7 @@ where
         let mass_matrix = Array2::eye(dim);
         let mass_inv = Array2::eye(dim);
         let current_log_density = target.log_density(&initial);
-        let stepsize = F::from(config.initial_stepsize).unwrap();
+        let stepsize = F::from(config.initial_stepsize).expect("Failed to convert to float");
 
         let adaptation_state = AdaptationState {
             iteration: 0,
@@ -288,7 +288,7 @@ where
 
         self.stats.n_proposals += 1;
 
-        let accepted = u < alpha.to_f64().unwrap();
+        let accepted = u < alpha.to_f64().expect("Operation failed");
         if accepted {
             self.position = final_position;
             self.current_log_density = final_log_density;
@@ -297,13 +297,15 @@ where
 
         // Update adaptation state
         if self.adaptation_state.iteration < self.config.adaptation_steps {
-            self.update_adaptation(alpha.to_f64().unwrap())?;
+            self.update_adaptation(alpha.to_f64().expect("Operation failed"))?;
         }
 
         // Update statistics
-        self.stats
-            .energy_errors
-            .push((final_hamiltonian - initial_hamiltonian).to_f64().unwrap());
+        self.stats.energy_errors.push(
+            (final_hamiltonian - initial_hamiltonian)
+                .to_f64()
+                .expect("Operation failed"),
+        );
         if self.stats.energy_errors.len() > 1000 {
             self.stats.energy_errors.drain(0..500); // Keep recent errors
         }
@@ -322,10 +324,15 @@ where
         // Initial half step for momentum
         let gradient = self.target.gradient(&position);
         if self.config.use_simd && position.len() >= 4 {
-            let scaled_gradient = gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
+            let scaled_gradient = gradient.mapv(|g| {
+                g * self.stepsize * F::from(0.5).expect("Failed to convert constant to float")
+            });
             momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
         } else {
-            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
+            momentum = momentum
+                + gradient.mapv(|g| {
+                    g * self.stepsize * F::from(0.5).expect("Failed to convert constant to float")
+                });
         }
 
         // Alternating full steps
@@ -354,10 +361,15 @@ where
         // Final half step for momentum
         let gradient = self.target.gradient(&position);
         if self.config.use_simd && position.len() >= 4 {
-            let scaled_gradient = gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
+            let scaled_gradient = gradient.mapv(|g| {
+                g * self.stepsize * F::from(0.5).expect("Failed to convert constant to float")
+            });
             momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
         } else {
-            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
+            momentum = momentum
+                + gradient.mapv(|g| {
+                    g * self.stepsize * F::from(0.5).expect("Failed to convert constant to float")
+                });
         }
 
         // Negate momentum for reversibility
@@ -395,7 +407,10 @@ where
             let metric_inv = scirs2_linalg::inv(&metric.view(), None)
                 .unwrap_or_else(|_| Array2::eye(position.len()));
 
-            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
+            momentum = momentum
+                + gradient.mapv(|g| {
+                    g * self.stepsize * F::from(0.5).expect("Failed to convert constant to float")
+                });
 
             // Update position using metric
             let velocity = metric_inv.dot(&momentum);
@@ -403,7 +418,10 @@ where
 
             // Final momentum update
             let gradient = self.target.gradient(&position);
-            momentum = momentum + gradient.mapv(|g| g * self.stepsize * F::from(0.5).unwrap());
+            momentum = momentum
+                + gradient.mapv(|g| {
+                    g * self.stepsize * F::from(0.5).expect("Failed to convert constant to float")
+                });
         }
 
         Ok((position, momentum))
@@ -418,7 +436,11 @@ where
 
         // Sample from standard normal
         let z: Vec<f64> = (0..dim).map(|_| normal.sample(rng)).collect();
-        let z_array = Array1::from_vec(z.into_iter().map(|x| F::from(x).unwrap()).collect());
+        let z_array = Array1::from_vec(
+            z.into_iter()
+                .map(|x| F::from(x).expect("Failed to convert to float"))
+                .collect(),
+        );
 
         // Transform using Cholesky decomposition of mass matrix
         // For simplicity, assume diagonal mass matrix
@@ -436,7 +458,7 @@ where
         for i in 0..momentum.len() {
             energy += momentum[i] * momentum[i] * self.mass_inv[[i, i]];
         }
-        energy * F::from(0.5).unwrap()
+        energy * F::from(0.5).expect("Failed to convert constant to float")
     }
 
     /// Update adaptation parameters
@@ -467,7 +489,7 @@ where
         state.log_step_avg = (1.0 - weight) * state.log_step_avg + weight * log_step;
 
         // Update step size
-        self.stepsize = F::from(log_step.exp()).unwrap();
+        self.stepsize = F::from(log_step.exp()).expect("Operation failed");
     }
 
     /// Update mass matrix adaptation
@@ -488,7 +510,8 @@ where
 
         // Update running mean
         let delta = &self.position - &state.running_mean;
-        state.running_mean = &state.running_mean + &delta.mapv(|d| d / F::from(n).unwrap());
+        state.running_mean = &state.running_mean
+            + &delta.mapv(|d| d / F::from(n).expect("Failed to convert to float"));
 
         // Update mass matrix based on strategy
         match self.config.mass_adaptation {
@@ -551,15 +574,18 @@ where
         let mean = buffer
             .iter()
             .fold(Array1::zeros(self.position.len()), |acc, x| acc + x)
-            / F::from(n).unwrap();
+            / F::from(n).expect("Failed to convert to float");
 
         let variance = buffer
             .iter()
             .map(|x| (x - &mean).mapv(|d| d * d))
             .fold(Array1::zeros(self.position.len()), |acc, x| acc + x)
-            / F::from(n.saturating_sub(1).max(1)).unwrap();
+            / F::from(n.saturating_sub(1).max(1)).expect("Operation failed");
 
-        Ok(variance.mapv(|v: F| v.max(F::from(1e-6).unwrap()))) // Ensure positive variance
+        Ok(
+            variance
+                .mapv(|v: F| v.max(F::from(1e-6).expect("Failed to convert constant to float"))),
+        ) // Ensure positive variance
     }
 
     /// Compute sample covariance from buffer
@@ -571,7 +597,8 @@ where
 
         let n = buffer.len();
         let dim = self.position.len();
-        let mean = buffer.iter().fold(Array1::zeros(dim), |acc, x| acc + x) / F::from(n).unwrap();
+        let mean = buffer.iter().fold(Array1::zeros(dim), |acc, x| acc + x)
+            / F::from(n).expect("Failed to convert to float");
 
         let mut covariance = Array2::zeros((dim, dim));
         for sample in buffer {
@@ -583,11 +610,11 @@ where
             }
         }
 
-        covariance /= F::from(n.saturating_sub(1).max(1)).unwrap();
+        covariance /= F::from(n.saturating_sub(1).max(1)).expect("Operation failed");
 
         // Add small regularization to diagonal
         for i in 0..dim {
-            covariance[[i, i]] += F::from(1e-6).unwrap();
+            covariance[[i, i]] += F::from(1e-6).expect("Failed to convert constant to float");
         }
 
         Ok(covariance)

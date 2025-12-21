@@ -1638,7 +1638,9 @@ mod tests {
         let section_point = Array1::from_vec(vec![0.0, 0.0, 0.0]);
 
         let analyzer = PoincareAnalyzer::new(section_normal, section_point, 1);
-        let result = analyzer.analyze_trajectory(&trajectory, &times).unwrap();
+        let result = analyzer
+            .analyze_trajectory(&trajectory, &times)
+            .expect("Operation failed");
 
         // Should find crossings for this trajectory
         assert!(!result.crossings.is_empty());
@@ -1655,7 +1657,7 @@ mod tests {
 
         let exponents = calculator
             .calculate_lyapunov_exponents(system, &initial_state, 10.0)
-            .unwrap();
+            .expect("Operation failed");
 
         // Both exponents should be negative for stable linear system
         assert!(exponents[0] < 0.0);
@@ -1682,7 +1684,9 @@ mod tests {
         analyzer.n_scales = 5; // Increased scales for more stable slope calculation
         analyzer.box_counting_method = BoxCountingMethod::Standard; // Use standard method
 
-        let result = analyzer.calculate_fractal_dimension(&points).unwrap();
+        let result = analyzer
+            .calculate_fractal_dimension(&points)
+            .expect("Operation failed");
 
         // Verify the results are mathematically valid
         assert!(result.dimension.is_finite(), "Dimension should be finite");
@@ -1720,7 +1724,9 @@ mod tests {
         let timeseries: Vec<f64> = (0..100).map(|i| (i as f64 * 0.1).sin()).collect();
 
         let analyzer = RecurrenceAnalyzer::new(0.1, 3, 1);
-        let result = analyzer.analyze_recurrence(&timeseries).unwrap();
+        let result = analyzer
+            .analyze_recurrence(&timeseries)
+            .expect("Operation failed");
 
         // Should have reasonable recurrence measures
         assert!(result.rqa_measures.recurrence_rate > 0.0);

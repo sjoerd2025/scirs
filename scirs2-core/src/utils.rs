@@ -230,7 +230,7 @@ pub fn arange<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> CoreResul
 #[must_use]
 #[allow(dead_code)]
 pub fn arange_unchecked<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> Vec<F> {
-    arange(start, end, step).unwrap()
+    arange(start, end, step).expect("Operation failed")
 }
 
 /// Checks if all elements in an iterable satisfy a predicate
@@ -304,7 +304,7 @@ pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(
         if num >= 1000 {
             use crate::parallel_ops::*;
 
-            let step = (end - start) / F::from(num - 1).unwrap();
+            let step = (end - start) / F::from(num - 1).expect("Failed to convert to float");
             let result: Vec<F> = (0..num)
                 .into_par_iter()
                 .map(|i| {
@@ -312,7 +312,7 @@ pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(
                         // Ensure the last value is exactly end
                         end
                     } else {
-                        start + step * F::from(i).unwrap()
+                        start + step * F::from(i).expect("Failed to convert to float")
                     }
                 })
                 .collect::<Vec<F>>();
@@ -324,11 +324,11 @@ pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(
     }
 
     // Fall back to standard implementation
-    let step = (end - start) / F::from(num - 1).unwrap();
+    let step = (end - start) / F::from(num - 1).expect("Failed to convert to float");
     let mut result = Vec::with_capacity(num);
 
     for i in 0..num {
-        let value = start + step * F::from(i).unwrap();
+        let value = start + step * F::from(i).expect("Failed to convert to float");
         result.push(value);
     }
 
@@ -360,7 +360,7 @@ pub fn logspace<F: Float + std::iter::Sum + Send + Sync>(
     num: usize,
     base: Option<F>,
 ) -> Array1<F> {
-    let base = base.unwrap_or_else(|| F::from(10.0).unwrap());
+    let base = base.unwrap_or_else(|| F::from(10.0).expect("Failed to convert constant to float"));
 
     // Generate linearly spaced values in the exponent space
     let linear = linspace(start, end, num);
@@ -435,7 +435,7 @@ where
             }
         } else {
             // Handle case where b cannot be converted to slice
-            let b_val = b.iter().nth(i).unwrap();
+            let b_val = b.iter().nth(i).expect("Operation failed");
             if *b_val > *elem {
                 *elem = *b_val;
             }
@@ -511,7 +511,7 @@ where
             }
         } else {
             // Handle case where b cannot be converted to slice
-            let b_val = b.iter().nth(i).unwrap();
+            let b_val = b.iter().nth(i).expect("Operation failed");
             if *b_val < *elem {
                 *elem = *b_val;
             }
@@ -539,7 +539,7 @@ where
 ///
 /// // Normalize a vector to unit energy
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
-/// let normalized = normalize(&signal, "energy").unwrap();
+/// let normalized = normalize(&signal, "energy").expect("Operation failed");
 ///
 /// // Sum of squares should be 1.0
 /// let sum_of_squares: f64 = normalized.iter().map(|&x| x * x).sum();
@@ -643,7 +643,7 @@ where
 /// use ndarray::{Array1, array};
 ///
 /// let arr = array![1.0, 2.0, 3.0];
-/// let padded = pad_array(&arr, &[(1, 2)], "constant", Some(0.0)).unwrap();
+/// let padded = pad_array(&arr, &[(1, 2)], "constant", Some(0.0)).expect("Operation failed");
 /// assert_eq!(padded.shape(), &[6]);
 /// assert_eq!(padded, array![0.0, 1.0, 2.0, 3.0, 0.0, 0.0]);
 /// ```
@@ -790,7 +790,7 @@ where
             "mean" => {
                 // Calculate mean value
                 let sum = inputarray1.iter().fold(T::zero(), |a, &b| a + b);
-                let mean_val = sum / T::from_usize(input_len).unwrap();
+                let mean_val = sum / T::from_usize(input_len).expect("Operation failed");
 
                 // Pad with mean value
                 for i in 0..pad_width[0].0 {
@@ -933,7 +933,7 @@ pub fn generate_window(
 /// ```rust
 /// use scirs2_core::utils::get_window;
 ///
-/// let hamming = get_window("hamming", 5, false).unwrap();
+/// let hamming = get_window("hamming", 5, false).expect("Operation failed");
 /// assert_eq!(hamming.len(), 5);
 /// ```
 #[allow(dead_code)]
@@ -961,7 +961,7 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> CoreResul
 ///
 /// // Differentiate f(x) = x^2 at x = 3
 /// let f = |x: f64| -> Result<f64, String> { Ok(x * x) };
-/// let derivative = differentiate(3.0, 0.001, f).unwrap();
+/// let derivative = differentiate(3.0, 0.001, f).expect("Operation failed");
 ///
 /// // The exact derivative is 2x = 6 at x = 3
 /// assert!((derivative - 6.0).abs() < 1e-5);
@@ -979,7 +979,8 @@ where
     // Use central difference for better accuracy
     let f_plus = evalfn(x + h).map_err(|e| format!("Error evaluating function at x+h: {e}"))?;
     let f_minus = evalfn(x - h).map_err(|e| format!("Error evaluating function at x-h: {e}"))?;
-    let derivative = (f_plus - f_minus) / (F::from(2.0).unwrap() * h);
+    let derivative =
+        (f_plus - f_minus) / (F::from(2.0).expect("Failed to convert constant to float") * h);
     Ok(derivative)
 }
 
@@ -1003,7 +1004,7 @@ where
 ///
 /// // Integrate f(x) = x^2 from 0 to 1
 /// let f = |x: f64| -> Result<f64, String> { Ok(x * x) };
-/// let integral = integrate(0.0, 1.0, 100, f).unwrap();
+/// let integral = integrate(0.0, 1.0, 100, f).expect("Operation failed");
 ///
 /// // The exact integral is x^3/3 = 1/3 from 0 to 1
 /// assert!((integral - 1.0/3.0).abs() < 1e-5);
@@ -1031,16 +1032,16 @@ where
         return Err("number of intervals must be even".to_string());
     }
 
-    let h = (b - a) / F::from_usize(n).unwrap();
+    let h = (b - a) / F::from_usize(n).expect("Operation failed");
     let mut sum = evalfn(a).map_err(|e| format!("Error evaluating function at a: {e}"))?
         + evalfn(b).map_err(|e| format!("Error evaluating function at b: {e}"))?;
 
     // Even-indexed points (except endpoints)
     for i in 1..n {
         if i % 2 == 0 {
-            let x_i = a + F::from_usize(i).unwrap() * h;
+            let x_i = a + F::from_usize(i).expect("Operation failed") * h;
             sum = sum
-                + F::from(2.0).unwrap()
+                + F::from(2.0).expect("Failed to convert constant to float")
                     * evalfn(x_i)
                         .map_err(|e| format!("Error evaluating function at x_{i}: {e}"))?;
         }
@@ -1049,15 +1050,15 @@ where
     // Odd-indexed points
     for i in 1..n {
         if i % 2 == 1 {
-            let x_i = a + F::from_usize(i).unwrap() * h;
+            let x_i = a + F::from_usize(i).expect("Operation failed") * h;
             sum = sum
-                + F::from(4.0).unwrap()
+                + F::from(4.0).expect("Failed to convert constant to float")
                     * evalfn(x_i)
                         .map_err(|e| format!("Error evaluating function at x_{i}: {e}"))?;
         }
     }
 
-    let integral = h * sum / F::from(3.0).unwrap();
+    let integral = h * sum / F::from(3.0).expect("Failed to convert constant to float");
     Ok(integral)
 }
 
@@ -1094,10 +1095,10 @@ mod tests {
 
     #[test]
     fn test_arange() {
-        let result = arange(0.0, 5.0, 1.0).unwrap();
+        let result = arange(0.0, 5.0, 1.0).expect("Operation failed");
         assert_eq!(result, vec![0.0, 1.0, 2.0, 3.0, 4.0]);
 
-        let result = arange(5.0, 0.0, -1.0).unwrap();
+        let result = arange(5.0, 0.0, -1.0).expect("Operation failed");
         assert_eq!(result, vec![5.0, 4.0, 3.0, 2.0, 1.0]);
     }
 
@@ -1218,7 +1219,7 @@ mod tests {
     fn test_normalize() {
         // Test energy normalization
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let normalized = normalize(&signal, "energy").unwrap();
+        let normalized = normalize(&signal, "energy").expect("Operation failed");
 
         // Sum of squares should be 1.0
         let sum_of_squares: f64 = normalized.iter().map(|&x| x * x).sum();
@@ -1226,7 +1227,7 @@ mod tests {
 
         // Test peak normalization
         let signal = vec![1.0, -2.0, 3.0, -4.0];
-        let normalized = normalize(&signal, "peak").unwrap();
+        let normalized = normalize(&signal, "peak").expect("Operation failed");
 
         // Max absolute value should be 1.0
         let peak = normalized.iter().fold(0.0, |a, &b| a.max(b.abs()));
@@ -1235,7 +1236,7 @@ mod tests {
 
         // Test sum normalization
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let normalized = normalize(&signal, "sum").unwrap();
+        let normalized = normalize(&signal, "sum").expect("Operation failed");
 
         // Sum should be 1.0
         let sum: f64 = normalized.iter().sum();
@@ -1246,21 +1247,21 @@ mod tests {
     fn test_pad_array() {
         // Test constant padding on 1D array
         let arr = array![1.0, 2.0, 3.0];
-        let padded = pad_array(&arr, &[(1, 2)], "constant", Some(0.0)).unwrap();
+        let padded = pad_array(&arr, &[(1, 2)], "constant", Some(0.0)).expect("Operation failed");
 
         assert_eq!(padded.shape(), &[6]);
         assert_eq!(padded, array![0.0, 1.0, 2.0, 3.0, 0.0, 0.0]);
 
         // Test edge padding
         let arr = array![1.0, 2.0, 3.0];
-        let padded = pad_array(&arr, &[(2, 2)], "edge", None).unwrap();
+        let padded = pad_array(&arr, &[(2, 2)], "edge", None).expect("Operation failed");
 
         assert_eq!(padded.shape(), &[7]);
         assert_eq!(padded, array![1.0, 1.0, 1.0, 2.0, 3.0, 3.0, 3.0]);
 
         // Test maximum padding
         let arr = array![1.0, 2.0, 3.0];
-        let padded = pad_array(&arr, &[(1, 1)], "maximum", None).unwrap();
+        let padded = pad_array(&arr, &[(1, 1)], "maximum", None).expect("Operation failed");
 
         assert_eq!(padded.shape(), &[5]);
         assert_eq!(padded, array![3.0, 1.0, 2.0, 3.0, 3.0]);
@@ -1269,21 +1270,21 @@ mod tests {
     #[test]
     fn test_get_window() {
         // Test Hamming window
-        let window = get_window("hamming", 5, false).unwrap();
+        let window = get_window("hamming", 5, false).expect("Operation failed");
 
         assert_eq!(window.len(), 5);
         assert!(window[0] > 0.0 && window[0] < 0.6); // First value around 0.54
         assert!(window[2] > 0.9); // Middle value close to 1.0
 
         // Test Hann window
-        let window = get_window("hann", 5, false).unwrap();
+        let window = get_window("hann", 5, false).expect("Operation failed");
 
         assert_eq!(window.len(), 5);
         assert!((window[0] - 0.0).abs() < 1e-10);
         assert!(window[2] > 0.9); // Middle value close to 1.0
 
         // Test rectangular window
-        let window = get_window("rectangular", 5, false).unwrap();
+        let window = get_window("rectangular", 5, false).expect("Operation failed");
 
         assert_eq!(window.len(), 5);
         assert!(window.iter().all(|&x| (x - 1.0).abs() < 1e-10));
@@ -1294,15 +1295,15 @@ mod tests {
         // Test differentiation of x^2
         let f = |x: f64| -> Result<f64, String> { Ok(x * x) };
 
-        let derivative = differentiate(3.0, 0.001, f).unwrap();
+        let derivative = differentiate(3.0, 0.001, f).expect("Operation failed");
         assert_relative_eq!(derivative, 6.0, epsilon = 1e-3); // f'(x) = 2x => f'(3) = 6
 
         // Test integration of x^2 from 0 to 1
-        let integral = integrate(0.0, 1.0, 100, f).unwrap();
+        let integral = integrate(0.0, 1.0, 100, f).expect("Operation failed");
         assert_relative_eq!(integral, 1.0 / 3.0, epsilon = 1e-5); // ∫x^2 dx = x^3/3 => [0,1] = 1/3
 
         // Test integration of x^2 from 0 to 2
-        let integral = integrate(0.0, 2.0, 100, f).unwrap();
+        let integral = integrate(0.0, 2.0, 100, f).expect("Operation failed");
         assert_relative_eq!(integral, 8.0 / 3.0, epsilon = 1e-5); // ∫x^2 dx = x^3/3 => [0,2] = 8/3
     }
 }

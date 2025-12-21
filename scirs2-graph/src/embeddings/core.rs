@@ -216,7 +216,7 @@ impl<N: Node> EmbeddingModel<N> {
             }
         }
 
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         similarities.truncate(k);
 
         Ok(similarities)

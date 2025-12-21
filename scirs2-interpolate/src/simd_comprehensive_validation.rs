@@ -724,7 +724,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
 
         for i in 0..size {
             // Generate pseudo-random but deterministic data
-            let value = T::from_f64((i as f64 * 1.234567).sin()).unwrap();
+            let value = T::from_f64((i as f64 * 1.234567).sin()).expect("Operation failed");
             data[i] = value;
         }
 
@@ -848,11 +848,14 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
         let mut total_relative_error = 0.0f64;
 
         for i in 0..test_size {
-            let abs_error = (simd_result[i] - scalar_result[i]).to_f64().unwrap().abs();
+            let abs_error = (simd_result[i] - scalar_result[i])
+                .to_f64()
+                .expect("Operation failed")
+                .abs();
             max_error = max_error.max(abs_error);
             total_error += abs_error;
 
-            let scalar_val = scalar_result[i].to_f64().unwrap().abs();
+            let scalar_val = scalar_result[i].to_f64().expect("Operation failed").abs();
             if scalar_val > 1e-15 {
                 total_relative_error += abs_error / scalar_val;
             }

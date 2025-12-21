@@ -69,7 +69,7 @@ pub enum PolynomialBasis {
 ///     0.0, 1.0,
 ///     1.0, 1.0,
 ///     0.5, 0.5,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 ///
 /// // Create MLS interpolator (simplified configuration for test)
@@ -79,11 +79,11 @@ pub enum PolynomialBasis {
 ///     WeightFunction::Gaussian,
 ///     PolynomialBasis::Constant, // Using constant basis to avoid linalg feature requirement
 ///     0.5, // bandwidth parameter
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Evaluate at a new point
 /// let query = Array1::from_vec(vec![0.25, 0.25]);
-/// let result = mls.evaluate(&query.view()).unwrap();
+/// let result = mls.evaluate(&query.view()).expect("Operation failed");
 /// # }
 /// ```
 #[derive(Debug, Clone)]
@@ -165,7 +165,7 @@ where
             weight_fn,
             basis,
             bandwidth,
-            epsilon: F::from_f64(1e-10).unwrap(),
+            epsilon: F::from_f64(1e-10).expect("Operation failed"),
             max_points: None,
             _phantom: PhantomData,
         })
@@ -352,7 +352,7 @@ where
                 WeightFunction::WendlandC2 => {
                     if r < F::one() {
                         let t = F::one() - r;
-                        let factor = F::from_f64(4.0).unwrap() * r + F::one();
+                        let factor = F::from_f64(4.0).expect("Operation failed") * r + F::one();
                         t.powi(4) * factor
                     } else {
                         F::zero()
@@ -360,14 +360,16 @@ where
                 }
                 WeightFunction::InverseDistance => F::one() / (self.epsilon + r * r),
                 WeightFunction::CubicSpline => {
-                    if r < F::from_f64(1.0 / 3.0).unwrap() {
+                    if r < F::from_f64(1.0 / 3.0).expect("Operation failed") {
                         let r2 = r * r;
                         let r3 = r2 * r;
-                        F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2
-                            + F::from_f64(19.0).unwrap() * r3
+                        F::from_f64(2.0 / 3.0).expect("Operation failed")
+                            - F::from_f64(9.0).expect("Operation failed") * r2
+                            + F::from_f64(19.0).expect("Operation failed") * r3
                     } else if r < F::one() {
-                        let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;
-                        F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)
+                        let t = F::from_f64(2.0).expect("Operation failed")
+                            - F::from_f64(3.0).expect("Operation failed") * r;
+                        F::from_f64(1.0 / 3.0).expect("Operation failed") * t.powi(3)
                     } else {
                         F::zero()
                     }
@@ -383,7 +385,7 @@ where
             weights.mapv_inplace(|w| w / sum);
         } else {
             // If all weights are zero (shouldn't happen), use equal weights
-            weights.fill(F::from_f64(1.0 / n as f64).unwrap());
+            weights.fill(F::from_f64(1.0 / n as f64).expect("Operation failed"));
         }
 
         Ok(weights)
@@ -512,10 +514,10 @@ where
         #[cfg(feature = "linalg")]
         let coeffs = {
             use scirs2_linalg::solve;
-            let btb_f64 = btb.mapv(|x| x.to_f64().unwrap());
-            let bty_f64 = bty.mapv(|x| x.to_f64().unwrap());
+            let btb_f64 = btb.mapv(|x| x.to_f64().expect("Operation failed"));
+            let bty_f64 = bty.mapv(|x| x.to_f64().expect("Operation failed"));
             match solve(&btb_f64.view(), &bty_f64.view(), None) {
-                Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
+                Ok(c) => c.mapv(|x| F::from_f64(x).expect("Operation failed")),
                 Err(_) => {
                     // Fallback: use local mean for numerical stability
                     let mut mean = F::zero();
@@ -608,8 +610,8 @@ mod tests {
     #[test]
     fn test_mls_constant_basis() {
         // Simple test with 2D data and constant basis
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         // Simple plane: z = x + y
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -621,11 +623,11 @@ mod tests {
             PolynomialBasis::Constant,
             0.5,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test at center point - should be close to average of all values (1.0)
         let center = array![0.5, 0.5];
-        let val = mls.evaluate(&center.view()).unwrap();
+        let val = mls.evaluate(&center.view()).expect("Operation failed");
 
         assert_abs_diff_eq!(val, 1.0, epsilon = 0.1);
     }
@@ -633,8 +635,8 @@ mod tests {
     #[test]
     fn test_mls_linear_basis() {
         // Simple test with 2D data and linear basis
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         // Simple plane: z = x + y
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -646,7 +648,7 @@ mod tests {
             PolynomialBasis::Linear,
             1.0,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // With linear basis, should be able to reproduce the plane equation
         let test_points = Array2::from_shape_vec(
@@ -659,10 +661,12 @@ mod tests {
                 0.75, 0.75, // Should be exactly 1.5
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let expected = Array1::from_vec(vec![1.0, 0.5, 1.0, 1.0, 1.5]);
-        let results = mls.evaluate_multi(&test_points.view()).unwrap();
+        let results = mls
+            .evaluate_multi(&test_points.view())
+            .expect("Operation failed");
 
         // Allow some numerical error, but should be close to exact values
         for (result, expect) in results.iter().zip(expected.iter()) {
@@ -677,7 +681,7 @@ mod tests {
             (6, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.7, 0.7],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Simple function: z = x + y (linear function for better numerical stability)
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 0.6, 1.4]);
@@ -696,7 +700,7 @@ mod tests {
                 PolynomialBasis::Linear, // Use linear basis for better stability
                 2.0,                     // Large bandwidth to include all points
             )
-            .unwrap();
+            .expect("Operation failed");
 
             let result = mls.evaluate(&query.view());
 

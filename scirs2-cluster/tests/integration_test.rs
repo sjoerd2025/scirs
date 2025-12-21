@@ -8,10 +8,10 @@ use scirs2_core::ndarray::{array, Array2};
 #[test]
 #[allow(dead_code)]
 fn test_whiten() {
-    let data =
-        Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
+    let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0])
+        .expect("Test: operation failed");
 
-    let whitened = whiten(&data).unwrap();
+    let whitened = whiten(&data).expect("Test: operation failed");
 
     // Check that whitened data has roughly unit variance
     assert_eq!(whitened.shape(), data.shape());
@@ -20,7 +20,8 @@ fn test_whiten() {
 #[test]
 #[allow(dead_code)]
 fn test_kmeans2_init_methods() {
-    let data = Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
+    let data = Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect())
+        .expect("Test: operation failed");
 
     let init_methods = vec![
         MinitMethod::Random,
@@ -39,7 +40,7 @@ fn test_kmeans2_init_methods() {
             Some(true),
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert_eq!(centroids.shape()[0], 3);
         assert_eq!(centroids.shape()[1], 2);
@@ -62,7 +63,7 @@ fn test_silhouette_score_basic() {
 
     let labels = array![0, 0, 0, 1, 1, 1];
 
-    let score = silhouette_score(data.view(), labels.view()).unwrap();
+    let score = silhouette_score(data.view(), labels.view()).expect("Test: operation failed");
 
     // Well-separated clusters should have high silhouette score
     assert!(score > 0.7);
@@ -82,10 +83,12 @@ fn test_advanced_clusterer_basic() {
             5.2, 5.1, 4.9, 5.3, 5.1, 4.8,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let mut clusterer = AdvancedClusterer::new();
-    let result = clusterer.cluster(&data.view()).unwrap();
+    let result = clusterer
+        .cluster(&data.view())
+        .expect("Test: operation failed");
 
     // Verify basic properties
     assert_eq!(result.clusters.len(), data.nrows());
@@ -111,14 +114,16 @@ fn test_advanced_clusterer_with_ai_selection() {
             20.0, 21.0, 22.0, 20.1, 21.1, 22.1, 19.9, 20.9, 21.9, 20.2, 21.2, 22.2,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true)
         .with_meta_learning(true);
 
-    let result = clusterer.cluster(&data.view()).unwrap();
+    let result = clusterer
+        .cluster(&data.view())
+        .expect("Test: operation failed");
 
     // Verify AI selection worked
     assert!(!result.selected_algorithm.is_empty());
@@ -144,7 +149,7 @@ fn test_advanced_clusterer_with_all_features() {
             })
             .collect(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
@@ -153,7 +158,9 @@ fn test_advanced_clusterer_with_all_features() {
         .with_continual_adaptation(true)
         .with_multi_objective_optimization(true);
 
-    let result = clusterer.cluster(&data.view()).unwrap();
+    let result = clusterer
+        .cluster(&data.view())
+        .expect("Test: operation failed");
 
     // Verify all features are active
     assert!(result.ai_speedup > 1.0);
@@ -178,16 +185,18 @@ fn test_advanced_clusterer_error_handling() {
     assert!(clusterer.cluster(&empty_data.view()).is_err());
 
     // Test single point
-    let single_point = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+    let single_point =
+        Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).expect("Test: operation failed");
     assert!(clusterer.cluster(&single_point.view()).is_err());
 
     // Test data with NaN
-    let nan_data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 3.0, 4.0, 5.0]).unwrap();
+    let nan_data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 3.0, 4.0, 5.0])
+        .expect("Test: operation failed");
     assert!(clusterer.cluster(&nan_data.view()).is_err());
 
     // Test data with infinity
-    let inf_data =
-        Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::INFINITY, 3.0, 4.0, 5.0]).unwrap();
+    let inf_data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::INFINITY, 3.0, 4.0, 5.0])
+        .expect("Test: operation failed");
     assert!(clusterer.cluster(&inf_data.view()).is_err());
 }
 
@@ -197,10 +206,12 @@ fn test_advanced_clusterer_different_data_sizes() {
     let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
     // Test small dataset
-    let small_data =
-        Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+    let small_data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1])
+        .expect("Test: operation failed");
 
-    let small_result = clusterer.cluster(&small_data.view()).unwrap();
+    let small_result = clusterer
+        .cluster(&small_data.view())
+        .expect("Test: operation failed");
     assert!(small_result.confidence > 0.0);
 
     // Test medium dataset
@@ -214,9 +225,11 @@ fn test_advanced_clusterer_different_data_sizes() {
             })
             .collect(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
-    let medium_result = clusterer.cluster(&medium_data.view()).unwrap();
+    let medium_result = clusterer
+        .cluster(&medium_data.view())
+        .expect("Test: operation failed");
     assert!(medium_result.confidence > 0.0);
     assert!(medium_result.performance.execution_time > 0.0);
 }
@@ -235,13 +248,15 @@ fn test_advanced_clusterer_high_dimensional() {
             })
             .collect(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let mut clusterer = AdvancedClusterer::new()
         .with_quantum_neuromorphic_fusion(true)
         .with_ai_algorithm_selection(true);
 
-    let result = clusterer.cluster(&data.view()).unwrap();
+    let result = clusterer
+        .cluster(&data.view())
+        .expect("Test: operation failed");
 
     // High-dimensional data should benefit from quantum algorithms
     assert!(result.quantum_advantage > 1.0);
@@ -267,13 +282,15 @@ fn test_advanced_clusterer_noisy_data() {
         data_vec.push(base_y + noise_y);
     }
 
-    let data = Array2::from_shape_vec((16, 2), data_vec).unwrap();
+    let data = Array2::from_shape_vec((16, 2), data_vec).expect("Test: operation failed");
 
     let mut clusterer = AdvancedClusterer::new()
         .with_quantum_neuromorphic_fusion(true)
         .with_continual_adaptation(true);
 
-    let result = clusterer.cluster(&data.view()).unwrap();
+    let result = clusterer
+        .cluster(&data.view())
+        .expect("Test: operation failed");
 
     // Quantum-neuromorphic algorithms should handle noise well
     assert!(result.neuromorphic_benefit > 1.0);
@@ -305,13 +322,15 @@ fn test_advanced_performance_metrics() {
             5.0, 5.0, 5.1, 5.1, 5.2, 5.2, // Cluster 2
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let mut clusterer = AdvancedClusterer::new()
         .with_ai_algorithm_selection(true)
         .with_quantum_neuromorphic_fusion(true);
 
-    let result = clusterer.cluster(&data.view()).unwrap();
+    let result = clusterer
+        .cluster(&data.view())
+        .expect("Test: operation failed");
 
     // Verify performance metrics are realistic
     let perf = &result.performance;

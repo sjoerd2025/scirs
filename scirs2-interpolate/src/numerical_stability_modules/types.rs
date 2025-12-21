@@ -386,15 +386,20 @@ pub fn machine_epsilon<F: Float + FromPrimitive>() -> F {
     match std::mem::size_of::<F>() {
         4 => F::from_f64(f32::EPSILON as f64).unwrap_or_else(|| {
             F::from(f32::EPSILON).unwrap_or_else(|| {
-                F::from_f64(1.19e-7).unwrap_or_else(|| F::from(1.19e-7).unwrap())
+                F::from_f64(1.19e-7).unwrap_or_else(|| {
+                    F::from(1.19e-7).expect("Failed to convert constant to float")
+                })
             })
         }), // f32
         8 => F::from_f64(f64::EPSILON).unwrap_or_else(|| {
             F::from(f64::EPSILON).unwrap_or_else(|| {
-                F::from_f64(2.22e-16).unwrap_or_else(|| F::from(2.22e-16).unwrap())
+                F::from_f64(2.22e-16).unwrap_or_else(|| {
+                    F::from(2.22e-16).expect("Failed to convert constant to float")
+                })
             })
         }), // f64
-        _ => F::from_f64(2.22e-16).unwrap_or_else(|| F::from(2.22e-16).unwrap()), // Default to f64 epsilon
+        _ => F::from_f64(2.22e-16)
+            .unwrap_or_else(|| F::from(2.22e-16).expect("Failed to convert constant to float")), // Default to f64 epsilon
     }
 }
 
@@ -403,9 +408,12 @@ pub fn classify_stability<F>(condition_number: F) -> StabilityLevel
 where
     F: Float + FromPrimitive,
 {
-    let excellent_threshold = F::from_f64(1e12).unwrap_or_else(|| F::from(1e12).unwrap());
-    let good_threshold = F::from_f64(1e14).unwrap_or_else(|| F::from(1e14).unwrap());
-    let marginal_threshold = F::from_f64(1e16).unwrap_or_else(|| F::from(1e16).unwrap());
+    let excellent_threshold = F::from_f64(1e12)
+        .unwrap_or_else(|| F::from(1e12).expect("Failed to convert constant to float"));
+    let good_threshold = F::from_f64(1e14)
+        .unwrap_or_else(|| F::from(1e14).expect("Failed to convert constant to float"));
+    let marginal_threshold = F::from_f64(1e16)
+        .unwrap_or_else(|| F::from(1e16).expect("Failed to convert constant to float"));
 
     if condition_number < excellent_threshold {
         StabilityLevel::Excellent

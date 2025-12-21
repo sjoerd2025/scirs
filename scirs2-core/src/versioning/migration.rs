@@ -338,8 +338,8 @@ impl MigrationManager {
         }
 
         Ok(MigrationPlan {
-            from_version: path.first().unwrap().clone(),
-            toversion: path.last().unwrap().clone(),
+            from_version: path.first().expect("Operation failed").clone(),
+            toversion: path.last().expect("Operation failed").clone(),
             steps: all_steps,
             estimated_effort: total_effort,
             risk_level: max_risk,
@@ -587,7 +587,7 @@ mod tests {
 
         let plan = manager
             .create_migration_plan(&from_version, &toversion)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(plan.from_version, from_version);
         assert_eq!(plan.toversion, toversion);
         assert!(!plan.steps.is_empty());
@@ -602,7 +602,7 @@ mod tests {
 
         let plan = manager
             .create_migration_plan(&from_version, &toversion)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(plan.risk_level, RiskLevel::Medium); // Minor version change
     }
 
@@ -614,7 +614,7 @@ mod tests {
 
         let plan = manager
             .create_migration_plan(&from_version, &toversion)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(plan.risk_level, RiskLevel::Low); // Patch version change
     }
 
@@ -633,11 +633,13 @@ mod tests {
         };
 
         let executionid = "test_migration_123".to_string();
-        manager.start_migration(plan, executionid.clone()).unwrap();
+        manager
+            .start_migration(plan, executionid.clone())
+            .expect("Operation failed");
 
         // let status = manager.get_migration_status(&executionid);
         // assert!(status.is_some());
-        // assert_eq!(status.unwrap().status, ExecutionStatus::NotStarted);
+        // assert_eq!(status.expect("Operation failed").status, ExecutionStatus::NotStarted);
     }
 
     #[test]

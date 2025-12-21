@@ -163,7 +163,7 @@ where
     let duration = start.elapsed();
 
     // Compute accuracy (energy conservation for oscillator system)
-    let final_energy = compute_system_energy(result.y.last().unwrap());
+    let final_energy = compute_system_energy(result.y.last().expect("Operation failed"));
     let initial_energy = compute_system_energy(&result.y[0]);
     let energy_error = ((final_energy - initial_energy) / initial_energy).abs();
 

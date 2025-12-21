@@ -51,7 +51,7 @@ type LayerNormForwardReturn<F> = (Array2<F>, (Array2<F>, Array1<F>, Array1<F>, A
 /// let x = Array::from_shape_vec(
 ///     (3, 2),
 ///     vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Parameters
 /// let gamma = Array::from_vec(vec![1.0, 1.0]);
@@ -71,7 +71,7 @@ type LayerNormForwardReturn<F> = (Array2<F>, (Array2<F>, Array1<F>, Array1<F>, A
 ///     &mut running_mean,
 ///     &mut running_var,
 ///     true
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(out.shape(), x.shape());
 /// ```
@@ -110,7 +110,7 @@ where
 
     if training {
         // Compute mean and variance for this batch
-        let batch_mean = x.mean_axis(Axis(0)).unwrap();
+        let batch_mean = x.mean_axis(Axis(0)).expect("Operation failed");
 
         // Compute variance
         let mut batch_var = Array1::<F>::zeros(num_features);
@@ -120,7 +120,7 @@ where
                 batch_var[j] = batch_var[j] + diff * diff;
             }
         }
-        batch_var.mapv_inplace(|v| v / F::from(batch_size).unwrap());
+        batch_var.mapv_inplace(|v| v / F::from(batch_size).expect("Failed to convert to float"));
 
         // Update running mean and variance
         for j in 0..num_features {
@@ -180,7 +180,7 @@ where
 /// use scirs2_neural::linalg::{batch_norm_forward, batch_norm_backward};
 ///
 /// // Setup (same as forward example)
-/// let x = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let x = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("Operation failed");
 /// let gamma = Array::from_vec(vec![1.0, 1.0]);
 /// let beta = Array::from_vec(vec![0.0, 0.0]);
 /// let eps = 1e-5;
@@ -192,14 +192,14 @@ where
 /// let (out, cache_opt) = batch_norm_forward(
 ///     &x.view(), &gamma.view(), &beta.view(), eps, momentum,
 ///     &mut running_mean, &mut running_var, true
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Assume gradient of loss with respect to output
-/// let dout = Array::from_shape_vec((3, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6]).unwrap();
+/// let dout = Array::from_shape_vec((3, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6]).expect("Operation failed");
 ///
 /// // Backward pass
 /// if let Some(cache) = cache_opt {
-///     let (dx, dgamma, dbeta) = batch_norm_backward(&dout.view(), &cache).unwrap();
+///     let (dx, dgamma, dbeta) = batch_norm_backward(&dout.view(), &cache).expect("Operation failed");
 ///     assert_eq!(dx.shape(), x.shape());
 ///     assert_eq!(dgamma.shape(), gamma.shape());
 ///     assert_eq!(dbeta.shape(), beta.shape());
@@ -253,7 +253,7 @@ where
     }
 
     // Gradient with respect to input x
-    let batch_size_f = F::from(batch_size).unwrap();
+    let batch_size_f = F::from(batch_size).expect("Failed to convert to float");
 
     for j in 0..num_features {
         let std_inv = F::one() / (batch_var[j] + *eps).sqrt();
@@ -305,7 +305,7 @@ where
 /// let x = Array::from_shape_vec(
 ///     (3, 4),
 ///     vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Parameters
 /// let gamma = Array::from_vec(vec![1.0, 1.0, 1.0, 1.0]);
@@ -313,7 +313,7 @@ where
 /// let eps = 1e-5;
 ///
 /// // Forward pass
-/// let (out, _) = layer_norm(&x.view(), &gamma.view(), &beta.view(), eps).unwrap();
+/// let (out, _) = layer_norm(&x.view(), &gamma.view(), &beta.view(), eps).expect("Operation failed");
 /// assert_eq!(out.shape(), x.shape());
 /// ```
 pub fn layer_norm<F>(
@@ -347,7 +347,7 @@ where
         for j in 0..num_features {
             mean[i] = mean[i] + x[[i, j]];
         }
-        mean[i] = mean[i] / F::from(num_features).unwrap();
+        mean[i] = mean[i] / F::from(num_features).expect("Failed to convert to float");
 
         // Compute variance for this sample
         var[i] = F::zero();
@@ -355,7 +355,7 @@ where
             let diff = x[[i, j]] - mean[i];
             var[i] = var[i] + diff * diff;
         }
-        var[i] = var[i] / F::from(num_features).unwrap();
+        var[i] = var[i] / F::from(num_features).expect("Failed to convert to float");
 
         // Normalize, scale, and shift
         for j in 0..num_features {
@@ -398,22 +398,22 @@ where
 /// let x = Array::from_shape_vec(
 ///     (3, 4),
 ///     vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// let gamma = Array::from_vec(vec![1.0, 1.0, 1.0, 1.0]);
 /// let beta = Array::from_vec(vec![0.0, 0.0, 0.0, 0.0]);
 /// let eps = 1e-5;
 ///
 /// // Forward pass to get cache
-/// let (out, cache) = layer_norm(&x.view(), &gamma.view(), &beta.view(), eps).unwrap();
+/// let (out, cache) = layer_norm(&x.view(), &gamma.view(), &beta.view(), eps).expect("Operation failed");
 ///
 /// // Assume gradient of loss with respect to output
 /// let dout = Array::from_shape_vec(
 ///     (3, 4),
 ///     vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Backward pass
-/// let (dx, dgamma, dbeta) = layer_norm_backward(&dout.view(), &cache).unwrap();
+/// let (dx, dgamma, dbeta) = layer_norm_backward(&dout.view(), &cache).expect("Operation failed");
 /// assert_eq!(dx.shape(), x.shape());
 /// assert_eq!(dgamma.shape(), gamma.shape());
 /// assert_eq!(dbeta.shape(), beta.shape());
@@ -466,7 +466,7 @@ where
     }
 
     // Gradient with respect to input x
-    let num_features_f = F::from(num_features).unwrap();
+    let num_features_f = F::from(num_features).expect("Failed to convert to float");
 
     for i in 0..batch_size {
         let std_inv = F::one() / (var[i] + *eps).sqrt();
@@ -515,10 +515,10 @@ where
 /// let grad = Array::from_shape_vec(
 ///     (2, 3),
 ///     vec![10.0f64, 20.0, 30.0, 40.0, 50.0, 60.0]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Clip gradient to max norm of 10.0
-/// let clipped_grad = clip_grad_norm(&grad.view(), 10.0).unwrap();
+/// let clipped_grad = clip_grad_norm(&grad.view(), 10.0).expect("Operation failed");
 /// assert_eq!(clipped_grad.shape(), grad.shape());
 ///
 /// // Verify norm is reduced

@@ -12,6 +12,12 @@ use super::config::TurningPointsConfig;
 use super::utils::detect_turning_points;
 use crate::error::{Result, TimeSeriesError};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Comprehensive turning points analysis features
 #[derive(Debug, Clone)]
 pub struct TurningPointsFeatures<F> {
@@ -195,8 +201,8 @@ where
             triangular_pattern_count: 0,
 
             // Relative position features
-            upper_half_turning_points: F::from(0.5).unwrap(),
-            lower_half_turning_points: F::from(0.5).unwrap(),
+            upper_half_turning_points: const_f64::<F>(0.5),
+            lower_half_turning_points: const_f64::<F>(0.5),
             turning_point_position_skewness: F::zero(),
             turning_point_position_kurtosis: F::zero(),
 
@@ -372,7 +378,8 @@ where
     let local_maxima_count = local_maxima.len();
     let local_minima_count = local_minima.len();
     let peak_valley_ratio = if local_minima_count > 0 {
-        F::from(local_maxima_count).unwrap() / F::from(local_minima_count).unwrap()
+        F::from(local_maxima_count).expect("Failed to convert to float")
+            / F::from(local_minima_count).expect("Failed to convert to float")
     } else {
         F::zero()
     };
@@ -380,7 +387,8 @@ where
     // Calculate average distance between turning points
     let average_turning_point_distance = if total_turning_points > 1 {
         let total_distance: usize = turning_points.windows(2).map(|w| w[1] - w[0]).sum();
-        F::from(total_distance).unwrap() / F::from(total_turning_points - 1).unwrap()
+        F::from(total_distance).expect("Failed to convert to float")
+            / F::from(total_turning_points - 1).expect("Failed to convert to float")
     } else {
         F::zero()
     };
@@ -536,14 +544,15 @@ where
 
     // Calculate directional statistics
     let directional_change_ratio = if downward_changes > 0 {
-        F::from(upward_changes).unwrap() / F::from(downward_changes).unwrap()
+        F::from(upward_changes).expect("Failed to convert to float")
+            / F::from(downward_changes).expect("Failed to convert to float")
     } else {
-        F::from(upward_changes).unwrap()
+        F::from(upward_changes).expect("Failed to convert to float")
     };
 
     let average_upward_magnitude = if !upward_magnitudes.is_empty() {
         upward_magnitudes.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(upward_magnitudes.len()).unwrap()
+            / F::from(upward_magnitudes.len()).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -552,7 +561,7 @@ where
         downward_magnitudes
             .iter()
             .fold(F::zero(), |acc, &x| acc + x)
-            / F::from(downward_magnitudes.len()).unwrap()
+            / F::from(downward_magnitudes.len()).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -565,11 +574,11 @@ where
 
     let directional_change_std = if all_magnitudes.len() > 1 {
         let mean = all_magnitudes.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(all_magnitudes.len()).unwrap();
+            / F::from(all_magnitudes.len()).expect("Test/example failed");
         let variance = all_magnitudes
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-            / F::from(all_magnitudes.len() - 1).unwrap();
+            / F::from(all_magnitudes.len() - 1).expect("Test/example failed");
         variance.sqrt()
     } else {
         F::zero()
@@ -636,15 +645,15 @@ where
 
     // Calculate average sequence lengths
     let average_upward_sequence_length = if !upward_sequences.is_empty() {
-        F::from(upward_sequences.iter().sum::<usize>()).unwrap()
-            / F::from(upward_sequences.len()).unwrap()
+        F::from(upward_sequences.iter().sum::<usize>()).expect("Operation failed")
+            / F::from(upward_sequences.len()).expect("Operation failed")
     } else {
         F::zero()
     };
 
     let average_downward_sequence_length = if !downward_sequences.is_empty() {
-        F::from(downward_sequences.iter().sum::<usize>()).unwrap()
-            / F::from(downward_sequences.len()).unwrap()
+        F::from(downward_sequences.iter().sum::<usize>()).expect("Operation failed")
+            / F::from(downward_sequences.len()).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -661,7 +670,8 @@ where
     let total_sequences = upward_sequences.len() + downward_sequences.len();
 
     let momentum_persistence_ratio = if total_sequences > 0 {
-        F::from(long_sequences).unwrap() / F::from(total_sequences).unwrap()
+        F::from(long_sequences).expect("Failed to convert to float")
+            / F::from(total_sequences).expect("Failed to convert to float")
     } else {
         F::zero()
     };
@@ -700,7 +710,7 @@ where
     // Average peak amplitude
     let average_peak_amplitude = if !peak_amplitudes.is_empty() {
         peak_amplitudes.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(peak_amplitudes.len()).unwrap()
+            / F::from(peak_amplitudes.len()).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -708,7 +718,7 @@ where
     // Average valley amplitude
     let average_valley_amplitude = if !valley_amplitudes.is_empty() {
         valley_amplitudes.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(valley_amplitudes.len()).unwrap()
+            / F::from(valley_amplitudes.len()).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -717,7 +727,7 @@ where
     let peak_amplitude_std = if peak_amplitudes.len() > 1 {
         let variance = peak_amplitudes.iter().fold(F::zero(), |acc, &x| {
             acc + (x - average_peak_amplitude) * (x - average_peak_amplitude)
-        }) / F::from(peak_amplitudes.len() - 1).unwrap();
+        }) / F::from(peak_amplitudes.len() - 1).expect("Test/example failed");
         variance.sqrt()
     } else {
         F::zero()
@@ -727,7 +737,7 @@ where
     let valley_amplitude_std = if valley_amplitudes.len() > 1 {
         let variance = valley_amplitudes.iter().fold(F::zero(), |acc, &x| {
             acc + (x - average_valley_amplitude) * (x - average_valley_amplitude)
-        }) / F::from(valley_amplitudes.len() - 1).unwrap();
+        }) / F::from(valley_amplitudes.len() - 1).expect("Test/example failed");
         variance.sqrt()
     } else {
         F::zero()
@@ -748,18 +758,18 @@ where
 
     let extrema_asymmetry = if all_extrema.len() > 2 {
         let mean = all_extrema.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(all_extrema.len()).unwrap();
+            / F::from(all_extrema.len()).expect("Test/example failed");
         let variance = all_extrema
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-            / F::from(all_extrema.len()).unwrap();
+            / F::from(all_extrema.len()).expect("Test/example failed");
 
         if variance > F::zero() {
             let std_dev = variance.sqrt();
             let skewness = all_extrema.iter().fold(F::zero(), |acc, &x| {
                 let normalized = (x - mean) / std_dev;
                 acc + normalized * normalized * normalized
-            }) / F::from(all_extrema.len()).unwrap();
+            }) / F::from(all_extrema.len()).expect("Test/example failed");
             skewness
         } else {
             F::zero()
@@ -788,7 +798,8 @@ fn detect_trend_reversals<F>(
 where
     F: Float + FromPrimitive + Debug,
 {
-    let major_threshold = F::from(config.major_reversal_threshold).unwrap();
+    let major_threshold =
+        F::from(config.major_reversal_threshold).expect("Failed to convert to float");
     let mut major_reversals = Vec::new();
     let mut minor_reversals = Vec::new();
 
@@ -819,20 +830,21 @@ where
 
     let average_major_reversal_magnitude = if !major_reversals.is_empty() {
         major_reversals.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(major_reversals.len()).unwrap()
+            / F::from(major_reversals.len()).expect("Operation failed")
     } else {
         F::zero()
     };
 
     let average_minor_reversal_magnitude = if !minor_reversals.is_empty() {
         minor_reversals.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(minor_reversals.len()).unwrap()
+            / F::from(minor_reversals.len()).expect("Operation failed")
     } else {
         F::zero()
     };
 
-    let trend_reversal_frequency = F::from(major_trend_reversals + minor_trend_reversals).unwrap()
-        / F::from(ts.len()).unwrap();
+    let trend_reversal_frequency = F::from(major_trend_reversals + minor_trend_reversals)
+        .expect("Failed to convert to float")
+        / F::from(ts.len()).expect("Test/example failed");
 
     let reversal_strength_index = major_reversals.iter().fold(F::zero(), |acc, &x| acc + x)
         + minor_reversals.iter().fold(F::zero(), |acc, &x| acc + x);
@@ -863,17 +875,17 @@ where
     // Calculate intervals between turning _points
     let intervals: Vec<F> = turning_points
         .windows(2)
-        .map(|w| F::from(w[1] - w[0]).unwrap())
+        .map(|w| F::from(w[1] - w[0]).expect("Failed to convert to float"))
         .collect();
 
     // Turning point regularity (coefficient of variation of intervals)
-    let mean_interval =
-        intervals.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(intervals.len()).unwrap();
+    let mean_interval = intervals.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(intervals.len()).expect("Test/example failed");
 
     let interval_variance = if intervals.len() > 1 {
         intervals.iter().fold(F::zero(), |acc, &x| {
             acc + (x - mean_interval) * (x - mean_interval)
-        }) / F::from(intervals.len() - 1).unwrap()
+        }) / F::from(intervals.len() - 1).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -927,34 +939,36 @@ where
 
         if end > start + 1 {
             let local_slice = ts.slice(s![start..end]);
-            let local_mean = local_slice.sum() / F::from(local_slice.len()).unwrap();
+            let local_mean =
+                local_slice.sum() / F::from(local_slice.len()).expect("Test/example failed");
             let local_variance = local_slice
                 .mapv(|x| (x - local_mean) * (x - local_mean))
                 .sum()
-                / F::from(local_slice.len()).unwrap();
+                / F::from(local_slice.len()).expect("Test/example failed");
             local_variances.push(local_variance);
         }
     }
 
     let turning_point_volatility = if !local_variances.is_empty() {
         local_variances.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(local_variances.len()).unwrap()
+            / F::from(local_variances.len()).expect("Operation failed")
     } else {
         F::zero()
     };
 
     // Stability index (inverse of turning point frequency)
-    let turning_point_frequency = F::from(turning_points.len()).unwrap() / F::from(n).unwrap();
+    let turning_point_frequency = F::from(turning_points.len()).expect("Operation failed")
+        / F::from(n).expect("Failed to convert to float");
     let stability_index = if turning_point_frequency > F::zero() {
         F::one() / turning_point_frequency
     } else {
-        F::from(n).unwrap()
+        F::from(n).expect("Failed to convert to float")
     };
 
     // Noise-to-signal ratio
-    let signal_mean = ts.sum() / F::from(n).unwrap();
-    let signal_variance =
-        ts.mapv(|x| (x - signal_mean) * (x - signal_mean)).sum() / F::from(n).unwrap();
+    let signal_mean = ts.sum() / F::from(n).expect("Failed to convert to float");
+    let signal_variance = ts.mapv(|x| (x - signal_mean) * (x - signal_mean)).sum()
+        / F::from(n).expect("Failed to convert to float");
     let noise_signal_ratio = if signal_variance > F::zero() {
         turning_point_volatility / signal_variance
     } else {
@@ -973,8 +987,9 @@ where
         }
     }
 
-    let trend_consistency =
-        F::one() - F::from(directional_changes).unwrap() / F::from(n - 2).unwrap();
+    let trend_consistency = F::one()
+        - F::from(directional_changes).expect("Failed to convert to float")
+            / F::from(n - 2).expect("Failed to convert to float");
 
     Ok(StabilityFeatures {
         turning_point_volatility,
@@ -1026,8 +1041,8 @@ where
 {
     if turning_points.is_empty() {
         return Ok(PositionFeatures {
-            upper_half_turning_points: F::from(0.5).unwrap(),
-            lower_half_turning_points: F::from(0.5).unwrap(),
+            upper_half_turning_points: const_f64::<F>(0.5),
+            lower_half_turning_points: const_f64::<F>(0.5),
             turning_point_position_skewness: F::zero(),
             turning_point_position_kurtosis: F::zero(),
         });
@@ -1037,7 +1052,7 @@ where
     let min_val = ts.iter().fold(F::infinity(), |a, &b| a.min(b));
     let max_val = ts.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
     let range = max_val - min_val;
-    let midpoint = min_val + range / F::from(2.0).unwrap();
+    let midpoint = min_val + range / const_f64::<F>(2.0);
 
     // Analyze turning point positions
     let tp_values: Vec<F> = turning_points
@@ -1048,17 +1063,17 @@ where
     let upper_half_count = tp_values.iter().filter(|&&x| x > midpoint).count();
     let total_count = tp_values.len();
 
-    let upper_half_turning_points =
-        F::from(upper_half_count).unwrap() / F::from(total_count).unwrap();
+    let upper_half_turning_points = F::from(upper_half_count).expect("Failed to convert to float")
+        / F::from(total_count).expect("Failed to convert to float");
     let lower_half_turning_points = F::one() - upper_half_turning_points;
 
     // Calculate skewness and kurtosis of turning point positions
-    let mean_position =
-        tp_values.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(total_count).unwrap();
+    let mean_position = tp_values.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(total_count).expect("Failed to convert to float");
 
     let variance = tp_values.iter().fold(F::zero(), |acc, &x| {
         acc + (x - mean_position) * (x - mean_position)
-    }) / F::from(total_count).unwrap();
+    }) / F::from(total_count).expect("Failed to convert to float");
 
     let (turning_point_position_skewness, turning_point_position_kurtosis) = if variance > F::zero()
     {
@@ -1067,14 +1082,14 @@ where
         let skewness = tp_values.iter().fold(F::zero(), |acc, &x| {
             let normalized = (x - mean_position) / std_dev;
             acc + normalized * normalized * normalized
-        }) / F::from(total_count).unwrap();
+        }) / F::from(total_count).expect("Failed to convert to float");
 
         let kurtosis = tp_values.iter().fold(F::zero(), |acc, &x| {
             let normalized = (x - mean_position) / std_dev;
             let normalized_sq = normalized * normalized;
             acc + normalized_sq * normalized_sq
-        }) / F::from(total_count).unwrap()
-            - F::from(3.0).unwrap();
+        }) / F::from(total_count).expect("Failed to convert to float")
+            - const_f64::<F>(3.0);
 
         (skewness, kurtosis)
     } else {
@@ -1130,14 +1145,20 @@ where
             let current_count = tp__.len() as f64;
             let consistency =
                 1.0 - (original_count - current_count).abs() / original_count.max(current_count);
-            scale_consistencies.push(F::from(consistency).unwrap());
+            scale_consistencies.push(F::from(consistency).expect("Failed to convert to float"));
         }
     }
 
     // Calculate scale turning point ratio
     let scale_turning_point_ratio = if multiscale_turning_points.len() > 1 {
-        let first_scale = F::from(multiscale_turning_points[0]).unwrap();
-        let last_scale = F::from(*multiscale_turning_points.last().unwrap()).unwrap();
+        let first_scale =
+            F::from(multiscale_turning_points[0]).expect("Failed to convert to float");
+        let last_scale = F::from(
+            *multiscale_turning_points
+                .last()
+                .expect("Failed to convert to float"),
+        )
+        .expect("Test/example failed");
         if last_scale > F::zero() {
             first_scale / last_scale
         } else {
@@ -1152,7 +1173,7 @@ where
         scale_consistencies
             .iter()
             .fold(F::zero(), |acc, &x| acc + x)
-            / F::from(scale_consistencies.len()).unwrap()
+            / F::from(scale_consistencies.len()).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -1161,13 +1182,14 @@ where
     let hierarchical_structure_index = if multiscale_turning_points.len() > 2 {
         let mut structure_measure = F::zero();
         for i in 1..multiscale_turning_points.len() {
-            let ratio = F::from(multiscale_turning_points[i - 1]).unwrap()
+            let ratio = F::from(multiscale_turning_points[i - 1])
+                .expect("Failed to convert to float")
                 / F::from(multiscale_turning_points[i])
-                    .unwrap()
-                    .max(F::from(1.0).unwrap());
+                    .expect("Operation failed")
+                    .max(const_f64::<F>(1.0));
             structure_measure = structure_measure + ratio;
         }
-        structure_measure / F::from(multiscale_turning_points.len() - 1).unwrap()
+        structure_measure / F::from(multiscale_turning_points.len() - 1).expect("Operation failed")
     } else {
         F::one()
     };
@@ -1203,7 +1225,7 @@ where
         let end = (i + half_window + 1).min(n);
 
         let window_sum = _ts.slice(s![start..end]).sum();
-        let window_len = F::from(end - start).unwrap();
+        let window_len = F::from(end - start).expect("Failed to convert to float");
         smoothed[i] = window_sum / window_len;
     }
 
@@ -1232,11 +1254,11 @@ where
         return Ok(F::zero());
     }
 
-    let mean_ratio =
-        ratios.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(ratios.len()).unwrap();
+    let mean_ratio = ratios.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(ratios.len()).expect("Test/example failed");
     let variance = ratios.iter().fold(F::zero(), |acc, &x| {
         acc + (x - mean_ratio) * (x - mean_ratio)
-    }) / F::from(ratios.len()).unwrap();
+    }) / F::from(ratios.len()).expect("Test/example failed");
 
     // Clustering is inverse of variance (higher variance = less clustering)
     Ok(F::one() / (F::one() + variance))
@@ -1271,7 +1293,8 @@ where
         return Ok(F::zero());
     }
 
-    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
+    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(data.len()).expect("Test/example failed");
 
     let mut numerator = F::zero();
     let mut denominator = F::zero();

@@ -294,7 +294,7 @@ fn bench_creation_comparison(c: &mut Criterion) {
             |b, &size| {
                 b.iter(|| {
                     let mut rng = StdRng::seed_from_u64(42);
-                    let graph = erdos_renyi_graph(size, 0.01, &mut rng).unwrap();
+                    let graph = erdos_renyi_graph(size, 0.01, &mut rng).expect("Operation failed");
                     black_box(graph)
                 });
             },
@@ -349,7 +349,7 @@ fn bench_traversal_comparison(c: &mut Criterion) {
 
     for size in &[100, 1000, 5000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).expect("Operation failed");
 
         // scirs2-graph BFS
         group.bench_with_input(BenchmarkId::new("scirs2_bfs", size), &graph, |b, graph| {
@@ -388,7 +388,7 @@ fn bench_centrality_comparison(c: &mut Criterion) {
 
     for size in &[100, 500, 1000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = barabasi_albert_graph(*size, 3, &mut rng).unwrap();
+        let graph = barabasi_albert_graph(*size, 3, &mut rng).expect("Operation failed");
 
         // scirs2-graph PageRank
         group.bench_with_input(
@@ -446,7 +446,7 @@ fn bench_shortest_path_comparison(c: &mut Criterion) {
 
     for size in &[100, 1000, 5000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).expect("Operation failed");
 
         // scirs2-graph shortest path
         group.bench_with_input(
@@ -487,7 +487,7 @@ fn bench_community_comparison(c: &mut Criterion) {
 
     for size in &[100, 500, 1000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = watts_strogatz_graph(*size, 6, 0.3, &mut rng).unwrap();
+        let graph = watts_strogatz_graph(*size, 6, 0.3, &mut rng).expect("Operation failed");
 
         // scirs2-graph Louvain communities
         group.bench_with_input(
@@ -584,10 +584,10 @@ fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graph_type: &str) -> 
     let mut rng = StdRng::seed_from_u64(42);
 
     let graph = match graph_type {
-        "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
-        "barabasi_albert" => barabasi_albert_graph(size, 3, &mut rng).unwrap(),
-        "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(),
-        _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
+        "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).expect("Operation failed"),
+        "barabasi_albert" => barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed"),
+        "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).expect("Operation failed"),
+        _ => erdos_renyi_graph(size, 0.01, &mut rng).expect("Operation failed"),
     };
 
     let start = Instant::now();
@@ -827,10 +827,14 @@ fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
         // Generate test graph once
         let mut rng = StdRng::seed_from_u64(42);
         let test_graph = match graph_type {
-            "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
-            "barabasi_albert" => barabasi_albert_graph(size, 3, &mut rng).unwrap(),
-            "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(),
-            _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
+            "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).expect("Operation failed"),
+            "barabasi_albert" => {
+                barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed")
+            }
+            "watts_strogatz" => {
+                watts_strogatz_graph(size, 6, 0.3, &mut rng).expect("Operation failed")
+            }
+            _ => erdos_renyi_graph(size, 0.01, &mut rng).expect("Operation failed"),
         };
 
         for algorithm in algorithms {
@@ -897,7 +901,7 @@ fn bench_memory_efficiency_comparison(c: &mut Criterion) {
                     let mut processor =
                         scirs2_graph::advanced::create_memory_efficient_advanced_processor();
                     let mut rng = StdRng::seed_from_u64(42);
-                    let graph = barabasi_albert_graph(size, 3, &mut rng).unwrap();
+                    let graph = barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed");
 
                     let result =
                         scirs2_graph::advanced::execute_with_enhanced_advanced(&graph, |g| {

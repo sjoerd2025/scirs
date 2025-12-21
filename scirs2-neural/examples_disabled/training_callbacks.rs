@@ -23,7 +23,7 @@ fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
             1.0, 1.0, // 1 XOR 1 = 0
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
     // XOR truth table outputs
     let y = Array2::from_shape_vec(
         (4, 1),

@@ -20,8 +20,11 @@ fn main() {
         // c = a * b (element-wise), shape should be 2x2
         let c = a * b;
 
-        println!("c shape: {:?}", c.eval(g).unwrap().shape());
-        println!("c:\n{:?}", c.eval(g).unwrap());
+        println!(
+            "c shape: {:?}",
+            c.eval(g).expect("Operation failed").shape()
+        );
+        println!("c:\n{:?}", c.eval(g).expect("Operation failed"));
 
         // Test element access
         println!("\nTesting element access:");
@@ -30,10 +33,10 @@ fn main() {
         let c_10 = c.access_elem(2);
         let c_11 = c.access_elem(3);
 
-        println!("c[0,0] = {:?}", c_00.eval(g).unwrap());
-        println!("c[0,1] = {:?}", c_01.eval(g).unwrap());
-        println!("c[1,0] = {:?}", c_10.eval(g).unwrap());
-        println!("c[1,1] = {:?}", c_11.eval(g).unwrap());
+        println!("c[0,0] = {:?}", c_00.eval(g).expect("Operation failed"));
+        println!("c[0,1] = {:?}", c_01.eval(g).expect("Operation failed"));
+        println!("c[1,0] = {:?}", c_10.eval(g).expect("Operation failed"));
+        println!("c[1,1] = {:?}", c_11.eval(g).expect("Operation failed"));
 
         // Test grad with single output
         println!("\nTesting grad with c[0,0]:");

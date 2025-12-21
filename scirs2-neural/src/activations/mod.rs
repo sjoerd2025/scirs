@@ -89,11 +89,11 @@ use scirs2_core::numeric::Float;
 /// let input = Array::from_vec(vec![-1.0, 0.0, 1.0]).into_dyn();
 /// // Forward pass
 /// let output = activation.forward(&input)?;
-/// assert_eq!(output.as_slice().unwrap(), &[0.0, 0.0, 1.0]);
+/// assert_eq!(output.as_slice().expect("Operation failed"), &[0.0, 0.0, 1.0]);
 /// // Backward pass
 /// let grad_output = Array::from_vec(vec![1.0, 1.0, 1.0]).into_dyn();
 /// let grad_input = activation.backward(&grad_output, &output)?;
-/// assert_eq!(grad_input.as_slice().unwrap(), &[0.0, 0.0, 1.0]);
+/// assert_eq!(grad_input.as_slice().expect("Operation failed"), &[0.0, 0.0, 1.0]);
 /// # Ok(())
 /// # }
 /// ```
@@ -131,7 +131,7 @@ pub trait Activation<F: Float> {
     /// let grad_output = Array::from_vec(vec![1.0, 1.0]).into_dyn();
     /// let grad_input = relu.backward(&grad_output, &output)?;
     /// // ReLU gradient: 0 for negative inputs, 1 for positive inputs
-    /// assert_eq!(grad_input.as_slice().unwrap(), &[0.0, 1.0]);
+    /// assert_eq!(grad_input.as_slice().expect("Operation failed"), &[0.0, 1.0]);
     fn backward(
         &self,
         grad_output: &Array<F, scirs2_core::ndarray::IxDyn>,

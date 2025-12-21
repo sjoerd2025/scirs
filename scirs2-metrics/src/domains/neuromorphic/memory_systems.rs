@@ -225,7 +225,7 @@ impl<F: Float> ShortTermMemory<F> {
         Self {
             working_memory: VecDeque::with_capacity(capacity),
             capacity,
-            decay_rate: F::from(0.95).unwrap(),
+            decay_rate: F::from(0.95).expect("Failed to convert constant to float"),
             refresh_controller: RefreshController::new(),
         }
     }
@@ -258,8 +258,9 @@ impl<F: Float> ShortTermMemory<F> {
         }
 
         // Remove weak traces
-        self.working_memory
-            .retain(|trace| trace.strength > F::from(0.01).unwrap());
+        self.working_memory.retain(|trace| {
+            trace.strength > F::from(0.01).expect("Failed to convert constant to float")
+        });
 
         // Update refresh controller
         self.refresh_controller.update(dt)?;
@@ -273,8 +274,8 @@ impl<F: Float> LongTermMemory<F> {
     pub fn new() -> Self {
         Self {
             memory_traces: HashMap::new(),
-            decay_rate: F::from(0.999).unwrap(),
-            consolidation_threshold: F::from(0.8).unwrap(),
+            decay_rate: F::from(0.999).expect("Failed to convert constant to float"),
+            consolidation_threshold: F::from(0.8).expect("Failed to convert constant to float"),
         }
     }
 
@@ -302,8 +303,9 @@ impl<F: Float> LongTermMemory<F> {
         }
 
         // Remove very weak traces
-        self.memory_traces
-            .retain(|_, trace| trace.strength > F::from(0.001).unwrap());
+        self.memory_traces.retain(|_, trace| {
+            trace.strength > F::from(0.001).expect("Failed to convert constant to float")
+        });
 
         Ok(())
     }
@@ -349,7 +351,7 @@ impl<F: Float> ConsolidationController<F> {
         for policy in &self.policies {
             match policy {
                 ConsolidationPolicy::StrengthBased { threshold } => {
-                    if trace.strength > F::from(*threshold).unwrap() {
+                    if trace.strength > F::from(*threshold).expect("Failed to convert to float") {
                         return Ok(true);
                     }
                 }
@@ -376,7 +378,7 @@ impl<F: Float> RefreshController<F> {
         Self {
             refresh_rate: Duration::from_millis(100),
             last_refresh: Instant::now(),
-            refresh_strength: F::from(0.1).unwrap(),
+            refresh_strength: F::from(0.1).expect("Failed to convert constant to float"),
         }
     }
 
@@ -413,7 +415,7 @@ impl<F: Float> AssociativeRecall<F> {
     pub fn new() -> Self {
         Self {
             association_matrix: HashMap::new(),
-            recall_threshold: F::from(0.7).unwrap(),
+            recall_threshold: F::from(0.7).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -422,7 +424,7 @@ impl<F: Float> ContentAddressableRecall<F> {
     pub fn new() -> Self {
         Self {
             content_index: HashMap::new(),
-            similarity_threshold: F::from(0.8).unwrap(),
+            similarity_threshold: F::from(0.8).expect("Failed to convert constant to float"),
         }
     }
 }

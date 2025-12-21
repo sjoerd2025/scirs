@@ -92,7 +92,7 @@ fn bench_fft_1d_comprehensive(c: &mut Criterion) {
         );
 
         // Inverse real FFT
-        let spectrum = rfft(&real_signal, None).unwrap();
+        let spectrum = rfft(&real_signal, None).expect("Operation failed");
         group.bench_with_input(BenchmarkId::new("irfft", size), &spectrum, |b, spectrum| {
             b.iter(|| irfft(black_box(spectrum), Some(size)))
         });
@@ -127,7 +127,9 @@ fn bench_fft_multidim(c: &mut Criterion) {
     for shape in &config.sizes_nd {
         let total_size: usize = shape.iter().product();
         let data = Array1::from_shape_fn(total_size, |i| (i as f64).sin());
-        let data_nd = data.into_shape_with_order(shape.as_slice()).unwrap();
+        let data_nd = data
+            .into_shape_with_order(shape.as_slice())
+            .expect("Operation failed");
 
         group.bench_with_input(
             BenchmarkId::new("fftn", format!("{shape:?}")),

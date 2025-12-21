@@ -21,7 +21,7 @@ fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
     match condition_number {
         Some(cond) => {
             // Generate matrix with specific condition number for numerical stability tests
-            let uniform = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
             let u = Array2::from_shape_fn((n, n), |_| rng.sample(uniform));
             let mut s = Array1::linspace(1.0, 1.0 / cond, n);
             s.mapv_inplace(|x| x.abs()); // Ensure positive singular values
@@ -39,7 +39,7 @@ fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
         }
         None => {
             // Generate well-conditioned random matrix
-            let uniform = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
             Array2::from_shape_fn((n, n), |_| rng.sample(uniform))
         }
     }
@@ -49,7 +49,7 @@ fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
 #[allow(dead_code)]
 fn generate_spd_matrix(n: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(SEED);
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
     let a = Array2::from_shape_fn((n, n), |_| rng.sample(uniform));
 
     // A^T * A is always positive definite

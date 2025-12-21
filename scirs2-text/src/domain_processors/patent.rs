@@ -21,11 +21,11 @@ impl PatentTextProcessor {
 
         // Patent number patterns - handle regex creation errors gracefully
         let patent_number_regex = Regex::new(r"\b(?:US|EP|WO)\s*\d{6,8}\s*[A-Z]?\d?\b")
-            .unwrap_or_else(|_| Regex::new(r"\d+").unwrap());
+            .unwrap_or_else(|_| Regex::new(r"\d+").expect("Operation failed"));
 
         // Patent claim patterns
-        let claim_regex =
-            Regex::new(r"(?i)\bclaim\s+\d+").unwrap_or_else(|_| Regex::new(r"claim").unwrap());
+        let claim_regex = Regex::new(r"(?i)\bclaim\s+\d+")
+            .unwrap_or_else(|_| Regex::new(r"claim").expect("Operation failed"));
 
         Self {
             config,

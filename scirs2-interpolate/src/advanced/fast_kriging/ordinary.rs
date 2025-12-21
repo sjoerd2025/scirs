@@ -126,21 +126,21 @@ where
                             }
 
                             // Try regularized solve, otherwise fallback to mean
-                            let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().unwrap());
-                            let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
+                            let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().expect("Operation failed"));
+                            let local_values_f64 = local_values.mapv(|x| x.to_f64().expect("Operation failed"));
 
                             #[cfg(feature = "linalg")]
                             {
                                 use ndarray_linalg::Solve;
                                 if let Ok(weights_f64) = cov_matrix_f64.solve(&local_values_f64) {
-                                    let weights = weights_f64.mapv(|x| F::from_f64(x).unwrap());
+                                    let weights = weights_f64.mapv(|x| F::from_f64(x).expect("Operation failed"));
                                     let mut prediction = F::zero();
                                     for j in 0..n_neighbors {
                                         prediction += weights[j] * local_values[j];
                                     }
                                     values[i] = prediction;
                                     variances[i] =
-                                        self.anisotropic_cov.sigma_sq * F::from_f64(0.1).unwrap();
+                                        self.anisotropic_cov.sigma_sq * F::from_f64(0.1).expect("Operation failed");
                                     continue;
                                 }
                             }
@@ -162,10 +162,10 @@ where
                 }
 
                 // Convert to f64 for linear algebra
-                let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());
-                let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
+                let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
+                let local_values_f64 = local_values.mapv(|x| x.to_f64().expect("Operation failed"));
                 let weights = match cov_matrix_f64.solve(&local_values_f64) {
-                    Ok(w) => w.mapv(|x| F::from_f64(x).unwrap()),
+                    Ok(w) => w.mapv(|x| F::from_f64(x).expect("Operation failed")),
                     Err(_) => {
                         // Try iterative refinement with regularization
                         let regularization = F::from_f64(1e-6).unwrap_or_else(|| F::epsilon());
@@ -174,21 +174,21 @@ where
                             regularized_cov[[j, j]] += regularization;
                         }
 
-                        let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().unwrap());
-                        let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
+                        let cov_matrix_f64 = regularized_cov.mapv(|x| x.to_f64().expect("Operation failed"));
+                        let local_values_f64 = local_values.mapv(|x| x.to_f64().expect("Operation failed"));
 
                         #[cfg(feature = "linalg")]
                         {
                             use ndarray_linalg::Solve;
                             if let Ok(weights_f64) = cov_matrix_f64.solve(&local_values_f64) {
-                                let weights = weights_f64.mapv(|x| F::from_f64(x).unwrap());
+                                let weights = weights_f64.mapv(|x| F::from_f64(x).expect("Operation failed"));
                                 let mut prediction = F::zero();
                                 for j in 0..n_neighbors {
                                     prediction += weights[j] * local_values[j];
                                 }
                                 values[i] = prediction;
                                 variances[i] =
-                                    self.anisotropic_cov.sigma_sq * F::from_f64(1.5).unwrap();
+                                    self.anisotropic_cov.sigma_sq * F::from_f64(1.5).expect("Operation failed");
                                 continue;
                             }
                         }
@@ -467,7 +467,7 @@ where
                     }
                 }
                 for d in 0..query_point.len() {
-                    centroid[d] /= F::from_usize(end_idx - start_idx).unwrap();
+                    centroid[d] /= F::from_usize(end_idx - start_idx).expect("Operation failed");
                 }
 
                 // Compute distance to centroid
@@ -479,14 +479,14 @@ where
                 let dist = dist_sq.sqrt();
 
                 // Weight based on inverse distance
-                let weight = if dist < F::from_f64(1e-10).unwrap() {
-                    F::from_f64(1e10).unwrap() // Very close to centroid
+                let weight = if dist < F::from_f64(1e-10).expect("Operation failed") {
+                    F::from_f64(1e10).expect("Operation failed") // Very close to centroid
                 } else {
                     F::one() / (F::one() + dist)
                 };
 
                 // Compute block contribution
-                if weight > F::from_f64(1e-6).unwrap() {
+                if weight > F::from_f64(1e-6).expect("Operation failed") {
                     // Use local kriging within this block
                     let block_points = self._points.slice(scirs2_core::ndarray::s![start_idx..end_idx, ..]);
                     let block_values = self.values.slice(scirs2_core::ndarray::s![start_idx..end_idx]);
@@ -582,18 +582,18 @@ where
         {
             use ndarray_linalg::Solve;
 
-            let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());
-            let block_values_f64 = block_values.mapv(|x| x.to_f64().unwrap());
+            let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
+            let block_values_f64 = block_values.mapv(|x| x.to_f64().expect("Operation failed"));
 
             match cov_matrix_f64.solve(&block_values_f64) {
                 Ok(weights_f64) => {
-                    let weights = weights_f64.mapv(|x| F::from_f64(x).unwrap());
+                    let weights = weights_f64.mapv(|x| F::from_f64(x).expect("Operation failed"));
                     let prediction = k_star.dot(&weights);
 
                     // Compute variance
-                    let k_star_f64 = k_star.mapv(|x| x.to_f64().unwrap());
+                    let k_star_f64 = k_star.mapv(|x| x.to_f64().expect("Operation failed"));
                     let cov_inv_k_star = match cov_matrix_f64.solve(&k_star_f64) {
-                        Ok(result) => result.mapv(|x| F::from_f64(x).unwrap()),
+                        Ok(result) => result.mapv(|x| F::from_f64(x).expect("Operation failed")),
                         Err(_) => Array1::zeros(n_block),
                     };
                     let variance = self.anisotropic_cov.sigma_sq - k_star.dot(&cov_inv_k_star);

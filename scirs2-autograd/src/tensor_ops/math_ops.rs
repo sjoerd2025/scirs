@@ -50,32 +50,32 @@ pub struct Digamma;
 #[inline(always)]
 #[allow(dead_code)]
 fn equal_fn<T: Float>(a: T, b: T) -> T {
-    T::from((a == b) as i32).unwrap()
+    T::from((a == b) as i32).expect("Operation failed")
 }
 #[inline(always)]
 #[allow(dead_code)]
 fn not_equal_fn<T: Float>(a: T, b: T) -> T {
-    T::from((a != b) as i32).unwrap()
+    T::from((a != b) as i32).expect("Operation failed")
 }
 #[inline(always)]
 #[allow(dead_code)]
 fn greater_fn<T: Float>(a: T, b: T) -> T {
-    T::from((a > b) as i32).unwrap()
+    T::from((a > b) as i32).expect("Operation failed")
 }
 #[inline(always)]
 #[allow(dead_code)]
 fn lesser_fn<T: Float>(a: T, b: T) -> T {
-    T::from((a < b) as i32).unwrap()
+    T::from((a < b) as i32).expect("Operation failed")
 }
 #[inline(always)]
 #[allow(dead_code)]
 fn greater_equal_fn<T: Float>(a: T, b: T) -> T {
-    T::from((a >= b) as i32).unwrap()
+    T::from((a >= b) as i32).expect("Operation failed")
 }
 #[inline(always)]
 #[allow(dead_code)]
 fn lesser_equal_fn<T: Float>(a: T, b: T) -> T {
-    T::from((a <= b) as i32).unwrap()
+    T::from((a <= b) as i32).expect("Operation failed")
 }
 #[inline(always)]
 #[allow(dead_code)]
@@ -267,7 +267,7 @@ macro_rules! elem_wise_vm_with_param_or_std {
         let ret = unsafe {
             if same_type::<T, f32>() {
                 let mut y = Vec::with_capacity(x.len());
-                let p = $param.to_f32().unwrap();
+                let p = $param.to_f32().expect("Operation failed");
                 $vms_op(
                     x.len() as BlasIF,
                     x.as_ptr() as *const f32,
@@ -278,7 +278,7 @@ macro_rules! elem_wise_vm_with_param_or_std {
                 NdArray::from_shape_vec_unchecked(x.shape(), y)
             } else if same_type::<T, f64>() {
                 let mut y = Vec::with_capacity(x.len());
-                let p = $param.to_f64().unwrap();
+                let p = $param.to_f64().expect("Operation failed");
                 $vmd_op(
                     x.len() as BlasIF,
                     x.as_ptr() as *const f64,
@@ -353,8 +353,8 @@ impl<T: Float> op::Op<T> for InvSqrt {
 
     fn grad(&self, ctx: &mut op::GradientContext<T>) {
         let g = ctx.graph();
-        let a = scalar(T::from(-0.5).unwrap(), g);
-        let b = pow(ctx.input(0), T::from(-1.5).unwrap());
+        let a = scalar(T::from(-0.5).expect("Operation failed"), g);
+        let b = pow(ctx.input(0), T::from(-1.5).expect("Operation failed"));
         ctx.append_input_grad(0, Some(a * b * ctx.output_grad()));
     }
 }
@@ -414,7 +414,7 @@ impl<T: Float> op::Op<T> for Transpose {
 
         let mut dims = vec![0; perm_len];
         for (i, d) in perm.iter().enumerate() {
-            let d = d.to_usize().unwrap();
+            let d = d.to_usize().expect("Operation failed");
             if self.invert_axes {
                 dims[d] = i;
             } else {
@@ -531,7 +531,7 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keepdims: bo
             max_fn(a, b)
         })
         .into_shape_with_order(scirs2_core::ndarray::IxDyn(reducedshape))
-        .unwrap();
+        .expect("Failed to create tensor");
 
     let exp = {
         // subtract `max` to prevent overflow of exp
@@ -551,7 +551,7 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keepdims: bo
     let mut sum = exp
         .sum_axis(scirs2_core::ndarray::Axis(axis))
         .into_shape_with_order(scirs2_core::ndarray::IxDyn(reducedshape))
-        .unwrap();
+        .expect("Failed to create tensor");
 
     #[cfg(feature = "blas")]
     {
@@ -619,7 +619,7 @@ impl<T: Float> op::Op<T> for Log10 {
     }
 
     fn grad(&self, ctx: &mut op::GradientContext<T>) {
-        let log10 = scalar(T::from(10.).unwrap().ln(), ctx.graph());
+        let log10 = scalar(T::from(10.).expect("Operation failed").ln(), ctx.graph());
         ctx.append_input_grad(0, Some(ctx.output_grad() / (log10 * ctx.input(0))));
     }
 }
@@ -678,7 +678,7 @@ impl<T: Float> op::Op<T> for Exp2 {
 
 impl<T: Float> op::Op<T> for Exp10 {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
-        let ten = T::from(10).unwrap();
+        let ten = T::from(10).expect("Operation failed");
 
         #[cfg(not(feature = "blas"))]
         {
@@ -689,7 +689,7 @@ impl<T: Float> op::Op<T> for Exp10 {
     }
 
     fn grad(&self, ctx: &mut op::GradientContext<T>) {
-        let log10 = scalar(T::from(10.).unwrap().ln(), ctx.graph());
+        let log10 = scalar(T::from(10.).expect("Operation failed").ln(), ctx.graph());
         ctx.append_input_grad(0, Some(log10 * ctx.output() * ctx.output_grad()));
     }
 }

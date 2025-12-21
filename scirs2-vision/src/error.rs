@@ -674,14 +674,14 @@ static ERROR_RECOVERY: std::sync::Mutex<Option<ErrorRecoveryManager>> = std::syn
 /// Initialize global error recovery manager
 #[allow(dead_code)]
 pub fn initialize_error_recovery(config: RecoveryConfig) {
-    let mut global_recovery = ERROR_RECOVERY.lock().unwrap();
+    let mut global_recovery = ERROR_RECOVERY.lock().expect("Operation failed");
     *global_recovery = Some(ErrorRecoveryManager::new(config));
 }
 
 /// Get global error recovery manager
 #[allow(dead_code)]
 pub fn get_error_recovery() -> std::sync::MutexGuard<'static, Option<ErrorRecoveryManager>> {
-    ERROR_RECOVERY.lock().unwrap()
+    ERROR_RECOVERY.lock().expect("Operation failed")
 }
 
 /// Macro for automatic error recovery in vision operations

@@ -160,7 +160,7 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
             .iter()
             .copied()
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(stability_scores.len()).unwrap();
+            / F::from(stability_scores.len()).expect("Operation failed");
 
         let variance = stability_scores
             .iter()
@@ -169,7 +169,7 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
                 diff * diff
             })
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(stability_scores.len()).unwrap();
+            / F::from(stability_scores.len()).expect("Operation failed");
         let std_stability = variance.sqrt();
 
         // Create bootstrap stability matrix
@@ -216,7 +216,7 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
                     .iter()
                     .copied()
                     .fold(F::zero(), |acc, x| acc + x)
-                    / F::from(pairwise_aris.len()).unwrap();
+                    / F::from(pairwise_aris.len()).expect("Operation failed");
                 scores.push(mean_ari);
             }
         }
@@ -353,11 +353,11 @@ impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> Cons
         }
 
         // Normalize by number of runs
-        let n_runs = F::from(all_labels.len()).unwrap();
+        let n_runs = F::from(all_labels.len()).expect("Operation failed");
         consensus_matrix.mapv_inplace(|x| x / n_runs);
 
         // Extract consensus clusters using threshold
-        let threshold = F::from(0.5).unwrap();
+        let threshold = F::from(0.5).expect("Failed to convert constant to float");
         self.extract_consensus_clusters(&consensus_matrix, threshold, k)
     }
 
@@ -431,7 +431,8 @@ impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> Cons
                 }
 
                 if count > 0 {
-                    let avg_consensus = total_consensus / F::from(count).unwrap();
+                    let avg_consensus =
+                        total_consensus / F::from(count).expect("Failed to convert to float");
                     if avg_consensus > best_avg_consensus {
                         best_avg_consensus = avg_consensus;
                         best_cluster = cluster_id;
@@ -535,8 +536,8 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
                 for i in 0..n_samples {
                     for j in 0..n_features {
                         let range = max_vals[j] - min_vals[j];
-                        let random_val =
-                            min_vals[j] + range * F::from(rng.random::<f64>()).unwrap();
+                        let random_val = min_vals[j]
+                            + range * F::from(rng.random::<f64>()).expect("Operation failed");
                         reference_data[[i, j]] = random_val;
                     }
                 }
@@ -551,7 +552,7 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
                 .iter()
                 .copied()
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(reference_log_wks.len()).unwrap();
+                / F::from(reference_log_wks.len()).expect("Operation failed");
             let gap = expected_log_wk - log_wk;
             gap_scores.push(gap);
         }
@@ -603,8 +604,9 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
 
                     // Normalize by cluster size
                     if cluster_size > 1 {
-                        total_dispersion =
-                            total_dispersion + cluster_dispersion / F::from(cluster_size).unwrap();
+                        total_dispersion = total_dispersion
+                            + cluster_dispersion
+                                / F::from(cluster_size).expect("Failed to convert to float");
                     }
                 }
 
@@ -681,12 +683,12 @@ pub mod advanced {
                 let (train_centroids, train_labels) = kmeans2(
                     train_data.view(),
                     k,
-                    Some(100),                    // max_iter
-                    Some(F::from(1e-6).unwrap()), // threshold
-                    None,                         // init method
-                    None,                         // missing method
-                    None,                         // check_finite
-                    Some(42),                     // seed
+                    Some(100), // max_iter
+                    Some(F::from(1e-6).expect("Failed to convert constant to float")), // threshold
+                    None,      // init method
+                    None,      // missing method
+                    None,      // check_finite
+                    Some(42),  // seed
                 )?;
 
                 // Assign test data to nearest centroids
@@ -718,12 +720,12 @@ pub mod advanced {
 
             // Calculate mean and standard deviation
             let mean_stability = stability_scores.iter().fold(F::zero(), |acc, x| acc + *x)
-                / F::from(stability_scores.len()).unwrap();
+                / F::from(stability_scores.len()).expect("Operation failed");
             let variance = stability_scores
                 .iter()
                 .map(|&s| (s - mean_stability) * (s - mean_stability))
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(stability_scores.len()).unwrap();
+                / F::from(stability_scores.len()).expect("Operation failed");
             let std_stability = variance.sqrt();
 
             Ok(StabilityResult {
@@ -752,7 +754,8 @@ pub mod advanced {
                 let cluster_size = cluster_members.len();
                 if cluster_size > 1 {
                     let pairs = cluster_size * (cluster_size - 1) / 2;
-                    cluster_cohesion = cluster_cohesion + F::from(pairs).unwrap();
+                    cluster_cohesion =
+                        cluster_cohesion + F::from(pairs).expect("Failed to convert to float");
                     total_pairs += pairs;
                 }
             }
@@ -760,7 +763,7 @@ pub mod advanced {
             if total_pairs == 0 {
                 Ok(F::zero())
             } else {
-                Ok(cluster_cohesion / F::from(total_pairs).unwrap())
+                Ok(cluster_cohesion / F::from(total_pairs).expect("Failed to convert to float"))
             }
         }
     }
@@ -816,12 +819,12 @@ pub mod advanced {
             let (baseline_centroids, baseline_labels) = kmeans2(
                 data,
                 k,
-                Some(100),                    // max_iter
-                Some(F::from(1e-6).unwrap()), // threshold
-                None,                         // init method
-                None,                         // missing method
-                None,                         // check_finite
-                Some(42),                     // seed
+                Some(100), // max_iter
+                Some(F::from(1e-6).expect("Failed to convert constant to float")), // threshold
+                None,      // init method
+                None,      // missing method
+                None,      // check_finite
+                Some(42),  // seed
             )?;
 
             // Test each perturbation type
@@ -836,12 +839,12 @@ pub mod advanced {
                     let (_, perturbed_labels) = kmeans2(
                         perturbed_data.view(),
                         k,
-                        Some(100),                    // max_iter
-                        Some(F::from(1e-6).unwrap()), // threshold
-                        None,                         // init method
-                        None,                         // missing method
-                        None,                         // check_finite
-                        None,                         // random seed
+                        Some(100), // max_iter
+                        Some(F::from(1e-6).expect("Failed to convert constant to float")), // threshold
+                        None, // init method
+                        None, // missing method
+                        None, // check_finite
+                        None, // random seed
                     )?;
 
                     // Calculate similarity to baseline
@@ -857,12 +860,12 @@ pub mod advanced {
             let mean_stability = all_stability_scores
                 .iter()
                 .fold(F::zero(), |acc, x| acc + *x)
-                / F::from(all_stability_scores.len()).unwrap();
+                / F::from(all_stability_scores.len()).expect("Operation failed");
             let variance = all_stability_scores
                 .iter()
                 .map(|&s| (s - mean_stability) * (s - mean_stability))
                 .sum::<F>()
-                / F::from(all_stability_scores.len()).unwrap();
+                / F::from(all_stability_scores.len()).expect("Operation failed");
             let std_stability = variance.sqrt();
 
             let bootstrap_matrix =
@@ -890,7 +893,7 @@ pub mod advanced {
                 PerturbationType::GaussianNoise { std_dev } => {
                     for elem in perturbed.iter_mut() {
                         let noise = rng.random::<f64>() * std_dev;
-                        *elem = *elem + F::from(noise).unwrap();
+                        *elem = *elem + F::from(noise).expect("Failed to convert to float");
                     }
                 }
                 PerturbationType::SampleRemoval { removal_rate } => {
@@ -910,7 +913,7 @@ pub mod advanced {
                 PerturbationType::FeatureNoise { noise_level } => {
                     for elem in perturbed.iter_mut() {
                         let noise = (rng.random::<f64>() - 0.5) * 2.0 * noise_level;
-                        *elem = *elem + F::from(noise).unwrap();
+                        *elem = *elem + F::from(noise).expect("Failed to convert to float");
                     }
                 }
                 PerturbationType::OutlierInjection {
@@ -924,7 +927,8 @@ pub mod advanced {
                         let sample_idx = rng.random_range(0..n_samples);
                         let feature_idx = rng.random_range(0..data.shape()[1]);
                         let outlier_value = rng.random::<f64>() * outlier_magnitude;
-                        perturbed[[sample_idx, feature_idx]] = F::from(outlier_value).unwrap();
+                        perturbed[[sample_idx, feature_idx]] =
+                            F::from(outlier_value).expect("Failed to convert to float");
                     }
                 }
             }
@@ -947,7 +951,7 @@ pub mod advanced {
 
             // Use adjusted rand index as similarity measure
             let ari: f64 = adjusted_rand_index(labels1_i32.view(), labels2_i32.view())?;
-            Ok(F::from(ari).unwrap())
+            Ok(F::from(ari).expect("Failed to convert to float"))
         }
     }
 
@@ -983,7 +987,8 @@ pub mod advanced {
 
             for &scale_factor in &self.scale_factors {
                 // Scale the data
-                let scaled_data = data.mapv(|x| x * F::from(scale_factor).unwrap());
+                let scaled_data =
+                    data.mapv(|x| x * F::from(scale_factor).expect("Failed to convert to float"));
 
                 // Assess stability at this scale for different k values
                 for k in k_range.0..=k_range.1 {
@@ -1148,7 +1153,7 @@ pub mod advanced {
 
             // Return mean prediction strength
             let sum: F = prediction_scores.iter().fold(F::zero(), |acc, &x| acc + x);
-            Ok(sum / F::from(prediction_scores.len()).unwrap())
+            Ok(sum / F::from(prediction_scores.len()).expect("Operation failed"))
         }
 
         /// Compute pairwise prediction strength between training and test assignments
@@ -1186,7 +1191,10 @@ pub mod advanced {
                 return Ok(F::zero());
             }
 
-            Ok(F::from(correct_predictions as f64 / total_predictions as f64).unwrap())
+            Ok(
+                F::from(correct_predictions as f64 / total_predictions as f64)
+                    .expect("Failed to convert to float"),
+            )
         }
 
         /// Find closest point in training data to a test point
@@ -1225,7 +1233,9 @@ pub mod advanced {
 
             // Find largest k with prediction strength above threshold
             for (idx, &strength) in strengths.iter().enumerate().rev() {
-                if strength >= F::from(self.config.strength_threshold).unwrap() {
+                if strength
+                    >= F::from(self.config.strength_threshold).expect("Failed to convert to float")
+                {
                     return Ok(k_range.0 + idx);
                 }
             }
@@ -1335,7 +1345,7 @@ pub mod advanced {
 
             // Return mean Jaccard similarity
             let sum: F = jaccard_scores.iter().fold(F::zero(), |acc, &x| acc + x);
-            Ok(sum / F::from(jaccard_scores.len()).unwrap())
+            Ok(sum / F::from(jaccard_scores.len()).expect("Operation failed"))
         }
 
         /// Compute Jaccard similarity between two cluster assignments
@@ -1371,7 +1381,10 @@ pub mod advanced {
                 return Ok(F::one()); // All pairs are different in both clusterings
             }
 
-            Ok(F::from(same_cluster_both as f64 / same_cluster_either as f64).unwrap())
+            Ok(
+                F::from(same_cluster_both as f64 / same_cluster_either as f64)
+                    .expect("Failed to convert to float"),
+            )
         }
 
         /// Assess stability across a range of cluster numbers
@@ -1485,13 +1498,13 @@ pub mod advanced {
             let mean_stability = cluster_stabilities
                 .iter()
                 .fold(F::zero(), |acc, &x| acc + x)
-                / F::from(cluster_stabilities.len()).unwrap();
+                / F::from(cluster_stabilities.len()).expect("Operation failed");
 
             let variance = cluster_stabilities
                 .iter()
                 .map(|&x| (x - mean_stability) * (x - mean_stability))
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(cluster_stabilities.len()).unwrap();
+                / F::from(cluster_stabilities.len()).expect("Operation failed");
             let std_stability = variance.sqrt();
 
             Ok(ClusterStabilityResult {
@@ -1519,7 +1532,7 @@ pub mod advanced {
 
                     if union_size > 0 {
                         let jaccard = intersection_size as f64 / union_size as f64;
-                        jaccard_scores.push(F::from(jaccard).unwrap());
+                        jaccard_scores.push(F::from(jaccard).expect("Failed to convert to float"));
                     }
                 }
             }
@@ -1530,7 +1543,7 @@ pub mod advanced {
 
             // Return mean Jaccard similarity
             let sum: F = jaccard_scores.iter().fold(F::zero(), |acc, &x| acc + x);
-            Ok(sum / F::from(jaccard_scores.len()).unwrap())
+            Ok(sum / F::from(jaccard_scores.len()).expect("Operation failed"))
         }
 
         /// Compute size consistency for a cluster across bootstrap samples
@@ -1551,7 +1564,7 @@ pub mod advanced {
             } else {
                 0.0
             };
-            Ok(F::one() - F::from(cv).unwrap()) // Consistency = 1 - CV
+            Ok(F::one() - F::from(cv).expect("Failed to convert to float")) // Consistency = 1 - CV
         }
     }
 
@@ -1624,12 +1637,12 @@ pub mod advanced {
 
                 for _ in 0..self.n_samples_per_range {
                     // Perturb parameters (here we vary k as an example)
-                    let k_perturbation = (F::from(rng.random::<f64>()).unwrap()
-                        - F::from(0.5).unwrap())
-                        * F::from(2.0).unwrap()
-                        * F::from(perturbation_level).unwrap();
+                    let k_perturbation = (F::from(rng.random::<f64>()).expect("Operation failed")
+                        - F::from(0.5).expect("Failed to convert constant to float"))
+                        * F::from(2.0).expect("Failed to convert constant to float")
+                        * F::from(perturbation_level).expect("Failed to convert to float");
                     let perturbed_k = (self.base_k as f64
-                        * (1.0 + k_perturbation.to_f64().unwrap()))
+                        * (1.0 + k_perturbation.to_f64().expect("Operation failed")))
                     .round()
                     .max(1.0) as usize;
 
@@ -1650,7 +1663,7 @@ pub mod advanced {
 
                 if !stability_scores.is_empty() {
                     let mean_stability = stability_scores.iter().fold(F::zero(), |acc, &x| acc + x)
-                        / F::from(stability_scores.len()).unwrap();
+                        / F::from(stability_scores.len()).expect("Operation failed");
                     stability_by_perturbation.push(mean_stability);
 
                     // Compute sensitivity (1 - stability)
@@ -1678,15 +1691,16 @@ pub mod advanced {
             let min_sensitivity = sensitivity_profile
                 .iter()
                 .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .unwrap();
+                .expect("Operation failed");
 
             // Define threshold as min + 10% of range
             let max_sensitivity = sensitivity_profile
                 .iter()
                 .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .unwrap();
-            let threshold =
-                *min_sensitivity + (*max_sensitivity - *min_sensitivity) * F::from(0.1).unwrap();
+                .expect("Operation failed");
+            let threshold = *min_sensitivity
+                + (*max_sensitivity - *min_sensitivity)
+                    * F::from(0.1).expect("Failed to convert constant to float");
 
             // Find first and last indices below threshold
             let mut start_idx = None;
@@ -1729,8 +1743,8 @@ mod tests {
 
     #[test]
     fn test_bootstrap_validator() {
-        let data =
-            Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect())
+            .expect("Operation failed");
 
         let config = StabilityConfig {
             n_bootstrap: 5,
@@ -1744,7 +1758,7 @@ mod tests {
         let result = validator.assess_kmeans_stability(data.view(), 2);
 
         assert!(result.is_ok());
-        let stability_result = result.unwrap();
+        let stability_result = result.expect("Operation failed");
         assert!(stability_result.mean_stability >= 0.0);
         assert!(stability_result.mean_stability <= 1.0);
         assert_eq!(stability_result.bootstrap_matrix.shape(), &[20, 20]);
@@ -1756,7 +1770,7 @@ mod tests {
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let config = StabilityConfig {
             n_bootstrap: 10,
@@ -1768,7 +1782,7 @@ mod tests {
         let result = consensus.find_consensus_clusters(data.view(), 2);
 
         assert!(result.is_ok());
-        let labels = result.unwrap();
+        let labels = result.expect("Operation failed");
         assert_eq!(labels.len(), 6);
 
         // Check that we have exactly 2 clusters
@@ -1787,7 +1801,7 @@ mod tests {
                 15.0, 15.0, 15.1, 15.1, 15.2, 15.2, // Cluster 4
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let config = StabilityConfig {
             k_range: Some((2, 5)),
@@ -1800,7 +1814,7 @@ mod tests {
         let result = selector.find_optimal_k(data.view());
 
         assert!(result.is_ok());
-        let (optimal_k, scores) = result.unwrap();
+        let (optimal_k, scores) = result.expect("Operation failed");
         assert!((2..=5).contains(&optimal_k));
         assert_eq!(scores.len(), 4); // k=2,3,4,5
     }
@@ -1813,7 +1827,7 @@ mod tests {
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2, 5.3, 5.3,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let config = StabilityConfig {
             k_range: Some((2, 4)),
@@ -1826,7 +1840,7 @@ mod tests {
         let result = selector.gap_statistic(data.view());
 
         assert!(result.is_ok());
-        let (optimal_k, gap_scores) = result.unwrap();
+        let (optimal_k, gap_scores) = result.expect("Operation failed");
         assert!((2..=4).contains(&optimal_k));
         assert_eq!(gap_scores.len(), 3); // k=2,3,4
     }

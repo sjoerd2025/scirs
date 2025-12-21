@@ -785,10 +785,10 @@ mod tests {
         let mut engine = DataOptimizationEngine::new();
         let data = b"Hello, World! This is a test string for compression.";
 
-        let compressed = engine.compress_data(data, &Some(CompressionAlgorithm::Gzip)).unwrap();
+        let compressed = engine.compress_data(data, &Some(CompressionAlgorithm::Gzip)).expect("Operation failed");
         assert!(compressed.len() <= data.len()); // Should be same or smaller
 
-        let decompressed = engine.decompress_data(&compressed, CompressionAlgorithm::Gzip).unwrap();
+        let decompressed = engine.decompress_data(&compressed, CompressionAlgorithm::Gzip).expect("Operation failed");
         assert!(decompressed.len() >= data.len()); // Should be expanded back
     }
 
@@ -831,7 +831,7 @@ mod tests {
             Duration::from_millis(100),
             50.0,
             0.05,
-        ).unwrap();
+        ).expect("Operation failed");
 
         assert!(analytics.provider_metrics.contains_key(&provider_id));
         assert!(analytics.cost_analytics.total_cost > 0.0);

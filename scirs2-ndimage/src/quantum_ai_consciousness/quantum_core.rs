@@ -469,7 +469,8 @@ impl CoherenceMechanism {
         let pulse_interval = time_step / 4.0;
 
         // Pauli-X gate (π-pulse)
-        let pauli_x = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 1.0, 0.0]).unwrap();
+        let pauli_x =
+            Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 1.0, 0.0]).expect("Operation failed");
 
         // Apply pulse to both qubits alternately
         channel.apply_gate(&pauli_x, 0)?;

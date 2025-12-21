@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 0.75, 0.75, // Point 3
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let local_result = local_kriging.predict(&query_points.view())?;
         println!("Local Kriging predictions: {:?}", local_result.value);

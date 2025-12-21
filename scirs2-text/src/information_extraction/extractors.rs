@@ -325,7 +325,7 @@ impl KeyPhraseExtractor {
             .collect();
 
         // Sort by score descending
-        phrases.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        phrases.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         Ok(phrases)
     }

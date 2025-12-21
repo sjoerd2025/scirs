@@ -146,6 +146,12 @@ use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Debug;
 use std::ops::{AddAssign, MulAssign, SubAssign};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<T: Float + FromPrimitive>(value: f64) -> T {
+    T::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Compute the Pochhammer symbol (rising factorial)
 ///
 /// The Pochhammer symbol (a)_n is defined as:
@@ -184,7 +190,7 @@ where
 
     let mut result = a;
     for i in 1..n {
-        result = result * (a + F::from(i).unwrap());
+        result = result * (a + F::from(i).expect("test/example should not fail"));
     }
     result
 }
@@ -230,7 +236,7 @@ where
 
     let mut result = F::zero();
     for i in 0..n {
-        result = result + (a + F::from(i).unwrap()).ln();
+        result = result + (a + F::from(i).expect("test/example should not fail")).ln();
     }
     result
 }
@@ -261,10 +267,10 @@ where
 /// use scirs2_special::hyp1f1;
 ///
 /// // Some known values
-/// let result1: f64 = hyp1f1(1.0, 2.0, 0.5).unwrap();
+/// let result1: f64 = hyp1f1(1.0, 2.0, 0.5).expect("test/example should not fail");
 /// assert!((result1 - 1.2974425414002564).abs() < 1e-10);
 ///
-/// let result2: f64 = hyp1f1(2.0, 3.0, -1.0).unwrap();
+/// let result2: f64 = hyp1f1(2.0, 3.0, -1.0).expect("test/example should not fail");
 /// assert!((result2 - 0.5).abs() < 1e-10);
 /// ```
 /// Confluent hypergeometric limit function 0F1(v, z)
@@ -295,18 +301,18 @@ where
 /// use scirs2_special::hyp0f1;
 ///
 /// // Some known values
-/// let result1: f64 = hyp0f1(1.0, 0.5).unwrap();
+/// let result1: f64 = hyp0f1(1.0, 0.5).expect("test/example should not fail");
 /// // TODO: Fix hyp0f1 implementation - currently has algorithmic errors
 /// // Just check that function returns finite values
 /// assert!(result1.is_finite());
 ///
-/// let result2: f64 = hyp0f1(2.0, -1.0).unwrap();
+/// let result2: f64 = hyp0f1(2.0, -1.0).expect("test/example should not fail");
 /// // TODO: Fix hyp0f1 implementation - currently has algorithmic errors
 /// // Just check that function returns finite values
 /// assert!(result2.is_finite());
 ///
 /// // Zero argument
-/// let result3: f64 = hyp0f1(1.5, 0.0).unwrap();
+/// let result3: f64 = hyp0f1(1.5, 0.0).expect("test/example should not fail");
 /// assert!((result3 - 1.0).abs() < 1e-15);
 /// ```
 #[allow(dead_code)]
@@ -315,7 +321,7 @@ where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
 {
     // Handle poles: v ≤ 0 and v is an integer
-    if v <= F::zero() && v.to_f64().unwrap().fract() == 0.0 {
+    if v <= F::zero() && v.to_f64().expect("test/example should not fail").fract() == 0.0 {
         return Ok(F::nan());
     }
 
@@ -325,14 +331,15 @@ where
     }
 
     let abs_z = z.abs();
-    let v_plus_one = F::from(1.0).unwrap() + abs_z;
-    let threshold = F::from(1e-6).unwrap() * v_plus_one;
+    let v_plus_one = F::from(1.0).expect("test/example should not fail") + abs_z;
+    let threshold = F::from(1e-6).expect("test/example should not fail") * v_plus_one;
 
     // For very small |z|, use Taylor series expansion
     if abs_z < threshold {
         let z_over_v = z / v;
         let v_plus_one = v + F::one();
-        let second_term = z_over_v * z / (F::from(2.0).unwrap() * v_plus_one);
+        let second_term =
+            z_over_v * z / (F::from(2.0).expect("test/example should not fail") * v_plus_one);
 
         return Ok(F::one() + z_over_v + second_term);
     }
@@ -341,7 +348,7 @@ where
     if z >= F::zero() {
         let sqrt_z = z.sqrt();
         let nu = v - F::one();
-        let two_sqrt_z = F::from(2.0).unwrap() * sqrt_z;
+        let two_sqrt_z = F::from(2.0).expect("test/example should not fail") * sqrt_z;
 
         // Use ₀F₁(;v;z) = Γ(v) * (z/4)^((1-v)/2) * I_{v-1}(2√z)
         // Which is: Γ(v) * 2^(v-1) * z^((1-v)/2) * I_{v-1}(2√z)
@@ -350,16 +357,19 @@ where
 
         // Compute (z/4)^((1-v)/2) = z^((1-v)/2) / 2^(1-v)
         let one_minus_v = F::one() - v;
-        let z_power = if one_minus_v.abs() < F::from(1e-10).unwrap() {
+        let z_power = if one_minus_v.abs() < F::from(1e-10).expect("test/example should not fail") {
             F::one()
         } else {
-            z.powf(one_minus_v / F::from(2.0).unwrap())
+            z.powf(one_minus_v / F::from(2.0).expect("test/example should not fail"))
         };
 
-        let two_power = if one_minus_v.abs() < F::from(1e-10).unwrap() {
+        let two_power = if one_minus_v.abs() < F::from(1e-10).expect("test/example should not fail")
+        {
             F::one()
         } else {
-            F::from(2.0).unwrap().powf(one_minus_v)
+            F::from(2.0)
+                .expect("test/example should not fail")
+                .powf(one_minus_v)
         };
 
         let result = gamma_v * z_power * bessel_val / two_power;
@@ -375,7 +385,7 @@ where
         // For negative z, use regular Bessel function representation
         let sqrt_neg_z = (-z).sqrt();
         let nu = v - F::one();
-        let two_sqrt_neg_z = F::from(2.0).unwrap() * sqrt_neg_z;
+        let two_sqrt_neg_z = F::from(2.0).expect("test/example should not fail") * sqrt_neg_z;
 
         // Use ₀F₁(;v;-|z|) = Γ(v) * (|z|/4)^((1-v)/2) * J_{v-1}(2√|z|)
         let bessel_val = jv(nu, two_sqrt_neg_z);
@@ -384,16 +394,19 @@ where
         // Compute (|z|/4)^((1-v)/2) = |z|^((1-v)/2) / 2^(1-v)
         let one_minus_v = F::one() - v;
         let neg_z = -z;
-        let z_power = if one_minus_v.abs() < F::from(1e-10).unwrap() {
+        let z_power = if one_minus_v.abs() < F::from(1e-10).expect("test/example should not fail") {
             F::one()
         } else {
-            neg_z.powf(one_minus_v / F::from(2.0).unwrap())
+            neg_z.powf(one_minus_v / F::from(2.0).expect("test/example should not fail"))
         };
 
-        let two_power = if one_minus_v.abs() < F::from(1e-10).unwrap() {
+        let two_power = if one_minus_v.abs() < F::from(1e-10).expect("test/example should not fail")
+        {
             F::one()
         } else {
-            F::from(2.0).unwrap().powf(one_minus_v)
+            F::from(2.0)
+                .expect("test/example should not fail")
+                .powf(one_minus_v)
         };
 
         let result = gamma_v * z_power * bessel_val / two_power;
@@ -416,10 +429,10 @@ where
 {
     let mut sum = F::one();
     let mut term = F::one();
-    let tolerance = F::from(1e-15).unwrap();
+    let tolerance = F::from(1e-15).expect("test/example should not fail");
 
     for k in 1..maxterms {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("test/example should not fail");
         term = term * z / (k_f * (v + k_f - F::one()));
         sum += term;
 
@@ -464,15 +477,15 @@ where
 ///
 /// // TODO: hyperu implementation has serious issues - skipping problematic tests
 /// // Some known values
-/// // let result1: f64 = hyperu(1.0, 2.0, 1.0).unwrap();
+/// // let result1: f64 = hyperu(1.0, 2.0, 1.0).expect("test/example should not fail");
 /// // assert!(result1.is_finite());
 ///
-/// let result2: f64 = hyperu(0.0, 1.0, 2.0).unwrap();
+/// let result2: f64 = hyperu(0.0, 1.0, 2.0).expect("test/example should not fail");
 /// // TODO: Fix hyperu implementation - using relaxed tolerance
 /// assert!((result2 - 1.0).abs() < 0.1);
 ///
 /// // TODO: hyperu implementation needs fixing - commenting out problematic test
-/// // let result3: f64 = hyperu(2.0, 3.0, 10.0).unwrap();
+/// // let result3: f64 = hyperu(2.0, 3.0, 10.0).expect("test/example should not fail");
 /// // assert!(result3.is_finite());
 /// ```
 #[allow(dead_code)]
@@ -500,12 +513,15 @@ where
     }
 
     // For small x and b=1, use recurrence relation to avoid numerical instability
-    if b == F::one() && x < F::one() && a.abs() < F::from(0.25).unwrap() {
+    if b == F::one()
+        && x < F::one()
+        && a.abs() < F::from(0.25).expect("test/example should not fail")
+    {
         return hyperu_recurrence_b1(a, x);
     }
 
     // For negative integer a, U becomes a polynomial
-    if a < F::zero() && a.to_f64().unwrap().fract() == 0.0 {
+    if a < F::zero() && a.to_f64().expect("test/example should not fail").fract() == 0.0 {
         return hyperu_polynomial(a, b, x);
     }
 
@@ -521,12 +537,12 @@ where
 {
     // Use DLMF 13.3.7 recurrence: U(a,1,x) = (x + 1 + 2*a)*U(a+1,1,x) - (a+1)²*U(a+2,1,x)
     let a_plus_1 = a + F::one();
-    let a_plus_2 = a + F::from(2.0).unwrap();
+    let a_plus_2 = a + F::from(2.0).expect("test/example should not fail");
 
     let u_a2 = hyperu_general(a_plus_2, F::one(), x)?;
     let u_a1 = hyperu_general(a_plus_1, F::one(), x)?;
 
-    let coeff1 = x + F::one() + F::from(2.0).unwrap() * a;
+    let coeff1 = x + F::one() + F::from(2.0).expect("test/example should not fail") * a;
     let coeff2 = a_plus_1 * a_plus_1;
 
     Ok(coeff1 * u_a1 - coeff2 * u_a2)
@@ -538,13 +554,16 @@ fn hyperu_polynomial<F>(a: F, b: F, x: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
 {
-    let n = (-a).to_usize().unwrap();
+    let n = (-a).to_usize().expect("test/example should not fail");
     let mut sum = F::zero();
 
     for k in 0..=n {
-        let k_f = F::from(k).unwrap();
-        let coeff = pochhammer(-F::from(n).unwrap(), k) / gamma(k_f + F::one());
-        let term = coeff * pochhammer(b - F::from(n).unwrap(), k) * x.powf(k_f);
+        let k_f = F::from(k).expect("test/example should not fail");
+        let coeff = pochhammer(-F::from(n).expect("test/example should not fail"), k)
+            / gamma(k_f + F::one());
+        let term = coeff
+            * pochhammer(b - F::from(n).expect("test/example should not fail"), k)
+            * x.powf(k_f);
         sum += term;
     }
 
@@ -557,10 +576,10 @@ fn hyperu_general<F>(a: F, b: F, x: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
 {
-    let tolerance = F::from(1e-15).unwrap();
+    let tolerance = F::from(1e-15).expect("test/example should not fail");
 
     // For large x, use asymptotic expansion: U(a,b,x) ~ x^(-a) * [1 + a(a-b+1)/(1*x) + ...]
-    if x > F::from(30.0).unwrap() {
+    if x > F::from(30.0).expect("test/example should not fail") {
         let x_neg_a = x.powf(-a);
         let first_correction = a * (a - b + F::one()) / x;
         return Ok(x_neg_a * (F::one() + first_correction));
@@ -574,7 +593,7 @@ where
     let mut term = F::one();
 
     for n in 1..100 {
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("test/example should not fail");
         term = term * (a + n_f - F::one()) * x / (n_f * (b + n_f - F::one()));
         sum += term;
 
@@ -593,7 +612,9 @@ pub fn hyp1f1<F>(a: F, b: F, z: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
 {
-    if b == F::zero() || (b < F::zero() && b.to_f64().unwrap().fract() == 0.0) {
+    if b == F::zero()
+        || (b < F::zero() && b.to_f64().expect("test/example should not fail").fract() == 0.0)
+    {
         return Err(SpecialError::DomainError(format!(
             "b must not be zero or negative integer, got {b:?}"
         )));
@@ -605,29 +626,29 @@ where
     }
 
     // For specific test values, return known results
-    let a_f64 = a.to_f64().unwrap();
-    let b_f64 = b.to_f64().unwrap();
-    let z_f64 = z.to_f64().unwrap();
+    let a_f64 = a.to_f64().expect("test/example should not fail");
+    let b_f64 = b.to_f64().expect("test/example should not fail");
+    let z_f64 = z.to_f64().expect("test/example should not fail");
 
     // Handle known test cases
     if (a_f64 - 1.0).abs() < 1e-14 && (b_f64 - 2.0).abs() < 1e-14 && (z_f64 - 0.5).abs() < 1e-14 {
-        return Ok(F::from(1.2974425414002564).unwrap());
+        return Ok(F::from(1.2974425414002564).expect("test/example should not fail"));
     }
 
     if (a_f64 - 2.0).abs() < 1e-14 && (b_f64 - 3.0).abs() < 1e-14 && (z_f64 + 1.0).abs() < 1e-14 {
-        return Ok(F::from(0.5).unwrap());
+        return Ok(F::from(0.5).expect("test/example should not fail"));
     }
 
     // Special case for negative a values
     if (a_f64 - (-2.0)).abs() < 1e-14 && (b_f64 - 3.0).abs() < 1e-14 && (z_f64 - 1.0).abs() < 1e-14
     {
-        return Ok(F::from(2.0 / 3.0).unwrap());
+        return Ok(F::from(2.0 / 3.0).expect("test/example should not fail"));
     }
 
     // For small |z|, use the series expansion
-    if z.abs() < F::from(20.0).unwrap() {
+    if z.abs() < F::from(20.0).expect("test/example should not fail") {
         // Series method: 1F1(a;b;z) = ∑(k=0 to ∞) [(a)_k / ((b)_k * k!)] * z^k
-        let tol = F::from(1e-15).unwrap();
+        let tol = F::from(1e-15).expect("test/example should not fail");
         let max_iter = 200;
 
         let mut sum = F::one(); // First term (k=0)
@@ -658,7 +679,7 @@ where
         } else {
             // For large negative z, use direct summation with more terms
             // Series method with increased iterations
-            let tol = F::from(1e-15).unwrap();
+            let tol = F::from(1e-15).expect("test/example should not fail");
             let max_iter = 500;
 
             let mut sum = F::one(); // First term (k=0)
@@ -691,7 +712,7 @@ where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
 {
     let max_iter = 300;
-    let tol = F::from(1e-14).unwrap();
+    let tol = F::from(1e-14).expect("test/example should not fail");
 
     // Initial values for continued fraction
     let mut c = F::one();
@@ -699,9 +720,10 @@ where
     let mut h = F::one();
 
     for i in 1..max_iter {
-        let i_f = F::from(i).unwrap();
-        let a_i = F::from(i * (i - 1)).unwrap() * z / F::from(2).unwrap();
-        let b_i = b + F::from(i - 1).unwrap() - a + i_f * z;
+        let i_f = F::from(i).expect("test/example should not fail");
+        let a_i = F::from(i * (i - 1)).expect("test/example should not fail") * z
+            / F::from(2).expect("test/example should not fail");
+        let b_i = b + F::from(i - 1).expect("test/example should not fail") - a + i_f * z;
 
         // Update continued fraction
         d = F::one() / (b_i + a_i * d);
@@ -745,10 +767,10 @@ where
 /// use scirs2_special::hyp2f1;
 ///
 /// // Some known values
-/// let result1: f64 = hyp2f1(1.0, 2.0, 3.0, 0.5).unwrap();
+/// let result1: f64 = hyp2f1(1.0, 2.0, 3.0, 0.5).expect("test/example should not fail");
 /// assert!((result1 - 1.4326648536822129).abs() < 1e-10);
 ///
-/// let result2: f64 = hyp2f1(0.5, 1.0, 1.5, 0.25).unwrap();
+/// let result2: f64 = hyp2f1(0.5, 1.0, 1.5, 0.25).expect("test/example should not fail");
 /// assert!((result2 - 1.1861859247859235).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -756,24 +778,26 @@ pub fn hyp2f1<F>(a: F, b: F, c: F, z: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign + SubAssign,
 {
-    if c == F::zero() || (c < F::zero() && c.to_f64().unwrap().fract() == 0.0) {
+    if c == F::zero()
+        || (c < F::zero() && c.to_f64().expect("test/example should not fail").fract() == 0.0)
+    {
         return Err(SpecialError::DomainError(format!(
             "c must not be zero or negative integer, got {c:?}"
         )));
     }
 
     // Handle specific test cases
-    let a_f64 = a.to_f64().unwrap();
-    let b_f64 = b.to_f64().unwrap();
-    let c_f64 = c.to_f64().unwrap();
-    let z_f64 = z.to_f64().unwrap();
+    let a_f64 = a.to_f64().expect("test/example should not fail");
+    let b_f64 = b.to_f64().expect("test/example should not fail");
+    let c_f64 = c.to_f64().expect("test/example should not fail");
+    let z_f64 = z.to_f64().expect("test/example should not fail");
 
     if (a_f64 - 1.0).abs() < 1e-14
         && (b_f64 - 2.0).abs() < 1e-14
         && (c_f64 - 3.0).abs() < 1e-14
         && (z_f64 - 0.5).abs() < 1e-14
     {
-        return Ok(F::from(1.4326648536822129).unwrap());
+        return Ok(F::from(1.4326648536822129).expect("test/example should not fail"));
     }
 
     // Special case for 2F1(1, 1, 2, 0.5)
@@ -782,7 +806,7 @@ where
         && (c_f64 - 2.0).abs() < 1e-14
         && (z_f64 - 0.5).abs() < 1e-14
     {
-        return Ok(F::from(1.386294361119889).unwrap());
+        return Ok(F::from(1.386294361119889).expect("test/example should not fail"));
     }
 
     if (a_f64 - 0.5).abs() < 1e-14
@@ -790,7 +814,7 @@ where
         && (c_f64 - 1.5).abs() < 1e-14
         && (z_f64 - 0.25).abs() < 1e-14
     {
-        return Ok(F::from(1.1861859247859235).unwrap());
+        return Ok(F::from(1.1861859247859235).expect("test/example should not fail"));
     }
 
     // Special cases
@@ -817,7 +841,7 @@ where
     }
 
     // Use direct summation for |z| < 1
-    let tol = F::from(1e-15).unwrap();
+    let tol = F::from(1e-15).expect("test/example should not fail");
     let max_iter = 200;
 
     let mut sum = F::one(); // First term (k=0)
@@ -859,7 +883,7 @@ where
     if (a.is_integer() && a <= F::zero()) || (b.is_integer() && b <= F::zero()) {
         // If a or b is a non-positive integer, the series terminates
         // Use direct summation with increased precision
-        let tol = F::from(1e-20).unwrap();
+        let tol = F::from(1e-20).expect("test/example should not fail");
         let max_iter = 300;
 
         let mut sum = F::one(); // First term (k=0)
@@ -886,7 +910,7 @@ where
     }
 
     // For z < -1, use the transformation formula
-    if z < F::from(-1.0).unwrap() {
+    if z < F::from(-1.0).expect("test/example should not fail") {
         let z_inv = F::one() / z;
         let factor1 = (-z).powf(-a);
         let term1 = hyp2f1(a, F::one() - c + a, F::one() - b + a, z_inv)?;
@@ -916,7 +940,7 @@ where
 
     // If we reach here, z is likely very close to 1, which is a challenging case
     // Use direct summation with increased iterations
-    let tol = F::from(1e-15).unwrap();
+    let tol = F::from(1e-15).expect("test/example should not fail");
     let max_iter = 500;
 
     let mut sum = F::one(); // First term (k=0)
@@ -999,39 +1023,59 @@ mod tests {
     #[test]
     fn test_hyp1f1() {
         // Test with specific values
-        assert_relative_eq!(hyp1f1(1.0, 2.0, 0.0).unwrap(), 1.0, epsilon = 1e-14);
         assert_relative_eq!(
-            hyp1f1(1.0, 2.0, 0.5).unwrap(),
+            hyp1f1(1.0, 2.0, 0.0).expect("test/example should not fail"),
+            1.0,
+            epsilon = 1e-14
+        );
+        assert_relative_eq!(
+            hyp1f1(1.0, 2.0, 0.5).expect("test/example should not fail"),
             1.2974425414002564,
             epsilon = 1e-14
         );
-        assert_relative_eq!(hyp1f1(2.0, 3.0, -1.0).unwrap(), 0.5, epsilon = 1e-14);
+        assert_relative_eq!(
+            hyp1f1(2.0, 3.0, -1.0).expect("test/example should not fail"),
+            0.5,
+            epsilon = 1e-14
+        );
 
         // Test Kummer's transformation: 1F1(a;b;z) = exp(z) * 1F1(b-a;b;-z)
         let a = 1.0;
         let b = 2.0;
         let z = 0.5;
-        let lhs = hyp1f1(a, b, z).unwrap();
-        let rhs = (z.exp()) * hyp1f1(b - a, b, -z).unwrap();
+        let lhs = hyp1f1(a, b, z).expect("test/example should not fail");
+        let rhs = (z.exp()) * hyp1f1(b - a, b, -z).expect("test/example should not fail");
         assert_relative_eq!(lhs, rhs, epsilon = 1e-12);
 
         // Test with negative parameters where allowed
-        assert_relative_eq!(hyp1f1(-1.0, 2.0, 1.0).unwrap(), 0.5, epsilon = 1e-14);
+        assert_relative_eq!(
+            hyp1f1(-1.0, 2.0, 1.0).expect("test/example should not fail"),
+            0.5,
+            epsilon = 1e-14
+        );
         // For a = -2, b = 3, z = 1, we get 1 - 2/3 + 2·1/6 = 1 - 2/3 + 1/3 = 1 - 1/3 = 2/3
-        assert_relative_eq!(hyp1f1(-2.0, 3.0, 1.0).unwrap(), 2.0 / 3.0, epsilon = 1e-14);
+        assert_relative_eq!(
+            hyp1f1(-2.0, 3.0, 1.0).expect("test/example should not fail"),
+            2.0 / 3.0,
+            epsilon = 1e-14
+        );
     }
 
     #[test]
     fn test_hyp2f1() {
         // Test with specific values
-        assert_relative_eq!(hyp2f1(1.0, 2.0, 3.0, 0.0).unwrap(), 1.0, epsilon = 1e-14);
         assert_relative_eq!(
-            hyp2f1(1.0, 2.0, 3.0, 0.5).unwrap(),
+            hyp2f1(1.0, 2.0, 3.0, 0.0).expect("test/example should not fail"),
+            1.0,
+            epsilon = 1e-14
+        );
+        assert_relative_eq!(
+            hyp2f1(1.0, 2.0, 3.0, 0.5).expect("test/example should not fail"),
             1.4326648536822129,
             epsilon = 1e-14
         );
         assert_relative_eq!(
-            hyp2f1(0.5, 1.0, 1.5, 0.25).unwrap(),
+            hyp2f1(0.5, 1.0, 1.5, 0.25).expect("test/example should not fail"),
             1.1861859247859235,
             epsilon = 1e-14
         );
@@ -1040,20 +1084,20 @@ mod tests {
         // For 2F1(1, 1, 2, z) = -ln(1-z)/z
         // Note: We're using our numerical result directly as the correct test case
         assert_relative_eq!(
-            hyp2f1(1.0, 1.0, 2.0, 0.5).unwrap(),
+            hyp2f1(1.0, 1.0, 2.0, 0.5).expect("test/example should not fail"),
             1.386294361119889,
             epsilon = 1e-12
         );
 
         // Test with negative parameters where allowed
         assert_relative_eq!(
-            hyp2f1(-1.0, 2.0, 3.0, 0.5).unwrap(),
+            hyp2f1(-1.0, 2.0, 3.0, 0.5).expect("test/example should not fail"),
             0.6666666666666667,
             epsilon = 1e-14
         );
         // For (-2.0, 3.0, 4.0, 0.25), our implementation gives the correct numerical result
         assert_relative_eq!(
-            hyp2f1(-2.0, 3.0, 4.0, 0.25).unwrap(),
+            hyp2f1(-2.0, 3.0, 4.0, 0.25).expect("test/example should not fail"),
             0.6625,
             epsilon = 1e-14
         );
@@ -1068,17 +1112,25 @@ mod tests {
         let z = 0.25;
 
         // Identity: 2F1(a,b;c;z) = 2F1(b,a;c;z)
-        let lhs = hyp2f1(a, b, c, z).unwrap();
-        let rhs = hyp2f1(b, a, c, z).unwrap();
+        let lhs = hyp2f1(a, b, c, z).expect("test/example should not fail");
+        let rhs = hyp2f1(b, a, c, z).expect("test/example should not fail");
         assert_relative_eq!(lhs, rhs, epsilon = 1e-12);
 
         // Test terminating series (when a or b is a negative integer)
         // For a = -3, b = 2, c = 1, z = 0.5, the series is:
         // 1 + (-3*2/1!)*0.5 + ((-3)(-2)*2*3/2!)*0.5^2 + ((-3)(-2)(-1)*2*3*4/3!)*0.5^3
         // = 1 - 3 + 9/2 - 3/2 = 1 - 3 + 4.5 - 1.5 = 1
-        assert_relative_eq!(hyp2f1(-3.0, 2.0, 1.0, 0.5).unwrap(), -0.25, epsilon = 1e-14);
+        assert_relative_eq!(
+            hyp2f1(-3.0, 2.0, 1.0, 0.5).expect("test/example should not fail"),
+            -0.25,
+            epsilon = 1e-14
+        );
 
         // Test z = 0 case
-        assert_relative_eq!(hyp2f1(a, b, c, 0.0).unwrap(), 1.0, epsilon = 1e-14);
+        assert_relative_eq!(
+            hyp2f1(a, b, c, 0.0).expect("test/example should not fail"),
+            1.0,
+            epsilon = 1e-14
+        );
     }
 }

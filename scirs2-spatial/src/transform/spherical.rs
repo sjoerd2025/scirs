@@ -38,7 +38,7 @@ use std::f64::consts::{PI, TAU};
 /// use scirs2_spatial::transform::spherical::cart_to_spherical;
 ///
 /// let cart = array![1.0, 1.0, 1.0]; // Point (1, 1, 1)
-/// let spherical = cart_to_spherical(&cart.view()).unwrap();
+/// let spherical = cart_to_spherical(&cart.view()).expect("Operation failed");
 ///
 /// // r = sqrt(3)
 /// // theta = arccos(1/sqrt(3)) = 0.9553 radians (≈54.7°)
@@ -117,7 +117,7 @@ pub fn cart_to_spherical(cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
 ///
 /// // Point at r=2, theta=π/4 (45°), phi=π/3 (60°)
 /// let spherical = array![2.0, PI/4.0, PI/3.0];
-/// let cart = spherical_to_cart(&spherical.view()).unwrap();
+/// let cart = spherical_to_cart(&spherical.view()).expect("Operation failed");
 /// ```
 ///
 /// # Errors
@@ -179,7 +179,7 @@ pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f6
 ///     [0.0, 1.0, 0.0],  // Point on y-axis
 ///     [0.0, 0.0, 1.0],  // Point on z-axis
 /// ];
-/// let spherical = cart_to_spherical_batch(&cart.view()).unwrap();
+/// let spherical = cart_to_spherical_batch(&cart.view()).expect("Operation failed");
 /// ```
 ///
 /// # Errors
@@ -227,7 +227,7 @@ pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Arra
 ///     [1.0, PI/2.0, PI/2.0],   // Point on y-axis
 ///     [1.0, 0.0, 0.0],         // Point on z-axis
 /// ];
-/// let cart = spherical_to_cart_batch(&spherical.view()).unwrap();
+/// let cart = spherical_to_cart_batch(&spherical.view()).expect("Operation failed");
 /// ```
 ///
 /// # Errors
@@ -276,7 +276,7 @@ pub fn spherical_to_cart_batch(spherical: &ArrayView2<'_, f64>) -> SpatialResult
 /// let point2 = array![1.0, PI/2.0, 0.0];      // Point on equator
 ///
 /// // Distance should be π/2 radians (90°) * radius (1.0)
-/// let distance = geodesic_distance(&point1.view(), &point2.view()).unwrap();
+/// let distance = geodesic_distance(&point1.view(), &point2.view()).expect("Operation failed");
 /// ```
 ///
 /// # Errors
@@ -359,7 +359,7 @@ pub fn geodesic_distance(
 /// let p3 = array![1.0, PI/2.0, PI/2.0];   // Point on equator, phi=π/2
 ///
 /// // This forms a spherical triangle with area π/2 steradians
-/// let area = spherical_triangle_area(&p1.view(), &p2.view(), &p3.view()).unwrap();
+/// let area = spherical_triangle_area(&p1.view(), &p2.view(), &p3.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn spherical_triangle_area(
@@ -416,35 +416,35 @@ mod tests {
     fn test_cart_to_spherical() {
         // Origin
         let cart = array![0.0, 0.0, 0.0];
-        let spherical = cart_to_spherical(&cart.view()).unwrap();
+        let spherical = cart_to_spherical(&cart.view()).expect("Operation failed");
         assert_relative_eq!(spherical[0], 0.0);
         assert_relative_eq!(spherical[1], 0.0);
         assert_relative_eq!(spherical[2], 0.0);
 
         // Point on positive x-axis
         let cart = array![1.0, 0.0, 0.0];
-        let spherical = cart_to_spherical(&cart.view()).unwrap();
+        let spherical = cart_to_spherical(&cart.view()).expect("Operation failed");
         assert_relative_eq!(spherical[0], 1.0); // r
         assert_relative_eq!(spherical[1], PI / 2.0); // theta
         assert_relative_eq!(spherical[2], 0.0); // phi
 
         // Point on positive y-axis
         let cart = array![0.0, 1.0, 0.0];
-        let spherical = cart_to_spherical(&cart.view()).unwrap();
+        let spherical = cart_to_spherical(&cart.view()).expect("Operation failed");
         assert_relative_eq!(spherical[0], 1.0); // r
         assert_relative_eq!(spherical[1], PI / 2.0); // theta
         assert_relative_eq!(spherical[2], PI / 2.0); // phi
 
         // Point on positive z-axis
         let cart = array![0.0, 0.0, 1.0];
-        let spherical = cart_to_spherical(&cart.view()).unwrap();
+        let spherical = cart_to_spherical(&cart.view()).expect("Operation failed");
         assert_relative_eq!(spherical[0], 1.0); // r
         assert_relative_eq!(spherical[1], 0.0); // theta
         assert_relative_eq!(spherical[2], 0.0); // phi
 
         // Point in octant with all positive coordinates
         let cart = array![1.0, 1.0, 1.0];
-        let spherical = cart_to_spherical(&cart.view()).unwrap();
+        let spherical = cart_to_spherical(&cart.view()).expect("Operation failed");
         assert_relative_eq!(spherical[0], 3.0_f64.sqrt(), epsilon = 1e-6); // r = sqrt(3)
         assert_relative_eq!(spherical[1], (1.0 / 3.0_f64.sqrt()).acos(), epsilon = 1e-6); // theta = acos(1/sqrt(3))
         assert_relative_eq!(spherical[2], PI / 4.0, epsilon = 1e-6); // phi = π/4
@@ -454,35 +454,35 @@ mod tests {
     fn test_spherical_to_cart() {
         // Origin
         let spherical = array![0.0, 0.0, 0.0];
-        let cart = spherical_to_cart(&spherical.view()).unwrap();
+        let cart = spherical_to_cart(&spherical.view()).expect("Operation failed");
         assert_relative_eq!(cart[0], 0.0);
         assert_relative_eq!(cart[1], 0.0);
         assert_relative_eq!(cart[2], 0.0);
 
         // Point on positive x-axis
         let spherical = array![1.0, PI / 2.0, 0.0];
-        let cart = spherical_to_cart(&spherical.view()).unwrap();
+        let cart = spherical_to_cart(&spherical.view()).expect("Operation failed");
         assert_relative_eq!(cart[0], 1.0, epsilon = 1e-6);
         assert_relative_eq!(cart[1], 0.0, epsilon = 1e-6);
         assert_relative_eq!(cart[2], 0.0, epsilon = 1e-6);
 
         // Point on positive y-axis
         let spherical = array![1.0, PI / 2.0, PI / 2.0];
-        let cart = spherical_to_cart(&spherical.view()).unwrap();
+        let cart = spherical_to_cart(&spherical.view()).expect("Operation failed");
         assert_relative_eq!(cart[0], 0.0, epsilon = 1e-6);
         assert_relative_eq!(cart[1], 1.0, epsilon = 1e-6);
         assert_relative_eq!(cart[2], 0.0, epsilon = 1e-6);
 
         // Point on positive z-axis
         let spherical = array![1.0, 0.0, 0.0];
-        let cart = spherical_to_cart(&spherical.view()).unwrap();
+        let cart = spherical_to_cart(&spherical.view()).expect("Operation failed");
         assert_relative_eq!(cart[0], 0.0, epsilon = 1e-6);
         assert_relative_eq!(cart[1], 0.0, epsilon = 1e-6);
         assert_relative_eq!(cart[2], 1.0, epsilon = 1e-6);
 
         // Point with r=2, theta=π/4, phi=π/3
         let spherical = array![2.0, PI / 4.0, PI / 3.0];
-        let cart = spherical_to_cart(&spherical.view()).unwrap();
+        let cart = spherical_to_cart(&spherical.view()).expect("Operation failed");
         assert_relative_eq!(
             cart[0],
             2.0 * (PI / 4.0).sin() * (PI / 3.0).cos(),
@@ -511,10 +511,10 @@ mod tests {
             let cart_original = row.to_owned();
 
             // Convert to spherical
-            let spherical = cart_to_spherical(&cart_original.view()).unwrap();
+            let spherical = cart_to_spherical(&cart_original.view()).expect("Operation failed");
 
             // Convert back to Cartesian
-            let cart_roundtrip = spherical_to_cart(&spherical.view()).unwrap();
+            let cart_roundtrip = spherical_to_cart(&spherical.view()).expect("Operation failed");
 
             // Check that we get the original point back
             for i in 0..3 {
@@ -532,7 +532,7 @@ mod tests {
             [0.0, 0.0, 1.0], // z-axis
         ];
 
-        let spherical = cart_to_spherical_batch(&cart.view()).unwrap();
+        let spherical = cart_to_spherical_batch(&cart.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(spherical.shape(), &[3, 3]);
@@ -543,7 +543,7 @@ mod tests {
         assert_relative_eq!(spherical[[0, 2]], 0.0); // phi
 
         // Test batch conversion from spherical to Cartesian
-        let cart_roundtrip = spherical_to_cart_batch(&spherical.view()).unwrap();
+        let cart_roundtrip = spherical_to_cart_batch(&spherical.view()).expect("Operation failed");
 
         // Check that we get the original points back
         assert_eq!(cart_roundtrip.shape(), &[3, 3]);
@@ -561,21 +561,22 @@ mod tests {
         let north_pole = array![1.0, 0.0, 0.0];
         let equator_point = array![1.0, PI / 2.0, 0.0];
 
-        let distance = geodesic_distance(&north_pole.view(), &equator_point.view()).unwrap();
+        let distance =
+            geodesic_distance(&north_pole.view(), &equator_point.view()).expect("Operation failed");
         assert_relative_eq!(distance, PI / 2.0, epsilon = 1e-6); // 90° arc = π/2 radians
 
         // Two antipodal points on the equator
         let point1 = array![1.0, PI / 2.0, 0.0];
         let point2 = array![1.0, PI / 2.0, PI];
 
-        let distance = geodesic_distance(&point1.view(), &point2.view()).unwrap();
+        let distance = geodesic_distance(&point1.view(), &point2.view()).expect("Operation failed");
         assert_relative_eq!(distance, PI, epsilon = 1e-6); // 180° arc = π radians
 
         // Two points 60° apart on a sphere of radius 2
         let point1 = array![2.0, PI / 2.0, 0.0];
         let point2 = array![2.0, PI / 2.0, PI / 3.0];
 
-        let distance = geodesic_distance(&point1.view(), &point2.view()).unwrap();
+        let distance = geodesic_distance(&point1.view(), &point2.view()).expect("Operation failed");
         assert_relative_eq!(distance, 2.0 * PI / 3.0, epsilon = 1e-6); // 60° arc * radius 2 = 2π/3
     }
 
@@ -586,7 +587,8 @@ mod tests {
         let p2 = array![1.0, PI / 2.0, 0.0]; // Point on equator at phi=0
         let p3 = array![1.0, PI / 2.0, PI / 2.0]; // Point on equator at phi=π/2
 
-        let area = spherical_triangle_area(&p1.view(), &p2.view(), &p3.view()).unwrap();
+        let area =
+            spherical_triangle_area(&p1.view(), &p2.view(), &p3.view()).expect("Operation failed");
         assert_relative_eq!(area, PI / 2.0, epsilon = 1e-6); // Area = π/2 steradians
 
         // 90° wedge on the sphere
@@ -594,7 +596,8 @@ mod tests {
         let p2 = array![1.0, PI, 0.0]; // South pole
         let p3 = array![1.0, PI / 2.0, 0.0]; // Point on equator at phi=0
 
-        let area = spherical_triangle_area(&p1.view(), &p2.view(), &p3.view()).unwrap();
+        let area =
+            spherical_triangle_area(&p1.view(), &p2.view(), &p3.view()).expect("Operation failed");
         assert_relative_eq!(area, PI, epsilon = 1e-6); // Area = π steradians (1/4 of sphere)
     }
 

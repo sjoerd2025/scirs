@@ -255,7 +255,7 @@ mod tests {
         let result = validate_multiscale_properties(&config);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(!metrics.scale_energy_distribution.is_empty());
         assert_eq!(metrics.inter_scale_correlations.nrows(), 2);
         assert_eq!(metrics.inter_scale_correlations.ncols(), 2);

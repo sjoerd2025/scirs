@@ -34,7 +34,7 @@ use scirs2_linalg::solve;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0, f64::NAN, 6.0]);
 /// let config = InterpolationConfig::default();
-/// let result = cubic_spline_interpolate(&signal, &config).unwrap();
+/// let result = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
 /// // Result will contain smoothly interpolated values
 /// ```
 #[allow(dead_code)]
@@ -211,7 +211,7 @@ pub fn cubic_spline_interpolate(
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 2.0]);
 /// let config = InterpolationConfig::default();
-/// let result = cubic_hermite_interpolate(&signal, &config).unwrap();
+/// let result = cubic_hermite_interpolate(&signal, &config).expect("Operation failed");
 /// // Result will preserve monotonicity and avoid overshooting
 /// ```
 #[allow(dead_code)]
@@ -368,7 +368,7 @@ mod tests {
     fn test_cubic_spline_interpolate_no_missing() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let config = InterpolationConfig::default();
-        let result = cubic_spline_interpolate(&signal, &config).unwrap();
+        let result = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
         assert_eq!(result, signal);
     }
 
@@ -376,7 +376,7 @@ mod tests {
     fn test_cubic_spline_interpolate_simple() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, f64::NAN, 5.0]);
         let config = InterpolationConfig::default();
-        let result = cubic_spline_interpolate(&signal, &config).unwrap();
+        let result = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
 
         // Should produce smooth interpolation
         assert_eq!(result[0], 1.0);
@@ -393,7 +393,7 @@ mod tests {
     fn test_cubic_spline_insufficient_points() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
         let config = InterpolationConfig::default();
-        let result = cubic_spline_interpolate(&signal, &config).unwrap();
+        let result = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
 
         // Should fall back to linear interpolation
         assert_eq!(result[0], 1.0);
@@ -413,7 +413,7 @@ mod tests {
     fn test_cubic_hermite_interpolate_no_missing() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let config = InterpolationConfig::default();
-        let result = cubic_hermite_interpolate(&signal, &config).unwrap();
+        let result = cubic_hermite_interpolate(&signal, &config).expect("Operation failed");
         assert_eq!(result, signal);
     }
 
@@ -421,7 +421,7 @@ mod tests {
     fn test_cubic_hermite_interpolate_simple() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 2.0]);
         let config = InterpolationConfig::default();
-        let result = cubic_hermite_interpolate(&signal, &config).unwrap();
+        let result = cubic_hermite_interpolate(&signal, &config).expect("Operation failed");
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -436,7 +436,7 @@ mod tests {
     fn test_cubic_hermite_single_point() {
         let signal = Array1::from_vec(vec![f64::NAN, 2.0, f64::NAN]);
         let config = InterpolationConfig::default();
-        let result = cubic_hermite_interpolate(&signal, &config).unwrap();
+        let result = cubic_hermite_interpolate(&signal, &config).expect("Operation failed");
 
         // Should fill with constant value
         assert_eq!(result[0], 2.0);
@@ -458,10 +458,10 @@ mod tests {
         let mut config = InterpolationConfig::default();
         config.extrapolate = true;
 
-        let result = cubic_spline_interpolate(&signal, &config).unwrap();
+        let result = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
         assert!(result.iter().all(|&x| !x.is_nan()));
 
-        let result = cubic_hermite_interpolate(&signal, &config).unwrap();
+        let result = cubic_hermite_interpolate(&signal, &config).expect("Operation failed");
         assert!(result.iter().all(|&x| !x.is_nan()));
     }
 
@@ -472,10 +472,10 @@ mod tests {
         config.smoothing = true;
         config.smoothing_factor = 0.3;
 
-        let result = cubic_spline_interpolate(&signal, &config).unwrap();
+        let result = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
         assert!(result.iter().all(|&x| !x.is_nan()));
 
-        let result = cubic_hermite_interpolate(&signal, &config).unwrap();
+        let result = cubic_hermite_interpolate(&signal, &config).expect("Operation failed");
         assert!(result.iter().all(|&x| !x.is_nan()));
     }
 
@@ -485,7 +485,7 @@ mod tests {
         let mut config = InterpolationConfig::default();
         config.monotonic = true;
 
-        let result = cubic_spline_interpolate(&signal, &config).unwrap();
+        let result = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
 
         // Should be monotonically increasing
         for i in 1..result.len() {

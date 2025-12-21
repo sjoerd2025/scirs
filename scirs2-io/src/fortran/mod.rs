@@ -757,7 +757,7 @@ mod tests {
 
     #[test]
     fn test_scalar_read_write() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         // Write scalars
@@ -783,7 +783,7 @@ mod tests {
 
     #[test]
     fn test_array_read_write() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         let array = arr1(&[1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -808,7 +808,7 @@ mod tests {
 
     #[test]
     fn test_2d_array() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         let array = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
@@ -834,7 +834,7 @@ mod tests {
 
     #[test]
     fn test_string_read_write() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         let test_string = "Hello Fortran";
@@ -860,7 +860,7 @@ mod tests {
 
     #[test]
     fn test_format_detection() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         // Write a file with known format

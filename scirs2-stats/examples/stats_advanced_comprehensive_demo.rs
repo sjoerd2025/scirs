@@ -13,7 +13,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create sample data
     let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
 
-    println!("Sample data: {:?}", data.as_slice().unwrap());
+    println!(
+        "Sample data: {:?}",
+        data.as_slice().expect("Operation failed")
+    );
 
     // Basic statistics
     println!("\n📈 Basic Statistics:");

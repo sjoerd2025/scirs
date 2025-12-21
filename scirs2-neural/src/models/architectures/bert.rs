@@ -185,7 +185,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
         let mut position_ids = Array::zeros(IxDyn(&[batch_size, seq_len]));
         for b in 0..batch_size {
             for s in 0..seq_len {
-                position_ids[[b, s]] = F::from(s).unwrap();
+                position_ids[[b, s]] = F::from(s).expect("Failed to convert to float");
             }
         }
 
@@ -369,8 +369,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
         let hidden = hidden.mapv(|v| {
             // GELU approximation
             let x3 = v * v * v;
-            v * F::from(0.5).unwrap()
-                * (F::one() + (v + F::from(0.044715).unwrap() * x3).tanh())
+            v * F::from(0.5).expect("Failed to convert constant to float")
+                * (F::one() + (v + F::from(0.044715).expect("Failed to convert constant to float") * x3).tanh())
         });
 
         // Output layer

@@ -210,7 +210,7 @@ fn test_abs_simd_f32_large_array() {
 #[test]
 fn test_abs_simd_equivalence_random() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data.clone());
 
@@ -417,7 +417,7 @@ fn test_sqrt_simd_f32_large_array() {
 #[test]
 fn test_sqrt_simd_equivalence_random() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(0.0, 100.0).unwrap(); // Only positive values
+    let uniform = Uniform::new(0.0, 100.0).expect("Test: operation failed"); // Only positive values
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data.clone());
 
@@ -461,7 +461,7 @@ fn test_abs_simd_idempotent() {
 fn test_abs_simd_non_negative() {
     // abs(x) >= 0 for all x
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..1000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data);
     let result = abs_simd(&x.view());
@@ -981,7 +981,7 @@ fn test_sin_simd_f32_large_array() {
 fn test_sin_simd_f64_range() {
     // sin(x) should always be in [-1, 1]
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let x: Array1<f64> = Array1::from_vec((0..1000).map(|_| uniform.sample(&mut rng)).collect());
     let result = sin_simd(&x.view());
 
@@ -1089,7 +1089,7 @@ fn test_cos_simd_f32_large_array() {
 fn test_cos_simd_f64_range() {
     // cos(x) should always be in [-1, 1]
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let x: Array1<f64> = Array1::from_vec((0..1000).map(|_| uniform.sample(&mut rng)).collect());
     let result = cos_simd(&x.view());
 
@@ -1216,7 +1216,7 @@ fn test_tan_simd_f32_large_array() {
 fn test_sin_cos_pythagorean_identity() {
     // sin²(x) + cos²(x) = 1
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-10.0, 10.0).unwrap();
+    let uniform = Uniform::new(-10.0, 10.0).expect("Test: operation failed");
     let x: Array1<f64> = Array1::from_vec((0..1000).map(|_| uniform.sample(&mut rng)).collect());
 
     let sin_x = sin_simd(&x.view());
@@ -1264,7 +1264,7 @@ fn test_tan_sin_cos_identity() {
 fn test_sin_negative_angle() {
     // sin(-x) = -sin(x)
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-10.0, 10.0).unwrap();
+    let uniform = Uniform::new(-10.0, 10.0).expect("Test: operation failed");
     let x: Array1<f64> = Array1::from_vec((0..100).map(|_| uniform.sample(&mut rng)).collect());
 
     let sin_x = sin_simd(&x.view());
@@ -1285,7 +1285,7 @@ fn test_sin_negative_angle() {
 fn test_cos_negative_angle() {
     // cos(-x) = cos(x)
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-10.0, 10.0).unwrap();
+    let uniform = Uniform::new(-10.0, 10.0).expect("Test: operation failed");
     let x: Array1<f64> = Array1::from_vec((0..100).map(|_| uniform.sample(&mut rng)).collect());
 
     let cos_x = cos_simd(&x.view());
@@ -1306,7 +1306,7 @@ fn test_cos_negative_angle() {
 fn test_tan_negative_angle() {
     // tan(-x) = -tan(x)
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-1.0, 1.0).unwrap(); // Avoid singularities
+    let uniform = Uniform::new(-1.0, 1.0).expect("Test: operation failed"); // Avoid singularities
     let x: Array1<f64> = Array1::from_vec((0..100).map(|_| uniform.sample(&mut rng)).collect());
 
     let tan_x = tan_simd(&x.view());
@@ -2041,7 +2041,7 @@ fn test_floor_ceil_relationship() {
 #[test]
 fn test_floor_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -2151,7 +2151,7 @@ fn test_ceil_floor_relationship() {
 #[test]
 fn test_ceil_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -2278,7 +2278,7 @@ fn test_round_symmetry() {
 #[test]
 fn test_round_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -2387,7 +2387,7 @@ fn test_atan_anti_symmetry() {
 #[test]
 fn test_atan_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-10.0, 10.0).unwrap();
+    let uniform = Uniform::new(-10.0, 10.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -2464,7 +2464,7 @@ fn test_asin_anti_symmetry() {
 #[test]
 fn test_asin_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -2540,7 +2540,7 @@ fn test_acos_asin_identity() {
 #[test]
 fn test_acos_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -2640,7 +2640,7 @@ fn test_atan2_anti_symmetry() {
 #[test]
 fn test_atan2_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-10.0, 10.0).unwrap();
+    let uniform = Uniform::new(-10.0, 10.0).expect("Test: operation failed");
     let y_data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x_data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let y = Array1::from(y_data.clone());
@@ -2846,7 +2846,7 @@ fn test_log10_change_of_base() {
 #[test]
 fn test_log10_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(1.0, 1000.0).unwrap();
+    let uniform = Uniform::new(1.0, 1000.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -3012,7 +3012,7 @@ fn test_log2_change_of_base() {
 #[test]
 fn test_log2_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(1.0, 1024.0).unwrap();
+    let uniform = Uniform::new(1.0, 1024.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -3210,7 +3210,7 @@ fn test_clamp_negative_range() {
 #[test]
 fn test_clamp_simd_large_array() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..10000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from(data.clone());
 
@@ -9294,7 +9294,7 @@ fn test_log_softmax_simd_transformer_use_case() {
     }
 
     // Perplexity = exp(-mean(log_probs)) should be reasonable
-    let mean_log_prob = log_probs.mean().unwrap();
+    let mean_log_prob = log_probs.mean().expect("Test: operation failed");
     let perplexity = (-mean_log_prob).exp();
     assert!(
         perplexity > 0.0 && perplexity < f64::INFINITY,

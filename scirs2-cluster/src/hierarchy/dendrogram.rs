@@ -34,8 +34,8 @@ pub fn cophenet<F: Float + FromPrimitive>(z: &Array2<F>, d: &Array1<F>) -> Resul
 
     // Process the linkage matrix
     for i in 0..z.shape()[0] {
-        let _cluster1 = z[[i, 0]].to_usize().unwrap();
-        let _cluster2 = z[[i, 1]].to_usize().unwrap();
+        let _cluster1 = z[[i, 0]].to_usize().expect("Operation failed");
+        let _cluster2 = z[[i, 1]].to_usize().expect("Operation failed");
         let height = z[[i, 2]];
         let new_cluster = n_samples + i;
 
@@ -55,8 +55,8 @@ pub fn cophenet<F: Float + FromPrimitive>(z: &Array2<F>, d: &Array1<F>) -> Resul
     }
 
     // Calculate the correlation coefficient
-    let d_mean = d.mean().unwrap();
-    let c_mean = cophenetic_distances.mean().unwrap();
+    let d_mean = d.mean().expect("Operation failed");
+    let c_mean = cophenetic_distances.mean().expect("Operation failed");
 
     let mut numerator = F::zero();
     let mut d_variance = F::zero();
@@ -73,7 +73,7 @@ pub fn cophenet<F: Float + FromPrimitive>(z: &Array2<F>, d: &Array1<F>) -> Resul
 
     let denom = (d_variance * c_variance).sqrt();
 
-    if denom < F::from_f64(1e-10).unwrap() {
+    if denom < F::from_f64(1e-10).expect("Operation failed") {
         return Err(ClusteringError::ComputationError(
             "Variance is too small to calculate cophenetic correlation".into(),
         ));
@@ -99,8 +99,8 @@ fn find_lca_height<F: Float>(i: usize, j: usize, z: &Array2<F>, clusterheight: &
     }
 
     for idx in 0..z.shape()[0] {
-        let cluster1 = z[[idx, 0]].to_usize().unwrap();
-        let cluster2 = z[[idx, 1]].to_usize().unwrap();
+        let cluster1 = z[[idx, 0]].to_usize().expect("Operation failed");
+        let cluster2 = z[[idx, 1]].to_usize().expect("Operation failed");
         let new_cluster = n_samples + idx;
 
         // Update cluster membership
@@ -162,18 +162,18 @@ pub fn inconsistent<F: Float + FromPrimitive + Debug>(
 
         // Calculate statistics
         let mean = heights.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(heights.len()).unwrap();
+            / F::from_usize(heights.len()).expect("Operation failed");
 
         let mut variance = F::zero();
         for &h in &heights {
             let diff = h - mean;
             variance = variance + diff * diff;
         }
-        variance = variance / F::from_usize(heights.len()).unwrap();
+        variance = variance / F::from_usize(heights.len()).expect("Operation failed");
         let std_dev = variance.sqrt();
 
         // Calculate inconsistency
-        let inconsistency = if std_dev < F::from_f64(1e-10).unwrap() {
+        let inconsistency = if std_dev < F::from_f64(1e-10).expect("Operation failed") {
             F::zero()
         } else {
             (z[[i, 2]] - mean) / std_dev
@@ -182,7 +182,7 @@ pub fn inconsistent<F: Float + FromPrimitive + Debug>(
         // Store results
         result[[i, 0]] = mean;
         result[[i, 1]] = std_dev;
-        result[[i, 2]] = F::from_usize(heights.len()).unwrap();
+        result[[i, 2]] = F::from_usize(heights.len()).expect("Operation failed");
         result[[i, 3]] = inconsistency;
     }
 
@@ -211,8 +211,8 @@ fn get_descendants<F: Float>(z: &Array2<F>, idx: usize, depth: usize) -> Result<
             ));
         }
 
-        let left = z[[i, 0]].to_usize().unwrap();
-        let right = z[[i, 1]].to_usize().unwrap();
+        let left = z[[i, 0]].to_usize().expect("Operation failed");
+        let right = z[[i, 1]].to_usize().expect("Operation failed");
 
         // Add current node
         result.push(i);
@@ -276,10 +276,10 @@ pub fn dendrogram<F: Float + FromPrimitive + Clone>(
     let mut result = Vec::with_capacity(n);
 
     for i in 0..n {
-        let cluster1 = z[[i, 0]].to_usize().unwrap();
-        let cluster2 = z[[i, 1]].to_usize().unwrap();
+        let cluster1 = z[[i, 0]].to_usize().expect("Operation failed");
+        let cluster2 = z[[i, 1]].to_usize().expect("Operation failed");
         let height = z[[i, 2]];
-        let count = z[[i, 3]].to_usize().unwrap();
+        let count = z[[i, 3]].to_usize().expect("Operation failed");
 
         result.push((cluster1, cluster2, height, count));
     }
@@ -305,11 +305,11 @@ mod tests {
                 11.0, 0.0, // Point 3 (close to 2)
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Compute linkage matrix
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Compute original distances (condensed form)
         let mut original_distances = Array1::zeros(6); // C(4,2) = 6 pairwise distances
@@ -325,7 +325,7 @@ mod tests {
         }
 
         // Compute cophenetic correlation
-        let correlation = cophenet(&linkage_matrix, &original_distances).unwrap();
+        let correlation = cophenet(&linkage_matrix, &original_distances).expect("Operation failed");
 
         // For a well-structured hierarchical dataset, correlation should be high
         assert!(
@@ -353,10 +353,10 @@ mod tests {
                 11.0, // Cluster 2, point D
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Compute original distances
         let original_distances = Array1::from_vec(vec![
@@ -368,7 +368,7 @@ mod tests {
             1.0,  // 2-3
         ]);
 
-        let correlation = cophenet(&linkage_matrix, &original_distances).unwrap();
+        let correlation = cophenet(&linkage_matrix, &original_distances).expect("Operation failed");
 
         // Should have very high correlation for this structured data
         assert!(
@@ -388,10 +388,10 @@ mod tests {
                 5.0, 5.0,
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
 
         let original_distances = Array1::from_vec(vec![
             0.0,                    // 0-1 (identical)
@@ -406,7 +406,7 @@ mod tests {
             "Cophenetic correlation should handle identical points"
         );
 
-        let correlation = result.unwrap();
+        let correlation = result.expect("Test: operation failed");
         // For identical points, correlation might be NaN, infinity, or a valid number
         // We just check that it doesn't panic and is some kind of number
         assert!(
@@ -423,13 +423,13 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 10.0, 0.0, 11.0, 0.0],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Average, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Average, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Test with default depth
-        let inconsistency_matrix = inconsistent(&linkage_matrix, None).unwrap();
+        let inconsistency_matrix = inconsistent(&linkage_matrix, None).expect("Operation failed");
 
         // Should have same number of rows as linkage matrix
         assert_eq!(inconsistency_matrix.shape()[0], linkage_matrix.shape()[0]);
@@ -450,14 +450,16 @@ mod tests {
 
     #[test]
     fn test_inconsistent_with_depth() {
-        let data = Array2::from_shape_vec((4, 1), vec![0.0, 1.0, 2.0, 10.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((4, 1), vec![0.0, 1.0, 2.0, 10.0]).expect("Operation failed");
 
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Complete, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Complete, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Test with different depths
         for depth in 1..=3 {
-            let inconsistency_matrix = inconsistent(&linkage_matrix, Some(depth)).unwrap();
+            let inconsistency_matrix =
+                inconsistent(&linkage_matrix, Some(depth)).expect("Operation failed");
 
             assert_eq!(inconsistency_matrix.shape()[0], linkage_matrix.shape()[0]);
             assert_eq!(inconsistency_matrix.shape()[1], 4);
@@ -475,12 +477,14 @@ mod tests {
     #[test]
     fn test_optimal_leaf_ordering() {
         let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Test: operation failed");
 
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
         let original_distances = Array1::from_vec(vec![1.414, 12.73, 14.14, 1.414, 12.73, 1.414]);
 
-        let ordering = optimal_leaf_ordering(&linkage_matrix, &original_distances).unwrap();
+        let ordering =
+            optimal_leaf_ordering(&linkage_matrix, &original_distances).expect("Operation failed");
 
         // Should return ordering for all samples
         assert_eq!(ordering.len(), 4);
@@ -493,12 +497,12 @@ mod tests {
 
     #[test]
     fn test_dendrogram_conversion() {
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 5.0, 10.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 1), vec![0.0, 5.0, 10.0]).expect("Operation failed");
 
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
 
-        let dendrogram_data = dendrogram(&linkage_matrix).unwrap();
+        let dendrogram_data = dendrogram(&linkage_matrix).expect("Operation failed");
 
         // Should have n-1 entries for n samples
         assert_eq!(dendrogram_data.len(), 2);
@@ -523,9 +527,9 @@ mod tests {
     #[test]
     fn test_cophenet_error_cases() {
         // Create valid test data first
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Test with zero variance (all distances identical)
         let identical_distances = Array1::from_vec(vec![1.0, 1.0, 1.0]);
@@ -539,7 +543,7 @@ mod tests {
             );
         } else {
             // If it succeeds, the result should be valid
-            let correlation = result.unwrap();
+            let correlation = result.expect("Test: operation failed");
             assert!(correlation.is_finite(), "Correlation should be finite");
         }
     }
@@ -547,14 +551,14 @@ mod tests {
     #[test]
     fn test_find_lca_height() {
         // Test the internal LCA function indirectly through cophenet
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 10.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 10.0]).expect("Operation failed");
 
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
         let original_distances = Array1::from_vec(vec![1.0, 10.0, 9.0]);
 
         // This should work without errors - testing the internal LCA logic
-        let correlation = cophenet(&linkage_matrix, &original_distances).unwrap();
+        let correlation = cophenet(&linkage_matrix, &original_distances).expect("Operation failed");
         assert!(
             correlation.is_finite(),
             "LCA height calculation should produce finite correlation"

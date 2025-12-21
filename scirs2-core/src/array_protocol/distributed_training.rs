@@ -719,7 +719,7 @@ mod tests {
         assert_eq!(dist_dataset.outputshape(), vec![2]);
 
         // Get a sample
-        let (input, target) = dist_dataset.get(0).unwrap();
+        let (input, target) = dist_dataset.get(0).expect("Operation failed");
         assert!(input
             .as_any()
             .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()

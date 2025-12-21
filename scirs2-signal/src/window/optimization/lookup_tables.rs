@@ -56,7 +56,7 @@ impl WindowLookupTable {
             WINDOW_TABLE_INIT.call_once(|| {
                 GLOBAL_WINDOW_TABLE = Some(WindowLookupTable::new(1000));
             });
-            GLOBAL_WINDOW_TABLE.as_ref().unwrap()
+            GLOBAL_WINDOW_TABLE.as_ref().expect("Operation failed")
         }
     }
 
@@ -81,15 +81,15 @@ impl WindowLookupTable {
 
         // Try to get from cache first
         {
-            let cache = self.cache.lock().unwrap();
+            let cache = self.cache.lock().expect("Operation failed");
             if let Some(entry) = cache.get(&cache_key) {
-                *self.cache_hits.lock().unwrap() += 1;
+                *self.cache_hits.lock().expect("Operation failed") += 1;
                 return Ok(entry.coefficients.clone());
             }
         }
 
         // Cache miss - compute window
-        *self.cache_misses.lock().unwrap() += 1;
+        *self.cache_misses.lock().expect("Operation failed") += 1;
         let coefficients = self.compute_window(window_type, length, parameters, symmetric)?;
 
         // Store in cache
@@ -135,17 +135,17 @@ impl WindowLookupTable {
 
     /// Clear cache
     pub fn clear_cache(&self) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("Operation failed");
         cache.clear();
-        *self.cache_hits.lock().unwrap() = 0;
-        *self.cache_misses.lock().unwrap() = 0;
+        *self.cache_hits.lock().expect("Operation failed") = 0;
+        *self.cache_misses.lock().expect("Operation failed") = 0;
     }
 
     /// Get cache statistics
     pub fn get_cache_stats(&self) -> CacheStatistics {
-        let hits = *self.cache_hits.lock().unwrap();
-        let misses = *self.cache_misses.lock().unwrap();
-        let cache = self.cache.lock().unwrap();
+        let hits = *self.cache_hits.lock().expect("Operation failed");
+        let misses = *self.cache_misses.lock().expect("Operation failed");
+        let cache = self.cache.lock().expect("Operation failed");
 
         CacheStatistics {
             hits,
@@ -162,7 +162,7 @@ impl WindowLookupTable {
 
     /// Remove least recently used entries to maintain cache size
     fn cleanup_cache(&self) -> SignalResult<()> {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("Operation failed");
 
         if cache.len() <= self.max_cache_size {
             return Ok(());
@@ -278,7 +278,7 @@ impl WindowLookupTable {
         };
 
         {
-            let mut cache = self.cache.lock().unwrap();
+            let mut cache = self.cache.lock().expect("Operation failed");
             cache.insert(key, entry);
         }
 
@@ -493,11 +493,15 @@ mod tests {
         let table = WindowLookupTable::new(10);
 
         // First access should be cache miss
-        let window1 = table.get_or_compute_window("hann", 64, &[], true).unwrap();
+        let window1 = table
+            .get_or_compute_window("hann", 64, &[], true)
+            .expect("Operation failed");
         assert_eq!(window1.len(), 64);
 
         // Second access should be cache hit
-        let window2 = table.get_or_compute_window("hann", 64, &[], true).unwrap();
+        let window2 = table
+            .get_or_compute_window("hann", 64, &[], true)
+            .expect("Operation failed");
         assert_eq!(window1, window2);
 
         let stats = table.get_cache_stats();
@@ -509,12 +513,12 @@ mod tests {
     #[test]
     fn test_cached_windows() {
         // Test cached window functions
-        let hann1 = cached_windows::hann(128, true).unwrap();
-        let hann2 = cached_windows::hann(128, true).unwrap();
+        let hann1 = cached_windows::hann(128, true).expect("Operation failed");
+        let hann2 = cached_windows::hann(128, true).expect("Operation failed");
         assert_eq!(hann1, hann2);
 
-        let kaiser1 = cached_windows::kaiser(64, 5.0, true).unwrap();
-        let kaiser2 = cached_windows::kaiser(64, 5.0, true).unwrap();
+        let kaiser1 = cached_windows::kaiser(64, 5.0, true).expect("Operation failed");
+        let kaiser2 = cached_windows::kaiser(64, 5.0, true).expect("Operation failed");
         assert_eq!(kaiser1, kaiser2);
     }
 
@@ -523,10 +527,18 @@ mod tests {
         let table = WindowLookupTable::new(3); // Small cache
 
         // Fill cache beyond capacity
-        table.get_or_compute_window("hann", 32, &[], true).unwrap();
-        table.get_or_compute_window("hann", 64, &[], true).unwrap();
-        table.get_or_compute_window("hann", 128, &[], true).unwrap();
-        table.get_or_compute_window("hann", 256, &[], true).unwrap();
+        table
+            .get_or_compute_window("hann", 32, &[], true)
+            .expect("Operation failed");
+        table
+            .get_or_compute_window("hann", 64, &[], true)
+            .expect("Operation failed");
+        table
+            .get_or_compute_window("hann", 128, &[], true)
+            .expect("Operation failed");
+        table
+            .get_or_compute_window("hann", 256, &[], true)
+            .expect("Operation failed");
 
         let stats = table.get_cache_stats();
         assert!(stats.cache_size <= 3);
@@ -534,7 +546,7 @@ mod tests {
 
     #[test]
     fn test_interpolated_window() {
-        let window = interpolated_window("hann", 100, &[], true).unwrap();
+        let window = interpolated_window("hann", 100, &[], true).expect("Operation failed");
         assert_eq!(window.len(), 100);
 
         // Should be approximately zero at endpoints for Hann
@@ -545,7 +557,7 @@ mod tests {
     #[test]
     fn test_populate_common_windows() {
         let table = WindowLookupTable::new(100);
-        table.populate_common_windows().unwrap();
+        table.populate_common_windows().expect("Operation failed");
 
         let stats = table.get_cache_stats();
         assert!(stats.cache_size > 10); // Should have populated many windows
@@ -558,10 +570,10 @@ mod tests {
         // Kaiser with different beta values should be different cache entries
         let kaiser1 = table
             .get_or_compute_window("kaiser", 64, &[2.0], true)
-            .unwrap();
+            .expect("Operation failed");
         let kaiser2 = table
             .get_or_compute_window("kaiser", 64, &[5.0], true)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_ne!(kaiser1, kaiser2);
 
@@ -570,10 +582,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_functionality() {
         let lengths = vec![64, 128];
-        let result = benchmark_lookup_table("hann", &lengths, &[], 5).unwrap();
+        let result = benchmark_lookup_table("hann", &lengths, &[], 5).expect("Operation failed");
 
         assert!(result.cold_duration.as_nanos() > 0);
         assert!(result.warm_duration.as_nanos() > 0);

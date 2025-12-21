@@ -46,7 +46,7 @@ fn main() {
 #[allow(dead_code)]
 fn create_uniformdata() -> Array2<f32> {
     let mut rng = scirs2_core::random::rng();
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
 
     let mut data = Array2::zeros((10, 10));
     for i in 0..10 {
@@ -62,7 +62,7 @@ fn create_uniformdata() -> Array2<f32> {
 #[allow(dead_code)]
 fn create_normaldata() -> Array2<f32> {
     let mut rng = scirs2_core::random::rng();
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
     let mut data = Array2::zeros((10, 10));
     for i in 0..10 {
@@ -78,8 +78,8 @@ fn create_normaldata() -> Array2<f32> {
 #[allow(dead_code)]
 fn create_bimodaldata() -> Array2<f32> {
     let mut rng = scirs2_core::random::rng();
-    let normal1 = Normal::new(-2.0, 0.5).unwrap();
-    let normal2 = Normal::new(2.0, 0.5).unwrap();
+    let normal1 = Normal::new(-2.0, 0.5).expect("Operation failed");
+    let normal2 = Normal::new(2.0, 0.5).expect("Operation failed");
 
     let mut data = Array2::zeros((10, 10));
     for i in 0..10 {
@@ -156,7 +156,7 @@ fn compare_calibration_methods(data: &Array2<f32>, bits: u8) {
         };
 
         // Calibrate parameters
-        let params = calibrate_matrix(&data.view(), bits, &config).unwrap();
+        let params = calibrate_matrix(&data.view(), bits, &config).expect("Operation failed");
 
         // Quantize and dequantize
         let (quantized, _) = quantize_matrix(&data.view(), bits, params.method);
@@ -188,7 +188,7 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
         ..Default::default()
     };
 
-    let params_std = calibrate_matrix(&data.view(), bits, &config_std).unwrap();
+    let params_std = calibrate_matrix(&data.view(), bits, &config_std).expect("Operation failed");
     let (quantized_std_, _) = quantize_matrix(&data.view(), bits, params_std.method);
     let dequantized_std = dequantize_matrix(&quantized_std_, &params_std);
 
@@ -205,7 +205,7 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
         ..Default::default()
     };
 
-    let params_pc = calibrate_matrix(&data.view(), bits, &config_pc).unwrap();
+    let params_pc = calibrate_matrix(&data.view(), bits, &config_pc).expect("Operation failed");
 
     // Print per-channel scales
     if let Some(scales) = &params_pc.channel_scales {
@@ -265,7 +265,7 @@ fn compare_bit_widths(data: &Array2<f32>) {
         };
 
         // Calibrate parameters
-        let params = calibrate_matrix(&data.view(), bit, &config).unwrap();
+        let params = calibrate_matrix(&data.view(), bit, &config).expect("Operation failed");
 
         // Quantize and dequantize
         let (quantized, _) = quantize_matrix(&data.view(), bit, params.method);

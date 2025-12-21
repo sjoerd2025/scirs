@@ -23,7 +23,7 @@
 //! use scirs2_core::profiling::{Profiler, Timer, MemoryTracker};
 //!
 //! // Start the global profiler
-//! Profiler::global().lock().unwrap().start();
+//! Profiler::global().lock().expect("Operation failed").start();
 //!
 //! // Time a function call
 //! let result = Timer::time_function("matrix_multiplication", || {
@@ -45,10 +45,10 @@
 //! tracker.stop();
 //!
 //! // Print profiling report
-//! Profiler::global().lock().unwrap().print_report();
+//! Profiler::global().lock().expect("Operation failed").print_report();
 //!
 //! // Stop profiling
-//! Profiler::global().lock().unwrap().stop();
+//! Profiler::global().lock().expect("Operation failed").stop();
 //! ```
 
 // Module declarations
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn test_profiler_integration() {
         // Use global profiler
-        Profiler::global().lock().unwrap().start();
+        Profiler::global().lock().expect("Operation failed").start();
 
         let timer = Timer::start("integration_test");
         thread::sleep(Duration::from_millis(5));
@@ -154,11 +154,11 @@ mod tests {
 
         let stats = Profiler::global()
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .get_timing_stats("integration_test");
         assert!(stats.is_some());
 
-        let (calls, total, avg, max) = stats.unwrap();
+        let (calls, total, avg, max) = stats.expect("Operation failed");
         assert_eq!(calls, 1);
         assert!(total >= Duration::from_millis(5));
         assert!(avg >= Duration::from_millis(5));
@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn test_bottleneck_detector() {
         // Use global profiler
-        Profiler::global().lock().unwrap().start();
+        Profiler::global().lock().expect("Operation failed").start();
 
         // Simulate a slow operation
         let timer = Timer::start("slow_operation");
@@ -196,7 +196,7 @@ mod tests {
         };
 
         let mut detector = advanced::BottleneckDetector::new(config);
-        let reports = detector.analyze(&Profiler::global().lock().unwrap());
+        let reports = detector.analyze(&Profiler::global().lock().expect("Operation failed"));
 
         assert!(!reports.is_empty());
         assert_eq!(
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn test_differential_profiler() {
         // Use global profiler
-        Profiler::global().lock().unwrap().start();
+        Profiler::global().lock().expect("Operation failed").start();
 
         // Baseline run
         let timer = Timer::start("diff_test_operation");
@@ -217,7 +217,7 @@ mod tests {
 
         let mut diff_profiler = advanced::DifferentialProfiler::new();
         diff_profiler.setbaseline(
-            &Profiler::global().lock().unwrap(),
+            &Profiler::global().lock().expect("Operation failed"),
             Some("baseline".to_string()),
         );
 
@@ -227,14 +227,14 @@ mod tests {
         timer.stop();
 
         diff_profiler.set_current(
-            &Profiler::global().lock().unwrap(),
+            &Profiler::global().lock().expect("Operation failed"),
             Some("current".to_string()),
         );
 
         let report = diff_profiler.generate_diff_report();
         assert!(report.is_some());
 
-        let report = report.unwrap();
+        let report = report.expect("Operation failed");
         assert!(!report.timing_diffs.is_empty() || !report.memory_diffs.is_empty());
         // Allow either timing or memory diffs
     }

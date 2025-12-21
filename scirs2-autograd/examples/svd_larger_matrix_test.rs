@@ -12,7 +12,7 @@ fn main() {
         let matrix = convert_to_tensor(matrix_data.clone(), g);
         println!(
             "Original 3x3 matrix shape: {:?}",
-            matrix.eval(g).unwrap().shape()
+            matrix.eval(g).expect("Operation failed").shape()
         );
 
         // Compute SVD
@@ -77,12 +77,12 @@ fn main() {
 
         // For now, we'll just show the matrices
         println!("Original matrix:");
-        println!("{:?}", matrix.eval(g).unwrap());
+        println!("{:?}", matrix.eval(g).expect("Operation failed"));
 
         println!("SVD Components:");
-        println!("U: {:?}", u.eval(g).unwrap());
-        println!("S: {:?}", s.eval(g).unwrap());
-        println!("V: {:?}", v.eval(g).unwrap());
+        println!("U: {:?}", u.eval(g).expect("Operation failed"));
+        println!("S: {:?}", s.eval(g).expect("Operation failed"));
+        println!("V: {:?}", v.eval(g).expect("Operation failed"));
 
         // Now try with a non-square matrix: 3x2
         println!("\n\nTesting with a 3x2 matrix:");
@@ -90,7 +90,7 @@ fn main() {
         let matrix_3x2 = convert_to_tensor(matrix_data_3x2.clone(), g);
         println!(
             "Original 3x2 matrix shape: {:?}",
-            matrix_3x2.eval(g).unwrap().shape()
+            matrix_3x2.eval(g).expect("Operation failed").shape()
         );
 
         // Compute SVD
@@ -141,7 +141,7 @@ fn main() {
 
         // Compare with original matrix
         println!("Original 3x2 matrix:");
-        println!("{:?}", matrix_3x2.eval(g).unwrap());
+        println!("{:?}", matrix_3x2.eval(g).expect("Operation failed"));
 
         // For now we'll just report this as a limitation
         println!(

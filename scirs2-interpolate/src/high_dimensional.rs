@@ -35,11 +35,11 @@
 //! let interpolator = HighDimensionalInterpolator::builder()
 //!     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 10 })
 //!     .build(&points.view(), &values.view())
-//!     .unwrap();
+//!     .expect("Operation failed");
 //!
 //! // Query at new high-dimensional point
 //! let query = Array1::zeros(n_dims);
-//! let result = interpolator.interpolate(&query.view()).unwrap();
+//! let result = interpolator.interpolate(&query.view()).expect("Operation failed");
 //! ```
 
 use crate::error::{InterpolateError, InterpolateResult};
@@ -399,11 +399,11 @@ where
         let target_dims = target_dims.min(n_dims);
 
         // Center the data
-        let mean = points.mean_axis(Axis(0)).unwrap();
+        let mean = points.mean_axis(Axis(0)).expect("Operation failed");
         let centered = points - &mean;
 
         // Compute covariance matrix (simplified)
-        let n_points = F::from_usize(points.nrows()).unwrap();
+        let n_points = F::from_usize(points.nrows()).expect("Operation failed");
         let _cov = centered.t().dot(&centered) / (n_points - F::one());
 
         // For simplicity, use a random projection as approximation to PCA
@@ -415,7 +415,7 @@ where
                 transformation[[j, i]] = if i == j {
                     F::one()
                 } else if i < n_dims && j < n_dims {
-                    F::from_f64(0.1).unwrap()
+                    F::from_f64(0.1).expect("Operation failed")
                 } else {
                     F::zero()
                 };
@@ -450,7 +450,8 @@ where
                 } else {
                     F::zero()
                 };
-                transformation[[i, j]] = val / F::from_f64((n_dims as f64).sqrt()).unwrap();
+                transformation[[i, j]] =
+                    val / F::from_f64((n_dims as f64).sqrt()).expect("Operation failed");
             }
         }
 
@@ -605,16 +606,16 @@ where
     ///     1.0, 0.0, 0.0, 0.0, 0.0,
     ///     0.0, 1.0, 0.0, 0.0, 0.0,
     ///     0.0, 0.0, 1.0, 0.0, 0.0,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
     ///
     /// let interpolator = HighDimensionalInterpolator::builder()
     ///     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 3 })
     ///     .build(&points.view(), &values.view())
-    ///     .unwrap();
+    ///     .expect("Operation failed");
     ///
     /// let query = Array1::from_vec(vec![0.5, 0.5, 0.0, 0.0, 0.0]);
-    /// let result = interpolator.interpolate(&query.view()).unwrap();
+    /// let result = interpolator.interpolate(&query.view()).expect("Operation failed");
     /// ```
     pub fn interpolate(&self, query: &ArrayView1<F>) -> InterpolateResult<F> {
         // Transform query point if dimension reduction is applied
@@ -638,19 +639,19 @@ where
             SpatialIndex::BruteForce(points) => self.brute_force_neighbors(query, points),
             SpatialIndex::KdTree(kdtree) => {
                 // Use KdTree for efficient neighbor search
-                let query_slice = query.as_slice().unwrap();
+                let query_slice = query.as_slice().expect("Operation failed");
                 match &self.local_method {
                     LocalMethod::KNearestNeighbors { k, .. } => {
                         let neighbors = kdtree.k_nearest_neighbors(query_slice, *k)?;
                         Ok(neighbors)
                     }
                     LocalMethod::LocallyWeighted { bandwidth, .. } => {
-                        let radius = F::from_f64(*bandwidth).unwrap();
+                        let radius = F::from_f64(*bandwidth).expect("Operation failed");
                         let neighbors = kdtree.radius_neighbors(query_slice, radius)?;
                         Ok(neighbors)
                     }
                     LocalMethod::LocalRBF { radius, .. } => {
-                        let search_radius = F::from_f64(*radius).unwrap();
+                        let search_radius = F::from_f64(*radius).expect("Operation failed");
                         let neighbors = kdtree.radius_neighbors(query_slice, search_radius)?;
                         Ok(neighbors)
                     }
@@ -658,19 +659,19 @@ where
             }
             SpatialIndex::BallTree(balltree) => {
                 // Use BallTree for efficient neighbor search
-                let query_slice = query.as_slice().unwrap();
+                let query_slice = query.as_slice().expect("Operation failed");
                 match &self.local_method {
                     LocalMethod::KNearestNeighbors { k, .. } => {
                         let neighbors = balltree.k_nearest_neighbors(query_slice, *k)?;
                         Ok(neighbors)
                     }
                     LocalMethod::LocallyWeighted { bandwidth, .. } => {
-                        let radius = F::from_f64(*bandwidth).unwrap();
+                        let radius = F::from_f64(*bandwidth).expect("Operation failed");
                         let neighbors = balltree.radius_neighbors(query_slice, radius)?;
                         Ok(neighbors)
                     }
                     LocalMethod::LocalRBF { radius, .. } => {
-                        let search_radius = F::from_f64(*radius).unwrap();
+                        let search_radius = F::from_f64(*radius).expect("Operation failed");
                         let neighbors = balltree.radius_neighbors(query_slice, search_radius)?;
                         Ok(neighbors)
                     }
@@ -704,14 +705,14 @@ where
                 // Return all points within bandwidth
                 Ok(distances
                     .into_iter()
-                    .filter(|(_, dist)| *dist <= F::from_f64(*bandwidth).unwrap())
+                    .filter(|(_, dist)| *dist <= F::from_f64(*bandwidth).expect("Operation failed"))
                     .collect())
             }
             LocalMethod::LocalRBF { radius, .. } => {
                 // Return all points within radius
                 Ok(distances
                     .into_iter()
-                    .filter(|(_, dist)| *dist <= F::from_f64(*radius).unwrap())
+                    .filter(|(_, dist)| *dist <= F::from_f64(*radius).expect("Operation failed"))
                     .collect())
             }
         }
@@ -749,7 +750,7 @@ where
                         // If point is exactly at a data point, return that value
                         return Ok(self.values[idx]);
                     } else {
-                        F::one() / dist.powf(F::from_f64(*weight_power).unwrap())
+                        F::one() / dist.powf(F::from_f64(*weight_power).expect("Operation failed"))
                     };
 
                     weighted_sum += weight * self.values[idx];
@@ -768,7 +769,7 @@ where
                 // Simplified locally weighted regression
                 // In a full implementation, this would fit a local polynomial
                 let mut sum = F::zero();
-                let count = F::from_usize(neighbors.len()).unwrap();
+                let count = F::from_usize(neighbors.len()).expect("Operation failed");
 
                 for &(idx, _) in neighbors {
                     sum += self.values[idx];
@@ -825,15 +826,15 @@ where
     /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
     /// use scirs2_core::ndarray::{Array1, Array2};
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).expect("Operation failed");
     /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0]);
     ///
     /// let interpolator = HighDimensionalInterpolator::builder()
     ///     .build(&points.view(), &values.view())
-    ///     .unwrap();
+    ///     .expect("Operation failed");
     ///
-    /// let queries = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.0, 0.5]).unwrap();
-    /// let results = interpolator.interpolate_multi(&queries.view()).unwrap();
+    /// let queries = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.0, 0.5]).expect("Operation failed");
+    /// let results = interpolator.interpolate_multi(&queries.view()).expect("Operation failed");
     /// assert_eq!(results.len(), 2);
     /// ```
     pub fn interpolate_multi(&self, queries: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
@@ -873,18 +874,18 @@ where
     /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
     /// use scirs2_core::ndarray::{Array1, Array2};
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).expect("Operation failed");
     /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0]);
     ///
     /// let interpolator = HighDimensionalInterpolator::builder()
     ///     .build(&points.view(), &values.view())
-    ///     .unwrap();
+    ///     .expect("Operation failed");
     ///
     /// // Create many query points for parallel processing
-    /// let queries = Array2::from_shape_vec((1000, 2), (0..2000).map(|i| i as f64 / 1000.0).collect()).unwrap();
+    /// let queries = Array2::from_shape_vec((1000, 2), (0..2000).map(|i| i as f64 / 1000.0).collect()).expect("Operation failed");
     ///
     /// // Use 4 worker threads
-    /// let results = interpolator.interpolate_multi_parallel(&queries.view(), Some(4)).unwrap();
+    /// let results = interpolator.interpolate_multi_parallel(&queries.view(), Some(4)).expect("Operation failed");
     /// assert_eq!(results.len(), 1000);
     /// ```
     pub fn interpolate_multi_parallel(
@@ -977,13 +978,13 @@ where
 ///     0.0, 1.0, 0.0,
 ///     0.0, 0.0, 1.0,
 ///     1.0, 1.0, 1.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 6.0]);
 ///
-/// let interpolator = make_knn_interpolator(&points.view(), &values.view(), 3).unwrap();
+/// let interpolator = make_knn_interpolator(&points.view(), &values.view(), 3).expect("Operation failed");
 ///
 /// let query = Array1::from_vec(vec![0.5, 0.5, 0.5]);
-/// let result = interpolator.interpolate(&query.view()).unwrap();
+/// let result = interpolator.interpolate(&query.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn make_knn_interpolator<F>(
@@ -1042,14 +1043,14 @@ where
 ///     2.0, 2.0, 2.0, 0.0, 0.0, 0.0,
 ///     1.0, 2.0, 3.0, 0.0, 0.0, 0.0,
 ///     3.0, 1.0, 1.0, 0.0, 0.0, 0.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let values = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.5]);
 ///
 /// // Reduce from 6D to 3D, then use 3 nearest neighbors
-/// let interpolator = make_pca_interpolator(&points.view(), &values.view(), 3, 3).unwrap();
+/// let interpolator = make_pca_interpolator(&points.view(), &values.view(), 3, 3).expect("Operation failed");
 ///
 /// let query = Array1::from_vec(vec![1.5, 1.5, 1.5, 0.0, 0.0, 0.0]);
-/// let result = interpolator.interpolate(&query.view()).unwrap();
+/// let result = interpolator.interpolate(&query.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn make_pca_interpolator<F>(
@@ -1109,14 +1110,14 @@ where
 ///     1.0, 0.0,
 ///     0.0, 1.0,
 ///     1.0, 1.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 ///
 /// // Use radius of 1.5 to include nearby points
-/// let interpolator = make_local_rbf_interpolator(&points.view(), &values.view(), 1.5).unwrap();
+/// let interpolator = make_local_rbf_interpolator(&points.view(), &values.view(), 1.5).expect("Operation failed");
 ///
 /// let query = Array1::from_vec(vec![0.5, 0.5]);
-/// let result = interpolator.interpolate(&query.view()).unwrap();
+/// let result = interpolator.interpolate(&query.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn make_local_rbf_interpolator<F>(
@@ -1163,7 +1164,7 @@ mod tests {
 
         let interpolator = HighDimensionalInterpolator::<f64>::builder()
             .build(&points.view(), &values.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(interpolator.effective_dimensions(), 3);
         assert_eq!(interpolator.training_size(), 4);
@@ -1174,11 +1175,14 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let values = array![0.0, 1.0, 1.0, 2.0];
 
-        let interpolator = make_knn_interpolator(&points.view(), &values.view(), 2).unwrap();
+        let interpolator =
+            make_knn_interpolator(&points.view(), &values.view(), 2).expect("Operation failed");
 
         // Interpolate at the center
         let query = array![0.5, 0.5];
-        let result = interpolator.interpolate(&query.view()).unwrap();
+        let result = interpolator
+            .interpolate(&query.view())
+            .expect("Operation failed");
 
         // Should be close to the average of nearby points
         assert!((0.5..=1.5).contains(&result));
@@ -1195,13 +1199,16 @@ mod tests {
         ];
         let values = array![1.0, 2.0, 3.0, 2.0];
 
-        let interpolator = make_pca_interpolator(&points.view(), &values.view(), 2, 3).unwrap();
+        let interpolator =
+            make_pca_interpolator(&points.view(), &values.view(), 2, 3).expect("Operation failed");
 
         assert_eq!(interpolator.effective_dimensions(), 2);
 
         // Test interpolation
         let query = array![1.5, 1.5, 1.5];
-        let result = interpolator.interpolate(&query.view()).unwrap();
+        let result = interpolator
+            .interpolate(&query.view())
+            .expect("Operation failed");
 
         assert!((0.5..=3.5).contains(&result));
     }
@@ -1211,11 +1218,13 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let values = array![0.0, 1.0, 1.0, 2.0];
 
-        let interpolator =
-            make_local_rbf_interpolator(&points.view(), &values.view(), 1.5).unwrap();
+        let interpolator = make_local_rbf_interpolator(&points.view(), &values.view(), 1.5)
+            .expect("Operation failed");
 
         let query = array![0.5, 0.5];
-        let result = interpolator.interpolate(&query.view()).unwrap();
+        let result = interpolator
+            .interpolate(&query.view())
+            .expect("Operation failed");
 
         assert!((0.0..=2.0).contains(&result));
     }
@@ -1225,10 +1234,13 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let values = array![0.0, 1.0, 1.0, 2.0];
 
-        let interpolator = make_knn_interpolator(&points.view(), &values.view(), 3).unwrap();
+        let interpolator =
+            make_knn_interpolator(&points.view(), &values.view(), 3).expect("Operation failed");
 
         let queries = array![[0.25, 0.25], [0.75, 0.75]];
-        let results = interpolator.interpolate_multi(&queries.view()).unwrap();
+        let results = interpolator
+            .interpolate_multi(&queries.view())
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert!(results[0] >= 0.0 && results[0] <= 2.0);
@@ -1248,7 +1260,7 @@ mod tests {
         let pca_interp = HighDimensionalInterpolator::<f64>::builder()
             .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 2 })
             .build(&points.view(), &values.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(pca_interp.effective_dimensions(), 2);
 
@@ -1256,7 +1268,7 @@ mod tests {
         let rp_interp = HighDimensionalInterpolator::builder()
             .with_dimension_reduction(DimensionReductionMethod::RandomProjection { target_dims: 2 })
             .build(&points.view(), &values.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(rp_interp.effective_dimensions(), 2);
     }
@@ -1273,7 +1285,7 @@ mod tests {
             })
             .with_spatial_index(SpatialIndexType::BruteForce)
             .build(&points.view(), &values.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(interpolator.training_size(), 2);
     }

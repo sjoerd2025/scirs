@@ -35,7 +35,7 @@ use crate::validation::{
 /// use scirs2_linalg::matrix_norm;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let norm_fro = matrix_norm(&a.view(), "fro", None).unwrap();
+/// let norm_fro = matrix_norm(&a.view(), "fro", None).expect("Operation failed");
 /// assert!((norm_fro - 5.477225575051661).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -119,7 +119,7 @@ where
 /// use scirs2_linalg::vector_norm;
 ///
 /// let x = array![3.0_f64, 4.0];
-/// let norm_2 = vector_norm(&x.view(), 2).unwrap();
+/// let norm_2 = vector_norm(&x.view(), 2).expect("Operation failed");
 /// assert!((norm_2 - 5.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -186,10 +186,10 @@ where
 /// use scirs2_linalg::vector_norm_simd;
 ///
 /// let x = array![3.0_f64, 4.0];
-/// let norm_2 = vector_norm_simd(&x.view(), 2).unwrap();
+/// let norm_2 = vector_norm_simd(&x.view(), 2).expect("Operation failed");
 /// assert!((norm_2 - 5.0).abs() < 1e-10);
 ///
-/// let norm_1 = vector_norm_simd(&x.view(), 1).unwrap();
+/// let norm_1 = vector_norm_simd(&x.view(), 1).expect("Operation failed");
 /// assert!((norm_1 - 7.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -294,7 +294,7 @@ where
 /// use scirs2_linalg::matrix_norm_simd;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let norm_fro = matrix_norm_simd(&a.view(), "fro", None).unwrap();
+/// let norm_fro = matrix_norm_simd(&a.view(), "fro", None).expect("Operation failed");
 /// assert!((norm_fro - 5.477225575051661).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -416,7 +416,7 @@ where
 /// use scirs2_linalg::vector_norm_parallel;
 ///
 /// let x = array![3.0_f64, 4.0];
-/// let norm2 = vector_norm_parallel(&x.view(), 2, Some(4)).unwrap();
+/// let norm2 = vector_norm_parallel(&x.view(), 2, Some(4)).expect("Operation failed");
 /// assert!((norm2 - 5.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -498,7 +498,7 @@ where
 /// use scirs2_linalg::cond;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let c = cond(&a.view(), None, None).unwrap();
+/// let c = cond(&a.view(), None, None).expect("Operation failed");
 /// assert!((c - 2.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -529,7 +529,7 @@ where
 
             // Find the smallest non-zero singular value
             for &val in s.iter().rev() {
-                if val > F::epsilon() * F::from(100).unwrap() * sigma_max {
+                if val > F::epsilon() * F::from(100).expect("Operation failed") * sigma_max {
                     sigma_min = val;
                     break;
                 }
@@ -555,7 +555,7 @@ where
             let mut sigma_min = F::zero();
 
             for &val in s.iter().rev() {
-                if val > F::epsilon() * F::from(100).unwrap() * sigma_max {
+                if val > F::epsilon() * F::from(100).expect("Operation failed") * sigma_max {
                     sigma_min = val;
                     break;
                 }
@@ -592,7 +592,7 @@ where
 /// use scirs2_linalg::matrix_rank;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
-/// let r = matrix_rank(&a.view(), None, None).unwrap();
+/// let r = matrix_rank(&a.view(), None, None).expect("Operation failed");
 /// assert_eq!(r, 2);
 /// ```
 #[allow(dead_code)]
@@ -634,7 +634,7 @@ where
         let max_dim = std::cmp::max(a.nrows(), a.ncols());
         let eps = F::epsilon();
         let sigma_max = s[0]; // Largest singular value
-        F::from(max_dim).unwrap() * eps * sigma_max
+        F::from(max_dim).expect("Operation failed") * eps * sigma_max
     };
 
     // Count singular values above tolerance
@@ -690,7 +690,7 @@ mod tests {
     #[test]
     fn testmatrix_norm_frobenius() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let norm = matrix_norm(&a.view(), "fro", None).unwrap();
+        let norm = matrix_norm(&a.view(), "fro", None).expect("Operation failed");
         // sqrt(1^2 + 2^2 + 3^2 + 4^2) = sqrt(30) ≈ 5.477
         assert_relative_eq!(norm, 5.477225575051661, epsilon = 1e-10);
     }
@@ -698,7 +698,7 @@ mod tests {
     #[test]
     fn testmatrix_norm_1() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let norm = matrix_norm(&a.view(), "1", None).unwrap();
+        let norm = matrix_norm(&a.view(), "1", None).expect("Operation failed");
         // max(1+3, 2+4) = max(4, 6) = 6
         assert_relative_eq!(norm, 6.0);
     }
@@ -706,7 +706,7 @@ mod tests {
     #[test]
     fn testmatrix_norm_inf() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let norm = matrix_norm(&a.view(), "inf", None).unwrap();
+        let norm = matrix_norm(&a.view(), "inf", None).expect("Operation failed");
         // max(1+2, 3+4) = max(3, 7) = 7
         assert_relative_eq!(norm, 7.0);
     }
@@ -714,7 +714,7 @@ mod tests {
     #[test]
     fn test_vector_norm_1() {
         let x = array![1.0, -2.0, 3.0];
-        let norm = vector_norm(&x.view(), 1).unwrap();
+        let norm = vector_norm(&x.view(), 1).expect("Operation failed");
         // |1| + |-2| + |3| = 6
         assert_relative_eq!(norm, 6.0);
     }
@@ -722,7 +722,7 @@ mod tests {
     #[test]
     fn test_vector_norm_2() {
         let x = array![3.0, 4.0];
-        let norm = vector_norm(&x.view(), 2).unwrap();
+        let norm = vector_norm(&x.view(), 2).expect("Operation failed");
         // sqrt(3^2 + 4^2) = 5
         assert_relative_eq!(norm, 5.0);
     }
@@ -730,7 +730,7 @@ mod tests {
     #[test]
     fn test_vector_norm_inf() {
         let x = array![1.0, -5.0, 3.0];
-        let norm = vector_norm(&x.view(), usize::MAX).unwrap();
+        let norm = vector_norm(&x.view(), usize::MAX).expect("Operation failed");
         // max(|1|, |-5|, |3|) = 5
         assert_relative_eq!(norm, 5.0);
     }

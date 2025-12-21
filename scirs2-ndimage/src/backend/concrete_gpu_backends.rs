@@ -176,7 +176,7 @@ impl CudaBackend {
 
         // Track allocation
         {
-            let mut allocations = self.allocations.lock().unwrap();
+            let mut allocations = self.allocations.lock().expect("Operation failed");
             allocations.insert(device_ptr, size);
         }
 
@@ -193,7 +193,7 @@ impl CudaBackend {
 
         // Remove from tracking
         {
-            let mut allocations = self.allocations.lock().unwrap();
+            let mut allocations = self.allocations.lock().expect("Operation failed");
             allocations.remove(&handle.device_ptr);
         }
 
@@ -242,7 +242,7 @@ impl CudaBackend {
     ) -> NdimageResult<CudaKernelHandle> {
         // Check cache first
         {
-            let cache = self.kernel_cache.lock().unwrap();
+            let cache = self.kernel_cache.lock().expect("Operation failed");
             if let Some(handle) = cache.get(&format!("{}:{}", source.len(), kernel_name)) {
                 return Ok(handle.clone());
             }
@@ -256,7 +256,7 @@ impl CudaBackend {
 
         // Cache the compiled kernel
         {
-            let mut cache = self.kernel_cache.lock().unwrap();
+            let mut cache = self.kernel_cache.lock().expect("Operation failed");
             cache.insert(format!("{}:{}", source.len(), kernel_name), handle.clone());
         }
 
@@ -511,7 +511,7 @@ impl OpenCLBackend {
 
         // Track allocation
         {
-            let mut allocations = self.allocations.lock().unwrap();
+            let mut allocations = self.allocations.lock().expect("Operation failed");
             allocations.insert(buffer, size);
         }
 
@@ -528,7 +528,7 @@ impl OpenCLBackend {
 
         // Remove from tracking
         {
-            let mut allocations = self.allocations.lock().unwrap();
+            let mut allocations = self.allocations.lock().expect("Operation failed");
             allocations.remove(&handle.buffer);
         }
 
@@ -562,7 +562,7 @@ impl OpenCLBackend {
         // Check cache first
         let cache_key = format!("{}:{}", source.len(), kernel_name);
         {
-            let cache = self.kernel_cache.lock().unwrap();
+            let cache = self.kernel_cache.lock().expect("Operation failed");
             if let Some(handle) = cache.get(&cache_key) {
                 return Ok(handle.clone());
             }
@@ -577,7 +577,7 @@ impl OpenCLBackend {
 
         // Cache the compiled kernel
         {
-            let mut cache = self.kernel_cache.lock().unwrap();
+            let mut cache = self.kernel_cache.lock().expect("Operation failed");
             cache.insert(cache_key, handle.clone());
         }
 

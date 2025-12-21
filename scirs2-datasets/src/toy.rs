@@ -44,7 +44,7 @@ pub fn load_iris() -> Result<Dataset> {
         7.7, 3.0, 6.1, 2.3, 6.3, 3.4, 5.6, 2.4, 6.4, 3.1, 5.5, 1.8, 6.0, 3.0, 4.8, 1.8, 6.9, 3.1, 5.4, 2.1,
         6.7, 3.1, 5.6, 2.4, 6.9, 3.1, 5.1, 2.3, 5.8, 2.7, 5.1, 1.9, 6.8, 3.2, 5.9, 2.3, 6.7, 3.3, 5.7, 2.5,
         6.7, 3.0, 5.2, 2.3, 6.3, 2.5, 5.0, 1.9, 6.5, 3.0, 5.2, 2.0, 6.2, 3.4, 5.4, 2.3, 5.9, 3.0, 5.1, 1.8
-    ]).unwrap();
+    ]).expect("Operation failed");
 
     // Define the target (class labels)
     let targets = vec![
@@ -138,7 +138,7 @@ pub fn load_breast_cancer() -> Result<Dataset> {
         18.61, 20.25, 122.1, 1094.0, 0.0944,
         15.3, 25.27, 102.4, 732.4, 0.1082,
         17.57, 15.05, 115.0, 955.1, 0.09847
-    ]).unwrap();
+    ]).expect("Operation failed");
 
     // Define the target (0 = malignant, 1 = benign)
     let targets = vec![
@@ -333,7 +333,7 @@ pub fn load_boston() -> Result<Dataset> {
         0.95577, 0.0, 8.14, 0.538, 6.047,
         0.77299, 0.0, 8.14, 0.538, 6.495,
         1.00245, 0.0, 8.14, 0.538, 6.674
-    ]).unwrap();
+    ]).expect("Operation failed");
 
     let targets = vec![
         24.0, 21.6, 34.7, 33.4, 36.2, 28.7, 22.9, 27.1, 16.5, 18.9, 15.0, 18.9, 21.7, 20.4, 18.2,
@@ -422,7 +422,8 @@ pub fn load_diabetes() -> Result<Dataset> {
         targets.push(target);
     }
 
-    let data_array = Array2::from_shape_vec((n_samples, n_features), data).unwrap();
+    let data_array =
+        Array2::from_shape_vec((n_samples, n_features), data).expect("Operation failed");
     let target_array = Array1::from_vec(targets);
 
     let featurenames = vec![
@@ -467,7 +468,7 @@ mod tests {
 
     #[test]
     fn test_load_iris() {
-        let dataset = load_iris().unwrap();
+        let dataset = load_iris().expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 150);
         assert_eq!(dataset.n_features(), 4);
@@ -476,19 +477,19 @@ mod tests {
         assert!(dataset.featurenames.is_some());
         assert!(dataset.targetnames.is_some());
 
-        let featurenames = dataset.featurenames.as_ref().unwrap();
+        let featurenames = dataset.featurenames.as_ref().expect("Operation failed");
         assert_eq!(featurenames.len(), 4);
         assert_eq!(featurenames[0], "sepal_length");
         assert_eq!(featurenames[3], "petal_width");
 
-        let targetnames = dataset.targetnames.as_ref().unwrap();
+        let targetnames = dataset.targetnames.as_ref().expect("Operation failed");
         assert_eq!(targetnames.len(), 3);
         assert!(targetnames.contains(&"setosa".to_string()));
         assert!(targetnames.contains(&"versicolor".to_string()));
         assert!(targetnames.contains(&"virginica".to_string()));
 
         // Check target values are in valid range (0, 1, 2)
-        let target = dataset.target.as_ref().unwrap();
+        let target = dataset.target.as_ref().expect("Operation failed");
         for &val in target.iter() {
             assert!((0.0..=2.0).contains(&val));
         }
@@ -496,7 +497,7 @@ mod tests {
 
     #[test]
     fn test_load_breast_cancer() {
-        let dataset = load_breast_cancer().unwrap();
+        let dataset = load_breast_cancer().expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 30);
         assert_eq!(dataset.n_features(), 5);
@@ -505,18 +506,18 @@ mod tests {
         assert!(dataset.featurenames.is_some());
         assert!(dataset.targetnames.is_some());
 
-        let featurenames = dataset.featurenames.as_ref().unwrap();
+        let featurenames = dataset.featurenames.as_ref().expect("Operation failed");
         assert_eq!(featurenames.len(), 5);
         assert_eq!(featurenames[0], "mean_radius");
         assert_eq!(featurenames[4], "mean_smoothness");
 
-        let targetnames = dataset.targetnames.as_ref().unwrap();
+        let targetnames = dataset.targetnames.as_ref().expect("Operation failed");
         assert_eq!(targetnames.len(), 2);
         assert!(targetnames.contains(&"malignant".to_string()));
         assert!(targetnames.contains(&"benign".to_string()));
 
         // Check target values are binary (0 or 1)
-        let target = dataset.target.as_ref().unwrap();
+        let target = dataset.target.as_ref().expect("Operation failed");
         for &val in target.iter() {
             assert!(val == 0.0 || val == 1.0);
         }
@@ -524,7 +525,7 @@ mod tests {
 
     #[test]
     fn test_load_digits() {
-        let dataset = load_digits().unwrap();
+        let dataset = load_digits().expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 50);
         assert_eq!(dataset.n_features(), 16);
@@ -533,19 +534,19 @@ mod tests {
         assert!(dataset.featurenames.is_some());
         assert!(dataset.targetnames.is_some());
 
-        let featurenames = dataset.featurenames.as_ref().unwrap();
+        let featurenames = dataset.featurenames.as_ref().expect("Operation failed");
         assert_eq!(featurenames.len(), 16);
         assert_eq!(featurenames[0], "pixel_0");
         assert_eq!(featurenames[15], "pixel_15");
 
-        let targetnames = dataset.targetnames.as_ref().unwrap();
+        let targetnames = dataset.targetnames.as_ref().expect("Operation failed");
         assert_eq!(targetnames.len(), 10);
         for i in 0..10 {
             assert!(targetnames.contains(&i.to_string()));
         }
 
         // Check target values are digits (0-9)
-        let target = dataset.target.as_ref().unwrap();
+        let target = dataset.target.as_ref().expect("Operation failed");
         for &val in target.iter() {
             assert!((0.0..=9.0).contains(&val));
         }
@@ -560,7 +561,7 @@ mod tests {
 
     #[test]
     fn test_load_boston() {
-        let dataset = load_boston().unwrap();
+        let dataset = load_boston().expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 30);
         assert_eq!(dataset.n_features(), 5);
@@ -569,17 +570,20 @@ mod tests {
         assert!(dataset.featurenames.is_some());
         assert!(dataset.feature_descriptions.is_some());
 
-        let featurenames = dataset.featurenames.as_ref().unwrap();
+        let featurenames = dataset.featurenames.as_ref().expect("Operation failed");
         assert_eq!(featurenames.len(), 5);
         assert_eq!(featurenames[0], "CRIM");
         assert_eq!(featurenames[4], "NOX");
 
-        let feature_descriptions = dataset.feature_descriptions.as_ref().unwrap();
+        let feature_descriptions = dataset
+            .feature_descriptions
+            .as_ref()
+            .expect("Operation failed");
         assert_eq!(feature_descriptions.len(), 5);
         assert!(feature_descriptions[0].contains("crime rate"));
 
         // Check target values are reasonable housing prices
-        let target = dataset.target.as_ref().unwrap();
+        let target = dataset.target.as_ref().expect("Operation failed");
         for &val in target.iter() {
             assert!(val > 0.0 && val < 100.0); // Reasonable housing prices in $1000s
         }
@@ -588,11 +592,14 @@ mod tests {
     #[test]
     fn test_all_datasets_have_consistentshapes() {
         let datasets = vec![
-            ("iris", load_iris().unwrap()),
-            ("breast_cancer", load_breast_cancer().unwrap()),
-            ("digits", load_digits().unwrap()),
-            ("boston", load_boston().unwrap()),
-            ("diabetes", load_diabetes().unwrap()),
+            ("iris", load_iris().expect("Operation failed")),
+            (
+                "breast_cancer",
+                load_breast_cancer().expect("Operation failed"),
+            ),
+            ("digits", load_digits().expect("Operation failed")),
+            ("boston", load_boston().expect("Operation failed")),
+            ("diabetes", load_diabetes().expect("Operation failed")),
         ];
 
         for (name, dataset) in datasets {

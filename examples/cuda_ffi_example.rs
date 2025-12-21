@@ -71,7 +71,7 @@ fn main() {
         
         // Load PTX module
         let ptx_data = include_str!("cuda_kernel.ptx");
-        let ptx_cstring = CString::new(ptx_data).unwrap();
+        let ptx_cstring = CString::new(ptx_data).expect("Operation failed");
         let mut module: CUmodule = ptr::null_mut();
         check_cuda(
             cuModuleLoadData(&mut module, ptx_cstring.as_ptr()),
@@ -79,7 +79,7 @@ fn main() {
         );
         
         // Get kernel functions
-        let kernel_name = CString::new("vector_add").unwrap();
+        let kernel_name = CString::new("vector_add").expect("Operation failed");
         let mut kernel: CUfunction = ptr::null_mut();
         check_cuda(
             cuModuleGetFunction(&mut kernel, module, kernel_name.as_ptr()),
@@ -170,7 +170,7 @@ fn main() {
         
         // Test 2: Stress Test
         println!("\nTest 2: GPU Stress Test");
-        let stress_kernel_name = CString::new("stress_kernel").unwrap();
+        let stress_kernel_name = CString::new("stress_kernel").expect("Operation failed");
         let mut stress_kernel: CUfunction = ptr::null_mut();
         check_cuda(
             cuModuleGetFunction(&mut stress_kernel, module, stress_kernel_name.as_ptr()),

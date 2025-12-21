@@ -822,7 +822,9 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator
+            .generatemesh(&domain, &boundary_spec)
+            .expect("Operation failed");
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
@@ -849,7 +851,9 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator
+            .generatemesh(&domain, &boundary_spec)
+            .expect("Operation failed");
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
@@ -872,7 +876,9 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator
+            .generatemesh(&domain, &boundary_spec)
+            .expect("Operation failed");
         let quality = generator.assessmesh_quality(&mesh);
 
         assert!(quality.min_angle > 0.0);
@@ -918,7 +924,9 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator
+            .generatemesh(&domain, &boundary_spec)
+            .expect("Operation failed");
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
@@ -941,7 +949,9 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator
+            .generatemesh(&domain, &boundary_spec)
+            .expect("Operation failed");
 
         assert!(!mesh.points.is_empty());
         assert!(!mesh.elements.is_empty());
@@ -967,7 +977,9 @@ mod tests {
         };
         let boundary_spec = BoundarySpecification::default();
 
-        let mesh = generator.generatemesh(&domain, &boundary_spec).unwrap();
+        let mesh = generator
+            .generatemesh(&domain, &boundary_spec)
+            .expect("Operation failed");
         let quality = generator.assessmesh_quality(&mesh);
 
         // With smaller element size, should have more elements

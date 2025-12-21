@@ -127,7 +127,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             // Evaluate objective function
             let start_time = std::time::Instant::now();
             let score = objectivefn(&params)?;
-            let training_time = F::from(start_time.elapsed().as_secs_f64()).unwrap();
+            let training_time =
+                F::from(start_time.elapsed().as_secs_f64()).expect("Operation failed");
 
             // Update best parameters if improved
             let is_better = self.best_score.is_none_or(|best| score > best);
@@ -150,7 +151,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
                     "Trial {}: Score = {:.6}, Best = {:.6}",
                     trial,
                     score.to_f64().unwrap_or(0.0),
-                    self.best_score.unwrap().to_f64().unwrap_or(0.0)
+                    self.best_score
+                        .expect("Operation failed")
+                        .to_f64()
+                        .unwrap_or(0.0)
                 );
             }
         }
@@ -171,7 +175,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         // Sample continuous parameters
         for (name, min_val, max_val) in &self.search_space.continuous {
             let range = *max_val - *min_val;
-            let random_val = F::from(scirs2_core::random::random::<f64>()).unwrap();
+            let random_val =
+                F::from(scirs2_core::random::random::<f64>()).expect("Operation failed");
             let value = *min_val + range * random_val;
             params.continuous.push((name.clone(), value));
         }
@@ -209,7 +214,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
         // Simplified acquisition function (Upper Confidence Bound)
         let mut best_candidate = None;
-        let mut best_acquisition = F::from(-f64::INFINITY).unwrap();
+        let mut best_acquisition = F::from(-f64::INFINITY).expect("Failed to convert to float");
 
         for _ in 0..10 {
             let candidate = self.random_search()?;
@@ -231,7 +236,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         // Simplified UCB computation
         let mean = self.predict_mean(params)?;
         let std = self.predict_std(params)?;
-        let beta = F::from(2.0).unwrap(); // Exploration parameter
+        let beta = F::from(2.0).expect("Failed to convert constant to float"); // Exploration parameter
 
         Ok(mean + beta * std)
     }
@@ -248,7 +253,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             .iter()
             .map(|step| step.score)
             .fold(F::zero(), |acc, x| acc + x);
-        Ok(sum / F::from(self.history.len()).unwrap())
+        Ok(sum / F::from(self.history.len()).expect("Operation failed"))
     }
 
     /// Predict standard deviation (simplified)
@@ -265,7 +270,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
         // Select top performers as parents
         let mut sorted_history = self.history.clone();
-        sorted_history.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        sorted_history.sort_by(|a, b| b.score.partial_cmp(&a.score).expect("Operation failed"));
 
         let parent1 = &sorted_history[0].params;
         let parent2 = &sorted_history[1].params;
@@ -288,12 +293,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
         // Crossover continuous parameters
         for ((name1, val1), (_, val2)) in parent1.continuous.iter().zip(&parent2.continuous) {
-            let alpha = F::from(scirs2_core::random::random::<f64>()).unwrap();
+            let alpha = F::from(scirs2_core::random::random::<f64>()).expect("Operation failed");
             let crossed_val = *val1 + alpha * (*val2 - *val1);
 
             // Mutation
             let mutation = if scirs2_core::random::random::<f64>() < 0.1 {
-                F::from((scirs2_core::random::random::<f64>() - 0.5) * 0.2).unwrap()
+                F::from((scirs2_core::random::random::<f64>() - 0.5) * 0.2)
+                    .expect("Operation failed")
             } else {
                 F::zero()
             };
@@ -334,7 +340,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
     /// Get convergence curve
     fn get_convergence_curve(&self) -> Vec<F> {
         let mut best_so_far = Vec::new();
-        let mut current_best = F::from(-f64::INFINITY).unwrap();
+        let mut current_best = F::from(-f64::INFINITY).expect("Failed to convert to float");
 
         for step in &self.history {
             if step.score > current_best {
@@ -490,7 +496,7 @@ mod tests {
         let optimizer =
             HyperparameterOptimizer::new(OptimizationMethod::RandomSearch, search_space, 10);
 
-        let params = optimizer.random_search().unwrap();
+        let params = optimizer.random_search().expect("Operation failed");
         assert_eq!(params.continuous.len(), 2);
         assert_eq!(params.integer.len(), 2);
         assert_eq!(params.categorical.len(), 1);
@@ -547,7 +553,7 @@ mod tests {
             Ok(score)
         };
 
-        let best_params = optimizer.optimize(objective).unwrap();
+        let best_params = optimizer.optimize(objective).expect("Operation failed");
         assert!(!best_params.continuous.is_empty());
 
         let results = optimizer.get_results();
@@ -573,8 +579,8 @@ mod tests {
             Ok(-x * x) // Maximize negative quadratic (minimize quadratic)
         };
 
-        let best_params = optimizer.optimize(objective).unwrap();
-        let best_x = best_params.get_continuous("x").unwrap();
+        let best_params = optimizer.optimize(objective).expect("Operation failed");
+        let best_x = best_params.get_continuous("x").expect("Operation failed");
 
         // Should be close to 0 for minimizing x^2
         // With only 10 trials in [-5, 5], evolutionary search may not converge tightly
@@ -599,7 +605,7 @@ mod tests {
             Ok(x) // Maximize x
         };
 
-        optimizer.optimize(objective).unwrap();
+        optimizer.optimize(objective).expect("Operation failed");
         let convergence = optimizer.get_convergence_curve();
 
         assert_eq!(convergence.len(), 3);

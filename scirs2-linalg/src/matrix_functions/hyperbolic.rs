@@ -30,7 +30,7 @@ use crate::validation::validate_decomposition;
 /// use scirs2_linalg::matrix_functions::coshm;
 ///
 /// let a = array![[0.0_f64, 1.0], [1.0, 0.0]];
-/// let cosh_a = coshm(&a.view()).unwrap();
+/// let cosh_a = coshm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn coshm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -116,7 +116,7 @@ where
     let mut result = Array2::eye(n);
 
     // Add A²/2!
-    let two_factorial = F::from(2.0).unwrap();
+    let two_factorial = F::from(2.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a2[[i, j]] / two_factorial;
@@ -124,7 +124,7 @@ where
     }
 
     // Add A⁴/4!
-    let four_factorial = F::from(24.0).unwrap();
+    let four_factorial = F::from(24.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a4[[i, j]] / four_factorial;
@@ -132,7 +132,7 @@ where
     }
 
     // Add A⁶/6!
-    let six_factorial = F::from(720.0).unwrap();
+    let six_factorial = F::from(720.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a6[[i, j]] / six_factorial;
@@ -165,7 +165,7 @@ where
 /// use scirs2_linalg::matrix_functions::sinhm;
 ///
 /// let a = array![[0.0_f64, 1.0], [1.0, 0.0]];
-/// let sinh_a = sinhm(&a.view()).unwrap();
+/// let sinh_a = sinhm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn sinhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -260,7 +260,7 @@ where
     let mut result = a.to_owned();
 
     // Add A³/3!
-    let three_factorial = F::from(6.0).unwrap();
+    let three_factorial = F::from(6.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a3[[i, j]] / three_factorial;
@@ -268,7 +268,7 @@ where
     }
 
     // Add A⁵/5!
-    let five_factorial = F::from(120.0).unwrap();
+    let five_factorial = F::from(120.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a5[[i, j]] / five_factorial;
@@ -276,7 +276,7 @@ where
     }
 
     // Add A⁷/7!
-    let seven_factorial = F::from(5040.0).unwrap();
+    let seven_factorial = F::from(5040.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a7[[i, j]] / seven_factorial;
@@ -305,7 +305,7 @@ where
 /// use scirs2_linalg::matrix_functions::tanhm;
 ///
 /// let a = array![[0.1_f64, 0.0], [0.0, 0.1]];
-/// let tanh_a = tanhm(&a.view()).unwrap();
+/// let tanh_a = tanhm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn tanhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>

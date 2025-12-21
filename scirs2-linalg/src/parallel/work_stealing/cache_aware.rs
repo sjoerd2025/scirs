@@ -190,7 +190,7 @@ impl<T: Clone + Send + 'static> CacheAwareWorkStealer<T> {
             }
             CacheAwareStrategy::Adaptive => {
                 // Choose strategy based on current cache miss rates
-                let miss_rates = self.cache_miss_rates.lock().unwrap();
+                let miss_rates = self.cache_miss_rates.lock().expect("Operation failed");
                 let avg_miss_rate: f64 = miss_rates.iter().sum::<f64>() / miss_rates.len() as f64;
 
                 if avg_miss_rate > 0.1 {
@@ -221,7 +221,7 @@ impl<T: Clone + Send + 'static> CacheAwareWorkStealer<T> {
             return Err(LinalgError::InvalidInput("Invalid worker ID".to_string()));
         }
 
-        let mut rates = self.cache_miss_rates.lock().unwrap();
+        let mut rates = self.cache_miss_rates.lock().expect("Operation failed");
         rates[worker_id] = missrate;
         Ok(())
     }
@@ -899,7 +899,7 @@ impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
 
         // Get current chunk size from adaptive chunking
         let chunksize = {
-            let chunking = self.adaptive_chunking.lock().unwrap();
+            let chunking = self.adaptive_chunking.lock().expect("Operation failed");
             chunking.get_chunksize()
         };
 
@@ -912,13 +912,13 @@ impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
         // Record performance metrics
         let execution_time = start_time.elapsed();
         {
-            let mut monitor = self.performance_monitor.lock().unwrap();
+            let mut monitor = self.performance_monitor.lock().expect("Operation failed");
             monitor.record_task(execution_time.as_nanos() as u64);
         }
 
         // Record chunk performance for adaptation
         {
-            let mut chunking = self.adaptive_chunking.lock().unwrap();
+            let mut chunking = self.adaptive_chunking.lock().expect("Operation failed");
             chunking.record_performance(ChunkPerformance {
                 chunksize,
                 execution_time_ns: execution_time.as_nanos() as u64,
@@ -934,17 +934,17 @@ impl<T: Clone + Send + 'static> OptimizedWorkStealingScheduler<T> {
     /// Get comprehensive performance statistics
     pub fn get_performance_stats(&self) -> OptimizedSchedulerStats {
         let chunking_stats = {
-            let chunking = self.adaptive_chunking.lock().unwrap();
+            let chunking = self.adaptive_chunking.lock().expect("Operation failed");
             chunking.get_stats()
         };
 
         let performance_stats = {
-            let monitor = self.performance_monitor.lock().unwrap();
+            let monitor = self.performance_monitor.lock().expect("Operation failed");
             monitor.get_stats()
         };
 
         let cache_recommendations = {
-            let optimizer = self.cache_optimizer.lock().unwrap();
+            let optimizer = self.cache_optimizer.lock().expect("Operation failed");
             optimizer.get_recommendations()
         };
 

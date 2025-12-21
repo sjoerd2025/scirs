@@ -10,7 +10,7 @@ use scirs2_neural::{Activation, Softmax};
 fn test_simd_softmax_f64_basic() {
     let softmax = Softmax::new(-1); // axis=-1 for last axis
     let input = Array::from_vec(vec![1.0f64, 2.0, 3.0]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Expected: exp(1)/(exp(1)+exp(2)+exp(3)), etc.
     let exp1 = 1.0f64.exp();
@@ -35,7 +35,7 @@ fn test_simd_softmax_f64_basic() {
 fn test_simd_softmax_f32_basic() {
     let softmax = Softmax::new(-1);
     let input = Array::from_vec(vec![1.0f32, 2.0, 3.0]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Expected: exp(1)/(exp(1)+exp(2)+exp(3)), etc.
     let exp1 = 1.0f32.exp();
@@ -62,7 +62,7 @@ fn test_simd_softmax_f64_large() {
     let softmax = Softmax::new(-1);
     let input_vec: Vec<f64> = (0..1000).map(|i| i as f64 * 0.01).collect();
     let input = Array::from_vec(input_vec.clone()).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Sum should be 1.0
     let sum: f64 = output.iter().sum();
@@ -89,7 +89,7 @@ fn test_simd_softmax_f32_large() {
     let softmax = Softmax::new(-1);
     let input_vec: Vec<f32> = (0..1000).map(|i| i as f32 * 0.01).collect();
     let input = Array::from_vec(input_vec.clone()).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Sum should be 1.0
     let sum: f32 = output.iter().sum();
@@ -115,7 +115,7 @@ fn test_simd_softmax_numerical_stability() {
     // Test with large values that could cause overflow without numerical stability
     let softmax = Softmax::new(-1);
     let input = Array::from_vec(vec![1000.0f64, 1001.0, 1002.0]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Sum should still be 1.0
     let sum: f64 = output.iter().sum();
@@ -140,7 +140,7 @@ fn test_simd_softmax_single_element() {
     // Test with single element array
     let softmax = Softmax::new(-1);
     let input = Array::from_vec(vec![5.0f64]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Single element should have probability 1.0
     assert!(
@@ -155,7 +155,7 @@ fn test_simd_softmax_uniform() {
     // Test with uniform input
     let softmax = Softmax::new(-1);
     let input = Array::from_vec(vec![5.0f64; 10]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // All values should be equal (1/10)
     let expected = 0.1f64;
@@ -175,7 +175,7 @@ fn test_simd_softmax_negative_values() {
     // Test with negative values
     let softmax = Softmax::new(-1);
     let input = Array::from_vec(vec![-5.0f64, -3.0, -1.0]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Sum should be 1.0
     let sum: f64 = output.iter().sum();
@@ -195,7 +195,7 @@ fn test_simd_softmax_accuracy_vs_scalar() {
     // Compare SIMD implementation against known correct values
     let softmax = Softmax::new(-1);
     let input = Array::from_vec(vec![0.0f64, 1.0, 2.0, 3.0, 4.0]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Manually computed expected values
     let exp_vals: Vec<f64> = [0.0f64, 1.0, 2.0, 3.0, 4.0]
@@ -221,11 +221,13 @@ fn test_simd_softmax_backward_pass() {
     // Test backward pass with SIMD-computed forward pass
     let softmax = Softmax::new(-1);
     let input = Array::from_vec(vec![1.0f64, 2.0, 3.0]).into_dyn();
-    let output = softmax.forward(&input).unwrap();
+    let output = softmax.forward(&input).expect("Operation failed");
 
     // Gradient for classification: one-hot encoded target
     let grad_output = Array::from_vec(vec![0.0f64, 0.0, 1.0]).into_dyn();
-    let grad_input = softmax.backward(&grad_output, &output).unwrap();
+    let grad_input = softmax
+        .backward(&grad_output, &output)
+        .expect("Operation failed");
 
     // Gradient should have same shape as input
     assert_eq!(grad_input.shape(), input.shape());

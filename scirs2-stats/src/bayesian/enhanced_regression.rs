@@ -226,7 +226,8 @@ where
             .dot(&(xtx_f64.dot(&xty_f64) + prior_precision_f64.dot(&prior_mean_f64)));
 
         // Posterior noise parameters
-        let posterior_mean_f: Array1<F> = posterior_mean_f64.mapv(|v| F::from(v).unwrap());
+        let posterior_mean_f: Array1<F> =
+            posterior_mean_f64.mapv(|v| F::from(v).expect("Failed to convert to float"));
         let residual = y - &x.dot(&posterior_mean_f);
         let residual_sum_squares = residual.dot(&residual).to_f64().unwrap_or(0.0);
 
@@ -234,12 +235,16 @@ where
         let posterior_noise_rate = noise_rate_f64 + residual_sum_squares / 2.0;
 
         // Convert back to F type
-        let beta_mean = posterior_mean_f64.mapv(|v| F::from(v).unwrap());
-        let beta_covariance = posterior_covariance_f64.mapv(|v| F::from(v).unwrap());
+        let beta_mean =
+            posterior_mean_f64.mapv(|v| F::from(v).expect("Failed to convert to float"));
+        let beta_covariance =
+            posterior_covariance_f64.mapv(|v| F::from(v).expect("Failed to convert to float"));
 
-        let noise_precision_mean = F::from(posterior_noiseshape / posterior_noise_rate).unwrap();
+        let noise_precision_mean = F::from(posterior_noiseshape / posterior_noise_rate)
+            .expect("Failed to convert to float");
         let noise_precision_var =
-            F::from(posterior_noiseshape / (posterior_noise_rate * posterior_noise_rate)).unwrap();
+            F::from(posterior_noiseshape / (posterior_noise_rate * posterior_noise_rate))
+                .expect("Operation failed");
 
         // Compute predictive distribution
         let predictive_mean = x.dot(&beta_mean);
@@ -310,21 +315,28 @@ where
             );
 
             // Update noise parameters
-            q_noiseshape = self.prior.noiseshape + F::from(n).unwrap() / F::from(2.0).unwrap();
+            q_noiseshape = self.prior.noiseshape
+                + F::from(n).expect("Failed to convert to float")
+                    / F::from(2.0).expect("Failed to convert constant to float");
 
             let _expected_beta_squared =
                 q_beta_mean.dot(&q_beta_mean) + q_beta_covariance.diag().sum();
-            let residual_term = y.dot(y) - F::from(2.0).unwrap() * y.dot(&x.dot(&q_beta_mean))
+            let residual_term = y.dot(y)
+                - F::from(2.0).expect("Failed to convert constant to float")
+                    * y.dot(&x.dot(&q_beta_mean))
                 + x.dot(&q_beta_mean).dot(&x.dot(&q_beta_mean))
                 + (x.t().dot(x) * q_beta_covariance).diag().sum();
 
-            q_noise_rate = self.prior.noise_rate + residual_term / F::from(2.0).unwrap();
+            q_noise_rate = self.prior.noise_rate
+                + residual_term / F::from(2.0).expect("Failed to convert constant to float");
 
             // Compute ELBO for convergence check
             let elbo =
                 self.compute_elbo(&q_beta_mean, &q_beta_precision, q_noiseshape, q_noise_rate)?;
 
-            if (elbo - prev_elbo).abs() < F::from(self.config.tolerance).unwrap() {
+            if (elbo - prev_elbo).abs()
+                < F::from(self.config.tolerance).expect("Failed to convert to float")
+            {
                 converged = true;
                 break;
             }
@@ -436,7 +448,7 @@ where
             let gamma_dist = Gamma::new(posteriorshape, 1.0 / posterior_rate).map_err(|e| {
                 StatsError::ComputationError(format!("Failed to create gamma distribution: {}", e))
             })?;
-            noise_precision = F::from(gamma_dist.sample(&mut rng)).unwrap();
+            noise_precision = F::from(gamma_dist.sample(&mut rng)).expect("Operation failed");
 
             // Store samples after burn-in
             if iter >= n_burnin && (iter - n_burnin).is_multiple_of(n_thin) {
@@ -464,7 +476,7 @@ where
         for sample in &beta_samples {
             posterior_beta_mean += sample;
         }
-        posterior_beta_mean /= F::from(n_kept_samples).unwrap();
+        posterior_beta_mean /= F::from(n_kept_samples).expect("Failed to convert to float");
 
         // Posterior covariance of beta
         let mut posterior_beta_cov = Array2::zeros((p, p));
@@ -476,20 +488,21 @@ where
                 }
             }
         }
-        posterior_beta_cov /= F::from(n_kept_samples.saturating_sub(1).max(1)).unwrap();
+        posterior_beta_cov /=
+            F::from(n_kept_samples.saturating_sub(1).max(1)).expect("Operation failed");
 
         // Posterior statistics for noise precision
         let noise_precision_mean = noise_precision_samples_
             .iter()
             .fold(F::zero(), |acc, &x| acc + x)
-            / F::from(n_kept_samples).unwrap();
+            / F::from(n_kept_samples).expect("Failed to convert to float");
 
         let noise_precision_var = {
             let mean_sq = noise_precision_samples_
                 .iter()
                 .map(|&x| (x - noise_precision_mean) * (x - noise_precision_mean))
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(n_kept_samples.saturating_sub(1).max(1)).unwrap();
+                / F::from(n_kept_samples.saturating_sub(1).max(1)).expect("Operation failed");
             mean_sq
         };
 
@@ -502,7 +515,7 @@ where
         let final_log_likelihood = if log_likelihood_history.is_empty() {
             self.compute_mcmc_log_likelihood(&posterior_beta_mean, noise_precision_mean)?
         } else {
-            *log_likelihood_history.last().unwrap()
+            *log_likelihood_history.last().expect("Operation failed")
         };
 
         // Check convergence based on effective sample size and stability
@@ -580,7 +593,7 @@ where
         let log_ml = 0.5 * (det_prior / det_posterior).ln() + noiseshape * noise_rate.ln()
             - (n / 2.0) * (2.0 * std::f64::consts::PI).ln();
 
-        Ok(F::from(log_ml).unwrap())
+        Ok(F::from(log_ml).expect("Failed to convert to float"))
     }
 
     /// Compute Evidence Lower BOund (ELBO) for variational inference
@@ -595,7 +608,9 @@ where
         // Full implementation would include entropy terms and expected log-likelihood
         let expected_noise_precision = q_noiseshape / q_noise_rate;
         let residual = &self.response - &self.design_matrix.dot(q_beta_mean);
-        let data_term = -F::from(0.5).unwrap() * expected_noise_precision * residual.dot(&residual);
+        let data_term = -F::from(0.5).expect("Failed to convert constant to float")
+            * expected_noise_precision
+            * residual.dot(&residual);
 
         Ok(data_term)
     }
@@ -622,7 +637,7 @@ where
 
         // Transform: mean + L * z where L is lower triangular Cholesky factor
         let sample_f64 = mean + &chol.dot(&z_array);
-        let sample = sample_f64.mapv(|x| F::from(x).unwrap());
+        let sample = sample_f64.mapv(|x| F::from(x).expect("Failed to convert to float"));
 
         Ok(sample)
     }
@@ -640,7 +655,7 @@ where
             - (n / 2.0) * (2.0 * std::f64::consts::PI).ln()
             - 0.5 * noise_precision.to_f64().unwrap_or(1.0) * sum_squared_residuals;
 
-        Ok(F::from(log_likelihood).unwrap())
+        Ok(F::from(log_likelihood).expect("Failed to convert to float"))
     }
 
     /// Check MCMC convergence using various diagnostics
@@ -670,7 +685,7 @@ where
 
             let var_ratio =
                 first_half_var.max(second_half_var) / first_half_var.min(second_half_var);
-            if var_ratio > F::from(2.0).unwrap() {
+            if var_ratio > F::from(2.0).expect("Failed to convert constant to float") {
                 return Ok(false); // Variance not stabilized
             }
         }
@@ -691,14 +706,16 @@ where
         }
 
         let n = samples.len();
-        let mean = samples.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+        let mean = samples.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(n).expect("Failed to convert to float");
         let variance = samples
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(n.saturating_sub(1).max(1)).unwrap();
+            / F::from(n.saturating_sub(1).max(1)).expect("Operation failed");
 
-        variance.max(F::from(1e-10).unwrap()) // Avoid zero variance
+        variance.max(F::from(1e-10).expect("Failed to convert constant to float"))
+        // Avoid zero variance
     }
 
     /// Compute effective sample size (simplified autocorrelation-based estimate)
@@ -708,7 +725,8 @@ where
         }
 
         let n = samples.len();
-        let mean = samples.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+        let mean = samples.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(n).expect("Failed to convert to float");
 
         // Compute lag-1 autocorrelation (simplified)
         let mut numerator = F::zero();
@@ -721,7 +739,8 @@ where
             denominator += x_i * x_i;
         }
 
-        let autocorr = if denominator > F::from(1e-10).unwrap() {
+        let autocorr = if denominator > F::from(1e-10).expect("Failed to convert constant to float")
+        {
             (numerator / denominator).to_f64().unwrap_or(0.0)
         } else {
             0.0
@@ -771,9 +790,10 @@ where
     /// Create uninformative prior
     pub fn uninformative(p: usize) -> Self {
         let beta_mean = Array1::zeros(p);
-        let beta_precision = Array2::eye(p) * F::from(1e-6).unwrap(); // Very small precision = large variance
-        let noiseshape = F::from(1e-3).unwrap();
-        let noise_rate = F::from(1e-3).unwrap();
+        let beta_precision =
+            Array2::eye(p) * F::from(1e-6).expect("Failed to convert constant to float"); // Very small precision = large variance
+        let noiseshape = F::from(1e-3).expect("Failed to convert constant to float");
+        let noise_rate = F::from(1e-3).expect("Failed to convert constant to float");
 
         Self {
             beta_mean,

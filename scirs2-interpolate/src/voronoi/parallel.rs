@@ -124,7 +124,7 @@ impl<
 
                     match self.interpolator.interpolate(&query) {
                         Ok(value) => {
-                            let mut results = results.lock().unwrap();
+                            let mut results = results.lock().expect("Operation failed");
                             results[i] = value;
                         }
                         Err(err) => return Err(err),
@@ -135,7 +135,10 @@ impl<
             })?;
 
         // Return the results
-        Ok(Arc::try_unwrap(results).unwrap().into_inner().unwrap())
+        Ok(Arc::try_unwrap(results)
+            .expect("Operation failed")
+            .into_inner()
+            .expect("Operation failed"))
     }
 
     /// Returns the underlying interpolation method

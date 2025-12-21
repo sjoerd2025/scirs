@@ -123,7 +123,8 @@ impl<F: Float + ScalarOperand> Op<F> for CholeskyOp {
 
         // The diagonal elements have a special formula
         for i in 0..n {
-            d_l[[i, i]] = gy_2d[[i, i]] / (F::from(2.0).unwrap() * l_clean[[i, i]]);
+            d_l[[i, i]] = gy_2d[[i, i]]
+                / (F::from(2.0).expect("Failed to convert constant to float") * l_clean[[i, i]]);
         }
 
         // Process row by row
@@ -148,7 +149,8 @@ impl<F: Float + ScalarOperand> Op<F> for CholeskyOp {
             for j in 0..n {
                 if i == j {
                     // Diagonal elements
-                    grad[[i, i]] = d_l[[i, i]] * F::from(2.0).unwrap();
+                    grad[[i, i]] =
+                        d_l[[i, i]] * F::from(2.0).expect("Failed to convert constant to float");
                 } else {
                     // Off-diagonal elements, symmetrize
                     let val = if i > j { d_l[[i, j]] } else { d_l[[j, i]] };
@@ -159,7 +161,7 @@ impl<F: Float + ScalarOperand> Op<F> for CholeskyOp {
         }
 
         // Add regularization for numerical stability
-        let eps = F::epsilon() * F::from(10.0).unwrap();
+        let eps = F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
         for i in 0..n {
             grad[[i, i]] += eps;
         }
@@ -197,7 +199,7 @@ impl<F: Float + ScalarOperand> Op<F> for SymmetrizeOp {
 
         // Symmetrize manually: (A + A^T) / 2
         let mut symmetric = Array2::<F>::zeros((shape[0], shape[1]));
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         for i in 0..shape[0] {
             for j in 0..shape[1] {
@@ -233,7 +235,7 @@ impl<F: Float + ScalarOperand> Op<F> for SymmetrizeOp {
 
         // Gradient of symmetrize: (dY + dY^T) / 2
         let mut grad = Array2::<F>::zeros(gy_2d.dim());
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         for i in 0..gy_2d.shape()[0] {
             for j in 0..gy_2d.shape()[1] {

@@ -123,9 +123,10 @@ impl<
                         .count();
 
                     // Compute recall and precision for this query
-                    let query_recall =
-                        F::from(hits).unwrap() / F::from(gt_candidates.len()).unwrap();
-                    let query_precision = F::from(hits).unwrap() / F::from(k).unwrap();
+                    let query_recall = F::from(hits).expect("Failed to convert to float")
+                        / F::from(gt_candidates.len()).expect("Operation failed");
+                    let query_precision = F::from(hits).expect("Failed to convert to float")
+                        / F::from(k).expect("Failed to convert to float");
 
                     total_recall = total_recall + query_recall;
                     total_precision = total_precision + query_precision;
@@ -134,8 +135,14 @@ impl<
             }
 
             if valid_queries > 0 {
-                recall_at_k.insert(k, total_recall / F::from(valid_queries).unwrap());
-                precision_at_k.insert(k, total_precision / F::from(valid_queries).unwrap());
+                recall_at_k.insert(
+                    k,
+                    total_recall / F::from(valid_queries).expect("Failed to convert to float"),
+                );
+                precision_at_k.insert(
+                    k,
+                    total_precision / F::from(valid_queries).expect("Failed to convert to float"),
+                );
             } else {
                 recall_at_k.insert(k, F::zero());
                 precision_at_k.insert(k, F::zero());
@@ -158,7 +165,8 @@ impl<
                 // Find rank of first relevant item
                 for (rank, (_, candidate_idx)) in query_similarities.iter().enumerate() {
                     if gt_candidates.contains(candidate_idx) {
-                        mrr = mrr + F::one() / F::from(rank + 1).unwrap();
+                        mrr =
+                            mrr + F::one() / F::from(rank + 1).expect("Failed to convert to float");
                         break;
                     }
                 }
@@ -167,7 +175,7 @@ impl<
         }
 
         if valid_queries > 0 {
-            mrr = mrr / F::from(valid_queries).unwrap();
+            mrr = mrr / F::from(valid_queries).expect("Failed to convert to float");
         }
 
         Ok(CrossModalRetrievalResult {
@@ -237,11 +245,11 @@ impl<
 
         // Compute alignment metrics
         let mean_positive_similarity = positive_similarities.iter().copied().sum::<F>()
-            / F::from(positive_similarities.len()).unwrap();
+            / F::from(positive_similarities.len()).expect("Operation failed");
 
         let mean_negative_similarity = if !negative_similarities.is_empty() {
             negative_similarities.iter().copied().sum::<F>()
-                / F::from(negative_similarities.len()).unwrap()
+                / F::from(negative_similarities.len()).expect("Operation failed")
         } else {
             F::zero()
         };
@@ -256,7 +264,7 @@ impl<
                 diff * diff
             })
             .sum::<F>()
-            / F::from(positive_similarities.len()).unwrap();
+            / F::from(positive_similarities.len()).expect("Operation failed");
         let pos_std = pos_variance.sqrt();
 
         let neg_variance = if !negative_similarities.is_empty() {
@@ -267,7 +275,7 @@ impl<
                     diff * diff
                 })
                 .sum::<F>()
-                / F::from(negative_similarities.len()).unwrap()
+                / F::from(negative_similarities.len()).expect("Operation failed")
         } else {
             F::zero()
         };

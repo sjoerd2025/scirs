@@ -58,11 +58,11 @@ impl Default for EmbeddingConfig {
 ///     embedding_dim: 64,
 ///     ..Default::default()
 /// };
-/// let embedding = Embedding::<f64>::new(config).unwrap();
+/// let embedding = Embedding::<f64>::new(config).expect("Operation failed");
 ///
 /// // Input: indices as floats (will be converted to usize)
-/// let indices = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-/// let output = embedding.forward(&indices.into_dyn()).unwrap();
+/// let indices = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("Operation failed");
+/// let output = embedding.forward(&indices.into_dyn()).expect("Operation failed");
 /// assert_eq!(output.shape(), &[2, 3, 64]);
 /// ```
 #[derive(Debug)]
@@ -112,7 +112,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Embedding<F> {
             // Simple deterministic initialization
             let (i, j) = (idx[0], idx[1]);
             let value = ((i * 31 + j * 17) % 1000) as f64 / 1000.0 - 0.5;
-            F::from(value).unwrap()
+            F::from(value).expect("Failed to convert to float")
         });
 
         // Set padding_idx embeddings to zero if specified
@@ -227,14 +227,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Embedding<F> {
                 // Calculate p-norm
                 for j in 0..self.config.embedding_dim {
                     let val = weights[[i, j]];
-                    if p == F::from(2.0).unwrap() {
+                    if p == F::from(2.0).expect("Failed to convert constant to float") {
                         norm = norm + val * val;
                     } else {
                         norm = norm + val.abs().powf(p);
                     }
                 }
 
-                if p == F::from(2.0).unwrap() {
+                if p == F::from(2.0).expect("Failed to convert constant to float") {
                     norm = norm.sqrt();
                 } else {
                     norm = norm.powf(F::one() / p);
@@ -357,8 +357,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Embe
                     // For now, use flat index
                     let flat_grad_idx = i * embedding_dim + j;
                     if flat_grad_idx < grad_output.len() {
-                        weight_grad[[idx, j]] =
-                            weight_grad[[idx, j]] + grad_output.as_slice().unwrap()[flat_grad_idx];
+                        weight_grad[[idx, j]] = weight_grad[[idx, j]]
+                            + grad_output.as_slice().expect("Operation failed")[flat_grad_idx];
                     }
                 } else {
                     weight_grad[[idx, j]] = weight_grad[[idx, j]] + grad_output[[i, j]];
@@ -392,7 +392,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Embe
                 }
 
                 let scale = if count > 0 {
-                    F::from(1.0 / count as f64).unwrap()
+                    F::from(1.0 / count as f64).expect("Failed to convert to float")
                 } else {
                     F::one()
                 };
@@ -495,9 +495,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> PositionalEmbeddi
             let weights_shape = IxDyn(&[max_seq_length, embedding_dim]);
 
             // Xavier initialization
-            let scale = F::from((2.0 / (max_seq_length + embedding_dim) as f64).sqrt()).unwrap();
+            let scale = F::from((2.0 / (max_seq_length + embedding_dim) as f64).sqrt())
+                .expect("Operation failed");
             let weights = Array::from_shape_fn(weights_shape.clone(), |_| {
-                scale * (F::from(0.5).unwrap() - F::from(0.25).unwrap())
+                scale
+                    * (F::from(0.5).expect("Failed to convert constant to float")
+                        - F::from(0.25).expect("Failed to convert constant to float"))
             });
 
             let weight_grad = Array::zeros(weights_shape);
@@ -537,9 +540,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> PositionalEmbeddi
                 let angle = pos as f64 / div_term;
 
                 if i % 2 == 0 {
-                    pos_embeddings[[pos, i]] = F::from(angle.sin()).unwrap();
+                    pos_embeddings[[pos, i]] = F::from(angle.sin()).expect("Operation failed");
                 } else {
-                    pos_embeddings[[pos, i]] = F::from(angle.cos()).unwrap();
+                    pos_embeddings[[pos, i]] = F::from(angle.cos()).expect("Operation failed");
                 }
             }
         }
@@ -557,7 +560,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Posi
             ));
         }
 
-        let last_dim = *input.shape().last().unwrap();
+        let last_dim = *input.shape().last().expect("Operation failed");
         if last_dim != self.embedding_dim {
             return Err(NeuralError::InferenceError(format!(
                 "Input embedding dimension {} doesn't match layer embedding dimension {}",
@@ -578,9 +581,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Posi
 
         // Get positional embeddings
         let pos_embeddings = if self.learned {
-            let weights = self.weights.as_ref().unwrap().read().map_err(|_| {
-                NeuralError::InferenceError("Failed to acquire read lock on weights".to_string())
-            })?;
+            let weights = self
+                .weights
+                .as_ref()
+                .expect("Operation failed")
+                .read()
+                .map_err(|_| {
+                    NeuralError::InferenceError(
+                        "Failed to acquire read lock on weights".to_string(),
+                    )
+                })?;
 
             // Extract the first seq_length positions
             let mut pos_emb = Array::zeros(IxDyn(&[seq_length, self.embedding_dim]));
@@ -721,7 +731,7 @@ mod tests {
             ..Default::default()
         };
 
-        let embedding = Embedding::<f64>::new(config).unwrap();
+        let embedding = Embedding::<f64>::new(config).expect("Operation failed");
         assert_eq!(embedding.num_embeddings(), 100);
         assert_eq!(embedding.embedding_dim(), 64);
     }
@@ -744,11 +754,14 @@ mod tests {
             ..Default::default()
         };
 
-        let embedding = Embedding::<f64>::new(config).unwrap();
+        let embedding = Embedding::<f64>::new(config).expect("Operation failed");
 
         // Input: indices as floats
-        let indices = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let output = embedding.forward(&indices.into_dyn()).unwrap();
+        let indices = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
+        let output = embedding
+            .forward(&indices.into_dyn())
+            .expect("Operation failed");
 
         // Output shape: (2, 3, 4)
         assert_eq!(output.shape(), &[2, 3, 4]);
@@ -762,31 +775,31 @@ mod tests {
             ..Default::default()
         };
 
-        let embedding = Embedding::<f64>::new(config).unwrap();
+        let embedding = Embedding::<f64>::new(config).expect("Operation failed");
         assert_eq!(embedding.parameter_count(), 100 * 64);
     }
 
     #[test]
     fn test_positional_embedding_learned() {
-        let pos_emb = PositionalEmbedding::<f64>::new(100, 64, true).unwrap();
+        let pos_emb = PositionalEmbedding::<f64>::new(100, 64, true).expect("Operation failed");
         assert!(pos_emb.weights.is_some());
         assert_eq!(pos_emb.parameter_count(), 100 * 64);
     }
 
     #[test]
     fn test_positional_embedding_sinusoidal() {
-        let pos_emb = PositionalEmbedding::<f64>::new(100, 64, false).unwrap();
+        let pos_emb = PositionalEmbedding::<f64>::new(100, 64, false).expect("Operation failed");
         assert!(pos_emb.weights.is_none());
         assert_eq!(pos_emb.parameter_count(), 0);
     }
 
     #[test]
     fn test_positional_embedding_forward() {
-        let pos_emb = PositionalEmbedding::<f64>::new(100, 64, false).unwrap();
+        let pos_emb = PositionalEmbedding::<f64>::new(100, 64, false).expect("Operation failed");
 
         // Input: (batch=2, seq=10, emb=64)
         let input = Array::from_elem(IxDyn(&[2, 10, 64]), 1.0);
-        let output = pos_emb.forward(&input).unwrap();
+        let output = pos_emb.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), &[2, 10, 64]);
     }

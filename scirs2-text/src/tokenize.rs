@@ -13,8 +13,8 @@ use unicode_segmentation::UnicodeSegmentation;
 pub use bpe::{BpeConfig, BpeTokenizer, BpeVocabulary};
 
 lazy_static! {
-    static ref WORD_PATTERN: Regex = Regex::new(r"\b\w+\b").unwrap();
-    static ref SENTENCE_PATTERN: Regex = Regex::new(r"[^.!?]+[.!?]").unwrap();
+    static ref WORD_PATTERN: Regex = Regex::new(r"\b\w+\b").expect("Operation failed");
+    static ref SENTENCE_PATTERN: Regex = Regex::new(r"[^.!?]+[.!?]").expect("Operation failed");
 }
 
 /// Trait for tokenizing text
@@ -390,15 +390,15 @@ mod tests {
     fn test_word_tokenizer() {
         let tokenizer = WordTokenizer::default();
         let text = "Hello, world! This is a test.";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["hello", "world", "this", "is", "a", "test"]);
     }
 
     #[test]
     fn test_word_tokenizer_custompattern() {
-        let tokenizer = WordTokenizer::withpattern(false, r"\w+").unwrap();
+        let tokenizer = WordTokenizer::withpattern(false, r"\w+").expect("Operation failed");
         let text = "Hello, world! This is a test.";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["Hello", "world", "This", "is", "a", "test"]);
     }
 
@@ -406,7 +406,7 @@ mod tests {
     fn test_sentence_tokenizer() {
         let tokenizer = SentenceTokenizer::default();
         let text = "Hello, world! This is a test. How are you today?";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(
             tokens,
             vec!["Hello, world!", "This is a test.", "How are you today?"]
@@ -417,7 +417,7 @@ mod tests {
     fn test_character_tokenizer() {
         let tokenizer = CharacterTokenizer::new(false);
         let text = "Hello";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["H", "e", "l", "l", "o"]);
     }
 
@@ -425,47 +425,49 @@ mod tests {
     fn test_grapheme_tokenizer() {
         let tokenizer = CharacterTokenizer::default();
         let text = "café";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["c", "a", "f", "é"]);
     }
 
     #[test]
     fn test_ngram_tokenizer() {
-        let tokenizer = NgramTokenizer::new(2).unwrap();
+        let tokenizer = NgramTokenizer::new(2).expect("Operation failed");
         let text = "hello world test";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["hello world", "world test"]);
     }
 
     #[test]
     fn test_ngram_tokenizer_range() {
-        let tokenizer = NgramTokenizer::with_range(1, 2).unwrap();
+        let tokenizer = NgramTokenizer::with_range(1, 2).expect("Operation failed");
         let text = "hello world";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["hello", "world", "hello world"]);
     }
 
     #[test]
     fn test_ngram_tokenizer_alphanumeric() {
-        let tokenizer = NgramTokenizer::new(2).unwrap().only_alphanumeric(true);
+        let tokenizer = NgramTokenizer::new(2)
+            .expect("Operation failed")
+            .only_alphanumeric(true);
         let text = "hello, world! test123";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["hello world", "world test123"]);
     }
 
     #[test]
     fn test_regex_tokenizer_matches() {
-        let tokenizer = RegexTokenizer::new(r"\b\w+\b", false).unwrap();
+        let tokenizer = RegexTokenizer::new(r"\b\w+\b", false).expect("Operation failed");
         let text = "Hello, world! Test 123.";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["Hello", "world", "Test", "123"]);
     }
 
     #[test]
     fn test_regex_tokenizer_gaps() {
-        let tokenizer = RegexTokenizer::new(r"\s*,\s*", true).unwrap();
+        let tokenizer = RegexTokenizer::new(r"\s*,\s*", true).expect("Operation failed");
         let text = "apple, banana, cherry";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["apple", "banana", "cherry"]);
     }
 
@@ -473,7 +475,7 @@ mod tests {
     fn test_whitespace_tokenizer() {
         let tokenizer = WhitespaceTokenizer::new();
         let text = "hello   world\ttest\nline";
-        let tokens = tokenizer.tokenize(text).unwrap();
+        let tokens = tokenizer.tokenize(text).expect("Operation failed");
         assert_eq!(tokens, vec!["hello", "world", "test", "line"]);
     }
 }

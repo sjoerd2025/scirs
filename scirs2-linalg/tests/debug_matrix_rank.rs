@@ -14,17 +14,19 @@ fn debug_nearly_singularmatrix_rank() {
     println!("{:?}", matrix);
 
     // Test with different tolerance values
-    let default_rank = matrix_rank(&matrix.view(), None, None).unwrap();
+    let default_rank = matrix_rank(&matrix.view(), None, None).expect("Test: operation failed");
     println!("Rank with default tolerance: {}", default_rank);
 
-    let tight_tol_rank = matrix_rank(&matrix.view(), Some(1e-14), None).unwrap();
+    let tight_tol_rank =
+        matrix_rank(&matrix.view(), Some(1e-14), None).expect("Test: operation failed");
     println!("Rank with tolerance 1e-14: {}", tight_tol_rank);
 
-    let loose_tol_rank = matrix_rank(&matrix.view(), Some(1e-12), None).unwrap();
+    let loose_tol_rank =
+        matrix_rank(&matrix.view(), Some(1e-12), None).expect("Test: operation failed");
     println!("Rank with tolerance 1e-12: {}", loose_tol_rank);
 
     // Let's also check what SVD gives us
-    let (_, s, _) = svd(&matrix.view(), false, None).unwrap();
+    let (_, s, _) = svd(&matrix.view(), false, None).expect("Test: operation failed");
     println!("Singular values: {:?}", s);
 
     // Calculate the default tolerance manually
@@ -52,10 +54,10 @@ fn debug_nearly_singularmatrix_rank() {
     println!("Matrix2:");
     println!("{:?}", matrix2);
 
-    let rank2 = matrix_rank(&matrix2.view(), None, None).unwrap();
+    let rank2 = matrix_rank(&matrix2.view(), None, None).expect("Test: operation failed");
     println!("Rank with default tolerance: {}", rank2);
 
-    let (_, s2, _) = svd(&matrix2.view(), false, None).unwrap();
+    let (_, s2, _) = svd(&matrix2.view(), false, None).expect("Test: operation failed");
     println!("Singular values: {:?}", s2);
 
     let default_tolerance2 = (max_dim as f64) * eps * s2[0];
@@ -80,10 +82,10 @@ fn debug_nearly_singularmatrix_rank() {
     println!("Matrix3:");
     println!("{:?}", matrix3);
 
-    let rank3 = matrix_rank(&matrix3.view(), None, None).unwrap();
+    let rank3 = matrix_rank(&matrix3.view(), None, None).expect("Test: operation failed");
     println!("Rank with default tolerance: {}", rank3);
 
-    let (_, s3, _) = svd(&matrix3.view(), false, None).unwrap();
+    let (_, s3, _) = svd(&matrix3.view(), false, None).expect("Test: operation failed");
     println!("Singular values: {:?}", s3);
 
     let default_tolerance3 = (max_dim as f64) * eps * s3[0];
@@ -99,6 +101,7 @@ fn debug_nearly_singularmatrix_rank() {
     }
 
     // Compare with a stricter tolerance
-    let strict_rank3 = matrix_rank(&matrix3.view(), Some(1e-12), None).unwrap();
+    let strict_rank3 =
+        matrix_rank(&matrix3.view(), Some(1e-12), None).expect("Test: operation failed");
     println!("Rank with tolerance 1e-12: {}", strict_rank3);
 }

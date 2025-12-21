@@ -13,31 +13,34 @@ fn main() {
 
         // Test basic operations
         let c = add(a, b);
-        println!("a + b = {:?}", c.eval(g).unwrap());
+        println!("a + b = {:?}", c.eval(g).expect("Operation failed"));
 
         let d = mul(a, b);
-        println!("a * b = {:?}", d.eval(g).unwrap());
+        println!("a * b = {:?}", d.eval(g).expect("Operation failed"));
 
         let e = sum_all(a);
-        println!("sum(a) = {:?}", e.eval(g).unwrap());
+        println!("sum(a) = {:?}", e.eval(g).expect("Operation failed"));
 
         let f = mean_all(b);
-        println!("mean(b) = {:?}", f.eval(g).unwrap());
+        println!("mean(b) = {:?}", f.eval(g).expect("Operation failed"));
 
         // Test matrix multiplication
         let b_t = transpose(b, &[1, 0]); // Transpose along the axes
         let g_tensor = matmul(a, b_t);
-        println!("a * b^T = {:?}", g_tensor.eval(g).unwrap());
+        println!(
+            "a * b^T = {:?}",
+            g_tensor.eval(g).expect("Operation failed")
+        );
 
         // Test neural network operations
         let h = sigmoid(a);
-        println!("sigmoid(a) = {:?}", h.eval(g).unwrap());
+        println!("sigmoid(a) = {:?}", h.eval(g).expect("Operation failed"));
 
         let i = relu(a);
-        println!("relu(a) = {:?}", i.eval(g).unwrap());
+        println!("relu(a) = {:?}", i.eval(g).expect("Operation failed"));
 
         let j = softmax(a, 1); // Softmax along axis 1
-        println!("softmax(a) = {:?}", j.eval(g).unwrap());
+        println!("softmax(a) = {:?}", j.eval(g).expect("Operation failed"));
 
         println!("All operations completed successfully!");
     });

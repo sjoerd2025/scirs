@@ -48,7 +48,7 @@
 //!                      0.003, -0.012, 0.018, -0.006, 0.009, 0.002, -0.008, 0.014, -0.004, 0.011,
 //!                      0.007, -0.009, 0.013, -0.003, 0.006]; // Return series
 //!
-//! let result = model.fit(&returns).unwrap();
+//! let result = model.fit(&returns).expect("Operation failed");
 //! println!("GJR-GARCH Parameters: {:?}", result.parameters);
 //! println!("Asymmetry parameter (γ): {}", result.parameters.gamma);
 //! ```
@@ -64,10 +64,10 @@
 //!                      0.007, -0.009, 0.013, -0.003, 0.006];
 //!
 //! // Fit model
-//! model.fit(&returns).unwrap();
+//! model.fit(&returns).expect("Operation failed");
 //!
 //! // Forecast volatility 5 steps ahead
-//! let forecasts = model.forecast(5).unwrap();
+//! let forecasts = model.forecast(5).expect("Operation failed");
 //! println!("Volatility Forecasts: {:?}", forecasts);
 //! ```
 //!
@@ -81,7 +81,7 @@
 //!                      0.003, -0.012, 0.018, -0.006, 0.009, 0.002, -0.008, 0.014, -0.004, 0.011,
 //!                      0.007, -0.009, 0.013, -0.003, 0.006];
 //!
-//! let result = model.fit(&returns).unwrap();
+//! let result = model.fit(&returns).expect("Operation failed");
 //!
 //! // Check for leverage effect
 //! if result.parameters.gamma > 0.0 {
@@ -189,7 +189,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
     ///
     /// let mut model = GjrGarchModel::<f64>::new();
     /// let returns = array![0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004];
-    /// let result = model.fit(&returns).unwrap();
+    /// let result = model.fit(&returns).expect("Operation failed");
     ///
     /// assert!(result.parameters.gamma >= 0.0); // Usually positive for equity returns
     /// ```
@@ -205,17 +205,18 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
         let n = returns.len();
 
         // Initialize parameters with typical values for financial data
-        let omega = F::from(0.00001).unwrap(); // Small positive constant
-        let alpha = F::from(0.05).unwrap(); // Symmetric ARCH effect
-        let beta = F::from(0.90).unwrap(); // High persistence
-        let gamma = F::from(0.05).unwrap(); // Asymmetry parameter (leverage effect)
+        let omega = F::from(0.00001).expect("Failed to convert constant to float"); // Small positive constant
+        let alpha = F::from(0.05).expect("Failed to convert constant to float"); // Symmetric ARCH effect
+        let beta = F::from(0.90).expect("Failed to convert constant to float"); // High persistence
+        let gamma = F::from(0.05).expect("Failed to convert constant to float"); // Asymmetry parameter (leverage effect)
 
         // Calculate mean and center the returns
-        let mean = returns.sum() / F::from(n).unwrap();
+        let mean = returns.sum() / F::from(n).expect("Failed to convert to float");
         let centered_returns: Array1<F> = returns.mapv(|x| x - mean);
 
         // Initialize conditional variance with sample variance
-        let initial_variance = centered_returns.mapv(|x| x.powi(2)).sum() / F::from(n - 1).unwrap();
+        let initial_variance = centered_returns.mapv(|x| x.powi(2)).sum()
+            / F::from(n - 1).expect("Failed to convert to float");
         let mut conditional_variance = Array1::zeros(n);
         conditional_variance[0] = initial_variance;
 
@@ -249,12 +250,14 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
 
         // Calculate log-likelihood for normal distribution
         let mut log_likelihood = F::zero();
-        let ln_2pi = F::from(2.0 * std::f64::consts::PI).unwrap().ln();
+        let ln_2pi = F::from(2.0 * std::f64::consts::PI)
+            .expect("Failed to convert to float")
+            .ln();
 
         for i in 0..n {
             let variance = conditional_variance[i];
             if variance > F::zero() {
-                let term = -F::from(0.5).unwrap()
+                let term = -F::from(0.5).expect("Failed to convert constant to float")
                     * (ln_2pi + variance.ln() + centered_returns[i].powi(2) / variance);
                 log_likelihood = log_likelihood + term;
             }
@@ -269,10 +272,12 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
         };
 
         // Calculate information criteria
-        let k = F::from(4).unwrap(); // Number of parameters (ω, α, β, γ)
-        let n_f = F::from(n).unwrap();
-        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
-        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+        let k = F::from(4).expect("Failed to convert constant to float"); // Number of parameters (ω, α, β, γ)
+        let n_f = F::from(n).expect("Failed to convert to float");
+        let aic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + F::from(2.0).expect("Failed to convert constant to float") * k;
+        let bic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + k * n_f.ln();
 
         // Update model state
         self.fitted = true;
@@ -314,8 +319,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
     /// let mut model = GjrGarchModel::<f64>::new();
     /// let returns = array![0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004];
     ///
-    /// model.fit(&returns).unwrap();
-    /// let forecasts = model.forecast(5).unwrap();
+    /// model.fit(&returns).expect("Operation failed");
+    /// let forecasts = model.forecast(5).expect("Operation failed");
     ///
     /// assert_eq!(forecasts.len(), 5);
     /// assert!(forecasts.iter().all(|&x| x > 0.0)); // All forecasts should be positive
@@ -327,15 +332,22 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
             ));
         }
 
-        let params = self.parameters.as_ref().unwrap();
-        let last_variance = *self.conditional_variance.as_ref().unwrap().last().unwrap();
+        let params = self.parameters.as_ref().expect("Operation failed");
+        let last_variance = *self
+            .conditional_variance
+            .as_ref()
+            .expect("Operation failed")
+            .last()
+            .expect("Operation failed");
 
         let mut forecasts = Array1::zeros(steps);
 
         // Calculate persistence parameter and long-run variance
         // For GJR-GARCH, expected persistence is α + β + γ/2
         // (since negative indicator has expected value 0.5 under symmetry)
-        let persistence = params.alpha + params.beta + params.gamma / F::from(2.0).unwrap();
+        let persistence = params.alpha
+            + params.beta
+            + params.gamma / F::from(2.0).expect("Failed to convert constant to float");
         let long_run_variance = params.omega / (F::one() - persistence);
 
         for i in 0..steps {
@@ -417,9 +429,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
     /// # Returns
     /// * `Option<F>` - Persistence measure if fitted, None otherwise
     pub fn volatility_persistence(&self) -> Option<F> {
-        self.parameters
-            .as_ref()
-            .map(|p| p.alpha + p.beta + p.gamma / F::from(2.0).unwrap())
+        self.parameters.as_ref().map(|p| {
+            p.alpha + p.beta + p.gamma / F::from(2.0).expect("Failed to convert constant to float")
+        })
     }
 
     /// Calculate the long-run (unconditional) variance
@@ -431,7 +443,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
     /// * `Option<F>` - Long-run variance if fitted and stationary, None otherwise
     pub fn long_run_variance(&self) -> Option<F> {
         if let Some(params) = &self.parameters {
-            let persistence = params.alpha + params.beta + params.gamma / F::from(2.0).unwrap();
+            let persistence = params.alpha
+                + params.beta
+                + params.gamma / F::from(2.0).expect("Failed to convert constant to float");
             if persistence < F::one() {
                 Some(params.omega / (F::one() - persistence))
             } else {
@@ -470,7 +484,7 @@ mod tests {
         let result = model.fit(&returns);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.parameters.omega > 0.0);
         assert!(result.parameters.alpha > 0.0);
         assert!(result.parameters.beta > 0.0);
@@ -486,9 +500,9 @@ mod tests {
             0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
         ]);
 
-        model.fit(&returns).unwrap();
+        model.fit(&returns).expect("Operation failed");
 
-        let forecasts = model.forecast(5).unwrap();
+        let forecasts = model.forecast(5).expect("Operation failed");
         assert_eq!(forecasts.len(), 5);
         assert!(forecasts.iter().all(|&x| x > 0.0));
 
@@ -503,7 +517,7 @@ mod tests {
             0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
         ]);
 
-        model.fit(&returns).unwrap();
+        model.fit(&returns).expect("Operation failed");
 
         let has_leverage = model.has_leverage_effect();
         assert!(has_leverage.is_some());
@@ -513,11 +527,11 @@ mod tests {
 
         let persistence = model.volatility_persistence();
         assert!(persistence.is_some());
-        assert!(persistence.unwrap() < 1.0); // Should be stationary
+        assert!(persistence.expect("Operation failed") < 1.0); // Should be stationary
 
         let long_run_var = model.long_run_variance();
         assert!(long_run_var.is_some());
-        assert!(long_run_var.unwrap() > 0.0);
+        assert!(long_run_var.expect("Operation failed") > 0.0);
 
         let is_stationary = model.is_stationary();
         assert!(is_stationary == Some(true));
@@ -548,7 +562,7 @@ mod tests {
             0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
         ]);
 
-        let result = model.fit(&returns).unwrap();
+        let result = model.fit(&returns).expect("Operation failed");
 
         // Check that parameters make economic sense
         assert!(result.parameters.omega > 0.0); // Positive constant

@@ -28,6 +28,21 @@ fn generate_validdata(size: usize, gen: &mut Gen) -> Array1<f64> {
     data
 }
 
+/// Check if data has valid magnitude for numerical stability
+fn has_valid_magnitude(data: &[f64]) -> bool {
+    data.iter().all(|&x| x.is_finite() && x.abs() < 1e50)
+}
+
+/// Relative approximate equality check for floating point comparisons
+fn approx_eq_rel(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
+    if !a.is_finite() || !b.is_finite() {
+        return false;
+    }
+    let diff = (a - b).abs();
+    let max_abs = a.abs().max(b.abs());
+    diff <= abs_tol || diff <= rel_tol * max_abs
+}
+
 /// Helper function to generate valid correlation data (finite, not all equal)
 #[allow(dead_code)]
 fn generate_correlationdata(size: usize, gen: &mut Gen) -> (Array1<f64>, Array1<f64>) {
@@ -62,7 +77,7 @@ mod descriptive_stats_properties {
         }
 
         let arr = Array1::from_vec(data.clone());
-        let mean_val = mean(&arr.view()).unwrap();
+        let mean_val = mean(&arr.view()).expect("Test: operation failed");
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
@@ -77,23 +92,26 @@ mod descriptive_stats_properties {
         }
 
         let arr = Array1::from_vec(data);
-        let variance = var(&arr.view(), 0, None).unwrap();
+        let variance = var(&arr.view(), 0, None).expect("Test: operation failed");
 
         TestResult::from_bool(variance >= 0.0 && variance.is_finite())
     }
 
     #[quickcheck]
-    #[ignore] // Fails with extreme float values
     fn std_variance_relation_property(data: Vec<f64>) -> TestResult {
-        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+        // Guard against extreme values for numerical stability
+        if data.len() < 2 || !has_valid_magnitude(&data) {
             return TestResult::discard();
         }
 
         let arr = Array1::from_vec(data);
-        let variance = var(&arr.view(), 0, None).unwrap();
-        let std_dev = std(&arr.view(), 0, None).unwrap();
+        let variance = var(&arr.view(), 0, None).expect("Test: operation failed");
+        let std_dev = std(&arr.view(), 0, None).expect("Test: operation failed");
 
-        TestResult::from_bool((std_dev * std_dev - variance).abs() < 1e-10 && std_dev >= 0.0)
+        // Use relative tolerance for comparison
+        TestResult::from_bool(
+            approx_eq_rel(std_dev * std_dev, variance, 1e-9, 1e-10) && std_dev >= 0.0,
+        )
     }
 
     #[quickcheck]
@@ -108,11 +126,11 @@ mod descriptive_stats_properties {
         }
 
         let arr = Array1::from_vec(data.clone());
-        let original_mean = mean(&arr.view()).unwrap();
+        let original_mean = mean(&arr.view()).expect("Test: operation failed");
 
         // Transform: y = a*x + b
         let transformed = arr.mapv(|x| a * x + b);
-        let transformed_mean = mean(&transformed.view()).unwrap();
+        let transformed_mean = mean(&transformed.view()).expect("Test: operation failed");
 
         let expected_mean = a * original_mean + b;
 
@@ -131,11 +149,11 @@ mod descriptive_stats_properties {
         }
 
         let arr = Array1::from_vec(data.clone());
-        let original_var = var(&arr.view(), 0, None).unwrap();
+        let original_var = var(&arr.view(), 0, None).expect("Test: operation failed");
 
         // Transform: y = a*x
         let transformed = arr.mapv(|x| a * x);
-        let transformed_var = var(&transformed.view(), 0, None).unwrap();
+        let transformed_var = var(&transformed.view(), 0, None).expect("Test: operation failed");
 
         let expected_var = a * a * original_var;
 
@@ -159,16 +177,16 @@ mod descriptive_stats_properties {
         }
 
         let arr = Array1::from_vec(data);
-        let skewness = skew(&arr.view(), false, None).unwrap();
+        let skewness = skew(&arr.view(), false, None).expect("Test: operation failed");
 
         // Skewness should be finite for valid data
         TestResult::from_bool(skewness.is_finite())
     }
 
     #[quickcheck]
-    #[ignore] // Fails with extreme float values
     fn kurtosis_minimum_property(data: Vec<f64>) -> TestResult {
-        if data.len() < 4 || data.iter().any(|x| !x.is_finite()) {
+        // Guard against extreme values for numerical stability
+        if data.len() < 4 || !has_valid_magnitude(&data) {
             return TestResult::discard();
         }
 
@@ -180,10 +198,11 @@ mod descriptive_stats_properties {
         }
 
         let arr = Array1::from_vec(data);
-        let kurt = kurtosis(&arr.view(), true, false, None).unwrap(); // Fisher's definition
+        let kurt = kurtosis(&arr.view(), true, false, None).expect("Test: operation failed"); // Fisher's definition
 
         // Fisher kurtosis should be >= -2 (theoretical minimum)
-        TestResult::from_bool(kurt >= -2.0 && kurt.is_finite())
+        // Allow small tolerance for numerical precision
+        TestResult::from_bool(kurt >= -2.0 - 1e-6 && kurt.is_finite())
     }
 }
 
@@ -206,13 +225,13 @@ mod correlation_properties {
         let y = Array1::from_vec(y_data);
 
         // Check for zero variance (would cause division by zero)
-        let x_var = var(&x.view(), 0, None).unwrap();
-        let y_var = var(&y.view(), 0, None).unwrap();
+        let x_var = var(&x.view(), 0, None).expect("Test: operation failed");
+        let y_var = var(&y.view(), 0, None).expect("Test: operation failed");
         if x_var < 1e-10 || y_var < 1e-10 {
             return TestResult::discard();
         }
 
-        let correlation = pearson_r(&x.view(), &y.view()).unwrap();
+        let correlation = pearson_r(&x.view(), &y.view()).expect("Test: operation failed");
 
         TestResult::from_bool((-1.0..=1.0).contains(&correlation) && correlation.is_finite())
     }
@@ -232,26 +251,27 @@ mod correlation_properties {
         let y = Array1::from_vec(y_data);
 
         // Check for zero variance
-        let x_var = var(&x.view(), 0, None).unwrap();
-        let y_var = var(&y.view(), 0, None).unwrap();
+        let x_var = var(&x.view(), 0, None).expect("Test: operation failed");
+        let y_var = var(&y.view(), 0, None).expect("Test: operation failed");
         if x_var < 1e-10 || y_var < 1e-10 {
             return TestResult::discard();
         }
 
-        let corr_xy = pearson_r(&x.view(), &y.view()).unwrap();
-        let corr_yx = pearson_r(&y.view(), &x.view()).unwrap();
+        let corr_xy = pearson_r(&x.view(), &y.view()).expect("Test: operation failed");
+        let corr_yx = pearson_r(&y.view(), &x.view()).expect("Test: operation failed");
 
         TestResult::from_bool((corr_xy - corr_yx).abs() < 1e-10)
     }
 
     #[quickcheck]
-    #[ignore] // Fails with extreme float values
     fn perfect_correlation_property(data: Vec<f64>, a: f64, b: f64) -> TestResult {
-        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+        // Guard against extreme values for numerical stability
+        if data.len() < 2 || !has_valid_magnitude(&data) {
             return TestResult::discard();
         }
 
-        if !a.is_finite() || !b.is_finite() || a.abs() < 1e-10 {
+        // Ensure a and b are reasonable values
+        if !a.is_finite() || !b.is_finite() || a.abs() < 1e-10 || a.abs() > 1e6 || b.abs() > 1e50 {
             return TestResult::discard();
         }
 
@@ -259,15 +279,21 @@ mod correlation_properties {
         let y = x.mapv(|val| a * val + b);
 
         // Check for zero variance in x
-        let x_var = var(&x.view(), 0, None).unwrap();
+        let x_var = var(&x.view(), 0, None).expect("Test: operation failed");
         if x_var < 1e-10 {
             return TestResult::discard();
         }
 
-        let correlation = pearson_r(&x.view(), &y.view()).unwrap();
+        // Check that y values are still valid
+        if y.iter().any(|&v| !v.is_finite() || v.abs() > 1e50) {
+            return TestResult::discard();
+        }
+
+        let correlation = pearson_r(&x.view(), &y.view()).expect("Test: operation failed");
         let expected = if a > 0.0 { 1.0 } else { -1.0 };
 
-        TestResult::from_bool((correlation - expected).abs() < 1e-10)
+        // Use relative tolerance for the correlation
+        TestResult::from_bool(approx_eq_rel(correlation, expected, 1e-9, 1e-10))
     }
 
     #[quickcheck]
@@ -291,18 +317,19 @@ mod correlation_properties {
             matrixdata.extend_from_slice(row);
         }
 
-        let matrix = Array2::from_shape_vec((data.len(), n_cols), matrixdata).unwrap();
+        let matrix = Array2::from_shape_vec((data.len(), n_cols), matrixdata)
+            .expect("Test: operation failed");
 
         // Check each column has non-zero variance
         for j in 0..n_cols {
             let col = matrix.column(j);
-            let col_var = var(&col, 0, None).unwrap();
+            let col_var = var(&col, 0, None).expect("Test: operation failed");
             if col_var < 1e-10 {
                 return TestResult::discard();
             }
         }
 
-        let corr_matrix = corrcoef(&matrix.view(), "pearson").unwrap();
+        let corr_matrix = corrcoef(&matrix.view(), "pearson").expect("Test: operation failed");
 
         // Check that diagonal elements are 1.0
         let mut diagonal_ok = true;
@@ -331,7 +358,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(mu, sigma).unwrap();
+        let normal = norm(mu, sigma).expect("Test: operation failed");
         let pdf_value = normal.pdf(x);
 
         TestResult::from_bool(pdf_value >= 0.0 && pdf_value.is_finite())
@@ -351,7 +378,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(mu, sigma).unwrap();
+        let normal = norm(mu, sigma).expect("Test: operation failed");
         let cdf1 = normal.cdf(x1);
         let cdf2 = normal.cdf(x2);
 
@@ -372,7 +399,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(mu, sigma).unwrap();
+        let normal = norm(mu, sigma).expect("Test: operation failed");
         let cdf_value = normal.cdf(x);
 
         TestResult::from_bool((0.0..=1.0).contains(&cdf_value) && cdf_value.is_finite())
@@ -388,7 +415,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let unif = uniform(low, high).unwrap();
+        let unif = uniform(low, high).expect("Test: operation failed");
         let pdf_value = unif.pdf(x);
 
         let expected_pdf = if x >= low && x < high {
@@ -412,7 +439,7 @@ mod distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(mu, sigma).unwrap();
+        let normal = norm(mu, sigma).expect("Test: operation failed");
         let dist_mean = normal.mean();
         let dist_var = normal.var();
 
@@ -444,9 +471,9 @@ mod extended_properties {
     }
 
     #[quickcheck]
-    #[ignore] // Fails with NaN values
     fn quantile_monotonicity_property(data: Vec<f64>, q1: f64, q2: f64) -> TestResult {
-        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+        // Guard against extreme values for numerical stability
+        if data.len() < 2 || !has_valid_magnitude(&data) {
             return TestResult::discard();
         }
 
@@ -455,16 +482,18 @@ mod extended_properties {
         }
 
         let arr = Array1::from_vec(data);
-        let quant1 = quantile(&arr.view(), q1, QuantileInterpolation::Linear).unwrap();
-        let quant2 = quantile(&arr.view(), q2, QuantileInterpolation::Linear).unwrap();
+        let quant1 = quantile(&arr.view(), q1, QuantileInterpolation::Linear)
+            .expect("Test: operation failed");
+        let quant2 = quantile(&arr.view(), q2, QuantileInterpolation::Linear)
+            .expect("Test: operation failed");
 
         TestResult::from_bool(quant1 <= quant2 && quant1.is_finite() && quant2.is_finite())
     }
 
     #[quickcheck]
-    #[ignore] // Fails with extreme float values
     fn quantile_bounds_property(data: Vec<f64>, q: f64) -> TestResult {
-        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+        // Guard against extreme values for numerical stability
+        if data.len() < 2 || !has_valid_magnitude(&data) {
             return TestResult::discard();
         }
 
@@ -473,7 +502,8 @@ mod extended_properties {
         }
 
         let arr = Array1::from_vec(data.clone());
-        let quant = quantile(&arr.view(), q, QuantileInterpolation::Linear).unwrap();
+        let quant = quantile(&arr.view(), q, QuantileInterpolation::Linear)
+            .expect("Test: operation failed");
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
@@ -481,14 +511,14 @@ mod extended_properties {
     }
 
     #[quickcheck]
-    #[ignore] // Fails with extreme float values
     fn median_middle_property(data: Vec<f64>) -> TestResult {
-        if data.len() < 3 || data.iter().any(|x| !x.is_finite()) {
+        // Guard against extreme values for numerical stability
+        if data.len() < 3 || !has_valid_magnitude(&data) {
             return TestResult::discard();
         }
 
         let arr = Array1::from_vec(data.clone());
-        let median_val = median(&arr.view()).unwrap();
+        let median_val = median(&arr.view()).expect("Test: operation failed");
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
@@ -498,20 +528,34 @@ mod extended_properties {
     }
 
     #[quickcheck]
-    #[ignore] // Fails with extreme float values
     fn variance_translation_invariance(data: Vec<f64>, c: f64) -> TestResult {
-        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) || !c.is_finite() {
+        // Guard against extreme values for numerical stability
+        if data.len() < 2 || !has_valid_magnitude(&data) {
+            return TestResult::discard();
+        }
+
+        // Ensure c is reasonable - large translations can cause precision loss
+        // when computing variance of translated data
+        if !c.is_finite() || c.abs() > 1e6 {
             return TestResult::discard();
         }
 
         let arr = Array1::from_vec(data.clone());
-        let original_var = var(&arr.view(), 0, None).unwrap();
+        let original_var = var(&arr.view(), 0, None).expect("Test: operation failed");
 
         // Add constant to all elements
         let translated = arr.mapv(|x| x + c);
-        let translated_var = var(&translated.view(), 0, None).unwrap();
 
-        TestResult::from_bool((original_var - translated_var).abs() < 1e-10)
+        // Check translated values are still valid
+        if translated.iter().any(|&v| !v.is_finite() || v.abs() > 1e50) {
+            return TestResult::discard();
+        }
+
+        let translated_var = var(&translated.view(), 0, None).expect("Test: operation failed");
+
+        // Use relative tolerance for comparison - variance translation invariance
+        // can have precision issues with large translation constants
+        TestResult::from_bool(approx_eq_rel(original_var, translated_var, 1e-6, 1e-10))
     }
 
     #[quickcheck]
@@ -522,8 +566,8 @@ mod extended_properties {
         }
 
         let arr = Array1::from_vec(data);
-        let mean_val = mean(&arr.view()).unwrap();
-        let std_val = std(&arr.view(), 0, None).unwrap();
+        let mean_val = mean(&arr.view()).expect("Test: operation failed");
+        let std_val = std(&arr.view(), 0, None).expect("Test: operation failed");
 
         // Avoid division by zero
         if std_val < 1e-10 {
@@ -532,8 +576,8 @@ mod extended_properties {
 
         // Standardize: z = (x - mean) / std
         let standardized = arr.mapv(|x| (x - mean_val) / std_val);
-        let std_mean = mean(&standardized.view()).unwrap();
-        let std_var = var(&standardized.view(), 0, None).unwrap();
+        let std_mean = mean(&standardized.view()).expect("Test: operation failed");
+        let std_var = var(&standardized.view(), 0, None).expect("Test: operation failed");
 
         TestResult::from_bool(std_mean.abs() < 1e-10 && (std_var - 1.0).abs() < 1e-10)
     }
@@ -556,7 +600,7 @@ mod robust_statistics_properties {
         }
 
         let arr = Array1::from_vec(data.clone());
-        let original_median = median(&arr.view()).unwrap();
+        let original_median = median(&arr.view()).expect("Test: operation failed");
 
         // Add extreme outlier
         let mut with_outlier = data;
@@ -565,11 +609,11 @@ mod robust_statistics_properties {
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         with_outlier.push(max_val * outlierfactor);
         let outlier_arr = Array1::from_vec(with_outlier);
-        let outlier_median = median(&outlier_arr.view()).unwrap();
+        let outlier_median = median(&outlier_arr.view()).expect("Test: operation failed");
 
         // Median should be less affected than mean
-        let original_mean = mean(&arr.view()).unwrap();
-        let outlier_mean = mean(&outlier_arr.view()).unwrap();
+        let original_mean = mean(&arr.view()).expect("Test: operation failed");
+        let outlier_mean = mean(&outlier_arr.view()).expect("Test: operation failed");
 
         let median_change = (original_median - outlier_median).abs();
         let mean_change = (original_mean - outlier_mean).abs();
@@ -591,12 +635,12 @@ mod robust_statistics_properties {
         }
 
         let arr = Array1::from_vec(data);
-        let median_val = median(&arr.view()).unwrap();
+        let median_val = median(&arr.view()).expect("Test: operation failed");
 
         // Compute MAD manually for verification
         let deviations: Vec<f64> = arr.iter().map(|&x| (x - median_val).abs()).collect();
         let mut sorted_deviations = deviations;
-        sorted_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_deviations.sort_by(|a, b| a.partial_cmp(b).expect("Test: operation failed"));
         let n = sorted_deviations.len();
         let mad = if n % 2 == 1 {
             sorted_deviations[n / 2]
@@ -685,7 +729,7 @@ mod advanced_distribution_properties {
             return TestResult::discard();
         }
 
-        let normal = norm(mu, sigma).unwrap();
+        let normal = norm(mu, sigma).expect("Test: operation failed");
         let cdf_x1 = normal.cdf(x1);
         let cdf_x2 = normal.cdf(x2);
 
@@ -704,7 +748,7 @@ mod advanced_distribution_properties {
         }
 
         // Test symmetry of normal distribution around mean
-        let normal = norm(0.0, sigma).unwrap();
+        let normal = norm(0.0, sigma).expect("Test: operation failed");
         let pdf_pos = normal.pdf(x);
         let pdf_neg = normal.pdf(-x);
 
@@ -725,7 +769,7 @@ mod simd_consistency_properties {
         }
 
         let arr = Array1::from_vec(data.clone());
-        let simd_result = mean(&arr.view()).unwrap();
+        let simd_result = mean(&arr.view()).expect("Test: operation failed");
 
         // Compute scalar version manually
         let scalar_result = data.iter().sum::<f64>() / data.len() as f64;
@@ -734,21 +778,23 @@ mod simd_consistency_properties {
     }
 
     #[quickcheck]
-    #[ignore] // Fails with extreme float values
     fn simd_scalar_consistency_variance(data: Vec<f64>) -> TestResult {
-        if data.len() < 2 || data.iter().any(|x| !x.is_finite()) {
+        // Guard against extreme values for numerical stability
+        if data.len() < 2 || !has_valid_magnitude(&data) {
             return TestResult::discard();
         }
 
         let arr = Array1::from_vec(data.clone());
-        let simd_result = var(&arr.view(), 0, None).unwrap();
+        // ddof=0 means divide by n (population variance)
+        let simd_result = var(&arr.view(), 0, None).expect("Test: operation failed");
 
-        // Compute scalar version manually
+        // Compute scalar version manually with ddof=0 (divide by n, not n-1)
         let mean_val = data.iter().sum::<f64>() / data.len() as f64;
         let scalar_result =
-            data.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
+            data.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / data.len() as f64;
 
-        TestResult::from_bool((simd_result - scalar_result).abs() < 1e-10)
+        // Use relative tolerance for comparison
+        TestResult::from_bool(approx_eq_rel(simd_result, scalar_result, 1e-9, 1e-10))
     }
 
     #[quickcheck]
@@ -761,9 +807,9 @@ mod simd_consistency_properties {
         let data: Vec<f64> = (0..size).map(|i| (i as f64).sin()).collect();
         let arr = Array1::from_vec(data);
 
-        let mean_val = mean(&arr.view()).unwrap();
-        let var_val = var(&arr.view(), 0, None).unwrap();
-        let std_val = std(&arr.view(), 0, None).unwrap();
+        let mean_val = mean(&arr.view()).expect("Test: operation failed");
+        let var_val = var(&arr.view(), 0, None).expect("Test: operation failed");
+        let std_val = std(&arr.view(), 0, None).expect("Test: operation failed");
 
         TestResult::from_bool(
             mean_val.is_finite()
@@ -791,8 +837,8 @@ mod numerical_stability_properties {
         let data = vec![value, value * 1.1, value * 0.9, value * 1.05, value * 0.95];
         let arr = Array1::from_vec(data);
 
-        let mean_val = mean(&arr.view()).unwrap();
-        let var_val = var(&arr.view(), 0, None).unwrap();
+        let mean_val = mean(&arr.view()).expect("Test: operation failed");
+        let var_val = var(&arr.view(), 0, None).expect("Test: operation failed");
 
         TestResult::from_bool(
             mean_val.is_finite() && mean_val > 0.0 && var_val.is_finite() && var_val >= 0.0,
@@ -809,8 +855,8 @@ mod numerical_stability_properties {
         let data = vec![value, value * 1.1, value * 0.9, value * 1.05, value * 0.95];
         let arr = Array1::from_vec(data);
 
-        let mean_val = mean(&arr.view()).unwrap();
-        let var_val = var(&arr.view(), 0, None).unwrap();
+        let mean_val = mean(&arr.view()).expect("Test: operation failed");
+        let var_val = var(&arr.view(), 0, None).expect("Test: operation failed");
 
         TestResult::from_bool(mean_val.is_finite() && var_val.is_finite() && var_val >= 0.0)
     }
@@ -831,9 +877,9 @@ mod numerical_stability_properties {
         ];
         let arr = Array1::from_vec(data);
 
-        let mean_val = mean(&arr.view()).unwrap();
-        let var_val = var(&arr.view(), 0, None).unwrap();
-        let std_val = std(&arr.view(), 0, None).unwrap();
+        let mean_val = mean(&arr.view()).expect("Test: operation failed");
+        let var_val = var(&arr.view(), 0, None).expect("Test: operation failed");
+        let std_val = std(&arr.view(), 0, None).expect("Test: operation failed");
 
         TestResult::from_bool(
             mean_val.is_finite()
@@ -880,18 +926,19 @@ mod multivariate_properties {
             matrixdata.extend_from_slice(row);
         }
 
-        let matrix = Array2::from_shape_vec((data.len(), n_cols), matrixdata).unwrap();
+        let matrix = Array2::from_shape_vec((data.len(), n_cols), matrixdata)
+            .expect("Test: operation failed");
 
         // Check each column has non-zero variance
         for j in 0..n_cols {
             let col = matrix.column(j);
-            let col_var = var(&col, 0, None).unwrap();
+            let col_var = var(&col, 0, None).expect("Test: operation failed");
             if col_var < 1e-10 {
                 return TestResult::discard();
             }
         }
 
-        let corr_matrix = corrcoef(&matrix.view(), "pearson").unwrap();
+        let corr_matrix = corrcoef(&matrix.view(), "pearson").expect("Test: operation failed");
 
         // Check correlation matrix properties
         let mut properties_hold = true;

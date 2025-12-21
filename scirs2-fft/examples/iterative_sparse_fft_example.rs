@@ -23,7 +23,7 @@ use std::time::Instant;
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64) -> Vec<f64> {
     // Create deterministic RNG for reproducible results
     let mut rng = StdRng::seed_from_u64(42);
-    let normal = Normal::new(0.0, noise_level).unwrap();
+    let normal = Normal::new(0.0, noise_level).expect("Operation failed");
 
     let mut signal = vec![0.0; n];
 
@@ -141,7 +141,8 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
         // CPU implementation
         let cpu_start = Instant::now();
         let cpu_result =
-            scirs2_fft::sparse_fft::sparse_fft(&signal, sparsity, Some(algorithm), None).unwrap();
+            scirs2_fft::sparse_fft::sparse_fft(&signal, sparsity, Some(algorithm), None)
+                .expect("Operation failed");
         let cpu_time = cpu_start.elapsed().as_millis();
 
         // Evaluate CPU accuracy
@@ -170,7 +171,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
                 Some(algorithm),
                 None,
             )
-            .unwrap();
+            .expect("Operation failed");
             gpu_time = gpu_start.elapsed().as_millis();
 
             // Evaluate GPU accuracy
@@ -228,7 +229,11 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
             .map(|(&idx, &val)| (idx, val))
             .collect();
 
-        components.sort_by(|a, b| b.1.norm().partial_cmp(&a.1.norm()).unwrap());
+        components.sort_by(|a, b| {
+            b.1.norm()
+                .partial_cmp(&a.1.norm())
+                .expect("Operation failed")
+        });
 
         for (i, (idx, val)) in components.iter().take(10).enumerate() {
             println!(
@@ -318,7 +323,7 @@ fn runsize_benchmark() {
                 Some(algorithm),
                 None,
             )
-            .unwrap();
+            .expect("Operation failed");
             let elapsed = start.elapsed().as_millis();
             times.push(elapsed);
         }
@@ -381,7 +386,7 @@ fn run_noise_benchmark() {
                 Some(algorithm),
                 None,
             )
-            .unwrap();
+            .expect("Operation failed");
 
             let (_, recall_, _) = evaluate_accuracy(&result, &frequencies, n);
             accuracies.push(recall_);
@@ -446,7 +451,8 @@ fn run_iteration_comparison() {
         let start = Instant::now();
 
         // Use our direct implementation instead of the generic cuda_sparse_fft
-        let result = execute_cuda_iterative_sparse_fft(&signal, sparsity, iterations).unwrap();
+        let result = execute_cuda_iterative_sparse_fft(&signal, sparsity, iterations)
+            .expect("Operation failed");
 
         let elapsed = start.elapsed().as_millis();
 
@@ -456,7 +462,7 @@ fn run_iteration_comparison() {
         println!("{iterations:<15} {true_positives:<15} {recall:<15.3} {elapsed:<20}");
 
         // Calculate reconstruction error
-        let reconstructed = reconstruct_time_domain(&result, n).unwrap();
+        let reconstructed = reconstruct_time_domain(&result, n).expect("Operation failed");
         let mut error = 0.0;
         for i in 0..n {
             let sample_error = (signal[i] - reconstructed[i].re).abs();
@@ -476,7 +482,7 @@ fn run_iteration_comparison() {
         plot.add_trace(trace);
 
         // Print found components (top 10)
-        if iterations == 1 || iterations == *iterations_to_test.last().unwrap() {
+        if iterations == 1 || iterations == *iterations_to_test.last().expect("Operation failed") {
             println!("\n  With {iterations} iterations, found components:");
 
             // Sort by magnitude
@@ -487,7 +493,11 @@ fn run_iteration_comparison() {
                 .map(|(&idx, &val)| (idx, val))
                 .collect();
 
-            components.sort_by(|a, b| b.1.norm().partial_cmp(&a.1.norm()).unwrap());
+            components.sort_by(|a, b| {
+                b.1.norm()
+                    .partial_cmp(&a.1.norm())
+                    .expect("Operation failed")
+            });
 
             for (i, (idx, val)) in components.iter().take(10).enumerate() {
                 // Check if this is a true component
@@ -538,7 +548,7 @@ fn run_iteration_comparison() {
     let start = Instant::now();
     let sublinear_result =
         execute_cuda_sublinear_sparse_fft(&signal, sparsity, SparseFFTAlgorithm::Sublinear)
-            .unwrap();
+            .expect("Operation failed");
     let elapsed = start.elapsed().as_millis();
 
     let (_, recall, true_positives) = evaluate_accuracy(&sublinear_result, &frequencies, n);
@@ -551,7 +561,7 @@ fn run_iteration_comparison() {
     );
 
     // Calculate reconstruction error
-    let reconstructed = reconstruct_time_domain(&sublinear_result, n).unwrap();
+    let reconstructed = reconstruct_time_domain(&sublinear_result, n).expect("Operation failed");
     let mut error = 0.0;
     for i in 0..n {
         let sample_error = (signal[i] - reconstructed[i].re).abs();
@@ -571,7 +581,11 @@ fn run_iteration_comparison() {
         .map(|(&idx, &val)| (idx, val))
         .collect();
 
-    components.sort_by(|a, b| b.1.norm().partial_cmp(&a.1.norm()).unwrap());
+    components.sort_by(|a, b| {
+        b.1.norm()
+            .partial_cmp(&a.1.norm())
+            .expect("Operation failed")
+    });
 
     for (i, (idx, val)) in components.iter().take(10).enumerate() {
         // Check if this is a true component
@@ -605,7 +619,7 @@ fn main() {
 
     // Check CUDA availability
     if is_cuda_available() {
-        let devices = get_cuda_devices().unwrap();
+        let devices = get_cuda_devices().expect("Operation failed");
         println!("\nCUDA is available with {} device(s):", devices.len());
 
         for (idx, device) in devices.iter().enumerate() {

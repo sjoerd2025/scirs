@@ -67,7 +67,7 @@ impl<F: IntegrateFloat> Default for EventSpec<F> {
             id: "default".to_string(),
             direction: EventDirection::default(),
             action: EventAction::default(),
-            threshold: F::from_f64(1e-6).unwrap(),
+            threshold: F::from_f64(1e-6).expect("Operation failed"),
             max_count: None,
             precise_time: true,
         }
@@ -214,7 +214,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
             return Ok(EventAction::Continue);
         }
 
-        let (t_prev, y_prev) = self.last_state.as_ref().unwrap();
+        let (t_prev, y_prev) = self.last_state.as_ref().expect("Operation failed");
 
         // Check each event
         let mut action = EventAction::Continue;
@@ -252,7 +252,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
                                 prev_value,
                                 value,
                                 func,
-                                dense_output.unwrap(),
+                                dense_output.expect("Operation failed"),
                             )?
                         } else {
                             // Use current time as event time (less accurate)
@@ -313,7 +313,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
         };
 
         // Root-finding tolerance
-        let tol = F::from_f64(1e-10).unwrap();
+        let tol = F::from_f64(1e-10).expect("Operation failed");
         let max_iter = 50;
 
         // Bisection search for zero-crossing
@@ -338,7 +338,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
 
         for _ in 0..max_iter {
             // Compute midpoint time
-            t_mid = (t_left + t_right) / F::from_f64(2.0).unwrap();
+            t_mid = (t_left + t_right) / F::from_f64(2.0).expect("Operation failed");
 
             // Get state at midpoint using dense _output
             y_mid = dense_output.evaluate(t_mid)?;
@@ -372,7 +372,11 @@ impl<F: IntegrateFloat> EventHandler<F> {
     /// Check if an event occurred that requires stopping the integration
     pub fn should_stop(&self) -> bool {
         self.record.events.iter().any(|e| {
-            let spec = self.specs.iter().find(|s| s.id == e.id).unwrap();
+            let spec = self
+                .specs
+                .iter()
+                .find(|s| s.id == e.id)
+                .expect("Operation failed");
             spec.action == EventAction::Stop
         })
     }
@@ -385,7 +389,7 @@ pub fn terminal_event<F: IntegrateFloat>(id: &str, direction: EventDirection) ->
         id: id.to_string(),
         direction,
         action: EventAction::Stop,
-        threshold: F::from_f64(1e-6).unwrap(),
+        threshold: F::from_f64(1e-6).expect("Operation failed"),
         max_count: Some(1),
         precise_time: true,
     }
@@ -449,7 +453,7 @@ impl<F: IntegrateFloat> ODEResultWithEvents<F> {
         } else {
             // If no dense output available, check if we have exact time points
             for (i, &ti) in self.base_result.t.iter().enumerate() {
-                if (ti - t).abs() < F::from_f64(1e-10).unwrap() {
+                if (ti - t).abs() < F::from_f64(1e-10).expect("Operation failed") {
                     return Ok(Some(self.base_result.y[i].clone()));
                 }
             }

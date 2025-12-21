@@ -140,7 +140,7 @@ fn create_dense_matrix_example() -> Result<()> {
             4.0, 5.0, 6.0,  // Second row
             7.0, 8.0, 9.0,  // Third row
         ]
-    ).unwrap();
+    ).expect("Operation failed");
 
     let dense_matrix = MMDenseMatrix {
         header,
@@ -436,9 +436,18 @@ fn demonstrate_coordinate_conversions() -> Result<()> {
     let values = Array1::from(vec![1.0, 2.0, 3.0, 0.5, -1.5]);
 
     println!("  Original coordinate arrays:");
-    println!("    Rows:   {:?}", rows.as_slice().unwrap());
-    println!("    Cols:   {:?}", cols.as_slice().unwrap());
-    println!("    Values: {:?}", values.as_slice().unwrap());
+    println!(
+        "    Rows:   {:?}",
+        rows.as_slice().expect("Operation failed")
+    );
+    println!(
+        "    Cols:   {:?}",
+        cols.as_slice().expect("Operation failed")
+    );
+    println!(
+        "    Values: {:?}",
+        values.as_slice().expect("Operation failed")
+    );
 
     // Convert to Matrix Market sparse matrix
     let header = MMHeader {
@@ -463,9 +472,18 @@ fn demonstrate_coordinate_conversions() -> Result<()> {
     let (back_rows, back_cols, back_values) = sparse_to_coo(&read_matrix);
 
     println!("  Converted back to coordinate arrays:");
-    println!("    Rows:   {:?}", back_rows.as_slice().unwrap());
-    println!("    Cols:   {:?}", back_cols.as_slice().unwrap());
-    println!("    Values: {:?}", back_values.as_slice().unwrap());
+    println!(
+        "    Rows:   {:?}",
+        back_rows.as_slice().expect("Operation failed")
+    );
+    println!(
+        "    Cols:   {:?}",
+        back_cols.as_slice().expect("Operation failed")
+    );
+    println!(
+        "    Values: {:?}",
+        back_values.as_slice().expect("Operation failed")
+    );
 
     // Verify the round-trip conversion
     let rows_match = rows == back_rows;

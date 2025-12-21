@@ -299,7 +299,7 @@ impl NeuralAdaptiveSparseProcessor {
         let best_idx = outputs
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
             .unwrap_or(0);
 
@@ -381,7 +381,7 @@ impl NeuralAdaptiveSparseProcessor {
             .max_by(|(_, (score1, count1)), (_, (score2, count2))| {
                 let avg1 = score1 / *count1 as f64;
                 let avg2 = score2 / *count2 as f64;
-                avg1.partial_cmp(&avg2).unwrap()
+                avg1.partial_cmp(&avg2).expect("Operation failed")
             })
             .map(|(strategy, _)| strategy)
             .unwrap_or(OptimizationStrategy::AdaptiveHybrid)
@@ -520,13 +520,13 @@ impl NeuralAdaptiveSparseProcessor {
             features.push(
                 *data_f64
                     .iter()
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                     .unwrap_or(&0.0),
             );
             features.push(
                 *data_f64
                     .iter()
-                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                     .unwrap_or(&0.0),
             );
         } else {

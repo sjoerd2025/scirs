@@ -33,11 +33,11 @@ use scirs2_core::ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 /// let values = array![0.0, 1.0, 2.0, 3.0];
 ///
 /// // Create interpolator with power=2
-/// let interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None).unwrap();
+/// let interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None).expect("Operation failed");
 ///
 /// // Interpolate at a point
 /// let query_point = array![0.5, 0.5];
-/// let result = interp.interpolate(&query_point.view()).unwrap();
+/// let result = interp.interpolate(&query_point.view()).expect("Operation failed");
 ///
 /// // Should be close to 1.5
 /// assert!((result - 1.5).abs() < 0.1);
@@ -165,7 +165,8 @@ impl IDWInterpolator {
         let (indices, distances) = match self.n_neighbors {
             Some(k) => {
                 // Use k nearest neighbors
-                self.kdtree.query(point.as_slice().unwrap(), k)?
+                self.kdtree
+                    .query(point.as_slice().expect("Operation failed"), k)?
             }
             None => {
                 // Use all points
@@ -361,14 +362,22 @@ mod tests {
         // Test with different power values
         for power in &[1.0, 2.0, 3.0] {
             // Create the interpolator
-            let interp =
-                IDWInterpolator::new(&points.view(), &values.view(), *power, None).unwrap();
+            let interp = IDWInterpolator::new(&points.view(), &values.view(), *power, None)
+                .expect("Operation failed");
 
             // Test at the data points (should interpolate exactly)
-            let val_00 = interp.interpolate(&array![0.0, 0.0].view()).unwrap();
-            let val_10 = interp.interpolate(&array![1.0, 0.0].view()).unwrap();
-            let val_01 = interp.interpolate(&array![0.0, 1.0].view()).unwrap();
-            let val_11 = interp.interpolate(&array![1.0, 1.0].view()).unwrap();
+            let val_00 = interp
+                .interpolate(&array![0.0, 0.0].view())
+                .expect("Operation failed");
+            let val_10 = interp
+                .interpolate(&array![1.0, 0.0].view())
+                .expect("Operation failed");
+            let val_01 = interp
+                .interpolate(&array![0.0, 1.0].view())
+                .expect("Operation failed");
+            let val_11 = interp
+                .interpolate(&array![1.0, 1.0].view())
+                .expect("Operation failed");
 
             assert_relative_eq!(val_00, 0.0, epsilon = 1e-10);
             assert_relative_eq!(val_10, 1.0, epsilon = 1e-10);
@@ -376,7 +385,9 @@ mod tests {
             assert_relative_eq!(val_11, 2.0, epsilon = 1e-10);
 
             // Test at the center
-            let val_center = interp.interpolate(&array![0.5, 0.5].view()).unwrap();
+            let val_center = interp
+                .interpolate(&array![0.5, 0.5].view())
+                .expect("Operation failed");
             assert_relative_eq!(val_center, 1.0, epsilon = 0.1);
         }
     }
@@ -406,15 +417,21 @@ mod tests {
         );
 
         // Create interpolator with different numbers of neighbors
-        let interp_all = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None).unwrap();
+        let interp_all = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None)
+            .expect("Operation failed");
 
-        let interp_3 = IDWInterpolator::new(&points.view(), &values.view(), 2.0, Some(3)).unwrap();
+        let interp_3 = IDWInterpolator::new(&points.view(), &values.view(), 2.0, Some(3))
+            .expect("Operation failed");
 
         // Test at a new point
         let test_point = array![0.6, 0.4];
 
-        let val_all = interp_all.interpolate(&test_point.view()).unwrap();
-        let val_3 = interp_3.interpolate(&test_point.view()).unwrap();
+        let val_all = interp_all
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
+        let val_3 = interp_3
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
 
         // Both should be close to x + y = 0.6 + 0.4 = 1.0
         assert_relative_eq!(val_all, 1.0, epsilon = 0.1);
@@ -434,12 +451,15 @@ mod tests {
         let values = array![0.0, 1.0, 1.0, 2.0];
 
         // Create the interpolator
-        let interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None).unwrap();
+        let interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None)
+            .expect("Operation failed");
 
         // Test multiple points at once
         let query_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5],];
 
-        let results = interp.interpolate_many(&query_points.view()).unwrap();
+        let results = interp
+            .interpolate_many(&query_points.view())
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 5);
         assert_relative_eq!(results[0], 0.0, epsilon = 1e-10);
@@ -456,16 +476,17 @@ mod tests {
 
         let values = array![0.0, 1.0, 1.0, 2.0];
 
-        let mut interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None).unwrap();
+        let mut interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None)
+            .expect("Operation failed");
 
         // Test setter methods
         assert_eq!(interp.power(), 2.0);
         assert_eq!(interp.n_neighbors(), None);
 
-        interp.set_power(3.0).unwrap();
+        interp.set_power(3.0).expect("Operation failed");
         assert_eq!(interp.power(), 3.0);
 
-        interp.set_n_neighbors(Some(2)).unwrap();
+        interp.set_n_neighbors(Some(2)).expect("Operation failed");
         assert_eq!(interp.n_neighbors(), Some(2));
 
         // Test error cases
@@ -485,7 +506,8 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
         let values = array![0.0, 1.0, 1.0];
 
-        let interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None).unwrap();
+        let interp = IDWInterpolator::new(&points.view(), &values.view(), 2.0, None)
+            .expect("Operation failed");
 
         let result = interp.interpolate(&array![0.0].view());
         assert!(result.is_err());

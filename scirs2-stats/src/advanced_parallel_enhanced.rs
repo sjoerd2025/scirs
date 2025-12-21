@@ -150,7 +150,7 @@ impl AdvancedParallelProcessor {
         let execution_strategy = if self.config.enable_ml_optimization {
             self.performance_predictor
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .predict_optimal_strategy(&data_characteristics, operations)?
         } else {
             ExecutionStrategy::default()
@@ -160,7 +160,7 @@ impl AdvancedParallelProcessor {
         let memory_layout = if self.config.enable_cross_numa_optimization {
             self.numa_optimizer
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .optimizedata_placement(&data_characteristics)?
         } else {
             MemoryLayout::default()
@@ -170,7 +170,7 @@ impl AdvancedParallelProcessor {
         let load_balancing_config = self
             .load_balancer
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .generate_load_balancing_config(&execution_strategy, &data_characteristics)?;
 
         // Execute parallel operations with real-time monitoring
@@ -216,7 +216,7 @@ impl AdvancedParallelProcessor {
         let execution_strategy = if self.config.enable_ml_optimization {
             self.performance_predictor
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .predict_matrix_strategy(&matrix_characteristics, &operation)?
         } else {
             MatrixExecutionStrategy::default()
@@ -226,7 +226,7 @@ impl AdvancedParallelProcessor {
         let numa_layout = if self.config.enable_cross_numa_optimization {
             self.numa_optimizer
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .optimize_matrix_placement(&matrix_characteristics)?
         } else {
             NumaMatrixLayout::default()
@@ -327,7 +327,7 @@ impl AdvancedParallelProcessor {
         let batch_strategy = if self.config.enable_predictive_scheduling {
             self.performance_predictor
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .predict_batch_strategy(&batch_characteristics, operations)?
         } else {
             BatchProcessingStrategy::default()
@@ -337,7 +337,7 @@ impl AdvancedParallelProcessor {
         let numa_schedule = if self.config.enable_cross_numa_optimization {
             self.numa_optimizer
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .schedule_batches(&batch_characteristics, &batch_strategy)?
         } else {
             NumaBatchSchedule::default()
@@ -398,7 +398,7 @@ impl AdvancedParallelProcessor {
         }
 
         // Calculate basic statistics to infer distribution
-        let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
+        let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).expect("Operation failed");
         let variance = data
             .iter()
             .map(|&x| {
@@ -406,11 +406,11 @@ impl AdvancedParallelProcessor {
                 diff * diff
             })
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(data.len() - 1).unwrap();
+            / F::from(data.len() - 1).expect("Operation failed");
 
-        if variance < F::from(0.1).unwrap() {
+        if variance < F::from(0.1).expect("Failed to convert constant to float") {
             DataDistribution::LowVariance
-        } else if variance > F::from(10.0).unwrap() {
+        } else if variance > F::from(10.0).expect("Failed to convert constant to float") {
             DataDistribution::HighVariance
         } else {
             DataDistribution::Normal
@@ -1577,7 +1577,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_think_parallel_processor_creation() {
         let processor = create_advanced_think_parallel_processor();
         assert!(processor.config.enable_ml_optimization);
@@ -1594,7 +1593,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_batchsize_variance_calculation() {
         let processor = create_advanced_think_parallel_processor();
         let batch1 = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -1608,7 +1606,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_memory_hierarchy_detection() {
         let hierarchy = detect_memory_hierarchy();
         assert!(hierarchy.l1_cache_kb > 0);
@@ -1617,7 +1614,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_numa_topology_detection() {
         let topology = detect_numa_topology();
         assert!(!topology.nodes.is_empty());
@@ -1640,7 +1636,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_cache_efficiency_estimation() {
         let processor = create_advanced_think_parallel_processor();
 
@@ -1654,7 +1649,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_streaming_buffer() {
         let mut buffer = StreamingBuffer::new(3);
         assert!(!buffer.is_ready());
@@ -1672,7 +1666,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_specialized_processor_creation() {
         let largedataset_processor = create_largedataset_parallel_processor();
         assert_eq!(

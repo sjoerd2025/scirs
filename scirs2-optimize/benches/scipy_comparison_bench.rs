@@ -227,7 +227,7 @@ fn bench_unconstrained_methods(c: &mut Criterion) {
                         b.iter(|| {
                             let result = minimize(
                                 problem.function,
-                                x0.as_slice().unwrap(),
+                                x0.as_slice().expect("Operation failed"),
                                 method,
                                 Some(Options::default()),
                             );
@@ -258,7 +258,7 @@ fn bench_dimensions(c: &mut Criterion) {
             b.iter(|| {
                 let result = minimize(
                     sphere,
-                    x0.as_slice().unwrap(),
+                    x0.as_slice().expect("Operation failed"),
                     Method::BFGS,
                     Some(Options::default()),
                 );
@@ -270,7 +270,7 @@ fn bench_dimensions(c: &mut Criterion) {
             b.iter(|| {
                 let result = minimize(
                     sphere,
-                    x0.as_slice().unwrap(),
+                    x0.as_slice().expect("Operation failed"),
                     Method::LBFGS,
                     Some(Options::default()),
                 );
@@ -441,7 +441,7 @@ mod report {
                     let start = std::time::Instant::now();
                     let result = minimize(
                         problem.function,
-                        x0.as_slice().unwrap(),
+                        x0.as_slice().expect("Operation failed"),
                         *method,
                         Some(Options::default()),
                     );

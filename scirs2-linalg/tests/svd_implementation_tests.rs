@@ -6,7 +6,7 @@ use scirs2_linalg::svd;
 #[allow(dead_code)]
 fn test_svd_identitymatrix() {
     let a: Array2<f64> = Array2::eye(3);
-    let (u, s, vt) = svd(&a.view(), false, None).unwrap();
+    let (u, s, vt) = svd(&a.view(), false, None).expect("Test: operation failed");
 
     println!("Identity matrix SVD results:");
     println!("U shape: {:?}", u.shape());
@@ -37,7 +37,7 @@ fn test_svd_identitymatrix() {
 #[allow(dead_code)]
 fn test_svd_diagonalmatrix() {
     let a = array![[3.0, 0.0], [0.0, 2.0]];
-    let (u, s, vt) = svd(&a.view(), false, None).unwrap();
+    let (u, s, vt) = svd(&a.view(), false, None).expect("Test: operation failed");
 
     // Singular values should be 3 and 2 (in descending order)
     assert_eq!(s.len(), 2);
@@ -62,7 +62,7 @@ fn test_svd_diagonalmatrix() {
 #[allow(dead_code)]
 fn test_svd_rectangularmatrix() {
     let a = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
-    let (u, s, vt) = svd(&a.view(), false, None).unwrap();
+    let (u, s, vt) = svd(&a.view(), false, None).expect("Test: operation failed");
 
     // Check dimensions
     assert_eq!(u.shape(), &[3, 2]);
@@ -99,7 +99,7 @@ fn test_svd_rectangularmatrix() {
 #[allow(dead_code)]
 fn test_svd_full_matrices() {
     let a = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
-    let (u, s, vt) = svd(&a.view(), true, None).unwrap();
+    let (u, s, vt) = svd(&a.view(), true, None).expect("Test: operation failed");
 
     // Check dimensions with full matrices
     assert_eq!(u.shape(), &[3, 3]);
@@ -131,8 +131,11 @@ fn test_svd_full_matrices() {
 fn test_svd_1x1matrix() {
     let a = array![[-5.0]];
     let a_view = a.view();
-    let a_1x1 = a_view.view().into_shape_with_order((1, 1)).unwrap();
-    let (u, s, vt) = svd(&a_1x1, false, None).unwrap();
+    let a_1x1 = a_view
+        .view()
+        .into_shape_with_order((1, 1))
+        .expect("Test: operation failed");
+    let (u, s, vt) = svd(&a_1x1, false, None).expect("Test: operation failed");
 
     assert_eq!(u.shape(), &[1, 1]);
     assert_eq!(s.len(), 1);
@@ -151,7 +154,7 @@ fn test_svd_1x1matrix() {
 fn test_svd_rank_deficientmatrix() {
     // Create a rank-1 matrix
     let a = array![[1.0, 2.0], [2.0, 4.0]];
-    let (u, s, vt) = svd(&a.view(), false, None).unwrap();
+    let (u, s, vt) = svd(&a.view(), false, None).expect("Test: operation failed");
 
     // Should have one non-zero singular value
     assert!(s[0] > 1e-10);

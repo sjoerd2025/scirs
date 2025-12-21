@@ -414,8 +414,8 @@ pub fn richardson_lucy_deconvolution_1d(
 
         // Compute the predicted signal
         let predicted = convolve::convolve(
-            estimate.as_slice().unwrap(),
-            normalized_psf.as_slice().unwrap(),
+            estimate.as_slice().expect("Operation failed"),
+            normalized_psf.as_slice().expect("Operation failed"),
             "same",
         )?;
 
@@ -428,8 +428,8 @@ pub fn richardson_lucy_deconvolution_1d(
 
         // Apply the correction
         let correction_blurred = convolve::convolve(
-            correction.as_slice().unwrap(),
-            flipped_psf.as_slice().unwrap(),
+            correction.as_slice().expect("Operation failed"),
+            flipped_psf.as_slice().expect("Operation failed"),
             "same",
         )?;
         for i in 0..pad_len {
@@ -553,8 +553,8 @@ pub fn clean_deconvolution_1d(
             let (idx, val) = residual
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.abs().partial_cmp(&b.1.abs()).unwrap())
-                .unwrap();
+                .max_by(|a, b| a.1.abs().partial_cmp(&b.1.abs()).expect("Operation failed"))
+                .expect("Operation failed");
             (idx, *val)
         };
 
@@ -577,8 +577,8 @@ pub fn clean_deconvolution_1d(
     // Convolve model with a restoring beam (Gaussian)
     let restoring_beam = create_gaussian_kernel((psf.len() / 2).max(3));
     let restored_vec = convolve::convolve(
-        model.as_slice().unwrap(),
-        restoring_beam.as_slice().unwrap(),
+        model.as_slice().expect("Operation failed"),
+        restoring_beam.as_slice().expect("Operation failed"),
         "same",
     )?;
     let restored = Array1::from_vec(restored_vec);
@@ -679,8 +679,8 @@ pub fn mem_deconvolution_1d(
 
         // Calculate model response
         let response = convolve::convolve(
-            model.as_slice().unwrap(),
-            normalized_psf.as_slice().unwrap(),
+            model.as_slice().expect("Operation failed"),
+            normalized_psf.as_slice().expect("Operation failed"),
             "same",
         )?;
 
@@ -1514,8 +1514,8 @@ fn gaussian_filter_1d(signal: &Array1<f64>, sigma: f64) -> Array1<f64> {
     let kernel = create_gaussian_kernel(kernel_size);
 
     match convolve::convolve(
-        signal.as_slice().unwrap(),
-        kernel.as_slice().unwrap(),
+        signal.as_slice().expect("Operation failed"),
+        kernel.as_slice().expect("Operation failed"),
         "same",
     ) {
         Ok(filtered) => Array1::from_vec(filtered),
@@ -1718,8 +1718,8 @@ pub fn estimate_regularization_param(
 
         // Compute residual sum of squares (RSS)
         let predicted = convolve::convolve(
-            solution.as_slice().unwrap(),
-            padded_psf.as_slice().unwrap(),
+            solution.as_slice().expect("Operation failed"),
+            padded_psf.as_slice().expect("Operation failed"),
             "same",
         )?;
         let mut rss = 0.0;

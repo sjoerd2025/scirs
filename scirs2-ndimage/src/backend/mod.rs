@@ -199,7 +199,12 @@ impl BackendExecutor {
     #[cfg(feature = "cuda")]
     fn is_cuda_available(&self) -> bool {
         device_detection::get_device_manager()
-            .map(|manager| manager.lock().unwrap().is_backend_available(Backend::Cuda))
+            .map(|manager| {
+                manager
+                    .lock()
+                    .expect("Operation failed")
+                    .is_backend_available(Backend::Cuda)
+            })
             .unwrap_or(false)
     }
 
@@ -209,7 +214,7 @@ impl BackendExecutor {
             .map(|manager| {
                 manager
                     .lock()
-                    .unwrap()
+                    .expect("Operation failed")
                     .is_backend_available(Backend::OpenCL)
             })
             .unwrap_or(false)
@@ -218,7 +223,12 @@ impl BackendExecutor {
     #[cfg(all(target_os = "macos", feature = "metal"))]
     fn is_metal_available(&self) -> bool {
         device_detection::get_device_manager()
-            .map(|manager| manager.lock().unwrap().is_backend_available(Backend::Metal))
+            .map(|manager| {
+                manager
+                    .lock()
+                    .expect("Operation failed")
+                    .is_backend_available(Backend::Metal)
+            })
             .unwrap_or(false)
     }
 }
@@ -382,12 +392,14 @@ mod tests {
             ..Default::default()
         };
 
-        let executor = BackendExecutor::new(config).unwrap();
+        let executor = BackendExecutor::new(config).expect("Operation failed");
         let small_array = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
         let op = GaussianFilterOp::new(vec![1.0, 1.0], None);
 
         // Small array should use CPU
-        let _result = executor.execute(&small_array.view(), op).unwrap();
+        let _result = executor
+            .execute(&small_array.view(), op)
+            .expect("Operation failed");
     }
 
     #[test]
@@ -397,7 +409,7 @@ mod tests {
             .gpu_threshold(50_000)
             .allow_fallback(true)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(executor.config.backend, Backend::Cpu);
         assert_eq!(executor.config.gpu_threshold, 50_000);

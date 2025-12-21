@@ -122,7 +122,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> CrossModalAttention<F> {
         let value_proj = Dense::<F>::new(key_dim, hidden_dim, None, &mut rng)?;
         let output_proj = Dense::<F>::new(hidden_dim, query_dim, None, &mut rng)?;
         // Scale factor for dot product attention
-        let scale = F::from(1.0 / (hidden_dim as f64).sqrt()).unwrap();
+        let scale = F::from(1.0 / (hidden_dim as f64).sqrt()).expect("Operation failed");
             query_proj,
             key_proj,
             value_proj,

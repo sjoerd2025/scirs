@@ -23,7 +23,7 @@ where
 {
     let n = y.len();
     let mut jac = Array2::<F>::zeros((n, n));
-    let eps = F::from_f64(1e-8).unwrap();
+    let eps = F::from_f64(1e-8).expect("Operation failed");
 
     // Compute only the diagonals within the band
     for j in 0..n {
@@ -66,7 +66,7 @@ where
 {
     let n = y.len();
     let mut jac = Array2::<F>::zeros((n, n));
-    let eps = F::from_f64(1e-8).unwrap();
+    let eps = F::from_f64(1e-8).expect("Operation failed");
 
     // For each column, only compute the elements in the block-diagonal
     for j in 0..n {
@@ -107,7 +107,7 @@ where
 {
     let n = y.len();
     let mut jac = Array2::<F>::zeros((n, n));
-    let eps = F::from_f64(1e-8).unwrap();
+    let eps = F::from_f64(1e-8).expect("Operation failed");
 
     // Determine the number of colors
     let max_color = coloring.iter().max().map_or(0, |&x| x) + 1;
@@ -182,7 +182,7 @@ where
     let dy_norm_squared = delta_y.iter().map(|&x| x * x).sum::<F>();
 
     // Apply update if denominator is not too small
-    if dy_norm_squared > F::from_f64(1e-14).unwrap() {
+    if dy_norm_squared > F::from_f64(1e-14).expect("Operation failed") {
         for i in 0..n {
             for j in 0..n {
                 _jac[[i, j]] += correction[i] * delta_y[j] / dy_norm_squared;
@@ -230,7 +230,7 @@ pub fn block_update<F>(
         let correction = &block_df - &block_jac_dy;
         let dy_norm_squared = block_dy.iter().map(|&x| x * x).sum::<F>();
 
-        if dy_norm_squared > F::from_f64(1e-14).unwrap() {
+        if dy_norm_squared > F::from_f64(1e-14).expect("Operation failed") {
             for i in 0..(end - start) {
                 for j in 0..(end - start) {
                     jac[[i + start, j + start]] += correction[i] * block_dy[j] / dy_norm_squared;

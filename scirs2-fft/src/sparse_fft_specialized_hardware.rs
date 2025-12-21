@@ -633,7 +633,10 @@ impl SpecializedHardwareManager {
         };
 
         // Execute on selected accelerator
-        let accelerator = self.accelerators.get_mut(&best_accelerator).unwrap();
+        let accelerator = self
+            .accelerators
+            .get_mut(&best_accelerator)
+            .expect("Operation failed");
 
         let input_handle = accelerator.allocate_memory(signal_bytes.len())?;
         let output_handle =
@@ -808,7 +811,7 @@ mod tests {
         };
 
         let mut manager = SpecializedHardwareManager::new(config);
-        let discovered = manager.discover_accelerators().unwrap();
+        let discovered = manager.discover_accelerators().expect("Operation failed");
 
         // Discovery should always return something (even if just mock accelerators)
         assert!(!discovered.is_empty());
@@ -841,7 +844,7 @@ mod tests {
         let result = specialized_hardware_sparse_fft(&signal, config);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert_eq!(result.values.len(), 4);
         assert_eq!(result.indices.len(), 4);
     }

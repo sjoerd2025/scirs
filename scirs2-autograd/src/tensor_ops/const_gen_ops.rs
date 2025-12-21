@@ -30,7 +30,7 @@ impl<T: Float> op::Op<T> for Zeros {
         let ret = if let Some(a) = shape.as_slice() {
             ndarray_ext::zeros(
                 a.iter()
-                    .map(|&b| b.to_usize().unwrap())
+                    .map(|&b| b.to_usize().expect("Operation failed"))
                     .collect::<Vec<_>>()
                     .as_slice(),
             )
@@ -38,7 +38,7 @@ impl<T: Float> op::Op<T> for Zeros {
             ndarray_ext::zeros(
                 shape
                     .iter()
-                    .map(|&b| b.to_usize().unwrap())
+                    .map(|&b| b.to_usize().expect("Operation failed"))
                     .collect::<Vec<_>>()
                     .as_slice(),
             )
@@ -58,7 +58,7 @@ impl<T: Float> op::Op<T> for Ones {
         let ret = if let Some(a) = shape.as_slice() {
             ndarray_ext::ones(
                 a.iter()
-                    .map(|&b| b.to_usize().unwrap())
+                    .map(|&b| b.to_usize().expect("Operation failed"))
                     .collect::<Vec<_>>()
                     .as_slice(),
             )
@@ -66,7 +66,7 @@ impl<T: Float> op::Op<T> for Ones {
             ndarray_ext::ones(
                 shape
                     .iter()
-                    .map(|&b| b.to_usize().unwrap())
+                    .map(|&b| b.to_usize().expect("Operation failed"))
                     .collect::<Vec<_>>()
                     .as_slice(),
             )

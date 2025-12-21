@@ -12,10 +12,10 @@
 //
 // // Multi-band separation
 // let signal = Array1::from_vec(vec![1.0, 0.5, -0.3, 0.8, -0.2]);
-// let bands = multiband_separation(&signal, &[0.1, 0.3, 0.5], 1000.0, None).unwrap();
+// let bands = multiband_separation(&signal, &[0.1, 0.3, 0.5], 1000.0, None).expect("Operation failed");
 //
 // // Harmonic/percussive separation
-// let (harmonic, percussive) = harmonic_percussive_separation(&signal, 1000.0, None).unwrap();
+// let (harmonic, percussive) = harmonic_percussive_separation(&signal, 1000.0, None).expect("Operation failed");
 // ```
 
 use crate::error::{SignalError, SignalResult};
@@ -95,7 +95,7 @@ impl Default for HarmonicPercussiveConfig {
 ///
 /// let signal = Array1::from_vec(vec![1.0, 0.5, -0.3, 0.8, -0.2, 0.1, -0.6, 0.4]);
 /// let cutoffs = vec![0.1, 0.3, 0.5]; // Creates 4 bands: 0-0.1, 0.1-0.3, 0.3-0.5, 0.5-1.0
-/// let bands = multiband_separation(&signal, &cutoffs, 1000.0, None).unwrap();
+/// let bands = multiband_separation(&signal, &cutoffs, 1000.0, None).expect("Operation failed");
 /// assert_eq!(bands.len(), 4); // Number of bands = cutoffs.len() + 1
 /// ```
 #[allow(dead_code)]
@@ -193,7 +193,7 @@ pub fn multiband_separation(
 /// use scirs2_signal::separation::harmonic_percussive_separation;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 0.5, -0.3, 0.8, -0.2, 0.1, -0.6, 0.4]);
-/// let (harmonic, percussive) = harmonic_percussive_separation(&signal, 1000.0, None).unwrap();
+/// let (harmonic, percussive) = harmonic_percussive_separation(&signal, 1000.0, None).expect("Operation failed");
 /// assert_eq!(harmonic.len(), signal.len());
 /// assert_eq!(percussive.len(), signal.len());
 /// ```
@@ -271,7 +271,7 @@ mod tests {
         // Define cutoff frequencies (normalized to Nyquist = 500 Hz)
         let cutoffs = vec![0.2, 0.6]; // 100 Hz, 300 Hz
 
-        let bands = multiband_separation(&signal_array, &cutoffs, sample_rate, None).unwrap();
+        let bands = multiband_separation(&signal_array, &cutoffs, sample_rate, None).expect("Operation failed");
 
         // Should create 3 bands
         assert_eq!(bands.len(), 3);
@@ -321,7 +321,7 @@ mod tests {
         let signal_array = Array1::from(signal);
 
         let (harmonic, percussive) =
-            harmonic_percussive_separation(&signal_array, sample_rate, None).unwrap();
+            harmonic_percussive_separation(&signal_array, sample_rate, None).expect("Operation failed");
 
         // Output signals should have same length as input
         assert_eq!(harmonic.len(), signal_array.len());

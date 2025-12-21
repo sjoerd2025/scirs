@@ -553,13 +553,13 @@ impl ProblemEncoder {
             features[4] = gradient_components
                 .iter()
                 .map(|&g| g.abs())
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .unwrap_or(0.0)
                 .tanh();
             features[5] = gradient_components
                 .iter()
                 .map(|&g| g.abs())
-                .min_by(|a, b| a.partial_cmp(b).unwrap())
+                .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .unwrap_or(0.0)
                 .tanh();
         }
@@ -687,7 +687,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = learned_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result =
+            learned_optimize(objective, &initial.view(), Some(config)).expect("Operation failed");
 
         assert!(result.fun >= 0.0);
         assert_eq!(result.x.len(), 2);

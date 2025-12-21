@@ -95,27 +95,33 @@ fn benchmark_classification_metrics(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("accuracy_score", size),
             size,
-            |b, &_size| b.iter(|| accuracy_score(&y_true, &y_pred).unwrap()),
+            |b, &_size| b.iter(|| accuracy_score(&y_true, &y_pred).expect("Operation failed")),
         );
 
         group.bench_with_input(
             BenchmarkId::new("precision_score", size),
             size,
-            |b, &_size| b.iter(|| precision_score(&y_true, &y_pred, 1.0).unwrap()),
+            |b, &_size| {
+                b.iter(|| precision_score(&y_true, &y_pred, 1.0).expect("Operation failed"))
+            },
         );
 
         group.bench_with_input(BenchmarkId::new("recall_score", size), size, |b, &_size| {
-            b.iter(|| recall_score(&y_true, &y_pred, 1.0).unwrap())
+            b.iter(|| recall_score(&y_true, &y_pred, 1.0).expect("Operation failed"))
         });
 
         group.bench_with_input(BenchmarkId::new("f1_score", size), size, |b, &_size| {
-            b.iter(|| f1_score(&y_true, &y_pred, 1.0).unwrap())
+            b.iter(|| f1_score(&y_true, &y_pred, 1.0).expect("Operation failed"))
         });
 
         group.bench_with_input(
             BenchmarkId::new("confusion_matrix", size),
             size,
-            |b, &_size| b.iter(|| confusion_matrix(&y_true_int, &y_pred_int, None).unwrap()),
+            |b, &_size| {
+                b.iter(|| {
+                    confusion_matrix(&y_true_int, &y_pred_int, None).expect("Operation failed")
+                })
+            },
         );
     }
 
@@ -133,17 +139,17 @@ fn benchmark_regression_metrics(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("mean_squared_error", size),
             size,
-            |b, &_size| b.iter(|| mean_squared_error(&y_true, &y_pred).unwrap()),
+            |b, &_size| b.iter(|| mean_squared_error(&y_true, &y_pred).expect("Operation failed")),
         );
 
         group.bench_with_input(
             BenchmarkId::new("mean_absolute_error", size),
             size,
-            |b, &_size| b.iter(|| mean_absolute_error(&y_true, &y_pred).unwrap()),
+            |b, &_size| b.iter(|| mean_absolute_error(&y_true, &y_pred).expect("Operation failed")),
         );
 
         group.bench_with_input(BenchmarkId::new("r2_score", size), size, |b, &_size| {
-            b.iter(|| r2_score(&y_true, &y_pred).unwrap())
+            b.iter(|| r2_score(&y_true, &y_pred).expect("Operation failed"))
         });
     }
 
@@ -162,13 +168,15 @@ fn benchmark_clustering_metrics(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("silhouette_score", size),
             size,
-            |b, &_size| b.iter(|| silhouette_score(&data, &labels, "euclidean").unwrap()),
+            |b, &_size| {
+                b.iter(|| silhouette_score(&data, &labels, "euclidean").expect("Operation failed"))
+            },
         );
 
         group.bench_with_input(
             BenchmarkId::new("davies_bouldin_score", size),
             size,
-            |b, &_size| b.iter(|| davies_bouldin_score(&data, &labels).unwrap()),
+            |b, &_size| b.iter(|| davies_bouldin_score(&data, &labels).expect("Operation failed")),
         );
     }
 
@@ -187,19 +195,19 @@ fn benchmark_anomaly_metrics(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("kl_divergence", size),
             size,
-            |b, &_size| b.iter(|| kl_divergence(&p, &q).unwrap()),
+            |b, &_size| b.iter(|| kl_divergence(&p, &q).expect("Operation failed")),
         );
 
         group.bench_with_input(
             BenchmarkId::new("js_divergence", size),
             size,
-            |b, &_size| b.iter(|| js_divergence(&p, &q).unwrap()),
+            |b, &_size| b.iter(|| js_divergence(&p, &q).expect("Operation failed")),
         );
 
         group.bench_with_input(
             BenchmarkId::new("wasserstein_distance", size),
             size,
-            |b, &_size| b.iter(|| wasserstein_distance(&data1, &data2).unwrap()),
+            |b, &_size| b.iter(|| wasserstein_distance(&data1, &data2).expect("Operation failed")),
         );
     }
 
@@ -216,17 +224,27 @@ fn benchmark_stable_metrics(c: &mut Criterion) {
         let data: Vec<f64> = (0..*size).map(|i| i as f64).collect();
 
         group.bench_with_input(BenchmarkId::new("stable_mean", size), size, |b, &_size| {
-            b.iter(|| stable_metrics.stable_mean(&data).unwrap())
+            b.iter(|| stable_metrics.stable_mean(&data).expect("Operation failed"))
         });
 
         group.bench_with_input(
             BenchmarkId::new("stable_variance", size),
             size,
-            |b, &_size| b.iter(|| stable_metrics.stable_variance(&data, 1).unwrap()),
+            |b, &_size| {
+                b.iter(|| {
+                    stable_metrics
+                        .stable_variance(&data, 1)
+                        .expect("Operation failed")
+                })
+            },
         );
 
         group.bench_with_input(BenchmarkId::new("stable_std", size), size, |b, &_size| {
-            b.iter(|| stable_metrics.stable_std(&data, 1).unwrap())
+            b.iter(|| {
+                stable_metrics
+                    .stable_std(&data, 1)
+                    .expect("Operation failed")
+            })
         });
     }
 
@@ -245,7 +263,9 @@ fn benchmark_high_dimensional_performance(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("silhouette_high_dim", dims),
             dims,
-            |b, &_dims| b.iter(|| silhouette_score(&data, &labels, "euclidean").unwrap()),
+            |b, &_dims| {
+                b.iter(|| silhouette_score(&data, &labels, "euclidean").expect("Operation failed"))
+            },
         );
     }
 
@@ -268,7 +288,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
                 b.iter(|| {
                     // This tests memory allocation patterns
 
-                    mean_squared_error(&y_true, &y_pred).unwrap()
+                    mean_squared_error(&y_true, &y_pred).expect("Operation failed")
                 })
             },
         );
@@ -280,7 +300,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
                 b.iter(|| {
                     let y_true_class: Array1<f64> = y_true.mapv(|x| (x as usize % 2) as f64);
                     let y_pred_class: Array1<f64> = y_pred.mapv(|x| (x as usize % 2) as f64);
-                    accuracy_score(&y_true_class, &y_pred_class).unwrap()
+                    accuracy_score(&y_true_class, &y_pred_class).expect("Operation failed")
                 })
             },
         );
@@ -299,7 +319,7 @@ fn benchmark_edge_cases(c: &mut Criterion) {
     let very_small_pred = Array1::from_vec(vec![2e-100; 1000]);
 
     group.bench_function("mse_tiny_numbers", |b| {
-        b.iter(|| mean_squared_error(&very_small_true, &very_small_pred).unwrap())
+        b.iter(|| mean_squared_error(&very_small_true, &very_small_pred).expect("Operation failed"))
     });
 
     // Test with very large numbers (potential overflow)
@@ -307,7 +327,7 @@ fn benchmark_edge_cases(c: &mut Criterion) {
     let very_large_pred = Array1::from_vec(vec![2e50; 1000]);
 
     group.bench_function("mse_huge_numbers", |b| {
-        b.iter(|| mean_squared_error(&very_large_true, &very_large_pred).unwrap())
+        b.iter(|| mean_squared_error(&very_large_true, &very_large_pred).expect("Operation failed"))
     });
 
     // Test with extreme class imbalance
@@ -317,7 +337,7 @@ fn benchmark_edge_cases(c: &mut Criterion) {
     let imbalanced_pred = Array1::zeros(10000);
 
     group.bench_function("accuracy_extreme_imbalance", |b| {
-        b.iter(|| accuracy_score(&imbalanced_true, &imbalanced_pred).unwrap())
+        b.iter(|| accuracy_score(&imbalanced_true, &imbalanced_pred).expect("Operation failed"))
     });
 
     group.finish();

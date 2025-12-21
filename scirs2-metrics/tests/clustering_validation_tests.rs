@@ -11,21 +11,21 @@ mod clustering_validation_tests {
         let labels1 = array![0, 0, 1, 1, 2, 2];
         let labels2 = array![0, 0, 1, 1, 2, 2];
 
-        let similarity = jaccard_similarity(&labels1, &labels2).unwrap();
+        let similarity = jaccard_similarity(&labels1, &labels2).expect("Operation failed");
         assert!(similarity > 0.99);
 
         // Same clustering but with different label values
         let labels3 = array![0, 0, 1, 1, 2, 2];
         let labels4 = array![1, 1, 0, 0, 2, 2];
 
-        let similarity = jaccard_similarity(&labels3, &labels4).unwrap();
+        let similarity = jaccard_similarity(&labels3, &labels4).expect("Operation failed");
         assert!(similarity > 0.5);
 
         // Different clusterings
         let labels5 = array![0, 0, 0, 1, 1, 1];
         let labels6 = array![0, 0, 1, 1, 2, 2];
 
-        let similarity = jaccard_similarity(&labels5, &labels6).unwrap();
+        let similarity = jaccard_similarity(&labels5, &labels6).expect("Operation failed");
         assert!(similarity < 1.0);
     }
 
@@ -36,7 +36,7 @@ mod clustering_validation_tests {
         let clustering2 = array![0, 0, 0, 1, 1, 1];
 
         let all_clusterings = vec![&clustering1, &clustering2];
-        let score = consensus_score(&all_clusterings).unwrap();
+        let score = consensus_score(&all_clusterings).expect("Operation failed");
         // For identical clusterings, we expect positive consensus, but the value
         // depends on the statistic calculation and data distribution
         assert!(score > 0.0);
@@ -46,7 +46,7 @@ mod clustering_validation_tests {
         let clustering4 = array![1, 1, 1, 0, 0, 0];
 
         let all_clusterings = vec![&clustering3, &clustering4];
-        let score = consensus_score(&all_clusterings).unwrap();
+        let score = consensus_score(&all_clusterings).expect("Operation failed");
         // Similar clusterings should have positive consensus
         assert!(score > 0.0);
 
@@ -56,7 +56,7 @@ mod clustering_validation_tests {
         let clustering7 = array![0, 0, 1, 1, 2, 2];
 
         let all_clusterings = vec![&clustering5, &clustering6, &clustering7];
-        let score = consensus_score(&all_clusterings).unwrap();
+        let score = consensus_score(&all_clusterings).expect("Operation failed");
         // Consensus may vary based on implementation details
         // Just check that it's a valid score between 0 and 1
         assert!(score >= 0.0);
@@ -73,12 +73,13 @@ mod clustering_validation_tests {
                 5.1, 6.1, 5.3, 5.9,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 0, 0, 1, 1, 1, 1, 1];
 
         // Test with small number of runs for quicker testing
-        let stability = cluster_stability(&x, &labels, Some(2), None, Some(42)).unwrap();
+        let stability =
+            cluster_stability(&x, &labels, Some(2), None, Some(42)).expect("Operation failed");
 
         // Well-separated clusters should have relatively high stability
         assert!(stability >= 0.0);
@@ -104,12 +105,13 @@ mod clustering_validation_tests {
                 5.1, 6.1, 5.3, 5.9,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 0, 0, 1, 1, 1, 1, 1];
 
         // Test with small number of folds for quicker testing
-        let stability = fold_stability(&x, &labels, Some(2), Some(0.6), Some(42)).unwrap();
+        let stability =
+            fold_stability(&x, &labels, Some(2), Some(0.6), Some(42)).expect("Operation failed");
 
         // Well-separated clusters should have high fold stability
         assert!(stability >= 0.0);

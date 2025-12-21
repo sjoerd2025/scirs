@@ -142,13 +142,14 @@ pub fn erf<F: Float + FromPrimitive>(x: F) -> F {
     // Go back to the original implementation using Abramowitz and Stegun 7.1.26 formula
     // This is known to be accurate enough for the test cases
 
-    let t = F::one() / (F::one() + F::from(0.3275911).unwrap() * x);
+    let t = F::one()
+        / (F::one() + F::from(0.3275911).expect("Failed to convert constant to float") * x);
 
-    let a1 = F::from(0.254829592).unwrap();
-    let a2 = F::from(-0.284496736).unwrap();
-    let a3 = F::from(1.421413741).unwrap();
-    let a4 = F::from(-1.453152027).unwrap();
-    let a5 = F::from(1.061405429).unwrap();
+    let a1 = F::from(0.254829592).expect("Failed to convert constant to float");
+    let a2 = F::from(-0.284496736).expect("Failed to convert constant to float");
+    let a3 = F::from(1.421413741).expect("Failed to convert constant to float");
+    let a4 = F::from(-1.453152027).expect("Failed to convert constant to float");
+    let a5 = F::from(1.061405429).expect("Failed to convert constant to float");
 
     let poly = a1 * t + a2 * t * t + a3 * t.powi(3) + a4 * t.powi(4) + a5 * t.powi(5);
 
@@ -195,29 +196,30 @@ pub fn erfc<F: Float + FromPrimitive>(x: F) -> F {
         return if x.is_sign_positive() {
             F::zero()
         } else {
-            F::from(2.0).unwrap()
+            F::from(2.0).expect("Failed to convert constant to float")
         };
     }
 
     // For negative values, use the relation: erfc(-x) = 2 - erfc(x)
     if x < F::zero() {
-        return F::from(2.0).unwrap() - erfc(-x);
+        return F::from(2.0).expect("Failed to convert constant to float") - erfc(-x);
     }
 
     // For small x use 1 - erf(x)
-    if x < F::from(0.5).unwrap() {
+    if x < F::from(0.5).expect("Failed to convert constant to float") {
         return F::one() - erf(x);
     }
 
     // Use the original Abramowitz and Stegun approximation for erfc
     // This is known to be accurate enough for the test cases
-    let t = F::one() / (F::one() + F::from(0.3275911).unwrap() * x);
+    let t = F::one()
+        / (F::one() + F::from(0.3275911).expect("Failed to convert constant to float") * x);
 
-    let a1 = F::from(0.254829592).unwrap();
-    let a2 = F::from(-0.284496736).unwrap();
-    let a3 = F::from(1.421413741).unwrap();
-    let a4 = F::from(-1.453152027).unwrap();
-    let a5 = F::from(1.061405429).unwrap();
+    let a1 = F::from(0.254829592).expect("Failed to convert constant to float");
+    let a2 = F::from(-0.284496736).expect("Failed to convert constant to float");
+    let a3 = F::from(1.421413741).expect("Failed to convert constant to float");
+    let a4 = F::from(-1.453152027).expect("Failed to convert constant to float");
+    let a5 = F::from(1.061405429).expect("Failed to convert constant to float");
 
     let poly = a1 * t + a2 * t * t + a3 * t.powi(3) + a4 * t.powi(4) + a5 * t.powi(5);
 
@@ -258,7 +260,7 @@ pub fn erfinv<F: Float + FromPrimitive + ToPrimitive>(y: F) -> F {
         return F::infinity();
     }
 
-    if y == F::from(-1.0).unwrap() {
+    if y == F::from(-1.0).expect("Failed to convert constant to float") {
         return F::neg_infinity();
     }
 
@@ -273,14 +275,14 @@ pub fn erfinv<F: Float + FromPrimitive + ToPrimitive>(y: F) -> F {
 
     let abs_y = y.abs();
 
-    let mut x = if abs_y <= F::from(0.9).unwrap() {
+    let mut x = if abs_y <= F::from(0.9).expect("Failed to convert constant to float") {
         // Central region - use Winitzki approximation with correction
         // This is robust and well-tested
-        let two = F::from(2.0).unwrap();
-        let three = F::from(3.0).unwrap();
-        let four = F::from(4.0).unwrap();
-        let eight = F::from(8.0).unwrap();
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
+        let three = F::from(3.0).expect("Failed to convert constant to float");
+        let four = F::from(4.0).expect("Failed to convert constant to float");
+        let eight = F::from(8.0).expect("Failed to convert constant to float");
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
 
         let numerator = eight * (pi - three);
         let denominator = three * pi * (four - pi);
@@ -336,8 +338,8 @@ pub fn erfinv<F: Float + FromPrimitive + ToPrimitive>(y: F) -> F {
         }
 
         let sqrt_ln = (-(one - abs_y).ln()).sqrt();
-        let correction = F::from(0.5).unwrap()
-            * (sqrt_ln.ln() + F::from(std::f64::consts::LN_2).unwrap())
+        let correction = F::from(0.5).expect("Failed to convert constant to float")
+            * (sqrt_ln.ln() + F::from(std::f64::consts::LN_2).expect("Failed to convert to float"))
             / sqrt_ln;
         let result = sqrt_ln - correction;
 
@@ -355,20 +357,21 @@ pub fn erfinv<F: Float + FromPrimitive + ToPrimitive>(y: F) -> F {
         let f = erf_x - y;
 
         // Check if we're already close enough
-        if f.abs() < F::from(1e-15).unwrap() {
+        if f.abs() < F::from(1e-15).expect("Failed to convert constant to float") {
             break;
         }
 
-        let two = F::from(2.0).unwrap();
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let sqrt_pi = pi.sqrt();
         let fprime = (two / sqrt_pi) * (-x * x).exp();
 
         // Only apply correction if fprime is not too small and correction is reasonable
-        if fprime.abs() > F::from(1e-15).unwrap() {
+        if fprime.abs() > F::from(1e-15).expect("Failed to convert constant to float") {
             let correction = f / fprime;
             // Limit the correction to prevent overshooting
-            let max_correction = x.abs() * F::from(0.5).unwrap();
+            let max_correction =
+                x.abs() * F::from(0.5).expect("Failed to convert constant to float");
             let limited_correction = if correction.abs() > max_correction {
                 max_correction * correction.signum()
             } else {
@@ -407,7 +410,7 @@ pub fn erfinv<F: Float + FromPrimitive + ToPrimitive>(y: F) -> F {
 #[allow(dead_code)]
 pub fn erfcinv<F: Float + FromPrimitive>(y: F) -> F {
     // Special cases
-    if y == F::from(2.0).unwrap() {
+    if y == F::from(2.0).expect("Failed to convert constant to float") {
         return F::neg_infinity();
     }
 
@@ -421,7 +424,7 @@ pub fn erfcinv<F: Float + FromPrimitive>(y: F) -> F {
 
     // For y > 1, use the relation: erfcinv(y) = -erfcinv(2-y)
     if y > F::one() {
-        return -erfcinv(F::from(2.0).unwrap() - y);
+        return -erfcinv(F::from(2.0).expect("Failed to convert constant to float") - y);
     }
 
     // Use a simple relation to erfinv
@@ -434,14 +437,14 @@ pub fn erfcinv<F: Float + FromPrimitive>(y: F) -> F {
 #[allow(dead_code)]
 fn refine_erfinv<F: Float + FromPrimitive>(mut x: F, y: F) -> F {
     // Constants for the algorithm
-    let sqrt_pi = F::from(std::f64::consts::PI.sqrt()).unwrap();
-    let two_over_sqrt_pi = F::from(2.0).unwrap() / sqrt_pi;
+    let sqrt_pi = F::from(std::f64::consts::PI.sqrt()).expect("Operation failed");
+    let two_over_sqrt_pi = F::from(2.0).expect("Failed to convert constant to float") / sqrt_pi;
 
     // Apply up to 3 iterations of Newton-Raphson method
     for _ in 0..3 {
         let err = erf(x) - y;
         // If already precise enough, stop iterations
-        if err.abs() < F::from(1e-12).unwrap() {
+        if err.abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             break;
         }
 
@@ -920,7 +923,7 @@ pub fn dawsn<F: Float + FromPrimitive + ToPrimitive>(x: F) -> F {
     }
 
     // Convert to f64 for calculation
-    let x_f64 = x.to_f64().unwrap().abs();
+    let x_f64 = x.to_f64().expect("Operation failed").abs();
 
     // For large |x|, use asymptotic expansion: D(x) ≈ 1/(2x)
     // The Faddeeva function loses precision for large x
@@ -931,7 +934,7 @@ pub fn dawsn<F: Float + FromPrimitive + ToPrimitive>(x: F) -> F {
         let dawson_value = x_inv * 0.5 * (1.0 + x_inv2 * (0.5 + x_inv2 * 0.75));
 
         // Apply sign
-        let result = F::from(dawson_value).unwrap();
+        let result = F::from(dawson_value).expect("Failed to convert to float");
         return if x.is_sign_positive() {
             result
         } else {
@@ -949,7 +952,7 @@ pub fn dawsn<F: Float + FromPrimitive + ToPrimitive>(x: F) -> F {
     let dawson_value = sqrt_pi_over_2 * w_result.im;
 
     // Apply sign based on input
-    let result = F::from(dawson_value).unwrap();
+    let result = F::from(dawson_value).expect("Failed to convert to float");
     if x.is_sign_positive() {
         result
     } else {
@@ -993,9 +996,9 @@ pub fn erfcx<F: Float + FromPrimitive>(x: F) -> F {
     use crate::erf::complex::erfcx_complex;
     use scirs2_core::numeric::Complex;
 
-    let z = Complex::new(x.to_f64().unwrap(), 0.0);
+    let z = Complex::new(x.to_f64().expect("Operation failed"), 0.0);
     let result = erfcx_complex(z);
-    F::from(result.re).unwrap()
+    F::from(result.re).expect("Failed to convert to float")
 }
 
 /// Imaginary error function: erfi(x) = -i * erf(i*x)
@@ -1041,19 +1044,24 @@ pub fn erfi<F: Float + FromPrimitive>(x: F) -> F {
         -F::one()
     };
 
-    let result = if abs_x < F::from(0.5).unwrap() {
+    let result = if abs_x < F::from(0.5).expect("Failed to convert constant to float") {
         // For small x, use series expansion: erfi(x) = (2/√π) * Σ[n=0..∞] x^(2n+1) / (n! * (2n+1))
-        let two_over_sqrt_pi = F::from(2.0 / std::f64::consts::PI.sqrt()).unwrap();
+        let two_over_sqrt_pi =
+            F::from(2.0 / std::f64::consts::PI.sqrt()).expect("Operation failed");
         let mut sum = abs_x;
         let mut term = abs_x;
         let x2 = abs_x * abs_x;
 
         for n in 1..50 {
-            let n_f = F::from(n).unwrap();
-            term = term * x2 / (n_f * (F::from(2.0).unwrap() * n_f + F::one()));
+            let n_f = F::from(n).expect("Failed to convert to float");
+            term = term * x2
+                / (n_f
+                    * (F::from(2.0).expect("Failed to convert constant to float") * n_f
+                        + F::one()));
             sum = sum + term;
 
-            if term.abs() < F::from(1e-15).unwrap() * sum.abs() {
+            if term.abs() < F::from(1e-15).expect("Failed to convert constant to float") * sum.abs()
+            {
                 break;
             }
         }
@@ -1062,7 +1070,8 @@ pub fn erfi<F: Float + FromPrimitive>(x: F) -> F {
     } else {
         // For larger x, use the relation with Dawson's function
         // erfi(x) = (2/√π) * exp(x²) * D(x)
-        let two_over_sqrt_pi = F::from(2.0 / std::f64::consts::PI.sqrt()).unwrap();
+        let two_over_sqrt_pi =
+            F::from(2.0 / std::f64::consts::PI.sqrt()).expect("Operation failed");
         let exp_x2 = (abs_x * abs_x).exp();
         let dawson_x = dawsn(abs_x);
 
@@ -1101,9 +1110,9 @@ pub fn wofz<F: Float + FromPrimitive>(x: F) -> F {
     use crate::erf::complex::faddeeva_complex;
     use scirs2_core::numeric::Complex;
 
-    let z = Complex::new(x.to_f64().unwrap(), 0.0);
+    let z = Complex::new(x.to_f64().expect("Operation failed"), 0.0);
     let result = faddeeva_complex(z);
-    F::from(result.re).unwrap()
+    F::from(result.re).expect("Failed to convert to float")
 }
 
 #[cfg(test)]

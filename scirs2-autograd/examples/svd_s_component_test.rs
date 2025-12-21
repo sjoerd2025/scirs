@@ -11,7 +11,7 @@ fn main() {
         let matrix = convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], g);
         println!(
             "Original matrix shape: {:?}",
-            matrix.eval(g).unwrap().shape()
+            matrix.eval(g).expect("Operation failed").shape()
         );
 
         // Compute SVD

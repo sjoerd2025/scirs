@@ -749,7 +749,7 @@ impl AIAlgorithmSelector {
                 }
             }
 
-            distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             if distances.len() >= k {
                 let mean_knn_dist: f64 = distances[..k].iter().sum::<f64>() / k as f64;
@@ -793,7 +793,7 @@ impl AIAlgorithmSelector {
                 }
             }
 
-            distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             if distances.len() >= k {
                 let mean_knn_dist: f64 = distances[..k].iter().sum::<f64>() / k as f64;
@@ -1042,7 +1042,7 @@ impl AIAlgorithmSelector {
         let mut correlations = Array2::zeros((n_dims, n_dims));
 
         // Calculate means
-        let means: Array1<f64> = data.mean_axis(Axis(0)).unwrap();
+        let means: Array1<f64> = data.mean_axis(Axis(0)).expect("Operation failed");
 
         // Calculate correlation coefficients
         for i in 0..n_dims {
@@ -1275,7 +1275,7 @@ impl AIAlgorithmSelector {
             pred1
                 .expected_accuracy
                 .partial_cmp(&pred2.expected_accuracy)
-                .unwrap()
+                .expect("Operation failed")
         });
 
         if let Some((candidate, prediction)) = best {
@@ -1552,7 +1552,7 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "Test failure - assertion failed: !algorithm_parameters.is_empty() at line 1568"]
     async fn test_ai_algorithm_selector() {
         let mut selector = AIAlgorithmSelector::new()
             .with_meta_learning(true)
@@ -1565,7 +1565,7 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        let (_algorithm_name, algorithm_parameters, prediction) = result.unwrap();
+        let (_algorithm_name, algorithm_parameters, prediction) = result.expect("Operation failed");
         assert!(!algorithm_parameters.is_empty());
         assert!(prediction.expected_accuracy >= 0.0 && prediction.expected_accuracy <= 1.0);
         assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);
@@ -1586,7 +1586,7 @@ mod tests {
         let characteristics = selector.analyze_data_characteristics(&points.view()).await;
         assert!(characteristics.is_ok());
 
-        let chars = characteristics.unwrap();
+        let chars = characteristics.expect("Operation failed");
         assert_eq!(chars.num_points, 6);
         assert_eq!(chars.dimensionality, 2);
         assert!(chars.density > 0.0);
@@ -1604,7 +1604,7 @@ mod tests {
         let result = optimizer.optimize_spatial_task(&points.view()).await;
         assert!(result.is_ok());
 
-        let meta_result = result.unwrap();
+        let meta_result = result.expect("Operation failed");
         assert!(!meta_result.optimal_algorithm.is_empty());
         assert!(meta_result.adaptation_steps > 0);
     }

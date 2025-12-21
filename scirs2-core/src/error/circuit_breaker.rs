@@ -770,7 +770,7 @@ mod tests {
         let cb = CircuitBreaker::new("test".to_string());
 
         // Should start in closed state
-        let status = cb.status().unwrap();
+        let status = cb.status().expect("Operation failed");
         assert_eq!(status.state, CircuitState::Closed);
 
         // Simulate failures to open circuit
@@ -780,7 +780,7 @@ mod tests {
             });
         }
 
-        let status = cb.status().unwrap();
+        let status = cb.status().expect("Operation failed");
         assert_eq!(status.state, CircuitState::Open);
     }
 
@@ -808,7 +808,7 @@ mod tests {
         attempt_count = *result.borrow();
 
         assert!(execute_result.is_ok());
-        assert_eq!(execute_result.unwrap(), "success");
+        assert_eq!(execute_result.expect("Operation failed"), "success");
         assert_eq!(attempt_count, 3);
     }
 
@@ -817,7 +817,7 @@ mod tests {
         let fallback = DefaultValueFallback::value(42, "test_fallback".to_string());
         let error = CoreError::ComputationError(ErrorContext::new("test error"));
 
-        let result = fallback.error(&error).unwrap();
+        let result = fallback.error(&error).expect("Operation failed");
         assert_eq!(result, 42);
     }
 
@@ -835,17 +835,17 @@ mod tests {
         });
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "fallback");
+        assert_eq!(result.expect("Operation failed"), "fallback");
     }
 
     #[test]
     fn test_circuitbreaker_registry() {
-        let cb1 = get_circuitbreaker("test1").unwrap();
-        let cb2 = get_circuitbreaker("test1").unwrap(); // Should get same instance
+        let cb1 = get_circuitbreaker("test1").expect("Operation failed");
+        let cb2 = get_circuitbreaker("test1").expect("Operation failed"); // Should get same instance
 
         assert!(Arc::ptr_eq(&cb1, &cb2));
 
-        let cb3 = get_circuitbreaker("test2").unwrap(); // Different instance
+        let cb3 = get_circuitbreaker("test2").expect("Operation failed"); // Different instance
         assert!(!Arc::ptr_eq(&cb1, &cb3));
     }
 }

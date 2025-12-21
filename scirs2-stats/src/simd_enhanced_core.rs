@@ -32,7 +32,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 /// use scirs2_stats::simd_enhanced_core::mean_enhanced;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-/// let mean: f64 = mean_enhanced(&data.view()).unwrap();
+/// let mean: f64 = mean_enhanced(&data.view()).expect("Operation failed");
 /// assert!((mean - 3.0).abs() < 1e-15);
 /// ```
 #[allow(dead_code)]
@@ -61,7 +61,7 @@ where
         compensated_simd_sum(x, &optimizer)
     };
 
-    Ok(sum / F::from(n).unwrap())
+    Ok(sum / F::from(n).expect("Failed to convert to float"))
 }
 
 /// Enhanced SIMD-optimized variance with Welford's algorithm
@@ -114,7 +114,7 @@ where
                 .fold(F::zero(), |acc, val| acc + val)
         };
 
-        Ok(sum_sq_dev / F::from(n - ddof).unwrap())
+        Ok(sum_sq_dev / F::from(n - ddof).expect("Failed to convert to float"))
     }
 }
 
@@ -317,7 +317,7 @@ where
         bandwidth_saturated_sum_ultra(x)
     };
 
-    Ok(sum / F::from(n).unwrap())
+    Ok(sum / F::from(n).expect("Failed to convert to float"))
 }
 
 /// Ultra-optimized SIMD variance with bandwidth saturation
@@ -351,7 +351,7 @@ where
         // Enhanced two-pass algorithm with SIMD
         let mean = mean_ultra_simd(x)?;
         let sum_sq_dev = bandwidth_saturated_sum_squared_deviations_ultra(x, mean);
-        Ok(sum_sq_dev / F::from(n - ddof).unwrap())
+        Ok(sum_sq_dev / F::from(n - ddof).expect("Failed to convert to float"))
     } else {
         // Fall back to enhanced implementation for smaller arrays
         variance_enhanced(x, ddof)
@@ -460,12 +460,12 @@ where
             let chunk_data: Array1<f32> = x
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
 
             // Use ultra-optimized SIMD sum
             let chunk_sum = f32::simd_sum_f32_ultra(&chunk_data.view());
-            total_sum = total_sum + F::from(chunk_sum as f64).unwrap();
+            total_sum = total_sum + F::from(chunk_sum as f64).expect("Failed to convert to float");
         } else {
             // Handle remaining elements with scalar processing
             for i in chunk_start..chunk_end {
@@ -500,7 +500,7 @@ where
             let chunk_data: Array1<f32> = x
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
 
             // Use ultra-optimized SIMD operations
@@ -515,8 +515,8 @@ where
             );
             let chunk_sum_sq = f32::simd_sum_f32_ultra(&chunk_squared.view());
 
-            sum = sum + F::from(chunk_sum as f64).unwrap();
-            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).unwrap();
+            sum = sum + F::from(chunk_sum as f64).expect("Failed to convert to float");
+            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).expect("Failed to convert to float");
         } else {
             // Handle remaining elements
             for i in chunk_start..chunk_end {
@@ -527,9 +527,10 @@ where
         }
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let mean = sum / n_f;
-    let variance = (sum_sq - n_f * mean * mean) / F::from(n - ddof).unwrap();
+    let variance =
+        (sum_sq - n_f * mean * mean) / F::from(n - ddof).expect("Failed to convert to float");
 
     Ok(variance)
 }
@@ -543,7 +544,7 @@ where
 {
     let n = x.len();
     let chunk_size = 16;
-    let mean_f32 = mean.to_f64().unwrap() as f32;
+    let mean_f32 = mean.to_f64().expect("Operation failed") as f32;
 
     let mut total_sum_sq_dev = F::zero();
 
@@ -556,7 +557,7 @@ where
             let chunk_data: Array1<f32> = x
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
 
             // Subtract mean using ultra-optimized SIMD
@@ -578,7 +579,8 @@ where
 
             // Sum squared deviations
             let chunk_sum_sq_dev = f32::simd_sum_f32_ultra(&squared_deviations.view());
-            total_sum_sq_dev = total_sum_sq_dev + F::from(chunk_sum_sq_dev as f64).unwrap();
+            total_sum_sq_dev = total_sum_sq_dev
+                + F::from(chunk_sum_sq_dev as f64).expect("Failed to convert to float");
         } else {
             // Handle remaining elements
             for i in chunk_start..chunk_end {
@@ -621,12 +623,12 @@ where
             let x_chunk: Array1<f32> = x
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
             let y_chunk: Array1<f32> = y
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
 
             // Use ultra-optimized SIMD operations
@@ -651,11 +653,11 @@ where
             let chunk_sum_y2 = f32::simd_sum_f32_ultra(&y_squared.view());
 
             // Accumulate results
-            sum_x = sum_x + F::from(chunk_sum_x as f64).unwrap();
-            sum_y = sum_y + F::from(chunk_sum_y as f64).unwrap();
-            sum_xy = sum_xy + F::from(chunk_sum_xy as f64).unwrap();
-            sum_x2 = sum_x2 + F::from(chunk_sum_x2 as f64).unwrap();
-            sum_y2 = sum_y2 + F::from(chunk_sum_y2 as f64).unwrap();
+            sum_x = sum_x + F::from(chunk_sum_x as f64).expect("Failed to convert to float");
+            sum_y = sum_y + F::from(chunk_sum_y as f64).expect("Failed to convert to float");
+            sum_xy = sum_xy + F::from(chunk_sum_xy as f64).expect("Failed to convert to float");
+            sum_x2 = sum_x2 + F::from(chunk_sum_x2 as f64).expect("Failed to convert to float");
+            sum_y2 = sum_y2 + F::from(chunk_sum_y2 as f64).expect("Failed to convert to float");
         } else {
             // Handle remaining elements
             for i in chunk_start..chunk_end {
@@ -670,7 +672,7 @@ where
         }
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let mean_x = sum_x / n_f;
     let mean_y = sum_y / n_f;
 
@@ -716,7 +718,7 @@ where
             let chunk_data: Array1<f32> = x
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
 
             // Compute powers using ultra-optimized SIMD
@@ -747,10 +749,12 @@ where
             let chunk_sum_fourth = f32::simd_sum_f32_ultra(&chunk_fourth.view());
 
             // Accumulate results
-            sum = sum + F::from(chunk_sum as f64).unwrap();
-            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).unwrap();
-            sum_cube = sum_cube + F::from(chunk_sum_cube as f64).unwrap();
-            sum_fourth = sum_fourth + F::from(chunk_sum_fourth as f64).unwrap();
+            sum = sum + F::from(chunk_sum as f64).expect("Failed to convert to float");
+            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).expect("Failed to convert to float");
+            sum_cube =
+                sum_cube + F::from(chunk_sum_cube as f64).expect("Failed to convert to float");
+            sum_fourth =
+                sum_fourth + F::from(chunk_sum_fourth as f64).expect("Failed to convert to float");
         } else {
             // Handle remaining elements
             for i in chunk_start..chunk_end {
@@ -764,7 +768,7 @@ where
         }
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let mean = sum / n_f;
     let mean_sq = mean * mean;
     let mean_cube = mean_sq * mean;
@@ -772,24 +776,26 @@ where
 
     // Calculate central moments
     let m2 = (sum_sq / n_f) - mean_sq;
-    let m3 = (sum_cube / n_f) - F::from(3.0).unwrap() * mean * m2 - mean_cube;
+    let m3 = (sum_cube / n_f)
+        - F::from(3.0).expect("Failed to convert constant to float") * mean * m2
+        - mean_cube;
     let m4 = (sum_fourth / n_f)
-        - F::from(4.0).unwrap() * mean * m3
-        - F::from(6.0).unwrap() * mean_sq * m2
+        - F::from(4.0).expect("Failed to convert constant to float") * mean * m3
+        - F::from(6.0).expect("Failed to convert constant to float") * mean_sq * m2
         - mean_fourth;
 
-    let variance = m2 * n_f / F::from(n - ddof).unwrap();
+    let variance = m2 * n_f / F::from(n - ddof).expect("Failed to convert to float");
     let std = variance.sqrt();
 
     // Calculate skewness and kurtosis
     let skewness = if m2 > F::epsilon() {
-        m3 / m2.powf(F::from(1.5).unwrap())
+        m3 / m2.powf(F::from(1.5).expect("Failed to convert constant to float"))
     } else {
         F::zero()
     };
 
     let kurtosis = if m2 > F::epsilon() {
-        (m4 / (m2 * m2)) - F::from(3.0).unwrap()
+        (m4 / (m2 * m2)) - F::from(3.0).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -826,7 +832,7 @@ where
 
         // Update mean and M2 using vectorized operations
         for (j, &val) in chunk.iter().enumerate() {
-            let count = F::from(start + j + 1).unwrap();
+            let count = F::from(start + j + 1).expect("Failed to convert to float");
             let delta = val - mean;
             mean = mean + delta / count;
             let delta2 = val - mean;
@@ -836,14 +842,14 @@ where
 
     // Handle remaining elements
     for (i, &val) in x.iter().enumerate().skip(full_chunks * SIMD_CHUNK) {
-        let count = F::from(i + 1).unwrap();
+        let count = F::from(i + 1).expect("Failed to convert to float");
         let delta = val - mean;
         mean = mean + delta / count;
         let delta2 = val - mean;
         m2 = m2 + delta * delta2;
     }
 
-    Ok(m2 / F::from(n - ddof).unwrap())
+    Ok(m2 / F::from(n - ddof).expect("Failed to convert to float"))
 }
 
 /// SIMD-optimized sum of squared deviations
@@ -870,7 +876,7 @@ where
     D2: Data<Elem = F>,
 {
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Compute means using SIMD
     let mean_x = F::simd_sum(&x.view()) / n_f;
@@ -912,7 +918,7 @@ where
     D2: Data<Elem = F>,
 {
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Single-pass algorithm to minimize memory access
     let mut sum_x = F::zero();
@@ -957,7 +963,7 @@ where
     D: Data<Elem = F>,
 {
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // First pass: compute mean
     let mean = F::simd_sum(&x.view()) / n_f;
@@ -976,18 +982,19 @@ where
     let m3 = dev_cubed.sum();
     let m4 = dev_fourth.sum();
 
-    let variance = m2 / F::from(n - ddof).unwrap();
+    let variance = m2 / F::from(n - ddof).expect("Failed to convert to float");
     let std = variance.sqrt();
 
     // Calculate skewness and kurtosis
     let skewness = if variance > F::epsilon() {
-        (m3 / n_f) / variance.powf(F::from(1.5).unwrap())
+        (m3 / n_f) / variance.powf(F::from(1.5).expect("Failed to convert constant to float"))
     } else {
         F::zero()
     };
 
     let kurtosis = if variance > F::epsilon() {
-        (m4 / n_f) / (variance * variance) - F::from(3.0).unwrap()
+        (m4 / n_f) / (variance * variance)
+            - F::from(3.0).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };

@@ -264,8 +264,12 @@ impl ResourceManager {
         ResourceUsageStats {
             total_threads: self.total_threads.load(Ordering::Relaxed),
             memory_bytes: self.memory_used.load(Ordering::Relaxed),
-            cpu_usage: *self.cpu_usage.read().unwrap(),
-            active_contexts_per_level: self.active_contexts.read().unwrap().clone(),
+            cpu_usage: *self.cpu_usage.read().expect("Operation failed"),
+            active_contexts_per_level: self
+                .active_contexts
+                .read()
+                .expect("Operation failed")
+                .clone(),
         }
     }
 }
@@ -551,7 +555,7 @@ mod tests {
             let data: Vec<i32> = (0..100).collect();
             scope.par_iter(data, |x| x * 2)
         })
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(result.len(), 100);
         assert_eq!(result[0], 0);
@@ -572,13 +576,13 @@ mod tests {
                             assert_eq!(current_nesting_level(), 2);
                             Ok(())
                         })
-                        .unwrap()
+                        .expect("Operation failed")
                     })
                 })
-                .unwrap()
+                .expect("Operation failed")
             })
         })
-        .unwrap();
+        .expect("Operation failed");
     }
 
     #[test]
@@ -596,7 +600,7 @@ mod tests {
             Ok(42)
         });
 
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
     }
 
     #[test]
@@ -613,7 +617,7 @@ mod tests {
             Ok(sum)
         });
 
-        assert_eq!(result.unwrap(), 45);
+        assert_eq!(result.expect("Operation failed"), 45);
     }
 
     #[test]

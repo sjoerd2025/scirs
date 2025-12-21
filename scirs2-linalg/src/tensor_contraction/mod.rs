@@ -50,7 +50,7 @@ pub mod tucker;
 ///                [[9.0, 10.0], [11.0, 12.0]]];
 ///
 /// // Contract over axis 1 of a and axis 0 of b
-/// let result = contract(&a.view(), &b.view(), &[1], &[0]).unwrap();
+/// let result = contract(&a.view(), &b.view(), &[1], &[0]).expect("Operation failed");
 ///
 /// // The result should be a 2x2x2x2 tensor
 /// assert_eq!(result.shape(), &[2, 2, 2, 2]);
@@ -227,11 +227,14 @@ where
 
     // Update the result tensor
     for (idx, sum) in results {
-        let mut result_tensor = result.lock().unwrap();
+        let mut result_tensor = result.lock().expect("Operation failed");
         result_tensor[idx.as_slice()] = sum;
     }
 
-    Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())
+    Ok(Arc::try_unwrap(result)
+        .expect("Operation failed")
+        .into_inner()
+        .expect("Operation failed"))
 }
 
 /// Performs matrix multiplication along specified batch dimensions.
@@ -265,7 +268,7 @@ where
 ///                [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]];
 ///
 /// // Perform batch matrix multiplication
-/// let result = batch_matmul(&a.view(), &b.view(), 1).unwrap();
+/// let result = batch_matmul(&a.view(), &b.view(), 1).expect("Operation failed");
 ///
 /// // The result should be a batch of 2 matrices, each 2x2
 /// assert_eq!(result.shape(), &[2, 2, 2]);
@@ -398,7 +401,7 @@ where
 
     // Update the result array
     for (batch_idx, result_batch) in results {
-        let mut result_tensor = result.lock().unwrap();
+        let mut result_tensor = result.lock().expect("Operation failed");
         for i in 0..m {
             for j in 0..n {
                 let mut result_idx = batch_idx.clone();
@@ -409,7 +412,10 @@ where
         }
     }
 
-    Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())
+    Ok(Arc::try_unwrap(result)
+        .expect("Operation failed")
+        .into_inner()
+        .expect("Operation failed"))
 }
 
 /// Calculates the mode-n product of a tensor with a matrix.
@@ -442,7 +448,7 @@ where
 /// let matrix = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
 ///
 /// // Calculate mode-0 product
-/// let result = mode_n_product(&tensor.view(), &matrix.view(), 0).unwrap();
+/// let result = mode_n_product(&tensor.view(), &matrix.view(), 0).expect("Operation failed");
 ///
 /// // The result should have shape 4x3x2
 /// assert_eq!(result.shape(), &[4, 3, 2]);
@@ -595,13 +601,16 @@ where
 
     // Update the result tensor
     for batch_results in all_results {
-        let mut result_tensor = result.lock().unwrap();
+        let mut result_tensor = result.lock().expect("Operation failed");
         for (idx, sum) in batch_results {
             result_tensor[idx.as_slice()] = sum;
         }
     }
 
-    Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())
+    Ok(Arc::try_unwrap(result)
+        .expect("Operation failed")
+        .into_inner()
+        .expect("Operation failed"))
 }
 
 /// Einstein summation (einsum) for tensor contractions.
@@ -635,7 +644,7 @@ where
 /// let b_dyn = b.view().into_dyn();
 ///
 /// // Perform matrix multiplication with einsum
-/// let result = einsum("ij,jk->ik", &[&a_dyn, &b_dyn]).unwrap();
+/// let result = einsum("ij,jk->ik", &[&a_dyn, &b_dyn]).expect("Operation failed");
 ///
 /// // The result should be a 2x4 matrix
 /// assert_eq!(result.shape(), &[2, 4]);
@@ -851,11 +860,14 @@ where
 
     // Update the result tensor
     for (idx, sum) in results {
-        let mut result_tensor = result.lock().unwrap();
+        let mut result_tensor = result.lock().expect("Operation failed");
         result_tensor[idx.as_slice()] = sum;
     }
 
-    Ok(Arc::try_unwrap(result).unwrap().into_inner().unwrap())
+    Ok(Arc::try_unwrap(result)
+        .expect("Operation failed")
+        .into_inner()
+        .expect("Operation failed"))
 }
 
 /// Performs a tensor decomposition using the Higher-Order SVD (HOSVD) method.
@@ -884,7 +896,7 @@ where
 /// let tensor = array![[[1., 2.], [3., 4.]], [[5., 6.], [7., 8.]]];
 ///
 /// // Decompose tensor with full rank
-/// let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).unwrap();
+/// let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).expect("Operation failed");
 ///
 /// // The core tensor should have the specified rank
 /// assert_eq!(core.shape(), &[2, 2, 2]);
@@ -943,10 +955,10 @@ where
         .par_iter()
         .map(|mode| {
             // Unfold the tensor along this mode
-            let unfolded = unfold(&tensor_dyn, *mode).unwrap();
+            let unfolded = unfold(&tensor_dyn, *mode).expect("Operation failed");
 
             // Compute SVD of the unfolded tensor
-            let (u, _, _) = svd_truncated(&unfolded, rank[*mode]).unwrap();
+            let (u, _, _) = svd_truncated(&unfolded, rank[*mode]).expect("Operation failed");
             u
         })
         .collect();
@@ -1104,7 +1116,7 @@ mod tests {
         let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];
 
         // Contract along axis 1 of a and axis 0 of b
-        let result = contract(&a.view(), &b.view(), &[1], &[0]).unwrap();
+        let result = contract(&a.view(), &b.view(), &[1], &[0]).expect("Operation failed");
 
         // Expected: a @ b
         let expected = array![[58.0, 64.0], [139.0, 154.0]];
@@ -1132,7 +1144,7 @@ mod tests {
         ];
 
         // Batch matrix multiplication with 1 batch dimension
-        let result = batch_matmul(&a.view(), &b.view(), 1).unwrap();
+        let result = batch_matmul(&a.view(), &b.view(), 1).expect("Operation failed");
 
         // Expected results for each batch
         // First batch: [1,2,3; 4,5,6] × [1,2; 3,4; 5,6] = [22,28; 49,64]
@@ -1160,7 +1172,7 @@ mod tests {
         let a_view = a.view().into_dyn();
         let b_view = b.view().into_dyn();
 
-        let result = einsum("ij,jk->ik", &[&a_view, &b_view]).unwrap();
+        let result = einsum("ij,jk->ik", &[&a_view, &b_view]).expect("Operation failed");
 
         // Expected: a @ b
         let expected = array![[58.0, 64.0], [139.0, 154.0]];
@@ -1182,14 +1194,18 @@ mod tests {
         let a_view = a.view().into_dyn();
         let b_view = b.view().into_dyn();
 
-        let result = einsum("i,i->", &[&a_view, &b_view]).unwrap();
+        let result = einsum("i,i->", &[&a_view, &b_view]).expect("Operation failed");
 
         // Expected: sum(a * b)
         let expected = 1.0 * 4.0 + 2.0 * 5.0 + 3.0 * 6.0; // 32.0
 
         assert_eq!(result.shape(), &[] as &[usize]);
         // For scalar output, we need to get the first element
-        assert_abs_diff_eq!(result.iter().next().unwrap(), &expected, epsilon = 1e-10);
+        assert_abs_diff_eq!(
+            result.iter().next().expect("Operation failed"),
+            &expected,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
@@ -1205,7 +1221,7 @@ mod tests {
         let matrix = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
 
         // Perform mode-0 product
-        let result = mode_n_product(&tensor.view(), &matrix.view(), 0).unwrap();
+        let result = mode_n_product(&tensor.view(), &matrix.view(), 0).expect("Operation failed");
 
         assert_eq!(result.shape(), &[4, 3, 2]);
 
@@ -1222,7 +1238,7 @@ mod tests {
         let tensor = array![[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]];
 
         // Decompose with full rank
-        let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).unwrap();
+        let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(core.shape(), &[2, 2, 2]);
@@ -1235,7 +1251,8 @@ mod tests {
         let mut reconstructed = core.clone();
 
         for (mode, factor) in factors.iter().enumerate() {
-            reconstructed = mode_n_product(&reconstructed.view(), &factor.view(), mode).unwrap();
+            reconstructed = mode_n_product(&reconstructed.view(), &factor.view(), mode)
+                .expect("Operation failed");
         }
 
         // Check that the reconstruction is close to the original

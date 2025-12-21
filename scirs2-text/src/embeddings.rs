@@ -596,8 +596,8 @@ impl Word2Vec {
             return Ok(()); // Need at least 2 words for context
         }
 
-        let input_embeddings = self.input_embeddings.as_mut().unwrap();
-        let output_embeddings = self.output_embeddings.as_mut().unwrap();
+        let input_embeddings = self.input_embeddings.as_mut().expect("Operation failed");
+        let output_embeddings = self.output_embeddings.as_mut().expect("Operation failed");
         let vector_size = self.config.vector_size;
         let window_size = self.config.window_size;
         let negative_samples = self.config.negative_samples;
@@ -705,8 +705,8 @@ impl Word2Vec {
             return Ok(()); // Need at least 2 words for context
         }
 
-        let input_embeddings = self.input_embeddings.as_mut().unwrap();
-        let output_embeddings = self.output_embeddings.as_mut().unwrap();
+        let input_embeddings = self.input_embeddings.as_mut().expect("Operation failed");
+        let output_embeddings = self.output_embeddings.as_mut().expect("Operation failed");
         let vector_size = self.config.vector_size;
         let window_size = self.config.window_size;
         let negative_samples = self.config.negative_samples;
@@ -789,7 +789,12 @@ impl Word2Vec {
         }
 
         match self.vocabulary.get_index(word) {
-            Some(idx) => Ok(self.input_embeddings.as_ref().unwrap().row(idx).to_owned()),
+            Some(idx) => Ok(self
+                .input_embeddings
+                .as_ref()
+                .expect("Operation failed")
+                .row(idx)
+                .to_owned()),
             None => Err(TextError::VocabularyError(format!(
                 "Word '{word}' not in vocabulary"
             ))),
@@ -815,7 +820,7 @@ impl Word2Vec {
             ));
         }
 
-        let input_embeddings = self.input_embeddings.as_ref().unwrap();
+        let input_embeddings = self.input_embeddings.as_ref().expect("Operation failed");
         let vocab_size = self.vocabulary.len();
 
         // Create a set of indices to exclude
@@ -894,7 +899,7 @@ impl Word2Vec {
         .map_err(|e| TextError::IoError(e.to_string()))?;
 
         // Write each word and its vector
-        let input_embeddings = self.input_embeddings.as_ref().unwrap();
+        let input_embeddings = self.input_embeddings.as_ref().expect("Operation failed");
 
         for i in 0..self.vocabulary.len() {
             if let Some(word) = self.vocabulary.get_token(i) {
@@ -1117,7 +1122,14 @@ mod tests {
         // Check that embeddings were initialized
         assert!(model.input_embeddings.is_some());
         assert!(model.output_embeddings.is_some());
-        assert_eq!(model.input_embeddings.as_ref().unwrap().shape(), &[9, 100]);
+        assert_eq!(
+            model
+                .input_embeddings
+                .as_ref()
+                .expect("Operation failed")
+                .shape(),
+            &[9, 100]
+        );
     }
 
     #[test]
@@ -1140,7 +1152,7 @@ mod tests {
         // Test getting a word vector
         let result = model.get_word_vector("fox");
         assert!(result.is_ok());
-        let vec = result.unwrap();
+        let vec = result.expect("Operation failed");
         assert_eq!(vec.len(), 10);
     }
 }

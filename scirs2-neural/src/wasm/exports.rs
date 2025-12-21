@@ -874,10 +874,10 @@ mod tests {
         assert!(config.caching.enable);
         assert_eq!(config.workers.pool.max_workers, 4);
     fn test_wasm_compiler_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([42; 32]);
         let mut model: Sequential<f32> = Sequential::new();
-        let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
+        let dense = Dense::new(10, 1, Some("relu"), &mut rng).expect("Operation failed");
         model.add_layer(dense);
         let wasm_config = WasmCompilationConfig::default();
         let web_config = WebIntegrationConfig::default();

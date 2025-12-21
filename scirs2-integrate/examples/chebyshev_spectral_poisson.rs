@@ -158,7 +158,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // First, find the largest coefficients
     let mut coeff_indices: Vec<usize> = (0..coeffs.len()).collect();
-    coeff_indices.sort_by(|&i, &j| coeffs[j].abs().partial_cmp(&coeffs[i].abs()).unwrap());
+    coeff_indices.sort_by(|&i, &j| {
+        coeffs[j]
+            .abs()
+            .partial_cmp(&coeffs[i].abs())
+            .expect("Operation failed")
+    });
 
     // Print the 5 largest coefficients
     for &i in coeff_indices.iter().take(5) {

@@ -967,7 +967,7 @@ mod tests {
         let result = plot_histogram(&data.view(), &config);
         assert!(result.is_ok());
 
-        let plot_str = result.unwrap();
+        let plot_str = result.expect("Operation failed");
         assert!(plot_str.contains("Test Histogram"));
     }
 
@@ -984,7 +984,7 @@ mod tests {
         let result = plot_profile(&x_data.view(), &y_data.view(), &config);
         assert!(result.is_ok());
 
-        let plot_str = result.unwrap();
+        let plot_str = result.expect("Operation failed");
         assert!(plot_str.contains("Test Profile"));
     }
 
@@ -1000,7 +1000,7 @@ mod tests {
         let result = plot_surface(&data.view(), &config);
         assert!(result.is_ok());
 
-        let plot_str = result.unwrap();
+        let plot_str = result.expect("Operation failed");
         assert!(plot_str.contains("Test Surface"));
         assert!(plot_str.contains("Data dimensions"));
     }
@@ -1018,7 +1018,7 @@ mod tests {
         let result = plot_scatter(&x_data.view(), &y_data.view(), &config);
         assert!(result.is_ok());
 
-        let plot_str = result.unwrap();
+        let plot_str = result.expect("Operation failed");
         assert!(plot_str.contains("Test Scatter"));
         assert!(plot_str.contains("<svg"));
     }

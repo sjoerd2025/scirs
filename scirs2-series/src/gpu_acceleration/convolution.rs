@@ -168,8 +168,8 @@ impl<F: Float + Debug + Clone> GpuConvolution<F> {
             let y_window = y.slice(s![i..i + window_size]);
 
             // Compute Pearson correlation coefficient
-            let mean_x = x_window.sum() / F::from(window_size).unwrap();
-            let mean_y = y_window.sum() / F::from(window_size).unwrap();
+            let mean_x = x_window.sum() / F::from(window_size).expect("Failed to convert to float");
+            let mean_y = y_window.sum() / F::from(window_size).expect("Failed to convert to float");
 
             let mut num = F::zero();
             let mut den_x = F::zero();

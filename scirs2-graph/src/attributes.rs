@@ -452,7 +452,7 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
                             edge.weight.clone(),
                             attrs.clone(),
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                 } else {
                     new_graph
                         .add_edge(
@@ -460,7 +460,7 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
                             edge.target.clone(),
                             edge.weight.clone(),
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                 }
             }
         }
@@ -785,8 +785,8 @@ mod tests {
             value: 123,
         };
 
-        let json_attr = AttributeValue::json(&data).unwrap();
-        let recovered: TestData = json_attr.as_json().unwrap();
+        let json_attr = AttributeValue::json(&data).expect("Operation failed");
+        let recovered: TestData = json_attr.as_json().expect("Operation failed");
         assert_eq!(recovered, data);
     }
 
@@ -807,7 +807,9 @@ mod tests {
         graph.set_node_attribute(&"Bob", "age", AttributeValue::integer(25));
 
         // Add edges with attributes
-        graph.add_edge("Alice", "Bob", 1.0).unwrap();
+        graph
+            .add_edge("Alice", "Bob", 1.0)
+            .expect("Operation failed");
         graph
             .set_edge_attribute(
                 &"Alice",
@@ -815,27 +817,27 @@ mod tests {
                 "relationship",
                 AttributeValue::string("friend"),
             )
-            .unwrap();
+            .expect("Operation failed");
 
         // Test retrieval
         assert_eq!(
             graph
                 .get_node_attribute(&"Alice", "type")
-                .unwrap()
+                .expect("Operation failed")
                 .as_string(),
             Some("person")
         );
         assert_eq!(
             graph
                 .get_node_attribute(&"Alice", "age")
-                .unwrap()
+                .expect("Operation failed")
                 .as_integer(),
             Some(30)
         );
         assert_eq!(
             graph
                 .get_edge_attribute(&"Alice", &"Bob", "relationship")
-                .unwrap()
+                .expect("Operation failed")
                 .as_string(),
             Some("friend")
         );
@@ -856,8 +858,8 @@ mod tests {
         graph.set_node_attribute(&3, "type", AttributeValue::string("server"));
 
         // Add edges
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(1, 3, 2.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(1, 3, 2.0).expect("Operation failed");
 
         // Filter nodes by attribute
         let servers = graph.nodes_with_attribute_value("type", &AttributeValue::string("server"));
@@ -883,10 +885,10 @@ mod tests {
         graph.set_node_attribute(&"B", "category", AttributeValue::string("normal"));
         graph.set_node_attribute(&"B", "weight", AttributeValue::float(1.5));
 
-        graph.add_edge("A", "B", 1.0).unwrap();
+        graph.add_edge("A", "B", 1.0).expect("Operation failed");
         graph
             .set_edge_attribute(&"A", &"B", "type", AttributeValue::string("connection"))
-            .unwrap();
+            .expect("Operation failed");
 
         graph.set_graph_attribute("name", AttributeValue::string("test_graph"));
 
@@ -974,11 +976,17 @@ mod tests {
         graph.set_graph_attribute("version", AttributeValue::float(1.0));
 
         assert_eq!(
-            graph.get_graph_attribute("title").unwrap().as_string(),
+            graph
+                .get_graph_attribute("title")
+                .expect("Operation failed")
+                .as_string(),
             Some("Test Network")
         );
         assert_eq!(
-            graph.get_graph_attribute("version").unwrap().as_float(),
+            graph
+                .get_graph_attribute("version")
+                .expect("Operation failed")
+                .as_float(),
             Some(1.0)
         );
 
@@ -996,7 +1004,7 @@ mod tests {
 
         digraph.add_node("A");
         digraph.add_node("B");
-        digraph.add_edge("A", "B", 1.0).unwrap();
+        digraph.add_edge("A", "B", 1.0).expect("Operation failed");
 
         assert_eq!(digraph.graph().node_count(), 2);
         assert_eq!(digraph.graph().edge_count(), 1);

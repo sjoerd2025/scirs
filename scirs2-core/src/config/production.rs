@@ -303,7 +303,10 @@ impl ProductionConfig {
         // Load all environment variables with SCIRS_ prefix
         for (key, value) in env::vars() {
             if key.starts_with("SCIRS_") {
-                let config_key = key.strip_prefix("SCIRS_").unwrap().to_lowercase();
+                let config_key = key
+                    .strip_prefix("SCIRS_")
+                    .expect("Operation failed")
+                    .to_lowercase();
 
                 let config_value = ConfigValue {
                     value: value.clone(),
@@ -836,18 +839,30 @@ mod tests {
         let config = ProductionConfig::new();
 
         // Test setting and getting
-        config.set("test_key", "test_value").unwrap();
+        config
+            .set("test_key", "test_value")
+            .expect("Operation failed");
         assert_eq!(
-            config.get("test_key").unwrap(),
+            config.get("test_key").expect("Operation failed"),
             Some("test_value".to_string())
         );
 
         // Test typed get
-        config.set("test_number", "42").unwrap();
-        assert_eq!(config.get_typed::<i32>("test_number").unwrap(), Some(42));
+        config.set("test_number", "42").expect("Operation failed");
+        assert_eq!(
+            config
+                .get_typed::<i32>("test_number")
+                .expect("Operation failed"),
+            Some(42)
+        );
 
         // Test default
-        assert_eq!(config.get_or_default("missing_key", 100i32).unwrap(), 100);
+        assert_eq!(
+            config
+                .get_or_default("missing_key", 100i32)
+                .expect("Operation failed"),
+            100
+        );
     }
 
     #[test]
@@ -856,12 +871,12 @@ mod tests {
 
         config
             .set_feature_flag("test_feature".to_string(), true, 100.0)
-            .unwrap();
+            .expect("Operation failed");
         assert!(config.is_feature_enabled("test_feature"));
 
         config
             .set_feature_flag("disabled_feature".to_string(), false, 100.0)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!config.is_feature_enabled("disabled_feature"));
     }
 
@@ -888,9 +903,12 @@ mod tests {
                 true,
                 Some("Test configuration".to_string()),
             )
-            .unwrap();
+            .expect("Operation failed");
 
-        let entry = config.get_entry("test_config").unwrap().unwrap();
+        let entry = config
+            .get_entry("test_config")
+            .expect("Operation failed")
+            .expect("Operation failed");
         assert_eq!(entry.defaultvalue, Some("defaultvalue".to_string()));
         assert_eq!(entry.validator, Some("positive_int".to_string()));
         assert!(entry.hot_reloadable);

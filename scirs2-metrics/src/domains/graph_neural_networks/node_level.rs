@@ -84,7 +84,9 @@ impl NodeClassificationMetrics {
             let degree = adjacency_matrix.row(i).sum().to_f64().unwrap_or(1.0);
             let weight = (degree + 1.0).ln(); // Log-weighted by degree
 
-            if (predictions[i] - ground_truth[i]).abs() < F::from(0.5).unwrap() {
+            if (predictions[i] - ground_truth[i]).abs()
+                < F::from(0.5).expect("Failed to convert constant to float")
+            {
                 correct_predictions += weight;
             }
             total_predictions += weight;
@@ -302,7 +304,7 @@ impl NodeEmbeddingMetrics {
                 })
                 .collect();
 
-            distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            distances.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
             // Count how many graph neighbors are among k-nearest neighbors in embedding space
             let k = neighbors.len().min(10); // Use top-k neighbors
@@ -378,7 +380,11 @@ impl NodeEmbeddingMetrics {
 
             // Compute average distance to nodes in same cluster
             let same_cluster_distances: Vec<f64> = (0..n_nodes)
-                .filter(|&j| i != j && (labels[j] - node_label).abs() < F::from(0.1).unwrap())
+                .filter(|&j| {
+                    i != j
+                        && (labels[j] - node_label).abs()
+                            < F::from(0.1).expect("Failed to convert constant to float")
+                })
                 .map(|j| {
                     (0..embeddings.ncols())
                         .map(|k| (embeddings[(i, k)] - embeddings[(j, k)]).powi(2))
@@ -398,16 +404,24 @@ impl NodeEmbeddingMetrics {
             // Compute minimum average distance to nodes in other clusters
             let mut other_labels: Vec<F> = (0..n_nodes)
                 .map(|j| labels[j])
-                .filter(|&label| (label - node_label).abs() >= F::from(0.1).unwrap())
+                .filter(|&label| {
+                    (label - node_label).abs()
+                        >= F::from(0.1).expect("Failed to convert constant to float")
+                })
                 .collect();
             other_labels.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-            other_labels.dedup_by(|a, b| (*a - *b).abs() < F::from(0.1).unwrap());
+            other_labels.dedup_by(|a, b| {
+                (*a - *b).abs() < F::from(0.1).expect("Failed to convert constant to float")
+            });
 
             let b = other_labels
                 .iter()
                 .map(|&other_label| {
                     let distances: Vec<f64> = (0..n_nodes)
-                        .filter(|&j| (labels[j] - other_label).abs() < F::from(0.1).unwrap())
+                        .filter(|&j| {
+                            (labels[j] - other_label).abs()
+                                < F::from(0.1).expect("Failed to convert constant to float")
+                        })
                         .map(|j| {
                             (0..embeddings.ncols())
                                 .map(|k| (embeddings[(i, k)] - embeddings[(j, k)]).powi(2))
@@ -516,7 +530,9 @@ impl HomophilyAwareMetrics {
             for j in (i + 1)..n_nodes {
                 if adjacency_matrix[(i, j)] > F::zero() {
                     total_edges += 1;
-                    if (labels[i] - labels[j]).abs() < F::from(0.1).unwrap() {
+                    if (labels[i] - labels[j]).abs()
+                        < F::from(0.1).expect("Failed to convert constant to float")
+                    {
                         homophilic_edges += 1;
                     }
                 }
@@ -553,7 +569,10 @@ impl HomophilyAwareMetrics {
 
             let same_label_neighbors = neighbors
                 .iter()
-                .filter(|&&j| (labels[i] - labels[j]).abs() < F::from(0.1).unwrap())
+                .filter(|&&j| {
+                    (labels[i] - labels[j]).abs()
+                        < F::from(0.1).expect("Failed to convert constant to float")
+                })
                 .count();
 
             let homophily = same_label_neighbors as f64 / neighbors.len() as f64;
@@ -581,12 +600,12 @@ impl HomophilyAwareMetrics {
         for i in 0..n_nodes {
             for j in (i + 1)..n_nodes {
                 if adjacency_matrix[(i, j)] > F::zero() {
-                    let same_true_label =
-                        (ground_truth[i] - ground_truth[j]).abs() < F::from(0.1).unwrap();
-                    let correct_i =
-                        (predictions[i] - ground_truth[i]).abs() < F::from(0.5).unwrap();
-                    let correct_j =
-                        (predictions[j] - ground_truth[j]).abs() < F::from(0.5).unwrap();
+                    let same_true_label = (ground_truth[i] - ground_truth[j]).abs()
+                        < F::from(0.1).expect("Failed to convert constant to float");
+                    let correct_i = (predictions[i] - ground_truth[i]).abs()
+                        < F::from(0.5).expect("Failed to convert constant to float");
+                    let correct_j = (predictions[j] - ground_truth[j]).abs()
+                        < F::from(0.5).expect("Failed to convert constant to float");
                     let edge_correct = correct_i && correct_j;
 
                     if same_true_label {
@@ -738,8 +757,8 @@ impl NodeFairnessMetrics {
         // Compute overall fairness metrics
         if group_metrics.len() >= 2 {
             let group_names: Vec<_> = group_metrics.keys().collect();
-            let group1 = group_metrics.get(group_names[0]).unwrap();
-            let group2 = group_metrics.get(group_names[1]).unwrap();
+            let group1 = group_metrics.get(group_names[0]).expect("Operation failed");
+            let group2 = group_metrics.get(group_names[1]).expect("Operation failed");
 
             self.demographic_parity = (group1.selection_rate - group2.selection_rate).abs();
             self.equalized_odds =

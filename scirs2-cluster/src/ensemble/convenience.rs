@@ -140,7 +140,7 @@ where
     let mut meta_features = Array2::zeros((n_samples, base_results.len()));
     for (i, result) in base_results.iter().enumerate() {
         for (j, &label) in result.labels.iter().enumerate() {
-            meta_features[[j, i]] = F::from(label).unwrap();
+            meta_features[[j, i]] = F::from(label).expect("Failed to convert to float");
         }
     }
 
@@ -281,7 +281,7 @@ fn combine_chunkresults(chunkresults: Vec<EnsembleResult>) -> Result<EnsembleRes
 
     // For simplicity, return the first result
     // A real implementation would intelligently combine all chunk results
-    Ok(chunkresults.into_iter().next().unwrap())
+    Ok(chunkresults.into_iter().next().expect("Operation failed"))
 }
 
 fn apply_differential_privacy(
@@ -334,7 +334,7 @@ fn secure_aggregate_results(
     }
 
     // Create aggregated result
-    let mut aggregated = local_results.into_iter().next().unwrap();
+    let mut aggregated = local_results.into_iter().next().expect("Operation failed");
     aggregated.consensus_labels = consensus_labels;
 
     Ok(aggregated)
@@ -347,14 +347,16 @@ mod tests {
 
     #[test]
     fn test_simple_ensemble_clustering() {
-        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = ensemble_clustering(data.view());
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_bootstrap_ensemble() {
-        let data = Array2::from_shape_vec((20, 3), (0..60).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 3), (0..60).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = bootstrap_ensemble(data.view(), 5, 0.8);
         assert!(result.is_ok());
     }

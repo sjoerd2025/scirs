@@ -135,7 +135,7 @@ impl PCA {
 
         // Center the data
         let mean = if self.center {
-            data.mean_axis(Axis(0)).unwrap()
+            data.mean_axis(Axis(0)).expect("Operation failed")
         } else {
             Array1::zeros(n_features)
         };
@@ -205,7 +205,7 @@ impl PCA {
         let (_u, s, vt) = data
             .svd(true, true)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
-        let v = vt.unwrap().t().to_owned();
+        let v = vt.expect("Operation failed").t().to_owned();
 
         // Extract _components
         let components = v
@@ -295,7 +295,7 @@ impl PCA {
             StatsError::ComputationError(format!("SVD of projected matrix failed: {}", e))
         })?;
 
-        let v = vt.unwrap().t().to_owned();
+        let v = vt.expect("Operation failed").t().to_owned();
 
         // Extract _components
         let components = v
@@ -488,7 +488,7 @@ impl IncrementalPCA {
         let (batchsize, n_features) = batch.dim();
 
         // Update mean incrementally
-        let batch_mean = batch.mean_axis(Axis(0)).unwrap();
+        let batch_mean = batch.mean_axis(Axis(0)).expect("Operation failed");
         let old_n = self.n_samples_seen;
         self.n_samples_seen += batchsize;
 
@@ -520,8 +520,8 @@ impl IncrementalPCA {
                 .svd(true, true)
                 .map_err(|e| StatsError::ComputationError(format!("Initial SVD failed: {}", e)))?;
 
-            let u = u.unwrap();
-            let vt = vt.unwrap();
+            let u = u.expect("Operation failed");
+            let vt = vt.expect("Operation failed");
 
             // Keep only n_components
             self.svd_u = Some(
@@ -535,13 +535,19 @@ impl IncrementalPCA {
                     .to_owned(),
             );
 
-            self.components = Some(self.svd_v.as_ref().unwrap().t().to_owned());
-            self.singular_values = Some(self.svd_s.as_ref().unwrap().clone());
+            self.components = Some(
+                self.svd_v
+                    .as_ref()
+                    .expect("Operation failed")
+                    .t()
+                    .to_owned(),
+            );
+            self.singular_values = Some(self.svd_s.as_ref().expect("Operation failed").clone());
         } else {
             // Incremental update
-            let u_old = self.svd_u.as_ref().unwrap();
-            let s_old = self.svd_s.as_ref().unwrap();
-            let v_old = self.svd_v.as_ref().unwrap();
+            let u_old = self.svd_u.as_ref().expect("Operation failed");
+            let s_old = self.svd_s.as_ref().expect("Operation failed");
+            let v_old = self.svd_v.as_ref().expect("Operation failed");
 
             // Project new data onto existing components
             let projection = centered_batch.dot(v_old);
@@ -579,8 +585,8 @@ impl IncrementalPCA {
                 StatsError::ComputationError(format!("Augmented SVD failed: {}", e))
             })?;
 
-            let u_aug = u_aug.unwrap();
-            let vt_aug = vt_aug.unwrap();
+            let u_aug = u_aug.expect("Operation failed");
+            let vt_aug = vt_aug.expect("Operation failed");
 
             // Update U
             let mut u_new = Array2::zeros((old_n + batchsize, n_components));
@@ -623,7 +629,7 @@ impl IncrementalPCA {
             self.svd_u = Some(u_new);
             self.svd_v = Some(v_new.clone());
             self.components = Some(v_new.t().to_owned());
-            self.singular_values = Some(self.svd_s.as_ref().unwrap().clone());
+            self.singular_values = Some(self.svd_s.as_ref().expect("Operation failed").clone());
         }
 
         Ok(())
@@ -639,9 +645,9 @@ impl IncrementalPCA {
 
         let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
-            row -= self.mean.as_ref().unwrap();
+            row -= self.mean.as_ref().expect("Operation failed");
         }
 
-        Ok(centered.dot(&self.components.as_ref().unwrap().t()))
+        Ok(centered.dot(&self.components.as_ref().expect("Operation failed").t()))
     }
 }

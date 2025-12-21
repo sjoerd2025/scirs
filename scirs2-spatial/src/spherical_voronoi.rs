@@ -1490,12 +1490,13 @@ mod tests {
         let center = array![0.0, 0.0, 0.0];
 
         // Create SphericalVoronoi
-        let sv = SphericalVoronoi::new(&points.view(), radius, Some(&center), None).unwrap();
+        let sv = SphericalVoronoi::new(&points.view(), radius, Some(&center), None)
+            .expect("Operation failed");
 
         // Test that the nearest generator to each generator point is itself
         for i in 0..points.nrows() {
             let point = points.row(i);
-            let (nearest_idx, dist) = sv.nearest_generator(&point).unwrap();
+            let (nearest_idx, dist) = sv.nearest_generator(&point).expect("Operation failed");
             assert_eq!(nearest_idx, i, "Point {i} should be nearest to itself");
             assert!(dist < 1e-10, "Distance to self should be near zero");
         }
@@ -1506,7 +1507,9 @@ mod tests {
         let norm_val = norm(&test_point);
         let test_point_normalized = test_point / norm_val;
 
-        let (nearest_idx, _dist) = sv.nearest_generator(&test_point_normalized.view()).unwrap();
+        let (nearest_idx, _dist) = sv
+            .nearest_generator(&test_point_normalized.view())
+            .expect("Operation failed");
 
         // The test point should be closest to one of the equatorial points
         assert!(

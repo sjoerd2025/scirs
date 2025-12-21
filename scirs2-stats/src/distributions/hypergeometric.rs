@@ -14,7 +14,7 @@
 //! // N = 20 (population size)
 //! // K = 7 (number of success states in the population)
 //! // n = 12 (number of draws)
-//! let hyper = distributions::hypergeom(20, 7, 12, 0.0).unwrap();
+//! let hyper = distributions::hypergeom(20, 7, 12, 0.0).expect("Operation failed");
 //!
 //! // Calculate PMF at different points
 //! let pmf_0 = hyper.pmf(0.0); // P(X = 0)
@@ -25,7 +25,7 @@
 //! let cdf_4 = hyper.cdf(4.0); // P(X ≤ 4)
 //!
 //! // Generate random samples
-//! let samples = hyper.rvs(100).unwrap();
+//! let samples = hyper.rvs(100).expect("Operation failed");
 //!
 //! // Calculate statistics
 //! let mean = hyper.mean();
@@ -195,7 +195,8 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
 
         let mut cdf_value = F::zero();
         for k in min_possible..=max_k {
-            cdf_value = cdf_value + self.pmf(F::from(k).unwrap() + self.loc);
+            cdf_value =
+                cdf_value + self.pmf(F::from(k).expect("Failed to convert to float") + self.loc);
         }
 
         if cdf_value > F::one() {
@@ -229,9 +230,9 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
                     break;
                 }
 
-                let p_success =
-                    F::from(success_remaining).unwrap() / F::from(population_remaining).unwrap();
-                if rng.gen_range(0.0..1.0) < p_success.to_f64().unwrap() {
+                let p_success = F::from(success_remaining).expect("Failed to convert to float")
+                    / F::from(population_remaining).expect("Failed to convert to float");
+                if rng.gen_range(0.0..1.0) < p_success.to_f64().expect("Operation failed") {
                     successes += 1;
                     success_remaining -= 1;
                 } else {
@@ -241,7 +242,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
                 population_remaining -= 1;
             }
 
-            samples[i] = F::from(successes).unwrap() + self.loc;
+            samples[i] = F::from(successes).expect("Failed to convert to float") + self.loc;
         }
 
         Ok(samples)
@@ -254,7 +255,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
     /// The mean (expected value)
     pub fn mean(&self) -> F {
         let mean_val = (self.n_draws as f64) * (self.n_success as f64) / (self.n_population as f64);
-        F::from(mean_val).unwrap() + self.loc
+        F::from(mean_val).expect("Failed to convert to float") + self.loc
     }
 
     /// Returns the variance of the distribution
@@ -274,7 +275,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
         let p = k / n;
         let variance = n_draws * p * (1.0 - p) * (n - n_draws) / (n - 1.0);
 
-        F::from(variance).unwrap()
+        F::from(variance).expect("Failed to convert to float")
     }
 
     /// Returns the standard deviation of the distribution
@@ -334,7 +335,7 @@ fn ln_binomial(n: usize, k: usize) -> f64 {
 /// // N = 20 (population size)
 /// // K = 7 (number of success states in the population)
 /// // n = 12 (number of draws)
-/// let hyper = distributions::hypergeom(20, 7, 12, 0.0f64).unwrap();
+/// let hyper = distributions::hypergeom(20, 7, 12, 0.0f64).expect("Operation failed");
 ///
 /// // Calculate PMF at different points
 /// let pmf_3 = hyper.pmf(3.0); // Probability of exactly 3 successes
@@ -360,7 +361,7 @@ mod tests {
     #[test]
     fn test_hypergeometric_creation() {
         // Valid parameters
-        let hyper = Hypergeometric::new(20, 7, 12, 0.0).unwrap();
+        let hyper = Hypergeometric::new(20, 7, 12, 0.0).expect("Operation failed");
         assert_eq!(hyper.n_population, 20);
         assert_eq!(hyper.n_success, 7);
         assert_eq!(hyper.n_draws, 12);
@@ -375,7 +376,7 @@ mod tests {
     #[test]
     fn test_hypergeometric_pmf() {
         // Create a hypergeometric distribution with parameters N=20, K=7, n=12
-        let hyper = Hypergeometric::new(20, 7, 12, 0.0).unwrap();
+        let hyper = Hypergeometric::new(20, 7, 12, 0.0).expect("Operation failed");
 
         // Expected PMF values
         assert_relative_eq!(hyper.pmf(0.0), 0.0001031991744066048, epsilon = 1e-10);
@@ -389,7 +390,7 @@ mod tests {
         assert_eq!(hyper.pmf(0.5), 0.0); // Non-integer
 
         // With location parameter
-        let shifted_hyper = Hypergeometric::new(20, 7, 12, 2.0).unwrap();
+        let shifted_hyper = Hypergeometric::new(20, 7, 12, 2.0).expect("Operation failed");
         assert_relative_eq!(
             shifted_hyper.pmf(2.0),
             0.0001031991744066048,
@@ -402,7 +403,7 @@ mod tests {
     #[test]
     fn test_hypergeometric_cdf() {
         // Create a hypergeometric distribution with parameters N=20, K=7, n=12
-        let hyper = Hypergeometric::new(20, 7, 12, 0.0).unwrap();
+        let hyper = Hypergeometric::new(20, 7, 12, 0.0).expect("Operation failed");
 
         // Expected CDF values
         assert_relative_eq!(hyper.cdf(0.0), 0.0001031991744066048, epsilon = 1e-10);
@@ -415,7 +416,7 @@ mod tests {
         assert_eq!(hyper.cdf(20.0), 1.0);
 
         // With location parameter
-        let shifted_hyper = Hypergeometric::new(20, 7, 12, 2.0).unwrap();
+        let shifted_hyper = Hypergeometric::new(20, 7, 12, 2.0).expect("Operation failed");
         assert_relative_eq!(
             shifted_hyper.cdf(2.0),
             0.0001031991744066048,
@@ -428,7 +429,7 @@ mod tests {
     #[test]
     fn test_hypergeometric_stats() {
         // Create a hypergeometric distribution with parameters N=20, K=7, n=12
-        let hyper = Hypergeometric::new(20, 7, 12, 0.0).unwrap();
+        let hyper = Hypergeometric::new(20, 7, 12, 0.0).expect("Operation failed");
 
         // Expected mean: n * (K/N) = 12 * (7/20) = 4.2
         assert_relative_eq!(hyper.mean(), 4.2, epsilon = 1e-10);
@@ -442,7 +443,7 @@ mod tests {
         assert_relative_eq!(hyper.std(), 1.0721351053904196, epsilon = 1e-10);
 
         // With location parameter
-        let shifted_hyper = Hypergeometric::new(20, 7, 12, 3.0).unwrap();
+        let shifted_hyper = Hypergeometric::new(20, 7, 12, 3.0).expect("Operation failed");
         assert_relative_eq!(shifted_hyper.mean(), 7.2, epsilon = 1e-10); // 4.2 + 3.0
         assert_relative_eq!(shifted_hyper.var(), 1.1494736842105262, epsilon = 1e-10);
         // Same variance
@@ -451,10 +452,10 @@ mod tests {
     #[test]
     fn test_hypergeometric_rvs() {
         // Create a hypergeometric distribution
-        let hyper = Hypergeometric::<f64>::new(100, 40, 20, 0.0).unwrap();
+        let hyper = Hypergeometric::<f64>::new(100, 40, 20, 0.0).expect("Operation failed");
 
         // Generate samples
-        let samples = hyper.rvs(1000).unwrap();
+        let samples = hyper.rvs(1000).expect("Operation failed");
 
         // Check basic properties
         assert_eq!(samples.len(), 1000);
@@ -474,21 +475,21 @@ mod tests {
     #[test]
     fn test_hypergeometric_edge_cases() {
         // Case 1: When n_success = 0, all samples should be 0
-        let hyper_no_success = Hypergeometric::new(20, 0, 10, 0.0).unwrap();
+        let hyper_no_success = Hypergeometric::new(20, 0, 10, 0.0).expect("Operation failed");
         assert_eq!(hyper_no_success.pmf(0.0), 1.0);
         assert_eq!(hyper_no_success.pmf(1.0), 0.0);
         assert_eq!(hyper_no_success.mean(), 0.0);
         assert_eq!(hyper_no_success.var(), 0.0);
 
         // Case 2: When n_draws = 0, all samples should be 0
-        let hyper_no_draws = Hypergeometric::new(20, 10, 0, 0.0).unwrap();
+        let hyper_no_draws = Hypergeometric::new(20, 10, 0, 0.0).expect("Operation failed");
         assert_eq!(hyper_no_draws.pmf(0.0), 1.0);
         assert_eq!(hyper_no_draws.pmf(1.0), 0.0);
         assert_eq!(hyper_no_draws.mean(), 0.0);
         assert_eq!(hyper_no_draws.var(), 0.0);
 
         // Case 3: When n_success = n_population, all samples should be n_draws
-        let hyper_all_success = Hypergeometric::new(20, 20, 10, 0.0).unwrap();
+        let hyper_all_success = Hypergeometric::new(20, 20, 10, 0.0).expect("Operation failed");
         assert_eq!(hyper_all_success.pmf(10.0), 1.0);
         assert_eq!(hyper_all_success.pmf(9.0), 0.0);
         assert_eq!(hyper_all_success.mean(), 10.0);

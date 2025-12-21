@@ -178,8 +178,8 @@ where
         if self.precision.is_some() && self.recall.is_some() {
             // Return pre-computed values
             return Ok((
-                self.precision.clone().unwrap(),
-                self.recall.clone().unwrap(),
+                self.precision.clone().expect("Operation failed"),
+                self.recall.clone().expect("Operation failed"),
                 self.thresholds.clone().unwrap_or_default(),
                 self.average_precision,
             ));
@@ -191,8 +191,8 @@ where
             ));
         }
 
-        let y_true = self.y_true.unwrap();
-        let y_score = self.y_score.unwrap();
+        let y_true = self.y_true.expect("Operation failed");
+        let y_score = self.y_score.expect("Operation failed");
 
         // Compute Precision-Recall curve
         let (precision, recall, thresholds) = precision_recall_curve(y_true, y_score)?;
@@ -236,7 +236,10 @@ where
         let mut series_names = Vec::new();
 
         if self.show_ap && ap.is_some() {
-            series_names.push(format!("Precision-Recall curve (AP = {:.3})", ap.unwrap()));
+            series_names.push(format!(
+                "Precision-Recall curve (AP = {:.3})",
+                ap.expect("Operation failed")
+            ));
         } else {
             series_names.push("Precision-Recall curve".to_string());
         }

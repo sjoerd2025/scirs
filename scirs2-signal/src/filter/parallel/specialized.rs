@@ -538,14 +538,14 @@ mod tests {
             .map(|i| (2.0 * PI * i as f64 / 50.0).sin())
             .collect();
 
-        let result = parallel_cic_filter(&signal, 4, 3, None).unwrap();
+        let result = parallel_cic_filter(&signal, 4, 3, None).expect("Operation failed");
         assert_eq!(result.len(), signal.len() / 4); // Should be decimated by factor of 4
     }
 
     #[test]
     fn test_parallel_minimum_phase() {
         let coefficients = vec![1.0, 0.5, 0.25, 0.125];
-        let result = parallel_minimum_phase(&coefficients, true, None).unwrap();
+        let result = parallel_minimum_phase(&coefficients, true, None).expect("Operation failed");
         assert_eq!(result.len(), coefficients.len());
     }
 
@@ -555,7 +555,7 @@ mod tests {
         let a = vec![1.0, -0.25];
         let frequencies: Vec<f64> = (0..10).map(|i| PI * i as f64 / 10.0).collect();
 
-        let result = parallel_group_delay(&b, &a, &frequencies, None).unwrap();
+        let result = parallel_group_delay(&b, &a, &frequencies, None).expect("Operation failed");
         assert_eq!(result.len(), frequencies.len());
     }
 
@@ -566,7 +566,8 @@ mod tests {
             .map(|i| (2.0 * PI * i as f64 / 20.0).sin())
             .collect();
 
-        let result = parallel_matched_filter(&template, &signal, true, None).unwrap();
+        let result =
+            parallel_matched_filter(&template, &signal, true, None).expect("Operation failed");
         assert_eq!(result.len(), signal.len() - template.len() + 1);
     }
 
@@ -578,7 +579,7 @@ mod tests {
             })
             .collect();
 
-        let result = parallel_wiener_filter(&signal, 0.01, 1.0, 5, None).unwrap();
+        let result = parallel_wiener_filter(&signal, 0.01, 1.0, 5, None).expect("Operation failed");
         assert_eq!(result.len(), signal.len());
     }
 

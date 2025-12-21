@@ -26,12 +26,12 @@ fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64
     let mut rng = StdRng::seed_from_u64(SEED);
 
     // Generate random orthogonal matrices U and V via QR decomposition
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
     let u_raw = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
     let v_raw = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
 
-    let (u, _) = qr(&u_raw.view(), None).unwrap();
-    let (v, _) = qr(&v_raw.view(), None).unwrap();
+    let (u, _) = qr(&u_raw.view(), None).expect("Operation failed");
+    let (v, _) = qr(&v_raw.view(), None).expect("Operation failed");
 
     // Create singular values with specified condition number
     let mut singular_values = Array1::linspace(1.0, 1.0 / condition_number, size);
@@ -109,8 +109,8 @@ fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -
     match solve(matrix, &rhs.view(), None) {
         Ok(computed_solution) => {
             let error = &computed_solution - known_solution;
-            let relative_error = vector_norm(&error.view(), 2).unwrap()
-                / vector_norm(&known_solution.view(), 2).unwrap();
+            let relative_error = vector_norm(&error.view(), 2).expect("Operation failed")
+                / vector_norm(&known_solution.view(), 2).expect("Operation failed");
 
             let success = relative_error < 1e-10; // Tolerance for success
             (success, relative_error)
@@ -127,8 +127,10 @@ fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
             let product = matrix.dot(&inv_matrix);
             let identity = Array2::eye(matrix.nrows());
             let error: Array2<f64> = &product - &identity;
-            let relative_error = matrix_norm::<f64>(&error.view(), "frobenius", None).unwrap()
-                / matrix_norm::<f64>(&identity.view(), "frobenius", None).unwrap();
+            let relative_error = matrix_norm::<f64>(&error.view(), "frobenius", None)
+                .expect("Operation failed")
+                / matrix_norm::<f64>(&identity.view(), "frobenius", None)
+                    .expect("Operation failed");
 
             let success = relative_error < 1e-10;
             (success, relative_error)
@@ -145,8 +147,9 @@ fn test_decomposition_accuracy(matrix: &ArrayView2<f64>, decomp_type: &str) -> (
             Ok((p, l, u)) => {
                 let reconstructed = p.dot(&l).dot(&u);
                 let error: Array2<f64> = &reconstructed - matrix;
-                let relative_error = matrix_norm(&error.view(), "frobenius", None).unwrap()
-                    / matrix_norm(matrix, "frobenius", None).unwrap();
+                let relative_error = matrix_norm(&error.view(), "frobenius", None)
+                    .expect("Operation failed")
+                    / matrix_norm(matrix, "frobenius", None).expect("Operation failed");
                 (relative_error < 1e-12, relative_error)
             }
             Err(_) => (false, f64::INFINITY),
@@ -155,8 +158,9 @@ fn test_decomposition_accuracy(matrix: &ArrayView2<f64>, decomp_type: &str) -> (
             Ok((q, r)) => {
                 let reconstructed = q.dot(&r);
                 let error: Array2<f64> = &reconstructed - matrix;
-                let relative_error = matrix_norm(&error.view(), "frobenius", None).unwrap()
-                    / matrix_norm(matrix, "frobenius", None).unwrap();
+                let relative_error = matrix_norm(&error.view(), "frobenius", None)
+                    .expect("Operation failed")
+                    / matrix_norm(matrix, "frobenius", None).expect("Operation failed");
                 (relative_error < 1e-12, relative_error)
             }
             Err(_) => (false, f64::INFINITY),
@@ -168,8 +172,9 @@ fn test_decomposition_accuracy(matrix: &ArrayView2<f64>, decomp_type: &str) -> (
                     let sigma = Array2::from_diag(&s);
                     let reconstructed = u.dot(&sigma).dot(&vt);
                     let error: Array2<f64> = &reconstructed - matrix;
-                    let relative_error = matrix_norm(&error.view(), "frobenius", None).unwrap()
-                        / matrix_norm(matrix, "frobenius", None).unwrap();
+                    let relative_error = matrix_norm(&error.view(), "frobenius", None)
+                        .expect("Operation failed")
+                        / matrix_norm(matrix, "frobenius", None).expect("Operation failed");
                     (relative_error < 1e-12, relative_error)
                 }
                 Err(_) => (false, f64::INFINITY),
@@ -362,7 +367,8 @@ fn bench_edge_cases(c: &mut Criterion) {
     let mut results = Vec::new();
 
     // Test with very small matrices
-    let tiny_matrix = Array2::from_shape_vec((2, 2), vec![1e-15, 1e-14, 1e-14, 1e-13]).unwrap();
+    let tiny_matrix =
+        Array2::from_shape_vec((2, 2), vec![1e-15, 1e-14, 1e-14, 1e-13]).expect("Operation failed");
 
     group.bench_function("tiny_matrix_det", |b| {
         b.iter(|| {
@@ -386,7 +392,8 @@ fn bench_edge_cases(c: &mut Criterion) {
     });
 
     // Test with very large values
-    let large_matrix = Array2::from_shape_vec((2, 2), vec![1e15, 1e14, 1e14, 1e13]).unwrap();
+    let large_matrix =
+        Array2::from_shape_vec((2, 2), vec![1e15, 1e14, 1e14, 1e13]).expect("Operation failed");
 
     group.bench_function("large_matrix_det", |b| {
         b.iter(|| {
@@ -394,7 +401,7 @@ fn bench_edge_cases(c: &mut Criterion) {
             let result: Result<f64, LinalgError> = det(&large_matrix.view(), None);
             let elapsed = start.elapsed().as_nanos() as u64;
 
-            let success = result.is_ok() && result.as_ref().unwrap().is_finite();
+            let success = result.is_ok() && result.as_ref().expect("Operation failed").is_finite();
             results.push(StabilityTestResult {
                 test_name: "large_matrix_det".to_string(),
                 matrix_size: 2,
@@ -435,7 +442,7 @@ fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
 fn save_stability_results(results: &[StabilityTestResult]) {
     std::fs::create_dir_all("target").unwrap_or_default();
 
-    let json = serde_json::to_string_pretty(results).unwrap();
+    let json = serde_json::to_string_pretty(results).expect("Operation failed");
     fs::write("target/stability_test_results.json", json).unwrap_or_else(|e| {
         eprintln!("Failed to save stability test results: {}", e);
     });

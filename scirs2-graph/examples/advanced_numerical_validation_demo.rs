@@ -465,7 +465,7 @@ mod tests {
         let result = run_quick_validation();
         assert!(result.is_ok());
 
-        let report = result.unwrap();
+        let report = result.expect("Operation failed");
         assert!(report.summary.total_tests > 0);
         assert!(report.summary.pass_rate >= 0.0);
         assert!(report.summary.pass_rate <= 1.0);

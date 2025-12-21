@@ -644,7 +644,7 @@ impl StressTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.total_operations,
-                    result.error.unwrap(),
+                    result.error.expect("Operation failed"),
                 ));
             }
 
@@ -663,7 +663,7 @@ impl StressTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.total_operations,
-                    result.error.unwrap(),
+                    result.error.expect("Operation failed"),
                 ));
             }
 
@@ -683,7 +683,7 @@ impl StressTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.total_operations,
-                    result.error.unwrap(),
+                    result.error.expect("Operation failed"),
                 ));
             }
 
@@ -702,7 +702,7 @@ impl StressTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.total_operations,
-                    result.error.unwrap(),
+                    result.error.expect("Operation failed"),
                 ));
             }
 
@@ -722,7 +722,7 @@ impl StressTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.total_operations,
-                    result.error.unwrap(),
+                    result.error.expect("Operation failed"),
                 ));
             }
 
@@ -741,7 +741,7 @@ impl StressTestUtils {
                 return Ok(TestResult::failure(
                     result.duration,
                     result.total_operations,
-                    result.error.unwrap(),
+                    result.error.expect("Operation failed"),
                 ));
             }
 
@@ -798,7 +798,7 @@ mod tests {
         let result = tester.test_cpu_intensive_workload();
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.total_operations > 0);
     }
 
@@ -814,7 +814,7 @@ mod tests {
         let result = tester.test_shared_resource_contention();
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.total_operations > 0);
     }
 }

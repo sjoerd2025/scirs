@@ -411,9 +411,9 @@ impl ModelRegistry {
             return Ok(self
                 .model_cache
                 .get(model_id)
-                .unwrap()
+                .expect("Operation failed")
                 .downcast_ref::<M>()
-                .unwrap());
+                .expect("Operation failed"));
         }
 
         // Load model metadata
@@ -941,7 +941,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             .token_embedding
             .get_embeddings()
             .as_slice()
-            .unwrap()
+            .expect("Operation failed")
             .to_vec();
         let embedshape = self.token_embedding.get_embeddings().shape().to_vec();
         weights.insert("token_embeddings".to_string(), embed_weights);
@@ -962,22 +962,22 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             let (w_q, w_k, w_v, w_o) = attention.get_weights();
             weights.insert(
                 format!("encoder_{i}_attention_wq"),
-                w_q.as_slice().unwrap().to_vec(),
+                w_q.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_attention_wq"), w_q.shape().to_vec());
             weights.insert(
                 format!("encoder_{i}_attention_wk"),
-                w_k.as_slice().unwrap().to_vec(),
+                w_k.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_attention_wk"), w_k.shape().to_vec());
             weights.insert(
                 format!("encoder_{i}_attention_wv"),
-                w_v.as_slice().unwrap().to_vec(),
+                w_v.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_attention_wv"), w_v.shape().to_vec());
             weights.insert(
                 format!("encoder_{i}_attention_wo"),
-                w_o.as_slice().unwrap().to_vec(),
+                w_o.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_attention_wo"), w_o.shape().to_vec());
 
@@ -985,22 +985,22 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             let (w1, w2, b1, b2) = ff.get_weights();
             weights.insert(
                 format!("encoder_{i}_ff_w1"),
-                w1.as_slice().unwrap().to_vec(),
+                w1.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ff_w1"), w1.shape().to_vec());
             weights.insert(
                 format!("encoder_{i}_ff_w2"),
-                w2.as_slice().unwrap().to_vec(),
+                w2.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ff_w2"), w2.shape().to_vec());
             weights.insert(
                 format!("encoder_{i}_ff_b1"),
-                b1.as_slice().unwrap().to_vec(),
+                b1.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ff_b1"), vec![b1.len()]);
             weights.insert(
                 format!("encoder_{i}_ff_b2"),
-                b2.as_slice().unwrap().to_vec(),
+                b2.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ff_b2"), vec![b2.len()]);
 
@@ -1009,22 +1009,22 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             let (gamma2, beta2) = ln2.get_params();
             weights.insert(
                 format!("encoder_{i}_ln1_gamma"),
-                gamma1.as_slice().unwrap().to_vec(),
+                gamma1.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ln1_gamma"), vec![gamma1.len()]);
             weights.insert(
                 format!("encoder_{i}_ln1_beta"),
-                beta1.as_slice().unwrap().to_vec(),
+                beta1.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ln1_beta"), vec![beta1.len()]);
             weights.insert(
                 format!("encoder_{i}_ln2_gamma"),
-                gamma2.as_slice().unwrap().to_vec(),
+                gamma2.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ln2_gamma"), vec![gamma2.len()]);
             weights.insert(
                 format!("encoder_{i}_ln2_beta"),
-                beta2.as_slice().unwrap().to_vec(),
+                beta2.as_slice().expect("Operation failed").to_vec(),
             );
             shapes.insert(format!("encoder_{i}_ln2_beta"), vec![beta2.len()]);
         }
@@ -1380,7 +1380,7 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
 
         // Serialize embedding weights
         if let Some(embeddings) = self.get_embeddings_matrix() {
-            let embed_weights = embeddings.as_slice().unwrap().to_vec();
+            let embed_weights = embeddings.as_slice().expect("Operation failed").to_vec();
             let embedshape = embeddings.shape().to_vec();
             weights.insert("embeddings".to_string(), embed_weights);
             shapes.insert("embeddings".to_string(), embedshape);
@@ -1538,8 +1538,9 @@ mod tests {
 
     #[test]
     fn test_model_registry_creation() {
-        let temp_dir = TempDir::new().unwrap();
-        let registry = ModelRegistry::new(temp_dir.path(), temp_dir.path()).unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
+        let registry =
+            ModelRegistry::new(temp_dir.path(), temp_dir.path()).expect("Operation failed");
 
         assert_eq!(registry.models.len(), 0);
         assert_eq!(registry.model_cache.len(), 0);

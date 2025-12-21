@@ -55,7 +55,7 @@ impl NSGAII {
             use std::time::{SystemTime, UNIX_EPOCH};
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_secs()
         });
 
@@ -137,8 +137,8 @@ impl NSGAII {
 
             // Perform crossover
             let (mut child1_vars, mut child2_vars) = self.crossover.crossover(
-                parent1.variables.as_slice().unwrap(),
-                parent2.variables.as_slice().unwrap(),
+                parent1.variables.as_slice().expect("Operation failed"),
+                parent2.variables.as_slice().expect("Operation failed"),
             );
 
             // Apply mutation (need bounds for mutation)
@@ -338,7 +338,7 @@ mod tests {
         let nsga2 = NSGAII::new(config, 2, 3);
         assert!(nsga2.is_ok());
 
-        let nsga2 = nsga2.unwrap();
+        let nsga2 = nsga2.expect("Operation failed");
         assert_eq!(nsga2.n_objectives, 2);
         assert_eq!(nsga2.n_variables, 3);
         assert_eq!(nsga2.generation, 0);
@@ -371,11 +371,11 @@ mod tests {
         config.bounds = Some((Array1::zeros(2), Array1::ones(2)));
         config.random_seed = Some(42);
 
-        let mut nsga2 = NSGAII::new(config, 2, 2).unwrap();
+        let mut nsga2 = NSGAII::new(config, 2, 2).expect("Operation failed");
         let result = nsga2.optimize(zdt1);
 
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.success);
         assert!(!result.pareto_front.is_empty());
         assert_eq!(result.n_generations, 10);
@@ -390,11 +390,11 @@ mod tests {
         config.population_size = 10;
         config.bounds = Some((Array1::zeros(2), Array1::ones(2)));
 
-        let mut nsga2 = NSGAII::new(config, 2, 2).unwrap();
+        let mut nsga2 = NSGAII::new(config, 2, 2).expect("Operation failed");
         let result = nsga2.optimize(zdt1);
 
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.n_evaluations <= 50);
     }
 
@@ -406,11 +406,11 @@ mod tests {
         config.bounds = Some((Array1::zeros(2), Array1::ones(2)));
         config.reference_point = Some(array![2.0, 2.0]);
 
-        let mut nsga2 = NSGAII::new(config, 2, 2).unwrap();
-        let result = nsga2.optimize(zdt1).unwrap();
+        let mut nsga2 = NSGAII::new(config, 2, 2).expect("Operation failed");
+        let result = nsga2.optimize(zdt1).expect("Operation failed");
 
         assert!(result.hypervolume.is_some());
-        assert!(result.hypervolume.unwrap() >= 0.0);
+        assert!(result.hypervolume.expect("Operation failed") >= 0.0);
         assert!(!result.metrics.convergence_history.is_empty());
     }
 
@@ -421,7 +421,7 @@ mod tests {
         config.max_generations = 2; // Few generations
         config.population_size = 10;
 
-        let nsga2 = NSGAII::new(config, 2, 2).unwrap();
+        let nsga2 = NSGAII::new(config, 2, 2).expect("Operation failed");
 
         // With empty convergence history, should not converge
         assert!(!nsga2.check_convergence());
@@ -430,7 +430,7 @@ mod tests {
     #[test]
     fn test_nsga2_name() {
         let config = MultiObjectiveConfig::default();
-        let nsga2 = NSGAII::new(config, 2, 2).unwrap();
+        let nsga2 = NSGAII::new(config, 2, 2).expect("Operation failed");
         assert_eq!(nsga2.name(), "NSGA-II");
     }
 }

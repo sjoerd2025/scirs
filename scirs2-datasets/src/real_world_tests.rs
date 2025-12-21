@@ -5,7 +5,7 @@ use scirs2_core::random::Uniform;
 
 #[test]
 fn test_load_titanic() {
-    let dataset = load_titanic().unwrap();
+    let dataset = load_titanic().expect("Operation failed");
     assert_eq!(dataset.n_samples(), 891);
     assert_eq!(dataset.n_features(), 7);
     assert!(dataset.target.is_some());
@@ -13,7 +13,7 @@ fn test_load_titanic() {
 
 #[test]
 fn test_load_california_housing() {
-    let dataset = load_california_housing().unwrap();
+    let dataset = load_california_housing().expect("Operation failed");
     assert_eq!(dataset.n_samples(), 20640);
     assert_eq!(dataset.n_features(), 8);
     assert!(dataset.target.is_some());
@@ -21,7 +21,7 @@ fn test_load_california_housing() {
 
 #[test]
 fn test_load_heart_disease() {
-    let dataset = load_heart_disease().unwrap();
+    let dataset = load_heart_disease().expect("Operation failed");
     assert_eq!(dataset.n_samples(), 303);
     assert_eq!(dataset.n_features(), 13);
     assert!(dataset.target.is_some());

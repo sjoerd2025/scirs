@@ -6,17 +6,17 @@ fn main() {
     let mut graph = create_graph::<&str, ()>();
 
     // Build the same graph as in the test
-    graph.add_edge("A", "B", ()).unwrap();
-    graph.add_edge("B", "C", ()).unwrap();
-    graph.add_edge("C", "A", ()).unwrap();
-    graph.add_edge("D", "A", ()).unwrap();
-    graph.add_edge("D", "B", ()).unwrap();
-    graph.add_edge("E", "D", ()).unwrap();
+    graph.add_edge("A", "B", ()).expect("Operation failed");
+    graph.add_edge("B", "C", ()).expect("Operation failed");
+    graph.add_edge("C", "A", ()).expect("Operation failed");
+    graph.add_edge("D", "A", ()).expect("Operation failed");
+    graph.add_edge("D", "B", ()).expect("Operation failed");
+    graph.add_edge("E", "D", ()).expect("Operation failed");
 
     // Print degrees
     println!("Node degrees:");
     for node in graph.nodes() {
-        let degree = graph.neighbors(node).unwrap().len();
+        let degree = graph.neighbors(node).expect("Operation failed").len();
         println!("{}: {}", node, degree);
     }
 

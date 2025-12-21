@@ -400,7 +400,7 @@ where
         );
 
         let (total_sum, total_count) = result;
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     /// Compute mean using adaptive chunks strategy
@@ -418,7 +418,7 @@ where
                 (acc_sum + sum, acc_count + count)
             });
 
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     /// Compute mean using work stealing strategy
@@ -434,7 +434,7 @@ where
                 (acc_sum + sum, acc_count + count)
             });
 
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     /// Compute mean using NUMA-aware strategy
@@ -453,7 +453,7 @@ where
                 (acc_sum + sum, acc_count + count)
             });
 
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     /// Compute mean using ML-guided strategy
@@ -479,7 +479,7 @@ where
         );
 
         let (total_sum, total_count) = result;
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     /// Compute variance using adaptive chunks
@@ -498,7 +498,7 @@ where
                 (acc_sum + sum, acc_count + count)
             });
 
-        let variance = total_sum_sq_diffs / F::from(total_count - ddof).unwrap();
+        let variance = total_sum_sq_diffs / F::from(total_count - ddof).expect("Failed to convert to float");
         Ok(variance)
     }
 
@@ -517,7 +517,7 @@ where
                 (acc_sum + sum, acc_count + count)
             });
 
-        let variance = total_sum_sq_diffs / F::from(total_count - ddof).unwrap();
+        let variance = total_sum_sq_diffs / F::from(total_count - ddof).expect("Failed to convert to float");
         Ok(variance)
     }
 
@@ -537,7 +537,7 @@ where
                 (acc_sum + sum, acc_count + count)
             });
 
-        let variance = total_sum_sq_diffs / F::from(total_count - ddof).unwrap();
+        let variance = total_sum_sq_diffs / F::from(total_count - ddof).expect("Failed to convert to float");
         Ok(variance)
     }
 
@@ -560,7 +560,7 @@ where
         );
 
         let (total_sum_sq_diffs, total_count) = result;
-        let variance = total_sum_sq_diffs / F::from(total_count - ddof).unwrap();
+        let variance = total_sum_sq_diffs / F::from(total_count - ddof).expect("Failed to convert to float");
         Ok(variance)
     }
 
@@ -826,42 +826,38 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_adaptive_mean_basic() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mut processor = AdaptiveParallelProcessor::<f64>::new();
-        let result = processor.adaptive_mean(&data.view()).unwrap();
+        let result = processor.adaptive_mean(&data.view()).expect("Operation failed");
         assert!((result - 3.0).abs() < 1e-10);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_adaptive_variance_basic() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mut processor = AdaptiveParallelProcessor::<f64>::new();
-        let result = processor.adaptive_variance(&data.view(), 1).unwrap();
+        let result = processor.adaptive_variance(&data.view(), 1).expect("Operation failed");
         assert!(result > 0.0); // Variance should be positive
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_work_distribution_strategies() {
         let data: Array1<f64> = Array1::from_shape_fn(10000, |i| i as f64);
         let mut processor = AdaptiveParallelProcessor::<f64>::new();
         
         // Test different strategies
         processor.strategy = WorkDistributionStrategy::EqualChunks;
-        let result1 = processor.adaptive_mean(&data.view()).unwrap();
+        let result1 = processor.adaptive_mean(&data.view()).expect("Operation failed");
         
         processor.strategy = WorkDistributionStrategy::AdaptiveChunks;
-        let result2 = processor.adaptive_mean(&data.view()).unwrap();
+        let result2 = processor.adaptive_mean(&data.view()).expect("Operation failed");
         
         // Results should be numerically equivalent
         assert!((result1 - result2).abs() < 1e-10);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_numa_topology_detection() {
         let topology = NumaTopology::detect();
         assert!(topology.num_nodes >= 1);

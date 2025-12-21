@@ -407,7 +407,7 @@ impl BenchmarkResults {
         ranked_algorithms.sort_by(|a, b| {
             a.1.overall_score
                 .partial_cmp(&b.1.overall_score)
-                .unwrap()
+                .expect("Operation failed")
                 .reverse()
         });
 
@@ -872,7 +872,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_config() {
         let config = BenchmarkConfig::default();
         assert!(config.test_problems.contains(&"sphere".to_string()));
@@ -881,7 +880,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_suites() {
         let quick = benchmark_suites::quick_benchmark();
         assert_eq!(quick.runs_per_problem, 5);

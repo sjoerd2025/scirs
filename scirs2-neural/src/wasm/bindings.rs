@@ -570,7 +570,7 @@ mod tests {
     use tempfile::TempDir;
     #[test]
     fn test_binding_generator_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let config = WebBindingConfig {
             target_language: WebBindingLanguage::Both,
             module_system: ModuleSystem::ESModules,
@@ -590,19 +590,19 @@ mod tests {
                 enable: false,
                 minify: false,
                 tree_shaking: false,
-        let js_path = generator.generate_javascript_bindings().unwrap();
+        let js_path = generator.generate_javascript_bindings().expect("Operation failed");
         assert!(js_path.exists());
         assert!(js_path.to_string_lossy().ends_with("scirs2-model.js"));
-        let content = fs::read_to_string(&js_path).unwrap();
+        let content = fs::read_to_string(&js_path).expect("Operation failed");
         assert!(content.contains("class SciRS2Model"));
         assert!(content.contains("async initialize"));
         assert!(content.contains("async predict"));
     fn test_typescript_binding_generation() {
             target_language: WebBindingLanguage::TypeScript,
-        let ts_path = generator.generate_typescript_bindings().unwrap();
+        let ts_path = generator.generate_typescript_bindings().expect("Operation failed");
         assert!(ts_path.exists());
         assert!(ts_path.to_string_lossy().ends_with("scirs2-model.ts"));
-        let content = fs::read_to_string(&ts_path).unwrap();
+        let content = fs::read_to_string(&ts_path).expect("Operation failed");
         assert!(content.contains("export class SciRS2Model"));
         assert!(content.contains("Promise<void>"));
         assert!(content.contains("PredictionOptions"));

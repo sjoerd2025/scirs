@@ -31,7 +31,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-graph = "0.1.0-rc.3"
+//! scirs2-graph = "0.1.0-rc.4"
 //! ```
 //!
 //! ```rust,no_run
@@ -44,7 +44,7 @@
 //! g.add_edge(0, 1, 1.0);
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
 //!
 //! ## API Stability and Versioning
 //!

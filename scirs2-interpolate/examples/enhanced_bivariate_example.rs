@@ -90,14 +90,15 @@ fn rect_bivariate_example() {
     println!("Grid data: {} x {} points", x.len(), y.len());
 
     // Create bivariate splines with different degrees
-    let spline_linear =
-        RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 1, 1, None).unwrap();
+    let spline_linear = RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 1, 1, None)
+        .expect("Operation failed");
 
     let spline_quadratic =
-        RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 2, 2, None).unwrap();
+        RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 2, 2, None)
+            .expect("Operation failed");
 
-    let spline_cubic =
-        RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 3, 3, None).unwrap();
+    let spline_cubic = RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 3, 3, None)
+        .expect("Operation failed");
 
     // Create a finer grid for testing
     let x_test = Array1::linspace(0.0, 1.0, 20);
@@ -106,13 +107,13 @@ fn rect_bivariate_example() {
     // Evaluate all splines on the test grid
     let result_linear = spline_linear
         .evaluate(&x_test.view(), &y_test.view(), true)
-        .unwrap();
+        .expect("Operation failed");
     let result_quadratic = spline_quadratic
         .evaluate(&x_test.view(), &y_test.view(), true)
-        .unwrap();
+        .expect("Operation failed");
     let result_cubic = spline_cubic
         .evaluate(&x_test.view(), &y_test.view(), true)
-        .unwrap();
+        .expect("Operation failed");
 
     // Create the ground truth for comparison
     let mut z_true = Array2::zeros((x_test.len(), y_test.len()));
@@ -138,13 +139,13 @@ fn rect_bivariate_example() {
 
     let val_linear = spline_linear
         .evaluate(&test_x.view(), &test_y.view(), false)
-        .unwrap()[[0, 0]];
+        .expect("Operation failed")[[0, 0]];
     let val_quadratic = spline_quadratic
         .evaluate(&test_x.view(), &test_y.view(), false)
-        .unwrap()[[0, 0]];
+        .expect("Operation failed")[[0, 0]];
     let val_cubic = spline_cubic
         .evaluate(&test_x.view(), &test_y.view(), false)
-        .unwrap()[[0, 0]];
+        .expect("Operation failed")[[0, 0]];
     let val_true = test_function(0.5, 0.5);
 
     println!("\nValues at (0.5, 0.5):");
@@ -191,25 +192,25 @@ fn smooth_bivariate_example() {
         .with_degrees(3, 3)
         .with_smoothing(0.0)
         .build()
-        .unwrap();
+        .expect("Operation failed");
 
     let spline_light = SmoothBivariateSplineBuilder::new(&x.view(), &y.view(), &z.view())
         .with_degrees(3, 3)
         .with_smoothing(0.1)
         .build()
-        .unwrap();
+        .expect("Operation failed");
 
     let spline_medium = SmoothBivariateSplineBuilder::new(&x.view(), &y.view(), &z.view())
         .with_degrees(3, 3)
         .with_smoothing(1.0)
         .build()
-        .unwrap();
+        .expect("Operation failed");
 
     let spline_heavy = SmoothBivariateSplineBuilder::new(&x.view(), &y.view(), &z.view())
         .with_degrees(3, 3)
         .with_smoothing(10.0)
         .build()
-        .unwrap();
+        .expect("Operation failed");
 
     // Create a grid for evaluation
     let x_test = Array1::linspace(0.0, 1.0, 20);
@@ -218,16 +219,16 @@ fn smooth_bivariate_example() {
     // Evaluate all splines on the test grid
     let result_exact = spline_exact
         .evaluate(&x_test.view(), &y_test.view(), true)
-        .unwrap();
+        .expect("Operation failed");
     let result_light = spline_light
         .evaluate(&x_test.view(), &y_test.view(), true)
-        .unwrap();
+        .expect("Operation failed");
     let result_medium = spline_medium
         .evaluate(&x_test.view(), &y_test.view(), true)
-        .unwrap();
+        .expect("Operation failed");
     let result_heavy = spline_heavy
         .evaluate(&x_test.view(), &y_test.view(), true)
-        .unwrap();
+        .expect("Operation failed");
 
     // Create the ground truth for comparison
     let mut z_true = Array2::zeros((x_test.len(), y_test.len()));
@@ -275,8 +276,8 @@ fn bivariate_calculus_example() {
     let (x, y, z) = generate_grid_data(15, 15);
 
     // Create a cubic spline
-    let spline =
-        RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 3, 3, None).unwrap();
+    let spline = RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 3, 3, None)
+        .expect("Operation failed");
 
     // Test derivatives at a specific point
     let test_x = array![0.5];
@@ -285,16 +286,16 @@ fn bivariate_calculus_example() {
     // Compute partial derivatives at (0.5, 0.5)
     let val = spline
         .evaluate(&test_x.view(), &test_y.view(), false)
-        .unwrap()[[0, 0]];
+        .expect("Operation failed")[[0, 0]];
     let dx = spline
         .evaluate_derivative(&test_x.view(), &test_y.view(), 1, 0, false)
-        .unwrap()[[0, 0]];
+        .expect("Operation failed")[[0, 0]];
     let dy = spline
         .evaluate_derivative(&test_x.view(), &test_y.view(), 0, 1, false)
-        .unwrap()[[0, 0]];
+        .expect("Operation failed")[[0, 0]];
     let dxy = spline
         .evaluate_derivative(&test_x.view(), &test_y.view(), 1, 1, false)
-        .unwrap()[[0, 0]];
+        .expect("Operation failed")[[0, 0]];
 
     // Compute the exact derivatives for the test function
     let pi = std::f64::consts::PI;
@@ -311,16 +312,26 @@ fn bivariate_calculus_example() {
 
     // Calculate integral over different regions
     // Test the integral over [0,1] x [0,1]
-    let integral_full = spline.integral(0.0, 1.0, 0.0, 1.0).unwrap();
+    let integral_full = spline
+        .integral(0.0, 1.0, 0.0, 1.0)
+        .expect("Operation failed");
 
     // True integral of sin(πx) * cos(πy) over [0,1] x [0,1] is 0
     let true_integral_full = 0.0;
 
     // Test integrals over smaller regions
-    let integral_q1 = spline.integral(0.0, 0.5, 0.0, 0.5).unwrap();
-    let integral_q2 = spline.integral(0.5, 1.0, 0.0, 0.5).unwrap();
-    let integral_q3 = spline.integral(0.0, 0.5, 0.5, 1.0).unwrap();
-    let integral_q4 = spline.integral(0.5, 1.0, 0.5, 1.0).unwrap();
+    let integral_q1 = spline
+        .integral(0.0, 0.5, 0.0, 0.5)
+        .expect("Operation failed");
+    let integral_q2 = spline
+        .integral(0.5, 1.0, 0.0, 0.5)
+        .expect("Operation failed");
+    let integral_q3 = spline
+        .integral(0.0, 0.5, 0.5, 1.0)
+        .expect("Operation failed");
+    let integral_q4 = spline
+        .integral(0.5, 1.0, 0.5, 1.0)
+        .expect("Operation failed");
 
     println!("\nDefinite integrals:");
     println!(

@@ -31,18 +31,18 @@
 // // Create a simple cubic spline
 // let x = array![0.0, 1.0, 2.0, 3.0];
 // let y = array![0.0, 1.0, 4.0, 9.0];
-// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
 //
 // // Evaluate at a point
-// let result = spline.evaluate(1.5).unwrap();
+// let result = spline.evaluate(1.5).expect("Operation failed");
 // println!("f(1.5) = {}", result);
 //
 // // Compute derivatives
-// let derivative = spline.derivative(1.5).unwrap();
+// let derivative = spline.derivative(1.5).expect("Operation failed");
 // println!("f'(1.5) = {}", derivative);
 //
 // // Integrate over an interval
-// let integral = spline.integrate(0.5, 2.5).unwrap();
+// let integral = spline.integrate(0.5, 2.5).expect("Operation failed");
 // println!("∫f(x)dx from 0.5 to 2.5 = {}", integral);
 // ```
 //
@@ -61,7 +61,7 @@
 //     .y(y)
 //     .boundary_condition(SplineBoundaryCondition::Clamped(0.0, 6.0))
 //     .build()
-//     .unwrap();
+//     .expect("Operation failed");
 // ```
 //
 // # SciPy Compatibility
@@ -80,7 +80,7 @@
 //     "not-a-knot",
 //     None,
 //     false
-// ).unwrap();
+// ).expect("Operation failed");
 // ```
 
 // Core type definitions
@@ -131,13 +131,13 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
 
         // Test evaluation at data points
-        assert_abs_diff_eq!(spline.evaluate(0.0).unwrap(), 0.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(1.0).unwrap(), 1.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(2.0).unwrap(), 4.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(3.0).unwrap(), 9.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.evaluate(0.0).expect("Operation failed"), 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.evaluate(1.0).expect("Operation failed"), 1.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.evaluate(2.0).expect("Operation failed"), 4.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.evaluate(3.0).expect("Operation failed"), 9.0, epsilon = 1e-10);
     }
 
     #[test]
@@ -146,11 +146,11 @@ mod tests {
         let y = array![0.0, 1.0, 4.0, 9.0];
 
         // Test different boundary conditions
-        let natural = CubicSpline::new(&x.view(), &y.view()).unwrap();
-        let not_a_knot = CubicSpline::new_not_a_knot(&x.view(), &y.view()).unwrap();
+        let natural = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
+        let not_a_knot = CubicSpline::new_not_a_knot(&x.view(), &y.view()).expect("Operation failed");
 
         // All should interpolate data points exactly
-        assert_abs_diff_eq!(natural.evaluate(1.5).unwrap(), not_a_knot.evaluate(1.5).unwrap(), epsilon = 0.1);
+        assert_abs_diff_eq!(natural.evaluate(1.5).expect("Operation failed"), not_a_knot.evaluate(1.5).expect("Operation failed"), epsilon = 0.1);
     }
 
     #[test]
@@ -158,13 +158,13 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0]; // approximately x^2
 
-        let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
 
         // For y ≈ x^2, derivative should be approximately 2x
-        let deriv_at_1 = spline.derivative(1.0).unwrap();
+        let deriv_at_1 = spline.derivative(1.0).expect("Operation failed");
         assert!((deriv_at_1 - 2.0_f64).abs() < 0.5_f64, "First derivative at x=1 should be close to 2");
 
-        let deriv_at_2 = spline.derivative(2.0).unwrap();
+        let deriv_at_2 = spline.derivative(2.0).expect("Operation failed");
         assert!((deriv_at_2 - 4.0_f64).abs() < 0.5_f64, "First derivative at x=2 should be close to 4");
     }
 
@@ -173,13 +173,13 @@ mod tests {
         let x = array![0.0, 1.0, 2.0];
         let y = array![0.0, 1.0, 4.0];
 
-        let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
 
         // Integration from a point to itself should be zero
-        assert_abs_diff_eq!(spline.integrate(1.0, 1.0).unwrap(), 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.integrate(1.0, 1.0).expect("Operation failed"), 0.0, epsilon = 1e-10);
 
         // Integration should be positive for this monotonic function
-        let integral = spline.integrate(0.0, 2.0).unwrap();
+        let integral = spline.integrate(0.0, 2.0).expect("Operation failed");
         assert!(integral > 0.0);
     }
 
@@ -188,11 +188,11 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let spline = cubic_spline_scipy(&x.view(), &y.view(), "natural", None, false).unwrap();
+        let spline = cubic_spline_scipy(&x.view(), &y.view(), "natural", None, false).expect("Operation failed");
 
         // Should interpolate data points exactly
-        assert_abs_diff_eq!(spline.evaluate(1.0).unwrap(), 1.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(2.0).unwrap(), 4.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.evaluate(1.0).expect("Operation failed"), 1.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.evaluate(2.0).expect("Operation failed"), 4.0, epsilon = 1e-10);
     }
 
     #[test]
@@ -205,9 +205,9 @@ mod tests {
             .y(y)
             .boundary_condition(SplineBoundaryCondition::Natural)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
-        assert_abs_diff_eq!(spline.evaluate(1.5).unwrap(), spline.evaluate(1.5).unwrap(), epsilon = 1e-10);
+        assert_abs_diff_eq!(spline.evaluate(1.5).expect("Operation failed"), spline.evaluate(1.5).expect("Operation failed"), epsilon = 1e-10);
     }
 
     #[test]
@@ -230,7 +230,7 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0];
         let y = array![1.0, 4.0, 9.0, 16.0];
 
-        let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
 
         // Should fail for out-of-bounds evaluation
         assert!(spline.evaluate(0.5).is_err());

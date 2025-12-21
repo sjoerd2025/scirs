@@ -43,13 +43,13 @@ use scirs2_core::parallel_ops::*;
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
 /// let indices = vec![0, 0, 1, 1, 2];
 /// let indptr = vec![0, 1, 3, 5];
-/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
 ///
 /// // Create a vector
 /// let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 ///
 /// // Compute the product
-/// let y = sym_csr_matvec(&matrix, &x.view()).unwrap();
+/// let y = sym_csr_matvec(&matrix, &x.view()).expect("Operation failed");
 ///
 /// // Verify the result: [2*1 + 1*2 + 0*3, 1*1 + 2*2 + 3*3, 0*1 + 3*2 + 1*3] = [4, 14, 9]
 /// assert_eq!(y[0], 4.0);
@@ -191,13 +191,13 @@ where
 /// let rows = vec![0, 1, 1, 2, 2];
 /// let cols = vec![0, 0, 1, 1, 2];
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
-/// let matrix = SymCooMatrix::new(data, rows, cols, (3, 3)).unwrap();
+/// let matrix = SymCooMatrix::new(data, rows, cols, (3, 3)).expect("Operation failed");
 ///
 /// // Create a vector
 /// let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 ///
 /// // Compute the product
-/// let y = sym_coo_matvec(&matrix, &x.view()).unwrap();
+/// let y = sym_coo_matvec(&matrix, &x.view()).expect("Operation failed");
 ///
 /// // Verify the result: [2*1 + 1*2 + 0*3, 1*1 + 2*2 + 3*3, 0*1 + 3*2 + 1*3] = [4, 14, 9]
 /// assert_eq!(y[0], 4.0);
@@ -344,13 +344,13 @@ where
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
 /// let indices = vec![0, 0, 1, 1, 2];
 /// let indptr = vec![0, 1, 3, 5];
-/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
 ///
 /// // Create a vector
 /// let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 ///
 /// // Compute the quadratic form
-/// let result = sym_csr_quadratic_form(&matrix, &x.view()).unwrap();
+/// let result = sym_csr_quadratic_form(&matrix, &x.view()).expect("Operation failed");
 ///
 /// // Verify: [1,2,3] * [2,1,0; 1,2,3; 0,3,1] * [1;2;3] = [1,2,3] * [4,14,9] = 4 + 28 + 27 = 59
 /// assert_eq!(result, 59.0);
@@ -394,7 +394,7 @@ where
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
 /// let indices = vec![0, 0, 1, 1, 2];
 /// let indptr = vec![0, 1, 3, 5];
-/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
 ///
 /// // Compute the trace
 /// let trace = sym_csr_trace(&matrix);
@@ -449,7 +449,7 @@ mod tests {
         let indices = vec![0, 0, 1, 1, 2];
         let indptr = vec![0, 1, 3, 5];
 
-        SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap()
+        SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed")
     }
 
     // Create a simple symmetric matrix in COO format for testing
@@ -468,7 +468,7 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 2];
         let cols = vec![0, 0, 1, 1, 2];
 
-        SymCooMatrix::new(data, rows, cols, (3, 3)).unwrap()
+        SymCooMatrix::new(data, rows, cols, (3, 3)).expect("Operation failed")
     }
 
     #[test]
@@ -476,7 +476,7 @@ mod tests {
         let matrix = create_test_sym_csr();
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let y = sym_csr_matvec(&matrix, &x.view()).unwrap();
+        let y = sym_csr_matvec(&matrix, &x.view()).expect("Operation failed");
 
         // Expected result: [2*1 + 1*2 + 0*3, 1*1 + 2*2 + 3*3, 0*1 + 3*2 + 1*3] = [4, 14, 9]
         assert_eq!(y.len(), 3);
@@ -490,7 +490,7 @@ mod tests {
         let matrix = create_test_sym_coo();
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let y = sym_coo_matvec(&matrix, &x.view()).unwrap();
+        let y = sym_coo_matvec(&matrix, &x.view()).expect("Operation failed");
 
         // Expected result: [2*1 + 1*2 + 0*3, 1*1 + 2*2 + 3*3, 0*1 + 3*2 + 1*3] = [4, 14, 9]
         assert_eq!(y.len(), 3);
@@ -507,7 +507,7 @@ mod tests {
 
         // Original diagonal element at (0,0) is 2.0
         // After rank-1 update with [1,0,0] and alpha=3, it should be 2+3*1*1 = 5
-        sym_csr_rank1_update(&mut matrix, &x.view(), alpha).unwrap();
+        sym_csr_rank1_update(&mut matrix, &x.view(), alpha).expect("Operation failed");
 
         // Check the updated value
         assert_relative_eq!(matrix.get(0, 0), 5.0);
@@ -524,7 +524,7 @@ mod tests {
         let matrix = create_test_sym_csr();
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let result = sym_csr_quadratic_form(&matrix, &x.view()).unwrap();
+        let result = sym_csr_quadratic_form(&matrix, &x.view()).expect("Operation failed");
 
         // Expected result: [1,2,3] * [2,1,0; 1,2,3; 0,3,1] * [1;2;3]
         // = [1,2,3] * [4,14,9] = 1*4 + 2*14 + 3*9 = 4 + 28 + 27 = 59
@@ -545,15 +545,17 @@ mod tests {
     fn test_compare_with_standard_matvec() {
         // Create matrices and vectors
         let sym_csr = create_test_sym_csr();
-        let full_csr = sym_csr.to_csr().unwrap();
+        let full_csr = sym_csr.to_csr().expect("Operation failed");
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
         // Compute using the optimized function
-        let y_optimized = sym_csr_matvec(&sym_csr, &x.view()).unwrap();
+        let y_optimized = sym_csr_matvec(&sym_csr, &x.view()).expect("Operation failed");
 
         // Compute using the standard function
         let linear_op = full_csr.as_linear_operator();
-        let y_standard = linear_op.matvec(x.as_slice().unwrap()).unwrap();
+        let y_standard = linear_op
+            .matvec(x.as_slice().expect("Operation failed"))
+            .expect("Operation failed");
 
         // Compare results
         for i in 0..y_optimized.len() {

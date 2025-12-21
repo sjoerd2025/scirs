@@ -118,7 +118,7 @@ impl DatabaseConnection for DuckDBConnection {
     }
 
     fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
-        let conn_guard = self.connection.lock().unwrap();
+        let conn_guard = self.connection.lock().expect("Operation failed");
         let conn = conn_guard.as_ref().ok_or_else(|| {
             IoError::DatabaseError("DuckDB connection not initialized".to_string())
         })?;
@@ -234,7 +234,7 @@ impl DatabaseConnection for DuckDBConnection {
     }
 
     fn insert_array(&self, table: &str, data: ArrayView2<f64>, columns: &[&str]) -> Result<usize> {
-        let conn_guard = self.connection.lock().unwrap();
+        let conn_guard = self.connection.lock().expect("Operation failed");
         let conn = conn_guard.as_ref().ok_or_else(|| {
             IoError::DatabaseError("DuckDB connection not initialized".to_string())
         })?;
@@ -277,7 +277,7 @@ impl DatabaseConnection for DuckDBConnection {
     }
 
     fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()> {
-        let conn_guard = self.connection.lock().unwrap();
+        let conn_guard = self.connection.lock().expect("Operation failed");
         let conn = conn_guard.as_ref().ok_or_else(|| {
             IoError::DatabaseError("DuckDB connection not initialized".to_string())
         })?;
@@ -323,7 +323,7 @@ impl DatabaseConnection for DuckDBConnection {
     }
 
     fn table_exists(&self, table: &str) -> Result<bool> {
-        let conn_guard = self.connection.lock().unwrap();
+        let conn_guard = self.connection.lock().expect("Operation failed");
         let conn = conn_guard.as_ref().ok_or_else(|| {
             IoError::DatabaseError("DuckDB connection not initialized".to_string())
         })?;
@@ -342,7 +342,7 @@ impl DatabaseConnection for DuckDBConnection {
     }
 
     fn get_schema(&self, table: &str) -> Result<TableSchema> {
-        let conn_guard = self.connection.lock().unwrap();
+        let conn_guard = self.connection.lock().expect("Operation failed");
         let conn = conn_guard.as_ref().ok_or_else(|| {
             IoError::DatabaseError("DuckDB connection not initialized".to_string())
         })?;

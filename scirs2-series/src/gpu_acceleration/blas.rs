@@ -434,13 +434,15 @@ impl<F: Float + Debug + Clone + scirs2_core::numeric::Zero + scirs2_core::numeri
         // 3. Convert result back to higher precision
 
         // Apply loss scaling for gradient stability
-        let scaled_alpha = alpha * F::from(self.tensor_config.loss_scale).unwrap();
+        let scaled_alpha =
+            alpha * F::from(self.tensor_config.loss_scale).expect("Failed to convert to float");
 
         // Perform computation with scaled alpha
         self.tensor_gemm(scaled_alpha, a, b, beta, c)?;
 
         // Unscale the result
-        let unscale_factor = F::one() / F::from(self.tensor_config.loss_scale).unwrap();
+        let unscale_factor =
+            F::one() / F::from(self.tensor_config.loss_scale).expect("Failed to convert to float");
         for elem in c.iter_mut() {
             *elem = *elem * unscale_factor;
         }
@@ -489,7 +491,7 @@ impl<F: Float + Debug + Clone + scirs2_core::numeric::Zero + scirs2_core::numeri
         let kernel_view = kernel.view();
         let kernel_matrix = kernel_view
             .to_shape((1, kernel_height * kernel_width))
-            .unwrap();
+            .expect("Operation failed");
 
         let mut output_matrix = Array2::zeros((1, output_height * output_width));
 
@@ -505,7 +507,7 @@ impl<F: Float + Debug + Clone + scirs2_core::numeric::Zero + scirs2_core::numeri
         // Reshape to output format
         Ok(output_matrix
             .to_shape((output_height, output_width))
-            .unwrap()
+            .expect("Operation failed")
             .to_owned())
     }
 

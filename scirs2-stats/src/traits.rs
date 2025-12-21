@@ -76,21 +76,21 @@ pub trait ContinuousDistribution<F: Float>: Distribution<F> {
         }
 
         // Use binary search to find the inverse
-        let mut low = F::from(-10.0).unwrap();
-        let mut high = F::from(10.0).unwrap();
-        let eps = F::from(1e-12).unwrap();
+        let mut low = F::from(-10.0).expect("Failed to convert constant to float");
+        let mut high = F::from(10.0).expect("Failed to convert constant to float");
+        let eps = F::from(1e-12).expect("Failed to convert constant to float");
 
         // Find a reasonable search range
         while self.cdf(low) > q {
-            low = low * F::from(2.0).unwrap();
+            low = low * F::from(2.0).expect("Failed to convert constant to float");
         }
         while self.cdf(high) < q {
-            high = high * F::from(2.0).unwrap();
+            high = high * F::from(2.0).expect("Failed to convert constant to float");
         }
 
         // Binary search
         for _ in 0..100 {
-            let mid = (low + high) / F::from(2.0).unwrap();
+            let mid = (low + high) / F::from(2.0).expect("Failed to convert constant to float");
             let cdf_mid = self.cdf(mid);
 
             if (cdf_mid - q).abs() < eps {
@@ -104,7 +104,7 @@ pub trait ContinuousDistribution<F: Float>: Distribution<F> {
             }
         }
 
-        Ok((low + high) / F::from(2.0).unwrap())
+        Ok((low + high) / F::from(2.0).expect("Failed to convert constant to float"))
     }
 }
 

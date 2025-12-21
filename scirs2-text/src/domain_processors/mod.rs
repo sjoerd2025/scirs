@@ -128,7 +128,7 @@ mod tests {
 
         let text =
             "The invention described in US1234567 relates to claim 1 of the patent application.";
-        let result = processor.process(text).unwrap();
+        let result = processor.process(text).expect("Operation failed");
 
         assert_eq!(result.domain, Domain::Patent);
         assert!(!result.processedtext.is_empty());
@@ -143,7 +143,7 @@ mod tests {
         let processor = NewsTextProcessor::new(config);
 
         let text = "WASHINGTON - The President announced new policies today.";
-        let result = processor.process(text).unwrap();
+        let result = processor.process(text).expect("Operation failed");
 
         assert_eq!(result.domain, Domain::News);
         assert!(!result.processedtext.is_empty());
@@ -158,7 +158,7 @@ mod tests {
         let processor = SocialMediaTextProcessor::new(config);
 
         let text = "Just posted a new article! #AI #MachineLearning @mention https://example.com";
-        let result = processor.process(text).unwrap();
+        let result = processor.process(text).expect("Operation failed");
 
         assert_eq!(result.domain, Domain::SocialMedia);
         assert!(!result.entities.is_empty()); // Should extract hashtags, mentions, URLs
@@ -252,7 +252,7 @@ mod tests {
         let processor = PatentTextProcessor::new(config);
 
         let text = "Test patent text with US1234567.";
-        let result = processor.process(text).unwrap();
+        let result = processor.process(text).expect("Operation failed");
 
         assert_eq!(result.originaltext, text);
         assert!(!result.processedtext.is_empty());

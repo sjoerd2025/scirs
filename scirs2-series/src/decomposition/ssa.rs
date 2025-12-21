@@ -68,7 +68,7 @@ impl Default for SSAOptions {
 /// let mut options = SSAOptions::default();
 /// options.window_length = 4;
 /// options.n_trend_components = 1;
-/// let result = ssa_decomposition(&ts, &options).unwrap();
+/// let result = ssa_decomposition(&ts, &options).expect("Operation failed");
 /// println!("Trend: {:?}", result.trend);
 /// println!("Seasonal: {:?}", result.seasonal);
 /// println!("Residual: {:?}", result.residual);
@@ -118,7 +118,7 @@ where
     }
 
     // Step 2: SVD on trajectory matrix using scirs2-linalg
-    let trajectory_matrix_f64 = trajectory_matrix.mapv(|x| x.to_f64().unwrap());
+    let trajectory_matrix_f64 = trajectory_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
 
     // Use randomized SVD for larger matrices to avoid eigendecomposition limitations
     let min_dim = std::cmp::min(window_length, k);
@@ -149,9 +149,9 @@ where
     };
 
     // Convert back to the original float type
-    let u = u_f64.mapv(|x| F::from_f64(x).unwrap());
-    let s = s_f64.mapv(|x| F::from_f64(x).unwrap());
-    let vt = vt_f64.mapv(|x| F::from_f64(x).unwrap());
+    let u = u_f64.mapv(|x| F::from_f64(x).expect("Operation failed"));
+    let s = s_f64.mapv(|x| F::from_f64(x).expect("Operation failed"));
+    let vt = vt_f64.mapv(|x| F::from_f64(x).expect("Operation failed"));
 
     // Step 3: Grouping components
     let mut trend_components = Vec::new();
@@ -308,11 +308,11 @@ where
     for idx in 0..weights.len() {
         let t = idx + 1;
         if t <= l_star {
-            weights[idx] = F::from_usize(t).unwrap();
+            weights[idx] = F::from_usize(t).expect("Operation failed");
         } else if t <= k_star {
-            weights[idx] = F::from_usize(l_star).unwrap();
+            weights[idx] = F::from_usize(l_star).expect("Operation failed");
         } else {
-            weights[idx] = F::from_usize(window_length + k - t).unwrap();
+            weights[idx] = F::from_usize(window_length + k - t).expect("Operation failed");
         }
     }
 
@@ -338,7 +338,10 @@ where
     if denom_i <= F::epsilon() || denom_j <= F::epsilon() {
         0.0
     } else {
-        (num / (denom_i * denom_j).sqrt()).to_f64().unwrap().abs()
+        (num / (denom_i * denom_j).sqrt())
+            .to_f64()
+            .expect("Operation failed")
+            .abs()
     }
 }
 
@@ -404,7 +407,7 @@ where
         }
 
         if count > 0 {
-            result[t] = sum / F::from_usize(count).unwrap();
+            result[t] = sum / F::from_usize(count).expect("Operation failed");
         }
     }
 
@@ -437,7 +440,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = ssa_decomposition(&ts, &options).unwrap();
+        let result = ssa_decomposition(&ts, &options).expect("Operation failed");
 
         // Check that decomposition sums to original (approximately)
         for i in 0..n {
@@ -469,7 +472,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = ssa_decomposition(&ts, &options).unwrap();
+        let result = ssa_decomposition(&ts, &options).expect("Operation failed");
 
         // Check that decomposition sums to original
         for i in 0..n {

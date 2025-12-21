@@ -22,8 +22,8 @@
 //! use scirs2_neural::performance::threading::ThreadPoolManager;
 //! let a = Array::ones((100, 200)).into_dyn();
 //! let b = Array::ones((200, 150)).into_dyn();
-//! let pool = ThreadPoolManager::new(Some(8)).unwrap();
-//! let result = pool.parallel_matmul(&a, &b).unwrap();
+//! let pool = ThreadPoolManager::new(Some(8)).expect("Operation failed");
+//! let result = pool.parallel_matmul(&a, &b).expect("Operation failed");
 //! assert_eq!(result.shape(), &[100, 150]);
 //! ## Unified Performance Optimization
 //! use scirs2_neural::performance::PerformanceOptimizer;
@@ -32,8 +32,8 @@
 //!     Some(1024), // max_memory_mb
 //!     Some(8),    // num_threads
 //!     true        // enable_profiling
-//! ).unwrap();
-//! let result = optimizer.optimized_matmul(&a, &b).unwrap();
+//! ).expect("Operation failed");
+//! let result = optimizer.optimized_matmul(&a, &b).expect("Operation failed");
 //! optimizer.profiler().print_summary();
 
 // Re-export all public modules
@@ -85,7 +85,7 @@ impl PerformanceOptimizer {
     ///     Some(1024), // 1GB memory limit
     ///     Some(8),    // 8 threads
     ///     true        // enable profiling
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         _chunk_size: Option<usize>, _max_memory_mb: Option<usize>,
@@ -331,13 +331,13 @@ mod tests {
     fn test_performance_optimizer_creation() {
         let optimizer = PerformanceOptimizer::new(Some(256), Some(1024), Some(4), true);
         assert!(optimizer.is_ok());
-        let optimizer = optimizer.unwrap();
+        let optimizer = optimizer.expect("Operation failed");
         assert_eq!(optimizer.thread_pool().num_threads(), 4);
         assert!(optimizer.profiler().get_stats().enabled);
     fn test_thread_pool_manager() {
         let pool = ThreadPoolManager::new(Some(2));
         assert!(pool.is_ok());
-        let pool = pool.unwrap();
+        let pool = pool.expect("Operation failed");
         assert_eq!(pool.num_threads(), 2);
     fn test_performance_profiler() {
         let mut profiler = PerformanceProfiler::new(true);
@@ -355,12 +355,11 @@ mod tests {
         let input = Array::ones((20, 5)).into_dyn();
         let result = processor.process_in_chunks(&input, |chunk| Ok(chunk.to_owned()));
         assert!(result.is_ok());
-    #[ignore = "timeout"]
     fn test_benchmark_results() {
         let results = BenchmarkResults {
             simd_time: Some(std::time::Duration::from_millis(10)),
             parallel_time: std::time::Duration::from_millis(15),
             serial_time: std::time::Duration::from_millis(30),
         assert!(results.parallel_speedup() > 1.0);
-        assert!(results.simd_speedup().unwrap() > 1.0);
+        assert!(results.simd_speedup().expect("Operation failed") > 1.0);
         assert_eq!(results.best_strategy(), "SIMD");

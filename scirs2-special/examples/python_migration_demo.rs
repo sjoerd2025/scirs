@@ -80,7 +80,10 @@ result3 = j0(2.5)
 
     // Create test data
     let x = Array1::linspace(0.1, 5.0, 10);
-    println!("Input array: {:?}", &x.as_slice().unwrap()[..5]); // Show first 5 elements
+    println!(
+        "Input array: {:?}",
+        &x.as_slice().expect("Operation failed")[..5]
+    ); // Show first 5 elements
 
     // Use compatibility functions
     let gamma_results = compat::gamma_array(&x.view());
@@ -89,10 +92,16 @@ result3 = j0(2.5)
 
     println!(
         "Gamma results: {:?}",
-        &gamma_results.as_slice().unwrap()[..5]
+        &gamma_results.as_slice().expect("Operation failed")[..5]
     );
-    println!("Erf results: {:?}", &erf_results.as_slice().unwrap()[..5]);
-    println!("J0 results: {:?}", &j0_results.as_slice().unwrap()[..5]);
+    println!(
+        "Erf results: {:?}",
+        &erf_results.as_slice().expect("Operation failed")[..5]
+    );
+    println!(
+        "J0 results: {:?}",
+        &j0_results.as_slice().expect("Operation failed")[..5]
+    );
 
     // 5. Migration examples
     println!("\n5. Migration Examples");

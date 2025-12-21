@@ -26,7 +26,7 @@ use std::f64::consts::PI;
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::exponential::exponential;
-/// let window = exponential(10, 2.0, true).unwrap();
+/// let window = exponential(10, 2.0, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// ```
 pub fn exponential(m: usize, tau: f64, sym: bool) -> SignalResult<Vec<f64>> {
@@ -69,7 +69,7 @@ pub fn exponential(m: usize, tau: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::exponential::gaussian;
-/// let window = gaussian(10, 1.0, true).unwrap();
+/// let window = gaussian(10, 1.0, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// ```
 pub fn gaussian(m: usize, std: f64, sym: bool) -> SignalResult<Vec<f64>> {
@@ -293,7 +293,7 @@ pub fn analyze_exponential_window(window: &[f64]) -> ExponentialWindowAnalysis {
     let (peak_idx, peak_value) = window
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .unwrap_or((n / 2, &1.0));
 
     // Estimate decay characteristics
@@ -393,7 +393,7 @@ fn estimate_decay_constant(window: &[f64]) -> f64 {
     let peak_idx = window
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
         .unwrap_or(n / 2);
 
@@ -547,7 +547,7 @@ mod tests {
 
     #[test]
     fn test_gaussian_window() {
-        let window = gaussian(11, 1.0, true).unwrap();
+        let window = gaussian(11, 1.0, true).expect("Operation failed");
         assert_eq!(window.len(), 11);
 
         // Peak should be at center
@@ -555,8 +555,8 @@ mod tests {
         let peak_idx = window
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed")
             .0;
         assert_eq!(peak_idx, center);
 
@@ -567,7 +567,7 @@ mod tests {
 
     #[test]
     fn test_kaiser_window() {
-        let window = kaiser(10, 5.0, true).unwrap();
+        let window = kaiser(10, 5.0, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Should have peak near center
@@ -577,7 +577,7 @@ mod tests {
 
     #[test]
     fn test_tukey_window() {
-        let window = tukey(20, 0.5, true).unwrap();
+        let window = tukey(20, 0.5, true).expect("Operation failed");
         assert_eq!(window.len(), 20);
 
         // Should have flat middle section
@@ -588,7 +588,7 @@ mod tests {
 
     #[test]
     fn test_exponential_window() {
-        let window = exponential(10, 2.0, true).unwrap();
+        let window = exponential(10, 2.0, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Peak should be at center for symmetric version
@@ -596,8 +596,8 @@ mod tests {
         let peak_idx = window
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed")
             .0;
         assert_eq!(peak_idx, center);
     }

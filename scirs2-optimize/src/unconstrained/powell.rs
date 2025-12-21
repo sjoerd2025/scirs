@@ -27,7 +27,7 @@ where
 
     // If bounds are provided, ensure x0 is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     let mut f = fun(&x.view()).into();
@@ -105,7 +105,7 @@ where
 
     // Final check for bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Use original function for final value
@@ -140,7 +140,7 @@ fn line_bounds(x: &Array1<f64>, direction: &Array1<f64>, bounds: Option<&Bounds>
         return (f64::NEG_INFINITY, f64::INFINITY);
     }
 
-    let bounds = bounds.unwrap();
+    let bounds = bounds.expect("Operation failed");
 
     // Start with unbounded range
     let mut a_min = f64::NEG_INFINITY;
@@ -215,7 +215,7 @@ where
         // Project the point onto bounds if needed
         let mut y_bounded = y.clone();
         if let Some(bounds) = bounds {
-            bounds.project(y_bounded.as_slice_mut().unwrap());
+            bounds.project(y_bounded.as_slice_mut().expect("Operation failed"));
         }
         *nfev += 1;
         fun(&y_bounded.view()).into()
@@ -337,7 +337,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![1.0, 1.0]);
         let options = Options::default();
 
-        let result = minimize_powell(quadratic, x0, &options).unwrap();
+        let result = minimize_powell(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-6);
@@ -355,7 +355,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![0.0, 0.0]);
         let options = Options::default();
 
-        let result = minimize_powell(rosenbrock, x0, &options).unwrap();
+        let result = minimize_powell(rosenbrock, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 1.0, epsilon = 1e-3);
@@ -374,7 +374,7 @@ mod tests {
         let bounds = Bounds::new(&[(Some(0.0), Some(1.0)), (Some(0.0), Some(1.0))]);
         options.bounds = Some(bounds);
 
-        let result = minimize_powell(quadratic, x0, &options).unwrap();
+        let result = minimize_powell(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // The optimal point (2, 3) is outside the bounds, so we should get (1, 1)

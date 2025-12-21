@@ -87,7 +87,7 @@ pub fn parallel_median_filter(
 
                 let mut neighborhood: Vec<f64> =
                     chunk_data[neighborhood_start..neighborhood_end].to_vec();
-                neighborhood.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                neighborhood.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                 let median = neighborhood[neighborhood.len() / 2];
                 chunk_result.push(median);
@@ -170,7 +170,7 @@ pub fn parallel_rank_order_filter(
                 let window_end = (local_idx + half_window + 1).min(chunk_data.len());
 
                 let mut window: Vec<f64> = chunk_data[window_start..window_end].to_vec();
-                window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                window.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                 let rank_val = if rank < window.len() {
                     window[rank]
@@ -375,7 +375,7 @@ pub fn parallel_percentile_filter(
                 let window_end = (local_idx + half_window + 1).min(chunk_data.len());
 
                 let mut window: Vec<f64> = chunk_data[window_start..window_end].to_vec();
-                window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                window.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                 // Calculate percentile index
                 let percentile_index =
@@ -461,7 +461,7 @@ pub fn parallel_trimmed_mean_filter(
                 let window_end = (local_idx + half_window + 1).min(chunk_data.len());
 
                 let mut window: Vec<f64> = chunk_data[window_start..window_end].to_vec();
-                window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                window.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                 // Calculate trim indices
                 let trim_count = (trim_fraction * window.len() as f64).floor() as usize;
@@ -506,7 +506,7 @@ mod tests {
     #[test]
     fn test_parallel_median_filter() {
         let signal = vec![1.0, 2.0, 3.0, 100.0, 5.0, 6.0, 7.0]; // Contains impulse noise
-        let result = parallel_median_filter(&signal, 3, None).unwrap();
+        let result = parallel_median_filter(&signal, 3, None).expect("Operation failed");
 
         assert_eq!(result.len(), signal.len());
         // Median filter should reduce the impulse noise
@@ -520,11 +520,11 @@ mod tests {
             .collect();
 
         // Test minimum filter (rank = 0)
-        let min_result = parallel_rank_order_filter(&signal, 5, 0, None).unwrap();
+        let min_result = parallel_rank_order_filter(&signal, 5, 0, None).expect("Operation failed");
         assert_eq!(min_result.len(), signal.len());
 
         // Test maximum filter (rank = window_size - 1)
-        let max_result = parallel_rank_order_filter(&signal, 5, 4, None).unwrap();
+        let max_result = parallel_rank_order_filter(&signal, 5, 4, None).expect("Operation failed");
         assert_eq!(max_result.len(), signal.len());
     }
 
@@ -534,7 +534,8 @@ mod tests {
             .map(|i| (2.0 * PI * i as f64 / 10.0).sin() + 0.1 * (i as f64 * 0.5).sin()) // Signal with noise
             .collect();
 
-        let result = parallel_bilateral_filter(&signal, 5, 1.0, 0.1, None).unwrap();
+        let result =
+            parallel_bilateral_filter(&signal, 5, 1.0, 0.1, None).expect("Operation failed");
         assert_eq!(result.len(), signal.len());
     }
 
@@ -543,11 +544,11 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
         // Test 50th percentile (median)
-        let result = parallel_percentile_filter(&signal, 5, 50.0, None).unwrap();
+        let result = parallel_percentile_filter(&signal, 5, 50.0, None).expect("Operation failed");
         assert_eq!(result.len(), signal.len());
 
         // Test 90th percentile
-        let result = parallel_percentile_filter(&signal, 5, 90.0, None).unwrap();
+        let result = parallel_percentile_filter(&signal, 5, 90.0, None).expect("Operation failed");
         assert_eq!(result.len(), signal.len());
 
         // Test error condition
@@ -559,7 +560,7 @@ mod tests {
     fn test_parallel_trimmed_mean_filter() {
         let signal = vec![1.0, 2.0, 100.0, 4.0, 5.0, 6.0, 200.0, 8.0, 9.0, 10.0]; // With outliers
 
-        let result = parallel_trimmed_mean_filter(&signal, 5, 0.2, None).unwrap();
+        let result = parallel_trimmed_mean_filter(&signal, 5, 0.2, None).expect("Operation failed");
         assert_eq!(result.len(), signal.len());
 
         // Test error condition
@@ -591,7 +592,7 @@ mod tests {
 
         // Single element signal
         let single_signal = vec![5.0];
-        let result = parallel_median_filter(&single_signal, 1, None).unwrap();
+        let result = parallel_median_filter(&single_signal, 1, None).expect("Operation failed");
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], 5.0);
     }

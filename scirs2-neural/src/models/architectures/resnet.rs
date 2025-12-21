@@ -590,7 +590,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ResNet<F> {
         let width = shape[3];
 
         let mut output = Array::zeros(IxDyn(&[batch_size, channels]));
-        let count = F::from(height * width).unwrap();
+        let count = F::from(height * width).expect("Failed to convert to float");
 
         for b in 0..batch_size {
             for c in 0..channels {

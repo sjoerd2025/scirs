@@ -105,7 +105,7 @@ pub fn validate_single_case(
 
     // Sort by time
     let mut time_signal: Vec<(f64, f64)> = t.into_iter().zip(signal).collect();
-    time_signal.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    time_signal.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
     let (t, signal): (Vec<f64>, Vec<f64>) = time_signal.into_iter().unzip();
 
     // Create frequency grid

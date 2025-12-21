@@ -720,8 +720,11 @@ impl DistributedPCA {
         for (i, partition) in partitions.iter().enumerate() {
             let task_id = format!("pca_transform_{}", i);
             let cfg = bincode::config::standard();
-            let transformer_state =
-                bincode::serde::encode_to_vec(self.components.as_ref().unwrap(), cfg).unwrap();
+            let transformer_state = bincode::serde::encode_to_vec(
+                self.components.as_ref().expect("Operation failed"),
+                cfg,
+            )
+            .expect("Operation failed");
 
             let task = DistributedTask::Transform {
                 task_id: task_id.clone(),
@@ -739,7 +742,7 @@ impl DistributedPCA {
             let result = self.coordinator.get_result(&task_id).await?;
             let cfg = bincode::config::standard();
             let (transformed_partition, _len): (Vec<f64>, usize) =
-                bincode::serde::decode_from_slice(&result.result, cfg).unwrap();
+                bincode::serde::decode_from_slice(&result.result, cfg).expect("Operation failed");
             all_results.extend(transformed_partition);
         }
 

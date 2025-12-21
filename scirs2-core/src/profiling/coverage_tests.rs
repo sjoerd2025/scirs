@@ -130,7 +130,7 @@ fn test_quality_gate_evaluation() {
         ..Default::default()
     };
 
-    let analyzer = CoverageAnalyzer::new(config).unwrap();
+    let analyzer = CoverageAnalyzer::new(config).expect("Operation failed");
 
     let stats = CoverageStatistics {
         total_lines: 1000,
@@ -160,7 +160,7 @@ fn test_quality_gate_evaluation() {
 #[test]
 fn test_coverage_recommendation_generation() {
     let config = CoverageConfig::default();
-    let analyzer = CoverageAnalyzer::new(config).unwrap();
+    let analyzer = CoverageAnalyzer::new(config).expect("Operation failed");
 
     let stats = CoverageStatistics {
         total_lines: 1000,
@@ -178,7 +178,9 @@ fn test_coverage_recommendation_generation() {
         files_analyzed: 25,
     };
 
-    let recommendations = analyzer.generate_recommendations(&stats).unwrap();
+    let recommendations = analyzer
+        .generate_recommendations(&stats)
+        .expect("Operation failed");
 
     assert!(!recommendations.is_empty());
 
@@ -196,10 +198,10 @@ fn test_coverage_recommendation_generation() {
 #[test]
 fn test_coverage_trends() {
     let config = CoverageConfig::default();
-    let analyzer = CoverageAnalyzer::new(config).unwrap();
+    let analyzer = CoverageAnalyzer::new(config).expect("Operation failed");
 
     // Add some historical data
-    let mut history = analyzer.history.lock().unwrap();
+    let mut history = analyzer.history.lock().expect("Operation failed");
     let now = SystemTime::now();
 
     history.push(CoverageDataPoint {
@@ -228,10 +230,10 @@ fn test_coverage_trends() {
 
     drop(history);
 
-    let trends = analyzer.calculate_trends().unwrap();
+    let trends = analyzer.calculate_trends().expect("Operation failed");
     assert!(trends.is_some());
 
-    let trends = trends.unwrap();
+    let trends = trends.expect("Operation failed");
     assert_eq!(trends.trend_direction, TrendDirection::Improving);
     assert!(trends.change_rate > 0.0); // Positive change rate
     assert!(trends.predicted_coverage.is_some());

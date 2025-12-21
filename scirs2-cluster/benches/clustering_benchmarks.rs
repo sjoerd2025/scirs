@@ -271,7 +271,8 @@ fn bench_validation_metrics(c: &mut Criterion) {
 
     for &n_samples in &sizes {
         let data = generate_clustered_data(n_samples, n_features, 3, 1.0);
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 
         // Create distance matrix for cophenetic correlation
         let mut distances = Array1::zeros(n_samples * (n_samples - 1) / 2);
@@ -364,7 +365,7 @@ fn bench_data_structures(c: &mut Criterion) {
             |b, condensed| b.iter(|| condensed_to_square(condensed.view())),
         );
 
-        let square = condensed_to_square(condensed.view()).unwrap();
+        let square = condensed_to_square(condensed.view()).expect("Operation failed");
         group.bench_with_input(
             BenchmarkId::new("square_to_condensed", n_points),
             &square,

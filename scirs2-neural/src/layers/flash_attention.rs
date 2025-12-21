@@ -120,11 +120,11 @@ impl FlashAttentionConfig {
 ///
 /// let mut rng = rng();
 /// let config = FlashAttentionConfig::new(8, 64).with_causal(true);
-/// let flash_attn = FlashAttention::<f64>::new(512, config, &mut rng).unwrap();
+/// let flash_attn = FlashAttention::<f64>::new(512, config, &mut rng).expect("Operation failed");
 ///
 /// // Input shape: [batch, seq_len, d_model]
 /// let input = Array3::<f64>::from_elem((2, 128, 512), 0.1).into_dyn();
-/// let output = flash_attn.forward(&input).unwrap();
+/// let output = flash_attn.forward(&input).expect("Operation failed");
 /// ```
 #[derive(Debug)]
 pub struct FlashAttention<F: Float + Debug + Send + Sync> {
@@ -161,7 +161,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> FlashAttention<F>
         }
 
         // Xavier initialization for weights
-        let xavier_std = (F::from(2.0).unwrap() / F::from(d_model + d_model).unwrap()).sqrt();
+        let xavier_std = (F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(d_model + d_model).expect("Failed to convert to float"))
+        .sqrt();
 
         let w_query = Self::init_weight(d_model, d_model, xavier_std, rng);
         let w_key = Self::init_weight(d_model, d_model, xavier_std, rng);
@@ -170,8 +172,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> FlashAttention<F>
 
         let scale = config
             .scale
-            .map(|s| F::from(s).unwrap())
-            .unwrap_or_else(|| F::one() / F::from(config.head_dim).unwrap().sqrt());
+            .map(|s| F::from(s).expect("Failed to convert to float"))
+            .unwrap_or_else(|| {
+                F::one()
+                    / F::from(config.head_dim)
+                        .expect("Failed to convert to float")
+                        .sqrt()
+            });
 
         Ok(Self {
             d_model,
@@ -192,7 +199,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> FlashAttention<F>
             let u1: f64 = rng.random();
             let u2: f64 = rng.random();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            *w = F::from(z).unwrap() * std;
+            *w = F::from(z).expect("Failed to convert to float") * std;
         }
         weights
     }
@@ -615,7 +622,10 @@ pub fn flash_attention_compute<F: Float + Debug + ScalarOperand>(
     let seq_len_kv = key.shape()[1];
     let head_dim = query.shape()[2];
 
-    let scale = F::one() / F::from(head_dim).unwrap().sqrt();
+    let scale = F::one()
+        / F::from(head_dim)
+            .expect("Failed to convert to float")
+            .sqrt();
 
     let mut output = Array::zeros(IxDyn(&[batch_size, seq_len_q, head_dim]));
 
@@ -803,14 +813,15 @@ mod tests {
         let config = FlashAttentionConfig::new(4, 16)
             .with_block_size_q(8)
             .with_block_size_kv(8);
-        let flash_attn = FlashAttention::<f64>::new(64, config, &mut rng).unwrap();
+        let flash_attn =
+            FlashAttention::<f64>::new(64, config, &mut rng).expect("Operation failed");
 
         // Input: [batch=2, seq_len=16, d_model=64]
         let input = Array3::<f64>::from_elem((2, 16, 64), 0.1).into_dyn();
         let output = flash_attn.forward(&input);
 
         assert!(output.is_ok());
-        let output = output.unwrap();
+        let output = output.expect("Operation failed");
         assert_eq!(output.shape(), &[2, 16, 64]);
     }
 
@@ -821,13 +832,14 @@ mod tests {
             .with_causal(true)
             .with_block_size_q(4)
             .with_block_size_kv(4);
-        let flash_attn = FlashAttention::<f64>::new(64, config, &mut rng).unwrap();
+        let flash_attn =
+            FlashAttention::<f64>::new(64, config, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((1, 8, 64), 0.1).into_dyn();
         let output = flash_attn.forward(&input);
 
         assert!(output.is_ok());
-        assert_eq!(output.unwrap().shape(), &[1, 8, 64]);
+        assert_eq!(output.expect("Operation failed").shape(), &[1, 8, 64]);
     }
 
     #[test]
@@ -838,7 +850,7 @@ mod tests {
 
         let output = flash_attention_compute(&query, &key, &value, false, 4);
         assert!(output.is_ok());
-        assert_eq!(output.unwrap().shape(), &[2, 8, 32]);
+        assert_eq!(output.expect("Operation failed").shape(), &[2, 8, 32]);
     }
 
     #[test]
@@ -848,7 +860,8 @@ mod tests {
         let config = FlashAttentionConfig::new(2, 8)
             .with_block_size_q(4)
             .with_block_size_kv(4);
-        let flash_attn = FlashAttention::<f64>::new(16, config, &mut rng).unwrap();
+        let flash_attn =
+            FlashAttention::<f64>::new(16, config, &mut rng).expect("Operation failed");
 
         let mut input = Array3::<f64>::zeros((1, 8, 16));
         // Fill with varying values
@@ -862,7 +875,7 @@ mod tests {
         assert!(output.is_ok());
 
         // Check output is finite (no NaN or Inf)
-        let output = output.unwrap();
+        let output = output.expect("Operation failed");
         for val in output.iter() {
             assert!(val.is_finite(), "Output contains non-finite values");
         }
@@ -875,24 +888,25 @@ mod tests {
         let key = query.clone();
         let value = query.clone();
 
-        let flash_output = flash_attention_compute(&query, &key, &value, false, 2).unwrap();
+        let flash_output =
+            flash_attention_compute(&query, &key, &value, false, 2).expect("Operation failed");
 
         // Standard attention computation for comparison
         let q_2d = query
             .slice(s![0, .., ..])
             .to_owned()
             .into_shape((4, 8))
-            .unwrap();
+            .expect("Operation failed");
         let k_2d = key
             .slice(s![0, .., ..])
             .to_owned()
             .into_shape((4, 8))
-            .unwrap();
+            .expect("Operation failed");
         let v_2d = value
             .slice(s![0, .., ..])
             .to_owned()
             .into_shape((4, 8))
-            .unwrap();
+            .expect("Operation failed");
 
         let scale = 1.0 / (8.0_f64).sqrt();
 

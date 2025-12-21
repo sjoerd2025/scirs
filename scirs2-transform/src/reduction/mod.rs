@@ -185,9 +185,9 @@ impl PCA {
             ));
         }
 
-        let components = self.components.as_ref().unwrap();
-        let mean = self.mean.as_ref().unwrap();
-        let std = self.std.as_ref().unwrap();
+        let components = self.components.as_ref().expect("Operation failed");
+        let mean = self.mean.as_ref().expect("Operation failed");
+        let std = self.std.as_ref().expect("Operation failed");
 
         if n_features != components.shape()[1] {
             return Err(TransformError::InvalidInput(format!(
@@ -380,7 +380,7 @@ impl TruncatedSVD {
             ));
         }
 
-        let components = self.components.as_ref().unwrap();
+        let components = self.components.as_ref().expect("Operation failed");
 
         if n_features != components.shape()[1] {
             return Err(TransformError::InvalidInput(format!(
@@ -734,7 +734,11 @@ impl LDA {
 
             // Sort eigenvalues and eigenvectors in descending order
             let mut indices: Vec<usize> = (0..n_features).collect();
-            indices.sort_by(|&i, &j| eig_vals[j].partial_cmp(&eig_vals[i]).unwrap());
+            indices.sort_by(|&i, &j| {
+                eig_vals[j]
+                    .partial_cmp(&eig_vals[i])
+                    .expect("Operation failed")
+            });
 
             // Select top n_components eigenvectors
             for i in 0..self.n_components {
@@ -796,7 +800,7 @@ impl LDA {
             ));
         }
 
-        let components = self.components.as_ref().unwrap();
+        let components = self.components.as_ref().expect("Operation failed");
 
         if n_features != components.shape()[1] {
             return Err(TransformError::InvalidInput(format!(
@@ -877,17 +881,17 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Initialize and fit PCA with 2 components
         let mut pca = PCA::new(2, true, false);
-        let x_transformed = pca.fit_transform(&x).unwrap();
+        let x_transformed = pca.fit_transform(&x).expect("Operation failed");
 
         // Check that the shape is correct
         assert_eq!(x_transformed.shape(), &[4, 2]);
 
         // Check that we have the correct number of explained variance components
-        let explained_variance = pca.explained_variance_ratio().unwrap();
+        let explained_variance = pca.explained_variance_ratio().expect("Operation failed");
         assert_eq!(explained_variance.len(), 2);
 
         // Check that the sum is a valid number (we don't need to enforce sum = 1)
@@ -903,17 +907,17 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Initialize and fit TruncatedSVD with 2 components
         let mut svd = TruncatedSVD::new(2);
-        let x_transformed = svd.fit_transform(&x).unwrap();
+        let x_transformed = svd.fit_transform(&x).expect("Operation failed");
 
         // Check that the shape is correct
         assert_eq!(x_transformed.shape(), &[4, 2]);
 
         // Check that we have the correct number of explained variance components
-        let explained_variance = svd.explained_variance_ratio().unwrap();
+        let explained_variance = svd.explained_variance_ratio().expect("Operation failed");
         assert_eq!(explained_variance.len(), 2);
 
         // Check that the sum is a valid number (we don't need to enforce sum = 1)
@@ -927,19 +931,19 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 4.0, 6.0, 5.0, 7.0, 4.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let y = Array::from_vec(vec![0, 0, 0, 1, 1, 1]);
 
         // Initialize and fit LDA with 1 component (max for 2 classes)
-        let mut lda = LDA::new(1, "svd").unwrap();
-        let x_transformed = lda.fit_transform(&x, &y).unwrap();
+        let mut lda = LDA::new(1, "svd").expect("Operation failed");
+        let x_transformed = lda.fit_transform(&x, &y).expect("Operation failed");
 
         // Check that the shape is correct
         assert_eq!(x_transformed.shape(), &[6, 1]);
 
         // Check that the explained variance ratio is 1.0 for a single component
-        let explained_variance = lda.explained_variance_ratio().unwrap();
+        let explained_variance = lda.explained_variance_ratio().expect("Operation failed");
         assert_abs_diff_eq!(explained_variance[0], 1.0, epsilon = 1e-10);
     }
 
@@ -954,17 +958,17 @@ mod tests {
                 9.0, 8.0, 10.0, 9.0, 11.0, 10.0, // Class 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let y = Array::from_vec(vec![0, 0, 0, 1, 1, 1, 2, 2, 2]);
 
         // Test eigen solver
-        let mut lda_eigen = LDA::new(2, "eigen").unwrap(); // 2 components for 3 classes
-        let x_transformed_eigen = lda_eigen.fit_transform(&x, &y).unwrap();
+        let mut lda_eigen = LDA::new(2, "eigen").expect("Operation failed"); // 2 components for 3 classes
+        let x_transformed_eigen = lda_eigen.fit_transform(&x, &y).expect("Operation failed");
 
         // Test SVD solver for comparison
-        let mut lda_svd = LDA::new(2, "svd").unwrap();
-        let x_transformed_svd = lda_svd.fit_transform(&x, &y).unwrap();
+        let mut lda_svd = LDA::new(2, "svd").expect("Operation failed");
+        let x_transformed_svd = lda_svd.fit_transform(&x, &y).expect("Operation failed");
 
         // Check that both transformations have correct shape
         assert_eq!(x_transformed_eigen.shape(), &[9, 2]);
@@ -975,8 +979,12 @@ mod tests {
         assert!(x_transformed_svd.iter().all(|&x| x.is_finite()));
 
         // Check that explained variance ratios are valid for both solvers
-        let explained_variance_eigen = lda_eigen.explained_variance_ratio().unwrap();
-        let explained_variance_svd = lda_svd.explained_variance_ratio().unwrap();
+        let explained_variance_eigen = lda_eigen
+            .explained_variance_ratio()
+            .expect("Operation failed");
+        let explained_variance_svd = lda_svd
+            .explained_variance_ratio()
+            .expect("Operation failed");
 
         assert_eq!(explained_variance_eigen.len(), 2);
         assert_eq!(explained_variance_svd.len(), 2);

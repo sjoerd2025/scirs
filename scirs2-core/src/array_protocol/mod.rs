@@ -1168,7 +1168,7 @@ pub use self::ml_ops::{
 #[allow(dead_code)]
 pub fn init() {
     // Initialize the JIT manager
-    let mut jit_manager = JITManager::global().write().unwrap();
+    let mut jit_manager = JITManager::global().write().expect("Operation failed");
     jit_manager.initialize();
 }
 
@@ -1260,14 +1260,16 @@ mod tests {
 
         let registry = ArrayFunctionRegistry::global();
         {
-            let mut reg = registry.write().unwrap();
+            let mut reg = registry.write().expect("Operation failed");
             reg.register(func.clone());
         }
 
         // Verify the function was registered
         {
-            let reg = registry.read().unwrap();
-            let registered_func = reg.get("scirs2::test::test_func").unwrap();
+            let reg = registry.read().expect("Operation failed");
+            let registered_func = reg
+                .get("scirs2::test::test_func")
+                .expect("Operation failed");
             assert_eq!(registered_func.name, "scirs2::test::test_func");
         }
     }
@@ -1278,8 +1280,11 @@ mod tests {
         assert!(array.is_distributed());
 
         let info = array.distribution_info();
-        assert_eq!(info.get("type").unwrap(), "mock_distributed");
-        assert_eq!(info.get("chunks").unwrap(), "3");
+        assert_eq!(
+            info.get("type").expect("Operation failed"),
+            "mock_distributed"
+        );
+        assert_eq!(info.get("chunks").expect("Operation failed"), "3");
     }
 
     #[test]
@@ -1288,8 +1293,8 @@ mod tests {
         assert!(array.is_on_gpu());
 
         let info = array.device_info();
-        assert_eq!(info.get("device").unwrap(), "cuda:0");
-        assert_eq!(info.get("type").unwrap(), "mock_gpu");
+        assert_eq!(info.get("device").expect("Operation failed"), "cuda:0");
+        assert_eq!(info.get("type").expect("Operation failed"), "mock_gpu");
     }
 
     #[test]
@@ -1343,7 +1348,7 @@ mod examples {
         assert_eq!(dist_array.shape(), &[10, 5]);
 
         // Convert back to a regular array
-        let result = dist_array.to_array().unwrap();
+        let result = dist_array.to_array().expect("Operation failed");
 
         // Check that the result matches the original array
         assert_eq!(result.shape(), array.shape());
@@ -1375,7 +1380,7 @@ mod examples {
 
         // Get device information
         let info = gpu_array.device_info();
-        assert_eq!(info.get("backend").unwrap(), "CUDA");
+        assert_eq!(info.get("backend").expect("Operation failed"), "CUDA");
 
         // Test box_clone for GPU array
         let gpu_box: Box<dyn ArrayProtocol> = Box::new(gpu_array);
@@ -1404,14 +1409,14 @@ mod examples {
 
         // Compile a function
         let expression = "x + y";
-        let jit_function = jitarray.compile(expression).unwrap();
+        let jit_function = jitarray.compile(expression).expect("Operation failed");
 
         // Check the function's properties
         assert_eq!(jit_function.source(), expression);
 
         // Get JIT information
         let info = jitarray.jit_info();
-        assert_eq!(info.get("supports_jit").unwrap(), "true");
+        assert_eq!(info.get("supports_jit").expect("Operation failed"), "true");
 
         // Test box_clone for JIT-enabled array
         let jit_box: Box<dyn ArrayProtocol> = Box::new(jitarray);
@@ -1484,14 +1489,14 @@ mod examples {
         // Register the function
         let registry = ArrayFunctionRegistry::global();
         {
-            let mut reg = registry.write().unwrap();
+            let mut reg = registry.write().expect("Operation failed");
             reg.register(func.clone());
         }
 
         // Verify the function was registered
         {
-            let reg = registry.read().unwrap();
-            let registered_func = reg.get(funcname).unwrap();
+            let reg = registry.read().expect("Operation failed");
+            let registered_func = reg.get(funcname).expect("Operation failed");
             assert_eq!(registered_func.name, funcname);
         }
     }
@@ -1646,7 +1651,7 @@ mod examples {
         // Verify we get a result (the sum of 1+2+3+4 = 10)
         assert!(result.is_ok());
         if let Ok(value) = result {
-            let sum = *value.downcast_ref::<f64>().unwrap();
+            let sum = *value.downcast_ref::<f64>().expect("Operation failed");
             assert_eq!(sum, 10.0);
         }
     }

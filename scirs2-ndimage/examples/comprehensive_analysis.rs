@@ -87,7 +87,7 @@ fn demonstrate_device_detection() -> NdimageResult<()> {
     // Try to create device manager
     match scirs2_ndimage::backend::device_detection::get_device_manager() {
         Ok(manager_arc) => {
-            let manager = manager_arc.lock().unwrap();
+            let manager = manager_arc.lock().expect("Operation failed");
 
             // Check different backends
             let backends = [

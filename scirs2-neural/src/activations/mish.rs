@@ -18,7 +18,7 @@ use std::fmt::Debug;
 /// use scirs2_core::ndarray::Array;
 /// let mish = Mish::new();
 /// let input = Array::from_vec(vec![1.0, -1.0, 2.0, -2.0]).into_dyn();
-/// let output = mish.forward(&input).unwrap();
+/// let output = mish.forward(&input).expect("Operation failed");
 #[derive(Debug, Clone, Copy)]
 pub struct Mish;
 impl Mish {
@@ -40,7 +40,7 @@ impl<F: Float + Debug> Activation<F> for Mish {
         Zip::from(&mut output).for_each(|x| {
             // Compute softplus(x) = ln(1 + e^x)
             // Use a numerically stable version for large values
-            let sp = if *x > F::from(20.0).unwrap() {
+            let sp = if *x > F::from(20.0).expect("Failed to convert constant to float") {
                 // For large x, softplus(x) ≈ x
                 *x
             } else {
@@ -70,7 +70,7 @@ impl<F: Float + Debug> Activation<F> for Mish {
             .and(input)
             .for_each(|grad_in, &grad_out, &x| {
                 // Compute softplus(x) = ln(1 + e^x) with numerical stability
-                let sp = if x > F::from(20.0).unwrap() {
+                let sp = if x > F::from(20.0).expect("Failed to convert constant to float") {
                     x // For large x, softplus(x) ≈ x
                 } else {
                     (F::one() + x.exp()).ln()

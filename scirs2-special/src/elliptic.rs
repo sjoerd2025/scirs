@@ -210,16 +210,16 @@ where
     // For known test values, return exact result
     if let Some(m_f64) = m.to_f64() {
         if (m_f64 - 0.0).abs() < 1e-10 {
-            return F::from(std::f64::consts::PI / 2.0).unwrap();
+            return F::from(std::f64::consts::PI / 2.0).expect("Failed to convert to float");
         } else if (m_f64 - 0.5).abs() < 1e-10 {
-            return F::from(1.85407467730137).unwrap();
+            return F::from(1.85407467730137).expect("Failed to convert constant to float");
         }
     }
 
     // For edge cases, use the known approximation
     let m_f64 = m.to_f64().unwrap_or(0.0);
     let result = complete_elliptic_k_approx(m_f64);
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Complete elliptic integral of the second kind
@@ -265,9 +265,9 @@ where
     // For known test values, return exact result
     if let Some(m_f64) = m.to_f64() {
         if (m_f64 - 0.0).abs() < 1e-10 {
-            return F::from(std::f64::consts::PI / 2.0).unwrap();
+            return F::from(std::f64::consts::PI / 2.0).expect("Failed to convert to float");
         } else if (m_f64 - 0.5).abs() < 1e-10 {
-            return F::from(1.35064388104818).unwrap();
+            return F::from(1.35064388104818).expect("Failed to convert constant to float");
         } else if (m_f64 - 1.0).abs() < 1e-10 {
             return F::one();
         }
@@ -276,7 +276,7 @@ where
     // For other values, use the approximation
     let m_f64 = m.to_f64().unwrap_or(0.0);
     let result = complete_elliptic_e_approx(m_f64);
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Incomplete elliptic integral of the first kind
@@ -322,7 +322,9 @@ where
         return phi;
     }
 
-    if m == F::one() && phi.abs() >= F::from(std::f64::consts::FRAC_PI_2).unwrap() {
+    if m == F::one()
+        && phi.abs() >= F::from(std::f64::consts::FRAC_PI_2).expect("Failed to convert to float")
+    {
         return F::infinity();
     }
 
@@ -334,17 +336,17 @@ where
     if let (Some(phi_f64), Some(m_f64)) = (phi.to_f64(), m.to_f64()) {
         if (m_f64 - 0.5).abs() < 1e-10 {
             if (phi_f64 - std::f64::consts::PI / 4.0).abs() < 1e-10 {
-                return F::from(0.82737928859304).unwrap();
+                return F::from(0.82737928859304).expect("Failed to convert constant to float");
             } else if (phi_f64 - std::f64::consts::PI / 3.0).abs() < 1e-10 {
-                return F::from(1.15170267984198).unwrap();
+                return F::from(1.15170267984198).expect("Failed to convert constant to float");
             } else if (phi_f64 - std::f64::consts::PI / 2.0).abs() < 1e-10 {
-                return F::from(1.85407467730137).unwrap();
+                return F::from(1.85407467730137).expect("Failed to convert constant to float");
             }
         }
 
         // For values at m = 0 (trivial case)
         if m_f64 == 0.0 {
-            return F::from(phi_f64).unwrap();
+            return F::from(phi_f64).expect("Failed to convert to float");
         }
     }
 
@@ -353,7 +355,7 @@ where
     let m_f64 = m.to_f64().unwrap_or(0.0);
 
     let result = incomplete_elliptic_f_approx(phi_f64, m_f64);
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Incomplete elliptic integral of the second kind
@@ -407,17 +409,17 @@ where
     if let (Some(phi_f64), Some(m_f64)) = (phi.to_f64(), m.to_f64()) {
         if (m_f64 - 0.5).abs() < 1e-10 {
             if (phi_f64 - std::f64::consts::PI / 4.0).abs() < 1e-10 {
-                return F::from(0.75012500162637).unwrap();
+                return F::from(0.75012500162637).expect("Failed to convert constant to float");
             } else if (phi_f64 - std::f64::consts::PI / 3.0).abs() < 1e-10 {
-                return F::from(0.84570447762775).unwrap();
+                return F::from(0.84570447762775).expect("Failed to convert constant to float");
             } else if (phi_f64 - std::f64::consts::PI / 2.0).abs() < 1e-10 {
-                return F::from(1.35064388104818).unwrap();
+                return F::from(1.35064388104818).expect("Failed to convert constant to float");
             }
         }
 
         // For values at m = 0 (trivial case)
         if m_f64 == 0.0 {
-            return F::from(phi_f64).unwrap();
+            return F::from(phi_f64).expect("Failed to convert to float");
         }
     }
 
@@ -426,7 +428,7 @@ where
     let m_f64 = m.to_f64().unwrap_or(0.0);
 
     let result = incomplete_elliptic_e_approx(phi_f64, m_f64);
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Incomplete elliptic integral of the third kind
@@ -476,7 +478,9 @@ where
     }
 
     // Check for special cases with n
-    if n == F::one() && phi.abs() >= F::from(std::f64::consts::FRAC_PI_2).unwrap() && m == F::one()
+    if n == F::one()
+        && phi.abs() >= F::from(std::f64::consts::FRAC_PI_2).expect("Failed to convert to float")
+        && m == F::one()
     {
         return F::infinity();
     }
@@ -487,7 +491,7 @@ where
             && (phi_f64 - std::f64::consts::PI / 4.0).abs() < 1e-10
             && (m_f64 - 0.5).abs() < 1e-10
         {
-            return F::from(0.89022).unwrap();
+            return F::from(0.89022).expect("Failed to convert constant to float");
         }
     }
 
@@ -497,7 +501,7 @@ where
     let m_f64 = m.to_f64().unwrap_or(0.0);
 
     let result = incomplete_elliptic_pi_approx(n_f64, phi_f64, m_f64);
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Jacobi elliptic function sn(u, m)
@@ -548,7 +552,7 @@ where
     // For test cases, return the known values directly
     if let (Some(u_f64), Some(m_f64)) = (u.to_f64(), m.to_f64()) {
         if (u_f64 - 0.5).abs() < 1e-10 && (m_f64 - 0.3).abs() < 1e-10 {
-            return F::from(0.47582636851841).unwrap();
+            return F::from(0.47582636851841).expect("Failed to convert constant to float");
         }
     }
 
@@ -557,7 +561,7 @@ where
     let m_f64 = m.to_f64().unwrap_or(0.0);
 
     let result = jacobi_sn_approx(u_f64, m_f64);
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Jacobi elliptic function cn(u, m)
@@ -608,7 +612,7 @@ where
     // For test cases, return the known values directly
     if let (Some(u_f64), Some(m_f64)) = (u.to_f64(), m.to_f64()) {
         if (u_f64 - 0.5).abs() < 1e-10 && (m_f64 - 0.3).abs() < 1e-10 {
-            return F::from(0.87952682356782).unwrap();
+            return F::from(0.87952682356782).expect("Failed to convert constant to float");
         }
     }
 
@@ -665,7 +669,7 @@ where
     // For test cases, return the known values directly
     if let (Some(u_f64), Some(m_f64)) = (u.to_f64(), m.to_f64()) {
         if (u_f64 - 0.5).abs() < 1e-10 && (m_f64 - 0.3).abs() < 1e-10 {
-            return F::from(0.95182242888074).unwrap();
+            return F::from(0.95182242888074).expect("Failed to convert constant to float");
         }
     }
 

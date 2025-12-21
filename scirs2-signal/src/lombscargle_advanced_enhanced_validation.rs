@@ -245,7 +245,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
         let (freqs, power) = lombscargle(
             &t,
             &y,
-            Some(freq_grid.as_slice().unwrap()),
+            Some(freq_grid.as_slice().expect("Operation failed")),
             Some("standard"),
             Some(true),
             Some(true),
@@ -257,9 +257,9 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
         let max_idx = power
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(i, _)| i)
-            .unwrap();
+            .expect("Operation failed");
 
         let detected_freq = freqs[max_idx];
         let detected_power = power[max_idx];
@@ -291,7 +291,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
     let (freqs, power) = lombscargle(
         &t,
         &y,
-        Some(freq_grid.as_slice().unwrap()),
+        Some(freq_grid.as_slice().expect("Operation failed")),
         Some("standard"),
         Some(true),
         Some(true),
@@ -333,7 +333,7 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
         let (freqs, power) = lombscargle(
             &t,
             &y,
-            Some(freq_grid.as_slice().unwrap()),
+            Some(freq_grid.as_slice().expect("Operation failed")),
             Some("standard"),
             Some(true),
             Some(true),
@@ -432,7 +432,7 @@ fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
         let _ = lombscargle(
             &t,
             &y,
-            Some(freq_grid.as_slice().unwrap()),
+            Some(freq_grid.as_slice().expect("Operation failed")),
             Some("standard"),
             Some(true),
             Some(true),

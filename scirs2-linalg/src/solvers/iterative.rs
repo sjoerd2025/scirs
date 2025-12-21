@@ -25,7 +25,7 @@ impl<A: Float> Default for IterativeSolverOptions<A> {
     fn default() -> Self {
         Self {
             max_iterations: 1000,
-            tolerance: A::from(1e-10).unwrap(),
+            tolerance: A::from(1e-10).expect("Operation failed"),
             verbose: false,
             restart: None,
         }
@@ -64,7 +64,7 @@ pub struct IterativeSolverResult<A> {
 /// let b = array![1.0, 2.0];
 /// let options = IterativeSolverOptions::default();
 ///
-/// let result = conjugate_gradient(&a.view(), &b.view(), None, &options).unwrap();
+/// let result = conjugate_gradient(&a.view(), &b.view(), None, &options).expect("Operation failed");
 /// assert!(result.converged);
 /// ```
 #[allow(dead_code)]
@@ -678,7 +678,8 @@ mod tests {
         let b = array![1.0, 2.0];
         let options = IterativeSolverOptions::default();
 
-        let result = conjugate_gradient(&a.view(), &b.view(), None, &options).unwrap();
+        let result =
+            conjugate_gradient(&a.view(), &b.view(), None, &options).expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.iterations < 10);
@@ -695,7 +696,7 @@ mod tests {
         let b = array![5.0, 11.0];
         let options = IterativeSolverOptions::default();
 
-        let result = gmres(&a.view(), &b.view(), None, &options).unwrap();
+        let result = gmres(&a.view(), &b.view(), None, &options).expect("Operation failed");
 
         assert!(result.converged);
 
@@ -711,7 +712,7 @@ mod tests {
         let b = array![1.0, 2.0];
         let options = IterativeSolverOptions::default();
 
-        let result = bicgstab(&a.view(), &b.view(), None, &options).unwrap();
+        let result = bicgstab(&a.view(), &b.view(), None, &options).expect("Operation failed");
 
         assert!(result.converged);
 
@@ -733,7 +734,7 @@ mod tests {
         let options = IterativeSolverOptions::default();
         let result =
             preconditioned_conjugate_gradient(&a.view(), &b.view(), preconditioner, None, &options)
-                .unwrap();
+                .expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.iterations <= 10); // PCG should converge faster

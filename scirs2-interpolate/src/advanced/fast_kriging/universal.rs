@@ -130,10 +130,10 @@ pub fn compute_trend_coefficients<F: Float + FromPrimitive + 'static>(
     {
         use ndarray_linalg::Solve;
         // Convert to f64 for linear algebra
-        let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
-        let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
+        let xtx_f64 = xtx.mapv(|x| x.to_f64().expect("Operation failed"));
+        let xty_f64 = xty.mapv(|x| x.to_f64().expect("Operation failed"));
         match xtx_f64.solve(&xty_f64) {
-            Ok(coeffs) => Ok(coeffs.mapv(|x| F::from_f64(x).unwrap())),
+            Ok(coeffs) => Ok(coeffs.mapv(|x| F::from_f64(x).expect("Operation failed"))),
             Err(_) => {
                 // Fallback to simple mean for constant trend
                 let mut coeffs = Array1::zeros(basis_functions.shape()[1]);
@@ -283,16 +283,16 @@ where
             {
                 use ndarray_linalg::Solve;
                 // Convert to f64 for linear algebra
-                let aug_matrix_f64 = aug_matrix.mapv(|x| x.to_f64().unwrap());
-                let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
+                let aug_matrix_f64 = aug_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
+                let rhs_f64 = rhs.mapv(|x| x.to_f64().expect("Operation failed"));
                 let solution = match aug_matrix_f64.solve(&rhs_f64) {
-                    Ok(sol) => sol.mapv(|x| F::from_f64(x).unwrap()),
+                    Ok(sol) => sol.mapv(|x| F::from_f64(x).expect("Operation failed")),
                     Err(_) => {
                         // Fallback to standard kriging if system can't be solved
-                        let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());
-                        let local_values_f64 = local_values.mapv(|x| x.to_f64().unwrap());
+                        let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
+                        let local_values_f64 = local_values.mapv(|x| x.to_f64().expect("Operation failed"));
                         let weights = match cov_matrix_f64.solve(&local_values_f64) {
-                            Ok(w) => w.mapv(|x| F::from_f64(x).unwrap()),
+                            Ok(w) => w.mapv(|x| F::from_f64(x).expect("Operation failed")),
                             Err(_) => {
                                 // Return mean as last resort
                                 values[i] = local_values.mean_or(F::zero());
@@ -429,7 +429,7 @@ where
 
             // For variance, we use a simplified approximation
             // In a full implementation, this would involve traversing the hierarchy
-            variances[i] = self.anisotropic_cov.sigma_sq * F::from_f64(0.1).unwrap();
+            variances[i] = self.anisotropic_cov.sigma_sq * F::from_f64(0.1).expect("Operation failed");
         }
 
         Ok(FastPredictionResult {
@@ -498,10 +498,10 @@ where
             let weights = {
                 use ndarray_linalg::Solve;
                 // Convert to f64 for linear algebra
-                let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().unwrap());
-                let block_values_f64 = block_values.mapv(|x| x.to_f64().unwrap());
+                let cov_matrix_f64 = cov_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
+                let block_values_f64 = block_values.mapv(|x| x.to_f64().expect("Operation failed"));
                 match cov_matrix_f64.solve(&block_values_f64) {
-                    Ok(w) => w.mapv(|x| F::from_f64(x).unwrap()),
+                    Ok(w) => w.mapv(|x| F::from_f64(x).expect("Operation failed")),
                     Err(_) => {
                         // Fallback to diagonal approximation
                         let mut w = Array1::zeros(n_points);
@@ -570,7 +570,7 @@ where
         let (near_indices, far_indices): (Vec<usize>, Vec<usize>) =
             indices.iter().copied().partition(|&idx| {
                 let dist = (self.points[[idx, split_dim]] - query_val).abs();
-                dist <= max_extent * F::from_f64(0.5).unwrap()
+                dist <= max_extent * F::from_f64(0.5).expect("Operation failed")
             });
 
         // Recursively compute prediction for near points
@@ -603,15 +603,15 @@ where
 
             // Compute a simplified low-rank approximation for the far points
             self.hodlr_predict_point(query_point, &sample_indices, leaf_size, trend)?
-                * F::from_f64(far_indices.len() as f64 / sample_indices.len() as f64).unwrap()
+                * F::from_f64(far_indices.len() as f64 / sample_indices.len() as f64).expect("Operation failed")
         } else {
             F::zero()
         };
 
         // Combine results with appropriate weighting
         let total_points = near_indices.len() + far_indices.len();
-        let near_weight = F::from_f64(near_indices.len() as f64 / total_points as f64).unwrap();
-        let far_weight = F::from_f64(far_indices.len() as f64 / total_points as f64).unwrap();
+        let near_weight = F::from_f64(near_indices.len() as f64 / total_points as f64).expect("Operation failed");
+        let far_weight = F::from_f64(far_indices.len() as f64 / total_points as f64).expect("Operation failed");
 
         Ok(near_weight * near_prediction + far_weight * far_prediction)
     }

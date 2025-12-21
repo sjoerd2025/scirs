@@ -387,7 +387,7 @@ fn estimate_noise_variance(signal: &Array1<f64>, analysis: &SignalAnalysis) -> S
     for i in 1..n {
         differences.push((_signal[i] - signal[i - 1]).abs());
     }
-    differences.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    differences.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let mad_diff = if !differences.is_empty() {
         differences[differences.len() / 2] / 0.6745 // MAD to standard deviation
@@ -424,7 +424,7 @@ fn estimate_noise_from_wavelets(signal: &Array1<f64>) -> SignalResult<Option<f64
     }
 
     // Decompose using Daubechies 4 wavelet
-    match dwt_decompose(_signal.as_slice().unwrap(), Wavelet::DB(4), None) {
+    match dwt_decompose(_signal.as_slice().expect("Operation failed"), Wavelet::DB(4), None) {
         Ok((_, detail_coeffs)) => {
             if detail_coeffs.is_empty() {
                 return Ok(None);
@@ -435,7 +435,7 @@ fn estimate_noise_from_wavelets(signal: &Array1<f64>) -> SignalResult<Option<f64
 
             // Calculate MAD of detail coefficients
             let mut abs_coeffs: Vec<f64> = finest_detail.iter().map(|&x: &f64| x.abs()).collect();
-            abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            abs_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             if abs_coeffs.is_empty() {
                 return Ok(None);
@@ -482,7 +482,7 @@ fn estimate_local_noise_variance(
         Ok(signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64)
     } else {
         // Use median of local variances
-        local_variances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        local_variances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         Ok(local_variances[local_variances.len() / 2])
     }
 }
@@ -641,7 +641,7 @@ fn apply_fusion_denoising(
     strategy: &DenoisingStrategy,
     config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<Array1<f64>> {
-    let weights = strategy.algorithmweights.as_ref().unwrap();
+    let weights = strategy.algorithmweights.as_ref().expect("Operation failed");
     let mut denoised_results = HashMap::new();
 
     // Apply each algorithm
@@ -718,7 +718,7 @@ fn apply_adaptive_wavelet_denoising(
 
     // Decompose signal
     let (approx_coeffs, detail_coeffs) =
-        dwt_decompose(signal.as_slice().unwrap(), Wavelet::DB(4), None)?;
+        dwt_decompose(signal.as_slice().expect("Operation failed"), Wavelet::DB(4), None)?;
 
     // Apply soft thresholding to detail coefficients
     let thresholded_details: Vec<f64> = detail_coeffs
@@ -993,7 +993,7 @@ fn estimate_snr_improvement(
 /// Estimate wavelet sparsity
 #[allow(dead_code)]
 fn estimate_wavelet_sparsity(signal: &Array1<f64>) -> SignalResult<f64> {
-    match dwt_decompose(_signal.as_slice().unwrap(), Wavelet::DB(4), None) {
+    match dwt_decompose(_signal.as_slice().expect("Operation failed"), Wavelet::DB(4), None) {
         Ok((_, detail_coeffs)) => {
             let mut all_coeffs = Vec::new();
             for detail in detail_coeffs {
@@ -1085,7 +1085,7 @@ mod tests {
         let result = adaptive_denoise_advanced(&noisy_signal, &config);
 
         assert!(result.is_ok());
-        let denoising_result = result.unwrap();
+        let denoising_result = result.expect("Operation failed");
         assert_eq!(denoising_result.denoised_signal.len(), noisy_signal.len());
         assert!(denoising_result.snr_improvement_db >= 0.0);
         assert!(denoising_result.quality_metrics.overall_quality > 0.0);
@@ -1095,8 +1095,8 @@ mod tests {
     fn test_noise_variance_estimation() {
         let signal = Array1::from_vec(vec![1.0, 1.1, 0.9, 1.05, 0.95, 1.02, 0.98, 1.01]);
         let config = AdaptiveDenoisingConfig::default();
-        let analysis = analyze_signal_characteristics(&signal, &config).unwrap();
-        let noise_var = estimate_noise_variance(&signal, &analysis).unwrap();
+        let analysis = analyze_signal_characteristics(&signal, &config).expect("Operation failed");
+        let noise_var = estimate_noise_variance(&signal, &analysis).expect("Operation failed");
 
         assert!(noise_var > 0.0);
         assert!(noise_var < 1.0); // Should be reasonable for this test signal
@@ -1106,7 +1106,7 @@ mod tests {
     fn test_signal_analysis() {
         let signal = Array1::from_vec((0..100).map(|i| (i as f64 * 0.1).sin()).collect());
         let config = AdaptiveDenoisingConfig::default();
-        let analysis = analyze_signal_characteristics(&signal, &config).unwrap();
+        let analysis = analyze_signal_characteristics(&signal, &config).expect("Operation failed");
 
         assert_eq!(analysis.length, 100);
         assert!(analysis.energy > 0.0);

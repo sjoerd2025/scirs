@@ -75,13 +75,13 @@ impl Default for WvdConfig {
 /// config.fs = fs;
 ///
 /// // Compute the WVD
-/// let wvd = wigner_ville(&signal, config).unwrap();
+/// let wvd = wigner_ville(&signal, config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn wigner_ville(signal: &Array1<f64>, config: WvdConfig) -> SignalResult<Array2<f64>> {
     // Convert to analytic _signal if needed
     let analytic_signal = if config.analytic {
-        Array1::from(hilbert::hilbert(_signal.as_slice().unwrap())?)
+        Array1::from(hilbert::hilbert(_signal.as_slice().expect("Operation failed"))?)
     } else {
         signal.mapv(|x| Complex64::new(x, 0.0))
     };
@@ -121,7 +121,7 @@ pub fn wigner_ville(signal: &Array1<f64>, config: WvdConfig) -> SignalResult<Arr
 /// config.fs = fs;
 ///
 /// // Compute the Cross WVD
-/// let xwvd = cross_wigner_ville(&signal1, &signal2, config).unwrap();
+/// let xwvd = cross_wigner_ville(&signal1, &signal2, config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cross_wigner_ville(
@@ -138,13 +138,13 @@ pub fn cross_wigner_ville(
 
     // Convert to analytic signals if needed
     let analytic_signal1 = if config.analytic {
-        Array1::from(hilbert::hilbert(signal1.as_slice().unwrap())?)
+        Array1::from(hilbert::hilbert(signal1.as_slice().expect("Operation failed"))?)
     } else {
         signal1.mapv(|x| Complex64::new(x, 0.0))
     };
 
     let analytic_signal2 = if config.analytic {
-        Array1::from(hilbert::hilbert(signal2.as_slice().unwrap())?)
+        Array1::from(hilbert::hilbert(signal2.as_slice().expect("Operation failed"))?)
     } else {
         signal2.mapv(|x| Complex64::new(x, 0.0))
     };
@@ -182,15 +182,15 @@ pub fn cross_wigner_ville(
 /// let signal = t.mapv(|ti| (2.0 * std::f64::consts::PI * (10.0 * ti + 50.0 * ti * ti)).sin());
 ///
 /// // Create windows for smoothing
-/// let time_win = Array1::from(window::hamming(51, true).unwrap());
-/// let freq_win = Array1::from(window::hamming(101, true).unwrap());
+/// let time_win = Array1::from(window::hamming(51, true).expect("Operation failed"));
+/// let freq_win = Array1::from(window::hamming(101, true).expect("Operation failed"));
 ///
 /// // Configure the WVD
 /// let mut config = WvdConfig::default();
 /// config.fs = fs;
 ///
 /// // Compute the SPWVD
-/// let spwvd = smoothed_pseudo_wigner_ville(&signal, &time_win, &freq_win, config).unwrap();
+/// let spwvd = smoothed_pseudo_wigner_ville(&signal, &time_win, &freq_win, config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn smoothed_pseudo_wigner_ville(
@@ -205,7 +205,7 @@ pub fn smoothed_pseudo_wigner_ville(
 
     // Convert to analytic signal if needed
     let analytic_signal = if config.analytic {
-        Array1::from(hilbert::hilbert(signal.as_slice().unwrap())?)
+        Array1::from(hilbert::hilbert(signal.as_slice().expect("Operation failed"))?)
     } else {
         signal.mapv(|x| Complex64::new(x, 0.0))
     };
@@ -334,7 +334,7 @@ fn compute_cross_wvd(
 
         // Compute FFT of autocorrelation to get the spectrum at this time point
         let spectrum =
-            scirs2_fft::fft(acorr.as_slice().unwrap(), None).expect("FFT computation failed");
+            scirs2_fft::fft(acorr.as_slice().expect("Operation failed"), None).expect("FFT computation failed");
 
         // Store only the positive frequencies (the result is conjugate symmetric for real signals)
         let n_freqs = n_fft / 2 + 1;
@@ -506,7 +506,7 @@ mod tests {
         };
 
         // Compute the WVD
-        let wvd = wigner_ville(&signal, config).unwrap();
+        let wvd = wigner_ville(&signal, config).expect("Operation failed");
 
         // Basic size check
         assert_eq!(wvd.shape()[1], n);
@@ -560,7 +560,7 @@ mod tests {
         };
 
         // Compute the Cross WVD
-        let xwvd = cross_wigner_ville(&signal1, &signal2, config).unwrap();
+        let xwvd = cross_wigner_ville(&signal1, &signal2, config).expect("Operation failed");
 
         // Basic size check
         assert_eq!(xwvd.shape()[1], n);
@@ -606,9 +606,9 @@ mod tests {
         };
 
         // Compute both standard WVD and smoothed pseudo-WVD
-        let wvd = wigner_ville(&signal, config.clone()).unwrap();
+        let wvd = wigner_ville(&signal, config.clone()).expect("Operation failed");
         let spwvd =
-            smoothed_pseudo_wigner_ville(&signal, &time_window, &freq_window, config).unwrap();
+            smoothed_pseudo_wigner_ville(&signal, &time_window, &freq_window, config).expect("Operation failed");
 
         // Both should have the same dimensions
         assert_eq!(wvd.shape(), spwvd.shape());

@@ -281,8 +281,8 @@ where
             negative_count: 0,
             local_maxima_count: 0,
             local_minima_count: 0,
-            above_mean_proportion: F::from(0.5).unwrap(),
-            below_mean_proportion: F::from(0.5).unwrap(),
+            above_mean_proportion: F::from(0.5).expect("Failed to convert constant to float"),
+            below_mean_proportion: F::from(0.5).expect("Failed to convert constant to float"),
 
             // Additional descriptive measures
             energy: F::zero(),
@@ -319,23 +319,24 @@ where
     }
 
     // Variance of the original time series
-    let ts_mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
+    let ts_mean =
+        ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).expect("Operation failed");
     let ts_var = ts
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - ts_mean).powi(2))
-        / F::from_usize(n).unwrap();
+        / F::from_usize(n).expect("Operation failed");
 
     if ts_var == F::zero() {
         return Ok((F::zero(), None));
     }
 
     // Variance of the differenced series
-    let diff_mean =
-        diff1.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(diff1.len()).unwrap();
+    let diff_mean = diff1.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from_usize(diff1.len()).expect("Operation failed");
     let diff_var = diff1
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - diff_mean).powi(2))
-        / F::from_usize(diff1.len()).unwrap();
+        / F::from_usize(diff1.len()).expect("Operation failed");
 
     // Trend strength
     let trend_strength = F::one() - (diff_var / ts_var);
@@ -356,11 +357,11 @@ where
 
         // Variance of seasonal differences
         let s_diff_mean = seasonal_diff.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(seasonal_diff.len()).unwrap();
+            / F::from_usize(seasonal_diff.len()).expect("Operation failed");
         let s_diff_var = seasonal_diff
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - s_diff_mean).powi(2))
-            / F::from_usize(seasonal_diff.len()).unwrap();
+            / F::from_usize(seasonal_diff.len()).expect("Operation failed");
 
         // Seasonality strength
         let s_strength = F::one() - (s_diff_var / ts_var);
@@ -393,11 +394,11 @@ where
     F: Float + FromPrimitive + Debug + Clone + scirs2_core::ndarray::ScalarOperand,
 {
     let n = ts.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Create sorted version for percentile calculations
     let mut sorted = ts.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Calculate percentiles
     let p5 = calculate_percentile(&sorted, 5.0);
@@ -416,7 +417,8 @@ where
     let winsorized_mean_5 = calculate_winsorized_mean(ts, 0.05)?;
     let median_absolute_deviation = calculate_mad(ts, basic_median)?;
     let interquartile_mean = calculate_interquartile_mean(ts, basic_q1, basic_q3)?;
-    let midhinge = (basic_q1 + basic_q3) / F::from(2.0).unwrap();
+    let midhinge =
+        (basic_q1 + basic_q3) / F::from(2.0).expect("Failed to convert constant to float");
     let trimmed_range = p95 - p5;
 
     // Percentile ratios
@@ -466,7 +468,9 @@ where
 
     let (lower_outlier_count, upper_outlier_count) =
         calculate_outlier_counts(ts, basic_q1, basic_q3)?;
-    let outlier_ratio = F::from(lower_outlier_count + upper_outlier_count).unwrap() / n_f;
+    let outlier_ratio = F::from(lower_outlier_count + upper_outlier_count)
+        .expect("Failed to convert to float")
+        / n_f;
 
     // Central tendency variations
     let harmonic_mean = calculate_harmonic_mean(ts)?;
@@ -489,7 +493,8 @@ where
         F::zero()
     };
     let relative_standard_deviation = if basic_mean != F::zero() {
-        (basic_std / basic_mean.abs()) * F::from(100.0).unwrap()
+        (basic_std / basic_mean.abs())
+            * F::from(100.0).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -503,12 +508,15 @@ where
     // Distribution characteristics (L-moments)
     let (l_scale, l_skewness, l_kurtosis) = calculate_l_moments(ts)?;
     let bowley_skewness = if basic_q3 - basic_q1 != F::zero() {
-        (basic_q3 + basic_q1 - F::from(2.0).unwrap() * basic_median) / (basic_q3 - basic_q1)
+        (basic_q3 + basic_q1
+            - F::from(2.0).expect("Failed to convert constant to float") * basic_median)
+            / (basic_q3 - basic_q1)
     } else {
         F::zero()
     };
     let kelly_skewness = if p90 - p10 != F::zero() {
-        (p90 + p10 - F::from(2.0).unwrap() * basic_median) / (p90 - p10)
+        (p90 + p10 - F::from(2.0).expect("Failed to convert constant to float") * basic_median)
+            / (p90 - p10)
     } else {
         F::zero()
     };
@@ -542,7 +550,8 @@ where
     let negative_count = ts.iter().filter(|&&x| x < F::zero()).count();
     let (local_maxima_count, local_minima_count) = calculate_local_extrema_counts(ts);
     let above_mean_count = ts.iter().filter(|&&x| x > basic_mean).count();
-    let above_mean_proportion = F::from(above_mean_count).unwrap() / n_f;
+    let above_mean_proportion =
+        F::from(above_mean_count).expect("Failed to convert to float") / n_f;
     let below_mean_proportion = F::one() - above_mean_proportion;
 
     // Additional descriptive measures
@@ -672,7 +681,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     let mut fifth_sum = F::zero();
     let mut sixth_sum = F::zero();
@@ -698,7 +707,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     if std == F::zero() {
         return Ok(F::zero());
@@ -711,7 +720,7 @@ where
     }
 
     let kurtosis = fourth_moment_sum / n_f;
-    Ok(kurtosis - F::from(3.0).unwrap()) // Excess kurtosis
+    Ok(kurtosis - F::from(3.0).expect("Failed to convert constant to float")) // Excess kurtosis
 }
 
 /// Calculate interquartile mean
@@ -731,7 +740,7 @@ where
     }
 
     let sum = values_in_iqr.iter().fold(F::zero(), |acc, &x| acc + x);
-    let count = F::from(values_in_iqr.len()).unwrap();
+    let count = F::from(values_in_iqr.len()).expect("Operation failed");
     Ok(sum / count)
 }
 
@@ -742,7 +751,7 @@ where
     F: Float + FromPrimitive,
 {
     let n = ts.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     let sum = ts
         .iter()
@@ -757,15 +766,15 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let mut sorted = ts.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let n = sorted.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     let mut numerator = F::zero();
     let mut sum = F::zero();
 
     for (i, &value) in sorted.iter().enumerate() {
-        numerator = numerator + F::from(2 * (i + 1) - n - 1).unwrap() * value;
+        numerator = numerator + F::from(2 * (i + 1) - n - 1).expect("Operation failed") * value;
         sum = sum + value;
     }
 
@@ -783,8 +792,8 @@ where
     F: Float + FromPrimitive,
 {
     let iqr = q3 - q1;
-    let lower_bound = q1 - F::from(1.5).unwrap() * iqr;
-    let upper_bound = q3 + F::from(1.5).unwrap() * iqr;
+    let lower_bound = q1 - F::from(1.5).expect("Failed to convert constant to float") * iqr;
+    let upper_bound = q3 + F::from(1.5).expect("Failed to convert constant to float") * iqr;
 
     let lower_outliers = ts.iter().filter(|&&x| x < lower_bound).count();
     let upper_outliers = ts.iter().filter(|&&x| x > upper_bound).count();

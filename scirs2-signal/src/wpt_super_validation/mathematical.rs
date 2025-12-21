@@ -58,7 +58,7 @@ pub fn validate_perfect_reconstruction_comprehensive(
                 let test_signal = generate_test_signal(signal_config)?;
 
                 // Perform WPT decomposition
-                let tree = wp_decompose(test_signal.as_slice().unwrap(), *wavelet, max_level, None)?;
+                let tree = wp_decompose(test_signal.as_slice().expect("Operation failed"), *wavelet, max_level, None)?;
 
                 // Reconstruct signal
                 let reconstructed = reconstruct_from_nodes(&tree, test_signal.len())?;
@@ -125,7 +125,7 @@ pub fn validate_tight_frame_properties(
                 let test_signal = generate_test_signal(signal_config)?;
 
                 // Perform WPT decomposition
-                let tree = wp_decompose(test_signal.as_slice().unwrap(), *wavelet, max_level, None)?;
+                let tree = wp_decompose(test_signal.as_slice().expect("Operation failed"), *wavelet, max_level, None)?;
 
                 // Calculate frame bounds
                 let (lower, upper) = calculate_frame_bounds(&tree, &test_signal)?;
@@ -184,7 +184,7 @@ pub fn validate_advanced_orthogonality(
                 let test_signal = generate_test_signal(signal_config)?;
 
                 // Perform WPT decomposition
-                let tree = wp_decompose(test_signal.as_slice().unwrap(), *wavelet, max_level, None)?;
+                let tree = wp_decompose(test_signal.as_slice().expect("Operation failed"), *wavelet, max_level, None)?;
 
                 // Extract all coefficient vectors
                 let coefficient_vectors = extract_coefficient_vectors(&tree)?;
@@ -473,7 +473,7 @@ pub fn analyze_correlation_matrix(
                 let test_signal = generate_test_signal(signal_config)?;
 
                 // Perform WPT decomposition
-                let tree = wp_decompose(test_signal.as_slice().unwrap(), *wavelet, max_level, None)?;
+                let tree = wp_decompose(test_signal.as_slice().expect("Operation failed"), *wavelet, max_level, None)?;
 
                 // Extract coefficient vectors
                 let coeff_vectors = extract_coefficient_vectors(&tree)?;
@@ -570,7 +570,7 @@ pub fn analyze_coherence(config: &AdvancedWptValidationConfig) -> SignalResult<C
                 let test_signal = generate_test_signal(signal_config)?;
 
                 // Perform WPT decomposition
-                let tree = wp_decompose(test_signal.as_slice().unwrap(), *wavelet, max_level, None)?;
+                let tree = wp_decompose(test_signal.as_slice().expect("Operation failed"), *wavelet, max_level, None)?;
 
                 // Extract coefficient vectors
                 let coeff_vectors = extract_coefficient_vectors(&tree)?;
@@ -894,7 +894,7 @@ mod tests {
     #[test]
     fn test_l2_norm_calculation() {
         let vec = Array1::from_vec(vec![3.0, 4.0]);
-        let norm = calculate_l2_norm(&vec).unwrap();
+        let norm = calculate_l2_norm(&vec).expect("Operation failed");
         assert!((norm - 5.0).abs() < 1e-10);
     }
 

@@ -59,7 +59,7 @@ where
         }
 
         // Check for singularity
-        if max_val < F::from_f64(1e-14).unwrap() {
+        if max_val < F::from_f64(1e-14).expect("Operation failed") {
             return Err(IntegrateError::ValueError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
@@ -161,7 +161,7 @@ where
         }
 
         // Check for singularity
-        if max_val < F::from_f64(1e-14).unwrap() {
+        if max_val < F::from_f64(1e-14).expect("Operation failed") {
             return Err(IntegrateError::ValueError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
@@ -199,7 +199,7 @@ where
 
         // Compute elements of L
         for i in (k + 1)..n {
-            if u[[k, k]].abs() < F::from_f64(1e-14).unwrap() {
+            if u[[k, k]].abs() < F::from_f64(1e-14).expect("Operation failed") {
                 return Err(IntegrateError::ValueError(
                     "LU decomposition failed: division by zero".to_string(),
                 ));
@@ -235,7 +235,7 @@ where
 
     // Back substitution
     for i in (0..n).rev() {
-        if u[[i, i]].abs() < F::from_f64(1e-14).unwrap() {
+        if u[[i, i]].abs() < F::from_f64(1e-14).expect("Operation failed") {
             return Err(IntegrateError::ValueError(
                 "LU decomposition: singular matrix detected during back substitution".to_string(),
             ));

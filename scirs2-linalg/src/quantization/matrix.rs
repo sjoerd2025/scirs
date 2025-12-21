@@ -128,7 +128,7 @@ impl QuantizedMatrix {
                         let idx = row * self.shape.1 + col;
                         let byte_idx = idx / 2;
                         let nibble_idx = idx % 2;
-                        let byte = arr.as_slice().unwrap()[byte_idx];
+                        let byte = arr.as_slice().expect("Operation failed")[byte_idx];
 
                         if nibble_idx == 0 {
                             // Upper 4 bits
@@ -142,7 +142,7 @@ impl QuantizedMatrix {
                         let idx = row * self.shape.1 + col;
                         let byte_idx = idx / 2;
                         let nibble_idx = idx % 2;
-                        let byte = arr.as_slice().unwrap()[byte_idx];
+                        let byte = arr.as_slice().expect("Operation failed")[byte_idx];
 
                         if nibble_idx == 0 {
                             // Upper 4 bits

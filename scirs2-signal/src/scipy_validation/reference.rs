@@ -193,7 +193,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
         let result = reference_butter_filter(&signal, 2, &[0.1], "low", 1.0);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), signal.len());
+        assert_eq!(result.expect("Operation failed").len(), signal.len());
     }
 
     #[test]
@@ -201,7 +201,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
         let result = reference_cheby1_filter(&signal, 2, 1.0, &[0.1], "low", 1.0);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), signal.len());
+        assert_eq!(result.expect("Operation failed").len(), signal.len());
     }
 
     #[test]
@@ -209,7 +209,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
         let result = reference_multitaper_psd(&signal, 1.0, 2.5, None);
         assert!(result.is_ok());
-        let psd = result.unwrap();
+        let psd = result.expect("Operation failed");
         assert_eq!(psd.len(), signal.len() / 2 + 1);
     }
 
@@ -220,6 +220,6 @@ mod tests {
         let freqs = vec![0.1, 0.2, 0.3];
         let result = reference_lombscargle(&t, &signal, &freqs, None, None);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), freqs.len());
+        assert_eq!(result.expect("Operation failed").len(), freqs.len());
     }
 }

@@ -94,7 +94,7 @@ where
             _level if _level > 0.80 => 1.282, // 80%
             _ => 1.96,                      // Default to 95%
         })
-        .unwrap();
+        .expect("Operation failed");
 
         let std_devs = self.standard_deviations();
         let mut intervals = Array2::zeros((self.len(), 2));
@@ -173,11 +173,11 @@ pub enum FastKrigingMethod {
 ///     .approximation_method(FastKrigingMethod::Local)
 ///     .max_neighbors(50)
 ///     .build()
-///     .unwrap();
+///     .expect("Operation failed");
 ///
 /// // Predict at new points
 /// let query_points = Array2::<f64>::zeros((10, 2));
-/// let predictions = local_kriging.predict(&query_points.view()).unwrap();
+/// let predictions = local_kriging.predict(&query_points.view()).expect("Operation failed");
 ///
 /// // Create a model using fixed rank approximation
 /// let low_rank_kriging = FastKrigingBuilder::<f64>::new()
@@ -186,7 +186,7 @@ pub enum FastKrigingMethod {
 ///     .covariance_function(CovarianceFunction::Exponential)
 ///     .approximation_method(FastKrigingMethod::FixedRank(10))
 ///     .build()
-///     .unwrap();
+///     .expect("Operation failed");
 /// # }
 /// ```
 #[derive(Debug, Clone)]
@@ -284,7 +284,7 @@ where
 ///     .max_neighbors(30)
 ///     .radius_multiplier(2.5)
 ///     .build()
-///     .unwrap();
+///     .expect("Operation failed");
 /// # }
 /// ```
 #[derive(Debug, Clone)]
@@ -418,7 +418,7 @@ where
                 let sparse_components = covariance::compute_tapered_covariance(
                     &self.points,
                     &self.anisotropic_cov,
-                    F::from_f64(range).unwrap(),
+                    F::from_f64(range).expect("Operation failed"),
                 )?;
                 self.sparse_components = Some(sparse_components);
             }
@@ -525,12 +525,12 @@ where
             values: None,
             cov_fn: CovarianceFunction::Matern52,
             length_scales: None,
-            sigma_sq: F::from_f64(1.0).unwrap(),
-            nugget: F::from_f64(1e-6).unwrap(),
+            sigma_sq: F::from_f64(1.0).expect("Operation failed"),
+            nugget: F::from_f64(1e-6).expect("Operation failed"),
             trend_fn: TrendFunction::Constant,
             approx_method: FastKrigingMethod::Local,
             max_neighbors: DEFAULT_MAX_NEIGHBORS,
-            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(), _phantom: PhantomData,
+            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).expect("Operation failed"), _phantom: PhantomData,
         }
     }
 
@@ -655,7 +655,7 @@ mod tests {
             computation_time_ms: None,
         };
 
-        let intervals = result.confidence_intervals(0.95).unwrap();
+        let intervals = result.confidence_intervals(0.95).expect("Operation failed");
         assert_eq!(intervals.nrows(), 3);
         assert_eq!(intervals.ncols(), 2);
 
@@ -761,7 +761,7 @@ mod tests {
             .approximation_method(FastKrigingMethod::Local)
             .max_neighbors(10)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         // Test basic properties
         assert_eq!(kriging.n_points(), 20);
@@ -769,9 +769,9 @@ mod tests {
         assert_eq!(kriging.approximation_method(), FastKrigingMethod::Local);
 
         // Test prediction
-        let query_points = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
+        let query_points = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).expect("Operation failed");
 
-        let result = kriging.predict(&query_points.view()).unwrap();
+        let result = kriging.predict(&query_points.view()).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result.method, FastKrigingMethod::Local);
 
@@ -797,12 +797,12 @@ mod tests {
             .covariance_function(CovarianceFunction::Exponential)
             .approximation_method(FastKrigingMethod::FixedRank(5))
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         let query_points =
-            Array2::from_shape_vec((3, 2), vec![0.1, 0.1, 0.5, 0.5, 0.9, 0.9]).unwrap();
+            Array2::from_shape_vec((3, 2), vec![0.1, 0.1, 0.5, 0.5, 0.9, 0.9]).expect("Operation failed");
 
-        let result = kriging.predict(&query_points.view()).unwrap();
+        let result = kriging.predict(&query_points.view()).expect("Operation failed");
         assert_eq!(result.len(), 3);
         assert_eq!(result.method, FastKrigingMethod::FixedRank(5));
 
@@ -823,11 +823,11 @@ mod tests {
             .covariance_function(CovarianceFunction::SquaredExponential)
             .approximation_method(FastKrigingMethod::Tapering(1.5))
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
-        let query_points = Array2::from_shape_vec((2, 2), vec![0.3, 0.3, 0.7, 0.7]).unwrap();
+        let query_points = Array2::from_shape_vec((2, 2), vec![0.3, 0.3, 0.7, 0.7]).expect("Operation failed");
 
-        let result = kriging.predict(&query_points.view()).unwrap();
+        let result = kriging.predict(&query_points.view()).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result.method, FastKrigingMethod::Tapering(1.5));
 
@@ -851,11 +851,11 @@ mod tests {
             .covariance_function(CovarianceFunction::Matern32)
             .approximation_method(FastKrigingMethod::HODLR(8))
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
-        let query_points = Array2::from_shape_vec((2, 2), vec![0.4, 0.4, 0.6, 0.6]).unwrap();
+        let query_points = Array2::from_shape_vec((2, 2), vec![0.4, 0.4, 0.6, 0.6]).expect("Operation failed");
 
-        let result = kriging.predict(&query_points.view()).unwrap();
+        let result = kriging.predict(&query_points.view()).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result.method, FastKrigingMethod::HODLR(8));
 
@@ -874,7 +874,7 @@ mod tests {
             .values(values)
             .approximation_method(FastKrigingMethod::Local)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         // Query points with wrong dimensionality
         let wrong_query = Array2::zeros((2, 3)); // 3D instead of 2D
@@ -892,19 +892,19 @@ mod tests {
             .values(values)
             .approximation_method(FastKrigingMethod::Local)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         // Empty query points
         let empty_query = Array2::zeros((0, 2));
 
-        let result = kriging.predict(&empty_query.view()).unwrap();
+        let result = kriging.predict(&empty_query.view()).expect("Operation failed");
         assert_eq!(result.len(), 0);
         assert!(result.is_empty());
     }
 
     #[test]
     fn test_single_point_dataset() {
-        let points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+        let points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).expect("Operation failed");
         let values = Array1::from_vec(vec![1.0]);
 
         let kriging = FastKrigingBuilder::<f64>::new()
@@ -913,9 +913,9 @@ mod tests {
             .approximation_method(FastKrigingMethod::Local)
             .max_neighbors(1)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
-        let query_points = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();
+        let query_points = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).expect("Operation failed");
 
         // Should not crash on single point
         let result = kriging.predict(&query_points.view());

@@ -635,10 +635,10 @@ pub fn arma_forecast(
         forecasts[h] = forecast;
 
         // Extend arrays
-        extended_signal = extended_signal.clone().intoshape(n + h + 1).unwrap();
+        extended_signal = extended_signal.clone().intoshape(n + h + 1).expect("Operation failed");
         extended_signal[n + h] = forecast;
 
-        extended_residuals = extended_residuals.clone().intoshape(n + h + 1).unwrap();
+        extended_residuals = extended_residuals.clone().intoshape(n + h + 1).expect("Operation failed");
         extended_residuals[n + h] = 0.0; // Future residuals are zero in expectation
 
         // Forecast error variance (simplified - assumes normal innovations)

@@ -311,7 +311,7 @@ mod tests {
     fn test_gemm() {
         let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
-        let c = gemm(&a.view(), &b.view()).unwrap();
+        let c = gemm(&a.view(), &b.view()).expect("Operation failed");
         assert_eq!(c[[0, 0]], 19.0);
         assert_eq!(c[[0, 1]], 22.0);
         assert_eq!(c[[1, 0]], 43.0);
@@ -322,7 +322,7 @@ mod tests {
     fn test_gemv() {
         let a = array![[1.0_f32, 2.0], [3.0, 4.0]];
         let x = array![5.0, 6.0];
-        let y = gemv(&a.view(), &x.view()).unwrap();
+        let y = gemv(&a.view(), &x.view()).expect("Operation failed");
         assert_eq!(y[0], 17.0);
         assert_eq!(y[1], 39.0);
     }
@@ -330,14 +330,14 @@ mod tests {
     #[test]
     fn test_gdet() {
         let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-        let det = gdet(&a.view()).unwrap();
+        let det = gdet(&a.view()).expect("Operation failed");
         assert!((det - (-2.0)).abs() < 1e-10);
     }
 
     #[test]
     fn test_ginv() {
         let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-        let a_inv = ginv(&a.view()).unwrap();
+        let a_inv = ginv(&a.view()).expect("Operation failed");
         assert!((a_inv[[0, 0]] - 1.0).abs() < 1e-10);
         assert!((a_inv[[1, 1]] - 0.5).abs() < 1e-10);
     }
@@ -345,7 +345,7 @@ mod tests {
     #[test]
     fn test_gnorm() {
         let a = array![[1.0_f32, 2.0], [3.0, 4.0]];
-        let norm = gnorm(&a.view(), "fro").unwrap();
+        let norm = gnorm(&a.view(), "fro").expect("Operation failed");
         let expected = (1.0 + 4.0 + 9.0 + 16.0_f32).sqrt();
         assert!((norm - expected).abs() < 1e-6);
     }
@@ -353,7 +353,7 @@ mod tests {
     #[test]
     fn test_gsvd() {
         let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-        let svd = gsvd(&a.view(), false).unwrap();
+        let svd = gsvd(&a.view(), false).expect("Operation failed");
 
         // Check that U and V are orthogonal
         let u_t_u = svd.u.t().dot(&svd.u);
@@ -368,7 +368,7 @@ mod tests {
     #[test]
     fn test_gqr() {
         let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-        let qr = gqr(&a.view()).unwrap();
+        let qr = gqr(&a.view()).expect("Operation failed");
 
         // Check that Q is orthogonal
         let q_t_q = qr.q.t().dot(&qr.q);
@@ -391,12 +391,12 @@ mod tests {
     #[test]
     fn test_geig() {
         let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-        let eigen = geig(&a.view()).unwrap();
+        let eigen = geig(&a.view()).expect("Operation failed");
 
         // For diagonal matrix, eigenvalues should be the diagonal elements
         // but they might not be in order
         let mut eigenvalues_real: Vec<f64> = eigen.eigenvalues.iter().map(|e| e.re).collect();
-        eigenvalues_real.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        eigenvalues_real.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let expected_eigenvalues = [1.0, 2.0];
         for (i, &expected) in expected_eigenvalues.iter().enumerate() {
@@ -410,7 +410,7 @@ mod tests {
     fn test_gsolve() {
         let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
         let b = array![[1.0], [1.0]];
-        let x = gsolve(&a.view(), &b.view()).unwrap();
+        let x = gsolve(&a.view(), &b.view()).expect("Operation failed");
 
         // Check that A * x = b
         let ax = a.dot(&x);

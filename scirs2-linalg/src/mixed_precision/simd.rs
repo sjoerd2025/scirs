@@ -41,7 +41,7 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 ///     let y = simd_mixed_precision_matvec_f32_f64::<f32>(
 ///         &a_f32.view(),
 ///         &x_f32.view()
-///     ).unwrap();
+///     ).expect("Operation failed");
 ///
 ///     assert_eq!(y.len(), 2);
 ///     assert!((y[0] - 1.5f32).abs() < 1e-6);
@@ -166,7 +166,7 @@ where
 ///     let c = simd_mixed_precision_matmul_f32_f64::<f32>(
 ///         &a_f32.view(),
 ///         &b_f32.view()
-///     ).unwrap();
+///     ).expect("Operation failed");
 ///
 ///     assert_eq!(c.shape(), &[2, 2]);
 ///     assert!((c[[0, 0]] - 19.0f32).abs() < 1e-5);
@@ -351,7 +351,7 @@ where
 ///     let result = simd_mixed_precision_dot_f32_f64::<f32>(
 ///         &a_f32.view(),
 ///         &b_f32.view()
-///     ).unwrap();
+///     ).expect("Operation failed");
 ///
 ///     // Expected: 1*4 + 2*5 + 3*6 = 4 + 10 + 18 = 32
 ///     assert!((result - 32.0f32).abs() < 1e-6);
@@ -360,7 +360,7 @@ where
 ///     let result_f64 = simd_mixed_precision_dot_f32_f64::<f64>(
 ///         &a_f32.view(),
 ///         &b_f32.view()
-///     ).unwrap();
+///     ).expect("Operation failed");
 ///
 ///     assert!((result_f64 - 32.0f64).abs() < 1e-14);
 /// }
@@ -447,7 +447,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_mixed_precision_matvec() {
         // Create test matrices and vectors
         let mat = array![[1.0e-4f32, 2.0e4, 3.0e-4], [4.0e4, 5.0e-4, 6.0e4]];
@@ -455,10 +454,10 @@ mod tests {
         let vec = array![7.0e-4f32, 8.0e4, 9.0e-4];
 
         // Compute using SIMD mixed precision
-        let result_f32 =
-            simd_mixed_precision_matvec_f32_f64::<f32>(&mat.view(), &vec.view()).unwrap();
-        let result_f64 =
-            simd_mixed_precision_matvec_f32_f64::<f64>(&mat.view(), &vec.view()).unwrap();
+        let result_f32 = simd_mixed_precision_matvec_f32_f64::<f32>(&mat.view(), &vec.view())
+            .expect("Operation failed");
+        let result_f64 = simd_mixed_precision_matvec_f32_f64::<f64>(&mat.view(), &vec.view())
+            .expect("Operation failed");
 
         // Compute reference using standard f32 and f64
         let mut expected_f32 = Array1::<f32>::zeros(2);
@@ -486,7 +485,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_mixed_precision_matmul() {
         // Create test matrices
         let a = array![[1.0e-4f32, 2.0e4, 3.0e-4], [4.0e4, 5.0e-4, 6.0e4]];
@@ -494,8 +492,10 @@ mod tests {
         let b = array![[7.0e-4f32, 8.0e-4], [9.0e4, 1.0e5], [2.0e-4, 3.0e-4]];
 
         // Compute using SIMD mixed precision
-        let result_f32 = simd_mixed_precision_matmul_f32_f64::<f32>(&a.view(), &b.view()).unwrap();
-        let result_f64 = simd_mixed_precision_matmul_f32_f64::<f64>(&a.view(), &b.view()).unwrap();
+        let result_f32 = simd_mixed_precision_matmul_f32_f64::<f32>(&a.view(), &b.view())
+            .expect("Operation failed");
+        let result_f64 = simd_mixed_precision_matmul_f32_f64::<f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         // Compute reference using standard f32 and f64
         let mut expected_f32 = Array2::<f32>::zeros((2, 2));
@@ -527,15 +527,16 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_mixed_precision_dot() {
         // Create test vectors with very small and very large values to highlight precision issues
         let a = array![1.0e-7f32, 2.0e7, 3.0e-7, 4.0e7, 5.0e-7, 6.0e7, 7.0e-7, 8.0e7, 9.0e-7];
         let b = array![9.0e-7f32, 8.0e7, 7.0e-7, 6.0e7, 5.0e-7, 4.0e7, 3.0e-7, 2.0e7, 1.0e-7];
 
         // Compute using SIMD mixed precision
-        let result_f32 = simd_mixed_precision_dot_f32_f64::<f32>(&a.view(), &b.view()).unwrap();
-        let result_f64 = simd_mixed_precision_dot_f32_f64::<f64>(&a.view(), &b.view()).unwrap();
+        let result_f32 = simd_mixed_precision_dot_f32_f64::<f32>(&a.view(), &b.view())
+            .expect("Operation failed");
+        let result_f64 = simd_mixed_precision_dot_f32_f64::<f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         // Compute reference using explicit f64 conversion
         let mut expected_f64 = 0.0f64;

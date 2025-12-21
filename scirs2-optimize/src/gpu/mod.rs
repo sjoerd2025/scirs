@@ -129,7 +129,7 @@ impl GpuOptimizationContext {
         // Use scirs2-core GPU buffer creation
         let shape = data.dim();
         let total_size = shape.0 * shape.1;
-        let flat_data = data.as_slice().unwrap();
+        let flat_data = data.as_slice().expect("Operation failed");
 
         // Create a GPU buffer with the flattened data
         // Note: GpuBuffer creation API may vary based on scirs2-core implementation

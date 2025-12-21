@@ -80,18 +80,18 @@ impl MemoryMapper {
             offset: 0,
             in_use: true,
         // Track allocation
-        let mut allocations = self.allocations.lock().unwrap();
+        let mut allocations = self.allocations.lock().expect("Operation failed");
         allocations.insert(allocation.buffer.id, allocation.clone());
         // Update statistics
-        let mut total = self.total_allocated.lock().unwrap();
+        let mut total = self.total_allocated.lock().expect("Operation failed");
         *total += aligned_size;
-        let mut peak = self.peak_allocated.lock().unwrap();
+        let mut peak = self.peak_allocated.lock().expect("Operation failed");
         if *total > *peak {
             *peak = *total;
         Ok(allocation)
     /// Allocate from memory pool
     fn allocate_from_pool(&self, layout: &MemoryLayout) -> Result<BufferAllocation> {
-        let mut pool = self.memory_pool.lock().unwrap();
+        let mut pool = self.memory_pool.lock().expect("Operation failed");
         if let Some(buffer) = pool.allocate(layout.size, layout.alignment) {
             let allocation = BufferAllocation {
                 buffer,
@@ -99,7 +99,7 @@ impl MemoryMapper {
                 offset: 0,
                 in_use: true,
             };
-            let mut allocations = self.allocations.lock().unwrap();
+            let mut allocations = self.allocations.lock().expect("Operation failed");
             allocations.insert(allocation.buffer.id, allocation.clone());
             Ok(allocation)
         } else {
@@ -112,11 +112,11 @@ impl MemoryMapper {
             let size = allocation.layout.size;
             // Return to pool if using pool strategy
             if matches!(self.strategy, MemoryStrategy::PoolBased(_)) {
-                let mut pool = self.memory_pool.lock().unwrap();
+                let mut pool = self.memory_pool.lock().expect("Operation failed");
                 pool.return_buffer(allocation.buffer);
             }
             // Update statistics
-            let mut total = self.total_allocated.lock().unwrap();
+            let mut total = self.total_allocated.lock().expect("Operation failed");
             *total = total.saturating_sub(size);
             Ok(())
             Err(crate::error::NeuralError::InvalidArgument(format!(
@@ -196,9 +196,9 @@ impl MemoryMapper {
         ((read_bytes + write_bytes) as f32) / 1e6
     /// Get memory statistics
     pub fn get_statistics(&self) -> MemoryStatistics {
-        let allocations = self.allocations.lock().unwrap();
-        let total = *self.total_allocated.lock().unwrap();
-        let peak = *self.peak_allocated.lock().unwrap();
+        let allocations = self.allocations.lock().expect("Operation failed");
+        let total = *self.total_allocated.lock().expect("Operation failed");
+        let peak = *self.peak_allocated.lock().expect("Operation failed");
         // Calculate fragmentation
         let mut used_blocks = 0;
         let mut total_block_size = 0;

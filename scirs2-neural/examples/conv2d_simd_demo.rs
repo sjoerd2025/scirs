@@ -165,7 +165,8 @@ fn main() {
     let weight = Array::from_shape_fn((1, 1, 2, 2), |_| 0.5f32);
     let bias = Some(Array1::from_elem(1, 0.1f32));
 
-    let output = conv2d_simd(&input.view(), &weight.view(), bias.as_ref(), 1, 0).unwrap();
+    let output =
+        conv2d_simd(&input.view(), &weight.view(), bias.as_ref(), 1, 0).expect("Operation failed");
     println!("Input shape: {:?}", input.shape());
     println!("Weight shape: {:?}", weight.shape());
     println!("Output shape: {:?}", output.shape());
@@ -185,7 +186,8 @@ fn main() {
     let bias = Some(Array1::from_elem(channels, 0.0f32));
 
     let start = Instant::now();
-    let output = conv2d_simd(&input.view(), &weight.view(), bias.as_ref(), 1, 1).unwrap();
+    let output =
+        conv2d_simd(&input.view(), &weight.view(), bias.as_ref(), 1, 1).expect("Operation failed");
     let elapsed = start.elapsed();
 
     println!("Configuration:");
@@ -220,7 +222,8 @@ fn main() {
     let bias = Some(Array1::from_elem(out_channels, 0.0f32));
 
     let start = Instant::now();
-    let output = conv2d_simd(&input.view(), &weight.view(), bias.as_ref(), 1, 1).unwrap();
+    let output =
+        conv2d_simd(&input.view(), &weight.view(), bias.as_ref(), 1, 1).expect("Operation failed");
     let elapsed = start.elapsed();
 
     println!("Configuration:");

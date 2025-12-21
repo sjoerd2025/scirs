@@ -65,7 +65,9 @@ mod tests {
     #[test]
     fn test_text_classification_pipeline() {
         let pipeline = TextClassificationPipeline::new();
-        let results = pipeline.predict("This is a great movie!").unwrap();
+        let results = pipeline
+            .predict("This is a great movie!")
+            .expect("Operation failed");
         assert_eq!(results.len(), 2);
         assert!(results[0].score >= 0.0 && results[0].score <= 1.0);
     }
@@ -76,7 +78,7 @@ mod tests {
         let labels = ["positive", "negative", "neutral"];
         let results = pipeline
             .classify("This is a wonderful day", &labels)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(results.len(), 3);
         assert!(results[0].score >= results[1].score);
         assert!(results[1].score >= results[2].score);
@@ -88,7 +90,9 @@ mod tests {
         let context = "The quick brown fox jumps over the lazy dog.";
         let question = "What jumps over the dog?";
 
-        let result = pipeline.answer(question, context).unwrap();
+        let result = pipeline
+            .answer(question, context)
+            .expect("Operation failed");
         assert!(!result.answer.is_empty());
         assert!(result.score > 0.0);
         assert!(result.start < result.end);
@@ -99,29 +103,35 @@ mod tests {
         let config = HfConfig::default();
         let adapter = HfModelAdapter::new(config);
 
-        let text_class_pipeline = adapter.create_pipeline("text-classification").unwrap();
+        let text_class_pipeline = adapter
+            .create_pipeline("text-classification")
+            .expect("Operation failed");
         assert!(matches!(
             text_class_pipeline,
             HfPipeline::TextClassification(_)
         ));
 
-        let zero_shot_pipeline = adapter.create_pipeline("zero-shot-classification").unwrap();
+        let zero_shot_pipeline = adapter
+            .create_pipeline("zero-shot-classification")
+            .expect("Operation failed");
         assert!(matches!(
             zero_shot_pipeline,
             HfPipeline::ZeroShotClassification(_)
         ));
 
-        let qa_pipeline = adapter.create_pipeline("question-answering").unwrap();
+        let qa_pipeline = adapter
+            .create_pipeline("question-answering")
+            .expect("Operation failed");
         assert!(matches!(qa_pipeline, HfPipeline::QuestionAnswering(_)));
     }
 
     #[test]
     fn test_hub_list_models() {
         let hub = HfHub::new();
-        let models = hub.list_models(None).unwrap();
+        let models = hub.list_models(None).expect("Operation failed");
         assert!(!models.is_empty());
 
-        let filtered = hub.list_models(Some("bert")).unwrap();
+        let filtered = hub.list_models(Some("bert")).expect("Operation failed");
         assert!(filtered.iter().any(|m| m.contains("bert")));
     }
 
@@ -148,7 +158,9 @@ mod tests {
     #[test]
     fn test_feature_extraction() {
         let pipeline = FeatureExtractionPipeline::new();
-        let features = pipeline.extract_features("Hello world").unwrap();
+        let features = pipeline
+            .extract_features("Hello world")
+            .expect("Operation failed");
         assert_eq!(features.shape()[1], 768); // Feature dimension
         assert!(features.shape()[0] > 0); // Sequence length
     }
@@ -156,7 +168,9 @@ mod tests {
     #[test]
     fn test_fill_mask() {
         let pipeline = FillMaskPipeline::new();
-        let results = pipeline.fill_mask("The quick [MASK] fox").unwrap();
+        let results = pipeline
+            .fill_mask("The quick [MASK] fox")
+            .expect("Operation failed");
         assert!(!results.is_empty());
         assert!(!results[0].sequence.contains("[MASK]"));
     }
@@ -165,7 +179,7 @@ mod tests {
     fn test_summarization() {
         let pipeline = SummarizationPipeline::new();
         let text = "This is a long text that needs to be summarized. It contains multiple sentences with various information.";
-        let result = pipeline.summarize(text).unwrap();
+        let result = pipeline.summarize(text).expect("Operation failed");
         assert!(!result.summary_text.is_empty());
         assert!(result.summary_text.len() <= text.len());
     }
@@ -173,7 +187,7 @@ mod tests {
     #[test]
     fn test_translation() {
         let pipeline = TranslationPipeline::new();
-        let result = pipeline.translate("hello world").unwrap();
+        let result = pipeline.translate("hello world").expect("Operation failed");
         assert!(!result.translation_text.is_empty());
     }
 
@@ -182,14 +196,16 @@ mod tests {
         let pipeline = TokenClassificationPipeline::new();
         let results = pipeline
             .classify_tokens("John works at Microsoft in Seattle")
-            .unwrap();
+            .expect("Operation failed");
         assert!(!results.is_empty());
     }
 
     #[test]
     fn test_text_generation() {
         let pipeline = TextGenerationPipeline::new();
-        let results = pipeline.generate("The weather today is").unwrap();
+        let results = pipeline
+            .generate("The weather today is")
+            .expect("Operation failed");
         assert!(!results.is_empty());
         assert!(results[0]
             .generated_text

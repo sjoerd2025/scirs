@@ -64,10 +64,10 @@ pub struct StreamingAnalyzer<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> StreamingAnalyzer<F> {
     /// Create new streaming analyzer with default configuration
     pub fn new(config: StreamConfig) -> Result<Self> {
-        let ewma = EWMA::new(F::from(0.1).unwrap())?;
+        let ewma = EWMA::new(F::from(0.1).expect("Failed to convert constant to float"))?;
         let cusum = CusumDetector::new(
-            F::from(config.change_detection_threshold).unwrap(),
-            F::from(0.5).unwrap(),
+            F::from(config.change_detection_threshold).expect("Failed to convert to float"),
+            F::from(0.5).expect("Failed to convert constant to float"),
         );
 
         let window_size = config.window_size;
@@ -139,10 +139,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> StreamingAnalyzer<F> {
     /// Reset the analyzer state
     pub fn reset(&mut self) {
         self.stats = OnlineStats::new();
-        self.ewma = EWMA::new(F::from(0.1).unwrap()).unwrap();
+        self.ewma = EWMA::new(F::from(0.1).expect("Failed to convert constant to float"))
+            .expect("Operation failed");
         self.cusum = CusumDetector::new(
-            F::from(self.config.change_detection_threshold).unwrap(),
-            F::from(0.5).unwrap(),
+            F::from(self.config.change_detection_threshold).expect("Failed to convert to float"),
+            F::from(0.5).expect("Failed to convert constant to float"),
         );
         self.buffer.clear();
         self.last_update = Instant::now();
@@ -194,7 +195,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> StreamingAnalyzer<F> {
         let z_score = ((value - mean) / std_dev).abs();
 
         // Consider outlier if z-score > 3
-        z_score > F::from(3.0).unwrap()
+        z_score > F::from(3.0).expect("Failed to convert constant to float")
     }
 
     /// Simple forecast method (compatibility)
@@ -248,11 +249,13 @@ mod tests {
     #[test]
     fn test_streaming_analyzer_basic() {
         let config = StreamConfig::default();
-        let mut analyzer = StreamingAnalyzer::<f64>::new(config).unwrap();
+        let mut analyzer = StreamingAnalyzer::<f64>::new(config).expect("Operation failed");
 
         // Add some observations
         for i in 1..=10 {
-            analyzer.add_observation(i as f64).unwrap();
+            analyzer
+                .add_observation(i as f64)
+                .expect("Operation failed");
         }
 
         // Check statistics
@@ -266,14 +269,14 @@ mod tests {
     #[test]
     fn test_streaming_analyzer_ewma() {
         let config = StreamConfig::default();
-        let mut analyzer = StreamingAnalyzer::<f64>::new(config).unwrap();
+        let mut analyzer = StreamingAnalyzer::<f64>::new(config).expect("Operation failed");
 
-        analyzer.add_observation(10.0).unwrap();
-        let ewma1 = analyzer.get_ewma().unwrap();
+        analyzer.add_observation(10.0).expect("Operation failed");
+        let ewma1 = analyzer.get_ewma().expect("Operation failed");
         assert_abs_diff_eq!(ewma1, 10.0);
 
-        analyzer.add_observation(20.0).unwrap();
-        let ewma2 = analyzer.get_ewma().unwrap();
+        analyzer.add_observation(20.0).expect("Operation failed");
+        let ewma2 = analyzer.get_ewma().expect("Operation failed");
         // EWMA should be between 10 and 20
         assert!(ewma2 > 10.0);
         assert!(ewma2 < 20.0);
@@ -283,19 +286,21 @@ mod tests {
     fn test_streaming_analyzer_buffer() {
         let mut config = StreamConfig::default();
         config.window_size = 3;
-        let mut analyzer = StreamingAnalyzer::<f64>::new(config).unwrap();
+        let mut analyzer = StreamingAnalyzer::<f64>::new(config).expect("Operation failed");
 
         // Add more data than buffer size
         for i in 1..=5 {
-            analyzer.add_observation(i as f64).unwrap();
+            analyzer
+                .add_observation(i as f64)
+                .expect("Operation failed");
         }
 
         let buffer = analyzer.get_buffer();
         assert_eq!(buffer.len(), 3);
         // Should contain last 3 observations
-        assert_eq!(*buffer.get(0).unwrap(), 3.0);
-        assert_eq!(*buffer.get(1).unwrap(), 4.0);
-        assert_eq!(*buffer.get(2).unwrap(), 5.0);
+        assert_eq!(*buffer.get(0).expect("Operation failed"), 3.0);
+        assert_eq!(*buffer.get(1).expect("Operation failed"), 4.0);
+        assert_eq!(*buffer.get(2).expect("Operation failed"), 5.0);
     }
 
     #[test]
@@ -303,11 +308,13 @@ mod tests {
         let mut config = StreamConfig::default();
         config.window_size = 1000;
         config.memory_threshold = 50;
-        let mut analyzer = StreamingAnalyzer::<f64>::new(config).unwrap();
+        let mut analyzer = StreamingAnalyzer::<f64>::new(config).expect("Operation failed");
 
         // Add many observations to exceed memory threshold
         for i in 1..=100 {
-            analyzer.add_observation(i as f64).unwrap();
+            analyzer
+                .add_observation(i as f64)
+                .expect("Operation failed");
         }
 
         analyzer.cleanup_memory();

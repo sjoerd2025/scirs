@@ -35,9 +35,9 @@ use std::f64::consts::PI;
 /// ```rust
 /// use scirs2_signal::lti::{systems::TransferFunction, analysis::bode};
 ///
-/// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+/// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
 /// let freqs = vec![0.1, 1.0, 10.0];
-/// let (w, mag, phase) = bode(&tf, Some(&freqs)).unwrap();
+/// let (w, mag, phase) = bode(&tf, Some(&freqs)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn bode<T: LtiSystem>(
@@ -201,8 +201,8 @@ pub struct KalmanDecomposition {
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
-/// ).unwrap();
-/// let analysis = analyze_controllability(&ss).unwrap();
+/// ).expect("Operation failed");
+/// let analysis = analyze_controllability(&ss).expect("Operation failed");
 /// assert!(analysis.is_controllable);
 /// ```
 #[allow(dead_code)]
@@ -279,8 +279,8 @@ pub fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityA
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
-/// ).unwrap();
-/// let analysis = analyze_observability(&ss).unwrap();
+/// ).expect("Operation failed");
+/// let analysis = analyze_observability(&ss).expect("Operation failed");
 /// assert!(analysis.is_observable);
 /// ```
 #[allow(dead_code)]
@@ -355,8 +355,8 @@ pub fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityAnaly
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
-/// ).unwrap();
-/// let analysis = analyze_control_observability(&ss).unwrap();
+/// ).expect("Operation failed");
+/// let analysis = analyze_control_observability(&ss).expect("Operation failed");
 /// assert!(analysis.is_minimal);
 /// ```
 #[allow(dead_code)]
@@ -423,8 +423,8 @@ pub type GramianPair = (Vec<Vec<f64>>, Vec<Vec<f64>>);
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
-/// ).unwrap();
-/// let (wc, wo) = compute_lyapunov_gramians(&ss).unwrap();
+/// ).expect("Operation failed");
+/// let (wc, wo) = compute_lyapunov_gramians(&ss).expect("Operation failed");
 /// ```
 #[allow(clippy::needless_range_loop)]
 #[allow(dead_code)]
@@ -544,8 +544,8 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
 /// let ss = StateSpace::new(
 ///     vec![-1.0, 0.0, 1.0, -2.0], vec![1.0, 0.0],
 ///     vec![1.0, 0.0], vec![0.0], None
-/// ).unwrap();
-/// let decomp = complete_kalman_decomposition(&ss).unwrap();
+/// ).expect("Operation failed");
+/// let decomp = complete_kalman_decomposition(&ss).expect("Operation failed");
 /// assert!(decomp.co_dimension + decomp.c_no_dimension + decomp.nc_o_dimension + decomp.nc_no_dimension == 2);
 /// ```
 #[allow(dead_code)]
@@ -673,9 +673,9 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
 /// ```rust
 /// use scirs2_signal::lti::{systems::TransferFunction, analysis::systems_equivalent};
 ///
-/// let tf1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
-/// let tf2 = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).unwrap();
-/// assert!(systems_equivalent(&tf1, &tf2, 1e-6).unwrap());
+/// let tf1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+/// let tf2 = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).expect("Operation failed");
+/// assert!(systems_equivalent(&tf1, &tf2, 1e-6).expect("Operation failed"));
 /// ```
 #[allow(dead_code)]
 pub fn systems_equivalent(
@@ -1058,11 +1058,11 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Create a simple first-order system H(s) = 1 / (s + 1)
-        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
 
         // Compute Bode plot at omega = 0.1, 1, 10
         let freqs = vec![0.1, 1.0, 10.0];
-        let (w, mag, phase) = bode(&tf, Some(&freqs)).unwrap();
+        let (w, mag, phase) = bode(&tf, Some(&freqs)).expect("Operation failed");
 
         // Check frequencies
         assert_eq!(w.len(), 3);
@@ -1091,9 +1091,9 @@ mod tests {
             vec![0.0],  // D = [0]
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let analysis = analyze_controllability(&ss).unwrap();
+        let analysis = analyze_controllability(&ss).expect("Operation failed");
         assert!(analysis.is_controllable);
         assert_eq!(analysis.controllability_rank, 1);
         assert_eq!(analysis.state_dimension, 1);
@@ -1109,9 +1109,9 @@ mod tests {
             vec![0.0],  // D = [0]
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let analysis = analyze_observability(&ss).unwrap();
+        let analysis = analyze_observability(&ss).expect("Operation failed");
         assert!(analysis.is_observable);
         assert_eq!(analysis.observability_rank, 1);
         assert_eq!(analysis.state_dimension, 1);
@@ -1127,9 +1127,9 @@ mod tests {
             vec![0.0],  // D = [0]
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let analysis = analyze_control_observability(&ss).unwrap();
+        let analysis = analyze_control_observability(&ss).expect("Operation failed");
         assert!(analysis.is_minimal);
         assert_eq!(analysis.kalman_structure.co_dimension, 1);
         assert_eq!(analysis.kalman_structure.c_no_dimension, 0);
@@ -1140,25 +1140,25 @@ mod tests {
     #[test]
     fn test_systems_equivalence() {
         // Create two equivalent systems (same after normalization)
-        let tf1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
-        let tf2 = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).unwrap();
+        let tf1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+        let tf2 = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).expect("Operation failed");
 
-        assert!(systems_equivalent(&tf1, &tf2, 1e-6).unwrap());
+        assert!(systems_equivalent(&tf1, &tf2, 1e-6).expect("Operation failed"));
 
         // Create two different systems
-        let tf3 = TransferFunction::new(vec![1.0], vec![1.0, 2.0], None).unwrap();
-        assert!(!systems_equivalent(&tf1, &tf3, 1e-6).unwrap());
+        let tf3 = TransferFunction::new(vec![1.0], vec![1.0, 2.0], None).expect("Operation failed");
+        assert!(!systems_equivalent(&tf1, &tf3, 1e-6).expect("Operation failed"));
     }
 
     #[test]
     fn test_matrix_rank() {
         // Test rank of identity matrix
         let identity = vec![vec![1.0, 0.0], vec![0.0, 1.0]];
-        assert_eq!(matrix_rank(&identity).unwrap(), 2);
+        assert_eq!(matrix_rank(&identity).expect("Operation failed"), 2);
 
         // Test rank of singular matrix
         let singular = vec![vec![1.0, 2.0], vec![2.0, 4.0]];
-        assert_eq!(matrix_rank(&singular).unwrap(), 1);
+        assert_eq!(matrix_rank(&singular).expect("Operation failed"), 1);
     }
 
     #[test]
@@ -1166,7 +1166,7 @@ mod tests {
         let a = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
         let b = vec![vec![5.0, 6.0], vec![7.0, 8.0]];
 
-        let result = matrix_multiply(&a, &b).unwrap();
+        let result = matrix_multiply(&a, &b).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].len(), 2);
         assert_relative_eq!(result[0][0], 19.0);
@@ -1178,5 +1178,5 @@ mod tests {
 
 #[allow(dead_code)]
 fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(num, den, None).unwrap()
+    TransferFunction::new(num, den, None).expect("Operation failed")
 }

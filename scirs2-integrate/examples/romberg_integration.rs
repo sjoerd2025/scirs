@@ -11,7 +11,7 @@ fn main() {
     println!("Example 1: Integrate x^2 from 0 to 1");
     println!("Exact value: {}", 1.0 / 3.0);
 
-    let result = romberg(|x: f64| x * x, 0.0, 1.0, None).unwrap();
+    let result = romberg(|x: f64| x * x, 0.0, 1.0, None).expect("Operation failed");
     println!("Romberg result: {:.15}", result.value);
     println!("Estimated error: {:.1e}", result.abs_error);
     println!("Number of iterations: {}", result.n_iters);
@@ -32,7 +32,7 @@ fn main() {
     println!("Example 2: Integrate sin(x) from 0 to π");
     println!("Exact value: {}", 2.0);
 
-    let result = romberg(|x: f64| x.sin(), 0.0, PI, None).unwrap();
+    let result = romberg(|x: f64| x.sin(), 0.0, PI, None).expect("Operation failed");
     println!("Romberg result: {:.15}", result.value);
     println!("Absolute error: {:.1e}", (result.value - 2.0).abs());
     println!("Estimated error: {:.1e}", result.abs_error);
@@ -56,7 +56,7 @@ fn main() {
 
     // Avoid the singularity at x=0 by starting from a small positive value
     let epsilon = 1e-10;
-    let result = romberg(|x: f64| x.ln(), epsilon, 1.0, Some(options)).unwrap();
+    let result = romberg(|x: f64| x.ln(), epsilon, 1.0, Some(options)).expect("Operation failed");
 
     println!("Romberg result: {:.15}", result.value);
     println!("Absolute error: {:.1e}", (result.value - (-1.0)).abs());
@@ -75,7 +75,7 @@ fn main() {
         &[(0.0, PI / 2.0), (0.0, PI / 2.0)],
         None,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("∫∫cos(x+y) dxdy over [0,π/2]²:");
     println!("  Calculated: {result_2d:.15}");
@@ -87,7 +87,7 @@ fn main() {
     println!("Example 5: Integrate cos(10x) from 0 to 2π");
     println!("Exact value: {}", 0.0); // Integral of cos(10x) over a full period is 0
 
-    let result = romberg(|x: f64| (10.0 * x).cos(), 0.0, 2.0 * PI, None).unwrap();
+    let result = romberg(|x: f64| (10.0 * x).cos(), 0.0, 2.0 * PI, None).expect("Operation failed");
     println!("Romberg result: {:.15}", result.value);
     println!("Absolute error: {:.1e}", result.value.abs());
     println!("Estimated error: {:.1e}", result.abs_error);

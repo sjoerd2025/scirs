@@ -12,7 +12,7 @@ fn generate_signal(size: usize) -> Vec<f64> {
     let fs = 1000.0; // Sample rate in Hz
     let t = (0..size).map(|i| i as f64 / fs).collect::<Vec<f64>>();
     // Return the signal
-    chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap()
+    chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).expect("Test: operation failed")
 }
 
 #[allow(dead_code)]
@@ -40,19 +40,31 @@ fn bench_wavelets_single_level(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("{}_decompose", name), size),
                 &size,
-                |b, &size| b.iter(|| black_box(dwt_decompose(&signal, *wavelet, None).unwrap())),
+                |b, &size| {
+                    b.iter(|| {
+                        black_box(
+                            dwt_decompose(&signal, *wavelet, None).expect("Test: operation failed"),
+                        )
+                    })
+                },
             );
 
             // Also benchmark reconstruction
             // First get coefficients
-            let (approx, detail) = dwt_decompose(&signal, *wavelet, None).unwrap();
+            let (approx, detail) =
+                dwt_decompose(&signal, *wavelet, None).expect("Test: operation failed");
 
             // Benchmark reconstruction
             group.bench_with_input(
                 BenchmarkId::new(format!("{}_reconstruct", name), size),
                 &size,
                 |b, &size| {
-                    b.iter(|| black_box(dwt_reconstruct(&approx, &detail, *wavelet).unwrap()))
+                    b.iter(|| {
+                        black_box(
+                            dwt_reconstruct(&approx, &detail, *wavelet)
+                                .expect("Test: operation failed"),
+                        )
+                    })
                 },
             );
         }
@@ -95,18 +107,28 @@ fn bench_wavelets_multi_level(c: &mut Criterion) {
                     BenchmarkId::new(format!("{}_decompose", level_name), size),
                     &size,
                     |b, &size| {
-                        b.iter(|| black_box(wavedec(&signal, *wavelet, Some(level), None).unwrap()))
+                        b.iter(|| {
+                            black_box(
+                                wavedec(&signal, *wavelet, Some(level), None)
+                                    .expect("Test: operation failed"),
+                            )
+                        })
                     },
                 );
 
                 // Get coefficients for reconstruction benchmark
-                let coeffs = wavedec(&signal, *wavelet, Some(level), None).unwrap();
+                let coeffs =
+                    wavedec(&signal, *wavelet, Some(level), None).expect("Test: operation failed");
 
                 // Benchmark multi-level reconstruction
                 group.bench_with_input(
                     BenchmarkId::new(format!("{}_reconstruct", level_name), size),
                     &size,
-                    |b, &size| b.iter(|| black_box(waverec(&coeffs, *wavelet).unwrap())),
+                    |b, &size| {
+                        b.iter(|| {
+                            black_box(waverec(&coeffs, *wavelet).expect("Test: operation failed"))
+                        })
+                    },
                 );
             }
         }
@@ -148,12 +170,18 @@ fn bench_stationary_wavelet_transform(c: &mut Criterion) {
                     BenchmarkId::new(format!("{}_swt_decompose", level_name), size),
                     &size,
                     |b, &size| {
-                        b.iter(|| black_box(swt_decompose(&signal, *wavelet, level, None).unwrap()))
+                        b.iter(|| {
+                            black_box(
+                                swt_decompose(&signal, *wavelet, level, None)
+                                    .expect("Test: operation failed"),
+                            )
+                        })
                     },
                 );
 
                 // Get coefficients for reconstruction benchmark
-                let (approx, detail) = swt_decompose(&signal, *wavelet, level, None).unwrap();
+                let (approx, detail) =
+                    swt_decompose(&signal, *wavelet, level, None).expect("Test: operation failed");
 
                 // Benchmark single-level SWT reconstruction
                 group.bench_with_input(
@@ -161,7 +189,10 @@ fn bench_stationary_wavelet_transform(c: &mut Criterion) {
                     &size,
                     |b, &size| {
                         b.iter(|| {
-                            black_box(swt_reconstruct(&approx, &detail, *wavelet, level).unwrap())
+                            black_box(
+                                swt_reconstruct(&approx, &detail, *wavelet, level)
+                                    .expect("Test: operation failed"),
+                            )
                         })
                     },
                 );
@@ -173,18 +204,31 @@ fn bench_stationary_wavelet_transform(c: &mut Criterion) {
                         BenchmarkId::new(format!("{}_full_swt", level_name), size),
                         &size,
                         |b, &size| {
-                            b.iter(|| black_box(swt(&signal, *wavelet, level, None).unwrap()))
+                            b.iter(|| {
+                                black_box(
+                                    swt(&signal, *wavelet, level, None)
+                                        .expect("Test: operation failed"),
+                                )
+                            })
                         },
                     );
 
                     // Get coefficients for multi-level reconstruction benchmark
-                    let (details, approx) = swt(&signal, *wavelet, level, None).unwrap();
+                    let (details, approx) =
+                        swt(&signal, *wavelet, level, None).expect("Test: operation failed");
 
                     // Benchmark multi-level SWT reconstruction
                     group.bench_with_input(
                         BenchmarkId::new(format!("{}_full_iswt", level_name), size),
                         &size,
-                        |b, &size| b.iter(|| black_box(iswt(&details, &approx, *wavelet).unwrap())),
+                        |b, &size| {
+                            b.iter(|| {
+                                black_box(
+                                    iswt(&details, &approx, *wavelet)
+                                        .expect("Test: operation failed"),
+                                )
+                            })
+                        },
                     );
                 }
             }
@@ -229,12 +273,12 @@ fn bench_wavelet_packet_transform(c: &mut Criterion) {
                 //     BenchmarkId::new(format!("{}_wp_decompose", level_name), size),
                 //     &size,
                 //     |b_| {
-                //         b.iter(|| black_box(wp_decompose(&signal, *wavelet, level, None).unwrap()))
+                //         b.iter(|| black_box(wp_decompose(&signal, *wavelet, level, None).expect("Test: operation failed")))
                 //     },
                 // );
                 //
                 // // Get tree for reconstruction benchmark
-                // let tree = wp_decompose(&signal, *wavelet, level, None).unwrap();
+                // let tree = wp_decompose(&signal, *wavelet, level, None).expect("Test: operation failed");
                 //
                 // // Create nodes list for level-based reconstruction
                 // let mut nodes = Vec::new();
@@ -246,7 +290,7 @@ fn bench_wavelet_packet_transform(c: &mut Criterion) {
                 // group.bench_with_input(
                 //     BenchmarkId::new(format!("{}_wp_reconstruct", level_name), size),
                 //     &size,
-                //     |b_| b.iter(|| black_box(reconstruct_from_nodes(&tree, &nodes).unwrap())),
+                //     |b_| b.iter(|| black_box(reconstruct_from_nodes(&tree, &nodes).expect("Test: operation failed"))),
                 // );
             }
         }

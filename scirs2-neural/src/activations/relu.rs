@@ -20,7 +20,7 @@ use std::fmt::Debug;
 /// use scirs2_core::ndarray::Array;
 /// let relu = ReLU::new();
 /// let input = Array::from_vec(vec![1.0, -1.0, 2.0, -2.0]).into_dyn();
-/// let output = relu.forward(&input).unwrap();
+/// let output = relu.forward(&input).expect("Operation failed");
 /// assert_eq!(output, Array::from_vec(vec![1.0, 0.0, 2.0, 0.0]).into_dyn());
 #[derive(Debug, Clone, Copy)]
 pub struct ReLU {
@@ -183,7 +183,7 @@ impl<F: Float + Debug> Activation<F> for ReLU {
 /// f(x) = max(alpha*x, x) or f(x) = x if x > 0, alpha*x otherwise
 /// use scirs2_neural::activations::LeakyReLU;
 /// let leaky_relu = LeakyReLU::new(0.01);
-/// let output = leaky_relu.forward(&input).unwrap();
+/// let output = leaky_relu.forward(&input).expect("Operation failed");
 /// assert_eq!(output, Array::from_vec(vec![1.0, -0.01, 2.0, -0.02]).into_dyn());
 pub struct LeakyReLU {
     /// Alpha parameter for leaky ReLU (small positive value)
@@ -230,7 +230,7 @@ mod tests {
     fn test_relu_simd_f64_1d() {
         let relu = ReLU::new();
         let input = Array::from_vec(vec![-2.0, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![0.0, 0.0, 0.0, 1.0, 2.0]).into_dyn();
         assert_eq!(output, expected);
     }
@@ -239,7 +239,7 @@ mod tests {
     fn test_relu_simd_f32_1d() {
         let relu = ReLU::new();
         let input = Array::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![0.0f32, 0.0, 0.0, 1.0, 2.0]).into_dyn();
         assert_eq!(output, expected);
     }
@@ -248,7 +248,7 @@ mod tests {
     fn test_leaky_relu_simd_f64_1d() {
         let relu = ReLU::leaky(0.01);
         let input = Array::from_vec(vec![-2.0, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![-0.02, -0.01, 0.0, 1.0, 2.0]).into_dyn();
         for (a, b) in output.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);
@@ -259,7 +259,7 @@ mod tests {
     fn test_leaky_relu_simd_f32_1d() {
         let relu = ReLU::leaky(0.01);
         let input = Array::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![-0.02f32, -0.01, 0.0, 1.0, 2.0]).into_dyn();
         for (a, b) in output.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-6);
@@ -272,7 +272,7 @@ mod tests {
         let relu = ReLU::new();
         let input: Vec<f64> = (0..10000).map(|i| i as f64 - 5000.0).collect();
         let input_arr = Array::from_vec(input.clone()).into_dyn();
-        let output = relu.forward(&input_arr).unwrap();
+        let output = relu.forward(&input_arr).expect("Operation failed");
 
         // Verify correctness
         for (i, &val) in output.iter().enumerate() {
@@ -287,7 +287,7 @@ mod tests {
         let relu = ReLU::leaky(0.01);
         let input: Vec<f32> = (0..10000).map(|i| i as f32 - 5000.0).collect();
         let input_arr = Array::from_vec(input.clone()).into_dyn();
-        let output = relu.forward(&input_arr).unwrap();
+        let output = relu.forward(&input_arr).expect("Operation failed");
 
         // Verify correctness
         for (i, &val) in output.iter().enumerate() {
@@ -301,11 +301,11 @@ mod tests {
         // Test that 2D arrays still work (using generic fallback)
         let relu = ReLU::new();
         let input = Array::from_shape_vec((2, 3), vec![-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_shape_vec((2, 3), vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         assert_eq!(output, expected);
     }
@@ -315,7 +315,7 @@ mod tests {
         // Test LeakyReLU wrapper struct
         let leaky_relu = LeakyReLU::new(0.01);
         let input = Array::from_vec(vec![-2.0, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = leaky_relu.forward(&input).unwrap();
+        let output = leaky_relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![-0.02, -0.01, 0.0, 1.0, 2.0]).into_dyn();
         for (a, b) in output.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);
@@ -327,7 +327,7 @@ mod tests {
         let relu = ReLU::new();
         let output = Array::from_vec(vec![0.0, 0.0, 0.0, 1.0, 2.0]).into_dyn();
         let grad_output = Array::from_vec(vec![1.0, 1.0, 1.0, 1.0, 1.0]).into_dyn();
-        let grad_input = relu.backward(&grad_output, &output).unwrap();
+        let grad_input = relu.backward(&grad_output, &output).expect("Operation failed");
         let expected = Array::from_vec(vec![0.0, 0.0, 0.0, 1.0, 1.0]).into_dyn();
         assert_eq!(grad_input, expected);
     }
@@ -337,7 +337,7 @@ mod tests {
         let relu = ReLU::leaky(0.01);
         let output = Array::from_vec(vec![-0.02, -0.01, 0.0, 1.0, 2.0]).into_dyn();
         let grad_output = Array::from_vec(vec![1.0, 1.0, 1.0, 1.0, 1.0]).into_dyn();
-        let grad_input = relu.backward(&grad_output, &output).unwrap();
+        let grad_input = relu.backward(&grad_output, &output).expect("Operation failed");
         let expected = Array::from_vec(vec![0.01, 0.01, 0.01, 1.0, 1.0]).into_dyn();
         for (a, b) in grad_input.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);

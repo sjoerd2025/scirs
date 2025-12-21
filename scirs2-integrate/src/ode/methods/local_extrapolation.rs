@@ -35,10 +35,10 @@ impl<F: IntegrateFloat> Default for ExtrapolationOptions<F> {
             max_order: 10,
             min_order: 3,
             base_method: ExtrapolationBaseMethod::ModifiedMidpoint,
-            extrapolation_tol: F::from_f64(1e-12).unwrap(),
-            safety_factor: F::from_f64(0.9).unwrap(),
-            max_increase_factor: F::from_f64(1.5).unwrap(),
-            max_decrease_factor: F::from_f64(0.5).unwrap(),
+            extrapolation_tol: F::from_f64(1e-12).expect("Operation failed"),
+            safety_factor: F::from_f64(0.9).expect("Operation failed"),
+            max_increase_factor: F::from_f64(1.5).expect("Operation failed"),
+            max_decrease_factor: F::from_f64(0.5).expect("Operation failed"),
         }
     }
 }
@@ -105,17 +105,17 @@ where
     // Initialize step size
     let mut h = opts.h0.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap()
+        _span / F::from_usize(100).expect("Operation failed")
     });
 
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span / F::from_usize(1_000_000).unwrap()
+        _span / F::from_usize(1_000_000).expect("Operation failed")
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span / F::from_usize(10).unwrap()
+        _span / F::from_usize(10).expect("Operation failed")
     });
 
     // Storage for solution
@@ -156,8 +156,11 @@ where
             // Adjust step size for next step (conservative approach)
             if result.converged && result.final_order >= ext_options.min_order {
                 h *= ext_options.max_increase_factor.min(
-                    (tolerance / error_estimate.max(F::from_f64(1e-14).unwrap()))
-                        .powf(F::one() / F::from_usize(result.final_order + 1).unwrap())
+                    (tolerance / error_estimate.max(F::from_f64(1e-14).expect("Operation failed")))
+                        .powf(
+                            F::one()
+                                / F::from_usize(result.final_order + 1).expect("Operation failed"),
+                        )
                         * ext_options.safety_factor,
                 );
             }
@@ -165,9 +168,9 @@ where
             // Reject step
             rejected_steps += 1;
             h *= ext_options.max_decrease_factor.max(
-                (tolerance / error_estimate)
-                    .powf(F::one() / F::from_usize(result.final_order + 1).unwrap())
-                    * ext_options.safety_factor,
+                (tolerance / error_estimate).powf(
+                    F::one() / F::from_usize(result.final_order + 1).expect("Operation failed"),
+                ) * ext_options.safety_factor,
             );
         }
 
@@ -238,7 +241,7 @@ where
         }
 
         // Compute solution with n_steps substeps
-        let h_sub = h / F::from_usize(n_steps).unwrap();
+        let h_sub = h / F::from_usize(n_steps).expect("Operation failed");
         let y_approx = match options.base_method {
             ExtrapolationBaseMethod::ModifiedMidpoint => {
                 modified_midpoint_sequence(f, t, y, h_sub, n_steps)?
@@ -265,11 +268,12 @@ where
 
             // For step sequence [2, 4, 6, ...], the extrapolation formula is:
             // T[i,j] = T[i,j-1] + (T[i,j-1] - T[i-1,j-1]) / ((n_i/n_{i-1})^{2j} - 1)
-            let ratio = F::from_usize(step_sequence[i]).unwrap()
-                / F::from_usize(step_sequence[i - 1]).unwrap();
-            let denominator = ratio.powf(F::from_usize(2 * j).unwrap()) - F::one();
+            let ratio = F::from_usize(step_sequence[i]).expect("Operation failed")
+                / F::from_usize(step_sequence[i - 1]).expect("Operation failed");
+            let denominator =
+                ratio.powf(F::from_usize(2 * j).expect("Operation failed")) - F::one();
 
-            if denominator.abs() > F::from_f64(1e-14).unwrap() {
+            if denominator.abs() > F::from_f64(1e-14).expect("Operation failed") {
                 table[[i, j]] =
                     table[[i, j - 1]] + (table[[i, j - 1]] - table[[i - 1, j - 1]]) / denominator;
             } else {
@@ -350,7 +354,7 @@ where
     // Subsequent _steps: y_{k+1} = y_{k-1} + 2h * f(t_k, y_k)
     for _ in 1..n_steps {
         let dy = f(t, y.view());
-        let y_next = &y_prev + &dy * (F::from_f64(2.0).unwrap() * h_sub);
+        let y_next = &y_prev + &dy * (F::from_f64(2.0).expect("Operation failed") * h_sub);
         y_prev = y.clone();
         y = y_next;
         t += h_sub;
@@ -359,7 +363,7 @@ where
     // Final averaging step for stability: y_final = 0.5 * (y_n + y_{n-1} + h * f(t_n, y_n))
     if n_steps > 1 {
         let dy = f(t, y.view());
-        y = (&y + &y_prev + &dy * h_sub) * F::from_f64(0.5).unwrap();
+        y = (&y + &y_prev + &dy * h_sub) * F::from_f64(0.5).expect("Operation failed");
     }
 
     Ok(y)
@@ -405,8 +409,8 @@ where
 {
     let mut y = y0.clone();
     let mut t = t0;
-    let h_half = h_sub * F::from_f64(0.5).unwrap();
-    let h_sixth = h_sub / F::from_f64(6.0).unwrap();
+    let h_half = h_sub * F::from_f64(0.5).expect("Operation failed");
+    let h_sixth = h_sub / F::from_f64(6.0).expect("Operation failed");
 
     for _ in 0..n_steps {
         let k1 = f(t, y.view());
@@ -415,7 +419,10 @@ where
         let k4 = f(t + h_sub, (&y + &k3 * h_sub).view());
 
         y = &y
-            + (&k1 + &k2 * F::from_f64(2.0).unwrap() + &k3 * F::from_f64(2.0).unwrap() + &k4)
+            + (&k1
+                + &k2 * F::from_f64(2.0).expect("Operation failed")
+                + &k3 * F::from_f64(2.0).expect("Operation failed")
+                + &k4)
                 * h_sixth;
         t += h_sub;
     }
@@ -444,20 +451,21 @@ where
     let y1 = method(f, t, y, h)?;
 
     // Two steps with step size h/2
-    let h_half = h * F::from_f64(0.5).unwrap();
+    let h_half = h * F::from_f64(0.5).expect("Operation failed");
     let y_mid = method(f, t, y, h_half)?;
     let y2 = method(f, t + h_half, &y_mid, h_half)?;
 
     // Richardson extrapolation: y_extrapolated = (4*y2 - y1) / 3
     // This assumes the method has order 2 (like Euler or midpoint)
-    let y_extrapolated = (&y2 * F::from_f64(4.0).unwrap() - &y1) / F::from_f64(3.0).unwrap();
+    let y_extrapolated = (&y2 * F::from_f64(4.0).expect("Operation failed") - &y1)
+        / F::from_f64(3.0).expect("Operation failed");
 
     // Error estimate: |y2 - y1| / 3
     let error_estimate = (&y2 - &y1)
         .iter()
         .map(|&x| x.abs())
         .fold(F::zero(), |a, b| a.max(b))
-        / F::from_f64(3.0).unwrap();
+        / F::from_f64(3.0).expect("Operation failed");
 
     Ok((y_extrapolated, error_estimate))
 }
@@ -475,7 +483,8 @@ mod tests {
         let h = 0.1;
         let n_steps = 10;
 
-        let result = modified_midpoint_sequence(&f, 0.0, &y0, h / n_steps as f64, n_steps).unwrap();
+        let result = modified_midpoint_sequence(&f, 0.0, &y0, h / n_steps as f64, n_steps)
+            .expect("Operation failed");
         let exact = (-h).exp();
 
         // Should be more accurate than simple Euler
@@ -493,10 +502,10 @@ mod tests {
         let f = |_t: f64, y: ArrayView1<f64>| -y.to_owned();
         let result =
             gragg_bulirsch_stoer_method(f, [0.0, h], y0.clone(), ODEOptions::default(), None)
-                .unwrap();
+                .expect("Operation failed");
 
         let exact = (-h).exp();
-        let final_value = result.y.last().unwrap()[0];
+        let final_value = result.y.last().expect("Operation failed")[0];
 
         // GBS should be more accurate than basic methods
         assert!(result.success);

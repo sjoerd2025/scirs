@@ -308,7 +308,7 @@ where
 
     // Check initial point feasibility if bounds are provided
     if let Some(ref bounds) = options.bounds {
-        if !bounds.is_feasible(x0.as_slice().unwrap()) {
+        if !bounds.is_feasible(x0.as_slice().expect("Operation failed")) {
             return Err(OptimizeError::ValueError(
                 "Initial point is not feasible".to_string(),
             ));
@@ -431,7 +431,7 @@ mod tests {
         let result = minimize(quadratic, &x0, Method::BFGS, None);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-6);
         assert_abs_diff_eq!(result.x[1], 0.0, epsilon = 1e-6);

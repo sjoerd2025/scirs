@@ -597,7 +597,7 @@ impl DistributedTopology {
         }
 
         // Simple connectivity check using DFS
-        let start_node = self.nodes.keys().next().unwrap();
+        let start_node = self.nodes.keys().next().expect("Operation failed");
         let mut visited = std::collections::HashSet::new();
         let mut stack = vec![start_node.clone()];
 
@@ -655,7 +655,7 @@ impl<F: Float> NeuromorphicLoadBalancer<F> {
             .collect();
 
         if !active_nodes.is_empty() {
-            let load_per_node = F::one() / F::from(active_nodes.len()).unwrap();
+            let load_per_node = F::one() / F::from(active_nodes.len()).expect("Operation failed");
             for node_id in active_nodes {
                 self.load_distribution.insert(node_id, load_per_node);
             }
@@ -683,7 +683,7 @@ impl<F: Float> LoadBalancingMetrics<F> {
             average_load: F::zero(),
             load_variance: F::zero(),
             efficiency: F::one(),
-            adaptation_speed: F::from(0.5).unwrap(),
+            adaptation_speed: F::from(0.5).expect("Failed to convert constant to float"),
         }
     }
 }

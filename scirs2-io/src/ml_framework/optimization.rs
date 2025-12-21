@@ -62,7 +62,7 @@ impl ModelOptimizer {
 
     fn apply_pruning(&self, mut model: MLModel, sparsity: f32) -> Result<MLModel> {
         for (_, tensor) in model.weights.iter_mut() {
-            let data = tensor.data.as_slice_mut().unwrap();
+            let data = tensor.data.as_slice_mut().expect("Operation failed");
             let threshold = self.compute_pruning_threshold(data, sparsity);
 
             for val in data.iter_mut() {
@@ -77,7 +77,7 @@ impl ModelOptimizer {
 
     fn compute_pruning_threshold(&self, data: &[f32], sparsity: f32) -> f32 {
         let mut sorted: Vec<f32> = data.iter().map(|x| x.abs()).collect();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let idx = (sorted.len() as f32 * sparsity) as usize;
         sorted.get(idx).copied().unwrap_or(0.0)
     }

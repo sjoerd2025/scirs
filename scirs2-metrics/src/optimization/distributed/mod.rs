@@ -137,7 +137,7 @@ impl AdvancedDistributedCoordinator {
 
         // Update cluster state
         {
-            let mut state = self.cluster_state.write().unwrap();
+            let mut state = self.cluster_state.write().expect("Operation failed");
             state.local_node_id = node_id;
             state.cluster_size = peers.len() + 1; // +1 for local node
             state.status = ClusterStatus::Active;
@@ -159,7 +159,7 @@ impl AdvancedDistributedCoordinator {
 
         // Update cluster state
         {
-            let mut state = self.cluster_state.write().unwrap();
+            let mut state = self.cluster_state.write().expect("Operation failed");
             state.status = ClusterStatus::Stopped;
             state.last_updated = SystemTime::now();
         }
@@ -204,7 +204,7 @@ impl AdvancedDistributedCoordinator {
 
         // Update cluster state
         {
-            let mut state = self.cluster_state.write().unwrap();
+            let mut state = self.cluster_state.write().expect("Operation failed");
             state.cluster_size += 1;
             state.last_updated = SystemTime::now();
         }
@@ -222,7 +222,7 @@ impl AdvancedDistributedCoordinator {
 
         // Update cluster state
         {
-            let mut state = self.cluster_state.write().unwrap();
+            let mut state = self.cluster_state.write().expect("Operation failed");
             state.cluster_size = state.cluster_size.saturating_sub(1);
             state.last_updated = SystemTime::now();
         }
@@ -247,13 +247,13 @@ impl AdvancedDistributedCoordinator {
 
     /// Get cluster state
     pub fn get_cluster_state(&self) -> ClusterState {
-        let state = self.cluster_state.read().unwrap();
+        let state = self.cluster_state.read().expect("Operation failed");
         state.clone()
     }
 
     /// Get performance metrics
     pub fn get_performance_metrics(&self) -> ClusterPerformanceMetrics {
-        let metrics = self.performance_metrics.read().unwrap();
+        let metrics = self.performance_metrics.read().expect("Operation failed");
         metrics.clone()
     }
 
@@ -274,7 +274,7 @@ impl AdvancedDistributedCoordinator {
 
     /// Update cluster performance metrics
     pub fn update_performance_metrics(&mut self, metrics: ClusterPerformanceMetrics) {
-        let mut perf_metrics = self.performance_metrics.write().unwrap();
+        let mut perf_metrics = self.performance_metrics.write().expect("Operation failed");
         *perf_metrics = metrics;
     }
 
@@ -672,7 +672,7 @@ mod tests {
         let coordinator = AdvancedDistributedCoordinator::new(config);
         assert!(coordinator.is_ok());
 
-        let coordinator = coordinator.unwrap();
+        let coordinator = coordinator.expect("Operation failed");
         assert_eq!(coordinator.get_status(), CoordinatorStatus::Stopped);
     }
 
@@ -713,13 +713,16 @@ mod tests {
     #[test]
     fn test_coordinator_start_stop() {
         let config = AdvancedClusterConfig::default();
-        let mut coordinator = AdvancedDistributedCoordinator::new(config).unwrap();
+        let mut coordinator =
+            AdvancedDistributedCoordinator::new(config).expect("Operation failed");
 
         let nodes = vec!["node1".to_string(), "node2".to_string()];
-        coordinator.start("node0".to_string(), nodes).unwrap();
+        coordinator
+            .start("node0".to_string(), nodes)
+            .expect("Operation failed");
         assert_eq!(coordinator.get_status(), CoordinatorStatus::Running);
 
-        coordinator.stop().unwrap();
+        coordinator.stop().expect("Operation failed");
         assert_eq!(coordinator.get_status(), CoordinatorStatus::Stopped);
     }
 }

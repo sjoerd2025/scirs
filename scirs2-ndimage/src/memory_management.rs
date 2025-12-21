@@ -341,7 +341,9 @@ mod tests {
         };
 
         let op_wrapper = MemoryEfficientOp::new(config);
-        let result = op_wrapper.execute(&input, SquareOp).unwrap();
+        let result = op_wrapper
+            .execute(&input, SquareOp)
+            .expect("Operation failed");
 
         assert_eq!(result[[0, 0]], 1.0);
         assert_eq!(result[[0, 1]], 4.0);
@@ -370,7 +372,7 @@ mod tests {
 
         let config = MemoryConfig::default();
         let op_wrapper = MemoryEfficientOp::new(config);
-        let result = op_wrapper.execute(&input, op).unwrap();
+        let result = op_wrapper.execute(&input, op).expect("Operation failed");
 
         assert_eq!(result[[0, 0]], 1.0);
         assert_eq!(result[[0, 1]], 2.0);

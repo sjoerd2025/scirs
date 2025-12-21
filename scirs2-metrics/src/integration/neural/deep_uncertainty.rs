@@ -18,6 +18,12 @@ use scirs2_core::numeric::Float;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
+
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + scirs2_core::numeric::FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 use std::iter::Sum;
 
 /// Deep learning uncertainty quantifier
@@ -57,7 +63,7 @@ impl<
     pub fn new() -> Self {
         Self {
             n_mc_dropout_samples: 100,
-            dropout_rate: F::from(0.1).unwrap(),
+            dropout_rate: const_f64::<F>(0.1),
             n_ensemble_members: 5,
             n_tta_samples: 10,
             enable_temperature_scaling: true,
@@ -142,8 +148,8 @@ impl<
         {
             Some(self.compute_neural_temperature_scaling(
                 mc_dropout_model,
-                x_calibration.unwrap(),
-                y_calibration.unwrap(),
+                x_calibration.expect("Calibration data required"),
+                y_calibration.expect("Calibration labels required"),
             )?)
         } else {
             None
@@ -195,7 +201,9 @@ impl<
         }
 
         // Compute statistics
-        let mean_predictions = predictions.mean_axis(Axis(0)).unwrap();
+        let mean_predictions = predictions
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
         let var_predictions = predictions.var_axis(Axis(0), F::zero());
         let std_predictions = var_predictions.mapv(|x| x.sqrt());
 
@@ -239,7 +247,9 @@ impl<
         }
 
         // Compute ensemble statistics
-        let mean_predictions = predictions.mean_axis(Axis(0)).unwrap();
+        let mean_predictions = predictions
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
         let var_predictions = predictions.var_axis(Axis(0), F::zero());
         let std_predictions = var_predictions.mapv(|x| x.sqrt());
 
@@ -289,7 +299,9 @@ impl<
         }
 
         // Compute TTA statistics
-        let mean_predictions = predictions.mean_axis(Axis(0)).unwrap();
+        let mean_predictions = predictions
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
         let std_predictions = predictions.var_axis(Axis(0), F::zero()).mapv(|x| x.sqrt());
 
         // Compute augmentation consistency
@@ -340,7 +352,8 @@ impl<
                 }
             }
             if count > 0 {
-                aleatoric_entropy[i] = sum_entropy / F::from(count).unwrap();
+                aleatoric_entropy[i] =
+                    sum_entropy / F::from(count).expect("Failed to convert to float");
             }
 
             // Epistemic entropy = Total - Aleatoric
@@ -369,7 +382,7 @@ impl<
 
         // Find optimal temperature using gradient descent
         let mut temperature = F::one();
-        let learning_rate = F::from(0.01).unwrap();
+        let learning_rate = const_f64::<F>(0.01);
         let n_iterations = 100;
 
         for _ in 0..n_iterations {
@@ -385,7 +398,7 @@ impl<
                 let y_true = y_calibration[i];
 
                 // Binary cross-entropy loss
-                let eps = F::from(1e-15).unwrap();
+                let eps = const_f64::<F>(1e-15);
                 let prob_clipped = prob.max(eps).min(F::one() - eps);
                 loss = loss
                     - (y_true * prob_clipped.ln()
@@ -400,8 +413,8 @@ impl<
             // Update temperature
             temperature = temperature - learning_rate * grad;
             temperature = temperature
-                .max(F::from(0.01).unwrap())
-                .min(F::from(10.0).unwrap());
+                .max(const_f64::<F>(0.01))
+                .min(const_f64::<F>(10.0));
         }
 
         // Compute calibrated predictions
@@ -453,7 +466,9 @@ impl<
         }
 
         // Compute SWAG statistics
-        let mean_predictions = predictions.mean_axis(Axis(0)).unwrap();
+        let mean_predictions = predictions
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
         let var_predictions = predictions.var_axis(Axis(0), F::zero());
         let std_predictions = var_predictions.mapv(|x| x.sqrt());
 
@@ -545,7 +560,8 @@ impl<
 
         for epoch in 0..n_epochs {
             // Simulate training updates with decreasing learning rate
-            let lr = F::from(0.01).unwrap() / (F::one() + F::from(epoch as f64 * 0.1).unwrap());
+            let lr = const_f64::<F>(0.01)
+                / (F::one() + F::from(epoch as f64 * 0.1).expect("Failed to convert to float"));
 
             // Add training noise and updates
             for weight in &mut current_weights {
@@ -568,7 +584,7 @@ impl<
             diagonal_variance,
             weight_deviations,
             n_epochs,
-            learning_rate_schedule: vec![F::from(0.01).unwrap(); n_epochs],
+            learning_rate_schedule: vec![const_f64::<F>(0.01); n_epochs],
         })
     }
 
@@ -609,7 +625,7 @@ impl<
         // For simplicity, approximate eigenvalues and eigenvectors
         for i in 0..rank {
             let eigenvalue = covariance[[i, i]]; // Diagonal approximation
-            eigenvalues.push(eigenvalue.max(F::from(1e-6).unwrap()));
+            eigenvalues.push(eigenvalue.max(const_f64::<F>(1e-6)));
 
             // Identity-like eigenvectors (simplified)
             eigenvectors[[i, i]] = F::one();
@@ -642,7 +658,9 @@ impl<
             for j in 0..rank {
                 low_rank_component[i] = low_rank_component[i]
                     + eigenvectors[[j, j]] * latent_samples[j]
-                        / F::from(rank as f64).unwrap().sqrt();
+                        / F::from(rank as f64)
+                            .expect("Failed to convert to float")
+                            .sqrt();
             }
         }
 
@@ -658,21 +676,20 @@ impl<
         let mut log_posterior = F::zero();
 
         // Prior component: p(θ) ~ N(0, λI)
-        let prior_precision = F::from(0.01).unwrap();
+        let prior_precision = const_f64::<F>(0.01);
         for &weight in weights {
-            log_posterior =
-                log_posterior - F::from(0.5).unwrap() * prior_precision * weight * weight;
+            log_posterior = log_posterior - const_f64::<F>(0.5) * prior_precision * weight * weight;
         }
 
         // Likelihood component (approximated)
-        let n_data = F::from(1000.0).unwrap(); // Simulated dataset size
-        let noise_precision = F::from(1.0).unwrap();
+        let n_data = const_f64::<F>(1000.0); // Simulated dataset size
+        let noise_precision = const_f64::<F>(1.0);
 
         // Approximate likelihood using SWA statistics
         let weight_deviation_penalty =
             self.compute_deviation_penalty(weights, &swa_stats.mean_weights)?;
         log_posterior = log_posterior
-            - F::from(0.5).unwrap() * noise_precision * n_data * weight_deviation_penalty;
+            - const_f64::<F>(0.5) * noise_precision * n_data * weight_deviation_penalty;
 
         Ok(log_posterior)
     }
@@ -722,7 +739,7 @@ impl<
         }
 
         // Apply diversity enhancement if samples are too similar
-        let min_distance_threshold = F::from(0.01).unwrap();
+        let min_distance_threshold = const_f64::<F>(0.01);
         for i in 0..n_samples {
             let mut too_close_neighbors = 0;
             for j in 0..n_samples {
@@ -733,14 +750,14 @@ impl<
 
             // Add noise to samples that are too close to others
             if too_close_neighbors > n_samples / 4 {
-                let noise_scale = min_distance_threshold * F::from(0.5).unwrap();
+                let noise_scale = min_distance_threshold * const_f64::<F>(0.5);
                 for weight in &mut weight_samples[i].weights {
                     *weight = *weight + self.sample_gaussian() * noise_scale;
                 }
 
                 // Recompute quality after enhancement
                 weight_samples[i].sample_quality.diversity_score =
-                    weight_samples[i].sample_quality.diversity_score * F::from(1.1).unwrap();
+                    weight_samples[i].sample_quality.diversity_score * const_f64::<F>(1.1);
             }
         }
 
@@ -763,7 +780,7 @@ impl<
         let mut weighted_predictions = base_predictions.clone();
 
         // Add noise based on weight sampling
-        let weight_noise_scale = F::from(0.05).unwrap();
+        let weight_noise_scale = const_f64::<F>(0.05);
         for pred in weighted_predictions.iter_mut() {
             let noise = self.sample_gaussian() * weight_noise_scale;
             *pred = *pred + noise;
@@ -788,17 +805,17 @@ impl<
             let mut sum_autocorr = F::one(); // lag 0
             for lag in 1..autocorr.len().min(n_samples / 4) {
                 if autocorr[lag] > F::zero() {
-                    sum_autocorr = sum_autocorr + F::from(2.0).unwrap() * autocorr[lag];
+                    sum_autocorr = sum_autocorr + const_f64::<F>(2.0) * autocorr[lag];
                 } else {
                     break; // Stop when autocorrelation becomes negative
                 }
             }
 
-            let ess_j = F::from(n_samples).unwrap() / sum_autocorr;
+            let ess_j = F::from(n_samples).expect("Failed to convert to float") / sum_autocorr;
             total_ess = total_ess + ess_j;
         }
 
-        Ok(total_ess / F::from(n_data).unwrap())
+        Ok(total_ess / F::from(n_data).expect("Failed to convert to float"))
     }
 
     /// Compute diagonal variance component of SWAG
@@ -821,7 +838,8 @@ impl<
             }
         }
         for i in 0..n_weights {
-            mean_weights[i] = mean_weights[i] / F::from(weight_samples.len()).unwrap();
+            mean_weights[i] =
+                mean_weights[i] / F::from(weight_samples.len()).expect("Test/example failed");
         }
 
         // Compute diagonal variance
@@ -832,7 +850,8 @@ impl<
             }
         }
         for i in 0..n_weights {
-            diagonal_var[i] = diagonal_var[i] / F::from(weight_samples.len() - 1).unwrap();
+            diagonal_var[i] =
+                diagonal_var[i] / F::from(weight_samples.len() - 1).expect("Test/example failed");
         }
 
         Ok(diagonal_var)
@@ -866,8 +885,8 @@ impl<
         }
 
         // Compute covariance as D * D^T / (K-1)
-        let covariance =
-            deviation_matrix.dot(&deviation_matrix.t()) / F::from((rank - 1).max(1)).unwrap();
+        let covariance = deviation_matrix.dot(&deviation_matrix.t())
+            / F::from((rank - 1).max(1)).expect("Test/example failed");
 
         Ok(covariance)
     }
@@ -881,25 +900,25 @@ impl<
         let mut log_posteriors: Vec<F> = weight_samples.iter().map(|s| s.log_posterior).collect();
         log_posteriors.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        let mean_log_posterior =
-            log_posteriors.iter().cloned().sum::<F>() / F::from(log_posteriors.len()).unwrap();
+        let mean_log_posterior = log_posteriors.iter().cloned().sum::<F>()
+            / F::from(log_posteriors.len()).expect("Test/example failed");
         let var_log_posterior = log_posteriors
             .iter()
             .map(|&x| (x - mean_log_posterior) * (x - mean_log_posterior))
             .sum::<F>()
-            / F::from(log_posteriors.len()).unwrap();
+            / F::from(log_posteriors.len()).expect("Test/example failed");
 
         // Effective sample size from log posteriors
-        let ess_log_posterior = F::from(log_posteriors.len()).unwrap()
+        let ess_log_posterior = F::from(log_posteriors.len())
+            .expect("Failed to convert length to float")
             / (F::one()
-                + F::from(2.0).unwrap()
-                    * self.compute_autocorrelation_of_vector(&log_posteriors)?);
+                + const_f64::<F>(2.0) * self.compute_autocorrelation_of_vector(&log_posteriors)?);
 
         // Acceptance rate (simplified)
-        let acceptance_rate = F::from(0.5).unwrap(); // Mock value
+        let acceptance_rate = const_f64::<F>(0.5); // Mock value
 
         // R-hat statistic (simplified single chain version)
-        let r_hat = F::one() + var_log_posterior / (var_log_posterior + F::from(1e-6).unwrap());
+        let r_hat = F::one() + var_log_posterior / (var_log_posterior + const_f64::<F>(1e-6));
 
         Ok(SWAGApproximationQuality {
             mean_log_posterior,
@@ -907,7 +926,7 @@ impl<
             ess_log_posterior,
             acceptance_rate,
             r_hat,
-            convergence_diagnostic: if r_hat < F::from(1.1).unwrap() {
+            convergence_diagnostic: if r_hat < const_f64::<F>(1.1) {
                 "Converged".to_string()
             } else {
                 "Not converged".to_string()
@@ -934,14 +953,14 @@ impl<
             let ensemble_mean = ensemble_col.mean_or(F::zero());
 
             let method_means = [mc_mean, ensemble_mean];
-            let overall_mean =
-                method_means.iter().cloned().sum::<F>() / F::from(method_means.len()).unwrap();
+            let overall_mean = method_means.iter().cloned().sum::<F>()
+                / F::from(method_means.len()).expect("Test/example failed");
 
             let disagreement = method_means
                 .iter()
                 .map(|&x| (x - overall_mean) * (x - overall_mean))
                 .sum::<F>()
-                / F::from(method_means.len()).unwrap();
+                / F::from(method_means.len()).expect("Test/example failed");
 
             disagreement_scores[i] = disagreement.sqrt();
 
@@ -966,24 +985,28 @@ impl<
 
     fn compute_aleatoric_from_samples(&self, predictions: &Array2<F>) -> Result<Array1<F>> {
         // Simplified aleatoric uncertainty estimation
-        let mean_predictions = predictions.mean_axis(Axis(0)).unwrap();
+        let mean_predictions = predictions
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
         Ok(mean_predictions.mapv(|p| p * (F::one() - p))) // For binary classification
     }
 
     fn compute_mc_prediction_intervals(&self, predictions: &Array2<F>) -> Result<Array2<F>> {
         let n_samples = predictions.ncols();
         let mut intervals = Array2::zeros((n_samples, 2));
-        let alpha = F::from(0.05).unwrap(); // 95% confidence interval
+        let alpha = const_f64::<F>(0.05); // 95% confidence interval
 
         for i in 0..n_samples {
             let mut sample_preds = predictions.column(i).to_vec();
             sample_preds.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-            let lower_idx = (alpha * F::from(sample_preds.len()).unwrap() / F::from(2.0).unwrap())
-                .to_usize()
-                .unwrap_or(0);
-            let upper_idx = ((F::one() - alpha / F::from(2.0).unwrap())
-                * F::from(sample_preds.len()).unwrap())
+            let lower_idx = (alpha
+                * F::from(sample_preds.len()).expect("Failed to convert length to float")
+                / const_f64::<F>(2.0))
+            .to_usize()
+            .unwrap_or(0);
+            let upper_idx = ((F::one() - alpha / const_f64::<F>(2.0))
+                * F::from(sample_preds.len()).expect("Failed to convert length to float"))
             .to_usize()
             .unwrap_or(sample_preds.len() - 1);
 
@@ -1020,7 +1043,7 @@ impl<
         }
 
         if count > 0 {
-            Ok(total_diversity / F::from(count).unwrap())
+            Ok(total_diversity / F::from(count).expect("Failed to convert to float"))
         } else {
             Ok(F::zero())
         }
@@ -1038,7 +1061,7 @@ impl<
 
         // Approximate MI using correlation
         let correlation = self.compute_correlation_arrays(&model1, &model2)?;
-        let mi = -F::from(0.5).unwrap() * (F::one() - correlation * correlation).ln();
+        let mi = -const_f64::<F>(0.5) * (F::one() - correlation * correlation).ln();
 
         Ok(mi.max(F::zero()))
     }
@@ -1054,15 +1077,15 @@ impl<
             consistency_sum = consistency_sum + consistency;
         }
 
-        Ok(consistency_sum / F::from(n_samples).unwrap())
+        Ok(consistency_sum / F::from(n_samples).expect("Failed to convert to float"))
     }
 
     fn compute_effective_sample_size(&self, predictions: &Array2<F>) -> Result<F> {
         // Simplified effective sample size estimation
         let n_samples = predictions.nrows();
         let autocorrelation = self.compute_autocorrelation(predictions)?;
-        let eff_sample_size =
-            F::from(n_samples).unwrap() / (F::one() + F::from(2.0).unwrap() * autocorrelation);
+        let eff_sample_size = F::from(n_samples).expect("Failed to convert to float")
+            / (F::one() + const_f64::<F>(2.0) * autocorrelation);
         Ok(eff_sample_size)
     }
 
@@ -1090,7 +1113,7 @@ impl<
         }
 
         if count > 0 {
-            Ok(correlation_sum / F::from(count).unwrap())
+            Ok(correlation_sum / F::from(count).expect("Failed to convert to float"))
         } else {
             Ok(F::zero())
         }
@@ -1101,8 +1124,12 @@ impl<
         predictions1: &Array2<F>,
         predictions2: &Array2<F>,
     ) -> Result<F> {
-        let mean1 = predictions1.mean_axis(Axis(0)).unwrap();
-        let mean2 = predictions2.mean_axis(Axis(0)).unwrap();
+        let mean1 = predictions1
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
+        let mean2 = predictions2
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
 
         self.compute_correlation_arrays(&mean1.view(), &mean2.view())
     }
@@ -1114,7 +1141,7 @@ impl<
             ));
         }
 
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Test/example failed");
         let mean_x = x.sum() / n;
         let mean_y = y.sum() / n;
 
@@ -1149,8 +1176,10 @@ impl<
         let mut total_samples = 0;
 
         for bin in 0..n_bins {
-            let bin_lower = F::from(bin).unwrap() / F::from(n_bins).unwrap();
-            let bin_upper = F::from(bin + 1).unwrap() / F::from(n_bins).unwrap();
+            let bin_lower = F::from(bin).expect("Failed to convert to float")
+                / F::from(n_bins).expect("Failed to convert to float");
+            let bin_upper = F::from(bin + 1).expect("Failed to convert to float")
+                / F::from(n_bins).expect("Failed to convert to float");
 
             let mut bin_predictions = Vec::new();
             let mut bin_labels = Vec::new();
@@ -1163,19 +1192,21 @@ impl<
             }
 
             if !bin_predictions.is_empty() {
-                let bin_accuracy =
-                    bin_labels.iter().cloned().sum::<F>() / F::from(bin_labels.len()).unwrap();
+                let bin_accuracy = bin_labels.iter().cloned().sum::<F>()
+                    / F::from(bin_labels.len()).expect("Test/example failed");
                 let bin_confidence = bin_predictions.iter().cloned().sum::<F>()
-                    / F::from(bin_predictions.len()).unwrap();
+                    / F::from(bin_predictions.len()).expect("Test/example failed");
                 let bin_weight = bin_predictions.len();
 
-                ece = ece + F::from(bin_weight).unwrap() * (bin_accuracy - bin_confidence).abs();
+                ece = ece
+                    + F::from(bin_weight).expect("Failed to convert to float")
+                        * (bin_accuracy - bin_confidence).abs();
                 total_samples += bin_weight;
             }
         }
 
         if total_samples > 0 {
-            Ok(ece / F::from(total_samples).unwrap())
+            Ok(ece / F::from(total_samples).expect("Failed to convert to float"))
         } else {
             Ok(F::zero())
         }
@@ -1184,11 +1215,11 @@ impl<
     fn sample_gaussian(&self) -> F {
         // Simplified Gaussian sampling using Box-Muller
         let seed = self.random_seed.unwrap_or(42);
-        let u1 = F::from((seed % 1000) as f64 / 1000.0).unwrap();
-        let u2 = F::from(((seed / 1000) % 1000) as f64 / 1000.0).unwrap();
+        let u1 = F::from((seed % 1000) as f64 / 1000.0).expect("Test/example failed");
+        let u2 = F::from(((seed / 1000) % 1000) as f64 / 1000.0).expect("Test/example failed");
 
-        (-F::from(2.0).unwrap() * u1.ln()).sqrt()
-            * (F::from(2.0 * std::f64::consts::PI).unwrap() * u2).cos()
+        (-const_f64::<F>(2.0) * u1.ln()).sqrt()
+            * (F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float") * u2).cos()
     }
 
     // Additional helper methods for enhanced SWAG implementation
@@ -1200,7 +1231,7 @@ impl<
 
         for i in 0..n_weights {
             // Generate reasonable weight values
-            let weight = F::from((i as f64 * 0.01 - 0.5).tanh()).unwrap();
+            let weight = F::from((i as f64 * 0.01 - 0.5).tanh()).expect("Test/example failed");
             mean.push(weight);
         }
 
@@ -1214,7 +1245,8 @@ impl<
 
         for i in 0..n_weights {
             // Generate reasonable variance values
-            let var = F::from(0.01 + (i as f64 / n_weights as f64) * 0.1).unwrap();
+            let var =
+                F::from(0.01 + (i as f64 / n_weights as f64) * 0.1).expect("Test/example failed");
             variance.push(var);
         }
 
@@ -1230,7 +1262,8 @@ impl<
         for i in 0..n_weights {
             let mut row = Vec::with_capacity(rank);
             for j in 0..rank {
-                let value = F::from(((i + j) as f64 / 100.0).sin() * 0.1).unwrap();
+                let value =
+                    F::from(((i + j) as f64 / 100.0).sin() * 0.1).expect("Test/example failed");
                 row.push(value);
             }
             matrix.push(row);
@@ -1245,13 +1278,13 @@ impl<
         let mut log_posterior = F::zero();
 
         // Log prior (Gaussian with small variance)
-        let prior_var = F::from(1.0).unwrap();
+        let prior_var = const_f64::<F>(1.0);
         for &weight in weights {
-            log_posterior = log_posterior - F::from(0.5).unwrap() * weight * weight / prior_var;
+            log_posterior = log_posterior - const_f64::<F>(0.5) * weight * weight / prior_var;
         }
 
         // Add mock log likelihood term
-        let log_likelihood = -F::from(weights.len() as f64 * 0.1).unwrap();
+        let log_likelihood = -F::from(weights.len() as f64 * 0.1).expect("Test/example failed");
         log_posterior = log_posterior + log_likelihood;
 
         Ok(log_posterior)
@@ -1267,10 +1300,12 @@ impl<
         }
 
         // Compute mean
-        let mean = series.iter().cloned().sum::<F>() / F::from(n).unwrap();
+        let mean =
+            series.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
 
         // Compute variance (lag 0)
-        let var = series.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / F::from(n).unwrap();
+        let var = series.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
+            / F::from(n).expect("Failed to convert to float");
 
         if var <= F::zero() {
             return Ok(autocorr);
@@ -1289,7 +1324,7 @@ impl<
                 sum = sum + (series[i] - mean) * (series[i + lag] - mean);
             }
 
-            autocorr[lag] = sum / (F::from(count).unwrap() * var);
+            autocorr[lag] = sum / (F::from(count).expect("Failed to convert to float") * var);
         }
 
         Ok(autocorr)
@@ -1304,7 +1339,8 @@ impl<
         let n = values.len();
         let lag = 1; // Only compute lag-1 autocorrelation
 
-        let mean = values.iter().cloned().sum::<F>() / F::from(n).unwrap();
+        let mean =
+            values.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
 
         let mut numerator = F::zero();
         let mut denominator = F::zero();
@@ -1333,7 +1369,9 @@ impl<
         // Xavier initialization: _weights ~ N(0, 2/(n_in + n_out))
         let fan_in = 100; // Simulated input dimension
         let fan_out = 10; // Simulated output dimension
-        let std = (F::from(2.0).unwrap() / F::from(fan_in + fan_out).unwrap()).sqrt();
+        let std = (const_f64::<F>(2.0)
+            / F::from(fan_in + fan_out).expect("Failed to convert to float"))
+        .sqrt();
 
         for i in 0..n_weights {
             let weight = self.sample_gaussian_with_seed(i) * std;
@@ -1362,7 +1400,7 @@ impl<
         }
 
         for weight in &mut mean_weights {
-            *weight = *weight / F::from(n_epochs).unwrap();
+            *weight = *weight / F::from(n_epochs).expect("Failed to convert to float");
         }
 
         Ok(mean_weights)
@@ -1386,7 +1424,7 @@ impl<
         }
 
         for var in &mut diagonal_variance {
-            *var = *var / F::from(n_epochs - 1).unwrap();
+            *var = *var / F::from(n_epochs - 1).expect("Failed to convert to float");
         }
 
         Ok(diagonal_variance)
@@ -1423,7 +1461,7 @@ impl<
 
         // Box-Muller transform
         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-        F::from(z).unwrap()
+        F::from(z).expect("Failed to convert to float")
     }
 
     /// Compute eigenvalue contribution for a sample
@@ -1439,7 +1477,7 @@ impl<
         if total_eigenvalue > F::zero() {
             Ok(dominant_eigenvalue / total_eigenvalue)
         } else {
-            Ok(F::one() / F::from(eigenvalues.len()).unwrap())
+            Ok(F::one() / F::from(eigenvalues.len()).expect("Failed to convert length to float"))
         }
     }
 
@@ -1452,7 +1490,7 @@ impl<
             penalty = penalty + deviation * deviation;
         }
 
-        Ok(penalty / F::from(weights.len()).unwrap())
+        Ok(penalty / F::from(weights.len()).expect("Failed to convert length to float"))
     }
 
     /// Compute weight distance between two weight vectors
@@ -1494,8 +1532,8 @@ impl<
     fn compute_stability_score(&self, weights: &[F]) -> Result<F> {
         let weight_magnitudes: Vec<F> = weights.iter().map(|&w| w.abs()).collect();
         let max_magnitude = weight_magnitudes.iter().cloned().fold(F::zero(), F::max);
-        let mean_magnitude =
-            weight_magnitudes.iter().cloned().sum::<F>() / F::from(weights.len()).unwrap();
+        let mean_magnitude = weight_magnitudes.iter().cloned().sum::<F>()
+            / F::from(weights.len()).expect("Test/example failed");
 
         // Stability is higher when weights are not too extreme
         let stability = if max_magnitude > F::zero() {
@@ -1771,7 +1809,7 @@ mod tests {
 
         let mc_uncertainty = quantifier
             .compute_mc_dropout_uncertainty(&mock_neural_model, &x_test)
-            .unwrap();
+            .expect("Test/example failed");
 
         assert_eq!(mc_uncertainty.predictions.nrows(), 10);
         assert_eq!(mc_uncertainty.predictions.ncols(), 3);
@@ -1790,7 +1828,7 @@ mod tests {
 
         let ensemble_uncertainty = quantifier
             .compute_ensemble_uncertainty(&ensemble_models, &x_test)
-            .unwrap();
+            .expect("Test/example failed");
 
         assert_eq!(ensemble_uncertainty.predictions.nrows(), 2);
         assert_eq!(ensemble_uncertainty.predictions.ncols(), 2);
@@ -1809,7 +1847,7 @@ mod tests {
 
         let tta_uncertainty = quantifier
             .compute_tta_uncertainty(&mock_neural_model, &mock_augmentation, &x_test)
-            .unwrap();
+            .expect("Test/example failed");
 
         assert_eq!(tta_uncertainty.predictions.nrows(), 3);
         assert_eq!(tta_uncertainty.predictions.ncols(), 2);
@@ -1827,7 +1865,7 @@ mod tests {
 
         let entropy_decomp = quantifier
             .compute_entropy_decomposition(&predictions)
-            .unwrap();
+            .expect("Test/example failed");
 
         assert_eq!(entropy_decomp.total_entropy.len(), 3);
         assert_eq!(entropy_decomp.aleatoric_entropy.len(), 3);
@@ -1851,7 +1889,7 @@ mod tests {
 
         let temp_scaling = quantifier
             .compute_neural_temperature_scaling(&mock_neural_model, &x_cal, &y_cal)
-            .unwrap();
+            .expect("Test/example failed");
 
         assert!(temp_scaling.temperature > 0.0);
         assert_eq!(temp_scaling.calibrated_probabilities.len(), 3);
@@ -1888,7 +1926,7 @@ mod tests {
                 Some(&x_cal),
                 Some(&y_cal),
             )
-            .unwrap();
+            .expect("Test/example failed");
 
         assert_eq!(analysis.sample_size, 2);
         assert!(analysis.temperature_scaling.is_some());

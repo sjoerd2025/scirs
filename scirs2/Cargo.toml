@@ -12,6 +12,10 @@ categories = ["science", "mathematics", "algorithms"]
 [lints]
 workspace = true
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dependencies]
 # Core module - always included (SCIRS2 POLICY: scirs2-core is the ONLY crate allowed external dependencies)
 scirs2-core = { workspace = true, features = ["cache", "logging", "profiling", "memory_management", "array", "random"] }

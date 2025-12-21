@@ -28,7 +28,8 @@ fn test_global_optimization_on_rosenbrock() {
         ..Default::default()
     };
 
-    let result = differential_evolution(rosenbrock, bounds.clone(), Some(options), None).unwrap();
+    let result = differential_evolution(rosenbrock, bounds.clone(), Some(options), None)
+        .expect("Operation failed");
     assert!(result.success);
     assert!((result.x[0] - 1.0).abs() < 0.1);
     assert!((result.x[1] - 1.0).abs() < 0.1);
@@ -41,7 +42,8 @@ fn test_global_optimization_on_rosenbrock() {
         ..Default::default()
     };
 
-    let result = basinhopping(rosenbrock, x0.clone(), Some(options), None, None).unwrap();
+    let result =
+        basinhopping(rosenbrock, x0.clone(), Some(options), None, None).expect("Operation failed");
     assert!(result.success);
     assert!((result.x[0] - 1.0).abs() < 0.2);
     assert!((result.x[1] - 1.0).abs() < 0.2);
@@ -54,7 +56,7 @@ fn test_global_optimization_on_rosenbrock() {
         ..Default::default()
     };
 
-    let result = dual_annealing(rosenbrock, x0, bounds, Some(options)).unwrap();
+    let result = dual_annealing(rosenbrock, x0, bounds, Some(options)).expect("Operation failed");
     // Dual annealing may not always converge to exact solution, so we check if it's close
     assert!(result.fun < 1.0);
 }
@@ -76,7 +78,8 @@ fn test_global_optimization_with_constraints() {
         ..Default::default()
     };
 
-    let result = differential_evolution(func, bounds.clone(), Some(options), None).unwrap();
+    let result = differential_evolution(func, bounds.clone(), Some(options), None)
+        .expect("Operation failed");
 
     assert!(result.success);
 
@@ -132,7 +135,8 @@ fn test_global_optimization_multimodal() {
         ..Default::default()
     };
 
-    let result = differential_evolution(ackley, bounds, Some(options), None).unwrap();
+    let result =
+        differential_evolution(ackley, bounds, Some(options), None).expect("Operation failed");
     assert!(result.success);
     // Ackley function has global minimum at origin with value 0
     assert!(result.x.iter().all(|&xi| xi.abs() < 0.5));

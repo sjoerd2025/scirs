@@ -642,9 +642,9 @@ mod tests {
 
         // Check device info
         let info = gpu_array.device_info();
-        assert_eq!(info.get("backend").unwrap(), "CUDA");
-        assert_eq!(info.get("device_id").unwrap(), "0");
-        assert_eq!(info.get("on_gpu").unwrap(), "true");
+        assert_eq!(info.get("backend").expect("Operation failed"), "CUDA");
+        assert_eq!(info.get("device_id").expect("Operation failed"), "0");
+        assert_eq!(info.get("on_gpu").expect("Operation failed"), "true");
     }
 
     #[test]
@@ -676,7 +676,7 @@ mod tests {
         let gpu_b = GPUNdarray::new(b.clone(), GPUConfig::default());
 
         // Test addition
-        let result = kernels::add(&gpu_a, &gpu_b).unwrap();
+        let result = kernels::add(&gpu_a, &gpu_b).expect("Operation failed");
         let expected = a + b;
         assert_eq!(result.host_data(), &expected);
 
@@ -687,7 +687,7 @@ mod tests {
         let gpu_a = GPUNdarray::new(a.clone(), GPUConfig::default());
         let gpu_b = GPUNdarray::new(b.clone(), GPUConfig::default());
 
-        let result = kernels::multiply(&gpu_a, &gpu_b).unwrap();
+        let result = kernels::multiply(&gpu_a, &gpu_b).expect("Operation failed");
         let expected = a * b;
         assert_eq!(result.host_data(), &expected);
     }

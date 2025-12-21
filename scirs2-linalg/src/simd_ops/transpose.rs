@@ -171,7 +171,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_transpose_f32() {
         let matrix = array![
             [1.0f32, 2.0, 3.0, 4.0],
@@ -179,7 +178,7 @@ mod tests {
             [9.0, 10.0, 11.0, 12.0]
         ];
 
-        let result = simd_transpose_f32(&matrix.view()).unwrap();
+        let result = simd_transpose_f32(&matrix.view()).expect("Operation failed");
 
         let expected = array![
             [1.0f32, 5.0, 9.0],
@@ -196,11 +195,10 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_transpose_f64() {
         let matrix = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
-        let result = simd_transpose_f64(&matrix.view()).unwrap();
+        let result = simd_transpose_f64(&matrix.view()).expect("Operation failed");
 
         let expected = array![[1.0f64, 4.0], [2.0, 5.0], [3.0, 6.0]];
 
@@ -212,11 +210,10 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_transpose_inplace_f32() {
         let mut matrix = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        simd_transpose_inplace_f32(&mut matrix).unwrap();
+        simd_transpose_inplace_f32(&mut matrix).expect("Operation failed");
 
         let expected = array![[1.0f32, 4.0, 7.0], [2.0, 5.0, 8.0], [3.0, 6.0, 9.0]];
 
@@ -228,7 +225,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_transpose_largematrix() {
         // Test with larger matrix to exercise blocking
         let size = 100;
@@ -241,7 +237,7 @@ mod tests {
             }
         }
 
-        let result = simd_transpose_f32(&matrix.view()).unwrap();
+        let result = simd_transpose_f32(&matrix.view()).expect("Operation failed");
 
         // Verify transpose correctness
         for i in 0..size {

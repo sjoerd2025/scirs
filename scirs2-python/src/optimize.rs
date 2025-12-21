@@ -487,7 +487,7 @@ fn curve_fit_py(
 
                 let f_val: f64 = f_clone
                     .bind(py)
-                    .call1(pyo3::types::PyTuple::new(py, &args).unwrap())
+                    .call1(pyo3::types::PyTuple::new(py, &args).expect("Operation failed"))
                     .expect("Failed to call model function")
                     .extract()
                     .expect("Failed to extract model result");

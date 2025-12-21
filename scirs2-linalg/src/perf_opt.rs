@@ -775,7 +775,7 @@ pub mod decomposition_opt {
                                 dot_product += a_copy[[i, j]] * a_copy[[i, k]];
                             }
 
-                            let tau = dot_product * F::from(2.0).unwrap();
+                            let tau = dot_product * F::from(2.0).expect("Operation failed");
                             a_copy[[j, k]] -= tau;
                             for i in (j + 1)..m {
                                 let householder_val = a_copy[[i, j]];
@@ -819,7 +819,7 @@ mod tests {
             algorithm: OptAlgorithm::Blocked,
         };
 
-        let c = blocked_matmul(&a.view(), &b.view(), &config).unwrap();
+        let c = blocked_matmul(&a.view(), &b.view(), &config).expect("Operation failed");
 
         assert_relative_eq!(c[[0, 0]], 19.0);
         assert_relative_eq!(c[[0, 1]], 22.0);
@@ -830,7 +830,7 @@ mod tests {
     #[test]
     fn test_optimized_transpose() {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
-        let a_t = optimized_transpose(&a.view()).unwrap();
+        let a_t = optimized_transpose(&a.view()).expect("Operation failed");
 
         assert_eq!(a_t.shape(), &[3, 2]);
         assert_relative_eq!(a_t[[0, 0]], 1.0);
@@ -847,7 +847,7 @@ mod tests {
         let x = array![[5.0], [6.0]];
 
         let config = OptConfig::default();
-        let y = parallel_matvec(&a.view(), &x.view(), &config).unwrap();
+        let y = parallel_matvec(&a.view(), &x.view(), &config).expect("Operation failed");
 
         assert_relative_eq!(y[[0, 0]], 17.0);
         assert_relative_eq!(y[[1, 0]], 39.0);
@@ -858,14 +858,14 @@ mod tests {
         let mut a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        inplace::add_assign(&mut a, &b.view()).unwrap();
+        inplace::add_assign(&mut a, &b.view()).expect("Operation failed");
 
         assert_relative_eq!(a[[0, 0]], 6.0);
         assert_relative_eq!(a[[0, 1]], 8.0);
         assert_relative_eq!(a[[1, 0]], 10.0);
         assert_relative_eq!(a[[1, 1]], 12.0);
 
-        inplace::scalar_mul_assign(&mut a, 2.0).unwrap();
+        inplace::scalar_mul_assign(&mut a, 2.0).expect("Operation failed");
 
         assert_relative_eq!(a[[0, 0]], 12.0);
         assert_relative_eq!(a[[0, 1]], 16.0);
@@ -877,7 +877,7 @@ mod tests {
     fn test_inplace_transpose() {
         let mut a = array![[1.0, 2.0], [3.0, 4.0]];
 
-        inplace::transpose_square(&mut a).unwrap();
+        inplace::transpose_square(&mut a).expect("Operation failed");
 
         assert_relative_eq!(a[[0, 0]], 1.0);
         assert_relative_eq!(a[[0, 1]], 3.0);
@@ -890,7 +890,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let c = adaptive_matmul(&a.view(), &b.view()).unwrap();
+        let c = adaptive_matmul(&a.view(), &b.view()).expect("Operation failed");
 
         assert_relative_eq!(c[[0, 0]], 19.0);
         assert_relative_eq!(c[[0, 1]], 22.0);
@@ -912,7 +912,7 @@ mod tests {
             algorithm: OptAlgorithm::Blocked,
         };
 
-        let c = blocked_matmul(&a.view(), &b.view(), &config).unwrap();
+        let c = blocked_matmul(&a.view(), &b.view(), &config).expect("Operation failed");
 
         // Multiplying by identity should give original matrix
         for i in 0..n {

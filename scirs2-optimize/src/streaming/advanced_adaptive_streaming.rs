@@ -648,11 +648,11 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
             let eigenvalues = self.approximate_eigenvalues(&hessian);
             let condition_number = eigenvalues
                 .iter()
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .unwrap_or(&1.0)
                 / eigenvalues
                     .iter()
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                     .unwrap_or(&1.0);
             1.0 / condition_number.sqrt()
         } else {

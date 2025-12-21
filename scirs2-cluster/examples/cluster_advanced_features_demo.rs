@@ -80,7 +80,7 @@ fn generate_sampledata() -> Array2<f64> {
         data.push(4.0 + noise_y);
     }
 
-    Array2::from_shape_vec((150, 2), data).unwrap()
+    Array2::from_shape_vec((150, 2), data).expect("Operation failed")
 }
 
 #[allow(dead_code)]

@@ -21,12 +21,12 @@
 //! use tempfile::tempdir;
 //!
 //! // Create a temporary CSV file for testing
-//! let dir = tempdir().unwrap();
+//! let dir = tempdir().expect("Operation failed");
 //! let file_path = dir.path().join("test_data.csv");
-//! let mut file = File::create(&file_path).unwrap();
-//! writeln!(file, "value").unwrap();
+//! let mut file = File::create(&file_path).expect("Operation failed");
+//! writeln!(file, "value").expect("Operation failed");
 //! for i in 0..100 {
-//!     writeln!(file, "{}", i as f64 * 0.1).unwrap();
+//!     writeln!(file, "{}", i as f64 * 0.1).expect("Operation failed");
 //! }
 //!
 //! // Process the dataset in chunks
@@ -819,7 +819,7 @@ impl OutOfCoreQuantileEstimator {
             if self.count == 5 {
                 // Initialize markers
                 self.initial_values
-                    .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 for i in 0..5 {
                     self.heights[i] = self.initial_values[i];
                 }
@@ -1051,28 +1051,28 @@ mod tests {
 
     #[test]
     fn test_out_of_core_moving_average() {
-        let mut ma = OutOfCoreMovingAverage::new(3).unwrap();
+        let mut ma = OutOfCoreMovingAverage::new(3).expect("Operation failed");
 
         assert!(ma.update(1.0).is_none()); // Not enough data yet
         assert!(ma.update(2.0).is_none()); // Not enough data yet
 
-        let avg = ma.update(3.0).unwrap(); // Now we have 3 values
+        let avg = ma.update(3.0).expect("Operation failed"); // Now we have 3 values
         assert!((avg - 2.0).abs() < 1e-10);
 
-        let avg = ma.update(4.0).unwrap(); // Window slides
+        let avg = ma.update(4.0).expect("Operation failed"); // Window slides
         assert!((avg - 3.0).abs() < 1e-10);
     }
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Test has infinite loop bug - progress counter exceeds 397702600%"]
     fn test_csv_processing() {
         // Create a temporary CSV file
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "time,value,other").unwrap();
-        writeln!(temp_file, "1,10.5,x").unwrap();
-        writeln!(temp_file, "2,20.3,y").unwrap();
-        writeln!(temp_file, "3,15.7,z").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "time,value,other").expect("Operation failed");
+        writeln!(temp_file, "1,10.5,x").expect("Operation failed");
+        writeln!(temp_file, "2,20.3,y").expect("Operation failed");
+        writeln!(temp_file, "3,15.7,z").expect("Operation failed");
+        temp_file.flush().expect("Operation failed");
 
         let config = ProcessingConfig::new()
             .with_chunk_size(2)
@@ -1081,7 +1081,7 @@ mod tests {
         let mut processor = ChunkedProcessor::new(config);
         let stats = processor
             .process_csv_file(temp_file.path(), 1, true)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(stats.count, 3);
         assert!((stats.mean - 15.5).abs() < 1e-10);
@@ -1091,14 +1091,14 @@ mod tests {
 
     #[test]
     fn test_quantile_estimator() {
-        let mut estimator = OutOfCoreQuantileEstimator::new(0.5).unwrap(); // Median
+        let mut estimator = OutOfCoreQuantileEstimator::new(0.5).expect("Operation failed"); // Median
 
         // Add enough data to initialize
         for i in 1..=100 {
             estimator.update(i as f64);
         }
 
-        let median = estimator.quantile_estimate().unwrap();
+        let median = estimator.quantile_estimate().expect("Operation failed");
         let (heights, positions) = estimator.debug_state();
 
         println!("Estimated median: {}", median);

@@ -664,7 +664,7 @@ fn estimate_psd_accuracy(_freqs: &[f64], psd: &[f64], fs: f64) -> SignalResult<f
                 (a - expected_freq)
                     .abs()
                     .partial_cmp(&(b - expected_freq).abs())
-                    .unwrap()
+                    .expect("Operation failed")
             })
             .map(|(i, _)| i)
             .unwrap_or(0);

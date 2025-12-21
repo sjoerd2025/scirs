@@ -462,7 +462,7 @@ impl<F: Float> Op<F> for CholeskySolveOp {
                 let mut result = view.to_owned();
                 let transposed = view.t().to_owned();
                 result = &result + &transposed;
-                result.mapv(|x| x * F::from(-0.5).unwrap())
+                result.mapv(|x| x * F::from(-0.5).expect("Failed to convert constant to float"))
             }
             Err(_) => {
                 ctx.append_input_grad(0, None);
@@ -543,7 +543,7 @@ fn solve_sylvester_internal<F: Float + scirs2_core::ndarray::ScalarOperand>(
         // X_{k+1} = (C - X_k B) A^{-1}
         let mut x = c.to_owned();
         let max_iter = 100;
-        let tol = F::epsilon() * F::from(100.0).unwrap();
+        let tol = F::epsilon() * F::from(100.0).expect("Failed to convert constant to float");
 
         for _ in 0..max_iter {
             let x_old = x.clone();

@@ -262,13 +262,13 @@ mod tests {
     fn test_count_tokens() {
         let tokenizer = WordTokenizer::default();
         let text = "this is a test this is only a test";
-        let counts = count_tokens(text, &tokenizer).unwrap();
+        let counts = count_tokens(text, &tokenizer).expect("Operation failed");
 
-        assert_eq!(counts.get("this").unwrap(), &2);
-        assert_eq!(counts.get("is").unwrap(), &2);
-        assert_eq!(counts.get("a").unwrap(), &2);
-        assert_eq!(counts.get("test").unwrap(), &2);
-        assert_eq!(counts.get("only").unwrap(), &1);
+        assert_eq!(counts.get("this").expect("Operation failed"), &2);
+        assert_eq!(counts.get("is").expect("Operation failed"), &2);
+        assert_eq!(counts.get("a").expect("Operation failed"), &2);
+        assert_eq!(counts.get("test").expect("Operation failed"), &2);
+        assert_eq!(counts.get("only").expect("Operation failed"), &1);
     }
 
     #[test]
@@ -278,7 +278,7 @@ mod tests {
 
         // Filter out common words
         let predicate = |token: &str| !["this", "is", "a"].contains(&token);
-        let filtered = filter_tokens(text, &tokenizer, predicate).unwrap();
+        let filtered = filter_tokens(text, &tokenizer, predicate).expect("Operation failed");
 
         assert_eq!(filtered, "test only test");
     }
@@ -289,11 +289,11 @@ mod tests {
         let text = "this is a simple test";
 
         // Extract bigrams
-        let bigrams = extract_ngrams(text, &tokenizer, 2).unwrap();
+        let bigrams = extract_ngrams(text, &tokenizer, 2).expect("Operation failed");
         assert_eq!(bigrams, vec!["this is", "is a", "a simple", "simple test"]);
 
         // Extract trigrams
-        let trigrams = extract_ngrams(text, &tokenizer, 3).unwrap();
+        let trigrams = extract_ngrams(text, &tokenizer, 3).expect("Operation failed");
         assert_eq!(trigrams, vec!["this is a", "is a simple", "a simple test"]);
     }
 
@@ -302,7 +302,7 @@ mod tests {
         let tokenizer = WordTokenizer::default();
         let text = "machine learning is a subset of artificial intelligence that provides systems with the ability to learn";
 
-        let collocations = extract_collocations(text, &tokenizer, 2, 1).unwrap();
+        let collocations = extract_collocations(text, &tokenizer, 2, 1).expect("Operation failed");
 
         // Check some expected collocations
         assert!(collocations.contains_key(&("machine".to_string(), "learning".to_string())));
@@ -320,7 +320,7 @@ mod tests {
         ];
 
         // Split with a fixed seed for reproducibility
-        let (train, test) = train_test_split(&texts, 0.4, Some(42)).unwrap();
+        let (train, test) = train_test_split(&texts, 0.4, Some(42)).expect("Operation failed");
 
         assert_eq!(train.len(), 3);
         assert_eq!(test.len(), 2);

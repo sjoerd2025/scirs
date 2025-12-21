@@ -592,7 +592,7 @@ where
         let gy_squared = T::simd_mul(&gy_view, &gy_view);
         let magnitude_squared = T::simd_add(&gx_squared.view(), &gy_squared.view());
         let magnitude_result = T::simd_sqrt(&magnitude_squared.view());
-        mag_flat.copy_from_slice(magnitude_result.as_slice().unwrap());
+        mag_flat.copy_from_slice(magnitude_result.as_slice().expect("Operation failed"));
     } else {
         // Standard calculation for small arrays
         Zip::from(&mut magnitude)

@@ -38,10 +38,10 @@ impl ActivationFunction {
             ActivationFunction::ReLU => x.max(F::zero()),
             ActivationFunction::GELU => {
                 // Approximation of GELU
-                let half = F::from(0.5).unwrap();
+                let half = F::from(0.5).expect("Failed to convert constant to float");
                 let one = F::one();
-                let sqrt_2_pi = F::from(0.7978845608).unwrap(); // sqrt(2/π)
-                let coeff = F::from(0.044715).unwrap();
+                let sqrt_2_pi = F::from(0.7978845608).expect("Failed to convert constant to float"); // sqrt(2/π)
+                let coeff = F::from(0.044715).expect("Failed to convert constant to float");
 
                 half * x * (one + (sqrt_2_pi * (x + coeff * x * x * x)).tanh())
             }

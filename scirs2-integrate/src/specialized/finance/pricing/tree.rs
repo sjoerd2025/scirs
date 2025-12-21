@@ -201,7 +201,7 @@ mod tests {
             FinanceMethod::Tree { n_steps: 100 },
         );
 
-        let price = price_tree(&solver, &option, 100).unwrap();
+        let price = price_tree(&solver, &option, 100).expect("Operation failed");
 
         // Black-Scholes reference: ~10.45
         assert!(price > 10.0 && price < 11.0, "Price: {}", price);
@@ -226,7 +226,7 @@ mod tests {
             FinanceMethod::Tree { n_steps: 100 },
         );
 
-        let price = price_tree(&solver, &option, 100).unwrap();
+        let price = price_tree(&solver, &option, 100).expect("Operation failed");
 
         // Black-Scholes reference: ~5.57
         assert!(price > 5.2 && price < 6.0, "Price: {}", price);
@@ -251,7 +251,7 @@ mod tests {
             FinanceMethod::Tree { n_steps: 100 },
         );
 
-        let price = price_tree(&solver, &option, 100).unwrap();
+        let price = price_tree(&solver, &option, 100).expect("Operation failed");
 
         // American put should be more valuable than European (early exercise premium)
         assert!(price > 5.8 && price < 7.0, "Price: {}", price);
@@ -276,7 +276,7 @@ mod tests {
             FinanceMethod::Tree { n_steps: 100 },
         );
 
-        let price = price_tree(&solver, &option, 100).unwrap();
+        let price = price_tree(&solver, &option, 100).expect("Operation failed");
 
         // American call with no dividends should equal European call
         // (never optimal to exercise early)
@@ -295,7 +295,7 @@ mod tests {
             dividend_yield: 0.0,
         };
 
-        let price = trinomial_tree_black_scholes(&option, 0.2, 50).unwrap();
+        let price = trinomial_tree_black_scholes(&option, 0.2, 50).expect("Operation failed");
 
         // Should be close to binomial and Black-Scholes
         assert!(price > 9.5 && price < 11.5, "Price: {}", price);

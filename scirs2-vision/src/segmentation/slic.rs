@@ -56,7 +56,7 @@ struct SuperpixelCenter {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let superpixels = slic(&img, 100, 10.0, 10, 0.0)?;
 /// # Ok(())
 /// # }
@@ -563,7 +563,7 @@ mod tests {
         let result = slic(&img, 25, 10.0, 10, 0.0);
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Operation failed");
         assert_eq!(labels.dim(), (50, 50));
     }
 

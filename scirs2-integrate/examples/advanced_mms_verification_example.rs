@@ -84,7 +84,7 @@ fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
             Some(options),
         )?;
 
-        let numerical_final = result.y.last().unwrap()[0];
+        let numerical_final = result.y.last().expect("Operation failed")[0];
         let exact_final = problem.exact_at(1.0);
         let error = (numerical_final - exact_final).abs();
 

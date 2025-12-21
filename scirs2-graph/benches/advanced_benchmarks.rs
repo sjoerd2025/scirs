@@ -112,7 +112,7 @@ impl BenchmarkResults {
 #[allow(dead_code)]
 fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
     let mut rng = scirs2_core::random::rng();
-    let graph = erdos_renyi_graph(size, density, &mut rng).unwrap();
+    let graph = erdos_renyi_graph(size, density, &mut rng).expect("Operation failed");
 
     // Convert Graph<usize, f64> to Graph<i32, f64>
     let mut result = Graph::new();
@@ -122,7 +122,7 @@ fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
     for edge in graph.edges() {
         result
             .add_edge(edge.source as i32, edge.target as i32, edge.weight)
-            .unwrap();
+            .expect("Operation failed");
     }
     result
 }
@@ -155,7 +155,7 @@ fn benchmark_connected_components(c: &mut Criterion) {
                     b.iter(|| {
                         black_box(
                             execute_with_advanced(g, |graph| Ok(connected_components(graph)))
-                                .unwrap(),
+                                .expect("Operation failed"),
                         )
                     })
                 },
@@ -184,7 +184,9 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                     &(&graph, start_node),
                     |b, (g, start)| {
                         let target = (*start + 1) % (g.node_count() as i32);
-                        b.iter(|| black_box(dijkstra_path(g, *start, &target).unwrap()))
+                        b.iter(|| {
+                            black_box(dijkstra_path(g, *start, &target).expect("Operation failed"))
+                        })
                     },
                 );
 
@@ -200,7 +202,7 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                                     let target = (*start + 1) % (graph.node_count() as i32);
                                     dijkstra_path(graph, *start, &target)
                                 })
-                                .unwrap(),
+                                .expect("Operation failed"),
                             )
                         })
                     },
@@ -227,7 +229,11 @@ fn benchmark_pagerank(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("pagerank_standard", format!("{}_{}", size, density)),
                 &graph,
-                |b, g| b.iter(|| black_box(pagerank_centrality(g, 0.85, 1e-6).unwrap())),
+                |b, g| {
+                    b.iter(|| {
+                        black_box(pagerank_centrality(g, 0.85, 1e-6).expect("Operation failed"))
+                    })
+                },
             );
 
             // Benchmark advanced optimized PageRank
@@ -241,7 +247,7 @@ fn benchmark_pagerank(c: &mut Criterion) {
                             execute_with_advanced(g, |graph| {
                                 pagerank_centrality(graph, 0.85, 1e-6)
                             })
-                            .unwrap(),
+                            .expect("Operation failed"),
                         )
                     })
                 },
@@ -279,7 +285,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
                     b.iter(|| {
                         black_box(
                             execute_with_advanced(g, |graph| Ok(louvain_communities_result(graph)))
-                                .unwrap(),
+                                .expect("Operation failed"),
                         )
                     })
                 },
@@ -320,7 +326,7 @@ fn benchmark_centrality(c: &mut Criterion) {
                             execute_with_advanced(g, |graph| {
                                 Ok(betweenness_centrality(graph, false))
                             })
-                            .unwrap(),
+                            .expect("Operation failed"),
                         )
                     })
                 },
@@ -388,7 +394,7 @@ fn benchmark_advanced_comprehensive(c: &mut Criterion) {
                         let _communities = louvain_communities_result(graph);
                         Ok(())
                     })
-                    .unwrap();
+                    .expect("Operation failed");
                     black_box(())
                 })
             },
@@ -459,7 +465,7 @@ pub fn generate_performance_report(
         "Generated at: {}\n",
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Operation failed")
             .as_secs()
     )?;
 
@@ -509,9 +515,11 @@ pub fn generate_performance_report(
 
     writeln!(file, "\n## Performance Analysis\n")?;
 
-    let best_speedup = results
-        .iter()
-        .max_by(|a, b| a.speedup_ratio.partial_cmp(&b.speedup_ratio).unwrap());
+    let best_speedup = results.iter().max_by(|a, b| {
+        a.speedup_ratio
+            .partial_cmp(&b.speedup_ratio)
+            .expect("Operation failed")
+    });
     if let Some(best) = best_speedup {
         writeln!(
             file,
@@ -523,7 +531,7 @@ pub fn generate_performance_report(
     let best_memory = results.iter().max_by(|a, b| {
         a.memory_efficiency_ratio
             .partial_cmp(&b.memory_efficiency_ratio)
-            .unwrap()
+            .expect("Operation failed")
     });
     if let Some(best) = best_memory {
         writeln!(

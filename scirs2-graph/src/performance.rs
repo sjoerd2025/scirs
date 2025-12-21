@@ -543,7 +543,7 @@ where
     pub fn get(&self) -> Result<&T> {
         let result = self.value.get_or_init(|| {
             // Extract the computation function from the mutex
-            let mut fn_guard = self.compute_fn.lock().unwrap();
+            let mut fn_guard = self.compute_fn.lock().expect("Operation failed");
             if let Some(compute_fn) = fn_guard.take() {
                 // Execute the computation
                 compute_fn()
@@ -910,19 +910,19 @@ mod tests {
     #[test]
     fn test_large_graph_iterator() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
-        graph.add_edge(3, 4, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
+        graph.add_edge(3, 4, 3.0).expect("Operation failed");
 
         let mut iterator = LargeGraphIterator::new(&graph, 2);
 
         let chunk1 = iterator.next_chunk();
         assert!(chunk1.is_some());
-        assert_eq!(chunk1.unwrap().len(), 2);
+        assert_eq!(chunk1.expect("Test: operation failed").len(), 2);
 
         let chunk2 = iterator.next_chunk();
         assert!(chunk2.is_some());
-        assert_eq!(chunk2.unwrap().len(), 1);
+        assert_eq!(chunk2.expect("Test: operation failed").len(), 1);
 
         let chunk3 = iterator.next_chunk();
         assert!(chunk3.is_none());
@@ -931,12 +931,12 @@ mod tests {
     #[test]
     fn test_parallel_degree_computation() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
-        graph.add_edge(3, 1, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
+        graph.add_edge(3, 1, 3.0).expect("Operation failed");
 
         let config = ParallelConfig::default();
-        let degrees = graph.parallel_degrees(&config).unwrap();
+        let degrees = graph.parallel_degrees(&config).expect("Operation failed");
 
         assert_eq!(degrees[&1], 2);
         assert_eq!(degrees[&2], 2);
@@ -947,13 +947,13 @@ mod tests {
     fn test_streaming_processor() {
         let mut processor: StreamingGraphProcessor<i32, f64> = StreamingGraphProcessor::new(2);
 
-        processor.add_edge(1, 2, 1.0).unwrap();
+        processor.add_edge(1, 2, 1.0).expect("Operation failed");
         assert_eq!(processor.edge_count(), 0); // Not yet processed
 
-        processor.add_edge(2, 3, 2.0).unwrap();
+        processor.add_edge(2, 3, 2.0).expect("Operation failed");
         assert_eq!(processor.edge_count(), 2); // Batch processed
 
-        let (total_edges, degrees) = processor.finish().unwrap();
+        let (total_edges, degrees) = processor.finish().expect("Operation failed");
         assert_eq!(total_edges, 2);
         assert_eq!(degrees[&1], 1);
         assert_eq!(degrees[&2], 2);
@@ -963,10 +963,10 @@ mod tests {
     #[test]
     fn test_cache_friendly_matrix() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(0, 1, 1.0).unwrap();
-        graph.add_edge(1, 2, 2.0).unwrap();
+        graph.add_edge(0, 1, 1.0).expect("Operation failed");
+        graph.add_edge(1, 2, 2.0).expect("Operation failed");
 
-        let matrix = graph.cache_friendly_matrix().unwrap();
+        let matrix = graph.cache_friendly_matrix().expect("Operation failed");
         assert_eq!(matrix.len(), 3);
         assert_eq!(matrix[0][1], 1.0);
         assert_eq!(matrix[1][2], 2.0);
@@ -1171,13 +1171,13 @@ mod tests {
         assert_eq!(counter.load(Ordering::Relaxed), 0);
 
         // First access computes the value
-        let result1 = lazy_metric.get().unwrap();
+        let result1 = lazy_metric.get().expect("Operation failed");
         assert_eq!(*result1, 42);
         assert!(lazy_metric.is_computed());
         assert_eq!(counter.load(Ordering::Relaxed), 1);
 
         // Second access returns cached value
-        let result2 = lazy_metric.get().unwrap();
+        let result2 = lazy_metric.get().expect("Operation failed");
         assert_eq!(*result2, 42);
         assert_eq!(counter.load(Ordering::Relaxed), 1); // Not incremented again
 
@@ -1218,12 +1218,15 @@ mod tests {
         let handles: Vec<_> = (0..10)
             .map(|_| {
                 let metric = lazy_metric.clone();
-                thread::spawn(move || *metric.get().unwrap())
+                thread::spawn(move || *metric.get().expect("Operation failed"))
             })
             .collect();
 
         // Wait for all threads and collect results
-        let results: Vec<i32> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+        let results: Vec<i32> = handles
+            .into_iter()
+            .map(|h| h.join().expect("Operation failed"))
+            .collect();
 
         // All threads should get the same value
         assert!(results.iter().all(|&x| x == 100));

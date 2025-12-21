@@ -666,7 +666,8 @@ impl AdvancedBenchmark {
             };
         }
 
-        let peak_memory_mb = *memorysamples.iter().max().unwrap() as f64 / 1_048_576.0;
+        let peak_memory_mb =
+            *memorysamples.iter().max().expect("Operation failed") as f64 / 1_048_576.0;
         let average_memory_mb =
             memorysamples.iter().sum::<usize>() as f64 / (memorysamples.len() as f64 * 1_048_576.0);
 
@@ -1332,7 +1333,6 @@ mod tests {
     use scirs2_core::ndarray::Array2;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_config_default() {
         let config = BenchmarkConfig::default();
         assert_eq!(config.warmup_iterations, 5);
@@ -1351,7 +1351,9 @@ mod tests {
             Duration::from_millis(98),
         ];
 
-        let stats = benchmark.calculate_performance_statistics(&times).unwrap();
+        let stats = benchmark
+            .calculate_performance_statistics(&times)
+            .expect("Operation failed");
         assert!(stats.mean.as_millis() > 90 && stats.mean.as_millis() < 120);
         assert!(stats.throughput > 0.0);
         assert!(!stats.is_stable || stats.coefficient_of_variation < 0.1);
@@ -1385,7 +1387,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_benchmark_creation() {
         let config = BenchmarkConfig {
             warmup_iterations: 2,

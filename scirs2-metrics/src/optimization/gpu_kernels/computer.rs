@@ -698,7 +698,7 @@ impl AdvancedGpuComputer {
             .zip(y_pred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
         Ok(mse)
     }
 
@@ -716,7 +716,7 @@ impl AdvancedGpuComputer {
             .zip(y_pred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
         Ok(mae)
     }
 
@@ -729,7 +729,8 @@ impl AdvancedGpuComputer {
     where
         F: Float + std::iter::Sum,
     {
-        let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
+        let mean_true =
+            y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).expect("Operation failed");
 
         let ss_tot = y_true
             .iter()
@@ -758,7 +759,7 @@ impl AdvancedGpuComputer {
     where
         F: Float + std::iter::Sum,
     {
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
         let mean_x = x.iter().cloned().sum::<F>() / n;
         let mean_y = y.iter().cloned().sum::<F>() / n;
 
@@ -820,14 +821,14 @@ impl AdvancedGpuComputer {
             let diff = F::simd_sub(y_true, y_pred);
             let squared = F::simd_mul(&diff.view(), &diff.view());
             let sum = F::simd_sum(&squared.view());
-            Ok(sum / F::from(y_true.len()).unwrap())
+            Ok(sum / F::from(y_true.len()).expect("Operation failed"))
         } else {
             let mse = y_true
                 .iter()
                 .zip(y_pred.iter())
                 .map(|(&t, &p)| (t - p) * (t - p))
                 .sum::<F>()
-                / F::from(y_true.len()).unwrap();
+                / F::from(y_true.len()).expect("Operation failed");
             Ok(mse)
         }
     }
@@ -840,14 +841,14 @@ impl AdvancedGpuComputer {
             let diff = F::simd_sub(y_true, y_pred);
             let abs_diff = F::simd_abs(&diff.view());
             let sum = F::simd_sum(&abs_diff.view());
-            Ok(sum / F::from(y_true.len()).unwrap())
+            Ok(sum / F::from(y_true.len()).expect("Operation failed"))
         } else {
             let mae = y_true
                 .iter()
                 .zip(y_pred.iter())
                 .map(|(&t, &p)| (t - p).abs())
                 .sum::<F>()
-                / F::from(y_true.len()).unwrap();
+                / F::from(y_true.len()).expect("Operation failed");
             Ok(mae)
         }
     }
@@ -857,7 +858,7 @@ impl AdvancedGpuComputer {
         F: Float + SimdUnifiedOps + std::iter::Sum,
     {
         if self.capabilities.simd_available {
-            let mean_true = F::simd_sum(y_true) / F::from(y_true.len()).unwrap();
+            let mean_true = F::simd_sum(y_true) / F::from(y_true.len()).expect("Operation failed");
             let mean_array = Array1::from_elem(y_true.len(), mean_true);
 
             let diff_from_mean = F::simd_sub(y_true, &mean_array.view());
@@ -883,7 +884,7 @@ impl AdvancedGpuComputer {
         F: Float + SimdUnifiedOps + std::iter::Sum,
     {
         if self.capabilities.simd_available {
-            let n = F::from(x.len()).unwrap();
+            let n = F::from(x.len()).expect("Operation failed");
             let mean_x = F::simd_sum(x) / n;
             let mean_y = F::simd_sum(y) / n;
 
@@ -1047,7 +1048,7 @@ impl AdvancedGpuComputer {
             .zip(y_pred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
         Ok(mse)
     }
 
@@ -1061,7 +1062,7 @@ impl AdvancedGpuComputer {
             .zip(y_pred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
         Ok(mae)
     }
 
@@ -1070,7 +1071,8 @@ impl AdvancedGpuComputer {
     where
         F: Float + NumCast + std::iter::Sum,
     {
-        let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
+        let mean_true =
+            y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).expect("Operation failed");
 
         let ss_tot = y_true
             .iter()

@@ -294,7 +294,7 @@ where
     chunks.sort_by(|a, b| {
         b.processing_priority
             .partial_cmp(&a.processing_priority)
-            .unwrap()
+            .expect("Operation failed")
     });
 
     Ok(chunks)
@@ -1125,7 +1125,7 @@ mod tests {
 
         let result =
             ai_predictive_chunking::<f64>(&datashape, &content_analysis, &mut ai_model, &config)
-                .unwrap();
+                .expect("Operation failed");
 
         assert!(!result.is_empty());
         assert!(!result[0].size.is_empty());
@@ -1133,13 +1133,13 @@ mod tests {
 
     #[test]
     fn test_content_aware_adaptive_chunking() {
-        let image =
-            Array2::from_shape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect())
+            .expect("Operation failed");
         let target_chunk_size = 25;
         let config = AIStreamConfig::default();
 
-        let result =
-            content_aware_adaptive_chunking(image.view(), target_chunk_size, &config).unwrap();
+        let result = content_aware_adaptive_chunking(image.view(), target_chunk_size, &config)
+            .expect("Operation failed");
 
         assert!(!result.is_empty());
         assert!(result[0].processing_priority >= 0.0);
@@ -1159,8 +1159,8 @@ mod tests {
         let mut prediction_model = Array2::zeros((5, 5));
         let config = AIStreamConfig::default();
 
-        let result =
-            intelligent_memory_management(&current_usage, &mut prediction_model, &config).unwrap();
+        let result = intelligent_memory_management(&current_usage, &mut prediction_model, &config)
+            .expect("Operation failed");
 
         // Should return some valid strategy
         match result {

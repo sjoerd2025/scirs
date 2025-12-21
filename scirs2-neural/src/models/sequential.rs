@@ -100,7 +100,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
             outputs.push(batch_output);
         // Concatenate all batch outputs
         if outputs.len() == 1 {
-            Ok(outputs.into_iter().next().unwrap())
+            Ok(outputs.into_iter().next().expect("Operation failed"))
         } else {
             // For multiple batches, concatenate along the first axis
             let mut concatenated = outputs[0].clone();
@@ -273,9 +273,9 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Model
 //         let mut rng = StdRng::seed_from_u64(42);
 //         let mut model = Sequential::<f64>::new();
 //         // Add layers
-//         model.add_layer(Dense::new(4, 8, None, &mut rng).unwrap());
-//         model.add_layer(Dense::new(8, 4, None, &mut rng).unwrap());
-//         model.add_layer(Dense::new(4, 1, None, &mut rng).unwrap());
+//         model.add_layer(Dense::new(4, 8, None, &mut rng).expect("Operation failed"));
+//         model.add_layer(Dense::new(8, 4, None, &mut rng).expect("Operation failed"));
+//         model.add_layer(Dense::new(4, 1, None, &mut rng).expect("Operation failed"));
 //         // Create dummy data
 //         let train_x = Array2::<f64>::from_elem((100, 4), 0.5).into_dyn();
 //         let train_y = Array2::<f64>::from_elem((100, 1), 1.0).into_dyn();
@@ -290,20 +290,20 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Model
 //         let loss_fn = MeanSquaredError::new();
 //         let mut optimizer = SGD::new(0.01);
 //         // Train the model
-//         model.fit(&train_x, &train_y, &config, &loss_fn, &mut optimizer).unwrap();
+//         model.fit(&train_x, &train_y, &config, &loss_fn, &mut optimizer).expect("Operation failed");
 //         // Check that training history was recorded
 //         assert!(!model.training_history().train_loss.is_empty());
 //         assert!(!model.training_history().val_loss.is_empty());
 //     }
 //     #[test]
 //     fn test_sequential_prediction() {
-//         model.add_layer(Dense::new(3, 5, None, &mut rng).unwrap());
-//         model.add_layer(Dense::new(5, 2, None, &mut rng).unwrap());
+//         model.add_layer(Dense::new(3, 5, None, &mut rng).expect("Operation failed"));
+//         model.add_layer(Dense::new(5, 2, None, &mut rng).expect("Operation failed"));
 //         let input = Array2::<f64>::from_elem((2, 3), 0.5).into_dyn();
-//         let output = model.predict(&input).unwrap();
+//         let output = model.predict(&input).expect("Operation failed");
 //         assert_eq!(output.shape(), &[2, 2]);
 //     fn test_batched_prediction() {
 //         let input = Array2::<f64>::from_elem((25, 3), 0.5).into_dyn();
-//         let output = model.predict_batched(&input, 10).unwrap();
+//         let output = model.predict_batched(&input, 10).expect("Operation failed");
 //         assert_eq!(output.shape(), &[25, 2]);
 // }

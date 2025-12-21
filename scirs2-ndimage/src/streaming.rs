@@ -198,7 +198,7 @@ where
                 .enumerate()
                 .filter(|(_, &d)| d > 1)
                 .max_by_key(|(_, &d)| d)
-                .unwrap();
+                .expect("Operation failed");
 
             chunk_dims[max_idx_] /= 2;
             current_size = chunk_dims.iter().product::<usize>() * element_size;
@@ -482,7 +482,9 @@ where
         self.sigma
             .iter()
             .map(|&s| {
-                let truncate = self.truncate.unwrap_or(T::from_f64(4.0).unwrap());
+                let truncate = self
+                    .truncate
+                    .unwrap_or(T::from_f64(4.0).expect("Operation failed"));
                 (truncate * s).to_usize().unwrap_or(4)
             })
             .collect()
@@ -532,12 +534,14 @@ where
             if coord_in_dim < overlap_size {
                 // We're in the overlap region at the beginning
                 let distance_from_edge = coord_in_dim;
-                let weight = T::from_f64(distance_from_edge as f64 / overlap_size as f64).unwrap();
+                let weight = T::from_f64(distance_from_edge as f64 / overlap_size as f64)
+                    .expect("Operation failed");
                 *output_pixel = *output_pixel * (T::one() - weight) + chunk_pixel * weight;
             } else if coord_in_dim >= outputshape[dim] - overlap_size {
                 // We're in the overlap region at the end
                 let distance_from_end = outputshape[dim] - 1 - coord_in_dim;
-                let weight = T::from_f64(distance_from_end as f64 / overlap_size as f64).unwrap();
+                let weight = T::from_f64(distance_from_end as f64 / overlap_size as f64)
+                    .expect("Operation failed");
                 *output_pixel = *output_pixel * (T::one() - weight) + chunk_pixel * weight;
             } else {
                 // Not in overlap region - use new _chunk value directly
@@ -603,7 +607,9 @@ mod tests {
         let input = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
 
         let op = StreamingGaussianFilter::new(vec![1.0, 1.0], None);
-        let result = processor.process_in_memory(&input.view(), op).unwrap();
+        let result = processor
+            .process_in_memory(&input.view(), op)
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
     }

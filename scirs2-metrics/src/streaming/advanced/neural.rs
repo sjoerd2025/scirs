@@ -190,7 +190,7 @@ impl<F: Float + std::fmt::Debug> RegretTracker<F> {
 
     pub fn get_average_regret(&self) -> F {
         if self.total_rounds > 0 {
-            self.cumulative_regret / F::from(self.total_rounds).unwrap()
+            self.cumulative_regret / F::from(self.total_rounds).expect("Failed to convert to float")
         } else {
             F::zero()
         }
@@ -236,7 +236,8 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign + std::iter::Sum> MultiArm
 
         for (i, rewards) in self.rewards.iter().enumerate() {
             if !rewards.is_empty() {
-                let average = rewards.iter().cloned().sum::<F>() / F::from(rewards.len()).unwrap();
+                let average = rewards.iter().cloned().sum::<F>()
+                    / F::from(rewards.len()).expect("Operation failed");
                 if average > best_average {
                     best_average = average;
                     best_action = i;
@@ -256,10 +257,11 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign + std::iter::Sum> MultiArm
             let ucb = if rewards.is_empty() {
                 F::infinity() // Unplayed actions have infinite UCB
             } else {
-                let average = rewards.iter().cloned().sum::<F>() / F::from(rewards.len()).unwrap();
+                let average = rewards.iter().cloned().sum::<F>()
+                    / F::from(rewards.len()).expect("Operation failed");
                 let confidence_bonus =
                     F::from(confidence_level * (total_counts as f64 / self.counts[i] as f64).ln())
-                        .unwrap()
+                        .expect("Operation failed")
                         .sqrt();
                 average + confidence_bonus
             };
@@ -291,7 +293,7 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign + std::iter::Sum> MultiArm
                 if r.is_empty() {
                     None
                 } else {
-                    Some(r.iter().cloned().sum::<F>() / F::from(r.len()).unwrap())
+                    Some(r.iter().cloned().sum::<F>() / F::from(r.len()).expect("Operation failed"))
                 }
             })
             .fold(F::neg_infinity(), F::max);
@@ -310,9 +312,10 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign + std::iter::Sum> MultiArm
                     (0, F::zero(), F::zero())
                 } else {
                     let count = rewards.len();
-                    let mean = rewards.iter().cloned().sum::<F>() / F::from(count).unwrap();
+                    let mean = rewards.iter().cloned().sum::<F>()
+                        / F::from(count).expect("Failed to convert to float");
                     let variance = rewards.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-                        / F::from(count.max(1)).unwrap();
+                        / F::from(count.max(1)).expect("Operation failed");
                     (count, mean, variance)
                 }
             })
@@ -426,9 +429,10 @@ impl<F: Float + std::fmt::Debug> AdaptiveLearningScheduler<F> {
                 if self.performance_history.len() > *patience {
                     let recent_performance =
                         &self.performance_history[self.performance_history.len() - patience..];
-                    let is_plateau = recent_performance
-                        .windows(2)
-                        .all(|w| (w[1] - w[0]).abs() < F::from(0.001).unwrap());
+                    let is_plateau = recent_performance.windows(2).all(|w| {
+                        (w[1] - w[0]).abs()
+                            < F::from(0.001).expect("Failed to convert constant to float")
+                    });
                     if is_plateau {
                         self.current_lr = self.current_lr * *factor;
                     }
@@ -483,9 +487,9 @@ pub struct SchedulerAdaptationParams<F: Float + std::fmt::Debug> {
 impl<F: Float + std::fmt::Debug> Default for SchedulerAdaptationParams<F> {
     fn default() -> Self {
         Self {
-            min_lr: F::from(1e-6).unwrap(),
-            max_lr: F::from(1e-1).unwrap(),
-            sensitivity: F::from(0.1).unwrap(),
+            min_lr: F::from(1e-6).expect("Failed to convert constant to float"),
+            max_lr: F::from(1e-1).expect("Failed to convert constant to float"),
+            sensitivity: F::from(0.1).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -551,7 +555,10 @@ impl<F: Float + std::fmt::Debug + Send + Sync + scirs2_core::ndarray::ScalarOper
             input_dim,
             output_dim,
             autoencoder: AutoencoderNetwork::new(input_dim, output_dim),
-            feature_selector: FeatureSelectionNetwork::new(input_dim, F::from(0.1).unwrap()),
+            feature_selector: FeatureSelectionNetwork::new(
+                input_dim,
+                F::from(0.1).expect("Failed to convert constant to float"),
+            ),
             attention: AttentionMechanism::new(input_dim, output_dim, AttentionType::SelfAttention),
         }
     }

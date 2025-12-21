@@ -210,7 +210,7 @@ impl EnhancedProgressTracker {
 
         // Update statistics
         {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("Operation failed");
             stats.update(processed, now);
         }
 
@@ -233,7 +233,7 @@ impl EnhancedProgressTracker {
         }
 
         let processed = {
-            let stats = self.stats.lock().unwrap();
+            let stats = self.stats.lock().expect("Operation failed");
             stats.processed + amount
         };
 
@@ -250,7 +250,7 @@ impl EnhancedProgressTracker {
 
         // Set processed to total
         {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("Operation failed");
             let total = stats.total;
             stats.processed = total;
             stats.percentage = 100.0;
@@ -281,19 +281,19 @@ impl EnhancedProgressTracker {
 
     /// Get the current progress statistics
     pub fn stats(&self) -> ProgressStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Operation failed").clone()
     }
 
     /// Determine if we should update based on fixed interval
     fn should_update_fixed(&self) -> bool {
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
         let elapsed = stats.last_update.elapsed();
         elapsed >= self.config.min_update_interval
     }
 
     /// Determine if we should update based on adaptive interval
     fn should_update_adaptive(&self) -> bool {
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
         let elapsed = stats.last_update.elapsed();
 
         // Always update if we've exceeded the maximum interval
@@ -331,7 +331,7 @@ impl EnhancedProgressTracker {
             return;
         }
 
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
         let symbols = self.config.symbols.clone().unwrap_or_default();
 
         match self.config.style {

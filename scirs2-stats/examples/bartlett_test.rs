@@ -20,7 +20,7 @@ fn main() {
 
     // Test whether the groups have equal variances
     let samples = vec![a.view(), b.view(), c.view()];
-    let (stat, p_value) = bartlett(&samples).unwrap();
+    let (stat, p_value) = bartlett(&samples).expect("Operation failed");
 
     println!("Bartlett's test results:");
     println!("Test statistic: {:.6}", stat);
@@ -51,7 +51,7 @@ fn main() {
     println!("Group E: {:.6}", variance(&e));
 
     let samples2 = vec![d.view(), e.view()];
-    let (stat, p_value) = bartlett(&samples2).unwrap();
+    let (stat, p_value) = bartlett(&samples2).expect("Operation failed");
 
     println!("Bartlett's test results:");
     println!("Test statistic: {:.6}", stat);
@@ -76,7 +76,7 @@ fn main() {
     println!("Group G: {:.6}", variance(&g));
 
     let samples3 = vec![f.view(), g.view()];
-    let (stat, p_value) = bartlett(&samples3).unwrap();
+    let (stat, p_value) = bartlett(&samples3).expect("Operation failed");
 
     println!("Bartlett's test results:");
     println!("Test statistic: {:.6}", stat);

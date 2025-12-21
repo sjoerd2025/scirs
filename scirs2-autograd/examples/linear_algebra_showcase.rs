@@ -15,15 +15,15 @@ fn main() {
         let tr = trace(a);
 
         println!("Matrix A:");
-        println!("{:?}", a.eval(g).unwrap());
+        println!("{:?}", a.eval(g).expect("Operation failed"));
         println!("Identity matrix:");
-        println!("{:?}", eye_matrix.eval(g).unwrap());
-        println!("Trace of A: {}", tr.eval(g).unwrap()[[]]);
+        println!("{:?}", eye_matrix.eval(g).expect("Operation failed"));
+        println!("Trace of A: {}", tr.eval(g).expect("Operation failed")[[]]);
 
         let diag_values = convert_to_tensor(array![4.0, 5.0], g);
         let diag_matrix = diag(diag_values);
         println!("Diagonal matrix from [4, 5]:");
-        println!("{:?}", diag_matrix.eval(g).unwrap());
+        println!("{:?}", diag_matrix.eval(g).expect("Operation failed"));
 
         // 2. Matrix Operations with Gradients
         println!("\n2. Matrix Operations with Gradients");
@@ -33,13 +33,16 @@ fn main() {
         let det_a = det(&a_var); // Using the new det alias
 
         println!("Inverse of A:");
-        println!("{:?}", inv_a.eval(g).unwrap());
-        println!("Determinant of A: {}", det_a.eval(g).unwrap()[[]]);
+        println!("{:?}", inv_a.eval(g).expect("Operation failed"));
+        println!(
+            "Determinant of A: {}",
+            det_a.eval(g).expect("Operation failed")[[]]
+        );
 
         // Compute gradient of determinant
         let grads = grad(&[&det_a], &[&a_var]);
         println!("Gradient of determinant w.r.t. A:");
-        println!("{:?}", grads[0].eval(g).unwrap());
+        println!("{:?}", grads[0].eval(g).expect("Operation failed"));
 
         // 3. Matrix Decompositions
         println!("\n3. Matrix Decompositions");
@@ -47,15 +50,21 @@ fn main() {
         // QR decomposition
         let (q, r) = qr(a);
         println!("QR decomposition:");
-        println!("Q:\n{:?}", q.eval(g).unwrap());
-        println!("R:\n{:?}", r.eval(g).unwrap());
+        println!("Q:\n{:?}", q.eval(g).expect("Operation failed"));
+        println!("R:\n{:?}", r.eval(g).expect("Operation failed"));
 
         // Eigenvalue decomposition
         let symmetric = convert_to_tensor(array![[4.0, 1.0], [1.0, 3.0]], g);
         let (eigenvals, eigenvecs) = eig(&symmetric); // Using the new eig alias
         println!("\nEigenvalue decomposition:");
-        println!("Eigenvalues: {:?}", eigenvals.eval(g).unwrap());
-        println!("Eigenvectors:\n{:?}", eigenvecs.eval(g).unwrap());
+        println!(
+            "Eigenvalues: {:?}",
+            eigenvals.eval(g).expect("Operation failed")
+        );
+        println!(
+            "Eigenvectors:\n{:?}",
+            eigenvecs.eval(g).expect("Operation failed")
+        );
 
         // SVD
         let matrix = convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], g);
@@ -88,13 +97,16 @@ fn main() {
         let x = solve(a_system, b_system);
 
         println!("Solving Ax = b:");
-        println!("A:\n{:?}", a_system.eval(g).unwrap());
-        println!("b:\n{:?}", b_system.eval(g).unwrap());
-        println!("x:\n{:?}", x.eval(g).unwrap());
+        println!("A:\n{:?}", a_system.eval(g).expect("Operation failed"));
+        println!("b:\n{:?}", b_system.eval(g).expect("Operation failed"));
+        println!("x:\n{:?}", x.eval(g).expect("Operation failed"));
 
         // Verify solution
         let ax = matmul(a_system, x);
-        println!("Verification (Ax):\n{:?}", ax.eval(g).unwrap());
+        println!(
+            "Verification (Ax):\n{:?}",
+            ax.eval(g).expect("Operation failed")
+        );
 
         // 5. Matrix Functions
         println!("\n5. Matrix Functions");
@@ -104,17 +116,17 @@ fn main() {
         let log_exp = logm(&exp_matrix); // Using the new logm alias
 
         println!("Original matrix:");
-        println!("{:?}", small_matrix.eval(g).unwrap());
+        println!("{:?}", small_matrix.eval(g).expect("Operation failed"));
         println!("exp(A):");
-        println!("{:?}", exp_matrix.eval(g).unwrap());
+        println!("{:?}", exp_matrix.eval(g).expect("Operation failed"));
         println!("log(exp(A)) - should equal A:");
-        println!("{:?}", log_exp.eval(g).unwrap());
+        println!("{:?}", log_exp.eval(g).expect("Operation failed"));
 
         // Matrix square root
         let pos_def = convert_to_tensor(array![[4.0, 1.0], [1.0, 3.0]], g);
         let sqrt_matrix = sqrtm(&pos_def); // Using the new sqrtm alias
         println!("\nMatrix square root:");
-        println!("{:?}", sqrt_matrix.eval(g).unwrap());
+        println!("{:?}", sqrt_matrix.eval(g).expect("Operation failed"));
 
         // 6. Special Matrix Operations
         println!("\n6. Special Matrix Operations");
@@ -123,12 +135,12 @@ fn main() {
         let pd_matrix = convert_to_tensor(array![[4.0, 2.0], [2.0, 5.0]], g);
         let chol = cholesky(&pd_matrix);
         println!("Cholesky decomposition of positive definite matrix:");
-        println!("{:?}", chol.eval(g).unwrap());
+        println!("{:?}", chol.eval(g).expect("Operation failed"));
 
         // Verify: L * L^T = A
         let reconstructed = matmul(chol, transpose(chol, &[1, 0]));
         println!("L * L^T (should equal original):");
-        println!("{:?}", reconstructed.eval(g).unwrap());
+        println!("{:?}", reconstructed.eval(g).expect("Operation failed"));
 
         // Extract triangular parts
         let matrix_3x3 =
@@ -137,9 +149,9 @@ fn main() {
         let upper = triu(&matrix_3x3, 0);
 
         println!("\nLower triangular part:");
-        println!("{:?}", lower.eval(g).unwrap());
+        println!("{:?}", lower.eval(g).expect("Operation failed"));
         println!("Upper triangular part:");
-        println!("{:?}", upper.eval(g).unwrap());
+        println!("{:?}", upper.eval(g).expect("Operation failed"));
 
         // 7. Complex Example: Principal Component Analysis (PCA)
         println!("\n7. Complex Example: PCA-like computation");
@@ -169,11 +181,11 @@ fn main() {
         let (eigenvalues, eigenvectors) = eig(&cov_scaled); // Using the new eig alias
 
         println!("Data covariance matrix:");
-        println!("{:?}", cov_scaled.eval(g).unwrap());
+        println!("{:?}", cov_scaled.eval(g).expect("Operation failed"));
         println!("Eigenvalues (variances along principal components):");
-        println!("{:?}", eigenvalues.eval(g).unwrap());
+        println!("{:?}", eigenvalues.eval(g).expect("Operation failed"));
         println!("Eigenvectors (principal components):");
-        println!("{:?}", eigenvectors.eval(g).unwrap());
+        println!("{:?}", eigenvectors.eval(g).expect("Operation failed"));
 
         // 8. Gradient Flow Through Complex Operations
         println!("\n8. Gradient Flow Through Complex Operations");
@@ -194,9 +206,9 @@ fn main() {
         let grads = grad(&[&combined], &[&a_grad, &b_grad]);
 
         println!("Gradient of combined result w.r.t. A:");
-        println!("{:?}", grads[0].eval(g).unwrap());
+        println!("{:?}", grads[0].eval(g).expect("Operation failed"));
         println!("Gradient of combined result w.r.t. b:");
-        println!("{:?}", grads[1].eval(g).unwrap());
+        println!("{:?}", grads[1].eval(g).expect("Operation failed"));
 
         println!("\n=== All linear algebra operations completed successfully! ===");
     });

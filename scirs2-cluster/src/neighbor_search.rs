@@ -220,7 +220,7 @@ impl<F: Float + FromPrimitive + Debug> KDTree<F> {
             });
         }
 
-        let data = self.data.as_ref().unwrap();
+        let data = self.data.as_ref().expect("Operation failed");
 
         // Choose splitting dimension (cycling through dimensions)
         let split_dim = depth % n_features;
@@ -461,7 +461,11 @@ impl<F: Float + FromPrimitive + Debug> NeighborSearcher<F> for BruteForceSearch<
             .collect();
 
         // Sort by distance and take k nearest
-        candidates.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+        candidates.sort_by(|a, b| {
+            a.distance
+                .partial_cmp(&b.distance)
+                .expect("Operation failed")
+        });
         candidates.truncate(k_actual);
 
         let indices = candidates.iter().map(|c| c.index).collect();
@@ -878,7 +882,7 @@ mod tests {
                 10.0, 11.0, // Point 5
             ],
         )
-        .unwrap()
+        .expect("Operation failed")
     }
 
     #[test]
@@ -886,11 +890,13 @@ mod tests {
         let data = create_test_data();
         let mut searcher = BruteForceSearch::new();
 
-        searcher.fit(data.view()).unwrap();
+        searcher.fit(data.view()).expect("Operation failed");
 
         // Query at origin - should find points 0, 1, 2 as nearest
         let query = Array1::from_vec(vec![0.0, 0.0]);
-        let result = searcher.kneighbors(query.view(), 3).unwrap();
+        let result = searcher
+            .kneighbors(query.view(), 3)
+            .expect("Operation failed");
 
         assert_eq!(result.indices.len(), 3);
         assert_eq!(result.distances.len(), 3);
@@ -900,7 +906,9 @@ mod tests {
         assert!(result.distances[0] < 1e-10);
 
         // Test radius search
-        let radius_result = searcher.radius_neighbors(query.view(), 1.5).unwrap();
+        let radius_result = searcher
+            .radius_neighbors(query.view(), 1.5)
+            .expect("Operation failed");
         assert!(radius_result.indices.len() >= 3); // Should find at least points 0, 1, 2
     }
 
@@ -909,11 +917,13 @@ mod tests {
         let data = create_test_data();
         let mut searcher = KDTree::new(2);
 
-        searcher.fit(data.view()).unwrap();
+        searcher.fit(data.view()).expect("Operation failed");
 
         // Query at origin
         let query = Array1::from_vec(vec![0.0, 0.0]);
-        let result = searcher.kneighbors(query.view(), 3).unwrap();
+        let result = searcher
+            .kneighbors(query.view(), 3)
+            .expect("Operation failed");
 
         assert_eq!(result.indices.len(), 3);
         assert_eq!(result.distances.len(), 3);
@@ -928,11 +938,13 @@ mod tests {
         let data = create_test_data();
         let mut searcher = BallTree::new(2);
 
-        searcher.fit(data.view()).unwrap();
+        searcher.fit(data.view()).expect("Operation failed");
 
         // Query at origin
         let query = Array1::from_vec(vec![0.0, 0.0]);
-        let result = searcher.kneighbors(query.view(), 3).unwrap();
+        let result = searcher
+            .kneighbors(query.view(), 3)
+            .expect("Operation failed");
 
         assert_eq!(result.indices.len(), 3);
         assert_eq!(result.distances.len(), 3);
@@ -960,10 +972,12 @@ mod tests {
             };
 
             let mut searcher = create_neighbor_searcher(config);
-            searcher.fit(data.view()).unwrap();
+            searcher.fit(data.view()).expect("Operation failed");
 
             let query = Array1::from_vec(vec![0.0, 0.0]);
-            let result = searcher.kneighbors(query.view(), 2).unwrap();
+            let result = searcher
+                .kneighbors(query.view(), 2)
+                .expect("Operation failed");
 
             assert_eq!(result.indices.len(), 2);
             assert_eq!(result.distances.len(), 2);
@@ -983,10 +997,12 @@ mod tests {
     fn test_k_zero() {
         let data = create_test_data();
         let mut searcher = BruteForceSearch::new();
-        searcher.fit(data.view()).unwrap();
+        searcher.fit(data.view()).expect("Operation failed");
 
         let query = Array1::from_vec(vec![0.0, 0.0]);
-        let result = searcher.kneighbors(query.view(), 0).unwrap();
+        let result = searcher
+            .kneighbors(query.view(), 0)
+            .expect("Operation failed");
 
         assert_eq!(result.indices.len(), 0);
         assert_eq!(result.distances.len(), 0);
@@ -996,11 +1012,14 @@ mod tests {
     fn test_batch_queries() {
         let data = create_test_data();
         let mut searcher = BruteForceSearch::new();
-        searcher.fit(data.view()).unwrap();
+        searcher.fit(data.view()).expect("Operation failed");
 
-        let queries = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
+        let queries =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).expect("Operation failed");
 
-        let results = searcher.kneighbors_batch(queries.view(), 2).unwrap();
+        let results = searcher
+            .kneighbors_batch(queries.view(), 2)
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].indices.len(), 2);

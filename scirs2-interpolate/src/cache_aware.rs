@@ -29,11 +29,11 @@
 //! };
 //!
 //! // Create a cache-optimized RBF interpolator
-//! let points = Array2::from_shape_vec((1000, 3), vec![0.0; 3000]).unwrap();
+//! let points = Array2::from_shape_vec((1000, 3), vec![0.0; 3000]).expect("Operation failed");
 //! let values = Array1::from_vec(vec![1.0; 1000]);
 //! let config = CacheOptimizedConfig::default();
 //!
-//! let rbf = CacheAwareRBF::new(points, values, config).unwrap();
+//! let rbf = CacheAwareRBF::new(points, values, config).expect("Operation failed");
 //! ```
 
 use crate::advanced::rbf::RBFKernel;
@@ -393,7 +393,7 @@ where
             self.precompute_coefficients()?;
         }
 
-        let coefficients = self.coefficients.as_ref().unwrap();
+        let coefficients = self.coefficients.as_ref().expect("Operation failed");
         let n_queries = query_points.nrows();
         let n_points = self.points.nrows();
         let block_size = self._config.block_size;

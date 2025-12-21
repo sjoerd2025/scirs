@@ -285,7 +285,11 @@ fn detect_orb_features(
     }
 
     // Limit total number of keypoints
-    all_keypoints.sort_by(|a, b| b.response.partial_cmp(&a.response).unwrap());
+    all_keypoints.sort_by(|a, b| {
+        b.response
+            .partial_cmp(&a.response)
+            .expect("Operation failed")
+    });
     all_keypoints.truncate(params.max_features);
 
     // Compute orientation for each keypoint
@@ -390,7 +394,11 @@ fn detect_fast_keypoints(
 
     // Sort by response and limit _features
     let mut sorted_keypoints = suppressed;
-    sorted_keypoints.sort_by(|a, b| b.response.partial_cmp(&a.response).unwrap());
+    sorted_keypoints.sort_by(|a, b| {
+        b.response
+            .partial_cmp(&a.response)
+            .expect("Operation failed")
+    });
     sorted_keypoints.truncate(max_features);
 
     Ok(sorted_keypoints)
@@ -469,7 +477,11 @@ fn non_maximum_suppression(keypoints: &[Keypoint], radius: f32) -> Result<Vec<Ke
     let radius_sq = radius * radius;
 
     let mut sorted_keypoints = keypoints.to_vec();
-    sorted_keypoints.sort_by(|a, b| b.response.partial_cmp(&a.response).unwrap());
+    sorted_keypoints.sort_by(|a, b| {
+        b.response
+            .partial_cmp(&a.response)
+            .expect("Operation failed")
+    });
 
     for keypoint in sorted_keypoints {
         let mut is_local_maximum = true;
@@ -1337,7 +1349,7 @@ mod tests {
         let result = generate_simple_descriptors(&image, &keypoints);
         assert!(result.is_ok());
 
-        let descriptors = result.unwrap();
+        let descriptors = result.expect("Operation failed");
         assert_eq!(descriptors.len(), 1);
         assert!(!descriptors[0].is_empty());
     }
@@ -1350,7 +1362,7 @@ mod tests {
         let result = template_register(&reference, &template, None);
         assert!(result.is_ok());
 
-        let reg_result = result.unwrap();
+        let reg_result = result.expect("Operation failed");
         assert!(reg_result.converged);
     }
 

@@ -368,7 +368,7 @@ fn order_contour_points(points: &mut Vec<(f64, f64)>) {
     points.remove(0);
 
     while !points.is_empty() {
-        let last = ordered.last().unwrap();
+        let last = ordered.last().expect("Operation failed");
 
         // Find nearest point
         let mut min_dist = f64::INFINITY;
@@ -528,7 +528,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = active_contour(&image.view(), &initial.view(), Some(params)).unwrap();
+        let result =
+            active_contour(&image.view(), &initial.view(), Some(params)).expect("Operation failed");
 
         assert_eq!(result.dim(), (20, 2));
     }

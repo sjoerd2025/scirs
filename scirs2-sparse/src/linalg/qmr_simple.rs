@@ -34,8 +34,8 @@ impl<F: Float> Default for QMROptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             left_preconditioner: None,
             right_preconditioner: None,
@@ -199,7 +199,7 @@ mod tests {
         let b = vec![1.0, 2.0, 3.0];
         let options = QMROptions::default();
 
-        let result = qmr(&identity, &b, options).unwrap();
+        let result = qmr(&identity, &b, options).expect("Operation failed");
         assert!(result.converged);
         #[allow(clippy::needless_range_loop)]
         for i in 0..3 {
@@ -221,7 +221,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = qmr(&diagonal, &b, options).unwrap();
+        let result = qmr(&diagonal, &b, options).expect("Operation failed");
         assert!(result.converged);
         #[allow(clippy::needless_range_loop)]
         for i in 0..3 {

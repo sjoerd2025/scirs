@@ -291,7 +291,7 @@ fn calculatetext_metrics(
         let pred_class = pred_row
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(i_)| i)
             .unwrap_or(0);
         let true_class = target_row
@@ -501,7 +501,7 @@ mod tests {
                 0.7, 0.2, 0.1, // Class 0
             ],
         )
-        .unwrap()
+        .expect("Operation failed")
         .into_dyn();
         let targets = Array2::from_shape_vec(
                 0.0, 1.0, 0.0, // Class 1

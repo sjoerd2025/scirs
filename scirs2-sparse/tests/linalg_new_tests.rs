@@ -9,7 +9,7 @@ fn test_cg_solver() {
     let rows = vec![0, 0, 1, 1];
     let cols = vec![0, 1, 0, 1];
     let data = vec![2.0, -1.0, -1.0, 2.0];
-    let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).expect("Operation failed");
 
     // Use AsLinearOperator trait to convert to LinearOperator
     use scirs2_sparse::linalg::AsLinearOperator;
@@ -20,7 +20,7 @@ fn test_cg_solver() {
 
     // Solve using CG
     let options = CGOptions::default();
-    let result = cg(op.as_ref(), &b, options).unwrap();
+    let result = cg(op.as_ref(), &b, options).expect("Operation failed");
 
     // Check convergence
     assert!(result.converged);
@@ -39,7 +39,7 @@ fn test_bicg_solver() {
     let rows = vec![0, 0, 1, 1];
     let cols = vec![0, 1, 0, 1];
     let data = vec![2.0, -1.0, 1.0, 3.0];
-    let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).expect("Operation failed");
 
     // Use AsLinearOperator trait to convert to LinearOperator
     use scirs2_sparse::linalg::AsLinearOperator;
@@ -54,7 +54,7 @@ fn test_bicg_solver() {
         rtol: 1e-8,
         ..Default::default()
     };
-    let result = bicg(op.as_ref(), &b, options).unwrap();
+    let result = bicg(op.as_ref(), &b, options).expect("Operation failed");
 
     // Check convergence (for some small problems, BiCG may struggle)
     println!(
@@ -65,7 +65,7 @@ fn test_bicg_solver() {
 
     // Check actual residual even if BiCG didn't converge
     let residual = {
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         let r: Vec<f64> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
         r.iter().map(|&x| x * x).sum::<f64>().sqrt()
     };
@@ -86,7 +86,7 @@ fn test_expm_multiply() {
     let rows = vec![0, 1];
     let cols = vec![0, 1];
     let data = vec![1.0, -1.0];
-    let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).expect("Operation failed");
 
     // Use AsLinearOperator trait to convert to LinearOperator
     use scirs2_sparse::linalg::AsLinearOperator;
@@ -96,7 +96,7 @@ fn test_expm_multiply() {
     let v = vec![1.0, 0.0];
 
     // Compute exp(A) * v
-    let result = expm_multiply(op.as_ref(), &v, 1.0, None, None).unwrap();
+    let result = expm_multiply(op.as_ref(), &v, 1.0, None, None).expect("Operation failed");
 
     // Debug output
     println!("expm_multiply result: {:?}", result);

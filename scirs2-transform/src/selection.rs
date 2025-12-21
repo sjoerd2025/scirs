@@ -57,7 +57,7 @@ impl VarianceThreshold {
     ///
     /// This will only remove features that are completely constant.
     pub fn with_defaults() -> Self {
-        Self::new(0.0).unwrap()
+        Self::new(0.0).expect("Operation failed")
     }
 
     /// Fits the VarianceThreshold to the input data
@@ -141,7 +141,7 @@ impl VarianceThreshold {
             ));
         }
 
-        let selected_features = self.selected_features_.as_ref().unwrap();
+        let selected_features = self.selected_features_.as_ref().expect("Operation failed");
 
         // Check feature consistency
         if let Some(ref variances) = self.variances_ {
@@ -341,7 +341,11 @@ where
 
             // Get indices of features with lowest importance
             let mut indices: Vec<usize> = (0..importances.len()).collect();
-            indices.sort_by(|&i, &j| importances[i].partial_cmp(&importances[j]).unwrap());
+            indices.sort_by(|&i, &j| {
+                importances[i]
+                    .partial_cmp(&importances[j])
+                    .expect("Operation failed")
+            });
 
             // Mark eliminated features with current rank
             for i in 0..n_to_remove {
@@ -403,7 +407,7 @@ where
             ));
         }
 
-        let selected = self.selected_features_.as_ref().unwrap();
+        let selected = self.selected_features_.as_ref().expect("Operation failed");
         Ok(self.subset_features(x, selected))
     }
 
@@ -553,7 +557,7 @@ impl MutualInfoSelector {
 
         // Select top k features
         let mut indices: Vec<usize> = (0..n_features).collect();
-        indices.sort_by(|&i, &j| scores[j].partial_cmp(&scores[i]).unwrap());
+        indices.sort_by(|&i, &j| scores[j].partial_cmp(&scores[i]).expect("Operation failed"));
 
         let selected_features = indices.into_iter().take(self.k).collect();
 
@@ -571,7 +575,7 @@ impl MutualInfoSelector {
             ));
         }
 
-        let selected = self.selected_features_.as_ref().unwrap();
+        let selected = self.selected_features_.as_ref().expect("Operation failed");
         let n_samples = x.shape()[0];
         let mut transformed = Array2::zeros((n_samples, self.k));
 
@@ -616,16 +620,16 @@ mod tests {
             (3, 4),
             vec![1.0, 1.0, 5.0, 1.0, 1.0, 2.0, 5.0, 3.0, 1.0, 3.0, 5.0, 5.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut selector = VarianceThreshold::with_defaults();
-        let transformed = selector.fit_transform(&data).unwrap();
+        let transformed = selector.fit_transform(&data).expect("Operation failed");
 
         // Should keep features 1 and 3 (indices 1 and 3)
         assert_eq!(transformed.shape(), &[3, 2]);
 
         // Check that we kept the right features
-        let selected = selector.get_support().unwrap();
+        let selected = selector.get_support().expect("Operation failed");
         assert_eq!(selected, &[1, 3]);
 
         // Check transformed values
@@ -650,21 +654,21 @@ mod tests {
                 4.0, 1.1, 4.0, // Sample 3
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Set threshold to remove features with very low variance
-        let mut selector = VarianceThreshold::new(0.1).unwrap();
-        let transformed = selector.fit_transform(&data).unwrap();
+        let mut selector = VarianceThreshold::new(0.1).expect("Operation failed");
+        let transformed = selector.fit_transform(&data).expect("Operation failed");
 
         // Feature 1 has very low variance (between 1.0 and 1.1), should be removed
         // Features 0 and 2 have higher variance, should be kept
         assert_eq!(transformed.shape(), &[4, 2]);
 
-        let selected = selector.get_support().unwrap();
+        let selected = selector.get_support().expect("Operation failed");
         assert_eq!(selected, &[0, 2]);
 
         // Check variances
-        let variances = selector.variances().unwrap();
+        let variances = selector.variances().expect("Operation failed");
         assert!(variances[0] > 0.1); // Feature 0 variance
         assert!(variances[1] <= 0.1); // Feature 1 variance (should be low)
         assert!(variances[2] > 0.1); // Feature 2 variance
@@ -676,32 +680,33 @@ mod tests {
             (3, 4),
             vec![1.0, 1.0, 5.0, 1.0, 1.0, 2.0, 5.0, 3.0, 1.0, 3.0, 5.0, 5.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut selector = VarianceThreshold::with_defaults();
-        selector.fit(&data).unwrap();
+        selector.fit(&data).expect("Operation failed");
 
-        let mask = selector.get_support_mask().unwrap();
+        let mask = selector.get_support_mask().expect("Operation failed");
         assert_eq!(mask.len(), 4);
         assert!(!mask[0]); // Feature 0 is constant
         assert!(mask[1]); // Feature 1 has variance
         assert!(!mask[2]); // Feature 2 is constant
         assert!(mask[3]); // Feature 3 has variance
 
-        assert_eq!(selector.n_features_selected().unwrap(), 2);
+        assert_eq!(selector.n_features_selected().expect("Operation failed"), 2);
     }
 
     #[test]
     fn test_variance_threshold_all_removed() {
         // Create data where all features are constant
-        let data = Array::from_shape_vec((3, 2), vec![5.0, 10.0, 5.0, 10.0, 5.0, 10.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![5.0, 10.0, 5.0, 10.0, 5.0, 10.0])
+            .expect("Operation failed");
 
         let mut selector = VarianceThreshold::with_defaults();
-        let transformed = selector.fit_transform(&data).unwrap();
+        let transformed = selector.fit_transform(&data).expect("Operation failed");
 
         // All features should be removed
         assert_eq!(transformed.shape(), &[3, 0]);
-        assert_eq!(selector.n_features_selected().unwrap(), 0);
+        assert_eq!(selector.n_features_selected().expect("Operation failed"), 0);
     }
 
     #[test]
@@ -710,18 +715,19 @@ mod tests {
         assert!(VarianceThreshold::new(-0.1).is_err());
 
         // Test with insufficient samples
-        let small_data = Array::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+        let small_data = Array::from_shape_vec((1, 2), vec![1.0, 2.0]).expect("Operation failed");
         let mut selector = VarianceThreshold::with_defaults();
         assert!(selector.fit(&small_data).is_err());
 
         // Test transform before fit
-        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
         let selector_unfitted = VarianceThreshold::with_defaults();
         assert!(selector_unfitted.transform(&data).is_err());
 
         // Test inverse transform (should always fail)
         let mut selector = VarianceThreshold::with_defaults();
-        selector.fit(&data).unwrap();
+        selector.fit(&data).expect("Operation failed");
         assert!(selector.inverse_transform(&data).is_err());
     }
 
@@ -729,11 +735,12 @@ mod tests {
     fn test_variance_threshold_feature_mismatch() {
         let train_data =
             Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
-        let test_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(); // Different number of features
+                .expect("Operation failed");
+        let test_data =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed"); // Different number of features
 
         let mut selector = VarianceThreshold::with_defaults();
-        selector.fit(&train_data).unwrap();
+        selector.fit(&train_data).expect("Operation failed");
         assert!(selector.transform(&test_data).is_err());
     }
 
@@ -741,12 +748,12 @@ mod tests {
     fn test_variance_calculation() {
         // Test variance calculation manually
         // Data: [1, 2, 3] should have variance = ((1-2)² + (2-2)² + (3-2)²) / 3 = (1 + 0 + 1) / 3 = 2/3
-        let data = Array::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
+        let data = Array::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).expect("Operation failed");
 
         let mut selector = VarianceThreshold::with_defaults();
-        selector.fit(&data).unwrap();
+        selector.fit(&data).expect("Operation failed");
 
-        let variances = selector.variances().unwrap();
+        let variances = selector.variances().expect("Operation failed");
         let expected_variance = 2.0 / 3.0;
         assert_abs_diff_eq!(variances[0], expected_variance, epsilon = 1e-10);
     }
@@ -768,7 +775,7 @@ mod tests {
             target_vec.push(3.0 * x1 + x4 + 0.1 * scirs2_core::random::random::<f64>());
         }
 
-        let x = Array::from_shape_vec((n_samples, 4), data_vec).unwrap();
+        let x = Array::from_shape_vec((n_samples, 4), data_vec).expect("Operation failed");
         let y = Array::from_vec(target_vec);
 
         // Simple importance function based on correlation
@@ -786,13 +793,13 @@ mod tests {
         };
 
         let mut rfe = RecursiveFeatureElimination::new(2, importance_func);
-        let transformed = rfe.fit_transform(&x, &y).unwrap();
+        let transformed = rfe.fit_transform(&x, &y).expect("Operation failed");
 
         // Should select 2 features
         assert_eq!(transformed.shape()[1], 2);
 
         // Check that features 0 and 3 (most important) were selected
-        let selected = rfe.get_support().unwrap();
+        let selected = rfe.get_support().expect("Operation failed");
         assert!(selected.contains(&0) || selected.contains(&3));
     }
 
@@ -817,13 +824,13 @@ mod tests {
             y_data.push(t + 0.5 * t.sin());
         }
 
-        let x = Array::from_shape_vec((n_samples, 3), x_data).unwrap();
+        let x = Array::from_shape_vec((n_samples, 3), x_data).expect("Operation failed");
         let y = Array::from_vec(y_data);
 
         let mut selector = MutualInfoSelector::new(2);
-        selector.fit(&x, &y).unwrap();
+        selector.fit(&x, &y).expect("Operation failed");
 
-        let scores = selector.scores().unwrap();
+        let scores = selector.scores().expect("Operation failed");
 
         // Feature 0 should have highest score (linear relationship)
         // Feature 2 should have second highest (non-linear relationship)
@@ -846,17 +853,17 @@ mod tests {
                 3.1, 0.2, 3.1, // Class 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let y = Array::from_vec(vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]);
 
         let mut selector = MutualInfoSelector::new(2).with_discrete_target();
-        let transformed = selector.fit_transform(&x, &y).unwrap();
+        let transformed = selector.fit_transform(&x, &y).expect("Operation failed");
 
         assert_eq!(transformed.shape(), &[6, 2]);
 
         // Feature 1 (middle column) has low variance within groups, should be excluded
-        let selected = selector.get_support().unwrap();
+        let selected = selector.get_support().expect("Operation failed");
         assert!(!selected.contains(&1));
     }
 

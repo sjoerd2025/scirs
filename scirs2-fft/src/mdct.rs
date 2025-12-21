@@ -33,7 +33,7 @@ use crate::window::Window;
 /// use scirs2_fft::window::Window;
 ///
 /// let signal = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-/// let mdct_result = mdct(&signal, 8, Some(Window::Hann)).unwrap();
+/// let mdct_result = mdct(&signal, 8, Some(Window::Hann)).expect("Operation failed");
 /// assert_eq!(mdct_result.len(), 4); // Output is half the transform size
 /// ```
 #[allow(dead_code)]
@@ -103,8 +103,8 @@ where
 /// use scirs2_fft::window::Window;
 ///
 /// let signal = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-/// let mdct_coeffs = mdct(&signal, 8, Some(Window::Hann)).unwrap();
-/// let reconstructed = imdct(&mdct_coeffs, Some(Window::Hann)).unwrap();
+/// let mdct_coeffs = mdct(&signal, 8, Some(Window::Hann)).expect("Operation failed");
+/// let reconstructed = imdct(&mdct_coeffs, Some(Window::Hann)).expect("Operation failed");
 /// assert_eq!(reconstructed.len(), 8); // Output is twice the input length
 /// ```
 #[allow(dead_code)]
@@ -293,7 +293,7 @@ mod tests {
     #[test]
     fn test_mdct_basic() {
         let signal = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let mdct_result = mdct(&signal, 8, None).unwrap();
+        let mdct_result = mdct(&signal, 8, None).expect("Operation failed");
 
         // MDCT should produce n/2 coefficients
         assert_eq!(mdct_result.len(), 4);
@@ -305,10 +305,10 @@ mod tests {
         let window = Some(Window::Hann);
 
         // Perform MDCT
-        let mdct_coeffs = mdct(&signal, 8, window.clone()).unwrap();
+        let mdct_coeffs = mdct(&signal, 8, window.clone()).expect("Operation failed");
 
         // Perform IMDCT
-        let reconstructed = imdct(&mdct_coeffs, window).unwrap();
+        let reconstructed = imdct(&mdct_coeffs, window).expect("Operation failed");
 
         // For proper reconstruction, we need overlapping blocks
         // This is a simplified test that checks the transform works
@@ -318,7 +318,7 @@ mod tests {
     #[test]
     fn test_mdst_basic() {
         let signal = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let mdst_result = mdst(&signal, 8, None).unwrap();
+        let mdst_result = mdst(&signal, 8, None).expect("Operation failed");
 
         // MDST should produce n/2 coefficients
         assert_eq!(mdst_result.len(), 4);
@@ -331,7 +331,7 @@ mod tests {
         let block2 = array![2.0, 3.0, 4.0, 5.0];
         let blocks = vec![block1, block2];
 
-        let result = mdct_overlap_add(&blocks, Some(Window::Hann), 4).unwrap();
+        let result = mdct_overlap_add(&blocks, Some(Window::Hann), 4).expect("Operation failed");
 
         // Check output length
         assert_eq!(result.len(), 12); // (2-1)*4 + 8

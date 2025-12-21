@@ -672,7 +672,6 @@ mod tests {
     use scirs2_core::ndarray::Array2;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let suite = SciPyBenchmarkSuite::new();
         assert_eq!(suite.results.len(), 0);

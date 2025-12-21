@@ -155,13 +155,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cn_result
             .u
             .last()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .fold(f64::INFINITY, |a, &b| a.min(b)),
         cn_result
             .u
             .last()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     );
@@ -176,13 +176,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         be_result
             .u
             .last()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .fold(f64::INFINITY, |a, &b| a.min(b)),
         be_result
             .u
             .last()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     );

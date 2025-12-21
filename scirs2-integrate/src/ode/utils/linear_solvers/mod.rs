@@ -75,7 +75,7 @@ where
         }
 
         // Check for singularity
-        if max_val < F::from_f64(1e-14).unwrap() {
+        if max_val < F::from_f64(1e-14).expect("Operation failed") {
             return Err(IntegrateError::ValueError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
@@ -264,7 +264,7 @@ where
     }
 
     let max_iter = max_iter.unwrap_or(std::cmp::min(n, 50));
-    let tol = tol.unwrap_or_else(|| F::from_f64(1e-10).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from_f64(1e-10).expect("Operation failed"));
     let restart = restart.unwrap_or(std::cmp::min(n, 20));
 
     // Initial guess: zero vector
@@ -323,7 +323,7 @@ where
 
             h[j + 1][j] = (w.iter().map(|&x| x * x).sum::<F>()).sqrt();
 
-            if h[j + 1][j] < F::from_f64(1e-14).unwrap() {
+            if h[j + 1][j] < F::from_f64(1e-14).expect("Operation failed") {
                 // Linear dependence, stop early
                 break;
             }

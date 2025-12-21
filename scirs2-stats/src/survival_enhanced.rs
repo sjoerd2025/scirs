@@ -65,7 +65,8 @@ where
             )));
         }
 
-        let confidence_level = confidence_level.unwrap_or_else(|| F::from(0.95).unwrap());
+        let confidence_level = confidence_level
+            .unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
         // Sort data by duration
         let mut data: Vec<(F, bool, usize)> = durations
@@ -75,7 +76,7 @@ where
             .map(|(i, (&duration, &observed))| (duration, observed, i))
             .collect();
 
-        data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        data.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         // Compute Kaplan-Meier estimate
         let n = data.len();
@@ -107,8 +108,9 @@ where
 
             // Update survival probability only if there are events
             if events_at_time > 0 {
-                let survival_multiplier =
-                    F::one() - F::from(events_at_time).unwrap() / F::from(current_at_risk).unwrap();
+                let survival_multiplier = F::one()
+                    - F::from(events_at_time).expect("Failed to convert to float")
+                        / F::from(current_at_risk).expect("Failed to convert to float");
                 current_survival = current_survival * survival_multiplier;
 
                 survival_times.push(current_time);
@@ -162,13 +164,13 @@ where
         let mut upper = Array1::zeros(n);
 
         // Z-score for 95% confidence (approximately 1.96)
-        let z = F::from(1.96).unwrap();
+        let z = F::from(1.96).expect("Failed to convert constant to float");
 
         let mut cumulative_variance = F::zero();
 
         for i in 0..n {
-            let events_i = F::from(events[i]).unwrap();
-            let at_risk_i = F::from(at_risk[i]).unwrap();
+            let events_i = F::from(events[i]).expect("Failed to convert to float");
+            let at_risk_i = F::from(at_risk[i]).expect("Failed to convert to float");
 
             // Greenwood's variance formula
             if at_risk[i] > events[i] {
@@ -200,7 +202,7 @@ where
 
     /// Compute median survival time
     fn compute_median_survival(times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
-        let median_threshold = F::from(0.5).unwrap();
+        let median_threshold = F::from(0.5).expect("Failed to convert constant to float");
 
         for i in 0..survival.len() {
             if survival[i] <= median_threshold {
@@ -353,8 +355,8 @@ where
         let mut beta = Array1::zeros(p);
 
         // Convert to f64 for numerical computation
-        let durations_f64 = durations.mapv(|x| x.to_f64().unwrap());
-        let covariates_f64 = covariates.mapv(|x| x.to_f64().unwrap());
+        let durations_f64 = durations.mapv(|x| x.to_f64().expect("Operation failed"));
+        let covariates_f64 = covariates.mapv(|x| x.to_f64().expect("Operation failed"));
 
         // Newton-Raphson iteration
         let mut converged = false;
@@ -401,8 +403,9 @@ where
         let standard_errors = cov_matrix.diag().mapv(|x| x.sqrt());
 
         // Convert back to F type
-        self.coefficients = Some(beta.mapv(|x| F::from(x).unwrap()));
-        self.standard_errors = Some(standard_errors.mapv(|x| F::from(x).unwrap()));
+        self.coefficients = Some(beta.mapv(|x| F::from(x).expect("Failed to convert to float")));
+        self.standard_errors =
+            Some(standard_errors.mapv(|x| F::from(x).expect("Failed to convert to float")));
 
         self.convergence_info = Some(CoxConvergenceInfo {
             n_iter: self.config.max_iter,
@@ -426,7 +429,11 @@ where
 
         // Sort by duration (descending for risk sets)
         let mut indices: Vec<usize> = (0..n).collect();
-        indices.sort_by(|&i, &j| durations[j].partial_cmp(&durations[i]).unwrap());
+        indices.sort_by(|&i, &j| {
+            durations[j]
+                .partial_cmp(&durations[i])
+                .expect("Operation failed")
+        });
 
         let mut log_likelihood = 0.0;
         let mut gradient = Array1::zeros(p);
@@ -542,7 +549,7 @@ where
     }
 
     // Sort by duration
-    combineddata.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    combineddata.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
     let mut observed_minus_expected = F::zero();
     let mut variance = F::zero();
@@ -584,19 +591,21 @@ where
 
         if total_events > 0 && total_at_risk > 0 {
             // Expected events in group 1
-            let expected1 =
-                F::from(at_risk1 * total_events).unwrap() / F::from(total_at_risk).unwrap();
+            let expected1 = F::from(at_risk1 * total_events).expect("Failed to convert to float")
+                / F::from(total_at_risk).expect("Failed to convert to float");
 
             // Update test statistic
-            observed_minus_expected =
-                observed_minus_expected + F::from(events1).unwrap() - expected1;
+            observed_minus_expected = observed_minus_expected
+                + F::from(events1).expect("Failed to convert to float")
+                - expected1;
 
             // Update variance
             if total_at_risk > 1 {
                 let variance_term =
                     F::from(at_risk1 * at_risk2 * total_events * (total_at_risk - total_events))
-                        .unwrap()
-                        / (F::from(total_at_risk * total_at_risk * (total_at_risk - 1)).unwrap());
+                        .expect("Operation failed")
+                        / (F::from(total_at_risk * total_at_risk * (total_at_risk - 1))
+                            .expect("Operation failed"));
                 variance = variance + variance_term;
             }
         }
@@ -615,11 +624,11 @@ where
 
     // Chi-square distribution with 1 df for p-value computation
     // This is a simplified p-value calculation
-    let p_value = if test_statistic > F::from(3.84).unwrap() {
+    let p_value = if test_statistic > F::from(3.84).expect("Failed to convert constant to float") {
         // Critical value for alpha = 0.05
-        F::from(0.05).unwrap()
+        F::from(0.05).expect("Failed to convert constant to float")
     } else {
-        F::from(0.5).unwrap() // Rough approximation
+        F::from(0.5).expect("Failed to convert constant to float") // Rough approximation
     };
 
     Ok((test_statistic, p_value))

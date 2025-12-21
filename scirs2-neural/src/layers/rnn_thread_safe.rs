@@ -197,7 +197,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Thre
             h = self
                 .step(&x_t_view, &h_view)?
                 .into_dimensionality::<Ix2>()
-                .unwrap();
+                .expect("Operation failed");
             // Store hidden state
             for b in 0..batch_size {
                 for i in 0..self.hidden_size {
@@ -232,7 +232,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Thre
         Ok(grad_input)
     fn update(&mut self, learningrate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
-        let small_change = F::from(0.001).unwrap();
+        let small_change = F::from(0.001).expect("Failed to convert constant to float");
         let lr = small_change * learning_rate;
         // Update weights and biases
         for w in self.weight_ih.iter_mut() {
@@ -514,8 +514,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Thre
         let mut c = Array::zeros((batch_size, self.hidden_size));
             let c_view = c.view().into_dyn();
             let (new_h, new_c) = self.step(&x_t_view, &h_view, &c_view)?;
-            h = new_h.into_dimensionality::<Ix2>().unwrap();
-            c = new_c.into_dimensionality::<Ix2>().unwrap();
+            h = new_h.into_dimensionality::<Ix2>().expect("Operation failed");
+            c = new_c.into_dimensionality::<Ix2>().expect("Operation failed");
         // Cache final states for backward pass
         if let Ok(mut cache) = self.states_cache.write() {
             *cache = Some((h.clone().into_dyn(), c.clone().into_dyn()));

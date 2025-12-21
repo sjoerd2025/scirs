@@ -349,7 +349,7 @@ impl ThresholdAnalyzer {
         }
 
         self.metrics = Some(metrics);
-        Ok(self.metrics.as_ref().unwrap())
+        Ok(self.metrics.as_ref().expect("Operation failed"))
     }
 
     /// Find optimal threshold based on a given strategy
@@ -369,44 +369,56 @@ impl ThresholdAnalyzer {
         if let Some(&idx) = self.optimal_thresholds.get(&strategy) {
             self.calculate_metrics()?;
             let threshold = self.thresholds[idx];
-            let metrics = self.metrics.as_ref().unwrap();
+            let metrics = self.metrics.as_ref().expect("Operation failed");
             return Ok((threshold, metrics[idx].clone()));
         }
 
         // Calculate metrics for finding optimal
         self.calculate_metrics()?;
-        let metrics = self.metrics.as_ref().unwrap();
+        let metrics = self.metrics.as_ref().expect("Operation failed");
 
         // Find optimal threshold based on strategy
         let optimal_idx = match strategy {
             OptimalThresholdStrategy::MaxF1 => metrics
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.f1_score.partial_cmp(&b.f1_score).unwrap())
+                .max_by(|(_, a), (_, b)| {
+                    a.f1_score
+                        .partial_cmp(&b.f1_score)
+                        .expect("Operation failed")
+                })
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::YoudensJ => metrics
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.youdens_j.partial_cmp(&b.youdens_j).unwrap())
+                .max_by(|(_, a), (_, b)| {
+                    a.youdens_j
+                        .partial_cmp(&b.youdens_j)
+                        .expect("Operation failed")
+                })
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::MaxAccuracy => metrics
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.accuracy.partial_cmp(&b.accuracy).unwrap())
+                .max_by(|(_, a), (_, b)| {
+                    a.accuracy
+                        .partial_cmp(&b.accuracy)
+                        .expect("Operation failed")
+                })
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::MaxMCC => metrics
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.mcc.partial_cmp(&b.mcc).unwrap())
+                .max_by(|(_, a), (_, b)| a.mcc.partial_cmp(&b.mcc).expect("Operation failed"))
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::MaxKappa => metrics
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.kappa.partial_cmp(&b.kappa).unwrap())
+                .max_by(|(_, a), (_, b)| a.kappa.partial_cmp(&b.kappa).expect("Operation failed"))
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
             OptimalThresholdStrategy::BalancedSensSpec => metrics
@@ -415,7 +427,7 @@ impl ThresholdAnalyzer {
                 .min_by(|(_, a), (_, b)| {
                     let a_diff = (a.tpr - a.specificity).abs();
                     let b_diff = (b.tpr - b.specificity).abs();
-                    a_diff.partial_cmp(&b_diff).unwrap()
+                    a_diff.partial_cmp(&b_diff).expect("Operation failed")
                 })
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
@@ -425,7 +437,7 @@ impl ThresholdAnalyzer {
                 .min_by(|(_, a), (_, b)| {
                     let a_diff = (a.precision - a.tpr).abs();
                     let b_diff = (b.precision - b.tpr).abs();
-                    a_diff.partial_cmp(&b_diff).unwrap()
+                    a_diff.partial_cmp(&b_diff).expect("Operation failed")
                 })
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
@@ -435,7 +447,7 @@ impl ThresholdAnalyzer {
                 .min_by(|(_, a), (_, b)| {
                     let a_dist = (a.fpr.powi(2) + (1.0 - a.tpr).powi(2)).sqrt();
                     let b_dist = (b.fpr.powi(2) + (1.0 - b.tpr).powi(2)).sqrt();
-                    a_dist.partial_cmp(&b_dist).unwrap()
+                    a_dist.partial_cmp(&b_dist).expect("Operation failed")
                 })
                 .map(|(idx, _)| idx)
                 .unwrap_or(0),
@@ -447,7 +459,7 @@ impl ThresholdAnalyzer {
                     .min_by(|(_, a), (_, b)| {
                         let a_diff = (a.threshold - threshold).abs();
                         let b_diff = (b.threshold - threshold).abs();
-                        a_diff.partial_cmp(&b_diff).unwrap()
+                        a_diff.partial_cmp(&b_diff).expect("Operation failed")
                     })
                     .map(|(idx, _)| idx)
                     .unwrap_or(0)
@@ -485,13 +497,13 @@ impl ThresholdAnalyzer {
             .min_by(|(_, &a), (_, &b)| {
                 let a_diff = (a - threshold).abs();
                 let b_diff = (b - threshold).abs();
-                a_diff.partial_cmp(&b_diff).unwrap()
+                a_diff.partial_cmp(&b_diff).expect("Operation failed")
             })
             .map(|(idx, _)| idx)
             .unwrap_or(0);
 
         // Get metrics - we know it's calculated at this point
-        let metrics = self.metrics.as_ref().unwrap();
+        let metrics = self.metrics.as_ref().expect("Operation failed");
         Ok(metrics[idx].clone())
     }
 

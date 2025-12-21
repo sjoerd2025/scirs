@@ -11,9 +11,9 @@ use regex::Regex;
 use std::collections::HashMap;
 
 lazy_static! {
-    static ref VOWELS: Regex = Regex::new(r"[aeiouy]").unwrap();
+    static ref VOWELS: Regex = Regex::new(r"[aeiouy]").expect("Operation failed");
     // Note: Using groups without backreferences for double consonant checking
-    static ref DOUBLES: Regex = Regex::new(r"(bb|dd|ff|gg|hh|jj|kk|ll|mm|nn|pp|qq|rr|ss|tt|vv|ww|xx|yy|zz)$").unwrap();
+    static ref DOUBLES: Regex = Regex::new(r"(bb|dd|ff|gg|hh|jj|kk|ll|mm|nn|pp|qq|rr|ss|tt|vv|ww|xx|yy|zz)$").expect("Operation failed");
 }
 
 /// Part of speech tags used for lemmatization rules
@@ -760,7 +760,7 @@ impl RuleLemmatizer {
             if first_char.is_uppercase() {
                 let mut result = String::new();
                 if let Some(lemma_first) = lemma.chars().next() {
-                    result.push(lemma_first.to_uppercase().next().unwrap());
+                    result.push(lemma_first.to_uppercase().next().expect("Operation failed"));
                     result.push_str(&lemma[lemma_first.len_utf8()..]);
                     return result;
                 }
@@ -1120,13 +1120,19 @@ mod tests {
         let lemmatizer = RuleLemmatizer::new();
 
         // Test Stemmer trait implementation
-        assert_eq!(lemmatizer.stem("running").unwrap(), "run");
-        assert_eq!(lemmatizer.stem("children").unwrap(), "child");
+        assert_eq!(lemmatizer.stem("running").expect("Operation failed"), "run");
+        assert_eq!(
+            lemmatizer.stem("children").expect("Operation failed"),
+            "child"
+        );
 
         // Test batch processing
         let words = vec!["running", "played", "children", "better"];
         let expected = vec!["run", "play", "child", "good"];
-        assert_eq!(lemmatizer.stem_batch(&words).unwrap(), expected);
+        assert_eq!(
+            lemmatizer.stem_batch(&words).expect("Operation failed"),
+            expected
+        );
     }
 
     #[test]
@@ -1145,10 +1151,10 @@ single_word
 "#;
 
         let temp_file = "test_dict.txt";
-        fs::write(temp_file, dict_content).unwrap();
+        fs::write(temp_file, dict_content).expect("Operation failed");
 
         // Test loading from dictionary file
-        let lemmatizer = RuleLemmatizer::from_dict_file(temp_file).unwrap();
+        let lemmatizer = RuleLemmatizer::from_dict_file(temp_file).expect("Operation failed");
 
         // Test loaded entries
         assert_eq!(lemmatizer.lemmatize("word1", None), "lemma1");

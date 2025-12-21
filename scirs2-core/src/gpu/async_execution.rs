@@ -108,7 +108,7 @@ impl GpuEvent {
 
     /// Get the current state of the event
     pub fn state(&self) -> EventState {
-        *self.state.lock().unwrap()
+        *self.state.lock().expect("Operation failed")
     }
 
     /// Check if the event has completed
@@ -150,7 +150,7 @@ impl GpuEvent {
 
     /// Get the execution duration if completed
     pub fn duration(&self) -> Option<Duration> {
-        *self.duration.lock().unwrap()
+        *self.duration.lock().expect("Operation failed")
     }
 
     /// Add a callback to be executed when the event completes
@@ -158,7 +158,10 @@ impl GpuEvent {
     where
         F: FnOnce() + Send + 'static,
     {
-        self.callbacks.lock().unwrap().push(Box::new(callback));
+        self.callbacks
+            .lock()
+            .expect("Operation failed")
+            .push(Box::new(callback));
     }
 
     /// Get dependencies
@@ -172,11 +175,11 @@ impl GpuEvent {
         let start_time = self.timestamp.unwrap_or_else(Instant::now);
         let duration = start_time.elapsed();
 
-        *self.duration.lock().unwrap() = Some(duration);
-        *self.state.lock().unwrap() = EventState::Completed;
+        *self.duration.lock().expect("Operation failed") = Some(duration);
+        *self.state.lock().expect("Operation failed") = EventState::Completed;
 
         // Execute callbacks
-        let callbacks = std::mem::take(&mut *self.callbacks.lock().unwrap());
+        let callbacks = std::mem::take(&mut *self.callbacks.lock().expect("Operation failed"));
         for callback in callbacks {
             callback();
         }
@@ -185,13 +188,13 @@ impl GpuEvent {
     /// Mark the event as failed
     #[allow(dead_code)]
     pub(crate) fn fail(&self) {
-        *self.state.lock().unwrap() = EventState::Failed;
+        *self.state.lock().expect("Operation failed") = EventState::Failed;
     }
 
     /// Cancel the event
     #[allow(dead_code)]
     pub(crate) fn cancel(&self) {
-        *self.state.lock().unwrap() = EventState::Cancelled;
+        *self.state.lock().expect("Operation failed") = EventState::Cancelled;
     }
 }
 
@@ -211,7 +214,10 @@ impl std::fmt::Debug for GpuEvent {
             .field("dependencies", &self.dependencies)
             .field(
                 "callbacks",
-                &format!("{} callbacks", self.callbacks.lock().unwrap().len()),
+                &format!(
+                    "{} callbacks",
+                    self.callbacks.lock().expect("Operation failed").len()
+                ),
             )
             .finish()
     }
@@ -276,13 +282,16 @@ impl GpuStream {
 
     /// Add an event to this stream
     pub fn add_event(&self, event: &Arc<GpuEvent>) {
-        self.events.lock().unwrap().push(Arc::downgrade(event));
-        *self.operations_count.lock().unwrap() += 1;
+        self.events
+            .lock()
+            .expect("Operation failed")
+            .push(Arc::downgrade(event));
+        *self.operations_count.lock().expect("Operation failed") += 1;
     }
 
     /// Wait for all operations in this stream to complete
     pub fn synchronize(&self) -> Result<(), GpuError> {
-        let events = self.events.lock().unwrap().clone();
+        let events = self.events.lock().expect("Operation failed").clone();
         for weak_event in events {
             if let Some(event) = weak_event.upgrade() {
                 event.wait()?;
@@ -293,12 +302,12 @@ impl GpuStream {
 
     /// Get the number of operations in this stream
     pub fn operations_count(&self) -> usize {
-        *self.operations_count.lock().unwrap()
+        *self.operations_count.lock().expect("Operation failed")
     }
 
     /// Check if the stream is idle (all operations completed)
     pub fn is_idle(&self) -> bool {
-        let events = self.events.lock().unwrap();
+        let events = self.events.lock().expect("Operation failed");
         events.iter().all(|weak_event| {
             weak_event
                 .upgrade()
@@ -309,7 +318,7 @@ impl GpuStream {
 
     /// Clean up completed events
     pub fn cleanup(&self) {
-        let mut events = self.events.lock().unwrap();
+        let mut events = self.events.lock().expect("Operation failed");
         events.retain(|weak_event| {
             weak_event
                 .upgrade()
@@ -383,7 +392,7 @@ impl AsyncGpuManager {
         let stream = Arc::new(GpuStream::with_priority(priority));
         self.streams
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert(stream.id(), stream.clone());
         stream
     }
@@ -395,7 +404,11 @@ impl AsyncGpuManager {
 
     /// Get a stream by ID
     pub fn get_stream(&self, id: StreamId) -> Option<Arc<GpuStream>> {
-        self.streams.lock().unwrap().get(&id).cloned()
+        self.streams
+            .lock()
+            .expect("Operation failed")
+            .get(&id)
+            .cloned()
     }
 
     /// Record an event in a stream
@@ -404,7 +417,7 @@ impl AsyncGpuManager {
         stream.add_event(&event);
         self.events
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert(event.id(), event.clone());
         event
     }
@@ -422,7 +435,7 @@ impl AsyncGpuManager {
         stream.add_event(&event);
         self.events
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert(event.id(), event.clone());
         Ok(event)
     }
@@ -430,7 +443,13 @@ impl AsyncGpuManager {
     /// Wait for multiple events
     pub fn wait_for_events(&self, eventids: &[EventId]) -> AsyncResult<()> {
         for &event_id in eventids {
-            if let Some(event) = self.events.lock().unwrap().get(&event_id).cloned() {
+            if let Some(event) = self
+                .events
+                .lock()
+                .expect("Operation failed")
+                .get(&event_id)
+                .cloned()
+            {
                 event.wait()?;
             } else {
                 return Err(AsyncGpuError::EventNotFound(event_id));
@@ -444,7 +463,7 @@ impl AsyncGpuManager {
         let streams = self
             .streams
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .values()
             .cloned()
             .collect::<Vec<_>>();
@@ -457,22 +476,34 @@ impl AsyncGpuManager {
     /// Clean up completed events and empty streams
     pub fn cleanup(&self) {
         // Clean up streams
-        let stream_ids: Vec<_> = self.streams.lock().unwrap().keys().cloned().collect();
+        let stream_ids: Vec<_> = self
+            .streams
+            .lock()
+            .expect("Operation failed")
+            .keys()
+            .cloned()
+            .collect();
         for stream_id in stream_ids {
-            if let Some(stream) = self.streams.lock().unwrap().get(&stream_id).cloned() {
+            if let Some(stream) = self
+                .streams
+                .lock()
+                .expect("Operation failed")
+                .get(&stream_id)
+                .cloned()
+            {
                 stream.cleanup();
             }
         }
 
         // Clean up completed events
-        let mut events = self.events.lock().unwrap();
+        let mut events = self.events.lock().expect("Operation failed");
         events.retain(|_, event| !event.is_completed() && !event.is_failed());
     }
 
     /// Get statistics about async operations
     pub fn get_statistics(&self) -> AsyncGpuStatistics {
-        let streams = self.streams.lock().unwrap();
-        let events = self.events.lock().unwrap();
+        let streams = self.streams.lock().expect("Operation failed");
+        let events = self.events.lock().expect("Operation failed");
 
         let total_streams = streams.len();
         let total_events = events.len();
@@ -494,7 +525,7 @@ impl AsyncGpuManager {
 
     /// Check for dependency cycles in events
     fn check_dependency_cycles(&self, dependencies: &[EventId]) -> AsyncResult<()> {
-        let events = self.events.lock().unwrap();
+        let events = self.events.lock().expect("Operation failed");
 
         // Simple cycle detection using DFS
         fn has_cycle(

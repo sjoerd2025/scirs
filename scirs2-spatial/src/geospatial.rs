@@ -875,7 +875,7 @@ mod tests {
             (1.0, 0.0), // 1° North, Greenwich
         ];
 
-        let area = spherical_polygon_area(&triangle).unwrap();
+        let area = spherical_polygon_area(&triangle).expect("Operation failed");
         assert!(area > 0.0);
 
         // Area should be reasonable for a 1°×1° triangle
@@ -887,13 +887,13 @@ mod tests {
     #[test]
     fn test_geographic_to_web_mercator() {
         // Test equator and prime meridian
-        let (x, y) = geographic_to_web_mercator(0.0, 0.0).unwrap();
+        let (x, y) = geographic_to_web_mercator(0.0, 0.0).expect("Operation failed");
         assert_relative_eq!(x, 0.0, epsilon = 1e-6);
         assert_relative_eq!(y, 0.0, epsilon = 1e-6);
 
         // Test round trip
         let original = (45.0, -90.0);
-        let (x, y) = geographic_to_web_mercator(original.0, original.1).unwrap();
+        let (x, y) = geographic_to_web_mercator(original.0, original.1).expect("Operation failed");
         let back = web_mercator_to_geographic(x, y);
         assert_relative_eq!(back.0, original.0, epsilon = 1e-6);
         assert_relative_eq!(back.1, original.1, epsilon = 1e-6);
@@ -907,7 +907,8 @@ mod tests {
     fn test_geographic_to_utm() {
         // Test a known location (London)
         let london = (51.5074, -0.1278);
-        let (easting, northing, zone, letter) = geographic_to_utm(london.0, london.1).unwrap();
+        let (easting, northing, zone, letter) =
+            geographic_to_utm(london.0, london.1).expect("Operation failed");
 
         // London should be in UTM zone 30 or 31
         assert!(zone == 30 || zone == 31);
@@ -941,14 +942,14 @@ mod tests {
         let paris = (48.8566, 2.3522);
 
         let haversine_dist = haversine_distance(london, paris);
-        let vincenty_dist = vincenty_distance(london, paris).unwrap();
+        let vincenty_dist = vincenty_distance(london, paris).expect("Operation failed");
 
         // Should be very close for moderate distances
         let diff_percent = ((vincenty_dist - haversine_dist) / haversine_dist * 100.0).abs();
         assert!(diff_percent < 1.0); // Within 1%
 
         // Test identical points
-        let same_point_dist = vincenty_distance(london, london).unwrap();
+        let same_point_dist = vincenty_distance(london, london).expect("Operation failed");
         assert_relative_eq!(same_point_dist, 0.0, epsilon = 1e-6);
     }
 

@@ -129,10 +129,12 @@ pub fn cubic_hermite_interpolation<F: IntegrateFloat>(
     let t = (x_new - x0) / h;
 
     // Hermite basis functions
-    let h00 =
-        F::from_f64(2.0).unwrap() * t.powi(3) - F::from_f64(3.0).unwrap() * t.powi(2) + F::one();
-    let h10 = t.powi(3) - F::from_f64(2.0).unwrap() * t.powi(2) + t;
-    let h01 = F::from_f64(-2.0).unwrap() * t.powi(3) + F::from_f64(3.0).unwrap() * t.powi(2);
+    let h00 = F::from_f64(2.0).expect("Operation failed") * t.powi(3)
+        - F::from_f64(3.0).expect("Operation failed") * t.powi(2)
+        + F::one();
+    let h10 = t.powi(3) - F::from_f64(2.0).expect("Operation failed") * t.powi(2) + t;
+    let h01 = F::from_f64(-2.0).expect("Operation failed") * t.powi(3)
+        + F::from_f64(3.0).expect("Operation failed") * t.powi(2);
     let h11 = t.powi(3) - t.powi(2);
 
     // Compute interpolant: p(t) = h00*y0 + h10*h*dy0 + h01*y1 + h11*h*dy1

@@ -43,7 +43,7 @@
 //! let integrator = StormerVerlet::<f64>::new();
 //!
 //! // Take one step
-//! let (q1, p1) = integrator.step(&system, t, &q0, &p0, dt).unwrap();
+//! let (q1, p1) = integrator.step(&system, t, &q0, &p0, dt).expect("Operation failed");
 //!
 //! // Energy should be conserved (approximately)
 //! let initial_energy = 0.5_f64 * p0.dot(&p0) + 0.5_f64 * q0.dot(&q0);
@@ -151,8 +151,8 @@ pub trait SymplecticIntegrator<F: IntegrateFloat> {
 
         // Determine number of steps
         let t_span = tf - t0;
-        let n_steps = (t_span / dt).ceil().to_f64().unwrap() as usize;
-        let actual_dt = t_span / F::from_usize(n_steps).unwrap();
+        let n_steps = (t_span / dt).ceil().to_f64().expect("Operation failed") as usize;
+        let actual_dt = t_span / F::from_usize(n_steps).expect("Operation failed");
 
         // Initialize result containers
         let mut t = Vec::with_capacity(n_steps + 1);
@@ -194,7 +194,7 @@ pub trait SymplecticIntegrator<F: IntegrateFloat> {
             let final_energy = hamiltonian(t[t.len() - 1], &q[q.len() - 1], &p[p.len() - 1])?;
 
             // Calculate relative error
-            if initial_energy.abs() > F::from_f64(1e-10).unwrap() {
+            if initial_energy.abs() > F::from_f64(1e-10).expect("Operation failed") {
                 Some((final_energy - initial_energy).abs() / initial_energy.abs())
             } else {
                 Some((final_energy - initial_energy).abs())

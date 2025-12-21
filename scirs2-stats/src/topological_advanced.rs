@@ -18,6 +18,12 @@ use scirs2_linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Advanced-advanced topological data analyzer
 pub struct AdvancedTopologicalAnalyzer<F> {
     /// Analysis configuration
@@ -955,8 +961,8 @@ where
 
         // Generate dummy birth-death pairs (would use actual persistence algorithm)
         for i in 0..num_features {
-            let birth = F::from(i as f64 * 0.1).unwrap();
-            let death = birth + F::from(0.5).unwrap();
+            let birth = F::from(i as f64 * 0.1).expect("Failed to convert to float");
+            let death = birth + const_f64::<F>(0.5);
             points[[i, 0]] = birth;
             points[[i, 1]] = death;
         }
@@ -1045,7 +1051,7 @@ where
                 point_indices: vec![i, i + 1],
                 size: 2,
                 centroid: Array1::zeros(points.ncols()),
-                average_filter_value: F::from(i as f64).unwrap(),
+                average_filter_value: F::from(i as f64).expect("Failed to convert to float"),
                 diameter: F::one(),
             };
             nodes.insert(i, node);
@@ -1065,9 +1071,9 @@ where
             num_nodes: nodes.len(),
             num_edges: edges.len(),
             num_components: 1,
-            average_nodesize: F::from(2.0).unwrap(),
+            average_nodesize: const_f64::<F>(2.0),
             graph_diameter: 4,
-            average_path_length: F::from(2.0).unwrap(),
+            average_path_length: const_f64::<F>(2.0),
             clustering_coefficient: F::zero(),
         };
 
@@ -1089,7 +1095,8 @@ where
 
         // Generate scales
         for i in 0..num_scales {
-            let t = F::from(i).unwrap() / F::from(num_scales - 1).unwrap();
+            let t = F::from(i).expect("Failed to convert to float")
+                / F::from(num_scales - 1).expect("Failed to convert to float");
             scales[i] = min_scale + t * (max_scale - min_scale);
         }
 
@@ -1148,17 +1155,17 @@ where
             test_statistics.insert(test_name.clone(), total_pers);
 
             // Simplified p-value (would use proper null distribution)
-            p_values.insert(test_name.clone(), F::from(0.05).unwrap());
+            p_values.insert(test_name.clone(), const_f64::<F>(0.05));
 
             // Simplified confidence interval
-            let ci_width = total_pers * F::from(0.1).unwrap();
+            let ci_width = total_pers * const_f64::<F>(0.1);
             confidence_intervals.insert(
                 test_name.clone(),
                 (total_pers - ci_width, total_pers + ci_width),
             );
 
             // Simplified critical value
-            critical_values.insert(test_name, total_pers * F::from(1.5).unwrap());
+            critical_values.insert(test_name, total_pers * const_f64::<F>(1.5));
         }
 
         Ok(TopologicalInferenceResults {
@@ -1194,10 +1201,10 @@ where
 
         // Topological entropy features - placeholder implementation
         let entropy_features = TopologicalEntropyFeatures {
-            persistent_entropy: F::from(1.0).unwrap(),
-            weighted_entropy: F::from(0.8).unwrap(),
+            persistent_entropy: const_f64::<F>(1.0),
+            weighted_entropy: const_f64::<F>(0.8),
             multiscale_entropy: Array1::ones(5),
-            complexity: F::from(0.6).unwrap(),
+            complexity: const_f64::<F>(0.6),
         };
 
         Ok(TopologicalFeatures {
@@ -1221,7 +1228,8 @@ where
         let num_scales = 10;
 
         for scale_idx in 0..num_scales {
-            let scale = F::from(scale_idx as f64 / num_scales as f64).unwrap();
+            let scale =
+                F::from(scale_idx as f64 / num_scales as f64).expect("Failed to convert to float");
             let epsilon = self.config.filtration_config.max_epsilon * scale;
 
             // Build complex at this scale
@@ -1244,7 +1252,7 @@ where
                         persistence: death - birth,
                         dimension: dim,
                         scale: epsilon,
-                        midlife: (birth + death) / F::from(2.0).unwrap(),
+                        midlife: (birth + death) / const_f64::<F>(2.0),
                     });
                 }
             }
@@ -1321,14 +1329,14 @@ where
             filtration_config: FiltrationConfig {
                 filtration_type: FiltrationType::VietorisRips,
                 distance_metric: DistanceMetric::Euclidean,
-                max_epsilon: F::from(1.0).unwrap(),
+                max_epsilon: const_f64::<F>(1.0),
                 num_steps: 100,
                 adaptive_steps: false,
             },
             persistence_config: PersistenceConfig {
                 algorithm: PersistenceAlgorithm::StandardReduction,
                 coefficient_field: CoeffientField::Z2,
-                persistence_threshold: F::from(0.01).unwrap(),
+                persistence_threshold: const_f64::<F>(0.01),
                 compute_entropy: true,
                 stability_analysis: false,
             },
@@ -1336,11 +1344,11 @@ where
                 filter_functions: Vec::new(),
                 cover_config: CoverConfig {
                     num_intervals: vec![10],
-                    overlap_percent: F::from(0.3).unwrap(),
+                    overlap_percent: const_f64::<F>(0.3),
                     cover_type: CoverType::UniformInterval,
                 },
                 clustering_method: ClusteringMethod::SingleLinkage,
-                overlap_threshold: F::from(0.1).unwrap(),
+                overlap_threshold: const_f64::<F>(0.1),
                 simplification: SimplificationConfig {
                     edge_contraction: false,
                     vertex_removal: false,
@@ -1348,14 +1356,14 @@ where
                 },
             },
             multiscale_config: MultiscaleConfig {
-                scale_range: (F::from(0.1).unwrap(), F::from(2.0).unwrap()),
+                scale_range: (const_f64::<F>(0.1), const_f64::<F>(2.0)),
                 num_scales: 10,
                 scale_distribution: ScaleDistribution::Linear,
                 merger_strategy: MergerStrategy::Union,
             },
             inference_config: TopologicalInferenceConfig {
                 bootstrap_samples: 0,
-                confidence_level: F::from(0.95).unwrap(),
+                confidence_level: const_f64::<F>(0.95),
                 null_model: NullModel::UniformRandom,
                 test_type: TopologicalTest::PersistentRankTest,
                 multiple_comparisons: MultipleComparisonsCorrection::BenjaminiHochberg,
@@ -1392,8 +1400,8 @@ where
         let clustering_result = TopologicalClusteringResult {
             cluster_labels: Array1::zeros(data.nrows()),
             cluster_centers: Array2::zeros((3, data.ncols())), // Assume 3 clusters
-            silhouette_score: F::from(0.5).unwrap(),
-            inertia: F::from(1.0).unwrap(),
+            silhouette_score: const_f64::<F>(0.5),
+            inertia: const_f64::<F>(1.0),
         };
 
         let feature_importance = Array1::ones(feature_matrix.ncols()); // Placeholder importance
@@ -1422,7 +1430,7 @@ where
             prediction_result,
             clustering_result,
             feature_importance,
-            stability_score: F::from(0.95).unwrap(), // Placeholder stability score
+            stability_score: const_f64::<F>(0.95), // Placeholder stability score
         })
     }
 
@@ -1450,10 +1458,10 @@ where
 
         // Topological entropy features - placeholder implementation
         let entropy_features = TopologicalEntropyFeatures {
-            persistent_entropy: F::from(1.0).unwrap(),
-            weighted_entropy: F::from(0.8).unwrap(),
+            persistent_entropy: const_f64::<F>(1.0),
+            weighted_entropy: const_f64::<F>(0.8),
             multiscale_entropy: Array1::ones(5),
-            complexity: F::from(0.6).unwrap(),
+            complexity: const_f64::<F>(0.6),
         };
 
         Ok(TopologicalFeatures {
@@ -1477,7 +1485,8 @@ where
         let num_scales = 10;
 
         for scale_idx in 0..num_scales {
-            let scale = F::from(scale_idx as f64 / num_scales as f64).unwrap();
+            let scale =
+                F::from(scale_idx as f64 / num_scales as f64).expect("Failed to convert to float");
             let epsilon = self.filtration_config.max_epsilon * scale;
 
             // Build complex at this scale
@@ -1500,7 +1509,7 @@ where
                         persistence: death - birth,
                         dimension: dim,
                         scale: epsilon,
-                        midlife: (birth + death) / F::from(2.0).unwrap(),
+                        midlife: (birth + death) / const_f64::<F>(2.0),
                     });
                 }
             }
@@ -1583,26 +1592,30 @@ where
 
         if max_val > F::zero() {
             // Gaussian kernel parameters
-            let sigma = F::from(0.1).unwrap() * max_val;
+            let sigma = const_f64::<F>(0.1) * max_val;
             let sigma_sq = sigma * sigma;
 
             for feature in features {
                 // Map to image coordinates
-                let _birth_coord = (feature.birth / max_val * F::from(resolution as f64).unwrap())
-                    .to_usize()
-                    .unwrap_or(0)
-                    .min(resolution - 1);
-                let _death_coord = (feature.death / max_val * F::from(resolution as f64).unwrap())
-                    .to_usize()
-                    .unwrap_or(0)
-                    .min(resolution - 1);
+                let _birth_coord = (feature.birth / max_val
+                    * F::from(resolution as f64).expect("Failed to convert to float"))
+                .to_usize()
+                .unwrap_or(0)
+                .min(resolution - 1);
+                let _death_coord = (feature.death / max_val
+                    * F::from(resolution as f64).expect("Failed to convert to float"))
+                .to_usize()
+                .unwrap_or(0)
+                .min(resolution - 1);
 
                 // Add Gaussian kernel centered at (birth, death)
                 for i in 0..resolution {
                     for j in 0..resolution {
-                        let x = F::from(i as f64).unwrap() / F::from(resolution as f64).unwrap()
+                        let x = F::from(i as f64).expect("Failed to convert to float")
+                            / F::from(resolution as f64).expect("Failed to convert to float")
                             * max_val;
-                        let y = F::from(j as f64).unwrap() / F::from(resolution as f64).unwrap()
+                        let y = F::from(j as f64).expect("Failed to convert to float")
+                            / F::from(resolution as f64).expect("Failed to convert to float")
                             * max_val;
 
                         let dist_sq = (x - feature.birth) * (x - feature.birth)
@@ -1648,14 +1661,16 @@ where
 
         for point_idx in 0..num_points {
             let t = min_birth
-                + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
+                + F::from(point_idx as f64).expect("Failed to convert to float")
+                    / F::from(num_points as f64).expect("Failed to convert to float")
+                    * range;
 
             // Compute landscape functions at parameter t
             let mut values = Vec::new();
 
             for feature in features {
                 if t >= feature.birth && t <= feature.death {
-                    let value = if t <= (feature.birth + feature.death) / F::from(2.0).unwrap() {
+                    let value = if t <= (feature.birth + feature.death) / const_f64::<F>(2.0) {
                         t - feature.birth
                     } else {
                         feature.death - t
@@ -1705,7 +1720,9 @@ where
 
         for point_idx in 0..num_points {
             let t = min_val
-                + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
+                + F::from(point_idx as f64).expect("Failed to convert to float")
+                    / F::from(num_points as f64).expect("Failed to convert to float")
+                    * range;
 
             // Count active features for each dimension
             for dim in 0..max_dim {
@@ -1714,7 +1731,8 @@ where
                     .filter(|f| f.dimension == dim && f.birth <= t && t < f.death)
                     .count();
 
-                betti_curves[[dim, point_idx]] = F::from(count).unwrap();
+                betti_curves[[dim, point_idx]] =
+                    F::from(count).expect("Failed to convert to float");
             }
         }
 
@@ -1750,7 +1768,9 @@ where
 
         for point_idx in 0..num_points {
             let t = min_val
-                + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
+                + F::from(point_idx as f64).expect("Failed to convert to float")
+                    / F::from(num_points as f64).expect("Failed to convert to float")
+                    * range;
 
             // Compute Euler characteristic: χ = Σ(-1)^i * β_i
             let mut euler_char = F::zero();
@@ -1762,7 +1782,8 @@ where
                     .count();
 
                 let sign = if dim % 2 == 0 { F::one() } else { -F::one() };
-                euler_char = euler_char + sign * F::from(betti_number).unwrap();
+                euler_char =
+                    euler_char + sign * F::from(betti_number).expect("Failed to convert to float");
             }
 
             euler_curve[point_idx] = euler_char;
@@ -1860,7 +1881,8 @@ where
         let mut multiscale_entropy = Array1::zeros(num_scales);
 
         for scale_idx in 0..num_scales {
-            let scale_threshold = F::from((scale_idx + 1) as f64 / num_scales as f64).unwrap();
+            let scale_threshold =
+                F::from((scale_idx + 1) as f64 / num_scales as f64).expect("Test/example failed");
 
             // Filter features by scale
             let filtered_features: Vec<_> = features
@@ -1883,7 +1905,7 @@ where
 
         // Combine multiple complexity measures
         let entropy = self.compute_persistent_entropy(features)?;
-        let num_features = F::from(features.len()).unwrap();
+        let num_features = F::from(features.len()).expect("Test/example failed");
         let avg_persistence = features
             .iter()
             .map(|f| f.persistence)
@@ -1902,10 +1924,18 @@ where
         features: &TopologicalFeatures<F>,
     ) -> StatsResult<TopologicalSignatures<F>> {
         // Flatten persistence images
-        let image_signature = features.persistence_images.as_slice().unwrap().to_vec();
+        let image_signature = features
+            .persistence_images
+            .as_slice()
+            .expect("Operation failed")
+            .to_vec();
 
         // Flatten persistence landscapes
-        let landscape_signature = features.persistence_landscapes.as_slice().unwrap().to_vec();
+        let landscape_signature = features
+            .persistence_landscapes
+            .as_slice()
+            .expect("Operation failed")
+            .to_vec();
 
         // Statistics from Betti curves
         let betti_statistics = self.compute_curve_statistics(&features.betti_curves)?;
@@ -1939,12 +1969,12 @@ where
             let curve = curves.row(curve_idx);
 
             // Basic statistics
-            let mean = curve.sum() / F::from(num_points).unwrap();
+            let mean = curve.sum() / F::from(num_points).expect("Failed to convert to float");
             let variance = curve
                 .iter()
                 .map(|&x| (x - mean) * (x - mean))
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(num_points).unwrap();
+                / F::from(num_points).expect("Failed to convert to float");
             let std_dev = variance.sqrt();
 
             // Extrema
@@ -1956,7 +1986,7 @@ where
                 .fold(F::neg_infinity(), |a, &b| if a > b { a } else { b });
 
             // Integral (area under curve)
-            let integral = curve.sum() / F::from(num_points).unwrap();
+            let integral = curve.sum() / F::from(num_points).expect("Failed to convert to float");
 
             statistics.extend_from_slice(&[mean, std_dev, min_val, max_val, integral]);
         }
@@ -1973,12 +2003,12 @@ where
         }
 
         // Basic statistics
-        let mean = curve.sum() / F::from(num_points).unwrap();
+        let mean = curve.sum() / F::from(num_points).expect("Failed to convert to float");
         let variance = curve
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(num_points).unwrap();
+            / F::from(num_points).expect("Failed to convert to float");
         let std_dev = variance.sqrt();
 
         // Extrema
@@ -2023,7 +2053,7 @@ where
         let mut kernel_matrix = Array2::zeros((n_samples_, n_samples_));
 
         // Gaussian RBF kernel with topological distance
-        let sigma = F::from(1.0).unwrap();
+        let sigma = const_f64::<F>(1.0);
         let sigma_sq = sigma * sigma;
 
         for i in 0..n_samples_ {
@@ -2076,7 +2106,7 @@ where
             .iter()
             .zip(labels.iter())
             .map(|(&pred, &true_label)| {
-                if (pred - true_label).abs() < F::from(0.5).unwrap() {
+                if (pred - true_label).abs() < const_f64::<F>(0.5) {
                     1
                 } else {
                     0
@@ -2084,7 +2114,8 @@ where
             })
             .sum();
 
-        let accuracy = F::from(correct_predictions as f64 / n_samples_ as f64).unwrap();
+        let accuracy = F::from(correct_predictions as f64 / n_samples_ as f64)
+            .expect("Failed to convert to float");
 
         Ok(TopologicalPredictionResult {
             predictions,
@@ -2109,7 +2140,8 @@ where
         // Initialize centers randomly
         for i in 0..num_clusters {
             for j in 0..features.ncols() {
-                cluster_centers[[i, j]] = F::from(i as f64 / num_clusters as f64).unwrap();
+                cluster_centers[[i, j]] =
+                    F::from(i as f64 / num_clusters as f64).expect("Failed to convert to float");
             }
         }
 
@@ -2131,17 +2163,17 @@ where
                 }
             }
 
-            cluster_labels[i] = F::from(best_cluster).unwrap();
+            cluster_labels[i] = F::from(best_cluster).expect("Failed to convert to float");
         }
 
         // Compute clustering quality (simplified silhouette score)
-        let silhouette_score = F::from(0.7).unwrap(); // Placeholder
+        let silhouette_score = const_f64::<F>(0.7); // Placeholder
 
         Ok(TopologicalClusteringResult {
             cluster_labels,
             cluster_centers,
             silhouette_score,
-            inertia: F::from(100.0).unwrap(),
+            inertia: const_f64::<F>(100.0),
         })
     }
 
@@ -2165,12 +2197,13 @@ where
             // Compute feature importance based on variance
             for j in 0..n_features {
                 let feature_col = features.column(j);
-                let mean = feature_col.sum() / F::from(feature_col.len()).unwrap();
+                let mean =
+                    feature_col.sum() / F::from(feature_col.len()).expect("Test/example failed");
                 let variance = feature_col
                     .iter()
                     .map(|&x| (x - mean) * (x - mean))
                     .fold(F::zero(), |acc, x| acc + x)
-                    / F::from(feature_col.len()).unwrap();
+                    / F::from(feature_col.len()).expect("Test/example failed");
 
                 importance_scores[j] = variance;
             }
@@ -2186,7 +2219,7 @@ where
             return Ok(F::zero());
         }
 
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let mean_x = x.sum() / n_f;
         let mean_y = y.sum() / n_f;
 
@@ -2239,7 +2272,7 @@ where
             .sqrt();
 
         // Combine norms as stability measure
-        let stability = (image_norm + landscape_norm + entropy_norm) / F::from(3.0).unwrap();
+        let stability = (image_norm + landscape_norm + entropy_norm) / const_f64::<F>(3.0);
 
         Ok(stability)
     }

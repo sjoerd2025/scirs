@@ -55,7 +55,7 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     ///     &knots.view(),
     ///     degree,
     ///     ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         control_points: &ArrayView2<T>,
@@ -303,7 +303,7 @@ impl<T: NurbsFloat> NurbsSurface<T> {
     ///     &knotsv.view(),
     ///     1, 1,  // degreeu, degreev
     ///     ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         control_points: &ArrayView2<T>,

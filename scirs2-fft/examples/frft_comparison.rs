@@ -43,37 +43,37 @@ fn test_additivity_property() {
         println!("α₁ = {alpha1}, α₂ = {alpha2}");
 
         // Original algorithm
-        let direct_orig = frft(&signal, alpha1 + alpha2, None).unwrap();
-        let temp_orig = frft(&signal, alpha2, None).unwrap();
+        let direct_orig = frft(&signal, alpha1 + alpha2, None).expect("Test: operation failed");
+        let temp_orig = frft(&signal, alpha2, None).expect("Test: operation failed");
         let sequential_orig = frft(
             &temp_orig.iter().map(|&c| c.re).collect::<Vec<_>>(),
             alpha1,
             None,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let energy_direct_orig: f64 = direct_orig.iter().map(|c| c.norm_sqr()).sum();
         let energy_sequential_orig: f64 = sequential_orig.iter().map(|c| c.norm_sqr()).sum();
         let ratio_orig = energy_direct_orig / energy_sequential_orig;
 
         // Ozaktas algorithm
-        let direct_ozaktas = frft_stable(&signal, alpha1 + alpha2).unwrap();
-        let temp_ozaktas = frft_stable(&signal, alpha2).unwrap();
+        let direct_ozaktas = frft_stable(&signal, alpha1 + alpha2).expect("Test: operation failed");
+        let temp_ozaktas = frft_stable(&signal, alpha2).expect("Test: operation failed");
         let sequential_ozaktas = frft_stable(
             &temp_ozaktas.iter().map(|&c| c.re).collect::<Vec<_>>(),
             alpha1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let energy_direct_ozaktas: f64 = direct_ozaktas.iter().map(|c| c.norm_sqr()).sum();
         let energy_sequential_ozaktas: f64 = sequential_ozaktas.iter().map(|c| c.norm_sqr()).sum();
         let ratio_ozaktas = energy_direct_ozaktas / energy_sequential_ozaktas;
 
         // DFT-based algorithm
-        let direct_dft = frft_dft(&signal, alpha1 + alpha2).unwrap();
-        let temp_dft = frft_dft(&signal, alpha2).unwrap();
-        let sequential_dft =
-            frft_dft(&temp_dft.iter().map(|&c| c.re).collect::<Vec<_>>(), alpha1).unwrap();
+        let direct_dft = frft_dft(&signal, alpha1 + alpha2).expect("Test: operation failed");
+        let temp_dft = frft_dft(&signal, alpha2).expect("Test: operation failed");
+        let sequential_dft = frft_dft(&temp_dft.iter().map(|&c| c.re).collect::<Vec<_>>(), alpha1)
+            .expect("Test: operation failed");
 
         let energy_direct_dft: f64 = direct_dft.iter().map(|c| c.norm_sqr()).sum();
         let energy_sequential_dft: f64 = sequential_dft.iter().map(|c| c.norm_sqr()).sum();
@@ -118,15 +118,15 @@ fn test_energy_conservation() {
     println!("---    --------   --------   ---------  ---------  ---------  --------");
 
     for alpha in alphas {
-        let result_orig = frft(&signal, alpha, None).unwrap();
+        let result_orig = frft(&signal, alpha, None).expect("Test: operation failed");
         let energy_orig: f64 = result_orig.iter().map(|c| c.norm_sqr()).sum();
         let deviation_orig = ((energy_orig - input_energy) / input_energy * 100.0).abs();
 
-        let result_ozaktas = frft_stable(&signal, alpha).unwrap();
+        let result_ozaktas = frft_stable(&signal, alpha).expect("Test: operation failed");
         let energy_ozaktas: f64 = result_ozaktas.iter().map(|c| c.norm_sqr()).sum();
         let deviation_ozaktas = ((energy_ozaktas - input_energy) / input_energy * 100.0).abs();
 
-        let result_dft = frft_dft(&signal, alpha).unwrap();
+        let result_dft = frft_dft(&signal, alpha).expect("Test: operation failed");
         let energy_dft: f64 = result_dft.iter().map(|c| c.norm_sqr()).sum();
         let deviation_dft = ((energy_dft - input_energy) / input_energy * 100.0).abs();
 
@@ -164,7 +164,7 @@ fn test_cascaded_transforms() {
             alpha,
             None,
         )
-        .unwrap();
+        .expect("Test: operation failed");
         result_orig = temp;
     }
     let energy_orig: f64 = result_orig.iter().map(|c| c.norm_sqr()).sum();
@@ -172,17 +172,19 @@ fn test_cascaded_transforms() {
     // Ozaktas algorithm
     let mut result_ozaktas = signal.clone();
     for _ in 0..num_iterations {
-        let temp = frft_stable(&result_ozaktas, alpha).unwrap();
+        let temp = frft_stable(&result_ozaktas, alpha).expect("Test: operation failed");
         result_ozaktas = temp.iter().map(|&c| c.re).collect();
     }
-    let final_ozaktas = frft_stable(&result_ozaktas, 0.0).unwrap(); // Convert to complex for comparison
+    let final_ozaktas = frft_stable(&result_ozaktas, 0.0).expect("Test: operation failed"); // Convert to complex for comparison
     let energy_ozaktas: f64 = final_ozaktas.iter().map(|c| c.norm_sqr()).sum();
 
     // Direct computation
-    let direct_orig = frft(&signal, alpha * num_iterations as f64, None).unwrap();
+    let direct_orig =
+        frft(&signal, alpha * num_iterations as f64, None).expect("Test: operation failed");
     let energy_direct_orig: f64 = direct_orig.iter().map(|c| c.norm_sqr()).sum();
 
-    let direct_ozaktas = frft_stable(&signal, alpha * num_iterations as f64).unwrap();
+    let direct_ozaktas =
+        frft_stable(&signal, alpha * num_iterations as f64).expect("Test: operation failed");
     let energy_direct_ozaktas: f64 = direct_ozaktas.iter().map(|c| c.norm_sqr()).sum();
 
     println!("Original algorithm:");
@@ -205,16 +207,24 @@ fn test_cascaded_transforms() {
     let peak_orig = result_orig
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.norm_sqr().partial_cmp(&b.norm_sqr()).unwrap())
+        .max_by(|(_, a), (_, b)| {
+            a.norm_sqr()
+                .partial_cmp(&b.norm_sqr())
+                .expect("Test: operation failed")
+        })
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Test: operation failed");
 
     let peak_ozaktas = final_ozaktas
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.norm_sqr().partial_cmp(&b.norm_sqr()).unwrap())
+        .max_by(|(_, a), (_, b)| {
+            a.norm_sqr()
+                .partial_cmp(&b.norm_sqr())
+                .expect("Test: operation failed")
+        })
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Test: operation failed");
 
     println!("Peak preservation:");
     println!("  Original algorithm peak at: {peak_orig}");

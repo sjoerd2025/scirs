@@ -675,7 +675,7 @@ mod tests {
         for i in 0..5 {
             let result = state
                 .update_and_check_convergence(1.0, 1e-3, 1e-6, i, None)
-                .unwrap();
+                .expect("Operation failed");
 
             if i >= 3 {
                 assert!(result.converged);
@@ -699,7 +699,7 @@ mod tests {
             let f_val = 1.0 - i as f64 * 1e-10; // Extremely slow decrease
             let result = state
                 .update_and_check_convergence(f_val, 1e-3, 1e-6, i, None)
-                .unwrap();
+                .expect("Operation failed");
 
             if i > 10 {
                 // Should converge due to insufficient progress
@@ -729,7 +729,7 @@ mod tests {
 
             let result = state
                 .update_and_check_convergence(f_val, g_val, 1e-8, i, None)
-                .unwrap();
+                .expect("Operation failed");
 
             if i >= 8 && result.converged {
                 assert!(result
@@ -760,7 +760,7 @@ mod tests {
         // Only satisfy one criterion (function tolerance)
         let result = state
             .update_and_check_convergence(1e-8, 1e-1, 1e-2, 10, None)
-            .unwrap();
+            .expect("Operation failed");
 
         // Should not converge with only one criterion met
         assert!(result.criteria_met < 2);
@@ -779,7 +779,7 @@ mod tests {
         for i in 0..10 {
             let result = state
                 .update_and_check_convergence(1.0, 1e-3, 1e-6, i, None)
-                .unwrap();
+                .expect("Operation failed");
 
             if i >= 6 {
                 assert!(result.plateau_detected);
@@ -816,7 +816,7 @@ mod tests {
 
         let result = state
             .update_and_check_convergence(1e-10, 1e-8, 1e-10, 10, None)
-            .unwrap();
+            .expect("Operation failed");
 
         let report = result.get_detailed_report();
         assert!(report.contains("Convergence Status:"));

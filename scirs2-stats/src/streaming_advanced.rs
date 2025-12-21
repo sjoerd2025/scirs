@@ -416,7 +416,7 @@ where
 
         // Add to buffer
         {
-            let mut buffer = self.buffer.write().unwrap();
+            let mut buffer = self.buffer.write().expect("Operation failed");
             buffer.push_back((timestamp, value));
 
             // Apply windowing strategy
@@ -469,7 +469,7 @@ where
         let throughput = values.len() as f64 / elapsed.as_secs_f64();
 
         {
-            let mut stats = self.statistics.write().unwrap();
+            let mut stats = self.statistics.write().expect("Operation failed");
             stats.throughput = throughput;
         }
 
@@ -489,9 +489,9 @@ where
 
         // Update streaming statistics with batch results
         {
-            let mut stats = self.statistics.write().unwrap();
-            let n = F::from(stats.count).unwrap();
-            let m = F::from(values.len()).unwrap();
+            let mut stats = self.statistics.write().expect("Operation failed");
+            let n = F::from(stats.count).expect("Failed to convert to float");
+            let m = F::from(values.len()).expect("Operation failed");
             let total = n + m;
 
             // Welford's online algorithm for incremental statistics
@@ -555,7 +555,7 @@ where
 
     /// Calculate adaptive window size based on data characteristics
     fn calculate_adaptive_windowsize(&self, minsize: usize, maxsize: usize) -> StatsResult<usize> {
-        let stats = self.statistics.read().unwrap();
+        let stats = self.statistics.read().expect("Operation failed");
 
         // Base the window size on variance and throughput
         let variance_factor = if stats.variance > F::zero() {
@@ -572,7 +572,7 @@ where
 
     /// Update real-time statistics with new data point
     fn update_statistics(&self, value: F, timestamp: Instant) -> StatsResult<()> {
-        let mut stats = self.statistics.write().unwrap();
+        let mut stats = self.statistics.write().expect("Operation failed");
 
         if stats.count == 0 {
             // First data point
@@ -584,7 +584,7 @@ where
             stats.count = 1;
         } else {
             // Incremental updates using Welford's algorithm
-            let n = F::from(stats.count).unwrap();
+            let n = F::from(stats.count).expect("Failed to convert to float");
             let delta = value - stats.mean;
             stats.mean = stats.mean + delta / (n + F::one());
             let delta2 = value - stats.mean;
@@ -612,9 +612,9 @@ where
 
     /// Detect change points in the data stream
     fn detect_change_points(&self, value: F) -> StatsResult<()> {
-        let mut detector = self.change_detector.lock().unwrap();
+        let mut detector = self.change_detector.lock().expect("Operation failed");
         if let Some(change_point) = detector.detect(value)? {
-            let mut stats = self.statistics.write().unwrap();
+            let mut stats = self.statistics.write().expect("Operation failed");
             stats.change_points.push(change_point);
         }
         Ok(())
@@ -622,9 +622,9 @@ where
 
     /// Detect anomalies in the data stream
     fn detect_anomalies(&self, value: F, timestamp: Instant) -> StatsResult<()> {
-        let mut detector = self.anomaly_detector.lock().unwrap();
+        let mut detector = self.anomaly_detector.lock().expect("Operation failed");
         if let Some(_anomaly_type) = detector.detect(value)? {
-            let mut stats = self.statistics.write().unwrap();
+            let mut stats = self.statistics.write().expect("Operation failed");
             stats.anomalies.push((timestamp, value));
         }
         Ok(())
@@ -639,14 +639,14 @@ where
 
     /// Apply intelligent compression to historical data
     fn apply_compression(&self, value: F, timestamp: Instant) -> StatsResult<()> {
-        let mut engine = self.compression_engine.lock().unwrap();
+        let mut engine = self.compression_engine.lock().expect("Operation failed");
         engine.compressdata_point(value, timestamp)?;
         Ok(())
     }
 
     /// Get current streaming analytics results
     pub fn get_analytics_results(&self) -> StatsResult<StreamingAnalyticsResult<F>> {
-        let stats = self.statistics.read().unwrap().clone();
+        let stats = self.statistics.read().expect("Operation failed").clone();
 
         // Generate change point events
         let change_points: Vec<ChangePointEvent> = stats
@@ -779,7 +779,7 @@ where
                 // Implement CUSUM algorithm
                 if self.windowdata.len() >= 10 {
                     let mean = self.calculate_mean()?;
-                    let diff = value.to_f64().unwrap() - mean;
+                    let diff = value.to_f64().expect("Operation failed") - mean;
                     if diff.abs() > *threshold {
                         self.last_detection = Some(Instant::now());
                         return Ok(Some(Instant::now()));
@@ -970,7 +970,7 @@ mod tests {
         let result = processor.processdata_point(5.0);
         assert!(result.is_ok());
 
-        let stats = processor.statistics.read().unwrap();
+        let stats = processor.statistics.read().expect("Operation failed");
         assert_eq!(stats.count, 1);
         assert_eq!(stats.mean, 5.0);
     }
@@ -982,7 +982,7 @@ mod tests {
         let result = processor.process_batch(&data.view());
         assert!(result.is_ok());
 
-        let stats = processor.statistics.read().unwrap();
+        let stats = processor.statistics.read().expect("Operation failed");
         assert_eq!(stats.count, 5);
         assert_eq!(stats.mean, 3.0);
     }
@@ -993,13 +993,12 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]; // Include an outlier
         let _ = processor.process_batch(&data.view());
 
-        let results = processor.get_analytics_results().unwrap();
+        let results = processor.get_analytics_results().expect("Operation failed");
         assert!(results.performance_metrics.throughput_samples_per_sec > 0.0);
         // Note: recommendations may be empty for small datasets
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_change_point_detector() {
         let mut detector = ChangePointDetector::<f64>::new();
 
@@ -1014,7 +1013,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_anomaly_detector() {
         let mut detector = AnomalyDetector::<f64>::new();
 
@@ -1038,7 +1036,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_windowing_strategies() {
         let config = AdvancedStreamingConfig::default();
         let processor = AdvancedAdvancedStreamingProcessor::<f64>::new(config);

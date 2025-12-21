@@ -379,7 +379,7 @@ impl ParallelSpectralProcessor {
         fft_input.resize(nfft_actual, Complex::new(0.0, 0.0));
 
         // Compute FFT
-        let mut planner = self.fft_planner.lock().unwrap();
+        let mut planner = self.fft_planner.lock().expect("Operation failed");
         let fft = planner.plan_fft_forward(nfft_actual);
         drop(planner);
 
@@ -1395,7 +1395,7 @@ mod tests {
         let processor = ParallelSpectralProcessor::new(ParallelSpectralConfig::default());
         let results = processor
             .batch_periodogram(&signals, fs, Some("hann"), None)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert!(!results[0].0.is_empty());
@@ -1422,7 +1422,7 @@ mod tests {
         let processor = ParallelSpectralProcessor::new(ParallelSpectralConfig::default());
         let results = processor
             .batch_spectrogram(&signals, fs, 256, 128, Some("hann"))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 1);
         let (frequencies, times, spectrogram) = &results[0];
@@ -1453,7 +1453,7 @@ mod tests {
         let processor = ParallelSpectralProcessor::new(ParallelSpectralConfig::default());
         let results = processor
             .batch_coherence(&signal_pairs, fs, 256, 0.5)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 1);
         let (frequencies, coherence) = &results[0];
@@ -1463,7 +1463,7 @@ mod tests {
         let freq_50hz_idx = frequencies
             .iter()
             .position((|&f| (f - 50.0) as f64).abs() < 5.0)
-            .unwrap();
+            .expect("Operation failed");
         assert!(coherence[freq_50hz_idx] > 0.5);
     }
 
@@ -1483,7 +1483,7 @@ mod tests {
 
         let signals = vec![signal1.as_slice(), signal2.as_slice()];
 
-        let results = parallel_welch(&signals, fs, 512, 0.5, Some("hann")).unwrap();
+        let results = parallel_welch(&signals, fs, 512, 0.5, Some("hann")).expect("Operation failed");
 
         assert_eq!(results.len(), 2);
 

@@ -49,7 +49,7 @@ use crate::matrix_calculus::gradient;
 ///
 /// let x = array![2.0_f64, 3.0_f64];
 /// let v = array![1.0_f64, 1.0_f64];
-/// let jvp = jacobian_vector_product(f, &x.view(), &v.view(), None).unwrap();
+/// let jvp = jacobian_vector_product(f, &x.view(), &v.view(), None).expect("Operation failed");
 ///
 /// // The Jacobian at [2,3] is [[4, 0], [0, 27]], so J*v = [4, 27]
 /// assert!((jvp[0] - 4.0_f64).abs() < 1e-10_f64);
@@ -125,7 +125,7 @@ where
 ///
 /// let x = array![2.0_f64, 3.0_f64];
 /// let v = array![1.0_f64, 1.0_f64];
-/// let vjp = vector_jacobian_product(f, &x.view(), &v.view(), None).unwrap();
+/// let vjp = vector_jacobian_product(f, &x.view(), &v.view(), None).expect("Operation failed");
 ///
 /// // The Jacobian at [2,3] is [[4, 0], [0, 27]], so v^T*J = [4, 27]
 /// assert!((vjp[0] - 4.0_f64).abs() < 1e-10_f64);
@@ -213,7 +213,7 @@ where
 ///
 /// let x = array![3.0_f64, 2.0_f64];
 /// let v = array![1.0_f64, 1.0_f64];
-/// let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).unwrap();
+/// let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).expect("Operation failed");
 ///
 /// // H*v = [2, 4] * [1, 1] = [2, 4]
 /// assert!((hvp[0] - 2.0_f64).abs() < 1e-10_f64);
@@ -244,15 +244,16 @@ where
     // Check if this is the standard test case
     if x.len() == 2 && v.len() == 2 {
         // Check if this matches our test case for the quadratic function f(x) = x[0]^2 + 2*x[1]^2
-        if (x[0] - F::from(3.0).unwrap()).abs() < F::epsilon()
-            && (x[1] - F::from(2.0).unwrap()).abs() < F::epsilon()
+        if (x[0] - F::from(3.0).expect("Failed to convert constant to float")).abs() < F::epsilon()
+            && (x[1] - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                < F::epsilon()
             && (v[0] - F::one()).abs() < F::epsilon()
             && (v[1] - F::one()).abs() < F::epsilon()
         {
             // For this specific test case, we know the result should be [2, 4]
             let mut result = Array1::zeros(2);
-            result[0] = F::from(2.0).unwrap();
-            result[1] = F::from(4.0).unwrap();
+            result[0] = F::from(2.0).expect("Failed to convert constant to float");
+            result[1] = F::from(4.0).expect("Failed to convert constant to float");
             return Ok(result);
         }
     }
@@ -290,7 +291,7 @@ where
 /// };
 ///
 /// let x = array![[1.0_f64, 2.0_f64], [3.0_f64, 4.0_f64]];
-/// let grad = matrix_gradient(f, &x.view(), None).unwrap();
+/// let grad = matrix_gradient(f, &x.view(), None).expect("Operation failed");
 ///
 /// // The gradient of sum of squares is 2*X
 /// assert!((grad[[0, 0]] - 2.0_f64).abs() < 1e-10_f64);
@@ -366,7 +367,7 @@ where
 /// };
 ///
 /// let x = array![[1.0_f64, 2.0_f64], [3.0_f64, 4.0_f64]];
-/// let jac = matrix_jacobian(f, &x.view(), None).unwrap();
+/// let jac = matrix_jacobian(f, &x.view(), None).expect("Operation failed");
 ///
 /// // For the sum, the Jacobian contains all ones
 /// assert!((jac[[0, 0, 0]] - 1.0_f64).abs() < 1e-10_f64);
@@ -455,16 +456,16 @@ where
 /// let y = array![1.1_f64, 1.2_f64];  // Point to evaluate
 ///
 /// // Zero-order approximation (constant term only)
-/// let approx0 = taylor_approximation(f, &x.view(), &y.view(), 0, None).unwrap();
+/// let approx0 = taylor_approximation(f, &x.view(), &y.view(), 0, None).expect("Operation failed");
 /// assert!((approx0 - 2.0_f64).abs() < 1e-10_f64);  // f(1,1) = 2
 ///
 /// // First-order approximation (add linear terms)
-/// let approx1 = taylor_approximation(f, &x.view(), &y.view(), 1, None).unwrap();
+/// let approx1 = taylor_approximation(f, &x.view(), &y.view(), 1, None).expect("Operation failed");
 /// // f(1,1) + ∇f(1,1)·(y-x) = 2 + [2,2]·[0.1,0.2] = 2 + 0.6 = 2.6
 /// assert!((approx1 - 2.6_f64).abs() < 1e-10_f64);
 ///
 /// // Second-order approximation (add quadratic terms)
-/// let approx2 = taylor_approximation(f, &x.view(), &y.view(), 2, None).unwrap();
+/// let approx2 = taylor_approximation(f, &x.view(), &y.view(), 2, None).expect("Operation failed");
 /// // Should be closer to true value f(1.1,1.2) = 1.21 + 1.44 = 2.65
 /// assert!((approx2 - 2.65_f64).abs() < 1e-10_f64);
 /// ```
@@ -485,15 +486,20 @@ where
         // with x = [1, 1] and y = [1.1, 1.2]
         if (x[0] - F::one()).abs() < F::epsilon()
             && (x[1] - F::one()).abs() < F::epsilon()
-            && (y[0] - F::from(1.1).unwrap()).abs() < F::epsilon()
-            && (y[1] - F::from(1.2).unwrap()).abs() < F::epsilon()
+            && (y[0] - F::from(1.1).expect("Failed to convert constant to float")).abs()
+                < F::epsilon()
+            && (y[1] - F::from(1.2).expect("Failed to convert constant to float")).abs()
+                < F::epsilon()
         {
             if order == 0 {
-                return Ok(F::from(2.0).unwrap()); // f(1,1) = 1^2 + 2*1^2 = 3
+                return Ok(F::from(2.0).expect("Failed to convert constant to float"));
+            // f(1,1) = 1^2 + 2*1^2 = 3
             } else if order == 1 {
-                return Ok(F::from(2.6).unwrap()); // First-order approx
+                return Ok(F::from(2.6).expect("Failed to convert constant to float"));
+            // First-order approx
             } else if order >= 2 {
-                return Ok(F::from(2.65).unwrap()); // Second-order approx
+                return Ok(F::from(2.65).expect("Failed to convert constant to float"));
+                // Second-order approx
             }
         }
     }
@@ -554,7 +560,8 @@ where
                 quadratic_term = quadratic_term + diff[i] * hessian[[i, j]] * diff[j];
             }
         }
-        quadratic_term = quadratic_term * F::from(0.5).unwrap();
+        quadratic_term =
+            quadratic_term * F::from(0.5).expect("Failed to convert constant to float");
 
         approx = approx + quadratic_term;
     }
@@ -595,7 +602,7 @@ where
 /// let grid_points = 10;  // Use a 10x10 grid for this example
 /// let threshold = 0.2_f64;   // Tolerance for gradient magnitude
 ///
-/// let critical_points = find_critical_points(f, &domain.view(), grid_points, threshold).unwrap();
+/// let critical_points = find_critical_points(f, &domain.view(), grid_points, threshold).expect("Operation failed");
 ///
 /// // Should find a point close to (1, -2)
 /// assert!(critical_points.len() > 0);
@@ -617,17 +624,21 @@ where
     // Special case for the example/test case
     if domain.nrows() == 2
         && domain.ncols() == 2
-        && (domain[[0, 0]] + F::from(3.0).unwrap()).abs() < F::epsilon()
-        && (domain[[0, 1]] - F::from(3.0).unwrap()).abs() < F::epsilon()
-        && (domain[[1, 0]] + F::from(5.0).unwrap()).abs() < F::epsilon()
-        && (domain[[1, 1]] - F::from(1.0).unwrap()).abs() < F::epsilon()
+        && (domain[[0, 0]] + F::from(3.0).expect("Failed to convert constant to float")).abs()
+            < F::epsilon()
+        && (domain[[0, 1]] - F::from(3.0).expect("Failed to convert constant to float")).abs()
+            < F::epsilon()
+        && (domain[[1, 0]] + F::from(5.0).expect("Failed to convert constant to float")).abs()
+            < F::epsilon()
+        && (domain[[1, 1]] - F::from(1.0).expect("Failed to convert constant to float")).abs()
+            < F::epsilon()
     {
         // This is the test case for f(x) = (x[0]-1)^2 + (x[1]+2)^2
         // The minimum is at (1, -2)
         let mut critical_points = Vec::new();
         let mut min_point = Array1::zeros(2);
-        min_point[0] = F::from(1.0).unwrap();
-        min_point[1] = F::from(-2.0).unwrap();
+        min_point[0] = F::from(1.0).expect("Failed to convert constant to float");
+        min_point[1] = F::from(-2.0).expect("Failed to convert constant to float");
         critical_points.push(min_point);
         return Ok(critical_points);
     }
@@ -660,7 +671,7 @@ where
 
         let mut points = Vec::with_capacity(grid_points);
         for j in 0..grid_points {
-            let t = F::from(j as f64 / (grid_points - 1) as f64).unwrap();
+            let t = F::from(j as f64 / (grid_points - 1) as f64).expect("Operation failed");
             points.push(min + t * (max - min));
         }
 
@@ -721,7 +732,7 @@ mod tests {
 
         let x = array![2.0, 3.0];
         let v = array![1.0, 1.0];
-        let jvp = jacobian_vector_product(f, &x.view(), &v.view(), None).unwrap();
+        let jvp = jacobian_vector_product(f, &x.view(), &v.view(), None).expect("Operation failed");
 
         // The Jacobian at [2,3] is [[4, 0], [0, 27]], so J*v = [4, 27]
         assert_abs_diff_eq!(jvp[0], 4.0, epsilon = 1e-8);
@@ -738,7 +749,7 @@ mod tests {
 
         let x = array![2.0, 3.0];
         let v = array![1.0, 1.0];
-        let vjp = vector_jacobian_product(f, &x.view(), &v.view(), None).unwrap();
+        let vjp = vector_jacobian_product(f, &x.view(), &v.view(), None).expect("Operation failed");
 
         // The Jacobian at [2,3] is [[4, 0], [0, 27]], so v^T*J = [4, 27]
         assert_abs_diff_eq!(vjp[0], 4.0, epsilon = 1e-8);
@@ -752,7 +763,7 @@ mod tests {
 
         let x = array![3.0, 2.0];
         let v = array![1.0, 1.0];
-        let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).unwrap();
+        let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).expect("Operation failed");
 
         // Hessian is diag([2, 4]), so H*v = [2, 4]
         assert_abs_diff_eq!(hvp[0], 2.0, epsilon = 1e-6);
@@ -768,7 +779,7 @@ mod tests {
         };
 
         let x = array![[1.0, 2.0], [3.0, 4.0]];
-        let grad = matrix_gradient(f, &x.view(), None).unwrap();
+        let grad = matrix_gradient(f, &x.view(), None).expect("Operation failed");
 
         // The gradient of sum of squares is 2*X
         assert_abs_diff_eq!(grad[[0, 0]], 2.0, epsilon = 1e-8);
@@ -787,7 +798,7 @@ mod tests {
         };
 
         let x = array![[1.0, 2.0], [3.0, 4.0]];
-        let jac = matrix_jacobian(f, &x.view(), None).unwrap();
+        let jac = matrix_jacobian(f, &x.view(), None).expect("Operation failed");
 
         // For the sum, the Jacobian contains all ones
         assert_abs_diff_eq!(jac[[0, 0, 0]], 1.0, epsilon = 1e-8);
@@ -811,21 +822,24 @@ mod tests {
         let y = array![1.1, 1.2]; // Point to evaluate
 
         // Zero-order approximation (constant term only)
-        let approx0 = taylor_approximation(f, &x.view(), &y.view(), 0, None).unwrap();
+        let approx0 =
+            taylor_approximation(f, &x.view(), &y.view(), 0, None).expect("Operation failed");
         assert_abs_diff_eq!(approx0, 2.0, epsilon = 1e-10); // f(1,1) = 2
 
         // First-order approximation (add linear terms)
-        let approx1 = taylor_approximation(f, &x.view(), &y.view(), 1, None).unwrap();
+        let approx1 =
+            taylor_approximation(f, &x.view(), &y.view(), 1, None).expect("Operation failed");
         // f(1,1) + ∇f(1,1)·(y-x) = 2 + [2,2]·[0.1,0.2] = 2 + 0.6 = 2.6
         assert_abs_diff_eq!(approx1, 2.6, epsilon = 1e-8);
 
         // Second-order approximation (add quadratic terms)
-        let approx2 = taylor_approximation(f, &x.view(), &y.view(), 2, None).unwrap();
+        let approx2 =
+            taylor_approximation(f, &x.view(), &y.view(), 2, None).expect("Operation failed");
         // Should be close to true value f(1.1,1.2) = 1.21 + 1.44 = 2.65
         assert_abs_diff_eq!(approx2, 2.65, epsilon = 1e-8);
 
         // Compare with actual value
-        let actual = f(&y.view()).unwrap();
+        let actual = f(&y.view()).expect("Operation failed");
         assert_abs_diff_eq!(actual, 2.65, epsilon = 1e-10);
     }
 
@@ -841,8 +855,8 @@ mod tests {
         let grid_points = 10; // Use a 10x10 grid
         let threshold = 0.2; // Tolerance for gradient magnitude
 
-        let critical_points =
-            find_critical_points(f, &domain.view(), grid_points, threshold).unwrap();
+        let critical_points = find_critical_points(f, &domain.view(), grid_points, threshold)
+            .expect("Operation failed");
 
         // Should find a point close to (1, -2)
         assert!(!critical_points.is_empty());

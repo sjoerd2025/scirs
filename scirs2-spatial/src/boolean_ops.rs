@@ -37,11 +37,11 @@
 //! ];
 //!
 //! // Compute union
-//! let union_result = polygon_union(&poly1.view(), &poly2.view()).unwrap();
+//! let union_result = polygon_union(&poly1.view(), &poly2.view()).expect("Operation failed");
 //! println!("Union has {} vertices", union_result.nrows());
 //!
 //! // Compute intersection
-//! let intersection_result = polygon_intersection(&poly1.view(), &poly2.view()).unwrap();
+//! let intersection_result = polygon_intersection(&poly1.view(), &poly2.view()).expect("Operation failed");
 //! println!("Intersection has {} vertices", intersection_result.nrows());
 //! ```
 
@@ -148,7 +148,7 @@ impl LabeledPolygon {
             data.push(vertex.x);
             data.push(vertex.y);
         }
-        Array2::from_shape_vec((self.vertices.len(), 2), data).unwrap()
+        Array2::from_shape_vec((self.vertices.len(), 2), data).expect("Operation failed")
     }
 
     fn ispoint_inside(&self, point: &Point2D) -> bool {
@@ -238,7 +238,7 @@ impl LabeledPolygon {
 /// let poly1 = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let poly2 = array![[0.5, 0.5], [1.5, 0.5], [1.5, 1.5], [0.5, 1.5]];
 ///
-/// let union = polygon_union(&poly1.view(), &poly2.view()).unwrap();
+/// let union = polygon_union(&poly1.view(), &poly2.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn polygon_union(
@@ -736,7 +736,7 @@ mod tests {
     #[test]
     fn test_polygon_creation() {
         let vertices = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let polygon = LabeledPolygon::from_array(&vertices.view()).unwrap();
+        let polygon = LabeledPolygon::from_array(&vertices.view()).expect("Operation failed");
 
         assert_eq!(polygon.vertices.len(), 4);
         assert_eq!(polygon.edges.len(), 4);
@@ -746,7 +746,7 @@ mod tests {
     #[test]
     fn testpoint_inside_polygon() {
         let vertices = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let polygon = LabeledPolygon::from_array(&vertices.view()).unwrap();
+        let polygon = LabeledPolygon::from_array(&vertices.view()).expect("Operation failed");
 
         let insidepoint = Point2D::new(0.5, 0.5);
         let outsidepoint = Point2D::new(1.5, 1.5);
@@ -765,7 +765,7 @@ mod tests {
         let result = line_segment_intersection(&p1, &p2, &p3, &p4);
         assert!(result.is_some());
 
-        let (intersection, t1, t2) = result.unwrap();
+        let (intersection, t1, t2) = result.expect("Operation failed");
         assert_relative_eq!(intersection.x, 0.5, epsilon = 1e-10);
         assert_relative_eq!(intersection.y, 0.5, epsilon = 1e-10);
         assert_relative_eq!(t1, 0.5, epsilon = 1e-10);
@@ -776,7 +776,7 @@ mod tests {
     fn test_is_convex_polygon() {
         // Convex square
         let convex = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        assert!(is_convex_polygon(&convex.view()).unwrap());
+        assert!(is_convex_polygon(&convex.view()).expect("Operation failed"));
 
         // Non-convex polygon (L-shape)
         let non_convex = arr2(&[
@@ -787,17 +787,17 @@ mod tests {
             [0.5, 1.0],
             [0.0, 1.0],
         ]);
-        assert!(!is_convex_polygon(&non_convex.view()).unwrap());
+        assert!(!is_convex_polygon(&non_convex.view()).expect("Operation failed"));
     }
 
     #[test]
     fn test_polygon_area() {
         let square = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let area = compute_polygon_area(&square.view()).unwrap();
+        let area = compute_polygon_area(&square.view()).expect("Operation failed");
         assert_relative_eq!(area, 1.0, epsilon = 1e-10);
 
         let triangle = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]]);
-        let area = compute_polygon_area(&triangle.view()).unwrap();
+        let area = compute_polygon_area(&triangle.view()).expect("Operation failed");
         assert_relative_eq!(area, 0.5, epsilon = 1e-10);
     }
 
@@ -805,11 +805,11 @@ mod tests {
     fn test_intersection() {
         // Non-self-intersecting square
         let square = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        assert!(!is_self_intersecting(&square.view()).unwrap());
+        assert!(!is_self_intersecting(&square.view()).expect("Operation failed"));
 
         // Self-intersecting bowtie
         let bowtie = arr2(&[[0.0, 0.0], [1.0, 1.0], [1.0, 0.0], [0.0, 1.0]]);
-        assert!(is_self_intersecting(&bowtie.view()).unwrap());
+        assert!(is_self_intersecting(&bowtie.view()).expect("Operation failed"));
     }
 
     #[test]
@@ -818,7 +818,7 @@ mod tests {
         let poly1 = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let poly2 = arr2(&[[2.0, 0.0], [3.0, 0.0], [3.0, 1.0], [2.0, 1.0]]);
 
-        let union = polygon_union(&poly1.view(), &poly2.view()).unwrap();
+        let union = polygon_union(&poly1.view(), &poly2.view()).expect("Operation failed");
         assert!(union.nrows() >= 4); // Should have at least 4 vertices
     }
 
@@ -828,11 +828,12 @@ mod tests {
         let poly1 = arr2(&[[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]]);
         let poly2 = arr2(&[[1.0, 1.0], [3.0, 1.0], [3.0, 3.0], [1.0, 3.0]]);
 
-        let intersection = polygon_intersection(&poly1.view(), &poly2.view()).unwrap();
+        let intersection =
+            polygon_intersection(&poly1.view(), &poly2.view()).expect("Operation failed");
 
         // The intersection should be a unit square
         if intersection.nrows() > 0 {
-            let area = compute_polygon_area(&intersection.view()).unwrap();
+            let area = compute_polygon_area(&intersection.view()).expect("Operation failed");
             assert!(area > 0.0); // Should have non-zero area
         }
     }
@@ -842,7 +843,8 @@ mod tests {
         let poly1 = arr2(&[[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]]);
         let poly2 = arr2(&[[1.0, 1.0], [3.0, 1.0], [3.0, 3.0], [1.0, 3.0]]);
 
-        let difference = polygon_difference(&poly1.view(), &poly2.view()).unwrap();
+        let difference =
+            polygon_difference(&poly1.view(), &poly2.view()).expect("Operation failed");
         assert!(difference.nrows() >= 3); // Should have at least 3 vertices
     }
 
@@ -874,7 +876,7 @@ mod tests {
             is_hole: false,
         };
 
-        let result = sutherland_hodgman_clip(&subject, &clip).unwrap();
+        let result = sutherland_hodgman_clip(&subject, &clip).expect("Operation failed");
 
         // Should produce a valid polygon
         assert!(result.vertices.len() >= 3);

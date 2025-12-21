@@ -219,7 +219,10 @@ impl MOLParabolicSolver3D {
 
         // Flatten the 3D grid into a 1D array for the ODE solver
         // Note: This is computed but not used, likely for future use
-        let _u0_flat = u0.clone().into_shape_with_order(nx * ny * nz).unwrap();
+        let _u0_flat = u0
+            .clone()
+            .into_shape_with_order(nx * ny * nz)
+            .expect("Operation failed");
 
         // Clone grids for the closure
         let x_grid_closure = x_grid.clone();
@@ -259,7 +262,9 @@ impl MOLParabolicSolver3D {
         // Construct the ODE function that represents the PDE after spatial discretization
         let ode_func = move |t: f64, u_flat: ArrayView1<f64>| -> Array1<f64> {
             // Reshape the flattened array back to 3D for easier indexing
-            let u = u_flat.into_shape_with_order((nz, ny, nx)).unwrap();
+            let u = u_flat
+                .into_shape_with_order((nz, ny, nx))
+                .expect("Operation failed");
             let mut dudt = Array3::zeros((nz, ny, nx));
 
             // Apply finite difference approximations for interior points
@@ -457,7 +462,8 @@ impl MOLParabolicSolver3D {
             }
 
             // Flatten the 3D dudt back to 1D for the ODE solver
-            dudt.into_shape_with_order(nx * ny * nz).unwrap()
+            dudt.into_shape_with_order(nx * ny * nz)
+                .expect("Operation failed")
         };
 
         // Use the ode_options from earlier
@@ -471,7 +477,9 @@ impl MOLParabolicSolver3D {
             &z_grid_apply,
         );
 
-        let u0_flat = u0.into_shape_with_order(nx * ny * nz).unwrap();
+        let u0_flat = u0
+            .into_shape_with_order(nx * ny * nz)
+            .expect("Operation failed");
 
         // Solve the ODE system
         let ode_result = solve_ivp(ode_func, time_range, u0_flat, Some(ode_options))?;
@@ -487,7 +495,10 @@ impl MOLParabolicSolver3D {
         let mut u_4d = Array4::zeros((nt, nz, ny, nx));
 
         for (time_idx, y_flat) in ode_result.y.iter().enumerate() {
-            let u_3d = y_flat.clone().into_shape_with_order((nz, ny, nx)).unwrap();
+            let u_3d = y_flat
+                .clone()
+                .into_shape_with_order((nz, ny, nx))
+                .expect("Operation failed");
             for k in 0..nz {
                 for j in 0..ny {
                     for i in 0..nx {
@@ -1486,7 +1497,7 @@ impl From<MOL3DResult> for PDESolution<f64> {
         let u_reshaped = result
             .u
             .into_shape_with_order((nt, total_spatial_points))
-            .unwrap();
+            .expect("Operation failed");
 
         // Create a single 2D array with time on one dimension and flattened spatial points on the other
         values.push(u_reshaped.t().to_owned());

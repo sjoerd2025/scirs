@@ -33,7 +33,7 @@ use std::f32::consts::PI;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let (edges, orientations) = sobel_edges_oriented(&img, 0.1, true)?;
 /// # Ok(())
 /// # }
@@ -366,7 +366,7 @@ mod tests {
         let result = sobel_edges_oriented(&img, 0.1, true);
         assert!(result.is_ok());
 
-        let (edges, orientations) = result.unwrap();
+        let (edges, orientations) = result.expect("Operation failed");
         assert!(orientations.is_some());
         assert_eq!(edges.dimensions(), (10, 10));
     }
@@ -385,7 +385,7 @@ mod tests {
         let result = compute_gradients(&dynamic_img);
         assert!(result.is_ok());
 
-        let (magnitude, orientation) = result.unwrap();
+        let (magnitude, orientation) = result.expect("Operation failed");
         assert_eq!(magnitude.dim(), (10, 10));
         assert_eq!(orientation.dim(), (10, 10));
 
@@ -408,13 +408,13 @@ mod tests {
     fn test_hog_histogram() {
         let magnitude =
             Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 1.0, 0.0, 2.0, 0.0, 1.0, 0.0, 1.0])
-                .unwrap();
+                .expect("Operation failed");
 
         let orientation = Array2::from_shape_vec(
             (3, 3),
             vec![0.0, 0.0, PI / 2.0, 0.0, PI, 0.0, -PI / 2.0, 0.0, PI],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let histogram = compute_hog_histogram(&magnitude, &orientation, 4);
 
@@ -426,7 +426,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_sobel_simd() {
         // Create test image with vertical edge
         let mut img = GrayImage::new(10, 10);
@@ -441,12 +440,13 @@ mod tests {
         let result = sobel_edges_simd(&dynamic_img, 100.0, true);
         assert!(result.is_ok());
 
-        let (edges, orientations) = result.unwrap();
+        let (edges, orientations) = result.expect("Operation failed");
         assert!(orientations.is_some());
         assert_eq!(edges.dimensions(), (10, 10));
 
         // Compare with regular implementation
-        let (edges_regular_, _) = sobel_edges_oriented(&dynamic_img, 100.0, true).unwrap();
+        let (edges_regular_, _) =
+            sobel_edges_oriented(&dynamic_img, 100.0, true).expect("Operation failed");
 
         // Results should be similar (allowing for minor numerical differences)
         assert_eq!(edges.dimensions(), edges_regular_.dimensions());

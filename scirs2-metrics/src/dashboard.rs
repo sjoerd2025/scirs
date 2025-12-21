@@ -16,10 +16,10 @@
 //! use scirs2_metrics::dashboard::server::start_http_server;
 //!
 //! let dashboard = InteractiveDashboard::default();
-//! dashboard.add_metric("accuracy", 0.95).unwrap();
+//! dashboard.add_metric("accuracy", 0.95).expect("Operation failed");
 //!
 //! // Start the HTTP server
-//! let server = start_http_server(dashboard).unwrap();
+//! let server = start_http_server(dashboard).expect("Operation failed");
 //! # }
 //! ```
 
@@ -55,7 +55,7 @@ pub struct DashboardConfig {
 impl Default for DashboardConfig {
     fn default() -> Self {
         Self {
-            address: "127.0.0.1:8080".parse().unwrap(),
+            address: "127.0.0.1:8080".parse().expect("Operation failed"),
             refresh_interval: 5,
             max_data_points: 1000,
             enable_realtime: true,
@@ -422,8 +422,8 @@ impl InteractiveDashboard {
         } else {
             let timestamps: Vec<u64> = data.iter().map(|p| p.timestamp).collect();
             (
-                *timestamps.iter().min().unwrap(),
-                *timestamps.iter().max().unwrap(),
+                *timestamps.iter().min().expect("Operation failed"),
+                *timestamps.iter().max().expect("Operation failed"),
             )
         };
 
@@ -803,10 +803,12 @@ mod tests {
         assert!(data.add_metric(point1).is_ok());
         assert!(data.add_metric(point2).is_ok());
 
-        let all_metrics = data.get_all_metrics().unwrap();
+        let all_metrics = data.get_all_metrics().expect("Operation failed");
         assert_eq!(all_metrics.len(), 2);
 
-        let accuracy_metrics = data.get_metrics_by_name("accuracy").unwrap();
+        let accuracy_metrics = data
+            .get_metrics_by_name("accuracy")
+            .expect("Operation failed");
         assert_eq!(accuracy_metrics.len(), 1);
         assert_eq!(accuracy_metrics[0].value, 0.95);
     }
@@ -819,7 +821,7 @@ mod tests {
         assert!(dashboard.add_metric("precision", 0.92).is_ok());
         assert!(dashboard.add_metric("accuracy", 0.97).is_ok());
 
-        let stats = dashboard.get_statistics().unwrap();
+        let stats = dashboard.get_statistics().expect("Operation failed");
         assert_eq!(stats.total_data_points, 3);
         assert_eq!(stats.unique_metrics, 2);
         assert_eq!(stats.metric_counts["accuracy"], 2);
@@ -835,15 +837,19 @@ mod tests {
 
         let json_export = dashboard.export_to_json();
         assert!(json_export.is_ok());
-        assert!(json_export.unwrap().contains("accuracy"));
+        assert!(json_export.expect("Operation failed").contains("accuracy"));
 
         let csv_export = dashboard.export_to_csv();
         assert!(csv_export.is_ok());
-        assert!(csv_export.unwrap().contains("timestamp,name,value"));
+        assert!(csv_export
+            .expect("Operation failed")
+            .contains("timestamp,name,value"));
 
         let html_export = dashboard.generate_html();
         assert!(html_export.is_ok());
-        assert!(html_export.unwrap().contains("<!DOCTYPE html>"));
+        assert!(html_export
+            .expect("Operation failed")
+            .contains("<!DOCTYPE html>"));
     }
 
     #[test]
@@ -861,8 +867,9 @@ mod tests {
 
     #[test]
     fn test_utility_functions() {
-        let dashboard = utils::create_classification_dashboard(0.95, 0.92, 0.88, 0.90).unwrap();
-        let stats = dashboard.get_statistics().unwrap();
+        let dashboard = utils::create_classification_dashboard(0.95, 0.92, 0.88, 0.90)
+            .expect("Operation failed");
+        let stats = dashboard.get_statistics().expect("Operation failed");
 
         assert_eq!(stats.total_data_points, 4);
         assert_eq!(stats.unique_metrics, 4);

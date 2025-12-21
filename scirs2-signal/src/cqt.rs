@@ -168,7 +168,7 @@ pub struct SparseKernel {
 /// config.bins_per_octave = 24;  // Quarter-tone resolution
 ///
 /// // Compute the CQT
-/// let result = constant_q_transform(&signal, &config).unwrap();
+/// let result = constant_q_transform(&signal, &config).expect("Operation failed");
 ///
 /// // result.cqt contains the CQT coefficients
 /// // result.frequencies contains the center frequencies of each bin
@@ -601,10 +601,10 @@ pub fn cqt_phase(cqt: &CqtResult) -> Array2<f64> {
 /// config.f_max = 2000.0;
 /// config.bins_per_octave = 12;
 ///
-/// let cqt_result = constant_q_transform(&signal, &config).unwrap();
+/// let cqt_result = constant_q_transform(&signal, &config).expect("Operation failed");
 ///
 /// // Reconstruct signal
-/// let reconstructed = inverse_constant_q_transform(&cqt_result, Some(signal.len())).unwrap();
+/// let reconstructed = inverse_constant_q_transform(&cqt_result, Some(signal.len())).expect("Operation failed");
 ///
 /// // Check that reconstruction has correct length
 /// assert_eq!(reconstructed.len(), signal.len());
@@ -636,7 +636,7 @@ pub fn inverse_constant_q_transform(
 
     // For a spectrogram, we need the hop size
     let hop_size = if n_frames > 1 && cqt.times.is_some() {
-        let times = cqt.times.as_ref().unwrap();
+        let times = cqt.times.as_ref().expect("Operation failed");
         if times.len() > 1 {
             // Estimate hop size from time differences
             ((times[1] - times[0]) * kernel.fs).round() as usize
@@ -778,7 +778,7 @@ mod tests {
         // Test window creation
         let length = 128;
 
-        let hann = create_window("hann", length).unwrap();
+        let hann = create_window("hann", length).expect("Operation failed");
         assert_eq!(hann.len(), length);
         assert!(hann[0] < 1e-10); // Should be close to 0 at endpoints
         assert!(hann[length - 1] < 1e-10);
@@ -815,7 +815,7 @@ mod tests {
         let fs = 22050.0;
 
         let kernel =
-            compute_cqt_kernel(f_min, f_max, bins_per_octave, q, fs, "hann", None, true).unwrap();
+            compute_cqt_kernel(f_min, f_max, bins_per_octave, q, fs, "hann", None, true).expect("Operation failed");
 
         // Check number of bins (should be exactly 36 bins for log2(440/55) * 12 = 3 * 12)
         let expected_bins = ((f_max / f_min).log2() * bins_per_octave as f64).ceil() as usize;
@@ -860,7 +860,7 @@ mod tests {
         };
 
         // Compute CQT
-        let cqt_result = constant_q_transform(&signal, &config).unwrap();
+        let cqt_result = constant_q_transform(&signal, &config).expect("Operation failed");
 
         // Find the bin with maximum energy
         let mut max_bin = 0;
@@ -883,10 +883,10 @@ mod tests {
                 (a - frequency)
                     .abs()
                     .partial_cmp(&(b - frequency).abs())
-                    .unwrap()
+                    .expect("Operation failed")
             })
             .map(|(idx_)| idx)
-            .unwrap();
+            .expect("Operation failed");
 
         // Should be at or very close to the expected bin
         assert!((max_bin as isize - closest_bin as isize).abs() <= 1);
@@ -922,7 +922,7 @@ mod tests {
         };
 
         // Compute CQT spectrogram
-        let cqt_result = constant_q_transform(&signal, &config).unwrap();
+        let cqt_result = constant_q_transform(&signal, &config).expect("Operation failed");
 
         // Check spectrogram dimensions
         let n_bins =
@@ -934,7 +934,7 @@ mod tests {
 
         // Times should be present
         assert!(cqt_result.times.is_some());
-        assert_eq!(cqt_result.times.unwrap().len(), n_frames);
+        assert_eq!(cqt_result.times.expect("Operation failed").len(), n_frames);
     }
 
     #[test]
@@ -964,10 +964,10 @@ mod tests {
         };
 
         // Compute CQT
-        let cqt_result = constant_q_transform(&signal, &config).unwrap();
+        let cqt_result = constant_q_transform(&signal, &config).expect("Operation failed");
 
         // Compute chromagram
-        let chroma = chromagram(&cqt_result, None, None).unwrap();
+        let chroma = chromagram(&cqt_result, None, None).expect("Operation failed");
 
         // Shape should be 12 x n_frames
         assert_eq!(chroma.shape()[0], 12);

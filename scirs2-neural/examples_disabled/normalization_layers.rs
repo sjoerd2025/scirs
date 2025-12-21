@@ -614,10 +614,10 @@ fn compare_normalization_methods() -> Result<()> {
             0.01,
         )?;
         // Print final losses
-        println!("Final training loss: {:.6}", train_losses.last().unwrap().0);
+        println!("Final training loss: {:.6}", train_losses.last().expect("Operation failed").0);
         println!(
             "Final validation loss: {:.6}",
-            train_losses.last().unwrap().1
+            train_losses.last().expect("Operation failed").1
         // Print final metrics
         let train_acc = evaluate(&mut network, &x_train_split, &y_train_split)?;
         let val_acc = evaluate(&mut network, &x_val, &y_val)?;

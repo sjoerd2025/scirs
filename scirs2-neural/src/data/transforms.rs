@@ -64,8 +64,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> StandardSca
             return Err(crate::error::NeuralError::InferenceError(
                 "StandardScaler has not been fitted".to_string(),
             ));
-        let mean = self.mean.as_ref().unwrap();
-        let std = self.std.as_ref().unwrap();
+        let mean = self.mean.as_ref().expect("Operation failed");
+        let std = self.std.as_ref().expect("Operation failed");
         let mut result = data.clone();
             // Apply global mean and std
             let mean_val = mean[[0]];
@@ -117,11 +117,11 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> MinMaxScale
             max: None,
             range: (_min_val, max_val),
             // Just compute global min and max
-            let min = match data.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
+            let min = match data.iter().min_by(|a, b| a.partial_cmp(b).expect("Operation failed")) {
                 Some(&val) => val,
                 None => F::zero(),
             };
-            let max = match data.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
+            let max = match data.iter().max_by(|a, b| a.partial_cmp(b).expect("Operation failed")) {
                 None => F::one(),
             self.min = Some(Array::from_elem(IxDyn(&[1]), min));
             self.max = Some(Array::from_elem(IxDyn(&[1]), max));
@@ -129,11 +129,11 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> MinMaxScale
             let mut min_vals = Array::zeros(IxDyn(&[data.shape()[0]]));
             let mut max_vals = Array::zeros(IxDyn(&[data.shape()[0]]));
                 let row = data.slice(scirs2_core::ndarray::s![i, ..]);
-                let min = match row.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
+                let min = match row.iter().min_by(|a, b| a.partial_cmp(b).expect("Operation failed")) {
                     Some(&val) => val,
                     None => F::zero(),
                 };
-                let max = match row.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
+                let max = match row.iter().max_by(|a, b| a.partial_cmp(b).expect("Operation failed")) {
                     None => F::one(),
                 min_vals[[i]] = min;
                 max_vals[[i]] = max;
@@ -143,14 +143,14 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> MinMaxScale
             let mut min_vals = Array::zeros(IxDyn(&[data.shape()[1]]));
             let mut max_vals = Array::zeros(IxDyn(&[data.shape()[1]]));
                 let col = data.slice(scirs2_core::ndarray::s![.., j]);
-                let min = match col.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
-                let max = match col.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
+                let min = match col.iter().min_by(|a, b| a.partial_cmp(b).expect("Operation failed")) {
+                let max = match col.iter().max_by(|a, b| a.partial_cmp(b).expect("Operation failed")) {
                 min_vals[[j]] = min;
                 max_vals[[j]] = max;
         if self.min.is_none() || self.max.is_none() {
                 "MinMaxScaler has not been fitted".to_string(),
-        let min = self.min.as_ref().unwrap();
-        let max = self.max.as_ref().unwrap();
+        let min = self.min.as_ref().expect("Operation failed");
+        let max = self.max.as_ref().expect("Operation failed");
         let (range_min, range_max) = self.range;
         let range_diff = range_max - range_min;
             // Apply global min and max

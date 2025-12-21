@@ -901,7 +901,7 @@ impl HalfspaceIntersection {
             })
             .collect();
 
-        vertex_angles.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        vertex_angles.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
         // Apply shoelace formula
         let mut area = 0.0;
@@ -1016,13 +1016,19 @@ mod tests {
     fn test_halfspace_distance() {
         let hs = Halfspace::new(arr1(&[1.0, 0.0]), 1.0); // x ≤ 1
 
-        let dist1 = hs.distance(&arr1(&[0.0, 0.0]).view()).unwrap();
+        let dist1 = hs
+            .distance(&arr1(&[0.0, 0.0]).view())
+            .expect("Operation failed");
         assert_relative_eq!(dist1, -1.0, epsilon = 1e-10); // Inside
 
-        let dist2 = hs.distance(&arr1(&[1.0, 0.0]).view()).unwrap();
+        let dist2 = hs
+            .distance(&arr1(&[1.0, 0.0]).view())
+            .expect("Operation failed");
         assert_relative_eq!(dist2, 0.0, epsilon = 1e-10); // On boundary
 
-        let dist3 = hs.distance(&arr1(&[2.0, 0.0]).view()).unwrap();
+        let dist3 = hs
+            .distance(&arr1(&[2.0, 0.0]).view())
+            .expect("Operation failed");
         assert_relative_eq!(dist3, 1.0, epsilon = 1e-10); // Outside
     }
 
@@ -1035,7 +1041,7 @@ mod tests {
             Halfspace::new(arr1(&[0.0, 1.0]), 1.0),  // y ≤ 1
         ];
 
-        let intersection = HalfspaceIntersection::new(&halfspaces, None).unwrap();
+        let intersection = HalfspaceIntersection::new(&halfspaces, None).expect("Operation failed");
 
         assert!(intersection.is_feasible());
         assert!(intersection.is_bounded());
@@ -1045,7 +1051,7 @@ mod tests {
         assert_eq!(intersection.num_vertices(), 4);
 
         // Check area
-        let area = intersection.volume().unwrap();
+        let area = intersection.volume().expect("Operation failed");
         assert_relative_eq!(area, 1.0, epsilon = 1e-6);
     }
 
@@ -1057,14 +1063,14 @@ mod tests {
             Halfspace::new(arr1(&[1.0, 1.0]), 1.0),  // x + y ≤ 1
         ];
 
-        let intersection = HalfspaceIntersection::new(&halfspaces, None).unwrap();
+        let intersection = HalfspaceIntersection::new(&halfspaces, None).expect("Operation failed");
 
         assert!(intersection.is_feasible());
         assert!(intersection.is_bounded());
         assert_eq!(intersection.num_vertices(), 3);
 
         // Triangle area should be 0.5
-        let area = intersection.volume().unwrap();
+        let area = intersection.volume().expect("Operation failed");
         assert_relative_eq!(area, 0.5, epsilon = 1e-6);
     }
 
@@ -1087,7 +1093,7 @@ mod tests {
     #[test]
     fn test_halfspace_normalize() {
         let hs = Halfspace::new(arr1(&[3.0, 4.0]), 10.0);
-        let normalized = hs.normalize().unwrap();
+        let normalized = hs.normalize().expect("Operation failed");
 
         let normal_norm = (normalized.normal()[0].powi(2) + normalized.normal()[1].powi(2)).sqrt();
         assert_relative_eq!(normal_norm, 1.0, epsilon = 1e-10);

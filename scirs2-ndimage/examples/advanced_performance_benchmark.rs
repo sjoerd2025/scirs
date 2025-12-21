@@ -91,8 +91,8 @@ impl BenchmarkResult {
             / durations.len() as f64;
 
         let std_deviation = Duration::from_nanos(variance.sqrt() as u64);
-        let min_duration = *durations.iter().min().unwrap();
-        let max_duration = *durations.iter().max().unwrap();
+        let min_duration = *durations.iter().min().expect("Operation failed");
+        let max_duration = *durations.iter().max().expect("Operation failed");
 
         // Calculate throughput in megapixels per second
         let total_pixels = (image_size.0 * image_size.1) as f64;
@@ -429,7 +429,7 @@ fn display_benchmark_summary(results: &[BenchmarkResult]) {
             sorted_results.sort_by(|a, b| {
                 b.throughput_mpix_per_sec
                     .partial_cmp(&a.throughput_mpix_per_sec)
-                    .unwrap()
+                    .expect("Operation failed")
             });
 
             for (i, result) in sorted_results.iter().enumerate() {

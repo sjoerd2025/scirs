@@ -27,7 +27,7 @@ fn main() {
             rng.standard_normal(&[feature_size, feature_size])
                 .mapv(|x| x * 0.01) // Scale down to prevent explosion
                 .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-                .unwrap()
+                .expect("Operation failed")
         })
         .collect();
 
@@ -63,7 +63,7 @@ fn main() {
             non_ckpt_memory_estimate += feature_size * std::mem::size_of::<f32>();
         }
 
-        let output = activations.last().unwrap();
+        let output = activations.last().expect("Operation failed");
         let loss = T::sum_all(output);
 
         // Backward pass
@@ -128,7 +128,7 @@ fn main() {
             }
         }
 
-        let output = activations.last().unwrap();
+        let output = activations.last().expect("Operation failed");
         let loss = T::sum_all(output);
 
         // Backward pass
@@ -197,7 +197,7 @@ fn main() {
             // based on the CheckpointProfiler results
         }
 
-        let output = activations.last().unwrap();
+        let output = activations.last().expect("Operation failed");
         let loss = T::sum_all(output);
 
         // Backward pass

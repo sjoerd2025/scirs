@@ -579,7 +579,7 @@ impl AdaptiveAdvancedOptimizer {
             .map(|s| s.metrics.execution_time.as_secs_f64())
             .collect();
 
-        execution_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        execution_times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mean_time = execution_times.iter().sum::<f64>() / execution_times.len() as f64;
         let median_time = execution_times[execution_times.len() / 2];
@@ -698,7 +698,11 @@ mod tests {
         let optimizer = AdaptiveAdvancedOptimizer::new(config);
 
         // Test basic creation
-        assert!(optimizer.performancehistory.read().unwrap().is_empty());
+        assert!(optimizer
+            .performancehistory
+            .read()
+            .expect("Operation failed")
+            .is_empty());
     }
 
     #[test]

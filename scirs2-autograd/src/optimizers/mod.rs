@@ -80,7 +80,7 @@ pub trait Optimizer<F: Float> {
             .run() // update runs
             .into_iter()
             .for_each(|r| {
-                r.unwrap();
+                r.expect("Operation failed");
             });
     }
 

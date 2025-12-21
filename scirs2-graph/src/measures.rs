@@ -1027,7 +1027,7 @@ where
 
                 // Apply updates atomically
                 if !local_updates.is_empty() {
-                    let mut new_pr = new_pagerank.lock().unwrap();
+                    let mut new_pr = new_pagerank.lock().expect("Failed to acquire lock");
                     for (neighbor_i, contrib) in local_updates {
                         new_pr[neighbor_i] += contrib;
                     }
@@ -1035,7 +1035,10 @@ where
             }
         });
 
-        let new_pagerank = Arc::try_unwrap(new_pagerank).unwrap().into_inner().unwrap();
+        let new_pagerank = Arc::try_unwrap(new_pagerank)
+            .expect("Failed to unwrap Arc")
+            .into_inner()
+            .expect("Failed to get inner value");
 
         // Convergence check
         let diff = pagerank
@@ -1382,7 +1385,9 @@ where
                 if let Ok(Some(path)) = dijkstra_path(graph, source, target) {
                     // Count how many times each intermediate node appears
                     for intermediate in &path.nodes[1..path.nodes.len() - 1] {
-                        *centrality.get_mut(intermediate).unwrap() += 1.0;
+                        *centrality
+                            .get_mut(intermediate)
+                            .expect("Failed to get mutable reference") += 1.0;
                     }
                 }
             }
@@ -1430,7 +1435,9 @@ where
                 if let Ok(Some(path)) = dijkstra_path_digraph(graph, source, target) {
                     // Count how many times each intermediate node appears
                     for intermediate in &path.nodes[1..path.nodes.len() - 1] {
-                        *centrality.get_mut(intermediate).unwrap() += 1.0;
+                        *centrality
+                            .get_mut(intermediate)
+                            .expect("Failed to get mutable reference") += 1.0;
                     }
                 }
             }
@@ -1570,11 +1577,11 @@ mod tests {
         // |
         // C -- D
 
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('A', 'C', 1.0).unwrap();
-        graph.add_edge('C', 'D', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Test failed");
+        graph.add_edge('A', 'C', 1.0).expect("Test failed");
+        graph.add_edge('C', 'D', 1.0).expect("Test failed");
 
-        let centrality = centrality(&graph, CentralityType::Degree).unwrap();
+        let centrality = centrality(&graph, CentralityType::Degree).expect("Test failed");
 
         // A has 2 connections out of 3 possible, so centrality = 2/3
         // B has 1 connection out of 3 possible, so centrality = 1/3
@@ -1598,13 +1605,13 @@ mod tests {
         //      |
         //      5
 
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(3, 4, 1.0).unwrap();
-        graph.add_edge(4, 1, 1.0).unwrap();
-        graph.add_edge(4, 5, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Test failed");
+        graph.add_edge(2, 3, 1.0).expect("Test failed");
+        graph.add_edge(3, 4, 1.0).expect("Test failed");
+        graph.add_edge(4, 1, 1.0).expect("Test failed");
+        graph.add_edge(4, 5, 1.0).expect("Test failed");
 
-        let coefficients = clustering_coefficient(&graph).unwrap();
+        let coefficients = clustering_coefficient(&graph).expect("Test failed");
 
         // Node 1 has neighbors 2 and 4, and they're not connected, so coefficient = 0/1 = 0
         assert_eq!(coefficients[&1], 0.0);
@@ -1624,9 +1631,9 @@ mod tests {
         assert_eq!(coefficients[&5], 0.0);
 
         // Now let's add an edge to create a triangle
-        graph.add_edge(1, 3, 1.0).unwrap();
+        graph.add_edge(1, 3, 1.0).expect("Test failed");
 
-        let coefficients = clustering_coefficient(&graph).unwrap();
+        let coefficients = clustering_coefficient(&graph).expect("Test failed");
 
         // Now nodes 1, 3, and 4 form a triangle
         // Node 4 has 3 neighbors (1, 3, 5) with 1 edge between them (1-3)
@@ -1653,21 +1660,21 @@ mod tests {
         graph.add_node(3);
         graph.add_node(4);
 
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(3, 4, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Test failed");
+        graph.add_edge(2, 3, 1.0).expect("Test failed");
+        graph.add_edge(3, 4, 1.0).expect("Test failed");
 
         // 3 edges out of 6 possible edges (4 choose 2 = 6)
-        let density = graph_density(&graph).unwrap();
+        let density = graph_density(&graph).expect("Test failed");
         assert_eq!(density, 0.5);
 
         // Add 3 more edges to make a complete graph
-        graph.add_edge(1, 3, 1.0).unwrap();
-        graph.add_edge(1, 4, 1.0).unwrap();
-        graph.add_edge(2, 4, 1.0).unwrap();
+        graph.add_edge(1, 3, 1.0).expect("Test failed");
+        graph.add_edge(1, 4, 1.0).expect("Test failed");
+        graph.add_edge(2, 4, 1.0).expect("Test failed");
 
         // 6 edges out of 6 possible edges
-        let density = graph_density(&graph).unwrap();
+        let density = graph_density(&graph).expect("Test failed");
         assert_eq!(density, 1.0);
     }
 
@@ -1676,11 +1683,11 @@ mod tests {
         let mut graph: Graph<char, f64> = Graph::new();
 
         // Create a simple star graph with A in the center
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('A', 'C', 1.0).unwrap();
-        graph.add_edge('A', 'D', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Test failed");
+        graph.add_edge('A', 'C', 1.0).expect("Test failed");
+        graph.add_edge('A', 'D', 1.0).expect("Test failed");
 
-        let centrality = katz_centrality(&graph, 0.1, 1.0).unwrap();
+        let centrality = katz_centrality(&graph, 0.1, 1.0).expect("Test failed");
 
         // The center node should have higher Katz centrality
         assert!(centrality[&'A'] > centrality[&'B']);
@@ -1697,11 +1704,11 @@ mod tests {
         let mut graph: Graph<char, f64> = Graph::new();
 
         // Create a simple triangle
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('B', 'C', 1.0).unwrap();
-        graph.add_edge('C', 'A', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Test failed");
+        graph.add_edge('B', 'C', 1.0).expect("Test failed");
+        graph.add_edge('C', 'A', 1.0).expect("Test failed");
 
-        let centrality = pagerank_centrality(&graph, 0.85, 1e-6).unwrap();
+        let centrality = pagerank_centrality(&graph, 0.85, 1e-6).expect("Test failed");
 
         // All nodes should have equal PageRank in a symmetric triangle
         let values: Vec<f64> = centrality.values().cloned().collect();
@@ -1721,10 +1728,10 @@ mod tests {
         let mut graph: DiGraph<char, f64> = DiGraph::new();
 
         // Create a directed path: A -> B -> C
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('B', 'C', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Test failed");
+        graph.add_edge('B', 'C', 1.0).expect("Test failed");
 
-        let centrality = pagerank_centrality_digraph(&graph, 0.85, 1e-6).unwrap();
+        let centrality = pagerank_centrality_digraph(&graph, 0.85, 1e-6).expect("Test failed");
 
         // C should have the highest PageRank (receives links but doesn't give any)
         // A should have the lowest (gives links but doesn't receive any except random jumps)
@@ -1736,12 +1743,12 @@ mod tests {
     fn test_centrality_enum_katz_pagerank() {
         let mut graph: Graph<char, f64> = Graph::new();
 
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('A', 'C', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Test failed");
+        graph.add_edge('A', 'C', 1.0).expect("Test failed");
 
         // Test that the enum-based centrality function works for new types
-        let katz_result = centrality(&graph, CentralityType::Katz).unwrap();
-        let pagerank_result = centrality(&graph, CentralityType::PageRank).unwrap();
+        let katz_result = centrality(&graph, CentralityType::Katz).expect("Test failed");
+        let pagerank_result = centrality(&graph, CentralityType::PageRank).expect("Test failed");
 
         // Both should return valid results
         assert_eq!(katz_result.len(), 3);
@@ -1763,15 +1770,15 @@ mod tests {
         // Create a small web graph
         // A and B are hubs (point to many pages)
         // C and D are authorities (pointed to by many pages)
-        graph.add_edge('A', 'C', 1.0).unwrap();
-        graph.add_edge('A', 'D', 1.0).unwrap();
-        graph.add_edge('B', 'C', 1.0).unwrap();
-        graph.add_edge('B', 'D', 1.0).unwrap();
+        graph.add_edge('A', 'C', 1.0).expect("Test failed");
+        graph.add_edge('A', 'D', 1.0).expect("Test failed");
+        graph.add_edge('B', 'C', 1.0).expect("Test failed");
+        graph.add_edge('B', 'D', 1.0).expect("Test failed");
         // E is both a hub and authority
-        graph.add_edge('E', 'C', 1.0).unwrap();
-        graph.add_edge('B', 'E', 1.0).unwrap();
+        graph.add_edge('E', 'C', 1.0).expect("Test failed");
+        graph.add_edge('B', 'E', 1.0).expect("Test failed");
 
-        let hits = hits_algorithm(&graph, 100, 1e-6).unwrap();
+        let hits = hits_algorithm(&graph, 100, 1e-6).expect("Test failed");
 
         // Check that we have scores for all nodes
         assert_eq!(hits.authorities.len(), 5);
@@ -1797,11 +1804,11 @@ mod tests {
         let mut graph = crate::generators::create_graph::<&str, f64>();
 
         // Create a simple weighted graph
-        graph.add_edge("A", "B", 2.0).unwrap();
-        graph.add_edge("A", "C", 3.0).unwrap();
-        graph.add_edge("B", "C", 1.0).unwrap();
+        graph.add_edge("A", "B", 2.0).expect("Test failed");
+        graph.add_edge("A", "C", 3.0).expect("Test failed");
+        graph.add_edge("B", "C", 1.0).expect("Test failed");
 
-        let centrality = centrality(&graph, CentralityType::WeightedDegree).unwrap();
+        let centrality = centrality(&graph, CentralityType::WeightedDegree).expect("Test failed");
 
         // A has edges with weights 2.0 + 3.0 = 5.0
         assert_eq!(centrality[&"A"], 5.0);
@@ -1818,10 +1825,11 @@ mod tests {
         let mut graph = crate::generators::create_graph::<&str, f64>();
 
         // Create a simple weighted graph
-        graph.add_edge("A", "B", 1.0).unwrap();
-        graph.add_edge("B", "C", 2.0).unwrap();
+        graph.add_edge("A", "B", 1.0).expect("Test failed");
+        graph.add_edge("B", "C", 2.0).expect("Test failed");
 
-        let centrality = centrality(&graph, CentralityType::WeightedCloseness).unwrap();
+        let centrality =
+            centrality(&graph, CentralityType::WeightedCloseness).expect("Test failed");
 
         // All centrality values should be positive
         for value in centrality.values() {
@@ -1838,10 +1846,11 @@ mod tests {
         let mut graph = crate::generators::create_graph::<&str, f64>();
 
         // Create a path graph A-B-C
-        graph.add_edge("A", "B", 1.0).unwrap();
-        graph.add_edge("B", "C", 1.0).unwrap();
+        graph.add_edge("A", "B", 1.0).expect("Test failed");
+        graph.add_edge("B", "C", 1.0).expect("Test failed");
 
-        let centrality = centrality(&graph, CentralityType::WeightedBetweenness).unwrap();
+        let centrality =
+            centrality(&graph, CentralityType::WeightedBetweenness).expect("Test failed");
 
         // B should have positive betweenness (lies on path from A to C)
         assert!(centrality[&"B"] > 0.0);
@@ -1856,13 +1865,14 @@ mod tests {
         let mut graph = crate::generators::create_digraph::<&str, f64>();
 
         // Create a simple directed weighted graph
-        graph.add_edge("A", "B", 2.0).unwrap();
-        graph.add_edge("B", "C", 3.0).unwrap();
-        graph.add_edge("A", "C", 1.0).unwrap();
+        graph.add_edge("A", "B", 2.0).expect("Test failed");
+        graph.add_edge("B", "C", 3.0).expect("Test failed");
+        graph.add_edge("A", "C", 1.0).expect("Test failed");
 
-        let degree_centrality = centrality_digraph(&graph, CentralityType::WeightedDegree).unwrap();
+        let degree_centrality =
+            centrality_digraph(&graph, CentralityType::WeightedDegree).expect("Test failed");
         let closeness_centrality =
-            centrality_digraph(&graph, CentralityType::WeightedCloseness).unwrap();
+            centrality_digraph(&graph, CentralityType::WeightedCloseness).expect("Test failed");
 
         // All centrality values should be non-negative
         for value in degree_centrality.values() {

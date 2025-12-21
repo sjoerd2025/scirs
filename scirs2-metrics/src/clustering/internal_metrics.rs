@@ -64,11 +64,11 @@ pub struct SilhouetteAnalysis<F: Float> {
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let score = silhouette_score(&x, &labels, "euclidean").unwrap();
+/// let score = silhouette_score(&x, &labels, "euclidean").expect("Operation failed");
 /// assert!(score > 0.8); // High score for well-separated clusters
 /// ```
 #[allow(dead_code)]
@@ -112,11 +112,11 @@ where
 /// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2, // Cluster 0
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2, // Cluster 1
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let samples = silhouette_samples(&x, &labels, "euclidean").unwrap();
+/// let samples = silhouette_samples(&x, &labels, "euclidean").expect("Operation failed");
 /// assert_eq!(samples.len(), 6);
 ///
 /// // Calculate the mean silhouette score manually
@@ -165,11 +165,11 @@ where
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,  // Cluster 0
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,  // Cluster 1
 ///     9.0, 10.0, 9.2, 9.8, 9.5, 10.2, // Cluster 2
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
 ///
-/// let cluster_scores = silhouette_scores_per_cluster(&x, &labels, "euclidean").unwrap();
+/// let cluster_scores = silhouette_scores_per_cluster(&x, &labels, "euclidean").expect("Operation failed");
 /// assert_eq!(cluster_scores.len(), 3);
 /// assert!(cluster_scores[&0] > 0.5);
 /// assert!(cluster_scores[&1] > 0.5);
@@ -218,11 +218,11 @@ where
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,  // Cluster 0
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,  // Cluster 1
 ///     9.0, 10.0, 9.2, 9.8, 9.5, 10.2, // Cluster 2
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
 ///
-/// let analysis = silhouette_analysis(&x, &labels, "euclidean").unwrap();
+/// let analysis = silhouette_analysis(&x, &labels, "euclidean").expect("Operation failed");
 ///
 /// // Get overall silhouette score
 /// let score = analysis.mean_score;
@@ -326,7 +326,7 @@ where
 
         // Handle single sample in cluster (set a to 0)
         if count_a > 0 {
-            a = a / F::from(count_a).unwrap();
+            a = a / F::from(count_a).expect("Failed to convert to float");
         }
 
         // Calculate the mean nearest-cluster distance (b)
@@ -342,7 +342,7 @@ where
             for &j in cluster_j {
                 cluster_dist = cluster_dist + distances[[i, j]];
             }
-            let cluster_dist = cluster_dist / F::from(cluster_j.len()).unwrap();
+            let cluster_dist = cluster_dist / F::from(cluster_j.len()).expect("Operation failed");
 
             // Update b if this is the closest cluster
             if let Some(current_b) = b {
@@ -374,7 +374,7 @@ where
     let sum = silhouette_values
         .iter()
         .fold(F::zero(), |acc, &val| acc + val);
-    let mean_score = sum / F::from(n_samples).unwrap();
+    let mean_score = sum / F::from(n_samples).expect("Failed to convert to float");
 
     // Calculate cluster-wise silhouette scores
     let mut cluster_scores = HashMap::new();
@@ -383,7 +383,7 @@ where
         for &idx in indices {
             cluster_sum = cluster_sum + silhouette_values[idx];
         }
-        let cluster_mean = cluster_sum / F::from(indices.len()).unwrap();
+        let cluster_mean = cluster_sum / F::from(indices.len()).expect("Operation failed");
         cluster_scores.insert(*label, cluster_mean);
     }
 
@@ -411,7 +411,10 @@ where
         .collect();
 
     // Sort by cluster (ascending), then by silhouette value (descending)
-    samples_with_scores.sort_by(|a, b| a.2.cmp(&b.2).then(b.1.partial_cmp(&a.1).unwrap()));
+    samples_with_scores.sort_by(|a, b| {
+        a.2.cmp(&b.2)
+            .then(b.1.partial_cmp(&a.1).expect("Operation failed"))
+    });
 
     let sorted_indices = samples_with_scores.iter().map(|&(i, _, _)| i).collect();
 
@@ -454,11 +457,11 @@ where
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let score = davies_bouldin_score(&x, &labels).unwrap();
+/// let score = davies_bouldin_score(&x, &labels).expect("Operation failed");
 /// assert!(score < 0.5); // Low score for well-separated clusters
 /// ```
 #[allow(dead_code)]
@@ -507,20 +510,20 @@ where
         for &idx in indices {
             centroid = centroid + x.row(idx).to_owned();
         }
-        centroid = centroid / F::from(indices.len()).unwrap();
+        centroid = centroid / F::from(indices.len()).expect("Operation failed");
         centroids.insert(label, centroid);
     }
 
     // Compute average distance to centroid for each cluster
     let mut avg_distances = HashMap::new();
     for (&label, indices) in &clusters {
-        let centroid = centroids.get(&label).unwrap();
+        let centroid = centroids.get(&label).expect("Operation failed");
         let mut total_distance = F::zero();
         for &idx in indices {
             total_distance = total_distance
                 + calculate_distance(&x.row(idx).to_vec(), &centroid.to_vec(), "euclidean")?;
         }
-        let avg_distance = total_distance / F::from(indices.len()).unwrap();
+        let avg_distance = total_distance / F::from(indices.len()).expect("Operation failed");
         avg_distances.insert(label, avg_distance);
     }
 
@@ -530,16 +533,16 @@ where
 
     for i in 0..labels_vec.len() {
         let label_i = labels_vec[i];
-        let centroid_i = centroids.get(&label_i).unwrap();
-        let avg_dist_i = avg_distances.get(&label_i).unwrap();
+        let centroid_i = centroids.get(&label_i).expect("Operation failed");
+        let avg_dist_i = avg_distances.get(&label_i).expect("Operation failed");
 
         let mut max_ratio = F::zero();
         for (j, &label_j) in labels_vec.iter().enumerate() {
             if i == j {
                 continue;
             }
-            let centroid_j = centroids.get(&label_j).unwrap();
-            let avg_dist_j = avg_distances.get(&label_j).unwrap();
+            let centroid_j = centroids.get(&label_j).expect("Operation failed");
+            let avg_dist_j = avg_distances.get(&label_j).expect("Operation failed");
 
             // Distance between centroids
             let centroid_dist =
@@ -558,7 +561,7 @@ where
     }
 
     // Normalize by number of clusters
-    Ok(db_index / F::from(labels_vec.len()).unwrap())
+    Ok(db_index / F::from(labels_vec.len()).expect("Operation failed"))
 }
 
 /// Calculates the Calinski-Harabasz index (Variance Ratio Criterion)
@@ -589,11 +592,11 @@ where
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let score = calinski_harabasz_score(&x, &labels).unwrap();
+/// let score = calinski_harabasz_score(&x, &labels).expect("Operation failed");
 /// assert!(score > 50.0); // High score for well-separated clusters
 /// ```
 #[allow(dead_code)]
@@ -640,7 +643,7 @@ where
     for i in 0..n_samples {
         global_centroid = global_centroid + x.row(i).to_owned();
     }
-    global_centroid = global_centroid / F::from(n_samples).unwrap();
+    global_centroid = global_centroid / F::from(n_samples).expect("Failed to convert to float");
 
     // Compute centroids for each cluster
     let mut centroids = HashMap::new();
@@ -649,15 +652,15 @@ where
         for &idx in indices {
             centroid = centroid + x.row(idx).to_owned();
         }
-        centroid = centroid / F::from(indices.len()).unwrap();
+        centroid = centroid / F::from(indices.len()).expect("Operation failed");
         centroids.insert(label, centroid);
     }
 
     // Compute between-cluster dispersion
     let mut between_disp = F::zero();
     for (label, indices) in &clusters {
-        let cluster_size = F::from(indices.len()).unwrap();
-        let centroid = centroids.get(label).unwrap();
+        let cluster_size = F::from(indices.len()).expect("Operation failed");
+        let centroid = centroids.get(label).expect("Operation failed");
 
         // Calculate squared distance between cluster centroid and global centroid
         let mut squared_dist = F::zero();
@@ -672,7 +675,7 @@ where
     // Compute within-cluster dispersion
     let mut within_disp = F::zero();
     for (label, indices) in &clusters {
-        let centroid = centroids.get(label).unwrap();
+        let centroid = centroids.get(label).expect("Operation failed");
 
         let mut cluster_disp = F::zero();
         for &idx in indices {
@@ -695,9 +698,9 @@ where
     }
 
     // Calculate Calinski-Harabasz index
-    let n_clusters = F::from(clusters.len()).unwrap();
+    let n_clusters = F::from(clusters.len()).expect("Operation failed");
     Ok(
-        between_disp * (F::from(n_samples - clusters.len()).unwrap())
+        between_disp * (F::from(n_samples - clusters.len()).expect("Operation failed"))
             / (within_disp * (n_clusters - F::one())),
     )
 }

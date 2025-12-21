@@ -17,7 +17,7 @@ fn main() {
 
     // Spiral dataset
     println!("1. Spiral Patterns:");
-    let spirals = make_spirals(200, 3, 0.1, Some(42)).unwrap();
+    let spirals = make_spirals(200, 3, 0.1, Some(42)).expect("Operation failed");
     println!(
         "   Generated {} spirals with {} samples",
         3,
@@ -27,17 +27,17 @@ fn main() {
 
     // Two moons dataset
     println!("\n2. Two Moons Pattern:");
-    let moons = make_moons(300, 0.05, Some(42)).unwrap();
+    let moons = make_moons(300, 0.05, Some(42)).expect("Operation failed");
     print_dataset_summary(&moons, "Moons");
 
     // Concentric circles
     println!("\n3. Concentric Circles:");
-    let circles = make_circles(250, 0.4, 0.03, Some(42)).unwrap();
+    let circles = make_circles(250, 0.4, 0.03, Some(42)).expect("Operation failed");
     print_dataset_summary(&circles, "Circles");
 
     // Swiss roll manifold
     println!("\n4. Swiss Roll Manifold:");
-    let swiss_roll = make_swiss_roll(400, 0.1, Some(42)).unwrap();
+    let swiss_roll = make_swiss_roll(400, 0.1, Some(42)).expect("Operation failed");
     print_dataset_summary(&swiss_roll, "Swiss Roll");
     println!("   3D manifold with intrinsic 2D structure");
     println!();
@@ -47,20 +47,23 @@ fn main() {
 
     // Anisotropic (elongated) clusters
     println!("1. Anisotropic Clusters:");
-    let aniso_clusters = make_anisotropic_blobs(300, 2, 4, 1.0, 5.0, Some(42)).unwrap();
+    let aniso_clusters =
+        make_anisotropic_blobs(300, 2, 4, 1.0, 5.0, Some(42)).expect("Operation failed");
     print_dataset_summary(&aniso_clusters, "Anisotropic Clusters");
     println!("   Elongated clusters with anisotropy factor 5.0");
 
     // Different anisotropy factors demonstration
     println!("\n   Anisotropy Factor Comparison:");
     for factor in [1.0, 2.0, 5.0, 10.0] {
-        let dataset = make_anisotropic_blobs(100, 2, 3, 1.0, factor, Some(42)).unwrap();
+        let dataset =
+            make_anisotropic_blobs(100, 2, 3, 1.0, factor, Some(42)).expect("Operation failed");
         println!("     Factor {:.1}: {} clusters", factor, 3);
     }
 
     // Hierarchical clusters
     println!("\n2. Hierarchical Clusters:");
-    let hierarchical = make_hierarchical_clusters(240, 3, 3, 4, 3.0, 0.8, Some(42)).unwrap();
+    let hierarchical =
+        make_hierarchical_clusters(240, 3, 3, 4, 3.0, 0.8, Some(42)).expect("Operation failed");
     print_dataset_summary(&hierarchical, "Hierarchical Clusters");
     println!("   3 main clusters, each with 4 sub-clusters");
 
@@ -75,7 +78,7 @@ fn main() {
     // Noise effect on spirals
     println!("1. Noise Effect on Spirals:");
     for noise in [0.0, 0.05, 0.1, 0.2] {
-        let _spiraldata = make_spirals(100, 2, noise, Some(42)).unwrap();
+        let _spiraldata = make_spirals(100, 2, noise, Some(42)).expect("Operation failed");
         println!(
             "   Noise {:.2}: Clean separation = {}",
             noise,
@@ -86,14 +89,15 @@ fn main() {
     // Factor effect on circles
     println!("\n2. Factor Effect on Concentric Circles:");
     for factor in [0.2, 0.4, 0.6, 0.8] {
-        let _circledata = make_circles(100, factor, 0.05, Some(42)).unwrap();
+        let _circledata = make_circles(100, factor, 0.05, Some(42)).expect("Operation failed");
         println!("   Factor {factor:.1}: Inner/Outer ratio = {factor:.1}");
     }
 
     // Cluster complexity in hierarchical patterns
     println!("\n3. Hierarchical Cluster Complexity:");
     for (main, sub) in [(2, 2), (2, 4), (3, 3), (4, 2)] {
-        let _hierdata = make_hierarchical_clusters(120, 2, main, sub, 2.0, 0.5, Some(42)).unwrap();
+        let _hierdata = make_hierarchical_clusters(120, 2, main, sub, 2.0, 0.5, Some(42))
+            .expect("Operation failed");
         println!(
             "   {} main × {} sub = {} total clusters",
             main,
@@ -128,15 +132,17 @@ fn main() {
     println!("=== Advanced Configuration Examples ===============");
 
     println!("1. Multi-scale Spiral (Large dataset):");
-    let large_spirals = make_spirals(2000, 4, 0.08, Some(42)).unwrap();
+    let large_spirals = make_spirals(2000, 4, 0.08, Some(42)).expect("Operation failed");
     print_dataset_summary(&large_spirals, "Large Spirals");
 
     println!("\n2. High-dimensional Anisotropic Clusters:");
-    let hd_aniso = make_anisotropic_blobs(500, 10, 5, 1.5, 8.0, Some(42)).unwrap();
+    let hd_aniso =
+        make_anisotropic_blobs(500, 10, 5, 1.5, 8.0, Some(42)).expect("Operation failed");
     print_dataset_summary(&hd_aniso, "High-D Anisotropic");
 
     println!("\n3. Deep Hierarchical Structure:");
-    let deep_hier = make_hierarchical_clusters(300, 4, 2, 6, 4.0, 1.0, Some(42)).unwrap();
+    let deep_hier =
+        make_hierarchical_clusters(300, 4, 2, 6, 4.0, 1.0, Some(42)).expect("Operation failed");
     print_dataset_summary(&deep_hier, "Deep Hierarchical");
     println!("   Deep structure: 2 main → 12 sub-clusters");
     println!();

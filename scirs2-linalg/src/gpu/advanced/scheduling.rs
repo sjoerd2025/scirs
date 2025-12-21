@@ -668,7 +668,7 @@ mod tests {
 
     #[test]
     fn test_tensor_core_scheduler_creation() {
-        let scheduler = AdvancedGpuTensorCoreScheduler::<f32>::new().unwrap();
+        let scheduler = AdvancedGpuTensorCoreScheduler::<f32>::new().expect("Operation failed");
         assert_eq!(scheduler.tensor_core_units.len(), 0);
     }
 
@@ -680,7 +680,7 @@ mod tests {
 
         let bandwidth = predictor
             .predict_bandwidth(&operations, &data_sizes)
-            .unwrap();
+            .expect("Operation failed");
         assert!(bandwidth > 0.0);
     }
 

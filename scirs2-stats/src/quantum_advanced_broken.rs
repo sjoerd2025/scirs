@@ -744,10 +744,10 @@ where
         let _n_samples_ = data.shape()[0];
 
         // Simplified QAE implementation
-        let target_amplitude = F::from(0.3).unwrap(); // Would compute actual amplitude
+        let target_amplitude = F::from(0.3).expect("Failed to convert constant to float"); // Would compute actual amplitude
         let confidence_interval = (
-            target_amplitude - F::from(0.05).unwrap(),
-            target_amplitude + F::from(0.05).unwrap(),
+            target_amplitude - F::from(0.05).expect("Failed to convert constant to float"),
+            target_amplitude + F::from(0.05).expect("Failed to convert constant to float"),
         );
 
         // Estimate oracle calls based on target accuracy
@@ -775,16 +775,16 @@ where
 
         // Generate synthetic eigenvalues (decreasing order)
         for i in 0..num_components {
-            eigenvalues[i] = F::from(1.0 / (i + 1) as f64).unwrap();
-            explained_variance_ratio[i] = eigenvalues[i] / F::from(num_components).unwrap();
+            eigenvalues[i] = F::from(1.0 / (i + 1) as f64).expect("Operation failed");
+            explained_variance_ratio[i] = eigenvalues[i] / F::from(num_components).expect("Failed to convert to float");
 
             // Generate random eigenvectors (would use actual quantum algorithm)
             for j in 0..n_features {
-                eigenvectors[[j, i]] = F::from((i + j) as f64 / n_features as f64).unwrap();
+                eigenvectors[[j, i]] = F::from((i + j) as f64 / n_features as f64).expect("Operation failed");
             }
         }
 
-        let reconstruction_error = F::from(0.1).unwrap(); // Simplified error estimate
+        let reconstruction_error = F::from(0.1).expect("Failed to convert constant to float"); // Simplified error estimate
 
         Ok(QPCAResults {
             eigenvalues,
@@ -805,8 +805,8 @@ where
         let decision_function = Array1::zeros(n_samples_);
 
         // Simplified metrics
-        let accuracy = F::from(0.85).unwrap();
-        let margin_width = F::from(1.5).unwrap();
+        let accuracy = F::from(0.85).expect("Failed to convert constant to float");
+        let margin_width = F::from(1.5).expect("Failed to convert constant to float");
 
         Ok(QSVMResults {
             support_vectors,
@@ -832,13 +832,13 @@ where
         }
 
         let quality_metrics = ClusteringQualityMetrics {
-            silhouette_score: F::from(0.7).unwrap(),
-            calinski_harabasz_index: F::from(100.0).unwrap(),
-            davies_bouldin_index: F::from(0.5).unwrap(),
-            quantum_coherence: F::from(0.8).unwrap(),
+            silhouette_score: F::from(0.7).expect("Failed to convert constant to float"),
+            calinski_harabasz_index: F::from(100.0).expect("Failed to convert constant to float"),
+            davies_bouldin_index: F::from(0.5).expect("Failed to convert constant to float"),
+            quantum_coherence: F::from(0.8).expect("Failed to convert constant to float"),
         };
 
-        let final_energy = F::from(-50.0).unwrap(); // Ground state energy
+        let final_energy = F::from(-50.0).expect("Failed to convert constant to float"); // Ground state energy
 
         Ok(QClusteringResults {
             cluster_labels,
@@ -856,13 +856,13 @@ where
         let _n_features = data.ncols();
 
         // Simplified VQE for matrix eigenvalue problem
-        let min_eigenvalue = F::from(-1.5).unwrap(); // Lowest eigenvalue found
+        let min_eigenvalue = F::from(-1.5).expect("Failed to convert constant to float"); // Lowest eigenvalue found
         let optimal_parameters = Array1::ones(self.config.vqe_config.max_iterations);
         let mut convergence_history = Array1::zeros(self.config.vqe_config.max_iterations);
 
         // Generate convergence curve
         for i in 0..self.config.vqe_config.max_iterations {
-            convergence_history[i] = min_eigenvalue + F::from(0.1 * (-(i as f64)).exp()).unwrap();
+            convergence_history[i] = min_eigenvalue + F::from(0.1 * (-(i as f64)).exp()).expect("Operation failed");
         }
 
         Ok(VQEResults {
@@ -870,7 +870,7 @@ where
             optimal_parameters,
             convergence_history,
             iterations: self.config.vqe_config.max_iterations,
-            gradient_norm: F::from(1e-6).unwrap(),
+            gradient_norm: F::from(1e-6).expect("Failed to convert constant to float"),
         })
     }
 
@@ -894,8 +894,8 @@ where
             compressed_tensors.push(tensor);
         }
 
-        let compression_ratio = F::from(0.1).unwrap(); // 10x compression
-        let reconstruction_fidelity = F::from(0.95).unwrap();
+        let compression_ratio = F::from(0.1).expect("Failed to convert constant to float"); // 10x compression
+        let reconstruction_fidelity = F::from(0.95).expect("Failed to convert constant to float");
         let bond_dimensions =
             Array1::from_elem(num_tensors, self.config.tensor_network_config.max_bond_dim);
 
@@ -923,10 +923,10 @@ where
 
         // Generate training loss curve
         for i in 0..epochs {
-            loss_history[i] = F::from((-(i as f64) / 10.0).exp()).unwrap();
+            loss_history[i] = F::from((-(i as f64) / 10.0).exp()).expect("Operation failed");
         }
 
-        let validation_accuracy = F::from(0.92).unwrap();
+        let validation_accuracy = F::from(0.92).expect("Failed to convert constant to float");
         let circuit_depth = self.config.qnn_config.quantum_layers.len();
 
         Ok(QNNResults {
@@ -975,12 +975,12 @@ where
             QuantumKernelType::QuantumFeatureKernel => {
                 // Feature map kernel
                 let feature_overlap = F::simd_dot(x1, x2);
-                Ok((feature_overlap / F::from(x1.len()).unwrap()).exp())
+                Ok((feature_overlap / F::from(x1.len()).expect("Operation failed")).exp())
             }
             QuantumKernelType::SwapTestKernel => {
                 // Swap test based kernel
                 let overlap = F::simd_dot(x1, x2);
-                Ok((F::one() + overlap) / F::from(2.0).unwrap())
+                Ok((F::one() + overlap) / F::from(2.0).expect("Failed to convert constant to float"))
             }
         }
     }
@@ -1006,13 +1006,13 @@ where
 
         for run in 0..num_runs {
             let temperature = temp_max
-                - (temp_max - temp_min) * F::from(run).unwrap() / F::from(num_runs).unwrap();
+                - (temp_max - temp_min) * F::from(run).expect("Failed to convert to float") / F::from(num_runs).expect("Failed to convert to float");
 
             // Quantum annealing step (simplified)
             for i in 0..current_state.len() {
                 let old_value = current_state[i];
-                let perturbation = F::from(0.1).unwrap()
-                    * (F::from(2.0).unwrap() * F::from(0.5).unwrap() - F::one());
+                let perturbation = F::from(0.1).expect("Failed to convert constant to float")
+                    * (F::from(2.0).expect("Failed to convert constant to float") * F::from(0.5).expect("Failed to convert constant to float") - F::one());
                 current_state[i] = old_value + perturbation;
 
                 let new_energy = objective_function(&current_state.view());
@@ -1025,7 +1025,7 @@ where
                     (-delta_energy / temperature).exp()
                 };
 
-                if F::from(0.5).unwrap() < accept_prob {
+                if F::from(0.5).expect("Failed to convert constant to float") < accept_prob {
                     // Would use proper random number
                     best_energy = new_energy;
                     best_state = current_state.clone();
@@ -1049,17 +1049,17 @@ where
             circuit_depth: 5,
             qae_config: QuantumAmplitudeEstimationConfig {
                 evaluation_qubits: 3,
-                target_accuracy: F::from(0.01).unwrap(),
+                target_accuracy: F::from(0.01).expect("Failed to convert constant to float"),
                 max_iterations: 100,
                 use_mlae: true,
                 use_iqae: false,
             },
             qpca_config: QuantumPCAConfig {
                 num_components: 5,
-                matrix_exp_precision: F::from(1e-6).unwrap(),
+                matrix_exp_precision: F::from(1e-6).expect("Failed to convert constant to float"),
                 use_variational: true,
                 block_encoding: BlockEncodingConfig {
-                    precision: F::from(1e-8).unwrap(),
+                    precision: F::from(1e-8).expect("Failed to convert constant to float"),
                     alpha: F::one(),
                     ancilla_qubits: 2,
                 },
@@ -1079,10 +1079,10 @@ where
                 num_clusters: 3,
                 annealing_config: QuantumAnnealingConfig {
                     annealing_schedule: AnnealingSchedule::Linear {
-                        duration: F::from(100.0).unwrap(),
+                        duration: F::from(100.0).expect("Failed to convert constant to float"),
                     },
                     num_runs: 100,
-                    temperature_range: (F::from(0.01).unwrap(), F::from(10.0).unwrap()),
+                    temperature_range: (F::from(0.01).expect("Failed to convert constant to float"), F::from(10.0).expect("Failed to convert constant to float")),
                     use_simulated_fallback: true,
                 },
                 use_qaoa: false,
@@ -1090,14 +1090,14 @@ where
             vqe_config: VQEConfig {
                 ansatz_type: VQEAnsatz::HardwareEfficient { layers: 3 },
                 optimizer: ClassicalOptimizer::COBYLA,
-                tolerance: F::from(1e-6).unwrap(),
+                tolerance: F::from(1e-6).expect("Failed to convert constant to float"),
                 max_iterations: 1000,
                 measurement_shots: 1024,
             },
             tensor_network_config: TensorNetworkConfig {
                 network_type: TensorNetworkType::MPS,
                 max_bond_dim: 50,
-                truncation_threshold: F::from(1e-12).unwrap(),
+                truncation_threshold: F::from(1e-12).expect("Failed to convert constant to float"),
                 use_gpu: false,
                 contraction_strategy: ContractionStrategy::Optimal,
             },
@@ -1119,21 +1119,21 @@ where
                 },
                 classical_layers: vec![],
                 training_config: QuantumTrainingConfig {
-                    learning_rate: F::from(0.01).unwrap(),
+                    learning_rate: F::from(0.01).expect("Failed to convert constant to float"),
                     epochs: 100,
                     batchsize: 32,
                     use_parameter_shift: true,
-                    regularization: F::from(0.001).unwrap(),
+                    regularization: F::from(0.001).expect("Failed to convert constant to float"),
                 },
             },
             noise_model: NoiseModel {
                 gate_errors: HashMap::new(),
                 decoherence_times: DecoherenceConfig {
-                    t1: F::from(100.0).unwrap(), // microseconds
-                    t2: F::from(50.0).unwrap(),
-                    t2_star: F::from(30.0).unwrap(),
+                    t1: F::from(100.0).expect("Failed to convert constant to float"), // microseconds
+                    t2: F::from(50.0).expect("Failed to convert constant to float"),
+                    t2_star: F::from(30.0).expect("Failed to convert constant to float"),
                 },
-                readout_errors: F::from(0.01).unwrap(),
+                readout_errors: F::from(0.01).expect("Failed to convert constant to float"),
                 enable_noise: false,
             },
         }

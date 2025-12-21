@@ -38,9 +38,12 @@ fn main() {
     };
 
     // Apply median filtering with different settings
-    let filtered_standard = median_filter_1d(&noisy_signal, 5, &standard_config).unwrap();
-    let filtered_adaptive = median_filter_1d(&noisy_signal, 5, &adaptive_config).unwrap();
-    let filtered_weighted = median_filter_1d(&noisy_signal, 5, &center_weighted_config).unwrap();
+    let filtered_standard =
+        median_filter_1d(&noisy_signal, 5, &standard_config).expect("Test: operation failed");
+    let filtered_adaptive =
+        median_filter_1d(&noisy_signal, 5, &adaptive_config).expect("Test: operation failed");
+    let filtered_weighted = median_filter_1d(&noisy_signal, 5, &center_weighted_config)
+        .expect("Test: operation failed");
 
     // Calculate error metrics
     let mse_noisy = calculate_mse(&clean_signal, &noisy_signal);
@@ -80,9 +83,12 @@ fn main() {
     println!("\n2. Rank Filtering for 1D Signals");
 
     // Apply rank filters with different ranks
-    let min_filter = rank_filter_1d(&noisy_signal, 5, 0.0, EdgeMode::Reflect).unwrap();
-    let median_filter = rank_filter_1d(&noisy_signal, 5, 0.5, EdgeMode::Reflect).unwrap();
-    let max_filter = rank_filter_1d(&noisy_signal, 5, 1.0, EdgeMode::Reflect).unwrap();
+    let min_filter =
+        rank_filter_1d(&noisy_signal, 5, 0.0, EdgeMode::Reflect).expect("Test: operation failed");
+    let median_filter =
+        rank_filter_1d(&noisy_signal, 5, 0.5, EdgeMode::Reflect).expect("Test: operation failed");
+    let max_filter =
+        rank_filter_1d(&noisy_signal, 5, 1.0, EdgeMode::Reflect).expect("Test: operation failed");
 
     // Save rank filter results to CSV
     save_signal_to_csv(
@@ -99,10 +105,14 @@ fn main() {
     println!("\n3. 2D Image Median Filtering");
 
     // Apply different filters to the noisy image
-    let image_standard = median_filter_2d(&noisy_image, 3, &standard_config).unwrap();
-    let image_adaptive = median_filter_2d(&noisy_image, 3, &adaptive_config).unwrap();
-    let image_weighted = median_filter_2d(&noisy_image, 3, &center_weighted_config).unwrap();
-    let image_hybrid = hybrid_median_filter_2d(&noisy_image, 5, &standard_config).unwrap();
+    let image_standard =
+        median_filter_2d(&noisy_image, 3, &standard_config).expect("Test: operation failed");
+    let image_adaptive =
+        median_filter_2d(&noisy_image, 3, &adaptive_config).expect("Test: operation failed");
+    let image_weighted =
+        median_filter_2d(&noisy_image, 3, &center_weighted_config).expect("Test: operation failed");
+    let image_hybrid =
+        hybrid_median_filter_2d(&noisy_image, 5, &standard_config).expect("Test: operation failed");
 
     // Calculate image quality metrics
     let image_mse_noisy = calculate_image_mse(&clean_image, &noisy_image);
@@ -147,9 +157,10 @@ fn main() {
     println!("\n4. Color Image Median Filtering");
 
     // Apply median filtering to color image
-    let color_channel =
-        median_filter_color(&noisy_color_image, 3, &standard_config, false).unwrap();
-    let color_vector = median_filter_color(&noisy_color_image, 3, &standard_config, true).unwrap();
+    let color_channel = median_filter_color(&noisy_color_image, 3, &standard_config, false)
+        .expect("Test: operation failed");
+    let color_vector = median_filter_color(&noisy_color_image, 3, &standard_config, true)
+        .expect("Test: operation failed");
 
     // Calculate color image quality metrics
     let color_mse_noisy = calculate_color_mse(&clean_color_image, &noisy_color_image);
@@ -225,10 +236,14 @@ fn main() {
     };
 
     // Apply median filtering with different edge modes
-    let edge_reflect = median_filter_2d(&noisy_image, 3, &reflect_config).unwrap();
-    let edge_nearest = median_filter_2d(&noisy_image, 3, &nearest_config).unwrap();
-    let edge_constant = median_filter_2d(&noisy_image, 3, &constant_config).unwrap();
-    let edge_wrap = median_filter_2d(&noisy_image, 3, &wrap_config).unwrap();
+    let edge_reflect =
+        median_filter_2d(&noisy_image, 3, &reflect_config).expect("Test: operation failed");
+    let edge_nearest =
+        median_filter_2d(&noisy_image, 3, &nearest_config).expect("Test: operation failed");
+    let edge_constant =
+        median_filter_2d(&noisy_image, 3, &constant_config).expect("Test: operation failed");
+    let edge_wrap =
+        median_filter_2d(&noisy_image, 3, &wrap_config).expect("Test: operation failed");
 
     // Save edge mode results to CSV files
     save_image_to_csv("median_edge_reflect.csv", &edge_reflect);
@@ -245,7 +260,8 @@ fn main() {
     let kernel_sizes = [3, 5, 7, 9];
 
     for &size in &kernel_sizes {
-        let filtered = median_filter_2d(&noisy_image, size, &standard_config).unwrap();
+        let filtered =
+            median_filter_2d(&noisy_image, size, &standard_config).expect("Test: operation failed");
         let mse = calculate_image_mse(&clean_image, &filtered);
 
         println!("   Kernel size {}: MSE = {:.4}", size, mse);

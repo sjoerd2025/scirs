@@ -39,7 +39,7 @@
 //! let goal = Array1::from_vec(vec![9.0, 9.0]);
 //!
 //! // Build the roadmap
-//! planner.build_roadmap().unwrap();
+//! planner.build_roadmap().expect("Operation failed");
 //!
 //! // Find a path
 //! let path = planner.find_path(&start, &goal);
@@ -836,10 +836,11 @@ mod tests {
         let lower_bounds = array![0.0, 0.0];
         let upper_bounds = array![10.0, 10.0];
 
-        let mut planner = PRMPlanner::new(config, lower_bounds, upper_bounds).unwrap();
+        let mut planner =
+            PRMPlanner::new(config, lower_bounds, upper_bounds).expect("Operation failed");
 
         // Build the roadmap
-        planner.build_roadmap().unwrap();
+        planner.build_roadmap().expect("Operation failed");
 
         // Find a path from start to goal
         let start = array![1.0, 1.0];
@@ -854,7 +855,7 @@ mod tests {
             assert_eq!(path.nodes[0], start);
 
             // Since we're using goal thresholds, the end might not be exactly at the goal
-            let last = path.nodes.last().unwrap();
+            let last = path.nodes.last().expect("Operation failed");
             let dx = last[0] - goal[0];
             let dy = last[1] - goal[1];
             let dist = (dx * dx + dy * dy).sqrt();
@@ -885,18 +886,18 @@ mod tests {
         let mut planner = PRM2DPlanner::new(config, vec![obstacle], (0.0, 10.0), (0.0, 10.0));
 
         // Build the roadmap
-        planner.build_roadmap().unwrap();
+        planner.build_roadmap().expect("Operation failed");
 
         // Find a path from start to goal that must go around the obstacle
         let start = [1.0, 5.0];
         let goal = [9.0, 5.0];
 
-        let path = planner.find_path(start, goal).unwrap();
+        let path = planner.find_path(start, goal).expect("Operation failed");
 
         // There should be a path
         assert!(path.is_some());
 
-        let path = path.unwrap();
+        let path = path.expect("Operation failed");
 
         // Path should have more than 2 points (not just start and goal)
         assert!(path.nodes.len() > 2);
@@ -905,7 +906,7 @@ mod tests {
         assert_relative_eq!(path.nodes[0][0], start[0], epsilon = 1e-5);
         assert_relative_eq!(path.nodes[0][1], start[1], epsilon = 1e-5);
 
-        let last = path.nodes.last().unwrap();
+        let last = path.nodes.last().expect("Operation failed");
         assert_relative_eq!(last[0], goal[0], epsilon = 1e-5);
         assert_relative_eq!(last[1], goal[1], epsilon = 1e-5);
     }

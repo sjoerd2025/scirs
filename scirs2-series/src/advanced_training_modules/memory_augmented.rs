@@ -47,13 +47,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             + controller_output_dim;
 
         let mut controller_params = Array2::zeros((1, controller_param_count));
-        let scale =
-            F::from(2.0).unwrap() / F::from(controller_input_dim + controller_output_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(controller_input_dim + controller_output_dim)
+                .expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         for i in 0..controller_param_count {
             let val = ((i * 67) % 1000) as f64 / 1000.0 - 0.5;
-            controller_params[[0, i]] = F::from(val).unwrap() * std_dev;
+            controller_params[[0, i]] = F::from(val).expect("Failed to convert to float") * std_dev;
         }
 
         // Initialize memory
@@ -67,8 +68,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         for i in 0..head_param_count {
             let val1 = ((i * 71) % 1000) as f64 / 1000.0 - 0.5;
             let val2 = ((i * 73) % 1000) as f64 / 1000.0 - 0.5;
-            read_head_params[[0, i]] = F::from(val1).unwrap() * F::from(0.1).unwrap();
-            write_head_params[[0, i]] = F::from(val2).unwrap() * F::from(0.1).unwrap();
+            read_head_params[[0, i]] = F::from(val1).expect("Failed to convert to float")
+                * F::from(0.1).expect("Failed to convert constant to float");
+            write_head_params[[0, i]] = F::from(val2).expect("Failed to convert to float")
+                * F::from(0.1).expect("Failed to convert constant to float");
         }
 
         Self {
@@ -150,7 +153,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             }
         }
 
-        let size = F::from(self.memory_size).unwrap();
+        let size = F::from(self.memory_size).expect("Failed to convert to float");
         for j in 0..self.memory_width {
             read_vector[j] = read_vector[j] / size;
         }
@@ -242,7 +245,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
                 // Compute loss (simplified)
                 if i < episode.query_y.len() {
-                    let target = F::from(episode.query_y[i]).unwrap();
+                    let target = F::from(episode.query_y[i]).expect("Failed to convert to float");
                     if !prediction.is_empty() {
                         let diff = prediction[0] - target;
                         episode_loss = episode_loss + diff * diff;
@@ -253,7 +256,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             total_loss = total_loss + episode_loss;
         }
 
-        Ok(total_loss / F::from(episodes.len()).unwrap())
+        Ok(total_loss / F::from(episodes.len()).expect("Operation failed"))
     }
 
     /// Get current memory state
@@ -374,7 +377,7 @@ mod tests {
         let mut mann = MANN::<f64>::new(5, 4, 8, 10, 3);
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
-        let output = mann.forward(&input).unwrap();
+        let output = mann.forward(&input).expect("Operation failed");
         assert_eq!(output.len(), 3);
 
         // Check that output is finite
@@ -388,7 +391,7 @@ mod tests {
         let mut mann = MANN::<f64>::new(3, 2, 4, 6, 2);
 
         // Test memory read (should be zeros initially)
-        let read_vector = mann.memory_read().unwrap();
+        let read_vector = mann.memory_read().expect("Operation failed");
         assert_eq!(read_vector.len(), 2);
         for &val in read_vector.iter() {
             assert_abs_diff_eq!(val, 0.0, epsilon = 1e-10);
@@ -396,7 +399,7 @@ mod tests {
 
         // Test memory write
         let write_data = Array1::from_vec(vec![1.0, 2.0]);
-        mann.memory_write(&write_data).unwrap();
+        mann.memory_write(&write_data).expect("Operation failed");
 
         // Check that memory was updated
         let memory = mann.get_memory();
@@ -410,7 +413,7 @@ mod tests {
 
         // Write some data
         let write_data = Array1::from_vec(vec![5.0, 10.0]);
-        mann.memory_write(&write_data).unwrap();
+        mann.memory_write(&write_data).expect("Operation failed");
 
         // Reset memory
         mann.reset_memory();
@@ -431,7 +434,7 @@ mod tests {
             Array1::from_vec(vec![3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
         ];
 
-        let outputs = mann.process_sequence(&inputs).unwrap();
+        let outputs = mann.process_sequence(&inputs).expect("Operation failed");
         assert_eq!(outputs.len(), 3);
 
         for output in outputs {
@@ -451,12 +454,14 @@ mod tests {
             (3, 4),
             vec![1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
         )
-        .unwrap();
-        mann.set_memory(memory_data).unwrap();
+        .expect("Operation failed");
+        mann.set_memory(memory_data).expect("Operation failed");
 
         // Compute attention with a key
         let key = Array1::from_vec(vec![1.0, 0.0, 0.0, 0.0]);
-        let weights = mann.compute_attention_weights(&key).unwrap();
+        let weights = mann
+            .compute_attention_weights(&key)
+            .expect("Operation failed");
 
         assert_eq!(weights.len(), 3);
 
@@ -480,7 +485,7 @@ mod tests {
         let mann = MANN::<f64>::new(4, 3, 6, 8, 2);
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 
-        let output = mann.controller_forward(&input).unwrap();
+        let output = mann.controller_forward(&input).expect("Operation failed");
         assert_eq!(output.len(), 2);
 
         for &val in output.iter() {
@@ -495,7 +500,8 @@ mod tests {
         let original_params = mann.get_controller_params().clone();
         let new_params = Array2::zeros(original_params.dim());
 
-        mann.set_controller_params(new_params.clone()).unwrap();
+        mann.set_controller_params(new_params.clone())
+            .expect("Operation failed");
         let retrieved_params = mann.get_controller_params();
 
         assert_eq!(retrieved_params.dim(), new_params.dim());

@@ -730,7 +730,7 @@ mod tests {
         let config = CloudProvider::S3(S3Config::new("bucket", "region", "key", "secret"));
         let url = generate_signed_url(&config, "test-file.txt", Duration::from_secs(3600));
         assert!(url.is_ok());
-        assert!(!url.unwrap().is_empty());
+        assert!(!url.expect("Operation failed").is_empty());
     }
 
     #[cfg(all(

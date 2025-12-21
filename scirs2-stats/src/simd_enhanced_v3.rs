@@ -216,7 +216,7 @@ where
             for i in 0..n_windows {
                 let window = data.slice(scirs2_core::ndarray::s![i..i + self.windowsize]);
                 let sum = F::simd_sum(&window);
-                result[i] = sum / F::from(self.windowsize).unwrap();
+                result[i] = sum / F::from(self.windowsize).expect("Failed to convert to float");
             }
         } else {
             // Optimized scalar path using sliding window sum
@@ -225,11 +225,12 @@ where
                 .iter()
                 .fold(F::zero(), |acc, &x| acc + x);
 
-            result[0] = window_sum / F::from(self.windowsize).unwrap();
+            result[0] = window_sum / F::from(self.windowsize).expect("Failed to convert to float");
 
             for i in 1..n_windows {
                 window_sum = window_sum - data[i - 1] + data[i + self.windowsize - 1];
-                result[i] = window_sum / F::from(self.windowsize).unwrap();
+                result[i] =
+                    window_sum / F::from(self.windowsize).expect("Failed to convert to float");
             }
         }
 
@@ -265,13 +266,15 @@ where
 
             if self.windowsize > 16 {
                 // SIMD path: compute mean, then variance
-                let mean = F::simd_sum(&window.view()) / F::from(self.windowsize).unwrap();
+                let mean = F::simd_sum(&window.view())
+                    / F::from(self.windowsize).expect("Failed to convert to float");
                 let mean_array = scirs2_core::ndarray::Array1::from_elem(self.windowsize, mean);
                 let diff = F::simd_sub(&window, &mean_array.view());
                 let sq_diff = F::simd_mul(&diff.view(), &diff.view());
                 let sum_sq_diff = F::simd_sum(&sq_diff.view());
 
-                result[i] = sum_sq_diff / F::from(self.windowsize - ddof).unwrap();
+                result[i] = sum_sq_diff
+                    / F::from(self.windowsize - ddof).expect("Failed to convert to float");
             } else {
                 // Scalar path: Welford's algorithm
                 let mut mean = F::zero();
@@ -281,12 +284,12 @@ where
                 for &val in window.iter() {
                     count += 1;
                     let delta = val - mean;
-                    mean = mean + delta / F::from(count).unwrap();
+                    mean = mean + delta / F::from(count).expect("Failed to convert to float");
                     let delta2 = val - mean;
                     m2 = m2 + delta * delta2;
                 }
 
-                result[i] = m2 / F::from(count - ddof).unwrap();
+                result[i] = m2 / F::from(count - ddof).expect("Failed to convert to float");
             }
         }
 
@@ -407,10 +410,10 @@ where
     // Create bin edges
     let mut bin_edges = scirs2_core::ndarray::Array1::zeros(bins + 1);
     let range_width = max_val - min_val;
-    let bin_width = range_width / F::from(bins).unwrap();
+    let bin_width = range_width / F::from(bins).expect("Failed to convert to float");
 
     for i in 0..=bins {
-        bin_edges[i] = min_val + F::from(i).unwrap() * bin_width;
+        bin_edges[i] = min_val + F::from(i).expect("Failed to convert to float") * bin_width;
     }
 
     // Initialize histogram counts
@@ -423,7 +426,11 @@ where
                 bins - 1 // Handle edge case where value equals max
             } else {
                 let normalized = (value - min_val) / bin_width;
-                normalized.floor().to_usize().unwrap().min(bins - 1)
+                normalized
+                    .floor()
+                    .to_usize()
+                    .expect("Operation failed")
+                    .min(bins - 1)
             };
             counts[bin_idx] += 1;
         }
@@ -454,7 +461,8 @@ where
     let n = data.len();
 
     // Compute mean and standard deviation using SIMD
-    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(n).expect("Failed to convert to float");
 
     // Compute standard deviation
     let variance = {
@@ -465,7 +473,7 @@ where
                 diff * diff
             })
             .fold(F::zero(), |acc, x| acc + x);
-        sum_sq_diff / F::from(n - 1).unwrap()
+        sum_sq_diff / F::from(n - 1).expect("Failed to convert to float")
     };
 
     let std_dev = variance.sqrt();
@@ -499,7 +507,7 @@ mod tests {
         let y = array![4.0, 5.0, 6.0];
         // Simple threshold instead of optimizer
 
-        let distance = euclidean_distance_simd(&x.view(), &y.view()).unwrap();
+        let distance = euclidean_distance_simd(&x.view(), &y.view()).expect("Operation failed");
         let expected = ((4.0 - 1.0).powi(2) + (5.0 - 2.0).powi(2) + (6.0 - 3.0).powi(2)).sqrt();
         assert_relative_eq!(distance, expected, epsilon = 1e-10);
     }
@@ -509,7 +517,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let window = MovingWindowSIMD::new(3);
 
-        let moving_mean = window.moving_mean(&data.view()).unwrap();
+        let moving_mean = window.moving_mean(&data.view()).expect("Operation failed");
         assert_relative_eq!(moving_mean[0], 2.0, epsilon = 1e-10); // (1+2+3)/3
         assert_relative_eq!(moving_mean[1], 3.0, epsilon = 1e-10); // (2+3+4)/3
         assert_relative_eq!(moving_mean[7], 9.0, epsilon = 1e-10); // (8+9+10)/3
@@ -518,7 +526,7 @@ mod tests {
     #[test]
     fn test_histogram_simd() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let (counts, edges) = histogram_simd(&data.view(), 5, None).unwrap();
+        let (counts, edges) = histogram_simd(&data.view(), 5, None).expect("Operation failed");
 
         assert_eq!(counts.len(), 5);
         assert_eq!(edges.len(), 6);
@@ -528,7 +536,7 @@ mod tests {
     #[test]
     fn test_outlier_detection_simd() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]; // 100.0 is an outlier
-        let outliers = detect_outliers_zscore_simd(&data.view(), 2.0).unwrap();
+        let outliers = detect_outliers_zscore_simd(&data.view(), 2.0).expect("Operation failed");
 
         assert!(!outliers[0]); // 1.0 is not an outlier
         assert!(!outliers[4]); // 5.0 is not an outlier

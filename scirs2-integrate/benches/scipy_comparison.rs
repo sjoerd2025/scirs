@@ -328,7 +328,11 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
                     };
 
                     let result = monte_carlo(
-                        |x| quadrature_problems::multivariate_gaussian(x.as_slice().unwrap()),
+                        |x| {
+                            quadrature_problems::multivariate_gaussian(
+                                x.as_slice().expect("Operation failed"),
+                            )
+                        },
                         &ranges,
                         Some(opts),
                     );
@@ -365,7 +369,9 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
 
                         let result = cubature(
                             |x: &Array1<f64>| {
-                                quadrature_problems::multivariate_gaussian(x.as_slice().unwrap())
+                                quadrature_problems::multivariate_gaussian(
+                                    x.as_slice().expect("Operation failed"),
+                                )
                             },
                             &ranges,
                             Some(opts),
@@ -410,7 +416,11 @@ fn bench_parallel_operations(c: &mut Criterion) {
                         };
 
                         let result = monte_carlo(
-                            |x| quadrature_problems::multivariate_gaussian(x.as_slice().unwrap()),
+                            |x| {
+                                quadrature_problems::multivariate_gaussian(
+                                    x.as_slice().expect("Operation failed"),
+                                )
+                            },
                             &ranges,
                             Some(opts),
                         );
@@ -441,7 +451,9 @@ fn bench_parallel_operations(c: &mut Criterion) {
 
                         let result = parallel_monte_carlo(
                             |x: scirs2_core::ndarray::ArrayView1<f64>| {
-                                quadrature_problems::multivariate_gaussian(x.as_slice().unwrap())
+                                quadrature_problems::multivariate_gaussian(
+                                    x.as_slice().expect("Operation failed"),
+                                )
                             },
                             &ranges,
                             Some(opts),

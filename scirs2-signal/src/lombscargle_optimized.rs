@@ -586,9 +586,9 @@ fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
     let peak_idx = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     // Analyze main lobe width (3dB bandwidth)
     let peak_power = power[peak_idx];
@@ -740,8 +740,8 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
         t1[i] += 0.1 * rng.gen_range(-1.0..1.0);
     }
     t1.as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Operation failed")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let y1: Array1<f64> =
         t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
     signals.push((t1, y1));
@@ -753,8 +753,8 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
         t2[i] += 0.05 * rng.gen_range(-1.0..1.0);
     }
     t2.as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Operation failed")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let y2: Array1<f64> = t2.mapv(|ti| {
         (2.0 * PI * 0.5 * ti).sin()
             + 0.7 * (2.0 * PI * 1.5 * ti).sin()
@@ -976,7 +976,7 @@ fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     )?;
 
     // For white noise, PSD should be approximately flat
-    let mean_power = power.mean().unwrap();
+    let mean_power = power.mean().expect("Operation failed");
     let power_variance = power.variance();
     let flatness = 1.0 - (power_variance / (mean_power * mean_power)).sqrt();
 
@@ -1126,8 +1126,8 @@ fn generate_optimization_recommendations(
 #[allow(dead_code)]
 fn compute_correlation(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
     let n = a.len().min(b.len());
-    let mean_a = a.slice(scirs2_core::ndarray::s![..n]).mean().unwrap();
-    let mean_b = b.slice(scirs2_core::ndarray::s![..n]).mean().unwrap();
+    let mean_a = a.slice(scirs2_core::ndarray::s![..n]).mean().expect("Operation failed");
+    let mean_b = b.slice(scirs2_core::ndarray::s![..n]).mean().expect("Operation failed");
 
     let mut numerator = 0.0;
     let mut sum_sq_a = 0.0;
@@ -1174,7 +1174,7 @@ fn find_peak_near_frequency(
 fn estimate_noise_floor(power: &Array1<f64>) -> f64 {
     // Use median as robust noise floor estimate
     let mut sorted_power = power.to_vec();
-    sorted_power.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_power.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     sorted_power[sorted_power.len() / 2]
 }
 

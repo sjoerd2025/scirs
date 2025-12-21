@@ -219,14 +219,14 @@ fn main() {
         file,
         "operation,dtype,size,implementation,time_us,iterations"
     )
-    .unwrap();
+    .expect("Operation failed");
     for r in &results {
         writeln!(
             file,
             "{},{},{},{},{:.2},{}",
             r.operation, r.dtype, r.size, r.implementation, r.time_us, r.iterations
         )
-        .unwrap();
+        .expect("Operation failed");
     }
 
     println!("\nResults saved to: {}", csv_file);

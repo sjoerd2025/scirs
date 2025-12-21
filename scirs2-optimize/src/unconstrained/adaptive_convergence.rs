@@ -158,7 +158,7 @@ impl AdaptiveToleranceState {
 
         // Estimate function scale as a robust measure of typical function values
         let mut values: Vec<f64> = self.function_history.iter().map(|&x| x.abs()).collect();
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Use median as robust scale estimate
         let median_idx = values.len() / 2;
@@ -181,7 +181,7 @@ impl AdaptiveToleranceState {
 
         // Estimate gradient scale as robust measure of typical gradient norms
         let mut values: Vec<f64> = self.gradient_history.iter().cloned().collect();
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Use median as robust scale estimate
         let median_idx = values.len() / 2;
@@ -467,7 +467,9 @@ mod tests {
         // Add some function values with known scale
         for i in 0..10 {
             let f_val = 100.0 + i as f64; // Scale around 100
-            state.update(f_val, 1e-5, 1e-8, i).unwrap();
+            state
+                .update(f_val, 1e-5, 1e-8, i)
+                .expect("Operation failed");
         }
 
         // Function scale should adapt to be around 100
@@ -485,7 +487,7 @@ mod tests {
 
         // Simulate stagnation by using same function value
         for i in 0..10 {
-            state.update(1.0, 1e-5, 1e-8, i).unwrap();
+            state.update(1.0, 1e-5, 1e-8, i).expect("Operation failed");
         }
 
         let stats = state.get_adaptation_stats();
@@ -530,7 +532,7 @@ mod tests {
 
         // Force extreme adaptation by using very large values
         for i in 0..10 {
-            state.update(1e10, 1e10, 1e10, i).unwrap();
+            state.update(1e10, 1e10, 1e10, i).expect("Operation failed");
         }
 
         // Tolerances should be clamped within bounds

@@ -220,9 +220,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum + scirs2_core::numeric::FromPrimi
     /// Create new risk metrics calculator
     pub fn new(returns: Array1<F>) -> Self {
         let confidencelevels = vec![
-            F::from(0.90).unwrap(),
-            F::from(0.95).unwrap(),
-            F::from(0.99).unwrap(),
+            F::from(0.90).expect("Failed to convert constant to float"),
+            F::from(0.95).expect("Failed to convert constant to float"),
+            F::from(0.99).expect("Failed to convert constant to float"),
         ];
 
         Self {
@@ -242,12 +242,12 @@ impl<F: Float + Debug + Clone + std::iter::Sum + scirs2_core::numeric::FromPrimi
         }
 
         let mut sorted_returns = self.returns.to_vec();
-        sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_returns.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let percentile = F::one() - confidencelevel;
-        let index = (percentile * F::from(sorted_returns.len()).unwrap())
+        let index = (percentile * F::from(sorted_returns.len()).expect("Operation failed"))
             .to_usize()
-            .unwrap();
+            .expect("Operation failed");
         let index = index.min(sorted_returns.len() - 1);
 
         Ok(-sorted_returns[index]) // VaR is typically reported as positive loss
@@ -278,7 +278,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + scirs2_core::numeric::FromPrimi
         }
 
         let sum = tail_losses.iter().fold(F::zero(), |acc, &x| acc + x);
-        let cvar = sum / F::from(tail_losses.len()).unwrap();
+        let cvar = sum / F::from(tail_losses.len()).expect("Operation failed");
         Ok(-cvar) // Report as positive loss
     }
 
@@ -325,7 +325,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + scirs2_core::numeric::FromPrimi
             });
         }
 
-        let meanreturn = self.returns.mean().unwrap();
+        let meanreturn = self.returns.mean().expect("Operation failed");
         let excessreturn = meanreturn - risk_freerate;
         let volatility = self.volatility()?;
 
@@ -346,7 +346,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + scirs2_core::numeric::FromPrimi
             });
         }
 
-        let meanreturn = self.returns.mean().unwrap();
+        let meanreturn = self.returns.mean().expect("Operation failed");
         let excessreturn = meanreturn - risk_freerate;
 
         // Calculate downside deviation
@@ -363,7 +363,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + scirs2_core::numeric::FromPrimi
             .collect();
 
         let downside_variance = negative_returns.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(negative_returns.len()).unwrap();
+            / F::from(negative_returns.len()).expect("Operation failed");
         let downside_deviation = downside_variance.sqrt();
 
         if downside_deviation == F::zero() {
@@ -379,20 +379,20 @@ impl<F: Float + Debug + Clone + std::iter::Sum + scirs2_core::numeric::FromPrimi
             return Ok(F::zero());
         }
 
-        let mean = self.returns.mean().unwrap();
+        let mean = self.returns.mean().expect("Operation failed");
         let variance = self
             .returns
             .iter()
             .map(|&r| (r - mean) * (r - mean))
             .sum::<F>()
-            / F::from(self.returns.len() - 1).unwrap();
+            / F::from(self.returns.len() - 1).expect("Operation failed");
 
         Ok(variance.sqrt())
     }
 
     /// Calculate Calmar Ratio (annual return / maximum drawdown)
     pub fn calmar_ratio(&self, periods_peryear: F) -> Result<F> {
-        let annualreturn = self.returns.mean().unwrap() * periods_peryear;
+        let annualreturn = self.returns.mean().expect("Operation failed") * periods_peryear;
         let max_dd = self.maximum_drawdown()?;
 
         if max_dd == F::zero() {
@@ -445,7 +445,7 @@ impl HFTIndicators {
         }
 
         let mut twap = Array1::zeros(prices.len() - window + 1);
-        let window_f = F::from(window).unwrap();
+        let window_f = F::from(window).expect("Failed to convert to float");
 
         for i in 0..twap.len() {
             let sum = prices.slice(s![i..i + window]).sum();
@@ -469,8 +469,8 @@ impl HFTIndicators {
         }
 
         // Simplified Almgren-Chriss model
-        let beta = F::from(0.5).unwrap(); // Square-root law exponent
-        let gamma = F::from(0.1).unwrap(); // Market impact coefficient
+        let beta = F::from(0.5).expect("Failed to convert constant to float"); // Square-root law exponent
+        let gamma = F::from(0.1).expect("Failed to convert constant to float"); // Market impact coefficient
 
         let relative_volume = volume / average_daily_volume;
         let impact = gamma * volatility * relative_volume.powf(beta) * participation_rate.sqrt();
@@ -513,12 +513,12 @@ impl HFTIndicators {
 
             // Calculate variance of first differences
             let sum_diff = diffs.iter().fold(F::zero(), |acc, &x| acc + x);
-            let mean_diff = sum_diff / F::from(diffs.len()).unwrap();
+            let mean_diff = sum_diff / F::from(diffs.len()).expect("Operation failed");
             let variance = diffs
                 .iter()
                 .map(|&d| (d - mean_diff) * (d - mean_diff))
                 .sum::<F>()
-                / F::from(diffs.len() - 1).unwrap();
+                / F::from(diffs.len() - 1).expect("Operation failed");
 
             noise[i] = variance.sqrt();
         }
@@ -774,7 +774,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         }
 
         // Initialize with uniform state probabilities
-        let state_probs = Array1::from_elem(num_regimes, F::one() / F::from(num_regimes).unwrap());
+        let state_probs = Array1::from_elem(
+            num_regimes,
+            F::one() / F::from(num_regimes).expect("Failed to convert to float"),
+        );
 
         Ok(Self {
             num_regimes,
@@ -816,11 +819,12 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
     /// Calculate Gaussian likelihood
     fn gaussian_likelihood(&self, x: F, mean: F, stddev: F) -> F {
-        let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
+        let two_pi = F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float");
         let sqrt_two_pi = two_pi.sqrt();
         let variance = stddev * stddev;
         let diff = x - mean;
-        let exponent = -(diff * diff) / (F::from(2).unwrap() * variance);
+        let exponent =
+            -(diff * diff) / (F::from(2).expect("Failed to convert constant to float") * variance);
 
         exponent.exp() / (sqrt_two_pi * stddev)
     }
@@ -867,7 +871,7 @@ mod tests {
         let returns = Array1::from_vec(vec![-0.05, -0.02, 0.01, -0.01, 0.03, -0.04, 0.02]);
         let risk_metrics = RiskMetrics::new(returns);
 
-        let var_95 = risk_metrics.value_at_risk(0.95).unwrap();
+        let var_95 = risk_metrics.value_at_risk(0.95).expect("Operation failed");
         assert!(var_95 > 0.0); // VaR should be positive (representing loss)
     }
 
@@ -876,7 +880,7 @@ mod tests {
         let returns = Array1::from_vec(vec![0.01, 0.02, -0.01, 0.03, 0.00, 0.02, 0.01]);
         let risk_metrics = RiskMetrics::new(returns);
 
-        let sharpe = risk_metrics.sharpe_ratio(0.02).unwrap();
+        let sharpe = risk_metrics.sharpe_ratio(0.02).expect("Operation failed");
         assert!(sharpe.is_finite());
     }
 
@@ -885,7 +889,7 @@ mod tests {
         let returns = Array1::from_vec(vec![0.10, -0.05, -0.10, 0.05, 0.15, -0.20]);
         let risk_metrics = RiskMetrics::new(returns);
 
-        let max_dd = risk_metrics.maximum_drawdown().unwrap();
+        let max_dd = risk_metrics.maximum_drawdown().expect("Operation failed");
         assert!(max_dd >= 0.0);
         assert!(max_dd <= 1.0);
     }
@@ -901,7 +905,7 @@ mod tests {
             option_type: OptionType::Call,
         };
 
-        let option_price = BlackScholes::price(&contract, 0.2).unwrap();
+        let option_price = BlackScholes::price(&contract, 0.2).expect("Operation failed");
 
         assert!(option_price.price > 0.0);
         assert!(option_price.delta > 0.0 && option_price.delta < 1.0);
@@ -921,7 +925,7 @@ mod tests {
             option_type: OptionType::Put,
         };
 
-        let option_price = BlackScholes::price(&contract, 0.2).unwrap();
+        let option_price = BlackScholes::price(&contract, 0.2).expect("Operation failed");
 
         assert!(option_price.price > 0.0);
         assert!(option_price.delta < 0.0 && option_price.delta > -1.0);
@@ -935,7 +939,7 @@ mod tests {
         let prices = Array1::from_vec(vec![100.0, 101.0, 102.0, 101.5, 100.5]);
         let volumes = Array1::from_vec(vec![1000.0, 1500.0, 800.0, 1200.0, 900.0]);
 
-        let vwap = HFTIndicators::vwap(&prices, &volumes).unwrap();
+        let vwap = HFTIndicators::vwap(&prices, &volumes).expect("Operation failed");
         assert_eq!(vwap.len(), prices.len());
 
         // VWAP should be reasonable
@@ -953,7 +957,8 @@ mod tests {
 
     #[test]
     fn test_regime_switching_model() {
-        let transition_probs = Array2::from_shape_vec((2, 2), vec![0.8, 0.2, 0.3, 0.7]).unwrap();
+        let transition_probs =
+            Array2::from_shape_vec((2, 2), vec![0.8, 0.2, 0.3, 0.7]).expect("Operation failed");
 
         let regime_params = vec![
             RegimeParameters {
@@ -968,15 +973,16 @@ mod tests {
             },
         ];
 
-        let mut model = RegimeSwitchingModel::new(2, transition_probs, regime_params).unwrap();
+        let mut model = RegimeSwitchingModel::new(2, transition_probs, regime_params)
+            .expect("Operation failed");
 
         // Test state update
-        model.update_states(0.03).unwrap();
+        model.update_states(0.03).expect("Operation failed");
         let current_regime = model.current_regime();
         assert!(current_regime < 2);
 
         // Test forecasting
-        let forecast = model.forecast().unwrap();
+        let forecast = model.forecast().expect("Operation failed");
         assert!(forecast.is_finite());
     }
 
@@ -993,7 +999,9 @@ mod tests {
 
         // Calculate theoretical price with known volatility
         let known_vol = 0.2;
-        let theoretical_price = BlackScholes::price(&contract, known_vol).unwrap().price;
+        let theoretical_price = BlackScholes::price(&contract, known_vol)
+            .expect("Operation failed")
+            .price;
 
         // Calculate implied volatility from theoretical price
         let implied_vol = BlackScholes::implied_volatility(
@@ -1003,7 +1011,7 @@ mod tests {
             1e-6, // tolerance
             100,  // max iterations
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_abs_diff_eq!(implied_vol, known_vol, epsilon = 1e-4);
     }

@@ -209,7 +209,9 @@ pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<Symbolic
                     Box::new(Constant(F::one())),
                     Box::new(Pow(
                         Box::new(y0.clone()),
-                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(
+                            F::from(2.0).expect("Failed to convert constant to float"),
+                        )),
                     )),
                 )),
             )),
@@ -237,9 +239,12 @@ pub fn example_stiff_chemical<F: IntegrateFloat>() -> IntegrateResult<SymbolicJa
     let y2 = SymbolicExpression::indexedvar("y", 1);
     let y3 = SymbolicExpression::indexedvar("y", 2);
 
-    let k1 = SymbolicExpression::constant(F::from(0.04).unwrap());
-    let k2 = SymbolicExpression::constant(F::from(1e4).unwrap());
-    let k3 = SymbolicExpression::constant(F::from(3e7).unwrap());
+    let k1 =
+        SymbolicExpression::constant(F::from(0.04).expect("Failed to convert constant to float"));
+    let k2 =
+        SymbolicExpression::constant(F::from(1e4).expect("Failed to convert constant to float"));
+    let k3 =
+        SymbolicExpression::constant(F::from(3e7).expect("Failed to convert constant to float"));
 
     // Using operator overloading for cleaner syntax
     let expr1 = -k1.clone() * y1.clone() + k2.clone() * y2.clone() * y3.clone();
@@ -265,12 +270,12 @@ pub fn example_seasonal_predator_prey<F: IntegrateFloat>() -> IntegrateResult<Sy
     let y = indexed_var("y", 1);
     let t = var("t");
 
-    let a = constant(F::from(1.5).unwrap());
-    let b = constant(F::from(0.1).unwrap());
-    let c = constant(F::from(0.5).unwrap());
-    let d = constant(F::from(0.75).unwrap());
-    let e = constant(F::from(0.25).unwrap());
-    let two_pi = constant(F::from(std::f64::consts::TAU).unwrap());
+    let a = constant(F::from(1.5).expect("Failed to convert constant to float"));
+    let b = constant(F::from(0.1).expect("Failed to convert constant to float"));
+    let c = constant(F::from(0.5).expect("Failed to convert constant to float"));
+    let d = constant(F::from(0.75).expect("Failed to convert constant to float"));
+    let e = constant(F::from(0.25).expect("Failed to convert constant to float"));
+    let two_pi = constant(F::from(std::f64::consts::TAU).expect("Failed to convert to float"));
 
     // Seasonal growth term: 1 + b*sin(2π*t)
     let seasonal = constant(F::one()) + b * SymbolicExpression::Sin(Box::new(two_pi * t));
@@ -326,13 +331,16 @@ mod tests {
         let y = Var(Variable::new("y"));
         let expr = Neg(Box::new(y));
 
-        let jacobian = generate_jacobian(&[expr], &[Variable::new("y")], None).unwrap();
+        let jacobian =
+            generate_jacobian(&[expr], &[Variable::new("y")], None).expect("Operation failed");
 
         // Jacobian should be [[-1]]
         let mut values = HashMap::new();
         values.insert(Variable::new("y"), 1.0);
 
-        let j = jacobian.evaluate(0.0, ArrayView1::from(&[1.0])).unwrap();
+        let j = jacobian
+            .evaluate(0.0, ArrayView1::from(&[1.0]))
+            .expect("Operation failed");
         assert_eq!(j.dim(), (1, 1));
         assert!((j[[0, 0]] + 1.0_f64).abs() < 1e-10);
     }

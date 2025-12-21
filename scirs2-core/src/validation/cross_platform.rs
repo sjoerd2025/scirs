@@ -785,7 +785,7 @@ mod tests {
 
     #[test]
     fn test_platform_detection() {
-        let info = CrossPlatformValidator::detect_platform_info().unwrap();
+        let info = CrossPlatformValidator::detect_platform_info().expect("Operation failed");
 
         // Basic sanity checks
         assert_ne!(info.os_family, OsFamily::Unknown);
@@ -796,7 +796,7 @@ mod tests {
 
     #[test]
     fn test_path_validation() {
-        let mut validator = CrossPlatformValidator::new().unwrap();
+        let mut validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Valid path
         let result = validator.validate_file_path("/home/user/data.txt");
@@ -810,7 +810,7 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn test_windows_path_validation() {
-        let mut validator = CrossPlatformValidator::new().unwrap();
+        let mut validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Valid Windows path
         let result = validator.validate_file_path("C:\\Users\\user\\data.txt");
@@ -828,7 +828,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn test_unix_path_validation() {
-        let mut validator = CrossPlatformValidator::new().unwrap();
+        let mut validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Valid Unix path
         let result = validator.validate_file_path("/home/user/data.txt");
@@ -842,7 +842,7 @@ mod tests {
 
     #[test]
     fn test_simd_validation() {
-        let mut validator = CrossPlatformValidator::new().unwrap();
+        let mut validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Valid vector size
         let result = validator.validate_simd_operation("add", 128, 128);
@@ -855,7 +855,7 @@ mod tests {
 
     #[test]
     fn test_memory_allocation_validation() {
-        let mut validator = CrossPlatformValidator::new().unwrap();
+        let mut validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Normal allocation
         let result = validator.validate_memory_allocation(1024, "test");
@@ -868,7 +868,7 @@ mod tests {
 
     #[test]
     fn test_feature_availability() {
-        let validator = CrossPlatformValidator::new().unwrap();
+        let validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // These should return boolean values without panicking
         let memory_mapping = validator.is_feature_available(PlatformFeature::MemoryMapping);
@@ -886,7 +886,7 @@ mod tests {
 
     #[test]
     fn test_wasm_specific_features() {
-        let validator = CrossPlatformValidator::new().unwrap();
+        let validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Test WASM-specific feature detection
         let wasm_simd = validator.is_feature_available(PlatformFeature::WasmSimd128);
@@ -899,7 +899,7 @@ mod tests {
 
     #[test]
     fn test_wasm_path_validation() {
-        let mut validator = CrossPlatformValidator::new().unwrap();
+        let mut validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Simulate WASM environment for testing
         // Note: This test will behave differently on actual WASM vs native platforms
@@ -918,14 +918,14 @@ mod tests {
 
     #[test]
     fn test_platform_memory_limits() {
-        let validator = CrossPlatformValidator::new().unwrap();
+        let validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Test that memory allocation validation considers platform architecture
         let small_alloc = validator.platform_info().page_size * 2;
         let large_alloc = 2usize.pow(30); // 1GB
 
         // These should not panic
-        let mut validator_mut = CrossPlatformValidator::new().unwrap();
+        let mut validator_mut = CrossPlatformValidator::new().expect("Operation failed");
         let small_result = validator_mut.validate_memory_allocation(small_alloc, "test");
         let large_result = validator_mut.validate_memory_allocation(large_alloc, "test");
 
@@ -934,7 +934,7 @@ mod tests {
 
     #[test]
     fn test_simd_capabilities_cross_platform() {
-        let mut validator = CrossPlatformValidator::new().unwrap();
+        let mut validator = CrossPlatformValidator::new().expect("Operation failed");
 
         // Test SIMD validation across different architectures
         let result = validator.validate_simd_operation("generic_add", 64, 64);

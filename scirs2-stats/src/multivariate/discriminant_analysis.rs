@@ -108,7 +108,7 @@ impl LinearDiscriminantAnalysis {
     /// Fit the LDA model
     pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "LDA fit");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "LDA fit");
 
         let (n_samples, n_features) = x.dim();
         let n_targets = y.len();
@@ -293,7 +293,7 @@ impl LinearDiscriminantAnalysis {
         let _n_classes = classes.len();
 
         // Overall mean
-        let overall_mean = x.mean_axis(Axis(0)).unwrap();
+        let overall_mean = x.mean_axis(Axis(0)).expect("Operation failed");
 
         // Initialize scatter matrices
         let mut sw = Array2::zeros((n_features, n_features));
@@ -383,7 +383,7 @@ impl LinearDiscriminantAnalysis {
             .svd(true, false)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
-        let u = u.unwrap();
+        let u = u.expect("Operation failed");
         let s = s;
 
         // Transform back: scalings = L^{-T} * U
@@ -391,7 +391,7 @@ impl LinearDiscriminantAnalysis {
 
         // Sort by eigenvalues (singular values in descending order)
         let mut eigen_pairs: Vec<_> = s.iter().cloned().zip(scalings.columns()).collect();
-        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
         let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_, _)| *val_).collect();
         let eigenvectors: Array2<f64> = Array2::from_shape_vec(
@@ -452,7 +452,7 @@ impl LinearDiscriminantAnalysis {
             .cloned()
             .zip(eigenvectors.columns())
             .collect();
-        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
         let sorted_eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_, _)| *val_).collect();
         let sorted_eigenvectors: Array2<f64> = Array2::from_shape_vec(
@@ -507,7 +507,7 @@ impl LinearDiscriminantAnalysis {
     /// Transform data to discriminant space
     pub fn transform(&self, x: ArrayView2<f64>, result: &LDAResult) -> Result<Array2<f64>> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "LDA transform");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "LDA transform");
 
         if x.ncols() != result.n_features {
             return Err(handler
@@ -533,9 +533,9 @@ impl LinearDiscriminantAnalysis {
             let max_idx = row
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(idx, _)| idx)
-                .unwrap();
+                .expect("Operation failed");
             predictions[i] = result.classes[max_idx];
         }
 
@@ -661,7 +661,7 @@ impl QuadraticDiscriminantAnalysis {
     /// Fit the QDA model
     pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<QDAResult> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "QDA fit");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "QDA fit");
 
         let (n_samples, n_features) = x.dim();
 
@@ -730,7 +730,7 @@ impl QuadraticDiscriminantAnalysis {
                 classdata.row_mut(i).assign(&x.row(sample_idx));
             }
 
-            let class_mean = classdata.mean_axis(Axis(0)).unwrap();
+            let class_mean = classdata.mean_axis(Axis(0)).expect("Operation failed");
             class_means.row_mut(class_idx).assign(&class_mean);
 
             // Compute class covariance
@@ -788,9 +788,9 @@ impl QuadraticDiscriminantAnalysis {
             let max_idx = row
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(idx, _)| idx)
-                .unwrap();
+                .expect("Operation failed");
             predictions[i] = result.classes[max_idx];
         }
 
@@ -800,7 +800,7 @@ impl QuadraticDiscriminantAnalysis {
     /// Compute decision function scores
     pub fn decision_function(&self, x: ArrayView2<f64>, result: &QDAResult) -> Result<Array2<f64>> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "QDA decision_function");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "QDA decision_function");
 
         if x.ncols() != result.n_features {
             return Err(handler
@@ -820,7 +820,7 @@ impl QuadraticDiscriminantAnalysis {
             ));
         }
 
-        let covariances = result.covariances.as_ref().unwrap();
+        let covariances = result.covariances.as_ref().expect("Operation failed");
         let n_samples = x.nrows();
         let n_classes = result.classes.len();
         let mut scores = Array2::zeros((n_samples, n_classes));
@@ -917,14 +917,14 @@ mod tests {
         let y = array![0, 0, 0, 1, 1, 1];
 
         let lda = LinearDiscriminantAnalysis::new();
-        let result = lda.fit(x.view(), y.view()).unwrap();
+        let result = lda.fit(x.view(), y.view()).expect("Operation failed");
 
         assert_eq!(result.classes, array![0, 1]);
         assert_eq!(result.means.nrows(), 2);
         assert_eq!(result.means.ncols(), 2);
 
         // Test prediction
-        let predictions = lda.predict(x.view(), &result).unwrap();
+        let predictions = lda.predict(x.view(), &result).expect("Operation failed");
         assert_eq!(predictions.len(), 6);
     }
 
@@ -942,14 +942,14 @@ mod tests {
         let y = array![0, 0, 0, 1, 1, 1];
 
         let qda = QuadraticDiscriminantAnalysis::new();
-        let result = qda.fit(x.view(), y.view()).unwrap();
+        let result = qda.fit(x.view(), y.view()).expect("Operation failed");
 
         assert_eq!(result.classes, array![0, 1]);
         assert_eq!(result.means.nrows(), 2);
         assert_eq!(result.means.ncols(), 2);
 
         // Test prediction
-        let predictions = qda.predict(x.view(), &result).unwrap();
+        let predictions = qda.predict(x.view(), &result).expect("Operation failed");
         assert_eq!(predictions.len(), 6);
     }
 
@@ -967,9 +967,9 @@ mod tests {
         let y = array![0, 0, 0, 1, 1, 1];
 
         let lda = LinearDiscriminantAnalysis::new();
-        let result = lda.fit(x.view(), y.view()).unwrap();
+        let result = lda.fit(x.view(), y.view()).expect("Operation failed");
 
-        let transformed = lda.transform(x.view(), &result).unwrap();
+        let transformed = lda.transform(x.view(), &result).expect("Operation failed");
         assert_eq!(transformed.nrows(), 6);
         assert!(transformed.ncols() <= result.classes.len() - 1);
     }

@@ -525,10 +525,11 @@ impl<F: Float + Debug> DataPatternAnalyzer<F> {
         let size_factor = if data_profile.size > 100 {
             F::one()
         } else {
-            F::from(data_profile.size as f64 / 100.0).unwrap()
+            F::from(data_profile.size as f64 / 100.0).expect("Failed to convert to float")
         };
 
-        (noise_factor + sparsity_factor + size_factor) / F::from(3.0).unwrap()
+        (noise_factor + sparsity_factor + size_factor)
+            / F::from(3.0).expect("Failed to convert constant to float")
     }
 
     /// Calculate complexity score for data
@@ -707,14 +708,16 @@ mod tests {
 
     #[test]
     fn test_pattern_analyzer_creation() {
-        let analyzer: DataPatternAnalyzer<f64> = DataPatternAnalyzer::new().unwrap();
+        let analyzer: DataPatternAnalyzer<f64> =
+            DataPatternAnalyzer::new().expect("Operation failed");
         assert_eq!(analyzer.pattern_db.len(), 0);
         assert_eq!(analyzer.analysis_state.progress, 0.0);
     }
 
     #[test]
     fn test_smoothness_profile_classification() {
-        let analyzer: DataPatternAnalyzer<f64> = DataPatternAnalyzer::new().unwrap();
+        let analyzer: DataPatternAnalyzer<f64> =
+            DataPatternAnalyzer::new().expect("Operation failed");
         let mut features = HashMap::new();
 
         features.insert("smoothness".to_string(), 0.95);
@@ -729,7 +732,8 @@ mod tests {
 
     #[test]
     fn test_pattern_type_classification() {
-        let analyzer: DataPatternAnalyzer<f64> = DataPatternAnalyzer::new().unwrap();
+        let analyzer: DataPatternAnalyzer<f64> =
+            DataPatternAnalyzer::new().expect("Operation failed");
         let mut features = HashMap::new();
 
         // Test noisy pattern

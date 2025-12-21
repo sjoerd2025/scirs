@@ -40,13 +40,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         // Initialize parameters using Xavier initialization
         let total_params =
             input_dim * hidden_dim + hidden_dim + hidden_dim * output_dim + output_dim;
-        let scale = F::from(2.0).unwrap() / F::from(input_dim + output_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim + output_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         let mut parameters = Array2::zeros((1, total_params));
         for i in 0..total_params {
             let val = ((i * 17) % 1000) as f64 / 1000.0 - 0.5;
-            parameters[[0, i]] = F::from(val).unwrap() * std_dev;
+            parameters[[0, i]] = F::from(val).expect("Failed to convert to float") * std_dev;
         }
 
         Self {
@@ -78,7 +79,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         }
 
         // Meta-update
-        let num_tasks = F::from(tasks.len()).unwrap();
+        let num_tasks = F::from(tasks.len()).expect("Operation failed");
         meta_gradients = meta_gradients / num_tasks;
         total_loss = total_loss / num_tasks;
 
@@ -116,7 +117,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             }
         }
 
-        Ok(loss / F::from(batch_size).unwrap())
+        Ok(loss / F::from(batch_size).expect("Failed to convert to float"))
     }
 
     /// Make predictions using current parameters
@@ -202,7 +203,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
     /// Compute gradients (simplified numerical differentiation)
     fn compute_gradients(&self, params: &Array2<F>, task: &TaskData<F>) -> Result<Array2<F>> {
-        let epsilon = F::from(1e-5).unwrap();
+        let epsilon = F::from(1e-5).expect("Failed to convert constant to float");
         let mut gradients = Array2::zeros(params.dim());
 
         let base_loss = self.forward(params, &task.support_x, &task.support_y)?;

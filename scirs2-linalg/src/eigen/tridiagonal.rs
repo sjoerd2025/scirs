@@ -96,7 +96,7 @@ where
         let mut shift = eigenvalues[m];
         
         // Perform an implicit QR step on the tridiagonal submatrix
-        let mut g = (eigenvalues[l] - shift) / (F::from(2.0).unwrap() * e[l]);
+        let mut g = (eigenvalues[l] - shift) / (F::from(2.0).expect("Operation failed") * e[l]);
         let mut r = (F::one() + g * g).sqrt();
         if g < F::zero() {
             r = -r;
@@ -122,7 +122,7 @@ where
             }
             
             g = eigenvalues[i+1] - p;
-            r = (eigenvalues[i] - g) * s + F::from(2.0).unwrap() * c * b;
+            r = (eigenvalues[i] - g) * s + F::from(2.0).expect("Operation failed") * c * b;
             p = s * r;
             eigenvalues[i] = g + p;
             g = c * r - b;
@@ -144,7 +144,7 @@ where
     
     // Sort eigenvalues
     let mut sorted = eigenvalues.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     for i in 0..n {
         eigenvalues[i] = sorted[i];
     }
@@ -219,7 +219,7 @@ where
         converged = true;
         for i in 0..n {
             for j in 0..n {
-                if i != j && temp[[i, j]].abs() > F::epsilon() * F::from(100.0).unwrap() {
+                if i != j && temp[[i, j]].abs() > F::epsilon() * F::from(100.0).expect("Operation failed") {
                     converged = false;
                     break;
                 }
@@ -241,7 +241,7 @@ where
             
             // Sort eigenvalues and corresponding eigenvectors
             let mut indices: Vec<usize> = (0..n).collect();
-            indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+            indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).expect("Operation failed"));
             
             let mut sorted_eigenvalues = Array1::zeros(n);
             let mut sorted_eigenvectors = Array2::zeros((n, n));

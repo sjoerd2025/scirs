@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,       // tol
         None,       // conf_level
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // More robust (lower epsilon)
     let huber_result_robust = huber_regression(
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,       // tol
         None,       // conf_level
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Less robust (higher epsilon, more like OLS)
     let huber_result_less_robust = huber_regression(
@@ -58,10 +58,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,       // tol
         None,       // conf_level
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Compute ordinary least squares regression for comparison
-    let ols_result = scirs2_stats::linregress(&x_values.view(), &y.view()).unwrap();
+    let ols_result =
+        scirs2_stats::linregress(&x_values.view(), &y.view()).expect("Operation failed");
     let (ols_slope, ols_intercept___, _, _, _) = ols_result;
 
     // Print results
@@ -96,19 +97,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let min_x = *x_values
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let max_x = *x_values
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let min_y = *y
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let max_y = *y
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
 
     // Add some padding to the plot ranges
     let x_range = min_x - 0.5..max_x + 0.5;

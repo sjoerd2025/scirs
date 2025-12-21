@@ -1,10 +1,10 @@
-# scirs2-signal TODO (v0.1.0-rc.3)
+# scirs2-signal TODO (v0.1.0-rc.4)
 
-This module provides signal processing functionality similar to SciPy's signal module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module is part of the rc.3 release with ecosystem consistency through scirs2-core abstractions.
+This module provides signal processing functionality similar to SciPy's signal module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module is part of the rc.4 release with ecosystem consistency through scirs2-core abstractions.
 
 ## ✅ Build Status: PRODUCTION READY
 
-**Version**: 0.1.0-rc.3
+**Version**: 0.1.0-rc.4
 **Status**: All compilation issues resolved, tests passing
 **Build**: Zero errors, zero warnings
 **Tests**: 416 passing (+11 SIMD diff integration tests)
@@ -24,7 +24,7 @@ The SIMD-related compilation issues that were previously blocking have been full
 
 ---
 
-## Production-Ready Features (v0.1.0-rc.3)
+## Production-Ready Features (v0.1.0-rc.4)
 
 ### Core Signal Processing ✅
 - [x] Module structure and error handling

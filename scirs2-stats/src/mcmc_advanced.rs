@@ -530,7 +530,11 @@ where
         let num_chains = self.chains.len();
         for i in 0..num_chains {
             let current_pos = self.chains[i].current_position.clone();
-            let current_grad = self.chains[i].current_gradient.as_ref().unwrap().clone();
+            let current_grad = self.chains[i]
+                .current_gradient
+                .as_ref()
+                .expect("Operation failed")
+                .clone();
             let mass_matrix = self.chains[i].mass_matrix.clone();
             let stepsize = self.chains[i].stepsize;
             let current_log_density = self.chains[i].current_log_density;
@@ -582,7 +586,7 @@ where
     ) -> StatsResult<(Array1<F>, Array1<F>)> {
         let mut p = position.clone();
         let mut m = momentum.clone();
-        let half_step = stepsize / F::from(2.0).unwrap();
+        let half_step = stepsize / F::from(2.0).expect("Failed to convert constant to float");
 
         // First half-step for momentum
         m = &m + &F::simd_scalar_mul(&gradient.view(), half_step);
@@ -613,11 +617,12 @@ where
     fn sample_momentum(&self, _massmatrix: &MassMatrixType<F>) -> StatsResult<Array1<F>> {
         // Simplified - would implement proper sampling from multivariate normal
         let dim = self.target.dim();
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
         let mut rng = scirs2_core::random::thread_rng();
 
-        let momentum: Array1<F> =
-            Array1::from_shape_fn(dim, |_| F::from(normal.sample(&mut rng)).unwrap());
+        let momentum: Array1<F> = Array1::from_shape_fn(dim, |_| {
+            F::from(normal.sample(&mut rng)).expect("Operation failed")
+        });
 
         Ok(momentum)
     }
@@ -649,19 +654,17 @@ where
         mass_matrix: &MassMatrixType<F>,
     ) -> StatsResult<F> {
         match mass_matrix {
-            MassMatrixType::Identity => {
-                Ok(F::simd_dot(&momentum.view(), &momentum.view()) / F::from(2.0).unwrap())
-            }
+            MassMatrixType::Identity => Ok(F::simd_dot(&momentum.view(), &momentum.view())
+                / F::from(2.0).expect("Failed to convert constant to float")),
             MassMatrixType::Diagonal(diag) => {
                 let weighted_momentum = F::simd_mul(&momentum.view(), &diag.view());
-                Ok(
-                    F::simd_dot(&momentum.view(), &weighted_momentum.view())
-                        / F::from(2.0).unwrap(),
-                )
+                Ok(F::simd_dot(&momentum.view(), &weighted_momentum.view())
+                    / F::from(2.0).expect("Failed to convert constant to float"))
             }
             _ => {
                 // Simplified for other types
-                Ok(F::simd_dot(&momentum.view(), &momentum.view()) / F::from(2.0).unwrap())
+                Ok(F::simd_dot(&momentum.view(), &momentum.view())
+                    / F::from(2.0).expect("Failed to convert constant to float"))
             }
         }
     }
@@ -674,7 +677,7 @@ where
             let accept_prob = (-energydiff).exp();
             let mut rng = scirs2_core::random::thread_rng();
             let u: f64 = rng.gen_range(0.0..1.0);
-            F::from(u).unwrap() < accept_prob
+            F::from(u).expect("Failed to convert to float") < accept_prob
         }
     }
 
@@ -752,7 +755,7 @@ where
         let convergence_summary = ConvergenceSummary {
             converged: true,
             max_rhat: F::one(),
-            min_ess: F::from(1000.0).unwrap(),
+            min_ess: F::from(1000.0).expect("Failed to convert constant to float"),
             convergence_iteration: Some(500),
             warnings: Vec::new(),
         };
@@ -793,7 +796,7 @@ where
             samples: Array2::zeros((config.num_samples, dim)),
             log_densities: Array1::zeros(config.num_samples),
             acceptances: Vec::with_capacity(config.num_samples),
-            stepsize: F::from(0.01).unwrap(),
+            stepsize: F::from(0.01).expect("Failed to convert constant to float"),
             mass_matrix: MassMatrixType::Identity,
             temperature: F::one(),
         })
@@ -810,15 +813,15 @@ where
             sample_mean: RwLock::new(Array1::zeros(dim)),
             num_samples: RwLock::new(0),
             stepsize_state: RwLock::new(StepSizeState {
-                log_stepsize: F::from(-2.3).unwrap(), // log(0.1)
-                log_stepsize_bar: F::from(-2.3).unwrap(),
+                log_stepsize: F::from(-2.3).expect("Failed to convert constant to float"), // log(0.1)
+                log_stepsize_bar: F::from(-2.3).expect("Failed to convert constant to float"),
                 h_bar: F::zero(),
-                mu: F::from(10.0).unwrap(),
+                mu: F::from(10.0).expect("Failed to convert constant to float"),
                 iteration: 0,
             }),
             mass_matrix_state: RwLock::new(MassMatrixState {
                 sample_covariance: Array2::eye(dim),
-                regularization: F::from(1e-6).unwrap(),
+                regularization: F::from(1e-6).expect("Failed to convert constant to float"),
                 adaptation_count: 0,
             }),
         }
@@ -865,17 +868,17 @@ where
             burn_in: 1000,
             thin: 1,
             method: SamplingMethod::EnhancedHMC {
-                stepsize: F::from(0.01).unwrap(),
+                stepsize: F::from(0.01).expect("Failed to convert constant to float"),
                 num_steps: 10,
                 mass_matrix: MassMatrixType::Identity,
             },
             adaptation: AdaptationConfig {
                 adaptation_period: 1000,
                 stepsize_adaptation: StepSizeAdaptation::DualAveraging {
-                    target_accept: F::from(0.8).unwrap(),
-                    gamma: F::from(0.75).unwrap(),
-                    t0: F::from(10.0).unwrap(),
-                    kappa: F::from(0.75).unwrap(),
+                    target_accept: F::from(0.8).expect("Failed to convert constant to float"),
+                    gamma: F::from(0.75).expect("Failed to convert constant to float"),
+                    t0: F::from(10.0).expect("Failed to convert constant to float"),
+                    kappa: F::from(0.75).expect("Failed to convert constant to float"),
                 },
                 mass_adaptation: MassAdaptation::Diagonal,
                 covariance_adaptation: true,
@@ -884,8 +887,8 @@ where
             tempering: None,
             population: None,
             convergence: ConvergenceConfig {
-                rhat_threshold: F::from(1.01).unwrap(),
-                ess_threshold: F::from(400.0).unwrap(),
+                rhat_threshold: F::from(1.01).expect("Failed to convert constant to float"),
+                ess_threshold: F::from(400.0).expect("Failed to convert constant to float"),
                 monitor_interval: 100,
                 split_rhat: true,
                 rank_normalized: true,
@@ -932,7 +935,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_advanced_mcmc() {
         let target = StandardNormal { dim: 2 };
         // Use faster config for testing but keep 4 chains for this test
@@ -940,7 +942,7 @@ mod tests {
         config.num_samples = 10; // Reduce from 2000
         config.burn_in = 5; // Reduce from 1000
 
-        let sampler = AdvancedAdvancedMCMC::new(target, config).unwrap();
+        let sampler = AdvancedAdvancedMCMC::new(target, config).expect("Operation failed");
 
         // Test initialization
         assert_eq!(sampler.chains.len(), 4);
@@ -948,7 +950,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_leapfrog_integration() {
         let target = StandardNormal { dim: 2 };
         // Use faster config for testing
@@ -956,7 +957,7 @@ mod tests {
         config.num_chains = 1; // Reduce from 4
         config.num_samples = 10; // Reduce from 2000
         config.burn_in = 5; // Reduce from 1000
-        let sampler = AdvancedAdvancedMCMC::new(target, config).unwrap();
+        let sampler = AdvancedAdvancedMCMC::new(target, config).expect("Operation failed");
 
         let position = array![0.0, 0.0];
         let momentum = array![1.0, -1.0];

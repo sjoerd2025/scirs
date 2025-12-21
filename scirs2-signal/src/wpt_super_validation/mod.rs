@@ -224,7 +224,7 @@ mod tests {
         let result = run_advanced_wpt_validation(&config);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert_eq!(validation.overall_status, ValidationStatus::Pass);
 
         // Verify that enabled validations have meaningful results
@@ -242,7 +242,7 @@ mod tests {
             parameters: [("frequency".to_string(), 5.0)].iter().cloned().collect(),
         };
 
-        let signal = generate_test_signal(&signal_config).unwrap();
+        let signal = generate_test_signal(&signal_config).expect("Operation failed");
         assert_eq!(signal.len(), 128);
         assert!(is_signal_valid(&signal));
 

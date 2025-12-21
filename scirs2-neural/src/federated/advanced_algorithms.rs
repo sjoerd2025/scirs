@@ -172,8 +172,8 @@ impl AggregationStrategy for FedAdam {
         if self.m.is_none() {
             self.m = Some(gradients.iter().map(|g| Array2::zeros(g.shape())).collect());
             self.v = Some(gradients.iter().map(|g| Array2::zeros(g.shape())).collect());
-        let m = self.m.as_mut().unwrap();
-        let v = self.v.as_mut().unwrap();
+        let m = self.m.as_mut().expect("Operation failed");
+        let v = self.v.as_mut().expect("Operation failed");
         // Update moment estimates and compute updates
         for (i, grad) in gradients.into_iter().enumerate() {
             // Update biased first moment estimate
@@ -199,7 +199,7 @@ impl AggregationStrategy for FedAdagrad {
         // Initialize accumulated gradients if needed
         if self.acc_grad.is_none() {
             self.acc_grad = Some(gradients.iter().map(|g| Array2::zeros(g.shape())).collect());
-        let acc_grad = self.acc_grad.as_mut().unwrap();
+        let acc_grad = self.acc_grad.as_mut().expect("Operation failed");
         // Update accumulated gradients and compute updates
             // Accumulate squared gradients
             acc_grad[i] = &acc_grad[i] + &grad * &grad;
@@ -330,8 +330,8 @@ impl AggregationStrategy for FedOpt {
                 if self.m.is_none() {
                     self.m = Some(pseudo_gradients.iter().map(|g| Array2::zeros(g.shape())).collect());
                     self.v = Some(pseudo_gradients.iter().map(|g| Array2::zeros(g.shape())).collect());
-                let m = self.m.as_mut().unwrap();
-                let v = self.v.as_mut().unwrap();
+                let m = self.m.as_mut().expect("Operation failed");
+                let v = self.v.as_mut().expect("Operation failed");
                 for (i, grad) in pseudo_gradients.into_iter().enumerate() {
                     // Update biased first moment estimate
                     m[i] = &m[i] * self.beta1 + &grad * (1.0 - self.beta1);
@@ -514,15 +514,15 @@ mod tests {
         let mut scaffold = SCAFFOLD::new(1.0, 1.0);
         let updates = create_test_updates();
         let weights = vec![0.5, 0.5];
-        let result = scaffold.aggregate(&updates, &weights).unwrap();
+        let result = scaffold.aggregate(&updates, &weights).expect("Operation failed");
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].shape(), &[3, 3]);
     fn test_fedavgm() {
         let mut fedavgm = FedAvgM::new(1.0, 0.9);
-        let result = fedavgm.aggregate(&updates, &weights).unwrap();
+        let result = fedavgm.aggregate(&updates, &weights).expect("Operation failed");
     fn test_aggregator_factory() {
         let config = AggregatorFactory::default_config("fedadam");
-        let aggregator = AggregatorFactory::create("fedadam", &config).unwrap();
+        let aggregator = AggregatorFactory::create("fedadam", &config).expect("Operation failed");
         assert_eq!(aggregator.name(), "FedAdam");
         let available = AggregatorFactory::available_aggregators();
         assert!(available.contains(&"scaffold"));

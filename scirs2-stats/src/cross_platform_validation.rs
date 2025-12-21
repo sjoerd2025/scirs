@@ -347,7 +347,6 @@ impl CrossPlatformValidator {
     }
 
     /// Test numerical precision across platforms
-    #[ignore = "timeout"]
     fn test_numerical_precision(&self, issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
@@ -1443,7 +1442,7 @@ mod tests {
         let config = CrossPlatformConfig::default();
         let validator = CrossPlatformValidator::new(config);
         
-        let result = validator.test_basic_arithmetic_precision().unwrap();
+        let result = validator.test_basic_arithmetic_precision().expect("Operation failed");
         assert_eq!(result.test_name, "BasicArithmeticPrecision");
         assert!(matches!(result.category, TestCategory::NumericalPrecision));
     }
@@ -1453,7 +1452,7 @@ mod tests {
         let config = CrossPlatformConfig::default();
         let validator = CrossPlatformValidator::new(config);
         
-        let result = validator.test_simd_operations_availability().unwrap();
+        let result = validator.test_simd_operations_availability().expect("Operation failed");
         assert_eq!(result.test_name, "SIMDOperationsAvailability");
         assert!(matches!(result.category, TestCategory::SIMDCompatibility));
     }

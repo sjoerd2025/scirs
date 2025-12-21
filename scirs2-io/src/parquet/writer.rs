@@ -216,19 +216,19 @@ mod tests {
 
     #[test]
     fn test_write_parquet_f64() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("test.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Operation failed");
 
         assert!(path.exists());
-        assert!(fs::metadata(&path).unwrap().len() > 0);
+        assert!(fs::metadata(&path).expect("Operation failed").len() > 0);
     }
 
     #[test]
     fn test_write_with_compression() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let data = Array1::from_vec((0..100).map(|x| x as f64).collect::<Vec<_>>());
 
         let codecs = [
@@ -240,39 +240,40 @@ mod tests {
         for codec in codecs {
             let path = dir.path().join(format!("test_{:?}.parquet", codec));
             let options = ParquetWriteOptions::with_compression(codec);
-            write_parquet(&path, &data, options).unwrap();
+            write_parquet(&path, &data, options).expect("Operation failed");
 
             assert!(path.exists());
-            assert!(fs::metadata(&path).unwrap().len() > 0);
+            assert!(fs::metadata(&path).expect("Operation failed").len() > 0);
         }
     }
 
     #[test]
     fn test_write_with_custom_name() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("named.parquet");
 
         let data = Array1::from_vec(vec![10.5, 20.3, 30.1]);
-        write_parquet_with_name(&path, &data, "measurements", Default::default()).unwrap();
+        write_parquet_with_name(&path, &data, "measurements", Default::default())
+            .expect("Operation failed");
 
-        let loaded = read_parquet(&path).unwrap();
+        let loaded = read_parquet(&path).expect("Operation failed");
         assert_eq!(loaded.column_names()[0], "measurements");
     }
 
     #[test]
     fn test_write_i32() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("integers.parquet");
 
         let data = Array1::from_vec(vec![1i32, 2, 3, 4, 5]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Operation failed");
 
         assert!(path.exists());
     }
 
     #[test]
     fn test_write_options_builder() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("configured.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -280,20 +281,20 @@ mod tests {
             .with_row_group_size(1000)
             .with_dictionary(true);
 
-        write_parquet(&path, &data, options).unwrap();
+        write_parquet(&path, &data, options).expect("Operation failed");
         assert!(path.exists());
     }
 
     #[test]
     fn test_roundtrip() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("roundtrip.parquet");
 
         let original = Array1::from_vec(vec![1.5, 2.7, 3.9, 4.2, 5.1]);
-        write_parquet(&path, &original, Default::default()).unwrap();
+        write_parquet(&path, &original, Default::default()).expect("Operation failed");
 
-        let loaded = read_parquet(&path).unwrap();
-        let recovered = loaded.get_column_f64("value").unwrap();
+        let loaded = read_parquet(&path).expect("Operation failed");
+        let recovered = loaded.get_column_f64("value").expect("Operation failed");
 
         assert_eq!(recovered.len(), original.len());
         for (a, b) in recovered.iter().zip(original.iter()) {
@@ -303,7 +304,7 @@ mod tests {
 
     #[test]
     fn test_empty_batches_error() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("empty.parquet");
 
         let result = write_parquet_batches(&path, vec![], Default::default());

@@ -31,7 +31,7 @@ use scirs2_core::ndarray::Array2;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let edges = laplacian_edges(&img, 0.1, true)?;
 /// # Ok(())
 /// # }
@@ -213,7 +213,7 @@ mod tests {
         let result = laplacian_edges(&dynamic_img, 0.1, false);
 
         assert!(result.is_ok());
-        let edges = result.unwrap();
+        let edges = result.expect("Operation failed");
 
         // Should detect edges around the square
         let mut has_edge = false;

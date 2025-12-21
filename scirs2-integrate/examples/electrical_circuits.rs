@@ -160,7 +160,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = solve_ivp(rc_charging_circuit, t_span, y0.clone(), None)?;
 
     println!("   Initial voltage: {:.3} V", y0[0]);
-    println!("   Final voltage: {:.3} V", result.y.last().unwrap()[0]);
+    println!(
+        "   Final voltage: {:.3} V",
+        result.y.last().expect("Operation failed")[0]
+    );
     println!(
         "   Theoretical final (at 5τ): {:.3} V",
         5.0 * (1.0 - (-5.0_f64).exp())
@@ -176,7 +179,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = solve_ivp(rl_circuit, [0.0, 0.1], array![0.0], None)?;
 
     println!("   Initial current: {:.3} A", 0.0);
-    println!("   Final current: {:.3} A", result.y.last().unwrap()[0]);
+    println!(
+        "   Final current: {:.3} A",
+        result.y.last().expect("Operation failed")[0]
+    );
     println!("   Theoretical steady-state: {:.3} A", 12.0 / 10.0);
     println!("   Time constant τ = L/R = {:.3} ms", 0.1 / 10.0 * 1000.0);
     println!();
@@ -205,9 +211,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Drive frequency: {:.0} Hz", 1000.0 / (2.0 * PI));
     println!(
         "   Final capacitor voltage: {:.3} V",
-        result.y.last().unwrap()[0]
+        result.y.last().expect("Operation failed")[0]
     );
-    println!("   Final current: {:.6} A", result.y.last().unwrap()[1]);
+    println!(
+        "   Final current: {:.6} A",
+        result.y.last().expect("Operation failed")[1]
+    );
     println!();
 
     // Example 4: Van der Pol Oscillator
@@ -232,8 +241,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Initial state: x={:.3}, y={:.3}", 2.0, 0.0);
     println!(
         "   Final state: x={:.3}, y={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
     println!("   Steps taken: {} (limit cycle behavior)", result.t.len());
     println!();
@@ -259,9 +268,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Final state: V_c1={:.3}, V_c2={:.3}, I_L={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1],
-        result.y.last().unwrap()[2]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1],
+        result.y.last().expect("Operation failed")[2]
     );
     println!("   Steps taken: {} (chaotic attractor)", result.t.len());
     println!();
@@ -274,7 +283,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = solve_ivp(rc_diode_circuit, t_span_diode, y0_diode, None)?;
 
     println!("   Initial voltage: {:.3} V", 0.0);
-    println!("   Final voltage: {:.3} V", result.y.last().unwrap()[0]);
+    println!(
+        "   Final voltage: {:.3} V",
+        result.y.last().expect("Operation failed")[0]
+    );
     println!("   Diode creates nonlinear rectification behavior");
     println!();
 
@@ -299,7 +311,7 @@ mod tests {
         let t_span = [0.0, 0.001]; // 1 ms
         let y0 = array![0.0];
 
-        let result = solve_ivp(rc_charging_circuit, t_span, y0, None).unwrap();
+        let result = solve_ivp(rc_charging_circuit, t_span, y0, None).expect("Operation failed");
 
         // At t = τ, voltage should be about 63.2% of final value
         let r = 1000.0;
@@ -308,7 +320,7 @@ mod tests {
         let _tau = r * c; // 0.1 seconds
 
         // For very short time (much less than τ), use linear approximation
-        let actual_voltage = result.y.last().unwrap()[0];
+        let actual_voltage = result.y.last().expect("Operation failed")[0];
 
         // Should be close for small times
         assert!(actual_voltage > 0.0);
@@ -322,7 +334,7 @@ mod tests {
         let t_span = [0.0, 0.001];
         let y0 = array![1.0, 0.0]; // Initial charge on capacitor
 
-        let result = solve_ivp(rlc_circuit, t_span, y0.clone(), None).unwrap();
+        let result = solve_ivp(rlc_circuit, t_span, y0.clone(), None).expect("Operation failed");
 
         // Just verify the integration completed successfully
         assert!(result.t.len() > 2);
@@ -347,10 +359,11 @@ mod tests {
             ..Default::default()
         };
 
-        let result = solve_ivp(van_der_pol_oscillator, t_span, y0, Some(options)).unwrap();
+        let result =
+            solve_ivp(van_der_pol_oscillator, t_span, y0, Some(options)).expect("Operation failed");
 
         // After long time, should have periodic behavior with amplitude ~2
-        let final_state = result.y.last().unwrap();
+        let final_state = result.y.last().expect("Operation failed");
         let amplitude = (final_state[0] * final_state[0] + final_state[1] * final_state[1]).sqrt();
 
         // Van der Pol limit cycle has amplitude around 2

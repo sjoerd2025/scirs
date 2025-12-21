@@ -188,7 +188,7 @@ where
     {
         let data = if array.is_standard_layout() {
             // Can use the underlying data directly
-            array.as_slice().unwrap().to_vec()
+            array.as_slice().expect("Operation failed").to_vec()
         } else {
             // Need to collect into a contiguous layout
             array.iter().cloned().collect()

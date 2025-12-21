@@ -100,7 +100,7 @@ where
     type Output = R;
 
     fn execute(&mut self) -> Self::Output {
-        (self.func.take().unwrap())()
+        (self.func.take().expect("Operation failed"))()
     }
 
     fn estimated_cost(&self) -> f64 {
@@ -273,7 +273,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
 
     /// Submit a single task for execution
     pub fn submit(&self, task: T) {
-        let mut global_queue = self.global_queue.lock().unwrap();
+        let mut global_queue = self.global_queue.lock().expect("Operation failed");
         global_queue.push_back(task);
         drop(global_queue);
 
@@ -283,7 +283,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
 
     /// Submit multiple tasks for execution
     pub fn submit_all(&self, tasks: Vec<T>) {
-        let mut global_queue = self.global_queue.lock().unwrap();
+        let mut global_queue = self.global_queue.lock().expect("Operation failed");
         for task in tasks {
             global_queue.push_back(task);
         }
@@ -298,11 +298,18 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         // Wait for all tasks to complete
         loop {
             // Check if all queues are empty AND no tasks are currently being executed
-            let global_empty = self.global_queue.lock().unwrap().is_empty();
-            let locals_empty = self
-                .worker_states
-                .iter()
-                .all(|state| state.local_queue.lock().unwrap().is_empty());
+            let global_empty = self
+                .global_queue
+                .lock()
+                .expect("Operation failed")
+                .is_empty();
+            let locals_empty = self.worker_states.iter().all(|state| {
+                state
+                    .local_queue
+                    .lock()
+                    .expect("Operation failed")
+                    .is_empty()
+            });
             let no_active_tasks = self.active_tasks.load(Ordering::Relaxed) == 0;
 
             if global_empty && locals_empty && no_active_tasks {
@@ -318,7 +325,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
 
     /// Get current pool statistics
     pub fn statistics(&self) -> PoolStatistics {
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("Operation failed");
 
         // Update statistics from worker states
         stats.total_tasks = self
@@ -330,7 +337,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         stats.total_computation_time = self
             .worker_states
             .iter()
-            .map(|state| *state.computation_time.lock().unwrap())
+            .map(|state| *state.computation_time.lock().expect("Operation failed"))
             .sum();
 
         // Calculate load balance efficiency
@@ -372,11 +379,15 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
 
         while !shutdown.load(Ordering::Relaxed) {
             // Try to get work from local _queue first
-            let mut task_opt = my_state.local_queue.lock().unwrap().pop_back();
+            let mut task_opt = my_state
+                .local_queue
+                .lock()
+                .expect("Operation failed")
+                .pop_back();
 
             // If no local work, try global _queue
             if task_opt.is_none() {
-                task_opt = global_queue.lock().unwrap().pop_back();
+                task_opt = global_queue.lock().expect("Operation failed").pop_back();
             }
 
             // If still no work, try stealing from other workers
@@ -398,12 +409,15 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
 
                 // Update statistics
                 my_state.completed_tasks.fetch_add(1, Ordering::Relaxed);
-                *my_state.computation_time.lock().unwrap() += computation_time;
+                *my_state.computation_time.lock().expect("Operation failed") += computation_time;
             } else {
                 // No work available, wait for notification
                 let _guard = cv
-                    .wait_timeout(cv_mutex.lock().unwrap(), Duration::from_millis(10))
-                    .unwrap();
+                    .wait_timeout(
+                        cv_mutex.lock().expect("Operation failed"),
+                        Duration::from_millis(10),
+                    )
+                    .expect("Operation failed");
             }
         }
     }
@@ -415,7 +429,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         stats: &Arc<Mutex<PoolStatistics>>,
     ) -> Option<T> {
         // Update steal attempt counter
-        stats.lock().unwrap().steal_attempts += 1;
+        stats.lock().expect("Operation failed").steal_attempts += 1;
 
         // Find worker with most work (highest cost)
         let mut best_victim = None;
@@ -426,7 +440,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
                 continue; // Don't steal from ourselves
             }
 
-            let queue = victim_state.local_queue.lock().unwrap();
+            let queue = victim_state.local_queue.lock().expect("Operation failed");
             let cost = queue.total_cost();
 
             if cost > best_cost && !queue.is_empty() {
@@ -438,11 +452,11 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         // Try to steal from the best victim
         if let Some(victim_id) = best_victim {
             let victim_state = &worker_states[victim_id];
-            let mut victim_queue = victim_state.local_queue.lock().unwrap();
+            let mut victim_queue = victim_state.local_queue.lock().expect("Operation failed");
 
             if let Some(stolen_task) = victim_queue.steal_front() {
                 // Update successful steal counter
-                stats.lock().unwrap().successful_steals += 1;
+                stats.lock().expect("Operation failed").successful_steals += 1;
                 return Some(stolen_task);
             }
         }
@@ -499,13 +513,13 @@ where
         let h = b - a;
         let fa = (self.integrand)(a);
         let fb = (self.integrand)(b);
-        h * (fa + fb) / F::from(2.0).unwrap()
+        h * (fa + fb) / F::from(2.0).expect("Failed to convert constant to float")
     }
 
     /// Estimate integration error using subdivision
     fn estimate_error(&self) -> F {
         let (a, b) = self.interval;
-        let mid = (a + b) / F::from(2.0).unwrap();
+        let mid = (a + b) / F::from(2.0).expect("Failed to convert constant to float");
 
         // Coarse estimate (full interval)
         let coarse = self.integrate_region();
@@ -555,12 +569,12 @@ where
 
     fn subdivide(&self) -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>> {
         let (a, b) = self.interval;
-        let mid = (a + b) / F::from(2.0).unwrap();
+        let mid = (a + b) / F::from(2.0).expect("Failed to convert constant to float");
 
         let left_task = AdaptiveIntegrationTask {
             integrand: self.integrand.clone(),
             interval: (a, mid),
-            tolerance: self.tolerance / F::from(2.0).unwrap(),
+            tolerance: self.tolerance / F::from(2.0).expect("Failed to convert constant to float"),
             depth: self.depth + 1,
             max_depth: self.max_depth,
         };
@@ -568,7 +582,7 @@ where
         let right_task = AdaptiveIntegrationTask {
             integrand: self.integrand.clone(),
             interval: (mid, b),
-            tolerance: self.tolerance / F::from(2.0).unwrap(),
+            tolerance: self.tolerance / F::from(2.0).expect("Failed to convert constant to float"),
             depth: self.depth + 1,
             max_depth: self.max_depth,
         };
@@ -636,7 +650,7 @@ mod tests {
             pool.submit(task);
         }
 
-        pool.execute_and_wait().unwrap();
+        pool.execute_and_wait().expect("Operation failed");
 
         assert_eq!(counter.load(Ordering::Relaxed), 20);
 

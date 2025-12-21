@@ -245,7 +245,10 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         self.quantum_state = QuantumState {
             amplitudes: vec![
                 (
-                    F::one() / F::from(param_count as f64).unwrap().sqrt(),
+                    F::one()
+                        / F::from(param_count as f64)
+                            .expect("Failed to convert to float")
+                            .sqrt(),
                     F::zero()
                 );
                 param_count
@@ -280,7 +283,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         let mut current_temperature = self.annealing_params.initial_temperature;
         let temperature_step = (self.annealing_params.initial_temperature
             - self.annealing_params.final_temperature)
-            / F::from(self.annealing_params.num_steps as f64).unwrap();
+            / F::from(self.annealing_params.num_steps as f64).expect("Failed to convert to float");
 
         for step in 0..self.annealing_params.num_steps {
             // Apply quantum operators to create superposition and entanglement
@@ -309,12 +312,17 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
             current_temperature = match &self.annealing_params.annealing_schedule {
                 AnnealingSchedule::Linear => {
                     self.annealing_params.initial_temperature
-                        - temperature_step * F::from(step as f64).unwrap()
+                        - temperature_step
+                            * F::from(step as f64).expect("Failed to convert to float")
                 }
                 AnnealingSchedule::Exponential { decay_rate } => current_temperature * *decay_rate,
                 AnnealingSchedule::Logarithmic { scale_factor } => {
                     self.annealing_params.initial_temperature
-                        / (F::one() + *scale_factor * F::from(step as f64).unwrap().ln())
+                        / (F::one()
+                            + *scale_factor
+                                * F::from(step as f64)
+                                    .expect("Failed to convert to float")
+                                    .ln())
                 }
                 AnnealingSchedule::Custom { schedule } => {
                     if step < schedule.len() {
@@ -482,7 +490,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         for i in 0..param_count {
             self.quantum_operators.push(QuantumOperator::Rotation {
                 parameter: i,
-                angle: F::from(std::f64::consts::PI / 4.0).unwrap(),
+                angle: F::from(std::f64::consts::PI / 4.0).expect("Failed to convert to float"),
             });
         }
 
@@ -509,7 +517,8 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
             // Initialize with random parameter values within bounds
             for (param_name, &(min_val, max_val)) in parameter_bounds {
                 let random_val = min_val
-                    + (max_val - min_val) * F::from(scirs2_core::random::random::<f64>()).unwrap();
+                    + (max_val - min_val)
+                        * F::from(scirs2_core::random::random::<f64>()).expect("Operation failed");
                 state
                     .parameter_values
                     .insert(param_name.clone(), random_val);
@@ -519,7 +528,10 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
             let param_count = parameter_bounds.len();
             state.amplitudes = vec![
                 (
-                    F::one() / F::from(param_count as f64).unwrap().sqrt(),
+                    F::one()
+                        / F::from(param_count as f64)
+                            .expect("Failed to convert to float")
+                            .sqrt(),
                     F::zero()
                 );
                 param_count
@@ -527,7 +539,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
             state.phases =
                 vec![
                     F::from(scirs2_core::random::random::<f64>() * 2.0 * std::f64::consts::PI)
-                        .unwrap();
+                        .expect("Operation failed");
                     param_count
                 ];
 
@@ -548,7 +560,9 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         }
 
         // Add quantum decoherence
-        self.apply_quantum_decoherence(F::from(0.01).unwrap())?;
+        self.apply_quantum_decoherence(
+            F::from(0.01).expect("Failed to convert constant to float"),
+        )?;
 
         Ok(())
     }
@@ -560,7 +574,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
                 if *parameter < self.quantum_state.amplitudes.len() {
                     // Apply Hadamard transformation (creates superposition)
                     let (real, imag) = self.quantum_state.amplitudes[*parameter];
-                    let sqrt2_inv = F::one() / F::from(2.0_f64.sqrt()).unwrap();
+                    let sqrt2_inv = F::one() / F::from(2.0_f64.sqrt()).expect("Operation failed");
                     self.quantum_state.amplitudes[*parameter] =
                         ((real + imag) * sqrt2_inv, (real - imag) * sqrt2_inv);
                 }
@@ -579,7 +593,9 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
                     let target_amp = self.quantum_state.amplitudes[*target];
 
                     // CNOT logic: if control is |1⟩, flip target
-                    if control_amp.0.abs() > F::from(0.5).unwrap() {
+                    if control_amp.0.abs()
+                        > F::from(0.5).expect("Failed to convert constant to float")
+                    {
                         self.quantum_state.amplitudes[*target] = (target_amp.1, target_amp.0);
                     }
                 }
@@ -612,8 +628,10 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
 
         for (param_name, &current_value) in &self.quantum_state.parameter_values {
             // Quantum measurement introduces uncertainty
-            let measurement_uncertainty = F::from(0.01).unwrap(); // 1% uncertainty
-            let random_factor = F::from(scirs2_core::random::random::<f64>() - 0.5).unwrap()
+            let measurement_uncertainty =
+                F::from(0.01).expect("Failed to convert constant to float"); // 1% uncertainty
+            let random_factor = F::from(scirs2_core::random::random::<f64>() - 0.5)
+                .expect("Operation failed")
                 * measurement_uncertainty;
             let measured_value = current_value * (F::one() + random_factor);
 
@@ -628,7 +646,8 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         self.quantum_state.energy = energy;
 
         // Normalize amplitudes based on energy (lower energy = higher amplitude)
-        let energy_factor = (-energy / F::from(10.0).unwrap()).exp();
+        let energy_factor =
+            (-energy / F::from(10.0).expect("Failed to convert constant to float")).exp();
         for (real, imag) in &mut self.quantum_state.amplitudes {
             *real *= energy_factor;
             *imag *= energy_factor;
@@ -649,7 +668,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
 
     /// Determine if state should be accepted
     fn should_accept_state(&self, acceptance_probability: F) -> InterpolateResult<bool> {
-        let random_value = F::from(scirs2_core::random::random::<f64>()).unwrap();
+        let random_value = F::from(scirs2_core::random::random::<f64>()).expect("Operation failed");
         Ok(random_value < acceptance_probability)
     }
 
@@ -659,8 +678,9 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
 
         // Add quantum fluctuations to parameter values
         for value in self.quantum_state.parameter_values.values_mut() {
-            let tunneling_offset =
-                F::from(scirs2_core::random::random::<f64>() - 0.5).unwrap() * tunneling_strength;
+            let tunneling_offset = F::from(scirs2_core::random::random::<f64>() - 0.5)
+                .expect("Operation failed")
+                * tunneling_strength;
             *value += tunneling_offset;
         }
 
@@ -674,12 +694,12 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         }
 
         let mean = energies.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(energies.len() as f64).unwrap();
+            / F::from(energies.len() as f64).expect("Operation failed");
         let variance = energies
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(energies.len() as f64).unwrap();
+            / F::from(energies.len() as f64).expect("Operation failed");
 
         variance
     }
@@ -687,7 +707,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
     /// Perform final quantum measurement
     fn perform_final_measurement(&self) -> InterpolateResult<MeasurementResult<F>> {
         let final_energy = self.quantum_state.energy;
-        let uncertainty = F::from(0.001).unwrap(); // Final measurement has low uncertainty
+        let uncertainty = F::from(0.001).expect("Failed to convert constant to float"); // Final measurement has low uncertainty
 
         Ok(MeasurementResult {
             value: final_energy,
@@ -711,17 +731,20 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         }
 
         let mean = energy_history.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(energy_history.len() as f64).unwrap();
+            / F::from(energy_history.len() as f64).expect("Operation failed");
         let variance = energy_history
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(energy_history.len() as f64).unwrap();
+            / F::from(energy_history.len() as f64).expect("Operation failed");
         let std_dev = variance.sqrt();
 
         // 95% confidence interval
-        let confidence_margin =
-            std_dev * F::from(1.96).unwrap() / F::from(energy_history.len() as f64).unwrap().sqrt();
+        let confidence_margin = std_dev
+            * F::from(1.96).expect("Failed to convert constant to float")
+            / F::from(energy_history.len() as f64)
+                .expect("Operation failed")
+                .sqrt();
 
         MeasurementStatistics {
             mean,
@@ -748,7 +771,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
             .collect();
 
         let energy_variance = self.calculate_energy_variance(&recent_energies);
-        Ok(energy_variance < F::from(1e-6).unwrap())
+        Ok(energy_variance < F::from(1e-6).expect("Failed to convert constant to float"))
     }
 
     /// Prepare ansatz state for VQE
@@ -766,7 +789,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
 
     /// Apply variational updates for VQE
     fn apply_variational_updates(&mut self, energy: F) -> InterpolateResult<()> {
-        let learning_rate = F::from(0.01).unwrap();
+        let learning_rate = F::from(0.01).expect("Failed to convert constant to float");
 
         // Simple gradient-based update (simplified)
         for phase in &mut self.quantum_state.phases {
@@ -788,7 +811,7 @@ impl<F: Float + Debug + std::ops::MulAssign + std::ops::AddAssign + std::ops::Su
         }
 
         let variance = self.calculate_energy_variance(recent_energies);
-        variance < F::from(1e-8).unwrap()
+        variance < F::from(1e-8).expect("Failed to convert constant to float")
     }
 
     /// Get optimization history
@@ -852,12 +875,12 @@ impl Default for EntanglementInfo {
 impl<F: Float> Default for AnnealingParameters<F> {
     fn default() -> Self {
         Self {
-            initial_temperature: F::from(1.0).unwrap(),
-            final_temperature: F::from(0.01).unwrap(),
+            initial_temperature: F::from(1.0).expect("Failed to convert constant to float"),
+            final_temperature: F::from(0.01).expect("Failed to convert constant to float"),
             annealing_schedule: AnnealingSchedule::Linear,
             num_steps: 1000,
-            tunneling_strength: F::from(0.1).unwrap(),
-            transverse_field: F::from(0.5).unwrap(),
+            tunneling_strength: F::from(0.1).expect("Failed to convert constant to float"),
+            transverse_field: F::from(0.5).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -927,14 +950,15 @@ mod tests {
 
     #[test]
     fn test_quantum_optimizer_creation() {
-        let optimizer: QuantumParameterOptimizer<f64> = QuantumParameterOptimizer::new().unwrap();
+        let optimizer: QuantumParameterOptimizer<f64> =
+            QuantumParameterOptimizer::new().expect("Operation failed");
         assert!(optimizer.quantum_operators.is_empty());
         assert!(optimizer.optimization_history.is_empty());
     }
 
     #[test]
     fn test_quantum_state_creation() {
-        let state: QuantumState<f64> = QuantumState::new().unwrap();
+        let state: QuantumState<f64> = QuantumState::new().expect("Operation failed");
         assert!(state.amplitudes.is_empty());
         assert!(state.parameter_values.is_empty());
         assert_eq!(state.energy, 0.0);
@@ -950,7 +974,7 @@ mod tests {
 
     #[test]
     fn test_measurement_probability() {
-        let mut state: QuantumState<f64> = QuantumState::new().unwrap();
+        let mut state: QuantumState<f64> = QuantumState::new().expect("Operation failed");
         state.amplitudes = vec![(0.8, 0.6)]; // |amplitude|² = 0.64 + 0.36 = 1.0
 
         let prob = state.get_measurement_probability(0);
@@ -959,7 +983,7 @@ mod tests {
 
     #[test]
     fn test_quantum_entropy_calculation() {
-        let mut state: QuantumState<f64> = QuantumState::new().unwrap();
+        let mut state: QuantumState<f64> = QuantumState::new().expect("Operation failed");
         state.amplitudes = vec![(0.707, 0.0), (0.707, 0.0)]; // Equal superposition
 
         let entropy = state.calculate_entropy();

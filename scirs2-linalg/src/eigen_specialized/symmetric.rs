@@ -39,7 +39,7 @@ where
     for i in 0..n {
         for j in i + 1..n {
             let diff = (a[[i, j]] - a[[j, i]]).abs();
-            if diff > F::epsilon() * F::from(10.0).unwrap() {
+            if diff > F::epsilon() * F::from(10.0).expect("Operation failed") {
                 return Err(LinalgError::ShapeError(
                     "Matrix must be symmetric for symmetric_eigh function".to_string(),
                 ));
@@ -83,7 +83,7 @@ where
     for i in 0..n {
         for j in i + 1..n {
             let diff = (a[[i, j]] - a[[j, i]]).abs();
-            if diff > F::epsilon() * F::from(10.0).unwrap() {
+            if diff > F::epsilon() * F::from(10.0).expect("Operation failed") {
                 return Err(LinalgError::ShapeError(
                     "Matrix must be symmetric for symmetric_eigvalsh function".to_string(),
                 ));
@@ -184,8 +184,8 @@ where
         for j in 0..n {
             for k in j..n {
                 workingmatrix[[j, k]] = workingmatrix[[j, k]]
-                    - F::from(2.0).unwrap() * (v[j] * w[k] + w[j] * v[k])
-                    + F::from(4.0).unwrap() * z * v[j] * v[k];
+                    - F::from(2.0).expect("Operation failed") * (v[j] * w[k] + w[j] * v[k])
+                    + F::from(4.0).expect("Operation failed") * z * v[j] * v[k];
                 workingmatrix[[k, j]] = workingmatrix[[j, k]]; // Maintain symmetry
             }
         }

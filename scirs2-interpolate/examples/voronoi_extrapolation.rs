@@ -162,7 +162,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("Constant Value", constant_mse),
     ];
 
-    methods.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    methods.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Test: operation failed"));
 
     println!("\nRanking of extrapolation methods by MSE (lower is better):");
     for (i, (method, mse)) in methods.iter().enumerate() {

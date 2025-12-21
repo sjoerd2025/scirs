@@ -111,7 +111,7 @@ where
 ///
 /// // Compute metrics in parallel
 /// let config = ParallelConfig::default();
-/// let results = compute_metrics_batch(&y_true, &y_pred, &metric_fns, &config).unwrap();
+/// let results = compute_metrics_batch(&y_true, &y_pred, &metric_fns, &config).expect("Operation failed");
 ///
 /// // Check results
 /// assert_eq!(results.len(), 2);
@@ -184,7 +184,7 @@ where
 /// };
 ///
 /// // Process data in chunks
-/// let result = chunked_parallel_compute(&data, 100, chunk_op, reducer).unwrap();
+/// let result = chunked_parallel_compute(&data, 100, chunk_op, reducer).expect("Operation failed");
 ///
 /// // Verify result
 /// let expected: f64 = (0..1000).map(|x| (x * x) as f64).sum();
@@ -332,7 +332,8 @@ mod tests {
 
         // Compute metrics with parallel disabled
         let config = ParallelConfig::new().with_parallel_enabled(false);
-        let results = compute_metrics_batch(&y_true, &y_pred, &metric_fns, &config).unwrap();
+        let results = compute_metrics_batch(&y_true, &y_pred, &metric_fns, &config)
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert!((results[0] - 0.5).abs() < 1e-10); // 3/6 correct
@@ -340,7 +341,8 @@ mod tests {
 
         // Compute metrics with parallel enabled
         let config = ParallelConfig::new().with_parallel_enabled(true);
-        let results = compute_metrics_batch(&y_true, &y_pred, &metric_fns, &config).unwrap();
+        let results = compute_metrics_batch(&y_true, &y_pred, &metric_fns, &config)
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert!((results[0] - 0.5).abs() < 1e-10);
@@ -359,7 +361,8 @@ mod tests {
         let reducer = |results: Vec<f64>| -> Result<f64> { Ok(results.iter().sum()) };
 
         // Process data in chunks
-        let result = chunked_parallel_compute(&data, 100, chunk_op, reducer).unwrap();
+        let result =
+            chunked_parallel_compute(&data, 100, chunk_op, reducer).expect("Operation failed");
 
         // Verify result against direct calculation
         let expected: f64 = (0..1000).map(|x| (x * x) as f64).sum();
@@ -402,7 +405,8 @@ mod tests {
 
         // Compute with chunking
         let config = ParallelConfig::default();
-        let result = compute_chunked_metric(&data, &metric, 100, &config).unwrap();
+        let result =
+            compute_chunked_metric(&data, &metric, 100, &config).expect("Operation failed");
 
         // Verify result against direct calculation
         let expected: f64 = data.iter().sum::<f64>() / data.len() as f64;

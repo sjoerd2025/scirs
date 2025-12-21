@@ -293,7 +293,6 @@ where
 
     // Implementation of individual property tests
 
-    #[ignore = "timeout"]
     fn test_mean_properties(&mut self) -> StatsResult<Vec<PropertyTestResult>> {
         let mut results = Vec::new();
 
@@ -1022,7 +1021,7 @@ mod tests {
         let result = framework.test_descriptive_statistics_invariants();
         
         assert!(result.is_ok());
-        let suite_result = result.unwrap();
+        let suite_result = result.expect("Operation failed");
         assert!(suite_result.total_tests > 0);
         assert!(suite_result.summary.success_rate >= 0.0 && suite_result.summary.success_rate <= 1.0);
     }
@@ -1032,7 +1031,7 @@ mod tests {
         let result = test_basic_statistics_properties();
         assert!(result.is_ok());
         
-        let suite_result = result.unwrap();
+        let suite_result = result.expect("Operation failed");
         assert!(suite_result.total_tests > 0);
     }
 
@@ -1041,7 +1040,7 @@ mod tests {
         let result = test_correlation_properties();
         assert!(result.is_ok());
         
-        let suite_result = result.unwrap();
+        let suite_result = result.expect("Operation failed");
         assert!(suite_result.total_tests >= 0); // May be 0 if simplified implementations
     }
 

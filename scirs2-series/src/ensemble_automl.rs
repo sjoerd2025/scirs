@@ -302,7 +302,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaModel<F> for LinearRegression
             sum_coeff = sum_coeff + coeff;
         }
         self.intercept = if sum_coeff < F::one() {
-            (F::one() - sum_coeff) / F::from(n_models).unwrap()
+            (F::one() - sum_coeff) / F::from(n_models).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -316,7 +316,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaModel<F> for LinearRegression
             let error = targets[i] - predictions_result[i];
             mse = mse + error * error;
         }
-        mse = mse / F::from(n_samples).unwrap();
+        mse = mse / F::from(n_samples).expect("Failed to convert to float");
 
         self.confidence = F::one() / (F::one() + mse);
 
@@ -382,8 +382,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             })
             .collect();
 
-        let ensemble_weights =
-            Array1::from_elem(num_models, F::one() / F::from(num_models).unwrap());
+        let ensemble_weights = Array1::from_elem(
+            num_models,
+            F::one() / F::from(num_models).expect("Failed to convert to float"),
+        );
 
         // Create meta-model if using stacking
         let meta_model = match &strategy {
@@ -446,50 +448,53 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             match &model.model_type {
                 BaseModel::ARIMA { p, d, q } => {
                     // Simplified ARIMA training - just store parameters
-                    model
-                        .model_state
-                        .parameters
-                        .insert("p".to_string(), F::from(*p).unwrap());
-                    model
-                        .model_state
-                        .parameters
-                        .insert("d".to_string(), F::from(*d).unwrap());
-                    model
-                        .model_state
-                        .parameters
-                        .insert("q".to_string(), F::from(*q).unwrap());
+                    model.model_state.parameters.insert(
+                        "p".to_string(),
+                        F::from(*p).expect("Failed to convert to float"),
+                    );
+                    model.model_state.parameters.insert(
+                        "d".to_string(),
+                        F::from(*d).expect("Failed to convert to float"),
+                    );
+                    model.model_state.parameters.insert(
+                        "q".to_string(),
+                        F::from(*q).expect("Failed to convert to float"),
+                    );
                 }
                 BaseModel::ExponentialSmoothing { alpha, beta, gamma } => {
                     // Simplified exponential smoothing training
-                    model
-                        .model_state
-                        .parameters
-                        .insert("alpha".to_string(), F::from(*alpha).unwrap());
+                    model.model_state.parameters.insert(
+                        "alpha".to_string(),
+                        F::from(*alpha).expect("Failed to convert to float"),
+                    );
                     if let Some(beta_val) = beta {
-                        model
-                            .model_state
-                            .parameters
-                            .insert("beta".to_string(), F::from(*beta_val).unwrap());
+                        model.model_state.parameters.insert(
+                            "beta".to_string(),
+                            F::from(*beta_val).expect("Failed to convert to float"),
+                        );
                     }
                     if let Some(gamma_val) = gamma {
-                        model
-                            .model_state
-                            .parameters
-                            .insert("gamma".to_string(), F::from(*gamma_val).unwrap());
+                        model.model_state.parameters.insert(
+                            "gamma".to_string(),
+                            F::from(*gamma_val).expect("Failed to convert to float"),
+                        );
                     }
                 }
                 BaseModel::LinearTrend => {
                     // Simple linear trend estimation
                     if data.len() >= 2 {
-                        let n = F::from(data.len()).unwrap();
-                        let sum_x = F::from(data.len() * (data.len() - 1) / 2).unwrap();
+                        let n = F::from(data.len()).expect("Operation failed");
+                        let sum_x =
+                            F::from(data.len() * (data.len() - 1) / 2).expect("Operation failed");
                         let sum_y = data.iter().cloned().sum::<F>();
                         let sum_xy = data
                             .iter()
                             .enumerate()
-                            .map(|(i, &y)| F::from(i).unwrap() * y)
+                            .map(|(i, &y)| F::from(i).expect("Failed to convert to float") * y)
                             .sum::<F>();
-                        let sum_x2 = (0..data.len()).map(|i| F::from(i * i).unwrap()).sum::<F>();
+                        let sum_x2 = (0..data.len())
+                            .map(|i| F::from(i * i).expect("Failed to convert to float"))
+                            .sum::<F>();
 
                         let denominator = n * sum_x2 - sum_x * sum_x;
                         if denominator != F::zero() {
@@ -517,31 +522,31 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 }
                 BaseModel::SeasonalNaive { period } => {
                     // Store seasonal period
-                    model
-                        .model_state
-                        .parameters
-                        .insert("period".to_string(), F::from(*period).unwrap());
+                    model.model_state.parameters.insert(
+                        "period".to_string(),
+                        F::from(*period).expect("Failed to convert to float"),
+                    );
                 }
                 BaseModel::MovingAverage { window } => {
                     // Store window size
-                    model
-                        .model_state
-                        .parameters
-                        .insert("window".to_string(), F::from(*window).unwrap());
+                    model.model_state.parameters.insert(
+                        "window".to_string(),
+                        F::from(*window).expect("Failed to convert to float"),
+                    );
                 }
                 BaseModel::LSTM {
                     hidden_units,
                     num_layers,
                 } => {
                     // Store network parameters
-                    model
-                        .model_state
-                        .parameters
-                        .insert("hidden_units".to_string(), F::from(*hidden_units).unwrap());
-                    model
-                        .model_state
-                        .parameters
-                        .insert("num_layers".to_string(), F::from(*num_layers).unwrap());
+                    model.model_state.parameters.insert(
+                        "hidden_units".to_string(),
+                        F::from(*hidden_units).expect("Failed to convert to float"),
+                    );
+                    model.model_state.parameters.insert(
+                        "num_layers".to_string(),
+                        F::from(*num_layers).expect("Failed to convert to float"),
+                    );
                 }
                 BaseModel::Prophet {
                     seasonality_prior_scale,
@@ -550,11 +555,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     // Store prophet parameters
                     model.model_state.parameters.insert(
                         "seasonality_prior_scale".to_string(),
-                        F::from(*seasonality_prior_scale).unwrap(),
+                        F::from(*seasonality_prior_scale).expect("Failed to convert to float"),
                     );
                     model.model_state.parameters.insert(
                         "changepoint_prior_scale".to_string(),
-                        F::from(*changepoint_prior_scale).unwrap(),
+                        F::from(*changepoint_prior_scale).expect("Failed to convert to float"),
                     );
                 }
             }
@@ -643,14 +648,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     ar_coeffs[i] = autocorrs[i + 1] / autocorrs[0];
                     // Keep stable
                     ar_coeffs[i] = ar_coeffs[i]
-                        .max(F::from(-0.99).unwrap())
-                        .min(F::from(0.99).unwrap());
+                        .max(F::from(-0.99).expect("Failed to convert constant to float"))
+                        .min(F::from(0.99).expect("Failed to convert constant to float"));
                 }
             }
         }
 
         // Estimate MA parameters (simplified)
-        let ma_coeffs = vec![F::from(0.1).unwrap(); q];
+        let ma_coeffs = vec![F::from(0.1).expect("Failed to convert constant to float"); q];
 
         // Store parameters
         for (i, &coeff) in ar_coeffs.iter().enumerate() {
@@ -700,7 +705,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 sum = sum + data[i] * data[i - _lag];
             }
 
-            autocorrs[_lag] = sum / F::from(count).unwrap();
+            autocorrs[_lag] = sum / F::from(count).expect("Failed to convert to float");
         }
 
         Ok(autocorrs)
@@ -720,24 +725,24 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             return Ok(());
         }
 
-        let alpha_f = F::from(alpha).unwrap();
+        let alpha_f = F::from(alpha).expect("Failed to convert to float");
         modelwrapper
             .model_state
             .parameters
             .insert("alpha".to_string(), alpha_f);
 
         if let Some(beta_val) = beta {
-            modelwrapper
-                .model_state
-                .parameters
-                .insert("beta".to_string(), F::from(beta_val).unwrap());
+            modelwrapper.model_state.parameters.insert(
+                "beta".to_string(),
+                F::from(beta_val).expect("Failed to convert to float"),
+            );
         }
 
         if let Some(gamma_val) = gamma {
-            modelwrapper
-                .model_state
-                .parameters
-                .insert("gamma".to_string(), F::from(gamma_val).unwrap());
+            modelwrapper.model_state.parameters.insert(
+                "gamma".to_string(),
+                F::from(gamma_val).expect("Failed to convert to float"),
+            );
         }
 
         // Initialize level and trend
@@ -767,15 +772,15 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             return Ok(());
         }
 
-        let n = F::from(data.len()).unwrap();
-        let x_mean = (n - F::one()) / F::from(2).unwrap();
+        let n = F::from(data.len()).expect("Operation failed");
+        let x_mean = (n - F::one()) / F::from(2).expect("Failed to convert constant to float");
         let y_mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / n;
 
         let mut numerator = F::zero();
         let mut denominator = F::zero();
 
         for (i, &y) in data.iter().enumerate() {
-            let x = F::from(i).unwrap();
+            let x = F::from(i).expect("Failed to convert to float");
             let x_diff = x - x_mean;
             numerator = numerator + x_diff * (y - y_mean);
             denominator = denominator + x_diff * x_diff;
@@ -813,10 +818,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             return Ok(());
         }
 
-        modelwrapper
-            .model_state
-            .parameters
-            .insert("period".to_string(), F::from(period).unwrap());
+        modelwrapper.model_state.parameters.insert(
+            "period".to_string(),
+            F::from(period).expect("Failed to convert to float"),
+        );
 
         // Store last seasonal cycle
         let last_cycle: Array1<F> =
@@ -841,10 +846,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             return Ok(());
         }
 
-        modelwrapper
-            .model_state
-            .parameters
-            .insert("window".to_string(), F::from(window).unwrap());
+        modelwrapper.model_state.parameters.insert(
+            "window".to_string(),
+            F::from(window).expect("Failed to convert to float"),
+        );
 
         // Store recent data for prediction
         let recent_data: Array1<F> =
@@ -896,13 +901,15 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         }
 
         // Simple trend estimation
-        let trend = (data[data.len() - 1] - data[0]) / F::from(data.len() - 1).unwrap();
+        let trend =
+            (data[data.len() - 1] - data[0]) / F::from(data.len() - 1).expect("Operation failed");
         modelwrapper
             .model_state
             .parameters
             .insert("trend".to_string(), trend);
 
-        let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
+        let mean = data.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(data.len()).expect("Operation failed");
         modelwrapper
             .model_state
             .parameters
@@ -998,7 +1005,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                         modelwrapper.model_state.parameters.get(&format!("ma_{i}"))
                     {
                         // Simplified: assume residuals decay to zero
-                        let residual_weight = F::from(0.95_f64.powi(i as i32 + 1)).unwrap();
+                        let residual_weight =
+                            F::from(0.95_f64.powi(i as i32 + 1)).expect("Operation failed");
                         prediction = prediction + ma_coeff * residual_weight;
                     }
                 }
@@ -1032,7 +1040,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             let _trend = trend_opt.cloned().unwrap_or(F::zero());
 
             for step in 0..steps {
-                let h = F::from(step + 1).unwrap();
+                let h = F::from(step + 1).expect("Failed to convert to float");
                 forecasts[step] = if has_trend { level + _trend * h } else { level };
             }
         }
@@ -1052,10 +1060,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             modelwrapper.model_state.parameters.get("slope"),
             modelwrapper.model_state.parameters.get("intercept"),
         ) {
-            let data_length = F::from(self.training_buffer.len()).unwrap();
+            let data_length = F::from(self.training_buffer.len()).expect("Operation failed");
 
             for step in 0..steps {
-                let x = data_length + F::from(step).unwrap();
+                let x = data_length + F::from(step).expect("Failed to convert to float");
                 forecasts[step] = slope * x + intercept;
             }
         }
@@ -1097,7 +1105,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         let mut forecasts = Array1::zeros(steps);
 
         if let Some(recent_data) = modelwrapper.model_state.state_variables.get("recent_data") {
-            let avg = recent_data.sum() / F::from(recent_data.len()).unwrap();
+            let avg = recent_data.sum() / F::from(recent_data.len()).expect("Operation failed");
 
             for step in 0..steps {
                 forecasts[step] = avg;
@@ -1116,13 +1124,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             let last_value = recent_data[recent_data.len() - 1];
             let trend = if recent_data.len() > 1 {
                 (recent_data[recent_data.len() - 1] - recent_data[recent_data.len() - 2])
-                    * F::from(0.5).unwrap()
+                    * F::from(0.5).expect("Failed to convert constant to float")
             } else {
                 F::zero()
             };
 
             for step in 0..steps {
-                let h = F::from(step + 1).unwrap();
+                let h = F::from(step + 1).expect("Failed to convert to float");
                 forecasts[step] = last_value + trend * h;
             }
         }
@@ -1142,16 +1150,18 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             modelwrapper.model_state.parameters.get("trend"),
             modelwrapper.model_state.parameters.get("base_level"),
         ) {
-            let data_length = F::from(self.training_buffer.len()).unwrap();
+            let data_length = F::from(self.training_buffer.len()).expect("Operation failed");
 
             for step in 0..steps {
-                let t = data_length + F::from(step + 1).unwrap();
+                let t = data_length + F::from(step + 1).expect("Failed to convert to float");
 
                 // Simple trend + seasonal component
                 let trend_component = base_level + trend * t;
-                let seasonal_component = F::from(0.1).unwrap()
-                    * (F::from(2.0 * std::f64::consts::PI).unwrap() * t / F::from(12).unwrap())
-                        .sin();
+                let seasonal_component = F::from(0.1).expect("Failed to convert constant to float")
+                    * (F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float")
+                        * t
+                        / F::from(12).expect("Failed to convert constant to float"))
+                    .sin();
 
                 forecasts[step] = trend_component + seasonal_component;
             }
@@ -1172,7 +1182,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     for model_idx in 0..n_models {
                         sum = sum + modelpredictions[[step, model_idx]];
                     }
-                    ensemble_forecast[step] = sum / F::from(n_models).unwrap();
+                    ensemble_forecast[step] =
+                        sum / F::from(n_models).expect("Failed to convert to float");
                 }
             }
             EnsembleStrategy::WeightedAverage
@@ -1185,7 +1196,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                         let weight = if model_idx < self.ensemble_weights.len() {
                             self.ensemble_weights[model_idx]
                         } else {
-                            F::one() / F::from(n_models).unwrap()
+                            F::one() / F::from(n_models).expect("Failed to convert to float")
                         };
 
                         weighted_sum = weighted_sum + weight * modelpredictions[[step, model_idx]];
@@ -1195,7 +1206,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     ensemble_forecast[step] = if total_weight > F::zero() {
                         weighted_sum / total_weight
                     } else {
-                        weighted_sum / F::from(n_models).unwrap()
+                        weighted_sum / F::from(n_models).expect("Failed to convert to float")
                     };
                 }
             }
@@ -1211,7 +1222,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     let median_idx = step_predictions.len() / 2;
                     ensemble_forecast[step] = if step_predictions.len().is_multiple_of(2) {
                         (step_predictions[median_idx - 1] + step_predictions[median_idx])
-                            / F::from(2).unwrap()
+                            / F::from(2).expect("Failed to convert constant to float")
                     } else {
                         step_predictions[median_idx]
                     };
@@ -1297,7 +1308,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                     }
                 } else {
                     // Equal weights fallback
-                    let equal_weight = F::one() / F::from(n_models).unwrap();
+                    let equal_weight =
+                        F::one() / F::from(n_models).expect("Failed to convert to float");
                     new_weights.fill(equal_weight);
                 }
 
@@ -1305,7 +1317,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
             }
             _ => {
                 // Equal weights for other strategies
-                let equal_weight = F::one() / F::from(n_models).unwrap();
+                let equal_weight =
+                    F::one() / F::from(n_models).expect("Failed to convert to float");
                 self.ensemble_weights = Array1::from_elem(n_models, equal_weight);
             }
         }
@@ -1710,8 +1723,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
         if scores.is_empty() {
             Ok(F::infinity())
         } else {
-            let avg_score =
-                scores.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(scores.len()).unwrap();
+            let avg_score = scores.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(scores.len()).expect("Operation failed");
             Ok(avg_score)
         }
     }
@@ -1731,7 +1744,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
             .first()
             .unwrap_or(&EvaluationMetric::MSE);
 
-        let n = F::from(actuals.len()).unwrap();
+        let n = F::from(actuals.len()).expect("Operation failed");
         let mut score = F::zero();
 
         match metric {
@@ -1761,16 +1774,17 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
                         score = score + ((forecasts[i] - actual) / actual).abs();
                     }
                 }
-                score = score * F::from(100).unwrap() / n;
+                score = score * F::from(100).expect("Failed to convert constant to float") / n;
             }
             EvaluationMetric::SMAPE => {
                 for (i, &actual) in actuals.iter().enumerate() {
-                    let denominator = (forecasts[i].abs() + actual.abs()) / F::from(2).unwrap();
+                    let denominator = (forecasts[i].abs() + actual.abs())
+                        / F::from(2).expect("Failed to convert constant to float");
                     if denominator > F::zero() {
                         score = score + (forecasts[i] - actual).abs() / denominator;
                     }
                 }
-                score = score * F::from(100).unwrap() / n;
+                score = score * F::from(100).expect("Failed to convert constant to float") / n;
             }
             _ => {
                 // Default to MSE for other metrics
@@ -1845,17 +1859,19 @@ mod tests {
         let mut meta_model = LinearRegressionMeta::<f64>::new();
 
         let predictions =
-            Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect())
+                .expect("Operation failed");
         let targets = Array1::from_vec((0..10).map(|i| i as f64).collect());
 
         let result = meta_model.train(&predictions, &targets);
         assert!(result.is_ok());
 
         let test_predictions =
-            Array2::from_shape_vec((5, 3), (0..15).map(|i| i as f64 * 0.2).collect()).unwrap();
+            Array2::from_shape_vec((5, 3), (0..15).map(|i| i as f64 * 0.2).collect())
+                .expect("Operation failed");
         let forecast = meta_model.predict(&test_predictions);
         assert!(forecast.is_ok());
-        assert_eq!(forecast.unwrap().len(), 5);
+        assert_eq!(forecast.expect("Operation failed").len(), 5);
     }
 
     #[test]

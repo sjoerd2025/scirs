@@ -444,7 +444,7 @@ mod tests {
     fn test_format_spec_extraction() {
         let spec = extract_format_spec("{percentage:>6.1}", "percentage");
         assert!(spec.is_some());
-        let spec = spec.unwrap();
+        let spec = spec.expect("Operation failed");
         assert_eq!(spec.width, Some(6));
         assert_eq!(spec.precision, Some(1));
     }

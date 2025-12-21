@@ -415,7 +415,7 @@ impl WorkflowExecutor {
         // Store state
         self.state
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert(executionid.clone(), state);
 
         // Start actual execution
@@ -428,7 +428,7 @@ impl WorkflowExecutor {
     fn executeworkflow_internal(&self, workflow: Workflow, executionid: String) -> Result<()> {
         // Update workflow status to running
         {
-            let mut states = self.state.lock().unwrap();
+            let mut states = self.state.lock().expect("Operation failed");
             if let Some(state) = states.get_mut(&executionid) {
                 state.status = WorkflowStatus::Running;
                 state.start_time = Some(Utc::now());
@@ -440,7 +440,7 @@ impl WorkflowExecutor {
 
         // Update final status
         {
-            let mut states = self.state.lock().unwrap();
+            let mut states = self.state.lock().expect("Operation failed");
             if let Some(state) = states.get_mut(&executionid) {
                 state.end_time = Some(Utc::now());
                 match execution_result {
@@ -516,7 +516,7 @@ impl WorkflowExecutor {
 
             // Update task state to running
             {
-                let mut states = self.state.lock().unwrap();
+                let mut states = self.state.lock().expect("Operation failed");
                 if let Some(state) = states.get_mut(executionid) {
                     if let Some(task_state) = state.task_states.get_mut(&task.id) {
                         task_state.status = if attempt == 1 {
@@ -535,7 +535,7 @@ impl WorkflowExecutor {
 
             // Update task state based on result
             {
-                let mut states = self.state.lock().unwrap();
+                let mut states = self.state.lock().expect("Operation failed");
                 if let Some(state) = states.get_mut(executionid) {
                     if let Some(task_state) = state.task_states.get_mut(&task.id) {
                         task_state.end_time = Some(Utc::now());
@@ -646,12 +646,16 @@ impl WorkflowExecutor {
 
     /// Get workflow state
     pub fn get_state(&self, executionid: &str) -> Option<WorkflowState> {
-        self.state.lock().unwrap().get(executionid).cloned()
+        self.state
+            .lock()
+            .expect("Operation failed")
+            .get(executionid)
+            .cloned()
     }
 
     /// Cancel a workflow execution
     pub fn cancel(&self, executionid: &str) -> Result<()> {
-        let mut states = self.state.lock().unwrap();
+        let mut states = self.state.lock().expect("Operation failed");
         if let Some(state) = states.get_mut(executionid) {
             state.status = WorkflowStatus::Cancelled;
             state.end_time = Some(Utc::now());
@@ -996,7 +1000,7 @@ pub mod scheduling {
 
         /// Start the scheduler
         pub fn start(&self) -> Result<()> {
-            *self.running.lock().unwrap() = true;
+            *self.running.lock().expect("Operation failed") = true;
 
             // In a real implementation, this would spawn a background thread
             // that continuously checks for workflows to run
@@ -1005,7 +1009,7 @@ pub mod scheduling {
 
         /// Stop the scheduler
         pub fn stop(&self) {
-            *self.running.lock().unwrap() = false;
+            *self.running.lock().expect("Operation failed") = false;
         }
     }
 }
@@ -1556,7 +1560,9 @@ pub mod events {
                             let mut workflow = workflow.clone();
                             workflow.metadata.set(
                                 "trigger_event",
-                                MetadataValue::String(serde_json::to_string(&event).unwrap()),
+                                MetadataValue::String(
+                                    serde_json::to_string(&event).expect("Operation failed"),
+                                ),
                             );
 
                             self.executor.execute(&workflow)?;
@@ -1865,7 +1871,7 @@ pub mod distributed {
             let worker = self.find_suitable_worker(&task)?;
 
             // Add to queue with assigned worker
-            let mut queue = self.task_queue.lock().unwrap();
+            let mut queue = self.task_queue.lock().expect("Operation failed");
             let mut scheduled_task = task;
             scheduled_task.assigned_worker = Some(worker.id.clone());
             queue.push(scheduled_task);
@@ -1890,7 +1896,11 @@ pub mod distributed {
             // Select worker with lowest load
             suitable_workers
                 .into_iter()
-                .min_by(|a, b| a.current_load.partial_cmp(&b.current_load).unwrap())
+                .min_by(|a, b| {
+                    a.current_load
+                        .partial_cmp(&b.current_load)
+                        .expect("Operation failed")
+                })
                 .ok_or_else(|| IoError::Other("No suitable worker available".to_string()))
         }
 

@@ -661,7 +661,7 @@ mod tests {
         let task = Task::new("task1".to_string(), "Test Task".to_string(), vec![1, 2, 3]);
         assert!(engine.submit_task(task).is_ok());
 
-        let stats = engine.get_statistics().unwrap();
+        let stats = engine.get_statistics().expect("Operation failed");
         assert_eq!(stats.total_nodes, 1);
         assert_eq!(stats.total_workflows, 1);
     }

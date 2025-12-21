@@ -27,7 +27,7 @@ fn main() {
         Some(true), // check_finite
         Some(42),   // random_seed
     )
-    .unwrap();
+    .expect("Operation failed");
     let kmeans_duration = start_time.elapsed();
 
     // Time mini-batch k-means with various batch sizes
@@ -42,7 +42,8 @@ fn main() {
         };
 
         let start_time = std::time::Instant::now();
-        let (centroids_mb, labels_mb) = minibatch_kmeans(data.view(), 2, Some(options)).unwrap();
+        let (centroids_mb, labels_mb) =
+            minibatch_kmeans(data.view(), 2, Some(options)).expect("Operation failed");
         let mb_duration = start_time.elapsed();
 
         // Calculate agreement with standard k-means
@@ -81,7 +82,7 @@ fn main() {
                 Some(true), // check_finite
                 Some(42),   // random_seed
             )
-            .unwrap();
+            .expect("Operation failed");
             let duration = start_time.elapsed();
             println!("Standard k-means with {} samples: {:.2?}", size, duration);
             duration
@@ -99,7 +100,7 @@ fn main() {
         };
 
         let start_time = std::time::Instant::now();
-        let _ = minibatch_kmeans(large_data.view(), 2, Some(options)).unwrap();
+        let _ = minibatch_kmeans(large_data.view(), 2, Some(options)).expect("Operation failed");
         let mb_duration = start_time.elapsed();
 
         println!(
@@ -124,8 +125,8 @@ fn generate_clustered_data(n_samples: usize, ndim: usize) -> Array2<f64> {
     let mut rng = thread_rng();
 
     // Define distributions for two clusters
-    let cluster1_dist = Uniform::new(-0.5, 0.5).unwrap();
-    let cluster2_dist = Uniform::new(-0.5, 0.5).unwrap();
+    let cluster1_dist = Uniform::new(-0.5, 0.5).expect("Operation failed");
+    let cluster2_dist = Uniform::new(-0.5, 0.5).expect("Operation failed");
 
     // Create centers for the clusters
     let center1: Vec<f64> = (0..ndim).map(|_| rng.gen_range(0.0..2.0)).collect();
@@ -163,7 +164,7 @@ fn generate_clustered_data(n_samples: usize, ndim: usize) -> Array2<f64> {
         shuffled_data.extend_from_slice(&data[start..end]);
     }
 
-    Array2::from_shape_vec((n_samples, ndim), shuffled_data).unwrap()
+    Array2::from_shape_vec((n_samples, ndim), shuffled_data).expect("Operation failed")
 }
 
 /// Calculate the agreement between two clusterings (adjusting for label permutation)

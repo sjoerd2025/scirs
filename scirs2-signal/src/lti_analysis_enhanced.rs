@@ -459,7 +459,7 @@ fn solve_continuous_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<A
     let coeff = &a_kron_i + &i_kron_a;
 
     // vec(Q)
-    let q_vec = q.as_slice().unwrap().to_vec();
+    let q_vec = q.as_slice().expect("Operation failed").to_vec();
     let q_vec_neg = Array1::from_vec(q_vec).mapv(|x| -x);
 
     // Solve the linear system
@@ -808,7 +808,7 @@ fn compute_system_zeros(ss: &StateSpace) -> SignalResult<Vec<Complex64>> {
         // Filter out poles
         let a_matrix = vec_to_array2(&_ss.a, ss.n_states, ss.n_states)?;
         let poles_set: std::collections::HashSet<_> = eig(&a_matrix.view(), None)
-            .unwrap()
+            .expect("Operation failed")
             .0
             .iter()
             .map(|&p| (p.re * 1e6) as i64)
@@ -1026,10 +1026,10 @@ fn validate_state_space(ss: &StateSpace) -> SignalResult<()> {
     checkshape(&_ss.d, (p, m), "D matrix")?;
 
     // Check finite values
-    check_finite(&_ss.a.as_slice().unwrap(), "A matrix")?;
-    check_finite(&_ss.b.as_slice().unwrap(), "B matrix")?;
-    check_finite(&_ss.c.as_slice().unwrap(), "C matrix")?;
-    check_finite(&_ss.d.as_slice().unwrap(), "D matrix")?;
+    check_finite(&_ss.a.as_slice().expect("Operation failed"), "A matrix")?;
+    check_finite(&_ss.b.as_slice().expect("Operation failed"), "B matrix")?;
+    check_finite(&_ss.c.as_slice().expect("Operation failed"), "C matrix")?;
+    check_finite(&_ss.d.as_slice().expect("Operation failed"), "D matrix")?;
 
     Ok(())
 }
@@ -1043,7 +1043,7 @@ pub fn controllability_canonical_form(ss: &StateSpace) -> SignalResult<(StateSpa
     let (u, s_, vt) = svd(&ctrl_matrix.view(), true, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
-    let u = u.unwrap();
+    let u = u.expect("Operation failed");
     let rank = s_.iter().filter(|&&sv| sv > 1e-10).count();
 
     if rank < ss.n_states {
@@ -1083,7 +1083,7 @@ pub fn observability_canonical_form(ss: &StateSpace) -> SignalResult<(StateSpace
     let (u, s_, vt) = svd(&obs_matrix.view(), true, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
-    let vt = vt.unwrap();
+    let vt = vt.expect("Operation failed");
     let rank = s_.iter().filter(|&&sv| sv > 1e-10).count();
 
     if rank < ss.n_states {
@@ -1692,7 +1692,7 @@ fn analyze_controllability_uncertainty(
         });
     }
 
-    measures.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    measures.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let lower_bound = measures[0];
     let upper_bound = measures[measures.len() - 1];
@@ -1743,7 +1743,7 @@ mod tests {
             dt: false,
         };
 
-        let result = analyze_controllability(&ss).unwrap();
+        let result = analyze_controllability(&ss).expect("Operation failed");
         assert!(result.is_controllable);
         assert_eq!(result.controllability_rank, 2);
     }
@@ -1760,7 +1760,7 @@ mod tests {
             dt: false,
         };
 
-        let result = analyze_stability(&ss).unwrap();
+        let result = analyze_stability(&ss).expect("Operation failed");
         assert!(result.is_stable);
         assert!(!result.is_marginally_stable);
     }

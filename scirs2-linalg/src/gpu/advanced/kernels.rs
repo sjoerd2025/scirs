@@ -303,7 +303,7 @@ where
 
     /// Add operation to the fusion graph
     pub fn add_operation(&self, operation: OperationNode<T>) -> LinalgResult<usize> {
-        let mut graph = self.operation_graph.write().unwrap();
+        let mut graph = self.operation_graph.write().expect("Operation failed");
         let id = operation.id;
         graph.nodes.push(operation);
         Ok(id)
@@ -311,15 +311,15 @@ where
 
     /// Add dependency between operations
     pub fn add_dependency(&self, edge: DependencyEdge) -> LinalgResult<()> {
-        let mut graph = self.operation_graph.write().unwrap();
+        let mut graph = self.operation_graph.write().expect("Operation failed");
         graph.edges.push(edge);
         Ok(())
     }
 
     /// Analyze fusion opportunities
     pub fn analyze_fusion_opportunities(&self) -> LinalgResult<Vec<FusionCandidate>> {
-        let graph = self.operation_graph.read().unwrap();
-        let optimizer = self.fusion_optimizer.lock().unwrap();
+        let graph = self.operation_graph.read().expect("Operation failed");
+        let optimizer = self.fusion_optimizer.lock().expect("Operation failed");
 
         let mut candidates = Vec::new();
 
@@ -423,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_kernel_fusion_engine_creation() {
-        let engine = KernelFusionEngine::new().unwrap();
+        let engine = KernelFusionEngine::new().expect("Operation failed");
         assert_eq!(engine.fusion_strategies.len(), 3);
     }
 
@@ -436,7 +436,12 @@ mod tests {
 
     #[test]
     fn test_advanced_gpu_kernel_fusion_creation() {
-        let fusion = AdvancedGpuKernelFusion::<f32>::new().unwrap();
-        assert!(fusion.operation_graph.read().unwrap().nodes.is_empty());
+        let fusion = AdvancedGpuKernelFusion::<f32>::new().expect("Operation failed");
+        assert!(fusion
+            .operation_graph
+            .read()
+            .expect("Operation failed")
+            .nodes
+            .is_empty());
     }
 }

@@ -276,7 +276,7 @@ mod tests {
             }
         });
 
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
         assert_eq!(*attempts.borrow(), 2);
     }
 
@@ -369,7 +369,7 @@ mod tests {
             })
             .await;
 
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
         assert_eq!(attempts, 2);
     }
 }

@@ -101,8 +101,8 @@ impl PerformanceHistory {
                 throughput_trend,
                 memory_trend,
                 execution_count: recent_executions.len(),
-                time_span: recent_executions.first().unwrap().timestamp 
-                    - recent_executions.last().unwrap().timestamp,
+                time_span: recent_executions.first().expect("Operation failed").timestamp 
+                    - recent_executions.last().expect("Operation failed").timestamp,
             }
         })
     }
@@ -602,7 +602,7 @@ mod tests {
         monitor.start_monitoring("test_pipeline", &config);
         assert_eq!(monitor.active_pipelines.len(), 1);
 
-        let alerts = monitor.update_metrics("test_pipeline", &metrics).unwrap();
+        let alerts = monitor.update_metrics("test_pipeline", &metrics).expect("Operation failed");
         assert!(alerts.is_empty()); // No alerts on first update
 
         monitor.stop_monitoring("test_pipeline");

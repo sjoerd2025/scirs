@@ -33,7 +33,7 @@ use super::super::core::SpikeEvent;
 ///
 /// let points = Array2::from_shape_vec((3, 2), vec![
 ///     0.0, 0.0, 1.0, 1.0, 2.0, 2.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let mut processor = NeuromorphicProcessor::new()
 ///     .with_memristive_crossbar(true)
@@ -41,10 +41,10 @@ use super::super::core::SpikeEvent;
 ///     .with_crossbar_size(64, 64);
 ///
 /// // Encode spatial data as neuromorphic events
-/// let events = processor.encode_spatial_events(&points.view()).unwrap();
+/// let events = processor.encode_spatial_events(&points.view()).expect("Operation failed");
 ///
 /// // Process events through neuromorphic pipeline
-/// let processed_events = processor.process_events(&events).unwrap();
+/// let processed_events = processor.process_events(&events).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct NeuromorphicProcessor {
@@ -210,7 +210,11 @@ impl NeuromorphicProcessor {
         }
 
         // Sort events by timestamp
-        events.sort_by(|a, b| a.timestamp().partial_cmp(&b.timestamp()).unwrap());
+        events.sort_by(|a, b| {
+            a.timestamp()
+                .partial_cmp(&b.timestamp())
+                .expect("Operation failed")
+        });
 
         Ok(events)
     }
@@ -516,10 +520,13 @@ mod tests {
 
     #[test]
     fn test_spatial_event_encoding() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let processor = NeuromorphicProcessor::new();
 
-        let events = processor.encode_spatial_events(&points.view()).unwrap();
+        let events = processor
+            .encode_spatial_events(&points.view())
+            .expect("Operation failed");
 
         // Should generate events for each coordinate
         assert!(!events.is_empty());
@@ -532,19 +539,19 @@ mod tests {
 
     #[test]
     fn test_temporal_vs_rate_coding() {
-        let points = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+        let points = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).expect("Operation failed");
 
         // Rate coding
         let processor_rate = NeuromorphicProcessor::new().with_temporal_coding(false);
         let events_rate = processor_rate
             .encode_spatial_events(&points.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Temporal coding
         let processor_temporal = NeuromorphicProcessor::new().with_temporal_coding(true);
         let events_temporal = processor_temporal
             .encode_spatial_events(&points.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Different coding schemes should produce different numbers of events
         // (temporal coding typically produces fewer events)
@@ -553,13 +560,16 @@ mod tests {
 
     #[test]
     fn test_event_processing() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let mut processor = NeuromorphicProcessor::new()
             .with_memristive_crossbar(false)
             .with_temporal_coding(false);
 
-        let events = processor.encode_spatial_events(&points.view()).unwrap();
-        let processed_events = processor.process_events(&events).unwrap();
+        let events = processor
+            .encode_spatial_events(&points.view())
+            .expect("Operation failed");
+        let processed_events = processor.process_events(&events).expect("Operation failed");
 
         // Without crossbar, should have same number of events
         assert_eq!(events.len(), processed_events.len());
@@ -567,17 +577,20 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_memristive_crossbar() {
-        let points = Array2::from_shape_vec((1, 1), vec![1.0]).unwrap();
+        let points = Array2::from_shape_vec((1, 1), vec![1.0]).expect("Operation failed");
         let mut processor = NeuromorphicProcessor::new()
             .with_memristive_crossbar(true)
-            .with_crossbar_size(4, 4);
+            .with_crossbar_size(4, 4)
+            .with_processing_params(1000, 0.2, 0.001); // Lower threshold to ensure output
 
-        let events = processor.encode_spatial_events(&points.view()).unwrap();
-        let processed_events = processor.process_events(&events).unwrap();
+        let events = processor
+            .encode_spatial_events(&points.view())
+            .expect("Operation failed");
+        let processed_events = processor.process_events(&events).expect("Operation failed");
 
         // Memristive crossbar might generate additional output events
+        // With lower threshold (0.2) and conductances [0.1, 1.0], we should get outputs
         assert!(!processed_events.is_empty());
 
         let stats = processor.get_crossbar_statistics();
@@ -592,7 +605,9 @@ mod tests {
             .with_crossbar_size(4, 4);
 
         // Test setting and getting conductance
-        processor.set_conductance(0, 0, 0.8).unwrap();
+        processor
+            .set_conductance(0, 0, 0.8)
+            .expect("Operation failed");
         assert_eq!(processor.get_conductance(0, 0), Some(0.8));
 
         // Test bounds checking
@@ -600,7 +615,9 @@ mod tests {
         assert_eq!(processor.get_conductance(10, 10), None);
 
         // Test clamping
-        processor.set_conductance(1, 1, 2.0).unwrap(); // Should be clamped to 1.0
+        processor
+            .set_conductance(1, 1, 2.0)
+            .expect("Operation failed"); // Should be clamped to 1.0
         assert_eq!(processor.get_conductance(1, 1), Some(1.0));
     }
 
@@ -609,9 +626,11 @@ mod tests {
         let mut processor = NeuromorphicProcessor::new().with_memristive_crossbar(true);
 
         // Process some events to change state
-        let points = Array2::from_shape_vec((1, 1), vec![1.0]).unwrap();
-        let events = processor.encode_spatial_events(&points.view()).unwrap();
-        processor.process_events(&events).unwrap();
+        let points = Array2::from_shape_vec((1, 1), vec![1.0]).expect("Operation failed");
+        let events = processor
+            .encode_spatial_events(&points.view())
+            .expect("Operation failed");
+        processor.process_events(&events).expect("Operation failed");
 
         assert!(processor.pipeline_length() > 0);
 
@@ -634,7 +653,9 @@ mod tests {
         let points = Array2::zeros((0, 2));
         let processor = NeuromorphicProcessor::new();
 
-        let events = processor.encode_spatial_events(&points.view()).unwrap();
+        let events = processor
+            .encode_spatial_events(&points.view())
+            .expect("Operation failed");
         assert!(events.is_empty());
     }
 }

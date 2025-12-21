@@ -12,6 +12,12 @@ use scirs2_core::ndarray::Array1;
 use std::f64::consts::PI;
 // use scirs2_core::numeric::Float;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: IntegrateFloat>(value: f64) -> F {
+    F::from_f64(value).expect("Failed to convert constant to target float type")
+}
+
 /// Represents the type of Newton-Cotes formula to generate
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NewtonCotesType {
@@ -62,7 +68,7 @@ pub struct NewtonCotesResult<F: IntegrateFloat> {
 /// use scirs2_integrate::newton_cotes::{newton_cotes, NewtonCotesType, NewtonCotesResult};
 ///
 /// // Generate a 5-point closed Newton-Cotes formula (Boole's rule)
-/// let result: NewtonCotesResult<f64> = newton_cotes(5, NewtonCotesType::Closed, None, None).unwrap();
+/// let result: NewtonCotesResult<f64> = newton_cotes(5, NewtonCotesType::Closed, None, None).expect("Test/example failed");
 ///
 /// // Print weights
 /// println!("Weights: {:?}", result.weights);
@@ -106,8 +112,8 @@ pub fn newton_cotes<F: IntegrateFloat>(
     }
 
     // Extract bounds or use defaults
-    let a = a.unwrap_or_else(|| F::from(0.0).unwrap());
-    let b = b.unwrap_or_else(|| F::from(1.0).unwrap());
+    let a = a.unwrap_or_else(|| const_f64::<F>(0.0));
+    let b = b.unwrap_or_else(|| const_f64::<F>(1.0));
 
     if a >= b {
         return Err(IntegrateError::ValueError(
@@ -120,10 +126,10 @@ pub fn newton_cotes<F: IntegrateFloat>(
         NewtonCotesType::Closed => {
             // Closed formula: n evenly spaced points from a to b (including endpoints)
             let mut points = Array1::zeros(n);
-            let step = (b - a) / F::from(n - 1).unwrap();
+            let step = (b - a) / F::from(n - 1).expect("Failed to convert (n-1) to float");
 
             for i in 0..n {
-                points[i] = a + F::from(i).unwrap() * step;
+                points[i] = a + F::from(i).expect("Failed to convert i to float") * step;
             }
 
             points
@@ -131,10 +137,10 @@ pub fn newton_cotes<F: IntegrateFloat>(
         NewtonCotesType::Open => {
             // Open formula: n evenly spaced points from a to b (excluding endpoints)
             let mut points = Array1::zeros(n);
-            let step = (b - a) / F::from(n + 1).unwrap();
+            let step = (b - a) / F::from(n + 1).expect("Failed to convert (n+1) to float");
 
             for i in 0..n {
-                points[i] = a + F::from(i + 1).unwrap() * step;
+                points[i] = a + F::from(i + 1).expect("Failed to convert (i+1) to float") * step;
             }
 
             points
@@ -187,71 +193,71 @@ fn calculate_weights<F: IntegrateFloat>(
                 2 => {
                     // Trapezoidal rule
                     let mut w = Array1::zeros(2);
-                    w[0] = F::from(0.5).unwrap();
-                    w[1] = F::from(0.5).unwrap();
+                    w[0] = F::from(0.5).expect("Test/example failed");
+                    w[1] = F::from(0.5).expect("Test/example failed");
                     Ok(w)
                 }
                 3 => {
                     // Simpson's rule
                     let mut w = Array1::zeros(3);
-                    w[0] = F::from(1.0 / 6.0).unwrap();
-                    w[1] = F::from(4.0 / 6.0).unwrap();
-                    w[2] = F::from(1.0 / 6.0).unwrap();
+                    w[0] = const_f64::<F>(1.0 / 6.0);
+                    w[1] = const_f64::<F>(4.0 / 6.0);
+                    w[2] = const_f64::<F>(1.0 / 6.0);
                     Ok(w)
                 }
                 4 => {
                     // Simpson's 3/8 rule
                     let mut w = Array1::zeros(4);
-                    w[0] = F::from(1.0 / 8.0).unwrap();
-                    w[1] = F::from(3.0 / 8.0).unwrap();
-                    w[2] = F::from(3.0 / 8.0).unwrap();
-                    w[3] = F::from(1.0 / 8.0).unwrap();
+                    w[0] = const_f64::<F>(1.0 / 8.0);
+                    w[1] = const_f64::<F>(3.0 / 8.0);
+                    w[2] = const_f64::<F>(3.0 / 8.0);
+                    w[3] = const_f64::<F>(1.0 / 8.0);
                     Ok(w)
                 }
                 5 => {
                     // Boole's rule
                     let mut w = Array1::zeros(5);
-                    w[0] = F::from(7.0 / 90.0).unwrap();
-                    w[1] = F::from(32.0 / 90.0).unwrap();
-                    w[2] = F::from(12.0 / 90.0).unwrap();
-                    w[3] = F::from(32.0 / 90.0).unwrap();
-                    w[4] = F::from(7.0 / 90.0).unwrap();
+                    w[0] = const_f64::<F>(7.0 / 90.0);
+                    w[1] = const_f64::<F>(32.0 / 90.0);
+                    w[2] = const_f64::<F>(12.0 / 90.0);
+                    w[3] = const_f64::<F>(32.0 / 90.0);
+                    w[4] = const_f64::<F>(7.0 / 90.0);
                     Ok(w)
                 }
                 6 => {
                     // 6-point closed Newton-Cotes
                     let mut w = Array1::zeros(6);
-                    w[0] = F::from(19.0 / 288.0).unwrap();
-                    w[1] = F::from(75.0 / 288.0).unwrap();
-                    w[2] = F::from(50.0 / 288.0).unwrap();
-                    w[3] = F::from(50.0 / 288.0).unwrap();
-                    w[4] = F::from(75.0 / 288.0).unwrap();
-                    w[5] = F::from(19.0 / 288.0).unwrap();
+                    w[0] = const_f64::<F>(19.0 / 288.0);
+                    w[1] = const_f64::<F>(75.0 / 288.0);
+                    w[2] = const_f64::<F>(50.0 / 288.0);
+                    w[3] = const_f64::<F>(50.0 / 288.0);
+                    w[4] = const_f64::<F>(75.0 / 288.0);
+                    w[5] = const_f64::<F>(19.0 / 288.0);
                     Ok(w)
                 }
                 7 => {
                     // 7-point closed Newton-Cotes
                     let mut w = Array1::zeros(7);
-                    w[0] = F::from(41.0 / 840.0).unwrap();
-                    w[1] = F::from(216.0 / 840.0).unwrap();
-                    w[2] = F::from(27.0 / 840.0).unwrap();
-                    w[3] = F::from(272.0 / 840.0).unwrap();
-                    w[4] = F::from(27.0 / 840.0).unwrap();
-                    w[5] = F::from(216.0 / 840.0).unwrap();
-                    w[6] = F::from(41.0 / 840.0).unwrap();
+                    w[0] = const_f64::<F>(41.0 / 840.0);
+                    w[1] = const_f64::<F>(216.0 / 840.0);
+                    w[2] = const_f64::<F>(27.0 / 840.0);
+                    w[3] = const_f64::<F>(272.0 / 840.0);
+                    w[4] = const_f64::<F>(27.0 / 840.0);
+                    w[5] = const_f64::<F>(216.0 / 840.0);
+                    w[6] = const_f64::<F>(41.0 / 840.0);
                     Ok(w)
                 }
                 8 => {
                     // 8-point closed Newton-Cotes
                     let mut w = Array1::zeros(8);
-                    w[0] = F::from(751.0 / 17280.0).unwrap();
-                    w[1] = F::from(3577.0 / 17280.0).unwrap();
-                    w[2] = F::from(1323.0 / 17280.0).unwrap();
-                    w[3] = F::from(2989.0 / 17280.0).unwrap();
-                    w[4] = F::from(2989.0 / 17280.0).unwrap();
-                    w[5] = F::from(1323.0 / 17280.0).unwrap();
-                    w[6] = F::from(3577.0 / 17280.0).unwrap();
-                    w[7] = F::from(751.0 / 17280.0).unwrap();
+                    w[0] = const_f64::<F>(751.0 / 17280.0);
+                    w[1] = const_f64::<F>(3577.0 / 17280.0);
+                    w[2] = const_f64::<F>(1323.0 / 17280.0);
+                    w[3] = const_f64::<F>(2989.0 / 17280.0);
+                    w[4] = const_f64::<F>(2989.0 / 17280.0);
+                    w[5] = const_f64::<F>(1323.0 / 17280.0);
+                    w[6] = const_f64::<F>(3577.0 / 17280.0);
+                    w[7] = const_f64::<F>(751.0 / 17280.0);
                     Ok(w)
                 }
                 _ => {
@@ -266,28 +272,28 @@ fn calculate_weights<F: IntegrateFloat>(
                 3 => {
                     // 3-point open Newton-Cotes
                     let mut w = Array1::zeros(3);
-                    w[0] = F::from(2.0 / 3.0).unwrap();
-                    w[1] = F::from(-1.0 / 3.0).unwrap();
-                    w[2] = F::from(2.0 / 3.0).unwrap();
+                    w[0] = const_f64::<F>(2.0 / 3.0);
+                    w[1] = const_f64::<F>(-1.0 / 3.0);
+                    w[2] = const_f64::<F>(2.0 / 3.0);
                     Ok(w)
                 }
                 4 => {
                     // 4-point open Newton-Cotes
                     let mut w = Array1::zeros(4);
-                    w[0] = F::from(11.0 / 24.0).unwrap();
-                    w[1] = F::from(1.0 / 24.0).unwrap();
-                    w[2] = F::from(1.0 / 24.0).unwrap();
-                    w[3] = F::from(11.0 / 24.0).unwrap();
+                    w[0] = const_f64::<F>(11.0 / 24.0);
+                    w[1] = const_f64::<F>(1.0 / 24.0);
+                    w[2] = const_f64::<F>(1.0 / 24.0);
+                    w[3] = const_f64::<F>(11.0 / 24.0);
                     Ok(w)
                 }
                 5 => {
                     // 5-point open Newton-Cotes
                     let mut w = Array1::zeros(5);
-                    w[0] = F::from(11.0 / 20.0).unwrap();
-                    w[1] = F::from(-14.0 / 20.0).unwrap();
-                    w[2] = F::from(26.0 / 20.0).unwrap();
-                    w[3] = F::from(-14.0 / 20.0).unwrap();
-                    w[4] = F::from(11.0 / 20.0).unwrap();
+                    w[0] = const_f64::<F>(11.0 / 20.0);
+                    w[1] = const_f64::<F>(-14.0 / 20.0);
+                    w[2] = const_f64::<F>(26.0 / 20.0);
+                    w[3] = const_f64::<F>(-14.0 / 20.0);
+                    w[4] = const_f64::<F>(11.0 / 20.0);
                     Ok(w)
                 }
                 _ => {
@@ -315,10 +321,10 @@ fn calculate_weights_general<F: IntegrateFloat>(
         NewtonCotesType::Closed => {
             // Evenly spaced points in [0, 1] including endpoints
             let mut pts = Array1::zeros(n);
-            let step = F::one() / F::from(n - 1).unwrap();
+            let step = F::one() / F::from(n - 1).expect("Failed to convert (n-1) to float");
 
             for i in 0..n {
-                pts[i] = F::from(i).unwrap() * step;
+                pts[i] = F::from(i).expect("Failed to convert i to float") * step;
             }
 
             pts
@@ -326,10 +332,10 @@ fn calculate_weights_general<F: IntegrateFloat>(
         NewtonCotesType::Open => {
             // Evenly spaced points in [0, 1] excluding endpoints
             let mut pts = Array1::zeros(n);
-            let step = F::one() / F::from(n + 1).unwrap();
+            let step = F::one() / F::from(n + 1).expect("Failed to convert (n+1) to float");
 
             for i in 0..n {
-                pts[i] = F::from(i + 1).unwrap() * step;
+                pts[i] = F::from(i + 1).expect("Failed to convert (i+1) to float") * step;
             }
 
             pts
@@ -363,14 +369,18 @@ fn calculate_weights_general<F: IntegrateFloat>(
 
             // Convert to f64 for calculation, then back to F
             let n_f64 = n as f64;
-            let contribution_f64 = sign.to_f64().unwrap()
-                * (1.0 / ((n_f64 + 1.0) * factorial.to_f64().unwrap() * diff.to_f64().unwrap()));
-            let contribution = F::from(contribution_f64).unwrap();
+            let contribution_f64 = sign.to_f64().expect("Failed to convert to f64")
+                * (1.0
+                    / ((n_f64 + 1.0)
+                        * factorial.to_f64().expect("Failed to convert to f64")
+                        * diff.to_f64().expect("Failed to convert to f64")));
+            let contribution =
+                F::from(contribution_f64).expect("Failed to convert contribution to float");
             weight += contribution;
 
             // Update for next term
             sign = -sign;
-            factorial *= F::from(j + 1).unwrap();
+            factorial *= F::from(j + 1).expect("Failed to convert (j+1) to float");
         }
 
         weights[i] = weight;
@@ -402,14 +412,14 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
     match formula_type {
         NewtonCotesType::Closed => {
             match n {
-                1 => Ok(F::from(-1.0 / 2.0).unwrap()),   // Midpoint rule
-                2 => Ok(F::from(-1.0 / 12.0).unwrap()),  // Trapezoidal rule
-                3 => Ok(F::from(-1.0 / 90.0).unwrap()),  // Simpson's rule
-                4 => Ok(F::from(-3.0 / 80.0).unwrap()),  // Simpson's 3/8 rule
-                5 => Ok(F::from(-8.0 / 945.0).unwrap()), // Boole's rule
-                6 => Ok(F::from(-275.0 / 12096.0).unwrap()),
-                7 => Ok(F::from(-9.0 / 1400.0).unwrap()),
-                8 => Ok(F::from(-8183.0 / 518400.0).unwrap()),
+                1 => Ok(const_f64::<F>(-1.0 / 2.0)),   // Midpoint rule
+                2 => Ok(const_f64::<F>(-1.0 / 12.0)),  // Trapezoidal rule
+                3 => Ok(const_f64::<F>(-1.0 / 90.0)),  // Simpson's rule
+                4 => Ok(const_f64::<F>(-3.0 / 80.0)),  // Simpson's 3/8 rule
+                5 => Ok(const_f64::<F>(-8.0 / 945.0)), // Boole's rule
+                6 => Ok(const_f64::<F>(-275.0 / 12096.0)),
+                7 => Ok(const_f64::<F>(-9.0 / 1400.0)),
+                8 => Ok(const_f64::<F>(-8183.0 / 518400.0)),
                 _ => {
                     // For higher orders, use an approximation
                     let degree = if n.is_multiple_of(2) { n } else { n + 1 } - 1;
@@ -417,16 +427,16 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
                         (-1.0_f64).powi((degree + 1) as i32)
                             / ((degree + 2) as f64 * (degree + 3) as f64),
                     )
-                    .unwrap();
+                    .expect("Test/example failed");
                     Ok(coeff)
                 }
             }
         }
         NewtonCotesType::Open => {
             match n {
-                3 => Ok(F::from(1.0 / 4.0).unwrap()),
-                4 => Ok(F::from(-3.0 / 20.0).unwrap()),
-                5 => Ok(F::from(13.0 / 42.0).unwrap()),
+                3 => Ok(const_f64::<F>(1.0 / 4.0)),
+                4 => Ok(const_f64::<F>(-3.0 / 20.0)),
+                5 => Ok(const_f64::<F>(13.0 / 42.0)),
                 _ => {
                     // For higher orders, use an approximation
                     let degree = n - 1;
@@ -434,7 +444,7 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
                         (-1.0_f64).powi(degree as i32)
                             / ((degree + 1) as f64 * (degree + 2) as f64),
                     )
-                    .unwrap();
+                    .expect("Test/example failed");
                     Ok(coeff)
                 }
             }
@@ -497,7 +507,8 @@ mod tests {
     #[test]
     fn test_newton_cotes_trapezoidal() {
         // Test trapezoidal rule (n=2)
-        let result = newton_cotes::<f64>(2, NewtonCotesType::Closed, None, None).unwrap();
+        let result = newton_cotes::<f64>(2, NewtonCotesType::Closed, None, None)
+            .expect("Test/example failed");
 
         assert_eq!(result.weights.len(), 2);
         assert_abs_diff_eq!(result.weights[0], 0.5, epsilon = 1e-14);
@@ -508,7 +519,8 @@ mod tests {
     #[test]
     fn test_newton_cotes_simpson() {
         // Test Simpson's rule (n=3)
-        let result = newton_cotes::<f64>(3, NewtonCotesType::Closed, None, None).unwrap();
+        let result = newton_cotes::<f64>(3, NewtonCotesType::Closed, None, None)
+            .expect("Test/example failed");
 
         assert_eq!(result.weights.len(), 3);
         assert_abs_diff_eq!(result.weights[0], 1.0 / 6.0, epsilon = 1e-14);
@@ -520,8 +532,8 @@ mod tests {
     #[test]
     fn test_newton_cotes_custom_bounds() {
         // Test with custom bounds
-        let result =
-            newton_cotes::<f64>(3, NewtonCotesType::Closed, Some(-1.0), Some(1.0)).unwrap();
+        let result = newton_cotes::<f64>(3, NewtonCotesType::Closed, Some(-1.0), Some(1.0))
+            .expect("Test/example failed");
 
         assert_eq!(result.points.len(), 3);
         assert_abs_diff_eq!(result.points[0], -1.0, epsilon = 1e-14);
@@ -536,7 +548,8 @@ mod tests {
     #[test]
     fn test_newton_cotes_open() {
         // Test open Newton-Cotes
-        let result = newton_cotes::<f64>(3, NewtonCotesType::Open, Some(0.0), Some(1.0)).unwrap();
+        let result = newton_cotes::<f64>(3, NewtonCotesType::Open, Some(0.0), Some(1.0))
+            .expect("Test/example failed");
 
         assert_eq!(result.points.len(), 3);
         assert!(result.points[0] > 0.0); // Should not include 0
@@ -547,13 +560,15 @@ mod tests {
     fn test_newton_cotes_integrate() {
         // Test integration of x^2 from 0 to 1 = 1/3
         let (result_, error) =
-            newton_cotes_integrate(|x| x * x, 0.0, 1.0, 3, NewtonCotesType::Closed).unwrap();
+            newton_cotes_integrate(|x| x * x, 0.0, 1.0, 3, NewtonCotesType::Closed)
+                .expect("Test/example failed");
         assert_abs_diff_eq!(result_, 1.0 / 3.0, epsilon = 1e-14);
 
         // Test integration of sin(x) from 0 to pi = 2
         // Simpson's rule gives 2π/3 ≈ 2.094, which has ~5% error
         let (result_, error) =
-            newton_cotes_integrate(|x: f64| x.sin(), 0.0, PI, 3, NewtonCotesType::Closed).unwrap();
+            newton_cotes_integrate(|x: f64| x.sin(), 0.0, PI, 3, NewtonCotesType::Closed)
+                .expect("Test/example failed");
         assert_abs_diff_eq!(result_, 2.0, epsilon = 0.1);
     }
 

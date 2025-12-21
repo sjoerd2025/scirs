@@ -318,7 +318,7 @@ mod tests {
 
         // Test forward mode
         options.mode = ADMode::Forward;
-        let result_forward = autodiff(func, &x.view(), &options).unwrap();
+        let result_forward = autodiff(func, &x.view(), &options).expect("Operation failed");
 
         assert_abs_diff_eq!(result_forward.value, 11.0, epsilon = 1e-10); // 1 + 8 + 2 = 11
 
@@ -331,7 +331,7 @@ mod tests {
 
         // Test reverse mode
         options.mode = ADMode::Reverse;
-        let result_reverse = autodiff(func, &x.view(), &options).unwrap();
+        let result_reverse = autodiff(func, &x.view(), &options).expect("Operation failed");
 
         assert_abs_diff_eq!(result_reverse.value, 11.0, epsilon = 1e-10);
 

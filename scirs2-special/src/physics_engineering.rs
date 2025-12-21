@@ -1110,15 +1110,15 @@ mod tests {
     #[test]
     fn test_blackbody_functions() {
         // Test Wien's displacement law
-        let wavelength = blackbody::wien_displacement(5778.0).unwrap(); // Sun's temperature
+        let wavelength = blackbody::wien_displacement(5778.0).expect("Operation failed"); // Sun's temperature
         assert_relative_eq!(wavelength, 5.016e-7, epsilon = 1e-9); // ~500 nm
 
         // Test Stefan-Boltzmann law
-        let power = blackbody::stefan_boltzmann_law(5778.0).unwrap();
+        let power = blackbody::stefan_boltzmann_law(5778.0).expect("Operation failed");
         assert_relative_eq!(power, 6.32e7, epsilon = 1e5); // ~63 MW/m²
 
         // Test Planck's law
-        let radiance = blackbody::planck_law(6e14, 5778.0).unwrap(); // 500 nm
+        let radiance = blackbody::planck_law(6e14, 5778.0).expect("Operation failed"); // 500 nm
         assert!(radiance > 0.0);
     }
 
@@ -1133,52 +1133,52 @@ mod tests {
         assert!(af.norm() <= 1.0);
 
         // Test Friis equation
-        let pr = antenna::friis_equation(0.0, 3.0, 3.0, 2.4e9, 100.0).unwrap();
+        let pr = antenna::friis_equation(0.0, 3.0, 3.0, 2.4e9, 100.0).expect("Operation failed");
         assert!(pr < 0.0); // Should have path loss
     }
 
     #[test]
     fn test_acoustics_functions() {
         // Test speed of sound
-        let c = acoustics::speed_of_sound(20.0, 0.5, 101325.0).unwrap();
+        let c = acoustics::speed_of_sound(20.0, 0.5, 101325.0).expect("Operation failed");
         assert_relative_eq!(c, 343.0, epsilon = 2.0);
 
         // Test SPL
-        let spl = acoustics::sound_pressure_level(1.0, 20e-6).unwrap();
+        let spl = acoustics::sound_pressure_level(1.0, 20e-6).expect("Operation failed");
         assert_relative_eq!(spl, 94.0, epsilon = 0.1);
 
         // Test A-weighting
-        let a_weight = acoustics::a_weighting(1000.0).unwrap();
+        let a_weight = acoustics::a_weighting(1000.0).expect("Operation failed");
         assert_relative_eq!(a_weight, 0.0, epsilon = 0.1); // 0 dB at 1 kHz
     }
 
     #[test]
     fn test_optics_functions() {
         // Test Brewster's angle for glass
-        let brewster = optics::brewster_angle(1.0, 1.5).unwrap();
+        let brewster = optics::brewster_angle(1.0, 1.5).expect("Operation failed");
         assert_relative_eq!(brewster, 0.9827, epsilon = 1e-4);
 
         // Test numerical aperture
-        let na = optics::numerical_aperture(1.5, 1.4).unwrap();
+        let na = optics::numerical_aperture(1.5, 1.4).expect("Operation failed");
         assert_relative_eq!(na, 0.5385, epsilon = 1e-4);
 
         // Test Gaussian beam
-        let w = optics::gaussian_beam_radius(1e-3, 1e-3, 633e-9).unwrap();
+        let w = optics::gaussian_beam_radius(1e-3, 1e-3, 633e-9).expect("Operation failed");
         assert!(w > 1e-3);
     }
 
     #[test]
     fn test_quantum_functions() {
         // Test de Broglie wavelength
-        let lambda = quantum::de_broglie_wavelength(6.626e-24).unwrap();
+        let lambda = quantum::de_broglie_wavelength(6.626e-24).expect("Operation failed");
         assert_relative_eq!(lambda, 1e-10, epsilon = 1e-12); // ~1 Angstrom
 
         // Test Bohr radius
-        let a0 = quantum::bohr_radius(1).unwrap();
+        let a0 = quantum::bohr_radius(1).expect("Operation failed");
         assert_relative_eq!(a0, 5.2917e-11, epsilon = 1e-14);
 
         // Test Rydberg wavelength for H-alpha (more accurate theoretical value)
-        let wavelength = quantum::rydberg_wavelength(3, 2, 1).unwrap();
+        let wavelength = quantum::rydberg_wavelength(3, 2, 1).expect("Operation failed");
         assert_relative_eq!(wavelength, 6.561123701785993e-7, epsilon = 1e-12);
     }
 }

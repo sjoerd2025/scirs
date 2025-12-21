@@ -28,9 +28,9 @@ use crate::error::{ClusteringError, Result};
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_cluster::metrics::dunn_index;
 ///
-/// let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0]).unwrap();
+/// let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0]).expect("Operation failed");
 /// let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-/// let dunn = dunn_index(data.view(), labels.view()).unwrap();
+/// let dunn = dunn_index(data.view(), labels.view()).expect("Operation failed");
 /// ```
 pub fn dunn_index<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
 where
@@ -122,9 +122,9 @@ where
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_cluster::metrics::bic_score;
 ///
-/// let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0]).unwrap();
+/// let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0]).expect("Operation failed");
 /// let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-/// let bic = bic_score(data.view(), labels.view()).unwrap();
+/// let bic = bic_score(data.view(), labels.view()).expect("Operation failed");
 /// ```
 pub fn bic_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
 where
@@ -180,7 +180,7 @@ where
         for &idx in &cluster_indices {
             centroid = &centroid + &data.row(idx);
         }
-        centroid = centroid / F::from_usize(cluster_indices.len()).unwrap();
+        centroid = centroid / F::from_usize(cluster_indices.len()).expect("Operation failed");
 
         // Calculate sum of squared distances to centroid
         for &idx in &cluster_indices {
@@ -191,9 +191,11 @@ where
 
     // Calculate BIC: log-likelihood + penalty term
     let n_params = k * (n_features + 1) - 1; // Number of parameters in the model
-    let log_likelihood = -F::from_usize(n_samples).unwrap() * wcss.ln() / F::from_f64(2.0).unwrap();
-    let penalty = F::from_usize(n_params).unwrap() * F::from_usize(n_samples).unwrap().ln()
-        / F::from_f64(2.0).unwrap();
+    let log_likelihood = -F::from_usize(n_samples).expect("Operation failed") * wcss.ln()
+        / F::from_f64(2.0).expect("Operation failed");
+    let penalty = F::from_usize(n_params).expect("Operation failed")
+        * F::from_usize(n_samples).expect("Operation failed").ln()
+        / F::from_f64(2.0).expect("Operation failed");
 
     Ok(-log_likelihood + penalty)
 }
@@ -263,7 +265,7 @@ where
         for &idx in &cluster_indices {
             centroid = &centroid + &data.row(idx);
         }
-        centroid = centroid / F::from_usize(cluster_indices.len()).unwrap();
+        centroid = centroid / F::from_usize(cluster_indices.len()).expect("Operation failed");
 
         // Calculate sum of squared distances to centroid
         for &idx in &cluster_indices {
@@ -274,10 +276,14 @@ where
 
     // Calculate AIC: -2 * log-likelihood + 2 * k
     let n_params = k * (n_features + 1) - 1; // Number of parameters in the model
-    let log_likelihood = -F::from_usize(n_samples).unwrap() * wcss.ln() / F::from_f64(2.0).unwrap();
+    let log_likelihood = -F::from_usize(n_samples).expect("Operation failed") * wcss.ln()
+        / F::from_f64(2.0).expect("Operation failed");
 
-    Ok(-F::from_f64(2.0).unwrap() * log_likelihood
-        + F::from_f64(2.0).unwrap() * F::from_usize(n_params).unwrap())
+    Ok(
+        -F::from_f64(2.0).expect("Operation failed") * log_likelihood
+            + F::from_f64(2.0).expect("Operation failed")
+                * F::from_usize(n_params).expect("Operation failed"),
+    )
 }
 
 /// Compute Euclidean distance between two points.
@@ -297,30 +303,30 @@ mod tests {
     #[test]
     fn test_dunn_index() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let dunn = dunn_index(data.view(), labels.view()).unwrap();
+        let dunn = dunn_index(data.view(), labels.view()).expect("Operation failed");
         assert!(dunn > 0.0);
     }
 
     #[test]
     fn test_bic_score() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let bic = bic_score(data.view(), labels.view()).unwrap();
+        let bic = bic_score(data.view(), labels.view()).expect("Operation failed");
         assert!(bic.is_finite());
     }
 
     #[test]
     fn test_aic_score() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let aic = aic_score(data.view(), labels.view()).unwrap();
+        let aic = aic_score(data.view(), labels.view()).expect("Operation failed");
         assert!(aic.is_finite());
     }
 

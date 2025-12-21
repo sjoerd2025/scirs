@@ -184,7 +184,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect();
         
         // Sort by power (descending)
-        freq_powers.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        freq_powers.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         
         println!("  * Time {} ({:.2} s):", label, time);
         for i in 0..3.min(freq_powers.len()) {

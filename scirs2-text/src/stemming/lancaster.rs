@@ -373,7 +373,7 @@ mod tests {
         ];
 
         for (word, expected) in test_cases {
-            let stemmed = stemmer.stem(word).unwrap();
+            let stemmed = stemmer.stem(word).expect("Operation failed");
             assert_eq!(stemmed, expected, "Failed for word: {word}");
         }
     }
@@ -391,7 +391,7 @@ mod tests {
         ];
 
         for (word, expected) in test_cases {
-            let stemmed = stemmer.stem(word).unwrap();
+            let stemmed = stemmer.stem(word).expect("Operation failed");
             assert_eq!(stemmed, expected, "Failed for word: {word}");
         }
     }
@@ -407,7 +407,7 @@ mod tests {
         ];
 
         for (word, expected) in test_cases {
-            let stemmed = stemmer.stem(word).unwrap();
+            let stemmed = stemmer.stem(word).expect("Operation failed");
             assert_eq!(stemmed, expected, "Failed for word: {word}");
         }
     }

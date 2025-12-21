@@ -34,12 +34,12 @@
 //!     .with_spherical_distance(true);
 //!
 //! // Fit the interpolator
-//! interpolator.fit(&latitudes.view(), &longitudes.view(), &temperatures.view()).unwrap();
+//! interpolator.fit(&latitudes.view(), &longitudes.view(), &temperatures.view()).expect("Operation failed");
 //!
 //! // Interpolate at new locations
 //! let query_lats = Array1::from_vec(vec![37.7749, 40.0]);
 //! let query_lons = Array1::from_vec(vec![-122.4194, -100.0]);
-//! let result = interpolator.interpolate(&query_lats.view(), &query_lons.view()).unwrap();
+//! let result = interpolator.interpolate(&query_lats.view(), &query_lons.view()).expect("Operation failed");
 //! ```
 
 use crate::advanced::kriging::{CovarianceFunction, KrigingInterpolator};
@@ -111,7 +111,7 @@ impl<T: Float + FromPrimitive> Default for GeospatialConfig<T> {
             coordinate_system: CoordinateSystem::WGS84,
             model: InterpolationModel::Kriging,
             use_spherical_distance: true,
-            earth_radius_km: T::from_f64(6371.0).unwrap(), // Mean Earth radius
+            earth_radius_km: T::from_f64(6371.0).expect("Operation failed"), // Mean Earth radius
             search_radius_km: None,
             max_neighbors: Some(20),
             anisotropy_angle: None,
@@ -427,10 +427,12 @@ where
                 // For WGS84, we can use coordinates directly or convert to radians
                 if self.config.use_spherical_distance {
                     // Convert to radians for spherical calculations
-                    let lat_rad = latitudes
-                        .mapv(|lat| lat * T::from_f64(std::f64::consts::PI / 180.0).unwrap());
-                    let lon_rad = longitudes
-                        .mapv(|lon| lon * T::from_f64(std::f64::consts::PI / 180.0).unwrap());
+                    let lat_rad = latitudes.mapv(|lat| {
+                        lat * T::from_f64(std::f64::consts::PI / 180.0).expect("Operation failed")
+                    });
+                    let lon_rad = longitudes.mapv(|lon| {
+                        lon * T::from_f64(std::f64::consts::PI / 180.0).expect("Operation failed")
+                    });
                     Ok((lat_rad, lon_rad))
                 } else {
                     // Use degrees directly
@@ -455,14 +457,15 @@ where
         latitudes: &ArrayView1<T>,
         longitudes: &ArrayView1<T>,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-        let earth_radius = self.config.earth_radius_km * T::from_f64(1000.0).unwrap(); // Convert to meters
-        let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).unwrap();
+        let earth_radius =
+            self.config.earth_radius_km * T::from_f64(1000.0).expect("Operation failed"); // Convert to meters
+        let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).expect("Operation failed");
 
         let x_coords = longitudes.mapv(|lon| lon * deg_to_rad * earth_radius);
         let y_coords = latitudes.mapv(|lat| {
             let lat_rad = lat * deg_to_rad;
             earth_radius
-                * (lat_rad + T::from_f64(std::f64::consts::PI / 4.0).unwrap())
+                * (lat_rad + T::from_f64(std::f64::consts::PI / 4.0).expect("Operation failed"))
                     .tan()
                     .ln()
         });
@@ -476,11 +479,11 @@ where
         latitudes: &ArrayView1<T>,
         longitudes: &ArrayView1<T>,
     ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-        let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).unwrap();
+        let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).expect("Operation failed");
         let earth_radius = self.config.earth_radius_km;
 
         // Use mean latitude for projection scaling
-        let mean_lat = latitudes.sum() / T::from_usize(latitudes.len()).unwrap();
+        let mean_lat = latitudes.sum() / T::from_usize(latitudes.len()).expect("Operation failed");
         let cos_mean_lat = (mean_lat * deg_to_rad).cos();
 
         let x_coords = longitudes.mapv(|lon| lon * deg_to_rad * earth_radius * cos_mean_lat);
@@ -505,15 +508,15 @@ where
 
         let n = values.len();
         if n > 1 {
-            let mean_val = values.sum() / T::from_usize(n).unwrap();
+            let mean_val = values.sum() / T::from_usize(n).expect("Operation failed");
             let variance = values
                 .iter()
                 .map(|&x| (x - mean_val) * (x - mean_val))
                 .sum::<T>()
-                / T::from_usize(n - 1).unwrap();
+                / T::from_usize(n - 1).expect("Operation failed");
 
             self.spatial_stats.spatial_variance = Some(variance);
-            self.spatial_stats.effective_dof = Some(T::from_usize(n).unwrap());
+            self.spatial_stats.effective_dof = Some(T::from_usize(n).expect("Operation failed"));
         }
 
         Ok(())
@@ -538,10 +541,10 @@ where
             &coords_2d.view(),
             values,
             CovarianceFunction::Exponential,
-            T::from_f64(1.0).unwrap(),  // sigma_sq
-            T::from_f64(1.0).unwrap(),  // length_scale
-            T::from_f64(0.01).unwrap(), // nugget
-            T::from_f64(1.0).unwrap(),  // alpha
+            T::from_f64(1.0).expect("Operation failed"), // sigma_sq
+            T::from_f64(1.0).expect("Operation failed"), // length_scale
+            T::from_f64(0.01).expect("Operation failed"), // nugget
+            T::from_f64(1.0).expect("Operation failed"), // alpha
         )?;
 
         self.interpolator = Some(Box::new(GeospatialKrigingWrapper { kriging }));
@@ -566,7 +569,7 @@ where
             &coords_2d.view(),
             values,
             RBFKernel::Gaussian,
-            T::from_f64(1.0).unwrap(),
+            T::from_f64(1.0).expect("Operation failed"),
         )?;
 
         self.interpolator = Some(Box::new(GeospatialRBFWrapper { rbf }));
@@ -587,7 +590,11 @@ where
             coords_2d[[i, 1]] = y_coords[i];
         }
 
-        let tps = ThinPlateSpline::new(&coords_2d.view(), values, T::from_f64(0.0).unwrap())?;
+        let tps = ThinPlateSpline::new(
+            &coords_2d.view(),
+            values,
+            T::from_f64(0.0).expect("Operation failed"),
+        )?;
         self.interpolator = Some(Box::new(GeospatialTPSWrapper { tps }));
         Ok(())
     }
@@ -604,7 +611,7 @@ where
 
     /// Calculate great circle distance between two points in kilometers
     pub fn great_circle_distance(&self, lat1: T, lon1: T, lat2: T, lon2: T) -> T {
-        let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).unwrap();
+        let deg_to_rad = T::from_f64(std::f64::consts::PI / 180.0).expect("Operation failed");
         let lat1_rad = lat1 * deg_to_rad;
         let lon1_rad = lon1 * deg_to_rad;
         let lat2_rad = lat2 * deg_to_rad;
@@ -613,9 +620,15 @@ where
         let dlat = lat2_rad - lat1_rad;
         let dlon = lon2_rad - lon1_rad;
 
-        let a = (dlat / T::from_f64(2.0).unwrap()).sin().powi(2)
-            + lat1_rad.cos() * lat2_rad.cos() * (dlon / T::from_f64(2.0).unwrap()).sin().powi(2);
-        let c = T::from_f64(2.0).unwrap() * a.sqrt().asin();
+        let a = (dlat / T::from_f64(2.0).expect("Operation failed"))
+            .sin()
+            .powi(2)
+            + lat1_rad.cos()
+                * lat2_rad.cos()
+                * (dlon / T::from_f64(2.0).expect("Operation failed"))
+                    .sin()
+                    .powi(2);
+        let c = T::from_f64(2.0).expect("Operation failed") * a.sqrt().asin();
 
         self.config.earth_radius_km * c
     }
@@ -922,13 +935,13 @@ mod tests {
 
         interpolator
             .fit(&latitudes.view(), &longitudes.view(), &temperatures.view())
-            .unwrap();
+            .expect("Operation failed");
 
         let query_lats = Array1::from_vec(vec![40.5, 41.5]);
         let query_lons = Array1::from_vec(vec![-74.5, -75.5]);
         let result = interpolator
             .interpolate(&query_lats.view(), &query_lons.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.values.len(), 2);
         assert!(result.values.iter().all(|&v| v.is_finite()));
@@ -961,7 +974,7 @@ mod tests {
         let result = interpolator.project_coordinates(&latitudes.view(), &longitudes.view());
         assert!(result.is_ok());
 
-        let (x_coords, y_coords) = result.unwrap();
+        let (x_coords, y_coords) = result.expect("Operation failed");
         assert_eq!(x_coords.len(), 2);
         assert_eq!(y_coords.len(), 2);
     }

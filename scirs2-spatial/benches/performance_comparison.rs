@@ -157,16 +157,16 @@ impl PerformanceAnalyzer {
                 let start = Instant::now();
                 for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
                     black_box(euclidean(
-                        row1.as_slice().unwrap(),
-                        row2.as_slice().unwrap(),
+                        row1.as_slice().expect("Operation failed"),
+                        row2.as_slice().expect("Operation failed"),
                     ));
                 }
                 let scalar_duration = start.elapsed();
 
                 // SIMD batch benchmark
                 let start = Instant::now();
-                let _distances =
-                    simd_euclidean_distance_batch(&points1.view(), &points2.view()).unwrap();
+                let _distances = simd_euclidean_distance_batch(&points1.view(), &points2.view())
+                    .expect("Operation failed");
                 let simd_duration = start.elapsed();
 
                 let speedup = scalar_duration.as_secs_f64() / simd_duration.as_secs_f64();
@@ -221,7 +221,8 @@ impl PerformanceAnalyzer {
 
             // Parallel benchmark
             let start = Instant::now();
-            let _par_distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+            let _par_distances =
+                parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
             let parallel_duration = start.elapsed();
 
             let speedup = sequential_duration.as_secs_f64() / parallel_duration.as_secs_f64();
@@ -267,7 +268,7 @@ impl PerformanceAnalyzer {
 
         for (i, &metric) in metrics.iter().enumerate() {
             let start = Instant::now();
-            let _distances = parallel_pdist(&points.view(), metric).unwrap();
+            let _distances = parallel_pdist(&points.view(), metric).expect("Operation failed");
             let duration = start.elapsed();
 
             if i == 0 {
@@ -310,18 +311,23 @@ impl PerformanceAnalyzer {
 
             // KDTree construction
             let start = Instant::now();
-            let kdtree = KDTree::new(&points).unwrap();
+            let kdtree = KDTree::new(&points).expect("Operation failed");
             let kdtree_build_time = start.elapsed();
 
             // BallTree construction
             let start = Instant::now();
-            let _balltree = BallTree::with_euclidean_distance(&points.view(), 10).unwrap();
+            let _balltree =
+                BallTree::with_euclidean_distance(&points.view(), 10).expect("Operation failed");
             let balltree_build_time = start.elapsed();
 
             // KDTree queries
             let start = Instant::now();
             for query in query_points.outer_iter() {
-                black_box(kdtree.query(query.as_slice().unwrap(), 5).unwrap());
+                black_box(
+                    kdtree
+                        .query(query.as_slice().expect("Operation failed"), 5)
+                        .expect("Operation failed"),
+                );
             }
             let kdtree_query_time = start.elapsed();
 
@@ -362,7 +368,8 @@ impl PerformanceAnalyzer {
         for &k in k_values {
             let start = Instant::now();
             let _indicesdistances =
-                simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean").unwrap();
+                simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean")
+                    .expect("Operation failed");
             let duration = start.elapsed();
 
             let throughput = query_size as f64 / duration.as_secs_f64();
@@ -412,7 +419,7 @@ impl PerformanceAnalyzer {
 
         for (i, (pattern_name, points)) in patterns.iter().enumerate() {
             let start = Instant::now();
-            let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+            let _distances = parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
             let duration = start.elapsed();
 
             if i == 0 {

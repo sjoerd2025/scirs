@@ -386,11 +386,21 @@ mod tests {
         let metric = WeightedLevenshtein::new();
 
         // With default weights, should be same as regular Levenshtein
-        assert_eq!(metric.distance("kitten", "sitting").unwrap(), 3.0);
-        assert_eq!(metric.distance("saturday", "sunday").unwrap(), 3.0);
-        assert_eq!(metric.distance("", "").unwrap(), 0.0);
-        assert_eq!(metric.distance("abc", "").unwrap(), 3.0);
-        assert_eq!(metric.distance("", "abc").unwrap(), 3.0);
+        assert_eq!(
+            metric
+                .distance("kitten", "sitting")
+                .expect("Operation failed"),
+            3.0
+        );
+        assert_eq!(
+            metric
+                .distance("saturday", "sunday")
+                .expect("Operation failed"),
+            3.0
+        );
+        assert_eq!(metric.distance("", "").expect("Operation failed"), 0.0);
+        assert_eq!(metric.distance("abc", "").expect("Operation failed"), 3.0);
+        assert_eq!(metric.distance("", "abc").expect("Operation failed"), 3.0);
     }
 
     #[test]
@@ -401,7 +411,12 @@ mod tests {
 
         // "kitten" -> "sitting" involves 2 substitutions (k->s, e->i) and 1 insertion (+g)
         // With weights: 2*1.0 + 1*2.0 = 4.0
-        assert_eq!(metric.distance("kitten", "sitting").unwrap(), 4.0);
+        assert_eq!(
+            metric
+                .distance("kitten", "sitting")
+                .expect("Operation failed"),
+            4.0
+        );
 
         // Make substitutions more expensive
         let weights = LevenshteinWeights::new(1.0, 1.0, 2.0);
@@ -409,7 +424,12 @@ mod tests {
 
         // "kitten" -> "sitting" involves 2 substitutions (k->s, e->i) and 1 insertion (+g)
         // With weights: 2*2.0 + 1*1.0 = 5.0
-        assert_eq!(metric.distance("kitten", "sitting").unwrap(), 5.0);
+        assert_eq!(
+            metric
+                .distance("kitten", "sitting")
+                .expect("Operation failed"),
+            5.0
+        );
     }
 
     #[test]
@@ -425,12 +445,23 @@ mod tests {
 
         // "kitten" -> "sitting" now has a cheaper k->s substitution
         // Standard would be 3.0, but with custom weight for k->s: 0.5 + 1.0 + 1.0 = 2.5
-        assert_eq!(metric.distance("kitten", "sitting").unwrap(), 2.5);
+        assert_eq!(
+            metric
+                .distance("kitten", "sitting")
+                .expect("Operation failed"),
+            2.5
+        );
 
         // With our current implementation, we only check the exact character pair (c1, c2)
         // So we should get the default substitution cost of 1.0 for both
-        assert_eq!(metric.distance("hat", "hot").unwrap(), 1.0);
-        assert_eq!(metric.distance("hot", "hat").unwrap(), 1.0);
+        assert_eq!(
+            metric.distance("hat", "hot").expect("Operation failed"),
+            1.0
+        );
+        assert_eq!(
+            metric.distance("hot", "hat").expect("Operation failed"),
+            1.0
+        );
     }
 
     #[test]
@@ -438,16 +469,46 @@ mod tests {
         let metric = WeightedLevenshtein::new();
 
         // With default weights, normalization works similar to regular Levenshtein
-        assert!((metric.similarity("kitten", "sitting").unwrap() - 0.769).abs() < 0.001);
-        assert!((metric.normalized_distance("kitten", "sitting").unwrap() - 0.231).abs() < 0.001);
+        assert!(
+            (metric
+                .similarity("kitten", "sitting")
+                .expect("Operation failed")
+                - 0.769)
+                .abs()
+                < 0.001
+        );
+        assert!(
+            (metric
+                .normalized_distance("kitten", "sitting")
+                .expect("Operation failed")
+                - 0.231)
+                .abs()
+                < 0.001
+        );
 
         // Perfect similarity for identical strings
-        assert_eq!(metric.similarity("same", "same").unwrap(), 1.0);
-        assert_eq!(metric.normalized_distance("same", "same").unwrap(), 0.0);
+        assert_eq!(
+            metric.similarity("same", "same").expect("Operation failed"),
+            1.0
+        );
+        assert_eq!(
+            metric
+                .normalized_distance("same", "same")
+                .expect("Operation failed"),
+            0.0
+        );
 
         // Zero similarity for completely different strings
-        assert_eq!(metric.similarity("", "abcde").unwrap(), 0.0);
-        assert_eq!(metric.normalized_distance("", "abcde").unwrap(), 1.0);
+        assert_eq!(
+            metric.similarity("", "abcde").expect("Operation failed"),
+            0.0
+        );
+        assert_eq!(
+            metric
+                .normalized_distance("", "abcde")
+                .expect("Operation failed"),
+            1.0
+        );
     }
 
     #[test]
@@ -455,17 +516,35 @@ mod tests {
         let metric = WeightedDamerauLevenshtein::new();
 
         // Regular cases
-        assert_eq!(metric.distance("kitten", "sitting").unwrap(), 3.0);
+        assert_eq!(
+            metric
+                .distance("kitten", "sitting")
+                .expect("Operation failed"),
+            3.0
+        );
 
         // "abcdef" -> "abcfed" involves one transposition (f,e -> e,f)
         // But our algorithm implementation currently treats this as two substitutions
-        assert_eq!(metric.distance("abcdef", "abcfed").unwrap(), 2.0);
+        assert_eq!(
+            metric
+                .distance("abcdef", "abcfed")
+                .expect("Operation failed"),
+            2.0
+        );
 
         // Transposition cases
         // Let's check what our current implementation actually returns
         // The transposition logic is a bit tricky and needs more work
-        assert_eq!(metric.distance("abc", "acb").unwrap(), 1.0); // Seems to work for simple case
-        assert_eq!(metric.distance("abcdef", "abcfde").unwrap(), 2.0); // But not for more complex ones
+        assert_eq!(
+            metric.distance("abc", "acb").expect("Operation failed"),
+            1.0
+        ); // Seems to work for simple case
+        assert_eq!(
+            metric
+                .distance("abcdef", "abcfde")
+                .expect("Operation failed"),
+            2.0
+        ); // But not for more complex ones
 
         // With custom weights for transpositions
         let weights = DamerauLevenshteinWeights::new(1.0, 1.0, 1.0, 0.5);
@@ -473,9 +552,17 @@ mod tests {
 
         // Transposition should cost 0.5, but our implementation needs more work
         // The simple case works with custom weight
-        assert_eq!(metric.distance("abc", "acb").unwrap(), 0.5);
+        assert_eq!(
+            metric.distance("abc", "acb").expect("Operation failed"),
+            0.5
+        );
         // But for more complex cases it doesn't detect the transposition correctly
-        assert_eq!(metric.distance("abcdef", "abcfde").unwrap(), 2.0);
+        assert_eq!(
+            metric
+                .distance("abcdef", "abcfde")
+                .expect("Operation failed"),
+            2.0
+        );
     }
 
     #[test]
@@ -483,18 +570,18 @@ mod tests {
         let metric = WeightedDamerauLevenshtein::new();
 
         // Empty strings
-        assert_eq!(metric.distance("", "").unwrap(), 0.0);
-        assert_eq!(metric.distance("abc", "").unwrap(), 3.0);
-        assert_eq!(metric.distance("", "abc").unwrap(), 3.0);
+        assert_eq!(metric.distance("", "").expect("Operation failed"), 0.0);
+        assert_eq!(metric.distance("abc", "").expect("Operation failed"), 3.0);
+        assert_eq!(metric.distance("", "abc").expect("Operation failed"), 3.0);
 
         // Custom weights for empty strings
         let weights = DamerauLevenshteinWeights::new(2.0, 2.0, 1.0, 1.0);
         let metric = WeightedDamerauLevenshtein::with_weights(weights);
 
         // Empty string with insertion cost of 2.0
-        assert_eq!(metric.distance("", "abc").unwrap(), 6.0);
+        assert_eq!(metric.distance("", "abc").expect("Operation failed"), 6.0);
 
         // Empty string with deletion cost of 2.0
-        assert_eq!(metric.distance("abc", "").unwrap(), 6.0);
+        assert_eq!(metric.distance("abc", "").expect("Operation failed"), 6.0);
     }
 }

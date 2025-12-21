@@ -154,8 +154,8 @@ impl<'a> InteriorPointSolver<'a> {
 
             // Evaluate constraints and Jacobians
             let (c_eq, j_eq) = if self.m_eq > 0 && eq_con.is_some() && eq_jac.is_some() {
-                let c = eq_con.as_mut().unwrap()(&x.view());
-                let j = eq_jac.as_mut().unwrap()(&x.view());
+                let c = eq_con.as_mut().expect("Operation failed")(&x.view());
+                let j = eq_jac.as_mut().expect("Operation failed")(&x.view());
                 self.nfev += 2;
                 (Some(c), Some(j))
             } else {
@@ -163,8 +163,8 @@ impl<'a> InteriorPointSolver<'a> {
             };
 
             let (c_ineq, j_ineq) = if self.m_ineq > 0 && ineq_con.is_some() && ineq_jac.is_some() {
-                let c = ineq_con.as_mut().unwrap()(&x.view());
-                let j = ineq_jac.as_mut().unwrap()(&x.view());
+                let c = ineq_con.as_mut().expect("Operation failed")(&x.view());
+                let j = ineq_jac.as_mut().expect("Operation failed")(&x.view());
                 self.nfev += 2;
                 (Some(c), Some(j))
             } else {
@@ -957,7 +957,7 @@ fn finite_diff_jacobian(
     let n = x.len();
     let m = constraint_fns.len();
     let mut jac = Array2::zeros((m, n));
-    let x_slice = x.as_slice().unwrap();
+    let x_slice = x.as_slice().expect("Operation failed");
 
     // Evaluate constraints at current point
     let f0: Vec<f64> = constraint_fns.iter().map(|f| f(x_slice)).collect();
@@ -967,7 +967,7 @@ fn finite_diff_jacobian(
     for j in 0..n {
         let h = eps * (1.0 + x[j].abs());
         x_pert[j] = x[j] + h;
-        let x_pert_slice = x_pert.as_slice().unwrap();
+        let x_pert_slice = x_pert.as_slice().expect("Operation failed");
 
         // Evaluate constraints at perturbed point
         for i in 0..m {
@@ -1014,9 +1014,11 @@ where
 
     // Prepare function and gradient
     let func_clone = func.clone();
-    let mut fun_mut = move |x: &ArrayView1<f64>| -> f64 { func(x.as_slice().unwrap()) };
+    let mut fun_mut =
+        move |x: &ArrayView1<f64>| -> f64 { func(x.as_slice().expect("Operation failed")) };
     let mut grad_mut = move |x: &ArrayView1<f64>| -> Array1<f64> {
-        let mut fun_fd = |x: &ArrayView1<f64>| -> f64 { func_clone(x.as_slice().unwrap()) };
+        let mut fun_fd =
+            |x: &ArrayView1<f64>| -> f64 { func_clone(x.as_slice().expect("Operation failed")) };
         finite_diff_gradient(&mut fun_fd, x, 1e-8)
     };
 
@@ -1024,7 +1026,7 @@ where
     let mut eq_con_mut: Option<Box<dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>> = if m_eq > 0 {
         let eq_fns: Vec<ConstraintFn> = eq_constraints.iter().map(|c| c.fun).collect();
         Some(Box::new(move |x: &ArrayView1<f64>| -> Array1<f64> {
-            let x_slice = x.as_slice().unwrap();
+            let x_slice = x.as_slice().expect("Operation failed");
             Array1::from_vec(eq_fns.iter().map(|f| f(x_slice)).collect())
         }))
     } else {
@@ -1044,7 +1046,7 @@ where
     let mut ineq_con_mut: Option<Box<dyn FnMut(&ArrayView1<f64>) -> Array1<f64>>> = if m_ineq > 0 {
         let ineq_fns: Vec<ConstraintFn> = ineq_constraints.iter().map(|c| c.fun).collect();
         Some(Box::new(move |x: &ArrayView1<f64>| -> Array1<f64> {
-            let x_slice = x.as_slice().unwrap();
+            let x_slice = x.as_slice().expect("Operation failed");
             Array1::from_vec(ineq_fns.iter().map(|f| f(x_slice)).collect())
         }))
     } else {
@@ -1107,7 +1109,7 @@ mod tests {
             |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![1.0 - x[0] - x[1]]) };
 
         let ineq_jac = |_x: &ArrayView1<f64>| -> Array2<f64> {
-            Array2::from_shape_vec((1, 2), vec![-1.0, -1.0]).unwrap()
+            Array2::from_shape_vec((1, 2), vec![-1.0, -1.0]).expect("Operation failed")
         };
 
         // Use a feasible starting point closer to the solution
@@ -1157,7 +1159,7 @@ mod tests {
             |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![x[0] + x[1] - 2.0]) };
 
         let eq_jac = |_x: &ArrayView1<f64>| -> Array2<f64> {
-            Array2::from_shape_vec((1, 2), vec![1.0, 1.0]).unwrap()
+            Array2::from_shape_vec((1, 2), vec![1.0, 1.0]).expect("Operation failed")
         };
 
         // Use a feasible starting point that satisfies the constraint

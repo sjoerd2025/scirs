@@ -313,12 +313,16 @@ where
 
             // Update submatrix with fill-in control
             for i in (k + 1)..n {
-                if workingmatrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {
+                if workingmatrix[[i, k]].abs()
+                    > F::from(config.drop_tolerance).expect("Operation failed")
+                {
                     l_factor[[i, k]] = workingmatrix[[i, k]] / pivot;
 
                     for j in (k + 1)..n {
-                        if workingmatrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap()
-                            && workingmatrix[[i, j]].abs() > F::from(config.drop_tolerance).unwrap()
+                        if workingmatrix[[k, j]].abs()
+                            > F::from(config.drop_tolerance).expect("Operation failed")
+                            && workingmatrix[[i, j]].abs()
+                                > F::from(config.drop_tolerance).expect("Operation failed")
                         {
                             workingmatrix[[i, j]] =
                                 workingmatrix[[i, j]] - l_factor[[i, k]] * workingmatrix[[k, j]];
@@ -329,7 +333,9 @@ where
 
             // Update U factor
             for j in (k + 1)..n {
-                if workingmatrix[[k, j]].abs() > F::from(config.drop_tolerance).unwrap() {
+                if workingmatrix[[k, j]].abs()
+                    > F::from(config.drop_tolerance).expect("Operation failed")
+                {
                     u_factor[[k, j]] = workingmatrix[[k, j]];
                 }
             }
@@ -447,7 +453,9 @@ where
 
             // Update column below diagonal
             for i in (k + 1)..n {
-                if workingmatrix[[i, k]].abs() > F::from(config.drop_tolerance).unwrap() {
+                if workingmatrix[[i, k]].abs()
+                    > F::from(config.drop_tolerance).expect("Operation failed")
+                {
                     l_factor[[i, k]] = workingmatrix[[i, k]] / l_factor[[k, k]];
                 }
             }
@@ -455,8 +463,10 @@ where
             // Update remaining submatrix
             for i in (k + 1)..n {
                 for j in k..i {
-                    if l_factor[[i, k]].abs() > F::from(config.drop_tolerance).unwrap()
-                        && l_factor[[j, k]].abs() > F::from(config.drop_tolerance).unwrap()
+                    if l_factor[[i, k]].abs()
+                        > F::from(config.drop_tolerance).expect("Operation failed")
+                        && l_factor[[j, k]].abs()
+                            > F::from(config.drop_tolerance).expect("Operation failed")
                     {
                         workingmatrix[[i, j]] -= l_factor[[i, k]] * l_factor[[j, k]];
                     }
@@ -780,15 +790,15 @@ where
         let sparsity = Self::estimate_sparsity(matrix);
 
         // Select preconditioner based on matrix properties
-        if condition_estimate < F::from(10.0).unwrap() {
+        if condition_estimate < F::from(10.0).expect("Operation failed") {
             // Well-conditioned: use simple diagonal preconditioner
             Ok(Self::Diagonal(DiagonalPreconditioner::new(matrix)?))
-        } else if is_positive_definite && sparsity > F::from(0.8).unwrap() {
+        } else if is_positive_definite && sparsity > F::from(0.8).expect("Operation failed") {
             // Sparse SPD: use incomplete Cholesky
             Ok(Self::IncompleteCholesky(
                 IncompleteCholeskyPreconditioner::new(matrix, config)?,
             ))
-        } else if sparsity > F::from(0.7).unwrap() {
+        } else if sparsity > F::from(0.7).expect("Operation failed") {
             // Sparse general: use incomplete LU
             Ok(Self::IncompleteLU(IncompleteLUPreconditioner::new(
                 matrix, config,
@@ -824,7 +834,10 @@ where
 
         // Rough estimate: condition number ≈ λ_max / λ_min
         // For simplicity, assume λ_min is roughly λ_max / n
-        Ok(lambda_max * F::from(n as f64).unwrap() / lambda_max.max(F::epsilon()))
+        Ok(
+            lambda_max * F::from(n as f64).expect("Operation failed")
+                / lambda_max.max(F::epsilon()),
+        )
     }
 
     /// Check if matrix is symmetric
@@ -834,7 +847,7 @@ where
             return false;
         }
 
-        let tolerance = F::from(1e-12).unwrap();
+        let tolerance = F::from(1e-12).expect("Operation failed");
         for i in 0..n {
             for j in (i + 1)..n {
                 if (matrix[[i, j]] - matrix[[j, i]]).abs() > tolerance {
@@ -864,10 +877,11 @@ where
     fn estimate_sparsity(matrix: &ArrayView2<F>) -> F {
         let (m, n) = matrix.dim();
         let total_elements = m * n;
-        let tolerance = F::from(1e-14).unwrap();
+        let tolerance = F::from(1e-14).expect("Operation failed");
 
         let zero_elements = matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
-        F::from(zero_elements).unwrap() / F::from(total_elements).unwrap()
+        F::from(zero_elements).expect("Operation failed")
+            / F::from(total_elements).expect("Operation failed")
     }
 }
 
@@ -1128,7 +1142,7 @@ where
 
         // For simplicity, use approximate solution update
         // (Full GMRES would solve the least squares problem)
-        x.scaled_add(tolerance * F::from(0.1).unwrap(), &v[0]);
+        x.scaled_add(tolerance * F::from(0.1).expect("Operation failed"), &v[0]);
     }
 
     Ok(x)
@@ -1210,10 +1224,10 @@ mod tests {
     #[test]
     fn test_diagonal_preconditioner() {
         let matrix = array![[4.0, 1.0], [1.0, 3.0]];
-        let preconditioner = DiagonalPreconditioner::new(&matrix.view()).unwrap();
+        let preconditioner = DiagonalPreconditioner::new(&matrix.view()).expect("Operation failed");
 
         let x = array![1.0, 2.0];
-        let result = preconditioner.apply(&x.view()).unwrap();
+        let result = preconditioner.apply(&x.view()).expect("Operation failed");
 
         // Should be [1/4, 2/3]
         assert_relative_eq!(result[0], 0.25, epsilon = 1e-10);
@@ -1225,10 +1239,11 @@ mod tests {
         let matrix = array![[4.0, 1.0, 0.0], [1.0, 4.0, 1.0], [0.0, 1.0, 4.0]];
 
         let config = PreconditionerConfig::default().with_drop_tolerance(1e-8);
-        let preconditioner = IncompleteLUPreconditioner::new(&matrix.view(), &config).unwrap();
+        let preconditioner =
+            IncompleteLUPreconditioner::new(&matrix.view(), &config).expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0];
-        let result = preconditioner.apply(&x.view()).unwrap();
+        let result = preconditioner.apply(&x.view()).expect("Operation failed");
 
         // Verify the result is reasonable (should be close to matrix^-1 * x)
         assert!(result.len() == 3);
@@ -1240,11 +1255,11 @@ mod tests {
         let matrix = array![[4.0, 1.0, 0.0], [1.0, 4.0, 1.0], [0.0, 1.0, 4.0]];
 
         let config = PreconditionerConfig::default().with_drop_tolerance(1e-8);
-        let preconditioner =
-            IncompleteCholeskyPreconditioner::new(&matrix.view(), &config).unwrap();
+        let preconditioner = IncompleteCholeskyPreconditioner::new(&matrix.view(), &config)
+            .expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0];
-        let result = preconditioner.apply(&x.view()).unwrap();
+        let result = preconditioner.apply(&x.view()).expect("Operation failed");
 
         // Verify the result is reasonable
         assert!(result.len() == 3);
@@ -1261,10 +1276,11 @@ mod tests {
         ];
 
         let config = PreconditionerConfig::default().with_blocksize(2);
-        let preconditioner = BlockJacobiPreconditioner::new(&matrix.view(), &config).unwrap();
+        let preconditioner =
+            BlockJacobiPreconditioner::new(&matrix.view(), &config).expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let result = preconditioner.apply(&x.view()).unwrap();
+        let result = preconditioner.apply(&x.view()).expect("Operation failed");
 
         // Verify the result is reasonable
         assert!(result.len() == 4);
@@ -1276,10 +1292,11 @@ mod tests {
         let matrix = array![[2.0, 0.1, 0.0], [0.1, 2.0, 0.1], [0.0, 0.1, 2.0]];
 
         let config = PreconditionerConfig::default().with_polynomial_degree(2);
-        let preconditioner = PolynomialPreconditioner::new(&matrix.view(), &config).unwrap();
+        let preconditioner =
+            PolynomialPreconditioner::new(&matrix.view(), &config).expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0];
-        let result = preconditioner.apply(&x.view()).unwrap();
+        let result = preconditioner.apply(&x.view()).expect("Operation failed");
 
         // Verify the result is reasonable
         assert!(result.len() == 3);
@@ -1291,10 +1308,11 @@ mod tests {
         let matrix = array![[4.0, 1.0, 0.0], [1.0, 4.0, 1.0], [0.0, 1.0, 4.0]];
 
         let config = PreconditionerConfig::default();
-        let preconditioner = AdaptivePreconditioner::new(&matrix.view(), &config).unwrap();
+        let preconditioner =
+            AdaptivePreconditioner::new(&matrix.view(), &config).expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0];
-        let result = preconditioner.apply(&x.view()).unwrap();
+        let result = preconditioner.apply(&x.view()).expect("Operation failed");
 
         // Verify the result is reasonable
         assert!(result.len() == 3);
@@ -1307,7 +1325,8 @@ mod tests {
         let rhs = array![1.0, 2.0, 3.0];
 
         let config = PreconditionerConfig::default();
-        let preconditioner = create_preconditioner(&matrix.view(), &config).unwrap();
+        let preconditioner =
+            create_preconditioner(&matrix.view(), &config).expect("Operation failed");
 
         let solution = preconditioned_conjugate_gradient(
             &matrix.view(),
@@ -1317,7 +1336,7 @@ mod tests {
             1e-8,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Verify solution satisfies Ax = b (approximately)
         let residual = &rhs - &matrix.dot(&solution);
@@ -1330,9 +1349,11 @@ mod tests {
         let matrix = array![[4.0, 1.0, 0.0], [1.0, 4.0, 1.0], [0.0, 1.0, 4.0]];
 
         let config = PreconditionerConfig::default();
-        let preconditioner = create_preconditioner(&matrix.view(), &config).unwrap();
+        let preconditioner =
+            create_preconditioner(&matrix.view(), &config).expect("Operation failed");
 
-        let analysis = analyze_preconditioner(&matrix.view(), preconditioner.as_ref()).unwrap();
+        let analysis = analyze_preconditioner(&matrix.view(), preconditioner.as_ref())
+            .expect("Operation failed");
 
         // Verify analysis contains reasonable values
         assert!(analysis.condition_improvement > 0.0);

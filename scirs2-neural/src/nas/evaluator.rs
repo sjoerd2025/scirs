@@ -101,7 +101,7 @@ impl ArchitectureEvaluator {
                 let pred_label = pred_probs
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(idx_)| idx)
                     .unwrap_or(0);
                 // Accuracy
@@ -112,10 +112,10 @@ impl ArchitectureEvaluator {
                 if let Some(ref k_values) = self.metrics_config.top_k {
                     let mut sorted_indices: Vec<usize> = (0..pred_probs.len()).collect();
                     sorted_indices
-                        .sort_by(|&a, &b| pred_probs[b].partial_cmp(&pred_probs[a]).unwrap());
+                        .sort_by(|&a, &b| pred_probs[b].partial_cmp(&pred_probs[a]).expect("Operation failed"));
                     for k in k_values {
                         if sorted_indices[..*k.min(&sorted_indices.len())].contains(true_label) {
-                            *top_k_correct.get_mut(k).unwrap() += 1;
+                            *top_k_correct.get_mut(k).expect("Operation failed") += 1;
                         }
                     }
                 all_predictions.push(pred_label);
@@ -133,7 +133,7 @@ impl ArchitectureEvaluator {
         if self.metrics_config.precision_recall || self.metrics_config.f1_score {
             let (precision, recall, f1) = self.compute_precision_recall_f1(
                 &all_predictions,
-                labels.as_slice().unwrap(),
+                labels.as_slice().expect("Operation failed"),
                 num_classes,
             )?;
             if self.metrics_config.precision_recall {
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn test_evaluator_creation() {
         let config = ControllerConfig::default();
-        let evaluator = ArchitectureEvaluator::new(config).unwrap();
+        let evaluator = ArchitectureEvaluator::new(config).expect("Operation failed");
         assert_eq!(evaluator.batch_size, 32);
     fn test_metrics_config() {
         let config = MetricsConfig::default();
@@ -311,7 +311,7 @@ mod tests {
         assert!(_config.top_k.is_some());
     fn test_hardware_aware_evaluator() {
         let base_config = ControllerConfig::default();
-        let base_evaluator = ArchitectureEvaluator::new(base_config).unwrap();
+        let base_evaluator = ArchitectureEvaluator::new(base_config).expect("Operation failed");
         let hw_config = HardwareConfig {
             device_type: "mobile".to_string(),
             memory_limit: Some(512),

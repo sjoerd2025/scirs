@@ -7,7 +7,7 @@ mod dwt_daubechies_tests {
         // Check that we can create Daubechies wavelet filters for all orders
         for n in 1..=10 {
             let wavelet = Wavelet::DB(n);
-            let filters = wavelet.filters().unwrap();
+            let filters = wavelet.filters().expect("Test: operation failed");
 
             // Check filter lengths (should be 2*n)
             assert_eq!(filters.dec_lo.len(), 2 * n);
@@ -32,14 +32,16 @@ mod dwt_daubechies_tests {
 
         // Test that decomposition and reconstruction don't crash
         let wavelet = Wavelet::Haar;
-        let (approx, detail) = dwt_decompose(&signal, wavelet, None).unwrap();
+        let (approx, detail) =
+            dwt_decompose(&signal, wavelet, None).expect("Test: operation failed");
 
         // Check dimensions
         assert!(!approx.is_empty());
         assert_eq!(approx.len(), detail.len());
 
         // Check reconstruction
-        let reconstructed = dwt_reconstruct(&approx, &detail, wavelet).unwrap();
+        let reconstructed =
+            dwt_reconstruct(&approx, &detail, wavelet).expect("Test: operation failed");
         assert!(!reconstructed.is_empty());
     }
 
@@ -54,13 +56,13 @@ mod dwt_daubechies_tests {
 
         // Test that multi-level decomposition and reconstruction don't crash
         let wavelet = Wavelet::Haar;
-        let coeffs = wavedec(&signal, wavelet, Some(3), None).unwrap();
+        let coeffs = wavedec(&signal, wavelet, Some(3), None).expect("Test: operation failed");
 
         // Check that we have some coefficients
         assert!(!coeffs.is_empty());
 
         // Check reconstruction
-        let reconstructed = waverec(&coeffs, wavelet).unwrap();
+        let reconstructed = waverec(&coeffs, wavelet).expect("Test: operation failed");
         assert!(!reconstructed.is_empty());
     }
 
@@ -75,15 +77,17 @@ mod dwt_daubechies_tests {
         let wavelet = Wavelet::Haar;
 
         // Verify that decomposition and reconstruction work without crashing
-        let (approx, detail) = dwt_decompose(&signal, wavelet, None).unwrap();
-        let reconstructed = dwt_reconstruct(&approx, &detail, wavelet).unwrap();
+        let (approx, detail) =
+            dwt_decompose(&signal, wavelet, None).expect("Test: operation failed");
+        let reconstructed =
+            dwt_reconstruct(&approx, &detail, wavelet).expect("Test: operation failed");
 
         // Just check that we got some output
         assert!(!reconstructed.is_empty());
 
         // Also test multi-level decomposition and reconstruction
-        let coeffs = wavedec(&signal, wavelet, Some(2), None).unwrap();
-        let reconstructed_ml = waverec(&coeffs, wavelet).unwrap();
+        let coeffs = wavedec(&signal, wavelet, Some(2), None).expect("Test: operation failed");
+        let reconstructed_ml = waverec(&coeffs, wavelet).expect("Test: operation failed");
 
         // Check that we got some output
         assert!(!reconstructed_ml.is_empty());
@@ -102,15 +106,18 @@ mod dwt_daubechies_tests {
 
         for &mode in &modes {
             // Test single-level decomposition and reconstruction
-            let (approx, detail) = dwt_decompose(&signal, wavelet, Some(mode)).unwrap();
-            let reconstructed = dwt_reconstruct(&approx, &detail, wavelet).unwrap();
+            let (approx, detail) =
+                dwt_decompose(&signal, wavelet, Some(mode)).expect("Test: operation failed");
+            let reconstructed =
+                dwt_reconstruct(&approx, &detail, wavelet).expect("Test: operation failed");
 
             // Verify we got some output
             assert!(!reconstructed.is_empty());
 
             // Test multi-level decomposition and reconstruction
-            let coeffs = wavedec(&signal, wavelet, Some(2), Some(mode)).unwrap();
-            let reconstructed_ml = waverec(&coeffs, wavelet).unwrap();
+            let coeffs =
+                wavedec(&signal, wavelet, Some(2), Some(mode)).expect("Test: operation failed");
+            let reconstructed_ml = waverec(&coeffs, wavelet).expect("Test: operation failed");
 
             // Verify we got some output
             assert!(!reconstructed_ml.is_empty());

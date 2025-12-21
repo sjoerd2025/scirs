@@ -985,7 +985,7 @@ mod tests {
     #[test]
     fn test_streaming_processor_creation() {
         let config = StreamingConfig::default();
-        let processor = StreamingProcessor::new(config).unwrap();
+        let processor = StreamingProcessor::new(config).expect("Operation failed");
 
         assert_eq!(processor.config.buffer_size, 512);
         assert_eq!(processor.config.num_channels, 1);
@@ -1000,7 +1000,7 @@ mod tests {
             ..Default::default()
         };
 
-        let mut processor = StreamingProcessor::new(config).unwrap();
+        let mut processor = StreamingProcessor::new(config).expect("Operation failed");
 
         // Generate test signal
         let fs = 1000.0;
@@ -1010,7 +1010,7 @@ mod tests {
             .collect();
 
         let input_array = Array1::from(input);
-        let result = processor.process_frame(&input_array).unwrap();
+        let result = processor.process_frame(&input_array).expect("Operation failed");
 
         assert_eq!(result.output.len(), 256);
         assert!(result.features.rms > 0.0);
@@ -1032,15 +1032,15 @@ mod tests {
             ..Default::default()
         };
 
-        let mut processor = StreamingProcessor::new(config).unwrap();
+        let mut processor = StreamingProcessor::new(config).expect("Operation failed");
 
         // Test with loud signal
         let loud_input = Array1::from_vec(vec![0.9; 128]);
-        let result1 = processor.process_frame(&loud_input).unwrap();
+        let result1 = processor.process_frame(&loud_input).expect("Operation failed");
 
         // Test with quiet signal
         let quiet_input = Array1::from_vec(vec![0.1; 128]);
-        let result2 = processor.process_frame(&quiet_input).unwrap();
+        let result2 = processor.process_frame(&quiet_input).expect("Operation failed");
 
         // AGC should adjust levels
         assert!(result1.output.iter().all(|&x: &f64| x.abs() <= 1.0));
@@ -1056,7 +1056,7 @@ mod tests {
             ..Default::default()
         };
 
-        let mut processor = StreamingProcessor::new(config).unwrap();
+        let mut processor = StreamingProcessor::new(config).expect("Operation failed");
 
         // Generate complex test signal
         let fs = 1000.0;
@@ -1068,7 +1068,7 @@ mod tests {
             .collect();
 
         let input_array = Array1::from(input);
-        let result = processor.process_frame(&input_array).unwrap();
+        let result = processor.process_frame(&input_array).expect("Operation failed");
 
         assert!(result.features.spectral_centroid > 0.0);
         assert!(result.features.spectral_bandwidth > 0.0);
@@ -1083,21 +1083,21 @@ mod tests {
             ..Default::default()
         };
 
-        let mut processor = StreamingProcessor::new(config).unwrap();
+        let mut processor = StreamingProcessor::new(config).expect("Operation failed");
 
         let input = Array2::from_shape_fn((256, 2), |(i, ch)| (i as f64 + ch as f64).sin());
 
-        let results = processor.process_multichannel(&input).unwrap();
+        let results = processor.process_multichannel(&input).expect("Operation failed");
         assert_eq!(results.len(), 2);
     }
 
     #[test]
     fn test_processor_reset() {
         let config = StreamingConfig::default();
-        let mut processor = StreamingProcessor::new(config).unwrap();
+        let mut processor = StreamingProcessor::new(config).expect("Operation failed");
 
         let input = Array1::from_vec(vec![0.5; 512]);
-        let _ = processor.process_frame(&input).unwrap();
+        let _ = processor.process_frame(&input).expect("Operation failed");
 
         assert!(processor.stats.samples_processed > 0);
 
@@ -1107,7 +1107,7 @@ mod tests {
 
     #[test]
     fn test_mel_filter_bank() {
-        let filter_bank = create_mel_filter_bank(257, 8000.0, 13).unwrap();
+        let filter_bank = create_mel_filter_bank(257, 8000.0, 13).expect("Operation failed");
         assert_eq!(filter_bank.nrows(), 13);
         assert_eq!(filter_bank.ncols(), 257);
 

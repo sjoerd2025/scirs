@@ -23,7 +23,7 @@ fn bench_normalization(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-100.0, 100.0).unwrap(),
+                Uniform::new(-100.0, 100.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -93,7 +93,7 @@ fn bench_simd_normalization(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-100.0, 100.0).unwrap(),
+                Uniform::new(-100.0, 100.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -137,7 +137,7 @@ fn bench_scaling(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-100.0, 100.0).unwrap(),
+                Uniform::new(-100.0, 100.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -148,7 +148,7 @@ fn bench_scaling(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     let mut scaler = MaxAbsScaler::new();
-                    scaler.fit(data).unwrap();
+                    scaler.fit(data).expect("Operation failed");
 
                     b.iter(|| {
                         let _result = scaler.transform(black_box(data));
@@ -164,8 +164,9 @@ fn bench_scaling(c: &mut Criterion) {
                 ),
                 &data,
                 |b, data| {
-                    let mut transformer = QuantileTransformer::new(100, "uniform", false).unwrap();
-                    transformer.fit(data).unwrap();
+                    let mut transformer =
+                        QuantileTransformer::new(100, "uniform", false).expect("Operation failed");
+                    transformer.fit(data).expect("Operation failed");
 
                     b.iter(|| {
                         let _result = transformer.transform(black_box(data));
@@ -190,7 +191,7 @@ fn bench_feature_engineering(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-10.0, 10.0).unwrap(),
+                Uniform::new(-10.0, 10.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -216,8 +217,9 @@ fn bench_feature_engineering(c: &mut Criterion) {
                 BenchmarkId::new("PowerTransform", format!("{}x{}", n_samples, n_features)),
                 &data,
                 |b, data| {
-                    let mut pt = PowerTransformer::new("yeo-johnson", true).unwrap();
-                    pt.fit(data).unwrap();
+                    let mut pt =
+                        PowerTransformer::new("yeo-johnson", true).expect("Operation failed");
+                    pt.fit(data).expect("Operation failed");
 
                     b.iter(|| {
                         let _result = pt.transform(black_box(data));
@@ -252,7 +254,7 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-10.0, 10.0).unwrap(),
+                Uniform::new(-10.0, 10.0).expect("Operation failed"),
                 &mut rng,
             );
             let n_components = n_features / 2;
@@ -264,7 +266,7 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     let mut pca = PCA::new(n_components, true, false);
-                    pca.fit(data).unwrap();
+                    pca.fit(data).expect("Operation failed");
 
                     b.iter(|| {
                         let _result = pca.transform(black_box(data));
@@ -278,7 +280,7 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     let mut svd = TruncatedSVD::new(n_components);
-                    svd.fit(data).unwrap();
+                    svd.fit(data).expect("Operation failed");
 
                     b.iter(|| {
                         let _result = svd.transform(black_box(data));
@@ -303,7 +305,7 @@ fn bench_imputation(c: &mut Criterion) {
             let mut rng = thread_rng();
             let mut data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-10.0, 10.0).unwrap(),
+                Uniform::new(-10.0, 10.0).expect("Operation failed"),
                 &mut rng,
             );
             // Insert NaN values randomly (about 10%)
@@ -322,7 +324,7 @@ fn bench_imputation(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     let mut imputer = SimpleImputer::new(ImputeStrategy::Mean, f64::NAN);
-                    imputer.fit(data).unwrap();
+                    imputer.fit(data).expect("Operation failed");
 
                     b.iter(|| {
                         let _result = imputer.transform(black_box(data));
@@ -342,7 +344,7 @@ fn bench_imputation(c: &mut Criterion) {
                             WeightingScheme::Distance,
                             f64::NAN,
                         );
-                        imputer.fit(data).unwrap();
+                        imputer.fit(data).expect("Operation failed");
 
                         b.iter(|| {
                             let _result = imputer.transform(black_box(data));
@@ -366,7 +368,7 @@ fn bench_pipeline(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-10.0, 10.0).unwrap(),
+                Uniform::new(-10.0, 10.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -387,7 +389,9 @@ fn bench_pipeline(c: &mut Criterion) {
                     // we'll benchmark the operations separately
                     b.iter(|| {
                         let mut norm = normalizer.clone();
-                        let normalized = norm.fit_transform(black_box(data)).unwrap();
+                        let normalized = norm
+                            .fit_transform(black_box(data))
+                            .expect("Operation failed");
 
                         let mut pca_copy = pca.clone();
                         let _result = pca_copy.fit_transform(&normalized);

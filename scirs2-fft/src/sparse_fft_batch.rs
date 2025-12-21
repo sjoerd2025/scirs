@@ -485,7 +485,7 @@ mod tests {
             Some(WindowFunction::Hann),
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check results
         assert_eq!(results.len(), signals.len());
@@ -534,7 +534,7 @@ mod tests {
             Some(WindowFunction::Hann),
             Some(batchconfig),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check results
         assert_eq!(results.len(), signals.len());
@@ -586,7 +586,7 @@ mod tests {
             None, // Use CPU
             None, // Default config
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check results
         assert_eq!(results.len(), signals.len());

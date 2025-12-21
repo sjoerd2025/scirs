@@ -1,4 +1,4 @@
-# Known Limitations - SciRS2 v0.1.0-rc.3
+# Known Limitations - SciRS2 v0.1.0-rc.4
 
 This document describes known limitations and issues in the current release of SciRS2.
 
@@ -15,7 +15,7 @@ When using SciRS2 crates, certain features are force-enabled even when specifyin
 ```toml
 # User's Cargo.toml
 [dependencies]
-scirs2-linalg = { version = "0.1.0-rc.3", default-features = false }
+scirs2-linalg = { version = "0.1.0-rc.4", default-features = false }
 ```
 
 The features `["linalg", "parallel", "simd", "random", "array"]` are **still enabled** because they are hardcoded in `scirs2-linalg`'s dependency declaration.
@@ -67,7 +67,7 @@ For detailed analysis and migration plan, see [docs/ISSUE_77_FEATURE_FLAGS_ANALY
 
 - **Policy Established**: Complete SciRS2 POLICY framework with layered abstraction architecture (v0.1.0-beta.4)
 - **Core Abstractions Complete**: scirs2-core provides comprehensive abstractions for rand, ndarray, and all dependencies
-- **Migration Status**: All 23 crates are POLICY-compliant (v0.1.0-rc.3)
+- **Migration Status**: All 23 crates are POLICY-compliant (v0.1.0-rc.4)
 - **Backward Compatibility**: Direct usage still works but core abstractions are recommended for new code
 
 ## Autograd Module
@@ -115,8 +115,8 @@ cargo nextest run --all-features
 
 ## Test Coverage
 
-**Current Status (v0.1.0-rc.3)**:
-- Total tests: 9,300+ across all modules
+**Current Status (v0.1.0-rc.4)**:
+- Total tests: 11,407 passing (174 skipped)
 - Regular CI tests: All passing ✅
 - Performance tests: Included in full test suite (run with `--all-features`)
 

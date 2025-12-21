@@ -42,11 +42,11 @@ pub type EigenResult<F> = LinalgResult<(Array1<Complex<F>>, Array2<Complex<F>>)>
 /// use scirs2_linalg::eigen::standard::eig;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let (w, v) = eig(&a.view(), None).unwrap();
+/// let (w, v) = eig(&a.view(), None).expect("Operation failed");
 ///
 /// // Sort eigenvalues (they may be returned in different order)
 /// let mut eigenvalues = vec![(w[0].re, 0), (w[1].re, 1)];
-/// eigenvalues.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+/// eigenvalues.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 ///
 /// assert!((eigenvalues[0].0 - 1.0).abs() < 1e-10);
 /// assert!((eigenvalues[1].0 - 2.0).abs() < 1e-10);
@@ -98,11 +98,11 @@ where
 /// use scirs2_linalg::eigen::standard::eigvals;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let w = eigvals(&a.view(), None).unwrap();
+/// let w = eigvals(&a.view(), None).expect("Operation failed");
 ///
 /// // Sort eigenvalues (they may be returned in different order)
 /// let mut eigenvalues = vec![w[0].re, w[1].re];
-/// eigenvalues.sort_by(|a, b| a.partial_cmp(b).unwrap());
+/// eigenvalues.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 ///
 /// assert!((eigenvalues[0] - 1.0).abs() < 1e-10);
 /// assert!((eigenvalues[1] - 2.0).abs() < 1e-10);
@@ -140,7 +140,7 @@ where
 /// use scirs2_linalg::eigen::standard::power_iteration;
 ///
 /// let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
-/// let (eigenvalue, eigenvector) = power_iteration(&a.view(), 100, 1e-10).unwrap();
+/// let (eigenvalue, eigenvector) = power_iteration(&a.view(), 100, 1e-10).expect("Operation failed");
 /// // The largest eigenvalue of this matrix is approximately 3.618
 /// assert!((eigenvalue - 3.618).abs() < 1e-2);
 /// ```
@@ -231,11 +231,11 @@ where
 /// use scirs2_linalg::eigen::standard::eigh;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let (w, v) = eigh(&a.view(), None).unwrap();
+/// let (w, v) = eigh(&a.view(), None).expect("Operation failed");
 ///
 /// // Sort eigenvalues (they may be returned in different order)
 /// let mut eigenvalues = vec![(w[0], 0), (w[1], 1)];
-/// eigenvalues.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+/// eigenvalues.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 ///
 /// assert!((eigenvalues[0].0 - 1.0).abs() < 1e-10);
 /// assert!((eigenvalues[1].0 - 2.0).abs() < 1e-10);
@@ -339,13 +339,14 @@ where
     let condition_number = estimate_condition_number(a)?;
 
     // Select precision target based on condition number
-    let precision_target = if condition_number > F::from(1e12).unwrap() {
-        F::from(1e-8).unwrap() // Difficult matrices
-    } else if condition_number > F::from(1e8).unwrap() {
-        F::from(1e-9).unwrap() // Moderately conditioned
-    } else {
-        F::from(1e-10).unwrap() // Well-conditioned matrices
-    };
+    let precision_target =
+        if condition_number > F::from(1e12).expect("Failed to convert constant to float") {
+            F::from(1e-8).expect("Failed to convert constant to float") // Difficult matrices
+        } else if condition_number > F::from(1e8).expect("Failed to convert constant to float") {
+            F::from(1e-9).expect("Failed to convert constant to float") // Moderately conditioned
+        } else {
+            F::from(1e-10).expect("Failed to convert constant to float") // Well-conditioned matrices
+        };
 
     // For small matrices, use advanced-precise analytical methods
     if n <= 4 {
@@ -369,7 +370,11 @@ where
     }
 
     // Use power iteration to estimate largest eigenvalue
-    let (lambda_max_, _) = power_iteration(a, 100, F::from(1e-8).unwrap())?;
+    let (lambda_max_, _) = power_iteration(
+        a,
+        100,
+        F::from(1e-8).expect("Failed to convert constant to float"),
+    )?;
 
     // Estimate smallest eigenvalue using inverse iteration
     // For simplicity, use a heuristic based on trace and determinant
@@ -382,19 +387,23 @@ where
             .map(|i| a[[i, i]].abs())
             .fold(F::one(), |acc, x| acc * x);
         if product > F::zero() {
-            product.powf(F::one() / F::from(n).unwrap())
+            product.powf(F::one() / F::from(n).expect("Failed to convert to float"))
         } else {
-            F::from(1e-15).unwrap() // Very small positive value
+            F::from(1e-15).expect("Failed to convert constant to float") // Very small positive value
         }
     };
 
-    let lambda_min = if det_estimate.abs() > F::from(1e-15).unwrap() {
-        det_estimate / lambda_max_.powf(F::from(n - 1).unwrap())
-    } else {
-        F::from(1e-15).unwrap()
-    };
+    let lambda_min =
+        if det_estimate.abs() > F::from(1e-15).expect("Failed to convert constant to float") {
+            det_estimate / lambda_max_.powf(F::from(n - 1).expect("Failed to convert to float"))
+        } else {
+            F::from(1e-15).expect("Failed to convert constant to float")
+        };
 
-    let condition = lambda_max_.abs() / lambda_min.abs().max(F::from(1e-15).unwrap());
+    let condition = lambda_max_.abs()
+        / lambda_min
+            .abs()
+            .max(F::from(1e-15).expect("Failed to convert constant to float"));
     Ok(condition)
 }
 
@@ -444,10 +453,10 @@ where
 
     // Enhanced discriminant calculation
     let trace_squared = trace * trace;
-    let four_det = F::from(4.0).unwrap() * det;
+    let four_det = F::from(4.0).expect("Failed to convert constant to float") * det;
     let discriminant = kahan_sum(&[trace_squared, -four_det]);
 
-    let half = F::from(0.5).unwrap();
+    let half = F::from(0.5).expect("Failed to convert constant to float");
     let sqrt_discriminant = discriminant.abs().sqrt();
 
     let lambda1 = if discriminant >= F::zero() {
@@ -579,15 +588,18 @@ where
     let c = c0 / c3;
 
     // Depressed cubic transformation: t³ + pt + q = 0
-    let third = F::one() / F::from(3.0).unwrap();
+    let third = F::one() / F::from(3.0).expect("Failed to convert constant to float");
     let p = b - a * a * third;
-    let q_part1 = F::from(2.0).unwrap() * a * a * a / F::from(27.0).unwrap();
+    let q_part1 = F::from(2.0).expect("Failed to convert constant to float") * a * a * a
+        / F::from(27.0).expect("Failed to convert constant to float");
     let q_part2 = -a * b * third;
     let q = kahan_sum(&[q_part1, q_part2, c]);
 
     // Enhanced discriminant calculation
-    let discriminant_part1 = (q / F::from(2.0).unwrap()).powi(2);
-    let discriminant_part2 = (p / F::from(3.0).unwrap()).powi(3);
+    let discriminant_part1 =
+        (q / F::from(2.0).expect("Failed to convert constant to float")).powi(2);
+    let discriminant_part2 =
+        (p / F::from(3.0).expect("Failed to convert constant to float")).powi(3);
     let discriminant = discriminant_part1 + discriminant_part2;
 
     let mut roots = Array1::zeros(3);
@@ -595,7 +607,7 @@ where
     if discriminant > precision_target {
         // One real root case - use enhanced Cardano's formula
         let sqrt_disc = discriminant.sqrt();
-        let half_q = q / F::from(2.0).unwrap();
+        let half_q = q / F::from(2.0).expect("Failed to convert constant to float");
 
         let u = if half_q + sqrt_disc >= F::zero() {
             (half_q + sqrt_disc).powf(third)
@@ -604,7 +616,7 @@ where
         };
 
         let v = if u.abs() > precision_target {
-            -p / (F::from(3.0).unwrap() * u)
+            -p / (F::from(3.0).expect("Failed to convert constant to float") * u)
         } else {
             F::zero()
         };
@@ -619,16 +631,23 @@ where
         roots[2] = refined_root;
     } else {
         // Three real roots case - use trigonometric solution
-        let m = F::from(2.0).unwrap() * (-p / F::from(3.0).unwrap()).sqrt();
-        let theta = (F::from(3.0).unwrap() * q / (p * m)).acos() / F::from(3.0).unwrap();
+        let m = F::from(2.0).expect("Failed to convert constant to float")
+            * (-p / F::from(3.0).expect("Failed to convert constant to float")).sqrt();
+        let theta = (F::from(3.0).expect("Failed to convert constant to float") * q / (p * m))
+            .acos()
+            / F::from(3.0).expect("Failed to convert constant to float");
 
-        let two_pi_third =
-            F::from(2.0).unwrap() * F::from(std::f64::consts::PI).unwrap() / F::from(3.0).unwrap();
+        let two_pi_third = F::from(2.0).expect("Failed to convert constant to float")
+            * F::from(std::f64::consts::PI).expect("Failed to convert to float")
+            / F::from(3.0).expect("Failed to convert constant to float");
         let a_third = a * third;
 
         roots[0] = m * theta.cos() - a_third;
         roots[1] = m * (theta - two_pi_third).cos() - a_third;
-        roots[2] = m * (theta - F::from(2.0).unwrap() * two_pi_third).cos() - a_third;
+        roots[2] = m
+            * (theta - F::from(2.0).expect("Failed to convert constant to float") * two_pi_third)
+                .cos()
+            - a_third;
 
         // Refine all roots with Newton's method
         for i in 0..3 {
@@ -664,7 +683,10 @@ where
     for _ in 0..max_iter {
         // Evaluate polynomial and its derivative using Horner's method
         let f_x = ((c3 * x + c2) * x + c1) * x + c0;
-        let df_x = (F::from(3.0).unwrap() * c3 * x + F::from(2.0).unwrap() * c2) * x + c1;
+        let df_x = (F::from(3.0).expect("Failed to convert constant to float") * c3 * x
+            + F::from(2.0).expect("Failed to convert constant to float") * c2)
+            * x
+            + c1;
 
         if df_x.abs() < tolerance {
             break; // Avoid division by zero
@@ -1001,7 +1023,9 @@ where
 
             let dot_product = v.dot(&col);
             for i in k..m {
-                r[[i, j]] -= F::from(2.0).unwrap() * dot_product * v[i - k];
+                r[[i, j]] -= F::from(2.0).expect("Failed to convert constant to float")
+                    * dot_product
+                    * v[i - k];
             }
         }
 
@@ -1014,7 +1038,9 @@ where
 
             let dot_product = v.dot(&col);
             for i in k..m {
-                q[[i, j]] -= F::from(2.0).unwrap() * dot_product * v[i - k];
+                q[[i, j]] -= F::from(2.0).expect("Failed to convert constant to float")
+                    * dot_product
+                    * v[i - k];
             }
         }
     }
@@ -1037,7 +1063,8 @@ where
     let trace = a11 + a22;
     let det = a11 * a22 - a12 * a21;
 
-    let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+    let discriminant =
+        trace * trace - F::from(4.0).expect("Failed to convert constant to float") * det;
 
     // Create eigenvalues
     let mut eigenvalues = Array1::zeros(2);
@@ -1046,8 +1073,10 @@ where
     if discriminant >= F::zero() {
         // Real eigenvalues
         let sqrt_discriminant = discriminant.sqrt();
-        let lambda1 = (trace + sqrt_discriminant) / F::from(2.0).unwrap();
-        let lambda2 = (trace - sqrt_discriminant) / F::from(2.0).unwrap();
+        let lambda1 = (trace + sqrt_discriminant)
+            / F::from(2.0).expect("Failed to convert constant to float");
+        let lambda2 = (trace - sqrt_discriminant)
+            / F::from(2.0).expect("Failed to convert constant to float");
 
         eigenvalues[0] = Complex::new(lambda1, F::zero());
         eigenvalues[1] = Complex::new(lambda2, F::zero());
@@ -1091,8 +1120,9 @@ where
         Ok((eigenvalues, complex_eigenvectors))
     } else {
         // Complex eigenvalues
-        let real_part = trace / F::from(2.0).unwrap();
-        let imag_part = (-discriminant).sqrt() / F::from(2.0).unwrap();
+        let real_part = trace / F::from(2.0).expect("Failed to convert constant to float");
+        let imag_part =
+            (-discriminant).sqrt() / F::from(2.0).expect("Failed to convert constant to float");
 
         eigenvalues[0] = Complex::new(real_part, imag_part);
         eigenvalues[1] = Complex::new(real_part, -imag_part);
@@ -1149,12 +1179,15 @@ where
     let trace = a11 + a22;
     let det = a11 * a22 - a12 * a12; // For symmetric matrices, a12 = a21
 
-    let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+    let discriminant =
+        trace * trace - F::from(4.0).expect("Failed to convert constant to float") * det;
     let sqrt_discriminant = discriminant.sqrt();
 
     // Eigenvalues
-    let lambda1 = (trace + sqrt_discriminant) / F::from(2.0).unwrap();
-    let lambda2 = (trace - sqrt_discriminant) / F::from(2.0).unwrap();
+    let lambda1 =
+        (trace + sqrt_discriminant) / F::from(2.0).expect("Failed to convert constant to float");
+    let lambda2 =
+        (trace - sqrt_discriminant) / F::from(2.0).expect("Failed to convert constant to float");
 
     // Sort eigenvalues in ascending order (SciPy convention)
     let (lambda_small, lambda_large) = if lambda1 <= lambda2 {
@@ -1242,7 +1275,7 @@ where
     let mut workmatrix = a.to_owned();
     let mut q_total = Array2::eye(3);
     let max_iter = 50;
-    let tol = F::from(1e-12).unwrap();
+    let tol = F::from(1e-12).expect("Failed to convert constant to float");
 
     // Apply QR iterations
     for _ in 0..max_iter {
@@ -1271,7 +1304,11 @@ where
 
     // Sort eigenvalues and corresponding eigenvectors
     let mut indices = [0, 1, 2];
-    indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+    indices.sort_by(|&i, &j| {
+        eigenvalues[i]
+            .partial_cmp(&eigenvalues[j])
+            .expect("Operation failed")
+    });
 
     let mut sorted_eigenvalues = Array1::zeros(3);
     let mut sorted_eigenvectors = Array2::zeros((3, 3));
@@ -1300,7 +1337,7 @@ where
     let mut workmatrix = a.to_owned();
     let mut q_total = Array2::eye(4);
     let max_iter = 100;
-    let tol = F::from(1e-12).unwrap();
+    let tol = F::from(1e-12).expect("Failed to convert constant to float");
 
     // Apply QR iterations
     for _ in 0..max_iter {
@@ -1333,7 +1370,11 @@ where
 
     // Sort eigenvalues and corresponding eigenvectors
     let mut indices = [0, 1, 2, 3];
-    indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+    indices.sort_by(|&i, &j| {
+        eigenvalues[i]
+            .partial_cmp(&eigenvalues[j])
+            .expect("Operation failed")
+    });
 
     let mut sorted_eigenvalues = Array1::zeros(4);
     let mut sorted_eigenvectors = Array2::zeros((4, 4));
@@ -1358,7 +1399,7 @@ where
     let mut a_k = a.to_owned();
     let n = a.nrows();
     let max_iter = 100;
-    let tol = F::epsilon() * F::from(100.0).unwrap();
+    let tol = F::epsilon() * F::from(100.0).expect("Failed to convert constant to float");
 
     // Initialize eigenvalues and eigenvectors
     let mut eigenvalues = Array1::zeros(n);
@@ -1569,7 +1610,7 @@ mod tests {
     #[test]
     fn test_1x1matrix() {
         let a = array![[3.0_f64]];
-        let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
+        let (eigenvalues, eigenvectors) = eig(&a.view(), None).expect("Operation failed");
 
         assert_relative_eq!(eigenvalues[0].re, 3.0, epsilon = 1e-10);
         assert_relative_eq!(eigenvalues[0].im, 0.0, epsilon = 1e-10);
@@ -1581,14 +1622,14 @@ mod tests {
     fn test_2x2_diagonalmatrix() {
         let a = array![[3.0_f64, 0.0], [0.0, 4.0]];
 
-        let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
+        let (eigenvalues, eigenvectors) = eig(&a.view(), None).expect("Operation failed");
 
         // Eigenvalues could be returned in any order
         assert_relative_eq!(eigenvalues[0].im, 0.0, epsilon = 1e-10);
         assert_relative_eq!(eigenvalues[1].im, 0.0, epsilon = 1e-10);
 
         // Test eigh
-        let (eigenvalues, eigenvectors) = eigh(&a.view(), None).unwrap();
+        let (eigenvalues, eigenvectors) = eigh(&a.view(), None).expect("Operation failed");
         // The eigenvalues might be returned in a different order
         assert!(
             (eigenvalues[0] - 3.0).abs() < 1e-10 && (eigenvalues[1] - 4.0).abs() < 1e-10
@@ -1601,7 +1642,7 @@ mod tests {
         let a = array![[1.0, 2.0], [2.0, 4.0]];
 
         // Test eigh
-        let (eigenvalues, eigenvectors) = eigh(&a.view(), None).unwrap();
+        let (eigenvalues, eigenvectors) = eigh(&a.view(), None).expect("Operation failed");
 
         // Eigenvalues should be approximately 5 and 0
         assert!(
@@ -1639,7 +1680,8 @@ mod tests {
         // Matrix with known dominant eigenvalue and eigenvector
         let a = array![[3.0, 1.0], [1.0, 3.0]];
 
-        let (eigenvalue, eigenvector) = power_iteration(&a.view(), 100, 1e-10).unwrap();
+        let (eigenvalue, eigenvector) =
+            power_iteration(&a.view(), 100, 1e-10).expect("Operation failed");
 
         // Dominant eigenvalue should be 4
         assert_relative_eq!(eigenvalue, 4.0, epsilon = 1e-8);

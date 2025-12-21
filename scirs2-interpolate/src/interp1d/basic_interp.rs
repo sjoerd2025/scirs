@@ -65,7 +65,7 @@ use scirs2_core::numeric::{Float, FromPrimitive};
 /// let y = array![10.0, 20.0, 30.0];
 /// let x_new = array![1.3, 1.7];
 ///
-/// let result = nearest_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+/// let result = nearest_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
 /// // Interpolate at x=1.3 (closer to x[0]=1.0)
 /// assert_eq!(result[0], 10.0);
 /// // Interpolate at x=1.7 (closer to x[1]=2.0)
@@ -133,7 +133,7 @@ pub(crate) fn nearest_interp<F: Float>(
 /// let y = array![10.0, 20.0, 30.0];
 /// let x_new = array![1.5, 1.25];
 ///
-/// let result = linear_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+/// let result = linear_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
 /// // Interpolate at x=1.5 (midpoint between x[0] and x[1])
 /// assert_eq!(result[0], 15.0); // Exactly halfway between y[0]=10 and y[1]=20
 /// // Interpolate at x=1.25 (25% of the way from x[0] to x[1])
@@ -221,7 +221,7 @@ pub(crate) fn linear_interp<F: Float>(
 /// let y = array![0.0f64, 1.0, 8.0, 27.0, 64.0]; // y = x³
 /// let x_new = array![1.5f64];
 ///
-/// let result = cubic_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+/// let result = cubic_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
 /// // Should be close to 1.5³ = 3.375
 /// assert!((result[0] - 3.375_f64).abs() < 0.1);
 /// ```
@@ -286,11 +286,11 @@ pub(crate) fn cubic_interp<F: Float + FromPrimitive>(
     //               (2*p0 - 5*p1 + 4*p2 - p3) * t^2 +
     //               (-p0 + 3*p1 - 3*p2 + p3) * t^3)
 
-    let two = F::from_f64(2.0).unwrap();
-    let three = F::from_f64(3.0).unwrap();
-    let four = F::from_f64(4.0).unwrap();
-    let five = F::from_f64(5.0).unwrap();
-    let half = F::from_f64(0.5).unwrap();
+    let two = F::from_f64(2.0).expect("Operation failed");
+    let three = F::from_f64(3.0).expect("Operation failed");
+    let four = F::from_f64(4.0).expect("Operation failed");
+    let five = F::from_f64(5.0).expect("Operation failed");
+    let half = F::from_f64(0.5).expect("Operation failed");
 
     let t2 = t * t;
     let t3 = t2 * t;
@@ -327,7 +327,7 @@ pub(crate) fn cubic_interp<F: Float + FromPrimitive>(
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
 /// let x_new = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = nearest_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+/// let y_interp = nearest_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
 /// let diff0 = (y_interp[0] - 0.0).abs();
 /// let diff1 = (y_interp[1] - 1.0).abs();
 /// let diff2 = (y_interp[2] - 4.0).abs();
@@ -369,7 +369,7 @@ pub fn nearest_interpolate<F: crate::traits::InterpolationFloat>(
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
 /// let x_new = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = linear_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+/// let y_interp = linear_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
 /// let diff0 = (y_interp[0] - 0.5).abs();
 /// let diff1 = (y_interp[1] - 2.5).abs();
 /// let diff2 = (y_interp[2] - 6.5).abs();
@@ -411,7 +411,7 @@ pub fn linear_interpolate<F: crate::traits::InterpolationFloat>(
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
 /// let x_new = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = cubic_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+/// let y_interp = cubic_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
 /// // Values will be close to but not exactly the same as linear interpolation
 /// let diff0 = (y_interp[0] - 0.5).abs();
 /// let diff1 = (y_interp[1] - 2.5).abs();
@@ -450,19 +450,19 @@ mod tests {
             InterpolationMethod::Nearest,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // Test points between data points
-        assert_relative_eq!(interp.evaluate(0.4).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(0.6).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(1.4).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(1.6).unwrap(), 4.0);
+        assert_relative_eq!(interp.evaluate(0.4).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(0.6).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(1.4).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(1.6).expect("Operation failed"), 4.0);
     }
 
     #[test]
@@ -476,18 +476,18 @@ mod tests {
             InterpolationMethod::Linear,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // Test points between data points
-        assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.5);
-        assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.5);
-        assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.5);
+        assert_relative_eq!(interp.evaluate(0.5).expect("Operation failed"), 0.5);
+        assert_relative_eq!(interp.evaluate(1.5).expect("Operation failed"), 2.5);
+        assert_relative_eq!(interp.evaluate(2.5).expect("Operation failed"), 6.5);
     }
 
     #[test]
@@ -501,20 +501,32 @@ mod tests {
             InterpolationMethod::Cubic,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // For this particular dataset (a quadratic y = x²),
         // cubic interpolation might not reproduce it exactly due to the specific spline algorithm
         // so we use wider tolerances
-        assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.25, epsilon = 0.1);
-        assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.25, epsilon = 0.1);
-        assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.25, epsilon = 1.0);
+        assert_relative_eq!(
+            interp.evaluate(0.5).expect("Operation failed"),
+            0.25,
+            epsilon = 0.1
+        );
+        assert_relative_eq!(
+            interp.evaluate(1.5).expect("Operation failed"),
+            2.25,
+            epsilon = 0.1
+        );
+        assert_relative_eq!(
+            interp.evaluate(2.5).expect("Operation failed"),
+            6.25,
+            epsilon = 1.0
+        );
     }
 
     #[test]
@@ -524,7 +536,8 @@ mod tests {
         let x_new = array![0.5, 1.5, 2.5];
 
         // Test nearest interpolation
-        let y_nearest = nearest_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+        let y_nearest =
+            nearest_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
         // Point 0.5 is exactly halfway between x[0]=0.0 and x[1]=1.0, so we default to the left point's value
         assert_relative_eq!(y_nearest[0], 0.0);
         // Point 1.5 is exactly halfway between x[1]=1.0 and x[2]=2.0, so we default to the left point's value
@@ -533,13 +546,15 @@ mod tests {
         assert_relative_eq!(y_nearest[2], 4.0);
 
         // Test linear interpolation
-        let y_linear = linear_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+        let y_linear =
+            linear_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
         assert_relative_eq!(y_linear[0], 0.5);
         assert_relative_eq!(y_linear[1], 2.5);
         assert_relative_eq!(y_linear[2], 6.5);
 
         // Test cubic interpolation
-        let y_cubic = cubic_interpolate(&x.view(), &y.view(), &x_new.view()).unwrap();
+        let y_cubic =
+            cubic_interpolate(&x.view(), &y.view(), &x_new.view()).expect("Operation failed");
         // Allow a wider tolerance for cubic interpolation since it depends on the specific spline implementation
         assert!((y_cubic[0] - 0.25).abs() < 0.15);
         assert!((y_cubic[1] - 2.25).abs() < 0.15);

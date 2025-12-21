@@ -551,7 +551,7 @@ pub mod rest {
 
     /// Convert MLTensor to REST format
     pub fn tensor_to_rest(tensor: &MLTensor) -> Vec<f32> {
-        tensor.data.as_slice().unwrap().to_vec()
+        tensor.data.as_slice().expect("Operation failed").to_vec()
     }
 
     /// Convert REST format to MLTensor
@@ -610,7 +610,7 @@ pub mod grpc {
             data: tensor
                 .data
                 .as_slice()
-                .unwrap()
+                .expect("Operation failed")
                 .iter()
                 .flat_map(|f| f.to_le_bytes())
                 .collect(),
@@ -626,7 +626,7 @@ pub mod grpc {
             .data
             .chunks_exact(4)
             .map(|chunk| {
-                let bytes: [u8; 4] = chunk.try_into().unwrap();
+                let bytes: [u8; 4] = chunk.try_into().expect("Operation failed");
                 f32::from_le_bytes(bytes)
             })
             .collect();

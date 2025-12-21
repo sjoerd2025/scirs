@@ -30,7 +30,7 @@ use scirs2_core::ndarray::Array2;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let edges = prewitt_edges(&img, 0.1)?;
 /// # Ok(())
 /// # }
@@ -151,7 +151,7 @@ mod tests {
         let result = prewitt_edges(&dynamic_img, 0.1);
 
         assert!(result.is_ok());
-        let edges = result.unwrap();
+        let edges = result.expect("Operation failed");
 
         // Should detect edge around x=5
         let mut has_edge = false;
@@ -174,7 +174,7 @@ mod tests {
         let result = prewitt_gradients(&dynamic_img);
         assert!(result.is_ok());
 
-        let (magnitude, direction) = result.unwrap();
+        let (magnitude, direction) = result.expect("Operation failed");
         assert_eq!(magnitude.dim(), (10, 10));
         assert_eq!(direction.dim(), (10, 10));
     }
@@ -191,7 +191,7 @@ mod tests {
         }
 
         let dynamic_img = DynamicImage::ImageLuma8(img);
-        let prewitt = prewitt_edges(&dynamic_img, 0.1).unwrap();
+        let prewitt = prewitt_edges(&dynamic_img, 0.1).expect("Operation failed");
 
         // Prewitt should detect diagonal edge
         let mut has_diagonal = false;

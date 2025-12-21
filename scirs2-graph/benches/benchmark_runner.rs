@@ -303,7 +303,10 @@ impl BenchmarkRunner {
                             if let Some(kb_str) = line.split_whitespace().nth(1) {
                                 if let Ok(kb) = kb_str.parse::<f64>() {
                                     let mb = kb / 1024.0;
-                                    memory_samples_clone.lock().unwrap().push(mb);
+                                    memory_samples_clone
+                                        .lock()
+                                        .expect("Operation failed")
+                                        .push(mb);
                                 }
                             }
                             break;
@@ -324,7 +327,7 @@ impl BenchmarkRunner {
 
         // Collect memory usage data
         let _ = memory_thread.join();
-        let samples = memory_samples.lock().unwrap().clone();
+        let samples = memory_samples.lock().expect("Operation failed").clone();
 
         let memory_usage = if !samples.is_empty() {
             Some(MemoryUsage {
@@ -444,13 +447,21 @@ impl BenchmarkRunner {
         let fastest_suite = results
             .iter()
             .filter(|r| matches!(r.status, BenchmarkStatus::Success))
-            .min_by(|a, b| a.duration_seconds.partial_cmp(&b.duration_seconds).unwrap())
+            .min_by(|a, b| {
+                a.duration_seconds
+                    .partial_cmp(&b.duration_seconds)
+                    .expect("Operation failed")
+            })
             .map(|r| r.suite_name.clone());
 
         let slowest_suite = results
             .iter()
             .filter(|r| matches!(r.status, BenchmarkStatus::Success))
-            .max_by(|a, b| a.duration_seconds.partial_cmp(&b.duration_seconds).unwrap())
+            .max_by(|a, b| {
+                a.duration_seconds
+                    .partial_cmp(&b.duration_seconds)
+                    .expect("Operation failed")
+            })
             .map(|r| r.suite_name.clone());
 
         let mut warnings = Vec::new();
@@ -682,7 +693,7 @@ mod tests {
         };
 
         let runner = BenchmarkRunner::new(config);
-        let report = runner.run_all_benchmarks().unwrap();
+        let report = runner.run_all_benchmarks().expect("Operation failed");
 
         assert!(!report.suite_results.is_empty());
         println!("Benchmark completed: {:?}", report.summary);

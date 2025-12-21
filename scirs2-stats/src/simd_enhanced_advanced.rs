@@ -31,15 +31,17 @@ where
 
     // Compute means using SIMD
     let mean1 = if n1 > 16 {
-        F::simd_sum(&a.view()) / F::from(n1).unwrap()
+        F::simd_sum(&a.view()) / F::from(n1).expect("Failed to convert to float")
     } else {
-        a.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n1).unwrap()
+        a.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(n1).expect("Failed to convert to float")
     };
 
     let mean2 = if n2 > 16 {
-        F::simd_sum(&b.view()) / F::from(n2).unwrap()
+        F::simd_sum(&b.view()) / F::from(n2).expect("Failed to convert to float")
     } else {
-        b.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n2).unwrap()
+        b.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(n2).expect("Failed to convert to float")
     };
 
     // Compute variances using SIMD
@@ -47,7 +49,7 @@ where
         let mean_array = Array1::from_elem(n1, mean1);
         let diff = F::simd_sub(&a.view(), &mean_array.view());
         let sq_diff = F::simd_mul(&diff.view(), &diff.view());
-        F::simd_sum(&sq_diff.view()) / F::from(n1 - 1).unwrap()
+        F::simd_sum(&sq_diff.view()) / F::from(n1 - 1).expect("Failed to convert to float")
     } else {
         a.iter()
             .map(|&x| {
@@ -55,14 +57,14 @@ where
                 diff * diff
             })
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(n1 - 1).unwrap()
+            / F::from(n1 - 1).expect("Failed to convert to float")
     };
 
     let var2 = if n2 > 16 {
         let mean_array = Array1::from_elem(n2, mean2);
         let diff = F::simd_sub(&b.view(), &mean_array.view());
         let sq_diff = F::simd_mul(&diff.view(), &diff.view());
-        F::simd_sum(&sq_diff.view()) / F::from(n2 - 1).unwrap()
+        F::simd_sum(&sq_diff.view()) / F::from(n2 - 1).expect("Failed to convert to float")
     } else {
         b.iter()
             .map(|&x| {
@@ -70,31 +72,34 @@ where
                 diff * diff
             })
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(n2 - 1).unwrap()
+            / F::from(n2 - 1).expect("Failed to convert to float")
     };
 
     // Compute t-statistic
     let (t_stat, df) = if equal_var {
         // Pooled variance
-        let pooled_var = ((F::from(n1 - 1).unwrap() * var1) + (F::from(n2 - 1).unwrap() * var2))
-            / F::from(n1 + n2 - 2).unwrap();
+        let pooled_var = ((F::from(n1 - 1).expect("Failed to convert to float") * var1)
+            + (F::from(n2 - 1).expect("Failed to convert to float") * var2))
+            / F::from(n1 + n2 - 2).expect("Failed to convert to float");
 
-        let se = (pooled_var * (F::one() / F::from(n1).unwrap() + F::one() / F::from(n2).unwrap()))
-            .sqrt();
+        let se = (pooled_var
+            * (F::one() / F::from(n1).expect("Failed to convert to float")
+                + F::one() / F::from(n2).expect("Failed to convert to float")))
+        .sqrt();
         let t = (mean1 - mean2) / se;
-        let df = F::from(n1 + n2 - 2).unwrap();
+        let df = F::from(n1 + n2 - 2).expect("Failed to convert to float");
         (t, df)
     } else {
         // Welch's t-test (unequal variances)
-        let se1_sq = var1 / F::from(n1).unwrap();
-        let se2_sq = var2 / F::from(n2).unwrap();
+        let se1_sq = var1 / F::from(n1).expect("Failed to convert to float");
+        let se2_sq = var2 / F::from(n2).expect("Failed to convert to float");
         let se = (se1_sq + se2_sq).sqrt();
         let t = (mean1 - mean2) / se;
 
         // Welch-Satterthwaite equation for degrees of freedom
         let num = (se1_sq + se2_sq) * (se1_sq + se2_sq);
-        let den = (se1_sq * se1_sq) / F::from(n1 - 1).unwrap()
-            + (se2_sq * se2_sq) / F::from(n2 - 1).unwrap();
+        let den = (se1_sq * se1_sq) / F::from(n1 - 1).expect("Failed to convert to float")
+            + (se2_sq * se2_sq) / F::from(n2 - 1).expect("Failed to convert to float");
         let df = num / den;
         (t, df)
     };
@@ -121,7 +126,7 @@ where
     }
 
     // Center the data
-    let means = data.mean_axis(Axis(0)).unwrap();
+    let means = data.mean_axis(Axis(0)).expect("Operation failed");
     let mut centered = data.to_owned();
     for i in 0..n_samples_ {
         for j in 0..n_features {
@@ -198,11 +203,12 @@ where
 
     let n = data.len();
     let mut sorteddata = data.to_vec();
-    sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorteddata.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Compute median
     let median = if n.is_multiple_of(2) {
-        (sorteddata[n / 2 - 1] + sorteddata[n / 2]) / F::from(2).unwrap()
+        (sorteddata[n / 2 - 1] + sorteddata[n / 2])
+            / F::from(2).expect("Failed to convert constant to float")
     } else {
         sorteddata[n / 2]
     };
@@ -217,19 +223,21 @@ where
         // SIMD-accelerated MAD calculation would require custom median implementation
         // For now, use standard approach
         let mut dev_sorted = deviations.to_vec();
-        dev_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        dev_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         if n.is_multiple_of(2) {
-            (dev_sorted[n / 2 - 1] + dev_sorted[n / 2]) / F::from(2).unwrap()
+            (dev_sorted[n / 2 - 1] + dev_sorted[n / 2])
+                / F::from(2).expect("Failed to convert constant to float")
         } else {
             dev_sorted[n / 2]
         }
     } else {
         let mut dev_sorted = deviations.to_vec();
-        dev_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        dev_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         if n.is_multiple_of(2) {
-            (dev_sorted[n / 2 - 1] + dev_sorted[n / 2]) / F::from(2).unwrap()
+            (dev_sorted[n / 2 - 1] + dev_sorted[n / 2])
+                / F::from(2).expect("Failed to convert constant to float")
         } else {
             dev_sorted[n / 2]
         }
@@ -290,9 +298,10 @@ where
 
         // Compute mean using SIMD if beneficial
         let bootstrap_mean = if n > 16 {
-            F::simd_sum(&bootstrap_sample.view()) / F::from(n).unwrap()
+            F::simd_sum(&bootstrap_sample.view()) / F::from(n).expect("Failed to convert to float")
         } else {
-            bootstrap_sample.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap()
+            bootstrap_sample.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(n).expect("Failed to convert to float")
         };
 
         bootstrap_means[i] = bootstrap_mean;
@@ -331,11 +340,17 @@ where
     let (mean_x, mean_y) = if n > 16 {
         let sum_x = F::simd_sum(&x.view());
         let sum_y = F::simd_sum(&y.view());
-        (sum_x / F::from(n).unwrap(), sum_y / F::from(n).unwrap())
+        (
+            sum_x / F::from(n).expect("Failed to convert to float"),
+            sum_y / F::from(n).expect("Failed to convert to float"),
+        )
     } else {
         let sum_x = x.iter().fold(F::zero(), |acc, &val| acc + val);
         let sum_y = y.iter().fold(F::zero(), |acc, &val| acc + val);
-        (sum_x / F::from(n).unwrap(), sum_y / F::from(n).unwrap())
+        (
+            sum_x / F::from(n).expect("Failed to convert to float"),
+            sum_y / F::from(n).expect("Failed to convert to float"),
+        )
     };
 
     // Compute slope and intercept using SIMD
@@ -383,13 +398,16 @@ where
 #[allow(dead_code)]
 fn simplified_t_pvalue<F: Float>(t: F, df: F) -> F {
     // Very rough approximation - in practice would use proper t-distribution
-    if df > F::from(30.0).unwrap() {
+    if df > F::from(30.0).expect("Failed to convert constant to float") {
         // Use normal approximation for large df
         let z = t;
-        F::from(2.0).unwrap() * (F::one() - normal_cdf(z.abs()))
+        F::from(2.0).expect("Failed to convert constant to float")
+            * (F::one() - normal_cdf(z.abs()))
     } else {
         // Simple approximation for small df
-        let p = F::from(2.0).unwrap() * (F::one() + t * t / df).powf(-df / F::from(2.0).unwrap());
+        let p = F::from(2.0).expect("Failed to convert constant to float")
+            * (F::one() + t * t / df)
+                .powf(-df / F::from(2.0).expect("Failed to convert constant to float"));
         p.min(F::one())
     }
 }
@@ -398,16 +416,16 @@ fn simplified_t_pvalue<F: Float>(t: F, df: F) -> F {
 #[allow(dead_code)]
 fn normal_cdf<F: Float>(x: F) -> F {
     // Very rough approximation using erf
-    let sqrt2 = F::from(1.4142135623730951).unwrap();
-    (F::one() + erf_approx(x / sqrt2)) / F::from(2.0).unwrap()
+    let sqrt2 = F::from(1.4142135623730951).expect("Failed to convert constant to float");
+    (F::one() + erf_approx(x / sqrt2)) / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 /// Error function approximation
 #[allow(dead_code)]
 fn erf_approx<F: Float>(x: F) -> F {
     // Simple rational approximation
-    let a = F::from(0.3275911).unwrap();
-    let p = F::from(0.254829592).unwrap();
+    let a = F::from(0.3275911).expect("Failed to convert constant to float");
+    let p = F::from(0.254829592).expect("Failed to convert constant to float");
 
     let t = F::one() / (F::one() + a * x.abs());
     let y = F::one() - p * t * (-x * x).exp();

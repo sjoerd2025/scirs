@@ -207,23 +207,23 @@ impl MPICommunicator {
 
     /// Get communication statistics
     pub fn get_stats(&self) -> MPICommStats {
-        self.comm_stats.lock().unwrap().clone()
+        self.comm_stats.lock().expect("Operation failed").clone()
     }
 
     /// Reset communication statistics
     pub fn reset_stats(&self) {
-        let mut stats = self.comm_stats.lock().unwrap();
+        let mut stats = self.comm_stats.lock().expect("Operation failed");
         *stats = MPICommStats::default();
     }
 
     /// Get active operations count
     pub fn active_operations_count(&self) -> usize {
-        self.active_operations.read().unwrap().len()
+        self.active_operations.read().expect("Operation failed").len()
     }
 
     /// Check if any operations are active
     pub fn has_active_operations(&self) -> bool {
-        !self.active_operations.read().unwrap().is_empty()
+        !self.active_operations.read().expect("Operation failed").is_empty()
     }
 
     /// Register a derived datatype
@@ -248,7 +248,7 @@ impl MPICommunicator {
 
     /// Update statistics after an operation
     fn update_stats(&self, operation_type: RequestOperationType, bytes: usize, elapsed: f64) {
-        let mut stats = self.comm_stats.lock().unwrap();
+        let mut stats = self.comm_stats.lock().expect("Operation failed");
 
         match operation_type {
             RequestOperationType::PointToPoint => {

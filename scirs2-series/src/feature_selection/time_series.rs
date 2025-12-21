@@ -33,10 +33,10 @@ impl TimeSeriesMethods {
     /// use scirs2_core::ndarray::{Array1, Array2};
     /// use scirs2_series::feature_selection::TimeSeriesMethods;
     ///
-    /// let features = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).expect("Operation failed");
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     ///
-    /// let result = TimeSeriesMethods::lag_based_selection(&features, &target, 5, Some(3)).unwrap();
+    /// let result = TimeSeriesMethods::lag_based_selection(&features, &target, 5, Some(3)).expect("Operation failed");
     /// println!("Selected {} features", result.selected_features.len());
     /// ```
     pub fn lag_based_selection(

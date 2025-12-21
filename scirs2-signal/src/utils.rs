@@ -30,7 +30,7 @@ use std::fmt::Debug;
 ///
 /// // Pad a signal to length 10
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
-/// let padded = zero_pad(&signal, 10, "constant", Some(0.0)).unwrap();
+/// let padded = zero_pad(&signal, 10, "constant", Some(0.0)).expect("Operation failed");
 ///
 /// assert_eq!(padded.len(), 10);
 /// assert_eq!(padded, vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0]);
@@ -221,7 +221,7 @@ where
 /// use scirs2_signal::utils::get_window;
 ///
 /// // Create a Hamming window of length 10
-/// let window = get_window("hamming", 10, false).unwrap();
+/// let window = get_window("hamming", 10, false).expect("Operation failed");
 ///
 /// assert_eq!(window.len(), 10);
 /// assert!(window[0] > 0.0 && window[0] < 1.0);
@@ -252,7 +252,7 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
 ///
 /// // Normalize a signal to unit energy
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
-/// let normalized = normalize(&signal, "energy").unwrap();
+/// let normalized = normalize(&signal, "energy").expect("Operation failed");
 ///
 /// // Sum of squares should be 1.0
 /// let sum_of_squares: f64 = normalized.iter().map(|&x| x * x).sum();
@@ -371,7 +371,7 @@ mod tests {
     fn test_zero_pad_constant() {
         // Test constant padding
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let padded = zero_pad(&signal, 10, "constant", Some(0.0)).unwrap();
+        let padded = zero_pad(&signal, 10, "constant", Some(0.0)).expect("Operation failed");
 
         assert_eq!(padded.len(), 10);
 
@@ -383,7 +383,7 @@ mod tests {
         assert_eq!(padded.iter().filter(|&&x| x == 0.0).count(), 6);
 
         // Test constant padding with non-zero value
-        let padded = zero_pad(&signal, 8, "constant", Some(5.0)).unwrap();
+        let padded = zero_pad(&signal, 8, "constant", Some(5.0)).expect("Operation failed");
 
         assert_eq!(padded.len(), 8);
 
@@ -399,7 +399,7 @@ mod tests {
     fn test_zero_pad_edge() {
         // Test edge padding
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let padded = zero_pad(&signal, 8, "edge", None).unwrap();
+        let padded = zero_pad(&signal, 8, "edge", None).expect("Operation failed");
 
         assert_eq!(padded.len(), 8);
         assert_eq!(padded, vec![1.0, 1.0, 1.0, 2.0, 3.0, 4.0, 4.0, 4.0]);
@@ -409,7 +409,7 @@ mod tests {
     fn test_zero_pad_mean() {
         // Test mean padding
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let padded = zero_pad(&signal, 8, "mean", None).unwrap();
+        let padded = zero_pad(&signal, 8, "mean", None).expect("Operation failed");
 
         assert_eq!(padded.len(), 8);
         let mean = 2.5; // (1 + 2 + 3 + 4) / 4
@@ -419,7 +419,7 @@ mod tests {
     #[test]
     fn test_get_window_hamming() {
         // Test Hamming window
-        let window = get_window("hamming", 10, false).unwrap();
+        let window = get_window("hamming", 10, false).expect("Operation failed");
 
         assert_eq!(window.len(), 10);
         assert_relative_eq!(window[0], 0.08, epsilon = 0.01);
@@ -439,7 +439,7 @@ mod tests {
     #[test]
     fn test_get_window_hann() {
         // Test Hann window
-        let window = get_window("hann", 10, false).unwrap();
+        let window = get_window("hann", 10, false).expect("Operation failed");
 
         assert_eq!(window.len(), 10);
         assert_relative_eq!(window[0], 0.0, epsilon = 0.01);
@@ -460,7 +460,7 @@ mod tests {
     fn test_normalize_energy() {
         // Test energy normalization
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let normalized = normalize(&signal, "energy").unwrap();
+        let normalized = normalize(&signal, "energy").expect("Operation failed");
 
         // Sum of squares should be 1.0
         let sum_of_squares: f64 = normalized.iter().map(|&x| x * x).sum();
@@ -478,7 +478,7 @@ mod tests {
         let b = vec![0.5, 0.5];
         // Test peak normalization
         let signal = vec![1.0, -2.0, 3.0, -4.0];
-        let normalized = normalize(&signal, "peak").unwrap();
+        let normalized = normalize(&signal, "peak").expect("Operation failed");
 
         // Maximum absolute value should be 1.0
         let peak = normalized.iter().fold(0.0, |a, &b| a.max(b.abs()));

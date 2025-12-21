@@ -38,8 +38,8 @@ pub fn simd_dot_f32_ultra(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
     assert_eq!(a.len(), b.len(), "Arrays must have the same length");
 
     let len = a.len();
-    let a_ptr = a.as_slice().unwrap().as_ptr();
-    let b_ptr = b.as_slice().unwrap().as_ptr();
+    let a_ptr = a.as_slice().expect("Test operation failed").as_ptr();
+    let b_ptr = b.as_slice().expect("Test operation failed").as_ptr();
 
     let features = get_cpu_features();
 
@@ -145,9 +145,9 @@ pub fn simd_fma_f32_ultra(
     let len = a.len();
     let mut result = vec![0.0f32; len];
 
-    let a_ptr = a.as_slice().unwrap().as_ptr();
-    let b_ptr = b.as_slice().unwrap().as_ptr();
-    let c_ptr = c.as_slice().unwrap().as_ptr();
+    let a_ptr = a.as_slice().expect("Test operation failed").as_ptr();
+    let b_ptr = b.as_slice().expect("Test operation failed").as_ptr();
+    let c_ptr = c.as_slice().expect("Test operation failed").as_ptr();
     let result_ptr = result.as_mut_ptr();
 
     let features = get_cpu_features();
@@ -241,8 +241,8 @@ pub fn simd_mul_f32_fast(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32
     let len = a.len();
     let mut result = vec![0.0f32; len];
 
-    let a_ptr = a.as_slice().unwrap().as_ptr();
-    let b_ptr = b.as_slice().unwrap().as_ptr();
+    let a_ptr = a.as_slice().expect("Test operation failed").as_ptr();
+    let b_ptr = b.as_slice().expect("Test operation failed").as_ptr();
     let result_ptr = result.as_mut_ptr();
 
     let features = get_cpu_features();
@@ -338,8 +338,8 @@ pub fn simd_sub_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 4 f64s at a time with AVX2
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = _mm256_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_pd(b_slice.as_ptr());
@@ -361,8 +361,8 @@ pub fn simd_sub_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 2 f64s at a time with SSE2
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = _mm_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm_loadu_pd(b_slice.as_ptr());
@@ -396,8 +396,8 @@ pub fn simd_sub_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 2 f64s at a time with NEON
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = vld1q_f64(a_slice.as_ptr());
                     let b_vec = vld1q_f64(b_slice.as_ptr());
@@ -450,8 +450,8 @@ pub fn simd_mul_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 8 f32s at a time with AVX2
                 while i + 8 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 8];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 8];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 8];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 8];
 
                     let a_vec = _mm256_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_ps(b_slice.as_ptr());
@@ -473,8 +473,8 @@ pub fn simd_mul_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 4 f32s at a time with SSE
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = _mm_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm_loadu_ps(b_slice.as_ptr());
@@ -508,8 +508,8 @@ pub fn simd_mul_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 4 f32s at a time with NEON
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = vld1q_f32(a_slice.as_ptr());
                     let b_vec = vld1q_f32(b_slice.as_ptr());
@@ -562,8 +562,8 @@ pub fn simd_mul_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 4 f64s at a time with AVX2
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = _mm256_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_pd(b_slice.as_ptr());
@@ -585,8 +585,8 @@ pub fn simd_mul_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 2 f64s at a time with SSE2
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = _mm_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm_loadu_pd(b_slice.as_ptr());
@@ -620,8 +620,8 @@ pub fn simd_mul_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 2 f64s at a time with NEON
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = vld1q_f64(a_slice.as_ptr());
                     let b_vec = vld1q_f64(b_slice.as_ptr());
@@ -674,8 +674,8 @@ pub fn simd_div_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 8 f32s at a time with AVX2
                 while i + 8 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 8];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 8];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 8];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 8];
 
                     let a_vec = _mm256_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_ps(b_slice.as_ptr());
@@ -697,8 +697,8 @@ pub fn simd_div_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 4 f32s at a time with SSE
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = _mm_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm_loadu_ps(b_slice.as_ptr());
@@ -732,8 +732,8 @@ pub fn simd_div_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 4 f32s at a time with NEON
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = vld1q_f32(a_slice.as_ptr());
                     let b_vec = vld1q_f32(b_slice.as_ptr());
@@ -786,8 +786,8 @@ pub fn simd_div_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 4 f64s at a time with AVX2
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = _mm256_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_pd(b_slice.as_ptr());
@@ -809,8 +809,8 @@ pub fn simd_div_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 2 f64s at a time with SSE2
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = _mm_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm_loadu_pd(b_slice.as_ptr());
@@ -844,8 +844,8 @@ pub fn simd_div_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
                 // Process 2 f64s at a time with NEON
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = vld1q_f64(a_slice.as_ptr());
                     let b_vec = vld1q_f64(b_slice.as_ptr());
@@ -899,8 +899,8 @@ pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
 
                 // Process 8 f32s at a time with AVX2
                 while i + 8 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 8];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 8];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 8];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 8];
 
                     let a_vec = _mm256_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_ps(b_slice.as_ptr());
@@ -936,8 +936,8 @@ pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
 
                 // Process 4 f32s at a time with SSE
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = _mm_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm_loadu_ps(b_slice.as_ptr());
@@ -982,8 +982,8 @@ pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
 
                 // Process 4 f32s at a time with NEON
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = vld1q_f32(a_slice.as_ptr());
                     let b_vec = vld1q_f32(b_slice.as_ptr());
@@ -1058,8 +1058,8 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
 
                 // Process 4 f64s at a time with AVX2
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 4];
 
                     let a_vec = _mm256_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_pd(b_slice.as_ptr());
@@ -1103,8 +1103,8 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
 
                 // Process 2 f64s at a time with SSE2
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = _mm_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm_loadu_pd(b_slice.as_ptr());
@@ -1163,8 +1163,8 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
 
                 // Process 2 f64s at a time with NEON
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Test operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Test operation failed")[i..i + 2];
 
                     let a_vec = vld1q_f64(a_slice.as_ptr());
                     let b_vec = vld1q_f64(b_slice.as_ptr());

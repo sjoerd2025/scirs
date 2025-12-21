@@ -48,7 +48,7 @@ use std::fmt::Debug;
 /// let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * freq * i as f64 * dt).cos()).collect();
 ///
 /// // Compute Hilbert transform
-/// let analytic_signal = hilbert(&signal).unwrap();
+/// let analytic_signal = hilbert(&signal).expect("Operation failed");
 ///
 /// // For a cosine wave, the analytical signal should have a magnitude of approximately 1
 /// // Due to numerical precision and edge effects, we'll check a range in the middle
@@ -197,7 +197,7 @@ where
 /// }).collect();
 ///
 /// // Compute envelope
-/// let envelope = envelope(&signal).unwrap();
+/// let envelope = envelope(&signal).expect("Operation failed");
 ///
 /// // Envelope should generally follow the window shape, but edge effects may occur
 /// let mid_point = n / 2;
@@ -254,7 +254,7 @@ where
 /// }).collect();
 ///
 /// // Compute instantaneous frequency
-/// let inst_freq = instantaneous_frequency(&signal, fs).unwrap();
+/// let inst_freq = instantaneous_frequency(&signal, fs).expect("Operation failed");
 ///
 /// // Check that frequency increases
 /// assert!(inst_freq[n/4] > inst_freq[n/8]);
@@ -298,7 +298,7 @@ where
             diff += 2.0 * PI;
         }
 
-        unwrapped_phase.push(unwrapped_phase.last().unwrap() + diff);
+        unwrapped_phase.push(unwrapped_phase.last().expect("Operation failed") + diff);
         prev_phase = p;
     }
 
@@ -348,7 +348,7 @@ where
 /// let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * freq * i as f64 * dt).sin()).collect();
 ///
 /// // Compute instantaneous phase (unwrapped)
-/// let phase = instantaneous_phase(&signal, true).unwrap();
+/// let phase = instantaneous_phase(&signal, true).expect("Operation failed");
 ///
 /// // Phase should increase linearly for a sine wave
 /// // Skip edges and check only middle portion for better reliability
@@ -403,7 +403,7 @@ where
             diff += 2.0 * PI;
         }
 
-        unwrapped_phase.push(unwrapped_phase.last().unwrap() + diff);
+        unwrapped_phase.push(unwrapped_phase.last().expect("Operation failed") + diff);
         prev_phase = p;
     }
 
@@ -427,7 +427,7 @@ mod tests {
         let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * freq * ti).cos()).collect();
 
         // Compute Hilbert transform
-        let analytic = hilbert(&signal).unwrap();
+        let analytic = hilbert(&signal).expect("Operation failed");
 
         // The Hilbert transform of cos(x) is sin(x)
         // So the analytic signal should be cos(x) + i*sin(x) = e^(ix)
@@ -479,7 +479,7 @@ mod tests {
             .collect();
 
         // Compute envelope
-        let envelope_result = envelope(&signal).unwrap();
+        let envelope_result = envelope(&signal).expect("Operation failed");
 
         // Since we've changed the implementation to use rustfft directly,
         // the exact values might differ. Let's check that the envelope follows
@@ -554,7 +554,7 @@ mod tests {
             .collect();
 
         // Compute instantaneous frequency
-        let inst_freq = instantaneous_frequency(&signal, fs).unwrap();
+        let inst_freq = instantaneous_frequency(&signal, fs).expect("Operation failed");
 
         // Check a few points (allowing for some error due to numerical differentiation)
         // Skip the very beginning and end due to edge effects
@@ -588,7 +588,7 @@ mod tests {
         let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * freq * ti).sin()).collect();
 
         // Compute instantaneous phase (unwrapped)
-        let phase = instantaneous_phase(&signal, true).unwrap();
+        let phase = instantaneous_phase(&signal, true).expect("Operation failed");
 
         // For a sine wave, the phase should increase linearly at a rate of 2πf
         let expected_phase_rate = 2.0 * PI * freq;

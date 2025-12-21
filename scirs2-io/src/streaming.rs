@@ -564,18 +564,18 @@ mod tests {
 
     #[test]
     fn test_chunked_reader() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_data.txt");
 
         // Create test data
         let test_data = "0123456789".repeat(100); // 1000 bytes
-        std::fs::write(&file_path, &test_data).unwrap();
+        std::fs::write(&file_path, &test_data).expect("Operation failed");
 
         let config = StreamingConfig::new().chunk_size(100);
-        let reader = ChunkedReader::new(&file_path, config).unwrap();
+        let reader = ChunkedReader::new(&file_path, config).expect("Operation failed");
 
         let chunks: Result<Vec<_>> = reader.collect();
-        let chunks = chunks.unwrap();
+        let chunks = chunks.expect("Operation failed");
 
         assert_eq!(chunks.len(), 10); // 1000 bytes / 100 bytes per chunk
         for chunk in &chunks {
@@ -585,18 +585,18 @@ mod tests {
 
     #[test]
     fn test_line_chunked_reader() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_lines.txt");
 
         // Create test data with lines
         let lines: Vec<String> = (0..50).map(|i| format!("Line {i}")).collect();
-        std::fs::write(&file_path, lines.join("\n")).unwrap();
+        std::fs::write(&file_path, lines.join("\n")).expect("Operation failed");
 
         let config = StreamingConfig::new().chunk_size(10); // 10 lines per chunk
-        let reader = LineChunkedReader::new(&file_path, config).unwrap();
+        let reader = LineChunkedReader::new(&file_path, config).expect("Operation failed");
 
         let chunks: Result<Vec<_>> = reader.collect();
-        let chunks = chunks.unwrap();
+        let chunks = chunks.expect("Operation failed");
 
         assert_eq!(chunks.len(), 5); // 50 lines / 10 lines per chunk
         for chunk in &chunks {
@@ -606,23 +606,23 @@ mod tests {
 
     #[test]
     fn test_streaming_csv_reader() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test.csv");
 
         // Create test CSV
-        let mut file = File::create(&file_path).unwrap();
-        writeln!(file, "name,age,city").unwrap();
+        let mut file = File::create(&file_path).expect("Operation failed");
+        writeln!(file, "name,age,city").expect("Operation failed");
         for i in 0..20 {
-            writeln!(file, "Person{},{},City{}", i, 20 + i, i % 5).unwrap();
+            writeln!(file, "Person{},{},City{}", i, 20 + i, i % 5).expect("Operation failed");
         }
 
         let config = StreamingConfig::new().chunk_size(5); // 5 lines per chunk
         let reader = StreamingCsvReader::new(&file_path, config)
-            .unwrap()
+            .expect("Operation failed")
             .with_header(true);
 
         let chunks: Result<Vec<_>> = reader.collect();
-        let chunks = chunks.unwrap();
+        let chunks = chunks.expect("Operation failed");
 
         // With 1 header + 20 data rows, chunk size 5:
         // First chunk: header + 4 data rows -> returns 4 data rows
@@ -658,12 +658,12 @@ mod tests {
 
     #[test]
     fn test_process_file_chunked() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_process.txt");
 
         // Create test data
         let test_data = "Hello World!".repeat(100);
-        std::fs::write(&file_path, &test_data).unwrap();
+        std::fs::write(&file_path, &test_data).expect("Operation failed");
 
         let config = StreamingConfig::new().chunk_size(100);
 
@@ -671,7 +671,7 @@ mod tests {
             process_file_chunked(&file_path, config, |chunk, _chunk_id| -> Result<usize> {
                 Ok(chunk.len())
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(total_size, 100); // Last chunk size
         assert!(stats.bytes_processed > 0);

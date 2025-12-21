@@ -311,7 +311,7 @@ where
 
     // Final check for bounds
     if let Some(bounds) = &base_opts.bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     Ok(OptimizeResult {
@@ -783,8 +783,8 @@ mod tests {
         };
 
         let x = Array1::ones(n);
-        let sparsity_info =
-            detect_sparsity_patterns(&mut fun, &mut grad, &x.view(), &options).unwrap();
+        let sparsity_info = detect_sparsity_patterns(&mut fun, &mut grad, &x.view(), &options)
+            .expect("Operation failed");
 
         // Should detect that only diagonal elements (0,0), (4,4), (9,9) are non-zero
         assert!(sparsity_info.jacobian_sparsity < 0.5); // Should be sparse
@@ -793,7 +793,7 @@ mod tests {
     #[test]
     fn test_sparse_vector_operations() {
         let dense = Array1::from_vec(vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0]);
-        let sparse = dense_to_sparse_vector(&dense, 1e-12).unwrap();
+        let sparse = dense_to_sparse_vector(&dense, 1e-12).expect("Operation failed");
 
         let reconstructed = sparse_to_dense(&sparse);
 

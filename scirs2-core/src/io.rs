@@ -258,38 +258,38 @@ mod tests {
 
     #[test]
     fn test_read_write_string() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test.txt");
 
         let test_str = "Hello, world!";
-        write_string(&filepath, test_str).unwrap();
+        write_string(&filepath, test_str).expect("Operation failed");
 
-        let contents = read_to_string(&filepath).unwrap();
+        let contents = read_to_string(&filepath).expect("Operation failed");
         assert_eq!(contents, test_str);
     }
 
     #[test]
     fn test_read_write_bytes() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test.bin");
 
         let test_bytes = vec![1, 2, 3, 4, 5];
-        write_bytes(&filepath, &test_bytes).unwrap();
+        write_bytes(&filepath, &test_bytes).expect("Operation failed");
 
-        let contents = read_to_bytes(&filepath).unwrap();
+        let contents = read_to_bytes(&filepath).expect("Operation failed");
         assert_eq!(contents, test_bytes);
     }
 
     #[test]
     fn test_read_lines() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_lines.txt");
 
         {
-            let mut file = File::create(&filepath).unwrap();
-            writeln!(file, "Line 1").unwrap();
-            writeln!(file, "Line 2").unwrap();
-            writeln!(file, "Line 3").unwrap();
+            let mut file = File::create(&filepath).expect("Operation failed");
+            writeln!(file, "Line 1").expect("Operation failed");
+            writeln!(file, "Line 2").expect("Operation failed");
+            writeln!(file, "Line 3").expect("Operation failed");
         }
 
         let mut lines = Vec::new();
@@ -297,56 +297,56 @@ mod tests {
             lines.push(line);
             Ok(())
         })
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(lines, vec!["Line 1", "Line 2", "Line 3"]);
     }
 
     #[test]
     fn test_file_exists() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_exists.txt");
 
         assert!(!file_exists(&filepath));
 
-        File::create(&filepath).unwrap();
+        File::create(&filepath).expect("Operation failed");
 
         assert!(file_exists(&filepath));
     }
 
     #[test]
     fn test_directory_exists() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let dirpath = dir.path().join("test_dir");
 
         assert!(!directory_exists(&dirpath));
 
-        std::fs::create_dir(&dirpath).unwrap();
+        std::fs::create_dir(&dirpath).expect("Operation failed");
 
         assert!(directory_exists(&dirpath));
     }
 
     #[test]
     fn test_create_directory() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let dirpath = dir.path().join("test_create_dir");
 
         assert!(!directory_exists(&dirpath));
 
-        create_directory(&dirpath).unwrap();
+        create_directory(&dirpath).expect("Operation failed");
 
         assert!(directory_exists(&dirpath));
     }
 
     #[test]
     fn test_filesize() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("testsize.txt");
 
         let test_str = "Hello, world!";
-        write_string(&filepath, test_str).unwrap();
+        write_string(&filepath, test_str).expect("Operation failed");
 
-        let size = filesize(&filepath).unwrap();
+        let size = filesize(&filepath).expect("Operation failed");
         assert_eq!(size, test_str.len() as u64);
     }
 

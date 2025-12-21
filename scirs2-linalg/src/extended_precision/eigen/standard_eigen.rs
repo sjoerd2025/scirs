@@ -45,7 +45,7 @@ pub type EigenResult<A> = LinalgResult<(
 /// ];
 ///
 /// // Compute eigenvalues with extended precision
-/// let eigvals = extended_eigvals::<_, f64>(&a.view(), None, None).unwrap();
+/// let eigvals = extended_eigvals::<_, f64>(&a.view(), None, None).expect("Operation failed");
 ///
 /// // Expected eigenvalues approximately (-0.3723, 5.3723)
 /// assert!((eigvals[0].re + 0.3723).abs() < 1e-4 || (eigvals[0].re - 5.3723).abs() < 1e-4);
@@ -91,7 +91,11 @@ where
     let a_high = hessenberg_reduction(a_high);
 
     // Apply QR algorithm with implicit shifts in higher precision
-    let eigenvalues_high = qr_algorithm(a_high, max_iter, I::from(tol.promote()).unwrap());
+    let eigenvalues_high = qr_algorithm(
+        a_high,
+        max_iter,
+        I::from(tol.promote()).expect("Operation failed"),
+    );
 
     // Convert eigenvalues back to original precision
     let mut eigenvalues = Array1::zeros(n);
@@ -133,7 +137,7 @@ where
 /// ];
 ///
 /// // Compute eigenvalues and eigenvectors with extended precision
-/// let (eigvals, eigvecs) = extended_eig::<_, f64>(&a.view(), None, None).unwrap();
+/// let (eigvals, eigvecs) = extended_eig::<_, f64>(&a.view(), None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn extended_eig<A, I>(
@@ -199,7 +203,7 @@ where
             &shiftedmatrix,
             lambda_high,
             max_iter.unwrap_or(100),
-            I::from(tol.unwrap_or(A::epsilon().sqrt()).promote()).unwrap(),
+            I::from(tol.unwrap_or(A::epsilon().sqrt()).promote()).expect("Operation failed"),
         );
 
         // Convert eigenvector back to original precision
@@ -242,7 +246,7 @@ where
 /// ];
 ///
 /// // Compute eigenvalues with extended precision
-/// let eigvals = extended_eigvalsh::<_, f64>(&a.view(), None, None).unwrap();
+/// let eigvals = extended_eigvalsh::<_, f64>(&a.view(), None, None).expect("Operation failed");
 ///
 /// // Check that we got 2 eigenvalues
 /// assert_eq!(eigvals.len(), 2);
@@ -281,7 +285,9 @@ where
     let n = a.nrows();
     for i in 0..n {
         for j in i + 1..n {
-            if (a[[i, j]] - a[[j, i]]).abs() > A::epsilon() * A::from(10.0).unwrap() {
+            if (a[[i, j]] - a[[j, i]]).abs()
+                > A::epsilon() * A::from(10.0).expect("Operation failed")
+            {
                 return Err(crate::error::LinalgError::InvalidInputError(
                     "Matrix must be symmetric/Hermitian".to_string(),
                 ));
@@ -304,8 +310,11 @@ where
     let a_high = tridiagonalize(a_high);
 
     // Apply QR algorithm for symmetric tridiagonal matrices
-    let eigenvalues_high =
-        qr_algorithm_symmetric(a_high, max_iter, I::from(tol.promote()).unwrap());
+    let eigenvalues_high = qr_algorithm_symmetric(
+        a_high,
+        max_iter,
+        I::from(tol.promote()).expect("Operation failed"),
+    );
 
     // Convert eigenvalues back to original precision
     let mut eigenvalues = Array1::zeros(n);
@@ -344,7 +353,7 @@ where
 /// ];
 ///
 /// // Compute eigenvalues and eigenvectors with extended precision
-/// let (eigvals, eigvecs) = extended_eigh::<_, f64>(&a.view(), None, None).unwrap();
+/// let (eigvals, eigvecs) = extended_eigh::<_, f64>(&a.view(), None, None).expect("Operation failed");
 ///
 /// // Check that we got 2 eigenvalues
 /// assert_eq!(eigvals.len(), 2);
@@ -393,7 +402,9 @@ where
     let n = a.nrows();
     for i in 0..n {
         for j in i + 1..n {
-            if (a[[i, j]] - a[[j, i]]).abs() > A::epsilon() * A::from(10.0).unwrap() {
+            if (a[[i, j]] - a[[j, i]]).abs()
+                > A::epsilon() * A::from(10.0).expect("Operation failed")
+            {
                 return Err(crate::error::LinalgError::InvalidInputError(
                     "Matrix must be symmetric/Hermitian".to_string(),
                 ));
@@ -416,8 +427,12 @@ where
     let (a_tri, q) = tridiagonalize_with_transform(a_high);
 
     // Apply QR algorithm for symmetric tridiagonal matrices
-    let (eigenvalues_high, eigenvectors_high) =
-        qr_algorithm_symmetric_with_vectors(a_tri, q, max_iter, I::from(tol.promote()).unwrap());
+    let (eigenvalues_high, eigenvectors_high) = qr_algorithm_symmetric_with_vectors(
+        a_tri,
+        q,
+        max_iter,
+        I::from(tol.promote()).expect("Operation failed"),
+    );
 
     // Convert eigenvalues and eigenvectors back to original precision
     let mut eigenvalues = Array1::zeros(n);

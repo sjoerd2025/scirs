@@ -625,7 +625,7 @@ impl HardwareAcceleratedMatrix {
         let mut correlation_matrix = Array2::zeros((n_features, n_features));
 
         // Compute means
-        let means: Array1<f64> = data.mean_axis(Axis(0)).unwrap();
+        let means: Array1<f64> = data.mean_axis(Axis(0)).expect("Operation failed");
 
         for i in 0..n_features {
             for j in (i + 1)..n_features {
@@ -720,16 +720,20 @@ mod tests {
         let b = Array1::from_vec(vec![2.0, 3.0, 4.0, 5.0, 6.0]);
 
         // Test Euclidean distance
-        let euclidean = metrics.euclidean_distance_simd(&a, &b).unwrap();
+        let euclidean = metrics
+            .euclidean_distance_simd(&a, &b)
+            .expect("Operation failed");
         let expected_euclidean = (5.0_f64).sqrt(); // sqrt(5 * 1^2)
         assert!((euclidean - expected_euclidean).abs() < 1e-10);
 
         // Test Manhattan distance
-        let manhattan = metrics.manhattan_distance_simd(&a, &b).unwrap();
+        let manhattan = metrics
+            .manhattan_distance_simd(&a, &b)
+            .expect("Operation failed");
         assert!((manhattan - 5.0).abs() < 1e-10);
 
         // Test dot product
-        let dot = metrics.dot_product_simd(&a, &b).unwrap();
+        let dot = metrics.dot_product_simd(&a, &b).expect("Operation failed");
         let expected_dot = 70.0; // 1*2 + 2*3 + 3*4 + 4*5 + 5*6
         assert!((dot - expected_dot).abs() < 1e-10);
     }
@@ -740,15 +744,15 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
         // Test mean
-        let mean = stats.mean_simd(&data).unwrap();
+        let mean = stats.mean_simd(&data).expect("Operation failed");
         assert!((mean - 3.0).abs() < 1e-10);
 
         // Test sum
-        let sum = stats.sum_simd(&data).unwrap();
+        let sum = stats.sum_simd(&data).expect("Operation failed");
         assert!((sum - 15.0).abs() < 1e-10);
 
         // Test variance
-        let variance = stats.variance_simd(&data).unwrap();
+        let variance = stats.variance_simd(&data).expect("Operation failed");
         let expected_variance = 2.5; // Sample variance
         assert!((variance - expected_variance).abs() < 1e-10);
     }
@@ -760,10 +764,12 @@ mod tests {
         // Test matrix-vector multiplication
         let matrix =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Operation failed");
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let result = matrix_ops.matvec_accelerated(&matrix, &vector).unwrap();
+        let result = matrix_ops
+            .matvec_accelerated(&matrix, &vector)
+            .expect("Operation failed");
         let expected = Array1::from_vec(vec![14.0, 32.0, 50.0]); // 1*1+2*2+3*3, etc.
 
         for (actual, expected) in result.iter().zip(expected.iter()) {
@@ -771,11 +777,12 @@ mod tests {
         }
 
         // Test pairwise distances
-        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
 
         let distances = matrix_ops
             .pairwise_distances_accelerated(&data, "euclidean")
-            .unwrap();
+            .expect("Operation failed");
 
         // Check symmetry
         assert!((distances[[0, 1]] - distances[[1, 0]]).abs() < 1e-10);

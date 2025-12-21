@@ -682,7 +682,7 @@ fn run_streaming_validation(
         0.0
     };
 
-    latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    latencies.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let p95_latency = if !latencies.is_empty() {
         latencies[(latencies.len() * 95 / 100).min(latencies.len() - 1)]
     } else {

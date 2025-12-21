@@ -139,10 +139,14 @@ fn detect_hamiltonian_conservation<F: IntegrateFloat>(
                 Box::new(Div(
                     Box::new(Pow(
                         Box::new(Var(p_vars[i].clone())),
-                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(
+                            F::from(2.0).expect("Failed to convert constant to float"),
+                        )),
                     )),
                     Box::new(Mul(
-                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(
+                            F::from(2.0).expect("Failed to convert constant to float"),
+                        )),
                         Box::new(Constant(coeff)),
                     )),
                 )),
@@ -195,7 +199,7 @@ fn detect_hamiltonian_conservation<F: IntegrateFloat>(
         Ok(Some(ConservationLaw::new(
             "Hamiltonian (Total Energy)",
             simplify(&hamiltonian),
-            F::from(1e-10).unwrap(),
+            F::from(1e-10).expect("Failed to convert constant to float"),
         )))
     } else {
         Ok(None)
@@ -240,9 +244,13 @@ fn integrate_expression<F: IntegrateFloat>(
         Var(v) if v == var => Some(Div(
             Box::new(Pow(
                 Box::new(Var(var.clone())),
-                Box::new(Constant(F::from(2.0).unwrap())),
+                Box::new(Constant(
+                    F::from(2.0).expect("Failed to convert constant to float"),
+                )),
             )),
-            Box::new(Constant(F::from(2.0).unwrap())),
+            Box::new(Constant(
+                F::from(2.0).expect("Failed to convert constant to float"),
+            )),
         )),
         Pow(base, exp) => {
             if let (Var(v), Constant(n)) = (base.as_ref(), exp.as_ref()) {
@@ -368,7 +376,7 @@ fn detect_linear_conservation<F: IntegrateFloat>(
             laws.push(ConservationLaw::new(
                 "Sum conservation",
                 sum_expr,
-                F::from(1e-10).unwrap(),
+                F::from(1e-10).expect("Failed to convert constant to float"),
             ));
         }
     }
@@ -391,7 +399,9 @@ fn detect_quadratic_conservation<F: IntegrateFloat>(
             Box::new(norm_expr),
             Box::new(Pow(
                 Box::new(Var(var.clone())),
-                Box::new(Constant(F::from(2.0).unwrap())),
+                Box::new(Constant(
+                    F::from(2.0).expect("Failed to convert constant to float"),
+                )),
             )),
         );
     }
@@ -414,7 +424,7 @@ fn detect_quadratic_conservation<F: IntegrateFloat>(
             laws.push(ConservationLaw::new(
                 "Norm conservation",
                 norm_expr,
-                F::from(1e-10).unwrap(),
+                F::from(1e-10).expect("Failed to convert constant to float"),
             ));
         }
     }
@@ -501,10 +511,14 @@ pub fn example_pendulum_conservation<F: IntegrateFloat>() -> Vec<ConservationLaw
 
     let energy = Sub(
         Box::new(Mul(
-            Box::new(Constant(F::from(0.5).unwrap())),
+            Box::new(Constant(
+                F::from(0.5).expect("Failed to convert constant to float"),
+            )),
             Box::new(Pow(
                 Box::new(omega),
-                Box::new(Constant(F::from(2.0).unwrap())),
+                Box::new(Constant(
+                    F::from(2.0).expect("Failed to convert constant to float"),
+                )),
             )),
         )),
         Box::new(Cos(Box::new(theta))),
@@ -513,7 +527,7 @@ pub fn example_pendulum_conservation<F: IntegrateFloat>() -> Vec<ConservationLaw
     vec![ConservationLaw::new(
         "Total Energy",
         energy,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     )]
 }
 
@@ -575,32 +589,32 @@ pub fn example_nbody_conservation<F: IntegrateFloat>(n: usize) -> Vec<Conservati
     laws.push(ConservationLaw::new(
         "Linear Momentum X",
         px,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
     laws.push(ConservationLaw::new(
         "Linear Momentum Y",
         py,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
     laws.push(ConservationLaw::new(
         "Linear Momentum Z",
         pz,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
     laws.push(ConservationLaw::new(
         "Angular Momentum X",
         lx,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
     laws.push(ConservationLaw::new(
         "Angular Momentum Y",
         ly,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
     laws.push(ConservationLaw::new(
         "Angular Momentum Z",
         lz,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
 
     laws
@@ -621,8 +635,15 @@ pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<Conservat
         energy = Add(
             Box::new(energy),
             Box::new(Mul(
-                Box::new(Constant(F::from(0.5).unwrap())),
-                Box::new(Pow(Box::new(v), Box::new(Constant(F::from(2.0).unwrap())))),
+                Box::new(Constant(
+                    F::from(0.5).expect("Failed to convert constant to float"),
+                )),
+                Box::new(Pow(
+                    Box::new(v),
+                    Box::new(Constant(
+                        F::from(2.0).expect("Failed to convert constant to float"),
+                    )),
+                )),
             )),
         );
     }
@@ -635,10 +656,14 @@ pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<Conservat
         energy = Add(
             Box::new(energy),
             Box::new(Mul(
-                Box::new(Constant(F::from(0.5).unwrap())),
+                Box::new(Constant(
+                    F::from(0.5).expect("Failed to convert constant to float"),
+                )),
                 Box::new(Pow(
                     Box::new(x.clone()),
-                    Box::new(Constant(F::from(2.0).unwrap())),
+                    Box::new(Constant(
+                        F::from(2.0).expect("Failed to convert constant to float"),
+                    )),
                 )),
             )),
         );
@@ -650,10 +675,14 @@ pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<Conservat
             energy = Add(
                 Box::new(energy),
                 Box::new(Mul(
-                    Box::new(Constant(F::from(0.5).unwrap())),
+                    Box::new(Constant(
+                        F::from(0.5).expect("Failed to convert constant to float"),
+                    )),
                     Box::new(Pow(
                         Box::new(diff),
-                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(
+                            F::from(2.0).expect("Failed to convert constant to float"),
+                        )),
                     )),
                 )),
             );
@@ -663,7 +692,7 @@ pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<Conservat
     laws.push(ConservationLaw::new(
         "Total Energy",
         energy,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
 
     // For periodic boundary conditions, add momentum conservation
@@ -675,7 +704,7 @@ pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<Conservat
     laws.push(ConservationLaw::new(
         "Total Momentum",
         total_momentum,
-        F::from(1e-10).unwrap(),
+        F::from(1e-10).expect("Failed to convert constant to float"),
     ));
 
     laws
@@ -705,7 +734,7 @@ mod tests {
         let law = ConservationLaw::new("Norm", norm, 1e-10);
 
         let state = Array1::from_vec(vec![3.0, 4.0]);
-        let value = law.evaluate(0.0, state.view()).unwrap();
+        let value = law.evaluate(0.0, state.view()).expect("Operation failed");
 
         assert!((value - 25.0_f64).abs() < 1e-10); // 3^2 + 4^2 = 25
     }

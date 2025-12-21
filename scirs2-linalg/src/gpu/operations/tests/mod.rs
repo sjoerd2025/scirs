@@ -25,12 +25,16 @@ fn test_cpu_fallback_operations() {
     // Test matrix-vector multiplication
     let a = array![[1.0, 2.0], [3.0, 4.0]];
     let x = array![1.0, 2.0];
-    let result = dispatcher.cpu_matvec(&a.view(), &x.view()).unwrap();
+    let result = dispatcher
+        .cpu_matvec(&a.view(), &x.view())
+        .expect("Test: operation failed");
     assert_eq!(result, array![5.0, 11.0]);
 
     // Test matrix-matrix multiplication
     let b = array![[1.0, 0.0], [0.0, 1.0]];
-    let result = dispatcher.cpu_matmul(&a.view(), &b.view()).unwrap();
+    let result = dispatcher
+        .cpu_matmul(&a.view(), &b.view())
+        .expect("Test: operation failed");
     assert_eq!(result, a);
 
     // CPU methods are private - these tests should use the public GPU interface
@@ -50,7 +54,7 @@ fn test_kernel_manager() {
 
     manager
         .load_kernel("test_kernel", "kernel void test() {}")
-        .unwrap();
+        .expect("Test: operation failed");
     // get_kernel returns private type - these tests disabled
     // assert!(manager.get_kernel("test_kernel").is_some());
     // assert!(manager.get_kernel("nonexistent").is_none());
@@ -68,7 +72,9 @@ fn test_performance_profiler() {
     profiler.record("matvec", 0.05);
 
     // Use approximate comparisons for floating point values
-    let avg_matmul = profiler.average_time("matmul").unwrap();
+    let avg_matmul = profiler
+        .average_time("matmul")
+        .expect("Test: operation failed");
     assert!((avg_matmul - 0.15).abs() < 1e-10);
     assert_eq!(profiler.best_time("matmul"), Some(0.1));
     assert_eq!(profiler.average_time("matvec"), Some(0.05));

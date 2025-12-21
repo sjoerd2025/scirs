@@ -28,7 +28,7 @@ use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_signal::multitaper::dpss;
 ///
 /// // Compute 4 DPSS tapers of length 64 with time-bandwidth product of 4
-/// let result = dpss(64, 4.0, 4, true).unwrap();
+/// let result = dpss(64, 4.0, 4, true).expect("Operation failed");
 /// let (tapers, eigenvalues) = (result.0, result.1.unwrap());
 ///
 /// // Check number of tapers
@@ -99,7 +99,7 @@ pub fn dpss(
 
     // Sort eigenvalues and eigenvectors
     let mut idx: Vec<usize> = (0..n_points).collect();
-    idx.sort_by(|&i, &j| eigvals[i].partial_cmp(&eigvals[j]).unwrap());
+    idx.sort_by(|&i, &j| eigvals[i].partial_cmp(&eigvals[j]).expect("Operation failed"));
 
     // Reorder eigenvalues and eigenvectors
     let mut sorted_eigvals = Vec::with_capacity(n_points);

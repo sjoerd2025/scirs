@@ -60,7 +60,7 @@ where
         x.iter().fold(F::zero(), |acc, &val| acc + val)
     };
 
-    Ok(sum / F::from(n).unwrap())
+    Ok(sum / F::from(n).expect("Failed to convert to float"))
 }
 
 /// Compute variance in parallel for large arrays
@@ -101,7 +101,7 @@ where
 
     // Parallel computation of sum of squared deviations
     let chunksize = (n / num_threads()).max(1000);
-    let sum_sq_dev: F = par_chunks(x.as_slice().unwrap(), chunksize)
+    let sum_sq_dev: F = par_chunks(x.as_slice().expect("Operation failed"), chunksize)
         .map(|chunk| {
             chunk
                 .iter()
@@ -113,7 +113,7 @@ where
         })
         .reduce(|| F::zero(), |a, b| a + b);
 
-    Ok(sum_sq_dev / F::from(n - ddof).unwrap())
+    Ok(sum_sq_dev / F::from(n - ddof).expect("Failed to convert to float"))
 }
 
 /// Compute multiple quantiles in parallel
@@ -168,17 +168,17 @@ where
     let mut sorted = x.to_owned();
     sorted
         .as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Operation failed")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Compute all quantiles in parallel
     let results: Vec<F> = parallel_map(quantiles, |&q| {
         // Direct quantile computation on sorted array
-        let pos = q * F::from(n - 1).unwrap();
+        let pos = q * F::from(n - 1).expect("Failed to convert to float");
         let idx = pos.floor();
         let frac = pos - idx;
 
-        let idx_usize: usize = NumCast::from(idx).unwrap();
+        let idx_usize: usize = NumCast::from(idx).expect("Operation failed");
 
         if frac == F::zero() {
             sorted[idx_usize]

@@ -192,8 +192,9 @@ impl ArrayProtocol for SparseArray {
                         // For the example, we'll just convert to dense and use ndarray's sum
                         let dense = self.to_dense();
                         let result = dense.sum_axis(scirs2_core::ndarray::Axis(*axis));
-                        let sparse_result =
-                            SparseArray::array(&result.into_dimensionality().unwrap());
+                        let sparse_result = SparseArray::array(
+                            &result.into_dimensionality().expect("Operation failed"),
+                        );
                         return Ok(Box::new(sparse_result));
                     }
                 }

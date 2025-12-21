@@ -128,7 +128,7 @@ impl Default for MultitaperConfig {
 /// };
 ///
 /// // Compute enhanced multitaper PSD
-/// let result = enhanced_pmtm(&signal, &config).unwrap();
+/// let result = enhanced_pmtm(&signal, &config).expect("Operation failed");
 /// assert!(result.frequencies.len() > 0);
 /// assert!(result.confidence_intervals.is_some());
 /// ```
@@ -587,7 +587,7 @@ fn try_chunked_simd_tapering(
 
     for (_chunk_idx, chunk_data) in signal
         .chunks(chunk_size)
-        .zip(taper.as_slice().unwrap().chunks(chunk_size))
+        .zip(taper.as_slice().expect("Operation failed").chunks(chunk_size))
         .zip(tapered.chunks_mut(chunk_size))
         .enumerate()
     {
@@ -610,7 +610,7 @@ fn try_chunked_simd_tapering(
 #[allow(dead_code)]
 fn scalar_tapering_optimized(signal: &[f64], taper: &ArrayView1<f64>, tapered: &mut [f64]) {
     // Unrolled loop for better performance
-    let taper_slice = taper.as_slice().unwrap();
+    let taper_slice = taper.as_slice().expect("Operation failed");
     let chunks = signal.len() / 4;
 
     // Process 4 elements at a time
@@ -1569,7 +1569,7 @@ where
                 let end = start + window_size;
                 let window = &x_arc[start..end];
 
-                enhanced_pmtm(window, &mt_config).unwrap()
+                enhanced_pmtm(window, &mt_config).expect("Operation failed")
             })
             .collect()
     } else {
@@ -1629,7 +1629,7 @@ mod tests {
             .collect();
 
         let config = MultitaperConfig::default();
-        let result = enhanced_pmtm(&signal, &config).unwrap();
+        let result = enhanced_pmtm(&signal, &config).expect("Operation failed");
 
         assert_eq!(result.frequencies.len(), result.psd.len());
         assert!(result.dof.is_some());
@@ -1638,7 +1638,7 @@ mod tests {
     #[test]
     fn test_enhanced_simd_fft() {
         let signal = vec![1.0, 0.0, -1.0, 0.0];
-        let result = enhanced_simd_fft(&signal, 4).unwrap();
+        let result = enhanced_simd_fft(&signal, 4).expect("Operation failed");
         assert_eq!(result.len(), 4);
         // Check that result is finite
         for val in result {

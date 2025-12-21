@@ -52,10 +52,11 @@ impl CoreferenceResolver {
     /// Create new coreference resolver
     pub fn new() -> Self {
         let pronoun_patterns = vec![
-            Regex::new(r"\b(?i)(?:he|she|it|they|him|her|them|his|hers|its|their)\b").unwrap(),
-            Regex::new(r"\b(?i)(?:this|that|these|those)\b").unwrap(),
+            Regex::new(r"\b(?i)(?:he|she|it|they|him|her|them|his|hers|its|their)\b")
+                .expect("Operation failed"),
+            Regex::new(r"\b(?i)(?:this|that|these|those)\b").expect("Operation failed"),
             Regex::new(r"\b(?i)(?:the (?:company|organization|person|individual|entity))\b")
-                .unwrap(),
+                .expect("Operation failed"),
         ];
 
         Self { pronoun_patterns }

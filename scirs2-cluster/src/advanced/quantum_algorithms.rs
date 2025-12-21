@@ -247,14 +247,16 @@ mod tests {
 
     #[test]
     fn test_qaoa_clustering_placeholder() {
-        let data = Array2::from_shape_vec((4, 2), (0..8).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((4, 2), (0..8).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = qaoa_clustering(data.view(), None);
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_vqe_clustering_placeholder() {
-        let data = Array2::from_shape_vec((4, 2), (0..8).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((4, 2), (0..8).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = vqe_clustering(data.view(), None);
         assert!(result.is_ok());
     }

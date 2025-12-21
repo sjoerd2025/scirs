@@ -119,8 +119,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Tran
         x = x.mapv(|v| {
             // GELU approximation: x * 0.5 * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
             let x3 = v * v * v;
-            v * F::from(0.5).unwrap()
-                * (F::one() + (v + F::from(0.044715).unwrap() * x3).tanh())
+            v * F::from(0.5).expect("Failed to convert constant to float")
+                * (F::one() + (v + F::from(0.044715).expect("Failed to convert constant to float") * x3).tanh())
         });
         x = self.dense2.forward(&x)?;
         Ok(x)
@@ -200,7 +200,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + SimdUnifiedOps + '
         let attn_config = crate::layers::AttentionConfig {
             num_heads,
             head_dim: dim / num_heads,
-            dropout_prob: attention_dropout_rate.to_f64().unwrap(),
+            dropout_prob: attention_dropout_rate.to_f64().expect("Operation failed"),
             causal: false,
             scale: None,
         };
@@ -220,7 +220,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + SimdUnifiedOps + '
         };
 
         // Dropouts
-        let dropout_rate_f64 = dropout_rate.to_f64().unwrap();
+        let dropout_rate_f64 = dropout_rate.to_f64().expect("Operation failed");
         let mut dropout_rng1 = scirs2_core::random::rngs::SmallRng::from_seed([47; 32]);
         let mut dropout_rng2 = scirs2_core::random::rngs::SmallRng::from_seed([48; 32]);
         let attn_dropout = Dropout::new(dropout_rate_f64, &mut dropout_rng1)?;
@@ -379,8 +379,8 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + SimdUnifiedOps + '
                 config.embed_dim,
                 config.num_heads,
                 config.mlp_dim,
-                F::from(config.dropout_rate).unwrap(),
-                F::from(config.attention_dropout_rate).unwrap(),
+                F::from(config.dropout_rate).expect("Failed to convert to float"),
+                F::from(config.attention_dropout_rate).expect("Failed to convert to float"),
             )?;
             encoder_blocks.push(block);
             let _ = i; // Suppress unused variable warning

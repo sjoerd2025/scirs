@@ -676,7 +676,7 @@ mod tests {
 
     #[test]
     fn test_quick_compatibility_check() {
-        let score = quick_compatibility_check().unwrap();
+        let score = quick_compatibility_check().expect("Operation failed");
         assert!((0.0..=1.0).contains(&score));
         // Compatibility score reflects current feature parity with SciPy
         // Score of ~0.45 indicates partial compatibility with room for improvement
@@ -686,7 +686,7 @@ mod tests {
     #[test]
     fn test_compatibility_report_methods() {
         let mut checker = create_compatibility_checker();
-        let report = checker.run_full_analysis().unwrap();
+        let report = checker.run_full_analysis().expect("Operation failed");
 
         let level = report.compatibility_level();
         assert!(matches!(

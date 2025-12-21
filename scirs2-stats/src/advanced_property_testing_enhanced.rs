@@ -163,7 +163,7 @@ impl AdvancedPropertyTester {
         let properties = self
             .mathematical_properties
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .get_properties_for_function(function_name)?;
 
         let mut test_results = Vec::new();
@@ -209,7 +209,7 @@ impl AdvancedPropertyTester {
         let properties = self
             .statistical_properties
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .get_properties_for_operation(&operation_type)?;
 
         let properties_count = properties.len();
@@ -254,7 +254,7 @@ impl AdvancedPropertyTester {
             let condition_result = self
                 .numerical_analyzer
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .test_stability_condition::<F>(function_name, &condition)?;
             condition_results.push(condition_result);
         }
@@ -286,7 +286,7 @@ impl AdvancedPropertyTester {
         let edge_cases = self
             .edge_case_generator
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .generate_edge_cases::<F>(function_name, &input_constraints)?;
 
         let mut edge_case_results = Vec::new();
@@ -323,7 +323,7 @@ impl AdvancedPropertyTester {
         let fuzzing_result = self
             .fuzzing_engine
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .execute_fuzzing_campaign::<F>(function_name, &fuzzing_config)?;
 
         let test_duration = start_time.elapsed();
@@ -507,7 +507,7 @@ impl AdvancedPropertyTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
     {
-        self.regression_detector.read().unwrap().detect_regressions(
+        self.regression_detector.read().expect("Operation failed").detect_regressions(
             function_name,
             baseline_results,
             current_results,
@@ -516,7 +516,6 @@ impl AdvancedPropertyTester {
 
     // Helper methods for test execution and analysis
 
-    #[ignore = "timeout"]
     fn test_single_mathematical_property<F>(
         &self,
         property: &MathematicalProperty,

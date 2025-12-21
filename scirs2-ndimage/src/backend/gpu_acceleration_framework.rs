@@ -138,7 +138,7 @@ impl GpuMemoryPool {
             return self.allocate_new_buffer(size, backend);
         }
 
-        let mut buffers = self.buffers.lock().unwrap();
+        let mut buffers = self.buffers.lock().expect("Operation failed");
 
         // Find an available buffer of sufficient size
         for buffer in buffers.iter_mut() {
@@ -154,8 +154,8 @@ impl GpuMemoryPool {
         let new_buffer = self.allocate_new_buffer(size, backend)?;
 
         // Add to pool if within limits
-        let mut buffers = self.buffers.lock().unwrap();
-        let current_total = *self.total_allocated.lock().unwrap();
+        let mut buffers = self.buffers.lock().expect("Operation failed");
+        let current_total = *self.total_allocated.lock().expect("Operation failed");
         if current_total + size <= self.config.max_pool_size {
             buffers.push(new_buffer.clone());
         }
@@ -169,7 +169,7 @@ impl GpuMemoryPool {
             return self.deallocate_immediate(buffer);
         }
 
-        let mut buffers = self.buffers.lock().unwrap();
+        let mut buffers = self.buffers.lock().expect("Operation failed");
         for pool_buffer in buffers.iter_mut() {
             if pool_buffer.id == buffer.id {
                 pool_buffer.in_use = false;
@@ -183,9 +183,9 @@ impl GpuMemoryPool {
 
     /// Get memory pool statistics
     pub fn get_statistics(&self) -> MemoryPoolStatistics {
-        let buffers = self.buffers.lock().unwrap();
-        let total_allocated = *self.total_allocated.lock().unwrap();
-        let peak_usage = *self.peak_usage.lock().unwrap();
+        let buffers = self.buffers.lock().expect("Operation failed");
+        let total_allocated = *self.total_allocated.lock().expect("Operation failed");
+        let peak_usage = *self.peak_usage.lock().expect("Operation failed");
 
         let active_buffers = buffers.iter().filter(|b| b.in_use).count();
         let total_buffers = buffers.len();
@@ -211,10 +211,10 @@ impl GpuMemoryPool {
         let buffer_id = self.generate_buffer_id();
         let handle = self.create_buffer_handle(size, backend)?;
 
-        let mut total_allocated = self.total_allocated.lock().unwrap();
+        let mut total_allocated = self.total_allocated.lock().expect("Operation failed");
         *total_allocated += size;
 
-        let mut peak_usage = self.peak_usage.lock().unwrap();
+        let mut peak_usage = self.peak_usage.lock().expect("Operation failed");
         *peak_usage = (*peak_usage).max(*total_allocated);
 
         Ok(GpuBuffer {
@@ -245,7 +245,7 @@ impl GpuMemoryPool {
             GpuBufferHandle::Placeholder => {}
         }
 
-        let mut total_allocated = self.total_allocated.lock().unwrap();
+        let mut total_allocated = self.total_allocated.lock().expect("Operation failed");
         *total_allocated = total_allocated.saturating_sub(buffer.size);
 
         Ok(())
@@ -491,9 +491,9 @@ impl GpuKernelCache {
     ) -> NdimageResult<CompiledKernel> {
         // Check cache first
         {
-            let kernels = self.kernels.read().unwrap();
+            let kernels = self.kernels.read().expect("Operation failed");
             if let Some(kernel) = kernels.get(kernel_id) {
-                let mut stats = self.stats.lock().unwrap();
+                let mut stats = self.stats.lock().expect("Operation failed");
                 stats.cache_hits += 1;
 
                 // Update usage statistics
@@ -506,7 +506,7 @@ impl GpuKernelCache {
         }
 
         // Cache miss, compile kernel
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("Operation failed");
         stats.cache_misses += 1;
         let compilation_start = Instant::now();
 
@@ -528,7 +528,7 @@ impl GpuKernelCache {
 
         // Store in cache
         {
-            let mut kernels = self.kernels.write().unwrap();
+            let mut kernels = self.kernels.write().expect("Operation failed");
             kernels.insert(kernel_id.to_string(), compiled_kernel.clone());
         }
 
@@ -543,7 +543,7 @@ impl GpuKernelCache {
         memory_bandwidth: f64,
         compute_utilization: f64,
     ) -> NdimageResult<()> {
-        let mut kernels = self.kernels.write().unwrap();
+        let mut kernels = self.kernels.write().expect("Operation failed");
         if let Some(kernel) = kernels.get_mut(kernel_id) {
             let stats = &mut kernel.performance_stats;
 
@@ -566,15 +566,15 @@ impl GpuKernelCache {
 
     /// Get cache statistics
     pub fn get_cache_stats(&self) -> KernelCacheStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Operation failed").clone()
     }
 
     /// Clear the kernel cache
     pub fn clear_cache(&self) {
-        let mut kernels = self.kernels.write().unwrap();
+        let mut kernels = self.kernels.write().expect("Operation failed");
         kernels.clear();
 
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("Operation failed");
         *stats = KernelCacheStats::default();
     }
 
@@ -757,7 +757,7 @@ impl GpuAccelerationManager {
     pub fn get_performance_report(&self) -> GpuPerformanceReport {
         let memory_stats = self.memory_pool.get_statistics();
         let cache_stats = self.kernel_cache.get_cache_stats();
-        let profiler = self.profiler.lock().unwrap();
+        let profiler = self.profiler.lock().expect("Operation failed");
 
         GpuPerformanceReport {
             memory_statistics: memory_stats,
@@ -789,7 +789,7 @@ impl GpuAccelerationManager {
         execution_time: Duration,
         memory_used: usize,
     ) -> NdimageResult<()> {
-        let mut profiler = self.profiler.lock().unwrap();
+        let mut profiler = self.profiler.lock().expect("Operation failed");
 
         profiler
             .timinghistory

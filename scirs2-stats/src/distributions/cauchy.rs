@@ -41,7 +41,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
     /// ```
     pub fn new(loc: F, scale: F) -> StatsResult<Self> {
         // Validate parameters
@@ -83,12 +83,12 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
     /// let pdf_at_zero = cauchy.pdf(0.0);
     /// assert!((pdf_at_zero - 0.3183099).abs() < 1e-7);
     /// ```
     pub fn pdf(&self, x: F) -> F {
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let one = F::one();
 
         // PDF = 1 / (π * scale * (1 + ((x - loc) / scale)^2))
@@ -111,13 +111,13 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
     /// let cdf_at_zero = cauchy.cdf(0.0);
     /// assert!((cdf_at_zero - 0.5).abs() < 1e-7);
     /// ```
     pub fn cdf(&self, x: F) -> F {
-        let pi = F::from(std::f64::consts::PI).unwrap();
-        let half = F::from(0.5).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         // CDF = 0.5 + (1/π) * arctan((x - loc) / scale)
         let z = (x - self.loc) / self.scale;
@@ -139,8 +139,8 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
-    /// let x = cauchy.ppf(0.75).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
+    /// let x = cauchy.ppf(0.75).expect("Operation failed");
     /// assert!((x - 1.0).abs() < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -150,8 +150,8 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
             ));
         }
 
-        let pi = F::from(std::f64::consts::PI).unwrap();
-        let half = F::from(0.5).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         // Quantile = loc + scale * tan(π * (p - 0.5))
         let tan_term = (pi * (p - half)).tan();
@@ -175,8 +175,8 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
-    /// let samples = cauchy.rvs_vec(10).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
+    /// let samples = cauchy.rvs_vec(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -193,7 +193,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
                 continue;
             }
 
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             // Apply inverse CDF transform
             let sample = match self.ppf(u_f) {
@@ -214,7 +214,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
                 continue;
             }
 
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             // Apply inverse CDF transform
             let sample = match self.ppf(u_f) {
@@ -243,8 +243,8 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
-    /// let samples = cauchy.rvs(10).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
+    /// let samples = cauchy.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
@@ -263,7 +263,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(2.0f64, 1.0).unwrap();
+    /// let cauchy = Cauchy::new(2.0f64, 1.0).expect("Operation failed");
     /// let median = cauchy.median();
     /// assert_eq!(median, 2.0);
     /// ```
@@ -283,7 +283,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(2.0f64, 1.0).unwrap();
+    /// let cauchy = Cauchy::new(2.0f64, 1.0).expect("Operation failed");
     /// let mode = cauchy.mode();
     /// assert_eq!(mode, 2.0);
     /// ```
@@ -303,7 +303,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
     /// let iqr = cauchy.iqr();
     /// assert!((iqr - 2.0).abs() < 1e-7);
     /// ```
@@ -323,13 +323,13 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// ```
     /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
-    /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
+    /// let cauchy = Cauchy::new(0.0f64, 1.0).expect("Operation failed");
     /// let entropy = cauchy.entropy();
     /// assert!((entropy - 2.5310242).abs() < 1e-7); // log(4π)
     /// ```
     pub fn entropy(&self) -> F {
-        let pi = F::from(std::f64::consts::PI).unwrap();
-        let four = F::from(4.0).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+        let four = F::from(4.0).expect("Failed to convert constant to float");
 
         // Entropy = log(4 * π * scale)
         (four * pi * self.scale).ln()
@@ -355,7 +355,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
 /// ```
 /// use scirs2_stats::distributions::cauchy;
 ///
-/// let c = cauchy::cauchy(0.0f64, 1.0).unwrap();
+/// let c = cauchy::cauchy(0.0f64, 1.0).expect("Operation failed");
 /// let pdf_at_zero = c.pdf(0.0);
 /// assert!((pdf_at_zero - 0.3183099).abs() < 1e-7);
 /// ```
@@ -431,12 +431,12 @@ mod tests {
     #[test]
     fn test_cauchy_creation() {
         // Standard Cauchy (loc=0, scale=1)
-        let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+        let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
         assert_eq!(cauchy.loc, 0.0);
         assert_eq!(cauchy.scale, 1.0);
 
         // Custom Cauchy
-        let custom = Cauchy::new(-2.0, 0.5).unwrap();
+        let custom = Cauchy::new(-2.0, 0.5).expect("Operation failed");
         assert_eq!(custom.loc, -2.0);
         assert_eq!(custom.scale, 0.5);
 
@@ -448,7 +448,7 @@ mod tests {
     #[test]
     fn test_cauchy_pdf() {
         // Standard Cauchy (loc=0, scale=1)
-        let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+        let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
 
         // PDF at x = 0 should be 1/(π*1) = 1/π ≈ 0.3183099
         let pdf_at_zero = cauchy.pdf(0.0);
@@ -463,7 +463,7 @@ mod tests {
         assert_relative_eq!(pdf_at_neg_one, pdf_at_one, epsilon = 1e-10);
 
         // Custom Cauchy with loc=-2, scale=0.5
-        let custom = Cauchy::new(-2.0, 0.5).unwrap();
+        let custom = Cauchy::new(-2.0, 0.5).expect("Operation failed");
 
         // PDF at x = -2 should be 1/(π*0.5) = 2/π ≈ 0.6366198
         let pdf_at_loc = custom.pdf(-2.0);
@@ -477,7 +477,7 @@ mod tests {
     #[test]
     fn test_cauchy_cdf() {
         // Standard Cauchy (loc=0, scale=1)
-        let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+        let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
 
         // CDF at x = 0 should be 0.5
         let cdf_at_zero = cauchy.cdf(0.0);
@@ -492,7 +492,7 @@ mod tests {
         assert_relative_eq!(cdf_at_neg_one, 0.25, epsilon = 1e-7);
 
         // Custom Cauchy with loc=-2, scale=0.5
-        let custom = Cauchy::new(-2.0, 0.5).unwrap();
+        let custom = Cauchy::new(-2.0, 0.5).expect("Operation failed");
 
         // CDF at x = -2 should be 0.5
         let cdf_at_loc = custom.cdf(-2.0);
@@ -506,29 +506,29 @@ mod tests {
     #[test]
     fn test_cauchy_ppf() {
         // Standard Cauchy (loc=0, scale=1)
-        let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+        let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
 
         // PPF at p = 0.5 should be 0
-        let ppf_at_half = cauchy.ppf(0.5).unwrap();
+        let ppf_at_half = cauchy.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half, 0.0, epsilon = 1e-10);
 
         // PPF at p = 0.75 should be 1.0
-        let ppf_at_75 = cauchy.ppf(0.75).unwrap();
+        let ppf_at_75 = cauchy.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(ppf_at_75, 1.0, epsilon = 1e-7);
 
         // PPF at p = 0.25 should be -1.0
-        let ppf_at_25 = cauchy.ppf(0.25).unwrap();
+        let ppf_at_25 = cauchy.ppf(0.25).expect("Operation failed");
         assert_relative_eq!(ppf_at_25, -1.0, epsilon = 1e-7);
 
         // Custom Cauchy with loc=-2, scale=0.5
-        let custom = Cauchy::new(-2.0, 0.5).unwrap();
+        let custom = Cauchy::new(-2.0, 0.5).expect("Operation failed");
 
         // PPF at p = 0.5 should be -2.0
-        let ppf_at_half_custom = custom.ppf(0.5).unwrap();
+        let ppf_at_half_custom = custom.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half_custom, -2.0, epsilon = 1e-10);
 
         // PPF at p = 0.75 should be -2.0 + 0.5*tan(π/4) = -2.0 + 0.5 = -1.5
-        let ppf_at_75_custom = custom.ppf(0.75).unwrap();
+        let ppf_at_75_custom = custom.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(ppf_at_75_custom, -1.5, epsilon = 1e-7);
 
         // Error cases
@@ -539,7 +539,7 @@ mod tests {
     #[test]
     fn test_cauchy_properties() {
         // Standard Cauchy (loc=0, scale=1)
-        let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+        let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
 
         // Median = loc = 0
         let median = cauchy.median();
@@ -558,7 +558,7 @@ mod tests {
         assert_relative_eq!(entropy, 2.5310242, epsilon = 1e-7);
 
         // Custom Cauchy with loc=-2, scale=0.5
-        let custom = Cauchy::new(-2.0, 0.5).unwrap();
+        let custom = Cauchy::new(-2.0, 0.5).expect("Operation failed");
 
         // Median = loc = -2
         let median_custom = custom.median();
@@ -579,11 +579,11 @@ mod tests {
 
     #[test]
     fn test_cauchy_rvs() {
-        let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+        let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
 
         // Generate samples
-        let samples_vec = cauchy.rvs_vec(100).unwrap();
-        let samples = cauchy.rvs(100).unwrap();
+        let samples_vec = cauchy.rvs_vec(100).expect("Operation failed");
+        let samples = cauchy.rvs(100).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples_vec.len(), 100);
@@ -595,7 +595,7 @@ mod tests {
 
         // Calculate sample median for vector samples
         let mut sorted_samples = samples_vec.clone();
-        sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_samples.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let median = if sorted_samples.len() % 2 == 0 {
             (sorted_samples[49] + sorted_samples[50]) / 2.0
         } else {
@@ -610,12 +610,12 @@ mod tests {
     #[test]
     fn test_cauchy_inverse_cdf() {
         // Test that cdf(ppf(p)) == p and ppf(cdf(x)) == x
-        let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+        let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
 
         // Test various probability values
         let probabilities = [0.1, 0.25, 0.5, 0.75, 0.9];
         for &p in &probabilities {
-            let x = cauchy.ppf(p).unwrap();
+            let x = cauchy.ppf(p).expect("Operation failed");
             let p_back = cauchy.cdf(x);
             assert_relative_eq!(p_back, p, epsilon = 1e-7);
         }
@@ -624,7 +624,7 @@ mod tests {
         let x_values = [-3.0, -1.0, 0.0, 1.0, 3.0];
         for &x in &x_values {
             let p = cauchy.cdf(x);
-            let x_back = cauchy.ppf(p).unwrap();
+            let x_back = cauchy.ppf(p).expect("Operation failed");
             assert_relative_eq!(x_back, x, epsilon = 1e-7);
         }
     }

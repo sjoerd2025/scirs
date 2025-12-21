@@ -294,7 +294,7 @@ pub fn make_confidence_extrapolator<T: Float + std::fmt::Display + Default + Add
     let config = ConfidenceExtrapolationConfig {
         bootstrap_samples,
         confidence_level,
-        max_extrapolation_ratio: T::from(0.5).unwrap(),
+        max_extrapolation_ratio: T::from(0.5).expect("Operation failed"),
         bias_correction: true,
     };
 
@@ -411,9 +411,9 @@ pub fn make_robust_ensemble_extrapolator<T: Float + std::fmt::Display + Default 
     ];
 
     let weights = Some(vec![
-        T::from(0.5).unwrap(), // Higher weight for linear (most stable)
-        T::from(0.3).unwrap(), // Medium weight for quadratic
-        T::from(0.2).unwrap(), // Lower weight for exponential
+        T::from(0.5).expect("Operation failed"), // Higher weight for linear (most stable)
+        T::from(0.3).expect("Operation failed"), // Medium weight for quadratic
+        T::from(0.2).expect("Operation failed"), // Lower weight for exponential
     ]);
 
     make_ensemble_extrapolator(
@@ -469,7 +469,7 @@ pub fn make_monotonic_extrapolator<T: Float + std::fmt::Display>(
     if is_increasing {
         // For increasing functions, use exponential growth if derivatives are positive
         if lower_derivative > T::zero() && upper_derivative > T::zero() {
-            let rate = T::from(0.1).unwrap(); // Conservative growth rate
+            let rate = T::from(0.1).expect("Operation failed"); // Conservative growth rate
             make_exponential_extrapolator(
                 lower_bound,
                 upper_bound,
@@ -492,7 +492,7 @@ pub fn make_monotonic_extrapolator<T: Float + std::fmt::Display>(
         }
     } else {
         // For decreasing functions, use exponential decay
-        let rate = T::from(-0.1).unwrap(); // Conservative decay rate
+        let rate = T::from(-0.1).expect("Operation failed"); // Conservative decay rate
         make_exponential_extrapolator(
             lower_bound,
             upper_bound,

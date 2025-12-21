@@ -27,7 +27,7 @@ where
     // Initialize variables
     let n = x0.len();
     let mut x = x0.to_owned();
-    let mut f = func(x.as_slice().unwrap());
+    let mut f = func(x.as_slice().expect("Operation failed"));
     let mut nfev = 1;
 
     // Initialize the Lagrange multipliers
@@ -38,7 +38,7 @@ where
     for i in 0..n {
         let mut x_h = x.clone();
         x_h[i] += eps;
-        let f_h = func(x_h.as_slice().unwrap());
+        let f_h = func(x_h.as_slice().expect("Operation failed"));
         g[i] = (f_h - f) / eps;
         nfev += 1;
     }
@@ -47,7 +47,7 @@ where
     let mut c = Array1::zeros(constraints.len());
     for (i, constraint) in constraints.iter().enumerate() {
         if !constraint.is_bounds() {
-            let val = (constraint.fun)(x.as_slice().unwrap());
+            let val = (constraint.fun)(x.as_slice().expect("Operation failed"));
 
             match constraint.kind {
                 ConstraintKind::Inequality => {
@@ -67,7 +67,7 @@ where
             for j in 0..n {
                 let mut x_h = x.clone();
                 x_h[j] += eps;
-                let c_h = (constraint.fun)(x_h.as_slice().unwrap());
+                let c_h = (constraint.fun)(x_h.as_slice().expect("Operation failed"));
                 a[[i, j]] = (c_h - c[i]) / eps;
                 nfev += 1;
             }
@@ -142,13 +142,13 @@ where
         let x_new = &x + &p;
 
         // Evaluate function and constraints at new point
-        let f_new = func(x_new.as_slice().unwrap());
+        let f_new = func(x_new.as_slice().expect("Operation failed"));
         nfev += 1;
 
         let mut c_new = Array1::zeros(constraints.len());
         for (i, constraint) in constraints.iter().enumerate() {
             if !constraint.is_bounds() {
-                c_new[i] = (constraint.fun)(x_new.as_slice().unwrap());
+                c_new[i] = (constraint.fun)(x_new.as_slice().expect("Operation failed"));
                 nfev += 1;
             }
         }
@@ -208,7 +208,7 @@ where
             for i in 0..n {
                 let mut x_h = x.clone();
                 x_h[i] += eps;
-                let f_h = func(x_h.as_slice().unwrap());
+                let f_h = func(x_h.as_slice().expect("Operation failed"));
                 g_new[i] = (f_h - f) / eps;
                 nfev += 1;
             }
@@ -220,7 +220,7 @@ where
                     for j in 0..n {
                         let mut x_h = x.clone();
                         x_h[j] += eps;
-                        let c_h = (constraint.fun)(x_h.as_slice().unwrap());
+                        let c_h = (constraint.fun)(x_h.as_slice().expect("Operation failed"));
                         a_new[[i, j]] = (c_h - c[i]) / eps;
                         nfev += 1;
                     }

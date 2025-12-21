@@ -29,7 +29,7 @@ fn bench_continuous_pdf(c: &mut Criterion) {
 
         // Normal distribution
         group.bench_with_input(BenchmarkId::new("normal", n), &x, |b, x| {
-            let dist = norm(0.0, 1.0).unwrap();
+            let dist = norm(0.0, 1.0).expect("Operation failed");
             b.iter(|| {
                 for &xi in x.iter() {
                     black_box(dist.pdf(xi));
@@ -39,7 +39,7 @@ fn bench_continuous_pdf(c: &mut Criterion) {
 
         // Student's t distribution
         group.bench_with_input(BenchmarkId::new("student_t", n), &x, |b, x| {
-            let dist = t(5.0, 0.0, 1.0).unwrap();
+            let dist = t(5.0, 0.0, 1.0).expect("Operation failed");
             b.iter(|| {
                 for &xi in x.iter() {
                     black_box(dist.pdf(xi));
@@ -50,7 +50,7 @@ fn bench_continuous_pdf(c: &mut Criterion) {
         // Uniform distribution
         let x_uniform: Array1<f64> = Array1::linspace(0.1, 0.9, n);
         group.bench_with_input(BenchmarkId::new("uniform", n), &x_uniform, |b, x| {
-            let dist = uniform(0.0, 1.0).unwrap();
+            let dist = uniform(0.0, 1.0).expect("Operation failed");
             b.iter(|| {
                 for &xi in x.iter() {
                     black_box(dist.pdf(xi));
@@ -74,7 +74,7 @@ fn bench_continuous_cdf(c: &mut Criterion) {
 
         // Normal distribution CDF
         group.bench_with_input(BenchmarkId::new("normal", n), &x, |b, x| {
-            let dist = norm(0.0, 1.0).unwrap();
+            let dist = norm(0.0, 1.0).expect("Operation failed");
             b.iter(|| {
                 for &xi in x.iter() {
                     black_box(dist.cdf(xi));
@@ -85,7 +85,7 @@ fn bench_continuous_cdf(c: &mut Criterion) {
         // Chi-square distribution CDF
         let x_positive: Array1<f64> = Array1::linspace(0.1, 10.0, n);
         group.bench_with_input(BenchmarkId::new("chi_square", n), &x_positive, |b, x| {
-            let dist = chi2(5.0, 0.0, 1.0).unwrap();
+            let dist = chi2(5.0, 0.0, 1.0).expect("Operation failed");
             b.iter(|| {
                 for &xi in x.iter() {
                     black_box(dist.cdf(xi));
@@ -107,7 +107,7 @@ fn bench_random_generation(c: &mut Criterion) {
     for &n in &samplesizes {
         // Normal distribution
         group.bench_with_input(BenchmarkId::new("normal", n), &n, |b, &n| {
-            let dist = norm(0.0, 1.0).unwrap();
+            let dist = norm(0.0, 1.0).expect("Operation failed");
             b.iter(|| {
                 black_box(dist.rvs(n));
             });
@@ -115,7 +115,7 @@ fn bench_random_generation(c: &mut Criterion) {
 
         // Uniform distribution
         group.bench_with_input(BenchmarkId::new("uniform", n), &n, |b, &n| {
-            let dist = uniform(0.0, 1.0).unwrap();
+            let dist = uniform(0.0, 1.0).expect("Operation failed");
             b.iter(|| {
                 black_box(dist.rvs(n));
             });
@@ -123,7 +123,7 @@ fn bench_random_generation(c: &mut Criterion) {
 
         // Exponential distribution
         group.bench_with_input(BenchmarkId::new("exponential", n), &n, |b, &n| {
-            let dist = expon(1.0, 0.0).unwrap();
+            let dist = expon(1.0, 0.0).expect("Operation failed");
             b.iter(|| {
                 black_box(dist.rvs(n));
             });
@@ -131,7 +131,7 @@ fn bench_random_generation(c: &mut Criterion) {
 
         // Poisson distribution
         group.bench_with_input(BenchmarkId::new("poisson", n), &n, |b, &n| {
-            let dist = poisson(3.0, 0.0).unwrap();
+            let dist = poisson(3.0, 0.0).expect("Operation failed");
             b.iter(|| {
                 black_box(dist.rvs(n));
             });
@@ -148,29 +148,29 @@ fn bench_moments(c: &mut Criterion) {
 
     // Normal distribution moments
     group.bench_function("normal_mean", |b| {
-        let dist = norm(5.0, 2.0).unwrap();
+        let dist = norm(5.0, 2.0).expect("Operation failed");
         b.iter(|| black_box(dist.mean()));
     });
 
     group.bench_function("normal_variance", |b| {
-        let dist = norm(5.0, 2.0).unwrap();
+        let dist = norm(5.0, 2.0).expect("Operation failed");
         b.iter(|| black_box(dist.var()));
     });
 
     // Gamma distribution moments
     group.bench_function("gamma_mean", |b| {
-        let dist = gamma(2.0, 3.0, 0.0).unwrap();
+        let dist = gamma(2.0, 3.0, 0.0).expect("Operation failed");
         b.iter(|| black_box(dist.mean()));
     });
 
     group.bench_function("gamma_variance", |b| {
-        let dist = gamma(2.0, 3.0, 0.0).unwrap();
+        let dist = gamma(2.0, 3.0, 0.0).expect("Operation failed");
         b.iter(|| black_box(dist.var()));
     });
 
     // Beta distribution moments
     group.bench_function("beta_mean", |b| {
-        let dist = beta(2.0, 5.0, 0.0, 1.0).unwrap();
+        let dist = beta(2.0, 5.0, 0.0, 1.0).expect("Operation failed");
         b.iter(|| black_box(dist.mean()));
     });
 
@@ -186,7 +186,7 @@ fn bench_discrete_distributions(c: &mut Criterion) {
 
     // Poisson PMF
     group.bench_function("poisson_pmf", |b| {
-        let dist = poisson(3.0, 0.0).unwrap();
+        let dist = poisson(3.0, 0.0).expect("Operation failed");
         b.iter(|| {
             for &k in &test_values {
                 black_box(dist.pmf(k));
@@ -196,7 +196,7 @@ fn bench_discrete_distributions(c: &mut Criterion) {
 
     // Binomial PMF
     group.bench_function("binomial_pmf", |b| {
-        let dist = binom(10, 0.3).unwrap();
+        let dist = binom(10, 0.3).expect("Operation failed");
         b.iter(|| {
             for &k in &test_values {
                 black_box(dist.pmf(k));

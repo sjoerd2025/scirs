@@ -72,7 +72,7 @@ impl WorkerPool {
 
     /// Get the current number of worker threads
     pub fn get_workers(&self) -> usize {
-        self.config.lock().unwrap().num_workers
+        self.config.lock().expect("Operation failed").num_workers
     }
 
     /// Set the number of worker threads
@@ -82,19 +82,19 @@ impl WorkerPool {
         &mut self,
         num_workers: usize,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let mut config = self.config.lock().unwrap();
+        let mut config = self.config.lock().expect("Operation failed");
         config.num_workers = num_workers;
         Ok(())
     }
 
     /// Check if parallelization is enabled
     pub fn is_enabled(&self) -> bool {
-        self.config.lock().unwrap().enabled
+        self.config.lock().expect("Operation failed").enabled
     }
 
     /// Enable or disable parallelization
     pub fn set_enabled(&self, enabled: bool) {
-        self.config.lock().unwrap().enabled = enabled;
+        self.config.lock().expect("Operation failed").enabled = enabled;
     }
 
     /// Execute a function in the worker pool if enabled
@@ -123,7 +123,7 @@ impl WorkerPool {
 
     /// Get information about the worker pool
     pub fn get_info(&self) -> WorkerPoolInfo {
-        let config = self.config.lock().unwrap();
+        let config = self.config.lock().expect("Operation failed");
         WorkerPoolInfo {
             num_workers: config.num_workers,
             enabled: config.enabled,
@@ -251,7 +251,7 @@ mod tests {
             thread_name_prefix: "test-worker".to_string(),
         };
 
-        let pool = WorkerPool::with_config(config).unwrap();
+        let pool = WorkerPool::with_config(config).expect("Operation failed");
         assert_eq!(pool.get_workers(), 4);
     }
 

@@ -324,7 +324,12 @@ impl AutoTuner {
 
         // Check cache first
         if self.strategy.use_history {
-            if let Some(cached_result) = self.tuning_cache.lock().unwrap().get(&cache_key) {
+            if let Some(cached_result) = self
+                .tuning_cache
+                .lock()
+                .expect("Operation failed")
+                .get(&cache_key)
+            {
                 return Ok(cached_result.clone());
             }
         }
@@ -352,7 +357,11 @@ impl AutoTuner {
                     evaluations += 1;
 
                     if best_performance.is_none()
-                        || metrics.throughput > best_performance.as_ref().unwrap().throughput
+                        || metrics.throughput
+                            > best_performance
+                                .as_ref()
+                                .expect("Operation failed")
+                                .throughput
                     {
                         best_params = params.clone();
                         best_performance = Some(metrics);
@@ -391,7 +400,7 @@ impl AutoTuner {
         // Cache the result
         self.tuning_cache
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert(cache_key, result.clone());
 
         Ok(result)
@@ -399,12 +408,12 @@ impl AutoTuner {
 
     /// Get cached tuning results
     pub fn get_cached_results(&self) -> HashMap<String, TuningResult> {
-        self.tuning_cache.lock().unwrap().clone()
+        self.tuning_cache.lock().expect("Operation failed").clone()
     }
 
     /// Clear tuning cache
     pub fn clear_cache(&self) {
-        self.tuning_cache.lock().unwrap().clear();
+        self.tuning_cache.lock().expect("Operation failed").clear();
     }
 
     /// Generate parameter configurations to test
@@ -684,7 +693,7 @@ mod tests {
         let device_info = AutoTuner::detect_device_info(GpuBackend::Cuda);
         assert!(device_info.is_ok());
 
-        let info = device_info.unwrap();
+        let info = device_info.expect("Operation failed");
         assert!(info.max_work_group_size > 0);
         assert!(info.max_local_memory_size > 0);
     }

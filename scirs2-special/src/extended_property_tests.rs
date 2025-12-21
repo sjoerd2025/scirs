@@ -530,7 +530,8 @@ mod cross_function_properties {
         }
 
         let gamma_n_plus_1 = gamma((n + 1) as f64);
-        let n_factorial = factorial(n.try_into().unwrap()).unwrap();
+        let n_factorial =
+            factorial(n.try_into().expect("Operation failed")).expect("Operation failed");
 
         TestResult::from_bool(approx_eq(gamma_n_plus_1, n_factorial, 1e-10))
     }

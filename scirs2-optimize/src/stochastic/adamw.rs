@@ -445,7 +445,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adamw(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_adamw(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should converge to zero
         assert!(result.success || result.fun < 1e-4);
@@ -469,7 +470,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adamw(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_adamw(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // With weight decay, should still converge
         assert!(result.success || result.fun < 1e-4);
@@ -493,7 +495,8 @@ mod tests {
 
         let grad_func1 = QuadraticFunction;
         let result_decoupled =
-            minimize_adamw(grad_func1, x0.clone(), data_provider1, options_decoupled).unwrap();
+            minimize_adamw(grad_func1, x0.clone(), data_provider1, options_decoupled)
+                .expect("Operation failed");
 
         // Test coupled weight decay (traditional L2)
         let options_coupled = AdamWOptions {
@@ -506,8 +509,8 @@ mod tests {
         };
 
         let grad_func2 = QuadraticFunction;
-        let result_coupled =
-            minimize_adamw(grad_func2, x0, data_provider2, options_coupled).unwrap();
+        let result_coupled = minimize_adamw(grad_func2, x0, data_provider2, options_coupled)
+            .expect("Operation failed");
 
         // Both should converge, but potentially differently (very relaxed tolerance)
         assert!(result_decoupled.fun < 1.0);
@@ -536,7 +539,7 @@ mod tests {
             1.5,  // t_mult
             1e-6, // eta_min
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Cosine restarts should help escape local minima (very relaxed tolerance)
         assert!(result.fun < 10.0); // Much more relaxed tolerance
@@ -556,7 +559,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adamw(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_adamw(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should still converge even with large initial gradients (relaxed tolerance for clipped gradients)
         assert!(result.success || result.fun < 1e-1);

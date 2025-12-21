@@ -166,7 +166,7 @@ mod integration_tests {
         let result = generate_test_data::<f64>("linear", 100);
         assert!(result.is_ok());
 
-        let (x, y) = result.unwrap();
+        let (x, y) = result.expect("Operation failed");
         assert_eq!(x.len(), 100);
         assert_eq!(y.len(), 100);
     }
@@ -281,15 +281,15 @@ mod integration_tests {
         use std::fmt::Write;
         let mut output = String::new();
 
-        write!(&mut output, "{}", TestStatus::Passed).unwrap();
+        write!(&mut output, "{}", TestStatus::Passed).expect("Operation failed");
         assert_eq!(output, "PASSED");
 
         output.clear();
-        write!(&mut output, "{}", TestStatus::Failed).unwrap();
+        write!(&mut output, "{}", TestStatus::Failed).expect("Operation failed");
         assert_eq!(output, "FAILED");
 
         output.clear();
-        write!(&mut output, "{}", TestStatus::PassedWithWarnings).unwrap();
+        write!(&mut output, "{}", TestStatus::PassedWithWarnings).expect("Operation failed");
         assert_eq!(output, "PASSED (with warnings)");
     }
 
@@ -298,11 +298,11 @@ mod integration_tests {
         use std::fmt::Write;
         let mut output = String::new();
 
-        write!(&mut output, "{}", IssueSeverity::Critical).unwrap();
+        write!(&mut output, "{}", IssueSeverity::Critical).expect("Operation failed");
         assert_eq!(output, "CRITICAL");
 
         output.clear();
-        write!(&mut output, "{}", IssueSeverity::High).unwrap();
+        write!(&mut output, "{}", IssueSeverity::High).expect("Operation failed");
         assert_eq!(output, "HIGH");
     }
 
@@ -311,11 +311,11 @@ mod integration_tests {
         use std::fmt::Write;
         let mut output = String::new();
 
-        write!(&mut output, "{}", ProductionImpact::Blocking).unwrap();
+        write!(&mut output, "{}", ProductionImpact::Blocking).expect("Operation failed");
         assert_eq!(output, "BLOCKING");
 
         output.clear();
-        write!(&mut output, "{}", ProductionImpact::Major).unwrap();
+        write!(&mut output, "{}", ProductionImpact::Major).expect("Operation failed");
         assert_eq!(output, "MAJOR");
     }
 
@@ -324,11 +324,11 @@ mod integration_tests {
         use std::fmt::Write;
         let mut output = String::new();
 
-        write!(&mut output, "{}", ProductionReadiness::Ready).unwrap();
+        write!(&mut output, "{}", ProductionReadiness::Ready).expect("Operation failed");
         assert_eq!(output, "Ready for Production");
 
         output.clear();
-        write!(&mut output, "{}", ProductionReadiness::NotReady).unwrap();
+        write!(&mut output, "{}", ProductionReadiness::NotReady).expect("Operation failed");
         assert_eq!(output, "Not Ready for Production");
     }
 
@@ -337,11 +337,11 @@ mod integration_tests {
         use std::fmt::Write;
         let mut output = String::new();
 
-        write!(&mut output, "{}", StressTestCategory::ExtremeDataSize).unwrap();
+        write!(&mut output, "{}", StressTestCategory::ExtremeDataSize).expect("Operation failed");
         assert_eq!(output, "Extreme Data Size");
 
         output.clear();
-        write!(&mut output, "{}", StressTestCategory::PathologicalData).unwrap();
+        write!(&mut output, "{}", StressTestCategory::PathologicalData).expect("Operation failed");
         assert_eq!(output, "Pathological Data");
     }
 

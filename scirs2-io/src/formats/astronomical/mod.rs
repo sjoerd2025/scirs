@@ -308,7 +308,7 @@ impl FitsFile {
             // Check for END
             if hdus
                 .last()
-                .unwrap()
+                .expect("Operation failed")
                 .header
                 .cards
                 .iter()
@@ -1197,9 +1197,9 @@ mod tests {
             comment: Some("Exposure time in seconds".to_string()),
         });
 
-        assert!(header.get_bool("SIMPLE").unwrap());
-        assert_eq!(header.get_i64("NAXIS").unwrap(), 2);
-        assert_eq!(header.get_f64("EXPTIME").unwrap(), 300.0);
+        assert!(header.get_bool("SIMPLE").expect("Operation failed"));
+        assert_eq!(header.get_i64("NAXIS").expect("Operation failed"), 2);
+        assert_eq!(header.get_f64("EXPTIME").expect("Operation failed"), 300.0);
     }
 
     #[test]
@@ -1242,7 +1242,7 @@ mod tests {
                 VOTableValue::Double(180.0),
                 VOTableValue::Double(45.0),
             ])
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(votable.columns.len(), 2);
         assert_eq!(votable.data.len(), 1);
@@ -1251,7 +1251,7 @@ mod tests {
 
     #[test]
     fn test_fits_write_read() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         // Create test data

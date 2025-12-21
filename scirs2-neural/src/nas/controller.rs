@@ -383,7 +383,7 @@ impl NASController {
                 if inputshape.is_empty() {
                     Ok(vec![*key_dim])
                     let mut outputshape = inputshape.to_vec();
-                    *outputshape.last_mut().unwrap() = *key_dim;
+                    *outputshape.last_mut().expect("Operation failed") = *key_dim;
                     Ok(outputshape)
             // Embedding layer
                 vocab_size: _,
@@ -539,7 +539,7 @@ mod tests {
     #[test]
     fn test_controller_creation() {
         let search_space = SearchSpaceConfig::default();
-        let controller = NASController::new(search_space).unwrap();
+        let controller = NASController::new(search_space).expect("Operation failed");
         assert_eq!(controller.config.num_classes, 10);
     fn test_architecture_validation() {
         // Valid architecture
@@ -564,7 +564,7 @@ mod tests {
             connections: vec![(1, 0)], // Backward connection
         assert!(controller.validate_architecture(&invalid_skip).is_err());
     fn test_multiplier_application() {
-        let controller = NASController::new(SearchSpaceConfig::default()).unwrap();
+        let controller = NASController::new(SearchSpaceConfig::default()).expect("Operation failed");
         let layers = vec![
             LayerType::Dense(100),
                 filters: 32,
@@ -572,7 +572,7 @@ mod tests {
                 stride: (1, 1),
             },
         ];
-        let modified = controller.apply_multipliers(&layers, 2.0, 1.5).unwrap();
+        let modified = controller.apply_multipliers(&layers, 2.0, 1.5).expect("Operation failed");
         // Width multiplier should double the units/filters
         match &modified[0] {
             LayerType::Dense(units) => assert_eq!(*units, 200, _ => unreachable!("Expected Dense layer"),

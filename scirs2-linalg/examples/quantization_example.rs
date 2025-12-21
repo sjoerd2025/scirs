@@ -27,7 +27,7 @@ fn main() {
     // Create a sample matrix
     let int4_test =
         Array2::from_shape_vec((2, 4), vec![1.0_f32, -2.0, 3.0, -4.0, 5.0, -6.0, 7.0, -8.0])
-            .unwrap();
+            .expect("Operation failed");
 
     println!("Original Matrix:");
     println!("{:?}\n", int4_test);
@@ -86,7 +86,8 @@ fn main() {
 
     // Do the same for UInt4
     let uint4_test =
-        Array2::from_shape_vec((2, 4), vec![1.0_f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        Array2::from_shape_vec((2, 4), vec![1.0_f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("Operation failed");
 
     println!("\nUInt4 Quantization Example");
     println!("-------------------------\n");
@@ -141,12 +142,13 @@ fn main() {
     println!("----------------------------------\n");
 
     // Create some sample matrices and vectors
-    let a =
-        Array2::from_shape_vec((3, 3), vec![1.2, 2.5, 3.7, 4.2, 5.0, 6.1, 7.3, 8.4, 9.5]).unwrap();
+    let a = Array2::from_shape_vec((3, 3), vec![1.2, 2.5, 3.7, 4.2, 5.0, 6.1, 7.3, 8.4, 9.5])
+        .expect("Operation failed");
 
-    let b = Array2::from_shape_vec((3, 2), vec![0.5, 1.5, 2.5, 3.5, 4.5, 5.5]).unwrap();
+    let b = Array2::from_shape_vec((3, 2), vec![0.5, 1.5, 2.5, 3.5, 4.5, 5.5])
+        .expect("Operation failed");
 
-    let x = Array1::from_shape_vec(3, vec![0.1, 0.2, 0.3]).unwrap();
+    let x = Array1::from_shape_vec(3, vec![0.1, 0.2, 0.3]).expect("Operation failed");
 
     println!("Original Matrix A:");
     println!("{:?}\n", a);
@@ -244,7 +246,8 @@ fn main() {
     // Quantized matrix multiplication
     let (b_q, b_params) = quantize_matrix(&b.view(), 8, QuantizationMethod::Symmetric);
     println!("Quantized Matrix Multiplication (8-bit):");
-    let c_q = quantized_matmul(&a_q_symmetric, &a_params_symmetric, &b_q, &b_params).unwrap();
+    let c_q = quantized_matmul(&a_q_symmetric, &a_params_symmetric, &b_q, &b_params)
+        .expect("Operation failed");
     println!("{:?}\n", c_q);
 
     println!("Quantization Error for Matrix Multiplication:");
@@ -267,7 +270,7 @@ fn main() {
     // Quantized matrix-vector multiplication
     let (x_q, x_params) = quantize_vector(&x.view(), 8, QuantizationMethod::Symmetric);
     println!("Quantized Matrix-Vector Multiplication (8-bit):");
-    let y_q = quantized_matvec(&a_q_symmetric, &a_params_symmetric, &x_q, &x_params).unwrap();
+    let y_q = quantized_matvec(&a_q_symmetric, &a_params_symmetric, &x_q, &x_params).expect("Operation failed");
     println!("{:?}\n", y_q);
 
     println!("Quantization Error for Matrix-Vector Multiplication:");
@@ -290,7 +293,7 @@ fn main() {
 
     // Quantized dot product
     println!("Quantized Dot Product (8-bit):");
-    let dot_q = quantized_dot(&x_q, &x_params, &x_q, &x_params).unwrap();
+    let dot_q = quantized_dot(&x_q, &x_params, &x_q, &x_params).expect("Operation failed");
     println!("{:?}\n", dot_q);
 
     println!("Quantization Error for Dot Product:");
@@ -405,7 +408,7 @@ fn main() {
             1.0,                  // One
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Original values with wide dynamic range:");
     println!("{:?}\n", wide_range);
@@ -476,8 +479,10 @@ fn main() {
     println!("-----------------------");
 
     // Create matrices for multiplication
-    let a_for_f16 = Array2::from_shape_vec((2, 3), vec![1.1, 2.2, 3.3, 4.4, 5.5, 6.6]).unwrap();
-    let b_for_f16 = Array2::from_shape_vec((3, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6]).unwrap();
+    let a_for_f16 = Array2::from_shape_vec((2, 3), vec![1.1, 2.2, 3.3, 4.4, 5.5, 6.6])
+        .expect("Operation failed");
+    let b_for_f16 = Array2::from_shape_vec((3, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
+        .expect("Operation failed");
 
     // Quantize to float16
     let (a_f16, a_f16_params) = quantize_matrix(&a_for_f16.view(), 16, QuantizationMethod::Float16);
@@ -489,7 +494,8 @@ fn main() {
     println!("{:?}\n", c_full);
 
     // Float16 matrix multiplication
-    let c_f16 = quantized_matmul(&a_f16, &a_f16_params, &b_f16, &b_f16_params).unwrap();
+    let c_f16 =
+        quantized_matmul(&a_f16, &a_f16_params, &b_f16, &b_f16_params).expect("Operation failed");
     println!("Float16 matrix multiplication result:");
     println!("{:?}\n", c_f16);
 

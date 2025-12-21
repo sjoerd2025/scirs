@@ -174,17 +174,19 @@ where
         }
 
         // Compute final statistics
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let mean = sum_acc / n_f;
         let variance = (sum_sq_acc / n_f) - (mean * mean);
         let std_dev = variance.sqrt();
 
         // Compute higher moments
         let m2 = sum_sq_acc / n_f - mean * mean;
-        let m3 = sum_cube_acc / n_f - F::from(3).unwrap() * mean * m2 - mean * mean * mean;
+        let m3 = sum_cube_acc / n_f
+            - F::from(3).expect("Failed to convert constant to float") * mean * m2
+            - mean * mean * mean;
         let m4 = sum_quad_acc / n_f
-            - F::from(4).unwrap() * mean * m3
-            - F::from(6).unwrap() * mean * mean * m2
+            - F::from(4).expect("Failed to convert constant to float") * mean * m3
+            - F::from(6).expect("Failed to convert constant to float") * mean * mean * m2
             - mean * mean * mean * mean;
 
         let skewness = if m2 > F::zero() {
@@ -194,7 +196,7 @@ where
         };
 
         let kurtosis = if m2 > F::zero() {
-            m4 / (m2 * m2) - F::from(3).unwrap()
+            m4 / (m2 * m2) - F::from(3).expect("Failed to convert constant to float")
         } else {
             F::zero()
         };
@@ -218,7 +220,7 @@ where
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStats<F>> {
         let n = data.len();
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         let sum: F = data.iter().copied().sum();
         let mean = sum / n_f;
@@ -252,7 +254,7 @@ where
         };
 
         let kurtosis = if m2 > F::zero() {
-            m4 / (m2 * m2) - F::from(3).unwrap()
+            m4 / (m2 * m2) - F::from(3).expect("Failed to convert constant to float")
         } else {
             F::zero()
         };
@@ -344,7 +346,7 @@ where
                     let col_j = matrix.column(j);
 
                     // Compute correlation using SIMD operations
-                    let _n = F::from(col_i.len()).unwrap();
+                    let _n = F::from(col_i.len()).expect("Operation failed");
                     let mean_i_vec = Array1::from_elem(col_i.len(), means[i]);
                     let mean_j_vec = Array1::from_elem(col_j.len(), means[j]);
 
@@ -408,16 +410,19 @@ where
         let mut sorted_means = bootstrap_means.to_owned();
         sorted_means
             .as_slice_mut()
-            .unwrap()
-            .sort_by(|a, b| a.partial_cmp(b).unwrap());
+            .expect("Operation failed")
+            .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
-        let alpha = F::from(0.05).unwrap(); // 95% confidence
-        let lower_idx = ((alpha / F::from(2).unwrap()) * F::from(n_bootstrap).unwrap())
-            .to_usize()
-            .unwrap();
-        let upper_idx = ((F::one() - alpha / F::from(2).unwrap()) * F::from(n_bootstrap).unwrap())
-            .to_usize()
-            .unwrap();
+        let alpha = F::from(0.05).expect("Failed to convert constant to float"); // 95% confidence
+        let lower_idx = ((alpha / F::from(2).expect("Failed to convert constant to float"))
+            * F::from(n_bootstrap).expect("Failed to convert to float"))
+        .to_usize()
+        .expect("Operation failed");
+        let upper_idx = ((F::one()
+            - alpha / F::from(2).expect("Failed to convert constant to float"))
+            * F::from(n_bootstrap).expect("Failed to convert to float"))
+        .to_usize()
+        .expect("Operation failed");
 
         let mean_ci = (
             sorted_means[lower_idx],
@@ -500,7 +505,7 @@ where
             return F::zero();
         }
 
-        let _n_f = F::from(n).unwrap();
+        let _n_f = F::from(n).expect("Failed to convert to float");
         let mut sum_xy = F::zero();
         let mut sum_x2 = F::zero();
         let mut sum_y2 = F::zero();

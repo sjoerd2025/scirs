@@ -184,7 +184,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         let gpu_context = Arc::new(Mutex::new(
             gpu::GpuContext::new(gpu::GpuBackend::Cpu).unwrap_or_else(|_| {
                 // Fallback to a minimal mock GPU context for tests
-                gpu::GpuContext::new(gpu::GpuBackend::Cpu).unwrap()
+                gpu::GpuContext::new(gpu::GpuBackend::Cpu).expect("Operation failed")
             }),
         ));
 
@@ -222,13 +222,13 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     ) -> IntegrateResult<()> {
         // Initialize feature extractor
         {
-            let mut extractor = self.feature_extractor.lock().unwrap();
+            let mut extractor = self.feature_extractor.lock().expect("Operation failed");
             extractor.initialize(problem_size, initialstep_size, problem_type)?;
         }
 
         // Initialize DQN with pre-trained weights if available
         {
-            let mut dqn = self.dqn.lock().unwrap();
+            let mut dqn = self.dqn.lock().expect("Operation failed");
             dqn.initialize_weights()?;
         }
 
@@ -248,7 +248,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     ) -> IntegrateResult<StepSizePrediction<F>> {
         // Extract _state features
         let state_features = {
-            let mut extractor = self.feature_extractor.lock().unwrap();
+            let mut extractor = self.feature_extractor.lock().expect("Operation failed");
             extractor.extract_features(
                 currentstep,
                 currenterror,
@@ -259,7 +259,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
 
         // Forward pass through DQN to get Q-values
         let q_values = {
-            let dqn = self.dqn.lock().unwrap();
+            let dqn = self.dqn.lock().expect("Operation failed");
             dqn.forward(&state_features)?
         };
 
@@ -271,8 +271,8 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         let predictedstep = currentstep * step_multiplier;
 
         // Apply safety constraints
-        let minstep = currentstep * F::from(0.01).unwrap(); // Minimum 1% of current _step
-        let maxstep = currentstep * F::from(10.0).unwrap(); // Maximum 10x current _step
+        let minstep = currentstep * F::from(0.01).expect("Failed to convert constant to float"); // Minimum 1% of current _step
+        let maxstep = currentstep * F::from(10.0).expect("Failed to convert constant to float"); // Maximum 10x current _step
         let safestep = predictedstep.max(minstep).min(maxstep);
 
         Ok(StepSizePrediction {
@@ -307,7 +307,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
 
         // Add to experience replay buffer
         {
-            let mut buffer = self.experience_buffer.lock().unwrap();
+            let mut buffer = self.experience_buffer.lock().expect("Operation failed");
             buffer.add_experience(experience)?;
         }
 
@@ -323,7 +323,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
 
         // Update performance analytics
         {
-            let mut analytics = self.performance_analytics.lock().unwrap();
+            let mut analytics = self.performance_analytics.lock().expect("Operation failed");
             analytics.update_metrics(reward.to_f64().unwrap_or(0.0), action_taken)?;
         }
 
@@ -331,18 +331,19 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
             loss: F::zero(),             // Would be actual loss from training
             q_value_estimate: F::zero(), // Average Q-value
             tderror: F::zero(),          // Temporal difference error
-            exploration_rate: F::from(self.training_config.epsilon).unwrap(),
+            exploration_rate: F::from(self.training_config.epsilon)
+                .expect("Failed to convert to float"),
             training_performed: self.should_train()?,
         })
     }
 
     /// Update the neural network using GPU-accelerated training
     pub fn gpu_accelerated_training(&self) -> IntegrateResult<()> {
-        let gpu_context = self.gpu_context.lock().unwrap();
+        let gpu_context = self.gpu_context.lock().expect("Operation failed");
 
         // Sample mini-batch from prioritized experience replay
         let (batch, indices, weights) = {
-            let mut buffer = self.experience_buffer.lock().unwrap();
+            let mut buffer = self.experience_buffer.lock().expect("Operation failed");
             buffer.sample_batch(self.training_config.batch_size)?
         };
 
@@ -383,7 +384,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
 
     /// Evaluate the performance of the RL agent
     pub fn evaluate_performance(&self) -> IntegrateResult<RLEvaluationResults> {
-        let analytics = self.performance_analytics.lock().unwrap();
+        let analytics = self.performance_analytics.lock().expect("Operation failed");
 
         let avg_reward =
             analytics.episode_rewards.iter().sum::<f64>() / analytics.episode_rewards.len() as f64;
@@ -448,7 +449,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     fn load_neural_rl_shader(&self) -> IntegrateResult<()> {
         // Simplified shader loading - in a real implementation would load actual compute shader
         // For now, just validate that GPU context is available
-        let _gpu_context = self.gpu_context.lock().unwrap();
+        let _gpu_context = self.gpu_context.lock().expect("Operation failed");
         Ok(())
     }
 
@@ -506,7 +507,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     }
 
     fn should_train(&self) -> IntegrateResult<bool> {
-        let buffer = self.experience_buffer.lock().unwrap();
+        let buffer = self.experience_buffer.lock().expect("Operation failed");
         Ok(buffer.buffer.len() >= self.training_config.batch_size)
     }
 
@@ -521,7 +522,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
     }
 
     fn update_target_network(&self) -> IntegrateResult<()> {
-        let mut dqn = self.dqn.lock().unwrap();
+        let mut dqn = self.dqn.lock().expect("Operation failed");
         dqn.soft_update_target(self.training_config.tau)
     }
 
@@ -569,7 +570,7 @@ impl<F: IntegrateFloat + GpuDataType + Default> NeuralRLStepController<F> {
         indices: &[usize],
         weights: &[f64],
     ) -> IntegrateResult<()> {
-        let mut buffer = self.experience_buffer.lock().unwrap();
+        let mut buffer = self.experience_buffer.lock().expect("Operation failed");
         buffer.update_priorities(indices, weights)
     }
 }
@@ -656,7 +657,8 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         // Soft update of target network using Polyak averaging
         // target_weights = _tau * main_weights + (1 - tau) * target_weights
 
-        let tau_f = F::from(tau).unwrap_or(F::from(0.005).unwrap());
+        let tau_f =
+            F::from(tau).unwrap_or(F::from(0.005).expect("Failed to convert constant to float"));
         let one_minus_tau = F::one() - tau_f;
 
         // Update layer 1 weights
@@ -893,8 +895,8 @@ impl<F: IntegrateFloat> PrioritizedExperienceReplay<F> {
             if *idx < self.buffer.len() {
                 // Update TD error which is used as priority
                 let clamped_priority = priority.max(1e-6); // Ensure minimum priority
-                self.buffer[*idx].tderror =
-                    F::from(clamped_priority).unwrap_or(F::from(1e-6).unwrap());
+                self.buffer[*idx].tderror = F::from(clamped_priority)
+                    .unwrap_or(F::from(1e-6).expect("Failed to convert constant to float"));
             }
         }
 
@@ -1192,8 +1194,10 @@ mod tests {
 
     #[test]
     fn test_feature_extraction() {
-        let mut extractor = StateFeatureExtractor::<f64>::new().unwrap();
-        extractor.initialize(1000, 0.01, "stiff_ode").unwrap();
+        let mut extractor = StateFeatureExtractor::<f64>::new().expect("Operation failed");
+        extractor
+            .initialize(1000, 0.01, "stiff_ode")
+            .expect("Operation failed");
 
         let problem_state = ProblemState {
             current_solution: array![1.0, 2.0, 3.0],
@@ -1210,15 +1214,15 @@ mod tests {
 
         let features = extractor.extract_features(0.01, 1e-6, &problem_state, &performance_metrics);
         assert!(features.is_ok());
-        assert_eq!(features.unwrap().len(), 64);
+        assert_eq!(features.expect("Operation failed").len(), 64);
     }
 
     #[test]
     fn test_dqn_forward_pass() {
-        let dqn = DeepQNetwork::<f64>::new().unwrap();
+        let dqn = DeepQNetwork::<f64>::new().expect("Operation failed");
         let input = Array1::zeros(64);
         let output = dqn.forward(&input);
         assert!(output.is_ok());
-        assert_eq!(output.unwrap().len(), 32);
+        assert_eq!(output.expect("Operation failed").len(), 32);
     }
 }

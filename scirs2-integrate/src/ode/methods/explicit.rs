@@ -153,8 +153,8 @@ where
     let mut step_count = 0;
 
     // Constants for RK4
-    let two = F::from_f64(2.0).unwrap();
-    let six = F::from_f64(6.0).unwrap();
+    let two = F::from_f64(2.0).expect("Operation failed");
+    let six = F::from_f64(6.0).expect("Operation failed");
 
     // Main integration loop
     while t < t_end && step_count < opts.max_steps {

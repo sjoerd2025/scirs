@@ -177,7 +177,10 @@ impl MultiParticleEntanglement {
         for qubit in 0..self.n_particles {
             if subsystem_qubits.contains(&qubit) {
                 // This qubit is in the subsystem
-                let sub_bit_pos = subsystem_qubits.iter().position(|&x| x == qubit).unwrap();
+                let sub_bit_pos = subsystem_qubits
+                    .iter()
+                    .position(|&x| x == qubit)
+                    .expect("Operation failed");
                 if (sub_config >> sub_bit_pos) & 1 == 1 {
                     full_config |= 1 << qubit;
                 }
@@ -375,7 +378,9 @@ mod tests {
         let mut system = MultiParticleEntanglement::new(2, masses);
 
         // Test Φ⁺ state
-        system.create_bell_state(BellState::PhiPlus).unwrap();
+        system
+            .create_bell_state(BellState::PhiPlus)
+            .expect("Operation failed");
         let state = system.get_state();
 
         let inv_sqrt2 = 1.0 / (2.0_f64).sqrt();
@@ -390,7 +395,7 @@ mod tests {
         let masses = Array1::from_vec(vec![1.0, 1.0, 1.0]);
         let mut system = MultiParticleEntanglement::new(3, masses);
 
-        system.create_ghz_state().unwrap();
+        system.create_ghz_state().expect("Operation failed");
         let state = system.get_state();
 
         let inv_sqrt2 = 1.0 / (2.0_f64).sqrt();
@@ -408,7 +413,7 @@ mod tests {
         let masses = Array1::from_vec(vec![1.0, 1.0, 1.0]);
         let mut system = MultiParticleEntanglement::new(3, masses);
 
-        system.create_w_state().unwrap();
+        system.create_w_state().expect("Operation failed");
         let state = system.get_state();
 
         let inv_sqrt3 = 1.0 / 3.0_f64.sqrt();
@@ -430,8 +435,10 @@ mod tests {
         let mut system = MultiParticleEntanglement::new(2, masses);
 
         // Test maximally entangled Bell state
-        system.create_bell_state(BellState::PhiPlus).unwrap();
-        let concurrence = system.calculate_concurrence().unwrap();
+        system
+            .create_bell_state(BellState::PhiPlus)
+            .expect("Operation failed");
+        let concurrence = system.calculate_concurrence().expect("Operation failed");
         assert_relative_eq!(concurrence, 1.0, epsilon = 1e-10);
 
         // Test separable state |00⟩
@@ -441,8 +448,8 @@ mod tests {
             Complex64::new(0.0, 0.0),
             Complex64::new(0.0, 0.0),
         ]);
-        system.set_state(separable_state).unwrap();
-        let concurrence = system.calculate_concurrence().unwrap();
+        system.set_state(separable_state).expect("Operation failed");
+        let concurrence = system.calculate_concurrence().expect("Operation failed");
         assert_relative_eq!(concurrence, 0.0, epsilon = 1e-10);
     }
 
@@ -458,10 +465,10 @@ mod tests {
             Complex64::new(0.0, 0.0),
             Complex64::new(0.0, 0.0),
         ]);
-        system.set_state(initial_state).unwrap();
+        system.set_state(initial_state).expect("Operation failed");
 
         // Apply Hadamard to first qubit: |00⟩ → (|00⟩ + |10⟩)/√2
-        system.apply_hadamard(0).unwrap();
+        system.apply_hadamard(0).expect("Operation failed");
         let state = system.get_state();
 
         let inv_sqrt2 = 1.0 / (2.0_f64).sqrt();
@@ -469,7 +476,7 @@ mod tests {
         assert_relative_eq!(state[2].re, inv_sqrt2, epsilon = 1e-10); // |10⟩
 
         // Apply CNOT: (|00⟩ + |10⟩)/√2 → (|00⟩ + |11⟩)/√2
-        system.apply_cnot(0, 1).unwrap();
+        system.apply_cnot(0, 1).expect("Operation failed");
         let state = system.get_state();
 
         assert_relative_eq!(state[0].re, inv_sqrt2, epsilon = 1e-10); // |00⟩

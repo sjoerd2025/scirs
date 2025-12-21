@@ -468,7 +468,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_sgd_momentum(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_sgd_momentum(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should converge to zero faster than plain SGD
         assert!(result.success || result.fun < 1e-4);
@@ -493,7 +494,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_sgd_momentum(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_sgd_momentum(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Nesterov should accelerate convergence
         assert!(result.success || result.fun < 1e-4);
@@ -514,7 +516,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_sgd_momentum(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_sgd_momentum(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Dampening should still allow convergence
         assert!(result.success || result.fun < 1e-3);
@@ -534,7 +537,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_heavy_ball(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_heavy_ball(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Heavy-ball should converge
         assert!(result.fun < 1e-3);
@@ -555,7 +559,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adaptive_momentum(grad_func, x0, data_provider, options, 5).unwrap();
+        let result = minimize_adaptive_momentum(grad_func, x0, data_provider, options, 5)
+            .expect("Operation failed");
 
         // Adaptive momentum should help convergence
         assert!(result.fun < 1e-3);
@@ -577,7 +582,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_sgd_momentum(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_sgd_momentum(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should converge with decaying learning rate
         assert!(result.success || result.fun < 1e-3);
@@ -599,7 +605,7 @@ mod tests {
         };
         let result_standard =
             minimize_sgd_momentum(grad_func1, x0.clone(), data_provider1, options_standard)
-                .unwrap();
+                .expect("Operation failed");
 
         // Test Nesterov momentum
         let grad_func2 = QuadraticFunction;
@@ -612,7 +618,8 @@ mod tests {
             ..Default::default()
         };
         let result_nesterov =
-            minimize_sgd_momentum(grad_func2, x0, data_provider2, options_nesterov).unwrap();
+            minimize_sgd_momentum(grad_func2, x0, data_provider2, options_nesterov)
+                .expect("Operation failed");
 
         // Both should converge
         assert!(result_standard.fun < 1e-2);

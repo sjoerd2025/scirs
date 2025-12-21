@@ -408,7 +408,7 @@ mod tests {
             .update_node_health("node1", NodeHealth::Failed)
             .is_ok());
 
-        let failed_nodes = manager.get_failed_nodes().unwrap();
+        let failed_nodes = manager.get_failed_nodes().expect("Operation failed");
         assert_eq!(failed_nodes.len(), 1);
         assert_eq!(failed_nodes[0].nodeid, "node1");
     }

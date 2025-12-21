@@ -259,37 +259,37 @@ mod tests {
     #[test]
     fn test_examples_docs_generator() {
         let config = BindingConfig::default();
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let output_dir = temp_dir.path().to_path_buf();
         // Create examples directory
-        fs::create_dir_all(output_dir.join("examples")).unwrap();
+        fs::create_dir_all(output_dir.join("examples")).expect("Operation failed");
         let generator = ExamplesDocsGenerator::new(&config, &output_dir);
-        let (examples, docs) = generator.generate().unwrap();
+        let (examples, docs) = generator.generate().expect("Operation failed");
         assert!(!examples.is_empty());
         assert!(!docs.is_empty());
         assert!(examples[0]
             .file_name()
-            .unwrap()
+            .expect("Operation failed")
             .to_str()
             .contains(".c"));
         assert!(docs[0]
             .contains("README"));
     fn test_example_generation() {
-        let examples = generator.generate_examples().unwrap();
+        let examples = generator.generate_examples().expect("Operation failed");
         // Check that C example was created
         let c_example = examples
             .iter()
-            .find(|p| p.file_name().unwrap().to_str().unwrap().ends_with(".c"));
+            .find(|p| p.file_name().expect("Operation failed").to_str().expect("Operation failed").ends_with(".c"));
         assert!(c_example.is_some());
-        let content = std::fs::read_to_string(c_example.unwrap()).unwrap();
+        let content = std::fs::read_to_string(c_example.expect("Operation failed")).expect("Operation failed");
         assert!(content.contains("scirs2_model_load"));
         assert!(content.contains("scirs2_tensor_create"));
     fn test_documentation_generation() {
-        let docs = generator.generate_documentation().unwrap();
+        let docs = generator.generate_documentation().expect("Operation failed");
         let readme = docs
-            .find(|p| p.file_name().unwrap().to_str().unwrap() == "README.md");
+            .find(|p| p.file_name().expect("Operation failed").to_str().expect("Operation failed") == "README.md");
         assert!(readme.is_some());
-        let content = std::fs::read_to_string(readme.unwrap()).unwrap();
+        let content = std::fs::read_to_string(readme.expect("Operation failed")).expect("Operation failed");
         assert!(content.contains("SciRS2 Neural Network"));
         assert!(content.contains("## Features"));
         assert!(content.contains("## Building"));

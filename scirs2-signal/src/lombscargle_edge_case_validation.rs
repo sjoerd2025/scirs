@@ -244,7 +244,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     for _ in 0..n_sparse {
         times.push(rng.gen_range(0.0..time_span));
     }
-    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Generate signal with known frequency
     let true_freq = 0.1; // Low frequency to be detectable with sparse sampling
@@ -275,8 +275,8 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     let (peak_idx, peak_power) = pgram
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
 
     let detected_freq = freqs[peak_idx];
     let freq_error = (detected_freq - true_freq).abs() / true_freq;
@@ -991,7 +991,7 @@ fn assess_multi_peak_detection(_freqs: &[f64], pgram: &[f64], expectedfreqs: &[f
                 (a - expected_freq)
                     .abs()
                     .partial_cmp(&(b - expected_freq).abs())
-                    .unwrap()
+                    .expect("Operation failed")
             })
             .map(|(i, _)| i)
             .unwrap_or(0);
@@ -1064,7 +1064,7 @@ fn assess_peak_detection_performance(_freqs: &[f64], pgram: &[f64], expectedfreq
             (a - expected_freq)
                 .abs()
                 .partial_cmp(&(b - expected_freq).abs())
-                .unwrap()
+                .expect("Operation failed")
         })
         .map(|(i, _)| i)
         .unwrap_or(0);
@@ -1089,13 +1089,13 @@ fn estimate_noise_floor_accuracy(_pgram_low_snr: &[f64], pgram_highsnr: &[f64]) 
     // Compare noise floors between low and high SNR cases
     let low_snr_median = {
         let mut sorted = pgram_low_snr.to_vec();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         sorted[sorted.len() / 2]
     };
 
     let high_snr_median = {
         let mut sorted = pgram_high_snr.to_vec();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         sorted[sorted.len() / 2]
     };
 

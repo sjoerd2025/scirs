@@ -10,8 +10,8 @@ use std::collections::HashSet;
 use unicode_normalization::UnicodeNormalization;
 
 lazy_static! {
-    static ref SPECIAL_CHARS: Regex = Regex::new(r"[^\w\s]").unwrap();
-    static ref WHITESPACE: Regex = Regex::new(r"\s+").unwrap();
+    static ref SPECIAL_CHARS: Regex = Regex::new(r"[^\w\s]").expect("Operation failed");
+    static ref WHITESPACE: Regex = Regex::new(r"\s+").expect("Operation failed");
 
     // Common English stopwords
     static ref DEFAULT_STOPWORDS: HashSet<String> = {
@@ -215,7 +215,7 @@ mod tests {
     fn test_basic_normalizer() {
         let normalizer = BasicNormalizer::default();
         let text = "Héllo, World!";
-        let normalized = normalizer.normalize(text).unwrap();
+        let normalized = normalizer.normalize(text).expect("Operation failed");
         assert_eq!(normalized, "héllo, world!");
     }
 
@@ -223,7 +223,7 @@ mod tests {
     fn testtext_cleaner() {
         let cleaner = BasicTextCleaner::default();
         let text = "Hello, world! This is a test.";
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
         assert_eq!(cleaned, "Hello world This test");
     }
 
@@ -231,7 +231,7 @@ mod tests {
     fn testtext_preprocessor() {
         let preprocessor = TextPreprocessor::default();
         let text = "Héllo, World! This is a test.";
-        let processed = preprocessor.process(text).unwrap();
+        let processed = preprocessor.process(text).expect("Operation failed");
         assert_eq!(processed, "héllo world this test");
     }
 }

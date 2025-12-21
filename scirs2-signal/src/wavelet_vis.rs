@@ -21,10 +21,10 @@ use scirs2_core::ndarray::s;
 // use scirs2_signal::wavelet_vis::arrange_coefficients_2d;
 //
 // // Create a simple test image
-// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).expect("Operation failed");
 //
 // // Perform 2D DWT decomposition
-// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 //
 // // Arrange the coefficients in a visually informative layout
 // let arranged = arrange_coefficients_2d(&decomp);
@@ -107,10 +107,10 @@ pub struct WaveletEnergy {
 /// use scirs2_signal::wavelet_vis::arrange_coefficients_2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).expect("Operation failed");
 ///
 /// // Perform 2D DWT decomposition
-/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 ///
 /// // Arrange the coefficients in a visually informative layout
 /// let arranged = arrange_coefficients_2d(&decomp);
@@ -191,10 +191,10 @@ pub fn arrange_coefficients_2d(decomposition: &Dwt2dResult) -> Array2<f64> {
 /// }
 ///
 /// // Perform multi-level 2D DWT decomposition (3 levels)
-/// let decomps = wavedec2(&image, Wavelet::Haar, 3, None).unwrap();
+/// let decomps = wavedec2(&image, Wavelet::Haar, 3, None).expect("Operation failed");
 ///
 /// // Arrange the coefficients in a visually informative layout
-/// let arranged = arrange_multilevel_coefficients_2d(&decomps).unwrap();
+/// let arranged = arrange_multilevel_coefficients_2d(&decomps).expect("Operation failed");
 ///
 /// // The arranged array has the same shape as the original image
 /// assert_eq!(arranged.shape(), image.shape());
@@ -330,10 +330,10 @@ pub fn arrange_multilevel_coefficients_2d(
 /// use scirs2_signal::wavelet_vis::calculate_energy_2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).expect("Operation failed");
 ///
 /// // Perform 2D DWT decomposition
-/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 ///
 /// // Calculate energy distribution
 /// let energy = calculate_energy_2d(&decomp);
@@ -406,10 +406,10 @@ pub fn calculate_energy_2d(decomposition: &Dwt2dResult) -> WaveletEnergy {
 /// use scirs2_signal::wavelet_vis::calculate_energy_swt2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).expect("Operation failed");
 ///
 /// // Perform 2D SWT decomposition
-/// let decomp = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
+/// let decomp = swt2d_decompose(&image, Wavelet::Haar, 1, None).expect("Operation failed");
 ///
 /// // Calculate energy distribution
 /// let energy = calculate_energy_swt2d(&decomp);
@@ -484,7 +484,7 @@ pub fn calculate_energy_swt2d(decomposition: &Swt2dResult) -> WaveletEnergy {
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Perform 1D DWT decomposition
-/// let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).unwrap();
+/// let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).expect("Operation failed");
 ///
 /// // Calculate energy distribution
 /// let energy = calculate_energy_1d(&approx, &detail);
@@ -550,10 +550,10 @@ pub fn calculate_energy_1d(approx: &[f64], detail: &[f64]) -> WaveletEnergy {
 /// use scirs2_signal::wavelet_vis::{normalize_coefficients, NormalizationStrategy};
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).expect("Operation failed");
 ///
 /// // Perform 2D DWT decomposition
-/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 ///
 /// // Normalize the horizontal detail coefficients for visualization
 /// let normalized = normalize_coefficients(&decomp.detail_h, NormalizationStrategy::MinMax, None);
@@ -707,10 +707,10 @@ pub enum NormalizationStrategy {
 /// use scirs2_signal::wavelet_vis::count_nonzero_coefficients;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).expect("Operation failed");
 ///
 /// // Perform 2D DWT decomposition
-/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 ///
 /// // Count non-zero coefficients with a threshold of 1.0
 /// let counts = count_nonzero_coefficients(&decomp, Some(1.0));
@@ -811,10 +811,10 @@ pub struct WaveletCoeffCount {
 /// use scirs2_signal::wavelet_vis::{create_coefficient_heatmap, NormalizationStrategy, colormaps};
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).expect("Operation failed");
 ///
 /// // Perform 2D DWT decomposition
-/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+/// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 ///
 /// // Create a heatmap of the approximation coefficients
 /// let heatmap = create_coefficient_heatmap(
@@ -961,7 +961,7 @@ mod tests {
         let image = create_test_image(8);
 
         // Perform 2D DWT
-        let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+        let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 
         // Arrange coefficients
         let arranged = arrange_coefficients_2d(&decomp);
@@ -991,10 +991,10 @@ mod tests {
         let image = create_test_image(8);
 
         // Perform multi-level 2D DWT
-        let decomps = wavedec2(&image, Wavelet::Haar, 1, None).unwrap();
+        let decomps = wavedec2(&image, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Arrange coefficients
-        let arranged = arrange_multilevel_coefficients_2d(&decomps).unwrap();
+        let arranged = arrange_multilevel_coefficients_2d(&decomps).expect("Operation failed");
 
         // Our test creates an 8x8 image, and after one level of decomposition,
         // we get 4x4 approximation and detail coefficients, which when arranged
@@ -1018,7 +1018,7 @@ mod tests {
         let image = create_test_image(8);
 
         // Perform 2D DWT
-        let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+        let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).expect("Operation failed");
 
         // Calculate energy
         let energy = calculate_energy_2d(&decomp);
@@ -1029,9 +1029,9 @@ mod tests {
         );
 
         // Check that detail energy is the sum of H, V, D energies
-        let h_energy = energy.horizontal.unwrap();
-        let v_energy = energy.vertical.unwrap();
-        let d_energy = energy.diagonal.unwrap();
+        let h_energy = energy.horizontal.expect("Operation failed");
+        let v_energy = energy.vertical.expect("Operation failed");
+        let d_energy = energy.diagonal.expect("Operation failed");
 
         assert!((energy.detail - (h_energy + v_energy + d_energy)).abs() < 1e-10);
     }
@@ -1044,7 +1044,7 @@ mod tests {
         let image = create_test_image(8);
 
         // Perform 2D SWT
-        let decomp = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
+        let decomp = swt2d_decompose(&image, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Calculate energy
         let energy = calculate_energy_swt2d(&decomp);

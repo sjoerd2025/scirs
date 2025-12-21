@@ -1025,12 +1025,13 @@ mod tests {
     fn test_quantum_spiking_neural_network() {
         let image =
             Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.2, 0.6, 0.8, 0.3, 0.7, 0.4])
-                .unwrap();
+                .expect("Failed to create array");
 
         let layers = vec![1];
         let config = QuantumNeuromorphicConfig::default();
 
-        let result = quantum_spiking_neural_network(image.view(), &layers, &config, 5).unwrap();
+        let result = quantum_spiking_neural_network(image.view(), &layers, &config, 5)
+            .expect("Operation failed");
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1040,10 +1041,11 @@ mod tests {
     fn test_neuromorphic_quantum_entanglement() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.0, 0.8, 0.3, 0.2, 0.6, 0.9, 0.1])
-                .unwrap();
+                .expect("Failed to create array");
 
         let config = QuantumNeuromorphicConfig::default();
-        let result = neuromorphic_quantum_entanglement(image.view(), &config).unwrap();
+        let result =
+            neuromorphic_quantum_entanglement(image.view(), &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1051,13 +1053,16 @@ mod tests {
 
     #[test]
     fn test_bio_quantum_reservoir_computing() {
-        let image1 = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap();
-        let image2 = Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).unwrap();
+        let image1 =
+            Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).expect("Operation failed");
+        let image2 =
+            Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).expect("Operation failed");
 
         let sequence = vec![image1.view(), image2.view()];
         let config = QuantumNeuromorphicConfig::default();
 
-        let result = bio_quantum_reservoir_computing(&sequence, 10, &config).unwrap();
+        let result =
+            bio_quantum_reservoir_computing(&sequence, 10, &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (2, 2));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1065,11 +1070,12 @@ mod tests {
 
     #[test]
     fn test_quantum_homeostatic_adaptation() {
-        let image =
-            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect())
+            .expect("Operation failed");
 
         let config = QuantumNeuromorphicConfig::default();
-        let result = quantum_homeostatic_adaptation(image.view(), &config, 3).unwrap();
+        let result =
+            quantum_homeostatic_adaptation(image.view(), &config, 3).expect("Operation failed");
 
         assert_eq!(result.dim(), (4, 4));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1077,13 +1083,15 @@ mod tests {
 
     #[test]
     fn test_quantum_memory_consolidation() {
-        let pattern1 = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap();
-        let pattern2 = Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).unwrap();
+        let pattern1 =
+            Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).expect("Operation failed");
+        let pattern2 =
+            Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).expect("Operation failed");
 
         let patterns = vec![pattern1, pattern2];
         let config = QuantumNeuromorphicConfig::default();
 
-        let result = quantum_memory_consolidation(&patterns, &config).unwrap();
+        let result = quantum_memory_consolidation(&patterns, &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (2, 2));
         assert!(result.iter().all(|c| c.norm().is_finite()));
@@ -1093,16 +1101,17 @@ mod tests {
     fn test_quantum_attention_mechanism() {
         let image =
             Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.2, 0.6, 0.8, 0.3, 0.7, 0.4])
-                .unwrap();
+                .expect("Failed to create array");
 
         let query =
             Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0])
-                .unwrap();
+                .expect("Failed to create array");
 
         let queries = vec![query];
         let config = QuantumNeuromorphicConfig::default();
 
-        let result = quantum_attention_mechanism(image.view(), &queries, &config).unwrap();
+        let result =
+            quantum_attention_mechanism(image.view(), &queries, &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));

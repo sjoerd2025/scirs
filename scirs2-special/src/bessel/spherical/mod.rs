@@ -23,17 +23,17 @@ use std::fmt::Debug;
 /// The function computes the first few terms for small x to avoid precision loss.
 #[allow(dead_code)]
 fn small_arg_series_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
-    let _n_f = F::from(n).unwrap();
+    let _n_f = F::from(n).expect("Failed to convert to float");
     let x_sq = x * x;
 
     // Compute the factorial denominator (2n+1)!!
     let mut factorial = F::one();
     for i in 1..=n {
-        factorial = factorial * F::from(2 * i + 1).unwrap();
+        factorial = factorial * F::from(2 * i + 1).expect("Failed to convert to float");
     }
 
     // First term in the series
-    let mut term = F::from(1.0).unwrap();
+    let mut term = F::from(1.0).expect("Failed to convert constant to float");
     let mut series = term;
 
     // Add more terms for better precision
@@ -41,12 +41,14 @@ fn small_arg_series_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 
     // Terms in the alternating series
     for i in 1..=terms_to_compute {
-        let denom = F::from(2.0 * i as f64).unwrap() * F::from((2 * n + 1 + 2 * i) as f64).unwrap();
+        let denom = F::from(2.0 * i as f64).expect("Failed to convert to float")
+            * F::from((2 * n + 1 + 2 * i) as f64).expect("Failed to convert to float");
         term = term * x_sq.neg() / denom;
         series = series + term;
 
         // Break early if term is insignificant
-        if term.abs() < F::from(1e-15).unwrap() * series.abs() {
+        if term.abs() < F::from(1e-15).expect("Failed to convert constant to float") * series.abs()
+        {
             break;
         }
     }
@@ -107,31 +109,38 @@ pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     // Direct formulas for n=0 and n=1 to avoid unnecessary recursion
     if n == 0 {
         // For j0(x), use a more accurate implementation for small x
-        if x.abs() < F::from(0.01).unwrap() {
+        if x.abs() < F::from(0.01).expect("Failed to convert constant to float") {
             // Series expansion: j0(x) = 1 - x²/6 + x⁴/120 - ...
             let x2 = x * x;
-            return F::one() - x2 / F::from(6.0).unwrap() + x2 * x2 / F::from(120.0).unwrap();
+            return F::one() - x2 / F::from(6.0).expect("Failed to convert constant to float")
+                + x2 * x2 / F::from(120.0).expect("Failed to convert constant to float");
         } else {
             return x.sin() / x;
         }
     } else if n == 1 {
         // For j1(x), use a more accurate implementation for small x
-        if x.abs() < F::from(0.01).unwrap() {
+        if x.abs() < F::from(0.01).expect("Failed to convert constant to float") {
             // Series expansion: j1(x) = x/3 - x³/30 + ...
             let x2 = x * x;
-            return x / F::from(3.0).unwrap() - x * x2 / F::from(30.0).unwrap();
+            return x / F::from(3.0).expect("Failed to convert constant to float")
+                - x * x2 / F::from(30.0).expect("Failed to convert constant to float");
         } else {
             return (x.sin() / x - x.cos()) / x;
         }
     }
 
     // Use series expansion for very small arguments to avoid cancellation errors
-    if x.abs() < F::from(0.1).unwrap() * (F::from(n).unwrap() + F::one()) {
+    if x.abs()
+        < F::from(0.1).expect("Failed to convert constant to float")
+            * (F::from(n).expect("Failed to convert to float") + F::one())
+    {
         return small_arg_series_jn(n, x);
     }
 
     // For large arguments, use the scaled version with appropriate scaling
-    if x > F::from(n).unwrap() * F::from(10.0).unwrap() {
+    if x > F::from(n).expect("Failed to convert to float")
+        * F::from(10.0).expect("Failed to convert constant to float")
+    {
         let scaling = x.sin();
         return spherical_jn_scaled(n, x) * scaling / x;
     }
@@ -142,24 +151,28 @@ pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     // For higher orders, use a recurrence relation
     // j_{n+1} = (2n+1)/x * j_n - j_{n-1}
     // Initialize j_0 with special case handling for small arguments
-    let mut j_nminus_2 = if x.abs() < F::from(0.01).unwrap() {
+    let mut j_nminus_2 = if x.abs() < F::from(0.01).expect("Failed to convert constant to float") {
         // Series expansion: j0(x) = 1 - x²/6 + x⁴/120 - ...
         let x2 = x * x;
-        F::one() - x2 / F::from(6.0).unwrap() + x2 * x2 / F::from(120.0).unwrap()
+        F::one() - x2 / F::from(6.0).expect("Failed to convert constant to float")
+            + x2 * x2 / F::from(120.0).expect("Failed to convert constant to float")
     } else {
         x.sin() / x
     }; // j_0
        // Initialize j_1 with special case handling for small arguments
-    let mut j_nminus_1 = if x.abs() < F::from(0.01).unwrap() {
+    let mut j_nminus_1 = if x.abs() < F::from(0.01).expect("Failed to convert constant to float") {
         // Series expansion: j1(x) = x/3 - x³/30 + ...
         let x2 = x * x;
-        x / F::from(3.0).unwrap() - x * x2 / F::from(30.0).unwrap()
+        x / F::from(3.0).expect("Failed to convert constant to float")
+            - x * x2 / F::from(30.0).expect("Failed to convert constant to float")
     } else {
         (x.sin() / x - x.cos()) / x
     }; // j_1
 
     for k in 2..=max_n {
-        let j_n = F::from(2.0 * k as f64 - 1.0).unwrap() / x * j_nminus_1 - j_nminus_2;
+        let j_n = F::from(2.0 * k as f64 - 1.0).expect("Failed to convert to float") / x
+            * j_nminus_1
+            - j_nminus_2;
         j_nminus_2 = j_nminus_1;
         j_nminus_1 = j_n;
     }
@@ -215,7 +228,9 @@ pub fn spherical_yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     }
 
     // For large arguments, use the scaled version with appropriate scaling
-    if x > F::from(n).unwrap() * F::from(10.0).unwrap() {
+    if x > F::from(n).expect("Failed to convert to float")
+        * F::from(10.0).expect("Failed to convert constant to float")
+    {
         let scaling = -x.cos();
         return spherical_yn_scaled(n, x) * scaling / x;
     }
@@ -229,7 +244,9 @@ pub fn spherical_yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     let mut y_nminus_1 = -(x.cos() / x + x.sin()) / x; // y_1
 
     for k in 2..=max_n {
-        let y_n = F::from(2.0 * k as f64 - 1.0).unwrap() / x * y_nminus_1 - y_nminus_2;
+        let y_n = F::from(2.0 * k as f64 - 1.0).expect("Failed to convert to float") / x
+            * y_nminus_1
+            - y_nminus_2;
         y_nminus_2 = y_nminus_1;
         y_nminus_1 = y_n;
     }
@@ -263,10 +280,11 @@ pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
             return F::one();
         }
 
-        if x > F::from(10.0).unwrap() {
+        if x > F::from(10.0).expect("Failed to convert constant to float") {
             // For large x, j0_scaled approaches 1
             let x_sq = x * x;
-            return F::one() - F::one() / (F::from(2.0).unwrap() * x_sq);
+            return F::one()
+                - F::one() / (F::from(2.0).expect("Failed to convert constant to float") * x_sq);
         } else {
             // For smaller x, compute directly
             // This should simplify to 1, but use explicit value to avoid precision issues
@@ -280,20 +298,25 @@ pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
             return F::zero();
         }
 
-        if x > F::from(10.0).unwrap() {
+        if x > F::from(10.0).expect("Failed to convert constant to float") {
             // For large x, j1_scaled approaches asymptotics
             let x_sq = x * x;
-            return F::one() - F::from(3.0).unwrap() / (F::from(2.0).unwrap() * x_sq);
+            return F::one()
+                - F::from(3.0).expect("Failed to convert constant to float")
+                    / (F::from(2.0).expect("Failed to convert constant to float") * x_sq);
         } else {
             // Compute more accurately for small x
             // This is equivalent to (1 - x.cos()/x.sin()) but with better precision
             let x2 = x * x;
-            return F::one() - F::from(2.0).unwrap() / F::from(3.0).unwrap() * x2;
+            return F::one()
+                - F::from(2.0).expect("Failed to convert constant to float")
+                    / F::from(3.0).expect("Failed to convert constant to float")
+                    * x2;
         }
     }
 
     // For higher orders with small arguments
-    if x < F::from(5.0).unwrap() {
+    if x < F::from(5.0).expect("Failed to convert constant to float") {
         if x == F::zero() {
             return F::zero();
         }
@@ -304,20 +327,27 @@ pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
     }
 
     // For large arguments, use asymptotic expansion
-    if x > F::from(n * n).unwrap() || x > F::from(1000.0).unwrap() {
+    if x > F::from(n * n).expect("Failed to convert to float")
+        || x > F::from(1000.0).expect("Failed to convert constant to float")
+    {
         let x_sq = x * x;
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         // Asymptotic expansion
         let mut factor = F::one();
 
         // First order correction
-        factor = factor - n_f * (n_f + F::one()) / (F::from(2.0).unwrap() * x_sq);
+        factor = factor
+            - n_f * (n_f + F::one())
+                / (F::from(2.0).expect("Failed to convert constant to float") * x_sq);
 
         // Second order correction for very large x
-        if x > F::from(100.0).unwrap() {
-            let term2 = n_f * (n_f + F::one()) * (n_f * (n_f + F::one()) - F::from(2.0).unwrap())
-                / (F::from(8.0).unwrap() * x_sq * x_sq);
+        if x > F::from(100.0).expect("Failed to convert constant to float") {
+            let term2 = n_f
+                * (n_f + F::one())
+                * (n_f * (n_f + F::one())
+                    - F::from(2.0).expect("Failed to convert constant to float"))
+                / (F::from(8.0).expect("Failed to convert constant to float") * x_sq * x_sq);
             factor = factor + term2;
         }
 
@@ -334,18 +364,20 @@ pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
     let nmax = (n * 2).min(100);
 
     // Initialize with arbitrary values (will be rescaled later)
-    let mut j_n_plus_1 = F::from(1e-100).unwrap();
-    let mut j_n = F::from(1e-100).unwrap();
+    let mut j_n_plus_1 = F::from(1e-100).expect("Failed to convert constant to float");
+    let mut j_n = F::from(1e-100).expect("Failed to convert constant to float");
 
     // Apply recurrence relation backward for better numerical stability
     for k in (0..=nmax).rev() {
-        let j_nminus_1 = F::from(2.0 * k as f64 + 1.0).unwrap() / x * j_n - j_n_plus_1;
+        let j_nminus_1 = F::from(2.0 * k as f64 + 1.0).expect("Failed to convert to float") / x
+            * j_n
+            - j_n_plus_1;
         j_n_plus_1 = j_n;
         j_n = j_nminus_1;
 
         // Normalize occasionally to avoid overflow/underflow
-        if j_n.abs() > F::from(1e50).unwrap() {
-            let scale = F::from(1e-50).unwrap();
+        if j_n.abs() > F::from(1e50).expect("Failed to convert constant to float") {
+            let scale = F::from(1e-50).expect("Failed to convert constant to float");
             j_n = j_n * scale;
             j_n_plus_1 = j_n_plus_1 * scale;
         }
@@ -363,7 +395,9 @@ pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
 
     // Now apply recurrence forward to get j_safe_n_scaled
     for k in 0..safe_n {
-        let j_n_plus_1_new = F::from(2.0 * k as f64 + 1.0).unwrap() / x * j_n - j_n_plus_1;
+        let j_n_plus_1_new = F::from(2.0 * k as f64 + 1.0).expect("Failed to convert to float") / x
+            * j_n
+            - j_n_plus_1;
         j_n_plus_1 = j_n;
         j_n = j_n_plus_1_new;
     }
@@ -397,10 +431,11 @@ pub fn spherical_yn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
 
     // Special case n=0
     if n == 0 {
-        if x > F::from(10.0).unwrap() {
+        if x > F::from(10.0).expect("Failed to convert constant to float") {
             // For large x, y0_scaled approaches 1
             let x_sq = x * x;
-            return F::one() - F::one() / (F::from(2.0).unwrap() * x_sq);
+            return F::one()
+                - F::one() / (F::from(2.0).expect("Failed to convert constant to float") * x_sq);
         } else {
             // For smaller x, compute directly
             return -x.cos() / x * x / (-x.cos()); // Simplifies to 1
@@ -409,10 +444,12 @@ pub fn spherical_yn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
 
     // Special case n=1
     if n == 1 {
-        if x > F::from(10.0).unwrap() {
+        if x > F::from(10.0).expect("Failed to convert constant to float") {
             // For large x, y1_scaled approaches asymptotics
             let x_sq = x * x;
-            return -F::one() + F::from(3.0).unwrap() / (F::from(2.0).unwrap() * x_sq);
+            return -F::one()
+                + F::from(3.0).expect("Failed to convert constant to float")
+                    / (F::from(2.0).expect("Failed to convert constant to float") * x_sq);
         } else {
             // Compute directly for small x
             return -(x.cos() / x + x.sin()) / x * x / (-x.cos());
@@ -420,29 +457,36 @@ pub fn spherical_yn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
     }
 
     // For higher orders with small arguments
-    if x < F::from(5.0).unwrap() {
+    if x < F::from(5.0).expect("Failed to convert constant to float") {
         // Use the direct formula with the unscaled function
         let y_n = spherical_yn(n, x);
         return y_n * x / (-x.cos());
     }
 
     // For large arguments, use asymptotic expansion
-    if x > F::from(n * n).unwrap() || x > F::from(1000.0).unwrap() {
+    if x > F::from(n * n).expect("Failed to convert to float")
+        || x > F::from(1000.0).expect("Failed to convert constant to float")
+    {
         let x_sq = x * x;
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         // Asymptotic expansion
         let sign = if n % 2 == 0 { F::one() } else { F::one().neg() };
         let mut factor = sign;
 
         // First order correction
-        factor = factor - sign * n_f * (n_f + F::one()) / (F::from(2.0).unwrap() * x_sq);
+        factor = factor
+            - sign * n_f * (n_f + F::one())
+                / (F::from(2.0).expect("Failed to convert constant to float") * x_sq);
 
         // Second order correction for very large x
-        if x > F::from(100.0).unwrap() {
-            let term2 =
-                sign * n_f * (n_f + F::one()) * (n_f * (n_f + F::one()) - F::from(2.0).unwrap())
-                    / (F::from(8.0).unwrap() * x_sq * x_sq);
+        if x > F::from(100.0).expect("Failed to convert constant to float") {
+            let term2 = sign
+                * n_f
+                * (n_f + F::one())
+                * (n_f * (n_f + F::one())
+                    - F::from(2.0).expect("Failed to convert constant to float"))
+                / (F::from(8.0).expect("Failed to convert constant to float") * x_sq * x_sq);
             factor = factor + term2;
         }
 

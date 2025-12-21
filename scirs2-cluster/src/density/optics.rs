@@ -94,7 +94,7 @@ pub fn extract_dbscan_clustering(_opticsresult: &OPTICSResult, eps: f64) -> Arra
         let reachability = _opticsresult.reachability[i];
 
         // Points with reachability distance > eps are noise
-        if reachability.is_none() || reachability.unwrap() > eps {
+        if reachability.is_none() || reachability.expect("Operation failed") > eps {
             // Could be the start of a new cluster if it's a core point
             if let Some(core_dist) = _opticsresult.core_distances[point_idx] {
                 if core_dist <= eps {
@@ -152,10 +152,10 @@ pub fn extract_dbscan_clustering(_opticsresult: &OPTICSResult, eps: f64) -> Arra
 ///     3.0, 3.0,   // Noise
 ///     9.0, 9.0,   // Noise
 ///     0.0, 10.0,  // Noise
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Run OPTICS with min_samples=2
-/// let result = optics::optics(data.view(), 2, None, Some(DistanceMetric::Euclidean)).unwrap();
+/// let result = optics::optics(data.view(), 2, None, Some(DistanceMetric::Euclidean)).expect("Operation failed");
 ///
 /// // Access the ordering and reachability distances
 /// println!("Ordering: {:?}", result.ordering);
@@ -188,7 +188,7 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
                     "max_eps must be positive".into(),
                 ));
             }
-            _eps.to_f64().unwrap()
+            _eps.to_f64().expect("Operation failed")
         }
         None => f64::INFINITY,
     };
@@ -217,20 +217,22 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
             let point2 = data.row(j).to_vec();
 
             let dist = match metric.unwrap_or(DistanceMetric::Euclidean) {
-                DistanceMetric::Euclidean => {
-                    distance::euclidean(&point1, &point2).to_f64().unwrap()
-                }
-                DistanceMetric::Manhattan => {
-                    distance::manhattan(&point1, &point2).to_f64().unwrap()
-                }
-                DistanceMetric::Chebyshev => {
-                    distance::chebyshev(&point1, &point2).to_f64().unwrap()
-                }
-                DistanceMetric::Minkowski => {
-                    distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
-                        .to_f64()
-                        .unwrap()
-                }
+                DistanceMetric::Euclidean => distance::euclidean(&point1, &point2)
+                    .to_f64()
+                    .expect("Operation failed"),
+                DistanceMetric::Manhattan => distance::manhattan(&point1, &point2)
+                    .to_f64()
+                    .expect("Operation failed"),
+                DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2)
+                    .to_f64()
+                    .expect("Operation failed"),
+                DistanceMetric::Minkowski => distance::minkowski(
+                    &point1,
+                    &point2,
+                    F::from(3.0).expect("Failed to convert constant to float"),
+                )
+                .to_f64()
+                .expect("Operation failed"),
             };
 
             distance_matrix[[i, j]] = dist;
@@ -547,10 +549,11 @@ mod tests {
                 10.0, 0.0, // Noise
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run OPTICS with min_samples=2
-        let result = optics(data.view(), 2, None, Some(DistanceMetric::Euclidean)).unwrap();
+        let result = optics(data.view(), 2, None, Some(DistanceMetric::Euclidean))
+            .expect("Operation failed");
 
         // Check that the ordering contains all points
         assert_eq!(result.ordering.len(), 8);

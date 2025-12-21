@@ -491,9 +491,15 @@ mod tests {
         let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
 
         // Add hyperedges: {1,2}, {2,3}, {1,3}
-        hypergraph.add_hyperedge_from_vec(vec![1, 2], 1.0).unwrap();
-        hypergraph.add_hyperedge_from_vec(vec![2, 3], 1.0).unwrap();
-        hypergraph.add_hyperedge_from_vec(vec![1, 3], 1.0).unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec![1, 2], 1.0)
+            .expect("Operation failed");
+        hypergraph
+            .add_hyperedge_from_vec(vec![2, 3], 1.0)
+            .expect("Operation failed");
+        hypergraph
+            .add_hyperedge_from_vec(vec![1, 3], 1.0)
+            .expect("Operation failed");
 
         let transversals = minimal_transversals(&hypergraph, Some(2));
 
@@ -513,13 +519,13 @@ mod tests {
         // Create a path-like structure: {A,B}, {B,C}, {C,D}
         hypergraph
             .add_hyperedge_from_vec(vec!["A", "B"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
         hypergraph
             .add_hyperedge_from_vec(vec!["B", "C"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
         hypergraph
             .add_hyperedge_from_vec(vec!["C", "D"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(hypergraph_distance(&hypergraph, &"A", &"A"), Some(0));
         assert_eq!(hypergraph_distance(&hypergraph, &"A", &"B"), Some(1));
@@ -536,14 +542,22 @@ mod tests {
         let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
 
         // Create a path: {1,2}, {2,3}, {3,4}
-        hypergraph.add_hyperedge_from_vec(vec![1, 2], 1.0).unwrap();
-        hypergraph.add_hyperedge_from_vec(vec![2, 3], 1.0).unwrap();
-        hypergraph.add_hyperedge_from_vec(vec![3, 4], 1.0).unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec![1, 2], 1.0)
+            .expect("Operation failed");
+        hypergraph
+            .add_hyperedge_from_vec(vec![2, 3], 1.0)
+            .expect("Operation failed");
+        hypergraph
+            .add_hyperedge_from_vec(vec![3, 4], 1.0)
+            .expect("Operation failed");
 
         assert_eq!(hypergraph_diameter(&hypergraph), Some(3));
 
         // Add a shortcut
-        hypergraph.add_hyperedge_from_vec(vec![1, 4], 1.0).unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec![1, 4], 1.0)
+            .expect("Operation failed");
         assert_eq!(hypergraph_diameter(&hypergraph), Some(2));
     }
 
@@ -554,14 +568,14 @@ mod tests {
         // Create two disconnected components
         hypergraph
             .add_hyperedge_from_vec(vec!["A", "B"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
         hypergraph
             .add_hyperedge_from_vec(vec!["B", "C"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
 
         hypergraph
             .add_hyperedge_from_vec(vec!["D", "E"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
 
         let components = hypergraph_connected_components(&hypergraph);
         assert_eq!(components.len(), 2);
@@ -579,7 +593,7 @@ mod tests {
         // Single component
         hypergraph
             .add_hyperedge_from_vec(vec![1, 2, 3], 1.0)
-            .unwrap();
+            .expect("Operation failed");
         assert!(ishypergraph_connected(&hypergraph));
 
         // Add disconnected node
@@ -587,7 +601,9 @@ mod tests {
         assert!(!ishypergraph_connected(&hypergraph));
 
         // Connect the disconnected node
-        hypergraph.add_hyperedge_from_vec(vec![3, 4], 1.0).unwrap();
+        hypergraph
+            .add_hyperedge_from_vec(vec![3, 4], 1.0)
+            .expect("Operation failed");
         assert!(ishypergraph_connected(&hypergraph));
     }
 
@@ -598,15 +614,15 @@ mod tests {
         // Create a structure where A and D are connected through B,C
         hypergraph
             .add_hyperedge_from_vec(vec!["A", "B"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
         hypergraph
             .add_hyperedge_from_vec(vec!["B", "C"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
         hypergraph
             .add_hyperedge_from_vec(vec!["C", "D"], 1.0)
-            .unwrap();
+            .expect("Operation failed");
 
-        let cut = minimum_vertex_cut(&hypergraph, &"A", &"D").unwrap();
+        let cut = minimum_vertex_cut(&hypergraph, &"A", &"D").expect("Operation failed");
 
         assert!(!cut.partition_a.is_empty());
         assert!(!cut.partition_b.is_empty());
@@ -619,13 +635,18 @@ mod tests {
         let mut hypergraph: Hypergraph<i32, f64> = Hypergraph::new();
 
         // Direct connection
-        hypergraph.add_hyperedge_from_vec(vec![1, 2], 1.0).unwrap();
-        assert_eq!(hyperedge_connectivity(&hypergraph, &1, &2).unwrap(), 1);
+        hypergraph
+            .add_hyperedge_from_vec(vec![1, 2], 1.0)
+            .expect("Operation failed");
+        assert_eq!(
+            hyperedge_connectivity(&hypergraph, &1, &2).expect("Operation failed"),
+            1
+        );
 
         // Test direct connection in a larger hyperedge
         hypergraph
             .add_hyperedge_from_vec(vec![1, 3, 4], 1.2)
-            .unwrap();
+            .expect("Operation failed");
 
         // Now 1 and 4 are directly connected in the same hyperedge
         assert!(
@@ -633,7 +654,7 @@ mod tests {
             "Nodes 1 and 4 should be directly connected in the same hyperedge"
         );
 
-        let connectivity = hyperedge_connectivity(&hypergraph, &1, &4).unwrap();
+        let connectivity = hyperedge_connectivity(&hypergraph, &1, &4).expect("Operation failed");
         assert!(
             connectivity >= 1,
             "Expected connectivity >= 1, got {connectivity}"
@@ -641,10 +662,16 @@ mod tests {
 
         // Test disconnected nodes
         hypergraph.add_node(5); // isolated node
-        assert_eq!(hyperedge_connectivity(&hypergraph, &1, &5).unwrap(), 0);
+        assert_eq!(
+            hyperedge_connectivity(&hypergraph, &1, &5).expect("Operation failed"),
+            0
+        );
 
         // Test same node
-        assert_eq!(hyperedge_connectivity(&hypergraph, &1, &1).unwrap(), 0);
+        assert_eq!(
+            hyperedge_connectivity(&hypergraph, &1, &1).expect("Operation failed"),
+            0
+        );
     }
 
     #[test]

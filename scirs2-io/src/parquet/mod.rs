@@ -135,21 +135,23 @@ mod tests {
 
     #[test]
     fn test_parquet_roundtrip_f64() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test.parquet");
 
         // Create test data
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
         // Write
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
 
         // Read
-        let loaded = read_parquet(&path).unwrap();
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
         // Verify
         assert_eq!(loaded.column_names().len(), 1);
-        let column = loaded.get_column_f64("value").unwrap();
+        let column = loaded
+            .get_column_f64("value")
+            .expect("Test I/O operation failed");
         assert_eq!(column.len(), 5);
         assert_eq!(column[0], 1.0);
         assert_eq!(column[4], 5.0);
@@ -157,7 +159,7 @@ mod tests {
 
     #[test]
     fn test_compression_codecs() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let data = Array1::from_vec((0..100).map(|x| x as f64).collect::<Vec<_>>());
 
         for codec in [
@@ -171,8 +173,8 @@ mod tests {
                 ..Default::default()
             };
 
-            write_parquet(&path, &data, options).unwrap();
-            let loaded = read_parquet(&path).unwrap();
+            write_parquet(&path, &data, options).expect("Test I/O operation failed");
+            let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
             assert_eq!(loaded.num_rows(), 100);
         }
@@ -180,76 +182,86 @@ mod tests {
 
     #[test]
     fn test_parquet_roundtrip_i32() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_i32.parquet");
 
         let data = Array1::from_vec(vec![10i32, 20, 30, 40, 50]);
 
-        write_parquet(&path, &data, Default::default()).unwrap();
-        let loaded = read_parquet(&path).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
         assert_eq!(loaded.num_rows(), 5);
-        let column = loaded.get_column_i32("value").unwrap();
+        let column = loaded
+            .get_column_i32("value")
+            .expect("Test I/O operation failed");
         assert_eq!(column[0], 10);
         assert_eq!(column[4], 50);
     }
 
     #[test]
     fn test_parquet_roundtrip_f32() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_f32.parquet");
 
         let data = Array1::from_vec(vec![1.5f32, 2.5, 3.5, 4.5]);
 
-        write_parquet(&path, &data, Default::default()).unwrap();
-        let loaded = read_parquet(&path).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
-        let column = loaded.get_column_f32("value").unwrap();
+        let column = loaded
+            .get_column_f32("value")
+            .expect("Test I/O operation failed");
         assert_eq!(column.len(), 4);
         assert!((column[0] - 1.5).abs() < 1e-6);
     }
 
     #[test]
     fn test_custom_column_name() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_named.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        write_parquet_with_name(&path, &data, "temperature", Default::default()).unwrap();
-        let loaded = read_parquet(&path).unwrap();
+        write_parquet_with_name(&path, &data, "temperature", Default::default())
+            .expect("Test I/O operation failed");
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
         assert_eq!(loaded.column_names(), vec!["temperature"]);
-        let column = loaded.get_column_f64("temperature").unwrap();
+        let column = loaded
+            .get_column_f64("temperature")
+            .expect("Test I/O operation failed");
         assert_eq!(column.len(), 3);
     }
 
     #[test]
     fn test_large_dataset() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_large.parquet");
 
         let data: Vec<f64> = (0..10000).map(|x| x as f64 * 0.1).collect();
         let array = Array1::from_vec(data);
 
-        write_parquet(&path, &array, Default::default()).unwrap();
-        let loaded = read_parquet(&path).unwrap();
+        write_parquet(&path, &array, Default::default()).expect("Test I/O operation failed");
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
         assert_eq!(loaded.num_rows(), 10000);
-        let column = loaded.get_column_f64("value").unwrap();
+        let column = loaded
+            .get_column_f64("value")
+            .expect("Test I/O operation failed");
         assert!((column[0] - 0.0).abs() < 1e-10);
         assert!((column[9999] - 999.9).abs() < 1e-6);
     }
 
     #[test]
     fn test_schema_introspection() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_schema.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        write_parquet_with_name(&path, &data, "measurements", Default::default()).unwrap();
-        let loaded = read_parquet(&path).unwrap();
+        write_parquet_with_name(&path, &data, "measurements", Default::default())
+            .expect("Test I/O operation failed");
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
         let schema = loaded.schema();
         assert_eq!(schema.num_columns(), 1);
@@ -260,7 +272,7 @@ mod tests {
 
     #[test]
     fn test_options_builder_pattern() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_builder.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -268,19 +280,19 @@ mod tests {
             .with_row_group_size(500)
             .with_dictionary(false);
 
-        write_parquet(&path, &data, options).unwrap();
+        write_parquet(&path, &data, options).expect("Test I/O operation failed");
         assert!(path.exists());
     }
 
     #[test]
     fn test_error_invalid_column() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_error.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
 
-        let loaded = read_parquet(&path).unwrap();
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
 
         // Attempt to access non-existent column
         let result = loaded.get_column_f64("nonexistent");
@@ -293,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_data_accuracy() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_accuracy.parquet");
 
         let original = Array1::from_vec(vec![
@@ -304,9 +316,11 @@ mod tests {
             5.55555555,
         ]);
 
-        write_parquet(&path, &original, Default::default()).unwrap();
-        let loaded = read_parquet(&path).unwrap();
-        let recovered = loaded.get_column_f64("value").unwrap();
+        write_parquet(&path, &original, Default::default()).expect("Test I/O operation failed");
+        let loaded = read_parquet(&path).expect("Test I/O operation failed");
+        let recovered = loaded
+            .get_column_f64("value")
+            .expect("Test I/O operation failed");
 
         assert_eq!(recovered.len(), original.len());
         for (a, b) in original.iter().zip(recovered.iter()) {
@@ -316,20 +330,20 @@ mod tests {
 
     #[test]
     fn test_chunked_reading() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_chunked.parquet");
 
         // Create a dataset with 100 rows
         let data: Vec<f64> = (0..100).map(|x| x as f64).collect();
         let array = Array1::from_vec(data);
 
-        write_parquet(&path, &array, Default::default()).unwrap();
+        write_parquet(&path, &array, Default::default()).expect("Test I/O operation failed");
 
         // Read in chunks of 10 rows
         let chunks: Vec<_> = read_parquet_chunked(&path, 10)
-            .unwrap()
+            .expect("Operation failed")
             .collect::<Result<Vec<_>>>()
-            .unwrap();
+            .expect("Test I/O operation failed");
 
         // Should have 10 chunks
         assert_eq!(chunks.len(), 10);
@@ -340,25 +354,28 @@ mod tests {
 
         // Verify first chunk
         let first_chunk = &chunks[0];
-        let first_values = first_chunk.get_column_f64("value").unwrap();
+        let first_values = first_chunk
+            .get_column_f64("value")
+            .expect("Test I/O operation failed");
         assert_eq!(first_values[0], 0.0);
         assert_eq!(first_values[9], 9.0);
     }
 
     #[test]
     fn test_chunked_column_selection() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_chunked_cols.parquet");
 
         // Write data
         let data = Array1::from_vec((0..50).map(|x| x as f64).collect::<Vec<_>>());
-        write_parquet_with_name(&path, &data, "column_a", Default::default()).unwrap();
+        write_parquet_with_name(&path, &data, "column_a", Default::default())
+            .expect("Test I/O operation failed");
 
         // Read in chunks with column selection
         let chunks: Vec<_> = read_parquet_chunked_columns(&path, &["column_a"], 10)
-            .unwrap()
+            .expect("Operation failed")
             .collect::<Result<Vec<_>>>()
-            .unwrap();
+            .expect("Test I/O operation failed");
 
         assert_eq!(chunks.len(), 5); // 50 rows / 10 per chunk = 5 chunks
         assert_eq!(chunks[0].num_columns(), 1);
@@ -367,39 +384,42 @@ mod tests {
 
     #[test]
     fn test_chunked_reading_schema() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_schema_chunk.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        write_parquet_with_name(&path, &data, "test_col", Default::default()).unwrap();
+        write_parquet_with_name(&path, &data, "test_col", Default::default())
+            .expect("Test I/O operation failed");
 
-        let mut iterator = read_parquet_chunked(&path, 2).unwrap();
+        let mut iterator = read_parquet_chunked(&path, 2).expect("Test I/O operation failed");
         let schema = iterator.schema();
 
         assert_eq!(schema.num_columns(), 1);
         assert_eq!(schema.column_names(), vec!["test_col"]);
 
         // Consume the iterator to verify it works
-        let chunks: Vec<_> = iterator.collect::<Result<Vec<_>>>().unwrap();
+        let chunks: Vec<_> = iterator
+            .collect::<Result<Vec<_>>>()
+            .expect("Test I/O operation failed");
         assert_eq!(chunks.len(), 2); // 3 rows with chunk size 2 = 2 chunks
     }
 
     #[test]
     fn test_chunked_memory_efficiency() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_memory.parquet");
 
         // Create a large dataset
         let data: Vec<f64> = (0..10000).map(|x| x as f64).collect();
         let array = Array1::from_vec(data);
-        write_parquet(&path, &array, Default::default()).unwrap();
+        write_parquet(&path, &array, Default::default()).expect("Test I/O operation failed");
 
         // Read in small chunks to test memory efficiency
         let mut row_count = 0;
         let mut chunk_count = 0;
 
-        for chunk_result in read_parquet_chunked(&path, 100).unwrap() {
-            let chunk = chunk_result.unwrap();
+        for chunk_result in read_parquet_chunked(&path, 100).expect("Operation failed") {
+            let chunk = chunk_result.expect("Test I/O operation failed");
             row_count += chunk.num_rows();
             chunk_count += 1;
 
@@ -420,53 +440,57 @@ mod tests {
 
     #[test]
     fn test_chunked_single_row() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_single_row.parquet");
 
         let data = Array1::from_vec(vec![42.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
 
         let chunks: Vec<_> = read_parquet_chunked(&path, 10)
-            .unwrap()
+            .expect("Operation failed")
             .collect::<Result<Vec<_>>>()
-            .unwrap();
+            .expect("Test I/O operation failed");
 
         assert_eq!(chunks.len(), 1);
         assert_eq!(chunks[0].num_rows(), 1);
 
-        let values = chunks[0].get_column_f64("value").unwrap();
+        let values = chunks[0]
+            .get_column_f64("value")
+            .expect("Test I/O operation failed");
         assert_eq!(values[0], 42.0);
     }
 
     #[test]
     fn test_statistics_api() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_stats_api.parquet");
 
         // Write data with known range
         let data = Array1::from_vec(vec![10.0, 20.0, 30.0, 40.0, 50.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
 
         // Read statistics
-        let stats = read_parquet_statistics(&path).unwrap();
+        let stats = read_parquet_statistics(&path).expect("Test I/O operation failed");
 
         assert_eq!(stats.num_rows, 5);
         assert!(stats.has_statistics());
         assert!(stats.column_stats("value").is_some());
 
-        let col_stats = stats.column_stats("value").unwrap();
+        let col_stats = stats
+            .column_stats("value")
+            .expect("Test I/O operation failed");
         assert_eq!(col_stats.num_values, 5);
         assert!(!col_stats.has_nulls());
     }
 
     #[test]
     fn test_predicate_filtering() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_predicate.parquet");
 
         // Write data
         let data = Array1::from_vec(vec![5.0, 15.0, 25.0, 35.0, 45.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
 
         // Read with predicate
         let predicate = ParquetPredicate::gt("value", PredicateValue::Float64(20.0));
@@ -475,27 +499,27 @@ mod tests {
         let result = read_parquet_filtered(&path, config);
         assert!(result.is_ok());
 
-        let data = result.unwrap();
+        let data = result.expect("Test I/O operation failed");
         assert!(data.num_rows() > 0);
     }
 
     #[test]
     fn test_predicate_chunked_filtering() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_pred_chunked.parquet");
 
         // Write test data
         let data = Array1::from_vec((0..100).map(|x| x as f64).collect::<Vec<_>>());
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
 
         // Read with predicate in chunks
         let predicate = ParquetPredicate::gt("value", PredicateValue::Float64(50.0));
         let config = FilterConfig::new(predicate).with_batch_size(10);
 
         let chunks: Vec<_> = read_parquet_filtered_chunked(&path, config)
-            .unwrap()
+            .expect("Operation failed")
             .collect::<Result<Vec<_>>>()
-            .unwrap();
+            .expect("Test I/O operation failed");
 
         // Should get multiple chunks
         assert!(!chunks.is_empty());
@@ -503,28 +527,28 @@ mod tests {
 
     #[test]
     fn test_combined_statistics_and_predicates() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_combined.parquet");
 
         // Write data
         let data = Array1::from_vec(vec![1.0, 5.0, 10.0, 15.0, 20.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Test I/O operation failed");
 
         // First, check statistics
-        let stats = read_parquet_statistics(&path).unwrap();
+        let stats = read_parquet_statistics(&path).expect("Test I/O operation failed");
         assert_eq!(stats.num_rows, 5);
 
         // Then filter based on statistics
         let predicate = ParquetPredicate::gt("value", PredicateValue::Float64(8.0));
         let config = FilterConfig::new(predicate);
 
-        let filtered = read_parquet_filtered(&path, config).unwrap();
+        let filtered = read_parquet_filtered(&path, config).expect("Test I/O operation failed");
         assert!(filtered.num_rows() > 0);
     }
 
     #[test]
     fn test_statistics_with_compression() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Test I/O operation failed");
         let path = dir.path().join("test_stats_compressed.parquet");
 
         // Write compressed data
@@ -534,10 +558,10 @@ mod tests {
             enable_statistics: true,
             ..Default::default()
         };
-        write_parquet(&path, &data, options).unwrap();
+        write_parquet(&path, &data, options).expect("Test I/O operation failed");
 
         // Statistics should work with compressed data
-        let stats = read_parquet_statistics(&path).unwrap();
+        let stats = read_parquet_statistics(&path).expect("Test I/O operation failed");
         assert_eq!(stats.num_rows, 50);
         assert!(stats.has_statistics());
     }

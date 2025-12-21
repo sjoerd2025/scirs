@@ -422,7 +422,7 @@ pub async fn download_concurrent(
 
         futures.push(async move {
             #[cfg(feature = "async")]
-            let _permit = semaphore_clone.acquire().await.unwrap();
+            let _permit = semaphore_clone.acquire().await.expect("Operation failed");
             client_clone.download(&url, &local_path).await
         });
     }

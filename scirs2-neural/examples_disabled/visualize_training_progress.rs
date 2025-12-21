@@ -35,8 +35,8 @@ fn generate_nonlinear_data(_numsamples: usize..rng: &mut SmallRng) -> (Array2<f3
             y + noise
         })
     // Convert to 2D arrays
-    let x = Array2::from_shape_vec((num_samples, 1), x_values).unwrap();
-    let y = Array2::from_shape_vec((num_samples, 1), y_values).unwrap();
+    let x = Array2::from_shape_vec((num_samples, 1), x_values).expect("Operation failed");
+    let y = Array2::from_shape_vec((num_samples, 1), y_values).expect("Operation failed");
     (x, y)
 // Split data into training and validation sets
 #[allow(dead_code)]
@@ -138,9 +138,9 @@ fn main() -> Result<()> {
         // Store metrics
         epoch_history
             .get_mut("train_loss")
-            .unwrap()
+            .expect("Operation failed")
             .push(train_loss);
-        epoch_history.get_mut("val_loss").unwrap().push(val_loss);
+        epoch_history.get_mut("val_loss").expect("Operation failed").push(val_loss);
         // Update the scheduler
         scheduler.update_lr(epoch);
         // Print progress
@@ -178,8 +178,8 @@ fn main() -> Result<()> {
         batch: 0,
         total_batches: 1,
         batch_loss: None,
-        epoch_loss: Some(*epoch_history.get("train_loss").unwrap().last().unwrap()),
-        val_loss: Some(*epoch_history.get("val_loss").unwrap().last().unwrap()),
+        epoch_loss: Some(*epoch_history.get("train_loss").expect("Operation failed").last().expect("Operation failed")),
+        val_loss: Some(*epoch_history.get("val_loss").expect("Operation failed").last().expect("Operation failed")),
         metrics: vec![],
         history: &epoch_history,
         stop_training: false,

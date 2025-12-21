@@ -24,7 +24,7 @@ fn main() {
 
     // Method 1: Using the simple function
     println!("Method 1: Using convex_hull() function");
-    let hull_vertices = convex_hull(&points_2d.view()).unwrap();
+    let hull_vertices = convex_hull(&points_2d.view()).expect("Operation failed");
 
     println!("Hull Vertices:");
     for (i, row) in hull_vertices.outer_iter().enumerate() {
@@ -34,7 +34,7 @@ fn main() {
 
     // Method 2: Using the ConvexHull class
     println!("Method 2: Using ConvexHull struct");
-    let hull = ConvexHull::new(&points_2d.view()).unwrap();
+    let hull = ConvexHull::new(&points_2d.view()).expect("Operation failed");
 
     println!("Hull Vertex Indices: {:?}", hull.vertex_indices());
     println!("Hull Simplices: {:?}", hull.simplices());
@@ -49,7 +49,7 @@ fn main() {
     ];
 
     for (point, desc) in test_points.iter() {
-        let inside = hull.contains(point).unwrap();
+        let inside = hull.contains(point).expect("Operation failed");
         println!(
             "  Point {} at {:?}: {}",
             desc,
@@ -73,12 +73,12 @@ fn main() {
     ];
 
     println!("3D Example:");
-    let hull_3d = ConvexHull::new(&points_3d.view()).unwrap();
+    let hull_3d = ConvexHull::new(&points_3d.view()).expect("Operation failed");
     println!("  3D Hull has {} vertices", hull_3d.vertex_indices().len());
     println!("  3D Hull has {} facets", hull_3d.simplices().len());
 
     // Check if the center point is inside
-    let inside_3d = hull_3d.contains([0.5, 0.5, 0.5]).unwrap();
+    let inside_3d = hull_3d.contains([0.5, 0.5, 0.5]).expect("Operation failed");
     println!(
         "  Center point [0.5, 0.5, 0.5] is {}",
         if inside_3d { "INSIDE" } else { "OUTSIDE" }

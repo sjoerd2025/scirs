@@ -139,7 +139,7 @@ impl PyKMeans {
 
         let binding = x.readonly();
         let data = binding.as_array();
-        let centers = self.cluster_centers_.as_ref().unwrap();
+        let centers = self.cluster_centers_.as_ref().expect("Operation failed");
 
         let n_samples = data.nrows();
         let mut labels = Vec::with_capacity(n_samples);

@@ -292,7 +292,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 });
 
         Ok(ClusteringResult {
-            centroids: self.centroids.as_ref().unwrap().clone(),
+            centroids: self.centroids.as_ref().expect("Operation failed").clone(),
             labels: final_labels,
             inertia: self.global_inertia,
             n_iterations: self.current_iteration,
@@ -541,7 +541,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 // Normalize to get means
                 for k in 0..self.k {
                     if point_counts[k] > 0 {
-                        let count = F::from(point_counts[k]).unwrap();
+                        let count = F::from(point_counts[k]).expect("Failed to convert to float");
                         for j in 0..partition.data.ncols() {
                             local_centroids[[k, j]] = local_centroids[[k, j]] / count;
                         }
@@ -596,7 +596,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             global_inertia += result.local_inertia;
 
             for k in 0..self.k {
-                let count = F::from(result.point_counts[k]).unwrap();
+                let count = F::from(result.point_counts[k]).expect("Failed to convert to float");
                 global_counts[k] += result.point_counts[k];
 
                 for j in 0..n_features {
@@ -609,7 +609,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         // Normalize to get global means
         for k in 0..self.k {
             if global_counts[k] > 0 {
-                let count = F::from(global_counts[k]).unwrap();
+                let count = F::from(global_counts[k]).expect("Failed to convert to float");
                 for j in 0..n_features {
                     global_centroids[[k, j]] = global_centroids[[k, j]] / count;
                 }
@@ -856,7 +856,7 @@ mod tests {
         let kmeans = DistributedKMeans::<f64>::new(3, config);
 
         assert!(kmeans.is_ok());
-        let kmeans = kmeans.unwrap();
+        let kmeans = kmeans.expect("Operation failed");
         assert_eq!(kmeans.k, 3);
         assert!(kmeans.centroids.is_none());
     }
@@ -864,7 +864,7 @@ mod tests {
     #[test]
     fn test_input_validation() {
         let config = DistributedKMeansConfig::default();
-        let kmeans = DistributedKMeans::<f64>::new(3, config).unwrap();
+        let kmeans = DistributedKMeans::<f64>::new(3, config).expect("Operation failed");
 
         // Empty data
         let empty_data = Array2::<f64>::zeros((0, 2));
@@ -882,18 +882,21 @@ mod tests {
     #[test]
     fn test_random_initialization() {
         let config = DistributedKMeansConfig::default();
-        let kmeans = DistributedKMeans::<f64>::new(3, config).unwrap();
+        let kmeans = DistributedKMeans::<f64>::new(3, config).expect("Operation failed");
 
-        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
-        let centroids = kmeans.random_initialization(data.view()).unwrap();
+        let centroids = kmeans
+            .random_initialization(data.view())
+            .expect("Operation failed");
         assert_eq!(centroids.shape(), &[3, 2]);
     }
 
     #[test]
     fn test_kmeans_plus_plus_initialization() {
         let config = DistributedKMeansConfig::default();
-        let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
+        let kmeans = DistributedKMeans::<f64>::new(2, config).expect("Operation failed");
 
         let data = Array2::from_shape_vec(
             (6, 2),
@@ -901,9 +904,11 @@ mod tests {
                 0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0, 5.0, 5.0, 6.0, 6.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let centroids = kmeans.kmeans_plus_plus_initialization(data.view()).unwrap();
+        let centroids = kmeans
+            .kmeans_plus_plus_initialization(data.view())
+            .expect("Operation failed");
         assert_eq!(centroids.shape(), &[2, 2]);
 
         // Centroids should be different (with high probability)
@@ -914,18 +919,19 @@ mod tests {
     #[test]
     fn test_predict() {
         let config = DistributedKMeansConfig::default();
-        let mut kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
+        let mut kmeans = DistributedKMeans::<f64>::new(2, config).expect("Operation failed");
 
         // Set known centroids
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).expect("Operation failed");
         kmeans.centroids = Some(centroids);
 
         // Test prediction
         let test_data =
             Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 9.0, 9.0, -1.0, -1.0, 11.0, 11.0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let labels = kmeans.predict(test_data.view()).unwrap();
+        let labels = kmeans.predict(test_data.view()).expect("Operation failed");
         assert_eq!(labels.len(), 4);
 
         // Points should be assigned to nearest centroids
@@ -941,21 +947,22 @@ mod tests {
             tolerance: 0.1,
             ..Default::default()
         };
-        let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
+        let kmeans = DistributedKMeans::<f64>::new(2, config).expect("Operation failed");
 
-        let old_centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let old_centroids =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
 
         let new_centroids_converged = Array2::from_shape_vec(
             (2, 2),
             vec![0.05, 0.05, 1.05, 1.05], // Small movement
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let new_centroids_not_converged = Array2::from_shape_vec(
             (2, 2),
             vec![0.5, 0.5, 1.5, 1.5], // Large movement
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Set up kmeans with old centroids
         let mut kmeans_converged = kmeans;
@@ -965,7 +972,7 @@ mod tests {
         // Test convergence
         assert!(kmeans_converged
             .check_convergence(&new_centroids_converged, 99.0)
-            .unwrap());
+            .expect("Operation failed"));
 
         let mut kmeans_not_converged = DistributedKMeans::<f64>::new(
             2,
@@ -974,19 +981,19 @@ mod tests {
                 ..Default::default()
             },
         )
-        .unwrap();
+        .expect("Operation failed");
         kmeans_not_converged.centroids = Some(old_centroids);
         kmeans_not_converged.global_inertia = 100.0;
 
         assert!(!kmeans_not_converged
             .check_convergence(&new_centroids_not_converged, 50.0)
-            .unwrap());
+            .expect("Operation failed"));
     }
 
     #[test]
     fn test_load_balance_score() {
         let config = DistributedKMeansConfig::default();
-        let mut kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
+        let mut kmeans = DistributedKMeans::<f64>::new(2, config).expect("Operation failed");
 
         // Balanced partitions
         let partition1 = DataPartition::new(0, Array2::zeros((100, 2)), 0);

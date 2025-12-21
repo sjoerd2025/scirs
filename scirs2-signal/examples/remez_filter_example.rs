@@ -18,7 +18,8 @@ fn main() {
     let desired = vec![1.0, 1.0, 0.0, 0.0];
     let weights = vec![1.0, 1.0, 10.0, 10.0]; // Emphasize stopband attenuation
 
-    let h_lp = remez(numtaps, &bands, &desired, Some(&weights), None, None).unwrap();
+    let h_lp = remez(numtaps, &bands, &desired, Some(&weights), None, None)
+        .expect("Test: operation failed");
 
     println!("Lowpass filter coefficients (first 10):");
     for (i, &coeff) in h_lp.iter().take(10).enumerate() {
@@ -30,7 +31,7 @@ fn main() {
     let mut h_padded = vec![0.0; nfft];
     h_padded[..numtaps].copy_from_slice(&h_lp);
 
-    let h_fft = fft(&h_padded, None).unwrap();
+    let h_fft = fft(&h_padded, None).expect("Test: operation failed");
     let _freqs: Vec<f64> = (0..nfft / 2).map(|i| i as f64 / nfft as f64).collect();
 
     println!("\nFrequency response at key points:");
@@ -64,7 +65,8 @@ fn main() {
     let desired = vec![0.0, 0.0, 1.0, 1.0, 0.0, 0.0];
     let weights = vec![10.0, 10.0, 1.0, 1.0, 10.0, 10.0]; // Emphasize rejection bands
 
-    let h_bp = remez(numtaps, &bands, &desired, Some(&weights), None, None).unwrap();
+    let h_bp = remez(numtaps, &bands, &desired, Some(&weights), None, None)
+        .expect("Test: operation failed");
 
     println!("Bandpass filter coefficients (center 11):");
     let center = numtaps / 2;
@@ -81,7 +83,7 @@ fn main() {
     let bands = vec![0.0, 0.1, 0.15, 0.25, 0.3, 0.4, 0.45, 0.55, 0.6, 1.0];
     let desired = vec![1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.5, 0.5];
 
-    let h_mb = remez(numtaps, &bands, &desired, None, None, None).unwrap();
+    let h_mb = remez(numtaps, &bands, &desired, None, None, None).expect("Test: operation failed");
 
     println!("Multiband filter has {} taps", h_mb.len());
 
@@ -101,7 +103,8 @@ fn main() {
     let bands = vec![0.05, 0.45]; // Avoid DC and Nyquist
     let desired = vec![0.05 * PI, 0.45 * PI]; // Linear slope
 
-    let h_diff = remez(numtaps, &bands, &desired, None, None, None).unwrap();
+    let h_diff =
+        remez(numtaps, &bands, &desired, None, None, None).expect("Test: operation failed");
 
     println!("Differentiator coefficients (first 10):");
     for (i, &coeff) in h_diff.iter().take(10).enumerate() {

@@ -63,7 +63,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     None, None,
 ///     Some(InterpolationOrder::Linear),
 ///     None, None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 ///
 /// ## Scaling and translation combined
@@ -85,7 +85,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     &scale_matrix,
 ///     Some(&offset),
 ///     None, None, None, None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 ///
 /// ## Shearing transformation
@@ -107,7 +107,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     &squareimage,
 ///     &shear_matrix,
 ///     None, None, None, None, None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 ///
 /// ## Image rectification with different output size
@@ -136,7 +136,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     None,
 ///     Some(BoundaryMode::Reflect),
 ///     None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(rectified.shape(), &[50, 50]);
 /// ```
@@ -162,7 +162,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// let rotated_volume = affine_transform(
 ///     &volume, &rotation_3d, None, None, None, None, None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(rotated_volume.shape(), volume.shape());
 /// ```
@@ -174,6 +174,13 @@ use crate::error::{NdimageError, NdimageResult};
 /// - `Cubic` interpolation gives highest quality but is computationally expensive
 /// - Prefiltering is recommended for high-order interpolation to reduce artifacts
 /// - Consider using specialized functions like `rotate` or `zoom` for simple transformations
+///
+/// # ⚠️ Known Issues
+///
+/// **WARNING**: Identity transformation behavior has known discrepancies with SciPy's
+/// implementation. Simple transformations may not preserve values exactly as
+/// scipy.ndimage.affine_transform does. This is being tracked for v0.2.0.
+/// For strict SciPy compatibility, validate results when transformation accuracy is critical.
 #[allow(clippy::too_many_arguments)] // Necessary to match SciPy's API signature
 #[allow(dead_code)]
 pub fn affine_transform<T, D>(
@@ -382,7 +389,8 @@ mod tests {
         let input: Array2<f64> = Array2::eye(3);
         let matrix = Array2::<f64>::eye(2);
 
-        let result = affine_transform(&input, &matrix, None, None, None, None, None, None).unwrap();
+        let result = affine_transform(&input, &matrix, None, None, None, None, None, None)
+            .expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -393,7 +401,8 @@ mod tests {
         // Identity mapping
         let mapping = |coords: &[usize]| -> Vec<f64> { coords.iter().map(|&x| x as f64).collect() };
 
-        let result = geometric_transform(&input, mapping, None, None, None, None, None).unwrap();
+        let result = geometric_transform(&input, mapping, None, None, None, None, None)
+            .expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 }

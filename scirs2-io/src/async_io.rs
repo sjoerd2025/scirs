@@ -649,18 +649,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_async_chunked_reader() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_async.txt");
 
         // Create test data
         let test_data = "0123456789".repeat(100); // 1000 bytes
-        std::fs::write(&file_path, &test_data).unwrap();
+        std::fs::write(&file_path, &test_data).expect("Operation failed");
 
         let config = AsyncStreamingConfig::new().chunk_size(100);
-        let mut reader = AsyncChunkedReader::new(&file_path, config).await.unwrap();
+        let mut reader = AsyncChunkedReader::new(&file_path, config)
+            .await
+            .expect("Operation failed");
 
         let mut chunks = Vec::new();
-        while let Some(chunk_result) = reader.read_next_chunk().await.unwrap() {
+        while let Some(chunk_result) = reader.read_next_chunk().await.expect("Operation failed") {
             chunks.push(chunk_result);
         }
 
@@ -672,18 +674,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_async_line_reader() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_async_lines.txt");
 
         // Create test data with lines
         let lines: Vec<String> = (0..50).map(|i| format!("Line {}", i)).collect();
-        std::fs::write(&file_path, lines.join("\n")).unwrap();
+        std::fs::write(&file_path, lines.join("\n")).expect("Operation failed");
 
         let config = AsyncStreamingConfig::new().chunk_size(10); // 10 lines per chunk
-        let mut reader = AsyncLineReader::new(&file_path, config).await.unwrap();
+        let mut reader = AsyncLineReader::new(&file_path, config)
+            .await
+            .expect("Operation failed");
 
         let mut chunks = Vec::new();
-        while let Some(lines_result) = reader.read_next_lines().await.unwrap() {
+        while let Some(lines_result) = reader.read_next_lines().await.expect("Operation failed") {
             chunks.push(lines_result);
         }
 

@@ -527,7 +527,11 @@ impl GpuOperations {
         // For now, we'll use the acceleration manager framework
         self.acceleration_manager
             .execute_operation("convolution_2d", input.into_dyn(), kernel_source, backend)
-            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
+            .map(|result| {
+                result
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed")
+            })
     }
 
     fn execute_gpu_morphology<T>(
@@ -550,7 +554,11 @@ impl GpuOperations {
                 kernel_source,
                 backend,
             )
-            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
+            .map(|result| {
+                result
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed")
+            })
     }
 
     fn execute_gpu_gaussian<T>(
@@ -567,7 +575,11 @@ impl GpuOperations {
         // Execute Gaussian filter on GPU
         self.acceleration_manager
             .execute_operation("gaussian_filter", input.into_dyn(), kernel_source, backend)
-            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
+            .map(|result| {
+                result
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed")
+            })
     }
 
     fn execute_gpu_distance_transform<T>(
@@ -588,7 +600,11 @@ impl GpuOperations {
                 kernel_source,
                 backend,
             )
-            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
+            .map(|result| {
+                result
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed")
+            })
     }
 
     // Fallback CPU implementations

@@ -219,7 +219,9 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                 Div(
                     Box::new(a.differentiate(var)),
                     Box::new(Mul(
-                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(
+                            F::from(2.0).expect("Failed to convert constant to float"),
+                        )),
                         Box::new(Sqrt(a.clone())),
                     )),
                 )
@@ -230,7 +232,9 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                     Box::new(a.differentiate(var)),
                     Box::new(Pow(
                         Box::new(Cos(a.clone())),
-                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(
+                            F::from(2.0).expect("Failed to convert constant to float"),
+                        )),
                     )),
                 )
             }
@@ -240,7 +244,12 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                     Box::new(a.differentiate(var)),
                     Box::new(Add(
                         Box::new(Constant(F::one())),
-                        Box::new(Pow(a.clone(), Box::new(Constant(F::from(2.0).unwrap())))),
+                        Box::new(Pow(
+                            a.clone(),
+                            Box::new(Constant(
+                                F::from(2.0).expect("Failed to convert constant to float"),
+                            )),
+                        )),
                     )),
                 )
             }
@@ -258,7 +267,9 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
                     Box::new(a.differentiate(var)),
                     Box::new(Pow(
                         Box::new(Cosh(a.clone())),
-                        Box::new(Constant(F::from(2.0).unwrap())),
+                        Box::new(Constant(
+                            F::from(2.0).expect("Failed to convert constant to float"),
+                        )),
                     )),
                 )
             }
@@ -375,8 +386,10 @@ pub fn match_pattern<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Option<
         Add(a, b) => {
             if let (Pow(base_a, exp_a), Pow(base_b, exp_b)) = (a.as_ref(), b.as_ref()) {
                 if let (Constant(n_a), Constant(n_b)) = (exp_a.as_ref(), exp_b.as_ref()) {
-                    if (*n_a - F::from(2.0).unwrap()).abs() < F::epsilon()
-                        && (*n_b - F::from(2.0).unwrap()).abs() < F::epsilon()
+                    if (*n_a - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                        < F::epsilon()
+                        && (*n_b - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                            < F::epsilon()
                     {
                         return Some(Pattern::SumOfSquares(base_a.clone(), base_b.clone()));
                     }
@@ -392,8 +405,10 @@ pub fn match_pattern<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Option<
                     cos_exp.as_ref(),
                 ) {
                     if match_expressions(sin_arg, cos_arg)
-                        && (*n1 - F::from(2.0).unwrap()).abs() < F::epsilon()
-                        && (*n2 - F::from(2.0).unwrap()).abs() < F::epsilon()
+                        && (*n1 - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                            < F::epsilon()
+                        && (*n2 - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                            < F::epsilon()
                     {
                         return Some(Pattern::PythagoreanIdentity(sin_arg.clone()));
                     }
@@ -405,8 +420,10 @@ pub fn match_pattern<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Option<
         Sub(a, b) => {
             if let (Pow(base_a, exp_a), Pow(base_b, exp_b)) = (a.as_ref(), b.as_ref()) {
                 if let (Constant(n_a), Constant(n_b)) = (exp_a.as_ref(), exp_b.as_ref()) {
-                    if (*n_a - F::from(2.0).unwrap()).abs() < F::epsilon()
-                        && (*n_b - F::from(2.0).unwrap()).abs() < F::epsilon()
+                    if (*n_a - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                        < F::epsilon()
+                        && (*n_b - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                            < F::epsilon()
                     {
                         return Some(Pattern::DifferenceOfSquares(base_a.clone(), base_b.clone()));
                     }
@@ -583,7 +600,12 @@ pub fn simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpr
                 Pow(base, exp) => {
                     if let Constant(n) = &**exp {
                         // sqrt(x^n) = x^(n/2)
-                        Pow(base.clone(), Box::new(Constant(*n / F::from(2.0).unwrap())))
+                        Pow(
+                            base.clone(),
+                            Box::new(Constant(
+                                *n / F::from(2.0).expect("Failed to convert constant to float"),
+                            )),
+                        )
                     } else {
                         Sqrt(Box::new(a_simp))
                     }

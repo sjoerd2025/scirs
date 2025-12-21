@@ -91,8 +91,8 @@ impl EWC {
                     let diff = curr - opt;
                     let fisher_diag = &diagonal[i];
                     // Flatten parameters and compute weighted squared difference
-                    let diff_flat = diff.as_slice().unwrap();
-                    let fisher_flat = fisher_diag.as_slice().unwrap();
+                    let diff_flat = diff.as_slice().expect("Operation failed");
+                    let fisher_flat = fisher_diag.as_slice().expect("Operation failed");
                     for (d, f) in diff_flat.iter().zip(fisher_flat) {
                         loss += f * d * d;
                     }
@@ -103,7 +103,7 @@ impl EWC {
             if let Some(ref full) = fisher.full {
                     let fisher_mat = &full[i];
                     // Quadratic form: diff^T * F * diff
-                    let diff_flat = Array1::from_vec(diff.as_slice().unwrap().to_vec());
+                    let diff_flat = Array1::from_vec(diff.as_slice().expect("Operation failed").to_vec());
                     let fisher_diff = fisher_mat.dot(&diff_flat);
                     loss += diff_flat.dot(&fisher_diff);
         Ok(loss / 2.0)
@@ -177,12 +177,12 @@ impl EWC {
                 for (i, grad) in gradients.iter().enumerate() {
                     if i >= diagonal.len() {
                         diagonal.push(Array1::zeros(grad.len()));
-                    let grad_flat = Array1::from_vec(grad.as_slice().unwrap().to_vec());
+                    let grad_flat = Array1::from_vec(grad.as_slice().expect("Operation failed").to_vec());
                     diagonal[i] = &diagonal[i] + &(&grad_flat * &grad_flat);
         } else if let Some(ref mut full) = fisher.full {
             // Update full Fisher matrix
             for (i, grad) in gradients.iter().enumerate() {
-                let grad_flat = Array1::from_vec(grad.as_slice().unwrap().to_vec());
+                let grad_flat = Array1::from_vec(grad.as_slice().expect("Operation failed").to_vec());
                 let outer_product = grad_flat
                     .clone()
                     .insert_axis(Axis(1))
@@ -267,14 +267,14 @@ mod tests {
             task_id: 0,
             diagonal: Some(vec![Array1::zeros(9)]),
             full: None,
-        ewc.accumulate_fisher(&mut fisher, &grad).unwrap();
+        ewc.accumulate_fisher(&mut fisher, &grad).expect("Operation failed");
         if let Some(ref diagonal) = fisher.diagonal {
             assert!(diagonal[0].iter().all(|&x| x > 0.0));
     fn test_ewc_regularizer() {
         let mut regularizer = EWCRegularizer::new(config);
         regularizer.set_enabled(false);
         let params = vec![Array2::from_elem((5, 5), 1.0)];
-        let loss = regularizer.get_loss(&params).unwrap();
+        let loss = regularizer.get_loss(&params).expect("Operation failed");
         assert_eq!(loss, 0.0);
         regularizer.set_enabled(true);
         assert_eq!(loss, 0.0); // No previous tasks yet

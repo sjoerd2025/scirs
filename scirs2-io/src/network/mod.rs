@@ -372,17 +372,17 @@ mod tests {
     #[cfg(feature = "async")]
     #[tokio::test]
     async fn test_cache_operations() {
-        let temp_dir = tempfile::tempdir().unwrap();
-        let cache_path = temp_dir.path().to_str().unwrap();
+        let temp_dir = tempfile::tempdir().expect("Operation failed");
+        let cache_path = temp_dir.path().to_str().expect("Operation failed");
 
         let client = NetworkClient::new().with_cache_dir(cache_path);
 
         // Test cache info on empty cache
-        let (size, count) = client.get_cache_info().unwrap();
+        let (size, count) = client.get_cache_info().expect("Operation failed");
         assert_eq!(size, 0);
         assert_eq!(count, 0);
 
         // Test cache clearing
-        client.clear_cache().unwrap();
+        client.clear_cache().expect("Operation failed");
     }
 }

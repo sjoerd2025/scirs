@@ -121,7 +121,7 @@ impl AdvancedScaleState {
 
             let bytes: Vec<u8> = x0
                 .as_slice()
-                .unwrap()
+                .expect("Operation failed")
                 .iter()
                 .flat_map(|&x| x.to_le_bytes())
                 .collect();
@@ -174,7 +174,7 @@ impl AdvancedScaleState {
                 let values: Result<Vec<f64>, _> = bytes
                     .chunks_exact(8)
                     .map(|chunk| {
-                        let array: [u8; 8] = chunk.try_into().unwrap();
+                        let array: [u8; 8] = chunk.try_into().expect("Operation failed");
                         Ok(f64::from_le_bytes(array))
                     })
                     .collect();
@@ -211,7 +211,7 @@ impl AdvancedScaleState {
 
                 let bytes: Vec<u8> = new_x
                     .as_slice()
-                    .unwrap()
+                    .expect("Operation failed")
                     .iter()
                     .flat_map(|&x| x.to_le_bytes())
                     .collect();
@@ -307,9 +307,11 @@ where
         }
 
         // Sort blocks by priority (highest first)
-        state
-            .blocks
-            .sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap());
+        state.blocks.sort_by(|a, b| {
+            b.priority
+                .partial_cmp(&a.priority)
+                .expect("Operation failed")
+        });
 
         // Process blocks in order of priority
         let num_blocks = state.blocks.len();
@@ -601,7 +603,7 @@ mod tests {
         let x0 = Array1::ones(n);
         let options = AdvancedScaleOptions::default();
 
-        let result = minimize_advanced_scale(quadratic, x0, &options).unwrap();
+        let result = minimize_advanced_scale(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // Should converge to origin

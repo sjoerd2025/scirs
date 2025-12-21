@@ -146,7 +146,7 @@ impl ObjectDetectionMetrics {
             // Check if match is above _threshold
             let is_true_positive = best_iou >= iou_threshold;
             if is_true_positive && best_gt_idx.is_some() {
-                gt_matched[best_gt_idx.unwrap()] = true;
+                gt_matched[best_gt_idx.expect("Operation failed")] = true;
                 matches.push((pred_class, true)); // True positive
             } else {
                 matches.push((pred_class, false)); // False positive
@@ -719,7 +719,7 @@ mod tests {
 
         let results = metrics
             .evaluate_object_detection(&predictions, &ground_truth, 0.5)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.map >= 0.0 && results.map <= 1.0);
         assert!(results.precision >= 0.0 && results.precision <= 1.0);
@@ -736,7 +736,7 @@ mod tests {
 
         let results = metrics
             .evaluate_classification(&y_true, &y_pred, None)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.top1_accuracy >= 0.0 && results.top1_accuracy <= 1.0);
         assert!(results.weighted_f1 >= 0.0 && results.weighted_f1 <= 1.0);
@@ -747,11 +747,15 @@ mod tests {
     fn test_segmentation_evaluation() {
         let metrics = SegmentationMetrics::new();
 
-        let y_true = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 1, 1, 1, 1, 1]).unwrap();
+        let y_true = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 1, 1, 1, 1, 1])
+            .expect("Operation failed");
 
-        let y_pred = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 0, 1, 1, 1, 1]).unwrap();
+        let y_pred = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 0, 1, 1, 1, 1])
+            .expect("Operation failed");
 
-        let results = metrics.evaluate_segmentation(&y_true, &y_pred).unwrap();
+        let results = metrics
+            .evaluate_segmentation(&y_true, &y_pred)
+            .expect("Operation failed");
 
         assert!(results.pixel_accuracy >= 0.0 && results.pixel_accuracy <= 1.0);
         assert!(results.mean_iou >= 0.0 && results.mean_iou <= 1.0);

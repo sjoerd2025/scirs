@@ -930,7 +930,13 @@ macro_rules! impl_bin_op_between_tensor_and_primitive {
         impl<'r, 'b, F: Float> $trt<Tensor<'b, F>> for $scalar_type {
             type Output = Tensor<'b, F>;
             fn $func(self, rhs: Tensor<'b, F>) -> Self::Output {
-                T::$func(&T::scalar(F::from(self).unwrap(), rhs.graph), &rhs)
+                T::$func(
+                    &T::scalar(
+                        F::from(self).expect("Failed to convert to float"),
+                        rhs.graph,
+                    ),
+                    &rhs,
+                )
             }
         }
 
@@ -938,7 +944,13 @@ macro_rules! impl_bin_op_between_tensor_and_primitive {
         impl<'r, 'b, F: Float> $trt<&'r Tensor<'b, F>> for $scalar_type {
             type Output = Tensor<'b, F>;
             fn $func(self, rhs: &'r Tensor<'b, F>) -> Self::Output {
-                T::$func(&T::scalar(F::from(self).unwrap(), rhs.graph), rhs)
+                T::$func(
+                    &T::scalar(
+                        F::from(self).expect("Failed to convert to float"),
+                        rhs.graph,
+                    ),
+                    rhs,
+                )
             }
         }
     };
@@ -1018,12 +1030,12 @@ macro_rules! impl_as_tensor_for_array {
             fn as_tensor(&self, graph: &'graph impl AsGraph<F>) -> Tensor<'graph, F> {
                 let vec = self
                     .iter()
-                    .map(|&a| F::from(a).unwrap())
+                    .map(|&a| F::from(a).expect("Failed to convert to float"))
                     .collect::<Vec<F>>();
 
                 // unwrap is safe
                 let arr = NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[self.len()]), vec)
-                    .unwrap();
+                    .expect("Operation failed");
                 T::convert_to_tensor(arr, graph.as_graph())
             }
         }

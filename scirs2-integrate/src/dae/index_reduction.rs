@@ -275,7 +275,7 @@ impl<
         PantelidesReducer {
             structure,
             max_diff_steps: 5, // Default limit on differentiation
-            tol: F::from_f64(1e-10).unwrap(),
+            tol: F::from_f64(1e-10).expect("Operation failed"),
         }
     }
 
@@ -782,7 +782,7 @@ impl<
     where
         GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     {
-        let h = F::from_f64(1e-8).unwrap();
+        let h = F::from_f64(1e-8).expect("Operation failed");
 
         // Compute g(t, x, y)
         let g0 = g(t, x, y);
@@ -967,7 +967,7 @@ impl<
             }
 
             // Gram-Schmidt orthogonalization
-            if max_norm > F::from_f64(1e-12).unwrap() {
+            if max_norm > F::from_f64(1e-12).expect("Operation failed") {
                 // Normalize the k-th column
                 for i in k..m {
                     a[[i, k]] /= max_norm;
@@ -993,7 +993,7 @@ impl<
 
     /// Compute the numerical rank of an upper triangular matrix
     fn compute_matrix_rank(r: &Array2<F>) -> IntegrateResult<usize> {
-        let tolerance = F::from_f64(1e-10).unwrap();
+        let tolerance = F::from_f64(1e-10).expect("Operation failed");
         let min_dim = std::cmp::min(r.nrows(), r.ncols());
 
         let mut rank = 0;
@@ -1109,7 +1109,7 @@ impl<
             structure,
             project_after_step: true,
             consistent_initialization: true,
-            constraint_tol: F::from_f64(1e-8).unwrap(),
+            constraint_tol: F::from_f64(1e-8).expect("Operation failed"),
         }
     }
 
@@ -1261,7 +1261,7 @@ where
     let mut jac = Array2::<F>::zeros((n_eqs, n_vars));
 
     // Compute the Jacobian using finite differences
-    let epsilon = F::from_f64(1e-8).unwrap();
+    let epsilon = F::from_f64(1e-8).expect("Operation failed");
 
     if start_idx < x.len() {
         // Differentiate with respect to x variables

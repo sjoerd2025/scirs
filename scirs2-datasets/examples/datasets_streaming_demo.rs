@@ -246,7 +246,10 @@ fn demonstrate_stream_transformations() -> Result<(), Box<dyn std::error::Error>
         println!("  Processing chunk {}", chunk.chunk_index + 1);
 
         // Show statistics before transformation
-        let data_mean_before = chunk.data.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let data_mean_before = chunk
+            .data
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
         let data_std_before = chunk.data.std_axis(scirs2_core::ndarray::Axis(0), 0.0);
 
         println!(
@@ -258,7 +261,10 @@ fn demonstrate_stream_transformations() -> Result<(), Box<dyn std::error::Error>
         transformer.transform_chunk(&mut chunk)?;
 
         // Show statistics after transformation
-        let data_mean_after = chunk.data.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let data_mean_after = chunk
+            .data
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
         let data_std_after = chunk.data.std_axis(scirs2_core::ndarray::Axis(0), 0.0);
 
         println!(
@@ -311,7 +317,10 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
         let mut stats = HashMap::new();
 
         // Compute basic statistics
-        let mean = chunk.data.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let mean = chunk
+            .data
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
         let std = chunk.data.std_axis(scirs2_core::ndarray::Axis(0), 0.0);
 
         stats.insert("mean_feature_0".to_string(), mean[0]);

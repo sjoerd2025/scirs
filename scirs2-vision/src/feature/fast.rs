@@ -37,7 +37,7 @@ use scirs2_core::ndarray::Array2;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let corners = fast_corners(&img, 20.0, 9, true)?;
 /// # Ok(())
 /// # }
@@ -332,7 +332,7 @@ mod tests {
         );
 
         // The algorithm should at least produce a valid output image
-        let corners = result.unwrap();
+        let corners = result.expect("Operation failed");
         assert_eq!(corners.dimensions(), (20, 20));
     }
 

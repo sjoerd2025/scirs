@@ -206,7 +206,7 @@ where
         };
 
         self.results = Some(results);
-        Ok(self.results.as_ref().unwrap())
+        Ok(self.results.as_ref().expect("Operation failed"))
     }
 
     /// Preprocess data (center and scale)
@@ -219,7 +219,7 @@ where
 
         // Compute mean
         let mean = if self.config.center {
-            let mean = data.mean_axis(Axis(0)).unwrap();
+            let mean = data.mean_axis(Axis(0)).expect("Operation failed");
 
             // Center data
             for mut row in processeddata.rows_mut() {
@@ -238,10 +238,10 @@ where
             let mut std_dev = Array1::zeros(n_features);
 
             for (j, mut col) in processeddata.columns_mut().into_iter().enumerate() {
-                let var = col.mapv(|x| x * x).mean().unwrap();
+                let var = col.mapv(|x| x * x).mean().expect("Operation failed");
                 std_dev[j] = var.sqrt();
 
-                if std_dev[j] > F::from(1e-12).unwrap() {
+                if std_dev[j] > F::from(1e-12).expect("Failed to convert constant to float") {
                     for x in col.iter_mut() {
                         *x = *x / std_dev[j];
                     }
@@ -267,7 +267,7 @@ where
         let (n_samples, n_features) = data.dim();
 
         // Convert to f64 for numerical stability
-        let data_f64 = data.mapv(|x| x.to_f64().unwrap());
+        let data_f64 = data.mapv(|x| x.to_f64().expect("Operation failed"));
 
         // Compute SVD
         let (u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, None)
@@ -293,13 +293,16 @@ where
         }
 
         // Convert back to F type
-        let components_f = components.mapv(|x| F::from(x).unwrap());
-        let singular_values_f = singular_values.mapv(|x| F::from(x).unwrap());
-        let explained_variance_f = explained_variance_f64.mapv(|x| F::from(x).unwrap());
-        let explained_variance_ratio_f = explained_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
+        let components_f = components.mapv(|x| F::from(x).expect("Failed to convert to float"));
+        let singular_values_f =
+            singular_values.mapv(|x| F::from(x).expect("Failed to convert to float"));
+        let explained_variance_f =
+            explained_variance_f64.mapv(|x| F::from(x).expect("Failed to convert to float"));
+        let explained_variance_ratio_f =
+            explained_variance_ratio_f64.mapv(|x| F::from(x).expect("Failed to convert to float"));
         let cumulative_variance_ratio_f =
-            cumulative_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
-        let total_variance_f = F::from(total_variance_f64).unwrap();
+            cumulative_variance_ratio_f64.mapv(|x| F::from(x).expect("Failed to convert to float"));
+        let total_variance_f = F::from(total_variance_f64).expect("Failed to convert to float");
 
         Ok(PCAResult {
             components: components_f,
@@ -326,7 +329,7 @@ where
         let (n_samples, n_features) = data.dim();
 
         // Compute covariance matrix
-        let data_f64 = data.mapv(|x| x.to_f64().unwrap());
+        let data_f64 = data.mapv(|x| x.to_f64().expect("Operation failed"));
         let cov_matrix = data_f64.t().dot(&data_f64) / (n_samples - 1) as f64;
 
         // Compute eigendecomposition
@@ -342,7 +345,7 @@ where
             .map(|(&val, vec)| (val, vec))
             .collect();
 
-        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
         // Extract top n_components
         let selected_eigenvalues: Vec<f64> = eigen_pairs[..n_components]
@@ -371,13 +374,16 @@ where
         }
 
         // Convert to F type
-        let components_f = components.mapv(|x| F::from(x).unwrap());
-        let singular_values_f = explained_variance_f64.mapv(|x| F::from(x.sqrt()).unwrap());
-        let explained_variance_f = explained_variance_f64.mapv(|x| F::from(x).unwrap());
-        let explained_variance_ratio_f = explained_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
+        let components_f = components.mapv(|x| F::from(x).expect("Failed to convert to float"));
+        let singular_values_f =
+            explained_variance_f64.mapv(|x| F::from(x.sqrt()).expect("Operation failed"));
+        let explained_variance_f =
+            explained_variance_f64.mapv(|x| F::from(x).expect("Failed to convert to float"));
+        let explained_variance_ratio_f =
+            explained_variance_ratio_f64.mapv(|x| F::from(x).expect("Failed to convert to float"));
         let cumulative_variance_ratio_f =
-            cumulative_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
-        let total_variance_f = F::from(total_variance_f64).unwrap();
+            cumulative_variance_ratio_f64.mapv(|x| F::from(x).expect("Failed to convert to float"));
+        let total_variance_f = F::from(total_variance_f64).expect("Failed to convert to float");
 
         Ok(PCAResult {
             components: components_f,
@@ -483,7 +489,7 @@ where
         // Scale
         if let Some(ref scale) = results.scale {
             for (j, mut col) in processeddata.columns_mut().into_iter().enumerate() {
-                if scale[j] > F::from(1e-12).unwrap() {
+                if scale[j] > F::from(1e-12).expect("Failed to convert constant to float") {
                     for x in col.iter_mut() {
                         *x = *x / scale[j];
                     }
@@ -525,7 +531,7 @@ where
         // Reverse scaling
         if let Some(ref scale) = results.scale {
             for (j, mut col) in reconstructed.columns_mut().into_iter().enumerate() {
-                if scale[j] > F::from(1e-12).unwrap() {
+                if scale[j] > F::from(1e-12).expect("Failed to convert constant to float") {
                     for x in col.iter_mut() {
                         *x = *x * scale[j];
                     }
@@ -675,7 +681,8 @@ where
         let mut loadings = self.initial_loadings(&corr_matrix)?;
 
         // Iterative estimation (simplified EM algorithm)
-        let uniquenesses = Array1::ones(n_features) * F::from(0.5).unwrap();
+        let uniquenesses =
+            Array1::ones(n_features) * F::from(0.5).expect("Failed to convert constant to float");
 
         // TODO: Implement full iterative EM algorithm
         // For now, use the initial PCA-based loadings directly
@@ -709,7 +716,7 @@ where
         };
 
         self.results = Some(results);
-        Ok(self.results.as_ref().unwrap())
+        Ok(self.results.as_ref().expect("Operation failed"))
     }
 
     /// Standardize data
@@ -717,10 +724,14 @@ where
         let mut standardized = data.to_owned();
 
         for mut col in standardized.columns_mut() {
-            let mean = col.mean().unwrap();
-            let std = col.mapv(|x| (x - mean) * (x - mean)).mean().unwrap().sqrt();
+            let mean = col.mean().expect("Operation failed");
+            let std = col
+                .mapv(|x| (x - mean) * (x - mean))
+                .mean()
+                .expect("Operation failed")
+                .sqrt();
 
-            if std > F::from(1e-12).unwrap() {
+            if std > F::from(1e-12).expect("Failed to convert constant to float") {
                 col.mapv_inplace(|x| (x - mean) / std);
             }
         }
@@ -746,7 +757,7 @@ where
                         .zip(col_j.iter())
                         .map(|(&x, &y)| x * y)
                         .sum::<F>();
-                    let n = F::from(col_i.len()).unwrap();
+                    let n = F::from(col_i.len()).expect("Operation failed");
                     numerator / (n - F::one())
                 };
 
@@ -761,7 +772,7 @@ where
     /// Get initial factor loadings using PCA
     fn initial_loadings(&self, corr_matrix: &Array2<F>) -> StatsResult<Array2<F>> {
         // Convert to f64 for numerical computation
-        let corr_f64 = corr_matrix.mapv(|x| x.to_f64().unwrap());
+        let corr_f64 = corr_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
 
         // Compute eigendecomposition
         let (eigenvalues, eigenvectors) =
@@ -776,7 +787,7 @@ where
             .map(|(&val, vec)| (val, vec))
             .collect();
 
-        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
         // Compute loadings = eigenvectors * sqrt(eigenvalues)
         let n_features = corr_matrix.nrows();
@@ -785,7 +796,8 @@ where
         for (i, (eigenval, eigenvec)) in eigen_pairs[..self.n_factors].iter().enumerate() {
             let sqrt_eigenval = eigenval.sqrt();
             for j in 0..n_features {
-                loadings[[j, i]] = F::from(eigenvec[j] * sqrt_eigenval).unwrap();
+                loadings[[j, i]] =
+                    F::from(eigenvec[j] * sqrt_eigenval).expect("Failed to convert to float");
             }
         }
 

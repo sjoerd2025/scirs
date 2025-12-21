@@ -58,7 +58,7 @@ fn bench_cpu_sparse_fft_small(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             None, // seed parameter
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -76,7 +76,7 @@ fn bench_cpu_sparse_fft_medium(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             None, // seed parameter
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -94,7 +94,7 @@ fn bench_cpu_sparse_fft_large(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             None, // seed parameter
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -114,7 +114,7 @@ fn bench_gpu_sparse_fft_sublinear(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -133,7 +133,7 @@ fn bench_gpu_sparse_fft_iterative(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Iterative),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -152,7 +152,7 @@ fn bench_gpu_sparse_fft_compressed_sensing(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::CompressedSensing),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -172,7 +172,7 @@ fn bench_gpu_sparse_fft_noisy(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -198,7 +198,7 @@ fn bench_gpu_batch_sparse_fft(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -218,7 +218,7 @@ fn bench_gpu_sparse_fft_hann_window(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -237,7 +237,7 @@ fn bench_gpu_sparse_fft_hamming_window(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hamming),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 

@@ -607,9 +607,9 @@ mod tests {
         let mut graph = create_graph::<&str, ()>();
 
         // Create a simple graph
-        graph.add_edge("A", "B", ()).unwrap();
-        graph.add_edge("C", "D", ()).unwrap();
-        graph.add_edge("E", "F", ()).unwrap();
+        graph.add_edge("A", "B", ()).expect("Operation failed");
+        graph.add_edge("C", "D", ()).expect("Operation failed");
+        graph.add_edge("E", "F", ()).expect("Operation failed");
 
         let matching = maximum_cardinality_matching(&graph);
 
@@ -632,9 +632,9 @@ mod tests {
         let mut graph = create_graph::<i32, ()>();
 
         // Create a triangle
-        graph.add_edge(1, 2, ()).unwrap();
-        graph.add_edge(2, 3, ()).unwrap();
-        graph.add_edge(3, 1, ()).unwrap();
+        graph.add_edge(1, 2, ()).expect("Operation failed");
+        graph.add_edge(2, 3, ()).expect("Operation failed");
+        graph.add_edge(3, 1, ()).expect("Operation failed");
 
         let matching = maximal_matching(&graph);
 

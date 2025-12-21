@@ -140,7 +140,7 @@ impl GpuContext {
         self.mixed_precision = config;
     /// Get memory statistics for a device
     pub fn memory_stats(&self, deviceid: u32) -> Result<MemoryStats> {
-        let stats = self.memory_stats.read().unwrap();
+        let stats = self.memory_stats.read().expect("Operation failed");
         stats
             .get(&device_id)
             .cloned()
@@ -151,7 +151,7 @@ impl GpuContext {
                 device_id
         // Update memory statistics
         {
-            let mut stats = self.memory_stats.write().unwrap();
+            let mut stats = self.memory_stats.write().expect("Operation failed");
             if let Some(device_stats) = stats.get_mut(&device_id) {
                 device_stats.allocated += size;
                 device_stats.active += size;
@@ -162,7 +162,7 @@ impl GpuContext {
             device_id,
     /// Free GPU memory
     pub fn free_memory(&self, handle: &GpuMemoryHandle) -> Result<()> {
-        let mut stats = self.memory_stats.write().unwrap();
+        let mut stats = self.memory_stats.write().expect("Operation failed");
         if let Some(device_stats) = stats.get_mut(&handle.device_id) {
             device_stats.allocated = device_stats.allocated.saturating_sub(handle.size);
             device_stats.active = device_stats.active.saturating_sub(handle.size);
@@ -517,7 +517,7 @@ impl NeuralOps {
         let result = CudaTensor::new(
             resultshape,
             a.device_id(),
-            self.gpu_context.as_ref().unwrap(),
+            self.gpu_context.as_ref().expect("Operation failed"),
         )?;
         // In real implementation, would launch CUDA kernels
         thread::sleep(Duration::from_micros(100)); // Simulate GPU computation
@@ -598,28 +598,28 @@ mod tests {
     use scirs2_core::ndarray::array;
     #[test]
     fn test_matrix_multiply() {
-        let ops = create_neural_ops().unwrap();
+        let ops = create_neural_ops().expect("Operation failed");
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
-        let result = ops.matrix_multiply(&a, &b).unwrap();
+        let result = ops.matrix_multiply(&a, &b).expect("Operation failed");
         let expected = array![[19.0, 22.0], [43.0, 50.0]];
         assert_eq!(result, expected);
     }
 
     #[test]
     fn test_relu_forward() {
-        let ops = create_neural_ops().unwrap();
+        let ops = create_neural_ops().expect("Operation failed");
         let input = array![[-1.0, 0.0, 1.0, 2.0]].into_dyn();
-        let result = ops.relu_forward(&input).unwrap();
+        let result = ops.relu_forward(&input).expect("Operation failed");
         let expected = array![[0.0, 0.0, 1.0, 2.0]].into_dyn();
         assert_eq!(result, expected);
     }
 
     #[test]
     fn test_sigmoid_forward() {
-        let ops = create_neural_ops().unwrap();
+        let ops = create_neural_ops().expect("Operation failed");
         let input = array![[0.0, 1.0, -1.0]].into_dyn();
-        let result = ops.sigmoid_forward(&input).unwrap();
+        let result = ops.sigmoid_forward(&input).expect("Operation failed");
         // Check that outputs are in valid sigmoid range (0, 1)
         for &val in result.iter() {
             assert!(val > 0.0 && val < 1.0);
@@ -629,7 +629,7 @@ mod tests {
     }
     #[test]
     fn test_batch_normalize() {
-        let ops = create_neural_ops().unwrap();
+        let ops = create_neural_ops().expect("Operation failed");
         let input = array![[1.0, 2.0], [3.0, 4.0]].into_dyn();
         let mean = array![2.0, 3.0];
         let var = array![1.0, 1.0];
@@ -637,16 +637,16 @@ mod tests {
         let beta = array![0.0, 0.0];
         let result = ops
             .batch_normalize(&input, &mean, &var, &gamma, &beta, 1e-5)
-            .unwrap();
+            .expect("Operation failed");
         // Result should be normalized
         assert!(result.shape() == input.shape());
     }
 
     #[test]
     fn test_softmax_forward() {
-        let ops = create_neural_ops().unwrap();
+        let ops = create_neural_ops().expect("Operation failed");
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]].into_dyn();
-        let result = ops.softmax_forward(&input).unwrap();
+        let result = ops.softmax_forward(&input).expect("Operation failed");
         // Check that each row sums to 1
         for row in result.axis_iter(scirs2_core::ndarray::Axis(0)) {
             let sum: f64 = row.iter().map(|&x| x as f64).sum();
@@ -716,8 +716,8 @@ mod tests {
             is_available: true,
         };
         // Test serialization/deserialization
-        let serialized = serde_json::to_string(&device_info).unwrap();
-        let deserialized: DeviceInfo = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&device_info).expect("Operation failed");
+        let deserialized: DeviceInfo = serde_json::from_str(&serialized).expect("Operation failed");
         assert_eq!(device_info.id, deserialized.id);
         assert_eq!(device_info.name, deserialized.name);
     }
@@ -770,14 +770,14 @@ mod tests {
             ReductionStrategy::Hierarchical,
         ];
         for strategy in &strategies {
-            let serialized = serde_json::to_string(strategy).unwrap();
-            let _deserialized: ReductionStrategy = serde_json::from_str(&serialized).unwrap();
+            let serialized = serde_json::to_string(strategy).expect("Operation failed");
+            let _deserialized: ReductionStrategy = serde_json::from_str(&serialized).expect("Operation failed");
         }
     }
 
     #[test]
     fn test_backend_info() {
-        let cpu_ops = NeuralOps::new().unwrap();
+        let cpu_ops = NeuralOps::new().expect("Operation failed");
         assert!(cpu_ops.backend_info().contains("CPU"));
         if let Ok(mut gpu_ops) = NeuralOps::with_gpu() {
             let info = gpu_ops.backend_info();
@@ -796,7 +796,7 @@ mod tests {
 
     #[test]
     fn test_synchronize() {
-        let ops = create_neural_ops().unwrap();
+        let ops = create_neural_ops().expect("Operation failed");
         assert!(ops.synchronize().is_ok());
         if let Ok(gpu_ops) = NeuralOps::with_gpu() {
             assert!(gpu_ops.synchronize().is_ok());

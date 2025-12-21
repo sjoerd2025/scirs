@@ -37,7 +37,7 @@ where
     
     // Choose solver based on matrix properties
     // For now, use distributed conjugate gradient
-    distributed_conjugate_gradient(a, b, 1000, T::from(1e-6).unwrap())
+    distributed_conjugate_gradient(a, b, 1000, T::from(1e-6).expect("Operation failed"))
 }
 
 /// Distributed Conjugate Gradient solver for symmetric positive definite systems
@@ -516,9 +516,9 @@ mod tests {
     fn test_scale_vector() {
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let config = DistributedConfig::default();
-        let dist_vector = DistributedVector::from_local(vector, config).unwrap();
+        let dist_vector = DistributedVector::from_local(vector, config).expect("Operation failed");
         
-        let scaled = scale_vector(&dist_vector, 2.0).unwrap();
+        let scaled = scale_vector(&dist_vector, 2.0).expect("Operation failed");
         
         // Check that scaling worked
         assert_eq!(scaled.local_length(), dist_vector.local_length());
@@ -528,14 +528,14 @@ mod tests {
     fn test_jacobi_preconditioner() {
         let matrix = Array2::from_diag(&Array1::from_vec(vec![2.0, 3.0, 4.0, 5.0]));
         let config = DistributedConfig::default();
-        let distmatrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix, config.clone()).expect("Operation failed");
         
-        let preconditioner = JacobiPreconditioner::new(&distmatrix).unwrap();
+        let preconditioner = JacobiPreconditioner::new(&distmatrix).expect("Operation failed");
         
         let x = Array1::from_vec(vec![2.0, 6.0, 12.0, 20.0]);
-        let dist_x = DistributedVector::from_local(x, config).unwrap();
+        let dist_x = DistributedVector::from_local(x, config).expect("Operation failed");
         
-        let result = preconditioner.apply(&dist_x).unwrap();
+        let result = preconditioner.apply(&dist_x).expect("Operation failed");
         
         // Result should be [1.0, 2.0, 3.0, 4.0] (x[i] / diagonal[i])
         assert_eq!(result.local_length(), 4);
@@ -544,12 +544,12 @@ mod tests {
     #[test]
     fn test_solver_interface() {
         // Create a simple 2x2 system
-        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).unwrap();
+        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).expect("Operation failed");
         let vector = Array1::from_vec(vec![3.0, 3.0]);
         
         let config = DistributedConfig::default();
-        let distmatrix = DistributedMatrix::from_local(matrix, config.clone()).unwrap();
-        let dist_vector = DistributedVector::from_local(vector, config).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix, config.clone()).expect("Operation failed");
+        let dist_vector = DistributedVector::from_local(vector, config).expect("Operation failed");
         
         // Test that solver interface works (even if it doesn't converge in this simple test)
         let result = solve_linear_system(&distmatrix, &dist_vector);

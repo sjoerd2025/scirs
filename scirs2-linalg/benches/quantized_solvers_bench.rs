@@ -72,7 +72,11 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                     .symmetric()
                     .positive_definite();
 
-            bench.iter(|| black_box(conjugate_gradient(&standard_op, &b, 100, 1e-6).unwrap()))
+            bench.iter(|| {
+                black_box(
+                    conjugate_gradient(&standard_op, &b, 100, 1e-6).expect("Operation failed"),
+                )
+            })
         });
 
         // Benchmark quantized matrix with standard solver (through LinearOperator)
@@ -96,7 +100,7 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                         bits,
                         QuantizationMethod::Symmetric,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                     .symmetric()
                     .positive_definite();
 
@@ -104,7 +108,10 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                     let quantized_linear_op = quantized_to_linear_operator(&quantized_op);
 
                     bench.iter(|| {
-                        black_box(conjugate_gradient(&quantized_linear_op, &b, 100, 1e-6).unwrap())
+                        black_box(
+                            conjugate_gradient(&quantized_linear_op, &b, 100, 1e-6)
+                                .expect("Operation failed"),
+                        )
                     })
                 },
             );
@@ -129,14 +136,14 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                         bits,
                         QuantizationMethod::Symmetric,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                     .symmetric()
                     .positive_definite();
 
                     bench.iter(|| {
                         black_box(
                             quantized_conjugate_gradient(&quantized_op, &b, 100, 1e-6, false)
-                                .unwrap(),
+                                .expect("Operation failed"),
                         )
                     })
                 },
@@ -162,14 +169,14 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                         bits,
                         QuantizationMethod::Symmetric,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                     .symmetric()
                     .positive_definite();
 
                     bench.iter(|| {
                         black_box(
                             quantized_conjugate_gradient(&quantized_op, &b, 100, 1e-6, true)
-                                .unwrap(),
+                                .expect("Operation failed"),
                         )
                     })
                 },
@@ -192,12 +199,13 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                         bits,
                         QuantizationMethod::Symmetric,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                     .symmetric()
                     .positive_definite();
 
                     // Create a preconditioner
-                    let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();
+                    let precond =
+                        quantized_jacobi_preconditioner(&quantized_op).expect("Operation failed");
 
                     bench.iter(|| {
                         black_box(
@@ -209,7 +217,7 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                                 1e-6,
                                 false,
                             )
-                            .unwrap(),
+                            .expect("Operation failed"),
                         )
                     })
                 },
@@ -241,7 +249,9 @@ fn bench_gmres(c: &mut Criterion) {
             let standard_op =
                 LinearOperator::new(size, move |v: &ArrayView1<f32>| matrix_clone.dot(v));
 
-            bench.iter(|| black_box(gmres(&standard_op, &b, 100, 1e-6, Some(20)).unwrap()))
+            bench.iter(|| {
+                black_box(gmres(&standard_op, &b, 100, 1e-6, Some(20)).expect("Operation failed"))
+            })
         });
 
         // Benchmark quantized matrix with standard solver (through LinearOperator)
@@ -265,13 +275,16 @@ fn bench_gmres(c: &mut Criterion) {
                         bits,
                         QuantizationMethod::Symmetric,
                     )
-                    .unwrap();
+                    .expect("Operation failed");
 
                     // Convert to standard LinearOperator
                     let quantized_linear_op = quantized_to_linear_operator(&quantized_op);
 
                     bench.iter(|| {
-                        black_box(gmres(&quantized_linear_op, &b, 100, 1e-6, Some(20)).unwrap())
+                        black_box(
+                            gmres(&quantized_linear_op, &b, 100, 1e-6, Some(20))
+                                .expect("Operation failed"),
+                        )
                     })
                 },
             );
@@ -296,11 +309,12 @@ fn bench_gmres(c: &mut Criterion) {
                         bits,
                         QuantizationMethod::Symmetric,
                     )
-                    .unwrap();
+                    .expect("Operation failed");
 
                     bench.iter(|| {
                         black_box(
-                            quantized_gmres(&quantized_op, &b, 100, 1e-6, Some(20), false).unwrap(),
+                            quantized_gmres(&quantized_op, &b, 100, 1e-6, Some(20), false)
+                                .expect("Operation failed"),
                         )
                     })
                 },
@@ -326,11 +340,12 @@ fn bench_gmres(c: &mut Criterion) {
                         bits,
                         QuantizationMethod::Symmetric,
                     )
-                    .unwrap();
+                    .expect("Operation failed");
 
                     bench.iter(|| {
                         black_box(
-                            quantized_gmres(&quantized_op, &b, 100, 1e-6, Some(20), true).unwrap(),
+                            quantized_gmres(&quantized_op, &b, 100, 1e-6, Some(20), true)
+                                .expect("Operation failed"),
                         )
                     })
                 },
@@ -377,7 +392,11 @@ fn bench_large_bandedmatrix(c: &mut Criterion) {
             // Create a right-hand side vector
             let b = Array1::from_vec(vec![1.0; size]);
 
-            bench.iter(|| black_box(conjugate_gradient(&standard_op, &b, 100, 1e-6).unwrap()))
+            bench.iter(|| {
+                black_box(
+                    conjugate_gradient(&standard_op, &b, 100, 1e-6).expect("Operation failed"),
+                )
+            })
         },
     );
 
@@ -401,13 +420,14 @@ fn bench_large_bandedmatrix(c: &mut Criterion) {
 
             let quantized_op =
                 QuantizedMatrixFreeOp::banded(size, bands, 8, QuantizationMethod::Symmetric)
-                    .unwrap()
+                    .expect("Operation failed")
                     .symmetric()
                     .positive_definite();
 
             bench.iter(|| {
                 black_box(
-                    quantized_conjugate_gradient(&quantized_op, &b, 100, 1e-6, false).unwrap(),
+                    quantized_conjugate_gradient(&quantized_op, &b, 100, 1e-6, false)
+                        .expect("Operation failed"),
                 )
             })
         },
@@ -433,12 +453,12 @@ fn bench_large_bandedmatrix(c: &mut Criterion) {
 
             let quantized_op =
                 QuantizedMatrixFreeOp::banded(size, bands, 8, QuantizationMethod::Symmetric)
-                    .unwrap()
+                    .expect("Operation failed")
                     .symmetric()
                     .positive_definite();
 
             // Create a preconditioner
-            let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();
+            let precond = quantized_jacobi_preconditioner(&quantized_op).expect("Operation failed");
 
             bench.iter(|| {
                 black_box(
@@ -450,7 +470,7 @@ fn bench_large_bandedmatrix(c: &mut Criterion) {
                         1e-6,
                         false,
                     )
-                    .unwrap(),
+                    .expect("Operation failed"),
                 )
             })
         },
@@ -485,13 +505,14 @@ fn bench_memory_usage(c: &mut Criterion) {
                     bits,
                     QuantizationMethod::Symmetric,
                 )
-                .unwrap()
+                .expect("Operation failed")
                 .symmetric()
                 .positive_definite();
 
                 bench.iter(|| {
                     black_box(
-                        quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, false).unwrap(),
+                        quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, false)
+                            .expect("Operation failed"),
                     )
                 })
             },

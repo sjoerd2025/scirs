@@ -297,7 +297,7 @@ fn evaluate_model(
             _ => ARMethod::Burg, // Default to Burg method
         };
 
-        let ar_result = estimate_ar(signal.as_slice().unwrap(), p, Some(method))?;
+        let ar_result = estimate_ar(signal.as_slice().expect("Operation failed"), p, Some(method))?;
 
         // Calculate information criteria
         let k = p + 1; // Number of parameters (AR coeffs + variance)
@@ -325,7 +325,7 @@ fn evaluate_model(
     } else {
         // ARMA model
         let arma_result = estimate_arma(
-            signal.as_slice().unwrap(),
+            signal.as_slice().expect("Operation failed"),
             p,
             q,
             Some(ArmaMethod::MaximumLikelihood),
@@ -377,8 +377,8 @@ fn select_optimal_model(results: Vec<ModelEvaluation>) -> SignalResult<OptimalMo
     // Select model with lowest AIC (can be made configurable)
     let best_model = _results
         .iter()
-        .min_by(|a, b| a.aic.partial_cmp(&b.aic).unwrap())
-        .unwrap();
+        .min_by(|a, b| a.aic.partial_cmp(&b.aic).expect("Operation failed"))
+        .expect("Operation failed");
 
     let model_type = if best_model.q == 0 {
         ModelType::AR(best_model.p)
@@ -477,7 +477,7 @@ fn robust_parametric_estimation(
 #[allow(dead_code)]
 fn robust_outlier_removal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let mut sorted_signal = signal.to_vec();
-    sorted_signal.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_signal.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = sorted_signal.len();
     let median = if n % 2 == 0 {
@@ -488,7 +488,7 @@ fn robust_outlier_removal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 
     // Calculate MAD
     let mut deviations: Vec<f64> = signal.iter().map(|&x| (x - median).abs()).collect();
-    deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let mad = if n % 2 == 0 {
         (deviations[n / 2 - 1] + deviations[n / 2]) / 2.0
@@ -594,7 +594,7 @@ fn robust_ar_order(signal: &Array1<f64>, p: usize) -> SignalResult<RobustArResul
 
         // Compute robust scale estimate
         let mut abs_residuals = residuals.iter().map(|r| r.abs()).collect::<Vec<_>>();
-        abs_residuals.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        abs_residuals.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let scale = abs_residuals[abs_residuals.len() / 2] / 0.6745; // MAD estimate
 
         // Compute Huber weights
@@ -771,7 +771,7 @@ fn adaptive_order_selection(
             best_cv_score = cv_score;
 
             // Fit final model on full data
-            let ar_result = estimate_ar(signal.as_slice().unwrap(), p, Some(ARMethod::Burg))?;
+            let ar_result = estimate_ar(signal.as_slice().expect("Operation failed"), p, Some(ARMethod::Burg))?;
             let model_type = ModelType::AR(p);
             let k = p + 1;
             let log_likelihood = -0.5 * n as f64 * (1.0 + ar_result.variance.ln());
@@ -826,9 +826,9 @@ fn cross_validate_ar_model(
 
         // Create training set (exclude test fold)
         let mut train_data = Vec::new();
-        train_data.extend_from_slice(&signal.as_slice().unwrap()[0..test_start]);
+        train_data.extend_from_slice(&signal.as_slice().expect("Operation failed")[0..test_start]);
         if test_end < n {
-            train_data.extend_from_slice(&signal.as_slice().unwrap()[test_end..]);
+            train_data.extend_from_slice(&signal.as_slice().expect("Operation failed")[test_end..]);
         }
 
         if train_data.len() <= p + 1 {
@@ -838,7 +838,7 @@ fn cross_validate_ar_model(
         // Fit AR model on training data
         if let Ok(ar_result) = estimate_ar(&train_data, p, Some(ARMethod::Burg)) {
             // Predict on test set
-            let test_data = &signal.as_slice().unwrap()[test_start..test_end];
+            let test_data = &signal.as_slice().expect("Operation failed")[test_start..test_end];
             for i in p..test_data.len() {
                 let mut prediction = 0.0;
                 for j in 0..p {
@@ -1008,12 +1008,12 @@ fn windowed_parametric_estimation(
         let window_data = signal.slice(s![start..window_end]);
 
         if let Ok(ar_result) = estimate_ar(
-            window_data.as_slice().unwrap(),
+            window_data.as_slice().expect("Operation failed"),
             ar_order,
             Some(ARMethod::Burg),
         ) {
             // Compute quality metrics for this window
-            let quality = assess_window_quality(&ar_result, window_data.as_slice().unwrap());
+            let quality = assess_window_quality(&ar_result, window_data.as_slice().expect("Operation failed"));
 
             if quality > 0.3 {
                 // Only use good quality windows
@@ -1500,7 +1500,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = enhanced_parametric_estimation(&signal, &config).unwrap();
+        let result = enhanced_parametric_estimation(&signal, &config).expect("Operation failed");
 
         // Check that we get reasonable results
         assert!(matches!(
@@ -1536,7 +1536,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = enhanced_parametric_estimation(&signal, &config).unwrap();
+        let result = enhanced_parametric_estimation(&signal, &config).expect("Operation failed");
 
         assert!(matches!(result.model_type, ModelType::AR(_)));
         assert!(result.variance > 0.0);
@@ -1565,7 +1565,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = enhanced_parametric_estimation(&signal, &config).unwrap();
+        let result = enhanced_parametric_estimation(&signal, &config).expect("Operation failed");
 
         // Should identify AR model of reasonable order
         if let ModelType::AR(order) = result.model_type {
@@ -1595,10 +1595,10 @@ mod tests {
             ..Default::default()
         };
 
-        let result = enhanced_parametric_estimation(&signal, &config).unwrap();
+        let result = enhanced_parametric_estimation(&signal, &config).expect("Operation failed");
 
         assert!(result.spectral_density.is_some());
-        let spectrum = result.spectral_density.unwrap();
+        let spectrum = result.spectral_density.expect("Operation failed");
         assert_eq!(spectrum.frequencies.len(), config.n_frequencies);
         assert_eq!(spectrum.psd.len(), config.n_frequencies);
         assert!(spectrum.confidence_intervals.is_some());

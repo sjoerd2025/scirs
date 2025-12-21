@@ -51,11 +51,11 @@ use std::ops::{Add, Div, Mul, Sub};
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     50    // max_neighbors
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]
@@ -133,11 +133,11 @@ pub fn make_local_kriging<
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     10    // rank
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]
@@ -214,11 +214,11 @@ pub fn make_fixed_rank_kriging<
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     3.0   // taper_range
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]
@@ -254,7 +254,7 @@ pub fn make_tapered_kriging<
         .values(values.to_owned())
         .covariance_function(cov_fn)
         .length_scales(length_scales)
-        .approximation_method(FastKrigingMethod::Tapering(taper_range.to_f64().unwrap()))
+        .approximation_method(FastKrigingMethod::Tapering(taper_range.to_f64().expect("Operation failed")))
         .build()
 }
 
@@ -295,11 +295,11 @@ pub fn make_tapered_kriging<
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     32    // leaf_size
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]

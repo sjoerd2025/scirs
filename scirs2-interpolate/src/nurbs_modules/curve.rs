@@ -39,9 +39,9 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     ///     &knots.view(),
     ///     1,
     ///     ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
-    /// let point = curve.evaluate(0.5).unwrap();
+    /// let point = curve.evaluate(0.5).expect("Operation failed");
     /// println!("Point at t=0.5: {:?}", point);
     /// ```
     pub fn evaluate(&self, t: T) -> InterpolateResult<Array1<T>> {
@@ -113,10 +113,10 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     ///     &knots.view(),
     ///     1,
     ///     ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// let t_vals = array![0.0, 0.25, 0.5, 0.75, 1.0];
-    /// let points = curve.evaluate_array(&t_vals.view()).unwrap();
+    /// let points = curve.evaluate_array(&t_vals.view()).expect("Operation failed");
     /// ```
     pub fn evaluate_array(&self, tvalues: &ArrayView1<T>) -> InterpolateResult<Array2<T>> {
         let n_points = tvalues.len();
@@ -162,13 +162,13 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     ///     &knots.view(),
     ///     1,
     ///     ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // First derivative (tangent vector)
-    /// let tangent = curve.derivative(0.5, 1).unwrap();
+    /// let tangent = curve.derivative(0.5, 1).expect("Operation failed");
     ///
     /// // Second derivative (curvature information)
-    /// let second_deriv = curve.derivative(0.5, 2).unwrap();
+    /// let second_deriv = curve.derivative(0.5, 2).expect("Operation failed");
     /// ```
     pub fn derivative(&self, t: T, order: usize) -> InterpolateResult<Array1<T>> {
         if order == 0 {
@@ -212,7 +212,7 @@ impl<T: NurbsFloat> NurbsCurve<T> {
                 // Apply binomial theorem for rational derivatives
                 for i in 0..=order {
                     let binomial_coeff = binomial_coefficient(order, i);
-                    let term = T::from(binomial_coeff).unwrap() * w_derivs[order - i] * a_derivs[i][j];
+                    let term = T::from(binomial_coeff).expect("Operation failed") * w_derivs[order - i] * a_derivs[i][j];
                     deriv_sum += if i == 0 { term } else { -term };
                 }
 
@@ -304,10 +304,10 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     ///     &knots.view(),
     ///     1,
     ///     ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Integrate curve from t=0 to t=1
-    /// let integral = curve.integrate(0.0, 1.0).unwrap();
+    /// let integral = curve.integrate(0.0, 1.0).expect("Operation failed");
     /// ```
     pub fn integrate(&self, a: T, b: T) -> InterpolateResult<Array1<T>> {
         if a == b {
@@ -368,10 +368,10 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     ///     &knots.view(),
     ///     1,
     ///     ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Insert knot at parameter 0.5 once
-    /// let refined_curve = curve.insert_knot(0.5, 1).unwrap();
+    /// let refined_curve = curve.insert_knot(0.5, 1).expect("Operation failed");
     /// ```
     pub fn insert_knot(&self, u: T, r: usize) -> InterpolateResult<Self> {
         if r == 0 {
@@ -588,10 +588,10 @@ impl<T: NurbsFloat> NurbsCurve<T> {
         // in the interval, but we can still find the minimum
         let mut x = bracket_a;
         let mut min_dist = fa;
-        let step = (bracket_b - bracket_a) / T::from(max_iterations).unwrap();
+        let step = (bracket_b - bracket_a) / T::from(max_iterations).expect("Operation failed");
 
         for i in 0..max_iterations {
-            let test_x = bracket_a + T::from(i).unwrap() * step;
+            let test_x = bracket_a + T::from(i).expect("Operation failed") * step;
             let dist = self.distance_to_point(test_x, &target_point.view())?;
 
             if dist < min_dist {
@@ -604,7 +604,7 @@ impl<T: NurbsFloat> NurbsCurve<T> {
             }
         }
 
-        if min_dist < tolerance * T::from(10.0).unwrap() {
+        if min_dist < tolerance * T::from(10.0).expect("Operation failed") {
             Ok(Some(x))
         } else {
             Ok(None)
@@ -643,13 +643,13 @@ impl<T: NurbsFloat> NurbsCurve<T> {
 
         let mut extrema = Vec::new();
         let num_samples = 50;
-        let step = (b - a) / T::from(num_samples).unwrap();
+        let step = (b - a) / T::from(num_samples).expect("Operation failed");
 
         // Sample the derivative to find sign changes
         let mut prev_deriv = self.derivative(a, 1)?[component];
 
         for i in 1..=num_samples {
-            let t = a + T::from(i).unwrap() * step;
+            let t = a + T::from(i).expect("Operation failed") * step;
             let deriv = self.derivative(t, 1)?[component];
 
             // Check for sign change (indicates extremum)
@@ -679,7 +679,7 @@ impl<T: NurbsFloat> NurbsCurve<T> {
     pub(crate) fn compute_basisvalues(&self, _t: T) -> InterpolateResult<Array1<T>> {
         // Simplified implementation - just return uniform weights for now
         let n = self.control_points.nrows();
-        Ok(Array1::from_elem(n, T::one() / T::from(n).unwrap()))
+        Ok(Array1::from_elem(n, T::one() / T::from(n).expect("Operation failed")))
     }
 
     /// Compute all basis function derivatives up to given order
@@ -735,41 +735,41 @@ impl<T: NurbsFloat> NurbsCurve<T> {
         tolerance: T,
         max_depth: usize,
     ) -> InterpolateResult<T> {
-        let mid = (a + b) / T::from(2.0).unwrap();
+        let mid = (a + b) / T::from(2.0).expect("Operation failed");
 
         let fa = self.evaluate(a)?[component];
         let fm = self.evaluate(mid)?[component];
         let fb = self.evaluate(b)?[component];
 
-        let h = (b - a) / T::from(6.0).unwrap();
-        let simpson = h * (fa + T::from(4.0).unwrap() * fm + fb);
+        let h = (b - a) / T::from(6.0).expect("Operation failed");
+        let simpson = h * (fa + T::from(4.0).expect("Operation failed") * fm + fb);
 
         if max_depth == 0 {
             return Ok(simpson);
         }
 
         // Subdivide and check tolerance
-        let mid_left = (a + mid) / T::from(2.0).unwrap();
-        let mid_right = (mid + b) / T::from(2.0).unwrap();
+        let mid_left = (a + mid) / T::from(2.0).expect("Operation failed");
+        let mid_right = (mid + b) / T::from(2.0).expect("Operation failed");
 
         let fml = self.evaluate(mid_left)?[component];
         let fmr = self.evaluate(mid_right)?[component];
 
-        let h_half = h / T::from(2.0).unwrap();
-        let simpson_left = h_half * (fa + T::from(4.0).unwrap() * fml + fm);
-        let simpson_right = h_half * (fm + T::from(4.0).unwrap() * fmr + fb);
+        let h_half = h / T::from(2.0).expect("Operation failed");
+        let simpson_left = h_half * (fa + T::from(4.0).expect("Operation failed") * fml + fm);
+        let simpson_right = h_half * (fm + T::from(4.0).expect("Operation failed") * fmr + fb);
         let simpson_combined = simpson_left + simpson_right;
 
-        let error = (simpson_combined - simpson).abs() / T::from(15.0).unwrap();
+        let error = (simpson_combined - simpson).abs() / T::from(15.0).expect("Operation failed");
 
         if error < tolerance {
             Ok(simpson_combined)
         } else {
             let left_integral = self.adaptive_simpson_integration(
-                a, mid, component, tolerance / T::from(2.0).unwrap(), max_depth - 1
+                a, mid, component, tolerance / T::from(2.0).expect("Operation failed"), max_depth - 1
             )?;
             let right_integral = self.adaptive_simpson_integration(
-                mid, b, component, tolerance / T::from(2.0).unwrap(), max_depth - 1
+                mid, b, component, tolerance / T::from(2.0).expect("Operation failed"), max_depth - 1
             )?;
             Ok(left_integral + right_integral)
         }
@@ -777,41 +777,41 @@ impl<T: NurbsFloat> NurbsCurve<T> {
 
     /// Arc length computation using Simpson's rule
     fn arc_length_simpson(&self, a: T, b: T, tolerance: T, max_depth: usize) -> InterpolateResult<T> {
-        let mid = (a + b) / T::from(2.0).unwrap();
+        let mid = (a + b) / T::from(2.0).expect("Operation failed");
 
         let speed_a = self.compute_speed(a)?;
         let speed_m = self.compute_speed(mid)?;
         let speed_b = self.compute_speed(b)?;
 
-        let h = (b - a) / T::from(6.0).unwrap();
-        let simpson = h * (speed_a + T::from(4.0).unwrap() * speed_m + speed_b);
+        let h = (b - a) / T::from(6.0).expect("Operation failed");
+        let simpson = h * (speed_a + T::from(4.0).expect("Operation failed") * speed_m + speed_b);
 
         if max_depth == 0 {
             return Ok(simpson);
         }
 
         // Subdivide and check tolerance
-        let mid_left = (a + mid) / T::from(2.0).unwrap();
-        let mid_right = (mid + b) / T::from(2.0).unwrap();
+        let mid_left = (a + mid) / T::from(2.0).expect("Operation failed");
+        let mid_right = (mid + b) / T::from(2.0).expect("Operation failed");
 
         let speed_ml = self.compute_speed(mid_left)?;
         let speed_mr = self.compute_speed(mid_right)?;
 
-        let h_half = h / T::from(2.0).unwrap();
-        let simpson_left = h_half * (speed_a + T::from(4.0).unwrap() * speed_ml + speed_m);
-        let simpson_right = h_half * (speed_m + T::from(4.0).unwrap() * speed_mr + speed_b);
+        let h_half = h / T::from(2.0).expect("Operation failed");
+        let simpson_left = h_half * (speed_a + T::from(4.0).expect("Operation failed") * speed_ml + speed_m);
+        let simpson_right = h_half * (speed_m + T::from(4.0).expect("Operation failed") * speed_mr + speed_b);
         let simpson_combined = simpson_left + simpson_right;
 
-        let error = (simpson_combined - simpson).abs() / T::from(15.0).unwrap();
+        let error = (simpson_combined - simpson).abs() / T::from(15.0).expect("Operation failed");
 
         if error < tolerance {
             Ok(simpson_combined)
         } else {
             let left_length = self.arc_length_simpson(
-                a, mid, tolerance / T::from(2.0).unwrap(), max_depth - 1
+                a, mid, tolerance / T::from(2.0).expect("Operation failed"), max_depth - 1
             )?;
             let right_length = self.arc_length_simpson(
-                mid, b, tolerance / T::from(2.0).unwrap(), max_depth - 1
+                mid, b, tolerance / T::from(2.0).expect("Operation failed"), max_depth - 1
             )?;
             Ok(left_length + right_length)
         }
@@ -838,7 +838,7 @@ impl<T: NurbsFloat> NurbsCurve<T> {
         tolerance: T,
         max_iterations: usize,
     ) -> InterpolateResult<Option<T>> {
-        let mut x = (a + b) / T::from(2.0).unwrap();
+        let mut x = (a + b) / T::from(2.0).expect("Operation failed");
 
         for _ in 0..max_iterations {
             let f = self.derivative(x, 1)?[component];

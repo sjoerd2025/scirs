@@ -55,7 +55,7 @@ pub enum LBPType {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let lbp_img = lbp(&img, LBPType::Original)?;
 /// # Ok(())
 /// # }
@@ -426,7 +426,7 @@ mod tests {
         let result = lbp(&img, LBPType::Original);
         assert!(result.is_ok());
 
-        let lbp_img = result.unwrap();
+        let lbp_img = result.expect("Operation failed");
         assert_eq!(lbp_img.dimensions(), (10, 10));
     }
 
@@ -467,7 +467,7 @@ mod tests {
             *pixel = Luma([(i % 256) as u8]);
         }
 
-        let hist = lbp_histogram(&img, 16, true).unwrap();
+        let hist = lbp_histogram(&img, 16, true).expect("Operation failed");
         assert_eq!(hist.len(), 16);
         assert!((hist.sum() - 1.0).abs() < 1e-6); // Should sum to 1 when normalized
     }

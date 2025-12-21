@@ -60,7 +60,7 @@ where
     /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     /// let shape = (3, 3);
     ///
-    /// let matrix = CooMatrix::new(data, rows, cols, shape).unwrap();
+    /// let matrix = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
     /// ```
     pub fn new(
         data: Vec<T>,
@@ -205,7 +205,7 @@ where
             self.col_indices.clone(),
             (self.rows, self.cols),
         )
-        .unwrap()
+        .expect("Operation failed")
     }
 
     /// Convert to CSC format
@@ -216,7 +216,7 @@ where
             self.col_indices.clone(),
             (self.rows, self.cols),
         )
-        .unwrap()
+        .expect("Operation failed")
     }
 
     /// Transpose the matrix
@@ -377,7 +377,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CooMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         assert_eq!(matrix.shape(), (3, 3));
         assert_eq!(matrix.nnz(), 5);
@@ -389,11 +389,11 @@ mod tests {
         let mut matrix = CooMatrix::<f64>::empty((3, 3));
 
         // Add elements
-        matrix.add_element(0, 0, 1.0).unwrap();
-        matrix.add_element(0, 2, 2.0).unwrap();
-        matrix.add_element(1, 2, 3.0).unwrap();
-        matrix.add_element(2, 0, 4.0).unwrap();
-        matrix.add_element(2, 1, 5.0).unwrap();
+        matrix.add_element(0, 0, 1.0).expect("Operation failed");
+        matrix.add_element(0, 2, 2.0).expect("Operation failed");
+        matrix.add_element(1, 2, 3.0).expect("Operation failed");
+        matrix.add_element(2, 0, 4.0).expect("Operation failed");
+        matrix.add_element(2, 1, 5.0).expect("Operation failed");
 
         assert_eq!(matrix.nnz(), 5);
 
@@ -410,7 +410,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CooMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let dense = matrix.to_dense();
 
         let expected = vec![
@@ -430,7 +430,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CooMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         // Matrix:
         // [1 0 2]
@@ -438,7 +438,7 @@ mod tests {
         // [4 5 0]
 
         let vec = vec![1.0, 2.0, 3.0];
-        let result = matrix.dot(&vec).unwrap();
+        let result = matrix.dot(&vec).expect("Operation failed");
 
         // Expected:
         // 1*1 + 0*2 + 2*3 = 7
@@ -460,7 +460,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CooMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let transposed = matrix.transpose();
 
         assert_eq!(transposed.shape(), (3, 3));
@@ -484,7 +484,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let shape = (3, 2);
 
-        let mut matrix = CooMatrix::new(data, rows, cols, shape).unwrap();
+        let mut matrix = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
         matrix.sum_duplicates();
 
         assert_eq!(matrix.nnz(), 4); // Should have 4 unique entries after summing
@@ -503,7 +503,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let coo_matrix = CooMatrix::new(data, rows, cols, shape).unwrap();
+        let coo_matrix = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         // Convert to CSR and CSC
         let csr_matrix = coo_matrix.to_csr();

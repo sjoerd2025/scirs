@@ -549,7 +549,10 @@ where
     // Calculate basic spectrum
     let spectrum = calculate_simple_periodogram(ts)?;
     let frequencies = (0..spectrum.len())
-        .map(|i| F::from(i).unwrap() / F::from(spectrum.len() * 2).unwrap())
+        .map(|i| {
+            F::from(i).expect("Failed to convert to float")
+                / F::from(spectrum.len() * 2).expect("Operation failed")
+        })
         .collect::<Vec<_>>();
 
     // Calculate spectral moments
@@ -563,8 +566,11 @@ where
 
     // Calculate other spectral features
     let spectral_entropy = calculate_spectral_entropy(&spectrum);
-    let spectral_rolloff =
-        calculate_spectral_rolloff(&spectrum, &frequencies, F::from(0.95).unwrap());
+    let spectral_rolloff = calculate_spectral_rolloff(
+        &spectrum,
+        &frequencies,
+        F::from(0.95).expect("Failed to convert constant to float"),
+    );
     let spectral_flux = F::zero(); // Would need previous spectrum for comparison
     let dominant_frequency = find_dominant_frequency(&spectrum, &frequencies);
 
@@ -751,7 +757,7 @@ where
 
     // Average the periodograms
     if segment_count > 0 {
-        let count_f = F::from_usize(segment_count).unwrap();
+        let count_f = F::from_usize(segment_count).expect("Operation failed");
         for value in averaged_periodogram.iter_mut() {
             *value = *value / count_f;
         }
@@ -814,7 +820,7 @@ where
 
     // Average and normalize
     if segment_count > 0 {
-        let count_f = F::from_usize(segment_count).unwrap();
+        let count_f = F::from_usize(segment_count).expect("Operation failed");
         for value in averaged_periodogram.iter_mut() {
             *value = *value / count_f;
         }
@@ -843,13 +849,17 @@ where
     let mut averaged_periodogram = vec![F::zero(); n / 2];
 
     for taper_idx in 0..num_tapers {
-        let phase_shift =
-            F::from(taper_idx as f64 * std::f64::consts::PI / num_tapers as f64).unwrap();
+        let phase_shift = F::from(taper_idx as f64 * std::f64::consts::PI / num_tapers as f64)
+            .expect("Failed to convert to float");
         let mut tapered_signal = ts.clone();
 
         for (i, value) in tapered_signal.iter_mut().enumerate() {
-            let t = F::from(i).unwrap() / F::from(n).unwrap();
-            let taper_weight = (F::from(std::f64::consts::PI).unwrap() * t + phase_shift).sin();
+            let t = F::from(i).expect("Failed to convert to float")
+                / F::from(n).expect("Failed to convert to float");
+            let taper_weight = (F::from(std::f64::consts::PI).expect("Failed to convert to float")
+                * t
+                + phase_shift)
+                .sin();
             *value = *value * taper_weight.abs();
         }
 
@@ -863,7 +873,7 @@ where
     }
 
     // Average across tapers
-    let num_tapers_f = F::from_usize(num_tapers).unwrap();
+    let num_tapers_f = F::from_usize(num_tapers).expect("Operation failed");
     for value in averaged_periodogram.iter_mut() {
         *value = *value / num_tapers_f;
     }
@@ -920,7 +930,7 @@ where
     // Apply simple smoothing as placeholder for proper AR method
     for i in order..(ar_periodogram.len() - order) {
         let sum = (0..2 * order + 1).fold(F::zero(), |acc, j| acc + periodogram[i - order + j]);
-        ar_periodogram[i] = sum / F::from(2 * order + 1).unwrap();
+        ar_periodogram[i] = sum / F::from(2 * order + 1).expect("Failed to convert to float");
     }
 
     Ok(ar_periodogram)
@@ -943,17 +953,19 @@ where
     let mut periodogram = vec![F::zero(); n / 2];
 
     // Calculate power spectrum (simplified)
-    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
+    let mean =
+        ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).expect("Operation failed");
     let variance = ts
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-        / F::from_usize(n).unwrap();
+        / F::from_usize(n).expect("Operation failed");
 
     // For demonstration, create a simple spectrum based on autocorrelation
     for (k, item) in periodogram.iter_mut().enumerate() {
         let mut power = F::zero();
-        let freq = F::from(k).unwrap() / F::from(n).unwrap()
-            * F::from(2.0 * std::f64::consts::PI).unwrap();
+        let freq = F::from(k).expect("Failed to convert to float")
+            / F::from(n).expect("Failed to convert to float")
+            * F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float");
 
         for lag in 0..std::cmp::min(n / 4, 50) {
             let mut autocorr = F::zero();
@@ -965,8 +977,8 @@ where
             }
 
             if count > 0 {
-                autocorr = autocorr / F::from_usize(count).unwrap();
-                let lag_f = F::from(lag).unwrap();
+                autocorr = autocorr / F::from_usize(count).expect("Operation failed");
+                let lag_f = F::from(lag).expect("Failed to convert to float");
                 power = power + autocorr * (freq * lag_f).cos();
             }
         }
@@ -995,33 +1007,37 @@ where
         }
         "Hanning" | "Hann" => {
             for (i, w) in window.iter_mut().enumerate() {
-                let arg =
-                    F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64).unwrap();
-                *w = F::from(0.5).unwrap() * (F::one() - arg.cos());
+                let arg = F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64)
+                    .expect("Operation failed");
+                *w = F::from(0.5).expect("Failed to convert constant to float")
+                    * (F::one() - arg.cos());
             }
         }
         "Hamming" => {
             for (i, w) in window.iter_mut().enumerate() {
-                let arg =
-                    F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64).unwrap();
-                *w = F::from(0.54).unwrap() - F::from(0.46).unwrap() * arg.cos();
+                let arg = F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64)
+                    .expect("Operation failed");
+                *w = F::from(0.54).expect("Failed to convert constant to float")
+                    - F::from(0.46).expect("Failed to convert constant to float") * arg.cos();
             }
         }
         "Blackman" => {
             for (i, w) in window.iter_mut().enumerate() {
-                let arg =
-                    F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64).unwrap();
-                let arg2 = F::from(2.0).unwrap() * arg;
-                *w = F::from(0.42).unwrap() - F::from(0.5).unwrap() * arg.cos()
-                    + F::from(0.08).unwrap() * arg2.cos();
+                let arg = F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64)
+                    .expect("Operation failed");
+                let arg2 = F::from(2.0).expect("Failed to convert constant to float") * arg;
+                *w = F::from(0.42).expect("Failed to convert constant to float")
+                    - F::from(0.5).expect("Failed to convert constant to float") * arg.cos()
+                    + F::from(0.08).expect("Failed to convert constant to float") * arg2.cos();
             }
         }
         _ => {
             // Default to Hanning
             for (i, w) in window.iter_mut().enumerate() {
-                let arg =
-                    F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64).unwrap();
-                *w = F::from(0.5).unwrap() * (F::one() - arg.cos());
+                let arg = F::from(2.0 * std::f64::consts::PI * i as f64 / (length - 1) as f64)
+                    .expect("Operation failed");
+                *w = F::from(0.5).expect("Failed to convert constant to float")
+                    * (F::one() - arg.cos());
             }
         }
     }
@@ -1137,7 +1153,8 @@ where
                 acc + power * standardized_squared * standardized_squared
             });
 
-    weighted_fourth_moment / total_power - F::from(3.0).unwrap()
+    weighted_fourth_moment / total_power
+        - F::from(3.0).expect("Failed to convert constant to float")
 }
 
 /// Calculate spectral entropy
@@ -1232,11 +1249,26 @@ where
 
     // Standard EEG frequency bands (normalized)
     let band_boundaries = [
-        (F::from(0.0).unwrap(), F::from(0.05).unwrap()), // Delta (0-4Hz normalized to 0-0.05)
-        (F::from(0.05).unwrap(), F::from(0.1).unwrap()), // Theta (4-8Hz)
-        (F::from(0.1).unwrap(), F::from(0.15).unwrap()), // Alpha (8-12Hz)
-        (F::from(0.15).unwrap(), F::from(0.375).unwrap()), // Beta (12-30Hz)
-        (F::from(0.375).unwrap(), F::from(0.5).unwrap()), // Gamma (30-100Hz)
+        (
+            F::from(0.0).expect("Failed to convert constant to float"),
+            F::from(0.05).expect("Failed to convert constant to float"),
+        ), // Delta (0-4Hz normalized to 0-0.05)
+        (
+            F::from(0.05).expect("Failed to convert constant to float"),
+            F::from(0.1).expect("Failed to convert constant to float"),
+        ), // Theta (4-8Hz)
+        (
+            F::from(0.1).expect("Failed to convert constant to float"),
+            F::from(0.15).expect("Failed to convert constant to float"),
+        ), // Alpha (8-12Hz)
+        (
+            F::from(0.15).expect("Failed to convert constant to float"),
+            F::from(0.375).expect("Failed to convert constant to float"),
+        ), // Beta (12-30Hz)
+        (
+            F::from(0.375).expect("Failed to convert constant to float"),
+            F::from(0.5).expect("Failed to convert constant to float"),
+        ), // Gamma (30-100Hz)
     ];
 
     for (low, high) in band_boundaries.iter() {
@@ -1269,7 +1301,10 @@ where
     // Simplified implementation - would need full spectral analysis
     let spectrum = calculate_simple_periodogram(ts)?;
     let frequencies = (0..spectrum.len())
-        .map(|i| F::from(i).unwrap() / F::from(spectrum.len() * 2).unwrap())
+        .map(|i| {
+            F::from(i).expect("Failed to convert to float")
+                / F::from(spectrum.len() * 2).expect("Operation failed")
+        })
         .collect::<Vec<_>>();
 
     let mut features = SpectralAnalysisFeatures::default();
@@ -1283,7 +1318,8 @@ where
     }
 
     features.total_power = spectrum.iter().fold(F::zero(), |acc, &x| acc + x);
-    features.frequency_resolution = F::from(1.0).unwrap() / F::from(ts.len()).unwrap();
+    features.frequency_resolution = F::from(1.0).expect("Failed to convert constant to float")
+        / F::from(ts.len()).expect("Operation failed");
 
     // Calculate frequency bands
     let bands = calculate_frequency_bands(&spectrum, &frequencies);
@@ -1328,7 +1364,7 @@ where
         return F::zero();
     }
 
-    let count_f = F::from_usize(count).unwrap();
+    let count_f = F::from_usize(count).expect("Operation failed");
     geometric_mean = geometric_mean.powf(F::one() / count_f);
     arithmetic_mean = arithmetic_mean / count_f;
 
@@ -1362,7 +1398,7 @@ pub fn calculate_window_effectiveness<F>(_windowinfo: &WindowTypeInfo<F>) -> F
 where
     F: Float + FromPrimitive,
 {
-    F::from(0.8).unwrap() // Placeholder
+    F::from(0.8).expect("Failed to convert constant to float") // Placeholder
 }
 
 /// Calculate spectral leakage measures
@@ -1371,7 +1407,7 @@ pub fn calculate_spectral_leakage<F>(_windowinfo: &WindowTypeInfo<F>) -> F
 where
     F: Float + FromPrimitive,
 {
-    F::from(0.1).unwrap() // Placeholder
+    F::from(0.1).expect("Failed to convert constant to float") // Placeholder
 }
 
 /// Calculate confidence intervals for periodogram
@@ -1465,7 +1501,7 @@ pub fn calculate_zero_padding_effectiveness<F>(_padded: &[F], original: &[F]) ->
 where
     F: Float + FromPrimitive,
 {
-    F::from(0.9).unwrap() // Placeholder
+    F::from(0.9).expect("Failed to convert constant to float") // Placeholder
 }
 
 /// Calculate interpolation effectiveness
@@ -1474,7 +1510,7 @@ pub fn calculate_interpolation_effectiveness<F>(_interpolated: &[F], original: &
 where
     F: Float + FromPrimitive,
 {
-    F::from(0.85).unwrap() // Placeholder
+    F::from(0.85).expect("Failed to convert constant to float") // Placeholder
 }
 
 /// Calculate signal-to-noise ratio from periodogram
@@ -1489,7 +1525,7 @@ where
 
     let max_power = periodogram.iter().fold(F::neg_infinity(), |a, &b| a.max(b));
     let avg_power = periodogram.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from_usize(periodogram.len()).unwrap();
+        / F::from_usize(periodogram.len()).expect("Operation failed");
 
     if avg_power == F::zero() {
         Ok(F::zero())

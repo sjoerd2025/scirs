@@ -6,7 +6,8 @@ use scirs2_linalg::eigh;
 fn test_3x3_eigenvalue_precision() {
     let symmetricmatrix = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
 
-    let (eigenvals, eigenvecs) = eigh(&symmetricmatrix.view(), None).unwrap();
+    let (eigenvals, eigenvecs) =
+        eigh(&symmetricmatrix.view(), None).expect("Test: operation failed");
 
     // Check A * V = V * Λ with high precision
     let av = symmetricmatrix.dot(&eigenvecs);

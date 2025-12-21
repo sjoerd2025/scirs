@@ -540,7 +540,7 @@ impl GradientTensor {
                                 let grad_out_2d = grad_out_array_val
                                     .clone()
                                     .into_shape_with_order((grad_out_rows, grad_out_cols))
-                                    .unwrap();
+                                    .expect("Operation failed");
 
                                 let b_tshape = b_t.shape();
                                 let b_t_rows = b_tshape[0];
@@ -552,7 +552,7 @@ impl GradientTensor {
                                 let b_t_2d = b_t
                                     .clone()
                                     .into_shape_with_order((b_t_rows, b_t_cols))
-                                    .unwrap();
+                                    .expect("Operation failed");
 
                                 // Now use dot with 2D arrays
                                 let grad_a_val = grad_out_2d.dot(&b_t_2d);
@@ -611,7 +611,7 @@ impl GradientTensor {
                                 let grad_out_2d = grad_out_array_val
                                     .clone()
                                     .into_shape_with_order((grad_out_rows, grad_out_cols))
-                                    .unwrap();
+                                    .expect("Operation failed");
 
                                 let a_tshape = a_t.shape();
                                 let a_t_rows = a_tshape[0];
@@ -623,7 +623,7 @@ impl GradientTensor {
                                 let a_t_2d = a_t
                                     .clone()
                                     .into_shape_with_order((a_t_rows, a_t_cols))
-                                    .unwrap();
+                                    .expect("Operation failed");
 
                                 // Now use dot with 2D arrays
                                 let grad_b_val = a_t_2d.dot(&grad_out_2d);

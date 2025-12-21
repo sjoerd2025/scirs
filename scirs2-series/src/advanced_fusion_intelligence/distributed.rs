@@ -366,8 +366,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedTaskScheduler<F> {
     /// Priority-based scheduling
     fn priority_scheduling(&mut self, schedule: &mut HashMap<usize, Vec<usize>>) -> Result<()> {
         // Sort tasks by priority
-        self.task_queue
-            .sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap());
+        self.task_queue.sort_by(|a, b| {
+            b.priority
+                .partial_cmp(&a.priority)
+                .expect("Operation failed")
+        });
 
         // Assign high-priority tasks first
         let mut node_index = 0;
@@ -457,11 +460,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedTask<F> {
     /// Estimate task execution time
     pub fn estimate_execution_time(&self) -> F {
         match self.task_type {
-            TaskType::Computation => F::from_f64(10.0).unwrap(),
-            TaskType::DataProcessing => F::from_f64(15.0).unwrap(),
-            TaskType::MachineLearning => F::from_f64(30.0).unwrap(),
-            TaskType::QuantumComputation => F::from_f64(5.0).unwrap(),
-            TaskType::Analysis => F::from_f64(20.0).unwrap(),
+            TaskType::Computation => F::from_f64(10.0).expect("Operation failed"),
+            TaskType::DataProcessing => F::from_f64(15.0).expect("Operation failed"),
+            TaskType::MachineLearning => F::from_f64(30.0).expect("Operation failed"),
+            TaskType::QuantumComputation => F::from_f64(5.0).expect("Operation failed"),
+            TaskType::Analysis => F::from_f64(20.0).expect("Operation failed"),
         }
     }
 }
@@ -470,9 +473,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> Default for ResourceRequirements<
     fn default() -> Self {
         ResourceRequirements {
             cpu_cores: 2,
-            memory_gb: F::from_f64(4.0).unwrap(),
-            storage_gb: F::from_f64(10.0).unwrap(),
-            network_bandwidth: F::from_f64(100.0).unwrap(), // Mbps
+            memory_gb: F::from_f64(4.0).expect("Operation failed"),
+            storage_gb: F::from_f64(10.0).expect("Operation failed"),
+            network_bandwidth: F::from_f64(100.0).expect("Operation failed"), // Mbps
             gpu_required: false,
         }
     }
@@ -494,10 +497,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedResourceManager<F> {
             let node = NodeResources {
                 node_id: i,
                 cpu_cores: 8,
-                available_memory: F::from_f64(16.0).unwrap(),
-                total_memory: F::from_f64(16.0).unwrap(),
-                storage_capacity: F::from_f64(1000.0).unwrap(),
-                network_bandwidth: F::from_f64(1000.0).unwrap(),
+                available_memory: F::from_f64(16.0).expect("Operation failed"),
+                total_memory: F::from_f64(16.0).expect("Operation failed"),
+                storage_capacity: F::from_f64(1000.0).expect("Operation failed"),
+                network_bandwidth: F::from_f64(1000.0).expect("Operation failed"),
                 gpu_count: 1,
                 utilization: F::zero(),
             };
@@ -516,7 +519,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedResourceManager<F> {
         // Find suitable node for the task
         let node_ids: Vec<usize> = self.available_resources.keys().cloned().collect();
         for node_id in node_ids {
-            let node_resources = self.available_resources.get(&node_id).unwrap();
+            let node_resources = self
+                .available_resources
+                .get(&node_id)
+                .expect("Operation failed");
             if self.can_accommodate_task(node_resources, task) {
                 // Allocate resources
                 self.allocate_task_to_node(node_id, task.task_id)?;
@@ -576,7 +582,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoadBalancer<F> {
         LoadBalancer {
             balancing_algorithm: LoadBalancingAlgorithm::RoundRobin,
             load_metrics: Vec::new(),
-            rebalancing_threshold: F::from_f64(0.8).unwrap(),
+            rebalancing_threshold: F::from_f64(0.8).expect("Operation failed"),
         }
     }
 
@@ -586,7 +592,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoadBalancer<F> {
 
         // Find overloaded and underloaded nodes
         let avg_load = node_loads.values().fold(F::zero(), |acc, &load| acc + load)
-            / F::from_usize(node_loads.len()).unwrap();
+            / F::from_usize(node_loads.len()).expect("Operation failed");
 
         let mut overloaded_nodes = Vec::new();
         let mut underloaded_nodes = Vec::new();
@@ -594,7 +600,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LoadBalancer<F> {
         for (&node_id, &load) in node_loads {
             if load > self.rebalancing_threshold {
                 overloaded_nodes.push(node_id);
-            } else if load < avg_load * F::from_f64(0.5).unwrap() {
+            } else if load < avg_load * F::from_f64(0.5).expect("Operation failed") {
                 underloaded_nodes.push(node_id);
             }
         }
@@ -671,7 +677,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedIntelligenceCoordinato
             .axis_chunks_iter(scirs2_core::ndarray::Axis(0), chunk_size)
             .enumerate()
         {
-            let task = DistributedTask::new(i, TaskType::DataProcessing, F::from_f64(1.0).unwrap());
+            let task = DistributedTask::new(
+                i,
+                TaskType::DataProcessing,
+                F::from_f64(1.0).expect("Operation failed"),
+            );
             tasks.push(task);
         }
 
@@ -681,12 +691,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedIntelligenceCoordinato
     /// Simulate task execution
     fn simulate_task_execution(&mut self, task_id: usize, nodeid: usize) -> Result<Array1<F>> {
         // Simulate processing delay
-        let execution_time = F::from_f64(0.1).unwrap(); // 100ms
+        let execution_time = F::from_f64(0.1).expect("Operation failed"); // 100ms
 
         // Create dummy result
         let result = Array1::from_elem(
             10,
-            F::from_f64(scirs2_core::random::random::<f64>()).unwrap(),
+            F::from_f64(scirs2_core::random::random::<f64>()).expect("Operation failed"),
         );
 
         Ok(result)
@@ -743,7 +753,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FaultToleranceSystem<F> {
     pub fn new() -> Self {
         FaultToleranceSystem {
             replication_factor: 3,
-            checkpoint_interval: F::from_f64(60.0).unwrap(), // 60 seconds
+            checkpoint_interval: F::from_f64(60.0).expect("Operation failed"), // 60 seconds
             failure_detection: FailureDetection::new(),
             recovery_mechanisms: vec![
                 RecoveryMechanism::new(RecoveryType::Restart),
@@ -756,7 +766,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FaultToleranceSystem<F> {
     pub fn handle_failure(&mut self, failed_nodeid: usize) -> Result<RecoveryType> {
         // Select appropriate recovery mechanism
         for mechanism in &self.recovery_mechanisms {
-            if mechanism.success_rate > F::from_f64(0.8).unwrap() {
+            if mechanism.success_rate > F::from_f64(0.8).expect("Operation failed") {
                 return Ok(mechanism.mechanism_type.clone());
             }
         }
@@ -783,13 +793,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> FailureDetection<F> {
         FailureDetection {
             detection_algorithms: vec![DetectionAlgorithm {
                 algorithm_name: "heartbeat_monitor".to_string(),
-                detection_accuracy: F::from_f64(0.95).unwrap(),
-                false_positive_rate: F::from_f64(0.05).unwrap(),
-                detection_latency: F::from_f64(5.0).unwrap(),
+                detection_accuracy: F::from_f64(0.95).expect("Operation failed"),
+                false_positive_rate: F::from_f64(0.05).expect("Operation failed"),
+                detection_latency: F::from_f64(5.0).expect("Operation failed"),
             }],
-            heartbeat_interval: F::from_f64(1.0).unwrap(), // 1 second
-            timeout_threshold: F::from_f64(5.0).unwrap(),  // 5 seconds
-            failure_probability: F::from_f64(0.01).unwrap(),
+            heartbeat_interval: F::from_f64(1.0).expect("Operation failed"), // 1 second
+            timeout_threshold: F::from_f64(5.0).expect("Operation failed"),  // 5 seconds
+            failure_probability: F::from_f64(0.01).expect("Operation failed"),
         }
     }
 
@@ -812,29 +822,29 @@ impl<F: Float + Debug + Clone + FromPrimitive> RecoveryMechanism<F> {
     pub fn new(mechanism_type: RecoveryType) -> Self {
         let (recovery_time, success_rate, resource_overhead) = match mechanism_type {
             RecoveryType::Restart => (
-                F::from_f64(10.0).unwrap(),
-                F::from_f64(0.9).unwrap(),
-                F::from_f64(0.1).unwrap(),
+                F::from_f64(10.0).expect("Operation failed"),
+                F::from_f64(0.9).expect("Operation failed"),
+                F::from_f64(0.1).expect("Operation failed"),
             ),
             RecoveryType::Failover => (
-                F::from_f64(5.0).unwrap(),
-                F::from_f64(0.95).unwrap(),
-                F::from_f64(0.2).unwrap(),
+                F::from_f64(5.0).expect("Operation failed"),
+                F::from_f64(0.95).expect("Operation failed"),
+                F::from_f64(0.2).expect("Operation failed"),
             ),
             RecoveryType::Redistribution => (
-                F::from_f64(15.0).unwrap(),
-                F::from_f64(0.85).unwrap(),
-                F::from_f64(0.15).unwrap(),
+                F::from_f64(15.0).expect("Operation failed"),
+                F::from_f64(0.85).expect("Operation failed"),
+                F::from_f64(0.15).expect("Operation failed"),
             ),
             RecoveryType::CheckpointRecovery => (
-                F::from_f64(20.0).unwrap(),
-                F::from_f64(0.8).unwrap(),
-                F::from_f64(0.05).unwrap(),
+                F::from_f64(20.0).expect("Operation failed"),
+                F::from_f64(0.8).expect("Operation failed"),
+                F::from_f64(0.05).expect("Operation failed"),
             ),
             RecoveryType::ReplicationRecovery => (
-                F::from_f64(8.0).unwrap(),
-                F::from_f64(0.92).unwrap(),
-                F::from_f64(0.3).unwrap(),
+                F::from_f64(8.0).expect("Operation failed"),
+                F::from_f64(0.92).expect("Operation failed"),
+                F::from_f64(0.3).expect("Operation failed"),
             ),
         };
 
@@ -849,8 +859,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> RecoveryMechanism<F> {
     /// Apply recovery mechanism
     pub fn apply_recovery(&self, failedtasks: &[usize]) -> Result<bool> {
         // Simulate recovery process
-        let recovery_success =
-            self.success_rate > F::from_f64(scirs2_core::random::random::<f64>()).unwrap();
+        let recovery_success = self.success_rate
+            > F::from_f64(scirs2_core::random::random::<f64>()).expect("Operation failed");
 
         if recovery_success {
             // Recovery successful
@@ -877,7 +887,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedMessage<F> {
             receiver_id,
             message_type,
             payload,
-            timestamp: F::from_f64(0.0).unwrap(), // Would use actual timestamp
+            timestamp: F::from_f64(0.0).expect("Operation failed"), // Would use actual timestamp
             priority: MessagePriority::Normal,
         }
     }

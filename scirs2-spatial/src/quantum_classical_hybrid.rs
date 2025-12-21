@@ -1046,7 +1046,7 @@ mod tests {
         let result = optimizer.optimize_spatial_function(objective).await;
         assert!(result.is_ok());
 
-        let opt_result = result.unwrap();
+        let opt_result = result.expect("Operation failed");
         assert!(opt_result.optimal_value < 10.0); // Should find near-zero minimum
         assert!(opt_result.iterations > 0);
         assert!(
@@ -1055,7 +1055,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "Test failure - assertion failed: metrics.total_time_ms > 0.0 at line 1078"]
     async fn test_hybrid_clusterer() {
         let points = array![
             [0.0, 0.0],
@@ -1072,7 +1072,7 @@ mod tests {
         let result = clusterer.fit(&points.view()).await;
         assert!(result.is_ok());
 
-        let (centroids, assignments, metrics) = result.unwrap();
+        let (centroids, assignments, metrics) = result.expect("Operation failed");
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(assignments.len(), 6);
         assert!(metrics.clustering_quality > -1.0 && metrics.clustering_quality <= 1.0);

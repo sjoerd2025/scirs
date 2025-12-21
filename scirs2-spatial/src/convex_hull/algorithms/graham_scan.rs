@@ -37,7 +37,7 @@ use scirs2_core::ndarray::ArrayView2;
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-/// let hull = compute_graham_scan(&points.view()).unwrap();
+/// let hull = compute_graham_scan(&points.view()).expect("Operation failed");
 /// assert_eq!(hull.ndim(), 2);
 /// assert_eq!(hull.vertex_indices().len(), 3); // Excludes interior point
 /// ```
@@ -65,20 +65,20 @@ pub fn compute_graham_scan(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
     let start_idx = indexed_points
         .iter()
         .min_by(|a, b| {
-            let cmp = a.1[1].partial_cmp(&b.1[1]).unwrap();
+            let cmp = a.1[1].partial_cmp(&b.1[1]).expect("Operation failed");
             if cmp == std::cmp::Ordering::Equal {
-                a.1[0].partial_cmp(&b.1[0]).unwrap()
+                a.1[0].partial_cmp(&b.1[0]).expect("Operation failed")
             } else {
                 cmp
             }
         })
-        .unwrap()
+        .expect("Operation failed")
         .0;
 
     let start_point = indexed_points
         .iter()
         .find(|(idx, _)| *idx == start_idx)
-        .unwrap()
+        .expect("Operation failed")
         .1;
 
     // Sort points by polar angle with respect to start point
@@ -93,12 +93,12 @@ pub fn compute_graham_scan(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
         let angle_a = (a.1[1] - start_point[1]).atan2(a.1[0] - start_point[0]);
         let angle_b = (b.1[1] - start_point[1]).atan2(b.1[0] - start_point[0]);
 
-        let angle_cmp = angle_a.partial_cmp(&angle_b).unwrap();
+        let angle_cmp = angle_a.partial_cmp(&angle_b).expect("Operation failed");
         if angle_cmp == std::cmp::Ordering::Equal {
             // If angles are equal, sort by distance
             let dist_a = (a.1[0] - start_point[0]).powi(2) + (a.1[1] - start_point[1]).powi(2);
             let dist_b = (b.1[0] - start_point[0]).powi(2) + (b.1[1] - start_point[1]).powi(2);
-            dist_a.partial_cmp(&dist_b).unwrap()
+            dist_a.partial_cmp(&dist_b).expect("Operation failed")
         } else {
             angle_cmp
         }
@@ -231,9 +231,9 @@ pub fn sort_by_polar_angle(points: &ArrayView2<'_, f64>, reference_point: [f64; 
 
     // Sort by angle, then by distance for points with the same angle
     indexed_points.sort_by(|a, b| {
-        let angle_cmp = a.1.partial_cmp(&b.1).unwrap();
+        let angle_cmp = a.1.partial_cmp(&b.1).expect("Operation failed");
         if angle_cmp == std::cmp::Ordering::Equal {
-            a.2.partial_cmp(&b.2).unwrap()
+            a.2.partial_cmp(&b.2).expect("Operation failed")
         } else {
             angle_cmp
         }
@@ -283,7 +283,7 @@ mod tests {
             [0.5, 0.5], // Interior point
         ]);
 
-        let hull = compute_graham_scan(&points.view()).unwrap();
+        let hull = compute_graham_scan(&points.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(hull.ndim(), 2);
@@ -299,7 +299,7 @@ mod tests {
     fn test_graham_scan_square() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let hull = compute_graham_scan(&points.view()).unwrap();
+        let hull = compute_graham_scan(&points.view()).expect("Operation failed");
 
         assert_eq!(hull.ndim(), 2);
         assert_eq!(hull.vertex_indices().len(), 4); // All points should be vertices
@@ -355,7 +355,7 @@ mod tests {
             [0.5, 1.0], // Point above the line
         ]);
 
-        let hull = compute_graham_scan(&points.view()).unwrap();
+        let hull = compute_graham_scan(&points.view()).expect("Operation failed");
 
         // Should form a triangle with the three non-collinear points
         assert_eq!(hull.vertex_indices().len(), 3);

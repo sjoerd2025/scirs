@@ -465,23 +465,24 @@ mod tests {
     #[test]
     fn test_linearshape_functions() {
         // Test at corners of reference triangle
-        let n = ShapeFunctions::evaluate(ElementType::Linear, 0.0, 0.0).unwrap();
+        let n = ShapeFunctions::evaluate(ElementType::Linear, 0.0, 0.0).expect("Operation failed");
         assert_relative_eq!(n[0], 1.0, epsilon = 1e-12);
         assert_relative_eq!(n[1], 0.0, epsilon = 1e-12);
         assert_relative_eq!(n[2], 0.0, epsilon = 1e-12);
 
-        let n = ShapeFunctions::evaluate(ElementType::Linear, 1.0, 0.0).unwrap();
+        let n = ShapeFunctions::evaluate(ElementType::Linear, 1.0, 0.0).expect("Operation failed");
         assert_relative_eq!(n[0], 0.0, epsilon = 1e-12);
         assert_relative_eq!(n[1], 1.0, epsilon = 1e-12);
         assert_relative_eq!(n[2], 0.0, epsilon = 1e-12);
 
-        let n = ShapeFunctions::evaluate(ElementType::Linear, 0.0, 1.0).unwrap();
+        let n = ShapeFunctions::evaluate(ElementType::Linear, 0.0, 1.0).expect("Operation failed");
         assert_relative_eq!(n[0], 0.0, epsilon = 1e-12);
         assert_relative_eq!(n[1], 0.0, epsilon = 1e-12);
         assert_relative_eq!(n[2], 1.0, epsilon = 1e-12);
 
         // Test partition of unity at center
-        let n = ShapeFunctions::evaluate(ElementType::Linear, 1.0 / 3.0, 1.0 / 3.0).unwrap();
+        let n = ShapeFunctions::evaluate(ElementType::Linear, 1.0 / 3.0, 1.0 / 3.0)
+            .expect("Operation failed");
         let sum: f64 = n.iter().sum();
         assert_relative_eq!(sum, 1.0, epsilon = 1e-12);
     }
@@ -489,12 +490,14 @@ mod tests {
     #[test]
     fn test_quadraticshape_functions() {
         // Test partition of unity at center
-        let n = ShapeFunctions::evaluate(ElementType::Quadratic, 1.0 / 3.0, 1.0 / 3.0).unwrap();
+        let n = ShapeFunctions::evaluate(ElementType::Quadratic, 1.0 / 3.0, 1.0 / 3.0)
+            .expect("Operation failed");
         let sum: f64 = n.iter().sum();
         assert_relative_eq!(sum, 1.0, epsilon = 1e-12);
 
         // Test at corner nodes
-        let n = ShapeFunctions::evaluate(ElementType::Quadratic, 0.0, 0.0).unwrap();
+        let n =
+            ShapeFunctions::evaluate(ElementType::Quadratic, 0.0, 0.0).expect("Operation failed");
         assert_relative_eq!(n[0], 1.0, epsilon = 1e-12);
         for i in 1..6 {
             assert_relative_eq!(n[i], 0.0, epsilon = 1e-12);
@@ -504,12 +507,13 @@ mod tests {
     #[test]
     fn test_cubicshape_functions() {
         // Test partition of unity at center
-        let n = ShapeFunctions::evaluate(ElementType::Cubic, 1.0 / 3.0, 1.0 / 3.0).unwrap();
+        let n = ShapeFunctions::evaluate(ElementType::Cubic, 1.0 / 3.0, 1.0 / 3.0)
+            .expect("Operation failed");
         let sum: f64 = n.iter().sum();
         assert_relative_eq!(sum, 1.0, epsilon = 1e-12);
 
         // Test at corner nodes
-        let n = ShapeFunctions::evaluate(ElementType::Cubic, 0.0, 0.0).unwrap();
+        let n = ShapeFunctions::evaluate(ElementType::Cubic, 0.0, 0.0).expect("Operation failed");
         assert_relative_eq!(n[0], 1.0, epsilon = 1e-12);
         for i in 1..10 {
             assert_relative_eq!(n[i], 0.0, epsilon = 1e-10);
@@ -517,18 +521,18 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Quadrature rules test failing
     fn test_quadrature_rules() {
         // Test that weights sum to area of reference triangle (0.5)
-        let (_, weights, _) = TriangularQuadrature::get_rule(1).unwrap();
+        // Note: get_rule returns (xi_coords, eta_coords, weights) - use index 2 for weights
+        let (_, _, weights) = TriangularQuadrature::get_rule(1).expect("Operation failed");
         let sum: f64 = weights.iter().sum();
         assert_relative_eq!(sum, 0.5, epsilon = 1e-12);
 
-        let (_, weights, _) = TriangularQuadrature::get_rule(3).unwrap();
+        let (_, _, weights) = TriangularQuadrature::get_rule(3).expect("Operation failed");
         let sum: f64 = weights.iter().sum();
         assert_relative_eq!(sum, 0.5, epsilon = 1e-12);
 
-        let (_, weights, _) = TriangularQuadrature::get_rule(6).unwrap();
+        let (_, _, weights) = TriangularQuadrature::get_rule(6).expect("Operation failed");
         let sum: f64 = weights.iter().sum();
         assert_relative_eq!(sum, 0.5, epsilon = 1e-12);
     }
@@ -536,18 +540,20 @@ mod tests {
     #[test]
     fn test_higher_order_triangle_creation() {
         // Test linear triangle
-        let linear = HigherOrderTriangle::new(vec![0, 1, 2], ElementType::Linear, None).unwrap();
+        let linear = HigherOrderTriangle::new(vec![0, 1, 2], ElementType::Linear, None)
+            .expect("Operation failed");
         assert_eq!(linear.nodes.len(), 3);
 
         // Test quadratic triangle
         let quadratic =
-            HigherOrderTriangle::new(vec![0, 1, 2, 3, 4, 5], ElementType::Quadratic, None).unwrap();
+            HigherOrderTriangle::new(vec![0, 1, 2, 3, 4, 5], ElementType::Quadratic, None)
+                .expect("Operation failed");
         assert_eq!(quadratic.nodes.len(), 6);
 
         // Test cubic triangle
         let cubic =
             HigherOrderTriangle::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9], ElementType::Cubic, None)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(cubic.nodes.len(), 10);
 
         // Test error case

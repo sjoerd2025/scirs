@@ -87,7 +87,7 @@ where
     ///     if r2 == 0 { (r1 + i + 1) as f64 * 0.5 } else { 0.0 }
     /// });
     ///
-    /// let tt_tensor = TTTensor::new(vec![core1, core2, core3]).unwrap();
+    /// let tt_tensor = TTTensor::new(vec![core1, core2, core3]).expect("Operation failed");
     /// ```
     pub fn new(cores: Vec<Array3<F>>) -> LinalgResult<Self> {
         if cores.is_empty() {
@@ -452,7 +452,8 @@ where
     // Compute Frobenius norm for relative tolerance
     let frobenius_norm = tensor.iter().map(|&x| x * x).sum::<F>().sqrt();
 
-    let abs_tolerance = tolerance * frobenius_norm / F::from(d - 1).unwrap().sqrt();
+    let abs_tolerance =
+        tolerance * frobenius_norm / F::from(d - 1).expect("Operation failed").sqrt();
 
     let mut cores = Vec::with_capacity(d);
     let mut ranks = vec![1]; // r₀ = 1
@@ -722,7 +723,7 @@ mod tests {
             }
         });
 
-        let tt_tensor = TTTensor::new(vec![core1, core2]).unwrap();
+        let tt_tensor = TTTensor::new(vec![core1, core2]).expect("Operation failed");
 
         assert_eq!(tt_tensor.ndim(), 2);
         assert_eq!(tt_tensor.shape(), &[2, 3]);
@@ -773,26 +774,26 @@ mod tests {
             }
         });
 
-        let tt_tensor = TTTensor::new(vec![core1, core2]).unwrap();
+        let tt_tensor = TTTensor::new(vec![core1, core2]).expect("Operation failed");
 
         // Test individual elements
         assert_relative_eq!(
-            tt_tensor.get_element(&[0, 0]).unwrap(),
+            tt_tensor.get_element(&[0, 0]).expect("Operation failed"),
             1.0,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            tt_tensor.get_element(&[0, 1]).unwrap(),
+            tt_tensor.get_element(&[0, 1]).expect("Operation failed"),
             2.0,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            tt_tensor.get_element(&[1, 0]).unwrap(),
+            tt_tensor.get_element(&[1, 0]).expect("Operation failed"),
             3.0,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            tt_tensor.get_element(&[1, 1]).unwrap(),
+            tt_tensor.get_element(&[1, 1]).expect("Operation failed"),
             4.0,
             epsilon = 1e-10
         );
@@ -803,14 +804,15 @@ mod tests {
         // Create a rank-1 tensor (outer product)
         let tensor = array![[[1.0, 2.0], [3.0, 6.0]], [[2.0, 4.0], [6.0, 12.0]]];
 
-        let tt_tensor = tt_decomposition(&tensor.view(), 1e-12, None).unwrap();
+        let tt_tensor = tt_decomposition(&tensor.view(), 1e-12, None).expect("Operation failed");
 
         // Check that decomposition preserves the tensor
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
                     let original = tensor[[i, j, k]];
-                    let reconstructed = tt_tensor.get_element(&[i, j, k]).unwrap();
+                    let reconstructed =
+                        tt_tensor.get_element(&[i, j, k]).expect("Operation failed");
                     assert_relative_eq!(original, reconstructed, epsilon = 1e-10);
                 }
             }
@@ -821,9 +823,9 @@ mod tests {
     fn test_tt_frobenius_norm() {
         // Create a simple 1D TT tensor [1, 2]
         let core1 = Array3::from_shape_fn((1, 2, 1), |(_, i_, _)| (i_ + 1) as f64);
-        let tt_tensor = TTTensor::new(vec![core1]).unwrap();
+        let tt_tensor = TTTensor::new(vec![core1]).expect("Operation failed");
 
-        let norm = tt_tensor.frobenius_norm().unwrap();
+        let norm = tt_tensor.frobenius_norm().expect("Operation failed");
 
         // Verify norm is positive
         assert!(norm > 0.0);
@@ -833,7 +835,7 @@ mod tests {
         assert_relative_eq!(norm, expected_norm, epsilon = 1e-10);
 
         // Also compare with dense tensor norm for verification
-        let dense = tt_tensor.to_dense().unwrap();
+        let dense = tt_tensor.to_dense().expect("Operation failed");
         let dense_norm = dense.iter().map(|&x| x * x).sum::<f64>().sqrt();
         assert_relative_eq!(norm, dense_norm, epsilon = 1e-10);
     }
@@ -842,16 +844,24 @@ mod tests {
     fn test_tt_addition() {
         // Create two simple TT tensors representing 1D vectors [1, 2] and [2, 3]
         let core1_a = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 1) as f64);
-        let tt_a = TTTensor::new(vec![core1_a]).unwrap();
+        let tt_a = TTTensor::new(vec![core1_a]).expect("Operation failed");
 
         let core1_b = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 2) as f64);
-        let tt_b = TTTensor::new(vec![core1_b]).unwrap();
+        let tt_b = TTTensor::new(vec![core1_b]).expect("Operation failed");
 
-        let tt_sum = tt_add(&tt_a, &tt_b).unwrap();
+        let tt_sum = tt_add(&tt_a, &tt_b).expect("Operation failed");
 
         // Check addition results: [1, 2] + [2, 3] = [3, 5]
-        assert_relative_eq!(tt_sum.get_element(&[0]).unwrap(), 3.0, epsilon = 1e-10); // 1 + 2
-        assert_relative_eq!(tt_sum.get_element(&[1]).unwrap(), 5.0, epsilon = 1e-10);
+        assert_relative_eq!(
+            tt_sum.get_element(&[0]).expect("Operation failed"),
+            3.0,
+            epsilon = 1e-10
+        ); // 1 + 2
+        assert_relative_eq!(
+            tt_sum.get_element(&[1]).expect("Operation failed"),
+            5.0,
+            epsilon = 1e-10
+        );
         // 2 + 3
     }
 
@@ -859,16 +869,24 @@ mod tests {
     fn test_tt_hadamard_product() {
         // Create two simple TT tensors
         let core1_a = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 1) as f64);
-        let tt_a = TTTensor::new(vec![core1_a]).unwrap();
+        let tt_a = TTTensor::new(vec![core1_a]).expect("Operation failed");
 
         let core1_b = Array3::from_shape_fn((1, 2, 1), |(_, i, _)| (i + 2) as f64);
-        let tt_b = TTTensor::new(vec![core1_b]).unwrap();
+        let tt_b = TTTensor::new(vec![core1_b]).expect("Operation failed");
 
-        let tt_product = tt_hadamard(&tt_a, &tt_b).unwrap();
+        let tt_product = tt_hadamard(&tt_a, &tt_b).expect("Operation failed");
 
         // Check Hadamard product results
-        assert_relative_eq!(tt_product.get_element(&[0]).unwrap(), 2.0, epsilon = 1e-10); // 1 * 2
-        assert_relative_eq!(tt_product.get_element(&[1]).unwrap(), 6.0, epsilon = 1e-10);
+        assert_relative_eq!(
+            tt_product.get_element(&[0]).expect("Operation failed"),
+            2.0,
+            epsilon = 1e-10
+        ); // 1 * 2
+        assert_relative_eq!(
+            tt_product.get_element(&[1]).expect("Operation failed"),
+            6.0,
+            epsilon = 1e-10
+        );
         // 2 * 3
     }
 
@@ -891,17 +909,17 @@ mod tests {
             _ => 0.0,
         });
 
-        let tt_tensor = TTTensor::new(vec![core1, core2]).unwrap();
+        let tt_tensor = TTTensor::new(vec![core1, core2]).expect("Operation failed");
 
         // Round with moderate tolerance - this should work with manually constructed tensor
-        let rounded = tt_tensor.round(1e-1, Some(2)).unwrap();
+        let rounded = tt_tensor.round(1e-1, Some(2)).expect("Operation failed");
 
         // Check that rounding preserves basic structure
         // Just verify that we can compute elements without errors
         for i in 0..2 {
             for j in 0..2 {
-                let original = tt_tensor.get_element(&[i, j]).unwrap();
-                let rounded_val = rounded.get_element(&[i, j]).unwrap();
+                let original = tt_tensor.get_element(&[i, j]).expect("Operation failed");
+                let rounded_val = rounded.get_element(&[i, j]).expect("Operation failed");
                 // Use a more lenient tolerance for this test
                 // The rounding algorithm can introduce errors larger than the rounding tolerance
                 assert_relative_eq!(original, rounded_val, epsilon = 5e-1);
@@ -913,7 +931,7 @@ mod tests {
     fn test_compression_ratio() {
         // Create a simple TT tensor manually and test compression ratio
         let core1 = Array3::from_shape_fn((1, 2, 1), |(_, i_, _)| (i_ + 1) as f64);
-        let tt_tensor = TTTensor::new(vec![core1]).unwrap();
+        let tt_tensor = TTTensor::new(vec![core1]).expect("Operation failed");
 
         let compression = tt_tensor.compression_ratio();
 

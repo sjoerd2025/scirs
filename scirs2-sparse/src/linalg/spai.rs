@@ -230,7 +230,7 @@ fn solve_dense_system<F: Float + NumAssign + SparseElement>(
         }
 
         // Check for singularity
-        if max_val < F::from(1e-14).unwrap() {
+        if max_val < F::from(1e-14).expect("Failed to convert constant to float") {
             return Err(SparseError::ValueError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
@@ -277,14 +277,15 @@ mod tests {
         let data = vec![4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0];
         let indptr = vec![0, 2, 5, 7];
         let indices = vec![0, 1, 0, 1, 2, 1, 2];
-        let matrix = CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).unwrap();
+        let matrix =
+            CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).expect("Operation failed");
 
         let options = SpaiOptions::default();
-        let preconditioner = SpaiPreconditioner::new(&matrix, options).unwrap();
+        let preconditioner = SpaiPreconditioner::new(&matrix, options).expect("Operation failed");
 
         // Test by applying preconditioner to a vector
         let b = vec![1.0, 2.0, 3.0];
-        let x = preconditioner.matvec(&b).unwrap();
+        let x = preconditioner.matvec(&b).expect("Operation failed");
 
         // The result should be approximately the solution to Ax = b
         // For this simple case, we can verify the result is reasonable
@@ -300,19 +301,20 @@ mod tests {
         let data = vec![2.0, 3.0, 4.0];
         let indptr = vec![0, 1, 2, 3];
         let indices = vec![0, 1, 2];
-        let matrix = CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).unwrap();
+        let matrix =
+            CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).expect("Operation failed");
 
         let options = SpaiOptions::default();
-        let preconditioner = SpaiPreconditioner::new(&matrix, options).unwrap();
+        let preconditioner = SpaiPreconditioner::new(&matrix, options).expect("Operation failed");
 
         // Apply preconditioner to each unit vector
         let e1 = vec![1.0, 0.0, 0.0];
         let e2 = vec![0.0, 1.0, 0.0];
         let e3 = vec![0.0, 0.0, 1.0];
 
-        let x1 = preconditioner.matvec(&e1).unwrap();
-        let x2 = preconditioner.matvec(&e2).unwrap();
-        let x3 = preconditioner.matvec(&e3).unwrap();
+        let x1 = preconditioner.matvec(&e1).expect("Operation failed");
+        let x2 = preconditioner.matvec(&e2).expect("Operation failed");
+        let x3 = preconditioner.matvec(&e3).expect("Operation failed");
 
         // For a diagonal matrix, SPAI should recover the exact inverse
         assert!((x1[0] - 0.5).abs() < 1e-10);

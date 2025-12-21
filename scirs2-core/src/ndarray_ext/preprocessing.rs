@@ -221,10 +221,10 @@ where
     }
 
     // Scalar fallback for small arrays
-    let n = F::from(x.len()).unwrap();
+    let n = F::from(x.len()).expect("Operation failed");
     let mean = x.iter().fold(F::zero(), |acc, &val| acc + val) / n;
 
-    let n_minus_1 = F::from(x.len() - 1).unwrap();
+    let n_minus_1 = F::from(x.len() - 1).expect("Operation failed");
     let variance = x
         .iter()
         .map(|&val| {
@@ -437,9 +437,9 @@ where
 /// let max_idx = attention_weights
 ///     .iter()
 ///     .enumerate()
-///     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+///     .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
 ///     .map(|(idx, _)| idx)
-///     .unwrap();
+///     .expect("Operation failed");
 /// assert_eq!(max_idx, 1); // Index of score 4.0
 ///
 /// // All weights sum to 1
@@ -772,9 +772,9 @@ mod tests {
         let max_idx = result
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(max_idx, 2); // Index of value 3.0
     }
 
@@ -840,9 +840,9 @@ mod tests {
         let max_idx = result
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(max_idx, 2);
     }
 
@@ -859,9 +859,9 @@ mod tests {
         let max_idx = result
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(max_idx, 2); // Index of -2.0
     }
 
@@ -879,9 +879,9 @@ mod tests {
         let max_idx = attention_weights
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(max_idx, 1); // Index of score 4.0
 
         // Verify all weights are positive
@@ -907,9 +907,9 @@ mod tests {
         let max_idx = result
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(max_idx, 4999); // Last element has highest value
     }
 

@@ -121,7 +121,7 @@ impl ParallelPlanner {
         // For small FFTs, use the base planner directly
         let size = shape.iter().product::<usize>();
         if size < self.config.parallel_threshold || !self.config.parallel_execution {
-            let mut planner = self.base_planner.lock().unwrap();
+            let mut planner = self.base_planner.lock().expect("Operation failed");
             return planner.plan_fft(shape, forward, backend);
         }
 
@@ -131,7 +131,7 @@ impl ParallelPlanner {
         let backend_clone = backend.clone();
 
         let result = self.worker_pool.execute(move || {
-            let mut planner = planner_clone.lock().unwrap();
+            let mut planner = planner_clone.lock().expect("Operation failed");
             planner
                 .plan_fft(&shape_clone, forward, backend_clone)
                 .map_err(|e| format!("FFT planning error: {e}"))
@@ -159,7 +159,7 @@ impl ParallelPlanner {
         for (idx, (shape, forward, backend)) in small_specs {
             let start = Instant::now();
             let plan = {
-                let mut planner = self.base_planner.lock().unwrap();
+                let mut planner = self.base_planner.lock().expect("Operation failed");
                 planner.plan_fft(shape, *forward, backend.clone())?
             };
             results.push((
@@ -191,7 +191,7 @@ impl ParallelPlanner {
                         let thread_id = 0; // Thread ID tracking handled by core parallel abstractions
                         let start = Instant::now();
                         let plan = {
-                            let mut planner_guard = planner.lock().unwrap();
+                            let mut planner_guard = planner.lock().expect("Operation failed");
                             planner_guard
                                 .plan_fft(&shape_clone, forward_val, backend_clone)
                                 .map_err(|e| format!("FFT planning error: {e}"))?
@@ -226,13 +226,13 @@ impl ParallelPlanner {
 
     /// Clear the plan cache
     pub fn clear_cache(&self) {
-        let planner = self.base_planner.lock().unwrap();
+        let planner = self.base_planner.lock().expect("Operation failed");
         planner.clear_cache();
     }
 
     /// Save plans to disk
     pub fn save_plans(&self) -> FFTResult<()> {
-        let planner = self.base_planner.lock().unwrap();
+        let planner = self.base_planner.lock().expect("Operation failed");
         planner.save_plans()
     }
 }
@@ -416,7 +416,7 @@ mod tests {
         // Create a plan
         let plan = planner
             .plan_fft(&[64], true, PlannerBackend::default())
-            .unwrap();
+            .expect("Operation failed");
 
         // Check the plan properties
         assert_eq!(plan.shape(), &[64]);
@@ -427,7 +427,7 @@ mod tests {
         let planner = ParallelPlanner::new(None);
         let plan = planner
             .plan_fft(&[64], true, PlannerBackend::default())
-            .unwrap();
+            .expect("Operation failed");
 
         let executor = ParallelExecutor::new(plan, None);
 
@@ -436,7 +436,9 @@ mod tests {
         let mut output = vec![Complex64::default(); 64];
 
         // Execute the plan
-        executor.execute(&input, &mut output).unwrap();
+        executor
+            .execute(&input, &mut output)
+            .expect("Operation failed");
 
         // Basic validation - output should not be all zeros
         assert!(output.iter().any(|&val| val != Complex64::default()));
@@ -447,7 +449,7 @@ mod tests {
         let planner = ParallelPlanner::new(None);
         let plan = planner
             .plan_fft(&[32], true, PlannerBackend::default())
-            .unwrap();
+            .expect("Operation failed");
 
         let executor = ParallelExecutor::new(plan, None);
 
@@ -462,7 +464,9 @@ mod tests {
         let mut outputs = [&mut output1[..], &mut output2[..]];
 
         // Execute batch
-        let times = executor.execute_batch(&inputs, &mut outputs).unwrap();
+        let times = executor
+            .execute_batch(&inputs, &mut outputs)
+            .expect("Operation failed");
 
         // Check that we got timing information
         assert_eq!(times.len(), 2);

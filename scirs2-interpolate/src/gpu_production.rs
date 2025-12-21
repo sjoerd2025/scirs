@@ -592,7 +592,11 @@ impl ProductionGpuAccelerator {
                 self.devices
                     .iter()
                     .filter(|d| d.is_available)
-                    .min_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap())
+                    .min_by(|a, b| {
+                        a.utilization
+                            .partial_cmp(&b.utilization)
+                            .expect("Operation failed")
+                    })
                     .map(|d| d.id)
                     .ok_or_else(|| {
                         InterpolateError::ComputationError(
@@ -679,7 +683,7 @@ impl ProductionGpuAccelerator {
 
     /// Get comprehensive performance report
     pub fn get_performance_report(&self) -> ProductionPerformanceReport {
-        let monitor = self.monitor.lock().unwrap();
+        let monitor = self.monitor.lock().expect("Operation failed");
 
         ProductionPerformanceReport {
             system_metrics: monitor.system_metrics.clone(),
@@ -1343,7 +1347,11 @@ pub mod production_extensions {
                         .filter(|d| {
                             d.is_available && d.available_memory >= task_requirements.min_memory
                         })
-                        .min_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap())
+                        .min_by(|a, b| {
+                            a.utilization
+                                .partial_cmp(&b.utilization)
+                                .expect("Operation failed")
+                        })
                         .ok_or_else(|| {
                             InterpolateError::ComputationError(
                                 "No suitable device found".to_string(),
@@ -1361,7 +1369,7 @@ pub mod production_extensions {
                         .max_by(|a, b| {
                             let score_a = Self::calculate_performance_score(a);
                             let score_b = Self::calculate_performance_score(b);
-                            score_a.partial_cmp(&score_b).unwrap()
+                            score_a.partial_cmp(&score_b).expect("Operation failed")
                         })
                         .ok_or_else(|| {
                             InterpolateError::ComputationError(
@@ -1399,7 +1407,7 @@ pub mod production_extensions {
                 .max_by(|a, b| {
                     let score_a = Self::calculate_performance_score(a);
                     let score_b = Self::calculate_performance_score(b);
-                    score_a.partial_cmp(&score_b).unwrap()
+                    score_a.partial_cmp(&score_b).expect("Operation failed")
                 })
                 .ok_or_else(|| {
                     InterpolateError::ComputationError("No suitable device found".to_string())
@@ -1458,30 +1466,32 @@ mod tests {
         // Should succeed with simulated devices
         assert!(result.is_ok());
 
-        let accelerator = result.unwrap();
+        let accelerator = result.expect("Operation failed");
         assert!(!accelerator.devices.is_empty());
     }
 
     #[test]
     fn test_execution_strategy_selection() {
         let config = ProductionGpuConfig::default();
-        let accelerator = ProductionGpuAccelerator::new(config).unwrap();
+        let accelerator = ProductionGpuAccelerator::new(config).expect("Operation failed");
 
         // Small problem should use single GPU
-        let strategy = accelerator.select_execution_strategy(100, 100).unwrap();
+        let strategy = accelerator
+            .select_execution_strategy(100, 100)
+            .expect("Operation failed");
         assert!(matches!(strategy, ExecutionStrategy::SingleGpuBatch));
 
         // Large problem should use streaming
         let strategy = accelerator
             .select_execution_strategy(100_000, 10_000)
-            .unwrap();
+            .expect("Operation failed");
         assert!(matches!(strategy, ExecutionStrategy::StreamingChunked));
     }
 
     #[test]
     fn test_performance_monitoring() {
         let config = ProductionGpuConfig::default();
-        let accelerator = ProductionGpuAccelerator::new(config).unwrap();
+        let accelerator = ProductionGpuAccelerator::new(config).expect("Operation failed");
 
         let report = accelerator.get_performance_report();
         assert!(report.uptime > Duration::from_secs(0));

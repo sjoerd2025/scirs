@@ -22,7 +22,7 @@
 //! let config = BatchConversionConfig::default().with_simd(true);
 //! let converter = BatchConverter::new(config);
 //!
-//! let result: Vec<f32> = converter.convert_slice(&data).unwrap();
+//! let result: Vec<f32> = converter.convert_slice(&data).expect("Operation failed");
 //! assert_eq!(result.len(), data.len());
 //!
 //! // Convert with error handling for individual elements
@@ -821,7 +821,7 @@ mod tests {
             .with_parallel(false);
         let converter = BatchConverter::new(config);
 
-        let result: Vec<f32> = converter.convert_slice(&data).unwrap();
+        let result: Vec<f32> = converter.convert_slice(&data).expect("Operation failed");
         assert_eq!(result.len(), data.len());
         assert_eq!(result[0], 1.0f32);
         assert_eq!(result[1], 2.5f32);
@@ -860,7 +860,9 @@ mod tests {
         ];
         let converter = BatchConverter::with_default_config();
 
-        let result: Vec<num_complex::Complex32> = converter.convert_complex_slice(&data).unwrap();
+        let result: Vec<num_complex::Complex32> = converter
+            .convert_complex_slice(&data)
+            .expect("Operation failed");
         assert_eq!(result.len(), data.len());
         assert_eq!(result[0].re, 1.0f32);
         assert_eq!(result[0].im, 2.0f32);
@@ -871,7 +873,7 @@ mod tests {
         let data: Vec<f64> = vec![];
         let converter = BatchConverter::with_default_config();
 
-        let result: Vec<f32> = converter.convert_slice(&data).unwrap();
+        let result: Vec<f32> = converter.convert_slice(&data).expect("Operation failed");
         assert_eq!(result.len(), 0);
 
         let (converted, errors) = converter.convert_slice_witherrors::<f64, f32>(&data);
@@ -899,18 +901,18 @@ mod tests {
         let config = BatchConversionConfig::default().with_parallel_threshold(10000);
         let converter = BatchConverter::new(config);
 
-        let result: Vec<f32> = converter.convert_slice(&data).unwrap();
+        let result: Vec<f32> = converter.convert_slice(&data).expect("Operation failed");
         assert_eq!(result.len(), data.len());
     }
 
     #[test]
     fn test_utils_functions() {
         let f64_data: Vec<f64> = vec![1.0, 2.5, 3.7];
-        let f32_result = utils::f64_to_f32_batch(&f64_data).unwrap();
+        let f32_result = utils::f64_to_f32_batch(&f64_data).expect("Operation failed");
         assert_eq!(f32_result.len(), f64_data.len());
 
         let f32_data: Vec<f32> = vec![1.0, 2.5, 3.7];
-        let f64_result = utils::f32_to_f64_batch(&f32_data).unwrap();
+        let f64_result = utils::f32_to_f64_batch(&f32_data).expect("Operation failed");
         assert_eq!(f64_result.len(), f32_data.len());
 
         let i32_data: Vec<i32> = vec![1, 2, 3];

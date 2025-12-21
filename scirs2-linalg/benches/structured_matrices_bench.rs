@@ -63,7 +63,10 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
             BenchmarkId::new("toeplitz_create", size),
             &(&first_row, &first_col),
             |b, (r, c)| {
-                b.iter(|| ToeplitzMatrix::new(black_box(r.view()), black_box(c.view())).unwrap())
+                b.iter(|| {
+                    ToeplitzMatrix::new(black_box(r.view()), black_box(c.view()))
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -73,9 +76,11 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
             &(&first_row, &first_col, &vector),
             |b, (r, c, v)| {
                 b.iter(|| {
-                    let toeplitz =
-                        ToeplitzMatrix::new(black_box(r.view()), black_box(c.view())).unwrap();
-                    toeplitz.matvec(black_box(&v.view())).unwrap()
+                    let toeplitz = ToeplitzMatrix::new(black_box(r.view()), black_box(c.view()))
+                        .expect("Operation failed");
+                    toeplitz
+                        .matvec(black_box(&v.view()))
+                        .expect("Operation failed")
                 })
             },
         );
@@ -86,7 +91,7 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
         //     &(&first_row, &first_col, &vector),
         //     |b, (r, c, v)| {
         //         b.iter(|| {
-        //             let toeplitz = ToeplitzMatrix::new(black_box(r.view()), black_box(c.view())).unwrap();
+        //             let toeplitz = ToeplitzMatrix::new(black_box(r.view()), black_box(c.view())).expect("Operation failed");
         //             toeplitz_matvec_fft(&toeplitz, black_box(&v.view()))
         //         })
         //     },
@@ -103,7 +108,7 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
                         black_box(r.view()),
                         black_box(rhs.view()),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -114,7 +119,7 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
         //     &(&first_row, &rhs),
         //     |b, (r, rhs)| {
         //         b.iter(|| {
-        //             let toeplitz = ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+        //             let toeplitz = ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).expect("Operation failed");
         //             solve_toeplitz_levinson(&toeplitz, black_box(&rhs.view()))
         //         })
         //     },
@@ -128,7 +133,7 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
         //         |b, r| {
         //             b.iter(|| {
         //                 let toeplitz =
-        //                     ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+        //                     ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).expect("Operation failed");
         //                 toeplitz_determinant(&toeplitz)
         //             })
         //         },
@@ -143,7 +148,8 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
                 |b, r| {
                     b.iter(|| {
                         let toeplitz =
-                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view()))
+                                .expect("Operation failed");
                         // toeplitz_inverse(&toeplitz) // Disabled due to API changes
                         toeplitz.shape() // Placeholder return
                     })
@@ -181,7 +187,8 @@ fn bench_circulant_operations(c: &mut Criterion) {
             &(&first_row, &vector),
             |b, (r, v)| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(black_box(r.view())).unwrap();
+                    let circulant =
+                        CirculantMatrix::new(black_box(r.view())).expect("Operation failed");
                     circulant_matvec_fft(&circulant, black_box(&v.view()))
                 })
             },
@@ -194,7 +201,8 @@ fn bench_circulant_operations(c: &mut Criterion) {
                 &(&first_row, &vector),
                 |b, (r, v)| {
                     b.iter(|| {
-                        let circulant = CirculantMatrix::new(black_box(r.view())).unwrap();
+                        let circulant =
+                            CirculantMatrix::new(black_box(r.view())).expect("Operation failed");
                         circulant_matvec_direct(&circulant, black_box(&v.view()))
                     })
                 },
@@ -207,7 +215,8 @@ fn bench_circulant_operations(c: &mut Criterion) {
             &(&first_row, &rhs),
             |b, (r, rhs)| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(black_box(r.view())).unwrap();
+                    let circulant =
+                        CirculantMatrix::new(black_box(r.view())).expect("Operation failed");
                     solve_circulant_fft(&circulant, black_box(&rhs.view()))
                 })
             },
@@ -219,7 +228,8 @@ fn bench_circulant_operations(c: &mut Criterion) {
             &first_row,
             |b, r| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(black_box(r.view())).unwrap();
+                    let circulant =
+                        CirculantMatrix::new(black_box(r.view())).expect("Operation failed");
                     circulant_eigenvalues(&circulant)
                 })
             },
@@ -231,7 +241,8 @@ fn bench_circulant_operations(c: &mut Criterion) {
             &first_row,
             |b, r| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(black_box(r.view())).unwrap();
+                    let circulant =
+                        CirculantMatrix::new(black_box(r.view())).expect("Operation failed");
                     circulant_determinant(&circulant)
                 })
             },
@@ -243,7 +254,8 @@ fn bench_circulant_operations(c: &mut Criterion) {
             &first_row,
             |b, r| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(black_box(r.view())).unwrap();
+                    let circulant =
+                        CirculantMatrix::new(black_box(r.view())).expect("Operation failed");
                     circulant_inverse_fft(&circulant)
                 })
             },
@@ -271,7 +283,10 @@ fn bench_hankel_operations(c: &mut Criterion) {
             BenchmarkId::new("hankel_create", size),
             &(&first_row, &last_col),
             |b, (r, c)| {
-                b.iter(|| HankelMatrix::new(black_box(r.view()), black_box(c.view())).unwrap())
+                b.iter(|| {
+                    HankelMatrix::new(black_box(r.view()), black_box(c.view()))
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -281,8 +296,8 @@ fn bench_hankel_operations(c: &mut Criterion) {
             &(&first_row, &last_col, &vector),
             |b, (r, c, v)| {
                 b.iter(|| {
-                    let hankel =
-                        HankelMatrix::new(black_box(r.view()), black_box(c.view())).unwrap();
+                    let hankel = HankelMatrix::new(black_box(r.view()), black_box(c.view()))
+                        .expect("Operation failed");
                     hankel_matvec(&hankel, black_box(&v.view()))
                 })
             },
@@ -294,8 +309,8 @@ fn bench_hankel_operations(c: &mut Criterion) {
             &(&first_row, &last_col, &vector),
             |b, (r, c, v)| {
                 b.iter(|| {
-                    let hankel =
-                        HankelMatrix::new(black_box(r.view()), black_box(c.view())).unwrap();
+                    let hankel = HankelMatrix::new(black_box(r.view()), black_box(c.view()))
+                        .expect("Operation failed");
                     hankel_matvec_fft(&hankel, black_box(&v.view()))
                 })
             },
@@ -308,8 +323,8 @@ fn bench_hankel_operations(c: &mut Criterion) {
                 &(&first_row, &last_col),
                 |b, (r, c)| {
                     b.iter(|| {
-                        let hankel =
-                            HankelMatrix::new(black_box(r.view()), black_box(c.view())).unwrap();
+                        let hankel = HankelMatrix::new(black_box(r.view()), black_box(c.view()))
+                            .expect("Operation failed");
                         hankel_determinant(&hankel)
                     })
                 },
@@ -323,8 +338,8 @@ fn bench_hankel_operations(c: &mut Criterion) {
                 &(&first_row, &last_col),
                 |b, (r, c)| {
                     b.iter(|| {
-                        let hankel =
-                            HankelMatrix::new(black_box(r.view()), black_box(c.view())).unwrap();
+                        let hankel = HankelMatrix::new(black_box(r.view()), black_box(c.view()))
+                            .expect("Operation failed");
                         hankel_svd(&hankel)
                     })
                 },
@@ -361,7 +376,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
                         black_box(diag.view()),
                         black_box(sup.view()),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -377,7 +392,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
                         black_box(diag.view()),
                         black_box(sup.view()),
                     )
-                    .unwrap();
+                    .expect("Operation failed");
                     tridiagonal_matvec(&tridiag, black_box(&v.view()))
                 })
             },
@@ -394,7 +409,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
                         black_box(diag.view()),
                         black_box(sup.view()),
                     )
-                    .unwrap();
+                    .expect("Operation failed");
                     solve_tridiagonal_thomas(&tridiag, black_box(&rhs.view()))
                 })
             },
@@ -411,7 +426,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
                         black_box(diag.view()),
                         black_box(sup.view()),
                     )
-                    .unwrap();
+                    .expect("Operation failed");
                     solve_tridiagonal_lu(&tridiag, black_box(&rhs.view()))
                 })
             },
@@ -428,7 +443,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
                         black_box(diag.view()),
                         black_box(sup.view()),
                     )
-                    .unwrap();
+                    .expect("Operation failed");
                     tridiagonal_determinant(&tridiag)
                 })
             },
@@ -446,7 +461,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
                             black_box(diag.view()),
                             black_box(sup.view()),
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                         tridiagonal_eigenvalues(&tridiag)
                     })
                 },
@@ -465,7 +480,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
                             black_box(diag.view()),
                             black_box(sup.view()),
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                         tridiagonal_eigenvectors(&tridiag)
                     })
                 },
@@ -505,7 +520,7 @@ fn bench_banded_operations(c: &mut Criterion) {
                             black_box(size), // nrows
                             black_box(size), // ncols
                         )
-                        .unwrap()
+                        .expect("Operation failed")
                     })
                 },
             );
@@ -523,7 +538,7 @@ fn bench_banded_operations(c: &mut Criterion) {
                             black_box(size), // nrows
                             black_box(size), // ncols
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                         // Use solve as placeholder since matvec doesn't exist
                         banded
                             .solve(black_box(&v.view()))
@@ -545,7 +560,7 @@ fn bench_banded_operations(c: &mut Criterion) {
                             black_box(size), // nrows
                             black_box(size), // ncols
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                         banded
                             .solve(black_box(&rhs.view()))
                             .unwrap_or_else(|_| (*rhs).clone())
@@ -567,7 +582,7 @@ fn bench_banded_operations(c: &mut Criterion) {
                                 black_box(size), // nrows
                                 black_box(size), // ncols
                             )
-                            .unwrap()
+                            .expect("Operation failed")
                         })
                     },
                 );
@@ -603,7 +618,8 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                 |b, blocks| {
                     b.iter(|| {
                         let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                        BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap()
+                        BlockDiagonalMatrix::from_views(black_box(block_views))
+                            .expect("Operation failed")
                     })
                 },
             );
@@ -618,8 +634,8 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                 |b, (blocks, v)| {
                     b.iter(|| {
                         let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                        let _block_diag =
-                            BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap();
+                        let _block_diag = BlockDiagonalMatrix::from_views(black_box(block_views))
+                            .expect("Operation failed");
                         // Use placeholder - just return the input vector since matvec doesn't exist yet
                         (*v).clone()
                     })
@@ -636,8 +652,8 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                 |b, (blocks, rhs)| {
                     b.iter(|| {
                         let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
-                        let block_diag =
-                            BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap();
+                        let block_diag = BlockDiagonalMatrix::from_views(black_box(block_views))
+                            .expect("Operation failed");
                         solve_block_diagonal(&block_diag, black_box(&rhs.view()))
                     })
                 },
@@ -655,7 +671,8 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                         b.iter(|| {
                             let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
                             let block_diag =
-                                BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap();
+                                BlockDiagonalMatrix::from_views(black_box(block_views))
+                                    .expect("Operation failed");
                             block_diagonal_determinant(&block_diag)
                         })
                     },
@@ -674,7 +691,8 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
                         b.iter(|| {
                             let block_views: Vec<_> = blocks.iter().map(|b| b.view()).collect();
                             // Use placeholder - just return the matrix creation since inverse doesn't exist yet
-                            BlockDiagonalMatrix::from_views(black_box(block_views)).unwrap()
+                            BlockDiagonalMatrix::from_views(black_box(block_views))
+                                .expect("Operation failed")
                         })
                     },
                 );
@@ -717,7 +735,7 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
                             black_box(diag_cloned),
                             black_box(off_diag_cloned),
                         )
-                        .unwrap()
+                        .expect("Operation failed")
                     })
                 },
             );
@@ -738,7 +756,7 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
                             black_box(diag_cloned),
                             black_box(off_diag_cloned),
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                         // Use placeholder - just return the input vector since matvec doesn't exist
                         (*v).clone()
                     })
@@ -764,7 +782,7 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
                             black_box(off_diag_cloned.clone()),
                             black_box(off_diag_cloned),
                         )
-                        .unwrap()
+                        .expect("Operation failed")
                     })
                 },
             );
@@ -786,7 +804,7 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
                                 black_box(off_diag_clones.clone()),
                                 black_box(off_diag_clones),
                             )
-                            .unwrap();
+                            .expect("Operation failed");
                             block_tridiagonal_lu(&block_tridiag)
                         })
                     },
@@ -817,8 +835,8 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
             &(&first_row, &vector),
             |b, (r, v)| {
                 b.iter(|| {
-                    let toeplitz =
-                        ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+                    let toeplitz = ToeplitzMatrix::new(black_box(r.view()), black_box(r.view()))
+                        .expect("Operation failed");
                     toeplitz.matvec(black_box(&v.view()))
                 })
             },
@@ -836,7 +854,8 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
             &(&first_row, &vector),
             |b, (r, v)| {
                 b.iter(|| {
-                    let circulant = CirculantMatrix::new(black_box(r.view())).unwrap();
+                    let circulant =
+                        CirculantMatrix::new(black_box(r.view())).expect("Operation failed");
                     circulant_matvec_fft(&circulant, black_box(&v.view()))
                 })
             },
@@ -854,8 +873,8 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
             &first_row,
             |b, r| {
                 b.iter(|| {
-                    let _toeplitz =
-                        ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+                    let _toeplitz = ToeplitzMatrix::new(black_box(r.view()), black_box(r.view()))
+                        .expect("Operation failed");
                     // Just creation to measure memory allocation
                 })
             },
@@ -910,7 +929,8 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
                 |b, r: &Array1<f64>| {
                     b.iter(|| {
                         let toeplitz =
-                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view()))
+                                .expect("Operation failed");
                         fast_toeplitz_inverse(&toeplitz)
                     })
                 },
@@ -925,7 +945,8 @@ fn bench_specialized_algorithms(c: &mut Criterion) {
                 |b, r: &Array1<f64>| {
                     b.iter(|| {
                         let toeplitz =
-                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view())).unwrap();
+                            ToeplitzMatrix::new(black_box(r.view()), black_box(r.view()))
+                                .expect("Operation failed");
                         gohberg_semencul_inverse(&toeplitz)
                     })
                 },

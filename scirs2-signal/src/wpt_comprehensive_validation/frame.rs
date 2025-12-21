@@ -322,9 +322,9 @@ mod tests {
     #[test]
     fn test_power_iteration() {
         // Test with simple 2x2 matrix
-        let matrix = scirs2_core::ndarray::Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).unwrap();
+        let matrix = scirs2_core::ndarray::Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 2.0]).expect("Operation failed");
 
-        let eigenvalue = power_iteration(&matrix, 100, 1e-10).unwrap();
+        let eigenvalue = power_iteration(&matrix, 100, 1e-10).expect("Operation failed");
 
         // Largest eigenvalue should be approximately 3.0
         assert!((eigenvalue - 3.0).abs() < 0.1);

@@ -75,8 +75,8 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
                     b.iter(|| {
                         for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
                             black_box(euclidean(
-                                row1.as_slice().unwrap(),
-                                row2.as_slice().unwrap(),
+                                row1.as_slice().expect("Test: operation failed"),
+                                row2.as_slice().expect("Test: operation failed"),
                             ));
                         }
                     })
@@ -91,7 +91,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
                     b.iter(|| {
                         black_box(
                             simd_euclidean_distance_batch(&points1.view(), &points2.view())
-                                .unwrap(),
+                                .expect("Test: operation failed"),
                         )
                     })
                 },
@@ -106,10 +106,10 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
                         for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
                             black_box(
                                 simd_euclidean_distance(
-                                    row1.as_slice().unwrap(),
-                                    row2.as_slice().unwrap(),
+                                    row1.as_slice().expect("Test: operation failed"),
+                                    row2.as_slice().expect("Test: operation failed"),
                                 )
-                                .unwrap(),
+                                .expect("Test: operation failed"),
                             );
                         }
                     })
@@ -142,7 +142,11 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
 
         // Parallel pdist
         group.bench_with_input(BenchmarkId::new("parallel_pdist", size), &size, |b_, _| {
-            b_.iter(|| black_box(parallel_pdist(&points.view(), "euclidean").unwrap()))
+            b_.iter(|| {
+                black_box(
+                    parallel_pdist(&points.view(), "euclidean").expect("Test: operation failed"),
+                )
+            })
         });
     }
 
@@ -155,7 +159,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("kdtree_construction", size),
             &size,
-            |b_, _| b_.iter(|| black_box(KDTree::new(&points).unwrap())),
+            |b_, _| b_.iter(|| black_box(KDTree::new(&points).expect("Test: operation failed"))),
         );
     }
 
@@ -185,7 +189,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                     // Only compute a subset to avoid memory explosion
                     let subset_size = (size / 10).max(100);
                     let subset = points.slice(scirs2_core::ndarray::s![..subset_size, ..]);
-                    black_box(parallel_pdist(&subset, "euclidean").unwrap())
+                    black_box(parallel_pdist(&subset, "euclidean").expect("Test: operation failed"))
                 })
             },
         );
@@ -203,7 +207,8 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                         let chunk =
                             points.slice(scirs2_core::ndarray::s![chunk_start..chunk_end, ..]);
                         if chunk.nrows() > 1 {
-                            let distances = parallel_pdist(&chunk, "euclidean").unwrap();
+                            let distances = parallel_pdist(&chunk, "euclidean")
+                                .expect("Test: operation failed");
                             total_distance += distances.sum();
                         }
                     }
@@ -230,7 +235,13 @@ fn bench_distance_metrics_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("parallel_pdist", metric),
             metric,
-            |b, metric| b.iter(|| black_box(parallel_pdist(&points.view(), metric).unwrap())),
+            |b, metric| {
+                b.iter(|| {
+                    black_box(
+                        parallel_pdist(&points.view(), metric).expect("Test: operation failed"),
+                    )
+                })
+            },
         );
     }
 
@@ -243,8 +254,12 @@ fn bench_distance_metrics_comparison(c: &mut Criterion) {
             BenchmarkId::new("simd_single_distance", metric),
             metric,
             |b, metric| match metric {
-                "euclidean" => b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap())),
-                "manhattan" => b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap())),
+                "euclidean" => b.iter(|| {
+                    black_box(simd_euclidean_distance(&p1, &p2).expect("Test: operation failed"))
+                }),
+                "manhattan" => b.iter(|| {
+                    black_box(simd_manhattan_distance(&p1, &p2).expect("Test: operation failed"))
+                }),
                 _ => unreachable!(),
             },
         );
@@ -294,7 +309,9 @@ fn bench_cross_architecture_performance(c: &mut Criterion) {
 
         // Benchmark SIMD implementation
         group.bench_with_input(BenchmarkId::new("simd_euclidean", dim), &dim, |b_, _| {
-            b_.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap()))
+            b_.iter(|| {
+                black_box(simd_euclidean_distance(&p1, &p2).expect("Test: operation failed"))
+            })
         });
 
         // Benchmark scalar fallback
@@ -320,7 +337,7 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("kdtree_construction", size),
             &size,
-            |b_, _| b_.iter(|| black_box(KDTree::new(&points).unwrap())),
+            |b_, _| b_.iter(|| black_box(KDTree::new(&points).expect("Test: operation failed"))),
         );
 
         // BallTree construction
@@ -328,13 +345,19 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
             BenchmarkId::new("balltree_construction", size),
             &size,
             |b, _| {
-                b.iter(|| black_box(BallTree::with_euclidean_distance(&points.view(), 10).unwrap()))
+                b.iter(|| {
+                    black_box(
+                        BallTree::with_euclidean_distance(&points.view(), 10)
+                            .expect("Test: operation failed"),
+                    )
+                })
             },
         );
 
         // Query performance
-        let kdtree = KDTree::new(&points).unwrap();
-        let balltree = BallTree::with_euclidean_distance(&points.view(), 10).unwrap();
+        let kdtree = KDTree::new(&points).expect("Test: operation failed");
+        let balltree =
+            BallTree::with_euclidean_distance(&points.view(), 10).expect("Test: operation failed");
 
         for &k in &[1, 5, 10] {
             group.bench_with_input(
@@ -343,7 +366,11 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
                 |b, _| {
                     b.iter(|| {
                         for query in query_points.outer_iter() {
-                            black_box(kdtree.query(query.as_slice().unwrap(), k).unwrap());
+                            black_box(
+                                kdtree
+                                    .query(query.as_slice().expect("Test: operation failed"), k)
+                                    .expect("Test: operation failed"),
+                            );
                         }
                     })
                 },
@@ -355,7 +382,15 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
                 |b, _| {
                     b.iter(|| {
                         for query in query_points.outer_iter() {
-                            black_box(balltree.query(query.as_slice().unwrap(), k, true).unwrap());
+                            black_box(
+                                balltree
+                                    .query(
+                                        query.as_slice().expect("Test: operation failed"),
+                                        k,
+                                        true,
+                                    )
+                                    .expect("Test: operation failed"),
+                            );
                         }
                     })
                 },
@@ -385,7 +420,7 @@ fn bench_knn_performance_scaling(c: &mut Criterion) {
             b.iter(|| {
                 black_box(
                     simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean")
-                        .unwrap(),
+                        .expect("Test: operation failed"),
                 )
             })
         });
@@ -401,7 +436,7 @@ fn bench_knn_performance_scaling(c: &mut Criterion) {
                 b.iter(|| {
                     black_box(
                         simd_knn_search(&query_points.view(), &data_points.view(), k, metric)
-                            .unwrap(),
+                            .expect("Test: operation failed"),
                     )
                 })
             },
@@ -430,7 +465,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                 // Limit computation to avoid excessive runtime
                 let subset_size = if size > 2000 { 1000 } else { size };
                 let subset = points.slice(scirs2_core::ndarray::s![..subset_size, ..]);
-                black_box(parallel_pdist(&subset, "euclidean").unwrap())
+                black_box(parallel_pdist(&subset, "euclidean").expect("Test: operation failed"))
             })
         });
     }
@@ -451,7 +486,8 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                 |b, _| {
                     b.iter(|| {
                         black_box(
-                            parallel_cdist(&points1.view(), &points2.view(), "euclidean").unwrap(),
+                            parallel_cdist(&points1.view(), &points2.view(), "euclidean")
+                                .expect("Test: operation failed"),
                         )
                     })
                 },
@@ -475,7 +511,8 @@ fn bench_memory_allocation_patterns(c: &mut Criterion) {
         let points = generate_points(size, dim, BENCHMARK_SEED);
         b.iter(|| {
             // Simulate pre-allocated buffer reuse
-            let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+            let _distances =
+                parallel_pdist(&points.view(), "euclidean").expect("Test: operation failed");
             black_box(_distances)
         })
     });
@@ -484,7 +521,8 @@ fn bench_memory_allocation_patterns(c: &mut Criterion) {
         b.iter(|| {
             // Generate fresh data each iteration (worst case)
             let points = generate_points(size, dim, BENCHMARK_SEED);
-            let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+            let _distances =
+                parallel_pdist(&points.view(), "euclidean").expect("Test: operation failed");
             black_box(_distances)
         })
     });
@@ -528,7 +566,8 @@ fn bench_performance_report(c: &mut Criterion) {
     group.bench_function("system_characterization", |b| {
         b.iter(|| {
             // Run a representative workload
-            let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+            let _distances =
+                parallel_pdist(&points.view(), "euclidean").expect("Test: operation failed");
             let _sum = _distances.sum();
             black_box(_sum)
         })

@@ -41,12 +41,12 @@ fn main() {
             );
             println!(
                 "Final value: {}, Exact: {}",
-                res.y.last().unwrap()[0],
+                res.y.last().expect("Operation failed")[0],
                 (-1.0f64).exp()
             );
             println!(
                 "Error: {:.2e}",
-                (res.y.last().unwrap()[0] - (-1.0f64).exp()).abs()
+                (res.y.last().expect("Operation failed")[0] - (-1.0f64).exp()).abs()
             );
 
             // Print all time points and values for close inspection
@@ -83,7 +83,7 @@ fn main() {
                     ..Default::default()
                 }),
             )
-            .unwrap();
+            .expect("Operation failed");
 
             println!(
                 "DOP853 Steps: {}, Function evaluations: {}",
@@ -91,12 +91,12 @@ fn main() {
             );
             println!(
                 "Final value: {}, Exact: {}",
-                dop_result.y.last().unwrap()[0],
+                dop_result.y.last().expect("Operation failed")[0],
                 (-1.0f64).exp()
             );
             println!(
                 "Error: {:.2e}",
-                (dop_result.y.last().unwrap()[0] - (-1.0f64).exp()).abs()
+                (dop_result.y.last().expect("Operation failed")[0] - (-1.0f64).exp()).abs()
             );
         }
     }

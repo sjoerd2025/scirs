@@ -259,7 +259,7 @@ mod tests {
         }
 
         // Compute FFT using strided implementation
-        let result = fft_strided(&input, 0).unwrap();
+        let result = fft_strided(&input, 0).expect("Operation failed");
 
         // Compare with expected FFT result
         // (We would compare with the standard FFT implementation)
@@ -277,11 +277,11 @@ mod tests {
         }
 
         // FFT along first axis
-        let result1 = fft_strided(&input, 0).unwrap();
+        let result1 = fft_strided(&input, 0).expect("Operation failed");
         assert_eq!(result1.shape(), input.shape());
 
         // FFT along second axis
-        let result2 = fft_strided(&input, 1).unwrap();
+        let result2 = fft_strided(&input, 1).expect("Operation failed");
         assert_eq!(result2.shape(), input.shape());
     }
 
@@ -295,8 +295,8 @@ mod tests {
         }
 
         // Forward and inverse FFT should give back the input
-        let forward = fft_strided_complex(&input, 0).unwrap();
-        let inverse = ifft_strided(&forward, 0).unwrap();
+        let forward = fft_strided_complex(&input, 0).expect("Operation failed");
+        let inverse = ifft_strided(&forward, 0).expect("Operation failed");
 
         // Check round-trip accuracy
         for i in 0..n {

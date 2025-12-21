@@ -38,7 +38,7 @@ use crate::error::LinalgResult;
 /// ];
 ///
 /// // Compute LU decomposition with extended precision
-/// let (p, l, u) = extended_lu::<_, f64>(&a.view()).unwrap();
+/// let (p, l, u) = extended_lu::<_, f64>(&a.view()).expect("Operation failed");
 ///
 /// // Check result: P*A ≈ L*U
 /// let pa = p.dot(&a);
@@ -315,7 +315,7 @@ where
 /// ];
 ///
 /// // Compute QR decomposition with extended precision
-/// let (q, r) = extended_qr::<_, f64>(&a.view()).unwrap();
+/// let (q, r) = extended_qr::<_, f64>(&a.view()).expect("Operation failed");
 ///
 /// // Check orthogonality of Q (Q^T * Q ≈ I)
 /// let qt = q.t();
@@ -404,7 +404,8 @@ where
                 }
 
                 for i in 0..v.len() {
-                    a_high[[i + k, j]] -= I::from(2.0).unwrap() * dot_product * v[i];
+                    a_high[[i + k, j]] -=
+                        I::from(2.0).expect("Operation failed") * dot_product * v[i];
                 }
             }
 
@@ -416,7 +417,8 @@ where
                 }
 
                 for i in 0..v.len() {
-                    q_high[[i + k, j]] -= I::from(2.0).unwrap() * dot_product * v[i];
+                    q_high[[i + k, j]] -=
+                        I::from(2.0).expect("Operation failed") * dot_product * v[i];
                 }
             }
         }
@@ -483,7 +485,7 @@ where
 /// ];
 ///
 /// // Compute Cholesky decomposition with extended precision
-/// let l = extended_cholesky::<_, f64>(&a.view()).unwrap();
+/// let l = extended_cholesky::<_, f64>(&a.view()).expect("Operation failed");
 ///
 /// // Check result: A ≈ L*L^T
 /// let lt = l.t();
@@ -519,7 +521,9 @@ where
     let n = a.nrows();
     for i in 0..n {
         for j in i + 1..n {
-            if (a[[i, j]] - a[[j, i]]).abs() > A::epsilon() * A::from(10.0).unwrap() {
+            if (a[[i, j]] - a[[j, i]]).abs()
+                > A::epsilon() * A::from(10.0).expect("Operation failed")
+            {
                 return Err(crate::error::LinalgError::InvalidInputError(
                     "Matrix must be symmetric".to_string(),
                 ));
@@ -609,7 +613,7 @@ where
 /// ];
 ///
 /// // Compute SVD with extended precision
-/// let (u, s, vh) = extended_svd::<_, f64>(&a.view(), true, None, None).unwrap();
+/// let (u, s, vh) = extended_svd::<_, f64>(&a.view(), true, None, None).expect("Operation failed");
 ///
 /// // Check that singular values are correct
 /// assert!((s[0] - 1.0).abs() < 1e-5);
@@ -700,7 +704,7 @@ where
         let mut converged = true;
         for i in 0..ata.nrows() {
             for j in 0..ata.ncols() {
-                if i != j && ata[[i, j]].abs() > I::from(tol.promote()).unwrap() {
+                if i != j && ata[[i, j]].abs() > I::from(tol.promote()).expect("Operation failed") {
                     converged = false;
                     break;
                 }
@@ -723,7 +727,7 @@ where
 
     // Sort singular values and corresponding vectors
     let mut indices: Vec<usize> = (0..k).collect();
-    indices.sort_by(|&i, &j| s_high[j].partial_cmp(&s_high[i]).unwrap());
+    indices.sort_by(|&i, &j| s_high[j].partial_cmp(&s_high[i]).expect("Operation failed"));
 
     let mut sorted_s_high = Array1::zeros(k);
     let mut sorted_v_high = Array2::zeros((if n <= m { n } else { m }, k));
@@ -919,7 +923,7 @@ where
                 }
 
                 for i in 0..v.len() {
-                    r[[i + k, j]] -= I::from(2.0).unwrap() * dot_product * v[i];
+                    r[[i + k, j]] -= I::from(2.0).expect("Operation failed") * dot_product * v[i];
                 }
             }
 
@@ -931,7 +935,7 @@ where
                 }
 
                 for i in 0..v.len() {
-                    q[[j, i + k]] -= I::from(2.0).unwrap() * dot_product * v[i];
+                    q[[j, i + k]] -= I::from(2.0).expect("Operation failed") * dot_product * v[i];
                 }
             }
         }

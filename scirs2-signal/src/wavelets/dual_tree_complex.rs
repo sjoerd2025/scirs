@@ -650,7 +650,7 @@ impl DtcwtProcessor {
                 }
 
                 // Original signal
-                extended.extend_from_slice(signal.as_slice().unwrap());
+                extended.extend_from_slice(signal.as_slice().expect("Operation failed"));
 
                 // Right extension
                 for i in 0..ext_len {
@@ -669,7 +669,7 @@ impl DtcwtProcessor {
                 }
 
                 // Original signal
-                extended.extend_from_slice(signal.as_slice().unwrap());
+                extended.extend_from_slice(signal.as_slice().expect("Operation failed"));
 
                 // Right extension
                 for i in 0..ext_len {
@@ -926,7 +926,7 @@ mod tests {
             num_levels: 3,
             ..Default::default()
         };
-        let processor = DtcwtProcessor::new(config).unwrap();
+        let processor = DtcwtProcessor::new(config).expect("Operation failed");
 
         // Create test signal
         let n = 64;
@@ -935,12 +935,16 @@ mod tests {
             .collect();
 
         // Forward transform
-        let dtcwtresult = processor.dtcwt_1d_forward(&signal).unwrap();
+        let dtcwtresult = processor
+            .dtcwt_1d_forward(&signal)
+            .expect("Operation failed");
         assert_eq!(dtcwtresult.levels, 3);
         assert_eq!(dtcwtresult.coefficients.len(), 3);
 
         // Inverse transform
-        let reconstructed = processor.dtcwt_1d_inverse(&dtcwtresult).unwrap();
+        let reconstructed = processor
+            .dtcwt_1d_inverse(&dtcwtresult)
+            .expect("Operation failed");
 
         // Check reconstruction quality
         let mse: f64 = signal
@@ -959,7 +963,7 @@ mod tests {
             num_levels: 2,
             ..Default::default()
         };
-        let processor = DtcwtProcessor::new(config).unwrap();
+        let processor = DtcwtProcessor::new(config).expect("Operation failed");
 
         // Create test image
         let (rows, cols) = (32, 32);
@@ -967,7 +971,9 @@ mod tests {
             Array2::from_shape_fn((rows, cols), |(i, j)| ((i as f64 + j as f64) / 8.0).sin());
 
         // Forward transform
-        let dtcwtresult = processor.dtcwt_2d_forward(&image).unwrap();
+        let dtcwtresult = processor
+            .dtcwt_2d_forward(&image)
+            .expect("Operation failed");
         assert_eq!(dtcwtresult.levels, 2);
         assert_eq!(dtcwtresult.orientations, 6);
         assert_eq!(dtcwtresult.coefficients.len(), 2);
@@ -984,7 +990,7 @@ mod tests {
             num_levels: 3,
             ..Default::default()
         };
-        let processor = DtcwtProcessor::new(config).unwrap();
+        let processor = DtcwtProcessor::new(config).expect("Operation failed");
 
         // Create test signal
         let n = 64;
@@ -997,8 +1003,12 @@ mod tests {
         }
 
         // Transform both signals
-        let dtcwt1 = processor.dtcwt_1d_forward(&signal).unwrap();
-        let dtcwt2 = processor.dtcwt_1d_forward(&shifted_signal).unwrap();
+        let dtcwt1 = processor
+            .dtcwt_1d_forward(&signal)
+            .expect("Operation failed");
+        let dtcwt2 = processor
+            .dtcwt_1d_forward(&shifted_signal)
+            .expect("Operation failed");
 
         // Compare magnitudes (should be similar due to shift invariance)
         for level in 0..dtcwt1.levels {
@@ -1031,7 +1041,7 @@ mod tests {
 
     #[test]
     fn test_dtcwt_filters() {
-        let filters = create_dtcwt_filters(FilterSet::Kingsbury).unwrap();
+        let filters = create_dtcwt_filters(FilterSet::Kingsbury).expect("Operation failed");
 
         // Check filter lengths
         assert_eq!(filters.h0a.len(), 10);
@@ -1053,10 +1063,12 @@ mod tests {
             boundary_mode: BoundaryMode::Symmetric,
             ..Default::default()
         };
-        let processor = DtcwtProcessor::new(config).unwrap();
+        let processor = DtcwtProcessor::new(config).expect("Operation failed");
 
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let extended = processor.extend_signal(&signal, 6).unwrap();
+        let extended = processor
+            .extend_signal(&signal, 6)
+            .expect("Operation failed");
 
         // Check symmetric extension
         assert_eq!(extended.len(), 4 + 2 * 5); // original + 2 * (filter_len - 1)

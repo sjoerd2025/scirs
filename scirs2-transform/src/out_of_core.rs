@@ -353,7 +353,7 @@ impl OutOfCoreNormalizer {
 
         for j in 0..nfeatures {
             if !reservoirs[j].is_empty() {
-                reservoirs[j].sort_by(|a, b| a.partial_cmp(b).unwrap());
+                reservoirs[j].sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let len = reservoirs[j].len();
 
                 // Median (50th percentile)
@@ -407,7 +407,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
         let mut chunks_iter = chunks.peekable();
         let nfeatures = match chunks_iter.peek() {
             Some(Ok(chunk)) => chunk.shape()[1],
-            Some(Err(_)) => return chunks_iter.next().unwrap().map(|_| ()),
+            Some(Err(_)) => return chunks_iter.next().expect("Operation failed").map(|_| ()),
             None => {
                 return Err(TransformError::InvalidInput(
                     "No chunks provided".to_string(),
@@ -447,7 +447,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
             ));
         }
 
-        let stats = self.stats.as_ref().unwrap();
+        let stats = self.stats.as_ref().expect("Operation failed");
 
         // Create temporary output file
         let output_path = format!(
@@ -624,7 +624,7 @@ impl Iterator for CsvChunkIterator {
 
         // Convert to Array2
         let n_rows = rows.len();
-        let n_cols = n_cols.unwrap();
+        let n_cols = n_cols.expect("Operation failed");
         let mut array = Array2::zeros((n_rows, n_cols));
 
         for (i, row) in rows.iter().enumerate() {
@@ -646,9 +646,12 @@ mod tests {
     fn test_out_of_core_robust_scaling() {
         // Create test data with known quantiles
         let data = vec![
-            Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap(),
-            Array::from_shape_vec((3, 2), vec![4.0, 40.0, 5.0, 50.0, 6.0, 60.0]).unwrap(),
-            Array::from_shape_vec((3, 2), vec![7.0, 70.0, 8.0, 80.0, 9.0, 90.0]).unwrap(),
+            Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0])
+                .expect("Operation failed"),
+            Array::from_shape_vec((3, 2), vec![4.0, 40.0, 5.0, 50.0, 6.0, 60.0])
+                .expect("Operation failed"),
+            Array::from_shape_vec((3, 2), vec![7.0, 70.0, 8.0, 80.0, 9.0, 90.0])
+                .expect("Operation failed"),
         ];
 
         // Create chunks iterator
@@ -656,10 +659,10 @@ mod tests {
 
         // Fit robust normalizer
         let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
-        normalizer.fit_chunks(chunks).unwrap();
+        normalizer.fit_chunks(chunks).expect("Operation failed");
 
         // Check that statistics were computed
-        let stats = normalizer.stats.as_ref().unwrap();
+        let stats = normalizer.stats.as_ref().expect("Operation failed");
         assert_eq!(stats.median.len(), 2);
         assert_eq!(stats.iqr.len(), 2);
 
@@ -678,18 +681,19 @@ mod tests {
     fn test_out_of_core_robust_transform() {
         // Create simple test data
         let fit_data = vec![
-            Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap(),
-            Array::from_shape_vec((2, 1), vec![3.0, 4.0]).unwrap(),
-            Array::from_shape_vec((1, 1), vec![5.0]).unwrap(),
+            Array::from_shape_vec((2, 1), vec![1.0, 2.0]).expect("Operation failed"),
+            Array::from_shape_vec((2, 1), vec![3.0, 4.0]).expect("Operation failed"),
+            Array::from_shape_vec((1, 1), vec![5.0]).expect("Operation failed"),
         ];
 
         let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
         normalizer
             .fit_chunks(fit_data.into_iter().map(|chunk| Ok(chunk)))
-            .unwrap();
+            .expect("Operation failed");
 
         // Transform new data
-        let transform_data = vec![Array::from_shape_vec((2, 1), vec![3.0, 6.0]).unwrap()];
+        let transform_data =
+            vec![Array::from_shape_vec((2, 1), vec![3.0, 6.0]).expect("Operation failed")];
 
         let result = normalizer.transform_chunks(transform_data.into_iter().map(|chunk| Ok(chunk)));
         assert!(result.is_ok());

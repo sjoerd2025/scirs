@@ -161,7 +161,7 @@ impl StreamPipeline {
             });
         }
 
-        let output_rx = channels.pop().unwrap();
+        let output_rx = channels.pop().expect("Operation failed");
 
         // Input thread
         thread::spawn(move || {
@@ -181,7 +181,7 @@ impl StreamPipeline {
 
     /// Get current pipeline metrics
     pub fn metrics(&self) -> PipelineMetrics {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
 }
 
@@ -204,7 +204,7 @@ impl StreamProcessor {
 
     /// Get current metrics
     pub fn metrics(&self) -> PipelineMetrics {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
 }
 

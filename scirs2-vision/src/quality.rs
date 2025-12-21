@@ -28,7 +28,7 @@ use statrs::statistics::Statistics;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img1 = image::open("examples/input/input.jpg").unwrap();
+/// let img1 = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let img2 = img1.clone(); // Same image for demonstration
 /// let psnr_value = psnr(&img1, &img2, 255.0)?;
 /// println!("PSNR: {:.2} dB", psnr_value);
@@ -111,7 +111,7 @@ impl Default for SSIMParams {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img1 = image::open("examples/input/input.jpg").unwrap();
+/// let img1 = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let img2 = img1.clone();
 /// let ssim_value = ssim(&img1, &img2, &SSIMParams::default())?;
 /// println!("SSIM: {:.4}", ssim_value);
@@ -438,7 +438,7 @@ mod tests {
     #[test]
     fn test_psnr_identical() {
         let img = DynamicImage::new_luma8(50, 50);
-        let psnr_value = psnr(&img, &img, 255.0).unwrap();
+        let psnr_value = psnr(&img, &img, 255.0).expect("Operation failed");
         assert!(psnr_value.is_infinite());
     }
 
@@ -455,7 +455,8 @@ mod tests {
             }
         }
 
-        let psnr_value = psnr(&img1, &DynamicImage::ImageLuma8(img2), 255.0).unwrap();
+        let psnr_value =
+            psnr(&img1, &DynamicImage::ImageLuma8(img2), 255.0).expect("Operation failed");
         assert!(psnr_value > 20.0 && psnr_value < 50.0);
     }
 
@@ -468,7 +469,7 @@ mod tests {
         }
         let img = DynamicImage::ImageLuma8(img_buf);
 
-        let ssim_value = ssim(&img, &img, &SSIMParams::default()).unwrap();
+        let ssim_value = ssim(&img, &img, &SSIMParams::default()).expect("Operation failed");
         assert!(
             (ssim_value - 1.0).abs() < 0.01,
             "SSIM of identical images should be ~1.0, got {ssim_value}"

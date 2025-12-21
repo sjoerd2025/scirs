@@ -50,7 +50,7 @@ where
     for i in 0..n {
         for j in i + 1..std::cmp::min(i + bandwidth + 1, n) {
             let diff = (a[[i, j]] - a[[j, i]]).abs();
-            if diff > F::epsilon() * F::from(10.0).unwrap() {
+            if diff > F::epsilon() * F::from(10.0).expect("Operation failed") {
                 return Err(LinalgError::ShapeError(
                     "Matrix must be symmetric for banded_eigh function".to_string(),
                 ));

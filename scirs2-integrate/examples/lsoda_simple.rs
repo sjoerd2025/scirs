@@ -42,7 +42,7 @@ fn main() {
                 ..Default::default()
             }),
         )
-        .unwrap()
+        .expect("Operation failed")
     });
 
     // Print statistics about the solution

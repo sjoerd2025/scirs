@@ -112,9 +112,9 @@ pub fn measure_spectral_leakage(freqs: &[f64], power: &[f64], target_freqs: &[f6
                 (**f1 - target_freq)
                     .abs()
                     .partial_cmp(&(**f2 - target_freq).abs())
-                    .unwrap()
+                    .expect("Operation failed")
             })
-            .unwrap();
+            .expect("Operation failed");
 
         let peak_power = power[peak_idx];
 
@@ -147,7 +147,7 @@ pub fn measure_spectral_leakage(freqs: &[f64], power: &[f64], target_freqs: &[f6
 pub fn estimate_noise_floor(power: &[f64]) -> f64 {
     // Use median as robust noise floor estimate
     let mut sorted_power = power.to_vec();
-    sorted_power.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_power.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let median_idx = sorted_power.len() / 2;
     sorted_power[median_idx]
 }
@@ -161,7 +161,7 @@ pub fn assess_frequency_resolution(freqs: &[f64], power: &[f64], target_freqs: &
         let (_, peak_freq) = freqs
             .iter()
             .zip(power.iter())
-            .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
+            .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).expect("Operation failed"))
             .map(|(&f, _)| ((), f))
             .unwrap_or(((), 0.0));
 
@@ -241,9 +241,9 @@ pub fn calculate_spurious_free_dynamic_range(
                 (**f1 - target_freq)
                     .abs()
                     .partial_cmp(&(**f2 - target_freq).abs())
-                    .unwrap()
+                    .expect("Operation failed")
             })
-            .unwrap();
+            .expect("Operation failed");
         legitimate_peaks.push(peak_idx);
     }
 
@@ -341,7 +341,7 @@ pub fn find_peaks(freqs: &[f64], power: &[f64], max_peaks: usize) -> Vec<(f64, f
     }
 
     // Sort by power and take top peaks
-    peaks.sort_by(|(_, p1), (_, p2)| p2.partial_cmp(p1).unwrap());
+    peaks.sort_by(|(_, p1), (_, p2)| p2.partial_cmp(p1).expect("Operation failed"));
     peaks.truncate(max_peaks);
 
     peaks
@@ -359,8 +359,8 @@ pub fn estimate_sidelobe_suppression(implementation: &str, times: &[f64]) -> Sig
     let (peak_idx, &peak_power) = power
         .iter()
         .enumerate()
-        .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
-        .unwrap();
+        .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).expect("Operation failed"))
+        .expect("Operation failed");
 
     // Find maximum sidelobe (excluding main lobe)
     let mut max_sidelobe = 0.0;
@@ -419,8 +419,8 @@ pub fn estimate_sidelobe_suppression_from_power(freqs: &[f64], power: &[f64], f0
     let (peak_idx, _) = freqs
         .iter()
         .enumerate()
-        .min_by(|(_, f1), (_, f2)| (**f1 - f0).abs().partial_cmp(&(**f2 - f0).abs()).unwrap())
-        .unwrap();
+        .min_by(|(_, f1), (_, f2)| (**f1 - f0).abs().partial_cmp(&(**f2 - f0).abs()).expect("Operation failed"))
+        .expect("Operation failed");
 
     let peak_power = power[peak_idx];
 
@@ -527,7 +527,7 @@ pub fn test_spectral_leakage(fs: f64, n: usize) -> SignalResult<f64> {
     let max_idx = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
         .unwrap_or(0);
 

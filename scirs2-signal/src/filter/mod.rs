@@ -20,10 +20,10 @@
 // use scirs2_signal::filter::{butter, FilterType};
 //
 // // Design a 4th order Butterworth lowpass filter
-// let (b, a) = butter(4, 0.3, FilterType::Lowpass).unwrap();
+// let (b, a) = butter(4, 0.3, FilterType::Lowpass).expect("Operation failed");
 //
 // // Or using string parameter
-// let (b, a) = butter(4, 0.3, "lowpass").unwrap();
+// let (b, a) = butter(4, 0.3, "lowpass").expect("Operation failed");
 // ```
 //
 // ## FIR Filter Design
@@ -32,7 +32,7 @@
 // use scirs2_signal::filter::firwin;
 //
 // // Design a 65-tap FIR lowpass filter with Hamming window
-// let h = firwin(65, 0.3, "hamming", true).unwrap();
+// let h = firwin(65, 0.3, "hamming", true).expect("Operation failed");
 // ```
 //
 // ## Filter Application
@@ -41,9 +41,9 @@
 // use scirs2_signal::filter::{butter, filtfilt};
 //
 // // Design filter and apply with zero phase delay
-// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
+// let (b, a) = butter(4, 0.2, "lowpass").expect("Operation failed");
 // let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
-// let filtered = filtfilt(&b, &a, &signal).unwrap();
+// let filtered = filtfilt(&b, &a, &signal).expect("Operation failed");
 // ```
 //
 // ## Filter Analysis
@@ -52,8 +52,8 @@
 // use scirs2_signal::filter::{butter, analyze_filter};
 //
 // // Analyze filter characteristics
-// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
-// let analysis = analyze_filter(&b, &a, Some(512)).unwrap();
+// let (b, a) = butter(4, 0.2, "lowpass").expect("Operation failed");
+// let analysis = analyze_filter(&b, &a, Some(512)).expect("Operation failed");
 // println!("3dB cutoff: {:.3}", analysis.cutoff_3db);
 // ```
 
@@ -146,7 +146,7 @@ mod tests {
         let result = butter(4, 0.3, FilterType::Lowpass);
         assert!(result.is_ok());
 
-        let (_b, a) = result.unwrap();
+        let (_b, a) = result.expect("Operation failed");
         assert_eq!(a.len(), 5); // 4th order = 5 coefficients
         assert_eq!(a[0], 1.0); // Normalized denominator
     }
@@ -157,7 +157,7 @@ mod tests {
         let result = firwin(21, 0.3, "hamming", true);
         assert!(result.is_ok());
 
-        let h = result.unwrap();
+        let h = result.expect("Operation failed");
         assert_eq!(h.len(), 21);
 
         // Check symmetry (linear phase)
@@ -169,11 +169,11 @@ mod tests {
     #[test]
     fn test_filter_analysis() {
         // Test filter analysis functionality
-        let (b, a) = butter(4, 0.2, "lowpass").unwrap();
+        let (b, a) = butter(4, 0.2, "lowpass").expect("Operation failed");
         let result = analyze_filter(&b, &a, Some(256));
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert_eq!(analysis.frequencies.len(), 256);
         assert_eq!(analysis.magnitude.len(), 256);
         assert!(analysis.cutoff_3db > 0.0 && analysis.cutoff_3db < 1.0);
@@ -184,12 +184,12 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Test zero-phase filtering
-        let (b, a) = butter(2, 0.3, "lowpass").unwrap();
+        let (b, a) = butter(2, 0.3, "lowpass").expect("Operation failed");
         let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
         let result = filtfilt(&b, &a, &signal);
         assert!(result.is_ok());
 
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.len(), signal.len());
     }
 
@@ -201,7 +201,7 @@ mod tests {
         let result = notch_filter(0.25, 35.0);
         assert!(result.is_ok());
 
-        let (b, a) = result.unwrap();
+        let (b, a) = result.expect("Operation failed");
         assert!(b.len() >= 2);
         assert!(a.len() >= 2);
         assert_eq!(a[0], 1.0); // Normalized
@@ -212,11 +212,11 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Test filter stability analysis
-        let (_b, a) = butter(4, 0.2, "lowpass").unwrap();
+        let (_b, a) = butter(4, 0.2, "lowpass").expect("Operation failed");
         let result = check_filter_stability(&a);
         assert!(result.is_ok());
 
-        let stability = result.unwrap();
+        let stability = result.expect("Operation failed");
         assert!(stability.is_stable);
         assert!(stability.stability_margin > 0.0);
     }
@@ -234,7 +234,7 @@ mod tests {
         let result = zpk_to_tf(&zeros, &poles, gain);
         assert!(result.is_ok());
 
-        let (_b, a) = result.unwrap();
+        let (_b, a) = result.expect("Operation failed");
         assert_eq!(a[0], 1.0); // Normalized
     }
 
@@ -243,11 +243,11 @@ mod tests {
         // Test filter type parameter conversion
         let filter_type = convert_filter_type(FilterTypeParam::String("lowpass".to_string()));
         assert!(filter_type.is_ok());
-        assert_eq!(filter_type.unwrap(), FilterType::Lowpass);
+        assert_eq!(filter_type.expect("Operation failed"), FilterType::Lowpass);
 
         let filter_type = convert_filter_type(FilterTypeParam::Type(FilterType::Highpass));
         assert!(filter_type.is_ok());
-        assert_eq!(filter_type.unwrap(), FilterType::Highpass);
+        assert_eq!(filter_type.expect("Operation failed"), FilterType::Highpass);
     }
 
     #[test]
@@ -268,5 +268,5 @@ mod tests {
 
 #[allow(dead_code)]
 fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(num, den, None).unwrap()
+    TransferFunction::new(num, den, None).expect("Operation failed")
 }

@@ -40,7 +40,7 @@ impl<
     /// Create new contrastive learning metrics
     pub fn new() -> Self {
         Self {
-            temperature: F::from(0.1).unwrap(),
+            temperature: F::from(0.1).expect("Failed to convert constant to float"),
             n_negatives: 1024,
             enable_hard_negatives: false,
             _phantom: std::marker::PhantomData,
@@ -103,7 +103,7 @@ impl<
             return Ok(F::zero());
         }
 
-        let uniformity = (sum_exp / F::from(count).unwrap()).ln() / t;
+        let uniformity = (sum_exp / F::from(count).expect("Failed to convert to float")).ln() / t;
         Ok(uniformity)
     }
 
@@ -142,7 +142,7 @@ impl<
             sum_distance = sum_distance + distance_sq.powf(alpha);
         }
 
-        let alignment = sum_distance / F::from(n_pairs).unwrap();
+        let alignment = sum_distance / F::from(n_pairs).expect("Failed to convert to float");
         Ok(alignment)
     }
 
@@ -214,8 +214,9 @@ impl<
             }
         }
 
-        let mean_loss = total_loss / F::from(n_pairs).unwrap();
-        let accuracy = F::from(correct_predictions).unwrap() / F::from(n_pairs).unwrap();
+        let mean_loss = total_loss / F::from(n_pairs).expect("Failed to convert to float");
+        let accuracy = F::from(correct_predictions).expect("Failed to convert to float")
+            / F::from(n_pairs).expect("Failed to convert to float");
 
         Ok(InfoNCEResult {
             loss: mean_loss,

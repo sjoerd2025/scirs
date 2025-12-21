@@ -125,10 +125,10 @@ where
     /// let rows = vec![0, 0, 1, 1, 2, 2];
     /// let cols = vec![0, 1, 0, 1, 1, 2];
     /// let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
     ///
     /// // Create AMG preconditioner
-    /// let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).unwrap();
+    /// let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).expect("Operation failed");
     /// ```
     pub fn new(matrix: &CsrArray<T>, options: AMGOptions) -> SparseResult<Self> {
         let mut amg = AMGPreconditioner {
@@ -256,7 +256,7 @@ where
             }
 
             // Identify strong connections
-            let threshold = T::from(self.options.theta).unwrap() * max_off_diag;
+            let threshold = T::from(self.options.theta).expect("Operation failed") * max_off_diag;
             for j in row_start..row_end {
                 let col = matrix.get_indices()[j];
                 if col != i {
@@ -575,7 +575,9 @@ where
         match self.options.smoother {
             SmootherType::GaussSeidel => self.gauss_seidel_smooth(x, b, matrix),
             SmootherType::Jacobi => self.jacobi_smooth(x, b, matrix),
-            SmootherType::SOR => self.sor_smooth(x, b, matrix, T::from(1.2).unwrap()),
+            SmootherType::SOR => {
+                self.sor_smooth(x, b, matrix, T::from(1.2).expect("Operation failed"))
+            }
         }
     }
 
@@ -753,9 +755,10 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
-        let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).unwrap();
+        let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).expect("Operation failed");
 
         assert!(amg.num_levels() >= 1);
         assert_eq!(amg.level_size(0), Some((3, 3)));
@@ -767,12 +770,13 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![2.0, 3.0, 4.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
-        let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).unwrap();
+        let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).expect("Operation failed");
 
         let b = Array1::from_vec(vec![2.0, 3.0, 4.0]);
-        let x = amg.apply(&b.view()).unwrap();
+        let x = amg.apply(&b.view()).expect("Operation failed");
 
         // For a diagonal system, AMG should get close to the exact solution [1, 1, 1]
         assert!(x[0] > 0.5 && x[0] < 1.5);
@@ -801,15 +805,17 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
-        let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).unwrap();
+        let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).expect("Operation failed");
 
         let mut x = Array1::from_vec(vec![0.0, 0.0, 0.0]);
         let b = Array1::from_vec(vec![1.0, 1.0, 1.0]);
 
         // Apply one Gauss-Seidel iteration
-        amg.gauss_seidel_smooth(&mut x, &b.view(), &matrix).unwrap();
+        amg.gauss_seidel_smooth(&mut x, &b.view(), &matrix)
+            .expect("Operation failed");
 
         // Solution should improve (move away from zero)
         assert!(x.iter().any(|&val| val.abs() > 1e-10));
@@ -823,21 +829,22 @@ mod tests {
         let data = vec![
             4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0, -1.0, 4.0, -1.0,
         ];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (5, 5), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (5, 5), false).expect("Operation failed");
 
         let options = AMGOptions {
             theta: 0.25, // Strong connection threshold
             ..Default::default()
         };
 
-        let amg = AMGPreconditioner::new(&matrix, options).unwrap();
+        let amg = AMGPreconditioner::new(&matrix, options).expect("Operation failed");
 
         // Should have created a hierarchy
         assert!(amg.num_levels() >= 1);
 
         // Test that it can be applied
         let b = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
-        let x = amg.apply(&b.view()).unwrap();
+        let x = amg.apply(&b.view()).expect("Operation failed");
 
         // Check that the result has the right size
         assert_eq!(x.len(), 5);
@@ -851,15 +858,18 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![4.0, -2.0, -2.0, 4.0, -2.0, 4.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let options = AMGOptions {
             theta: 0.25,
             ..Default::default()
         };
-        let amg = AMGPreconditioner::new(&matrix, options).unwrap();
+        let amg = AMGPreconditioner::new(&matrix, options).expect("Operation failed");
 
-        let strong_connections = amg.detect_strong_connections(&matrix).unwrap();
+        let strong_connections = amg
+            .detect_strong_connections(&matrix)
+            .expect("Operation failed");
 
         // Each point should have some strong connections
         assert!(!strong_connections[0].is_empty());

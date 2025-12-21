@@ -415,7 +415,7 @@ impl QuantumOptimizer {
             if let Some((best_idx, &best_fitness)) = fitnessvalues
                 .iter()
                 .enumerate()
-                .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .min_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
             {
                 if best_fitness < self.best_fitness {
                     self.best_fitness = best_fitness;
@@ -1248,7 +1248,7 @@ mod tests {
         let optimizer = QuantumOptimizer::new(5, QuantumStrategy::QuantumAnnealing, Some(20));
         assert!(optimizer.is_ok());
 
-        let opt = optimizer.unwrap();
+        let opt = optimizer.expect("Operation failed");
         assert_eq!(opt.dimensions, 5);
         assert_eq!(opt.population_size, 20);
         assert_eq!(opt.strategy, QuantumStrategy::QuantumAnnealing);
@@ -1256,14 +1256,16 @@ mod tests {
 
     #[test]
     fn test_quantum_optimization_simple() {
-        let mut optimizer =
-            QuantumOptimizer::new(2, QuantumStrategy::QuantumAnnealing, Some(10)).unwrap();
+        let mut optimizer = QuantumOptimizer::new(2, QuantumStrategy::QuantumAnnealing, Some(10))
+            .expect("Operation failed");
 
         // Simple sphere function: f(x) = x1² + x2²
         let objective = |x: &[f64]| x.iter().map(|xi| xi * xi).sum();
         let bounds = vec![(-5.0, 5.0), (-5.0, 5.0)];
 
-        let result = optimizer.optimize(objective, &bounds, 50).unwrap();
+        let result = optimizer
+            .optimize(objective, &bounds, 50)
+            .expect("Operation failed");
 
         assert!(result.best_fitness >= 0.0);
         assert_eq!(result.best_solution.len(), 2);
@@ -1273,14 +1275,16 @@ mod tests {
 
     #[test]
     fn test_quantum_annealing_optimization() {
-        let mut optimizer =
-            QuantumOptimizer::new(1, QuantumStrategy::QuantumAnnealing, None).unwrap();
+        let mut optimizer = QuantumOptimizer::new(1, QuantumStrategy::QuantumAnnealing, None)
+            .expect("Operation failed");
 
         // Simple quadratic: f(x) = (x - 2)²
         let objective = |x: &[f64]| (x[0] - 2.0).powi(2);
         let bounds = vec![(-5.0, 5.0)]; // Smaller search space
 
-        let result = optimizer.optimize(objective, &bounds, 300).unwrap(); // More iterations
+        let result = optimizer
+            .optimize(objective, &bounds, 300)
+            .expect("Operation failed"); // More iterations
 
         // Should make progress (test that algorithm works, not exact convergence)
         assert!(result.best_fitness >= 0.0); // Basic sanity check
@@ -1293,7 +1297,8 @@ mod tests {
     #[test]
     fn test_quantum_evolutionary_optimization() {
         let mut optimizer =
-            QuantumOptimizer::new(2, QuantumStrategy::QuantumEvolutionary, Some(20)).unwrap();
+            QuantumOptimizer::new(2, QuantumStrategy::QuantumEvolutionary, Some(20))
+                .expect("Operation failed");
 
         // Rosenbrock function: f(x, y) = (a-x)² + b(y-x²)²
         let objective = |x: &[f64]| {
@@ -1303,7 +1308,9 @@ mod tests {
         };
         let bounds = vec![(-5.0, 5.0), (-5.0, 5.0)];
 
-        let result = optimizer.optimize(objective, &bounds, 100).unwrap();
+        let result = optimizer
+            .optimize(objective, &bounds, 100)
+            .expect("Operation failed");
 
         // Should make progress toward minimum at (1, 1)
         // The Rosenbrock function is difficult, so just check that we made some improvement
@@ -1390,7 +1397,8 @@ mod tests {
     #[cfg(feature = "parallel")]
     fn test_parallel_evaluation() {
         let mut optimizer =
-            QuantumOptimizer::new(3, QuantumStrategy::QuantumEvolutionary, Some(20)).unwrap();
+            QuantumOptimizer::new(3, QuantumStrategy::QuantumEvolutionary, Some(20))
+                .expect("Operation failed");
 
         // Function that benefits from parallel evaluation
         let objective = |x: &[f64]| {
@@ -1402,7 +1410,9 @@ mod tests {
         let bounds = vec![(-2.0, 2.0), (-2.0, 2.0), (-2.0, 2.0)];
 
         let start = Instant::now();
-        let result = optimizer.optimize(objective, &bounds, 20).unwrap();
+        let result = optimizer
+            .optimize(objective, &bounds, 20)
+            .expect("Operation failed");
         let elapsed = start.elapsed();
 
         // Should complete in reasonable time with parallelization

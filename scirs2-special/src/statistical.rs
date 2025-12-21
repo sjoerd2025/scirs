@@ -197,7 +197,7 @@ pub fn logistic_derivative(x: f64) -> f64 {
 /// use approx::assert_relative_eq;
 ///
 /// let x = array![1.0, 2.0, 3.0];
-/// let result = softmax(x.view()).unwrap();
+/// let result = softmax(x.view()).expect("Operation failed");
 ///
 /// // Check that probabilities sum to 1
 /// assert_relative_eq!(result.sum(), 1.0, epsilon = 1e-10);
@@ -262,10 +262,10 @@ pub fn softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 /// use approx::assert_relative_eq;
 ///
 /// let x = array![1.0, 2.0, 3.0];
-/// let result = log_softmax(x.view()).unwrap();
+/// let result = log_softmax(x.view()).expect("Operation failed");
 ///
 /// // log_softmax should be equivalent to log(softmax(x))
-/// let softmax_result = scirs2_special::softmax(x.view()).unwrap();
+/// let softmax_result = scirs2_special::softmax(x.view()).expect("Operation failed");
 /// let log_softmax_manual = softmax_result.mapv(|val| val.ln());
 ///
 /// for (a, b) in result.iter().zip(log_softmax_manual.iter()) {
@@ -326,7 +326,7 @@ pub fn log_softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 /// use approx::assert_relative_eq;
 ///
 /// let x = array![1.0, 2.0, 3.0];
-/// let result = logsumexp(x.view()).unwrap();
+/// let result = logsumexp(x.view()).expect("Operation failed");
 ///
 /// // Should be equivalent to log(exp(1) + exp(2) + exp(3))
 /// let manual = (1.0_f64.exp() + 2.0_f64.exp() + 3.0_f64.exp()).ln();
@@ -509,7 +509,7 @@ pub fn sinc_array(x: ArrayView1<f64>) -> Array1<f64> {
 /// use approx::assert_relative_eq;
 ///
 /// // For small positive integers, log(Γ(n)) = log((n-1)!)
-/// assert_relative_eq!(log_abs_gamma(5.0).unwrap(), (24.0_f64).ln(), epsilon = 1e-10);
+/// assert_relative_eq!(log_abs_gamma(5.0).expect("Operation failed"), (24.0_f64).ln(), epsilon = 1e-10);
 /// ```
 #[allow(dead_code)]
 pub fn log_abs_gamma(x: f64) -> SpecialResult<f64> {
@@ -563,7 +563,7 @@ mod tests {
     #[test]
     fn test_softmax() {
         let x = array![1.0, 2.0, 3.0];
-        let result = softmax(x.view()).unwrap();
+        let result = softmax(x.view()).expect("Operation failed");
 
         // Check that probabilities sum to 1
         assert_relative_eq!(result.sum(), 1.0, epsilon = 1e-10);
@@ -579,10 +579,10 @@ mod tests {
     #[test]
     fn test_log_softmax() {
         let x = array![1.0, 2.0, 3.0];
-        let result = log_softmax(x.view()).unwrap();
+        let result = log_softmax(x.view()).expect("Operation failed");
 
         // log_softmax should be equivalent to log(softmax(x))
-        let softmax_result = softmax(x.view()).unwrap();
+        let softmax_result = softmax(x.view()).expect("Operation failed");
         let log_softmax_manual = softmax_result.mapv(|val| val.ln());
 
         for (a, b) in result.iter().zip(log_softmax_manual.iter()) {
@@ -593,7 +593,7 @@ mod tests {
     #[test]
     fn test_logsumexp() {
         let x = array![1.0, 2.0, 3.0];
-        let result = logsumexp(x.view()).unwrap();
+        let result = logsumexp(x.view()).expect("Operation failed");
 
         // Should be equivalent to log(exp(1) + exp(2) + exp(3))
         let manual = (1.0_f64.exp() + 2.0_f64.exp() + 3.0_f64.exp()).ln();
@@ -601,7 +601,7 @@ mod tests {
 
         // Test with large values to check numerical stability
         let large_x = array![1000.0, 1001.0, 1002.0];
-        let large_result = logsumexp(large_x.view()).unwrap();
+        let large_result = logsumexp(large_x.view()).expect("Operation failed");
         assert!(large_result.is_finite());
     }
 
@@ -645,11 +645,23 @@ mod tests {
     #[test]
     fn test_log_abs_gamma() {
         // For small positive integers, log(Γ(n)) = log((n-1)!)
-        assert_relative_eq!(log_abs_gamma(1.0).unwrap(), 0.0, epsilon = 1e-10); // log(0!) = log(1)
-        assert_relative_eq!(log_abs_gamma(2.0).unwrap(), 0.0, epsilon = 1e-10); // log(1!) = log(1)
-        assert_relative_eq!(log_abs_gamma(3.0).unwrap(), (2.0_f64).ln(), epsilon = 1e-10); // log(2!)
         assert_relative_eq!(
-            log_abs_gamma(5.0).unwrap(),
+            log_abs_gamma(1.0).expect("Operation failed"),
+            0.0,
+            epsilon = 1e-10
+        ); // log(0!) = log(1)
+        assert_relative_eq!(
+            log_abs_gamma(2.0).expect("Operation failed"),
+            0.0,
+            epsilon = 1e-10
+        ); // log(1!) = log(1)
+        assert_relative_eq!(
+            log_abs_gamma(3.0).expect("Operation failed"),
+            (2.0_f64).ln(),
+            epsilon = 1e-10
+        ); // log(2!)
+        assert_relative_eq!(
+            log_abs_gamma(5.0).expect("Operation failed"),
             (24.0_f64).ln(),
             epsilon = 1e-10
         ); // log(4!)

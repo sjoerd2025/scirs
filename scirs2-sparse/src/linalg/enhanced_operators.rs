@@ -794,9 +794,13 @@ impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifi
             1 => {
                 // First derivative: central difference
                 vec![
-                    -F::sparse_one() / (F::from(2.0).unwrap() * self.spacing),
+                    -F::sparse_one()
+                        / (F::from(2.0).expect("Failed to convert constant to float")
+                            * self.spacing),
                     F::sparse_zero(),
-                    F::sparse_one() / (F::from(2.0).unwrap() * self.spacing),
+                    F::sparse_one()
+                        / (F::from(2.0).expect("Failed to convert constant to float")
+                            * self.spacing),
                 ]
             }
             2 => {
@@ -804,7 +808,7 @@ impl<F: Float + SparseElement + NumAssign + Sum + Copy + Send + Sync + SimdUnifi
                 let h_sq = self.spacing * self.spacing;
                 vec![
                     F::sparse_one() / h_sq,
-                    -F::from(2.0).unwrap() / h_sq,
+                    -F::from(2.0).expect("Failed to convert constant to float") / h_sq,
                     F::sparse_one() / h_sq,
                 ]
             }
@@ -1294,7 +1298,7 @@ mod tests {
         let diag = vec![2.0, 3.0, 4.0];
         let op = EnhancedDiagonalOperator::new(diag);
         let x = vec![1.0, 2.0, 3.0];
-        let y = op.matvec(&x).unwrap();
+        let y = op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![2.0, 6.0, 12.0]);
     }
 
@@ -1302,10 +1306,10 @@ mod tests {
     fn test_enhanced_sum_operator() {
         let diag1 = enhanced_diagonal(vec![1.0, 2.0, 3.0]);
         let diag2 = enhanced_diagonal(vec![2.0, 1.0, 1.0]);
-        let sum_op = EnhancedSumOperator::new(diag1, diag2).unwrap();
+        let sum_op = EnhancedSumOperator::new(diag1, diag2).expect("Operation failed");
 
         let x = vec![1.0, 1.0, 1.0];
-        let y = sum_op.matvec(&x).unwrap();
+        let y = sum_op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![3.0, 3.0, 4.0]); // (1+2)*1, (2+1)*1, (3+1)*1
     }
 
@@ -1313,10 +1317,10 @@ mod tests {
     fn test_enhanced_difference_operator() {
         let diag1 = enhanced_diagonal(vec![3.0, 4.0, 5.0]);
         let diag2 = enhanced_diagonal(vec![1.0, 2.0, 1.0]);
-        let diff_op = EnhancedDifferenceOperator::new(diag1, diag2).unwrap();
+        let diff_op = EnhancedDifferenceOperator::new(diag1, diag2).expect("Operation failed");
 
         let x = vec![1.0, 1.0, 1.0];
-        let y = diff_op.matvec(&x).unwrap();
+        let y = diff_op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![2.0, 2.0, 4.0]); // (3-1)*1, (4-2)*1, (5-1)*1
     }
 
@@ -1326,7 +1330,7 @@ mod tests {
         let scaled_op = EnhancedScaledOperator::new(2.0, diag);
 
         let x = vec![1.0, 1.0, 1.0];
-        let y = scaled_op.matvec(&x).unwrap();
+        let y = scaled_op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![2.0, 4.0, 6.0]); // 2 * [1, 2, 3]
     }
 
@@ -1336,7 +1340,7 @@ mod tests {
         let conv_op = ConvolutionOperator::new(kernel, 3, ConvolutionMode::Full);
 
         let x = vec![1.0, 0.0, 0.0];
-        let y = conv_op.matvec(&x).unwrap();
+        let y = conv_op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![1.0, 2.0, 3.0, 0.0, 0.0]); // Full convolution output
     }
 
@@ -1346,7 +1350,7 @@ mod tests {
         let conv_op = ConvolutionOperator::new(kernel, 3, ConvolutionMode::Same);
 
         let x = vec![1.0, 2.0, 3.0];
-        let y = conv_op.matvec(&x).unwrap();
+        let y = conv_op.matvec(&x).expect("Operation failed");
         assert_relative_eq!(y[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(y[1], 2.0, epsilon = 1e-10);
         assert_relative_eq!(y[2], 3.0, epsilon = 1e-10);
@@ -1358,7 +1362,7 @@ mod tests {
 
         // Test on a linear function: f(x) = x
         let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
-        let y = fd_op.matvec(&x).unwrap();
+        let y = fd_op.matvec(&x).expect("Operation failed");
 
         // First derivative of linear function should be approximately 1
         #[allow(clippy::needless_range_loop)]
@@ -1373,7 +1377,7 @@ mod tests {
 
         // Test on a quadratic function: f(x) = x^2
         let x = vec![0.0, 1.0, 4.0, 9.0, 16.0];
-        let y = fd_op.matvec(&x).unwrap();
+        let y = fd_op.matvec(&x).expect("Operation failed");
 
         // Second derivative of x^2 should be approximately 2
         #[allow(clippy::needless_range_loop)]
@@ -1383,7 +1387,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_enhanced_operators_with_large_vectors() {
         // Test that large vectors trigger parallel processing
         let large_size = 15000; // Above default parallel threshold
@@ -1392,10 +1395,10 @@ mod tests {
 
         let op1 = enhanced_diagonal(diag1);
         let op2 = enhanced_diagonal(diag2);
-        let sum_op = EnhancedSumOperator::new(op1, op2).unwrap();
+        let sum_op = EnhancedSumOperator::new(op1, op2).expect("Operation failed");
 
         let x = vec![1.0; large_size];
-        let y = sum_op.matvec(&x).unwrap();
+        let y = sum_op.matvec(&x).expect("Operation failed");
 
         // Check some values
         assert_relative_eq!(y[0], 3.0, epsilon = 1e-10); // (1 + 2) * 1

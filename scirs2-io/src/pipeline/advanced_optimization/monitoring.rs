@@ -61,7 +61,11 @@ impl ResourceMonitor {
 
             Ok(metrics)
         } else {
-            Ok(self.cached_metrics.as_ref().unwrap().clone())
+            Ok(self
+                .cached_metrics
+                .as_ref()
+                .expect("Operation failed")
+                .clone())
         }
     }
 

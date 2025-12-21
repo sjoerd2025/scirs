@@ -56,7 +56,7 @@ impl FramePool {
         // Try to reuse an existing frame with matching dimensions
         if let Some(frame_dims) = self.frame_dimensions {
             if frame_dims == (height, width) && !self.available_frames.is_empty() {
-                let mut frame = self.available_frames.pop().unwrap();
+                let mut frame = self.available_frames.pop().expect("Operation failed");
                 // Reset the frame data
                 frame.data.fill(0.0);
                 frame.timestamp = Instant::now();
@@ -248,7 +248,7 @@ impl AdvancedStreamPipeline {
     pub fn with_zero_copy(self) -> Self {
         // Pre-allocate frame pool for common video sizes
         {
-            let mut pool = self.frame_pool.lock().unwrap();
+            let mut pool = self.frame_pool.lock().expect("Operation failed");
 
             // Common video resolutions
             let common_sizes = [(480, 640), (720, 1280), (1080, 1920), (240, 320)];
@@ -362,7 +362,7 @@ impl AdvancedStreamPipeline {
             worker_handles.push(handle);
         }
 
-        let output_rx = channels.pop().unwrap();
+        let output_rx = channels.pop().expect("Operation failed");
 
         // Optimized input thread with batching
         thread::spawn(move || {
@@ -400,17 +400,23 @@ impl AdvancedStreamPipeline {
 
     /// Get current memory usage statistics
     pub fn memory_stats(&self) -> MemoryStats {
-        self.memory_profiler.lock().unwrap().get_stats()
+        self.memory_profiler
+            .lock()
+            .expect("Operation failed")
+            .get_stats()
     }
 
     /// Reset memory profiler statistics
     pub fn reset_memory_stats(&self) {
-        self.memory_profiler.lock().unwrap().reset();
+        self.memory_profiler
+            .lock()
+            .expect("Operation failed")
+            .reset();
     }
 
     /// Get current pipeline metrics
     pub fn metrics(&self) -> PipelineMetrics {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
 }
 
@@ -471,17 +477,23 @@ impl AdvancedStreamProcessor {
 
     /// Get current metrics
     pub fn metrics(&self) -> PipelineMetrics {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
 
     /// Get current memory statistics
     pub fn memory_stats(&self) -> MemoryStats {
-        self.memory_profiler.lock().unwrap().get_stats()
+        self.memory_profiler
+            .lock()
+            .expect("Operation failed")
+            .get_stats()
     }
 
     /// Reset memory profiler statistics
     pub fn reset_memory_stats(&self) {
-        self.memory_profiler.lock().unwrap().reset();
+        self.memory_profiler
+            .lock()
+            .expect("Operation failed")
+            .reset();
     }
 }
 

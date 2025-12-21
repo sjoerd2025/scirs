@@ -704,27 +704,30 @@ where
         warnings: &mut Vec<String>,
     ) -> StatsResult<(Option<F>, Option<(F, F)>)> {
         // Fisher's z-transformation for confidence intervals
-        let z = ((F::one() + correlation) / (F::one() - correlation)).ln() * F::from(0.5).unwrap();
-        let se_z = F::one() / F::from(n - 3).unwrap().sqrt();
+        let z = ((F::one() + correlation) / (F::one() - correlation)).ln()
+            * F::from(0.5).expect("Failed to convert constant to float");
+        let se_z = F::one() / F::from(n - 3).expect("Failed to convert to float").sqrt();
 
         // Critical value for given confidence level (simplified - would use proper t-distribution)
-        let _alpha = F::one() - F::from(self.config.confidence_level).unwrap();
-        let z_critical = F::from(1.96).unwrap(); // Approximate for 95% confidence
+        let _alpha =
+            F::one() - F::from(self.config.confidence_level).expect("Failed to convert to float");
+        let z_critical = F::from(1.96).expect("Failed to convert constant to float"); // Approximate for 95% confidence
 
         let z_lower = z - z_critical * se_z;
         let z_upper = z + z_critical * se_z;
 
         // Transform back to correlation scale
-        let r_lower = (F::from(2.0).unwrap() * z_lower).exp();
+        let r_lower = (F::from(2.0).expect("Failed to convert constant to float") * z_lower).exp();
         let r_lower = (r_lower - F::one()) / (r_lower + F::one());
 
-        let r_upper = (F::from(2.0).unwrap() * z_upper).exp();
+        let r_upper = (F::from(2.0).expect("Failed to convert constant to float") * z_upper).exp();
         let r_upper = (r_upper - F::one()) / (r_upper + F::one());
 
         // Simplified p-value calculation (would use proper statistical test)
-        let _t_stat = correlation * F::from(n - 2).unwrap().sqrt()
+        let _t_stat = correlation * F::from(n - 2).expect("Failed to convert to float").sqrt()
             / (F::one() - correlation * correlation).sqrt();
-        let p_value = F::from(2.0).unwrap() * (F::one() - F::from(0.95).unwrap()); // Simplified
+        let p_value = F::from(2.0).expect("Failed to convert constant to float")
+            * (F::one() - F::from(0.95).expect("Failed to convert constant to float")); // Simplified
 
         Ok((Some(p_value), Some((r_lower, r_upper))))
     }
@@ -884,7 +887,7 @@ mod tests {
             .simd(false)
             .with_metadata()
             .compute(data.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.value.count, 5);
         assert!((result.value.mean - 3.0).abs() < 1e-10);
@@ -901,7 +904,7 @@ mod tests {
             .confidence_level(0.95)
             .with_metadata()
             .compute(x.view(), y.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert!((result.value.correlation - 1.0).abs() < 1e-10);
         assert!(result.value.p_value.is_some());
@@ -913,14 +916,14 @@ mod tests {
         let analyzer = StatsAnalyzer::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let desc_result = analyzer.describe(data.view()).unwrap();
+        let desc_result = analyzer.describe(data.view()).expect("Operation failed");
         assert_eq!(desc_result.value.count, 5);
 
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
         let corr_result = analyzer
             .correlate(x.view(), y.view(), CorrelationMethod::Pearson)
-            .unwrap();
+            .expect("Operation failed");
         assert!((corr_result.value.correlation + 1.0).abs() < 1e-10);
     }
 
@@ -931,7 +934,7 @@ mod tests {
         let result = DescriptiveStatsBuilder::new()
             .null_handling(NullHandling::Exclude)
             .compute(data.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.value.count, 4); // NaN excluded
         assert!(!result.warnings.is_empty()); // Should have warning about removed values

@@ -850,22 +850,24 @@ mod tests {
     #[test]
     fn test_map_zero_copy() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_map.bin");
 
         // Create a test array and save it with proper header using save_array
         let data = crate::ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
-        MemoryMappedArray::<f64>::save_array(&data, &file_path, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data, &file_path, None).expect("Operation failed");
 
         // Open the file for zero-copy operations
-        let mmap =
-            MemoryMappedArray::<f64>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
+        let mmap = MemoryMappedArray::<f64>::open_zero_copy(&file_path, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Map operation: double each element
-        let result = mmap.map_zero_copy(|x| x * 2.0).unwrap();
+        let result = mmap.map_zero_copy(|x| x * 2.0).expect("Operation failed");
 
         // Verify the result
-        let result_array = result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+        let result_array = result
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
         for i in 0..1000 {
             assert_eq!(result_array[i], (i as f64) * 2.0);
         }
@@ -874,22 +876,25 @@ mod tests {
     #[test]
     fn test_reduce_zero_copy() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_reduce.bin");
 
         // Create a test array and save it to a file
         let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        let mut file = File::create(&file_path).unwrap();
+        let mut file = File::create(&file_path).expect("Operation failed");
         for val in &data {
-            file.write_all(&val.to_ne_bytes()).unwrap();
+            file.write_all(&val.to_ne_bytes())
+                .expect("Operation failed");
         }
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1000]).unwrap();
+        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1000]).expect("Operation failed");
 
         // Reduce operation: sum all elements
-        let sum = mmap.reduce_zero_copy(0.0, |acc, x| acc + x).unwrap();
+        let sum = mmap
+            .reduce_zero_copy(0.0, |acc, x| acc + x)
+            .expect("Operation failed");
 
         // Verify the result (sum of 0..999 = 499500)
         assert_eq!(sum, 499500.0);
@@ -898,7 +903,7 @@ mod tests {
     #[test]
     fn test_combine_zero_copy() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path1 = dir.path().join("test_combine1.bin");
         let file_path2 = dir.path().join("test_combine2.bin");
 
@@ -906,20 +911,24 @@ mod tests {
         let data1 = crate::ndarray::Array1::from_vec((0..1000).map(|i| i as f64).collect());
         let data2 = crate::ndarray::Array1::from_vec((0..1000).map(|i| (i * 2) as f64).collect());
 
-        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
-        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).expect("Operation failed");
+        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).expect("Operation failed");
 
         // Open the files for zero-copy operations
-        let mmap1 =
-            MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly).unwrap();
-        let mmap2 =
-            MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly).unwrap();
+        let mmap1 = MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly)
+            .expect("Operation failed");
+        let mmap2 = MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Combine operation: add the arrays
-        let result = mmap1.combine_zero_copy(&mmap2, |a, b| a + b).unwrap();
+        let result = mmap1
+            .combine_zero_copy(&mmap2, |a, b| a + b)
+            .expect("Operation failed");
 
         // Verify the result (each element should be 3*i)
-        let result_array = result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+        let result_array = result
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
         for i in 0..1000 {
             assert_eq!(result_array[i], (i as f64) * 3.0);
         }
@@ -928,22 +937,25 @@ mod tests {
     #[test]
     fn test_filter_zero_copy() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_filter.bin");
 
         // Create a test array and save it to a file
         let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        let mut file = File::create(&file_path).unwrap();
+        let mut file = File::create(&file_path).expect("Operation failed");
         for val in &data {
-            file.write_all(&val.to_ne_bytes()).unwrap();
+            file.write_all(&val.to_ne_bytes())
+                .expect("Operation failed");
         }
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1000]).unwrap();
+        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1000]).expect("Operation failed");
 
         // Filter operation: keep only even numbers
-        let even_numbers = mmap.filter_zero_copy(|&x| (x as usize) % 2 == 0).unwrap();
+        let even_numbers = mmap
+            .filter_zero_copy(|&x| (x as usize) % 2 == 0)
+            .expect("Operation failed");
 
         // Verify the result (should be 0, 2, 4, ..., 998)
         assert_eq!(even_numbers.len(), 500);
@@ -955,7 +967,7 @@ mod tests {
     #[test]
     fn test_arithmetic_ops() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path1 = dir.path().join("test_arithmetic1.bin");
         let file_path2 = dir.path().join("test_arithmetic2.bin");
 
@@ -963,41 +975,49 @@ mod tests {
         let data1 = crate::ndarray::Array1::from_vec((0..100).map(|i| i as f64).collect());
         let data2 = crate::ndarray::Array1::from_vec((0..100).map(|i| (i + 5) as f64).collect());
 
-        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
-        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).expect("Operation failed");
+        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).expect("Operation failed");
 
         // Open the files for zero-copy operations
-        let mmap1 =
-            MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly).unwrap();
-        let mmap2 =
-            MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly).unwrap();
+        let mmap1 = MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly)
+            .expect("Operation failed");
+        let mmap2 = MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Test addition
-        let add_result = mmap1.add(&mmap2).unwrap();
-        let add_array = add_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+        let add_result = mmap1.add(&mmap2).expect("Operation failed");
+        let add_array = add_result
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
         for i in 0..100 {
             assert_eq!(add_array[i], (i as f64) + ((i + 5) as f64));
         }
 
         // Test subtraction
-        let sub_result = mmap1.sub(&mmap2).unwrap();
-        let sub_array = sub_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+        let sub_result = mmap1.sub(&mmap2).expect("Operation failed");
+        let sub_array = sub_result
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
         for i in 0..100 {
             assert_eq!(sub_array[i], (i as f64) - ((i + 5) as f64));
         }
 
         // Test multiplication
-        let mul_result = mmap1.mul(&mmap2).unwrap();
-        let mul_array = mul_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+        let mul_result = mmap1.mul(&mmap2).expect("Operation failed");
+        let mul_array = mul_result
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
         for i in 0..100 {
             assert_eq!(mul_array[i], (i as f64) * ((i + 5) as f64));
         }
 
         // Test division (avoid division by zero)
         let div_result = mmap2
-            .div(&mmap1.map_zero_copy(|x| x + 1.0).unwrap())
-            .unwrap();
-        let div_array = div_result.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+            .div(&mmap1.map_zero_copy(|x| x + 1.0).expect("Operation failed"))
+            .expect("Test: operation failed");
+        let div_array = div_result
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
         for i in 0..100 {
             assert_eq!(div_array[i], ((i + 5) as f64) / ((i + 1) as f64));
         }
@@ -1006,7 +1026,7 @@ mod tests {
     #[test]
     fn test_broadcast_op() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path1 = dir.path().join("test_broadcast1.bin");
         let file_path2 = dir.path().join("test_broadcast2.bin");
 
@@ -1015,20 +1035,24 @@ mod tests {
         let data2 = crate::ndarray::Array1::from_vec((0..4).map(|i| (i + 1) as f64).collect());
 
         // Save the arrays with proper headers using save_array
-        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
-        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).expect("Operation failed");
+        MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).expect("Operation failed");
 
         // Open the files for zero-copy operations
-        let mmap1 =
-            MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly).unwrap();
-        let mmap2 =
-            MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly).unwrap();
+        let mmap1 = MemoryMappedArray::<f64>::open_zero_copy(&file_path1, AccessMode::ReadOnly)
+            .expect("Operation failed");
+        let mmap2 = MemoryMappedArray::<f64>::open_zero_copy(&file_path2, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Test broadcasting
-        let result = mmap1.broadcast_op(&mmap2, |a, b| a * b).unwrap();
+        let result = mmap1
+            .broadcast_op(&mmap2, |a, b| a * b)
+            .expect("Operation failed");
 
         // Verify the result
-        let result_array = result.readonlyarray::<crate::ndarray::Ix2>().unwrap();
+        let result_array = result
+            .readonlyarray::<crate::ndarray::Ix2>()
+            .expect("Operation failed");
         assert_eq!(result_array.shape(), &[3, 4]);
 
         for i in 0..3 {

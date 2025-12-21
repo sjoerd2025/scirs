@@ -267,7 +267,7 @@ impl AdvancedQMCGenerator {
         // Take ownership of generator_state to avoid borrowing conflicts
         let mut temp_state = mem::replace(
             &mut self.generator_state,
-            QMCGeneratorState::Sobol(SobolState::new(1).unwrap()),
+            QMCGeneratorState::Sobol(SobolState::new(1).expect("Operation failed")),
         );
 
         let point = match &mut temp_state {
@@ -1147,12 +1147,12 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Test failure - needs investigation"]
     fn test_advanced_qmc_sobol() {
-        let mut generator =
-            AdvancedQMCGenerator::new(QMCSequenceType::Sobol, 2, false, Some(42)).unwrap();
+        let mut generator = AdvancedQMCGenerator::new(QMCSequenceType::Sobol, 2, false, Some(42))
+            .expect("Operation failed");
 
-        let samples = generator.generate(100).unwrap();
+        let samples = generator.generate(100).expect("Operation failed");
         assert_eq!(samples.dim(), (100, 2));
 
         // Check all samples are in [0,1]^2
@@ -1164,7 +1164,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_stratified_sampler() {
         let config = StratifiedSamplingConfig {
             strata_per_dimension: 3,
@@ -1172,8 +1171,8 @@ mod tests {
             ..Default::default()
         };
 
-        let mut sampler = StratifiedSampler::new(2, config).unwrap();
-        let samples = sampler.generate(50, Some(42)).unwrap();
+        let mut sampler = StratifiedSampler::new(2, config).expect("Operation failed");
+        let samples = sampler.generate(50, Some(42)).expect("Operation failed");
 
         assert_eq!(samples.dim(), (50, 2));
 
@@ -1186,12 +1185,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Test failure - needs investigation"]
     fn test_niederreiter_sequence() {
         let mut generator =
-            AdvancedQMCGenerator::new(QMCSequenceType::Niederreiter, 3, false, Some(42)).unwrap();
+            AdvancedQMCGenerator::new(QMCSequenceType::Niederreiter, 3, false, Some(42))
+                .expect("Operation failed");
 
-        let samples = generator.generate(50).unwrap();
+        let samples = generator.generate(50).expect("Operation failed");
         assert_eq!(samples.dim(), (50, 3));
 
         // Basic uniformity check

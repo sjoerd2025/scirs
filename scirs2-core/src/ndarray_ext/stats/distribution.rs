@@ -33,7 +33,7 @@ pub type Histogram2dResult<T> =
 /// use scirs2_core::ndarray_ext::stats::histogram;
 ///
 /// let data = array![0.1, 0.5, 1.1, 1.5, 2.2, 2.9, 3.1, 3.8, 4.1, 4.9];
-/// let (hist, bin_edges) = histogram(data.view(), 5, None, None).unwrap();
+/// let (hist, bin_edges) = histogram(data.view(), 5, None, None).expect("Operation failed");
 ///
 /// assert_eq!(hist.len(), 5);
 /// assert_eq!(bin_edges.len(), 6);
@@ -81,10 +81,10 @@ where
 
     // Create bin edges
     let mut bin_edges = Array::<T, Ix1>::zeros(bins + 1);
-    let bin_width = (max_val - min_val) / T::from_usize(bins).unwrap();
+    let bin_width = (max_val - min_val) / T::from_usize(bins).expect("Operation failed");
 
     for i in 0..=bins {
-        bin_edges[i] = min_val + bin_width * T::from_usize(i).unwrap();
+        bin_edges[i] = min_val + bin_width * T::from_usize(i).expect("Operation failed");
     }
 
     // Ensure the last bin edge is exactly max_val
@@ -171,7 +171,7 @@ where
 ///
 /// let x = array![0.1, 0.5, 1.3, 2.5, 3.1, 3.8, 4.2, 4.9];
 /// let y = array![0.2, 0.8, 1.5, 2.0, 3.0, 3.2, 3.5, 4.5];
-/// let (hist, x_edges, y_edges) = histogram2d(x.view(), y.view(), Some((4, 4)), None, None).unwrap();
+/// let (hist, x_edges, y_edges) = histogram2d(x.view(), y.view(), Some((4, 4)), None, None).expect("Operation failed");
 ///
 /// assert_eq!(hist.shape(), &[4, 4]);
 /// assert_eq!(x_edges.len(), 5);
@@ -238,15 +238,15 @@ where
     let mut x_edges = Array::<T, Ix1>::zeros(x_bins + 1);
     let mut y_edges = Array::<T, Ix1>::zeros(y_bins + 1);
 
-    let x_bin_width = (x_max - x_min) / T::from_usize(x_bins).unwrap();
-    let y_bin_width = (y_max - y_min) / T::from_usize(y_bins).unwrap();
+    let x_bin_width = (x_max - x_min) / T::from_usize(x_bins).expect("Operation failed");
+    let y_bin_width = (y_max - y_min) / T::from_usize(y_bins).expect("Operation failed");
 
     for i in 0..=x_bins {
-        x_edges[i] = x_min + x_bin_width * T::from_usize(i).unwrap();
+        x_edges[i] = x_min + x_bin_width * T::from_usize(i).expect("Operation failed");
     }
 
     for i in 0..=y_bins {
-        y_edges[i] = y_min + y_bin_width * T::from_usize(i).unwrap();
+        y_edges[i] = y_min + y_bin_width * T::from_usize(i).expect("Operation failed");
     }
 
     // Ensure the last bin edges are exactly max values
@@ -351,11 +351,11 @@ where
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
 /// // Median (50th percentile)
-/// let median = quantile(data.view(), array![0.5].view(), Some("linear")).unwrap();
+/// let median = quantile(data.view(), array![0.5].view(), Some("linear")).expect("Operation failed");
 /// assert_eq!(median[0], 5.0);
 ///
 /// // Multiple quantiles
-/// let quartiles = quantile(data.view(), array![0.25, 0.5, 0.75].view(), None).unwrap();
+/// let quartiles = quantile(data.view(), array![0.25, 0.5, 0.75].view(), None).expect("Operation failed");
 /// assert_eq!(quartiles[0], 3.0);  // 25th percentile
 /// assert_eq!(quartiles[1], 5.0);  // 50th percentile
 /// assert_eq!(quartiles[2], 7.0);  // 75th percentile
@@ -377,7 +377,9 @@ where
 
     // Validate q values
     for &val in q.iter() {
-        if val < T::from_f64(0.0).unwrap() || val > T::from_f64(1.0).unwrap() {
+        if val < T::from_f64(0.0).expect("Operation failed")
+            || val > T::from_f64(1.0).expect("Operation failed")
+        {
             return Err("Quantile values must be between 0 and 1");
         }
     }
@@ -393,18 +395,18 @@ where
     let method = method.unwrap_or("linear");
 
     for (i, &q_val) in q.iter().enumerate() {
-        if q_val == T::from_f64(0.0).unwrap() {
+        if q_val == T::from_f64(0.0).expect("Operation failed") {
             result[i] = sorted[0];
             continue;
         }
 
-        if q_val == T::from_f64(1.0).unwrap() {
+        if q_val == T::from_f64(1.0).expect("Operation failed") {
             result[i] = sorted[n - 1];
             continue;
         }
 
         // Calculate the position in the sorted array
-        let h = T::from_usize(n - 1).unwrap() * q_val;
+        let h = T::from_usize(n - 1).expect("Operation failed") * q_val;
         let h_floor = h.floor();
         let idx_low = h_floor.to_usize().unwrap_or(0).min(n - 1);
         let idx_high = (idx_low + 1).min(n - 1);
@@ -412,7 +414,7 @@ where
         match method {
             "linear" => {
                 let weight = h - h_floor;
-                result[i] = sorted[idx_low] * (T::from_f64(1.0).unwrap() - weight) + sorted[idx_high] * weight;
+                result[i] = sorted[idx_low] * (T::from_f64(1.0).expect("Operation failed") - weight) + sorted[idx_high] * weight;
             }
             "lower" => {
                 result[i] = sorted[idx_low];
@@ -421,11 +423,11 @@ where
                 result[i] = sorted[idx_high];
             }
             "midpoint" => {
-                result[i] = (sorted[idx_low] + sorted[idx_high]) / T::from_f64(2.0).unwrap();
+                result[i] = (sorted[idx_low] + sorted[idx_high]) / T::from_f64(2.0).expect("Operation failed");
             }
             "nearest" => {
                 let weight = h - h_floor;
-                if weight < T::from_f64(0.5).unwrap() {
+                if weight < T::from_f64(0.5).expect("Operation failed") {
                     result[i] = sorted[idx_low];
                 } else {
                     result[i] = sorted[idx_high];
@@ -457,7 +459,7 @@ where
 /// use scirs2_core::ndarray_ext::stats::bincount;
 ///
 /// let data = array![1, 2, 3, 1, 2, 1, 0, 1, 3, 2];
-/// let counts = bincount(data.view(), None, None).unwrap();
+/// let counts = bincount(data.view(), None, None).expect("Operation failed");
 /// assert_eq!(counts.len(), 4);
 /// assert_eq!(counts[0], 1.0); // '0' occurs once
 /// assert_eq!(counts[1], 4.0); // '1' occurs four times
@@ -533,7 +535,7 @@ pub fn bincount(
 ///
 /// let data = array![1.2, 3.5, 5.1, 0.8, 2.9];
 /// let bins = array![1.0, 3.0, 5.0];
-/// let indices = digitize(data.view(), bins.view(), false, "indices").unwrap();
+/// let indices = digitize(data.view(), bins.view(), false, "indices").expect("Operation failed");
 ///
 /// assert_eq!(indices[0], 1); // 1.2 is in the first bin (1.0 <= x < 3.0)
 /// assert_eq!(indices[1], 2); // 3.5 is in the second bin (3.0 <= x < 5.0)

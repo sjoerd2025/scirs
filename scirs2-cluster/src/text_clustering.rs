@@ -794,7 +794,7 @@ impl SemanticHierarchical {
             (linkage_steps.len(), 4),
             linkage_steps.into_iter().flatten().collect(),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         self.linkage_matrix = Some(linkage_matrix);
         Ok(())
@@ -1111,7 +1111,7 @@ mod tests {
             (4, 3),
             vec![1.0, 0.0, 0.0, 0.9, 0.1, 0.0, 0.0, 0.0, 1.0, 0.0, 0.1, 0.9],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let text_repr = TextRepresentation::TfIdf {
             vectors,
@@ -1121,7 +1121,7 @@ mod tests {
         let result = semantic_kmeans(&text_repr, 2, SemanticSimilarity::Cosine);
         assert!(result.is_ok());
 
-        let (centers, labels) = result.unwrap();
+        let (centers, labels) = result.expect("Operation failed");
         assert_eq!(centers.nrows(), 2);
         assert_eq!(labels.len(), 4);
     }
@@ -1135,11 +1135,15 @@ mod tests {
         let clusterer = SemanticKMeans::new(config);
 
         // Test cosine similarity
-        let cosine_sim = clusterer.cosine_similarity(a.view(), b.view()).unwrap();
+        let cosine_sim = clusterer
+            .cosine_similarity(a.view(), b.view())
+            .expect("Operation failed");
         assert_eq!(cosine_sim, 0.0); // Orthogonal vectors
 
         // Test Manhattan distance
-        let manhattan = clusterer.manhattan_distance(a.view(), b.view()).unwrap();
+        let manhattan = clusterer
+            .manhattan_distance(a.view(), b.view())
+            .expect("Operation failed");
         assert_eq!(manhattan, 2.0);
     }
 
@@ -1148,9 +1152,12 @@ mod tests {
         let config = SemanticClusteringConfig::default();
         let clusterer = SemanticKMeans::new(config);
 
-        let matrix = Array2::from_shape_vec((2, 3), vec![3.0, 4.0, 0.0, 1.0, 2.0, 2.0]).unwrap();
+        let matrix = Array2::from_shape_vec((2, 3), vec![3.0, 4.0, 0.0, 1.0, 2.0, 2.0])
+            .expect("Operation failed");
 
-        let normalized = clusterer.normalize_vectors(matrix).unwrap();
+        let normalized = clusterer
+            .normalize_vectors(matrix)
+            .expect("Operation failed");
 
         // Check that vectors are normalized
         for row in normalized.rows() {
@@ -1166,7 +1173,7 @@ mod tests {
             (3, 4),
             vec![2.0, 0.0, 1.0, 0.0, 0.0, 3.0, 0.0, 1.0, 1.0, 1.0, 2.0, 1.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let text_repr = TextRepresentation::DocumentTerm {
             matrix,
@@ -1181,7 +1188,7 @@ mod tests {
         let result = topic_clustering(&text_repr, 2);
         assert!(result.is_ok());
 
-        let (topics, doc_topics, labels) = result.unwrap();
+        let (topics, doc_topics, labels) = result.expect("Operation failed");
         assert_eq!(topics.nrows(), 2);
         assert_eq!(doc_topics.nrows(), 3);
         assert_eq!(labels.len(), 3);

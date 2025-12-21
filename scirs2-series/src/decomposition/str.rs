@@ -104,7 +104,7 @@ pub struct STRResult<F> {
 /// let mut options = STROptions::default();
 /// options.seasonal_periods = vec![4.0, 12.0]; // Both quarterly and yearly patterns
 ///
-/// let result = str_decomposition(&ts, &options).unwrap();
+/// let result = str_decomposition(&ts, &options).expect("Operation failed");
 /// println!("Trend: {:?}", result.trend);
 /// println!("Seasonal Components: {:?}", result.seasonal_components);
 /// println!("Residual: {:?}", result.residual);
@@ -150,7 +150,8 @@ where
     }
 
     // Step 1: Prepare design matrices for trend and seasonal components
-    let time_indices: Array1<F> = Array1::from_iter((0..n).map(|i| F::from_usize(i).unwrap()));
+    let time_indices: Array1<F> =
+        Array1::from_iter((0..n).map(|i| F::from_usize(i).expect("Operation failed")));
 
     // Trend design matrix using polynomial basis functions
     let trend_degree = options.trend_degrees;
@@ -163,7 +164,8 @@ where
                 trend_basis[[i, j]] = F::one(); // Constant term
             } else {
                 let time_idx = time_indices[i];
-                trend_basis[[i, j]] = Float::powf(time_idx, F::from_usize(j).unwrap());
+                trend_basis[[i, j]] =
+                    Float::powf(time_idx, F::from_usize(j).expect("Operation failed"));
             }
         }
     }
@@ -188,8 +190,8 @@ where
         for i in 0..n {
             let t = time_indices[i];
             for j in 0..harmonics {
-                let freq =
-                    F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period).unwrap();
+                let freq = F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period)
+                    .expect("Operation failed");
                 // Sin term
                 seasonal_basis[[i, 2 * j]] = Float::sin(freq * t);
                 // Cos term
@@ -230,7 +232,7 @@ where
         } else {
             options.trend_lambda * (i as f64).powi(2)
         };
-        regularization_matrix[[i, i]] = F::from_f64(weight).unwrap();
+        regularization_matrix[[i, i]] = F::from_f64(weight).expect("Operation failed");
     }
 
     // Seasonal regularization
@@ -239,7 +241,7 @@ where
         let seasonal_cols = seasonal_basis.ncols();
         for i in 0..seasonal_cols {
             regularization_matrix[[col_offset + i, col_offset + i]] =
-                F::from(options.seasonal_lambda).unwrap();
+                F::from(options.seasonal_lambda).expect("Failed to convert to float");
         }
         col_offset += seasonal_cols;
     }
@@ -265,7 +267,7 @@ where
                 ts,
                 options.seasonal_lambda,
                 1000,
-                F::from(1e-6).unwrap(),
+                F::from(1e-6).expect("Failed to convert constant to float"),
             )?
         }
         RegularizationType::ElasticNet => {
@@ -276,7 +278,7 @@ where
                 options.seasonal_lambda,
                 options.trend_lambda,
                 1000,
-                F::from(1e-6).unwrap(),
+                F::from(1e-6).expect("Failed to convert constant to float"),
             )?
         }
     };
@@ -364,7 +366,8 @@ where
     }
 
     // Estimate residual variance
-    let residual_variance = residual.mapv(|x| x * x).sum() / F::from_usize(n - p).unwrap();
+    let residual_variance =
+        residual.mapv(|x| x * x).sum() / F::from_usize(n - p).expect("Operation failed");
 
     // Compute covariance _matrix: σ² (X^T X + λR)^(-1)
     let covariance_matrix = match matrix_inverse(system_matrix) {
@@ -378,14 +381,16 @@ where
     let t_critical = if df > 30 {
         // Normal approximation for large df
         match alpha {
-            a if a <= 0.01 => F::from(2.576).unwrap(), // 99% CI
-            a if a <= 0.05 => F::from(1.96).unwrap(),  // 95% CI
-            _ => F::from(1.645).unwrap(),              // 90% CI
+            a if a <= 0.01 => F::from(2.576).expect("Failed to convert constant to float"), // 99% CI
+            a if a <= 0.05 => F::from(1.96).expect("Failed to convert constant to float"), // 95% CI
+            _ => F::from(1.645).expect("Failed to convert constant to float"),             // 90% CI
         }
     } else {
         // Simple t-distribution approximation
-        let base = F::from(2.0).unwrap();
-        base + F::from(df as f64).unwrap().recip()
+        let base = F::from(2.0).expect("Failed to convert constant to float");
+        base + F::from(df as f64)
+            .expect("Failed to convert to float")
+            .recip()
     };
 
     // Compute standard errors for trend component
@@ -482,7 +487,7 @@ where
 {
     let (n, p) = (x.nrows(), x.ncols());
     let mut beta = Array1::zeros(p);
-    let lambda_f = F::from(lambda).unwrap();
+    let lambda_f = F::from(lambda).expect("Failed to convert to float");
 
     // Precompute X^T X diagonal (for efficiency)
     let mut xtx_diag = Array1::zeros(p);
@@ -549,8 +554,8 @@ where
 {
     let (n, p) = (x.nrows(), x.ncols());
     let mut beta = Array1::zeros(p);
-    let l1_lambda_f = F::from(l1_lambda).unwrap();
-    let l2_lambda_f = F::from(l2_lambda).unwrap();
+    let l1_lambda_f = F::from(l1_lambda).expect("Failed to convert to float");
+    let l2_lambda_f = F::from(l2_lambda).expect("Failed to convert to float");
 
     // Precompute X^T X diagonal + L2 penalty
     let mut xtx_diag = Array1::zeros(p);
@@ -655,7 +660,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = str_decomposition(&ts, &options).unwrap();
+        let result = str_decomposition(&ts, &options).expect("Operation failed");
 
         // Check that decomposition sums to original (approximately)
         for i in 0..n {
@@ -691,7 +696,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = str_decomposition(&ts, &options).unwrap();
+        let result = str_decomposition(&ts, &options).expect("Operation failed");
 
         // Check that decomposition sums to original
         for i in 0..n {

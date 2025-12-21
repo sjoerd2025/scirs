@@ -30,14 +30,14 @@ fn main() {
         // First run (cold cache)
         let start = Instant::now();
         for _ in 0..num_iterations {
-            let _ = fft(&signal, None).unwrap();
+            let _ = fft(&signal, None).expect("Operation failed");
         }
         let cold_duration = start.elapsed();
 
         // Second run (warm cache)
         let start = Instant::now();
         for _ in 0..num_iterations {
-            let _ = fft(&signal, None).unwrap();
+            let _ = fft(&signal, None).expect("Operation failed");
         }
         let warm_duration = start.elapsed();
 
@@ -74,7 +74,7 @@ fn main() {
 
     // Test that pre-computed sizes work
     let signal_128: Vec<f64> = vec![1.0; 128];
-    let _ = fft(&signal_128, None).unwrap();
+    let _ = fft(&signal_128, None).expect("Operation failed");
 
     let stats = cache.get_stats();
     println!("After using pre-computed plan: {stats}");

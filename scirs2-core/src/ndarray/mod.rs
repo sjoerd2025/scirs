@@ -476,11 +476,12 @@ mod tests {
         let b = array![[5, 6], [7, 8]];
 
         // Concatenate along axis 0
-        let concat = concatenate(Axis(0), &[a.view(), b.view()]).unwrap();
+        let concat = concatenate(Axis(0), &[a.view(), b.view()]).expect("Operation failed");
         assert_eq!(concat.shape(), &[4, 2]);
 
         // Stack along new axis
-        let stacked = crate::ndarray::stack(Axis(0), &[a.view(), b.view()]).unwrap();
+        let stacked =
+            crate::ndarray::stack(Axis(0), &[a.view(), b.view()]).expect("Operation failed");
         assert_eq!(stacked.shape(), &[2, 2, 2]);
     }
 

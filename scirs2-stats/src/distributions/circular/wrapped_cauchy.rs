@@ -34,7 +34,7 @@ use std::marker::PhantomData;
 /// use scirs2_stats::traits::{CircularDistribution, Distribution};
 ///
 /// // Create a wrapped Cauchy distribution with mean direction 0.0 and concentration 0.5
-/// let wc = WrappedCauchy::new(0.0f64, 0.5).unwrap();
+/// let wc = WrappedCauchy::new(0.0f64, 0.5).expect("Operation failed");
 ///
 /// // Calculate PDF
 /// let pdf = wc.pdf(0.0);
@@ -43,7 +43,7 @@ use std::marker::PhantomData;
 /// let cdf = wc.cdf(1.0);
 ///
 /// // Generate a random sample
-/// let sample = wc.rvs(100).unwrap();
+/// let sample = wc.rvs(100).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct WrappedCauchy<F: Float> {
@@ -79,7 +79,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> WrappedCauc
         }
 
         // Normalize mu to [0, 2π]
-        let two_pi = F::from(2.0 * PI).unwrap();
+        let two_pi = F::from(2.0 * PI).expect("Failed to convert to float");
         let normalized_mu = ((mu % two_pi) + two_pi) % two_pi;
 
         Ok(Self {
@@ -105,7 +105,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distributio
 
     fn std(&self) -> F {
         // Circular standard deviation
-        let neg_two = F::from(-2.0).unwrap();
+        let neg_two = F::from(-2.0).expect("Failed to convert constant to float");
         (neg_two * self.gamma.ln()).sqrt()
     }
 
@@ -120,7 +120,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distributio
     fn entropy(&self) -> F {
         // Entropy of the wrapped Cauchy distribution:
         // H = ln(2π * (1 - γ²))
-        let two_pi = F::from(2.0 * PI).unwrap();
+        let two_pi = F::from(2.0 * PI).expect("Failed to convert to float");
         (two_pi * (F::one() - self.gamma * self.gamma)).ln()
     }
 }
@@ -130,18 +130,20 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
 {
     fn pdf(&self, x: F) -> F {
         // f(x; μ, γ) = (1 - γ²) / (2π * (1 + γ² - 2γ * cos(x - μ)))
-        let two_pi = F::from(2.0 * PI).unwrap();
+        let two_pi = F::from(2.0 * PI).expect("Failed to convert to float");
         let one_minus_gamma_sq = F::one() - self.gamma * self.gamma;
         let denom = F::one() + self.gamma * self.gamma
-            - F::from(2.0).unwrap() * self.gamma * (x - self.mu).cos();
+            - F::from(2.0).expect("Failed to convert constant to float")
+                * self.gamma
+                * (x - self.mu).cos();
 
         one_minus_gamma_sq / (two_pi * denom)
     }
 
     fn cdf(&self, x: F) -> F {
         // Normalize x to [0, 2π]
-        let two_pi = F::from(2.0 * PI).unwrap();
-        let pi = F::from(PI).unwrap();
+        let two_pi = F::from(2.0 * PI).expect("Failed to convert to float");
+        let pi = F::from(PI).expect("Failed to convert to float");
         let x_norm = ((x % two_pi) + two_pi) % two_pi;
 
         // Calculate CDF using the formula from SciPy implementation
@@ -152,13 +154,13 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
 
         if x_norm < pi {
             // CDF for 0 <= x < π
-            let half = F::from(0.5).unwrap();
-            let pi_inv = F::from(1.0 / PI).unwrap();
+            let half = F::from(0.5).expect("Failed to convert constant to float");
+            let pi_inv = F::from(1.0 / PI).expect("Failed to convert to float");
             pi_inv * (cr * (x_norm * half).tan()).atan()
         } else {
             // CDF for π <= x <= 2π
-            let half = F::from(0.5).unwrap();
-            let pi_inv = F::from(1.0 / PI).unwrap();
+            let half = F::from(0.5).expect("Failed to convert constant to float");
+            let pi_inv = F::from(1.0 / PI).expect("Failed to convert to float");
             F::one() - pi_inv * (cr * ((two_pi - x_norm) * half).tan()).atan()
         }
     }
@@ -173,9 +175,12 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
 
         // Convert to angle using inverse CDF
         // For wrapped Cauchy: x = 2 * atan(tan(π*u)/γ)
-        let u_f64 = F::from(u).unwrap().to_f64().unwrap();
-        let gamma_f64 = self.gamma.to_f64().unwrap();
-        let mu_f64 = self.mu.to_f64().unwrap();
+        let u_f64 = F::from(u)
+            .expect("Failed to convert to float")
+            .to_f64()
+            .expect("Operation failed");
+        let gamma_f64 = self.gamma.to_f64().expect("Operation failed");
+        let mu_f64 = self.mu.to_f64().expect("Operation failed");
 
         let pi_u = PI * u_f64;
         let angle = 2.0_f64 * (pi_u.tan() / gamma_f64).atan();
@@ -184,7 +189,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
         let result = angle + mu_f64;
         let normalized = ((result + PI) % (2.0_f64 * PI)) - PI;
 
-        Ok(F::from(normalized).unwrap())
+        Ok(F::from(normalized).expect("Failed to convert to float"))
     }
 
     fn circular_mean(&self) -> F {
@@ -199,7 +204,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
 
     fn circular_std(&self) -> F {
         // sqrt(-2 * ln(mean_resultant_length))
-        let neg_two = F::from(-2.0).unwrap();
+        let neg_two = F::from(-2.0).expect("Failed to convert constant to float");
         (neg_two * self.mean_resultant_length().ln()).sqrt()
     }
 
@@ -255,7 +260,7 @@ mod tests {
 
     #[test]
     fn test_wrapped_cauchy_pdf() {
-        let wc = wrapped_cauchy(0.0f64, 0.5).unwrap();
+        let wc = wrapped_cauchy(0.0f64, 0.5).expect("Operation failed");
 
         // PDF at mean
         let pdf_at_mean = wc.pdf(0.0);
@@ -270,7 +275,7 @@ mod tests {
 
     #[test]
     fn test_wrapped_cauchy_cdf() {
-        let wc = wrapped_cauchy(0.0f64, 0.5).unwrap();
+        let wc = wrapped_cauchy(0.0f64, 0.5).expect("Operation failed");
 
         // CDF at mean is 0.5
         let cdf_at_mean = wc.cdf(0.0);
@@ -290,26 +295,32 @@ mod tests {
     fn test_wrapped_cauchy_mean_resultant_length() {
         // For wrapped Cauchy, mean resultant length = gamma
         for gamma in [0.1, 0.3, 0.5, 0.7, 0.9] {
-            let wc = wrapped_cauchy(0.0f64, gamma).unwrap();
+            let wc = wrapped_cauchy(0.0f64, gamma).expect("Operation failed");
             assert_abs_diff_eq!(wc.mean_resultant_length(), gamma, epsilon = 1e-10);
         }
     }
 
     #[test]
     fn test_wrapped_cauchy_rvs() {
-        let wc = wrapped_cauchy(0.0f64, 0.8).unwrap();
-        let samples = wc.rvs(1000).unwrap();
+        let wc = wrapped_cauchy(0.0f64, 0.8).expect("Operation failed");
+        let samples = wc.rvs(1000).expect("Operation failed");
 
         // Check that all samples are in [-π, π]
         for &sample in samples.iter() {
-            let sample_f64 = sample.to_f64().unwrap();
+            let sample_f64 = sample.to_f64().expect("Operation failed");
             assert!(sample_f64 >= -PI && sample_f64 <= PI);
         }
 
         // Check that mean is close to the circular mean (for high concentration)
         // Calculate circular mean of samples
-        let sin_sum: f64 = samples.iter().map(|&x| x.to_f64().unwrap().sin()).sum();
-        let cos_sum: f64 = samples.iter().map(|&x| x.to_f64().unwrap().cos()).sum();
+        let sin_sum: f64 = samples
+            .iter()
+            .map(|&x| x.to_f64().expect("Operation failed").sin())
+            .sum();
+        let cos_sum: f64 = samples
+            .iter()
+            .map(|&x| x.to_f64().expect("Operation failed").cos())
+            .sum();
         let circular_mean = sin_sum.atan2(cos_sum);
 
         // For high concentration, the mean should be close to μ

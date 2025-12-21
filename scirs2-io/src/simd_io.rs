@@ -667,10 +667,10 @@ pub mod matrix_simd {
         if a.len() > 1024 {
             for ((r, &a_val), &b_val) in result
                 .as_slice_mut()
-                .unwrap()
+                .expect("Operation failed")
                 .iter_mut()
-                .zip(a.as_slice().unwrap().iter())
-                .zip(b.as_slice().unwrap().iter())
+                .zip(a.as_slice().expect("Operation failed").iter())
+                .zip(b.as_slice().expect("Operation failed").iter())
             {
                 *r = a_val + b_val;
             }
@@ -695,7 +695,11 @@ pub mod stats_simd {
             return 0.0;
         }
 
-        let sum = data.as_slice().unwrap().iter().sum::<f64>();
+        let sum = data
+            .as_slice()
+            .expect("Operation failed")
+            .iter()
+            .sum::<f64>();
 
         sum / data.len() as f64
     }
@@ -707,7 +711,7 @@ pub mod stats_simd {
         }
 
         let mean = mean_simd(data);
-        let slice = data.as_slice().unwrap();
+        let slice = data.as_slice().expect("Operation failed");
 
         // Use parallel processing for variance calculation
         let sum_sq_diff: f64 = slice.iter().map(|&x| (x - mean).powi(2)).sum();
@@ -721,7 +725,7 @@ pub mod stats_simd {
             return (f64::NAN, f64::NAN);
         }
 
-        let slice = data.as_slice().unwrap();
+        let slice = data.as_slice().expect("Operation failed");
 
         let (min, max) = slice
             .iter()
@@ -739,7 +743,7 @@ pub mod stats_simd {
         }
 
         let mut sorted_data = data.to_vec();
-        sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let index = q * (sorted_data.len() - 1) as f64;
         let lower = index.floor() as usize;
@@ -890,8 +894,8 @@ impl AdvancedSimdProcessor {
             return output;
         }
 
-        let input_slice = input.as_slice().unwrap();
-        let output_slice = output.as_slice_mut().unwrap();
+        let input_slice = input.as_slice().expect("Operation failed");
+        let output_slice = output.as_slice_mut().expect("Operation failed");
 
         #[cfg(target_arch = "x86_64")]
         {
@@ -1380,7 +1384,9 @@ mod tests {
         let src: Vec<u8> = (0..1024).map(|x| (x % 256) as u8).collect();
         let mut dst = vec![0u8; 1024];
 
-        processor.memcopy_simd(&src, &mut dst).unwrap();
+        processor
+            .memcopy_simd(&src, &mut dst)
+            .expect("Operation failed");
         assert_eq!(src, dst);
     }
 
@@ -1406,7 +1412,7 @@ mod tests {
 
         let result = processor
             .matrix_multiply_blocked(&a.view(), &b.view())
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.dim(), (32, 16));
 
         // Verify a few elements manually
@@ -1423,7 +1429,7 @@ mod tests {
 
         let result = processor
             .matrix_vector_multiply_simd(&matrix.view(), &vector.view())
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.len(), 10);
 
         // Verify first element manually

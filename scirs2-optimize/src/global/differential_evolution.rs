@@ -283,7 +283,7 @@ where
                 .collect();
 
             // Extract parallel options for evaluation
-            let parallel_opts = self.options.parallel.as_ref().unwrap();
+            let parallel_opts = self.options.parallel.as_ref().expect("Operation failed");
 
             let energies = parallel_evaluate_batch(&self.func, &candidates, parallel_opts);
             self.energies = Array1::from_vec(energies);
@@ -318,7 +318,7 @@ where
         for i in 0..popsize {
             for j in 0..self.ndim {
                 let (lb, ub) = self.bounds[j];
-                let uniform = Uniform::new(lb, ub).unwrap();
+                let uniform = Uniform::new(lb, ub).expect("Operation failed");
                 self.population[[i, j]] = self.rng.sample(uniform);
             }
         }
@@ -339,7 +339,7 @@ where
             for (i, &seg) in segments.iter().enumerate() {
                 let segment_lb = lb + seg as f64 * segment_size;
                 let segment_ub = segment_lb + segment_size;
-                let uniform = Uniform::new(segment_lb, segment_ub).unwrap();
+                let uniform = Uniform::new(segment_lb, segment_ub).expect("Operation failed");
                 self.population[[i, j]] = self.rng.sample(uniform);
             }
         }
@@ -590,7 +590,7 @@ where
                 .collect();
 
             // Extract the parallel options for evaluation
-            let parallel_opts = self.options.parallel.as_ref().unwrap();
+            let parallel_opts = self.options.parallel.as_ref().expect("Operation failed");
 
             // Evaluate all trials in parallel
             let trial_energies = parallel_evaluate_batch(&self.func, &trials, parallel_opts);
@@ -693,12 +693,12 @@ where
                             bounds_vec.iter().map(|b| Some(b.0)).collect(),
                             bounds_vec.iter().map(|b| Some(b.1)).collect(),
                         )
-                        .unwrap(),
+                        .expect("Operation failed"),
                     ),
                     ..Default::default()
                 }),
             )
-            .unwrap();
+            .expect("Operation failed");
             if local_result.success && local_result.fun < result.fun {
                 // Ensure polished result respects bounds
                 let mut polished_x = local_result.x;

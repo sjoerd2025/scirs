@@ -117,7 +117,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
         let mut pd_values = Vec::new();
 
         for i in 0..n_grid_points {
-            let t = F::from(i).unwrap() / F::from(n_grid_points - 1).unwrap();
+            let t = F::from(i).expect("Failed to convert to float")
+                / F::from(n_grid_points - 1).expect("Failed to convert to float");
             let grid_val = min_val + t * (max_val - min_val);
             grid_values.push(grid_val);
 
@@ -173,7 +174,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
             let mut predictions = Vec::new();
 
             for i in 0..n_grid_points {
-                let t = F::from(i).unwrap() / F::from(n_grid_points - 1).unwrap();
+                let t = F::from(i).expect("Failed to convert to float")
+                    / F::from(n_grid_points - 1).expect("Failed to convert to float");
                 let grid_val = min_val + t * (max_val - min_val);
                 grid_values.push(grid_val);
 
@@ -479,7 +481,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
         }
 
         Ok(if count > 0 {
-            interaction_sum / F::from(count).unwrap()
+            interaction_sum / F::from(count).expect("Failed to convert to float")
         } else {
             F::zero()
         })
@@ -552,7 +554,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
             sensitivity_sum = sensitivity_sum + (perturbed_pred - baseline_pred).abs();
         }
 
-        Ok(sensitivity_sum / F::from(sample_size).unwrap())
+        Ok(sensitivity_sum / F::from(sample_size).expect("Failed to convert to float"))
     }
 
     fn assess_model_linearity<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
@@ -568,7 +570,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
             let instance = xdata.row(i);
 
             for j in 0..xdata.ncols() {
-                let step = self.get_feature_std(xdata, j)? / F::from(10).unwrap();
+                let step = self.get_feature_std(xdata, j)?
+                    / F::from(10).expect("Failed to convert constant to float");
 
                 let mut left = instance.to_owned();
                 left[j] = left[j] - step;
@@ -581,13 +584,16 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
                 let pred_right = model(&right.insert_axis(Axis(0)).view())[0];
 
                 // Second derivative approximation
-                let second_deriv = pred_right - F::from(2).unwrap() * pred_center + pred_left;
+                let second_deriv = pred_right
+                    - F::from(2).expect("Failed to convert constant to float") * pred_center
+                    + pred_left;
                 nonlinearity_score = nonlinearity_score + second_deriv.abs();
             }
         }
 
-        let linearity_score =
-            F::one() / (F::one() + nonlinearity_score / F::from(sample_size).unwrap());
+        let linearity_score = F::one()
+            / (F::one()
+                + nonlinearity_score / F::from(sample_size).expect("Failed to convert to float"));
         Ok(linearity_score)
     }
 
@@ -613,22 +619,23 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
 
             // Normalized range-to-std ratio
             let feature_coverage = if std_dev > F::zero() {
-                (range / std_dev).min(F::from(10).unwrap()) / F::from(10).unwrap()
+                (range / std_dev).min(F::from(10).expect("Failed to convert constant to float"))
+                    / F::from(10).expect("Failed to convert constant to float")
             } else {
                 F::zero()
             };
             coverage_score = coverage_score + feature_coverage;
         }
 
-        Ok(coverage_score / F::from(n_features).unwrap())
+        Ok(coverage_score / F::from(n_features).expect("Failed to convert to float"))
     }
 
     // Utility methods
 
     fn compute_variance(&self, data: &Array1<F>) -> Result<F> {
         let mean = data.mean_or(F::zero());
-        let variance =
-            data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / F::from(data.len()).unwrap();
+        let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
+            / F::from(data.len()).expect("Operation failed");
         Ok(variance)
     }
 
@@ -640,7 +647,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
         let column = xdata.column(colidx);
         let mean = column.mean_or(F::zero());
         let variance = column.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-            / F::from(column.len()).unwrap();
+            / F::from(column.len()).expect("Operation failed");
         Ok(variance.sqrt())
     }
 
@@ -701,7 +708,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
     {
         // Simplified effective degrees of freedom estimation
         // In practice, this would use more sophisticated methods
-        Ok(F::from(xdata.ncols()).unwrap())
+        Ok(F::from(xdata.ncols()).expect("Operation failed"))
     }
 
     fn compute_model_smoothness<M>(&self, model: &M, xdata: &Array2<F>) -> Result<F>
@@ -719,7 +726,9 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
             variation_sum = variation_sum + diff;
         }
 
-        let smoothness = F::one() / (F::one() + variation_sum / F::from(sample_size - 1).unwrap());
+        let smoothness = F::one()
+            / (F::one()
+                + variation_sum / F::from(sample_size - 1).expect("Failed to convert to float"));
         Ok(smoothness)
     }
 
@@ -792,7 +801,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
         }
 
         let avg_correlation = rank_correlations.iter().cloned().sum::<F>()
-            / F::from(rank_correlations.len()).unwrap();
+            / F::from(rank_correlations.len()).expect("Operation failed");
 
         Ok(avg_correlation)
     }
@@ -802,9 +811,10 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
             return Ok(F::zero());
         }
 
-        let mean = values.iter().cloned().sum::<F>() / F::from(values.len()).unwrap();
+        let mean =
+            values.iter().cloned().sum::<F>() / F::from(values.len()).expect("Operation failed");
         let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-            / F::from(values.len()).unwrap();
+            / F::from(values.len()).expect("Operation failed");
 
         let std_dev = variance.sqrt();
 
@@ -847,7 +857,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> GlobalExpl
             return Ok(F::zero());
         }
 
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
         let mean_x = x.iter().cloned().sum::<F>() / n;
         let mean_y = y.iter().cloned().sum::<F>() / n;
 
@@ -999,7 +1009,7 @@ mod tests {
 
         let pd_plot = explainer
             .partial_dependence(&mock_model, &xdata, 0, 5)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(pd_plot.featureidx, 0);
         assert_eq!(pd_plot.grid_values.len(), 5);
@@ -1013,7 +1023,7 @@ mod tests {
 
         let ice_curves = explainer
             .ice_curves(&mock_model, &xdata, 0, 3, Some(2))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(ice_curves.len(), 2); // max_instances = 2
         assert_eq!(ice_curves[0].grid_values.len(), 3);
@@ -1028,7 +1038,7 @@ mod tests {
 
         let interactions = explainer
             .feature_interactions(&mock_model, &xdata, &feature_names, 2)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(interactions.pairwiseinteractions.len(), 1); // Only one pair for 2 features
         assert!(interactions.pairwiseinteractions.contains_key("f1_f2"));
@@ -1042,7 +1052,7 @@ mod tests {
 
         let summary = explainer
             .model_behavior_summary(&mock_model, &xdata, &feature_names)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(summary.mean_prediction > 0.0);
         assert!(summary.prediction_variance >= 0.0);
@@ -1055,7 +1065,7 @@ mod tests {
         let explainer = GlobalExplainer::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let variance = explainer.compute_variance(&data).unwrap();
+        let variance = explainer.compute_variance(&data).expect("Operation failed");
         assert!((variance - 2.0).abs() < 1e-10); // Variance of 1,2,3,4,5 is 2.0
     }
 
@@ -1065,7 +1075,9 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![2.0, 4.0, 6.0, 8.0, 10.0]; // Perfect correlation
 
-        let correlation = explainer.compute_correlation(&x, &y).unwrap();
+        let correlation = explainer
+            .compute_correlation(&x, &y)
+            .expect("Operation failed");
         assert!((correlation - 1.0).abs() < 1e-10);
     }
 
@@ -1076,7 +1088,7 @@ mod tests {
 
         let interaction = explainer
             .compute_pairwise_interaction(&mock_model, &xdata, 0, 1)
-            .unwrap();
+            .expect("Operation failed");
 
         // Should detect interaction since our mock model has x1*x2 term
         assert!(interaction > 0.0);

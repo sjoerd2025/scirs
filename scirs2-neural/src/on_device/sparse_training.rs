@@ -52,7 +52,7 @@ impl SparseTrainer {
             .indexed_iter()
             .map(|((i, j), &w)| (w.abs(), (i, j)))
             .collect();
-        weight_magnitudes.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        weight_magnitudes.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
         // Prune smallest magnitude weights
         let mut pruned_count = 0;
         for i in 0..params_to_prune.min(weight_magnitudes.len()) {
@@ -92,7 +92,7 @@ impl SparseTrainer {
                 let norm = weights.column(c).iter().map(|x| x * x).sum::<f32>().sqrt();
                 (norm, c)
             })
-        channel_importance.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        channel_importance.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
         // Prune least important channels
         let mut pruned_channels = 0;
         for i in 0..channels_to_prune.min(channel_importance.len()) {
@@ -201,7 +201,7 @@ impl DynamicSparseNetwork {
         num_to_prune: usize,
         let mut active_weights: Vec<(f32, (usize, usize))> = weights
             .filter(|(_, &w)| w != 0.0)
-        activeweights.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        activeweights.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
         for i in 0..num_to_prune.min(activeweights.len()) {
             let (_, (row, col)) = active_weights[i];
     /// Grow connections
@@ -222,7 +222,7 @@ impl DynamicSparseNetwork {
     fn gradient_based_growth(
         let mut gradient_magnitudes: Vec<(f32, (usize, usize))> = weights
             .map(|((i, j)_)| (gradients[[i, j]].abs(), (i, j)))
-        gradient_magnitudes.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        gradient_magnitudes.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
         for i in 0..num_to_grow.min(gradient_magnitudes.len()) {
             let (_, (row, col)) = gradient_magnitudes[i];
             weights[[row, col]] = 0.001 * gradients[[row, col]].signum();
@@ -250,8 +250,8 @@ mod tests {
         let mut weights = Array2::from_shape_vec(
             (2, 3),
             vec![0.1, -0.5, 0.2, -0.3, 0.4, -0.6]
-        ).unwrap();
-        let stats = trainer.magnitude_pruning(&mut weights.view_mut(), 0.5).unwrap();
+        ).expect("Operation failed");
+        let stats = trainer.magnitude_pruning(&mut weights.view_mut(), 0.5).expect("Operation failed");
         assert_eq!(stats.pruned_params, 3);
         assert!((stats.sparsity - 0.5).abs() < 0.01);
         // Check that smallest magnitude values are pruned
@@ -274,7 +274,7 @@ mod tests {
             vec![0.1, 0.2, 0.3, 0.4,
                  0.5, 0.6, 0.7, 0.8,
                  0.9, 1.0, 1.1, 1.2]
-        let stats = trainer.structured_pruning(&mut weights.view_mut(), 0.5).unwrap();
+        let stats = trainer.structured_pruning(&mut weights.view_mut(), 0.5).expect("Operation failed");
         assert!(stats.structured);
         // Should prune entire columns
         assert_eq!(weights.column(0), Array1::zeros(3));

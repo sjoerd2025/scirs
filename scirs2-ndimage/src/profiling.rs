@@ -1178,7 +1178,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark() {
         let mut bench = Benchmark::new("array_operations");
 

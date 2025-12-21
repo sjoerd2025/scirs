@@ -83,7 +83,7 @@ where
     /// ordinary least squares when the errors are normally distributed.
     pub fn new() -> Self {
         HuberT {
-            t: F::from(1.345).unwrap(),
+            t: F::from(1.345).expect("Failed to convert constant to float"),
             weight_func: huber_weight,
         }
     }
@@ -119,9 +119,12 @@ where
     pub fn loss(&self, r: F) -> F {
         let abs_r = crate::regression::utils::float_abs(r);
         if abs_r <= self.t {
-            F::from(0.5).unwrap() * crate::regression::utils::float_powi(r, 2)
+            F::from(0.5).expect("Failed to convert constant to float")
+                * crate::regression::utils::float_powi(r, 2)
         } else {
-            self.t * abs_r - F::from(0.5).unwrap() * crate::regression::utils::float_powi(self.t, 2)
+            self.t * abs_r
+                - F::from(0.5).expect("Failed to convert constant to float")
+                    * crate::regression::utils::float_powi(self.t, 2)
         }
     }
 }
@@ -189,7 +192,7 @@ where
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![1.0, 3.0, 4.0, 5.0, 20.0];  // The last point is an outlier
 ///
-/// let result = theilslopes(&x.view(), &y.view(), None, None).unwrap();
+/// let result = theilslopes(&x.view(), &y.view(), None, None).expect("Operation failed");
 ///
 /// // The Theil-Sen estimator should be less affected by the outlier
 /// assert!(result.slope > 0.0f64);  // Slope should be positive
@@ -231,7 +234,8 @@ where
     }
 
     // Default confidence level is 0.95
-    let alpha = alpha.unwrap_or_else(|| F::from(0.95).unwrap());
+    let alpha =
+        alpha.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     // Default method is "approximate"
     let method = method.unwrap_or("approximate");
@@ -270,7 +274,7 @@ where
                 y_sum = y_sum + y[idx];
             }
 
-            let y_avg = y_sum / F::from(repeats.len()).unwrap();
+            let y_avg = y_sum / F::from(repeats.len()).expect("Operation failed");
 
             x_vals.push(x_val);
             y_vals.push(y_avg);
@@ -292,21 +296,26 @@ where
     let intercept = y_median - slope * x_median;
 
     // Compute confidence intervals for the slope
-    let z = norm_ppf(F::from(0.5).unwrap() * (F::one() + alpha));
-    let n_f = F::from(n).unwrap();
+    let z =
+        norm_ppf(F::from(0.5).expect("Failed to convert constant to float") * (F::one() + alpha));
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Compute standard error of the slope
     let slope_stderr = match method {
         "exact" => {
             // Exact method using the distribution of the median of n(n-1)/2 slopes
             // This is computationally expensive for large n
-            F::from(1.0).unwrap() / (F::from(6.0).unwrap() * scirs2_core::numeric::Float::sqrt(n_f))
+            F::from(1.0).expect("Failed to convert constant to float")
+                / (F::from(6.0).expect("Failed to convert constant to float")
+                    * scirs2_core::numeric::Float::sqrt(n_f))
         }
         _ => {
             // Approximate method (Sen, 1968)
             let factor = scirs2_core::numeric::Float::sqrt(
-                F::from(3.0).unwrap() * n_f * (n_f + F::one())
-                    / (F::from(0.5).unwrap() * n_f * (n_f - F::one())),
+                F::from(3.0).expect("Failed to convert constant to float") * n_f * (n_f + F::one())
+                    / (F::from(0.5).expect("Failed to convert constant to float")
+                        * n_f
+                        * (n_f - F::one())),
             );
             factor
                 / (scirs2_core::numeric::Float::sqrt(n_f)
@@ -343,12 +352,12 @@ where
     let mut sorted = x.to_owned();
     sorted
         .as_slice_mut()
-        .unwrap()
+        .expect("Operation failed")
         .sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let mid = n / 2;
     if n.is_multiple_of(2) {
-        (sorted[mid - 1] + sorted[mid]) / F::from(2.0).unwrap()
+        (sorted[mid - 1] + sorted[mid]) / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         sorted[mid]
     }
@@ -404,10 +413,10 @@ where
 /// // Create data with outliers
 /// let x = Array2::from_shape_vec((10, 1), vec![
 ///     1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let y = array![2.1, 4.2, 6.1, 8.0, 9.9, 12.2, 14.0, 16.1, 18.0, 10.0]; // Last point is an outlier
 ///
-/// let result = ransac(&x.view(), &y.view(), None, None, None, None, Some(42)).unwrap();
+/// let result = ransac(&x.view(), &y.view(), None, None, None, None, Some(42)).expect("Operation failed");
 ///
 /// // The model should be close to y = 2x
 /// assert!((result.coefficients[0] - 0.0f64).abs() < 1.0f64);  // Intercept close to 0
@@ -440,7 +449,7 @@ where
 ///     Some(100),       // Max trials
 ///     Some(0.99),      // Stop probability
 ///     Some(42)         // Random seed
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Check that we get inlier mask
 /// assert_eq!(result.inlier_mask.len(), 5);
@@ -487,7 +496,8 @@ where
     // Set default parameters
     let min_samples_ = min_samples_.unwrap_or(2);
     let max_trials = max_trials.unwrap_or(100);
-    let stop_probability = stop_probability.unwrap_or_else(|| F::from(0.99).unwrap());
+    let stop_probability = stop_probability
+        .unwrap_or_else(|| F::from(0.99).expect("Failed to convert constant to float"));
 
     // We need at least min_samples_ data points
     if n < min_samples_ {
@@ -518,7 +528,7 @@ where
 
         // Use median absolute deviation as basis for _threshold
         let mad = crate::regression::utils::median_abs_deviation_from_zero(&residuals_array.view());
-        mad * F::from(2.5).unwrap() // Typically 2.0-3.0 times MAD
+        mad * F::from(2.5).expect("Failed to convert constant to float") // Typically 2.0-3.0 times MAD
     };
 
     // Initialize random number generator
@@ -615,7 +625,8 @@ where
 
             // Update stopping criterion
             if inlier_count > min_samples_ {
-                let inlier_ratio = F::from(inlier_count).unwrap() / F::from(n).unwrap();
+                let inlier_ratio = F::from(inlier_count).expect("Failed to convert to float")
+                    / F::from(n).expect("Failed to convert to float");
                 let power_term =
                     crate::regression::utils::float_powi(inlier_ratio, min_samples_ as i32);
                 let denom = F::one() - power_term;
@@ -756,10 +767,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients
@@ -774,22 +786,23 @@ where
     // Calculate p-values (simplified)
     let p_values = t_values.mapv(|t| {
         let t_abs = scirs2_core::numeric::Float::abs(t);
-        let df_f = F::from(df_residuals).unwrap();
-        F::from(2.0).unwrap()
+        let df_f = F::from(df_residuals).expect("Failed to convert to float");
+        F::from(2.0).expect("Failed to convert constant to float")
             * (F::one() - t_abs / scirs2_core::numeric::Float::sqrt(df_f + t_abs * t_abs))
     });
 
     // Calculate confidence intervals
     let mut conf_intervals = Array2::<F>::zeros((p, 2));
     for i in 0..p {
-        let margin = std_errors[i] * F::from(1.96).unwrap(); // Approximate 95% CI
+        let margin = std_errors[i] * F::from(1.96).expect("Failed to convert constant to float"); // Approximate 95% CI
         conf_intervals[[i, 0]] = coefficients[i] - margin;
         conf_intervals[[i, 1]] = coefficients[i] + margin;
     }
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity()
     };
@@ -874,11 +887,11 @@ where
 /// // Create data with outliers
 /// let x = Array2::from_shape_vec((10, 1), vec![
 ///     1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let y = array![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 30.0]; // Last point is an outlier
 ///
-/// let result = huber_regression(&x.view(), &y.view(), None, None, None, None, None, None).unwrap();
+/// let result = huber_regression(&x.view(), &y.view(), None, None, None, None, None, None).expect("Operation failed");
 ///
 /// // Check that we got some coefficients
 /// assert_eq!(result.coefficients.len(), 2);  // Intercept and slope
@@ -904,7 +917,7 @@ where
 ///     8.0, 8.1,
 ///     9.0, 9.3,
 ///     10.0, 10.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // y = x1 + 0.5*x2 + noise with one outlier
 /// let y = array![2.6, 5.2, 7.6, 10.1, 12.6, 15.1, 17.5, 20.1, 22.7, 40.0];
@@ -916,7 +929,7 @@ where
 ///     Some(1.0),    // Smaller epsilon for more robustness
 ///     Some(true),    // fit_intercept
 ///     None, None, None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Check that we get reasonable number of coefficients
 /// assert_eq!(result.coefficients.len(), 3);  // Intercept and two slopes
@@ -962,11 +975,13 @@ where
     let _p_features = x.ncols();
 
     // Set default parameters
-    let epsilon = epsilon.unwrap_or_else(|| F::from(1.345).unwrap());
+    let epsilon =
+        epsilon.unwrap_or_else(|| F::from(1.345).expect("Failed to convert constant to float"));
     let fit_intercept = fit_intercept.unwrap_or(true);
     let max_iter = max_iter.unwrap_or(50);
-    let tol = tol.unwrap_or_else(|| F::from(1e-5).unwrap());
-    let conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from(1e-5).expect("Failed to convert constant to float"));
+    let conf_level =
+        conf_level.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     // Create design matrix (add _intercept if requested)
     let x_design = if fit_intercept {
@@ -997,7 +1012,7 @@ where
     } else {
         // Use median absolute deviation of residuals / 0.6745
         let mad = median_abs_deviation_from_zero(&initial_residuals.view());
-        mad / F::from(0.6745).unwrap()
+        mad / F::from(0.6745).expect("Failed to convert constant to float")
     };
 
     // Create Huber function
@@ -1019,7 +1034,7 @@ where
         }
 
         // Check for convergence
-        if weight_sum / F::from(n).unwrap() > F::one() - tol {
+        if weight_sum / F::from(n).expect("Failed to convert to float") > F::one() - tol {
             break;
         }
 
@@ -1043,7 +1058,7 @@ where
                 .iter()
                 .map(|&r| crate::regression::utils::float_powi(r, 2))
                 .sum::<F>()
-                / F::from(n).unwrap(),
+                / F::from(n).expect("Failed to convert to float"),
         );
 
         // Check for convergence
@@ -1071,7 +1086,7 @@ where
     let df_residuals = n - p;
 
     // Calculate sum of squares
-    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
     let ss_total = y
         .iter()
         .map(|&yi| scirs2_core::numeric::Float::powi(yi - y_mean, 2))
@@ -1087,10 +1102,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Use a robust estimate for standard errors
@@ -1111,14 +1127,16 @@ where
     // Calculate p-values (simplified)
     let p_values = t_values.mapv(|t| {
         let t_abs = scirs2_core::numeric::Float::abs(t);
-        let df_f = F::from(df_residuals).unwrap();
-        F::from(2.0).unwrap()
+        let df_f = F::from(df_residuals).expect("Failed to convert to float");
+        F::from(2.0).expect("Failed to convert constant to float")
             * (F::one() - t_abs / scirs2_core::numeric::Float::sqrt(df_f + t_abs * t_abs))
     });
 
     // Calculate confidence intervals
     let mut conf_intervals = Array2::<F>::zeros((p, 2));
-    let z = norm_ppf(F::from(0.5).unwrap() * (F::one() + conf_level));
+    let z = norm_ppf(
+        F::from(0.5).expect("Failed to convert constant to float") * (F::one() + conf_level),
+    );
 
     for i in 0..p {
         let margin = std_errors[i] * z;
@@ -1128,7 +1146,8 @@ where
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity()
     };

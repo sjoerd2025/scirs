@@ -709,7 +709,10 @@ impl NeedlemanWunsch {
                 let delete = matrix[i - 1][j] + self.gap_penalty;
                 let insert = matrix[i][j - 1] + self.gap_penalty;
 
-                matrix[i][j] = *[match_mismatch, delete, insert].iter().max().unwrap();
+                matrix[i][j] = *[match_mismatch, delete, insert]
+                    .iter()
+                    .max()
+                    .expect("Operation failed");
             }
         }
 
@@ -821,7 +824,10 @@ impl SmithWaterman {
                 let delete = matrix[i - 1][j] + self.gap_penalty;
                 let insert = matrix[i][j - 1] + self.gap_penalty;
 
-                matrix[i][j] = *[0, match_mismatch, delete, insert].iter().max().unwrap();
+                matrix[i][j] = *[0, match_mismatch, delete, insert]
+                    .iter()
+                    .max()
+                    .expect("Operation failed");
 
                 // Track maximum score position
                 if matrix[i][j] > max_score {
@@ -888,26 +894,52 @@ mod tests {
         let metric = DamerauLevenshteinMetric::new();
 
         // Basic operations
-        assert_eq!(metric.distance("", "").unwrap(), 0.0);
-        assert_eq!(metric.distance("abc", "").unwrap(), 3.0);
-        assert_eq!(metric.distance("", "abc").unwrap(), 3.0);
-        assert_eq!(metric.distance("abc", "abc").unwrap(), 0.0);
+        assert_eq!(metric.distance("", "").expect("Operation failed"), 0.0);
+        assert_eq!(metric.distance("abc", "").expect("Operation failed"), 3.0);
+        assert_eq!(metric.distance("", "abc").expect("Operation failed"), 3.0);
+        assert_eq!(
+            metric.distance("abc", "abc").expect("Operation failed"),
+            0.0
+        );
 
         // Single operations
-        assert_eq!(metric.distance("abc", "aXc").unwrap(), 1.0); // substitution
-        assert_eq!(metric.distance("abc", "ac").unwrap(), 1.0); // deletion
-        assert_eq!(metric.distance("ac", "abc").unwrap(), 1.0); // insertion
-        assert_eq!(metric.distance("abc", "acb").unwrap(), 1.0); // transposition
+        assert_eq!(
+            metric.distance("abc", "aXc").expect("Operation failed"),
+            1.0
+        ); // substitution
+        assert_eq!(metric.distance("abc", "ac").expect("Operation failed"), 1.0); // deletion
+        assert_eq!(metric.distance("ac", "abc").expect("Operation failed"), 1.0); // insertion
+        assert_eq!(
+            metric.distance("abc", "acb").expect("Operation failed"),
+            1.0
+        ); // transposition
 
         // Multiple operations
-        assert_eq!(metric.distance("kitten", "sitting").unwrap(), 3.0);
+        assert_eq!(
+            metric
+                .distance("kitten", "sitting")
+                .expect("Operation failed"),
+            3.0
+        );
 
         // Test normalized distance
-        assert!((metric.normalized_distance("abc", "aXc").unwrap() - 0.333).abs() < 0.01);
-        assert_eq!(metric.normalized_distance("", "").unwrap(), 0.0);
+        assert!(
+            (metric
+                .normalized_distance("abc", "aXc")
+                .expect("Operation failed")
+                - 0.333)
+                .abs()
+                < 0.01
+        );
+        assert_eq!(
+            metric
+                .normalized_distance("", "")
+                .expect("Operation failed"),
+            0.0
+        );
 
         // Test similarity
-        assert!((metric.similarity("abc", "aXc").unwrap() - 0.667).abs() < 0.01);
+        assert!((metric.similarity("abc", "aXc").expect("Operation failed") - 0.667).abs() < 0.01);
     }
 
     #[test]
@@ -915,50 +947,73 @@ mod tests {
         let metric = DamerauLevenshteinMetric::restricted();
 
         // OSA doesn't allow substring transpositions
-        assert_eq!(metric.distance("ca", "abc").unwrap(), 3.0); // Not 2.0 as in full DL
+        assert_eq!(metric.distance("ca", "abc").expect("Operation failed"), 3.0);
+        // Not 2.0 as in full DL
     }
 
     #[test]
     fn test_soundex() {
         let soundex = Soundex::new();
 
-        assert_eq!(soundex.encode("Robert").unwrap(), "R163");
-        assert_eq!(soundex.encode("Rupert").unwrap(), "R163");
-        assert_eq!(soundex.encode("SOUNDEX").unwrap(), "S532");
-        assert_eq!(soundex.encode("Smith").unwrap(), "S530");
-        assert_eq!(soundex.encode("Smythe").unwrap(), "S530");
-        assert_eq!(soundex.encode("").unwrap(), "");
-        assert_eq!(soundex.encode("123").unwrap(), "");
+        assert_eq!(soundex.encode("Robert").expect("Operation failed"), "R163");
+        assert_eq!(soundex.encode("Rupert").expect("Operation failed"), "R163");
+        assert_eq!(soundex.encode("SOUNDEX").expect("Operation failed"), "S532");
+        assert_eq!(soundex.encode("Smith").expect("Operation failed"), "S530");
+        assert_eq!(soundex.encode("Smythe").expect("Operation failed"), "S530");
+        assert_eq!(soundex.encode("").expect("Operation failed"), "");
+        assert_eq!(soundex.encode("123").expect("Operation failed"), "");
 
         // Test sounds_like
-        assert!(soundex.sounds_like("Robert", "Rupert").unwrap());
-        assert!(soundex.sounds_like("Smith", "Smythe").unwrap());
-        assert!(!soundex.sounds_like("Smith", "Jones").unwrap());
+        assert!(soundex
+            .sounds_like("Robert", "Rupert")
+            .expect("Operation failed"));
+        assert!(soundex
+            .sounds_like("Smith", "Smythe")
+            .expect("Operation failed"));
+        assert!(!soundex
+            .sounds_like("Smith", "Jones")
+            .expect("Operation failed"));
 
         // Test custom length
         let soundex_5 = Soundex::with_length(5);
-        assert_eq!(soundex_5.encode("SOUNDEX").unwrap(), "S5320");
+        assert_eq!(
+            soundex_5.encode("SOUNDEX").expect("Operation failed"),
+            "S5320"
+        );
     }
 
     #[test]
     fn test_metaphone() {
         let metaphone = Metaphone::new();
 
-        assert_eq!(metaphone.encode("programming").unwrap(), "PRKRMN");
-        assert_eq!(metaphone.encode("programmer").unwrap(), "PRKRMR");
-        assert_eq!(metaphone.encode("Wright").unwrap(), "RT");
-        assert_eq!(metaphone.encode("White").unwrap(), "WT");
-        assert_eq!(metaphone.encode("Knight").unwrap(), "NT");
-        assert_eq!(metaphone.encode("").unwrap(), "");
-        assert_eq!(metaphone.encode("123").unwrap(), "");
+        assert_eq!(
+            metaphone.encode("programming").expect("Operation failed"),
+            "PRKRMN"
+        );
+        assert_eq!(
+            metaphone.encode("programmer").expect("Operation failed"),
+            "PRKRMR"
+        );
+        assert_eq!(metaphone.encode("Wright").expect("Operation failed"), "RT");
+        assert_eq!(metaphone.encode("White").expect("Operation failed"), "WT");
+        assert_eq!(metaphone.encode("Knight").expect("Operation failed"), "NT");
+        assert_eq!(metaphone.encode("").expect("Operation failed"), "");
+        assert_eq!(metaphone.encode("123").expect("Operation failed"), "");
 
         // Test sounds_like - "Wright" and "Write" actually should sound similar in Metaphone
-        assert!(metaphone.sounds_like("Wright", "Write").unwrap());
-        assert!(!metaphone.sounds_like("White", "Wright").unwrap());
+        assert!(metaphone
+            .sounds_like("Wright", "Write")
+            .expect("Operation failed"));
+        assert!(!metaphone
+            .sounds_like("White", "Wright")
+            .expect("Operation failed"));
 
         // Test custom max length
         let metaphone_3 = Metaphone::with_max_length(3);
-        assert_eq!(metaphone_3.encode("programming").unwrap(), "PRK");
+        assert_eq!(
+            metaphone_3.encode("programming").expect("Operation failed"),
+            "PRK"
+        );
     }
 
     #[test]
@@ -967,12 +1022,21 @@ mod tests {
         let metaphone = Metaphone::new();
 
         // Test with non-alphabetic characters
-        assert_eq!(soundex.encode("O'Brien").unwrap(), "O165");
-        assert_eq!(metaphone.encode("O'Brien").unwrap(), "OBRN");
+        assert_eq!(soundex.encode("O'Brien").expect("Operation failed"), "O165");
+        assert_eq!(
+            metaphone.encode("O'Brien").expect("Operation failed"),
+            "OBRN"
+        );
 
         // Test with mixed case
-        assert_eq!(soundex.encode("McDonald").unwrap(), "M235");
-        assert_eq!(metaphone.encode("McDonald").unwrap(), "MKTNLT");
+        assert_eq!(
+            soundex.encode("McDonald").expect("Operation failed"),
+            "M235"
+        );
+        assert_eq!(
+            metaphone.encode("McDonald").expect("Operation failed"),
+            "MKTNLT"
+        );
     }
 
     #[test]
@@ -980,28 +1044,53 @@ mod tests {
         let nysiis = Nysiis::new();
 
         // Basic tests
-        assert_eq!(nysiis.encode("Johnson").unwrap(), "JANSAN");
-        assert_eq!(nysiis.encode("Williams").unwrap(), "WALAN"); // Standard NYSIIS code
-        assert_eq!(nysiis.encode("Jones").unwrap(), "JAN");
-        assert_eq!(nysiis.encode("Smith").unwrap(), "SNAT");
-        assert_eq!(nysiis.encode("MacDonald").unwrap(), "MCDANALD");
-        assert_eq!(nysiis.encode("Knight").unwrap(), "NAGT");
-        assert_eq!(nysiis.encode("").unwrap(), "");
-        assert_eq!(nysiis.encode("123").unwrap(), "");
+        assert_eq!(
+            nysiis.encode("Johnson").expect("Operation failed"),
+            "JANSAN"
+        );
+        assert_eq!(
+            nysiis.encode("Williams").expect("Operation failed"),
+            "WALAN"
+        ); // Standard NYSIIS code
+        assert_eq!(nysiis.encode("Jones").expect("Operation failed"), "JAN");
+        assert_eq!(nysiis.encode("Smith").expect("Operation failed"), "SNAT");
+        assert_eq!(
+            nysiis.encode("MacDonald").expect("Operation failed"),
+            "MCDANALD"
+        );
+        assert_eq!(nysiis.encode("Knight").expect("Operation failed"), "NAGT");
+        assert_eq!(nysiis.encode("").expect("Operation failed"), "");
+        assert_eq!(nysiis.encode("123").expect("Operation failed"), "");
 
         // Test sounds_like
-        assert!(nysiis.sounds_like("Johnson", "Jonson").unwrap());
-        assert!(!nysiis.sounds_like("Smith", "Jones").unwrap());
+        assert!(nysiis
+            .sounds_like("Johnson", "Jonson")
+            .expect("Operation failed"));
+        assert!(!nysiis
+            .sounds_like("Smith", "Jones")
+            .expect("Operation failed"));
 
         // Test edge cases
-        assert_eq!(nysiis.encode("Philips").unwrap(), "FFALAP");
-        assert_eq!(nysiis.encode("Schmidt").unwrap(), "SSNAD");
-        assert_eq!(nysiis.encode("Schneider").unwrap(), "SSNADAR");
+        assert_eq!(
+            nysiis.encode("Philips").expect("Operation failed"),
+            "FFALAP"
+        );
+        assert_eq!(nysiis.encode("Schmidt").expect("Operation failed"), "SSNAD");
+        assert_eq!(
+            nysiis.encode("Schneider").expect("Operation failed"),
+            "SSNADAR"
+        );
 
         // Test with max length
         let nysiis_6 = Nysiis::with_max_length(6);
-        assert_eq!(nysiis_6.encode("Williams").unwrap(), "WALAN"); // 5 chars, so not truncated
-        assert_eq!(nysiis_6.encode("MacDonald").unwrap(), "MCDANA"); // 6 chars, truncated from longer
+        assert_eq!(
+            nysiis_6.encode("Williams").expect("Operation failed"),
+            "WALAN"
+        ); // 5 chars, so not truncated
+        assert_eq!(
+            nysiis_6.encode("MacDonald").expect("Operation failed"),
+            "MCDANA"
+        ); // 6 chars, truncated from longer
     }
 
     #[test]

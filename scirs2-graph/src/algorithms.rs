@@ -197,7 +197,7 @@ where
             }
             Ordering::Equal => {
                 parent.insert(root_y, root_x.clone());
-                *rank.get_mut(&root_x).unwrap() += 1;
+                *rank.get_mut(&root_x).expect("Operation failed") += 1;
             }
         }
         true
@@ -371,13 +371,13 @@ where
                 for w in neighbors {
                     // First time we reach w?
                     if dist[&w].is_none() {
-                        dist.insert(w.clone(), Some(dist[&v].unwrap() + 1.0));
+                        dist.insert(w.clone(), Some(dist[&v].expect("Operation failed") + 1.0));
                         queue.push_back(w.clone());
                     }
 
                     // Shortest path to w via v?
-                    if dist[&w] == Some(dist[&v].unwrap() + 1.0) {
-                        *sigma.get_mut(&w).unwrap() += sigma[&v];
+                    if dist[&w] == Some(dist[&v].expect("Operation failed") + 1.0) {
+                        *sigma.get_mut(&w).expect("Operation failed") += sigma[&v];
                         paths.entry(w.clone()).or_default().push(v.clone());
                     }
                 }
@@ -390,12 +390,13 @@ where
         while let Some(w) = stack.pop() {
             if let Some(predecessors) = paths.get(&w) {
                 for v in predecessors {
-                    *delta.get_mut(v).unwrap() += (sigma[v] / sigma[&w]) * (1.0 + delta[&w]);
+                    *delta.get_mut(v).expect("Operation failed") +=
+                        (sigma[v] / sigma[&w]) * (1.0 + delta[&w]);
                 }
             }
 
             if w != *s {
-                *centrality.get_mut(&w).unwrap() += delta[&w];
+                *centrality.get_mut(&w).expect("Operation failed") += delta[&w];
             }
         }
     }
@@ -554,12 +555,12 @@ mod tests {
     #[test]
     fn test_minimum_spanning_tree() {
         let mut graph = create_graph::<&str, f64>();
-        graph.add_edge("A", "B", 1.0).unwrap();
-        graph.add_edge("B", "C", 2.0).unwrap();
-        graph.add_edge("A", "C", 3.0).unwrap();
-        graph.add_edge("C", "D", 1.0).unwrap();
+        graph.add_edge("A", "B", 1.0).expect("Operation failed");
+        graph.add_edge("B", "C", 2.0).expect("Operation failed");
+        graph.add_edge("A", "C", 3.0).expect("Operation failed");
+        graph.add_edge("C", "D", 1.0).expect("Operation failed");
 
-        let mst = minimum_spanning_tree(&graph).unwrap();
+        let mst = minimum_spanning_tree(&graph).expect("Operation failed");
 
         // MST should have n-1 edges
         assert_eq!(mst.len(), 3);
@@ -572,18 +573,30 @@ mod tests {
     #[test]
     fn test_topological_sort() {
         let mut graph = crate::generators::create_digraph::<&str, ()>();
-        graph.add_edge("A", "B", ()).unwrap();
-        graph.add_edge("A", "C", ()).unwrap();
-        graph.add_edge("B", "D", ()).unwrap();
-        graph.add_edge("C", "D", ()).unwrap();
+        graph.add_edge("A", "B", ()).expect("Operation failed");
+        graph.add_edge("A", "C", ()).expect("Operation failed");
+        graph.add_edge("B", "D", ()).expect("Operation failed");
+        graph.add_edge("C", "D", ()).expect("Operation failed");
 
-        let sorted = topological_sort(&graph).unwrap();
+        let sorted = topological_sort(&graph).expect("Operation failed");
 
         // A should come before B and C
-        let a_pos = sorted.iter().position(|n| n == &"A").unwrap();
-        let b_pos = sorted.iter().position(|n| n == &"B").unwrap();
-        let c_pos = sorted.iter().position(|n| n == &"C").unwrap();
-        let d_pos = sorted.iter().position(|n| n == &"D").unwrap();
+        let a_pos = sorted
+            .iter()
+            .position(|n| n == &"A")
+            .expect("Operation failed");
+        let b_pos = sorted
+            .iter()
+            .position(|n| n == &"B")
+            .expect("Operation failed");
+        let c_pos = sorted
+            .iter()
+            .position(|n| n == &"C")
+            .expect("Operation failed");
+        let d_pos = sorted
+            .iter()
+            .position(|n| n == &"D")
+            .expect("Operation failed");
 
         assert!(a_pos < b_pos);
         assert!(a_pos < c_pos);
@@ -594,10 +607,10 @@ mod tests {
     #[test]
     fn test_pagerank() {
         let mut graph = crate::generators::create_digraph::<&str, ()>();
-        graph.add_edge("A", "B", ()).unwrap();
-        graph.add_edge("A", "C", ()).unwrap();
-        graph.add_edge("B", "C", ()).unwrap();
-        graph.add_edge("C", "A", ()).unwrap();
+        graph.add_edge("A", "B", ()).expect("Operation failed");
+        graph.add_edge("A", "C", ()).expect("Operation failed");
+        graph.add_edge("B", "C", ()).expect("Operation failed");
+        graph.add_edge("C", "A", ()).expect("Operation failed");
 
         let pr = pagerank(&graph, 0.85, 1e-6, 100);
 

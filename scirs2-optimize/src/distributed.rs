@@ -220,7 +220,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
 
     /// Broadcast parameters from master to all workers
     pub fn broadcast_parameters(&self, params: &mut Array1<f64>) -> ScirsResult<()> {
-        let data = params.as_slice_mut().unwrap();
+        let data = params.as_slice_mut().expect("Operation failed");
         self.mpi.broadcast(data, 0)
     }
 
@@ -230,7 +230,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
             let total_size = local_result.len() * self.size as usize;
             let mut gathered_data = vec![0.0; total_size];
             self.mpi.gather(
-                local_result.as_slice().unwrap(),
+                local_result.as_slice().expect("Operation failed"),
                 Some(&mut gathered_data),
                 0,
             )?;
@@ -246,7 +246,8 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
                     })?;
             Ok(Some(result))
         } else {
-            self.mpi.gather(local_result.as_slice().unwrap(), None, 0)?;
+            self.mpi
+                .gather(local_result.as_slice().expect("Operation failed"), None, 0)?;
             Ok(None)
         }
     }
@@ -255,8 +256,8 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
     pub fn allreduce_sum(&self, local_data: &Array1<f64>) -> ScirsResult<Array1<f64>> {
         let mut result = Array1::zeros(local_data.len());
         self.mpi.allreduce(
-            local_data.as_slice().unwrap(),
-            result.as_slice_mut().unwrap(),
+            local_data.as_slice().expect("Operation failed"),
+            result.as_slice_mut().expect("Operation failed"),
             ReductionOp::Sum,
         )?;
         Ok(result)
@@ -625,7 +626,7 @@ pub mod algorithms {
             let best_idx = fitness
                 .iter()
                 .enumerate()
-                .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .min_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(i, _)| i)
                 .unwrap_or(0);
 

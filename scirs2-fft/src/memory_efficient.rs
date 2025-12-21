@@ -82,7 +82,7 @@ pub enum FftMode {
 /// let mut output_buffer = vec![Complex64::new(0.0, 0.0); input_buffer.len()];
 ///
 /// // Perform in-place FFT
-/// fft_inplace(&mut input_buffer, &mut output_buffer, FftMode::Forward, false).unwrap();
+/// fft_inplace(&mut input_buffer, &mut output_buffer, FftMode::Forward, false).expect("Operation failed");
 ///
 /// // Input buffer now contains the result
 /// let sum: f64 = (1.0 + 2.0 + 3.0 + 4.0);
@@ -209,7 +209,8 @@ where
         return op(input);
     }
 
-    let chunk_size_nz = NonZeroUsize::new(chunk_size).unwrap_or(NonZeroUsize::new(1).unwrap());
+    let chunk_size_nz =
+        NonZeroUsize::new(chunk_size).unwrap_or(NonZeroUsize::new(1).expect("Operation failed"));
     let n_chunks = input.len().div_ceil(chunk_size_nz.get());
     let mut result = Vec::with_capacity(input.len());
 
@@ -288,7 +289,10 @@ where
     }
 
     // Get a flattened view to avoid allocating additional memory
-    let mut buffer = complex_input.as_slice_mut().unwrap().to_vec();
+    let mut buffer = complex_input
+        .as_slice_mut()
+        .expect("Operation failed")
+        .to_vec();
 
     // Create FFT planner
     let mut planner = FftPlanner::new();
@@ -499,7 +503,8 @@ where
     }
 
     // Process in chunks for large arrays
-    let chunk_size_nz = NonZeroUsize::new(chunk_size_val).unwrap_or(NonZeroUsize::new(1).unwrap());
+    let chunk_size_nz = NonZeroUsize::new(chunk_size_val)
+        .unwrap_or(NonZeroUsize::new(1).expect("Operation failed"));
     let n_chunks = n_val.div_ceil(chunk_size_nz.get());
     let mut result = Vec::with_capacity(n_val);
 
@@ -607,13 +612,13 @@ mod tests {
         let mut output = vec![Complex64::new(0.0, 0.0); 4];
 
         // Perform forward FFT
-        fft_inplace(&mut input, &mut output, FftMode::Forward, false).unwrap();
+        fft_inplace(&mut input, &mut output, FftMode::Forward, false).expect("Operation failed");
 
         // Check DC component is sum of all inputs
         assert_relative_eq!(input[0].re, 10.0, epsilon = 1e-10);
 
         // Perform inverse FFT
-        fft_inplace(&mut input, &mut output, FftMode::Inverse, true).unwrap();
+        fft_inplace(&mut input, &mut output, FftMode::Inverse, true).expect("Operation failed");
 
         // Check that we recover the original signal
         assert_relative_eq!(input[0].re, 1.0, epsilon = 1e-10);
@@ -628,13 +633,15 @@ mod tests {
         let arr = array![[1.0, 2.0], [3.0, 4.0]];
 
         // Compute 2D FFT
-        let spectrum_2d = fft2_efficient(&arr.view(), None, FftMode::Forward, false).unwrap();
+        let spectrum_2d =
+            fft2_efficient(&arr.view(), None, FftMode::Forward, false).expect("Operation failed");
 
         // DC component should be sum of all elements
         assert_relative_eq!(spectrum_2d[[0, 0]].re, 10.0, epsilon = 1e-10);
 
         // Compute inverse FFT
-        let recovered = fft2_efficient(&spectrum_2d.view(), None, FftMode::Inverse, true).unwrap();
+        let recovered = fft2_efficient(&spectrum_2d.view(), None, FftMode::Inverse, true)
+            .expect("Operation failed");
 
         // Check original values are recovered
         assert_relative_eq!(recovered[[0, 0]].re, 1.0, epsilon = 1e-10);
@@ -649,13 +656,15 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Test with default chunk size
-        let result = fft_streaming(&signal, None, FftMode::Forward, None).unwrap();
+        let result =
+            fft_streaming(&signal, None, FftMode::Forward, None).expect("Operation failed");
 
         // Check DC component is sum of inputs
         assert_relative_eq!(result[0].re, 10.0, epsilon = 1e-10);
 
         // Test inverse
-        let inverse = fft_streaming(&result, None, FftMode::Inverse, None).unwrap();
+        let inverse =
+            fft_streaming(&result, None, FftMode::Inverse, None).expect("Operation failed");
 
         // Check we recover original signal
         assert_relative_eq!(inverse[0].re, 1.0, epsilon = 1e-10);
@@ -664,8 +673,8 @@ mod tests {
         assert_relative_eq!(inverse[3].re, 4.0, epsilon = 1e-10);
 
         // Test with explicit small chunk size - this is explicitly set to ensure stable test results
-        let result_chunked =
-            fft_streaming(&signal, None, FftMode::Forward, Some(signal.len())).unwrap();
+        let result_chunked = fft_streaming(&signal, None, FftMode::Forward, Some(signal.len()))
+            .expect("Operation failed");
 
         // Results should be the same
         for (a, b) in result.iter().zip(result_chunked.iter()) {

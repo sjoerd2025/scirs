@@ -95,7 +95,7 @@ where
     /// use scirs2_linalg::circulant_toeplitz::CirculantMatrix;
     ///
     /// let first_row = array![1.0, 2.0, 3.0, 4.0];
-    /// let circ = CirculantMatrix::new(first_row).unwrap();
+    /// let circ = CirculantMatrix::new(first_row).expect("Operation failed");
     /// ```
     pub fn new(first_row: Array1<F>) -> LinalgResult<Self> {
         let size = first_row.len();
@@ -140,7 +140,7 @@ where
             }
         }
 
-        Ok(self.eigenvalues.as_ref().unwrap())
+        Ok(self.eigenvalues.as_ref().expect("Operation failed"))
     }
 
     /// Manual DFT computation for small matrices to avoid FFT implementation issues
@@ -197,9 +197,9 @@ where
     /// use scirs2_linalg::circulant_toeplitz::CirculantMatrix;
     ///
     /// let first_row = array![2.0, -1.0, 0.0, -1.0]; // Typical finite difference matrix
-    /// let mut circ = CirculantMatrix::new(first_row).unwrap();
+    /// let mut circ = CirculantMatrix::new(first_row).expect("Operation failed");
     /// let b = array![1.0, 1.0, 1.0, 1.0];
-    /// let x = circ.solve(&b.view()).unwrap();
+    /// let x = circ.solve(&b.view()).expect("Operation failed");
     /// ```
     pub fn solve(&mut self, b: &ArrayView1<F>) -> LinalgResult<Array1<F>> {
         if b.len() != self.size {
@@ -403,7 +403,7 @@ where
     ///
     /// let first_row = array![1.0, 2.0, 3.0];
     /// let first_col = array![1.0, 4.0, 5.0]; // Note: first_row[0] == first_col[0]
-    /// let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();
+    /// let toep = ToeplitzMatrix::new(first_row, first_col).expect("Operation failed");
     /// ```
     pub fn new(first_row: Array1<F>, first_column: Array1<F>) -> LinalgResult<Self> {
         let n = first_row.len();
@@ -671,7 +671,7 @@ mod tests {
     #[test]
     fn test_circulantmatrix_creation() {
         let first_row = array![1.0, 2.0, 3.0, 4.0];
-        let circ = CirculantMatrix::new(first_row.clone()).unwrap();
+        let circ = CirculantMatrix::new(first_row.clone()).expect("Operation failed");
 
         assert_eq!(circ.size, 4);
         assert_eq!(circ.first_row, first_row);
@@ -680,7 +680,7 @@ mod tests {
     #[test]
     fn test_circulant_to_dense() {
         let first_row = array![1.0, 2.0, 3.0];
-        let circ = CirculantMatrix::new(first_row).unwrap();
+        let circ = CirculantMatrix::new(first_row).expect("Operation failed");
         let dense = circ.to_dense();
 
         let expected = array![[1.0, 2.0, 3.0], [3.0, 1.0, 2.0], [2.0, 3.0, 1.0]];
@@ -696,13 +696,13 @@ mod tests {
     fn test_circulant_solve() {
         // Test with a well-conditioned circulant matrix
         let first_row = array![3.0, -1.0, -1.0]; // Well-conditioned tridiagonal-like circulant
-        let mut circ = CirculantMatrix::new(first_row).unwrap();
+        let mut circ = CirculantMatrix::new(first_row).expect("Operation failed");
 
         let b = array![1.0, 1.0, 1.0];
-        let x = circ.solve(&b.view()).unwrap();
+        let x = circ.solve(&b.view()).expect("Operation failed");
 
         // Verify solution by multiplication
-        let result = circ.matvec(&x.view()).unwrap();
+        let result = circ.matvec(&x.view()).expect("Operation failed");
 
         for i in 0..3 {
             assert_relative_eq!(result[i], b[i], epsilon = 1e-6);
@@ -712,7 +712,7 @@ mod tests {
     #[test]
     fn test_circulant_matvec() {
         let first_row = array![1.0, 2.0, 3.0];
-        let mut circ = CirculantMatrix::new(first_row.clone()).unwrap();
+        let mut circ = CirculantMatrix::new(first_row.clone()).expect("Operation failed");
         let v = array![1.0, 0.0, 0.0];
 
         // Debug: Check the dense matrix first
@@ -731,11 +731,11 @@ mod tests {
         println!("Manual result (dense.dot(v)): {:?}", manual_result);
 
         // FFT-based computation
-        let result = circ.matvec(&v.view()).unwrap();
+        let result = circ.matvec(&v.view()).expect("Operation failed");
         println!("FFT result: {:?}", result);
 
         // Check eigenvalues
-        let eigenvals = circ.compute_eigenvalues().unwrap();
+        let eigenvals = circ.compute_eigenvalues().expect("Operation failed");
         println!("Eigenvalues: {:?}", eigenvals);
 
         for i in 0..3 {
@@ -755,7 +755,7 @@ mod tests {
     fn test_toeplitzmatrix_creation() {
         let first_row = array![1.0, 2.0, 3.0];
         let first_col = array![1.0, 4.0, 5.0];
-        let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();
+        let toep = ToeplitzMatrix::new(first_row, first_col).expect("Operation failed");
 
         assert_eq!(toep.size, 3);
         assert!(toep.first_row[0] == toep.first_column[0]);
@@ -764,7 +764,7 @@ mod tests {
     #[test]
     fn test_toeplitz_symmetric() {
         let diag = array![1.0, 2.0, 3.0];
-        let toep = ToeplitzMatrix::symmetric(diag.clone()).unwrap();
+        let toep = ToeplitzMatrix::symmetric(diag.clone()).expect("Operation failed");
 
         assert!(toep.is_symmetric());
         assert_eq!(toep.first_row, diag);
@@ -775,7 +775,7 @@ mod tests {
     fn test_toeplitz_to_dense() {
         let first_row = array![1.0, 2.0, 3.0];
         let first_col = array![1.0, 4.0, 5.0];
-        let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();
+        let toep = ToeplitzMatrix::new(first_row, first_col).expect("Operation failed");
 
         let dense = toep.to_dense();
         let expected = array![[1.0, 2.0, 3.0], [4.0, 1.0, 2.0], [5.0, 4.0, 1.0]];
@@ -791,13 +791,13 @@ mod tests {
     fn test_toeplitz_solve_fft() {
         // Test with a well-conditioned symmetric positive definite Toeplitz matrix
         let diag = array![3.0, -0.5, 0.0]; // Well-conditioned tridiagonal pattern
-        let toep = ToeplitzMatrix::symmetric(diag).unwrap();
+        let toep = ToeplitzMatrix::symmetric(diag).expect("Operation failed");
 
         let b = array![1.0, 0.0, 0.0];
-        let x = toep.solve(&b.view()).unwrap();
+        let x = toep.solve(&b.view()).expect("Operation failed");
 
         // Verify solution
-        let result = toep.matvec(&x.view()).unwrap();
+        let result = toep.matvec(&x.view()).expect("Operation failed");
 
         for i in 0..3 {
             assert_relative_eq!(result[i], b[i], epsilon = 5e-2); // More lenient for FFT-based Toeplitz
@@ -808,13 +808,13 @@ mod tests {
     fn test_toeplitz_solve_levinson() {
         // Test Levinson's algorithm with well-conditioned matrix
         let diag = array![4.0, -0.5, 0.0]; // Well-conditioned matrix
-        let toep = ToeplitzMatrix::symmetric(diag).unwrap();
+        let toep = ToeplitzMatrix::symmetric(diag).expect("Operation failed");
 
         let b = array![1.0, 1.0, 1.0];
-        let x = toep.solve_levinson(&b.view()).unwrap();
+        let x = toep.solve_levinson(&b.view()).expect("Operation failed");
 
         // Verify solution
-        let result = toep.matvec(&x.view()).unwrap();
+        let result = toep.matvec(&x.view()).expect("Operation failed");
 
         for i in 0..3 {
             assert_relative_eq!(result[i], b[i], epsilon = 2e-1); // More lenient for Levinson algorithm precision
@@ -825,10 +825,10 @@ mod tests {
     fn test_toeplitz_matvec() {
         let first_row = array![1.0, 2.0, 3.0];
         let first_col = array![1.0, 4.0, 5.0];
-        let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();
+        let toep = ToeplitzMatrix::new(first_row, first_col).expect("Operation failed");
 
         let v = array![1.0, 0.0, 0.0];
-        let result = toep.matvec(&v.view()).unwrap();
+        let result = toep.matvec(&v.view()).expect("Operation failed");
         let expected = array![1.0, 4.0, 5.0]; // First column
 
         for i in 0..3 {
@@ -840,9 +840,9 @@ mod tests {
     fn test_circulant_condition_number() {
         // Well-conditioned circulant matrix
         let first_row = array![2.0, -1.0, 0.0, -1.0];
-        let mut circ = CirculantMatrix::new(first_row).unwrap();
+        let mut circ = CirculantMatrix::new(first_row).expect("Operation failed");
 
-        let cond = circ.condition_number().unwrap();
+        let cond = circ.condition_number().expect("Operation failed");
         assert!(cond > 1.0);
         assert!(cond < 100.0); // Should be reasonably conditioned
     }
@@ -856,11 +856,11 @@ mod tests {
         first_row[1] = -0.5; // Reduced off-diagonal elements
         first_row[n - 1] = -0.5; // Circulant tridiagonal
 
-        let mut circ = CirculantMatrix::new(first_row).unwrap();
+        let mut circ = CirculantMatrix::new(first_row).expect("Operation failed");
         let b = Array1::ones(n);
 
-        let x = circ.solve(&b.view()).unwrap();
-        let result = circ.matvec(&x.view()).unwrap();
+        let x = circ.solve(&b.view()).expect("Operation failed");
+        let result = circ.matvec(&x.view()).expect("Operation failed");
 
         for i in 0..n {
             assert_relative_eq!(result[i], b[i], epsilon = 1e-6);
@@ -871,12 +871,12 @@ mod tests {
     fn test_toeplitz_fft_vs_levinson() {
         // Compare FFT-based and Levinson solutions with well-conditioned matrix
         let diag = array![5.0, -0.5, 0.0, 0.0]; // Better conditioned matrix
-        let toep = ToeplitzMatrix::symmetric(diag).unwrap();
+        let toep = ToeplitzMatrix::symmetric(diag).expect("Operation failed");
 
         let b = array![1.0, 2.0, 3.0, 4.0];
 
-        let x_fft = toep.solve(&b.view()).unwrap();
-        let x_levinson = toep.solve_levinson(&b.view()).unwrap();
+        let x_fft = toep.solve(&b.view()).expect("Operation failed");
+        let x_levinson = toep.solve_levinson(&b.view()).expect("Operation failed");
 
         // Solutions should be reasonably close (allowing for numerical differences between algorithms)
         for i in 0..4 {

@@ -185,7 +185,7 @@ impl IntelligentIoManager {
     ) {
         let throughput = (input_size as f64) / (processing_time.as_secs_f64() * 1024.0 * 1024.0);
 
-        let mut history = self.performance_history.lock().unwrap();
+        let mut history = self.performance_history.lock().expect("Operation failed");
         history.push_back(throughput);
         if history.len() > 1000 {
             history.pop_front();
@@ -205,7 +205,7 @@ impl IntelligentIoManager {
 
     /// Get performance analytics
     pub fn get_performance_analytics(&self) -> PerformanceAnalytics {
-        let history = self.performance_history.lock().unwrap();
+        let history = self.performance_history.lock().expect("Operation failed");
 
         if history.is_empty() {
             return PerformanceAnalytics::default();

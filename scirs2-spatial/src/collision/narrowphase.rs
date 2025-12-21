@@ -1227,8 +1227,8 @@ fn negate_vector(a: &[f64; 3]) -> [f64; 3] {
 /// Handle line simplex (2 points)
 #[allow(dead_code)]
 fn handle_line_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
-    let a = simplex.get_point(1).unwrap(); // Latest point
-    let b = simplex.get_point(0).unwrap(); // Previous point
+    let a = simplex.get_point(1).expect("Operation failed"); // Latest point
+    let b = simplex.get_point(0).expect("Operation failed"); // Previous point
 
     let ab = subtract_vectors(&b, &a);
     let ao = negate_vector(&a);
@@ -1248,9 +1248,9 @@ fn handle_line_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bo
 /// Handle triangle simplex (3 points)
 #[allow(dead_code)]
 fn handle_triangle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
-    let a = simplex.get_point(2).unwrap(); // Latest point
-    let b = simplex.get_point(1).unwrap();
-    let c = simplex.get_point(0).unwrap();
+    let a = simplex.get_point(2).expect("Operation failed"); // Latest point
+    let b = simplex.get_point(1).expect("Operation failed");
+    let c = simplex.get_point(0).expect("Operation failed");
 
     let ab = subtract_vectors(&b, &a);
     let ac = subtract_vectors(&c, &a);
@@ -1305,10 +1305,10 @@ fn handle_line_simplex_from_points(
 /// Handle tetrahedron simplex (4 points)
 #[allow(dead_code)]
 fn handle_tetrahedron_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
-    let a = simplex.get_point(3).unwrap(); // Latest point
-    let b = simplex.get_point(2).unwrap();
-    let c = simplex.get_point(1).unwrap();
-    let d = simplex.get_point(0).unwrap();
+    let a = simplex.get_point(3).expect("Operation failed"); // Latest point
+    let b = simplex.get_point(2).expect("Operation failed");
+    let c = simplex.get_point(1).expect("Operation failed");
+    let d = simplex.get_point(0).expect("Operation failed");
 
     let ab = subtract_vectors(&b, &a);
     let ac = subtract_vectors(&c, &a);

@@ -205,7 +205,7 @@ fn analyze_wave_propagation(
     }
 
     // Print values at specific locations for the final time
-    let final_sol = result.u.last().unwrap();
+    let final_sol = result.u.last().expect("Operation failed");
     println!("\nFinal solution values at specific locations:");
     println!("Position | Value");
     println!("---------|------");
@@ -230,8 +230,8 @@ fn compare_solutions(
     _domain: &Domain,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Get final solutions
-    let cn_final = cn_result.u.last().unwrap();
-    let be_final = be_result.u.last().unwrap();
+    let cn_final = cn_result.u.last().expect("Operation failed");
+    let be_final = be_result.u.last().expect("Operation failed");
 
     // Calculate difference
     let mut max_diff: f64 = 0.0;

@@ -320,7 +320,7 @@ impl<T: Float> op::Op<T> for ReduceSumToScalar {
                             )
                         };
                         let sum_f32 = simd_reduce_sum_f32_cache_aware(f32_slice);
-                        let sum_t = T::from(sum_f32).unwrap();
+                        let sum_t = T::from(sum_f32).expect("Operation failed");
                         ctx.append_output(scirs2_core::ndarray::arr0(sum_t).into_dyn());
                         return Ok(());
                     }
@@ -353,7 +353,7 @@ impl<T: Float> op::Op<T> for ReduceSumToScalarGrad {
             use crate::same_type;
             if same_type::<T, f32>() {
                 let grad_value = unsafe { *ctx.input(0).as_ptr() };
-                let grad_f32 = grad_value.to_f32().unwrap();
+                let grad_f32 = grad_value.to_f32().expect("Operation failed");
                 let target_shape = shape.as_slice();
 
                 // Use cache-aware SIMD gradient broadcast
@@ -408,7 +408,7 @@ impl<T: Float> op::Op<T> for ReduceSum {
                     // Use cache-aware SIMD reduction
                     if data_slice.len() >= 256 {
                         let sum_f32 = simd_reduce_sum_f32_cache_aware(f32_slice);
-                        let sum_t = T::from(sum_f32).unwrap();
+                        let sum_t = T::from(sum_f32).expect("Operation failed");
                         let result_shape = if self.keep_dims {
                             let mut shape = x.shape().to_vec();
                             shape[axes[0]] = 1;
@@ -469,7 +469,7 @@ impl<T: Float> op::Op<T> for ReduceMean {
         let mut sum = compute_reduce_sum(x, axes, self.keep_dims);
 
         // Do division
-        let reduction_len_inv = T::one() / T::from(reduction_len).unwrap();
+        let reduction_len_inv = T::one() / T::from(reduction_len).expect("Operation failed");
         sum.mapv_inplace(move |elem| elem * reduction_len_inv);
         ctx.append_output(sum);
         Ok(())
@@ -637,7 +637,7 @@ fn argx_helper<T: Float>(
                     if z {
                         *f = true;
                     }
-                    *r = T::from(z as i32).unwrap();
+                    *r = T::from(z as i32).expect("Operation failed");
                 });
         }
         mask
@@ -654,13 +654,14 @@ fn argx_helper<T: Float>(
         );
         let shape2d = (reduction_len, mask.len() / reduction_len);
         let mut mask = if mask.is_standard_layout() {
-            mask.into_shape_with_order(shape2d).unwrap()
+            mask.into_shape_with_order(shape2d)
+                .expect("Operation failed")
         } else {
             // Convert to standard layout first if needed
             mask.as_standard_layout()
                 .to_owned()
                 .into_shape_with_order(shape2d)
-                .unwrap()
+                .expect("Failed to get slice")
         };
         mask.swap_axes(0, 1);
         mask
@@ -669,9 +670,13 @@ fn argx_helper<T: Float>(
     // 3. Make the indices (vertical vector)
     let indices = {
         let cols = mask.shape()[1];
-        scirs2_core::ndarray::Array::range(T::zero(), T::from(cols).unwrap(), T::one())
-            .into_shape_with_order((cols, 1))
-            .unwrap()
+        scirs2_core::ndarray::Array::range(
+            T::zero(),
+            T::from(cols).expect("Operation failed"),
+            T::one(),
+        )
+        .into_shape_with_order((cols, 1))
+        .expect("Failed to reshape")
     };
 
     // 4. Dot product between mask and index-tensor
@@ -687,7 +692,7 @@ fn argx_helper<T: Float>(
     // unwrap is safe (95% confidence...)
     mat.into_dyn()
         .into_shape_with_order(scirs2_core::ndarray::IxDyn(finalshape.as_slice()))
-        .unwrap()
+        .expect("Failed to reshape")
 }
 
 impl<T: Float> op::Op<T> for ArgMin {
@@ -748,11 +753,19 @@ impl<T: Float> op::Op<T> for ReduceGradCommon {
                 gyshape.insert(axis, 1);
             }
             // do broadcast
-            let a = gy.into_shape_with_order(gyshape).unwrap();
-            ctx.append_output(a.broadcast(targetshape).unwrap().to_owned())
+            let a = gy.into_shape_with_order(gyshape).expect("Operation failed");
+            ctx.append_output(
+                a.broadcast(targetshape)
+                    .expect("Operation failed")
+                    .to_owned(),
+            )
         } else {
             // do broadcast
-            ctx.append_output(gy.broadcast(targetshape).unwrap().to_owned())
+            ctx.append_output(
+                gy.broadcast(targetshape)
+                    .expect("Operation failed")
+                    .to_owned(),
+            )
         }
         Ok(())
     }
@@ -784,7 +797,7 @@ impl<T: Float> op::Op<T> for ReduceVariance {
             .iter()
             .map(|&axis| x.shape()[axis] as f32)
             .product::<f32>();
-        let reduction_len_inv = T::from(1.0 / reduction_len).unwrap();
+        let reduction_len_inv = T::from(1.0 / reduction_len).expect("Operation failed");
         let mean = mean.mapv(|elem| elem * reduction_len_inv);
 
         // Compute variance: mean((x - mean)^2)
@@ -833,7 +846,7 @@ impl<T: Float> op::Op<T> for ReduceMeanAll {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let len = x.len() as f32;
-        let mean = x.sum() / T::from(len).unwrap();
+        let mean = x.sum() / T::from(len).expect("Operation failed");
         ctx.append_output(scirs2_core::ndarray::arr0(mean).into_dyn());
         Ok(())
     }

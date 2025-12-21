@@ -428,8 +428,8 @@ mod tests {
             .strategy(ChunkingStrategy::Fixed(1000))
             .build();
 
-        let result =
-            uniform_filter_chunked_v2(&input, &size, BorderMode::Constant, Some(config)).unwrap();
+        let result = uniform_filter_chunked_v2(&input, &size, BorderMode::Constant, Some(config))
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
 
@@ -450,7 +450,8 @@ mod tests {
             .strategy(ChunkingStrategy::NumChunks(4))
             .build();
 
-        let result = binary_op_chunked_v2(&array1, &array2, |a, b| a + b, Some(config)).unwrap();
+        let result = binary_op_chunked_v2(&array1, &array2, |a, b| a + b, Some(config))
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), array1.shape());
 

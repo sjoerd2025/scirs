@@ -255,12 +255,12 @@ impl NeuralIoNetwork {
         let _output_weight_grad = output_bias_grad
             .view()
             .to_shape((output_bias_grad.len(), 1))
-            .unwrap()
+            .expect("Operation failed")
             .dot(
                 &hidden_output2
                     .view()
                     .to_shape((1, hidden_output2.len()))
-                    .unwrap(),
+                    .expect("Operation failed"),
             );
 
         // Hidden layer gradients (simplified for efficiency)
@@ -281,12 +281,12 @@ impl NeuralIoNetwork {
         let _input_weight_grad = input_bias_grad
             .view()
             .to_shape((input_bias_grad.len(), 1))
-            .unwrap()
+            .expect("Operation failed")
             .dot(
                 &attended_input
                     .view()
                     .to_shape((1, attended_input.len()))
-                    .unwrap(),
+                    .expect("Operation failed"),
             );
 
         // Update weights using Adam optimizer - simplified approach
@@ -535,7 +535,7 @@ impl NeuralAdaptiveIoController {
         &self,
         metrics: &SystemMetrics,
     ) -> Result<OptimizationDecisions> {
-        let network = self.network.read().unwrap();
+        let network = self.network.read().expect("Operation failed");
         let input = metrics.to_input_vector();
         let output = network.forward(&input)?;
         Ok(OptimizationDecisions::from_output_vector(&output))
@@ -550,7 +550,7 @@ impl NeuralAdaptiveIoController {
     ) -> Result<()> {
         // Update performance history
         {
-            let mut history = self.performance_history.write().unwrap();
+            let mut history = self.performance_history.write().expect("Operation failed");
             history.push_back((metrics.clone(), decisions.clone(), feedback.clone()));
             if history.len() > 1000 {
                 history.pop_front();
@@ -559,24 +559,24 @@ impl NeuralAdaptiveIoController {
 
         // Update baseline performance
         {
-            let mut baseline = self.baseline_performance.write().unwrap();
+            let mut baseline = self.baseline_performance.write().expect("Operation failed");
             if baseline.is_none() {
                 *baseline = Some(feedback.throughput_mbps);
             } else {
-                let current_baseline = baseline.as_mut().unwrap();
+                let current_baseline = baseline.as_mut().expect("Operation failed");
                 *current_baseline = 0.9 * *current_baseline + 0.1 * feedback.throughput_mbps;
             }
         }
 
         // Adapt network if enough time has passed
         let should_adapt = {
-            let last_adaptation = self.last_adaptation.read().unwrap();
+            let last_adaptation = self.last_adaptation.read().expect("Operation failed");
             last_adaptation.elapsed() > self.adaptation_interval
         };
 
         if should_adapt {
             self.adapt_network()?;
-            let mut last_adaptation = self.last_adaptation.write().unwrap();
+            let mut last_adaptation = self.last_adaptation.write().expect("Operation failed");
             *last_adaptation = Instant::now();
         }
 
@@ -585,11 +585,11 @@ impl NeuralAdaptiveIoController {
 
     /// Adapt the neural network based on recent performance
     fn adapt_network(&self) -> Result<()> {
-        let history = self.performance_history.read().unwrap();
-        let baseline = self.baseline_performance.read().unwrap();
+        let history = self.performance_history.read().expect("Operation failed");
+        let baseline = self.baseline_performance.read().expect("Operation failed");
 
         if let Some(baseline_throughput) = *baseline {
-            let mut network = self.network.write().unwrap();
+            let mut network = self.network.write().expect("Operation failed");
 
             // Use the last 10 entries for training
             let recent_entries: Vec<_> = history.iter().rev().take(10).collect();
@@ -608,8 +608,8 @@ impl NeuralAdaptiveIoController {
 
     /// Get adaptation statistics
     pub fn get_adaptation_stats(&self) -> AdaptationStats {
-        let history = self.performance_history.read().unwrap();
-        let baseline = self.baseline_performance.read().unwrap();
+        let history = self.performance_history.read().expect("Operation failed");
+        let baseline = self.baseline_performance.read().expect("Operation failed");
 
         let recent_performance: Vec<f32> = history
             .iter()
@@ -695,7 +695,7 @@ impl AdvancedIoProcessor {
 
         // Update current parameters
         {
-            let mut params = self.current_params.write().unwrap();
+            let mut params = self.current_params.write().expect("Operation failed");
             *params = concrete_params.clone();
         }
 
@@ -865,7 +865,7 @@ impl ReinforcementLearningAgent {
                 .max_by(|a, b| {
                     let value_a = state_actions.get(*a).unwrap_or(&0.0);
                     let value_b = state_actions.get(*b).unwrap_or(&0.0);
-                    value_a.partial_cmp(value_b).unwrap()
+                    value_a.partial_cmp(value_b).expect("Operation failed")
                 })
                 .cloned()
                 .unwrap_or_else(|| actions[0].clone())
@@ -1064,7 +1064,7 @@ mod tests {
     fn test_neural_network_forward() {
         let network = NeuralIoNetwork::new(8, 16, 5);
         let input = Array1::from(vec![0.5; 8]);
-        let output = network.forward(&input).unwrap();
+        let output = network.forward(&input).expect("Operation failed");
         assert_eq!(output.len(), 5);
         assert!(output.iter().all(|&x| (0.0..=1.0).contains(&x)));
     }
@@ -1091,7 +1091,9 @@ mod tests {
     fn test_advanced_think_processor() {
         let mut processor = AdvancedIoProcessor::new();
         let test_data = vec![1, 2, 3, 4, 5];
-        let result = processor.process_data_adaptive(&test_data).unwrap();
+        let result = processor
+            .process_data_adaptive(&test_data)
+            .expect("Operation failed");
         assert!(!result.is_empty());
     }
 }

@@ -63,7 +63,7 @@ impl AdvancedThreadPool {
         let (task, handle) = Task::new(task);
 
         // Use global queue for all tasks to avoid move issues
-        let mut queue = self.global_queue.lock().unwrap();
+        let mut queue = self.global_queue.lock().expect("Test: operation failed");
         if queue.len() >= self.config.max_queue_size {
             return Err(ThreadPoolError::QueueFull);
         }
@@ -107,7 +107,7 @@ impl AdvancedThreadPool {
 
     /// Get thread pool statistics
     pub fn get_stats(&self) -> AdvancedThreadPoolStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Test: operation failed").clone()
     }
 
     /// Shutdown the thread pool
@@ -237,7 +237,7 @@ impl WorkStealingWorker {
 
                     // Update statistics
                     {
-                        let mut stats = stats.lock().unwrap();
+                        let mut stats = stats.lock().expect("Test: operation failed");
                         stats.total_tasks_executed += 1;
                         stats.total_execution_time += execution_time;
                         stats.worker_stats[id].tasks_completed += 1;
@@ -255,11 +255,11 @@ impl WorkStealingWorker {
                     if let Some(start) = idle_start {
                         if start.elapsed() > config.idle_timeout {
                             let (lock, cvar) = &*shutdown_signal;
-                            let mut shutdown = lock.lock().unwrap();
+                            let mut shutdown = lock.lock().expect("Test: operation failed");
                             while !*shutdown && running.load(Ordering::Relaxed) {
                                 let result = cvar
                                     .wait_timeout(shutdown, Duration::from_millis(100))
-                                    .unwrap();
+                                    .expect("Test: wait timeout failed");
                                 shutdown = result.0;
                                 if result.1.timed_out() {
                                     break;
@@ -283,7 +283,7 @@ impl WorkStealingWorker {
     ) -> Option<Task> {
         // Try local _queue first
         {
-            let mut _queue = local_queue.lock().unwrap();
+            let mut _queue = local_queue.lock().expect("Test: operation failed");
             if let Some(task) = _queue.pop_front() {
                 return Some(task);
             }
@@ -291,7 +291,7 @@ impl WorkStealingWorker {
 
         // Try global _queue
         {
-            let mut _queue = global_queue.lock().unwrap();
+            let mut _queue = global_queue.lock().expect("Test: operation failed");
             if let Some(task) = _queue.pop_front() {
                 return Some(task);
             }
@@ -308,8 +308,14 @@ impl WorkStealingWorker {
     /// Try to submit a task to the local queue
     #[allow(dead_code)]
     fn try_submit_local(&self, task: Task) -> bool {
-        let mut queue = self.local_queue.lock().unwrap();
-        if queue.len() < self.local_queue.lock().unwrap().capacity() {
+        let mut queue = self.local_queue.lock().expect("Test: operation failed");
+        if queue.len()
+            < self
+                .local_queue
+                .lock()
+                .expect("Test: operation failed")
+                .capacity()
+        {
             queue.push_back(task);
             true
         } else {
@@ -319,13 +325,16 @@ impl WorkStealingWorker {
 
     /// Get the current queue size
     fn get_queue_size(&self) -> usize {
-        self.local_queue.lock().unwrap().len()
+        self.local_queue
+            .lock()
+            .expect("Test: operation failed")
+            .len()
     }
 
     /// Notify worker to shutdown
     fn notify_shutdown(&self) {
         let (lock, cvar) = &*self.shutdown_signal;
-        let mut shutdown = lock.lock().unwrap();
+        let mut shutdown = lock.lock().expect("Test: operation failed");
         *shutdown = true;
         cvar.notify_one();
     }
@@ -633,9 +642,9 @@ mod tests {
             .submit(move || {
                 counter_clone.fetch_add(1, Ordering::SeqCst);
             })
-            .unwrap();
+            .expect("Test: thread spawn failed");
 
-        handle.wait().unwrap();
+        handle.wait().expect("Test: operation failed");
         assert_eq!(counter.load(Ordering::SeqCst), 1);
     }
 
@@ -652,7 +661,7 @@ mod tests {
             .submit(|| {
                 std::thread::sleep(Duration::from_millis(200));
             })
-            .unwrap();
+            .expect("Test: thread spawn failed");
 
         // Should timeout
         let result = handle.wait_timeout(Duration::from_millis(50));
@@ -678,10 +687,10 @@ mod tests {
             })
             .collect();
 
-        let handles = pool.submit_batch(tasks).unwrap();
+        let handles = pool.submit_batch(tasks).expect("Test: operation failed");
 
         for handle in handles {
-            handle.wait().unwrap();
+            handle.wait().expect("Test: operation failed");
         }
 
         assert_eq!(counter.load(Ordering::SeqCst), 5);
@@ -719,9 +728,9 @@ mod tests {
                 },
                 Some(0),
             )
-            .unwrap();
+            .expect("Test: array creation failed");
 
-        handle.wait().unwrap();
+        handle.wait().expect("Test: operation failed");
         assert_eq!(counter.load(Ordering::SeqCst), 1);
     }
 

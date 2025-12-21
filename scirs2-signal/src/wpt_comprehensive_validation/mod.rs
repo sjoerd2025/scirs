@@ -221,7 +221,7 @@ mod tests {
         let signal = generate_test_signal(TestSignalType::Sinusoidal, 64, 42);
         assert!(signal.is_ok());
 
-        let signal_data = signal.unwrap();
+        let signal_data = signal.expect("Operation failed");
         assert_eq!(signal_data.len(), 64);
         assert!(signal_data.iter().all(|&x| x.is_finite()));
     }

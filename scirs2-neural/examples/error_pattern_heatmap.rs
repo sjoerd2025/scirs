@@ -40,7 +40,7 @@ fn main() {
     let flat_matrix: Vec<f64> = matrix.iter().flatten().map(|&x| x as f64).collect();
     let ndarray_matrix =
         scirs2_core::ndarray::Array::from_shape_vec((num_classes, num_classes), flat_matrix)
-            .unwrap();
+            .expect("Operation failed");
     // Create class labels
     let class_labels = vec![
         "Class A".to_string(),
@@ -50,7 +50,8 @@ fn main() {
         "Class E".to_string(),
     ];
     // Create confusion matrix
-    let cm = ConfusionMatrix::from_matrix(ndarray_matrix, Some(class_labels)).unwrap();
+    let cm =
+        ConfusionMatrix::from_matrix(ndarray_matrix, Some(class_labels)).expect("Operation failed");
     // Example 1: Standard confusion matrix
     println!("Example 1: Standard Confusion Matrix\n");
     let regular_output = cm.to_ascii(Some("Classification Results"), false);

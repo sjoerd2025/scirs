@@ -34,11 +34,11 @@ impl FeatureSelector {
     /// use scirs2_core::ndarray::{Array1, Array2};
     /// use scirs2_series::feature_selection::{FeatureSelector, FeatureSelectionConfig};
     ///
-    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).expect("Operation failed");
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     /// let config = FeatureSelectionConfig::default();
     ///
-    /// let result = FeatureSelector::auto_select(&features, Some(&target), &config).unwrap();
+    /// let result = FeatureSelector::auto_select(&features, Some(&target), &config).expect("Operation failed");
     /// println!("Selected {} features using automatic selection", result.selected_features.len());
     /// ```
     pub fn auto_select(

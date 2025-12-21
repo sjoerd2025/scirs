@@ -28,13 +28,13 @@
 //! let kernel = SquaredExponential::default();
 //! let mut gpr = GaussianProcessRegressor::new(kernel);
 //!
-//! let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+//! let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
 //! let y_train = array![0.0, 1.0, 0.0];
 //!
-//! gpr.fit(&x_train, &y_train).unwrap();
+//! gpr.fit(&x_train, &y_train).expect("Operation failed");
 //!
-//! let x_test = Array2::from_shape_vec((1, 1), vec![1.5]).unwrap();
-//! let predictions = gpr.predict(&x_test).unwrap();
+//! let x_test = Array2::from_shape_vec((1, 1), vec![1.5]).expect("Operation failed");
+//! let predictions = gpr.predict(&x_test).expect("Operation failed");
 //! println!("Prediction: {}", predictions[0]);
 //! ```
 //!
@@ -47,13 +47,13 @@
 //! let kernel = SquaredExponential::default();
 //! let mut gpr = GaussianProcessRegressor::new(kernel);
 //!
-//! let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+//! let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
 //! let y_train = array![0.0, 1.0, 0.0];
 //!
-//! gpr.fit(&x_train, &y_train).unwrap();
+//! gpr.fit(&x_train, &y_train).expect("Operation failed");
 //!
-//! let x_test = Array2::from_shape_vec((1, 1), vec![1.5]).unwrap();
-//! let (mean, std) = gpr.predict_with_std(&x_test).unwrap();
+//! let x_test = Array2::from_shape_vec((1, 1), vec![1.5]).expect("Operation failed");
+//! let (mean, std) = gpr.predict_with_std(&x_test).expect("Operation failed");
 //! println!("Prediction: {} ± {}", mean[0], std[0]);
 //! ```
 //!
@@ -72,10 +72,10 @@
 //!
 //! let mut gpr = GaussianProcessRegressor::new(kernel);
 //!
-//! let x_train = Array2::from_shape_vec((2, 1), vec![0.0, 1.0]).unwrap();
+//! let x_train = Array2::from_shape_vec((2, 1), vec![0.0, 1.0]).expect("Operation failed");
 //! let y_train = array![0.0, 1.0];
 //!
-//! gpr.fit(&x_train, &y_train).unwrap();
+//! gpr.fit(&x_train, &y_train).expect("Operation failed");
 //! ```
 
 pub mod gp;

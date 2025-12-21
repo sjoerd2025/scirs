@@ -29,7 +29,7 @@ where
     // Initialize variables
     let n = x0.len();
     let mut x = x0.to_owned();
-    let mut f = func(x.as_slice().unwrap());
+    let mut f = func(x.as_slice().expect("Operation failed"));
     let mut nfev = 1;
     let mut njev = 0;
 
@@ -71,7 +71,8 @@ where
     };
 
     // Compute initial Jacobian
-    let (mut jac, nfev_inc, njev_inc) = get_jacobian(x.as_slice().unwrap(), &f, &jacobian_fn);
+    let (mut jac, nfev_inc, njev_inc) =
+        get_jacobian(x.as_slice().expect("Operation failed"), &f, &jacobian_fn);
     nfev += nfev_inc;
     njev += njev_inc;
 
@@ -108,7 +109,7 @@ where
         }
 
         // Evaluate function at the new point
-        let f_new = func(x_new.as_slice().unwrap());
+        let f_new = func(x_new.as_slice().expect("Operation failed"));
         nfev += 1;
 
         let f_new_norm = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>().sqrt();
@@ -125,7 +126,7 @@ where
 
             // Update Jacobian for next iteration
             let (new_jac, nfev_delta, njev_delta) =
-                get_jacobian(x.as_slice().unwrap(), &f, &jacobian_fn);
+                get_jacobian(x.as_slice().expect("Operation failed"), &f, &jacobian_fn);
             jac = new_jac;
             nfev += nfev_delta;
             njev += njev_delta;

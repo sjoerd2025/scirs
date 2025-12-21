@@ -109,7 +109,8 @@ fn bench_monotonic_interpolation(c: &mut Criterion) {
 
         // Pre-build the interpolator
         let interpolator =
-            MonotonicInterpolator::new(&x.view(), &y.view(), MonotonicMethod::Pchip, true).unwrap();
+            MonotonicInterpolator::new(&x.view(), &y.view(), MonotonicMethod::Pchip, true)
+                .expect("Test: operation failed");
 
         group.throughput(Throughput::Elements(queries.len() as u64));
         group.bench_with_input(
@@ -151,7 +152,7 @@ fn bench_cubic_spline(c: &mut Criterion) {
     for data_size in [100, 500, 1000, 5000].iter() {
         let (x, y) = generate_test_data(*data_size);
         let queries = generate_query_points(100, 0.0, 10.0);
-        let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = CubicSpline::new(&x.view(), &y.view()).expect("Test: operation failed");
 
         group.throughput(Throughput::Elements(queries.len() as u64));
         group.bench_with_input(
@@ -171,7 +172,7 @@ fn bench_cubic_spline(c: &mut Criterion) {
     for data_size in [100, 500, 1000, 5000].iter() {
         let (x, y) = generate_test_data(*data_size);
         let queries = generate_query_points(100, 0.0, 10.0);
-        let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = CubicSpline::new(&x.view(), &y.view()).expect("Test: operation failed");
 
         group.throughput(Throughput::Elements(queries.len() as u64));
         group.bench_with_input(
@@ -195,7 +196,7 @@ fn bench_array_evaluation(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_evaluation");
 
     let (x, y) = generate_test_data(1000);
-    let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    let spline = CubicSpline::new(&x.view(), &y.view()).expect("Test: operation failed");
 
     for query_size in [100, 500, 1000, 5000].iter() {
         let queries = generate_query_points(*query_size, 0.0, 10.0);

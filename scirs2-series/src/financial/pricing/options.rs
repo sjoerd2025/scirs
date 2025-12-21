@@ -33,11 +33,11 @@ use crate::error::{Result, TimeSeriesError};
 /// use scirs2_series::financial::pricing::options::black_scholes;
 ///
 /// // Price a call option
-/// let call_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, true).unwrap();
+/// let call_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, true).expect("Operation failed");
 /// println!("Call option price: ${:.2}", call_price);
 ///
 /// // Price a put option
-/// let put_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, false).unwrap();
+/// let put_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, false).expect("Operation failed");
 /// println!("Put option price: ${:.2}", put_price);
 /// ```
 ///
@@ -88,7 +88,9 @@ pub fn black_scholes<F: Float + Clone>(
     // Calculate d1 and d2
     let sqrt_t = time_to_expiry.sqrt();
     let d1 = ((spot_price / strike_price).ln()
-        + (risk_free_rate + volatility.powi(2) / F::from(2.0).unwrap()) * time_to_expiry)
+        + (risk_free_rate
+            + volatility.powi(2) / F::from(2.0).expect("Failed to convert constant to float"))
+            * time_to_expiry)
         / (volatility * sqrt_t);
     let d2 = d1 - volatility * sqrt_t;
 
@@ -158,7 +160,9 @@ pub fn black_scholes_greeks<F: Float + Clone>(
     // Calculate d1 and d2
     let sqrt_t = time_to_expiry.sqrt();
     let d1 = ((spot_price / strike_price).ln()
-        + (risk_free_rate + volatility.powi(2) / F::from(2.0).unwrap()) * time_to_expiry)
+        + (risk_free_rate
+            + volatility.powi(2) / F::from(2.0).expect("Failed to convert constant to float"))
+            * time_to_expiry)
         / (volatility * sqrt_t);
     let d2 = d1 - volatility * sqrt_t;
 
@@ -166,8 +170,9 @@ pub fn black_scholes_greeks<F: Float + Clone>(
     let norm_cdf_d2 = normal_cdf(d2);
 
     // Standard normal PDF
-    let norm_pdf_d1 =
-        (-d1.powi(2) / F::from(2.0).unwrap()).exp() / F::from(2.506628274631).unwrap(); // sqrt(2π)
+    let norm_pdf_d1 = (-d1.powi(2) / F::from(2.0).expect("Failed to convert constant to float"))
+        .exp()
+        / F::from(2.506628274631).expect("Failed to convert constant to float"); // sqrt(2π)
 
     let discount_factor = (-risk_free_rate * time_to_expiry).exp();
 
@@ -175,7 +180,8 @@ pub fn black_scholes_greeks<F: Float + Clone>(
         Greeks {
             delta: norm_cdf_d1,
             gamma: norm_pdf_d1 / (spot_price * volatility * sqrt_t),
-            theta: -(spot_price * norm_pdf_d1 * volatility) / (F::from(2.0).unwrap() * sqrt_t)
+            theta: -(spot_price * norm_pdf_d1 * volatility)
+                / (F::from(2.0).expect("Failed to convert constant to float") * sqrt_t)
                 - risk_free_rate * strike_price * discount_factor * norm_cdf_d2,
             vega: spot_price * norm_pdf_d1 * sqrt_t,
             rho: strike_price * time_to_expiry * discount_factor * norm_cdf_d2,
@@ -187,7 +193,8 @@ pub fn black_scholes_greeks<F: Float + Clone>(
         Greeks {
             delta: norm_cdf_d1 - F::one(),
             gamma: norm_pdf_d1 / (spot_price * volatility * sqrt_t),
-            theta: -(spot_price * norm_pdf_d1 * volatility) / (F::from(2.0).unwrap() * sqrt_t)
+            theta: -(spot_price * norm_pdf_d1 * volatility)
+                / (F::from(2.0).expect("Failed to convert constant to float") * sqrt_t)
                 + risk_free_rate * strike_price * discount_factor * norm_cdf_neg_d2,
             vega: spot_price * norm_pdf_d1 * sqrt_t,
             rho: -strike_price * time_to_expiry * discount_factor * norm_cdf_neg_d2,
@@ -230,8 +237,8 @@ pub fn implied_volatility<F: Float + Clone>(
     }
 
     // Initial guess for volatility
-    let mut volatility = F::from(0.2).unwrap(); // 20%
-    let tolerance = F::from(1e-6).unwrap();
+    let mut volatility = F::from(0.2).expect("Failed to convert constant to float"); // 20%
+    let tolerance = F::from(1e-6).expect("Failed to convert constant to float");
     let max_iterations = 100;
 
     for _ in 0..max_iterations {
@@ -267,7 +274,7 @@ pub fn implied_volatility<F: Float + Clone>(
         volatility = volatility - price_diff / greeks.vega;
 
         // Ensure volatility stays positive
-        volatility = volatility.max(F::from(0.001).unwrap());
+        volatility = volatility.max(F::from(0.001).expect("Failed to convert constant to float"));
     }
 
     Err(TimeSeriesError::InvalidInput(
@@ -344,11 +351,13 @@ mod tests {
     #[test]
     fn test_black_scholes() {
         // Test call option
-        let call_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, true).unwrap();
+        let call_price =
+            black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, true).expect("Operation failed");
         assert!(call_price > 0.0, "Call option should have positive price");
 
         // Test put option
-        let put_price = black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, false).unwrap();
+        let put_price =
+            black_scholes(100.0, 100.0, 1.0, 0.05, 0.2, false).expect("Operation failed");
         assert!(put_price > 0.0, "Put option should have positive price");
 
         // Test put-call parity approximately holds
@@ -370,7 +379,7 @@ mod tests {
         let result = black_scholes_greeks(100.0, 100.0, 1.0, 0.05, 0.2, true);
         assert!(result.is_ok());
 
-        let greeks = result.unwrap();
+        let greeks = result.expect("Operation failed");
         assert!(greeks.is_valid());
 
         // Delta should be between 0 and 1 for call options
@@ -414,7 +423,8 @@ mod tests {
     fn test_implied_volatility() {
         // First calculate a price with known volatility
         let known_vol = 0.25;
-        let price = black_scholes(100.0, 100.0, 1.0, 0.05, known_vol, true).unwrap();
+        let price =
+            black_scholes(100.0, 100.0, 1.0, 0.05, known_vol, true).expect("Operation failed");
 
         // Then recover the implied volatility
         let result = implied_volatility(price, 100.0, 100.0, 1.0, 0.05, true);
@@ -428,14 +438,16 @@ mod tests {
     #[test]
     fn test_deep_in_money_call() {
         // Deep in-the-money call should have delta close to 1
-        let greeks = black_scholes_greeks(150.0, 100.0, 1.0, 0.05, 0.2, true).unwrap();
+        let greeks =
+            black_scholes_greeks(150.0, 100.0, 1.0, 0.05, 0.2, true).expect("Operation failed");
         assert!(greeks.delta > 0.8);
     }
 
     #[test]
     fn test_deep_out_money_call() {
         // Deep out-of-the-money call should have delta close to 0
-        let greeks = black_scholes_greeks(50.0, 100.0, 1.0, 0.05, 0.2, true).unwrap();
+        let greeks =
+            black_scholes_greeks(50.0, 100.0, 1.0, 0.05, 0.2, true).expect("Operation failed");
         assert!(greeks.delta < 0.2);
     }
 }

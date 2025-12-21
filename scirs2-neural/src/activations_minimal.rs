@@ -55,9 +55,10 @@ impl<F: Float + Debug> Activation<F> for GELU {
         let mut output = input.clone();
 
         if self.fast {
-            let sqrt_2_over_pi = F::from(0.7978845608028654).unwrap();
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_2_over_pi =
+                F::from(0.7978845608028654).expect("Failed to convert constant to float");
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
 
             Zip::from(&mut output).for_each(|x| {
@@ -66,9 +67,10 @@ impl<F: Float + Debug> Activation<F> for GELU {
                 *x = half * *x * (one + inner.tanh());
             });
         } else {
-            let sqrt_pi_over_2 = F::from(1.2533141373155).unwrap();
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_pi_over_2 =
+                F::from(1.2533141373155).expect("Failed to convert constant to float");
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
 
             Zip::from(&mut output).for_each(|x| {
@@ -89,11 +91,12 @@ impl<F: Float + Debug> Activation<F> for GELU {
         let mut grad_input = Array::zeros(grad_output.raw_dim());
 
         if self.fast {
-            let sqrt_2_over_pi = F::from(0.7978845608028654).unwrap();
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_2_over_pi =
+                F::from(0.7978845608028654).expect("Failed to convert constant to float");
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
-            let three = F::from(3.0).unwrap();
+            let three = F::from(3.0).expect("Failed to convert constant to float");
 
             Zip::from(&mut grad_input)
                 .and(grad_output)
@@ -109,11 +112,12 @@ impl<F: Float + Debug> Activation<F> for GELU {
                     *grad_in = grad_out * dgelu_dx;
                 });
         } else {
-            let sqrt_pi_over_2 = F::from(1.2533141373155).unwrap();
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_pi_over_2 =
+                F::from(1.2533141373155).expect("Failed to convert constant to float");
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
-            let three = F::from(3.0).unwrap();
+            let three = F::from(3.0).expect("Failed to convert constant to float");
 
             Zip::from(&mut grad_input)
                 .and(grad_output)
@@ -516,7 +520,7 @@ mod tests {
     fn test_relu_simd_f64_1d() {
         let relu = ReLU::new();
         let input = Array::from_vec(vec![-2.0, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![0.0, 0.0, 0.0, 1.0, 2.0]).into_dyn();
         assert_eq!(output, expected);
     }
@@ -525,7 +529,7 @@ mod tests {
     fn test_relu_simd_f32_1d() {
         let relu = ReLU::new();
         let input = Array::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![0.0f32, 0.0, 0.0, 1.0, 2.0]).into_dyn();
         assert_eq!(output, expected);
     }
@@ -534,7 +538,7 @@ mod tests {
     fn test_leaky_relu_simd_f64_1d() {
         let relu = ReLU::leaky(0.01);
         let input = Array::from_vec(vec![-2.0, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![-0.02, -0.01, 0.0, 1.0, 2.0]).into_dyn();
         for (a, b) in output.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);
@@ -545,7 +549,7 @@ mod tests {
     fn test_leaky_relu_simd_f32_1d() {
         let relu = ReLU::leaky(0.01);
         let input = Array::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]).into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_vec(vec![-0.02f32, -0.01, 0.0, 1.0, 2.0]).into_dyn();
         for (a, b) in output.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-6);
@@ -558,7 +562,7 @@ mod tests {
         let relu = ReLU::new();
         let input: Vec<f64> = (0..10000).map(|i| i as f64 - 5000.0).collect();
         let input_arr = Array::from_vec(input.clone()).into_dyn();
-        let output = relu.forward(&input_arr).unwrap();
+        let output = relu.forward(&input_arr).expect("Operation failed");
 
         // Verify correctness
         for (i, &val) in output.iter().enumerate() {
@@ -573,7 +577,7 @@ mod tests {
         let relu = ReLU::leaky(0.01);
         let input: Vec<f32> = (0..10000).map(|i| i as f32 - 5000.0).collect();
         let input_arr = Array::from_vec(input.clone()).into_dyn();
-        let output = relu.forward(&input_arr).unwrap();
+        let output = relu.forward(&input_arr).expect("Operation failed");
 
         // Verify correctness
         for (i, &val) in output.iter().enumerate() {
@@ -591,11 +595,11 @@ mod tests {
         // Test that 2D arrays still work (using generic fallback)
         let relu = ReLU::new();
         let input = Array::from_shape_vec((2, 3), vec![-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
-        let output = relu.forward(&input).unwrap();
+        let output = relu.forward(&input).expect("Operation failed");
         let expected = Array::from_shape_vec((2, 3), vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         assert_eq!(output, expected);
     }
@@ -605,7 +609,9 @@ mod tests {
         let relu = ReLU::new();
         let input = Array::from_vec(vec![-1.0, 0.0, 1.0]).into_dyn();
         let grad_output = Array::from_vec(vec![1.0, 1.0, 1.0]).into_dyn();
-        let grad_input = relu.backward(&grad_output, &input).unwrap();
+        let grad_input = relu
+            .backward(&grad_output, &input)
+            .expect("Operation failed");
         let expected = Array::from_vec(vec![0.0, 0.0, 1.0]).into_dyn();
         assert_eq!(grad_input, expected);
     }
@@ -615,7 +621,9 @@ mod tests {
         let relu = ReLU::leaky(0.01);
         let input = Array::from_vec(vec![-1.0, 0.0, 1.0]).into_dyn();
         let grad_output = Array::from_vec(vec![1.0, 1.0, 1.0]).into_dyn();
-        let grad_input = relu.backward(&grad_output, &input).unwrap();
+        let grad_input = relu
+            .backward(&grad_output, &input)
+            .expect("Operation failed");
         let expected = Array::from_vec(vec![0.01, 0.01, 1.0]).into_dyn();
         for (a, b) in grad_input.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);

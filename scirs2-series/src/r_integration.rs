@@ -538,7 +538,7 @@ pub unsafe extern "C" fn scirs_get_arima_params(
             .take(param_count)
             .enumerate()
         {
-            let c_name = CString::new(*name).unwrap();
+            let c_name = CString::new(*name).expect("Operation failed");
             names_slice[i] = c_name.into_raw();
             values_slice[i] = *value;
         }

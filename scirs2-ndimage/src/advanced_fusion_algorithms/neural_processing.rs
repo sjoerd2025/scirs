@@ -87,7 +87,10 @@ pub fn self_organizing_neural_processing(
     let mut neural_output = Array2::zeros((height, width));
 
     // Access the network topology with proper locking
-    let mut topology = advancedstate.network_topology.write().unwrap();
+    let mut topology = advancedstate
+        .network_topology
+        .write()
+        .expect("Operation failed");
 
     // Self-organize network structure based on input patterns
     if config.self_organization {
@@ -544,18 +547,22 @@ mod tests {
         let config = AdvancedConfig::default();
 
         // Test sigmoid activation
-        let result = apply_activation_function(0.0, &ActivationType::Sigmoid, &config).unwrap();
+        let result = apply_activation_function(0.0, &ActivationType::Sigmoid, &config)
+            .expect("Operation failed");
         assert!((result - 0.5).abs() < 1e-10);
 
         // Test ReLU activation
-        let result = apply_activation_function(-1.0, &ActivationType::ReLU, &config).unwrap();
+        let result = apply_activation_function(-1.0, &ActivationType::ReLU, &config)
+            .expect("Operation failed");
         assert_eq!(result, 0.0);
 
-        let result = apply_activation_function(2.0, &ActivationType::ReLU, &config).unwrap();
+        let result = apply_activation_function(2.0, &ActivationType::ReLU, &config)
+            .expect("Operation failed");
         assert_eq!(result, 2.0);
 
         // Test tanh activation
-        let result = apply_activation_function(0.0, &ActivationType::Tanh, &config).unwrap();
+        let result = apply_activation_function(0.0, &ActivationType::Tanh, &config)
+            .expect("Operation failed");
         assert!((result - 0.0).abs() < 1e-10);
     }
 
@@ -570,7 +577,7 @@ mod tests {
         let result = self_organizing_neural_processing(&features, &mut state, &config);
         assert!(result.is_ok());
 
-        let output = result.unwrap();
+        let output = result.expect("Operation failed");
         assert_eq!(output.dim(), (32, 32));
     }
 
@@ -629,10 +636,12 @@ mod tests {
         let config = AdvancedConfig::default();
 
         // Test extreme inputs are clamped
-        let result = apply_activation_function(1000.0, &ActivationType::Sigmoid, &config).unwrap();
+        let result = apply_activation_function(1000.0, &ActivationType::Sigmoid, &config)
+            .expect("Operation failed");
         assert!(result >= -10.0 && result <= 10.0);
 
-        let result = apply_activation_function(-1000.0, &ActivationType::Sigmoid, &config).unwrap();
+        let result = apply_activation_function(-1000.0, &ActivationType::Sigmoid, &config)
+            .expect("Operation failed");
         assert!(result >= -10.0 && result <= 10.0);
     }
 }

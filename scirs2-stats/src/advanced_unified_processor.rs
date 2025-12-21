@@ -651,8 +651,8 @@ impl AdvancedUnifiedProcessor {
             }
         }
 
-        let mean = sum / F::from(n).unwrap();
-        let variance = (sum_squares / F::from(n).unwrap()) - (mean * mean);
+        let mean = sum / F::from(n).expect("Failed to convert to float");
+        let variance = (sum_squares / F::from(n).expect("Failed to convert to float")) - (mean * mean);
         let std_dev = variance.sqrt();
 
         // Compute higher moments
@@ -666,9 +666,9 @@ impl AdvancedUnifiedProcessor {
             sum_fourth_dev = sum_fourth_dev + dev_squared * dev_squared;
         }
 
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let skewness = (sum_cubed_dev / n_f) / (std_dev * std_dev * std_dev);
-        let kurtosis = (sum_fourth_dev / n_f) / (variance * variance) - F::from(3.0).unwrap();
+        let kurtosis = (sum_fourth_dev / n_f) / (variance * variance) - F::from(3.0).expect("Failed to convert constant to float");
 
         Ok(BatchResults {
             mean,
@@ -921,7 +921,7 @@ mod tests {
 
         let result = processor
             .process_comprehensive_statistics(&data.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert!((result.statistics.mean - 3.0).abs() < 1e-10);
         assert_eq!(result.statistics.count, 5);
@@ -947,10 +947,10 @@ mod tests {
         // Test different data sizes
         let _small_strategy = processor
             .determine_processing_strategy(100, &context)
-            .unwrap();
+            .expect("Operation failed");
         let large_strategy = processor
             .determine_processing_strategy(100000, &context)
-            .unwrap();
+            .expect("Operation failed");
 
         // Large datasets should use more aggressive optimization
         assert!(large_strategy.uses_parallel() || large_strategy.uses_simd());

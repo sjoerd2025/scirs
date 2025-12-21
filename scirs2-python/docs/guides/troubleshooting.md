@@ -1,7 +1,7 @@
 # Troubleshooting Guide
 
 **Version**: SciRS2-Python 0.2.0
-**Last Updated**: 2025-12-17
+**Last Updated**: 2025-12-21
 
 ---
 
@@ -660,5 +660,5 @@ print(scirs2.__version__)  # Should show latest version
 
 ---
 
-**Last Updated**: 2025-12-17
+**Last Updated**: 2025-12-21
 **Version**: 0.2.0

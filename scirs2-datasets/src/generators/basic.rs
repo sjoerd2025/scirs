@@ -78,7 +78,7 @@ pub fn make_classification(
     let mut data = Array2::zeros((n_samples, n_features));
     let mut target = Array1::zeros(n_samples);
 
-    let normal = scirs2_core::random::Normal::new(0.0, 1.0).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed");
 
     // Samples per _class
     let samples_per_class = n_samples / n_classes;
@@ -193,7 +193,7 @@ pub fn make_regression(
 
     // Generate the coefficients for the _informative _features
     let mut coef = Array1::zeros(n_features);
-    let normal = scirs2_core::random::Normal::new(0.0, 1.0).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed");
 
     for i in 0..n_informative {
         coef[i] = 100.0 * normal.sample(&mut rng);
@@ -279,7 +279,7 @@ pub fn make_time_series(
         }
     };
 
-    let normal = scirs2_core::random::Normal::new(0.0, 1.0).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed");
     let mut data = Array2::zeros((n_samples, n_features));
 
     for feature in 0..n_features {
@@ -288,7 +288,7 @@ pub fn make_time_series(
         } else {
             0.0
         };
-        let seasonality_period = rng.sample(Uniform::new(10, 50).unwrap()) as f64;
+        let seasonality_period = rng.sample(Uniform::new(10, 50).expect("Operation failed")) as f64;
         let seasonality_amplitude = if seasonality {
             rng.gen_range(1.0f64..5.0f64)
         } else {
@@ -400,7 +400,7 @@ pub fn make_blobs(
     let mut data = Array2::zeros((n_samples, n_features));
     let mut target = Array1::zeros(n_samples);
 
-    let normal = scirs2_core::random::Normal::new(0.0, cluster_std).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, cluster_std).expect("Operation failed");
 
     // Samples per center
     let samples_per_center = n_samples / centers;
@@ -481,7 +481,7 @@ pub fn make_spirals(
     let mut target = Array1::zeros(n_samples);
 
     let normal = if noise > 0.0 {
-        Some(scirs2_core::random::Normal::new(0.0, noise).unwrap())
+        Some(scirs2_core::random::Normal::new(0.0, noise).expect("Operation failed"))
     } else {
         None
     };
@@ -558,7 +558,7 @@ pub fn make_moons(n_samples: usize, noise: f64, randomseed: Option<u64>) -> Resu
     let mut target = Array1::zeros(n_samples);
 
     let normal = if noise > 0.0 {
-        Some(scirs2_core::random::Normal::new(0.0, noise).unwrap())
+        Some(scirs2_core::random::Normal::new(0.0, noise).expect("Operation failed"))
     } else {
         None
     };
@@ -655,7 +655,7 @@ pub fn make_circles(
     let mut target = Array1::zeros(n_samples);
 
     let normal = if noise > 0.0 {
-        Some(scirs2_core::random::Normal::new(0.0, noise).unwrap())
+        Some(scirs2_core::random::Normal::new(0.0, noise).expect("Operation failed"))
     } else {
         None
     };
@@ -778,7 +778,7 @@ pub fn make_anisotropic_blobs(
     let mut data = Array2::zeros((n_samples, n_features));
     let mut target = Array1::zeros(n_samples);
 
-    let normal = scirs2_core::random::Normal::new(0.0, cluster_std).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, cluster_std).expect("Operation failed");
 
     let samples_per_center = n_samples / centers;
     let remainder = n_samples % centers;
@@ -916,8 +916,10 @@ pub fn make_hierarchical_clusters(
     let mut main_target = Array1::zeros(n_samples);
     let mut sub_target = Array1::zeros(n_samples);
 
-    let main_normal = scirs2_core::random::Normal::new(0.0, main_cluster_std).unwrap();
-    let sub_normal = scirs2_core::random::Normal::new(0.0, sub_cluster_std).unwrap();
+    let main_normal =
+        scirs2_core::random::Normal::new(0.0, main_cluster_std).expect("Operation failed");
+    let sub_normal =
+        scirs2_core::random::Normal::new(0.0, sub_cluster_std).expect("Operation failed");
 
     let samples_per_main = n_samples / n_main_clusters;
     let remainder = n_samples % n_main_clusters;

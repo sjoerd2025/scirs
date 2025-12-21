@@ -232,7 +232,7 @@ where
             });
         }
 
-        let target_ndim = target_ndim.unwrap();
+        let target_ndim = target_ndim.expect("Operation failed");
 
         // Try direct conversion first for exact matches
         if source_ndim == target_ndim {
@@ -621,7 +621,12 @@ where
     // Create a mapping from sorted _indices to original positions
     let mut index_map = Vec::with_capacity(chunk_indices.len());
     for &idx in chunk_indices {
-        index_map.push(sorted_indices.iter().position(|&x| x == idx).unwrap());
+        index_map.push(
+            sorted_indices
+                .iter()
+                .position(|&x| x == idx)
+                .expect("Operation failed"),
+        );
     }
 
     // Load chunks in optimal order

@@ -316,7 +316,10 @@ where
             let start = i * initial_chunksize;
             let end = ((i + 1) * initial_chunksize).min(n);
             if start < end {
-                work_queue.lock().unwrap().push_back((start, end));
+                work_queue
+                    .lock()
+                    .expect("Operation failed")
+                    .push_back((start, end));
             }
         }
 
@@ -333,7 +336,9 @@ where
                 s.spawn(move |_| {
                     let mut local_sum = F::zero();
 
-                    while let Some((start, end)) = work_queue.lock().unwrap().pop_front() {
+                    while let Some((start, end)) =
+                        work_queue.lock().expect("Operation failed").pop_front()
+                    {
                         // Process chunk safely
                         for &val in &data_slice[start..end] {
                             local_sum = local_sum + val;
@@ -343,23 +348,29 @@ where
                         if end - start > 1000 {
                             let mid = (start + end) / 2;
                             if mid > start {
-                                work_queue.lock().unwrap().push_back((mid, end));
+                                work_queue
+                                    .lock()
+                                    .expect("Operation failed")
+                                    .push_back((mid, end));
                             }
                         }
                     }
 
-                    partial_sums.lock().unwrap().push(local_sum);
+                    partial_sums
+                        .lock()
+                        .expect("Operation failed")
+                        .push(local_sum);
                 });
             }
         })
-        .unwrap();
+        .expect("Operation failed");
 
         let total_sum = partial_sums
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .fold(F::zero(), |acc, &val| acc + val);
-        Ok(total_sum / F::from(n).unwrap())
+        Ok(total_sum / F::from(n).expect("Failed to convert to float"))
     }
 
     fn mean_adaptive_chunking<D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
@@ -410,7 +421,7 @@ where
         let total_sum = partial_sums
             .into_iter()
             .fold(F::zero(), |acc, val| acc + val);
-        Ok(total_sum / F::from(n).unwrap())
+        Ok(total_sum / F::from(n).expect("Failed to convert to float"))
     }
 
     fn mean_cache_optimal<D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
@@ -450,7 +461,7 @@ where
             // Base case: compute directly
             let slice = x.slice(scirs2_core::ndarray::s![start..start + len]);
             let sum = slice.iter().fold(F::zero(), |acc, &val| acc + val);
-            Ok(sum / F::from(len).unwrap())
+            Ok(sum / F::from(len).expect("Failed to convert to float"))
         } else {
             // Divide and conquer (sequential to avoid lifetime issues)
             let mid = len / 2;
@@ -458,9 +469,9 @@ where
             let right_result = Self::mean_cache_oblivious_static(x, start + mid, len - mid)?;
 
             // Combine results weighted by size
-            let left_weight = F::from(mid).unwrap();
-            let right_weight = F::from(len - mid).unwrap();
-            let total_weight = F::from(len).unwrap();
+            let left_weight = F::from(mid).expect("Failed to convert to float");
+            let right_weight = F::from(len - mid).expect("Failed to convert to float");
+            let total_weight = F::from(len).expect("Failed to convert to float");
 
             Ok((left_result * left_weight + right_result * right_weight) / total_weight)
         }
@@ -489,7 +500,7 @@ where
         let total_sum = partial_sums
             .into_iter()
             .fold(F::zero(), |acc, val| acc + val);
-        Ok(total_sum / F::from(n).unwrap())
+        Ok(total_sum / F::from(n).expect("Failed to convert to float"))
     }
 
     fn variance_welford_parallel<D>(&self, x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
@@ -520,7 +531,7 @@ where
                 let count = chunk.len();
 
                 for (j, &val) in chunk.iter().enumerate() {
-                    let n = F::from(j + 1).unwrap();
+                    let n = F::from(j + 1).expect("Failed to convert to float");
                     let delta = val - mean;
                     mean = mean + delta / n;
                     let delta2 = val - mean;
@@ -543,9 +554,9 @@ where
                 }
 
                 let total_count = count_a + count_b;
-                let count_a_f = F::from(count_a).unwrap();
-                let count_b_f = F::from(count_b).unwrap();
-                let total_count_f = F::from(total_count).unwrap();
+                let count_a_f = F::from(count_a).expect("Failed to convert to float");
+                let count_b_f = F::from(count_b).expect("Failed to convert to float");
+                let total_count_f = F::from(total_count).expect("Failed to convert to float");
 
                 let delta = mean_b - mean_a;
                 let combined_mean = (mean_a * count_a_f + mean_b * count_b_f) / total_count_f;
@@ -556,7 +567,7 @@ where
             },
         );
 
-        Ok(final_m2 / F::from(n - ddof).unwrap())
+        Ok(final_m2 / F::from(n - ddof).expect("Failed to convert to float"))
     }
 
     fn correlation_matrix_parallel_upper_triangle<D>(
@@ -643,7 +654,7 @@ where
 
                 let chunk = x.slice(scirs2_core::ndarray::s![start..end]);
                 let count = chunk.len();
-                let count_f = F::from(count).unwrap();
+                let count_f = F::from(count).expect("Failed to convert to float");
 
                 // Single pass computation of all moments
                 let mean = chunk.iter().fold(F::zero(), |acc, &val| acc + val) / count_f;
@@ -676,9 +687,9 @@ where
 
                 // Combine means
                 let total_count = count_acc + count;
-                let count_f = F::from(count).unwrap();
-                let count_acc_f = F::from(count_acc).unwrap();
-                let total_count_f = F::from(total_count).unwrap();
+                let count_f = F::from(count).expect("Failed to convert to float");
+                let count_acc_f = F::from(count_acc).expect("Failed to convert to float");
+                let total_count_f = F::from(total_count).expect("Failed to convert to float");
 
                 let combined_mean = (mean_acc * count_acc_f + mean * count_f) / total_count_f;
 
@@ -693,17 +704,19 @@ where
             },
         );
 
-        let variance = total_m2_ / F::from(n - ddof).unwrap();
+        let variance = total_m2_ / F::from(n - ddof).expect("Failed to convert to float");
         let std = variance.sqrt();
 
         let skewness = if variance > F::epsilon() {
-            (total_m3 / F::from(n).unwrap()) / variance.powf(F::from(1.5).unwrap())
+            (total_m3 / F::from(n).expect("Failed to convert to float"))
+                / variance.powf(F::from(1.5).expect("Failed to convert constant to float"))
         } else {
             F::zero()
         };
 
         let kurtosis = if variance > F::epsilon() {
-            (total_m4 / F::from(n).unwrap()) / (variance * variance) - F::from(3.0).unwrap()
+            (total_m4 / F::from(n).expect("Failed to convert to float")) / (variance * variance)
+                - F::from(3.0).expect("Failed to convert constant to float")
         } else {
             F::zero()
         };
@@ -772,13 +785,16 @@ where
                         local_results.push(statistic);
                     }
 
-                    partial_results.lock().unwrap().extend(local_results);
+                    partial_results
+                        .lock()
+                        .expect("Operation failed")
+                        .extend(local_results);
                 });
             }
         })
-        .unwrap();
+        .expect("Operation failed");
 
-        let mut all_results = partial_results.lock().unwrap();
+        let mut all_results = partial_results.lock().expect("Operation failed");
         all_results.truncate(n_samples_); // Ensure exact number of _samples
 
         Ok(Array1::from(all_results.clone()))
@@ -812,7 +828,11 @@ impl ThreadPool {
             let receiver = Arc::clone(&receiver);
 
             let worker = thread::spawn(move || loop {
-                let message = receiver.lock().unwrap().recv().unwrap();
+                let message = receiver
+                    .lock()
+                    .expect("Operation failed")
+                    .recv()
+                    .expect("Operation failed");
 
                 match message {
                     Message::NewJob(job) => {
@@ -836,14 +856,18 @@ impl ThreadPool {
         F: FnOnce() + Send + 'static,
     {
         let job = Box::new(f);
-        self.sender.send(Message::NewJob(job)).unwrap();
+        self.sender
+            .send(Message::NewJob(job))
+            .expect("Operation failed");
     }
 }
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
         for _ in &self.workers {
-            self.sender.send(Message::Terminate).unwrap();
+            self.sender
+                .send(Message::Terminate)
+                .expect("Operation failed");
         }
 
         for worker in &mut self.workers {

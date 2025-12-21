@@ -558,11 +558,18 @@ impl CrossFilePrefetchManager {
         }
 
         // Get correlations for this dataset
-        let related_datasets = self.correlations.get(&access.dataset).unwrap();
+        let related_datasets = self
+            .correlations
+            .get(&access.dataset)
+            .expect("Operation failed");
 
         // Sort by correlation strength
         let mut correlations: Vec<_> = related_datasets.values().collect();
-        correlations.sort_by(|a, b| b.strength.partial_cmp(&a.strength).unwrap());
+        correlations.sort_by(|a, b| {
+            b.strength
+                .partial_cmp(&a.strength)
+                .expect("Operation failed")
+        });
 
         // Prefetch from datasets with strongest correlations
         let mut prefetch_count = 0;
@@ -610,7 +617,7 @@ impl CrossFilePrefetchManager {
         }
 
         // Sort by correlation strength (strongest first)
-        result.sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap());
+        result.sort_by(|(_, a), (_, b)| b.partial_cmp(a).expect("Operation failed"));
         result
     }
 
@@ -619,7 +626,11 @@ impl CrossFilePrefetchManager {
         if let Some(related_map) = self.correlations.get(dataset) {
             related_map
                 .iter()
-                .max_by(|(_, a), (_, b)| a.strength.partial_cmp(&b.strength).unwrap())
+                .max_by(|(_, a), (_, b)| {
+                    a.strength
+                        .partial_cmp(&b.strength)
+                        .expect("Operation failed")
+                })
                 .map(|(k, v)| (k.clone(), v.strength))
         } else {
             None
@@ -673,7 +684,7 @@ impl CrossFilePrefetchRegistry {
 
         #[allow(static_mut_refs)]
         unsafe {
-            INSTANCE.as_ref().unwrap()
+            INSTANCE.as_ref().expect("Operation failed")
         }
     }
 
@@ -1116,8 +1127,8 @@ mod tests {
             };
 
             // Record access to both datasets in sequence
-            manager.record_access(access1).unwrap();
-            manager.record_access(access2).unwrap();
+            manager.record_access(access1).expect("Operation failed");
+            manager.record_access(access2).expect("Operation failed");
         }
 
         // Should have established a correlation
@@ -1150,13 +1161,13 @@ mod tests {
 
     impl DatasetPrefetcher for MockPrefetcher {
         fn prefetch_indices(&self, indices: &[usize]) -> CoreResult<()> {
-            let mut prefetched = self.prefetched_indices.lock().unwrap();
+            let mut prefetched = self.prefetched_indices.lock().expect("Operation failed");
             prefetched.extend_from_slice(indices);
             Ok(())
         }
 
         fn prefetch_all(&self) -> CoreResult<()> {
-            let mut prefetched_all = self.prefetched_all.lock().unwrap();
+            let mut prefetched_all = self.prefetched_all.lock().expect("Operation failed");
             *prefetched_all = true;
             Ok(())
         }
@@ -1208,8 +1219,8 @@ mod tests {
             };
 
             // Record access to both datasets
-            manager.record_access(access1).unwrap();
-            manager.record_access(access2).unwrap();
+            manager.record_access(access1).expect("Operation failed");
+            manager.record_access(access2).expect("Operation failed");
         }
 
         // Now trigger prefetching by accessing dataset1
@@ -1221,10 +1232,13 @@ mod tests {
             dimensions: None,
         };
 
-        manager.record_access(access).unwrap();
+        manager.record_access(access).expect("Operation failed");
 
         // Check that dataset2 got prefetched
-        let prefetched = prefetcher2.prefetched_indices.lock().unwrap();
+        let prefetched = prefetcher2
+            .prefetched_indices
+            .lock()
+            .expect("Operation failed");
         assert!(!prefetched.is_empty());
 
         // Should have prefetched index 20 (10 * 2) based on correlation

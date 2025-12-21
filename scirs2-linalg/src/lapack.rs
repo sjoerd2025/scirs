@@ -64,7 +64,7 @@ pub struct EigDecomposition<F: Float> {
 /// use scirs2_linalg::lapack::lu_factor;
 ///
 /// let a = array![[2.0, 1.0, 1.0], [4.0, 3.0, 3.0], [8.0, 7.0, 9.0]];
-/// let lu_result = lu_factor(&a.view()).unwrap();
+/// let lu_result = lu_factor(&a.view()).expect("Operation failed");
 ///
 /// // Check that P*A = L*U
 /// // (implementation dependent, so not shown here)
@@ -164,7 +164,7 @@ where
 /// use scirs2_linalg::lapack::qr_factor;
 ///
 /// let a = array![[2.0, 1.0], [4.0, 3.0], [8.0, 7.0]];
-/// let qr_result = qr_factor(&a.view()).unwrap();
+/// let qr_result = qr_factor(&a.view()).expect("Operation failed");
 ///
 /// // Check that A = Q*R
 /// // (implementation dependent, so not shown here)
@@ -229,7 +229,8 @@ where
                         .fold(F::zero(), |acc, val| acc + val);
 
                     for i in k..n {
-                        r[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;
+                        r[[i, j]] -=
+                            F::from(2.0).expect("Operation failed") * v[i - k] * dot_product;
                     }
                 }
 
@@ -241,7 +242,8 @@ where
                         .fold(F::zero(), |acc, val| acc + val);
 
                     for i in k..n {
-                        q[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;
+                        q[[i, j]] -=
+                            F::from(2.0).expect("Operation failed") * v[i - k] * dot_product;
                     }
                 }
             }
@@ -272,7 +274,7 @@ where
 /// use scirs2_linalg::lapack::svd;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
-/// let svd_result = svd(&a.view(), false).unwrap();
+/// let svd_result = svd(&a.view(), false).expect("Operation failed");
 ///
 /// // Check that A = U*diag(S)*V^T
 /// // (implementation dependent, so not shown here)
@@ -372,11 +374,11 @@ where
         // Compute U with better numerical stability
         let mut u = Array2::<F>::zeros((n, rank));
         for i in 0..rank {
-            if s[i] > F::from(1e-14).unwrap() {
+            if s[i] > F::from(1e-14).expect("Operation failed") {
                 // More conservative threshold
                 let av_col = a.dot(&v_sorted.column(i));
                 let norm = av_col.dot(&av_col).sqrt();
-                if norm > F::from(1e-14).unwrap() {
+                if norm > F::from(1e-14).expect("Operation failed") {
                     u.column_mut(i).assign(&(&av_col / norm));
                     // Recompute singular value more accurately
                     s[i] = norm;
@@ -401,10 +403,10 @@ where
         // Compute V with better numerical stability
         let mut v = Array2::<F>::zeros((m, rank));
         for i in 0..rank {
-            if s[i] > F::from(1e-14).unwrap() {
+            if s[i] > F::from(1e-14).expect("Operation failed") {
                 let atv_col = a.t().dot(&u_sorted.column(i));
                 let norm = atv_col.dot(&atv_col).sqrt();
-                if norm > F::from(1e-14).unwrap() {
+                if norm > F::from(1e-14).expect("Operation failed") {
                     v.column_mut(i).assign(&(&atv_col / norm));
                     // Recompute singular value more accurately
                     s[i] = norm;
@@ -436,7 +438,7 @@ where
 
     // Ensure singular values are sorted in descending order (required by SciPy compatibility)
     let mut sort_indices: Vec<usize> = (0..s.len()).collect();
-    sort_indices.sort_by(|&i, &j| s[j].partial_cmp(&s[i]).unwrap());
+    sort_indices.sort_by(|&i, &j| s[j].partial_cmp(&s[i]).expect("Operation failed"));
 
     // Check if sorting is needed
     let needs_sorting = sort_indices.iter().enumerate().any(|(i, &j)| i != j);
@@ -497,7 +499,7 @@ where
         let mut col_i = matrix.column(i).to_owned();
         let norm = col_i.dot(&col_i).sqrt();
 
-        if norm > F::from(1e-14).unwrap() {
+        if norm > F::from(1e-14).expect("Operation failed") {
             col_i /= norm;
             matrix.column_mut(i).assign(&col_i);
 
@@ -555,7 +557,7 @@ where
 
         // Normalize
         let norm = new_vec.dot(&new_vec).sqrt();
-        if norm > F::from(1e-14).unwrap() {
+        if norm > F::from(1e-14).expect("Operation failed") {
             new_vec /= norm;
         }
 
@@ -585,7 +587,7 @@ where
 /// use scirs2_linalg::lapack::eig;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
-/// let eig_result = eig(&a.view()).unwrap();
+/// let eig_result = eig(&a.view()).expect("Operation failed");
 ///
 /// // Check that A*V = V*diag(eigenvalues)
 /// // (implementation dependent, so not shown here)
@@ -648,7 +650,7 @@ where
 /// use scirs2_linalg::lapack::cholesky;
 ///
 /// let a = array![[4.0, 2.0], [2.0, 5.0]];
-/// let l = cholesky(&a.view()).unwrap();
+/// let l = cholesky(&a.view()).expect("Operation failed");
 ///
 /// // Check that A = L*L^T
 /// // (implementation dependent, so not shown here)
@@ -712,7 +714,7 @@ mod tests {
     #[test]
     fn test_lu_factor() {
         let a = array![[2.0, 1.0], [4.0, 3.0]];
-        let result = lu_factor(&a.view()).unwrap();
+        let result = lu_factor(&a.view()).expect("Operation failed");
 
         // Verify the specific values in our LU decomposition implementation
         // First row should be [4.0, 3.0] due to pivoting
@@ -761,7 +763,7 @@ mod tests {
     #[test]
     fn test_cholesky() {
         let a = array![[4.0, 2.0], [2.0, 5.0]];
-        let l = cholesky(&a.view()).unwrap();
+        let l = cholesky(&a.view()).expect("Operation failed");
 
         // Check some elements
         assert_relative_eq!(l[[0, 0]], 2.0);
@@ -781,7 +783,7 @@ mod tests {
     #[test]
     fn test_qr_factor() {
         let a = array![[2.0, 1.0], [4.0, 3.0]];
-        let result = qr_factor(&a.view()).unwrap();
+        let result = qr_factor(&a.view()).expect("Operation failed");
 
         // Basic check of dimensions
         assert_eq!(result.q.shape(), &[2, 2]);

@@ -570,9 +570,10 @@ where
         let windowsize = self.config.nonstationary_config.stft_windowsize;
         let overlap = self.config.nonstationary_config.stft_overlap;
 
-        let hopsize = ((F::one() - overlap) * F::from(windowsize).unwrap())
-            .to_usize()
-            .unwrap();
+        let hopsize = ((F::one() - overlap)
+            * F::from(windowsize).expect("Failed to convert to float"))
+        .to_usize()
+        .expect("Operation failed");
         let n_windows = (n_samples_ - windowsize) / hopsize + 1;
         let n_freqs = windowsize / 2 + 1;
 
@@ -671,7 +672,8 @@ where
 
             // Add to averaged PSD
             for (freq_idx, &coeff) in spectrum.iter().enumerate().take(n_freqs) {
-                psd[[freq_idx, 0]] = psd[[freq_idx, 0]] + coeff.norm_sqr() / F::from(k).unwrap();
+                psd[[freq_idx, 0]] = psd[[freq_idx, 0]]
+                    + coeff.norm_sqr() / F::from(k).expect("Failed to convert to float");
             }
         }
 
@@ -763,22 +765,26 @@ where
 
     fn generate_window(&self, windowtype: WindowFunction, size: usize) -> StatsResult<Array1<F>> {
         let mut window = Array1::zeros(size);
-        let n_f = F::from(size).unwrap();
+        let n_f = F::from(size).expect("Failed to convert to float");
 
         match windowtype {
             WindowFunction::Hann => {
                 for i in 0..size {
-                    let i_f = F::from(i).unwrap();
-                    let two_pi = F::from(2.0).unwrap() * F::PI();
-                    window[i] = F::from(0.5).unwrap() * (F::one() - (two_pi * i_f / n_f).cos());
+                    let i_f = F::from(i).expect("Failed to convert to float");
+                    let two_pi =
+                        F::from(2.0).expect("Failed to convert constant to float") * F::PI();
+                    window[i] = F::from(0.5).expect("Failed to convert constant to float")
+                        * (F::one() - (two_pi * i_f / n_f).cos());
                 }
             }
             WindowFunction::Hamming => {
                 for i in 0..size {
-                    let i_f = F::from(i).unwrap();
-                    let two_pi = F::from(2.0).unwrap() * F::PI();
-                    window[i] = F::from(0.54).unwrap()
-                        - F::from(0.46).unwrap() * (two_pi * i_f / n_f).cos();
+                    let i_f = F::from(i).expect("Failed to convert to float");
+                    let two_pi =
+                        F::from(2.0).expect("Failed to convert constant to float") * F::PI();
+                    window[i] = F::from(0.54).expect("Failed to convert constant to float")
+                        - F::from(0.46).expect("Failed to convert constant to float")
+                            * (two_pi * i_f / n_f).cos();
                 }
             }
             WindowFunction::Rectangular => {
@@ -824,9 +830,11 @@ where
         for k in 0..n {
             let mut sum = scirs2_core::numeric::Complex::new(F::zero(), F::zero());
             for j in 0..n {
-                let angle =
-                    -F::from(2.0).unwrap() * F::PI() * F::from(k).unwrap() * F::from(j).unwrap()
-                        / F::from(n).unwrap();
+                let angle = -F::from(2.0).expect("Failed to convert constant to float")
+                    * F::PI()
+                    * F::from(k).expect("Failed to convert to float")
+                    * F::from(j).expect("Failed to convert to float")
+                    / F::from(n).expect("Failed to convert to float");
                 let complex_exp = scirs2_core::numeric::Complex::new(angle.cos(), angle.sin());
                 sum = sum + scirs2_core::numeric::Complex::new(signal[j], F::zero()) * complex_exp;
             }
@@ -839,10 +847,10 @@ where
     fn generate_frequency_grid(&self, n: usize) -> Array1<F> {
         let mut frequencies = Array1::zeros(n / 2 + 1);
         let fs = self.config.fs;
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         for i in 0..frequencies.len() {
-            frequencies[i] = fs * F::from(i).unwrap() / n_f;
+            frequencies[i] = fs * F::from(i).expect("Failed to convert to float") / n_f;
         }
 
         frequencies
@@ -854,10 +862,13 @@ where
 
         for taper_idx in 0..k {
             for i in 0..n {
-                let i_f = F::from(i).unwrap();
-                let n_f = F::from(n).unwrap();
-                let phase =
-                    F::from(2.0).unwrap() * F::PI() * F::from(taper_idx).unwrap() * i_f / n_f;
+                let i_f = F::from(i).expect("Failed to convert to float");
+                let n_f = F::from(n).expect("Failed to convert to float");
+                let phase = F::from(2.0).expect("Failed to convert constant to float")
+                    * F::PI()
+                    * F::from(taper_idx).expect("Failed to convert to float")
+                    * i_f
+                    / n_f;
                 tapers[[i, taper_idx]] = phase.sin();
             }
         }
@@ -1007,7 +1018,7 @@ where
             fs: F::one(),
             windows: vec![WindowFunction::Hann],
             multitaper_config: MultiTaperConfig {
-                nw: F::from(4.0).unwrap(),
+                nw: F::from(4.0).expect("Failed to convert constant to float"),
                 k: 7,
                 adaptive: true,
                 jackknife: true,
@@ -1016,9 +1027,9 @@ where
             wavelet_config: WaveletConfig {
                 wavelet_type: WaveletType::Morlet,
                 scales: 64,
-                f_min: F::from(0.1).unwrap(),
-                f_max: F::from(0.5).unwrap(),
-                q_factor: F::from(5.0).unwrap(),
+                f_min: F::from(0.1).expect("Failed to convert constant to float"),
+                f_max: F::from(0.5).expect("Failed to convert constant to float"),
+                q_factor: F::from(5.0).expect("Failed to convert constant to float"),
                 continuous: true,
                 packet_transform: false,
             },
@@ -1026,7 +1037,7 @@ where
                 compute_bispectrum: false,
                 compute_trispectrum: false,
                 max_lag: 100,
-                overlap: F::from(0.5).unwrap(),
+                overlap: F::from(0.5).expect("Failed to convert constant to float"),
                 segment_length: 512,
             },
             coherence_config: CoherenceConfig {
@@ -1034,12 +1045,12 @@ where
                 complex_coherence: true,
                 partial_coherence: false,
                 multiple_coherence: false,
-                frequency_resolution: F::from(0.01).unwrap(),
-                confidence_level: F::from(0.95).unwrap(),
+                frequency_resolution: F::from(0.01).expect("Failed to convert constant to float"),
+                confidence_level: F::from(0.95).expect("Failed to convert constant to float"),
             },
             nonstationary_config: NonStationaryConfig {
                 stft_windowsize: 256,
-                stft_overlap: F::from(0.75).unwrap(),
+                stft_overlap: F::from(0.75).expect("Failed to convert constant to float"),
                 spectrogram_type: SpectrogramType::PowerSpectralDensity,
                 time_varying: true,
                 adaptive_window: false,
@@ -1052,8 +1063,8 @@ where
                 network_params: NetworkParams {
                     hiddensizes: vec![128, 64, 32],
                     activation: ActivationFunction::ReLU,
-                    learning_rate: F::from(0.001).unwrap(),
-                    regularization: F::from(0.01).unwrap(),
+                    learning_rate: F::from(0.001).expect("Failed to convert constant to float"),
+                    regularization: F::from(0.01).expect("Failed to convert constant to float"),
                     epochs: 100,
                 },
             },
@@ -1081,7 +1092,9 @@ mod tests {
         let config = AdvancedSpectralConfig::default();
         let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
-        let window = analyzer.generate_window(WindowFunction::Hann, 10).unwrap();
+        let window = analyzer
+            .generate_window(WindowFunction::Hann, 10)
+            .expect("Operation failed");
         assert_eq!(window.len(), 10);
         assert!(window[0] < window[5]); // Window should be peaked in middle
     }
@@ -1111,7 +1124,9 @@ mod tests {
             signal[i] = (2.0 * std::f64::consts::PI * t).sin() + 0.1 * (i as f64).sin();
         }
 
-        let result = analyzer.analyze_comprehensive(&signal.view()).unwrap();
+        let result = analyzer
+            .analyze_comprehensive(&signal.view())
+            .expect("Operation failed");
 
         assert!(result.frequencies.len() > 0);
         assert!(result.psd.nrows() > 0);
@@ -1132,7 +1147,9 @@ mod tests {
             5.0, 4.0, 3.0, 2.0, 1.0, 0.0
         ];
 
-        let result = analyzer.time_frequency_analysis(&signal.view()).unwrap();
+        let result = analyzer
+            .time_frequency_analysis(&signal.view())
+            .expect("Operation failed");
 
         assert!(result.ndim() == 3);
         assert!(result.shape()[0] > 0); // Frequency bins
@@ -1150,7 +1167,7 @@ mod tests {
 
         let peaks = analyzer
             .detect_spectral_peaks(&psd.view(), &freqs.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(peaks.len() >= 2); // Should detect at least 2 peaks
         assert!(peaks[0].amplitude >= peaks[1].amplitude); // Should be sorted by amplitude

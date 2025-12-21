@@ -142,11 +142,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ConvNeXtBlock<F> 
         )?;
 
         // Initialize gamma as a learnable parameter
-        let gamma_value = F::from(layer_scale_init_value).unwrap();
+        let gamma_value = F::from(layer_scale_init_value).expect("Failed to convert to float");
         let gamma = Array::<F, _>::from_elem([channels, 1, 1], gamma_value).into_dyn();
 
         // Stochastic depth rate
-        let skip_scale = F::from(1.0 - drop_path_prob).unwrap();
+        let skip_scale = F::from(1.0 - drop_path_prob).expect("Failed to convert to float");
         let use_skip = drop_path_prob > 0.0;
 
         Ok(Self {
@@ -195,7 +195,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Conv
                 .clone()
                 .into_shape_with_order((shape[0], shape[1], shape[2] * shape[3]))?;
             let scaled = view * &self.gamma;
-            x = scaled.into_shape_with_order(shape).unwrap();
+            x = scaled.into_shape_with_order(shape).expect("Operation failed");
         }
 
         // Apply stochastic depth and skip connection
@@ -233,7 +233,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Conv
                 .clone()
                 .into_shape_with_order((shape[0], shape[1], shape[2] * shape[3]))?;
             let grad_scaled = grad_view * &self.gamma;
-            grad = grad_scaled.into_shape_with_order(shape).unwrap();
+            grad = grad_scaled.into_shape_with_order(shape).expect("Operation failed");
         }
 
         // Backward through second pointwise convolution
@@ -266,7 +266,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Conv
         self.pointwise_conv2.update(learning_rate)?;
 
         // Update gamma parameter
-        let small_update = F::from(0.0001).unwrap() * learning_rate;
+        let small_update = F::from(0.0001).expect("Failed to convert constant to float") * learning_rate;
         for elem in self.gamma.iter_mut() {
             *elem = *elem - small_update;
         }
@@ -556,7 +556,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ConvNeXt<F> {
             let mut head_seq = Sequential::new();
 
             head_seq.add(LayerNorm2D::<F>::new::<SmallRng>(
-                *config.dims.last().unwrap(),
+                *config.dims.last().expect("Operation failed"),
                 1e-6,
                 Some("head_norm"),
             )?);
@@ -570,7 +570,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ConvNeXt<F> {
             }
 
             head_seq.add(Dense::<F>::new(
-                *config.dims.last().unwrap(),
+                *config.dims.last().expect("Operation failed"),
                 config.num_classes,
                 Some("classifier"),
                 &mut rng,

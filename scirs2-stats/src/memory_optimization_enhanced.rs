@@ -402,7 +402,7 @@ impl EnhancedMemoryOptimizer {
 
     /// Get current memory usage statistics
     pub fn get_memory_stats(&self) -> MemoryStatistics {
-        let monitor = self.monitor.read().unwrap();
+        let monitor = self.monitor.read().expect("Operation failed");
         let current_usage = monitor.current_usage.load(Ordering::Relaxed);
         let peak_usage = monitor.peak_usage.load(Ordering::Relaxed);
 
@@ -429,7 +429,7 @@ impl EnhancedMemoryOptimizer {
         F: Float + NumCast + std::fmt::Display,
     {
         let current_conditions = self.assess_memory_conditions();
-        let algorithm_selector = self.algorithm_selector.read().unwrap();
+        let algorithm_selector = self.algorithm_selector.read().expect("Operation failed");
 
         // Select optimal algorithm based on memory conditions
         let recommended_algorithm =
@@ -484,7 +484,7 @@ impl EnhancedMemoryOptimizer {
         F: Float + NumCast + std::fmt::Display,
     {
         let conditions = self.assess_memory_conditions();
-        let selector = self.algorithm_selector.read().unwrap();
+        let selector = self.algorithm_selector.read().expect("Operation failed");
         selector.select_algorithm(operation, datasize, &conditions)
     }
 
@@ -497,7 +497,7 @@ impl EnhancedMemoryOptimizer {
         thread::spawn(move || loop {
             thread::sleep(interval);
 
-            let mut monitor = monitor.write().unwrap();
+            let mut monitor = monitor.write().expect("Operation failed");
             monitor.update_memory_metrics();
             monitor.analyze_trends();
             monitor.update_performance_metrics();
@@ -507,13 +507,13 @@ impl EnhancedMemoryOptimizer {
     }
 
     fn initialize_smart_cache(&self) -> StatsResult<()> {
-        let _cache_manager = self.cache_manager.write().unwrap();
+        let _cache_manager = self.cache_manager.write().expect("Operation failed");
         // Initialize cache with optimal settings based on available memory
         Ok(())
     }
 
     fn initialize_memory_pools(&self) -> StatsResult<()> {
-        let mut allocator = self.pool_allocator.lock().unwrap();
+        let mut allocator = self.pool_allocator.lock().expect("Operation failed");
         allocator.initialize_pools();
         Ok(())
     }
@@ -539,12 +539,12 @@ impl EnhancedMemoryOptimizer {
     }
 
     fn get_cache_hit_ratio(&self) -> f64 {
-        let cache_manager = self.cache_manager.read().unwrap();
+        let cache_manager = self.cache_manager.read().expect("Operation failed");
         cache_manager.get_hit_ratio()
     }
 
     fn calculate_allocation_efficiency(&self) -> f64 {
-        let allocator = self.pool_allocator.lock().unwrap();
+        let allocator = self.pool_allocator.lock().expect("Operation failed");
         allocator.calculate_efficiency()
     }
 
@@ -613,23 +613,23 @@ impl EnhancedMemoryOptimizer {
     fn get_current_memory_usage(&self) -> usize {
         self.monitor
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .current_usage
             .load(Ordering::Relaxed)
     }
 
     fn cleanup_cache(&self) -> StatsResult<usize> {
-        let mut cache_manager = self.cache_manager.write().unwrap();
+        let mut cache_manager = self.cache_manager.write().expect("Operation failed");
         Ok(cache_manager.cleanup_expired_entries())
     }
 
     fn consolidate_memory_pools(&self) -> StatsResult<usize> {
-        let mut allocator = self.pool_allocator.lock().unwrap();
+        let mut allocator = self.pool_allocator.lock().expect("Operation failed");
         Ok(allocator.consolidate_pools())
     }
 
     fn cleanup_large_allocations(&self) -> StatsResult<usize> {
-        let mut allocator = self.pool_allocator.lock().unwrap();
+        let mut allocator = self.pool_allocator.lock().expect("Operation failed");
         Ok(allocator.cleanup_large_allocations())
     }
 

@@ -890,7 +890,7 @@ impl AdaptiveStrategySelector {
         }
 
         let improvement_rate = if state.performance_history.len() >= 2 {
-            let recent = state.performance_history.back().unwrap();
+            let recent = state.performance_history.back().expect("Operation failed");
             let prev = state.performance_history[state.performance_history.len() - 2];
 
             if prev > 0.0 {
@@ -973,7 +973,7 @@ mod tests {
 
         let fused = fusion_engine
             .fuse_solutions(&sol1.view(), &sol2.view(), 0.5)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!((fused[0] - 2.0).abs() < 1e-10);
         assert!((fused[1] - 3.0).abs() < 1e-10);
@@ -990,7 +990,8 @@ mod tests {
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let initial = Array1::from(vec![2.0, 2.0]);
 
-        let result = advanced_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result =
+            advanced_optimize(objective, &initial.view(), Some(config)).expect("Operation failed");
 
         assert!(result.nit > 0);
         assert!(result.fun <= objective(&initial.view()));
@@ -1051,7 +1052,9 @@ mod tests {
             },
         ];
 
-        let fused = fusion_engine.fuse_multiple_solutions(&results).unwrap();
+        let fused = fusion_engine
+            .fuse_multiple_solutions(&results)
+            .expect("Operation failed");
         assert_eq!(fused.len(), 2);
 
         // Better solution (lower objective) should have higher influence

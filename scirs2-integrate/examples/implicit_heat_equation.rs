@@ -101,8 +101,8 @@ fn compare_solutions(
     final_time: f64,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Extract solution at final _time
-    let cn_final = &cn_result.u.last().unwrap();
-    let be_final = &be_result.u.last().unwrap();
+    let cn_final = &cn_result.u.last().expect("Operation failed");
+    let be_final = &be_result.u.last().expect("Operation failed");
 
     // Get spatial grid
     let nx = cn_final.shape()[0];

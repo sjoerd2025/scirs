@@ -113,7 +113,7 @@ impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions
 ///     |x: ArrayView1<f64>| (x[0] * x[1]).sin() * (-x[0]*x[0] - x[1]*x[1]).exp(),
 ///     &[(-2.0, 2.0), (-2.0, 2.0)],
 ///     Some(options)
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
@@ -211,7 +211,7 @@ where
             // Create uniform distributions for each dimension
             let distributions: Vec<_> = ranges
                 .iter()
-                .map(|&(a, b)| Uniform::new_inclusive(a, b).unwrap())
+                .map(|&(a, b)| Uniform::new_inclusive(a, b).expect("Operation failed"))
                 .collect();
 
             let mut thread_sum = F::zero();
@@ -327,7 +327,7 @@ where
         // Create uniform distributions for each dimension
         let distributions: Vec<_> = ranges
             .iter()
-            .map(|&(a, b)| Uniform::new_inclusive(a, b).unwrap())
+            .map(|&(a, b)| Uniform::new_inclusive(a, b).expect("Operation failed"))
             .collect();
 
         let mut batch_sum = F::zero();
@@ -369,23 +369,23 @@ where
 
         // Add batch results to shared totals
         {
-            let mut sum = shared_sum.lock().unwrap();
+            let mut sum = shared_sum.lock().expect("Operation failed");
             *sum += batch_sum;
         }
         {
-            let mut sum_sq = shared_sum_sq.lock().unwrap();
+            let mut sum_sq = shared_sum_sq.lock().expect("Operation failed");
             *sum_sq += batch_sum_sq;
         }
         {
-            let mut n_evals = shared_n_evals.lock().unwrap();
+            let mut n_evals = shared_n_evals.lock().expect("Operation failed");
             *n_evals += batch_n_evals;
         }
     });
 
     // Extract final totals
-    let total_sum = *shared_sum.lock().unwrap();
-    let total_sum_sq = *shared_sum_sq.lock().unwrap();
-    let total_n_evals = *shared_n_evals.lock().unwrap();
+    let total_sum = *shared_sum.lock().expect("Operation failed");
+    let total_sum_sq = *shared_sum_sq.lock().expect("Operation failed");
+    let total_n_evals = *shared_n_evals.lock().expect("Operation failed");
 
     compute_final_result(
         total_sum,
@@ -405,23 +405,23 @@ fn compute_final_result<F: IntegrateFloat>(
     volume: F,
     error_method: &ErrorEstimationMethod,
 ) -> IntegrateResult<MonteCarloResult<F>> {
-    let mean = sum / F::from_usize(n_evals).unwrap();
+    let mean = sum / F::from_usize(n_evals).expect("Operation failed");
     let integral_value = mean * volume;
 
     let std_error = match error_method {
         ErrorEstimationMethod::StandardError => {
-            let variance = (sum_sq - sum * sum / F::from_usize(n_evals).unwrap())
-                / F::from_usize(n_evals - 1).unwrap();
+            let variance = (sum_sq - sum * sum / F::from_usize(n_evals).expect("Operation failed"))
+                / F::from_usize(n_evals - 1).expect("Operation failed");
 
-            (variance / F::from_usize(n_evals).unwrap()).sqrt() * volume
+            (variance / F::from_usize(n_evals).expect("Operation failed")).sqrt() * volume
         }
         ErrorEstimationMethod::BatchMeans => {
             // For parallel execution, we can implement proper batch means
             // by using the results from different threads as "batches"
-            let variance = (sum_sq - sum * sum / F::from_usize(n_evals).unwrap())
-                / F::from_usize(n_evals - 1).unwrap();
+            let variance = (sum_sq - sum * sum / F::from_usize(n_evals).expect("Operation failed"))
+                / F::from_usize(n_evals - 1).expect("Operation failed");
 
-            (variance / F::from_usize(n_evals).unwrap()).sqrt() * volume
+            (variance / F::from_usize(n_evals).expect("Operation failed")).sqrt() * volume
         }
     };
 
@@ -474,17 +474,20 @@ where
 
         // Combine results
         let total_evals = result.n_evals + additional_result.n_evals;
-        let combined_value = (result.value * F::from_usize(result.n_evals).unwrap()
-            + additional_result.value * F::from_usize(additional_result.n_evals).unwrap())
-            / F::from_usize(total_evals).unwrap();
+        let combined_value = (result.value
+            * F::from_usize(result.n_evals).expect("Operation failed")
+            + additional_result.value
+                * F::from_usize(additional_result.n_evals).expect("Operation failed"))
+            / F::from_usize(total_evals).expect("Operation failed");
 
         // Simplified error combination (in practice, would be more sophisticated)
-        let combined_error =
-            (result.std_error * result.std_error * F::from_usize(result.n_evals).unwrap()
-                + additional_result.std_error
-                    * additional_result.std_error
-                    * F::from_usize(additional_result.n_evals).unwrap())
-                / F::from_usize(total_evals).unwrap();
+        let combined_error = (result.std_error
+            * result.std_error
+            * F::from_usize(result.n_evals).expect("Operation failed")
+            + additional_result.std_error
+                * additional_result.std_error
+                * F::from_usize(additional_result.n_evals).expect("Operation failed"))
+            / F::from_usize(total_evals).expect("Operation failed");
         let combined_std_error = combined_error.sqrt();
 
         result = MonteCarloResult {
@@ -571,7 +574,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = parallel_monte_carlo(f, &ranges, Some(options)).unwrap();
+        let result = parallel_monte_carlo(f, &ranges, Some(options)).expect("Operation failed");
 
         // Should be close to 0.5 with good accuracy due to large sample size
         assert_relative_eq!(result.value, 0.5, epsilon = 0.01);
@@ -594,7 +597,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = parallel_monte_carlo(f, &ranges, Some(options)).unwrap();
+        let result = parallel_monte_carlo(f, &ranges, Some(options)).expect("Operation failed");
 
         assert_relative_eq!(result.value, 0.25, epsilon = 0.02);
         assert!(result.std_error > 0.0);
@@ -615,7 +618,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = parallel_monte_carlo(f, &ranges, Some(options)).unwrap();
+        let result = parallel_monte_carlo(f, &ranges, Some(options)).expect("Operation failed");
 
         // Exact result is 1/3
         assert_relative_eq!(result.value, 1.0 / 3.0, epsilon = 0.02);
@@ -665,7 +668,7 @@ mod tests {
 
         let result =
             adaptive_parallel_monte_carlo(f, &ranges, target_variance, max_samples, Some(options))
-                .unwrap();
+                .expect("Operation failed");
 
         // Should either reach target variance or use max samples
         assert!(result.std_error <= target_variance || result.n_evals >= max_samples);

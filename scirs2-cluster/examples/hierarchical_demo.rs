@@ -16,7 +16,7 @@ fn main() {
             9.0, 1.0, 9.5, 1.2, 9.2, 1.5,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Print the dataset
     println!("\nDataset:");
@@ -38,7 +38,8 @@ fn main() {
         println!("\n{method:?} Linkage:");
 
         // Calculate linkage matrix
-        let linkage_matrix = linkage(data.view(), method, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), method, Metric::Euclidean).expect("Operation failed");
 
         // Print the linkage matrix (first few rows)
         println!("  Linkage Matrix (first few rows):");
@@ -59,7 +60,7 @@ fn main() {
                 n_clusters,
                 Some(ClusterCriterion::MaxClust),
             )
-            .unwrap();
+            .expect("Operation failed");
 
             println!("\n  {n_clusters} Clusters:");
             // Count elements in each cluster

@@ -310,8 +310,8 @@ impl ShardManager {
 
     /// Initialize consistent hash ring
     fn initialize_consistent_hash(&mut self, nodes: Vec<String>) -> Result<()> {
-        let mut hash_ring = self.hash_ring.write().unwrap();
-        let mut shards = self.shards.write().unwrap();
+        let mut hash_ring = self.hash_ring.write().expect("Operation failed");
+        let mut shards = self.shards.write().expect("Operation failed");
 
         hash_ring.clear();
         shards.clear();
@@ -331,7 +331,7 @@ impl ShardManager {
 
         for (i, &hash) in ring_keys.iter().enumerate() {
             let shard_id = format!("shard_{}", i);
-            let node = hash_ring.get(&hash).unwrap().clone();
+            let node = hash_ring.get(&hash).expect("Operation failed").clone();
 
             let shard = DataShard {
                 id: shard_id.clone(),
@@ -357,7 +357,7 @@ impl ShardManager {
 
     /// Initialize hash-based sharding
     fn initialize_hash_sharding(&mut self, nodes: Vec<String>) -> Result<()> {
-        let mut shards = self.shards.write().unwrap();
+        let mut shards = self.shards.write().expect("Operation failed");
         shards.clear();
 
         let hash_range_size = u64::MAX / self.config.shard_count as u64;
@@ -396,7 +396,7 @@ impl ShardManager {
 
     /// Initialize range-based sharding
     fn initialize_range_sharding(&mut self, nodes: Vec<String>) -> Result<()> {
-        let mut shards = self.shards.write().unwrap();
+        let mut shards = self.shards.write().expect("Operation failed");
         shards.clear();
 
         // For range sharding, we'll use key-based ranges
@@ -446,7 +446,7 @@ impl ShardManager {
 
     /// Find the shard for a given key
     pub fn find_shard(&self, key: &str) -> Result<String> {
-        let shards = self.shards.read().unwrap();
+        let shards = self.shards.read().expect("Operation failed");
 
         for shard in shards.values() {
             if shard.range.contains_key(key) {
@@ -465,7 +465,7 @@ impl ShardManager {
             ShardingStrategy::ConsistentHash => self.get_node_consistent_hash(key),
             _ => {
                 let shard_id = self.find_shard(key)?;
-                let shards = self.shards.read().unwrap();
+                let shards = self.shards.read().expect("Operation failed");
                 if let Some(shard) = shards.get(&shard_id) {
                     Ok(shard.primary_node.clone())
                 } else {
@@ -477,7 +477,7 @@ impl ShardManager {
 
     /// Get node using consistent hashing
     fn get_node_consistent_hash(&self, key: &str) -> Result<String> {
-        let hash_ring = self.hash_ring.read().unwrap();
+        let hash_ring = self.hash_ring.read().expect("Operation failed");
         if hash_ring.is_empty() {
             return Err(MetricsError::ShardingError(
                 "Hash ring is empty".to_string(),
@@ -552,7 +552,7 @@ impl ShardManager {
     /// Add node to consistent hash ring
     fn add_node_consistent_hash(&mut self, node_id: String) -> Result<()> {
         {
-            let mut hash_ring = self.hash_ring.write().unwrap();
+            let mut hash_ring = self.hash_ring.write().expect("Operation failed");
 
             // Add virtual nodes for the new node
             for i in 0..self.config.virtual_nodes {
@@ -579,7 +579,7 @@ impl ShardManager {
     /// Remove node from consistent hash ring
     fn remove_node_consistent_hash(&mut self, node_id: &str) -> Result<()> {
         {
-            let mut hash_ring = self.hash_ring.write().unwrap();
+            let mut hash_ring = self.hash_ring.write().expect("Operation failed");
 
             // Remove all virtual nodes for this node
             hash_ring.retain(|_, node| node != node_id);
@@ -599,7 +599,7 @@ impl ShardManager {
 
     /// Migrate shards away from a node being removed
     fn migrate_shards_from_node(&mut self, node_id: &str) -> Result<()> {
-        let shards = self.shards.read().unwrap();
+        let shards = self.shards.read().expect("Operation failed");
         let affected_shards: Vec<_> = shards
             .values()
             .filter(|shard| shard.primary_node == node_id)
@@ -625,8 +625,8 @@ impl ShardManager {
     /// Migrate a shard to a different node
     pub fn migrate_shard(&mut self, shard_id: &str, target_node: Option<String>) -> Result<String> {
         let migration_id = {
-            let mut shards = self.shards.write().unwrap();
-            let mut migrations = self.migrations.write().unwrap();
+            let mut shards = self.shards.write().expect("Operation failed");
+            let mut migrations = self.migrations.write().expect("Operation failed");
 
             let shard = shards
                 .get_mut(shard_id)
@@ -653,7 +653,7 @@ impl ShardManager {
                 shard_id,
                 SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_millis()
             );
 
@@ -683,7 +683,7 @@ impl ShardManager {
 
     /// Start a migration process
     fn start_migration(&mut self, migration_id: &str) -> Result<()> {
-        let mut migrations = self.migrations.write().unwrap();
+        let mut migrations = self.migrations.write().expect("Operation failed");
 
         if let Some(migration) = migrations.get_mut(migration_id) {
             migration.status = MigrationStatus::InProgress;
@@ -696,8 +696,8 @@ impl ShardManager {
 
     /// Complete a migration
     pub fn complete_migration(&mut self, migration_id: &str) -> Result<()> {
-        let mut migrations = self.migrations.write().unwrap();
-        let mut shards = self.shards.write().unwrap();
+        let mut migrations = self.migrations.write().expect("Operation failed");
+        let mut shards = self.shards.write().expect("Operation failed");
 
         let migration = migrations
             .get_mut(migration_id)
@@ -723,8 +723,8 @@ impl ShardManager {
 
     /// Get sharding statistics
     pub fn get_stats(&self) -> ShardingStats {
-        let shards = self.shards.read().unwrap();
-        let migrations = self.migrations.read().unwrap();
+        let shards = self.shards.read().expect("Operation failed");
+        let migrations = self.migrations.read().expect("Operation failed");
 
         let total_shards = shards.len();
         let active_migrations = migrations
@@ -747,13 +747,13 @@ impl ShardManager {
 
     /// List all shards
     pub fn list_shards(&self) -> Vec<DataShard> {
-        let shards = self.shards.read().unwrap();
+        let shards = self.shards.read().expect("Operation failed");
         shards.values().cloned().collect()
     }
 
     /// Get shard by ID
     pub fn get_shard(&self, shard_id: &str) -> Option<DataShard> {
-        let shards = self.shards.read().unwrap();
+        let shards = self.shards.read().expect("Operation failed");
         shards.get(shard_id).cloned()
     }
 
@@ -764,7 +764,7 @@ impl ShardManager {
         size_bytes: u64,
         key_count: usize,
     ) -> Result<()> {
-        let mut shards = self.shards.write().unwrap();
+        let mut shards = self.shards.write().expect("Operation failed");
 
         if let Some(shard) = shards.get_mut(shard_id) {
             shard.size_bytes = size_bytes;
@@ -841,7 +841,7 @@ mod tests {
             start: 1000,
             end: 2000,
         };
-        let (left, right) = hash_range.split().unwrap();
+        let (left, right) = hash_range.split().expect("Operation failed");
 
         if let (DataRange::Hash { start: s1, end: e1 }, DataRange::Hash { start: s2, end: e2 }) =
             (left, right)
@@ -880,7 +880,7 @@ mod tests {
             "node3".to_string(),
         ];
 
-        manager.initialize(nodes).unwrap();
+        manager.initialize(nodes).expect("Operation failed");
         assert_eq!(manager.list_shards().len(), 4);
     }
 
@@ -899,7 +899,7 @@ mod tests {
         let mut manager = ShardManager::new(config);
         let nodes = vec!["node1".to_string(), "node2".to_string()];
 
-        manager.initialize(nodes).unwrap();
+        manager.initialize(nodes).expect("Operation failed");
 
         // Test that we can find a shard for any key
         let shard_id = manager.find_shard("test_key");
@@ -912,7 +912,7 @@ mod tests {
         let mut manager = ShardManager::new(config);
         let nodes = vec!["node1".to_string(), "node2".to_string()];
 
-        manager.initialize(nodes).unwrap();
+        manager.initialize(nodes).expect("Operation failed");
         let shards = manager.list_shards();
 
         if let Some(shard) = shards.first() {
@@ -936,12 +936,14 @@ mod tests {
         let mut manager = ShardManager::new(config);
         let nodes = vec!["node1".to_string(), "node2".to_string()];
 
-        manager.initialize(nodes).unwrap();
+        manager.initialize(nodes).expect("Operation failed");
 
         // Test adding a node
-        manager.add_node("node3".to_string()).unwrap();
+        manager
+            .add_node("node3".to_string())
+            .expect("Operation failed");
 
         // Test removing a node
-        manager.remove_node("node1").unwrap();
+        manager.remove_node("node1").expect("Operation failed");
     }
 }

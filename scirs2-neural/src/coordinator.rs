@@ -218,7 +218,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
                 // Pre-allocate memory for performance
                 self.cache_system.aggressive_prealloc(layer)?;
             MemoryStrategy::Adaptive { threshold_mb } => {
-                let memory_info = self.resource_monitor.memory_usage.read().unwrap();
+                let memory_info = self.resource_monitor.memory_usage.read().expect("Operation failed");
                 if memory_info.available_mb < *threshold_mb {
                     self.cache_system.conservative_cleanup();
                 } else {
@@ -265,8 +265,8 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
         Ok(loss)
     /// Get comprehensive performance report
     pub fn performance_report(&self) -> PerformanceReport {
-        let tracker = self.performance_tracker.read().unwrap();
-        let memory_info = self.resource_monitor.memory_usage.read().unwrap();
+        let tracker = self.performance_tracker.read().expect("Operation failed");
+        let memory_info = self.resource_monitor.memory_usage.read().expect("Operation failed");
         PerformanceReport {
             avg_iteration_time: tracker.iteration_times.iter().sum::<Duration>()
                 / tracker.iteration_times.len() as u32,
@@ -290,7 +290,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
             // High memory pressure - enable full gradient checkpointing
             self.cache_system.activation_cache.clear();
             // Mark layer for gradient checkpointing
-            let mut tracker = self.performance_tracker.write().unwrap();
+            let mut tracker = self.performance_tracker.write().expect("Operation failed");
             tracker.memory_usage.push(memory_info.used_mb);
             // Log checkpointing activation
             println!(
@@ -369,7 +369,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
     fn apply_model_optimizations<M: Model<F>>(&mut self, model: &mut M) -> Result<()> {
         // Apply various model optimizations such as layer fusion, kernel optimization, etc.
         // Update resource monitoring to get current system state
-        let cpu_usage = *self.resource_monitor.cpu_usage.read().unwrap();
+        let cpu_usage = *self.resource_monitor.cpu_usage.read().expect("Operation failed");
         // Apply optimization strategies based on target device and resources
         match &self.optimization_config.target_device {
             DeviceType::CPU => {
@@ -389,7 +389,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
                     println!("Advanced: Enabling mixed precision training for GPU");
                 // GPU memory optimization
                 if let Some(gpu_info) = &self.resource_monitor.gpu_info {
-                    let gpu_data = gpu_info.read().unwrap();
+                    let gpu_data = gpu_info.read().expect("Operation failed");
                     if gpu_data.memory_used_mb as f64 / gpu_data.memory_total_mb as f64 > 0.8 {
                         println!(
                             "Advanced: High GPU memory usage, enabling memory optimizations"
@@ -427,7 +427,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
                 "Advanced: Enabling kernel optimizations (level {})",
                 self.optimization_config.optimization_level
             // Optimize based on historical performance
-            let tracker = self.performance_tracker.read().unwrap();
+            let tracker = self.performance_tracker.read().expect("Operation failed");
             if tracker.iteration_times.len() > 5 {
                 let avg_time = tracker.iteration_times.iter().sum::<Duration>()
                     / tracker.iteration_times.len() as u32;
@@ -439,7 +439,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
             println!("Advanced: Enabling dynamic quantization");
             // Apply quantization optimizations
         // Update optimization statistics
-        let mut tracker = self.performance_tracker.write().unwrap();
+        let mut tracker = self.performance_tracker.write().expect("Operation failed");
         tracker.memory_usage.push(memory_info.used_mb);
         println!("Advanced: Model optimizations applied - Memory: {}MB, CPU: {:.1}%, Optimization level: {}",
                 memory_info.used_mb, cpu_usage * 100.0, self.optimization_config.optimization_level);
@@ -454,7 +454,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
         _model: &mut M, input: &ArrayD<F>, _target: &ArrayD<F>,
         // Implementation would perform mixed precision training
         // using FP16 for forward pass and FP32 for backward pass
-        Ok(F::from(0.5).unwrap())
+        Ok(F::from(0.5).expect("Failed to convert constant to float"))
     /// Perform standard training step
     fn standard_training_step<M: Model<F>>(
         // Implementation would perform standard training step
@@ -572,10 +572,10 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
         if !self.optimization_config.enable_simd {
             recommendations.push("Enable SIMD acceleration for improved performance".to_string());
         // Add meta-learning recommendations
-        let meta_learner = self.meta_learner.read().unwrap();
+        let meta_learner = self.meta_learner.read().expect("Operation failed");
         recommendations.extend(meta_learner.get_recommendations());
         // Add emergent behavior insights
-        let emergent_detector = self.emergent_detector.read().unwrap();
+        let emergent_detector = self.emergent_detector.read().expect("Operation failed");
         if let Some(insights) = emergent_detector.get_insights() {
             recommendations.extend(insights);
         recommendations
@@ -583,13 +583,13 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
     pub fn advanced_training_step<M: Model<F>>(
     ) -> Result<AdvancedTrainingResult<F>> {
         // Phase 1: Meta-learning adaptation
-            let mut meta_learner = self.meta_learner.write().unwrap();
+            let mut meta_learner = self.meta_learner.write().expect("Operation failed");
             meta_learner.adapt_to_context(input, target)?;
         // Phase 2: Quantum-inspired hyperparameter optimization
         let optimized_params = self.quantum_optimizer.optimize_hyperparameters(model)?;
         // Phase 3: Neural architecture search if needed
         let architecture_suggestion = {
-            let mut nas = self.nas_engine.write().unwrap();
+            let mut nas = self.nas_engine.write().expect("Operation failed");
             nas.evaluate_and_suggest(model, input, target)?
         // Phase 4: Multi-modal coordination
         let coordinated_strategy = self
@@ -603,7 +603,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
             TrainingStrategy::Emergent => self.emergent_training_step(model, input, target)?,
         // Phase 6: Emergent behavior detection
         let emergent_behavior = {
-            let mut detector = self.emergent_detector.write().unwrap();
+            let mut detector = self.emergent_detector.write().expect("Operation failed");
             detector.analyze_training_step(input, target, loss, start_time.elapsed())?
         // Phase 7: Self-modification if safe
         if let Some(modification) = emergent_behavior.suggested_modification {
@@ -616,7 +616,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
             strategy_used: coordinated_strategy,
             emergent_behavior,
             architecture_suggestion,
-            meta_learning_insights: self.meta_learner.read().unwrap().get_current_insights(),
+            meta_learning_insights: self.meta_learner.read().expect("Operation failed").get_current_insights(),
             quantum_optimization_gain: optimized_params.improvement_factor,
         })
     /// Quantum-enhanced training step
@@ -629,7 +629,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
         // Simulate quantum effects in parameter updates
         let loss = self.standard_training_step(model, input, target)?;
         // Apply quantum interference for optimization
-        let interference_factor = F::from(0.1).unwrap() * F::from(superposition_factor).unwrap();
+        let interference_factor = F::from(0.1).expect("Failed to convert constant to float") * F::from(superposition_factor).expect("Failed to convert to float");
         let quantum_loss = loss * (F::one() + interference_factor);
         Ok(quantum_loss)
     /// Emergent training step with adaptive modifications
@@ -638,20 +638,20 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
         let emergent_patterns = self
             .emergent_detector
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .get_current_patterns();
         // Apply emergent optimizations
         let base_loss = self.standard_training_step(model, input, target)?;
         // Modify loss based on emergent patterns
         let emergent_factor = emergent_patterns.adaptation_factor;
-        let emergent_loss = base_loss * F::from(emergent_factor).unwrap();
+        let emergent_loss = base_loss * F::from(emergent_factor).expect("Failed to convert to float");
         Ok(emergent_loss)
     /// Get comprehensive Advanced statistics
     pub fn get_advanced_statistics(&self) -> AdvancedStatistics {
         let performance_report = self.performance_report();
-        let meta_learning_stats = self.meta_learner.read().unwrap().get_statistics();
-        let emergent_stats = self.emergent_detector.read().unwrap().get_statistics();
-        let nas_stats = self.nas_engine.read().unwrap().get_statistics();
+        let meta_learning_stats = self.meta_learner.read().expect("Operation failed").get_statistics();
+        let emergent_stats = self.emergent_detector.read().expect("Operation failed").get_statistics();
+        let nas_stats = self.nas_engine.read().expect("Operation failed").get_statistics();
         let quantum_stats = self.quantum_optimizer.get_statistics();
         AdvancedStatistics {
             performance_report,
@@ -782,7 +782,7 @@ impl ResourceMonitor {
     /// Update resource information
     pub fn update(&mut self) -> Result<()> {
         // Update memory info
-            let mut memory_info = self.memory_usage.write().unwrap();
+            let mut memory_info = self.memory_usage.write().expect("Operation failed");
             // Simplified memory tracking - in real implementation would use system APIs
             memory_info.total_mb = 8192; // 8GB placeholder
             memory_info.available_mb = 4096; // 4GB placeholder
@@ -863,7 +863,7 @@ impl<F: Float + Debug + ScalarOperand> MetaLearningSystem<F> {
         // Calculate input statistics for task characterization
         let input_mean = input
             .mean()
-            .unwrap_or_else(|| F::from(0.0).unwrap())
+            .unwrap_or_else(|| F::from(0.0).expect("Failed to convert constant to float"))
             .to_f64()
             .unwrap_or(0.0);
         let input_std = {
@@ -924,7 +924,7 @@ impl<F: Float + Debug + ScalarOperand> MetaLearningSystem<F> {
                 pattern_data: self
                     .current_task_features
                     .iter()
-                    .map(|&x| F::from(x).unwrap())
+                    .map(|&x| F::from(x).expect("Failed to convert to float"))
                     .collect(),
                 success_rate: 0.0, // Will be updated as we gather data
                 domain: task_type.to_string(),

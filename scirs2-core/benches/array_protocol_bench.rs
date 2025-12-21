@@ -26,7 +26,7 @@ fn bench_array_protocol_matmul(c: &mut Criterion) {
     let wrapped_b = NdarrayWrapper::new(b);
 
     c.bench_function("array_protocol_matmul", |bench| {
-        bench.iter(|| matmul(&wrapped_a, &wrapped_b).unwrap())
+        bench.iter(|| matmul(&wrapped_a, &wrapped_b).expect("Operation failed"))
     });
 }
 
@@ -51,7 +51,7 @@ fn bench_array_protocol_add(c: &mut Criterion) {
     let wrapped_b = NdarrayWrapper::new(b);
 
     c.bench_function("array_protocol_add", |bench| {
-        bench.iter(|| add(&wrapped_a, &wrapped_b).unwrap())
+        bench.iter(|| add(&wrapped_a, &wrapped_b).expect("Operation failed"))
     });
 }
 
@@ -72,7 +72,7 @@ fn bench_array_protocol_transpose(c: &mut Criterion) {
     let wrapped_a = NdarrayWrapper::new(a);
 
     c.bench_function("array_protocol_transpose", |bench| {
-        bench.iter(|| transpose(&wrapped_a).unwrap())
+        bench.iter(|| transpose(&wrapped_a).expect("Operation failed"))
     });
 }
 
@@ -98,7 +98,7 @@ fn bench_gpu_array_matmul(c: &mut Criterion) {
     let gpu_b = GPUNdarray::new(b, gpu_config);
 
     c.bench_function("gpu_array_matmul", |bench| {
-        bench.iter(|| matmul(&gpu_a, &gpu_b).unwrap())
+        bench.iter(|| matmul(&gpu_a, &gpu_b).expect("Operation failed"))
     });
 }
 

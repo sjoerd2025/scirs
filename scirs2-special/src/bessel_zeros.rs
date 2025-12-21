@@ -12,6 +12,11 @@ use std::convert::TryFrom;
 use std::f64::consts::PI;
 use std::fmt::{Debug, Display};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 /// Compute the k-th zero of J₀(x)
 ///
 /// # Arguments
@@ -31,19 +36,19 @@ where
     }
 
     // McMahon's asymptotic expansion for large zeros
-    let k_f = T::from_usize(k).unwrap();
-    let pi = T::from_f64(PI).unwrap();
+    let k_f = T::from_usize(k).expect("Test/example failed");
+    let pi = T::from_f64(PI).expect("Test/example failed");
 
     // Initial approximation - use known values for first few zeros
     let beta = if k == 1 {
-        T::from_f64(2.404825557695773).unwrap() // First zero (exact value)
+        T::from_f64(2.404825557695773).expect("Operation failed") // First zero (exact value)
     } else if k == 2 {
-        T::from_f64(5.520078110286311).unwrap() // Second zero (exact value)
+        T::from_f64(5.520078110286311).expect("Operation failed") // Second zero (exact value)
     } else if k == 3 {
-        T::from_f64(8.653727912911013).unwrap() // Third zero (exact value)
+        T::from_f64(8.653727912911013).expect("Operation failed") // Third zero (exact value)
     } else {
         // McMahon's asymptotic expansion for k >= 4
-        (k_f - T::from_f64(0.25).unwrap()) * pi
+        (k_f - T::from_f64(0.25).expect("Operation failed")) * pi
     };
 
     // For the first few zeros, we can return the known exact values directly
@@ -67,19 +72,19 @@ where
         ));
     }
 
-    let k_f = T::from_usize(k).unwrap();
-    let pi = T::from_f64(PI).unwrap();
+    let k_f = T::from_usize(k).expect("Test/example failed");
+    let pi = T::from_f64(PI).expect("Test/example failed");
 
     // Initial approximation - use known values for first few zeros
     let beta = if k == 1 {
-        T::from_f64(3.831705970207512).unwrap() // First zero of J₁
+        T::from_f64(3.831705970207512).expect("Operation failed") // First zero of J₁
     } else if k == 2 {
-        T::from_f64(7.015586669815619).unwrap() // Second zero of J₁
+        T::from_f64(7.015586669815619).expect("Operation failed") // Second zero of J₁
     } else if k == 3 {
-        T::from_f64(10.173468135062722).unwrap() // Third zero of J₁
+        T::from_f64(10.173468135062722).expect("Operation failed") // Third zero of J₁
     } else {
         // McMahon's asymptotic expansion for k >= 4
-        (k_f + T::from_f64(0.25).unwrap()) * pi
+        (k_f + T::from_f64(0.25).expect("Operation failed")) * pi
     };
 
     // For the first few zeros, we can return the known exact values directly
@@ -110,12 +115,14 @@ where
         ));
     }
 
-    let n_f = T::from_usize(n).unwrap();
-    let k_f = T::from_usize(k).unwrap();
-    let pi = T::from_f64(PI).unwrap();
+    let n_f = T::from_usize(n).expect("Test/example failed");
+    let k_f = T::from_usize(k).expect("Test/example failed");
+    let pi = T::from_f64(PI).expect("Test/example failed");
 
     // McMahon's asymptotic expansion
-    let beta = (k_f + n_f / T::from_f64(2.0).unwrap() - T::from_f64(0.25).unwrap()) * pi;
+    let beta = (k_f + n_f / T::from_f64(2.0).expect("Operation failed")
+        - T::from_f64(0.25).expect("Operation failed"))
+        * pi;
 
     // Refine with Newton's method
     let n_i32 = i32::try_from(n)
@@ -135,12 +142,14 @@ where
         ));
     }
 
-    let n_f = T::from_usize(n).unwrap();
-    let k_f = T::from_usize(k).unwrap();
-    let pi = T::from_f64(PI).unwrap();
+    let n_f = T::from_usize(n).expect("Test/example failed");
+    let k_f = T::from_usize(k).expect("Test/example failed");
+    let pi = T::from_f64(PI).expect("Test/example failed");
 
     // Initial approximation
-    let beta = (k_f + n_f / T::from_f64(2.0).unwrap() - T::from_f64(0.75).unwrap()) * pi;
+    let beta = (k_f + n_f / T::from_f64(2.0).expect("Operation failed")
+        - T::from_f64(0.75).expect("Operation failed"))
+        * pi;
 
     // Refine with Newton's method for derivative
     let n_i32 = i32::try_from(n)
@@ -160,11 +169,11 @@ where
         ));
     }
 
-    let k_f = T::from_usize(k).unwrap();
-    let pi = T::from_f64(PI).unwrap();
+    let k_f = T::from_usize(k).expect("Test/example failed");
+    let pi = T::from_f64(PI).expect("Test/example failed");
 
     // Initial approximation
-    let beta = (k_f - T::from_f64(0.75).unwrap()) * pi;
+    let beta = (k_f - T::from_f64(0.75).expect("Operation failed")) * pi;
 
     // Refine with Newton's method
     refine_bessel_zero(beta, |x| y0(x), |x| -y1(x))
@@ -182,11 +191,11 @@ where
         ));
     }
 
-    let k_f = T::from_usize(k).unwrap();
-    let pi = T::from_f64(PI).unwrap();
+    let k_f = T::from_usize(k).expect("Test/example failed");
+    let pi = T::from_f64(PI).expect("Test/example failed");
 
     // Initial approximation
-    let beta = (k_f - T::from_f64(0.25).unwrap()) * pi;
+    let beta = (k_f - T::from_f64(0.25).expect("Operation failed")) * pi;
 
     // Refine with Newton's method
     refine_bessel_zero(beta, |x| y1(x), |x| y1_prime(x))
@@ -204,12 +213,14 @@ where
         ));
     }
 
-    let n_f = T::from_usize(n).unwrap();
-    let k_f = T::from_usize(k).unwrap();
-    let pi = T::from_f64(PI).unwrap();
+    let n_f = T::from_usize(n).expect("Test/example failed");
+    let k_f = T::from_usize(k).expect("Test/example failed");
+    let pi = T::from_f64(PI).expect("Test/example failed");
 
     // Initial approximation
-    let beta = (k_f + n_f / T::from_f64(2.0).unwrap() - T::from_f64(0.75).unwrap()) * pi;
+    let beta = (k_f + n_f / T::from_f64(2.0).expect("Operation failed")
+        - T::from_f64(0.75).expect("Operation failed"))
+        * pi;
 
     // Refine with Newton's method
     let n_i32 = i32::try_from(n)
@@ -247,24 +258,24 @@ where
     // Use adaptive Gauss-Kronrod quadrature for numerical integration
     // ∫₀^∞ tⁿ J₀(t) Y₀(xt) dt
 
-    let n_float = T::from_usize(n).unwrap();
+    let n_float = T::from_usize(n).expect("Test/example failed");
     let mut integral1 = T::zero();
     let mut integral2 = T::zero();
 
     // Split integration into segments to handle oscillatory behavior
     let num_segments = 20;
-    let max_t = T::from_f64(100.0).unwrap(); // Truncate integration at large t
-    let dt = max_t / T::from_usize(num_segments).unwrap();
+    let max_t = T::from_f64(100.0).expect("Test/example failed"); // Truncate integration at large t
+    let dt = max_t / T::from_usize(num_segments).expect("Test/example failed");
 
     for i in 0..num_segments {
-        let t_start = T::from_usize(i).unwrap() * dt;
+        let t_start = T::from_usize(i).expect("Operation failed") * dt;
         let t_end = t_start + dt;
 
         // Use Simpson's rule for each segment
-        let h = (t_end - t_start) / T::from_f64(6.0).unwrap();
+        let h = (t_end - t_start) / T::from_f64(6.0).expect("Test/example failed");
 
         for j in 0..6 {
-            let t = t_start + T::from_usize(j).unwrap() * h;
+            let t = t_start + T::from_usize(j).expect("Operation failed") * h;
             if t == T::zero() && n == 0 {
                 continue; // Skip singularity at t=0 for n=0
             }
@@ -272,9 +283,9 @@ where
             let weight = if j == 0 || j == 6 {
                 T::one()
             } else if j % 2 == 1 {
-                T::from_f64(4.0).unwrap()
+                T::from_f64(4.0).expect("Operation failed")
             } else {
-                T::from_f64(2.0).unwrap()
+                T::from_f64(2.0).expect("Operation failed")
             };
 
             let t_power_n = if n == 0 { T::one() } else { t.powf(n_float) };
@@ -290,8 +301,9 @@ where
         }
     }
 
-    integral1 = integral1 * dt / T::from_f64(3.0).unwrap();
-    integral2 = integral2 * dt / T::from_f64(3.0).unwrap() * T::from_f64(0.1).unwrap(); // Scale down
+    integral1 = integral1 * dt / T::from_f64(3.0).expect("Test/example failed");
+    integral2 = integral2 * dt / T::from_f64(3.0).expect("Operation failed")
+        * T::from_f64(0.1).expect("Test/example failed"); // Scale down
 
     // Apply exponential damping for convergence
     let damping_factor = (-x).exp();
@@ -317,9 +329,9 @@ where
         0 => {
             // ∫₀^∞ J₀(t) Y₀(xt) dt = -2/(π(1-x²)) for |x| < 1
             if x < T::one() {
-                let pi = T::from_f64(PI).unwrap();
+                let pi = T::from_f64(PI).expect("Test/example failed");
                 let denom = pi * (T::one() - x * x);
-                let integral1 = -T::from_f64(2.0).unwrap() / denom;
+                let integral1 = -T::from_f64(2.0).expect("Operation failed") / denom;
                 let integral2 = integral1; // Simplified
                 Ok((integral1, integral2))
             } else {
@@ -331,12 +343,12 @@ where
         1 => {
             // ∫₀^∞ t J₀(t) Y₀(xt) dt = -2x/(π(1-x²)²) for |x| < 1
             if x < T::one() {
-                let pi = T::from_f64(PI).unwrap();
+                let pi = T::from_f64(PI).expect("Test/example failed");
                 let oneminus_x_sq = T::one() - x * x;
                 let denom = pi * oneminus_x_sq * oneminus_x_sq;
-                let integral1 = -T::from_f64(2.0).unwrap() * x / denom;
+                let integral1 = -T::from_f64(2.0).expect("Operation failed") * x / denom;
                 // For the second integral, we use a similar form but with different scaling
-                let integral2 = integral1 * T::from_f64(0.5).unwrap(); // Simplified approximation
+                let integral2 = integral1 * T::from_f64(0.5).expect("Test/example failed"); // Simplified approximation
                 Ok((integral1, integral2))
             } else {
                 Err(SpecialError::DomainError(
@@ -347,13 +359,13 @@ where
         2 => {
             // ∫₀^∞ t² J₀(t) Y₀(xt) dt = -2(1+x²)/(π(1-x²)³) for |x| < 1
             if x < T::one() {
-                let pi = T::from_f64(PI).unwrap();
+                let pi = T::from_f64(PI).expect("Test/example failed");
                 let x_sq = x * x;
                 let oneminus_x_sq = T::one() - x_sq;
-                let numerator = T::from_f64(2.0).unwrap() * (T::one() + x_sq);
+                let numerator = T::from_f64(2.0).expect("Operation failed") * (T::one() + x_sq);
                 let denom = pi * oneminus_x_sq * oneminus_x_sq * oneminus_x_sq;
                 let integral1 = -numerator / denom;
-                let integral2 = integral1 * T::from_f64(0.75).unwrap(); // Approximation
+                let integral2 = integral1 * T::from_f64(0.75).expect("Test/example failed"); // Approximation
                 Ok((integral1, integral2))
             } else {
                 Err(SpecialError::DomainError(
@@ -364,13 +376,15 @@ where
         3 => {
             // ∫₀^∞ t³ J₀(t) Y₀(xt) dt = -2x(3+x²)/(π(1-x²)⁴) for |x| < 1
             if x < T::one() {
-                let pi = T::from_f64(PI).unwrap();
+                let pi = T::from_f64(PI).expect("Test/example failed");
                 let x_sq = x * x;
                 let oneminus_x_sq = T::one() - x_sq;
-                let numerator = T::from_f64(2.0).unwrap() * x * (T::from_f64(3.0).unwrap() + x_sq);
+                let numerator = T::from_f64(2.0).expect("Operation failed")
+                    * x
+                    * (T::from_f64(3.0).expect("Operation failed") + x_sq);
                 let denom = pi * oneminus_x_sq.powi(4);
                 let integral1 = -numerator / denom;
-                let integral2 = integral1 * T::from_f64(0.6).unwrap(); // Approximation
+                let integral2 = integral1 * T::from_f64(0.6).expect("Test/example failed"); // Approximation
                 Ok((integral1, integral2))
             } else {
                 Err(SpecialError::DomainError(
@@ -381,15 +395,17 @@ where
         4 => {
             // ∫₀^∞ t⁴ J₀(t) Y₀(xt) dt = -2(3+6x²+x⁴)/(π(1-x²)⁵) for |x| < 1
             if x < T::one() {
-                let pi = T::from_f64(PI).unwrap();
+                let pi = T::from_f64(PI).expect("Test/example failed");
                 let x_sq = x * x;
                 let x_fourth = x_sq * x_sq;
                 let oneminus_x_sq = T::one() - x_sq;
-                let numerator = T::from_f64(2.0).unwrap()
-                    * (T::from_f64(3.0).unwrap() + T::from_f64(6.0).unwrap() * x_sq + x_fourth);
+                let numerator = T::from_f64(2.0).expect("Operation failed")
+                    * (T::from_f64(3.0).expect("Operation failed")
+                        + T::from_f64(6.0).expect("Operation failed") * x_sq
+                        + x_fourth);
                 let denom = pi * oneminus_x_sq.powi(5);
                 let integral1 = -numerator / denom;
-                let integral2 = integral1 * T::from_f64(0.5).unwrap(); // Approximation
+                let integral2 = integral1 * T::from_f64(0.5).expect("Test/example failed"); // Approximation
                 Ok((integral1, integral2))
             } else {
                 Err(SpecialError::DomainError(
@@ -427,7 +443,7 @@ where
     let mut y_curr = T::one() + x;
 
     for k in 1..n {
-        let two_k_plus_one = T::from_usize(2 * k + 1).unwrap();
+        let two_k_plus_one = T::from_usize(2 * k + 1).expect("Test/example failed");
         let y_next = two_k_plus_one * x * y_curr + y_prev;
         y_prev = y_curr;
         y_curr = y_next;
@@ -447,14 +463,14 @@ where
     D: Fn(T) -> T,
 {
     let mut x = initial;
-    let tol = T::from_f64(1e-9).unwrap(); // More relaxed tolerance
+    let tol = T::from_f64(1e-9).expect("Test/example failed"); // More relaxed tolerance
     let max_iter = 100; // Even more iterations
 
     for _ in 0..max_iter {
         let fx = f(x);
         let dfx = df(x);
 
-        if dfx.abs() < T::from_f64(1e-30).unwrap() {
+        if dfx.abs() < T::from_f64(1e-30).expect("Operation failed") {
             return Err(SpecialError::ConvergenceError(
                 "refine_bessel_zero: derivative too small".to_string(),
             ));
@@ -492,7 +508,7 @@ where
         -y1(x)
     } else {
         let n_i32 = i32::try_from(n).unwrap_or(i32::MAX);
-        (yn(n_i32 - 1, x) - yn(n_i32 + 1, x)) / T::from_f64(2.0).unwrap()
+        (yn(n_i32 - 1, x) - yn(n_i32 + 1, x)) / T::from_f64(2.0).expect("Operation failed")
     }
 }
 
@@ -502,7 +518,7 @@ fn jn_prime_prime<T>(n: usize, x: T) -> T
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign,
 {
-    let n_f = T::from_usize(n).unwrap();
+    let n_f = T::from_usize(n).expect("Test/example failed");
     let n_i32 = i32::try_from(n).unwrap_or(i32::MAX);
     let jn_val = jn(n_i32, x);
     let jn_p1 = jn(n_i32 + 1, x);
@@ -510,7 +526,7 @@ where
 
     // J''_n(x) = -(1 + n(n-1)/x²)J_n(x) + (2n+1)/x J_{n+1}(x) - J_{n+2}(x)
     let term1 = -(T::one() + n_f * (n_f - T::one()) / (x * x)) * jn_val;
-    let term2 = (T::from_f64(2.0).unwrap() * n_f + T::one()) / x * jn_p1;
+    let term2 = (T::from_f64(2.0).expect("Operation failed") * n_f + T::one()) / x * jn_p1;
     let term3 = -jn_p2;
 
     term1 + term2 + term3
@@ -537,26 +553,26 @@ mod tests {
     #[test]
     fn test_j0_zeros() {
         // First few zeros of J₀(x) - SciPy reference values
-        let zero1 = j0_zeros::<f64>(1).unwrap();
+        let zero1 = j0_zeros::<f64>(1).expect("Test/example failed");
         assert_relative_eq!(zero1, 2.404_825_557_695_773, epsilon = 1e-14);
 
-        let zero2 = j0_zeros::<f64>(2).unwrap();
+        let zero2 = j0_zeros::<f64>(2).expect("Test/example failed");
         assert_relative_eq!(zero2, 5.520_078_110_286_311, epsilon = 1e-14);
 
-        let zero3 = j0_zeros::<f64>(3).unwrap();
+        let zero3 = j0_zeros::<f64>(3).expect("Test/example failed");
         assert_relative_eq!(zero3, 8.653_727_912_911_013, epsilon = 1e-14);
     }
 
     #[test]
     fn test_j1_zeros() {
         // First few zeros of J₁(x) - SciPy reference values
-        let zero1 = j1_zeros::<f64>(1).unwrap();
+        let zero1 = j1_zeros::<f64>(1).expect("Test/example failed");
         assert_relative_eq!(zero1, 3.831_705_970_207_512, epsilon = 1e-14);
 
-        let zero2 = j1_zeros::<f64>(2).unwrap();
+        let zero2 = j1_zeros::<f64>(2).expect("Test/example failed");
         assert_relative_eq!(zero2, 7.015_586_669_815_619, epsilon = 1e-14);
 
-        let zero3 = j1_zeros::<f64>(3).unwrap();
+        let zero3 = j1_zeros::<f64>(3).expect("Test/example failed");
         assert_relative_eq!(zero3, 10.173_468_135_062_722, epsilon = 1e-14);
     }
 
@@ -614,7 +630,7 @@ mod tests {
         let x = 0.5;
         let result = itj0y0::<f64>(x, 0);
         assert!(result.is_ok(), "itj0y0 should work for n=0, x=0.5");
-        let (int1, _int2) = result.unwrap();
+        let (int1, _int2) = result.expect("Test/example failed");
         // Should be negative values based on the formula
         assert!(int1 < 0.0, "First integral should be negative for n=0");
 
@@ -674,7 +690,7 @@ mod tests {
         let x = 0.999;
         let result = itj0y0::<f64>(x, 0);
         assert!(result.is_ok(), "Should work for x close to 1");
-        let (int1, _) = result.unwrap();
+        let (int1, _) = result.expect("Test/example failed");
         // Should have large magnitude when x approaches 1
         assert!(
             int1.abs() > 100.0,
@@ -692,7 +708,7 @@ mod tests {
         for n in 0..=4 {
             let result = itj0y0::<f64>(x, n);
             assert!(result.is_ok(), "Analytical formula should work for n={n}");
-            let (int1, int2) = result.unwrap();
+            let (int1, int2) = result.expect("Test/example failed");
             assert!(int1.is_finite(), "Integral 1 should be finite for n={n}");
             assert!(int2.is_finite(), "Integral 2 should be finite for n={n}");
         }

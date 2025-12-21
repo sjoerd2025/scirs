@@ -11,7 +11,10 @@ use scirs2_core::validation::{check_finite, check_positive};
 /// Validate denoising configuration
 pub fn validate_denoise_config(config: &DenoiseConfig) -> SignalResult<()> {
     // Validate noise estimation flag
-    if config.adaptive_noise && config.levels.is_some() && config.levels.unwrap() == 0 {
+    if config.adaptive_noise
+        && config.levels.is_some()
+        && config.levels.expect("Operation failed") == 0
+    {
         return Err(SignalError::ValueError(
             "Adaptive noise estimation requires at least one decomposition level".to_string(),
         ));
@@ -63,7 +66,7 @@ pub fn validate_denoise_config(config: &DenoiseConfig) -> SignalResult<()> {
 
     // Validate memory optimization settings
     if config.memory_optimized && config.block_size.is_some() {
-        check_positive(config.block_size.unwrap(), "block_size")?;
+        check_positive(config.block_size.expect("Operation failed"), "block_size")?;
     }
 
     Ok(())
@@ -129,7 +132,7 @@ pub fn adaptive_noise_estimation(coeffs: &crate::dwt::DecompositionResult) -> Si
 
     // Median absolute deviation estimator
     let mut abs_coeffs: Vec<f64> = finest_detail.iter().map(|&x| x.abs()).collect();
-    abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    abs_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let median = if abs_coeffs.len().is_multiple_of(2) {
         (abs_coeffs[abs_coeffs.len() / 2 - 1] + abs_coeffs[abs_coeffs.len() / 2]) / 2.0
@@ -352,12 +355,12 @@ mod tests {
     fn test_compute_numerical_stability() {
         // Test with normal signal
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
-        let stability = compute_numerical_stability(&signal).unwrap();
+        let stability = compute_numerical_stability(&signal).expect("Operation failed");
         assert_eq!(stability, 1.0);
 
         // Test with signal containing infinity
         let signal = Array1::from_vec(vec![1.0, f64::INFINITY, 3.0]);
-        let stability = compute_numerical_stability(&signal).unwrap();
+        let stability = compute_numerical_stability(&signal).expect("Operation failed");
         assert!(stability < 1.0);
 
         // Test with empty signal
@@ -378,13 +381,13 @@ mod tests {
             details: vec![detail1, detail2],
         };
 
-        let noise_sigma = adaptive_noise_estimation(&coeffs).unwrap();
+        let noise_sigma = adaptive_noise_estimation(&coeffs).expect("Operation failed");
         assert!(noise_sigma > 0.0);
         assert!(noise_sigma < 1.0); // Reasonable range for test data
 
         // Test tree energy computation
         let tree_data = vec![1.0, 2.0, 3.0];
-        let energy = compute_tree_energy(&tree_data).unwrap();
+        let energy = compute_tree_energy(&tree_data).expect("Operation failed");
         assert_eq!(energy, 14.0); // 1^2 + 2^2 + 3^2 = 14
     }
 
@@ -394,7 +397,8 @@ mod tests {
         let noisy = Array1::from_vec(vec![1.1, 2.1, 3.1, 2.1, 1.1]);
         let denoised = Array1::from_vec(vec![1.05, 2.05, 3.05, 2.05, 1.05]);
 
-        let snr_improvement = compute_snr_improvement(&original, &noisy, &denoised).unwrap();
+        let snr_improvement =
+            compute_snr_improvement(&original, &noisy, &denoised).expect("Operation failed");
         assert!(snr_improvement > 0.0); // Should show improvement
 
         // Test error condition - mismatched lengths

@@ -54,7 +54,7 @@ where
 
     let n = rows;
     let m = m.unwrap_or(30.min(n - 1));
-    let tol = tol.unwrap_or(F::from(1e-7).unwrap());
+    let tol = tol.unwrap_or(F::from(1e-7).expect("Failed to convert constant to float"));
 
     // Special case: t = 0
     if t == F::sparse_zero() {
@@ -91,7 +91,7 @@ where
         h[j + 1][j] = h_next;
 
         // Check for breakdown
-        if h_next.abs() < tol * F::from(100).unwrap() {
+        if h_next.abs() < tol * F::from(100).expect("Failed to convert constant to float") {
             // Early termination - Krylov subspace is exhausted
             break;
         }
@@ -154,8 +154,8 @@ where
 
     while scaled_norm > F::sparse_one() {
         s += 1;
-        scale *= F::from(2).unwrap();
-        scaled_norm /= F::from(2).unwrap();
+        scale *= F::from(2).expect("Failed to convert constant to float");
+        scaled_norm /= F::from(2).expect("Failed to convert constant to float");
     }
 
     let t_scaled = t / scale;
@@ -199,22 +199,22 @@ where
     // Padé coefficients for order 6
     let num_coeffs = [
         F::sparse_one(),
-        F::from(0.5).unwrap(),
-        F::from(3.0 / 26.0).unwrap(),
-        F::from(1.0 / 312.0).unwrap(),
-        F::from(1.0 / 11232.0).unwrap(),
-        F::from(1.0 / 506880.0).unwrap(),
-        F::from(1.0 / 18811680.0).unwrap(),
+        F::from(0.5).expect("Failed to convert constant to float"),
+        F::from(3.0 / 26.0).expect("Failed to convert to float"),
+        F::from(1.0 / 312.0).expect("Failed to convert to float"),
+        F::from(1.0 / 11232.0).expect("Failed to convert to float"),
+        F::from(1.0 / 506880.0).expect("Failed to convert to float"),
+        F::from(1.0 / 18811680.0).expect("Failed to convert to float"),
     ];
 
     let den_coeffs = [
         F::sparse_one(),
-        F::from(-0.5).unwrap(),
-        F::from(3.0 / 26.0).unwrap(),
-        F::from(-1.0 / 312.0).unwrap(),
-        F::from(1.0 / 11232.0).unwrap(),
-        F::from(-1.0 / 506880.0).unwrap(),
-        F::from(1.0 / 18811680.0).unwrap(),
+        F::from(-0.5).expect("Failed to convert constant to float"),
+        F::from(3.0 / 26.0).expect("Failed to convert to float"),
+        F::from(-1.0 / 312.0).expect("Failed to convert to float"),
+        F::from(1.0 / 11232.0).expect("Failed to convert to float"),
+        F::from(-1.0 / 506880.0).expect("Failed to convert to float"),
+        F::from(1.0 / 18811680.0).expect("Failed to convert to float"),
     ];
 
     // Compute numerator and denominator
@@ -257,9 +257,9 @@ where
 /// let rows = vec![0, 1];
 /// let cols = vec![0, 1];
 /// let data = vec![2.0, 3.0];
-/// let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
+/// let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).expect("Operation failed");
 ///
-/// let norm_estimate = twonormest(&matrix, None, Some(1)).unwrap();
+/// let norm_estimate = twonormest(&matrix, None, Some(1)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn twonormest<F>(a: &CsrMatrix<F>, tol: Option<F>, maxiter: Option<usize>) -> SparseResult<F>
@@ -267,7 +267,7 @@ where
     F: Float + NumAssign + Sum + SparseElement + 'static + Debug,
 {
     let (m, n) = (a.rows(), a.cols());
-    let tol = tol.unwrap_or_else(|| F::from(1e-6).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from(1e-6).expect("Failed to convert constant to float"));
     let maxiter = maxiter.unwrap_or(100);
 
     if m == 0 || n == 0 {
@@ -282,7 +282,7 @@ where
     // Initialize with a random unit vector
     let mut rng = scirs2_core::random::rng();
     let mut v: Vec<F> = (0..n)
-        .map(|_| F::from(rng.random::<f64>() - 0.5).unwrap())
+        .map(|_| F::from(rng.random::<f64>() - 0.5).expect("Operation failed"))
         .collect();
 
     // Normalize initial vector
@@ -386,9 +386,9 @@ where
 /// let rows = vec![0, 1];
 /// let cols = vec![0, 1];
 /// let data = vec![2.0, 3.0];
-/// let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).unwrap();
+/// let matrix = CsrMatrix::new(data, rows, cols, (2, 2)).expect("Operation failed");
 ///
-/// let cond_estimate = condest(&matrix, None, None, Some(1)).unwrap();
+/// let cond_estimate = condest(&matrix, None, None, Some(1)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn condest<F>(
@@ -408,7 +408,7 @@ where
     }
 
     let norm_type = norm_type.unwrap_or("2");
-    let tol = tol.unwrap_or_else(|| F::from(1e-6).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from(1e-6).expect("Failed to convert constant to float"));
     let maxiter = maxiter.unwrap_or(100);
 
     // Estimate ||A||
@@ -480,7 +480,7 @@ where
     // Initialize with a random unit vector
     let mut rng = scirs2_core::random::rng();
     let mut v: Vec<F> = (0..n)
-        .map(|_| F::from(rng.random::<f64>() - 0.5).unwrap())
+        .map(|_| F::from(rng.random::<f64>() - 0.5).expect("Operation failed"))
         .collect();
 
     // Normalize initial vector
@@ -581,7 +581,7 @@ where
         }
 
         // Simple iteration: x = x - α * (A^T * A * x - b)
-        let alpha = F::from(0.1).unwrap(); // Simple step size
+        let alpha = F::from(0.1).expect("Failed to convert constant to float"); // Simple step size
         for i in 0..n {
             x[i] -= alpha * (ata_x[i] - b[i]);
         }
@@ -660,7 +660,11 @@ where
     }
 
     // For small square matrices, use power iteration with high accuracy
-    twonormest(a, Some(F::from(1e-12).unwrap()), Some(1000))
+    twonormest(
+        a,
+        Some(F::from(1e-12).expect("Failed to convert constant to float")),
+        Some(1000),
+    )
 }
 
 /// Estimate the 1-norm of a sparse matrix using a randomized algorithm
@@ -763,7 +767,7 @@ where
             .enumerate()
             .map(|(i, &y_val)| (y_val.abs(), i))
             .collect();
-        abs_y.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        abs_y.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
         // Update ind_best with largest elements not in S
         let mut count = 0;
@@ -1027,9 +1031,9 @@ fn solve_matrix_equation<F: Float + NumAssign + SparseElement>(
 /// let rows = vec![0, 1];
 /// let cols = vec![0, 1];
 /// let data = vec![2.0, 3.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).expect("Operation failed");
 ///
-/// let norm_estimate = twonormest_enhanced(&matrix, None, Some(1), None).unwrap();
+/// let norm_estimate = twonormest_enhanced(&matrix, None, Some(1), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn twonormest_enhanced<T, S>(
@@ -1056,7 +1060,7 @@ where
     S: SparseArray<T>,
 {
     let (m, n) = a.shape();
-    let tol = tol.unwrap_or_else(|| T::from(1e-8).unwrap());
+    let tol = tol.unwrap_or_else(|| T::from(1e-8).expect("Operation failed"));
     let maxiter = maxiter.unwrap_or(100);
 
     if m == 0 || n == 0 {
@@ -1083,7 +1087,7 @@ where
             let mut rng = scirs2_core::random::rng();
             let mut v_arr = Array1::zeros(n);
             for i in 0..n {
-                v_arr[i] = T::from(rng.random::<f64>() - 0.5).unwrap();
+                v_arr[i] = T::from(rng.random::<f64>() - 0.5).expect("Operation failed");
             }
             v_arr
         }
@@ -1168,9 +1172,9 @@ where
 /// let rows = vec![0, 1];
 /// let cols = vec![0, 1];
 /// let data = vec![2.0, 3.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).expect("Operation failed");
 ///
-/// let cond_estimate = condest_enhanced(&matrix, None, None, Some(1)).unwrap();
+/// let cond_estimate = condest_enhanced(&matrix, None, None, Some(1)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn condest_enhanced<T, S>(
@@ -1204,7 +1208,7 @@ where
     }
 
     let norm_type = norm_type.unwrap_or("2");
-    let tol = tol.unwrap_or_else(|| T::from(1e-8).unwrap());
+    let tol = tol.unwrap_or_else(|| T::from(1e-8).expect("Operation failed"));
     let maxiter = maxiter.unwrap_or(100);
 
     // Estimate ||A||
@@ -1414,7 +1418,7 @@ where
     let mut rng = scirs2_core::random::rng();
     let mut v = Array1::zeros(n);
     for i in 0..n {
-        v[i] = T::from(rng.random::<f64>() - 0.5).unwrap();
+        v[i] = T::from(rng.random::<f64>() - 0.5).expect("Operation failed");
     }
 
     // Normalize initial vector
@@ -1548,7 +1552,7 @@ where
         let ata_x = sparse_matvec_transpose(a, &ax.view())?;
 
         // Simple iteration: x = x - α * (A^T * A * x - b)
-        let alpha = T::from(0.1).unwrap(); // Conservative step size
+        let alpha = T::from(0.1).expect("Operation failed"); // Conservative step size
         for i in 0..n {
             x[i] = x[i] - alpha * (ata_x[i] - b[i]);
         }
@@ -1619,7 +1623,12 @@ where
     }
 
     // For small matrices, use high-precision power iteration
-    twonormest_enhanced(a, Some(T::from(1e-12).unwrap()), Some(1000), None)
+    twonormest_enhanced(
+        a,
+        Some(T::from(1e-12).expect("Operation failed")),
+        Some(1000),
+        None,
+    )
 }
 
 /// Compute exact 1-norm for small sparse arrays
@@ -1662,7 +1671,7 @@ mod tests {
         let v = vec![1.0, 2.0, 3.0];
         let t = 1.0;
 
-        let result = expm_multiply(&identity, &v, t, None, None).unwrap();
+        let result = expm_multiply(&identity, &v, t, None, None).expect("Operation failed");
 
         let exp_t = t.exp();
         let expected: Vec<f64> = v.iter().map(|&vi| exp_t * vi).collect();
@@ -1684,7 +1693,7 @@ mod tests {
         let v = vec![1.0, 2.0, 3.0];
         let t = 0.5;
 
-        let result = expm_multiply(&scaled_identity, &v, t, None, None).unwrap();
+        let result = expm_multiply(&scaled_identity, &v, t, None, None).expect("Operation failed");
 
         let exp_t_alpha = (t * alpha).exp();
         let expected: Vec<f64> = v.iter().map(|&vi| exp_t_alpha * vi).collect();
@@ -1701,7 +1710,7 @@ mod tests {
         let v = vec![1.0, 2.0, 3.0];
         let t = 0.0;
 
-        let result = expm_multiply(&identity, &v, t, None, None).unwrap();
+        let result = expm_multiply(&identity, &v, t, None, None).expect("Operation failed");
 
         for (ri, vi) in result.iter().zip(&v) {
             assert!((ri - vi).abs() < 1e-10);
@@ -1716,8 +1725,8 @@ mod tests {
         let data = vec![2.0, 3.0, 4.0];
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
-        let estimate = onenormest(&matrix, None, None).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
+        let estimate = onenormest(&matrix, None, None).expect("Operation failed");
 
         // For a diagonal matrix, the 1-norm is the maximum absolute diagonal element
         assert!((estimate - 4.0).abs() < 1e-10);

@@ -13,11 +13,21 @@ fn main() {
     let mut graph = create_graph::<&str, f64>();
 
     // Add nodes (people) and edges (friendships with weights as interaction strength)
-    graph.add_edge("Alice", "Bob", 0.8).unwrap();
-    graph.add_edge("Bob", "Charlie", 0.6).unwrap();
-    graph.add_edge("Charlie", "David", 0.7).unwrap();
-    graph.add_edge("David", "Alice", 0.5).unwrap();
-    graph.add_edge("Alice", "Charlie", 0.3).unwrap();
+    graph
+        .add_edge("Alice", "Bob", 0.8)
+        .expect("Operation failed");
+    graph
+        .add_edge("Bob", "Charlie", 0.6)
+        .expect("Operation failed");
+    graph
+        .add_edge("Charlie", "David", 0.7)
+        .expect("Operation failed");
+    graph
+        .add_edge("David", "Alice", 0.5)
+        .expect("Operation failed");
+    graph
+        .add_edge("Alice", "Charlie", 0.3)
+        .expect("Operation failed");
 
     println!(
         "   Created graph with {} nodes and {} edges",
@@ -29,11 +39,11 @@ fn main() {
     println!("\n2. Graph Traversal");
 
     // Breadth-first search
-    let bfs_result = breadth_first_search(&graph, &"Alice").unwrap();
+    let bfs_result = breadth_first_search(&graph, &"Alice").expect("Operation failed");
     println!("   BFS from Alice: {} nodes visited", bfs_result.len());
 
     // Depth-first search
-    let dfs_result = depth_first_search(&graph, &"Alice").unwrap();
+    let dfs_result = depth_first_search(&graph, &"Alice").expect("Operation failed");
     println!("   DFS from Alice: {} nodes visited", dfs_result.len());
 
     // 3. Shortest path algorithms
@@ -101,7 +111,7 @@ fn main() {
     let mut rng = scirs2_core::random::rng();
 
     // Erdős-Rényi random graph
-    let random_graph = erdos_renyi_graph(10, 0.3, &mut rng).unwrap();
+    let random_graph = erdos_renyi_graph(10, 0.3, &mut rng).expect("Operation failed");
     println!(
         "   Erdős-Rényi graph: {} nodes, {} edges",
         random_graph.node_count(),
@@ -109,7 +119,7 @@ fn main() {
     );
 
     // Barabási-Albert preferential attachment
-    let ba_graph = barabasi_albert_graph(20, 2, &mut rng).unwrap();
+    let ba_graph = barabasi_albert_graph(20, 2, &mut rng).expect("Operation failed");
     println!(
         "   Barabási-Albert graph: {} nodes, {} edges",
         ba_graph.node_count(),
@@ -121,10 +131,10 @@ fn main() {
     let mut digraph = create_digraph::<&str, f64>();
 
     // Create a directed graph with cycles
-    digraph.add_edge("A", "B", 1.0).unwrap();
-    digraph.add_edge("B", "C", 1.0).unwrap();
-    digraph.add_edge("C", "A", 1.0).unwrap();
-    digraph.add_edge("B", "D", 1.0).unwrap();
+    digraph.add_edge("A", "B", 1.0).expect("Operation failed");
+    digraph.add_edge("B", "C", 1.0).expect("Operation failed");
+    digraph.add_edge("C", "A", 1.0).expect("Operation failed");
+    digraph.add_edge("B", "D", 1.0).expect("Operation failed");
 
     // Topological sort (will fail due to cycle)
     match topological_sort(&digraph) {
@@ -154,13 +164,13 @@ fn main() {
     // Add hyperedges representing group activities
     let he1 = hypergraph
         .add_hyperedge_from_vec(vec!["Alice", "Bob", "Charlie"], 1.0)
-        .unwrap();
+        .expect("Operation failed");
     let he2 = hypergraph
         .add_hyperedge_from_vec(vec!["Bob", "Charlie", "David"], 1.2)
-        .unwrap();
+        .expect("Operation failed");
     let he3 = hypergraph
         .add_hyperedge_from_vec(vec!["Alice", "David"], 0.8)
-        .unwrap();
+        .expect("Operation failed");
 
     println!(
         "   Created hypergraph with {} hyperedges",

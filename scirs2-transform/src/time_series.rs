@@ -597,10 +597,10 @@ mod tests {
             let t = i as f64 / n as f64 * 4.0 * std::f64::consts::PI;
             signal.push((t).sin() + 0.5 * (2.0 * t).sin());
         }
-        let x = Array::from_shape_vec((1, n), signal).unwrap();
+        let x = Array::from_shape_vec((1, n), signal).expect("Operation failed");
 
         let fourier = FourierFeatures::new(10);
-        let features = fourier.transform(&x).unwrap();
+        let features = fourier.transform(&x).expect("Operation failed");
 
         assert_eq!(features.shape(), &[1, 10]);
 
@@ -619,7 +619,9 @@ mod tests {
         let x = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 
         let lag_extractor = LagFeatures::new(vec![1, 2]);
-        let features = lag_extractor.transform_1d(&x.view()).unwrap();
+        let features = lag_extractor
+            .transform_1d(&x.view())
+            .expect("Operation failed");
 
         // Should have 4 samples (6 - max_lag(2)) and 3 features (original + 2 lags)
         assert_eq!(features.shape(), &[4, 3]);
@@ -633,10 +635,13 @@ mod tests {
     #[test]
     fn test_wavelet_features() {
         let x = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-        let x_2d = x.clone().into_shape_with_order((1, 8)).unwrap();
+        let x_2d = x
+            .clone()
+            .into_shape_with_order((1, 8))
+            .expect("Operation failed");
 
         let wavelet = WaveletFeatures::new("db1", 2);
-        let features = wavelet.transform(&x_2d).unwrap();
+        let features = wavelet.transform(&x_2d).expect("Operation failed");
 
         assert!(!features.is_empty());
         assert!(features[0].len() > 0);

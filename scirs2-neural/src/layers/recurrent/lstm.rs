@@ -38,13 +38,13 @@ pub struct LSTMConfig {
 /// use scirs2_core::random::SeedableRng;
 /// // Create an LSTM layer with 10 input features and 20 hidden units
 /// let mut rng = StdRng::seed_from_u64(42);
-/// let lstm = LSTM::new(10, 20, &mut rng).unwrap();
+/// let lstm = LSTM::new(10, 20, &mut rng).expect("Operation failed");
 /// // Forward pass with a batch of 2 samples, sequence length 5, and 10 features
 /// let batch_size = 2;
 /// let seq_len = 5;
 /// let input_size = 10;
 /// let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
-/// let output = lstm.forward(&input).unwrap();
+/// let output = lstm.forward(&input).expect("Operation failed");
 /// // Output should have dimensions [batch_size, seq_len, hidden_size]
 /// assert_eq!(output.shape(), &[batch_size, seq_len, 20]);
 pub struct LSTM<F: Float + Debug + Send + Sync> {
@@ -288,31 +288,39 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
         // SIMD-accelerated gate computation using simd_dot
         for b in 0..batch_size {
             let x_b = x.slice(scirs2_core::ndarray::s![b, ..]);
-            let x_view: ArrayView1<F> = x_b.into_dimensionality().unwrap();
+            let x_view: ArrayView1<F> = x_b.into_dimensionality().expect("Operation failed");
             let h_b = h.slice(scirs2_core::ndarray::s![b, ..]);
-            let h_view: ArrayView1<F> = h_b.into_dimensionality().unwrap();
+            let h_view: ArrayView1<F> = h_b.into_dimensionality().expect("Operation failed");
 
             for i in 0..self.hidden_size {
                 // Get weight rows for SIMD dot products
                 let wii_row = self.weight_ii.slice(scirs2_core::ndarray::s![i, ..]);
-                let wii_view: ArrayView1<F> = wii_row.into_dimensionality().unwrap();
+                let wii_view: ArrayView1<F> =
+                    wii_row.into_dimensionality().expect("Operation failed");
                 let whi_row = self.weight_hi.slice(scirs2_core::ndarray::s![i, ..]);
-                let whi_view: ArrayView1<F> = whi_row.into_dimensionality().unwrap();
+                let whi_view: ArrayView1<F> =
+                    whi_row.into_dimensionality().expect("Operation failed");
 
                 let wif_row = self.weight_if.slice(scirs2_core::ndarray::s![i, ..]);
-                let wif_view: ArrayView1<F> = wif_row.into_dimensionality().unwrap();
+                let wif_view: ArrayView1<F> =
+                    wif_row.into_dimensionality().expect("Operation failed");
                 let whf_row = self.weight_hf.slice(scirs2_core::ndarray::s![i, ..]);
-                let whf_view: ArrayView1<F> = whf_row.into_dimensionality().unwrap();
+                let whf_view: ArrayView1<F> =
+                    whf_row.into_dimensionality().expect("Operation failed");
 
                 let wig_row = self.weight_ig.slice(scirs2_core::ndarray::s![i, ..]);
-                let wig_view: ArrayView1<F> = wig_row.into_dimensionality().unwrap();
+                let wig_view: ArrayView1<F> =
+                    wig_row.into_dimensionality().expect("Operation failed");
                 let whg_row = self.weight_hg.slice(scirs2_core::ndarray::s![i, ..]);
-                let whg_view: ArrayView1<F> = whg_row.into_dimensionality().unwrap();
+                let whg_view: ArrayView1<F> =
+                    whg_row.into_dimensionality().expect("Operation failed");
 
                 let wio_row = self.weight_io.slice(scirs2_core::ndarray::s![i, ..]);
-                let wio_view: ArrayView1<F> = wio_row.into_dimensionality().unwrap();
+                let wio_view: ArrayView1<F> =
+                    wio_row.into_dimensionality().expect("Operation failed");
                 let who_row = self.weight_ho.slice(scirs2_core::ndarray::s![i, ..]);
-                let who_view: ArrayView1<F> = who_row.into_dimensionality().unwrap();
+                let who_view: ArrayView1<F> =
+                    who_row.into_dimensionality().expect("Operation failed");
 
                 // Input gate with simd_dot
                 let i_sum = self.bias_ii[i]
@@ -467,7 +475,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
 
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Cache input for backward pass
-        *self.input_cache.write().unwrap() = Some(input.clone());
+        *self.input_cache.write().expect("Operation failed") = Some(input.clone());
         // Validate input shape
         let inputshape = input.shape();
         if inputshape.len() != 3 {
@@ -502,8 +510,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
             let c_view = c.view().into_dyn();
             let (new_h, new_c, gates) = self.step(&x_t_view, &h_view, &c_view)?;
             // Convert back from dynamic dimension
-            h = new_h.into_dimensionality::<Ix2>().unwrap();
-            c = new_c.into_dimensionality::<Ix2>().unwrap();
+            h = new_h
+                .into_dimensionality::<Ix2>()
+                .expect("Operation failed");
+            c = new_c
+                .into_dimensionality::<Ix2>()
+                .expect("Operation failed");
             all_gates.push(gates);
             // Store hidden and cell states
             for b in 0..batch_size {
@@ -515,8 +527,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
         }
 
         // Cache states and gates for backward pass
-        *self.hidden_states_cache.write().unwrap() = Some(all_hidden_states.clone().into_dyn());
-        *self.cell_states_cache.write().unwrap() = Some(all_cell_states.into_dyn());
+        *self.hidden_states_cache.write().expect("Operation failed") =
+            Some(all_hidden_states.clone().into_dyn());
+        *self.cell_states_cache.write().expect("Operation failed") =
+            Some(all_cell_states.into_dyn());
         // Return with correct dynamic dimension
         Ok(all_hidden_states.into_dyn())
     }
@@ -556,7 +570,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
 
     fn update(&mut self, learningrate: F) -> Result<()> {
         // Apply a small update to parameters (placeholder)
-        let small_change = F::from(0.001).unwrap();
+        let small_change = F::from(0.001).expect("Failed to convert constant to float");
         let lr = small_change * learningrate;
         // Helper function to update a parameter
         let update_param = |param: &mut Array<F, IxDyn>| {
@@ -700,7 +714,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
 // //         let input_size = 10;
 // //         let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
 // //         // Forward pass
-// //         let output = lstm.forward(&input).unwrap();
+// //         let output = lstm.forward(&input).expect("Operation failed");
 // //         // Check output shape
 // //         assert_eq!(output.shape(), &[batch_size, seq_len, 20]);
 // //     }

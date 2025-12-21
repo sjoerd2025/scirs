@@ -800,19 +800,31 @@ mod tests {
             // Test basic arithmetic
             let sum_result = add(a, b);
             let expected_sum = array![5.0_f32, 7.0, 9.0];
-            assert_eq!(sum_result.eval(g).unwrap(), expected_sum.into_dyn());
+            assert_eq!(
+                sum_result.eval(g).expect("Operation failed"),
+                expected_sum.into_dyn()
+            );
 
             let sub_result = sub(a, b);
             let expected_sub = array![-3.0_f32, -3.0, -3.0];
-            assert_eq!(sub_result.eval(g).unwrap(), expected_sub.into_dyn());
+            assert_eq!(
+                sub_result.eval(g).expect("Operation failed"),
+                expected_sub.into_dyn()
+            );
 
             let mul_result = mul(a, b);
             let expected_mul = array![4.0_f32, 10.0, 18.0];
-            assert_eq!(mul_result.eval(g).unwrap(), expected_mul.into_dyn());
+            assert_eq!(
+                mul_result.eval(g).expect("Operation failed"),
+                expected_mul.into_dyn()
+            );
 
             let div_result = div(b, a);
             let expected_div = array![4.0_f32, 2.5, 2.0];
-            assert_eq!(div_result.eval(g).unwrap(), expected_div.into_dyn());
+            assert_eq!(
+                div_result.eval(g).expect("Operation failed"),
+                expected_div.into_dyn()
+            );
         });
     }
 
@@ -824,7 +836,7 @@ mod tests {
             // Test sqrt
             let sqrt_result = sqrt(x);
             let expected_sqrt = array![1.0_f32, 2.0, 3.0];
-            let actual_sqrt = sqrt_result.eval(g).unwrap();
+            let actual_sqrt = sqrt_result.eval(g).expect("Operation failed");
             for (actual, expected) in actual_sqrt.iter().zip(expected_sqrt.iter()) {
                 assert_relative_eq!(actual, expected, epsilon = 1e-6);
             }
@@ -832,7 +844,10 @@ mod tests {
             // Test square
             let square_result = square(x);
             let expected_square = array![1.0_f32, 16.0, 81.0];
-            assert_eq!(square_result.eval(g).unwrap(), expected_square.into_dyn());
+            assert_eq!(
+                square_result.eval(g).expect("Operation failed"),
+                expected_square.into_dyn()
+            );
         });
     }
 
@@ -846,14 +861,14 @@ mod tests {
 
             // Test sin
             let sin_result = sin(x);
-            let actual_sin = sin_result.eval(g).unwrap();
+            let actual_sin = sin_result.eval(g).expect("Operation failed");
             assert_relative_eq!(actual_sin[0], 0.0, epsilon = 1e-6);
             assert_relative_eq!(actual_sin[1], 1.0, epsilon = 1e-6);
             assert_relative_eq!(actual_sin[2], 0.0, epsilon = 1e-6);
 
             // Test cos
             let cos_result = cos(x);
-            let actual_cos = cos_result.eval(g).unwrap();
+            let actual_cos = cos_result.eval(g).expect("Operation failed");
             assert_relative_eq!(actual_cos[0], 1.0, epsilon = 1e-6);
             assert_relative_eq!(actual_cos[1], 0.0, epsilon = 1e-6);
             assert_relative_eq!(actual_cos[2], -1.0, epsilon = 1e-6);
@@ -869,17 +884,26 @@ mod tests {
             // Test equal
             let equal_result = equal(a, b);
             let expected_equal = array![0.0_f32, 1.0, 0.0];
-            assert_eq!(equal_result.eval(g).unwrap(), expected_equal.into_dyn());
+            assert_eq!(
+                equal_result.eval(g).expect("Operation failed"),
+                expected_equal.into_dyn()
+            );
 
             // Test greater
             let greater_result = greater(a, b);
             let expected_greater = array![0.0_f32, 0.0, 1.0];
-            assert_eq!(greater_result.eval(g).unwrap(), expected_greater.into_dyn());
+            assert_eq!(
+                greater_result.eval(g).expect("Operation failed"),
+                expected_greater.into_dyn()
+            );
 
             // Test lesser
             let lesser_result = lesser(a, b);
             let expected_lesser = array![1.0_f32, 0.0, 0.0];
-            assert_eq!(lesser_result.eval(g).unwrap(), expected_lesser.into_dyn());
+            assert_eq!(
+                lesser_result.eval(g).expect("Operation failed"),
+                expected_lesser.into_dyn()
+            );
         });
     }
 
@@ -892,12 +916,18 @@ mod tests {
             // Test maximum
             let max_result = maximum(a, b);
             let expected_max = array![3.0_f32, 2.0, 3.0];
-            assert_eq!(max_result.eval(g).unwrap(), expected_max.into_dyn());
+            assert_eq!(
+                max_result.eval(g).expect("Operation failed"),
+                expected_max.into_dyn()
+            );
 
             // Test minimum
             let min_result = minimum(a, b);
             let expected_min = array![1.0_f32, 2.0, 1.0];
-            assert_eq!(min_result.eval(g).unwrap(), expected_min.into_dyn());
+            assert_eq!(
+                min_result.eval(g).expect("Operation failed"),
+                expected_min.into_dyn()
+            );
         });
     }
 }

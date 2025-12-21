@@ -136,7 +136,7 @@ where
             return Ok(converted_dim);
         }
 
-        let target_ndim = target_ndim.unwrap();
+        let target_ndim = target_ndim.expect("Operation failed");
 
         // Check if dimensions match exactly
         if source_ndim == target_ndim {
@@ -361,7 +361,7 @@ where
             });
         }
 
-        let target_ndim = target_ndim.unwrap();
+        let target_ndim = target_ndim.expect("Operation failed");
 
         // Try direct conversion first for exact matches
         if source_ndim == target_ndim {

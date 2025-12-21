@@ -1029,7 +1029,7 @@ impl QuantumInspiredOptimizer {
         let best_value = objective_values
             .iter()
             .fold(f64::INFINITY, |a, &b| a.min(b));
-        let latest_value = *objective_values.last().unwrap();
+        let latest_value = *objective_values.last().expect("Operation failed");
 
         // Calculate convergence rate
         let convergence_rate = if objective_values.len() > 1 {

@@ -663,8 +663,8 @@ impl CompressionEngine {
         }
 
         while heap.len() > 1 {
-            let right = heap.pop().unwrap();
-            let left = heap.pop().unwrap();
+            let right = heap.pop().expect("Operation failed");
+            let left = heap.pop().expect("Operation failed");
 
             heap.push(FrequencyNode {
                 frequency: left.frequency + right.frequency,
@@ -675,7 +675,7 @@ impl CompressionEngine {
             });
         }
 
-        let root = heap.pop().unwrap().node;
+        let root = heap.pop().expect("Operation failed").node;
 
         // Build encoding table
         let mut encode_table = HashMap::new();

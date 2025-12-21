@@ -401,7 +401,7 @@ mod tests {
 
         let dealiased =
             DealiasingOperations::apply_dealiasing_2d(&field, DealiasingStrategy::TwoThirds)
-                .unwrap();
+                .expect("Operation failed");
 
         // Dealiased field should have same dimensions
         assert_eq!(dealiased.dim(), field.dim());
@@ -429,7 +429,8 @@ mod tests {
         }
 
         // High-frequency field should exceed 50% threshold
-        let needs_dealiasing = DealiasingOperations::needs_dealiasing(&field, 0.5).unwrap();
+        let needs_dealiasing =
+            DealiasingOperations::needs_dealiasing(&field, 0.5).expect("Operation failed");
         assert!(needs_dealiasing);
 
         // Create field with mostly low frequency content
@@ -444,7 +445,7 @@ mod tests {
 
         // Low-frequency field should be below 50% threshold (accounting for discretization)
         let needs_dealiasing_low =
-            DealiasingOperations::needs_dealiasing(&low_freq_field, 0.5).unwrap();
+            DealiasingOperations::needs_dealiasing(&low_freq_field, 0.5).expect("Operation failed");
         assert!(!needs_dealiasing_low);
     }
 
@@ -474,8 +475,8 @@ mod tests {
         let ny = 8;
         let field = Array2::ones((nx, ny));
 
-        let result =
-            DealiasingOperations::apply_dealiasing_2d(&field, DealiasingStrategy::None).unwrap();
+        let result = DealiasingOperations::apply_dealiasing_2d(&field, DealiasingStrategy::None)
+            .expect("Operation failed");
 
         // Field should be unchanged
         assert_eq!(result, field);

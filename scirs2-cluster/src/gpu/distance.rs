@@ -460,30 +460,34 @@ mod tests {
         let point2 = scirs2_core::ndarray::arr1(&[4.0, 5.0, 6.0]);
 
         let config = GpuConfig::default();
-        let matrix =
-            GpuDistanceMatrix::<f64>::new(config, DistanceMetric::Euclidean, None).unwrap();
+        let matrix = GpuDistanceMatrix::<f64>::new(config, DistanceMetric::Euclidean, None)
+            .expect("Operation failed");
 
         let distance = matrix
             .compute_single_distance(point1.view(), point2.view())
-            .unwrap();
+            .expect("Operation failed");
         assert!((distance - 5.196152422706632).abs() < 1e-10);
     }
 
     #[test]
     fn test_gpu_array_allocation() {
-        let array = GpuArray::<f32>::allocate([100, 50]).unwrap();
+        let array = GpuArray::<f32>::allocate([100, 50]).expect("Operation failed");
         assert_eq!(array.shape(), [100, 50]);
         assert!(array.is_on_device());
     }
 
     #[test]
     fn test_distance_matrix_cpu_fallback() {
-        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
 
         let config = GpuConfig::default();
-        let matrix = GpuDistanceMatrix::new(config, DistanceMetric::Euclidean, None).unwrap();
+        let matrix = GpuDistanceMatrix::new(config, DistanceMetric::Euclidean, None)
+            .expect("Operation failed");
 
-        let result = matrix.compute_distance_matrix_cpu(data.view()).unwrap();
+        let result = matrix
+            .compute_distance_matrix_cpu(data.view())
+            .expect("Operation failed");
         assert_eq!(result.shape(), &[3, 3]);
         assert!((result[[0, 0]] - 0.0).abs() < 1e-10);
     }
@@ -491,13 +495,16 @@ mod tests {
     #[test]
     fn test_k_nearest_neighbors() {
         let query = scirs2_core::ndarray::arr1(&[1.0, 1.0]);
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 2.0, 2.0, 3.0, 3.0, 1.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 2.0, 2.0, 3.0, 3.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         let config = GpuConfig::default();
-        let mut matrix = GpuDistanceMatrix::new(config, DistanceMetric::Euclidean, None).unwrap();
+        let mut matrix = GpuDistanceMatrix::new(config, DistanceMetric::Euclidean, None)
+            .expect("Operation failed");
 
-        let (indices, distances) = matrix.find_k_nearest(query.view(), data.view(), 2).unwrap();
+        let (indices, distances) = matrix
+            .find_k_nearest(query.view(), data.view(), 2)
+            .expect("Operation failed");
         assert_eq!(indices.len(), 2);
         assert_eq!(distances.len(), 2);
         assert_eq!(indices[0], 3); // Exact match should be first

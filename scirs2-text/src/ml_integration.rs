@@ -486,7 +486,9 @@ mod tests {
             "Machine learning is great",
         ];
 
-        let features = preprocessor.fit_transform(&texts).unwrap();
+        let features = preprocessor
+            .fit_transform(&texts)
+            .expect("Operation failed");
         assert_eq!(features.features.nrows(), 3);
         assert!(features.features.ncols() > 0);
     }
@@ -516,7 +518,7 @@ mod tests {
             "Feature extraction test",
         ];
 
-        let features = pipeline.process(&texts).unwrap();
+        let features = pipeline.process(&texts).expect("Operation failed");
         assert_eq!(features.features.nrows(), 3);
     }
 
@@ -530,7 +532,7 @@ mod tests {
             "Fourth batch text",
         ];
 
-        let batches = processor.process_batches(&texts).unwrap();
+        let batches = processor.process_batches(&texts).expect("Operation failed");
         assert_eq!(batches.len(), 2); // 4 texts with batch size 2
     }
 }

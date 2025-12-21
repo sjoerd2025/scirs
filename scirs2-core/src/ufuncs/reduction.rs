@@ -431,7 +431,7 @@ where
             // Sum along a specific axis
             let result = array.sum_axis(Axis(ax));
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).unwrap()
+            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
         }
         None => {
             // Sum all elements
@@ -484,7 +484,7 @@ where
             // Product along a specific axis
             let result = array.map_axis(Axis(ax), |lane| lane.iter().product());
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).unwrap()
+            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
         }
         None => {
             // Product of all elements
@@ -632,7 +632,7 @@ where
                 lane.iter().map(|&x| (x - m).powi(2)).sum::<f64>() / n
             });
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).unwrap()
+            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
         }
         None => {
             // Variance of all elements
@@ -690,17 +690,17 @@ where
             let result = array.map_axis(Axis(ax), |lane| {
                 *lane
                     .iter()
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                     .unwrap_or(&f64::INFINITY)
             });
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).unwrap()
+            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
         }
         None => {
             // Min of all elements
             let min_val = array
                 .iter()
-                .min_by(|a, b| a.partial_cmp(b).unwrap())
+                .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .copied()
                 .unwrap_or(f64::INFINITY);
             Array::from_elem(1, min_val)
@@ -754,17 +754,17 @@ where
             let result = array.map_axis(Axis(ax), |lane| {
                 *lane
                     .iter()
-                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                     .unwrap_or(&f64::NEG_INFINITY)
             });
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).unwrap()
+            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
         }
         None => {
             // Max of all elements
             let max_val = array
                 .iter()
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .copied()
                 .unwrap_or(f64::NEG_INFINITY);
             Array::from_elem(1, max_val)

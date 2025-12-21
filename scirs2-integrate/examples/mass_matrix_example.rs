@@ -202,8 +202,8 @@ fn main() -> IntegrateResult<()> {
     let result_standard = solve_ivp(f, [0.0, 10.0], y0, Some(options_standard))?;
 
     // Compare final values
-    let final_x_with_mass = result.y.last().unwrap()[0];
-    let final_x_standard = result_standard.y.last().unwrap()[0];
+    let final_x_with_mass = result.y.last().expect("Operation failed")[0];
+    let final_x_standard = result_standard.y.last().expect("Operation failed")[0];
 
     println!("\nEffect of time-dependent mass matrix:");
     println!("  Final position with mass matrix: {final_x_with_mass:.6}");

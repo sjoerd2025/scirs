@@ -31,7 +31,7 @@ use std::f64::consts::PI;
 /// ```
 /// use scirs2_signal::window::kaiser;
 ///
-/// let window = kaiser(10, 5.0, true).unwrap();
+/// let window = kaiser(10, 5.0, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// ```
 #[allow(dead_code)]
@@ -86,7 +86,7 @@ pub fn kaiser(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// ```
 /// use scirs2_signal::window::kaiser_bessel_derived;
 ///
-/// let window = kaiser_bessel_derived(10, 5.0, true).unwrap();
+/// let window = kaiser_bessel_derived(10, 5.0, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// ```
 #[allow(dead_code)]
@@ -162,7 +162,7 @@ mod tests {
     use approx::assert_relative_eq;
     #[test]
     fn test_kaiser_window() {
-        let window = kaiser(10, 5.0, true).unwrap();
+        let window = kaiser(10, 5.0, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Test symmetry
@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn test_kaiser_bessel_derived_window() {
-        let window = kaiser_bessel_derived(10, 5.0, true).unwrap();
+        let window = kaiser_bessel_derived(10, 5.0, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Test that all values are finite

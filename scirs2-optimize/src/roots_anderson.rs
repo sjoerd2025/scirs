@@ -32,7 +32,7 @@ where
     // Initialize variables
     let n = x0.len();
     let mut x = x0.to_owned();
-    let mut f = func(x.as_slice().unwrap());
+    let mut f = func(x.as_slice().expect("Operation failed"));
     let mut nfev = 1;
 
     // Storage for previous residuals and step differences
@@ -136,7 +136,7 @@ where
         steps.push(x_simple);
 
         // Evaluate function at the new point
-        let f_new = func(x_new.as_slice().unwrap());
+        let f_new = func(x_new.as_slice().expect("Operation failed"));
         nfev += 1;
 
         // Check convergence on parameters

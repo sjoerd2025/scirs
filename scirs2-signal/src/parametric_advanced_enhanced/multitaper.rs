@@ -165,7 +165,7 @@ fn combine_multitaper_spectra(
         CombinationMethod::MedianCombination => {
             for i in 0..n_freq {
                 let mut values: Vec<f64> = spectra.iter().map(|s| s.psd[i]).collect();
-                values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 combined_psd[i] = if values.len().is_multiple_of(2) {
                     (values[values.len() / 2 - 1] + values[values.len() / 2]) / 2.0
                 } else {
@@ -358,7 +358,7 @@ mod tests {
         }
         assert!(result.is_ok());
 
-        let mt_result = result.unwrap();
+        let mt_result = result.expect("Operation failed");
         assert!(!mt_result.combined_spectrum.psd.is_empty());
         assert!(!mt_result.individual_estimates.is_empty());
         assert!(mt_result.degrees_of_freedom > 0.0);
@@ -373,7 +373,7 @@ mod tests {
         let result = generate_dpss_tapers(n, nw, k);
         assert!(result.is_ok());
 
-        let tapers = result.unwrap();
+        let tapers = result.expect("Operation failed");
         assert_eq!(tapers.dim(), (k, n));
 
         // Check that tapers are normalized
@@ -409,7 +409,7 @@ mod tests {
         let result = combine_multitaper_spectra(&spectra, &CombinationMethod::ArithmeticMean);
         assert!(result.is_ok());
 
-        let combined = result.unwrap();
+        let combined = result.expect("Operation failed");
         assert_eq!(combined.psd[0], 1.25); // (1.0 + 1.5) / 2
         assert_eq!(combined.psd[1], 2.25); // (2.0 + 2.5) / 2
     }

@@ -31,15 +31,21 @@ pub fn check_theoretical_grads<'g, 't, 'v, F: Float, A>(
     // for each variable nodes
     for (var_node, th_grad) in variables.iter().zip(theoretical_grads) {
         // Copy gradient array if needed
-        let th_copied = if th_grad.as_ref().unwrap().is_standard_layout() {
+        let th_copied = if th_grad
+            .as_ref()
+            .expect("Operation failed")
+            .is_standard_layout()
+        {
             None
         } else {
-            Some(ndarray_ext::deep_copy(&th_grad.as_ref().unwrap().view()))
+            Some(ndarray_ext::deep_copy(
+                &th_grad.as_ref().expect("Operation failed").view(),
+            ))
         };
         let th_ptr = if let Some(ref inner) = th_copied {
             inner.as_ptr()
         } else {
-            th_grad.as_ref().unwrap().as_ptr()
+            th_grad.as_ref().expect("Operation failed").as_ptr()
         };
 
         // for each values
@@ -81,7 +87,7 @@ pub fn check_theoretical_grads<'g, 't, 'v, F: Float, A>(
                 .set_feeder(feeder.clone())
                 .run()
                 .remove(0)
-                .unwrap();
+                .expect("Operation failed");
             let obj_pos = if obj_pos_orig.is_standard_layout() {
                 obj_pos_orig
             } else {
@@ -111,7 +117,7 @@ pub fn check_theoretical_grads<'g, 't, 'v, F: Float, A>(
                 .set_feeder(feeder.clone())
                 .run()
                 .remove(0)
-                .unwrap();
+                .expect("Operation failed");
             let obj_neg = if obj_neg_orig.is_standard_layout() {
                 obj_neg_orig
             } else {

@@ -8,7 +8,7 @@ fn main() {
         // 1. Create a tensor with simple constructor
         println!("\n=== 1. Testing zeros tensor creation ===");
         let z = ag::tensor_ops::zeros(&[2, 2], g);
-        let z_eval = z.eval(g).unwrap();
+        let z_eval = z.eval(g).expect("Operation failed");
         println!("Zeros tensor shape: {:?}", z_eval.shape());
         println!("Zeros tensor data:\n{:?}", z_eval);
 
@@ -17,7 +17,7 @@ fn main() {
         let test_array = scirs2_core::ndarray::array![[1.0, 2.0], [3.0, 4.0]];
         println!("Original array shape: {:?}", test_array.shape());
         let v = ag::tensor_ops::variable(test_array.clone(), g);
-        let v_eval = v.eval(g).unwrap();
+        let v_eval = v.eval(g).expect("Operation failed");
         println!("Variable tensor shape: {:?}", v_eval.shape());
         println!("Variable tensor data:\n{:?}", v_eval);
 
@@ -38,7 +38,7 @@ fn main() {
         // 4. Try more advanced operations
         println!("\n=== 4. Testing matrix operations ===");
         let det = ag::tensor_ops::determinant(v);
-        let det_eval = det.eval(g).unwrap();
+        let det_eval = det.eval(g).expect("Operation failed");
         println!("Determinant shape: {:?}", det_eval.shape());
         if det_eval.shape().is_empty() {
             println!("Determinant value: {}", det_eval[[]]);

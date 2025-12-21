@@ -91,7 +91,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     ///     0.0, 1.0,
     ///     1.0, 1.0,
     ///     0.5, 0.5
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
     /// // Create values at those points (z = x² + y²)
     /// let values = array![0.0f64, 1.0, 1.0, 2.0, 0.5];
@@ -105,11 +105,11 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     ///     0.5,  // length_scale
     ///     1e-10, // nugget
     ///     1.0   // alpha (not used for SquaredExponential)
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Interpolate at a new point
-    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
-    /// let result = interp.predict(&test_point.view()).unwrap();
+    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).expect("Operation failed");
+    /// let result = interp.predict(&test_point.view()).expect("Operation failed");
     /// println!("Interpolated value at (0.25, 0.25): {}", result.value[0]);
     /// println!("Prediction variance: {}", result.variance[0]);
     /// ```
@@ -227,7 +227,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
                         &points.slice(scirs2_core::ndarray::s![i, ..]),
                         &points.slice(scirs2_core::ndarray::s![j, ..]),
                     );
-                    if dist > F::from_f64(1e-10).unwrap() {
+                    if dist > F::from_f64(1e-10).expect("Operation failed") {
                         w = w * (F::one() / dist);
                     }
                 }
@@ -289,22 +289,22 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
             }
             CovarianceFunction::Matern32 => {
                 // σ² (1 + √3r/l) exp(-√3r/l)
-                let sqrt3_r_l = F::from_f64(3.0).unwrap().sqrt() * scaled_dist;
+                let sqrt3_r_l = F::from_f64(3.0).expect("Operation failed").sqrt() * scaled_dist;
                 sigma_sq * (F::one() + sqrt3_r_l) * (-sqrt3_r_l).exp()
             }
             CovarianceFunction::Matern52 => {
                 // σ² (1 + √5r/l + 5r²/(3l²)) exp(-√5r/l)
-                let sqrt5_r_l = F::from_f64(5.0).unwrap().sqrt() * scaled_dist;
+                let sqrt5_r_l = F::from_f64(5.0).expect("Operation failed").sqrt() * scaled_dist;
                 let factor = F::one()
                     + sqrt5_r_l
-                    + F::from_f64(5.0).unwrap() * scaled_dist * scaled_dist
-                        / F::from_f64(3.0).unwrap();
+                    + F::from_f64(5.0).expect("Operation failed") * scaled_dist * scaled_dist
+                        / F::from_f64(3.0).expect("Operation failed");
                 sigma_sq * factor * (-sqrt5_r_l).exp()
             }
             CovarianceFunction::RationalQuadratic => {
                 // σ² (1 + r²/(2αl²))^(-α)
-                let r_sq_div_2al_sq =
-                    scaled_dist * scaled_dist / (F::from_f64(2.0).unwrap() * alpha);
+                let r_sq_div_2al_sq = scaled_dist * scaled_dist
+                    / (F::from_f64(2.0).expect("Operation failed") * alpha);
                 sigma_sq * (F::one() + r_sq_div_2al_sq).powf(-alpha)
             }
         }
@@ -370,7 +370,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
                 avg_dist = avg_dist + dist;
                 min_dist = if dist < min_dist { dist } else { min_dist };
             }
-            let _avg_dist = avg_dist / F::from_usize(n_points).unwrap();
+            let _avg_dist = avg_dist / F::from_usize(n_points).expect("Operation failed");
 
             // Calculate variance based on distances
             // For _points far from any known points, variance increases
@@ -446,7 +446,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
 ///     0.0, 1.0,
 ///     1.0, 1.0,
 ///     0.5, 0.5
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Create values at those points (z = x² + y²)
 /// let values = array![0.0f64, 1.0, 1.0, 2.0, 0.5];
@@ -460,11 +460,11 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
 ///     0.5,  // length_scale
 ///     1e-10, // nugget
 ///     1.0   // alpha (not used for Matern32)
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Interpolate at a new point
-/// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
-/// let result = interp.predict(&test_point.view()).unwrap();
+/// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).expect("Operation failed");
+/// let result = interp.predict(&test_point.view()).expect("Operation failed");
 /// println!("Interpolated value at (0.25, 0.25): {}", result.value[0]);
 /// println!("Prediction variance: {}", result.variance[0]);
 /// ```
@@ -502,7 +502,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5];
@@ -517,11 +517,11 @@ mod tests {
             1e-10,
             1.0,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation at the sample points
         // The interpolator should exactly reproduce the sample values
-        let result_se = interp_se.predict(&points.view()).unwrap();
+        let result_se = interp_se.predict(&points.view()).expect("Operation failed");
 
         for i in 0..values.len() {
             // Using a larger epsilon for our simplified algorithm
@@ -534,7 +534,8 @@ mod tests {
     #[test]
     fn test_kriging_interpolator_prediction() {
         // Simple 1D case: y = x²
-        let points = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let points = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0])
+            .expect("Operation failed");
         let values = array![0.0, 1.0, 4.0, 9.0, 16.0];
 
         let interp = KrigingInterpolator::new(
@@ -546,13 +547,16 @@ mod tests {
             1e-10,
             1.0,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test at some intermediate points
-        let test_points = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 3.5]).unwrap();
+        let test_points =
+            Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 3.5]).expect("Operation failed");
         let expected = array![0.25, 2.25, 12.25]; // x²
 
-        let result = interp.predict(&test_points.view()).unwrap();
+        let result = interp
+            .predict(&test_points.view())
+            .expect("Operation failed");
 
         // Check predictions are close to expected values
         for i in 0..expected.len() {
@@ -649,8 +653,8 @@ mod tests {
     #[test]
     fn test_make_kriging_interpolator() {
         // Create 2D points
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         // Create values at those points (z = x + y)
         let values = array![0.0, 1.0, 1.0, 2.0];
@@ -665,11 +669,13 @@ mod tests {
             1e-10,
             1.0,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test at a point (0.5, 0.5) which should be interpolated to 1.0
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
-        let result = interp.predict(&test_point.view()).unwrap();
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).expect("Operation failed");
+        let result = interp
+            .predict(&test_point.view())
+            .expect("Operation failed");
 
         // Using a larger epsilon for our simplified algorithm
         assert!((result.value[0] - 1.0).abs() < 2.0);

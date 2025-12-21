@@ -153,7 +153,7 @@ fn test_cdist() {
 
     let xb = arr2(&[[0.0, 1.0], [1.0, 1.0]]);
 
-    let dist_matrix = cdist(&x_a, &xb, euclidean).unwrap();
+    let dist_matrix = cdist(&x_a, &xb, euclidean).expect("Operation failed");
 
     assert_eq!(dist_matrix.shape(), &[2, 2]);
 
@@ -197,7 +197,7 @@ fn test_braycurtis_distance() {
 fn test_squareform() {
     // Test conversion from condensed to square form
     let condensed = vec![1.0, 2.0, 3.0];
-    let square = squareform(&condensed).unwrap();
+    let square = squareform(&condensed).expect("Operation failed");
 
     assert_eq!(square.shape(), &[3, 3]);
     assert_relative_eq!(square[(0, 1)], 1.0, epsilon = 1e-6);
@@ -205,6 +205,6 @@ fn test_squareform() {
     assert_relative_eq!(square[(1, 2)], 3.0, epsilon = 1e-6);
 
     // Test conversion from square to condensed form
-    let condensed2 = squareform_to_condensed(&square).unwrap();
+    let condensed2 = squareform_to_condensed(&square).expect("Operation failed");
     assert_eq!(condensed2, condensed);
 }

@@ -259,8 +259,8 @@ impl ExecutionTracer {
             if !times.is_empty() {
                 let total_time: Duration = times.iter().sum();
                 let avg_time = total_time / times.len() as u32;
-                let min_time = *times.iter().min().unwrap();
-                let max_time = *times.iter().max().unwrap();
+                let min_time = *times.iter().min().expect("Operation failed");
+                let max_time = *times.iter().max().expect("Operation failed");
 
                 analysis.operation_stats.insert(
                     operation,
@@ -278,7 +278,7 @@ impl ExecutionTracer {
         // Calculate memory statistics
         if !memory_patterns.is_empty() {
             analysis.memory_stats = MemoryStats {
-                peak_usage: *memory_patterns.iter().max().unwrap(),
+                peak_usage: *memory_patterns.iter().max().expect("Operation failed"),
                 average_usage: memory_patterns.iter().sum::<usize>() / memory_patterns.len(),
                 allocation_count: memory_patterns.len(),
             };
@@ -895,7 +895,7 @@ mod tests {
 
         tracer.record_event(event);
 
-        let session = tracer.current_session.as_ref().unwrap();
+        let session = tracer.current_session.as_ref().expect("Operation failed");
         assert_eq!(session.events.len(), 1);
     }
 
@@ -942,10 +942,10 @@ mod tests {
 
     #[test]
     fn test_global_tracer() {
-        let session_id = start_trace_session("global_test").unwrap();
+        let session_id = start_trace_session("global_test").expect("Operation failed");
         assert!(!session_id.0.is_empty());
 
-        let record = end_trace_session().unwrap();
+        let record = end_trace_session().expect("Operation failed");
         assert!(record.is_some());
     }
 
@@ -955,7 +955,9 @@ mod tests {
         tracer.start_session("export_test");
         tracer.end_session();
 
-        let json_export = tracer.export_traces(ExportFormat::Json).unwrap();
+        let json_export = tracer
+            .export_traces(ExportFormat::Json)
+            .expect("Operation failed");
         assert!(json_export.contains("session_"));
     }
 

@@ -32,11 +32,11 @@ fn test_real_fft_functional_api() {
         .collect();
 
     // Forward FFT
-    let spectrum = rfft(&signal, None).unwrap();
+    let spectrum = rfft(&signal, None).expect("Operation failed");
     assert_eq!(spectrum.len(), 513); // 1024/2 + 1
 
     // Inverse FFT
-    let recovered = irfft(&spectrum, Some(1024)).unwrap();
+    let recovered = irfft(&spectrum, Some(1024)).expect("Operation failed");
     assert_eq!(recovered.len(), 1024);
 
     // Verify round-trip accuracy
@@ -486,7 +486,7 @@ fn test_parallel_fft_processing() {
 
     let results: Vec<Vec<Complex64>> = signals
         .par_iter()
-        .map(|signal| rfft(signal, None).unwrap())
+        .map(|signal| rfft(signal, None).expect("Operation failed"))
         .collect();
 
     assert_eq!(results.len(), 8);

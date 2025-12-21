@@ -436,7 +436,7 @@ mod tests {
     #[test]
     fn test_cross_validator() {
         let mut validator = CrossValidator::new();
-        validator.load_test_cases().unwrap();
+        validator.load_test_cases().expect("Operation failed");
 
         let summary = validator.validate_function("gamma", |args| gamma(args[0]));
 

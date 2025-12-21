@@ -222,8 +222,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
         EvolutionEngine {
             population,
             selection_strategy,
-            mutation_rate: F::from_f64(0.1).unwrap(),
-            crossover_rate: F::from_f64(0.8).unwrap(),
+            mutation_rate: F::from_f64(0.1).expect("Operation failed"),
+            crossover_rate: F::from_f64(0.8).expect("Operation failed"),
         }
     }
 
@@ -247,18 +247,23 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
             };
 
             // Crossover
-            let (mut child1, mut child2) =
-                if scirs2_core::random::random::<f64>() < self.crossover_rate.to_f64().unwrap() {
-                    self.crossover(parent1, parent2)?
-                } else {
-                    (parent1.clone(), parent2.clone())
-                };
+            let (mut child1, mut child2) = if scirs2_core::random::random::<f64>()
+                < self.crossover_rate.to_f64().expect("Operation failed")
+            {
+                self.crossover(parent1, parent2)?
+            } else {
+                (parent1.clone(), parent2.clone())
+            };
 
             // Mutation
-            if scirs2_core::random::random::<f64>() < self.mutation_rate.to_f64().unwrap() {
+            if scirs2_core::random::random::<f64>()
+                < self.mutation_rate.to_f64().expect("Operation failed")
+            {
                 self.mutate(&mut child1)?;
             }
-            if scirs2_core::random::random::<f64>() < self.mutation_rate.to_f64().unwrap() {
+            if scirs2_core::random::random::<f64>()
+                < self.mutation_rate.to_f64().expect("Operation failed")
+            {
                 self.mutate(&mut child2)?;
             }
 
@@ -309,8 +314,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
             // Select best individual from tournament
             let winner = tournament
                 .iter()
-                .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap())
-                .unwrap();
+                .max_by(|a, b| {
+                    a.fitness_score
+                        .partial_cmp(&b.fitness_score)
+                        .expect("Operation failed")
+                })
+                .expect("Test: operation failed");
 
             selected.push((*winner).clone());
         }
@@ -333,8 +342,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
         let mut selected = Vec::new();
 
         for _ in 0..self.population.len() {
-            let random_value =
-                F::from_f64(scirs2_core::random::random::<f64>()).unwrap() * total_fitness;
+            let random_value = F::from_f64(scirs2_core::random::random::<f64>())
+                .expect("Operation failed")
+                * total_fitness;
             let mut cumulative_fitness = F::zero();
 
             for individual in &self.population {
@@ -352,7 +362,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     /// Elite selection implementation
     fn elite_selection(&self) -> Result<Vec<Architecture<F>>> {
         let mut sorted_population = self.population.clone();
-        sorted_population.sort_by(|a, b| b.fitness_score.partial_cmp(&a.fitness_score).unwrap());
+        sorted_population.sort_by(|a, b| {
+            b.fitness_score
+                .partial_cmp(&a.fitness_score)
+                .expect("Operation failed")
+        });
 
         // Select top 50% as elite
         let elite_size = self.population.len() / 2;
@@ -370,7 +384,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
     /// Rank-based selection implementation
     fn rank_based_selection(&self) -> Result<Vec<Architecture<F>>> {
         let mut sorted_population = self.population.clone();
-        sorted_population.sort_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap());
+        sorted_population.sort_by(|a, b| {
+            a.fitness_score
+                .partial_cmp(&b.fitness_score)
+                .expect("Operation failed")
+        });
 
         // Assign ranks (higher rank = better fitness)
         let mut selected = Vec::new();
@@ -429,9 +447,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
         for layer in &mut individual.layers {
             for param in &mut layer.parameters {
                 if scirs2_core::random::random::<f64>() < 0.1 {
-                    let mutation_strength = F::from_f64(0.1).unwrap();
-                    let random_factor =
-                        F::from_f64(scirs2_core::random::random::<f64>() - 0.5).unwrap();
+                    let mutation_strength = F::from_f64(0.1).expect("Operation failed");
+                    let random_factor = F::from_f64(scirs2_core::random::random::<f64>() - 0.5)
+                        .expect("Operation failed");
                     *param = *param + mutation_strength * random_factor;
                 }
             }
@@ -440,9 +458,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
         // Mutate connection weights
         for connection in &mut individual.connections {
             if scirs2_core::random::random::<f64>() < 0.1 {
-                let mutation_strength = F::from_f64(0.1).unwrap();
-                let random_factor =
-                    F::from_f64(scirs2_core::random::random::<f64>() - 0.5).unwrap();
+                let mutation_strength = F::from_f64(0.1).expect("Operation failed");
+                let random_factor = F::from_f64(scirs2_core::random::random::<f64>() - 0.5)
+                    .expect("Operation failed");
                 connection.weight = connection.weight + mutation_strength * random_factor;
             }
         }
@@ -454,9 +472,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
 
     /// Get best individual from current population
     pub fn get_best_individual(&self) -> Option<&Architecture<F>> {
-        self.population
-            .iter()
-            .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap())
+        self.population.iter().max_by(|a, b| {
+            a.fitness_score
+                .partial_cmp(&b.fitness_score)
+                .expect("Operation failed")
+        })
     }
 
     /// Get population statistics
@@ -472,7 +492,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EvolutionEngine<F> {
             .collect();
 
         let mean = fitness_values.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(fitness_values.len()).unwrap();
+            / F::from_usize(fitness_values.len()).expect("Operation failed");
 
         let max_fitness =
             fitness_values
@@ -499,7 +519,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> Architecture<F> {
                 layer_type: LayerType::Dense, // Simplified to Dense for now
                 size: 32 + scirs2_core::random::Rng::random_range(&mut rng, 0..256), // 32-287 neurons
                 activation: ActivationFunction::ReLU, // Simplified to ReLU
-                parameters: vec![F::from_f64(scirs2_core::random::random::<f64>()).unwrap(); 4],
+                parameters: vec![
+                    F::from_f64(scirs2_core::random::random::<f64>())
+                        .expect("Operation failed");
+                    4
+                ],
             };
             layers.push(layer);
         }
@@ -511,8 +535,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> Architecture<F> {
                 from_layer: i,
                 to_layer: i + 1,
                 connection_type: ConnectionType::Feedforward,
-                strength: F::from_f64(1.0).unwrap(),
-                weight: F::from_f64(scirs2_core::random::random::<f64>()).unwrap(),
+                strength: F::from_f64(1.0).expect("Operation failed"),
+                weight: F::from_f64(scirs2_core::random::random::<f64>())
+                    .expect("Operation failed"),
             };
             connections.push(connection);
         }
@@ -530,7 +555,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> Architecture<F> {
 
         let connection_complexity = self.connections.len();
 
-        F::from_usize(layer_complexity + connection_complexity).unwrap()
+        F::from_usize(layer_complexity + connection_complexity).expect("Operation failed")
     }
 
     /// Validate architecture consistency
@@ -560,7 +585,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
     pub fn new(evaluation_function: EvaluationFunction) -> Self {
         FitnessEvaluator {
             evaluation_function,
-            weights: vec![F::from_f64(1.0).unwrap(); 4], // Default weights
+            weights: vec![F::from_f64(1.0).expect("Operation failed"); 4], // Default weights
             normalization_strategy: NormalizationStrategy::MinMax,
         }
     }
@@ -578,17 +603,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
     /// Accuracy-based fitness evaluation
     fn evaluate_accuracy(&self, architecture: &Architecture<F>) -> Result<F> {
         // Simplified accuracy estimation based on architecture properties
-        let complexity_penalty = architecture.calculate_complexity() / F::from_f64(1000.0).unwrap();
-        let base_accuracy = F::from_f64(0.8).unwrap(); // Base accuracy
+        let complexity_penalty =
+            architecture.calculate_complexity() / F::from_f64(1000.0).expect("Operation failed");
+        let base_accuracy = F::from_f64(0.8).expect("Operation failed"); // Base accuracy
 
         // Bonus for deep networks (up to a point)
         let depth_bonus = if architecture.layers.len() > 10 {
-            F::from_f64(0.05).unwrap()
+            F::from_f64(0.05).expect("Operation failed")
         } else {
-            F::from_usize(architecture.layers.len()).unwrap() / F::from_f64(100.0).unwrap()
+            F::from_usize(architecture.layers.len()).expect("Operation failed")
+                / F::from_f64(100.0).expect("Operation failed")
         };
 
-        let fitness = base_accuracy + depth_bonus - complexity_penalty * F::from_f64(0.1).unwrap();
+        let fitness = base_accuracy + depth_bonus
+            - complexity_penalty * F::from_f64(0.1).expect("Operation failed");
         Ok(fitness.max(F::zero()))
     }
 
@@ -596,7 +624,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
     fn evaluate_latency(&self, architecture: &Architecture<F>) -> Result<F> {
         // Lower complexity = better latency fitness
         let complexity = architecture.calculate_complexity();
-        let max_complexity = F::from_f64(10000.0).unwrap();
+        let max_complexity = F::from_f64(10000.0).expect("Operation failed");
 
         let latency_fitness = (max_complexity - complexity) / max_complexity;
         Ok(latency_fitness.max(F::zero()))
@@ -606,10 +634,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
     fn evaluate_memory(&self, architecture: &Architecture<F>) -> Result<F> {
         // Estimate memory usage based on layer sizes
         let memory_usage: F = architecture.layers.iter()
-            .map(|layer| F::from_usize(layer.size * layer.size).unwrap()) // Approximate parameter count
+            .map(|layer| F::from_usize(layer.size * layer.size).expect("Operation failed")) // Approximate parameter count
             .fold(F::zero(), |acc, x| acc + x);
 
-        let max_memory = F::from_f64(1000000.0).unwrap(); // 1M parameters
+        let max_memory = F::from_f64(1000000.0).expect("Operation failed"); // 1M parameters
         let memory_fitness = (max_memory - memory_usage) / max_memory;
 
         Ok(memory_fitness.max(F::zero()))
@@ -622,9 +650,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> FitnessEvaluator<F> {
         let memory_score = self.evaluate_memory(architecture)?;
 
         // Weighted combination
-        let accuracy_weight = F::from_f64(0.5).unwrap();
-        let latency_weight = F::from_f64(0.3).unwrap();
-        let memory_weight = F::from_f64(0.2).unwrap();
+        let accuracy_weight = F::from_f64(0.5).expect("Operation failed");
+        let latency_weight = F::from_f64(0.3).expect("Operation failed");
+        let memory_weight = F::from_f64(0.2).expect("Operation failed");
 
         let multi_objective_score = accuracy_score * accuracy_weight
             + latency_score * latency_weight
@@ -672,7 +700,7 @@ impl MutationOperator {
                 if scirs2_core::random::random::<f64>() < 0.1 {
                     let mutation =
                         F::from_f64(self.intensity * (scirs2_core::random::random::<f64>() - 0.5))
-                            .unwrap();
+                            .expect("Test: operation failed");
                     *param = *param + mutation;
                 }
             }
@@ -699,7 +727,11 @@ impl MutationOperator {
             layer_type: LayerType::Dense,
             size: 32 + scirs2_core::random::Rng::random_range(&mut rng, 0..128),
             activation: ActivationFunction::ReLU,
-            parameters: vec![F::from_f64(scirs2_core::random::random::<f64>()).unwrap(); 4],
+            parameters: vec![
+                F::from_f64(scirs2_core::random::random::<f64>())
+                    .expect("Operation failed");
+                4
+            ],
         };
 
         architecture.layers.push(new_layer);
@@ -730,7 +762,7 @@ impl MutationOperator {
             if scirs2_core::random::random::<f64>() < 0.1 {
                 let mutation =
                     F::from_f64(self.intensity * (scirs2_core::random::random::<f64>() - 0.5))
-                        .unwrap();
+                        .expect("Test: operation failed");
                 connection.weight = connection.weight + mutation;
             }
         }

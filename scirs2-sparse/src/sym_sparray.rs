@@ -882,7 +882,8 @@ mod tests {
         let indices = vec![0, 0, 1, 1, 2];
         let indptr = vec![0, 1, 3, 5];
 
-        let sym_matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+        let sym_matrix =
+            SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
         SymCsrArray::new(sym_matrix)
     }
 
@@ -904,14 +905,14 @@ mod tests {
         assert_eq!(sym_csr.nnz(), 7); // Including symmetric pairs
 
         // Test conversion between formats
-        let sym_coo = sym_csr.to_sym_coo().unwrap();
+        let sym_coo = sym_csr.to_sym_coo().expect("Operation failed");
         assert_eq!(sym_coo.shape(), (3, 3));
         assert!(sym_coo.is_symmetric());
 
-        let csr = SymSparseArray::<f64>::to_csr(&sym_csr).unwrap();
+        let csr = SymSparseArray::<f64>::to_csr(&sym_csr).expect("Operation failed");
         assert_eq!(csr.shape(), (3, 3));
 
-        let coo = SymSparseArray::<f64>::to_coo(&sym_csr).unwrap();
+        let coo = SymSparseArray::<f64>::to_coo(&sym_csr).expect("Operation failed");
         assert_eq!(coo.shape(), (3, 3));
 
         // Test that find() returns the full matrix elements
@@ -927,25 +928,25 @@ mod tests {
         let sym_csr2 = create_test_sym_csr();
 
         // Test addition
-        let sum = sym_csr.add(&sym_csr2).unwrap();
+        let sum = sym_csr.add(&sym_csr2).expect("Operation failed");
         assert_eq!(sum.shape(), (3, 3));
         assert_eq!(sum.get(0, 0), 4.0); // 2 + 2
         assert_eq!(sum.get(0, 1), 2.0); // 1 + 1
         assert_eq!(sum.get(1, 0), 2.0); // 1 + 1 (symmetric)
 
         // Test element-wise multiplication
-        let prod = sym_csr.mul(&sym_csr2).unwrap();
+        let prod = sym_csr.mul(&sym_csr2).expect("Operation failed");
         assert_eq!(prod.shape(), (3, 3));
         assert_eq!(prod.get(0, 0), 4.0); // 2 * 2
         assert_eq!(prod.get(0, 1), 1.0); // 1 * 1
         assert_eq!(prod.get(1, 0), 1.0); // 1 * 1 (symmetric)
 
         // Test matrix multiplication
-        let dot = sym_csr.dot(&sym_csr2).unwrap();
+        let dot = sym_csr.dot(&sym_csr2).expect("Operation failed");
         assert_eq!(dot.shape(), (3, 3));
 
         // Test transpose (should be no change for symmetric matrices)
-        let trans = sym_csr.transpose().unwrap();
+        let trans = sym_csr.transpose().expect("Operation failed");
         assert_eq!(trans.shape(), sym_csr.shape());
         assert_eq!(SparseArray::get(&*trans, 0, 1), sym_csr.get(0, 1));
         assert_eq!(SparseArray::get(&*trans, 1, 0), sym_csr.get(1, 0));

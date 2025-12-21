@@ -783,7 +783,7 @@ pub enum AdaptationMethod {
         target_stats: &DomainStatistics<F>,
     ) -> Result<ArrayD<F>> {
         // Normalize using source statistics, then denormalize using target statistics
-        let eps = F::from(1e-5).unwrap();
+        let eps = F::from(1e-5).expect("Failed to convert constant to float");
         // Normalize with source stats
         let normalized =
             (features - &source_stats.mean) / (source_stats.variance.mapv(|x| (x + eps).sqrt()));
@@ -809,7 +809,7 @@ mod tests {
         let manager = TransferLearningManager::<f64>::new(strategy, 0.001);
         assert!(manager.is_ok());
     fn test_feature_extraction_strategy() {
-        let mut manager = TransferLearningManager::<f64>::new(strategy, 0.001).unwrap();
+        let mut manager = TransferLearningManager::<f64>::new(strategy, 0.001).expect("Operation failed");
         let layer_names = vec![
             "conv1".to_string(),
             "conv2".to_string(),
@@ -817,7 +817,7 @@ mod tests {
             "fc1".to_string(),
             "fc2".to_string(),
         ];
-        manager.initialize_layer_states(&layer_names).unwrap();
+        manager.initialize_layer_states(&layer_names).expect("Operation failed");
         // First 3 layers should be frozen, last 2 trainable
         assert!(manager.is_layer_frozen("conv1"));
         assert!(manager.is_layer_frozen("conv2"));
@@ -848,7 +848,7 @@ mod tests {
         assert!(manager.is_layer_frozen("layer1"));
         assert!(manager.is_layer_frozen("layer4"));
         // After epoch 5, last 2 layers unfrozen
-        manager.update_epoch(5).unwrap();
+        manager.update_epoch(5).expect("Operation failed");
         assert!(manager.is_layer_frozen("layer2"));
         assert!(!manager.is_layer_frozen("layer3"));
         assert!(!manager.is_layer_frozen("layer4"));
@@ -859,7 +859,7 @@ mod tests {
             ArrayD::zeros(scirs2_core::ndarray::IxDyn(&[10, 5])),
         );
         weights.insert("layer2".to_string(), ArrayD::ones(scirs2_core::ndarray::IxDyn(&[5, 3])));
-        loader.load_weights(weights).unwrap();
+        loader.load_weights(weights).expect("Operation failed");
         loader.add_layer_mapping("layer1".to_string(), "new_layer1".to_string());
         let available = loader.get_available_weights();
         assert_eq!(available.len(), 2);
@@ -869,7 +869,7 @@ mod tests {
         let mut utils = FineTuningUtilities::<f64>::new();
         utils
             .set_layer_learning_rate("backbone".to_string(), 0.0001)
-            .unwrap();
+            .expect("Operation failed");
             .set_layer_learning_rate("head".to_string(), 0.001)
             .set_layer_gradient_clip("backbone".to_string(), 1.0)
         let backbone_lr = utils.get_effective_learning_rate("backbone_layer1", 0.01);
@@ -880,7 +880,7 @@ mod tests {
         assert!((unknown_lr - 0.01).abs() < 1e-6);
         let clip = utils.get_gradient_clip("backbone_layer1");
         assert!(clip.is_some());
-        assert!((clip.unwrap() - 1.0).abs() < 1e-6);
+        assert!((clip.expect("Operation failed") - 1.0).abs() < 1e-6);
     fn test_domain_adaptation() {
         let mut adapter = DomainAdaptation::<f64>::new(AdaptationMethod::BatchNormAdaptation);
         // Create some test features
@@ -888,14 +888,14 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[10, 5]),
             (0..50).map(|x| x as f64 / 10.0).collect(),
         )
-        .unwrap()
+        .expect("Operation failed")
         .into_dyn();
         let target_features = ArrayD::from_shape_vec(
             (0..50).map(|x| (x as f64 + 25.0) / 10.0).collect(),
         adapter
             .compute_domain_statistics("layer1".to_string(), &source_features, true)
             .compute_domain_statistics("layer1".to_string(), &target_features, false)
-        let adapted = adapter.adapt_features("layer1", &source_features).unwrap();
+        let adapted = adapter.adapt_features("layer1", &source_features).expect("Operation failed");
         assert_eq!(adapted.shape(), source_features.shape());
     fn test_transfer_learning_state_display() {
         let state = TransferLearningState {
@@ -912,7 +912,7 @@ mod tests {
         let weights = ArrayD::from_shape_vec(
             scirs2_core::ndarray::IxDyn(&[3, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-        .unwrap();
+        .expect("Operation failed");
         let stats = WeightStatistics::from_tensor(&weights);
         assert_eq!(stats.param_count, 9);
         assert_eq!(stats.shape, vec![3, 3]);
@@ -945,13 +945,13 @@ mod tests {
         let mut model_config = ModelConfig {
             layers: vec!["layer1".to_string(), "layer2".to_string()],
             layer_configs: HashMap::new(),
-        let operations = surgery.apply_surgery(&mut model_config).unwrap();
+        let operations = surgery.apply_surgery(&mut model_config).expect("Operation failed");
         assert_eq!(operations.len(), 1);
         assert!(operations[0].contains("Added layer new_layer"));
     fn test_transfer_learning_orchestrator() {
         let init_strategy = WeightInitStrategy::KeepPretrained;
         let mut orchestrator =
-            TransferLearningOrchestrator::<f64>::new(strategy, 0.001, init_strategy).unwrap();
+            TransferLearningOrchestrator::<f64>::new(strategy, 0.001, init_strategy).expect("Operation failed");
         let layer_names = vec!["conv1".to_string(), "conv2".to_string(), "fc".to_string()];
         let report = orchestrator
             .setup_transfer_learning(&layer_names, None)

@@ -305,7 +305,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
             coherence_optimizer: QuantumCoherenceOptimizer::new()?,
             entanglement_network: QuantumEntanglementNetwork::new()?,
             quantum_state: vec![Complex::new(F::zero(), F::zero()); qubits],
-            coherence_time: F::from_f64(100.0).unwrap(), // 100 microseconds default
+            coherence_time: F::from_f64(100.0).expect("Operation failed"), // 100 microseconds default
             _phantom: std::marker::PhantomData,
         })
     }
@@ -340,7 +340,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
         // Apply quantum phase rotations
         for i in 0..result.len() {
             let phase_factor =
-                F::from_f64(2.0 * std::f64::consts::PI * i as f64 / result.len() as f64).unwrap();
+                F::from_f64(2.0 * std::f64::consts::PI * i as f64 / result.len() as f64)
+                    .expect("Operation failed");
             result[i] = result[i] * phase_factor.cos();
         }
 
@@ -356,9 +357,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
         for i in 0..result.len() {
             // Quantum enhancement: exploit superposition for parallel computation
             let quantum_weight = if i < self.qubits {
-                F::from_f64(1.0).unwrap()
+                F::from_f64(1.0).expect("Operation failed")
             } else {
-                F::from_f64(0.5).unwrap()
+                F::from_f64(0.5).expect("Operation failed")
             };
             result[i] = result[i] * quantum_weight;
         }
@@ -373,7 +374,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
         // Apply quantum entanglement correlations
         for i in 0..result.len().saturating_sub(1) {
             // Entanglement correlation between adjacent elements
-            let entanglement_factor = F::from_f64(0.1).unwrap();
+            let entanglement_factor = F::from_f64(0.1).expect("Operation failed");
             let correlation = result[i] * result[i + 1] * entanglement_factor;
             result[i] = result[i] + correlation;
         }
@@ -388,7 +389,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
         // Apply quantum superposition principles
         for i in 0..result.len() {
             // Quantum interference effects
-            let superposition_amplitude = F::from_f64(0.8).unwrap();
+            let superposition_amplitude = F::from_f64(0.8).expect("Operation failed");
             result[i] = result[i] * superposition_amplitude;
         }
 
@@ -416,8 +417,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
         Ok(QuantumNeuromorphicInterface {
             quantum_to_spike: Vec::new(),
             spike_to_quantum: Vec::new(),
-            conversion_efficiency: F::from_f64(0.95).unwrap(),
-            calibration_params: vec![F::from_f64(1.0).unwrap(); 10],
+            conversion_efficiency: F::from_f64(0.95).expect("Operation failed"),
+            calibration_params: vec![F::from_f64(1.0).expect("Operation failed"); 10],
         })
     }
 
@@ -432,7 +433,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
             let phase = quantum_state.arg();
 
             // Quantum-biological correlation factor
-            let correlation_factor = F::from_f64(0.7).unwrap();
+            let correlation_factor = F::from_f64(0.7).expect("Operation failed");
 
             // Generate spike probability based on quantum state
             let spike_probability = amplitude * correlation_factor;
@@ -454,14 +455,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
             let phase = if spike_value >= F::zero() {
                 F::zero()
             } else {
-                F::from_f64(std::f64::consts::PI).unwrap()
+                F::from_f64(std::f64::consts::PI).expect("Operation failed")
             };
 
             // Quantum-modulated spike generation
-            let quantum_amplitude = amplitude * F::from_f64(0.8).unwrap();
+            let quantum_amplitude = amplitude * F::from_f64(0.8).expect("Operation failed");
 
             // Quantum interference effects on spike timing
-            let quantum_phase = phase + F::from_f64(std::f64::consts::PI / 4.0).unwrap();
+            let quantum_phase =
+                phase + F::from_f64(std::f64::consts::PI / 4.0).expect("Operation failed");
 
             // Create complex quantum state
             quantum_states[i] = Complex::new(
@@ -480,17 +482,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
         }
 
         // Quantum uncertainty calculation
-        let mean =
-            data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(data.len()).unwrap();
+        let mean = data.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from_usize(data.len()).expect("Operation failed");
         let variance = data
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-            / F::from_usize(data.len()).unwrap();
+            / F::from_usize(data.len()).expect("Operation failed");
 
         // Quantum confidence based on uncertainty principle
         let uncertainty = variance.sqrt();
-        let max_confidence = F::from_f64(1.0).unwrap();
-        let confidence = max_confidence / (F::from_f64(1.0).unwrap() + uncertainty);
+        let max_confidence = F::from_f64(1.0).expect("Operation failed");
+        let confidence =
+            max_confidence / (F::from_f64(1.0).expect("Operation failed") + uncertainty);
 
         Ok(confidence)
     }
@@ -526,7 +529,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DistributedQuantumCoordinator<F> 
             node_managers: HashMap::new(),
             entanglement_manager: EntanglementManager {
                 entangled_pairs: Vec::new(),
-                fidelity_threshold: F::from_f64(0.9).unwrap(),
+                fidelity_threshold: F::from_f64(0.9).expect("Operation failed"),
                 purification_protocol: "BBPSSW".to_string(),
             },
             communication_protocols: QuantumCommunicationProtocols {
@@ -582,8 +585,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicCore<F> {
 
         for i in 0..result.len() {
             // Weighted fusion of quantum and neuromorphic results
-            let quantum_weight = F::from_f64(0.6).unwrap();
-            let neuromorphic_weight = F::from_f64(0.4).unwrap();
+            let quantum_weight = F::from_f64(0.6).expect("Operation failed");
+            let neuromorphic_weight = F::from_f64(0.4).expect("Operation failed");
 
             result[i] = quantum[i] * quantum_weight + neuromorphic[i] * neuromorphic_weight;
         }

@@ -163,7 +163,7 @@ impl<'a> MmapArrayBuilder<'a> {
         // Write array data in chunks to avoid memory pressure
         if array.is_standard_layout() {
             // For contiguous arrays, we can write directly
-            let data_slice = bytemuck::cast_slice(array.as_slice().unwrap());
+            let data_slice = bytemuck::cast_slice(array.as_slice().expect("Operation failed"));
             let mut written = 0;
             while written < data_slice.len() {
                 let chunk_size = (data_slice.len() - written).min(self.buffer_size);
@@ -175,7 +175,8 @@ impl<'a> MmapArrayBuilder<'a> {
         } else {
             // For non-contiguous arrays, we need to copy to a contiguous buffer
             let owned_array = array.to_owned();
-            let data_slice = bytemuck::cast_slice(owned_array.as_slice().unwrap());
+            let data_slice =
+                bytemuck::cast_slice(owned_array.as_slice().expect("Operation failed"));
             let mut written = 0;
             while written < data_slice.len() {
                 let chunk_size = (data_slice.len() - written).min(self.buffer_size);
@@ -581,21 +582,21 @@ mod tests {
 
     #[test]
     fn test_mmap_array_1d() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_1d.bin");
 
         // Create test data
         let data = Array1::from(vec![1.0f64, 2.0, 3.0, 4.0, 5.0]);
 
         // Write to file
-        create_mmap_array(&file_path, &data).unwrap();
+        create_mmap_array(&file_path, &data).expect("Operation failed");
 
         // Read back
-        let mmap_array: MmapArray<f64> = MmapArray::open(&file_path).unwrap();
-        let shape = mmap_array.shape().unwrap();
+        let mmap_array: MmapArray<f64> = MmapArray::open(&file_path).expect("Operation failed");
+        let shape = mmap_array.shape().expect("Operation failed");
         assert_eq!(shape, vec![5]);
 
-        let array_view = mmap_array.as_array_view(&shape).unwrap();
+        let array_view = mmap_array.as_array_view(&shape).expect("Operation failed");
         assert_eq!(array_view.len(), 5);
 
         for (i, &value) in array_view.iter().enumerate() {
@@ -605,61 +606,67 @@ mod tests {
 
     #[test]
     fn test_mmap_array_2d() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_2d.bin");
 
         // Create test data
         let data = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
         // Write to file
-        create_mmap_array(&file_path, &data).unwrap();
+        create_mmap_array(&file_path, &data).expect("Operation failed");
 
         // Read back
-        let mmap_array: MmapArray<f64> = MmapArray::open(&file_path).unwrap();
-        let shape = mmap_array.shape().unwrap();
+        let mmap_array: MmapArray<f64> = MmapArray::open(&file_path).expect("Operation failed");
+        let shape = mmap_array.shape().expect("Operation failed");
         assert_eq!(shape, vec![2, 3]);
 
-        let array_view = mmap_array.as_array_view(&shape).unwrap();
+        let array_view = mmap_array.as_array_view(&shape).expect("Operation failed");
         assert_eq!(array_view.shape(), &[2, 3]);
 
         // Access individual elements using linear indexing
         for i in 0..2 {
             for j in 0..3 {
                 let linear_index = i * 3 + j;
-                assert_eq!(array_view.as_slice().unwrap()[linear_index], data[[i, j]]);
+                assert_eq!(
+                    array_view.as_slice().expect("Operation failed")[linear_index],
+                    data[[i, j]]
+                );
             }
         }
     }
 
     #[test]
     fn test_mmap_array_mutable() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_mut.bin");
 
         // Create test data
         let data: Array2<f64> = Array2::zeros((10, 10));
 
         // Write to file
-        create_mmap_array(&file_path, &data).unwrap();
+        create_mmap_array(&file_path, &data).expect("Operation failed");
 
         // Open for writing
-        let mut mmap_array: MmapArrayMut<f64> = MmapArrayMut::open(&file_path).unwrap();
-        let shape = mmap_array.shape().unwrap();
+        let mut mmap_array: MmapArrayMut<f64> =
+            MmapArrayMut::open(&file_path).expect("Operation failed");
+        let shape = mmap_array.shape().expect("Operation failed");
 
         {
-            let mut array_view = mmap_array.as_array_view_mut(&shape).unwrap();
+            let mut array_view = mmap_array
+                .as_array_view_mut(&shape)
+                .expect("Operation failed");
             // Modify some values using linear indexing
-            let slice = array_view.as_slice_mut().unwrap();
+            let slice = array_view.as_slice_mut().expect("Operation failed");
             slice[5 * 10 + 5] = 42.0; // (5, 5) in row-major order
             slice[10 + 2] = 13.7; // (1, 2) in row-major order
         }
 
         // Flush changes
-        mmap_array.flush().unwrap();
+        mmap_array.flush().expect("Operation failed");
 
         // Read back and verify
-        let read_array: ArrayD<f64> = read_mmap_array(&file_path).unwrap();
-        let read_slice = read_array.as_slice().unwrap();
+        let read_array: ArrayD<f64> = read_mmap_array(&file_path).expect("Operation failed");
+        let read_slice = read_array.as_slice().expect("Operation failed");
         assert_eq!(read_slice[5 * 10 + 5], 42.0);
         assert_eq!(read_slice[10 + 2], 13.7);
         assert_eq!(read_slice[0], 0.0);
@@ -667,17 +674,17 @@ mod tests {
 
     #[test]
     fn test_convenience_functions() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_convenience.bin");
 
         // Create test data
         let original = Array2::from_shape_fn((100, 50), |(i, j)| (i + j) as f64);
 
         // Write using convenience function
-        create_mmap_array(&file_path, &original).unwrap();
+        create_mmap_array(&file_path, &original).expect("Operation failed");
 
         // Read using convenience function
-        let read_back: ArrayD<f64> = read_mmap_array(&file_path).unwrap();
+        let read_back: ArrayD<f64> = read_mmap_array(&file_path).expect("Operation failed");
 
         assert_eq!(original.shape(), read_back.shape());
         for (orig, read) in original.iter().zip(read_back.iter()) {
@@ -687,22 +694,22 @@ mod tests {
 
     #[test]
     fn test_empty_array_creation() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_empty.bin");
 
         // Create empty array
         let shape = vec![100, 200];
         MmapArrayBuilder::new(&file_path)
             .create_empty::<f64>(&shape)
-            .unwrap();
+            .expect("Operation failed");
 
         // Verify it was created correctly
-        let mmap_array = MmapArray::<f64>::open(&file_path).unwrap();
-        let readshape = mmap_array.shape().unwrap();
+        let mmap_array = MmapArray::<f64>::open(&file_path).expect("Operation failed");
+        let readshape = mmap_array.shape().expect("Operation failed");
         assert_eq!(readshape, shape);
         assert_eq!(mmap_array.len(), 100 * 200);
 
-        let array_view = mmap_array.as_array_view(&shape).unwrap();
+        let array_view = mmap_array.as_array_view(&shape).expect("Operation failed");
         for &value in array_view.iter() {
             assert_eq!(value, 0.0);
         }

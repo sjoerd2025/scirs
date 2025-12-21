@@ -36,7 +36,7 @@ pub fn kernel_ica(
     let (n_signals, n_samples) = signals.dim();
 
     // Center the signals
-    let means = signals.mean_axis(Axis(1)).unwrap();
+    let means = signals.mean_axis(Axis(1)).expect("Operation failed");
     let mut centered = signals.clone();
 
     for i in 0..n_signals {
@@ -58,7 +58,7 @@ pub fn kernel_ica(
         }
     };
 
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
     let mut w = Array2::<f64>::zeros((n_components, n_components));
 
     for i in 0..n_components {
@@ -87,8 +87,8 @@ pub fn kernel_ica(
         }
 
         // Center Gram matrix
-        let row_means = gram.mean_axis(Axis(0)).unwrap();
-        let col_means = gram.mean_axis(Axis(1)).unwrap();
+        let row_means = gram.mean_axis(Axis(0)).expect("Operation failed");
+        let col_means = gram.mean_axis(Axis(1)).expect("Operation failed");
         let total_mean = gram.clone().mean();
 
         for i in 0..n_samples {

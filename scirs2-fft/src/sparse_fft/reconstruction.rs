@@ -35,10 +35,10 @@ use super::algorithms::SparseFFTResult;
 /// }
 ///
 /// // Compute sparse FFT with k=4
-/// let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
+/// let sparse_result = sparse_fft(&signal, 4, None, None).expect("Operation failed");
 ///
 /// // Reconstruct full spectrum
-/// let full_spectrum = reconstruct_spectrum(&sparse_result, n).unwrap();
+/// let full_spectrum = reconstruct_spectrum(&sparse_result, n).expect("Operation failed");
 ///
 /// // The reconstructed spectrum should have length n
 /// assert_eq!(full_spectrum.len(), n);
@@ -85,10 +85,10 @@ pub fn reconstruct_spectrum(
 /// }
 ///
 /// // Compute sparse FFT
-/// let sparse_result = sparse_fft(&original_signal, 4, None, None).unwrap();
+/// let sparse_result = sparse_fft(&original_signal, 4, None, None).expect("Operation failed");
 ///
 /// // Reconstruct time-domain signal
-/// let reconstructed = reconstruct_time_domain(&sparse_result, n).unwrap();
+/// let reconstructed = reconstruct_time_domain(&sparse_result, n).expect("Operation failed");
 ///
 /// // The reconstructed signal should have the same length
 /// assert_eq!(reconstructed.len(), n);
@@ -141,10 +141,10 @@ pub fn reconstruct_time_domain(
 /// }
 ///
 /// // Compute sparse FFT
-/// let sparse_result = sparse_fft(&signal, 2, None, None).unwrap();
+/// let sparse_result = sparse_fft(&signal, 2, None, None).expect("Operation failed");
 ///
 /// // Reconstruct with higher resolution (2x the original length)
-/// let high_res = reconstruct_high_resolution(&sparse_result, n, 2 * n).unwrap();
+/// let high_res = reconstruct_high_resolution(&sparse_result, n, 2 * n).expect("Operation failed");
 ///
 /// // The high-resolution signal should have the target length
 /// assert_eq!(high_res.len(), 2 * n);
@@ -252,7 +252,7 @@ pub fn reconstruct_high_resolution(
 /// }
 ///
 /// // Compute sparse FFT
-/// let sparse_result = sparse_fft(&signal, 6, None, None).unwrap();
+/// let sparse_result = sparse_fft(&signal, 6, None, None).expect("Operation failed");
 ///
 /// // Create a low-pass filter (keep only low frequencies)
 /// let low_pass_filter = |freq_index: usize, n: usize| -> f64 {
@@ -264,7 +264,7 @@ pub fn reconstruct_high_resolution(
 /// };
 ///
 /// // Reconstruct with filtering
-/// let filtered = reconstruct_filtered(&sparse_result, n, low_pass_filter).unwrap();
+/// let filtered = reconstruct_filtered(&sparse_result, n, low_pass_filter).expect("Operation failed");
 ///
 /// assert_eq!(filtered.len(), n);
 /// ```
@@ -311,8 +311,8 @@ mod tests {
     #[test]
     fn test_reconstruct_spectrum() {
         let signal = create_test_signal(64);
-        let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
-        let spectrum = reconstruct_spectrum(&sparse_result, 64).unwrap();
+        let sparse_result = sparse_fft(&signal, 4, None, None).expect("Operation failed");
+        let spectrum = reconstruct_spectrum(&sparse_result, 64).expect("Operation failed");
 
         assert_eq!(spectrum.len(), 64);
         // Verify that the reconstructed spectrum has the expected sparse structure
@@ -338,8 +338,8 @@ mod tests {
     #[test]
     fn test_reconstruct_time_domain() {
         let signal = create_test_signal(64);
-        let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
-        let reconstructed = reconstruct_time_domain(&sparse_result, 64).unwrap();
+        let sparse_result = sparse_fft(&signal, 4, None, None).expect("Operation failed");
+        let reconstructed = reconstruct_time_domain(&sparse_result, 64).expect("Operation failed");
 
         assert_eq!(reconstructed.len(), 64);
     }
@@ -347,8 +347,9 @@ mod tests {
     #[test]
     fn test_reconstruct_high_resolution() {
         let signal = create_test_signal(32);
-        let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
-        let high_res = reconstruct_high_resolution(&sparse_result, 32, 64).unwrap();
+        let sparse_result = sparse_fft(&signal, 4, None, None).expect("Operation failed");
+        let high_res =
+            reconstruct_high_resolution(&sparse_result, 32, 64).expect("Operation failed");
 
         assert_eq!(high_res.len(), 64);
     }
@@ -356,7 +357,7 @@ mod tests {
     #[test]
     fn test_reconstruct_high_resolution_invalid_length() {
         let signal = create_test_signal(32);
-        let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
+        let sparse_result = sparse_fft(&signal, 4, None, None).expect("Operation failed");
         let result = reconstruct_high_resolution(&sparse_result, 32, 16);
 
         assert!(result.is_err());
@@ -365,7 +366,7 @@ mod tests {
     #[test]
     fn test_reconstruct_filtered() {
         let signal = create_test_signal(64);
-        let sparse_result = sparse_fft(&signal, 6, None, None).unwrap();
+        let sparse_result = sparse_fft(&signal, 6, None, None).expect("Operation failed");
 
         // Low-pass filter
         let filter = |freq_index: usize, n: usize| -> f64 {
@@ -376,7 +377,7 @@ mod tests {
             }
         };
 
-        let filtered = reconstruct_filtered(&sparse_result, 64, filter).unwrap();
+        let filtered = reconstruct_filtered(&sparse_result, 64, filter).expect("Operation failed");
         assert_eq!(filtered.len(), 64);
     }
 }

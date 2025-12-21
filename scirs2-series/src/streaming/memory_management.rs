@@ -91,13 +91,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiSeriesAnalyzer<F> {
             .take(min_len)
             .cloned()
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(min_len).unwrap();
+            / F::from(min_len).expect("Failed to convert to float");
         let mean2 = buffer2
             .iter()
             .take(min_len)
             .cloned()
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(min_len).unwrap();
+            / F::from(min_len).expect("Failed to convert to float");
 
         let mut numerator = F::zero();
         let mut sum1_sq = F::zero();
@@ -159,7 +159,7 @@ impl<F: Float + Debug + Clone> StreamingAnomalyDetector<F> {
         }
 
         let mut features = Vec::with_capacity(self.num_features);
-        let n = F::from(window.len()).unwrap();
+        let n = F::from(window.len()).expect("Operation failed");
 
         // Feature 1: Mean
         let mean = window.iter().fold(F::zero(), |acc, &x| acc + x) / n;
@@ -191,12 +191,13 @@ impl<F: Float + Debug + Clone> StreamingAnomalyDetector<F> {
 
         // Feature 5: Trend (slope of linear regression)
         if window.len() > 1 {
-            let x_mean = F::from(window.len() - 1).unwrap() / F::from(2).unwrap();
+            let x_mean = F::from(window.len() - 1).expect("Operation failed")
+                / F::from(2).expect("Failed to convert constant to float");
             let mut num = F::zero();
             let mut den = F::zero();
 
             for (i, &y) in window.iter().enumerate() {
-                let x = F::from(i).unwrap();
+                let x = F::from(i).expect("Failed to convert to float");
                 num = num + (x - x_mean) * (y - mean);
                 den = den + (x - x_mean) * (x - x_mean);
             }
@@ -274,7 +275,8 @@ impl<F: Float + Debug + Clone> StreamingAnomalyDetector<F> {
             }
 
             if count > 0 {
-                let avg_distance = total_distance / F::from(count).unwrap();
+                let avg_distance =
+                    total_distance / F::from(count).expect("Failed to convert to float");
                 self.threshold = avg_distance * factor;
             }
         }
@@ -346,7 +348,7 @@ impl<F: Float + Debug + Clone> StreamingPatternMatcher<F> {
                     if correlation >= self.threshold {
                         matches.push(PatternMatch {
                             pattern_name: self.pattern_names[i].clone(),
-                            correlation: correlation.to_f64().unwrap(),
+                            correlation: correlation.to_f64().expect("Operation failed"),
                             start_index: self.buffer.len() - pattern.len(),
                             pattern_length: pattern.len(),
                         });
@@ -366,7 +368,7 @@ impl<F: Float + Debug + Clone> StreamingPatternMatcher<F> {
             ));
         }
 
-        let n = F::from(a.len()).unwrap();
+        let n = F::from(a.len()).expect("Operation failed");
 
         // Calculate means
         let mean_a = a.iter().fold(F::zero(), |acc, &x| acc + x) / n;
@@ -514,7 +516,7 @@ mod tests {
         let normal_data: Vec<f64> = (0..20).map(|x| x as f64).collect();
 
         for window in normal_data.windows(10) {
-            let is_anomaly = detector.update(window).unwrap();
+            let is_anomaly = detector.update(window).expect("Operation failed");
             assert!(!is_anomaly, "Normal data should not be anomalous");
         }
 
@@ -524,7 +526,7 @@ mod tests {
 
         let result = detector
             .update(&anomalous_data[anomalous_data.len() - 10..])
-            .unwrap();
+            .expect("Operation failed");
         assert!(result, "Clear anomaly should be detected");
     }
 
@@ -536,7 +538,7 @@ mod tests {
         let pattern = vec![1.0, 2.0, 3.0, 2.0, 1.0];
         matcher
             .add_pattern(pattern.clone(), "triangle".to_string())
-            .unwrap();
+            .expect("Operation failed");
 
         // Add matching data
         for &value in &pattern {

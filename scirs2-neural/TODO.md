@@ -1,10 +1,10 @@
-# scirs2-neural TODO (v0.1.0-rc.3)
+# scirs2-neural TODO (v0.1.0-rc.4)
 
 **scirs2-neural** provides PyTorch-style neural network building blocks for Rust, with automatic differentiation integration and production-ready training utilities. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module uses scirs2-core abstractions for ecosystem consistency.
 
 ## Build Status: PRODUCTION READY
 
-**Version**: 0.1.0-rc.3
+**Version**: 0.1.0-rc.4
 **Status**: All tests passing, zero warnings
 **Unit Tests**: 111 passing (+9 ReLU, +10 Softmax SIMD integration tests)
 **Doc Tests**: All passing (some ignored for API compatibility)
@@ -252,7 +252,7 @@ scirs2-neural/src/
 
 ## Version History
 
-- **v0.1.0-rc.3** (Current): Production-ready with comprehensive neural network functionality
+- **v0.1.0-rc.4** (Current): Production-ready with comprehensive neural network functionality
   - Added Flash Attention for memory-efficient attention computation
   - Added Mamba/State Space Models (S4, SelectiveSSM)
   - Fixed ConvNeXt implementation with all variants (Tiny to XLarge)
@@ -264,4 +264,4 @@ scirs2-neural/src/
 
 ---
 
-*Last Updated: December 2025 | Version: 0.1.0-rc.3*
+*Last Updated: December 2025 | Version: 0.1.0-rc.4*

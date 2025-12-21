@@ -4,6 +4,12 @@ use scirs2_core::numeric::{Float, FromPrimitive};
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::ExtrapolateMode;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Tension spline interpolation.
 ///
 /// Tension splines add a tension parameter to control the "tightness"
@@ -203,9 +209,9 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         // Fill the tridiagonal system
         for i in 1..nm1 {
             a[i] = h[i - 1];
-            b[i] = T::from(2.0).unwrap() * (h[i - 1] + h[i]);
+            b[i] = T::from(2.0).expect("Operation failed") * (h[i - 1] + h[i]);
             c[i] = h[i];
-            d[i] = T::from(6.0).unwrap() * (delta[i] - delta[i - 1]);
+            d[i] = T::from(6.0).expect("Operation failed") * (delta[i] - delta[i - 1]);
         }
 
         // Solve the tridiagonal system for second derivatives
@@ -233,15 +239,16 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
 
             // b_i = (y_{i+1} - y_i) / h_i - h_i * (2*f''_i + f''_{i+1}) / 6
             coeffs[[i, 1]] = (y[i + 1] - y[i]) / dx
-                - dx * (T::from(2.0).unwrap() * second_derivs[i] + second_derivs[i + 1])
-                    / T::from(6.0).unwrap();
+                - dx * (T::from(2.0).expect("Operation failed") * second_derivs[i]
+                    + second_derivs[i + 1])
+                    / T::from(6.0).expect("Test/example failed");
 
             // c_i = f''_i / 2
-            coeffs[[i, 2]] = second_derivs[i] / T::from(2.0).unwrap();
+            coeffs[[i, 2]] = second_derivs[i] / T::from(2.0).expect("Test/example failed");
 
             // d_i = (f''_{i+1} - f''_i) / (6 * h_i)
-            coeffs[[i, 3]] =
-                (second_derivs[i + 1] - second_derivs[i]) / (T::from(6.0).unwrap() * dx);
+            coeffs[[i, 3]] = (second_derivs[i + 1] - second_derivs[i])
+                / (T::from(6.0).expect("Operation failed") * dx);
         }
 
         Ok(coeffs)
@@ -420,9 +427,12 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
 
             return match deriv_order {
                 0 => Ok(a + dx * (b + dx * (c + dx * d))),
-                1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),
-                2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),
-                3 => Ok(T::from(6.0).unwrap() * d),
+                1 => Ok(b + dx
+                    * (T::from(2.0).expect("Operation failed") * c
+                        + T::from(3.0).expect("Operation failed") * dx * d)),
+                2 => Ok(T::from(2.0).expect("Operation failed") * c
+                    + T::from(6.0).expect("Operation failed") * dx * d),
+                3 => Ok(T::from(6.0).expect("Operation failed") * d),
                 _ => Err(InterpolateError::InvalidValue(
                     "Derivative _order must be ≤ 3".to_string(),
                 )),
@@ -477,10 +487,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // x^2
     ///
-    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).expect("Test/example failed");
     ///
     /// // Get function value, first derivative, and second derivative at x=2.5  
-    /// let derivatives = spline.derivatives_all(2.5, 2).unwrap();
+    /// let derivatives = spline.derivatives_all(2.5, 2).expect("Test/example failed");
     /// let function_value = derivatives[0];
     /// let first_deriv = derivatives[1];
     /// let second_deriv = derivatives[2];
@@ -520,10 +530,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // x^2
     ///
-    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).expect("Test/example failed");
     ///
     /// let x_eval = array![1.5, 2.5, 3.5];
-    /// let derivatives = spline.derivative_array(&x_eval.view(), 1).unwrap();
+    /// let derivatives = spline.derivative_array(&x_eval.view(), 1).expect("Test/example failed");
     /// ```
     pub fn derivative_array(
         &self,
@@ -558,10 +568,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![1.0, 1.0, 1.0, 1.0, 1.0]; // Constant function
     ///
-    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).expect("Test/example failed");
     ///
     /// // Integrate from 0 to 3 (should be approximately 3.0 for constant function)
-    /// let integral = spline.integrate(0.0, 3.0).unwrap();
+    /// let integral = spline.integrate(0.0, 3.0).expect("Test/example failed");
     /// ```
     pub fn integrate(&self, a: T, b: T) -> InterpolateResult<T> {
         if a == b {
@@ -616,9 +626,9 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             // Integral of cubic: a*(x-x_i) + b*(x-x_i)^2/2 + c*(x-x_i)^3/3 + d*(x-x_i)^4/4
             let eval_at = |dx: T| -> T {
                 coeff_a * dx
-                    + coeff_b * dx * dx / T::from(2.0).unwrap()
-                    + coeff_c * dx * dx * dx / T::from(3.0).unwrap()
-                    + coeff_d * dx * dx * dx * dx / T::from(4.0).unwrap()
+                    + coeff_b * dx * dx / T::from(2.0).expect("Operation failed")
+                    + coeff_c * dx * dx * dx / T::from(3.0).expect("Operation failed")
+                    + coeff_d * dx * dx * dx * dx / T::from(4.0).expect("Operation failed")
             };
 
             return Ok(eval_at(dx_b) - eval_at(dx_a));
@@ -636,7 +646,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         // = a*(x-x_i) + b*(x-x_i)^2/2 + c*cosh(p*(x-x_i))/p + d*sinh(p*(x-x_i))/p
         let eval_at = |dx: T| -> T {
             coeff_a * dx
-                + coeff_b * dx * dx / T::from(2.0).unwrap()
+                + coeff_b * dx * dx / T::from(2.0).expect("Operation failed")
                 + coeff_c * (p * dx).cosh() / p
                 + coeff_d * (p * dx).sinh() / p
         };
@@ -669,13 +679,13 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // x^2
     ///
-    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).expect("Test/example failed");
     ///
     /// // Compute arc length from 0 to 2 with relaxed tolerance
-    /// let arc_length = spline.arc_length(0.0, 2.0, Some(1e-4)).unwrap();
+    /// let arc_length = spline.arc_length(0.0, 2.0, Some(1e-4)).expect("Test/example failed");
     /// ```
     pub fn arc_length(&self, a: T, b: T, tolerance: Option<T>) -> InterpolateResult<T> {
-        let tol = tolerance.unwrap_or_else(|| T::from(1e-8).unwrap());
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-8).expect("Operation failed"));
 
         if a == b {
             return Ok(T::zero());
@@ -709,14 +719,15 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         F: Fn(T) -> InterpolateResult<T>,
     {
         let h = b - a;
-        let c = (a + b) / T::from(2.0).unwrap();
+        let c = (a + b) / T::from(2.0).expect("Test/example failed");
 
         let fa = f(a)?;
         let fb = f(b)?;
         let fc = f(c)?;
 
         // Simpson's rule approximation
-        let s = h * (fa + T::from(4.0).unwrap() * fc + fb) / T::from(6.0).unwrap();
+        let s = h * (fa + T::from(4.0).expect("Operation failed") * fc + fb)
+            / T::from(6.0).expect("Test/example failed");
 
         // Recursive adaptive refinement
         self.adaptive_simpson_recursive(f, a, b, tolerance, s, fa, fb, fc, 15)
@@ -741,27 +752,29 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             return Ok(s);
         }
 
-        let c = (a + b) / T::from(2.0).unwrap();
+        let c = (a + b) / T::from(2.0).expect("Test/example failed");
         let h = b - a;
-        let d = (a + c) / T::from(2.0).unwrap();
-        let e = (c + b) / T::from(2.0).unwrap();
+        let d = (a + c) / T::from(2.0).expect("Test/example failed");
+        let e = (c + b) / T::from(2.0).expect("Test/example failed");
 
         let fd = f(d)?;
         let fe = f(e)?;
 
-        let s_left = h * (fa + T::from(4.0).unwrap() * fd + fc) / T::from(12.0).unwrap();
-        let s_right = h * (fc + T::from(4.0).unwrap() * fe + fb) / T::from(12.0).unwrap();
+        let s_left = h * (fa + T::from(4.0).expect("Operation failed") * fd + fc)
+            / T::from(12.0).expect("Test/example failed");
+        let s_right = h * (fc + T::from(4.0).expect("Operation failed") * fe + fb)
+            / T::from(12.0).expect("Test/example failed");
         let s_new = s_left + s_right;
 
-        if (s - s_new).abs() <= T::from(15.0).unwrap() * tolerance {
-            return Ok(s_new + (s_new - s) / T::from(15.0).unwrap());
+        if (s - s_new).abs() <= T::from(15.0).expect("Operation failed") * tolerance {
+            return Ok(s_new + (s_new - s) / T::from(15.0).expect("Operation failed"));
         }
 
         let left = self.adaptive_simpson_recursive(
             &f,
             a,
             c,
-            tolerance / T::from(2.0).unwrap(),
+            tolerance / T::from(2.0).expect("Operation failed"),
             s_left,
             fa,
             fc,
@@ -773,7 +786,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             &f,
             c,
             b,
-            tolerance / T::from(2.0).unwrap(),
+            tolerance / T::from(2.0).expect("Operation failed"),
             s_right,
             fc,
             fb,
@@ -809,10 +822,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![-1.0, 1.0, -1.0, 1.0, -1.0]; // Oscillating function
     ///
-    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).expect("Test/example failed");
     ///
     /// // Find root near x=0.5
-    /// let root = spline.find_root(0.5, Some(1e-8), Some(50)).unwrap();
+    /// let root = spline.find_root(0.5, Some(1e-8), Some(50)).expect("Test/example failed");
     /// ```
     pub fn find_root(
         &self,
@@ -820,7 +833,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         tolerance: Option<T>,
         max_iterations: Option<usize>,
     ) -> InterpolateResult<T> {
-        let tol = tolerance.unwrap_or_else(|| T::from(1e-10).unwrap());
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-10).expect("Operation failed"));
         let max_iter = max_iterations.unwrap_or(100);
 
         let mut x = initial_guess;
@@ -875,10 +888,10 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 0.0, 1.0, 0.0]; // Wave-like function
     ///
-    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+    /// let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).expect("Test/example failed");
     ///
     /// // Find extrema between x=0 and x=4
-    /// let extrema = spline.find_extrema((0.0, 4.0), Some(1e-8), Some(50)).unwrap();
+    /// let extrema = spline.find_extrema((0.0, 4.0), Some(1e-8), Some(50)).expect("Test/example failed");
     /// ```
     pub fn find_extrema(
         &self,
@@ -886,7 +899,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         tolerance: Option<T>,
         max_iterations: Option<usize>,
     ) -> InterpolateResult<Vec<T>> {
-        let tol = tolerance.unwrap_or_else(|| T::from(1e-10).unwrap());
+        let tol = tolerance.unwrap_or_else(|| T::from(1e-10).expect("Operation failed"));
         let max_iter = max_iterations.unwrap_or(100);
         let (start, end) = search_range;
 
@@ -894,12 +907,12 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
 
         // Sample the derivative to find sign changes (indicating extrema)
         let num_samples = 100;
-        let step = (end - start) / T::from_usize(num_samples).unwrap();
+        let step = (end - start) / T::from_usize(num_samples).expect("Test/example failed");
 
         let mut prev_deriv_sign: Option<bool> = None;
 
         for i in 0..=num_samples {
-            let x = start + T::from_usize(i).unwrap() * step;
+            let x = start + T::from_usize(i).expect("Operation failed") * step;
 
             if x < self.x[0] || x > self.x[self.x.len() - 1] {
                 continue;
@@ -911,7 +924,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             if let Some(prev_sign) = prev_deriv_sign {
                 if prev_sign != current_sign {
                     // Sign change detected, refine the extremum location
-                    let prev_x = start + T::from_usize(i - 1).unwrap() * step;
+                    let prev_x = start + T::from_usize(i - 1).expect("Operation failed") * step;
 
                     // Use bisection to refine the extremum location
                     if let Ok(extremum) = self.refine_extremum(prev_x, x, tol, max_iter) {
@@ -935,7 +948,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         max_iterations: usize,
     ) -> InterpolateResult<T> {
         for _iteration in 0..max_iterations {
-            let c = (a + b) / T::from(2.0).unwrap();
+            let c = (a + b) / T::from(2.0).expect("Test/example failed");
             let deriv_c = self.derivative_single(1, c)?;
 
             if deriv_c.abs() < tolerance {
@@ -951,7 +964,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             }
 
             if (b - a).abs() < tolerance {
-                return Ok((a + b) / T::from(2.0).unwrap());
+                return Ok((a + b) / T::from(2.0).expect("Operation failed"));
             }
         }
 
@@ -994,8 +1007,8 @@ mod tests {
         let x = Array::linspace(0.0, 10.0, 11);
         let y = x.mapv(|v| v.powi(2));
 
-        let spline =
-            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+        let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
 
         assert_eq!(spline.tension(), 1.0);
     }
@@ -1006,18 +1019,24 @@ mod tests {
         let y = x.mapv(|v| v.powi(2));
 
         // Create splines with different tension parameters
-        let spline_low =
-            make_tension_spline(&x.view(), &y.view(), 0.1, ExtrapolateMode::Error).unwrap();
-        let spline_med =
-            make_tension_spline(&x.view(), &y.view(), 5.0, ExtrapolateMode::Error).unwrap();
-        let spline_high =
-            make_tension_spline(&x.view(), &y.view(), 50.0, ExtrapolateMode::Error).unwrap();
+        let spline_low = make_tension_spline(&x.view(), &y.view(), 0.1, ExtrapolateMode::Error)
+            .expect("Test/example failed");
+        let spline_med = make_tension_spline(&x.view(), &y.view(), 5.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
+        let spline_high = make_tension_spline(&x.view(), &y.view(), 50.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
 
         // Test interpolation at data points
         for i in 0..x.len() {
-            let eval_low = spline_low.evaluate_single(x[i]).unwrap();
-            let eval_med = spline_med.evaluate_single(x[i]).unwrap();
-            let eval_high = spline_high.evaluate_single(x[i]).unwrap();
+            let eval_low = spline_low
+                .evaluate_single(x[i])
+                .expect("Test/example failed");
+            let eval_med = spline_med
+                .evaluate_single(x[i])
+                .expect("Test/example failed");
+            let eval_high = spline_high
+                .evaluate_single(x[i])
+                .expect("Test/example failed");
 
             // Values at data points should match closely for all tension values
             assert_abs_diff_eq!(eval_low, y[i], epsilon = 1e-6);
@@ -1029,9 +1048,15 @@ mod tests {
         let xnew = Array::linspace(0.5, 9.5, 10);
         let y_exact = xnew.mapv(|v| v.powi(2));
 
-        let y_low = spline_low.evaluate(&xnew.view()).unwrap();
-        let y_med = spline_med.evaluate(&xnew.view()).unwrap();
-        let y_high = spline_high.evaluate(&xnew.view()).unwrap();
+        let y_low = spline_low
+            .evaluate(&xnew.view())
+            .expect("Test/example failed");
+        let y_med = spline_med
+            .evaluate(&xnew.view())
+            .expect("Test/example failed");
+        let y_high = spline_high
+            .evaluate(&xnew.view())
+            .expect("Test/example failed");
 
         // Compare MSE for different tension values
         let mse_low = y_low
@@ -1066,18 +1091,22 @@ mod tests {
         let x = Array::linspace(0.0, 10.0, 11);
         let y = x.mapv(|v| v.powi(2));
 
-        let spline =
-            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+        let spline = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
 
         // Test first derivative at middle point
         let x_test = Array::from_elem(1, 5.0);
-        let deriv1 = spline.derivative(1, &x_test.view()).unwrap();
+        let deriv1 = spline
+            .derivative(1, &x_test.view())
+            .expect("Test/example failed");
 
         // For y = x^2, the derivative is approximately 2*x
         assert_abs_diff_eq!(deriv1[0], 10.0, epsilon = 2.0);
 
         // Test second derivative at middle point
-        let deriv2 = spline.derivative(2, &x_test.view()).unwrap();
+        let deriv2 = spline
+            .derivative(2, &x_test.view())
+            .expect("Test/example failed");
 
         // With the PartialOrd change, the second derivative calculation may be different
         // Just check that it produces a finite result
@@ -1093,21 +1122,27 @@ mod tests {
         let y = x.mapv(|v| v.powi(2));
 
         // Test error mode
-        let spline_error =
-            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
+        let spline_error = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
         assert!(spline_error.evaluate_single(-1.0).is_err());
 
         // Test extrapolate mode
         let spline_extrap =
-            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Extrapolate).unwrap();
-        let val = spline_extrap.evaluate_single(-1.0).unwrap();
+            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Extrapolate)
+                .expect("Test/example failed");
+        let val = spline_extrap
+            .evaluate_single(-1.0)
+            .expect("Test/example failed");
         // Should return an extrapolated value, which for x=-1 might be close to 1
         assert!(val > -5.0 && val < 5.0);
 
         // Test nearest value mode
         let spline_nearest =
-            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Extrapolate).unwrap();
-        let val = spline_nearest.evaluate_single(-1.0).unwrap();
+            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Extrapolate)
+                .expect("Test/example failed");
+        let val = spline_nearest
+            .evaluate_single(-1.0)
+            .expect("Test/example failed");
         // Extrapolation behavior may vary, so use larger tolerance
         assert_abs_diff_eq!(val, y[0], epsilon = 2.0);
     }
@@ -1118,19 +1153,25 @@ mod tests {
         let y = Array::from_vec(vec![0.0, 0.5, 0.0, 0.5, 0.0, 0.5]);
 
         // Create splines with different tension values
-        let spline_0 =
-            make_tension_spline(&x.view(), &y.view(), 0.0, ExtrapolateMode::Error).unwrap();
-        let spline_1 =
-            make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
-        let spline_10 =
-            make_tension_spline(&x.view(), &y.view(), 10.0, ExtrapolateMode::Error).unwrap();
+        let spline_0 = make_tension_spline(&x.view(), &y.view(), 0.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
+        let spline_1 = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
+        let spline_10 = make_tension_spline(&x.view(), &y.view(), 10.0, ExtrapolateMode::Error)
+            .expect("Test/example failed");
 
         // Sample between points to see the effect of tension
         let x_mid = Array::from_vec(vec![0.5, 1.5, 2.5, 3.5, 4.5]);
 
-        let y_0 = spline_0.evaluate(&x_mid.view()).unwrap();
-        let y_1 = spline_1.evaluate(&x_mid.view()).unwrap();
-        let y_10 = spline_10.evaluate(&x_mid.view()).unwrap();
+        let y_0 = spline_0
+            .evaluate(&x_mid.view())
+            .expect("Test/example failed");
+        let y_1 = spline_1
+            .evaluate(&x_mid.view())
+            .expect("Test/example failed");
+        let y_10 = spline_10
+            .evaluate(&x_mid.view())
+            .expect("Test/example failed");
 
         // Higher tension should lead to values closer to linear interpolation
         // For a sine-wave-like pattern, higher tension should have less overshoot

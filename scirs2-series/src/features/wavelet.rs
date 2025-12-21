@@ -350,7 +350,8 @@ where
     match family {
         WaveletFamily::Haar => {
             // Haar wavelet filters
-            let sqrt_2_inv = F::from(std::f64::consts::FRAC_1_SQRT_2).unwrap();
+            let sqrt_2_inv =
+                F::from(std::f64::consts::FRAC_1_SQRT_2).expect("Failed to convert to float");
             let h = Array1::from_vec(vec![sqrt_2_inv, sqrt_2_inv]);
             let g = Array1::from_vec(vec![-sqrt_2_inv, sqrt_2_inv]);
             Ok((h, g))
@@ -359,7 +360,8 @@ where
             match n {
                 2 => {
                     // db2 (same as Haar)
-                    let sqrt_2_inv = F::from(std::f64::consts::FRAC_1_SQRT_2).unwrap();
+                    let sqrt_2_inv = F::from(std::f64::consts::FRAC_1_SQRT_2)
+                        .expect("Failed to convert to float");
                     let h = Array1::from_vec(vec![sqrt_2_inv, sqrt_2_inv]);
                     let g = Array1::from_vec(vec![-sqrt_2_inv, sqrt_2_inv]);
                     Ok((h, g))
@@ -367,52 +369,52 @@ where
                 4 => {
                     // db4 Daubechies-4 coefficients
                     let h = Array1::from_vec(vec![
-                        F::from(0.48296291314469025).unwrap(),
-                        F::from(0.8365163037378079).unwrap(),
-                        F::from(0.22414386804185735).unwrap(),
-                        F::from(-0.12940952255092145).unwrap(),
+                        F::from(0.48296291314469025).expect("Failed to convert constant to float"),
+                        F::from(0.8365163037378079).expect("Failed to convert constant to float"),
+                        F::from(0.22414386804185735).expect("Failed to convert constant to float"),
+                        F::from(-0.12940952255092145).expect("Failed to convert constant to float"),
                     ]);
                     let g = Array1::from_vec(vec![
-                        F::from(-0.12940952255092145).unwrap(),
-                        F::from(-0.22414386804185735).unwrap(),
-                        F::from(0.8365163037378079).unwrap(),
-                        F::from(-0.48296291314469025).unwrap(),
+                        F::from(-0.12940952255092145).expect("Failed to convert constant to float"),
+                        F::from(-0.22414386804185735).expect("Failed to convert constant to float"),
+                        F::from(0.8365163037378079).expect("Failed to convert constant to float"),
+                        F::from(-0.48296291314469025).expect("Failed to convert constant to float"),
                     ]);
                     Ok((h, g))
                 }
                 6 => {
                     // db6 Daubechies-6 coefficients
                     let h = Array1::from_vec(vec![
-                        F::from(0.3326705529509569).unwrap(),
-                        F::from(0.8068915093133388).unwrap(),
-                        F::from(0.4598775021193313).unwrap(),
-                        F::from(-0.13501102001039084).unwrap(),
-                        F::from(-0.08544127388224149).unwrap(),
-                        F::from(0.035226291882100656).unwrap(),
+                        F::from(0.3326705529509569).expect("Failed to convert constant to float"),
+                        F::from(0.8068915093133388).expect("Failed to convert constant to float"),
+                        F::from(0.4598775021193313).expect("Failed to convert constant to float"),
+                        F::from(-0.13501102001039084).expect("Failed to convert constant to float"),
+                        F::from(-0.08544127388224149).expect("Failed to convert constant to float"),
+                        F::from(0.035226291882100656).expect("Failed to convert constant to float"),
                     ]);
                     let g = Array1::from_vec(vec![
-                        F::from(0.035226291882100656).unwrap(),
-                        F::from(0.08544127388224149).unwrap(),
-                        F::from(-0.13501102001039084).unwrap(),
-                        F::from(-0.4598775021193313).unwrap(),
-                        F::from(0.8068915093133388).unwrap(),
-                        F::from(-0.3326705529509569).unwrap(),
+                        F::from(0.035226291882100656).expect("Failed to convert constant to float"),
+                        F::from(0.08544127388224149).expect("Failed to convert constant to float"),
+                        F::from(-0.13501102001039084).expect("Failed to convert constant to float"),
+                        F::from(-0.4598775021193313).expect("Failed to convert constant to float"),
+                        F::from(0.8068915093133388).expect("Failed to convert constant to float"),
+                        F::from(-0.3326705529509569).expect("Failed to convert constant to float"),
                     ]);
                     Ok((h, g))
                 }
                 _ => {
                     // Default to db4 for unsupported orders
                     let h = Array1::from_vec(vec![
-                        F::from(0.48296291314469025).unwrap(),
-                        F::from(0.8365163037378079).unwrap(),
-                        F::from(0.22414386804185735).unwrap(),
-                        F::from(-0.12940952255092145).unwrap(),
+                        F::from(0.48296291314469025).expect("Failed to convert constant to float"),
+                        F::from(0.8365163037378079).expect("Failed to convert constant to float"),
+                        F::from(0.22414386804185735).expect("Failed to convert constant to float"),
+                        F::from(-0.12940952255092145).expect("Failed to convert constant to float"),
                     ]);
                     let g = Array1::from_vec(vec![
-                        F::from(-0.12940952255092145).unwrap(),
-                        F::from(-0.22414386804185735).unwrap(),
-                        F::from(0.8365163037378079).unwrap(),
-                        F::from(-0.48296291314469025).unwrap(),
+                        F::from(-0.12940952255092145).expect("Failed to convert constant to float"),
+                        F::from(-0.22414386804185735).expect("Failed to convert constant to float"),
+                        F::from(0.8365163037378079).expect("Failed to convert constant to float"),
+                        F::from(-0.48296291314469025).expect("Failed to convert constant to float"),
                     ]);
                     Ok((h, g))
                 }
@@ -421,12 +423,12 @@ where
         _ => {
             // Default to Haar for unsupported families
             let h = Array1::from_vec(vec![
-                F::from(std::f64::consts::FRAC_1_SQRT_2).unwrap(),
-                F::from(std::f64::consts::FRAC_1_SQRT_2).unwrap(),
+                F::from(std::f64::consts::FRAC_1_SQRT_2).expect("Failed to convert to float"),
+                F::from(std::f64::consts::FRAC_1_SQRT_2).expect("Failed to convert to float"),
             ]);
             let g = Array1::from_vec(vec![
-                F::from(-std::f64::consts::FRAC_1_SQRT_2).unwrap(),
-                F::from(std::f64::consts::FRAC_1_SQRT_2).unwrap(),
+                F::from(-std::f64::consts::FRAC_1_SQRT_2).expect("Failed to convert to float"),
+                F::from(std::f64::consts::FRAC_1_SQRT_2).expect("Failed to convert to float"),
             ]);
             Ok((h, g))
         }
@@ -570,9 +572,10 @@ where
     // Skip the first level (approximation coefficients) and only use detail _coefficients
     for coeff_level in coefficients.iter().skip(1) {
         if coeff_level.len() > 1 {
-            let mean = coeff_level.sum() / F::from(coeff_level.len()).unwrap();
+            let mean =
+                coeff_level.sum() / F::from(coeff_level.len()).expect("Failed to convert to float");
             let variance = coeff_level.mapv(|x| (x - mean) * (x - mean)).sum()
-                / F::from(coeff_level.len() - 1).unwrap();
+                / F::from(coeff_level.len() - 1).expect("Failed to convert to float");
 
             total_variance = total_variance + variance;
             total_count += 1;
@@ -580,7 +583,7 @@ where
     }
 
     if total_count > 0 {
-        Ok(total_variance / F::from(total_count).unwrap())
+        Ok(total_variance / F::from(total_count).expect("Failed to convert to float"))
     } else {
         Ok(F::zero())
     }
@@ -604,12 +607,12 @@ where
     // Calculate log of average energy per scale
     for (scale, coeff_level) in coefficients.iter().enumerate().skip(1) {
         if !coeff_level.is_empty() {
-            let avg_energy =
-                coeff_level.mapv(|x| x * x).sum() / F::from(coeff_level.len()).unwrap();
+            let avg_energy = coeff_level.mapv(|x| x * x).sum()
+                / F::from(coeff_level.len()).expect("Failed to convert to float");
 
             if avg_energy > F::zero() {
                 let log_energy = avg_energy.ln();
-                let log_scale = F::from(scale).unwrap().ln();
+                let log_scale = F::from(scale).expect("Failed to convert to float").ln();
                 scale_energies.push((log_scale, log_energy));
             }
         }
@@ -620,7 +623,7 @@ where
     }
 
     // Linear regression to estimate slope (regularity)
-    let n = F::from(scale_energies.len()).unwrap();
+    let n = F::from(scale_energies.len()).expect("Failed to convert to float");
     let sum_x: F = scale_energies
         .iter()
         .map(|(x_, _)| *x_)
@@ -639,7 +642,7 @@ where
         .fold(F::zero(), |acc, xx| acc + xx);
 
     let denominator = n * sum_xx - sum_x * sum_x;
-    if denominator.abs() < F::from(1e-10).unwrap() {
+    if denominator.abs() < F::from(1e-10).expect("Failed to convert constant to float") {
         return Ok(F::zero());
     }
 
@@ -689,11 +692,11 @@ where
 
     // Calculate coefficient of variation across levels
     let mean_energy = level_energies.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from(level_energies.len()).unwrap();
+        / F::from(level_energies.len()).expect("Failed to convert to float");
 
     let variance_energy = level_energies.iter().fold(F::zero(), |acc, &x| {
         acc + (x - mean_energy) * (x - mean_energy)
-    }) / F::from(level_energies.len()).unwrap();
+    }) / F::from(level_energies.len()).expect("Failed to convert to float");
 
     let level_cv = if mean_energy > F::zero() {
         variance_energy.sqrt() / mean_energy
@@ -799,7 +802,8 @@ where
                     let t_norm = (tau as f64) / scale;
                     let envelope = (-0.5 * t_norm * t_norm).exp();
                     let oscillation = (omega0 * t_norm).cos();
-                    let wavelet_val = F::from(envelope * oscillation).unwrap();
+                    let wavelet_val =
+                        F::from(envelope * oscillation).expect("Failed to convert to float");
 
                     cwt_value = cwt_value + signal[signal_idx] * wavelet_val;
                     norm = norm + wavelet_val * wavelet_val;
@@ -843,7 +847,7 @@ where
         // Convert scale to frequency (simplified)
         let scale = scales[max_scale_idx];
         let freq = 1.0 / scale; // Simplified frequency estimation
-        inst_freqs.push(F::from(freq).unwrap());
+        inst_freqs.push(F::from(freq).expect("Failed to convert to float"));
     }
 
     Ok(inst_freqs)
@@ -881,12 +885,12 @@ where
     let mean = _instantaneousfrequencies
         .iter()
         .fold(F::zero(), |acc, &x| acc + x)
-        / F::from(n).unwrap();
+        / F::from(n).expect("Failed to convert to float");
 
     let variance = _instantaneousfrequencies
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-        / F::from(n - 1).unwrap();
+        / F::from(n - 1).expect("Failed to convert to float");
 
     // Stability is inverse of coefficient of variation
     if mean > F::zero() {
@@ -939,7 +943,7 @@ where
 
         for (scale_idx, &scale) in scales.iter().enumerate() {
             let weight = time_slice[scale_idx] * time_slice[scale_idx];
-            let freq = F::from(1.0 / scale).unwrap();
+            let freq = F::from(1.0 / scale).expect("Failed to convert to float");
 
             weighted_freq = weighted_freq + weight * freq;
             total_weight = total_weight + weight;
@@ -986,7 +990,7 @@ where
         }
 
         let n = coeff_level.len();
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         // Mean
         let mean = coeff_level.sum() / n_f;
@@ -1010,7 +1014,8 @@ where
             }
 
             let skewness = sum_cube / n_f;
-            let kurtosis = sum_fourth / n_f - F::from(3.0).unwrap();
+            let kurtosis =
+                sum_fourth / n_f - F::from(3.0).expect("Failed to convert constant to float");
 
             level_skewness.push(skewness);
             level_kurtosis.push(kurtosis);
@@ -1129,26 +1134,30 @@ where
 
     let median_idx = sorted_coeffs.len() / 2;
     let mad = if sorted_coeffs.len().is_multiple_of(2) {
-        (sorted_coeffs[median_idx - 1] + sorted_coeffs[median_idx]) / F::from(2.0).unwrap()
+        (sorted_coeffs[median_idx - 1] + sorted_coeffs[median_idx])
+            / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         sorted_coeffs[median_idx]
     };
 
-    let sigma = mad / F::from(0.6745).unwrap(); // MAD to standard deviation conversion
+    let sigma = mad / F::from(0.6745).expect("Failed to convert constant to float"); // MAD to standard deviation conversion
 
     match method {
         DenoisingMethod::Hard | DenoisingMethod::Soft => {
             // Universal threshold
-            let n = F::from(finest_detail.len()).unwrap();
-            Ok(sigma * (F::from(2.0).unwrap() * n.ln()).sqrt())
+            let n = F::from(finest_detail.len()).expect("Failed to convert to float");
+            Ok(
+                sigma
+                    * (F::from(2.0).expect("Failed to convert constant to float") * n.ln()).sqrt(),
+            )
         }
         DenoisingMethod::Sure => {
             // SURE threshold (simplified)
-            Ok(sigma * F::from(1.5).unwrap())
+            Ok(sigma * F::from(1.5).expect("Failed to convert constant to float"))
         }
         DenoisingMethod::Minimax => {
             // Minimax threshold (simplified)
-            Ok(sigma * F::from(0.8).unwrap())
+            Ok(sigma * F::from(0.8).expect("Failed to convert constant to float"))
         }
     }
 }
@@ -1229,7 +1238,7 @@ where
 
     // Add scaled detail _coefficients (simplified approach)
     for (level, detail_coeffs) in coefficients.iter().enumerate().skip(1) {
-        let scale_factor = F::from(2.0_f64.powi(level as i32)).unwrap();
+        let scale_factor = F::from(2.0_f64.powi(level as i32)).expect("Failed to convert to float");
 
         // Upsample and add details (very simplified)
         for (i, &detail) in detail_coeffs.iter().enumerate() {
@@ -1257,8 +1266,11 @@ where
         });
 
     if noise_power > F::zero() && signal_power > F::zero() {
-        let snr = (signal_power / noise_power).ln() / F::from(10.0).unwrap().ln()
-            * F::from(10.0).unwrap();
+        let snr = (signal_power / noise_power).ln()
+            / F::from(10.0)
+                .expect("Failed to convert constant to float")
+                .ln()
+            * F::from(10.0).expect("Failed to convert constant to float");
         Ok(snr)
     } else {
         Ok(F::zero())
@@ -1271,7 +1283,7 @@ fn calculate_mse_reduction<F>(original: &Array1<F>, denoised: &Array1<F>) -> Res
 where
     F: Float + FromPrimitive,
 {
-    let n = F::from(original.len()).unwrap();
+    let n = F::from(original.len()).expect("Failed to convert to float");
     let mse = original
         .iter()
         .zip(denoised.iter())

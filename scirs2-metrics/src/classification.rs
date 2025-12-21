@@ -19,8 +19,8 @@
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
 //!
-//! let mcc = matthews_corrcoef(&y_true, &y_pred).unwrap();
-//! let bal_acc = balanced_accuracy_score(&y_true, &y_pred).unwrap();
+//! let mcc = matthews_corrcoef(&y_true, &y_pred).expect("Operation failed");
+//! let bal_acc = balanced_accuracy_score(&y_true, &y_pred).expect("Operation failed");
 //! ```
 //!
 //! ## One-vs-One Metrics
@@ -35,8 +35,8 @@
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
 //!
-//! let ovo_acc = one_vs_one_accuracy(&y_true, &y_pred).unwrap();
-//! let f1_scores = one_vs_one_f1_score(&y_true, &y_pred).unwrap();
+//! let ovo_acc = one_vs_one_accuracy(&y_true, &y_pred).expect("Operation failed");
+//! let f1_scores = one_vs_one_f1_score(&y_true, &y_pred).expect("Operation failed");
 //! ```
 
 pub mod advanced;
@@ -104,7 +104,7 @@ use crate::error::{MetricsError, Result};
 /// let y_true = array![0, 1, 2, 3];
 /// let y_pred = array![0, 2, 1, 3];
 ///
-/// let acc = accuracy_score(&y_true, &y_pred).unwrap();
+/// let acc = accuracy_score(&y_true, &y_pred).expect("Operation failed");
 /// assert!((acc - 0.5).abs() < 1e-10); // 2 out of 4 are correct
 /// ```
 #[allow(dead_code)]
@@ -170,7 +170,7 @@ where
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
 ///
-/// let (cm, classes) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+/// let (cm, classes) = confusion_matrix(&y_true, &y_pred, None).expect("Operation failed");
 /// // Expected confusion matrix:
 /// // [[2, 0, 0],
 /// //  [1, 0, 1],
@@ -314,7 +314,7 @@ where
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
 ///
-/// let precision = precision_score(&y_true, &y_pred, 1).unwrap();
+/// let precision = precision_score(&y_true, &y_pred, 1).expect("Operation failed");
 /// // There are 2 true positives and 1 false positive
 /// assert!((precision - 2.0/3.0).abs() < 1e-10);
 /// ```
@@ -441,7 +441,7 @@ where
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
 ///
-/// let recall = recall_score(&y_true, &y_pred, 1).unwrap();
+/// let recall = recall_score(&y_true, &y_pred, 1).expect("Operation failed");
 /// // There are 2 true positives and 1 false negative
 /// assert!((recall - 2.0/3.0).abs() < 1e-10);
 /// ```
@@ -580,7 +580,7 @@ where
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
 ///
-/// let f1 = f1_score(&y_true, &y_pred, 1).unwrap();
+/// let f1 = f1_score(&y_true, &y_pred, 1).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn f1_score<T, S1, S2, D1, D2>(
@@ -630,10 +630,10 @@ where
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
 ///
 /// // F0.5 score (weighs precision higher than recall)
-/// let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).unwrap();
+/// let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).expect("Operation failed");
 ///
 /// // F2 score (weighs recall higher than precision)
-/// let f_two = fbeta_score(&y_true, &y_pred, 1, 2.0).unwrap();
+/// let f_two = fbeta_score(&y_true, &y_pred, 1, 2.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn fbeta_score<T, S1, S2, D1, D2>(
@@ -690,7 +690,7 @@ where
 /// let y_true = array![0, 1, 1, 0];
 /// let y_prob = array![0.1, 0.9, 0.8, 0.3];
 ///
-/// let loss = binary_log_loss(&y_true, &y_prob, 1e-15).unwrap();
+/// let loss = binary_log_loss(&y_true, &y_prob, 1e-15).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn binary_log_loss<S1, S2, D1, D2>(
@@ -759,7 +759,7 @@ where
 /// let y_true = array![0, 0, 1, 1];
 /// let y_score = array![0.1, 0.4, 0.35, 0.8];
 ///
-/// let auc = roc_auc_score(&y_true, &y_score).unwrap();
+/// let auc = roc_auc_score(&y_true, &y_score).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn roc_auc_score<S1, S2, D1, D2>(
@@ -876,7 +876,7 @@ where
 /// let y_true = array![0, 0, 1, 0, 1, 1, 0, 1, 0, 1];
 /// let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
 ///
-/// let (percentiles, lift_values, cum_gains) = lift_chart(&y_true, &y_score, 10).unwrap();
+/// let (percentiles, lift_values, cum_gains) = lift_chart(&y_true, &y_score, 10).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn lift_chart<S1, S2, D1, D2>(
@@ -1006,7 +1006,7 @@ where
 /// let y_true = array![0, 0, 1, 0, 1, 1, 0, 1, 0, 1];
 /// let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
 ///
-/// let (percentiles, cum_gains) = gain_chart(&y_true, &y_score, 10).unwrap();
+/// let (percentiles, cum_gains) = gain_chart(&y_true, &y_score, 10).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn gain_chart<S1, S2, D1, D2>(
@@ -1046,7 +1046,7 @@ where
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
 ///
-/// let report = classification_report(&y_true, &y_pred, None).unwrap();
+/// let report = classification_report(&y_true, &y_pred, None).expect("Operation failed");
 /// println!("{}", report);
 /// ```
 #[allow(dead_code)]
@@ -1140,7 +1140,7 @@ mod tests {
         let y_true = array![0, 1, 2, 3];
         let y_pred = array![0, 2, 1, 3];
 
-        let acc = accuracy_score(&y_true, &y_pred).unwrap();
+        let acc = accuracy_score(&y_true, &y_pred).expect("Operation failed");
         assert_abs_diff_eq!(acc, 0.5, epsilon = 1e-10); // 2 out of 4 are correct
     }
 
@@ -1149,7 +1149,7 @@ mod tests {
         let y_true = array![0, 1, 2, 0, 1, 2];
         let y_pred = array![0, 2, 1, 0, 0, 2];
 
-        let (cm, classes) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+        let (cm, classes) = confusion_matrix(&y_true, &y_pred, None).expect("Operation failed");
 
         assert_eq!(cm.shape(), &[3, 3]);
         assert_eq!(classes.len(), 3);
@@ -1170,9 +1170,9 @@ mod tests {
         let y_true = array![0, 1, 0, 0, 1, 1];
         let y_pred = array![0, 0, 1, 0, 1, 1];
 
-        let precision = precision_score(&y_true, &y_pred, 1).unwrap();
-        let recall = recall_score(&y_true, &y_pred, 1).unwrap();
-        let f1 = f1_score(&y_true, &y_pred, 1).unwrap();
+        let precision = precision_score(&y_true, &y_pred, 1).expect("Operation failed");
+        let recall = recall_score(&y_true, &y_pred, 1).expect("Operation failed");
+        let f1 = f1_score(&y_true, &y_pred, 1).expect("Operation failed");
 
         // precision = 2/3, recall = 2/3, f1 = 2*2/3*2/3 / (2/3 + 2/3) = 2/3
         assert_abs_diff_eq!(precision, 2.0 / 3.0, epsilon = 1e-10);
@@ -1186,17 +1186,17 @@ mod tests {
         let y_pred = array![0, 0, 1, 0, 1, 1];
 
         // F1 score (beta = 1.0)
-        let f1 = fbeta_score(&y_true, &y_pred, 1, 1.0).unwrap();
+        let f1 = fbeta_score(&y_true, &y_pred, 1, 1.0).expect("Operation failed");
         assert_abs_diff_eq!(f1, 2.0 / 3.0, epsilon = 1e-10);
 
         // F0.5 score (weighs precision higher than recall)
-        let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).unwrap();
+        let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).expect("Operation failed");
         // With beta=0.5, beta²=0.25
         // F0.5 = (1+0.25) * 2/3 * 2/3 / (0.25*2/3 + 2/3) = 1.25 * 4/9 / (1/6 + 2/3) = 5/9 / 5/6 = 5/9 * 6/5 = 30/45 = 2/3
         assert_abs_diff_eq!(f_half, 2.0 / 3.0, epsilon = 1e-10);
 
         // F2 score (weighs recall higher than precision)
-        let f_two = fbeta_score(&y_true, &y_pred, 1, 2.0).unwrap();
+        let f_two = fbeta_score(&y_true, &y_pred, 1, 2.0).expect("Operation failed");
         // With beta=2.0, beta²=4.0
         // F2 = (1+4) * 2/3 * 2/3 / (4*2/3 + 2/3) = 5 * 4/9 / (8/3 + 2/3) = 20/9 / 10/3 = 20/9 * 3/10 = 60/90 = 2/3
         assert_abs_diff_eq!(f_two, 2.0 / 3.0, epsilon = 1e-10);
@@ -1208,17 +1208,17 @@ mod tests {
         // precision = 3/5 = 0.6, recall = 3/5 = 0.6
 
         // F1 score (beta = 1.0)
-        let f1 = fbeta_score(&y_true, &y_pred, 1, 1.0).unwrap();
+        let f1 = fbeta_score(&y_true, &y_pred, 1, 1.0).expect("Operation failed");
         assert_abs_diff_eq!(f1, 0.6, epsilon = 1e-10);
 
         // F0.5 score (weighs precision higher than recall)
-        let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).unwrap();
+        let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).expect("Operation failed");
         // With beta=0.5, beta²=0.25
         // F0.5 = (1+0.25) * 0.6 * 0.6 / (0.25*0.6 + 0.6) = 1.25 * 0.36 / (0.15 + 0.6) = 0.45 / 0.75 = 0.6
         assert_abs_diff_eq!(f_half, 0.6, epsilon = 1e-10);
 
         // F2 score (weighs recall higher than precision)
-        let f_two = fbeta_score(&y_true, &y_pred, 1, 2.0).unwrap();
+        let f_two = fbeta_score(&y_true, &y_pred, 1, 2.0).expect("Operation failed");
         // With beta=2.0, beta²=4.0
         // F2 = (1+4) * 0.6 * 0.6 / (4*0.6 + 0.6) = 5 * 0.36 / (2.4 + 0.6) = 1.8 / 3.0 = 0.6
         assert_abs_diff_eq!(f_two, 0.6, epsilon = 1e-10);
@@ -1229,7 +1229,7 @@ mod tests {
         // precision = 2/4 = 0.5, recall = 2/4 = 0.5
 
         // F0.5 score (weighs precision higher than recall)
-        let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).unwrap();
+        let f_half = fbeta_score(&y_true, &y_pred, 1, 0.5).expect("Operation failed");
         // With beta=0.5, beta²=0.25
         // F0.5 = (1+0.25) * 0.5 * 0.5 / (0.25*0.5 + 0.5) = 1.25 * 0.25 / (0.125 + 0.5) = 0.3125 / 0.625 = 0.5
         assert_abs_diff_eq!(f_half, 0.5, epsilon = 1e-10);
@@ -1240,7 +1240,7 @@ mod tests {
         let y_true = array![0, 1, 1, 0];
         let y_prob = array![0.1, 0.9, 0.8, 0.3];
 
-        let loss = binary_log_loss(&y_true, &y_prob, 1e-15).unwrap();
+        let loss = binary_log_loss(&y_true, &y_prob, 1e-15).expect("Operation failed");
         // Expected loss: -[(log(0.9) + log(0.8) + log(0.9) + log(0.7))/4]
         let expected =
             -(((1.0_f64 - 0.1).ln() + 0.9_f64.ln() + 0.8_f64.ln() + (1.0_f64 - 0.3).ln()) / 4.0);
@@ -1252,13 +1252,13 @@ mod tests {
         // Perfect separation
         let y_true = array![0, 0, 1, 1];
         let y_score = array![0.1, 0.2, 0.8, 0.9];
-        let auc = roc_auc_score(&y_true, &y_score).unwrap();
+        let auc = roc_auc_score(&y_true, &y_score).expect("Operation failed");
         assert_abs_diff_eq!(auc, 1.0, epsilon = 1e-10);
 
         // Random
         let y_true = array![0, 1, 0, 1];
         let y_score = array![0.5, 0.5, 0.5, 0.5];
-        let auc = roc_auc_score(&y_true, &y_score).unwrap();
+        let auc = roc_auc_score(&y_true, &y_score).expect("Operation failed");
         assert_abs_diff_eq!(auc, 0.5, epsilon = 1e-10);
     }
 
@@ -1268,7 +1268,8 @@ mod tests {
         let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
 
         // Test with 5 bins
-        let (percentiles, lift_values, cum_gains) = lift_chart(&y_true, &y_score, 5).unwrap();
+        let (percentiles, lift_values, cum_gains) =
+            lift_chart(&y_true, &y_score, 5).expect("Operation failed");
 
         // Verify dimensions
         assert_eq!(percentiles.len(), 5);
@@ -1293,7 +1294,7 @@ mod tests {
         let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
 
         // Test with 5 bins
-        let (percentiles, cum_gains) = gain_chart(&y_true, &y_score, 5).unwrap();
+        let (percentiles, cum_gains) = gain_chart(&y_true, &y_score, 5).expect("Operation failed");
 
         // Verify dimensions
         assert_eq!(percentiles.len(), 5);

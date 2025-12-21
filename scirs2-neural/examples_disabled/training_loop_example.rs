@@ -136,7 +136,7 @@ fn main() -> Result<()> {
         let learning_rate = learning_rates[epoch];
         history
             .get_mut("learning_rate")
-            .unwrap()
+            .expect("Operation failed")
             .push(learning_rate);
         // Reset data loader
         let mut train_loader = DataLoader::new(train_dataset.clone(), batch_size, true, false);
@@ -172,7 +172,7 @@ fn main() -> Result<()> {
             batch_count += 1;
         // Compute epoch loss
         epoch_loss /= batch_count as f32;
-        history.get_mut("train_loss").unwrap().push(epoch_loss);
+        history.get_mut("train_loss").expect("Operation failed").push(epoch_loss);
         context.epoch_loss = Some(epoch_loss);
         println!("Train loss: {:.6}", epoch_loss);
         // Evaluate on validation set
@@ -187,12 +187,12 @@ fn main() -> Result<()> {
             val_batch_count += 1;
         // Compute validation loss
         val_loss /= val_batch_count as f32;
-        history.get_mut("val_loss").unwrap().push(val_loss);
+        history.get_mut("val_loss").expect("Operation failed").push(val_loss);
         context.val_loss = Some(val_loss);
         // Simulate accuracy metric
         let accuracy =
             0.5 + 0.4 * (epoch as f32 / num_epochs as f32) + rand::random::<f32>() * 0.05;
-        history.get_mut("accuracy").unwrap().push(accuracy);
+        history.get_mut("accuracy").expect("Operation failed").push(accuracy);
         // Add accuracy to metrics
         context.metrics = vec![accuracy];
         println!("Validation loss: {:.6}", val_loss);
@@ -240,7 +240,7 @@ fn main() -> Result<()> {
     let mut accuracy_data = HashMap::new();
     accuracy_data.insert(
         "accuracy".to_string(),
-        history.get("accuracy").unwrap().clone(),
+        history.get("accuracy").expect("Operation failed").clone(),
     // Plot accuracy
     let accuracy_plot = ascii_plot(
         &accuracy_data,
@@ -262,7 +262,7 @@ fn main() -> Result<()> {
     let mut lr_data = HashMap::new();
     lr_data.insert(
         "learning_rate".to_string(),
-        history.get("learning_rate").unwrap().clone(),
+        history.get("learning_rate").expect("Operation failed").clone(),
     // Plot learning rate
     let lr_plot = ascii_plot(
         &lr_data,
@@ -273,9 +273,9 @@ fn main() -> Result<()> {
     let mut loss_data = HashMap::new();
     loss_data.insert(
         "train_loss".to_string(),
-        history.get("train_loss").unwrap().clone(),
+        history.get("train_loss").expect("Operation failed").clone(),
         "val_loss".to_string(),
-        history.get("val_loss").unwrap().clone(),
+        history.get("val_loss").expect("Operation failed").clone(),
     let loss_plot = ascii_plot(
         &loss_data,
         Some("Training and Validation Loss"),

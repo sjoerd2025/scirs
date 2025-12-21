@@ -438,7 +438,7 @@ impl SpectralPeakTracker {
         }
 
         // Sort by amplitude and keep top peaks
-        peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         peaks.truncate(self.max_peaks);
 
         // Update tracked peaks
@@ -459,7 +459,7 @@ mod tests {
     #[test]
     fn test_adaptive_ar_initialization() {
         let config = AdaptiveConfig::default();
-        let model = initialize_adaptive_ar(&config).unwrap();
+        let model = initialize_adaptive_ar(&config).expect("Operation failed");
 
         assert_eq!(model.order, config.initial_order);
         assert_eq!(model.coefficients.len(), config.initial_order);
@@ -473,13 +473,13 @@ mod tests {
             ..Default::default()
         };
 
-        let mut model = initialize_adaptive_ar(&config).unwrap();
+        let mut model = initialize_adaptive_ar(&config).expect("Operation failed");
 
         // Generate simple AR signal
         let signal = vec![1.0, 0.5, 0.25, 0.125, 0.0625];
 
         for &sample in &signal {
-            let error = update_adaptive_ar(&mut model, sample, &config).unwrap();
+            let error = update_adaptive_ar(&mut model, sample, &config).expect("Operation failed");
             assert!(error.is_finite());
         }
 
@@ -498,7 +498,7 @@ mod tests {
             method: AdaptiveMethod::RLS,
         };
 
-        let (freqs, psd) = adaptive_spectrum(&model, 128).unwrap();
+        let (freqs, psd) = adaptive_spectrum(&model, 128).expect("Operation failed");
 
         assert_eq!(freqs.len(), 128);
         assert_eq!(psd.len(), 128);

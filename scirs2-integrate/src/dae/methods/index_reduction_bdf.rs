@@ -216,7 +216,7 @@ where
     // ... (higher derivatives as needed)
 
     // Compute necessary derivatives for the extended system
-    let h = F::from_f64(1e-8).unwrap(); // Small step for numerical differentiation
+    let h = F::from_f64(1e-8).expect("Operation failed"); // Small step for numerical differentiation
 
     // Storage for extended initial conditions
     let extended_size = n * index_level;
@@ -276,7 +276,7 @@ where
                 // Compute derivatives of the constraint
                 // This is a simplified implementation - in practice, automatic differentiation
                 // or symbolic differentiation would be preferred
-                let h_diff = F::from_f64(1e-6).unwrap();
+                let h_diff = F::from_f64(1e-6).expect("Operation failed");
 
                 for i in 0..n {
                     // Numerical differentiation of the residual with respect to time
@@ -287,7 +287,8 @@ where
 
                     // Derivative constraint: df/dt + df/dy * y' + df/dy' * y'' = 0
                     // For simplicity, we use a linearized approximation
-                    residual[start_idx + i] = df_dt + f_val[i] * F::from_f64(0.1).unwrap();
+                    residual[start_idx + i] =
+                        df_dt + f_val[i] * F::from_f64(0.1).expect("Operation failed");
                 }
             }
 

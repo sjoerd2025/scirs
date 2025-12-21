@@ -45,7 +45,7 @@ pub fn simd_quantized_matvec(
 
     // Create result vector
     let mut result = Array1::zeros(qmatrix.shape.0);
-    let vec_slice = vector.as_slice().unwrap();
+    let vec_slice = vector.as_slice().expect("Operation failed");
 
     // Handle based on data type
     match &qmatrix.data {
@@ -78,7 +78,7 @@ pub fn simd_quantized_matvec(
                     let chunksize = 8;
                     let mut acc = 0.0f32;
 
-                    let row_slice = row.as_slice().unwrap();
+                    let row_slice = row.as_slice().expect("Operation failed");
                     let mut j = 0;
 
                     // Accumulate 8 elements at a time using SIMD
@@ -118,7 +118,7 @@ pub fn simd_quantized_matvec(
                 {
                     // Process each row
                     for (i, row) in data.rows().into_iter().enumerate() {
-                        let row_slice = row.as_slice().unwrap();
+                        let row_slice = row.as_slice().expect("Operation failed");
                         let mut acc = 0.0f32;
 
                         // For Int4/UInt4, we need to unpack two values from each byte
@@ -171,7 +171,7 @@ pub fn simd_quantized_matvec(
                 } else {
                     // Standard Int8 processing
                     for (i, row) in data.rows().into_iter().enumerate() {
-                        let row_slice = row.as_slice().unwrap();
+                        let row_slice = row.as_slice().expect("Operation failed");
                         let mut acc = 0.0f32;
 
                         // Process 8 elements at a time with SIMD
@@ -628,8 +628,8 @@ pub fn simd_quantized_dot(
         }
 
         // Standard 8-bit quantization
-        let a_slice = a_data.as_slice().unwrap();
-        let b_slice = b_data.as_slice().unwrap();
+        let a_slice = a_data.as_slice().expect("Operation failed");
+        let b_slice = b_data.as_slice().expect("Operation failed");
 
         // Process 8 elements at a time with SIMD
         let mut i = 0;
@@ -703,7 +703,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_quantized_matvec() {
         // Create test matrix and vector
         let mat = array![
@@ -718,7 +717,7 @@ mod tests {
         let (qmat, qparams) = quantize_matrix(&mat.view(), 8, QuantizationMethod::Symmetric);
 
         // Compute result with SIMD acceleration
-        let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).unwrap();
+        let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).expect("Operation failed");
 
         // Expected result (regular matmul)
         let expected = array![40.0f32, 96.0, 152.0];
@@ -731,7 +730,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_quantized_matmul() {
         // Create test matrices
         let a = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -742,7 +740,8 @@ mod tests {
         let (qb, qb_params) = quantize_matrix(&b.view(), 8, QuantizationMethod::Symmetric);
 
         // Compute result with SIMD acceleration
-        let result = simd_quantized_matmul(&qa, &qa_params, &qb, &qb_params).unwrap();
+        let result =
+            simd_quantized_matmul(&qa, &qa_params, &qb, &qb_params).expect("Operation failed");
 
         // Expected result (regular matmul)
         let expected = array![[66.0f32, 72.0, 78.0], [156.0, 171.0, 186.0]];
@@ -755,7 +754,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_quantized_dot() {
         // Create test vectors
         let a = array![1.0f32, 2.0, 3.0, 4.0, 5.0];
@@ -766,7 +764,8 @@ mod tests {
         let (qb, qb_params) = quantize_vector(&b.view(), 8, QuantizationMethod::Symmetric);
 
         // Compute result with SIMD acceleration
-        let result = simd_quantized_dot(&qa, &qa_params, &qb, &qb_params).unwrap();
+        let result =
+            simd_quantized_dot(&qa, &qa_params, &qb, &qb_params).expect("Operation failed");
 
         // Expected result (regular dot product)
         let expected = 1.0 * 5.0 + 2.0 * 4.0 + 3.0 * 3.0 + 4.0 * 2.0 + 5.0 * 1.0;
@@ -779,7 +778,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_quantized_int4_operations() {
         // Create test matrix and vector
         let mat = array![[1.0f32, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]];
@@ -790,7 +788,7 @@ mod tests {
         let (qmat, qparams) = quantize_matrix(&mat.view(), 4, QuantizationMethod::Int4);
 
         // Compute result with SIMD acceleration
-        let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).unwrap();
+        let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).expect("Operation failed");
 
         // Expected result (regular matmul)
         let expected = array![40.0f32, 96.0];
@@ -803,7 +801,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_quantized_per_channel() {
         // Create a test matrix with very different scales in each column
         let mat = array![
@@ -819,7 +816,7 @@ mod tests {
             quantize_matrix_per_channel(&mat.view(), 8, QuantizationMethod::PerChannelSymmetric);
 
         // Compute result with SIMD acceleration
-        let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).unwrap();
+        let result = simd_quantized_matvec(&qmat, &qparams, &vec.view()).expect("Operation failed");
 
         // Expected result (regular matmul)
         let expected = array![

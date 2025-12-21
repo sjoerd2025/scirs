@@ -371,7 +371,7 @@ impl<'py> PyArrayDescrMethods<'py> for Bound<'py, PyArrayDescr> {
             Some(subarray) => {
                 // NumPy guarantees that shape is a tuple of non-negative integers so this should never panic.
                 let shape = unsafe { Borrowed::from_ptr(self.py(), subarray.shape) };
-                shape.extract().unwrap()
+                shape.extract().expect("Operation failed")
             }
         }
     }
@@ -409,14 +409,18 @@ impl<'py> PyArrayDescrMethods<'py> for Bound<'py, PyArrayDescr> {
             .get_item(name)?
             .ok_or_else(|| PyIndexError::new_err(name.to_owned()))?
             .cast_into::<PyTuple>()
-            .unwrap();
+            .expect("Operation failed");
         // Note that we cannot just extract the entire tuple since the third element can be a title.
         let dtype = tuple
             .get_item(0)
-            .unwrap()
+            .expect("Operation failed")
             .cast_into::<PyArrayDescr>()
-            .unwrap();
-        let offset = tuple.get_item(1).unwrap().extract().unwrap();
+            .expect("Operation failed");
+        let offset = tuple
+            .get_item(1)
+            .expect("Operation failed")
+            .extract()
+            .expect("Operation failed");
         Ok((dtype, offset))
     }
 }
@@ -659,14 +663,23 @@ mod tests {
     fn test_dtype_new() {
         Python::attach(|py| {
             assert!(PyArrayDescr::new(py, "float64")
-                .unwrap()
+                .expect("Operation failed")
                 .is(dtype::<f64>(py)));
 
-            let dt = PyArrayDescr::new(py, [("a", "O"), ("b", "?")].as_ref()).unwrap();
+            let dt =
+                PyArrayDescr::new(py, [("a", "O"), ("b", "?")].as_ref()).expect("Operation failed");
             assert_eq!(dt.names(), Some(vec!["a".to_owned(), "b".to_owned()]));
             assert!(dt.has_object());
-            assert!(dt.get_field("a").unwrap().0.is(dtype::<Py<PyAny>>(py)));
-            assert!(dt.get_field("b").unwrap().0.is(dtype::<bool>(py)));
+            assert!(dt
+                .get_field("a")
+                .expect("Operation failed")
+                .0
+                .is(dtype::<Py<PyAny>>(py)));
+            assert!(dt
+                .get_field("b")
+                .expect("Operation failed")
+                .0
+                .is(dtype::<bool>(py)));
 
             assert!(PyArrayDescr::new(py, 123_usize).is_err());
         });
@@ -675,7 +688,10 @@ mod tests {
     #[test]
     fn test_dtype_names() {
         fn type_name<T: Element>(py: Python<'_>) -> Bound<'_, PyString> {
-            dtype::<T>(py).typeobj().qualname().unwrap()
+            dtype::<T>(py)
+                .typeobj()
+                .qualname()
+                .expect("Operation failed")
         }
         Python::attach(|py| {
             if is_numpy_2(py) {
@@ -719,7 +735,10 @@ mod tests {
 
             assert_eq!(dt.num(), NPY_TYPES::NPY_DOUBLE as c_int);
             assert_eq!(dt.flags(), 0);
-            assert_eq!(dt.typeobj().qualname().unwrap(), "float64");
+            assert_eq!(
+                dt.typeobj().qualname().expect("Operation failed"),
+                "float64"
+            );
             assert_eq!(dt.char(), b'd');
             assert_eq!(dt.kind(), b'f');
             assert_eq!(dt.byteorder(), b'=');
@@ -748,14 +767,14 @@ mod tests {
             );
             let dt = locals
                 .get_item("dtype")
-                .unwrap()
-                .unwrap()
+                .expect("Operation failed")
+                .expect("Operation failed")
                 .cast_into::<PyArrayDescr>()
-                .unwrap();
+                .expect("Operation failed");
 
             assert_eq!(dt.num(), NPY_TYPES::NPY_VOID as c_int);
             assert_eq!(dt.flags(), 0);
-            assert_eq!(dt.typeobj().qualname().unwrap(), "void");
+            assert_eq!(dt.typeobj().qualname().expect("Operation failed"), "void");
             assert_eq!(dt.char(), b'V');
             assert_eq!(dt.kind(), b'V');
             assert_eq!(dt.byteorder(), b'|');
@@ -784,16 +803,16 @@ mod tests {
             );
             let dt = locals
                 .get_item("dtype")
-                .unwrap()
-                .unwrap()
+                .expect("Operation failed")
+                .expect("Operation failed")
                 .cast_into::<PyArrayDescr>()
-                .unwrap();
+                .expect("Operation failed");
 
             assert_eq!(dt.num(), NPY_TYPES::NPY_VOID as c_int);
             assert_ne!(dt.flags() & NPY_ITEM_HASOBJECT, 0);
             assert_ne!(dt.flags() & NPY_NEEDS_PYAPI, 0);
             assert_ne!(dt.flags() & NPY_ALIGNED_STRUCT, 0);
-            assert_eq!(dt.typeobj().qualname().unwrap(), "void");
+            assert_eq!(dt.typeobj().qualname().expect("Operation failed"), "void");
             assert_eq!(dt.char(), b'V');
             assert_eq!(dt.kind(), b'V');
             assert_eq!(dt.byteorder(), b'|');
@@ -811,13 +830,13 @@ mod tests {
             assert_eq!(dt.ndim(), 0);
             assert_eq!(dt.shape(), Vec::<usize>::new());
             assert!(dt.base().is_equiv_to(&dt));
-            let x = dt.get_field("x").unwrap();
+            let x = dt.get_field("x").expect("Operation failed");
             assert!(x.0.is_equiv_to(&dtype::<u8>(py)));
             assert_eq!(x.1, 0);
-            let y = dt.get_field("y").unwrap();
+            let y = dt.get_field("y").expect("Operation failed");
             assert!(y.0.is_equiv_to(&dtype::<f64>(py)));
             assert_eq!(y.1, 8);
-            let z = dt.get_field("z").unwrap();
+            let z = dt.get_field("z").expect("Operation failed");
             assert!(z.0.is_equiv_to(&dtype::<Py<PyAny>>(py)));
             assert_eq!(z.1, 16);
         });

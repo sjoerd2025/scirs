@@ -88,7 +88,7 @@ impl DistributedComputationEngine {
         let start_time = Instant::now();
         
         // Check load balance
-        let mut load_balancer = self.load_balancer.lock().unwrap();
+        let mut load_balancer = self.load_balancer.lock().expect("Operation failed");
         if let Some(plan) = load_balancer.suggest_redistribution() {
             // Implement redistribution if needed
             drop(load_balancer);
@@ -102,7 +102,7 @@ impl DistributedComputationEngine {
         
         // Record performance
         let elapsed = start_time.elapsed();
-        let mut load_balancer = self.load_balancer.lock().unwrap();
+        let mut load_balancer = self.load_balancer.lock().expect("Operation failed");
         load_balancer.record_workload(self.config.node_rank, elapsed.as_millis() as f64);
         
         Ok(result)
@@ -193,12 +193,12 @@ impl DistributedComputationEngine {
     
     /// Get computation performance metrics
     pub fn get_metrics(&self) -> ComputationMetrics {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
     
     /// Reset performance metrics
     pub fn reset_metrics(&self) {
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("Operation failed");
         *metrics = ComputationMetrics::new();
     }
     
@@ -268,14 +268,14 @@ impl DistributedComputationEngine {
         // 2. Out-of-core computation
         // 3. Memory-efficient algorithms
         
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("Operation failed");
         metrics.peak_memory_usage = metrics.peak_memory_usage.max(total_memory);
         
         Ok(())
     }
     
     fn record_computation_metrics(&self, operation: &str, duration: Duration) {
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("Operation failed");
         metrics.operation_count += 1;
         metrics.total_computation_time += duration;
         metrics.operations.insert(operation.to_string(), 
@@ -385,7 +385,7 @@ impl ComputationScheduler {
     
     /// Schedule an operation for execution
     pub fn schedule_operation(&self, operation: ScheduledOperation) {
-        let mut queue = self.operation_queue.lock().unwrap();
+        let mut queue = self.operation_queue.lock().expect("Operation failed");
         
         match self.strategy {
             SchedulingStrategy::FCFS => {
@@ -416,7 +416,7 @@ impl ComputationScheduler {
     
     /// Get next operation to execute
     pub fn next_operation(&self) -> Option<ScheduledOperation> {
-        let mut queue = self.operation_queue.lock().unwrap();
+        let mut queue = self.operation_queue.lock().expect("Operation failed");
         queue.pop_front()
     }
     
@@ -485,7 +485,7 @@ mod tests {
             .with_num_nodes(2)
             .with_node_rank(0);
         
-        let engine = DistributedComputationEngine::new(config).unwrap();
+        let engine = DistributedComputationEngine::new(config).expect("Operation failed");
         let metrics = engine.get_metrics();
         
         assert_eq!(metrics.operation_count, 0);
@@ -527,7 +527,7 @@ mod tests {
         scheduler.schedule_operation(op2);
         
         // With SJF, shorter operation should come first
-        let next = scheduler.next_operation().unwrap();
+        let next = scheduler.next_operation().expect("Operation failed");
         assert_eq!(next.id, "op2");
     }
     

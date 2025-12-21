@@ -14,11 +14,14 @@ fn test_trace_gradient_flow() {
 
         // Compute trace
         let tr = trace(a);
-        println!("Trace value: {:?}", tr.eval(g).unwrap());
+        println!(
+            "Trace value: {:?}",
+            tr.eval(g).expect("Test: operation failed")
+        );
 
         // Compute gradient
         let grads = grad(&[&tr], &[&a]);
-        let grad_a = grads[0].eval(g).unwrap();
+        let grad_a = grads[0].eval(g).expect("Test: operation failed");
 
         println!("Gradient shape: {:?}", grad_a.shape());
         println!("Gradient values: {:?}", grad_a);
@@ -43,10 +46,13 @@ fn test_matrix_inverse_gradient_flow() {
         let inv_a = matinv(&a);
         let sum_inv = sum_all(inv_a);
 
-        println!("Sum of inverse: {:?}", sum_inv.eval(g).unwrap());
+        println!(
+            "Sum of inverse: {:?}",
+            sum_inv.eval(g).expect("Test: operation failed")
+        );
 
         let grads = grad(&[&sum_inv], &[&a]);
-        let grad_a = grads[0].eval(g).unwrap();
+        let grad_a = grads[0].eval(g).expect("Test: operation failed");
 
         println!("Matrix inverse gradient shape: {:?}", grad_a.shape());
         println!("Matrix inverse gradient: {:?}", grad_a);
@@ -66,14 +72,20 @@ fn test_chained_gradient_flow() {
 
         // Step by step
         let inv_a = matinv(&a);
-        println!("Inverse shape: {:?}", inv_a.eval(g).unwrap().shape());
+        println!(
+            "Inverse shape: {:?}",
+            inv_a.eval(g).expect("Test: operation failed").shape()
+        );
 
         let tr_inv = trace(inv_a);
         println!(
             "Trace of inverse shape: {:?}",
-            tr_inv.eval(g).unwrap().shape()
+            tr_inv.eval(g).expect("Test: operation failed").shape()
         );
-        println!("Trace of inverse value: {:?}", tr_inv.eval(g).unwrap());
+        println!(
+            "Trace of inverse value: {:?}",
+            tr_inv.eval(g).expect("Test: operation failed")
+        );
 
         // Now compute gradient
         let grads = grad(&[&tr_inv], &[&a]);
@@ -86,7 +98,7 @@ fn test_chained_gradient_flow() {
             grad_tensor.shape()
         );
 
-        let grad_a = grad_tensor.eval(g).unwrap();
+        let grad_a = grad_tensor.eval(g).expect("Test: operation failed");
         println!("Gradient shape after eval: {:?}", grad_a.shape());
         println!("Gradient values: {:?}", grad_a);
 

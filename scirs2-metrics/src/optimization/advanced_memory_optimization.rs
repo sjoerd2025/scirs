@@ -333,14 +333,14 @@ impl AdvancedMemoryPool {
     pub fn deallocate(&self, block: MemoryBlock) -> Result<()> {
         // Record deallocation for statistics
         {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("Operation failed");
             stats.deallocation_count += 1;
             stats.total_allocated = stats.total_allocated.saturating_sub(block.size);
         }
 
         // Remove from allocated blocks
         {
-            let mut allocated = self.allocated_blocks.write().unwrap();
+            let mut allocated = self.allocated_blocks.write().expect("Operation failed");
             allocated.remove(&block.id);
         }
 
@@ -361,7 +361,7 @@ impl AdvancedMemoryPool {
 
     /// Get current memory statistics
     pub fn get_stats(&self) -> MemoryStats {
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
         stats.clone()
     }
 
@@ -408,7 +408,7 @@ impl AdvancedMemoryPool {
     }
 
     fn allocate_first_fit(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
-        let mut free_blocks = self.free_blocks.lock().unwrap();
+        let mut free_blocks = self.free_blocks.lock().expect("Operation failed");
 
         // Find first suitable block
         for (block_size, blocks) in free_blocks.iter_mut() {
@@ -442,7 +442,7 @@ impl AdvancedMemoryPool {
     }
 
     fn allocate_best_fit(&self, size: usize, blocktype: BlockType) -> Result<MemoryBlock> {
-        let mut free_blocks = self.free_blocks.lock().unwrap();
+        let mut free_blocks = self.free_blocks.lock().expect("Operation failed");
         let mut best_fit: Option<(usize, usize)> = None; // (block_size, index)
         let mut best_waste = usize::MAX;
 
@@ -510,7 +510,7 @@ impl AdvancedMemoryPool {
         _strategy: &AdaptiveStrategy,
     ) -> Result<MemoryBlock> {
         // Analyze current performance metrics
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
         let fragmentation = stats.fragmentation_ratio;
         let efficiency = stats.efficiency_score;
 
@@ -577,7 +577,7 @@ impl AdvancedMemoryPool {
     fn record_allocation(&self, block: &MemoryBlock) -> Result<()> {
         // Record in allocated blocks
         {
-            let mut allocated = self.allocated_blocks.write().unwrap();
+            let mut allocated = self.allocated_blocks.write().expect("Operation failed");
             allocated.insert(
                 block.id,
                 AllocatedBlock {
@@ -591,7 +591,7 @@ impl AdvancedMemoryPool {
 
         // Update statistics
         {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("Operation failed");
             stats.allocation_count += 1;
             stats.total_allocated += block.size;
             if stats.total_allocated > stats.peak_usage {
@@ -618,7 +618,7 @@ impl AdvancedMemoryPool {
     }
 
     fn return_to_pool(&self, block: MemoryBlock) -> Result<()> {
-        let mut free_blocks = self.free_blocks.lock().unwrap();
+        let mut free_blocks = self.free_blocks.lock().expect("Operation failed");
         free_blocks
             .entry(block.size)
             .or_insert_with(VecDeque::new)
@@ -627,7 +627,7 @@ impl AdvancedMemoryPool {
     }
 
     fn should_run_gc(&self) -> Result<bool> {
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
         let usage_ratio = stats.total_allocated as f64 / self.config.max_pool_size as f64;
         Ok(usage_ratio > self.config.gc_threshold)
     }
@@ -638,7 +638,7 @@ impl AdvancedMemoryPool {
         // - Coalesce adjacent free blocks
         // - Update fragmentation statistics
 
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("Operation failed");
         stats.fragmentation_ratio = self.calculate_fragmentation()?;
         stats.efficiency_score = self.calculate_efficiency()?;
 
@@ -653,7 +653,7 @@ impl AdvancedMemoryPool {
 
     fn calculate_efficiency(&self) -> Result<f64> {
         // Calculate memory utilization efficiency
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
         if stats.peak_usage == 0 {
             Ok(1.0)
         } else {
@@ -764,7 +764,9 @@ mod tests {
     fn test_basic_allocation() {
         let pool = AdvancedMemoryPool::new(MemoryPoolConfig::default());
 
-        let block = pool.allocate(1024, BlockType::InputData).unwrap();
+        let block = pool
+            .allocate(1024, BlockType::InputData)
+            .expect("Operation failed");
         assert_eq!(block.size, 1024);
         assert_eq!(block.blocktype, BlockType::InputData);
 
@@ -777,10 +779,12 @@ mod tests {
     fn test_allocation_deallocation_cycle() {
         let pool = AdvancedMemoryPool::new(MemoryPoolConfig::default());
 
-        let block = pool.allocate(2048, BlockType::OutputData).unwrap();
+        let block = pool
+            .allocate(2048, BlockType::OutputData)
+            .expect("Operation failed");
         let _block_id = block.id;
 
-        pool.deallocate(block).unwrap();
+        pool.deallocate(block).expect("Operation failed");
 
         let stats = pool.get_stats();
         assert_eq!(stats.deallocation_count, 1);
@@ -795,12 +799,13 @@ mod tests {
         let pool = AdvancedMemoryPool::new(config);
 
         // Test that allocations are properly aligned
-        let block = pool.allocate(100, BlockType::IntermediateBuffer).unwrap();
+        let block = pool
+            .allocate(100, BlockType::IntermediateBuffer)
+            .expect("Operation failed");
         assert_eq!(block.size % 512, 0);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_strategy_benchmarking() {
         let pool = AdvancedMemoryPool::new(MemoryPoolConfig::default());
 
@@ -817,7 +822,9 @@ mod tests {
             },
         ];
 
-        let benchmark = pool.benchmark_strategies(&workload).unwrap();
+        let benchmark = pool
+            .benchmark_strategies(&workload)
+            .expect("Operation failed");
         assert!(!benchmark.results.is_empty());
     }
 }

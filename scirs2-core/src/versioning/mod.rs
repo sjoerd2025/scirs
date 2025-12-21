@@ -681,13 +681,13 @@ mod tests {
 
     #[test]
     fn test_apiversion_builder() {
-        let version = Version::parse("1.0.0").unwrap();
+        let version = Version::parse("1.0.0").expect("Operation failed");
         let apiversion = ApiVersionBuilder::new(version)
             .stability(StabilityLevel::Stable)
             .feature("feature1")
             .new_feature("New awesome feature")
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(apiversion.version.to_string(), "1.0.0");
         assert_eq!(apiversion.stability, StabilityLevel::Stable);
@@ -698,10 +698,14 @@ mod tests {
     #[test]
     fn testversion_registration() {
         let mut manager = VersionManager::new();
-        let version = Version::parse("1.0.0").unwrap();
-        let apiversion = ApiVersionBuilder::new(version.clone()).build().unwrap();
+        let version = Version::parse("1.0.0").expect("Operation failed");
+        let apiversion = ApiVersionBuilder::new(version.clone())
+            .build()
+            .expect("Operation failed");
 
-        manager.registerversion(apiversion).unwrap();
+        manager
+            .registerversion(apiversion)
+            .expect("Operation failed");
         assert_eq!(manager.getversions().len(), 1);
         assert!(manager.getversion(&version).is_some());
     }
@@ -709,11 +713,17 @@ mod tests {
     #[test]
     fn test_currentversion_setting() {
         let mut manager = VersionManager::new();
-        let version = Version::parse("1.0.0").unwrap();
-        let apiversion = ApiVersionBuilder::new(version.clone()).build().unwrap();
+        let version = Version::parse("1.0.0").expect("Operation failed");
+        let apiversion = ApiVersionBuilder::new(version.clone())
+            .build()
+            .expect("Operation failed");
 
-        manager.registerversion(apiversion).unwrap();
-        manager.set_currentversion(version.clone()).unwrap();
+        manager
+            .registerversion(apiversion)
+            .expect("Operation failed");
+        manager
+            .set_currentversion(version.clone())
+            .expect("Operation failed");
         assert_eq!(manager.currentversion(), Some(&version));
     }
 
@@ -739,18 +749,18 @@ mod tests {
         let mut manager = VersionManager::new();
 
         // Add some versions
-        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").unwrap())
+        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").expect("Operation failed"))
             .stability(StabilityLevel::Stable)
             .build()
-            .unwrap();
-        let v2 = ApiVersionBuilder::new(Version::parse("2.0.0").unwrap())
+            .expect("Operation failed");
+        let v2 = ApiVersionBuilder::new(Version::parse("2.0.0").expect("Operation failed"))
             .stability(StabilityLevel::Beta)
             .support_status(SupportStatus::Maintenance)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
-        manager.registerversion(v1).unwrap();
-        manager.registerversion(v2).unwrap();
+        manager.registerversion(v1).expect("Operation failed");
+        manager.registerversion(v2).expect("Operation failed");
 
         let stats = manager.getversion_statistics();
         assert_eq!(stats.totalversions, 2);

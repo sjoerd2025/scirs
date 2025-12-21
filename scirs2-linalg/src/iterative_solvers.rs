@@ -33,7 +33,7 @@ use crate::validation::validate_linear_system;
 ///
 /// let a = array![[4.0_f64, 1.0], [1.0, 3.0]]; // Symmetric positive definite
 /// let b = array![1.0_f64, 2.0];
-/// let x = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).unwrap();
+/// let x = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).expect("Operation failed");
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     4.0 * x[0] + 1.0 * x[1],
@@ -66,7 +66,9 @@ where
     // Check if matrix is symmetric
     for i in 0..n {
         for j in (i + 1)..n {
-            if (a[[i, j]] - a[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (a[[i, j]] - a[[j, i]]).abs()
+                > F::epsilon() * F::from(10.0).expect("Operation failed")
+            {
                 return Err(LinalgError::InvalidInputError(
                     "Matrix must be symmetric for conjugate gradient method".to_string(),
                 ));
@@ -193,7 +195,7 @@ where
 ///
 /// let a = array![[3.0_f64, -1.0], [-1.0, 2.0]]; // Diagonally dominant
 /// let b = array![5.0_f64, 1.0];
-/// let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+/// let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     3.0 * x[0] - 1.0 * x[1],
@@ -310,7 +312,7 @@ where
 ///
 /// let a = array![[3.0_f64, -1.0], [-1.0, 2.0]]; // Diagonally dominant
 /// let b = array![5.0_f64, 1.0];
-/// let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+/// let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     3.0 * x[0] - 1.0 * x[1],
@@ -432,7 +434,7 @@ where
 ///
 /// let a = array![[3.0_f64, -1.0], [-1.0, 2.0]]; // Diagonally dominant
 /// let b = array![5.0_f64, 1.0];
-/// let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).unwrap();
+/// let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).expect("Operation failed");
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     3.0 * x[0] - 1.0 * x[1],
@@ -462,7 +464,7 @@ where
     validate_linear_system(a, b, "Successive Over-Relaxation method")?;
 
     // Check omega range for convergence
-    if omega <= F::zero() || omega >= F::from(2.0).unwrap() {
+    if omega <= F::zero() || omega >= F::from(2.0).expect("Operation failed") {
         return Err(LinalgError::InvalidInputError(
             "Relaxation factor omega must be in range (0,2) for convergence".to_string(),
         ));
@@ -575,7 +577,7 @@ where
 /// let b = Array1::ones(n);
 ///
 /// // Solve using multigrid method
-/// let x = geometric_multigrid(&a.view(), &b.view(), 3, 10, 2, 2, 1e-6, None).unwrap();
+/// let x = geometric_multigrid(&a.view(), &b.view(), 3, 10, 2, 2, 1e-6, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn geometric_multigrid<F>(
@@ -653,8 +655,8 @@ where
             let i_fine = 2 * i;
 
             // Apply restriction stencil [1/4, 1/2, 1/4]
-            let quarter = F::from(0.25).unwrap();
-            let half = F::from(0.5).unwrap();
+            let quarter = F::from(0.25).expect("Operation failed");
+            let half = F::from(0.5).expect("Operation failed");
 
             if i_fine > 0 {
                 r[[i, i_fine - 1]] = quarter;
@@ -678,8 +680,8 @@ where
 
             // Set interpolated points
             if i_fine + 1 < gridsizes[l - 1] && i + 1 < n_coarse {
-                p[[i_fine + 1, i]] = F::from(0.5).unwrap();
-                p[[i_fine + 1, i + 1]] = F::from(0.5).unwrap();
+                p[[i_fine + 1, i]] = F::from(0.5).expect("Operation failed");
+                p[[i_fine + 1, i + 1]] = F::from(0.5).expect("Operation failed");
             } else if i_fine + 1 < gridsizes[l - 1] {
                 p[[i_fine + 1, i]] = F::one();
             }
@@ -864,7 +866,7 @@ where
 ///
 /// let a = array![[4.0_f64, 1.0], [2.0, 3.0]]; // Non-symmetric
 /// let b = array![1.0_f64, 2.0];
-/// let x = bicgstab(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+/// let x = bicgstab(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     4.0 * x[0] + 1.0 * x[1],
@@ -1065,7 +1067,7 @@ where
 /// // For the doctests, we'll use a positive definite matrix which works better with MINRES
 /// let a = array![[4.0_f64, 1.0], [1.0, 3.0]]; // Symmetric positive definite
 /// let b = array![1.0_f64, 2.0];
-/// let x = minres(&a.view(), &b.view(), 100, 1e-6, None).unwrap();
+/// let x = minres(&a.view(), &b.view(), 100, 1e-6, None).expect("Operation failed");
 /// // Check solution: Ax should be close to b
 /// let ax = array![
 ///     4.0 * x[0] + 1.0 * x[1],
@@ -1098,7 +1100,9 @@ where
     // Check if matrix is symmetric
     for i in 0..n {
         for j in (i + 1)..n {
-            if (a[[i, j]] - a[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (a[[i, j]] - a[[j, i]]).abs()
+                > F::epsilon() * F::from(10.0).expect("Operation failed")
+            {
                 return Err(LinalgError::InvalidInputError(
                     "Matrix must be symmetric for MINRES method".to_string(),
                 ));
@@ -1366,7 +1370,8 @@ mod tests {
         let a = array![[1.0, 0.0], [0.0, 1.0]];
         let b = array![2.0, 3.0];
 
-        let x = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).unwrap();
+        let x =
+            conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).expect("Operation failed");
 
         assert_relative_eq!(x[0], 2.0, epsilon = 1e-10);
         assert_relative_eq!(x[1], 3.0, epsilon = 1e-10);
@@ -1377,7 +1382,8 @@ mod tests {
         let a = array![[4.0, 1.0], [1.0, 3.0]];
         let b = array![1.0, 2.0];
 
-        let x = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).unwrap();
+        let x =
+            conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).expect("Operation failed");
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1388,7 +1394,7 @@ mod tests {
         let a = array![[3.0, -1.0], [-1.0, 2.0]];
         let b = array![5.0, 1.0];
 
-        let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+        let x = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1399,7 +1405,7 @@ mod tests {
         let a = array![[3.0, -1.0], [-1.0, 2.0]];
         let b = array![5.0, 1.0];
 
-        let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+        let x = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1410,7 +1416,8 @@ mod tests {
         let a = array![[3.0, -1.0], [-1.0, 2.0]];
         let b = array![5.0, 1.0];
 
-        let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).unwrap();
+        let x = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None)
+            .expect("Operation failed");
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1437,11 +1444,13 @@ mod tests {
         }
 
         // Solve using all methods
-        let x_cg = conjugate_gradient(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
-        let x_jacobi = jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
-        let x_gs = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
-        let x_sor =
-            successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None).unwrap();
+        let x_cg =
+            conjugate_gradient(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
+        let x_jacobi =
+            jacobi_method(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
+        let x_gs = gauss_seidel(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
+        let x_sor = successive_over_relaxation(&a.view(), &b.view(), 1.5, 100, 1e-10, None)
+            .expect("Operation failed");
 
         // All solutions should satisfy the system
         assert!(check_solution(&a.view(), &x_cg.view(), &b.view(), 1e-8));
@@ -1480,7 +1489,8 @@ mod tests {
         let b = Array1::ones(n);
 
         // Solve using multigrid method with 2 levels
-        let x_mg = geometric_multigrid(&a.view(), &b.view(), 2, 5, 2, 2, 1e-6, None).unwrap();
+        let x_mg = geometric_multigrid(&a.view(), &b.view(), 2, 5, 2, 2, 1e-6, None)
+            .expect("Operation failed");
 
         // Just verify that the multigrid solution satisfies the system
         assert!(check_solution(&a.view(), &x_mg.view(), &b.view(), 1e-4));
@@ -1501,7 +1511,7 @@ mod tests {
         let a = array![[4.0, 1.0], [1.0, 3.0]];
         let b = array![1.0, 2.0];
 
-        let x = minres(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+        let x = minres(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
 
         // Calculate Ax
         let n = a.nrows();
@@ -1533,7 +1543,8 @@ mod tests {
         let a_indef = array![[4.0, 1.0], [1.0, -0.5]]; // Less negative eigenvalue
         let b_indef = array![1.0, 2.0];
 
-        let x_indef = minres(&a_indef.view(), &b_indef.view(), 100, 1e-6, None).unwrap();
+        let x_indef =
+            minres(&a_indef.view(), &b_indef.view(), 100, 1e-6, None).expect("Operation failed");
 
         // Print the solution for debugging
         println!("Indefinite solution: {:?}", x_indef);
@@ -1563,7 +1574,8 @@ mod tests {
 
         let b_large = Array1::ones(n);
 
-        let x_large = minres(&a_large.view(), &b_large.view(), 100, 1e-10, None).unwrap();
+        let x_large =
+            minres(&a_large.view(), &b_large.view(), 100, 1e-10, None).expect("Operation failed");
 
         // Check the solution with higher tolerance
         assert!(check_solution(
@@ -1580,7 +1592,7 @@ mod tests {
         let a = array![[4.0, 1.0], [2.0, 3.0]];
         let b = array![1.0, 2.0];
 
-        let x = bicgstab(&a.view(), &b.view(), 100, 1e-10, None).unwrap();
+        let x = bicgstab(&a.view(), &b.view(), 100, 1e-10, None).expect("Operation failed");
 
         // Check the solution
         assert!(check_solution(&a.view(), &x.view(), &b.view(), 1e-8));
@@ -1604,7 +1616,8 @@ mod tests {
 
         let b_large = Array1::ones(n);
 
-        let x_large = bicgstab(&a_large.view(), &b_large.view(), 100, 1e-10, None).unwrap();
+        let x_large =
+            bicgstab(&a_large.view(), &b_large.view(), 100, 1e-10, None).expect("Operation failed");
 
         // Check the solution
         assert!(check_solution(

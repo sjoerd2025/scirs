@@ -18,6 +18,12 @@ use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
 
+/// Helper to convert f64 constants to generic Float type with better error messages
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type - this indicates an incompatible numeric type")
+}
+
 /// Spiking neuron models for neuromorphic computation
 #[derive(Debug, Clone)]
 pub enum NeuronModel {
@@ -153,7 +159,7 @@ pub struct NeuronState<F: Float> {
 impl<F: Float + FromPrimitive> Default for NeuronState<F> {
     fn default() -> Self {
         Self {
-            v: F::from(-70.0).unwrap(), // Resting potential in mV
+            v: const_f64::<F>(-70.0), // Resting potential in mV
             u: F::zero(),
             last_spike: None,
             refractory: 0.0,
@@ -233,10 +239,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
             for row in 0..rows {
                 for col in 0..cols {
                     // Initialize with small random weights
-                    let weight = F::from((row + col * 17) % 1000).unwrap()
-                        / F::from(1000.0).unwrap()
-                        * F::from(0.1).unwrap()
-                        - F::from(0.05).unwrap();
+                    let weight = const_f64::<F>(((row + col * 17) % 1000) as f64)
+                        / const_f64::<F>(1000.0)
+                        * const_f64::<F>(0.1)
+                        - const_f64::<F>(0.05);
                     weight_matrix[[row, col]] = weight;
 
                     // Random delays between 1-10 ms
@@ -274,15 +280,15 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
             // Distribute input across multiple neurons
             for neuron_idx in 0..input_neurons {
                 // Each neuron represents a different aspect/range of the input
-                let neuron_sensitivity = F::from(neuron_idx as f64 / input_neurons as f64).unwrap();
+                let neuron_sensitivity = const_f64::<F>(neuron_idx as f64 / input_neurons as f64);
                 let activation = (value - neuron_sensitivity).abs();
 
                 // Convert to spike probability
-                let spike_prob = (-activation * F::from(5.0).unwrap()).exp();
+                let spike_prob = (-activation * const_f64::<F>(5.0)).exp();
 
                 // Generate spikes based on probability
                 let random_val =
-                    F::from(((time_idx + neuron_idx * 7) % 1000) as f64 / 1000.0).unwrap();
+                    const_f64::<F>(((time_idx + neuron_idx * 7) % 1000) as f64 / 1000.0);
                 if random_val < spike_prob {
                     spikes.push(Spike {
                         time,
@@ -308,7 +314,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
             if spike.neuron_id < self.layer_sizes[0] {
                 self.neuron_states[0][spike.neuron_id].input_current =
                     self.neuron_states[0][spike.neuron_id].input_current
-                        + F::from(spike.amplitude).unwrap();
+                        + const_f64::<F>(spike.amplitude);
             }
 
             // Update all neurons and propagate _spikes
@@ -381,10 +387,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 v_threshold,
                 v_reset,
             } => {
-                let tau_m_f = F::from(*tau_m).unwrap();
-                let v_rest_f = F::from(*v_rest).unwrap();
-                let v_threshold_f = F::from(*v_threshold).unwrap();
-                let dt_f = F::from(self.dt).unwrap();
+                let tau_m_f = const_f64::<F>(*tau_m);
+                let v_rest_f = const_f64::<F>(*v_rest);
+                let v_threshold_f = const_f64::<F>(*v_threshold);
+                let dt_f = const_f64::<F>(self.dt);
 
                 // dV/dt = (v_rest - V + R*I) / tau_m
                 let dv = ((v_rest_f - state.v + state.input_current) / tau_m_f) * dt_f;
@@ -392,7 +398,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
 
                 // Check for spike
                 if state.v >= v_threshold_f {
-                    state.v = F::from(*v_reset).unwrap();
+                    state.v = const_f64::<F>(*v_reset);
                     state.refractory = 2.0; // 2ms refractory period
                     state.last_spike = Some(self.current_time);
                     return Ok(true);
@@ -407,13 +413,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 a,
                 b,
             } => {
-                let tau_m_f = F::from(*tau_m).unwrap();
-                let tau_w_f = F::from(*tau_w).unwrap();
-                let delta_t_f = F::from(*delta_t).unwrap();
-                let v_threshold_f = F::from(*v_threshold).unwrap();
-                let a_f = F::from(*a).unwrap();
-                let b_f = F::from(*b).unwrap();
-                let dt_f = F::from(self.dt).unwrap();
+                let tau_m_f = const_f64::<F>(*tau_m);
+                let tau_w_f = const_f64::<F>(*tau_w);
+                let delta_t_f = const_f64::<F>(*delta_t);
+                let v_threshold_f = const_f64::<F>(*v_threshold);
+                let a_f = const_f64::<F>(*a);
+                let b_f = const_f64::<F>(*b);
+                let dt_f = const_f64::<F>(self.dt);
 
                 // Exponential term
                 let exp_term = delta_t_f * ((state.v - v_threshold_f) / delta_t_f).exp();
@@ -428,7 +434,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
 
                 // Check for spike
                 if state.v >= v_threshold_f {
-                    state.v = F::from(-70.0).unwrap(); // Reset to resting potential
+                    state.v = const_f64::<F>(-70.0); // Reset to resting potential
                     state.u = state.u + b_f; // Spike-triggered adaptation
                     state.refractory = 2.0;
                     state.last_spike = Some(self.current_time);
@@ -437,14 +443,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
             }
 
             NeuronModel::Izhikevich { a, b, c, d } => {
-                let a_f = F::from(*a).unwrap();
-                let b_f = F::from(*b).unwrap();
-                let dt_f = F::from(self.dt).unwrap();
+                let a_f = const_f64::<F>(*a);
+                let b_f = const_f64::<F>(*b);
+                let dt_f = const_f64::<F>(self.dt);
 
                 // dv/dt = 0.04*v^2 + 5*v + 140 - u + I
-                let dv = (F::from(0.04).unwrap() * state.v * state.v
-                    + F::from(5.0).unwrap() * state.v
-                    + F::from(140.0).unwrap()
+                let dv = (const_f64::<F>(0.04) * state.v * state.v
+                    + const_f64::<F>(5.0) * state.v
+                    + const_f64::<F>(140.0)
                     - state.u
                     + state.input_current)
                     * dt_f;
@@ -455,9 +461,9 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 state.u = state.u + du;
 
                 // Check for spike
-                if state.v >= F::from(30.0).unwrap() {
-                    state.v = F::from(*c).unwrap();
-                    state.u = state.u + F::from(*d).unwrap();
+                if state.v >= const_f64::<F>(30.0) {
+                    state.v = const_f64::<F>(*c);
+                    state.u = state.u + const_f64::<F>(*d);
                     state.last_spike = Some(self.current_time);
                     return Ok(true);
                 }
@@ -470,16 +476,16 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 let v_threshold = -55.0;
                 let v_reset = -70.0;
 
-                let tau_m_f = F::from(tau_m).unwrap();
-                let v_rest_f = F::from(v_rest).unwrap();
-                let v_threshold_f = F::from(v_threshold).unwrap();
-                let dt_f = F::from(self.dt).unwrap();
+                let tau_m_f = const_f64::<F>(tau_m);
+                let v_rest_f = const_f64::<F>(v_rest);
+                let v_threshold_f = const_f64::<F>(v_threshold);
+                let dt_f = const_f64::<F>(self.dt);
 
                 let dv = ((v_rest_f - state.v + state.input_current) / tau_m_f) * dt_f;
                 state.v = state.v + dv;
 
                 if state.v >= v_threshold_f {
-                    state.v = F::from(v_reset).unwrap();
+                    state.v = const_f64::<F>(v_reset);
                     state.refractory = 2.0;
                     state.last_spike = Some(self.current_time);
                     return Ok(true);
@@ -510,10 +516,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 v_threshold,
                 v_reset,
             } => {
-                let tau_m_f = F::from(*tau_m).unwrap();
-                let v_rest_f = F::from(*v_rest).unwrap();
-                let v_threshold_f = F::from(*v_threshold).unwrap();
-                let dt_f = F::from(dt).unwrap();
+                let tau_m_f = const_f64::<F>(*tau_m);
+                let v_rest_f = const_f64::<F>(*v_rest);
+                let v_threshold_f = const_f64::<F>(*v_threshold);
+                let dt_f = const_f64::<F>(dt);
 
                 // dV/dt = (v_rest - V + R*I) / tau_m
                 let dv = ((v_rest_f - state.v + state.input_current) / tau_m_f) * dt_f;
@@ -521,7 +527,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
 
                 // Check for spike
                 if state.v >= v_threshold_f {
-                    state.v = F::from(*v_reset).unwrap();
+                    state.v = const_f64::<F>(*v_reset);
                     state.refractory = 2.0; // 2ms refractory period
                     state.last_spike = Some(current_time);
                     return Ok(true);
@@ -536,13 +542,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 a,
                 b,
             } => {
-                let tau_m_f = F::from(*tau_m).unwrap();
-                let tau_w_f = F::from(*tau_w).unwrap();
-                let delta_t_f = F::from(*delta_t).unwrap();
-                let v_threshold_f = F::from(*v_threshold).unwrap();
-                let a_f = F::from(*a).unwrap();
-                let b_f = F::from(*b).unwrap();
-                let dt_f = F::from(dt).unwrap();
+                let tau_m_f = const_f64::<F>(*tau_m);
+                let tau_w_f = const_f64::<F>(*tau_w);
+                let delta_t_f = const_f64::<F>(*delta_t);
+                let v_threshold_f = const_f64::<F>(*v_threshold);
+                let a_f = const_f64::<F>(*a);
+                let b_f = const_f64::<F>(*b);
+                let dt_f = const_f64::<F>(dt);
 
                 // Exponential term
                 let exp_term = delta_t_f * ((state.v - v_threshold_f) / delta_t_f).exp();
@@ -557,7 +563,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
 
                 // Check for spike
                 if state.v >= v_threshold_f {
-                    state.v = F::from(-70.0).unwrap(); // Reset to resting potential
+                    state.v = const_f64::<F>(-70.0); // Reset to resting potential
                     state.u = state.u + b_f; // Spike-triggered adaptation
                     state.refractory = 2.0;
                     state.last_spike = Some(current_time);
@@ -566,14 +572,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
             }
 
             NeuronModel::Izhikevich { a, b, c, d } => {
-                let a_f = F::from(*a).unwrap();
-                let b_f = F::from(*b).unwrap();
-                let dt_f = F::from(dt).unwrap();
+                let a_f = const_f64::<F>(*a);
+                let b_f = const_f64::<F>(*b);
+                let dt_f = const_f64::<F>(dt);
 
                 // dv/dt = 0.04*v^2 + 5*v + 140 - u + I
-                let dv = (F::from(0.04).unwrap() * state.v * state.v
-                    + F::from(5.0).unwrap() * state.v
-                    + F::from(140.0).unwrap()
+                let dv = (const_f64::<F>(0.04) * state.v * state.v
+                    + const_f64::<F>(5.0) * state.v
+                    + const_f64::<F>(140.0)
                     - state.u
                     + state.input_current)
                     * dt_f;
@@ -584,9 +590,9 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 state.u = state.u + du;
 
                 // Check for spike
-                if state.v >= F::from(30.0).unwrap() {
-                    state.v = F::from(*c).unwrap();
-                    state.u = state.u + F::from(*d).unwrap();
+                if state.v >= const_f64::<F>(30.0) {
+                    state.v = const_f64::<F>(*c);
+                    state.u = state.u + const_f64::<F>(*d);
                     state.last_spike = Some(current_time);
                     return Ok(true);
                 }
@@ -599,16 +605,16 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 let v_threshold = -55.0;
                 let v_reset = -70.0;
 
-                let tau_m_f = F::from(tau_m).unwrap();
-                let v_rest_f = F::from(v_rest).unwrap();
-                let v_threshold_f = F::from(v_threshold).unwrap();
-                let dt_f = F::from(dt).unwrap();
+                let tau_m_f = const_f64::<F>(tau_m);
+                let v_rest_f = const_f64::<F>(v_rest);
+                let v_threshold_f = const_f64::<F>(v_threshold);
+                let dt_f = const_f64::<F>(dt);
 
                 let dv = ((v_rest_f - state.v + state.input_current) / tau_m_f) * dt_f;
                 state.v = state.v + dv;
 
                 if state.v >= v_threshold_f {
-                    state.v = F::from(v_reset).unwrap();
+                    state.v = const_f64::<F>(v_reset);
                     state.refractory = 2.0;
                     state.last_spike = Some(current_time);
                     return Ok(true);
@@ -703,12 +709,12 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                         {
                             let current_weight =
                                 self.weights[layer_idx][[history_spike.neuron_id, spike.neuron_id]];
-                            let new_weight = current_weight + F::from(delta_w).unwrap();
+                            let new_weight = current_weight + const_f64::<F>(delta_w);
 
                             // Clip weights to reasonable range
                             let clipped_weight = new_weight
-                                .max(F::from(-1.0).unwrap())
-                                .min(F::from(1.0).unwrap());
+                                .max(const_f64::<F>(-1.0))
+                                .min(const_f64::<F>(1.0));
                             self.weights[layer_idx][[history_spike.neuron_id, spike.neuron_id]] =
                                 clipped_weight;
                         }
@@ -721,8 +727,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
                 decay_rate,
             } => {
                 // Simplified Hebbian learning
-                let _lr = F::from(*learning_rate).unwrap();
-                let decay = F::from(*decay_rate).unwrap();
+                let _lr = const_f64::<F>(*learning_rate);
+                let decay = const_f64::<F>(*decay_rate);
 
                 // Apply decay to all weights
                 for weight in self.weights[layer_idx].iter_mut() {
@@ -768,7 +774,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> SpikingNeuralNet
             loss = loss + diff * diff;
         }
 
-        Ok(loss / F::from(min_len).unwrap())
+        Ok(loss / const_f64::<F>(min_len as f64))
     }
 
     /// Reset network state
@@ -988,11 +994,11 @@ pub struct MemristorState<F: Float> {
 
 impl<F: Float + scirs2_core::numeric::FromPrimitive> Default for MemristorState<F> {
     fn default() -> Self {
-        let resistance = F::from(1000.0).unwrap(); // 1kΩ default
+        let resistance = const_f64::<F>(1000.0); // 1kΩ default
         Self {
             resistance,
-            conductance: F::from(1.0).unwrap() / resistance, // 1/R
-            state: F::from(0.0).unwrap(),                    // Neutral state
+            conductance: const_f64::<F>(1.0) / resistance, // 1/R
+            state: const_f64::<F>(0.0),                    // Neutral state
             params: MemristorParams::default(),
         }
     }
@@ -1014,10 +1020,10 @@ pub struct MemristorParams<F: Float> {
 impl<F: Float + scirs2_core::numeric::FromPrimitive> Default for MemristorParams<F> {
     fn default() -> Self {
         Self {
-            r_min: F::from(100.0).unwrap(),   // 100Ω minimum
-            r_max: F::from(10000.0).unwrap(), // 10kΩ maximum
-            alpha: F::from(0.1).unwrap(),     // Default state change rate
-            beta: F::from(1.0).unwrap(),      // Default nonlinearity
+            r_min: const_f64::<F>(100.0),   // 100Ω minimum
+            r_max: const_f64::<F>(10000.0), // 10kΩ maximum
+            alpha: const_f64::<F>(0.1),     // Default state change rate
+            beta: const_f64::<F>(1.0),      // Default nonlinearity
         }
     }
 }
@@ -1070,14 +1076,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> MemristiveNetwork<F> {
         for i in 0..size {
             for j in 0..size {
                 crossbar[[i, j]] = MemristorState {
-                    resistance: F::from(1000.0).unwrap(), // 1kΩ
-                    conductance: F::from(0.001).unwrap(), // 1mS
-                    state: F::from(0.5).unwrap(),         // Mid-state
+                    resistance: const_f64::<F>(1000.0), // 1kΩ
+                    conductance: const_f64::<F>(0.001), // 1mS
+                    state: const_f64::<F>(0.5),         // Mid-state
                     params: MemristorParams {
-                        r_min: F::from(100.0).unwrap(),   // 100Ω
-                        r_max: F::from(10000.0).unwrap(), // 10kΩ
-                        alpha: F::from(1.0).unwrap(),
-                        beta: F::from(1.0).unwrap(),
+                        r_min: const_f64::<F>(100.0),   // 100Ω
+                        r_max: const_f64::<F>(10000.0), // 10kΩ
+                        alpha: const_f64::<F>(1.0),
+                        beta: const_f64::<F>(1.0),
                     },
                 };
             }
@@ -1118,7 +1124,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MemristiveNetwork<F> {
         let f_x = memristor.state * (F::one() - memristor.state); // Window function
         let g_v = voltage; // Simplified voltage dependence
 
-        let dx = params.alpha * f_x * g_v * F::from(0.01).unwrap(); // Small time step
+        let dx = params.alpha * f_x * g_v * const_f64::<F>(0.01); // Small time step
         memristor.state = (memristor.state + dx).max(F::zero()).min(F::one());
 
         // Update resistance based on state
@@ -1167,10 +1173,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> MemristiveNetwork<F> {
 
                 let weight_change = if dt > 0.0 {
                     // LTP
-                    F::from(0.01 * (-dt / tau).exp()).unwrap()
+                    const_f64::<F>(0.01 * (-dt / tau).exp())
                 } else {
                     // LTD
-                    F::from(-0.01 * (dt / tau).exp()).unwrap()
+                    const_f64::<F>(-0.01 * (dt / tau).exp())
                 };
 
                 total_change = total_change + weight_change;
@@ -1415,10 +1421,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         active_currents.insert(DendriticCurrent::IKA, F::zero());
 
         let calcium_dynamics = CalciumDynamics {
-            ca_concentration: Array1::from_elem(__numsegments, F::from(0.0001).unwrap()), // 100 nM baseline
+            ca_concentration: Array1::from_elem(__numsegments, const_f64::<F>(0.0001)), // 100 nM baseline
             buffer_concentrations: HashMap::new(),
             pump_activities: HashMap::new(),
-            diffusion_coefficients: Array1::from_elem(__numsegments, F::from(0.22).unwrap()), // μm²/ms
+            diffusion_coefficients: Array1::from_elem(__numsegments, const_f64::<F>(0.22)), // μm²/ms
         };
 
         Self {
@@ -1441,31 +1447,31 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
             let mut channel_densities = HashMap::new();
 
             // Distance-dependent channel densities
-            let distance_factor = F::from(i as f64 / _numsegments as f64).unwrap();
+            let distance_factor = const_f64::<F>(i as f64 / _numsegments as f64);
 
             channel_densities.insert(
                 IonChannel::VGSodium,
-                F::from(120.0).unwrap() * (F::one() - distance_factor * F::from(0.5).unwrap()),
+                const_f64::<F>(120.0) * (F::one() - distance_factor * const_f64::<F>(0.5)),
             );
-            channel_densities.insert(IonChannel::VGPotassium, F::from(36.0).unwrap());
+            channel_densities.insert(IonChannel::VGPotassium, const_f64::<F>(36.0));
             channel_densities.insert(
                 IonChannel::VGCalciumL,
-                F::from(0.4).unwrap() * distance_factor,
+                const_f64::<F>(0.4) * distance_factor,
             );
-            channel_densities.insert(IonChannel::HCN, F::from(0.1).unwrap() * distance_factor);
+            channel_densities.insert(IonChannel::HCN, const_f64::<F>(0.1) * distance_factor);
 
             let segment = DendriticSegment {
                 id: i,
-                voltage: F::from(-70.0).unwrap(), // Resting potential
-                length: F::from(10.0).unwrap(),   // μm
-                surface_area: F::from(314.16).unwrap(), // μm² (π*d*L for d=10μm)
+                voltage: const_f64::<F>(-70.0), // Resting potential
+                length: const_f64::<F>(10.0),   // μm
+                surface_area: const_f64::<F>(314.16), // μm² (π*d*L for d=10μm)
                 channel_densities,
-                calcium_concentration: F::from(0.0001).unwrap(), // 100 nM
+                calcium_concentration: const_f64::<F>(0.0001), // 100 nM
             };
 
             _segments.push(segment);
-            soma_distances[i] = F::from(i as f64 * 10.0).unwrap(); // 10 μm per segment
-            diameters[i] = F::from(2.0).unwrap() / (F::one() + distance_factor);
+            soma_distances[i] = const_f64::<F>(i as f64 * 10.0); // 10 μm per segment
+            diameters[i] = const_f64::<F>(2.0) / (F::one() + distance_factor);
             // Tapering diameter
         }
 
@@ -1549,7 +1555,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
             let total_current = total_currents[i];
 
             // Update membrane potential
-            let cm = F::from(1.0).unwrap(); // μF/cm²
+            let cm = const_f64::<F>(1.0); // μF/cm²
             let dv = total_current / cm * dt;
             segment.voltage = segment.voltage + dv;
 
@@ -1576,36 +1582,36 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
 
         // Voltage-gated sodium current (persistent)
         if let Some(&density) = segment.channel_densities.get(&IonChannel::VGSodium) {
-            let e_na = F::from(50.0).unwrap(); // mV
-            let m_inf = F::one()
-                / (F::one() + (-(v + F::from(38.0).unwrap()) / F::from(7.0).unwrap()).exp());
+            let e_na = const_f64::<F>(50.0); // mV
+            let m_inf =
+                F::one() / (F::one() + (-(v + const_f64::<F>(38.0)) / const_f64::<F>(7.0)).exp());
             let i_na_p = density * m_inf * (v - e_na);
-            total_current = total_current - i_na_p * F::from(0.01).unwrap(); // Small persistent component
+            total_current = total_current - i_na_p * const_f64::<F>(0.01); // Small persistent component
         }
 
         // L-type calcium current
         if let Some(&density) = segment.channel_densities.get(&IonChannel::VGCalciumL) {
-            let e_ca = F::from(120.0).unwrap(); // mV
-            let m_inf = F::one()
-                / (F::one() + (-(v + F::from(10.0).unwrap()) / F::from(5.0).unwrap()).exp());
+            let e_ca = const_f64::<F>(120.0); // mV
+            let m_inf =
+                F::one() / (F::one() + (-(v + const_f64::<F>(10.0)) / const_f64::<F>(5.0)).exp());
             let i_ca_l = density * m_inf * m_inf * (v - e_ca);
             total_current = total_current - i_ca_l;
         }
 
         // A-type potassium current
         if let Some(&density) = segment.channel_densities.get(&IonChannel::KA) {
-            let e_k = F::from(-85.0).unwrap(); // mV
-            let m_inf = F::one()
-                / (F::one() + (-(v + F::from(60.0).unwrap()) / F::from(8.5).unwrap()).exp());
-            let h_inf = F::one()
-                / (F::one() + ((v + F::from(78.0).unwrap()) / F::from(6.0).unwrap()).exp());
+            let e_k = const_f64::<F>(-85.0); // mV
+            let m_inf =
+                F::one() / (F::one() + (-(v + const_f64::<F>(60.0)) / const_f64::<F>(8.5)).exp());
+            let h_inf =
+                F::one() / (F::one() + ((v + const_f64::<F>(78.0)) / const_f64::<F>(6.0)).exp());
             let i_ka = density * m_inf * m_inf * m_inf * h_inf * (v - e_k);
             total_current = total_current - i_ka;
         }
 
         // Calcium-activated potassium current
-        let ca_factor = ca / (ca + F::from(0.001).unwrap()); // Half-activation at 1 μM
-        let i_k_ca = F::from(2.0).unwrap() * ca_factor * (v - F::from(-85.0).unwrap());
+        let ca_factor = ca / (ca + const_f64::<F>(0.001)); // Half-activation at 1 μM
+        let i_k_ca = const_f64::<F>(2.0) * ca_factor * (v - const_f64::<F>(-85.0));
         total_current = total_current - i_k_ca;
 
         Ok(total_current)
@@ -1633,7 +1639,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         let segment_voltage = self.dendritic_tree.segments[segmentid].voltage;
 
         for connection in &self.dendritic_tree.connections {
-            let resistance = F::from(connection.resistance).unwrap();
+            let resistance = const_f64::<F>(connection.resistance);
 
             if connection.from_segment == segmentid {
                 // Current flowing out to target segment
@@ -1663,13 +1669,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         let ca_removal = self.compute_calcium_removal(segmentid)?;
 
         // Calcium influx from voltage-gated channels
-        let ca_influx = -ca_current / (F::from(2.0).unwrap() * F::from(96485.0).unwrap()); // Convert current to flux
+        let ca_influx = -ca_current / (const_f64::<F>(2.0) * const_f64::<F>(96485.0)); // Convert current to flux
 
         // Update calcium concentration
         let dca = (ca_influx - ca_removal) * dt;
         let segment = &mut self.dendritic_tree.segments[segmentid];
         segment.calcium_concentration =
-            (segment.calcium_concentration + dca).max(F::from(0.00005).unwrap()); // Minimum 50 nM
+            (segment.calcium_concentration + dca).max(const_f64::<F>(0.00005)); // Minimum 50 nM
 
         // Update calcium in dynamics array
         if segmentid < self.calcium_dynamics.ca_concentration.len() {
@@ -1686,19 +1692,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
 
         // L-type calcium channels
         if let Some(&density) = segment.channel_densities.get(&IonChannel::VGCalciumL) {
-            let e_ca = F::from(120.0).unwrap();
-            let m_inf = F::one()
-                / (F::one() + (-(v + F::from(10.0).unwrap()) / F::from(5.0).unwrap()).exp());
+            let e_ca = const_f64::<F>(120.0);
+            let m_inf =
+                F::one() / (F::one() + (-(v + const_f64::<F>(10.0)) / const_f64::<F>(5.0)).exp());
             ca_current = ca_current + density * m_inf * m_inf * (v - e_ca);
         }
 
         // T-type calcium channels
         if let Some(&density) = segment.channel_densities.get(&IonChannel::VGCalciumT) {
-            let e_ca = F::from(120.0).unwrap();
-            let m_inf = F::one()
-                / (F::one() + (-(v + F::from(50.0).unwrap()) / F::from(7.4).unwrap()).exp());
-            let h_inf = F::one()
-                / (F::one() + ((v + F::from(78.0).unwrap()) / F::from(5.0).unwrap()).exp());
+            let e_ca = const_f64::<F>(120.0);
+            let m_inf =
+                F::one() / (F::one() + (-(v + const_f64::<F>(50.0)) / const_f64::<F>(7.4)).exp());
+            let h_inf =
+                F::one() / (F::one() + ((v + const_f64::<F>(78.0)) / const_f64::<F>(5.0)).exp());
             ca_current = ca_current + density * m_inf * m_inf * h_inf * (v - e_ca);
         }
 
@@ -1714,16 +1720,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         let ca = self.calcium_dynamics.ca_concentration[segmentid];
 
         // PMCA pump (plasma membrane calcium ATPase)
-        let k_pmca = F::from(0.1).unwrap(); // 1/ms
-        let ca_pmca = F::from(0.0005).unwrap(); // 0.5 μM
+        let k_pmca = const_f64::<F>(0.1); // 1/ms
+        let ca_pmca = const_f64::<F>(0.0005); // 0.5 μM
         let pmca_removal = k_pmca * ca / (ca + ca_pmca);
 
         // NCX (sodium-calcium exchanger)
-        let k_ncx = F::from(0.05).unwrap(); // 1/ms
+        let k_ncx = const_f64::<F>(0.05); // 1/ms
         let ncx_removal = k_ncx * ca;
 
         // Buffer binding (simplified)
-        let k_buffer = F::from(0.02).unwrap(); // 1/ms
+        let k_buffer = const_f64::<F>(0.02); // 1/ms
         let buffer_removal = k_buffer * ca;
 
         Ok(pmca_removal + ncx_removal + buffer_removal)
@@ -1747,17 +1753,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
         let (conductance, reversal_potential, tau_rise, tau_decay, nmda_ampa_ratio) =
             match input_type {
                 SynapticType::Excitatory => (
-                    F::from(0.1).unwrap(),
+                    const_f64::<F>(0.1),
                     F::zero(),
-                    F::from(0.2).unwrap(),
-                    F::from(2.0).unwrap(),
-                    F::from(0.3).unwrap(),
+                    const_f64::<F>(0.2),
+                    const_f64::<F>(2.0),
+                    const_f64::<F>(0.3),
                 ),
                 SynapticType::Inhibitory => (
-                    F::from(0.2).unwrap(),
-                    F::from(-70.0).unwrap(),
-                    F::from(0.5).unwrap(),
-                    F::from(5.0).unwrap(),
+                    const_f64::<F>(0.2),
+                    const_f64::<F>(-70.0),
+                    const_f64::<F>(0.5),
+                    const_f64::<F>(5.0),
                     F::zero(),
                 ),
             };
@@ -1850,19 +1856,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> SynapticVesicleDynamics<F> {
             rrp_vesicles: _initialvesicles / 3,
             recycling_pool: _initialvesicles / 3,
             reserve_pool: _initialvesicles / 3,
-            release_probability: F::from(0.3).unwrap(),
+            release_probability: const_f64::<F>(0.3),
             replenishment_rates: VesicleReplenishmentRates {
-                reserve_to_recycling: F::from(0.01).unwrap(), // 1/s
-                recycling_to_rrp: F::from(0.1).unwrap(),      // 1/s
-                endocytosis_rate: F::from(0.05).unwrap(),     // 1/s
-                exocytosis_rate: F::from(1.0).unwrap(),       // 1/s
+                reserve_to_recycling: const_f64::<F>(0.01), // 1/s
+                recycling_to_rrp: const_f64::<F>(0.1),      // 1/s
+                endocytosis_rate: const_f64::<F>(0.05),     // 1/s
+                exocytosis_rate: const_f64::<F>(1.0),       // 1/s
             },
-            calcium_cooperativity: F::from(4.0).unwrap(), // Hill coefficient
+            calcium_cooperativity: const_f64::<F>(4.0), // Hill coefficient
             stp_parameters: ShortTermPlasticityParams {
-                tau_facilitation: F::from(100.0).unwrap(), // ms
-                tau_depression: F::from(500.0).unwrap(),   // ms
-                facilitation_strength: F::from(0.1).unwrap(),
-                initial_depression: F::from(1.0).unwrap(),
+                tau_facilitation: const_f64::<F>(100.0), // ms
+                tau_depression: const_f64::<F>(500.0),   // ms
+                facilitation_strength: const_f64::<F>(0.1),
+                initial_depression: const_f64::<F>(1.0),
             },
         }
     }
@@ -1875,13 +1881,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> SynapticVesicleDynamics<F> {
     ) -> crate::error::Result<usize> {
         // Calculate release probability based on calcium
         let ca_factor = calcium_concentration.powf(self.calcium_cooperativity);
-        let k_half = F::from(0.001).unwrap(); // Half-activation at 1 μM
+        let k_half = const_f64::<F>(0.001); // Half-activation at 1 μM
         let effective_release_prob = self.release_probability * ca_factor
             / (ca_factor + k_half.powf(self.calcium_cooperativity));
 
         // Number of vesicles released
         let vesicles_released = if self.rrp_vesicles > 0 {
-            let release_rate = effective_release_prob * F::from(self.rrp_vesicles).unwrap() * dt;
+            let release_rate =
+                effective_release_prob * const_f64::<F>(self.rrp_vesicles as f64) * dt;
             let released = release_rate.to_usize().unwrap_or(0).min(self.rrp_vesicles);
             self.rrp_vesicles -= released;
             released
@@ -1898,7 +1905,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SynapticVesicleDynamics<F> {
     /// Update vesicle pool dynamics
     fn update_vesicle_pools(&mut self, dt: F) -> crate::error::Result<()> {
         // Reserve pool -> Recycling pool
-        let reserve_to_recycling = (F::from(self.reserve_pool).unwrap()
+        let reserve_to_recycling = (const_f64::<F>(self.reserve_pool as f64)
             * self.replenishment_rates.reserve_to_recycling
             * dt)
             .to_usize()
@@ -1908,7 +1915,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SynapticVesicleDynamics<F> {
         self.recycling_pool += reserve_to_recycling;
 
         // Recycling pool -> RRP
-        let recycling_to_rrp = (F::from(self.recycling_pool).unwrap()
+        let recycling_to_rrp = (const_f64::<F>(self.recycling_pool as f64)
             * self.replenishment_rates.recycling_to_rrp
             * dt)
             .to_usize()
@@ -1943,8 +1950,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> SynapticVesicleDynamics<F> {
         // Clamp release probability
         self.release_probability = self
             .release_probability
-            .max(F::from(0.01).unwrap())
-            .min(F::from(0.99).unwrap());
+            .max(const_f64::<F>(0.01))
+            .min(const_f64::<F>(0.99));
 
         Ok(())
     }
@@ -2180,9 +2187,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicCore<F> {
                 voltage: F::zero(),
                 current: F::zero(),
                 bias: F::zero(),
-                voltage_decay: F::from(0.95).unwrap(), // Decay factor
-                current_decay: F::from(0.9).unwrap(),
-                threshold: F::from(100.0).unwrap(),
+                voltage_decay: const_f64::<F>(0.95), // Decay factor
+                current_decay: const_f64::<F>(0.9),
+                threshold: const_f64::<F>(100.0),
                 refractory_delay: 2,
                 refractory_counter: 0,
             });
@@ -2256,8 +2263,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicCore<F> {
     /// Receive spike from another core or external input
     pub fn receive_spike(&mut self, spike: &SpikePacket) -> crate::error::Result<()> {
         if spike.dst_compartment < self.dendrite_accumulators.len() {
-            self.dendrite_accumulators[spike.dst_compartment] =
-                self.dendrite_accumulators[spike.dst_compartment] + F::from(spike.weight).unwrap();
+            self.dendrite_accumulators[spike.dst_compartment] = self.dendrite_accumulators
+                [spike.dst_compartment]
+                + const_f64::<F>(spike.weight as f64);
         }
         Ok(())
     }
@@ -2320,10 +2328,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> OnChipLearningEngine<F> {
 
         match _learningrule {
             OnChipLearningRule::STDP => {
-                parameters.insert("tau_plus".to_string(), F::from(20.0).unwrap());
-                parameters.insert("tau_minus".to_string(), F::from(20.0).unwrap());
-                parameters.insert("a_plus".to_string(), F::from(0.01).unwrap());
-                parameters.insert("a_minus".to_string(), F::from(0.01).unwrap());
+                parameters.insert("tau_plus".to_string(), const_f64::<F>(20.0));
+                parameters.insert("tau_minus".to_string(), const_f64::<F>(20.0));
+                parameters.insert("a_plus".to_string(), const_f64::<F>(0.01));
+                parameters.insert("a_minus".to_string(), const_f64::<F>(0.01));
             }
             _ => {
                 // Other learning rules would have their own parameters
@@ -2347,8 +2355,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> OnChipLearningEngine<F> {
         match self.learning_rule {
             OnChipLearningRule::STDP => {
                 let dt = post_spike_time as i64 - pre_spike_time as i64;
-                let default_tau = F::from(20.0).unwrap();
-                let default_a = F::from(0.01).unwrap();
+                let default_tau = const_f64::<F>(20.0);
+                let default_a = const_f64::<F>(0.01);
                 let tau_plus = self.parameters.get("tau_plus").unwrap_or(&default_tau);
                 let tau_minus = self.parameters.get("tau_minus").unwrap_or(&default_tau);
                 let a_plus = self.parameters.get("a_plus").unwrap_or(&default_a);
@@ -2356,10 +2364,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> OnChipLearningEngine<F> {
 
                 let weight_change = if dt > 0 {
                     // Post before pre -> LTP
-                    *a_plus * (-F::from(dt as f64).unwrap() / *tau_plus).exp()
+                    *a_plus * (-const_f64::<F>(dt as f64) / *tau_plus).exp()
                 } else if dt < 0 {
                     // Pre before post -> LTD
-                    -*a_minus * (F::from(dt as f64).unwrap() / *tau_minus).exp()
+                    -*a_minus * (const_f64::<F>(dt as f64) / *tau_minus).exp()
                 } else {
                     F::zero()
                 };
@@ -2375,8 +2383,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
     /// Create new power manager
     pub fn new(_numcores: usize) -> Self {
         Self {
-            core_power: Array1::from_elem(_numcores, F::from(0.1).unwrap()), // 0.1W per core
-            power_budget: F::from(10.0).unwrap(),                            // 10W total budget
+            core_power: Array1::from_elem(_numcores, const_f64::<F>(0.1)), // 0.1W per core
+            power_budget: const_f64::<F>(10.0),                            // 10W total budget
             voltage_scaling: Array1::from_elem(_numcores, F::one()),
             clock_gating: Array1::from_elem(_numcores, false),
             power_history: Vec::new(),
@@ -2394,8 +2402,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
             if i < self.core_power.len() {
                 // Calculate dynamic power based on spike activity
                 let spike_count = core.axon_outputs.iter().filter(|&&x| x).count();
-                let dynamic_power = F::from(spike_count as f64).unwrap() * F::from(0.001).unwrap(); // 1mW per spike
-                let static_power = F::from(0.05).unwrap(); // 50mW static power
+                let dynamic_power = const_f64::<F>(spike_count as f64) * const_f64::<F>(0.001); // 1mW per spike
+                let static_power = const_f64::<F>(0.05); // 50mW static power
 
                 self.core_power[i] = static_power + dynamic_power;
                 total_power = total_power + self.core_power[i];
@@ -2415,8 +2423,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
     fn apply_power_management(&mut self) -> crate::error::Result<()> {
         // Dynamic voltage and frequency scaling
         for i in 0..self.voltage_scaling.len() {
-            if self.core_power[i] > F::from(0.2).unwrap() {
-                self.voltage_scaling[i] = F::from(0.8).unwrap(); // Reduce voltage
+            if self.core_power[i] > const_f64::<F>(0.2) {
+                self.voltage_scaling[i] = const_f64::<F>(0.8); // Reduce voltage
             } else {
                 self.voltage_scaling[i] = F::one();
             }
@@ -2424,7 +2432,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
 
         // Clock gating for inactive cores
         for i in 0..self.clock_gating.len() {
-            self.clock_gating[i] = self.core_power[i] < F::from(0.06).unwrap(); // Gate if low activity
+            self.clock_gating[i] = self.core_power[i] < const_f64::<F>(0.06); // Gate if low activity
         }
 
         Ok(())

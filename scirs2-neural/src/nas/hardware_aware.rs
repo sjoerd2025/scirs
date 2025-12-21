@@ -533,7 +533,7 @@ mod tests {
             depth_multiplier: 1.0,
         let latency = predictor
             .predict_latency(&architecture, &[32, 32, 3])
-            .unwrap();
+            .expect("Operation failed");
         assert!(latency > 0.0);
     fn test_memory_predictor() {
         let predictor = MemoryPredictor::new(HardwarePlatform::GPU);
@@ -546,7 +546,7 @@ mod tests {
         let arch = Arc::new(crate::nas::architecture_encoding::SequentialEncoding::new(
             vec![LayerType::Dense(128), LayerType::Dense(10)],
         ));
-        let violations = search.evaluate_constraints(&arch, &[784]).unwrap();
+        let violations = search.evaluate_constraints(&arch, &[784]).expect("Operation failed");
         assert!(!violations.is_empty());
         let score = search.compute_constraint_score(&violations);
         assert!(score >= 0.0);

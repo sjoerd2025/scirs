@@ -463,7 +463,9 @@ mod tests {
     fn test_quality_score_computation() {
         let validator = ComprehensiveValidator::new();
         let output = Array2::<f64>::ones((10, 10));
-        let quality = validator.compute_quality_score(&output).unwrap();
+        let quality = validator
+            .compute_quality_score(&output)
+            .expect("Operation failed");
         assert!(quality > 0.0 && quality <= 1.0);
     }
 }

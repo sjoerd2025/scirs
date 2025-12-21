@@ -147,7 +147,7 @@ fn estimate_number_of_signals(
 ) -> SignalResult<usize> {
     let n = eigenvalues.len();
     let mut sorted_eigenvalues = eigenvalues.to_vec();
-    sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap()); // Descending order
+    sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed")); // Descending order
 
     // Simple threshold-based detection
     let noise_threshold = sorted_eigenvalues.iter().sum::<f64>() / n as f64 * config.svd_threshold;
@@ -176,7 +176,7 @@ fn music_spectrum_estimation(
     eigenvalue_indices.sort_by(|&i, &j| {
         eigen_result.eigenvalues[j]
             .partial_cmp(&eigen_result.eigenvalues[i])
-            .unwrap()
+            .expect("Operation failed")
     });
 
     // Create noise subspace matrix
@@ -245,7 +245,7 @@ fn esprit_frequency_estimation(
     eigenvalue_indices.sort_by(|&i, &j| {
         eigen_result.eigenvalues[j]
             .partial_cmp(&eigen_result.eigenvalues[i])
-            .unwrap()
+            .expect("Operation failed")
     });
 
     let signal_indices = &eigenvalue_indices[..num_signals];
@@ -292,7 +292,7 @@ fn pisarenko_method(
         .eigenvalues
         .iter()
         .enumerate()
-        .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .min_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(idx, _)| idx)
         .unwrap_or(0);
 
@@ -366,7 +366,7 @@ fn find_spectral_peaks(spectrum: &Array1<f64>, frequencies: &[f64], num_peaks: u
         .collect();
 
     // Sort by power in descending order
-    peaks_with_indices.sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap());
+    peaks_with_indices.sort_by(|(_, a), (_, b)| b.partial_cmp(a).expect("Operation failed"));
 
     // Extract top frequencies
     peaks_with_indices
@@ -417,7 +417,7 @@ mod tests {
         }
         assert!(result.is_ok());
 
-        let hr_result = result.unwrap();
+        let hr_result = result.expect("Operation failed");
         assert!(!hr_result.frequency_estimates.is_empty());
         assert!(!hr_result.eigenvalues.is_empty());
         assert!(hr_result.signal_subspace_dim > 0);
@@ -429,7 +429,7 @@ mod tests {
         let result = create_hankel_matrix(&signal, 3);
         assert!(result.is_ok());
 
-        let matrix = result.unwrap();
+        let matrix = result.expect("Operation failed");
         assert_eq!(matrix.dim(), (3, 3));
         assert_eq!(matrix[(0, 0)], 1.0);
         assert_eq!(matrix[(0, 2)], 3.0);
@@ -438,11 +438,12 @@ mod tests {
 
     #[test]
     fn test_compute_sample_covariance() {
-        let matrix = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let matrix = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
         let result = compute_sample_covariance(&matrix);
         assert!(result.is_ok());
 
-        let covariance = result.unwrap();
+        let covariance = result.expect("Operation failed");
         assert_eq!(covariance.dim(), (2, 2));
         assert!(covariance[(0, 0)] > 0.0); // Variance should be positive
     }

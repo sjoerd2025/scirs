@@ -14,7 +14,7 @@ fn random_array<Sh: ShapeBuilder<Dim = scirs2_core::ndarray::Ix2>>(
     low: f64,
     high: f64,
 ) -> Array2<f64> {
-    let dist = Uniform::new(low, high).unwrap();
+    let dist = Uniform::new(low, high).expect("Operation failed");
     let mut rng = thread_rng();
     Array2::from_shape_fn(shape, |_| dist.sample(&mut rng))
 }

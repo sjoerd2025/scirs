@@ -357,12 +357,12 @@ mod tests {
 
         let coordinates =
             Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         let basis_functions = basis.generate_basis_functions(&coordinates);
         assert!(basis_functions.is_ok());
 
-        let functions = basis_functions.unwrap();
+        let functions = basis_functions.expect("Operation failed");
         assert_eq!(functions.nrows(), 3);
         assert_eq!(functions.ncols(), 2);
     }
@@ -378,7 +378,7 @@ mod tests {
                 0.0, 0.0, 0.6, 0.0, 0.0, 0.7, 0.0, 0.0, 0.8, 0.0, 0.0, 0.9, 0.0, 0.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = basis.calculate_overlap_matrix(&coordinates);
         assert!(result.is_ok());

@@ -337,7 +337,7 @@ impl<T> LockFreeQueue<T> {
                 // Queue is being destroyed - safely clean up
                 // SAFETY: new_node was allocated by Box::into_raw above
                 let node = unsafe { Box::from_raw(new_node) };
-                let item = node.data.unwrap();
+                let item = node.data.expect("Operation failed");
                 return Err(item);
             }
 
@@ -593,7 +593,7 @@ impl BufferPool {
         if let Some(buffer) = self.available.pop() {
             // Pool hit
             {
-                let mut stats = self.stats.write().unwrap();
+                let mut stats = self.stats.write().expect("Operation failed");
                 stats.pool_hits += 1;
                 stats.buffers_reused += 1;
             }
@@ -601,7 +601,7 @@ impl BufferPool {
         } else {
             // Pool miss - allocate new buffer
             {
-                let mut stats = self.stats.write().unwrap();
+                let mut stats = self.stats.write().expect("Operation failed");
                 stats.pool_misses += 1;
                 stats.buffers_allocated += 1;
             }
@@ -620,11 +620,11 @@ impl BufferPool {
             if self.available.push(buffer).is_err() {
                 // Pool is full, buffer will be dropped
             } else {
-                let stats = self.stats.read().unwrap();
+                let stats = self.stats.read().expect("Operation failed");
                 let current_size = self.available.len();
                 if current_size > stats.peak_poolsize {
                     drop(stats);
-                    let mut stats = self.stats.write().unwrap();
+                    let mut stats = self.stats.write().expect("Operation failed");
                     stats.peak_poolsize = current_size;
                 }
             }
@@ -634,7 +634,7 @@ impl BufferPool {
 
     /// Get buffer pool statistics
     pub fn stats(&self) -> BufferPoolStats {
-        self.stats.read().unwrap().clone()
+        self.stats.read().expect("Operation failed").clone()
     }
 
     /// Get current pool size
@@ -880,7 +880,7 @@ where
 
     /// Start the zero-copy stream processor
     pub fn start(&mut self) -> CoreResult<()> {
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Operation failed");
         if *state == StreamState::Running {
             return Err(CoreError::StreamError(
                 ErrorContext::new("Stream already running".to_string())
@@ -936,7 +936,7 @@ where
         while !shutdown.load(Ordering::Relaxed) {
             // Check if we should continue
             {
-                let current_state = state.read().unwrap();
+                let current_state = state.read().expect("Operation failed");
                 if *current_state != StreamState::Running {
                     break;
                 }
@@ -957,7 +957,7 @@ where
 
                         // Update statistics
                         {
-                            let mut stats_guard = stats.write().unwrap();
+                            let mut stats_guard = stats.write().expect("Operation failed");
                             stats_guard.items_processed += 1;
                             let processing_time = start_time.elapsed().as_micros() as f64;
                             stats_guard.avg_processing_time_us = (stats_guard
@@ -997,7 +997,7 @@ where
 
     /// Get processing statistics
     pub fn stats(&self) -> ZeroCopyStats {
-        let mut stats = self.stats.read().unwrap().clone();
+        let mut stats = self.stats.read().expect("Operation failed").clone();
 
         // Add buffer pool statistics
         let buffer_stats = self.buffer_pool.stats();
@@ -1019,7 +1019,7 @@ where
 
         // Update state
         {
-            let mut state = self.state.write().unwrap();
+            let mut state = self.state.write().expect("Operation failed");
             *state = StreamState::Paused;
         }
 
@@ -1076,12 +1076,12 @@ mod tests {
 
     #[test]
     fn test_zero_copy_buffer() {
-        let buffer = ZeroCopyBuffer::new(1024, None, 64).unwrap();
+        let buffer = ZeroCopyBuffer::new(1024, None, 64).expect("Operation failed");
         assert_eq!(buffer.size(), 1024);
         assert!(buffer.is_unique());
         assert_eq!(buffer.ref_count(), 1);
 
-        let shared = buffer.share().unwrap();
+        let shared = buffer.share().expect("Operation failed");
         assert_eq!(shared.size(), 1024);
         assert!(!buffer.is_unique());
         assert_eq!(buffer.ref_count(), 2);
@@ -1107,17 +1107,17 @@ mod tests {
 
     #[test]
     fn test_buffer_pool() {
-        let pool = BufferPool::new(4, 1024, false, 64).unwrap();
+        let pool = BufferPool::new(4, 1024, false, 64).expect("Operation failed");
 
         // Get a buffer
-        let buffer1 = pool.get_buffer().unwrap();
+        let buffer1 = pool.get_buffer().expect("Operation failed");
         assert_eq!(buffer1.size(), 1024);
 
         // Return the buffer
         pool.return_buffer(buffer1);
 
         // Get another buffer (should reuse)
-        let buffer2 = pool.get_buffer().unwrap();
+        let buffer2 = pool.get_buffer().expect("Operation failed");
         assert_eq!(buffer2.size(), 1024);
 
         let stats = pool.stats();
@@ -1132,13 +1132,14 @@ mod tests {
             ..Default::default()
         };
 
-        let mut processor = ZeroCopyStreamProcessor::new(config, |x: i32| Ok(x * 2)).unwrap();
+        let mut processor =
+            ZeroCopyStreamProcessor::new(config, |x: i32| Ok(x * 2)).expect("Operation failed");
 
-        processor.start().unwrap();
+        processor.start().expect("Operation failed");
 
         // Push some data
         for i in 0..10 {
-            processor.push(i).unwrap();
+            processor.push(i).expect("Operation failed");
         }
 
         // Wait a bit for processing
@@ -1150,7 +1151,7 @@ mod tests {
             results.push(result);
         }
 
-        processor.stop().unwrap();
+        processor.stop().expect("Operation failed");
 
         // Check that we got some results
         assert!(!results.is_empty());

@@ -4,7 +4,7 @@ use scirs2_spatial::rtree::RTree;
 #[allow(dead_code)]
 fn main() {
     // Create a new 2D R-tree with min entries 2 and max entries 5
-    let mut rtree: RTree<String> = RTree::new(2, 2, 5).unwrap();
+    let mut rtree: RTree<String> = RTree::new(2, 2, 5).expect("Operation failed");
 
     // Define some city locations (longitude, latitude) and names
     let cities = vec![
@@ -23,7 +23,7 @@ fn main() {
     // Insert cities into the R-tree
     println!("Inserting cities into R-tree...");
     for (location, name) in cities {
-        rtree.insert(location, name).unwrap();
+        rtree.insert(location, name).expect("Operation failed");
     }
 
     println!("R-tree size: {}", rtree.size());
@@ -35,7 +35,7 @@ fn main() {
 
     let results = rtree
         .search_range(&central_europe_min.view(), &central_europe_max.view())
-        .unwrap();
+        .expect("Operation failed");
 
     for (_idx, city) in results {
         println!("- {city}");
@@ -45,7 +45,9 @@ fn main() {
     println!("\nFinding the 3 nearest cities to Vienna:");
     let vienna_coords = array![16.3738, 48.2082];
 
-    let nearest_results = rtree.nearest(&vienna_coords.view(), 3).unwrap();
+    let nearest_results = rtree
+        .nearest(&vienna_coords.view(), 3)
+        .expect("Operation failed");
 
     for (_idx, city, distance) in nearest_results {
         println!("- {city} (distance: {distance:.2})");
@@ -55,7 +57,9 @@ fn main() {
     println!("\nFinding the 3 nearest cities to Paris:");
     let paris_coords = array![2.3522, 48.8566];
 
-    let nearest_results = rtree.nearest(&paris_coords.view(), 3).unwrap();
+    let nearest_results = rtree
+        .nearest(&paris_coords.view(), 3)
+        .expect("Operation failed");
 
     for (_idx, city, distance) in nearest_results {
         println!("- {city} (distance: {distance:.2})");
@@ -66,7 +70,7 @@ fn main() {
     let london_coords = array![-0.1278, 51.5074];
     let deleted = rtree
         .delete::<fn(&String) -> bool>(&london_coords.view(), None)
-        .unwrap();
+        .expect("Operation failed");
 
     if deleted {
         println!("London successfully deleted.");
@@ -78,7 +82,9 @@ fn main() {
     // Show nearest cities to London again (London should no longer appear)
     println!("\nFinding the 3 nearest cities to London's location after deletion:");
 
-    let nearest_results = rtree.nearest(&london_coords.view(), 3).unwrap();
+    let nearest_results = rtree
+        .nearest(&london_coords.view(), 3)
+        .expect("Operation failed");
 
     for (_idx, city, distance) in nearest_results {
         println!("- {city} (distance: {distance:.2})");

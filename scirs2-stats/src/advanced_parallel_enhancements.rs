@@ -249,19 +249,19 @@ impl AdvancedParallelProcessor {
         let chunksize = (n / self.config.max_threads).max(self.config.min_chunksize);
 
         // Parallel sum computation
-        let chunk_sums: Vec<F> = par_chunks(data.as_slice().unwrap(), chunksize)
+        let chunk_sums: Vec<F> = par_chunks(data.as_slice().expect("Operation failed"), chunksize)
             .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
             .collect();
 
         let total_sum = chunk_sums.into().iter().fold(F::zero(), |acc, sum| acc + sum);
-        let mean = total_sum / F::from(n).unwrap();
+        let mean = total_sum / F::from(n).expect("Failed to convert to float");
 
         Ok(mean)
     }
 
     /// Get performance analytics for optimization
     pub fn get_performance_analytics(&self) -> ParallelPerformanceAnalytics {
-        let history = self.performance_history.lock().unwrap();
+        let history = self.performance_history.lock().expect("Operation failed");
 
         if history.is_empty() {
             return ParallelPerformanceAnalytics::default();
@@ -323,7 +323,7 @@ impl AdvancedParallelProcessor {
 
         // Parallel reduction for basic statistics
         let chunk_results: Vec<ChunkStatistics<F>> =
-            par_chunks(data.as_slice().unwrap(), chunksize)
+            par_chunks(data.as_slice().expect("Operation failed"), chunksize)
                 .map(|chunk| self.compute_chunk_statistics(chunk))
                 .collect();
 
@@ -432,7 +432,7 @@ impl AdvancedParallelProcessor {
             }
         }
 
-        let n_f = F::from(total_n).unwrap();
+        let n_f = F::from(total_n).expect("Failed to convert to float");
         let mean = total_sum / n_f;
         let variance = (total_sum_squares / n_f) - (mean * mean);
         let std_dev = variance.sqrt();
@@ -573,7 +573,7 @@ impl AdvancedParallelProcessor {
                 }
             }
 
-            let n_f = F::from(n_cols).unwrap();
+            let n_f = F::from(n_cols).expect("Failed to convert to float");
             let mean = sum / n_f;
             let variance = (sum_squares / n_f) - (mean * mean);
 
@@ -635,7 +635,7 @@ impl AdvancedParallelProcessor {
                 }
             }
 
-            let n_f = F::from(n_rows).unwrap();
+            let n_f = F::from(n_rows).expect("Failed to convert to float");
             let mean = sum / n_f;
             let variance = (sum_squares / n_f) - (mean * mean);
 
@@ -684,7 +684,7 @@ impl AdvancedParallelProcessor {
         // First compute column means in parallel
         let means: Vec<F> = parallel_map((0..n_cols).collect(), |&col_idx| {
             let col = data.column(col_idx);
-            col.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(n_rows).unwrap()
+            col.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(n_rows).expect("Failed to convert to float")
         })
         .collect();
 
@@ -709,7 +709,7 @@ impl AdvancedParallelProcessor {
             }
 
             // Use sample covariance (n-1 denominator)
-            covariance = covariance / F::from(n_rows - 1).unwrap();
+            covariance = covariance / F::from(n_rows - 1).expect("Failed to convert to float");
 
             (i, j, covariance)
         })
@@ -756,7 +756,7 @@ impl AdvancedParallelProcessor {
         // First compute column means and standard deviations in parallel
         let stats: Vec<(F, F)> = parallel_map((0..n_cols).collect(), |&col_idx| {
             let col = data.column(col_idx);
-            let n_f = F::from(n_rows).unwrap();
+            let n_f = F::from(n_rows).expect("Failed to convert to float");
 
             // Compute mean
             let mean = col.iter().fold(F::zero(), |acc, &val| acc + val) / n_f;
@@ -769,7 +769,7 @@ impl AdvancedParallelProcessor {
                     diff * diff
                 })
                 .fold(F::zero(), |acc, sq_diff| acc + sq_diff)
-                / F::from(n_rows - 1).unwrap();
+                / F::from(n_rows - 1).expect("Failed to convert to float");
             let std_dev = variance.sqrt();
 
             (mean, std_dev)
@@ -807,7 +807,7 @@ impl AdvancedParallelProcessor {
                 covariance = covariance + (val_i - mean_i) * (val_j - mean_j);
             }
 
-            covariance = covariance / F::from(n_rows - 1).unwrap();
+            covariance = covariance / F::from(n_rows - 1).expect("Failed to convert to float");
             let correlation = covariance / (std_i * std_j);
 
             (i, j, correlation)
@@ -928,7 +928,7 @@ impl AdvancedParallelProcessor {
                     parallel_map((0..num_windows).collect(), |&start_idx| {
                         let window = data.slice(scirs2_core::ndarray::s![start_idx..start_idx + windowsize]);
                         window.iter().fold(F::zero(), |acc, &val| acc + val)
-                            / F::from(windowsize).unwrap()
+                            / F::from(windowsize).expect("Failed to convert to float")
                     })
                     .collect()
                 }
@@ -938,7 +938,7 @@ impl AdvancedParallelProcessor {
 
                         // Compute mean
                         let mean = window.iter().fold(F::zero(), |acc, &val| acc + val)
-                            / F::from(windowsize).unwrap();
+                            / F::from(windowsize).expect("Failed to convert to float");
 
                         // Compute variance
                         let variance = window
@@ -948,7 +948,7 @@ impl AdvancedParallelProcessor {
                                 diff * diff
                             })
                             .fold(F::zero(), |acc, sq_diff| acc + sq_diff)
-                            / F::from(windowsize - 1).unwrap();
+                            / F::from(windowsize - 1).expect("Failed to convert to float");
 
                         variance
                     })
@@ -976,14 +976,14 @@ impl AdvancedParallelProcessor {
 
                         // Simple median computation (not optimal for sliding windows)
                         let mut sorted_window: Vec<F> = window.iter().cloned().collect();
-                        sorted_window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                        sorted_window.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                         if windowsize % 2 == 1 {
                             sorted_window[windowsize / 2]
                         } else {
                             let mid1 = sorted_window[windowsize / 2 - 1];
                             let mid2 = sorted_window[windowsize / 2];
-                            (mid1 + mid2) / F::from(2.0).unwrap()
+                            (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
                         }
                     })
                     .collect()
@@ -1099,7 +1099,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_parallel_processor_creation() {
         let processor = create_advanced_parallel_processor();
         assert!(processor.config.max_threads > 0);
@@ -1111,7 +1110,7 @@ mod tests {
         let processor = create_advanced_parallel_processor();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let result = processor.process_batch_statistics(&data.view()).unwrap();
+        let result = processor.process_batch_statistics(&data.view()).expect("Operation failed");
 
         assert!((result.mean - 3.0).abs() < 1e-10);
         assert_eq!(result.count, 5);

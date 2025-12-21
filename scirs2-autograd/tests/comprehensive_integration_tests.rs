@@ -28,7 +28,7 @@ fn test_complete_advanced_pipeline() {
         adaptive_scheduling: true,
         ..Default::default()
     };
-    init_thread_pool_with_config(thread_config).unwrap();
+    init_thread_pool_with_config(thread_config).expect("Test: operation failed");
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Step 1: Create a complex computation graph using new features
@@ -67,12 +67,12 @@ fn test_complete_advanced_pipeline() {
         let final_result = T::inplace_add(&conditional_result, &weights);
 
         // Step 2: Test that the computation evaluates successfully
-        let output = final_result.eval(ctx).unwrap();
+        let output = final_result.eval(ctx).expect("Test: operation failed");
         assert_eq!(output.len(), 8192);
         assert!(output.iter().all(|&x| x.is_finite()));
 
         // Step 3: Verify reduced result
-        let reduced_output = reduced.eval(ctx).unwrap();
+        let reduced_output = reduced.eval(ctx).expect("Test: operation failed");
 
         // Handle scalar result (reduce_sum with keep_dims=false produces a scalar)
         let reduced_value = if reduced_output.ndim() == 0 {
@@ -236,19 +236,19 @@ fn test_comprehensive_parallel_operations() {
 
     for (i, config) in configs.iter().enumerate() {
         // Test parallel element-wise operations
-        let a =
-            Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| x as f32).collect()).unwrap();
+        let a = Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| x as f32).collect())
+            .expect("Test: operation failed");
         let b = Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x * 2) as f32).collect())
-            .unwrap();
+            .expect("Test: operation failed");
 
-        let add_result = ParallelElementWise::add(&a, &b, config).unwrap();
+        let add_result = ParallelElementWise::add(&a, &b, config).expect("Test: operation failed");
         assert_eq!(add_result.len(), 1000);
 
         // Test parallel reductions
-        let sum_result = ParallelReduction::sum(&a, config).unwrap();
+        let sum_result = ParallelReduction::sum(&a, config).expect("Test: operation failed");
         assert!(sum_result > 0.0);
 
-        let mean_result = ParallelReduction::mean(&a, config).unwrap();
+        let mean_result = ParallelReduction::mean(&a, config).expect("Test: operation failed");
         assert!(mean_result > 0.0);
 
         println!(
@@ -267,7 +267,7 @@ fn test_comprehensive_custom_activations() {
             IxDyn(&[100]),
             (0..100).map(|x| (x as f32 - 50.0) / 10.0).collect(), // Range from -5 to 4.5
         )
-        .unwrap();
+        .expect("Test: operation failed");
         let x = T::convert_to_tensor(test_data, ctx);
 
         // Test all built-in custom activations
@@ -275,7 +275,7 @@ fn test_comprehensive_custom_activations() {
 
         for activation in activations {
             let result = T::custom_activation(&x, activation);
-            let output = result.eval(ctx).unwrap();
+            let output = result.eval(ctx).expect("Test: operation failed");
 
             // Verify output is finite and reasonable
             assert!(output.iter().all(|&val| val.is_finite()));
@@ -288,8 +288,8 @@ fn test_comprehensive_custom_activations() {
                 }
                 "gelu" => {
                     // GELU should be monotonic
-                    let first_half = &output.as_slice().unwrap()[0..50];
-                    let second_half = &output.as_slice().unwrap()[50..];
+                    let first_half = &output.as_slice().expect("Test: operation failed")[0..50];
+                    let second_half = &output.as_slice().expect("Test: operation failed")[50..];
                     assert!(first_half.iter().sum::<f32>() < second_half.iter().sum::<f32>());
                 }
                 _ => {} // Basic checks for others
@@ -300,7 +300,7 @@ fn test_comprehensive_custom_activations() {
 
         // Test parameterized activations
         let prelu_result = T::parameterized_activation(&x, "parametric_relu", &[0.1]);
-        let prelu_output = prelu_result.eval(ctx).unwrap();
+        let prelu_output = prelu_result.eval(ctx).expect("Test: operation failed");
         assert!(prelu_output.iter().all(|&val| val.is_finite()));
 
         println!("✅ Parameterized activations working correctly");
@@ -318,7 +318,7 @@ fn test_comprehensive_efficient_operations() {
 
         // Test efficient reshape
         let reshaped = T::efficient_reshape_withshape(&zeros, &[2000]);
-        let reshaped_output = reshaped.eval(ctx).unwrap();
+        let reshaped_output = reshaped.eval(ctx).expect("Test: operation failed");
         assert_eq!(reshaped_output.len(), 2000);
         assert!(reshaped_output.iter().all(|&x| x == 0.0));
 
@@ -328,17 +328,17 @@ fn test_comprehensive_efficient_operations() {
             T::SliceRange::full(),                          // All columns
         ];
         let sliced = T::efficient_slice(&ones, &slices);
-        let sliced_output = sliced.eval(ctx).unwrap();
+        let sliced_output = sliced.eval(ctx).expect("Test: operation failed");
         assert_eq!(sliced_output.shape(), &[25, 40]);
 
         // Test efficient concatenation
         let concat_result = T::efficient_concat(&[&zeros, &ones], 0);
-        let concat_output = concat_result.eval(ctx).unwrap();
+        let concat_output = concat_result.eval(ctx).expect("Test: operation failed");
         assert_eq!(concat_output.shape(), &[100, 40]);
 
         // Test in-place operations
         let inplace_result = T::inplace_add(&zeros, &ones);
-        let inplace_output = inplace_result.eval(ctx).unwrap();
+        let inplace_output = inplace_result.eval(ctx).expect("Test: operation failed");
         assert!(inplace_output.iter().all(|&x| x == 1.0));
 
         println!("✅ All efficient operations working correctly");
@@ -353,12 +353,13 @@ fn test_comprehensive_simd_operations() {
         // Create test data that benefits from SIMD
         let size = 1024; // Good for SIMD alignment
         let a = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[size]), (0..size).map(|x| x as f32).collect()).unwrap(),
+            Array::from_shape_vec(IxDyn(&[size]), (0..size).map(|x| x as f32).collect())
+                .expect("Test: operation failed"),
             ctx,
         );
         let b = T::convert_to_tensor(
             Array::from_shape_vec(IxDyn(&[size]), (0..size).map(|x| (x * 2) as f32).collect())
-                .unwrap(),
+                .expect("Test: operation failed"),
             ctx,
         );
 
@@ -366,8 +367,8 @@ fn test_comprehensive_simd_operations() {
         let simd_add = T::simd_add(&a, &b);
         let simd_mul = T::simd_mul(&a, &b);
 
-        let add_output = simd_add.eval(ctx).unwrap();
-        let mul_output = simd_mul.eval(ctx).unwrap();
+        let add_output = simd_add.eval(ctx).expect("Test: operation failed");
+        let mul_output = simd_mul.eval(ctx).expect("Test: operation failed");
 
         // Verify correctness
         for i in 0..size {
@@ -381,14 +382,14 @@ fn test_comprehensive_simd_operations() {
         // Test SIMD unary operations
         let test_values =
             Array::from_shape_vec(IxDyn(&[8]), vec![-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 3.0])
-                .unwrap();
+                .expect("Test: operation failed");
         let x = T::convert_to_tensor(test_values, ctx);
 
         let simd_relu = T::simd_relu(&x);
         let simd_sigmoid = T::simd_sigmoid(&x);
 
-        let relu_output = simd_relu.eval(ctx).unwrap();
-        let sigmoid_output = simd_sigmoid.eval(ctx).unwrap();
+        let relu_output = simd_relu.eval(ctx).expect("Test: operation failed");
+        let sigmoid_output = simd_sigmoid.eval(ctx).expect("Test: operation failed");
 
         // Verify ReLU properties
         assert!(relu_output[0] == 0.0); // ReLU(-2) = 0
@@ -419,8 +420,8 @@ fn test_comprehensive_graph_enhancements() {
         let cached_square = T::cached_op(&x, "square");
         let cached_identity = T::cached_op(&x, "identity");
 
-        let square_output = cached_square.eval(ctx).unwrap();
-        let identity_output = cached_identity.eval(ctx).unwrap();
+        let square_output = cached_square.eval(ctx).expect("Test: operation failed");
+        let identity_output = cached_identity.eval(ctx).expect("Test: operation failed");
 
         assert!(square_output.iter().all(|&val| val == 1.0)); // 1^2 = 1
         assert!(identity_output.iter().all(|&val| val == 1.0));
@@ -430,17 +431,21 @@ fn test_comprehensive_graph_enhancements() {
         let checkpoint_small = T::smart_checkpoint(&large_data, 100000); // High threshold
         let checkpoint_large = T::smart_checkpoint(&large_data, 1000); // Low threshold
 
-        let out1 = checkpoint_small.eval(ctx).unwrap();
-        let out2 = checkpoint_large.eval(ctx).unwrap();
+        let out1 = checkpoint_small.eval(ctx).expect("Test: operation failed");
+        let out2 = checkpoint_large.eval(ctx).expect("Test: operation failed");
 
         assert_eq!(out1.len(), out2.len());
         assert!(out1.iter().zip(out2.iter()).all(|(a, b)| a == b));
 
         // Test conditional operations
-        let condition_true =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
-        let condition_false =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
+        let condition_true = T::convert_to_tensor(
+            Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).expect("Test: operation failed"),
+            ctx,
+        );
+        let condition_false = T::convert_to_tensor(
+            Array::from_shape_vec(IxDyn(&[1]), vec![-1.0]).expect("Test: operation failed"),
+            ctx,
+        );
 
         let true_branch = T::efficient_ones(&[5], ctx);
         let false_branch = T::efficient_zeros(&[5], ctx);
@@ -458,8 +463,8 @@ fn test_comprehensive_graph_enhancements() {
             T::PredicateType::GreaterThanZero,
         );
 
-        let out_true = result_true.eval(ctx).unwrap();
-        let out_false = result_false.eval(ctx).unwrap();
+        let out_true = result_true.eval(ctx).expect("Test: operation failed");
+        let out_false = result_false.eval(ctx).expect("Test: operation failed");
 
         assert!(out_true.iter().all(|&x| x == 1.0)); // Should select true branch
         assert!(out_false.iter().all(|&x| x == 0.0)); // Should select false branch
@@ -486,7 +491,7 @@ fn test_realistic_ml_workflow_integration() {
         adaptive_scheduling: true,
         ..Default::default()
     };
-    init_thread_pool_with_config(thread_config).unwrap();
+    init_thread_pool_with_config(thread_config).expect("Test: operation failed");
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         println!("🚀 Starting realistic ML workflow integration test...");
@@ -551,7 +556,7 @@ fn test_realistic_ml_workflow_integration() {
         let gradients = T::grad(&[loss], &[&weights1, &weights2, &bias1, &bias2]);
 
         // Step 5: Verify all computations
-        let loss_value = loss.eval(ctx).unwrap();
+        let loss_value = loss.eval(ctx).expect("Test: operation failed");
 
         // Handle scalar result (reduce_mean with keep_dims=false produces a scalar)
         let loss_scalar = if loss_value.ndim() == 0 {
@@ -563,13 +568,13 @@ fn test_realistic_ml_workflow_integration() {
         assert!(loss_scalar.is_finite());
         assert!(loss_scalar > 0.0);
 
-        let final_output_value = final_output.eval(ctx).unwrap();
+        let final_output_value = final_output.eval(ctx).expect("Test: operation failed");
         assert_eq!(final_output_value.shape(), &[batch_size, output_size]);
         assert!(final_output_value.iter().all(|&x| x.is_finite()));
 
         // Verify gradients
         for (i, grad) in gradients.iter().enumerate() {
-            let grad_value = grad.eval(ctx).unwrap();
+            let grad_value = grad.eval(ctx).expect("Test: operation failed");
             assert!(
                 grad_value.iter().all(|&x| x.is_finite()),
                 "Gradient {} contains non-finite values",

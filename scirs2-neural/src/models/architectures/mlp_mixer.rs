@@ -32,7 +32,7 @@
 //! };
 //!
 //! let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
-//! let mixer = MLPMixer::<f32>::new(config, &mut rng).unwrap();
+//! let mixer = MLPMixer::<f32>::new(config, &mut rng).expect("Operation failed");
 //! ```
 
 use crate::error::{NeuralError, Result};
@@ -238,10 +238,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> MixerBlock<F> {
         dropout_rate: f64,
         rng: &mut R,
     ) -> Result<Self> {
-        let norm1 = LayerNorm::new(hidden_dim, F::from(1e-6).unwrap());
+        let norm1 = LayerNorm::new(hidden_dim, F::from(1e-6).expect("Failed to convert constant to float"));
         let token_mixing =
             MixerMLP::new(num_patches, token_mlp_dim, num_patches, dropout_rate, rng)?;
-        let norm2 = LayerNorm::new(hidden_dim, F::from(1e-6).unwrap());
+        let norm2 = LayerNorm::new(hidden_dim, F::from(1e-6).expect("Failed to convert constant to float"));
         let channel_mixing =
             MixerMLP::new(hidden_dim, channel_mlp_dim, hidden_dim, dropout_rate, rng)?;
 
@@ -382,7 +382,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> MLPMixer<F> {
         }
 
         // Final layer norm
-        let norm = LayerNorm::new(config.hidden_dim, F::from(1e-6).unwrap());
+        let norm = LayerNorm::new(config.hidden_dim, F::from(1e-6).expect("Failed to convert constant to float"));
 
         // Classification head
         let head = Dense::new(config.hidden_dim, config.num_classes, None, rng)?;
@@ -581,10 +581,10 @@ mod tests {
     #[test]
     fn test_mixer_mlp() {
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
-        let mlp = MixerMLP::<f32>::new(64, 128, 64, 0.0, &mut rng).unwrap();
+        let mlp = MixerMLP::<f32>::new(64, 128, 64, 0.0, &mut rng).expect("Operation failed");
 
         let input = Array2::<f32>::zeros((10, 64)).into_dyn();
-        let output = mlp.forward(&input).unwrap();
+        let output = mlp.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), &[10, 64]);
     }
@@ -600,10 +600,10 @@ mod tests {
             0.0,  // dropout
             &mut rng,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let input = Array3::<f32>::zeros((2, 16, 64));
-        let output = block.forward(&input).unwrap();
+        let output = block.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), input.shape());
     }
@@ -625,11 +625,11 @@ mod tests {
             in_channels: 3,
         };
 
-        let mixer = MLPMixer::<f32>::new(config.clone(), &mut rng).unwrap();
+        let mixer = MLPMixer::<f32>::new(config.clone(), &mut rng).expect("Operation failed");
 
         // Test forward pass
         let images = Array4::<f32>::zeros((2, 3, 32, 32)).into_dyn();
-        let output = mixer.forward(&images).unwrap();
+        let output = mixer.forward(&images).expect("Operation failed");
 
         assert_eq!(output.shape(), &[2, 10]);
     }
@@ -650,7 +650,7 @@ mod tests {
             in_channels: 1,
         };
 
-        let mixer = MLPMixer::<f32>::new(config.clone(), &mut rng).unwrap();
+        let mixer = MLPMixer::<f32>::new(config.clone(), &mut rng).expect("Operation failed");
 
         // Create test image: 1 batch, 1 channel, 8x8
         let mut images = Array4::<f32>::zeros((1, 1, 8, 8));
@@ -660,7 +660,7 @@ mod tests {
             }
         }
 
-        let patches = mixer.extract_patches(&images.into_dyn()).unwrap();
+        let patches = mixer.extract_patches(&images.into_dyn()).expect("Operation failed");
 
         // Should have 4 patches (2x2 grid of 4x4 patches)
         assert_eq!(patches.shape(), &[1, 4, 16]);
@@ -674,7 +674,7 @@ mod tests {
     fn test_num_parameters() {
         let config = MLPMixerConfig::mixer_s_16(1000);
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
-        let mixer = MLPMixer::<f32>::new(config, &mut rng).unwrap();
+        let mixer = MLPMixer::<f32>::new(config, &mut rng).expect("Operation failed");
 
         let params = mixer.num_parameters();
         assert!(params > 0);

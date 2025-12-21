@@ -267,7 +267,7 @@ mod tests {
         let source = "__global__ void test() {}";
         let compiled = compiler
             .compile("test", source, CompilationTarget::CUDA)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(compiled.name, "test");
         assert_eq!(compiled.target, CompilationTarget::CUDA);
         assert!(!compiled.binary.is_empty());

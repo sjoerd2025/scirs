@@ -19,7 +19,8 @@ fn main() {
         ..Default::default()
     };
 
-    let result = monte_carlo(|x| x[0] * x[0], &[(0.0, 1.0)], Some(options)).unwrap();
+    let result =
+        monte_carlo(|x| x[0] * x[0], &[(0.0, 1.0)], Some(options)).expect("Operation failed");
 
     println!("Monte Carlo result: {:.8}", result.value);
     println!("Standard error: {:.8}", result.std_error);
@@ -45,7 +46,7 @@ fn main() {
         &[(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
         Some(options),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Monte Carlo result: {:.8}", result.value);
     println!("Standard error: {:.8}", result.std_error);
@@ -77,7 +78,7 @@ fn main() {
         &[(0.0, 1.0)],
         Some(options_standard),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // With antithetic sampling
     let options_antithetic = MonteCarloOptions {
@@ -95,7 +96,7 @@ fn main() {
         &[(0.0, 1.0)],
         Some(options_antithetic),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Without antithetic sampling:");
     println!("  Result: {:.15}", result_standard.value);
@@ -132,14 +133,14 @@ fn main() {
         ..Default::default()
     };
 
-    let result_standard =
-        monte_carlo(peak_function, &[(0.0, 1.0)], Some(options_standard)).unwrap();
+    let result_standard = monte_carlo(peak_function, &[(0.0, 1.0)], Some(options_standard))
+        .expect("Operation failed");
 
     // Importance sampling using a normal distribution centered at the peak
     // Create a sampler function that generates samples from a normal distribution
     let normal_sampler = |rng: &mut StdRng, dims: usize| {
         let mut point = Array1::zeros(dims);
-        let normal = Normal::new(0.5, 0.2).unwrap(); // centered at peak x=0.5
+        let normal = Normal::new(0.5, 0.2).expect("Operation failed"); // centered at peak x=0.5
 
         for i in 0..dims {
             // Sample and clamp to [0, 1]
@@ -175,7 +176,7 @@ fn main() {
         &[(0.0, 1.0)],
         Some(options_importance),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Standard Monte Carlo:");
     println!("  Result: {:.15}", result_standard.value);
@@ -230,7 +231,7 @@ fn main() {
         ],
         Some(options),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // The Monte Carlo integration gives us the ratio of points inside the sphere
     // To get the actual volume, we multiply by the volume of the 5D hypercube (2^5=32)

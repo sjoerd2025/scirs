@@ -834,7 +834,10 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
 
         while let Some(update) = self.async_update_queue.front() {
             if current_time >= update.apply_at {
-                let update = self.async_update_queue.pop_front().unwrap();
+                let update = self
+                    .async_update_queue
+                    .pop_front()
+                    .expect("Operation failed");
 
                 // Apply delayed parameter update with staleness compensation
                 let staleness = current_time.duration_since(update.timestamp).as_secs_f64();
@@ -1028,7 +1031,7 @@ mod tests {
         let consensus = voting_state.check_consensus();
         assert!(consensus.is_some());
 
-        let (winner_id, _winning_params) = consensus.unwrap();
+        let (winner_id, _winning_params) = consensus.expect("Operation failed");
         assert_eq!(winner_id, 1);
     }
 
@@ -1044,7 +1047,7 @@ mod tests {
 
         let avg_grad = federated_state
             .compute_federated_gradient(Instant::now())
-            .unwrap();
+            .expect("Operation failed");
 
         // Should be some reasonable average - test that federated averaging works
         assert!(avg_grad[0].is_finite() && avg_grad[0] > 0.0);

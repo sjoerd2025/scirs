@@ -62,7 +62,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_batch_metrics_computation() {
         let computer = AdvancedGpuComputer::default();
 
@@ -85,7 +84,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_stats_tracking() {
         let computer = AdvancedGpuComputer::default();
 
@@ -153,7 +151,7 @@ mod tests {
         let block = pool.allocate(512);
         assert!(block.is_some());
 
-        let block = block.unwrap();
+        let block = block.expect("Operation failed");
         assert_eq!(block.size, 512);
 
         // Free the block

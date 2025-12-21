@@ -82,7 +82,7 @@ mod tests {
         let config = DenoiseConfig::default();
         let result = denoise_wavelet_1d(&signal, &config);
         assert!(result.is_ok());
-        let denoised_result = result.unwrap();
+        let denoised_result = result.expect("Operation failed");
         // Check that the denoised signal length is reasonable (within a few elements of original)
         assert!(
             denoised_result.signal.len() >= signal.len()

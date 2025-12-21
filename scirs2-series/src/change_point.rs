@@ -129,7 +129,7 @@ pub struct ChangePointResult {
 ///     ..Default::default()
 /// };
 ///
-/// let result = detect_change_points(&ts, &options).unwrap();
+/// let result = detect_change_points(&ts, &options).expect("Operation failed");
 /// println!("Change points detected at: {:?}", result.change_points);
 /// ```
 #[allow(dead_code)]
@@ -180,7 +180,7 @@ where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
     let n = ts.len();
-    let penalty = F::from_f64(options.penalty).unwrap();
+    let penalty = F::from_f64(options.penalty).expect("Operation failed");
     let min_len = options.min_segment_length;
 
     // Initialize cost array and last change point array
@@ -207,7 +207,7 @@ where
 
                 // Pruning: keep candidate if it might be optimal for future points
                 let future_cost = costs[s] + penalty;
-                if future_cost <= best_cost + F::from_f64(1e-10).unwrap() {
+                if future_cost <= best_cost + F::from_f64(1e-10).expect("Operation failed") {
                     new_candidates.push(s);
                 }
             }
@@ -315,7 +315,7 @@ where
 {
     let n = ts.len();
     let window_size = options.window_size.unwrap_or(20);
-    let threshold = F::from_f64(options.threshold.unwrap_or(5.0)).unwrap();
+    let threshold = F::from_f64(options.threshold.unwrap_or(5.0)).expect("Operation failed");
 
     if n < window_size * 2 {
         return Err(TimeSeriesError::InsufficientData {
@@ -339,7 +339,7 @@ where
 
     for i in window_size..n {
         // Normalize the observation
-        let normalized = if reference_std > F::from_f64(1e-10).unwrap() {
+        let normalized = if reference_std > F::from_f64(1e-10).expect("Operation failed") {
             (ts[i] - reference_mean) / reference_std
         } else {
             F::zero()
@@ -348,11 +348,11 @@ where
         // Update CUSUM statistics
         cusum_pos = F::max(
             F::zero(),
-            cusum_pos + normalized - F::from_f64(0.5).unwrap(),
+            cusum_pos + normalized - F::from_f64(0.5).expect("Operation failed"),
         );
         cusum_neg = F::max(
             F::zero(),
-            cusum_neg - normalized - F::from_f64(0.5).unwrap(),
+            cusum_neg - normalized - F::from_f64(0.5).expect("Operation failed"),
         );
 
         // Check for change point
@@ -386,8 +386,8 @@ where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
     let n = ts.len();
-    let prior_prob = F::from_f64(options.prior_probability).unwrap();
-    let threshold = F::from_f64(0.5).unwrap(); // Probability threshold for detection
+    let prior_prob = F::from_f64(options.prior_probability).expect("Operation failed");
+    let threshold = F::from_f64(0.5).expect("Operation failed"); // Probability threshold for detection
 
     let mut change_points = Vec::new();
     let mut scores = Vec::new();
@@ -406,16 +406,17 @@ where
 
         // Update run length probabilities
         for r in 0..t {
-            if run_length_probs[r] > F::from_f64(1e-10).unwrap() {
+            if run_length_probs[r] > F::from_f64(1e-10).expect("Operation failed") {
                 // Update running statistics
-                let n_obs = F::from_usize(r + 1).unwrap();
+                let n_obs = F::from_usize(r + 1).expect("Operation failed");
                 let old_mean = running_means[r];
-                let new_mean = (old_mean * F::from_usize(r).unwrap() + observation) / n_obs;
+                let new_mean =
+                    (old_mean * F::from_usize(r).expect("Operation failed") + observation) / n_obs;
                 running_means[r] = new_mean;
 
                 let old_var = running_vars[r];
                 let new_var = if r > 0 {
-                    ((old_var * F::from_usize(r - 1).unwrap())
+                    ((old_var * F::from_usize(r - 1).expect("Operation failed"))
                         + (observation - old_mean) * (observation - new_mean))
                         / n_obs
                 } else {
@@ -424,9 +425,12 @@ where
                 running_vars[r] = new_var;
 
                 // Calculate predictive probability (simplified)
-                let std_dev = new_var.sqrt().max(F::from_f64(1e-6).unwrap());
+                let std_dev = new_var
+                    .sqrt()
+                    .max(F::from_f64(1e-6).expect("Operation failed"));
                 let z_score = (observation - old_mean) / std_dev;
-                let likelihood = (-z_score * z_score / F::from_f64(2.0).unwrap()).exp();
+                let likelihood =
+                    (-z_score * z_score / F::from_f64(2.0).expect("Operation failed")).exp();
 
                 // Probability of continuing this run
                 new_probs[r + 1] = run_length_probs[r] * (F::one() - prior_prob) * likelihood;
@@ -439,7 +443,7 @@ where
 
         // Normalize probabilities
         let total: F = new_probs.iter().cloned().sum();
-        if total > F::from_f64(1e-10).unwrap() {
+        if total > F::from_f64(1e-10).expect("Operation failed") {
             new_probs.mapv_inplace(|p| p / total);
         }
 
@@ -472,7 +476,7 @@ where
 {
     let n = ts.len();
     let bandwidth = options.kernel_bandwidth.unwrap_or(n as f64 / 10.0);
-    let bandwidth_f = F::from_f64(bandwidth).unwrap();
+    let bandwidth_f = F::from_f64(bandwidth).expect("Operation failed");
     let min_len = options.min_segment_length;
 
     let mut change_points = Vec::new();
@@ -486,15 +490,16 @@ where
         for i in 0..t {
             for j in t..n {
                 let diff = ts[i] - ts[j];
-                let kernel_value =
-                    (-diff * diff / (F::from_f64(2.0).unwrap() * bandwidth_f * bandwidth_f)).exp();
+                let kernel_value = (-diff * diff
+                    / (F::from_f64(2.0).expect("Operation failed") * bandwidth_f * bandwidth_f))
+                    .exp();
                 test_statistic = test_statistic + kernel_value;
             }
         }
 
         // Normalize by sample sizes
-        let n_before = F::from_usize(t).unwrap();
-        let n_after = F::from_usize(n - t).unwrap();
+        let n_before = F::from_usize(t).expect("Operation failed");
+        let n_after = F::from_usize(n - t).expect("Operation failed");
         test_statistic = test_statistic / (n_before * n_after);
 
         scores.push(test_statistic.to_f64().unwrap_or(0.0));
@@ -544,7 +549,7 @@ where
     }
 
     let segment = ts.slice(s![start..end]);
-    let n = F::from_usize(segment.len()).unwrap();
+    let n = F::from_usize(segment.len()).expect("Operation failed");
 
     match cost_function {
         CostFunction::Normal => {
@@ -552,7 +557,7 @@ where
             let mean = segment.mean_or(F::zero());
             let variance = calculate_variance(&segment.to_owned(), mean);
 
-            if variance <= F::from_f64(1e-10).unwrap() {
+            if variance <= F::from_f64(1e-10).expect("Operation failed") {
                 return Ok(F::zero());
             }
 
@@ -622,7 +627,7 @@ where
         return F::zero();
     }
 
-    let n = F::from_usize(segment.len()).unwrap();
+    let n = F::from_usize(segment.len()).expect("Operation failed");
     let sum_sq_deviations: F = segment.iter().map(|&x| (x - mean) * (x - mean)).sum();
 
     sum_sq_deviations / (n - F::one())
@@ -651,7 +656,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_change_points(&ts, &options).unwrap();
+        let result = detect_change_points(&ts, &options).expect("Operation failed");
 
         // Should detect at least one change point
         if result.change_points.is_empty() {
@@ -689,7 +694,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_change_points(&ts, &options).unwrap();
+        let result = detect_change_points(&ts, &options).expect("Operation failed");
 
         // Should detect change points
         assert!(!result.change_points.is_empty());
@@ -715,7 +720,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_change_points(&ts, &options).unwrap();
+        let result = detect_change_points(&ts, &options).expect("Operation failed");
 
         // Should detect the change point
         assert!(!result.change_points.is_empty());
@@ -727,25 +732,29 @@ mod tests {
         let segment = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // Test normal cost function
-        let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Normal).unwrap();
+        let cost =
+            calculate_segment_cost(&segment, 0, 5, CostFunction::Normal).expect("Operation failed");
         assert!(cost.is_finite(), "Normal cost should be finite, got {cost}");
 
         // Test Poisson cost function
-        let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Poisson).unwrap();
+        let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Poisson)
+            .expect("Operation failed");
         assert!(
             cost.is_finite(),
             "Poisson cost should be finite, got {cost}"
         );
 
         // Test exponential cost function
-        let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Exponential).unwrap();
+        let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Exponential)
+            .expect("Operation failed");
         assert!(
             cost.is_finite(),
             "Exponential cost should be finite, got {cost}"
         );
 
         // Test non-parametric cost function
-        let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::NonParametric).unwrap();
+        let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::NonParametric)
+            .expect("Operation failed");
         assert!(
             cost >= 0.0,
             "Non-parametric cost should be non-negative, got {cost}"
@@ -768,7 +777,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_change_points(&ts, &options).unwrap();
+        let result = detect_change_points(&ts, &options).expect("Operation failed");
         // Should detect no change points or very few
         assert!(result.change_points.len() <= 1);
     }

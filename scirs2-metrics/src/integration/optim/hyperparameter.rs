@@ -80,7 +80,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
             name: name.into(),
             value,
             min_value: F::zero(),
-            maxvalue: F::from(values.len() - 1).unwrap(),
+            maxvalue: F::from(values.len() - 1).expect("Operation failed"),
             step: Some(F::one()),
             is_categorical: true,
             categorical_values: Some(values),
@@ -131,7 +131,8 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
 
         let range = self.maxvalue - self.min_value;
         let mut rng = scirs2_core::random::rng();
-        let rand_val = F::from(rng.random::<f64>()).unwrap() * range + self.min_value;
+        let rand_val =
+            F::from(rng.random::<f64>()).expect("Operation failed") * range + self.min_value;
 
         if let Some(step) = self.step {
             // For discrete parameters..round to the nearest step

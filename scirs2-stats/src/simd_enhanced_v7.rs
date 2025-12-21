@@ -235,7 +235,7 @@ where
             &coefficients.view(),
             &standard_errors.view(),
             n - design_matrix.ncols(),
-            F::from(0.05).unwrap(), // 95% CI
+            F::from(0.05).expect("Failed to convert constant to float"), // 95% CI
         )?;
 
         // SIMD-optimized ANOVA table
@@ -606,8 +606,8 @@ where
         let r_squared = F::one() - (rss / tss);
         
         // Adjusted R-squared
-        let n_f = F::from(n).unwrap();
-        let k_f = F::from(n_params).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
+        let k_f = F::from(n_params).expect("Failed to convert to float");
         let adjusted_r_squared = F::one() - 
             ((F::one() - r_squared) * (n_f - F::one()) / (n_f - k_f));
 
@@ -618,7 +618,7 @@ where
     fn simd_mean_squared_error(&self, residuals: &ArrayView1<F>) -> StatsResult<F> {
         let n = residuals.len();
         let ss = F::simd_sum_squares(residuals);
-        Ok(ss / F::from(n).unwrap())
+        Ok(ss / F::from(n).expect("Failed to convert to float"))
     }
 
     /// Simplified matrix inversion (would use proper LAPACK in production)
@@ -632,11 +632,11 @@ where
         }
 
         // Convert to f64 for numerical stability
-        let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap());
+        let matrix_f64 = matrix.mapv(|x| x.to_f64().expect("Operation failed"));
         let inv_f64 = scirs2_linalg::inv(&matrix_f64.view(), None)
             .map_err(|e| StatsError::ComputationError(format!("Matrix inversion failed: {}", e)))?;
         
-        Ok(inv_f64.mapv(|x| F::from(x).unwrap()))
+        Ok(inv_f64.mapv(|x| F::from(x).expect("Failed to convert to float")))
     }
 
     /// Additional placeholder methods for completeness...
@@ -660,7 +660,7 @@ where
 
     fn simd_compute_p_values(&self, tstatistics: &ArrayView1<F>, df: usize) -> StatsResult<Array1<F>> {
         // Simplified p-value computation - would use proper t-distribution
-        Ok(t_statistics.mapv(|t| F::from(2.0).unwrap() * (F::one() - F::from(0.95).unwrap())))
+        Ok(t_statistics.mapv(|t| F::from(2.0).expect("Failed to convert constant to float") * (F::one() - F::from(0.95).expect("Failed to convert constant to float"))))
     }
 
     fn simd_compute_confidence_intervals(
@@ -672,7 +672,7 @@ where
     ) -> StatsResult<Array2<F>> {
         let n_params = coefficients.len();
         let mut ci = Array2::zeros((n_params, 2));
-        let t_critical = F::from(1.96).unwrap(); // Simplified - would use proper t-distribution
+        let t_critical = F::from(1.96).expect("Failed to convert constant to float"); // Simplified - would use proper t-distribution
         
         for i in 0..n_params {
             let margin = t_critical * standard_errors[i];
@@ -700,11 +700,11 @@ where
         let df_regression = n_params - 1;
         let df_residual = n - n_params;
         
-        let ms_regression = ss_regression / F::from(df_regression).unwrap();
-        let ms_residual = ss_residual / F::from(df_residual).unwrap();
+        let ms_regression = ss_regression / F::from(df_regression).expect("Failed to convert to float");
+        let ms_residual = ss_residual / F::from(df_residual).expect("Failed to convert to float");
         
         let f_statistic = ms_regression / ms_residual;
-        let f_p_value = F::from(0.05).unwrap(); // Simplified
+        let f_p_value = F::from(0.05).expect("Failed to convert constant to float"); // Simplified
         
         Ok(SimdAnovaTable {
             sum_squares_regression: ss_regression,
@@ -752,9 +752,9 @@ where
         let mut cov_matrix = Array2::zeros((p, p));
         
         let divisor = if bias_correction {
-            F::from(n - 1).unwrap()
+            F::from(n - 1).expect("Failed to convert to float")
         } else {
-            F::from(n).unwrap()
+            F::from(n).expect("Failed to convert to float")
         };
         
         for i in 0..p {

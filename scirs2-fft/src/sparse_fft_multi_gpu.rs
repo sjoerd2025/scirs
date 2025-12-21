@@ -334,7 +334,7 @@ impl MultiGPUSparseFFT {
         available_devices: Vec<(usize, GPUDeviceInfo)>,
         max_devices: usize,
     ) -> FFTResult<()> {
-        let performance_history = self.performance_history.lock().unwrap();
+        let performance_history = self.performance_history.lock().expect("Operation failed");
 
         // Calculate average performance for each device
         let mut device_scores: Vec<(usize, f64)> = available_devices
@@ -631,7 +631,7 @@ impl MultiGPUSparseFFT {
         }
 
         if chunk_results.len() == 1 {
-            return Ok(chunk_results.into_iter().next().unwrap());
+            return Ok(chunk_results.into_iter().next().expect("Operation failed"));
         }
 
         // Use the computation time from the slowest device
@@ -694,12 +694,18 @@ impl MultiGPUSparseFFT {
 
     /// Get performance statistics for each device
     pub fn get_performance_stats(&self) -> HashMap<i32, Vec<f64>> {
-        self.performance_history.lock().unwrap().clone()
+        self.performance_history
+            .lock()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Reset performance history
     pub fn reset_performance_history(&mut self) {
-        self.performance_history.lock().unwrap().clear();
+        self.performance_history
+            .lock()
+            .expect("Operation failed")
+            .clear();
     }
 }
 
@@ -772,7 +778,7 @@ mod tests {
     #[test]
     fn test_device_enumeration() {
         let mut processor = MultiGPUSparseFFT::new(MultiGPUConfig::default());
-        processor.initialize().unwrap();
+        processor.initialize().expect("Operation failed");
 
         let devices = processor.get_devices();
         assert!(!devices.is_empty());
@@ -815,7 +821,7 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(!result.values.is_empty());
         assert_eq!(result.values.len(), result.indices.len());
     }
@@ -831,7 +837,9 @@ mod tests {
         // Simulate device setup
         processor.selected_devices = vec![0, 1, 2];
 
-        let chunk_sizes = processor.calculate_chunk_sizes(1000, 3).unwrap();
+        let chunk_sizes = processor
+            .calculate_chunk_sizes(1000, 3)
+            .expect("Operation failed");
         assert_eq!(chunk_sizes.len(), 3);
         assert_eq!(chunk_sizes.iter().sum::<usize>(), 1000);
     }
@@ -842,7 +850,9 @@ mod tests {
         let signal = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         let chunk_sizes = vec![3, 3, 4];
 
-        let chunks = processor.split_signal(&signal, &chunk_sizes).unwrap();
+        let chunks = processor
+            .split_signal(&signal, &chunk_sizes)
+            .expect("Operation failed");
         assert_eq!(chunks.len(), 3);
         assert_eq!(chunks[0], vec![1, 2, 3]);
         assert_eq!(chunks[1], vec![4, 5, 6]);

@@ -39,11 +39,11 @@ impl<F: Float + FromPrimitive> Default for MiniBatchKMeansOptions<F> {
         Self {
             max_iter: 100,
             batch_size: 1024,
-            tol: F::from(1e-4).unwrap(),
+            tol: F::from(1e-4).expect("Failed to convert constant to float"),
             random_seed: None,
             max_no_improvement: 10,
             init_size: None,
-            reassignment_ratio: F::from(0.01).unwrap(),
+            reassignment_ratio: F::from(0.01).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -75,9 +75,9 @@ impl<F: Float + FromPrimitive> Default for MiniBatchKMeansOptions<F> {
 ///     3.7, 4.2,
 ///     3.9, 3.9,
 ///     4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let (centroids, labels) = minibatch_kmeans(ArrayView2::from(&data), 2, None).unwrap();
+/// let (centroids, labels) = minibatch_kmeans(ArrayView2::from(&data), 2, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn minibatch_kmeans<F>(
@@ -181,7 +181,7 @@ where
         }
 
         // Update exponentially weighted average of inertia
-        let ewa_factor = F::from(0.7).unwrap(); // Smoothing factor for EWA
+        let ewa_factor = F::from(0.7).expect("Failed to convert constant to float"); // Smoothing factor for EWA
         let current_ewa = match ewa_inertia {
             Some(prev_ewa) => prev_ewa * ewa_factor + batch_inertia * (F::one() - ewa_factor),
             None => batch_inertia,
@@ -205,7 +205,7 @@ where
             }
 
             // Normalize by number of centroids and features
-            center_shift = center_shift / F::from(k).unwrap();
+            center_shift = center_shift / F::from(k).expect("Failed to convert to float");
 
             if center_shift < opts.tol {
                 // Converged based on centroid movement
@@ -335,7 +335,8 @@ where
                 }
 
                 // Reset count to a small value to prevent immediate reassignment
-                counts[i] = counts[i].max(F::from(1.0).unwrap());
+                counts[i] =
+                    counts[i].max(F::from(1.0).expect("Failed to convert constant to float"));
 
                 // Update closest center and distance for this point
                 closest_centers[max_idx] = i;
@@ -345,7 +346,7 @@ where
     }
 
     // Normalize inertia by batch size
-    inertia = inertia / F::from(batch_size).unwrap();
+    inertia = inertia / F::from(batch_size).expect("Failed to convert to float");
 
     // Check if we have converged
     let has_converged = !has_empty && inertia < opts.tol;
@@ -411,7 +412,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run mini-batch k-means with k=2
         let options = MiniBatchKMeansOptions {
@@ -421,7 +422,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (centroids, labels) = minibatch_kmeans(data.view(), 2, Some(options)).unwrap();
+        let (centroids, labels) =
+            minibatch_kmeans(data.view(), 2, Some(options)).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -465,7 +467,7 @@ mod tests {
                 1.0, 1.0, 1.1, 1.1, 1.2, 1.0, 1.0, 1.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.0, 5.0, 5.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run mini-batch k-means with k=3 (which would likely lead to an empty cluster)
         let options = MiniBatchKMeansOptions {
@@ -476,7 +478,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (centroids, labels) = minibatch_kmeans(data.view(), 3, Some(options)).unwrap();
+        let (centroids, labels) =
+            minibatch_kmeans(data.view(), 3, Some(options)).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[3, 2]);

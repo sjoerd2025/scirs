@@ -26,12 +26,12 @@ mod tests {
 
     #[test]
     fn test_quantum_attention() {
-        let quantum_attn = QuantumAttention::<f64>::new(64, 8, 3).unwrap();
+        let quantum_attn = QuantumAttention::<f64>::new(64, 8, 3).expect("Test failed");
 
-        let input =
-            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
+        let input = Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect())
+            .expect("Test failed");
 
-        let output = quantum_attn.forward(&input).unwrap();
+        let output = quantum_attn.forward(&input).expect("Test failed");
         assert_eq!(output.dim(), (10, 64));
 
         // Verify quantum attention produces meaningful output
@@ -44,7 +44,7 @@ mod tests {
         let vqc = VariationalQuantumCircuit::<f64>::new(4, 3, 8);
 
         let input = Array1::from_vec((0..8).map(|i| i as f64 * 0.1).collect());
-        let output = vqc.forward(&input).unwrap();
+        let output = vqc.forward(&input).expect("Test failed");
 
         assert_eq!(output.len(), 4); // Number of qubits
 
@@ -65,8 +65,8 @@ mod tests {
         let x2 = Array1::from_vec(vec![0.15, 0.25, 0.35]);
         let x3 = Array1::from_vec(vec![0.9, 0.8, 0.7]);
 
-        let k12 = kernel.compute_kernel(&x1, &x2).unwrap();
-        let k13 = kernel.compute_kernel(&x1, &x3).unwrap();
+        let k12 = kernel.compute_kernel(&x1, &x2).expect("Test failed");
+        let k13 = kernel.compute_kernel(&x1, &x3).expect("Test failed");
 
         // Similar inputs should have higher kernel values
         assert!(k12 > k13);
@@ -74,9 +74,9 @@ mod tests {
         // Test kernel matrix
         let data =
             Array2::from_shape_vec((3, 3), vec![0.1, 0.2, 0.3, 0.15, 0.25, 0.35, 0.9, 0.8, 0.7])
-                .unwrap();
+                .expect("Test failed");
 
-        let kernel_matrix = kernel.compute_kernel_matrix(&data).unwrap();
+        let kernel_matrix = kernel.compute_kernel_matrix(&data).expect("Test failed");
         assert_eq!(kernel_matrix.dim(), (3, 3));
 
         // Diagonal should be 1 (self-similarity)
@@ -96,7 +96,7 @@ mod tests {
             (x - 0.3).powi(2) + (y - 0.7).powi(2)
         };
 
-        let result = optimizer.optimize(objective).unwrap();
+        let result = optimizer.optimize(objective).expect("Test failed");
         assert_eq!(result.len(), 2);
 
         // Check that optimizer found a reasonable solution
@@ -115,7 +115,7 @@ mod tests {
 
         // Apply π rotation (should flip |0⟩ to |1⟩)
         let pi = std::f64::consts::PI;
-        state.apply_rotation(0, pi, 0.0).unwrap();
+        state.apply_rotation(0, pi, 0.0).expect("Test failed");
 
         let (measurement, _) = state.measure();
         assert_eq!(measurement, 1); // Should measure |1⟩ state
@@ -193,13 +193,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
             };
 
             let mut linear_weights = Array2::zeros((layer_output_dim, layer_input_dim));
-            let scale = F::from(2.0).unwrap() / F::from(layer_input_dim).unwrap();
+            let scale = F::from(2.0).expect("Test: failed to convert constant to float")
+                / F::from(layer_input_dim).expect("Test failed");
             let std_dev = scale.sqrt();
 
             for i in 0..layer_output_dim {
                 for j in 0..layer_input_dim {
                     let rand_val = ((i + j * 19 + layer_idx * 37) % 1000) as f64 / 1000.0 - 0.5;
-                    linear_weights[[i, j]] = F::from(rand_val).unwrap() * std_dev;
+                    linear_weights[[i, j]] =
+                        F::from(rand_val).expect("Test: failed to convert to float") * std_dev;
                 }
             }
 
@@ -267,11 +269,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
                 // Quantum ReLU: measure quantum state and apply threshold
                 for (i, &value) in input.iter().enumerate() {
                     let mut qubit_state = QuantumState::new(1);
-                    let angle = value * F::from(std::f64::consts::PI / 4.0).unwrap();
+                    let angle = value * F::from(std::f64::consts::PI / 4.0).expect("Test failed");
                     qubit_state.apply_rotation(0, angle, F::zero())?;
 
                     let probabilities = qubit_state.get_probabilities();
-                    output[i] = if probabilities[1] > F::from(0.5).unwrap() {
+                    output[i] = if probabilities[1]
+                        > F::from(0.5).expect("Test: failed to convert constant to float")
+                    {
                         value
                     } else {
                         F::zero()
@@ -293,13 +297,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
                 // Quantum Tanh: use phase to implement tanh-like behavior
                 for (i, &value) in input.iter().enumerate() {
                     let mut qubit_state = QuantumState::new(1);
-                    let theta = F::from(std::f64::consts::PI / 4.0).unwrap();
+                    let theta = F::from(std::f64::consts::PI / 4.0).expect("Test failed");
                     let phi = value;
                     qubit_state.apply_rotation(0, theta, phi)?;
 
                     let probabilities = qubit_state.get_probabilities();
                     // Map to [-1, 1] range
-                    output[i] = F::from(2.0).unwrap() * probabilities[1] - F::one();
+                    output[i] = F::from(2.0).expect("Test: failed to convert constant to float")
+                        * probabilities[1]
+                        - F::one();
                 }
             }
         }
@@ -326,7 +332,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
                 total_loss = total_loss + loss;
             }
 
-            total_loss = total_loss / F::from(training_data.len()).unwrap();
+            total_loss = total_loss / F::from(training_data.len()).expect("Test failed");
             loss_history.push(total_loss);
 
             // Parameter update using quantum-inspired optimization
@@ -354,7 +360,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
             loss = loss + diff * diff;
         }
 
-        loss / F::from(min_len).unwrap()
+        loss / F::from(min_len).expect("Test: failed to convert to float")
     }
 
     /// Update parameters using quantum-inspired optimization
@@ -365,7 +371,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
         iteration: usize,
     ) -> Result<()> {
         // Quantum-inspired parameter perturbation
-        let perturbation_scale = learning_rate * F::from(0.1).unwrap();
+        let perturbation_scale = learning_rate * F::from(0.1).expect("Test failed");
 
         for (layer_idx, layer) in self.layers.iter_mut().enumerate() {
             // Update linear weights with quantum tunneling effect
@@ -374,7 +380,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
                     // Quantum tunneling: allow larger jumps occasionally
                     let is_tunnel = (iteration + layer_idx + i + j).is_multiple_of(50);
                     let scale = if is_tunnel {
-                        perturbation_scale * F::from(5.0).unwrap()
+                        perturbation_scale
+                            * F::from(5.0).expect("Test: failed to convert constant to float")
                     } else {
                         perturbation_scale
                     };
@@ -383,7 +390,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
                         ((iteration + layer_idx * 7 + i * 11 + j * 13) % 1000) as f64 / 1000.0
                             - 0.5,
                     )
-                    .unwrap()
+                    .expect("Test: operation failed")
                         * scale;
 
                     layer.linear_weights[[i, j]] = layer.linear_weights[[i, j]] + perturbation;
@@ -398,7 +405,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
             for layer_p in 0..gradientshape.0 {
                 for qubit in 0..gradientshape.1 {
                     for param in 0..gradientshape.2 {
-                        let epsilon = F::from(0.01).unwrap();
+                        let epsilon = F::from(0.01).expect("Test failed");
 
                         // Perturb parameter
                         layer.circuit.parameters[[layer_p, qubit, param]] =
@@ -406,21 +413,23 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
 
                         // For simplicity, use a fixed gradient approximation
                         // In a real implementation, you'd compute the actual gradient
-                        let loss_plus = F::from(0.1).unwrap(); // Placeholder
+                        let loss_plus = F::from(0.1).expect("Test failed"); // Placeholder
 
                         // Restore and perturb in opposite direction
                         layer.circuit.parameters[[layer_p, qubit, param]] =
                             layer.circuit.parameters[[layer_p, qubit, param]]
-                                - F::from(2.0).unwrap() * epsilon;
+                                - F::from(2.0).expect("Test: failed to convert constant to float")
+                                    * epsilon;
 
-                        let loss_minus = F::from(0.05).unwrap(); // Placeholder
+                        let loss_minus = F::from(0.05).expect("Test failed"); // Placeholder
 
                         // Restore parameter and compute gradient
                         layer.circuit.parameters[[layer_p, qubit, param]] =
                             layer.circuit.parameters[[layer_p, qubit, param]] + epsilon;
 
-                        gradients[[layer_p, qubit, param]] =
-                            (loss_plus - loss_minus) / (F::from(2.0).unwrap() * epsilon);
+                        gradients[[layer_p, qubit, param]] = (loss_plus - loss_minus)
+                            / (F::from(2.0).expect("Test: failed to convert constant to float")
+                                * epsilon);
                     }
                 }
             }
@@ -476,7 +485,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
         // Initialize equal weights
         let mut model_weights = Array1::zeros(num_models);
         for i in 0..num_models {
-            model_weights[i] = F::one() / F::from(num_models).unwrap();
+            model_weights[i] = F::one() / F::from(num_models).expect("Test failed");
         }
 
         Self {
@@ -525,7 +534,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
             // Apply rotations based on prediction values
             for (model_idx, prediction) in predictions.iter().enumerate() {
                 if dim < prediction.len() {
-                    let angle = prediction[dim] * F::from(std::f64::consts::PI / 2.0).unwrap();
+                    let angle =
+                        prediction[dim] * F::from(std::f64::consts::PI / 2.0).expect("Test failed");
                     let qubit = model_idx % num_qubits;
                     voting_state.apply_rotation(qubit, angle, F::zero())?;
                 }
@@ -536,10 +546,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
             let weighted_sum: F = probabilities
                 .iter()
                 .enumerate()
-                .map(|(i, &p)| p * F::from(i).unwrap())
+                .map(|(i, &p)| p * F::from(i).expect("Test: failed to convert to float"))
                 .sum();
 
-            final_prediction[dim] = weighted_sum / F::from(probabilities.len()).unwrap();
+            final_prediction[dim] =
+                weighted_sum / F::from(probabilities.len()).expect("Test failed");
         }
 
         Ok(final_prediction)
@@ -596,7 +607,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
                 if dim < prediction.len() && model_idx < self.model_weights.len() {
                     let weight = self.model_weights[model_idx];
                     let magnitude = weight.sqrt();
-                    let phase = prediction[dim] * F::from(std::f64::consts::PI).unwrap();
+                    let phase =
+                        prediction[dim] * F::from(std::f64::consts::PI).expect("Test failed");
 
                     let amplitude = Complex::new(magnitude * phase.cos(), magnitude * phase.sin());
 
@@ -646,7 +658,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
             let normalized_weights: Array1<F> = if weight_sum > F::zero() {
                 weights.mapv(|w| w / weight_sum)
             } else {
-                Array1::from_elem(num_models, F::one() / F::from(num_models).unwrap())
+                Array1::from_elem(
+                    num_models,
+                    F::one() / F::from(num_models).expect("Test: failed to convert to float"),
+                )
             };
 
             let mut total_error = F::zero();
@@ -674,7 +689,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
                 }
             }
 
-            total_error / F::from(sample_size).unwrap()
+            total_error / F::from(sample_size).expect("Test: failed to convert to float")
         };
 
         // Optimize weights
@@ -686,7 +701,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
             if i < optimal_weights.len() && weight_sum > F::zero() {
                 self.model_weights[i] = optimal_weights[i] / weight_sum;
             } else {
-                self.model_weights[i] = F::one() / F::from(num_models).unwrap();
+                self.model_weights[i] = F::one() / F::from(num_models).expect("Test failed");
             }
         }
 
@@ -786,7 +801,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
             nodes,
             connections,
             bond_dimensions,
-            max_entanglement: F::from(2.0).unwrap().ln(), // log(2) for qubits
+            max_entanglement: F::from(2.0)
+                .expect("Test: failed to convert constant to float")
+                .ln(), // log(2) for qubits
         }
     }
 
@@ -794,9 +811,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
     pub fn encode_time_series(&mut self, data: &Array1<F>) -> Result<()> {
         for (i, &value) in data.iter().enumerate().take(self.nodes.len()) {
             // Encode data value into tensor using quantum embedding
-            let angle = value * F::from(std::f64::consts::PI).unwrap();
-            let cos_half = (angle / F::from(2.0).unwrap()).cos();
-            let sin_half = (angle / F::from(2.0).unwrap()).sin();
+            let angle = value * F::from(std::f64::consts::PI).expect("Test failed");
+            let cos_half =
+                (angle / F::from(2.0).expect("Test: failed to convert constant to float")).cos();
+            let sin_half =
+                (angle / F::from(2.0).expect("Test: failed to convert constant to float")).sin();
 
             // Set tensor elements for quantum state |ψ⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩
             self.nodes[i].tensor[[0, 0, 0]] = Complex::new(cos_half, F::zero());
@@ -822,7 +841,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
                 expectation = expectation + prob_0 - prob_1;
             }
 
-            result[i] = expectation / F::from(node.tensor.shape()[1]).unwrap();
+            result[i] = expectation / F::from(node.tensor.shape()[1]).expect("Test failed");
         }
 
         Ok(result)
@@ -834,7 +853,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
         target_data: &Array1<F>,
         max_iterations: usize,
     ) -> Result<F> {
-        let mut best_loss = F::from(f64::INFINITY).unwrap();
+        let mut best_loss = F::from(f64::INFINITY).expect("Test failed");
 
         for iteration in 0..max_iterations {
             // Forward pass
@@ -846,7 +865,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
                 let diff = prediction[i] - target_data[i];
                 loss = loss + diff * diff;
             }
-            loss = loss / F::from(prediction.len().min(target_data.len())).unwrap();
+            loss = loss / F::from(prediction.len().min(target_data.len())).expect("Test failed");
 
             if loss < best_loss {
                 best_loss = loss;
@@ -861,8 +880,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
 
     /// Update tensor parameters using variational approach
     fn update_tensors_variational(&mut self, iteration: usize) -> Result<()> {
-        let learning_rate = F::from(0.01).unwrap();
-        let perturbation_scale = F::from(0.1).unwrap();
+        let learning_rate = F::from(0.01).expect("Test failed");
+        let perturbation_scale = F::from(0.1).expect("Test failed");
 
         for (node_idx, node) in self.nodes.iter_mut().enumerate() {
             // Apply small random perturbations to tensor elements
@@ -872,7 +891,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
                         let perturbation = F::from(
                             ((iteration + node_idx + i + j + k) % 1000) as f64 / 1000.0 - 0.5,
                         )
-                        .unwrap()
+                        .expect("Test: operation failed")
                             * perturbation_scale;
 
                         node.tensor[[i, j, k]] = Complex::new(
@@ -926,7 +945,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
         }
 
         // Normalize by region sizes
-        let normalization = F::from((region_a.len() * region_b.len()) as f64).unwrap();
+        let normalization = F::from((region_a.len() * region_b.len()) as f64).expect("Test failed");
         Ok(entropy / normalization)
     }
 }
@@ -1006,10 +1025,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
             physical_qubits,
             logical_qubits: logicalqubits,
             error_rates: ErrorRates {
-                bit_flip: F::from(0.001).unwrap(),
-                phase_flip: F::from(0.001).unwrap(),
-                depolarization: F::from(0.002).unwrap(),
-                measurement: F::from(0.01).unwrap(),
+                bit_flip: F::from(0.001).expect("Test failed"),
+                phase_flip: F::from(0.001).expect("Test failed"),
+                depolarization: F::from(0.002).expect("Test failed"),
+                measurement: F::from(0.01).expect("Test failed"),
             },
             syndromes: Vec::new(),
         }
@@ -1043,10 +1062,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
             let probability = amplitude.norm_sqr();
 
             // Check if probability deviates from expected values
-            let expected_prob = F::one() / F::from(quantumstate.amplitudes.len()).unwrap();
+            let expected_prob =
+                F::one() / F::from(quantumstate.amplitudes.len()).expect("Test failed");
             let deviation = (probability - expected_prob).abs();
 
-            if deviation > F::from(0.1).unwrap() {
+            if deviation > F::from(0.1).expect("Test: failed to convert constant to float") {
                 error_pattern[i] = true;
                 error_probability = error_probability + deviation;
             }
@@ -1094,7 +1114,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
         // Record correction
         let mut corrected_syndrome = syndrome.clone();
         corrected_syndrome.correction_applied = true;
-        corrected_syndrome.correction_confidence = F::from(0.95).unwrap();
+        corrected_syndrome.correction_confidence = F::from(0.95).expect("Test failed");
         self.syndromes.push(corrected_syndrome);
 
         Ok(())
@@ -1110,7 +1130,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
             .count();
 
         let success_rate = if total_corrections > 0 {
-            F::from(successful_corrections).unwrap() / F::from(total_corrections).unwrap()
+            F::from(successful_corrections).expect("Test: failed to convert to float")
+                / F::from(total_corrections).expect("Test: failed to convert to float")
         } else {
             F::zero()
         };
@@ -1121,7 +1142,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
                 .filter(|s| s.correction_applied)
                 .map(|s| s.correction_confidence)
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(successful_corrections).unwrap()
+                / F::from(successful_corrections).expect("Test: failed to convert to float")
         } else {
             F::zero()
         };
@@ -1284,13 +1305,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvant
 
         // Calculate advantage metrics
         self.advantage_metrics.speedup =
-            F::from(classical_train_time / quantum_train_time.max(0.001)).unwrap();
+            F::from(classical_train_time / quantum_train_time.max(0.001)).expect("Test failed");
         self.advantage_metrics.accuracy_improvement =
             (classical_performance.mse - quantum_performance.mse) / classical_performance.mse;
         self.advantage_metrics.memory_efficiency = classical_performance.memory_usage
             / quantum_performance
                 .memory_usage
-                .max(F::from(0.001).unwrap());
+                .max(F::from(0.001).expect("Test: failed to convert constant to float"));
 
         Ok(self.advantage_metrics.clone())
     }
@@ -1334,7 +1355,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvant
             for i in 0..n {
                 sum = sum + x_matrix[[i, j]];
             }
-            self.classical_baseline.linear_weights[j] = sum / F::from(n).unwrap();
+            self.classical_baseline.linear_weights[j] = sum / F::from(n).expect("Test failed");
         }
 
         Ok(())
@@ -1354,7 +1375,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvant
             // Limit for demo
             if let Ok(quantum_output) = self.qml_model.vqc.forward(features) {
                 let prediction = quantum_output.iter().copied().sum::<F>()
-                    / F::from(quantum_output.len()).unwrap();
+                    / F::from(quantum_output.len()).expect("Test failed");
                 let error = prediction - *target;
                 total_error = total_error + error * error;
                 valid_predictions += 1;
@@ -1364,16 +1385,16 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvant
         let inference_time = start_time.elapsed().as_secs_f64();
 
         let mse = if valid_predictions > 0 {
-            total_error / F::from(valid_predictions).unwrap()
+            total_error / F::from(valid_predictions).expect("Test: failed to convert to float")
         } else {
-            F::from(f64::INFINITY).unwrap()
+            F::from(f64::INFINITY).expect("Test: failed to convert to float")
         };
 
         Ok(PerformanceMetrics {
             mse,
             training_time: F::zero(), // Would be tracked separately
-            inference_time: F::from(inference_time).unwrap(),
-            memory_usage: F::from(self.qml_model.vqc.num_qubits * 8).unwrap(), // Simplified
+            inference_time: F::from(inference_time).expect("Test failed"),
+            memory_usage: F::from(self.qml_model.vqc.num_qubits * 8).expect("Test failed"), // Simplified
         })
     }
 
@@ -1406,16 +1427,17 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvant
         let inference_time = start_time.elapsed().as_secs_f64();
 
         let mse = if valid_predictions > 0 {
-            total_error / F::from(valid_predictions).unwrap()
+            total_error / F::from(valid_predictions).expect("Test: failed to convert to float")
         } else {
-            F::from(f64::INFINITY).unwrap()
+            F::from(f64::INFINITY).expect("Test: failed to convert to float")
         };
 
         Ok(PerformanceMetrics {
             mse,
             training_time: F::zero(),
-            inference_time: F::from(inference_time).unwrap(),
-            memory_usage: F::from(self.classical_baseline.linear_weights.len() * 8).unwrap(),
+            inference_time: F::from(inference_time).expect("Test failed"),
+            memory_usage: F::from(self.classical_baseline.linear_weights.len() * 8)
+                .expect("Test failed"),
         })
     }
 
@@ -1437,7 +1459,7 @@ mod quantum_advanced_tests {
         let mut qnn = QuantumNeuralNetwork::<f64>::new(2, 4, 8, 3);
 
         let input = Array1::from_vec((0..8).map(|i| i as f64 * 0.1).collect());
-        let output = qnn.forward(&input).unwrap();
+        let output = qnn.forward(&input).expect("Test failed");
 
         assert_eq!(output.len(), 3);
 
@@ -1450,7 +1472,7 @@ mod quantum_advanced_tests {
             ),
         ];
 
-        let loss_history = qnn.train(&training_data, 5, 0.01).unwrap();
+        let loss_history = qnn.train(&training_data, 5, 0.01).expect("Test failed");
         assert_eq!(loss_history.len(), 5);
     }
 
@@ -1460,7 +1482,7 @@ mod quantum_advanced_tests {
             QuantumEnsemble::<f64>::new(3, 3, 5, 2, QuantumEnsembleMethod::QuantumWeightedAverage);
 
         let input = Array1::from_vec(vec![0.1, 0.2, 0.3, 0.4, 0.5]);
-        let prediction = ensemble.predict(&input).unwrap();
+        let prediction = ensemble.predict(&input).expect("Test failed");
 
         assert_eq!(prediction.len(), 2);
 
@@ -1487,8 +1509,8 @@ mod quantum_advanced_tests {
 
         let input = Array1::from_vec(vec![0.1, 0.2, 0.3, 0.4]);
 
-        let pred_voting = ensemble_voting.predict(&input).unwrap();
-        let pred_interference = ensemble_interference.predict(&input).unwrap();
+        let pred_voting = ensemble_voting.predict(&input).expect("Test failed");
+        let pred_interference = ensemble_interference.predict(&input).expect("Test failed");
 
         assert_eq!(pred_voting.len(), 2);
         assert_eq!(pred_interference.len(), 2);
@@ -1514,13 +1536,13 @@ mod quantum_advanced_tests {
         // Test different activation functions
         let relu_output = qnn
             .apply_quantum_activation(&input, &QuantumActivation::QuantumReLU)
-            .unwrap();
+            .expect("Test failed");
         let sigmoid_output = qnn
             .apply_quantum_activation(&input, &QuantumActivation::QuantumSigmoid)
-            .unwrap();
+            .expect("Test failed");
         let tanh_output = qnn
             .apply_quantum_activation(&input, &QuantumActivation::QuantumTanh)
-            .unwrap();
+            .expect("Test failed");
 
         assert_eq!(relu_output.len(), 3);
         assert_eq!(sigmoid_output.len(), 3);
@@ -1550,15 +1572,17 @@ mod quantum_advanced_tests {
 
         // Test data encoding
         let data = Array1::from_vec(vec![0.1, 0.2, 0.3, 0.4, 0.5]);
-        qtn.encode_time_series(&data).unwrap();
+        qtn.encode_time_series(&data).expect("Test failed");
 
         // Test network contraction
-        let features = qtn.contract_network().unwrap();
+        let features = qtn.contract_network().expect("Test failed");
         assert_eq!(features.len(), 5);
 
         // Test variational optimization
         let target = Array1::from_vec(vec![0.15, 0.25, 0.35, 0.45, 0.55]);
-        let final_loss = qtn.variational_optimization(&target, 10).unwrap();
+        let final_loss = qtn
+            .variational_optimization(&target, 10)
+            .expect("Test failed");
         assert!(final_loss >= 0.0);
 
         // Test entanglement entropy calculation
@@ -1566,7 +1590,7 @@ mod quantum_advanced_tests {
         let region_b = vec![3, 4];
         let entropy = qtn
             .calculate_entanglement_entropy(&region_a, &region_b)
-            .unwrap();
+            .expect("Test failed");
         assert!(entropy >= 0.0);
     }
 
@@ -1582,7 +1606,9 @@ mod quantum_advanced_tests {
         let mut quantum_state = QuantumState::<f64>::new(3);
         quantum_state.create_superposition();
 
-        let _correction_applied = qec.detect_and_correct(&mut quantum_state).unwrap();
+        let _correction_applied = qec
+            .detect_and_correct(&mut quantum_state)
+            .expect("Test failed");
         // Should attempt correction for superposition state
 
         // Test error statistics
@@ -1625,7 +1651,7 @@ mod quantum_advanced_tests {
         // Evaluate quantum advantage
         let advantage_metrics = qap
             .evaluate_quantum_advantage(&training_data, &test_data)
-            .unwrap();
+            .expect("Test failed");
 
         // Check advantage metrics are reasonable
         assert!(advantage_metrics.speedup >= 0.0);

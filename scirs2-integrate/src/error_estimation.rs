@@ -140,13 +140,14 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
         }
 
         let mut result = ErrorAnalysisResult {
-            primary_estimate: embedded_error.unwrap_or(F::from(1e-8).unwrap()),
+            primary_estimate: embedded_error
+                .unwrap_or(F::from(1e-8).expect("Failed to convert constant to float")),
             richardson_error: None,
             spectral_error: None,
             defect_error: None,
             quality_metrics: self.assess_solution_quality()?,
             recommended_step_size: step_size,
-            confidence: F::from(0.5).unwrap(), // Default confidence
+            confidence: F::from(0.5).expect("Failed to convert constant to float"), // Default confidence
             error_distribution: self.analyze_error_distribution(current_solution)?,
         };
 
@@ -192,7 +193,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
 
         // Assume second-order method for Richardson extrapolation
         let r = h1 / h2;
-        if (r - F::one()).abs() < F::from(0.1).unwrap() {
+        if (r - F::one()).abs() < F::from(0.1).expect("Failed to convert constant to float") {
             // Step sizes too similar for reliable extrapolation
             return Ok(None);
         }
@@ -222,8 +223,9 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
             // Compute second differences (approximates second derivative)
             if values.len() >= 3 {
                 for i in 1..values.len() - 1 {
-                    let second_diff =
-                        values[i + 1] - F::from(2.0).unwrap() * values[i] + values[i - 1];
+                    let second_diff = values[i + 1]
+                        - F::from(2.0).expect("Failed to convert constant to float") * values[i]
+                        + values[i - 1];
                     spectral_norm += second_diff.abs();
                     total_norm += values[i].abs();
                 }
@@ -251,7 +253,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
             return Ok(None);
         }
 
-        let h = *self.step_size_history.back().unwrap();
+        let h = *self.step_size_history.back().expect("Operation failed");
         let t = F::zero(); // Assuming we're at some time t
 
         // Compute defect: residual when substituting numerical _solution
@@ -309,8 +311,8 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
                     }
                 }
             }
-            metrics.oscillation_index =
-                F::from(oscillations).unwrap() / F::from(n * solutions[0].len()).unwrap();
+            metrics.oscillation_index = F::from(oscillations).expect("Failed to convert to float")
+                / F::from(n * solutions[0].len()).expect("Operation failed");
         }
 
         // Estimate signal-to-noise ratio
@@ -321,7 +323,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
             for comp in 0..solutions[0].len() {
                 let values: Vec<F> = solutions.iter().map(|sol| sol[comp]).collect();
                 let mean = values.iter().fold(F::zero(), |acc, &x| acc + x)
-                    / F::from(values.len()).unwrap();
+                    / F::from(values.len()).expect("Operation failed");
 
                 // Signal power (variance)
                 for &val in &values {
@@ -330,8 +332,9 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
 
                 // Noise power (second differences)
                 for i in 1..values.len() - 1 {
-                    let second_diff =
-                        values[i + 1] - F::from(2.0).unwrap() * values[i] + values[i - 1];
+                    let second_diff = values[i + 1]
+                        - F::from(2.0).expect("Failed to convert constant to float") * values[i]
+                        + values[i - 1];
                     noise_power += second_diff.powi(2);
                 }
             }
@@ -354,7 +357,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
 
         // Estimate component-wise errors (simple finite difference approximation)
         if self.solution_history.len() >= 2 {
-            let prev_solution = self.solution_history.back().unwrap();
+            let prev_solution = self.solution_history.back().expect("Operation failed");
             for i in 0..n_components {
                 component_errors[i] = (solution[i] - prev_solution[i]).abs();
             }
@@ -362,13 +365,13 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
 
         // Compute distribution statistics
         let mean_error = component_errors.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(n_components).unwrap();
+            / F::from(n_components).expect("Failed to convert to float");
 
         let variance = component_errors
             .iter()
             .map(|&err| (err - mean_error).powi(2))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(n_components).unwrap();
+            / F::from(n_components).expect("Failed to convert to float");
 
         let std_deviation = variance.sqrt();
         let max_error = component_errors
@@ -381,7 +384,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
                 .iter()
                 .map(|&err| ((err - mean_error) / std_deviation).powi(3))
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(n_components).unwrap()
+                / F::from(n_components).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -412,12 +415,12 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
 
         if estimates.len() >= 2 {
             let mean_est = estimates.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from(estimates.len()).unwrap();
+                / F::from(estimates.len()).expect("Operation failed");
             let relative_std = estimates
                 .iter()
                 .map(|&est| ((est - mean_est) / mean_est).abs())
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(estimates.len()).unwrap();
+                / F::from(estimates.len()).expect("Operation failed");
 
             // Higher confidence if estimates agree
             confidence_factors.push(F::one() / (F::one() + relative_std));
@@ -430,9 +433,9 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
         // Average confidence factors
         if !confidence_factors.is_empty() {
             confidence_factors.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from(confidence_factors.len()).unwrap()
+                / F::from(confidence_factors.len()).expect("Operation failed")
         } else {
-            F::from(0.5).unwrap() // Default moderate confidence
+            F::from(0.5).expect("Failed to convert constant to float") // Default moderate confidence
         }
     }
 
@@ -446,24 +449,30 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
         }
 
         // Safety factor based on confidence
-        let safety_factor = F::from(0.8).unwrap() + F::from(0.15).unwrap() * result.confidence;
+        let safety_factor = F::from(0.8).expect("Failed to convert constant to float")
+            + F::from(0.15).expect("Failed to convert constant to float") * result.confidence;
 
         // Standard _step size controller (assumes 2nd order method)
-        let ratio = (target_error / current_error).powf(F::from(0.5).unwrap());
+        let ratio = (target_error / current_error)
+            .powf(F::from(0.5).expect("Failed to convert constant to float"));
         let _basic_recommendation = currentstep * ratio * safety_factor;
 
         // Adjust based on solution quality
-        let quality_factor = if result.quality_metrics.oscillation_index > F::from(0.1).unwrap() {
-            F::from(0.7).unwrap() // Reduce _step size for oscillatory solutions
-        } else if result.quality_metrics.smoothness > F::from(0.8).unwrap() {
-            F::from(1.2).unwrap() // Increase _step size for smooth solutions
+        let quality_factor = if result.quality_metrics.oscillation_index
+            > F::from(0.1).expect("Failed to convert constant to float")
+        {
+            F::from(0.7).expect("Failed to convert constant to float") // Reduce _step size for oscillatory solutions
+        } else if result.quality_metrics.smoothness
+            > F::from(0.8).expect("Failed to convert constant to float")
+        {
+            F::from(1.2).expect("Failed to convert constant to float") // Increase _step size for smooth solutions
         } else {
             F::one()
         };
 
         // Limit _step size changes
-        let min_factor = F::from(0.2).unwrap();
-        let max_factor = F::from(5.0).unwrap();
+        let min_factor = F::from(0.2).expect("Failed to convert constant to float");
+        let max_factor = F::from(5.0).expect("Failed to convert constant to float");
         let final_factor = (ratio * safety_factor * quality_factor)
             .max(min_factor)
             .min(max_factor);
@@ -477,7 +486,10 @@ impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
     pub fn new(order: usize) -> Self {
         Self {
             order,
-            step_ratios: vec![F::from(0.5).unwrap(), F::from(0.25).unwrap()],
+            step_ratios: vec![
+                F::from(0.5).expect("Failed to convert constant to float"),
+                F::from(0.25).expect("Failed to convert constant to float"),
+            ],
             solutions: Vec::new(),
         }
     }
@@ -507,14 +519,15 @@ impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
         // Richardson extrapolation tableau
         for col in 1..n {
             for row in 0..n - col {
-                let default_ratio = F::from(0.5).unwrap();
+                let default_ratio = F::from(0.5).expect("Failed to convert constant to float");
                 let r = self.step_ratios.get(col - 1).unwrap_or(&default_ratio);
                 let r_power = r.powi(self.order as i32);
 
                 let numerator = &tableau[row + 1][col - 1] * r_power - &tableau[row][col - 1];
                 let denominator = r_power - F::one();
 
-                if denominator.abs() > F::from(1e-12).unwrap() {
+                if denominator.abs() > F::from(1e-12).expect("Failed to convert constant to float")
+                {
                     let extrapolated = numerator / denominator;
                     tableau[row].push(extrapolated);
                 } else {
@@ -596,7 +609,9 @@ impl<F: IntegrateFloat> SpectralErrorIndicator<F> {
             }
         }
 
-        Ok(Some(total_indicator / F::from(n_components).unwrap()))
+        Ok(Some(
+            total_indicator / F::from(n_components).expect("Failed to convert to float"),
+        ))
     }
 }
 
@@ -616,7 +631,7 @@ mod tests {
         let result = estimator.analyze_error(&solution, step_size, ode_fn, Some(1e-8));
         assert!(result.is_ok());
 
-        let error_analysis = result.unwrap();
+        let error_analysis = result.expect("Test: error analysis failed");
         assert!(error_analysis.primary_estimate > 0.0);
         assert!(error_analysis.confidence >= 0.0 && error_analysis.confidence <= 1.0);
     }

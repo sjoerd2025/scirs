@@ -1,6 +1,6 @@
 # SciRS2-Python TODO (For v0.2.0 or later)
 
-## Status: NOT READY FOR v0.1.0-rc.3
+## Status: NOT READY FOR v0.1.0-rc.4
 
 This crate contains the foundational work for unified Python bindings but has critical blockers preventing immediate release. It will be included in a future version (v0.2.0 or v0.3.0).
 
@@ -245,7 +245,7 @@ maturin publish
 
 ---
 
-## Current State (v0.1.0-rc.3)
+## Current State (v0.1.0-rc.4)
 
 ✅ **Phase 0 Complete** (2025-11-19):
 - Cargo.toml, pyproject.toml, README.md

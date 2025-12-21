@@ -52,7 +52,7 @@ use std::fmt::Debug;
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Perform SWT using the Haar wavelet at level 1
-/// let (ca, cd) = swt_decompose(&signal, Wavelet::Haar, 1, None).unwrap();
+/// let (ca, cd) = swt_decompose(&signal, Wavelet::Haar, 1, None).expect("Operation failed");
 ///
 /// // Check the length of the coefficients (should be same as original signal length)
 /// assert_eq!(ca.len(), signal.len());
@@ -177,7 +177,7 @@ where
 /// use scirs2_signal::dwt::Wavelet;
 ///
 /// let signal: Vec<f32> = (0..1024).map(|x| (x as f32).sin()).collect();
-/// let (ca, cd) = swt_decompose_simd_pipelined(&signal, Wavelet::DB(4), 2, None).unwrap();
+/// let (ca, cd) = swt_decompose_simd_pipelined(&signal, Wavelet::DB(4), 2, None).expect("Operation failed");
 /// ```
 pub fn swt_decompose_simd_pipelined(
     data: &[f32],
@@ -522,10 +522,10 @@ fn extend_signal_f32(signal: &[f32], filter_len: usize, mode: &str) -> SignalRes
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Perform SWT using the Haar wavelet at level 1
-/// let (ca, cd) = swt_decompose(&signal, Wavelet::Haar, 1, None).unwrap();
+/// let (ca, cd) = swt_decompose(&signal, Wavelet::Haar, 1, None).expect("Operation failed");
 ///
 /// // Reconstruct the signal
-/// let reconstructed = swt_reconstruct(&ca, &cd, Wavelet::Haar, 1).unwrap();
+/// let reconstructed = swt_reconstruct(&ca, &cd, Wavelet::Haar, 1).expect("Operation failed");
 ///
 /// // Check that the reconstruction has the correct length
 /// assert_eq!(reconstructed.len(), signal.len());
@@ -641,7 +641,7 @@ pub fn swt_reconstruct(
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Perform multi-level SWT using the Haar wavelet (2 levels)
-/// let (details, approx) = swt(&signal, Wavelet::Haar, 2, None).unwrap();
+/// let (details, approx) = swt(&signal, Wavelet::Haar, 2, None).expect("Operation failed");
 ///
 /// // Check that we have the right number of detail coefficient arrays
 /// assert_eq!(details.len(), 2);
@@ -731,10 +731,10 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Perform multi-level SWT using the Haar wavelet (2 levels)
-/// let (details, approx) = swt(&signal, Wavelet::Haar, 2, None).unwrap();
+/// let (details, approx) = swt(&signal, Wavelet::Haar, 2, None).expect("Operation failed");
 ///
 /// // Reconstruct the signal
-/// let reconstructed = iswt(&details, &approx, Wavelet::Haar).unwrap();
+/// let reconstructed = iswt(&details, &approx, Wavelet::Haar).expect("Operation failed");
 ///
 /// // Check that the reconstruction has the correct length
 /// assert_eq!(reconstructed.len(), signal.len());
@@ -923,7 +923,8 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Decompose with Haar wavelet at level 1
-        let (approx, detail) = swt_decompose(&signal, Wavelet::Haar, 1, None).unwrap();
+        let (approx, detail) =
+            swt_decompose(&signal, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Check length (should be same as input)
         assert_eq!(approx.len(), signal.len());
@@ -949,10 +950,12 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Decompose with Haar wavelet at level 1
-        let (approx, detail) = swt_decompose(&signal, Wavelet::Haar, 1, None).unwrap();
+        let (approx, detail) =
+            swt_decompose(&signal, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Reconstruct
-        let reconstructed = swt_reconstruct(&approx, &detail, Wavelet::Haar, 1).unwrap();
+        let reconstructed =
+            swt_reconstruct(&approx, &detail, Wavelet::Haar, 1).expect("Operation failed");
 
         // Check that reconstruction has the correct length
         assert_eq!(reconstructed.len(), signal.len());
@@ -970,7 +973,8 @@ mod tests {
         let step_signal = vec![1.0, 1.0, 1.0, 1.0, 5.0, 5.0, 5.0, 5.0];
 
         // Decompose and reconstruct
-        let (approx2, detail2) = swt_decompose(&step_signal, Wavelet::Haar, 1, None).unwrap();
+        let (approx2, detail2) =
+            swt_decompose(&step_signal, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Detail coefficients should be non-zero at the step boundary
         let mut has_nonzero_detail = false;
@@ -986,7 +990,8 @@ mod tests {
         );
 
         // Reconstruct
-        let reconstructed2 = swt_reconstruct(&approx2, &detail2, Wavelet::Haar, 1).unwrap();
+        let reconstructed2 =
+            swt_reconstruct(&approx2, &detail2, Wavelet::Haar, 1).expect("Operation failed");
         assert_eq!(reconstructed2.len(), step_signal.len());
     }
 
@@ -998,7 +1003,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Perform 2-level SWT
-        let (details, approx) = swt(&signal, Wavelet::Haar, 2, None).unwrap();
+        let (details, approx) = swt(&signal, Wavelet::Haar, 2, None).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(details.len(), 2); // 2 levels of detail
@@ -1015,7 +1020,7 @@ mod tests {
         assert!(total_energy > 0.0);
 
         // Reconstruct
-        let reconstructed = iswt(&details, &approx, Wavelet::Haar).unwrap();
+        let reconstructed = iswt(&details, &approx, Wavelet::Haar).expect("Operation failed");
 
         // Check that reconstruction has the right length
         assert_eq!(reconstructed.len(), signal.len());

@@ -565,14 +565,14 @@ mod tests {
         let solver = GPUQuantumSolver::new(0, 4);
         assert!(solver.is_ok());
 
-        let gpu_solver = solver.unwrap();
+        let gpu_solver = solver.expect("Operation failed");
         assert_eq!(gpu_solver.device_id, 0);
         assert_eq!(gpu_solver.max_qubits, 4);
     }
 
     #[test]
     fn test_quantum_state_evolution() {
-        let mut solver = GPUQuantumSolver::new(0, 2).unwrap();
+        let mut solver = GPUQuantumSolver::new(0, 2).expect("Operation failed");
 
         // Simple 2-qubit state
         let initial_state = Array1::from_vec(vec![
@@ -588,13 +588,13 @@ mod tests {
         let evolved_state = solver.evolve_quantum_state(&initial_state, &hamiltonian, 0.1, 10);
         assert!(evolved_state.is_ok());
 
-        let final_state = evolved_state.unwrap();
+        let final_state = evolved_state.expect("Operation failed");
         assert_eq!(final_state.len(), 4);
     }
 
     #[test]
     fn test_gpu_memory_manager() {
-        let mut memory_manager = GPUMemoryManager::new(1_000_000).unwrap();
+        let mut memory_manager = GPUMemoryManager::new(1_000_000).expect("Operation failed");
 
         let result = memory_manager.allocate_state_vector(1000);
         assert!(result.is_ok());
@@ -609,7 +609,7 @@ mod tests {
         let solver = GPUMultiBodyQuantumSolver::new(0, 3);
         assert!(solver.is_ok());
 
-        let multi_body_solver = solver.unwrap();
+        let multi_body_solver = solver.expect("Operation failed");
         assert_eq!(multi_body_solver.n_particles, 3);
         assert_eq!(multi_body_solver.base_solver.max_qubits, 6);
     }

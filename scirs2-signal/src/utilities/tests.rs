@@ -22,7 +22,7 @@ mod spectral_tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let fs = 100.0; // Sample rate in Hz
 
-        let esd = energy_spectral_density(&psd, fs).unwrap();
+        let esd = energy_spectral_density(&psd, fs).expect("Test: operation failed");
 
         // Check scaling by sample interval (1/fs)
         for (i, &p) in psd.iter().enumerate() {
@@ -37,7 +37,7 @@ mod spectral_tests {
         // Create a simple PSD
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
 
-        let norm_psd = normalized_psd(&psd).unwrap();
+        let norm_psd = normalized_psd(&psd).expect("Test: operation failed");
 
         // Check sum is 1.0
         let sum: f64 = norm_psd.iter().sum();
@@ -59,7 +59,7 @@ mod spectral_tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let centroid = spectral_centroid(&psd, &freqs).unwrap();
+        let centroid = spectral_centroid(&psd, &freqs).expect("Test: operation failed");
 
         // For symmetric PSD with peak in the middle, centroid should be at the middle frequency
         assert_relative_eq!(centroid, 3.0, epsilon = 1e-10);
@@ -68,7 +68,7 @@ mod spectral_tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let centroid = spectral_centroid(&psd, &freqs).unwrap();
+        let centroid = spectral_centroid(&psd, &freqs).expect("Test: operation failed");
 
         // Centroid should be biased toward higher frequencies
         assert!(centroid > 3.0);
@@ -82,7 +82,7 @@ mod spectral_tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let spread = spectral_spread(&psd, &freqs, None).unwrap();
+        let spread = spectral_spread(&psd, &freqs, None).expect("Test: operation failed");
 
         // Spread should be positive
         assert!(spread > 0.0);
@@ -91,7 +91,7 @@ mod spectral_tests {
         let psd = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let spread = spectral_spread(&psd, &freqs, None).unwrap();
+        let spread = spectral_spread(&psd, &freqs, None).expect("Test: operation failed");
 
         // Spread should be very small for narrow PSD
         assert!(spread < 0.1);
@@ -105,7 +105,7 @@ mod spectral_tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();
+        let skewness = spectral_skewness(&psd, &freqs, None, None).expect("Test: operation failed");
 
         // Skewness should be close to zero for symmetric distribution
         assert_relative_eq!(skewness, 0.0, epsilon = 1e-10);
@@ -114,7 +114,7 @@ mod spectral_tests {
         let psd = vec![4.0, 3.0, 2.0, 1.0, 0.5, 0.3, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();
+        let skewness = spectral_skewness(&psd, &freqs, None, None).expect("Test: operation failed");
 
         // In spectral analysis, this is considered to have a positive skewness
         // This is because spectral skewness in signal processing often measures
@@ -130,7 +130,7 @@ mod spectral_tests {
         let psd = vec![0.1, 0.3, 0.5, 1.0, 2.0, 3.0, 4.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();
+        let skewness = spectral_skewness(&psd, &freqs, None, None).expect("Test: operation failed");
 
         // In spectral analysis with this implementation, a distribution with more energy
         // at high frequencies gives negative skewness. This is due to how the spectral
@@ -151,7 +151,7 @@ mod spectral_tests {
         let psd = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).unwrap();
+        let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).expect("Test: operation failed");
 
         // Kurtosis should be negative for uniform distribution (platykurtic)
         assert!(kurtosis < 0.0);
@@ -160,7 +160,7 @@ mod spectral_tests {
         let psd = vec![0.1, 0.2, 0.5, 5.0, 0.5, 0.2, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).unwrap();
+        let kurtosis = spectral_kurtosis(&psd, &freqs, None, None).expect("Test: operation failed");
 
         // Kurtosis should be positive for peaked distribution
         assert!(kurtosis > 0.0);
@@ -173,7 +173,7 @@ mod spectral_tests {
         // Create a flat PSD (white noise-like)
         let psd = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
 
-        let flatness = spectral_flatness(&psd).unwrap();
+        let flatness = spectral_flatness(&psd).expect("Test: operation failed");
 
         // Flatness should be close to 1.0 for flat PSD
         assert_relative_eq!(flatness, 1.0, epsilon = 1e-10);
@@ -181,7 +181,7 @@ mod spectral_tests {
         // Create a PSD with a single peak (tone-like)
         let psd = vec![0.01, 0.01, 0.01, 1.0, 0.01, 0.01, 0.01];
 
-        let flatness = spectral_flatness(&psd).unwrap();
+        let flatness = spectral_flatness(&psd).expect("Test: operation failed");
 
         // Flatness should be close to 0.0 for peak PSD
         assert!(flatness < 0.3);
@@ -193,9 +193,9 @@ mod spectral_tests {
         let psd1 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let psd2 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
 
-        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();
-        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();
-        let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();
+        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").expect("Test: operation failed");
+        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").expect("Test: operation failed");
+        let flux_max = spectral_flux(&psd1, &psd2, "max").expect("Test: operation failed");
 
         // Flux should be 0.0 for identical PSDs
         assert_relative_eq!(flux_l1, 0.0, epsilon = 1e-10);
@@ -206,9 +206,9 @@ mod spectral_tests {
         let psd1 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let psd2 = vec![0.0, 1.0, 2.0, 3.0, 4.0, 3.0, 2.0];
 
-        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").unwrap();
-        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").unwrap();
-        let flux_max = spectral_flux(&psd1, &psd2, "max").unwrap();
+        let flux_l1 = spectral_flux(&psd1, &psd2, "l1").expect("Test: operation failed");
+        let flux_l2 = spectral_flux(&psd1, &psd2, "l2").expect("Test: operation failed");
+        let flux_max = spectral_flux(&psd1, &psd2, "max").expect("Test: operation failed");
 
         // Flux should be positive for different PSDs
         assert!(flux_l1 > 0.0);
@@ -228,8 +228,8 @@ mod spectral_tests {
         let psd = vec![1.0, 2.0, 3.0, 4.0, 0.1, 0.1, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let rolloff_95 = spectral_rolloff(&psd, &freqs, 0.95).unwrap();
-        let rolloff_50 = spectral_rolloff(&psd, &freqs, 0.50).unwrap();
+        let rolloff_95 = spectral_rolloff(&psd, &freqs, 0.95).expect("Test: operation failed");
+        let rolloff_50 = spectral_rolloff(&psd, &freqs, 0.50).expect("Test: operation failed");
 
         // 95% rolloff should be higher than 50% rolloff
         assert!(rolloff_95 >= rolloff_50);
@@ -241,7 +241,7 @@ mod spectral_tests {
         let psd = vec![0.1, 0.1, 0.1, 0.1, 3.0, 4.0, 5.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let rolloff = spectral_rolloff(&psd, &freqs, 0.95).unwrap();
+        let rolloff = spectral_rolloff(&psd, &freqs, 0.95).expect("Test: operation failed");
 
         // Rolloff should be in the higher frequency range
         assert!(rolloff >= 5.0);
@@ -255,7 +255,7 @@ mod spectral_tests {
         // Create a flat PSD (white noise-like)
         let psd = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
 
-        let crest = spectral_crest(&psd).unwrap();
+        let crest = spectral_crest(&psd).expect("Test: operation failed");
 
         // Crest factor should be 1.0 for flat PSD
         assert_relative_eq!(crest, 1.0, epsilon = 1e-10);
@@ -263,7 +263,7 @@ mod spectral_tests {
         // Create a peaked PSD
         let psd = vec![0.1, 0.1, 0.1, 1.0, 0.1, 0.1, 0.1];
 
-        let crest = spectral_crest(&psd).unwrap();
+        let crest = spectral_crest(&psd).expect("Test: operation failed");
 
         // Crest factor should be high for peaked PSD
         // The exact value depends on the calculation method
@@ -278,7 +278,7 @@ mod spectral_tests {
         let psd = vec![5.0, 4.0, 3.0, 2.0, 1.0, 0.5, 0.2];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let decrease = spectral_decrease(&psd, &freqs).unwrap();
+        let decrease = spectral_decrease(&psd, &freqs).expect("Test: operation failed");
 
         // Decrease should be negative for decreasing spectrum
         assert!(decrease < 0.0);
@@ -287,7 +287,7 @@ mod spectral_tests {
         let psd = vec![0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let decrease = spectral_decrease(&psd, &freqs).unwrap();
+        let decrease = spectral_decrease(&psd, &freqs).expect("Test: operation failed");
 
         // Decrease should be positive for increasing spectrum
         assert!(decrease > 0.0);
@@ -301,7 +301,7 @@ mod spectral_tests {
         let psd = vec![5.0, 4.0, 3.0, 2.0, 1.0, 0.5, 0.2];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let slope = spectral_slope(&psd, &freqs).unwrap();
+        let slope = spectral_slope(&psd, &freqs).expect("Test: operation failed");
 
         // Slope should be negative
         assert!(slope < 0.0);
@@ -310,7 +310,7 @@ mod spectral_tests {
         let psd = vec![0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let slope = spectral_slope(&psd, &freqs).unwrap();
+        let slope = spectral_slope(&psd, &freqs).expect("Test: operation failed");
 
         // Slope should be positive
         assert!(slope > 0.0);
@@ -324,7 +324,7 @@ mod spectral_tests {
         let psd = vec![0.1, 1.0, 0.1, 1.0, 0.1, 1.0, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let contrast = spectral_contrast(&psd, &freqs, 2).unwrap();
+        let contrast = spectral_contrast(&psd, &freqs, 2).expect("Test: operation failed");
 
         // Should have correct number of bands
         assert_eq!(contrast.len(), 2);
@@ -338,7 +338,7 @@ mod spectral_tests {
         let psd = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let contrast = spectral_contrast(&psd, &freqs, 2).unwrap();
+        let contrast = spectral_contrast(&psd, &freqs, 2).expect("Test: operation failed");
 
         // Contrast should be low for flat spectrum
         for &c in &contrast {
@@ -352,8 +352,8 @@ mod spectral_tests {
         let psd = vec![0.1, 0.2, 0.5, 1.0, 0.5, 0.2, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let bandwidth_3db = spectral_bandwidth(&psd, &freqs, -3.0).unwrap();
-        let bandwidth_6db = spectral_bandwidth(&psd, &freqs, -6.0).unwrap();
+        let bandwidth_3db = spectral_bandwidth(&psd, &freqs, -3.0).expect("Test: operation failed");
+        let bandwidth_6db = spectral_bandwidth(&psd, &freqs, -6.0).expect("Test: operation failed");
 
         // -6dB bandwidth should be wider than -3dB bandwidth
         assert!(bandwidth_6db > bandwidth_3db);
@@ -371,7 +371,7 @@ mod spectral_tests {
         let psd = vec![0.1, 0.2, 0.5, 5.0, 0.5, 0.2, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let (dominant_freq, magnitude) = dominant_frequency(&psd, &freqs).unwrap();
+        let (dominant_freq, magnitude) = dominant_frequency(&psd, &freqs).expect("Test: operation failed");
 
         // Dominant frequency should be at the peak (index 3, frequency 3.0)
         assert_relative_eq!(dominant_freq, 3.0, epsilon = 1e-10);
@@ -386,7 +386,7 @@ mod spectral_tests {
         let psd = vec![0.1, 2.0, 0.1, 5.0, 0.1, 3.0, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let peaks = dominant_frequencies(&psd, &freqs, 3, 1.0).unwrap();
+        let peaks = dominant_frequencies(&psd, &freqs, 3, 1.0).expect("Test: operation failed");
 
         // Should find 3 peaks
         assert_eq!(peaks.len(), 3);
@@ -441,23 +441,23 @@ mod spectral_tests {
         let psd = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]);
         let freqs = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 
-        let centroid = spectral_centroid(&psd.to_vec(), &freqs.to_vec()).unwrap();
+        let centroid = spectral_centroid(&psd.to_vec(), &freqs.to_vec()).expect("Test: operation failed");
         assert_relative_eq!(centroid, 3.0, epsilon = 1e-10);
 
         // Create 2D array and take a slice
         let psd_2d =
-            Array2::from_shape_vec((1, 7), vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]).unwrap();
+            Array2::from_shape_vec((1, 7), vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]).expect("Test: operation failed");
         let psd_slice = psd_2d.slice(scirs2_core::ndarray::s![0, ..]);
         let psd_slice_vec: Vec<f64> = psd_slice.iter().cloned().collect();
 
-        let spread = spectral_spread(&psd_slice_vec, &freqs.to_vec(), None).unwrap();
+        let spread = spectral_spread(&psd_slice_vec, &freqs.to_vec(), None).expect("Test: operation failed");
         assert!(spread > 0.0);
 
         // Test new functions with ndarray
-        let crest = spectral_crest(&psd.to_vec()).unwrap();
+        let crest = spectral_crest(&psd.to_vec()).expect("Test: operation failed");
         assert!(crest >= 1.0);
 
-        let (dominant_freq_) = dominant_frequency(&psd.to_vec(), &freqs.to_vec()).unwrap();
+        let (dominant_freq_) = dominant_frequency(&psd.to_vec(), &freqs.to_vec()).expect("Test: operation failed");
         assert_relative_eq!(dominant_freq, 3.0, epsilon = 1e-10);
     }
 }

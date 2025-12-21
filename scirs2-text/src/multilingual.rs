@@ -527,7 +527,7 @@ mod tests {
         let detector = LanguageDetector::new();
 
         // Test English detection with more text
-        let result = detector.detect("The quick brown fox jumps over the lazy dog. This is definitely an English sentence with many common words.").unwrap();
+        let result = detector.detect("The quick brown fox jumps over the lazy dog. This is definitely an English sentence with many common words.").expect("Operation failed");
         assert_eq!(result.language, Language::English);
 
         // Test with empty text
@@ -559,7 +559,7 @@ mod tests {
     fn test_multilingual_processor() {
         let processor = MultilingualProcessor::new();
 
-        let result = processor.process("The quick brown fox jumps over the lazy dog. This sentence has many English words.").unwrap();
+        let result = processor.process("The quick brown fox jumps over the lazy dog. This sentence has many English words.").expect("Operation failed");
         assert_eq!(result.language, Language::English);
         assert!(!result.tokens.is_empty());
         assert!(result.filtered_tokens.len() < result.tokens.len());

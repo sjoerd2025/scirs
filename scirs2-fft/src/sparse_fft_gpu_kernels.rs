@@ -739,7 +739,9 @@ mod tests {
         );
 
         // Test creating FFT kernel
-        let kernel = factory.create_fft_kernel(1024, 0x10000, 0x20000).unwrap();
+        let kernel = factory
+            .create_fft_kernel(1024, 0x10000, 0x20000)
+            .expect("Operation failed");
 
         // Check configuration
         let config = kernel.config();
@@ -758,7 +760,7 @@ mod tests {
                 SparseFFTAlgorithm::Sublinear,
                 WindowFunction::Hann,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         // Check configuration
         let config = kernel.config();
@@ -797,14 +799,16 @@ mod tests {
         let mut launcher = KernelLauncher::new(factory);
 
         // Test allocating memory
-        let (input_address, output_address) = launcher.allocate_fft_memory(1024).unwrap();
+        let (input_address, output_address) = launcher
+            .allocate_fft_memory(1024)
+            .expect("Operation failed");
         assert_ne!(input_address, 0);
         assert_ne!(output_address, 0);
 
         // Test launching FFT kernel
         let stats = launcher
             .launch_fft_kernel(1024, input_address, output_address)
-            .unwrap();
+            .expect("Operation failed");
 
         // Check stats
         assert!(stats.execution_time_ms > 0.0);
@@ -839,7 +843,7 @@ mod tests {
                 1024 * 1024, // 1 MB
             );
             // In mock mode, this should still return valid dummy data
-            let (values, indices, stats) = result.unwrap();
+            let (values, indices, stats) = result.expect("Operation failed");
             assert_eq!(values.len(), 6);
             assert_eq!(indices.len(), 6);
             assert!(stats.execution_time_ms >= 0.0);
@@ -856,7 +860,7 @@ mod tests {
             (8, 6),
             10 * 1024 * 1024 * 1024, // 10 GB
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check results
         assert_eq!(values.len(), 6);

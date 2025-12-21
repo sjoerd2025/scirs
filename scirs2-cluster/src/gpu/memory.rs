@@ -373,7 +373,7 @@ mod tests {
     fn test_memory_allocation() {
         let mut manager = GpuMemoryManager::new(256, 10);
 
-        let block = manager.allocate(1024).unwrap();
+        let block = manager.allocate(1024).expect("Operation failed");
         assert!(block.size >= 1024);
         assert!(block.in_use);
 
@@ -386,11 +386,11 @@ mod tests {
         let mut manager = GpuMemoryManager::new(256, 10);
 
         // Allocate and deallocate
-        let block = manager.allocate(1024).unwrap();
-        manager.deallocate(block).unwrap();
+        let block = manager.allocate(1024).expect("Operation failed");
+        manager.deallocate(block).expect("Operation failed");
 
         // Second allocation should hit pool
-        let _block2 = manager.allocate(1024).unwrap();
+        let _block2 = manager.allocate(1024).expect("Operation failed");
         assert!(manager.get_stats().pool_hits > 0);
     }
 

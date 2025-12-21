@@ -167,13 +167,22 @@ fn demo_advanced_ops() {
         println!("W shape: {:?}", w_val.shape());
         println!("b shape: {:?}", b_val.shape());
         println!("\nGradients:");
-        println!("dL/dX shape: {:?}", results[0].as_ref().unwrap().shape());
-        println!("dL/dW shape: {:?}", results[1].as_ref().unwrap().shape());
-        println!("dL/db shape: {:?}", results[2].as_ref().unwrap().shape());
+        println!(
+            "dL/dX shape: {:?}",
+            results[0].as_ref().expect("Operation failed").shape()
+        );
+        println!(
+            "dL/dW shape: {:?}",
+            results[1].as_ref().expect("Operation failed").shape()
+        );
+        println!(
+            "dL/db shape: {:?}",
+            results[2].as_ref().expect("Operation failed").shape()
+        );
 
         // Create identity for another example
         let eye_3 = helpers::eye_workaround(3, ctx);
-        let eye_val = eye_3.eval(ctx).unwrap();
+        let eye_val = eye_3.eval(ctx).expect("Operation failed");
         println!("\nIdentity matrix (3x3):\n{:?}", eye_val);
     });
 

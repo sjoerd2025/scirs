@@ -406,7 +406,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_simd_bfgs(fun, x0, Some(options)).unwrap();
+        let result = minimize_simd_bfgs(fun, x0, Some(options)).expect("Operation failed");
 
         assert!(result.success);
         for &xi in result.x.iter() {
@@ -440,7 +440,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_simd_bfgs(rosenbrock, x0, Some(options)).unwrap();
+        let result = minimize_simd_bfgs(rosenbrock, x0, Some(options)).expect("Operation failed");
 
         // Rosenbrock function minimum is at (1, 1, 1, 1)
         for &xi in result.x.iter() {
@@ -467,7 +467,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_simd_bfgs(fun, x0, Some(options)).unwrap();
+        let result = minimize_simd_bfgs(fun, x0, Some(options)).expect("Operation failed");
 
         // Should find minimum at bounds: (0, 0)
         assert!(result.x[0] >= 0.0 && result.x[0] <= 1.0);
@@ -510,7 +510,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_simd_bfgs(fun, x0, Some(options)).unwrap();
+        let result = minimize_simd_bfgs(fun, x0, Some(options)).expect("Operation failed");
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-6);
         assert_abs_diff_eq!(result.x[1], 0.0, epsilon = 1e-6);

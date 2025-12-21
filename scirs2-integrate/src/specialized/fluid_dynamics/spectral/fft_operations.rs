@@ -361,8 +361,8 @@ mod tests {
         }
 
         // Forward and backward FFT should recover original field
-        let field_hat = FFTOperations::fft_2d_forward(&field).unwrap();
-        let recovered = FFTOperations::fft_2d_backward(&field_hat).unwrap();
+        let field_hat = FFTOperations::fft_2d_forward(&field).expect("Operation failed");
+        let recovered = FFTOperations::fft_2d_backward(&field_hat).expect("Operation failed");
 
         // Check that we recover the original field (within numerical precision)
         for i in 0..nx {
@@ -387,7 +387,7 @@ mod tests {
             }
         }
 
-        let spectrum = FFTOperations::compute_energy_spectrum_2d(&field).unwrap();
+        let spectrum = FFTOperations::compute_energy_spectrum_2d(&field).expect("Operation failed");
 
         // Spectrum should have finite length
         assert!(!spectrum.is_empty());
@@ -413,7 +413,7 @@ mod tests {
             }
         }
 
-        let filtered = FFTOperations::low_pass_filter_2d(&field, 2.0).unwrap();
+        let filtered = FFTOperations::low_pass_filter_2d(&field, 2.0).expect("Operation failed");
 
         // Filtered field should have same dimensions
         assert_eq!(filtered.dim(), field.dim());

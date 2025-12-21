@@ -390,7 +390,7 @@ impl ContinuousPerformanceMonitor {
     /// Start continuous monitoring
     pub fn start(&mut self) -> CoreResult<()> {
         {
-            let mut running = self.running.lock().unwrap();
+            let mut running = self.running.lock().expect("Operation failed");
             if *running {
                 return Ok(()); // Already running
             }
@@ -419,13 +419,13 @@ impl ContinuousPerformanceMonitor {
     /// Stop continuous monitoring
     pub fn stop(&mut self) {
         {
-            let mut running = self.running.lock().unwrap();
+            let mut running = self.running.lock().expect("Operation failed");
             *running = false;
         }
 
         // Stop system monitor
         if let Some(systemmonitor) = &self.systemmonitor {
-            let mut monitor = systemmonitor.lock().unwrap();
+            let mut monitor = systemmonitor.lock().expect("Operation failed");
             monitor.stop();
         }
 
@@ -474,7 +474,7 @@ impl ContinuousPerformanceMonitor {
         let mut last_trend_analysis = Instant::now();
         let mut alert_cooldown_map: HashMap<String, Instant> = HashMap::new();
 
-        while *running.lock().unwrap() {
+        while *running.lock().expect("Operation failed") {
             let snapshot_start = Instant::now();
 
             // Collect metrics snapshot
@@ -486,7 +486,7 @@ impl ContinuousPerformanceMonitor {
 
             // Store snapshot
             {
-                let mut history = metrics_history.write().unwrap();
+                let mut history = metrics_history.write().expect("Operation failed");
                 history.push_back(snapshot.clone());
 
                 // Limit history size
@@ -538,7 +538,7 @@ impl ContinuousPerformanceMonitor {
 
         // Collect system metrics
         let system_metrics = if let Some(monitor) = systemmonitor {
-            monitor.lock().unwrap().get_current_metrics().ok()
+            monitor.lock().expect("Operation failed").get_current_metrics().ok()
         } else {
             None
         };
@@ -547,7 +547,7 @@ impl ContinuousPerformanceMonitor {
         let hardware_counters = if let Some(manager) = hardware_manager {
             manager
                 .lock()
-                .unwrap()
+                .expect("Operation failed")
                 .sample_counters()
                 .unwrap_or_default()
         } else {
@@ -608,7 +608,7 @@ impl ContinuousPerformanceMonitor {
 
                     active_alerts
                         .write()
-                        .unwrap()
+                        .expect("Operation failed")
                         .insert(alert.id.clone(), alert);
                     cooldown_map.insert(alertkey, now);
                 }
@@ -645,7 +645,7 @@ impl ContinuousPerformanceMonitor {
 
                         active_alerts
                             .write()
-                            .unwrap()
+                            .expect("Operation failed")
                             .insert(alert.id.clone(), alert);
                         cooldown_map.insert(alertkey, now);
                     }
@@ -681,7 +681,7 @@ impl ContinuousPerformanceMonitor {
 
                 active_alerts
                     .write()
-                    .unwrap()
+                    .expect("Operation failed")
                     .insert(alert.id.clone(), alert);
                 cooldown_map.insert(alertkey, now);
             }
@@ -708,7 +708,7 @@ impl ContinuousPerformanceMonitor {
         trend_analysis: &Arc<RwLock<HashMap<String, TrendAnalysis>>>,
         config: &MonitoringConfig,
     ) {
-        let history = metrics_history.read().unwrap();
+        let history = metrics_history.read().expect("Operation failed");
         let window_start = Instant::now() - config.trend_window;
 
         // Filter samples within the trend window
@@ -751,7 +751,7 @@ impl ContinuousPerformanceMonitor {
         }
 
         // Update trend analysis results
-        *trend_analysis.write().unwrap() = analysis_results;
+        *trend_analysis.write().expect("Operation failed") = analysis_results;
     }
 
     /// Analyze trend for a specific metric
@@ -796,7 +796,7 @@ impl ContinuousPerformanceMonitor {
         let prediction = slope * next_x + intercept;
 
         // Calculate confidence interval (simplified)
-        let last_value = values.last().unwrap().1;
+        let last_value = values.last().expect("Operation failed").1;
         let confidence_range = (last_value - prediction).abs() * 0.2;
         let confidence_interval = (prediction - confidence_range, prediction + confidence_range);
 
@@ -816,8 +816,8 @@ impl ContinuousPerformanceMonitor {
         trend_analysis: &Arc<RwLock<HashMap<String, TrendAnalysis>>>,
         recommendations: &Arc<RwLock<Vec<OptimizationRecommendation>>>,
     ) {
-        let history = metrics_history.read().unwrap();
-        let trends = trend_analysis.read().unwrap();
+        let history = metrics_history.read().expect("Operation failed");
+        let trends = trend_analysis.read().expect("Operation failed");
         let mut new_recommendations = Vec::new();
 
         // Analyze CPU usage trend
@@ -866,7 +866,7 @@ impl ContinuousPerformanceMonitor {
         }
 
         // Update recommendations (keep only recent ones)
-        let mut recs = recommendations.write().unwrap();
+        let mut recs = recommendations.write().expect("Operation failed");
         recs.extend(new_recommendations);
 
         // Remove old recommendations (keep last 10)
@@ -880,7 +880,7 @@ impl ContinuousPerformanceMonitor {
     pub fn get_active_alerts(&self) -> Vec<PerformanceAlert> {
         self.active_alerts
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .values()
             .cloned()
             .collect()
@@ -888,17 +888,17 @@ impl ContinuousPerformanceMonitor {
 
     /// Get current trend analysis
     pub fn get_trend_analysis(&self) -> HashMap<String, TrendAnalysis> {
-        self.trend_analysis.read().unwrap().clone()
+        self.trend_analysis.read().expect("Operation failed").clone()
     }
 
     /// Get optimization recommendations
     pub fn get_recommendations(&self) -> Vec<OptimizationRecommendation> {
-        self.recommendations.read().unwrap().clone()
+        self.recommendations.read().expect("Operation failed").clone()
     }
 
     /// Get recent metrics history
     pub fn get_metrics_history(&self, duration: Duration) -> Vec<MetricsSnapshot> {
-        let history = self.metrics_history.read().unwrap();
+        let history = self.metrics_history.read().expect("Operation failed");
         let cutoff = Instant::now() - duration;
 
         history
@@ -1029,7 +1029,7 @@ impl SimpleApplicationMetricsProvider {
     where
         F: FnOnce(&mut ApplicationMetrics),
     {
-        let mut metrics = self.metrics.lock().unwrap();
+        let mut metrics = self.metrics.lock().expect("Operation failed");
         updater(&mut metrics);
     }
 }
@@ -1042,13 +1042,13 @@ impl Default for SimpleApplicationMetricsProvider {
 
 impl ApplicationMetricsProvider for SimpleApplicationMetricsProvider {
     fn get_metrics(&self) -> ApplicationMetrics {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
 
     fn get_custom_metric(&self, name: &str) -> Option<f64> {
         self.metrics
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .custom_metrics
             .get(name)
             .copied()
@@ -1078,21 +1078,21 @@ pub mod utils {
     /// Start basic continuous monitoring
     pub fn start_basicmonitoring() -> CoreResult<()> {
         let monitor = globalmonitor();
-        let mut monitor = monitor.lock().unwrap();
+        let mut monitor = monitor.lock().expect("Operation failed");
         monitor.start()
     }
 
     /// Stop continuous monitoring
     pub fn stopmonitoring() {
         let monitor = globalmonitor();
-        let mut monitor = monitor.lock().unwrap();
+        let mut monitor = monitor.lock().expect("Operation failed");
         monitor.stop();
     }
 
     /// Get current performance status
     pub fn get_performance_status() -> (usize, usize, usize) {
         let monitor = globalmonitor();
-        let monitor = monitor.lock().unwrap();
+        let monitor = monitor.lock().expect("Operation failed");
 
         let alerts = monitor.get_active_alerts();
         let trends = monitor.get_trend_analysis();
@@ -1104,7 +1104,7 @@ pub mod utils {
     /// Check if there are any critical alerts
     pub fn has_critical_alerts() -> bool {
         let monitor = globalmonitor();
-        let monitor = monitor.lock().unwrap();
+        let monitor = monitor.lock().expect("Operation failed");
 
         monitor
             .get_active_alerts()
@@ -1223,7 +1223,7 @@ mod tests {
         let config = MonitoringConfig::default();
         let monitor = ContinuousPerformanceMonitor::new(config);
 
-        assert!(!*monitor.running.lock().unwrap());
+        assert!(!*monitor.running.lock().expect("Operation failed"));
         assert!(monitor.get_active_alerts().is_empty());
         assert!(monitor.get_recommendations().is_empty());
     }

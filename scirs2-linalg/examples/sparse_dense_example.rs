@@ -34,7 +34,7 @@ fn main() {
 
     // Convert the first matrix to sparse format
     println!("Converting Matrix A to sparse format...");
-    let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();
+    let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).expect("Operation failed");
     println!("Number of non-zeros: {}\n", sparse_a.nnz());
 
     // Basic Information
@@ -48,7 +48,7 @@ fn main() {
 
     // Matrix-Matrix Multiplication
     println!("Sparse-Dense Matrix Multiplication (A * B):");
-    let result_ab = sparse_dense_matmul(&sparse_a, &dense_b.view()).unwrap();
+    let result_ab = sparse_dense_matmul(&sparse_a, &dense_b.view()).expect("Operation failed");
     println!("{:?}\n", result_ab);
 
     // Verify with standard matrix multiplication
@@ -61,7 +61,7 @@ fn main() {
 
     // Matrix-Vector Multiplication
     println!("Sparse-Dense Matrix-Vector Multiplication (A * C):");
-    let result_ac = sparse_dense_matvec(&sparse_a, &vec_c.view()).unwrap();
+    let result_ac = sparse_dense_matvec(&sparse_a, &vec_c.view()).expect("Operation failed");
     println!("{:?}\n", result_ac);
 
     // Verify with standard matrix-vector multiplication
@@ -80,7 +80,7 @@ fn main() {
 
     // Element-wise Addition
     println!("Sparse-Dense Element-wise Addition (A + D):");
-    let result_ad_add = sparse_dense_add(&sparse_a, &dense_d.view()).unwrap();
+    let result_ad_add = sparse_dense_add(&sparse_a, &dense_d.view()).expect("Operation failed");
     println!("{:?}\n", result_ad_add);
 
     // Verify with standard element-wise addition
@@ -96,7 +96,8 @@ fn main() {
 
     // Element-wise Multiplication
     println!("Sparse-Dense Element-wise Multiplication (A .* D):");
-    let result_ad_mul = sparse_dense_elementwise_mul(&sparse_a, &dense_d.view()).unwrap();
+    let result_ad_mul =
+        sparse_dense_elementwise_mul(&sparse_a, &dense_d.view()).expect("Operation failed");
     let result_ad_mul_dense = result_ad_mul.to_dense();
     println!("{:?}\n", result_ad_mul_dense);
 
@@ -113,7 +114,7 @@ fn main() {
 
     // Transpose
     println!("Sparse Matrix Transpose:");
-    let sparse_a_t = sparse_transpose(&sparse_a).unwrap();
+    let sparse_a_t = sparse_transpose(&sparse_a).expect("Operation failed");
     let sparse_a_t_dense = sparse_a_t.to_dense();
     println!("{:?}\n", sparse_a_t_dense);
 
@@ -165,7 +166,7 @@ fn main() {
     );
 
     // Convert to sparse format
-    let sparse_large = sparse_from_ndarray(&dense_large.view(), 1e-10).unwrap();
+    let sparse_large = sparse_from_ndarray(&dense_large.view(), 1e-10).expect("Operation failed");
 
     // Create a dense vector for testing
     let dense_vec = Array1::<f64>::ones(m);
@@ -176,7 +177,7 @@ fn main() {
     println!("\nMatrix-Vector Multiplication Benchmark:");
     let start = Instant::now();
     for _ in 0..10 {
-        let _ = sparse_dense_matvec(&sparse_large, &dense_vec.view()).unwrap();
+        let _ = sparse_dense_matvec(&sparse_large, &dense_vec.view()).expect("Operation failed");
     }
     let sparse_time = start.elapsed();
 

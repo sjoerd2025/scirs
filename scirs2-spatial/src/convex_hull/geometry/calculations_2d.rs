@@ -140,7 +140,7 @@ pub fn compute_2d_hull_equations(
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let vertices = vec![0, 1, 2, 3];
 ///
-/// let area = compute_polygon_area(&points.view(), &vertices).unwrap();
+/// let area = compute_polygon_area(&points.view(), &vertices).expect("Operation failed");
 /// assert!((area - 1.0).abs() < 1e-10);
 /// ```
 pub fn compute_polygon_area(
@@ -188,7 +188,7 @@ pub fn compute_polygon_area(
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
 /// let vertices = vec![0, 1, 2, 3];
 ///
-/// let perimeter = compute_polygon_perimeter(&points.view(), &vertices).unwrap();
+/// let perimeter = compute_polygon_perimeter(&points.view(), &vertices).expect("Operation failed");
 /// assert!((perimeter - 4.0).abs() < 1e-10);
 /// ```
 pub fn compute_polygon_perimeter(
@@ -304,7 +304,7 @@ mod tests {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let vertices = vec![0, 1, 2, 3];
 
-        let area = compute_polygon_area(&points.view(), &vertices).unwrap();
+        let area = compute_polygon_area(&points.view(), &vertices).expect("Operation failed");
         assert!((area - 1.0).abs() < 1e-10);
     }
 
@@ -314,7 +314,8 @@ mod tests {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let vertices = vec![0, 1, 2, 3];
 
-        let perimeter = compute_polygon_perimeter(&points.view(), &vertices).unwrap();
+        let perimeter =
+            compute_polygon_perimeter(&points.view(), &vertices).expect("Operation failed");
         assert!((perimeter - 4.0).abs() < 1e-10);
     }
 

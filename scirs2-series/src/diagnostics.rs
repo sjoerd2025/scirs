@@ -189,7 +189,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
-    let n = F::from(data.len()).unwrap();
+    let n = F::from(data.len()).expect("Operation failed");
     let mean = data.mean_or(F::zero());
 
     let mut m2 = F::zero();
@@ -208,8 +208,8 @@ where
     m3 = m3 / n;
     m4 = m4 / n;
 
-    let skewness = m3 / m2.powf(F::from(1.5).unwrap());
-    let kurtosis = m4 / (m2 * m2) - F::from(3.0).unwrap(); // Excess kurtosis
+    let skewness = m3 / m2.powf(F::from(1.5).expect("Failed to convert constant to float"));
+    let kurtosis = m4 / (m2 * m2) - F::from(3.0).expect("Failed to convert constant to float"); // Excess kurtosis
 
     Ok((skewness, kurtosis))
 }
@@ -241,9 +241,9 @@ where
     let mut statistic = F::zero();
     for k in 1..=lags {
         let rk = acf[k];
-        statistic = statistic + rk * rk / F::from(n - k).unwrap();
+        statistic = statistic + rk * rk / F::from(n - k).expect("Failed to convert to float");
     }
-    statistic = F::from(n * (n + 2)).unwrap() * statistic;
+    statistic = F::from(n * (n + 2)).expect("Operation failed") * statistic;
 
     // Calculate p-value using chi-squared distribution
     let df = lags;
@@ -267,12 +267,13 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
-    let n = F::from(residuals.len()).unwrap();
+    let n = F::from(residuals.len()).expect("Operation failed");
     let (skewness, kurtosis) = calculate_moments(residuals)?;
 
     // Jarque-Bera statistic
-    let statistic = n / F::from(6.0).unwrap()
-        * (skewness * skewness + kurtosis * kurtosis / F::from(4.0).unwrap());
+    let statistic = n / F::from(6.0).expect("Failed to convert constant to float")
+        * (skewness * skewness
+            + kurtosis * kurtosis / F::from(4.0).expect("Failed to convert constant to float"));
 
     // P-value using chi-squared distribution with 2 df
     let p_value = chi_squared_pvalue(statistic, 2)?;
@@ -338,7 +339,7 @@ where
     }
 
     // Regularized pseudo-inverse
-    let lambda = F::from(1e-6).unwrap();
+    let lambda = F::from(1e-6).expect("Failed to convert constant to float");
     let mut xtx_reg = xtx.clone();
     for i in 0..n {
         xtx_reg[[i, i]] = xtx_reg[[i, i]] + lambda;
@@ -360,7 +361,7 @@ where
         };
 
         // LM statistic
-        let statistic = F::from(n - lags).unwrap() * r2;
+        let statistic = F::from(n - lags).expect("Failed to convert to float") * r2;
 
         // P-value using chi-squared distribution
         let p_value = chi_squared_pvalue(statistic, lags)?;
@@ -412,8 +413,8 @@ where
     let squared_errors = errors.mapv(|e| e * e);
 
     // Basic metrics
-    let mae = errors.mapv(|e| e.abs()).mean().unwrap();
-    let mse = squared_errors.mean().unwrap();
+    let mae = errors.mapv(|e| e.abs()).mean().expect("Operation failed");
+    let mse = squared_errors.mean().expect("Operation failed");
     let rmse = mse.sqrt();
 
     // MAPE and SMAPE (if no zeros in actual)
@@ -424,15 +425,18 @@ where
             .zip(actual.iter())
             .map(|(e, a)| (*e / *a).abs())
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(n).unwrap();
+            / F::from(n).expect("Failed to convert to float");
 
         let smape = errors
             .iter()
             .zip(actual.iter())
             .zip(predicted.iter())
-            .map(|((e, a), p)| F::from(2.0).unwrap() * e.abs() / (a.abs() + p.abs()))
+            .map(|((e, a), p)| {
+                F::from(2.0).expect("Failed to convert constant to float") * e.abs()
+                    / (a.abs() + p.abs())
+            })
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(n).unwrap();
+            / F::from(n).expect("Failed to convert to float");
 
         (Some(mape), Some(smape))
     } else {
@@ -440,7 +444,7 @@ where
     };
 
     // R-squared
-    let y_mean = actual.mean().unwrap();
+    let y_mean = actual.mean().expect("Operation failed");
     let ss_tot = actual.mapv(|y| (y - y_mean) * (y - y_mean)).sum();
     let ss_res = squared_errors.sum();
     let r2 = if ss_tot > F::zero() {
@@ -451,8 +455,8 @@ where
 
     // Adjusted R-squared
     let adj_r2 = if let Some(p) = n_params {
-        let n_f = F::from(n).unwrap();
-        let p_f = F::from(p).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
+        let p_f = F::from(p).expect("Failed to convert to float");
         F::one() - (F::one() - r2) * (n_f - F::one()) / (n_f - p_f - F::one())
     } else {
         r2
@@ -538,13 +542,14 @@ where
     }
 
     // Calculate averages
-    let avg_mae =
-        fold_mae.iter().fold(F::zero(), |acc, x| acc + *x) / F::from(fold_mae.len()).unwrap();
-    let avg_rmse =
-        fold_rmse.iter().fold(F::zero(), |acc, x| acc + *x) / F::from(fold_rmse.len()).unwrap();
+    let avg_mae = fold_mae.iter().fold(F::zero(), |acc, x| acc + *x)
+        / F::from(fold_mae.len()).expect("Operation failed");
+    let avg_rmse = fold_rmse.iter().fold(F::zero(), |acc, x| acc + *x)
+        / F::from(fold_rmse.len()).expect("Operation failed");
     let avg_mape = if !fold_mape.is_empty() {
         Some(
-            fold_mape.iter().fold(F::zero(), |acc, x| acc + *x) / F::from(fold_mape.len()).unwrap(),
+            fold_mape.iter().fold(F::zero(), |acc, x| acc + *x)
+                / F::from(fold_mape.len()).expect("Operation failed"),
         )
     } else {
         None
@@ -570,41 +575,61 @@ where
 
     // Use normal approximation for large df
     if df > 30 {
-        let mean = F::from(df).unwrap();
-        let std_dev = (F::from(2 * df).unwrap()).sqrt();
+        let mean = F::from(df).expect("Failed to convert to float");
+        let std_dev = (F::from(2 * df).expect("Failed to convert to float")).sqrt();
         let z = (statistic - mean) / std_dev;
 
         // Approximate p-value using standard normal
-        if z > F::from(3.0).unwrap() {
-            Ok(F::from(0.001).unwrap())
-        } else if z > F::from(2.0).unwrap() {
-            Ok(F::from(0.05).unwrap())
-        } else if z > F::from(1.0).unwrap() {
-            Ok(F::from(0.16).unwrap())
+        if z > F::from(3.0).expect("Failed to convert constant to float") {
+            Ok(F::from(0.001).expect("Failed to convert constant to float"))
+        } else if z > F::from(2.0).expect("Failed to convert constant to float") {
+            Ok(F::from(0.05).expect("Failed to convert constant to float"))
+        } else if z > F::from(1.0).expect("Failed to convert constant to float") {
+            Ok(F::from(0.16).expect("Failed to convert constant to float"))
         } else {
-            Ok(F::from(0.5).unwrap())
+            Ok(F::from(0.5).expect("Failed to convert constant to float"))
         }
     } else {
         // For small df, use simple approximation
         let critical_values = match df {
-            1 => (F::from(3.841).unwrap(), F::from(6.635).unwrap()),
-            2 => (F::from(5.991).unwrap(), F::from(9.210).unwrap()),
-            3 => (F::from(7.815).unwrap(), F::from(11.345).unwrap()),
-            4 => (F::from(9.488).unwrap(), F::from(13.277).unwrap()),
-            5 => (F::from(11.070).unwrap(), F::from(15.086).unwrap()),
-            10 => (F::from(18.307).unwrap(), F::from(23.209).unwrap()),
+            1 => (
+                F::from(3.841).expect("Failed to convert constant to float"),
+                F::from(6.635).expect("Failed to convert constant to float"),
+            ),
+            2 => (
+                F::from(5.991).expect("Failed to convert constant to float"),
+                F::from(9.210).expect("Failed to convert constant to float"),
+            ),
+            3 => (
+                F::from(7.815).expect("Failed to convert constant to float"),
+                F::from(11.345).expect("Failed to convert constant to float"),
+            ),
+            4 => (
+                F::from(9.488).expect("Failed to convert constant to float"),
+                F::from(13.277).expect("Failed to convert constant to float"),
+            ),
+            5 => (
+                F::from(11.070).expect("Failed to convert constant to float"),
+                F::from(15.086).expect("Failed to convert constant to float"),
+            ),
+            10 => (
+                F::from(18.307).expect("Failed to convert constant to float"),
+                F::from(23.209).expect("Failed to convert constant to float"),
+            ),
             _ => (
-                F::from(df).unwrap() * F::from(1.5).unwrap(),
-                F::from(df).unwrap() * F::from(2.0).unwrap(),
+                F::from(df).expect("Failed to convert to float")
+                    * F::from(1.5).expect("Failed to convert constant to float"),
+                F::from(df).expect("Failed to convert to float")
+                    * F::from(2.0).expect("Failed to convert constant to float"),
             ),
         };
 
         if statistic > critical_values.1 {
-            Ok(F::from(0.01).unwrap())
+            Ok(F::from(0.01).expect("Failed to convert constant to float"))
         } else if statistic > critical_values.0 {
-            Ok(F::from(0.05).unwrap())
+            Ok(F::from(0.05).expect("Failed to convert constant to float"))
         } else {
-            Ok(F::from(0.1).unwrap())
+            Ok(F::from(0.1).expect("Failed to convert constant to float"))
         }
     }
 }
@@ -649,7 +674,7 @@ where
         }
 
         // Check for singular matrix
-        if aug[[i, i]].abs() < F::from(1e-10).unwrap() {
+        if aug[[i, i]].abs() < F::from(1e-10).expect("Failed to convert constant to float") {
             return Err(TimeSeriesError::ComputationError(
                 "Matrix is singular".to_string(),
             ));
@@ -689,7 +714,7 @@ mod tests {
         let result = residual_diagnostics(&residuals, None, 0.05);
         assert!(result.is_ok());
 
-        let diag = result.unwrap();
+        let diag = result.expect("Operation failed");
         assert!(diag.mean.abs() < 0.1);
         assert!(diag.std_dev > 0.0);
     }
@@ -709,7 +734,7 @@ mod tests {
         let result = calculate_fit_statistics(&actual, &predicted, Some(2));
         assert!(result.is_ok());
 
-        let stats = result.unwrap();
+        let stats = result.expect("Operation failed");
         assert!(stats.mae > 0.0);
         assert!(stats.rmse > 0.0);
         assert!(stats.r2 > 0.9);

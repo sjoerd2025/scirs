@@ -360,6 +360,21 @@ impl AdvancedCrossModuleCoordinator {
         })
     }
 
+    /// Create a lightweight coordinator for testing (avoids expensive initialization)
+    #[cfg(test)]
+    pub fn new_for_testing() -> Result<Self> {
+        Ok(Self {
+            vision_core: NeuralQuantumHybridProcessor::new_for_testing(),
+            clustering_interface: ClusteringCoordinationInterface::new(),
+            spatial_interface: SpatialProcessingInterface::new(),
+            neural_interface: NeuralNetworkInterface::new(),
+            global_optimizer: GlobalAdvancedOptimizer::new(),
+            global_performance: CrossModulePerformanceTracker::new(),
+            unified_meta_learner: UnifiedMetaLearningSystem::new(),
+            resource_manager: AdvancedResourceManager::new(),
+        })
+    }
+
     /// Initialize Advanced mode across all modules
     pub async fn initialize_advanced_mode(&mut self) -> Result<AdvancedInitializationReport> {
         let start_time = Instant::now();

@@ -482,15 +482,21 @@ mod tests {
     fn test_basic_sentiment_analysis() {
         let analyzer = LexiconSentimentAnalyzer::with_basiclexicon();
 
-        let positive_result = analyzer.analyze("This is a wonderful day!").unwrap();
+        let positive_result = analyzer
+            .analyze("This is a wonderful day!")
+            .expect("Operation failed");
         assert_eq!(positive_result.sentiment, Sentiment::Positive);
         assert!(positive_result.score > 0.0);
 
-        let negative_result = analyzer.analyze("This is terrible and awful").unwrap();
+        let negative_result = analyzer
+            .analyze("This is terrible and awful")
+            .expect("Operation failed");
         assert_eq!(negative_result.sentiment, Sentiment::Negative);
         assert!(negative_result.score < 0.0);
 
-        let neutral_result = analyzer.analyze("This is a book").unwrap();
+        let neutral_result = analyzer
+            .analyze("This is a book")
+            .expect("Operation failed");
         assert_eq!(neutral_result.sentiment, Sentiment::Neutral);
         assert_eq!(neutral_result.score, 0.0);
     }
@@ -499,7 +505,9 @@ mod tests {
     fn test_negation_handling() {
         let analyzer = LexiconSentimentAnalyzer::with_basiclexicon();
 
-        let negated_result = analyzer.analyze("This is not good").unwrap();
+        let negated_result = analyzer
+            .analyze("This is not good")
+            .expect("Operation failed");
         assert_eq!(negated_result.sentiment, Sentiment::Negative);
         assert!(negated_result.score < 0.0);
     }
@@ -508,8 +516,10 @@ mod tests {
     fn test_rule_based_sentiment() {
         let analyzer = RuleBasedSentimentAnalyzer::with_basiclexicon();
 
-        let intensified_result = analyzer.analyze("This is very good").unwrap();
-        let normal_result = analyzer.analyze("This is good").unwrap();
+        let intensified_result = analyzer
+            .analyze("This is very good")
+            .expect("Operation failed");
+        let normal_result = analyzer.analyze("This is good").expect("Operation failed");
 
         assert!(intensified_result.score > normal_result.score);
     }
@@ -519,7 +529,7 @@ mod tests {
         let analyzer = LexiconSentimentAnalyzer::with_basiclexicon();
         let texts = vec!["I love this", "I hate this", "This is okay"];
 
-        let results = analyzer.analyze_batch(&texts).unwrap();
+        let results = analyzer.analyze_batch(&texts).expect("Operation failed");
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].sentiment, Sentiment::Positive);
         assert_eq!(results[1].sentiment, Sentiment::Negative);

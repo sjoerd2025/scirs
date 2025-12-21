@@ -1357,10 +1357,11 @@ mod tests {
             vec![0.0],                  // 1x1 D matrix
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let config = RobustAnalysisConfig::default();
-        let analysis = robust_control_observability_analysis(&ss, &config).unwrap();
+        let analysis =
+            robust_control_observability_analysis(&ss, &config).expect("Operation failed");
 
         // Basic checks
         assert!(
@@ -1384,10 +1385,12 @@ mod tests {
     #[test]
     fn test_svd_controllability_analysis() {
         let controllability_matrix =
-            Array2::from_shape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0]).unwrap();
+            Array2::from_shape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0])
+                .expect("Operation failed");
         let config = RobustAnalysisConfig::default();
 
-        let analysis = svd_controllability_analysis(&controllability_matrix, &config).unwrap();
+        let analysis = svd_controllability_analysis(&controllability_matrix, &config)
+            .expect("Operation failed");
 
         assert_eq!(analysis.singular_values.len(), 2);
         assert!(analysis.numerical_rank <= 2);
@@ -1399,7 +1402,8 @@ mod tests {
         let matrix = Array2::eye(3);
         let config = RobustAnalysisConfig::default();
 
-        let conditioning = assess_numerical_conditioning(&matrix, &config).unwrap();
+        let conditioning =
+            assess_numerical_conditioning(&matrix, &config).expect("Operation failed");
 
         // Identity matrix should be well-conditioned
         assert!(conditioning.condition_number_2 >= 1.0);

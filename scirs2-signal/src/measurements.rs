@@ -27,7 +27,7 @@ use std::fmt::Debug;
 ///
 /// // Calculate RMS of a sine wave
 /// let signal = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
-/// let rms_value = rms(&signal).unwrap();
+/// let rms_value = rms(&signal).expect("Operation failed");
 ///
 /// // RMS of a sine wave with amplitude 1 is 1/√2 ≈ 0.707
 /// assert!(((rms_value - 0.707) as f64).abs() < 0.01);
@@ -76,7 +76,7 @@ where
 ///
 /// // Calculate peak-to-peak amplitude of a signal
 /// let signal = vec![-1.5, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5];
-/// let pp_value = peak_to_peak(&signal).unwrap();
+/// let pp_value = peak_to_peak(&signal).expect("Operation failed");
 ///
 /// assert_eq!(pp_value, 2.5); // Max 1.0 - Min -1.5 = 2.5
 /// ```
@@ -126,7 +126,7 @@ where
 ///
 /// // Calculate crest factor of a sine wave
 /// let signal = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
-/// let crest_factor = peak_to_rms(&signal).unwrap();
+/// let crest_factor = peak_to_rms(&signal).expect("Operation failed");
 ///
 /// // Crest factor of a sine wave is √2 ≈ 1.414
 /// assert!(((crest_factor - 1.414) as f64).abs() < 0.01);
@@ -189,7 +189,7 @@ where
 ///     .collect();
 ///
 /// // Calculate SNR
-/// let snr_db = snr(&clean, &noisy).unwrap();
+/// let snr_db = snr(&clean, &noisy).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn snr<T, U>(signal: &[T], signal_plusnoise: &[U]) -> SignalResult<f64>
@@ -287,7 +287,7 @@ where
 ///     .collect();
 ///
 /// // Calculate THD
-/// let thd_val = thd(&signal, fs, f0, Some(5)).unwrap();
+/// let thd_val = thd(&signal, fs, f0, Some(5)).expect("Operation failed");
 ///
 /// // THD should be approximately sqrt(0.1² + 0.05²)/1.0 ≈ 0.112
 /// assert!(((thd_val - 0.112) as f64).abs() < 0.01);
@@ -412,14 +412,14 @@ mod tests {
     fn test_rms() {
         // DC signal
         let dc_signal = vec![2.0; 100];
-        let rms_val = rms(&dc_signal).unwrap();
+        let rms_val = rms(&dc_signal).expect("Operation failed");
         assert_relative_eq!(rms_val, 2.0, epsilon = 1e-10);
 
         // Sine wave with amplitude 1
         let sine_wave: Vec<f64> = (0..1000)
             .map(|i| (2.0 * PI * i as f64 / 100.0).sin())
             .collect();
-        let rms_val = rms(&sine_wave).unwrap();
+        let rms_val = rms(&sine_wave).expect("Operation failed");
         assert_relative_eq!(rms_val, 1.0 / 2.0_f64.sqrt(), epsilon = 1e-2);
     }
 
@@ -427,14 +427,14 @@ mod tests {
     fn test_peak_to_peak() {
         // Signal with known min and max
         let signal = vec![-1.5, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5];
-        let pp_val = peak_to_peak(&signal).unwrap();
+        let pp_val = peak_to_peak(&signal).expect("Operation failed");
         assert_relative_eq!(pp_val, 2.5, epsilon = 1e-10);
 
         // Sine wave with amplitude 1
         let sine_wave: Vec<f64> = (0..1000)
             .map(|i| (2.0 * PI * i as f64 / 100.0).sin())
             .collect();
-        let pp_val = peak_to_peak(&sine_wave).unwrap();
+        let pp_val = peak_to_peak(&sine_wave).expect("Operation failed");
         assert_relative_eq!(pp_val, 2.0, epsilon = 1e-2);
     }
 
@@ -442,14 +442,14 @@ mod tests {
     fn test_peak_to_rms() {
         // DC signal (crest factor = 1)
         let dc_signal = vec![2.0; 100];
-        let cf_val = peak_to_rms(&dc_signal).unwrap();
+        let cf_val = peak_to_rms(&dc_signal).expect("Operation failed");
         assert_relative_eq!(cf_val, 1.0, epsilon = 1e-10);
 
         // Sine wave (crest factor = sqrt(2))
         let sine_wave: Vec<f64> = (0..1000)
             .map(|i| (2.0 * PI * i as f64 / 100.0).sin())
             .collect();
-        let cf_val = peak_to_rms(&sine_wave).unwrap();
+        let cf_val = peak_to_rms(&sine_wave).expect("Operation failed");
         assert_relative_eq!(cf_val, 2.0_f64.sqrt(), epsilon = 1e-2);
     }
 
@@ -472,7 +472,7 @@ mod tests {
             .collect();
 
         // Calculate SNR
-        let snr_db = snr(&clean, &noisy).unwrap();
+        let snr_db = snr(&clean, &noisy).expect("Operation failed");
 
         // Expected SNR ≈ 20 dB (signal amplitude = 1, noise amplitude = 0.1)
         // In power: (1^2)/(0.1^2) = 100 => 10*log10(100) = 20 dB

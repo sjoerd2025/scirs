@@ -275,11 +275,11 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
                     .iter()
                     .zip(y_pred.iter())
                     .filter(|(&true_val, &pred_val)| {
-                        (true_val - pred_val).abs() < F::from(1e-10).unwrap()
+                        (true_val - pred_val).abs() < F::from(1e-10).expect("Failed to convert constant to float")
                     })
                     .count();
                 let total = y_true.len();
-                let accuracy = F::from(correct).unwrap() / F::from(total).unwrap();
+                let accuracy = F::from(correct).expect("Failed to convert to float") / F::from(total).expect("Failed to convert to float");
                     value: accuracy,
                     metadata: HashMap::new(),
             ClassificationMetric::TopKAccuracy { k } => {
@@ -289,8 +289,8 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
                     value: top_k_correct,
                     metadata: [("k".to_string(), k.to_string())].iter().cloned().collect(, _ => {
                 // For other classification metrics, return a placeholder
-                    value: F::from(0.5).unwrap(),
-                    std_dev: Some(F::from(0.1).unwrap()),
+                    value: F::from(0.5).expect("Failed to convert constant to float"),
+                    std_dev: Some(F::from(0.1).expect("Failed to convert constant to float")),
     fn compute_regression_metric(
         metric: &RegressionMetric,
             RegressionMetric::MSE => {
@@ -306,8 +306,8 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
                 let r2 = self.r_squared(y_true, y_pred)?;
                     value: r2,
                 // For other regression metrics, return a placeholder
-                    value: F::from(0.8).unwrap(),
-                    std_dev: Some(F::from(0.05).unwrap()),
+                    value: F::from(0.8).expect("Failed to convert constant to float"),
+                    std_dev: Some(F::from(0.05).expect("Failed to convert constant to float")),
     fn mean_squared_error(&self, y_true: &ArrayD<F>, ypred: &ArrayD<F>) -> F {
         let diff = y_true - y_pred;
         let squared_diff = diff.mapv(|x| x * x);
@@ -332,9 +332,9 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
             let true_label = y_true[[i]];
             let pred_label = y_pred[[i]];
             // Simplified: consider correct if within top-k range
-            if (true_label - pred_label).abs() < F::from(k as f64).unwrap() {
+            if (true_label - pred_label).abs() < F::from(k as f64).expect("Failed to convert to float") {
                 correct += 1;
-        Ok(F::from(correct).unwrap() / F::from(batch_size).unwrap())
+        Ok(F::from(correct).expect("Failed to convert to float") / F::from(batch_size).expect("Failed to convert to float"))
     fn perform_cross_validation(
     ) -> Result<CrossValidationResults<F>> {
         // Simplified cross-validation implementation
@@ -367,9 +367,9 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
                 .iter()
                 .map(|fold| fold.get(&metric_name).cloned().unwrap_or(F::zero()))
                 .collect();
-            let mean = scores.iter().cloned().sum::<F>() / F::from(scores.len()).unwrap();
+            let mean = scores.iter().cloned().sum::<F>() / F::from(scores.len()).expect("Operation failed");
             let variance = scores.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-                / F::from(scores.len() - 1).unwrap();
+                / F::from(scores.len() - 1).expect("Operation failed");
             let std_dev = variance.sqrt();
             // Find best fold (highest score)
             let best_idx = scores
@@ -460,8 +460,8 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
             NeuralError::ComputationError(format!("Results for {} not found", model2_name))
         // Simplified statistical test implementation
         let t_test = Some(TTestResult {
-            t_statistic: F::from(1.5).unwrap(),
-            p_value: F::from(0.03).unwrap(),
+            t_statistic: F::from(1.5).expect("Failed to convert constant to float"),
+            p_value: F::from(0.03).expect("Failed to convert constant to float"),
             degrees_freedom: 100,
             significant: true,
         });
@@ -565,7 +565,7 @@ mod tests {
         let y_pred = Array1::from_vec(vec![1.0, 0.0, 0.0, 1.0, 0.0]).into_dyn();
         let results = evaluator
             .evaluate(&y_true, &y_pred, Some("test_model".to_string()))
-            .unwrap();
+            .expect("Operation failed");
         assert!(results.scores.contains_key("accuracy"));
         let accuracy = results.scores["accuracy"].value;
         assert!((accuracy - 0.8).abs() < 1e-10); // 4/5 = 0.8
@@ -573,7 +573,7 @@ mod tests {
         evaluator.add_metric(EvaluationMetric::Regression(RegressionMetric::MSE));
         let y_true = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]).into_dyn();
         let y_pred = Array1::from_vec(vec![1.1, 1.9, 3.1, 3.9, 5.1]).into_dyn();
-        let results = evaluator.evaluate(&y_true, &y_pred, None).unwrap();
+        let results = evaluator.evaluate(&y_true, &y_pred, None).expect("Operation failed");
         assert!(results.scores.contains_key("mse"));
         let mse = results.scores["mse"].value;
         assert!(mse > 0.0);

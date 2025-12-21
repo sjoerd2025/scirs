@@ -93,12 +93,12 @@ fn test_end_to_end_forecasting_pipeline() {
 
     // 1. Detect pattern and seasonality
     let pattern_detector = PatternDetector::new();
-    let period = pattern_detector.detect_period(&data).unwrap();
+    let period = pattern_detector.detect_period(&data).expect("Operation failed");
     assert!(period >= 10 && period <= 15); // Should detect ~12
 
     // 2. Decompose the series
-    let decomposer = STLDecomposer::new(period, 7, 7, 1, false).unwrap();
-    let decomposition = decomposer.decompose(&data).unwrap();
+    let decomposer = STLDecomposer::new(period, 7, 7, 1, false).expect("Operation failed");
+    let decomposition = decomposer.decompose(&data).expect("Operation failed");
 
     // Verify decomposition components
     assert_eq!(decomposition.trend.len(), data.len());
@@ -106,12 +106,12 @@ fn test_end_to_end_forecasting_pipeline() {
     assert_eq!(decomposition.remainder.len(), data.len());
 
     // 3. Fit SARIMA model to the data
-    let mut sarima = SARIMAModel::new(1, 1, 1, 1, 1, 1, period).unwrap();
-    sarima.fit(&data).unwrap();
+    let mut sarima = SARIMAModel::new(1, 1, 1, 1, 1, 1, period).expect("Operation failed");
+    sarima.fit(&data).expect("Operation failed");
 
     // 4. Generate forecasts
     let horizon = 24;
-    let forecast = sarima.forecast(horizon).unwrap();
+    let forecast = sarima.forecast(horizon).expect("Operation failed");
 
     assert_eq!(forecast.len(), horizon);
     // Forecasts should be reasonable (not too far from last observed values)
@@ -143,7 +143,7 @@ fn test_anomaly_detection_and_change_point_integration() {
     let anomaly_detector = AnomalyDetector::new()
         .with_method(scirs2_series::anomaly::AnomalyMethod::ZScore)
         .with_threshold(3.0);
-    let anomalies = anomaly_detector.detect(&data).unwrap();
+    let anomalies = anomaly_detector.detect(&data).expect("Operation failed");
 
     // Should detect the outliers we inserted
     assert!(anomalies[50] > 0.5); // Anomaly at position 50
@@ -151,7 +151,7 @@ fn test_anomaly_detection_and_change_point_integration() {
 
     // 2. Detect change points
     let change_detector = PELTDetector::new(10.0);
-    let change_points = change_detector.detect(&data).unwrap();
+    let change_points = change_detector.detect(&data).expect("Operation failed");
 
     // Should detect change point around position 100
     assert!(change_points.iter().any(|&cp| (cp as i32 - 100).abs() < 10));
@@ -167,13 +167,13 @@ fn test_feature_extraction_and_classification_pipeline() {
 
     // Stack into matrix for clustering
     let data_matrix =
-        scirs2_core::ndarray::stack(Axis(0), &[series1.view(), series2.view(), series3.view()]).unwrap();
+        scirs2_core::ndarray::stack(Axis(0), &[series1.view(), series2.view(), series3.view()]).expect("Operation failed");
 
     // 1. Extract statistical features
     let feature_extractor = StatisticalFeatures::new();
-    let features1 = feature_extractor.extract(&series1).unwrap();
-    let features2 = feature_extractor.extract(&series2).unwrap();
-    let features3 = feature_extractor.extract(&series3).unwrap();
+    let features1 = feature_extractor.extract(&series1).expect("Operation failed");
+    let features2 = feature_extractor.extract(&series2).expect("Operation failed");
+    let features3 = feature_extractor.extract(&series3).expect("Operation failed");
 
     // Features should be different due to different series characteristics
     assert!((features1[0] - features2[0]).abs() > 0.1); // Different means
@@ -186,7 +186,7 @@ fn test_feature_extraction_and_classification_pipeline() {
         distance: scirs2_series::clustering::TimeSeriesDistance::Euclidean,
         ..Default::default()
     };
-    let clustering_result = clusterer.kmeans_clustering(&data_matrix, &config).unwrap();
+    let clustering_result = clusterer.kmeans_clustering(&data_matrix, &config).expect("Operation failed");
     let cluster_assignments = clustering_result.cluster_labels;
 
     // Should assign different clusters to different series
@@ -216,7 +216,7 @@ fn test_causality_and_correlation_analysis() {
 
     // 1. Test Granger causality
     let granger_test = GrangerCausalityTest::new(3);
-    let causality_result = granger_test.test(&x_series, &y_series).unwrap();
+    let causality_result = granger_test.test(&x_series, &y_series).expect("Operation failed");
 
     // X should Granger-cause Y
     assert!(causality_result.f_statistic > 1.0);
@@ -226,7 +226,7 @@ fn test_causality_and_correlation_analysis() {
     let correlator = CrossCorrelation::new();
     let cross_corr = correlator
         .cross_correlate(&x_series, &y_series, 10)
-        .unwrap();
+        .expect("Operation failed");
 
     // Should show strong correlation at lag 1 and 2
     assert!(cross_corr[11].abs() > 0.3); // Lag 1 (index 10 + 1)
@@ -245,14 +245,14 @@ fn test_distributed_processing_workflow() {
     // 1. Distributed forecasting
     let forecast = processor
         .distributed_forecast(&large_data, 20, "linear")
-        .unwrap();
+        .expect("Operation failed");
     assert_eq!(forecast.len(), 20);
 
     // 2. Distributed feature extraction
     let features = vec!["mean".to_string(), "std".to_string(), "trend".to_string()];
     let feature_matrix = processor
         .distributed_feature_extraction(&large_data, &features)
-        .unwrap();
+        .expect("Operation failed");
     assert!(feature_matrix.nrows() > 0);
     assert_eq!(feature_matrix.ncols(), features.len());
 
@@ -272,7 +272,7 @@ fn test_streaming_analysis_pipeline() {
         window_size: 50,
         ..Default::default()
     };
-    let mut streaming_analyzer = StreamingAnalyzer::new(config).unwrap();
+    let mut streaming_analyzer = StreamingAnalyzer::new(config).expect("Operation failed");
 
     let mut anomaly_count = 0;
     let mut trend_changes = 0;
@@ -280,7 +280,7 @@ fn test_streaming_analysis_pipeline() {
 
     // Process data in streaming fashion
     for (i, &value) in data.iter().enumerate() {
-        streaming_analyzer.add_observation(value).unwrap();
+        streaming_analyzer.add_observation(value).expect("Operation failed");
         let stats = streaming_analyzer.get_stats();
 
         if i >= 50 {
@@ -318,7 +318,7 @@ fn test_financial_analysis_integration() {
         std_dev_multiplier: 2.0,
         ma_type: MovingAverageType::Simple,
     };
-    let bb_result = bollinger_bands(&prices, &bb_config).unwrap();
+    let bb_result = bollinger_bands(&prices, &bb_config).expect("Operation failed");
 
     assert_eq!(bb_result.upper_band.len(), prices.len() - 20 + 1);
     assert_eq!(bb_result.lower_band.len(), prices.len() - 20 + 1);
@@ -329,7 +329,7 @@ fn test_financial_analysis_integration() {
     }
 
     // 2. GARCH volatility modeling
-    let garch_result = garch_model(&returns, 1, 1).unwrap();
+    let garch_result = garch_model(&returns, 1, 1).expect("Operation failed");
 
     assert_eq!(garch_result.conditional_variance.len(), returns.len());
     // All variances should be positive
@@ -370,13 +370,13 @@ fn test_biomedical_signal_processing() {
     }
 
     // Analyze ECG
-    let mut ecg_analysis = ECGAnalysis::new(ecg_signal.clone(), fs).unwrap();
-    let r_peaks = ecg_analysis.detect_r_peaks().unwrap();
+    let mut ecg_analysis = ECGAnalysis::new(ecg_signal.clone(), fs).expect("Operation failed");
+    let r_peaks = ecg_analysis.detect_r_peaks().expect("Operation failed");
     let r_peaks_len = r_peaks.len(); // Store length to avoid borrow conflicts
 
     let hrv = ecg_analysis
         .heart_rate_variability(scirs2_series::biomedical::HRVMethod::TimeDomain)
-        .unwrap();
+        .expect("Operation failed");
 
     // Should detect reasonable number of R-peaks
     let expected_beats = (duration * heart_rate / 60.0) as usize;
@@ -407,24 +407,24 @@ fn test_iot_environmental_monitoring() {
 
     // Create environmental analysis
     let analysis = EnvironmentalSensorAnalysis::new(timestamps, 1.0)
-        .unwrap()
+        .expect("Operation failed")
         .with_temperature(temperature.clone())
-        .unwrap()
+        .expect("Operation failed")
         .with_humidity(humidity.clone())
-        .unwrap();
+        .expect("Operation failed");
 
     // 1. Comfort index calculation
-    let comfort = analysis.comfort_index().unwrap();
+    let comfort = analysis.comfort_index().expect("Operation failed");
     assert_eq!(comfort.len(), length);
     assert!(comfort.iter().all(|&c| c >= 0.0 && c <= 100.0));
 
     // 2. Sensor malfunction detection
-    let malfunctions = analysis.detect_sensor_malfunctions().unwrap();
+    let malfunctions = analysis.detect_sensor_malfunctions().expect("Operation failed");
     assert!(malfunctions.contains_key("Temperature"));
     assert!(malfunctions.contains_key("Humidity"));
 
     // 3. Environmental stress analysis
-    let stress_index = analysis.environmental_stress_index().unwrap();
+    let stress_index = analysis.environmental_stress_index().expect("Operation failed");
     assert_eq!(stress_index.len(), length);
     assert!(stress_index.iter().all(|&s| s >= 0.0));
 }
@@ -478,7 +478,7 @@ fn test_cross_validation_workflow() {
 
     // Create cross-validator
     let validator = CrossValidator::new(5, 0.2); // 5-fold CV with 20% holdout
-    let splits = validator.time_series_split(&data).unwrap();
+    let splits = validator.time_series_split(&data).expect("Operation failed");
 
     assert_eq!(splits.len(), 5);
 
@@ -491,7 +491,7 @@ fn test_cross_validation_workflow() {
         let test_data = data.slice(scirs2_core::ndarray::s![split.test_start..split.test_end]);
 
         // Fit ARIMA model
-        let mut arima = ArimaModel::new(1, 1, 1).unwrap();
+        let mut arima = ArimaModel::new(1, 1, 1).expect("Operation failed");
         if arima.fit(&train_data.to_owned()).is_ok() {
             // Generate forecasts
             let horizon = test_data.len();
@@ -537,7 +537,7 @@ fn test_dimensionality_reduction_workflow() {
 
     // Apply functional PCA
     let fpca = FunctionalPCA::new(3); // Reduce to 3 components
-    let reduced_data = fpca.fit_transform(&data).unwrap();
+    let reduced_data = fpca.fit_transform(&data).expect("Operation failed");
 
     assert_eq!(reduced_data.ncols(), 3);
     assert_eq!(reduced_data.nrows(), length);
@@ -574,7 +574,7 @@ fn test_trend_analysis_integration() {
 
     // Apply robust trend filtering
     let trend_filter = RobustTrendFilter::new(0.1);
-    let trend = trend_filter.filter(&data).unwrap();
+    let trend = trend_filter.filter(&data).expect("Operation failed");
 
     assert_eq!(trend.len(), data.len());
 
@@ -606,7 +606,7 @@ fn test_comprehensive_workflow() {
     // 2. Detect and handle outliers
     let anomaly_detector = AnomalyDetector::new()
         .with_method(scirs2_series::anomaly::AnomalyMethod::InterquartileRange);
-    let anomalies = anomaly_detector.detect(&base_data).unwrap();
+    let anomalies = anomaly_detector.detect(&base_data).expect("Operation failed");
 
     // Create cleaned data by replacing outliers with interpolated values
     let mut cleaned_data = base_data.clone();
@@ -617,12 +617,12 @@ fn test_comprehensive_workflow() {
     }
 
     // 3. Decompose the cleaned series
-    let decomposer = STLDecomposer::new(24, 7, 7, 1, false).unwrap();
-    let decomposition = decomposer.decompose(&cleaned_data).unwrap();
+    let decomposer = STLDecomposer::new(24, 7, 7, 1, false).expect("Operation failed");
+    let decomposition = decomposer.decompose(&cleaned_data).expect("Operation failed");
 
     // 4. Analyze trend component for change points
     let change_detector = PELTDetector::new(5.0);
-    let change_points = change_detector.detect(&decomposition.trend).unwrap();
+    let change_points = change_detector.detect(&decomposition.trend).expect("Operation failed");
 
     // 5. Extract features from each segment between change points
     let mut segments = Vec::new();
@@ -643,14 +643,14 @@ fn test_comprehensive_workflow() {
 
     for &(start, end) in &segments {
         let segment = cleaned_data.slice(scirs2_core::ndarray::s![start..end]);
-        let features = feature_extractor.extract(&segment.to_owned()).unwrap();
+        let features = feature_extractor.extract(&segment.to_owned()).expect("Operation failed");
         segment_features.push(features);
     }
 
     // 6. Fit forecasting models and generate predictions
-    let mut arima = ArimaModel::new(2, 1, 2).unwrap();
-    arima.fit(&cleaned_data).unwrap();
-    let arima_forecast = arima.forecast(50, &cleaned_data).unwrap();
+    let mut arima = ArimaModel::new(2, 1, 2).expect("Operation failed");
+    arima.fit(&cleaned_data).expect("Operation failed");
+    let arima_forecast = arima.forecast(50, &cleaned_data).expect("Operation failed");
 
     // 7. Validate results
     assert!(segments.len() > 0);

@@ -663,7 +663,7 @@ impl<F: Float + Send + Sync + scirs2_core::ndarray::ScalarOperand + std::iter::S
                 id: format!("entry_{}", level.entries.len()),
                 content: content.to_vec(),
                 abstraction_level: 0,
-                strength: F::from(1.0).unwrap(),
+                strength: F::from(1.0).expect("Failed to convert constant to float"),
                 access_frequency: 1,
                 last_access: Instant::now(),
             };
@@ -687,7 +687,7 @@ impl<F: Float + Send + Sync + scirs2_core::ndarray::ScalarOperand + std::iter::S
                 duration: std::time::Duration::from_millis(100),
                 relationships: Vec::new(),
             },
-            binding_strength: F::from(0.8).unwrap(),
+            binding_strength: F::from(0.8).expect("Failed to convert constant to float"),
         };
 
         if self.working_memory.episodic_buffer.episodes.len()
@@ -749,7 +749,7 @@ impl<F: Float + Send + Sync + scirs2_core::ndarray::ScalarOperand + std::iter::S
         for level in &self.hierarchical_memory.long_term.levels {
             for entry in level.entries.values() {
                 let similarity = self.calculate_similarity(query, &entry.content)?;
-                if similarity > F::from(0.8).unwrap() {
+                if similarity > F::from(0.8).expect("Failed to convert constant to float") {
                     return Ok(Some(entry.content.clone()));
                 }
             }
@@ -763,7 +763,7 @@ impl<F: Float + Send + Sync + scirs2_core::ndarray::ScalarOperand + std::iter::S
         for episode in &self.working_memory.episodic_buffer.episodes {
             if let Some(visual) = &episode.content.visual {
                 let similarity = self.calculate_similarity(query, visual)?;
-                if similarity > F::from(0.8).unwrap() {
+                if similarity > F::from(0.8).expect("Failed to convert constant to float") {
                     return Ok(Some(visual.clone()));
                 }
             }
@@ -815,8 +815,15 @@ impl<F: Float + Send + Sync + scirs2_core::ndarray::ScalarOperand + std::iter::S
     /// Create new hierarchical memory system
     pub fn new() -> Result<Self> {
         Ok(Self {
-            sensory_memory: SensoryMemoryBuffer::new(1000, F::from(0.1).unwrap()),
-            short_term: ShortTermMemoryWithChunking::new(100, 10, F::from(0.8).unwrap()),
+            sensory_memory: SensoryMemoryBuffer::new(
+                1000,
+                F::from(0.1).expect("Failed to convert constant to float"),
+            ),
+            short_term: ShortTermMemoryWithChunking::new(
+                100,
+                10,
+                F::from(0.8).expect("Failed to convert constant to float"),
+            ),
             long_term: LongTermMemoryHierarchy::new(),
             memory_routers: Vec::new(),
         })
@@ -852,8 +859,9 @@ impl<F: Float + Send + Sync + scirs2_core::ndarray::ScalarOperand> SensoryMemory
             .zip(self.timestamps.iter())
             .map(|(data, timestamp)| {
                 let elapsed = now.duration_since(*timestamp).as_secs_f64();
-                let decay_factor = (-self.decay_rate.to_f64().unwrap() * elapsed).exp();
-                data * F::from(decay_factor).unwrap()
+                let decay_factor =
+                    (-self.decay_rate.to_f64().expect("Operation failed") * elapsed).exp();
+                data * F::from(decay_factor).expect("Failed to convert to float")
             })
             .collect()
     }
@@ -894,19 +902,25 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
                         .ok_or_else(|| {
                             MetricsError::ComputationError("No chunks available".to_string())
                         })?;
-                    self.chunks.get_mut(&lru_key).unwrap().clear();
+                    self.chunks
+                        .get_mut(&lru_key)
+                        .expect("Operation failed")
+                        .clear();
                     lru_key
                 }
             }
         };
 
         // Add pattern to chunk
-        let chunk = self.chunks.get_mut(&chunk_key).unwrap();
+        let chunk = self.chunks.get_mut(&chunk_key).expect("Operation failed");
         if chunk.len() >= self.max_chunk_size {
             chunk.remove(0); // Remove oldest
         }
         chunk.push(pattern);
-        *self.access_counts.get_mut(&chunk_key).unwrap() += 1;
+        *self
+            .access_counts
+            .get_mut(&chunk_key)
+            .expect("Operation failed") += 1;
 
         Ok(())
     }
@@ -926,7 +940,8 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
                 let similarity = self.calculate_cosine_similarity(pattern, chunk_pattern)?;
                 total_similarity = total_similarity + similarity;
             }
-            let avg_similarity = total_similarity / F::from(chunk_patterns.len()).unwrap();
+            let avg_similarity =
+                total_similarity / F::from(chunk_patterns.len()).expect("Operation failed");
 
             if avg_similarity > self.similarity_threshold {
                 match &best_match {
@@ -1014,7 +1029,7 @@ impl<F: Float> AttentionControl<F> {
         Self {
             current_focus: None,
             attention_weights: HashMap::new(),
-            switching_cost: F::from(0.1).unwrap(),
+            switching_cost: F::from(0.1).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -1035,9 +1050,9 @@ impl<F: Float> ResourceAllocator<F> {
     pub fn new() -> Self {
         Self {
             available_resources: Resources {
-                memory_capacity: F::from(100.0).unwrap(),
-                processing_capacity: F::from(100.0).unwrap(),
-                attention_capacity: F::from(100.0).unwrap(),
+                memory_capacity: F::from(100.0).expect("Failed to convert constant to float"),
+                processing_capacity: F::from(100.0).expect("Failed to convert constant to float"),
+                attention_capacity: F::from(100.0).expect("Failed to convert constant to float"),
             },
             strategy: AllocationStrategy::Dynamic,
             allocation_history: Vec::new(),
@@ -1060,7 +1075,7 @@ impl<F: Float> PhonologicalStore<F> {
     pub fn new() -> Self {
         Self {
             patterns: Vec::new(),
-            decay_rate: F::from(0.95).unwrap(),
+            decay_rate: F::from(0.95).expect("Failed to convert constant to float"),
             capacity: 7, // Typical phonological loop capacity
         }
     }
@@ -1070,9 +1085,9 @@ impl<F: Float> RehearsalSystem<F> {
     /// Create new rehearsal system
     pub fn new() -> Self {
         Self {
-            rehearsal_rate: F::from(2.0).unwrap(), // 2 Hz typical rehearsal rate
+            rehearsal_rate: F::from(2.0).expect("Failed to convert constant to float"), // 2 Hz typical rehearsal rate
             rehearsal_queue: VecDeque::new(),
-            effectiveness: F::from(0.8).unwrap(),
+            effectiveness: F::from(0.8).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -1093,7 +1108,7 @@ impl<F: Float> VisualStore<F> {
     pub fn new() -> Self {
         Self {
             representations: Vec::new(),
-            resolution: F::from(1.0).unwrap(),
+            resolution: F::from(1.0).expect("Failed to convert constant to float"),
             color_depth: 24, // 24-bit color
         }
     }

@@ -420,12 +420,12 @@ impl VersionRegistry {
             .filter(|e| e.deprecated.is_some())
             .collect();
 
-        deprecated_apis.sort_by_key(|e| e.deprecated.unwrap());
+        deprecated_apis.sort_by_key(|e| e.deprecated.expect("Operation failed"));
 
         let mut current_version: Option<Version> = None;
 
         for api in deprecated_apis {
-            let dep_version = api.deprecated.unwrap();
+            let dep_version = api.deprecated.expect("Operation failed");
 
             if current_version != Some(dep_version) {
                 timeline.push_str(&format!("\n## Version {dep_version}\n\n"));
@@ -978,7 +978,7 @@ pub fn global_registry_mut() -> std::sync::MutexGuard<'static, VersionRegistry> 
     REGISTRY
         .get_or_init(|| Mutex::new(VersionRegistry::new()))
         .lock()
-        .unwrap()
+        .expect("Operation failed")
 }
 
 /// Get the global registry for reading
@@ -993,7 +993,7 @@ pub fn global_api_checker_mut() -> std::sync::MutexGuard<'static, ApiCompatibili
     API_CHECKER
         .get_or_init(|| Mutex::new(ApiCompatibilityChecker::for_beta1()))
         .lock()
-        .unwrap()
+        .expect("Operation failed")
 }
 
 /// Get the global API checker for reading
@@ -1209,13 +1209,16 @@ mod tests {
 
     #[test]
     fn test_version_parse() {
-        assert_eq!(Version::parse("1.2.3").unwrap(), Version::new(1, 2, 3));
         assert_eq!(
-            Version::parse("0.1.0-beta.4").unwrap(),
+            Version::parse("1.2.3").expect("Operation failed"),
+            Version::new(1, 2, 3)
+        );
+        assert_eq!(
+            Version::parse("0.1.0-beta.4").expect("Operation failed"),
             Version::new(0, 1, 0)
         );
         assert_eq!(
-            Version::parse("10.20.30").unwrap(),
+            Version::parse("10.20.30").expect("Operation failed"),
             Version::new(10, 20, 30)
         );
 
@@ -1248,7 +1251,7 @@ mod tests {
 
         registry
             .deprecate_api("OldArray", Version::new(0, 2, 0), Some("Array".to_string()))
-            .unwrap();
+            .expect("Operation failed");
 
         let v0_1_0 = Version::new(0, 1, 0);
         let v0_2_0 = Version::new(0, 2, 0);
@@ -1282,7 +1285,7 @@ mod tests {
                 Version::new(0, 2, 0),
                 Some("Feature2".to_string()),
             )
-            .unwrap();
+            .expect("Operation failed");
 
         let guide = registry.migration_guide(&Version::new(0, 1, 0), &Version::new(0, 2, 0));
 
@@ -1314,7 +1317,9 @@ mod tests {
         )];
 
         // Freeze the APIs
-        checker.freeze_apis(initial_apis.clone()).unwrap();
+        checker
+            .freeze_apis(initial_apis.clone())
+            .expect("Operation failed");
         assert_eq!(checker.freeze_status, ApiFreezeStatus::Frozen);
 
         // Test compatibility with same APIs
@@ -1341,7 +1346,9 @@ mod tests {
             StabilityLevel::Stable,
         );
 
-        checker.freeze_apis(vec![original_api.clone()]).unwrap();
+        checker
+            .freeze_apis(vec![original_api.clone()])
+            .expect("Operation failed");
 
         // Test with modified signature (different parameter type)
         let modified_api = create_api_signature(
@@ -1391,7 +1398,7 @@ mod tests {
 
         checker
             .freeze_apis(vec![api1.clone(), api2.clone()])
-            .unwrap();
+            .expect("Operation failed");
 
         // Test with one API removed
         let result = checker.check_compatibility(&[api1]); // api2 is missing
@@ -1416,7 +1423,9 @@ mod tests {
             StabilityLevel::Stable,
         );
 
-        checker.freeze_apis(vec![public_api]).unwrap();
+        checker
+            .freeze_apis(vec![public_api])
+            .expect("Operation failed");
 
         // Test with reduced visibility
         let private_api = create_api_signature(
@@ -1454,7 +1463,9 @@ mod tests {
             StabilityLevel::Stable,
         );
 
-        checker.freeze_apis(vec![original_api]).unwrap();
+        checker
+            .freeze_apis(vec![original_api])
+            .expect("Operation failed");
 
         // Test with new required parameter
         let modified_api = create_api_signature(
@@ -1500,7 +1511,9 @@ mod tests {
             StabilityLevel::Stable,
         );
 
-        checker.freeze_apis(vec![original_api]).unwrap();
+        checker
+            .freeze_apis(vec![original_api])
+            .expect("Operation failed");
 
         // Test with removed API
         let result = checker.check_compatibility(&[]); // All APIs removed
@@ -1523,7 +1536,7 @@ mod tests {
         let compat_result = check_current_compatibility();
         assert!(compat_result.is_ok());
 
-        let result = compat_result.unwrap();
+        let result = compat_result.expect("Operation failed");
         // Should be compatible since we're checking against the same APIs
         assert!(result.is_compatible);
     }

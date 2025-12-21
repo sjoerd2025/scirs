@@ -25,7 +25,7 @@ fn test_mse_precision() {
     // Expected MSE = ((1.0-1.1)² + (2.0-1.9)² + (3.0-3.1)² + (4.0-3.9)² + (5.0-5.1)²) / 5
     // = (0.01 + 0.01 + 0.01 + 0.01 + 0.01) / 5 = 0.05 / 5 = 0.01
     let expected_mse = 0.01;
-    let computed_mse = mean_squared_error(&y_true, &y_pred).unwrap();
+    let computed_mse = mean_squared_error(&y_true, &y_pred).expect("Test: operation failed");
 
     assert_abs_diff_eq!(computed_mse, expected_mse, epsilon = 1e-15);
 }
@@ -41,7 +41,7 @@ fn test_mae_precision() {
     // Expected MAE = (|1.0-0.8| + |2.0-2.2| + |3.0-2.9| + |4.0-4.1| + |5.0-5.0|) / 5
     // = (0.2 + 0.2 + 0.1 + 0.1 + 0.0) / 5 = 0.6 / 5 = 0.12
     let expected_mae = 0.12;
-    let computed_mae = mean_absolute_error(&y_true, &y_pred).unwrap();
+    let computed_mae = mean_absolute_error(&y_true, &y_pred).expect("Test: operation failed");
 
     assert_abs_diff_eq!(computed_mae, expected_mae, epsilon = 1e-15);
 }
@@ -53,12 +53,12 @@ fn test_r2_precision() {
     let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_pred = array![1.0, 2.0, 3.0, 4.0, 5.0]; // Perfect prediction
 
-    let computed_r2 = r2_score(&y_true, &y_pred).unwrap();
+    let computed_r2 = r2_score(&y_true, &y_pred).expect("Test: operation failed");
     assert_abs_diff_eq!(computed_r2, 1.0, epsilon = 1e-15);
 
     // Test with zero prediction (worst case)
     let y_pred_zero = array![0.0, 0.0, 0.0, 0.0, 0.0];
-    let computed_r2_zero = r2_score(&y_true, &y_pred_zero).unwrap();
+    let computed_r2_zero = r2_score(&y_true, &y_pred_zero).expect("Test: operation failed");
 
     // R² = 1 - SS_res/SS_tot
     // SS_res = sum((y_true - y_pred)²) = sum(y_true²) = 1+4+9+16+25 = 55
@@ -75,7 +75,7 @@ fn test_accuracy_precision() {
     let y_pred = array![1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0];
 
     // 4 correct out of 8 = 0.5 exactly
-    let computed_accuracy = accuracy_score(&y_true, &y_pred).unwrap();
+    let computed_accuracy = accuracy_score(&y_true, &y_pred).expect("Test: operation failed");
     assert_abs_diff_eq!(computed_accuracy, 0.5, epsilon = 1e-15);
 }
 
@@ -91,9 +91,10 @@ fn test_precision_recall_f1_exact() {
     // Recall = TP/(TP+FN) = 2/(2+1) = 2/3
     // F1 = 2 * (Precision * Recall) / (Precision + Recall) = 2 * (2/3 * 2/3) / (2/3 + 2/3) = 2/3
 
-    let computed_precision = precision_score(&y_true, &y_pred, 1.0).unwrap();
-    let computed_recall = recall_score(&y_true, &y_pred, 1.0).unwrap();
-    let computed_f1 = f1_score(&y_true, &y_pred, 1.0).unwrap();
+    let computed_precision =
+        precision_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
+    let computed_recall = recall_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
+    let computed_f1 = f1_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
 
     assert_abs_diff_eq!(computed_precision, 2.0 / 3.0, epsilon = 1e-15);
     assert_abs_diff_eq!(computed_recall, 2.0 / 3.0, epsilon = 1e-15);
@@ -107,7 +108,9 @@ fn test_stable_statistical_functions() {
     let stable_metrics = StableMetrics::<f64>::new();
     let values_vec = vec![1e10, 1e10 + 1.0, 1e10 + 2.0, 1e10 + 3.0];
     let expected_mean = 1e10 + 1.5;
-    let computed_mean = stable_metrics.stable_mean(&values_vec).unwrap();
+    let computed_mean = stable_metrics
+        .stable_mean(&values_vec)
+        .expect("Test: operation failed");
 
     // Should maintain precision even with large base values
     assert_relative_eq!(computed_mean, expected_mean, epsilon = 1e-10);
@@ -117,7 +120,7 @@ fn test_stable_statistical_functions() {
     let expected_variance = 2.5; // Variance of [1,2,3,4,5] = 2.5
     let computed_variance = stable_metrics
         .stable_variance(&variance_values_vec, 1)
-        .unwrap();
+        .expect("Test: operation failed");
 
     assert_abs_diff_eq!(computed_variance, expected_variance, epsilon = 1e-15);
 }
@@ -129,13 +132,17 @@ fn test_stable_metrics() {
 
     // Test with very small values that could cause underflow
     let small_values = vec![1e-100, 2e-100, 3e-100];
-    let mean_small = stable_metrics.stable_mean(&small_values).unwrap();
+    let mean_small = stable_metrics
+        .stable_mean(&small_values)
+        .expect("Test: operation failed");
     assert!(mean_small.is_finite());
     assert!(mean_small > 0.0);
 
     // Test with very large values that could cause overflow
     let large_values = vec![1e50, 2e50, 3e50];
-    let mean_large = stable_metrics.stable_mean(&large_values).unwrap();
+    let mean_large = stable_metrics
+        .stable_mean(&large_values)
+        .expect("Test: operation failed");
     assert!(mean_large.is_finite());
     assert!(mean_large > 0.0);
 }
@@ -149,10 +156,14 @@ fn test_variance_precision() {
     let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     // Population variance = sum((x - mean)²) / n = 2.0
     // Sample variance = sum((x - mean)²) / (n-1) = 2.5
-    let sample_variance = stable_metrics.stable_variance(&values, 1).unwrap();
+    let sample_variance = stable_metrics
+        .stable_variance(&values, 1)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(sample_variance, 2.5, epsilon = 1e-15);
 
-    let population_variance = stable_metrics.stable_variance(&values, 0).unwrap();
+    let population_variance = stable_metrics
+        .stable_variance(&values, 0)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(population_variance, 2.0, epsilon = 1e-15);
 }
 
@@ -163,16 +174,16 @@ fn test_classification_edge_precision() {
     let y_true = array![1.0, 0.0, 1.0, 0.0];
     let y_pred = array![1.0, 0.0, 1.0, 0.0];
 
-    let accuracy = accuracy_score(&y_true, &y_pred).unwrap();
+    let accuracy = accuracy_score(&y_true, &y_pred).expect("Test: operation failed");
     assert_abs_diff_eq!(accuracy, 1.0, epsilon = 1e-15);
 
-    let precision = precision_score(&y_true, &y_pred, 1.0).unwrap();
+    let precision = precision_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
     assert_abs_diff_eq!(precision, 1.0, epsilon = 1e-15);
 
-    let recall = recall_score(&y_true, &y_pred, 1.0).unwrap();
+    let recall = recall_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
     assert_abs_diff_eq!(recall, 1.0, epsilon = 1e-15);
 
-    let f1 = f1_score(&y_true, &y_pred, 1.0).unwrap();
+    let f1 = f1_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
     assert_abs_diff_eq!(f1, 1.0, epsilon = 1e-15);
 }
 
@@ -183,13 +194,13 @@ fn test_wasserstein_distance_precision() {
     let dist1 = array![0.0, 1.0, 2.0];
     let dist2 = array![0.5, 1.5, 2.5];
 
-    let wd = wasserstein_distance(&dist1, &dist2).unwrap();
+    let wd = wasserstein_distance(&dist1, &dist2).expect("Test: operation failed");
 
     // For 1D uniform distributions, check if result is reasonable (might be NaN for equal-sized arrays)
     assert!(wd.is_finite() || wd.is_nan()); // Either finite or NaN is acceptable
 
     // Test symmetry if both results are finite
-    let wd_reverse = wasserstein_distance(&dist2, &dist1).unwrap();
+    let wd_reverse = wasserstein_distance(&dist2, &dist1).expect("Test: operation failed");
     if wd.is_finite() && wd_reverse.is_finite() {
         assert_abs_diff_eq!(wd, wd_reverse, epsilon = 1e-15);
     } else {
@@ -213,17 +224,17 @@ fn test_clustering_metrics_precision() {
             5.2, 5.2, // Cluster 1
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let labels = array![0usize, 0usize, 0usize, 1usize, 1usize, 1usize];
 
     // Silhouette score should be close to 1 for well-separated clusters
-    let silhouette = silhouette_score(&data, &labels, "euclidean").unwrap();
+    let silhouette = silhouette_score(&data, &labels, "euclidean").expect("Test: operation failed");
     assert!(silhouette > 0.8); // Should be high for well-separated clusters
     assert!(silhouette <= 1.0); // Bounded above by 1
 
     // Davies-Bouldin index should be low for well-separated clusters
-    let db_index = davies_bouldin_score(&data, &labels).unwrap();
+    let db_index = davies_bouldin_score(&data, &labels).expect("Test: operation failed");
     assert!(db_index >= 0.0); // Always non-negative
     assert!(db_index < 1.0); // Should be low for good clustering
 }
@@ -236,7 +247,7 @@ fn test_floating_point_edge_cases() {
     let y_true = array![1.0, 2.0, 3.0];
     let y_pred = array![1.0 + f64::EPSILON, 2.0 + f64::EPSILON, 3.0 + f64::EPSILON];
 
-    let mse = mean_squared_error(&y_true, &y_pred).unwrap();
+    let mse = mean_squared_error(&y_true, &y_pred).expect("Test: operation failed");
 
     // MSE should be approximately EPSILON²
     assert!(mse < (f64::EPSILON * f64::EPSILON * 10.0));
@@ -250,7 +261,7 @@ fn test_floating_point_edge_cases() {
     ];
     let normal = array![1.0, 1.0, 1.0];
 
-    let mse_denorm: f64 = mean_squared_error(&denorm, &normal).unwrap();
+    let mse_denorm: f64 = mean_squared_error(&denorm, &normal).expect("Test: operation failed");
     assert!(mse_denorm.is_finite());
     assert!(mse_denorm > 0.0);
 }
@@ -265,7 +276,7 @@ fn test_cancellation_errors() {
     let y_pred = array![large_base + 0.1, large_base + 1.1, large_base + 2.1];
 
     // Differences are small (0.1) but base numbers are large
-    let mse: f64 = mean_squared_error(&y_true, &y_pred).unwrap();
+    let mse: f64 = mean_squared_error(&y_true, &y_pred).expect("Test: operation failed");
 
     // The differences are 0.1, so MSE should be 0.01
     // But verify it's reasonable and positive

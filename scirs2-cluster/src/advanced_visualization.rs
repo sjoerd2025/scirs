@@ -462,7 +462,7 @@ impl AdvancedVisualizer {
         }
 
         // Center the data
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let centered = data - &mean.insert_axis(Axis(0));
 
         // Quantum-enhanced PCA with amplitude amplification

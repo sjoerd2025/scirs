@@ -34,9 +34,9 @@ use crate::error::{ClusteringError, Result};
 ///     0.0, 1.0, 2.0,
 ///     1.0, 0.0, 3.0,
 ///     2.0, 3.0, 0.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let condensed = square_to_condensed(square.view()).unwrap();
+/// let condensed = square_to_condensed(square.view()).expect("Operation failed");
 /// assert_eq!(condensed.to_vec(), vec![1.0, 2.0, 3.0]);
 /// ```
 #[allow(dead_code)]
@@ -93,7 +93,7 @@ pub fn square_to_condensed<F: Float + Zero + Copy>(
 /// use scirs2_cluster::hierarchy::condensed_matrix::condensed_to_square;
 ///
 /// let condensed = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-/// let square = condensed_to_square(condensed.view()).unwrap();
+/// let square = condensed_to_square(condensed.view()).expect("Operation failed");
 ///
 /// assert_eq!(square[[0, 1]], 1.0);
 /// assert_eq!(square[[1, 0]], 1.0);
@@ -157,7 +157,7 @@ pub fn condensed_to_square<F: Float + Zero + Copy>(
 /// use scirs2_cluster::hierarchy::condensed_matrix::get_distance;
 ///
 /// let condensed = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-/// let distance = get_distance(condensed.view(), 0, 2, 3).unwrap();
+/// let distance = get_distance(condensed.view(), 0, 2, 3).expect("Operation failed");
 /// assert_eq!(distance, 2.0);
 /// ```
 #[allow(dead_code)]
@@ -386,16 +386,16 @@ mod tests {
                 0.0, 1.0, 2.0, 3.0, 1.0, 0.0, 4.0, 5.0, 2.0, 4.0, 0.0, 6.0, 3.0, 5.0, 6.0, 0.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let condensed = square_to_condensed(square.view()).unwrap();
+        let condensed = square_to_condensed(square.view()).expect("Operation failed");
         assert_eq!(condensed.to_vec(), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
     }
 
     #[test]
     fn test_condensed_to_square() {
         let condensed = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let square = condensed_to_square(condensed.view()).unwrap();
+        let square = condensed_to_square(condensed.view()).expect("Operation failed");
 
         let expected = Array2::from_shape_vec(
             (4, 4),
@@ -403,7 +403,7 @@ mod tests {
                 0.0, 1.0, 2.0, 3.0, 1.0, 0.0, 4.0, 5.0, 2.0, 4.0, 0.0, 6.0, 3.0, 5.0, 6.0, 0.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(square, expected);
     }
@@ -412,10 +412,10 @@ mod tests {
     fn test_round_trip_conversion() {
         let original =
             Array2::from_shape_vec((3, 3), vec![0.0, 1.5, 2.5, 1.5, 0.0, 3.5, 2.5, 3.5, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let condensed = square_to_condensed(original.view()).unwrap();
-        let reconstructed = condensed_to_square(condensed.view()).unwrap();
+        let condensed = square_to_condensed(original.view()).expect("Operation failed");
+        let reconstructed = condensed_to_square(condensed.view()).expect("Operation failed");
 
         assert_eq!(original, reconstructed);
     }
@@ -425,17 +425,44 @@ mod tests {
         let condensed = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
         // Test all pairwise distances for 3 points
-        assert_eq!(get_distance(condensed.view(), 0, 1, 3).unwrap(), 1.0);
-        assert_eq!(get_distance(condensed.view(), 1, 0, 3).unwrap(), 1.0); // Symmetric
-        assert_eq!(get_distance(condensed.view(), 0, 2, 3).unwrap(), 2.0);
-        assert_eq!(get_distance(condensed.view(), 2, 0, 3).unwrap(), 2.0); // Symmetric
-        assert_eq!(get_distance(condensed.view(), 1, 2, 3).unwrap(), 3.0);
-        assert_eq!(get_distance(condensed.view(), 2, 1, 3).unwrap(), 3.0); // Symmetric
+        assert_eq!(
+            get_distance(condensed.view(), 0, 1, 3).expect("Operation failed"),
+            1.0
+        );
+        assert_eq!(
+            get_distance(condensed.view(), 1, 0, 3).expect("Operation failed"),
+            1.0
+        ); // Symmetric
+        assert_eq!(
+            get_distance(condensed.view(), 0, 2, 3).expect("Operation failed"),
+            2.0
+        );
+        assert_eq!(
+            get_distance(condensed.view(), 2, 0, 3).expect("Operation failed"),
+            2.0
+        ); // Symmetric
+        assert_eq!(
+            get_distance(condensed.view(), 1, 2, 3).expect("Operation failed"),
+            3.0
+        );
+        assert_eq!(
+            get_distance(condensed.view(), 2, 1, 3).expect("Operation failed"),
+            3.0
+        ); // Symmetric
 
         // Test diagonal (should be zero)
-        assert_eq!(get_distance(condensed.view(), 0, 0, 3).unwrap(), 0.0);
-        assert_eq!(get_distance(condensed.view(), 1, 1, 3).unwrap(), 0.0);
-        assert_eq!(get_distance(condensed.view(), 2, 2, 3).unwrap(), 0.0);
+        assert_eq!(
+            get_distance(condensed.view(), 0, 0, 3).expect("Operation failed"),
+            0.0
+        );
+        assert_eq!(
+            get_distance(condensed.view(), 1, 1, 3).expect("Operation failed"),
+            0.0
+        );
+        assert_eq!(
+            get_distance(condensed.view(), 2, 2, 3).expect("Operation failed"),
+            0.0
+        );
     }
 
     #[test]
@@ -445,10 +472,10 @@ mod tests {
         assert_eq!(condensed_size(4), 6);
         assert_eq!(condensed_size(5), 10);
 
-        assert_eq!(points_from_condensed_size(1).unwrap(), 2);
-        assert_eq!(points_from_condensed_size(3).unwrap(), 3);
-        assert_eq!(points_from_condensed_size(6).unwrap(), 4);
-        assert_eq!(points_from_condensed_size(10).unwrap(), 5);
+        assert_eq!(points_from_condensed_size(1).expect("Operation failed"), 2);
+        assert_eq!(points_from_condensed_size(3).expect("Operation failed"), 3);
+        assert_eq!(points_from_condensed_size(6).expect("Operation failed"), 4);
+        assert_eq!(points_from_condensed_size(10).expect("Operation failed"), 5);
 
         // Invalid sizes should fail
         assert!(points_from_condensed_size(2).is_err()); // No integer n such that n*(n-1)/2 = 2
@@ -459,7 +486,10 @@ mod tests {
     fn test_validate_condensed_matrix() {
         // Valid matrix
         let valid = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        assert_eq!(validate_condensed_matrix(valid.view()).unwrap(), 3);
+        assert_eq!(
+            validate_condensed_matrix(valid.view()).expect("Operation failed"),
+            3
+        );
 
         // Invalid size
         let invalid_size = Array1::from_vec(vec![1.0, 2.0]);
@@ -477,12 +507,12 @@ mod tests {
     #[test]
     fn test_error_cases() {
         // Non-square matrix
-        let non_square =
-            Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let non_square = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
         assert!(square_to_condensed(non_square.view()).is_err());
 
         // Too small matrix
-        let too_small = Array2::from_shape_vec((1, 1), vec![0.0]).unwrap();
+        let too_small = Array2::from_shape_vec((1, 1), vec![0.0]).expect("Operation failed");
         assert!(square_to_condensed(too_small.view()).is_err());
 
         // Out of bounds point indices

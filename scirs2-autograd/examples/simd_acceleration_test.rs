@@ -30,14 +30,14 @@ fn main() {
         // Time the addition operation (potentially SIMD-accelerated)
         let start = Instant::now();
         let add_result = tensor1 + tensor2;
-        let result = add_result.eval(ctx).unwrap();
+        let result = add_result.eval(ctx).expect("Operation failed");
         let duration = start.elapsed();
 
         println!("Addition completed in: {:?}", duration);
         println!("Result shape: {:?}", result.shape());
         println!(
             "First 10 elements: {:?}",
-            &result.as_slice().unwrap()[0..10]
+            &result.as_slice().expect("Operation failed")[0..10]
         );
 
         // Verify correctness
@@ -45,9 +45,9 @@ fn main() {
         let expected_1 = array1[1] + array2[1]; // 1 + 2 = 3
         let expected_2 = array1[2] + array2[2]; // 2 + 4 = 6
 
-        assert_eq!(result.as_slice().unwrap()[0], expected_0);
-        assert_eq!(result.as_slice().unwrap()[1], expected_1);
-        assert_eq!(result.as_slice().unwrap()[2], expected_2);
+        assert_eq!(result.as_slice().expect("Operation failed")[0], expected_0);
+        assert_eq!(result.as_slice().expect("Operation failed")[1], expected_1);
+        assert_eq!(result.as_slice().expect("Operation failed")[2], expected_2);
         println!("✓ Addition correctness verified");
 
         println!("\nTesting multiplication with {} elements", size);
@@ -55,14 +55,14 @@ fn main() {
         // Time the multiplication operation (potentially SIMD-accelerated)
         let start = Instant::now();
         let mul_result = tensor1 * tensor2;
-        let mul_result_eval = mul_result.eval(ctx).unwrap();
+        let mul_result_eval = mul_result.eval(ctx).expect("Operation failed");
         let duration = start.elapsed();
 
         println!("Multiplication completed in: {:?}", duration);
         println!("Result shape: {:?}", mul_result_eval.shape());
         println!(
             "First 10 elements: {:?}",
-            &mul_result_eval.as_slice().unwrap()[0..10]
+            &mul_result_eval.as_slice().expect("Operation failed")[0..10]
         );
 
         // Verify correctness for multiplication
@@ -71,10 +71,22 @@ fn main() {
         let expected_mul_2 = array1[2] * array2[2]; // 2 * 4 = 8
         let expected_mul_3 = array1[3] * array2[3]; // 3 * 6 = 18
 
-        assert_eq!(mul_result_eval.as_slice().unwrap()[0], expected_mul_0);
-        assert_eq!(mul_result_eval.as_slice().unwrap()[1], expected_mul_1);
-        assert_eq!(mul_result_eval.as_slice().unwrap()[2], expected_mul_2);
-        assert_eq!(mul_result_eval.as_slice().unwrap()[3], expected_mul_3);
+        assert_eq!(
+            mul_result_eval.as_slice().expect("Operation failed")[0],
+            expected_mul_0
+        );
+        assert_eq!(
+            mul_result_eval.as_slice().expect("Operation failed")[1],
+            expected_mul_1
+        );
+        assert_eq!(
+            mul_result_eval.as_slice().expect("Operation failed")[2],
+            expected_mul_2
+        );
+        assert_eq!(
+            mul_result_eval.as_slice().expect("Operation failed")[3],
+            expected_mul_3
+        );
         println!("✓ Multiplication correctness verified");
 
         // Test with f64 as well
@@ -96,11 +108,17 @@ fn main() {
         let small_tensor2 = T::convert_to_tensor(small_array2, ctx);
 
         let small_add_result = small_tensor1 + small_tensor2;
-        let small_result = small_add_result.eval(ctx).unwrap();
+        let small_result = small_add_result.eval(ctx).expect("Operation failed");
 
-        println!("Small array result: {:?}", small_result.as_slice().unwrap());
+        println!(
+            "Small array result: {:?}",
+            small_result.as_slice().expect("Operation failed")
+        );
         // Expected: [1+4, 2+5, 3+6] = [5, 7, 9]
-        assert_eq!(small_result.as_slice().unwrap(), &[5.0, 7.0, 9.0]);
+        assert_eq!(
+            small_result.as_slice().expect("Operation failed"),
+            &[5.0, 7.0, 9.0]
+        );
         println!("✓ Small array correctness verified");
 
         println!("\n🎉 All SIMD acceleration tests passed!");

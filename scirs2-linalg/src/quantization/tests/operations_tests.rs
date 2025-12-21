@@ -18,7 +18,7 @@ fn test_quantized_matmul() {
     let (b_q, b_params) = quantize_matrix(&b.view(), 8, QuantizationMethod::Symmetric);
 
     // Perform quantized matrix multiplication
-    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).expect("Test: operation failed");
 
     // Regular matrix multiplication for comparison
     let c = a.dot(&b);
@@ -38,7 +38,7 @@ fn test_quantized_matmul_int4() {
     let (b_q, b_params) = quantize_matrix(&b.view(), 4, QuantizationMethod::Int4);
 
     // Perform quantized matrix multiplication
-    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).expect("Test: operation failed");
 
     // Regular matrix multiplication for comparison
     let c = a.dot(&b);
@@ -59,7 +59,7 @@ fn test_quantized_matvec() {
     let (x_q, x_params) = quantize_vector(&x.view(), 8, QuantizationMethod::Symmetric);
 
     // Perform quantized matrix-vector multiplication
-    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();
+    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).expect("Test: operation failed");
 
     // Regular matrix-vector multiplication for comparison
     let y = a.dot(&x);
@@ -79,7 +79,7 @@ fn test_quantized_matvec_uint4() {
     let (x_q, x_params) = quantize_vector(&x.view(), 4, QuantizationMethod::UInt4);
 
     // Perform quantized matrix-vector multiplication
-    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();
+    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).expect("Test: operation failed");
 
     // Regular matrix-vector multiplication for comparison
     let y = a.dot(&x);
@@ -100,7 +100,7 @@ fn test_quantized_dot() {
     let (b_q, b_params) = quantize_vector(&b.view(), 8, QuantizationMethod::Symmetric);
 
     // Perform quantized dot product
-    let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).expect("Test: operation failed");
 
     // Regular dot product for comparison
     let dot = a.dot(&b);
@@ -120,7 +120,7 @@ fn test_quantized_dot_mixed() {
     let (b_q, b_params) = quantize_vector(&b.view(), 4, QuantizationMethod::UInt4);
 
     // Perform quantized dot product with mixed quantization
-    let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).expect("Test: operation failed");
 
     // Regular dot product for comparison
     let dot = a.dot(&b);

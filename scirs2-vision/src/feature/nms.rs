@@ -200,9 +200,12 @@ pub fn soft_nms(
                     .unwrap_or(Ordering::Equal)
             })
             .copied()
-            .unwrap();
+            .expect("Operation failed");
 
-        let max_pos = indices.iter().position(|&x| x == max_idx).unwrap();
+        let max_pos = indices
+            .iter()
+            .position(|&x| x == max_idx)
+            .expect("Operation failed");
         indices.remove(max_pos);
 
         if boxes[max_idx].score >= score_threshold {

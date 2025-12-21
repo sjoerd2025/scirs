@@ -557,7 +557,7 @@ mod tests {
 
     #[test]
     fn test_memory_manager_creation() {
-        let manager = GpuMemoryManager::new(0).unwrap();
+        let manager = GpuMemoryManager::new(0).expect("Operation failed");
         assert_eq!(manager.gpu_id, 0);
         assert_eq!(manager.memory_pools.len(), 0);
     }

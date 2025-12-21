@@ -61,7 +61,7 @@ pub fn random_bool_with_prob(prob: f64) -> bool {
 pub fn random_vector(size: usize) -> Vec<f64> {
     let mut rng = thread_rng();
     (0..size)
-        .map(|_| rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+        .map(|_| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")))
         .collect()
 }
 

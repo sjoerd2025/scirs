@@ -435,7 +435,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         size: usize,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         // Check predictor for optimal allocation strategy
-        let predictor = self.predictor.lock().unwrap();
+        let predictor = self.predictor.lock().expect("Operation failed");
         let allocation_strategy =
             predictor.predict_optimal_allocation(size, MemoryType::Solution)?;
         drop(predictor);
@@ -471,7 +471,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         &self,
         characteristics: &ProblemCharacteristics,
     ) -> IntegrateResult<MemoryRequirements<F>> {
-        let predictor = self.predictor.lock().unwrap();
+        let predictor = self.predictor.lock().expect("Operation failed");
         predictor.predict_requirements(characteristics)
     }
 
@@ -494,7 +494,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
 
     /// Apply cache optimizations based on plan
     fn apply_cache_optimizations(&self, plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
-        let cache_optimizer = self.cache_optimizer.lock().unwrap();
+        let cache_optimizer = self.cache_optimizer.lock().expect("Operation failed");
         CacheOptimizer::apply_optimizations(plan)
     }
 
@@ -504,14 +504,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         size: usize,
         strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
-        let mut hierarchy = self.hierarchy_manager.write().unwrap();
+        let mut hierarchy = self.hierarchy_manager.write().expect("Operation failed");
 
         let buffer = L1CacheBuffer {
             id: format!(
                 "l1_buffer_{}",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .as_nanos()
             ),
             data: vec![F::zero(); size],
@@ -544,14 +544,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         size: usize,
         strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
-        let mut hierarchy = self.hierarchy_manager.write().unwrap();
+        let mut hierarchy = self.hierarchy_manager.write().expect("Operation failed");
 
         let buffer = L2CacheBuffer {
             id: format!(
                 "l2_buffer_{}",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .as_nanos()
             ),
             data: vec![F::zero(); size],
@@ -583,14 +583,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         size: usize,
         strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
-        let mut hierarchy = self.hierarchy_manager.write().unwrap();
+        let mut hierarchy = self.hierarchy_manager.write().expect("Operation failed");
 
         let buffer = L3CacheBuffer {
             id: format!(
                 "l3_buffer_{}",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .as_nanos()
             ),
             data: vec![F::zero(); size],
@@ -622,18 +622,18 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         size: usize,
         strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
-        let numa_manager = self.numa_manager.read().unwrap();
+        let numa_manager = self.numa_manager.read().expect("Operation failed");
         let optimal_node = NumaTopologyManager::select_optimal_node(size)?;
         drop(numa_manager);
 
-        let mut hierarchy = self.hierarchy_manager.write().unwrap();
+        let mut hierarchy = self.hierarchy_manager.write().expect("Operation failed");
 
         let buffer = RamBuffer {
             id: format!(
                 "ram_buffer_{}",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .as_nanos()
             ),
             data: vec![F::zero(); size],
@@ -674,14 +674,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         size: usize,
         strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
-        let mut hierarchy = self.hierarchy_manager.write().unwrap();
+        let mut hierarchy = self.hierarchy_manager.write().expect("Operation failed");
 
         let buffer = GpuBuffer {
             id: format!(
                 "gpu_buffer_{}",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .as_nanos()
             ),
             device_id: 0, // Default to first GPU
@@ -1379,14 +1379,14 @@ mod tests {
 
     #[test]
     fn test_memory_allocation_prediction() {
-        let optimizer = AdvancedMemoryOptimizer::<f64>::new().unwrap();
+        let optimizer = AdvancedMemoryOptimizer::<f64>::new().expect("Operation failed");
         let plan = optimizer.optimize_for_problem(1000, "rk4", 100);
         assert!(plan.is_ok());
     }
 
     #[test]
     fn test_solution_memory_allocation() {
-        let optimizer = AdvancedMemoryOptimizer::<f64>::new().unwrap();
+        let optimizer = AdvancedMemoryOptimizer::<f64>::new().expect("Operation failed");
         let memory = optimizer.allocate_solution_memory(1000);
         assert!(memory.is_ok());
     }

@@ -40,7 +40,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// ```
     pub fn new(loc: F, scale: F) -> StatsResult<Self> {
         // Validate parameters
@@ -82,12 +82,12 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// let pdf_at_zero = laplace.pdf(0.0);
     /// assert!((pdf_at_zero - 0.5).abs() < 1e-7);
     /// ```
     pub fn pdf(&self, x: F) -> F {
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
         let abs_value = if x >= self.loc {
             x - self.loc
         } else {
@@ -113,12 +113,12 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// let cdf_at_zero = laplace.cdf(0.0);
     /// assert!((cdf_at_zero - 0.5).abs() < 1e-7);
     /// ```
     pub fn cdf(&self, x: F) -> F {
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         if x < self.loc {
             // CDF = (1/2) * exp((x-loc)/scale)
@@ -144,8 +144,8 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
-    /// let x = laplace.ppf(0.75).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
+    /// let x = laplace.ppf(0.75).expect("Operation failed");
     /// assert!((x - 0.693147).abs() < 1e-6);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -155,7 +155,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
             ));
         }
 
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         let quantile = if p < half {
             // Q(p) = loc + scale * ln(2p)
@@ -183,8 +183,8 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
-    /// let samples = laplace.rvs_vec(10).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
+    /// let samples = laplace.rvs_vec(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -194,7 +194,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
         for _ in 0..size {
             // Generate uniform random number in [0, 1)
             let u = self.rand_distr.sample(&mut rng);
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             // Apply inverse CDF transform
             let sample = match self.ppf(u_f) {
@@ -208,7 +208,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
         // Ensure we have exactly 'size' samples
         while samples.len() < size {
             let u = self.rand_distr.sample(&mut rng);
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             let sample = match self.ppf(u_f) {
                 Ok(s) => s,
@@ -236,8 +236,8 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
-    /// let samples = laplace.rvs(10).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
+    /// let samples = laplace.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
@@ -256,7 +256,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(2.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(2.0f64, 1.0).expect("Operation failed");
     /// let mean = laplace.mean();
     /// assert_eq!(mean, 2.0);
     /// ```
@@ -276,13 +276,13 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// let variance = laplace.var();
     /// assert!((variance - 2.0).abs() < 1e-7);
     /// ```
     pub fn var(&self) -> F {
         // Variance = 2 * scale^2
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         two * self.scale * self.scale
     }
 
@@ -297,7 +297,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// let std_dev = laplace.std();
     /// assert!((std_dev - 1.414213).abs() < 1e-6);
     /// ```
@@ -317,7 +317,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(2.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(2.0f64, 1.0).expect("Operation failed");
     /// let median = laplace.median();
     /// assert_eq!(median, 2.0);
     /// ```
@@ -337,7 +337,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(2.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(2.0f64, 1.0).expect("Operation failed");
     /// let mode = laplace.mode();
     /// assert_eq!(mode, 2.0);
     /// ```
@@ -357,7 +357,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// let skewness = laplace.skewness();
     /// assert_eq!(skewness, 0.0);
     /// ```
@@ -377,13 +377,13 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// let kurtosis = laplace.kurtosis();
     /// assert!((kurtosis - 3.0).abs() < 1e-7);
     /// ```
     pub fn kurtosis(&self) -> F {
         // Excess kurtosis = 3 (higher than normal distribution's 0)
-        F::from(3.0).unwrap()
+        F::from(3.0).expect("Failed to convert constant to float")
     }
 
     /// Calculate the entropy of the distribution
@@ -397,14 +397,14 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// ```
     /// use scirs2_stats::distributions::laplace::Laplace;
     ///
-    /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
+    /// let laplace = Laplace::new(0.0f64, 1.0).expect("Operation failed");
     /// let entropy = laplace.entropy();
     /// assert!((entropy - 1.693147).abs() < 1e-6);
     /// ```
     pub fn entropy(&self) -> F {
         // Entropy = 1 + ln(2*scale)
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         one + (two * self.scale).ln()
     }
 }
@@ -428,7 +428,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
 /// ```
 /// use scirs2_stats::distributions::laplace;
 ///
-/// let l = laplace::laplace(0.0f64, 1.0).unwrap();
+/// let l = laplace::laplace(0.0f64, 1.0).expect("Operation failed");
 /// let pdf_at_zero = l.pdf(0.0);
 /// assert!((pdf_at_zero - 0.5).abs() < 1e-7);
 /// ```
@@ -493,12 +493,12 @@ mod tests {
     #[test]
     fn test_laplace_creation() {
         // Standard Laplace (loc=0, scale=1)
-        let laplace = Laplace::new(0.0, 1.0).unwrap();
+        let laplace = Laplace::new(0.0, 1.0).expect("Operation failed");
         assert_eq!(laplace.loc, 0.0);
         assert_eq!(laplace.scale, 1.0);
 
         // Custom Laplace
-        let custom = Laplace::new(-2.0, 0.5).unwrap();
+        let custom = Laplace::new(-2.0, 0.5).expect("Operation failed");
         assert_eq!(custom.loc, -2.0);
         assert_eq!(custom.scale, 0.5);
 
@@ -510,7 +510,7 @@ mod tests {
     #[test]
     fn test_laplace_pdf() {
         // Standard Laplace (loc=0, scale=1)
-        let laplace = Laplace::new(0.0, 1.0).unwrap();
+        let laplace = Laplace::new(0.0, 1.0).expect("Operation failed");
 
         // PDF at x = 0 should be 1/(2*1) = 0.5
         let pdf_at_zero = laplace.pdf(0.0);
@@ -525,7 +525,7 @@ mod tests {
         assert_relative_eq!(pdf_at_neg_one, pdf_at_one, epsilon = 1e-10);
 
         // Custom Laplace with loc=-2, scale=0.5
-        let custom = Laplace::new(-2.0, 0.5).unwrap();
+        let custom = Laplace::new(-2.0, 0.5).expect("Operation failed");
 
         // PDF at x = -2 should be 1/(2*0.5) = 1
         let pdf_at_loc = custom.pdf(-2.0);
@@ -539,7 +539,7 @@ mod tests {
     #[test]
     fn test_laplace_cdf() {
         // Standard Laplace (loc=0, scale=1)
-        let laplace = Laplace::new(0.0, 1.0).unwrap();
+        let laplace = Laplace::new(0.0, 1.0).expect("Operation failed");
 
         // CDF at x = 0 should be 0.5
         let cdf_at_zero = laplace.cdf(0.0);
@@ -554,7 +554,7 @@ mod tests {
         assert_relative_eq!(cdf_at_neg_one, 0.1839397, epsilon = 1e-7);
 
         // Custom Laplace with loc=-2, scale=0.5
-        let custom = Laplace::new(-2.0, 0.5).unwrap();
+        let custom = Laplace::new(-2.0, 0.5).expect("Operation failed");
 
         // CDF at x = -2 should be 0.5
         let cdf_at_loc = custom.cdf(-2.0);
@@ -568,29 +568,29 @@ mod tests {
     #[test]
     fn test_laplace_ppf() {
         // Standard Laplace (loc=0, scale=1)
-        let laplace = Laplace::new(0.0, 1.0).unwrap();
+        let laplace = Laplace::new(0.0, 1.0).expect("Operation failed");
 
         // PPF at p = 0.5 should be 0
-        let ppf_at_half = laplace.ppf(0.5).unwrap();
+        let ppf_at_half = laplace.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half, 0.0, epsilon = 1e-10);
 
         // PPF at p = 0.75 should be log(2*0.75) ≈ log(1.5) ≈ 0.693147
-        let ppf_at_75 = laplace.ppf(0.75).unwrap();
+        let ppf_at_75 = laplace.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(ppf_at_75, 0.693147, epsilon = 1e-6);
 
         // PPF at p = 0.25 should be -log(2*0.75) ≈ -log(1.5) ≈ -0.693147
-        let ppf_at_25 = laplace.ppf(0.25).unwrap();
+        let ppf_at_25 = laplace.ppf(0.25).expect("Operation failed");
         assert_relative_eq!(ppf_at_25, -0.693147, epsilon = 1e-6);
 
         // Custom Laplace with loc=-2, scale=0.5
-        let custom = Laplace::new(-2.0, 0.5).unwrap();
+        let custom = Laplace::new(-2.0, 0.5).expect("Operation failed");
 
         // PPF at p = 0.5 should be -2.0
-        let ppf_at_half_custom = custom.ppf(0.5).unwrap();
+        let ppf_at_half_custom = custom.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half_custom, -2.0, epsilon = 1e-10);
 
         // PPF at p = 0.75 should be -2.0 + 0.5*log(1.5) ≈ -2.0 + 0.5*0.693147 ≈ -1.653426
-        let ppf_at_75_custom = custom.ppf(0.75).unwrap();
+        let ppf_at_75_custom = custom.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(ppf_at_75_custom, -1.653426, epsilon = 1e-6);
 
         // Error cases
@@ -601,7 +601,7 @@ mod tests {
     #[test]
     fn test_laplace_properties() {
         // Standard Laplace (loc=0, scale=1)
-        let laplace = Laplace::new(0.0, 1.0).unwrap();
+        let laplace = Laplace::new(0.0, 1.0).expect("Operation failed");
 
         // Mean = loc = 0
         let mean = laplace.mean();
@@ -636,7 +636,7 @@ mod tests {
         assert_relative_eq!(entropy, 1.693147, epsilon = 1e-6);
 
         // Custom Laplace with loc=-2, scale=0.5
-        let custom = Laplace::new(-2.0, 0.5).unwrap();
+        let custom = Laplace::new(-2.0, 0.5).expect("Operation failed");
 
         // Mean = loc = -2
         let mean_custom = custom.mean();
@@ -657,10 +657,10 @@ mod tests {
 
     #[test]
     fn test_laplace_rvs() {
-        let laplace = Laplace::new(0.0, 1.0).unwrap();
+        let laplace = Laplace::new(0.0, 1.0).expect("Operation failed");
 
         // Generate samples
-        let samples = laplace.rvs(100).unwrap();
+        let samples = laplace.rvs(100).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 100);
@@ -677,12 +677,12 @@ mod tests {
     #[test]
     fn test_laplace_inverse_cdf() {
         // Test that cdf(ppf(p)) == p and ppf(cdf(x)) == x
-        let laplace = Laplace::new(0.0, 1.0).unwrap();
+        let laplace = Laplace::new(0.0, 1.0).expect("Operation failed");
 
         // Test various probability values
         let probabilities = [0.1, 0.25, 0.5, 0.75, 0.9];
         for &p in &probabilities {
-            let x = laplace.ppf(p).unwrap();
+            let x = laplace.ppf(p).expect("Operation failed");
             let p_back = laplace.cdf(x);
             assert_relative_eq!(p_back, p, epsilon = 1e-7);
         }
@@ -691,7 +691,7 @@ mod tests {
         let x_values = [-3.0, -1.0, 0.0, 1.0, 3.0];
         for &x in &x_values {
             let p = laplace.cdf(x);
-            let x_back = laplace.ppf(p).unwrap();
+            let x_back = laplace.ppf(p).expect("Operation failed");
             assert_relative_eq!(x_back, x, epsilon = 1e-7);
         }
     }

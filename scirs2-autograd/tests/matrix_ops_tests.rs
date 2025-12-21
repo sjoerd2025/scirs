@@ -8,7 +8,8 @@ use scirs2_autograd as ag;
 fn test_matrix_inverse() {
     ag::run(|ctx| {
         // Create a simple test matrix with known inverse
-        let a_data = Array2::<f32>::from_shape_vec((2, 2), vec![4.0, 7.0, 2.0, 6.0]).unwrap();
+        let a_data = Array2::<f32>::from_shape_vec((2, 2), vec![4.0, 7.0, 2.0, 6.0])
+            .expect("Test: operation failed");
 
         // The inverse should be:
         // [ 0.6  -0.7 ]
@@ -32,7 +33,7 @@ fn test_matrix_inverse() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("A * A^(-1):\n{:?}", identity_result);
 
@@ -40,7 +41,7 @@ fn test_matrix_inverse() {
         let identity = ag::ndarray::Array2::<f32>::eye(2);
         let error = (identity_result
             .into_dimensionality::<ag::ndarray::Ix2>()
-            .unwrap()
+            .expect("Test: operation failed")
             - &identity)
             .mapv(|x: f32| x.abs())
             .sum();
@@ -59,7 +60,7 @@ fn test_matrix_inverse() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!(
             "Gradient of sum(A^(-1)) with respect to A:\n{:?}",
@@ -98,7 +99,7 @@ fn test_determinant() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("Det(A): {:?}", det_result);
 
@@ -119,7 +120,7 @@ fn test_determinant() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("Gradient of det(A) with respect to A:\n{:?}", grad_result);
 
@@ -132,7 +133,7 @@ fn test_determinant() {
         if grad_result.ndim() == 2 {
             let grad_2d = grad_result
                 .into_dimensionality::<ag::ndarray::Ix2>()
-                .unwrap();
+                .expect("Test: operation failed");
             // ∂det(A)/∂A_ii = det(A)/A_ii for diagonal matrix
             let grad_00 = grad_2d[[0, 0]];
             let expected_grad_00 = expected_det / a_data[[0, 0]];
@@ -181,12 +182,14 @@ fn test_matrix_solve() {
             .feed(b, b_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("Solved x:\n{:?}", x_result);
 
         // Check if solution is correct
-        let x_result_2d = x_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
+        let x_result_2d = x_result
+            .into_dimensionality::<ag::ndarray::Ix2>()
+            .expect("Test: operation failed");
         let error = (x_result_2d - &expected_x).mapv(|x: f32| x.abs()).sum();
 
         println!("Solution error: {}", error);
@@ -206,8 +209,8 @@ fn test_matrix_solve() {
             .feed(b, b_data.view().into_dyn())
             .run();
 
-        let grad_a_result = grad_results[0].clone().unwrap();
-        let grad_b_result = grad_results[1].clone().unwrap();
+        let grad_a_result = grad_results[0].clone().expect("Test: operation failed");
+        let grad_b_result = grad_results[1].clone().expect("Test: operation failed");
 
         println!("Gradient of sum(x) with respect to A:\n{:?}", grad_a_result);
         println!("Gradient of sum(x) with respect to b:\n{:?}", grad_b_result);
@@ -250,14 +253,16 @@ fn test_qr_decomposition() {
             .feed(a, a_data.view().into_dyn())
             .run();
 
-        let q_result = results[0].clone().unwrap();
-        let r_result = results[1].clone().unwrap();
+        let q_result = results[0].clone().expect("Test: operation failed");
+        let r_result = results[1].clone().expect("Test: operation failed");
 
         println!("Q:\n{:?}", q_result);
         println!("R:\n{:?}", r_result);
 
         // Check if Q is orthogonal (Q^T * Q ≈ I)
-        let q_2d = q_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
+        let q_2d = q_result
+            .into_dimensionality::<ag::ndarray::Ix2>()
+            .expect("Test: operation failed");
         let q_t = q_2d.t().to_owned();
         let q_orthogonal = q_t.dot(&q_2d);
         let identity = ag::ndarray::Array2::<f32>::eye(3);
@@ -271,7 +276,9 @@ fn test_qr_decomposition() {
         );
 
         // Check if A = Q * R
-        let r_2d = r_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
+        let r_2d = r_result
+            .into_dimensionality::<ag::ndarray::Ix2>()
+            .expect("Test: operation failed");
         let a_reconstructed = q_2d.dot(&r_2d);
 
         let reconstruction_error = (a_reconstructed - &a_data).mapv(|x| x.abs()).sum();
@@ -293,7 +300,7 @@ fn test_qr_decomposition() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!(
             "Gradient of sum(Q) + sum(R) with respect to A:\n{:?}",
@@ -329,7 +336,7 @@ fn test_matrix_exp() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("exp(A):\n{:?}", exp_result);
 
@@ -340,7 +347,7 @@ fn test_matrix_exp() {
 
         let exp_2d = exp_result
             .into_dimensionality::<ag::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
         let error = (exp_2d - &expected_exp).mapv(|x| x.abs()).sum();
 
         println!("Matrix exponential error: {}", error);
@@ -357,7 +364,7 @@ fn test_matrix_exp() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!(
             "Gradient of sum(exp(A)) with respect to A:\n{:?}",
@@ -405,7 +412,7 @@ fn test_near_singular_matrix_operations() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("A^(-1):\n{:?}", a_inv_result);
 
@@ -419,11 +426,11 @@ fn test_near_singular_matrix_operations() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         let identity_2d = identity_result
             .into_dimensionality::<ag::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
 
         // Check if close to identity with a larger tolerance
         let identity = Array2::<f32>::eye(3);
@@ -447,7 +454,7 @@ fn test_near_singular_matrix_operations() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("Det(A) for near-singular matrix: {:?}", det_result);
 
@@ -475,7 +482,7 @@ fn test_near_singular_matrix_operations() {
             .feed(b, b_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("Solution x for near-singular matrix:\n{:?}", x_result);
 
@@ -490,11 +497,11 @@ fn test_near_singular_matrix_operations() {
             .feed(b, b_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         let b_reconstructed_2d = b_reconstructed_result
             .into_dimensionality::<ag::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
 
         let b_error = (b_reconstructed_2d - &b_data).mapv(|x| x.abs()).sum();
         println!("Error in Ax = b for near-singular matrix: {}", b_error);
@@ -526,7 +533,7 @@ fn test_near_singular_matrix_operations() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         let grad_results2 = ctx
             .evaluator()
@@ -534,7 +541,7 @@ fn test_near_singular_matrix_operations() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         let grad_results3 = ctx
             .evaluator()
@@ -543,7 +550,7 @@ fn test_near_singular_matrix_operations() {
             .feed(b, b_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!(
             "Gradient of sum(A^(-1)) for near-singular matrix:\n{:?}",
@@ -600,7 +607,7 @@ fn test_matrix_sqrt() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!("sqrt(A):\n{:?}", sqrt_result);
 
@@ -614,11 +621,11 @@ fn test_matrix_sqrt() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         let sqrt_squared_2d = sqrt_squared_result
             .into_dimensionality::<ag::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
 
         let error = (sqrt_squared_2d - &a_data).mapv(|x: f32| x.abs()).sum();
         println!("Matrix square root verification error: {}", error);
@@ -635,7 +642,7 @@ fn test_matrix_sqrt() {
             .feed(a, a_data.view().into_dyn())
             .run()[0]
             .clone()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!(
             "Gradient of sum(sqrt(A)) with respect to A:\n{:?}",

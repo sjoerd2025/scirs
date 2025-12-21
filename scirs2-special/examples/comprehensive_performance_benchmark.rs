@@ -131,7 +131,7 @@ fn generate_performance_recommendations(
         a.speedup_factor
             .unwrap_or(1.0)
             .partial_cmp(&b.speedup_factor.unwrap_or(1.0))
-            .unwrap()
+            .expect("Operation failed")
     }) {
         println!(
             "🏆 Best overall implementation: {} ({:.2}x speedup)",

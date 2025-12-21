@@ -93,7 +93,7 @@ impl Policy for PolicyNetwork {
     fn sample_action(&self, state: &ArrayView1<f32>) -> Result<Array1<f32>> {
         let (params, std) = self.get_distribution_params(state)?;
             // Sample from Gaussian distribution
-            let std = std.unwrap();
+            let std = std.expect("Operation failed");
             let mut action = Array1::zeros(self.action_dim);
             let mut rng = rng();
             for i in 0..self.action_dim {
@@ -261,15 +261,15 @@ mod tests {
     use super::*;
     #[test]
     fn test_policy_network_discrete() {
-        let policy = PolicyNetwork::new(4, 2, vec![32, 32], false).unwrap();
+        let policy = PolicyNetwork::new(4, 2, vec![32, 32], false).expect("Operation failed");
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let action = policy.sample_action(&state.view()).unwrap();
+        let action = policy.sample_action(&state.view()).expect("Operation failed");
         assert_eq!(action.len(), 2);
         assert!((action.sum() - 1.0).abs() < 1e-5); // One-hot action
     fn test_policy_network_continuous() {
-        let policy = PolicyNetwork::new(4, 2, vec![32, 32], true).unwrap();
+        let policy = PolicyNetwork::new(4, 2, vec![32, 32], true).expect("Operation failed");
     fn test_policy_gradient_returns() {
-        let policy = Arc::new(PolicyNetwork::new(4, 2, vec![32], false).unwrap());
+        let policy = Arc::new(PolicyNetwork::new(4, 2, vec![32], false).expect("Operation failed"));
         let pg = PolicyGradient::new(policy, 0.01, 0.99);
         let rewards = vec![1.0, 2.0, 3.0];
         let returns = pg.calculate_returns(&rewards);

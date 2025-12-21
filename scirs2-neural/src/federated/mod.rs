@@ -187,7 +187,7 @@ use scirs2_core::random::seq::SliceRandom;
                     .enumerate()
                     .map(|(i_)| (i, 1.0 + rng.random::<f32>()))
                     .collect();
-                weighted_indices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+                weighted_indices.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
                 Ok(weighted_indices
                     .map(|(i_)| i)
             _ => {
@@ -272,7 +272,7 @@ mod tests {
         assert_eq!(config.clients_per_round, 10);
         assert_eq!(config.aggregation_strategy, "fedavg");
     fn test_client_selection() {
-        let fl = FederatedLearning::new(config, 20).unwrap();
-        let selected = fl.select_clients().unwrap();
+        let fl = FederatedLearning::new(config, 20).expect("Operation failed");
+        let selected = fl.select_clients().expect("Operation failed");
         assert_eq!(selected.len(), 10);
         assert!(selected.iter().all(|&id| id < 20));

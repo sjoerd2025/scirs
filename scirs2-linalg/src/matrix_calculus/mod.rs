@@ -42,7 +42,7 @@
 //!
 //! // Compute the gradient at point [1.0, 1.0]
 //! let x = array![1.0_f64, 1.0_f64];
-//! let grad = gradient(f, &x.view(), None).unwrap();
+//! let grad = gradient(f, &x.view(), None).expect("Operation failed");
 //!
 //! // The gradient should be [2*x[0], 4*x[1]] = [2.0, 4.0]
 //! assert!((grad[0] - 2.0_f64).abs() < 1e-6_f64);
@@ -210,7 +210,8 @@ where
             let f_mm = f(&x_mm.view())?;
 
             // Compute the mixed partial derivative using central difference
-            let h_ij = (f_pp - f_pm - f_mp + f_mm) / (F::from(4.0).unwrap() * eps * eps);
+            let h_ij =
+                (f_pp - f_pm - f_mp + f_mm) / (F::from(4.0).expect("Operation failed") * eps * eps);
             hess[[i, j]] = h_ij;
         }
     }

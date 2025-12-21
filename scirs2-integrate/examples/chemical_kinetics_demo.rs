@@ -562,7 +562,7 @@ mod tests {
         // Integrate for several time steps
         for i in 0..10 {
             let t = i as f64 * 0.1;
-            let result = integrator.step(t, &state).unwrap();
+            let result = integrator.step(t, &state).expect("Operation failed");
             state = result.state;
         }
 
@@ -587,7 +587,7 @@ mod tests {
         // Integrate for many steps
         for i in 0..100 {
             let t = i as f64 * 0.05;
-            let result = integrator.step(t, &state).unwrap();
+            let result = integrator.step(t, &state).expect("Operation failed");
             state = result.state;
         }
 

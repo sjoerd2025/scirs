@@ -135,7 +135,7 @@ where
     let mut frobenius_sum = F::zero();
     let mut near_zero_count = 0;
     let total_elements = a.len();
-    let zero_threshold = F::epsilon() * F::from(1000.0).unwrap(); // More generous zero threshold
+    let zero_threshold = F::epsilon() * F::from(1000.0).expect("Operation failed"); // More generous zero threshold
 
     for &elem in a.iter() {
         let abs_elem = elem.abs();
@@ -153,8 +153,8 @@ where
         }
     }
     diagnostics.frobenius_norm = frobenius_sum.sqrt();
-    diagnostics.sparsity_ratio =
-        F::from(near_zero_count).unwrap() / F::from(total_elements).unwrap();
+    diagnostics.sparsity_ratio = F::from(near_zero_count).expect("Operation failed")
+        / F::from(total_elements).expect("Operation failed");
 
     // Compute diagonal statistics for square matrices
     if a.nrows() == a.ncols() && a.nrows() > 0 {
@@ -192,11 +192,11 @@ where
             }
 
             // Add suggestions based on condition number
-            if cond > F::from(1e12).unwrap() {
+            if cond > F::from(1e12).expect("Operation failed") {
                 diagnostics.suggestions.push(
                     "Matrix is extremely ill-conditioned. Consider regularization or using higher precision arithmetic.".to_string()
                 );
-            } else if cond > F::from(1e6).unwrap() {
+            } else if cond > F::from(1e6).expect("Operation failed") {
                 diagnostics
                     .suggestions
                     .push("Matrix is ill-conditioned. Results may be inaccurate.".to_string());
@@ -208,7 +208,7 @@ where
             use crate::basic::det;
             if let Ok(det_val) = det(a, None) {
                 // This specific check is for the test case
-                if det_val.abs() < F::from(1e-8).unwrap() {
+                if det_val.abs() < F::from(1e-8).expect("Operation failed") {
                     diagnostics
                         .suggestions
                         .push("Matrix is nearly singular (very small determinant).".to_string());
@@ -224,7 +224,9 @@ where
         );
     }
 
-    if diagnostics.max_abs_value / diagnostics.min_abs_value > F::from(1e15).unwrap() {
+    if diagnostics.max_abs_value / diagnostics.min_abs_value
+        > F::from(1e15).expect("Operation failed")
+    {
         diagnostics.suggestions.push(
             "Matrix has extreme scale differences. Consider normalizing or preconditioning."
                 .to_string(),
@@ -232,7 +234,7 @@ where
     }
 
     // Add suggestions based on sparsity
-    if diagnostics.sparsity_ratio > F::from(0.5).unwrap() {
+    if diagnostics.sparsity_ratio > F::from(0.5).expect("Operation failed") {
         diagnostics.suggestions.push(
             "Matrix is sparse. Consider using sparse matrix algorithms for better performance."
                 .to_string(),
@@ -245,7 +247,7 @@ where
             diagnostics.suggestions.push(
                 "Matrix has zero or near-zero diagonal elements. Consider pivoting or regularization.".to_string()
             );
-        } else if max_diag / min_diag > F::from(1e12).unwrap() {
+        } else if max_diag / min_diag > F::from(1e12).expect("Operation failed") {
             diagnostics.suggestions.push(
                 "Matrix has poorly scaled diagonal elements. Consider diagonal scaling."
                     .to_string(),
@@ -270,7 +272,7 @@ where
                 diagnostics
                     .suggestions
                     .push("Matrix is singular (determinant is zero).".to_string());
-            } else if det_val.abs() < F::from(1e-10).unwrap() {
+            } else if det_val.abs() < F::from(1e-10).expect("Operation failed") {
                 diagnostics
                     .suggestions
                     .push("Matrix is nearly singular (determinant is very small).".to_string());
@@ -290,7 +292,9 @@ fn is_symmetric<F: Float>(a: &ArrayView2<F>) -> bool {
 
     for i in 0..a.nrows() {
         for j in i + 1..a.ncols() {
-            if (a[[i, j]] - a[[j, i]]).abs() > F::epsilon() * F::from(100.0).unwrap() {
+            if (a[[i, j]] - a[[j, i]]).abs()
+                > F::epsilon() * F::from(100.0).expect("Operation failed")
+            {
                 return false;
             }
         }
@@ -329,7 +333,7 @@ where
             }
             // Very rough estimation based on det and norm
             let condition_est = norm_a * norm_a / det_a.abs();
-            if condition_est > F::from(1e12).unwrap() {
+            if condition_est > F::from(1e12).expect("Operation failed") {
                 return Ok(condition_est);
             }
         }
@@ -451,7 +455,7 @@ fn estimate_near_zero_eigenvalues<
 
     let n = a.nrows();
     let mut zero_count = 0;
-    let threshold = F::epsilon() * F::from(100.0).unwrap();
+    let threshold = F::epsilon() * F::from(100.0).expect("Operation failed");
 
     // Check diagonal elements as a rough estimate
     for i in 0..n {
@@ -501,7 +505,7 @@ where
     if let Some(cond) = diagnostics.condition_number {
         report.effective_condition_number = cond.to_f64();
 
-        if cond > F::from(1e14).unwrap() {
+        if cond > F::from(1e14).expect("Operation failed") {
             report.is_stable = false;
             report
                 .warnings
@@ -509,7 +513,7 @@ where
             report
                 .recommendations
                 .push("Use higher precision arithmetic or regularization".to_string());
-        } else if cond > F::from(1e10).unwrap() {
+        } else if cond > F::from(1e10).expect("Operation failed") {
             report
                 .warnings
                 .push("Poor conditioning detected".to_string());
@@ -535,7 +539,7 @@ where
     }
 
     // Check sparsity pattern
-    if diagnostics.sparsity_ratio > F::from(0.7).unwrap() {
+    if diagnostics.sparsity_ratio > F::from(0.7).expect("Operation failed") {
         report
             .recommendations
             .push("Matrix is very sparse - consider sparse algorithms".to_string());
@@ -578,7 +582,7 @@ fn estimate_numerical_rank<
 
     // Check if any diagonal elements are essentially zero
     for i in 0..n {
-        if a[[i, i]].abs() < F::epsilon() * F::from(1000.0).unwrap() {
+        if a[[i, i]].abs() < F::epsilon() * F::from(1000.0).expect("Operation failed") {
             apparent_rank -= 1;
         }
     }
@@ -587,7 +591,7 @@ fn estimate_numerical_rank<
     if n <= 3 {
         use crate::basic::det;
         if let Ok(det_val) = det(a, None) {
-            if det_val.abs() < F::epsilon() * F::from(1000.0).unwrap() {
+            if det_val.abs() < F::epsilon() * F::from(1000.0).expect("Operation failed") {
                 apparent_rank = apparent_rank.saturating_sub(1);
             }
         }

@@ -227,7 +227,7 @@ pub fn validate_signal_processing_library(
         passed_tests += 1;
         println!(
             "✅ Multitaper validation passed (score: {:.1})",
-            multitaper_results.as_ref().unwrap().overall_score
+            multitaper_results.as_ref().expect("Operation failed").overall_score
         );
     } else {
         issues.push("Multitaper validation failed".to_string());
@@ -746,7 +746,7 @@ mod tests {
         let result = validate_signal_processing_library(&config);
         assert!(result.is_ok());
 
-        let validation_result = result.unwrap();
+        let validation_result = result.expect("Operation failed");
         assert!(validation_result.summary.total_tests > 0);
         assert!(validation_result.execution_time_ms > 0.0);
     }

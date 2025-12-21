@@ -51,7 +51,7 @@ use std::fmt::Debug;
 ///
 /// // Compute Lomb-Scargle periodogram
 /// let (freqs, power) = lombscargle(
-///     t.as_slice().unwrap(),
+///     t.as_slice().expect("Operation failed"),
 ///     &y,
 ///     None,
 ///     Some("standard"),
@@ -59,7 +59,7 @@ use std::fmt::Debug;
 ///     Some(true),
 ///     None,
 ///     None,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Find the frequency with maximum power
 /// let mut max_idx = 0;
@@ -447,7 +447,7 @@ fn autofrequency(
         dts.push(times[i] - times[i - 1]);
     }
 
-    dts.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    dts.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let dt = if dts.len() % 2 == 0 {
         (dts[dts.len() / 2 - 1] + dts[dts.len() / 2]) / 2.0
     } else {
@@ -804,7 +804,7 @@ pub fn find_peaks(
     }
 
     // Sort peaks by power (descending)
-    peak_indices.sort_by(|&a, &b| power[b].partial_cmp(&power[a]).unwrap());
+    peak_indices.sort_by(|&a, &b| power[b].partial_cmp(&power[a]).expect("Operation failed"));
 
     // Group peaks if a frequency _window is specified
     let mut result_freqs = Vec::new();
@@ -893,15 +893,15 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Find the frequency with maximum power
         let max_idx = power
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx_, _)| idx_)
-            .unwrap();
+            .expect("Operation failed");
 
         // The frequency with maximum power should be close to the true frequency
         assert_relative_eq!(f[max_idx], frequency, epsilon = 0.01);
@@ -917,15 +917,18 @@ mod tests {
         let t: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
 
         // FFT method
-        let freqs_fft = autofrequency(&t, 1.0, Some(AutoFreqMethod::Fft)).unwrap();
+        let freqs_fft =
+            autofrequency(&t, 1.0, Some(AutoFreqMethod::Fft)).expect("Operation failed");
         assert!(!freqs_fft.is_empty());
 
         // Linear method
-        let freqs_linear = autofrequency(&t, 1.0, Some(AutoFreqMethod::Linear)).unwrap();
+        let freqs_linear =
+            autofrequency(&t, 1.0, Some(AutoFreqMethod::Linear)).expect("Operation failed");
         assert!(!freqs_linear.is_empty());
 
         // Log method
-        let freqs_log = autofrequency(&t, 1.0, Some(AutoFreqMethod::Log)).unwrap();
+        let freqs_log =
+            autofrequency(&t, 1.0, Some(AutoFreqMethod::Log)).expect("Operation failed");
         assert!(!freqs_log.is_empty());
 
         // Check that frequencies are reasonable
@@ -959,10 +962,14 @@ mod tests {
         let n_samples = 100;
 
         // Calculate significance levels for different normalizations
-        let sig_standard = significance_levels(&power, &fap_levels, "standard", n_samples).unwrap();
-        let sig_model = significance_levels(&power, &fap_levels, "model", n_samples).unwrap();
-        let sig_log = significance_levels(&power, &fap_levels, "log", n_samples).unwrap();
-        let sig_psd = significance_levels(&power, &fap_levels, "psd", n_samples).unwrap();
+        let sig_standard = significance_levels(&power, &fap_levels, "standard", n_samples)
+            .expect("Operation failed");
+        let sig_model =
+            significance_levels(&power, &fap_levels, "model", n_samples).expect("Operation failed");
+        let sig_log =
+            significance_levels(&power, &fap_levels, "log", n_samples).expect("Operation failed");
+        let sig_psd =
+            significance_levels(&power, &fap_levels, "psd", n_samples).expect("Operation failed");
 
         // Each normalization should return the correct number of levels
         assert_eq!(sig_standard.len(), fap_levels.len());
@@ -988,7 +995,8 @@ mod tests {
         let power = vec![0.1, 0.5, 0.3, 0.8, 0.2, 0.9, 0.4, 0.7, 0.6, 0.3];
 
         // Find peaks with threshold 0.5 and no grouping
-        let (peak_freqs, peak_powers) = find_peaks(&freq, &power, 0.5, None).unwrap();
+        let (peak_freqs, peak_powers) =
+            find_peaks(&freq, &power, 0.5, None).expect("Operation failed");
 
         // Check that we found some peaks above the threshold
         assert!(!peak_freqs.is_empty());
@@ -999,7 +1007,8 @@ mod tests {
         }
 
         // Test with grouping
-        let (grouped_freqs, grouped_powers) = find_peaks(&freq, &power, 0.5, Some(0.15)).unwrap();
+        let (grouped_freqs, grouped_powers) =
+            find_peaks(&freq, &power, 0.5, Some(0.15)).expect("Operation failed");
 
         // With grouping, we might have the same or fewer peaks
         assert!(grouped_freqs.len() <= peak_freqs.len());
@@ -1052,7 +1061,7 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check that we got valid results
         assert_eq!(f.len(), power.len());
@@ -1074,7 +1083,7 @@ mod tests {
         assert!(peaks.len() >= 2);
 
         // Sort peaks by power
-        peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // The two strongest peaks should be near our input frequencies
         let tolerance = 0.05; // Allow 0.05 Hz tolerance

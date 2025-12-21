@@ -132,7 +132,9 @@ where
 
     // Estimate smoothness
     let smoothness_score = estimate_smoothness(values);
-    let is_smooth = smoothness_score > F::from(0.7).unwrap_or_else(|| F::from(0.7).unwrap());
+    let is_smooth = smoothness_score
+        > F::from(0.7)
+            .unwrap_or_else(|| F::from(0.7).expect("Failed to convert constant to float"));
 
     // Check monotonicity
     let is_monotonic = check_monotonicity(values);
@@ -250,7 +252,8 @@ where
     };
 
     // Large condition number indicates near-linear dependence
-    let threshold = F::from(1e12).unwrap_or_else(|| F::from(1e12).unwrap());
+    let threshold = F::from(1e12)
+        .unwrap_or_else(|| F::from(1e12).expect("Failed to convert constant to float"));
     Ok(condition_number > threshold)
 }
 
@@ -329,7 +332,8 @@ where
     }
 
     let tolerance = super::types::machine_epsilon::<F>()
-        * F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap());
+        * F::from(1000.0)
+            .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"));
 
     // Check if all points lie on the same line
     let x1 = points[(0, 0)];
@@ -377,7 +381,7 @@ where
         }
     }
 
-    let mean_distance = total_distance / F::from(count).unwrap();
+    let mean_distance = total_distance / F::from(count).expect("Failed to convert to float");
 
     // Calculate variance of distances
     let mut variance = F::zero();
@@ -393,7 +397,7 @@ where
             variance += diff_from_mean * diff_from_mean;
         }
     }
-    variance = variance / F::from(count).unwrap();
+    variance = variance / F::from(count).expect("Failed to convert to float");
 
     // Clustering score based on coefficient of variation
     if mean_distance > F::zero() {
@@ -417,7 +421,9 @@ where
     // Calculate second differences
     let mut second_diffs = Vec::new();
     for i in 1..(n - 1) {
-        let second_diff = values[i + 1] - F::from(2.0).unwrap() * values[i] + values[i - 1];
+        let second_diff = values[i + 1]
+            - F::from(2.0).expect("Failed to convert constant to float") * values[i]
+            + values[i - 1];
         second_diffs.push(second_diff.abs());
     }
 
@@ -427,11 +433,11 @@ where
 
     // Calculate smoothness as inverse of mean second difference
     let mean_second_diff: F = second_diffs.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from(second_diffs.len()).unwrap();
+        / F::from(second_diffs.len()).expect("Operation failed");
 
     // Normalize to [0, 1] range
-    let max_possible_diff =
-        values.iter().fold(F::zero(), |acc, &x| acc.max(x.abs())) * F::from(2.0).unwrap();
+    let max_possible_diff = values.iter().fold(F::zero(), |acc, &x| acc.max(x.abs()))
+        * F::from(2.0).expect("Failed to convert constant to float");
 
     if max_possible_diff > F::zero() {
         F::one() - (mean_second_diff / max_possible_diff).min(F::one())
@@ -486,8 +492,8 @@ where
     let iqr = q3 - q1;
 
     // Use 1.5 * IQR rule for outlier detection
-    let lower_bound = q1 - F::from(1.5).unwrap() * iqr;
-    let upper_bound = q3 + F::from(1.5).unwrap() * iqr;
+    let lower_bound = q1 - F::from(1.5).expect("Failed to convert constant to float") * iqr;
+    let upper_bound = q3 + F::from(1.5).expect("Failed to convert constant to float") * iqr;
 
     for &value in values.iter() {
         if value < lower_bound || value > upper_bound {
@@ -507,12 +513,17 @@ where
     let range = values.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x))
         - values.iter().fold(F::infinity(), |acc, &x| acc.min(x));
 
-    let base_smoothing = range * F::from(0.01).unwrap_or_else(|| F::from(0.01).unwrap());
+    let base_smoothing = range
+        * F::from(0.01)
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
 
     // Adjust based on smoothness score
     let smoothness_factor = F::one() - smoothness_score;
     base_smoothing
-        * (F::one() + smoothness_factor * F::from(10.0).unwrap_or_else(|| F::from(10.0).unwrap()))
+        * (F::one()
+            + smoothness_factor
+                * F::from(10.0)
+                    .unwrap_or_else(|| F::from(10.0).expect("Failed to convert constant to float")))
 }
 
 /// Assess if boundary effects are significant
@@ -529,7 +540,8 @@ where
     }
 
     // Check if boundary values are significantly different from interior pattern
-    let boundary_threshold = F::from(0.1).unwrap_or_else(|| F::from(0.1).unwrap());
+    let boundary_threshold =
+        F::from(0.1).unwrap_or_else(|| F::from(0.1).expect("Failed to convert constant to float"));
 
     // Compare first/last values with interior trend
     let interior_range = values[n / 4] - values[3 * n / 4];
@@ -557,7 +569,8 @@ where
         let last_val = values[n - 1];
         let tolerance = (values.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x))
             - values.iter().fold(F::infinity(), |acc, &x| acc.min(x)))
-            * F::from(0.1).unwrap_or_else(|| F::from(0.1).unwrap());
+            * F::from(0.1)
+                .unwrap_or_else(|| F::from(0.1).expect("Failed to convert constant to float"));
 
         if (first_val - last_val).abs() < tolerance {
             return Ok(BoundaryTreatment::Periodic);
@@ -593,26 +606,39 @@ where
     let mut risk_score = F::zero();
 
     // Penalize non-smooth functions
-    if smoothness < F::from(0.5).unwrap_or_else(|| F::from(0.5).unwrap()) {
-        risk_score += F::from(0.3).unwrap_or_else(|| F::from(0.3).unwrap());
+    if smoothness
+        < F::from(0.5).unwrap_or_else(|| F::from(0.5).expect("Failed to convert constant to float"))
+    {
+        risk_score += F::from(0.3)
+            .unwrap_or_else(|| F::from(0.3).expect("Failed to convert constant to float"));
     }
 
     // Penalize non-monotonic functions
     if !is_monotonic {
-        risk_score += F::from(0.2).unwrap_or_else(|| F::from(0.2).unwrap());
+        risk_score += F::from(0.2)
+            .unwrap_or_else(|| F::from(0.2).expect("Failed to convert constant to float"));
     }
 
     // Penalize clustered data
-    if clustering_score > F::from(0.5).unwrap_or_else(|| F::from(0.5).unwrap()) {
-        risk_score += F::from(0.3).unwrap_or_else(|| F::from(0.3).unwrap());
+    if clustering_score
+        > F::from(0.5).unwrap_or_else(|| F::from(0.5).expect("Failed to convert constant to float"))
+    {
+        risk_score += F::from(0.3)
+            .unwrap_or_else(|| F::from(0.3).expect("Failed to convert constant to float"));
     }
 
     // Convert risk score to categorical risk
-    if risk_score < F::from(0.2).unwrap_or_else(|| F::from(0.2).unwrap()) {
+    if risk_score
+        < F::from(0.2).unwrap_or_else(|| F::from(0.2).expect("Failed to convert constant to float"))
+    {
         Ok(ExtrapolationRisk::Low)
-    } else if risk_score < F::from(0.5).unwrap_or_else(|| F::from(0.5).unwrap()) {
+    } else if risk_score
+        < F::from(0.5).unwrap_or_else(|| F::from(0.5).expect("Failed to convert constant to float"))
+    {
         Ok(ExtrapolationRisk::Medium)
-    } else if risk_score < F::from(0.8).unwrap_or_else(|| F::from(0.8).unwrap()) {
+    } else if risk_score
+        < F::from(0.8).unwrap_or_else(|| F::from(0.8).expect("Failed to convert constant to float"))
+    {
         Ok(ExtrapolationRisk::High)
     } else {
         Ok(ExtrapolationRisk::Critical)
@@ -636,12 +662,17 @@ where
             .push("Points are collinear - consider adding non-collinear points".to_string());
     }
 
-    if data_points.clustering_score > F::from(0.7).unwrap_or_else(|| F::from(0.7).unwrap()) {
+    if data_points.clustering_score
+        > F::from(0.7).unwrap_or_else(|| F::from(0.7).expect("Failed to convert constant to float"))
+    {
         recommendations
             .push("Points are highly clustered - consider more uniform distribution".to_string());
     }
 
-    if data_points.distance_ratio > F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap()) {
+    if data_points.distance_ratio
+        > F::from(1000.0)
+            .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"))
+    {
         recommendations
             .push("Large variation in point spacing - consider regularization".to_string());
     }
@@ -713,7 +744,10 @@ where
     }
 
     // Extreme clustering that would cause numerical issues
-    if data_points.clustering_score > F::from(0.95).unwrap_or_else(|| F::from(0.95).unwrap()) {
+    if data_points.clustering_score
+        > F::from(0.95)
+            .unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"))
+    {
         return false;
     }
 
@@ -737,10 +771,10 @@ mod tests {
 
     #[test]
     fn test_analyze_well_distributed_points() {
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
-        let analysis = analyze_data_points(&points.view()).unwrap();
+        let analysis = analyze_data_points(&points.view()).expect("Operation failed");
         assert_eq!(analysis.num_points, 4);
         assert!(!analysis.is_collinear);
         assert!(analysis.clustering_score < 0.5);
@@ -748,10 +782,10 @@ mod tests {
 
     #[test]
     fn test_collinearity_detection() {
-        let collinear_points =
-            Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+        let collinear_points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0])
+            .expect("Operation failed");
 
-        let analysis = analyze_data_points(&collinear_points.view()).unwrap();
+        let analysis = analyze_data_points(&collinear_points.view()).expect("Operation failed");
         assert!(analysis.is_collinear);
     }
 
@@ -793,10 +827,11 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let values = Array1::from_vec(vec![0.0, 1.0, 4.0, 9.0, 16.0]);
 
-        let analysis = analyze_interpolation_edge_cases(&points.view(), &values.view()).unwrap();
+        let analysis = analyze_interpolation_edge_cases(&points.view(), &values.view())
+            .expect("Operation failed");
 
         assert!(analysis.is_solvable);
         assert!(analysis.data_points.is_collinear); // Points on a line

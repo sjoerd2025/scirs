@@ -616,7 +616,7 @@ where
     let results: Vec<Array2<F>> = parallel_map(&chunks, |(start_row, end_row)| {
         let a_block = a.slice(s![*start_row..*end_row, ..]);
         hardware_optimized_gemm_block(&a_block, b, capabilities, cache_blocksize, simd_width)
-            .unwrap()
+            .expect("Operation failed")
     });
 
     // Assemble results
@@ -738,7 +738,7 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let y = array![8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
 
-        let result = hardware_optimized_dot(&x.view(), &y.view(), &caps).unwrap();
+        let result = hardware_optimized_dot(&x.view(), &y.view(), &caps).expect("Operation failed");
         let expected = 120.0; // 1*8 + 2*7 + 3*6 + 4*5 + 5*4 + 6*3 + 7*2 + 8*1
 
         assert_abs_diff_eq!(result, expected, epsilon = 1e-10);
@@ -750,7 +750,8 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let x = array![1.0, 2.0, 3.0];
 
-        let result = hardware_optimized_matvec(&a.view(), &x.view(), &caps).unwrap();
+        let result =
+            hardware_optimized_matvec(&a.view(), &x.view(), &caps).expect("Operation failed");
         let expected = array![14.0, 32.0]; // [1*1+2*2+3*3, 4*1+5*2+6*3]
 
         for (actual, expected) in result.iter().zip(expected.iter()) {

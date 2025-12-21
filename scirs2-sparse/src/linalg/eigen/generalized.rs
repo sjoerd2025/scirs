@@ -39,16 +39,16 @@ use std::ops::{Add, Div, Mul, Sub};
 /// let a_data = vec![4.0, 2.0, 3.0];
 /// let a_indptr = vec![0, 1, 3];
 /// let a_indices = vec![0, 0, 1];
-/// let amatrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
+/// let amatrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).expect("Operation failed");
 ///
 /// // Symmetric 2x2 B stored as lower: (0,0)=2, (1,0)=1, (1,1)=2
 /// let b_data = vec![2.0, 1.0, 2.0];
 /// let b_indptr = vec![0, 1, 3];
 /// let b_indices = vec![0, 0, 1];
-/// let bmatrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
+/// let bmatrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).expect("Operation failed");
 ///
 /// // Solve Ax = λBx
-/// let result = eigsh_generalized(&amatrix, &bmatrix, Some(2), None, None).unwrap();
+/// let result = eigsh_generalized(&amatrix, &bmatrix, Some(2), None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigsh_generalized<T>(
@@ -127,16 +127,16 @@ where
 /// let a_data = vec![5.0, 1.0, 4.0];
 /// let a_indptr = vec![0, 1, 3];
 /// let a_indices = vec![0, 0, 1];
-/// let amatrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
+/// let amatrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).expect("Operation failed");
 ///
 /// let b_data = vec![2.0, 0.5, 1.5];
 /// let b_indptr = vec![0, 1, 3];
 /// let b_indices = vec![0, 0, 1];
-/// let bmatrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
+/// let bmatrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).expect("Operation failed");
 ///
 /// let result = eigsh_generalized_enhanced(
 ///     &amatrix, &bmatrix, Some(2), None, Some("standard"), None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
@@ -439,13 +439,15 @@ mod tests {
         let a_data = vec![2.0, 1.0, 3.0];
         let a_indptr = vec![0, 1, 3];
         let a_indices = vec![0, 0, 1];
-        let a_matrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
+        let a_matrix =
+            SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).expect("Operation failed");
 
         // Matrix B: [[1, 0.5], [0.5, 2]] stored as lower: [[1], [0.5, 2]]
         let b_data = vec![1.0, 0.5, 2.0];
         let b_indptr = vec![0, 1, 3];
         let b_indices = vec![0, 0, 1];
-        let b_matrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
+        let b_matrix =
+            SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).expect("Operation failed");
 
         let result = eigsh_generalized(&a_matrix, &b_matrix, Some(1), None, None);
 
@@ -459,9 +461,9 @@ mod tests {
         let data = vec![2.0, 1.0, 3.0];
         let indptr = vec![0, 1, 3];
         let indices = vec![0, 0, 1];
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
-        let result = is_positive_definite_diagonal(&matrix).unwrap();
+        let result = is_positive_definite_diagonal(&matrix).expect("Operation failed");
         assert!(result);
     }
 
@@ -487,13 +489,15 @@ mod tests {
         let a_data = vec![4.0, 1.0, 2.0];
         let a_indptr = vec![0, 1, 3];
         let a_indices = vec![0, 0, 1];
-        let a_matrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
+        let a_matrix =
+            SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).expect("Operation failed");
 
         // Matrix B: [[2, 0.5], [0.5, 1]] stored as lower: [[2], [0.5, 1]]
         let b_data = vec![2.0, 0.5, 1.0];
         let b_indptr = vec![0, 1, 3];
         let b_indices = vec![0, 0, 1];
-        let b_matrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
+        let b_matrix =
+            SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).expect("Operation failed");
 
         let result = eigsh_generalized_enhanced(
             &a_matrix,
@@ -515,18 +519,20 @@ mod tests {
         let a_data = vec![3.0, 1.0, 4.0];
         let a_indptr = vec![0, 1, 3];
         let a_indices = vec![0, 0, 1];
-        let a_matrix = SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).unwrap();
+        let a_matrix =
+            SymCsrMatrix::new(a_data, a_indptr, a_indices, (2, 2)).expect("Operation failed");
 
         // Matrix B: [[1, 0.5], [0.5, 2]] stored as lower: [[1], [0.5, 2]]
         let b_data = vec![1.0, 0.5, 2.0];
         let b_indptr = vec![0, 1, 3];
         let b_indices = vec![0, 0, 1];
-        let b_matrix = SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).unwrap();
+        let b_matrix =
+            SymCsrMatrix::new(b_data, b_indptr, b_indices, (2, 2)).expect("Operation failed");
 
         let result = compute_generalized_matrix(&a_matrix, &b_matrix);
         assert!(result.is_ok());
 
-        let transformed = result.unwrap();
+        let transformed = result.expect("Operation failed");
         assert_eq!(transformed.shape(), (2, 2));
     }
 }

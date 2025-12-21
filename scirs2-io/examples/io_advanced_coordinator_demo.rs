@@ -158,12 +158,12 @@ fn demonstrate_multi_modal_processing(coordinator: &mut AdvancedCoordinator) -> 
     println!("📈 Adaptation Analysis:");
     println!(
         "   Strategy Evolution: {:?} → {:?}",
-        results.first().unwrap().0,
-        results.last().unwrap().0
+        results.first().expect("Operation failed").0,
+        results.last().expect("Operation failed").0
     );
 
-    let initial_efficiency = results.first().unwrap().1;
-    let final_efficiency = results.last().unwrap().1;
+    let initial_efficiency = results.first().expect("Operation failed").1;
+    let final_efficiency = results.last().expect("Operation failed").1;
     let improvement = ((final_efficiency / initial_efficiency) - 1.0) * 100.0;
     println!("   Efficiency Improvement: {:.1}%", improvement);
 
@@ -216,7 +216,7 @@ fn demonstrate_adaptive_learning_evolution(coordinator: &mut AdvancedCoordinator
 
         // Show learning trend
         if learning_progression.len() > 1 {
-            let trend = learning_progression.last().unwrap()
+            let trend = learning_progression.last().expect("Operation failed")
                 - learning_progression[learning_progression.len() - 2];
             let trend_direction = if trend > 0.01 {
                 "↗️ Improving"
@@ -233,7 +233,7 @@ fn demonstrate_adaptive_learning_evolution(coordinator: &mut AdvancedCoordinator
     // Calculate overall learning effectiveness
     if learning_progression.len() >= 2 {
         let initial_performance = learning_progression[0];
-        let final_performance = learning_progression.last().unwrap();
+        let final_performance = learning_progression.last().expect("Operation failed");
         let learning_effectiveness = ((final_performance / initial_performance) - 1.0) * 100.0;
 
         println!("📊 Learning Summary:");
@@ -301,8 +301,8 @@ fn demonstrate_cross_domain_intelligence(coordinator: &mut AdvancedCoordinator) 
     // Find best performing domain
     let best_domain = domain_performances
         .iter()
-        .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"))
+        .expect("Operation failed");
     println!(
         "   Best Performing Domain: {} ({:.3})",
         best_domain.0, best_domain.1
@@ -485,12 +485,12 @@ fn demonstrate_real_world_performance(coordinator: &mut AdvancedCoordinator) -> 
     // Find best and worst performing scenarios
     let best_scenario = performance_metrics
         .iter()
-        .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"))
+        .expect("Operation failed");
     let worst_scenario = performance_metrics
         .iter()
-        .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
-        .unwrap();
+        .min_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"))
+        .expect("Operation failed");
 
     println!(
         "   Best Performance: {} ({:.1} MB/s)",

@@ -242,7 +242,7 @@ fn hard_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
 fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
     let n = coeffs.len() as f64;
     let mut sorted_coeffs: Vec<f64> = coeffs.iter().map(|x| x.abs()).collect();
-    sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let mut min_risk = f64::INFINITY;
     let mut best_threshold = 0.0;
@@ -505,10 +505,12 @@ mod tests {
 
     #[test]
     fn test_soft_threshold() {
-        let mut coeffs = Array2::from_shape_vec((2, 2), vec![1.5, -0.5, 2.0, -2.5]).unwrap();
+        let mut coeffs =
+            Array2::from_shape_vec((2, 2), vec![1.5, -0.5, 2.0, -2.5]).expect("Operation failed");
         soft_threshold(&mut coeffs, 1.0);
 
-        let expected = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 1.0, -1.5]).unwrap();
+        let expected =
+            Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 1.0, -1.5]).expect("Operation failed");
 
         for (a, b) in coeffs.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);
@@ -517,10 +519,12 @@ mod tests {
 
     #[test]
     fn test_hard_threshold() {
-        let mut coeffs = Array2::from_shape_vec((2, 2), vec![1.5, -0.5, 2.0, -2.5]).unwrap();
+        let mut coeffs =
+            Array2::from_shape_vec((2, 2), vec![1.5, -0.5, 2.0, -2.5]).expect("Operation failed");
         hard_threshold(&mut coeffs, 1.0);
 
-        let expected = Array2::from_shape_vec((2, 2), vec![1.5, 0.0, 2.0, -2.5]).unwrap();
+        let expected =
+            Array2::from_shape_vec((2, 2), vec![1.5, 0.0, 2.0, -2.5]).expect("Operation failed");
 
         for (a, b) in coeffs.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-10);
@@ -534,7 +538,8 @@ mod tests {
         let detail_v = Array2::from_shape_simple_fn((10, 10), || rng.gen::<f64>() * 0.1);
         let detail_d = Array2::from_shape_simple_fn((10, 10), || rng.gen::<f64>() * 0.1);
 
-        let sigma = estimate_noise_std_from_subbands(&detail_h, &detail_v, &detail_d).unwrap();
+        let sigma = estimate_noise_std_from_subbands(&detail_h, &detail_v, &detail_d)
+            .expect("Operation failed");
         assert!(sigma > 0.0);
         assert!(sigma < 1.0); // Should be reasonable for the test data
     }

@@ -28,7 +28,7 @@ use crate::tensor_ops::{array_ops, conv_ops, dot_ops, math_ops, shape};
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[4, 2], g);
 ///    let b: ag::Tensor<f32> = ag::tensor_ops::zeros(&[2, 3], g);
 ///    let c = matmul(a, b);
-///    assert_eq!(c.eval(g).unwrap().shape(), &[4, 3]);
+///    assert_eq!(c.eval(g).expect("Operation failed").shape(), &[4, 3]);
 /// });
 /// ```
 ///
@@ -75,7 +75,7 @@ where
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[3, 4, 5], g);
 ///    let b: ag::Tensor<f32> = ag::tensor_ops::zeros(&[4, 3, 2], g);
 ///    let c = tensordot(a, b, &[1, 0], &[0, 1]);
-///    assert_eq!(c.eval(g).unwrap().shape(), &[5, 2]);
+///    assert_eq!(c.eval(g).expect("Operation failed").shape(), &[5, 2]);
 /// });
 /// ```
 //
@@ -133,7 +133,7 @@ where
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[2, 3, 2, 4], g);
 ///    let b: ag::Tensor<f32> = ag::tensor_ops::zeros(&[2, 3, 2, 3], g);
 ///    let c = batch_matmul_t(a, b, true, false);
-///    assert_eq!(c.eval(g).unwrap().shape(), &[2, 3, 4, 3]);
+///    assert_eq!(c.eval(g).expect("Operation failed").shape(), &[2, 3, 4, 3]);
 /// });
 /// ```
 ///
@@ -176,7 +176,7 @@ where
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::ones((&[2, 3, 4, 2]), g);
 ///    let b: ag::Tensor<f32> = ag::tensor_ops::ones((&[2, 3, 2, 3]), g);
 ///    let c = batch_matmul(a, b);
-///    assert_eq!(c.eval(g).unwrap().shape(), &[2, 3, 4, 3]);
+///    assert_eq!(c.eval(g).expect("Operation failed").shape(), &[2, 3, 4, 3]);
 /// });
 /// ```
 ///
@@ -214,7 +214,7 @@ where
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = ag::tensor_ops::zeros(&[1, 2, 3, 4, 5], g);
 ///    let b = transpose(a, &[4, 2, 3, 0, 1]);
-///    assert_eq!(b.eval(g).unwrap().shape(), &[5, 3, 4, 1, 2]);
+///    assert_eq!(b.eval(g).expect("Operation failed").shape(), &[5, 3, 4, 1, 2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -297,7 +297,7 @@ where
 ///
 /// ag::run(|g| {
 ///    let identity: ag::Tensor<'_, f64> = eye(3, g);
-///    let result = identity.eval(g).unwrap();
+///    let result = identity.eval(g).expect("Operation failed");
 ///    assert_eq!(result.shape(), &[3, 3]);
 ///    assert_eq!(result[[0, 0]], 1.0);
 ///    assert_eq!(result[[0, 1]], 0.0);
@@ -320,7 +320,7 @@ pub fn eye<F: Float>(size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
 /// ag::run(|g| {
 ///    let v = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
 ///    let d = diag(v);
-///    let result = d.eval(g).unwrap();
+///    let result = d.eval(g).expect("Operation failed");
 ///    assert_eq!(result.shape(), &[3, 3]);
 ///    assert_eq!(result[[0, 0]], 1.0);
 ///    assert_eq!(result[[1, 1]], 2.0);
@@ -352,8 +352,8 @@ where
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
 ///    let (q, r) = qr(a);
 ///    // Q should be orthogonal and R should be upper triangular
-///    assert_eq!(q.eval(g).unwrap().shape(), &[2, 2]);
-///    assert_eq!(r.eval(g).unwrap().shape(), &[2, 2]);
+///    assert_eq!(q.eval(g).expect("Operation failed").shape(), &[2, 2]);
+///    assert_eq!(r.eval(g).expect("Operation failed").shape(), &[2, 2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -378,9 +378,9 @@ where
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
 ///    let (u, s, vt) = svd(a);
 ///    // U and V^T should be orthogonal, S should be diagonal
-///    assert_eq!(u.eval(g).unwrap().shape(), &[2, 2]);
-///    assert_eq!(s.eval(g).unwrap().shape(), &[2]);
-///    assert_eq!(vt.eval(g).unwrap().shape(), &[2, 2]);
+///    assert_eq!(u.eval(g).expect("Operation failed").shape(), &[2, 2]);
+///    assert_eq!(s.eval(g).expect("Operation failed").shape(), &[2]);
+///    assert_eq!(vt.eval(g).expect("Operation failed").shape(), &[2, 2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -406,7 +406,7 @@ where
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
 ///    let w = eigenvalues(a);
-///    assert_eq!(w.eval(g).unwrap().shape(), &[2]);
+///    assert_eq!(w.eval(g).expect("Operation failed").shape(), &[2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -439,8 +439,8 @@ where
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
 ///    let (w, v) = eigen(a);
-///    assert_eq!(w.eval(g).unwrap().shape(), &[2]);
-///    assert_eq!(v.eval(g).unwrap().shape(), &[2, 2]);
+///    assert_eq!(w.eval(g).expect("Operation failed").shape(), &[2]);
+///    assert_eq!(v.eval(g).expect("Operation failed").shape(), &[2, 2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -499,7 +499,7 @@ where
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
 ///    let inv_a = matrix_inverse(a);
-///    assert_eq!(inv_a.eval(g).unwrap().shape(), &[2, 2]);
+///    assert_eq!(inv_a.eval(g).expect("Operation failed").shape(), &[2, 2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -527,7 +527,7 @@ where
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
 ///    let b = ag::tensor_ops::convert_to_tensor(array![1., 2.], g);
 ///    let x = solve(a, b);
-///    assert_eq!(x.eval(g).unwrap().shape(), &[2]);
+///    assert_eq!(x.eval(g).expect("Operation failed").shape(), &[2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -560,7 +560,7 @@ where
 ///    let a = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.], [5., 6.]], g);
 ///    let b = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
 ///    let x = lstsq(a, b);
-///    assert_eq!(x.eval(g).unwrap().shape(), &[2]);
+///    assert_eq!(x.eval(g).expect("Operation failed").shape(), &[2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -730,7 +730,7 @@ where
 ///    let c: ag::Tensor<f32> = ag::tensor_ops::zeros(&[3, 2], g);
 ///    let d = concat(&[a, b, c], 0);
 ///
-///    assert_eq!(d.eval(g).unwrap().shape(), &[9, 2]);
+///    assert_eq!(d.eval(g).expect("Operation failed").shape(), &[9, 2]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -770,9 +770,9 @@ where
 ///    let e1 = &evaluated[1];
 ///    let e2 = &evaluated[2];
 ///
-///    assert_eq!(e0.as_ref().unwrap().shape(), &[3, 2, 5]);
-///    assert_eq!(e1.as_ref().unwrap().shape(), &[3, 3, 5]);
-///    assert_eq!(e2.as_ref().unwrap().shape(), &[3, 2, 5]);
+///    assert_eq!(e0.as_ref().expect("Operation failed").shape(), &[3, 2, 5]);
+///    assert_eq!(e1.as_ref().expect("Operation failed").shape(), &[3, 3, 5]);
+///    assert_eq!(e2.as_ref().expect("Operation failed").shape(), &[3, 2, 5]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -958,12 +958,15 @@ mod tests {
             // Test matrix multiplication
             let c = matmul(a, b);
             let expected = array![[19.0_f32, 22.0], [43.0, 50.0]];
-            assert_eq!(c.eval(g).unwrap(), expected.into_dyn());
+            assert_eq!(c.eval(g).expect("Operation failed"), expected.into_dyn());
 
             // Test transpose
             let a_t = transpose(a, &[1, 0]);
             let expected_t = array![[1.0_f32, 3.0], [2.0, 4.0]];
-            assert_eq!(a_t.eval(g).unwrap(), expected_t.into_dyn());
+            assert_eq!(
+                a_t.eval(g).expect("Operation failed"),
+                expected_t.into_dyn()
+            );
         });
     }
 
@@ -975,18 +978,21 @@ mod tests {
             // Test trace
             let tr = trace(a);
             assert_eq!(
-                tr.eval(g).unwrap(),
+                tr.eval(g).expect("Operation failed"),
                 scirs2_core::ndarray::arr0(5.0).into_dyn()
             );
 
             // Test diagonal extraction
             let diag_vals = extract_diag(a);
             let expected_diag = array![1.0_f32, 4.0];
-            assert_eq!(diag_vals.eval(g).unwrap(), expected_diag.into_dyn());
+            assert_eq!(
+                diag_vals.eval(g).expect("Operation failed"),
+                expected_diag.into_dyn()
+            );
 
             // Test determinant (with tolerance for floating point precision)
             let det = determinant(a);
-            let det_result = det.eval(g).unwrap();
+            let det_result = det.eval(g).expect("Operation failed");
             let det_value = det_result[scirs2_core::ndarray::IxDyn(&[])];
             assert!((det_value - (-2.0)).abs() < 1e-5);
         });
@@ -997,7 +1003,7 @@ mod tests {
         crate::run(|g| {
             // Test identity matrix
             let identity = eye(3, g);
-            let result = identity.eval(g).unwrap();
+            let result = identity.eval(g).expect("Operation failed");
             assert_eq!(result.shape(), &[3, 3]);
             assert_eq!(result[[0, 0]], 1.0);
             assert_eq!(result[[0, 1]], 0.0);
@@ -1006,7 +1012,7 @@ mod tests {
             // Test diagonal matrix creation
             let v = convert_to_tensor(array![1.0_f32, 2.0, 3.0], g);
             let d = diag(v);
-            let result = d.eval(g).unwrap();
+            let result = d.eval(g).expect("Operation failed");
             assert_eq!(result.shape(), &[3, 3]);
             assert_eq!(result[[0, 0]], 1.0);
             assert_eq!(result[[1, 1]], 2.0);
@@ -1024,16 +1030,19 @@ mod tests {
             // Test concatenation
             let concat_result = concat(&[a, b], 0);
             let expected_concat = array![[1.0_f32, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
-            assert_eq!(concat_result.eval(g).unwrap(), expected_concat.into_dyn());
+            assert_eq!(
+                concat_result.eval(g).expect("Operation failed"),
+                expected_concat.into_dyn()
+            );
 
             // Test splitting
             let to_split = convert_to_tensor(array![[1.0_f32, 2.0, 3.0, 4.0, 5.0, 6.0]], g);
             let splits = split(to_split, &[2, 2, 2], 1);
             assert_eq!(splits.len(), 3);
 
-            let eval1 = splits[0].eval(g).unwrap();
-            let eval2 = splits[1].eval(g).unwrap();
-            let eval3 = splits[2].eval(g).unwrap();
+            let eval1 = splits[0].eval(g).expect("Operation failed");
+            let eval2 = splits[1].eval(g).expect("Operation failed");
+            let eval3 = splits[2].eval(g).expect("Operation failed");
 
             assert_eq!(eval1.shape(), &[1, 2]);
             assert_eq!(eval2.shape(), &[1, 2]);
@@ -1049,7 +1058,10 @@ mod tests {
             // Test scalar multiplication
             let scaled = scalar_mul(a, 2.0);
             let expected = array![2.0_f32, 4.0, 6.0];
-            assert_eq!(scaled.eval(g).unwrap(), expected.into_dyn());
+            assert_eq!(
+                scaled.eval(g).expect("Operation failed"),
+                expected.into_dyn()
+            );
         });
     }
 
@@ -1067,11 +1079,17 @@ mod tests {
 
             // Test batch matrix multiplication
             let batch_result = batch_matmul(a, b);
-            assert_eq!(batch_result.eval(g).unwrap().shape(), &[2, 2, 2]);
+            assert_eq!(
+                batch_result.eval(g).expect("Operation failed").shape(),
+                &[2, 2, 2]
+            );
 
             // The result should be the same as input since we're multiplying by identity
             let expected = array![[[1.0_f32, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]];
-            assert_eq!(batch_result.eval(g).unwrap(), expected.into_dyn());
+            assert_eq!(
+                batch_result.eval(g).expect("Operation failed"),
+                expected.into_dyn()
+            );
         });
     }
 }

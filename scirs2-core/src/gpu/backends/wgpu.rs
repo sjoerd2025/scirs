@@ -698,27 +698,27 @@ fn extract_var_name(line: &str) -> Option<&str> {
 
 impl GpuKernelImpl for WebGPUKernelHandle {
     fn set_buffer(&self, name: &str, buffer: &Arc<dyn GpuBufferImpl>) {
-        let mut params = self.params.lock().unwrap();
+        let mut params = self.params.lock().expect("Operation failed");
         params.insert(name.to_string(), KernelParam::Buffer(Arc::clone(buffer)));
     }
 
     fn set_u32(&self, name: &str, value: u32) {
-        let mut params = self.params.lock().unwrap();
+        let mut params = self.params.lock().expect("Operation failed");
         params.insert(name.to_string(), KernelParam::U32(value));
     }
 
     fn set_i32(&self, name: &str, value: i32) {
-        let mut params = self.params.lock().unwrap();
+        let mut params = self.params.lock().expect("Operation failed");
         params.insert(name.to_string(), KernelParam::I32(value));
     }
 
     fn set_f32(&self, name: &str, value: f32) {
-        let mut params = self.params.lock().unwrap();
+        let mut params = self.params.lock().expect("Operation failed");
         params.insert(name.to_string(), KernelParam::F32(value));
     }
 
     fn set_f64(&self, name: &str, value: f64) {
-        let mut params = self.params.lock().unwrap();
+        let mut params = self.params.lock().expect("Operation failed");
         params.insert(name.to_string(), KernelParam::F64(value));
     }
 
@@ -729,9 +729,9 @@ impl GpuKernelImpl for WebGPUKernelHandle {
         #[cfg(feature = "wgpu_backend")]
         {
             // Real WebGPU compute dispatch
-            let shaders = self.compiled_shaders.lock().unwrap();
+            let shaders = self.compiled_shaders.lock().expect("Operation failed");
             if let Some(shader) = shaders.get(&self.shader_name) {
-                let params = self.params.lock().unwrap();
+                let params = self.params.lock().expect("Operation failed");
 
                 // Create command encoder
                 let mut encoder =

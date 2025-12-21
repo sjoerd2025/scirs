@@ -938,8 +938,8 @@ impl AdaptiveSimdOptimizer {
 
     /// Get performance statistics
     pub fn get_performance_statistics(&self) -> PerformanceStatistics {
-        let cache = self.performance_cache.lock().unwrap();
-        let _benchmarks = self.benchmark_results.lock().unwrap();
+        let cache = self.performance_cache.lock().expect("Operation failed");
+        let _benchmarks = self.benchmark_results.lock().expect("Operation failed");
 
         let total_operations = cache.len();
         let avg_speedup = if !cache.is_empty() {
@@ -1048,24 +1048,27 @@ mod tests {
 
     #[test]
     fn test_hardware_detection() {
-        let capabilities = AdaptiveSimdOptimizer::detect_hardware_capabilities().unwrap();
+        let capabilities =
+            AdaptiveSimdOptimizer::detect_hardware_capabilities().expect("Operation failed");
         assert!(!capabilities.simd_instructions.is_empty());
         assert!(capabilities.vector_width > 0);
     }
 
     #[test]
     fn testdata_characteristics_analysis() {
-        let optimizer = AdaptiveSimdOptimizer::default().unwrap();
+        let optimizer = AdaptiveSimdOptimizer::default().expect("Operation failed");
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 
-        let characteristics = optimizer.analyzedata_characteristics(&data.view()).unwrap();
+        let characteristics = optimizer
+            .analyzedata_characteristics(&data.view())
+            .expect("Operation failed");
         assert_eq!(characteristics.size, 5);
         assert_eq!(characteristics.elementsize, 8); // f64
     }
 
     #[test]
     fn test_strategy_generation() {
-        let optimizer = AdaptiveSimdOptimizer::default().unwrap();
+        let optimizer = AdaptiveSimdOptimizer::default().expect("Operation failed");
         let characteristics = DataCharacteristics {
             size: 1000,
             elementsize: 8,
@@ -1086,13 +1089,13 @@ mod tests {
 
         let strategies = optimizer
             .generate_candidate_strategies(&characteristics)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!strategies.is_empty());
     }
 
     #[test]
     fn test_strategy_selection() {
-        let optimizer = AdaptiveSimdOptimizer::default().unwrap();
+        let optimizer = AdaptiveSimdOptimizer::default().expect("Operation failed");
         let characteristics = DataCharacteristics {
             size: 1000,
             elementsize: 8,
@@ -1113,14 +1116,14 @@ mod tests {
 
         let strategy = optimizer
             .select_optimal_strategy("test_op", &characteristics)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!strategy.name.is_empty());
         assert!(strategy.expected_speedup > 0.0);
     }
 
     #[test]
     fn test_performance_metrics_calculation() {
-        let optimizer = AdaptiveSimdOptimizer::default().unwrap();
+        let optimizer = AdaptiveSimdOptimizer::default().expect("Operation failed");
         let characteristics = DataCharacteristics {
             size: 1000,
             elementsize: 8,
@@ -1152,7 +1155,7 @@ mod tests {
 
         let metrics = optimizer
             .calculate_performance_metrics(&characteristics, &strategy, Duration::from_millis(10))
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(metrics.throughput > 0.0);
         assert!(metrics.simd_efficiency >= 0.0 && metrics.simd_efficiency <= 1.0);

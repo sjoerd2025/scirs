@@ -380,29 +380,53 @@ mod tests {
     fn test_basic_counts() {
         let stats = TextStatistics::new();
 
-        assert_eq!(stats.word_count(SIMPLE_TEXT).unwrap(), 12);
-        assert_eq!(stats.sentence_count(SIMPLE_TEXT).unwrap(), 3);
-        assert!(stats.syllable_count(SIMPLE_TEXT).unwrap() >= 12);
+        assert_eq!(stats.word_count(SIMPLE_TEXT).expect("Operation failed"), 12);
+        assert_eq!(
+            stats.sentence_count(SIMPLE_TEXT).expect("Operation failed"),
+            3
+        );
+        assert!(stats.syllable_count(SIMPLE_TEXT).expect("Operation failed") >= 12);
 
-        assert_eq!(stats.word_count(COMPLEX_TEXT).unwrap(), 24);
-        assert_eq!(stats.sentence_count(COMPLEX_TEXT).unwrap(), 2);
-        assert!(stats.complex_word_count(COMPLEX_TEXT).unwrap() >= 8);
+        assert_eq!(
+            stats.word_count(COMPLEX_TEXT).expect("Operation failed"),
+            24
+        );
+        assert_eq!(
+            stats
+                .sentence_count(COMPLEX_TEXT)
+                .expect("Operation failed"),
+            2
+        );
+        assert!(
+            stats
+                .complex_word_count(COMPLEX_TEXT)
+                .expect("Operation failed")
+                >= 8
+        );
     }
 
     #[test]
     fn test_averages() {
         let stats = TextStatistics::new();
 
-        let simple_avg_sentence_len = stats.avg_sentence_length(SIMPLE_TEXT).unwrap();
+        let simple_avg_sentence_len = stats
+            .avg_sentence_length(SIMPLE_TEXT)
+            .expect("Operation failed");
         assert!(simple_avg_sentence_len > 3.8 && simple_avg_sentence_len < 4.2);
 
-        let complex_avg_sentence_len = stats.avg_sentence_length(COMPLEX_TEXT).unwrap();
+        let complex_avg_sentence_len = stats
+            .avg_sentence_length(COMPLEX_TEXT)
+            .expect("Operation failed");
         assert!(complex_avg_sentence_len > 10.0 && complex_avg_sentence_len < 13.0);
 
-        let simple_avg_word_len = stats.avg_word_length(SIMPLE_TEXT).unwrap();
+        let simple_avg_word_len = stats
+            .avg_word_length(SIMPLE_TEXT)
+            .expect("Operation failed");
         assert!(simple_avg_word_len > 2.0 && simple_avg_word_len < 5.0);
 
-        let complex_avg_word_len = stats.avg_word_length(COMPLEX_TEXT).unwrap();
+        let complex_avg_word_len = stats
+            .avg_word_length(COMPLEX_TEXT)
+            .expect("Operation failed");
         assert!(complex_avg_word_len > 7.0);
     }
 
@@ -411,18 +435,26 @@ mod tests {
         let stats = TextStatistics::new();
 
         // Simple text should be easier to read
-        let simple_flesch = stats.flesch_reading_ease(SIMPLE_TEXT).unwrap();
-        let complex_flesch = stats.flesch_reading_ease(COMPLEX_TEXT).unwrap();
+        let simple_flesch = stats
+            .flesch_reading_ease(SIMPLE_TEXT)
+            .expect("Operation failed");
+        let complex_flesch = stats
+            .flesch_reading_ease(COMPLEX_TEXT)
+            .expect("Operation failed");
         assert!(simple_flesch > complex_flesch);
 
         // Grade level should be higher for complex text
-        let simple_grade = stats.flesch_kincaid_grade_level(SIMPLE_TEXT).unwrap();
-        let complex_grade = stats.flesch_kincaid_grade_level(COMPLEX_TEXT).unwrap();
+        let simple_grade = stats
+            .flesch_kincaid_grade_level(SIMPLE_TEXT)
+            .expect("Operation failed");
+        let complex_grade = stats
+            .flesch_kincaid_grade_level(COMPLEX_TEXT)
+            .expect("Operation failed");
         assert!(simple_grade < complex_grade);
 
         // Gunning fog should be higher for complex text
-        let simple_fog = stats.gunning_fog(SIMPLE_TEXT).unwrap();
-        let complex_fog = stats.gunning_fog(COMPLEX_TEXT).unwrap();
+        let simple_fog = stats.gunning_fog(SIMPLE_TEXT).expect("Operation failed");
+        let complex_fog = stats.gunning_fog(COMPLEX_TEXT).expect("Operation failed");
         assert!(simple_fog < complex_fog);
     }
 
@@ -430,8 +462,12 @@ mod tests {
     fn test_lexical_diversity() {
         let stats = TextStatistics::new();
 
-        let simple_diversity = stats.lexical_diversity(SIMPLE_TEXT).unwrap();
-        let complex_diversity = stats.lexical_diversity(COMPLEX_TEXT).unwrap();
+        let simple_diversity = stats
+            .lexical_diversity(SIMPLE_TEXT)
+            .expect("Operation failed");
+        let complex_diversity = stats
+            .lexical_diversity(COMPLEX_TEXT)
+            .expect("Operation failed");
 
         // Complex text should have higher lexical diversity (commented out as it depends on specific tokenization)
         // assert!(simple_diversity < complex_diversity);
@@ -439,7 +475,9 @@ mod tests {
 
         // Type-token ratio should be the same as lexical diversity
         assert_eq!(
-            stats.type_token_ratio(SIMPLE_TEXT).unwrap(),
+            stats
+                .type_token_ratio(SIMPLE_TEXT)
+                .expect("Operation failed"),
             simple_diversity
         );
     }
@@ -448,7 +486,9 @@ mod tests {
     fn test_get_all_metrics() {
         let stats = TextStatistics::new();
 
-        let metrics = stats.get_all_metrics(COMPLEX_TEXT).unwrap();
+        let metrics = stats
+            .get_all_metrics(COMPLEX_TEXT)
+            .expect("Operation failed");
 
         assert!(metrics.flesch_reading_ease < 50.0);
         assert!(metrics.flesch_kincaid_grade_level > 12.0);
@@ -465,7 +505,9 @@ mod tests {
         assert!(stats.smog_index(SIMPLE_TEXT).is_err());
 
         // But get_all_metrics should still work, with smog_index being None
-        let metrics = stats.get_all_metrics(SIMPLE_TEXT).unwrap();
+        let metrics = stats
+            .get_all_metrics(SIMPLE_TEXT)
+            .expect("Operation failed");
         assert!(metrics.smog_index.is_none());
     }
 
@@ -473,9 +515,9 @@ mod tests {
     fn test_emptytext() {
         let stats = TextStatistics::new();
 
-        assert_eq!(stats.word_count("").unwrap(), 0);
-        assert_eq!(stats.sentence_count("").unwrap(), 0);
-        assert_eq!(stats.syllable_count("").unwrap(), 0);
+        assert_eq!(stats.word_count("").expect("Operation failed"), 0);
+        assert_eq!(stats.sentence_count("").expect("Operation failed"), 0);
+        assert_eq!(stats.syllable_count("").expect("Operation failed"), 0);
 
         // These should error with empty text
         assert!(stats.avg_sentence_length("").is_err());

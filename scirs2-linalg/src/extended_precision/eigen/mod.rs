@@ -29,11 +29,11 @@
 //! ];
 //!
 //! // Compute eigenvalues only
-//! let eigvals = extended_eigvalsh::<_, f64>(&a.view(), None, None).unwrap();
+//! let eigvals = extended_eigvalsh::<_, f64>(&a.view(), None, None).expect("Operation failed");
 //! println!("Eigenvalues: {:?}", eigvals);
 //!
 //! // Compute both eigenvalues and eigenvectors
-//! let (eigvals, eigvecs) = extended_eigh::<_, f64>(&a.view(), None, None).unwrap();
+//! let (eigvals, eigvecs) = extended_eigh::<_, f64>(&a.view(), None, None).expect("Operation failed");
 //! println!("Eigenvalues: {:?}", eigvals);
 //! println!("Eigenvectors shape: {:?}", eigvecs.shape());
 //! ```

@@ -78,10 +78,10 @@ impl<F: Float + std::fmt::Display> TreeNode<F> {
 ///     0.0, 1.0, 0.1, 2.0,
 ///     2.0, 3.0, 0.2, 2.0,
 ///     4.0, 5.0, 0.3, 4.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let labels = Some(vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]);
 /// let config = DendrogramConfig::default();
-/// let plot = create_dendrogramplot(linkage.view(), labels.as_deref(), config).unwrap();
+/// let plot = create_dendrogramplot(linkage.view(), labels.as_deref(), config).expect("Operation failed");
 /// ```
 pub fn create_dendrogramplot<F: Float + FromPrimitive + PartialOrd + Debug + std::fmt::Display>(
     linkage_matrix: ArrayView2<F>,
@@ -147,8 +147,8 @@ fn build_dendrogram_tree<F: Float + FromPrimitive + Debug + std::fmt::Display>(
 
     // Create internal nodes from linkage matrix
     for (i, row) in linkage_matrix.outer_iter().enumerate() {
-        let left_id = row[0].to_usize().unwrap();
-        let right_id = row[1].to_usize().unwrap();
+        let left_id = row[0].to_usize().expect("Operation failed");
+        let right_id = row[1].to_usize().expect("Operation failed");
         let distance = row[2];
 
         let left_node = nodes.remove(&left_id).ok_or_else(|| {
@@ -193,7 +193,7 @@ fn calculate_positions_recursive<F: Float + FromPrimitive + std::fmt::Display>(
     orientation: DendrogramOrientation,
 ) -> F {
     if node.is_leaf() {
-        let x_pos = F::from(*leaf_counter).unwrap();
+        let x_pos = F::from(*leaf_counter).expect("Failed to convert to float");
         let y_pos = F::zero();
 
         let pos = match orientation {
@@ -207,13 +207,13 @@ fn calculate_positions_recursive<F: Float + FromPrimitive + std::fmt::Display>(
         *leaf_counter += 1;
         x_pos
     } else {
-        let left = node.left.as_ref().unwrap();
-        let right = node.right.as_ref().unwrap();
+        let left = node.left.as_ref().expect("Operation failed");
+        let right = node.right.as_ref().expect("Operation failed");
 
         let left_x = calculate_positions_recursive(left, positions, leaf_counter, orientation);
         let right_x = calculate_positions_recursive(right, positions, leaf_counter, orientation);
 
-        let x_pos = (left_x + right_x) / F::from(2).unwrap();
+        let x_pos = (left_x + right_x) / F::from(2).expect("Failed to convert constant to float");
         let y_pos = node.height;
 
         let pos = match orientation {
@@ -249,12 +249,12 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd + std::fmt::D
     branches: &mut Vec<Branch<F>>,
 ) -> Result<()> {
     if !node.is_leaf() {
-        let left = node.left.as_ref().unwrap();
-        let right = node.right.as_ref().unwrap();
+        let left = node.left.as_ref().expect("Operation failed");
+        let right = node.right.as_ref().expect("Operation failed");
 
-        let node_pos = positions.get(&node.id).unwrap();
-        let left_pos = positions.get(&left.id).unwrap();
-        let right_pos = positions.get(&right.id).unwrap();
+        let node_pos = positions.get(&node.id).expect("Operation failed");
+        let left_pos = positions.get(&left.id).expect("Operation failed");
+        let right_pos = positions.get(&right.id).expect("Operation failed");
 
         // Determine color based on threshold
         let color = if node.height > threshold {
@@ -275,7 +275,8 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd + std::fmt::D
         branches.push(horizontal_branch);
 
         // Create vertical line from horizontal line to node
-        let mid_x = (left_pos.0 + right_pos.0) / F::from(2).unwrap();
+        let mid_x =
+            (left_pos.0 + right_pos.0) / F::from(2).expect("Failed to convert constant to float");
         let vertical_start = (mid_x, left_pos.1.max(right_pos.1));
         let vertical_branch = Branch {
             start: vertical_start,
@@ -316,7 +317,10 @@ fn create_leaves<F: Float + FromPrimitive>(
             };
 
             let leaf = Leaf {
-                position: (pos.0.to_f64().unwrap(), pos.1.to_f64().unwrap()),
+                position: (
+                    pos.0.to_f64().expect("Operation failed"),
+                    pos.1.to_f64().expect("Operation failed"),
+                ),
                 label,
                 color: "#333333".to_string(),
                 data_index: i,
@@ -381,8 +385,8 @@ fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (
 
     // Consider leaf bounds
     for leaf in leaves {
-        let leaf_x = F::from(leaf.position.0).unwrap();
-        let leaf_y = F::from(leaf.position.1).unwrap();
+        let leaf_x = F::from(leaf.position.0).expect("Failed to convert to float");
+        let leaf_y = F::from(leaf.position.1).expect("Failed to convert to float");
         min_x = min_x.min(leaf_x);
         max_x = max_x.max(leaf_x);
         min_y = min_y.min(leaf_y);
@@ -436,9 +440,9 @@ mod tests {
             (3, 4),
             vec![0.0, 1.0, 0.1, 2.0, 2.0, 3.0, 0.2, 2.0, 4.0, 5.0, 0.3, 4.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let tree = build_dendrogram_tree(linkage.view()).unwrap();
+        let tree = build_dendrogram_tree(linkage.view()).expect("Operation failed");
         assert!(!tree.is_leaf());
         assert_eq!(tree.leaf_count, 4);
     }
@@ -449,20 +453,23 @@ mod tests {
             (3, 4),
             vec![0.0, 1.0, 0.1, 2.0, 2.0, 3.0, 0.2, 2.0, 4.0, 5.0, 0.3, 4.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let threshold = calculate_auto_threshold(linkage.view(), Some(2)).unwrap();
+        let threshold =
+            calculate_auto_threshold(linkage.view(), Some(2)).expect("Operation failed");
         assert!((threshold - 0.2).abs() < 1e-10);
     }
 
     #[test]
     fn test_create_dendrogramplot() {
-        let linkage = Array2::from_shape_vec((1, 4), vec![0.0, 1.0, 0.1, 2.0]).unwrap();
+        let linkage =
+            Array2::from_shape_vec((1, 4), vec![0.0, 1.0, 0.1, 2.0]).expect("Operation failed");
 
         let labels = Some(vec!["A".to_string(), "B".to_string()]);
         let config = DendrogramConfig::default();
 
-        let plot = create_dendrogramplot(linkage.view(), labels.as_deref(), config).unwrap();
+        let plot = create_dendrogramplot(linkage.view(), labels.as_deref(), config)
+            .expect("Operation failed");
         assert!(!plot.branches.is_empty());
         assert_eq!(plot.leaves.len(), 2);
     }

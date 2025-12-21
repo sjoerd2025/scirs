@@ -379,7 +379,7 @@ impl AdaptiveLearningSession {
         }
 
         // Sort by score and return the best candidate
-        candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         candidates.first().map(|(topic_, _)| topic_.clone())
     }
 
@@ -477,7 +477,7 @@ impl AdaptiveLearningSession {
     }
 
     fn provide_personalized_feedback(&self, topic: &str, score: f64, timetaken: Duration) {
-        let node = self.knowledge_graph.get(topic).unwrap();
+        let node = self.knowledge_graph.get(topic).expect("Operation failed");
         let expected_time = node.estimated_time;
 
         println!("\n📊 Performance Analysis for {}:", node.name);
@@ -693,7 +693,7 @@ fn display_learning_dashboard(profile: &LearningProfile) {
     // Display skill progression
     println!("\n📈 Skill Levels:");
     let mut skills: Vec<_> = profile.skill_levels.iter().collect();
-    skills.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+    skills.sort_by(|a, b| b.1.partial_cmp(a.1).expect("Operation failed"));
 
     for (skill, level) in skills.iter().take(5) {
         let bar_length = 20;
@@ -1446,10 +1446,13 @@ fn run_comprehensive_assessment(
     // Topic breakdown
     println!("📈 Topic Performance:");
     let mut sorted_topics: Vec<_> = topic_scores.iter().collect();
-    sorted_topics.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+    sorted_topics.sort_by(|a, b| b.1.partial_cmp(a.1).expect("Operation failed"));
 
     for (topic, &score) in sorted_topics {
-        let node = session.knowledge_graph.get(topic).unwrap();
+        let node = session
+            .knowledge_graph
+            .get(topic)
+            .expect("Operation failed");
         println!("  {:<30} {:.1}%", node.name, score * 100.0);
         session.profile.skill_levels.insert(topic.clone(), score);
     }
@@ -1458,7 +1461,10 @@ fn run_comprehensive_assessment(
     println!("\n💡 Recommendations:");
     for (topic, &score) in &topic_scores {
         if score < 0.7 {
-            let node = session.knowledge_graph.get(topic).unwrap();
+            let node = session
+                .knowledge_graph
+                .get(topic)
+                .expect("Operation failed");
             println!(
                 "  📚 Review: {} (current: {:.1}%)",
                 node.name,

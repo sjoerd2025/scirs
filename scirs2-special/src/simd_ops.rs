@@ -28,14 +28,14 @@ pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let end = start + chunksize;
 
         // Load SIMD vectors
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
 
         // Compute gamma using Stirling's approximation for SIMD
         // This is a simplified version - in practice you'd want more precision
         let results = simd_gamma_approx_f32(x_slice);
 
         // Store results
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements with scalar gamma
@@ -62,13 +62,13 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
         let end = start + chunksize;
 
         // Load SIMD vectors
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
 
         // Compute gamma using SIMD operations
         let results = simd_gamma_approx_f64(x_slice);
 
         // Store results
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements with scalar gamma
@@ -598,13 +598,13 @@ pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let end = start + chunksize;
 
         // Load SIMD vectors
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
 
         // Compute log using SIMD approximation
         let results = simd_log_approx_f32(x_slice);
 
         // Store results
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements
@@ -629,10 +629,10 @@ pub fn sin_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunksize;
         let end = start + chunksize;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
         let results = simd_sin_approx_f32(x_slice);
 
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     for i in (chunks * chunksize)..len {
@@ -656,10 +656,10 @@ pub fn cos_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunksize;
         let end = start + chunksize;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
         let results = simd_cos_approx_f32(x_slice);
 
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     for i in (chunks * chunksize)..len {
@@ -683,10 +683,10 @@ pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunksize;
         let end = start + chunksize;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
         let results = simd_j1_approx_f32(x_slice);
 
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements with scalar j1
@@ -711,10 +711,10 @@ pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunksize;
         let end = start + chunksize;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
         let results = simd_erfc_approx_f32(x_slice);
 
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements
@@ -739,10 +739,10 @@ pub fn digamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunksize;
         let end = start + chunksize;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
         let results = simd_digamma_approx_f32(x_slice);
 
-        output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+        output.as_slice_mut().expect("Operation failed")[start..end].copy_from_slice(&results);
     }
 
     // Handle remaining elements
@@ -910,7 +910,7 @@ pub fn multi_function_simd_f32(
     for i in 0..chunks {
         let start = i * chunksize;
         let end = start + chunksize;
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &input.as_slice().expect("Operation failed")[start..end];
 
         for (func_idx, &func_name) in functions.iter().enumerate() {
             let results = match func_name {
@@ -931,7 +931,8 @@ pub fn multi_function_simd_f32(
                 }
             };
 
-            outputs[func_idx].as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
+            outputs[func_idx].as_slice_mut().expect("Operation failed")[start..end]
+                .copy_from_slice(&results);
         }
     }
 
@@ -970,7 +971,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_gamma_f32_simd() {
         let input = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
-        let result = gamma_f32_simd(&input.view()).unwrap();
+        let result = gamma_f32_simd(&input.view()).expect("Operation failed");
 
         // Check against known values
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-5);
@@ -984,7 +985,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_log_f32_simd() {
         let input = Array1::from_vec(vec![1.0f32, 2.0, std::f32::consts::E, 10.0]);
-        let result = log_f32_simd(&input.view()).unwrap();
+        let result = log_f32_simd(&input.view()).expect("Operation failed");
 
         assert_relative_eq!(result[0], 0.0, epsilon = 1e-5); // ln(1) = 0
         assert_relative_eq!(result[1], 2.0f32.ln(), epsilon = 1e-5);
@@ -1001,12 +1002,12 @@ mod tests {
             std::f32::consts::PI,
         ]);
 
-        let sin_result = sin_f32_simd(&input.view()).unwrap();
+        let sin_result = sin_f32_simd(&input.view()).expect("Operation failed");
         assert_relative_eq!(sin_result[0], 0.0, epsilon = 1e-5);
         assert_relative_eq!(sin_result[1], 1.0, epsilon = 1e-5);
         assert_relative_eq!(sin_result[2], 0.0, epsilon = 1e-4);
 
-        let cos_result = cos_f32_simd(&input.view()).unwrap();
+        let cos_result = cos_f32_simd(&input.view()).expect("Operation failed");
         assert_relative_eq!(cos_result[0], 1.0, epsilon = 1e-5);
         assert_relative_eq!(cos_result[1], 0.0, epsilon = 1e-4);
         assert_relative_eq!(cos_result[2], -1.0, epsilon = 1e-5);
@@ -1016,7 +1017,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_j1_f32_simd() {
         let input = Array1::from_vec(vec![0.0f32, 1.0, 2.0, 3.0]);
-        let result = j1_f32_simd(&input.view()).unwrap();
+        let result = j1_f32_simd(&input.view()).expect("Operation failed");
 
         // J1(0) = 0
         assert_relative_eq!(result[0], 0.0, epsilon = 1e-5);
@@ -1031,7 +1032,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_erfc_f32_simd() {
         let input = Array1::from_vec(vec![0.0f32, 1.0, 2.0, -1.0]);
-        let result = erfc_f32_simd(&input.view()).unwrap();
+        let result = erfc_f32_simd(&input.view()).expect("Operation failed");
 
         // erfc(0) = 1
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-4);
@@ -1047,7 +1048,7 @@ mod tests {
     fn test_multi_function_simd() {
         let input = Array1::from_vec(vec![1.0f32, 2.0, 3.0]);
         let functions = vec!["gamma", "log", "sin"];
-        let results = multi_function_simd_f32(&input.view(), &functions).unwrap();
+        let results = multi_function_simd_f32(&input.view(), &functions).expect("Operation failed");
 
         assert_eq!(results.len(), 3); // Three functions
         assert_eq!(results[0].len(), 3); // Three input values
@@ -1068,7 +1069,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_digamma_f32_simd() {
         let input = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 0.5]);
-        let result = digamma_f32_simd(&input.view()).unwrap();
+        let result = digamma_f32_simd(&input.view()).expect("Operation failed");
 
         // All results should be finite
         for &val in result.iter() {
@@ -1084,7 +1085,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_gamma_f64_simd() {
         let input = Array1::from_vec(vec![1.0f64, 2.0, 3.0, 4.0, 5.0]);
-        let result = gamma_f64_simd(&input.view()).unwrap();
+        let result = gamma_f64_simd(&input.view()).expect("Operation failed");
 
         // Check against known values
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-10);
@@ -1098,7 +1099,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_exp_f32_simd() {
         let input = Array1::from_vec(vec![0.0f32, 1.0, 2.0, 3.0]);
-        let result = exp_f32_simd(&input.view()).unwrap();
+        let result = exp_f32_simd(&input.view()).expect("Operation failed");
 
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-6);
         assert_relative_eq!(result[1], std::f32::consts::E, epsilon = 1e-6);
@@ -1110,7 +1111,7 @@ mod tests {
     #[cfg(feature = "simd")]
     fn test_j0_f32_simd() {
         let input = Array1::from_vec(vec![0.0f32, 1.0, 2.0, 3.0]);
-        let result = j0_f32_simd(&input.view()).unwrap();
+        let result = j0_f32_simd(&input.view()).expect("Operation failed");
 
         // J0(0) = 1
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-6);
@@ -1141,7 +1142,7 @@ mod tests {
     #[cfg(feature = "parallel")]
     fn test_gamma_f64_parallel() {
         let input = Array1::from_vec(vec![1.0f64, 2.0, 3.0, 4.0, 5.0]);
-        let result = gamma_f64_parallel(&input.view()).unwrap();
+        let result = gamma_f64_parallel(&input.view()).expect("Operation failed");
 
         // Check against known values
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-10);
@@ -1155,7 +1156,7 @@ mod tests {
     #[cfg(feature = "parallel")]
     fn test_j0_f64_parallel() {
         let input = Array1::from_vec(vec![0.0f64, 1.0, 2.0, 3.0]);
-        let result = j0_f64_parallel(&input.view()).unwrap();
+        let result = j0_f64_parallel(&input.view()).expect("Operation failed");
 
         // J0(0) = 1
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-10);
@@ -1171,7 +1172,7 @@ mod tests {
     #[cfg(all(feature = "simd", feature = "parallel"))]
     fn test_gamma_f32_simd_parallel() {
         let input = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
-        let result = gamma_f32_simd_parallel(&input.view()).unwrap();
+        let result = gamma_f32_simd_parallel(&input.view()).expect("Operation failed");
 
         // Check against known values (less precision for f32)
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-5);
@@ -1184,7 +1185,7 @@ mod tests {
     #[test]
     fn test_adaptive_gamma_processing() {
         let input = Array1::from_vec(vec![1.0f64, 2.0, 3.0, 4.0, 5.0]);
-        let result = adaptive_gamma_processing(&input.view()).unwrap();
+        let result = adaptive_gamma_processing(&input.view()).expect("Operation failed");
 
         // Check against known values
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-10);
@@ -1199,11 +1200,11 @@ mod tests {
     fn test_parallel_threshold_behavior() {
         // Test small array (should use sequential)
         let smallinput = Array1::from_vec((0..10).map(|i| i as f64 + 1.0).collect());
-        let small_result = gamma_f64_parallel(&smallinput.view()).unwrap();
+        let small_result = gamma_f64_parallel(&smallinput.view()).expect("Operation failed");
 
         // Test large array (should use parallel)
         let largeinput = Array1::from_vec((0..2000).map(|i| (i as f64) * 0.001 + 1.0).collect());
-        let large_result = gamma_f64_parallel(&largeinput.view()).unwrap();
+        let large_result = gamma_f64_parallel(&largeinput.view()).expect("Operation failed");
 
         // Both should produce valid results
         assert!(small_result.len() == 10);

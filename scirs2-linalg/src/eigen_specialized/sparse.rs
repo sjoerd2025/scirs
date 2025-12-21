@@ -36,7 +36,7 @@ use crate::norm::vector_norm;
 /// use scirs2_linalg::largest_k_eigh;
 ///
 /// let a = array![[4.0_f64, 1.0, 0.0], [1.0, 3.0, 0.0], [0.0, 0.0, 2.0]];
-/// let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+/// let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Operation failed");
 ///
 /// // The two largest eigenvalues should be approximately 4.618 and 2.382
 /// assert!((eigenvalues[0] - 4.618).abs() < 1e-1);
@@ -147,7 +147,7 @@ where
 /// use scirs2_linalg::smallest_k_eigh;
 ///
 /// let a = array![[4.0_f64, 1.0, 0.0], [1.0, 3.0, 0.0], [0.0, 0.0, 2.0]];
-/// let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+/// let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Operation failed");
 ///
 /// // The two smallest eigenvalues should be approximately 2.0 and 2.382
 /// assert!((eigenvalues[0] - 2.0).abs() < 1e-1);
@@ -368,7 +368,7 @@ mod tests {
     #[test]
     fn test_largest_k_eigh_simple() {
         let a = array![[2.0_f64, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 3.0]];
-        let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+        let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Operation failed");
 
         // The two largest eigenvalues should be 3.0 and 2.0
         assert_relative_eq!(eigenvalues[0], 3.0, epsilon = 1e-8);
@@ -406,7 +406,7 @@ mod tests {
     #[test]
     fn test_smallest_k_eigh_simple() {
         let a = array![[2.0_f64, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 3.0]];
-        let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+        let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Operation failed");
 
         // The two smallest eigenvalues should be 1.0 and 2.0
         assert_relative_eq!(eigenvalues[0], 1.0, epsilon = 1e-8);
@@ -447,13 +447,13 @@ mod tests {
         let a = array![[3.0_f64, 1.0], [1.0, 3.0]];
 
         let (eigenvalue, eigenvector) =
-            power_iteration_with_convergence(&a.view(), 100, 1e-10).unwrap();
+            power_iteration_with_convergence(&a.view(), 100, 1e-10).expect("Operation failed");
 
         // Dominant eigenvalue should be 4.0
         assert_relative_eq!(eigenvalue, 4.0, epsilon = 1e-8);
 
         // Eigenvector should be normalized
-        let norm = vector_norm(&eigenvector.view(), 2).unwrap();
+        let norm = vector_norm(&eigenvector.view(), 2).expect("Operation failed");
         assert_relative_eq!(norm, 1.0, epsilon = 1e-10);
 
         // Eigenvector should be [1/sqrt(2), 1/sqrt(2)] or [-1/sqrt(2), -1/sqrt(2)]

@@ -1,6 +1,6 @@
 # Release Notes - SciRS2
 
-## 🚀 v0.1.0-rc.3 (2025-12-17) - Release Candidate 3
+## 🚀 v0.1.0-rc.4 (2025-12-22) - Release Candidate 4
 
 ### 🎯 Python Integration & Performance Enhancements
 
@@ -12,7 +12,7 @@ This is the third Release Candidate for SciRS2 v0.1.0, introducing Python bindin
 - ⚡ **SIMD Expansion (Phases 25-80)** - Transcendental functions & normalization library
 - 🚀 **BLAS/LAPACK Optimizations** - Platform-specific performance tuning
 - 🎮 **CUDA Improvements** - Enhanced GPU acceleration capabilities
-- ✅ **9,300+ Tests Passing** - Maintained production-ready quality
+- ✅ **11,400+ Tests Passing** - Maintained production-ready quality
 
 #### ✨ Major Features & Improvements:
 
@@ -68,7 +68,7 @@ This is the third Release Candidate for SciRS2 v0.1.0, introducing Python bindin
 - CUDA kernels: 2-5x improvement in specific workloads
 
 **Build & Test Status**:
-- ✅ All 9,300+ tests passing
+- ✅ All 11,407 tests passing (174 skipped)
 - ✅ Zero compilation warnings across entire workspace
 - ✅ Full clippy compliance maintained
 - ✅ Verified on macOS (M3), Linux (x86_64), and Linux + CUDA
@@ -82,10 +82,10 @@ This is the third Release Candidate for SciRS2 v0.1.0, introducing Python bindin
 #### 📦 Installation:
 ```toml
 [dependencies]
-scirs2-core = "0.1.0-rc.3"
-scirs2 = "0.1.0-rc.3"
+scirs2-core = "0.1.0-rc.4"
+scirs2 = "0.1.0-rc.4"
 # Python bindings
-scirs2-python = "0.1.0-rc.3"  # PyO3 integration
+scirs2-python = "0.1.0-rc.4"  # PyO3 integration
 ```
 
 #### 🎯 Migration from rc.2:
@@ -98,7 +98,7 @@ scirs2-python = "0.1.0-rc.3"  # PyO3 integration
 #### 📊 Release Statistics:
 - **Python Integration**: scirs2-python with complete PyO3 bindings
 - **SIMD Phases**: 25-80 completed (transcendental & normalization)
-- **Test Status**: 9,300+ tests passing
+- **Test Status**: 11,407 tests passing (174 skipped)
 - **Code Quality**: Zero warnings, full clippy compliance
 - **Platform Support**: macOS, Linux, Windows, Linux + CUDA verified
 
@@ -537,4 +537,4 @@ Dual-licensed under MIT and Apache 2.0.
 
 **Note**: This is a beta release. While core functionality is stable and well-tested, some features are still under development. Production use should be carefully evaluated based on your specific requirements.
 
-For detailed documentation, visit: https://docs.rs/scirs2/0.1.0-rc.3/
+For detailed documentation, visit: https://docs.rs/scirs2/0.1.0-rc.4/

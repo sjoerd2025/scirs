@@ -16,7 +16,7 @@
 //! // For scientific computing - use the prelude
 //! use scirs2_core::random::prelude::*;
 //! let mut rng = thread_rng();
-//! let sample = rng.sample(Normal::new(0.0, 1.0).unwrap());
+//! let sample = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
 //! ```
 //!
 //! ## Module Organization
@@ -290,7 +290,7 @@ where
         for _ in 0..size {
             data.push(distribution.sample(rng));
         }
-        Self::from_shape_vec(shape, data).unwrap()
+        Self::from_shape_vec(shape, data).expect("Operation failed")
     }
 }
 
@@ -329,19 +329,19 @@ pub mod convenience {
     /// Generate a uniform random number in [0, 1)
     pub fn uniform() -> f64 {
         let mut rng = thread_rng();
-        rng.sample(Uniform::new(0.0, 1.0).unwrap())
+        rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
     }
 
     /// Generate a standard normal random number (mean=0, std=1)
     pub fn normal() -> f64 {
         let mut rng = thread_rng();
-        rng.sample(Normal::new(0.0, 1.0).unwrap())
+        rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"))
     }
 
     /// Generate a random integer in the given range
     pub fn integer(min: i64, max: i64) -> i64 {
         let mut rng = thread_rng();
-        rng.sample(Uniform::new_inclusive(min, max).unwrap())
+        rng.sample(Uniform::new_inclusive(min, max).expect("Operation failed"))
     }
 
     /// Generate a random boolean
@@ -356,9 +356,9 @@ pub mod convenience {
         let shape = shape.into();
         let size = shape.size();
         let values: Vec<f64> = (0..size)
-            .map(|_| rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+            .map(|_| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")))
             .collect();
-        Array::from_shape_vec(shape, values).unwrap()
+        Array::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     /// Generate a random array with normal distribution
@@ -367,9 +367,9 @@ pub mod convenience {
         let shape = shape.into();
         let size = shape.size();
         let values: Vec<f64> = (0..size)
-            .map(|_| rng.sample(Normal::new(mean, std).unwrap()))
+            .map(|_| rng.sample(Normal::new(mean, std).expect("Operation failed")))
             .collect();
-        Array::from_shape_vec(shape, values).unwrap()
+        Array::from_shape_vec(shape, values).expect("Operation failed")
     }
 }
 
@@ -381,27 +381,27 @@ pub mod sampling {
 
     /// Sample uniformly from [0, 1)
     pub fn random_uniform01<R: rand::Rng>(rng: &mut Random<R>) -> f64 {
-        rng.sample(Uniform::new(0.0, 1.0).unwrap())
+        rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
     }
 
     /// Sample from a standard normal distribution (mean 0, std dev 1)
     pub fn random_standard_normal<R: rand::Rng>(rng: &mut Random<R>) -> f64 {
-        rng.sample(Normal::new(0.0, 1.0).unwrap())
+        rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"))
     }
 
     /// Sample from a normal distribution with given mean and standard deviation
     pub fn random_normal<R: rand::Rng>(rng: &mut Random<R>, mean: f64, stddev: f64) -> f64 {
-        rng.sample(Normal::new(mean, stddev).unwrap())
+        rng.sample(Normal::new(mean, stddev).expect("Operation failed"))
     }
 
     /// Sample from a log-normal distribution
     pub fn random_lognormal<R: rand::Rng>(rng: &mut Random<R>, mean: f64, stddev: f64) -> f64 {
-        rng.sample(LogNormal::new(mean, stddev).unwrap())
+        rng.sample(LogNormal::new(mean, stddev).expect("Operation failed"))
     }
 
     /// Sample from an exponential distribution
     pub fn random_exponential<R: rand::Rng>(rng: &mut Random<R>, lambda: f64) -> f64 {
-        rng.sample(Exp::new(lambda).unwrap())
+        rng.sample(Exp::new(lambda).expect("Operation failed"))
     }
 
     /// Generate an array of random integers in a range
@@ -414,7 +414,10 @@ pub mod sampling {
     where
         Sh: Into<IxDyn>,
     {
-        rng.sample_array(Uniform::new_inclusive(min, max).unwrap(), shape)
+        rng.sample_array(
+            Uniform::new_inclusive(min, max).expect("Operation failed"),
+            shape,
+        )
     }
 
     /// Generate an array of random floating-point values in a range
@@ -427,7 +430,7 @@ pub mod sampling {
     where
         Sh: Into<IxDyn>,
     {
-        rng.sample_array(Uniform::new(min, max).unwrap(), shape)
+        rng.sample_array(Uniform::new(min, max).expect("Operation failed"), shape)
     }
 
     /// Sample indices for bootstrapping (sampling with replacement)
@@ -436,7 +439,7 @@ pub mod sampling {
         data_size: usize,
         sample_size: usize,
     ) -> Vec<usize> {
-        let dist = Uniform::new(0, data_size).unwrap();
+        let dist = Uniform::new(0, data_size).expect("Operation failed");
         rng.sample_vec(dist, sample_size)
     }
 
@@ -545,7 +548,8 @@ pub mod importance_sampling {
                 } else {
                     initial_samples / 2
                 };
-                let normal_dist = Normal::new(proposal_mean, proposal_std).unwrap();
+                let normal_dist =
+                    Normal::new(proposal_mean, proposal_std).expect("Operation failed");
 
                 let mut round_sample_vec = Vec::new();
                 let mut weights = Vec::new();
@@ -659,7 +663,7 @@ impl<R: rand::Rng> Random<R> {
         min: T,
         max: T,
     ) -> T {
-        self.sample(rand_distr::Uniform::new(min, max).unwrap())
+        self.sample(rand_distr::Uniform::new(min, max).expect("Operation failed"))
     }
 
     /// Generate a random value within the given range (using range syntax)
@@ -674,7 +678,7 @@ impl<R: rand::Rng> Random<R> {
 
     /// Generate a random f64 value between 0.0 and 1.0
     pub fn random_f64(&mut self) -> f64 {
-        self.sample(rand_distr::Uniform::new(0.0, 1.0).unwrap())
+        self.sample(rand_distr::Uniform::new(0.0, 1.0).expect("Operation failed"))
     }
 
     /// Generate a random f64 value using the underlying RNG (convenience method)
@@ -685,14 +689,14 @@ impl<R: rand::Rng> Random<R> {
     /// Generate a random boolean value
     pub fn random_bool(&mut self) -> bool {
         use rand_distr::Distribution;
-        let dist = rand_distr::Bernoulli::new(0.5).unwrap();
+        let dist = rand_distr::Bernoulli::new(0.5).expect("Operation failed");
         dist.sample(&mut self.rng)
     }
 
     /// Generate a random boolean with the given probability of being true
     pub fn random_bool_with_chance(&mut self, prob: f64) -> bool {
         use rand_distr::Distribution;
-        let dist = rand_distr::Bernoulli::new(prob).unwrap();
+        let dist = rand_distr::Bernoulli::new(prob).expect("Operation failed");
         dist.sample(&mut self.rng)
     }
 
@@ -725,7 +729,7 @@ impl<R: rand::Rng> Random<R> {
         let shape = shape.into();
         let size = shape.size();
         let values = self.sample_vec(distribution, size);
-        crate::ndarray::Array::from_shape_vec(shape, values).unwrap()
+        crate::ndarray::Array::from_shape_vec(shape, values).expect("Operation failed")
     }
 }
 
@@ -828,7 +832,7 @@ impl DeterministicSequence {
         let shape = shape.into();
         let size = shape.size();
         let values = self.get_vec(size);
-        crate::ndarray::Array::from_shape_vec(shape, values).unwrap()
+        crate::ndarray::Array::from_shape_vec(shape, values).expect("Operation failed")
     }
 }
 

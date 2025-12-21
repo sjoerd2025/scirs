@@ -215,7 +215,7 @@ where
                 self.bounds.iter().map(|&(lb, _)| Some(lb)).collect(),
                 self.bounds.iter().map(|&(_, ub)| Some(ub)).collect(),
             )
-            .unwrap(),
+            .expect("Operation failed"),
         );
 
         let options = Options {

@@ -26,8 +26,8 @@ impl<F: Float> Default for MINRESOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             preconditioner: None,
         }
@@ -60,7 +60,7 @@ impl<F: Float> Default for MINRESOptions<F> {
 /// let identity = IdentityOperator::<f64>::new(3);
 /// let b = vec![1.0, 2.0, 3.0];
 /// let options = MINRESOptions::default();
-/// let result = minres(&identity, &b, options).unwrap();
+/// let result = minres(&identity, &b, options).expect("Operation failed");
 /// assert!(result.converged);
 /// ```
 #[allow(dead_code)]
@@ -141,7 +141,7 @@ where
     let mut dbar = F::sparse_zero();
     let mut epsln = F::sparse_zero();
     let mut phibar = beta1;
-    let mut cs = F::from(-1.0).unwrap();
+    let mut cs = F::from(-1.0).expect("Failed to convert constant to float");
     let mut sn = F::sparse_zero();
     let mut w = vec![F::sparse_zero(); n];
     let mut w2 = vec![F::sparse_zero(); n];
@@ -297,14 +297,14 @@ mod tests {
         let identity = IdentityOperator::<f64>::new(3);
         let b = vec![1.0, 2.0, 3.0];
         let options = MINRESOptions::default();
-        let result = minres(&identity, &b, options).unwrap();
+        let result = minres(&identity, &b, options).expect("Operation failed");
 
         println!("Identity test result: {:?}", result);
         println!("Expected x: {:?}", b);
         println!("Actual x: {:?}", result.x);
 
         // Verify solution
-        let ax = identity.matvec(&result.x).unwrap();
+        let ax = identity.matvec(&result.x).expect("Operation failed");
         println!("Ax = {:?}", ax);
         println!("b  = {:?}", b);
 
@@ -329,7 +329,7 @@ mod tests {
         let diag = DiagonalOperator::new(vec![2.0, -3.0, 4.0]); // Note: can have negative values
         let b = vec![2.0, -6.0, 12.0];
         let options = MINRESOptions::default();
-        let result = minres(&diag, &b, options).unwrap();
+        let result = minres(&diag, &b, options).expect("Operation failed");
 
         println!("Result: {:?}", result);
         println!("Solution x: {:?}", result.x);
@@ -338,7 +338,7 @@ mod tests {
         println!("Residual norm: {}", result.residual_norm);
 
         // Verify solution
-        let ax = diag.matvec(&result.x).unwrap();
+        let ax = diag.matvec(&result.x).expect("Operation failed");
         println!("Ax = {:?}", ax);
         println!("b  = {:?}", b);
 
@@ -361,16 +361,16 @@ mod tests {
         let data = vec![4.0, -1.0, -1.0, 2.0, -1.0, -1.0, 4.0];
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let op = matrix.as_linear_operator();
 
         let b = vec![1.0, 0.0, 1.0];
         let options = MINRESOptions::default();
-        let result = minres(op.as_ref(), &b, options).unwrap();
+        let result = minres(op.as_ref(), &b, options).expect("Operation failed");
 
         assert!(result.converged);
         // Verify solution by checking Ax = b
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         for (axi, bi) in ax.iter().zip(&b) {
             assert!((axi - bi).abs() < 1e-9);
         }
@@ -384,7 +384,7 @@ mod tests {
         let data = vec![4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0];
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let op = matrix.as_linear_operator();
 
         let b = vec![1.0, 2.0, 3.0];
@@ -397,11 +397,11 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minres(op.as_ref(), &b, options).unwrap();
+        let result = minres(op.as_ref(), &b, options).expect("Operation failed");
 
         assert!(result.converged);
         // Verify solution by checking Ax = b
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         for (axi, bi) in ax.iter().zip(&b) {
             assert!((axi - bi).abs() < 1e-9);
         }

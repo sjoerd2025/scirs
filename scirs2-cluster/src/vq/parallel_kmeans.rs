@@ -33,7 +33,7 @@ impl<F: Float + FromPrimitive> Default for ParallelKMeansOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 300,
-            tol: F::from(1e-4).unwrap(),
+            tol: F::from(1e-4).expect("Failed to convert constant to float"),
             random_seed: None,
             n_init: 10,
             init_method: KMeansInit::KMeansPlusPlus,
@@ -67,9 +67,9 @@ impl<F: Float + FromPrimitive> Default for ParallelKMeansOptions<F> {
 ///
 /// let data = Array2::from_shape_vec((1000, 2),
 ///     (0..2000).map(|i| i as f64 / 100.0).collect()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
-/// let (centroids, labels) = parallel_kmeans(data.view(), 5, None).unwrap();
+/// let (centroids, labels) = parallel_kmeans(data.view(), 5, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn parallel_kmeans<F>(
@@ -127,7 +127,10 @@ where
         }
     }
 
-    Ok((bestcentroids.unwrap(), best_labels.unwrap()))
+    Ok((
+        bestcentroids.expect("Operation failed"),
+        best_labels.expect("Operation failed"),
+    ))
 }
 
 /// Run a single parallel k-means clustering iteration
@@ -167,8 +170,8 @@ where
                 let (far_idx, _) = distances
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .unwrap();
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+                    .expect("Operation failed");
 
                 // Move this point to the empty cluster
                 finalcentroids
@@ -265,12 +268,12 @@ where
         .zip(labels.iter())
         .par_bridge()
         .for_each(|(sample, &label)| {
-            let mut sum = sums[label].lock().unwrap();
+            let mut sum = sums[label].lock().expect("Operation failed");
             for i in 0..n_features {
                 sum[i] = sum[i] + sample[i];
             }
 
-            let mut count = counts[label].lock().unwrap();
+            let mut count = counts[label].lock().expect("Operation failed");
             *count += 1;
         });
 
@@ -278,12 +281,12 @@ where
     let mut newcentroids = Array2::zeros((k, n_features));
 
     for i in 0..k {
-        let sum = sums[i].lock().unwrap();
-        let count = *counts[i].lock().unwrap();
+        let sum = sums[i].lock().expect("Operation failed");
+        let count = *counts[i].lock().expect("Operation failed");
 
         if count > 0 {
             for j in 0..n_features {
-                newcentroids[[i, j]] = sum[j] / F::from(count).unwrap();
+                newcentroids[[i, j]] = sum[j] / F::from(count).expect("Failed to convert to float");
             }
         }
     }
@@ -337,7 +340,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run parallel k-means
         let options = ParallelKMeansOptions {
@@ -346,7 +349,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (centroids, labels) = parallel_kmeans(data.view(), 2, Some(options)).unwrap();
+        let (centroids, labels) =
+            parallel_kmeans(data.view(), 2, Some(options)).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -378,7 +382,8 @@ mod tests {
             }
         }
 
-        let data = Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap();
+        let data =
+            Array2::from_shape_vec((n_samples, n_features), data_vec).expect("Operation failed");
 
         // Run parallel k-means
         let options = ParallelKMeansOptions {
@@ -389,7 +394,8 @@ mod tests {
         };
 
         let start_time = std::time::Instant::now();
-        let (centroids, labels) = parallel_kmeans(data.view(), 3, Some(options)).unwrap();
+        let (centroids, labels) =
+            parallel_kmeans(data.view(), 3, Some(options)).expect("Operation failed");
         let duration = start_time.elapsed();
 
         println!("Parallel K-means took: {duration:?}");

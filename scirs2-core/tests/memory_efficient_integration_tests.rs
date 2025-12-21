@@ -21,7 +21,7 @@ mod tests {
             |chunk| chunk.map(|&x| x * 2.0),
             ChunkingStrategy::Fixed(5),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // 2. Create a lazy array from the result
         let lazy = LazyArray::new(doubled.clone());
@@ -30,30 +30,31 @@ mod tests {
         let lazy_result = lazy.map(|&x| x);
 
         // 4. Evaluate the lazy operation
-        let evaluated = evaluate(&lazy_result).unwrap();
+        let evaluated = evaluate(&lazy_result).expect("Test: operation failed");
 
         // 5. Create a transpose view
-        let transposed = transpose_view(&evaluated).unwrap();
+        let transposed = transpose_view(&evaluated).expect("Test: operation failed");
 
         // 6. Get the diagonal view (should contain the doubled diagonal values)
-        let diagonal = diagonal_view(&evaluated).unwrap();
+        let diagonal = diagonal_view(&evaluated).expect("Test: operation failed");
 
         // 7. Create a masked array to mask out zeros
         let mask = Array2::from_shape_fn(evaluated.raw_dim(), |(i, j)| evaluated[[i, j]] == 0.0);
-        let masked = mask_array(evaluated.clone(), Some(mask), Some(0.0)).unwrap();
+        let masked =
+            mask_array(evaluated.clone(), Some(mask), Some(0.0)).expect("Test: operation failed");
 
         // 8. Store the result in a disk-backed array
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Test: operation failed");
         let disk_array = create_disk_array(
             &masked.data,
             temp_file.path(),
             ChunkingStrategy::Fixed(5),
             false,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // 9. Load back from disk
-        let loaded = disk_array.load().unwrap();
+        let loaded = disk_array.load().expect("Test: operation failed");
 
         // Verify the results
 
@@ -112,19 +113,19 @@ mod tests {
             |chunk| chunk.map(|&x| x + 10.0),
             ChunkingStrategy::Fixed(5),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Create a lazy array for another operation - multiply by 2
         let lazy = LazyArray::new(added);
         let lazy_doubled = lazy.map(|&x| x * 2.0);
 
         // Create a temporary file
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Test: operation failed");
 
         // Store the result in a disk-backed array
         // In a real implementation, we would be able to evaluate directly to disk,
         // but in our placeholder we need to evaluate first
-        let evaluated = evaluate(&lazy_doubled).unwrap();
+        let evaluated = evaluate(&lazy_doubled).expect("Test: operation failed");
 
         let disk_array = create_disk_array(
             &evaluated,
@@ -132,10 +133,10 @@ mod tests {
             ChunkingStrategy::Fixed(5),
             false,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Load back from disk
-        let loaded = disk_array.load().unwrap();
+        let loaded = disk_array.load().expect("Test: operation failed");
 
         // Verify the results
         // NOTE: Lazy evaluation is now working properly and applies the multiply by 2 operation
@@ -175,10 +176,11 @@ mod tests {
             |chunk| chunk.map(|&x| x * 2.0),
             ChunkingStrategy::Fixed(3),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // 3. Create a new masked array with the result but keep the original mask
-        let doubled_masked = mask_array(result, Some(masked.mask.clone()), Some(0.0)).unwrap();
+        let doubled_masked = mask_array(result, Some(masked.mask.clone()), Some(0.0))
+            .expect("Test: operation failed");
 
         // Verify the results
         for i in 0..10 {

@@ -26,7 +26,7 @@ use std::f64::consts::PI;
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::specialized::bohman;
-/// let window = bohman(10, true).unwrap();
+/// let window = bohman(10, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// ```
 pub fn bohman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
@@ -160,7 +160,7 @@ pub fn planck_taper(m: usize, epsilon: f64, sym: bool) -> SignalResult<Vec<f64>>
 /// // Create a Hamming window using general cosine
 /// use scirs2_signal::window::families::specialized::general_cosine;
 /// let coeffs = vec![0.54, -0.46]; // Hamming coefficients
-/// let window = general_cosine(10, &coeffs, true).unwrap();
+/// let window = general_cosine(10, &coeffs, true).expect("Operation failed");
 /// ```
 pub fn general_cosine(m: usize, coeffs: &[f64], sym: bool) -> SignalResult<Vec<f64>> {
     if coeffs.is_empty() {
@@ -178,15 +178,14 @@ pub fn general_cosine(m: usize, coeffs: &[f64], sym: bool) -> SignalResult<Vec<f
     let mut w = Vec::with_capacity(n);
     for i in 0..n {
         let mut w_val = 0.0;
-        let angle = 2.0 * PI * i as f64 / (n - 1) as f64;
+        // scipy uses linspace(-π, π, M), so angle goes from -π to π
+        // This is equivalent to 2π(i/(n-1) - 0.5) = 2πi/(n-1) - π
+        let angle = 2.0 * PI * i as f64 / (n - 1) as f64 - PI;
 
+        // No sign alternation - coefficients contain the signs
+        // w[n] = sum_k a_k * cos(k * angle)
         for (k, &coeff) in coeffs.iter().enumerate() {
-            if k == 0 {
-                w_val += coeff;
-            } else {
-                let sign = if k % 2 == 1 { -1.0 } else { 1.0 };
-                w_val += sign * coeff * (k as f64 * angle).cos();
-            }
+            w_val += coeff * (k as f64 * angle).cos();
         }
         w.push(w_val);
     }
@@ -280,7 +279,10 @@ pub fn ultraspherical(m: usize, alpha: f64, beta: f64, sym: bool) -> SignalResul
     }
 
     // Normalize to peak of 1.0
-    if let Some(&max_val) = w.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
+    if let Some(&max_val) = w
+        .iter()
+        .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+    {
         if max_val > 0.0 {
             for val in &mut w {
                 *val /= max_val;
@@ -586,7 +588,7 @@ mod tests {
 
     #[test]
     fn test_bohman_window() {
-        let window = bohman(11, true).unwrap();
+        let window = bohman(11, true).expect("Operation failed");
         assert_eq!(window.len(), 11);
 
         // Should be symmetric
@@ -600,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_poisson_window() {
-        let window = poisson(10, 2.0, true).unwrap();
+        let window = poisson(10, 2.0, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Peak should be at center
@@ -608,15 +610,15 @@ mod tests {
         let peak_idx = window
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed")
             .0;
         assert_eq!(peak_idx, center);
     }
 
     #[test]
     fn test_planck_taper() {
-        let window = planck_taper(20, 0.1, true).unwrap();
+        let window = planck_taper(20, 0.1, true).expect("Operation failed");
         assert_eq!(window.len(), 20);
 
         // Should have middle region close to 1.0
@@ -625,15 +627,19 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Precision mismatch between general_cosine and direct hamming implementations
     fn test_general_cosine() {
         // Create Hamming window using general cosine
-        let coeffs = vec![0.54, -0.46];
-        let window = general_cosine(10, &coeffs, true).unwrap();
+        // Note: scipy's general_cosine uses angle from -π to π, so the coefficient
+        // should be positive [0.54, 0.46], not [0.54, -0.46]
+        // hamming = 0.54 - 0.46*cos(2πn/(N-1)) but with fac from -π to π,
+        // cos(-π) = -1, so we need w = 0.54 + 0.46*cos(fac) = 0.54 + 0.46*(-1) = 0.08 at endpoints
+        let coeffs = vec![0.54, 0.46];
+        let window = general_cosine(10, &coeffs, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Compare with direct Hamming calculation
-        let expected = crate::window::families::cosine::hamming(10, true).unwrap();
+        let expected =
+            crate::window::families::cosine::hamming(10, true).expect("Operation failed");
         for (a, b) in window.iter().zip(expected.iter()) {
             assert!((a - b).abs() < 1e-6); // More relaxed tolerance for floating-point comparison
         }
@@ -649,7 +655,7 @@ mod tests {
 
     #[test]
     fn test_dpss_approximation() {
-        let window = dpss_approximation(10, 3.0, true).unwrap();
+        let window = dpss_approximation(10, 3.0, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Should be roughly symmetric

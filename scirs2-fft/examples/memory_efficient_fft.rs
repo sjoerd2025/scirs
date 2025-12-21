@@ -52,7 +52,7 @@ fn basic_inplace_example() {
         FftMode::Forward,
         false,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("FFT result:");
     for (i, &val) in input_buffer.iter().enumerate() {
@@ -66,7 +66,7 @@ fn basic_inplace_example() {
     }
 
     // Verify result with standard FFT
-    let standard_fft = fft(&signal, None).unwrap();
+    let standard_fft = fft(&signal, None).expect("Operation failed");
 
     println!("\nVerifying against standard FFT:");
     let mut match_status = true;
@@ -92,7 +92,7 @@ fn basic_inplace_example() {
         FftMode::Inverse,
         true,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nRecovered signal after IFFT:");
     for (i, (&orig, &rec)) in signal.iter().zip(input_buffer.iter()).enumerate() {
@@ -128,7 +128,8 @@ fn large_array_processing() {
     println!("  Number of chunks: {num_chunks}");
 
     let start_time = Instant::now();
-    let _result = fft_streaming(&signal, None, FftMode::Forward, Some(chunksize)).unwrap();
+    let _result =
+        fft_streaming(&signal, None, FftMode::Forward, Some(chunksize)).expect("Operation failed");
     let streaming_time = start_time.elapsed();
 
     println!("Streaming FFT completed in {streaming_time:.2?}");
@@ -142,7 +143,7 @@ fn large_array_processing() {
         // Just compute FFT of each chunk
         fft(chunk, None)
     })
-    .unwrap();
+    .expect("Operation failed");
     let chunks_time = start_time.elapsed();
 
     println!("Chunk processing completed in {chunks_time:.2?}");
@@ -158,11 +159,12 @@ fn large_array_processing() {
 
     let subset = &signal[0..subsetsize];
     let start_time = Instant::now();
-    let standard_result = fft(subset, None).unwrap();
+    let standard_result = fft(subset, None).expect("Operation failed");
     let standard_time = start_time.elapsed();
 
     let start_time = Instant::now();
-    let streaming_subset = fft_streaming(subset, None, FftMode::Forward, None).unwrap();
+    let streaming_subset =
+        fft_streaming(subset, None, FftMode::Forward, None).expect("Operation failed");
     let streaming_subset_time = start_time.elapsed();
 
     println!("Standard FFT: {standard_time:.2?}");
@@ -200,7 +202,8 @@ fn memory_efficient_2d_fft() {
 
     // Perform efficient 2D FFT
     println!("\nPerforming memory-efficient 2D FFT...");
-    let spectrum_2d = fft2_efficient(&data.view(), None, FftMode::Forward, false).unwrap();
+    let spectrum_2d =
+        fft2_efficient(&data.view(), None, FftMode::Forward, false).expect("Operation failed");
 
     println!("2D FFT result (showing magnitudes):");
     for i in 0..spectrum_2d.shape()[0] {
@@ -212,7 +215,8 @@ fn memory_efficient_2d_fft() {
 
     // Verify against standard FFT
     println!("\nVerifying against standard 2D FFT...");
-    let standard_2d = scirs2_fft::fft2(&data.to_owned(), None, None, None).unwrap();
+    let standard_2d =
+        scirs2_fft::fft2(&data.to_owned(), None, None, None).expect("Operation failed");
 
     println!("Standard 2D FFT result (showing magnitudes):");
     for i in 0..standard_2d.shape()[0] {
@@ -252,7 +256,8 @@ fn memory_efficient_2d_fft() {
 
     // Show that we can recover the original array
     println!("\nRecovering original array with IFFT...");
-    let recovered = fft2_efficient(&spectrum_2d.view(), None, FftMode::Inverse, true).unwrap();
+    let recovered = fft2_efficient(&spectrum_2d.view(), None, FftMode::Inverse, true)
+        .expect("Operation failed");
 
     let mut max_recovery_error: f64 = 0.0;
     for i in 0..data.shape()[0] {
@@ -297,12 +302,13 @@ fn performance_comparison() {
 
         // Measure standard FFT
         let start = Instant::now();
-        let _ = fft(&signal, None).unwrap();
+        let _ = fft(&signal, None).expect("Operation failed");
         let standard_time = start.elapsed();
 
         // Measure streaming FFT
         let start = Instant::now();
-        let _ = fft_streaming(&signal, None, FftMode::Forward, Some(4096)).unwrap();
+        let _ =
+            fft_streaming(&signal, None, FftMode::Forward, Some(4096)).expect("Operation failed");
         let streaming_time = start.elapsed();
 
         // Measure in-place FFT
@@ -317,7 +323,7 @@ fn performance_comparison() {
             FftMode::Forward,
             false,
         )
-        .unwrap();
+        .expect("Operation failed");
         let inplace_time = start.elapsed();
 
         println!(

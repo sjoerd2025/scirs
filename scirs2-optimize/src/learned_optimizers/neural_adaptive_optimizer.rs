@@ -851,8 +851,11 @@ impl NeuralAdaptiveOptimizer {
     ) -> OptimizeResult<()> {
         // Analyze trajectory for adaptation patterns
         if trajectory.performance_values.len() > 2 {
-            let performance_trend =
-                trajectory.performance_values.last().unwrap() - trajectory.performance_values[0];
+            let performance_trend = trajectory
+                .performance_values
+                .last()
+                .expect("Operation failed")
+                - trajectory.performance_values[0];
 
             // Update strategy selector based on performance
             if performance_trend > 0.0 {
@@ -1909,7 +1912,7 @@ mod tests {
         let mut network = OptimizationNetwork::new(architecture);
         let input = Array1::from(vec![1.0; 10]);
 
-        let output = network.forward(&input.view()).unwrap();
+        let output = network.forward(&input.view()).expect("Operation failed");
 
         assert_eq!(output.len(), 4);
         assert!(output.iter().all(|&x| x.is_finite()));
@@ -1920,7 +1923,7 @@ mod tests {
         let mut layer = NeuralLayer::new(5, 3, ActivationType::ReLU);
         let input = Array1::from(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
-        let output = layer.forward(&input.view()).unwrap();
+        let output = layer.forward(&input.view()).expect("Operation failed");
 
         assert_eq!(output.len(), 3);
         assert!(output.iter().all(|&x| x.is_finite()));
@@ -1931,7 +1934,9 @@ mod tests {
         let selector = StrategySelector::new(16);
         let network_output = Array1::from(vec![0.5; 16]);
 
-        let strategy = selector.select(&network_output, 0.8).unwrap();
+        let strategy = selector
+            .select(&network_output, 0.8)
+            .expect("Operation failed");
 
         assert!(!strategy.id.is_empty());
         assert!(strategy.expected_performance >= 0.0);
@@ -1942,7 +1947,7 @@ mod tests {
         let predictor = PerformancePredictor::new(32);
         let features = Array1::from(vec![0.1; 32]);
 
-        let prediction = predictor.predict(&features).unwrap();
+        let prediction = predictor.predict(&features).expect("Operation failed");
 
         assert!(prediction >= -1.0 && prediction <= 1.0);
     }
@@ -1958,7 +1963,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = neural_adaptive_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result = neural_adaptive_optimize(objective, &initial.view(), Some(config))
+            .expect("Operation failed");
 
         assert!(result.fun >= 0.0);
         assert_eq!(result.x.len(), 2);

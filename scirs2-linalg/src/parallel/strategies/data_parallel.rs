@@ -448,7 +448,7 @@ mod tests {
         let matrix = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
         let vector = arr1(&[1.0, 2.0]);
         
-        let result = parallel_matvec(&matrix.view(), &vector.view(), &config).unwrap();
+        let result = parallel_matvec(&matrix.view(), &vector.view(), &config).expect("Operation failed");
         
         assert_eq!(result, arr1(&[5.0, 11.0]));
     }
@@ -459,7 +459,7 @@ mod tests {
         let x = arr1(&[1.0, 2.0, 3.0]);
         let y = arr1(&[4.0, 5.0, 6.0]);
         
-        let result = vector_ops::parallel_dot(&x.view(), &y.view(), &config).unwrap();
+        let result = vector_ops::parallel_dot(&x.view(), &y.view(), &config).expect("Operation failed");
         
         assert_eq!(result, 32.0); // 1*4 + 2*5 + 3*6 = 4 + 10 + 18 = 32
     }
@@ -469,7 +469,7 @@ mod tests {
         let config = WorkerConfig::default();
         let x = arr1(&[3.0, 4.0]);
         
-        let result = vector_ops::parallel_norm(&x.view(), &config).unwrap();
+        let result = vector_ops::parallel_norm(&x.view(), &config).expect("Operation failed");
         
         assert_eq!(result, 5.0); // sqrt(3^2 + 4^2) = sqrt(9 + 16) = sqrt(25) = 5
     }
@@ -481,7 +481,7 @@ mod tests {
         let y = arr1(&[3.0, 4.0]);
         let alpha = 2.0;
         
-        let result = vector_ops::parallel_axpy(alpha, &x.view(), &y.view(), &config).unwrap();
+        let result = vector_ops::parallel_axpy(alpha, &x.view(), &y.view(), &config).expect("Operation failed");
         
         assert_eq!(result, arr1(&[5.0, 8.0])); // 2*1 + 3 = 5, 2*2 + 4 = 8
     }
@@ -492,7 +492,7 @@ mod tests {
         let a = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
         let b = arr2(&[[5.0, 6.0], [7.0, 8.0]]);
         
-        let result = parallel_gemm(&a.view(), &b.view(), &config).unwrap();
+        let result = parallel_gemm(&a.view(), &b.view(), &config).expect("Operation failed");
         
         // [1 2] * [5 6] = [1*5+2*7  1*6+2*8] = [19 22]
         // [3 4]   [7 8]   [3*5+4*7  3*6+4*8]   [43 50]

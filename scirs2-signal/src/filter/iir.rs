@@ -48,10 +48,10 @@ use crate::lti::design::tf as design_tf;
 /// use scirs2_signal::filter::FilterType;
 ///
 /// // Design a 4th order lowpass Butterworth filter with cutoff at 0.2 times Nyquist
-/// let (b, a) = butter(4, 0.2, FilterType::Lowpass).unwrap();
+/// let (b, a) = butter(4, 0.2, FilterType::Lowpass).expect("Operation failed");
 ///
 /// // Using string parameter
-/// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
+/// let (b, a) = butter(4, 0.2, "lowpass").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn butter<T>(
@@ -142,7 +142,7 @@ where
 /// use scirs2_signal::filter::FilterType;
 ///
 /// // Design a 4th order bandpass Butterworth filter from 0.1 to 0.4 times Nyquist
-/// let (b, a) = butter_bandpass_bandstop(4, 0.1, 0.4, FilterType::Bandpass).unwrap();
+/// let (b, a) = butter_bandpass_bandstop(4, 0.1, 0.4, FilterType::Bandpass).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn butter_bandpass_bandstop(
@@ -261,7 +261,7 @@ pub fn butter_bandpass_bandstop(
 /// use scirs2_signal::filter::iir::cheby1;
 ///
 /// // Design a 4th order Chebyshev I lowpass filter with 0.5 dB ripple
-/// let (b, a) = cheby1(4, 0.5, 0.3, "lowpass").unwrap();
+/// let (b, a) = cheby1(4, 0.5, 0.3, "lowpass").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cheby1<T>(
@@ -359,7 +359,7 @@ where
 /// use scirs2_signal::filter::FilterType;
 ///
 /// // Design a 2nd order Chebyshev I bandpass filter (4 poles total)
-/// let (b, a) = cheby1_bandpass_bandstop(2, 0.5, 0.2, 0.6, FilterType::Bandpass).unwrap();
+/// let (b, a) = cheby1_bandpass_bandstop(2, 0.5, 0.2, 0.6, FilterType::Bandpass).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cheby1_bandpass_bandstop<T, U>(
@@ -499,7 +499,7 @@ where
 /// use scirs2_signal::filter::iir::cheby2;
 ///
 /// // Design a 4th order Chebyshev II lowpass filter with 40 dB stopband attenuation
-/// let (b, a) = cheby2(4, 40.0, 0.3, "lowpass").unwrap();
+/// let (b, a) = cheby2(4, 40.0, 0.3, "lowpass").expect("Operation failed");
 /// assert_eq!(b.len(), 5); // Order + 1 coefficients
 /// assert_eq!(a.len(), 5);
 /// ```
@@ -624,7 +624,7 @@ where
 /// use scirs2_signal::filter::iir::ellip;
 ///
 /// // Design a 4th order elliptic lowpass filter with 0.5 dB ripple and 40 dB stopband attenuation
-/// let (b, a) = ellip(4, 0.5, 40.0, 0.3, "lowpass").unwrap();
+/// let (b, a) = ellip(4, 0.5, 40.0, 0.3, "lowpass").expect("Operation failed");
 /// assert_eq!(b.len(), 5); // Order + 1 coefficients
 /// assert_eq!(a.len(), 5);
 /// ```
@@ -766,7 +766,7 @@ where
 /// use scirs2_signal::filter::iir::bessel;
 ///
 /// // Design a 4th order Bessel lowpass filter
-/// let (b, a) = bessel(4, 0.3, "lowpass").unwrap();
+/// let (b, a) = bessel(4, 0.3, "lowpass").expect("Operation failed");
 /// assert_eq!(b.len(), 5); // Order + 1 coefficients
 /// assert_eq!(a.len(), 5);
 /// ```
@@ -1004,5 +1004,5 @@ fn zpk_to_tf(
 
 #[allow(dead_code)]
 fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(num, den, None).unwrap()
+    TransferFunction::new(num, den, None).expect("Operation failed")
 }

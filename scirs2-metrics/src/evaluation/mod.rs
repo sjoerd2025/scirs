@@ -47,10 +47,10 @@ pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
 /// use scirs2_core::ndarray::{Array, Ix1};
 /// use scirs2_metrics::evaluation::train_test_split;
 ///
-/// let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape(Ix1(10)).unwrap();
+/// let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape(Ix1(10)).expect("Operation failed");
 /// let y = &x * 2.;
 ///
-/// let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();
+/// let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).expect("Operation failed");
 ///
 /// // Unpack the results
 /// let x_train = &train_arrays[0];
@@ -180,7 +180,8 @@ mod tests {
         let x = scirs2_core::ndarray::Array::linspace(0.0, 9.0, 10);
         let y = &x * 2.0;
 
-        let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();
+        let (train_arrays, test_arrays) =
+            train_test_split(&[&x, &y], 0.3, Some(42)).expect("Operation failed");
 
         // Check arrays dimension
         assert_eq!(train_arrays.len(), 2);

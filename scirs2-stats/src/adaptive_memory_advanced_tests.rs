@@ -12,7 +12,7 @@ fn test_adaptive_memory_manager_creation() {
 #[test]
 fn test_memory_allocation() {
     let manager = AdaptiveMemoryManager::<f64>::new();
-    let ptr = manager.allocate(1024).unwrap();
+    let ptr = manager.allocate(1024).expect("Test: operation failed");
     assert!(!ptr.is_null());
 
     let result = manager.deallocate(ptr, 1024);
@@ -30,10 +30,9 @@ fn test_performance_metrics() {
 }
 
 #[test]
-#[ignore = "timeout"]
 fn test_gc_trigger() {
     let manager = AdaptiveMemoryManager::<f64>::new();
-    let result = manager.trigger_gc().unwrap();
+    let result = manager.trigger_gc().expect("Test: operation failed");
 
     assert!(result.memory_reclaimed > 0);
     assert!(result.collection_time > Duration::from_nanos(0));

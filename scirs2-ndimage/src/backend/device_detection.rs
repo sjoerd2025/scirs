@@ -924,7 +924,7 @@ mod tests {
         // Test allocation tracking
         manager
             .allocate(super::super::Backend::Cpu, 0, 1000)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(
             manager.get_memory_usage(super::super::Backend::Cpu, 0),
             1000

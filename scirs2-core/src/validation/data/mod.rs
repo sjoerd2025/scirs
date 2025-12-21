@@ -163,7 +163,7 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test array validation
         let constraints = ArrayValidationConstraints::new()
@@ -172,17 +172,17 @@ mod tests {
             .check_numeric_quality();
 
         let config = ValidationConfig::default();
-        let validator = Validator::new(config.clone()).unwrap();
+        let validator = Validator::new(config.clone()).expect("Operation failed");
 
         let result = validator
             .validate_ndarray(&data, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.is_valid());
 
         // Test quality report generation
         let report = validator
             .generate_quality_report(&data, "test_data")
-            .unwrap();
+            .expect("Operation failed");
         assert!(report.quality_score > 0.9);
     }
 
@@ -192,10 +192,10 @@ mod tests {
         use crate::validation::data::*;
 
         let config = ValidationConfig::default();
-        let validator = Validator::new(config.clone()).unwrap();
+        let validator = Validator::new(config.clone()).expect("Operation failed");
 
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("Operation failed");
 
         // These should all work exactly as they did before refactoring
         let constraints = ArrayValidationConstraints::new()
@@ -204,7 +204,7 @@ mod tests {
 
         let result = validator
             .validate_ndarray(&data, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.is_valid());
     }
 
@@ -224,14 +224,16 @@ mod tests {
             );
 
         let config = ValidationConfig::default();
-        let validator = Validator::new(config).unwrap();
+        let validator = Validator::new(config).expect("Operation failed");
 
         let data = serde_json::json!({
             "name": "Test User",
             "age": 25
         });
 
-        let result = validator.validate(&data, &schema).unwrap();
+        let result = validator
+            .validate(&data, &schema)
+            .expect("Operation failed");
         assert!(result.is_valid());
     }
 

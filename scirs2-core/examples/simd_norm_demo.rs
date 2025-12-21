@@ -39,7 +39,7 @@ fn main() {
         println!("----------   ---------   ----------------------   ----------");
 
         for &size in &sizes {
-            let dist = Uniform::new(-100.0f32, 100.0).unwrap();
+            let dist = Uniform::new(-100.0f32, 100.0).expect("Operation failed");
             let data = Array1::from_shape_fn(size, |_| dist.sample(&mut rng));
 
             let start = Instant::now();
@@ -68,7 +68,7 @@ fn main() {
         println!("----------   ---------   ----------------------   ----------");
 
         for &size in &sizes {
-            let dist = Uniform::new(-100.0f32, 100.0).unwrap();
+            let dist = Uniform::new(-100.0f32, 100.0).expect("Operation failed");
             let data = Array1::from_shape_fn(size, |_| dist.sample(&mut rng));
 
             let start = Instant::now();
@@ -97,7 +97,7 @@ fn main() {
         println!("----------   ---------   ----------------------   ----------");
 
         for &size in &sizes {
-            let dist = Uniform::new(-100.0f32, 100.0).unwrap();
+            let dist = Uniform::new(-100.0f32, 100.0).expect("Operation failed");
             let data = Array1::from_shape_fn(size, |_| dist.sample(&mut rng));
 
             let start = Instant::now();
@@ -130,7 +130,7 @@ fn main() {
 
         for &(name, _) in &norm_types {
             // f32 benchmark
-            let dist_f32 = Uniform::new(-100.0f32, 100.0).unwrap();
+            let dist_f32 = Uniform::new(-100.0f32, 100.0).expect("Operation failed");
             let data_f32 = Array1::from_shape_fn(size, |_| dist_f32.sample(&mut rng));
 
             let start = Instant::now();
@@ -143,7 +143,7 @@ fn main() {
             let elapsed_f32 = start.elapsed();
 
             // f64 benchmark
-            let dist_f64 = Uniform::new(-100.0f64, 100.0).unwrap();
+            let dist_f64 = Uniform::new(-100.0f64, 100.0).expect("Operation failed");
             let data_f64 = Array1::from_shape_fn(size, |_| dist_f64.sample(&mut rng));
 
             let start = Instant::now();
@@ -196,7 +196,7 @@ fn main() {
         // Example 1: Vector normalization for machine learning
         println!("\nApplication 1: Vector Normalization (ML Feature Scaling)");
         let size = 10_000;
-        let dist = Uniform::new(0.0f32, 100.0).unwrap();
+        let dist = Uniform::new(0.0f32, 100.0).expect("Operation failed");
         let data = Array1::from_shape_fn(size, |_| dist.sample(&mut rng));
 
         let start = Instant::now();
@@ -216,7 +216,7 @@ fn main() {
         // Example 2: Distance computation (k-NN, clustering)
         println!("\nApplication 2: Distance Computation (k-NN/Clustering)");
         let dim = 1_000;
-        let dist_f64 = Uniform::new(0.0f64, 1.0).unwrap();
+        let dist_f64 = Uniform::new(0.0f64, 1.0).expect("Operation failed");
         let point1 = Array1::from_shape_fn(dim, |_| dist_f64.sample(&mut rng));
         let point2 = Array1::from_shape_fn(dim, |_| dist_f64.sample(&mut rng));
 
@@ -236,7 +236,7 @@ fn main() {
         // Example 3: Gradient clipping for neural networks
         println!("\nApplication 3: Gradient Clipping (Neural Network Training)");
         let n_params = 50_000;
-        let dist_grad = Uniform::new(-1.0f32, 1.0).unwrap();
+        let dist_grad = Uniform::new(-1.0f32, 1.0).expect("Operation failed");
         let gradients = Array1::from_shape_fn(n_params, |_| dist_grad.sample(&mut rng));
         let max_norm = 10.0f32;
 
@@ -286,7 +286,7 @@ fn main() {
         println!("----   ---------   ----------------------");
 
         for &size in &sizes_f32 {
-            let dist = Uniform::new(-1.0f32, 1.0).unwrap();
+            let dist = Uniform::new(-1.0f32, 1.0).expect("Operation failed");
             let data = Array1::from_shape_fn(size, |_| dist.sample(&mut rng));
 
             let start = Instant::now();

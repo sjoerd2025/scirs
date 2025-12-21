@@ -77,10 +77,10 @@ mod tests {
         assert_eq!(config.quantization.precision.weights, 8);
         assert_eq!(config.power.power_mode, PowerMode::Balanced);
     fn test_mobile_deployment_generator_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([42; 32]);
         let mut model: Sequential<f32> = Sequential::new();
-        let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
+        let dense = Dense::new(10, 1, Some("relu"), &mut rng).expect("Operation failed");
         model.add_layer(dense);
             devices: vec![IOSDevice::IPhone],
         let optimization = MobileOptimizationConfig::default();

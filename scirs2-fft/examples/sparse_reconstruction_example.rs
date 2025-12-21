@@ -37,7 +37,7 @@ fn main() {
         Some(SparseFFTAlgorithm::SpectralFlatness),
         Some(42), // Use seed for deterministic behavior
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!(
         "Found {} significant frequency components",
@@ -48,7 +48,7 @@ fn main() {
     println!(
         "\nBasic reconstruction: Converting sparse frequency components back to time domain..."
     );
-    let reconstructed = reconstruct_time_domain(&sparse_result, n).unwrap();
+    let reconstructed = reconstruct_time_domain(&sparse_result, n).expect("Operation failed");
 
     // Compute error between original clean signal and reconstruction
     let clean_error = compute_error(&clean_signal, &reconstructed);
@@ -62,7 +62,8 @@ fn main() {
     // 3. High-resolution reconstruction
     println!("\nHigh-resolution reconstruction: Enhancing frequency resolution 2x...");
     let target_length = n * 2;
-    let high_res = reconstruct_high_resolution(&sparse_result, n, target_length).unwrap();
+    let high_res =
+        reconstruct_high_resolution(&sparse_result, n, target_length).expect("Operation failed");
 
     println!("Original signal length: {n}");
     println!("High-resolution signal length: {}", high_res.len());
@@ -86,7 +87,8 @@ fn main() {
     };
 
     // Apply filter
-    let lowpass_signal = reconstruct_filtered(&sparse_result, n, lowpass).unwrap();
+    let lowpass_signal =
+        reconstruct_filtered(&sparse_result, n, lowpass).expect("Operation failed");
 
     // 5. Filtered reconstruction - demonstrating band-pass filter
     println!("\nFiltered reconstruction: Applying band-pass filter (30-70% of Nyquist)...");
@@ -108,7 +110,8 @@ fn main() {
     };
 
     // Apply filter
-    let bandpass_signal = reconstruct_filtered(&sparse_result, n, bandpass).unwrap();
+    let bandpass_signal =
+        reconstruct_filtered(&sparse_result, n, bandpass).expect("Operation failed");
 
     // 6. Visualization
     println!("\nCreating visualization...");

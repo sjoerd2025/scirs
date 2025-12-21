@@ -105,7 +105,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         // Create Hessian matrix (simplified - assumes flattened input)
         let mut hessian = Array::zeros(IxDyn(&[n, n]));
 
-        let step = F::from(self.config.step_size).unwrap();
+        let step = F::from(self.config.step_size).expect("Test: failed to convert to float");
 
         // Compute second partial derivatives using central differences
         for i in 0..n {
@@ -137,7 +137,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         let step = if self.config.adaptive_step {
             self.select_optimal_step_size(&function, input)?
         } else {
-            F::from(self.config.step_size).unwrap()
+            F::from(self.config.step_size).expect("Test: failed to convert to float")
         };
 
         let f_x = function(input)?;
@@ -169,7 +169,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        let step = F::from(self.config.step_size).unwrap();
+        let step = F::from(self.config.step_size).expect("Test: failed to convert to float");
         let f_x = function(input)?;
         let inputshape = input.shape();
         let mut gradient = Array::zeros(scirs2_core::ndarray::IxDyn(&inputshape));
@@ -198,7 +198,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        let step = F::from(self.config.step_size).unwrap();
+        let step = F::from(self.config.step_size).expect("Test: failed to convert to float");
         let inputshape = input.shape();
         let mut gradient = Array::zeros(scirs2_core::ndarray::IxDyn(&inputshape));
 
@@ -231,7 +231,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        let step = F::from(self.config.step_size).unwrap();
+        let step = F::from(self.config.step_size).expect("Test: failed to convert to float");
         let inputshape = input.shape();
         let mut gradient = Array::zeros(scirs2_core::ndarray::IxDyn(&inputshape));
 
@@ -241,9 +241,9 @@ impl<F: Float> FiniteDifferenceComputer<F> {
                 self.compute_five_point_stencil(&function, input, i, step)?;
 
             // ∂f/∂x_i ≈ (-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)) / (12h)
-            let _two = F::from(2.0).unwrap();
-            let eight = F::from(8.0).unwrap();
-            let twelve = F::from(12.0).unwrap();
+            let _two = F::from(2.0).expect("Test: failed to convert constant");
+            let eight = F::from(8.0).expect("Test: failed to convert constant");
+            let twelve = F::from(12.0).expect("Test: failed to convert constant");
 
             let partial_derivative =
                 (-f_plus_2h + eight * f_plus_h - eight * f_minus_h + f_minus_2h) / (twelve * step);
@@ -269,8 +269,9 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         // Implement adaptive step size selection using Richardson extrapolation
         // or other numerical analysis techniques
 
-        let mut best_step = F::from(self.config.step_size).unwrap();
-        let mut best_error = F::from(f64::INFINITY).unwrap();
+        let mut best_step =
+            F::from(self.config.step_size).expect("Test: failed to convert to float");
+        let mut best_error = F::from(f64::INFINITY).expect("Test: failed to convert to float");
 
         // Test several step sizes
         let step_candidates = [
@@ -281,7 +282,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
         for &step_size in &step_candidates {
             if step_size >= self.config.min_step && step_size <= self.config.max_step {
-                let step = F::from(step_size).unwrap();
+                let step = F::from(step_size).expect("Test: failed to convert to float");
                 let error = self.estimate_truncation_error(function, input, step)?;
 
                 if error < best_error {
@@ -305,7 +306,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         // Simplified error estimation - in practice would use Richardson extrapolation
-        Ok(F::from(1e-10).unwrap())
+        Ok(F::from(1e-10).expect("Test: failed to convert constant"))
     }
 
     #[allow(dead_code)]
@@ -334,7 +335,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
-        let diff = F::from(0.001).unwrap(); // Placeholder
+        let diff = F::from(0.001).expect("Test: failed to convert constant"); // Placeholder
         diff / step
     }
 
@@ -346,8 +347,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
-        let diff = F::from(0.002).unwrap(); // Placeholder
-        let two = F::from(2.0).unwrap();
+        let diff = F::from(0.002).expect("Test: failed to convert constant"); // Placeholder
+        let two = F::from(2.0).expect("Test: failed to convert constant");
         diff / (two * step)
     }
 
@@ -390,7 +391,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         let f_plus = function(&input_plus)?;
         let f_minus = function(&input_minus)?;
 
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Test: failed to convert constant");
         let second_derivative = (self.extract_scalar(&f_plus)?
             - two * self.extract_scalar(&f_x)?
             + self.extract_scalar(&f_minus)?)
@@ -424,7 +425,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         let f_mp = function(&input_mp)?;
         let f_mm = function(&input_mm)?;
 
-        let four = F::from(4.0).unwrap();
+        let four = F::from(4.0).expect("Test: failed to convert constant");
         let mixed_derivative = (self.extract_scalar(&f_pp)?
             - self.extract_scalar(&f_pm)?
             - self.extract_scalar(&f_mp)?
@@ -445,7 +446,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Test: failed to convert constant");
 
         let input_minus_2h = self.create_single_perturbation(input, index, -two * step)?;
         let input_minus_h = self.create_single_perturbation(input, index, -step)?;
@@ -492,7 +493,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     fn extract_scalar(&self, tensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
         // Extract a scalar value from the _tensor (assumes output is scalar)
         // Simplified implementation
-        Ok(F::from(1.0).unwrap())
+        Ok(F::from(1.0).expect("Test: failed to convert constant"))
     }
 }
 

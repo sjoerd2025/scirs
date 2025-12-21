@@ -590,7 +590,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
             // Copy the block into the result
             let start = offset;
             let end = (start + block.len()).min(self.metadata.num_elements);
-            let slice = &mut result.as_slice_mut().unwrap()[start..end];
+            let slice = &mut result.as_slice_mut().expect("Operation failed")[start..end];
             slice.copy_from_slice(&block[..(end - start)]);
 
             // Update the offset
@@ -760,7 +760,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
                 }
 
                 // Set the element in the result
-                let result_slice = result.as_slice_mut().unwrap();
+                let result_slice = result.as_slice_mut().expect("Operation failed");
                 result_slice[result_flat_idx] = block[block_offset];
             }
 
@@ -1060,7 +1060,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     ///
     /// `true` if the block is in the cache, `false` otherwise
     fn has_block(&self, blockidx: usize) -> bool {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("Operation failed");
 
         // Check if the block is in the cache
         if let Some(cached) = cache.get(&blockidx) {
@@ -1087,7 +1087,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     ///
     /// The block if it is in the cache, `None` otherwise
     fn get_block(&self, blockidx: usize) -> Option<Vec<A>> {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("Operation failed");
 
         // Check if the block is in the cache
         if let Some(mut cached) = cache.remove(&blockidx) {
@@ -1118,7 +1118,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     /// * `blockidx` - The index of the block to put
     /// * `block` - The block data
     fn put_block(&self, blockidx: usize, block: Vec<A>) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("Operation failed");
 
         // Check if we need to evict a block
         if cache.len() >= self.capacity && !cache.contains_key(&blockidx) {
@@ -1145,21 +1145,21 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     /// Clear the cache.
     #[allow(dead_code)]
     fn clear(&self) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("Operation failed");
         cache.clear();
     }
 
     /// Get the number of blocks in the cache.
     #[allow(dead_code)]
     fn len(&self) -> usize {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("Operation failed");
         cache.len()
     }
 
     /// Check if the cache is empty.
     #[allow(dead_code)]
     fn is_empty(&self) -> bool {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("Operation failed");
         cache.is_empty()
     }
 }
@@ -1173,7 +1173,7 @@ mod tests {
     #[test]
     fn test_compressed_memmapped_array_1d() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_compressed_1d.cmm");
 
         // Create test data
@@ -1188,7 +1188,9 @@ mod tests {
             .with_description("Test 1D array");
 
         // Create the compressed memory-mapped array
-        let cmm = builder.create_from_raw(&data, &[1000], &file_path).unwrap();
+        let cmm = builder
+            .create_from_raw(&data, &[1000], &file_path)
+            .expect("Operation failed");
 
         // Check metadata
         assert_eq!(cmm.shape(), &[1000]);
@@ -1197,12 +1199,12 @@ mod tests {
 
         // Test random access
         for i in 0..10 {
-            let val = cmm.get(&[i * 100]).unwrap();
+            let val = cmm.get(&[i * 100]).expect("Operation failed");
             assert_eq!(val, (i * 100) as f64);
         }
 
         // Test slicing
-        let slice = cmm.slice(&[(200, 300)]).unwrap();
+        let slice = cmm.slice(&[(200, 300)]).expect("Operation failed");
         assert_eq!(slice.shape(), &[100]);
         for i in 0..100 {
             assert_eq!(slice[crate::ndarray::IxDyn(&[i])], (i + 200) as f64);
@@ -1211,12 +1213,12 @@ mod tests {
         // Test block processing
         let sums = cmm
             .process_blocks(|block, _| block.iter().sum::<f64>())
-            .unwrap();
+            .expect("Test: operation failed");
 
         assert_eq!(sums.len(), 10); // 1000 elements / 100 block size = 10 blocks
 
         // Test loading the entire array
-        let array = cmm.readonly_array().unwrap();
+        let array = cmm.readonly_array().expect("Operation failed");
         assert_eq!(array.shape(), &[1000]);
         for i in 0..1000 {
             assert_eq!(array[crate::ndarray::IxDyn(&[i])], i as f64);
@@ -1226,7 +1228,7 @@ mod tests {
     #[test]
     fn test_compressed_memmapped_array_2d() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_compressed_2d.cmm");
 
         // Create test data - 10x10 matrix
@@ -1241,7 +1243,7 @@ mod tests {
             .with_description("Test 2D array");
 
         // Create the compressed memory-mapped array
-        let cmm = builder.create(&data, &file_path).unwrap();
+        let cmm = builder.create(&data, &file_path).expect("Operation failed");
 
         // Check metadata
         assert_eq!(cmm.shape(), &[10, 10]);
@@ -1251,13 +1253,13 @@ mod tests {
         // Test random access
         for i in 0..10 {
             for j in 0..10 {
-                let val = cmm.get(&[i, j]).unwrap();
+                let val = cmm.get(&[i, j]).expect("Operation failed");
                 assert_eq!(val, (i * 10 + j) as f64);
             }
         }
 
         // Test slicing
-        let slice = cmm.slice(&[(2, 5), (3, 7)]).unwrap();
+        let slice = cmm.slice(&[(2, 5), (3, 7)]).expect("Operation failed");
         assert_eq!(slice.shape(), &[3, 4]);
         for i in 0..3 {
             for j in 0..4 {
@@ -1269,7 +1271,7 @@ mod tests {
         }
 
         // Test loading the entire array
-        let array = cmm.readonly_array().unwrap();
+        let array = cmm.readonly_array().expect("Operation failed");
         assert_eq!(array.shape(), &[10, 10]);
         for i in 0..10 {
             for j in 0..10 {
@@ -1281,7 +1283,7 @@ mod tests {
     #[test]
     fn test_different_compression_algorithms() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
 
         // Create test data
         let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
@@ -1302,10 +1304,12 @@ mod tests {
                 .with_cache_size(4);
 
             // Create the compressed memory-mapped array
-            let cmm = builder.create_from_raw(&data, &[1000], &file_path).unwrap();
+            let cmm = builder
+                .create_from_raw(&data, &[1000], &file_path)
+                .expect("Operation failed");
 
             // Test loading the entire array
-            let array = cmm.readonly_array().unwrap();
+            let array = cmm.readonly_array().expect("Operation failed");
             for i in 0..1000 {
                 assert_eq!(array[crate::ndarray::IxDyn(&[i])], i as f64);
             }
@@ -1315,7 +1319,7 @@ mod tests {
     #[test]
     fn test_block_cache() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_cache.cmm");
 
         // Create test data
@@ -1325,12 +1329,12 @@ mod tests {
         let small_cache = CompressedMemMapBuilder::new()
             .with_block_size(100)
             .with_cache_size(2) // Very small cache
-            .create_from_raw(&data, &[1000], &file_path).unwrap();
+            .create_from_raw(&data, &[1000], &file_path).expect("Operation failed");
 
         // Test cache behavior
         // First, load all blocks to fill the cache
         for i in 0..10 {
-            small_cache.preload_block(i).unwrap();
+            small_cache.preload_block(i).expect("Operation failed");
         }
 
         // Check the cache size - should be 2 (capacity)
@@ -1338,7 +1342,7 @@ mod tests {
 
         // Now access a block that's not in the cache
         // This should evict the least recently used block
-        let val = small_cache.get(&[0]).unwrap(); // Block 0
+        let val = small_cache.get(&[0]).expect("Operation failed"); // Block 0
         assert_eq!(val, 0.0);
 
         // Check that the block is now in the cache
@@ -1348,7 +1352,7 @@ mod tests {
     #[test]
     fn test_block_preloading() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_preload.cmm");
 
         // Create test data
@@ -1358,16 +1362,16 @@ mod tests {
         let cmm = CompressedMemMapBuilder::new()
             .with_block_size(100)
             .create_from_raw(&data, &[1000], &file_path)
-            .unwrap();
+            .expect("Test: operation failed");
 
         // Preload a block
-        cmm.preload_block(5).unwrap();
+        cmm.preload_block(5).expect("Operation failed");
 
         // Check that the block is now in the cache
         assert!(cmm.block_cache.has_block(5));
 
         // Access an element from the preloaded block
-        let val = cmm.get(&[550]).unwrap(); // In block 5
+        let val = cmm.get(&[550]).expect("Operation failed"); // In block 5
         assert_eq!(val, 550.0);
     }
 }

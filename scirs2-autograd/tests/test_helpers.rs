@@ -50,7 +50,10 @@ where
 
     let size: usize = shape.iter().product();
     let data: Vec<F> = (0..size)
-        .map(|i| F::from(i).unwrap() * F::from(0.1).unwrap())
+        .map(|i| {
+            F::from(i).expect("Failed to convert to float")
+                * F::from(0.1).expect("Failed to convert constant to float")
+        })
         .collect();
 
     let arr = Array::from_shape_vec(IxDyn(&shape), data).expect("Failed to create array");
@@ -79,7 +82,7 @@ where
     let data: Vec<F> = (0..size)
         .map(|_| {
             let noise = rng.random_range(-magnitude..magnitude);
-            F::from(noise).unwrap()
+            F::from(noise).expect("Failed to convert to float")
         })
         .collect();
 

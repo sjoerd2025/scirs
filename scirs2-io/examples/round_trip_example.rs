@@ -270,7 +270,7 @@ fn test_hdf5_round_trip(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std:
     );
     assert!(root_group.has_group("data"), "Missing data group");
 
-    let data_group = root_group.get_group("data").unwrap();
+    let data_group = root_group.get_group("data").expect("Operation failed");
     assert!(
         data_group.has_dataset("array_1d"),
         "Missing array_1d dataset"
@@ -281,7 +281,9 @@ fn test_hdf5_round_trip(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std:
     );
 
     // Verify 1D array
-    let dataset_1d = data_group.get_dataset("array_1d").unwrap();
+    let dataset_1d = data_group
+        .get_dataset("array_1d")
+        .expect("Operation failed");
     assert_eq!(dataset_1d.shape, vec![5], "1D array shape mismatch");
 
     if let Some(data_vec) = dataset_1d.as_float_vec() {
@@ -295,7 +297,9 @@ fn test_hdf5_round_trip(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std:
     }
 
     // Verify 2D array
-    let dataset_2d = data_group.get_dataset("array_2d").unwrap();
+    let dataset_2d = data_group
+        .get_dataset("array_2d")
+        .expect("Operation failed");
     assert_eq!(dataset_2d.shape, vec![2, 3], "2D array shape mismatch");
 
     println!("  ✅ HDF5 round-trip successful: groups, attributes, and datasets preserved");

@@ -46,7 +46,7 @@ pub struct ErrorHistogram<F: Float> {
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
 ///
-/// let hist = error_histogram(&y_true, &y_pred, 4).unwrap();
+/// let hist = error_histogram(&y_true, &y_pred, 4).expect("Operation failed");
 /// assert_eq!(hist.bin_counts.len(), 4);
 /// assert_eq!(hist.bin_edges.len(), 5);
 /// assert_eq!(hist.n_observations, 8);
@@ -100,11 +100,11 @@ where
     } else {
         F::one()
     };
-    let bin_width = range / NumCast::from(n_bins).unwrap();
+    let bin_width = range / NumCast::from(n_bins).expect("Operation failed");
 
     let mut bin_edges = Vec::with_capacity(n_bins + 1);
     for i in 0..=n_bins {
-        bin_edges.push(min_error + F::from(i).unwrap() * bin_width);
+        bin_edges.push(min_error + F::from(i).expect("Failed to convert to float") * bin_width);
     }
 
     // Count values in each bin
@@ -116,7 +116,9 @@ where
             bin_counts[n_bins - 1] += 1;
         } else {
             // Find the appropriate bin
-            let bin_idx = ((residual - min_error) / bin_width).to_usize().unwrap();
+            let bin_idx = ((residual - min_error) / bin_width)
+                .to_usize()
+                .expect("Operation failed");
             bin_counts[bin_idx] += 1;
         }
     }
@@ -162,7 +164,7 @@ pub struct QQPlotData<F: Float> {
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
 ///
-/// let qq_data = qq_plot_data(&y_true, &y_pred, 20).unwrap();
+/// let qq_data = qq_plot_data(&y_true, &y_pred, 20).expect("Operation failed");
 /// assert_eq!(qq_data.theoretical_quantiles.len(), qq_data.sample_quantiles.len());
 /// ```
 #[allow(dead_code)]
@@ -199,13 +201,13 @@ where
     residuals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Standardize residuals
-    let mean =
-        residuals.iter().fold(F::zero(), |acc, &x| acc + x) / NumCast::from(n_samples).unwrap();
+    let mean = residuals.iter().fold(F::zero(), |acc, &x| acc + x)
+        / NumCast::from(n_samples).expect("Operation failed");
 
     let variance = residuals.iter().fold(F::zero(), |acc, &x| {
         let diff = x - mean;
         acc + diff * diff
-    }) / NumCast::from(n_samples).unwrap();
+    }) / NumCast::from(n_samples).expect("Operation failed");
 
     let std_dev = variance.sqrt();
 
@@ -218,17 +220,17 @@ where
     let mut theoretical_quantiles = Vec::with_capacity(n_quantiles);
     let mut sample_quantiles = Vec::with_capacity(n_quantiles);
 
-    let step = F::one() / NumCast::from(n_quantiles + 1).unwrap();
+    let step = F::one() / NumCast::from(n_quantiles + 1).expect("Operation failed");
 
     for i in 1..=n_quantiles {
-        let p: F = F::from(i).unwrap() * step;
-        let theoretical_q = normal_quantile(p.to_f64().unwrap());
-        theoretical_quantiles.push(F::from(theoretical_q).unwrap());
+        let p: F = F::from(i).expect("Failed to convert to float") * step;
+        let theoretical_q = normal_quantile(p.to_f64().expect("Operation failed"));
+        theoretical_quantiles.push(F::from(theoretical_q).expect("Failed to convert to float"));
 
         // Get corresponding sample quantile
-        let idx = (p * NumCast::from(n_samples).unwrap())
+        let idx = (p * NumCast::from(n_samples).expect("Operation failed"))
             .to_usize()
-            .unwrap()
+            .expect("Operation failed")
             .min(n_samples - 1);
         sample_quantiles.push(std_residuals[idx]);
     }
@@ -239,8 +241,8 @@ where
 
     // Add some margin
     let range = max_val - min_val;
-    min_val = min_val - range * F::from_f64(0.05).unwrap();
-    max_val = max_val + range * F::from_f64(0.05).unwrap();
+    min_val = min_val - range * F::from_f64(0.05).expect("Operation failed");
+    max_val = max_val + range * F::from_f64(0.05).expect("Operation failed");
 
     let reference_line = vec![(min_val, min_val), (max_val, max_val)];
 
@@ -368,7 +370,7 @@ pub struct ResidualAnalysis<F: Float> {
 /// // Create dummy X matrix (features matrix) with 2 predictors
 /// let x = Array2::from_shape_fn((8, 2), |(i, j)| i as f64 + j as f64);
 ///
-/// let analysis = residual_analysis(&y_true, &y_pred, Some(&x), None).unwrap();
+/// let analysis = residual_analysis(&y_true, &y_pred, Some(&x), None).expect("Operation failed");
 ///
 /// // Access various diagnostics
 /// println!("Durbin-Watson statistic: {}", analysis.durbin_watson);
@@ -423,14 +425,14 @@ where
     }
 
     // Calculate mean of residuals
-    let residual_mean =
-        residuals.iter().fold(F::zero(), |acc, &r| acc + r) / NumCast::from(n_samples).unwrap();
+    let residual_mean = residuals.iter().fold(F::zero(), |acc, &r| acc + r)
+        / NumCast::from(n_samples).expect("Operation failed");
 
     // Calculate variance of residuals
     let residual_var = residuals.iter().fold(F::zero(), |acc, &r| {
         let diff = r - residual_mean;
         acc + diff * diff
-    }) / NumCast::from(n_samples).unwrap();
+    }) / NumCast::from(n_samples).expect("Operation failed");
 
     let residual_std = residual_var.sqrt();
 
@@ -481,7 +483,7 @@ where
         h_diag
     } else {
         // No X _matrix or hat _matrix provided, use default
-        vec![F::one() / NumCast::from(n_samples).unwrap(); n_samples]
+        vec![F::one() / NumCast::from(n_samples).expect("Operation failed"); n_samples]
     };
 
     // Calculate studentized residuals
@@ -507,7 +509,8 @@ where
             } else {
                 1 // Default to 1 predictor
             };
-            let cook_d = (r * r) * (h_ii / (F::one() - h_ii)) / NumCast::from(p_value).unwrap();
+            let cook_d = (r * r) * (h_ii / (F::one() - h_ii))
+                / NumCast::from(p_value).expect("Operation failed");
             cooks_distances.push(cook_d);
         } else {
             cooks_distances.push(F::zero());
@@ -537,20 +540,20 @@ where
     let durbin_watson = if denominator > F::epsilon() {
         numerator / denominator
     } else {
-        F::from(2.0).unwrap() // No autocorrelation
+        F::from(2.0).expect("Failed to convert constant to float") // No autocorrelation
     };
 
     // Calculate Breusch-Pagan statistic (tests for heteroscedasticity)
     // Simplified approach: regress squared residuals on fitted values
     let squared_residuals: Vec<F> = residuals.iter().map(|&r| r * r).collect();
     let mean_sq_residual = squared_residuals.iter().fold(F::zero(), |acc, &r| acc + r)
-        / NumCast::from(n_samples).unwrap();
+        / NumCast::from(n_samples).expect("Operation failed");
 
     let mut numerator = F::zero();
     let mut denominator = F::zero();
 
     for (i, &sq_r) in squared_residuals.iter().enumerate() {
-        let _pred = y_pred.iter().nth(i).unwrap();
+        let _pred = y_pred.iter().nth(i).expect("Operation failed");
         let diff = sq_r - mean_sq_residual;
         numerator = numerator + diff * diff;
         denominator = denominator + (*_pred) * (*_pred);
@@ -569,10 +572,12 @@ where
 
     let mut expected_quantiles = Vec::with_capacity(n_samples);
     for i in 0..n_samples {
-        let p = (F::from(i + 1).unwrap() - F::from(0.375).unwrap())
-            / (F::from(n_samples).unwrap() + F::from(0.25).unwrap());
-        let q = normal_quantile(p.to_f64().unwrap());
-        expected_quantiles.push(F::from(q).unwrap());
+        let p = (F::from(i + 1).expect("Failed to convert to float")
+            - F::from(0.375).expect("Failed to convert constant to float"))
+            / (F::from(n_samples).expect("Failed to convert to float")
+                + F::from(0.25).expect("Failed to convert constant to float"));
+        let q = normal_quantile(p.to_f64().expect("Operation failed"));
+        expected_quantiles.push(F::from(q).expect("Failed to convert to float"));
     }
 
     let mut numerator = F::zero();
@@ -629,7 +634,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
 ///
-/// let bp_stat = test_heteroscedasticity(&y_true, &y_pred).unwrap();
+/// let bp_stat = test_heteroscedasticity(&y_true, &y_pred).expect("Operation failed");
 /// assert!(bp_stat >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -658,14 +663,14 @@ where
     // Calculate squared residuals
     let squared_residuals: Vec<F> = residuals.iter().map(|&r| r * r).collect();
     let mean_sq_residual = squared_residuals.iter().fold(F::zero(), |acc, &r| acc + r)
-        / NumCast::from(n_samples).unwrap();
+        / NumCast::from(n_samples).expect("Operation failed");
 
     // Regress squared residuals on fitted values
     let mut numerator = F::zero();
     let mut denominator = F::zero();
 
     for (i, &sq_r) in squared_residuals.iter().enumerate() {
-        let _pred = y_pred.iter().nth(i).unwrap();
+        let _pred = y_pred.iter().nth(i).expect("Operation failed");
         let diff = sq_r - mean_sq_residual;
         numerator = numerator + diff * diff;
         denominator = denominator + (*_pred) * (*_pred);
@@ -701,7 +706,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
 ///
-/// let dw_stat = test_autocorrelation(&y_true, &y_pred).unwrap();
+/// let dw_stat = test_autocorrelation(&y_true, &y_pred).expect("Operation failed");
 /// // DW statistic ranges from 0 to 4, with 2 being no autocorrelation
 /// assert!(dw_stat >= 0.0 && dw_stat <= 4.0);
 /// ```
@@ -773,7 +778,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
 ///
-/// let sw_stat = test_normality(&y_true, &y_pred).unwrap();
+/// let sw_stat = test_normality(&y_true, &y_pred).expect("Operation failed");
 /// // SW statistic ranges from 0 to 1, with values close to 1 indicating normality
 /// assert!(sw_stat >= 0.0 && sw_stat <= 1.0);
 /// ```
@@ -801,13 +806,13 @@ where
     }
 
     // Calculate mean and standard deviation
-    let mean =
-        residuals.iter().fold(F::zero(), |acc, &r| acc + r) / NumCast::from(n_samples).unwrap();
+    let mean = residuals.iter().fold(F::zero(), |acc, &r| acc + r)
+        / NumCast::from(n_samples).expect("Operation failed");
 
     let variance = residuals.iter().fold(F::zero(), |acc, &r| {
         let diff = r - mean;
         acc + diff * diff
-    }) / NumCast::from(n_samples).unwrap();
+    }) / NumCast::from(n_samples).expect("Operation failed");
 
     let std_dev = variance.sqrt();
 
@@ -824,16 +829,18 @@ where
     // Calculate expected normal order statistics
     let mut expected_quantiles = Vec::with_capacity(n_samples);
     for i in 0..n_samples {
-        let p = (F::from(i + 1).unwrap() - F::from(0.375).unwrap())
-            / (F::from(n_samples).unwrap() + F::from(0.25).unwrap());
-        let q = normal_quantile(p.to_f64().unwrap());
-        expected_quantiles.push(F::from(q).unwrap());
+        let p = (F::from(i + 1).expect("Failed to convert to float")
+            - F::from(0.375).expect("Failed to convert constant to float"))
+            / (F::from(n_samples).expect("Failed to convert to float")
+                + F::from(0.25).expect("Failed to convert constant to float"));
+        let q = normal_quantile(p.to_f64().expect("Operation failed"));
+        expected_quantiles.push(F::from(q).expect("Failed to convert to float"));
     }
 
     // Calculate correlation between ordered residuals and expected quantiles
     let mean_residual = F::zero(); // Standardized residuals have mean zero
     let mean_quantile = expected_quantiles.iter().fold(F::zero(), |acc, &q| acc + q)
-        / NumCast::from(n_samples).unwrap();
+        / NumCast::from(n_samples).expect("Operation failed");
 
     let mut numerator = F::zero();
     let mut denom_residual = F::zero();

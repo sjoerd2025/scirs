@@ -883,7 +883,7 @@ pub fn init_global_memory_manager(
     allocation_strategy: AllocationStrategy,
     max_memory: usize,
 ) -> FFTResult<()> {
-    let mut global = GLOBAL_MEMORY_MANAGER.lock().unwrap();
+    let mut global = GLOBAL_MEMORY_MANAGER.lock().expect("Operation failed");
     *global = Some(Arc::new(Mutex::new(GPUMemoryManager::new(
         backend,
         device_id,
@@ -896,7 +896,7 @@ pub fn init_global_memory_manager(
 /// Get global memory manager
 #[allow(dead_code)]
 pub fn get_global_memory_manager() -> FFTResult<Arc<Mutex<GPUMemoryManager>>> {
-    let global = GLOBAL_MEMORY_MANAGER.lock().unwrap();
+    let global = GLOBAL_MEMORY_MANAGER.lock().expect("Operation failed");
     if let Some(ref manager) = *global {
         Ok(manager.clone())
     } else {
@@ -922,7 +922,7 @@ where
 {
     // Get the global _memory manager
     let manager = get_global_memory_manager()?;
-    let _manager = manager.lock().unwrap();
+    let _manager = manager.lock().expect("Operation failed");
 
     // Determine optimal chunk size based on available _memory
     let signal_len = signal.len();
@@ -959,7 +959,7 @@ mod tests {
                 BufferLocation::Host,
                 BufferType::Input,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(buffer.size, 1024);
         assert_eq!(buffer.element_size, 8);
@@ -968,7 +968,7 @@ mod tests {
         assert_eq!(manager.current_memory_usage(), 1024 * 8);
 
         // Release buffer
-        manager.release_buffer(buffer).unwrap();
+        manager.release_buffer(buffer).expect("Operation failed");
         assert_eq!(manager.current_memory_usage(), 0);
     }
 
@@ -989,10 +989,10 @@ mod tests {
                 BufferLocation::Host,
                 BufferType::Input,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         // Release to cache
-        manager.release_buffer(buffer1).unwrap();
+        manager.release_buffer(buffer1).expect("Operation failed");
 
         // Memory usage should not decrease when using CacheBySize
         assert_eq!(manager.current_memory_usage(), 1024 * 8);
@@ -1000,19 +1000,19 @@ mod tests {
         // Allocate same size buffer, should get from cache
         let buffer2 = manager
             .allocate_buffer(1024, 8, BufferLocation::Host, BufferType::Input)
-            .unwrap();
+            .expect("Operation failed");
 
         // Memory should not increase since we're reusing
         assert_eq!(manager.current_memory_usage(), 1024 * 8);
 
         // Release the second buffer back to cache
-        manager.release_buffer(buffer2).unwrap();
+        manager.release_buffer(buffer2).expect("Operation failed");
 
         // Memory should still be allocated (cached)
         assert_eq!(manager.current_memory_usage(), 1024 * 8);
 
         // Clear cache - now this should free the cached memory
-        manager.clear_cache().unwrap();
+        manager.clear_cache().expect("Operation failed");
         assert_eq!(manager.current_memory_usage(), 0);
     }
 
@@ -1025,18 +1025,18 @@ mod tests {
             AllocationStrategy::CacheBySize,
             1024 * 1024,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Get global memory manager
-        let manager = get_global_memory_manager().unwrap();
-        let mut manager = manager.lock().unwrap();
+        let manager = get_global_memory_manager().expect("Operation failed");
+        let mut manager = manager.lock().expect("Operation failed");
 
         // Allocate a buffer
         let buffer = manager
             .allocate_buffer(1024, 8, BufferLocation::Host, BufferType::Input)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(buffer.size, 1024);
-        manager.release_buffer(buffer).unwrap();
+        manager.release_buffer(buffer).expect("Operation failed");
     }
 }

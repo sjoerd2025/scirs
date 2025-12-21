@@ -88,7 +88,7 @@ impl WorkStealingScheduler {
                             // Process the chunk
                             for i in start..end {
                                 let result = f_ref(&items_ref[i]);
-                                let mut results_guard = results.lock().unwrap();
+                                let mut results_guard = results.lock().expect("Operation failed");
                                 results_guard[i] = result;
                             }
                         }
@@ -98,7 +98,7 @@ impl WorkStealingScheduler {
 
             // Wait for all threads to complete
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 
@@ -178,7 +178,7 @@ impl WorkStealingScheduler {
 
                         // Add local results to global results
                         if !local_results.is_empty() {
-                            let mut global_results = results_vec.lock().unwrap();
+                            let mut global_results = results_vec.lock().expect("Operation failed");
                             global_results.extend(local_results);
                         }
                     })
@@ -186,7 +186,7 @@ impl WorkStealingScheduler {
                 .collect();
 
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 

@@ -61,12 +61,12 @@ where
     if n < config.minsize {
         // Small arrays: use scalar code
         let sum = x.iter().fold(F::zero(), |acc, &val| acc + val);
-        return Ok(sum / F::from(n).unwrap());
+        return Ok(sum / F::from(n).expect("Failed to convert to float"));
     }
 
     // For larger arrays, use chunked SIMD processing
     let sum = chunked_simd_sum(x, &config)?;
-    Ok(sum / F::from(n).unwrap())
+    Ok(sum / F::from(n).expect("Failed to convert to float"))
 }
 
 /// Optimized variance calculation using single-pass SIMD algorithm
@@ -100,7 +100,7 @@ where
     let mean = mean_simd_optimized(x, Some(config))?;
     let sum_sq_dev = chunked_simd_sum_squared_deviations(x, mean, &config)?;
 
-    Ok(sum_sq_dev / F::from(n - ddof).unwrap())
+    Ok(sum_sq_dev / F::from(n - ddof).expect("Failed to convert to float"))
 }
 
 /// Compute all basic statistics in a single SIMD pass
@@ -123,7 +123,7 @@ where
 
     let config = config.unwrap_or_default();
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     if n < config.minsize {
         // Use scalar single-pass algorithm
@@ -212,7 +212,7 @@ where
     }
 
     // Calculate statistics from moments
-    let variance = m2 / F::from(n - 1).unwrap();
+    let variance = m2 / F::from(n - 1).expect("Failed to convert to float");
     let std_dev = variance.sqrt();
 
     let skewness = if std_dev > F::epsilon() {
@@ -222,7 +222,8 @@ where
     };
 
     let kurtosis = if variance > F::epsilon() {
-        (m4 / n_f) / (variance * variance) - F::from(3).unwrap()
+        (m4 / n_f) / (variance * variance)
+            - F::from(3).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -312,12 +313,12 @@ where
     for &val in x.iter() {
         count += 1;
         let delta = val - mean;
-        mean = mean + delta / F::from(count).unwrap();
+        mean = mean + delta / F::from(count).expect("Failed to convert to float");
         let delta2 = val - mean;
         m2 = m2 + delta * delta2;
     }
 
-    Ok(m2 / F::from(count - ddof).unwrap())
+    Ok(m2 / F::from(count - ddof).expect("Failed to convert to float"))
 }
 
 /// Scalar single-pass statistics (fallback)
@@ -328,7 +329,7 @@ where
     D: Data<Elem = F>,
 {
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // First pass: compute mean
     let mean = x.iter().fold(F::zero(), |acc, &val| acc + val) / n_f;
@@ -358,7 +359,7 @@ where
         }
     }
 
-    let variance = m2 / F::from(n - 1).unwrap();
+    let variance = m2 / F::from(n - 1).expect("Failed to convert to float");
     let std_dev = variance.sqrt();
 
     let skewness = if std_dev > F::epsilon() {
@@ -368,7 +369,8 @@ where
     };
 
     let kurtosis = if variance > F::epsilon() {
-        (m4 / n_f) / (variance * variance) - F::from(3).unwrap()
+        (m4 / n_f) / (variance * variance)
+            - F::from(3).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -384,14 +386,14 @@ mod tests {
     #[test]
     fn test_mean_simd_optimized() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let mean = mean_simd_optimized(&data.view(), None).unwrap();
+        let mean = mean_simd_optimized(&data.view(), None).expect("Operation failed");
         assert!((mean - 3.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_variance_simd_optimized() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let var = variance_simd_optimized(&data.view(), 1, None).unwrap();
+        let var = variance_simd_optimized(&data.view(), 1, None).expect("Operation failed");
         assert!((var - 2.5).abs() < 1e-10);
     }
 
@@ -399,7 +401,7 @@ mod tests {
     fn test_stats_single_pass() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
         let (mean, var, min, max__, skew, kurt) =
-            stats_simd_single_pass(&data.view(), None).unwrap();
+            stats_simd_single_pass(&data.view(), None).expect("Operation failed");
 
         assert!((mean - 3.0).abs() < 1e-10);
         assert!((var - 2.5).abs() < 1e-10);

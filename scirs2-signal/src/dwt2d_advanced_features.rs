@@ -315,7 +315,7 @@ fn estimate_noise_variance(
 
         // Robust noise estimation using MAD (Median Absolute Deviation)
         let mut coeffs_vec: Vec<f64> = diagonal_coeffs.iter().cloned().collect();
-        coeffs_vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        coeffs_vec.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let n = coeffs_vec.len();
         let median = if n % 2 == 0 {
@@ -326,7 +326,7 @@ fn estimate_noise_variance(
 
         // MAD-based noise variance estimate
         let mut deviations: Vec<f64> = coeffs_vec.iter().map(|&x| (x - median).abs()).collect();
-        deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mad = if n % 2 == 0 {
             (deviations[n / 2 - 1] + deviations[n / 2]) / 2.0
@@ -456,7 +456,7 @@ fn compute_sure_threshold(
 
     // Sort coefficients by magnitude
     let mut sorted_coeffs: Vec<f64> = all_coeffs.iter().map(|&&x| x.abs()).collect();
-    sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = sorted_coeffs.len() as f64;
     let sigma = noise_variance.sqrt();
@@ -517,7 +517,7 @@ fn compute_local_variance(
     }
 
     // Return median variance for robustness
-    variances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    variances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let n = variances.len();
     Ok(if n % 2 == 0 {
         (variances[n / 2 - 1] + variances[n / 2]) / 2.0
@@ -930,7 +930,7 @@ mod tests {
         let noisy_image = clean_image.mapv(|x| x + 0.1 * rng.gen_range(-1.0..1.0));
 
         let config = AdvancedWaveletConfig::default();
-        let result = advanced_wavelet_denoising(&noisy_image..Wavelet::DB(4), &config).unwrap();
+        let result = advanced_wavelet_denoising(&noisy_image..Wavelet::DB(4), &config).expect("Operation failed");
 
         assert_eq!(result.processed_image.dim(), noisy_image.dim());
         assert!(result.denoising_metrics.noise_variance > 0.0);
@@ -945,17 +945,17 @@ mod tests {
                 0.1, 0.5, 1.0, 1.5, 0.2, 0.6, 1.1, 1.6, 0.3, 0.7, 1.2, 1.7, 0.4, 0.8, 1.3, 1.8,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let threshold = 0.5;
 
         // Test soft thresholding
-        let soft_result = apply_threshold_2d(&coeffs, threshold, ThresholdMethod::Soft).unwrap();
+        let soft_result = apply_threshold_2d(&coeffs, threshold, ThresholdMethod::Soft).expect("Operation failed");
         assert!(soft_result[[0, 0]] == 0.0); // Below threshold
         assert!(soft_result[[2, 2]] == 0.7); // 1.2 - 0.5
 
         // Test hard thresholding
-        let hard_result = apply_threshold_2d(&coeffs, threshold, ThresholdMethod::Hard).unwrap();
+        let hard_result = apply_threshold_2d(&coeffs, threshold, ThresholdMethod::Hard).expect("Operation failed");
         assert!(hard_result[[0, 0]] == 0.0); // Below threshold
         assert!(hard_result[[2, 2]] == 1.2); // Above threshold, unchanged
     }

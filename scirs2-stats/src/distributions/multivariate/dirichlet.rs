@@ -103,7 +103,7 @@ impl Dirichlet {
     ///
     /// // Create a 3D Dirichlet distribution with symmetric parameters (equivalent to a uniform distribution over the simplex)
     /// let alpha = array![1.0, 1.0, 1.0];
-    /// let dirichlet = Dirichlet::new(alpha).unwrap();
+    /// let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
     /// ```
     pub fn new<D>(alpha: ArrayBase<D, Ix1>) -> StatsResult<Self>
     where
@@ -159,7 +159,7 @@ impl Dirichlet {
     /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 1.0, 1.0];
-    /// let dirichlet = Dirichlet::new(alpha).unwrap();
+    /// let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
     ///
     /// // PDF for a uniform Dirichlet at any point on the simplex is 2 (in 3D)
     /// let point = array![0.3, 0.3, 0.4];
@@ -212,7 +212,7 @@ impl Dirichlet {
     /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 1.0, 1.0];
-    /// let dirichlet = Dirichlet::new(alpha).unwrap();
+    /// let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
     ///
     /// let point = array![0.3, 0.3, 0.4];
     /// let logpdf_value = dirichlet.logpdf(&point);
@@ -266,9 +266,9 @@ impl Dirichlet {
     /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 2.0, 3.0];
-    /// let dirichlet = Dirichlet::new(alpha).unwrap();
+    /// let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
     ///
-    /// let samples = dirichlet.rvs(10).unwrap();
+    /// let samples = dirichlet.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// assert_eq!(samples[0].len(), 3);
     /// ```
@@ -316,9 +316,9 @@ impl Dirichlet {
     /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 2.0, 3.0];
-    /// let dirichlet = Dirichlet::new(alpha).unwrap();
+    /// let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
     ///
-    /// let sample = dirichlet.rvs_single().unwrap();
+    /// let sample = dirichlet.rvs_single().expect("Operation failed");
     /// assert_eq!(sample.len(), 3);
     /// ```
     pub fn rvs_single(&self) -> StatsResult<Array1<f64>> {
@@ -347,7 +347,7 @@ impl Dirichlet {
 /// use scirs2_stats::distributions::multivariate;
 ///
 /// let alpha = array![1.0, 1.0, 1.0];
-/// let dirichlet = multivariate::dirichlet(&alpha).unwrap();
+/// let dirichlet = multivariate::dirichlet(&alpha).expect("Operation failed");
 /// let point = array![0.3, 0.3, 0.4];
 /// let pdf_at_point = dirichlet.pdf(&point);
 /// ```
@@ -376,14 +376,14 @@ mod tests {
     fn test_dirichlet_creation() {
         // Uniform Dirichlet
         let alpha = array![1.0, 1.0, 1.0];
-        let dirichlet = Dirichlet::new(alpha.clone()).unwrap();
+        let dirichlet = Dirichlet::new(alpha.clone()).expect("Operation failed");
 
         assert_eq!(dirichlet.dim, 3);
         assert_eq!(dirichlet.alpha, alpha);
 
         // Non-uniform Dirichlet
         let alpha2 = array![2.0, 3.0, 4.0];
-        let dirichlet2 = Dirichlet::new(alpha2.clone()).unwrap();
+        let dirichlet2 = Dirichlet::new(alpha2.clone()).expect("Operation failed");
 
         assert_eq!(dirichlet2.dim, 3);
         assert_eq!(dirichlet2.alpha, alpha2);
@@ -405,7 +405,7 @@ mod tests {
         // Uniform Dirichlet (alpha = [1,1,1])
         // PDF value should be constant on the simplex: 2 for 3D
         let alpha = array![1.0, 1.0, 1.0];
-        let dirichlet = Dirichlet::new(alpha).unwrap();
+        let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
 
         let point1 = array![1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0];
         let point2 = array![0.2, 0.3, 0.5];
@@ -415,7 +415,7 @@ mod tests {
 
         // Concentrated Dirichlet
         let alpha = array![5.0, 5.0, 5.0];
-        let concentrated = Dirichlet::new(alpha).unwrap();
+        let concentrated = Dirichlet::new(alpha).expect("Operation failed");
 
         // PDF should be higher at the center than at the edges
         let center = array![1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0];
@@ -427,7 +427,7 @@ mod tests {
     #[test]
     fn test_dirichlet_pdf_edge_cases() {
         let alpha = array![1.0, 1.0, 1.0];
-        let dirichlet = Dirichlet::new(alpha).unwrap();
+        let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
 
         // Points not on the simplex
         let invalid1 = array![0.3, 0.3, 0.3]; // Sum != 1
@@ -444,7 +444,7 @@ mod tests {
     #[test]
     fn test_dirichlet_logpdf() {
         let alpha = array![1.0, 1.0, 1.0];
-        let dirichlet = Dirichlet::new(alpha).unwrap();
+        let dirichlet = Dirichlet::new(alpha).expect("Operation failed");
 
         let point = array![0.3, 0.3, 0.4];
 
@@ -462,11 +462,11 @@ mod tests {
     #[test]
     fn test_dirichlet_rvs() {
         let alpha = array![1.0, 2.0, 3.0];
-        let dirichlet = Dirichlet::new(alpha.clone()).unwrap();
+        let dirichlet = Dirichlet::new(alpha.clone()).expect("Operation failed");
 
         // Generate samples
         let n_samples_ = 1000;
-        let samples = dirichlet.rvs(n_samples_).unwrap();
+        let samples = dirichlet.rvs(n_samples_).expect("Operation failed");
 
         // Check number of samples
         assert_eq!(samples.len(), n_samples_);
@@ -501,9 +501,9 @@ mod tests {
     #[test]
     fn test_dirichlet_rvs_single() {
         let alpha = array![1.0, 2.0, 3.0];
-        let dirichlet = Dirichlet::new(alpha.clone()).unwrap();
+        let dirichlet = Dirichlet::new(alpha.clone()).expect("Operation failed");
 
-        let sample = dirichlet.rvs_single().unwrap();
+        let sample = dirichlet.rvs_single().expect("Operation failed");
 
         // Check sample dimension
         assert_eq!(sample.len(), 3);

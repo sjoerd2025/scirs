@@ -38,7 +38,7 @@ use std::fmt::Debug;
 /// use scirs2_signal::savgol_coeffs;
 ///
 /// // Create filter coefficients for a 5-point window, quadratic polynomial
-/// let coeffs = savgol_coeffs(5, 2, None, None, None, None).unwrap();
+/// let coeffs = savgol_coeffs(5, 2, None, None, None, None).expect("Operation failed");
 /// ```
 ///
 /// # References
@@ -624,7 +624,7 @@ where
 /// let x: Vec<f64> = (0..100).map(|i| i as f64 / 10.0 + (i as f64 / 5.0).sin()).collect();
 ///
 /// // Apply a Savitzky-Golay filter
-/// let smoothed = savgol_filter(&x, 11, 2, None, None, None, None).unwrap();
+/// let smoothed = savgol_filter(&x, 11, 2, None, None, None, None).expect("Operation failed");
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
@@ -838,7 +838,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Test with window_length = 5, polyorder = 2
-        let coeffs = savgol_coeffs(5, 2, None, None, None, None).unwrap();
+        let coeffs = savgol_coeffs(5, 2, None, None, None, None).expect("Operation failed");
         let expected = [-0.08571429, 0.34285714, 0.48571429, 0.34285714, -0.08571429];
 
         assert_eq!(coeffs.len(), 5);
@@ -852,7 +852,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Test with derivative = 1
-        let coeffs = savgol_coeffs(5, 2, Some(1), None, None, None).unwrap();
+        let coeffs = savgol_coeffs(5, 2, Some(1), None, None, None).expect("Operation failed");
         let expected = [0.2, 0.1, 0.0, -0.1, -0.2];
 
         assert_eq!(coeffs.len(), 5);
@@ -875,7 +875,7 @@ mod tests {
         });
 
         // Apply Savitzky-Golay filter
-        let smoothed = savgol_filter(&x, 11, 2, None, None, None, None).unwrap();
+        let smoothed = savgol_filter(&x, 11, 2, None, None, None, None).expect("Operation failed");
 
         // Check length
         assert_eq!(smoothed.len(), x.len());
@@ -917,11 +917,11 @@ mod tests {
         let x: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
 
         // Test different modes
-        let interp = savgol_filter(&x, 5, 2, None, None, Some("interp"), None).unwrap();
-        let mirror = savgol_filter(&x, 5, 2, None, None, Some("mirror"), None).unwrap();
-        let constant = savgol_filter(&x, 5, 2, None, None, Some("constant"), None).unwrap();
-        let nearest = savgol_filter(&x, 5, 2, None, None, Some("nearest"), None).unwrap();
-        let wrap = savgol_filter(&x, 5, 2, None, None, Some("wrap"), None).unwrap();
+        let interp = savgol_filter(&x, 5, 2, None, None, Some("interp"), None).expect("Operation failed");
+        let mirror = savgol_filter(&x, 5, 2, None, None, Some("mirror"), None).expect("Operation failed");
+        let constant = savgol_filter(&x, 5, 2, None, None, Some("constant"), None).expect("Operation failed");
+        let nearest = savgol_filter(&x, 5, 2, None, None, Some("nearest"), None).expect("Operation failed");
+        let wrap = savgol_filter(&x, 5, 2, None, None, Some("wrap"), None).expect("Operation failed");
 
         // Ensure all results have the same length as the input
         assert_eq!(interp.len(), x.len());

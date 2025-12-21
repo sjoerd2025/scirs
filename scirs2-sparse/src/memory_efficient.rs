@@ -37,14 +37,14 @@ impl MemoryTracker {
 
     /// Allocate memory and track usage
     pub fn allocate(&mut self, size: usize) -> SparseResult<()> {
+        // Check limit BEFORE modifying current_usage
+        if self.current_usage + size > self._memorylimit {
+            return Err(SparseError::ValueError("Memory limit exceeded".to_string()));
+        }
+
         self.current_usage += size;
         self.peak_usage = self.peak_usage.max(self.current_usage);
-
-        if self.current_usage > self._memorylimit {
-            Err(SparseError::ValueError("Memory limit exceeded".to_string()))
-        } else {
-            Ok(())
-        }
+        Ok(())
     }
 
     /// Deallocate memory and update tracking
@@ -925,7 +925,6 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // TODO: Fix memory tracker test - assertion failed due to incorrect calculation
     fn test_memory_tracker() {
         let mut tracker = MemoryTracker::new(1000);
 
@@ -952,12 +951,14 @@ mod tests {
         let rows = vec![0, 0, 1, 2, 2];
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
         let mut tracker = MemoryTracker::new(10000);
-        let result = streaming_sparse_matvec(&matrix, &x.view(), 2, Some(&mut tracker)).unwrap();
+        let result = streaming_sparse_matvec(&matrix, &x.view(), 2, Some(&mut tracker))
+            .expect("Operation failed");
 
         // Expected: [1*1 + 2*3, 3*2, 4*1 + 5*3] = [7, 6, 19]
         assert_relative_eq!(result[0], 7.0);
@@ -976,15 +977,19 @@ mod tests {
         let rowsa = vec![0, 1, 1];
         let cols_a = vec![0, 0, 1];
         let data_a = vec![2.0, 1.0, 3.0];
-        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (2, 2), false).unwrap();
+        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (2, 2), false)
+            .expect("Operation failed");
 
         // B = [[1, 0], [0, 2]]
         let rowsb = vec![0, 1];
         let cols_b = vec![0, 1];
         let data_b = vec![1.0, 2.0];
-        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (2, 2), false).unwrap();
+        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (2, 2), false)
+            .expect("Operation failed");
 
-        let result = processor.out_of_core_matmul(&matrix_a, &matrix_b).unwrap();
+        let result = processor
+            .out_of_core_matmul(&matrix_a, &matrix_b)
+            .expect("Operation failed");
 
         // Verify result dimensions
         assert_eq!(result.shape(), (2, 2));
@@ -1004,18 +1009,21 @@ mod tests {
         let rows = vec![0, 0, 1, 2, 2];
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
         // Test cache-optimized SpMV
-        let result = CacheAwareOps::cache_optimized_spmv(&matrix, &x.view(), 64).unwrap();
+        let result =
+            CacheAwareOps::cache_optimized_spmv(&matrix, &x.view(), 64).expect("Operation failed");
         assert_relative_eq!(result[0], 7.0);
         assert_relative_eq!(result[1], 6.0);
         assert_relative_eq!(result[2], 19.0);
 
         // Test cache-optimized transpose
-        let transposed = CacheAwareOps::cache_optimized_transpose(&matrix, 64).unwrap();
+        let transposed =
+            CacheAwareOps::cache_optimized_transpose(&matrix, 64).expect("Operation failed");
         assert_eq!(transposed.shape(), (3, 3));
 
         // Verify transpose correctness
@@ -1051,7 +1059,8 @@ mod tests {
         let rows = vec![0, 0, 1, 2, 2];
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
@@ -1069,17 +1078,19 @@ mod tests {
         let rowsa = vec![0, 1, 2];
         let cols_a = vec![0, 1, 2];
         let data_a = vec![1.0, 2.0, 3.0];
-        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (3, 3), false).unwrap();
+        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (3, 3), false)
+            .expect("Operation failed");
 
         let rowsb = vec![0, 1, 2];
         let cols_b = vec![0, 1, 2];
         let data_b = vec![4.0, 5.0, 6.0];
-        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (3, 3), false).unwrap();
+        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (3, 3), false)
+            .expect("Operation failed");
 
         let mut tracker = MemoryTracker::new(10000);
         let result =
             ChunkedOperations::chunked_sparse_add(&matrix_a, &matrix_b, 2, Some(&mut tracker))
-                .unwrap();
+                .expect("Operation failed");
 
         // Check result dimensions
         assert_eq!(result.shape(), (3, 3));
@@ -1095,11 +1106,12 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 2.0, 3.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let mut tracker = MemoryTracker::new(10000);
-        let result =
-            ChunkedOperations::chunked_sparse_scale(&matrix, 2.0, 2, Some(&mut tracker)).unwrap();
+        let result = ChunkedOperations::chunked_sparse_scale(&matrix, 2.0, 2, Some(&mut tracker))
+            .expect("Operation failed");
 
         // Check result dimensions
         assert_eq!(result.shape(), (3, 3));
@@ -1115,11 +1127,12 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 2.0, 3.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let mut tracker = MemoryTracker::new(10000);
-        let result =
-            ChunkedOperations::chunked_format_conversion(&matrix, 2, Some(&mut tracker)).unwrap();
+        let result = ChunkedOperations::chunked_format_conversion(&matrix, 2, Some(&mut tracker))
+            .expect("Operation failed");
 
         // Should be identical to original
         assert_eq!(result.shape(), matrix.shape());
@@ -1137,11 +1150,13 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2, 3, 3];
         let cols = vec![0, 3, 1, 2, 1, 2, 0, 3];
         let data = vec![1.0, 1.0, 2.0, 1.0, 1.0, 3.0, 1.0, 4.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed");
 
         let mut tracker = MemoryTracker::new(100000);
         let (ordering, reordered) =
-            ChunkedOperations::bandwidth_reduction(&matrix, Some(&mut tracker)).unwrap();
+            ChunkedOperations::bandwidth_reduction(&matrix, Some(&mut tracker))
+                .expect("Operation failed");
 
         // Check that we got an ordering
         assert_eq!(ordering.len(), 4);
@@ -1161,7 +1176,8 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 2.0, 3.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         // Set very small memory limit
         let mut tracker = MemoryTracker::new(10);
@@ -1186,14 +1202,17 @@ mod tests {
         let rowsa = vec![0, 2];
         let cols_a = vec![0, 2];
         let data_a = vec![1.0, 3.0];
-        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (3, 3), false).unwrap();
+        let matrix_a = CsrArray::from_triplets(&rowsa, &cols_a, &data_a, (3, 3), false)
+            .expect("Operation failed");
 
         let rowsb = vec![1, 2];
         let cols_b = vec![1, 0];
         let data_b = vec![2.0, 1.0];
-        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (3, 3), false).unwrap();
+        let matrix_b = CsrArray::from_triplets(&rowsb, &cols_b, &data_b, (3, 3), false)
+            .expect("Operation failed");
 
-        let result = ChunkedOperations::chunked_sparse_add(&matrix_a, &matrix_b, 1, None).unwrap();
+        let result = ChunkedOperations::chunked_sparse_add(&matrix_a, &matrix_b, 1, None)
+            .expect("Operation failed");
 
         // Check that all elements are preserved
         assert_relative_eq!(result.get(0, 0), 1.0); // From A

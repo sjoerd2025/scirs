@@ -560,13 +560,13 @@ where
 ///                      [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]];
 ///
 /// // Decompose into tensor train format with maximum rank 2
-/// let tt = tensor_train_decomposition(&tensor.view(), Some(2), None).unwrap();
+/// let tt = tensor_train_decomposition(&tensor.view(), Some(2), None).expect("Operation failed");
 ///
 /// // The TT-ranks should be [1, 2, 2, 1] (boundary ranks are always 1)
 /// assert_eq!(tt.ranks, vec![1, 2, 2, 1]);
 ///
 /// // Reconstruct the tensor and check the approximation
-/// let reconstructed = tt.to_full().unwrap();
+/// let reconstructed = tt.to_full().expect("Operation failed");
 /// for i in 0..2 {
 ///     for j in 0..3 {
 ///         for k in 0..2 {
@@ -868,7 +868,7 @@ mod tests {
         ];
 
         // Decompose with full rank (without truncation)
-        let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();
+        let tt = tensor_train_decomposition(&tensor.view(), None, None).expect("Operation failed");
 
         // Verify the shape and ranks
         assert_eq!(tt.shape, vec![2, 3, 2]);
@@ -888,7 +888,7 @@ mod tests {
         }
 
         // Reconstruct the tensor
-        let reconstructed = tt.to_full().unwrap();
+        let reconstructed = tt.to_full().expect("Operation failed");
 
         // Check that the reconstruction matches the original tensor
         for i in 0..2 {
@@ -923,7 +923,8 @@ mod tests {
         }
 
         // Decompose with rank truncation (max rank 2)
-        let tt = tensor_train_decomposition(&tensor.view(), Some(2), None).unwrap();
+        let tt =
+            tensor_train_decomposition(&tensor.view(), Some(2), None).expect("Operation failed");
 
         // Check that no rank exceeds 2
         for &r in &tt.ranks {
@@ -931,7 +932,7 @@ mod tests {
         }
 
         // Reconstruct the tensor
-        let reconstructed = tt.to_full().unwrap();
+        let reconstructed = tt.to_full().expect("Operation failed");
 
         // For low rank tensors like this one, we should still get a good approximation
         for i in 0..4 {
@@ -958,13 +959,13 @@ mod tests {
         ];
 
         // Decompose without truncation
-        let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();
+        let tt = tensor_train_decomposition(&tensor.view(), None, None).expect("Operation failed");
 
         // Test getting individual elements
         for i in 0..2 {
             for j in 0..3 {
                 for k in 0..2 {
-                    let value = tt.get(&[i, j, k]).unwrap();
+                    let value = tt.get(&[i, j, k]).expect("Operation failed");
                     assert_abs_diff_eq!(value, tensor[[i, j, k]], epsilon = 1e-10);
                 }
             }
@@ -990,14 +991,14 @@ mod tests {
         }
 
         // Decompose with full rank
-        let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();
+        let tt = tensor_train_decomposition(&tensor.view(), None, None).expect("Operation failed");
 
         // Round the tensor train with various epsilon values
         for epsilon in [1e-8, 1e-4, 1e-2].iter() {
-            let rounded_tt = tt.round(*epsilon).unwrap();
+            let rounded_tt = tt.round(*epsilon).expect("Operation failed");
 
             // Reconstruct the tensor
-            let reconstructed = rounded_tt.to_full().unwrap();
+            let reconstructed = rounded_tt.to_full().expect("Operation failed");
 
             // Check that the error is within bounds
             let mut max_error = 0.0;

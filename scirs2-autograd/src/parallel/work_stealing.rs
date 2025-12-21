@@ -460,31 +460,31 @@ impl<T> LockFreeWorkStealingDeque<T> {
 
     /// Push to bottom (owner thread)
     pub fn push(&self, item: T) {
-        let mut deque = self.inner.lock().unwrap();
+        let mut deque = self.inner.lock().expect("Operation failed");
         deque.push_back(item);
     }
 
     /// Pop from bottom (owner thread)
     pub fn pop(&self) -> Option<T> {
-        let mut deque = self.inner.lock().unwrap();
+        let mut deque = self.inner.lock().expect("Operation failed");
         deque.pop_back()
     }
 
     /// Steal from top (stealer threads)
     pub fn steal(&self) -> Option<T> {
-        let mut deque = self.inner.lock().unwrap();
+        let mut deque = self.inner.lock().expect("Operation failed");
         deque.pop_front()
     }
 
     /// Check if empty
     pub fn is_empty(&self) -> bool {
-        let deque = self.inner.lock().unwrap();
+        let deque = self.inner.lock().expect("Operation failed");
         deque.is_empty()
     }
 
     /// Get size
     pub fn len(&self) -> usize {
-        let deque = self.inner.lock().unwrap();
+        let deque = self.inner.lock().expect("Operation failed");
         deque.len()
     }
 }
@@ -603,7 +603,7 @@ mod tests {
         let processed = counter.load(Ordering::SeqCst);
         assert!(processed > 0);
 
-        pool.shutdown().unwrap();
+        pool.shutdown().expect("Operation failed");
     }
 
     #[test]
@@ -674,13 +674,13 @@ mod tests {
             consumers.push(consumer);
         }
 
-        producer.join().unwrap();
+        producer.join().expect("Operation failed");
 
         // Give consumers time to finish
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         for consumer in consumers {
-            consumer.join().unwrap();
+            consumer.join().expect("Operation failed");
         }
 
         // All tasks should be processed

@@ -655,7 +655,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let shape = (3, 3);
 
-        let coo = CooArray::new(data, row, col, shape, false).unwrap();
+        let coo = CooArray::new(data, row, col, shape, false).expect("Operation failed");
 
         assert_eq!(coo.shape(), (3, 3));
         assert_eq!(coo.nnz(), 5);
@@ -674,7 +674,8 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let coo = CooArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let coo =
+            CooArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         assert_eq!(coo.shape(), (3, 3));
         assert_eq!(coo.nnz(), 5);
@@ -693,7 +694,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let shape = (3, 3);
 
-        let coo = CooArray::new(data, row, col, shape, false).unwrap();
+        let coo = CooArray::new(data, row, col, shape, false).expect("Operation failed");
         let dense = coo.to_array();
 
         assert_eq!(dense.shape(), &[3, 3]);
@@ -715,7 +716,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let shape = (2, 2);
 
-        let mut coo = CooArray::new(data, row, col, shape, false).unwrap();
+        let mut coo = CooArray::new(data, row, col, shape, false).expect("Operation failed");
 
         // Test summing duplicates
         coo.sum_duplicates();
@@ -734,18 +735,18 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0]);
         let shape = (2, 2);
 
-        let mut coo = CooArray::new(data, row, col, shape, false).unwrap();
+        let mut coo = CooArray::new(data, row, col, shape, false).expect("Operation failed");
 
         // Set a new value
-        coo.set(0, 1, 3.0).unwrap();
+        coo.set(0, 1, 3.0).expect("Operation failed");
         assert_eq!(coo.get(0, 1), 3.0);
 
         // Update an existing value
-        coo.set(0, 0, 4.0).unwrap();
+        coo.set(0, 0, 4.0).expect("Operation failed");
         assert_eq!(coo.get(0, 0), 4.0);
 
         // Set to zero should remove the entry
-        coo.set(0, 0, 0.0).unwrap();
+        coo.set(0, 0, 0.0).expect("Operation failed");
         assert_eq!(coo.get(0, 0), 0.0);
 
         // nnz should be 2 now (2.0 at (1,1) and 3.0 at (0,1))
@@ -759,7 +760,7 @@ mod tests {
         let data = Array1::from_vec(vec![3.0, 1.0, 5.0, 2.0]);
         let shape = (3, 3);
 
-        let mut coo = CooArray::new(data, row, col, shape, false).unwrap();
+        let mut coo = CooArray::new(data, row, col, shape, false).expect("Operation failed");
 
         // Not in canonical format
         assert!(!coo.has_canonical_format);
@@ -795,10 +796,10 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let shape = (3, 3);
 
-        let coo = CooArray::new(data, row, col, shape, false).unwrap();
+        let coo = CooArray::new(data, row, col, shape, false).expect("Operation failed");
 
         // Convert to CSR
-        let csr = coo.to_csr().unwrap();
+        let csr = coo.to_csr().expect("Operation failed");
 
         // Check values
         let dense = csr.to_array();
@@ -816,10 +817,10 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let shape = (3, 3);
 
-        let coo = CooArray::new(data, row, col, shape, false).unwrap();
+        let coo = CooArray::new(data, row, col, shape, false).expect("Operation failed");
 
         // Transpose
-        let transposed = coo.transpose().unwrap();
+        let transposed = coo.transpose().expect("Operation failed");
 
         // Check shape
         assert_eq!(transposed.shape(), (3, 3));

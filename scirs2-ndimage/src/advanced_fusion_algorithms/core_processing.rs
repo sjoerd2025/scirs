@@ -586,7 +586,7 @@ pub fn update_efficiencymetrics(
             .resource_allocation
             .allocationhistory
             .back()
-            .unwrap()
+            .expect("Operation failed")
             .utilization
             .get("memory")
             .unwrap_or(&0.5)
@@ -634,7 +634,10 @@ pub fn update_efficiencymetrics(
 
     let quantum_quality = config.quantum.coherence_factor * (1.0 - config.quantum.decoherence_rate);
     let neural_quality = {
-        let topology = advancedstate.network_topology.read().unwrap();
+        let topology = advancedstate
+            .network_topology
+            .read()
+            .expect("Operation failed");
         topology.global_properties.efficiency
     };
 
@@ -648,7 +651,10 @@ pub fn update_efficiencymetrics(
 
     // Update global network properties with efficiency metrics
     {
-        let mut topology = advancedstate.network_topology.write().unwrap();
+        let mut topology = advancedstate
+            .network_topology
+            .write()
+            .expect("Operation failed");
         topology.global_properties.efficiency = advancedstate.efficiencymetrics.quality_efficiency;
         topology.global_properties.coherence = consciousness_quality;
 

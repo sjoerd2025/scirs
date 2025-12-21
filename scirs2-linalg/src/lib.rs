@@ -49,9 +49,9 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-linalg = "0.1.0-rc.3"
+//! scirs2-linalg = "0.1.0-rc.4"
 //! # Optional features
-//! scirs2-linalg = { version = "0.1.0-rc.3", features = ["simd", "parallel", "gpu"] }
+//! scirs2-linalg = { version = "0.1.0-rc.4", features = ["simd", "parallel", "gpu"] }
 //! ```
 //!
 //! ### Basic Matrix Operations
@@ -62,12 +62,12 @@
 //!
 //! // Determinant and inverse
 //! let a = array![[4.0, 2.0], [2.0, 3.0]];
-//! let det_a = det(&a.view(), None).unwrap();
-//! let a_inv = inv(&a.view(), None).unwrap();
+//! let det_a = det(&a.view(), None).expect("Operation failed");
+//! let a_inv = inv(&a.view(), None).expect("Operation failed");
 //!
 //! // Solve linear system Ax = b
 //! let b = array![6.0, 7.0];
-//! let x = solve(&a.view(), &b.view(), None).unwrap();
+//! let x = solve(&a.view(), &b.view(), None).expect("Operation failed");
 //! ```
 //!
 //! ### Matrix Decompositions
@@ -79,20 +79,20 @@
 //! let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 //!
 //! // LU decomposition: PA = LU
-//! let (p, l, u) = lu(&a.view(), None).unwrap();
+//! let (p, l, u) = lu(&a.view(), None).expect("Operation failed");
 //!
 //! // QR decomposition: A = QR
-//! let (q, r) = qr(&a.view(), None).unwrap();
+//! let (q, r) = qr(&a.view(), None).expect("Operation failed");
 //!
 //! // SVD: A = UΣVᵀ
-//! let (u, s, vt) = svd(&a.view(), true, None).unwrap();
+//! let (u, s, vt) = svd(&a.view(), true, None).expect("Operation failed");
 //!
 //! // Eigenvalues and eigenvectors
-//! let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
+//! let (eigenvalues, eigenvectors) = eig(&a.view(), None).expect("Operation failed");
 //!
 //! // Cholesky decomposition for positive definite matrices
 //! let spd = array![[4.0, 2.0], [2.0, 3.0]];
-//! let l_chol = cholesky(&spd.view(), None).unwrap();
+//! let l_chol = cholesky(&spd.view(), None).expect("Operation failed");
 //! ```
 //!
 //! ### Iterative Solvers (Large Sparse Systems)
@@ -104,10 +104,10 @@
 //! // Conjugate Gradient for symmetric positive definite systems
 //! let a = array![[4.0_f64, 1.0], [1.0, 3.0]];
 //! let b = array![1.0_f64, 2.0];
-//! let x_cg = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).unwrap();
+//! let x_cg = conjugate_gradient(&a.view(), &b.view(), 10, 1e-10, None).expect("Operation failed");
 //!
 //! // GMRES for general systems
-//! let x_gmres = gmres(&a.view(), &b.view(), 10, 1e-10, None).unwrap();
+//! let x_gmres = gmres(&a.view(), &b.view(), 10, 1e-10, None).expect("Operation failed");
 //! ```
 //!
 //! ### Matrix Functions
@@ -119,13 +119,13 @@
 //! let a = array![[1.0, 0.5], [0.5, 1.0]];
 //!
 //! // Matrix exponential: exp(A)
-//! let exp_a = expm(&a.view(), None).unwrap();
+//! let exp_a = expm(&a.view(), None).expect("Operation failed");
 //!
 //! // Matrix logarithm: log(A)
-//! let log_a = logm(&a.view(), None).unwrap();
+//! let log_a = logm(&a.view(), None).expect("Operation failed");
 //!
 //! // Matrix square root: √A
-//! let sqrt_a = sqrtm(&a.view(), None).unwrap();
+//! let sqrt_a = sqrtm(&a.view(), None).expect("Operation failed");
 //! ```
 //!
 //! ### Accelerated BLAS/LAPACK Operations
@@ -137,10 +137,10 @@
 //! // Hardware-accelerated matrix multiplication
 //! let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 //! let b = array![[5.0_f64, 6.0], [7.0, 8.0]];
-//! let c = matmul(&a.view(), &b.view()).unwrap();
+//! let c = matmul(&a.view(), &b.view()).expect("Operation failed");
 //!
 //! // Fast linear system solver using LAPACK
-//! let x = fast_solve(&a.view(), &b.view()).unwrap();
+//! let x = fast_solve(&a.view(), &b.view()).expect("Operation failed");
 //! ```
 //!
 //! ### Attention Mechanisms (Deep Learning)
@@ -210,8 +210,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.3
-//! - **Release Date**: October 03, 2025
+//! - **Version**: 0.1.0-rc.4
+//! - **Release Date**: December 21, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-linalg](https://docs.rs/scirs2-linalg)
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)
@@ -679,10 +679,10 @@ pub mod prelude {
         //! let a = array![[4.0, 2.0], [2.0, 3.0]];
         //!
         //! // SciPy-style determinant computation
-        //! let det = scipy_compat::det(&a.view(), false, true).unwrap();
+        //! let det = scipy_compat::det(&a.view(), false, true).expect("Operation failed");
         //!
         //! // SciPy-style matrix norm
-        //! let norm = scipy_compat::norm(&a.view(), Some("fro"), None, false, true).unwrap();
+        //! let norm = scipy_compat::norm(&a.view(), Some("fro"), None, false, true).expect("Operation failed");
         //! ```
 
         pub use super::super::compat::{

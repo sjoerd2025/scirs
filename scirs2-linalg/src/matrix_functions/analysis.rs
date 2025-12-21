@@ -29,7 +29,7 @@ use crate::validation::validate_decomposition;
 /// use scirs2_linalg::matrix_functions::spectral_radius;
 ///
 /// let a = array![[2.0_f64, 0.0], [0.0, 3.0]];
-/// let rho = spectral_radius(&a.view(), None).unwrap();
+/// let rho = spectral_radius(&a.view(), None).expect("Operation failed");
 /// // rho should be 3.0
 /// ```
 #[allow(dead_code)]
@@ -80,7 +80,7 @@ where
 /// use scirs2_linalg::matrix_functions::spectral_condition_number;
 ///
 /// let a = array![[2.0_f64, 0.0], [0.0, 1.0]];
-/// let cond = spectral_condition_number(&a.view(), None).unwrap();
+/// let cond = spectral_condition_number(&a.view(), None).expect("Operation failed");
 /// // cond should be 2.0
 /// ```
 #[allow(dead_code)]
@@ -141,7 +141,7 @@ where
 /// use scirs2_linalg::matrix_functions::polar_decomposition;
 ///
 /// let a = array![[2.0_f64, 1.0], [0.0, 1.0]];
-/// let (u, p) = polar_decomposition(&a.view(), "right").unwrap();
+/// let (u, p) = polar_decomposition(&a.view(), "right").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn polar_decomposition<F>(a: &ArrayView2<F>, side: &str) -> LinalgResult<(Array2<F>, Array2<F>)>
@@ -170,7 +170,7 @@ where
             }
 
             // Compute P = sqrt(A^H * A)
-            let p = sqrtm(&aha.view(), 50, F::from(1e-12).unwrap())?;
+            let p = sqrtm(&aha.view(), 50, F::from(1e-12).expect("Operation failed"))?;
 
             // Compute U = A * P^{-1}
             let p_inv = solve_multiple(&p.view(), &Array2::eye(n).view(), None)?;
@@ -201,7 +201,7 @@ where
             }
 
             // Compute P = sqrt(A * A^H)
-            let p = sqrtm(&aah.view(), 50, F::from(1e-12).unwrap())?;
+            let p = sqrtm(&aah.view(), 50, F::from(1e-12).expect("Operation failed"))?;
 
             // Compute U = P^{-1} * A
             let p_inv = solve_multiple(&p.view(), &Array2::eye(m).view(), None)?;
@@ -249,7 +249,7 @@ where
 ///
 /// let a = array![[4.0_f64, 0.0], [0.0, 1.0]];
 /// let b = array![[1.0_f64, 0.0], [0.0, 4.0]];
-/// let mean = geometric_mean_spd(&a.view(), &b.view(), 0.5).unwrap();
+/// let mean = geometric_mean_spd(&a.view(), &b.view(), 0.5).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn geometric_mean_spd<F>(a: &ArrayView2<F>, b: &ArrayView2<F>, t: F) -> LinalgResult<Array2<F>>
@@ -358,7 +358,7 @@ where
 /// use scirs2_linalg::matrix_functions::tikhonov_regularization;
 ///
 /// let a = array![[1.0_f64, 0.5], [0.5, 1.0]];
-/// let reg_a = tikhonov_regularization(&a.view(), 0.1, true).unwrap();
+/// let reg_a = tikhonov_regularization(&a.view(), 0.1, true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn tikhonov_regularization<F>(
@@ -417,7 +417,7 @@ where
 /// use scirs2_linalg::matrix_functions::nuclear_norm;
 ///
 /// let a = array![[2.0_f64, 0.0], [0.0, 3.0]];
-/// let norm = nuclear_norm(&a.view(), None).unwrap();
+/// let norm = nuclear_norm(&a.view(), None).expect("Operation failed");
 /// // norm should be 5.0
 /// ```
 #[allow(dead_code)]

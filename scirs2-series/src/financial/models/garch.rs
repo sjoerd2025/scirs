@@ -30,7 +30,7 @@
 //!                   0.003, -0.012, 0.018, -0.006, 0.009, 0.002, -0.008, 0.014, -0.004, 0.011,
 //!                   0.007, -0.009, 0.013, -0.003, 0.006]; // Returns
 //!
-//! let result = model.fit(&data).unwrap();
+//! let result = model.fit(&data).expect("Operation failed");
 //! println!("GARCH Parameters: {:?}", result.parameters);
 //! println!("Log-likelihood: {}", result.log_likelihood);
 //! ```
@@ -63,10 +63,10 @@
 //!                   0.007, -0.009, 0.013, -0.003, 0.006];
 //!
 //! // Fit model
-//! model.fit(&data).unwrap();
+//! model.fit(&data).expect("Operation failed");
 //!
 //! // Forecast volatility 5 steps ahead
-//! let forecasts = model.forecast_variance(5).unwrap();
+//! let forecasts = model.forecast_variance(5).expect("Operation failed");
 //! println!("Volatility Forecasts: {:?}", forecasts);
 //! ```
 
@@ -249,7 +249,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         };
 
         let n = returns.len();
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         // Calculate sample moments
         let mean = returns.sum() / n_f;
@@ -260,7 +260,8 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
 
         // Sample skewness and kurtosis for moment matching
         let _sample_skew = centered_returns.mapv(|r| r.powi(3)).sum()
-            / ((n_f - F::one()) * sample_var.powf(F::from(1.5).unwrap()));
+            / ((n_f - F::one())
+                * sample_var.powf(F::from(1.5).expect("Failed to convert constant to float")));
         let sample_kurt =
             centered_returns.mapv(|r| r.powi(4)).sum() / ((n_f - F::one()) * sample_var.powi(2));
 
@@ -271,25 +272,30 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         // E[r^4] / (E[r^2])^2 = 3(1 - (alpha + beta)^2) / (1 - (alpha + beta)^2 - 2*alpha^2)
 
         // Simplified parameter estimation
-        let alpha_beta_sum = F::one() - F::from(3.0).unwrap() / sample_kurt;
+        let alpha_beta_sum =
+            F::one() - F::from(3.0).expect("Failed to convert constant to float") / sample_kurt;
         let alpha_beta_sum = alpha_beta_sum
-            .max(F::from(0.1).unwrap())
-            .min(F::from(0.99).unwrap());
+            .max(F::from(0.1).expect("Failed to convert constant to float"))
+            .min(F::from(0.99).expect("Failed to convert constant to float"));
 
         // Split alpha and beta based on typical GARCH patterns
-        let alpha = alpha_beta_sum * F::from(0.1).unwrap(); // Typically alpha < beta
+        let alpha = alpha_beta_sum * F::from(0.1).expect("Failed to convert constant to float"); // Typically alpha < beta
         let beta = alpha_beta_sum - alpha;
         let omega = sample_var * (F::one() - alpha - beta);
 
         // Ensure parameters are positive and sum to less than 1
-        let omega = omega.max(F::from(1e-6).unwrap());
-        let alpha = alpha.max(F::from(0.01).unwrap()).min(F::from(0.3).unwrap());
-        let beta = beta.max(F::from(0.01).unwrap()).min(F::from(0.95).unwrap());
+        let omega = omega.max(F::from(1e-6).expect("Failed to convert constant to float"));
+        let alpha = alpha
+            .max(F::from(0.01).expect("Failed to convert constant to float"))
+            .min(F::from(0.3).expect("Failed to convert constant to float"));
+        let beta = beta
+            .max(F::from(0.01).expect("Failed to convert constant to float"))
+            .min(F::from(0.95).expect("Failed to convert constant to float"));
 
         // Adjust if sum exceeds 1
         let sum_ab = alpha + beta;
         let (alpha, beta) = if sum_ab >= F::one() {
-            let scale = F::from(0.99).unwrap() / sum_ab;
+            let scale = F::from(0.99).expect("Failed to convert constant to float") / sum_ab;
             (alpha * scale, beta * scale)
         } else {
             (alpha, beta)
@@ -318,15 +324,17 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             let variance = conditional_variance[i];
             if variance > F::zero() {
                 log_likelihood = log_likelihood
-                    - F::from(0.5).unwrap()
+                    - F::from(0.5).expect("Failed to convert constant to float")
                         * (variance.ln() + centered_returns[i].powi(2) / variance);
             }
         }
 
         // Information criteria
-        let k = F::from(3).unwrap(); // Number of parameters (omega, alpha, beta)
-        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
-        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+        let k = F::from(3).expect("Failed to convert constant to float"); // Number of parameters (omega, alpha, beta)
+        let aic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + F::from(2.0).expect("Failed to convert constant to float") * k;
+        let bic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + k * n_f.ln();
 
         // Create parameter structure
         let mean_params = Array1::from_vec(vec![mean]);
@@ -363,8 +371,11 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             ));
         }
 
-        let parameters = self.parameters.as_ref().unwrap();
-        let conditional_variance = self.conditional_variance.as_ref().unwrap();
+        let parameters = self.parameters.as_ref().expect("Operation failed");
+        let conditional_variance = self
+            .conditional_variance
+            .as_ref()
+            .expect("Operation failed");
 
         if parameters.garch_params.len() < 3 {
             return Err(TimeSeriesError::InvalidModel(
@@ -392,7 +403,8 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             } else {
                 // Multi-step ahead forecast converges to unconditional variance
                 // h-step ahead variance: omega + (alpha + beta)^(h-1) * (1-step variance - unconditional)
-                let decay_factor = (alpha + beta).powf(F::from(i).unwrap());
+                let decay_factor =
+                    (alpha + beta).powf(F::from(i).expect("Failed to convert to float"));
                 forecasts[i] =
                     unconditional_variance + decay_factor * (forecasts[0] - unconditional_variance);
             }
@@ -416,7 +428,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         };
 
         let n = returns.len();
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         // Prepare mean equation
         let (mean_residuals, mean_params) = self.estimate_mean_equation(&returns)?;
@@ -427,16 +439,17 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
 
         // Initialize omega (unconditional variance)
         let sample_var = mean_residuals.mapv(|x| x.powi(2)).sum() / (n_f - F::one());
-        garch_params[0] = sample_var * F::from(0.1).unwrap(); // omega
+        garch_params[0] = sample_var * F::from(0.1).expect("Failed to convert constant to float"); // omega
 
         // Initialize alpha parameters (ARCH terms)
         for i in 1..=self.config.q {
-            garch_params[i] = F::from(0.05).unwrap();
+            garch_params[i] = F::from(0.05).expect("Failed to convert constant to float");
         }
 
         // Initialize beta parameters (GARCH terms)
         for i in (1 + self.config.q)..(1 + self.config.q + self.config.p) {
-            garch_params[i] = F::from(0.85).unwrap() / F::from(self.config.p).unwrap();
+            garch_params[i] = F::from(0.85).expect("Failed to convert constant to float")
+                / F::from(self.config.p).expect("Failed to convert to float");
         }
 
         // Ensure parameter constraints (stationarity)
@@ -453,9 +466,11 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
 
         // Calculate log-likelihood and information criteria
         let log_likelihood = self.compute_log_likelihood(&mean_residuals, &conditional_variance)?;
-        let k = F::from(mean_params.len() + optimized_params.len()).unwrap();
-        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
-        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+        let k = F::from(mean_params.len() + optimized_params.len()).expect("Operation failed");
+        let aic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + F::from(2.0).expect("Failed to convert constant to float") * k;
+        let bic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + k * n_f.ln();
 
         let parameters = GarchParameters {
             mean_params,
@@ -490,7 +505,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             }
             MeanModel::Constant => {
                 // Constant mean model
-                let mean = returns.sum() / F::from(returns.len()).unwrap();
+                let mean = returns.sum() / F::from(returns.len()).expect("Operation failed");
                 let residuals = returns.mapv(|r| r - mean);
                 let mean_params = Array1::from_vec(vec![mean]);
                 Ok((residuals, mean_params))
@@ -550,7 +565,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
 
                 // For now, fall back to constant mean
                 // Full ARMA estimation would require iterative methods
-                let mean = returns.sum() / F::from(returns.len()).unwrap();
+                let mean = returns.sum() / F::from(returns.len()).expect("Operation failed");
                 let residuals = returns.mapv(|r| r - mean);
                 let mean_params = Array1::from_vec(vec![mean]);
                 Ok((residuals, mean_params))
@@ -561,7 +576,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
     /// Constrain GARCH parameters to ensure stationarity and positivity
     fn constrain_parameters(&self, params: &mut Array1<F>) {
         // Ensure omega > 0
-        params[0] = params[0].max(F::from(1e-6).unwrap());
+        params[0] = params[0].max(F::from(1e-6).expect("Failed to convert constant to float"));
 
         // Ensure alpha_i >= 0
         for i in 1..=self.config.q {
@@ -581,7 +596,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
 
         let total_sum = alpha_sum + beta_sum;
         if total_sum >= F::one() {
-            let scale = F::from(0.99).unwrap() / total_sum;
+            let scale = F::from(0.99).expect("Failed to convert constant to float") / total_sum;
             for i in 1..params.len() {
                 params[i] = params[i] * scale;
             }
@@ -598,7 +613,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
         let mut best_likelihood = self.negative_log_likelihood(residuals, &initial_params)?;
 
         // Simple parameter search with random perturbations
-        let perturbation_size = F::from(0.01).unwrap();
+        let perturbation_size = F::from(0.01).expect("Failed to convert constant to float");
 
         for iteration in 0..self.config.max_iterations {
             let mut improved = false;
@@ -638,9 +653,9 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
 
             // Adaptive perturbation size
             if iteration % 20 == 0 && iteration > 0 {
-                let decay = F::from(0.95).unwrap();
+                let decay = F::from(0.95).expect("Failed to convert constant to float");
                 let new_size = perturbation_size * decay;
-                if new_size > F::from(1e-8).unwrap() {
+                if new_size > F::from(1e-8).expect("Failed to convert constant to float") {
                     // perturbation_size = new_size; // Would need to be mutable
                 }
             }
@@ -728,15 +743,18 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
 
         match &self.config.distribution {
             Distribution::Normal => {
-                let ln_2pi = F::from(2.0 * std::f64::consts::PI).unwrap().ln();
-                let n = F::from(residuals.len()).unwrap();
+                let ln_2pi = F::from(2.0 * std::f64::consts::PI)
+                    .expect("Failed to convert to float")
+                    .ln();
+                let n = F::from(residuals.len()).expect("Operation failed");
 
                 // Add the constant term: -n/2 * ln(2π)
-                log_likelihood = -F::from(0.5).unwrap() * n * ln_2pi;
+                log_likelihood =
+                    -F::from(0.5).expect("Failed to convert constant to float") * n * ln_2pi;
 
                 for i in 0..residuals.len() {
                     if variance[i] > F::zero() {
-                        let term = -F::from(0.5).unwrap()
+                        let term = -F::from(0.5).expect("Failed to convert constant to float")
                             * (variance[i].ln() + residuals[i].powi(2) / variance[i]);
                         log_likelihood = log_likelihood + term;
                     }
@@ -744,15 +762,16 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             }
             Distribution::StudentT => {
                 // Simplified Student-t with fixed degrees of freedom (5.0)
-                let nu = F::from(5.0).unwrap();
-                let gamma_factor = F::from(0.8).unwrap(); // Approximation of gamma functions ratio
+                let nu = F::from(5.0).expect("Failed to convert constant to float");
+                let gamma_factor = F::from(0.8).expect("Failed to convert constant to float"); // Approximation of gamma functions ratio
 
                 for i in 0..residuals.len() {
                     if variance[i] > F::zero() {
                         let standardized = residuals[i] / variance[i].sqrt();
                         let term = gamma_factor
-                            - F::from(0.5).unwrap() * variance[i].ln()
-                            - F::from(0.5).unwrap()
+                            - F::from(0.5).expect("Failed to convert constant to float")
+                                * variance[i].ln()
+                            - F::from(0.5).expect("Failed to convert constant to float")
                                 * (nu + F::one())
                                 * (F::one() + standardized.powi(2) / nu).ln();
                         log_likelihood = log_likelihood + term;
@@ -847,7 +866,7 @@ impl<F: Float + Debug + std::iter::Sum> GarchModel<F> {
             }
 
             // Check for singular matrix
-            if aug[[k, k]].abs() < F::from(1e-12).unwrap() {
+            if aug[[k, k]].abs() < F::from(1e-12).expect("Failed to convert constant to float") {
                 return Err(TimeSeriesError::InvalidInput(
                     "Singular matrix in linear system".to_string(),
                 ));
@@ -902,7 +921,7 @@ mod tests {
         let result = model.fit(&data);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert_eq!(result.parameters.garch_params.len(), 3); // omega, alpha, beta
                                                              // TODO: Fix log-likelihood calculation to be properly negative
                                                              // For now, just check that it's finite and reasonable
@@ -919,9 +938,9 @@ mod tests {
             0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
         ]);
 
-        model.fit(&data).unwrap();
+        model.fit(&data).expect("Operation failed");
 
-        let forecasts = model.forecast_variance(5).unwrap();
+        let forecasts = model.forecast_variance(5).expect("Operation failed");
         assert_eq!(forecasts.len(), 5);
         assert!(forecasts.iter().all(|&x| x > 0.0)); // All forecasts should be positive
     }
@@ -957,7 +976,7 @@ mod tests {
         let result = model.fit(&data);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         // For GARCH(2,1): 1 omega + 1 alpha + 2 betas = 4 parameters
         assert_eq!(result.parameters.garch_params.len(), 4);
     }

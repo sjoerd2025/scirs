@@ -132,7 +132,7 @@ where
 
         match minimize(
             fun_clone,
-            start_point.as_slice().unwrap(),
+            start_point.as_slice().expect("Operation failed"),
             method,
             options.clone(),
         ) {
@@ -176,7 +176,7 @@ where
     let best_minimum = minima
         .iter()
         .filter(|m| m.success)
-        .min_by(|a, b| a.f.partial_cmp(&b.f).unwrap())
+        .min_by(|a, b| a.f.partial_cmp(&b.f).expect("Operation failed"))
         .cloned();
 
     Ok(ClusteringResult {
@@ -713,7 +713,7 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
         let next_idx = distances
             .iter()
             .enumerate()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
             .map(|(i, _)| i)
             .unwrap_or(0);
 
@@ -1068,7 +1068,7 @@ mod tests {
             ..Default::default()
         };
 
-        threshold_clustering(&mut minima, &options).unwrap();
+        threshold_clustering(&mut minima, &options).expect("Operation failed");
 
         // First two should be in same cluster, third in different cluster
         assert_eq!(minima[0].cluster_id, minima[1].cluster_id);

@@ -13,16 +13,16 @@ fn main() {
         let matrix = variable(matrix_data.clone(), g);
         println!(
             "Original matrix shape: {:?}",
-            matrix.eval(g).unwrap().shape()
+            matrix.eval(g).expect("Operation failed").shape()
         );
 
         // Compute SVD
         let (u, s, v) = svd(matrix);
         println!(
             "SVD shapes: U={:?}, S={:?}, V={:?}",
-            u.eval(g).unwrap().shape(),
-            s.eval(g).unwrap().shape(),
-            v.eval(g).unwrap().shape()
+            u.eval(g).expect("Operation failed").shape(),
+            s.eval(g).expect("Operation failed").shape(),
+            v.eval(g).expect("Operation failed").shape()
         );
 
         // Test 1: Gradient through sum of U
@@ -66,11 +66,11 @@ fn main() {
                             // Compute SVD for perturbed matrices
                             let matrix_plus = convert_to_tensor(perturbed_plus, g);
                             let (u_plus, _, _) = svd(matrix_plus);
-                            let sum_u_plus = u_plus.eval(g).unwrap().sum();
+                            let sum_u_plus = u_plus.eval(g).expect("Operation failed").sum();
 
                             let matrix_minus = convert_to_tensor(perturbed_minus, g);
                             let (u_minus, _, _) = svd(matrix_minus);
-                            let sum_u_minus = u_minus.eval(g).unwrap().sum();
+                            let sum_u_minus = u_minus.eval(g).expect("Operation failed").sum();
 
                             // Compute finite difference
                             fd_grad[[i, j]] = (sum_u_plus - sum_u_minus) / (2.0 * eps);
@@ -82,7 +82,7 @@ fn main() {
 
                     // Compare with analytical gradient
                     println!("Shape of gradient array: {:?}", arr.shape());
-                    let grad_arr = arr.into_dimensionality::<Ix2>().unwrap();
+                    let grad_arr = arr.into_dimensionality::<Ix2>().expect("Operation failed");
                     let mut max_diff: f64 = 0.0;
 
                     // Handle the case where the gradient shape doesn't match the input matrix shape
@@ -153,11 +153,11 @@ fn main() {
                             // Compute SVD for perturbed matrices
                             let matrix_plus = convert_to_tensor(perturbed_plus, g);
                             let (_, s_plus, _) = svd(matrix_plus);
-                            let sum_s_plus = s_plus.eval(g).unwrap().sum();
+                            let sum_s_plus = s_plus.eval(g).expect("Operation failed").sum();
 
                             let matrix_minus = convert_to_tensor(perturbed_minus, g);
                             let (_, s_minus, _) = svd(matrix_minus);
-                            let sum_s_minus = s_minus.eval(g).unwrap().sum();
+                            let sum_s_minus = s_minus.eval(g).expect("Operation failed").sum();
 
                             // Compute finite difference
                             fd_grad[[i, j]] = (sum_s_plus - sum_s_minus) / (2.0 * eps);
@@ -169,7 +169,7 @@ fn main() {
 
                     // Compare with analytical gradient
                     println!("Shape of gradient array: {:?}", arr.shape());
-                    let grad_arr = arr.into_dimensionality::<Ix2>().unwrap();
+                    let grad_arr = arr.into_dimensionality::<Ix2>().expect("Operation failed");
                     let mut max_diff: f64 = 0.0;
 
                     // Handle the case where the gradient shape doesn't match the input matrix shape
@@ -240,11 +240,11 @@ fn main() {
                             // Compute SVD for perturbed matrices
                             let matrix_plus = convert_to_tensor(perturbed_plus, g);
                             let (_, _, v_plus) = svd(matrix_plus);
-                            let sum_v_plus = v_plus.eval(g).unwrap().sum();
+                            let sum_v_plus = v_plus.eval(g).expect("Operation failed").sum();
 
                             let matrix_minus = convert_to_tensor(perturbed_minus, g);
                             let (_, _, v_minus) = svd(matrix_minus);
-                            let sum_v_minus = v_minus.eval(g).unwrap().sum();
+                            let sum_v_minus = v_minus.eval(g).expect("Operation failed").sum();
 
                             // Compute finite difference
                             fd_grad[[i, j]] = (sum_v_plus - sum_v_minus) / (2.0 * eps);
@@ -256,7 +256,7 @@ fn main() {
 
                     // Compare with analytical gradient
                     println!("Shape of gradient array: {:?}", arr.shape());
-                    let grad_arr = arr.into_dimensionality::<Ix2>().unwrap();
+                    let grad_arr = arr.into_dimensionality::<Ix2>().expect("Operation failed");
                     let mut max_diff: f64 = 0.0;
 
                     // Handle the case where the gradient shape doesn't match the input matrix shape

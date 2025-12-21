@@ -37,7 +37,7 @@ use scirs2_core::ndarray::Array2;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let corners = shi_tomasi_corners(&img, 3, 0.01, 100, 10)?;
 /// # Ok(())
 /// # }
@@ -403,7 +403,7 @@ mod tests {
         let result = shi_tomasi_corners_simple(&dynamic_img, 10);
 
         assert!(result.is_ok());
-        let corners = result.unwrap();
+        let corners = result.expect("Operation failed");
 
         // Count detected corners
         let mut corner_count = 0;
@@ -430,7 +430,7 @@ mod tests {
         let result = good_features_to_track(&dynamic_img, 3, 0.01, 10, 5);
         assert!(result.is_ok());
 
-        let features = result.unwrap();
+        let features = result.expect("Operation failed");
         assert!(features.len() <= 10, "Should not exceed max_corners");
     }
 

@@ -79,7 +79,7 @@ use scirs2_core::simd_ops::{
 /// let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * 10.0 * i as f64 / n as f64).sin()).collect();
 ///
 /// // Compute FrFT with order 0.5 (halfway between time and frequency domain)
-/// let result = frft(&signal, 0.5, None).unwrap();
+/// let result = frft(&signal, 0.5, None).expect("Operation failed");
 ///
 /// // Result has same length as input
 /// assert_eq!(result.len(), signal.len());
@@ -100,7 +100,7 @@ use scirs2_core::simd_ops::{
 /// }).collect();
 ///
 /// // Compute FrFT
-/// let result = frft_complex(&signal, 0.5, None).unwrap();
+/// let result = frft_complex(&signal, 0.5, None).expect("Operation failed");
 /// assert_eq!(result.len(), signal.len());
 /// ```
 ///
@@ -305,7 +305,7 @@ fn frft_near_special_case(x: &[Complex64], alpha: f64, _d: f64) -> FFTResult<Vec
 /// }).collect();
 ///
 /// // Compute FrFT with order 0.5
-/// let result = frft_complex(&signal, 0.5, None).unwrap();
+/// let result = frft_complex(&signal, 0.5, None).expect("Operation failed");
 ///
 /// // Result has same length as input
 /// assert_eq!(result.len(), signal.len());
@@ -377,7 +377,7 @@ pub fn frft_complex(x: &[Complex64], alpha: f64, d: Option<f64>) -> FFTResult<Ve
 /// use scirs2_fft::frft_stable;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
-/// let result = frft_stable(&signal, 0.5).unwrap();
+/// let result = frft_stable(&signal, 0.5).expect("Operation failed");
 /// assert_eq!(result.len(), signal.len());
 /// ```
 #[allow(dead_code)]
@@ -408,7 +408,7 @@ where
 /// use scirs2_fft::frft_dft;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
-/// let result = frft_dft(&signal, 0.5).unwrap();
+/// let result = frft_dft(&signal, 0.5).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn frft_dft<T>(x: &[T], alpha: f64) -> FFTResult<Vec<Complex64>>
@@ -853,7 +853,7 @@ mod tests {
     fn test_frft_identity() {
         // α = 0 should be the identity transform
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let result = frft(&signal, 0.0, None).unwrap();
+        let result = frft(&signal, 0.0, None).expect("Operation failed");
 
         for (i, val) in signal.iter().enumerate() {
             assert_relative_eq!(result[i].re, *val, epsilon = 1e-10);
@@ -865,8 +865,8 @@ mod tests {
     fn test_frft_fourier() {
         // α = 1 should be equivalent to standard FFT
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let frft_result = frft(&signal, 1.0, None).unwrap();
-        let fft_result = fft(&signal, None).unwrap();
+        let frft_result = frft(&signal, 1.0, None).expect("Operation failed");
+        let fft_result = fft(&signal, None).expect("Operation failed");
 
         for i in 0..signal.len() {
             assert_relative_eq!(frft_result[i].re, fft_result[i].re, epsilon = 1e-10);
@@ -878,7 +878,7 @@ mod tests {
     fn test_frft_time_reversal() {
         // α = 2 should reverse the signal
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let result = frft(&signal, 2.0, None).unwrap();
+        let result = frft(&signal, 2.0, None).expect("Operation failed");
 
         for i in 0..signal.len() {
             assert_relative_eq!(result[i].re, signal[signal.len() - 1 - i], epsilon = 1e-10);
@@ -898,8 +898,8 @@ mod tests {
         ];
 
         // Use the specialized function for Complex64
-        let frft_result = frft_complex(&signal_vec, 3.0, None).unwrap();
-        let ifft_result = ifft(&signal_vec, None).unwrap();
+        let frft_result = frft_complex(&signal_vec, 3.0, None).expect("Operation failed");
+        let ifft_result = ifft(&signal_vec, None).expect("Operation failed");
 
         // Compare results
         for i in 0..signal_vec.len() {
@@ -929,9 +929,10 @@ mod tests {
             signal.iter().map(|&x| Complex64::new(x, 0.0)).collect();
 
         // Original implementation results
-        let orig_result1 = frft_complex(&signal_complex, alpha1 + alpha2, None).unwrap();
-        let orig_temp = frft_complex(&signal_complex, alpha2, None).unwrap();
-        let orig_result2 = frft_complex(&orig_temp, alpha1, None).unwrap();
+        let orig_result1 =
+            frft_complex(&signal_complex, alpha1 + alpha2, None).expect("Operation failed");
+        let orig_temp = frft_complex(&signal_complex, alpha2, None).expect("Operation failed");
+        let orig_result2 = frft_complex(&orig_temp, alpha1, None).expect("Operation failed");
 
         // Calculate energy for original implementation
         let orig_energy1: f64 = orig_result1.iter().map(|c| c.norm_sqr()).sum();
@@ -943,12 +944,12 @@ mod tests {
 
         // Now test the Ozaktas-Kutay implementation (frft_stable)
         // This should have better numerical stability
-        let ozaktas_result1 = frft_stable(&signal, alpha1 + alpha2).unwrap();
-        let ozaktas_temp = frft_stable(&signal, alpha2).unwrap();
+        let ozaktas_result1 = frft_stable(&signal, alpha1 + alpha2).expect("Operation failed");
+        let ozaktas_temp = frft_stable(&signal, alpha2).expect("Operation failed");
 
         // Convert complex result to real for second transform
         let real_temp: Vec<f64> = ozaktas_temp.iter().map(|c| c.re).collect();
-        let ozaktas_result2 = frft_stable(&real_temp, alpha1).unwrap();
+        let ozaktas_result2 = frft_stable(&real_temp, alpha1).expect("Operation failed");
 
         // Calculate energy for Ozaktas implementation
         let ozaktas_energy1: f64 = ozaktas_result1.iter().map(|c| c.norm_sqr()).sum();
@@ -964,12 +965,12 @@ mod tests {
         );
 
         // Finally, test the DFT-based implementation which should have the best stability
-        let dft_result1 = frft_dft(&signal, alpha1 + alpha2).unwrap();
-        let dft_temp = frft_dft(&signal, alpha2).unwrap();
+        let dft_result1 = frft_dft(&signal, alpha1 + alpha2).expect("Operation failed");
+        let dft_temp = frft_dft(&signal, alpha2).expect("Operation failed");
 
         // Convert complex result to real for second transform
         let dft_real_temp: Vec<f64> = dft_temp.iter().map(|c| c.re).collect();
-        let dft_result2 = frft_dft(&dft_real_temp, alpha1).unwrap();
+        let dft_result2 = frft_dft(&dft_real_temp, alpha1).expect("Operation failed");
 
         // Calculate energy for DFT implementation
         let dft_energy1: f64 = dft_result1.iter().map(|c| c.norm_sqr()).sum();
@@ -1016,8 +1017,8 @@ mod tests {
             signal2.iter().map(|&x| Complex64::new(x, 0.0)).collect();
 
         // Compute a*FrFT(signal1) + b*FrFT(signal2)
-        let frft1 = frft_complex(&signal1_complex, alpha, None).unwrap();
-        let frft2 = frft_complex(&signal2_complex, alpha, None).unwrap();
+        let frft1 = frft_complex(&signal1_complex, alpha, None).expect("Operation failed");
+        let frft2 = frft_complex(&signal2_complex, alpha, None).expect("Operation failed");
 
         let mut combined1 = vec![Complex64::zero(); n];
         for i in 0..n {
@@ -1030,7 +1031,7 @@ mod tests {
             combined_signal[i] = Complex64::new(a * signal1[i] + b * signal2[i], 0.0);
         }
 
-        let combined2 = frft_complex(&combined_signal, alpha, None).unwrap();
+        let combined2 = frft_complex(&combined_signal, alpha, None).expect("Operation failed");
 
         // Check with a generous epsilon due to numerical differences
         // For FrFT, linearity is approximate due to numerical errors
@@ -1063,17 +1064,17 @@ mod tests {
             })
             .collect();
 
-        let result = frft_complex(&signal_complex, 0.5, None).unwrap();
+        let result = frft_complex(&signal_complex, 0.5, None).expect("Operation failed");
 
         // Verify we get a result with the right length
         assert_eq!(result.len(), n);
 
         // Also test that we can apply the transform twice
-        let result2 = frft_complex(&result, 0.5, None).unwrap();
+        let result2 = frft_complex(&result, 0.5, None).expect("Operation failed");
         assert_eq!(result2.len(), n);
 
         // And that α = 4 returns to the original (approximately)
-        let result4 = frft_complex(&signal_complex, 4.0, None).unwrap();
+        let result4 = frft_complex(&signal_complex, 4.0, None).expect("Operation failed");
         for i in 0..n {
             assert_relative_eq!(result4[i].re, signal_complex[i].re, epsilon = 1e-10);
             assert_relative_eq!(result4[i].im, signal_complex[i].im, epsilon = 1e-10);

@@ -108,14 +108,14 @@ where
 
         if n < self.config.min_chunksize {
             // Use sequential computation for small datasets
-            return Ok(data.mean().unwrap());
+            return Ok(data.mean().expect("Operation failed"));
         }
 
         // Use scirs2-core's parallel operations
         let chunksize = self.calculate_optimal_chunksize(n);
         let result = data
             .as_slice()
-            .unwrap()
+            .expect("Operation failed")
             .par_chunks(chunksize)
             .map(|chunk| {
                 // Process each chunk (map phase)
@@ -132,7 +132,7 @@ where
             );
 
         let (total_sum, total_count) = result;
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     /// Parallel variance computation with Welford's algorithm
@@ -149,9 +149,9 @@ where
 
         if n < self.config.min_chunksize {
             // Use sequential computation for small datasets
-            let mean = data.mean().unwrap();
+            let mean = data.mean().expect("Operation failed");
             let sum_sq_diff: F = data.iter().map(|&x| (x - mean) * (x - mean)).sum();
-            return Ok(sum_sq_diff / F::from(n.saturating_sub(ddof)).unwrap());
+            return Ok(sum_sq_diff / F::from(n.saturating_sub(ddof)).expect("Operation failed"));
         }
 
         // First pass: compute mean in parallel
@@ -161,7 +161,7 @@ where
         let chunksize = self.calculate_optimal_chunksize(n);
         let result = data
             .as_slice()
-            .unwrap()
+            .expect("Operation failed")
             .par_chunks(chunksize)
             .map(|chunk| {
                 // Process each chunk (map phase)
@@ -186,7 +186,7 @@ where
             ));
         }
 
-        Ok(total_sum_sq_diff / F::from(denominator).unwrap())
+        Ok(total_sum_sq_diff / F::from(denominator).expect("Failed to convert to float"))
     }
 
     /// Parallel correlation matrix computation
@@ -204,7 +204,7 @@ where
         // Compute means in parallel
         let means = parallel_map_collect(0..n_features, |i| {
             let col = matrix.column(i);
-            self.mean_parallel_enhanced(&col).unwrap()
+            self.mean_parallel_enhanced(&col).expect("Operation failed")
         });
 
         // Compute correlation coefficients in parallel
@@ -221,7 +221,7 @@ where
                 let col_j = matrix.column(j);
                 let corr = self
                     .correlation_coefficient(&col_i, &col_j, means[i], means[j])
-                    .unwrap();
+                    .expect("Operation failed");
                 (i, j, corr)
             }
         });
@@ -285,23 +285,25 @@ where
         // Compute row statistics in parallel
         let row_means = parallel_map_collect(0..rows, |i| {
             let row = matrix.row(i);
-            self.mean_parallel_enhanced(&row).unwrap()
+            self.mean_parallel_enhanced(&row).expect("Operation failed")
         });
 
         let row_vars = parallel_map_collect(0..rows, |i| {
             let row = matrix.row(i);
-            self.variance_parallel_enhanced(&row, 1).unwrap()
+            self.variance_parallel_enhanced(&row, 1)
+                .expect("Operation failed")
         });
 
         // Compute column statistics in parallel
         let col_means = parallel_map_collect(0..cols, |j| {
             let col = matrix.column(j);
-            self.mean_parallel_enhanced(&col).unwrap()
+            self.mean_parallel_enhanced(&col).expect("Operation failed")
         });
 
         let col_vars = parallel_map_collect(0..cols, |j| {
             let col = matrix.column(j);
-            self.variance_parallel_enhanced(&col, 1).unwrap()
+            self.variance_parallel_enhanced(&col, 1)
+                .expect("Operation failed")
         });
 
         // Compute overall statistics
@@ -349,13 +351,13 @@ where
         if sorteddata.len() >= self.config.min_chunksize {
             sorteddata
                 .as_slice_mut()
-                .unwrap()
-                .par_sort_by(|a, b| a.partial_cmp(b).unwrap());
+                .expect("Operation failed")
+                .par_sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         } else {
             sorteddata
                 .as_slice_mut()
-                .unwrap()
-                .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                .expect("Operation failed")
+                .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         }
 
         // Compute quantiles
@@ -363,10 +365,12 @@ where
         let results = quantiles
             .iter()
             .map(|&q| {
-                let index = (q * F::from(n - 1).unwrap()).to_f64().unwrap();
+                let index = (q * F::from(n - 1).expect("Failed to convert to float"))
+                    .to_f64()
+                    .expect("Operation failed");
                 let lower = index.floor() as usize;
                 let upper = index.ceil() as usize;
-                let weight = F::from(index - index.floor()).unwrap();
+                let weight = F::from(index - index.floor()).expect("Operation failed");
 
                 if lower == upper {
                     sorteddata[lower]

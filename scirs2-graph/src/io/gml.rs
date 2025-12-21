@@ -63,17 +63,17 @@
 //! use scirs2_graph::io::gml::{read_gml_format, write_gml_format};
 //!
 //! // Create a temporary file with GML data
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, "graph [").unwrap();
-//! writeln!(temp_file, "  directed 0").unwrap();
-//! writeln!(temp_file, "  node [ id 1 ]").unwrap();
-//! writeln!(temp_file, "  node [ id 2 ]").unwrap();
-//! writeln!(temp_file, "  edge [ source 1 target 2 ]").unwrap();
-//! writeln!(temp_file, "]").unwrap();
-//! temp_file.flush().unwrap();
+//! let mut temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+//! writeln!(temp_file, "graph [").expect("Test I/O operation failed");
+//! writeln!(temp_file, "  directed 0").expect("Test I/O operation failed");
+//! writeln!(temp_file, "  node [ id 1 ]").expect("Test I/O operation failed");
+//! writeln!(temp_file, "  node [ id 2 ]").expect("Test I/O operation failed");
+//! writeln!(temp_file, "  edge [ source 1 target 2 ]").expect("Test I/O operation failed");
+//! writeln!(temp_file, "]").expect("Test I/O operation failed");
+//! temp_file.flush().expect("Test I/O operation failed");
 //!
 //! // Read the graph
-//! let graph: Graph<i32, f64> = read_gml_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, f64> = read_gml_format(temp_file.path(), false).expect("Test I/O operation failed");
 //! assert_eq!(graph.node_count(), 2);
 //! assert_eq!(graph.edge_count(), 1);
 //! ```
@@ -159,13 +159,21 @@ impl GmlLexer {
 
     fn skip_whitespace_and_comments(&mut self) {
         while self.position < self.input.len() {
-            let ch = self.input.chars().nth(self.position).unwrap();
+            let ch = self
+                .input
+                .chars()
+                .nth(self.position)
+                .expect("Character index out of bounds");
             if ch.is_whitespace() {
                 self.position += 1;
             } else if ch == '#' {
                 // Skip comment line
                 while self.position < self.input.len() {
-                    let ch = self.input.chars().nth(self.position).unwrap();
+                    let ch = self
+                        .input
+                        .chars()
+                        .nth(self.position)
+                        .expect("Character index out of bounds");
                     self.position += 1;
                     if ch == '\n' {
                         break;
@@ -182,7 +190,11 @@ impl GmlLexer {
         let start = self.position;
 
         while self.position < self.input.len() {
-            let ch = self.input.chars().nth(self.position).unwrap();
+            let ch = self
+                .input
+                .chars()
+                .nth(self.position)
+                .expect("Character index out of bounds");
             if ch == '"' {
                 let value = self.input[start..self.position].to_string();
                 self.position += 1; // Skip closing quote
@@ -198,7 +210,11 @@ impl GmlLexer {
         let start = self.position;
 
         while self.position < self.input.len() {
-            let ch = self.input.chars().nth(self.position).unwrap();
+            let ch = self
+                .input
+                .chars()
+                .nth(self.position)
+                .expect("Character index out of bounds");
             if ch.is_alphanumeric() || ch == '_' || ch == '.' || ch == '-' {
                 self.position += 1;
             } else {
@@ -719,18 +735,19 @@ mod tests {
 
     #[test]
     fn test_read_simple_gml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "graph [").unwrap();
-        writeln!(temp_file, "  directed 0").unwrap();
-        writeln!(temp_file, "  node [ id 1 ]").unwrap();
-        writeln!(temp_file, "  node [ id 2 ]").unwrap();
-        writeln!(temp_file, "  node [ id 3 ]").unwrap();
-        writeln!(temp_file, "  edge [ source 1 target 2 ]").unwrap();
-        writeln!(temp_file, "  edge [ source 2 target 3 ]").unwrap();
-        writeln!(temp_file, "]").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(temp_file, "graph [").expect("Test I/O operation failed");
+        writeln!(temp_file, "  directed 0").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 1 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 3 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  edge [ source 1 target 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  edge [ source 2 target 3 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "]").expect("Test I/O operation failed");
+        temp_file.flush().expect("Test I/O operation failed");
 
-        let graph: Graph<i32, f64> = read_gml_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_gml_format(temp_file.path(), false).expect("Test I/O operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -738,16 +755,18 @@ mod tests {
 
     #[test]
     fn test_read_weighted_gml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "graph [").unwrap();
-        writeln!(temp_file, "  directed 0").unwrap();
-        writeln!(temp_file, "  node [ id 1 ]").unwrap();
-        writeln!(temp_file, "  node [ id 2 ]").unwrap();
-        writeln!(temp_file, "  edge [ source 1 target 2 weight 1.5 ]").unwrap();
-        writeln!(temp_file, "]").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(temp_file, "graph [").expect("Test I/O operation failed");
+        writeln!(temp_file, "  directed 0").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 1 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  edge [ source 1 target 2 weight 1.5 ]")
+            .expect("Test I/O operation failed");
+        writeln!(temp_file, "]").expect("Test I/O operation failed");
+        temp_file.flush().expect("Test I/O operation failed");
 
-        let graph: Graph<i32, f64> = read_gml_format(temp_file.path(), true).unwrap();
+        let graph: Graph<i32, f64> =
+            read_gml_format(temp_file.path(), true).expect("Test I/O operation failed");
 
         assert_eq!(graph.node_count(), 2);
         assert_eq!(graph.edge_count(), 1);
@@ -755,16 +774,17 @@ mod tests {
 
     #[test]
     fn test_read_directed_gml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "graph [").unwrap();
-        writeln!(temp_file, "  directed 1").unwrap();
-        writeln!(temp_file, "  node [ id 1 ]").unwrap();
-        writeln!(temp_file, "  node [ id 2 ]").unwrap();
-        writeln!(temp_file, "  edge [ source 1 target 2 ]").unwrap();
-        writeln!(temp_file, "]").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(temp_file, "graph [").expect("Test I/O operation failed");
+        writeln!(temp_file, "  directed 1").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 1 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  edge [ source 1 target 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "]").expect("Test I/O operation failed");
+        temp_file.flush().expect("Test I/O operation failed");
 
-        let graph: DiGraph<i32, f64> = read_gml_format_digraph(temp_file.path(), false).unwrap();
+        let graph: DiGraph<i32, f64> =
+            read_gml_format_digraph(temp_file.path(), false).expect("Test I/O operation failed");
 
         assert_eq!(graph.node_count(), 2);
         assert_eq!(graph.edge_count(), 1);
@@ -773,13 +793,19 @@ mod tests {
     #[test]
     fn test_write_read_roundtrip() {
         let mut original_graph: Graph<i32, f64> = Graph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Test I/O operation failed");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Test I/O operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_gml_format(&original_graph, temp_file.path(), false).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        write_gml_format(&original_graph, temp_file.path(), false)
+            .expect("Test I/O operation failed");
 
-        let read_graph: Graph<i32, f64> = read_gml_format(temp_file.path(), false).unwrap();
+        let read_graph: Graph<i32, f64> =
+            read_gml_format(temp_file.path(), false).expect("Test I/O operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -788,14 +814,19 @@ mod tests {
     #[test]
     fn test_digraph_write_read_roundtrip() {
         let mut original_graph: DiGraph<i32, f64> = DiGraph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Test I/O operation failed");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Test I/O operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_gml_format_digraph(&original_graph, temp_file.path(), false).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        write_gml_format_digraph(&original_graph, temp_file.path(), false)
+            .expect("Test I/O operation failed");
 
         let read_graph: DiGraph<i32, f64> =
-            read_gml_format_digraph(temp_file.path(), false).unwrap();
+            read_gml_format_digraph(temp_file.path(), false).expect("Test I/O operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -803,9 +834,9 @@ mod tests {
 
     #[test]
     fn test_invalid_gml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "invalid gml format").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(temp_file, "invalid gml format").expect("Test I/O operation failed");
+        temp_file.flush().expect("Test I/O operation failed");
 
         let result: Result<Graph<i32, f64>> = read_gml_format(temp_file.path(), false);
         assert!(result.is_err());
@@ -813,14 +844,14 @@ mod tests {
 
     #[test]
     fn test_directed_mismatch() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "graph [").unwrap();
-        writeln!(temp_file, "  directed 1").unwrap();
-        writeln!(temp_file, "  node [ id 1 ]").unwrap();
-        writeln!(temp_file, "  node [ id 2 ]").unwrap();
-        writeln!(temp_file, "  edge [ source 1 target 2 ]").unwrap();
-        writeln!(temp_file, "]").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(temp_file, "graph [").expect("Test I/O operation failed");
+        writeln!(temp_file, "  directed 1").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 1 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  edge [ source 1 target 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "]").expect("Test I/O operation failed");
+        temp_file.flush().expect("Test I/O operation failed");
 
         // Try to read as undirected graph - should fail
         let result: Result<Graph<i32, f64>> = read_gml_format(temp_file.path(), false);
@@ -829,18 +860,19 @@ mod tests {
 
     #[test]
     fn test_gml_with_comments() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "# This is a comment").unwrap();
-        writeln!(temp_file, "graph [").unwrap();
-        writeln!(temp_file, "  # Another comment").unwrap();
-        writeln!(temp_file, "  directed 0").unwrap();
-        writeln!(temp_file, "  node [ id 1 label \"Node 1\" ]").unwrap();
-        writeln!(temp_file, "  node [ id 2 label \"Node 2\" ]").unwrap();
-        writeln!(temp_file, "  edge [ source 1 target 2 ]").unwrap();
-        writeln!(temp_file, "]").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(temp_file, "# This is a comment").expect("Test I/O operation failed");
+        writeln!(temp_file, "graph [").expect("Test I/O operation failed");
+        writeln!(temp_file, "  # Another comment").expect("Test I/O operation failed");
+        writeln!(temp_file, "  directed 0").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 1 label \"Node 1\" ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  node [ id 2 label \"Node 2\" ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "  edge [ source 1 target 2 ]").expect("Test I/O operation failed");
+        writeln!(temp_file, "]").expect("Test I/O operation failed");
+        temp_file.flush().expect("Test I/O operation failed");
 
-        let graph: Graph<i32, f64> = read_gml_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_gml_format(temp_file.path(), false).expect("Test I/O operation failed");
 
         assert_eq!(graph.node_count(), 2);
         assert_eq!(graph.edge_count(), 1);

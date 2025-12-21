@@ -29,7 +29,7 @@
 //! let spline = MultiscaleBSpline::new(
 //!     &x.view(), &y.view(), 10, 3, 5, 0.01_f64,
 //!     scirs2_interpolate::ExtrapolateMode::Extrapolate
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! // Set up active learning
 //! let mut learner = ActiveLearner::new(spline, SamplingStrategy::UncertaintyBased)
@@ -37,7 +37,7 @@
 //!     .with_exploration_weight(0.2);
 //!
 //! // Suggest next sampling points
-//! let candidates = learner.suggest_samples(10).unwrap();
+//! let candidates = learner.suggest_samples(10).expect("Operation failed");
 //! println!("Suggested sampling points: {:?}", candidates);
 //! ```
 
@@ -92,12 +92,12 @@ impl<T: Float + FromPrimitive> Default for ActiveLearningConfig<T> {
         Self {
             maxsamples_per_iteration: 10,
             total_budget: 100,
-            exploration_weight: T::from(0.1).unwrap(),
-            min_sample_distance: T::from(0.01).unwrap(),
-            convergence_threshold: T::from(1e-6).unwrap(),
-            uncertainty_weight: T::from(0.4).unwrap(),
-            error_weight: T::from(0.4).unwrap(),
-            gradient_weight: T::from(0.2).unwrap(),
+            exploration_weight: T::from(0.1).expect("Operation failed"),
+            min_sample_distance: T::from(0.01).expect("Operation failed"),
+            convergence_threshold: T::from(1e-6).expect("Operation failed"),
+            uncertainty_weight: T::from(0.4).expect("Operation failed"),
+            error_weight: T::from(0.4).expect("Operation failed"),
+            gradient_weight: T::from(0.2).expect("Operation failed"),
         }
     }
 }
@@ -311,16 +311,16 @@ where
         let mut combined_y = Vec::with_capacity(current_y.len() + new_y.len());
 
         // Add existing data
-        combined_x.extend_from_slice(current_x.as_slice().unwrap());
-        combined_y.extend_from_slice(current_y.as_slice().unwrap());
+        combined_x.extend_from_slice(current_x.as_slice().expect("Operation failed"));
+        combined_y.extend_from_slice(current_y.as_slice().expect("Operation failed"));
 
         // Add new data
-        combined_x.extend_from_slice(new_x.as_slice().unwrap());
-        combined_y.extend_from_slice(new_y.as_slice().unwrap());
+        combined_x.extend_from_slice(new_x.as_slice().expect("Operation failed"));
+        combined_y.extend_from_slice(new_y.as_slice().expect("Operation failed"));
 
         // Create combined arrays and sort by _x values
         let mut data_pairs: Vec<_> = combined_x.into_iter().zip(combined_y).collect();
-        data_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        data_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         let (sorted_x, sorted_y): (Vec<_>, Vec<_>) = data_pairs.into_iter().unzip();
         let x_array = Array1::from_vec(sorted_x);
@@ -335,7 +335,7 @@ where
             std::cmp::max(std::cmp::min(x_array.len() / 2, 20), min_knots), // Ensure enough knots
             degree,                                                         // Cubic degree
             10,                                                             // Max levels
-            T::from(0.01).unwrap(),
+            T::from(0.01).expect("Operation failed"),
             crate::ExtrapolateMode::Extrapolate,
         )?;
 
@@ -372,7 +372,12 @@ where
         // Check if improvement in recent iterations is below threshold
         let recent_errors = &self.stats.error_history[self.stats.error_history.len() - 3..];
         let improvement = recent_errors[0] - recent_errors[2];
-        improvement < self.config.convergence_threshold.to_f64().unwrap()
+        improvement
+            < self
+                .config
+                .convergence_threshold
+                .to_f64()
+                .expect("Operation failed")
     }
 
     /// Uncertainty-based sampling strategy
@@ -386,8 +391,8 @@ where
         // Generate candidate _points across the domain
         let num_candidates = num_points * 10; // Oversample to allow selection
         let candidate_points = Array1::linspace(
-            self.domain_min.to_f64().unwrap(),
-            self.domain_max.to_f64().unwrap(),
+            self.domain_min.to_f64().expect("Operation failed"),
+            self.domain_max.to_f64().expect("Operation failed"),
             num_candidates,
         );
 
@@ -395,13 +400,13 @@ where
 
         // Estimate uncertainty at each candidate point
         for &x_val in candidate_points.iter() {
-            let x_t = T::from(x_val).unwrap();
+            let x_t = T::from(x_val).expect("Operation failed");
             let uncertainty = self.estimate_uncertainty(x_t)?;
             utilities.push((x_t, uncertainty, "uncertainty".to_string()));
         }
 
         // Sort by utility (uncertainty) in descending order
-        utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
@@ -411,7 +416,7 @@ where
                     location,
                     utility,
                     information_type: info_type,
-                    confidence: T::from(0.8).unwrap(), // Moderate confidence in uncertainty estimates
+                    confidence: T::from(0.8).expect("Operation failed"), // Moderate confidence in uncertainty estimates
                 });
                 selected_points.push(location);
 
@@ -457,10 +462,10 @@ where
 
         // Also add _points between high-error regions
         for i in 0..error_locations.len().saturating_sub(1) {
-            let mid_point =
-                (error_locations[i].0 + error_locations[i + 1].0) / T::from(2.0).unwrap();
-            let estimated_error =
-                (error_locations[i].1 + error_locations[i + 1].1) / T::from(2.0).unwrap();
+            let mid_point = (error_locations[i].0 + error_locations[i + 1].0)
+                / T::from(2.0).expect("Operation failed");
+            let estimated_error = (error_locations[i].1 + error_locations[i + 1].1)
+                / T::from(2.0).expect("Operation failed");
             error_locations.push((
                 mid_point,
                 estimated_error,
@@ -469,7 +474,7 @@ where
         }
 
         // Sort by error magnitude
-        error_locations.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        error_locations.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
@@ -479,7 +484,7 @@ where
                     location,
                     utility,
                     information_type: info_type,
-                    confidence: T::from(0.9).unwrap(), // High confidence in error-based sampling
+                    confidence: T::from(0.9).expect("Operation failed"), // High confidence in error-based sampling
                 });
                 selected_points.push(location);
 
@@ -495,9 +500,9 @@ where
             if self.is_valid_location(random_point, &selected_points) {
                 candidates.push(SamplingCandidate {
                     location: random_point,
-                    utility: T::from(0.1).unwrap(),
+                    utility: T::from(0.1).expect("Operation failed"),
                     information_type: "exploration".to_string(),
-                    confidence: T::from(0.3).unwrap(),
+                    confidence: T::from(0.3).expect("Operation failed"),
                 });
                 selected_points.push(random_point);
             }
@@ -516,8 +521,8 @@ where
         // Generate candidate _points
         let num_candidates = num_points * 10;
         let candidate_points = Array1::linspace(
-            self.domain_min.to_f64().unwrap(),
-            self.domain_max.to_f64().unwrap(),
+            self.domain_min.to_f64().expect("Operation failed"),
+            self.domain_max.to_f64().expect("Operation failed"),
             num_candidates,
         );
 
@@ -525,7 +530,7 @@ where
 
         // Estimate gradients at candidate _points
         for &x_val in candidate_points.iter() {
-            let x_t = T::from(x_val).unwrap();
+            let x_t = T::from(x_val).expect("Operation failed");
 
             // Compute first derivative (gradient magnitude)
             let gradient = self.interpolator.derivative(
@@ -538,7 +543,7 @@ where
         }
 
         // Sort by gradient magnitude in descending order
-        gradient_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        gradient_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
@@ -548,7 +553,7 @@ where
                     location,
                     utility,
                     information_type: info_type,
-                    confidence: T::from(0.7).unwrap(), // Moderate confidence in gradient estimates
+                    confidence: T::from(0.7).expect("Operation failed"), // Moderate confidence in gradient estimates
                 });
                 selected_points.push(location);
 
@@ -598,7 +603,7 @@ where
         }
 
         // Sort by expected improvement
-        combined_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        combined_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
@@ -608,7 +613,7 @@ where
                     location,
                     utility,
                     information_type: info_type,
-                    confidence: T::from(0.6).unwrap(), // Lower confidence for complex heuristic
+                    confidence: T::from(0.6).expect("Operation failed"), // Lower confidence for complex heuristic
                 });
                 selected_points.push(location);
 
@@ -626,8 +631,13 @@ where
         &mut self,
         num_points: usize,
     ) -> InterpolateResult<Vec<SamplingCandidate<T>>> {
-        let num_exploitation =
-            (num_points as f64 * (1.0 - self.config.exploration_weight.to_f64().unwrap())) as usize;
+        let num_exploitation = (num_points as f64
+            * (1.0
+                - self
+                    .config
+                    .exploration_weight
+                    .to_f64()
+                    .expect("Operation failed"))) as usize;
         let num_exploration = num_points - num_exploitation;
 
         let mut candidates = Vec::new();
@@ -641,9 +651,9 @@ where
             let exploration_point = self.find_under_sampled_region()?;
             candidates.push(SamplingCandidate {
                 location: exploration_point,
-                utility: T::from(0.5).unwrap(),
+                utility: T::from(0.5).expect("Operation failed"),
                 information_type: "exploration".to_string(),
-                confidence: T::from(0.4).unwrap(),
+                confidence: T::from(0.4).expect("Operation failed"),
             });
         }
 
@@ -690,7 +700,7 @@ where
         }
 
         // Sort by combined utility
-        all_candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        all_candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
@@ -700,7 +710,7 @@ where
                     location,
                     utility,
                     information_type: info_type,
-                    confidence: T::from(0.75).unwrap(), // Good confidence in combined approach
+                    confidence: T::from(0.75).expect("Operation failed"), // Good confidence in combined approach
                 });
                 selected_points.push(location);
 
@@ -767,7 +777,7 @@ where
         let normalized = (self.rng_state as f64) / ((1u64 << 32) as f64);
 
         let range = self.domain_max - self.domain_min;
-        self.domain_min + range * T::from(normalized).unwrap()
+        self.domain_min + range * T::from(normalized).expect("Operation failed")
     }
 
     /// Find an under-sampled region for exploration
@@ -786,7 +796,7 @@ where
             let gap = x_data[i + 1] - x_data[i];
             if gap > max_gap {
                 max_gap = gap;
-                best_location = x_data[i] + gap / T::from(2.0).unwrap();
+                best_location = x_data[i] + gap / T::from(2.0).expect("Operation failed");
             }
         }
 
@@ -794,12 +804,13 @@ where
         let left_gap = x_data[0] - self.domain_min;
         if left_gap > max_gap {
             max_gap = left_gap;
-            best_location = self.domain_min + left_gap / T::from(2.0).unwrap();
+            best_location = self.domain_min + left_gap / T::from(2.0).expect("Operation failed");
         }
 
         let right_gap = self.domain_max - x_data[x_data.len() - 1];
         if right_gap > max_gap {
-            best_location = x_data[x_data.len() - 1] + right_gap / T::from(2.0).unwrap();
+            best_location =
+                x_data[x_data.len() - 1] + right_gap / T::from(2.0).expect("Operation failed");
         }
 
         Ok(best_location)
@@ -846,7 +857,7 @@ where
         std::cmp::max(std::cmp::min(x.len() / 2, 10), min_knots), // Ensure enough knots
         degree,                                                   // Cubic degree
         10,                                                       // Max levels
-        T::from(0.01).unwrap(),                                   // Error threshold
+        T::from(0.01).expect("Operation failed"),                 // Error threshold
         crate::ExtrapolateMode::Extrapolate,
     )?;
 
@@ -867,7 +878,7 @@ mod tests {
 
         let learner =
             make_active_learner(&x.view(), &y.view(), SamplingStrategy::UncertaintyBased, 50)
-                .unwrap();
+                .expect("Operation failed");
 
         assert_eq!(learner.config.total_budget, 50);
         assert_eq!(learner.strategy, SamplingStrategy::UncertaintyBased);
@@ -880,9 +891,9 @@ mod tests {
 
         let mut learner =
             make_active_learner(&x.view(), &y.view(), SamplingStrategy::UncertaintyBased, 20)
-                .unwrap();
+                .expect("Operation failed");
 
-        let candidates = learner.suggest_samples(5).unwrap();
+        let candidates = learner.suggest_samples(5).expect("Operation failed");
 
         assert!(!candidates.is_empty());
         assert!(candidates.len() <= 5);
@@ -901,9 +912,10 @@ mod tests {
         let y = x.mapv(|x| if (x - 5.0).abs() < 1.0 { x * x } else { x });
 
         let mut learner =
-            make_active_learner(&x.view(), &y.view(), SamplingStrategy::ErrorBased, 20).unwrap();
+            make_active_learner(&x.view(), &y.view(), SamplingStrategy::ErrorBased, 20)
+                .expect("Operation failed");
 
-        let candidates = learner.suggest_samples(3).unwrap();
+        let candidates = learner.suggest_samples(3).expect("Operation failed");
 
         assert!(!candidates.is_empty());
 
@@ -919,13 +931,15 @@ mod tests {
 
         let mut learner =
             make_active_learner(&x.view(), &y.view(), SamplingStrategy::UncertaintyBased, 20)
-                .unwrap();
+                .expect("Operation failed");
 
         // Add new data points
         let new_x = Array1::from_vec(vec![2.5, 7.5]);
         let new_y = Array1::from_vec(vec![0.5, 0.5]);
 
-        let success = learner.update_model(&new_x.view(), &new_y.view()).unwrap();
+        let success = learner
+            .update_model(&new_x.view(), &new_y.view())
+            .expect("Operation failed");
         assert!(success);
 
         // Check that the model has been updated
@@ -937,10 +951,10 @@ mod tests {
         let x = Array1::linspace(0.0, 10.0, 21);
         let y = x.mapv(|x| x.sin() + 0.1 * (5.0 * x).sin());
 
-        let mut learner =
-            make_active_learner(&x.view(), &y.view(), SamplingStrategy::Combined, 30).unwrap();
+        let mut learner = make_active_learner(&x.view(), &y.view(), SamplingStrategy::Combined, 30)
+            .expect("Operation failed");
 
-        let candidates = learner.suggest_samples(5).unwrap();
+        let candidates = learner.suggest_samples(5).expect("Operation failed");
 
         assert!(!candidates.is_empty());
         assert!(candidates.len() <= 5);
@@ -966,9 +980,9 @@ mod tests {
             SamplingStrategy::ExplorationExploitation,
             20,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let candidates = learner.suggest_samples(4).unwrap();
+        let candidates = learner.suggest_samples(4).expect("Operation failed");
 
         assert!(!candidates.is_empty());
 
@@ -986,10 +1000,10 @@ mod tests {
 
         let mut learner =
             make_active_learner(&x.view(), &y.view(), SamplingStrategy::UncertaintyBased, 20)
-                .unwrap()
+                .expect("Operation failed")
                 .with_min_sample_distance(1.0);
 
-        let candidates = learner.suggest_samples(5).unwrap();
+        let candidates = learner.suggest_samples(5).expect("Operation failed");
 
         // Check that all candidates respect minimum distance constraint
         for i in 0..candidates.len() {

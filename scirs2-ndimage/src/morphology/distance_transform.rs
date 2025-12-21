@@ -1050,7 +1050,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - InvalidInput: Metric must be one of 'euclidean', 'cityblock', or 'chessboard', got 'chessboard' at line 1087"]
     fn test_distance_transform_bf() {
         // Create a simple binary array
         let input = array![

@@ -38,7 +38,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// ```
     pub fn new(p: F) -> StatsResult<Self> {
         // Validate parameters using core validation function
@@ -75,7 +75,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let pmf_at_one = bern.pmf(1.0);
     /// assert!((pmf_at_one - 0.3).abs() < 1e-7);
     /// ```
@@ -108,7 +108,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let log_pmf_at_one = bern.log_pmf(1.0);
     /// assert!((log_pmf_at_one - (-1.2039728)).abs() < 1e-6);
     /// ```
@@ -150,7 +150,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let cdf_at_zero = bern.cdf(0.0);
     /// assert!((cdf_at_zero - 0.7).abs() < 1e-7);
     /// ```
@@ -182,8 +182,8 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
-    /// let quant = bern.ppf(0.8).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
+    /// let quant = bern.ppf(0.8).expect("Operation failed");
     /// assert_eq!(quant, 1.0);
     /// ```
     pub fn ppf(&self, p_val: F) -> StatsResult<F> {
@@ -218,8 +218,8 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
-    /// let samples = bern.rvs(10).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
+    /// let samples = bern.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -253,7 +253,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let mean = bern.mean();
     /// assert!((mean - 0.3).abs() < 1e-7);
     /// ```
@@ -273,7 +273,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let variance = bern.var();
     /// assert!((variance - 0.21).abs() < 1e-7);
     /// ```
@@ -294,7 +294,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let std_dev = bern.std();
     /// assert!((std_dev - 0.458257).abs() < 1e-6);
     /// ```
@@ -314,7 +314,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let skewness = bern.skewness();
     /// assert!((skewness - 0.87287156).abs() < 1e-5);
     /// ```
@@ -344,7 +344,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let kurtosis = bern.kurtosis();
     /// assert!((kurtosis - (-1.2351)) < 1e-4);
     /// ```
@@ -375,7 +375,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let entropy = bern.entropy();
     /// assert!((entropy - 0.6108643).abs() < 1e-6);
     /// ```
@@ -406,14 +406,14 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let median = bern.median();
     /// assert_eq!(median, 0.0);
     /// ```
     pub fn median(&self) -> F {
         let zero = F::zero();
         let one = F::one();
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         // Median is 0 if p < 0.5, 0 or 1 if p = 0.5, and 1 if p > 0.5
         if self.p < half {
@@ -438,14 +438,14 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// ```
     /// use scirs2_stats::distributions::bernoulli::Bernoulli;
     ///
-    /// let bern = Bernoulli::new(0.3f64).unwrap();
+    /// let bern = Bernoulli::new(0.3f64).expect("Operation failed");
     /// let mode = bern.mode();
     /// assert_eq!(mode, 0.0);
     /// ```
     pub fn mode(&self) -> F {
         let zero = F::zero();
         let one = F::one();
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
 
         // Mode is 0 if p < 0.5, 0 or 1 if p = 0.5, and 1 if p > 0.5
         if self.p < half {
@@ -478,7 +478,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
 /// ```
 /// use scirs2_stats::distributions::bernoulli;
 ///
-/// let b = bernoulli::bernoulli(0.3f64).unwrap();
+/// let b = bernoulli::bernoulli(0.3f64).expect("Operation failed");
 /// let pmf_at_one = b.pmf(1.0);
 /// assert!((pmf_at_one - 0.3).abs() < 1e-7);
 /// ```
@@ -505,13 +505,13 @@ mod tests {
     #[test]
     fn test_bernoulli_creation() {
         // Valid p values
-        let bern1 = Bernoulli::new(0.0).unwrap();
+        let bern1 = Bernoulli::new(0.0).expect("Operation failed");
         assert_eq!(bern1.p, 0.0);
 
-        let bern2 = Bernoulli::new(0.5).unwrap();
+        let bern2 = Bernoulli::new(0.5).expect("Operation failed");
         assert_eq!(bern2.p, 0.5);
 
-        let bern3 = Bernoulli::new(1.0).unwrap();
+        let bern3 = Bernoulli::new(1.0).expect("Operation failed");
         assert_eq!(bern3.p, 1.0);
 
         // Invalid p values
@@ -521,7 +521,7 @@ mod tests {
 
     #[test]
     fn test_bernoulli_pmf() {
-        let bern = Bernoulli::new(0.3).unwrap();
+        let bern = Bernoulli::new(0.3).expect("Operation failed");
 
         // PMF at k = 0
         let pmf_at_zero = bern.pmf(0.0);
@@ -536,18 +536,18 @@ mod tests {
         assert_eq!(pmf_at_other, 0.0);
 
         // Corner cases
-        let bern_zero = Bernoulli::new(0.0).unwrap();
+        let bern_zero = Bernoulli::new(0.0).expect("Operation failed");
         assert_eq!(bern_zero.pmf(0.0), 1.0);
         assert_eq!(bern_zero.pmf(1.0), 0.0);
 
-        let bern_one = Bernoulli::new(1.0).unwrap();
+        let bern_one = Bernoulli::new(1.0).expect("Operation failed");
         assert_eq!(bern_one.pmf(0.0), 0.0);
         assert_eq!(bern_one.pmf(1.0), 1.0);
     }
 
     #[test]
     fn test_bernoulli_log_pmf() {
-        let bern = Bernoulli::new(0.3).unwrap();
+        let bern = Bernoulli::new(0.3).expect("Operation failed");
 
         // log-PMF at k = 0
         let log_pmf_at_zero = bern.log_pmf(0.0);
@@ -562,18 +562,18 @@ mod tests {
         assert!(log_pmf_at_other.is_infinite() && log_pmf_at_other.is_sign_negative());
 
         // Corner cases
-        let bern_zero = Bernoulli::new(0.0).unwrap();
+        let bern_zero = Bernoulli::new(0.0).expect("Operation failed");
         assert_eq!(bern_zero.log_pmf(0.0), 0.0);
         assert!(bern_zero.log_pmf(1.0).is_infinite() && bern_zero.log_pmf(1.0).is_sign_negative());
 
-        let bern_one = Bernoulli::new(1.0).unwrap();
+        let bern_one = Bernoulli::new(1.0).expect("Operation failed");
         assert!(bern_one.log_pmf(0.0).is_infinite() && bern_one.log_pmf(0.0).is_sign_negative());
         assert_eq!(bern_one.log_pmf(1.0), 0.0);
     }
 
     #[test]
     fn test_bernoulli_cdf() {
-        let bern = Bernoulli::new(0.3).unwrap();
+        let bern = Bernoulli::new(0.3).expect("Operation failed");
 
         // CDF for various values
         assert_eq!(bern.cdf(-0.1), 0.0); // F(-0.1) = 0
@@ -585,14 +585,14 @@ mod tests {
 
     #[test]
     fn test_bernoulli_ppf() {
-        let bern = Bernoulli::new(0.3).unwrap();
+        let bern = Bernoulli::new(0.3).expect("Operation failed");
 
         // Quantile function
-        assert_eq!(bern.ppf(0.0).unwrap(), 0.0); // Q(0) = 0
-        assert_eq!(bern.ppf(0.3).unwrap(), 0.0); // Q(0.3) = 0 since 0.3 ≤ q = 0.7
-        assert_eq!(bern.ppf(0.7).unwrap(), 0.0); // Q(0.7) = 0 since 0.7 = q = 0.7
-        assert_eq!(bern.ppf(0.71).unwrap(), 1.0); // Q(0.71) = 1 since 0.71 > q = 0.7
-        assert_eq!(bern.ppf(1.0).unwrap(), 1.0); // Q(1) = 1
+        assert_eq!(bern.ppf(0.0).expect("Operation failed"), 0.0); // Q(0) = 0
+        assert_eq!(bern.ppf(0.3).expect("Operation failed"), 0.0); // Q(0.3) = 0 since 0.3 ≤ q = 0.7
+        assert_eq!(bern.ppf(0.7).expect("Operation failed"), 0.0); // Q(0.7) = 0 since 0.7 = q = 0.7
+        assert_eq!(bern.ppf(0.71).expect("Operation failed"), 1.0); // Q(0.71) = 1 since 0.71 > q = 0.7
+        assert_eq!(bern.ppf(1.0).expect("Operation failed"), 1.0); // Q(1) = 1
 
         // Invalid p values
         assert!(bern.ppf(-0.1).is_err());
@@ -601,10 +601,10 @@ mod tests {
 
     #[test]
     fn test_bernoulli_rvs() {
-        let bern = Bernoulli::new(0.5).unwrap();
+        let bern = Bernoulli::new(0.5).expect("Operation failed");
 
         // Generate samples
-        let samples = bern.rvs(100).unwrap();
+        let samples = bern.rvs(100).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 100);
@@ -625,7 +625,7 @@ mod tests {
     #[test]
     fn test_bernoulli_stats() {
         // Test with p = 0.3
-        let bern = Bernoulli::new(0.3).unwrap();
+        let bern = Bernoulli::new(0.3).expect("Operation failed");
 
         // Mean = p = 0.3
         assert_eq!(bern.mean(), 0.3);
@@ -653,14 +653,14 @@ mod tests {
         assert_eq!(bern.mode(), 0.0);
 
         // Test with p = 0.8 (> 0.5)
-        let bern2 = Bernoulli::new(0.8).unwrap();
+        let bern2 = Bernoulli::new(0.8).expect("Operation failed");
 
         // Median and mode for p > 0.5 are both 1
         assert_eq!(bern2.median(), 1.0);
         assert_eq!(bern2.mode(), 1.0);
 
         // Test with p = 0.5
-        let bern3 = Bernoulli::new(0.5).unwrap();
+        let bern3 = Bernoulli::new(0.5).expect("Operation failed");
 
         // Median and mode for p = 0.5 are either 0 or 1 (we return 0 by convention)
         assert_eq!(bern3.median(), 0.0);

@@ -30,7 +30,7 @@
 //!     for _ in 0..samples {
 //!         // Simple Black-Scholes approximation based on level
 //!         let dt = 1.0 / (2.0_f64.powi(level as i32));
-//!         let random_val = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+//!         let random_val = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
 //!         let price = 100.0 * (1.0 + 0.05 * dt * random_val);
 //!         results.push((price - 100.0).max(0.0)); // Call option payoff
 //!     }
@@ -40,7 +40,7 @@
 //! // Define an expensive computation function
 //! let expensive_computation = |rng: &mut Random<rand::rngs::StdRng>| -> f64 {
 //!     // Monte Carlo integration of a complex function
-//!     let samples: Vec<f64> = (0..100).map(|_| rng.sample(Uniform::new(0.0, 1.0).unwrap())).collect();
+//!     let samples: Vec<f64> = (0..100).map(|_| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))).collect();
 //!     samples.iter().map(|&x| (x * std::f64::consts::PI).sin().powi(2)).sum::<f64>() / samples.len() as f64
 //! };
 //!
@@ -601,7 +601,8 @@ impl SequentialMonteCarlo {
     /// Systematic resampling
     fn resample(&mut self) -> Result<(), String> {
         let mut rng = seeded_rng(42);
-        let u0 = rng.sample(Uniform::new(0.0, 1.0 / self.num_particles as f64).unwrap());
+        let u0 = rng
+            .sample(Uniform::new(0.0, 1.0 / self.num_particles as f64).expect("Operation failed"));
 
         let mut new_particles = Vec::with_capacity(self.num_particles);
         let mut cumulative_weight = 0.0;
@@ -733,7 +734,7 @@ impl AdaptiveMetropolisHastings {
             let accept = if log_alpha >= 0.0 {
                 true
             } else {
-                let u: f64 = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+                let u: f64 = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
                 u.ln() < log_alpha
             };
 
@@ -858,11 +859,11 @@ mod tests {
                 let mut rng = seeded_rng(42 + level as u64);
                 let mut vals = Vec::with_capacity(samples);
                 for _ in 0..samples {
-                    vals.push(rng.sample(Uniform::new(0.0, 1.0).unwrap()));
+                    vals.push(rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")));
                 }
                 Ok(vals)
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_relative_eq!(result.estimate, 0.5, epsilon = 0.1);
         assert!(result.levels_used > 0);
@@ -876,9 +877,9 @@ mod tests {
         let result = sampler
             .sample_until_convergence(|rng| {
                 // Sample from standard normal
-                rng.sample(Normal::new(0.0, 1.0).unwrap())
+                rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"))
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_relative_eq!(result.estimate, 0.0, epsilon = 0.1);
         assert!(result.samples_used > 0);
@@ -887,12 +888,12 @@ mod tests {
     #[test]
     fn test_importance_sampling() {
         let sampler = ImportanceSampler::new(
-            |rng| rng.sample(Normal::new(1.0, 1.0).unwrap()), // Proposal: N(1,1)
+            |rng| rng.sample(Normal::new(1.0, 1.0).expect("Operation failed")), // Proposal: N(1,1)
             |x| (-0.5 * x * x).exp(), // Target: N(0,1) density (unnormalized)
             |x| (-0.5 * (x - 1.0).powi(2)).exp(), // Proposal density (unnormalized)
         );
 
-        let result = sampler.estimate(|x| x, 1000).unwrap();
+        let result = sampler.estimate(|x| x, 1000).expect("Operation failed");
 
         // Should estimate E[X] under N(0,1), which is 0
         assert_relative_eq!(result.estimate, 0.0, epsilon = 0.3);
@@ -904,15 +905,15 @@ mod tests {
         let mut smc = SequentialMonteCarlo::new(100);
 
         // Initialize with standard normal
-        smc.initialize(|rng| vec![rng.sample(Normal::new(0.0, 1.0).unwrap())])
-            .unwrap();
+        smc.initialize(|rng| vec![rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"))])
+            .expect("Operation failed");
 
         // Predict step (random walk)
         smc.predict(|state, rng| {
-            let noise = rng.sample(Normal::new(0.0, 0.1).unwrap());
+            let noise = rng.sample(Normal::new(0.0, 0.1).expect("Operation failed"));
             vec![state[0] + noise]
         })
-        .unwrap();
+        .expect("Operation failed");
 
         // Update with observation
         let observation = vec![0.5];
@@ -921,7 +922,7 @@ mod tests {
             let diff = state[0] - obs[0];
             (-0.5 * diff * diff).exp()
         })
-        .unwrap();
+        .expect("Operation failed");
 
         let estimate = smc.state_estimate();
         assert_eq!(estimate.len(), 1);
@@ -943,7 +944,7 @@ mod tests {
                 vec![0.0, 0.0],
                 1000,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(samples.len(), 1000);
         assert!(amh.acceptance_rate() > 0.1);

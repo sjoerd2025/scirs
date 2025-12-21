@@ -18,7 +18,7 @@ impl DeterministicAlgorithm {
     }
 
     fn generate_sample(&mut self) -> f64 {
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
         self.rng.sample(normal)
     }
 }
@@ -55,7 +55,7 @@ impl<R: Rng> GenericAlgorithm<R> {
 
 /// Example 4: Functions accepting RNG parameters
 fn process_with_rng<R: Rng>(rng: &mut CoreRandom<R>, size: usize) -> Vec<f64> {
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
     (0..size).map(|_| rng.sample(normal)).collect()
 }
 
@@ -82,7 +82,7 @@ impl NeuralNetwork {
     }
 
     fn add_noise(&mut self, scale: f64) {
-        let noise_dist = Normal::new(0.0, scale).unwrap();
+        let noise_dist = Normal::new(0.0, scale).expect("Operation failed");
         for weight in &mut self.weights {
             *weight += self.rng.sample(noise_dist);
         }
@@ -125,7 +125,7 @@ impl TextSampler {
             }
         }
 
-        words.last().unwrap().0.clone()
+        words.last().expect("Operation failed").0.clone()
     }
 }
 

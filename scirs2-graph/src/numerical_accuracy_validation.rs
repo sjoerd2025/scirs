@@ -688,7 +688,7 @@ impl AdvancedNumericalValidator {
                 }
                 for i in 0..*nodes {
                     for j in (i + 1)..*nodes {
-                        graph.add_edge(i, j, 1.0).unwrap();
+                        graph.add_edge(i, j, 1.0).expect("Operation failed");
                     }
                 }
                 Ok(graph)
@@ -944,7 +944,7 @@ impl AdvancedNumericalValidator {
         let mut indexed_values: Vec<(usize, f64)> =
             values.iter().enumerate().map(|(i, &v)| (i, v)).collect();
 
-        indexed_values.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        indexed_values.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
         let mut ranks = vec![0.0; values.len()];
         for (rank, (original_index, _)) in indexed_values.iter().enumerate() {
@@ -1143,8 +1143,8 @@ impl AdvancedNumericalValidator {
             }
         }
 
-        top_performers.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        performance_regressions.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        top_performers.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
+        performance_regressions.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
         PerformanceAnalysis {
             best_speedup,
@@ -1426,7 +1426,7 @@ mod tests {
                 edges: 15,
                 directed: false,
             })
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(graph.node_count(), 10);
         // Random graph generator may produce varying edge counts due to undirected edge handling and random selection
         assert!(graph.edge_count() > 0 && graph.edge_count() <= 45); // Maximum possible edges for 10 nodes: 10*9/2 = 45
@@ -1434,7 +1434,7 @@ mod tests {
         // Test complete graph generation
         let complete = validator
             .generate_test_graph(&GraphGenerator::Complete { nodes: 5 })
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(complete.node_count(), 5);
         assert_eq!(complete.edge_count(), 10); // 5 choose 2 = 10
     }
@@ -1479,7 +1479,7 @@ mod tests {
         let result = run_quick_validation();
         assert!(result.is_ok());
 
-        let report = result.unwrap();
+        let report = result.expect("Operation failed");
         assert!(report.summary.total_tests > 0);
         assert!(report.summary.pass_rate >= 0.0);
         assert!(report.summary.pass_rate <= 1.0);

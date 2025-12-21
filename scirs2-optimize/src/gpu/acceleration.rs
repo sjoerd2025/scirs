@@ -1235,7 +1235,7 @@ impl AdvancedParallelSwarmOptimizer {
                         indices.sort_by(|&a, &b| {
                             self.swarm_states[source_swarm].current_fitness[a]
                                 .partial_cmp(&self.swarm_states[source_swarm].current_fitness[b])
-                                .unwrap()
+                                .expect("Operation failed")
                         });
                         indices.into_iter().take(migration_count).collect()
                     }
@@ -1260,7 +1260,7 @@ impl AdvancedParallelSwarmOptimizer {
                         indices.sort_by(|&a, &b| {
                             self.swarm_states[source_swarm].current_fitness[a]
                                 .partial_cmp(&self.swarm_states[source_swarm].current_fitness[b])
-                                .unwrap()
+                                .expect("Operation failed")
                         });
                         indices
                             .into_iter()
@@ -1797,7 +1797,7 @@ mod tests {
     #[test]
     fn test_swarm_state_creation() {
         let config = AdvancedSwarmConfig::default();
-        let swarm = SwarmState::new(&config).unwrap();
+        let swarm = SwarmState::new(&config).expect("Operation failed");
         assert_eq!(swarm.positions.nrows(), config.swarm_size);
         assert_eq!(swarm.velocities.nrows(), config.swarm_size);
     }

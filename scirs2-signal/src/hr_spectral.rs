@@ -112,7 +112,7 @@ pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSp
         .map(|(&val, vec)| (val.norm(), vec))
         .collect();
 
-    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
     // Determine signal subspace dimension
     let signal_dim = determine_signal_dimension(&eigen_pairs, config)?;
@@ -183,7 +183,7 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
         .map(|(&val, vec)| (val.norm(), vec))
         .collect();
 
-    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+    eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
     // Determine signal subspace dimension
     let signal_dim = determine_signal_dimension(&eigen_pairs, config)?;
@@ -231,7 +231,7 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
             *freq += 1.0;
         }
     }
-    source_freqs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    source_freqs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Create spectrum by placing peaks at estimated frequencies
     let frequencies = create_frequency_grid(config);
@@ -339,8 +339,8 @@ pub fn pisarenko(
     let min_idx = eigenvalues
         .iter()
         .enumerate()
-        .min_by(|a, b| a.1.norm().partial_cmp(&b.1.norm()).unwrap())
-        .unwrap()
+        .min_by(|a, b| a.1.norm().partial_cmp(&b.1.norm()).expect("Operation failed"))
+        .expect("Operation failed")
         .0;
 
     let noise_eigenvector = eigenvectors.column(min_idx);
@@ -362,7 +362,7 @@ pub fn pisarenko(
             *freq += 1.0;
         }
     }
-    source_freqs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    source_freqs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Create spectrum
     let frequencies = create_frequency_grid(config);
@@ -438,7 +438,7 @@ pub fn prony(
         }
     }
 
-    source_freqs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    source_freqs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Create spectrum
     let frequencies = create_frequency_grid(config);
@@ -626,9 +626,9 @@ fn create_line_spectrum(
             .min_by(|(_, a), (_, b)| {
                 ((*a - source_freq).abs())
                     .partial_cmp(&((*b - source_freq).abs()))
-                    .unwrap()
+                    .expect("Operation failed")
             })
-            .unwrap()
+            .expect("Operation failed")
             .0;
 
         spectrum[closest_idx] += 1.0;
@@ -701,7 +701,7 @@ fn find_polynomial_roots(coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
         return Ok(vec![]);
     }
 
-    let first_idx = first_nonzero.unwrap();
+    let first_idx = first_nonzero.expect("Operation failed");
     let effective_coeffs = &normalized_coeffs[first_idx..];
     let effective_n = effective_coeffs.len() - 1;
 
@@ -777,7 +777,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = music(&data, &config).unwrap();
+        let result = music(&data, &config).expect("Operation failed");
 
         assert_eq!(result.frequencies.len(), config.num_freqs);
         assert_eq!(result.spectrum.len(), config.num_freqs);
@@ -799,7 +799,7 @@ mod tests {
         }
 
         let config = HrSpectralConfig::default();
-        let result = minimum_variance(&data, &config).unwrap();
+        let result = minimum_variance(&data, &config).expect("Operation failed");
 
         assert_eq!(result.frequencies.len(), config.num_freqs);
         assert_eq!(result.spectrum.len(), config.num_freqs);
@@ -819,7 +819,7 @@ mod tests {
             .collect();
 
         let config = HrSpectralConfig::default();
-        let result = pisarenko(&data, 2, &config).unwrap();
+        let result = pisarenko(&data, 2, &config).expect("Operation failed");
 
         assert_eq!(result.frequencies.len(), config.num_freqs);
         assert_eq!(result.spectrum.len(), config.num_freqs);
@@ -853,7 +853,7 @@ mod tests {
     #[test]
     fn test_autocorrelation_matrix() {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let autocorr = create_autocorrelation_matrix(&data, 3).unwrap();
+        let autocorr = create_autocorrelation_matrix(&data, 3).expect("Operation failed");
 
         assert_eq!(autocorr.shape(), &[3, 3]);
 

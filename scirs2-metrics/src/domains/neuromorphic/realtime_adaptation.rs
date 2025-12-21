@@ -325,7 +325,7 @@ impl<F: Float> RealtimeAdaptationEngine<F> {
     fn should_modify_architecture(&self) -> Result<bool> {
         // Simple heuristic: modify if performance drops below threshold
         if let Some(&performance) = self.realtime_monitor.metrics.get("accuracy") {
-            Ok(performance < F::from(0.8).unwrap())
+            Ok(performance < F::from(0.8).expect("Failed to convert constant to float"))
         } else {
             Ok(false)
         }
@@ -366,7 +366,7 @@ impl<F: Float> OnlineLearningAlgorithm<F> {
             .parameters
             .get("learning_rate")
             .copied()
-            .unwrap_or_else(|| F::from(0.01).unwrap());
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
 
         // Simplified SGD update
         for i in 0..self.state.parameters.len().min(input.len()) {
@@ -383,13 +383,13 @@ impl<F: Float> OnlineLearningAlgorithm<F> {
             .parameters
             .get("learning_rate")
             .copied()
-            .unwrap_or_else(|| F::from(0.01).unwrap());
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
 
         // Simplified perceptron update
         let prediction = self.predict(input)?;
         let error = target.first().copied().unwrap_or(F::zero()) - prediction;
 
-        if error.abs() > F::from(0.001).unwrap() {
+        if error.abs() > F::from(0.001).expect("Failed to convert constant to float") {
             for i in 0..self.state.parameters.len().min(input.len()) {
                 self.state.parameters[i] =
                     self.state.parameters[i] + learning_rate * error * input[i];
@@ -429,7 +429,8 @@ impl<F: Float> OnlineLearningState<F> {
     pub fn initialize(&mut self, size: usize) {
         self.parameters = vec![F::zero(); size];
         self.momentum = vec![F::zero(); size];
-        self.adaptive_rates = vec![F::from(0.01).unwrap(); size];
+        self.adaptive_rates =
+            vec![F::from(0.01).expect("Failed to convert constant to float"); size];
     }
 }
 
@@ -451,7 +452,7 @@ impl<F: Float> ElasticWeightConsolidation<F> {
         Self {
             fisher_information: Vec::new(),
             important_weights: Vec::new(),
-            lambda: F::from(1000.0).unwrap(),
+            lambda: F::from(1000.0).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -518,8 +519,10 @@ impl<F: Float> RealtimePerformanceMonitor<F> {
     /// Update metrics
     pub fn update_metrics(&mut self, _input: &[F], _target: &[F]) -> Result<()> {
         // Placeholder implementation
-        self.metrics
-            .insert("accuracy".to_string(), F::from(0.9).unwrap());
+        self.metrics.insert(
+            "accuracy".to_string(),
+            F::from(0.9).expect("Failed to convert constant to float"),
+        );
         Ok(())
     }
 }

@@ -246,7 +246,7 @@ impl QualityAnalyzer {
 
         // Simple outlier detection using IQR method
         let mut sortedvalues = finite_values.to_vec();
-        sortedvalues.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sortedvalues.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let outliers = self.count_outliers_iqr(&sortedvalues);
 
         // Basic distribution detection
@@ -591,7 +591,7 @@ mod tests {
 
         let report = analyzer
             .generate_quality_report(&array, "test_field")
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(report.quality_score > 0.9); // Should be high quality
         assert_eq!(report.metrics.completeness, 1.0); // No missing values
@@ -606,7 +606,7 @@ mod tests {
 
         let report = analyzer
             .generate_quality_report(&array, "test_field")
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(report.metrics.completeness < 1.0); // Has missing values
         assert!(!report.issues.is_empty()); // Should have issues
@@ -622,7 +622,7 @@ mod tests {
 
         let report = analyzer
             .generate_quality_report(&array, "test_field")
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(report.metrics.validity < 1.0); // Has invalid values
 
@@ -637,10 +637,13 @@ mod tests {
 
         let report = analyzer
             .generate_quality_report(&array, "test_field")
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(report.metrics.statistical_summary.is_some());
-        let stats = report.metrics.statistical_summary.unwrap();
+        let stats = report
+            .metrics
+            .statistical_summary
+            .expect("Operation failed");
         assert_eq!(stats.count, 5);
         assert!((stats.mean - 3.0).abs() < 1e-10);
         assert_eq!(stats.min, 1.0);
@@ -654,7 +657,7 @@ mod tests {
 
         let report = analyzer
             .generate_quality_report(&array, "test_field")
-            .unwrap();
+            .expect("Operation failed");
         let formatted = report.formatted_report();
 
         assert!(formatted.contains("Data Quality Report"));
@@ -670,7 +673,7 @@ mod tests {
 
         let report = analyzer
             .generate_quality_report(&array, "test_field")
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(report.is_acceptable(0.8)); // Should pass 80% threshold
         assert!(report.is_acceptable(0.9)); // Should pass 90% threshold

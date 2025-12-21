@@ -52,7 +52,7 @@ pub fn lu<F: Float + Debug + Send + Sync + 'static>(
 
     let mut p = Array2::<F>::eye(n);
     let mut l = Array2::<F>::eye(n);
-    let mut u = a.data.clone().intoshape((n, n)).unwrap();
+    let mut u = a.data.clone().intoshape((n, n)).expect("Operation failed");
 
     if n == 2 {
         // Pivoting
@@ -104,7 +104,7 @@ pub fn lu<F: Float + Debug + Send + Sync + 'static>(
 
                     // For matrices up to 2x2, we'll just pass the gradient of U directly to A
                     // This is highly simplified and not correct in general
-                    let grad_u_2d = grad_u.clone().intoshape((n, n)).unwrap();
+                    let grad_u_2d = grad_u.clone().intoshape((n, n)).expect("Operation failed");
                     Ok(grad_u_2d.into_dyn())
                 })
                     as Box<dyn Fn(scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>) -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> + Send + Sync>,
@@ -170,7 +170,7 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
 
     // For 2x2 matrices, use Householder reflections
     let mut q = Array2::<F>::eye(m);
-    let mut r = a.data.clone().intoshape((m, n)).unwrap();
+    let mut r = a.data.clone().intoshape((m, n)).expect("Operation failed");
 
     if m >= 1 && n >= 1 {
         // First column Householder reflection
@@ -178,7 +178,7 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
                     .fold(F::zero(), |acc, (&u_i, &r_i)| acc + u_i * r_i);
 
                 for i in 0..m {
-                    r[[i, j]] = r[[i, j]] - F::from(2.0).unwrap() * u[i] * dot_product;
+                    r[[i, j]] = r[[i, j]] - F::from(2.0).expect("Operation failed") * u[i] * dot_product;
                 }
             }
 
@@ -186,7 +186,7 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
             for i in 0..m {
                 for j in 0..m {
                     let identity = if i == j { F::one() } else { F::zero() };
-                    q[[i, j]] = identity - F::from(2.0).unwrap() * u[i] * u[j];
+                    q[[i, j]] = identity - F::from(2.0).expect("Operation failed") * u[i] * u[j];
                 }
             }
         }
@@ -212,8 +212,8 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
                     // dA = dQ * R^T + Q * dR^T
                     // Here we're assuming dQ = 0 for simplicity
 
-                    let grad_r_2d = grad_r.clone().intoshape((m, n)).unwrap();
-                    let q_2d = q_data_clone.clone().intoshape((m, m)).unwrap();
+                    let grad_r_2d = grad_r.clone().intoshape((m, n)).expect("Operation failed");
+                    let q_2d = q_data_clone.clone().intoshape((m, m)).expect("Operation failed");
 
                     // Compute Q * dR
                     let mut grad_a = Array2::<F>::zeros((m, n));
@@ -339,8 +339,8 @@ pub fn cholesky<F: Float + Debug + Send + Sync + 'static>(
                     // Gradient of Cholesky decomposition
                     // See "Matrix Differential Calculus with Applications in Statistics and Econometrics"
 
-                    let grad_l_2d = grad_l.clone().intoshape((n, n)).unwrap();
-                    let l_2d = l_data_clone.clone().intoshape((n, n)).unwrap();
+                    let grad_l_2d = grad_l.clone().intoshape((n, n)).expect("Operation failed");
+                    let l_2d = l_data_clone.clone().intoshape((n, n)).expect("Operation failed");
 
                     // Initialize gradient of A
                     let mut grad_a = Array2::<F>::zeros((n, n));
@@ -354,7 +354,7 @@ pub fn cholesky<F: Float + Debug + Send + Sync + 'static>(
                                 for k in 0..j {
                                     sum = sum + grad_a[[j, k]] * l_2d[[j, k]];
                                 }
-                                grad_a[[j, j]] = (grad_l_2d[[j, j]] - sum) / (F::from(2.0).unwrap() * l_2d[[j, j]]);
+                                grad_a[[j, j]] = (grad_l_2d[[j, j]] - sum) / (F::from(2.0).expect("Operation failed") * l_2d[[j, j]]);
                             } else {
                                 // Off-diagonal elements
                                 let mut sum = F::zero();

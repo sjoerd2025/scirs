@@ -52,9 +52,9 @@ use scirs2_core::validation::clustering::*;
 ///     3.7, 4.2,
 ///     3.9, 3.9,
 ///     4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let (centroids, labels, inertia) = kmeans_simd(data.view(), 2, None, None).unwrap();
+/// let (centroids, labels, inertia) = kmeans_simd(data.view(), 2, None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn kmeans_simd<F>(
@@ -144,7 +144,11 @@ where
         }
     }
 
-    Ok((bestcentroids.unwrap(), best_labels.unwrap(), best_inertia))
+    Ok((
+        bestcentroids.expect("Operation failed"),
+        best_labels.expect("Operation failed"),
+        best_inertia,
+    ))
 }
 
 /// Single run of SIMD-accelerated K-means
@@ -368,7 +372,7 @@ where
             let cluster = batch_labels[i];
             counts[cluster] += 1;
 
-            let eta = F::one() / F::from(counts[cluster]).unwrap();
+            let eta = F::one() / F::from(counts[cluster]).expect("Failed to convert to float");
             let point = batch_data.slice(s![i, ..]);
             let centroid = centroids.slice_mut(s![cluster, ..]);
 
@@ -553,7 +557,7 @@ where
         if sum_weights > F::zero() {
             weights.mapv_inplace(|w| w / sum_weights);
         } else {
-            weights.fill(F::from(1.0 / n_samples as f64).unwrap());
+            weights.fill(F::from(1.0 / n_samples as f64).expect("Failed to convert to float"));
         }
 
         // Convert to cumulative distribution
@@ -564,7 +568,7 @@ where
 
         // Select next centroid using weighted random selection
         let r = rng.random_range(0.0..1.0);
-        let r_f = F::from(r).unwrap();
+        let r_f = F::from(r).expect("Failed to convert to float");
 
         let mut selected_idx = n_samples - 1;
         for j in 0..n_samples {
@@ -590,10 +594,9 @@ mod tests {
     use scirs2_core::ndarray::Array2;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_kmeans_simd() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 3.7, 4.2, 3.9, 3.9]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 3.7, 4.2, 3.9, 3.9])
+            .expect("Operation failed");
 
         // Use fast options to speed up test
         let options = KMeansOptions {
@@ -604,7 +607,7 @@ mod tests {
         };
 
         let (centroids, labels, inertia) =
-            kmeans_simd(data.view(), 2, Some(options), None).unwrap();
+            kmeans_simd(data.view(), 2, Some(options), None).expect("Operation failed");
 
         assert_eq!(centroids.shape(), &[2, 2]);
         assert_eq!(labels.len(), 4);
@@ -617,9 +620,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mini_batch_kmeans_simd() {
-        let data = Array2::from_shape_vec((8, 2), (0..16).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((8, 2), (0..16).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
         // Use fast options to speed up test
         let options = KMeansOptions {
@@ -630,7 +633,8 @@ mod tests {
         };
 
         let (centroids, labels, inertia) =
-            mini_batch_kmeans_simd(data.view(), 2, 3, Some(options), None).unwrap();
+            mini_batch_kmeans_simd(data.view(), 2, 3, Some(options), None)
+                .expect("Operation failed");
 
         assert_eq!(centroids.shape(), &[2, 2]);
         assert_eq!(labels.len(), 8);
@@ -643,11 +647,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_kmeans_plus_plus_simd() {
-        let data = Array2::from_shape_vec((6, 2), (0..12).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((6, 2), (0..12).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
-        let centroids = kmeans_plus_plus_simd(data.view(), 2, None, Some(42)).unwrap();
+        let centroids =
+            kmeans_plus_plus_simd(data.view(), 2, None, Some(42)).expect("Operation failed");
 
         assert_eq!(centroids.shape(), &[2, 2]);
 
@@ -663,15 +668,16 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_compute_centroid_shift_simd() {
-        let oldcentroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let oldcentroids =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
 
-        let newcentroids = Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 1.1, 1.1]).unwrap();
+        let newcentroids =
+            Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 1.1, 1.1]).expect("Operation failed");
 
         let config = SimdOptimizationConfig::default();
-        let shift =
-            compute_centroid_shift_simd(oldcentroids.view(), newcentroids.view(), &config).unwrap();
+        let shift = compute_centroid_shift_simd(oldcentroids.view(), newcentroids.view(), &config)
+            .expect("Operation failed");
 
         // Expected shift: sqrt(0.1^2 + 0.1^2) + sqrt(0.1^2 + 0.1^2) ≈ 0.283
         let expected = 2.0 * (0.1f64.powi(2) + 0.1f64.powi(2)).sqrt();

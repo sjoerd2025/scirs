@@ -34,11 +34,11 @@ use num_traits::{Float, FromPrimitive};
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 ///
 /// // Global mean
-/// let global_mean = mean_2d(&a.view(), None).unwrap();
+/// let global_mean = mean_2d(&a.view(), None).expect("Operation failed");
 /// assert_eq!(global_mean[0], 3.5);
 ///
 /// // Mean along axis 0 (columns)
-/// let col_means = mean_2d(&a.view(), Some(Axis(0))).unwrap();
+/// let col_means = mean_2d(&a.view(), Some(Axis(0))).expect("Operation failed");
 /// assert_eq!(col_means.len(), 3);
 /// assert_eq!(col_means[0], 2.5);
 /// assert_eq!(col_means[1], 3.5);
@@ -63,7 +63,7 @@ where
             0 => {
                 // Mean along axis 0 (columns)
                 let mut result = Array::<T, Ix1>::zeros(cols);
-                let n = T::from_usize(rows).unwrap();
+                let n = T::from_usize(rows).expect("Operation failed");
 
                 for j in 0..cols {
                     let mut sum = T::zero();
@@ -78,7 +78,7 @@ where
             1 => {
                 // Mean along axis 1 (rows)
                 let mut result = Array::<T, Ix1>::zeros(rows);
-                let n = T::from_usize(cols).unwrap();
+                let n = T::from_usize(cols).expect("Operation failed");
 
                 for i in 0..rows {
                     let mut sum = T::zero();
@@ -134,11 +134,11 @@ where
 /// let a = array![[1.0, 3.0, 5.0], [2.0, 4.0, 6.0]];
 ///
 /// // Global median
-/// let global_median = median_2d(&a.view(), None).unwrap();
+/// let global_median = median_2d(&a.view(), None).expect("Operation failed");
 /// assert_eq!(global_median[0], 3.5);
 ///
 /// // Median along axis 0 (columns)
-/// let col_medians = median_2d(&a.view(), Some(Axis(0))).unwrap();
+/// let col_medians = median_2d(&a.view(), Some(Axis(0))).expect("Operation failed");
 /// assert_eq!(col_medians.len(), 3);
 /// assert_eq!(col_medians[0], 1.5);
 /// assert_eq!(col_medians[1], 3.5);
@@ -175,7 +175,8 @@ where
 
                     let median_value = if column_values.len() % 2 == 0 {
                         let mid = column_values.len() / 2;
-                        (column_values[mid - 1] + column_values[mid]) / T::from_f64(2.0).unwrap()
+                        (column_values[mid - 1] + column_values[mid])
+                            / T::from_f64(2.0).expect("Operation failed")
                     } else {
                         column_values[column_values.len() / 2]
                     };
@@ -200,7 +201,8 @@ where
 
                     let median_value = if row_values.len() % 2 == 0 {
                         let mid = row_values.len() / 2;
-                        (row_values[mid - 1] + row_values[mid]) / T::from_f64(2.0).unwrap()
+                        (row_values[mid - 1] + row_values[mid])
+                            / T::from_f64(2.0).expect("Operation failed")
                     } else {
                         row_values[row_values.len() / 2]
                     };
@@ -219,7 +221,7 @@ where
 
         let median_value = if values.len() % 2 == 0 {
             let mid = values.len() / 2;
-            (values[mid - 1] + values[mid]) / T::from_f64(2.0).unwrap()
+            (values[mid - 1] + values[mid]) / T::from_f64(2.0).expect("Operation failed")
         } else {
             values[values.len() / 2]
         };
@@ -257,11 +259,11 @@ where
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 ///
 /// // Global standard deviation
-/// let global_std = std_dev_2d(&a.view(), None, 1).unwrap();
+/// let global_std = std_dev_2d(&a.view(), None, 1).expect("Operation failed");
 /// assert!((global_std[0] - 1.87082869339_f64).abs() < 1e-10);
 ///
 /// // Standard deviation along axis 0 (columns)
-/// let col_stds = std_dev_2d(&a.view(), Some(Axis(0)), 1).unwrap();
+/// let col_stds = std_dev_2d(&a.view(), Some(Axis(0)), 1).expect("Operation failed");
 /// assert_eq!(col_stds.len(), 3);
 /// ```
 #[allow(dead_code)]
@@ -306,11 +308,11 @@ where
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 ///
 /// // Global variance
-/// let global_var = variance_2d(&a.view(), None, 1).unwrap();
+/// let global_var = variance_2d(&a.view(), None, 1).expect("Operation failed");
 /// assert!((global_var[0] - 3.5_f64).abs() < 1e-10);
 ///
 /// // Variance along axis 0 (columns)
-/// let col_vars = variance_2d(&a.view(), Some(Axis(0)), 1).unwrap();
+/// let col_vars = variance_2d(&a.view(), Some(Axis(0)), 1).expect("Operation failed");
 /// assert_eq!(col_vars.len(), 3);
 /// ```
 #[allow(dead_code)]
@@ -347,7 +349,7 @@ where
                         sum_sq_diff = sum_sq_diff + (diff * diff);
                     }
 
-                    let divisor = T::from_usize(rows - ddof).unwrap();
+                    let divisor = T::from_usize(rows - ddof).expect("Operation failed");
                     result[j] = sum_sq_diff / divisor;
                 }
 
@@ -370,7 +372,7 @@ where
                         sum_sq_diff = sum_sq_diff + (diff * diff);
                     }
 
-                    let divisor = T::from_usize(cols - ddof).unwrap();
+                    let divisor = T::from_usize(cols - ddof).expect("Operation failed");
                     result[0] = sum_sq_diff / divisor;
                 }
 
@@ -396,7 +398,7 @@ where
             sum_sq_diff = sum_sq_diff + (diff * diff);
         }
 
-        let divisor = T::from_usize(total_elements - ddof).unwrap();
+        let divisor = T::from_usize(total_elements - ddof).expect("Operation failed");
 
         Ok(Array::from_elem(1, sum_sq_diff / divisor))
     }
@@ -780,8 +782,10 @@ where
                             let weight_high = pos - (idx_low as f64);
                             let weight_low = 1.0 - weight_high;
 
-                            result[j] = column_values[idx_low] * T::from_f64(weight_low).unwrap()
-                                + column_values[idx_high] * T::from_f64(weight_high).unwrap();
+                            result[j] = column_values[idx_low]
+                                * T::from_f64(weight_low).expect("Operation failed")
+                                + column_values[idx_high]
+                                    * T::from_f64(weight_high).expect("Operation failed");
                         }
                     }
 
@@ -811,8 +815,10 @@ where
                             let weight_high = pos - (idx_low as f64);
                             let weight_low = 1.0 - weight_high;
 
-                            result[0] = row_values[idx_low] * T::from_f64(weight_low).unwrap()
-                                + row_values[idx_high] * T::from_f64(weight_high).unwrap();
+                            result[0] = row_values[idx_low]
+                                * T::from_f64(weight_low).expect("Operation failed")
+                                + row_values[idx_high]
+                                    * T::from_f64(weight_high).expect("Operation failed");
                         }
                     }
 
@@ -837,8 +843,8 @@ where
                 let weight_high = pos - (idx_low as f64);
                 let weight_low = 1.0 - weight_high;
 
-                values[idx_low] * T::from_f64(weight_low).unwrap()
-                    + values[idx_high] * T::from_f64(weight_high).unwrap()
+                values[idx_low] * T::from_f64(weight_low).expect("Operation failed")
+                    + values[idx_high] * T::from_f64(weight_high).expect("Operation failed")
             };
 
             Ok(Array::from_elem(1, result))
@@ -967,7 +973,7 @@ where
 
             let median_value = if values.len() % 2 == 0 {
                 let mid = values.len() / 2;
-                (values[mid - 1] + values[mid]) / T::from_f64(2.0).unwrap()
+                (values[mid - 1] + values[mid]) / T::from_f64(2.0).expect("Operation failed")
             } else {
                 values[values.len() / 2]
             };
@@ -1028,7 +1034,7 @@ where
             }
 
             // Calculate variance along specified axis using ndarray's var_axis
-            let result = array.var_axis(ax, T::from_usize(ddof).unwrap());
+            let result = array.var_axis(ax, T::from_usize(ddof).expect("Operation failed"));
 
             // Convert to 1D array as expected by function signature
             let flat_result = result
@@ -1055,7 +1061,7 @@ where
                 sum_sq_diff = sum_sq_diff + (diff * diff);
             }
 
-            let divisor = T::from_usize(total_elements - ddof).unwrap();
+            let divisor = T::from_usize(total_elements - ddof).expect("Operation failed");
 
             Ok(Array::from_elem(1, sum_sq_diff / divisor))
         }
@@ -1148,7 +1154,7 @@ where
         }
         None => {
             // Global minimum
-            let mut min_val = *array.iter().next().unwrap();
+            let mut min_val = *array.iter().next().expect("Operation failed");
 
             for &val in array {
                 if val < min_val {
@@ -1214,7 +1220,7 @@ where
         }
         None => {
             // Global maximum
-            let mut max_val = *array.iter().next().unwrap();
+            let mut max_val = *array.iter().next().expect("Operation failed");
 
             for &val in array {
                 if val > max_val {
@@ -1286,8 +1292,8 @@ where
                 let weight_high = pos - (idx_low as f64);
                 let weight_low = 1.0 - weight_high;
 
-                values[idx_low] * T::from_f64(weight_low).unwrap()
-                    + values[idx_high] * T::from_f64(weight_high).unwrap()
+                values[idx_low] * T::from_f64(weight_low).expect("Operation failed")
+                    + values[idx_high] * T::from_f64(weight_high).expect("Operation failed")
             };
 
             Ok(Array::from_elem(1, result))

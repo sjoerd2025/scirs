@@ -21,13 +21,13 @@ use scirs2_core::ndarray::{Array1, Array2};
 /// let kernel = SquaredExponential::default();
 /// let mut gpr = GaussianProcessRegressor::new(kernel);
 ///
-/// let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+/// let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
 /// let y_train = array![0.0, 1.0, 0.5];
 ///
-/// gpr.fit(&x_train, &y_train).unwrap();
+/// gpr.fit(&x_train, &y_train).expect("Operation failed");
 ///
-/// let x_test = Array2::from_shape_vec((1, 1), vec![1.5]).unwrap();
-/// let predictions = gpr.predict(&x_test).unwrap();
+/// let x_test = Array2::from_shape_vec((1, 1), vec![1.5]).expect("Operation failed");
+/// let predictions = gpr.predict(&x_test).expect("Operation failed");
 /// ```
 pub struct GaussianProcessRegressor<K: Kernel> {
     /// The underlying Gaussian Process
@@ -239,13 +239,14 @@ mod tests {
         let kernel = SquaredExponential::default();
         let mut gpr = GaussianProcessRegressor::new(kernel);
 
-        let x_train = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let x_train = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0])
+            .expect("Operation failed");
         let y_train = array![0.0, 1.0, 1.5, 1.0, 0.0];
 
-        gpr.fit(&x_train, &y_train).unwrap();
+        gpr.fit(&x_train, &y_train).expect("Operation failed");
 
-        let x_test = Array2::from_shape_vec((1, 1), vec![2.5]).unwrap();
-        let predictions = gpr.predict(&x_test).unwrap();
+        let x_test = Array2::from_shape_vec((1, 1), vec![2.5]).expect("Operation failed");
+        let predictions = gpr.predict(&x_test).expect("Operation failed");
 
         // Prediction should be reasonable
         assert!(predictions[0] > 0.5 && predictions[0] < 2.0);
@@ -256,13 +257,14 @@ mod tests {
         let kernel = SquaredExponential::default();
         let mut gpr = GaussianProcessRegressor::new(kernel);
 
-        let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 2.0, 4.0]).unwrap();
+        let x_train =
+            Array2::from_shape_vec((3, 1), vec![0.0, 2.0, 4.0]).expect("Operation failed");
         let y_train = array![1.0, 0.0, 1.0];
 
-        gpr.fit(&x_train, &y_train).unwrap();
+        gpr.fit(&x_train, &y_train).expect("Operation failed");
 
-        let x_test = Array2::from_shape_vec((2, 1), vec![1.0, 5.0]).unwrap();
-        let (mean, std) = gpr.predict_with_std(&x_test).unwrap();
+        let x_test = Array2::from_shape_vec((2, 1), vec![1.0, 5.0]).expect("Operation failed");
+        let (mean, std) = gpr.predict_with_std(&x_test).expect("Operation failed");
 
         // All predictions should have positive uncertainty
         assert!(std.iter().all(|&s| s > 0.0));
@@ -276,12 +278,13 @@ mod tests {
         let kernel = SquaredExponential::default();
         let mut gpr = GaussianProcessRegressor::with_options(kernel, 1e-10, true);
 
-        let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let x_train =
+            Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
         let y_train = array![100.0, 200.0, 150.0]; // Large values
 
-        gpr.fit(&x_train, &y_train).unwrap();
+        gpr.fit(&x_train, &y_train).expect("Operation failed");
 
-        let predictions = gpr.predict(&x_train).unwrap();
+        let predictions = gpr.predict(&x_train).expect("Operation failed");
 
         // Should fit training data well despite large values
         for i in 0..3 {
@@ -294,12 +297,13 @@ mod tests {
         let kernel = SquaredExponential::default();
         let mut gpr = GaussianProcessRegressor::new(kernel);
 
-        let x = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let x = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0])
+            .expect("Operation failed");
         let y = array![0.0, 1.0, 2.0, 1.5, 0.5];
 
-        gpr.fit(&x, &y).unwrap();
+        gpr.fit(&x, &y).expect("Operation failed");
 
-        let score = gpr.score(&x, &y).unwrap();
+        let score = gpr.score(&x, &y).expect("Operation failed");
 
         // Should fit training data well (R² close to 1)
         assert!(score > 0.8);

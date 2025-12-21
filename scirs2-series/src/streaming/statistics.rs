@@ -49,7 +49,7 @@ impl<F: Float + Debug> OnlineStats<F> {
 
         // Welford's online algorithm for mean and variance
         let delta = value - self.mean;
-        self.mean = self.mean + delta / F::from(self.count).unwrap();
+        self.mean = self.mean + delta / F::from(self.count).expect("Failed to convert to float");
         let delta2 = value - self.mean;
         self.m2 = self.m2 + delta * delta2;
     }
@@ -64,7 +64,7 @@ impl<F: Float + Debug> OnlineStats<F> {
         if self.count < 2 {
             F::zero()
         } else {
-            self.m2 / F::from(self.count - 1).unwrap()
+            self.m2 / F::from(self.count - 1).expect("Failed to convert to float")
         }
     }
 

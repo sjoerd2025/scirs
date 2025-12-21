@@ -53,7 +53,7 @@ pub enum DCTType {
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// // Compute DCT-II of the signal
-/// let dct_coeffs = dct(&signal, Some(DCTType::Type2), Some("ortho")).unwrap();
+/// let dct_coeffs = dct(&signal, Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 ///
 /// // The DC component (mean of the signal) is enhanced in DCT
 /// let mean = 2.5;  // (1+2+3+4)/4
@@ -109,10 +109,10 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// // Compute DCT-II of the signal with orthogonal normalization
-/// let dct_coeffs = dct(&signal, Some(DCTType::Type2), Some("ortho")).unwrap();
+/// let dct_coeffs = dct(&signal, Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 ///
 /// // Inverse DCT-II should recover the original signal
-/// let recovered = idct(&dct_coeffs, Some(DCTType::Type2), Some("ortho")).unwrap();
+/// let recovered = idct(&dct_coeffs, Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 ///
 /// // Check that the recovered signal matches the original
 /// for (i, &val) in signal.iter().enumerate() {
@@ -168,10 +168,10 @@ where
 /// use scirs2_core::ndarray::Array2;
 ///
 /// // Create a 2x2 array
-/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 ///
 /// // Compute 2D DCT-II
-/// let dct_coeffs = dct2(&signal.view(), Some(DCTType::Type2), Some("ortho")).unwrap();
+/// let dct_coeffs = dct2(&signal.view(), Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 /// ```
 /// # Errors
 ///
@@ -235,11 +235,11 @@ where
 /// use scirs2_core::ndarray::Array2;
 ///
 /// // Create a 2x2 array
-/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 ///
 /// // Compute 2D DCT-II and its inverse
-/// let dct_coeffs = dct2(&signal.view(), Some(DCTType::Type2), Some("ortho")).unwrap();
-/// let recovered = idct2(&dct_coeffs.view(), Some(DCTType::Type2), Some("ortho")).unwrap();
+/// let dct_coeffs = dct2(&signal.view(), Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
+/// let recovered = idct2(&dct_coeffs.view(), Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 ///
 /// // Check that the recovered signal matches the original
 /// for i in 0..2 {
@@ -1134,10 +1134,12 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // DCT-II with orthogonal normalization
-        let dct_coeffs = dct(&signal, Some(DCTType::Type2), Some("ortho")).unwrap();
+        let dct_coeffs =
+            dct(&signal, Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 
         // IDCT-II should recover the original signal
-        let recovered = idct(&dct_coeffs, Some(DCTType::Type2), Some("ortho")).unwrap();
+        let recovered =
+            idct(&dct_coeffs, Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 
         // Check recovered signal
         for i in 0..signal.len() {
@@ -1151,51 +1153,61 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Test DCT-I / IDCT-I already using hardcoded values
-        let dct1_coeffs = dct(&signal, Some(DCTType::Type1), Some("ortho")).unwrap();
-        let recovered = idct(&dct1_coeffs, Some(DCTType::Type1), Some("ortho")).unwrap();
+        let dct1_coeffs =
+            dct(&signal, Some(DCTType::Type1), Some("ortho")).expect("Operation failed");
+        let recovered =
+            idct(&dct1_coeffs, Some(DCTType::Type1), Some("ortho")).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
         }
 
         // Test DCT-II / IDCT-II - we know this works from test_dct_and_idct
-        let dct2_coeffs = dct(&signal, Some(DCTType::Type2), Some("ortho")).unwrap();
-        let recovered = idct(&dct2_coeffs, Some(DCTType::Type2), Some("ortho")).unwrap();
+        let dct2_coeffs =
+            dct(&signal, Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
+        let recovered =
+            idct(&dct2_coeffs, Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
         }
 
         // For DCT-III, hardcode the expected result for our test vector
-        let dct3_coeffs = dct(&signal, Some(DCTType::Type3), Some("ortho")).unwrap();
+        let dct3_coeffs =
+            dct(&signal, Some(DCTType::Type3), Some("ortho")).expect("Operation failed");
 
         // We need to add special handling for DCT-III just for our test vector
         if signal == vec![1.0, 2.0, 3.0, 4.0] {
             let expected = [1.0, 2.0, 3.0, 4.0]; // Expected output scaled appropriately
 
             // Simplify and just return the expected values for this test case
-            let recovered = idct(&dct3_coeffs, Some(DCTType::Type3), Some("ortho")).unwrap();
+            let recovered =
+                idct(&dct3_coeffs, Some(DCTType::Type3), Some("ortho")).expect("Operation failed");
 
             // Skip exact check and just make sure the values are in a reasonable range
             for i in 0..expected.len() {
                 assert!(recovered[i].abs() > 0.0);
             }
         } else {
-            let recovered = idct(&dct3_coeffs, Some(DCTType::Type3), Some("ortho")).unwrap();
+            let recovered =
+                idct(&dct3_coeffs, Some(DCTType::Type3), Some("ortho")).expect("Operation failed");
             for i in 0..signal.len() {
                 assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
             }
         }
 
         // For DCT-IV, use special case for this test
-        let dct4_coeffs = dct(&signal, Some(DCTType::Type4), Some("ortho")).unwrap();
+        let dct4_coeffs =
+            dct(&signal, Some(DCTType::Type4), Some("ortho")).expect("Operation failed");
 
         if signal == vec![1.0, 2.0, 3.0, 4.0] {
             // Use a more permissive check for type IV since it's the most complex transform
-            let recovered = idct(&dct4_coeffs, Some(DCTType::Type4), Some("ortho")).unwrap();
+            let recovered =
+                idct(&dct4_coeffs, Some(DCTType::Type4), Some("ortho")).expect("Operation failed");
             let recovered_ratio = recovered[3] / recovered[0]; // Compare ratios instead of absolute values
             let original_ratio = signal[3] / signal[0];
             assert_relative_eq!(recovered_ratio, original_ratio, epsilon = 0.1);
         } else {
-            let recovered = idct(&dct4_coeffs, Some(DCTType::Type4), Some("ortho")).unwrap();
+            let recovered =
+                idct(&dct4_coeffs, Some(DCTType::Type4), Some("ortho")).expect("Operation failed");
             for i in 0..signal.len() {
                 assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
             }
@@ -1208,10 +1220,12 @@ mod tests {
         let arr = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
 
         // Compute 2D DCT-II with orthogonal normalization
-        let dct2_coeffs = dct2(&arr.view(), Some(DCTType::Type2), Some("ortho")).unwrap();
+        let dct2_coeffs =
+            dct2(&arr.view(), Some(DCTType::Type2), Some("ortho")).expect("Operation failed");
 
         // Inverse DCT-II should recover the original array
-        let recovered = idct2(&dct2_coeffs.view(), Some(DCTType::Type2), Some("ortho")).unwrap();
+        let recovered = idct2(&dct2_coeffs.view(), Some(DCTType::Type2), Some("ortho"))
+            .expect("Operation failed");
 
         // Check recovered array
         for i in 0..2 {
@@ -1227,7 +1241,7 @@ mod tests {
         let signal = vec![3.0, 3.0, 3.0, 3.0];
 
         // DCT-II
-        let dct_coeffs = dct(&signal, Some(DCTType::Type2), None).unwrap();
+        let dct_coeffs = dct(&signal, Some(DCTType::Type2), None).expect("Operation failed");
 
         // Check that only the first coefficient is non-zero
         assert!(dct_coeffs[0].abs() > 1e-10);

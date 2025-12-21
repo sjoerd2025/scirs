@@ -437,7 +437,7 @@ mod tests {
             Point2D::new(0.0, 1.0),
         ];
 
-        let tps = ThinPlateSpline::new(&points, &points).unwrap();
+        let tps = ThinPlateSpline::new(&points, &points).expect("Operation failed");
 
         // Test that identity transformation works
         for &point in &points {
@@ -463,7 +463,7 @@ mod tests {
             Point2D::new(1.0, 1.1), // Slight stretch
         ];
 
-        let tps = ThinPlateSpline::new(&source, &target).unwrap();
+        let tps = ThinPlateSpline::new(&source, &target).expect("Operation failed");
 
         // Test that control points map correctly
         for (i, &source_pt) in source.iter().enumerate() {
@@ -478,7 +478,8 @@ mod tests {
         let points = vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)];
         let params = RegistrationParams::default();
 
-        let result = register_non_rigid_points(&points, &points, &params).unwrap();
+        let result =
+            register_non_rigid_points(&points, &points, &params).expect("Operation failed");
 
         // Should have zero error for identical points
         assert!(result.final_cost < 1e-10);
@@ -491,7 +492,8 @@ mod tests {
         let target = vec![(0.0, 0.0), (1.1, 0.1), (0.1, 1.1), (1.0, 1.0)];
         let params = RegistrationParams::default();
 
-        let result = register_non_rigid_points(&source, &target, &params).unwrap();
+        let result =
+            register_non_rigid_points(&source, &target, &params).expect("Operation failed");
 
         // Should find a valid transformation
         assert!(result.final_cost < 1.0);
@@ -514,7 +516,8 @@ mod tests {
         let target = vec![(0.0, 0.0), (1.1, 0.1), (0.1, 1.1), (1.0, 1.0)];
         let params = RegistrationParams::default();
 
-        let result = register_non_rigid_regularized(&source, &target, 0.01, &params).unwrap();
+        let result = register_non_rigid_regularized(&source, &target, 0.01, &params)
+            .expect("Operation failed");
 
         // Should find a valid transformation
         assert!(result.final_cost < 2.0);

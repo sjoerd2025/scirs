@@ -55,7 +55,11 @@ impl EvolutionaryStrategy {
     pub fn evolve(&mut self) {
         // Select best half
         let mut indices: Vec<usize> = (0..self.population_size).collect();
-        indices.sort_by(|&a, &b| self.fitness[a].partial_cmp(&self.fitness[b]).unwrap());
+        indices.sort_by(|&a, &b| {
+            self.fitness[a]
+                .partial_cmp(&self.fitness[b])
+                .expect("Operation failed")
+        });
 
         let elite_size = self.population_size / 2;
 

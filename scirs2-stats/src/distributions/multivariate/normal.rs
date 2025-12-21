@@ -51,7 +51,7 @@ impl MultivariateNormal {
     /// // Create a 2D multivariate normal distribution
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
-    /// let mvn = MultivariateNormal::new(mean, cov).unwrap();
+    /// let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
     /// ```
     pub fn new<D1, D2>(mean: ArrayBase<D1, Ix1>, cov: ArrayBase<D2, Ix2>) -> StatsResult<Self>
     where
@@ -119,7 +119,7 @@ impl MultivariateNormal {
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.0], [0.0, 1.0]];
-    /// let mvn = MultivariateNormal::new(mean, cov).unwrap();
+    /// let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
     ///
     /// // PDF at origin for a standard 2D normal should be 1/(2π)
     /// let pdf_at_origin = mvn.pdf(&array![0.0, 0.0]);
@@ -169,14 +169,14 @@ impl MultivariateNormal {
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
-    /// let mvn = MultivariateNormal::new(mean, cov).unwrap();
+    /// let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
     ///
-    /// let samples = mvn.rvs(100).unwrap();
+    /// let samples = mvn.rvs(100).expect("Operation failed");
     /// assert_eq!(samples.shape(), &[100, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array2<f64>> {
         let mut rng = thread_rng();
-        let normal = RandNormal::new(0.0, 1.0).unwrap();
+        let normal = RandNormal::new(0.0, 1.0).expect("Operation failed");
 
         // Create a matrix of standard normal samples
         let mut std_normal_samples = Array2::<f64>::zeros((size, self.dim));
@@ -225,9 +225,9 @@ impl MultivariateNormal {
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
-    /// let mvn = MultivariateNormal::new(mean, cov).unwrap();
+    /// let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
     ///
-    /// let sample = mvn.rvs_single().unwrap();
+    /// let sample = mvn.rvs_single().expect("Operation failed");
     /// assert_eq!(sample.len(), 2);
     /// ```
     pub fn rvs_single(&self) -> StatsResult<Array1<f64>> {
@@ -253,7 +253,7 @@ impl MultivariateNormal {
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.0], [0.0, 1.0]];
-    /// let mvn = MultivariateNormal::new(mean, cov).unwrap();
+    /// let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
     ///
     /// let log_pdf = mvn.logpdf(&array![0.0, 0.0]);
     /// assert!((log_pdf - (-1.8378770664093453)).abs() < 1e-7); // ln(1/(2π)) ≈ -1.837877
@@ -393,7 +393,7 @@ pub fn compute_inverse_from_cholesky(l: &Array2<f64>) -> Result<Array2<f64>, Str
 ///
 /// let mean = array![0.0, 0.0];
 /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
-/// let mvn = multivariate::multivariate_normal(mean, cov).unwrap();
+/// let mvn = multivariate::multivariate_normal(mean, cov).expect("Operation failed");
 /// let pdf_at_origin = mvn.pdf(&array![0.0, 0.0]);
 /// ```
 #[allow(dead_code)]
@@ -505,7 +505,7 @@ mod tests {
         // 2D standard multivariate normal
         let mean = array![0.0, 0.0];
         let cov = array![[1.0, 0.0], [0.0, 1.0]];
-        let mvn = MultivariateNormal::new(mean.clone(), cov.clone()).unwrap();
+        let mvn = MultivariateNormal::new(mean.clone(), cov.clone()).expect("Operation failed");
 
         assert_eq!(mvn.dim, 2);
         assert_eq!(mvn.mean, mean);
@@ -514,7 +514,7 @@ mod tests {
         // Custom 3D multivariate normal
         let mean3 = array![1.0, 2.0, 3.0];
         let cov3 = array![[1.0, 0.5, 0.3], [0.5, 2.0, 0.2], [0.3, 0.2, 1.5]];
-        let mvn3 = MultivariateNormal::new(mean3.clone(), cov3.clone()).unwrap();
+        let mvn3 = MultivariateNormal::new(mean3.clone(), cov3.clone()).expect("Operation failed");
 
         assert_eq!(mvn3.dim, 3);
         assert_eq!(mvn3.mean, mean3);
@@ -539,7 +539,7 @@ mod tests {
         // 2D standard multivariate normal
         let mean = array![0.0, 0.0];
         let cov = array![[1.0, 0.0], [0.0, 1.0]];
-        let mvn = MultivariateNormal::new(mean, cov).unwrap();
+        let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
 
         // PDF at origin should be 1/(2π) ≈ 0.15915494
         let pdf_at_origin = mvn.pdf(&array![0.0, 0.0]);
@@ -555,7 +555,7 @@ mod tests {
         // 2D standard multivariate normal
         let mean = array![0.0, 0.0];
         let cov = array![[1.0, 0.0], [0.0, 1.0]];
-        let mvn = MultivariateNormal::new(mean, cov).unwrap();
+        let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
 
         // logPDF at origin should be ln(1/(2π)) ≈ -1.837877
         let logpdf_at_origin = mvn.logpdf(&array![0.0, 0.0]);
@@ -573,15 +573,15 @@ mod tests {
         // 2D multivariate normal with correlation
         let mean = array![1.0, 2.0];
         let cov = array![[1.0, 0.5], [0.5, 2.0]];
-        let mvn = MultivariateNormal::new(mean, cov).unwrap();
+        let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
 
         // Generate samples and check dimensions
         let n_samples_ = 500;
-        let samples = mvn.rvs(n_samples_).unwrap();
+        let samples = mvn.rvs(n_samples_).expect("Operation failed");
         assert_eq!(samples.shape(), &[n_samples_, 2]);
 
         // Check statistics (rough check as it's random)
-        let sample_mean = samples.mean_axis(Axis(0)).unwrap();
+        let sample_mean = samples.mean_axis(Axis(0)).expect("Operation failed");
         assert_relative_eq!(sample_mean[0], 1.0, epsilon = 0.3);
         assert_relative_eq!(sample_mean[1], 2.0, epsilon = 0.3);
 
@@ -597,9 +597,9 @@ mod tests {
     fn test_mvn_rvs_single() {
         let mean = array![1.0, 2.0];
         let cov = array![[1.0, 0.5], [0.5, 2.0]];
-        let mvn = MultivariateNormal::new(mean, cov).unwrap();
+        let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
 
-        let sample = mvn.rvs_single().unwrap();
+        let sample = mvn.rvs_single().expect("Operation failed");
         assert_eq!(sample.len(), 2);
     }
 
@@ -608,7 +608,7 @@ mod tests {
         // Test the Cholesky decomposition
         let a = array![[4.0, 2.0, 2.0], [2.0, 5.0, 3.0], [2.0, 3.0, 6.0]];
 
-        let l = compute_cholesky(&a).unwrap();
+        let l = compute_cholesky(&a).expect("Operation failed");
 
         // Reconstruct A = L·L^T
         let mut a_reconstructed = Array2::<f64>::zeros((3, 3));
@@ -634,10 +634,10 @@ mod tests {
         let a = array![[4.0, 2.0, 2.0], [2.0, 5.0, 3.0], [2.0, 3.0, 6.0]];
 
         // Compute Cholesky decomposition
-        let l = compute_cholesky(&a).unwrap();
+        let l = compute_cholesky(&a).expect("Operation failed");
 
         // Compute inverse from Cholesky
-        let a_inv = compute_inverse_from_cholesky(&l).unwrap();
+        let a_inv = compute_inverse_from_cholesky(&l).expect("Operation failed");
 
         // Check that A·A⁻¹ ≈ I
         let identity = a.dot(&a_inv);

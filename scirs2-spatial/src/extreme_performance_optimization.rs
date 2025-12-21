@@ -1290,7 +1290,9 @@ impl AdvancedfastDistanceMatrix {
         let total_chunks = (rows * cols).div_ceil(chunk_size);
 
         // Simulate lock-free parallel processing
-        let num_threads = std::thread::available_parallelism().unwrap().get();
+        let num_threads = std::thread::available_parallelism()
+            .expect("Operation failed")
+            .get();
         let chunks_per_thread = total_chunks.div_ceil(num_threads);
 
         for thread_id in 0..num_threads {
@@ -1705,7 +1707,7 @@ mod tests {
         let result = compiler.compile_algorithm("kmeans", &params);
         assert!(result.is_ok());
 
-        let code = result.unwrap();
+        let code = result.expect("Operation failed");
         assert!(!code.code.is_empty());
         assert_eq!(code.entry_point, 0);
     }
@@ -1735,7 +1737,7 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        let distances = result.unwrap();
+        let distances = result.expect("Operation failed");
         assert_eq!(distances.shape(), &[3, 3]);
 
         // Diagonal should be zero
@@ -1756,7 +1758,7 @@ mod tests {
         let result = algorithm.auto_optimize_and_execute(&points.view()).await;
         assert!(result.is_ok());
 
-        let assignments = result.unwrap();
+        let assignments = result.expect("Operation failed");
         assert_eq!(assignments.len(), 4);
 
         // Check that optimization history was recorded
@@ -1778,7 +1780,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "timeout"]
     async fn test_extreme_performance_benchmark() {
         // Use a very small dataset for fast testing
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -1786,7 +1787,7 @@ mod tests {
         let result = benchmark_extreme_optimizations(&points.view()).await;
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.ops_per_second > 0.0);
         assert!(metrics.extreme_speedup >= 1.0);
         assert!(metrics.cache_hit_ratio >= 90.0);

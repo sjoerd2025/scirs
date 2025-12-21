@@ -261,13 +261,17 @@ impl MetalSpMatVec {
 
             if let Some(kernel) = kernel {
                 // Upload data to GPU
-                let indptr_buffer =
-                    context.create_buffer_from_slice(matrix.get_indptr().as_slice().unwrap());
-                let indices_buffer =
-                    context.create_buffer_from_slice(matrix.get_indices().as_slice().unwrap());
-                let data_buffer =
-                    context.create_buffer_from_slice(matrix.get_data().as_slice().unwrap());
-                let vector_buffer = context.create_buffer_from_slice(vector.as_slice().unwrap());
+                let indptr_buffer = context.create_buffer_from_slice(
+                    matrix.get_indptr().as_slice().expect("Operation failed"),
+                );
+                let indices_buffer = context.create_buffer_from_slice(
+                    matrix.get_indices().as_slice().expect("Operation failed"),
+                );
+                let data_buffer = context.create_buffer_from_slice(
+                    matrix.get_data().as_slice().expect("Operation failed"),
+                );
+                let vector_buffer =
+                    context.create_buffer_from_slice(vector.as_slice().expect("Operation failed"));
                 let result_buffer = context.create_buffer::<T>(rows);
 
                 // Set kernel parameters
@@ -379,12 +383,16 @@ impl MetalSpMatVec {
 
         if let Some(ref context) = self.context {
             // Upload data to GPU using context
-            let indptr_gpu =
-                context.create_buffer_from_slice(matrix.get_indptr().as_slice().unwrap());
-            let indices_gpu =
-                context.create_buffer_from_slice(matrix.get_indices().as_slice().unwrap());
-            let data_gpu = context.create_buffer_from_slice(matrix.get_data().as_slice().unwrap());
-            let vector_gpu = context.create_buffer_from_slice(vector.as_slice().unwrap());
+            let indptr_gpu = context.create_buffer_from_slice(
+                matrix.get_indptr().as_slice().expect("Operation failed"),
+            );
+            let indices_gpu = context.create_buffer_from_slice(
+                matrix.get_indices().as_slice().expect("Operation failed"),
+            );
+            let data_gpu = context
+                .create_buffer_from_slice(matrix.get_data().as_slice().expect("Operation failed"));
+            let vector_gpu =
+                context.create_buffer_from_slice(vector.as_slice().expect("Operation failed"));
             let result_gpu = context.create_buffer::<T>(rows);
 
             // Configure launch parameters based on optimization level

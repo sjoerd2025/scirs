@@ -39,7 +39,7 @@ fn main() {
 #[allow(dead_code)]
 fn create_model_weights(inputsize: usize, outputsize: usize) -> Array2<f32> {
     let mut rng = scirs2_core::random::rng();
-    let normal = Normal::new(0.0, 0.1).unwrap(); // Small standard deviation typical for weights
+    let normal = Normal::new(0.0, 0.1).expect("Operation failed"); // Small standard deviation typical for weights
 
     let mut weights = Array2::zeros((outputsize, inputsize));
     for i in 0..outputsize {
@@ -60,7 +60,9 @@ fn create_activations(_batchsize: usize, featuresize: usize) -> Array2<f32> {
     let mut activations = Array2::zeros((_batchsize, featuresize));
     for i in 0.._batchsize {
         for j in 0..featuresize {
-            let val = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);
+            let val = Normal::new(0.0, 1.0)
+                .expect("Operation failed")
+                .sample(&mut rng);
             activations[[i, j]] = if val > 0.0 { val } else { 0.0 };
         }
     }
@@ -118,7 +120,8 @@ fn compare_matmul_accuracy(weights: &Array2<f32>, activations: &Array2<f32>, bit
         };
 
         // Calibrate and quantize _weights
-        let weights_params = calibrate_matrix(&weights.view(), bits, &config_weights).unwrap();
+        let weights_params =
+            calibrate_matrix(&weights.view(), bits, &config_weights).expect("Operation failed");
         let (quantized_weights, _) = quantize_matrix(&weights.view(), bits, weights_params.method);
         let dequantized_weights = dequantize_matrix(&quantized_weights, &weights_params);
 
@@ -127,8 +130,8 @@ fn compare_matmul_accuracy(weights: &Array2<f32>, activations: &Array2<f32>, bit
             (weights - &dequantized_weights).mapv(|x| x * x).sum() / weights.len() as f32;
 
         // Calibrate and quantize activations
-        let activations_params =
-            calibrate_matrix(&activations.view(), bits, &config_activations).unwrap();
+        let activations_params = calibrate_matrix(&activations.view(), bits, &config_activations)
+            .expect("Operation failed");
         let (quantized_activations, _) =
             quantize_matrix(&activations.view(), bits, activations_params.method);
         let dequantized_activations =
@@ -205,7 +208,8 @@ fn compare_bit_widths_matmul(weights: &Array2<f32>, activations: &Array2<f32>) {
         };
 
         // Calibrate and quantize _weights
-        let weights_params = calibrate_matrix(&weights.view(), bits, &config).unwrap();
+        let weights_params =
+            calibrate_matrix(&weights.view(), bits, &config).expect("Operation failed");
         let (quantized_weights, _) = quantize_matrix(&weights.view(), bits, weights_params.method);
 
         // Calibrate and quantize activations with asymmetric quantization
@@ -215,7 +219,8 @@ fn compare_bit_widths_matmul(weights: &Array2<f32>, activations: &Array2<f32>) {
             num_bins: 256,
             ..Default::default()
         };
-        let activations_params = calibrate_matrix(&activations.view(), bits, &config_act).unwrap();
+        let activations_params =
+            calibrate_matrix(&activations.view(), bits, &config_act).expect("Operation failed");
         let (quantized_activations, _) =
             quantize_matrix(&activations.view(), bits, activations_params.method);
 
@@ -299,14 +304,15 @@ fn demonstrate_mixed_precision(weights: &Array2<f32>, activations: &Array2<f32>)
         };
 
         // Calibrate and quantize _weights
-        let weights_params =
-            calibrate_matrix(&weights.view(), weight_bits, &weights_config).unwrap();
+        let weights_params = calibrate_matrix(&weights.view(), weight_bits, &weights_config)
+            .expect("Operation failed");
         let (quantized_weights, _) =
             quantize_matrix(&weights.view(), weight_bits, weights_params.method);
 
         // Calibrate and quantize activations
         let activations_params =
-            calibrate_matrix(&activations.view(), act_bits, &activations_config).unwrap();
+            calibrate_matrix(&activations.view(), act_bits, &activations_config)
+                .expect("Operation failed");
         let (quantized_activations, _) =
             quantize_matrix(&activations.view(), act_bits, activations_params.method);
 

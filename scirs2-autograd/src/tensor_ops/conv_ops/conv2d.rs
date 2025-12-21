@@ -483,7 +483,8 @@ fn conv2d_impl<F: Float>(
         dilation_h as i32,
         dilation_w as i32,
     );
-    let y = NdArray::from_shape_vec(IxDyn(&[batch_size, ych, yh, yw]), y).unwrap();
+    let y =
+        NdArray::from_shape_vec(IxDyn(&[batch_size, ych, yh, yw]), y).expect("Operation failed");
     let cols = unsafe {
         NdArray::from_shape_vec_unchecked(IxDyn(&[batch_size, xch, kw, kh, yh, yw]), cols)
     };
@@ -520,7 +521,7 @@ fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) ->
         f = slow_col_x_filter_kernel;
     }
     let y = f(
-        cols.as_slice().unwrap(),
+        cols.as_slice().expect("Operation failed"),
         w_slice,
         xch,
         ych,

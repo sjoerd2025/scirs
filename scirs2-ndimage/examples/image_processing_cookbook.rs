@@ -297,10 +297,10 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("let binary = threshold_binary(&image.view(), 0.5)?;");
     println!();
     println!("// Step 2: Distance transform to find object centers");
-    println!("let binary_dyn = binary.clone().into_dimensionality::<IxDyn>().unwrap();");
+    println!("let binary_dyn = binary.clone().into_dimensionality::<IxDyn>().expect(\"Operation failed\");");
     println!("let (distances_) = distance_transform_edt(&binary_dyn, None, true, false)?;");
     println!(
-        "let distances_2d = distances.into_dimensionality::<scirs2_core::ndarray::Ix2>().unwrap();"
+        "let distances_2d = distances.into_dimensionality::<scirs2_core::ndarray::Ix2>().expect(\"Operation failed\");"
     );
     println!();
     println!("// Step 3: Find peaks as markers");

@@ -69,7 +69,7 @@ fn create_eigenvalue_controlledmatrix(n: usize, min_eig: f64, maxeig: f64) -> Ar
 #[allow(dead_code)]
 fn orthogonalmatrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
-    let (q_, _r) = qr(&a.view(), None).unwrap();
+    let (q_, _r) = qr(&a.view(), None).expect("Operation failed");
     q_
 }
 
@@ -93,28 +93,44 @@ fn benchmatrix_exponential(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("expm_small_eigenvals", size),
             &smallmatrix,
-            |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
+            |b, m| {
+                b.iter(|| {
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
+                })
+            },
         );
 
         // Matrix exponential (medium eigenvalues)
         group.bench_with_input(
             BenchmarkId::new("expm_medium_eigenvals", size),
             &mediummatrix,
-            |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
+            |b, m| {
+                b.iter(|| {
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
+                })
+            },
         );
 
         // Matrix exponential (large eigenvalues - more challenging)
         group.bench_with_input(
             BenchmarkId::new("expm_large_eigenvals", size),
             &largematrix,
-            |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
+            |b, m| {
+                b.iter(|| {
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
+                })
+            },
         );
 
         // Matrix exponential (nilpotent matrix)
         group.bench_with_input(
             BenchmarkId::new("expm_nilpotent", size),
             &nilpotent,
-            |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
+            |b, m| {
+                b.iter(|| {
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
+                })
+            },
         );
 
         // Matrix exponential with Padé approximation (if available)
@@ -124,7 +140,7 @@ fn benchmatrix_exponential(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // expm_pade not available, use standard expm
-                    matrix_functions::expm(black_box(&m.view()), None).unwrap()
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
                 })
             },
         );
@@ -136,7 +152,7 @@ fn benchmatrix_exponential(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // expm_scaling_squaring not available, use standard expm
-                    matrix_functions::expm(black_box(&m.view()), None).unwrap()
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
                 })
             },
         );
@@ -161,21 +177,21 @@ fn benchmatrix_logarithm(c: &mut Criterion) {
 
         // Matrix logarithm (SPD matrix)
         group.bench_with_input(BenchmarkId::new("logm_spd", size), &spdmatrix, |b, m| {
-            b.iter(|| logm(black_box(&m.view())).unwrap())
+            b.iter(|| logm(black_box(&m.view())).expect("Operation failed"))
         });
 
         // Matrix logarithm (well-conditioned)
         group.bench_with_input(
             BenchmarkId::new("logm_well_conditioned", size),
             &well_conditioned,
-            |b, m| b.iter(|| logm(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| logm(black_box(&m.view())).expect("Operation failed")),
         );
 
         // Matrix logarithm with specific algorithm (if available)
         group.bench_with_input(BenchmarkId::new("logm_schur", size), &spdmatrix, |b, m| {
             b.iter(|| {
                 // logm_schur not available, use standard logm
-                matrix_functions::logm(black_box(&m.view())).unwrap()
+                matrix_functions::logm(black_box(&m.view())).expect("Operation failed")
             })
         });
 
@@ -186,7 +202,7 @@ fn benchmatrix_logarithm(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // logm_inverse_scaling_squaring not available, use standard logm
-                    matrix_functions::logm(black_box(&m.view())).unwrap()
+                    matrix_functions::logm(black_box(&m.view())).expect("Operation failed")
                 })
             },
         );
@@ -215,7 +231,7 @@ fn benchmatrix_power(c: &mut Criterion) {
                 |b, (m, p)| {
                     b.iter(|| {
                         // matrix_power_int not available, use matrix_power
-                        matrix_power(black_box(&m.view()), *p as f64).unwrap()
+                        matrix_power(black_box(&m.view()), *p as f64).expect("Operation failed")
                     })
                 },
             );
@@ -231,10 +247,10 @@ fn benchmatrix_power(c: &mut Criterion) {
                         // matrix_power_real not available for fractional powers
                         // Use matrix_power for integer part only
                         if *p == (*p as i32) as f64 {
-                            matrix_power(black_box(&m.view()), *p).unwrap()
+                            matrix_power(black_box(&m.view()), *p).expect("Operation failed")
                         } else {
                             // For fractional powers, use matrix_power as well
-                            matrix_power(black_box(&m.view()), *p).unwrap()
+                            matrix_power(black_box(&m.view()), *p).expect("Operation failed")
                         }
                     })
                 },
@@ -262,7 +278,7 @@ fn benchmatrix_power(c: &mut Criterion) {
                 b.iter(|| {
                     // matrix_power_via_schur not available
                     // Use matrix_power for integer part
-                    matrix_power(black_box(&m.view()), *p).unwrap()
+                    matrix_power(black_box(&m.view()), *p).expect("Operation failed")
                 })
             },
         );
@@ -285,14 +301,14 @@ fn benchmatrix_sqrt(c: &mut Criterion) {
 
         // Matrix square root (SPD)
         group.bench_with_input(BenchmarkId::new("sqrtm_spd", size), &spdmatrix, |b, m| {
-            b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap())
+            b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).expect("Operation failed"))
         });
 
         // Matrix square root (general)
         group.bench_with_input(
             BenchmarkId::new("sqrtm_general", size),
             &generalmatrix,
-            |b, m| b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()),
+            |b, m| b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).expect("Operation failed")),
         );
 
         // Matrix square root via Schur decomposition
@@ -302,7 +318,7 @@ fn benchmatrix_sqrt(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // sqrtm_schur not available, use standard sqrtm
-                    sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()
+                    sqrtm(black_box(&m.view()), 100, 1e-12).expect("Operation failed")
                 })
             },
         );
@@ -314,7 +330,7 @@ fn benchmatrix_sqrt(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // sqrtm_denman_beavers not available, use standard sqrtm
-                    sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()
+                    sqrtm(black_box(&m.view()), 100, 1e-12).expect("Operation failed")
                 })
             },
         );
@@ -326,7 +342,7 @@ fn benchmatrix_sqrt(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // sqrtm_newton not available, use standard sqrtm
-                    sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()
+                    sqrtm(black_box(&m.view()), 100, 1e-12).expect("Operation failed")
                 })
             },
         );
@@ -351,7 +367,7 @@ fn benchmatrix_sign(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("sign_function", size), &matrix, |b, m| {
             b.iter(|| {
                 // matrix_sign not available, use signm
-                matrix_functions::signm(black_box(&m.view())).unwrap()
+                matrix_functions::signm(black_box(&m.view())).expect("Operation failed")
             })
         });
 
@@ -359,14 +375,14 @@ fn benchmatrix_sign(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sign_function_controlled", size),
             &controlled_eigenvals,
-            |b, m| b.iter(|| signm(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| signm(black_box(&m.view())).expect("Operation failed")),
         );
 
         // Matrix sign function via Newton iteration
         group.bench_with_input(BenchmarkId::new("sign_newton", size), &matrix, |b, m| {
             b.iter(|| {
                 // matrix_sign_newton not available, use signm
-                matrix_functions::signm(black_box(&m.view())).unwrap()
+                matrix_functions::signm(black_box(&m.view())).expect("Operation failed")
             })
         });
 
@@ -374,7 +390,7 @@ fn benchmatrix_sign(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("sign_schur", size), &matrix, |b, m| {
             b.iter(|| {
                 // matrix_sign_schur not available, use signm
-                matrix_functions::signm(black_box(&m.view())).unwrap()
+                matrix_functions::signm(black_box(&m.view())).expect("Operation failed")
             })
         });
     }
@@ -395,32 +411,32 @@ fn benchmatrix_trigonometric(c: &mut Criterion) {
 
         // Matrix cosine
         group.bench_with_input(BenchmarkId::new("cosm", size), &matrix, |b, m| {
-            b.iter(|| matrix_functions::cosm(black_box(&m.view())).unwrap())
+            b.iter(|| matrix_functions::cosm(black_box(&m.view())).expect("Operation failed"))
         });
 
         // Matrix sine
         group.bench_with_input(BenchmarkId::new("sinm", size), &matrix, |b, m| {
-            b.iter(|| sinm(black_box(&m.view())).unwrap())
+            b.iter(|| sinm(black_box(&m.view())).expect("Operation failed"))
         });
 
         // Matrix tangent
         group.bench_with_input(BenchmarkId::new("tanm", size), &matrix, |b, m| {
-            b.iter(|| tanm(black_box(&m.view())).unwrap())
+            b.iter(|| tanm(black_box(&m.view())).expect("Operation failed"))
         });
 
         // Matrix hyperbolic cosine
         group.bench_with_input(BenchmarkId::new("coshm", size), &matrix, |b, m| {
-            b.iter(|| matrix_functions::coshm(black_box(&m.view())).unwrap())
+            b.iter(|| matrix_functions::coshm(black_box(&m.view())).expect("Operation failed"))
         });
 
         // Matrix hyperbolic sine
         group.bench_with_input(BenchmarkId::new("sinhm", size), &matrix, |b, m| {
-            b.iter(|| sinhm(black_box(&m.view())).unwrap())
+            b.iter(|| sinhm(black_box(&m.view())).expect("Operation failed"))
         });
 
         // Matrix hyperbolic tangent
         group.bench_with_input(BenchmarkId::new("tanhm", size), &matrix, |b, m| {
-            b.iter(|| tanhm(black_box(&m.view())).unwrap())
+            b.iter(|| tanhm(black_box(&m.view())).expect("Operation failed"))
         });
     }
 
@@ -444,7 +460,7 @@ fn benchmatrix_inverse_trigonometric(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("arcsinm", size), &smallmatrix, |b, m| {
             b.iter(|| {
                 // arcsinm not available, use asinm
-                matrix_functions::asinm(black_box(&m.view())).unwrap()
+                matrix_functions::asinm(black_box(&m.view())).expect("Operation failed")
             })
         });
 
@@ -452,7 +468,7 @@ fn benchmatrix_inverse_trigonometric(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("arccosm", size), &smallmatrix, |b, m| {
             b.iter(|| {
                 // arccosm not available, use acosm
-                matrix_functions::acosm(black_box(&m.view())).unwrap()
+                matrix_functions::acosm(black_box(&m.view())).expect("Operation failed")
             })
         });
 
@@ -463,7 +479,7 @@ fn benchmatrix_inverse_trigonometric(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // arctanm not available, use atanm
-                    matrix_functions::atanm(black_box(&m.view())).unwrap()
+                    matrix_functions::atanm(black_box(&m.view())).expect("Operation failed")
                 })
             },
         );
@@ -519,7 +535,7 @@ fn bench_generalmatrix_function(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // funm not available, use expm as placeholder
-                    matrix_functions::expm(black_box(&m.view()), None).unwrap()
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
                 })
             },
         );
@@ -528,7 +544,7 @@ fn bench_generalmatrix_function(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("funm_exp", size), &matrix, |b, m| {
             b.iter(|| {
                 // funm not available, use expm directly
-                matrix_functions::expm(black_box(&m.view()), None).unwrap()
+                matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
             })
         });
 
@@ -547,7 +563,7 @@ fn bench_generalmatrix_function(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // funm_schur_parlett not available, use sqrtm
-                    sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()
+                    sqrtm(black_box(&m.view()), 100, 1e-12).expect("Operation failed")
                 })
             },
         );
@@ -575,7 +591,8 @@ fn bench_accuracy_performance_tradeoffs(c: &mut Criterion) {
             |b, m_tol| {
                 b.iter(|| {
                     // expm_with_tolerance not available, use standard expm
-                    matrix_functions::expm(black_box(&m_tol.0.view()), None).unwrap()
+                    matrix_functions::expm(black_box(&m_tol.0.view()), None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -586,7 +603,11 @@ fn bench_accuracy_performance_tradeoffs(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new(format!("sqrtm_iter_{}", max_iter), size),
             &(&matrix, max_iter),
-            |b, (m, iter)| b.iter(|| sqrtm(black_box(&m.view()), black_box(*iter), 1e-12).unwrap()),
+            |b, (m, iter)| {
+                b.iter(|| {
+                    sqrtm(black_box(&m.view()), black_box(*iter), 1e-12).expect("Operation failed")
+                })
+            },
         );
     }
 
@@ -610,13 +631,17 @@ fn bench_conditioning_effects(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new(format!("expm_cond_{:.0e}", condition_number), size),
             &matrix,
-            |b, m| b.iter(|| matrix_functions::expm(black_box(&m.view()), None).unwrap()),
+            |b, m| {
+                b.iter(|| {
+                    matrix_functions::expm(black_box(&m.view()), None).expect("Operation failed")
+                })
+            },
         );
 
         group.bench_with_input(
             BenchmarkId::new(format!("sqrtm_cond_{:.0e}", condition_number), size),
             &matrix,
-            |b, m| b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).unwrap()),
+            |b, m| b.iter(|| sqrtm(black_box(&m.view()), 100, 1e-12).expect("Operation failed")),
         );
     }
 

@@ -792,7 +792,7 @@ impl<F: Float + NumAssign> ChainOperator<F> {
         }
 
         let (first_rows, _) = operators[0].shape();
-        let (_, last_cols) = operators.last().unwrap().shape();
+        let (_, last_cols) = operators.last().expect("Operation failed").shape();
         let totalshape = (first_rows, last_cols);
 
         Ok(Self {
@@ -1093,7 +1093,7 @@ mod tests {
     fn test_identity_operator() {
         let op = IdentityOperator::<f64>::new(3);
         let x = vec![1.0, 2.0, 3.0];
-        let y = op.matvec(&x).unwrap();
+        let y = op.matvec(&x).expect("Operation failed");
         assert_eq!(x, y);
     }
 
@@ -1101,7 +1101,7 @@ mod tests {
     fn test_scaled_identity_operator() {
         let op = ScaledIdentityOperator::new(3, 2.0);
         let x = vec![1.0, 2.0, 3.0];
-        let y = op.matvec(&x).unwrap();
+        let y = op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![2.0, 4.0, 6.0]);
     }
 
@@ -1109,7 +1109,7 @@ mod tests {
     fn test_diagonal_operator() {
         let op = DiagonalOperator::new(vec![2.0, 3.0, 4.0]);
         let x = vec![1.0, 2.0, 3.0];
-        let y = op.matvec(&x).unwrap();
+        let y = op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![2.0, 6.0, 12.0]);
     }
 
@@ -1117,7 +1117,7 @@ mod tests {
     fn test_zero_operator() {
         let op = ZeroOperator::<f64>::new(3, 3);
         let x = vec![1.0, 2.0, 3.0];
-        let y = op.matvec(&x).unwrap();
+        let y = op.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![0.0, 0.0, 0.0]);
     }
 
@@ -1125,9 +1125,9 @@ mod tests {
     fn test_sum_operator() {
         let id = Box::new(IdentityOperator::<f64>::new(3));
         let scaled = Box::new(ScaledIdentityOperator::new(3, 2.0));
-        let sum = SumOperator::new(id, scaled).unwrap();
+        let sum = SumOperator::new(id, scaled).expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0];
-        let y = sum.matvec(&x).unwrap();
+        let y = sum.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![3.0, 6.0, 9.0]); // (I + 2I) * x = 3x
     }
 
@@ -1135,9 +1135,9 @@ mod tests {
     fn test_product_operator() {
         let id = Box::new(IdentityOperator::<f64>::new(3));
         let scaled = Box::new(ScaledIdentityOperator::new(3, 2.0));
-        let product = ProductOperator::new(scaled, id).unwrap();
+        let product = ProductOperator::new(scaled, id).expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0];
-        let y = product.matvec(&x).unwrap();
+        let y = product.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![2.0, 4.0, 6.0]); // (2I * I) * x = 2x
     }
 
@@ -1145,9 +1145,9 @@ mod tests {
     fn test_difference_operator() {
         let scaled_3 = Box::new(ScaledIdentityOperator::new(3, 3.0));
         let scaled_2 = Box::new(ScaledIdentityOperator::new(3, 2.0));
-        let diff = DifferenceOperator::new(scaled_3, scaled_2).unwrap();
+        let diff = DifferenceOperator::new(scaled_3, scaled_2).expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0];
-        let y = diff.matvec(&x).unwrap();
+        let y = diff.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![1.0, 2.0, 3.0]); // (3I - 2I) * x = I * x = x
     }
 
@@ -1156,7 +1156,7 @@ mod tests {
         let id = Box::new(IdentityOperator::<f64>::new(3));
         let scaled = ScaledOperator::new(5.0, id);
         let x = vec![1.0, 2.0, 3.0];
-        let y = scaled.matvec(&x).unwrap();
+        let y = scaled.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![5.0, 10.0, 15.0]); // 5 * I * x = 5x
     }
 
@@ -1165,7 +1165,7 @@ mod tests {
         let diag = Box::new(DiagonalOperator::new(vec![2.0, 3.0, 4.0]));
         let transpose = TransposeOperator::new(diag);
         let x = vec![1.0, 2.0, 3.0];
-        let y = transpose.matvec(&x).unwrap();
+        let y = transpose.matvec(&x).expect("Operation failed");
         // For diagonal matrices, transpose equals original
         assert_eq!(y, vec![2.0, 6.0, 12.0]);
     }
@@ -1173,9 +1173,9 @@ mod tests {
     #[test]
     fn test_adjoint_operator() {
         let diag = Box::new(DiagonalOperator::new(vec![2.0, 3.0, 4.0]));
-        let adjoint = AdjointOperator::new(diag).unwrap();
+        let adjoint = AdjointOperator::new(diag).expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0];
-        let y = adjoint.matvec(&x).unwrap();
+        let y = adjoint.matvec(&x).expect("Operation failed");
         // For real diagonal matrices, adjoint equals original
         assert_eq!(y, vec![2.0, 6.0, 12.0]);
     }
@@ -1184,9 +1184,9 @@ mod tests {
     fn test_chain_operator() {
         let op1 = Box::new(ScaledIdentityOperator::new(3, 2.0));
         let op2 = Box::new(ScaledIdentityOperator::new(3, 3.0));
-        let chain = ChainOperator::new(vec![op1, op2]).unwrap();
+        let chain = ChainOperator::new(vec![op1, op2]).expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0];
-        let y = chain.matvec(&x).unwrap();
+        let y = chain.matvec(&x).expect("Operation failed");
         // Chain applies from right to left: (2I) * (3I) * x = 6I * x = 6x
         assert_eq!(y, vec![6.0, 12.0, 18.0]);
     }
@@ -1194,9 +1194,9 @@ mod tests {
     #[test]
     fn test_power_operator() {
         let scaled = Box::new(ScaledIdentityOperator::new(3, 2.0));
-        let power = PowerOperator::new(scaled, 3).unwrap();
+        let power = PowerOperator::new(scaled, 3).expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0];
-        let y = power.matvec(&x).unwrap();
+        let y = power.matvec(&x).expect("Operation failed");
         // (2I)^3 * x = 8I * x = 8x
         assert_eq!(y, vec![8.0, 16.0, 24.0]);
     }
@@ -1207,40 +1207,40 @@ mod tests {
         let scaled = Box::new(ScaledIdentityOperator::new(3, 2.0));
 
         // Test add_operators
-        let sum = add_operators(id.clone(), scaled.clone()).unwrap();
+        let sum = add_operators(id.clone(), scaled.clone()).expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0];
-        let y = sum.matvec(&x).unwrap();
+        let y = sum.matvec(&x).expect("Operation failed");
         assert_eq!(y, vec![3.0, 6.0, 9.0]); // (I + 2I) * x = 3x
 
         // Test subtract_operators
-        let diff = subtract_operators(scaled.clone(), id.clone()).unwrap();
-        let y2 = diff.matvec(&x).unwrap();
+        let diff = subtract_operators(scaled.clone(), id.clone()).expect("Operation failed");
+        let y2 = diff.matvec(&x).expect("Operation failed");
         assert_eq!(y2, vec![1.0, 2.0, 3.0]); // (2I - I) * x = x
 
         // Test multiply_operators
-        let product = multiply_operators(scaled.clone(), id.clone()).unwrap();
-        let y3 = product.matvec(&x).unwrap();
+        let product = multiply_operators(scaled.clone(), id.clone()).expect("Operation failed");
+        let y3 = product.matvec(&x).expect("Operation failed");
         assert_eq!(y3, vec![2.0, 4.0, 6.0]); // (2I * I) * x = 2x
 
         // Test scale_operator
         let scaled_op = scale_operator(3.0, id.clone());
-        let y4 = scaled_op.matvec(&x).unwrap();
+        let y4 = scaled_op.matvec(&x).expect("Operation failed");
         assert_eq!(y4, vec![3.0, 6.0, 9.0]); // 3 * I * x = 3x
 
         // Test transpose_operator
         let transpose = transpose_operator(scaled.clone());
-        let y5 = transpose.matvec(&x).unwrap();
+        let y5 = transpose.matvec(&x).expect("Operation failed");
         assert_eq!(y5, vec![2.0, 4.0, 6.0]); // (2I)^T * x = 2I * x = 2x
 
         // Test compose_operators
         let ops: Vec<Box<dyn LinearOperator<f64>>> = vec![scaled.clone(), id.clone()];
-        let composed = compose_operators(ops).unwrap();
-        let y6 = composed.matvec(&x).unwrap();
+        let composed = compose_operators(ops).expect("Operation failed");
+        let y6 = composed.matvec(&x).expect("Operation failed");
         assert_eq!(y6, vec![2.0, 4.0, 6.0]); // (2I * I) * x = 2x
 
         // Test power_operator
-        let power = power_operator(scaled.clone(), 2).unwrap();
-        let y7 = power.matvec(&x).unwrap();
+        let power = power_operator(scaled.clone(), 2).expect("Operation failed");
+        let y7 = power.matvec(&x).expect("Operation failed");
         assert_eq!(y7, vec![4.0, 8.0, 12.0]); // (2I)^2 * x = 4I * x = 4x
     }
 

@@ -69,7 +69,7 @@ pub fn dpss_enhanced(
         eigenvalues[j]
             .abs()
             .partial_cmp(&eigenvalues[i].abs())
-            .unwrap()
+            .expect("Operation failed")
     });
 
     // Extract k largest eigenvalue/eigenvector pairs
@@ -364,7 +364,7 @@ pub fn validate_dpss_implementation() -> SignalResult<bool> {
     let k = 7;
 
     let (tapers, ratios) = dpss_enhanced(n, nw, k, true)?;
-    let ratios = ratios.unwrap();
+    let ratios = ratios.expect("Operation failed");
 
     // Expected concentration ratios (from SciPy)
     let expected_ratios = vec![
@@ -434,7 +434,7 @@ pub fn generate_reference_values() -> SignalResult<()> {
         println!("\nCase: n={}, NW={}, k={}", n, nw, k);
 
         let (tapers, ratios) = dpss_enhanced(n, nw, k, true)?;
-        let ratios = ratios.unwrap();
+        let ratios = ratios.expect("Operation failed");
 
         println!("Concentration ratios:");
         for i in 0..k {
@@ -457,7 +457,7 @@ mod tests {
     use approx::assert_relative_eq;
     #[test]
     fn test_dpss_basic() {
-        let (tapers, ratios) = dpss_enhanced(64, 4.0, 7, true).unwrap();
+        let (tapers, ratios) = dpss_enhanced(64, 4.0, 7, true).expect("Operation failed");
 
         assert_eq!(tapers.nrows(), 7);
         assert_eq!(tapers.ncols(), 64);
@@ -466,7 +466,7 @@ mod tests {
 
     #[test]
     fn test_dpss_orthogonality() {
-        let (tapers_) = dpss_enhanced(128, 4.0, 7, false).unwrap();
+        let (tapers_) = dpss_enhanced(128, 4.0, 7, false).expect("Operation failed");
 
         // Check orthogonality
         for i in 0..7 {
@@ -479,7 +479,7 @@ mod tests {
 
     #[test]
     fn test_dpss_normalization() {
-        let (tapers_) = dpss_enhanced(128, 4.0, 7, false).unwrap();
+        let (tapers_) = dpss_enhanced(128, 4.0, 7, false).expect("Operation failed");
 
         // Check unit norm
         for i in 0..7 {
@@ -490,8 +490,8 @@ mod tests {
 
     #[test]
     fn test_concentration_ratios() {
-        let (_, ratios) = dpss_enhanced(64, 4.0, 7, true).unwrap();
-        let ratios = ratios.unwrap();
+        let (_, ratios) = dpss_enhanced(64, 4.0, 7, true).expect("Operation failed");
+        let ratios = ratios.expect("Operation failed");
 
         // All ratios should be between 0 and 1
         for &ratio in ratios.iter() {
@@ -506,6 +506,6 @@ mod tests {
 
     #[test]
     fn test_validation() {
-        assert!(validate_dpss_implementation().unwrap());
+        assert!(validate_dpss_implementation().expect("Operation failed"));
     }
 }

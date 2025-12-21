@@ -342,7 +342,7 @@ impl Default for AdvancedAdvancedDenoisingConfig {
 ///     ..Default::default()
 /// };
 ///
-/// let result = advanced_advanced_denoise(&noisy_signal, &config).unwrap();
+/// let result = advanced_advanced_denoise(&noisy_signal, &config).expect("Operation failed");
 ///
 /// assert!(result.quality_metrics.snr_improvement_db > 5.0);
 /// assert!(result.processing_stats.simd_speedup >= 1.0);
@@ -1166,7 +1166,7 @@ mod tests {
         let result = advanced_advanced_denoise(&noisy_signal, &config);
 
         assert!(result.is_ok());
-        let denoising_result = result.unwrap();
+        let denoising_result = result.expect("Operation failed");
         assert_eq!(denoising_result.denoised_signal.len(), n);
         assert!(denoising_result.quality_metrics.snr_improvement_db >= 0.0);
     }
@@ -1180,7 +1180,7 @@ mod tests {
         let result = advanced_advanced_denoise_realtime(&chunk, &mut context, &config);
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 64);
+        assert_eq!(result.expect("Operation failed").len(), 64);
     }
 
     #[test]

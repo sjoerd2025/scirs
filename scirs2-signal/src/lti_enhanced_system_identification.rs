@@ -631,12 +631,12 @@ fn perform_advanced_validation(
     // Normalized RMSE
     let output_range = output
         .iter()
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
+        .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed")
         - output
             .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
     let normalized_rmse = rmse / output_range;
 
     // Information criteria
@@ -1142,7 +1142,7 @@ fn analyze_complexity_accuracy_tradeoff(
     }
 
     // Sort by complexity
-    pareto_frontier.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    pareto_frontier.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
     // Find recommended point (balance between complexity and accuracy)
     let recommended_point = pareto_frontier
@@ -1150,7 +1150,7 @@ fn analyze_complexity_accuracy_tradeoff(
         .max_by(|a, b| {
             (a.1 / (1.0 + a.0))
                 .partial_cmp(&(b.1 / (1.0 + b.0)))
-                .unwrap()
+                .expect("Operation failed")
         })
         .copied()
         .unwrap_or((1.0, 0.5));
@@ -1175,7 +1175,7 @@ fn compute_order_confidence(
             .values()
             .filter(|c| c.cross_validation_score > best_score)
             .map(|c| c.cross_validation_score)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .unwrap_or(best_score * 2.0);
 
         let separation = (next_best_score - best_score) / best_score;
@@ -1196,7 +1196,7 @@ fn find_alternative_orders(
         .map(|(&_order, criteria)| (_order, 1.0 / (1.0 + criteria.cross_validation_score)))
         .collect();
 
-    alternatives.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    alternatives.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
     alternatives.into_iter().take(3).collect()
 }
 
@@ -1320,14 +1320,14 @@ fn compute_stability_margin(tf: &TransferFunction) -> SignalResult<f64> {
             - poles
                 .iter()
                 .map(|p| p.norm())
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .unwrap_or(0.0))
     } else {
         // Continuous-time: distance from imaginary axis
         Ok(-poles
             .iter()
             .map(|p| p.re)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .unwrap_or(-1.0))
     }
 }
@@ -1432,7 +1432,7 @@ mod tests {
         let result = advanced_enhanced_system_identification(&input, &output, &config);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.validation_metrics.fit_percentage >= 0.0);
         assert!(result.validation_metrics.fit_percentage <= 100.0);
         assert!(result.structure_selection.selected_order >= config.min_order);
@@ -1448,7 +1448,7 @@ mod tests {
         let params = classical_parameter_estimation(&input, &output, 2, &config);
         assert!(params.is_ok());
 
-        let params = params.unwrap();
+        let params = params.expect("Operation failed");
         assert_eq!(params.len(), 4); // 2 * order
 
         for param in &params {
@@ -1462,7 +1462,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Create a simple test system
-        let tf = TransferFunction::new(vec![1.0], vec![1.0, 0.5], None).unwrap();
+        let tf = TransferFunction::new(vec![1.0], vec![1.0, 0.5], None).expect("Operation failed");
         let model = SystemModel {
             transfer_function: Some(tf),
             state_space: None,
@@ -1473,13 +1473,13 @@ mod tests {
 
         let input = Array1::from_shape_fn(50, |i| (i as f64 * 0.1).sin());
         let output =
-            simulate_model_response(model.transfer_function.as_ref().unwrap(), &input).unwrap();
+            simulate_model_response(model.transfer_function.as_ref().expect("Operation failed"), &input).expect("Operation failed");
 
         let config = AdvancedEnhancedSysIdConfig::default();
         let validation = perform_advanced_validation(&input, &output, &model, &config);
 
         assert!(validation.is_ok());
-        let validation = validation.unwrap();
+        let validation = validation.expect("Operation failed");
         assert!(validation.fit_percentage > 95.0); // Should be high for perfect model
         assert!(validation.r_squared > 0.9);
     }
@@ -1498,7 +1498,7 @@ mod tests {
         let result = perform_structure_selection(&input, &output, &config);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.selected_order >= config.min_order);
         assert!(result.selected_order <= config.max_order);
         assert!(result.auto_order_result.confidence >= 0.0);

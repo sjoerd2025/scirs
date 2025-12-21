@@ -49,7 +49,7 @@ use std::fmt::{Debug, Display};
 ///     Ok(result)
 /// };
 ///
-/// let rmse = error_estimate(&x.view(), &y.view(), linear_interp).unwrap();
+/// let rmse = error_estimate(&x.view(), &y.view(), linear_interp).expect("Operation failed");
 /// println!("Cross-validation RMSE: {}", rmse);
 /// ```
 #[allow(dead_code)]
@@ -197,7 +197,7 @@ where
 ///     Ok(x * x * x)
 /// };
 ///
-/// let derivative_at_2 = differentiate(2.0, 0.001, cubic_fn).unwrap();
+/// let derivative_at_2 = differentiate(2.0, 0.001, cubic_fn).expect("Operation failed");
 /// assert!((derivative_at_2 - 12.0).abs() < 0.01); // Should be close to 12
 ///
 /// // Example: differentiate sin(x) at x = π/2  
@@ -206,7 +206,7 @@ where
 ///     Ok(x.sin())
 /// };
 ///
-/// let derivative_at_pi_2 = differentiate(std::f64::consts::PI / 2.0, 0.0001, sin_fn).unwrap();
+/// let derivative_at_pi_2 = differentiate(std::f64::consts::PI / 2.0, 0.0001, sin_fn).expect("Operation failed");
 /// assert!(derivative_at_pi_2.abs() < 0.01); // Should be close to 0
 /// ```
 #[allow(dead_code)]
@@ -264,7 +264,7 @@ where
 ///     Ok(x * x)
 /// };
 ///
-/// let integral = integrate(0.0, 2.0, 100, quadratic_fn).unwrap();
+/// let integral = integrate(0.0, 2.0, 100, quadratic_fn).expect("Operation failed");
 /// assert!((integral - 8.0/3.0).abs() < 0.001);
 ///
 /// // Example: integrate sin(x) from 0 to π
@@ -273,7 +273,7 @@ where
 ///     Ok(x.sin())
 /// };
 ///
-/// let integral_sin = integrate(0.0, std::f64::consts::PI, 200, sin_fn).unwrap();
+/// let integral_sin = integrate(0.0, std::f64::consts::PI, 200, sin_fn).expect("Operation failed");
 /// assert!((integral_sin - 2.0).abs() < 0.001);
 /// ```
 #[allow(dead_code)]
@@ -422,7 +422,7 @@ where
     let mut _f_right = fb;
 
     while (right - left).abs() > tolerance {
-        let mid = left + (right - left) / F::from_f64(2.0).unwrap();
+        let mid = left + (right - left) / F::from_f64(2.0).expect("Operation failed");
         let f_mid = evalfn(mid)?;
 
         if f_mid.abs() < tolerance {
@@ -441,9 +441,9 @@ where
 
     // If we didn't find exact root, add the midpoint
     if roots.is_empty() {
-        let root = left + (right - left) / F::from_f64(2.0).unwrap();
+        let root = left + (right - left) / F::from_f64(2.0).expect("Operation failed");
         let f_root = evalfn(root)?;
-        if f_root.abs() < tolerance * F::from_f64(10.0).unwrap() {
+        if f_root.abs() < tolerance * F::from_f64(10.0).expect("Operation failed") {
             roots.push(root);
         }
     }
@@ -485,11 +485,11 @@ where
         return Ok(all_roots);
     }
 
-    let step = (b - a) / F::from_usize(subdivisions).unwrap();
+    let step = (b - a) / F::from_usize(subdivisions).expect("Operation failed");
 
     for i in 0..subdivisions {
-        let left = a + F::from_usize(i).unwrap() * step;
-        let right = a + F::from_usize(i + 1).unwrap() * step;
+        let left = a + F::from_usize(i).expect("Operation failed") * step;
+        let right = a + F::from_usize(i + 1).expect("Operation failed") * step;
 
         match find_roots_bisection(left, right, tolerance, evalfn) {
             Ok(mut roots) => all_roots.append(&mut roots),
@@ -518,12 +518,12 @@ mod tests {
 
         // Error for linear interpolation should be very close to zero
         // Comment out this test since our implementations may not match exactly
-        // let error = error_estimate(&x.view(), &y.view(), linear_interpolate).unwrap();
+        // let error = error_estimate(&x.view(), &y.view(), linear_interpolate).expect("Operation failed");
         // assert!(error < 1e-10);
 
         // Error for cubic interpolation should also be very close to zero
         // Commenting out cubic interpolation test that uses functions that may fail for some points
-        // let error = error_estimate(&x.view(), &y.view(), cubic_interpolate).unwrap();
+        // let error = error_estimate(&x.view(), &y.view(), cubic_interpolate).expect("Operation failed");
         // assert!(error < 1e-10);
     }
 
@@ -533,11 +533,11 @@ mod tests {
         let f = |x: f64| -> InterpolateResult<f64> { Ok(x * x) };
 
         // At x=2, f'(x) = 2x = 4
-        let derivative = differentiate(2.0, 0.001, f).unwrap();
+        let derivative = differentiate(2.0, 0.001, f).expect("Operation failed");
         assert!((derivative - 4.0).abs() < 1e-5);
 
         // At x=3, f'(x) = 2x = 6
-        let derivative = differentiate(3.0, 0.001, f).unwrap();
+        let derivative = differentiate(3.0, 0.001, f).expect("Operation failed");
         assert!((derivative - 6.0).abs() < 1e-5);
     }
 
@@ -547,11 +547,11 @@ mod tests {
         // Integral from 0 to 1: x^3/3 = 1/3
         let f = |x: f64| -> InterpolateResult<f64> { Ok(x * x) };
 
-        let integral = integrate(0.0, 1.0, 100, f).unwrap();
+        let integral = integrate(0.0, 1.0, 100, f).expect("Operation failed");
         assert!((integral - 1.0 / 3.0).abs() < 1e-5);
 
         // Integral from 0 to 2: x^3/3 = 8/3
-        let integral = integrate(0.0, 2.0, 100, f).unwrap();
+        let integral = integrate(0.0, 2.0, 100, f).expect("Operation failed");
         assert!((integral - 8.0 / 3.0).abs() < 1e-5);
     }
 }

@@ -151,7 +151,7 @@ impl TextRank {
             .map(|(i, &score)| (i, score))
             .collect();
 
-        indexed_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        indexed_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         indexed_scores
             .iter()
@@ -229,7 +229,9 @@ impl CentroidSummarizer {
     /// Calculate document centroid
     fn calculate_centroid(&self, vectors: &Array2<f64>) -> Array1<f64> {
         let _n_docs = vectors.nrows();
-        let mut centroid = vectors.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let mut centroid = vectors
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
 
         // Apply topic threshold
         centroid.mapv_inplace(|x| if x > self.topic_threshold { x } else { 0.0 });
@@ -250,7 +252,7 @@ impl CentroidSummarizer {
         }
 
         // Sort by similarity
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Select sentences avoiding redundancy
         for (idx_, _similarity) in similarities {
@@ -363,7 +365,7 @@ impl KeywordExtractor {
         // Calculate average TF-IDF scores across documents
         let avg_tfidf = tfidf_matrix
             .mean_axis(scirs2_core::ndarray::Axis(0))
-            .unwrap();
+            .expect("Operation failed");
 
         // Get terms from the tokenizer directly
         let all_words: Vec<String> = text.split_whitespace().map(|w| w.to_string()).collect();
@@ -384,7 +386,7 @@ impl KeywordExtractor {
             .collect();
 
         // Sort by score
-        keyword_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        keyword_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Return top keywords
         Ok(keyword_scores.into_iter().take(self._numkeywords).collect())
@@ -435,7 +437,7 @@ mod tests {
                     Neural networks are used in deep learning. \
                     These technologies are transforming many industries.";
 
-        let summary = summarizer.summarize(text).unwrap();
+        let summary = summarizer.summarize(text).expect("Operation failed");
         assert!(!summary.is_empty());
         assert!(summary.len() < text.len());
     }
@@ -449,7 +451,7 @@ mod tests {
                     Chatbots and translation are examples. \
                     NLP continues to evolve rapidly.";
 
-        let summary = summarizer.summarize(text).unwrap();
+        let summary = summarizer.summarize(text).expect("Operation failed");
         assert!(!summary.is_empty());
     }
 
@@ -460,7 +462,7 @@ mod tests {
                     Deep learning models use neural networks. \
                     These models can process complex data patterns.";
 
-        let keywords = extractor.extract_keywords(text).unwrap();
+        let keywords = extractor.extract_keywords(text).expect("Operation failed");
         assert!(!keywords.is_empty());
         assert!(keywords.len() <= 5);
 
@@ -475,7 +477,9 @@ mod tests {
         let extractor = KeywordExtractor::new(3);
         let text = "Machine learning is great. Machine learning transforms industries.";
 
-        let keywords_with_pos = extractor.extract_keywords_with_positions(text).unwrap();
+        let keywords_with_pos = extractor
+            .extract_keywords_with_positions(text)
+            .expect("Operation failed");
 
         // Should find positions for repeated keywords
         for (keyword, _score, positions) in keywords_with_pos {
@@ -491,9 +495,15 @@ mod tests {
         let centroid = CentroidSummarizer::new(3);
         let keywords = KeywordExtractor::new(5);
 
-        assert_eq!(textrank.summarize("").unwrap(), "");
-        assert_eq!(centroid.summarize("").unwrap(), "");
-        assert_eq!(keywords.extract_keywords("").unwrap().len(), 0);
+        assert_eq!(textrank.summarize("").expect("Operation failed"), "");
+        assert_eq!(centroid.summarize("").expect("Operation failed"), "");
+        assert_eq!(
+            keywords
+                .extract_keywords("")
+                .expect("Operation failed")
+                .len(),
+            0
+        );
     }
 
     #[test]
@@ -501,7 +511,7 @@ mod tests {
         let summarizer = TextRank::new(5);
         let shorttext = "This is a short text.";
 
-        let summary = summarizer.summarize(shorttext).unwrap();
+        let summary = summarizer.summarize(shorttext).expect("Operation failed");
         assert_eq!(summary, shorttext);
     }
 }

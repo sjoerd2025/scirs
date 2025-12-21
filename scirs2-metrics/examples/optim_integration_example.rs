@@ -74,7 +74,10 @@ fn classification_optimization_example() -> Result<(), Box<dyn std::error::Error
     }
 
     println!("\nOptimization Summary:");
-    println!("  Best F1-score: {:.3}", f1_optimizer.best_value().unwrap());
+    println!(
+        "  Best F1-score: {:.3}",
+        f1_optimizer.best_value().expect("Operation failed")
+    );
     println!("  Total epochs: {}", f1_optimizer.history().len());
 
     // Create scheduler configuration for external optimizer
@@ -136,10 +139,15 @@ fn regression_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\nOptimization Summary:");
-    println!("  Best MSE: {:.3}", mse_optimizer.best_value().unwrap());
+    println!(
+        "  Best MSE: {:.3}",
+        mse_optimizer.best_value().expect("Operation failed")
+    );
 
     // Show R² progression
-    let r2_history = mse_optimizer.additional_metric_history("r2").unwrap();
+    let r2_history = mse_optimizer
+        .additional_metric_history("r2")
+        .expect("Operation failed");
     println!(
         "  R² progression: {:?}",
         r2_history
@@ -264,7 +272,7 @@ fn external_scheduler_pattern_example() -> Result<(), Box<dyn std::error::Error>
     println!("  Mode: {} (lower loss is better)", final_config.mode);
     println!(
         "  Best loss achieved: {:.3}",
-        metric_optimizer.best_value().unwrap()
+        metric_optimizer.best_value().expect("Operation failed")
     );
 
     println!("\n💡 Integration Note:");

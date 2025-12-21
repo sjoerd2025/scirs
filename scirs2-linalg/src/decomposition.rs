@@ -46,7 +46,7 @@ type EigResult = LinalgResult<(Array1<Complex<f64>>, Array2<Complex<f64>>)>;
 /// use scirs2_linalg::cholesky;
 ///
 /// let a = array![[4.0, 2.0], [2.0, 5.0]];
-/// let l = cholesky(&a.view(), None).unwrap();
+/// let l = cholesky(&a.view(), None).expect("Operation failed");
 /// // l should be [[2.0, 0.0], [1.0, 2.0]]
 /// ```
 #[allow(dead_code)]
@@ -68,7 +68,7 @@ where
     if use_work_stealing {
         // Use work-stealing scheduler for large matrices
         use crate::parallel::parallel_cholesky_work_stealing;
-        parallel_cholesky_work_stealing(a, workers.unwrap())
+        parallel_cholesky_work_stealing(a, workers.expect("Operation failed"))
     } else {
         // Configure OpenMP thread count if workers specified
         // Note: This affects BLAS/LAPACK operations that use OpenMP
@@ -125,7 +125,7 @@ where
 ///
 /// // Non-singular matrix example
 /// let a = array![[2.0_f64, 1.0], [4.0, 3.0]];
-/// let (p, l, u) = lu(&a.view(), None).unwrap();
+/// let (p, l, u) = lu(&a.view(), None).expect("Operation failed");
 /// // Result should be a valid LU decomposition where P*L*U = A
 /// ```
 #[allow(dead_code)]
@@ -251,7 +251,7 @@ where
 /// use scirs2_linalg::qr;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
-/// let (q, r) = qr(&a.view(), None).unwrap();
+/// let (q, r) = qr(&a.view(), None).expect("Operation failed");
 /// // Result should be a valid QR decomposition where Q*R = A
 /// ```
 #[allow(dead_code)]
@@ -286,7 +286,7 @@ where
     if use_work_stealing {
         // Use work-stealing scheduler for large matrices
         use crate::parallel::parallel_qr_work_stealing;
-        return parallel_qr_work_stealing(a, workers.unwrap());
+        return parallel_qr_work_stealing(a, workers.expect("Operation failed"));
     }
 
     // Configure OpenMP thread count if workers specified
@@ -332,7 +332,7 @@ where
 /// use scirs2_linalg::svd;
 ///
 /// let a = array![[1.0, 0.0], [0.0, 1.0]];
-/// let (u, s, vh) = svd(&a.view(), false, None).unwrap();
+/// let (u, s, vh) = svd(&a.view(), false, None).expect("Operation failed");
 /// // Result should be a valid SVD where U*diag(S)*Vh = A
 /// ```
 #[allow(dead_code)]
@@ -371,7 +371,7 @@ where
     if use_work_stealing {
         // Use work-stealing scheduler for large _matrices
         use crate::parallel::parallel_svd_work_stealing;
-        return parallel_svd_work_stealing(a, workers.unwrap());
+        return parallel_svd_work_stealing(a, workers.expect("Operation failed"));
     }
 
     // Configure OpenMP thread count if workers specified
@@ -457,7 +457,7 @@ where
 /// use scirs2_linalg::schur;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let (z, t) = schur(&a.view()).unwrap();
+/// let (z, t) = schur(&a.view()).expect("Operation failed");
 /// // Result should be a valid Schur decomposition where Z*T*Z^T = A
 /// ```
 #[allow(dead_code)]
@@ -518,7 +518,7 @@ where
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 /// let b = array![[5.0_f64, 6.0], [7.0, 8.0]];
-/// let (q, a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).unwrap();
+/// let (q, a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).expect("Operation failed");
 /// // Result should be a valid QZ decomposition where Q*A*Z = A_decomp and Q*B*Z = B_decomp
 /// ```
 #[allow(dead_code)]
@@ -619,7 +619,7 @@ where
 ///
 /// let a = array![[1.0_f64, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 /// // This matrix is rank-deficient (det = 0)
-/// let (q, r, p) = complete_orthogonal_decomposition(&a.view()).unwrap();
+/// let (q, r, p) = complete_orthogonal_decomposition(&a.view()).expect("Operation failed");
 /// // The rank of a will be revealed in the R matrix
 /// ```
 #[allow(dead_code)]
@@ -845,192 +845,6 @@ where
     Ok((q, a_copy, p))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use approx::assert_relative_eq;
-    use scirs2_core::ndarray::array;
-
-    #[test]
-    fn test_cholesky_2x2() {
-        // Simple positive definite matrix
-        let a = array![[4.0, 2.0], [2.0, 5.0]];
-        let l = cholesky(&a.view(), None).unwrap();
-
-        assert!((l[[0, 0]] - 2.0).abs() < 1e-10);
-        assert!((l[[0, 1]] - 0.0).abs() < 1e-10);
-        assert!((l[[1, 0]] - 1.0).abs() < 1e-10);
-        assert!((l[[1, 1]] - 2.0).abs() < 1e-10);
-
-        // Reconstruct the original matrix
-        let l_t = l.t().to_owned();
-        let a_reconstructed = l.dot(&l_t);
-
-        for i in 0..2 {
-            for j in 0..2 {
-                assert!((a_reconstructed[[i, j]] - a[[i, j]]).abs() < 1e-10);
-            }
-        }
-    }
-
-    #[test]
-    fn test_lu() {
-        let a = array![[2.0, 1.0], [4.0, 3.0]];
-        let (p, l, u) = lu(&a.view(), None).unwrap();
-
-        // Verify that P*A = L*U
-        let pa = p.dot(&a);
-        let lu = l.dot(&u);
-
-        assert_relative_eq!(pa[[0, 0]], lu[[0, 0]], epsilon = 1e-10);
-        assert_relative_eq!(pa[[0, 1]], lu[[0, 1]], epsilon = 1e-10);
-        assert_relative_eq!(pa[[1, 0]], lu[[1, 0]], epsilon = 1e-10);
-        assert_relative_eq!(pa[[1, 1]], lu[[1, 1]], epsilon = 1e-10);
-    }
-
-    #[test]
-    fn test_qr() {
-        let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let (q, r) = qr(&a.view(), None).unwrap();
-
-        // Verify that Q is orthogonal
-        let qt = q.t();
-        let q_orthogonal = q.dot(&qt);
-
-        assert_relative_eq!(q_orthogonal[[0, 0]], 1.0, epsilon = 1e-5);
-        assert_relative_eq!(q_orthogonal[[0, 1]], 0.0, epsilon = 1e-5);
-        assert_relative_eq!(q_orthogonal[[1, 0]], 0.0, epsilon = 1e-5);
-        assert_relative_eq!(q_orthogonal[[1, 1]], 1.0, epsilon = 1e-5);
-
-        // Verify that A = Q*R
-        let qr = q.dot(&r);
-
-        assert_relative_eq!(qr[[0, 0]], a[[0, 0]], epsilon = 1e-5);
-        assert_relative_eq!(qr[[0, 1]], a[[0, 1]], epsilon = 1e-5);
-        assert_relative_eq!(qr[[1, 0]], a[[1, 0]], epsilon = 1e-5);
-        assert_relative_eq!(qr[[1, 1]], a[[1, 1]], epsilon = 1e-5);
-    }
-
-    #[test]
-    fn test_schur() {
-        let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let (z, t) = schur(&a.view()).unwrap();
-
-        // Verify that Z is orthogonal
-        let zt = z.t();
-        let z_orthogonal = z.dot(&zt);
-
-        assert_relative_eq!(z_orthogonal[[0, 0]], 1.0, epsilon = 1e-5);
-        assert_relative_eq!(z_orthogonal[[0, 1]], 0.0, epsilon = 1e-5);
-        assert_relative_eq!(z_orthogonal[[1, 0]], 0.0, epsilon = 1e-5);
-        assert_relative_eq!(z_orthogonal[[1, 1]], 1.0, epsilon = 1e-5);
-
-        // Verify that A = Z*T*Z^T
-        let ztzt = z.dot(&t).dot(&zt);
-
-        assert_relative_eq!(ztzt[[0, 0]], a[[0, 0]], epsilon = 1e-5);
-        assert_relative_eq!(ztzt[[0, 1]], a[[0, 1]], epsilon = 1e-5);
-        assert_relative_eq!(ztzt[[1, 0]], a[[1, 0]], epsilon = 1e-5);
-        assert_relative_eq!(ztzt[[1, 1]], a[[1, 1]], epsilon = 1e-5);
-
-        // T should be approximately upper triangular
-        assert!(t[[1, 0]].abs() < 1e-5);
-    }
-
-    #[test]
-    fn test_qz() {
-        let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let b = array![[5.0, 6.0], [7.0, 8.0]];
-        let (q, a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).unwrap();
-
-        // Verify that Q and Z are orthogonal (within numerical tolerance)
-        let qt = q.t();
-        let q_orthogonal = q.dot(&qt);
-
-        assert_relative_eq!(q_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
-
-        let zt = z.t();
-        let z_orthogonal = z.dot(&zt);
-
-        assert_relative_eq!(z_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
-        assert_relative_eq!(z_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(z_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(z_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
-
-        // Verify B_decomp is upper triangular
-        assert!(b_decomp[[1, 0]].abs() < 1e-3);
-
-        // Test pass if we got here - for a proper implementation we would verify
-        // the exact decomposition properties, but this is sufficient for the
-        // demonstration implementation
-    }
-
-    #[test]
-    fn test_complete_orthogonal_decomposition() {
-        // Test with a rank-deficient matrix
-        let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        // This matrix has rank 2 (det=0)
-
-        let (q, r, p) = complete_orthogonal_decomposition(&a.view()).unwrap();
-
-        // Verify that Q is orthogonal
-        let qt = q.t();
-        let q_orthogonal = q.dot(&qt);
-
-        assert_relative_eq!(q_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[0, 2]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[1, 2]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[2, 0]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[2, 1]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(q_orthogonal[[2, 2]], 1.0, epsilon = 1e-3);
-
-        // Verify that P is orthogonal
-        let pt = p.t();
-        let p_orthogonal = p.dot(&pt);
-
-        assert_relative_eq!(p_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[0, 2]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[1, 2]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[2, 0]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[2, 1]], 0.0, epsilon = 1e-3);
-        assert_relative_eq!(p_orthogonal[[2, 2]], 1.0, epsilon = 1e-3);
-
-        // Verify that R has the expected form (upper triangular revealing rank)
-        // For a rank-2 matrix, we expect the last row to be all zeros
-        // and the last column below the diagonal to be all zeros
-
-        // First, check that R is upper triangular
-        for i in 1..3 {
-            for j in 0..i {
-                assert!(r[[i, j]].abs() < 1e-3);
-            }
-        }
-
-        // Basic check of orthogonality and structure is enough for now
-
-        // For this demonstration implementation with a rank-deficient matrix,
-        // we don't apply a strict reconstruction test since our implementation might
-        // have numerical issues. In a production implementation, we would use LAPACK
-        // routines which are more numerically stable.
-
-        // Just check that R has the expected triangular form
-        for i in 1..3 {
-            for j in 0..i {
-                assert!(r[[i, j]].abs() < 0.5);
-            }
-        }
-    }
-}
-
 // ============================================================================
 // BLAS/LAPACK-OPTIMIZED DECOMPOSITIONS FOR F64
 // ============================================================================
@@ -1137,4 +951,190 @@ pub fn eig_f64_lapack(a: &ArrayView2<f64>) -> EigResult {
 pub fn lu_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<(Array2<f64>, Array2<f64>, Array2<f64>)> {
     // Delegate to the existing pure Rust implementation
     crate::lu(a, None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+    use scirs2_core::ndarray::array;
+
+    #[test]
+    fn test_cholesky_2x2() {
+        // Simple positive definite matrix
+        let a = array![[4.0, 2.0], [2.0, 5.0]];
+        let l = cholesky(&a.view(), None).expect("Operation failed");
+
+        assert!((l[[0, 0]] - 2.0).abs() < 1e-10);
+        assert!((l[[0, 1]] - 0.0).abs() < 1e-10);
+        assert!((l[[1, 0]] - 1.0).abs() < 1e-10);
+        assert!((l[[1, 1]] - 2.0).abs() < 1e-10);
+
+        // Reconstruct the original matrix
+        let l_t = l.t().to_owned();
+        let a_reconstructed = l.dot(&l_t);
+
+        for i in 0..2 {
+            for j in 0..2 {
+                assert!((a_reconstructed[[i, j]] - a[[i, j]]).abs() < 1e-10);
+            }
+        }
+    }
+
+    #[test]
+    fn test_lu() {
+        let a = array![[2.0, 1.0], [4.0, 3.0]];
+        let (p, l, u) = lu(&a.view(), None).expect("Operation failed");
+
+        // Verify that P*A = L*U
+        let pa = p.dot(&a);
+        let lu = l.dot(&u);
+
+        assert_relative_eq!(pa[[0, 0]], lu[[0, 0]], epsilon = 1e-10);
+        assert_relative_eq!(pa[[0, 1]], lu[[0, 1]], epsilon = 1e-10);
+        assert_relative_eq!(pa[[1, 0]], lu[[1, 0]], epsilon = 1e-10);
+        assert_relative_eq!(pa[[1, 1]], lu[[1, 1]], epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_qr() {
+        let a = array![[1.0, 2.0], [3.0, 4.0]];
+        let (q, r) = qr(&a.view(), None).expect("Operation failed");
+
+        // Verify that Q is orthogonal
+        let qt = q.t();
+        let q_orthogonal = q.dot(&qt);
+
+        assert_relative_eq!(q_orthogonal[[0, 0]], 1.0, epsilon = 1e-5);
+        assert_relative_eq!(q_orthogonal[[0, 1]], 0.0, epsilon = 1e-5);
+        assert_relative_eq!(q_orthogonal[[1, 0]], 0.0, epsilon = 1e-5);
+        assert_relative_eq!(q_orthogonal[[1, 1]], 1.0, epsilon = 1e-5);
+
+        // Verify that A = Q*R
+        let qr = q.dot(&r);
+
+        assert_relative_eq!(qr[[0, 0]], a[[0, 0]], epsilon = 1e-5);
+        assert_relative_eq!(qr[[0, 1]], a[[0, 1]], epsilon = 1e-5);
+        assert_relative_eq!(qr[[1, 0]], a[[1, 0]], epsilon = 1e-5);
+        assert_relative_eq!(qr[[1, 1]], a[[1, 1]], epsilon = 1e-5);
+    }
+
+    #[test]
+    fn test_schur() {
+        let a = array![[1.0, 2.0], [3.0, 4.0]];
+        let (z, t) = schur(&a.view()).expect("Operation failed");
+
+        // Verify that Z is orthogonal
+        let zt = z.t();
+        let z_orthogonal = z.dot(&zt);
+
+        assert_relative_eq!(z_orthogonal[[0, 0]], 1.0, epsilon = 1e-5);
+        assert_relative_eq!(z_orthogonal[[0, 1]], 0.0, epsilon = 1e-5);
+        assert_relative_eq!(z_orthogonal[[1, 0]], 0.0, epsilon = 1e-5);
+        assert_relative_eq!(z_orthogonal[[1, 1]], 1.0, epsilon = 1e-5);
+
+        // Verify that A = Z*T*Z^T
+        let ztzt = z.dot(&t).dot(&zt);
+
+        assert_relative_eq!(ztzt[[0, 0]], a[[0, 0]], epsilon = 1e-5);
+        assert_relative_eq!(ztzt[[0, 1]], a[[0, 1]], epsilon = 1e-5);
+        assert_relative_eq!(ztzt[[1, 0]], a[[1, 0]], epsilon = 1e-5);
+        assert_relative_eq!(ztzt[[1, 1]], a[[1, 1]], epsilon = 1e-5);
+
+        // T should be approximately upper triangular
+        assert!(t[[1, 0]].abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_qz() {
+        let a = array![[1.0, 2.0], [3.0, 4.0]];
+        let b = array![[5.0, 6.0], [7.0, 8.0]];
+        let (q, a_decomp, b_decomp, z) = qz(&a.view(), &b.view()).expect("Operation failed");
+
+        // Verify that Q and Z are orthogonal (within numerical tolerance)
+        let qt = q.t();
+        let q_orthogonal = q.dot(&qt);
+
+        assert_relative_eq!(q_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
+
+        let zt = z.t();
+        let z_orthogonal = z.dot(&zt);
+
+        assert_relative_eq!(z_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
+        assert_relative_eq!(z_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(z_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(z_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
+
+        // Verify B_decomp is upper triangular
+        assert!(b_decomp[[1, 0]].abs() < 1e-3);
+
+        // Test pass if we got here - for a proper implementation we would verify
+        // the exact decomposition properties, but this is sufficient for the
+        // demonstration implementation
+    }
+
+    #[test]
+    fn test_complete_orthogonal_decomposition() {
+        // Test with a rank-deficient matrix
+        let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+        // This matrix has rank 2 (det=0)
+
+        let (q, r, p) = complete_orthogonal_decomposition(&a.view()).expect("Operation failed");
+
+        // Verify that Q is orthogonal
+        let qt = q.t();
+        let q_orthogonal = q.dot(&qt);
+
+        assert_relative_eq!(q_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[0, 2]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[1, 2]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[2, 0]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[2, 1]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(q_orthogonal[[2, 2]], 1.0, epsilon = 1e-3);
+
+        // Verify that P is orthogonal
+        let pt = p.t();
+        let p_orthogonal = p.dot(&pt);
+
+        assert_relative_eq!(p_orthogonal[[0, 0]], 1.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[0, 1]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[0, 2]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[1, 0]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[1, 1]], 1.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[1, 2]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[2, 0]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[2, 1]], 0.0, epsilon = 1e-3);
+        assert_relative_eq!(p_orthogonal[[2, 2]], 1.0, epsilon = 1e-3);
+
+        // Verify that R has the expected form (upper triangular revealing rank)
+        // For a rank-2 matrix, we expect the last row to be all zeros
+        // and the last column below the diagonal to be all zeros
+
+        // First, check that R is upper triangular
+        for i in 1..3 {
+            for j in 0..i {
+                assert!(r[[i, j]].abs() < 1e-3);
+            }
+        }
+
+        // Basic check of orthogonality and structure is enough for now
+
+        // For this demonstration implementation with a rank-deficient matrix,
+        // we don't apply a strict reconstruction test since our implementation might
+        // have numerical issues. In a production implementation, we would use LAPACK
+        // routines which are more numerically stable.
+
+        // Just check that R has the expected triangular form
+        for i in 1..3 {
+            for j in 0..i {
+                assert!(r[[i, j]].abs() < 0.5);
+            }
+        }
+    }
 }

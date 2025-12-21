@@ -184,7 +184,7 @@ impl BlockAccessTracker {
 
         // Check for sequential access
         let mut is_sequential = true;
-        let mut prev = *self.history.front().unwrap();
+        let mut prev = *self.history.front().expect("Operation failed");
 
         for &block_idx in self.history.iter().skip(1) {
             if block_idx != prev + 1 {
@@ -201,8 +201,9 @@ impl BlockAccessTracker {
 
         // Check for strided access
         let mut is_strided = true;
-        let stride = self.history.get(1).unwrap() - self.history.front().unwrap();
-        prev = *self.history.front().unwrap();
+        let stride = self.history.get(1).expect("Operation failed")
+            - self.history.front().expect("Operation failed");
+        prev = *self.history.front().expect("Operation failed");
 
         for &block_idx in self.history.iter().skip(1) {
             if block_idx != prev + stride {
@@ -247,7 +248,7 @@ impl AccessPatternTracker for BlockAccessTracker {
         }
 
         let mut predictions = Vec::with_capacity(count);
-        let latest = *self.history.back().unwrap();
+        let latest = *self.history.back().expect("Operation failed");
 
         match self.current_pattern {
             AccessPattern::Sequential => {
@@ -1005,8 +1006,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
         // For large slices, we should also check intermediate blocks along the edges
         // This is a simplification, but covers many common cases
         if blocks.len() > 1 {
-            let min_block = *blocks.iter().min().unwrap();
-            let max_block = *blocks.iter().max().unwrap();
+            let min_block = *blocks.iter().min().expect("Operation failed");
+            let max_block = *blocks.iter().max().expect("Operation failed");
 
             // Add all blocks in between
             for block_idx in min_block..=max_block {

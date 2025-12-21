@@ -53,16 +53,16 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
     ///     0.8, 0.78, 0.79,    // 300 samples, 3 folds
     ///     0.85, 0.83, 0.84,   // 400 samples, 3 folds
     ///     0.87, 0.88, 0.86,   // 500 samples, 3 folds
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     /// let val_scores = Array2::from_shape_vec((5, 3), vec![
     ///     0.55, 0.53, 0.54,   // 100 samples, 3 folds
     ///     0.65, 0.63, 0.64,   // 200 samples, 3 folds
     ///     0.75, 0.73, 0.74,   // 300 samples, 3 folds
     ///     0.76, 0.74, 0.75,   // 400 samples, 3 folds
     ///     0.77, 0.76, 0.76,   // 500 samples, 3 folds
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     /// // Create learning curve
-    /// let curve = LearningCurve::<f64>::new(train_sizes, train_scores, val_scores).unwrap();
+    /// let curve = LearningCurve::<f64>::new(train_sizes, train_scores, val_scores).expect("Operation failed");
     /// ```
     pub fn new(
         train_sizes: Array1<usize>,
@@ -81,8 +81,8 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
             ));
         }
         // Compute means and standard deviations
-        let train_mean = train_scores.mean_axis(Axis(1)).unwrap();
-        let val_mean = val_scores.mean_axis(Axis(1)).unwrap();
+        let train_mean = train_scores.mean_axis(Axis(1)).expect("Operation failed");
+        let val_mean = val_scores.mean_axis(Axis(1)).expect("Operation failed");
         // Compute standard deviations using helper function
         let train_std = compute_std(&train_scores, &train_mean, n_sizes);
         let val_std = compute_std(&val_scores, &val_mean, n_sizes);
@@ -154,7 +154,8 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
                 .iter()
                 .fold(F::neg_infinity(), |acc, &v| if v > acc { v } else { acc });
         // Add a small margin to the y-range
-        let y_margin = F::from(0.1).unwrap() * (max_score - min_score);
+        let y_margin =
+            F::from(0.1).expect("Failed to convert constant to float") * (max_score - min_score);
         let y_min = min_score - y_margin;
         let y_max = max_score + y_margin;
         // Create a 2D grid for the plot
@@ -163,7 +164,9 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
                                                                           // Function to map a value to a y-coordinate
         let y_coord = |value: F| -> usize {
             let norm = (value - y_min) / (y_max - y_min);
-            let y = height - 1 - (norm.to_f64().unwrap() * (height - 1) as f64).round() as usize;
+            let y = height
+                - 1
+                - (norm.to_f64().expect("Operation failed") * (height - 1) as f64).round() as usize;
             std::cmp::min(y, height - 1)
         };
         // Function to map a training size to an x-coordinate
@@ -215,7 +218,8 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
                     result.push_str(&format!("{y_min:.2} |"));
                 }
             } else if y == height / 2 {
-                let mid = y_min + (y_max - y_min) * F::from(0.5).unwrap();
+                let mid = y_min
+                    + (y_max - y_min) * F::from(0.5).expect("Failed to convert constant to float");
                 if color_options.enabled {
                     let value = format!("{mid:.2}");
                     result.push_str(&format!("{} |", colorize(value, Color::BrightCyan)));
@@ -316,7 +320,7 @@ fn compute_std<F: Float + Debug + Display + FromPrimitive>(
             let diff = scores[[i, j]] - mean[i];
             sum_sq_diff = sum_sq_diff + diff * diff;
         }
-        std_arr[i] = (sum_sq_diff / F::from(n_folds).unwrap()).sqrt();
+        std_arr[i] = (sum_sq_diff / F::from(n_folds).expect("Failed to convert to float")).sqrt();
     }
     std_arr
 }

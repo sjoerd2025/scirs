@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   {:.3}", rotationmatrix);
     println!(
         "   Initial vector: {:?}",
-        initial_vector.as_slice().unwrap()
+        initial_vector.as_slice().expect("Operation failed")
     );
     println!("   Evolution time: π/2 (90° rotation)");
 
@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Evolved vector: {:?}",
-        evolved_vector.as_slice().unwrap()
+        evolved_vector.as_slice().expect("Operation failed")
     );
     println!("   Expected: [0, 1] (90° rotation of [1, 0])");
     println!("   ✅ Matrix exponential action provides efficient time evolution");
@@ -250,7 +250,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Hamiltonian matrix H:");
     println!("   {:.3}", quantum_hamiltonian);
     println!("   Initial state |ψ⟩: equal superposition");
-    println!("   |ψ(0)⟩ = {:?}", initial_state.as_slice().unwrap());
+    println!(
+        "   |ψ(0)⟩ = {:?}",
+        initial_state.as_slice().expect("Operation failed")
+    );
 
     let quantum_config = DynamicsConfig::quantum();
     let evolution_times = [0.0, PI / 2.0, PI, 3.0 * PI / 2.0, 2.0 * PI];
@@ -320,7 +323,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let (is_stable, eigenvalues, stability_margin) = stability_analysis(&systemmatrix.view())?;
 
-        println!("   Eigenvalues: {:?}", eigenvalues.as_slice().unwrap());
+        println!(
+            "   Eigenvalues: {:?}",
+            eigenvalues.as_slice().expect("Operation failed")
+        );
         println!("   Stability margin: {:.6}", stability_margin);
         println!(
             "   System is {}",

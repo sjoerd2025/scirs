@@ -126,7 +126,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
             }
 
             let mean_importance = permutation_scores.iter().cloned().sum::<F>()
-                / F::from(permutation_scores.len()).unwrap();
+                / F::from(permutation_scores.len()).expect("Operation failed");
 
             importance_scores.insert(feature_name.clone(), mean_importance);
         }
@@ -190,10 +190,11 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
             return FeatureImportanceStats::default();
         }
 
-        let mean = values.iter().cloned().sum::<F>() / F::from(values.len()).unwrap();
+        let mean =
+            values.iter().cloned().sum::<F>() / F::from(values.len()).expect("Operation failed");
 
         let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-            / F::from(values.len()).unwrap();
+            / F::from(values.len()).expect("Operation failed");
 
         let std_dev = variance.sqrt();
 
@@ -202,7 +203,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
 
         let median = if sorted_values.len().is_multiple_of(2) {
             let mid = sorted_values.len() / 2;
-            (sorted_values[mid - 1] + sorted_values[mid]) / F::from(2).unwrap()
+            (sorted_values[mid - 1] + sorted_values[mid])
+                / F::from(2).expect("Failed to convert constant to float")
         } else {
             sorted_values[sorted_values.len() / 2]
         };
@@ -460,7 +462,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
             sample_count += 1;
         }
 
-        Ok(total_contribution / F::from(sample_count).unwrap())
+        Ok(total_contribution / F::from(sample_count).expect("Failed to convert to float"))
     }
 
     /// Sample a random coalition of features
@@ -605,7 +607,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let mut path = Array2::zeros((n_steps, n_features));
 
         for step in 0..n_steps {
-            let alpha = F::from(step).unwrap() / F::from(n_steps - 1).unwrap();
+            let alpha = F::from(step).expect("Failed to convert to float")
+                / F::from(n_steps - 1).expect("Failed to convert to float");
 
             for feature_idx in 0..n_features {
                 path[[step, feature_idx]] = x_baseline[feature_idx]
@@ -625,7 +628,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let n_features = xsamples.ncols();
         let mut gradients = Array2::zeros((n_samples, n_features));
 
-        let epsilon = F::from(1e-6).unwrap();
+        let epsilon = F::from(1e-6).expect("Failed to convert constant to float");
 
         for sample_idx in 0..n_samples {
             for feature_idx in 0..n_features {
@@ -638,7 +641,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
                 let pred_plus = model(&x_plus.view().insert_axis(Axis(0)));
                 let pred_minus = model(&x_minus.view().insert_axis(Axis(0)));
 
-                let gradient = (pred_plus[0] - pred_minus[0]) / (F::from(2.0).unwrap() * epsilon);
+                let gradient = (pred_plus[0] - pred_minus[0])
+                    / (F::from(2.0).expect("Failed to convert constant to float") * epsilon);
                 gradients[[sample_idx, feature_idx]] = gradient;
             }
         }
@@ -673,7 +677,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
             ));
         }
 
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
         let mean_x = x.iter().cloned().sum::<F>() / n;
         let mean_y = y.iter().cloned().sum::<F>() / n;
 
@@ -899,7 +903,7 @@ fn compute_mutual_information_improved<
 
     // Compute mutual information
     let mut mi = F::zero();
-    let n_total = F::from(x.len()).unwrap();
+    let n_total = F::from(x.len()).expect("Operation failed");
 
     for i in 0..n_bins {
         for j in 0..n_bins {
@@ -930,7 +934,7 @@ fn create_bins<F: Float + scirs2_core::numeric::FromPrimitive>(
         return Ok(vec![0; values.len()]);
     }
 
-    let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
+    let bin_width = (max_val - min_val) / F::from(n_bins).expect("Failed to convert to float");
 
     let _bins: Vec<usize> = values
         .iter()
@@ -980,7 +984,7 @@ fn compute_correlation<F: Float + std::iter::Sum>(
     x: &scirs2_core::ndarray::ArrayView1<F>,
     y: &Array1<F>,
 ) -> Result<F> {
-    let n = F::from(x.len()).unwrap();
+    let n = F::from(x.len()).expect("Operation failed");
 
     let mean_x = x.iter().cloned().sum::<F>() / n;
     let mean_y = y.iter().cloned().sum::<F>() / n;
@@ -1023,7 +1027,7 @@ mod tests {
         let calculator = FeatureImportanceCalculator::<f64>::new();
         let data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = calculator.drop_column(&data, 1).unwrap();
+        let result = calculator.drop_column(&data, 1).expect("Operation failed");
 
         assert_eq!(result.shape(), &[3, 2]);
         assert_eq!(result[[0, 0]], 1.0);
@@ -1088,7 +1092,7 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0];
 
-        let correlation = compute_correlation(&x.view(), &y).unwrap();
+        let correlation = compute_correlation(&x.view(), &y).expect("Operation failed");
         assert!((correlation - 1.0).abs() < 1e-10);
     }
 
@@ -1098,7 +1102,8 @@ mod tests {
         let y = array![1.0, 2.0, 3.0];
         let feature_names = vec!["feature1".to_string(), "feature2".to_string()];
 
-        let importance = mutual_information_importance(&x, &y, &feature_names).unwrap();
+        let importance =
+            mutual_information_importance(&x, &y, &feature_names).expect("Operation failed");
 
         assert_eq!(importance.len(), 2);
         assert!(importance.contains_key("feature1"));
@@ -1127,15 +1132,17 @@ mod tests {
         let mut values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let original = values.clone();
 
-        calculator.fisher_yates_shuffle(&mut values).unwrap();
+        calculator
+            .fisher_yates_shuffle(&mut values)
+            .expect("Operation failed");
 
         // Values should be different order (with high probability)
         // but contain the same elements
         let mut sorted_original = original;
-        sorted_original.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_original.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mut sorted_shuffled = values;
-        sorted_shuffled.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_shuffled.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         assert_eq!(sorted_original, sorted_shuffled);
     }
@@ -1163,7 +1170,7 @@ mod tests {
 
         let shap_values = calculator
             .shap_importance(&model, &x_test, &x_background, score_fn, &feature_names)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(shap_values.len(), 2);
         assert!(shap_values.contains_key("feature1"));
@@ -1196,7 +1203,7 @@ mod tests {
                 &feature_names,
                 20,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(lime_scores.len(), 2);
         assert!(lime_scores.contains_key("feature1"));
@@ -1220,7 +1227,7 @@ mod tests {
                 &feature_names,
                 10,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(ig_scores.len(), 2);
         assert!(ig_scores.contains_key("feature1"));
@@ -1258,7 +1265,7 @@ mod tests {
 
         let gain_scores = calculator
             .gain_importance(&model, &x_test, &feature_names, &tree_splits)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(gain_scores.len(), 2);
         assert_eq!(gain_scores["feature1"], 0.7); // 0.5 + 0.2
@@ -1298,7 +1305,7 @@ mod tests {
             &feature_names,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(results.permutation_importance.len(), 2);
         assert!(results.shap_values.is_some());
@@ -1313,7 +1320,7 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0];
 
-        let mi = compute_mutual_information_improved(&x.view(), &y).unwrap();
+        let mi = compute_mutual_information_improved(&x.view(), &y).expect("Operation failed");
 
         // For perfectly correlated data, MI should be high
         assert!(mi > 0.0);
@@ -1322,7 +1329,7 @@ mod tests {
     #[test]
     fn test_bin_creation() {
         let values = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let bins = create_bins(&values.view(), 3).unwrap();
+        let bins = create_bins(&values.view(), 3).expect("Operation failed");
 
         assert_eq!(bins.len(), 5);
         // All bin indices should be within range

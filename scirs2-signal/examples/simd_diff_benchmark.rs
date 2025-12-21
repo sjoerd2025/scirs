@@ -39,7 +39,7 @@ fn bench_diff_f64(size: usize) {
     let signal: Vec<f64> = (0..size).map(|i| (i as f64 * 0.01).sin()).collect();
 
     // Warm-up
-    let _ = simd_diff(&signal).unwrap();
+    let _ = simd_diff(&signal).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -52,7 +52,7 @@ fn bench_diff_f64(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = simd_diff(&signal).unwrap();
+        let _ = simd_diff(&signal).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -69,7 +69,7 @@ fn bench_diff_f32(size: usize) {
     let signal: Vec<f32> = (0..size).map(|i| (i as f32 * 0.01).sin()).collect();
 
     // Warm-up
-    let _ = simd_diff_f32(&signal).unwrap();
+    let _ = simd_diff_f32(&signal).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -82,7 +82,7 @@ fn bench_diff_f32(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = simd_diff_f32(&signal).unwrap();
+        let _ = simd_diff_f32(&signal).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();

@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_interpolate_colors() {
-        let colors = interpolate_colors("#ff0000", "#0000ff", 3).unwrap();
+        let colors = interpolate_colors("#ff0000", "#0000ff", 3).expect("Operation failed");
         assert_eq!(colors.len(), 3);
         assert_eq!(colors[0], "#ff0000"); // Red
         assert_eq!(colors[2], "#0000ff"); // Blue
@@ -363,10 +363,10 @@ mod tests {
 
     #[test]
     fn test_parse_hex_color() {
-        let (r, g, b) = parse_hex_color("#ff0000").unwrap();
+        let (r, g, b) = parse_hex_color("#ff0000").expect("Operation failed");
         assert_eq!((r, g, b), (255, 0, 0));
 
-        let (r, g, b) = parse_hex_color("00ff00").unwrap();
+        let (r, g, b) = parse_hex_color("00ff00").expect("Operation failed");
         assert_eq!((r, g, b), (0, 255, 0));
     }
 
@@ -386,7 +386,7 @@ mod tests {
 
     #[test]
     fn test_interpolate_colors_empty() {
-        let colors = interpolate_colors("#ff0000", "#0000ff", 0).unwrap();
+        let colors = interpolate_colors("#ff0000", "#0000ff", 0).expect("Operation failed");
         assert_eq!(colors.len(), 0);
     }
 }

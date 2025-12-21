@@ -537,7 +537,7 @@ impl AdaptivePerformanceMonitor {
         self.stage_metrics
             .values()
             .map(|metrics| metrics.throughput)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .unwrap_or(0.0)
     }
 

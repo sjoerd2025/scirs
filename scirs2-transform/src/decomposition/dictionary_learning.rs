@@ -391,7 +391,7 @@ impl DictionaryLearning {
         }
 
         let x_f64 = x.mapv(|v| NumCast::from(v).unwrap_or(0.0));
-        let dictionary = self.dictionary.as_ref().unwrap();
+        let dictionary = self.dictionary.as_ref().expect("Operation failed");
 
         Ok(self.sparse_code_step(&x_f64, dictionary))
     }
@@ -430,7 +430,7 @@ impl DictionaryLearning {
             ));
         }
 
-        let dictionary = self.dictionary.as_ref().unwrap();
+        let dictionary = self.dictionary.as_ref().expect("Operation failed");
         Ok(sparsecodes.dot(dictionary))
     }
 }
@@ -456,19 +456,19 @@ mod tests {
             }
         }
 
-        let x = Array::from_shape_vec((n_samples, n_features), data).unwrap();
+        let x = Array::from_shape_vec((n_samples, n_features), data).expect("Operation failed");
 
         let mut dict_learning = DictionaryLearning::new(10, 0.1)
             .with_max_iter(50)
             .with_random_state(42);
 
-        let sparse_codes = dict_learning.fit_transform(&x).unwrap();
+        let sparse_codes = dict_learning.fit_transform(&x).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(sparse_codes.shape(), &[n_samples, 10]);
 
         // Check dictionary
-        let dictionary = dict_learning.dictionary().unwrap();
+        let dictionary = dict_learning.dictionary().expect("Operation failed");
         assert_eq!(dictionary.shape(), &[10, n_features]);
 
         // Check that dictionary atoms are normalized
@@ -478,7 +478,9 @@ mod tests {
         }
 
         // Check reconstruction
-        let reconstructed = dict_learning.inverse_transform(&sparse_codes).unwrap();
+        let reconstructed = dict_learning
+            .inverse_transform(&sparse_codes)
+            .expect("Operation failed");
         assert_eq!(reconstructed.shape(), x.shape());
     }
 
@@ -488,7 +490,7 @@ mod tests {
 
         let mut dict_learning = DictionaryLearning::new(10, 0.05).with_max_iter(30);
 
-        let sparse_codes = dict_learning.fit_transform(&x).unwrap();
+        let sparse_codes = dict_learning.fit_transform(&x).expect("Operation failed");
 
         // Check sparsity: most elements should be zero
         let n_nonzero = sparse_codes.iter().filter(|&&x| x.abs() > 1e-10).count();

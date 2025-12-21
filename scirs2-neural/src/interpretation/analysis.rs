@@ -96,14 +96,14 @@ pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnaly
     let max_activation = activations.iter().cloned().fold(F::neg_infinity(), F::max);
     let min_activation = activations.iter().cloned().fold(F::infinity(), F::min);
     // Compute dead neuron percentage (neurons that are always zero)
-    let zero_threshold = F::from(1e-6).unwrap();
+    let zero_threshold = F::from(1e-6).expect("Failed to convert constant to float");
     let dead_neurons = activations
         .iter()
         .filter(|&&x| x.abs() < zero_threshold)
         .count();
     let dead_neuron_percentage = dead_neurons as f64 / activations.len() as f64 * 100.0;
     // Compute sparsity (percentage of near-zero activations)
-    let sparsity_threshold = F::from(0.01).unwrap();
+    let sparsity_threshold = F::from(0.01).expect("Failed to convert constant to float");
     let sparse_neurons = activations
         .filter(|&&x| x.abs() < sparsity_threshold)
     let sparsity = sparse_neurons as f64 / activations.len() as f64 * 100.0;
@@ -111,14 +111,14 @@ pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnaly
     let num_bins = 50;
     let range = max_activation - min_activation;
     let bin_width = if range > F::zero() {
-        range / F::from(num_bins).unwrap()
+        range / F::from(num_bins).expect("Failed to convert to float")
     } else {
         F::one()
     };
     let mut histogram = vec![0u32; num_bins];
     let mut bin_edges = Vec::with_capacity(num_bins + 1);
     for i in 0..=num_bins {
-        bin_edges.push(min_activation + bin_width * F::from(i).unwrap());
+        bin_edges.push(min_activation + bin_width * F::from(i).expect("Failed to convert to float"));
     }
     for &val in activations.iter() {
         if val.is_finite() && range > F::zero() {
@@ -201,11 +201,11 @@ pub fn find_most_important_features<F>(
     if attributions.is_empty() {
         return Vec::new();
     // Average attributions across methods
-    let first_attribution = attributions.values().next().unwrap();
+    let first_attribution = attributions.values().next().expect("Operation failed");
     let mut averaged_attribution = Array::zeros(first_attribution.raw_dim());
     for attribution in attributions.values() {
         averaged_attribution = averaged_attribution + attribution;
-    averaged_attribution = averaged_attribution / F::from(attributions.len()).unwrap();
+    averaged_attribution = averaged_attribution / F::from(attributions.len()).expect("Operation failed");
     // Find top-k features by absolute importance
     let mut feature_scores: Vec<(usize, f64)> = averaged_attribution
         .enumerate()
@@ -311,7 +311,7 @@ mod tests {
     #[test]
     fn test_compute_layer_statistics() {
         let activations = Array::from_vec(vec![0.0, 0.1, 0.5, 1.0, 0.0, -0.2]).into_dyn();
-        let stats = compute_layer_statistics(&activations).unwrap();
+        let stats = compute_layer_statistics(&activations).expect("Operation failed");
         assert!(stats.mean_activation > -0.1 && stats.mean_activation < 0.5);
         assert!(stats.max_activation == 1.0);
         assert!(stats.min_activation == -0.2);

@@ -932,7 +932,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![2.0, 1.0]);
         let options = Options::default();
 
-        let result = minimize_trust_ncg(quadratic, x0, &options).unwrap();
+        let result = minimize_trust_ncg(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-4);
@@ -951,7 +951,7 @@ mod tests {
         let mut options = Options::default();
         options.max_iter = 2000; // Trust region methods may need more iterations for Rosenbrock
 
-        let result = minimize_trust_krylov(rosenbrock, x0, &options).unwrap();
+        let result = minimize_trust_krylov(rosenbrock, x0, &options).expect("Operation failed");
 
         // Rosenbrock is challenging, accept reasonable convergence
         assert!(result.nit > 0, "Should make at least some progress");
@@ -976,7 +976,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![0.0, 0.0]);
         let options = Options::default();
 
-        let result = minimize_trust_exact(quadratic, x0, &options).unwrap();
+        let result = minimize_trust_exact(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 1.0, epsilon = 1e-4);

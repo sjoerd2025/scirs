@@ -30,22 +30,22 @@ fn test_metric_adapter_consistency() {
     // Calculate metrics using adapters
     let adapter_accuracy = accuracy_adapter
         .compute(&y_pred.clone().into_dyn(), &y_true.clone().into_dyn())
-        .unwrap();
+        .expect("Test: operation failed");
     let adapter_precision = precision_adapter
         .compute(&y_pred.clone().into_dyn(), &y_true.clone().into_dyn())
-        .unwrap();
+        .expect("Test: operation failed");
     let adapter_recall = recall_adapter
         .compute(&y_pred.clone().into_dyn(), &y_true.clone().into_dyn())
-        .unwrap();
+        .expect("Test: operation failed");
     let adapter_f1 = f1_adapter
         .compute(&y_pred.clone().into_dyn(), &y_true.clone().into_dyn())
-        .unwrap();
+        .expect("Test: operation failed");
 
     // Calculate metrics directly
-    let direct_accuracy = accuracy_score(&y_true, &y_pred).unwrap();
-    let direct_precision = precision_score(&y_true, &y_pred, 1.0).unwrap();
-    let direct_recall = recall_score(&y_true, &y_pred, 1.0).unwrap();
-    let direct_f1 = f1_score(&y_true, &y_pred, 1.0).unwrap();
+    let direct_accuracy = accuracy_score(&y_true, &y_pred).expect("Test: operation failed");
+    let direct_precision = precision_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
+    let direct_recall = recall_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
+    let direct_f1 = f1_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
 
     // Compare results
     assert_abs_diff_eq!(adapter_accuracy, direct_accuracy, epsilon = 1e-10);
@@ -67,17 +67,17 @@ fn test_metric_adapter_consistency() {
             &y_pred_reg.clone().into_dyn(),
             &y_true_reg.clone().into_dyn(),
         )
-        .unwrap();
+        .expect("Test: operation failed");
     let adapter_r2 = r2_adapter
         .compute(
             &y_pred_reg.clone().into_dyn(),
             &y_true_reg.clone().into_dyn(),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
     // Calculate metrics directly
-    let direct_mse = mean_squared_error(&y_true_reg, &y_pred_reg).unwrap();
-    let direct_r2 = r2_score(&y_true_reg, &y_pred_reg).unwrap();
+    let direct_mse = mean_squared_error(&y_true_reg, &y_pred_reg).expect("Test: operation failed");
+    let direct_r2 = r2_score(&y_true_reg, &y_pred_reg).expect("Test: operation failed");
 
     // Compare results
     assert_abs_diff_eq!(adapter_mse, direct_mse, epsilon = 1e-10);
@@ -106,13 +106,13 @@ fn test_metrics_callback() {
     // Compute metrics
     let results = callback
         .compute_metrics(&y_pred.clone().into_dyn(), &y_true.clone().into_dyn())
-        .unwrap();
+        .expect("Test: operation failed");
 
     // Calculate metrics directly
-    let direct_accuracy = accuracy_score(&y_true, &y_pred).unwrap();
-    let direct_precision = precision_score(&y_true, &y_pred, 1.0).unwrap();
-    let direct_recall = recall_score(&y_true, &y_pred, 1.0).unwrap();
-    let direct_f1 = f1_score(&y_true, &y_pred, 1.0).unwrap();
+    let direct_accuracy = accuracy_score(&y_true, &y_pred).expect("Test: operation failed");
+    let direct_precision = precision_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
+    let direct_recall = recall_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
+    let direct_f1 = f1_score(&y_true, &y_pred, 1.0).expect("Test: operation failed");
 
     // Check all results are present
     assert!(results.contains_key("accuracy"));
@@ -149,7 +149,7 @@ fn test_visualization_adapters() {
         &y_score.clone().into_dyn(),
         Some(0.75),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Check visualization metadata
     let viz_metadata = roc_viz.get_metadata();
@@ -163,7 +163,7 @@ fn test_visualization_adapters() {
         &y_score.clone().into_dyn(),
         None,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Check visualization metadata
     let viz_metadata = pr_viz.get_metadata();
@@ -181,7 +181,7 @@ fn test_visualization_adapters() {
         Some(labels),
         false,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Check visualization metadata
     let viz_metadata = cm_viz.get_metadata();
@@ -218,8 +218,14 @@ fn test_custom_metric_adapter() {
         "custom_metric",
         Box::new(|preds, targets| {
             // A simple custom metric that computes the ratio of matching elements
-            let preds_flat = preds.clone().into_dimensionality::<Ix1>().unwrap();
-            let targets_flat = targets.clone().into_dimensionality::<Ix1>().unwrap();
+            let preds_flat = preds
+                .clone()
+                .into_dimensionality::<Ix1>()
+                .expect("Test: operation failed");
+            let targets_flat = targets
+                .clone()
+                .into_dimensionality::<Ix1>()
+                .expect("Test: operation failed");
 
             let mut matching = 0;
             for (p, t) in preds_flat.iter().zip(targets_flat.iter()) {
@@ -239,7 +245,7 @@ fn test_custom_metric_adapter() {
     // Compute custom metric
     let result = custom_metric
         .compute(&y_pred.clone().into_dyn(), &y_true.clone().into_dyn())
-        .unwrap();
+        .expect("Test: operation failed");
 
     // Expected result: 3 matching elements out of 5
     assert_abs_diff_eq!(result, 0.6, epsilon = 1e-10);

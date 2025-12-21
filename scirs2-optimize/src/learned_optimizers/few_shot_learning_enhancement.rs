@@ -1472,7 +1472,7 @@ mod tests {
         let extractor = FeatureExtractor::new(32);
         let encoding = Array1::from(vec![1.0, 2.0, 3.0]);
 
-        let features = extractor.extract(&encoding).unwrap();
+        let features = extractor.extract(&encoding).expect("Operation failed");
         assert_eq!(features.len(), 32);
     }
 
@@ -1481,7 +1481,7 @@ mod tests {
         let generator = ParameterGenerator::new(16);
         let encoding = Array1::from(vec![0.5, -0.3, 0.8]);
 
-        let params = generator.generate(&encoding).unwrap();
+        let params = generator.generate(&encoding).expect("Operation failed");
         assert_eq!(params.len(), 16);
         assert!(params.iter().all(|&x| x >= -1.0 && x <= 1.0));
     }
@@ -1496,7 +1496,7 @@ mod tests {
 
         let similarity = optimizer
             .compute_similarity(&encoding1, &encoding2)
-            .unwrap();
+            .expect("Operation failed");
         assert!(similarity >= 0.0 && similarity <= 1.0);
     }
 
@@ -1519,8 +1519,8 @@ mod tests {
             metadata: HashMap::new(),
         };
 
-        let result =
-            few_shot_optimize(objective, &initial.view(), &[support_example], None).unwrap();
+        let result = few_shot_optimize(objective, &initial.view(), &[support_example], None)
+            .expect("Operation failed");
 
         assert!(result.fun >= 0.0);
         assert_eq!(result.x.len(), 2);
@@ -1538,7 +1538,7 @@ mod tests {
 
         let strategy = optimizer
             .select_adaptation_strategy(&support_features, &similar_problems)
-            .unwrap();
+            .expect("Operation failed");
 
         match strategy {
             AdaptationStrategy::Prototype => {}

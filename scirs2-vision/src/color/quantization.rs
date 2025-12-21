@@ -64,7 +64,7 @@ pub enum InitMethod {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let quantized = kmeans_quantize(&img, &KMeansParams::default())?;
 /// # Ok(())
 /// # }
@@ -463,7 +463,7 @@ mod tests {
         let result = kmeans_quantize(&img, &params);
         assert!(result.is_ok());
 
-        let quantized = result.unwrap();
+        let quantized = result.expect("Operation failed");
         assert_eq!(quantized.width(), 20);
         assert_eq!(quantized.height(), 20);
     }

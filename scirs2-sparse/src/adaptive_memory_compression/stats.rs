@@ -423,14 +423,14 @@ impl SparsityPatternAnalysis {
         if !nnz_per_row.is_empty() {
             self.avg_nnz_per_row =
                 nnz_per_row.iter().sum::<usize>() as f64 / nnz_per_row.len() as f64;
-            self.max_nnz_per_row = *nnz_per_row.iter().max().unwrap();
-            self.min_nnz_per_row = *nnz_per_row.iter().min().unwrap();
+            self.max_nnz_per_row = *nnz_per_row.iter().max().expect("Operation failed");
+            self.min_nnz_per_row = *nnz_per_row.iter().min().expect("Operation failed");
         }
 
         // Calculate bandwidth (simplified)
         if !indices.is_empty() {
-            let min_col = *indices.iter().min().unwrap();
-            let max_col = *indices.iter().max().unwrap();
+            let min_col = *indices.iter().min().expect("Operation failed");
+            let max_col = *indices.iter().max().expect("Operation failed");
             self.bandwidth = max_col - min_col + 1;
         }
 

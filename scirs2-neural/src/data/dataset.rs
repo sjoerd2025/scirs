@@ -68,7 +68,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> Dataset<F> 
         let mut x = x_slice
             .to_owned()
             .into_shape_with_order(IxDyn(&xshape))
-            .unwrap();
+            .expect("Operation failed");
         let mut y = y_slice
             .into_shape_with_order(IxDyn(&yshape))
         // Apply transforms if available

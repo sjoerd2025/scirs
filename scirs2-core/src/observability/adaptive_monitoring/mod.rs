@@ -60,7 +60,7 @@ impl AdaptiveMonitoringSystem {
     /// Get global monitoring system instance
     pub fn global() -> CoreResult<Arc<Self>> {
         Ok(GLOBAL_MONITORING
-            .get_or_init(|| Arc::new(Self::new().unwrap()))
+            .get_or_init(|| Arc::new(Self::new().expect("Operation failed")))
             .clone())
     }
 
@@ -497,14 +497,14 @@ mod tests {
 
     #[test]
     fn test_monitoring_system_creation() {
-        let _system = AdaptiveMonitoringSystem::new().unwrap();
+        let _system = AdaptiveMonitoringSystem::new().expect("Operation failed");
         // Basic functionality test
     }
 
     #[test]
     fn test_metrics_collection() {
-        let mut collector = MetricsCollector::new().unwrap();
-        let metrics = collector.collect_comprehensive_metrics().unwrap();
+        let mut collector = MetricsCollector::new().expect("Operation failed");
+        let metrics = collector.collect_comprehensive_metrics().expect("Operation failed");
 
         assert!(metrics.cpu_utilization >= 0.0);
         assert!(metrics.memory_utilization >= 0.0);
@@ -512,7 +512,7 @@ mod tests {
 
     #[test]
     fn test_anomaly_detection() {
-        let detector = AnomalyDetector::new().unwrap();
+        let detector = AnomalyDetector::new().expect("Operation failed");
         let metrics = ComprehensivePerformanceMetrics {
             timestamp: Instant::now(),
             cpu_utilization: 0.99, // Anomalously high
@@ -528,7 +528,7 @@ mod tests {
             custom_metrics: HashMap::new(),
         };
 
-        let anomalies = detector.detect_anomalies(&metrics).unwrap();
+        let anomalies = detector.detect_anomalies(&metrics).expect("Operation failed");
         assert!(anomalies.is_some());
     }
 
@@ -536,7 +536,7 @@ mod tests {
     fn test_time_series_prediction() {
         let mut model = TimeSeriesModel::new();
         let data = vec![0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
-        model.add_data(data).unwrap();
+        model.add_data(data).expect("Operation failed");
 
         let predictions = model.predict_next(3);
         assert_eq!(predictions.len(), 3);
@@ -565,7 +565,7 @@ mod tests {
             });
         }
 
-        analyzer.analyze_correlations(&test_data).unwrap();
+        analyzer.analyze_correlations(&test_data).expect("Operation failed");
         // Note: correlations field is private, so we can't test the specific content
     }
 }

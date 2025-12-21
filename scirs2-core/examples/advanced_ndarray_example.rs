@@ -59,7 +59,7 @@ fn main() {
     println!("\nDiagonal matrix from [1, 2, 3]:");
     println!("{}", diag_mat);
 
-    let tr = trace(array![[1.0, 2.0], [3.0, 4.0]].view()).unwrap();
+    let tr = trace(array![[1.0, 2.0], [3.0, 4.0]].view()).expect("Operation failed");
     println!("\nTrace of [[1, 2], [3, 4]]: {}", tr);
 
     let k = kron(
@@ -76,7 +76,8 @@ fn main() {
     println!("\nBlock diagonal matrix:");
     println!("{}", block);
 
-    let toep = toeplitz(array![1.0, 2.0, 3.0].view(), array![1.0, 4.0, 7.0].view()).unwrap();
+    let toep = toeplitz(array![1.0, 2.0, 3.0].view(), array![1.0, 4.0, 7.0].view())
+        .expect("Operation failed");
     println!("\nToeplitz matrix:");
     println!("{}", toep);
 
@@ -85,7 +86,7 @@ fn main() {
         array![4.0, 5.0].view(),      // lower diagonal
         array![6.0, 7.0].view(),      // upper diagonal
     )
-    .unwrap();
+    .expect("Operation failed");
     println!("\nTridiagonal matrix:");
     println!("{}", tridiag);
 
@@ -115,11 +116,12 @@ fn main() {
     println!("\nPadded with zeros:");
     println!("{}", padded);
 
-    let concat_h = concatenate_2d(&[a.view(), b.view()], 1).unwrap();
+    let concat_h = concatenate_2d(&[a.view(), b.view()], 1).expect("Operation failed");
     println!("\nConcatenated horizontally:");
     println!("{}", concat_h);
 
-    let vstacked = vstack_1d(&[c.view(), array![40.0, 50.0, 60.0].view()]).unwrap();
+    let vstacked =
+        vstack_1d(&[c.view(), array![40.0, 50.0, 60.0].view()]).expect("Operation failed");
     println!("\nVertically stacked 1D arrays:");
     println!("{}", vstacked);
 

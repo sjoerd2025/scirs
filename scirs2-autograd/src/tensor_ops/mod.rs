@@ -245,9 +245,12 @@ unsafe fn cblas_sgemm_fallback(
     let b_slice = std::slice::from_raw_parts(b, (k * n) as usize);
     let c_slice = std::slice::from_raw_parts_mut(c, (m * n) as usize);
 
-    let a_mat = ArrayView2::from_shape((m as usize, k as usize), a_slice).unwrap();
-    let b_mat = ArrayView2::from_shape((k as usize, n as usize), b_slice).unwrap();
-    let mut c_mat = ArrayViewMut2::from_shape((m as usize, n as usize), c_slice).unwrap();
+    let a_mat =
+        ArrayView2::from_shape((m as usize, k as usize), a_slice).expect("Operation failed");
+    let b_mat =
+        ArrayView2::from_shape((k as usize, n as usize), b_slice).expect("Operation failed");
+    let mut c_mat =
+        ArrayViewMut2::from_shape((m as usize, n as usize), c_slice).expect("Operation failed");
 
     if beta == 0.0 {
         c_mat.fill(0.0);
@@ -306,12 +309,13 @@ pub(crate) unsafe fn cblas_dgemm(
     let c_slice = std::slice::from_raw_parts_mut(c, (m * n) as usize);
 
     // Convert to ndarray matrices
-    let a_mat =
-        scirs2_core::ndarray::ArrayView2::from_shape((m as usize, k as usize), a_slice).unwrap();
-    let b_mat =
-        scirs2_core::ndarray::ArrayView2::from_shape((k as usize, n as usize), b_slice).unwrap();
+    let a_mat = scirs2_core::ndarray::ArrayView2::from_shape((m as usize, k as usize), a_slice)
+        .expect("Operation failed");
+    let b_mat = scirs2_core::ndarray::ArrayView2::from_shape((k as usize, n as usize), b_slice)
+        .expect("Operation failed");
     let mut c_mat =
-        scirs2_core::ndarray::ArrayViewMut2::from_shape((m as usize, n as usize), c_slice).unwrap();
+        scirs2_core::ndarray::ArrayViewMut2::from_shape((m as usize, n as usize), c_slice)
+            .expect("Operation failed");
 
     // Perform matrix multiplication: C = alpha * A * B + beta * C
     if beta == 0.0 {
@@ -538,7 +542,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     /// ag::run(|g| {
     ///    let a = convert_to_tensor(array![[2., 3.], [4., 5.]], g);
     ///    let b = a.access_elem(2);
-    ///    assert_eq!(b.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])], 4.);
+    ///    assert_eq!(b.eval(g).expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])], 4.);
     /// });
     ///    ```
     pub fn access_elem(self, i: isize) -> Tensor<'graph, F> {
@@ -577,15 +581,15 @@ impl<'graph, F: Float> Tensor<'graph, F> {
 ///     let ggx = T::grad(&[gx], &[x])[0];
 ///
 ///     // evaluation of gradients
-///     assert_eq!(3., gy.eval(ctx).unwrap()[scirs2_core::ndarray::IxDyn(&[])]);
-///     assert_eq!(4., ggx.eval(ctx).unwrap()[scirs2_core::ndarray::IxDyn(&[])]);
+///     assert_eq!(3., gy.eval(ctx).expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])]);
+///     assert_eq!(4., ggx.eval(ctx).expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])]);
 ///
 ///     // Evaluate dz/dx when x=2:
 ///     let gx_result = ctx.evaluator()
 ///         .push(&gx)
 ///         .feed(x, scirs2_core::ndarray::arr0(2.).view().into_dyn())
 ///         .run();
-///     assert_eq!(8., gx_result[0].as_ref().unwrap()[scirs2_core::ndarray::IxDyn(&[])]);
+///     assert_eq!(8., gx_result[0].as_ref().expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -685,8 +689,8 @@ where
 ///    let c = matmul(a, b);
 ///    let j = jacobians(c, &[a, b], 4*3);
 ///
-///    assert_eq!(j[0].eval(g).unwrap().shape(), &[4*3, 4*2]);
-///    assert_eq!(j[1].eval(g).unwrap().shape(), &[4*3, 2*3]);
+///    assert_eq!(j[0].eval(g).expect("Operation failed").shape(), &[4*3, 4*2]);
+///    assert_eq!(j[1].eval(g).expect("Operation failed").shape(), &[4*3, 2*3]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -767,7 +771,7 @@ where
 /// ag::run(|c| {
 ///    let x: ag::Tensor<f32> = zeros(&[2, 3], c);
 ///    let s = shape(x);
-///    assert_eq!(&[2., 3.], s.eval(c).unwrap().as_slice().unwrap());
+///    assert_eq!(&[2., 3.], s.eval(c).expect("Operation failed").as_slice().expect("Operation failed"));
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -797,7 +801,7 @@ where
 ///    let a: ag::Tensor<f32> = zeros(&[4, 3], c);
 ///    let b = size(a);
 ///
-///    assert_eq!(12., b.eval(c).unwrap()[scirs2_core::ndarray::IxDyn(&[])]);
+///    assert_eq!(12., b.eval(c).expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -823,7 +827,7 @@ where
 /// ag::run(|c| {
 ///    let x: ag::Tensor<f32> = zeros(&[2, 3, 4], c);
 ///    let r = rank(x);
-///    assert_eq!(3., r.eval(c).unwrap()[scirs2_core::ndarray::IxDyn(&[])]);
+///    assert_eq!(3., r.eval(c).expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -921,7 +925,7 @@ where
 ///    let a: ag::Tensor<f32> = zeros(&[4, 4], g);
 ///    let b = slice(a, &[0, 0], &[-1, 2]); // numpy equivalent is a[:, 0:2]
 ///
-///    assert_eq!(b.eval(g).unwrap().shape(), &[4, 2]);
+///    assert_eq!(b.eval(g).expect("Operation failed").shape(), &[4, 2]);
 /// });
 ///    ```
 ///
@@ -933,7 +937,7 @@ where
 ///    let a: ag::Tensor<f32> = zeros(&[4, 4], g);
 ///    let b = slice(a, &[0, 0], &[-2, 2]); // numpy equivalent is a[:-1, :2]
 ///
-///    assert_eq!(b.eval(g).unwrap().shape(), &[3, 2]);
+///    assert_eq!(b.eval(g).expect("Operation failed").shape(), &[3, 2]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -987,7 +991,7 @@ where
 ///    let indices = convert_to_tensor(array![[5., -1., 3.], [2., 1., -2.]], g);
 ///    let y = gather_common(param, indices, 2);
 ///
-///    assert_eq!(y.eval(g).unwrap().shape(), &[5, 4, 2, 3, 2])
+///    assert_eq!(y.eval(g).expect("Operation failed").shape(), &[5, 4, 2, 3, 2])
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -1026,7 +1030,7 @@ where
 ///    let indices = convert_to_tensor(array![[5., 4., 3.], [2., 1., 0.]], g);  // shape: (2, 3)
 ///    let y = gather(param, indices, 2);
 ///
-///    assert_eq!(y.eval(g).unwrap().shape(), &[5, 4, 2, 3, 2])
+///    assert_eq!(y.eval(g).expect("Operation failed").shape(), &[5, 4, 2, 3, 2])
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -1056,7 +1060,7 @@ where
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[3, 2, 2], g);
 ///    let b = reshape(a, &[2, 6]);
-///    assert_eq!(b.eval(g).unwrap().shape(), &[2, 6]);
+///    assert_eq!(b.eval(g).expect("Operation failed").shape(), &[2, 6]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -1084,7 +1088,7 @@ where
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[3, 2, 2], g);
 ///    let b = flatten(a);
-///    assert_eq!(b.eval(g).unwrap().shape(), &[12]);
+///    assert_eq!(b.eval(g).expect("Operation failed").shape(), &[12]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -1109,7 +1113,7 @@ where
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[3], g);
 ///    let b = expand_dims(a, &[1]);
-///    assert_eq!(b.eval(g).unwrap().shape(), &[3, 1]);
+///    assert_eq!(b.eval(g).expect("Operation failed").shape(), &[3, 1]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -1135,7 +1139,7 @@ where
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = zeros(&[1, 3, 1], g);
 ///    let b = squeeze(a, &[0, 2]);
-///    assert_eq!(b.eval(g).unwrap().shape(), &[3]);
+///    assert_eq!(b.eval(g).expect("Operation failed").shape(), &[3]);
 /// });
 ///    ```
 #[allow(dead_code)]
@@ -1319,8 +1323,8 @@ where
 ///
 /// ag::run(|g| {
 ///    let a: ag::Tensor<f32> = scalar(3., g);
-///    println!("{}", a.eval(g).unwrap());  // => 3.
-///    assert_eq!(a.eval(g).unwrap().shape().len(), 0);
+///    println!("{}", a.eval(g).expect("Operation failed"));  // => 3.
+///    assert_eq!(a.eval(g).expect("Operation failed").shape().len(), 0);
 /// });
 ///    ```
 #[allow(dead_code)]

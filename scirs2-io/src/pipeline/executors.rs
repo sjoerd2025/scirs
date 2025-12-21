@@ -87,7 +87,7 @@ pub struct AsyncExecutor {
 impl AsyncExecutor {
     pub fn new() -> Self {
         Self {
-            runtime: Runtime::new().unwrap(),
+            runtime: Runtime::new().expect("Operation failed"),
         }
     }
 }
@@ -308,7 +308,7 @@ mod tests {
             Pipeline::new().add_stage(function_stage("double", |x: i32| Ok(x * 2)));
 
         let executor = SequentialExecutor;
-        let result = executor.execute(&pipeline, 21).unwrap();
+        let result = executor.execute(&pipeline, 21).expect("Operation failed");
         assert_eq!(result, 42);
     }
 
@@ -320,7 +320,9 @@ mod tests {
             }));
 
         let executor = StreamingExecutor::new(2);
-        let result = executor.execute(&pipeline, vec![1, 2, 3, 4]).unwrap();
+        let result = executor
+            .execute(&pipeline, vec![1, 2, 3, 4])
+            .expect("Operation failed");
         assert_eq!(result, vec![2, 4, 6, 8]);
     }
 }
@@ -431,7 +433,10 @@ impl<E> MonitoringExecutor<E> {
     }
 
     pub fn get_metrics(&self) -> PipelineMetrics {
-        self.metrics_collector.lock().unwrap().clone()
+        self.metrics_collector
+            .lock()
+            .expect("Operation failed")
+            .clone()
     }
 }
 
@@ -443,7 +448,7 @@ where
 {
     fn execute(&self, pipeline: &Pipeline<I, O>, input: I) -> Result<O> {
         {
-            let mut metrics = self.metrics_collector.lock().unwrap();
+            let mut metrics = self.metrics_collector.lock().expect("Operation failed");
             metrics.start_time = Some(Instant::now());
             metrics.total_items.fetch_add(1, Ordering::SeqCst);
         }
@@ -451,7 +456,7 @@ where
         let result = self.inner.execute(pipeline, input);
 
         {
-            let mut metrics = self.metrics_collector.lock().unwrap();
+            let mut metrics = self.metrics_collector.lock().expect("Operation failed");
             metrics.end_time = Some(Instant::now());
 
             match &result {

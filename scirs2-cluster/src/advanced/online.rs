@@ -122,7 +122,8 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
         let (nearest_cluster_idx, nearest_distance) = self.find_nearest_cluster(point);
 
         let assigned_cluster = if let Some(cluster_idx) = nearest_cluster_idx {
-            let distance_threshold = F::from(self.config.cluster_creation_threshold).unwrap();
+            let distance_threshold = F::from(self.config.cluster_creation_threshold)
+                .expect("Failed to convert to float");
 
             if nearest_distance <= distance_threshold {
                 // Update existing cluster
@@ -194,7 +195,8 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
         cluster.weight = cluster.weight * self.config.forgetting_factor + 1.0;
 
         // Update centroid using online mean
-        let learning_rate = F::from(self.learning_rate / cluster.weight).unwrap();
+        let learning_rate =
+            F::from(self.learning_rate / cluster.weight).expect("Failed to convert to float");
 
         Zip::from(&mut cluster.centroid)
             .and(point)
@@ -274,7 +276,8 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
     /// Merge clusters that are too similar
     fn merge_similar_clusters(&mut self) -> Result<()> {
         let mut to_merge = Vec::new();
-        let merge_threshold = F::from(self.config.merge_threshold).unwrap();
+        let merge_threshold =
+            F::from(self.config.merge_threshold).expect("Failed to convert to float");
 
         // Find pairs of clusters to merge
         for i in 0..self.clusters.len() {
@@ -314,8 +317,10 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
 
         // Weighted merge of centroids
         let total_weight = cluster_i.weight + cluster_j.weight;
-        let weight_i = F::from(cluster_i.weight / total_weight).unwrap();
-        let weight_j = F::from(cluster_j.weight / total_weight).unwrap();
+        let weight_i =
+            F::from(cluster_i.weight / total_weight).expect("Failed to convert to float");
+        let weight_j =
+            F::from(cluster_j.weight / total_weight).expect("Failed to convert to float");
 
         Zip::from(&mut cluster_i.centroid)
             .and(&cluster_j.centroid)
@@ -434,7 +439,7 @@ mod tests {
     #[test]
     fn test_adaptive_online_clustering_simple() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Operation failed");
 
         let config = AdaptiveOnlineConfig {
             cluster_creation_threshold: 2.0,
@@ -445,7 +450,7 @@ mod tests {
         let result = adaptive_online_clustering(data.view(), Some(config));
         assert!(result.is_ok());
 
-        let (centers, labels) = result.unwrap();
+        let (centers, labels) = result.expect("Operation failed");
         assert_eq!(labels.len(), 4);
         assert!(centers.nrows() <= 4); // Should create clusters as needed
     }
@@ -456,7 +461,9 @@ mod tests {
         let mut clusterer = AdaptiveOnlineClustering::<f64>::new(config);
 
         let point = Array1::from_vec(vec![1.0, 2.0]);
-        let cluster_id = clusterer.partial_fit(point.view()).unwrap();
+        let cluster_id = clusterer
+            .partial_fit(point.view())
+            .expect("Operation failed");
 
         assert_eq!(cluster_id, 0);
         assert_eq!(clusterer.n_clusters(), 1);
@@ -475,7 +482,9 @@ mod tests {
         // Process some initial points
         for i in 0..5 {
             let point = Array1::from_vec(vec![i as f64, i as f64]);
-            clusterer.partial_fit(point.view()).unwrap();
+            clusterer
+                .partial_fit(point.view())
+                .expect("Operation failed");
         }
 
         // The drift detection should run without errors
@@ -496,14 +505,20 @@ mod tests {
         let point1 = Array1::from_vec(vec![0.0, 0.0]);
         let point2 = Array1::from_vec(vec![0.3, 0.3]);
 
-        clusterer.partial_fit(point1.view()).unwrap();
-        clusterer.partial_fit(point2.view()).unwrap();
+        clusterer
+            .partial_fit(point1.view())
+            .expect("Operation failed");
+        clusterer
+            .partial_fit(point2.view())
+            .expect("Operation failed");
 
         // Initial clusters should exist
         let initial_clusters = clusterer.n_clusters();
 
         // Force merge check
-        clusterer.merge_similar_clusters().unwrap();
+        clusterer
+            .merge_similar_clusters()
+            .expect("Operation failed");
 
         // Clusters might be merged if they're close enough
         assert!(clusterer.n_clusters() <= initial_clusters);

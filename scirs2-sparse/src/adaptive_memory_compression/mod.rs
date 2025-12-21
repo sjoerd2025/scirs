@@ -172,7 +172,7 @@ mod tests {
         assert_eq!(block_id, restored);
 
         let as_string = block_id.as_string();
-        let restored_from_string = BlockId::from_string(&as_string).unwrap();
+        let restored_from_string = BlockId::from_string(&as_string).expect("Operation failed");
         assert_eq!(block_id, restored_from_string);
     }
 
@@ -219,7 +219,10 @@ mod tests {
     #[test]
     fn test_block_type_properties() {
         assert_eq!(BlockType::Data.as_str(), "data");
-        assert_eq!(BlockType::from_str("indices").unwrap(), BlockType::Indices);
+        assert_eq!(
+            BlockType::from_str("indices").expect("Operation failed"),
+            BlockType::Indices
+        );
 
         assert!(
             BlockType::Data.compression_priority() > BlockType::Metadata.compression_priority()

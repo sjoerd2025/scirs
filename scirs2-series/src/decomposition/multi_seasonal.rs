@@ -85,7 +85,7 @@ impl Default for MultiSeasonalConfig {
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0,
 ///                 2.0, 3.0, 4.0, 3.0, 2.0, 3.0, 4.0, 3.0, 2.0, 3.0, 4.0, 3.0];
 /// let config = MultiSeasonalConfig::default();
-/// let result = decompose_multi_seasonal(&ts, &config).unwrap();
+/// let result = decompose_multi_seasonal(&ts, &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn decompose_multi_seasonal<F>(
@@ -185,8 +185,8 @@ where
             total_change
         };
 
-        if trend_change < F::from_f64(config.tolerance).unwrap()
-            && seasonal_change < F::from_f64(config.tolerance).unwrap()
+        if trend_change < F::from_f64(config.tolerance).expect("Operation failed")
+            && seasonal_change < F::from_f64(config.tolerance).expect("Operation failed")
         {
             break;
         }
@@ -282,7 +282,7 @@ where
     // Find local maxima in ACF
     for i in min_period..maxperiod.min(acf.len() - 1) {
         if acf[i] > acf[i - 1] && acf[i] > acf[i + 1] {
-            let threshold = F::from_f64(0.1).unwrap(); // 10% threshold
+            let threshold = F::from_f64(0.1).expect("Operation failed"); // 10% threshold
             if acf[i] > threshold {
                 periods.push(i);
             }
@@ -311,15 +311,16 @@ where
         let mut sum_sin = F::zero();
 
         for i in 0..n {
-            let angle = F::from_f64(2.0 * std::f64::consts::PI).unwrap()
-                * F::from_usize(i).unwrap()
-                / F::from_usize(_period).unwrap();
+            let angle = F::from_f64(2.0 * std::f64::consts::PI).expect("Operation failed")
+                * F::from_usize(i).expect("Operation failed")
+                / F::from_usize(_period).expect("Operation failed");
             sum_cos = sum_cos + ts[i] * angle.cos();
             sum_sin = sum_sin + ts[i] * angle.sin();
         }
 
         let power = sum_cos * sum_cos + sum_sin * sum_sin;
-        let threshold = F::from_f64(0.1).unwrap() * F::from_usize(n).unwrap().powi(2);
+        let threshold = F::from_f64(0.1).expect("Operation failed")
+            * F::from_usize(n).expect("Operation failed").powi(2);
 
         if power > threshold {
             periods.push(_period);
@@ -350,7 +351,7 @@ where
         let end = (i + window / 2 + 1).min(acf.len());
         let slice = acf.slice(scirs2_core::ndarray::s![start..end]);
         let sum: F = slice.iter().fold(F::zero(), |acc, &x| acc + x);
-        smoothed_acf.push(sum / F::from_usize(end - start).unwrap());
+        smoothed_acf.push(sum / F::from_usize(end - start).expect("Operation failed"));
     }
 
     // Find peaks with prominence
@@ -371,7 +372,7 @@ where
 
             let prominence = smoothed_acf[i] - left_min.max(right_min);
 
-            if prominence > F::from_f64(0.05).unwrap() {
+            if prominence > F::from_f64(0.05).expect("Operation failed") {
                 // 5% prominence threshold
                 periods.push(i);
             }
@@ -413,27 +414,28 @@ where
         }
 
         let mean = season_data.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(season_data.len()).unwrap();
+            / F::from_usize(season_data.len()).expect("Operation failed");
         season_means.push(mean);
 
         let var = season_data
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from_usize(season_data.len()).unwrap();
+            / F::from_usize(season_data.len()).expect("Operation failed");
         within_season_var = within_season_var + var;
     }
 
     // Calculate overall mean and between-season variance
-    let overall_mean =
-        ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(ts.len()).unwrap();
+    let overall_mean = ts.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from_usize(ts.len()).expect("Operation failed");
 
     for &season_mean in &season_means {
         between_season_var = between_season_var + (season_mean - overall_mean).powi(2);
     }
 
     if !season_means.is_empty() {
-        between_season_var = between_season_var / F::from_usize(season_means.len()).unwrap();
+        between_season_var =
+            between_season_var / F::from_usize(season_means.len()).expect("Operation failed");
     }
 
     // Calculate seasonal strength as ratio
@@ -512,14 +514,14 @@ where
         match config.model {
             DecompositionModel::Additive => {
                 let mean_seasonal = seasonal_pattern.iter().fold(F::zero(), |acc, &x| acc + x)
-                    / F::from_usize(period).unwrap();
+                    / F::from_usize(period).expect("Operation failed");
                 for i in 0..period {
                     seasonal_pattern[i] = seasonal_pattern[i] - mean_seasonal;
                 }
             }
             DecompositionModel::Multiplicative => {
                 let mean_seasonal = seasonal_pattern.iter().fold(F::zero(), |acc, &x| acc + x)
-                    / F::from_usize(period).unwrap();
+                    / F::from_usize(period).expect("Operation failed");
                 if mean_seasonal != F::zero() {
                     for i in 0..period {
                         seasonal_pattern[i] = seasonal_pattern[i] / mean_seasonal;
@@ -642,7 +644,7 @@ mod tests {
             tolerance: 1e-6,
         };
 
-        let result = decompose_multi_seasonal(&ts, &config).unwrap();
+        let result = decompose_multi_seasonal(&ts, &config).expect("Operation failed");
         assert!(!result.periods.is_empty());
         assert_eq!(result.seasonal_components.len(), result.periods.len());
     }
@@ -652,14 +654,15 @@ mod tests {
         let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
         let config = MultiSeasonalConfig::default();
 
-        let periods = detect_seasonal_periods(&ts, &config).unwrap();
+        let periods = detect_seasonal_periods(&ts, &config).expect("Operation failed");
         assert!(periods.contains(&4) || !periods.is_empty());
     }
 
     #[test]
     fn test_seasonal_strength() {
         let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
-        let strength = calculate_seasonal_strength(&ts, 4, &DecompositionModel::Additive).unwrap();
+        let strength = calculate_seasonal_strength(&ts, 4, &DecompositionModel::Additive)
+            .expect("Operation failed");
         assert!(strength > 0.0);
     }
 
@@ -669,8 +672,8 @@ mod tests {
         let comp2 = array![0.5, 0.5, 0.5, 0.5];
         let components = vec![comp1, comp2];
 
-        let combined =
-            combine_seasonal_components(&components, DecompositionModel::Additive).unwrap();
+        let combined = combine_seasonal_components(&components, DecompositionModel::Additive)
+            .expect("Operation failed");
         assert_eq!(combined[0], 1.5);
         assert_eq!(combined[1], 2.5);
     }

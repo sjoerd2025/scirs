@@ -10,7 +10,7 @@ fn main() {
     println!("-------------------------------------");
     let real_values = [-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 5.0];
     for &x in &real_values {
-        let omega = wright_omega_real(x, 1e-8).unwrap();
+        let omega = wright_omega_real(x, 1e-8).expect("Operation failed");
         let check = omega + omega.ln();
         println!("ω({:.2}) = {:.10}", x, omega);
         println!(
@@ -33,7 +33,7 @@ fn main() {
     ];
 
     for &z in &complex_values {
-        let omega = wright_omega(z, 1e-8).unwrap();
+        let omega = wright_omega(z, 1e-8).expect("Operation failed");
         let check = omega + omega.ln();
         println!(
             "ω({:.2}{:+.2}i) = {:.6}{:+.6}i",
@@ -50,7 +50,7 @@ fn main() {
     println!("\nRelationship with Lambert W Function:");
     println!("----------------------------------");
     let z = Complex64::new(0.5, 3.0);
-    let omega = wright_omega(z, 1e-8).unwrap();
+    let omega = wright_omega(z, 1e-8).expect("Operation failed");
     println!("For z = {:.2}{:+.2}i:", z.re, z.im);
     println!("ω(z) = {:.6}{:+.6}i", omega.re, omega.im);
     println!(
@@ -64,11 +64,11 @@ fn main() {
     println!("--------------");
     println!(
         "ω(-∞) = {}",
-        wright_omega_real(f64::NEG_INFINITY, 1e-8).unwrap()
+        wright_omega_real(f64::NEG_INFINITY, 1e-8).expect("Operation failed")
     );
     println!(
         "ω(+∞) = {}",
-        wright_omega_real(f64::INFINITY, 1e-8).unwrap()
+        wright_omega_real(f64::INFINITY, 1e-8).expect("Operation failed")
     );
 
     // Numerical properties
@@ -79,12 +79,12 @@ fn main() {
     println!("For large positive x = {:.1e}:", large_positive);
     println!(
         "ω(x) ≈ {:.6e}",
-        wright_omega_real(large_positive, 1e-8).unwrap()
+        wright_omega_real(large_positive, 1e-8).expect("Operation failed")
     );
     println!("For large negative x = {:.1}:", large_negative);
     println!(
         "ω(x) ≈ {:.6e}",
-        wright_omega_real(large_negative, 1e-8).unwrap()
+        wright_omega_real(large_negative, 1e-8).expect("Operation failed")
     );
     println!(
         "  (Should be approximately e^({:.1}) = {:.6e})",

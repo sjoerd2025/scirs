@@ -44,7 +44,7 @@ impl DatabaseConnection for SQLiteConnection {
             IoError::DatabaseError("SQLite connection not initialized".to_string())
         })?;
 
-        let mut conn = conn.lock().unwrap();
+        let mut conn = conn.lock().expect("Operation failed");
 
         // Convert JSON params to SQLite values
         let sqlite_params: Vec<Box<dyn ToSql>> = params
@@ -56,7 +56,7 @@ impl DatabaseConnection for SQLiteConnection {
                         if let Some(i) = n.as_i64() {
                             Box::new(i)
                         } else {
-                            Box::new(n.as_f64().unwrap())
+                            Box::new(n.as_f64().expect("Operation failed"))
                         }
                     }
                     serde_json::Value::Bool(b) => Box::new(*b),
@@ -125,7 +125,7 @@ impl DatabaseConnection for SQLiteConnection {
             IoError::DatabaseError("SQLite connection not initialized".to_string())
         })?;
 
-        let mut conn = conn.lock().unwrap();
+        let mut conn = conn.lock().expect("Operation failed");
 
         if columns.len() != data.ncols() {
             return Err(IoError::ValidationError(
@@ -170,7 +170,7 @@ impl DatabaseConnection for SQLiteConnection {
             IoError::DatabaseError("SQLite connection not initialized".to_string())
         })?;
 
-        let mut conn = conn.lock().unwrap();
+        let mut conn = conn.lock().expect("Operation failed");
 
         let mut create_sql = format!("CREATE TABLE {} (", table);
 
@@ -214,7 +214,7 @@ impl DatabaseConnection for SQLiteConnection {
             IoError::DatabaseError("SQLite connection not initialized".to_string())
         })?;
 
-        let mut conn = conn.lock().unwrap();
+        let mut conn = conn.lock().expect("Operation failed");
 
         let count: i32 = conn
             .query_row(
@@ -232,7 +232,7 @@ impl DatabaseConnection for SQLiteConnection {
             IoError::DatabaseError("SQLite connection not initialized".to_string())
         })?;
 
-        let mut conn = conn.lock().unwrap();
+        let mut conn = conn.lock().expect("Operation failed");
 
         // Get column information using PRAGMA
         let mut stmt = conn

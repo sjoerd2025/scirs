@@ -17,7 +17,7 @@
 // use scirs2_signal::lti::{design, systems::TransferFunction};
 //
 // // Transfer function: H(s) = 1/(s+1)
-// let sys1 = design::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
+// let sys1 = design::tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
 //
 // // Zero-pole-gain: H(s) = 2(s+1)/(s+2)
 // let sys2 = design::zpk(
@@ -25,12 +25,12 @@
 //     vec![Complex64::new(-2.0, 0.0)], // poles
 //     2.0,                             // gain
 //     None
-// ).unwrap();
+// ).expect("Operation failed");
 //
 // // State-space: dx/dt = -x + u, y = x
 // let sys3 = design::ss(
 //     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
-// ).unwrap();
+// ).expect("Operation failed");
 // ```
 //
 // ## System Analysis
@@ -38,16 +38,16 @@
 // ```rust
 // use scirs2_signal::lti::{design::{tf, ss}, analysis::{bode, analyze_controllability}};
 //
-// let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
+// let sys = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
 //
 // // Frequency response analysis
 // let freqs = vec![0.1, 1.0, 10.0];
-// let (w, mag, phase) = bode(&sys, Some(&freqs)).unwrap();
+// let (w, mag, phase) = bode(&sys, Some(&freqs)).expect("Operation failed");
 //
 // // State-space analysis using direct state-space creation
 // // For H(s) = 1/(s+1), state-space form: dx/dt = -x + u, y = x
-// let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
-// let ctrl_analysis = analyze_controllability(&ss_sys).unwrap();
+// let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).expect("Operation failed");
+// let ctrl_analysis = analyze_controllability(&ss_sys).expect("Operation failed");
 // println!("System is controllable: {}", ctrl_analysis.is_controllable);
 // ```
 //
@@ -56,17 +56,17 @@
 // ```rust
 // use scirs2_signal::lti::design::{tf, series, parallel, feedback};
 //
-// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();
+// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).expect("Operation failed");
 //
 // // Series connection
-// let series_sys = series(&g1, &g2).unwrap();
+// let series_sys = series(&g1, &g2).expect("Operation failed");
 //
 // // Parallel connection
-// let parallel_sys = parallel(&g1, &g2).unwrap();
+// let parallel_sys = parallel(&g1, &g2).expect("Operation failed");
 //
 // // Feedback connection
-// let feedback_sys = feedback(&g1, None, 1).unwrap(); // Unity feedback
+// let feedback_sys = feedback(&g1, None, 1).expect("Operation failed"); // Unity feedback
 // ```
 //
 // ## Robust Analysis
@@ -81,7 +81,7 @@
 //     vec![1.0, 0.0],             // C matrix (1x2)
 //     vec![0.0],                  // D matrix (1x1)
 //     None,
-// ).unwrap();
+// ).expect("Operation failed");
 //
 // // Perform comprehensive robust analysis
 // let config = RobustAnalysisConfig {
@@ -92,7 +92,7 @@
 //     ..Default::default()
 // };
 //
-// let robust_analysis = robust_control_observability_analysis(&sys, &config).unwrap();
+// let robust_analysis = robust_control_observability_analysis(&sys, &config).expect("Operation failed");
 //
 // // Check robustness metrics
 // println!("Robustness Score: {:.1}/100", robust_analysis.robustness_score);
@@ -173,11 +173,11 @@ pub use response::{impulse_response, lsim, step_response};
 /// use scirs2_signal::lti::system;
 ///
 /// // Create systems
-/// let g1 = system::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-/// let g2 = system::tf(vec![2.0], vec![1.0, 2.0], None).unwrap();
+/// let g1 = system::tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+/// let g2 = system::tf(vec![2.0], vec![1.0, 2.0], None).expect("Operation failed");
 ///
 /// // Connect systems
-/// let series_connection = system::series(&g1, &g2).unwrap();
+/// let series_connection = system::series(&g1, &g2).expect("Operation failed");
 /// ```
 pub mod system {
     pub use super::design::*;
@@ -194,25 +194,27 @@ mod tests {
         // Test that the main API functions are accessible
 
         // System creation
-        let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-        let _zpk_sys = zpk(Vec::new(), vec![Complex64::new(-1.0, 0.0)], 1.0, None).unwrap();
-        let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
+        let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+        let _zpk_sys =
+            zpk(Vec::new(), vec![Complex64::new(-1.0, 0.0)], 1.0, None).expect("Operation failed");
+        let ss_sys =
+            ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).expect("Operation failed");
 
         // Analysis
         let freqs = vec![1.0];
-        let (w, mag, phase) = bode(&tf_sys, Some(&freqs)).unwrap();
+        let (w, mag, phase) = bode(&tf_sys, Some(&freqs)).expect("Operation failed");
         assert_eq!(w.len(), 1);
         assert_eq!(mag.len(), 1);
         assert_eq!(phase.len(), 1);
 
-        let ctrl_analysis = analyze_controllability(&ss_sys).unwrap();
+        let ctrl_analysis = analyze_controllability(&ss_sys).expect("Operation failed");
         assert!(ctrl_analysis.is_controllable);
 
         // Interconnections
-        let tf2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();
-        let series_sys = series(&tf_sys, &tf2).unwrap();
-        let parallel_sys = parallel(&tf_sys, &tf2).unwrap();
-        let feedback_sys = feedback(&tf_sys, None, 1).unwrap();
+        let tf2 = tf(vec![2.0], vec![1.0, 2.0], None).expect("Operation failed");
+        let series_sys = series(&tf_sys, &tf2).expect("Operation failed");
+        let parallel_sys = parallel(&tf_sys, &tf2).expect("Operation failed");
+        let feedback_sys = feedback(&tf_sys, None, 1).expect("Operation failed");
 
         // Verify these operations produce valid systems
         assert!(!series_sys.num.is_empty());
@@ -223,11 +225,11 @@ mod tests {
     #[test]
     fn test_backward_compatibility() {
         // Test that the system module (for backward compatibility) works
-        let g1 = system::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-        let g2 = system::tf(vec![2.0], vec![1.0, 2.0], None).unwrap();
+        let g1 = system::tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+        let g2 = system::tf(vec![2.0], vec![1.0, 2.0], None).expect("Operation failed");
 
-        let series_connection = system::series(&g1, &g2).unwrap();
-        let parallel_connection = system::parallel(&g1, &g2).unwrap();
+        let series_connection = system::series(&g1, &g2).expect("Operation failed");
+        let parallel_connection = system::parallel(&g1, &g2).expect("Operation failed");
 
         assert!(!series_connection.num.is_empty());
         assert!(!parallel_connection.num.is_empty());
@@ -236,11 +238,11 @@ mod tests {
     #[test]
     fn test_system_conversions() {
         // Test conversions between different representations
-        let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let tf_sys = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
 
         // Convert to other representations
-        let zpk_sys = tf_sys.to_zpk().unwrap();
-        let ss_sys = tf_sys.to_ss().unwrap();
+        let zpk_sys = tf_sys.to_zpk().expect("Operation failed");
+        let ss_sys = tf_sys.to_ss().expect("Operation failed");
 
         // Verify basic properties are maintained
         assert_eq!(tf_sys.dt, zpk_sys.dt);
@@ -259,12 +261,12 @@ mod tests {
             vec![0.0],                  // 1x1 D matrix
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Structural analysis
-        let ctrl_analysis = analyze_controllability(&ss_sys).unwrap();
-        let obs_analysis = analyze_observability(&ss_sys).unwrap();
-        let combined_analysis = analyze_control_observability(&ss_sys).unwrap();
+        let ctrl_analysis = analyze_controllability(&ss_sys).expect("Operation failed");
+        let obs_analysis = analyze_observability(&ss_sys).expect("Operation failed");
+        let combined_analysis = analyze_control_observability(&ss_sys).expect("Operation failed");
 
         // Verify analysis results are consistent
         assert_eq!(
@@ -281,12 +283,12 @@ mod tests {
         );
 
         // Energy-based analysis
-        let (wc, wo) = compute_lyapunov_gramians(&ss_sys).unwrap();
+        let (wc, wo) = compute_lyapunov_gramians(&ss_sys).expect("Operation failed");
         assert_eq!(wc.len(), ss_sys.n_states);
         assert_eq!(wo.len(), ss_sys.n_states);
 
         // Complete decomposition
-        let kalman_decomp = complete_kalman_decomposition(&ss_sys).unwrap();
+        let kalman_decomp = complete_kalman_decomposition(&ss_sys).expect("Operation failed");
         assert_eq!(
             kalman_decomp.co_dimension
                 + kalman_decomp.c_no_dimension
@@ -332,10 +334,10 @@ mod tests {
     #[test]
     fn test_sensitivity_analysis() {
         // Test sensitivity and complementary sensitivity functions
-        let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap(); // 10/(s+1)
+        let g = tf(vec![10.0], vec![1.0, 1.0], None).expect("Operation failed"); // 10/(s+1)
 
-        let s_func = sensitivity(&g, None).unwrap();
-        let t_func = complementary_sensitivity(&g, None).unwrap();
+        let s_func = sensitivity(&g, None).expect("Operation failed");
+        let t_func = complementary_sensitivity(&g, None).expect("Operation failed");
 
         // Verify S(s) + T(s) = 1 at s = 0
         let s_val = s_func.evaluate(Complex64::new(0.0, 0.0));
@@ -349,23 +351,23 @@ mod tests {
     #[test]
     fn test_system_equivalence() {
         // Test system equivalence checking
-        let sys1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-        let sys2 = tf(vec![2.0], vec![2.0, 2.0], None).unwrap(); // Same after normalization
+        let sys1 = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+        let sys2 = tf(vec![2.0], vec![2.0, 2.0], None).expect("Operation failed"); // Same after normalization
 
-        assert!(systems_equivalent(&sys1, &sys2, 1e-6).unwrap());
+        assert!(systems_equivalent(&sys1, &sys2, 1e-6).expect("Operation failed"));
 
         // Different systems should not be equivalent
-        let sys3 = tf(vec![1.0], vec![1.0, 2.0], None).unwrap();
-        assert!(!systems_equivalent(&sys1, &sys3, 1e-6).unwrap());
+        let sys3 = tf(vec![1.0], vec![1.0, 2.0], None).expect("Operation failed");
+        assert!(!systems_equivalent(&sys1, &sys3, 1e-6).expect("Operation failed"));
     }
 
     #[test]
     fn test_frequency_response() {
         // Test frequency response computation
-        let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)
+        let sys = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed"); // 1/(s+1)
 
         let freqs = vec![0.0, 1.0, 10.0];
-        let response = sys.frequency_response(&freqs).unwrap();
+        let response = sys.frequency_response(&freqs).expect("Operation failed");
 
         assert_eq!(response.len(), 3);
 
@@ -380,14 +382,14 @@ mod tests {
     #[test]
     fn test_impulse_and_step_response() {
         // Test time-domain response computation
-        let _sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap(); // 1/(s+1)
+        let _sys = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed"); // 1/(s+1)
 
         let t = vec![0.0, 0.1, 0.2, 0.5, 1.0];
 
         // For discrete-time system, test impulse response
-        let sys_dt = tf(vec![1.0], vec![1.0, 1.0], Some(true)).unwrap();
-        let impulse = sys_dt.impulse_response(&t).unwrap();
-        let step = sys_dt.step_response(&t).unwrap();
+        let sys_dt = tf(vec![1.0], vec![1.0, 1.0], Some(true)).expect("Operation failed");
+        let impulse = sys_dt.impulse_response(&t).expect("Operation failed");
+        let step = sys_dt.step_response(&t).expect("Operation failed");
 
         assert_eq!(impulse.len(), t.len());
         assert_eq!(step.len(), t.len());
@@ -396,5 +398,5 @@ mod tests {
 
 #[allow(dead_code)]
 pub fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(num, den, None).unwrap()
+    TransferFunction::new(num, den, None).expect("Operation failed")
 }

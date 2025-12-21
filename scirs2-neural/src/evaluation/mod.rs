@@ -185,7 +185,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
             if self.metrics.contains_key(&MetricType::Loss) && loss_fn.is_some() {
                 if let Some(loss_fn) = loss_fn {
                     let loss = loss_fn.forward(&outputs, &batch_y)?;
-                    self.metrics.get_mut(&MetricType::Loss).unwrap().update(
+                    self.metrics.get_mut(&MetricType::Loss).expect("Operation failed").update(
                         &outputs,
                         &batch_y,
                         Some(loss),

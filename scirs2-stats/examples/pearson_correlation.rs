@@ -11,10 +11,10 @@ fn main() {
     let y1 = array![2.0, 4.0, 6.0, 8.0, 10.0]; // y = 2x
 
     // Basic Pearson correlation (coefficient only)
-    let r1: f64 = pearson_r(&x1.view(), &y1.view()).unwrap();
+    let r1: f64 = pearson_r(&x1.view(), &y1.view()).expect("Operation failed");
 
     // Pearson correlation with p-value
-    let (r1_with_p, p1) = pearsonr(&x1.view(), &y1.view(), "two-sided").unwrap();
+    let (r1_with_p, p1) = pearsonr(&x1.view(), &y1.view(), "two-sided").expect("Operation failed");
 
     println!("Example 1: Perfect positive correlation (y = 2x)");
     println!("Pearson r: {:.6}", r1);
@@ -36,8 +36,8 @@ fn main() {
     let x2 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y2 = array![10.0, 8.0, 6.0, 4.0, 2.0]; // y = -2x + 12
 
-    let r2: f64 = pearson_r(&x2.view(), &y2.view()).unwrap();
-    let (r2_with_p, p2) = pearsonr(&x2.view(), &y2.view(), "two-sided").unwrap();
+    let r2: f64 = pearson_r(&x2.view(), &y2.view()).expect("Operation failed");
+    let (r2_with_p, p2) = pearsonr(&x2.view(), &y2.view(), "two-sided").expect("Operation failed");
 
     println!("Example 2: Perfect negative correlation (y = -2x + 12)");
     println!("Pearson r: {:.6}", r2);
@@ -59,8 +59,8 @@ fn main() {
     let x3 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y3 = array![5.2, 2.1, 8.3, 3.7, 6.9]; // Random values
 
-    let r3: f64 = pearson_r(&x3.view(), &y3.view()).unwrap();
-    let (r3_with_p, p3) = pearsonr(&x3.view(), &y3.view(), "two-sided").unwrap();
+    let r3: f64 = pearson_r(&x3.view(), &y3.view()).expect("Operation failed");
+    let (r3_with_p, p3) = pearsonr(&x3.view(), &y3.view(), "two-sided").expect("Operation failed");
 
     println!("Example 3: No linear correlation (random data)");
     println!("Pearson r: {:.6}", r3);
@@ -83,13 +83,14 @@ fn main() {
     let y4 = array![1.2, 1.9, 3.2, 4.1, 4.8, 5.9, 7.2, 8.1, 9.3, 9.9]; // Positive correlation
 
     // Two-sided test (correlation != 0)
-    let (r4_two, p4_two) = pearsonr(&x4.view(), &y4.view(), "two-sided").unwrap();
+    let (r4_two, p4_two) = pearsonr(&x4.view(), &y4.view(), "two-sided").expect("Operation failed");
 
     // One-sided test (correlation > 0)
-    let (r4_greater, p4_greater) = pearsonr(&x4.view(), &y4.view(), "greater").unwrap();
+    let (r4_greater, p4_greater) =
+        pearsonr(&x4.view(), &y4.view(), "greater").expect("Operation failed");
 
     // One-sided test (correlation < 0)
-    let (r4_less, p4_less) = pearsonr(&x4.view(), &y4.view(), "less").unwrap();
+    let (r4_less, p4_less) = pearsonr(&x4.view(), &y4.view(), "less").expect("Operation failed");
 
     println!("Example 4: Hypothesis testing variants");
     println!("Data with positive correlation:");
@@ -113,7 +114,7 @@ fn main() {
     let x5 = array![1.0, 2.0];
     let y5 = array![2.0, 4.0];
 
-    let (r5, p5) = pearsonr(&x5.view(), &y5.view(), "two-sided").unwrap();
+    let (r5, p5) = pearsonr(&x5.view(), &y5.view(), "two-sided").expect("Operation failed");
 
     println!("Example 5: Small sample size (n=2)");
     println!("Pearson r: {:.6}", r5);

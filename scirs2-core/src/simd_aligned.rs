@@ -449,7 +449,7 @@ mod tests {
 
     #[test]
     fn test_aligned_vec_creation() {
-        let mut vec = AlignedVec::<f32>::with_capacity(16).unwrap();
+        let mut vec = AlignedVec::<f32>::with_capacity(16).expect("Operation failed");
         assert_eq!(vec.len(), 0);
         assert_eq!(vec.capacity(), 16);
 
@@ -464,7 +464,7 @@ mod tests {
         let a = vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let b = vec![10.0f32, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
 
-        let result = simd_add_aligned_f32(&a, &b).unwrap();
+        let result = simd_add_aligned_f32(&a, &b).expect("Operation failed");
         let expected = vec![11.0f32; 10];
 
         assert_eq!(result.as_slice(), &expected);
@@ -475,7 +475,7 @@ mod tests {
         let a = vec![1.0f32, 2.0, 3.0, 4.0];
         let b = vec![5.0f32, 6.0, 7.0, 8.0];
 
-        let result = simd_dot_aligned_f32(&a, &b).unwrap();
+        let result = simd_dot_aligned_f32(&a, &b).expect("Operation failed");
         let expected = 1.0 * 5.0 + 2.0 * 6.0 + 3.0 * 7.0 + 4.0 * 8.0; // = 70.0
 
         assert!((result - expected).abs() < 1e-6);
@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_alignment() {
-        let mut vec = AlignedVec::<f32>::with_capacity(32).unwrap();
+        let mut vec = AlignedVec::<f32>::with_capacity(32).expect("Operation failed");
         // Add some elements to ensure non-empty vector
         vec.push(1.0);
         vec.push(2.0);

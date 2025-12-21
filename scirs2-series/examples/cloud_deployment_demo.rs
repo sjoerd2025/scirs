@@ -245,7 +245,7 @@ fn submit_sample_jobs(
         );
         parameters.insert(
             "threshold".to_string(),
-            serde_json::Value::Number(serde_json::Number::from_f64(2.5).unwrap()),
+            serde_json::Value::Number(serde_json::Number::from_f64(2.5).expect("Operation failed")),
         );
 
         let job = CloudTimeSeriesJob {

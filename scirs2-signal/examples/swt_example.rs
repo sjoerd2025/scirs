@@ -10,7 +10,7 @@ fn main() {
     // Generate a chirp signal
     let fs = 1000.0; // Sample rate in Hz
     let t = (0..1000).map(|i| i as f64 / fs).collect::<Vec<f64>>();
-    let signal = chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap();
+    let signal = chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).expect("Operation failed");
 
     // Add some noise to the signal
     let mut rng = scirs2_core::random::rng();
@@ -20,7 +20,7 @@ fn main() {
         .collect::<Vec<f64>>();
 
     // Perform SWT decomposition with 3 levels
-    let (details, approx) = swt(&noisy_signal, Wavelet::DB(4), 3, None).unwrap();
+    let (details, approx) = swt(&noisy_signal, Wavelet::DB(4), 3, None).expect("Operation failed");
 
     // Modify detail coefficients to denoise (simple hard threshold)
     let mut modified_details = details.clone();
@@ -34,10 +34,11 @@ fn main() {
     }
 
     // Reconstruct the signal using modified coefficients
-    let denoised_signal = iswt(&modified_details, &approx, Wavelet::DB(4)).unwrap();
+    let denoised_signal =
+        iswt(&modified_details, &approx, Wavelet::DB(4)).expect("Operation failed");
 
     // Reconstruct the signal using original coefficients as a reference
-    let reconstructed_signal = iswt(&details, &approx, Wavelet::DB(4)).unwrap();
+    let reconstructed_signal = iswt(&details, &approx, Wavelet::DB(4)).expect("Operation failed");
 
     // Plot the results
     let mut plot = Plot::new();

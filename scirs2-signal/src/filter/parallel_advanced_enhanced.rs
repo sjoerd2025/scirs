@@ -818,21 +818,23 @@ mod tests {
             synthesis_filters,
             decimation_factors,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let test_signal: Vec<f64> = (0..100)
             .map(|i| (2.0 * PI * i as f64 / 10.0).sin())
             .collect();
 
         let config = AdvancedParallelConfig::default();
-        let result = filter_bank.process(&test_signal, &config).unwrap();
+        let result = filter_bank
+            .process(&test_signal, &config)
+            .expect("Operation failed");
 
         assert_eq!(result.len(), test_signal.len());
 
         // Test perfect reconstruction
         let pr_error = filter_bank
             .validate_perfect_reconstruction(&test_signal)
-            .unwrap();
+            .expect("Operation failed");
         assert!(pr_error < 0.5); // Should have reasonably low reconstruction error
     }
 
@@ -849,7 +851,9 @@ mod tests {
             .collect();
 
         let config = AdvancedParallelConfig::default();
-        let result = sparse_filter.apply_parallel(&test_signal, &config).unwrap();
+        let result = sparse_filter
+            .apply_parallel(&test_signal, &config)
+            .expect("Operation failed");
 
         assert_eq!(result.len(), test_signal.len());
     }
@@ -863,21 +867,21 @@ mod tests {
             ..Default::default()
         };
 
-        let filter = LockFreeStreamingFilter::new(b, a, config).unwrap();
+        let filter = LockFreeStreamingFilter::new(b, a, config).expect("Operation failed");
 
         // Test single sample processing
         let input = 1.0;
-        let output = filter.process_sample(input).unwrap();
+        let output = filter.process_sample(input).expect("Operation failed");
         assert!(output.is_finite());
 
         // Test block processing
         let inputs = vec![1.0, 0.5, -0.5, -1.0];
-        let outputs = filter.process_block(&inputs).unwrap();
+        let outputs = filter.process_block(&inputs).expect("Operation failed");
         assert_eq!(outputs.len(), inputs.len());
         assert!(outputs.iter().all(|&x: &f64| x.is_finite()));
 
         // Check metrics
-        let metrics = filter.get_metrics().unwrap();
+        let metrics = filter.get_metrics().expect("Operation failed");
         // Processing time might be 0 on very fast systems, just check it exists
         let _ = metrics.processing_time.as_nanos(); // Always >= 0 for u128
     }
@@ -896,8 +900,8 @@ mod tests {
             })
             .collect();
 
-        let spectral_filter =
-            ParallelSpectralFilter::new(frequency_response, fft_size, 0.5).unwrap();
+        let spectral_filter = ParallelSpectralFilter::new(frequency_response, fft_size, 0.5)
+            .expect("Operation failed");
 
         let test_signal: Vec<f64> = (0..256)
             .map(|i| (2.0 * PI * i as f64 / 8.0).sin() + (2.0 * PI * i as f64 / 4.0).sin())
@@ -906,14 +910,13 @@ mod tests {
         let config = AdvancedParallelConfig::default();
         let filtered = spectral_filter
             .apply_parallel(&test_signal, &config)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(filtered.len(), test_signal.len());
         assert!(filtered.iter().all(|&x: &f64| x.is_finite()));
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_parallel_filtering_benchmark() {
         let signal_lengths = vec![1000, 5000];
         let filter_lengths = vec![10, 50];
@@ -924,7 +927,7 @@ mod tests {
             &filter_lengths,
             num_iterations,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(!results.is_empty());
 

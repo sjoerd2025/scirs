@@ -14,26 +14,26 @@ fn get_spline_poles<T: Float + FromPrimitive>(order: usize) -> Vec<T> {
         0 | 1 => vec![], // No poles for constant or linear
         2 => {
             // Quadratic B-spline has one pole at sqrt(8) - 3
-            let sqrt8 = T::from_f64(8.0).unwrap().sqrt();
-            let three = T::from_f64(3.0).unwrap();
+            let sqrt8 = T::from_f64(8.0).expect("Operation failed").sqrt();
+            let three = T::from_f64(3.0).expect("Operation failed");
             vec![sqrt8 - three]
         }
         3 => {
             // Cubic B-spline has one pole at sqrt(3) - 2
-            let sqrt3 = T::from_f64(3.0).unwrap().sqrt();
-            let two = T::from_f64(2.0).unwrap();
+            let sqrt3 = T::from_f64(3.0).expect("Operation failed").sqrt();
+            let two = T::from_f64(2.0).expect("Operation failed");
             vec![sqrt3 - two]
         }
         4 => {
             // Quartic B-spline has two poles
-            let val1 = T::from_f64(0.361341225285).unwrap(); // sqrt(664 - sqrt(438976)) / 8 - 13
-            let val2 = T::from_f64(0.013725429297).unwrap(); // sqrt(664 + sqrt(438976)) / 8 - 13
+            let val1 = T::from_f64(0.361341225285).expect("Operation failed"); // sqrt(664 - sqrt(438976)) / 8 - 13
+            let val2 = T::from_f64(0.013725429297).expect("Operation failed"); // sqrt(664 + sqrt(438976)) / 8 - 13
             vec![val1, val2]
         }
         5 => {
             // Quintic B-spline has two poles
-            let val1 = T::from_f64(0.430575347099).unwrap();
-            let val2 = T::from_f64(0.043096288203).unwrap();
+            let val1 = T::from_f64(0.430575347099).expect("Operation failed");
+            let val2 = T::from_f64(0.043096288203).expect("Operation failed");
             vec![val1, val2]
         }
         _ => vec![], // Higher orders not supported
@@ -274,7 +274,7 @@ where
         return Ok(());
     }
 
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let tolerance = T::from_f64(1e-10).expect("Operation failed");
     let axis_len = data.shape()[axis];
 
     // Process each 1D line along the specified axis
@@ -346,13 +346,13 @@ fn evaluate_bspline_basis<T: Float + FromPrimitive>(x: T, order: usize, derivati
             // Quadratic B-spline
             let abs_x = x.abs();
             if derivative == 0 {
-                if abs_x < T::from_f64(0.5).unwrap() {
-                    let _half = T::from_f64(0.5).unwrap();
-                    let three_quarters = T::from_f64(0.75).unwrap();
+                if abs_x < T::from_f64(0.5).expect("Operation failed") {
+                    let _half = T::from_f64(0.5).expect("Operation failed");
+                    let three_quarters = T::from_f64(0.75).expect("Operation failed");
                     three_quarters - x * x
-                } else if abs_x < T::from_f64(1.5).unwrap() {
-                    let half = T::from_f64(0.5).unwrap();
-                    let val = abs_x - T::from_f64(1.5).unwrap();
+                } else if abs_x < T::from_f64(1.5).expect("Operation failed") {
+                    let half = T::from_f64(0.5).expect("Operation failed");
+                    let val = abs_x - T::from_f64(1.5).expect("Operation failed");
                     half * val * val
                 } else {
                     T::zero()
@@ -367,12 +367,12 @@ fn evaluate_bspline_basis<T: Float + FromPrimitive>(x: T, order: usize, derivati
             let abs_x = x.abs();
             if derivative == 0 {
                 if abs_x < T::one() {
-                    let two_thirds = T::from_f64(2.0 / 3.0).unwrap();
-                    let half = T::from_f64(0.5).unwrap();
+                    let two_thirds = T::from_f64(2.0 / 3.0).expect("Operation failed");
+                    let half = T::from_f64(0.5).expect("Operation failed");
                     two_thirds - abs_x * abs_x + half * abs_x * abs_x * abs_x
-                } else if abs_x < T::from_f64(2.0).unwrap() {
-                    let one_sixth = T::from_f64(1.0 / 6.0).unwrap();
-                    let val = T::from_f64(2.0).unwrap() - abs_x;
+                } else if abs_x < T::from_f64(2.0).expect("Operation failed") {
+                    let one_sixth = T::from_f64(1.0 / 6.0).expect("Operation failed");
+                    let val = T::from_f64(2.0).expect("Operation failed") - abs_x;
                     one_sixth * val * val * val
                 } else {
                     T::zero()
@@ -394,21 +394,21 @@ mod tests {
     #[test]
     fn test_spline_filter() {
         let input: Array2<f64> = Array2::eye(3);
-        let result = spline_filter(&input, None).unwrap();
+        let result = spline_filter(&input, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
     #[test]
     fn test_spline_filter1d() {
         let input: Array2<f64> = Array2::eye(3);
-        let result = spline_filter1d(&input, None, None).unwrap();
+        let result = spline_filter1d(&input, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
     #[test]
     fn test_bspline() {
         let positions = Array1::linspace(0.0, 2.0, 5);
-        let result = bspline(&positions, None, None).unwrap();
+        let result = bspline(&positions, None, None).expect("Operation failed");
         assert_eq!(result.len(), positions.len());
     }
 }

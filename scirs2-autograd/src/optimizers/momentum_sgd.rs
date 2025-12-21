@@ -45,8 +45,8 @@ impl<F: Float> MomentumSGD<F> {
         env_handle: &mut VariableEnvironment<F>,
     ) -> MomentumSGD<F> {
         MomentumSGD::new(
-            F::from(0.01).unwrap(),
-            F::from(0.9).unwrap(),
+            F::from(0.01).expect("Failed to convert constant to float"),
+            F::from(0.9).expect("Failed to convert constant to float"),
             var_id_list,
             env_handle,
             unique_namespace_id,

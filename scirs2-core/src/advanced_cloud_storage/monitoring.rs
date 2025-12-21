@@ -717,7 +717,7 @@ mod tests {
             AlertLevel::Warning,
             "Test alert".to_string(),
             "test_source".to_string(),
-        ).unwrap();
+        ).expect("Operation failed");
 
         assert!(!alert_id.is_empty());
         assert_eq!(monitoring.get_active_alerts().len(), 1);
@@ -731,9 +731,9 @@ mod tests {
             AlertLevel::Warning,
             "Test alert".to_string(),
             "test_source".to_string(),
-        ).unwrap();
+        ).expect("Operation failed");
 
-        let acknowledged = monitoring.acknowledge_alert(&alert_id).unwrap();
+        let acknowledged = monitoring.acknowledge_alert(&alert_id).expect("Operation failed");
         assert!(acknowledged);
 
         let alerts = monitoring.get_active_alerts();
@@ -746,7 +746,7 @@ mod tests {
         let mut tags = HashMap::new();
         tags.insert("provider".to_string(), "test".to_string());
 
-        monitoring.record_metric(MetricType::Latency, 150.0, tags).unwrap();
+        monitoring.record_metric(MetricType::Latency, 150.0, tags).expect("Operation failed");
         // Should not panic or error
     }
 
@@ -770,7 +770,7 @@ mod tests {
             estimated_completion: None,
         };
 
-        let job_id = manager.submit_transfer(job).unwrap();
+        let job_id = manager.submit_transfer(job).expect("Operation failed");
         assert_eq!(job_id, "test_job");
         assert_eq!(manager.performance_metrics.total_transfers, 1);
     }

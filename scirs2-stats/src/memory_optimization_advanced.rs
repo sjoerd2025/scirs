@@ -306,11 +306,11 @@ where
             ));
         }
 
-        let count_f = F::from(self.count).unwrap();
+        let count_f = F::from(self.count).expect("Failed to convert to float");
         let mean = self.sum / count_f;
 
         let variance = if self.count > 1 {
-            let count_minus_one = F::from(self.count - 1).unwrap();
+            let count_minus_one = F::from(self.count - 1).expect("Failed to convert to float");
             (self.sum_squares - self.sum * self.sum / count_f) / count_minus_one
         } else {
             F::zero()
@@ -542,7 +542,7 @@ where
     /// Compute column means with cache-optimized access
     fn compute_column_means_optimized(&self) -> StatsResult<Array1<F>> {
         let n_features = self.data.ncols();
-        let n_samples_f = F::from(self.data.nrows()).unwrap();
+        let n_samples_f = F::from(self.data.nrows()).expect("Operation failed");
         let mut means = Array1::zeros(n_features);
 
         // Process columns in blocks to improve cache locality
@@ -571,7 +571,7 @@ where
         }
 
         let n_samples_ = self.data.nrows();
-        let _n_samples_f = F::from(n_samples_).unwrap();
+        let _n_samples_f = F::from(n_samples_).expect("Failed to convert to float");
 
         let mean_i = means[col_i];
         let mean_j = means[col_j];
@@ -1002,7 +1002,7 @@ impl MemoryOptimizationSuite {
             }
         }
 
-        let n_samples_f = F::from(n_samples_).unwrap();
+        let n_samples_f = F::from(n_samples_).expect("Failed to convert to float");
         for mean in &mut means {
             *mean = *mean / n_samples_f;
         }
@@ -1192,10 +1192,14 @@ mod tests {
         let chunk1 = array![1.0, 2.0, 3.0];
         let chunk2 = array![4.0, 5.0, 6.0];
 
-        calculator.process_chunk(chunk1.view()).unwrap();
-        calculator.process_chunk(chunk2.view()).unwrap();
+        calculator
+            .process_chunk(chunk1.view())
+            .expect("Operation failed");
+        calculator
+            .process_chunk(chunk2.view())
+            .expect("Operation failed");
 
-        let stats = calculator.get_statistics().unwrap();
+        let stats = calculator.get_statistics().expect("Operation failed");
         assert_eq!(stats.count, 6);
         assert!((stats.mean - 3.5).abs() < 1e-10);
     }
@@ -1216,7 +1220,7 @@ mod tests {
 
         let ptr = allocator
             .allocate_optimized(1024, 8, "test_operation")
-            .unwrap();
+            .expect("Operation failed");
         assert!(!ptr.is_null());
     }
 
@@ -1226,7 +1230,9 @@ mod tests {
         let mut suite = MemoryOptimizationSuite::new(config);
 
         let data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let correlation = suite.optimized_correlation_matrix(data.view()).unwrap();
+        let correlation = suite
+            .optimized_correlation_matrix(data.view())
+            .expect("Operation failed");
 
         assert_eq!(correlation.nrows(), 3);
         assert_eq!(correlation.ncols(), 3);

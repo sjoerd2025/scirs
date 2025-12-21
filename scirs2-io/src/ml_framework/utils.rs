@@ -11,7 +11,7 @@ use std::io::Read;
 /// Convert tensor to Python-compatible dictionary
 pub fn tensor_to_python_dict(tensor: &MLTensor) -> Result<serde_json::Value> {
     Ok(serde_json::json!({
-        "data": tensor.data.as_slice().unwrap().to_vec(),
+        "data": tensor.data.as_slice().expect("Operation failed").to_vec(),
         "shape": tensor.metadata.shape,
         "dtype": format!("{:?}", tensor.metadata.dtype),
         "requires_grad": tensor.metadata.requires_grad,

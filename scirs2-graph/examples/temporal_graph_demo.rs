@@ -141,7 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("   Temporal betweenness centrality (t=100 to t=200):");
     let mut centrality_vec: Vec<_> = centrality.iter().collect();
-    centrality_vec.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+    centrality_vec.sort_by(|a, b| b.1.partial_cmp(a.1).expect("Operation failed"));
 
     for (node, score) in centrality_vec {
         println!("     {node}: {score:.3}");

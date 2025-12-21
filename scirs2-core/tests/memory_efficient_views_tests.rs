@@ -9,7 +9,7 @@ mod tests {
         let data = Array2::from_shape_fn((3, 4), |(i, j)| i * 10 + j);
 
         // Create a transpose view
-        let view = transpose_view(&data).unwrap();
+        let view = transpose_view(&data).expect("Test: operation failed");
 
         // Check that the shape is transposed
         assert_eq!(view.shape(), &[4, 3]);
@@ -31,7 +31,7 @@ mod tests {
         let data = Array2::from_shape_fn((3, 3), |(i, j)| if i == j { i + 1 } else { 0 });
 
         // Create a diagonal view
-        let view = diagonal_view(&data).unwrap();
+        let view = diagonal_view(&data).expect("Test: operation failed");
 
         // Check that the shape is correct
         assert_eq!(view.shape(), &[3]);
@@ -91,7 +91,7 @@ mod tests {
         // This should panic with "not yet implemented"
         unsafe {
             let _: ArrayView<u8, scirs2_core::ndarray::Ix2> =
-                scirs2_core::memory_efficient::view_as(&data).unwrap();
+                scirs2_core::memory_efficient::view_as(&data).expect("Test: operation failed");
         }
     }
 }

@@ -33,7 +33,7 @@
 //! ];
 //!
 //! // Compute quantum fidelity
-//! let fidelity = qml_suite.quantum_state_fidelity(&state1, &state2).unwrap();
+//! let fidelity = qml_suite.quantum_state_fidelity(&state1, &state2).expect("Operation failed");
 //! println!("Quantum State Fidelity: {:.4}", fidelity);
 //! ```
 
@@ -818,7 +818,9 @@ mod tests {
         ];
         let state2 = state1.clone();
 
-        let fidelity = suite.quantum_state_fidelity(&state1, &state2).unwrap();
+        let fidelity = suite
+            .quantum_state_fidelity(&state1, &state2)
+            .expect("Operation failed");
         assert!((fidelity - 1.0).abs() < 1e-10);
     }
 
@@ -830,7 +832,9 @@ mod tests {
         let state1 = array![Complex64::new(1.0, 0.0), Complex64::new(0.0, 0.0)];
         let state2 = array![Complex64::new(0.0, 0.0), Complex64::new(1.0, 0.0)];
 
-        let fidelity = suite.quantum_state_fidelity(&state1, &state2).unwrap();
+        let fidelity = suite
+            .quantum_state_fidelity(&state1, &state2)
+            .expect("Operation failed");
         assert!(fidelity.abs() < 1e-10);
     }
 
@@ -846,7 +850,9 @@ mod tests {
             Complex64::new(1.0 / 2.0_f64.sqrt(), 0.0), // |11⟩
         ];
 
-        let concurrence = suite.compute_concurrence(&bell_state).unwrap();
+        let concurrence = suite
+            .compute_concurrence(&bell_state)
+            .expect("Operation failed");
         assert!((concurrence - 1.0).abs() < 1e-10);
     }
 
@@ -866,7 +872,9 @@ mod tests {
             connectivity: None,
         };
 
-        let metrics = suite.circuit_complexity_analysis(&circuit).unwrap();
+        let metrics = suite
+            .circuit_complexity_analysis(&circuit)
+            .expect("Operation failed");
         assert_eq!(metrics.depth, 4);
         assert_eq!(metrics.gate_count, 4);
         assert_eq!(metrics.two_qubit_gate_count, 2);
@@ -895,7 +903,9 @@ mod tests {
         let predictions = vec![1.0, 2.0, 3.0];
         let targets = vec![1.1, 1.9, 3.1];
 
-        let mse = suite.mean_squared_error(&predictions, &targets).unwrap();
+        let mse = suite
+            .mean_squared_error(&predictions, &targets)
+            .expect("Operation failed");
         let expected_mse = (0.01 + 0.01 + 0.01) / 3.0;
         assert!((mse - expected_mse).abs() < 1e-10);
     }

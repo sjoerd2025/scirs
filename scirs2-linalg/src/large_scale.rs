@@ -34,7 +34,7 @@ use std::fmt::{Debug, Display};
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 /// let b = array![1.0, 2.0, 3.0];
-/// let x = randomized_least_squares(&a.view(), &b.view(), 2, 3).unwrap();
+/// let x = randomized_least_squares(&a.view(), &b.view(), 2, 3).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn randomized_least_squares<A>(
@@ -70,14 +70,14 @@ where
 
     // Generate random sketching matrix S (sketchsize × m)
     let mut rng = scirs2_core::random::rng();
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
     let mut s = Array2::zeros((sketchsize, m));
-    let scale = A::from(1.0 / (sketchsize as f64).sqrt()).unwrap();
+    let scale = A::from(1.0 / (sketchsize as f64).sqrt()).expect("Operation failed");
 
     for i in 0..sketchsize {
         for j in 0..m {
-            s[[i, j]] = A::from(normal.sample(&mut rng)).unwrap() * scale;
+            s[[i, j]] = A::from(normal.sample(&mut rng)).expect("Operation failed") * scale;
         }
     }
 
@@ -133,7 +133,7 @@ where
 /// use scirs2_linalg::large_scale::randomized_norm;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
-/// let norm = randomized_norm(&a.view(), "2", 10, 2).unwrap();
+/// let norm = randomized_norm(&a.view(), "2", 10, 2).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn randomized_norm<A>(
@@ -159,7 +159,7 @@ where
         "2" | "spectral" => {
             // Estimate spectral norm using power method with random initialization
             let mut rng = scirs2_core::random::rng();
-            let normal = Normal::new(0.0, 1.0).unwrap();
+            let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
             let mut max_norm = A::zero();
 
@@ -167,7 +167,7 @@ where
                 // Random initial vector
                 let mut v = Array1::zeros(n);
                 for i in 0..n {
-                    v[i] = A::from(normal.sample(&mut rng)).unwrap();
+                    v[i] = A::from(normal.sample(&mut rng)).expect("Operation failed");
                 }
 
                 // Normalize
@@ -519,12 +519,12 @@ where
 
     // Initialize random block
     let mut rng = scirs2_core::random::rng();
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
     let mut q = Array2::zeros((n, blocksize));
     for i in 0..n {
         for j in 0..blocksize {
-            q[[i, j]] = A::from(normal.sample(&mut rng)).unwrap();
+            q[[i, j]] = A::from(normal.sample(&mut rng)).expect("Operation failed");
         }
     }
 
@@ -625,7 +625,11 @@ where
 
     // Select k largest eigenvalues
     let mut indices: Vec<usize> = (0..eigvals.len()).collect();
-    indices.sort_by(|&i, &j| eigvals[j].partial_cmp(&eigvals[i]).unwrap());
+    indices.sort_by(|&i, &j| {
+        eigvals[j]
+            .partial_cmp(&eigvals[i])
+            .expect("Operation failed")
+    });
 
     let mut selected_eigvals = Array1::zeros(k);
     let mut selected_eigvecs = Array2::zeros((n, k));
@@ -673,7 +677,7 @@ mod tests {
         let a = array![[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]];
         let b = array![1.0, 2.0, 0.0];
 
-        let x = randomized_least_squares(&a.view(), &b.view(), 2, 2).unwrap();
+        let x = randomized_least_squares(&a.view(), &b.view(), 2, 2).expect("Operation failed");
 
         // Should approximately solve the least squares problem
         assert_abs_diff_eq!(x[0], 1.0, epsilon = 0.1);
@@ -685,11 +689,11 @@ mod tests {
         let a = array![[3.0, 0.0], [0.0, 4.0]];
 
         // Spectral norm of diagonal matrix is max diagonal element
-        let spec_norm = randomized_norm(&a.view(), "2", 20, 3).unwrap();
+        let spec_norm = randomized_norm(&a.view(), "2", 20, 3).expect("Operation failed");
         assert!(spec_norm > 3.5 && spec_norm < 4.5);
 
         // Frobenius norm is sqrt(3^2 + 4^2) = 5
-        let fro_norm = randomized_norm(&a.view(), "fro", 100, 0).unwrap();
+        let fro_norm = randomized_norm(&a.view(), "fro", 100, 0).expect("Operation failed");
         assert!(fro_norm > 4.5 && fro_norm < 5.5);
     }
 
@@ -703,7 +707,8 @@ mod tests {
         initial[[2, 2]] = 0.5;
         initial[[3, 3]] = 0.25;
 
-        let (u, s, vt) = crate::decomposition::svd(&initial.view(), false, None).unwrap();
+        let (u, s, vt) =
+            crate::decomposition::svd(&initial.view(), false, None).expect("Operation failed");
 
         // Add new columns
         let mut new_cols = Array2::zeros((6, 2));
@@ -711,7 +716,8 @@ mod tests {
         new_cols[[5, 1]] = 1.0;
 
         let (u_new, s_new, vt_new) =
-            incremental_svd(&u.view(), &s.view(), &vt.view(), &new_cols.view(), 6).unwrap();
+            incremental_svd(&u.view(), &s.view(), &vt.view(), &new_cols.view(), 6)
+                .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(u_new.shape()[0], 6);
@@ -728,7 +734,7 @@ mod tests {
         let a = array![[2.0, 0.0], [0.0, 3.0]];
         let b = array![[2.0, 4.0], [6.0, 9.0]];
 
-        let x = block_krylov_solve(&a.view(), &b.view(), 1, 10, 1e-10).unwrap();
+        let x = block_krylov_solve(&a.view(), &b.view(), 1, 10, 1e-10).expect("Operation failed");
 
         // Solution should be [[1, 2], [2, 3]]
         assert_abs_diff_eq!(x[[0, 0]], 1.0, epsilon = 1e-10);
@@ -742,7 +748,7 @@ mod tests {
         let a = array![[4.0, 1.0], [1.0, 3.0]];
         let b = array![1.0, 2.0];
 
-        let x = ca_gmres(&a.view(), &b.view(), 2, 100, 1e-10).unwrap();
+        let x = ca_gmres(&a.view(), &b.view(), 2, 100, 1e-10).expect("Operation failed");
 
         // Verify solution
         let residual = &b - a.dot(&x);
@@ -767,7 +773,8 @@ mod tests {
         }
 
         let k = 3; // Find 3 largest eigenvalues
-        let (eigvals, eigvecs) = randomized_block_lanczos(&a.view(), k, 2, 2, 10).unwrap();
+        let (eigvals, eigvecs) =
+            randomized_block_lanczos(&a.view(), k, 2, 2, 10).expect("Operation failed");
 
         // Check we got the requested number of eigenvalues
         assert_eq!(eigvals.len(), k);

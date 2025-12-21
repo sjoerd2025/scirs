@@ -14,10 +14,10 @@ use super::*;
                 16.0,
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Decompose using Haar wavelet
-        let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+        let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Check shape
         assert_eq!(decomposition.approx.shape(), &[2, 2]);
@@ -26,7 +26,7 @@ use super::*;
         assert_eq!(decomposition.detail_d.shape(), &[2, 2]);
 
         // Reconstruct
-        let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).unwrap();
+        let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Check shape matches (perfect reconstruction isn't always possible due to rounding)
         assert_eq!(reconstructed.shape(), data.shape());
@@ -46,13 +46,13 @@ use super::*;
 
         // Multi-level decomposition (just using 1 level for reliability)
         let levels = 1;
-        let coeffs = wavedec2(&data, Wavelet::Haar, levels, None).unwrap();
+        let coeffs = wavedec2(&data, Wavelet::Haar, levels, None).expect("Test: operation failed");
 
         // Check number of levels
         assert_eq!(coeffs.len(), levels);
 
         // Reconstruct
-        let reconstructed = waverec2(&coeffs, Wavelet::Haar, None).unwrap();
+        let reconstructed = waverec2(&coeffs, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Check shape matches (perfect reconstruction isn't always possible due to rounding)
         assert_eq!(reconstructed.shape(), data.shape());
@@ -71,7 +71,7 @@ use super::*;
         }
 
         // Decompose using Haar wavelet
-        let mut decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+        let mut decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Count non-zero coefficients before thresholding
         let (before_count_) = count_nonzeros(&decomposition, true);
@@ -161,7 +161,7 @@ use super::*;
         }
 
         // Decompose using Haar wavelet
-        let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+        let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Calculate energy including approximation coefficients
         let (total_energy_with_approx, energy_by_subband) = calculate_energy(&decomposition, true);
@@ -198,7 +198,7 @@ use super::*;
         }
 
         // Decompose using DB2 wavelet
-        let decomposition = dwt2d_decompose(&data, Wavelet::DB(2), None).unwrap();
+        let decomposition = dwt2d_decompose(&data, Wavelet::DB(2), None).expect("Test: operation failed");
 
         // Check shape
         assert_eq!(decomposition.approx.shape(), &[3, 3]);
@@ -207,7 +207,7 @@ use super::*;
         assert_eq!(decomposition.detail_d.shape(), &[3, 3]);
 
         // Reconstruct
-        let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::DB(2), None).unwrap();
+        let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::DB(2), None).expect("Test: operation failed");
 
         // Check shape matches (perfect reconstruction isn't always possible due to rounding)
         assert_eq!(reconstructed.shape(), data.shape());

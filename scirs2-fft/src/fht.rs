@@ -618,11 +618,11 @@ mod tests {
             .collect();
 
         // Test forward transform
-        let y = fht(&x, dln, mu, None, None).unwrap();
+        let y = fht(&x, dln, mu, None, None).expect("Operation failed");
         assert_eq!(y.len(), n);
 
         // Test inverse transform
-        let x_recovered = ifht(&y, dln, mu, None, None).unwrap();
+        let x_recovered = ifht(&y, dln, mu, None, None).expect("Operation failed");
         assert_eq!(x_recovered.len(), n);
     }
 
@@ -632,11 +632,11 @@ mod tests {
         let mu = 0.5;
 
         // Test with zero bias
-        let offset1 = fhtoffset(dln, mu, None, Some(0.0)).unwrap();
+        let offset1 = fhtoffset(dln, mu, None, Some(0.0)).expect("Operation failed");
         assert_relative_eq!(offset1, 0.0, epsilon = 1e-10);
 
         // Test with non-zero bias and initial guess
-        let offset2 = fhtoffset(dln, mu, Some(0.5), Some(1.0)).unwrap();
+        let offset2 = fhtoffset(dln, mu, Some(0.5), Some(1.0)).expect("Operation failed");
         assert_relative_eq!(offset2, 0.5, epsilon = 1e-10);
     }
 

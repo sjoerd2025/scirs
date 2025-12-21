@@ -465,59 +465,63 @@ mod tests {
 
     #[test]
     fn test_memory_mapped_file_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let filepath = temp_dir.path().join("test.dat");
 
         let mapped_file = MemoryMappedFile::new(filepath, 1024);
         assert!(mapped_file.is_ok());
 
-        let mapped_file = mapped_file.unwrap();
+        let mapped_file = mapped_file.expect("Operation failed");
         assert_eq!(mapped_file.size(), 1024);
         assert!(mapped_file.is_mapped());
     }
 
     #[test]
     fn test_read_write_operations() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let filepath = temp_dir.path().join("test.dat");
 
-        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).unwrap();
+        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).expect("Operation failed");
 
         // Write some data
         let write_data = b"Hello, World!";
-        let bytes_written = mapped_file.write_at(0, write_data).unwrap();
+        let bytes_written = mapped_file
+            .write_at(0, write_data)
+            .expect("Operation failed");
         assert_eq!(bytes_written, write_data.len());
 
         // Read it back
         let mut read_buffer = vec![0u8; write_data.len()];
-        let bytes_read = mapped_file.read_at(0, &mut read_buffer).unwrap();
+        let bytes_read = mapped_file
+            .read_at(0, &mut read_buffer)
+            .expect("Operation failed");
         assert_eq!(bytes_read, write_data.len());
         assert_eq!(&read_buffer, write_data);
     }
 
     #[test]
     fn test_file_resize() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let filepath = temp_dir.path().join("test.dat");
 
-        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).unwrap();
+        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).expect("Operation failed");
         assert_eq!(mapped_file.size(), 1024);
 
         // Resize to larger
-        mapped_file.resize(2048).unwrap();
+        mapped_file.resize(2048).expect("Operation failed");
         assert_eq!(mapped_file.size(), 2048);
 
         // Resize to smaller
-        mapped_file.resize(512).unwrap();
+        mapped_file.resize(512).expect("Operation failed");
         assert_eq!(mapped_file.size(), 512);
     }
 
     #[test]
     fn test_chunked_operations() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let filepath = temp_dir.path().join("test.dat");
 
-        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).unwrap();
+        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).expect("Operation failed");
 
         // Write chunked data
         let test_data = b"This is a test string for chunked operations";
@@ -540,7 +544,7 @@ mod tests {
                     Ok(Some(test_data[start..end].to_vec()))
                 }
             })
-            .unwrap();
+            .expect("Operation failed");
 
         // Read back and verify
         let mut read_data = Vec::new();
@@ -549,27 +553,29 @@ mod tests {
                 read_data.extend_from_slice(chunk);
                 Ok(())
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(&read_data[..test_data.len()], test_data);
     }
 
     #[test]
     fn test_memory_mapping_manager() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let config = MemoryMappingConfig::default();
         let mut manager = MemoryMappingManager::new(config);
 
         // Map a file
         let filepath = temp_dir.path().join("test.dat");
-        manager.map_file(filepath.clone(), 1024).unwrap();
+        manager
+            .map_file(filepath.clone(), 1024)
+            .expect("Operation failed");
 
         let stats = manager.get_stats();
         assert_eq!(stats.total_files, 1);
         assert_eq!(stats.total_mapped_size, 1024);
 
         // Unmap the file
-        manager.unmap_file(&filepath).unwrap();
+        manager.unmap_file(&filepath).expect("Operation failed");
 
         let stats = manager.get_stats();
         assert_eq!(stats.total_files, 0);
@@ -578,18 +584,20 @@ mod tests {
 
     #[test]
     fn test_access_count_tracking() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let filepath = temp_dir.path().join("test.dat");
 
-        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).unwrap();
+        let mut mapped_file = MemoryMappedFile::new(filepath, 1024).expect("Operation failed");
         assert_eq!(mapped_file.access_count(), 0);
 
         // Perform some operations
         let mut buffer = vec![0u8; 10];
-        mapped_file.read_at(0, &mut buffer).unwrap();
+        mapped_file
+            .read_at(0, &mut buffer)
+            .expect("Operation failed");
         assert_eq!(mapped_file.access_count(), 1);
 
-        mapped_file.write_at(0, b"test").unwrap();
+        mapped_file.write_at(0, b"test").expect("Operation failed");
         assert_eq!(mapped_file.access_count(), 2);
 
         // Reset counter

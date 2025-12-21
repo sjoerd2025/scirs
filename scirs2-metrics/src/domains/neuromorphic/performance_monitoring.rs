@@ -89,9 +89,18 @@ impl<F: Float + std::iter::Sum> NeuromorphicPerformanceMonitor<F> {
     /// Create new performance monitor
     pub fn new() -> Self {
         let mut alert_thresholds = HashMap::new();
-        alert_thresholds.insert("accuracy".to_string(), F::from(0.8).unwrap());
-        alert_thresholds.insert("energy_efficiency".to_string(), F::from(0.7).unwrap());
-        alert_thresholds.insert("processing_speed".to_string(), F::from(100.0).unwrap());
+        alert_thresholds.insert(
+            "accuracy".to_string(),
+            F::from(0.8).expect("Failed to convert constant to float"),
+        );
+        alert_thresholds.insert(
+            "energy_efficiency".to_string(),
+            F::from(0.7).expect("Failed to convert constant to float"),
+        );
+        alert_thresholds.insert(
+            "processing_speed".to_string(),
+            F::from(100.0).expect("Failed to convert constant to float"),
+        );
 
         Self {
             metrics: PerformanceMetrics::new(),
@@ -123,7 +132,13 @@ impl<F: Float + std::iter::Sum> NeuromorphicPerformanceMonitor<F> {
     /// Check if should take snapshot
     fn should_take_snapshot(&self) -> bool {
         self.history.is_empty()
-            || self.history.back().unwrap().timestamp.elapsed() >= self.config.interval
+            || self
+                .history
+                .back()
+                .expect("Operation failed")
+                .timestamp
+                .elapsed()
+                >= self.config.interval
     }
 
     /// Take performance snapshot
@@ -213,7 +228,7 @@ impl<F: Float + std::iter::Sum> NeuromorphicPerformanceMonitor<F> {
         if values.is_empty() {
             F::zero()
         } else {
-            values.iter().cloned().sum::<F>() / F::from(values.len()).unwrap()
+            values.iter().cloned().sum::<F>() / F::from(values.len()).expect("Operation failed")
         }
     }
 }
@@ -253,10 +268,10 @@ impl<F: Float + std::iter::Sum> PerformanceMetrics<F> {
         let active_neurons = network_state
             .activity_levels
             .iter()
-            .filter(|&&x| x > F::from(0.1).unwrap())
+            .filter(|&&x| x > F::from(0.1).expect("Failed to convert constant to float"))
             .count();
-        self.network_utilization = F::from(active_neurons).unwrap()
-            / F::from(network_state.activity_levels.len()).unwrap();
+        self.network_utilization = F::from(active_neurons).expect("Failed to convert to float")
+            / F::from(network_state.activity_levels.len()).expect("Operation failed");
 
         Ok(())
     }

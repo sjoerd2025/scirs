@@ -24,10 +24,10 @@
 //! let rows = vec![0, 0, 1, 2];
 //! let cols = vec![1, 2, 2, 0];
 //! let data = vec![1.0, 4.0, 2.0, 3.0];
-//! let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+//! let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 //!
 //! // Find shortest paths from vertex 0
-//! let distances = shortest_path(&graph, Some(0), None, "dijkstra", true, false).unwrap();
+//! let distances = shortest_path(&graph, Some(0), None, "dijkstra", true, false).expect("Operation failed");
 //! ```
 //!
 //! ### Connected Components
@@ -40,10 +40,10 @@
 //! let rows = vec![0, 1, 2, 3];
 //! let cols = vec![1, 0, 3, 2];
 //! let data = vec![1.0, 1.0, 1.0, 1.0];
-//! let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
+//! let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed");
 //!
 //! // Find connected components
-//! let (n_components, labels) = connected_components(&graph, false, "weak", true).unwrap();
+//! let (n_components, labels) = connected_components(&graph, false, "weak", true).expect("Operation failed");
 //! ```
 
 use crate::error::{SparseError, SparseResult};
@@ -158,7 +158,7 @@ where
                 let weight = values[i];
                 let reverse_weight = matrix.get(col, row);
 
-                if (weight - reverse_weight).abs() > T::from(1e-10).unwrap() {
+                if (weight - reverse_weight).abs() > T::from(1e-10).expect("Operation failed") {
                     return Err(SparseError::ValueError(
                         "Undirected graph _matrix must be symmetric".to_string(),
                     ));
@@ -269,7 +269,7 @@ mod tests {
         let cols = vec![1, 2, 0, 3, 0, 3, 1, 2];
         let data = vec![1.0, 2.0, 1.0, 3.0, 2.0, 1.0, 3.0, 1.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed")
     }
 
     #[test]
@@ -290,7 +290,8 @@ mod tests {
         let cols = vec![1, 0];
         let data = vec![1.0, 2.0]; // Different weights
 
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).expect("Operation failed");
 
         // Should be valid as directed graph
         assert!(validate_graph(&graph, true).is_ok());
@@ -305,7 +306,8 @@ mod tests {
         let cols = vec![1, 0];
         let data = vec![-1.0, 1.0]; // Negative weight
 
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).expect("Operation failed");
 
         // Should fail due to negative weights
         assert!(validate_graph(&graph, true).is_err());
@@ -315,7 +317,7 @@ mod tests {
     #[test]
     fn test_to_adjacency_list() {
         let graph = create_test_graph();
-        let adj_list = to_adjacency_list(&graph, false).unwrap();
+        let adj_list = to_adjacency_list(&graph, false).expect("Operation failed");
 
         assert_eq!(adj_list.len(), 4);
 
@@ -341,9 +343,9 @@ mod tests {
         let graph = create_test_graph();
 
         // Directed: all 8 edges
-        assert_eq!(num_edges(&graph, true).unwrap(), 8);
+        assert_eq!(num_edges(&graph, true).expect("Operation failed"), 8);
 
         // Undirected: 4 unique edges
-        assert_eq!(num_edges(&graph, false).unwrap(), 4);
+        assert_eq!(num_edges(&graph, false).expect("Operation failed"), 4);
     }
 }

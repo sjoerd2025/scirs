@@ -1509,7 +1509,7 @@ mod tests {
 
         // Apply Fourier Gaussian filter
         let sigma = vec![2.0];
-        let filtered = fourier_gaussian(&signal, &sigma, None).unwrap();
+        let filtered = fourier_gaussian(&signal, &sigma, None).expect("Operation failed");
 
         // Check that the spike is smoothed
         assert!(filtered[32] < 1.0);
@@ -1529,7 +1529,7 @@ mod tests {
 
         // Apply Fourier Gaussian filter
         let sigma = vec![1.5, 1.5];
-        let filtered = fourier_gaussian(&image, &sigma, None).unwrap();
+        let filtered = fourier_gaussian(&image, &sigma, None).expect("Operation failed");
 
         // Check that the spike is smoothed
         assert!(filtered[[16, 16]] < 1.0);
@@ -1552,7 +1552,7 @@ mod tests {
 
         // Apply Fourier uniform filter
         let size = vec![5];
-        let filtered = fourier_uniform(&signal, &size).unwrap();
+        let filtered = fourier_uniform(&signal, &size).expect("Operation failed");
 
         // The filter should smooth the edges
         assert!(filtered[29] > 0.0);
@@ -1584,7 +1584,7 @@ mod tests {
 
         // Apply lowpass filter
         let size = vec![0.2, 0.2];
-        let filtered = fourier_ellipsoid(&image, &size, "lowpass").unwrap();
+        let filtered = fourier_ellipsoid(&image, &size, "lowpass").expect("Operation failed");
 
         // The high frequency checkerboard pattern should be reduced
         let noise_original = (image[[0, 0]] - image[[0, 1]]).abs();
@@ -1599,7 +1599,7 @@ mod tests {
 
         // Shift by 2 positions
         let shift = vec![2.0];
-        let shifted = fourier_shift(&signal, &shift).unwrap();
+        let shifted = fourier_shift(&signal, &shift).expect("Operation failed");
 
         // Check that values are shifted (with some tolerance for numerical errors)
         assert_abs_diff_eq!(shifted[2], 1.0, epsilon = 0.1);
@@ -1622,7 +1622,7 @@ mod tests {
 
         // Shift by a fractional amount
         let shift = vec![0.5];
-        let shifted = fourier_shift(&signal, &shift).unwrap();
+        let shifted = fourier_shift(&signal, &shift).expect("Operation failed");
 
         // After shifting by 0.5, the peak should move from index 30 to between 29.5-30.5
         // The values at indices 29 and 30 should both be high and similar

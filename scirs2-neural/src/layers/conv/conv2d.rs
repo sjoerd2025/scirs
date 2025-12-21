@@ -30,11 +30,11 @@ use std::sync::{Arc, RwLock};
 /// use scirs2_core::ndarray::Array4;
 ///
 /// // Create a Conv2D layer: 3 input channels, 16 output channels, 3x3 kernel
-/// let conv = Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), Some("conv1")).unwrap();
+/// let conv = Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), Some("conv1")).expect("Operation failed");
 ///
 /// // Forward pass with batch of 2 images, 3 channels, 32x32 pixels
 /// let input = Array4::<f64>::zeros((2, 3, 32, 32)).into_dyn();
-/// let output = conv.forward(&input).unwrap();
+/// let output = conv.forward(&input).expect("Operation failed");
 ///
 /// // Output shape: (2, 16, 30, 30) for 'valid' padding
 /// assert_eq!(output.shape()[0], 2);   // batch size
@@ -98,13 +98,15 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + NumAssign + 'static> Conv2
         // Scale = sqrt(2 / (fan_in + fan_out)) where fan_in = in_channels * kH * kW
         let fan_in = in_channels * kernel_size.0 * kernel_size.1;
         let fan_out = out_channels * kernel_size.0 * kernel_size.1;
-        let scale = F::from((2.0 / (fan_in + fan_out) as f64).sqrt()).unwrap();
+        let scale = F::from((2.0 / (fan_in + fan_out) as f64).sqrt()).expect("Operation failed");
 
         // Initialize weights with scaled uniform distribution
         let weights = Array::from_shape_fn(IxDyn(&weights_shape), |_| {
             // Simple deterministic initialization for reproducibility
             // In production, use scirs2_core::random
-            scale * (F::from(0.5).unwrap() - F::from(0.25).unwrap())
+            scale
+                * (F::from(0.5).expect("Failed to convert constant to float")
+                    - F::from(0.25).expect("Failed to convert constant to float"))
         });
 
         let weight_grad = Array::zeros(IxDyn(&weights_shape));
@@ -764,7 +766,8 @@ mod tests {
 
     #[test]
     fn test_conv2d_creation() {
-        let conv = Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), Some("conv1")).unwrap();
+        let conv =
+            Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), Some("conv1")).expect("Operation failed");
         assert_eq!(conv.in_channels, 3);
         assert_eq!(conv.out_channels, 16);
         assert_eq!(conv.kernel_size, (3, 3));
@@ -773,11 +776,12 @@ mod tests {
 
     #[test]
     fn test_conv2d_forward_shape() {
-        let conv = Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), Some("conv1")).unwrap();
+        let conv =
+            Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), Some("conv1")).expect("Operation failed");
 
         // Input: (batch=2, channels=3, height=32, width=32)
         let input = Array4::<f64>::zeros((2, 3, 32, 32)).into_dyn();
-        let output = conv.forward(&input).unwrap();
+        let output = conv.forward(&input).expect("Operation failed");
 
         // Output: (batch=2, channels=16, height=30, width=30) for valid padding
         assert_eq!(output.shape(), &[2, 16, 30, 30]);
@@ -785,11 +789,12 @@ mod tests {
 
     #[test]
     fn test_conv2d_forward_with_stride() {
-        let conv = Conv2D::<f64>::new(1, 8, (3, 3), (2, 2), Some("conv_stride")).unwrap();
+        let conv = Conv2D::<f64>::new(1, 8, (3, 3), (2, 2), Some("conv_stride"))
+            .expect("Operation failed");
 
         // Input: (batch=1, channels=1, height=16, width=16)
         let input = Array4::<f64>::zeros((1, 1, 16, 16)).into_dyn();
-        let output = conv.forward(&input).unwrap();
+        let output = conv.forward(&input).expect("Operation failed");
 
         // Output: (batch=1, channels=8, height=7, width=7)
         assert_eq!(output.shape(), &[1, 8, 7, 7]);
@@ -797,20 +802,23 @@ mod tests {
 
     #[test]
     fn test_conv2d_backward() {
-        let conv = Conv2D::<f64>::new(2, 4, (3, 3), (1, 1), Some("conv_back")).unwrap();
+        let conv =
+            Conv2D::<f64>::new(2, 4, (3, 3), (1, 1), Some("conv_back")).expect("Operation failed");
 
         let input = Array4::<f64>::from_elem((1, 2, 8, 8), 1.0).into_dyn();
-        let _output = conv.forward(&input).unwrap();
+        let _output = conv.forward(&input).expect("Operation failed");
 
         let grad_output = Array4::<f64>::from_elem((1, 4, 6, 6), 0.1).into_dyn();
-        let grad_input = conv.backward(&input, &grad_output).unwrap();
+        let grad_input = conv
+            .backward(&input, &grad_output)
+            .expect("Operation failed");
 
         assert_eq!(grad_input.shape(), &[1, 2, 8, 8]);
     }
 
     #[test]
     fn test_conv2d_parameter_count() {
-        let conv = Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), None).unwrap();
+        let conv = Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), None).expect("Operation failed");
 
         // weights: 16 * 3 * 3 * 3 = 432
         // bias: 16
@@ -821,7 +829,7 @@ mod tests {
     #[test]
     fn test_conv2d_without_bias() {
         let conv = Conv2D::<f64>::new(3, 16, (3, 3), (1, 1), None)
-            .unwrap()
+            .expect("Operation failed")
             .without_bias();
 
         // weights only: 16 * 3 * 3 * 3 = 432
@@ -833,7 +841,8 @@ mod tests {
     fn test_conv2d_simd_vs_naive_correctness() {
         // Create a conv layer with sufficient work to trigger SIMD
         // kernel_h * kernel_w * in_channels > 64 -> 3 * 3 * 8 = 72 > 64
-        let conv = Conv2D::<f64>::new(8, 16, (3, 3), (1, 1), Some("conv_simd")).unwrap();
+        let conv =
+            Conv2D::<f64>::new(8, 16, (3, 3), (1, 1), Some("conv_simd")).expect("Operation failed");
 
         // Use batch >= 2 to trigger SIMD path
         let input = Array4::<f64>::from_shape_fn((4, 8, 16, 16), |(b, c, h, w)| {
@@ -842,10 +851,10 @@ mod tests {
         .into_dyn();
 
         // Get SIMD result
-        let simd_result = conv.conv2d_forward_simd(&input).unwrap();
+        let simd_result = conv.conv2d_forward_simd(&input).expect("Operation failed");
 
         // Get naive result
-        let naive_result = conv.conv2d_forward(&input).unwrap();
+        let naive_result = conv.conv2d_forward(&input).expect("Operation failed");
 
         // Compare shapes
         assert_eq!(simd_result.shape(), naive_result.shape());
@@ -869,7 +878,7 @@ mod tests {
     #[test]
     fn test_conv2d_small_batch_uses_naive() {
         // Small kernel work: 1 * 1 * 1 = 1 <= 64
-        let conv = Conv2D::<f64>::new(1, 4, (1, 1), (1, 1), None).unwrap();
+        let conv = Conv2D::<f64>::new(1, 4, (1, 1), (1, 1), None).expect("Operation failed");
         // should_use_simd should return false
         assert!(!conv.should_use_simd(1));
         assert!(!conv.should_use_simd(4)); // Even with batch=4, work is too small
@@ -879,7 +888,7 @@ mod tests {
     #[test]
     fn test_conv2d_large_batch_uses_simd() {
         // Large kernel work: 3 * 3 * 8 = 72 > 64
-        let conv = Conv2D::<f64>::new(8, 16, (3, 3), (1, 1), None).unwrap();
+        let conv = Conv2D::<f64>::new(8, 16, (3, 3), (1, 1), None).expect("Operation failed");
         // should_use_simd should return true for batch >= 2
         assert!(!conv.should_use_simd(1)); // Still false for batch=1
         assert!(conv.should_use_simd(2)); // True for batch >= 2
@@ -890,12 +899,12 @@ mod tests {
     #[test]
     fn test_conv2d_simd_same_padding() {
         let conv = Conv2D::<f64>::new(8, 16, (3, 3), (1, 1), None)
-            .unwrap()
+            .expect("Operation failed")
             .with_padding(PaddingMode::Same);
 
         let input = Array4::<f64>::from_elem((4, 8, 16, 16), 0.5).into_dyn();
 
-        let output = conv.forward(&input).unwrap();
+        let output = conv.forward(&input).expect("Operation failed");
         // With Same padding and stride 1, output spatial dims = input spatial dims
         assert_eq!(output.shape(), &[4, 16, 16, 16]);
     }
@@ -904,12 +913,12 @@ mod tests {
     #[test]
     fn test_conv2d_simd_custom_padding() {
         let conv = Conv2D::<f64>::new(8, 16, (3, 3), (1, 1), None)
-            .unwrap()
+            .expect("Operation failed")
             .with_padding(PaddingMode::Custom(2));
 
         let input = Array4::<f64>::from_elem((4, 8, 16, 16), 0.5).into_dyn();
 
-        let output = conv.forward(&input).unwrap();
+        let output = conv.forward(&input).expect("Operation failed");
         // With padding=2, output = (16 + 2*2 - 3)/1 + 1 = 18
         assert_eq!(output.shape(), &[4, 16, 18, 18]);
     }

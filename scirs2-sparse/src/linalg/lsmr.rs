@@ -3,6 +3,10 @@
 //! LSMR is an iterative algorithm for solving large sparse least squares problems
 //! and sparse systems of linear equations. It's closely related to LSQR but
 //! can be more stable for ill-conditioned problems.
+//!
+//! Implementation follows SciPy reference based on:
+//! D. C.-L. Fong and M. A. Saunders (2011), "LSMR: An iterative algorithm
+//! for sparse least-squares problems", SIAM J. Sci. Comput., 33(5), 2950-2971.
 
 #![allow(unused_variables)]
 #![allow(unused_assignments)]
@@ -11,8 +15,39 @@
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use scirs2_core::ndarray::{Array1, ArrayView1};
-use scirs2_core::numeric::{Float, SparseElement};
+use scirs2_core::numeric::{Float, One, SparseElement};
 use std::fmt::Debug;
+
+/// Stable implementation of Givens rotation (sym_ortho)
+///
+/// Computes (c, s, r) such that [ c  s] [a] = [r]
+///                               [-s  c] [b]   [0]
+///
+/// Uses the stable formulation to avoid overflow/underflow.
+fn sym_ortho<T: Float + SparseElement>(a: T, b: T) -> (T, T, T) {
+    let zero = T::sparse_zero();
+    let one = <T as One>::one();
+
+    if b == zero {
+        return (if a >= zero { one } else { -one }, zero, a.abs());
+    } else if a == zero {
+        return (zero, if b >= zero { one } else { -one }, b.abs());
+    } else if b.abs() > a.abs() {
+        let tau = a / b;
+        let s_sign = if b >= zero { one } else { -one };
+        let s = s_sign / (one + tau * tau).sqrt();
+        let c = s * tau;
+        let r = b / s;
+        (c, s, r)
+    } else {
+        let tau = b / a;
+        let c_sign = if a >= zero { one } else { -one };
+        let c = c_sign / (one + tau * tau).sqrt();
+        let s = c * tau;
+        let r = a / c;
+        (c, s, r)
+    }
+}
 
 /// Options for the LSMR solver
 #[derive(Debug, Clone)]
@@ -97,13 +132,13 @@ pub struct LSMRResult<T> {
 /// let rows = vec![0, 0, 1, 1, 2, 2];
 /// let cols = vec![0, 1, 0, 1, 0, 1];
 /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).expect("Operation failed");
 ///
 /// // Right-hand side
 /// let b = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 ///
 /// // Solve using LSMR
-/// let result = lsmr(&matrix, &b.view(), None, LSMROptions::default()).unwrap();
+/// let result = lsmr(&matrix, &b.view(), None, LSMROptions::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn lsmr<T, S>(
@@ -145,9 +180,9 @@ where
     let mut beta = l2_norm(&u.view());
 
     // Tolerances
-    let atol = T::from(options.atol).unwrap();
-    let btol = T::from(options.btol).unwrap();
-    let conlim = T::from(options.conlim).unwrap();
+    let atol = T::from(options.atol).expect("Operation failed");
+    let btol = T::from(options.btol).expect("Operation failed");
+    let conlim = T::from(options.conlim).expect("Operation failed");
 
     let mut residual_history = if options.store_residual_history {
         Some(vec![beta])
@@ -188,117 +223,141 @@ where
         }
     }
 
-    // Initialize other variables
+    // Initialize LSMR-specific variables (following SciPy reference)
+    let one = T::sparse_one();
+    let zero = T::sparse_zero();
+
     let mut alphabar = alpha;
     let mut zetabar = alpha * beta;
-    let mut rho = T::sparse_one();
-    let mut rhobar = T::sparse_one();
-    let mut cbar = T::sparse_one();
-    let mut sbar = T::sparse_zero();
+    let mut rho = one;
+    let mut rhobar = one;
+    let mut cbar = one;
+    let mut sbar = zero;
 
     let mut h = v.clone();
-    let mut hbar = Array1::zeros(n);
+    let mut hbar: Array1<T> = Array1::zeros(n);
 
-    // LSMR iteration variables
-    let mut arnorm = alpha * beta;
-    let mut beta_dd = beta;
-    let mut tau = T::sparse_zero();
-    let mut theta = T::sparse_zero();
-    let mut zeta = T::sparse_zero();
-    let mut d = T::sparse_zero();
-    let mut res2 = T::sparse_zero();
-    let mut anorm = T::sparse_zero();
-    let mut xxnorm = T::sparse_zero();
+    // For norm estimation
+    let mut anorm = zero;
+    let mut acond = zero;
+    let mut rnorm = beta;
+    let mut xnorm = zero;
+
+    let bnorm = beta;
+    let mut norm_a2 = alpha * alpha;
+    let mut maxrbar = zero;
+    let mut minrbar = T::from(1e100).expect("Operation failed");
 
     let mut converged = false;
     let mut convergence_reason = String::new();
     let mut iter = 0;
 
-    for k in 0..options.max_iter {
-        iter = k + 1;
+    for itn in 0..options.max_iter {
+        iter = itn + 1;
 
-        // Continue the bidiagonalization
-        let au = matrix_vector_multiply(matrix, &v.view())?;
+        // Perform the next step of the bidiagonalization.
+        // Golub-Kahan bidiagonalization: u = A*v - alpha*u
+        let av = matrix_vector_multiply(matrix, &v.view())?;
         for i in 0..m {
-            u[i] = au[i] - alpha * u[i];
+            u[i] = av[i] - alpha * u[i];
         }
         beta = l2_norm(&u.view());
 
-        if beta > T::sparse_zero() {
+        if beta > zero {
             for i in 0..m {
                 u[i] = u[i] / beta;
             }
 
+            // v = A'*u - beta*v
             let atu = matrix_transpose_vector_multiply(matrix, &u.view())?;
             for i in 0..n {
                 v[i] = atu[i] - beta * v[i];
             }
             alpha = l2_norm(&v.view());
 
-            if alpha > T::sparse_zero() {
+            if alpha > zero {
                 for i in 0..n {
                     v[i] = v[i] / alpha;
                 }
             }
-
-            anorm = (anorm * anorm + alpha * alpha + beta * beta).sqrt();
         }
 
-        // Use a plane rotation to eliminate the damping parameter
-        let rhobar1 = (rhobar * rhobar + beta * beta).sqrt();
-        let cs1 = rhobar / rhobar1;
-        let sn1 = beta / rhobar1;
-        let psi = sn1 * alpha;
-        alpha = cs1 * alpha;
+        // Construct rotation Q_{i,2i+1} (plane rotation to eliminate beta)
+        let rhoold = rho;
+        let (c, s, rho_new) = sym_ortho(alphabar, beta);
+        rho = rho_new;
+        let thetanew = s * alpha;
+        alphabar = c * alpha;
 
-        // Use a plane rotation to eliminate the subdiagonal element
-        let cs = cbar * cs1;
-        let sn = sbar * cs1;
-        let theta = sbar * alpha;
-        rho = (cs * alpha * cs * alpha + theta * theta).sqrt();
-        let c = cs * alpha / rho;
-        let s = theta / rho;
-        zeta = c * zetabar;
-        zetabar = -s * zetabar;
+        // Construct rotation Qbar_{i,2i+1} (plane rotation for LSMR)
+        let rhobarold = rhobar;
+        let zetaold = zetabar;
+        let thetabar = sbar * rho;
+        let rhotemp = cbar * rho;
+        let (cbar_new, sbar_new, rhobar_new) = sym_ortho(rhotemp, thetanew);
+        cbar = cbar_new;
+        sbar = sbar_new;
+        rhobar = rhobar_new;
+        let zeta = cbar * zetabar;
+        zetabar = -sbar * zetabar;
 
         // Update h, hbar, x
         for i in 0..n {
-            hbar[i] = h[i] - (theta * rho / (rhobar * rhobar1)) * hbar[i];
-            x[i] = x[i] + (zeta / (rho * rhobar1)) * hbar[i];
-            h[i] = v[i] - (alpha / rhobar1) * h[i];
+            let hbar_old = hbar[i];
+            hbar[i] = h[i] - (thetabar * rho / (rhoold * rhobarold)) * hbar_old;
+        }
+        for i in 0..n {
+            x[i] = x[i] + (zeta / (rho * rhobar)) * hbar[i];
+        }
+        for i in 0..n {
+            h[i] = v[i] - (thetanew / rho) * h[i];
         }
 
         // Estimate norms
-        xxnorm = (xxnorm + (zeta / rho) * (zeta / rho)).sqrt();
-        let ddnorm = (d + (zeta / rho) * (zeta / rho)).sqrt();
-        d = ddnorm;
+        norm_a2 = norm_a2 + beta * beta;
+        anorm = norm_a2.sqrt();
+        norm_a2 = norm_a2 + alpha * alpha;
 
-        // Estimate ||r||
-        let beta_dd1 = beta_dd;
-        let beta_dd = beta * sn1;
+        // Update estimates
+        if c.abs() > zero {
+            maxrbar = maxrbar.max(rhobarold);
+            if itn > 1 {
+                minrbar = minrbar.min(rhobarold);
+            }
+        }
+        acond = maxrbar / minrbar;
+
+        // Compute norm estimates
+        let betadd = c * zetaold;
+        let betad = -(sbar * betadd);
         let rhodold = rho;
-        let tautilde = (zetabar * zetabar).sqrt();
-        let tau = tau + tautilde * tautilde;
-        let d1 = (d * d + (beta_dd1 / rhodold) * (beta_dd1 / rhodold)).sqrt();
-        let d2 = (d1 * d1 + (beta_dd / rho) * (beta_dd / rho)).sqrt();
 
-        res2 = (d2 * d2 + tau).sqrt();
-        let arnorm = alpha * beta.abs();
+        // Use the recurrence for ||r_k||
+        let thetahat = sbar * rho;
+        let rhohat = cbar * rho;
+        let chat = rhohat / rhodold;
+        let shat = thetahat / rhodold;
+
+        rnorm = (rnorm * rnorm * shat * shat + betad * betad).sqrt();
+        xnorm = (xnorm * xnorm + (zeta / (rho * rhobar)) * (zeta / (rho * rhobar))).sqrt();
+
+        let arnorm = alpha * beta.abs() * c.abs() * s.abs();
 
         if let Some(ref mut history) = residual_history {
-            history.push(res2);
+            history.push(rnorm);
         }
 
         // Check stopping criteria
-        let r1norm = res2;
-        let r2norm = arnorm;
-        let cond = anorm * xxnorm;
+        // Condition 1: ||Ax - b|| / ||b|| small enough
+        let test1 = rnorm / (bnorm + anorm * xnorm + one);
+        // Condition 2: ||A'r|| / (||A|| ||r||) small enough
+        let test2 = if rnorm > zero {
+            arnorm / (anorm * rnorm + one)
+        } else {
+            zero
+        };
 
-        let test1 = res2 / (T::sparse_one() + anorm * xxnorm);
-        let test2 = arnorm / (T::sparse_one() + anorm);
-        let test3 = T::sparse_one() / (T::sparse_one() + cond);
-
-        if test1 <= atol {
+        if test1 <= atol || rnorm <= atol * bnorm {
             converged = true;
             convergence_reason = "Residual tolerance satisfied".to_string();
             break;
@@ -310,17 +369,11 @@ where
             break;
         }
 
-        if test3 <= T::sparse_one() / conlim {
+        if acond >= conlim {
             converged = true;
             convergence_reason = "Condition number limit reached".to_string();
             break;
         }
-
-        // Update for next iteration
-        rhobar = rhobar1;
-        cbar = cs1;
-        sbar = sn1;
-        alphabar = alpha;
     }
 
     if !converged {
@@ -333,8 +386,8 @@ where
     let final_residualnorm = l2_norm(&final_residual.view());
     let final_solution_norm = l2_norm(&x.view());
 
-    // Simple condition number estimate
-    let condition_number = anorm * xxnorm;
+    // Condition number estimate
+    let condition_number = acond;
 
     // Compute standard errors if requested
     let standard_errors = if options.calc_var {
@@ -429,7 +482,7 @@ where
 
     // Simplified standard error computation
     let variance = if m > n {
-        residualnorm * residualnorm / T::from(m - n).unwrap()
+        residualnorm * residualnorm / T::from(m - n).expect("Operation failed")
     } else {
         residualnorm * residualnorm
     };
@@ -445,21 +498,22 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // TODO: Fix LSMR algorithm - currently not converging correctly
     fn test_lsmr_square_system() {
         // Create a simple 3x3 system
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
-        let result = lsmr(&matrix, &b.view(), None, LSMROptions::default()).unwrap();
+        let result =
+            lsmr(&matrix, &b.view(), None, LSMROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
         // Verify solution by computing residual
-        let ax = matrix_vector_multiply(&matrix, &result.x.view()).unwrap();
+        let ax = matrix_vector_multiply(&matrix, &result.x.view()).expect("Operation failed");
         let residual = &b - &ax;
         let residualnorm = l2_norm(&residual.view());
 
@@ -467,16 +521,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSMR algorithm - currently not converging correctly
     fn test_lsmr_overdetermined_system() {
         // Create an overdetermined 3x2 system
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 0, 1];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let result = lsmr(&matrix, &b.view(), None, LSMROptions::default()).unwrap();
+        let result =
+            lsmr(&matrix, &b.view(), None, LSMROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
         assert_eq!(result.x.len(), 2);
@@ -486,16 +541,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSMR algorithm - currently not converging correctly
     fn test_lsmr_diagonal_system() {
         // Create a diagonal system
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![2.0, 3.0, 4.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![4.0, 9.0, 16.0]);
-        let result = lsmr(&matrix, &b.view(), None, LSMROptions::default()).unwrap();
+        let result =
+            lsmr(&matrix, &b.view(), None, LSMROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
@@ -510,12 +566,14 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 1.0, 1.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![5.0, 6.0, 7.0]);
         let x0 = Array1::from_vec(vec![4.0, 5.0, 6.0]); // Close to solution
 
-        let result = lsmr(&matrix, &b.view(), Some(&x0.view()), LSMROptions::default()).unwrap();
+        let result = lsmr(&matrix, &b.view(), Some(&x0.view()), LSMROptions::default())
+            .expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.iterations <= 10); // Should converge reasonably quickly
@@ -526,7 +584,8 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 1.0, 1.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 1.0, 1.0]);
 
@@ -535,12 +594,12 @@ mod tests {
             ..Default::default()
         };
 
-        let result = lsmr(&matrix, &b.view(), None, options).unwrap();
+        let result = lsmr(&matrix, &b.view(), None, options).expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.standard_errors.is_some());
 
-        let std_errs = result.standard_errors.unwrap();
+        let std_errs = result.standard_errors.expect("Operation failed");
         assert_eq!(std_errs.len(), 3);
     }
 }

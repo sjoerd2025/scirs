@@ -199,7 +199,7 @@ impl LSTM {
                 .slice(s![.., t, ..])
                 .to_owned()
                 .into_shape_with_order([batch_size, self.input_size])
-                .unwrap();
+                .expect("Operation failed");
             // Get previous hidden and cell states
             let h_prev = all_hidden_states.slice(s![.., t, ..]).to_owned();
             let c_prev = all_cell_states.slice(s![.., t, ..]).to_owned();

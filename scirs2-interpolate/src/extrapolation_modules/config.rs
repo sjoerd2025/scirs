@@ -34,7 +34,7 @@ impl<T: Float> Default for ExtrapolationParameters<T> {
             exponential_offset: T::zero(),
             power_exponent: -T::one(), // Default to 1/x decay
             power_scale: T::one(),
-            period: T::from(2.0 * std::f64::consts::PI).unwrap(),
+            period: T::from(2.0 * std::f64::consts::PI).expect("Operation failed"),
         }
     }
 }
@@ -96,8 +96,8 @@ impl<T: Float> Default for ConfidenceExtrapolationConfig<T> {
     fn default() -> Self {
         Self {
             bootstrap_samples: 1000,
-            confidence_level: T::from(0.95).unwrap(),
-            max_extrapolation_ratio: T::from(0.5).unwrap(),
+            confidence_level: T::from(0.95).expect("Operation failed"),
+            max_extrapolation_ratio: T::from(0.5).expect("Operation failed"),
             bias_correction: true,
         }
     }

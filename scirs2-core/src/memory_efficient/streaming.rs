@@ -290,7 +290,7 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
     /// Add an item to the buffer
     fn push(&mut self, item: T) -> Result<(), CoreError> {
-        let mut guard = self.mutex.lock().unwrap();
+        let mut guard = self.mutex.lock().expect("Failed to acquire lock");
 
         // Check if the buffer is closed
         if self.closed {
@@ -302,7 +302,10 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
         // Wait until there's space in the buffer
         while self.data.len() >= self.maxsize {
-            guard = self.condvar.wait(guard).unwrap();
+            guard = self
+                .condvar
+                .wait(guard)
+                .expect("Condition variable wait failed");
 
             // Check if the buffer was closed while waiting
             if self.closed {
@@ -324,7 +327,7 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
     /// Add multiple items to the buffer
     fn push_batch(&mut self, items: Vec<T>) -> Result<(), CoreError> {
-        let mut guard = self.mutex.lock().unwrap();
+        let mut guard = self.mutex.lock().expect("Failed to acquire lock");
 
         // Check if the buffer is closed
         if self.closed {
@@ -336,7 +339,10 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
         // Wait until there's space in the buffer
         while self.data.len() + items.len() > self.maxsize {
-            guard = self.condvar.wait(guard).unwrap();
+            guard = self
+                .condvar
+                .wait(guard)
+                .expect("Condition variable wait failed");
 
             // Check if the buffer was closed while waiting
             if self.closed {
@@ -358,7 +364,7 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
     /// Get a batch of items from the buffer
     fn pop_batch(&mut self, max_batch_size: usize, timeoutms: u64) -> Result<Vec<T>, CoreError> {
-        let mut guard = self.mutex.lock().unwrap();
+        let mut guard = self.mutex.lock().expect("Failed to acquire lock");
 
         // Wait until there are items in the buffer
         if self.data.is_empty() && !self.closed {
@@ -392,7 +398,10 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
                 // No timeout, wait indefinitely
                 #[allow(unused_assignments)]
                 {
-                    guard = self.condvar.wait(guard).unwrap();
+                    guard = self
+                        .condvar
+                        .wait(guard)
+                        .expect("Condition variable wait failed");
                 }
             }
         }
@@ -425,19 +434,19 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
     /// Get the number of items in the buffer
     fn len(&self) -> usize {
-        let _guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().expect("Failed to acquire lock");
         self.data.len()
     }
 
     /// Check if the buffer is empty
     fn is_empty(&self) -> bool {
-        let _guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().expect("Failed to acquire lock");
         self.data.is_empty()
     }
 
     /// Close the buffer
     fn close(&mut self) {
-        let _guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().expect("Failed to acquire lock");
         self.closed = true;
         self.condvar.notify_all();
     }
@@ -445,13 +454,13 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
     /// Check if the buffer is closed
     #[allow(dead_code)]
     fn is_closed(&self) -> bool {
-        let _guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().expect("Failed to acquire lock");
         self.closed
     }
 
     /// Clear the buffer
     fn clear(&mut self) {
-        let _guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().expect("Failed to acquire lock");
         self.data.clear();
         self.condvar.notify_all();
     }
@@ -516,7 +525,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
 
     /// Start the stream processor
     pub fn start(&mut self) -> Result<(), CoreError> {
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Failed to acquire write lock");
 
         // Check if the stream is already running
         if *state == StreamState::Running {
@@ -530,7 +539,10 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         *state = StreamState::Running;
 
         // Set start time
-        let mut start_time = self.start_time.write().unwrap();
+        let mut start_time = self
+            .start_time
+            .write()
+            .expect("Failed to acquire write lock");
         *start_time = Some(Instant::now());
 
         // Create worker thread
@@ -578,7 +590,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         loop {
             // Check if we should continue
             {
-                let current_state = state.read().unwrap();
+                let current_state = state.read().expect("Failed to acquire read lock");
                 if *current_state != StreamState::Running {
                     break;
                 }
@@ -603,7 +615,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                 StreamMode::Buffered => config.max_batch_size,
                 StreamMode::Adaptive => {
                     // Simple adaptive batch sizing based on processing time
-                    let stats_guard = stats.read().unwrap();
+                    let stats_guard = stats.read().expect("Failed to acquire read lock");
                     let avg_time = stats_guard.avg_batch_time_ms;
 
                     if avg_time < 10.0 {
@@ -623,7 +635,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
             // Get a batch of data from the input buffer
             let input_batch = match input_buffer
                 .lock()
-                .unwrap()
+                .expect("Failed to acquire lock")
                 .pop_batch(batch_size, config.timeout_ms)
             {
                 Ok(batch) => batch,
@@ -631,7 +643,8 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                     match err {
                         CoreError::EndOfStream(_) => {
                             // End of stream, update state and exit
-                            let mut current_state = state.write().unwrap();
+                            let mut current_state =
+                                state.write().expect("Failed to acquire write lock");
                             *current_state = StreamState::Completed;
                             break;
                         }
@@ -641,7 +654,8 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                         }
                         _ => {
                             // Other error, update stats and continue
-                            let mut stats_guard = stats.write().unwrap();
+                            let mut stats_guard =
+                                stats.write().expect("Failed to acquire write lock");
                             stats_guard.error_count += 1;
                             stats_guard.lasterror = Some(err.to_string());
                             continue;
@@ -694,7 +708,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                 let result = processfn(process_input.clone());
 
                 // Update processing statistics
-                let mut stats_guard = stats.write().unwrap();
+                let mut stats_guard = stats.write().expect("Failed to acquire write lock");
                 stats_guard.processed_batches += 1;
                 stats_guard.processed_items += process_input.len();
 
@@ -710,14 +724,14 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                         / total_batches as f64;
 
                 // Update throughput
-                if let Some(start) = *start_time.read().unwrap() {
+                if let Some(start) = *start_time.read().expect("Failed to acquire read lock") {
                     let uptime_seconds = start.elapsed().as_secs_f64();
                     stats_guard.uptime_seconds = uptime_seconds;
                     stats_guard.avg_throughput = total_items as f64 / uptime_seconds;
                 }
 
                 // Update buffer statistics
-                let buffer_len = input_buffer.lock().unwrap().len();
+                let buffer_len = input_buffer.lock().expect("Failed to acquire lock").len();
                 if buffer_len > stats_guard.buffer_high_water_mark {
                     stats_guard.buffer_high_water_mark = buffer_len;
                 }
@@ -730,11 +744,16 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                 Ok(output_batch) => {
                     // Send the output to the output _buffer
                     if !output_batch.is_empty() {
-                        match output_buffer.lock().unwrap().push_batch(output_batch) {
+                        match output_buffer
+                            .lock()
+                            .expect("Failed to acquire lock")
+                            .push_batch(output_batch)
+                        {
                             Ok(_) => {}
                             Err(err) => {
                                 // Error sending output, update stats
-                                let mut stats_guard = stats.write().unwrap();
+                                let mut stats_guard =
+                                    stats.write().expect("Failed to acquire write lock");
                                 stats_guard.error_count += 1;
                                 stats_guard.lasterror = Some(err.to_string());
                             }
@@ -743,7 +762,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
                 }
                 Err(err) => {
                     // Processing error, update stats
-                    let mut stats_guard = stats.write().unwrap();
+                    let mut stats_guard = stats.write().expect("Failed to acquire write lock");
                     stats_guard.error_count += 1;
                     stats_guard.lasterror = Some(err.to_string());
                 }
@@ -756,7 +775,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
 
     /// Stop the stream processor
     pub fn stop(&mut self) -> Result<(), CoreError> {
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Failed to acquire write lock");
 
         // Check if the stream is running
         if *state != StreamState::Running {
@@ -770,7 +789,10 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         *state = StreamState::Paused;
 
         // Close the input buffer
-        self.input_buffer.lock().unwrap().close();
+        self.input_buffer
+            .lock()
+            .expect("Failed to acquire lock")
+            .close();
 
         // Wait for the worker thread to finish
         if let Some(worker) = self.worker_thread.take() {
@@ -791,7 +813,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
     /// Push data to the stream processor
     pub fn push(&self, data: T) -> Result<(), CoreError> {
         // Check if the stream is running
-        let state = self.state.read().unwrap();
+        let state = self.state.read().expect("Failed to acquire read lock");
         if *state != StreamState::Running {
             return Err(CoreError::StreamError(
                 ErrorContext::new("Stream not running".to_string())
@@ -800,13 +822,16 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         }
 
         // Push data to the input buffer
-        self.input_buffer.lock().unwrap().push(data)
+        self.input_buffer
+            .lock()
+            .expect("Failed to acquire lock")
+            .push(data)
     }
 
     /// Push a batch of data to the stream processor
     pub fn push_batch(&self, data: Vec<T>) -> Result<(), CoreError> {
         // Check if the stream is running
-        let state = self.state.read().unwrap();
+        let state = self.state.read().expect("Failed to acquire read lock");
         if *state != StreamState::Running {
             return Err(CoreError::StreamError(
                 ErrorContext::new("Stream not running".to_string())
@@ -815,13 +840,16 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         }
 
         // Push data to the input buffer
-        self.input_buffer.lock().unwrap().push_batch(data)
+        self.input_buffer
+            .lock()
+            .expect("Failed to acquire lock")
+            .push_batch(data)
     }
 
     /// Pop processed data from the stream processor
     pub fn pop(&self) -> Result<U, CoreError> {
         // Check if the stream is running or completed
-        let state = self.state.read().unwrap();
+        let state = self.state.read().expect("Failed to acquire read lock");
         if *state != StreamState::Running && *state != StreamState::Completed {
             return Err(CoreError::StreamError(
                 ErrorContext::new("Stream not running or completed".to_string())
@@ -833,7 +861,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         let result = self
             .output_buffer
             .lock()
-            .unwrap()
+            .expect("Failed to acquire lock")
             .pop_batch(1, self.config.timeout_ms)?;
 
         if result.is_empty() {
@@ -849,7 +877,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
     /// Pop a batch of processed data from the stream processor
     pub fn pop_batch(&self, batchsize: usize) -> Result<Vec<U>, CoreError> {
         // Check if the stream is running or completed
-        let state = self.state.read().unwrap();
+        let state = self.state.read().expect("Failed to acquire read lock");
         if *state != StreamState::Running && *state != StreamState::Completed {
             return Err(CoreError::StreamError(
                 ErrorContext::new("Stream not running or completed".to_string())
@@ -860,30 +888,40 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         // Pop data from the output buffer
         self.output_buffer
             .lock()
-            .unwrap()
+            .expect("Failed to acquire lock")
             .pop_batch(batchsize, self.config.timeout_ms)
     }
 
     /// Get the current state of the stream processor
     pub fn state(&self) -> StreamState {
-        *self.state.read().unwrap()
+        *self.state.read().expect("Failed to acquire read lock")
     }
 
     /// Get the statistics for the stream processor
     pub fn stats(&self) -> StreamStats {
-        self.stats.read().unwrap().clone()
+        self.stats
+            .read()
+            .expect("Failed to acquire read lock")
+            .clone()
     }
 
     /// Check if the stream is empty
     pub fn is_empty(&self) -> bool {
-        self.input_buffer.lock().unwrap().is_empty()
-            && self.output_buffer.lock().unwrap().is_empty()
+        self.input_buffer
+            .lock()
+            .expect("Failed to acquire lock")
+            .is_empty()
+            && self
+                .output_buffer
+                .lock()
+                .expect("Failed to acquire lock")
+                .is_empty()
     }
 
     /// Clear the stream buffers
     pub fn clear(&self) -> Result<(), CoreError> {
         // Check if the stream is not running
-        let state = self.state.read().unwrap();
+        let state = self.state.read().expect("Failed to acquire read lock");
         if *state == StreamState::Running {
             return Err(CoreError::StreamError(
                 ErrorContext::new("Cannot clear running stream".to_string())
@@ -892,8 +930,14 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         }
 
         // Clear the buffers
-        self.input_buffer.lock().unwrap().clear();
-        self.output_buffer.lock().unwrap().clear();
+        self.input_buffer
+            .lock()
+            .expect("Failed to acquire lock")
+            .clear();
+        self.output_buffer
+            .lock()
+            .expect("Failed to acquire lock")
+            .clear();
 
         Ok(())
     }
@@ -902,7 +946,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
 impl<T: Clone + Send + 'static, U: Clone + Send + 'static> Drop for StreamProcessor<T, U> {
     fn drop(&mut self) {
         // Stop the stream if it's running
-        if *self.state.read().unwrap() == StreamState::Running {
+        if *self.state.read().expect("Failed to acquire read lock") == StreamState::Running {
             let _ = self.stop();
         }
     }
@@ -950,22 +994,34 @@ impl<I: Clone + Send + 'static, O: Clone + Send + 'static> PipelineStage<I, O> {
 
     /// Start the stage
     pub fn start(&self) -> Result<(), CoreError> {
-        self.processor.lock().unwrap().start()
+        self.processor
+            .lock()
+            .expect("Failed to acquire lock")
+            .start()
     }
 
     /// Stop the stage
     pub fn stop(&self) -> Result<(), CoreError> {
-        self.processor.lock().unwrap().stop()
+        self.processor
+            .lock()
+            .expect("Failed to acquire lock")
+            .stop()
     }
 
     /// Get the state of the stage
     pub fn state(&self) -> StreamState {
-        self.processor.lock().unwrap().state()
+        self.processor
+            .lock()
+            .expect("Failed to acquire lock")
+            .state()
     }
 
     /// Get the statistics for the stage
     pub fn stats(&self) -> StreamStats {
-        self.processor.lock().unwrap().stats()
+        self.processor
+            .lock()
+            .expect("Failed to acquire lock")
+            .stats()
     }
 }
 
@@ -1105,7 +1161,7 @@ impl PipelineBuilder {
 impl Pipeline {
     /// Start the pipeline
     pub fn start(&mut self) -> Result<(), CoreError> {
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Failed to acquire write lock");
 
         // Check if the pipeline is already running
         if *state == StreamState::Running {
@@ -1162,7 +1218,7 @@ impl Pipeline {
         loop {
             // Check if we should continue
             {
-                let current_state = state.read().unwrap();
+                let current_state = state.read().expect("Failed to acquire read lock");
                 if *current_state != StreamState::Running {
                     break;
                 }
@@ -1180,7 +1236,8 @@ impl Pipeline {
                         consecutiveerrors += 1;
 
                         // Update error context
-                        let mut error_context_guard = error_context.write().unwrap();
+                        let mut error_context_guard =
+                            error_context.write().expect("Failed to acquire write lock");
                         *error_context_guard = Some(
                             ErrorContext::new(format!(
                                 "Error pushing data from {} to {}: {}",
@@ -1193,7 +1250,8 @@ impl Pipeline {
 
                         // Check if we should give up
                         if consecutiveerrors >= error_threshold {
-                            let mut current_state = state.write().unwrap();
+                            let mut current_state =
+                                state.write().expect("Failed to acquire write lock");
                             *current_state = StreamState::Error;
                             break;
                         }
@@ -1217,7 +1275,8 @@ impl Pipeline {
                             consecutiveerrors += 1;
 
                             // Update error context
-                            let mut error_context_guard = error_context.write().unwrap();
+                            let mut error_context_guard =
+                                error_context.write().expect("Failed to acquire write lock");
                             *error_context_guard = Some(
                                 ErrorContext::new(format!(
                                     "Error popping data from {}: {}",
@@ -1229,7 +1288,8 @@ impl Pipeline {
 
                             // Check if we should give up
                             if consecutiveerrors >= error_threshold {
-                                let mut current_state = state.write().unwrap();
+                                let mut current_state =
+                                    state.write().expect("Failed to acquire write lock");
                                 *current_state = StreamState::Error;
                                 break;
                             }
@@ -1245,7 +1305,7 @@ impl Pipeline {
 
     /// Stop the pipeline
     pub fn stop(&mut self) -> Result<(), CoreError> {
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Failed to acquire write lock");
 
         // Check if the pipeline is running
         if *state != StreamState::Running {
@@ -1281,7 +1341,7 @@ impl Pipeline {
 
     /// Get the current state of the pipeline
     pub fn state(&self) -> StreamState {
-        *self.state.read().unwrap()
+        *self.state.read().expect("Failed to acquire read lock")
     }
 
     /// Get the statistics for the pipeline
@@ -1333,7 +1393,10 @@ impl Pipeline {
 
     /// Get the last error from the pipeline
     pub fn lasterror(&self) -> Option<ErrorContext> {
-        self.error_context.read().unwrap().clone()
+        self.error_context
+            .read()
+            .expect("Failed to acquire read lock")
+            .clone()
     }
 
     /// Check if the pipeline is empty
@@ -1355,7 +1418,7 @@ impl Pipeline {
 impl Drop for Pipeline {
     fn drop(&mut self) {
         // Stop the pipeline if it's running
-        if *self.state.read().unwrap() == StreamState::Running {
+        if *self.state.read().expect("Failed to acquire read lock") == StreamState::Running {
             let _ = self.stop();
         }
     }
@@ -1399,7 +1462,11 @@ impl<I: Clone + Send + 'static, O: Clone + Send + 'static> AnyStage for StageWra
     }
 
     fn is_empty(&self) -> bool {
-        self.stage.processor.lock().unwrap().is_empty()
+        self.stage
+            .processor
+            .lock()
+            .expect("Failed to acquire lock")
+            .is_empty()
     }
 
     fn push_raw(&self, data: Box<dyn std::any::Any + Send>) -> Result<(), CoreError> {
@@ -1422,11 +1489,20 @@ impl<I: Clone + Send + 'static, O: Clone + Send + 'static> AnyStage for StageWra
             }
         };
 
-        self.stage.processor.lock().unwrap().push_batch(input)
+        self.stage
+            .processor
+            .lock()
+            .expect("Failed to acquire lock")
+            .push_batch(input)
     }
 
     fn pop_raw(&self) -> Result<Box<dyn std::any::Any + Send>, CoreError> {
-        let output = self.stage.processor.lock().unwrap().pop_batch(100)?;
+        let output = self
+            .stage
+            .processor
+            .lock()
+            .expect("Failed to acquire lock")
+            .pop_batch(100)?;
         Ok(Box::new(output))
     }
 }
@@ -1511,12 +1587,12 @@ where
                             reshaped
                         } else {
                             // If reshaping fails, use the first chunk as fallback
-                            chunk_results.into_iter().next().unwrap()
+                            chunk_results.into_iter().next().expect("Expected at least one result")
                         }
                     } else {
                         // For multi-dimensional arrays, more complex logic would be needed
                         // For now, concatenate and reshape approach
-                        chunk_results.into_iter().next().unwrap()
+                        chunk_results.into_iter().next().expect("Expected at least one result")
                     }
                 } else {
                     return Err(CoreError::ValueError(ErrorContext::new(

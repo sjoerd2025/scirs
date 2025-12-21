@@ -116,7 +116,7 @@ where
         sum = t;
     }
 
-    Ok(sum / F::from(x.len()).unwrap())
+    Ok(sum / F::from(x.len()).expect("Operation failed"))
 }
 
 /// Cache-friendly variance computation
@@ -180,7 +180,7 @@ where
         sum_sq_dev = t;
     }
 
-    Ok(sum_sq_dev / F::from(n - ddof).unwrap())
+    Ok(sum_sq_dev / F::from(n - ddof).expect("Failed to convert to float"))
 }
 
 /// Lazy statistics calculator that computes values on demand
@@ -262,7 +262,7 @@ where
 
     /// Get median (requires sorting, cached for subsequent quantile calls)
     pub fn median(&self) -> StatsResult<F> {
-        self.quantile(F::from(0.5).unwrap())
+        self.quantile(F::from(0.5).expect("Failed to convert constant to float"))
     }
 
     /// Get quantile (uses cached sorted data if available)
@@ -278,9 +278,9 @@ where
             *sorted_ref = Some(sorted);
         }
 
-        let sorted = sorted_ref.as_ref().unwrap();
+        let sorted = sorted_ref.as_ref().expect("Operation failed");
         let n = sorted.len();
-        let pos = q * F::from(n - 1).unwrap();
+        let pos = q * F::from(n - 1).expect("Failed to convert to float");
         let idx = pos.floor();
         let frac = pos - idx;
 
@@ -319,7 +319,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
         assert_eq!(sample.len(), self.means.len(), "Feature dimension mismatch");
 
         self.n += 1;
-        let n_f = F::from(self.n).unwrap();
+        let n_f = F::from(self.n).expect("Failed to convert to float");
 
         // Update means and covariance using Welford's algorithm
         let mut deltas = self.pool.acquire(sample.len());
@@ -351,7 +351,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
             ));
         }
 
-        let factor = F::from(self.n - ddof).unwrap();
+        let factor = F::from(self.n - ddof).expect("Failed to convert to float");
         let mut result = self.cov.clone();
 
         for i in 0..result.len() {
@@ -443,14 +443,14 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let stats = LazyStats::new(&data);
 
-        assert!((stats.mean().unwrap() - 3.0).abs() < 1e-10);
-        assert!((stats.variance(1).unwrap() - 2.5).abs() < 1e-10);
+        assert!((stats.mean().expect("Operation failed") - 3.0).abs() < 1e-10);
+        assert!((stats.variance(1).expect("Operation failed") - 2.5).abs() < 1e-10);
 
-        let (min, max) = stats.minmax().unwrap();
+        let (min, max) = stats.minmax().expect("Operation failed");
         assert_eq!(min, 1.0);
         assert_eq!(max, 5.0);
 
-        assert!((stats.median().unwrap() - 3.0).abs() < 1e-10);
+        assert!((stats.median().expect("Operation failed") - 3.0).abs() < 1e-10);
     }
 
     #[test]
@@ -463,7 +463,7 @@ mod tests {
         cov.update(&[2.0, 4.0]);
         cov.update(&[3.0, 6.0]);
 
-        let result = cov.covariance(1).unwrap();
+        let result = cov.covariance(1).expect("Operation failed");
 
         // Should have perfect correlation
         assert!(result[0][0] > 0.0); // Variance of first feature

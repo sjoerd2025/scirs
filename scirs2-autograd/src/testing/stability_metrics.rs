@@ -265,16 +265,16 @@ impl<F: Float> StabilityMetrics<F> {
             let (most_sensitive_param, max_sensitivity) = metrics
                 .parameter_sensitivities
                 .iter()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(k, v)| (k.clone(), *v))
-                .unwrap();
+                .expect("Operation failed");
 
             let (least_sensitive_param, min_sensitivity) = metrics
                 .parameter_sensitivities
                 .iter()
-                .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .min_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(k, v)| (k.clone(), *v))
-                .unwrap();
+                .expect("Operation failed");
 
             metrics.most_sensitive_parameter = Some(most_sensitive_param);
             metrics.least_sensitive_parameter = Some(least_sensitive_param);
@@ -384,7 +384,7 @@ impl<F: Float> StabilityMetrics<F> {
             .iter()
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x);
-        Ok(sum_of_squares.sqrt().to_f64().unwrap())
+        Ok(sum_of_squares.sqrt().to_f64().expect("Operation failed"))
     }
 
     fn compute_tensor_difference(
@@ -404,7 +404,10 @@ impl<F: Float> StabilityMetrics<F> {
             .zip(tensor2.data().iter())
             .map(|(&a, &b)| (a - b) * (a - b))
             .fold(F::zero(), |acc, x| acc + x);
-        Ok(sum_of_squared_diffs.sqrt().to_f64().unwrap())
+        Ok(sum_of_squared_diffs
+            .sqrt()
+            .to_f64()
+            .expect("Operation failed"))
     }
 
     fn compute_std_dev(&self, values: &[f64], mean: f64) -> f64 {

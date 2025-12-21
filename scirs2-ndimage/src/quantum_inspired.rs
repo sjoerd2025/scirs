@@ -402,7 +402,7 @@ where
                     },
                 )?;
 
-            if entanglement > T::from_f64(0.1).unwrap() {
+            if entanglement > T::from_f64(0.1).expect("Operation failed") {
                 entangled_pixels.push((y, x, entanglement));
             }
         }
@@ -647,7 +647,7 @@ where
             })?;
 
             probability_map[(y, x)] =
-                current + interference * enhancement / T::from_usize(4).unwrap();
+                current + interference * enhancement / T::from_usize(4).expect("Operation failed");
         }
     }
 
@@ -716,7 +716,7 @@ where
         / T::from_usize(height * width)
             .ok_or_else(|| NdimageError::ComputationError("Mean calculation failed".to_string()))?;
 
-    amplifiedfeatures.mapv_inplace(|x| T::from_f64(2.0).unwrap() * mean - x);
+    amplifiedfeatures.mapv_inplace(|x| T::from_f64(2.0).expect("Operation failed") * mean - x);
 
     Ok(())
 }
@@ -759,8 +759,11 @@ where
                 }
             }
 
-            qft_result[(y, x)] =
-                qft_sum / Complex::new(T::from_f64((height * width) as f64).unwrap(), T::zero());
+            qft_result[(y, x)] = qft_sum
+                / Complex::new(
+                    T::from_f64((height * width) as f64).expect("Operation failed"),
+                    T::zero(),
+                );
         }
     }
 
@@ -808,7 +811,7 @@ where
         .iter()
         .enumerate()
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Failed to create array");
 
     Ok((predicted_class, max_prob))
 }
@@ -943,7 +946,7 @@ where
     for y in 0..height {
         for x in 0..width {
             let pixel = image[(y, x)];
-            let angle = pixel * T::from_f64(PI).unwrap();
+            let angle = pixel * T::from_f64(PI).expect("Operation failed");
 
             // Quantum feature encoding
             let feature = Complex::new(angle.cos(), angle.sin());
@@ -979,7 +982,7 @@ where
     }
 
     // Normalize kernel value
-    kernel_value = kernel_value / T::from_usize(height * width).unwrap();
+    kernel_value = kernel_value / T::from_usize(height * width).expect("Operation failed");
 
     Ok(kernel_value)
 }
@@ -1066,7 +1069,7 @@ where
 
     // Simple average for continuous _values
     let sum = values.iter().fold(T::zero(), |acc, &x| acc + x);
-    let average = sum / T::from_usize(values.len()).unwrap();
+    let average = sum / T::from_usize(values.len()).expect("Operation failed");
 
     Ok(average)
 }
@@ -1091,7 +1094,7 @@ where
 
             // Decompose pixel into bond _dimension components
             for d in 0..bond_dimension {
-                let component = pixel / T::from_usize(bond_dimension).unwrap();
+                let component = pixel / T::from_usize(bond_dimension).expect("Operation failed");
                 tensor_network[(y, x, d)] = component;
             }
         }
@@ -1117,7 +1120,8 @@ where
                 let current_value = tensor_network[(y, x, d)];
 
                 // Apply rotation gate
-                let angle = T::from_f64(config.entanglement_strength * PI).unwrap();
+                let angle =
+                    T::from_f64(config.entanglement_strength * PI).expect("Operation failed");
                 let rotated_value = current_value * angle.cos();
 
                 tensor_network[(y, x, d)] = rotated_value;
@@ -1167,7 +1171,7 @@ where
 
     // Initialize with small random values
     for i in 0..param_count {
-        let random_value = T::from_f64(rng.random_range(-0.05..0.05)).unwrap();
+        let random_value = T::from_f64(rng.random_range(-0.05..0.05)).expect("Operation failed");
         parameters[i] = random_value;
     }
 
@@ -1226,7 +1230,7 @@ where
     }
 
     // Normalize cost
-    cost = cost / T::from_usize(height * width).unwrap();
+    cost = cost / T::from_usize(height * width).expect("Operation failed");
 
     Ok(cost)
 }
@@ -1241,7 +1245,7 @@ where
     T: Float + FromPrimitive + Copy,
 {
     let mut gradients = Array1::zeros(parameters.len());
-    let epsilon = T::from_f64(0.01).unwrap();
+    let epsilon = T::from_f64(0.01).expect("Operation failed");
 
     // Calculate numerical gradients using parameter shift rule
     for i in 0..parameters.len() {
@@ -1261,7 +1265,8 @@ where
             calculate_enhancement_cost(&circuit_minus, image)?
         };
 
-        let gradient = (cost_plus - cost_minus) / (T::from_f64(2.0).unwrap() * epsilon);
+        let gradient =
+            (cost_plus - cost_minus) / (T::from_f64(2.0).expect("Operation failed") * epsilon);
         gradients[i] = gradient;
     }
 
@@ -1277,7 +1282,8 @@ fn update_variational_parameters<T>(
 where
     T: Float + FromPrimitive + Copy,
 {
-    let learning_rate = T::from_f64(0.01 / (1.0 + iteration as f64 * 0.001)).unwrap();
+    let learning_rate =
+        T::from_f64(0.01 / (1.0 + iteration as f64 * 0.001)).expect("Operation failed");
 
     // Update parameters using gradient descent
     for i in 0..parameters.len() {
@@ -1294,16 +1300,17 @@ mod tests {
 
     #[test]
     fn test_quantum_superposition_filter() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
-        let filter1 = Array2::from_shape_vec((3, 3), vec![1.0; 9]).unwrap() / 9.0;
+        let filter1 = Array2::from_shape_vec((3, 3), vec![1.0; 9]).expect("Operation failed") / 9.0;
         let filter2 =
             Array2::from_shape_vec((3, 3), vec![-1.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0])
-                .unwrap();
+                .expect("Failed to create quantum state");
 
         let config = QuantumConfig::default();
-        let result =
-            quantum_superposition_filter(image.view(), &[filter1, filter2], &config).unwrap();
+        let result = quantum_superposition_filter(image.view(), &[filter1, filter2], &config)
+            .expect("Operation failed");
 
         assert_eq!(result.dim(), (4, 4));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1313,10 +1320,11 @@ mod tests {
     fn test_quantum_entanglement_correlation() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 5.0, 2.0, 1.0, 2.0, 1.0])
-                .unwrap();
+                .expect("Failed to create quantum state");
 
         let config = QuantumConfig::default();
-        let result = quantum_entanglement_correlation(image.view(), &config).unwrap();
+        let result =
+            quantum_entanglement_correlation(image.view(), &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1324,10 +1332,12 @@ mod tests {
 
     #[test]
     fn test_quantum_walk_edge_detection() {
-        let image = Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
         let config = QuantumConfig::default();
-        let result = quantum_walk_edge_detection(image.view(), 10, &config).unwrap();
+        let result =
+            quantum_walk_edge_detection(image.view(), 10, &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (5, 5));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1335,10 +1345,11 @@ mod tests {
 
     #[test]
     fn test_quantum_fourier_enhancement() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
         let config = QuantumConfig::default();
-        let result = quantum_fourier_enhancement(image.view(), &config).unwrap();
+        let result = quantum_fourier_enhancement(image.view(), &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (4, 4));
         assert!(result.iter().all(|x| x.re.is_finite() && x.im.is_finite()));
@@ -1348,18 +1359,18 @@ mod tests {
     fn test_quantum_machine_learning_classifier() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Failed to create array");
 
         let training_data = vec![
-            Array2::from_shape_vec((3, 3), vec![1.0; 9]).unwrap(),
-            Array2::from_shape_vec((3, 3), vec![5.0; 9]).unwrap(),
+            Array2::from_shape_vec((3, 3), vec![1.0; 9]).expect("Operation failed"),
+            Array2::from_shape_vec((3, 3), vec![5.0; 9]).expect("Operation failed"),
         ];
         let labels = vec![0, 1];
 
         let config = QuantumConfig::default();
         let result =
             quantum_machine_learning_classifier(image.view(), &training_data, &labels, &config)
-                .unwrap();
+                .expect("Failed to create array");
 
         assert!(result.0 < 2); // Valid class
         assert!(result.1.is_finite()); // Valid probability
@@ -1369,10 +1380,11 @@ mod tests {
     fn test_quantum_error_correction() {
         let noisyimage =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Failed to create array");
 
         let config = QuantumConfig::default();
-        let result = quantum_error_correction(noisyimage.view(), 3, &config).unwrap();
+        let result =
+            quantum_error_correction(noisyimage.view(), 3, &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1382,10 +1394,11 @@ mod tests {
     fn test_quantum_tensor_network_processing() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Failed to create array");
 
         let config = QuantumConfig::default();
-        let result = quantum_tensor_network_processing(image.view(), 2, &config).unwrap();
+        let result =
+            quantum_tensor_network_processing(image.view(), 2, &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1395,14 +1408,15 @@ mod tests {
     fn test_quantum_variational_enhancement() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Failed to create array");
 
         let config = QuantumConfig {
             iterations: 5, // Reduce iterations for testing
             ..Default::default()
         };
 
-        let result = quantum_variational_enhancement(image.view(), 2, &config).unwrap();
+        let result =
+            quantum_variational_enhancement(image.view(), 2, &config).expect("Operation failed");
 
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));

@@ -38,10 +38,10 @@ use std::ops::{Add, Div, Mul, Sub};
 /// let data = vec![4.0, 2.0, 5.0];
 /// let indptr = vec![0, 1, 3];
 /// let indices = vec![0, 0, 1];
-/// let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 ///
 /// // Find the 2 largest eigenvalues
-/// let result = eigsh(&matrix, Some(2), Some("LA"), None).unwrap();
+/// let result = eigsh(&matrix, Some(2), Some("LA"), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigsh<T>(
@@ -110,10 +110,10 @@ where
 /// let data = vec![4.0, 2.0, 5.0];
 /// let indptr = vec![0, 1, 3];
 /// let indices = vec![0, 0, 1];
-/// let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 ///
 /// // Find eigenvalues near 2.5
-/// let result = eigsh_shift_invert(&matrix, 2.5, Some(2), None, None).unwrap();
+/// let result = eigsh_shift_invert(&matrix, 2.5, Some(2), None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigsh_shift_invert<T>(
@@ -445,9 +445,9 @@ mod tests {
         let data = vec![4.0, 2.0, 3.0, 5.0, 1.0];
         let indptr = vec![0, 1, 3, 5];
         let indices = vec![0, 0, 1, 1, 2];
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
 
-        let result = eigsh(&matrix, Some(2), Some("LA"), None).unwrap();
+        let result = eigsh(&matrix, Some(2), Some("LA"), None).expect("Operation failed");
 
         // Check that we got results (convergence may vary)
         assert!(!result.eigenvalues.is_empty());
@@ -461,15 +461,15 @@ mod tests {
         let data = vec![2.0, 1.0, 2.0]; // diagonal and lower elements
         let indptr = vec![0, 1, 3]; // row pointers
         let indices = vec![0, 0, 1]; // column indices
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         // Test largest algebraic
-        let result_la = eigsh(&matrix, Some(1), Some("LA"), None).unwrap();
+        let result_la = eigsh(&matrix, Some(1), Some("LA"), None).expect("Operation failed");
         assert!(!result_la.eigenvalues.is_empty());
         assert!(result_la.eigenvalues[0].is_finite());
 
         // Test smallest algebraic
-        let result_sa = eigsh(&matrix, Some(1), Some("SA"), None).unwrap();
+        let result_sa = eigsh(&matrix, Some(1), Some("SA"), None).expect("Operation failed");
         assert!(!result_sa.eigenvalues.is_empty());
         assert!(result_sa.eigenvalues[0].is_finite());
     }
@@ -480,9 +480,10 @@ mod tests {
         let data = vec![4.0, 1.0, 3.0]; // diagonal and lower elements
         let indptr = vec![0, 1, 3]; // row pointers
         let indices = vec![0, 0, 1]; // column indices
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
-        let result = eigsh_shift_invert(&matrix, 2.0, Some(1), None, None).unwrap();
+        let result =
+            eigsh_shift_invert(&matrix, 2.0, Some(1), None, None).expect("Operation failed");
 
         // Check that we got results (convergence may vary)
         assert!(!result.eigenvalues.is_empty());
@@ -503,13 +504,15 @@ mod tests {
         };
 
         // Test LA (largest algebraic)
-        let result_la = process_eigenvalue_selection(result.clone(), "LA", 2).unwrap();
+        let result_la =
+            process_eigenvalue_selection(result.clone(), "LA", 2).expect("Operation failed");
         assert_eq!(result_la.eigenvalues.len(), 2);
         assert_eq!(result_la.eigenvalues[0], 5.0);
         assert_eq!(result_la.eigenvalues[1], 3.0);
 
         // Test SA (smallest algebraic)
-        let result_sa = process_eigenvalue_selection(result.clone(), "SA", 2).unwrap();
+        let result_sa =
+            process_eigenvalue_selection(result.clone(), "SA", 2).expect("Operation failed");
         assert_eq!(result_sa.eigenvalues.len(), 2);
         assert_eq!(result_sa.eigenvalues[0], 1.0);
         assert_eq!(result_sa.eigenvalues[1], 3.0);

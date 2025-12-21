@@ -144,7 +144,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> Bucket<F> {
         if self.count == 0 {
             F::zero()
         } else {
-            self.sum / F::from(self.count).unwrap()
+            self.sum / F::from(self.count).expect("Failed to convert to float")
         }
     }
 }
@@ -182,7 +182,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
     fn check_drift(&self, mean0: F, mean1: F, n0: usize, n1: usize) -> bool {
         let threshold = self.calculate_cut_threshold(n0, n1);
         let diff = (mean0 - mean1).abs();
-        diff > F::from(threshold).unwrap()
+        diff > F::from(threshold).expect("Failed to convert to float")
     }
     
     /// Compress buckets to maintain efficiency
@@ -190,7 +190,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
         let mut i = 0;
         while i < self.buckets.len() - 1 {
             if self.buckets[i].can_merge(&self.buckets[i + 1]) {
-                let next_bucket = self.buckets.remove(i + 1).unwrap();
+                let next_bucket = self.buckets.remove(i + 1).expect("Operation failed");
                 if let Err(_) = self.buckets[i].merge(&next_bucket) {
                     // If merge fails, put the bucket back
                     self.buckets.insert(i + 1, next_bucket);
@@ -210,7 +210,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
         self.drift_detected = false;
         
         // Add new bucket if needed
-        if self.buckets.is_empty() || self.buckets.back().unwrap().count >= self.buckets.back().unwrap().max_bucket_size {
+        if self.buckets.is_empty() || self.buckets.back().expect("Operation failed").count >= self.buckets.back().expect("Operation failed").max_bucket_size {
             self.buckets.push_back(Bucket::new());
         }
         
@@ -224,7 +224,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
         self.statistics.n_elements += 1;
         
         // Update statistics
-        self.statistics.mean = self.total_sum / F::from(self.total_count).unwrap();
+        self.statistics.mean = self.total_sum / F::from(self.total_count).expect("Failed to convert to float");
         
         // Check for drift
         let mut drift_point = None;
@@ -238,8 +238,8 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
             let n1 = self.total_count - n0;
             if n1 > 0 {
                 let sum1 = self.total_sum - sum0;
-                let mean0 = sum0 / F::from(n0).unwrap();
-                let mean1 = sum1 / F::from(n1).unwrap();
+                let mean0 = sum0 / F::from(n0).expect("Failed to convert to float");
+                let mean1 = sum1 / F::from(n1).expect("Failed to convert to float");
                 
                 if self.check_drift(mean0, mean1, n0, n1) {
                     drift_point = Some(i);
@@ -264,7 +264,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
             
             // Recalculate mean after drift
             if self.total_count > 0 {
-                self.statistics.mean = self.total_sum / F::from(self.total_count).unwrap();
+                self.statistics.mean = self.total_sum / F::from(self.total_count).expect("Failed to convert to float");
             }
         }
         
@@ -375,7 +375,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         self.statistics.n_elements += 1;
         
         // Update error rate using exponential moving average
-        let alpha = F::from(0.1).unwrap(); // Smoothing factor
+        let alpha = F::from(0.1).expect("Failed to convert constant to float"); // Smoothing factor
         if self.n_elements == 1 {
             self.error_rate = error;
         } else {
@@ -384,7 +384,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         
         // Calculate standard deviation
         if self.n_elements > 1 {
-            let variance = self.error_rate * (F::one() - self.error_rate) / F::from(self.n_elements).unwrap();
+            let variance = self.error_rate * (F::one() - self.error_rate) / F::from(self.n_elements).expect("Failed to convert to float");
             self.std_dev = variance.sqrt();
         }
         
@@ -406,8 +406,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         let current_level = self.error_rate + self.std_dev;
         let min_level = self.min_error_rate + self.min_std_dev;
         
-        let warning_threshold = min_level + F::from(self.alpha).unwrap() * self.min_std_dev;
-        let drift_threshold = min_level + F::from(self.beta).unwrap() * self.min_std_dev;
+        let warning_threshold = min_level + F::from(self.alpha).expect("Failed to convert to float") * self.min_std_dev;
+        let drift_threshold = min_level + F::from(self.beta).expect("Failed to convert to float") * self.min_std_dev;
         
         let status = if current_level > drift_threshold {
             self.drift_detected = true;
@@ -532,7 +532,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         self.statistics.n_elements += 1;
         
         // Update cumulative sum
-        let alpha_f = F::from(self.alpha).unwrap();
+        let alpha_f = F::from(self.alpha).expect("Failed to convert to float");
         self.cumulative_sum = self.cumulative_sum + value - alpha_f;
         
         // Update minimum cumulative sum
@@ -541,7 +541,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         }
         
         // Update statistics
-        self.statistics.mean = self.cumulative_sum / F::from(self.n_elements).unwrap();
+        self.statistics.mean = self.cumulative_sum / F::from(self.n_elements).expect("Failed to convert to float");
         
         // Reset drift flag
         self.drift_detected = false;
@@ -549,7 +549,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         // Check for drift
         let status = if self.n_elements >= self.min_instances {
             let ph_value = self.cumulative_sum - self.min_cumulative_sum;
-            if ph_value > F::from(self.threshold).unwrap() {
+            if ph_value > F::from(self.threshold).expect("Failed to convert to float") {
                 self.drift_detected = true;
                 self.statistics.total_drifts += 1;
                 self.statistics.last_drift_time = Some(SystemTime::now());
@@ -652,14 +652,14 @@ mod tests {
         // Add stable data
         for i in 0..100 {
             let value = 0.5 + (i as f64) * 0.001; // Slight upward trend
-            let result = detector.add_element(value).unwrap();
+            let result = detector.add_element(value).expect("Operation failed");
             assert_eq!(result.status, DriftStatus::Stable);
         }
         
         // Add drift data
         for _ in 0..50 {
             let value = 2.0; // Sudden jump
-            detector.add_element(value).unwrap();
+            detector.add_element(value).expect("Operation failed");
         }
         
         // Check statistics
@@ -674,7 +674,7 @@ mod tests {
         // Add stable error rates
         for _ in 0..100 {
             let error = 0.1; // 10% error rate
-            let result = detector.add_element(error).unwrap();
+            let result = detector.add_element(error).expect("Operation failed");
             if detector.n_elements > 30 {
                 // Should be stable after initial learning
                 assert_ne!(result.status, DriftStatus::Drift);
@@ -684,7 +684,7 @@ mod tests {
         // Add increasing error rates
         for i in 0..20 {
             let error = 0.1 + (i as f64) * 0.05; // Increasing error
-            detector.add_element(error).unwrap();
+            detector.add_element(error).expect("Operation failed");
         }
         
         assert_eq!(detector.name(), "DDM");
@@ -697,14 +697,14 @@ mod tests {
         // Add stable data
         for _ in 0..50 {
             let value = 0.0;
-            let result = detector.add_element(value).unwrap();
+            let result = detector.add_element(value).expect("Operation failed");
             // Early samples might not detect drift due to min_instances
         }
         
         // Add drift data
         for _ in 0..20 {
             let value = 1.0; // Change in mean
-            detector.add_element(value).unwrap();
+            detector.add_element(value).expect("Operation failed");
         }
         
         assert_eq!(detector.name(), "Page-Hinkley");

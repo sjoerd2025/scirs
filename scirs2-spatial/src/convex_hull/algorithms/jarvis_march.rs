@@ -42,7 +42,7 @@ use scirs2_core::ndarray::ArrayView2;
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-/// let hull = compute_jarvis_march(&points.view()).unwrap();
+/// let hull = compute_jarvis_march(&points.view()).expect("Operation failed");
 /// assert_eq!(hull.ndim(), 2);
 /// assert_eq!(hull.vertex_indices().len(), 3); // Excludes interior point
 /// ```
@@ -331,7 +331,7 @@ mod tests {
             [0.5, 0.5], // Interior point
         ]);
 
-        let hull = compute_jarvis_march(&points.view()).unwrap();
+        let hull = compute_jarvis_march(&points.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(hull.ndim(), 2);
@@ -347,7 +347,7 @@ mod tests {
     fn test_jarvis_march_square() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let hull = compute_jarvis_march(&points.view()).unwrap();
+        let hull = compute_jarvis_march(&points.view()).expect("Operation failed");
 
         assert_eq!(hull.ndim(), 2);
         assert_eq!(hull.vertex_indices().len(), 4); // All points should be vertices
@@ -419,7 +419,7 @@ mod tests {
             [0.5, 1.0], // Point above the line
         ]);
 
-        let hull = compute_jarvis_march(&points.view()).unwrap();
+        let hull = compute_jarvis_march(&points.view()).expect("Operation failed");
 
         // Should form a triangle with the non-collinear points
         assert_eq!(hull.vertex_indices().len(), 3);
@@ -437,7 +437,7 @@ mod tests {
             [0.0, 0.0], // Duplicate point
         ]);
 
-        let hull = compute_jarvis_march(&points.view()).unwrap();
+        let hull = compute_jarvis_march(&points.view()).expect("Operation failed");
 
         // Should still form a valid triangle
         assert_eq!(hull.vertex_indices().len(), 3);

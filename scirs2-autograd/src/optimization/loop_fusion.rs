@@ -703,14 +703,15 @@ mod tests {
             vec![5],
         );
 
-        let kernel = FusedKernel::from_chain(chain).unwrap();
+        let kernel = FusedKernel::from_chain(chain).expect("Operation failed");
 
-        let input = Array::from_shape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
-        let result = kernel.execute(&[&input]).unwrap();
+        let input = Array::from_shape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0])
+            .expect("Operation failed");
+        let result = kernel.execute(&[&input]).expect("Operation failed");
 
         // Should be (x^2) * 2 = [2, 8, 18, 32, 50]
         let expected = vec![2.0, 8.0, 18.0, 32.0, 50.0];
-        assert_eq!(result.as_slice().unwrap(), &expected);
+        assert_eq!(result.as_slice().expect("Operation failed"), &expected);
     }
 
     #[test]
@@ -741,10 +742,10 @@ mod tests {
 
     #[test]
     fn test_global_fusion_manager() {
-        set_fusion_enabled(true).unwrap();
+        set_fusion_enabled(true).expect("Operation failed");
         assert!(is_fusion_enabled());
 
-        set_fusion_enabled(false).unwrap();
+        set_fusion_enabled(false).expect("Operation failed");
         assert!(!is_fusion_enabled());
     }
 
@@ -764,15 +765,16 @@ mod tests {
             vec![4],
         );
 
-        let kernel = FusedKernel::from_chain(chain).unwrap();
+        let kernel = FusedKernel::from_chain(chain).expect("Operation failed");
 
-        let input = Array::from_shape_vec(IxDyn(&[4]), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
-        let result = kernel.execute(&[&input]).unwrap();
+        let input = Array::from_shape_vec(IxDyn(&[4]), vec![-2.0, -1.0, 1.0, 2.0])
+            .expect("Operation failed");
+        let result = kernel.execute(&[&input]).expect("Operation failed");
 
         // Expected: x^2 -> ReLU -> *3 -> +1
         // [-2, -1, 1, 2] -> [4, 1, 1, 4] -> [4, 1, 1, 4] -> [12, 3, 3, 12] -> [13, 4, 4, 13]
         let expected = vec![13.0, 4.0, 4.0, 13.0];
-        assert_eq!(result.as_slice().unwrap(), &expected);
+        assert_eq!(result.as_slice().expect("Operation failed"), &expected);
 
         let speedup = kernel.estimate_speedup();
         assert!(speedup > 1.0 && speedup <= 4.0);

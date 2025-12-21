@@ -123,7 +123,7 @@ impl SpectralEmbedding {
             .collect();
 
         // Sort by eigenvalue
-        eigen_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        eigen_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         // Skip the first eigenvalue if it's (approximately) zero
         let start_idx = if eigen_pairs[0].0.abs() < 1e-10 { 1 } else { 0 };
@@ -409,7 +409,7 @@ impl Node2Vec {
 
                 // Subsequent steps: biased by p and q
                 for _ in 2..self.base_model.walk_length {
-                    let current = *walk.last().unwrap();
+                    let current = *walk.last().expect("Operation failed");
                     let prev = walk[walk.len() - 2];
 
                     let current_neighbors = &neighbors[current];

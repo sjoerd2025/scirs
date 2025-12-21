@@ -48,7 +48,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumState<F> {
     /// Create superposition state
     pub fn create_superposition(&mut self) {
         let num_states = self.amplitudes.len();
-        let amplitude = F::one() / F::from(num_states as f64).unwrap().sqrt();
+        let amplitude = F::one()
+            / F::from(num_states as f64)
+                .expect("Failed to convert to float")
+                .sqrt();
 
         for i in 0..num_states {
             self.amplitudes[i] = Complex::new(amplitude, F::zero());
@@ -63,8 +66,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumState<F> {
             ));
         }
 
-        let cos_half = (theta / F::from(2.0).unwrap()).cos();
-        let sin_half = (theta / F::from(2.0).unwrap()).sin();
+        let cos_half = (theta / F::from(2.0).expect("Failed to convert constant to float")).cos();
+        let sin_half = (theta / F::from(2.0).expect("Failed to convert constant to float")).sin();
         let exp_phi = Complex::new(phi.cos(), phi.sin());
 
         let num_states = self.amplitudes.len();
@@ -162,7 +165,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
             ));
         }
 
-        let scale = F::from(2.0).unwrap() / F::from(_model_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(_model_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         // Initialize quantum parameters
@@ -189,8 +193,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
         for i in 0.._num_heads {
             for j in 0..qubits_perhead {
                 // Initialize with random angles
-                let angle =
-                    F::from(((i + j * 7) % 100) as f64 / 100.0 * std::f64::consts::PI).unwrap();
+                let angle = F::from(((i + j * 7) % 100) as f64 / 100.0 * std::f64::consts::PI)
+                    .expect("Operation failed");
                 params[[i, j]] = angle;
             }
         }
@@ -205,7 +209,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
         for i in 0.._rows {
             for j in 0..cols {
                 let rand_val = ((i + j * 17) % 1000) as f64 / 1000.0 - 0.5;
-                matrix[[i, j]] = F::from(rand_val).unwrap() * stddev;
+                matrix[[i, j]] = F::from(rand_val).expect("Failed to convert to float") * stddev;
             }
         }
 
@@ -360,7 +364,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> VariationalQuantumCircuit<F> {
                     let val = ((layer + qubit * 7 + param * 13) % 1000) as f64 / 1000.0
                         * std::f64::consts::PI
                         * 2.0;
-                    parameters[[layer, qubit, param]] = F::from(val).unwrap();
+                    parameters[[layer, qubit, param]] =
+                        F::from(val).expect("Failed to convert to float");
                 }
             }
         }
@@ -379,7 +384,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> VariationalQuantumCircuit<F> {
 
         // Amplitude encoding (simplified)
         for (i, &value) in data.iter().enumerate().take(self.num_qubits) {
-            let angle = value * F::from(std::f64::consts::PI).unwrap();
+            let angle = value * F::from(std::f64::consts::PI).expect("Failed to convert to float");
             state.apply_rotation(i, angle, F::zero())?;
         }
 
@@ -494,7 +499,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumKernel<F> {
         for i in 0.._num_qubits {
             for j in 0..3 {
                 let val = ((i + j * 11) % 100) as f64 / 100.0 * std::f64::consts::PI;
-                feature_map_params[[i, j]] = F::from(val).unwrap();
+                feature_map_params[[i, j]] = F::from(val).expect("Failed to convert to float");
             }
         }
 
@@ -540,7 +545,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumKernel<F> {
             fidelity = fidelity + (-diff * diff).exp();
         }
 
-        Ok(fidelity / F::from(min_len).unwrap())
+        Ok(fidelity / F::from(min_len).expect("Failed to convert to float"))
     }
 
     /// Quantum distance kernel
@@ -557,7 +562,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumKernel<F> {
         }
 
         // Convert distance to similarity
-        let gamma = F::from(0.1).unwrap();
+        let gamma = F::from(0.1).expect("Failed to convert constant to float");
         Ok((-gamma * distance).exp())
     }
 
@@ -622,20 +627,21 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAnnealingOptimizer<F> {
     pub fn new(_num_vars: usize, maxiterations: usize) -> Self {
         // Create temperature schedule (exponential cooling)
         let mut temperature_schedule = Array1::zeros(maxiterations);
-        let initial_temp = F::from(10.0).unwrap();
-        let final_temp = F::from(0.01).unwrap();
-        let cooling_rate =
-            (final_temp / initial_temp).ln() / F::from(maxiterations as f64).unwrap();
+        let initial_temp = F::from(10.0).expect("Failed to convert constant to float");
+        let final_temp = F::from(0.01).expect("Failed to convert constant to float");
+        let cooling_rate = (final_temp / initial_temp).ln()
+            / F::from(maxiterations as f64).expect("Failed to convert to float");
 
         for i in 0..maxiterations {
-            let temp = initial_temp * (cooling_rate * F::from(i as f64).unwrap()).exp();
+            let temp = initial_temp
+                * (cooling_rate * F::from(i as f64).expect("Failed to convert to float")).exp();
             temperature_schedule[i] = temp;
         }
 
         // Initialize random solution closer to center
         let mut current_solution = Array1::zeros(_num_vars);
         for i in 0.._num_vars {
-            current_solution[i] = F::from(0.5 + (i as f64 * 0.1 - 0.05)).unwrap();
+            current_solution[i] = F::from(0.5 + (i as f64 * 0.1 - 0.05)).expect("Operation failed");
         }
 
         Self {
@@ -643,7 +649,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAnnealingOptimizer<F> {
             temperature_schedule,
             current_solution: current_solution.clone(),
             best_solution: current_solution,
-            best_energy: F::from(f64::INFINITY).unwrap(),
+            best_energy: F::from(f64::INFINITY).expect("Failed to convert to float"),
         }
     }
 
@@ -673,7 +679,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAnnealingOptimizer<F> {
             };
 
             // Simplified random decision (deterministic for reproducibility)
-            let random_val = F::from(((iteration * 17) % 1000) as f64 / 1000.0).unwrap();
+            let random_val =
+                F::from(((iteration * 17) % 1000) as f64 / 1000.0).expect("Operation failed");
 
             if random_val < acceptance_prob {
                 self.current_solution = neighbor;
@@ -695,9 +702,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAnnealingOptimizer<F> {
 
         // Apply quantum tunneling effect (larger jumps at higher temperature)
         for i in 0..self.num_vars {
-            let perturbation_scale = temperature / F::from(5.0).unwrap(); // Increased from 10.0 to 5.0
-            let perturbation =
-                F::from(((i * 23) % 1000) as f64 / 1000.0 - 0.5).unwrap() * perturbation_scale;
+            let perturbation_scale =
+                temperature / F::from(5.0).expect("Failed to convert constant to float"); // Increased from 10.0 to 5.0
+            let perturbation = F::from(((i * 23) % 1000) as f64 / 1000.0 - 0.5)
+                .expect("Operation failed")
+                * perturbation_scale;
 
             neighbor[i] = neighbor[i] + perturbation;
 

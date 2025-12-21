@@ -65,7 +65,7 @@ impl AsyncRetryExecutor {
                     }
                 }
 
-                Err(lasterror.unwrap())
+                Err(lasterror.expect("Operation failed"))
             }
 
             RecoveryStrategy::LinearBackoff {
@@ -87,7 +87,7 @@ impl AsyncRetryExecutor {
                     }
                 }
 
-                Err(lasterror.unwrap())
+                Err(lasterror.expect("Operation failed"))
             }
 
             RecoveryStrategy::CustomBackoff {
@@ -111,7 +111,7 @@ impl AsyncRetryExecutor {
                     }
                 }
 
-                Err(lasterror.unwrap())
+                Err(lasterror.expect("Operation failed"))
             }
 
             _ => f().await, // Other strategies not applicable for retry
@@ -239,19 +239,19 @@ impl AsyncProgressTracker {
 
     /// Mark a step as completed
     pub fn complete_step(&self) {
-        let mut completed = self.completed_steps.lock().unwrap();
+        let mut completed = self.completed_steps.lock().expect("Operation failed");
         *completed += 1;
     }
 
     /// Record an error that occurred during processing
     pub fn recorderror(&self, error: RecoverableError) {
-        let mut errors = self.errors.lock().unwrap();
+        let mut errors = self.errors.lock().expect("Operation failed");
         errors.push(error);
     }
 
     /// Get current progress (0.0 to 1.0)
     pub fn progress(&self) -> f64 {
-        let completed = *self.completed_steps.lock().unwrap() as f64;
+        let completed = *self.completed_steps.lock().expect("Operation failed") as f64;
         completed / self.total_steps as f64
     }
 
@@ -275,20 +275,20 @@ impl AsyncProgressTracker {
 
     /// Get all recorded errors
     pub fn errors(&self) -> Vec<RecoverableError> {
-        self.errors.lock().unwrap().clone()
+        self.errors.lock().expect("Operation failed").clone()
     }
 
     /// Check if any errors have been recorded
     pub fn haserrors(&self) -> bool {
-        !self.errors.lock().unwrap().is_empty()
+        !self.errors.lock().expect("Operation failed").is_empty()
     }
 
     /// Get a progress report
     pub fn progress_report(&self) -> String {
-        let completed = *self.completed_steps.lock().unwrap();
+        let completed = *self.completed_steps.lock().expect("Operation failed");
         let progress_pct = (self.progress() * 100.0) as u32;
         let elapsed = self.elapsed_time();
-        let error_count = self.errors.lock().unwrap().len();
+        let error_count = self.errors.lock().expect("Operation failed").len();
 
         let mut report = format!(
             "Progress: {}/{} steps ({}%) | Elapsed: {:?}",
@@ -333,7 +333,7 @@ impl AsyncErrorAggregator {
 
     /// Add an error to the aggregator (async-safe)
     pub async fn adderror(&self, error: RecoverableError) {
-        let mut errors = self.errors.lock().unwrap();
+        let mut errors = self.errors.lock().expect("Operation failed");
 
         if let Some(max) = self.maxerrors {
             if errors.len() >= max {
@@ -351,17 +351,17 @@ impl AsyncErrorAggregator {
 
     /// Check if there are any errors
     pub fn haserrors(&self) -> bool {
-        !self.errors.lock().unwrap().is_empty()
+        !self.errors.lock().expect("Operation failed").is_empty()
     }
 
     /// Get the number of errors
     pub fn error_count(&self) -> usize {
-        self.errors.lock().unwrap().len()
+        self.errors.lock().expect("Operation failed").len()
     }
 
     /// Get all errors
     pub fn geterrors(&self) -> Vec<RecoverableError> {
-        self.errors.lock().unwrap().clone()
+        self.errors.lock().expect("Operation failed").clone()
     }
 
     /// Get the most severe error
@@ -550,7 +550,7 @@ mod tests {
             })
             .await;
 
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
         assert_eq!(attempt_count.load(Ordering::SeqCst), 3);
     }
 

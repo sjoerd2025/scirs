@@ -19,7 +19,8 @@ mod random_tests {
 
     #[test]
     fn test_sobol_sequence() {
-        let mut sobol = quasi_monte_carlo::SobolSequence::dimension(2).unwrap();
+        let mut sobol =
+            quasi_monte_carlo::SobolSequence::dimension(2).expect("Test: operation failed");
         let points = sobol.generate(10);
 
         assert_eq!(points.nrows(), 10);
@@ -29,7 +30,8 @@ mod random_tests {
 
     #[test]
     fn test_halton_sequence() {
-        let mut halton = quasi_monte_carlo::HaltonSequence::dimension(2).unwrap();
+        let mut halton =
+            quasi_monte_carlo::HaltonSequence::dimension(2).expect("Test: operation failed");
         let points = halton.generate(10);
 
         assert_eq!(points.nrows(), 10);
@@ -40,7 +42,7 @@ mod random_tests {
     #[test]
     fn test_latin_hypercube_sampling() {
         let mut lhs = quasi_monte_carlo::LatinHypercubeSampling::new(2);
-        let samples = lhs.sample(10).unwrap();
+        let samples = lhs.sample(10).expect("Test: operation failed");
 
         assert_eq!(samples.shape(), &[10, 2]);
         assert!(samples.iter().all(|&x| (0.0..1.0).contains(&x)));
@@ -75,7 +77,9 @@ mod random_tests {
 
         let target_pdf = |x: f64| (-0.5 * x * x).exp();
         let proposal_pdf = |_x: f64| 1.0; // Uniform on some interval
-        let proposal_sampler = |rng: &mut Random<_>| rng.sample(Uniform::new(-3.0, 3.0).unwrap());
+        let proposal_sampler = |rng: &mut Random<_>| {
+            rng.sample(Uniform::new(-3.0, 3.0).expect("Test: operation failed"))
+        };
 
         let (samples, weights) =
             sampler.sample_with_weights(target_pdf, proposal_pdf, proposal_sampler, 100);
@@ -90,7 +94,7 @@ mod random_tests {
         let mean = vec![0.0, 0.0];
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
 
-        let mvn = MultivariateNormal::new(mean, cov).unwrap();
+        let mvn = MultivariateNormal::new(mean, cov).expect("Test: operation failed");
         let mut rng = CoreRandom::default();
         let sample = mvn.sample(&mut rng);
 
@@ -100,7 +104,7 @@ mod random_tests {
     #[test]
     fn test_dirichlet_distribution() {
         let alphas = vec![1.0, 2.0, 3.0];
-        let dirichlet = Dirichlet::new(alphas).unwrap();
+        let dirichlet = Dirichlet::new(alphas).expect("Test: operation failed");
 
         let mut rng = CoreRandom::default();
         let sample = dirichlet.sample(&mut rng);
@@ -112,7 +116,7 @@ mod random_tests {
 
     #[test]
     fn test_von_mises_distribution() {
-        let von_mises = VonMises::mu(0.0, 1.0).unwrap();
+        let von_mises = VonMises::mu(0.0, 1.0).expect("Test: operation failed");
         let mut rng = CoreRandom::default();
 
         let samples = von_mises.sample_vec(&mut rng, 100);
@@ -126,7 +130,8 @@ mod random_tests {
     fn test_thread_local_rng_pool() {
         let pool = parallel::ThreadLocalRngPool::default();
 
-        let result = pool.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).unwrap()));
+        let result = pool
+            .with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).expect("Test: operation failed")));
 
         assert!((0.0..1.0).contains(&result));
     }
@@ -157,8 +162,8 @@ mod random_tests {
         // Same seed should produce same first value
         let mut rng1 = rng1;
         let mut rng2 = rng2;
-        let val1 = rng1.sample(Uniform::new(0.0, 1.0).unwrap());
-        let val2 = rng2.sample(Uniform::new(0.0, 1.0).unwrap());
+        let val1 = rng1.sample(Uniform::new(0.0, 1.0).expect("Test: operation failed"));
+        let val2 = rng2.sample(Uniform::new(0.0, 1.0).expect("Test: operation failed"));
 
         assert_eq!(val1, val2);
     }
@@ -168,8 +173,8 @@ mod random_tests {
         let mut rng1 = seeded_rng(12345);
         let mut rng2 = seeded_rng(12345);
 
-        let val1 = rng1.sample(Uniform::new(0.0, 1.0).unwrap());
-        let val2 = rng2.sample(Uniform::new(0.0, 1.0).unwrap());
+        let val1 = rng1.sample(Uniform::new(0.0, 1.0).expect("Test: operation failed"));
+        let val2 = rng2.sample(Uniform::new(0.0, 1.0).expect("Test: operation failed"));
 
         assert_eq!(val1, val2);
     }
@@ -177,7 +182,7 @@ mod random_tests {
     #[test]
     fn test_thread_rng_function() {
         let mut rng = thread_rng();
-        let value = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+        let value = rng.sample(Uniform::new(0.0, 1.0).expect("Test: operation failed"));
         assert!((0.0..1.0).contains(&value));
     }
 
@@ -227,7 +232,7 @@ mod random_tests {
 
     #[test]
     fn test_beta_distribution() {
-        let beta = Beta::new(2.0, 3.0).unwrap();
+        let beta = Beta::new(2.0, 3.0).expect("Test: operation failed");
         let mut rng = CoreRandom::default();
 
         let sample = beta.sample(&mut rng);
@@ -245,7 +250,7 @@ mod random_tests {
     #[test]
     fn test_categorical_distribution() {
         let weights = vec![0.2, 0.3, 0.5];
-        let categorical = Categorical::new(weights).unwrap();
+        let categorical = Categorical::new(weights).expect("Test: operation failed");
         let mut rng = CoreRandom::default();
 
         let samples = categorical.sample_vec(&mut rng, 1000);
@@ -271,7 +276,7 @@ mod random_tests {
     fn test_weighted_choice_distribution() {
         let items = vec!["A", "B", "C"];
         let weights = vec![0.2, 0.3, 0.5];
-        let weighted_choice = WeightedChoice::new(items, weights).unwrap();
+        let weighted_choice = WeightedChoice::new(items, weights).expect("Test: operation failed");
         let mut rng = CoreRandom::default();
 
         let samples = weighted_choice.sample_vec(&mut rng, 100);
@@ -286,7 +291,7 @@ mod random_tests {
 
     #[test]
     fn test_exponential_distribution() {
-        let exp_dist = ExponentialDist::new(1.0).unwrap();
+        let exp_dist = ExponentialDist::new(1.0).expect("Test: operation failed");
         let mut rng = CoreRandom::default();
 
         let sample = exp_dist.sample(&mut rng);
@@ -310,7 +315,7 @@ mod random_tests {
 
     #[test]
     fn test_gamma_distribution() {
-        let gamma_dist = GammaDist::new(2.0, 1.0).unwrap();
+        let gamma_dist = GammaDist::new(2.0, 1.0).expect("Test: operation failed");
         let mut rng = CoreRandom::default();
 
         let sample = gamma_dist.sample(&mut rng);
@@ -374,13 +379,17 @@ mod random_tests {
         let shape = Ix2(5, 5);
 
         // Test random_bulk method
-        let array = Array::<f64, _>::random_bulk(shape, Uniform::new(0.0, 1.0).unwrap(), &mut rng);
+        let array = Array::<f64, _>::random_bulk(
+            shape,
+            Uniform::new(0.0, 1.0).expect("Test: operation failed"),
+            &mut rng,
+        );
         assert_eq!(array.shape(), &[5, 5]);
         assert!(array.iter().all(|&x| (0.0..1.0).contains(&x)));
 
         // Test random_using_bulk method
         let array2 = Array::<i32, _>::random_using_bulk(shape, &mut rng, |rng| {
-            rng.sample(Uniform::new(1, 100).unwrap())
+            rng.sample(Uniform::new(1, 100).expect("Test: operation failed"))
         });
         assert_eq!(array2.shape(), &[5, 5]);
         assert!(array2.iter().all(|&x| (1..100).contains(&x)));

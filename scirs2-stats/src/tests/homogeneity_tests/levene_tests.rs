@@ -10,7 +10,6 @@ mod tests {
     const C: [f64; 10] = [8.95, 9.12, 8.95, 8.85, 9.03, 8.84, 9.07, 8.98, 8.86, 8.98];
 
     #[test]
-    #[ignore = "timeout"]
     fn test_levene_median() {
         let a = array![A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[8], A[9]];
         let b = array![B[0], B[1], B[2], B[3], B[4], B[5], B[6], B[7], B[8], B[9]];
@@ -18,7 +17,8 @@ mod tests {
 
         let samples = vec![a.view(), b.view(), c.view()];
 
-        let (statistic, p_value) = levene(&samples, "median", 0.05).unwrap();
+        let (statistic, p_value) =
+            levene(&samples, "median", 0.05).expect("Test: operation failed");
 
         // The expected values are from SciPy's implementation
         // Using an epsilon value to account for different implementations
@@ -38,7 +38,7 @@ mod tests {
 
         let samples = vec![a.view(), b.view(), c.view()];
 
-        let (statistic, p_value) = levene(&samples, "mean", 0.05).unwrap();
+        let (statistic, p_value) = levene(&samples, "mean", 0.05).expect("Test: operation failed");
 
         // Mean and median give different results
         assert!(
@@ -57,7 +57,8 @@ mod tests {
 
         let samples = vec![a.view(), b.view(), c.view()];
 
-        let (statistic, p_value) = levene(&samples, "trimmed", 0.1).unwrap();
+        let (statistic, p_value) =
+            levene(&samples, "trimmed", 0.1).expect("Test: operation failed");
 
         // Results should be different from mean and median
         assert!(
@@ -81,7 +82,7 @@ mod tests {
 
         let samples = vec![a.view(), b.view(), c.view()];
 
-        let (_, p_value) = levene(&samples, "median", 0.05).unwrap();
+        let (_, p_value) = levene(&samples, "median", 0.05).expect("Test: operation failed");
 
         // With equal variances, p-value should be high (non-significant)
         assert!(p_value > 0.05, "Expected p_value > 0.05, got {}", p_value);
@@ -95,7 +96,7 @@ mod tests {
 
         let samples = vec![a.view(), b.view()];
 
-        let (_, p_value) = levene(&samples, "median", 0.05).unwrap();
+        let (_, p_value) = levene(&samples, "median", 0.05).expect("Test: operation failed");
 
         // With very different variances, p-value should be low (significant)
         assert!(p_value < 0.05, "Expected p_value < 0.05, got {}", p_value);
@@ -109,8 +110,8 @@ mod tests {
 
         let samples = vec![a.view(), b.view()];
 
-        let (stat1, p1) = levene(&samples, "mean", 0.05).unwrap();
-        let (stat2, p2) = levene(&samples, "trimmed", 0.0).unwrap();
+        let (stat1, p1) = levene(&samples, "mean", 0.05).expect("Test: operation failed");
+        let (stat2, p2) = levene(&samples, "trimmed", 0.0).expect("Test: operation failed");
 
         assert_abs_diff_eq!(stat1, stat2, epsilon = 1e-10);
         assert_abs_diff_eq!(p1, p2, epsilon = 1e-10);

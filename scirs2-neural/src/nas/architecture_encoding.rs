@@ -485,7 +485,7 @@ mod tests {
             vec![false, false, false],
         let encoding = GraphEncoding::new(nodes, edges);
         let vector = encoding.to_vector();
-        let decoded = GraphEncoding::from_vector(&vector).unwrap();
+        let decoded = GraphEncoding::from_vector(&vector).expect("Operation failed");
         assert_eq!(vector[0], 3.0); // Number of nodes
         assert_eq!(decoded.nodes.len(), 3);
     fn test_sequential_encoding() {
@@ -495,10 +495,10 @@ mod tests {
             LayerType::Dropout(0.2),
             LayerType::Dense(10),
         let encoding = SequentialEncoding::new(layers);
-        let decoded = SequentialEncoding::from_vector(&vector).unwrap();
+        let decoded = SequentialEncoding::from_vector(&vector).expect("Operation failed");
         assert_eq!(vector[0], 5.0); // Number of layers
         assert_eq!(decoded.layers.len(), 5);
     fn test_random_generation() {
-        let seq_encoding = SequentialEncoding::random(&mut rng).unwrap();
+        let seq_encoding = SequentialEncoding::random(&mut rng).expect("Operation failed");
         assert!(seq_encoding.layers.len() >= 3);
         assert!(seq_encoding.layers.len() <= 10);

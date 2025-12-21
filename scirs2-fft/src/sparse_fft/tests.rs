@@ -29,7 +29,7 @@ fn test_sparse_fft_basic() {
     let signal = create_sparse_signal(n, &frequencies);
 
     // Compute sparse FFT
-    let result = sparse_fft(&signal, 6, None, None).unwrap();
+    let result = sparse_fft(&signal, 6, None, None).expect("Operation failed");
 
     // Should find 6 components (positive and negative frequencies for each)
     assert_eq!(result.values.len(), 6);
@@ -53,7 +53,9 @@ fn test_sparsity_estimation() {
     let mut processor = algorithms::SparseFFT::new(config);
 
     // Estimate sparsity
-    let estimated_k = processor.estimate_sparsity(&signal).unwrap();
+    let estimated_k = processor
+        .estimate_sparsity(&signal)
+        .expect("Operation failed");
 
     // Should estimate approximately 6 components (positive and negative frequencies)
     assert!(estimated_k >= 4 && estimated_k <= 8);
@@ -78,13 +80,13 @@ fn test_frequency_pruning() {
     let mut processor = algorithms::SparseFFT::new(config);
 
     // Perform frequency-pruning sparse FFT
-    let result = processor.sparse_fft(&signal).unwrap();
+    let result = processor.sparse_fft(&signal).expect("Operation failed");
 
     // Should find the frequency components
     assert!(!result.values.is_empty());
 
     // Test standalone function too
-    let result2 = frequency_pruning_sparse_fft(&signal, 2.0).unwrap();
+    let result2 = frequency_pruning_sparse_fft(&signal, 2.0).expect("Operation failed");
     assert!(!result2.values.is_empty());
 }
 
@@ -114,13 +116,15 @@ fn test_spectral_flatness() {
     let mut processor = algorithms::SparseFFT::new(config);
 
     // Perform spectral flatness sparse FFT
-    let result = processor.sparse_fft(&noisy_signal).unwrap();
+    let result = processor
+        .sparse_fft(&noisy_signal)
+        .expect("Operation failed");
 
     // Should find some frequency components
     assert!(!result.values.is_empty());
 
     // Test standalone function too
-    let result2 = spectral_flatness_sparse_fft(&noisy_signal, 0.5, 16).unwrap();
+    let result2 = spectral_flatness_sparse_fft(&noisy_signal, 0.5, 16).expect("Operation failed");
     assert!(!result2.values.is_empty());
 }
 
@@ -130,21 +134,24 @@ fn test_windowing_functions() {
     let signal = vec![1.0, 2.0, 3.0, 4.0];
 
     // Test Hann window
-    let result = windowing::apply_window(&signal, config::WindowFunction::Hann, 14.0).unwrap();
+    let result = windowing::apply_window(&signal, config::WindowFunction::Hann, 14.0)
+        .expect("Operation failed");
     assert_eq!(result.len(), 4);
     // First and last samples should be close to zero for Hann window
     assert!(result[0].re.abs() < 1e-10);
     assert!(result[3].re.abs() < 1e-10);
 
     // Test Hamming window
-    let result = windowing::apply_window(&signal, config::WindowFunction::Hamming, 14.0).unwrap();
+    let result = windowing::apply_window(&signal, config::WindowFunction::Hamming, 14.0)
+        .expect("Operation failed");
     assert_eq!(result.len(), 4);
     // Hamming window should not be zero at endpoints
     assert!(result[0].re > 0.0);
     assert!(result[3].re > 0.0);
 
     // Test no windowing
-    let result = windowing::apply_window(&signal, config::WindowFunction::None, 14.0).unwrap();
+    let result = windowing::apply_window(&signal, config::WindowFunction::None, 14.0)
+        .expect("Operation failed");
     assert_eq!(result.len(), 4);
     assert_eq!(result[0].re, 1.0);
     assert_eq!(result[1].re, 2.0);
@@ -158,18 +165,21 @@ fn test_reconstruction() {
     let signal = create_sparse_signal(n, &frequencies);
 
     // Compute sparse FFT
-    let sparse_result = sparse_fft(&signal, 4, None, None).unwrap();
+    let sparse_result = sparse_fft(&signal, 4, None, None).expect("Operation failed");
 
     // Test spectrum reconstruction
-    let spectrum = reconstruction::reconstruct_spectrum(&sparse_result, n).unwrap();
+    let spectrum =
+        reconstruction::reconstruct_spectrum(&sparse_result, n).expect("Operation failed");
     assert_eq!(spectrum.len(), n);
 
     // Test time domain reconstruction
-    let reconstructed = reconstruction::reconstruct_time_domain(&sparse_result, n).unwrap();
+    let reconstructed =
+        reconstruction::reconstruct_time_domain(&sparse_result, n).expect("Operation failed");
     assert_eq!(reconstructed.len(), n);
 
     // Test high resolution reconstruction
-    let high_res = reconstruction::reconstruct_high_resolution(&sparse_result, n, 2 * n).unwrap();
+    let high_res = reconstruction::reconstruct_high_resolution(&sparse_result, n, 2 * n)
+        .expect("Operation failed");
     assert_eq!(high_res.len(), 2 * n);
 }
 
@@ -181,7 +191,7 @@ fn test_adaptive_sparse_fft() {
     let signal = create_sparse_signal(n, &frequencies);
 
     // Test adaptive sparse FFT
-    let result = adaptive_sparse_fft(&signal, 0.1).unwrap();
+    let result = adaptive_sparse_fft(&signal, 0.1).expect("Operation failed");
 
     // Should find some components
     assert!(!result.values.is_empty());
@@ -204,7 +214,7 @@ fn test_algorithm_variants() {
     ];
 
     for algorithm in algorithms {
-        let result = sparse_fft(&signal, 4, Some(algorithm), None).unwrap();
+        let result = sparse_fft(&signal, 4, Some(algorithm), None).expect("Operation failed");
         assert_eq!(result.algorithm, algorithm);
         assert!(!result.values.is_empty());
         assert!(!result.indices.is_empty());
@@ -219,7 +229,7 @@ fn test_performance_measurement() {
     let frequencies = vec![(3, 1.0), (7, 0.5)];
     let signal = create_sparse_signal(n, &frequencies);
 
-    let result = sparse_fft(&signal, 4, None, None).unwrap();
+    let result = sparse_fft(&signal, 4, None, None).expect("Operation failed");
 
     // Check that computation time was measured
     assert!(result.computation_time.as_nanos() > 0);
@@ -235,12 +245,12 @@ fn test_edge_cases() {
 
     // Test single sample
     let single_sample = vec![1.0];
-    let result = sparse_fft(&single_sample, 1, None, None).unwrap();
+    let result = sparse_fft(&single_sample, 1, None, None).expect("Operation failed");
     assert_eq!(result.values.len(), 1);
 
     // Test k larger than signal length
     let small_signal = vec![1.0, 2.0];
-    let result = sparse_fft(&small_signal, 10, None, None).unwrap();
+    let result = sparse_fft(&small_signal, 10, None, None).expect("Operation failed");
     assert!(result.values.len() <= small_signal.len());
 }
 
@@ -252,19 +262,23 @@ fn test_sparsity_estimation_methods() {
     let signal = create_sparse_signal(n, &frequencies);
 
     // Test threshold method
-    let estimated = estimation::estimate_sparsity_threshold(&signal, 0.1).unwrap();
+    let estimated =
+        estimation::estimate_sparsity_threshold(&signal, 0.1).expect("Operation failed");
     assert!(estimated > 0);
 
     // Test adaptive method
-    let estimated = estimation::estimate_sparsity_adaptive(&signal, 0.25, 10).unwrap();
+    let estimated =
+        estimation::estimate_sparsity_adaptive(&signal, 0.25, 10).expect("Operation failed");
     assert!(estimated > 0);
 
     // Test frequency pruning method
-    let estimated = estimation::estimate_sparsity_frequency_pruning(&signal, 2.0).unwrap();
+    let estimated =
+        estimation::estimate_sparsity_frequency_pruning(&signal, 2.0).expect("Operation failed");
     assert!(estimated > 0);
 
     // Test spectral flatness method
-    let estimated = estimation::estimate_sparsity_spectral_flatness(&signal, 0.3, 8).unwrap();
+    let estimated =
+        estimation::estimate_sparsity_spectral_flatness(&signal, 0.3, 8).expect("Operation failed");
     assert!(estimated > 0);
 }
 
@@ -304,7 +318,7 @@ fn test_signal_size_limit() {
     };
 
     let mut processor = algorithms::SparseFFT::new(config);
-    let result = processor.sparse_fft(&signal).unwrap();
+    let result = processor.sparse_fft(&signal).expect("Operation failed");
 
     // Should still work, but process only the limited size
     assert!(!result.values.is_empty());
@@ -331,7 +345,7 @@ fn test_filtered_reconstruction() {
     let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25)];
     let signal = create_sparse_signal(n, &frequencies);
 
-    let sparse_result = sparse_fft(&signal, 6, None, None).unwrap();
+    let sparse_result = sparse_fft(&signal, 6, None, None).expect("Operation failed");
 
     // Test low-pass filter
     let low_pass = |freq_idx: usize, n: usize| -> f64 {
@@ -342,7 +356,8 @@ fn test_filtered_reconstruction() {
         }
     };
 
-    let filtered = reconstruction::reconstruct_filtered(&sparse_result, n, low_pass).unwrap();
+    let filtered = reconstruction::reconstruct_filtered(&sparse_result, n, low_pass)
+        .expect("Operation failed");
     assert_eq!(filtered.len(), n);
 }
 

@@ -13,14 +13,22 @@ use std::time::{Duration, Instant};
 /// High-level Advanced processing function
 #[allow(dead_code)]
 pub fn process_with_advanced_mode(frame: Frame) -> Result<AdvancedProcessingResult> {
+    #[cfg(test)]
+    let mut processor = NeuralQuantumHybridProcessor::new_for_testing();
+    #[cfg(not(test))]
     let mut processor = NeuralQuantumHybridProcessor::new();
+
     processor.process_advanced(frame)
 }
 
 /// Batch processing with Advanced capabilities
 #[allow(dead_code)]
 pub fn batch_process_advanced(frames: Vec<Frame>) -> Result<Vec<AdvancedProcessingResult>> {
+    #[cfg(test)]
+    let mut processor = NeuralQuantumHybridProcessor::new_for_testing();
+    #[cfg(not(test))]
     let mut processor = NeuralQuantumHybridProcessor::new();
+
     let mut results = Vec::with_capacity(frames.len());
 
     for frame in frames {
@@ -42,7 +50,11 @@ pub fn realtime_advanced_stream(
     frame_stream: impl Iterator<Item = Frame>,
     target_fps: f64,
 ) -> impl Iterator<Item = Result<AdvancedProcessingResult>> {
+    #[cfg(test)]
+    let mut processor = NeuralQuantumHybridProcessor::new_for_testing();
+    #[cfg(not(test))]
     let mut processor = NeuralQuantumHybridProcessor::new();
+
     let frame_duration = Duration::from_secs_f64(1.0 / target_fps);
 
     frame_stream.map(move |frame| {

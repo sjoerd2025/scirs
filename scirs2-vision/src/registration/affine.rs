@@ -176,7 +176,7 @@ mod tests {
         let points = vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)];
         let params = RegistrationParams::default();
 
-        let result = register_affine_points(&points, &points, &params).unwrap();
+        let result = register_affine_points(&points, &points, &params).expect("Operation failed");
 
         // Should be identity transformation with zero error
         assert!(result.final_cost < 1e-10);
@@ -189,7 +189,7 @@ mod tests {
         let target = vec![(2.0, 3.0), (3.0, 3.0), (2.0, 4.0)];
         let params = RegistrationParams::default();
 
-        let result = register_affine_points(&source, &target, &params).unwrap();
+        let result = register_affine_points(&source, &target, &params).expect("Operation failed");
 
         // Should find translation (2, 3)
         assert!(result.final_cost < 1e-10);
@@ -203,7 +203,7 @@ mod tests {
         let target = vec![(0.0, 0.0), (2.0, 0.0), (0.0, 3.0)];
         let params = RegistrationParams::default();
 
-        let result = register_affine_points(&source, &target, &params).unwrap();
+        let result = register_affine_points(&source, &target, &params).expect("Operation failed");
 
         // Should find scaling (2, 3)
         assert!(result.final_cost < 1e-10);
@@ -218,7 +218,7 @@ mod tests {
         let target = vec![(1.0, 2.0), (3.0, 3.0), (2.0, 4.0), (4.0, 5.0)];
         let params = RegistrationParams::default();
 
-        let result = register_affine_points(&source, &target, &params).unwrap();
+        let result = register_affine_points(&source, &target, &params).expect("Operation failed");
 
         // Should find a valid transformation with low error
         assert!(result.final_cost < 1e-10);
@@ -260,7 +260,8 @@ mod tests {
         let target = vec![(1.0, 2.0), (3.0, 3.0), (2.0, 4.0), (4.0, 5.0)];
         let params = RegistrationParams::default();
 
-        let result = register_affine_iterative(&source, &target, &params).unwrap();
+        let result =
+            register_affine_iterative(&source, &target, &params).expect("Operation failed");
 
         // Should find a valid transformation
         assert!(result.final_cost < 1e-8);

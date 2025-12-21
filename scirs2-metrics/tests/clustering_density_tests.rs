@@ -12,22 +12,22 @@ mod clustering_density_tests {
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
         // Test with default k
-        let factors = local_density_factor(&x, &labels, None).unwrap();
+        let factors = local_density_factor(&x, &labels, None).expect("Operation failed");
 
         // There should be two clusters
         assert_eq!(factors.len(), 2);
 
         // Check that density factors are positive
-        assert!(*factors.get(&0).unwrap() > 0.0);
-        assert!(*factors.get(&1).unwrap() > 0.0);
+        assert!(*factors.get(&0).expect("Operation failed") > 0.0);
+        assert!(*factors.get(&1).expect("Operation failed") > 0.0);
 
         // Test with explicit k value
-        let factors_k2 = local_density_factor(&x, &labels, Some(2)).unwrap();
+        let factors_k2 = local_density_factor(&x, &labels, Some(2)).expect("Operation failed");
         assert_eq!(factors_k2.len(), 2);
 
         // Test with varying density clusters
@@ -38,13 +38,17 @@ mod clustering_density_tests {
                 5.0, 5.0, 6.0, 6.0, 7.0, 7.0, // Sparse cluster
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
-        let factors_varying = local_density_factor(&varying_density, &labels, Some(2)).unwrap();
+        let factors_varying =
+            local_density_factor(&varying_density, &labels, Some(2)).expect("Operation failed");
 
         // Dense cluster should have higher factor
-        assert!(*factors_varying.get(&0).unwrap() > *factors_varying.get(&1).unwrap());
+        assert!(
+            *factors_varying.get(&0).expect("Operation failed")
+                > *factors_varying.get(&1).expect("Operation failed")
+        );
     }
 
     #[test]
@@ -58,28 +62,31 @@ mod clustering_density_tests {
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Moderately separated clusters
         let moderately_separated = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 4.0, 5.0, 4.2, 4.8, 4.5, 5.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Poorly separated clusters
         let poorly_separated = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 2.0, 2.5, 2.5, 3.0, 3.0, 3.2, 3.5, 3.8],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
         // Calculate RDI for all datasets with k=2
-        let rdi_well = relative_density_index(&well_separated, &labels, Some(2)).unwrap();
-        let rdi_moderate = relative_density_index(&moderately_separated, &labels, Some(2)).unwrap();
-        let rdi_poor = relative_density_index(&poorly_separated, &labels, Some(2)).unwrap();
+        let rdi_well =
+            relative_density_index(&well_separated, &labels, Some(2)).expect("Operation failed");
+        let rdi_moderate = relative_density_index(&moderately_separated, &labels, Some(2))
+            .expect("Operation failed");
+        let rdi_poor =
+            relative_density_index(&poorly_separated, &labels, Some(2)).expect("Operation failed");
 
         // Well-separated clusters should have highest RDI
         assert!(rdi_well > 1.0);
@@ -101,12 +108,13 @@ mod clustering_density_tests {
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let good_labels = array![0, 0, 0, 1, 1, 1];
 
         // Calculate DBCV
-        let dbcv = density_based_cluster_validity(&well_separated, &good_labels, Some(2)).unwrap();
+        let dbcv = density_based_cluster_validity(&well_separated, &good_labels, Some(2))
+            .expect("Operation failed");
 
         // DBCV should be positive for well-separated clusters with correct labels
         assert!(dbcv > 0.0);
@@ -116,8 +124,8 @@ mod clustering_density_tests {
         let bad_labels = array![0, 1, 0, 1, 0, 1]; // Mixed labels
 
         // Calculate DBCV with bad labels
-        let dbcv_bad =
-            density_based_cluster_validity(&well_separated, &bad_labels, Some(2)).unwrap();
+        let dbcv_bad = density_based_cluster_validity(&well_separated, &bad_labels, Some(2))
+            .expect("Operation failed");
 
         // DBCV should be lower for incorrect clustering
         // Note: This test might be brittle depending on exact dataset
@@ -129,7 +137,8 @@ mod clustering_density_tests {
     #[test]
     fn test_with_invalid_inputs() {
         // Create a valid dataset
-        let x = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let x = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
 
         // Mismatched dimensions
         let labels_wrong_size = array![0, 0]; // Only 2 labels for 3 samples

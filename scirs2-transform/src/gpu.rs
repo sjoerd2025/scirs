@@ -327,7 +327,7 @@ mod tests {
     fn test_gpu_pca_creation() {
         let pca = GpuPCA::new(3);
         assert!(pca.is_ok());
-        let pca = pca.unwrap();
+        let pca = pca.expect("Operation failed");
         assert_eq!(pca.n_components, 3);
         assert!(pca.center);
         assert!(pca.components.is_none());
@@ -354,7 +354,7 @@ mod tests {
     fn test_gpu_tsne_creation() {
         let tsne = GpuTSNE::new(2);
         assert!(tsne.is_ok());
-        let tsne = tsne.unwrap();
+        let tsne = tsne.expect("Operation failed");
         assert_eq!(tsne.n_components, 2);
         assert_eq!(tsne.perplexity, 30.0);
         assert_eq!(tsne.learning_rate, 200.0);
@@ -365,7 +365,7 @@ mod tests {
     #[cfg(feature = "gpu")]
     fn test_gpu_tsne_with_params() {
         let tsne = GpuTSNE::new(3)
-            .unwrap()
+            .expect("Operation failed")
             .with_perplexity(50.0)
             .with_learning_rate(100.0)
             .with_max_iter(500);

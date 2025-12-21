@@ -24,10 +24,10 @@ use scirs2_core::ndarray::s;
 // let signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 10.0, 1.3, 1.2, -5.0, 1.1]);
 //
 // // Apply alpha-trimmed mean filter
-// let filtered = alpha_trimmed_filter(&signal, 5, 0.2).unwrap();
+// let filtered = alpha_trimmed_filter(&signal, 5, 0.2).expect("Operation failed");
 //
 // // Apply Hampel filter for outlier detection
-// let (cleaned, outliers) = hampel_filter(&signal, 5, 3.0).unwrap();
+// let (cleaned, outliers) = hampel_filter(&signal, 5, 3.0).expect("Operation failed");
 // ```
 
 use crate::error::{SignalError, SignalResult};
@@ -93,7 +93,7 @@ pub enum EdgeMode {
 /// use scirs2_signal::robust::alpha_trimmed_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
-/// let filtered = alpha_trimmed_filter(&signal, 3, 0.2).unwrap();
+/// let filtered = alpha_trimmed_filter(&signal, 3, 0.2).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn alpha_trimmed_filter(
@@ -150,12 +150,12 @@ pub fn alpha_trimmed_filter(
                 window_values.insert(0, window_values[0]);
             } else {
                 // Pad at end by reflecting
-                window_values.push(*window_values.last().unwrap());
+                window_values.push(*window_values.last().expect("Operation failed"));
             }
         }
 
         // Sort window values
-        window_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        window_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Trim alpha portion from both ends and compute mean
         let trimmed_values = &window_values[trim_count..window_values.len() - trim_count];
@@ -190,7 +190,7 @@ pub fn alpha_trimmed_filter(
 /// use scirs2_signal::robust::hampel_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
-/// let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).unwrap();
+/// let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn hampel_filter(
@@ -236,13 +236,13 @@ pub fn hampel_filter(
             if start == 0 {
                 window_values.insert(0, window_values[0]);
             } else {
-                window_values.push(*window_values.last().unwrap());
+                window_values.push(*window_values.last().expect("Operation failed"));
             }
         }
 
         // Calculate median
         let mut sorted_values = window_values.clone();
-        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let median = if sorted_values.len() % 2 == 0 {
             let mid = sorted_values.len() / 2;
             (sorted_values[mid - 1] + sorted_values[mid]) / 2.0
@@ -253,7 +253,7 @@ pub fn hampel_filter(
         // Calculate MAD (Median Absolute Deviation)
         let mut abs_deviations: Vec<f64> =
             window_values.iter().map(|&x| (x - median).abs()).collect();
-        abs_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        abs_deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mad = if abs_deviations.len() % 2 == 0 {
             let mid = abs_deviations.len() / 2;
@@ -299,7 +299,7 @@ pub fn hampel_filter(
 /// use scirs2_signal::robust::winsorize_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
-/// let filtered = winsorize_filter(&signal, 3, 10.0).unwrap();
+/// let filtered = winsorize_filter(&signal, 3, 10.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn winsorize_filter(
@@ -344,11 +344,11 @@ pub fn winsorize_filter(
             if start == 0 {
                 window_values.insert(0, window_values[0]);
             } else {
-                window_values.push(*window_values.last().unwrap());
+                window_values.push(*window_values.last().expect("Operation failed"));
             }
         }
 
-        window_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        window_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Calculate percentile indices
         let lower_idx = ((percentile / 100.0) * (window_values.len() - 1) as f64) as usize;
@@ -395,7 +395,7 @@ pub fn winsorize_filter(
 /// use scirs2_signal::robust::huber_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
-/// let filtered = huber_filter(&signal, 3, 1.35).unwrap();
+/// let filtered = huber_filter(&signal, 3, 1.35).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn huber_filter(
@@ -440,7 +440,7 @@ pub fn huber_filter(
             if start == 0 {
                 window_values.insert(0, window_values[0]);
             } else {
-                window_values.push(*window_values.last().unwrap());
+                window_values.push(*window_values.last().expect("Operation failed"));
             }
         }
 
@@ -542,7 +542,7 @@ mod tests {
     #[test]
     fn test_alpha_trimmed_filter() {
         let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3, 1.15, -5.0, 1.25]);
-        let filtered = alpha_trimmed_filter(&signal, 3, 0.3).unwrap();
+        let filtered = alpha_trimmed_filter(&signal, 3, 0.3).expect("Operation failed");
 
         assert_eq!(filtered.len(), signal.len());
 
@@ -554,7 +554,7 @@ mod tests {
     #[test]
     fn test_hampel_filter() {
         let signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 10.0, 1.3, 1.2, 1.1]);
-        let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).unwrap();
+        let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).expect("Operation failed");
 
         assert_eq!(filtered.len(), signal.len());
         assert!(!outliers.is_empty()); // Should detect the outlier at index 3
@@ -564,7 +564,7 @@ mod tests {
     #[test]
     fn test_winsorize_filter() {
         let signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 10.0, 1.3, 1.2, 1.1]);
-        let filtered = winsorize_filter(&signal, 5, 20.0).unwrap();
+        let filtered = winsorize_filter(&signal, 5, 20.0).expect("Operation failed");
 
         assert_eq!(filtered.len(), signal.len());
         // Extreme values should be winsorized
@@ -574,7 +574,7 @@ mod tests {
     #[test]
     fn test_huber_filter() {
         let signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 10.0, 1.3, 1.2, 1.1]);
-        let filtered = huber_filter(&signal, 3, 1.0).unwrap();
+        let filtered = huber_filter(&signal, 3, 1.0).expect("Operation failed");
 
         assert_eq!(filtered.len(), signal.len());
         // All values should be finite
@@ -587,9 +587,9 @@ mod tests {
     fn test_robust_filter_2d() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 1.2, 1.1, 1.1, 10.0, 1.2, 1.3, 1.2, 1.1])
-                .unwrap();
+                .expect("Operation failed");
 
-        let filtered = robust_filter_2d(&image, alpha_trimmed_filter, 3, 0.2).unwrap();
+        let filtered = robust_filter_2d(&image, alpha_trimmed_filter, 3, 0.2).expect("Operation failed");
 
         assert_eq!(filtered.dim(), image.dim());
         // The outlier (10.0) should be reduced
@@ -600,12 +600,12 @@ mod tests {
     fn test_edge_cases() {
         // Empty signal
         let empty_signal = Array1::zeros(0);
-        let result = alpha_trimmed_filter(&empty_signal, 3, 0.2).unwrap();
+        let result = alpha_trimmed_filter(&empty_signal, 3, 0.2).expect("Operation failed");
         assert_eq!(result.len(), 0);
 
         // Small signal
         let small_signal = Array1::from_vec(vec![1.0, 2.0]);
-        let result = alpha_trimmed_filter(&small_signal, 3, 0.2).unwrap();
+        let result = alpha_trimmed_filter(&small_signal, 3, 0.2).expect("Operation failed");
         assert_eq!(result.len(), 2);
     }
 

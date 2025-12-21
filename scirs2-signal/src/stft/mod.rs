@@ -35,7 +35,7 @@
 //! // Create a hann window and initialize STFT
 //! let window_length = 256;
 //! let hop_size = 64;
-//! let hann_window = window::hann(window_length, true).unwrap();
+//! let hann_window = window::hann(window_length, true).expect("Operation failed");
 //!
 //! // Create configuration
 //! let config = StftConfig {
@@ -51,10 +51,10 @@
 //!     hop_size,
 //!     fs,
 //!     Some(config),
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! // Compute STFT
-//! let stft_result = stft.stft(&signal).unwrap();
+//! let stft_result = stft.stft(&signal).expect("Operation failed");
 //!
 //! // The result is a complex-valued 2D array with:
 //! // - Rows representing frequency bins
@@ -103,13 +103,13 @@ mod tests {
         // Create Hann window
         let window_length = 32;
         let hop_size = 16;
-        let hann_window = window::hann(window_length, true).unwrap();
+        let hann_window = window::hann(window_length, true).expect("Operation failed");
 
         // Create STFT
-        let stft = ShortTimeFft::new(&hann_window, hop_size, fs, None).unwrap();
+        let stft = ShortTimeFft::new(&hann_window, hop_size, fs, None).expect("Operation failed");
 
         // Compute STFT
-        let result = stft.stft(&signal).unwrap();
+        let result = stft.stft(&signal).expect("Operation failed");
 
         // Check dimensions
         assert!(result.nrows() > 0);
@@ -132,13 +132,13 @@ mod tests {
         let mut config = StftConfig::default();
         config.dual_win = Some(rect_window.clone());
 
-        let stft = ShortTimeFft::new(&rect_window, hop_size, 1.0, Some(config)).unwrap();
+        let stft = ShortTimeFft::new(&rect_window, hop_size, 1.0, Some(config)).expect("Operation failed");
 
         // Compute STFT
-        let stft_result = stft.stft(&signal).unwrap();
+        let stft_result = stft.stft(&signal).expect("Operation failed");
 
         // Reconstruct signal
-        let reconstructed = stft.istft(&stft_result, None, None).unwrap();
+        let reconstructed = stft.istft(&stft_result, None, None).expect("Operation failed");
 
         // The reconstructed signal will be longer due to windowing
         // Just check that we get reasonable reconstruction in the middle part
@@ -176,9 +176,9 @@ mod tests {
         // Create a simple signal
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 
-        let stft = ShortTimeFft::from_window("hann", 10.0, 8, 4, None).unwrap();
+        let stft = ShortTimeFft::from_window("hann", 10.0, 8, 4, None).expect("Operation failed");
 
-        let result = stft.stft(&signal).unwrap();
+        let result = stft.stft(&signal).expect("Operation failed");
 
         assert!(result.nrows() > 0);
         assert!(result.ncols() > 0);
@@ -189,8 +189,8 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0, 0.0, -1.0, -2.0];
         let window = vec![1.0; 4];
 
-        let stft = ShortTimeFft::new(&window, 2, 1.0, None).unwrap();
-        let spectrogram = stft.spectrogram(&signal).unwrap();
+        let stft = ShortTimeFft::new(&window, 2, 1.0, None).expect("Operation failed");
+        let spectrogram = stft.spectrogram(&signal).expect("Operation failed");
 
         // All values should be non-negative (magnitude squared)
         for &val in spectrogram.iter() {
@@ -201,7 +201,7 @@ mod tests {
     #[test]
     fn test_frequency_and_time_vectors() {
         let window = vec![1.0; 16];
-        let stft = ShortTimeFft::new(&window, 8, 100.0, None).unwrap();
+        let stft = ShortTimeFft::new(&window, 8, 100.0, None).expect("Operation failed");
 
         let signal_length = 100;
         let f_vec = stft.f();
@@ -220,7 +220,7 @@ mod tests {
     #[test]
     fn test_memory_efficient_stft() {
         let signal: Vec<f64> = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect();
-        let window = window::hann(64, true).unwrap();
+        let window = window::hann(64, true).expect("Operation failed");
 
         let memory_config = MemoryEfficientStftConfig {
             memory_limit: 10, // Very small limit to force chunking
@@ -234,13 +234,13 @@ mod tests {
             100.0,
             None,
             memory_config,
-        ).unwrap();
+        ).expect("Operation failed");
 
-        let result = memory_stft.stft_chunked(&signal).unwrap();
+        let result = memory_stft.stft_chunked(&signal).expect("Operation failed");
         assert!(result.nrows() > 0);
         assert!(result.ncols() > 0);
 
-        let spectrogram = memory_stft.spectrogram_chunked(&signal).unwrap();
+        let spectrogram = memory_stft.spectrogram_chunked(&signal).expect("Operation failed");
         assert_eq!(spectrogram.shape(), result.shape());
 
         // All spectrogram values should be non-negative
@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     fn test_cola_window_creation() {
-        let cola_window = create_cola_window(32, 8).unwrap();
+        let cola_window = create_cola_window(32, 8).expect("Operation failed");
         assert_eq!(cola_window.len(), 32);
 
         // Test COLA condition
@@ -260,7 +260,7 @@ mod tests {
 
     #[test]
     fn test_window_normalization() {
-        let window = window::hann(32, true).unwrap();
+        let window = window::hann(32, true).expect("Operation failed");
 
         let mag_norm = calculate_window_normalization(&window, "magnitude");
         let psd_norm = calculate_window_normalization(&window, "psd");
@@ -276,7 +276,7 @@ mod tests {
 
     #[test]
     fn test_hop_size_estimation() {
-        let window = window::hann(64, true).unwrap();
+        let window = window::hann(64, true).expect("Operation failed");
 
         let hop_50 = estimate_optimal_hop_size(&window, 0.5);
         let hop_75 = estimate_optimal_hop_size(&window, 0.75);

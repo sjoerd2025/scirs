@@ -46,7 +46,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
         }
 
         let head_dim = _model_dim / numheads;
-        let scale = F::from(2.0).unwrap() / F::from(_model_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(_model_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         Ok(Self {
@@ -100,9 +101,11 @@ pub struct FeedForwardNetwork<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> FeedForwardNetwork<F> {
     /// Create new feed-forward network
     pub fn new(input_dim: usize, hidden_dim: usize, activation: ActivationFunction) -> Self {
-        let scale1 = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
+        let scale1 = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim).expect("Failed to convert to float");
         let std_dev1 = scale1.sqrt();
-        let scale2 = F::from(2.0).unwrap() / F::from(hidden_dim).unwrap();
+        let scale2 = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(hidden_dim).expect("Failed to convert to float");
         let std_dev2 = scale2.sqrt();
 
         Self {
@@ -197,7 +200,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
             blocks.push(TransformerBlock::new(model_dim, num_heads, ffn_hidden_dim)?);
         }
 
-        let scale = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         Ok(Self {

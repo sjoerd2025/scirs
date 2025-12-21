@@ -26,7 +26,8 @@ fn main() {
 
     // Initial condition [1, 0] (cosine solution)
     // Integrate over a long interval (0 to 10π) = 5 complete cycles
-    let result = solve_ivp(harmonic, [0.0, 10.0 * PI], array![1.0, 0.0], Some(options)).unwrap();
+    let result = solve_ivp(harmonic, [0.0, 10.0 * PI], array![1.0, 0.0], Some(options))
+        .expect("Operation failed");
 
     println!("\nSolving harmonic oscillator over t = [0, 10π] with high accuracy");
     println!("Exact solution is y(t) = cos(t), y'(t) = -sin(t)");
@@ -45,7 +46,12 @@ fn main() {
             .t
             .iter()
             .enumerate()
-            .min_by(|(_, &a), (_, &b)| (a - t).abs().partial_cmp(&(b - t).abs()).unwrap())
+            .min_by(|(_, &a), (_, &b)| {
+                (a - t)
+                    .abs()
+                    .partial_cmp(&(b - t).abs())
+                    .expect("Operation failed")
+            })
             .map(|(idx_, _)| idx_)
             .unwrap_or(0);
 
@@ -67,7 +73,7 @@ fn main() {
     println!("  Success: {}", result.success);
 
     // Check final state (should be close to [1, 0] after 5 full cycles)
-    let final_y = result.y.last().unwrap();
+    let final_y = result.y.last().expect("Operation failed");
     println!("\nFinal state: [{:.10}, {:.10}]", final_y[0], final_y[1]);
     println!(
         "Error from exact: [{:.2e}, {:.2e}]",
@@ -105,9 +111,10 @@ fn main() {
             ..Default::default()
         };
 
-        let result = solve_ivp(exp_decay, [0.0, 5.0], array![1.0], Some(options)).unwrap();
+        let result =
+            solve_ivp(exp_decay, [0.0, 5.0], array![1.0], Some(options)).expect("Operation failed");
 
-        let final_y = result.y.last().unwrap()[0];
+        let final_y = result.y.last().expect("Operation failed")[0];
         let exact = (-5.0f64).exp();
         let error = (final_y - exact).abs();
 
@@ -148,13 +155,13 @@ fn main() {
         ..Default::default()
     };
 
-    let result = solve_ivp(kepler, [0.0, 2.0 * PI], y0, Some(options)).unwrap();
+    let result = solve_ivp(kepler, [0.0, 2.0 * PI], y0, Some(options)).expect("Operation failed");
 
     println!("Solving for one complete orbit (period = 2π)");
     println!("Initial state: [x, y, vx, vy] = [1, 0, 0, 1]");
     println!("After one orbit, should return to initial state");
 
-    let final_state = result.y.last().unwrap();
+    let final_state = result.y.last().expect("Operation failed");
     println!(
         "\nFinal state: [{:.10}, {:.10}, {:.10}, {:.10}]",
         final_state[0], final_state[1], final_state[2], final_state[3]

@@ -356,7 +356,7 @@ where
     /// Panics if the array has negative strides.
     #[doc(alias = "nalgebra")]
     pub fn as_matrix(&self) -> nalgebra::DMatrixView<'_, N, nalgebra::Dyn, nalgebra::Dyn> {
-        self.try_as_matrix().unwrap()
+        self.try_as_matrix().expect("Operation failed")
     }
 }
 
@@ -372,7 +372,7 @@ where
     /// Panics if the array has negative strides.
     #[doc(alias = "nalgebra")]
     pub fn as_matrix(&self) -> nalgebra::DMatrixView<'_, N, nalgebra::Dyn, nalgebra::Dyn> {
-        self.try_as_matrix().unwrap()
+        self.try_as_matrix().expect("Operation failed")
     }
 }
 
@@ -382,7 +382,7 @@ where
     D: Dimension,
 {
     fn clone(&self) -> Self {
-        acquire(self.array.py(), self.array.as_array_ptr()).unwrap();
+        acquire(self.array.py(), self.array.as_array_ptr()).expect("Operation failed");
 
         Self {
             array: self.array.clone(),
@@ -578,7 +578,7 @@ where
     /// Panics if the array has negative strides.
     #[doc(alias = "nalgebra")]
     pub fn as_matrix_mut(&self) -> nalgebra::DMatrixViewMut<'_, N, nalgebra::Dyn, nalgebra::Dyn> {
-        self.try_as_matrix_mut().unwrap()
+        self.try_as_matrix_mut().expect("Operation failed")
     }
 }
 
@@ -594,7 +594,7 @@ where
     /// Panics if the array has negative strides.
     #[doc(alias = "nalgebra")]
     pub fn as_matrix_mut(&self) -> nalgebra::DMatrixViewMut<'_, N, nalgebra::Dyn, nalgebra::Dyn> {
-        self.try_as_matrix_mut().unwrap()
+        self.try_as_matrix_mut().expect("Operation failed")
     }
 }
 
@@ -617,7 +617,7 @@ where
     ///     assert_eq!(pyarray.len(), 10);
     ///
     ///     let pyarray = pyarray.readwrite();
-    ///     let pyarray = pyarray.resize(100).unwrap();
+    ///     let pyarray = pyarray.resize(100).expect("Operation failed");
     ///     assert_eq!(pyarray.len(), 100);
     /// });
     /// ```
@@ -632,7 +632,7 @@ where
 
         // Update the borrow metadata to match the shape change.
         release_mut(py, ptr);
-        acquire_mut(py, ptr).unwrap();
+        acquire_mut(py, ptr).expect("Operation failed");
 
         Ok(self)
     }
@@ -715,12 +715,14 @@ mod tests {
             let array = PyArray::<f64, _>::zeros(py, 10, false);
 
             // The view will make the internal reference check of `PyArray_Resize` fail.
-            let locals = [("array", &array)].into_py_dict(py).unwrap();
+            let locals = [("array", &array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let _view = py
                 .eval(c_str!("array[:]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let exclusive = array.readwrite();
             assert!(exclusive.resize(100).is_err());

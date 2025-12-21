@@ -106,8 +106,8 @@ pub fn simd_standardize_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
     let len = input.len();
     let mut result = Array1::zeros(len);
-    let input_slice = input.as_slice().unwrap();
-    let result_slice: &mut [f32] = result.as_slice_mut().unwrap();
+    let input_slice = input.as_slice().expect("Operation failed");
+    let result_slice: &mut [f32] = result.as_slice_mut().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {
@@ -206,8 +206,8 @@ pub fn simd_standardize_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
     let len = input.len();
     let mut result = Array1::zeros(len);
-    let input_slice = input.as_slice().unwrap();
-    let result_slice: &mut [f64] = result.as_slice_mut().unwrap();
+    let input_slice = input.as_slice().expect("Operation failed");
+    let result_slice: &mut [f64] = result.as_slice_mut().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {

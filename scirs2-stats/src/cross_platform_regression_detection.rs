@@ -456,7 +456,7 @@ impl CrossPlatformRegressionDetector {
         let platform = PlatformInfo::current_platform();
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .expect("Operation failed")
             .as_secs();
 
         let measurement = PerformanceMeasurement {
@@ -637,7 +637,7 @@ impl CrossPlatformRegressionDetector {
 
         // Calculate percentiles
         let mut sorted_times = times.clone();
-        sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let median = if sorted_times.len().is_multiple_of(2) {
             let mid = sorted_times.len() / 2;
@@ -718,7 +718,7 @@ impl CrossPlatformRegressionDetector {
         // Predict performance in 30 days
         let current_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .expect("Operation failed")
             .as_secs() as f64;
         let future_time = current_time + (30.0 * 86400.0);
         let predicted_performance_30d =
@@ -915,7 +915,7 @@ impl CrossPlatformRegressionDetector {
         Ok(RegressionReport {
             timestamp: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_secs(),
             overall_status,
             platform: PlatformInfo::current_platform(),
@@ -1004,7 +1004,7 @@ mod tests {
 
     #[test]
     fn test_performance_measurement_recording() {
-        let mut detector = create_regression_detector().unwrap();
+        let mut detector = create_regression_detector().expect("Operation failed");
         let result = detector.record_measurement(
             "test_function",
             "inputsize_100",
@@ -1017,7 +1017,7 @@ mod tests {
 
     #[test]
     fn testbaseline_statistics_calculation() {
-        let detector = create_regression_detector().unwrap();
+        let detector = create_regression_detector().expect("Operation failed");
         let measurements = vec![
             PerformanceMeasurement {
                 timestamp: 1000,
@@ -1057,14 +1057,16 @@ mod tests {
             },
         ];
 
-        let stats = detector.calculate_statistics(&measurements).unwrap();
+        let stats = detector
+            .calculate_statistics(&measurements)
+            .expect("Operation failed");
         assert!((stats.mean_time_ns - 105.0).abs() < 1e-10);
         assert_eq!(stats.sample_count, 2);
     }
 
     #[test]
     fn test_platform_similarity_calculation() {
-        let detector = create_regression_detector().unwrap();
+        let detector = create_regression_detector().expect("Operation failed");
         let platform1 = PlatformInfo {
             os: "linux".to_string(),
             arch: "x86_64".to_string(),
@@ -1083,11 +1085,13 @@ mod tests {
 
     #[test]
     fn test_linear_regression() {
-        let detector = create_regression_detector().unwrap();
+        let detector = create_regression_detector().expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![2.0, 4.0, 6.0, 8.0, 10.0]; // Perfect linear relationship
 
-        let (slope, r_squared) = detector.linear_regression(&x, &y).unwrap();
+        let (slope, r_squared) = detector
+            .linear_regression(&x, &y)
+            .expect("Operation failed");
         assert!((slope - 2.0).abs() < 1e-10);
         assert!((r_squared - 1.0).abs() < 1e-10);
     }

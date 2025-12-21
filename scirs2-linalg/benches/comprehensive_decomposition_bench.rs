@@ -68,7 +68,7 @@ fn bench_lu_decomposition(c: &mut Criterion) {
 
         // Standard LU decomposition
         group.bench_with_input(BenchmarkId::new("lu_standard", size), &matrix, |b, m| {
-            b.iter(|| lu(black_box(&m.view()), None).unwrap())
+            b.iter(|| lu(black_box(&m.view()), None).expect("Operation failed"))
         });
 
         // LU with partial pivoting
@@ -78,7 +78,7 @@ fn bench_lu_decomposition(c: &mut Criterion) {
             |b, m| {
                 b.iter(|| {
                     // lu_partial_pivot doesn't exist, use standard lu which includes partial pivoting
-                    lu(black_box(&m.view()), None).unwrap()
+                    lu(black_box(&m.view()), None).expect("Operation failed")
                 })
             },
         );
@@ -91,7 +91,8 @@ fn bench_lu_decomposition(c: &mut Criterion) {
             |b, (m, r)| {
                 b.iter(|| {
                     // lu_solve doesn't exist, use solve which internally uses LU
-                    solve(black_box(&m.view()), black_box(&r.view()), None).unwrap()
+                    solve(black_box(&m.view()), black_box(&r.view()), None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -118,29 +119,31 @@ fn bench_qr_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("qr_square", size),
             &squarematrix,
-            |b, m| b.iter(|| qr(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| qr(black_box(&m.view()), None).expect("Operation failed")),
         );
 
         // QR decomposition (tall matrix)
         group.bench_with_input(BenchmarkId::new("qr_tall", size), &tallmatrix, |b, m| {
-            b.iter(|| qr(black_box(&m.view()), None).unwrap())
+            b.iter(|| qr(black_box(&m.view()), None).expect("Operation failed"))
         });
 
         // QR decomposition (wide matrix)
         group.bench_with_input(BenchmarkId::new("qr_wide", size), &widematrix, |b, m| {
-            b.iter(|| qr(black_box(&m.view()), None).unwrap())
+            b.iter(|| qr(black_box(&m.view()), None).expect("Operation failed"))
         });
 
         // Economy QR decomposition
         group.bench_with_input(BenchmarkId::new("qr_economy", size), &tallmatrix, |b, m| {
-            b.iter(|| qr(black_box(&m.view()), None).unwrap())
+            b.iter(|| qr(black_box(&m.view()), None).expect("Operation failed"))
         });
 
         // Rank-revealing QR
         group.bench_with_input(
             BenchmarkId::new("qr_rank_revealing", size),
             &squarematrix,
-            |b, m| b.iter(|| rank_revealing_qr(black_box(&m.view()), 1e-12).unwrap()),
+            |b, m| {
+                b.iter(|| rank_revealing_qr(black_box(&m.view()), 1e-12).expect("Operation failed"))
+            },
         );
     }
 
@@ -166,31 +169,37 @@ fn bench_svd_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("svd_full_square", size),
             &squarematrix,
-            |b, m| b.iter(|| svd(black_box(&m.view()), false, None).unwrap()),
+            |b, m| b.iter(|| svd(black_box(&m.view()), false, None).expect("Operation failed")),
         );
 
         // Thin SVD (square)
         group.bench_with_input(
             BenchmarkId::new("svd_thin_square", size),
             &squarematrix,
-            |b, m| b.iter(|| svd(black_box(&m.view()), true, None).unwrap()),
+            |b, m| b.iter(|| svd(black_box(&m.view()), true, None).expect("Operation failed")),
         );
 
         // SVD (tall matrix)
         group.bench_with_input(BenchmarkId::new("svd_tall", size), &tallmatrix, |b, m| {
-            b.iter(|| svd(black_box(&m.view()), true, None).unwrap())
+            b.iter(|| svd(black_box(&m.view()), true, None).expect("Operation failed"))
         });
 
         // SVD (wide matrix)
         group.bench_with_input(BenchmarkId::new("svd_wide", size), &widematrix, |b, m| {
-            b.iter(|| svd(black_box(&m.view()), true, None).unwrap())
+            b.iter(|| svd(black_box(&m.view()), true, None).expect("Operation failed"))
         });
 
         // SVD values only
         group.bench_with_input(
             BenchmarkId::new("svd_values_only", size),
             &squarematrix,
-            |b, m| b.iter(|| svd(black_box(&m.view()), true, None).unwrap().1),
+            |b, m| {
+                b.iter(|| {
+                    svd(black_box(&m.view()), true, None)
+                        .expect("Operation failed")
+                        .1
+                })
+            },
         );
     }
 
@@ -212,7 +221,7 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cholesky_standard", size),
             &spdmatrix,
-            |b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| cholesky(black_box(&m.view()), None).expect("Operation failed")),
         );
 
         // Cholesky solve
@@ -222,8 +231,9 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
             &(&spdmatrix, &rhs),
             |b, (m, r)| {
                 b.iter(|| {
-                    let l = cholesky(black_box(&m.view()), None).unwrap();
-                    solve_triangular(&l.view(), black_box(&r.view()), false, false).unwrap()
+                    let l = cholesky(black_box(&m.view()), None).expect("Operation failed");
+                    solve_triangular(&l.view(), black_box(&r.view()), false, false)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -236,8 +246,8 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
         //         &(&spdmatrix, &update_vec),
         //         |b, (m, v)| {
         //             b.iter(|| {
-        //                 let l = cholesky(black_box(&m.view()), None).unwrap();
-        //                 cholesky_rank_one_update(&l, black_box(&v.view())).unwrap()
+        //                 let l = cholesky(black_box(&m.view()), None).expect("Operation failed");
+        //                 cholesky_rank_one_update(&l, black_box(&v.view())).expect("Operation failed")
         //             })
         //         },
         //     );
@@ -264,28 +274,28 @@ fn bench_eigenvalue_decomposition(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("eigvals_general", size),
             &generalmatrix,
-            |b, m| b.iter(|| eigvals(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| eigvals(black_box(&m.view()), None).expect("Operation failed")),
         );
 
         // General eigenvalue problem (values and vectors)
         group.bench_with_input(
             BenchmarkId::new("eig_general", size),
             &generalmatrix,
-            |b, m| b.iter(|| eig(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| eig(black_box(&m.view()), None).expect("Operation failed")),
         );
 
         // Symmetric eigenvalue problem (eigenvalues only)
         group.bench_with_input(
             BenchmarkId::new("eigvalsh_symmetric", size),
             &symmetricmatrix,
-            |b, m| b.iter(|| eigvalsh(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| eigvalsh(black_box(&m.view()), None).expect("Operation failed")),
         );
 
         // Symmetric eigenvalue problem (values and vectors)
         group.bench_with_input(
             BenchmarkId::new("eigh_symmetric", size),
             &symmetricmatrix,
-            |b, m| b.iter(|| eigh(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| eigh(black_box(&m.view()), None).expect("Operation failed")),
         );
 
         // Partial eigenvalue computation (if available)
@@ -296,7 +306,8 @@ fn bench_eigenvalue_decomposition(c: &mut Criterion) {
                 |b, m| {
                     b.iter(|| {
                         // eigvals_range doesn't exist, use smallest_k_eigh with proper parameters
-                        smallest_k_eigh(black_box(&m.view()), 10, size, 1e-10).unwrap()
+                        smallest_k_eigh(black_box(&m.view()), 10, size, 1e-10)
+                            .expect("Operation failed")
                     })
                 },
             );
@@ -320,14 +331,14 @@ fn bench_schur_decomposition(c: &mut Criterion) {
 
         // Real Schur decomposition
         group.bench_with_input(BenchmarkId::new("schur_real", size), &matrix, |b, m| {
-            b.iter(|| schur(black_box(&m.view())).unwrap())
+            b.iter(|| schur(black_box(&m.view())).expect("Operation failed"))
         });
 
         // Complex Schur decomposition
         group.bench_with_input(BenchmarkId::new("schur_complex", size), &matrix, |b, m| {
             b.iter(|| {
                 // complex_schur function signature issue, use standard schur
-                schur(black_box(&m.view())).unwrap()
+                schur(black_box(&m.view())).expect("Operation failed")
             })
         });
 
@@ -335,7 +346,7 @@ fn bench_schur_decomposition(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("schur_ordered", size), &matrix, |b, m| {
             b.iter(|| {
                 // ordered_schur not available, use standard schur
-                schur(black_box(&m.view())).unwrap()
+                schur(black_box(&m.view())).expect("Operation failed")
             })
         });
     }
@@ -358,7 +369,8 @@ fn bench_polar_decomposition(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("polar_right", size), &matrix, |b, m| {
             b.iter(|| {
                 // polar_right not available, use polar_decomposition
-                let (u, p) = advanced_polar_decomposition(black_box(&m.view()), true).unwrap();
+                let (u, p) = advanced_polar_decomposition(black_box(&m.view()), true)
+                    .expect("Operation failed");
                 (u, p)
             })
         });
@@ -367,7 +379,8 @@ fn bench_polar_decomposition(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("polar_left", size), &matrix, |b, m| {
             b.iter(|| {
                 // polar_left not available, use polar_decomposition
-                let (u, p) = advanced_polar_decomposition(black_box(&m.view()), false).unwrap();
+                let (u, p) = advanced_polar_decomposition(black_box(&m.view()), false)
+                    .expect("Operation failed");
                 (u, p)
             })
         });
@@ -376,7 +389,8 @@ fn bench_polar_decomposition(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("polar_unitary", size), &matrix, |b, m| {
             b.iter(|| {
                 // polar_unitary not available, use polar_decomposition and extract unitary part
-                let u_ = advanced_polar_decomposition(black_box(&m.view()), true).unwrap();
+                let u_ = advanced_polar_decomposition(black_box(&m.view()), true)
+                    .expect("Operation failed");
                 u_
             })
         });
@@ -405,7 +419,7 @@ fn bench_qz_decomposition(c: &mut Criterion) {
             |b, (a, matrix_b)| {
                 b.iter(|| {
                     // qz is not exported, skip this benchmark
-                    // qz(black_box(&a.view()), black_box(&matrix_b.view())).unwrap()
+                    // qz(black_box(&a.view()), black_box(&matrix_b.view())).expect("Operation failed")
                     black_box((a, matrix_b))
                 })
             },
@@ -418,7 +432,8 @@ fn bench_qz_decomposition(c: &mut Criterion) {
             |b, (a, matrix_b)| {
                 b.iter(|| {
                     // qz_eigvals not available, use eigvals_gen
-                    eigvals_gen(black_box(&a.view()), black_box(&matrix_b.view()), None).unwrap()
+                    eigvals_gen(black_box(&a.view()), black_box(&matrix_b.view()), None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -430,7 +445,8 @@ fn bench_qz_decomposition(c: &mut Criterion) {
             |b, (a, matrix_b)| {
                 b.iter(|| {
                     // qz_eig not available, use eig_gen
-                    eig_gen(black_box(&a.view()), black_box(&matrix_b.view()), None).unwrap()
+                    eig_gen(black_box(&a.view()), black_box(&matrix_b.view()), None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -454,14 +470,14 @@ fn bench_complex_decompositions(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("complex_lu", size),
             &complexmatrix,
-            |b, m| b.iter(|| complex_lu(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| complex_lu(black_box(&m.view())).expect("Operation failed")),
         );
 
         // Complex QR decomposition
         group.bench_with_input(
             BenchmarkId::new("complex_qr", size),
             &complexmatrix,
-            |b, m| b.iter(|| complex_qr(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| complex_qr(black_box(&m.view())).expect("Operation failed")),
         );
 
         // Complex SVD (smaller sizes)
@@ -469,7 +485,9 @@ fn bench_complex_decompositions(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("complex_svd", size),
                 &complexmatrix,
-                |b, m| b.iter(|| complex_svd(black_box(&m.view()), true).unwrap()),
+                |b, m| {
+                    b.iter(|| complex_svd(black_box(&m.view()), true).expect("Operation failed"))
+                },
             );
         }
 
@@ -477,7 +495,7 @@ fn bench_complex_decompositions(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("complex_eig", size),
             &complexmatrix,
-            |b, m| b.iter(|| complex_eig(black_box(&m.view())).unwrap()),
+            |b, m| b.iter(|| complex_eig(black_box(&m.view())).expect("Operation failed")),
         );
     }
 
@@ -547,14 +565,14 @@ fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
             b.iter(|| {
                 let m_copy = m.clone();
                 // lu_inplace not available, use regular lu
-                lu(&m_copy.view(), None).unwrap()
+                lu(&m_copy.view(), None).expect("Operation failed")
             })
         });
 
         group.bench_with_input(
             BenchmarkId::new("lu_out_of_place", size),
             &matrix,
-            |b, m| b.iter(|| lu(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| lu(black_box(&m.view()), None).expect("Operation failed")),
         );
 
         // In-place vs out-of-place Cholesky
@@ -566,7 +584,7 @@ fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
         //     |b, m| {
         //         b.iter(|| {
         //             let mut m_copy = m.clone();
-        //             cholesky_inplace(&mut m_copy.view_mut()).unwrap()
+        //             cholesky_inplace(&mut m_copy.view_mut()).expect("Operation failed")
         //         })
         //     },
         // );
@@ -574,7 +592,7 @@ fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cholesky_out_of_place", size),
             &spdmatrix,
-            |b, m| b.iter(|| cholesky(black_box(&m.view()), None).unwrap()),
+            |b, m| b.iter(|| cholesky(black_box(&m.view()), None).expect("Operation failed")),
         );
     }
 

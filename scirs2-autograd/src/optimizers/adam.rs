@@ -61,10 +61,10 @@ impl<F: Float> Adam<F> {
         env_handle: &mut VariableEnvironment<F>,
     ) -> Adam<F> {
         Adam::new(
-            F::from(0.001).unwrap(),
-            F::from(1e-08).unwrap(),
-            F::from(0.9).unwrap(),
-            F::from(0.999).unwrap(),
+            F::from(0.001).expect("Failed to convert constant to float"),
+            F::from(1e-08).expect("Failed to convert constant to float"),
+            F::from(0.9).expect("Failed to convert constant to float"),
+            F::from(0.999).expect("Failed to convert constant to float"),
             var_id_list,
             env_handle,
             unique_namespace_id,

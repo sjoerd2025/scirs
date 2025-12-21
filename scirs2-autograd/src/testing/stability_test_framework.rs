@@ -213,7 +213,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             BasicTestCase {
                 function: Box::new(|x: &Tensor<F>| {
                     // Simple scaling: y = 2 * x
-                    let _scale = F::from(2.0).unwrap();
+                    let _scale = F::from(2.0).expect("Failed to convert constant to float");
                     Ok(*x) // Simplified - would actually scale
                 }),
                 input: self.create_test_tensor(vec![5, 5], graph),
@@ -484,10 +484,16 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
 
         let size: usize = shape.iter().product();
         let data: Vec<F> = (0..size)
-            .map(|i| F::from(i).unwrap() * F::from(0.1).unwrap())
+            .map(|i| {
+                F::from(i).expect("Failed to convert to float")
+                    * F::from(0.1).expect("Failed to convert constant to float")
+            })
             .collect();
 
-        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(
+            Array::from_shape_vec(IxDyn(&shape), data).expect("Operation failed"),
+            graph,
+        )
     }
 
     #[allow(dead_code)]
@@ -506,11 +512,14 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         let data: Vec<F> = (0..size)
             .map(|_| {
                 let random_val = rng.random_range(-1.0..1.0);
-                F::from(random_val * magnitude).unwrap()
+                F::from(random_val * magnitude).expect("Failed to convert to float")
             })
             .collect();
 
-        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(
+            Array::from_shape_vec(IxDyn(&shape), data).expect("Operation failed"),
+            graph,
+        )
     }
 
     #[allow(dead_code)]
@@ -523,9 +532,15 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         use scirs2_core::ndarray::{Array, IxDyn};
 
         let shape = vec![values.len()];
-        let data: Vec<F> = values.into_iter().map(|v| F::from(v).unwrap()).collect();
+        let data: Vec<F> = values
+            .into_iter()
+            .map(|v| F::from(v).expect("Failed to convert to float"))
+            .collect();
 
-        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(
+            Array::from_shape_vec(IxDyn(&shape), data).expect("Operation failed"),
+            graph,
+        )
     }
 
     fn evaluate_test_pass(
@@ -1128,7 +1143,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_result() {
         let benchmark = BenchmarkResult {
             tensor_size: 1000,

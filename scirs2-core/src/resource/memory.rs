@@ -345,7 +345,7 @@ mod tests {
         let memoryinfo = MemoryInfo::detect();
         assert!(memoryinfo.is_ok());
 
-        let memory = memoryinfo.unwrap();
+        let memory = memoryinfo.expect("Operation failed");
         assert!(memory.total_memory > 0);
         assert!(memory.available_memory > 0);
         assert!(memory.available_memory <= memory.total_memory);

@@ -175,7 +175,7 @@ fn compression_example() -> Result<(), Box<dyn std::error::Error>> {
     // Add metadata after creating datasets
     {
         let root = file.root_mut();
-        let compressed_group = root.get_group_mut("compressed").unwrap();
+        let compressed_group = root.get_group_mut("compressed").expect("Operation failed");
         compressed_group.set_attribute("compression", AttributeValue::String("gzip-6".to_string()));
         compressed_group.set_attribute(
             "filters",

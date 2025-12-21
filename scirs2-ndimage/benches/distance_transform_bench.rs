@@ -48,7 +48,10 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
 
     for (rows, cols, _label) in sizes {
         let input = create_test_pattern_2d(rows, cols);
-        let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+        let input_dyn = input
+            .clone()
+            .into_dimensionality::<IxDyn>()
+            .expect("Operation failed");
 
         // Benchmark optimized algorithm
         group.bench_with_input(
@@ -95,7 +98,10 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
 
     for (size_x, size_y, size_z, label) in sizes {
         let input = create_test_pattern_3d(size_x, size_y, size_z);
-        let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+        let input_dyn = input
+            .clone()
+            .into_dimensionality::<IxDyn>()
+            .expect("Operation failed");
 
         // Only benchmark optimized algorithm for 3D due to performance
         group.bench_with_input(
@@ -135,7 +141,10 @@ fn bench_distancemetrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("distancemetrics");
 
     let input = create_test_pattern_2d(100, 100);
-    let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+    let input_dyn = input
+        .clone()
+        .into_dimensionality::<IxDyn>()
+        .expect("Operation failed");
 
     let metrics = vec![
         ("euclidean", "Euclidean"),
@@ -161,7 +170,10 @@ fn bench_sampling_effects(c: &mut Criterion) {
     let mut group = c.benchmark_group("sampling_effects");
 
     let input = create_test_pattern_2d(100, 100);
-    let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+    let input_dyn = input
+        .clone()
+        .into_dimensionality::<IxDyn>()
+        .expect("Operation failed");
 
     let sampling_options = vec![
         (None, "Unit Sampling"),
@@ -194,7 +206,10 @@ fn bench_return_modes(c: &mut Criterion) {
     let mut group = c.benchmark_group("return_modes");
 
     let input = create_test_pattern_2d(100, 100);
-    let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+    let input_dyn = input
+        .clone()
+        .into_dimensionality::<IxDyn>()
+        .expect("Operation failed");
 
     let return_modes = vec![
         (true, false, "Distances Only"),

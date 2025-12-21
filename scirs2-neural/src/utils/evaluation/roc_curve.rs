@@ -49,7 +49,7 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
     /// let y_score = Array1::from_vec(vec![0.1, 0.9, 0.8, 0.3, 0.7, 0.2, 0.6, 0.4, 0.8, 0.3]);
     ///
     /// // Compute ROC curve
-    /// let roc = ROCCurve::<f64>::new(&y_true.view(), &y_score.view()).unwrap();
+    /// let roc = ROCCurve::<f64>::new(&y_true.view(), &y_score.view()).expect("Operation failed");
     ///
     /// // AUC should be > 0.5 for a model better than random guessing
     /// assert!(roc.auc > 0.5);
@@ -112,14 +112,19 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
             // Set threshold for this point
             thresholds[i + 1] = score;
             // Compute rates
-            tpr[i + 1] = F::from(tp).unwrap() / F::from(n_pos).unwrap();
-            fpr[i + 1] = F::from(fp).unwrap() / F::from(n_neg).unwrap();
+            tpr[i + 1] = F::from(tp).expect("Failed to convert to float")
+                / F::from(n_pos).expect("Failed to convert to float");
+            fpr[i + 1] = F::from(fp).expect("Failed to convert to float")
+                / F::from(n_neg).expect("Failed to convert to float");
         }
 
         // Compute AUC using trapezoidal rule
         let mut auc = F::zero();
         for i in 0..fpr.len() - 1 {
-            auc = auc + (fpr[i + 1] - fpr[i]) * (tpr[i] + tpr[i + 1]) * F::from(0.5).unwrap();
+            auc = auc
+                + (fpr[i + 1] - fpr[i])
+                    * (tpr[i] + tpr[i + 1])
+                    * F::from(0.5).expect("Failed to convert constant to float");
         }
 
         Ok(ROCCurve {
@@ -165,7 +170,7 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
     /// // Create test data
     /// let y_true = Array1::from_vec(vec![0, 0, 1, 1]);
     /// let y_scores = Array1::from_vec(vec![0.1, 0.4, 0.35, 0.8]);
-    /// let roc = ROCCurve::new(&y_true.view(), &y_scores.view()).unwrap();
+    /// let roc = ROCCurve::new(&y_true.view(), &y_scores.view()).expect("Operation failed");
     ///
     /// // Create ROC curve visualization
     /// let options = ColorOptions::default();
@@ -221,9 +226,12 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
         let mut prev_x = 0;
         let mut prev_y = height - 1; // Start at (0,0) in ROC space
         for i in 1..self.fpr.len() {
-            let x = (self.fpr[i].to_f64().unwrap() * (width - 1) as f64).round() as usize;
-            let y =
-                height - 1 - (self.tpr[i].to_f64().unwrap() * (height - 1) as f64).round() as usize;
+            let x = (self.fpr[i].to_f64().expect("Operation failed") * (width - 1) as f64).round()
+                as usize;
+            let y = height
+                - 1
+                - (self.tpr[i].to_f64().expect("Operation failed") * (height - 1) as f64).round()
+                    as usize;
 
             // Draw line segments between points
             if x != prev_x || y != prev_y {

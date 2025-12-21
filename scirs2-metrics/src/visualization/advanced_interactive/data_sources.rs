@@ -416,14 +416,23 @@ impl DataSourceManager {
     /// Register data source
     pub fn register_source(&self, source: Box<dyn DataSource>) -> Result<()> {
         let id = source.id().to_string();
-        self.sources.lock().unwrap().insert(id, source);
+        self.sources
+            .lock()
+            .expect("Operation failed")
+            .insert(id, source);
         Ok(())
     }
 
     /// Unregister data source
     pub fn unregister_source(&self, source_id: &str) -> Result<()> {
-        self.sources.lock().unwrap().remove(source_id);
-        self.subscriptions.lock().unwrap().remove(source_id);
+        self.sources
+            .lock()
+            .expect("Operation failed")
+            .remove(source_id);
+        self.subscriptions
+            .lock()
+            .expect("Operation failed")
+            .remove(source_id);
         Ok(())
     }
 
@@ -432,7 +441,7 @@ impl DataSourceManager {
         // Simplified - would return actual source reference
         self.sources
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .get(source_id)
             .map(|_| source_id.to_string())
     }
@@ -445,7 +454,7 @@ impl DataSourceManager {
         let subscription_id = format!("{}_{}", source_id, scirs2_core::random::random::<u64>());
         self.subscriptions
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .entry(source_id.to_string())
             .or_default()
             .push(Box::new(callback));

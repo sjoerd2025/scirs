@@ -262,7 +262,7 @@ where
             let scores = cv_validator.cross_validate_optics(
                 data,
                 min_samples,
-                Some(F::from(max_eps).unwrap()),
+                Some(F::from(max_eps).expect("Failed to convert to float")),
                 &self.config.metric,
             )?;
             let mean_score = scores.iter().sum::<f64>() / scores.len() as f64;
@@ -340,7 +340,7 @@ where
                 data,
                 n_clusters,
                 n_neighbors,
-                F::from(gamma).unwrap(),
+                F::from(gamma).expect("Failed to convert to float"),
                 max_iter,
                 &self.config.metric,
             )?;
@@ -411,7 +411,7 @@ where
             let cv_validator = CrossValidator::new(&self.config.cv_config);
             let scores = cv_validator.cross_validate_affinity_propagation(
                 data,
-                F::from(damping).unwrap(),
+                F::from(damping).expect("Failed to convert to float"),
                 max_iter,
                 convergence_iter,
                 &self.config.metric,
@@ -479,7 +479,7 @@ where
             let scores = cv_validator.cross_validate_birch(
                 data,
                 branching_factor,
-                F::from(threshold).unwrap(),
+                F::from(threshold).expect("Failed to convert to float"),
                 &self.config.metric,
             )?;
             let mean_score = scores.iter().sum::<f64>() / scores.len() as f64;
@@ -549,8 +549,8 @@ where
                 data,
                 n_components,
                 max_iter,
-                F::from(tol).unwrap(),
-                F::from(reg_covar).unwrap(),
+                F::from(tol).expect("Failed to convert to float"),
+                F::from(reg_covar).expect("Failed to convert to float"),
                 &self.config.metric,
             )?;
             let mean_score = scores.iter().sum::<f64>() / scores.len() as f64;

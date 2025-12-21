@@ -204,7 +204,7 @@ fn read_and_process_scientific_data(output_dir: &str) -> Result<(), Box<dyn Erro
         if values.len() >= 2 {
             let mut rates = Vec::new();
             let mut sorted_values = values.clone();
-            sorted_values.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            sorted_values.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
             for i in 1..sorted_values.len() {
                 let time_diff = sorted_values[i].0 - sorted_values[i - 1].0;
@@ -273,7 +273,7 @@ fn convert_units_and_create_derived_data(output_dir: &str) -> Result<(), Box<dyn
         indices.sort_by(|&a, &b| {
             let time_a = data[[a, 0]].parse::<f64>().unwrap_or(0.0);
             let time_b = data[[b, 0]].parse::<f64>().unwrap_or(0.0);
-            time_a.partial_cmp(&time_b).unwrap()
+            time_a.partial_cmp(&time_b).expect("Operation failed")
         });
     }
 
@@ -291,8 +291,11 @@ fn convert_units_and_create_derived_data(output_dir: &str) -> Result<(), Box<dyn
         let pressure_atm = pressure / 101.325; // kPa -> atm
 
         // Find this row's position in its material group
-        let material_group = material_groups.get(&material).unwrap();
-        let pos_in_group = material_group.iter().position(|&x| x == i).unwrap();
+        let material_group = material_groups.get(&material).expect("Operation failed");
+        let pos_in_group = material_group
+            .iter()
+            .position(|&x| x == i)
+            .expect("Operation failed");
 
         let mut temp_rate = 0.0;
         let mut pressure_change = 0.0;

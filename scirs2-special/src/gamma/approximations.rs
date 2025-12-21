@@ -11,7 +11,7 @@ use super::constants;
 /// Enhanced Stirling's formula with improved overflow protection and extreme value handling
 #[allow(dead_code)]
 pub(super) fn stirling_approximation<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // Enhanced overflow detection for extreme values
     if x_f64 > 500.0 {
@@ -23,7 +23,7 @@ pub(super) fn stirling_approximation<F: Float + FromPrimitive + std::ops::AddAss
     let log_gamma = stirling_approximation_ln(x);
 
     // Enhanced overflow threshold with safety margin
-    let overflow_threshold = F::from(std::f64::MAX.ln() * 0.8).unwrap(); // More conservative threshold
+    let overflow_threshold = F::from(std::f64::MAX.ln() * 0.8).expect("Operation failed"); // More conservative threshold
 
     // Only exponentiate if it won't overflow
     if log_gamma < overflow_threshold {
@@ -132,21 +132,21 @@ pub(super) fn stirling_approximation<F: Float + FromPrimitive + std::ops::AddAss
 /// - de Bruijn, "Asymptotic Methods", Ch. 4
 #[allow(dead_code)]
 pub(super) fn stirling_approximation_ln<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // Enhanced precision coefficients for Stirling's series with more terms
-    let p0 = F::from(constants::LOG_SQRT_2PI).unwrap();
-    let p1 = F::from(1.0 / 12.0).unwrap(); // B₂/(2·1·2!)
-    let p2 = F::from(-1.0 / 360.0).unwrap(); // B₄/(4·3·4!)
-    let p3 = F::from(1.0 / 1260.0).unwrap(); // B₆/(6·5·6!)
-    let p4 = F::from(-1.0 / 1680.0).unwrap(); // B₈/(8·7·8!)
+    let p0 = F::from(constants::LOG_SQRT_2PI).expect("Failed to convert to float");
+    let p1 = F::from(1.0 / 12.0).expect("Failed to convert to float"); // B₂/(2·1·2!)
+    let p2 = F::from(-1.0 / 360.0).expect("Failed to convert to float"); // B₄/(4·3·4!)
+    let p3 = F::from(1.0 / 1260.0).expect("Failed to convert to float"); // B₆/(6·5·6!)
+    let p4 = F::from(-1.0 / 1680.0).expect("Failed to convert to float"); // B₈/(8·7·8!)
 
     // Additional higher-order terms for extreme precision
-    let p5 = F::from(1.0 / 1188.0).unwrap(); // B₁₀/(10·9·10!)
-    let p6 = F::from(-691.0 / 360360.0).unwrap(); // B₁₂/(12·11·12!)
-    let p7 = F::from(1.0 / 156.0).unwrap(); // B₁₄/(14·13·14!)
+    let p5 = F::from(1.0 / 1188.0).expect("Failed to convert to float"); // B₁₀/(10·9·10!)
+    let p6 = F::from(-691.0 / 360360.0).expect("Failed to convert to float"); // B₁₂/(12·11·12!)
+    let p7 = F::from(1.0 / 156.0).expect("Failed to convert to float"); // B₁₄/(14·13·14!)
 
-    let xminus_half = x - F::from(0.5).unwrap();
+    let xminus_half = x - F::from(0.5).expect("Failed to convert constant to float");
     let log_x = x.ln();
     let x_recip = F::one() / x;
     let x_recip_squared = x_recip * x_recip;
@@ -180,9 +180,9 @@ pub(super) fn stirling_approximation_ln<F: Float + FromPrimitive + std::ops::Add
     } else {
         // Fallback for extreme cases
         if x_f64 > 0.0 {
-            F::from(std::f64::MAX.ln() * 0.9).unwrap()
+            F::from(std::f64::MAX.ln() * 0.9).expect("Operation failed")
         } else {
-            F::from(std::f64::MIN.ln() * 0.9).unwrap()
+            F::from(std::f64::MIN.ln() * 0.9).expect("Operation failed")
         }
     }
 }
@@ -338,29 +338,29 @@ pub(super) fn stirling_approximation_ln<F: Float + FromPrimitive + std::ops::Add
 pub(super) fn improved_lanczos_gamma<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
     // Use the Lanczos approximation with g=7 (standard choice)
     // These coefficients are from numerical recipes and provide excellent accuracy
-    let g = F::from(7.0).unwrap();
-    let sqrt_2pi = F::from(constants::SQRT_2PI).unwrap();
+    let g = F::from(7.0).expect("Failed to convert constant to float");
+    let sqrt_2pi = F::from(constants::SQRT_2PI).expect("Failed to convert to float");
 
     // Coefficients for the Lanczos approximation (from Boost)
     let p = [
-        F::from(0.999_999_999_999_809_9).unwrap(),
-        F::from(676.5203681218851).unwrap(),
-        F::from(-1259.1392167224028).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507343278686905).unwrap(),
-        F::from(-0.13857109526572012).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.5056327351493116e-7).unwrap(),
+        F::from(0.999_999_999_999_809_9).expect("Failed to convert to float"),
+        F::from(676.5203681218851).expect("Failed to convert constant to float"),
+        F::from(-1259.1392167224028).expect("Failed to convert constant to float"),
+        F::from(771.323_428_777_653_1).expect("Failed to convert to float"),
+        F::from(-176.615_029_162_140_6).expect("Failed to convert to float"),
+        F::from(12.507343278686905).expect("Failed to convert constant to float"),
+        F::from(-0.13857109526572012).expect("Failed to convert constant to float"),
+        F::from(9.984_369_578_019_572e-6).expect("Failed to convert to float"),
+        F::from(1.5056327351493116e-7).expect("Failed to convert constant to float"),
     ];
 
-    if x < F::from(0.5).unwrap() {
+    if x < F::from(0.5).expect("Failed to convert constant to float") {
         // Use reflection formula: Γ(x) = π / (sin(πx) · Γ(1-x))
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let sinpix = (pi * x).sin();
 
         // Handle possible division by zero
-        if sinpix.abs() < F::from(1e-14).unwrap() {
+        if sinpix.abs() < F::from(1e-14).expect("Failed to convert constant to float") {
             return F::infinity();
         }
 
@@ -371,11 +371,14 @@ pub(super) fn improved_lanczos_gamma<F: Float + FromPrimitive + std::ops::AddAss
     let mut acc = p[0];
 
     for (i, &p_val) in p.iter().enumerate().skip(1) {
-        acc += p_val / (z + F::from(i).unwrap());
+        acc += p_val / (z + F::from(i).expect("Failed to convert to float"));
     }
 
-    let t = z + g + F::from(0.5).unwrap();
-    sqrt_2pi * acc * t.powf(z + F::from(0.5).unwrap()) * (-t).exp()
+    let t = z + g + F::from(0.5).expect("Failed to convert constant to float");
+    sqrt_2pi
+        * acc
+        * t.powf(z + F::from(0.5).expect("Failed to convert constant to float"))
+        * (-t).exp()
 }
 
 /// Improved Lanczos approximation for the log gamma function with enhanced accuracy.
@@ -385,31 +388,31 @@ pub(super) fn improved_lanczos_gamma<F: Float + FromPrimitive + std::ops::AddAss
 #[allow(dead_code)]
 pub(super) fn improved_lanczos_gammaln<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
     // Use the Lanczos approximation with g=7 (standard choice)
-    let g = F::from(7.0).unwrap();
-    let log_sqrt_2pi = F::from(constants::LOG_SQRT_2PI).unwrap();
+    let g = F::from(7.0).expect("Failed to convert constant to float");
+    let log_sqrt_2pi = F::from(constants::LOG_SQRT_2PI).expect("Failed to convert to float");
 
     // Coefficients for the Lanczos approximation (from Boost)
     let p = [
-        F::from(0.999_999_999_999_809_9).unwrap(),
-        F::from(676.5203681218851).unwrap(),
-        F::from(-1259.1392167224028).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507343278686905).unwrap(),
-        F::from(-0.13857109526572012).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.5056327351493116e-7).unwrap(),
+        F::from(0.999_999_999_999_809_9).expect("Failed to convert to float"),
+        F::from(676.5203681218851).expect("Failed to convert constant to float"),
+        F::from(-1259.1392167224028).expect("Failed to convert constant to float"),
+        F::from(771.323_428_777_653_1).expect("Failed to convert to float"),
+        F::from(-176.615_029_162_140_6).expect("Failed to convert to float"),
+        F::from(12.507343278686905).expect("Failed to convert constant to float"),
+        F::from(-0.13857109526572012).expect("Failed to convert constant to float"),
+        F::from(9.984_369_578_019_572e-6).expect("Failed to convert to float"),
+        F::from(1.5056327351493116e-7).expect("Failed to convert constant to float"),
     ];
 
-    if x < F::from(0.5).unwrap() {
+    if x < F::from(0.5).expect("Failed to convert constant to float") {
         // Use the reflection formula for log-gamma:
         // log(Γ(x)) = log(π) - log(sin(πx)) - log(Γ(1-x))
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let log_pi = pi.ln();
 
         // Handle potential numerical issues
         let sinpix = (pi * x).sin();
-        if sinpix.abs() < F::from(1e-14).unwrap() {
+        if sinpix.abs() < F::from(1e-14).expect("Failed to convert constant to float") {
             return F::infinity();
         }
         let log_sinpix = sinpix.ln();
@@ -421,11 +424,14 @@ pub(super) fn improved_lanczos_gammaln<F: Float + FromPrimitive + std::ops::AddA
     let mut acc = p[0];
 
     for (i, &p_val) in p.iter().enumerate().skip(1) {
-        acc += p_val / (z + F::from(i).unwrap());
+        acc += p_val / (z + F::from(i).expect("Failed to convert to float"));
     }
 
-    let t = z + g + F::from(0.5).unwrap();
+    let t = z + g + F::from(0.5).expect("Failed to convert constant to float");
 
     // log(gamma(x)) = log(sqrt(2*pi)) + log(acc) + (z+0.5)*log(t) - t
-    log_sqrt_2pi + acc.ln() + (z + F::from(0.5).unwrap()) * t.ln() - t
+    log_sqrt_2pi
+        + acc.ln()
+        + (z + F::from(0.5).expect("Failed to convert constant to float")) * t.ln()
+        - t
 }

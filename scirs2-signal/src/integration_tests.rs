@@ -138,7 +138,7 @@ fn test_biomedical_signal_pipeline() -> SignalResult<()> {
         .psd
         .iter()
         .enumerate()
-        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
         .map(|(i, _)| i)
         .unwrap_or(0);
 
@@ -780,7 +780,7 @@ fn recognize_chords(
             .map(|(&f, &p)| (f, p))
             .collect();
 
-        freq_power_pairs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        freq_power_pairs.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         if freq_power_pairs.len() >= 3 {
             let chord_name = classify_chord(&[
@@ -893,7 +893,7 @@ fn detect_seismic_events(signal: &[f64], fs: f64) -> SignalResult<Vec<f64>> {
 #[allow(dead_code)]
 fn estimate_noise_level(coeffs: &[f64]) -> f64 {
     let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
-    abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    abs_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     if abs_coeffs.is_empty() {
         return 0.1;

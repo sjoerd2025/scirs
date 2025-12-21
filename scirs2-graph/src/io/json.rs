@@ -65,12 +65,12 @@
 //! use scirs2_graph::io::json::{read_json_format, write_json_format};
 //!
 //! // Create a temporary file with JSON data
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, r#"{{"directed": false, "nodes": [{{"id": "1"}}, {{"id": "2"}}], "edges": [{{"source": "1", "target": "2"}}]}}"#).unwrap();
-//! temp_file.flush().unwrap();
+//! let mut temp_file = NamedTempFile::new().expect("Operation failed");
+//! writeln!(temp_file, r#"{{"directed": false, "nodes": [{{"id": "1"}}, {{"id": "2"}}], "edges": [{{"source": "1", "target": "2"}}]}}"#).expect("Operation failed");
+//! temp_file.flush().expect("Operation failed");
 //!
 //! // Read the graph
-//! let graph: Graph<i32, f64> = read_json_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, f64> = read_json_format(temp_file.path(), false).expect("Operation failed");
 //! assert_eq!(graph.node_count(), 2);
 //! assert_eq!(graph.edge_count(), 1);
 //! ```
@@ -451,7 +451,7 @@ mod tests {
 
     #[test]
     fn test_read_json_undirected() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
         writeln!(
             temp_file,
             r#"{{
@@ -467,10 +467,11 @@ mod tests {
                 ]
             }}"#
         )
-        .unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: operation failed");
+        temp_file.flush().expect("Operation failed");
 
-        let graph: Graph<i32, f64> = read_json_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_json_format(temp_file.path(), false).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -478,7 +479,7 @@ mod tests {
 
     #[test]
     fn test_read_json_directed() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
         writeln!(
             temp_file,
             r#"{{
@@ -494,10 +495,11 @@ mod tests {
                 ]
             }}"#
         )
-        .unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: operation failed");
+        temp_file.flush().expect("Operation failed");
 
-        let graph: DiGraph<i32, f64> = read_json_format_digraph(temp_file.path(), false).unwrap();
+        let graph: DiGraph<i32, f64> =
+            read_json_format_digraph(temp_file.path(), false).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -505,7 +507,7 @@ mod tests {
 
     #[test]
     fn test_read_json_weighted() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
         writeln!(
             temp_file,
             r#"{{
@@ -521,10 +523,11 @@ mod tests {
                 ]
             }}"#
         )
-        .unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: operation failed");
+        temp_file.flush().expect("Operation failed");
 
-        let graph: Graph<i32, f64> = read_json_format(temp_file.path(), true).unwrap();
+        let graph: Graph<i32, f64> =
+            read_json_format(temp_file.path(), true).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -533,13 +536,18 @@ mod tests {
     #[test]
     fn test_write_read_roundtrip() {
         let mut original_graph: Graph<i32, f64> = Graph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Operation failed");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_json_format(&original_graph, temp_file.path(), true).unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
+        write_json_format(&original_graph, temp_file.path(), true).expect("Operation failed");
 
-        let read_graph: Graph<i32, f64> = read_json_format(temp_file.path(), true).unwrap();
+        let read_graph: Graph<i32, f64> =
+            read_json_format(temp_file.path(), true).expect("Operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -548,14 +556,19 @@ mod tests {
     #[test]
     fn test_digraph_write_read_roundtrip() {
         let mut original_graph: DiGraph<i32, f64> = DiGraph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Operation failed");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_json_format_digraph(&original_graph, temp_file.path(), true).unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
+        write_json_format_digraph(&original_graph, temp_file.path(), true)
+            .expect("Operation failed");
 
         let read_graph: DiGraph<i32, f64> =
-            read_json_format_digraph(temp_file.path(), true).unwrap();
+            read_json_format_digraph(temp_file.path(), true).expect("Operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -563,9 +576,9 @@ mod tests {
 
     #[test]
     fn test_invalid_json() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "{{invalid json").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "{{invalid json").expect("Operation failed");
+        temp_file.flush().expect("Operation failed");
 
         let result: Result<Graph<i32, f64>> = read_json_format(temp_file.path(), false);
         assert!(result.is_err());
@@ -573,7 +586,7 @@ mod tests {
 
     #[test]
     fn test_missing_node_reference() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
         writeln!(
             temp_file,
             r#"{{
@@ -587,8 +600,8 @@ mod tests {
                 ]
             }}"#
         )
-        .unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: operation failed");
+        temp_file.flush().expect("Operation failed");
 
         let result: Result<Graph<i32, f64>> = read_json_format(temp_file.path(), false);
         assert!(result.is_err());
@@ -596,7 +609,7 @@ mod tests {
 
     #[test]
     fn test_directed_graph_mismatch() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
         writeln!(
             temp_file,
             r#"{{
@@ -610,8 +623,8 @@ mod tests {
                 ]
             }}"#
         )
-        .unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: operation failed");
+        temp_file.flush().expect("Operation failed");
 
         // Try to read as undirected graph - should fail
         let result: Result<Graph<i32, f64>> = read_json_format(temp_file.path(), false);

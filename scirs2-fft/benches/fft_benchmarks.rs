@@ -48,7 +48,7 @@ fn bench_fft_1d(c: &mut Criterion) {
         );
 
         // Benchmark inverse real FFT
-        let spectrum = rfft(&signal, None).unwrap();
+        let spectrum = rfft(&signal, None).expect("Operation failed");
         group.bench_with_input(BenchmarkId::new("irfft", size), &spectrum, |b, spectrum| {
             b.iter(|| irfft(black_box(spectrum), Some(size)))
         });
@@ -74,7 +74,9 @@ fn bench_fft_2d(c: &mut Criterion) {
         });
 
         // Reshape to 2D
-        let data_2d = data.into_shape_with_order((size, size)).unwrap();
+        let data_2d = data
+            .into_shape_with_order((size, size))
+            .expect("Operation failed");
 
         // Benchmark 2D FFT
         group.bench_with_input(BenchmarkId::new("fft2", size), &data_2d, |b, data| {
@@ -180,7 +182,9 @@ fn bench_memory_efficient(c: &mut Criterion) {
             (2.0 * PI * (5.0 * x + 3.0 * y)).sin()
         });
 
-        let data_2d = data.into_shape_with_order((size, size)).unwrap();
+        let data_2d = data
+            .into_shape_with_order((size, size))
+            .expect("Operation failed");
 
         group.bench_with_input(
             BenchmarkId::new("fft2_efficient", size),

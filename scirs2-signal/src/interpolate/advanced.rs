@@ -34,7 +34,7 @@ use scirs2_linalg::{cholesky, solve, solve_triangular};
 /// use scirs2_signal::interpolate::advanced::gaussian_process_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
-/// let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).unwrap();
+/// let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).expect("Operation failed");
 /// // Result contains probabilistically interpolated values
 /// ```
 #[allow(dead_code)]
@@ -179,7 +179,7 @@ pub fn gaussian_process_interpolate(
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let config = InterpolationConfig::default();
 /// let variogram = |h: f64| 1.0 - (-h / 2.0).exp(); // Exponential model
-/// let result = kriging_interpolate(&signal, variogram, &config).unwrap();
+/// let result = kriging_interpolate(&signal, variogram, &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn kriging_interpolate<F>(
@@ -305,7 +305,7 @@ where
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let config = InterpolationConfig::default();
 /// let rbf = |r: f64| (-r * r).exp(); // Gaussian RBF
-/// let result = rbf_interpolate(&signal, rbf, &config).unwrap();
+/// let result = rbf_interpolate(&signal, rbf, &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn rbf_interpolate<F>(
@@ -415,7 +415,7 @@ where
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
 /// let config = InterpolationConfig::default();
-/// let result = minimum_energy_interpolate(&signal, &config).unwrap();
+/// let result = minimum_energy_interpolate(&signal, &config).expect("Operation failed");
 /// // Result contains the smoothest possible interpolation
 /// ```
 #[allow(dead_code)]
@@ -652,7 +652,7 @@ mod tests {
     #[test]
     fn test_gaussian_process_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
-        let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).unwrap();
+        let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).expect("Operation failed");
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -669,7 +669,7 @@ mod tests {
         let config = InterpolationConfig::default();
         let variogram = |h: f64| 1.0 - (-h / 2.0).exp();
 
-        let result = kriging_interpolate(&signal, variogram, &config).unwrap();
+        let result = kriging_interpolate(&signal, variogram, &config).expect("Operation failed");
 
         assert!(result.iter().all(|&x| !x.is_nan()));
         assert_eq!(result[0], 1.0);
@@ -682,7 +682,7 @@ mod tests {
         let config = InterpolationConfig::default();
         let rbf = |r: f64| (-r * r).exp();
 
-        let result = rbf_interpolate(&signal, rbf, &config).unwrap();
+        let result = rbf_interpolate(&signal, rbf, &config).expect("Operation failed");
 
         assert!(result.iter().all(|&x| !x.is_nan()));
         assert_eq!(result[0], 1.0);
@@ -694,7 +694,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
         let config = InterpolationConfig::default();
 
-        let result = minimum_energy_interpolate(&signal, &config).unwrap();
+        let result = minimum_energy_interpolate(&signal, &config).expect("Operation failed");
 
         assert!(result.iter().all(|&x| !x.is_nan()));
         assert_eq!(result[0], 1.0);
@@ -761,10 +761,10 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let config = InterpolationConfig::default();
 
-        let result1 = gaussian_process_interpolate(&signal, 1.0, 1.0, 0.01).unwrap();
-        let result2 = kriging_interpolate(&signal, |_| 1.0, &config).unwrap();
-        let result3 = rbf_interpolate(&signal, |_| 1.0, &config).unwrap();
-        let result4 = minimum_energy_interpolate(&signal, &config).unwrap();
+        let result1 = gaussian_process_interpolate(&signal, 1.0, 1.0, 0.01).expect("Operation failed");
+        let result2 = kriging_interpolate(&signal, |_| 1.0, &config).expect("Operation failed");
+        let result3 = rbf_interpolate(&signal, |_| 1.0, &config).expect("Operation failed");
+        let result4 = minimum_energy_interpolate(&signal, &config).expect("Operation failed");
 
         assert_eq!(result1, signal);
         assert_eq!(result2, signal);

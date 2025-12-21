@@ -83,7 +83,7 @@ pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
         let trace = a11 + a22;
         let det = a11 * a22 - a12 * a21;
 
-        let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+        let discriminant = trace * trace - F::from(4.0).expect("Operation failed") * det;
 
         if discriminant < F::zero() {
             return Err(scirs2_autograd::error::AutogradError::OperationError(
@@ -92,9 +92,9 @@ pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
         }
 
         let sqrt_disc = discriminant.sqrt();
-        s_squared[0] = (trace + sqrt_disc) / F::from(2.0).unwrap();
+        s_squared[0] = (trace + sqrt_disc) / F::from(2.0).expect("Operation failed");
         if s_squared.len() > 1 {
-            s_squared[1] = (trace - sqrt_disc) / F::from(2.0).unwrap();
+            s_squared[1] = (trace - sqrt_disc) / F::from(2.0).expect("Operation failed");
         }
 
         // Compute eigenvectors
@@ -165,7 +165,7 @@ pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
     }
 
     // Apply cutoff for small singular values
-    let default_rcond = F::from(1e-15).unwrap().sqrt();
+    let default_rcond = F::from(1e-15).expect("Operation failed").sqrt();
     let rcond_val = rcond.unwrap_or(default_rcond);
     let max_s = s.fold(F::zero(), |a, &b| if a > b { a } else { b });
     let cutoff = max_s * rcond_val;
@@ -208,8 +208,8 @@ pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
                     // Simplified gradient approximation
                     // For a proper implementation, see the paper:
                     // "Matrix Backpropagation for Deep Networks with Structured Layers"
-                    let grad_2d = grad.clone().intoshape((n, m)).unwrap();
-                    let pinv_2d = pinv_data.clone().intoshape((n, m)).unwrap();
+                    let grad_2d = grad.clone().intoshape((n, m)).expect("Operation failed");
+                    let pinv_2d = pinv_data.clone().intoshape((n, m)).expect("Operation failed");
 
                     // Approximate gradient: -A^+ * dL/dA^+ * A^+
                     let mut result = Array2::<F>::zeros((m, n));
@@ -307,7 +307,7 @@ pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autogra
         let trace = a11 + a22;
         let det = a11 * a22 - a12 * a21;
 
-        let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+        let discriminant = trace * trace - F::from(4.0).expect("Operation failed") * det;
 
         if discriminant < F::zero() {
             return Err(scirs2_autograd::error::AutogradError::OperationError(
@@ -316,8 +316,8 @@ pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autogra
         }
 
         let sqrt_disc = discriminant.sqrt();
-        let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();
-        let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();
+        let lambda1 = (trace + sqrt_disc) / F::from(2.0).expect("Operation failed");
+        let lambda2 = (trace - sqrt_disc) / F::from(2.0).expect("Operation failed");
 
         // Check for negative eigenvalues
         if lambda1 < F::zero() || lambda2 < F::zero() {
@@ -415,8 +415,8 @@ pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autogra
                 Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                     // For sqrtm, the gradient involves solving a Sylvester equation
                     // For simplicity, we'll use a crude approximation
-                    let grad_2d = grad.clone().intoshape((n, n)).unwrap();
-                    let sqrtm_2d = sqrtm_data.clone().intoshape((n, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((n, n)).expect("Operation failed");
+                    let sqrtm_2d = sqrtm_data.clone().intoshape((n, n)).expect("Operation failed");
 
                     // Approximate solution: Q = grad * sqrtm^(-1) / 2
                     let sqrtm_inv = if n == 1 {
@@ -449,7 +449,7 @@ pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autogra
                             for k in 0..n {
                                 sum = sum + grad_2d[[i, k]] * sqrtm_inv[[k, j]];
                             }
-                            q[[i, j]] = sum / F::from(2.0).unwrap();
+                            q[[i, j]] = sum / F::from(2.0).expect("Operation failed");
                         }
                     }
 
@@ -554,7 +554,7 @@ pub fn logm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autograd
         let trace = a11 + a22;
         let det = a11 * a22 - a12 * a21;
 
-        let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+        let discriminant = trace * trace - F::from(4.0).expect("Operation failed") * det;
 
         if discriminant < F::zero() {
             return Err(scirs2_autograd::error::AutogradError::OperationError(
@@ -563,8 +563,8 @@ pub fn logm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autograd
         }
 
         let sqrt_disc = discriminant.sqrt();
-        let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();
-        let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();
+        let lambda1 = (trace + sqrt_disc) / F::from(2.0).expect("Operation failed");
+        let lambda2 = (trace - sqrt_disc) / F::from(2.0).expect("Operation failed");
 
         // Check for non-positive eigenvalues
         if lambda1 <= F::zero() || lambda2 <= F::zero() {
@@ -663,7 +663,7 @@ pub fn logm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autograd
             Some(
                 Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                     // For simplicity, we'll use a crude approximation for small matrices
-                    let grad_2d = grad.clone().intoshape((n, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((n, n)).expect("Operation failed");
 
                     // Crude approximation: grad_a ≈ A^(-1) * grad
                     let a_inv = if n == 1 {

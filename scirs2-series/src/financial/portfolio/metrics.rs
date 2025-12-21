@@ -37,7 +37,7 @@ use crate::error::{Result, TimeSeriesError};
 /// let risk_free_rate = 0.02;
 /// let periods_per_year = 252;
 ///
-/// let metrics = calculate_portfolio_metrics(&returns, &prices, risk_free_rate, periods_per_year).unwrap();
+/// let metrics = calculate_portfolio_metrics(&returns, &prices, risk_free_rate, periods_per_year).expect("Operation failed");
 /// ```
 pub fn calculate_portfolio_metrics<F: Float + Clone + std::iter::Sum>(
     returns: &Array1<F>,
@@ -62,14 +62,18 @@ pub fn calculate_portfolio_metrics<F: Float + Clone + std::iter::Sum>(
     let total_return = (prices[prices.len() - 1] / prices[0]) - F::one();
 
     // Annualized return
-    let years = F::from(returns.len()).unwrap() / F::from(periods_per_year).unwrap();
+    let years = F::from(returns.len()).expect("Operation failed")
+        / F::from(periods_per_year).expect("Failed to convert to float");
     let annualized_return = (F::one() + total_return).powf(F::one() / years) - F::one();
 
     // Volatility (annualized)
-    let mean_return = returns.sum() / F::from(returns.len()).unwrap();
-    let variance =
-        returns.mapv(|r| (r - mean_return).powi(2)).sum() / F::from(returns.len() - 1).unwrap();
-    let volatility = variance.sqrt() * F::from(periods_per_year).unwrap().sqrt();
+    let mean_return = returns.sum() / F::from(returns.len()).expect("Operation failed");
+    let variance = returns.mapv(|r| (r - mean_return).powi(2)).sum()
+        / F::from(returns.len() - 1).expect("Operation failed");
+    let volatility = variance.sqrt()
+        * F::from(periods_per_year)
+            .expect("Failed to convert to float")
+            .sqrt();
 
     // Risk metrics using imported functions
     let sharpe = crate::financial::risk::sharpe_ratio(returns, risk_free_rate, periods_per_year)?;
@@ -113,7 +117,7 @@ pub fn calculate_return_statistics<F: Float + Clone>(returns: &Array1<F>) -> Res
         });
     }
 
-    let n = F::from(returns.len()).unwrap();
+    let n = F::from(returns.len()).expect("Operation failed");
     let mean = returns.sum() / n;
 
     // Calculate centered moments
@@ -141,14 +145,15 @@ pub fn calculate_return_statistics<F: Float + Clone>(returns: &Array1<F>) -> Res
 
     // Skewness
     let skewness = if variance > F::zero() {
-        third_moment / variance.powf(F::from(1.5).unwrap())
+        third_moment / variance.powf(F::from(1.5).expect("Failed to convert constant to float"))
     } else {
         F::zero()
     };
 
     // Excess kurtosis
     let kurtosis = if variance > F::zero() {
-        (fourth_moment / variance.powi(2)) - F::from(3.0).unwrap()
+        (fourth_moment / variance.powi(2))
+            - F::from(3.0).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -190,25 +195,32 @@ pub fn calculate_rolling_metrics<F: Float + Clone>(
     let mut rolling_volatility = Array1::zeros(n_windows);
     let mut rolling_returns = Array1::zeros(n_windows);
 
-    let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
+    let annualized_rf =
+        risk_free_rate / F::from(periods_per_year).expect("Failed to convert to float");
 
     for i in 0..n_windows {
         let window_returns = returns.slice(scirs2_core::ndarray::s![i..i + window]);
 
         // Calculate window metrics
-        let mean_return = window_returns.sum() / F::from(window).unwrap();
+        let mean_return =
+            window_returns.sum() / F::from(window).expect("Failed to convert to float");
         let excess_return = mean_return - annualized_rf;
 
-        let variance =
-            window_returns.mapv(|r| (r - mean_return).powi(2)).sum() / F::from(window - 1).unwrap();
+        let variance = window_returns.mapv(|r| (r - mean_return).powi(2)).sum()
+            / F::from(window - 1).expect("Failed to convert to float");
         let std_dev = variance.sqrt();
 
         // Annualize metrics
-        rolling_returns[i] = mean_return * F::from(periods_per_year).unwrap();
-        rolling_volatility[i] = std_dev * F::from(periods_per_year).unwrap().sqrt();
+        rolling_returns[i] =
+            mean_return * F::from(periods_per_year).expect("Failed to convert to float");
+        rolling_volatility[i] = std_dev
+            * F::from(periods_per_year)
+                .expect("Failed to convert to float")
+                .sqrt();
 
         rolling_sharpe[i] = if std_dev > F::zero() {
-            (excess_return * F::from(periods_per_year).unwrap()) / rolling_volatility[i]
+            (excess_return * F::from(periods_per_year).expect("Failed to convert to float"))
+                / rolling_volatility[i]
         } else {
             F::zero()
         };
@@ -257,9 +269,10 @@ pub fn calculate_tracking_error<F: Float + Clone>(
         .collect();
 
     // Calculate tracking error (standard deviation of active returns)
-    let mean_active = active_returns.sum() / F::from(active_returns.len()).unwrap();
+    let mean_active =
+        active_returns.sum() / F::from(active_returns.len()).expect("Operation failed");
     let variance = active_returns.mapv(|r| (r - mean_active).powi(2)).sum()
-        / F::from(active_returns.len() - 1).unwrap();
+        / F::from(active_returns.len() - 1).expect("Operation failed");
 
     Ok(variance.sqrt())
 }
@@ -294,7 +307,8 @@ pub fn calculate_information_ratio<F: Float + Clone>(
         .map(|(&p, &b)| p - b)
         .collect();
 
-    let mean_active = active_returns.sum() / F::from(active_returns.len()).unwrap();
+    let mean_active =
+        active_returns.sum() / F::from(active_returns.len()).expect("Operation failed");
     let tracking_error = calculate_tracking_error(portfolio_returns, benchmark_returns)?;
 
     if tracking_error == F::zero() {
@@ -336,8 +350,10 @@ pub fn calculate_portfolio_beta<F: Float + Clone>(
         });
     }
 
-    let portfolio_mean = portfolio_returns.sum() / F::from(portfolio_returns.len()).unwrap();
-    let benchmark_mean = benchmark_returns.sum() / F::from(benchmark_returns.len()).unwrap();
+    let portfolio_mean =
+        portfolio_returns.sum() / F::from(portfolio_returns.len()).expect("Operation failed");
+    let benchmark_mean =
+        benchmark_returns.sum() / F::from(benchmark_returns.len()).expect("Operation failed");
 
     let mut covariance = F::zero();
     let mut benchmark_variance = F::zero();
@@ -350,7 +366,7 @@ pub fn calculate_portfolio_beta<F: Float + Clone>(
         benchmark_variance = benchmark_variance + benchmark_dev.powi(2);
     }
 
-    let n = F::from(portfolio_returns.len() - 1).unwrap();
+    let n = F::from(portfolio_returns.len() - 1).expect("Operation failed");
     covariance = covariance / n;
     benchmark_variance = benchmark_variance / n;
 
@@ -407,15 +423,15 @@ pub fn calculate_capture_ratios<F: Float + Clone>(
     }
 
     let upside_capture = if upside_count > 0 && upside_benchmark != F::zero() {
-        (upside_portfolio / F::from(upside_count).unwrap())
-            / (upside_benchmark / F::from(upside_count).unwrap())
+        (upside_portfolio / F::from(upside_count).expect("Failed to convert to float"))
+            / (upside_benchmark / F::from(upside_count).expect("Failed to convert to float"))
     } else {
         F::zero()
     };
 
     let downside_capture = if downside_count > 0 && downside_benchmark != F::zero() {
-        (downside_portfolio / F::from(downside_count).unwrap())
-            / (downside_benchmark / F::from(downside_count).unwrap())
+        (downside_portfolio / F::from(downside_count).expect("Failed to convert to float"))
+            / (downside_benchmark / F::from(downside_count).expect("Failed to convert to float"))
     } else {
         F::zero()
     };
@@ -439,7 +455,7 @@ mod tests {
             calculate_portfolio_metrics(&returns, &prices, risk_free_rate, periods_per_year);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.is_valid());
         assert!(metrics.volatility > 0.0);
     }
@@ -451,7 +467,7 @@ mod tests {
         let result = calculate_return_statistics(&returns);
         assert!(result.is_ok());
 
-        let (mean, std_dev, skewness, kurtosis) = result.unwrap();
+        let (mean, std_dev, skewness, kurtosis) = result.expect("Operation failed");
         assert!(std_dev > 0.0);
         assert!(mean.is_finite());
         assert!(skewness.is_finite());
@@ -466,7 +482,7 @@ mod tests {
         let result = calculate_tracking_error(&portfolio, &benchmark);
         assert!(result.is_ok());
 
-        let te = result.unwrap();
+        let te = result.expect("Operation failed");
         assert!(te >= 0.0);
         assert!(te.is_finite());
     }
@@ -479,7 +495,7 @@ mod tests {
         let result = calculate_portfolio_beta(&portfolio, &benchmark);
         assert!(result.is_ok());
 
-        let beta = result.unwrap();
+        let beta = result.expect("Operation failed");
         assert!(beta.is_finite());
     }
 
@@ -491,7 +507,7 @@ mod tests {
         let result = calculate_capture_ratios(&portfolio, &benchmark);
         assert!(result.is_ok());
 
-        let (upside, downside) = result.unwrap();
+        let (upside, downside) = result.expect("Operation failed");
         assert!(upside >= 0.0);
         assert!(downside >= 0.0);
     }

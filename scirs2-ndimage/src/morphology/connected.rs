@@ -582,26 +582,23 @@ mod tests {
     use scirs2_core::ndarray::Array2;
 
     #[test]
-    #[ignore]
     fn test_label() {
         let input = Array2::from_elem((3, 3), true);
-        let (result, _num_labels) = label(&input, None, None, None).unwrap();
+        let (result, _num_labels) = label(&input, None, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
     #[test]
-    #[ignore]
     fn test_find_boundaries() {
         let input = Array2::from_elem((3, 3), 1);
-        let result = find_boundaries(&input, None, None).unwrap();
+        let result = find_boundaries(&input, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
     #[test]
-    #[ignore]
     fn test_remove_small_objects() {
         let input = Array2::from_elem((3, 3), true);
-        let result = remove_small_objects(&input, 1, None).unwrap();
+        let result = remove_small_objects(&input, 1, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 }

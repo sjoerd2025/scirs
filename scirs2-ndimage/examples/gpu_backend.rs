@@ -35,12 +35,16 @@ fn automatic_backend_selection() {
 
     println!("Processing small array (100x100) - should use CPU");
     let op2 = GaussianFilterOp::new(vec![2.0, 2.0], Some(4.0));
-    let _result = executor.execute(&small_array.view(), op).unwrap();
+    let _result = executor
+        .execute(&small_array.view(), op)
+        .expect("Operation failed");
 
     // Large array - will use GPU if available
     let large_array = Array2::from_elem((5000, 5000), 1.0f32);
     println!("Processing large array (5000x5000) - should use GPU if available");
-    let _result = executor.execute(&large_array.view(), op2).unwrap();
+    let _result = executor
+        .execute(&large_array.view(), op2)
+        .expect("Operation failed");
 }
 
 /// Force GPU backend for all operations
@@ -96,7 +100,9 @@ fn custom_backend_config() {
 
         println!("Processing {}x{} array ({} elements)", h, w, h * w);
 
-        let _result = executor.execute(&array.view(), op).unwrap();
+        let _result = executor
+            .execute(&array.view(), op)
+            .expect("Operation failed");
     }
 }
 
@@ -183,25 +189,29 @@ mod tests {
             .backend(Backend::Cpu)
             .gpu_threshold(100_000)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         let array = Array2::zeros((10, 10));
         let op = GaussianFilterOp::new(vec![1.0, 1.0], None);
 
-        let result = executor.execute(&array.view(), op).unwrap();
+        let result = executor
+            .execute(&array.view(), op)
+            .expect("Operation failed");
         assert_eq!(result.shape(), array.shape());
     }
 
     #[test]
     fn test_custom_op() {
-        let executor = auto_backend().unwrap();
+        let executor = auto_backend().expect("Operation failed");
         let array = Array2::ones((50, 50));
         let op = CustomBlurOp {
             iterations: 2,
             sigma: 1.5,
         };
 
-        let result = executor.execute(&array.view(), op).unwrap();
+        let result = executor
+            .execute(&array.view(), op)
+            .expect("Operation failed");
         assert_eq!(result.shape(), array.shape());
         // Values should be blurred (not exactly 1.0 anymore)
         assert!((result[[25, 25]] - 1.0).abs() < 0.1);

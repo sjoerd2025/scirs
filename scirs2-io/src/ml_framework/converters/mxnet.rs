@@ -29,7 +29,7 @@ impl MLFrameworkConverter for MXNetConverter {
                 (name.clone(), serde_json::json!({
                     "shape": tensor.metadata.shape,
                     "dtype": format!("{:?}", tensor.metadata.dtype),
-                    "data": tensor.data.as_slice().unwrap().to_vec()
+                    "data": tensor.data.as_slice().expect("Operation failed").to_vec()
                 }))
             }).collect::<serde_json::Map<String, serde_json::Value>>(),
             "metadata": model.metadata
@@ -77,7 +77,7 @@ impl MLFrameworkConverter for MXNetConverter {
             "mxnet_ndarray": {
                 "shape": tensor.metadata.shape,
                 "dtype": format!("{:?}", tensor.metadata.dtype),
-                "data": tensor.data.as_slice().unwrap().to_vec(),
+                "data": tensor.data.as_slice().expect("Operation failed").to_vec(),
                 "context": "cpu(0)"
             }
         });

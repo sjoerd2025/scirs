@@ -32,7 +32,7 @@ use crate::error::{ClusteringError, Result};
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let pred_labels = Array1::from_vec(vec![0, 1, 0, 1]);
 ///
-/// let rand: f64 = rand_score(true_labels.view(), pred_labels.view()).unwrap();
+/// let rand: f64 = rand_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
 /// assert!(rand >= 0.0 && rand <= 1.0);
 /// ```
 pub fn rand_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
@@ -67,7 +67,7 @@ where
     if total_pairs == 0 {
         Ok(F::one())
     } else {
-        Ok(F::from(agreements as f64 / total_pairs as f64).unwrap())
+        Ok(F::from(agreements as f64 / total_pairs as f64).expect("Failed to convert to float"))
     }
 }
 
@@ -92,7 +92,7 @@ where
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 ///
-/// let ari: f64 = adjusted_rand_score(true_labels.view(), pred_labels.view()).unwrap();
+/// let ari: f64 = adjusted_rand_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
 /// assert!(ari >= -1.0 && ari <= 1.0);
 /// ```
 pub fn adjusted_rand_score<F>(
@@ -127,33 +127,34 @@ where
     let mut sum_comb_c = F::zero(); // Sum of combinations C(n_ij, 2)
     for &n_ij in contingency.values() {
         if n_ij >= 2 {
-            sum_comb_c = sum_comb_c + F::from(combination(n_ij, 2)).unwrap();
+            sum_comb_c = sum_comb_c + F::from(combination(n_ij, 2)).expect("Operation failed");
         }
     }
 
     let mut sum_comb_a = F::zero(); // Sum of combinations C(n_i, 2) for rows
     for &n_i in row_sums.values() {
         if n_i >= 2 {
-            sum_comb_a = sum_comb_a + F::from(combination(n_i, 2)).unwrap();
+            sum_comb_a = sum_comb_a + F::from(combination(n_i, 2)).expect("Operation failed");
         }
     }
 
     let mut sum_comb_b = F::zero(); // Sum of combinations C(n_j, 2) for columns
     for &n_j in col_sums.values() {
         if n_j >= 2 {
-            sum_comb_b = sum_comb_b + F::from(combination(n_j, 2)).unwrap();
+            sum_comb_b = sum_comb_b + F::from(combination(n_j, 2)).expect("Operation failed");
         }
     }
 
-    let comb_n = F::from(combination(n_samples, 2)).unwrap();
+    let comb_n = F::from(combination(n_samples, 2)).expect("Operation failed");
 
     // Calculate ARI using the standard formula
     let expected_index = (sum_comb_a * sum_comb_b) / comb_n;
-    let max_index = (sum_comb_a + sum_comb_b) / F::from(2).unwrap();
+    let max_index =
+        (sum_comb_a + sum_comb_b) / F::from(2).expect("Failed to convert constant to float");
 
     let denominator = max_index - expected_index;
 
-    if denominator.abs() < F::from(1e-10).unwrap() {
+    if denominator.abs() < F::from(1e-10).expect("Failed to convert constant to float") {
         Ok(F::zero())
     } else {
         Ok((sum_comb_c - expected_index) / denominator)
@@ -218,7 +219,7 @@ where
     if precision == 0.0 || recall == 0.0 {
         Ok(F::zero())
     } else {
-        Ok(F::from((precision * recall).sqrt()).unwrap())
+        Ok(F::from((precision * recall).sqrt()).expect("Operation failed"))
     }
 }
 
@@ -284,13 +285,13 @@ where
     let (tp, _tn, fp, fn_count) = pair_confusion_matrix(labels_true, labels_pred)?;
 
     let precision = if tp + fp > 0 {
-        F::from(tp as f64 / (tp + fp) as f64).unwrap()
+        F::from(tp as f64 / (tp + fp) as f64).expect("Operation failed")
     } else {
         F::zero()
     };
 
     let recall = if tp + fn_count > 0 {
-        F::from(tp as f64 / (tp + fn_count) as f64).unwrap()
+        F::from(tp as f64 / (tp + fn_count) as f64).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -343,14 +344,14 @@ mod tests {
     #[test]
     fn test_rand_score_identical() {
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
-        let rand: f64 = rand_score(labels.view(), labels.view()).unwrap();
+        let rand: f64 = rand_score(labels.view(), labels.view()).expect("Operation failed");
         assert!((rand - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_adjusted_rand_score_identical() {
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
-        let ari: f64 = adjusted_rand_score(labels.view(), labels.view()).unwrap();
+        let ari: f64 = adjusted_rand_score(labels.view(), labels.view()).expect("Operation failed");
         assert!((ari - 1.0).abs() < 1e-10);
     }
 
@@ -359,7 +360,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
         let pred_labels = Array1::from_vec(vec![0, 1, 2, 0, 1, 2]);
 
-        let ari: f64 = adjusted_rand_score(true_labels.view(), pred_labels.view()).unwrap();
+        let ari: f64 =
+            adjusted_rand_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
         assert!(ari >= -1.0 && ari <= 1.0);
     }
 
@@ -368,7 +370,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let pred_labels = Array1::from_vec(vec![0, 1, 0, 1]);
 
-        let fm: f64 = fowlkes_mallows_score(true_labels.view(), pred_labels.view()).unwrap();
+        let fm: f64 = fowlkes_mallows_score(true_labels.view(), pred_labels.view())
+            .expect("Operation failed");
         assert!(fm >= 0.0 && fm <= 1.0);
     }
 
@@ -377,8 +380,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let pred_labels = Array1::from_vec(vec![0, 1, 0, 1]);
 
-        let (tp, tn, fp, fn_count) =
-            pair_confusion_matrix(true_labels.view(), pred_labels.view()).unwrap();
+        let (tp, tn, fp, fn_count) = pair_confusion_matrix(true_labels.view(), pred_labels.view())
+            .expect("Operation failed");
 
         // Total pairs should be C(4,2) = 6
         assert_eq!(tp + tn + fp + fn_count, 6);
@@ -390,7 +393,8 @@ mod tests {
         let pred_labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
         let (precision, recall): (f64, f64) =
-            pair_precision_recall(true_labels.view(), pred_labels.view()).unwrap();
+            pair_precision_recall(true_labels.view(), pred_labels.view())
+                .expect("Operation failed");
 
         // Perfect clustering should have precision and recall of 1.0
         assert!((precision - 1.0).abs() < 1e-10);

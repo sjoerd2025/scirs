@@ -30,9 +30,9 @@ use std::f64::consts::PI;
 /// ```
 /// use scirs2_special::factorial;
 ///
-/// assert_eq!(factorial(0).unwrap(), 1.0);
-/// assert_eq!(factorial(5).unwrap(), 120.0);
-/// assert_eq!(factorial(10).unwrap(), 3628800.0);
+/// assert_eq!(factorial(0).expect("test/example should not fail"), 1.0);
+/// assert_eq!(factorial(5).expect("test/example should not fail"), 120.0);
+/// assert_eq!(factorial(10).expect("test/example should not fail"), 3628800.0);
 /// ```
 #[allow(dead_code)]
 pub fn factorial(n: u32) -> SpecialResult<f64> {
@@ -69,9 +69,9 @@ pub fn factorial(n: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::double_factorial;
 ///
-/// assert_eq!(double_factorial(0).unwrap(), 1.0);
-/// assert_eq!(double_factorial(5).unwrap(), 15.0); // 5 × 3 × 1
-/// assert_eq!(double_factorial(6).unwrap(), 48.0); // 6 × 4 × 2
+/// assert_eq!(double_factorial(0).expect("test/example should not fail"), 1.0);
+/// assert_eq!(double_factorial(5).expect("test/example should not fail"), 15.0); // 5 × 3 × 1
+/// assert_eq!(double_factorial(6).expect("test/example should not fail"), 48.0); // 6 × 4 × 2
 /// ```
 #[allow(dead_code)]
 pub fn double_factorial(n: u32) -> SpecialResult<f64> {
@@ -105,8 +105,8 @@ pub fn double_factorial(n: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::factorial2;
 ///
-/// assert_eq!(factorial2(5).unwrap(), 15.0); // 5 × 3 × 1
-/// assert_eq!(factorial2(6).unwrap(), 48.0); // 6 × 4 × 2
+/// assert_eq!(factorial2(5).expect("test/example should not fail"), 15.0); // 5 × 3 × 1
+/// assert_eq!(factorial2(6).expect("test/example should not fail"), 48.0); // 6 × 4 × 2
 /// ```
 #[allow(dead_code)]
 pub fn factorial2(n: u32) -> SpecialResult<f64> {
@@ -133,9 +133,9 @@ pub fn factorial2(n: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::factorialk;
 ///
-/// assert_eq!(factorialk(8, 3).unwrap(), 80.0); // 8 × 5 × 2
-/// assert_eq!(factorialk(5, 2).unwrap(), 15.0); // 5 × 3 × 1
-/// assert_eq!(factorialk(6, 2).unwrap(), 48.0); // 6 × 4 × 2 (same as double factorial)
+/// assert_eq!(factorialk(8, 3).expect("test/example should not fail"), 80.0); // 8 × 5 × 2
+/// assert_eq!(factorialk(5, 2).expect("test/example should not fail"), 15.0); // 5 × 3 × 1
+/// assert_eq!(factorialk(6, 2).expect("test/example should not fail"), 48.0); // 6 × 4 × 2 (same as double factorial)
 /// ```
 #[allow(dead_code)]
 pub fn factorialk(n: u32, k: u32) -> SpecialResult<f64> {
@@ -177,10 +177,10 @@ pub fn factorialk(n: u32, k: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::binomial;
 ///
-/// assert_eq!(binomial(5, 2).unwrap(), 10.0);
-/// assert_eq!(binomial(10, 3).unwrap(), 120.0);
-/// assert_eq!(binomial(7, 0).unwrap(), 1.0);
-/// assert_eq!(binomial(7, 7).unwrap(), 1.0);
+/// assert_eq!(binomial(5, 2).expect("test/example should not fail"), 10.0);
+/// assert_eq!(binomial(10, 3).expect("test/example should not fail"), 120.0);
+/// assert_eq!(binomial(7, 0).expect("test/example should not fail"), 1.0);
+/// assert_eq!(binomial(7, 7).expect("test/example should not fail"), 1.0);
 /// ```
 #[allow(dead_code)]
 pub fn binomial(n: u32, k: u32) -> SpecialResult<f64> {
@@ -230,9 +230,9 @@ pub fn binomial(n: u32, k: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::permutations;
 ///
-/// assert_eq!(permutations(5, 2).unwrap(), 20.0);
-/// assert_eq!(permutations(10, 3).unwrap(), 720.0);
-/// assert_eq!(permutations(7, 0).unwrap(), 1.0);
+/// assert_eq!(permutations(5, 2).expect("test/example should not fail"), 20.0);
+/// assert_eq!(permutations(10, 3).expect("test/example should not fail"), 720.0);
+/// assert_eq!(permutations(7, 0).expect("test/example should not fail"), 1.0);
 /// ```
 #[allow(dead_code)]
 pub fn permutations(n: u32, k: u32) -> SpecialResult<f64> {
@@ -277,8 +277,8 @@ pub fn permutations(n: u32, k: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::perm;
 ///
-/// assert_eq!(perm(5, 2).unwrap(), 20.0);
-/// assert_eq!(perm(10, 3).unwrap(), 720.0);
+/// assert_eq!(perm(5, 2).expect("test/example should not fail"), 20.0);
+/// assert_eq!(perm(10, 3).expect("test/example should not fail"), 720.0);
 /// ```
 #[allow(dead_code)]
 pub fn perm(n: u32, k: u32) -> SpecialResult<f64> {
@@ -304,9 +304,9 @@ pub fn perm(n: u32, k: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::stirling_first;
 ///
-/// assert_eq!(stirling_first(0, 0).unwrap(), 1.0);
-/// assert_eq!(stirling_first(4, 2).unwrap(), 11.0);
-/// assert_eq!(stirling_first(5, 3).unwrap(), 35.0);
+/// assert_eq!(stirling_first(0, 0).expect("test/example should not fail"), 1.0);
+/// assert_eq!(stirling_first(4, 2).expect("test/example should not fail"), 11.0);
+/// assert_eq!(stirling_first(5, 3).expect("test/example should not fail"), 35.0);
 /// ```
 #[allow(dead_code)]
 pub fn stirling_first(n: u32, k: u32) -> SpecialResult<f64> {
@@ -349,9 +349,9 @@ pub fn stirling_first(n: u32, k: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::stirling_second;
 ///
-/// assert_eq!(stirling_second(0, 0).unwrap(), 1.0);
-/// assert_eq!(stirling_second(4, 2).unwrap(), 7.0);
-/// assert_eq!(stirling_second(5, 3).unwrap(), 25.0);
+/// assert_eq!(stirling_second(0, 0).expect("test/example should not fail"), 1.0);
+/// assert_eq!(stirling_second(4, 2).expect("test/example should not fail"), 7.0);
+/// assert_eq!(stirling_second(5, 3).expect("test/example should not fail"), 25.0);
 /// ```
 #[allow(dead_code)]
 pub fn stirling_second(n: u32, k: u32) -> SpecialResult<f64> {
@@ -393,8 +393,8 @@ pub fn stirling_second(n: u32, k: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::stirling2;
 ///
-/// assert_eq!(stirling2(4, 2).unwrap(), 7.0);
-/// assert_eq!(stirling2(5, 3).unwrap(), 25.0);
+/// assert_eq!(stirling2(4, 2).expect("test/example should not fail"), 7.0);
+/// assert_eq!(stirling2(5, 3).expect("test/example should not fail"), 25.0);
 /// ```
 #[allow(dead_code)]
 pub fn stirling2(n: u32, k: u32) -> SpecialResult<f64> {
@@ -419,11 +419,11 @@ pub fn stirling2(n: u32, k: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::bell_number;
 ///
-/// assert_eq!(bell_number(0).unwrap(), 1.0);
-/// assert_eq!(bell_number(1).unwrap(), 1.0);
-/// assert_eq!(bell_number(2).unwrap(), 2.0);
-/// assert_eq!(bell_number(3).unwrap(), 5.0);
-/// assert_eq!(bell_number(4).unwrap(), 15.0);
+/// assert_eq!(bell_number(0).expect("test/example should not fail"), 1.0);
+/// assert_eq!(bell_number(1).expect("test/example should not fail"), 1.0);
+/// assert_eq!(bell_number(2).expect("test/example should not fail"), 2.0);
+/// assert_eq!(bell_number(3).expect("test/example should not fail"), 5.0);
+/// assert_eq!(bell_number(4).expect("test/example should not fail"), 15.0);
 /// ```
 #[allow(dead_code)]
 pub fn bell_number(n: u32) -> SpecialResult<f64> {
@@ -460,10 +460,10 @@ pub fn bell_number(n: u32) -> SpecialResult<f64> {
 /// use scirs2_special::bernoulli_number;
 /// use approx::assert_relative_eq;
 ///
-/// assert_eq!(bernoulli_number(0).unwrap(), 1.0);
-/// assert_relative_eq!(bernoulli_number(1).unwrap(), -0.5, epsilon = 1e-10);
-/// assert_relative_eq!(bernoulli_number(2).unwrap(), 1.0/6.0, epsilon = 1e-10);
-/// assert_eq!(bernoulli_number(3).unwrap(), 0.0); // Odd Bernoulli numbers are 0 (except B_1)
+/// assert_eq!(bernoulli_number(0).expect("test/example should not fail"), 1.0);
+/// assert_relative_eq!(bernoulli_number(1).expect("test/example should not fail"), -0.5, epsilon = 1e-10);
+/// assert_relative_eq!(bernoulli_number(2).expect("test/example should not fail"), 1.0/6.0, epsilon = 1e-10);
+/// assert_eq!(bernoulli_number(3).expect("test/example should not fail"), 0.0); // Odd Bernoulli numbers are 0 (except B_1)
 /// ```
 #[allow(dead_code)]
 pub fn bernoulli_number(n: u32) -> SpecialResult<f64> {
@@ -532,10 +532,10 @@ pub fn bernoulli_number(n: u32) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::euler_number;
 ///
-/// assert_eq!(euler_number(0).unwrap(), 1.0);
-/// assert_eq!(euler_number(1).unwrap(), 0.0);
-/// assert_eq!(euler_number(2).unwrap(), -1.0);
-/// assert_eq!(euler_number(4).unwrap(), 5.0);
+/// assert_eq!(euler_number(0).expect("test/example should not fail"), 1.0);
+/// assert_eq!(euler_number(1).expect("test/example should not fail"), 0.0);
+/// assert_eq!(euler_number(2).expect("test/example should not fail"), -1.0);
+/// assert_eq!(euler_number(4).expect("test/example should not fail"), 5.0);
 /// ```
 #[allow(dead_code)]
 pub fn euler_number(n: u32) -> SpecialResult<f64> {
@@ -726,45 +726,88 @@ mod tests {
 
     #[test]
     fn test_factorial() {
-        assert_eq!(factorial(0).unwrap(), 1.0);
-        assert_eq!(factorial(1).unwrap(), 1.0);
-        assert_eq!(factorial(5).unwrap(), 120.0);
-        assert_eq!(factorial(10).unwrap(), 3628800.0);
+        assert_eq!(factorial(0).expect("test/example should not fail"), 1.0);
+        assert_eq!(factorial(1).expect("test/example should not fail"), 1.0);
+        assert_eq!(factorial(5).expect("test/example should not fail"), 120.0);
+        assert_eq!(
+            factorial(10).expect("test/example should not fail"),
+            3628800.0
+        );
 
         // Test larger values using gamma function
-        assert_relative_eq!(factorial(15).unwrap(), 1307674368000.0, epsilon = 1.0);
+        assert_relative_eq!(
+            factorial(15).expect("test/example should not fail"),
+            1307674368000.0,
+            epsilon = 1.0
+        );
     }
 
     #[test]
     fn test_double_factorial() {
-        assert_eq!(double_factorial(0).unwrap(), 1.0);
-        assert_eq!(double_factorial(1).unwrap(), 1.0);
-        assert_eq!(double_factorial(2).unwrap(), 2.0);
-        assert_eq!(double_factorial(5).unwrap(), 15.0); // 5 × 3 × 1
-        assert_eq!(double_factorial(6).unwrap(), 48.0); // 6 × 4 × 2
-        assert_eq!(double_factorial(8).unwrap(), 384.0); // 8 × 6 × 4 × 2
+        assert_eq!(
+            double_factorial(0).expect("test/example should not fail"),
+            1.0
+        );
+        assert_eq!(
+            double_factorial(1).expect("test/example should not fail"),
+            1.0
+        );
+        assert_eq!(
+            double_factorial(2).expect("test/example should not fail"),
+            2.0
+        );
+        assert_eq!(
+            double_factorial(5).expect("test/example should not fail"),
+            15.0
+        ); // 5 × 3 × 1
+        assert_eq!(
+            double_factorial(6).expect("test/example should not fail"),
+            48.0
+        ); // 6 × 4 × 2
+        assert_eq!(
+            double_factorial(8).expect("test/example should not fail"),
+            384.0
+        ); // 8 × 6 × 4 × 2
     }
 
     #[test]
     fn test_factorial2() {
-        assert_eq!(factorial2(0).unwrap(), 1.0);
-        assert_eq!(factorial2(5).unwrap(), 15.0); // 5 × 3 × 1
-        assert_eq!(factorial2(6).unwrap(), 48.0); // 6 × 4 × 2
+        assert_eq!(factorial2(0).expect("test/example should not fail"), 1.0);
+        assert_eq!(factorial2(5).expect("test/example should not fail"), 15.0); // 5 × 3 × 1
+        assert_eq!(factorial2(6).expect("test/example should not fail"), 48.0); // 6 × 4 × 2
 
         // Test that factorial2 is the same as double_factorial
-        assert_eq!(factorial2(8).unwrap(), double_factorial(8).unwrap());
+        assert_eq!(
+            factorial2(8).expect("test/example should not fail"),
+            double_factorial(8).expect("test/example should not fail")
+        );
     }
 
     #[test]
     fn test_factorialk() {
-        assert_eq!(factorialk(0, 1).unwrap(), 1.0);
-        assert_eq!(factorialk(8, 3).unwrap(), 80.0); // 8 × 5 × 2
-        assert_eq!(factorialk(5, 2).unwrap(), 15.0); // 5 × 3 × 1
-        assert_eq!(factorialk(6, 2).unwrap(), 48.0); // 6 × 4 × 2 (same as double factorial)
-        assert_eq!(factorialk(9, 4).unwrap(), 45.0); // 9 × 5 × 1
+        assert_eq!(factorialk(0, 1).expect("test/example should not fail"), 1.0);
+        assert_eq!(
+            factorialk(8, 3).expect("test/example should not fail"),
+            80.0
+        ); // 8 × 5 × 2
+        assert_eq!(
+            factorialk(5, 2).expect("test/example should not fail"),
+            15.0
+        ); // 5 × 3 × 1
+        assert_eq!(
+            factorialk(6, 2).expect("test/example should not fail"),
+            48.0
+        ); // 6 × 4 × 2 (same as double factorial)
+        assert_eq!(
+            factorialk(9, 4).expect("test/example should not fail"),
+            45.0
+        ); // 9 × 5 × 1
 
         // Test k=1 (should be regular factorial)
-        assert_eq!(factorialk(5, 1).unwrap(), factorial(5).unwrap());
+        assert_eq!(
+            factorialk(5, 1).expect("test/example should not fail"),
+            factorial(5).expect("test/example should not fail")
+        );
 
         // Test error case
         assert!(factorialk(5, 0).is_err());
@@ -772,87 +815,165 @@ mod tests {
 
     #[test]
     fn test_binomial() {
-        assert_eq!(binomial(5, 2).unwrap(), 10.0);
-        assert_eq!(binomial(10, 3).unwrap(), 120.0);
-        assert_eq!(binomial(7, 0).unwrap(), 1.0);
-        assert_eq!(binomial(7, 7).unwrap(), 1.0);
-        assert_eq!(binomial(5, 10).unwrap(), 0.0); // k > n
+        assert_eq!(binomial(5, 2).expect("test/example should not fail"), 10.0);
+        assert_eq!(
+            binomial(10, 3).expect("test/example should not fail"),
+            120.0
+        );
+        assert_eq!(binomial(7, 0).expect("test/example should not fail"), 1.0);
+        assert_eq!(binomial(7, 7).expect("test/example should not fail"), 1.0);
+        assert_eq!(binomial(5, 10).expect("test/example should not fail"), 0.0); // k > n
 
         // Test symmetry
-        assert_eq!(binomial(10, 3).unwrap(), binomial(10, 7).unwrap());
+        assert_eq!(
+            binomial(10, 3).expect("test/example should not fail"),
+            binomial(10, 7).expect("test/example should not fail")
+        );
     }
 
     #[test]
     fn test_permutations() {
-        assert_eq!(permutations(5, 2).unwrap(), 20.0);
-        assert_eq!(permutations(10, 3).unwrap(), 720.0);
-        assert_eq!(permutations(7, 0).unwrap(), 1.0);
-        assert_eq!(permutations(5, 10).unwrap(), 0.0); // k > n
+        assert_eq!(
+            permutations(5, 2).expect("test/example should not fail"),
+            20.0
+        );
+        assert_eq!(
+            permutations(10, 3).expect("test/example should not fail"),
+            720.0
+        );
+        assert_eq!(
+            permutations(7, 0).expect("test/example should not fail"),
+            1.0
+        );
+        assert_eq!(
+            permutations(5, 10).expect("test/example should not fail"),
+            0.0
+        ); // k > n
     }
 
     #[test]
     fn test_perm() {
-        assert_eq!(perm(5, 2).unwrap(), 20.0);
-        assert_eq!(perm(10, 3).unwrap(), 720.0);
+        assert_eq!(perm(5, 2).expect("test/example should not fail"), 20.0);
+        assert_eq!(perm(10, 3).expect("test/example should not fail"), 720.0);
 
         // Test that perm is the same as permutations
-        assert_eq!(perm(7, 3).unwrap(), permutations(7, 3).unwrap());
+        assert_eq!(
+            perm(7, 3).expect("test/example should not fail"),
+            permutations(7, 3).expect("test/example should not fail")
+        );
     }
 
     #[test]
     fn test_stirling_first() {
-        assert_eq!(stirling_first(0, 0).unwrap(), 1.0);
-        assert_eq!(stirling_first(4, 2).unwrap(), 11.0);
-        assert_eq!(stirling_first(5, 3).unwrap(), 35.0);
-        assert_eq!(stirling_first(3, 0).unwrap(), 0.0);
-        assert_eq!(stirling_first(0, 3).unwrap(), 0.0);
+        assert_eq!(
+            stirling_first(0, 0).expect("test/example should not fail"),
+            1.0
+        );
+        assert_eq!(
+            stirling_first(4, 2).expect("test/example should not fail"),
+            11.0
+        );
+        assert_eq!(
+            stirling_first(5, 3).expect("test/example should not fail"),
+            35.0
+        );
+        assert_eq!(
+            stirling_first(3, 0).expect("test/example should not fail"),
+            0.0
+        );
+        assert_eq!(
+            stirling_first(0, 3).expect("test/example should not fail"),
+            0.0
+        );
     }
 
     #[test]
     fn test_stirling_second() {
-        assert_eq!(stirling_second(0, 0).unwrap(), 1.0);
-        assert_eq!(stirling_second(4, 2).unwrap(), 7.0);
-        assert_eq!(stirling_second(5, 3).unwrap(), 25.0);
-        assert_eq!(stirling_second(3, 0).unwrap(), 0.0);
-        assert_eq!(stirling_second(0, 3).unwrap(), 0.0);
+        assert_eq!(
+            stirling_second(0, 0).expect("test/example should not fail"),
+            1.0
+        );
+        assert_eq!(
+            stirling_second(4, 2).expect("test/example should not fail"),
+            7.0
+        );
+        assert_eq!(
+            stirling_second(5, 3).expect("test/example should not fail"),
+            25.0
+        );
+        assert_eq!(
+            stirling_second(3, 0).expect("test/example should not fail"),
+            0.0
+        );
+        assert_eq!(
+            stirling_second(0, 3).expect("test/example should not fail"),
+            0.0
+        );
     }
 
     #[test]
     fn test_stirling2() {
-        assert_eq!(stirling2(4, 2).unwrap(), 7.0);
-        assert_eq!(stirling2(5, 3).unwrap(), 25.0);
+        assert_eq!(stirling2(4, 2).expect("test/example should not fail"), 7.0);
+        assert_eq!(stirling2(5, 3).expect("test/example should not fail"), 25.0);
 
         // Test that stirling2 is the same as stirling_second
-        assert_eq!(stirling2(6, 3).unwrap(), stirling_second(6, 3).unwrap());
+        assert_eq!(
+            stirling2(6, 3).expect("test/example should not fail"),
+            stirling_second(6, 3).expect("test/example should not fail")
+        );
     }
 
     #[test]
     fn test_bell_number() {
-        assert_eq!(bell_number(0).unwrap(), 1.0);
-        assert_eq!(bell_number(1).unwrap(), 1.0);
-        assert_eq!(bell_number(2).unwrap(), 2.0);
-        assert_eq!(bell_number(3).unwrap(), 5.0);
-        assert_eq!(bell_number(4).unwrap(), 15.0);
-        assert_eq!(bell_number(5).unwrap(), 52.0);
+        assert_eq!(bell_number(0).expect("test/example should not fail"), 1.0);
+        assert_eq!(bell_number(1).expect("test/example should not fail"), 1.0);
+        assert_eq!(bell_number(2).expect("test/example should not fail"), 2.0);
+        assert_eq!(bell_number(3).expect("test/example should not fail"), 5.0);
+        assert_eq!(bell_number(4).expect("test/example should not fail"), 15.0);
+        assert_eq!(bell_number(5).expect("test/example should not fail"), 52.0);
     }
 
     #[test]
     fn test_bernoulli_number() {
-        assert_eq!(bernoulli_number(0).unwrap(), 1.0);
-        assert_relative_eq!(bernoulli_number(1).unwrap(), -0.5, epsilon = 1e-10);
-        assert_relative_eq!(bernoulli_number(2).unwrap(), 1.0 / 6.0, epsilon = 1e-10);
-        assert_eq!(bernoulli_number(3).unwrap(), 0.0);
-        assert_relative_eq!(bernoulli_number(4).unwrap(), -1.0 / 30.0, epsilon = 1e-10);
-        assert_eq!(bernoulli_number(5).unwrap(), 0.0);
+        assert_eq!(
+            bernoulli_number(0).expect("test/example should not fail"),
+            1.0
+        );
+        assert_relative_eq!(
+            bernoulli_number(1).expect("test/example should not fail"),
+            -0.5,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            bernoulli_number(2).expect("test/example should not fail"),
+            1.0 / 6.0,
+            epsilon = 1e-10
+        );
+        assert_eq!(
+            bernoulli_number(3).expect("test/example should not fail"),
+            0.0
+        );
+        assert_relative_eq!(
+            bernoulli_number(4).expect("test/example should not fail"),
+            -1.0 / 30.0,
+            epsilon = 1e-10
+        );
+        assert_eq!(
+            bernoulli_number(5).expect("test/example should not fail"),
+            0.0
+        );
     }
 
     #[test]
     fn test_euler_number() {
-        assert_eq!(euler_number(0).unwrap(), 1.0);
-        assert_eq!(euler_number(1).unwrap(), 0.0);
-        assert_eq!(euler_number(2).unwrap(), -1.0);
-        assert_eq!(euler_number(3).unwrap(), 0.0);
-        assert_eq!(euler_number(4).unwrap(), 5.0);
-        assert_eq!(euler_number(6).unwrap(), -61.0);
+        assert_eq!(euler_number(0).expect("test/example should not fail"), 1.0);
+        assert_eq!(euler_number(1).expect("test/example should not fail"), 0.0);
+        assert_eq!(euler_number(2).expect("test/example should not fail"), -1.0);
+        assert_eq!(euler_number(3).expect("test/example should not fail"), 0.0);
+        assert_eq!(euler_number(4).expect("test/example should not fail"), 5.0);
+        assert_eq!(
+            euler_number(6).expect("test/example should not fail"),
+            -61.0
+        );
     }
 }

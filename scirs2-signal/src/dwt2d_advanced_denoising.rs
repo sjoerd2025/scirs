@@ -583,7 +583,7 @@ fn calculate_bayes_threshold(_coeffs: &Array2<f64>, noisevariance: f64) -> Signa
 fn calculate_sure_threshold(_coeffs: &Array2<f64>, noisevariance: f64) -> SignalResult<f64> {
     let coeffs_vec: Vec<f64> = coeffs.iter().cloned().collect();
     let mut sorted_coeffs = coeffs_vec.clone();
-    sorted_coeffs.sort_by(|a, b| a.abs().partial_cmp(&b.abs()).unwrap());
+    sorted_coeffs.sort_by(|a, b| a.abs().partial_cmp(&b.abs()).expect("Operation failed"));
 
     let n = sorted_coeffs.len() as f64;
     let mut best_threshold = 0.0;
@@ -930,12 +930,12 @@ fn estimate_noise_robust_mad_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
 
     // Calculate MAD
     let mut values: Vec<f64> = filtered.iter().cloned().collect();
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let median = values[values.len() / 2];
     let mad: Vec<f64> = values.iter().map(|&x| (x - median).abs()).collect();
     let mut mad = mad;
-    mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    mad.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let sigma = 1.4826 * mad[mad.len() / 2];
     Ok(sigma)
@@ -950,12 +950,12 @@ fn estimate_noise_wavelet_based_2d(image: &ArrayView2<f64>) -> SignalResult<f64>
     // Estimate noise from HH (diagonal) coefficients
     let hh_values: Vec<f64> = result.detail_d.iter().cloned().collect();
     let mut sorted_hh = hh_values;
-    sorted_hh.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_hh.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let median = sorted_hh[sorted_hh.len() / 2];
     let mad: Vec<f64> = sorted_hh.iter().map(|&x| (x - median).abs()).collect();
     let mut mad = mad;
-    mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    mad.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let sigma = 1.4826 * mad[mad.len() / 2] / 0.6745; // Normalization factor
     Ok(sigma)
@@ -992,7 +992,7 @@ fn estimate_noise_local_variance_2d(image: &ArrayView2<f64>) -> SignalResult<f64
     }
 
     // Use median of local variances as noise estimate
-    local_variances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    local_variances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let noise_variance = local_variances[local_variances.len() / 4]; // 25th percentile
     Ok(noise_variance.sqrt())
 }
@@ -1023,7 +1023,7 @@ fn estimate_noise_quantum_inspired_2d(image: &ArrayView2<f64>) -> SignalResult<f
     }
 
     // Noise estimate from quantum energy distribution
-    quantum_energies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    quantum_energies.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let noise_estimate = quantum_energies[quantum_energies.len() / 10]; // 10th percentile
     Ok(noise_estimate.sqrt())
 }

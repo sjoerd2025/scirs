@@ -336,12 +336,12 @@ mod tests {
     #[test]
     fn test_zoom() {
         let input: Array2<f64> = Array2::eye(3);
-        let result = zoom(&input, 2.0, None, None, None, None).unwrap();
+        let result = zoom(&input, 2.0, None, None, None, None).expect("Operation failed");
         // With zoom factor 2.0, output shape should be doubled
         assert_eq!(result.shape(), &[6, 6]);
 
         // Test zooming down
-        let result_small = zoom(&input, 0.5, None, None, None, None).unwrap();
+        let result_small = zoom(&input, 0.5, None, None, None, None).expect("Operation failed");
         // With zoom factor 0.5, output shape should be halved (3 * 0.5 = 1)
         assert_eq!(result_small.shape(), &[1, 1]);
     }
@@ -350,7 +350,8 @@ mod tests {
     fn test_shift_function() {
         let input: Array2<f64> = Array2::eye(3);
         let shift_values = vec![1.0, -1.0];
-        let result = shift(&input, &shift_values, None, None, None, None).unwrap();
+        let result =
+            shift(&input, &shift_values, None, None, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
 
         // Test simple shift with a known pattern
@@ -359,7 +360,8 @@ mod tests {
 
         // Shift by [0, 1] should move the center pixel to the right
         let shift_right = vec![0.0, 1.0];
-        let result_right = shift(&simple_input, &shift_right, None, None, None, None).unwrap();
+        let result_right =
+            shift(&simple_input, &shift_right, None, None, None, None).expect("Operation failed");
 
         // The pixel should now be at [1, 2] (shifted right)
         // Since we only have a 3x3 array, check if the pixel moved correctly
@@ -369,7 +371,8 @@ mod tests {
     #[test]
     fn test_rotate() {
         let input: Array2<f64> = Array2::eye(3);
-        let result = rotate(&input, 45.0, None, None, None, None, None, None).unwrap();
+        let result =
+            rotate(&input, 45.0, None, None, None, None, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 }

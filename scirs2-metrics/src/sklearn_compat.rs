@@ -876,7 +876,8 @@ mod tests {
         let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2]);
         let y_pred = Array1::from_vec(vec![0, 2, 1, 0, 0, 2]);
 
-        let report = classification_report_sklearn(&y_true, &y_pred, None, None, 2, 0.0).unwrap();
+        let report = classification_report_sklearn(&y_true, &y_pred, None, None, 2, 0.0)
+            .expect("Operation failed");
 
         assert!(report.accuracy >= 0.0 && report.accuracy <= 1.0);
         assert!(report.precision.len() == 3);
@@ -899,7 +900,7 @@ mod tests {
             None,
             0.0,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(precision.len(), 1);
         assert_eq!(recall.len(), 1);
@@ -912,11 +913,13 @@ mod tests {
         let y1 = Array1::from_vec(vec![0, 1, 0, 1]);
         let y2 = Array1::from_vec(vec![0, 1, 0, 1]);
 
-        let kappa = cohen_kappa_score_sklearn(&y1, &y2, None, None, None).unwrap();
+        let kappa =
+            cohen_kappa_score_sklearn(&y1, &y2, None, None, None).expect("Operation failed");
         assert!((kappa - 1.0).abs() < 1e-10); // Perfect agreement
 
         let y3 = Array1::from_vec(vec![0, 1, 1, 0]);
-        let kappa2 = cohen_kappa_score_sklearn(&y1, &y3, None, None, None).unwrap();
+        let kappa2 =
+            cohen_kappa_score_sklearn(&y1, &y3, None, None, None).expect("Operation failed");
         assert!(kappa2 < 1.0); // Less than perfect agreement
     }
 
@@ -925,23 +928,25 @@ mod tests {
         let y_true = Array1::from_vec(vec![0, 1, 0, 1]);
         let y_pred = Array1::from_vec(vec![0, 1, 1, 0]);
 
-        let loss_normalized = zero_one_loss_sklearn(&y_true, &y_pred, true, None).unwrap();
+        let loss_normalized =
+            zero_one_loss_sklearn(&y_true, &y_pred, true, None).expect("Operation failed");
         assert!((loss_normalized - 0.5).abs() < 1e-10); // 2 errors out of 4
 
-        let loss_count = zero_one_loss_sklearn(&y_true, &y_pred, false, None).unwrap();
+        let loss_count =
+            zero_one_loss_sklearn(&y_true, &y_pred, false, None).expect("Operation failed");
         assert!((loss_count - 2.0).abs() < 1e-10); // 2 errors
     }
 
     #[test]
     fn test_multilabel_confusion_matrix_sklearn() {
-        let y_true =
-            Array2::from_shape_vec((4, 3), vec![1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1]).unwrap();
+        let y_true = Array2::from_shape_vec((4, 3), vec![1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1])
+            .expect("Operation failed");
 
-        let y_pred =
-            Array2::from_shape_vec((4, 3), vec![1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1]).unwrap();
+        let y_pred = Array2::from_shape_vec((4, 3), vec![1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1])
+            .expect("Operation failed");
 
-        let confusion_matrices =
-            multilabel_confusion_matrix_sklearn(&y_true, &y_pred, None, None).unwrap();
+        let confusion_matrices = multilabel_confusion_matrix_sklearn(&y_true, &y_pred, None, None)
+            .expect("Operation failed");
 
         assert_eq!(confusion_matrices.shape(), [6, 2]); // 3 labels * 2 rows each
     }

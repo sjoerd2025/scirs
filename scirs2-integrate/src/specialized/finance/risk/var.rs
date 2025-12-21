@@ -50,7 +50,7 @@ impl HistoricalVaR {
     /// Calculate VaR and CVaR for a given horizon
     pub fn calculate(&self, horizon_days: usize) -> VaRResult {
         let mut sorted_returns = self.returns.clone();
-        sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_returns.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Scale returns to horizon
         let horizon_factor = (horizon_days as f64).sqrt();
@@ -180,7 +180,7 @@ impl MonteCarloVaR {
     /// Calculate VaR using Monte Carlo simulation
     pub fn calculate(&self, horizon_days: usize) -> VaRResult {
         let mut rng = scirs2_core::random::thread_rng();
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
         let dt = 1.0; // Daily steps
         let n_steps = horizon_days;
@@ -201,7 +201,7 @@ impl MonteCarloVaR {
         }
 
         // Sort returns
-        portfolio_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        portfolio_returns.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Calculate VaR
         let alpha = 1.0 - self.confidence_level;
@@ -298,7 +298,7 @@ mod tests {
             0.01, 0.02, -0.01, 0.015, -0.02, 0.005, -0.015, 0.01, -0.025, 0.02,
         ];
 
-        let var_calc = HistoricalVaR::new(returns, 0.95).unwrap();
+        let var_calc = HistoricalVaR::new(returns, 0.95).expect("Operation failed");
         let result = var_calc.calculate(1);
 
         assert!(result.var > 0.0, "VaR should be positive");
@@ -308,7 +308,7 @@ mod tests {
 
     #[test]
     fn test_parametric_var() {
-        let var_calc = ParametricVaR::new(0.0005, 0.02, 0.95).unwrap();
+        let var_calc = ParametricVaR::new(0.0005, 0.02, 0.95).expect("Operation failed");
         let result = var_calc.calculate(1);
 
         // For 95% confidence with σ=0.02, VaR should be around 0.0329 (1.645*0.02)
@@ -322,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_monte_carlo_var() {
-        let var_calc = MonteCarloVaR::new(0.0005, 0.02, 10000, 0.95).unwrap();
+        let var_calc = MonteCarloVaR::new(0.0005, 0.02, 10000, 0.95).expect("Operation failed");
         let result = var_calc.calculate(1);
 
         // Should be similar to parametric VaR
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_var_multi_day_horizon() {
-        let var_calc = ParametricVaR::new(0.0, 0.01, 0.95).unwrap();
+        let var_calc = ParametricVaR::new(0.0, 0.01, 0.95).expect("Operation failed");
 
         let var_1day = var_calc.calculate(1);
         let var_10day = var_calc.calculate(10);
@@ -356,7 +356,7 @@ mod tests {
             -0.05, -0.04, -0.03, -0.02, -0.01, 0.01, 0.02, 0.03, 0.04, 0.05,
         ];
 
-        let var_calc = HistoricalVaR::new(returns, 0.90).unwrap();
+        let var_calc = HistoricalVaR::new(returns, 0.90).expect("Operation failed");
         let result = var_calc.calculate(1);
 
         // CVaR (Expected Shortfall) should always be >= VaR
@@ -370,8 +370,8 @@ mod tests {
 
     #[test]
     fn test_higher_confidence_higher_var() {
-        let var_95 = ParametricVaR::new(0.0, 0.01, 0.95).unwrap();
-        let var_99 = ParametricVaR::new(0.0, 0.01, 0.99).unwrap();
+        let var_95 = ParametricVaR::new(0.0, 0.01, 0.95).expect("Operation failed");
+        let var_99 = ParametricVaR::new(0.0, 0.01, 0.99).expect("Operation failed");
 
         let result_95 = var_95.calculate(1);
         let result_99 = var_99.calculate(1);

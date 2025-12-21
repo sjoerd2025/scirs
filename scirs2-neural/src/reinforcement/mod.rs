@@ -228,11 +228,11 @@ impl<E: Environment> RLTrainer<E> {
             mean_reward,
             std_reward,
             min_reward: episode_rewards
-                .min_by(|a, b| a.partial_cmp(b).unwrap())
+                .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .copied()
                 .unwrap_or(0.0),
             max_reward: episode_rewards
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             mean_length: episode_lengths.iter().sum::<usize>() as f32
                 / episode_lengths.len() as f32,
 /// Training statistics

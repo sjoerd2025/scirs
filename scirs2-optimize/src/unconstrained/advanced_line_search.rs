@@ -616,7 +616,7 @@ where
         ));
     }
 
-    let grad_fun = grad_fun.unwrap();
+    let grad_fun = grad_fun.expect("Operation failed");
 
     let mut alpha = options.alpha_init;
     if let Some(bounds) = bounds {
@@ -977,7 +977,7 @@ mod tests {
             &options,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.success);
         assert!(result.alpha > 0.0);

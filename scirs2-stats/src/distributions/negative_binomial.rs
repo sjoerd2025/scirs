@@ -41,7 +41,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// ```
     pub fn new(r: F, p: F) -> StatsResult<Self> {
         // Validate parameters
@@ -75,7 +75,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let pmf_at_7 = nb.pmf(7.0);
     /// assert!((pmf_at_7 - 0.0660).abs() < 1e-4);
     /// ```
@@ -162,7 +162,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let log_pmf_at_7 = nb.log_pmf(7.0);
     /// assert!((log_pmf_at_7 - (-2.717)).abs() < 1e-3);
     /// ```
@@ -176,8 +176,8 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
             return neg_infinity;
         }
 
-        let k_usize = k.to_usize().unwrap();
-        let k_f = F::from(k_usize).unwrap();
+        let k_usize = k.to_usize().expect("Operation failed");
+        let k_f = F::from(k_usize).expect("Failed to convert to float");
 
         // Handle special cases
         if self.p == one {
@@ -186,7 +186,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
 
         // For integer r, we can use the binomial coefficient formula
         if Self::is_integer(self.r) {
-            let r_usize = self.r.to_usize().unwrap();
+            let r_usize = self.r.to_usize().expect("Operation failed");
             if r_usize > 0 {
                 return self.log_binomial_pmf(k_usize);
             }
@@ -199,10 +199,10 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     // Helper method for log-PMF calculation for integer r
     fn log_binomial_pmf(&self, k: usize) -> F {
         let one = F::one();
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
 
-        let r_usize = self.r.to_usize().unwrap();
-        let r_f = F::from(r_usize).unwrap();
+        let r_usize = self.r.to_usize().expect("Operation failed");
+        let r_f = F::from(r_usize).expect("Failed to convert to float");
 
         // Calculate ln(C(k+r-1, k))
         let ln_binom_coef = self.ln_binom_coef(k + r_usize - 1, k);
@@ -230,7 +230,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
         let ln_prob = r_f64 * p_f64.ln() + k_f64 * (1.0 - p_f64).ln();
 
         // Convert back to F
-        F::from(ln_coef + ln_prob).unwrap()
+        F::from(ln_coef + ln_prob).expect("Failed to convert to float")
     }
 
     /// Calculate the cumulative distribution function (CDF) at a given point
@@ -248,7 +248,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let cdf_at_7 = nb.cdf(7.0);
     /// assert!((cdf_at_7 - 0.2763).abs() < 1e-4);
     /// ```
@@ -268,12 +268,12 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
 
         // Floor k to handle non-integer values
         let k_floor = k.floor();
-        let k_int = k_floor.to_usize().unwrap();
+        let k_int = k_floor.to_usize().expect("Operation failed");
 
         // Calculate CDF as sum of PMFs from 0 to k_int
         let mut sum = zero;
         for i in 0..=k_int {
-            sum = sum + self.pmf(F::from(i).unwrap());
+            sum = sum + self.pmf(F::from(i).expect("Failed to convert to float"));
         }
 
         sum
@@ -294,8 +294,8 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
-    /// let quant = nb.ppf(0.5).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
+    /// let quant = nb.ppf(0.5).expect("Operation failed");
     /// assert_eq!(quant, 11.0);
     /// ```
     pub fn ppf(&self, pval: F) -> StatsResult<F> {
@@ -358,8 +358,8 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
-    /// let samples = nb.rvs(10).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
+    /// let samples = nb.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -368,7 +368,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
 
         // For integer r, we can use a sum of geometric variables
         if Self::is_integer(self.r) {
-            let r_usize = self.r.to_usize().unwrap();
+            let r_usize = self.r.to_usize().expect("Operation failed");
 
             for _ in 0..size {
                 // Generate r geometric variables and sum them
@@ -378,11 +378,16 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
                     let u: f64 = rng.gen_range(0.0..1.0);
                     let p_f64 = <f64 as scirs2_core::numeric::NumCast>::from(self.p).unwrap_or(0.5);
                     let geom_sample = (u.ln()
-                        / (F::from(1.0).unwrap().to_f64().unwrap() - p_f64).ln())
+                        / (F::from(1.0)
+                            .expect("Failed to convert constant to float")
+                            .to_f64()
+                            .expect("Operation failed")
+                            - p_f64)
+                            .ln())
                     .floor() as usize;
                     sum += geom_sample;
                 }
-                samples.push(F::from(sum).unwrap());
+                samples.push(F::from(sum).expect("Failed to convert to float"));
             }
         } else {
             // For non-integer r..use gamma-Poisson mixture
@@ -408,7 +413,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
                     })?;
                 let poisson_sample = poisson_distr.sample(&mut rng);
 
-                samples.push(F::from(poisson_sample).unwrap());
+                samples.push(F::from(poisson_sample).expect("Failed to convert to float"));
             }
         }
 
@@ -426,7 +431,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let mean = nb.mean();
     /// assert!((mean - 11.666667).abs() < 1e-6);
     /// ```
@@ -448,7 +453,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let variance = nb.var();
     /// assert!((variance - 38.888889).abs() < 1e-6);
     /// ```
@@ -470,7 +475,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let std_dev = nb.std();
     /// assert!((std_dev - 6.236).abs() < 1e-3);
     /// ```
@@ -490,14 +495,14 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let skewness = nb.skewness();
     /// assert!((skewness - 0.909).abs() < 1e-3);
     /// ```
     pub fn skewness(&self) -> F {
         // Skewness = (2-p) / sqrt(r * (1-p))
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
 
         let q = one - self.p; // q = 1 - p
         (two - self.p) / (self.r * q).sqrt()
@@ -514,14 +519,14 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let kurtosis = nb.kurtosis();
     /// assert!((kurtosis - 1.226).abs() < 1e-3);
     /// ```
     pub fn kurtosis(&self) -> F {
         // Excess Kurtosis = 6/r + (p^2)/(r*(1-p))
         let one = F::one();
-        let six = F::from(6.0).unwrap();
+        let six = F::from(6.0).expect("Failed to convert constant to float");
 
         let q = one - self.p; // q = 1 - p
         six / self.r + (self.p * self.p) / (self.r * q)
@@ -538,18 +543,19 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let entropy = nb.entropy();
     /// assert!(entropy > 0.0);
     /// ```
     pub fn entropy(&self) -> F {
         // For integer r, approximate using the mean and variance
         // This is a reasonable approximation for large r
-        let half = F::from(0.5).unwrap();
-        let two_pi_e = F::from(2.0 * std::f64::consts::PI * std::f64::consts::E).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
+        let two_pi_e = F::from(2.0 * std::f64::consts::PI * std::f64::consts::E)
+            .expect("Failed to convert to float");
 
         // If r is large, use normal approximation
-        if self.r >= F::from(10.0).unwrap() {
+        if self.r >= F::from(10.0).expect("Failed to convert constant to float") {
             let variance = self.var();
             return half * (two_pi_e * variance).ln();
         }
@@ -580,7 +586,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// ```
     /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
     ///
-    /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
+    /// let nb = NegativeBinomial::new(5.0f64, 0.3).expect("Operation failed");
     /// let mode = nb.mode();
     /// assert_eq!(mode, 9.0);
     /// ```
@@ -611,7 +617,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
             for i in 0..k {
                 result = result * (n - i) as u64 / (i + 1) as u64;
             }
-            F::from(result).unwrap()
+            F::from(result).expect("Failed to convert to float")
         } else {
             // For larger values, use ln_gamma for numerical stability
             self.ln_binom_coef(n, k).exp()
@@ -626,7 +632,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
         // ln(C(n,k)) = ln_gamma(n+1) - ln_gamma(k+1) - ln_gamma(n-k+1)
         let result = ln_gamma(n_f64 + 1.0) - ln_gamma(k_f64 + 1.0) - ln_gamma(n_f64 - k_f64 + 1.0);
 
-        F::from(result).unwrap()
+        F::from(result).expect("Failed to convert to float")
     }
 }
 
@@ -649,7 +655,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
 /// ```
 /// use scirs2_stats::distributions;
 ///
-/// let nb = distributions::nbinom(5.0f64, 0.3).unwrap();
+/// let nb = distributions::nbinom(5.0f64, 0.3).expect("Operation failed");
 /// let pmf_at_7 = nb.pmf(7.0);
 /// assert!((pmf_at_7 - 0.0660).abs() < 1e-4);
 /// ```
@@ -676,11 +682,11 @@ mod tests {
     #[test]
     fn test_negative_binomial_creation() {
         // Valid parameters
-        let nb1 = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb1 = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
         assert_eq!(nb1.r, 5.0);
         assert_eq!(nb1.p, 0.3);
 
-        let nb2 = NegativeBinomial::new(1.0, 1.0).unwrap();
+        let nb2 = NegativeBinomial::new(1.0, 1.0).expect("Operation failed");
         assert_eq!(nb2.r, 1.0);
         assert_eq!(nb2.p, 1.0);
 
@@ -697,7 +703,7 @@ mod tests {
     #[test]
     fn test_negative_binomial_pmf() {
         // NegativeBinomial(5, 0.3) - integer r
-        let nb = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
 
         // PMF values for different k
         assert_relative_eq!(nb.pmf(0.0), 0.00243, epsilon = 1e-5);
@@ -712,18 +718,18 @@ mod tests {
         assert_eq!(nb.pmf(3.5), 0.0);
 
         // Special case: NegativeBinomial(1, 0.3) - same as geometric
-        let nb_geom = NegativeBinomial::new(1.0, 0.3).unwrap();
+        let nb_geom = NegativeBinomial::new(1.0, 0.3).expect("Operation failed");
         assert_relative_eq!(nb_geom.pmf(0.0), 0.3, epsilon = 1e-10);
         assert_relative_eq!(nb_geom.pmf(1.0), 0.3 * 0.7, epsilon = 1e-10);
         assert_relative_eq!(nb_geom.pmf(2.0), 0.3 * 0.7 * 0.7, epsilon = 1e-10);
 
         // Special case: NegativeBinomial(r, 1.0)
-        let nb_p1 = NegativeBinomial::new(5.0, 1.0).unwrap();
+        let nb_p1 = NegativeBinomial::new(5.0, 1.0).expect("Operation failed");
         assert_eq!(nb_p1.pmf(0.0), 1.0);
         assert_eq!(nb_p1.pmf(1.0), 0.0);
 
         // Test with non-integer r
-        let nb_non_int = NegativeBinomial::new(2.5, 0.3).unwrap();
+        let nb_non_int = NegativeBinomial::new(2.5, 0.3).expect("Operation failed");
         assert!(nb_non_int.pmf(0.0) > 0.0);
         assert!(nb_non_int.pmf(3.0) > 0.0);
     }
@@ -731,7 +737,7 @@ mod tests {
     #[test]
     fn test_negative_binomial_log_pmf() {
         // NegativeBinomial(5, 0.3)
-        let nb = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
 
         // Check log_pmf against pmf
         for k in 0..15 {
@@ -754,7 +760,7 @@ mod tests {
     #[test]
     fn test_negative_binomial_cdf() {
         // NegativeBinomial(5, 0.3)
-        let nb = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
 
         // CDF for k < 0 should be 0
         assert_eq!(nb.cdf(-1.0), 0.0);
@@ -769,7 +775,7 @@ mod tests {
         assert_relative_eq!(nb.cdf(7.5), nb.cdf(7.0), epsilon = 1e-10);
 
         // Special case: NegativeBinomial(r, 1.0)
-        let nb_p1 = NegativeBinomial::new(5.0, 1.0).unwrap();
+        let nb_p1 = NegativeBinomial::new(5.0, 1.0).expect("Operation failed");
         assert_eq!(nb_p1.cdf(0.0), 1.0);
         assert_eq!(nb_p1.cdf(1.0), 1.0);
     }
@@ -777,12 +783,12 @@ mod tests {
     #[test]
     fn test_negative_binomial_ppf() {
         // NegativeBinomial(5, 0.3)
-        let nb = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
 
         // Verify that ppf is the inverse of cdf for some test points
         let test_points = vec![0.1, 0.3, 0.5, 0.7, 0.9];
         for &p in &test_points {
-            let k = nb.ppf(p).unwrap();
+            let k = nb.ppf(p).expect("Operation failed");
 
             // For discrete distributions, we check that CDF(k-1) < p ≤ CDF(k)
             if k > 0.0 {
@@ -798,8 +804,8 @@ mod tests {
         }
 
         // Test edge cases
-        assert_eq!(nb.ppf(0.0).unwrap(), 0.0);
-        assert!(nb.ppf(1.0).unwrap().is_infinite());
+        assert_eq!(nb.ppf(0.0).expect("Operation failed"), 0.0);
+        assert!(nb.ppf(1.0).expect("Operation failed").is_infinite());
 
         // Invalid probability values
         assert!(nb.ppf(-0.1).is_err());
@@ -809,10 +815,10 @@ mod tests {
     #[test]
     fn test_negative_binomial_rvs() {
         // NegativeBinomial(5, 0.3)
-        let nb = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
 
         // Generate samples
-        let samples = nb.rvs(100).unwrap();
+        let samples = nb.rvs(100).expect("Operation failed");
 
         // Check number of samples
         assert_eq!(samples.len(), 100);
@@ -834,7 +840,7 @@ mod tests {
     #[test]
     fn test_negative_binomial_moments() {
         // Test with r = 5, p = 0.3
-        let nb = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
 
         // Mean = r(1-p)/p = 5*0.7/0.3 = 11.67
         assert_relative_eq!(nb.mean(), 11.666667, epsilon = 1e-6);
@@ -858,7 +864,7 @@ mod tests {
     #[test]
     fn test_negative_binomial_edge_cases() {
         // Test with r = 1, p = 0.3 (should be equivalent to Geometric(0.3))
-        let nb_geom = NegativeBinomial::new(1.0, 0.3).unwrap();
+        let nb_geom = NegativeBinomial::new(1.0, 0.3).expect("Operation failed");
 
         // Mean = (1-p)/p = 0.7/0.3 = 2.33...
         assert_relative_eq!(nb_geom.mean(), 2.333333, epsilon = 1e-6);
@@ -870,13 +876,13 @@ mod tests {
         assert_eq!(nb_geom.mode(), 0.0);
 
         // Test with large r
-        let nb_large = NegativeBinomial::new(100.0, 0.3).unwrap();
+        let nb_large = NegativeBinomial::new(100.0, 0.3).expect("Operation failed");
 
         // Mean = r(1-p)/p = 100*0.7/0.3 = 233.33...
         assert_relative_eq!(nb_large.mean(), 233.33333, epsilon = 1e-5);
 
         // Test with p close to 1
-        let nb_p_high = NegativeBinomial::new(5.0, 0.99).unwrap();
+        let nb_p_high = NegativeBinomial::new(5.0, 0.99).expect("Operation failed");
 
         // Mean = r(1-p)/p = 5*0.01/0.99 = 0.0505...
         assert_relative_eq!(nb_p_high.mean(), 0.050505, epsilon = 1e-6);
@@ -885,7 +891,7 @@ mod tests {
     #[test]
     fn test_negative_binomial_compare_with_binomial() {
         // NegativeBinomial with integer r should use binomial coefficient calculation
-        let nb_int = NegativeBinomial::new(5.0, 0.3).unwrap();
+        let nb_int = NegativeBinomial::new(5.0, 0.3).expect("Operation failed");
 
         // PMF values for different k
         let pmf_0 = nb_int.pmf(0.0);
@@ -904,7 +910,7 @@ mod tests {
     #[test]
     fn test_non_integer_r() {
         // Test with non-integer r
-        let nb_non_int = NegativeBinomial::new(2.5, 0.3).unwrap();
+        let nb_non_int = NegativeBinomial::new(2.5, 0.3).expect("Operation failed");
 
         // PMF values for different k
         // These values are approximated using gamma function approach

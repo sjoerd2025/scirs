@@ -145,7 +145,7 @@ impl<T: Clone + Send> WorkStealingQueue<T> {
     }
 
     fn add_work(&self, item: WorkItem<T>) {
-        let mut items = self.items.lock().unwrap();
+        let mut items = self.items.lock().expect("Operation failed");
         items.push(item);
     }
 
@@ -153,7 +153,7 @@ impl<T: Clone + Send> WorkStealingQueue<T> {
         // Try to steal from other threads
         for (i, queue) in self.thread_queues.iter().enumerate() {
             if i != thread_id {
-                let mut queue = queue.lock().unwrap();
+                let mut queue = queue.lock().expect("Operation failed");
                 if !queue.is_empty() {
                     return queue.pop();
                 }
@@ -658,11 +658,11 @@ where
                 }
             }
             
-            let mut results = results.lock().unwrap();
+            let mut results = results.lock().expect("Operation failed");
             results.extend(chunk_results);
         });
 
-        let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let final_results = Arc::try_unwrap(results).expect("Operation failed").into_inner().expect("Operation failed");
         Ok(Array1::from_vec(final_results))
     }
 
@@ -715,11 +715,11 @@ where
                 }
             }
             
-            let mut results = results.lock().unwrap();
+            let mut results = results.lock().expect("Operation failed");
             results.extend(chunk_results);
         });
 
-        let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let final_results = Arc::try_unwrap(results).expect("Operation failed").into_inner().expect("Operation failed");
         Ok(Array1::from_vec(final_results))
     }
 
@@ -744,7 +744,7 @@ where
             
             for _ in start_idx..end_idx {
                 // Generate Dirichlet weights (Gamma(1,1) normalized)
-                let gamma = Gamma::new(1.0, 1.0).unwrap();
+                let gamma = Gamma::new(1.0, 1.0).expect("Operation failed");
                 let mut weights: Vec<f64> = (0..data_len)
                     .map(|_| gamma.sample(&mut rng))
                     .collect();
@@ -775,11 +775,11 @@ where
                 }
             }
             
-            let mut results = results.lock().unwrap();
+            let mut results = results.lock().expect("Operation failed");
             results.extend(chunk_results);
         });
 
-        let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let final_results = Arc::try_unwrap(results).expect("Operation failed").into_inner().expect("Operation failed");
         Ok(Array1::from_vec(final_results))
     }
 
@@ -813,33 +813,33 @@ where
             let mut sum_sq = F::zero();
             
             for _ in 0..thread_samples {
-                let x = a + F::from(rng.random::<f64>()).unwrap() * range;
+                let x = a + F::from(rng.random::<f64>()).expect("Operation failed") * range;
                 let y = integrand(x);
                 sum = sum + y;
                 sum_sq = sum_sq + y * y;
             }
             
-            let mut results = results.lock().unwrap();
+            let mut results = results.lock().expect("Operation failed");
             results.push((sum, sum_sq, thread_samples));
         });
 
-        let thread_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let thread_results = Arc::try_unwrap(results).expect("Operation failed").into_inner().expect("Operation failed");
         
         let total_sum: F = thread_results.iter().map(|(sum__)| *sum).sum();
         let total_sum_sq: F = thread_results.iter().map(|(_, sum_sq_)| *sum_sq).sum();
         let total_samples: usize = thread_results.iter().map(|(__, count)| *count).sum();
         
-        let mean = total_sum / F::from(total_samples).unwrap();
+        let mean = total_sum / F::from(total_samples).expect("Failed to convert to float");
         let integral_estimate = mean * range;
         
-        let variance = (total_sum_sq / F::from(total_samples).unwrap()) - (mean * mean);
-        let standard_error = (variance / F::from(total_samples).unwrap()).sqrt() * range;
+        let variance = (total_sum_sq / F::from(total_samples).expect("Failed to convert to float")) - (mean * mean);
+        let standard_error = (variance / F::from(total_samples).expect("Failed to convert to float")).sqrt() * range;
         
         Ok(MonteCarloResult {
             integral: integral_estimate,
             standard_error,
             n_samples_: total_samples,
-            convergence_rate: F::one() / F::from(total_samples as f64).unwrap().sqrt(),
+            convergence_rate: F::one() / F::from(total_samples as f64).expect("Failed to convert to float").sqrt(),
         })
     }
 
@@ -864,9 +864,9 @@ where
         
         // Combine results
         let total_samples = initial_result.n_samples_ + refinement_result.n_samples_;
-        let combined_integral = (initial_result.integral * F::from(initial_result.n_samples_).unwrap() +
-                               refinement_result.integral * F::from(refinement_result.n_samples_).unwrap()) /
-                               F::from(total_samples).unwrap();
+        let combined_integral = (initial_result.integral * F::from(initial_result.n_samples_).expect("Failed to convert to float") +
+                               refinement_result.integral * F::from(refinement_result.n_samples_).expect("Failed to convert to float")) /
+                               F::from(total_samples).expect("Failed to convert to float");
         
         let combined_error = (initial_result.standard_error * initial_result.standard_error +
                              refinement_result.standard_error * refinement_result.standard_error).sqrt();
@@ -875,7 +875,7 @@ where
             integral: combined_integral,
             standard_error: combined_error,
             n_samples_: total_samples,
-            convergence_rate: F::one() / F::from(total_samples as f64).unwrap().sqrt(),
+            convergence_rate: F::one() / F::from(total_samples as f64).expect("Failed to convert to float").sqrt(),
         })
     }
 
@@ -922,10 +922,10 @@ where
             }
         }
         
-        let mean_score = scores.iter().copied().sum::<F>() / F::from(scores.len()).unwrap();
+        let mean_score = scores.iter().copied().sum::<F>() / F::from(scores.len()).expect("Operation failed");
         let variance = scores.iter()
             .map(|&s| (s - mean_score) * (s - mean_score))
-            .sum::<F>() / F::from(scores.len()).unwrap();
+            .sum::<F>() / F::from(scores.len()).expect("Operation failed");
         
         Ok(CrossValidationResult {
             mean_score,
@@ -986,12 +986,12 @@ where
         
         parallel_for_each(&parameter_combinations, |params| {
             if let Ok(score) = objective_fn(params) {
-                let mut results = results.lock().unwrap();
+                let mut results = results.lock().expect("Operation failed");
                 results.push((params.to_vec(), score));
             }
         });
 
-        let all_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let all_results = Arc::try_unwrap(results).expect("Operation failed").into_inner().expect("Operation failed");
         
         let best_result = all_results.iter()
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
@@ -1024,17 +1024,17 @@ where
                 let mut params = vec![F::zero(); n_params];
                 for (i, &(min_val, max_val)) in parameter_bounds.iter().enumerate() {
                     let range = max_val - min_val;
-                    params[i] = min_val + F::from(rng.random::<f64>()).unwrap() * range;
+                    params[i] = min_val + F::from(rng.random::<f64>()).expect("Operation failed") * range;
                 }
                 
                 if let Ok(score) = objective_fn(&params) {
-                    let mut results = results.lock().unwrap();
+                    let mut results = results.lock().expect("Operation failed");
                     results.push((params, score));
                 }
             }
         });
 
-        let all_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let all_results = Arc::try_unwrap(results).expect("Operation failed").into_inner().expect("Operation failed");
         
         let best_result = all_results.iter()
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
@@ -1100,10 +1100,10 @@ where
         }
         
         let (min_val, max_val) = parameter_bounds[param_idx];
-        let step = (max_val - min_val) / F::from(grid_points_per_dim - 1).unwrap();
+        let step = (max_val - min_val) / F::from(grid_points_per_dim - 1).expect("Failed to convert to float");
         
         for i in 0..grid_points_per_dim {
-            current_combination[param_idx] = min_val + F::from(i).unwrap() * step;
+            current_combination[param_idx] = min_val + F::from(i).expect("Failed to convert to float") * step;
             self.generate_grid_recursive(
                 parameter_bounds,
                 grid_points_per_dim,
@@ -1124,7 +1124,7 @@ where
         let mse = predictions.iter()
             .zip(targets.iter())
             .map(|(&pred, &target)| (pred - target) * (pred - target))
-            .sum::<F>() / F::from(predictions.len()).unwrap();
+            .sum::<F>() / F::from(predictions.len()).expect("Operation failed");
 
         Ok(mse)
     }
@@ -1241,10 +1241,9 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_parallel_config() {
         let config = AdvancedParallelConfig::default();
-        assert!(config.num_cpus::get.unwrap() > 0);
+        assert!(config.num_cpus::get.expect("Operation failed") > 0);
         assert!(config.work_stealing);
         assert!(config.task_granularity.min_parallelsize > 0);
     }
@@ -1257,7 +1256,7 @@ mod tests {
         let result = advanced_parallel_matrix_multiply(&a.view(), &b.view());
         assert!(result.is_ok());
         
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert_eq!(result.dim(), (2, 2));
     }
 
@@ -1277,7 +1276,7 @@ mod tests {
         );
         
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 100);
+        assert_eq!(result.expect("Operation failed").len(), 100);
     }
 
     #[test]
@@ -1291,7 +1290,7 @@ mod tests {
         let _ = processor.parallel_matrix_multiply(&a.view(), &b.view());
         
         assert!(processor.get_metrics().is_some());
-        let metrics = processor.get_metrics().unwrap();
+        let metrics = processor.get_metrics().expect("Operation failed");
         assert!(metrics.total_time_ms >= 0.0);
         assert!(metrics.thread_efficiency >= 0.0 && metrics.thread_efficiency <= 1.0);
     }

@@ -314,18 +314,18 @@ mod tests {
     use super::*;
     #[test]
     fn test_shared_backbone() {
-        let backbone = SharedBackbone::new(10, &[64, 32]).unwrap();
+        let backbone = SharedBackbone::new(10, &[64, 32]).expect("Operation failed");
         assert_eq!(backbone.output_dim(), 32);
         let input = Array2::from_elem((5, 10), 1.0);
-        let output = backbone.forward(&input.view()).unwrap();
+        let output = backbone.forward(&input.view()).expect("Operation failed");
         assert_eq!(output.shape(), &[5, 32]);
     fn test_task_specific_head() {
         let task_type = TaskType::Classification { num_classes: 5 };
-        let head = TaskSpecificHead::new("test_task".to_string(), 32, &[16], 5, task_type).unwrap();
+        let head = TaskSpecificHead::new("test_task".to_string(), 32, &[16], 5, task_type).expect("Operation failed");
         assert_eq!(head.task_name(), "test_task");
         assert_eq!(head.output_dim(), 5);
         let features = Array2::from_elem((3, 32), 0.5);
-        let output = head.forward(&features.view()).unwrap();
+        let output = head.forward(&features.view()).expect("Operation failed");
         assert_eq!(output.shape(), &[3, 5]);
     fn test_multi_task_architecture() {
         let task_configs = vec![
@@ -340,9 +340,9 @@ mod tests {
                 1,
                 TaskType::Regression { output_dim: 1 },
         ];
-        let arch = MultiTaskArchitecture::new(10, &[32, 16], &task_configs).unwrap();
+        let arch = MultiTaskArchitecture::new(10, &[32, 16], &task_configs).expect("Operation failed");
         let input = Array2::from_elem((2, 10), 1.0);
-        let outputs = arch.forward_all_tasks(&input.view()).unwrap();
+        let outputs = arch.forward_all_tasks(&input.view()).expect("Operation failed");
         assert_eq!(outputs.len(), 2);
         assert!(outputs.contains_key("task1"));
         assert!(outputs.contains_key("task2"));

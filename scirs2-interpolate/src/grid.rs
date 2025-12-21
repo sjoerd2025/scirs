@@ -40,7 +40,7 @@ pub enum GridTransformMethod {
 /// let grid_coords = create_regular_grid(
 ///     &[(0.0, 1.0), (0.0, 2.0)],
 ///     &[10, 20]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(grid_coords.len(), 2);
 /// assert_eq!(grid_coords[0].len(), 10);
@@ -84,9 +84,9 @@ where
         if n_points == 1 {
             coords[0] = min;
         } else {
-            let step = (max - min) / F::from_usize(n_points - 1).unwrap();
+            let step = (max - min) / F::from_usize(n_points - 1).expect("Operation failed");
             for j in 0..n_points {
-                coords[j] = min + F::from_usize(j).unwrap() * step;
+                coords[j] = min + F::from_usize(j).expect("Operation failed") * step;
             }
         }
 
@@ -472,12 +472,12 @@ where
         if valid {
             // Use linear indexing for all cases to avoid generic dimension issues
             let linear_idx = ravel_multi_index(&src_indices, src_values.shape());
-            let src_value = src_values.as_slice().unwrap()[linear_idx];
+            let src_value = src_values.as_slice().expect("Operation failed")[linear_idx];
             let dst_linear_idx = ravel_multi_index(&indices, &dstshape);
-            dst_values.as_slice_mut().unwrap()[dst_linear_idx] = src_value;
+            dst_values.as_slice_mut().expect("Operation failed")[dst_linear_idx] = src_value;
         } else {
             let dst_linear_idx = ravel_multi_index(&indices, &dstshape);
-            dst_values.as_slice_mut().unwrap()[dst_linear_idx] = fill_value;
+            dst_values.as_slice_mut().expect("Operation failed")[dst_linear_idx] = fill_value;
         }
 
         // Increment indices
@@ -597,7 +597,7 @@ where
 
         // Get _value at this corner using linear indexing
         let linear_idx = ravel_multi_index(&corner_indices, values.shape());
-        let corner_value = values.as_slice().unwrap()[linear_idx];
+        let corner_value = values.as_slice().expect("Operation failed")[linear_idx];
         result = result + corner_weight * corner_value;
     }
 
@@ -707,7 +707,7 @@ where
     }
 
     let linear_idx = ravel_multi_index(&nearest_indices, grid_values.shape());
-    Ok(grid_values.as_slice().unwrap()[linear_idx])
+    Ok(grid_values.as_slice().expect("Operation failed")[linear_idx])
 }
 
 /// Efficient grid coordinate range checking
@@ -784,7 +784,7 @@ where
 
         // Calculate average spacing (assumes roughly uniform grid)
         let total_range = coord[coord.len() - 1] - coord[0];
-        let n_intervals = F::from_usize(coord.len() - 1).unwrap();
+        let n_intervals = F::from_usize(coord.len() - 1).expect("Operation failed");
         let avg_spacing = total_range / n_intervals;
 
         spacings.push(avg_spacing);
@@ -802,7 +802,7 @@ mod tests {
     #[test]
     fn test_create_regular_grid() {
         // 1D grid
-        let grid_1d = create_regular_grid(&[(0.0, 1.0)], &[5]).unwrap();
+        let grid_1d = create_regular_grid(&[(0.0, 1.0)], &[5]).expect("Operation failed");
 
         assert_eq!(grid_1d.len(), 1);
         assert_eq!(grid_1d[0].len(), 5);
@@ -810,7 +810,8 @@ mod tests {
         assert_abs_diff_eq!(grid_1d[0][4], 1.0, epsilon = 1e-10);
 
         // 2D grid
-        let grid_2d = create_regular_grid(&[(0.0, 1.0), (-1.0, 1.0)], &[3, 5]).unwrap();
+        let grid_2d =
+            create_regular_grid(&[(0.0, 1.0), (-1.0, 1.0)], &[3, 5]).expect("Operation failed");
 
         assert_eq!(grid_2d.len(), 2);
         assert_eq!(grid_2d[0].len(), 3);

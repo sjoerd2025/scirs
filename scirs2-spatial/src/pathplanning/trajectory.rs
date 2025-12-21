@@ -23,7 +23,7 @@
 //! let constraints = TrajectoryConstraints::default();
 //! let optimizer = TrajectoryOptimizer::new(constraints);
 //!
-//! let trajectory = optimizer.optimize_quintic(&start, &goal, duration).unwrap();
+//! let trajectory = optimizer.optimize_quintic(&start, &goal, duration).expect("Operation failed");
 //! println!("Trajectory has {} waypoints", trajectory.len());
 //! ```
 
@@ -639,7 +639,9 @@ mod tests {
         let constraints = TrajectoryConstraints::default();
         let optimizer = TrajectoryOptimizer::new(constraints);
 
-        let trajectory = optimizer.optimize_quintic(&start, &goal, duration).unwrap();
+        let trajectory = optimizer
+            .optimize_quintic(&start, &goal, duration)
+            .expect("Operation failed");
 
         // Check boundary conditions
         let first_point = &trajectory.points()[0];
@@ -664,15 +666,17 @@ mod tests {
 
         let constraints = TrajectoryConstraints::default();
         let optimizer = TrajectoryOptimizer::new(constraints);
-        let trajectory = optimizer.optimize_quintic(&start, &goal, duration).unwrap();
+        let trajectory = optimizer
+            .optimize_quintic(&start, &goal, duration)
+            .expect("Operation failed");
 
         // Sample at start
-        let start_sample = trajectory.sample(0.0).unwrap();
+        let start_sample = trajectory.sample(0.0).expect("Operation failed");
         assert_relative_eq!(start_sample.x, start.x, epsilon = 1e-6);
         assert_relative_eq!(start_sample.y, start.y, epsilon = 1e-6);
 
         // Sample at end
-        let end_sample = trajectory.sample(duration).unwrap();
+        let end_sample = trajectory.sample(duration).expect("Operation failed");
         assert_relative_eq!(end_sample.x, goal.x, epsilon = 1e-2);
         assert_relative_eq!(end_sample.y, goal.y, epsilon = 1e-2);
 

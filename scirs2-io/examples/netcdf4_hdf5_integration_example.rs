@@ -236,7 +236,7 @@ fn demonstrate_netcdf4_reading() -> Result<(), Box<dyn std::error::Error>> {
             println!("         Shape: {:?}", temp_data.shape());
             println!(
                 "         Sample values: {:?}",
-                &temp_data.as_slice().unwrap()[..5.min(temp_data.len())]
+                &temp_data.as_slice().expect("Operation failed")[..5.min(temp_data.len())]
             );
         }
     }

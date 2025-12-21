@@ -37,7 +37,8 @@ fn test_visualization_extreme_graphs() {
         // Create a deep computation graph (100 operations to avoid overflow)
         for i in 0..100 {
             let factor = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![1.0 + i as f32 * 0.0001]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[1]), vec![1.0 + i as f32 * 0.0001])
+                    .expect("Test: operation failed"),
                 ctx,
             );
             current = T::simd_mul(&current, &factor);
@@ -61,7 +62,7 @@ fn test_visualization_extreme_graphs() {
         let _visualizer = GraphVisualizer::<f32>::with_config(config);
 
         // Verify the deep graph still evaluates correctly
-        let result = current.eval(ctx).unwrap();
+        let result = current.eval(ctx).expect("Test: operation failed");
         // Allow some overflow for extreme stress test
         let finite_count = result.iter().filter(|&&x| x.is_finite()).count();
         assert!(
@@ -81,12 +82,14 @@ fn test_optimization_pathological_cases() {
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Case 1: Extremely deep chain of additions (constant folding opportunity)
-        let mut chain =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+        let mut chain = T::convert_to_tensor(
+            Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).expect("Test: operation failed"),
+            ctx,
+        );
 
         for _i in 0..500 {
             let constant = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![0.001]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[1]), vec![0.001]).expect("Test: operation failed"),
                 ctx,
             );
             chain = chain + constant;
@@ -102,7 +105,7 @@ fn test_optimization_pathological_cases() {
             let _optimizer = GraphOptimizer::<f32>::with_level(level);
 
             // Verify optimization doesn't break computation
-            let result = chain.eval(ctx).unwrap();
+            let result = chain.eval(ctx).expect("Test: operation failed");
             assert!((result[0] - 1.5).abs() < 0.01); // Should be approximately 1.5
         }
 
@@ -113,7 +116,7 @@ fn test_optimization_pathological_cases() {
         let expr3 = T::simd_mul(&x, &x); // Same as expr1
 
         let combined = T::simd_add(&T::simd_add(&expr1, &expr2), &expr3);
-        let result = combined.eval(ctx).unwrap();
+        let result = combined.eval(ctx).expect("Test: operation failed");
         assert!(result.iter().all(|&val| (val - 3.0).abs() < 1e-6));
 
         // Case 3: Zero operations (dead code elimination opportunity)
@@ -122,7 +125,7 @@ fn test_optimization_pathological_cases() {
         let dead_code = T::simd_mul(&ones, &zero); // Always zero
         let final_result = T::simd_add(&ones, &dead_code); // ones + 0 = ones
 
-        let output = final_result.eval(ctx).unwrap();
+        let output = final_result.eval(ctx).expect("Test: operation failed");
         assert!(output.iter().all(|&val| (val - 1.0).abs() < 1e-6));
 
         println!("✅ Pathological optimization cases handled correctly");
@@ -142,7 +145,7 @@ fn test_thread_pool_extreme_load() {
         adaptive_scheduling: false,
         ..Default::default()
     };
-    init_thread_pool_with_config(minimal_config).unwrap();
+    init_thread_pool_with_config(minimal_config).expect("Test: operation failed");
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Create many small parallel operations
@@ -151,7 +154,7 @@ fn test_thread_pool_extreme_load() {
         for i in 0..100 {
             let data = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x + i) as f32).collect())
-                    .unwrap(),
+                    .expect("Test: operation failed"),
                 ctx,
             );
             let processed = T::custom_activation(&data, "swish");
@@ -164,7 +167,7 @@ fn test_thread_pool_extreme_load() {
             combined = T::simd_add(&combined, result);
         }
 
-        let final_output = combined.eval(ctx).unwrap();
+        let final_output = combined.eval(ctx).expect("Test: operation failed");
         assert!(final_output.iter().all(|&x| x.is_finite()));
 
         println!("✅ Single-threaded extreme load handled correctly");
@@ -180,7 +183,7 @@ fn test_thread_pool_extreme_load() {
         adaptive_scheduling: true,
         ..Default::default()
     };
-    init_thread_pool_with_config(max_config).unwrap();
+    init_thread_pool_with_config(max_config).expect("Test: operation failed");
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test parallel operations with many threads
@@ -191,9 +194,9 @@ fn test_thread_pool_extreme_load() {
         let result2 = T::cached_op(&large_data, "square");
         let result3 = T::simd_relu(&large_data);
 
-        let output1 = result1.eval(ctx).unwrap();
-        let output2 = result2.eval(ctx).unwrap();
-        let output3 = result3.eval(ctx).unwrap();
+        let output1 = result1.eval(ctx).expect("Test: operation failed");
+        let output2 = result2.eval(ctx).expect("Test: operation failed");
+        let output3 = result3.eval(ctx).expect("Test: operation failed");
 
         // Handle scalar result for reduce sum
         let expected_sum = if output1.ndim() == 0 {
@@ -222,7 +225,7 @@ fn test_custom_activations_extreme_inputs() {
                 IxDyn(&[5]),
                 vec![100.0, 1000.0, 10000.0, f32::MAX / 2.0, 50.0],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
@@ -232,7 +235,7 @@ fn test_custom_activations_extreme_inputs() {
                 IxDyn(&[5]),
                 vec![-100.0, -1000.0, -10000.0, f32::MIN / 2.0, -50.0],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
@@ -249,7 +252,7 @@ fn test_custom_activations_extreme_inputs() {
                     f32::NAN,
                 ],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
@@ -258,7 +261,7 @@ fn test_custom_activations_extreme_inputs() {
         for activation in activations {
             // Test extreme positive
             let result_pos = T::custom_activation(&extreme_positive, activation);
-            let output_pos = result_pos.eval(ctx).unwrap();
+            let output_pos = result_pos.eval(ctx).expect("Test: operation failed");
 
             // Should handle large values gracefully (no panics, mostly finite)
             let finite_count = output_pos.iter().filter(|&&x| x.is_finite()).count();
@@ -270,7 +273,7 @@ fn test_custom_activations_extreme_inputs() {
 
             // Test extreme negative
             let result_neg = T::custom_activation(&extreme_negative, activation);
-            let output_neg = result_neg.eval(ctx).unwrap();
+            let output_neg = result_neg.eval(ctx).expect("Test: operation failed");
 
             let finite_count = output_neg.iter().filter(|&&x| x.is_finite()).count();
             assert!(
@@ -281,11 +284,12 @@ fn test_custom_activations_extreme_inputs() {
 
             // Test edge values (skip infinity and NaN tests for some activations)
             let normal_edge = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, f32::EPSILON, -f32::EPSILON]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, f32::EPSILON, -f32::EPSILON])
+                    .expect("Test: operation failed"),
                 ctx,
             );
             let result_edge = T::custom_activation(&normal_edge, activation);
-            let output_edge = result_edge.eval(ctx).unwrap();
+            let output_edge = result_edge.eval(ctx).expect("Test: operation failed");
 
             assert!(
                 output_edge.iter().all(|&x| x.is_finite()),
@@ -323,7 +327,7 @@ fn test_simd_operations_edge_cases() {
                     -0.0,
                 ],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
@@ -342,13 +346,13 @@ fn test_simd_operations_edge_cases() {
                     -1e35,
                 ],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         // Test SIMD addition with extreme values
         let simd_add_result = T::simd_add(&tiny_values, &huge_values);
-        let add_output = simd_add_result.eval(ctx).unwrap();
+        let add_output = simd_add_result.eval(ctx).expect("Test: operation failed");
 
         // Should handle addition without crashing
         let finite_count = add_output.iter().filter(|&&x| x.is_finite()).count();
@@ -360,7 +364,7 @@ fn test_simd_operations_edge_cases() {
                 IxDyn(&[4]),
                 vec![1e20, -1e20, f32::MAX.sqrt(), -f32::MAX.sqrt()],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
         let near_overflow_b = T::convert_to_tensor(
@@ -368,12 +372,12 @@ fn test_simd_operations_edge_cases() {
                 IxDyn(&[4]),
                 vec![1e20, 1e20, f32::MAX.sqrt(), f32::MAX.sqrt()],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let simd_mul_result = T::simd_mul(&near_overflow_a, &near_overflow_b);
-        let mul_output = simd_mul_result.eval(ctx).unwrap();
+        let mul_output = simd_mul_result.eval(ctx).expect("Test: operation failed");
 
         // Check for reasonable behavior (may include infinities)
         assert!(
@@ -396,12 +400,12 @@ fn test_simd_operations_edge_cases() {
                     -f32::EPSILON,
                 ],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let simd_relu_result = T::simd_relu(&mixed_values);
-        let relu_output = simd_relu_result.eval(ctx).unwrap();
+        let relu_output = simd_relu_result.eval(ctx).expect("Test: operation failed");
 
         // ReLU should handle all values correctly
         assert!(relu_output.iter().all(|&x| x.is_finite() && x >= 0.0));
@@ -438,7 +442,7 @@ fn test_memory_optimization_stress() {
             }
         }
 
-        let final_result = current.eval(ctx).unwrap();
+        let final_result = current.eval(ctx).expect("Test: operation failed");
         assert!(final_result
             .iter()
             .all(|&x| x.is_finite() || x.is_infinite()));
@@ -453,7 +457,7 @@ fn test_memory_optimization_stress() {
 
         // Force evaluation of all temporaries
         for temp in &temporary_results {
-            let _ = temp.eval(ctx).unwrap();
+            let _ = temp.eval(ctx).expect("Test: operation failed");
         }
 
         // Test in-place operations to reduce memory pressure
@@ -461,7 +465,7 @@ fn test_memory_optimization_stress() {
         let modifier = T::efficient_ones(&[500, 500], ctx);
 
         let inplace_result = T::inplace_add(&base, &modifier);
-        let inplace_output = inplace_result.eval(ctx).unwrap();
+        let inplace_output = inplace_result.eval(ctx).expect("Test: operation failed");
         assert!(inplace_output.iter().all(|&x| x == 2.0));
 
         println!("✅ Memory optimization handles stress correctly");
@@ -515,9 +519,10 @@ fn test_parallel_operations_numerical_stability() {
             .map(|i| if i % 2 == 0 { 1e10 } else { -1e10 })
             .collect::<Vec<f32>>(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
-    let sum_result = ParallelReduction::sum(&cancellation_test, &config).unwrap();
+    let sum_result =
+        ParallelReduction::sum(&cancellation_test, &config).expect("Test: operation failed");
     // Result should be 0 but might have some numerical error
     assert!(
         sum_result.abs() < 1e6,
@@ -531,12 +536,13 @@ fn test_parallel_operations_numerical_stability() {
             .map(|i| 1e-20 * (i as f32 + 1.0))
             .collect::<Vec<f32>>(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
-    let small_sum = ParallelReduction::sum(&small_values, &config).unwrap();
+    let small_sum = ParallelReduction::sum(&small_values, &config).expect("Test: operation failed");
     assert!(small_sum.is_finite());
 
-    let small_mean = ParallelReduction::mean(&small_values, &config).unwrap();
+    let small_mean =
+        ParallelReduction::mean(&small_values, &config).expect("Test: operation failed");
     assert!(small_mean.is_finite());
 
     // Test parallel matrix multiplication with ill-conditioned matrices
@@ -556,7 +562,7 @@ fn test_parallel_operations_numerical_stability() {
             })
             .collect::<Vec<f32>>(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let identity = Array::from_shape_vec(
         IxDyn(&[100, 100]),
@@ -564,9 +570,10 @@ fn test_parallel_operations_numerical_stability() {
             .map(|i| if i / 100 == i % 100 { 1.0 } else { 0.0 })
             .collect::<Vec<f32>>(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
-    let matmul_result = ParallelMatrix::matmul(&ill_conditioned_a, &identity, &config).unwrap();
+    let matmul_result = ParallelMatrix::matmul(&ill_conditioned_a, &identity, &config)
+        .expect("Test: operation failed");
 
     // Should be approximately equal to the original matrix
     let max_error = matmul_result
@@ -585,15 +592,16 @@ fn test_parallel_operations_numerical_stability() {
         IxDyn(&[1000]),
         (0..1000).map(|_| f32::EPSILON).collect::<Vec<f32>>(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let large_values = Array::from_shape_vec(
         IxDyn(&[1000]),
         (0..1000).map(|_| 1e20).collect::<Vec<f32>>(),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
-    let add_result = ParallelElementWise::add(&small_values, &large_values, &config).unwrap();
+    let add_result = ParallelElementWise::add(&small_values, &large_values, &config)
+        .expect("Test: operation failed");
     let finite_count = add_result.iter().filter(|&&x| x.is_finite()).count();
     assert!(
         finite_count >= 990,
@@ -617,16 +625,16 @@ fn test_graph_enhancements_edge_cases() {
         // Fill cache beyond capacity
         for i in 0..150 {
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![i as f32]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[1]), vec![i as f32]).expect("Test: operation failed"),
                 ctx,
             );
             let cached = T::cached_op(&data, "square");
-            let _ = cached.eval(ctx).unwrap();
+            let _ = cached.eval(ctx).expect("Test: operation failed");
         }
 
         // Test conditional operations with NaN conditions
         let nan_condition = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[1]), vec![f32::NAN]).unwrap(),
+            Array::from_shape_vec(IxDyn(&[1]), vec![f32::NAN]).expect("Test: operation failed"),
             ctx,
         );
         let true_branch = T::efficient_ones(&[5], ctx);
@@ -639,13 +647,14 @@ fn test_graph_enhancements_edge_cases() {
             T::PredicateType::GreaterThanZero,
         );
 
-        let nan_result = nan_conditional.eval(ctx).unwrap();
+        let nan_result = nan_conditional.eval(ctx).expect("Test: operation failed");
         // Should handle NaN condition gracefully (likely default to false branch)
         assert!(nan_result.iter().all(|&x| x.is_finite()));
 
         // Test conditional operations with infinite conditions
         let inf_condition = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[1]), vec![f32::INFINITY]).unwrap(),
+            Array::from_shape_vec(IxDyn(&[1]), vec![f32::INFINITY])
+                .expect("Test: operation failed"),
             ctx,
         );
 
@@ -656,13 +665,15 @@ fn test_graph_enhancements_edge_cases() {
             T::PredicateType::GreaterThanZero,
         );
 
-        let inf_result = inf_conditional.eval(ctx).unwrap();
+        let inf_result = inf_conditional.eval(ctx).expect("Test: operation failed");
         assert!(inf_result.iter().all(|&x| x.is_finite()));
 
         // Test smart checkpointing with zero-size tensors
         let empty_tensor = T::efficient_zeros(&[0], ctx);
         let checkpointed_empty = T::smart_checkpoint(&empty_tensor, 1000);
-        let empty_result = checkpointed_empty.eval(ctx).unwrap();
+        let empty_result = checkpointed_empty
+            .eval(ctx)
+            .expect("Test: operation failed");
         assert_eq!(empty_result.len(), 0);
 
         // Test garbage collection under memory pressure
@@ -697,7 +708,7 @@ fn test_cross_feature_integration_stress() {
         adaptive_scheduling: true,
         ..Default::default()
     };
-    init_thread_pool_with_config(stress_config).unwrap();
+    init_thread_pool_with_config(stress_config).expect("Test: operation failed");
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Complex workflow combining all features
@@ -713,7 +724,8 @@ fn test_cross_feature_integration_stress() {
         input_data[100] = 0.0;
 
         let input = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[batch_size, feature_size]), input_data).unwrap(),
+            Array::from_shape_vec(IxDyn(&[batch_size, feature_size]), input_data)
+                .expect("Test: operation failed"),
             ctx,
         );
 
@@ -746,7 +758,7 @@ fn test_cross_feature_integration_stress() {
         );
 
         // Verify the complex pipeline works
-        let output = final_result.eval(ctx).unwrap();
+        let output = final_result.eval(ctx).expect("Test: operation failed");
         assert_eq!(output.len(), batch_size);
         // Allow some non-finite values in extreme stress test
         let finite_count = output.iter().filter(|&&x| x.is_finite()).count();
@@ -762,8 +774,11 @@ fn test_cross_feature_integration_stress() {
         let dummy_loss = T::reduce_sum(final_result, &[0], false);
         let gradients = T::grad(&[dummy_loss], &[&input]);
 
-        let grad_output = gradients[0].eval(ctx).unwrap();
-        assert_eq!(grad_output.shape(), input.eval(ctx).unwrap().shape());
+        let grad_output = gradients[0].eval(ctx).expect("Test: operation failed");
+        assert_eq!(
+            grad_output.shape(),
+            input.eval(ctx).expect("Test: operation failed").shape()
+        );
 
         // Most gradients should be finite (some may be zero due to ReLU-like operations)
         let finite_grad_count = grad_output.iter().filter(|&&x| x.is_finite()).count();
@@ -796,8 +811,10 @@ fn test_numerical_precision_stability() {
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test precision preservation through long computation chains
-        let precise_input =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+        let precise_input = T::convert_to_tensor(
+            Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).expect("Test: operation failed"),
+            ctx,
+        );
 
         let mut current = precise_input;
         let original_value = 1.0f32;
@@ -808,7 +825,7 @@ fn test_numerical_precision_stability() {
             current = T::simd_mul(&current, &current); // Square
         }
 
-        let final_value = current.eval(ctx).unwrap()[0];
+        let final_value = current.eval(ctx).expect("Test: operation failed")[0];
         let precision_error = (final_value - original_value).abs();
 
         assert!(
@@ -827,9 +844,10 @@ fn test_numerical_precision_stability() {
                 .map(|i| if i < 500 { 1.0 / 500.0 } else { -1.0 / 500.0 })
                 .collect(),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
-        let parallel_sum: f32 = ParallelReduction::sum(&balanced_values, &config).unwrap();
+        let parallel_sum: f32 =
+            ParallelReduction::sum(&balanced_values, &config).expect("Test: operation failed");
         assert!(
             parallel_sum.abs() < 1e-6,
             "Parallel sum lost precision: {:.2e}",
@@ -842,13 +860,13 @@ fn test_numerical_precision_stability() {
                 IxDyn(&[7]),
                 vec![0.0, f32::EPSILON, -f32::EPSILON, 1.0, -1.0, 0.5, -0.5],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         for activation in ["swish", "gelu", "mish"] {
             let result = T::custom_activation(&critical_points, activation);
-            let output = result.eval(ctx).unwrap();
+            let output = result.eval(ctx).expect("Test: operation failed");
 
             // Check for numerical stability (no NaN, reasonable values)
             assert!(

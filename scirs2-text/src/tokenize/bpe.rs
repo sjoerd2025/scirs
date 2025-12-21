@@ -467,7 +467,7 @@ mod tests {
         ];
 
         let mut tokenizer = BpeTokenizer::with_defaults();
-        tokenizer.train(&corpus).unwrap();
+        tokenizer.train(&corpus).expect("Operation failed");
 
         assert!(tokenizer.has_vocabulary());
         assert!(tokenizer.vocab_size() > 0);
@@ -483,9 +483,11 @@ mod tests {
         ];
 
         let mut tokenizer = BpeTokenizer::with_defaults();
-        tokenizer.train(&corpus).unwrap();
+        tokenizer.train(&corpus).expect("Operation failed");
 
-        let tokens = tokenizer.tokenize("this is a tokenizer test").unwrap();
+        let tokens = tokenizer
+            .tokenize("this is a tokenizer test")
+            .expect("Operation failed");
         assert!(!tokens.is_empty());
     }
 
@@ -499,23 +501,27 @@ mod tests {
         ];
 
         let mut tokenizer = BpeTokenizer::with_defaults();
-        tokenizer.train(&corpus).unwrap();
+        tokenizer.train(&corpus).expect("Operation failed");
 
         // Create a temporary directory for the test
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let vocab_path = temp_dir.path().join("vocab.bpe");
 
         // Save the vocabulary
-        tokenizer.save_vocabulary(&vocab_path).unwrap();
+        tokenizer
+            .save_vocabulary(&vocab_path)
+            .expect("Operation failed");
 
         // Create a new tokenizer and load the vocabulary
         let mut new_tokenizer = BpeTokenizer::with_defaults();
-        new_tokenizer.load_vocabulary(&vocab_path).unwrap();
+        new_tokenizer
+            .load_vocabulary(&vocab_path)
+            .expect("Operation failed");
 
         // Both tokenizers should produce the same tokens
         let text = "this is a tokenizer test";
-        let tokens1 = tokenizer.tokenize(text).unwrap();
-        let tokens2 = new_tokenizer.tokenize(text).unwrap();
+        let tokens1 = tokenizer.tokenize(text).expect("Operation failed");
+        let tokens2 = new_tokenizer.tokenize(text).expect("Operation failed");
 
         assert_eq!(tokens1, tokens2);
     }
@@ -535,9 +541,9 @@ mod tests {
         ];
 
         let mut tokenizer = BpeTokenizer::new(config);
-        tokenizer.train(&corpus).unwrap();
+        tokenizer.train(&corpus).expect("Operation failed");
 
-        let vocab = tokenizer.vocabulary().unwrap();
+        let vocab = tokenizer.vocabulary().expect("Operation failed");
         assert!(vocab.token_to_id.contains_key("<pad>"));
         assert!(vocab.token_to_id.contains_key("<unk>"));
     }
@@ -546,9 +552,9 @@ mod tests {
     fn test_bpe_tokenizer_emptytext() {
         let corpus = ["this is a test"];
         let mut tokenizer = BpeTokenizer::with_defaults();
-        tokenizer.train(&corpus).unwrap();
+        tokenizer.train(&corpus).expect("Operation failed");
 
-        let tokens = tokenizer.tokenize("").unwrap();
+        let tokens = tokenizer.tokenize("").expect("Operation failed");
         assert_eq!(tokens.len(), 0);
     }
 
@@ -558,8 +564,10 @@ mod tests {
 
         // Test with lowercase=true (default)
         let mut tokenizer1 = BpeTokenizer::with_defaults();
-        tokenizer1.train(&corpus).unwrap();
-        let tokens1 = tokenizer1.tokenize("THIS is A test").unwrap();
+        tokenizer1.train(&corpus).expect("Operation failed");
+        let tokens1 = tokenizer1
+            .tokenize("THIS is A test")
+            .expect("Operation failed");
 
         // Test with lowercase=false
         let config = BpeConfig {
@@ -567,8 +575,10 @@ mod tests {
             ..Default::default()
         };
         let mut tokenizer2 = BpeTokenizer::new(config);
-        tokenizer2.train(&corpus).unwrap();
-        let tokens2 = tokenizer2.tokenize("THIS is A test").unwrap();
+        tokenizer2.train(&corpus).expect("Operation failed");
+        let tokens2 = tokenizer2
+            .tokenize("THIS is A test")
+            .expect("Operation failed");
 
         // The lowercase tokenizer should produce fewer tokens as it's case-insensitive
         assert!(tokens1.len() <= tokens2.len());

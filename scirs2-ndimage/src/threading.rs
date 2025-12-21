@@ -48,7 +48,7 @@ pub fn init_thread_pool(config: ThreadPoolConfig) -> Result<(), String> {
 pub fn get_thread_pool_config() -> ThreadPoolConfig {
     THREAD_POOL_CONFIG
         .get()
-        .map(|config| config.lock().unwrap().clone())
+        .map(|config| config.lock().expect("Operation failed").clone())
         .unwrap_or_default()
 }
 
@@ -59,7 +59,7 @@ where
     F: FnOnce(&mut ThreadPoolConfig),
 {
     if let Some(config) = THREAD_POOL_CONFIG.get() {
-        let mut config = config.lock().unwrap();
+        let mut config = config.lock().expect("Operation failed");
         _updatefn(&mut *config);
         Ok(())
     } else {
@@ -182,7 +182,7 @@ impl AdaptiveThreadPool {
 
     /// Adjust thread count based on current load
     pub fn adjust_threads(&self, currentload: f64) {
-        let mut threads = self.current_threads.lock().unwrap();
+        let mut threads = self.current_threads.lock().expect("Operation failed");
 
         if currentload > self.load_threshold && *threads < self.max_threads {
             *threads = (*threads + 1).min(self.max_threads);
@@ -193,7 +193,7 @@ impl AdaptiveThreadPool {
 
     /// Get current thread count
     pub fn current_thread_count(&self) -> usize {
-        *self.current_threads.lock().unwrap()
+        *self.current_threads.lock().expect("Operation failed")
     }
 }
 
@@ -215,7 +215,7 @@ impl<T: Send> WorkStealingQueue<T> {
     /// Push work to a specific queue
     pub fn push(&self, queueid: usize, item: T) {
         if let Some(queue) = self.queues.get(queueid) {
-            queue.lock().unwrap().push(item);
+            queue.lock().expect("Operation failed").push(item);
         }
     }
 
@@ -223,7 +223,7 @@ impl<T: Send> WorkStealingQueue<T> {
     pub fn pop(&self, queueid: usize) -> Option<T> {
         // Try own queue first
         if let Some(queue) = self.queues.get(queueid) {
-            if let Some(item) = queue.lock().unwrap().pop() {
+            if let Some(item) = queue.lock().expect("Operation failed").pop() {
                 return Some(item);
             }
         }
@@ -231,7 +231,7 @@ impl<T: Send> WorkStealingQueue<T> {
         // Try to steal from other queues
         for (i, queue) in self.queues.iter().enumerate() {
             if i != queueid {
-                if let Some(item) = queue.lock().unwrap().pop() {
+                if let Some(item) = queue.lock().expect("Operation failed").pop() {
                     return Some(item);
                 }
             }

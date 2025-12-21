@@ -344,7 +344,7 @@ fn create_sine_wave_array(shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::from_shape_vec(IxDyn(shape), data).unwrap()
+    Array::from_shape_vec(IxDyn(shape), data).expect("Operation failed")
 }
 
 #[allow(dead_code)]
@@ -361,7 +361,7 @@ fn create_random_array(shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::from_shape_vec(IxDyn(shape), data).unwrap()
+    Array::from_shape_vec(IxDyn(shape), data).expect("Operation failed")
 }
 
 #[allow(dead_code)]
@@ -381,5 +381,5 @@ fn create_mixed_array(shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::from_shape_vec(IxDyn(shape), data).unwrap()
+    Array::from_shape_vec(IxDyn(shape), data).expect("Operation failed")
 }

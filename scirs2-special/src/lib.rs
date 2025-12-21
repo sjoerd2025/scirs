@@ -45,7 +45,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-special = "0.1.0-rc.3"
+//! scirs2-special = "0.1.0-rc.4"
 //! ```
 //!
 //!
@@ -97,8 +97,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.3
-//! - **Release Date**: October 03, 2025
+//! - **Version**: 0.1.0-rc.4
+//! - **Release Date**: December 21, 2025
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)
 
 // Export error types
@@ -470,7 +470,7 @@ mod tests {
     #[test]
     fn test_lambert_w() {
         // Test principal branch (k=0)
-        let w = lambert_w(Complex64::new(1.0, 0.0), 0, 1e-8).unwrap();
+        let w = lambert_w(Complex64::new(1.0, 0.0), 0, 1e-8).expect("Operation failed");
         let expected = Complex64::new(0.567_143_290_409_783_8, 0.0);
         assert!((w - expected).norm() < 1e-10);
 
@@ -480,15 +480,15 @@ mod tests {
         assert!((w_exp_w - z).norm() < 1e-10);
 
         // Test branch k = 1
-        let w_b1 = lambert_w(Complex64::new(1.0, 0.0), 1, 1e-8).unwrap();
+        let w_b1 = lambert_w(Complex64::new(1.0, 0.0), 1, 1e-8).expect("Operation failed");
         assert!(w_b1.im > 0.0);
 
         // Test branch k = -1
-        let w_bm1 = lambert_w(Complex64::new(1.0, 0.0), -1, 1e-8).unwrap();
+        let w_bm1 = lambert_w(Complex64::new(1.0, 0.0), -1, 1e-8).expect("Operation failed");
         assert!(w_bm1.im < 0.0);
 
         // Test real function
-        let w_real = lambert_w_real(1.0, 1e-8).unwrap();
+        let w_real = lambert_w_real(1.0, 1e-8).expect("Operation failed");
         assert!((w_real - 0.567_143_290_409_783_8).abs() < 1e-10);
     }
 }

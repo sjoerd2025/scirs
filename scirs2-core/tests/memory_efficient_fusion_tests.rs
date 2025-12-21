@@ -148,7 +148,9 @@ mod tests {
 
         // Add a square operation
         let square_op = Arc::new(SquareOp);
-        fusion.add_op(Arc::new(SquareOp)).unwrap();
+        fusion
+            .add_op(Arc::new(SquareOp))
+            .expect("Test: operation failed");
 
         // Should now have one operation
         assert!(!fusion.is_empty());
@@ -161,7 +163,9 @@ mod tests {
 
         // Add a square operation
         let square_op = Arc::new(SquareOp);
-        fusion.add_op(Arc::new(SquareOp)).unwrap();
+        fusion
+            .add_op(Arc::new(SquareOp))
+            .expect("Test: operation failed");
 
         // Try to add an operation with mismatched types
         struct MismatchOp;
@@ -205,14 +209,18 @@ mod tests {
         let square_op = Arc::new(SquareOp);
         let sqrt_op = Arc::new(SqrtOp);
 
-        fusion.add_op(Arc::new(SquareOp)).unwrap();
-        fusion.add_op(Arc::new(SqrtOp)).unwrap();
+        fusion
+            .add_op(Arc::new(SquareOp))
+            .expect("Test: operation failed");
+        fusion
+            .add_op(Arc::new(SqrtOp))
+            .expect("Test: operation failed");
 
         // Before optimization
         assert_eq!(fusion.num_ops(), 2);
 
         // After optimization
-        fusion.optimize().unwrap();
+        fusion.optimize().expect("Test: operation failed");
 
         // Should have combined into a single operation
         assert_eq!(fusion.num_ops(), 1);
@@ -224,14 +232,18 @@ mod tests {
 
         // Add square operation
         let square_op = Arc::new(SquareOp);
-        fusion.add_op(Arc::new(SquareOp)).unwrap();
+        fusion
+            .add_op(Arc::new(SquareOp))
+            .expect("Test: operation failed");
 
         // Apply to input
         let input = 3.0;
-        let result = fusion.apply(input).unwrap();
+        let result = fusion.apply(input).expect("Test: operation failed");
 
         // Downcast and check
-        let output = result.downcast_ref::<f64>().unwrap();
+        let output = result
+            .downcast_ref::<f64>()
+            .expect("Test: operation failed");
         assert_eq!(*output, 9.0); // 3 squared = 9
     }
 
@@ -239,7 +251,7 @@ mod tests {
     fn test_op_fusion_register() {
         // Register a square operation for f64
         let square_op = Arc::new(SquareOp);
-        register_fusion::<f64>(Arc::new(SquareOp)).unwrap();
+        register_fusion::<f64>(Arc::new(SquareOp)).expect("Test: operation failed");
 
         // This is hard to test fully because the registry is global and we can't easily
         // query it directly, but at least we can verify registration doesn't error
@@ -250,7 +262,7 @@ mod tests {
         let mut fusion = OpFusion::new();
 
         // Optimizing an empty fusion should succeed but do nothing
-        fusion.optimize().unwrap();
+        fusion.optimize().expect("Test: operation failed");
         assert!(fusion.is_empty());
     }
 
@@ -260,10 +272,12 @@ mod tests {
 
         // Add a single operation
         let square_op = Arc::new(SquareOp);
-        fusion.add_op(Arc::new(SquareOp)).unwrap();
+        fusion
+            .add_op(Arc::new(SquareOp))
+            .expect("Test: operation failed");
 
         // Optimizing a fusion with one op should succeed but do nothing
-        fusion.optimize().unwrap();
+        fusion.optimize().expect("Test: operation failed");
         assert_eq!(fusion.num_ops(), 1);
     }
 
@@ -273,7 +287,9 @@ mod tests {
 
         // Add square operation for f64
         let square_op = Arc::new(SquareOp);
-        fusion.add_op(Arc::new(SquareOp)).unwrap();
+        fusion
+            .add_op(Arc::new(SquareOp))
+            .expect("Test: operation failed");
 
         // Try to apply with wrong type
         let input = 3i32;

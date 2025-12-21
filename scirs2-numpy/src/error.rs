@@ -25,7 +25,7 @@ macro_rules! impl_pyerr {
             fn arguments<'py>(self, py: Python<'py>) -> Py<PyAny> {
                 self.to_string()
                     .into_pyobject(py)
-                    .unwrap()
+                    .expect("Operation failed")
                     .into_any()
                     .unbind()
             }
@@ -99,7 +99,7 @@ impl PyErrArguments for TypeErrorArguments {
 
         err.to_string()
             .into_pyobject(py)
-            .unwrap()
+            .expect("Operation failed")
             .into_any()
             .unbind()
     }

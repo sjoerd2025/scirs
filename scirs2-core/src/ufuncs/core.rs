@@ -64,7 +64,7 @@ static UFUNC_REGISTRY: Lazy<RwLock<HashMap<String, Box<dyn UFunc>>>> =
 pub fn register_ufunc(ufunc: Box<dyn UFunc>) -> Result<(), &'static str> {
     let name = ufunc.name().to_string();
 
-    let mut registry = UFUNC_REGISTRY.write().unwrap();
+    let mut registry = UFUNC_REGISTRY.write().expect("Operation failed");
 
     if registry.contains_key(&name) {
         return Err("UFunc with this name already exists");
@@ -77,7 +77,7 @@ pub fn register_ufunc(ufunc: Box<dyn UFunc>) -> Result<(), &'static str> {
 /// Get a universal function from the registry by name
 #[allow(dead_code)]
 pub fn get_ufunc(name: &str) -> Option<Box<dyn UFunc>> {
-    let registry = UFUNC_REGISTRY.read().unwrap();
+    let registry = UFUNC_REGISTRY.read().expect("Operation failed");
 
     registry.get(name).map(|ufunc| {
         // Clone the UFunc implementation
@@ -112,7 +112,7 @@ impl UFunc for UFuncWrapper {
     ) -> Result<(), &'static str> {
         // This is a wrapper that delegates to the actual implementation
         // Get the real UFunc from the registry
-        let registry = UFUNC_REGISTRY.read().unwrap();
+        let registry = UFUNC_REGISTRY.read().expect("Operation failed");
 
         if let Some(real_ufunc) = registry.get(&self.name) {
             real_ufunc.apply(inputs, output)
@@ -148,8 +148,8 @@ where
         use crate::parallel_ops::*;
         // For simplicity, we convert to vectors, process in parallel, then convert back
         // A more efficient implementation would operate directly on array iterators
-        let input_slice = input.as_slice().unwrap();
-        let output_slice = output.as_slice_mut().unwrap();
+        let input_slice = input.as_slice().expect("Operation failed");
+        let output_slice = output.as_slice_mut().expect("Operation failed");
 
         output_slice
             .par_iter_mut()
@@ -200,9 +200,9 @@ where
     {
         use crate::parallel_ops::*;
 
-        let input1_slice = input1.as_slice().unwrap();
-        let input2_slice = input2.as_slice().unwrap();
-        let output_slice = output.as_slice_mut().unwrap();
+        let input1_slice = input1.as_slice().expect("Operation failed");
+        let input2_slice = input2.as_slice().expect("Operation failed");
+        let output_slice = output.as_slice_mut().expect("Operation failed");
 
         output_slice
             .par_iter_mut()
@@ -320,7 +320,7 @@ where
             let mut iter = input.iter();
             let mut acc = initial
                 .clone()
-                .unwrap_or_else(|| iter.next().unwrap().clone());
+                .unwrap_or_else(|| iter.next().expect("Operation failed").clone());
 
             for val in iter {
                 acc = op(acc, val);
@@ -403,10 +403,10 @@ mod tests {
     fn test_ufunc_registry() {
         // Register a test ufunc
         let ufunc = Box::new(TestUnaryUFunc);
-        register_ufunc(ufunc).unwrap();
+        register_ufunc(ufunc).expect("Operation failed");
 
         // Get the ufunc from the registry
-        let ufunc = get_ufunc("test_unary").unwrap();
+        let ufunc = get_ufunc("test_unary").expect("Operation failed");
         assert_eq!(ufunc.name(), "test_unary");
         assert_eq!(ufunc.kind(), UFuncKind::Unary);
     }
@@ -416,7 +416,7 @@ mod tests {
         let input = array![1.0, 2.0, 3.0, 4.0];
         let mut output = Array1::<f64>::zeros(4);
 
-        apply_unary(&input, &mut output, |&x: &f64| x * x).unwrap();
+        apply_unary(&input, &mut output, |&x: &f64| x * x).expect("Operation failed");
 
         assert_eq!(output, array![1.0, 4.0, 9.0, 16.0]);
     }
@@ -427,7 +427,8 @@ mod tests {
         let input2 = array![5.0, 6.0, 7.0, 8.0];
         let mut output = Array1::<f64>::zeros(4);
 
-        apply_binary(&input1, &input2, &mut output, |&x: &f64, &y: &f64| x + y).unwrap();
+        apply_binary(&input1, &input2, &mut output, |&x: &f64, &y: &f64| x + y)
+            .expect("Operation failed");
 
         assert_eq!(output, array![6.0, 8.0, 10.0, 12.0]);
     }
@@ -438,17 +439,20 @@ mod tests {
 
         // Reduction along axis 0 (sum of columns)
         let mut output = Array1::<f64>::zeros(3);
-        apply_reduction(&input, &mut output, Some(0), Some(0.0), |acc, &x| acc + x).unwrap();
+        apply_reduction(&input, &mut output, Some(0), Some(0.0), |acc, &x| acc + x)
+            .expect("Operation failed");
         assert_eq!(output, array![5.0, 7.0, 9.0]);
 
         // Reduction along axis 1 (sum of rows)
         let mut output = Array1::<f64>::zeros(2);
-        apply_reduction(&input, &mut output, Some(1), Some(0.0), |acc, &x| acc + x).unwrap();
+        apply_reduction(&input, &mut output, Some(1), Some(0.0), |acc, &x| acc + x)
+            .expect("Operation failed");
         assert_eq!(output, array![6.0, 15.0]);
 
         // Full reduction (sum of all elements)
         let mut output = Array1::<f64>::zeros(1);
-        apply_reduction(&input, &mut output, None, Some(0.0), |acc, &x| acc + x).unwrap();
+        apply_reduction(&input, &mut output, None, Some(0.0), |acc, &x| acc + x)
+            .expect("Operation failed");
         assert_eq!(output, array![21.0]);
     }
 }

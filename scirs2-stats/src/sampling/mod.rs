@@ -34,10 +34,10 @@ pub trait SampleableDistribution<T> {
 /// use scirs2_stats::{sampling, distributions};
 ///
 /// // Create a normal distribution
-/// let normal = distributions::norm(0.0f64, 1.0).unwrap();
+/// let normal = distributions::norm(0.0f64, 1.0).expect("Operation failed");
 ///
 /// // Sample from it
-/// let samples = sampling::sample_distribution(&normal, 100).unwrap();
+/// let samples = sampling::sample_distribution(&normal, 100).expect("Operation failed");
 /// assert_eq!(samples.len(), 100);
 /// ```
 #[allow(dead_code)]
@@ -78,7 +78,7 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 ///
 /// // Generate bootstrap samples
-/// let samples = sampling::bootstrap(&data.view(), 10, Some(42)).unwrap();
+/// let samples = sampling::bootstrap(&data.view(), 10, Some(42)).expect("Operation failed");
 /// assert_eq!(samples.shape(), &[10, 5]);
 /// ```
 #[allow(dead_code)]
@@ -114,7 +114,7 @@ where
 /// let data = array![1, 2, 3, 4, 5];
 ///
 /// // Generate a permutation
-/// let perm = sampling::permutation(&data.view(), Some(42)).unwrap();
+/// let perm = sampling::permutation(&data.view(), Some(42)).expect("Operation failed");
 /// assert_eq!(perm.len(), 5);
 /// ```
 #[allow(dead_code)]
@@ -149,7 +149,7 @@ where
 /// let groups = array![0, 0, 1, 1, 2, 2];
 ///
 /// // Generate a stratified sample with 1 sample per group
-/// let indices = sampling::stratified_sample(&data.view(), &groups.view(), 1, Some(42)).unwrap();
+/// let indices = sampling::stratified_sample(&data.view(), &groups.view(), 1, Some(42)).expect("Operation failed");
 /// assert_eq!(indices.len(), 3);  // 3 groups with 1 sample each
 /// ```
 #[allow(dead_code)]
@@ -249,7 +249,7 @@ where
 /// let groups = array![0, 0, 1, 1, 2, 2];
 ///
 /// // Generate stratified bootstrap samples
-/// let samples = sampling::stratified_bootstrap(&data.view(), &groups.view(), 5, Some(42)).unwrap();
+/// let samples = sampling::stratified_bootstrap(&data.view(), &groups.view(), 5, Some(42)).expect("Operation failed");
 /// assert_eq!(samples.shape(), &[5, 6]);
 /// ```
 #[allow(dead_code)]
@@ -335,7 +335,7 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Generate block bootstrap samples with block size 3
-/// let samples = sampling::block_bootstrap(&data.view(), 3, 5, true, Some(42)).unwrap();
+/// let samples = sampling::block_bootstrap(&data.view(), 3, 5, true, Some(42)).expect("Operation failed");
 /// assert_eq!(samples.shape(), &[5, 8]);
 /// ```
 #[allow(dead_code)]
@@ -667,15 +667,15 @@ where
         }
 
         // Estimate bias for this first-level sample
-        let second_level_mean = second_level_stats.mean().unwrap();
+        let second_level_mean = second_level_stats.mean().expect("Operation failed");
         bias_estimates[i] = second_level_mean - first_stat;
     }
 
     // Overall bias estimate
-    let overall_bias = bias_estimates.mean().unwrap();
+    let overall_bias = bias_estimates.mean().expect("Operation failed");
 
     // Bias-corrected estimate
-    let _first_level_mean = first_level_stats.mean().unwrap();
+    let _first_level_mean = first_level_stats.mean().expect("Operation failed");
     let bias_corrected = original_stat - overall_bias;
 
     Ok((bias_corrected, first_level_stats, overall_bias))
@@ -729,7 +729,7 @@ where
 
     // Sort bootstrap statistics
     let mut sorted_stats = bootstrap_stats.to_vec();
-    sorted_stats.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_stats.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let alpha = 1.0 - confidence_level;
     let n = sorted_stats.len() as f64;

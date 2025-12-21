@@ -62,7 +62,8 @@ pub struct VariableSelectionNetwork<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> VariableSelectionNetwork<F> {
     /// Create new variable selection network
     pub fn new(input_dim: usize, output_dim: usize) -> Self {
-        let scale = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         Self {
@@ -92,7 +93,8 @@ pub struct GatedResidualNetwork<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> GatedResidualNetwork<F> {
     /// Create new gated residual network
     pub fn new(dim: usize) -> Self {
-        let scale = F::from(2.0).unwrap() / F::from(dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         Self {

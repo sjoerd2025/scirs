@@ -17,9 +17,9 @@
 //! use scirs2_core::random::thread_rng;
 //!
 //! // Create distributions with unified interface
-//! let normal = UnifiedNormal::new(0.0, 1.0).unwrap();
-//! let beta = UnifiedBeta::new(2.0, 5.0).unwrap();
-//! let student_t = UnifiedStudentT::new(10.0).unwrap();
+//! let normal = UnifiedNormal::new(0.0, 1.0).expect("Operation failed");
+//! let beta = UnifiedBeta::new(2.0, 5.0).expect("Operation failed");
+//! let student_t = UnifiedStudentT::new(10.0).expect("Operation failed");
 //!
 //! let mut rng = thread_rng();
 //! let sample = normal.sample_unified(&mut rng);
@@ -176,7 +176,7 @@ macro_rules! impl_unified_distribution {
             {
                 let size = shape.size();
                 let values = self.sample_vec(rng, size);
-                ArrayD::from_shape_vec(shape, values).unwrap()
+                ArrayD::from_shape_vec(shape, values).expect("Operation failed")
             }
 
             fn parameters_string(&self) -> String {
@@ -441,7 +441,7 @@ impl Distribution<Vec<f64>> for UnifiedDirichlet {
             .alphas()
             .iter()
             .map(|&alpha| {
-                let gamma = Gamma::new(alpha, 1.0).unwrap();
+                let gamma = Gamma::new(alpha, 1.0).expect("Operation failed");
                 rng.sample(gamma)
             })
             .collect();
@@ -464,7 +464,7 @@ impl UnifiedDistribution<Vec<f64>> for UnifiedDirichlet {
     fn sample_array<R: Rng>(&self, rng: &mut Random<R>, shape: IxDyn) -> ArrayD<Vec<f64>> {
         let size = shape.size();
         let values = self.sample_vec(rng, size);
-        ArrayD::from_shape_vec(shape, values).unwrap()
+        ArrayD::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn parameters_string(&self) -> String {
@@ -482,22 +482,22 @@ pub mod defaults {
 
     /// Create a standard normal distribution (mean=0, std=1)
     pub fn standard_normal() -> UnifiedNormal {
-        UnifiedNormal::new(0.0, 1.0).unwrap()
+        UnifiedNormal::new(0.0, 1.0).expect("Operation failed")
     }
 
     /// Create a uniform distribution on [0, 1)
     pub fn uniform_01() -> rand_distr::Uniform<f64> {
-        rand_distr::Uniform::new(0.0, 1.0).unwrap()
+        rand_distr::Uniform::new(0.0, 1.0).expect("Operation failed")
     }
 
     /// Create a standard exponential distribution (lambda=1)
     pub fn standard_exponential() -> UnifiedExp {
-        UnifiedExp::new(1.0).unwrap()
+        UnifiedExp::new(1.0).expect("Operation failed")
     }
 
     /// Create a standard gamma distribution (shape=1, scale=1)
     pub fn standard_gamma() -> UnifiedGamma {
-        UnifiedGamma::new(1.0, 1.0).unwrap()
+        UnifiedGamma::new(1.0, 1.0).expect("Operation failed")
     }
 }
 
@@ -508,7 +508,7 @@ mod tests {
 
     #[test]
     fn test_unified_normal() {
-        let dist = UnifiedNormal::new(0.0, 1.0).unwrap();
+        let dist = UnifiedNormal::new(0.0, 1.0).expect("Operation failed");
         let mut rng = thread_rng();
 
         let sample = dist.sample_unified(&mut rng);
@@ -520,7 +520,7 @@ mod tests {
 
     #[test]
     fn test_unified_beta() {
-        let dist = UnifiedBeta::new(2.0, 5.0).unwrap();
+        let dist = UnifiedBeta::new(2.0, 5.0).expect("Operation failed");
         let mut rng = thread_rng();
 
         let sample = dist.sample_unified(&mut rng);
@@ -529,7 +529,7 @@ mod tests {
 
     #[test]
     fn test_unified_poisson() {
-        let dist = UnifiedPoisson::new(5.0).unwrap();
+        let dist = UnifiedPoisson::new(5.0).expect("Operation failed");
         let mut rng = thread_rng();
 
         let sample = dist.sample_unified(&mut rng);
@@ -538,7 +538,7 @@ mod tests {
 
     #[test]
     fn test_unified_dirichlet() {
-        let dist = UnifiedDirichlet::new(vec![1.0, 2.0, 3.0]).unwrap();
+        let dist = UnifiedDirichlet::new(vec![1.0, 2.0, 3.0]).expect("Operation failed");
         let mut rng = thread_rng();
 
         let sample = dist.sample(&mut rng);
@@ -550,7 +550,7 @@ mod tests {
 
     #[test]
     fn test_distribution_trait() {
-        let dist = UnifiedNormal::new(0.0, 1.0).unwrap();
+        let dist = UnifiedNormal::new(0.0, 1.0).expect("Operation failed");
         let mut rng = rand::thread_rng();
 
         // Test that Distribution trait works

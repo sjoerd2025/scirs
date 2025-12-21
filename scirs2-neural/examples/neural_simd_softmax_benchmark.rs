@@ -49,7 +49,7 @@ fn bench_softmax_f64(size: usize) {
     let input = Array::from_vec(logits).into_dyn();
 
     // Warm-up
-    let _ = softmax.forward(&input).unwrap();
+    let _ = softmax.forward(&input).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -62,7 +62,7 @@ fn bench_softmax_f64(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = softmax.forward(&input).unwrap();
+        let _ = softmax.forward(&input).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -84,7 +84,7 @@ fn bench_softmax_f32(size: usize) {
     let input = Array::from_vec(logits).into_dyn();
 
     // Warm-up
-    let _ = softmax.forward(&input).unwrap();
+    let _ = softmax.forward(&input).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -97,7 +97,7 @@ fn bench_softmax_f32(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = softmax.forward(&input).unwrap();
+        let _ = softmax.forward(&input).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();

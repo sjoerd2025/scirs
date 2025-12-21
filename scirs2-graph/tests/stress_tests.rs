@@ -153,7 +153,7 @@ fn test_large_grid_graph() -> CoreResult<()> {
         let path_start = Instant::now();
         let path_result = algorithms::dijkstra_path(&graph, &source, &target)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
-        let path = path_result.unwrap().nodes;
+        let path = path_result.expect("Operation failed").nodes;
         println!(
             "  Shortest path (corner to corner): {} steps ({:.2}s)",
             path.len() - 1,

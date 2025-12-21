@@ -273,7 +273,9 @@ impl AStarPlanner {
 
                 // Check if we've found a better path to the neighbor
                 let in_open_set = g_values.contains_key(&neighbor_state);
-                if in_open_set && tentative_g >= *g_values.get(&neighbor_state).unwrap() {
+                if in_open_set
+                    && tentative_g >= *g_values.get(&neighbor_state).expect("Operation failed")
+                {
                     continue;
                 }
 
@@ -669,14 +671,17 @@ mod tests {
         let start = [0, 0];
         let goal = [4, 4];
 
-        let path = planner.find_path(start, goal).unwrap().unwrap();
+        let path = planner
+            .find_path(start, goal)
+            .expect("Operation failed")
+            .expect("Operation failed");
 
         // The path should exist
         assert!(!path.is_empty());
 
         // The path should start at the start position and end at the goal
-        assert_eq!(path.nodes.first().unwrap(), &start);
-        assert_eq!(path.nodes.last().unwrap(), &goal);
+        assert_eq!(path.nodes.first().expect("Operation failed"), &start);
+        assert_eq!(path.nodes.last().expect("Operation failed"), &goal);
 
         // The path length should be 9 (start, 7 steps, goal) with only cardinal moves
         assert_eq!(path.len(), 9);
@@ -701,14 +706,17 @@ mod tests {
         let start = [1, 1];
         let goal = [4, 3];
 
-        let path = planner.find_path(start, goal).unwrap().unwrap();
+        let path = planner
+            .find_path(start, goal)
+            .expect("Operation failed")
+            .expect("Operation failed");
 
         // The path should exist
         assert!(!path.is_empty());
 
         // The path should start at the start position and end at the goal
-        assert_eq!(path.nodes.first().unwrap(), &start);
-        assert_eq!(path.nodes.last().unwrap(), &goal);
+        assert_eq!(path.nodes.first().expect("Operation failed"), &start);
+        assert_eq!(path.nodes.last().expect("Operation failed"), &goal);
 
         // The path should go around the obstacles
         // Check that none of the path nodes are obstacles
@@ -732,7 +740,7 @@ mod tests {
         let start = [1, 1];
         let goal = [4, 1];
 
-        let path = planner.find_path(start, goal).unwrap();
+        let path = planner.find_path(start, goal).expect("Operation failed");
 
         // There should be no path
         assert!(path.is_none());
@@ -753,14 +761,17 @@ mod tests {
         let start = [0, 0];
         let goal = [4, 4];
 
-        let path = planner.find_path(start, goal).unwrap().unwrap();
+        let path = planner
+            .find_path(start, goal)
+            .expect("Operation failed")
+            .expect("Operation failed");
 
         // The path should exist
         assert!(!path.is_empty());
 
         // The path should start at the start position and end at the goal
-        assert_eq!(path.nodes.first().unwrap(), &start);
-        assert_eq!(path.nodes.last().unwrap(), &goal);
+        assert_eq!(path.nodes.first().expect("Operation failed"), &start);
+        assert_eq!(path.nodes.last().expect("Operation failed"), &goal);
 
         // With diagonals, the path should be shorter (5 nodes: start, 3 diagonal steps, goal)
         assert_eq!(path.len(), 5);

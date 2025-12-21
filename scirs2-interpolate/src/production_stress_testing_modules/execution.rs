@@ -68,8 +68,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
         for size in normal_sizes {
             let (x, y) = create_large_test_data(size)?;
             let x_query = Array1::linspace(
-                T::from_f64(0.5).unwrap(),
-                T::from_f64(9.5).unwrap(),
+                T::from_f64(0.5).expect("Operation failed"),
+                T::from_f64(9.5).expect("Operation failed"),
                 size / 10,
             );
 
@@ -112,8 +112,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                 Ok(Ok((x, y))) => {
                     let start = Instant::now();
                     let x_query = Array1::linspace(
-                        T::from_f64(1.0).unwrap(),
-                        T::from_f64(9.0).unwrap(),
+                        T::from_f64(1.0).expect("Operation failed"),
+                        T::from_f64(9.0).expect("Operation failed"),
                         (size / 100).min(1000),
                     );
 
@@ -167,8 +167,11 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
             let test_result = match generate_test_data(pattern, 1000) {
                 Ok((x, y)) => {
                     let start = Instant::now();
-                    let x_query =
-                        Array1::linspace(T::from_f64(1.0).unwrap(), T::from_f64(9.0).unwrap(), 10);
+                    let x_query = Array1::linspace(
+                        T::from_f64(1.0).expect("Operation failed"),
+                        T::from_f64(9.0).expect("Operation failed"),
+                        10,
+                    );
 
                     // Test multiple interpolation methods
                     let methods = vec!["linear", "cubic"];
@@ -277,8 +280,10 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                 Ok((x, y)) => {
                     let start = Instant::now();
                     let x_query = Array1::linspace(
-                        T::from_f64(*min_val + (*max_val - *min_val) * 0.1).unwrap(),
-                        T::from_f64(*min_val + (*max_val - *min_val) * 0.9).unwrap(),
+                        T::from_f64(*min_val + (*max_val - *min_val) * 0.1)
+                            .expect("Operation failed"),
+                        T::from_f64(*min_val + (*max_val - *min_val) * 0.9)
+                            .expect("Operation failed"),
                         10,
                     );
 
@@ -364,8 +369,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                     let start = Instant::now();
 
                     let x_query = Array1::linspace(
-                        T::from_f64(1.0).unwrap(),
-                        T::from_f64(9.0).unwrap(),
+                        T::from_f64(1.0).expect("Operation failed"),
+                        T::from_f64(9.0).expect("Operation failed"),
                         data_size / 100,
                     );
 
@@ -456,7 +461,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                     let methods = vec!["linear", "cubic"];
                     for method in methods {
                         total_tests += 1;
-                        let query_x = Array1::from_vec(vec![T::from_f64(2.5).unwrap()]);
+                        let query_x =
+                            Array1::from_vec(vec![T::from_f64(2.5).expect("Operation failed")]);
 
                         let result = match method {
                             "linear" => crate::interp1d::linear_interpolate(
@@ -554,8 +560,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                     // Run multiple iterations
                     for _iteration in 0..5 {
                         let x_query = Array1::linspace(
-                            T::from_f64(1.0).unwrap(),
-                            T::from_f64(9.0).unwrap(),
+                            T::from_f64(1.0).expect("Operation failed"),
+                            T::from_f64(9.0).expect("Operation failed"),
                             size / 100,
                         );
 

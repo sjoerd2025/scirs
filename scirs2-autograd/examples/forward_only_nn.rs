@@ -54,7 +54,7 @@ fn main() {
         // Evaluate and print predictions
         let predictions = ctx.evaluator().push(&pred).set_feeder(feeder).run()[0]
             .clone()
-            .unwrap();
+            .expect("Operation failed");
 
         println!("\nPredictions:");
         println!("Shape of predictions: {:?}", predictions.shape());

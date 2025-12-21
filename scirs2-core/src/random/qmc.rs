@@ -32,7 +32,7 @@
 //!     
 //!     Ok(())
 //! }
-//! # example().unwrap();
+//! # example().expect("Operation failed");
 //! ```
 
 use ::ndarray::{Array1, Array2};
@@ -656,7 +656,8 @@ pub mod integration {
             let results_clone = Arc::clone(&results);
 
             let handle = thread::spawn(move || {
-                let mut generator = create_qmc_generator(sequence_type, dimension).unwrap();
+                let mut generator =
+                    create_qmc_generator(sequence_type, dimension).expect("Operation failed");
                 generator.skip(thread_id * points_per_thread);
 
                 let points = generator.generate(points_per_thread);
@@ -676,17 +677,20 @@ pub mod integration {
                     sum_sq += value * value;
                 }
 
-                results_clone.lock().unwrap().push((sum, sum_sq));
+                results_clone
+                    .lock()
+                    .expect("Operation failed")
+                    .push((sum, sum_sq));
             });
 
             handles.push(handle);
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("Operation failed");
         }
 
-        let results = results.lock().unwrap();
+        let results = results.lock().expect("Operation failed");
         let (total_sum, total_sum_sq) = results
             .iter()
             .fold((0.0, 0.0), |(s, ss), (sum, sum_sq)| (s + sum, ss + sum_sq));
@@ -754,7 +758,7 @@ mod tests {
 
     #[test]
     fn test_sobol_sequence_properties() {
-        let mut sobol = SobolGenerator::dimension(2).unwrap();
+        let mut sobol = SobolGenerator::dimension(2).expect("Operation failed");
 
         // First point should be [0, 0]
         let first = sobol.next_point();
@@ -790,14 +794,14 @@ mod tests {
 
     #[test]
     fn test_halton_primebases() {
-        let halton = HaltonGenerator::dimension(3).unwrap();
+        let halton = HaltonGenerator::dimension(3).expect("Operation failed");
         assert_eq!(halton.bases, &[2, 3, 5]);
     }
 
     #[test]
     fn test_latin_hypercube_sampling() {
         let mut lhs = LatinHypercubeSampler::<rand::prelude::ThreadRng>::new(2);
-        let points = lhs.sample(10).unwrap();
+        let points = lhs.sample(10).expect("Operation failed");
 
         assert_eq!(points.nrows(), 10);
         assert_eq!(points.ncols(), 2);
@@ -806,7 +810,7 @@ mod tests {
         for dim in 0..2 {
             let column = points.column(dim);
             let mut sorted: Vec<f64> = column.to_vec();
-            sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             // Should be well-distributed
             for &value in sorted.iter().take(10) {
@@ -817,7 +821,7 @@ mod tests {
 
     #[test]
     fn test_faure_generator() {
-        let mut faure = FaureGenerator::dimension(2).unwrap();
+        let mut faure = FaureGenerator::dimension(2).expect("Operation failed");
 
         let points = faure.generate(20);
         assert_eq!(points.nrows(), 20);
@@ -846,7 +850,7 @@ mod tests {
             10000,
             QmcSequenceType::Halton,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_abs_diff_eq!(result.value, 0.25, epsilon = 0.03);
         assert!(result.error > 0.0);
@@ -855,7 +859,7 @@ mod tests {
 
     #[test]
     fn test_sequence_reset() {
-        let mut sobol = SobolGenerator::dimension(2).unwrap();
+        let mut sobol = SobolGenerator::dimension(2).expect("Operation failed");
 
         let first_sequence: Vec<_> = (0..5).map(|_| sobol.next_point()).collect();
 
@@ -867,7 +871,7 @@ mod tests {
 
     #[test]
     fn test_discrepancy_estimation() {
-        let sobol = SobolGenerator::dimension(2).unwrap();
+        let sobol = SobolGenerator::dimension(2).expect("Operation failed");
         let discrepancy = sobol.estimate_discrepancy(1000);
 
         // Should be small for low-discrepancy sequences

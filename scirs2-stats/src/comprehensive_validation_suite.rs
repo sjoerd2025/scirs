@@ -792,7 +792,7 @@ mod tests {
 
         let result = suite
             .validate_function("mean", |data| mean(data), Some(scipy_mean))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.function_name, "mean");
         assert!(matches!(

@@ -23,14 +23,14 @@
 //! // Create a B-spline
 //! let knots = array![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
 //! let coeffs = array![1.0, 2.0, 3.0, 4.0, 5.0];
-//! let spline = BSpline::new(&knots.view(), &coeffs.view(), 2, ExtrapolateMode::Extrapolate).unwrap();
+//! let spline = BSpline::new(&knots.view(), &coeffs.view(), 2, ExtrapolateMode::Extrapolate).expect("Operation failed");
 //!
 //! // Create fast evaluator
 //! let fast_eval = FastBSplineEvaluator::new(&spline);
 //!
 //! // Evaluate at multiple points efficiently
 //! let x_vals = array![0.5, 1.0, 1.5, 2.0, 2.5];
-//! let results = fast_eval.evaluate_array_fast(&x_vals.view()).unwrap();
+//! let results = fast_eval.evaluate_array_fast(&x_vals.view()).expect("Operation failed");
 //! ```
 
 use crate::bspline::{BSpline, ExtrapolateMode};
@@ -383,11 +383,13 @@ where
         }
 
         // Apply de Boor's algorithm to compute the value at x
+        // The standard recurrence is: alpha = (x - t_j) / (t_{j+k+1-r} - t_j)
+        // where j is the global coefficient index (idx + local_j)
         for r in 1..=degree {
             for j in (r..=degree).rev() {
-                let i = idx + j - r;
-                let left_idx = i;
-                let right_idx = i + degree + 1 - r;
+                let global_j = idx + j;
+                let left_idx = global_j;
+                let right_idx = global_j + degree + 1 - r;
 
                 // Ensure the indices are within bounds
                 if left_idx >= knots.len() || right_idx >= knots.len() {
@@ -631,7 +633,11 @@ where
         // Note: Using sequential evaluation instead of parallel due to thread safety
 
         let chunk_size = self.chunk_size;
-        let chunks: Vec<_> = xvals.as_slice().unwrap().chunks(chunk_size).collect();
+        let chunks: Vec<_> = xvals
+            .as_slice()
+            .expect("Operation failed")
+            .chunks(chunk_size)
+            .collect();
 
         let results: Result<Vec<_>, InterpolateError> = chunks
             .into_iter()
@@ -815,7 +821,7 @@ mod tests {
             2,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create fast evaluator
         let fast_eval = FastBSplineEvaluator::new(&spline);
@@ -833,7 +839,7 @@ mod tests {
             2,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let fast_eval = FastBSplineEvaluator::new(&spline);
 
@@ -841,8 +847,8 @@ mod tests {
         let test_points = array![0.5, 1.0, 1.5, 2.0, 2.5];
 
         for &x in test_points.iter() {
-            let standard_result = spline.evaluate(x).unwrap();
-            let fast_result = fast_eval.evaluate_fast(x).unwrap();
+            let standard_result = spline.evaluate(x).expect("Operation failed");
+            let fast_result = fast_eval.evaluate_fast(x).expect("Operation failed");
 
             // Results should be very close (allowing for numerical differences)
             assert_relative_eq!(fast_result, standard_result, epsilon = 1e-10);
@@ -859,14 +865,18 @@ mod tests {
             2,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let fast_eval = FastBSplineEvaluator::new(&spline);
 
         // Test array evaluation
         let x_vals = array![1.5, 2.5, 3.5, 4.5];
-        let fast_results = fast_eval.evaluate_array_fast(&x_vals.view()).unwrap();
-        let standard_results = spline.evaluate_array(&x_vals.view()).unwrap();
+        let fast_results = fast_eval
+            .evaluate_array_fast(&x_vals.view())
+            .expect("Operation failed");
+        let standard_results = spline
+            .evaluate_array(&x_vals.view())
+            .expect("Operation failed");
 
         for i in 0..x_vals.len() {
             assert_relative_eq!(fast_results[i], standard_results[i], epsilon = 1e-10);
@@ -883,7 +893,7 @@ mod tests {
             1,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let fast_eval = FastBSplineEvaluator::new(&spline);
 
@@ -904,7 +914,7 @@ mod tests {
             0,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut fast_eval = FastBSplineEvaluator::new(&spline);
 
@@ -927,14 +937,14 @@ mod tests {
             0,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test convenience function
         let fast_eval = make_fast_bspline_evaluator(&spline);
         assert!(!fast_eval.has_cache());
 
         // Test that evaluation works
-        let result = fast_eval.evaluate_fast(1.5).unwrap();
+        let result = fast_eval.evaluate_fast(1.5).expect("Operation failed");
         assert_relative_eq!(result, 1.0, epsilon = 1e-10);
     }
 }

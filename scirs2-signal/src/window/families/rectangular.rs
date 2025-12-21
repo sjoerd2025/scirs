@@ -23,7 +23,7 @@ use std::f64::consts::PI;
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::rectangular::boxcar;
-/// let window = boxcar(10, true).unwrap();
+/// let window = boxcar(10, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// assert!(window.iter().all(|&x| (x - 1.0).abs() < 1e-10));
 /// ```
@@ -67,7 +67,7 @@ pub fn dirichlet(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::rectangular::rectangular_with_amplitude;
-/// let window = rectangular_with_amplitude(10, 0.5, true).unwrap();
+/// let window = rectangular_with_amplitude(10, 0.5, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// assert!(window.iter().all(|&x| (x - 0.5).abs() < 1e-10));
 /// ```
@@ -250,14 +250,14 @@ mod tests {
 
     #[test]
     fn test_boxcar_basic() {
-        let window = boxcar(5, true).unwrap();
+        let window = boxcar(5, true).expect("Operation failed");
         assert_eq!(window.len(), 5);
         assert!(window.iter().all(|&x| (x - 1.0).abs() < 1e-10));
     }
 
     #[test]
     fn test_rectangular_with_amplitude() {
-        let window = rectangular_with_amplitude(5, 0.5, true).unwrap();
+        let window = rectangular_with_amplitude(5, 0.5, true).expect("Operation failed");
         assert_eq!(window.len(), 5);
         assert!(window.iter().all(|&x| (x - 0.5).abs() < 1e-10));
     }
@@ -273,7 +273,7 @@ mod tests {
 
     #[test]
     fn test_pulse_train() {
-        let window = rectangular_pulse_train(10, 0.5, 2, true).unwrap();
+        let window = rectangular_pulse_train(10, 0.5, 2, true).expect("Operation failed");
         assert_eq!(window.len(), 10);
 
         // Should have roughly half the samples as 1.0

@@ -54,7 +54,7 @@ use scirs2_core::random::seq::SliceRandom;
         let mut rng = if let Some(seed) = self.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_rng(&mut rng()).unwrap()
+            StdRng::from_rng(&mut rng()).expect("Operation failed")
         };
         let mut clients = available_clients.to_vec();
         clients.shuffle(&mut rng);
@@ -100,7 +100,7 @@ impl ClientSelection for ImportanceSelection {
             })
             .collect();
         // Sort by importance (descending)
-        scored_clients.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        scored_clients.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         // Select top clients
         Ok(scored_clients
             .into_iter()
@@ -128,7 +128,7 @@ impl ClientSelection for PowerAwareSelection {
                     }
                 })
         // Sort by power status (plugged first, then by battery level)
-        eligible_clients.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        eligible_clients.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         // Randomly sample from eligible clients if we have more than needed
         if eligible_clients.len() > num_select {
             let mut rng = rng();
@@ -153,7 +153,7 @@ impl DiversitySelection {
                 .label_distribution
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(idx_)| idx % self.num_clusters)
                 .unwrap_or(0);
             clusters.insert(client_id, cluster);
@@ -227,7 +227,7 @@ mod tests {
         let selector = RandomSelection::with_seed(42);
         let clients = vec![0, 1, 2, 3, 4];
         let info = HashMap::new();
-        let selected = selector.select(&clients, 3, &info).unwrap();
+        let selected = selector.select(&clients, 3, &info).expect("Operation failed");
         assert_eq!(selected.len(), 3);
         assert!(selected.iter().all(|id| clients.contains(id)));
     fn test_importance_selection() {
@@ -254,5 +254,5 @@ mod tests {
                 battery_level: Some(0.5),
                 reliability: 0.7,
                 label_distribution: vec![0.8, 0.2],
-        let selected = selector.select(&clients, 1, &info).unwrap();
+        let selected = selector.select(&clients, 1, &info).expect("Operation failed");
         assert_eq!(selected, vec![0]); // Should select client 0 due to higher importance

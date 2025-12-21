@@ -99,7 +99,7 @@ where
             // Generate random value between 0 and 1
             let r: f64 = rng.random_range(0.0..1.0);
             // Scale to range [low..high]
-            let val = low + F::from_f64(r).unwrap() * range;
+            let val = low + F::from_f64(r).expect("Operation failed") * range;
             result[[i, j]] = val;
         }
     }
@@ -178,7 +178,7 @@ where
             let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
 
             // Convert to target float type and scale to desired mean/std
-            let val = mean + F::from_f64(z0).unwrap() * std;
+            let val = mean + F::from_f64(z0).expect("Operation failed") * std;
             result[[i, j]] = val;
         }
     }
@@ -240,7 +240,7 @@ where
     let a = normal(n, n, F::zero(), F::one(), seed);
 
     // Perform QR decomposition
-    let (q, _) = qr(&a.view(), None).unwrap();
+    let (q, _) = qr(&a.view(), None).expect("Operation failed");
 
     // Return the orthogonal matrix Q
     q
@@ -316,7 +316,7 @@ where
     for i in 0..n {
         let r: f64 = rng.random_range(0.0..1.0);
         let range = maxeigenval - min_eigenval;
-        diag_values[i] = min_eigenval + F::from_f64(r).unwrap() * range;
+        diag_values[i] = min_eigenval + F::from_f64(r).expect("Operation failed") * range;
     }
 
     // Add a diagonal matrix to ensure the minimum eigenvalue is min_eigenval
@@ -374,7 +374,7 @@ where
     let mut diag = Array1::<F>::zeros(n);
     for i in 0..n {
         let r: f64 = rng.random_range(0.0..1.0);
-        diag[i] = low + F::from_f64(r).unwrap() * range;
+        diag[i] = low + F::from_f64(r).expect("Operation failed") * range;
     }
 
     // Create a matrix with these diagonal elements
@@ -447,7 +447,7 @@ where
 
         for j in j_start..j_end {
             let r: f64 = rng.random_range(0.0..1.0);
-            result[[i, j]] = low + F::from_f64(r).unwrap() * range;
+            result[[i, j]] = low + F::from_f64(r).expect("Operation failed") * range;
         }
     }
 
@@ -519,7 +519,7 @@ where
             let p: f64 = rng.random_range(0.0..1.0);
             if p < density {
                 let r: f64 = rng.random_range(0.0..1.0);
-                result[[i, j]] = low + F::from_f64(r).unwrap() * range;
+                result[[i, j]] = low + F::from_f64(r).expect("Operation failed") * range;
             }
         }
     }
@@ -577,7 +577,7 @@ where
 
     for i in 0..n {
         let r: f64 = rng.random_range(0.0..1.0);
-        first_row[i] = low + F::from_f64(r).unwrap() * range;
+        first_row[i] = low + F::from_f64(r).expect("Operation failed") * range;
     }
 
     // First element of first column is same as first element of first row
@@ -585,7 +585,7 @@ where
 
     for i in 1..n {
         let r: f64 = rng.random_range(0.0..1.0);
-        first_col[i] = low + F::from_f64(r).unwrap() * range;
+        first_col[i] = low + F::from_f64(r).expect("Operation failed") * range;
     }
 
     // Construct Toeplitz matrix
@@ -672,7 +672,7 @@ where
     let log_max = F::one().ln();
 
     for i in 0..n {
-        let t = F::from_f64((i as f64) / ((n - 1) as f64)).unwrap();
+        let t = F::from_f64((i as f64) / ((n - 1) as f64)).expect("Operation failed");
         let log_val = log_min * t + log_max * (F::one() - t);
         d[[i, i]] = log_val.exp();
     }
@@ -716,7 +716,7 @@ where
 /// assert_eq!(a.shape(), &[3, 3]);
 ///
 /// // In practice, we would compute eigenvalues and verify correctness:
-/// // let computed_evals = eigvals(&a.view()).unwrap();
+/// // let computed_evals = eigvals(&a.view()).expect("Operation failed");
 /// // But eigenvalues could be complex and sorting may be challenging in doctests
 /// // So we just verify the matrix size here
 /// ```
@@ -790,7 +790,7 @@ where
 
     for i in 0..n {
         for j in 0..n {
-            let value = F::one() / F::from_f64((i + j + 1) as f64).unwrap();
+            let value = F::one() / F::from_f64((i + j + 1) as f64).expect("Operation failed");
             result[[i, j]] = value;
         }
     }
@@ -1034,7 +1034,7 @@ where
 
     // Extract column vectors from left and row vectors from right
     for r in 0..rank {
-        let scaling = F::from_f64(1.0).unwrap(); // All singular values are 1.0
+        let scaling = F::from_f64(1.0).expect("Operation failed"); // All singular values are 1.0
 
         // Get column r from left
         let u_col = left.column(r).to_owned();
@@ -1431,7 +1431,7 @@ mod tests {
         assert_eq!(a.shape(), &[n, n]);
 
         // Compute eigenvalues
-        let computed_eigenvalues = eigvals(&a.view(), None).unwrap();
+        let computed_eigenvalues = eigvals(&a.view(), None).expect("Operation failed");
 
         // Check that the real parts of the eigenvalues match (ignoring order)
         // Convert complex eigenvalues to real magnitudes
@@ -1442,10 +1442,10 @@ mod tests {
             real_computed.push(ev.re);
         }
 
-        real_computed.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        real_computed.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mut sorted_expected = eigenvalues.to_vec();
-        sorted_expected.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_expected.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Check that eigenvalues match
         for (expected, computed) in sorted_expected.iter().zip(real_computed.iter()) {
@@ -1538,7 +1538,7 @@ mod tests {
 
         // Check positive semi-definiteness
         // Eigenvalues of a correlation matrix should be non-negative
-        let eigenvalues = eigvals(&c.view(), None).unwrap();
+        let eigenvalues = eigvals(&c.view(), None).expect("Operation failed");
         for ev in eigenvalues.iter() {
             assert!(ev.re >= -1e-10); // Allow for small numerical errors
         }

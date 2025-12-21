@@ -751,7 +751,7 @@ mod tests {
         let indptr = Array1::from_vec(vec![0, 2, 3, 5]);
         let shape = (3, 3);
 
-        let csc = CscArray::new(data, indices, indptr, shape).unwrap();
+        let csc = CscArray::new(data, indices, indptr, shape).expect("Operation failed");
 
         assert_eq!(csc.shape(), (3, 3));
         assert_eq!(csc.nnz(), 5);
@@ -770,7 +770,8 @@ mod tests {
         let data = vec![1.0, 4.0, 2.0, 3.0, 5.0];
         let shape = (3, 3);
 
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let csc =
+            CscArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         assert_eq!(csc.shape(), (3, 3));
         assert_eq!(csc.nnz(), 5);
@@ -789,7 +790,8 @@ mod tests {
         let data = vec![1.0, 4.0, 2.0, 3.0, 5.0];
         let shape = (3, 3);
 
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let csc =
+            CscArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
         let dense = csc.to_array();
 
         assert_eq!(dense.shape(), &[3, 3]);
@@ -811,8 +813,9 @@ mod tests {
         let data = vec![1.0, 4.0, 2.0, 3.0, 5.0];
         let shape = (3, 3);
 
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let csr = csc.to_csr().unwrap();
+        let csc =
+            CscArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
+        let csr = csc.to_csr().expect("Operation failed");
 
         // Check that the conversion preserved values
         let csc_array = csc.to_array();
@@ -832,10 +835,11 @@ mod tests {
         let data = vec![1.0, 4.0, 2.0, 3.0, 5.0];
         let shape = (3, 3);
 
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let csc =
+            CscArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
         let vec = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let result = csc.dot_vector(&vec.view()).unwrap();
+        let result = csc.dot_vector(&vec.view()).expect("Operation failed");
 
         // Expected:
         // [0,0]*1 + [0,1]*2 + [0,2]*3 = 1*1 + 2*2 + 0*3 = 5
@@ -854,8 +858,9 @@ mod tests {
         let data = vec![1.0, 4.0, 2.0, 3.0, 5.0];
         let shape = (3, 3);
 
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let transposed = csc.transpose().unwrap();
+        let csc =
+            CscArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
+        let transposed = csc.transpose().expect("Operation failed");
 
         // Check dimensions are swapped
         assert_eq!(transposed.shape(), (3, 3));
@@ -876,7 +881,8 @@ mod tests {
         let data = vec![1.0, 4.0, 2.0, 3.0, 5.0];
         let shape = (3, 3);
 
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let csc =
+            CscArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
         let (result_rows, result_cols, result_data) = csc.find();
 
         // Check that the find operation returned all non-zero elements

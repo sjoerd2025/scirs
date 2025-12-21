@@ -94,7 +94,7 @@ impl SecureRandom {
     /// This is suitable for generating keys, nonces, and other cryptographic material.
     pub fn random_bytes(&mut self, count: usize) -> Vec<u8> {
         (0..count)
-            .map(|_| self.sample(Uniform::new(0u8, 255u8).unwrap()))
+            .map(|_| self.sample(Uniform::new(0u8, 255u8).expect("Operation failed")))
             .collect()
     }
 
@@ -115,12 +115,12 @@ impl SecureRandom {
 
     /// Generate a cryptographically secure random float in [0, 1)
     pub fn random_f64(&mut self) -> f64 {
-        self.sample(Uniform::new(0.0, 1.0).unwrap())
+        self.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
     }
 
     /// Generate a cryptographically secure random float in [0, 1) as f32
     pub fn random_f32(&mut self) -> f32 {
-        self.sample(Uniform::new(0.0f32, 1.0f32).unwrap())
+        self.sample(Uniform::new(0.0f32, 1.0f32).expect("Operation failed"))
     }
 
     /// Generate cryptographically secure random integers in a range
@@ -128,7 +128,7 @@ impl SecureRandom {
     where
         T: rand_distr::uniform::SampleUniform + PartialOrd + Copy,
     {
-        self.sample(Uniform::new(min, max).unwrap())
+        self.sample(Uniform::new(min, max).expect("Operation failed"))
     }
 
     /// Generate a cryptographically secure random boolean
@@ -339,10 +339,10 @@ mod tests {
             "UUID should be 36 characters, got: '{}'",
             uuid
         );
-        assert_eq!(uuid.chars().nth(8).unwrap(), '-');
-        assert_eq!(uuid.chars().nth(13).unwrap(), '-');
-        assert_eq!(uuid.chars().nth(18).unwrap(), '-');
-        assert_eq!(uuid.chars().nth(23).unwrap(), '-');
+        assert_eq!(uuid.chars().nth(8).expect("Operation failed"), '-');
+        assert_eq!(uuid.chars().nth(13).expect("Operation failed"), '-');
+        assert_eq!(uuid.chars().nth(18).expect("Operation failed"), '-');
+        assert_eq!(uuid.chars().nth(23).expect("Operation failed"), '-');
     }
 
     #[test]

@@ -94,9 +94,12 @@ where
     let max = F::simd_max_element(&array.view());
     let range = max - min;
 
-    if range.abs() <= F::from(EPSILON).unwrap() {
+    if range.abs() <= F::from(EPSILON).expect("Failed to convert to float") {
         // Constant feature, return array of 0.5
-        return Ok(Array1::from_elem(array.len(), F::from(0.5).unwrap()));
+        return Ok(Array1::from_elem(
+            array.len(),
+            F::from(0.5).expect("Failed to convert constant to float"),
+        ));
     }
 
     // Normalize: (x - min) / range
@@ -121,7 +124,7 @@ where
     }
 
     let mean = F::simd_mean(&array.view());
-    let n = F::from(array.len()).unwrap();
+    let n = F::from(array.len()).expect("Operation failed");
 
     // Compute variance
     let meanarray = Array1::from_elem(array.len(), mean);
@@ -130,7 +133,7 @@ where
     let variance = F::simd_sum(&squared.view()) / n;
     let std_dev = variance.sqrt();
 
-    if std_dev <= F::from(EPSILON).unwrap() {
+    if std_dev <= F::from(EPSILON).expect("Failed to convert to float") {
         // Constant feature, return zeros
         return Ok(Array1::zeros(array.len()));
     }
@@ -156,7 +159,7 @@ where
 
     let l2_norm = F::simd_norm(&array.view());
 
-    if l2_norm <= F::from(EPSILON).unwrap() {
+    if l2_norm <= F::from(EPSILON).expect("Failed to convert to float") {
         // Zero vector, return zeros
         return Ok(Array1::zeros(array.len()));
     }
@@ -183,7 +186,7 @@ where
     let absarray = F::simd_abs(&array.view());
     let max_abs = F::simd_max_element(&absarray.view());
 
-    if max_abs <= F::from(EPSILON).unwrap() {
+    if max_abs <= F::from(EPSILON).expect("Failed to convert to float") {
         // All zeros, return zeros
         return Ok(Array1::zeros(array.len()));
     }
@@ -287,10 +290,11 @@ where
                 let colarray = col.to_owned();
                 let range = global_maxs[j] - global_mins[j];
 
-                if range.abs() <= F::from(EPSILON).unwrap() {
+                if range.abs() <= F::from(EPSILON).expect("Failed to convert to float") {
                     // Constant feature
                     for i in 0..shape[0] {
-                        normalized[[i, j]] = F::from(0.5).unwrap();
+                        normalized[[i, j]] =
+                            F::from(0.5).expect("Failed to convert constant to float");
                     }
                 } else {
                     // Vectorized normalization
@@ -344,7 +348,7 @@ where
         // Column-wise normalization
         let mut global_means = Array1::zeros(shape[1]);
         let mut global_stds = Array1::zeros(shape[1]);
-        let n_samples_f = F::from(shape[0]).unwrap();
+        let n_samples_f = F::from(shape[0]).expect("Failed to convert to float");
 
         // First pass: compute means and standard deviations
         for block_start in (0..shape[1]).step_by(block_size) {
@@ -365,7 +369,7 @@ where
                 global_stds[j] = variance.sqrt();
 
                 // Avoid division by zero
-                if global_stds[j] <= F::from(EPSILON).unwrap() {
+                if global_stds[j] <= F::from(EPSILON).expect("Failed to convert to float") {
                     global_stds[j] = F::one();
                 }
             }
@@ -379,7 +383,7 @@ where
                 let col = array.column(j);
                 let colarray = col.to_owned();
 
-                if global_stds[j] <= F::from(EPSILON).unwrap() {
+                if global_stds[j] <= F::from(EPSILON).expect("Failed to convert to float") {
                     // Constant feature
                     for i in 0..shape[0] {
                         normalized[[i, j]] = F::zero();
@@ -457,7 +461,7 @@ where
                 let rowarray = row.to_owned();
                 let l2_norm = F::simd_norm(&rowarray.view());
 
-                if l2_norm <= F::from(EPSILON).unwrap() {
+                if l2_norm <= F::from(EPSILON).expect("Failed to convert to float") {
                     // Zero vector
                     for j in 0..shape[1] {
                         normalized[[i, j]] = F::zero();
@@ -519,7 +523,7 @@ where
                 let absarray = F::simd_abs(&rowarray.view());
                 let max_abs = F::simd_max_element(&absarray.view());
 
-                if max_abs <= F::from(EPSILON).unwrap() {
+                if max_abs <= F::from(EPSILON).expect("Failed to convert to float") {
                     // All zeros
                     for j in 0..shape[1] {
                         normalized[[i, j]] = F::zero();

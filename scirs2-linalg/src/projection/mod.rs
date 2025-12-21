@@ -45,7 +45,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// use scirs2_linalg::projection::gaussian_randommatrix;
 ///
 /// // Generate a 1000x100 random projection matrix (projecting from 1000 to 100 dimensions)
-/// let projectionmatrix = gaussian_randommatrix::<f64>(100, 1000).unwrap();
+/// let projectionmatrix = gaussian_randommatrix::<f64>(100, 1000).expect("Operation failed");
 /// assert_eq!(projectionmatrix.shape(), &[1000, 100]);
 /// ```
 #[allow(dead_code)]
@@ -62,7 +62,7 @@ pub fn gaussian_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     let mut rng = scirs2_core::random::rng();
 
     // Scaling factor for preserving distances
-    let scale = F::from(1.0 / (n_components as f64).sqrt()).unwrap();
+    let scale = F::from(1.0 / (n_components as f64).sqrt()).expect("Operation failed");
 
     // Generate Gaussian random matrix
     let mut _components = Array2::<F>::zeros((n_features, n_components));
@@ -74,7 +74,7 @@ pub fn gaussian_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
             let u2: f64 = rng.random_range(0.0..1.0);
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
 
-            let value = F::from(z).unwrap() * scale;
+            let value = F::from(z).expect("Operation failed") * scale;
             _components[[i, j]] = value;
         }
     }
@@ -106,7 +106,7 @@ pub fn gaussian_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
 /// use scirs2_linalg::projection::sparse_randommatrix;
 ///
 /// // Generate a 1000x100 sparse random projection matrix with density 0.1
-/// let projectionmatrix = sparse_randommatrix::<f64>(100, 1000, 0.1).unwrap();
+/// let projectionmatrix = sparse_randommatrix::<f64>(100, 1000, 0.1).expect("Operation failed");
 /// assert_eq!(projectionmatrix.shape(), &[1000, 100]);
 /// ```
 #[allow(dead_code)]
@@ -130,7 +130,7 @@ pub fn sparse_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     let mut rng = scirs2_core::random::rng();
 
     // Scaling factor for preserving distances
-    let scale = F::from(1.0 / (density * n_components as f64).sqrt()).unwrap();
+    let scale = F::from(1.0 / (density * n_components as f64).sqrt()).expect("Operation failed");
 
     // Compute probability thresholds
     let prob_zero = 1.0 - density;
@@ -178,7 +178,7 @@ pub fn sparse_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
 /// use scirs2_linalg::projection::very_sparse_randommatrix;
 ///
 /// // Generate a 1000x100 very sparse random projection matrix
-/// let projectionmatrix = very_sparse_randommatrix::<f64>(100, 1000).unwrap();
+/// let projectionmatrix = very_sparse_randommatrix::<f64>(100, 1000).expect("Operation failed");
 /// assert_eq!(projectionmatrix.shape(), &[1000, 100]);
 /// ```
 #[allow(dead_code)]
@@ -200,7 +200,7 @@ pub fn very_sparse_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperan
     let prob_neg = prob_nonzero / 2.0;
 
     // Scaling factor for preserving distances
-    let scale = F::from((s / n_components as f64).sqrt()).unwrap();
+    let scale = F::from((s / n_components as f64).sqrt()).expect("Operation failed");
 
     // Generate very sparse random matrix
     let mut _components = Array2::<F>::zeros((n_features, n_components));
@@ -209,9 +209,9 @@ pub fn very_sparse_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperan
         for j in 0..n_components {
             let prob = rng.random_range(0.0..1.0);
             let value = if prob < prob_neg {
-                F::from(-1.0).unwrap() * scale
+                F::from(-1.0).expect("Operation failed") * scale
             } else if prob < prob_nonzero {
-                F::from(1.0).unwrap() * scale
+                F::from(1.0).expect("Operation failed") * scale
             } else {
                 F::zero()
             };
@@ -249,10 +249,10 @@ pub fn very_sparse_randommatrix<F: Float + NumAssign + Zero + Sum + ScalarOperan
 /// let X = Array2::<f64>::ones((n_samples, n_features));
 ///
 /// // Generate random projection matrix
-/// let components = gaussian_randommatrix::<f64>(n_components, n_features).unwrap();
+/// let components = gaussian_randommatrix::<f64>(n_components, n_features).expect("Operation failed");
 ///
 /// // Project data
-/// let X_projected = project(&X.view(), &components.view()).unwrap();
+/// let X_projected = project(&X.view(), &components.view()).expect("Operation failed");
 /// assert_eq!(X_projected.shape(), &[n_samples, n_components]);
 /// ```
 #[allow(dead_code)]
@@ -303,7 +303,7 @@ pub fn project<F: Float + NumAssign + Sum + ScalarOperand>(
 /// let X = Array2::<f64>::ones((n_samples, n_features));
 ///
 /// // Apply Johnson-Lindenstrauss transform with 10% error tolerance
-/// let (X_projected, components) = johnson_lindenstrauss_transform(&X.view(), 0.1).unwrap();
+/// let (X_projected, components) = johnson_lindenstrauss_transform(&X.view(), 0.1).expect("Operation failed");
 ///
 /// // The number of dimensions is automatically determined
 /// assert!(X_projected.shape()[1] < n_features);
@@ -356,7 +356,7 @@ pub fn johnson_lindenstrauss_transform<F: Float + NumAssign + Zero + Sum + Scala
 /// use scirs2_linalg::projection::johnson_lindenstrauss_min_dim;
 ///
 /// // For 10,000 samples and 10% error tolerance
-/// let min_dim = johnson_lindenstrauss_min_dim(10000, 0.1).unwrap();
+/// let min_dim = johnson_lindenstrauss_min_dim(10000, 0.1).expect("Operation failed");
 /// println!("Minimum dimensions needed: {}", min_dim);
 /// ```
 #[allow(dead_code)]
@@ -386,7 +386,8 @@ mod tests {
         let n_features = 100;
 
         // Generate random projection matrix
-        let components = gaussian_randommatrix::<f64>(n_components, n_features).unwrap();
+        let components =
+            gaussian_randommatrix::<f64>(n_components, n_features).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(components.shape(), &[n_features, n_components]);
@@ -403,7 +404,8 @@ mod tests {
         let density = 0.1;
 
         // Generate sparse random projection matrix
-        let components = sparse_randommatrix::<f64>(n_components, n_features, density).unwrap();
+        let components = sparse_randommatrix::<f64>(n_components, n_features, density)
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(components.shape(), &[n_features, n_components]);
@@ -430,7 +432,8 @@ mod tests {
         let n_features = 100;
 
         // Generate very sparse random projection matrix
-        let components = very_sparse_randommatrix::<f64>(n_components, n_features).unwrap();
+        let components =
+            very_sparse_randommatrix::<f64>(n_components, n_features).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(components.shape(), &[n_features, n_components]);
@@ -460,10 +463,11 @@ mod tests {
         }
 
         // Create a simple projection matrix
-        let components = gaussian_randommatrix::<f64>(n_components, n_features).unwrap();
+        let components =
+            gaussian_randommatrix::<f64>(n_components, n_features).expect("Operation failed");
 
         // Project the data
-        let x_projected = project(&x.view(), &components.view()).unwrap();
+        let x_projected = project(&x.view(), &components.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(x_projected.shape(), &[n_samples, n_components]);
@@ -483,24 +487,25 @@ mod tests {
         let x = Array2::<f64>::ones((n_samples, n_features));
 
         // Apply JL transform
-        let (x_projected, components) = johnson_lindenstrauss_transform(&x.view(), eps).unwrap();
+        let (x_projected, components) =
+            johnson_lindenstrauss_transform(&x.view(), eps).expect("Operation failed");
 
         // Check that dimensions are reduced
         assert!(x_projected.shape()[1] < n_features);
 
         // Check that the dimensions match theoretical bounds
-        let min_dim = johnson_lindenstrauss_min_dim(n_samples, eps).unwrap();
+        let min_dim = johnson_lindenstrauss_min_dim(n_samples, eps).expect("Operation failed");
         assert!(x_projected.shape()[1] <= min_dim);
 
         // Check that projection is correct
-        let expected_proj = project(&x.view(), &components.view()).unwrap();
+        let expected_proj = project(&x.view(), &components.view()).expect("Operation failed");
         assert_eq!(x_projected, expected_proj);
     }
 
     #[test]
     fn test_johnson_lindenstrauss_min_dim() {
         // Known values for specific inputs
-        assert!(johnson_lindenstrauss_min_dim(10000, 0.1).unwrap() >= 500);
+        assert!(johnson_lindenstrauss_min_dim(10000, 0.1).expect("Operation failed") >= 500);
 
         // Error for invalid epsilon
         assert!(johnson_lindenstrauss_min_dim(1000, 0.0).is_err());

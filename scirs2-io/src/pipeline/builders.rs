@@ -371,7 +371,7 @@ mod tests {
             .transform("to_string", |x: i32| Ok(x.to_string()))
             .build();
 
-        let result = pipeline.execute(21).unwrap();
+        let result = pipeline.execute(21).expect("Operation failed");
         assert_eq!(result, "42");
     }
 
@@ -383,7 +383,9 @@ mod tests {
             })
             .build();
 
-        let result = pipeline.execute(vec![1, 2, 3, 4, 5, 6]).unwrap();
+        let result = pipeline
+            .execute(vec![1, 2, 3, 4, 5, 6])
+            .expect("Operation failed");
         assert_eq!(result, vec![2, 4, 6]);
     }
 }

@@ -179,7 +179,7 @@ impl ZeroShotClassificationPipeline {
         }
 
         // Sort by score descending
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        results.sort_by(|a, b| b.score.partial_cmp(&a.score).expect("Operation failed"));
 
         Ok(results)
     }

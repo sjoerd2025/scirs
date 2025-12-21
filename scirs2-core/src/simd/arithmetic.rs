@@ -8,8 +8,8 @@ use ndarray::{Array1, ArrayView1};
 pub fn simd_scalar_mul_f32(a: &ArrayView1<f32>, scalar: f32) -> Array1<f32> {
     let len = a.len();
     let mut result = Array1::zeros(len);
-    let a_slice = a.as_slice().unwrap();
-    let result_slice: &mut [f32] = result.as_slice_mut().unwrap();
+    let a_slice = a.as_slice().expect("Operation failed");
+    let result_slice: &mut [f32] = result.as_slice_mut().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {
@@ -98,8 +98,8 @@ pub fn simd_scalar_mul_f32(a: &ArrayView1<f32>, scalar: f32) -> Array1<f32> {
 pub fn simd_scalar_mul_f64(a: &ArrayView1<f64>, scalar: f64) -> Array1<f64> {
     let len = a.len();
     let mut result = Array1::zeros(len);
-    let a_slice = a.as_slice().unwrap();
-    let result_slice: &mut [f64] = result.as_slice_mut().unwrap();
+    let a_slice = a.as_slice().expect("Operation failed");
+    let result_slice: &mut [f64] = result.as_slice_mut().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {

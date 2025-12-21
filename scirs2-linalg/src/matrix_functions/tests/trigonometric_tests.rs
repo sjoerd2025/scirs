@@ -6,7 +6,7 @@ use scirs2_core::ndarray::array;
 #[test]
 fn test_cosm_zero() {
     let zero = array![[0.0_f64, 0.0], [0.0, 0.0]];
-    let result = cosm(&zero.view()).unwrap();
+    let result = cosm(&zero.view()).expect("Test: operation failed");
     let identity = array![[1.0_f64, 0.0], [0.0, 1.0]];
 
     for i in 0..2 {
@@ -19,7 +19,7 @@ fn test_cosm_zero() {
 #[test]
 fn test_sinm_zero() {
     let zero = array![[0.0_f64, 0.0], [0.0, 0.0]];
-    let result = sinm(&zero.view()).unwrap();
+    let result = sinm(&zero.view()).expect("Test: operation failed");
 
     for i in 0..2 {
         for j in 0..2 {

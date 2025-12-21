@@ -38,17 +38,17 @@ fn numeric_conversion_example() {
     let float_value: f64 = 42.5;
 
     // Convert to integer (truncates)
-    let int_result: i32 = float_value.to_numeric().unwrap();
+    let int_result: i32 = float_value.to_numeric().expect("Operation failed");
     println!("f64 {} -> i32 {}", float_value, int_result);
 
     // Convert integer to float (exact)
     let int_value: i32 = 42;
-    let float_result: f64 = int_value.to_numeric().unwrap();
+    let float_result: f64 = int_value.to_numeric().expect("Operation failed");
     println!("i32 {} -> f64 {}", int_value, float_result);
 
     // Convert between integer types
     let large_int: i64 = 1_000_000;
-    let medium_int: i32 = large_int.to_numeric().unwrap();
+    let medium_int: i32 = large_int.to_numeric().expect("Operation failed");
     println!("i64 {} -> i32 {}", large_int, medium_int);
 }
 
@@ -155,11 +155,11 @@ fn complex_conversion_example() {
     );
 
     // Convert to Complex32
-    let z32 = z64.convert_complex::<f32>().unwrap();
+    let z32 = z64.convert_complex::<f32>().expect("Operation failed");
     println!("Converted to Complex32: {}", z32);
 
     // Convert back to Complex64
-    let z64_back = z32.convert_complex::<f64>().unwrap();
+    let z64_back = z32.convert_complex::<f64>().expect("Operation failed");
     println!(
         "Converted back to Complex64: {}",
         z64_back.to_algebraic_string()

@@ -27,7 +27,7 @@ use crate::utils::moving_average;
 /// use scirs2_series::decomposition::{decompose_seasonal, DecompositionModel};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
-/// let result = decompose_seasonal(&ts, 4, DecompositionModel::Additive).unwrap();
+/// let result = decompose_seasonal(&ts, 4, DecompositionModel::Additive).expect("Operation failed");
 /// println!("Trend: {:?}", result.trend);
 /// println!("Seasonal: {:?}", result.seasonal);
 /// println!("Residual: {:?}", result.residual);
@@ -108,7 +108,8 @@ where
     // Normalize seasonal pattern
     for i in 0..period {
         if counts[i] > 0 {
-            seasonal_pattern[i] = seasonal_pattern[i] / F::from_usize(counts[i]).unwrap();
+            seasonal_pattern[i] =
+                seasonal_pattern[i] / F::from_usize(counts[i]).expect("Operation failed");
         }
     }
 
@@ -116,14 +117,14 @@ where
     match model {
         DecompositionModel::Additive => {
             let mean = seasonal_pattern.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(period).unwrap();
+                / F::from_usize(period).expect("Operation failed");
             for i in 0..period {
                 seasonal_pattern[i] = seasonal_pattern[i] - mean;
             }
         }
         DecompositionModel::Multiplicative => {
             let mean = seasonal_pattern.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(period).unwrap();
+                / F::from_usize(period).expect("Operation failed");
             if mean == F::zero() {
                 return Err(TimeSeriesError::DecompositionError(
                     "Division by zero normalizing multiplicative seasonal pattern".to_string(),

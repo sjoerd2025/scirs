@@ -245,7 +245,7 @@ impl AdaptivePatternTracker {
             let best_strategy = self
                 .strategy_performance
                 .values()
-                .max_by(|a, b| a.q_value.partial_cmp(&b.q_value).unwrap())
+                .max_by(|a, b| a.q_value.partial_cmp(&b.q_value).expect("Operation failed"))
                 .map(|p| p.strategy)
                 .unwrap_or_default();
 
@@ -660,7 +660,7 @@ impl AdaptivePatternTracker {
             return Vec::new();
         }
 
-        let latest = self.history.back().unwrap().0;
+        let latest = self.history.back().expect("Operation failed").0;
 
         match self.current_strategy {
             PrefetchStrategy::Sequential(n) => {

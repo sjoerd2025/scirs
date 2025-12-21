@@ -79,23 +79,23 @@ mod integration_tests {
         let mut maml = MAML::<f64>::new(4, 8, 2, 0.01, 0.1, 3);
         let vae = TimeSeriesVAE::<f64>::new(5, 2, 3, 8, 8);
 
-        let input =
-            Array2::from_shape_vec((5, 2), (0..10).map(|i| i as f64 * 0.1).collect()).unwrap();
-        let vae_output = vae.forward(&input).unwrap();
+        let input = Array2::from_shape_vec((5, 2), (0..10).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
+        let vae_output = vae.forward(&input).expect("Operation failed");
 
         // Use VAE latent representation as input to MAML
         let task = TaskData {
             support_x: Array2::from_shape_vec((3, 4), (0..12).map(|i| i as f64 * 0.1).collect())
-                .unwrap(),
+                .expect("Operation failed"),
             support_y: Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2).collect())
-                .unwrap(),
+                .expect("Operation failed"),
             query_x: Array2::from_shape_vec((2, 4), (12..20).map(|i| i as f64 * 0.1).collect())
-                .unwrap(),
+                .expect("Operation failed"),
             query_y: Array2::from_shape_vec((2, 2), (6..10).map(|i| i as f64 * 0.2).collect())
-                .unwrap(),
+                .expect("Operation failed"),
         };
 
-        let loss = maml.meta_train(&[task]).unwrap();
+        let loss = maml.meta_train(&[task]).expect("Operation failed");
         assert!(loss.is_finite());
         assert!(vae_output.reconstruction_loss.is_finite());
     }
@@ -122,8 +122,8 @@ mod integration_tests {
 
             let transformer =
                 TimeSeriesTransformer::<f64>::new(10, 5, 64, num_heads, num_layers, 256);
-            let input =
-                Array2::from_shape_vec((2, 10), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
+            let input = Array2::from_shape_vec((2, 10), (0..20).map(|i| i as f64 * 0.1).collect())
+                .expect("Operation failed");
 
             let output = transformer.forward(&input)?;
 
@@ -138,7 +138,7 @@ mod integration_tests {
             Ok(-variance) // Maximize negative variance (minimize variance)
         };
 
-        let best_params = optimizer.optimize(objective).unwrap();
+        let best_params = optimizer.optimize(objective).expect("Operation failed");
         assert!(!best_params.integer.is_empty());
     }
 
@@ -149,14 +149,14 @@ mod integration_tests {
 
         let episode = FewShotEpisode {
             support_x: Array2::from_shape_vec((4, 8), (0..32).map(|i| i as f64 * 0.1).collect())
-                .unwrap(),
+                .expect("Operation failed"),
             support_y: Array1::from_vec(vec![0, 0, 1, 1]),
             query_x: Array2::from_shape_vec((2, 8), (32..48).map(|i| i as f64 * 0.1).collect())
-                .unwrap(),
+                .expect("Operation failed"),
             query_y: Array1::from_vec(vec![0, 1]),
         };
 
-        let loss = mann.train_few_shot(&[episode]).unwrap();
+        let loss = mann.train_few_shot(&[episode]).expect("Operation failed");
         assert!(loss.is_finite());
         assert!(loss >= 0.0);
     }
@@ -175,7 +175,7 @@ mod integration_tests {
         let problem = OptimizationProblem::<f64>::quadratic(10, 20);
         let (optimized_params, loss_history) = meta_opt
             .optimize_parameters(&problem.initial_params, &problem.target, problem.max_steps)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(optimized_params.len(), 10);
         assert_eq!(loss_history.len(), 20);
@@ -188,22 +188,25 @@ mod integration_tests {
         let proto_net = PrototypicalNetworks::<f64>::new(6, 4, vec![8]);
         let mut reptile = REPTILE::<f64>::new(6, 8, 2, 0.01, 0.1, 3);
 
-        let support_x =
-            Array2::from_shape_vec((4, 6), (0..24).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let support_x = Array2::from_shape_vec((4, 6), (0..24).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
         let support_y_proto = Array1::from_vec(vec![0, 0, 1, 1]);
         let support_y_reptile =
-            Array2::from_shape_vec((4, 2), (0..8).map(|i| i as f64 * 0.1).collect()).unwrap();
-        let query_x =
-            Array2::from_shape_vec((2, 6), (24..36).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((4, 2), (0..8).map(|i| i as f64 * 0.1).collect())
+                .expect("Operation failed");
+        let query_x = Array2::from_shape_vec((2, 6), (24..36).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
         // Test Prototypical Networks
         let proto_predictions = proto_net
             .few_shot_episode(&support_x, &support_y_proto, &query_x)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(proto_predictions.len(), 2);
 
         // Test REPTILE adaptation
-        let adapted_params = reptile.fast_adapt(&support_x, &support_y_reptile).unwrap();
+        let adapted_params = reptile
+            .fast_adapt(&support_x, &support_y_reptile)
+            .expect("Operation failed");
         assert_eq!(adapted_params.dim(), reptile.parameters().dim());
     }
 
@@ -213,15 +216,19 @@ mod integration_tests {
 
         // Config and task data
         let task = TaskData {
-            support_x: Array2::from_shape_vec((2, 3), (0..6).map(|i| i as f64).collect()).unwrap(),
-            support_y: Array2::from_shape_vec((2, 2), (0..4).map(|i| i as f64).collect()).unwrap(),
-            query_x: Array2::from_shape_vec((1, 3), (6..9).map(|i| i as f64).collect()).unwrap(),
-            query_y: Array2::from_shape_vec((1, 2), (4..6).map(|i| i as f64).collect()).unwrap(),
+            support_x: Array2::from_shape_vec((2, 3), (0..6).map(|i| i as f64).collect())
+                .expect("Operation failed"),
+            support_y: Array2::from_shape_vec((2, 2), (0..4).map(|i| i as f64).collect())
+                .expect("Operation failed"),
+            query_x: Array2::from_shape_vec((1, 3), (6..9).map(|i| i as f64).collect())
+                .expect("Operation failed"),
+            query_y: Array2::from_shape_vec((1, 2), (4..6).map(|i| i as f64).collect())
+                .expect("Operation failed"),
         };
 
         // MAML
         let mut maml = MAML::<f64>::new(3, 6, 2, 0.01, 0.1, 2);
-        let maml_loss = maml.meta_train(&[task.clone()]).unwrap();
+        let maml_loss = maml.meta_train(&[task.clone()]).expect("Operation failed");
         assert!(maml_loss.is_finite());
 
         // Neural ODE
@@ -229,21 +236,26 @@ mod integration_tests {
         let time_steps = Array1::from_vec(vec![0.0, 0.1, 0.2]);
         let neural_ode = NeuralODE::<f64>::new(2, 4, time_steps, ode_config);
         let initial_state = Array1::from_vec(vec![1.0, 0.5]);
-        let ode_result = neural_ode.forward(&initial_state).unwrap();
+        let ode_result = neural_ode
+            .forward(&initial_state)
+            .expect("Operation failed");
         assert_eq!(ode_result.dim(), (3, 2));
 
         // VAE
         let vae = TimeSeriesVAE::<f64>::new(3, 2, 2, 4, 4);
-        let vae_input =
-            Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.1).collect()).unwrap();
-        let vae_output = vae.forward(&vae_input).unwrap();
+        let vae_input = Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
+        let vae_output = vae.forward(&vae_input).expect("Operation failed");
         assert_eq!(vae_output.reconstruction.dim(), (3, 2));
 
         // Transformer
         let transformer = TimeSeriesTransformer::<f64>::new(4, 2, 8, 2, 1, 16);
         let transformer_input =
-            Array2::from_shape_vec((1, 4), (0..4).map(|i| i as f64 * 0.1).collect()).unwrap();
-        let transformer_output = transformer.forward(&transformer_input).unwrap();
+            Array2::from_shape_vec((1, 4), (0..4).map(|i| i as f64 * 0.1).collect())
+                .expect("Operation failed");
+        let transformer_output = transformer
+            .forward(&transformer_input)
+            .expect("Operation failed");
         assert_eq!(transformer_output.dim(), (1, 2));
 
         // Hyperparameter Optimization
@@ -255,28 +267,32 @@ mod integration_tests {
         let mut hyperopt =
             HyperparameterOptimizer::new(OptimizationMethod::RandomSearch, search_space, 2);
         let objective = |_: &HyperparameterSet<f64>| -> crate::error::Result<f64> { Ok(0.5) };
-        let best_params = hyperopt.optimize(objective).unwrap();
+        let best_params = hyperopt.optimize(objective).expect("Operation failed");
         assert!(!best_params.continuous.is_empty());
 
         // Prototypical Networks
         let proto_net = PrototypicalNetworks::<f64>::new(3, 2, vec![4]);
-        let proto_features = proto_net.extract_features(&task.support_x).unwrap();
+        let proto_features = proto_net
+            .extract_features(&task.support_x)
+            .expect("Operation failed");
         assert_eq!(proto_features.dim(), (2, 2));
 
         // REPTILE
         let mut reptile = REPTILE::<f64>::new(3, 4, 2, 0.01, 0.1, 2);
-        let reptile_loss = reptile.meta_train(&[task]).unwrap();
+        let reptile_loss = reptile.meta_train(&[task]).expect("Operation failed");
         assert!(reptile_loss.is_finite());
 
         // MANN
         let mut mann = MANN::<f64>::new(4, 3, 6, 4, 2);
         let mann_input = Array1::from_vec(vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6]);
-        let mann_output = mann.forward(&mann_input).unwrap();
+        let mann_output = mann.forward(&mann_input).expect("Operation failed");
         assert_eq!(mann_output.len(), 2);
 
         // Meta-Optimizer
         let mut meta_opt = MetaOptimizer::<f64>::new(2, 3);
-        let opt_update = meta_opt.generate_update(0.1, &[1.0, 0.8], 5).unwrap();
+        let opt_update = meta_opt
+            .generate_update(0.1, &[1.0, 0.8], 5)
+            .expect("Operation failed");
         assert!(opt_update.is_finite());
 
         // Optimization Problem
@@ -289,19 +305,25 @@ mod integration_tests {
     fn test_cross_module_data_compatibility() {
         // Test that data structures are compatible across modules
         let time_series_data =
-            Array2::from_shape_vec((5, 3), (0..15).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((5, 3), (0..15).map(|i| i as f64 * 0.1).collect())
+                .expect("Operation failed");
 
         // Test that the same data can be used by different modules
         let vae = TimeSeriesVAE::<f64>::new(5, 3, 4, 8, 8);
-        let vae_result = vae.forward(&time_series_data).unwrap();
+        let vae_result = vae.forward(&time_series_data).expect("Operation failed");
 
         let transformer = TimeSeriesTransformer::<f64>::new(5, 3, 12, 3, 2, 32);
         let transformer_input =
-            Array2::from_shape_vec((1, 5), (0..5).map(|i| i as f64 * 0.1).collect()).unwrap();
-        let transformer_result = transformer.forward(&transformer_input).unwrap();
+            Array2::from_shape_vec((1, 5), (0..5).map(|i| i as f64 * 0.1).collect())
+                .expect("Operation failed");
+        let transformer_result = transformer
+            .forward(&transformer_input)
+            .expect("Operation failed");
 
         let proto_net = PrototypicalNetworks::<f64>::new(3, 4, vec![6]);
-        let proto_features = proto_net.extract_features(&time_series_data).unwrap();
+        let proto_features = proto_net
+            .extract_features(&time_series_data)
+            .expect("Operation failed");
 
         // All should produce finite outputs
         assert!(vae_result.reconstruction_loss.is_finite());

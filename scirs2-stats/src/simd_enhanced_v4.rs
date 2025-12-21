@@ -34,7 +34,7 @@ where
     }
 
     let n = data.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Single-pass computation with SIMD
     let (sum, sum_sq, min_val, max_val) = if n > 32 {
@@ -60,7 +60,7 @@ where
 
     let mean = sum / n_f;
     let variance = if n > 1 {
-        let n_minus_1 = F::from(n - 1).unwrap();
+        let n_minus_1 = F::from(n - 1).expect("Failed to convert to float");
         (sum_sq - sum * sum / n_f) / n_minus_1
     } else {
         F::zero()
@@ -100,7 +100,8 @@ where
     };
 
     let kurtosis = if variance > F::zero() {
-        (sum_fourth_dev / (n_f * variance * variance)) - F::from(3.0).unwrap()
+        (sum_fourth_dev / (n_f * variance * variance))
+            - F::from(3.0).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -168,7 +169,7 @@ where
     let mut mins = Array1::zeros(n_windows);
     let mut maxs = Array1::zeros(n_windows);
 
-    let windowsize_f = F::from(windowsize).unwrap();
+    let windowsize_f = F::from(windowsize).expect("Failed to convert to float");
 
     // Process each window
     for i in 0..n_windows {
@@ -183,7 +184,7 @@ where
             let sqdata = F::simd_mul(&window, &window);
             let sum_sq = F::simd_sum(&sqdata.view());
             let variance = if windowsize > 1 {
-                let n_minus_1 = F::from(windowsize - 1).unwrap();
+                let n_minus_1 = F::from(windowsize - 1).expect("Failed to convert to float");
                 (sum_sq - sum * sum / windowsize_f) / n_minus_1
             } else {
                 F::zero()
@@ -200,7 +201,7 @@ where
 
             let sum_sq: F = window.iter().map(|&x| x * x).sum();
             let variance = if windowsize > 1 {
-                let n_minus_1 = F::from(windowsize - 1).unwrap();
+                let n_minus_1 = F::from(windowsize - 1).expect("Failed to convert to float");
                 (sum_sq - sum * sum / windowsize_f) / n_minus_1
             } else {
                 F::zero()
@@ -258,7 +259,7 @@ where
 
     // Compute means for each feature using SIMD
     let means = if n_samples_ > 32 {
-        let n_samples_f = F::from(n_samples_).unwrap();
+        let n_samples_f = F::from(n_samples_).expect("Failed to convert to float");
         let mut feature_means = Array1::zeros(n_features);
 
         for j in 0..n_features {
@@ -268,7 +269,7 @@ where
         feature_means
     } else {
         // Scalar fallback
-        data.mean_axis(Axis(0)).unwrap()
+        data.mean_axis(Axis(0)).expect("Operation failed")
     };
 
     // Center the data
@@ -289,7 +290,7 @@ where
 
     // Compute covariance matrix using SIMD matrix multiplication
     let mut cov_matrix = Array2::zeros((n_features, n_features));
-    let n_minus_1 = F::from(n_samples_ - 1).unwrap();
+    let n_minus_1 = F::from(n_samples_ - 1).expect("Failed to convert to float");
 
     for i in 0..n_features {
         for j in i..n_features {
@@ -346,8 +347,8 @@ where
     let mut sorteddata = data.to_owned();
     sorteddata
         .as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Operation failed")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = sorteddata.len();
     let mut results = Array1::zeros(quantiles.len());
@@ -362,7 +363,7 @@ where
             let pos = q * (n - 1) as f64;
             let lower_idx = pos.floor() as usize;
             let upper_idx = (lower_idx + 1).min(n - 1);
-            let weight = F::from(pos - lower_idx as f64).unwrap();
+            let weight = F::from(pos - lower_idx as f64).expect("Failed to convert to float");
 
             let lower_val = sorteddata[lower_idx];
             let upper_val = sorteddata[upper_idx];
@@ -462,18 +463,19 @@ where
                 let (mean, std_dev) = if n_samples_ > 32 {
                     // SIMD path
                     let sum = F::simd_sum(&column);
-                    let mean = sum / F::from(n_samples_).unwrap();
+                    let mean = sum / F::from(n_samples_).expect("Failed to convert to float");
 
                     let mean_vec = Array1::from_elem(n_samples_, mean);
                     let centered = F::simd_sub(&column, &mean_vec.view());
                     let squared = F::simd_mul(&centered.view(), &centered.view());
-                    let variance = F::simd_sum(&squared.view()) / F::from(n_samples_ - 1).unwrap();
+                    let variance = F::simd_sum(&squared.view())
+                        / F::from(n_samples_ - 1).expect("Failed to convert to float");
                     let std_dev = variance.sqrt();
 
                     (mean, std_dev)
                 } else {
                     // Scalar fallback
-                    let mean = column.mean().unwrap();
+                    let mean = column.mean().expect("Operation failed");
                     let variance = column.var(F::one()); // ddof=1
                     let std_dev = variance.sqrt();
                     (mean, std_dev)
@@ -495,18 +497,19 @@ where
                 let (mean, std_dev) = if n_features > 32 {
                     // SIMD path
                     let sum = F::simd_sum(&row);
-                    let mean = sum / F::from(n_features).unwrap();
+                    let mean = sum / F::from(n_features).expect("Failed to convert to float");
 
                     let mean_vec = Array1::from_elem(n_features, mean);
                     let centered = F::simd_sub(&row, &mean_vec.view());
                     let squared = F::simd_mul(&centered.view(), &centered.view());
-                    let variance = F::simd_sum(&squared.view()) / F::from(n_features - 1).unwrap();
+                    let variance = F::simd_sum(&squared.view())
+                        / F::from(n_features - 1).expect("Failed to convert to float");
                     let std_dev = variance.sqrt();
 
                     (mean, std_dev)
                 } else {
                     // Scalar fallback
-                    let mean = row.mean().unwrap();
+                    let mean = row.mean().expect("Operation failed");
                     let variance = row.var(F::one()); // ddof=1
                     let std_dev = variance.sqrt();
                     (mean, std_dev)
@@ -603,8 +606,8 @@ where
     let mut sorteddata = data.to_owned();
     sorteddata
         .as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Operation failed")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = sorteddata.len();
 
@@ -614,7 +617,7 @@ where
     } else {
         let mid1 = sorteddata[n / 2 - 1];
         let mid2 = sorteddata[n / 2];
-        (mid1 + mid2) / F::from(2.0).unwrap()
+        (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
     };
 
     // Compute Median Absolute Deviation (MAD)
@@ -635,19 +638,19 @@ where
     // Sort deviations to find median
     deviations
         .as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Operation failed")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let mad = if n % 2 == 1 {
         deviations[n / 2]
     } else {
         let mid1 = deviations[n / 2 - 1];
         let mid2 = deviations[n / 2];
-        (mid1 + mid2) / F::from(2.0).unwrap()
+        (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
     };
 
     // Scale MAD to be consistent with standard deviation for normal distributions
-    let mad_scaled = mad * F::from(1.4826).unwrap();
+    let mad_scaled = mad * F::from(1.4826).expect("Failed to convert constant to float");
 
     // Compute robust range (IQR)
     let q1_idx = (n as f64 * 0.25) as usize;

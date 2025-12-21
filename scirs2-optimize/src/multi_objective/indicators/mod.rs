@@ -24,7 +24,11 @@ pub fn hypervolume(pareto_front: &[Solution], reference_point: &[f64]) -> f64 {
 /// Calculate 2D hypervolume
 fn hypervolume_2d(pareto_front: &[Solution], reference_point: &[f64]) -> f64 {
     let mut sorted_front = pareto_front.to_vec();
-    sorted_front.sort_by(|a, b| a.objectives[0].partial_cmp(&b.objectives[0]).unwrap());
+    sorted_front.sort_by(|a, b| {
+        a.objectives[0]
+            .partial_cmp(&b.objectives[0])
+            .expect("Operation failed")
+    });
 
     let mut volume = 0.0;
     let mut prev_x = 0.0;
@@ -80,7 +84,10 @@ fn hypervolume_monte_carlo(
 
 fn is_dominated_by_front(point: &[f64], pareto_front: &[Solution]) -> bool {
     for solution in pareto_front {
-        if dominates(solution.objectives.as_slice().unwrap(), point) {
+        if dominates(
+            solution.objectives.as_slice().expect("Operation failed"),
+            point,
+        ) {
             return true;
         }
     }
@@ -114,7 +121,10 @@ pub fn igd(pareto_front: &[Solution], true_pareto_front: &[Vec<f64>]) -> f64 {
             pareto_front
                 .iter()
                 .map(|solution| {
-                    euclidean_distance(solution.objectives.as_slice().unwrap(), true_point)
+                    euclidean_distance(
+                        solution.objectives.as_slice().expect("Operation failed"),
+                        true_point,
+                    )
                 })
                 .fold(f64::INFINITY, |a, b| a.min(b))
         })
@@ -135,7 +145,10 @@ pub fn generational_distance(pareto_front: &[Solution], true_pareto_front: &[Vec
             true_pareto_front
                 .iter()
                 .map(|true_point| {
-                    euclidean_distance(solution.objectives.as_slice().unwrap(), true_point)
+                    euclidean_distance(
+                        solution.objectives.as_slice().expect("Operation failed"),
+                        true_point,
+                    )
                 })
                 .fold(f64::INFINITY, |a, b| a.min(b))
         })
@@ -158,8 +171,8 @@ pub fn spacing(pareto_front: &[Solution]) -> f64 {
                 .filter(|other| !std::ptr::eq(*other, sol))
                 .map(|other| {
                     euclidean_distance(
-                        sol.objectives.as_slice().unwrap(),
-                        other.objectives.as_slice().unwrap(),
+                        sol.objectives.as_slice().expect("Operation failed"),
+                        other.objectives.as_slice().expect("Operation failed"),
                     )
                 })
                 .fold(f64::INFINITY, |a, b| a.min(b))

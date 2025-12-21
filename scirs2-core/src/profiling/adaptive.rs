@@ -1139,7 +1139,7 @@ mod tests {
         let optimizer = AdaptiveOptimizer::new(config);
         assert!(optimizer.is_ok());
 
-        let optimizer = optimizer.unwrap();
+        let optimizer = optimizer.expect("Operation failed");
         assert_eq!(optimizer.state, OptimizerState::Stopped);
     }
 
@@ -1190,7 +1190,7 @@ mod tests {
     #[test]
     fn test_workload_registration() {
         let config = OptimizationConfig::default();
-        let mut optimizer = AdaptiveOptimizer::new(config).unwrap();
+        let mut optimizer = AdaptiveOptimizer::new(config).expect("Operation failed");
 
         let workload = WorkloadProfile::builder()
             .with_name("test_registration")
@@ -1206,7 +1206,7 @@ mod tests {
     #[test]
     fn test_metric_recording() {
         let config = OptimizationConfig::default();
-        let mut optimizer = AdaptiveOptimizer::new(config).unwrap();
+        let mut optimizer = AdaptiveOptimizer::new(config).expect("Operation failed");
 
         let result = optimizer.record_metric("test_workload", "execution_time", 150.0);
         assert!(result.is_ok());
@@ -1215,7 +1215,7 @@ mod tests {
     #[test]
     fn test_trend_calculation() {
         let config = OptimizationConfig::default();
-        let optimizer = AdaptiveOptimizer::new(config).unwrap();
+        let optimizer = AdaptiveOptimizer::new(config).expect("Operation failed");
 
         // Test with no history
         let trend = optimizer.calculate_trend("test", "metric", 100.0);

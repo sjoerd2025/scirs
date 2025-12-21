@@ -523,7 +523,7 @@ mod tests {
     fn test_diversity_metrics() {
         let metrics = DiversityMetrics::new(
             0.6,
-            Array2::from_shape_vec((2, 2), vec![0.0, 0.8, 0.8, 0.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.8, 0.8, 0.0]).expect("Operation failed"),
             HashMap::new(),
             HashMap::new(),
         );

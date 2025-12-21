@@ -265,13 +265,15 @@ impl RiskManagementMetrics {
 
         // Calculate percentile index
         let alpha = F::one() - confidencelevel;
-        let index = (alpha * F::from(sorted_returns.len()).unwrap()).floor();
+        let index = (alpha * F::from(sorted_returns.len()).expect("Operation failed")).floor();
         let var_index = index.to_usize().unwrap_or(0);
 
         if var_index < sorted_returns.len() {
             let daily_var = -sorted_returns[var_index]; // VaR is positive for losses
                                                         // Scale for holding _period (assuming sqrt of time scaling)
-            let holding_period_factor = F::from(holding_period).unwrap().sqrt();
+            let holding_period_factor = F::from(holding_period)
+                .expect("Failed to convert to float")
+                .sqrt();
             Ok(daily_var * holding_period_factor)
         } else {
             Ok(F::zero())
@@ -293,7 +295,7 @@ impl RiskManagementMetrics {
         sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let alpha = F::one() - confidencelevel;
-        let cutoff_index = (alpha * F::from(sorted_returns.len()).unwrap())
+        let cutoff_index = (alpha * F::from(sorted_returns.len()).expect("Operation failed"))
             .floor()
             .to_usize()
             .unwrap_or(0);
@@ -304,7 +306,7 @@ impl RiskManagementMetrics {
 
         // Calculate mean of worst returns (tail)
         let tail_sum: F = sorted_returns[..cutoff_index].iter().cloned().sum();
-        let cvar = -tail_sum / F::from(cutoff_index).unwrap(); // CVaR is positive for losses
+        let cvar = -tail_sum / F::from(cutoff_index).expect("Failed to convert to float"); // CVaR is positive for losses
 
         Ok(cvar)
     }
@@ -346,23 +348,23 @@ impl RiskManagementMetrics {
             ));
         }
 
-        let portfolio_mean =
-            portfolioreturns.iter().cloned().sum::<F>() / F::from(portfolioreturns.len()).unwrap();
-        let market_mean =
-            marketreturns.iter().cloned().sum::<F>() / F::from(marketreturns.len()).unwrap();
+        let portfolio_mean = portfolioreturns.iter().cloned().sum::<F>()
+            / F::from(portfolioreturns.len()).expect("Operation failed");
+        let market_mean = marketreturns.iter().cloned().sum::<F>()
+            / F::from(marketreturns.len()).expect("Operation failed");
 
         let covariance = portfolioreturns
             .iter()
             .zip(marketreturns.iter())
             .map(|(&p, &m)| (p - portfolio_mean) * (m - market_mean))
             .sum::<F>()
-            / F::from(portfolioreturns.len() - 1).unwrap();
+            / F::from(portfolioreturns.len() - 1).expect("Operation failed");
 
         let market_variance = marketreturns
             .iter()
             .map(|&m| (m - market_mean) * (m - market_mean))
             .sum::<F>()
-            / F::from(marketreturns.len() - 1).unwrap();
+            / F::from(marketreturns.len() - 1).expect("Operation failed");
 
         if market_variance > F::zero() {
             Ok(covariance / market_variance)
@@ -404,15 +406,15 @@ impl PortfolioMetrics {
             return Ok(F::zero());
         }
 
-        let mean_return =
-            portfolioreturns.iter().cloned().sum::<F>() / F::from(portfolioreturns.len()).unwrap();
+        let mean_return = portfolioreturns.iter().cloned().sum::<F>()
+            / F::from(portfolioreturns.len()).expect("Operation failed");
         let excess_return = mean_return - risk_freerate;
 
         let variance = portfolioreturns
             .iter()
             .map(|&r| (r - mean_return) * (r - mean_return))
             .sum::<F>()
-            / F::from(portfolioreturns.len() - 1).unwrap();
+            / F::from(portfolioreturns.len() - 1).expect("Operation failed");
 
         let volatility = variance.sqrt();
 
@@ -432,8 +434,8 @@ impl PortfolioMetrics {
             return Ok(F::zero());
         }
 
-        let mean_return =
-            portfolioreturns.iter().cloned().sum::<F>() / F::from(portfolioreturns.len()).unwrap();
+        let mean_return = portfolioreturns.iter().cloned().sum::<F>()
+            / F::from(portfolioreturns.len()).expect("Operation failed");
         let excess_return = mean_return - targetreturn;
 
         // Calculate downside deviation
@@ -448,7 +450,7 @@ impl PortfolioMetrics {
                 }
             })
             .sum::<F>()
-            / F::from(portfolioreturns.len() - 1).unwrap();
+            / F::from(portfolioreturns.len() - 1).expect("Operation failed");
 
         let downside_deviation = downside_variance.sqrt();
 
@@ -481,8 +483,8 @@ impl PortfolioMetrics {
             .map(|(&p, &b)| p - b)
             .collect();
 
-        let mean_active_return =
-            active_returns.iter().cloned().sum::<F>() / F::from(active_returns.len()).unwrap();
+        let mean_active_return = active_returns.iter().cloned().sum::<F>()
+            / F::from(active_returns.len()).expect("Operation failed");
 
         // Calculate tracking error (standard deviation of active returns)
         let tracking_error = {
@@ -490,7 +492,7 @@ impl PortfolioMetrics {
                 .iter()
                 .map(|&ar| (ar - mean_active_return) * (ar - mean_active_return))
                 .sum::<F>()
-                / F::from(active_returns.len() - 1).unwrap();
+                / F::from(active_returns.len() - 1).expect("Operation failed");
             variance.sqrt()
         };
 
@@ -527,9 +529,10 @@ impl PortfolioMetrics {
             return Ok(F::zero());
         }
 
-        let mean_return = returns.iter().cloned().sum::<F>() / F::from(returns.len()).unwrap();
+        let mean_return =
+            returns.iter().cloned().sum::<F>() / F::from(returns.len()).expect("Operation failed");
         // Assuming daily returns, multiply by 252 trading days
-        Ok(mean_return * F::from(252).unwrap())
+        Ok(mean_return * F::from(252).expect("Failed to convert constant to float"))
     }
 }
 
@@ -598,13 +601,15 @@ impl CreditRiskMetrics {
                 cumulative_defaults += 1;
             } else {
                 _cumulative_non_defaults += 1;
-                auc = auc + F::from(cumulative_defaults).unwrap();
+                auc = auc + F::from(cumulative_defaults).expect("Failed to convert to float");
             }
         }
 
-        let auc_normalized =
-            auc / (F::from(total_defaults).unwrap() * F::from(total_non_defaults).unwrap());
-        let gini = F::from(2.0).unwrap() * auc_normalized - F::one();
+        let auc_normalized = auc
+            / (F::from(total_defaults).expect("Failed to convert to float")
+                * F::from(total_non_defaults).expect("Failed to convert to float"));
+        let gini =
+            F::from(2.0).expect("Failed to convert constant to float") * auc_normalized - F::one();
 
         Ok(gini)
     }
@@ -650,10 +655,11 @@ impl CreditRiskMetrics {
                 cumulative_non_defaults += 1;
             }
 
-            let default_rate =
-                F::from(cumulative_defaults).unwrap() / F::from(total_defaults).unwrap();
-            let non_default_rate =
-                F::from(cumulative_non_defaults).unwrap() / F::from(total_non_defaults).unwrap();
+            let default_rate = F::from(cumulative_defaults).expect("Failed to convert to float")
+                / F::from(total_defaults).expect("Failed to convert to float");
+            let non_default_rate = F::from(cumulative_non_defaults)
+                .expect("Failed to convert to float")
+                / F::from(total_non_defaults).expect("Failed to convert to float");
 
             let ks_stat = (default_rate - non_default_rate).abs();
             if ks_stat > max_ks {
@@ -702,10 +708,10 @@ impl CreditRiskMetrics {
         // Calculate PSI
         let mut psi = F::zero();
         for i in 0..num_buckets {
-            let baseline_pct =
-                F::from(baseline_counts[i]).unwrap() / F::from(baseline_scores.len()).unwrap();
-            let current_pct =
-                F::from(current_counts[i]).unwrap() / F::from(current_scores.len()).unwrap();
+            let baseline_pct = F::from(baseline_counts[i]).expect("Failed to convert to float")
+                / F::from(baseline_scores.len()).expect("Operation failed");
+            let current_pct = F::from(current_counts[i]).expect("Failed to convert to float")
+                / F::from(current_scores.len()).expect("Operation failed");
 
             if baseline_pct > F::zero() && current_pct > F::zero() {
                 let ratio = current_pct / baseline_pct;
@@ -768,7 +774,8 @@ impl MarketRiskMetrics {
         // Calculate means for each asset
         let means: Vec<F> = (0..n_assets)
             .map(|i| {
-                returnsmatrix.column(i).iter().cloned().sum::<F>() / F::from(n_periods).unwrap()
+                returnsmatrix.column(i).iter().cloned().sum::<F>()
+                    / F::from(n_periods).expect("Failed to convert to float")
             })
             .collect();
 
@@ -803,7 +810,7 @@ impl MarketRiskMetrics {
     where
         F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum,
     {
-        let n = F::from(returns1.len()).unwrap();
+        let n = F::from(returns1.len()).expect("Operation failed");
 
         let covariance = returns1
             .iter()
@@ -860,7 +867,10 @@ impl TradingStrategyMetrics {
 
         let profitable_trades = tradereturns.iter().filter(|&&ret| ret > F::zero()).count();
 
-        Ok(F::from(profitable_trades).unwrap() / F::from(tradereturns.len()).unwrap())
+        Ok(
+            F::from(profitable_trades).expect("Failed to convert to float")
+                / F::from(tradereturns.len()).expect("Operation failed"),
+        )
     }
 
     /// Calculate profit factor (gross profit / gross loss)
@@ -1067,9 +1077,12 @@ impl ESGMetrics {
         F: Float + scirs2_core::numeric::FromPrimitive,
     {
         let (env_weight, social_weight, gov_weight) = weights.unwrap_or((
-            F::from(1.0).unwrap() / F::from(3.0).unwrap(),
-            F::from(1.0).unwrap() / F::from(3.0).unwrap(),
-            F::from(1.0).unwrap() / F::from(3.0).unwrap(),
+            F::from(1.0).expect("Failed to convert constant to float")
+                / F::from(3.0).expect("Failed to convert constant to float"),
+            F::from(1.0).expect("Failed to convert constant to float")
+                / F::from(3.0).expect("Failed to convert constant to float"),
+            F::from(1.0).expect("Failed to convert constant to float")
+                / F::from(3.0).expect("Failed to convert constant to float"),
         ));
 
         Ok(environmental_score * env_weight
@@ -1123,7 +1136,9 @@ mod tests {
         let returns = array![0.01, 0.02, -0.01, 0.03, 0.0];
         let risk_freerate = 0.005;
 
-        let sharpe = portfolio.sharpe_ratio(&returns, risk_freerate).unwrap();
+        let sharpe = portfolio
+            .sharpe_ratio(&returns, risk_freerate)
+            .expect("Operation failed");
         assert!(sharpe.is_finite());
     }
 
@@ -1135,7 +1150,7 @@ mod tests {
 
         let var = risk_mgmt
             .historical_var(&returns, confidencelevel, 1)
-            .unwrap();
+            .expect("Operation failed");
         assert!(var >= 0.0);
     }
 
@@ -1145,7 +1160,9 @@ mod tests {
         let scores = array![0.8, 0.6, 0.9, 0.3, 0.7];
         let defaults = array![true, false, true, false, false];
 
-        let gini = credit.gini_coefficient(&scores, &defaults).unwrap();
+        let gini = credit
+            .gini_coefficient(&scores, &defaults)
+            .expect("Operation failed");
         assert!((-1.0..=1.0).contains(&gini));
     }
 
@@ -1154,7 +1171,7 @@ mod tests {
         let trading = TradingStrategyMetrics::new();
         let tradereturns = array![0.02, -0.01, 0.03, -0.005, 0.01];
 
-        let hit_ratio = trading.hit_ratio(&tradereturns).unwrap();
+        let hit_ratio = trading.hit_ratio(&tradereturns).expect("Operation failed");
         assert!((0.0..=1.0).contains(&hit_ratio));
         assert_eq!(hit_ratio, 0.6); // 3 out of 5 profitable trades
     }
@@ -1167,7 +1184,7 @@ mod tests {
 
         let ratio = regulatory
             .capital_ratio(tier1_capital, risk_weightedassets)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(ratio, 0.125); // 12.5%
     }
 
@@ -1180,7 +1197,7 @@ mod tests {
 
         let composite = esg
             .composite_esg_score(environmental, social, governance, None)
-            .unwrap();
+            .expect("Operation failed");
         assert!((0.0..=1.0).contains(&composite));
     }
 }

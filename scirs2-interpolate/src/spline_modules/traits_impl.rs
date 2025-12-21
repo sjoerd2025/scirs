@@ -182,7 +182,7 @@ where
             }
 
             // Find extrema by locating roots of the first derivative
-            let step = (search_b - search_a) / F::from(100).unwrap();
+            let step = (search_b - search_a) / F::from(100).expect("Failed to convert constant to float");
             let mut x = search_a;
 
             while x < search_b {
@@ -332,9 +332,9 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0]; // y = x^2
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
-    /// let antideriv = spline.antiderivative().unwrap();
+    /// let antideriv = spline.antiderivative().expect("Operation failed");
     /// // antideriv should approximate x^3/3 + C
     /// ```
     pub fn antiderivative(&self) -> InterpolateResult<CubicSpline<F>> {

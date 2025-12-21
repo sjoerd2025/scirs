@@ -254,10 +254,10 @@ mod tests {
     #[test]
     fn test_cartpole() {
         let mut env = CartPole::new();
-        let obs = env.reset().unwrap();
+        let obs = env.reset().expect("Operation failed");
         assert_eq!(obs.len(), 4);
         let action = Array1::from_vec(vec![1.0]);
-        let (next_obs, reward, done, info) = env.step(&action).unwrap();
+        let (next_obs, reward, done, info) = env.step(&action).expect("Operation failed");
         assert_eq!(next_obs.len(), 4);
         assert!(reward >= 0.0);
         assert!(info.contains_key("steps"));
@@ -266,7 +266,7 @@ mod tests {
         assert_eq!(obs.len(), 2);
         assert!(obs[0] >= -0.6 && obs[0] <= -0.4);
         let action = Array1::from_vec(vec![0.8]); // Go right
-        let (_, reward__) = env.step(&action).unwrap();
+        let (_, reward__) = env.step(&action).expect("Operation failed");
         assert_eq!(reward, -1.0); // Not at goal yet
     fn test_pendulum() {
         let mut env = Pendulum::new();
@@ -274,15 +274,15 @@ mod tests {
         assert_eq!(env.observation_space(), 3);
         assert_eq!(env.action_space(), 1);
         assert!(env.continuous_actions());
-        let bounds = env.action_bounds().unwrap();
+        let bounds = env.action_bounds().expect("Operation failed");
         assert_eq!(bounds.0[0], -2.0);
         assert_eq!(bounds.1[0], 2.0);
     fn test_vectorized_env() {
         let mut vec_env = VectorizedEnvironment::new(CartPole::new, 4);
-        let observations = vec_env.reset_all().unwrap();
+        let observations = vec_env.reset_all().expect("Operation failed");
         assert_eq!(observations.shape(), &[4, 4]);
         let actions = Array2::ones((4, 1));
-        let (next_obs, rewards, dones, infos) = vec_env.step_all(&actions.view()).unwrap();
+        let (next_obs, rewards, dones, infos) = vec_env.step_all(&actions.view()).expect("Operation failed");
         assert_eq!(next_obs.shape(), &[4, 4]);
         assert_eq!(rewards.len(), 4);
         assert_eq!(dones.len(), 4);

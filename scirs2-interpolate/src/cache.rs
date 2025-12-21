@@ -31,11 +31,11 @@
 //!     3, // degree
 //!     ExtrapolateMode::Extrapolate,
 //!     BSplineCache::default(),
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! // Use cached evaluation for fast performance
 //! for x in Array1::linspace(0.0, 10.0, 1000).iter() {
-//!     let y = cached_spline.evaluate_cached(*x).unwrap();
+//!     let y = cached_spline.evaluate_cached(*x).expect("Operation failed");
 //! }
 //! ```
 
@@ -356,7 +356,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         T: Float + Copy,
     {
         self.access_counter += 1;
-        let tolerance = F::from_f64(self.config.tolerance).unwrap();
+        let tolerance = F::from_f64(self.config.tolerance).expect("Operation failed");
         let key = (FloatKey::new(x, tolerance), i, k);
 
         if let Some(cache_entry) = self.basis_cache.get_mut(&key) {
@@ -405,7 +405,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         self.access_counter += 1;
 
         // Convert BasisCacheKey to internal cache key format
-        let tolerance = F::from_f64(self.config.tolerance).unwrap();
+        let tolerance = F::from_f64(self.config.tolerance).expect("Operation failed");
         let x = F::from_f64(f64::from_bits(key.x_quantized)).unwrap_or_else(F::zero);
         let internal_key = (FloatKey::new(x, tolerance), key.index, key.degree);
 
@@ -444,7 +444,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
     /// Get cached knot span or compute and cache it
     fn get_or_compute_span(&mut self, x: F, computer: impl FnOnce() -> usize) -> usize {
         self.access_counter += 1;
-        let tolerance = F::from_f64(self.config.tolerance).unwrap();
+        let tolerance = F::from_f64(self.config.tolerance).expect("Operation failed");
         let key = FloatKey::new(x, tolerance);
 
         if let Some(cache_entry) = self.span_cache.get_mut(&key) {
@@ -672,7 +672,7 @@ where
     ///     2, // quadratic
     ///     ExtrapolateMode::Extrapolate,
     ///     cache,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         knots: &ArrayView1<T>,
@@ -715,12 +715,12 @@ where
     ///     &coeffs.view(),
     ///     2,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Fast repeated evaluations
     /// let x_values = Array1::linspace(0.0, 10.0, 100);
     /// for &x in x_values.iter() {
-    ///     let y = cached_spline.evaluate_cached(x).unwrap();
+    ///     let y = cached_spline.evaluate_cached(x).expect("Operation failed");
     ///     // Process result...
     /// }
     ///
@@ -956,11 +956,11 @@ where
     ///     &coeffs.view(),
     ///     1, // linear
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Evaluate at multiple points efficiently
     /// let x_vals = Array1::from_vec(vec![0.5, 1.0, 1.5, 2.0, 2.5]);
-    /// let results = cached_spline.evaluate_array_cached(&x_vals.view()).unwrap();
+    /// let results = cached_spline.evaluate_array_cached(&x_vals.view()).expect("Operation failed");
     ///
     /// assert_eq!(results.len(), x_vals.len());
     /// ```
@@ -1153,7 +1153,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore] // BUG: Cached evaluation produces incorrect results (1.875 vs 2.5) - basis function computation or caching logic has errors
     fn test_cached_bspline_evaluation() {
         // Create a simple B-spline
         let knots = array![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
@@ -1165,14 +1164,16 @@ mod tests {
             2, // quadratic
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test evaluation at a few points
         let test_points = array![0.5, 1.0, 1.5, 2.0, 2.5];
 
         for &x in test_points.iter() {
-            let cached_result = cached_spline.evaluate_cached(x).unwrap();
-            let standard_result = cached_spline.evaluate_standard(x).unwrap();
+            let cached_result = cached_spline.evaluate_cached(x).expect("Operation failed");
+            let standard_result = cached_spline
+                .evaluate_standard(x)
+                .expect("Operation failed");
 
             // Results should be very close
             assert_relative_eq!(cached_result, standard_result, epsilon = 1e-10);
@@ -1194,15 +1195,19 @@ mod tests {
                 ..Default::default()
             },
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // First evaluation should result in cache misses
-        let _ = cached_spline.evaluate_cached(1.5).unwrap();
+        let _ = cached_spline
+            .evaluate_cached(1.5)
+            .expect("Operation failed");
         let stats_after_first = cached_spline.cache_stats();
         assert!(stats_after_first.misses > 0);
 
         // Second evaluation at the same point should result in cache hits
-        let _ = cached_spline.evaluate_cached(1.5).unwrap();
+        let _ = cached_spline
+            .evaluate_cached(1.5)
+            .expect("Operation failed");
         let stats_after_second = cached_spline.cache_stats();
         assert!(stats_after_second.hits > 0);
     }
@@ -1217,7 +1222,8 @@ mod tests {
         let mut cache = DistanceMatrixCache::<f64>::new(config);
 
         // Create test points
-        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
 
         // First computation should be a cache miss
         let result1 = cache.get_or_compute_distance_matrix(&points, |pts| {
@@ -1247,7 +1253,8 @@ mod tests {
         assert_eq!(cache.stats().hits, 1);
 
         // Different points should be a cache miss
-        let different_points = Array2::from_shape_vec((2, 2), vec![2.0, 2.0, 3.0, 3.0]).unwrap();
+        let different_points =
+            Array2::from_shape_vec((2, 2), vec![2.0, 2.0, 3.0, 3.0]).expect("Operation failed");
         let _result3 = cache.get_or_compute_distance_matrix(&different_points, |pts| {
             let n = pts.nrows();
             Array2::zeros((n, n))

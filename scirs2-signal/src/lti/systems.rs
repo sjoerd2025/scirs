@@ -89,7 +89,7 @@ pub trait LtiSystem {
 ///     vec![1.0, 2.0],      // s + 2
 ///     vec![1.0, 3.0, 2.0], // s^2 + 3s + 2
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct TransferFunction {
@@ -122,7 +122,7 @@ impl TransferFunction {
     /// use scirs2_signal::lti::systems::TransferFunction;
     ///
     /// // Create a simple first-order continuous-time system: H(s) = 1 / (s + 1)
-    /// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+    /// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
     /// ```
     pub fn new(mut num: Vec<f64>, mut den: Vec<f64>, dt: Option<bool>) -> SignalResult<Self> {
         // Remove leading zeros from numerator and denominator
@@ -440,7 +440,7 @@ impl LtiSystem for TransferFunction {
 ///     vec![Complex64::new(-2.0, 0.0)], // pole at s = -2
 ///     2.0,                             // gain = 2
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct ZerosPoleGain {
@@ -483,7 +483,7 @@ impl ZerosPoleGain {
     ///     vec![Complex64::new(-1.0, 0.0)],  // One pole at s = -1
     ///     1.0,  // Gain = 1
     ///     None,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         zeros: Vec<Complex64>,
@@ -644,7 +644,7 @@ impl LtiSystem for ZerosPoleGain {
 ///     vec![1.0],  // C = [1]
 ///     vec![0.0],  // D = [0]
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct StateSpace {
@@ -700,7 +700,7 @@ impl StateSpace {
     ///     vec![1.0],   // C = [1]
     ///     vec![0.0],   // D = [0]
     ///     None,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         a: Vec<f64>,
@@ -916,7 +916,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Test creating a simple transfer function
-        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
         assert_eq!(tf.num.len(), 1);
         assert_eq!(tf.den.len(), 2);
         assert_eq!(tf.num[0], 1.0);
@@ -928,7 +928,7 @@ mod tests {
     #[test]
     fn test_transfer_function_normalization() {
         // Test that denominator is normalized
-        let tf = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).unwrap();
+        let tf = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).expect("Operation failed");
         assert_relative_eq!(tf.num[0], 1.0);
         assert_relative_eq!(tf.den[0], 1.0);
         assert_relative_eq!(tf.den[1], 1.0);
@@ -937,7 +937,7 @@ mod tests {
     #[test]
     fn test_transfer_function_evaluation() {
         // Test evaluating H(s) = 1/(s+1) at s = 0
-        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
         let result = tf.evaluate(Complex64::new(0.0, 0.0));
         assert_relative_eq!(result.re, 1.0);
         assert_relative_eq!(result.im, 0.0);
@@ -951,7 +951,7 @@ mod tests {
             1.0,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(zpk.zeros.len(), 1);
         assert_eq!(zpk.poles.len(), 1);
@@ -968,18 +968,20 @@ mod tests {
             1.0,
             None,
         )
-        .unwrap();
-        assert!(zpk_stable.is_stable().unwrap());
+        .expect("Operation failed");
+        assert!(zpk_stable.is_stable().expect("Operation failed"));
 
         // Unstable system (pole in RHP)
         let zpk_unstable =
-            ZerosPoleGain::new(Vec::new(), vec![Complex64::new(1.0, 0.0)], 1.0, None).unwrap();
-        assert!(!zpk_unstable.is_stable().unwrap());
+            ZerosPoleGain::new(Vec::new(), vec![Complex64::new(1.0, 0.0)], 1.0, None)
+                .expect("Operation failed");
+        assert!(!zpk_unstable.is_stable().expect("Operation failed"));
     }
 
     #[test]
     fn test_state_space_creation() {
-        let ss = StateSpace::new(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
+        let ss = StateSpace::new(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None)
+            .expect("Operation failed");
 
         assert_eq!(ss.n_states, 1);
         assert_eq!(ss.n_inputs, 1);
@@ -998,20 +1000,20 @@ mod tests {
             vec![0.0],                  // 1x1 D matrix
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        assert_eq!(ss.a(0, 0).unwrap(), -1.0);
-        assert_eq!(ss.a(0, 1).unwrap(), 0.0);
-        assert_eq!(ss.a(1, 0).unwrap(), 1.0);
-        assert_eq!(ss.a(1, 1).unwrap(), -2.0);
+        assert_eq!(ss.a(0, 0).expect("Operation failed"), -1.0);
+        assert_eq!(ss.a(0, 1).expect("Operation failed"), 0.0);
+        assert_eq!(ss.a(1, 0).expect("Operation failed"), 1.0);
+        assert_eq!(ss.a(1, 1).expect("Operation failed"), -2.0);
 
-        assert_eq!(ss.b(0, 0).unwrap(), 1.0);
-        assert_eq!(ss.b(1, 0).unwrap(), 0.0);
+        assert_eq!(ss.b(0, 0).expect("Operation failed"), 1.0);
+        assert_eq!(ss.b(1, 0).expect("Operation failed"), 0.0);
 
-        assert_eq!(ss.c(0, 0).unwrap(), 1.0);
-        assert_eq!(ss.c(0, 1).unwrap(), 0.0);
+        assert_eq!(ss.c(0, 0).expect("Operation failed"), 1.0);
+        assert_eq!(ss.c(0, 1).expect("Operation failed"), 0.0);
 
-        assert_eq!(ss.d(0, 0).unwrap(), 0.0);
+        assert_eq!(ss.d(0, 0).expect("Operation failed"), 0.0);
     }
 
     #[test]
@@ -1038,5 +1040,5 @@ mod tests {
 
 #[allow(dead_code)]
 fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(num, den, None).unwrap()
+    TransferFunction::new(num, den, None).expect("Operation failed")
 }

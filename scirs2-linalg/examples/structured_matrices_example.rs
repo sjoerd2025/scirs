@@ -16,16 +16,17 @@ fn main() {
     let first_row = array![1.0, 2.0, 3.0, 4.0];
     let first_col = array![1.0, 5.0, 6.0, 7.0];
 
-    let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();
+    let toeplitz =
+        ToeplitzMatrix::new(first_row.view(), first_col.view()).expect("Operation failed");
 
     // Print the matrix
-    let dense_toeplitz = toeplitz.to_dense().unwrap();
+    let dense_toeplitz = toeplitz.to_dense().expect("Operation failed");
     println!("Toeplitz matrix:");
     println!("{}", dense_toeplitz);
 
     // Matrix-vector multiplication
     let x = array![1.0, 2.0, 3.0, 4.0];
-    let y = toeplitz.matvec(&x.view()).unwrap();
+    let y = toeplitz.matvec(&x.view()).expect("Operation failed");
 
     println!("\nMatrix-vector product:");
     println!("x = {:?}", x);
@@ -33,25 +34,26 @@ fn main() {
 
     // Create a symmetric Toeplitz matrix
     let first_row_sym = array![1.0, 2.0, 3.0];
-    let toeplitz_sym = ToeplitzMatrix::new_symmetric(first_row_sym.view()).unwrap();
+    let toeplitz_sym =
+        ToeplitzMatrix::new_symmetric(first_row_sym.view()).expect("Operation failed");
 
     println!("\nSymmetric Toeplitz matrix:");
-    println!("{}", toeplitz_sym.to_dense().unwrap());
+    println!("{}", toeplitz_sym.to_dense().expect("Operation failed"));
 
     // ----- Circulant Matrix Example -----
     println!("\n=== Circulant Matrix ===");
 
     // Create a circulant matrix
     let first_row = array![1.0, 2.0, 3.0, 4.0];
-    let circulant = CirculantMatrix::new(first_row.view()).unwrap();
+    let circulant = CirculantMatrix::new(first_row.view()).expect("Operation failed");
 
     // Print the matrix
-    let dense_circulant = circulant.to_dense().unwrap();
+    let dense_circulant = circulant.to_dense().expect("Operation failed");
     println!("Circulant matrix:");
     println!("{}", dense_circulant);
 
     // Matrix-vector multiplication
-    let y = circulant.matvec(&x.view()).unwrap();
+    let y = circulant.matvec(&x.view()).expect("Operation failed");
 
     println!("\nMatrix-vector product:");
     println!("x = {:?}", x);
@@ -64,16 +66,16 @@ fn main() {
     let first_col = array![1.0, 2.0, 3.0];
     let last_row = array![3.0, 4.0, 5.0];
 
-    let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();
+    let hankel = HankelMatrix::new(first_col.view(), last_row.view()).expect("Operation failed");
 
     // Print the matrix
-    let dense_hankel = hankel.to_dense().unwrap();
+    let dense_hankel = hankel.to_dense().expect("Operation failed");
     println!("Hankel matrix:");
     println!("{}", dense_hankel);
 
     // Matrix-vector multiplication
     let x_hankel = array![1.0, 2.0, 3.0];
-    let y = hankel.matvec(&x_hankel.view()).unwrap();
+    let y = hankel.matvec(&x_hankel.view()).expect("Operation failed");
 
     println!("\nMatrix-vector product:");
     println!("x = {:?}", x_hankel);
@@ -81,10 +83,10 @@ fn main() {
 
     // Create a Hankel matrix from a sequence
     let sequence = array![1.0, 2.0, 3.0, 4.0, 5.0];
-    let hankel_seq = HankelMatrix::from_sequence(sequence.view(), 3, 3).unwrap();
+    let hankel_seq = HankelMatrix::from_sequence(sequence.view(), 3, 3).expect("Operation failed");
 
     println!("\nHankel matrix from sequence:");
-    println!("{}", hankel_seq.to_dense().unwrap());
+    println!("{}", hankel_seq.to_dense().expect("Operation failed"));
 
     // ----- Matrix-free operations -----
     println!("\n=== Matrix-free operations ===");
@@ -93,14 +95,14 @@ fn main() {
     let toeplitz_op = structured_to_operator(&toeplitz);
 
     // Apply the operator
-    let y_op = toeplitz_op.apply(&x.view()).unwrap();
+    let y_op = toeplitz_op.apply(&x.view()).expect("Operation failed");
 
     println!("Matrix-free operator result:");
     println!("x = {:?}", x);
     println!("Op(x) = {:?}", y_op);
 
     // Get direct result from Toeplitz matrix
-    let direct_y = toeplitz.matvec(&x.view()).unwrap();
+    let direct_y = toeplitz.matvec(&x.view()).expect("Operation failed");
 
     println!("\nCompare with direct matrix-vector product:");
     println!("Direct Tx = {:?}", direct_y);
@@ -117,7 +119,7 @@ fn main() {
     let b = array![1.0, 2.0, 3.0]; // Right-hand side
 
     // Solve using the specialized Levinson recursion algorithm
-    let x = solve_toeplitz(c.view(), r.view(), b.view()).unwrap();
+    let x = solve_toeplitz(c.view(), r.view(), b.view()).expect("Operation failed");
 
     println!("Toeplitz system:");
     println!("First column = {:?}", c);
@@ -126,8 +128,8 @@ fn main() {
     println!("Solution = {:?}", x);
 
     // Verify the solution
-    let toeplitz = ToeplitzMatrix::new(c.view(), r.view()).unwrap();
-    let tx = toeplitz.matvec(&x.view()).unwrap();
+    let toeplitz = ToeplitzMatrix::new(c.view(), r.view()).expect("Operation failed");
+    let tx = toeplitz.matvec(&x.view()).expect("Operation failed");
 
     println!("\nVerification (Tx should equal b):");
     println!("Tx = {:?}", tx);
@@ -141,7 +143,7 @@ fn main() {
     let b = array![14.0, 10.0, 12.0]; // Right-hand side
 
     // Solve using the specialized solver
-    let x = solve_circulant(c.view(), b.view()).unwrap();
+    let x = solve_circulant(c.view(), b.view()).expect("Operation failed");
 
     println!("Circulant system:");
     println!("First row = {:?}", c);
@@ -149,8 +151,8 @@ fn main() {
     println!("Solution = {:?}", x);
 
     // Verify the solution
-    let circulant = CirculantMatrix::new(c.view()).unwrap();
-    let cx = circulant.matvec(&x.view()).unwrap();
+    let circulant = CirculantMatrix::new(c.view()).expect("Operation failed");
+    let cx = circulant.matvec(&x.view()).expect("Operation failed");
 
     println!("\nVerification (Cx should equal b):");
     println!("Cx = {:?}", cx);

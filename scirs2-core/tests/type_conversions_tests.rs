@@ -7,10 +7,24 @@ mod type_conversion_tests {
     #[test]
     fn test_valid_numeric_conversions() {
         // Convert between numeric types
-        assert_eq!(42.0f64.to_numeric::<i32>().unwrap(), 42);
-        assert_eq!((-42.0f64).to_numeric::<i32>().unwrap(), -42);
-        assert_eq!(42i32.to_numeric::<f64>().unwrap(), 42.0);
-        assert_eq!(42u8.to_numeric::<u16>().unwrap(), 42u16);
+        assert_eq!(
+            42.0f64.to_numeric::<i32>().expect("Test: operation failed"),
+            42
+        );
+        assert_eq!(
+            (-42.0f64)
+                .to_numeric::<i32>()
+                .expect("Test: operation failed"),
+            -42
+        );
+        assert_eq!(
+            42i32.to_numeric::<f64>().expect("Test: operation failed"),
+            42.0
+        );
+        assert_eq!(
+            42u8.to_numeric::<u16>().expect("Test: operation failed"),
+            42u16
+        );
     }
 
     #[test]
@@ -81,12 +95,12 @@ mod type_conversion_tests {
         let z1 = Complex64::new(3.0, 4.0);
 
         // Convert to Complex32
-        let z2 = z1.convert_complex::<f32>().unwrap();
+        let z2 = z1.convert_complex::<f32>().expect("Test: operation failed");
         assert_relative_eq!(z2.re, 3.0f32, epsilon = 1e-6);
         assert_relative_eq!(z2.im, 4.0f32, epsilon = 1e-6);
 
         // Convert back to Complex64
-        let z3 = z2.convert_complex::<f64>().unwrap();
+        let z3 = z2.convert_complex::<f64>().expect("Test: operation failed");
         assert_relative_eq!(z3.re, 3.0f64, epsilon = 1e-6);
         assert_relative_eq!(z3.im, 4.0f64, epsilon = 1e-6);
     }
@@ -106,7 +120,8 @@ mod type_conversion_tests {
 
         // Test slice conversion
         let float_values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let int_values = convert::slice_to_numeric::<_, i32>(&float_values).unwrap();
+        let int_values =
+            convert::slice_to_numeric::<_, i32>(&float_values).expect("Test: operation failed");
 
         assert_eq!(int_values, vec![1, 2, 3, 4, 5]);
 
@@ -119,7 +134,8 @@ mod type_conversion_tests {
         // Test complex slice conversion
         let complex_values = vec![Complex64::new(1.0, 2.0), Complex64::new(3.0, 4.0)];
 
-        let converted = convert::complex_slice_to_complex::<_, f32>(&complex_values).unwrap();
+        let converted = convert::complex_slice_to_complex::<_, f32>(&complex_values)
+            .expect("Test: operation failed");
 
         assert_relative_eq!(converted[0].re, 1.0f32, epsilon = 1e-6);
         assert_relative_eq!(converted[0].im, 2.0f32, epsilon = 1e-6);
@@ -128,7 +144,8 @@ mod type_conversion_tests {
 
         // Test real to complex conversion
         let real_values = vec![1.0, 2.0, 3.0];
-        let complex = convert::real_to_complex::<_, f64>(&real_values).unwrap();
+        let complex =
+            convert::real_to_complex::<_, f64>(&real_values).expect("Test: operation failed");
 
         assert_relative_eq!(complex[0].re, 1.0, epsilon = 1e-10);
         assert_relative_eq!(complex[0].im, 0.0, epsilon = 1e-10);

@@ -196,16 +196,16 @@ impl<F: IntegrateFloat> BlockILUPreconditioner<F> {
             // Process the entries below the diagonal in column k
             for i in (k + 1)..n_total {
                 // Only process entries that are non-zero in L
-                if l[[i, k]].abs() > F::from_f64(1e-14).unwrap() {
+                if l[[i, k]].abs() > F::from_f64(1e-14).expect("Operation failed") {
                     l[[i, k]] /= u[[k, k]];
 
                     // Update the remaining entries in row i
                     for j in (k + 1)..n_total {
                         // Only update entries that are non-zero in U
-                        if u[[k, j]].abs() > F::from_f64(1e-14).unwrap() {
+                        if u[[k, j]].abs() > F::from_f64(1e-14).expect("Operation failed") {
                             // Only update if the entry is non-zero in L or U
-                            if l[[i, j]].abs() > F::from_f64(1e-14).unwrap()
-                                || u[[i, j]].abs() > F::from_f64(1e-14).unwrap()
+                            if l[[i, j]].abs() > F::from_f64(1e-14).expect("Operation failed")
+                                || u[[i, j]].abs() > F::from_f64(1e-14).expect("Operation failed")
                             {
                                 l[[i, j]] = l[[i, j]] - l[[i, k]] * u[[k, j]];
                             }
@@ -219,8 +219,8 @@ impl<F: IntegrateFloat> BlockILUPreconditioner<F> {
         let mut d_scaling = Array1::<F>::ones(n_total);
         for i in 0..n_total {
             // Ensure diagonal elements are not too small
-            if u[[i, i]].abs() < F::from_f64(1e-14).unwrap() {
-                u[[i, i]] = F::from_f64(1e-14).unwrap() * u[[i, i]].signum();
+            if u[[i, i]].abs() < F::from_f64(1e-14).expect("Operation failed") {
+                u[[i, i]] = F::from_f64(1e-14).expect("Operation failed") * u[[i, i]].signum();
             }
             // Store inverse of diagonal for faster application
             d_scaling[i] = F::one() / u[[i, i]];
@@ -337,8 +337,8 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
         // For 1x1 blocks, just take the reciprocal
         if n == 1 {
             let val = block[[0, 0]];
-            if val.abs() < F::from_f64(1e-14).unwrap() {
-                result[[0, 0]] = F::from_f64(1e-14).unwrap() * val.signum();
+            if val.abs() < F::from_f64(1e-14).expect("Operation failed") {
+                result[[0, 0]] = F::from_f64(1e-14).expect("Operation failed") * val.signum();
             } else {
                 result[[0, 0]] = F::one() / val;
             }
@@ -353,9 +353,9 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
             let d = block[[1, 1]];
 
             let det = a * d - b * c;
-            if det.abs() < F::from_f64(1e-14).unwrap() {
+            if det.abs() < F::from_f64(1e-14).expect("Operation failed") {
                 // If determinant is too small, use regularization
-                let reg = F::from_f64(1e-14).unwrap() * det.signum();
+                let reg = F::from_f64(1e-14).expect("Operation failed") * det.signum();
                 result[[0, 0]] = d / (det + reg);
                 result[[0, 1]] = -b / (det + reg);
                 result[[1, 0]] = -c / (det + reg);
@@ -385,9 +385,9 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
             // Compute the determinant
             let det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
 
-            if det.abs() < F::from_f64(1e-14).unwrap() {
+            if det.abs() < F::from_f64(1e-14).expect("Operation failed") {
                 // If determinant is too small, use regularization
-                let reg = F::from_f64(1e-14).unwrap() * det.signum();
+                let reg = F::from_f64(1e-14).expect("Operation failed") * det.signum();
 
                 // Compute the adjugate matrix elements
                 let a11 = (e * i - f * h) / (det + reg);
@@ -458,8 +458,8 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
             }
 
             // If the pivot is too small, use a small value
-            if max_val < F::from_f64(1e-14).unwrap() {
-                lu[[p, k]] = F::from_f64(1e-14).unwrap() * lu[[p, k]].signum();
+            if max_val < F::from_f64(1e-14).expect("Operation failed") {
+                lu[[p, k]] = F::from_f64(1e-14).expect("Operation failed") * lu[[p, k]].signum();
             }
 
             // Swap rows if necessary

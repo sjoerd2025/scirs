@@ -41,9 +41,9 @@ fn verify_norm_gradient_finite_diff<F: ag::Float>(
         // Compute analytical gradient
         let norm = norm_fn(a);
         let grad = T::grad(&[norm], &[&a])[0];
-        let analytical_grad = grad.eval(ctx).unwrap()
+        let analytical_grad = grad.eval(ctx).expect("Test: operation failed")
             .into_dimensionality::<ag::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
         
         // Compute numerical gradient using finite differences
         let mut numerical_grad = Array2::<F>::zeros(matrix.raw_dim());
@@ -59,8 +59,8 @@ fn verify_norm_gradient_finite_diff<F: ag::Float>(
             let a_plus = T::convert_to_tensor(matrix_plus, ctx);
             let a_minus = T::convert_to_tensor(matrix_minus, ctx);
             
-            let norm_plus = norm_fn(a_plus).eval(ctx).unwrap()[[0]];
-            let norm_minus = norm_fn(a_minus).eval(ctx).unwrap()[[0]];
+            let norm_plus = norm_fn(a_plus).eval(ctx).expect("Test: operation failed")[[0]];
+            let norm_minus = norm_fn(a_minus).eval(ctx).expect("Test: operation failed")[[0]];
             
             numerical_grad[[i, j]] = (norm_plus - norm_minus) / (h + h);
         }
@@ -126,9 +126,9 @@ mod template_tests {
             let nucl_norm = T::nuclear_norm(a);
             
             // Gradients should not contain NaN or infinity
-            let frob_grad = T::grad(&[frob_norm], &[&a])[0].eval(ctx).unwrap();
-            let spec_grad = T::grad(&[spec_norm], &[&a])[0].eval(ctx).unwrap();
-            let nucl_grad = T::grad(&[nucl_norm], &[&a])[0].eval(ctx).unwrap();
+            let frob_grad = T::grad(&[frob_norm], &[&a])[0].eval(ctx).expect("Test: operation failed");
+            let spec_grad = T::grad(&[spec_norm], &[&a])[0].eval(ctx).expect("Test: operation failed");
+            let nucl_grad = T::grad(&[nucl_norm], &[&a])[0].eval(ctx).expect("Test: operation failed");
             
             assert!(!frob_grad.iter().any(|&x| x.is_nan() || x.is_infinite()));
             assert!(!spec_grad.iter().any(|&x| x.is_nan() || x.is_infinite()));

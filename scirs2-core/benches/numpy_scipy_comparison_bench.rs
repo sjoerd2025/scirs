@@ -154,7 +154,7 @@ fn bench_reduction_ops(c: &mut Criterion) {
         // Mean calculation
         group.bench_with_input(BenchmarkId::new("mean", size), &arr, |b, a| {
             b.iter(|| {
-                let result = a.mean().unwrap();
+                let result = a.mean().expect("Operation failed");
                 black_box(result)
             })
         });
@@ -162,8 +162,11 @@ fn bench_reduction_ops(c: &mut Criterion) {
         // Standard deviation
         group.bench_with_input(BenchmarkId::new("std", size), &arr, |b, a| {
             b.iter(|| {
-                let mean = a.mean().unwrap();
-                let variance = a.mapv(|x| (x - mean).powi(2)).mean().unwrap();
+                let mean = a.mean().expect("Operation failed");
+                let variance = a
+                    .mapv(|x| (x - mean).powi(2))
+                    .mean()
+                    .expect("Operation failed");
                 let std = variance.sqrt();
                 black_box(std)
             })
@@ -267,7 +270,10 @@ fn bench_array_manipulation(c: &mut Criterion) {
             if rows * cols == size {
                 group.bench_with_input(BenchmarkId::new("reshape", size), &arr, |b, a| {
                     b.iter(|| {
-                        let result = a.clone().into_shape_with_order((rows, cols)).unwrap();
+                        let result = a
+                            .clone()
+                            .into_shape_with_order((rows, cols))
+                            .expect("Operation failed");
                         black_box(result)
                     })
                 });
@@ -285,7 +291,7 @@ fn bench_array_manipulation(c: &mut Criterion) {
             |b, (a1, a2)| {
                 b.iter(|| {
                     let views = vec![a1.view(), a2.view()];
-                    let result = ndarray::concatenate(Axis(0), &views).unwrap();
+                    let result = ndarray::concatenate(Axis(0), &views).expect("Operation failed");
                     black_box(result)
                 })
             },
@@ -304,7 +310,7 @@ fn bench_array_manipulation(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("sort", size), &arr, |b, a| {
             b.iter(|| {
                 let mut vec = a.to_vec();
-                vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                vec.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let result = Array1::from(vec);
                 black_box(result)
             })
@@ -334,8 +340,11 @@ fn bench_statistical_ops(c: &mut Criterion) {
         // Variance
         group.bench_with_input(BenchmarkId::new("variance", size), &arr1, |b, a| {
             b.iter(|| {
-                let mean = a.mean().unwrap();
-                let variance = a.mapv(|x| (x - mean).powi(2)).mean().unwrap();
+                let mean = a.mean().expect("Operation failed");
+                let variance = a
+                    .mapv(|x| (x - mean).powi(2))
+                    .mean()
+                    .expect("Operation failed");
                 black_box(variance)
             })
         });
@@ -346,8 +355,8 @@ fn bench_statistical_ops(c: &mut Criterion) {
             &(&arr1, &arr2),
             |b, (a1, a2)| {
                 b.iter(|| {
-                    let mean1 = a1.mean().unwrap();
-                    let mean2 = a2.mean().unwrap();
+                    let mean1 = a1.mean().expect("Operation failed");
+                    let mean2 = a2.mean().expect("Operation failed");
                     let cov = a1
                         .iter()
                         .zip(a2.iter())
@@ -363,7 +372,7 @@ fn bench_statistical_ops(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("median", size), &arr1, |b, a| {
             b.iter(|| {
                 let mut sorted = a.to_vec();
-                sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let median = if size % 2 == 0 {
                     (sorted[size / 2 - 1] + sorted[size / 2]) / 2.0
                 } else {

@@ -240,7 +240,7 @@ pub fn read_parquet_filtered<P: AsRef<Path>>(path: P, config: FilterConfig) -> R
 
     // For simplicity, return the first chunk
     // A full implementation would merge all chunks
-    Ok(chunks.into_iter().next().unwrap())
+    Ok(chunks.into_iter().next().expect("Operation failed"))
 }
 
 /// Read Parquet file with predicate filtering in chunks
@@ -394,17 +394,17 @@ mod tests {
             .with_columns(vec!["id".to_string(), "name".to_string()]);
 
         assert_eq!(config.batch_size, 5000);
-        assert_eq!(config.columns.as_ref().unwrap().len(), 2);
+        assert_eq!(config.columns.as_ref().expect("Operation failed").len(), 2);
     }
 
     #[test]
     fn test_read_filtered_basic() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("filtered.parquet");
 
         // Write test data
         let data = Array1::from_vec(vec![10.0, 20.0, 30.0, 40.0, 50.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Operation failed");
 
         // Read with a predicate that matches some data
         let predicate = ParquetPredicate::gt("value", PredicateValue::Float64(25.0));

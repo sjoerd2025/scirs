@@ -426,7 +426,7 @@ pub mod migration_examples {
         fn default() -> Self {
             Self {
                 kernel: RBFKernel::Gaussian,
-                epsilon: T::from_f64(1.0).unwrap(),
+                epsilon: T::from_f64(1.0).expect("Operation failed"),
             }
         }
     }

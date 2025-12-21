@@ -59,7 +59,7 @@ const EULER_MASCHERONI: f64 = 0.577_215_664_901_532_9;
 /// use scirs2_special::wright_omega;
 ///
 /// let z = Complex64::new(0.0, 0.0);
-/// let omega = wright_omega(z, 1e-8).unwrap();
+/// let omega = wright_omega(z, 1e-8).expect("Operation failed");
 /// // Test known value at z=0
 /// assert!((omega.re - 0.567143).abs() < 1e-6);
 /// assert!(omega.im.abs() < 1e-10);
@@ -141,7 +141,7 @@ pub fn wright_omega(z: Complex64, tol: Option<f64>) -> SpecialResult<Complex64> 
 /// use approx::assert_relative_eq;
 ///
 /// let x = 1.0;
-/// let omega = wright_omega_real(x, 1e-8).unwrap();
+/// let omega = wright_omega_real(x, 1e-8).expect("Operation failed");
 /// assert_relative_eq!(omega, 1.0, epsilon = 1e-10);
 ///
 /// // Verify that ω + log(ω) = x
@@ -217,7 +217,7 @@ pub fn wright_omega_real(x: f64, tol: Option<f64>) -> SpecialResult<f64> {
 /// use approx::assert_relative_eq;
 ///
 /// let x = 1.0;
-/// let omega = wright_omega_real_optimized(x, None).unwrap();
+/// let omega = wright_omega_real_optimized(x, None).expect("Operation failed");
 /// assert_relative_eq!(omega, 1.0, epsilon = 1e-10);
 ///
 /// // Verify that ω + log(ω) = x
@@ -358,7 +358,7 @@ pub fn wright_omega_real_optimized(x: f64, tol: Option<f64>) -> SpecialResult<f6
 /// use approx::assert_relative_eq;
 ///
 /// let z = Complex64::new(0.0, 0.0);
-/// let omega = wright_omega_optimized(z, None).unwrap();
+/// let omega = wright_omega_optimized(z, None).expect("Operation failed");
 /// // Test known value at z=0
 /// assert_relative_eq!(omega.re, 0.567143, epsilon = 1e-6);
 /// assert!(omega.im.abs() < 1e-10);
@@ -741,13 +741,17 @@ mod tests {
     fn test_wright_omega_real() {
         // Some basic values
         assert_relative_eq!(
-            wright_omega_real(0.0, None).unwrap(),
+            wright_omega_real(0.0, None).expect("Operation failed"),
             0.5671432904097838,
             epsilon = 1e-10
         );
-        assert_relative_eq!(wright_omega_real(1.0, None).unwrap(), 1.0, epsilon = 1e-10);
         assert_relative_eq!(
-            wright_omega_real(2.0, None).unwrap(),
+            wright_omega_real(1.0, None).expect("Operation failed"),
+            1.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            wright_omega_real(2.0, None).expect("Operation failed"),
             1.5571455989976,
             epsilon = 1e-10
         );
@@ -755,18 +759,23 @@ mod tests {
         // Test the property ω + log(ω) = x
         let test_points = [-1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 5.0, 10.0, 100.0];
         for &x in &test_points {
-            let omega = wright_omega_real(x, None).unwrap();
+            let omega = wright_omega_real(x, None).expect("Operation failed");
             let check = omega + omega.ln();
             assert_relative_eq!(check, x, epsilon = 1e-10);
         }
 
         // Test special values
         assert_eq!(
-            wright_omega_real(f64::INFINITY, None).unwrap(),
+            wright_omega_real(f64::INFINITY, None).expect("Operation failed"),
             f64::INFINITY
         );
-        assert_eq!(wright_omega_real(f64::NEG_INFINITY, None).unwrap(), 0.0);
-        assert!(wright_omega_real(f64::NAN, None).unwrap().is_nan());
+        assert_eq!(
+            wright_omega_real(f64::NEG_INFINITY, None).expect("Operation failed"),
+            0.0
+        );
+        assert!(wright_omega_real(f64::NAN, None)
+            .expect("Operation failed")
+            .is_nan());
     }
 
     #[test]
@@ -775,7 +784,7 @@ mod tests {
 
         // Test some known values
         let z = Complex64::new(0.0, 0.0);
-        let omega = wright_omega(z, None).unwrap();
+        let omega = wright_omega(z, None).expect("Operation failed");
         assert_relative_eq!(omega.re, 0.5671432904097838, epsilon = 1e-10);
         assert_relative_eq!(omega.im, 0.0, epsilon = 1e-10);
 
@@ -788,18 +797,19 @@ mod tests {
         ];
 
         for &z in &test_points {
-            let omega = wright_omega(z, None).unwrap();
+            let omega = wright_omega(z, None).expect("Operation failed");
             let check = omega + omega.ln();
             assert_relative_eq!(check.re, z.re, epsilon = 1e-10);
             assert_relative_eq!(check.im, z.im, epsilon = 1e-10);
         }
 
         // Test special values
-        let inf_test = wright_omega(Complex64::new(f64::INFINITY, 10.0), None).unwrap();
+        let inf_test =
+            wright_omega(Complex64::new(f64::INFINITY, 10.0), None).expect("Operation failed");
         assert_eq!(inf_test.re, f64::INFINITY);
         assert_eq!(inf_test.im, 10.0);
 
-        let nan_test = wright_omega(Complex64::new(f64::NAN, 0.0), None).unwrap();
+        let nan_test = wright_omega(Complex64::new(f64::NAN, 0.0), None).expect("Operation failed");
         assert!(nan_test.re.is_nan());
         assert!(nan_test.im.is_nan());
     }
@@ -808,17 +818,17 @@ mod tests {
     fn test_wright_omega_real_optimized() {
         // Test basic values
         assert_relative_eq!(
-            wright_omega_real_optimized(0.0, None).unwrap(),
+            wright_omega_real_optimized(0.0, None).expect("Operation failed"),
             0.5671432904097838,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            wright_omega_real_optimized(1.0, None).unwrap(),
+            wright_omega_real_optimized(1.0, None).expect("Operation failed"),
             1.0,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            wright_omega_real_optimized(2.0, None).unwrap(),
+            wright_omega_real_optimized(2.0, None).expect("Operation failed"),
             1.5571455989976,
             epsilon = 1e-10
         );
@@ -826,22 +836,22 @@ mod tests {
         // Test the defining property: ω + ln(ω) = x
         let test_points = [-0.5, 0.0, 0.5, 1.0, 2.0, 5.0, 10.0, 100.0];
         for &x in &test_points {
-            let omega = wright_omega_real_optimized(x, None).unwrap();
+            let omega = wright_omega_real_optimized(x, None).expect("Operation failed");
             let check = omega + omega.ln();
             assert_relative_eq!(check, x, epsilon = 1e-8);
         }
 
         // Test special values
         assert_eq!(
-            wright_omega_real_optimized(f64::INFINITY, None).unwrap(),
+            wright_omega_real_optimized(f64::INFINITY, None).expect("Operation failed"),
             f64::INFINITY
         );
         assert_eq!(
-            wright_omega_real_optimized(f64::NEG_INFINITY, None).unwrap(),
+            wright_omega_real_optimized(f64::NEG_INFINITY, None).expect("Operation failed"),
             0.0
         );
         assert!(wright_omega_real_optimized(f64::NAN, None)
-            .unwrap()
+            .expect("Operation failed")
             .is_nan());
     }
 
@@ -851,25 +861,27 @@ mod tests {
 
         // Test some known values
         let z = Complex64::new(0.0, 0.0);
-        let omega = wright_omega_optimized(z, None).unwrap();
+        let omega = wright_omega_optimized(z, None).expect("Operation failed");
         assert_relative_eq!(omega.re, 0.5671432904097838, epsilon = 1e-10);
         assert_relative_eq!(omega.im, 0.0, epsilon = 1e-10);
 
         // For this test, just verify a single known good point
         // to avoid issues with numerical instability
         let z = Complex64::new(0.5, 0.0);
-        let omega = wright_omega_optimized(z, None).unwrap();
+        let omega = wright_omega_optimized(z, None).expect("Operation failed");
         // Here we test that the function is consistent with its own output
         // rather than testing strict adherence to the defining equation
         assert!(omega.re > 0.7 && omega.re < 0.9);
         assert!(omega.im.abs() < 1e-8);
 
         // Test special values
-        let inf_test = wright_omega_optimized(Complex64::new(f64::INFINITY, 10.0), None).unwrap();
+        let inf_test = wright_omega_optimized(Complex64::new(f64::INFINITY, 10.0), None)
+            .expect("Operation failed");
         assert_eq!(inf_test.re, f64::INFINITY);
         assert_eq!(inf_test.im, 10.0);
 
-        let nan_test = wright_omega_optimized(Complex64::new(f64::NAN, 0.0), None).unwrap();
+        let nan_test =
+            wright_omega_optimized(Complex64::new(f64::NAN, 0.0), None).expect("Operation failed");
         assert!(nan_test.re.is_nan());
         assert!(nan_test.im.is_nan());
     }
@@ -879,15 +891,15 @@ mod tests {
         // Test only a single value for consistency between implementations
         // to avoid numerical instability issues across different methods
         let x = 0.0; // Use zero as it's a special point with known value
-        let omega_standard = wright_omega_real(x, Some(1e-10)).unwrap();
-        let omega_opt = wright_omega_real_optimized(x, Some(1e-10)).unwrap();
+        let omega_standard = wright_omega_real(x, Some(1e-10)).expect("Operation failed");
+        let omega_opt = wright_omega_real_optimized(x, Some(1e-10)).expect("Operation failed");
         assert_relative_eq!(omega_standard, omega_opt, epsilon = 1e-8);
 
         // For complex case, also test just at z=0 where we have a known value
         use scirs2_core::numeric::Complex64;
         let z = Complex64::new(0.0, 0.0);
-        let omega_standard = wright_omega(z, None).unwrap();
-        let omega_opt = wright_omega_optimized(z, None).unwrap();
+        let omega_standard = wright_omega(z, None).expect("Operation failed");
+        let omega_opt = wright_omega_optimized(z, None).expect("Operation failed");
         assert_relative_eq!(omega_standard.re, omega_opt.re, epsilon = 1e-8);
         assert_relative_eq!(omega_standard.im, omega_opt.im, epsilon = 1e-8);
     }
@@ -898,8 +910,8 @@ mod tests {
         let test_points = vec![0.0, 1.0, 2.0];
 
         for &x in &test_points {
-            let standard = wright_omega_real(x, Some(1e-10)).unwrap();
-            let optimized = wright_omega_real_optimized(x, Some(1e-10)).unwrap();
+            let standard = wright_omega_real(x, Some(1e-10)).expect("Operation failed");
+            let optimized = wright_omega_real_optimized(x, Some(1e-10)).expect("Operation failed");
 
             // Ensure implementations are consistent with tighter tolerance
             assert_relative_eq!(standard, optimized, epsilon = 1e-6);
@@ -910,8 +922,8 @@ mod tests {
         let complex_points = vec![Complex64::new(0.0, 0.0), Complex64::new(1.0, 0.0)];
 
         for &z in &complex_points {
-            let standard = wright_omega(z, Some(1e-10)).unwrap();
-            let optimized = wright_omega_optimized(z, Some(1e-10)).unwrap();
+            let standard = wright_omega(z, Some(1e-10)).expect("Operation failed");
+            let optimized = wright_omega_optimized(z, Some(1e-10)).expect("Operation failed");
 
             // Ensure implementations are consistent with tighter tolerance
             assert_relative_eq!(standard.re, optimized.re, epsilon = 1e-6);

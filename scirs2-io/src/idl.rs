@@ -716,7 +716,7 @@ impl IdlWriter {
         // Write timestamp data (simplified)
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Operation failed")
             .as_secs();
 
         self.write_u64(timestamp)?;

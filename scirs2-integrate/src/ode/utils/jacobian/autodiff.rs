@@ -72,7 +72,7 @@ where
         // Note: This is a simplified approach. A full implementation would
         // propagate dual numbers through the function evaluation.
         // For now, we'll use finite differences as a fallback.
-        let eps = F::from(1e-8).unwrap();
+        let eps = F::from(1e-8).expect("Failed to convert constant to float");
         let mut y_pert = y.to_owned();
         y_pert[j] += eps;
         let f_pert = f(t, y_pert.view());

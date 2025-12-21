@@ -41,13 +41,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         }
 
         // Initialize feature extractor parameters
-        let scale = F::from(2.0).unwrap() / F::from(input_dim + feature_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim + feature_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         let mut feature_extractor = Array2::zeros((1, total_params));
         for i in 0..total_params {
             let val = ((i * 43) % 1000) as f64 / 1000.0 - 0.5;
-            feature_extractor[[0, i]] = F::from(val).unwrap() * std_dev;
+            feature_extractor[[0, i]] = F::from(val).expect("Failed to convert to float") * std_dev;
         }
 
         Self {
@@ -123,7 +124,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
                     for features in &class_features {
                         sum = sum + features[j];
                     }
-                    prototypes[[class_idx, j]] = sum / F::from(class_features.len()).unwrap();
+                    prototypes[[class_idx, j]] =
+                        sum / F::from(class_features.len()).expect("Operation failed");
                 }
             }
         }
@@ -202,7 +204,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
                     }
                 }
             }
-            episode_loss = episode_loss / F::from(predictions.len()).unwrap();
+            episode_loss = episode_loss / F::from(predictions.len()).expect("Operation failed");
 
             // Compute gradients (simplified numerical differentiation)
             let gradients = self.compute_gradients(episode)?;
@@ -211,8 +213,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         }
 
         // Update parameters
-        let learning_rate = F::from(0.001).unwrap();
-        let num_episodes = F::from(episodes.len()).unwrap();
+        let learning_rate = F::from(0.001).expect("Failed to convert constant to float");
+        let num_episodes = F::from(episodes.len()).expect("Operation failed");
         total_gradients = total_gradients / num_episodes;
 
         self.feature_extractor = self.feature_extractor.clone() - total_gradients * learning_rate;
@@ -275,7 +277,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
     fn compute_gradients(&self, episode: &FewShotEpisode<F>) -> Result<Array2<F>> {
         // Simplified gradient computation
-        let epsilon = F::from(1e-5).unwrap();
+        let epsilon = F::from(1e-5).expect("Failed to convert constant to float");
         let mut gradients = Array2::zeros(self.feature_extractor.dim());
 
         let base_predictions =
@@ -415,13 +417,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         // Initialize parameters using Xavier initialization
         let total_params =
             input_dim * hidden_dim + hidden_dim + hidden_dim * output_dim + output_dim;
-        let scale = F::from(2.0).unwrap() / F::from(input_dim + output_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim + output_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         let mut parameters = Array2::zeros((1, total_params));
         for i in 0..total_params {
             let val = ((i * 59) % 1000) as f64 / 1000.0 - 0.5;
-            parameters[[0, i]] = F::from(val).unwrap() * std_dev;
+            parameters[[0, i]] = F::from(val).expect("Failed to convert to float") * std_dev;
         }
 
         Self {
@@ -461,7 +464,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         }
 
         // Meta-update: average parameter updates across tasks
-        let num_tasks = F::from(tasks.len()).unwrap();
+        let num_tasks = F::from(tasks.len()).expect("Operation failed");
         parameter_updates = parameter_updates / num_tasks;
         total_loss = total_loss / num_tasks;
 
@@ -505,7 +508,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             }
         }
 
-        Ok(loss / F::from(batch_size).unwrap())
+        Ok(loss / F::from(batch_size).expect("Failed to convert to float"))
     }
 
     /// Make predictions using current parameters
@@ -591,7 +594,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
     /// Compute task-specific gradients
     fn compute_task_gradients(&self, params: &Array2<F>, task: &TaskData<F>) -> Result<Array2<F>> {
-        let epsilon = F::from(1e-5).unwrap();
+        let epsilon = F::from(1e-5).expect("Failed to convert constant to float");
         let mut gradients = Array2::zeros(params.dim());
 
         let base_loss = self.forward(params, &task.support_x, &task.support_y)?;
@@ -636,10 +639,11 @@ mod tests {
 
     #[test]
     fn test_few_shot_episode() {
-        let support_x =
-            Array2::from_shape_vec((4, 3), (0..12).map(|i| i as f64).collect()).unwrap();
+        let support_x = Array2::from_shape_vec((4, 3), (0..12).map(|i| i as f64).collect())
+            .expect("Operation failed");
         let support_y = Array1::from_vec(vec![0, 0, 1, 1]);
-        let query_x = Array2::from_shape_vec((2, 3), (12..18).map(|i| i as f64).collect()).unwrap();
+        let query_x = Array2::from_shape_vec((2, 3), (12..18).map(|i| i as f64).collect())
+            .expect("Operation failed");
         let query_y = Array1::from_vec(vec![0, 1]);
 
         let episode = FewShotEpisode::new(support_x, support_y, query_x, query_y);
@@ -654,10 +658,10 @@ mod tests {
     #[test]
     fn test_prototypical_networks_features() {
         let model = PrototypicalNetworks::<f64>::new(5, 4, vec![8]);
-        let input =
-            Array2::from_shape_vec((3, 5), (0..15).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let input = Array2::from_shape_vec((3, 5), (0..15).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
-        let features = model.extract_features(&input).unwrap();
+        let features = model.extract_features(&input).expect("Operation failed");
         assert_eq!(features.dim(), (3, 4));
 
         // Check that features are finite
@@ -670,15 +674,15 @@ mod tests {
     fn test_prototypical_networks_classification() {
         let model = PrototypicalNetworks::<f64>::new(4, 6, vec![8]);
 
-        let support_x =
-            Array2::from_shape_vec((6, 4), (0..24).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let support_x = Array2::from_shape_vec((6, 4), (0..24).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
         let support_y = Array1::from_vec(vec![0, 0, 0, 1, 1, 1]);
-        let query_x =
-            Array2::from_shape_vec((2, 4), (24..32).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let query_x = Array2::from_shape_vec((2, 4), (24..32).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
         let predictions = model
             .few_shot_episode(&support_x, &support_y, &query_x)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(predictions.len(), 2);
 
         // Predictions should be within valid class range
@@ -699,10 +703,12 @@ mod tests {
     #[test]
     fn test_reptile_prediction() {
         let reptile = REPTILE::<f64>::new(4, 8, 2, 0.01, 0.1, 3);
-        let input =
-            Array2::from_shape_vec((3, 4), (0..12).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let input = Array2::from_shape_vec((3, 4), (0..12).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
-        let output = reptile.predict(&reptile.parameters, &input).unwrap();
+        let output = reptile
+            .predict(&reptile.parameters, &input)
+            .expect("Operation failed");
         assert_eq!(output.dim(), (3, 2));
 
         // Check that output is finite
@@ -714,12 +720,14 @@ mod tests {
     #[test]
     fn test_reptile_fast_adapt() {
         let reptile = REPTILE::<f64>::new(3, 6, 2, 0.01, 0.1, 2);
-        let support_x =
-            Array2::from_shape_vec((4, 3), (0..12).map(|i| i as f64 * 0.2).collect()).unwrap();
-        let support_y =
-            Array2::from_shape_vec((4, 2), (0..8).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let support_x = Array2::from_shape_vec((4, 3), (0..12).map(|i| i as f64 * 0.2).collect())
+            .expect("Operation failed");
+        let support_y = Array2::from_shape_vec((4, 2), (0..8).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
-        let adapted_params = reptile.fast_adapt(&support_x, &support_y).unwrap();
+        let adapted_params = reptile
+            .fast_adapt(&support_x, &support_y)
+            .expect("Operation failed");
         assert_eq!(adapted_params.dim(), reptile.parameters.dim());
 
         // Adapted parameters should be different from original
@@ -736,7 +744,7 @@ mod tests {
         let a = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let b = Array1::from_vec(vec![4.0, 5.0, 6.0]);
 
-        let distance = model.euclidean_distance(&a, &b).unwrap();
+        let distance = model.euclidean_distance(&a, &b).expect("Operation failed");
         let expected = ((3.0_f64).powi(2) + (3.0_f64).powi(2) + (3.0_f64).powi(2)).sqrt();
         assert_abs_diff_eq!(distance, expected, epsilon = 1e-10);
     }
@@ -757,10 +765,12 @@ mod tests {
                 6.0, 6.0, 6.0, // Class 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 
-        let prototypes = model.compute_prototypes(&features, &labels).unwrap();
+        let prototypes = model
+            .compute_prototypes(&features, &labels)
+            .expect("Operation failed");
         assert_eq!(prototypes.dim(), (3, 3)); // 3 classes, 3 features
 
         // Check class 0 prototype (mean of [1,1,1] and [2,2,2])

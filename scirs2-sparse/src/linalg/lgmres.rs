@@ -28,8 +28,8 @@ impl<F: Float> Default for LGMRESOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 500,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-8).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-8).expect("Failed to convert constant to float"),
             inner_m: 30,
             outer_k: 3,
             x0: None,
@@ -284,7 +284,7 @@ where
             k = j + 1; // Update iterations completed
 
             // Check for early termination
-            if beta[j + 1].abs() < F::from(1e-10).unwrap() {
+            if beta[j + 1].abs() < F::from(1e-10).expect("Failed to convert constant to float") {
                 break;
             }
         } else {
@@ -344,7 +344,7 @@ mod tests {
         let b = vec![1.0, 2.0, 3.0];
         let options = LGMRESOptions::default();
 
-        let result = lgmres(&a, &b, options).unwrap();
+        let result = lgmres(&a, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         assert!((result.x[0] - 1.0).abs() < 1e-10);
@@ -358,13 +358,14 @@ mod tests {
         let data = vec![4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0];
         let indptr = vec![0, 2, 5, 7];
         let indices = vec![0, 1, 0, 1, 2, 1, 2];
-        let matrix = CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).unwrap();
+        let matrix =
+            CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).expect("Operation failed");
         let linear_op = matrix.as_linear_operator();
 
         let b = vec![1.0, 2.0, 3.0];
         let options = LGMRESOptions::default();
 
-        let result = lgmres(linear_op.as_ref(), &b, options).unwrap();
+        let result = lgmres(linear_op.as_ref(), &b, options).expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.residual_norm < 1e-8);

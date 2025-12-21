@@ -179,7 +179,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Attention<F> {
                 ))?;
                 let expanded = expanded_decoder
                     .broadcast((batch_size, seq_len, expanded_decoder.shape()[2]))
-                    .unwrap();
+                    .expect("Operation failed");
                 // Add encoder and decoder projections
                 let combined = &expanded + &encoder_projected;
                 // Apply tanh and project to get scores
@@ -241,7 +241,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Attention<F> {
             .into_shape_with_order((batch_size, seq_len, 1))?;
         let broadcast_weights = attention_weights_expanded
             .broadcast((batch_size, seq_len, encoder_dim))
-            .unwrap();
+            .expect("Operation failed");
         // Element-wise multiply and sum over sequence dimension
         let weighted_encoder = encoder_outputs * &broadcast_weights;
         let context = weighted_encoder.sum_axis(Axis(1));
@@ -672,7 +672,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
         let decoder_states = if self.config.encoder_cell_type == self.config.decoder_cell_type {
         // Initialize first decoder input with start tokens
         let mut decoder_input = Array::<F>::zeros((batch_size, 1));
-            decoder_input[[b, 0]] = F::from(start_token_id as f64).unwrap();
+            decoder_input[[b, 0]] = F::from(start_token_id as f64).expect("Failed to convert to float");
         let mut decoder_input = decoder_input.into_dyn();
         let mut output_ids = Array::<F>::zeros((batch_size, max_len));
         let mut states = decoder_states;
@@ -695,8 +695,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
                         max_prob = output_t[[b, v]];
                         max_idx = v;
                 // Store predicted token
-                output_ids[[b, t]] = F::from(max_idx as f64).unwrap();
-                next_tokens[[b, 0]] = F::from(max_idx as f64).unwrap();
+                output_ids[[b, t]] = F::from(max_idx as f64).expect("Failed to convert to float");
+                next_tokens[[b, 0]] = F::from(max_idx as f64).expect("Failed to convert to float");
                 // Check if sequence is completed
                 if let Some(eos_id) = end_token_id {
                     if max_idx == eos_id {

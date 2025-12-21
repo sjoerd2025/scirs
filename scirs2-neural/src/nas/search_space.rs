@@ -371,14 +371,14 @@ mod tests {
     #[test]
     fn test_search_space_creation() {
         let config = SearchSpaceConfig::default();
-        let search_space = SearchSpace::new(config).unwrap();
+        let search_space = SearchSpace::new(config).expect("Operation failed");
         assert!(search_space.layer_choices.len() > 0);
     fn test_architecture_sampling() {
-        let arch = search_space.sample().unwrap();
+        let arch = search_space.sample().expect("Operation failed");
         assert!(arch.layers.len() >= search_space.config.min_layers);
         assert!(arch.layers.len() <= search_space.config.max_layers);
     fn test_architecture_mutation() {
-        let mutated = search_space.mutate(&arch, 0.5).unwrap();
+        let mutated = search_space.mutate(&arch, 0.5).expect("Operation failed");
         // Mutation should produce a valid architecture
         assert!(mutated.layers.len() >= search_space.config.min_layers);
         assert!(mutated.layers.len() <= search_space.config.max_layers);

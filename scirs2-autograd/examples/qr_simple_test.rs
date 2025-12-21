@@ -22,15 +22,19 @@ fn main() {
             .set_feeder(feeder.clone())
             .run();
 
-        let q_result = results[0].clone().unwrap();
-        let r_result = results[1].clone().unwrap();
+        let q_result = results[0].clone().expect("Operation failed");
+        let r_result = results[1].clone().expect("Operation failed");
 
         println!("Q result:\n{:?}", q_result);
         println!("R result:\n{:?}", r_result);
 
         // Verify Q is orthogonal
-        let q_2d = q_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
-        let r_2d = r_result.into_dimensionality::<ag::ndarray::Ix2>().unwrap();
+        let q_2d = q_result
+            .into_dimensionality::<ag::ndarray::Ix2>()
+            .expect("Operation failed");
+        let r_2d = r_result
+            .into_dimensionality::<ag::ndarray::Ix2>()
+            .expect("Operation failed");
 
         let qt_q = q_2d.t().dot(&q_2d);
         println!("Q^T * Q:\n{:?}", qt_q);

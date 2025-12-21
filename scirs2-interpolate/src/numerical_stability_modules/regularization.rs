@@ -17,7 +17,9 @@ where
     F: Float + FromPrimitive + std::fmt::LowerExp,
 {
     let eps = machine_epsilon::<F>();
-    let min_denominator = eps * F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap());
+    let min_denominator = eps
+        * F::from(1000.0)
+            .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"));
 
     if denominator.abs() < min_denominator {
         Err(InterpolateError::NumericalInstability {
@@ -38,7 +40,9 @@ where
     F: Float + FromPrimitive + std::fmt::LowerExp,
 {
     let eps = machine_epsilon::<F>();
-    let min_value = eps * F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap());
+    let min_value = eps
+        * F::from(1000.0)
+            .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"));
 
     if value.abs() < min_value {
         Err(InterpolateError::NumericalInstability {
@@ -97,10 +101,11 @@ where
             let log_condition = condition_ratio.ln().max(F::one());
             log_condition.sqrt()
         } else {
-            F::from(10.0).unwrap_or_else(|| F::from(10.0).unwrap())
+            F::from(10.0)
+                .unwrap_or_else(|| F::from(10.0).expect("Failed to convert constant to float"))
         }
     } else {
-        F::from(10.0).unwrap_or_else(|| F::from(10.0).unwrap())
+        F::from(10.0).unwrap_or_else(|| F::from(10.0).expect("Failed to convert constant to float"))
     };
 
     let regularization_param = base_regularization * adaptive_factor;
@@ -152,13 +157,17 @@ where
 {
     let n = matrix.nrows();
     let eps = machine_epsilon::<F>();
-    let threshold =
-        eps * F::from(n).unwrap() * F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap());
+    let threshold = eps
+        * F::from(n).expect("Failed to convert to float")
+        * F::from(1000.0)
+            .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"));
 
     // For 2x2 matrices, compute actual determinant
     if n == 2 {
         let det = matrix[(0, 0)] * matrix[(1, 1)] - matrix[(0, 1)] * matrix[(1, 0)];
-        return det.abs() < F::from(1e-10).unwrap_or_else(|| F::from(1e-10).unwrap());
+        return det.abs()
+            < F::from(1e-10)
+                .unwrap_or_else(|| F::from(1e-10).expect("Failed to convert constant to float"));
     }
 
     // For larger matrices, check diagonal product as approximation
@@ -183,8 +192,10 @@ where
 
     // Simple rank estimation based on diagonal elements
     // In practice, this would use SVD or QR decomposition
-    let threshold =
-        eps * F::from(n).unwrap() * F::from(100.0).unwrap_or_else(|| F::from(100.0).unwrap());
+    let threshold = eps
+        * F::from(n).expect("Failed to convert to float")
+        * F::from(100.0)
+            .unwrap_or_else(|| F::from(100.0).expect("Failed to convert constant to float"));
 
     let mut rank = 0;
     for i in 0..n {
@@ -271,8 +282,9 @@ where
 {
     let n = original_matrix.nrows();
     let tolerance = machine_epsilon::<F>()
-        * F::from(n).unwrap()
-        * F::from(100.0).unwrap_or_else(|| F::from(100.0).unwrap());
+        * F::from(n).expect("Failed to convert to float")
+        * F::from(100.0)
+            .unwrap_or_else(|| F::from(100.0).expect("Failed to convert constant to float"));
 
     let mut solution = initial_solution.to_owned();
     let mut residual = Array1::zeros(n);
@@ -307,7 +319,10 @@ where
         // Prevent infinite refinement
         if iteration > max_iterations / 2 {
             let improvement_ratio = residual_norm / (residual_norm + tolerance);
-            if improvement_ratio > F::from(0.9).unwrap_or_else(|| F::from(0.9).unwrap()) {
+            if improvement_ratio
+                > F::from(0.9)
+                    .unwrap_or_else(|| F::from(0.9).expect("Failed to convert constant to float"))
+            {
                 break; // Not converging well enough
             }
         }
@@ -494,14 +509,16 @@ mod tests {
     #[test]
     fn test_safe_reciprocal() {
         assert!(safe_reciprocal(2.0).is_ok());
-        assert_eq!(safe_reciprocal(2.0).unwrap(), 0.5);
+        assert_eq!(safe_reciprocal(2.0).expect("Operation failed"), 0.5);
         assert!(safe_reciprocal(1e-20).is_err());
     }
 
     #[test]
     fn test_tikhonov_regularization() {
-        let matrix = Array2::from_shape_vec((2, 2), vec![1.0, 0.5, 0.5, 1.0]).unwrap();
-        let regularized = apply_tikhonov_regularization(&matrix.view(), 0.1).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 2), vec![1.0, 0.5, 0.5, 1.0]).expect("Operation failed");
+        let regularized =
+            apply_tikhonov_regularization(&matrix.view(), 0.1).expect("Operation failed");
 
         assert_eq!(regularized[(0, 0)], 1.1);
         assert_eq!(regularized[(1, 1)], 1.1);
@@ -511,16 +528,19 @@ mod tests {
 
     #[test]
     fn test_edge_case_detection() {
-        let singular_matrix = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 4.0]).unwrap();
-        let report = detect_edge_cases(&singular_matrix.view()).unwrap();
+        let singular_matrix =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 4.0]).expect("Operation failed");
+        let report = detect_edge_cases(&singular_matrix.view()).expect("Operation failed");
 
         assert!(report.is_nearly_singular);
     }
 
     #[test]
     fn test_diagonal_preconditioning() {
-        let matrix = Array2::from_shape_vec((2, 2), vec![4.0, 1.0, 1.0, 9.0]).unwrap();
-        let (precond, inv_precond) = diagonal_preconditioning(&matrix.view()).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 2), vec![4.0, 1.0, 1.0, 9.0]).expect("Operation failed");
+        let (precond, inv_precond) =
+            diagonal_preconditioning(&matrix.view()).expect("Operation failed");
 
         assert!((precond[(0, 0)] - 2.0).abs() < 1e-10);
         assert!((precond[(1, 1)] - 3.0).abs() < 1e-10);
@@ -530,8 +550,10 @@ mod tests {
 
     #[test]
     fn test_numerical_rank_estimation() {
-        let full_rank = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0]).unwrap();
-        let rank_deficient = Array2::from_shape_vec((2, 2), vec![1e-20, 0.0, 0.0, 1.0]).unwrap();
+        let full_rank =
+            Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0]).expect("Operation failed");
+        let rank_deficient =
+            Array2::from_shape_vec((2, 2), vec![1e-20, 0.0, 0.0, 1.0]).expect("Operation failed");
 
         assert_eq!(estimate_numerical_rank(&full_rank.view()), 2);
         assert_eq!(estimate_numerical_rank(&rank_deficient.view()), 1);

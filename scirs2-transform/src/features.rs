@@ -305,7 +305,7 @@ impl PolynomialFeatures {
 ///                   [2.0, 0.0, 0.0],
 ///                   [-1.0, 1.0, -1.0]];
 ///                   
-/// let binarized = binarize(&data, 0.0).unwrap();
+/// let binarized = binarize(&data, 0.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn binarize<S>(array: &ArrayBase<S, Ix2>, threshold: f64) -> Result<Array2<f64>>
@@ -698,7 +698,7 @@ where
 ///                   [4.0, 5.0, 6.0],
 ///                   [7.0, 8.0, 9.0]];
 ///                   
-/// let transformed = power_transform(&data, "yeo-johnson", true).unwrap();
+/// let transformed = power_transform(&data, "yeo-johnson", true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn power_transform<S>(
@@ -1115,7 +1115,7 @@ impl PowerTransformer {
 
             // Transform data with optimal lambdas and compute statistics
             for j in 0..nfeatures {
-                let lambda = self.lambdas_.as_ref().unwrap()[j];
+                let lambda = self.lambdas_.as_ref().expect("Operation failed")[j];
                 let mut transformed_feature = Array1::zeros(n_samples);
 
                 // Apply transformation to each sample in the feature
@@ -1179,7 +1179,7 @@ impl PowerTransformer {
         let n_samples = shape[0];
         let nfeatures = shape[1];
 
-        let lambdas = self.lambdas_.as_ref().unwrap();
+        let lambdas = self.lambdas_.as_ref().expect("Operation failed");
 
         if nfeatures != lambdas.len() {
             return Err(TransformError::InvalidInput(
@@ -1217,8 +1217,8 @@ impl PowerTransformer {
 
         // Apply standardization if requested
         if self.standardize {
-            let means = self.means_.as_ref().unwrap();
-            let stds = self.stds_.as_ref().unwrap();
+            let means = self.means_.as_ref().expect("Operation failed");
+            let stds = self.stds_.as_ref().expect("Operation failed");
 
             for j in 0..nfeatures {
                 let mean = means[j];
@@ -1279,7 +1279,7 @@ impl PowerTransformer {
         let n_samples = shape[0];
         let nfeatures = shape[1];
 
-        let lambdas = self.lambdas_.as_ref().unwrap();
+        let lambdas = self.lambdas_.as_ref().expect("Operation failed");
 
         if nfeatures != lambdas.len() {
             return Err(TransformError::InvalidInput(
@@ -1292,8 +1292,8 @@ impl PowerTransformer {
 
         // Reverse standardization if it was applied
         if self.standardize {
-            let means = self.means_.as_ref().unwrap();
-            let stds = self.stds_.as_ref().unwrap();
+            let means = self.means_.as_ref().expect("Operation failed");
+            let stds = self.stds_.as_ref().expect("Operation failed");
 
             for j in 0..nfeatures {
                 let mean = means[j];
@@ -1537,11 +1537,12 @@ mod tests {
 
     #[test]
     fn test_polynomial_features() {
-        let data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 
         // Test with degree=2, interaction_only=false, includebias=true
         let poly = PolynomialFeatures::new(2, false, true);
-        let transformed = poly.transform(&data).unwrap();
+        let transformed = poly.transform(&data).expect("Operation failed");
 
         // Expected features: [1, x1, x2, x1^2, x1*x2, x2^2]
         assert_eq!(transformed.shape(), &[2, 6]);
@@ -1584,9 +1585,10 @@ mod tests {
 
     #[test]
     fn test_binarize() {
-        let data = Array::from_shape_vec((2, 3), vec![1.0, -1.0, 2.0, 2.0, 0.0, -3.0]).unwrap();
+        let data = Array::from_shape_vec((2, 3), vec![1.0, -1.0, 2.0, 2.0, 0.0, -3.0])
+            .expect("Operation failed");
 
-        let binarized = binarize(&data, 0.0).unwrap();
+        let binarized = binarize(&data, 0.0).expect("Operation failed");
 
         // Expected result: [[1, 0, 1], [1, 0, 0]]
         assert_eq!(binarized.shape(), &[2, 3]);
@@ -1601,10 +1603,11 @@ mod tests {
 
     #[test]
     fn test_discretize_equal_width() {
-        let data = Array::from_shape_vec((3, 2), vec![0.0, 0.0, 3.0, 5.0, 6.0, 10.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![0.0, 0.0, 3.0, 5.0, 6.0, 10.0])
+            .expect("Operation failed");
 
         // Test with ordinal encoding
-        let discretized = discretize_equal_width(&data, 2, "ordinal", 0).unwrap();
+        let discretized = discretize_equal_width(&data, 2, "ordinal", 0).expect("Operation failed");
 
         // Expected result: [[0, 0], [0, 0], [1, 1]]
         assert_eq!(discretized.shape(), &[3, 2]);
@@ -1617,7 +1620,7 @@ mod tests {
         assert_abs_diff_eq!(discretized[[2, 1]], 1.0, epsilon = 1e-10);
 
         // Test with one-hot encoding
-        let discretized = discretize_equal_width(&data, 2, "onehot", 0).unwrap();
+        let discretized = discretize_equal_width(&data, 2, "onehot", 0).expect("Operation failed");
 
         // Expected result: [
         //   [1, 0, 1, 0],
@@ -1644,9 +1647,10 @@ mod tests {
 
     #[test]
     fn test_log_transform() {
-        let data = Array::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
+        let data =
+            Array::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).expect("Operation failed");
 
-        let transformed = log_transform(&data, 1.0).unwrap();
+        let transformed = log_transform(&data, 1.0).expect("Operation failed");
 
         // Expected: ln(x + 1)
         assert_abs_diff_eq!(transformed[[0, 0]], (0.0 + 1.0).ln(), epsilon = 1e-10);
@@ -1658,8 +1662,8 @@ mod tests {
     #[test]
     fn test_power_transformer_yeo_johnson() {
         // Test data that includes negative values (Yeo-Johnson can handle these)
-        let data =
-            Array::from_shape_vec((4, 2), vec![1.0, -1.0, 2.0, 0.5, 3.0, -2.0, 0.1, 1.5]).unwrap();
+        let data = Array::from_shape_vec((4, 2), vec![1.0, -1.0, 2.0, 0.5, 3.0, -2.0, 0.1, 1.5])
+            .expect("Operation failed");
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
 
@@ -1667,19 +1671,21 @@ mod tests {
         assert!(!transformer.is_fitted());
 
         // Fit the transformer
-        transformer.fit(&data).unwrap();
+        transformer.fit(&data).expect("Operation failed");
         assert!(transformer.is_fitted());
 
         // Check that lambdas were computed
-        let lambdas = transformer.lambdas().unwrap();
+        let lambdas = transformer.lambdas().expect("Operation failed");
         assert_eq!(lambdas.len(), 2);
 
         // Transform the data
-        let transformed = transformer.transform(&data).unwrap();
+        let transformed = transformer.transform(&data).expect("Operation failed");
         assert_eq!(transformed.shape(), data.shape());
 
         // Test inverse transformation
-        let inverse = transformer.inverse_transform(&transformed).unwrap();
+        let inverse = transformer
+            .inverse_transform(&transformed)
+            .expect("Operation failed");
         assert_eq!(inverse.shape(), data.shape());
 
         // Check that inverse transformation approximately recovers original data
@@ -1693,20 +1699,22 @@ mod tests {
     #[test]
     fn test_power_transformer_box_cox() {
         // Test data with strictly positive values (Box-Cox requirement)
-        let data =
-            Array::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 0.5, 1.5, 2.5, 3.5]).unwrap();
+        let data = Array::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 0.5, 1.5, 2.5, 3.5])
+            .expect("Operation failed");
 
         let mut transformer = PowerTransformer::box_cox(false);
 
         // Fit the transformer
-        transformer.fit(&data).unwrap();
+        transformer.fit(&data).expect("Operation failed");
 
         // Transform the data
-        let transformed = transformer.transform(&data).unwrap();
+        let transformed = transformer.transform(&data).expect("Operation failed");
         assert_eq!(transformed.shape(), data.shape());
 
         // Test inverse transformation
-        let inverse = transformer.inverse_transform(&transformed).unwrap();
+        let inverse = transformer
+            .inverse_transform(&transformed)
+            .expect("Operation failed");
 
         // Check that inverse transformation approximately recovers original data
         for i in 0..data.shape()[0] {
@@ -1722,12 +1730,12 @@ mod tests {
             (5, 2),
             vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut transformer = PowerTransformer::yeo_johnson(true);
 
         // Fit and transform with standardization
-        let transformed = transformer.fit_transform(&data).unwrap();
+        let transformed = transformer.fit_transform(&data).expect("Operation failed");
 
         // Check that each feature has approximately zero mean and unit variance
         for j in 0..transformed.shape()[1] {
@@ -1744,7 +1752,8 @@ mod tests {
     #[test]
     fn test_power_transformer_box_cox_negative_data() {
         // Test that Box-Cox fails with negative data
-        let data = Array::from_shape_vec((2, 2), vec![1.0, -1.0, 2.0, 3.0]).unwrap();
+        let data =
+            Array::from_shape_vec((2, 2), vec![1.0, -1.0, 2.0, 3.0]).expect("Operation failed");
 
         let mut transformer = PowerTransformer::box_cox(false);
 
@@ -1754,17 +1763,18 @@ mod tests {
 
     #[test]
     fn test_power_transformer_fit_transform() {
-        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
 
         // Test fit_transform convenience method
-        let transformed1 = transformer.fit_transform(&data).unwrap();
+        let transformed1 = transformer.fit_transform(&data).expect("Operation failed");
 
         // Compare with separate fit and transform
         let mut transformer2 = PowerTransformer::yeo_johnson(false);
-        transformer2.fit(&data).unwrap();
-        let transformed2 = transformer2.transform(&data).unwrap();
+        transformer2.fit(&data).expect("Operation failed");
+        let transformed2 = transformer2.transform(&data).expect("Operation failed");
 
         // Results should be identical
         for i in 0..transformed1.shape()[0] {
@@ -1776,20 +1786,24 @@ mod tests {
 
     #[test]
     fn test_power_transformer_different_data_sizes() {
-        let train_data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let test_data = Array::from_shape_vec((2, 2), vec![2.5, 3.5, 4.5, 5.5]).unwrap();
+        let train_data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
+        let test_data =
+            Array::from_shape_vec((2, 2), vec![2.5, 3.5, 4.5, 5.5]).expect("Operation failed");
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
 
         // Fit on training data
-        transformer.fit(&train_data).unwrap();
+        transformer.fit(&train_data).expect("Operation failed");
 
         // Transform test data (different number of samples)
-        let transformed = transformer.transform(&test_data).unwrap();
+        let transformed = transformer.transform(&test_data).expect("Operation failed");
         assert_eq!(transformed.shape(), test_data.shape());
 
         // Test inverse transformation on test data
-        let inverse = transformer.inverse_transform(&transformed).unwrap();
+        let inverse = transformer
+            .inverse_transform(&transformed)
+            .expect("Operation failed");
 
         for i in 0..test_data.shape()[0] {
             for j in 0..test_data.shape()[1] {
@@ -1800,11 +1814,13 @@ mod tests {
 
     #[test]
     fn test_power_transformer_mismatched_features() {
-        let train_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let test_data = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let train_data =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let test_data = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
-        transformer.fit(&train_data).unwrap();
+        transformer.fit(&train_data).expect("Operation failed");
 
         // Should fail because number of features doesn't match
         assert!(transformer.transform(&test_data).is_err());
@@ -1812,7 +1828,8 @@ mod tests {
 
     #[test]
     fn test_power_transformer_not_fitted() {
-        let data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
         let transformer = PowerTransformer::yeo_johnson(false);
 
         // Should fail because transformer hasn't been fitted
@@ -1823,14 +1840,14 @@ mod tests {
     #[test]
     fn test_power_transformer_creation_methods() {
         // Test different creation methods
-        let transformer1 = PowerTransformer::new("yeo-johnson", true).unwrap();
+        let transformer1 = PowerTransformer::new("yeo-johnson", true).expect("Operation failed");
         let transformer2 = PowerTransformer::yeo_johnson(true);
 
         // Should be equivalent
         assert_eq!(transformer1.method, transformer2.method);
         assert_eq!(transformer1.standardize, transformer2.standardize);
 
-        let transformer3 = PowerTransformer::new("box-cox", false).unwrap();
+        let transformer3 = PowerTransformer::new("box-cox", false).expect("Operation failed");
         let transformer4 = PowerTransformer::box_cox(false);
 
         assert_eq!(transformer3.method, transformer4.method);

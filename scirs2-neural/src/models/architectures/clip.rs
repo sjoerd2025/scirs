@@ -276,7 +276,7 @@ pub struct CLIP<
             None
         };
         // Initialize logit scale (typically ln(1/0.07))
-        let logit_scale = F::from(2.6592).unwrap();
+        let logit_scale = F::from(2.6592).expect("Failed to convert constant to float");
             vision_encoder,
             text_encoder,
             classifier,
@@ -381,7 +381,7 @@ fn normalize_features<F: Float + Debug + ScalarOperand>(
         let sum_squares = x.iter().fold(F::zero(), |acc, &val| acc + val * val);
         let norm = sum_squares.sqrt();
         // Avoid division by zero
-        if norm > F::from(1e-12).unwrap() {
+        if norm > F::from(1e-12).expect("Failed to convert constant to float") {
             norm
             F::one()
     });

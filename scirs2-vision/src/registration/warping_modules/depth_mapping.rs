@@ -1021,7 +1021,7 @@ fn apply_median_filter(disparity_map: &Array2<f32>, window_size: usize) -> Resul
             }
 
             if !values.is_empty() {
-                values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 filtered[[y, x]] = values[values.len() / 2];
             }
         }

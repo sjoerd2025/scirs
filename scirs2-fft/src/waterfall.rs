@@ -64,7 +64,7 @@ use std::f64::consts::PI;
 ///     Some(64),
 ///     Some(true),
 ///     Some(80.0),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Verify dimensions
 /// assert_eq!(data.shape()[0], times.len());    // Time dimension
@@ -177,7 +177,7 @@ where
 ///     Some(64),
 ///     Some(true),
 ///     Some(80.0),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Verify dimensions are consistent
 /// assert_eq!(time_mesh.shape(), freq_mesh.shape());
@@ -292,7 +292,7 @@ where
 ///     Some(0.2),   // Offset between lines
 ///     Some(true),
 ///     Some(80.0),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Each line contains frequency and amplitude data
 /// assert_eq!(lines.shape()[0], times.len());      // Number of time points
@@ -429,7 +429,7 @@ where
 ///     Some(64),
 ///     Some(true),
 ///     Some(80.0),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Verify dimensions
 /// assert_eq!(vertices.shape()[1], 3);  // [x,y,z] coordinates
@@ -564,7 +564,7 @@ where
 /// let amplitudes = Array1::from_vec(vec![0.0, 0.25, 0.5, 0.75, 1.0]);
 ///
 /// // Apply jet colormap
-/// let colors = apply_colormap(&amplitudes, "jet").unwrap();
+/// let colors = apply_colormap(&amplitudes, "jet").expect("Operation failed");
 ///
 /// // Check output dimensions
 /// assert_eq!(colors.shape(), &[5, 3]);  // 5 colors, each with RGB components
@@ -707,7 +707,7 @@ mod tests {
             Some(true),
             Some(60.0),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(data.shape()[0], times.len()); // Time dimension
@@ -746,7 +746,7 @@ mod tests {
             Some(true),
             Some(60.0),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check that dimensions are consistent
         assert_eq!(time_mesh.shape(), freq_mesh.shape());
@@ -784,7 +784,7 @@ mod tests {
             Some(true),
             Some(60.0),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(times.len(), n_lines);
@@ -836,7 +836,7 @@ mod tests {
             Some(true),
             Some(60.0),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(vertices.shape()[1], 3); // [x,y,z] coordinates
@@ -869,7 +869,7 @@ mod tests {
         let colormaps = ["jet", "viridis", "plasma", "grayscale", "hot"];
 
         for &cmap in &colormaps {
-            let colors = apply_colormap(&amplitudes, cmap).unwrap();
+            let colors = apply_colormap(&amplitudes, cmap).expect("Operation failed");
 
             // Check dimensions
             assert_eq!(colors.shape(), &[5, 3]);

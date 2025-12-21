@@ -1695,7 +1695,8 @@ impl SchemaValidator {
         // Email format validator
         self.add_format_validator("email", |s| {
             let email_regex =
-                regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
+                regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+                    .expect("Operation failed");
             email_regex.is_match(s)
         });
 

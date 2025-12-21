@@ -941,6 +941,6 @@ mod tests {
 
         let recovery = AutoRecoverySystem::attempt_auto_recovery(&error, &context);
         assert!(recovery.is_some());
-        assert!(recovery.unwrap().automatic);
+        assert!(recovery.expect("Operation failed").automatic);
     }
 }

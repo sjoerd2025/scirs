@@ -57,7 +57,7 @@ pub fn validate_simd_vs_scalar_accuracy(config: &AdvancedWptValidationConfig) ->
                 let test_signal = generate_test_signal(signal_config)?;
 
                 // Perform SIMD-accelerated WPT
-                let simd_tree = wp_decompose(test_signal.as_slice().unwrap(), *wavelet, max_level, None)?;
+                let simd_tree = wp_decompose(test_signal.as_slice().expect("Operation failed"), *wavelet, max_level, None)?;
 
                 // Perform scalar WPT (disable SIMD for comparison)
                 let scalar_tree = wp_decompose_scalar(&test_signal, *wavelet, max_level)?;
@@ -299,7 +299,7 @@ pub fn wp_decompose_scalar(
     // that doesn't use SIMD acceleration internally. It operates on scalar
     // f64 values using the DWT filter bank approach.
     // This is the appropriate baseline for comparing against SIMD optimizations.
-    crate::wpt::wp_decompose(signal.as_slice().unwrap(), wavelet, max_level, None)
+    crate::wpt::wp_decompose(signal.as_slice().expect("Operation failed"), wavelet, max_level, None)
 }
 
 /// Compare coefficients between different WPT trees
@@ -358,7 +358,7 @@ mod tests {
         let result = test_simd_energy_calculation(&signal);
         assert!(result.is_ok());
 
-        let (simd_energy, scalar_energy) = result.unwrap();
+        let (simd_energy, scalar_energy) = result.expect("Operation failed");
         assert!((simd_energy - scalar_energy).abs() < 1e-10);
         assert!((simd_energy - 30.0).abs() < 1e-10); // 1² + 2² + 3² + 4² = 30
     }
@@ -384,7 +384,7 @@ mod tests {
         let result = test_simd_thresholding(&signal);
         assert!(result.is_ok());
 
-        let (simd_energy, scalar_energy) = result.unwrap();
+        let (simd_energy, scalar_energy) = result.expect("Operation failed");
         assert!((simd_energy - scalar_energy).abs() < 1e-10);
     }
 }

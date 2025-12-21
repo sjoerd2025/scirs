@@ -152,7 +152,7 @@ impl AggregationStrategy for TrimmedMean {
                         .map(|u| u.weight_updates[tensor_idx][[i, j]])
                         .collect();
                     // Sort and trim
-                    values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                     let trimmed = &values[trim_count..num_clients - trim_count];
                     // Compute mean of trimmed values
                     result[[i, j]] = trimmed.iter().sum::<f32>() / trimmed.len() as f32;
@@ -189,11 +189,11 @@ impl AggregationStrategy for Krum {
         let k = num_clients - self.num_byzantine - 2;
         let mut scores = vec![0.0; num_clients];
             let mut dists: Vec<f32> = distances[i].clone();
-            dists.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            dists.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             scores[i] = dists[1..=k].iter().sum(); // Skip self (0 distance)
         // Select clients with lowest scores
         let mut indices: Vec<usize> = (0..num_clients).collect();
-        indices.sort_by(|&i, &j| scores[i].partial_cmp(&scores[j]).unwrap());
+        indices.sort_by(|&i, &j| scores[i].partial_cmp(&scores[j]).expect("Operation failed"));
         let selected = &indices[..num_select];
         // Average selected updates
         let selected_updates: Vec<ClientUpdate> =
@@ -251,7 +251,7 @@ mod tests {
         let aggregator = FedAvg::new();
         let updates = create_test_updates();
         let weights = vec![0.5, 0.5];
-        let result = aggregator.aggregate(&updates, &weights).unwrap();
+        let result = aggregator.aggregate(&updates, &weights).expect("Operation failed");
         assert_eq!(result.len(), 1);
         assert_eq!(result[0][[0, 0]], 1.5); // Average of 1 and 2
     fn test_median() {

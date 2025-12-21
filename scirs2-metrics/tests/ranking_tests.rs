@@ -11,13 +11,13 @@ fn test_mean_reciprocal_rank() {
     // Test case 1: Perfect ranking - relevant item at rank 1
     let y_true_1 = vec![array![0.0, 1.0, 0.0, 0.0, 0.0]];
     let y_score_1 = vec![array![0.1, 0.9, 0.2, 0.3, 0.4]];
-    let mrr_1 = mean_reciprocal_rank(&y_true_1, &y_score_1).unwrap();
+    let mrr_1 = mean_reciprocal_rank(&y_true_1, &y_score_1).expect("Operation failed");
     assert_abs_diff_eq!(mrr_1, 1.0, epsilon = 1e-10);
 
     // Test case 2: Relevant item at rank 2
     let y_true_2 = vec![array![0.0, 0.0, 1.0, 0.0, 0.0]];
     let y_score_2 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]];
-    let mrr_2 = mean_reciprocal_rank(&y_true_2, &y_score_2).unwrap();
+    let mrr_2 = mean_reciprocal_rank(&y_true_2, &y_score_2).expect("Operation failed");
     assert_abs_diff_eq!(mrr_2, 1.0 / 3.0, epsilon = 1e-10);
 
     // Test case 3: Multiple queries with different ranks
@@ -29,13 +29,13 @@ fn test_mean_reciprocal_rank() {
         array![0.1, 0.9, 0.2, 0.3, 0.4], // Scores for query 1 - 0.9 is highest so relevant item is at rank 1
         array![0.9, 0.7, 0.8, 0.95, 0.3], // Scores for query 2 - 0.95 is highest so relevant item is at rank 1
     ];
-    let mrr_3 = mean_reciprocal_rank(&y_true_3, &y_score_3).unwrap();
+    let mrr_3 = mean_reciprocal_rank(&y_true_3, &y_score_3).expect("Operation failed");
     assert_abs_diff_eq!(mrr_3, (1.0 + 1.0) / 2.0, epsilon = 1e-10); // Both items at rank 1
 
     // Test case 4: No relevant items
     let y_true_4 = vec![array![0.0, 0.0, 0.0, 0.0, 0.0]];
     let y_score_4 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]];
-    let mrr_4 = mean_reciprocal_rank(&y_true_4, &y_score_4).unwrap();
+    let mrr_4 = mean_reciprocal_rank(&y_true_4, &y_score_4).expect("Operation failed");
     assert_abs_diff_eq!(mrr_4, 0.0, epsilon = 1e-10);
 
     // Test case 5: Multiple queries, one with no relevant items
@@ -47,7 +47,7 @@ fn test_mean_reciprocal_rank() {
         array![0.1, 0.9, 0.2, 0.3, 0.4], // Scores for query 1
         array![0.9, 0.7, 0.8, 0.6, 0.5], // Scores for query 2
     ];
-    let mrr_5 = mean_reciprocal_rank(&y_true_5, &y_score_5).unwrap();
+    let mrr_5 = mean_reciprocal_rank(&y_true_5, &y_score_5).expect("Operation failed");
     assert_abs_diff_eq!(mrr_5, 1.0 / 2.0, epsilon = 1e-10);
 }
 
@@ -57,13 +57,13 @@ fn test_ndcg_score() {
     // Test case 1: Perfect ranking
     let y_true_1 = vec![array![0.0, 1.0, 0.0, 0.0, 0.0]];
     let y_score_1 = vec![array![0.1, 0.9, 0.2, 0.3, 0.4]];
-    let ndcg_1 = ndcg_score(&y_true_1, &y_score_1, None).unwrap();
+    let ndcg_1 = ndcg_score(&y_true_1, &y_score_1, None).expect("Operation failed");
     assert_abs_diff_eq!(ndcg_1, 1.0, epsilon = 1e-10);
 
     // Test case 2: Imperfect ranking
     let y_true_2 = vec![array![0.0, 0.0, 1.0, 0.0, 0.0]];
     let y_score_2 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]];
-    let ndcg_2 = ndcg_score(&y_true_2, &y_score_2, None).unwrap();
+    let ndcg_2 = ndcg_score(&y_true_2, &y_score_2, None).expect("Operation failed");
 
     // When using DCG formula: rel_i / log2(i+1), for i=1..k
     // Ideal DCG: 1.0 / log2(1+1) = 1.0
@@ -99,14 +99,14 @@ fn test_ndcg_score() {
 
     // Mean NDCG = (0.92 + 0.797) / 2 = 0.859
 
-    let ndcg_3 = ndcg_score(&y_true_3, &y_score_3, None).unwrap();
+    let ndcg_3 = ndcg_score(&y_true_3, &y_score_3, None).expect("Operation failed");
     assert!(ndcg_3 > 0.0 && ndcg_3 <= 1.0);
 
     // Test case 4: Limited k
     let y_true_4 = vec![array![0.0, 0.0, 1.0, 0.0, 2.0]];
     let y_score_4 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]];
-    let ndcg_4_all = ndcg_score(&y_true_4, &y_score_4, None).unwrap();
-    let ndcg_4_k3 = ndcg_score(&y_true_4, &y_score_4, Some(3)).unwrap();
+    let ndcg_4_all = ndcg_score(&y_true_4, &y_score_4, None).expect("Operation failed");
+    let ndcg_4_k3 = ndcg_score(&y_true_4, &y_score_4, Some(3)).expect("Operation failed");
 
     // NDCG @3 should only consider first 3 elements
     // With k=3, we only include the relevance=1 item at position 3
@@ -116,7 +116,7 @@ fn test_ndcg_score() {
     // Test case 5: No relevant items
     let y_true_5 = vec![array![0.0, 0.0, 0.0, 0.0, 0.0]];
     let y_score_5 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]];
-    let ndcg_5 = ndcg_score(&y_true_5, &y_score_5, None).unwrap();
+    let ndcg_5 = ndcg_score(&y_true_5, &y_score_5, None).expect("Operation failed");
     assert_abs_diff_eq!(ndcg_5, 0.0, epsilon = 1e-10);
 }
 
@@ -157,7 +157,7 @@ fn test_mean_average_precision() {
     // Test case 1: Perfect ranking
     let y_true_1 = vec![array![0.0, 1.0, 0.0, 1.0, 0.0]]; // Two relevant items
     let y_score_1 = vec![array![0.1, 0.9, 0.2, 0.8, 0.3]]; // Ranked as 2nd and 4th
-    let map_1 = mean_average_precision(&y_true_1, &y_score_1, None).unwrap();
+    let map_1 = mean_average_precision(&y_true_1, &y_score_1, None).expect("Operation failed");
 
     // AP calculation:
     // First relevant at rank 1, precision = 1/1 = 1.0
@@ -168,7 +168,7 @@ fn test_mean_average_precision() {
     // Test case 2: Imperfect ranking
     let y_true_2 = vec![array![0.0, 1.0, 0.0, 1.0, 0.0]]; // Two relevant items
     let y_score_2 = vec![array![0.9, 0.7, 0.8, 0.6, 0.5]]; // Highest scores are for non-relevant items
-    let map_2 = mean_average_precision(&y_true_2, &y_score_2, None).unwrap();
+    let map_2 = mean_average_precision(&y_true_2, &y_score_2, None).expect("Operation failed");
 
     // When sorted by score: [0.9, 0.8, 0.7, 0.6, 0.5]
     // Corresponds to relevance: [0.0, 0.0, 1.0, 1.0, 0.0]
@@ -193,7 +193,7 @@ fn test_mean_average_precision() {
     // Query 1: [0.9, 0.8, 0.3, 0.2, 0.1] -> [1.0, 1.0, 0.0, 0.0, 0.0]
     // Query 2: [0.9, 0.8, 0.7, 0.6, 0.5] -> [0.0, 0.0, 1.0, 0.0, 1.0]
 
-    let map_3 = mean_average_precision(&y_true_3, &y_score_3, None).unwrap();
+    let map_3 = mean_average_precision(&y_true_3, &y_score_3, None).expect("Operation failed");
 
     // AP for query 1: (1/1 + 2/2) / 2 = (1.0 + 1.0) / 2 = 1.0
     // AP for query 2: (1/3 + 2/5) / 2 = (0.333 + 0.4) / 2 = 0.3665
@@ -206,7 +206,8 @@ fn test_mean_average_precision() {
 
     // When sorted by score: [0.9, 0.8, 0.3, 0.2, 0.1] -> [1.0, 1.0, 0.0, 0.0, 0.0]
 
-    let map_4_k3 = mean_average_precision(&y_true_4, &y_score_4, Some(3)).unwrap();
+    let map_4_k3 =
+        mean_average_precision(&y_true_4, &y_score_4, Some(3)).expect("Operation failed");
 
     // With k=3, we only consider first 3 items
     // But both relevant items are in top 2 ranks already
@@ -218,7 +219,7 @@ fn test_mean_average_precision() {
     // Test case 5: No relevant items
     let y_true_5 = vec![array![0.0, 0.0, 0.0, 0.0, 0.0]];
     let y_score_5 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]];
-    let map_5 = mean_average_precision(&y_true_5, &y_score_5, None).unwrap();
+    let map_5 = mean_average_precision(&y_true_5, &y_score_5, None).expect("Operation failed");
     assert_abs_diff_eq!(map_5, 0.0, epsilon = 1e-10);
 }
 
@@ -232,15 +233,15 @@ fn test_precision_at_k() {
     // When sorted by score, the ranking is [0.9, 0.8, 0.3, 0.2, 0.1]
     // which corresponds to relevance [1.0, 1.0, 0.0, 0.0, 0.0]
     // So precision@2 = 2/2 = 1.0 (2 relevant out of 2)
-    let prec_1_k2 = precision_at_k(&y_true_1, &y_score_1, 2).unwrap();
+    let prec_1_k2 = precision_at_k(&y_true_1, &y_score_1, 2).expect("Operation failed");
     assert_abs_diff_eq!(prec_1_k2, 1.0, epsilon = 1e-10);
 
     // Precision@3: 2/3 = 0.667 (2 relevant out of 3)
-    let prec_1_k3 = precision_at_k(&y_true_1, &y_score_1, 3).unwrap();
+    let prec_1_k3 = precision_at_k(&y_true_1, &y_score_1, 3).expect("Operation failed");
     assert_abs_diff_eq!(prec_1_k3, 2.0 / 3.0, epsilon = 1e-10);
 
     // Precision@5: 2/5 = 0.4 (2 relevant out of 5)
-    let prec_1_k5 = precision_at_k(&y_true_1, &y_score_1, 5).unwrap();
+    let prec_1_k5 = precision_at_k(&y_true_1, &y_score_1, 5).expect("Operation failed");
     assert_abs_diff_eq!(prec_1_k5, 0.4, epsilon = 1e-10);
 
     // Test case 2: Multiple queries
@@ -260,7 +261,7 @@ fn test_precision_at_k() {
     // Precision@3 for query 1: 2/3 = 0.667 (2 relevant out of 3)
     // Precision@3 for query 2: 1/3 = 0.333 (1 relevant out of 3)
     // Average: (0.667 + 0.333) / 2 = 0.5
-    let prec_2_k3 = precision_at_k(&y_true_2, &y_score_2, 3).unwrap();
+    let prec_2_k3 = precision_at_k(&y_true_2, &y_score_2, 3).expect("Operation failed");
     assert_abs_diff_eq!(prec_2_k3, 0.5, epsilon = 1e-10);
 
     // Test case 3: k larger than array
@@ -268,7 +269,7 @@ fn test_precision_at_k() {
     let y_score_3 = vec![array![0.3, 0.9, 0.4]]; // Good ranking
 
     // Precision@5 (k > array length): 1/3 = 0.333
-    let prec_3_k5 = precision_at_k(&y_true_3, &y_score_3, 5).unwrap();
+    let prec_3_k5 = precision_at_k(&y_true_3, &y_score_3, 5).expect("Operation failed");
     assert_abs_diff_eq!(prec_3_k5, 1.0 / 3.0, epsilon = 1e-10);
 
     // Test case 4: Zero k
@@ -288,19 +289,19 @@ fn test_recall_at_k() {
     // [0.9, 0.8, 0.3, 0.2, 0.1] corresponds to relevance [1.0, 1.0, 0.0, 0.0, 0.0]
 
     // Recall@1: 1/2 = 0.5 (1 out of 2 relevant items)
-    let recall_1_k1 = recall_at_k(&y_true_1, &y_score_1, 1).unwrap();
+    let recall_1_k1 = recall_at_k(&y_true_1, &y_score_1, 1).expect("Operation failed");
     assert_abs_diff_eq!(recall_1_k1, 0.5, epsilon = 1e-10);
 
     // Recall@2: 2/2 = 1.0 (2 out of 2 relevant items)
-    let recall_1_k2 = recall_at_k(&y_true_1, &y_score_1, 2).unwrap();
+    let recall_1_k2 = recall_at_k(&y_true_1, &y_score_1, 2).expect("Operation failed");
     assert_abs_diff_eq!(recall_1_k2, 1.0, epsilon = 1e-10);
 
     // Recall@3: 2/2 = 1.0 (2 out of 2 relevant items)
-    let recall_1_k3 = recall_at_k(&y_true_1, &y_score_1, 3).unwrap();
+    let recall_1_k3 = recall_at_k(&y_true_1, &y_score_1, 3).expect("Operation failed");
     assert_abs_diff_eq!(recall_1_k3, 1.0, epsilon = 1e-10);
 
     // Recall@5: 2/2 = 1.0 (2 out of 2 relevant items)
-    let recall_1_k5 = recall_at_k(&y_true_1, &y_score_1, 5).unwrap();
+    let recall_1_k5 = recall_at_k(&y_true_1, &y_score_1, 5).expect("Operation failed");
     assert_abs_diff_eq!(recall_1_k5, 1.0, epsilon = 1e-10);
 
     // Test case 2: Multiple queries
@@ -320,7 +321,7 @@ fn test_recall_at_k() {
     // Recall@3 for query 1: 2/2 = 1.0 (both relevant items in top 3)
     // Recall@3 for query 2: 1/2 = 0.5 (1 out of 2 relevant items in top 3)
     // Average: (1.0 + 0.5) / 2 = 0.75
-    let recall_2_k3 = recall_at_k(&y_true_2, &y_score_2, 3).unwrap();
+    let recall_2_k3 = recall_at_k(&y_true_2, &y_score_2, 3).expect("Operation failed");
     assert_abs_diff_eq!(recall_2_k3, 0.75, epsilon = 1e-10);
 
     // Test case 3: No relevant items
@@ -328,7 +329,7 @@ fn test_recall_at_k() {
     let y_score_3 = vec![array![0.5, 0.6, 0.7, 0.8, 0.9]];
 
     // Recall@3 with no relevant items: 0.0
-    let recall_3_k3 = recall_at_k(&y_true_3, &y_score_3, 3).unwrap();
+    let recall_3_k3 = recall_at_k(&y_true_3, &y_score_3, 3).expect("Operation failed");
     assert_abs_diff_eq!(recall_3_k3, 0.0, epsilon = 1e-10);
 
     // Test case 4: k larger than array
@@ -336,7 +337,7 @@ fn test_recall_at_k() {
     let y_score_4 = vec![array![0.3, 0.9, 0.4]]; // Good ranking
 
     // Recall@5 (k > array length): 1/1 = 1.0 (all relevant items are found)
-    let recall_4_k5 = recall_at_k(&y_true_4, &y_score_4, 5).unwrap();
+    let recall_4_k5 = recall_at_k(&y_true_4, &y_score_4, 5).expect("Operation failed");
     assert_abs_diff_eq!(recall_4_k5, 1.0, epsilon = 1e-10);
 }
 
@@ -346,25 +347,25 @@ fn test_kendalls_tau() {
     // Test case 1: Perfect agreement
     let x_1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
-    let tau_1 = kendalls_tau(&x_1, &y_1).unwrap();
+    let tau_1 = kendalls_tau(&x_1, &y_1).expect("Operation failed");
     assert_abs_diff_eq!(tau_1, 1.0, epsilon = 1e-10);
 
     // Test case 2: Perfect disagreement
     let x_2 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_2 = array![5.0, 4.0, 3.0, 2.0, 1.0];
-    let tau_2 = kendalls_tau(&x_2, &y_2).unwrap();
+    let tau_2 = kendalls_tau(&x_2, &y_2).expect("Operation failed");
     assert_abs_diff_eq!(tau_2, -1.0, epsilon = 1e-10);
 
     // Test case 3: Some negative correlation
     let x_3 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_3 = array![5.0, 3.0, 1.0, 4.0, 2.0];
-    let tau_3 = kendalls_tau(&x_3, &y_3).unwrap();
+    let tau_3 = kendalls_tau(&x_3, &y_3).expect("Operation failed");
     assert_abs_diff_eq!(tau_3, -0.4, epsilon = 1e-10);
 
     // Test case 4: Partial agreement
     let x_4 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_4 = array![1.0, 3.0, 2.0, 5.0, 4.0];
-    let tau_4 = kendalls_tau(&x_4, &y_4).unwrap();
+    let tau_4 = kendalls_tau(&x_4, &y_4).expect("Operation failed");
     // We have 8 concordant pairs and 2 discordant pairs out of 10 total pairs
     // Tau = (8 - 2) / 10 = 0.6
     assert_abs_diff_eq!(tau_4, 0.6, epsilon = 1e-10);
@@ -386,25 +387,25 @@ fn test_spearmans_rho() {
     // Test case 1: Perfect positive correlation
     let x_1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
-    let rho_1 = spearmans_rho(&x_1, &y_1).unwrap();
+    let rho_1 = spearmans_rho(&x_1, &y_1).expect("Operation failed");
     assert_abs_diff_eq!(rho_1, 1.0, epsilon = 1e-10);
 
     // Test case 2: Perfect negative correlation
     let x_2 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_2 = array![5.0, 4.0, 3.0, 2.0, 1.0];
-    let rho_2 = spearmans_rho(&x_2, &y_2).unwrap();
+    let rho_2 = spearmans_rho(&x_2, &y_2).expect("Operation failed");
     assert_abs_diff_eq!(rho_2, -1.0, epsilon = 1e-10);
 
     // Test case 3: Some negative correlation
     let x_3 = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y_3 = array![5.0, 2.0, 1.0, 4.0, 3.0];
-    let rho_3 = spearmans_rho(&x_3, &y_3).unwrap();
+    let rho_3 = spearmans_rho(&x_3, &y_3).expect("Operation failed");
     assert_abs_diff_eq!(rho_3, -0.2, epsilon = 0.1); // Allow some numerical error
 
     // Test case 4: With ties
     let x_4 = array![1.0, 2.0, 3.0, 3.0, 5.0]; // Tie at rank 3
     let y_4 = array![1.0, 2.0, 2.0, 4.0, 5.0]; // Tie at rank 2
-    let rho_4 = spearmans_rho(&x_4, &y_4).unwrap();
+    let rho_4 = spearmans_rho(&x_4, &y_4).expect("Operation failed");
     assert!(rho_4 > 0.8 && rho_4 <= 1.0); // Should be high positive correlation
 
     // Test case 5: Different length arrays
@@ -432,7 +433,7 @@ fn test_map_at_k() {
     ];
 
     // MAP@3
-    let map_k3 = map_at_k(&y_true_1, &y_score_1, 3).unwrap();
+    let map_k3 = map_at_k(&y_true_1, &y_score_1, 3).expect("Operation failed");
     // Since we're using the same function mean_average_precision under the hood,
     // and our array calculations might be slightly different from the expected values,
     // we'll just check it's within a reasonable range
@@ -443,9 +444,9 @@ fn test_map_at_k() {
     let y_score_2 = vec![array![0.3, 0.9, 0.4]]; // Good ranking
 
     // MAP@5 (k > array length)
-    let map_k5 = map_at_k(&y_true_2, &y_score_2, 5).unwrap();
+    let map_k5 = map_at_k(&y_true_2, &y_score_2, 5).expect("Operation failed");
     // Should be the same as considering all items
-    let map_all = mean_average_precision(&y_true_2, &y_score_2, None).unwrap();
+    let map_all = mean_average_precision(&y_true_2, &y_score_2, None).expect("Operation failed");
     assert_abs_diff_eq!(map_k5, map_all, epsilon = 1e-10);
 
     // Test case 3: Zero k
@@ -460,7 +461,7 @@ fn test_click_through_rate() {
     let y_score_1 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]]; // Good ranking - relevant at top
 
     // CTR@3
-    let ctr_1 = click_through_rate(&y_true_1, &y_score_1, 3).unwrap();
+    let ctr_1 = click_through_rate(&y_true_1, &y_score_1, 3).expect("Operation failed");
     // Position bias: 1/1, 1/2, 1/3
     // Sum of biases: 1 + 0.5 + 0.333 = 1.833
     // CTR = (1/1*1 + 1/2*1 + 1/3*0)/1.833 = 0.818
@@ -471,7 +472,7 @@ fn test_click_through_rate() {
     let y_score_2 = vec![array![0.9, 0.8, 0.7, 0.6, 0.5]];
 
     // CTR@3
-    let ctr_2 = click_through_rate(&y_true_2, &y_score_2, 3).unwrap();
+    let ctr_2 = click_through_rate(&y_true_2, &y_score_2, 3).expect("Operation failed");
     assert_abs_diff_eq!(ctr_2, 0.0, epsilon = 1e-10);
 
     // Test case 3: Multiple queries with mixed relevance
@@ -485,7 +486,7 @@ fn test_click_through_rate() {
     ];
 
     // CTR@3
-    let ctr_3 = click_through_rate(&y_true_3, &y_score_3, 3).unwrap();
+    let ctr_3 = click_through_rate(&y_true_3, &y_score_3, 3).expect("Operation failed");
     // Should be positive but less than 1.0
     assert!(ctr_3 > 0.0 && ctr_3 < 1.0);
 

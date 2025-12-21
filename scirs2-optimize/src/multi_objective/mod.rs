@@ -114,7 +114,7 @@ mod tests {
         let result = nsga2(zdt1, 2, 2, Some(config));
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.success);
         assert!(!result.pareto_front.is_empty());
     }

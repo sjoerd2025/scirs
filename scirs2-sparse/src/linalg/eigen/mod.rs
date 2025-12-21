@@ -258,10 +258,11 @@ mod tests {
         let data = vec![2.0, 1.0, 2.0];
         let indptr = vec![0, 1, 3];
         let indices = vec![0, 0, 1];
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let config = EigenSolverConfig::new().with_num_eigenvalues(1);
-        let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::Auto).unwrap();
+        let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::Auto)
+            .expect("Operation failed");
 
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 1);
@@ -273,11 +274,11 @@ mod tests {
         let data = vec![3.0, 1.0, 2.0];
         let indptr = vec![0, 1, 3];
         let indices = vec![0, 0, 1];
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let config = EigenSolverConfig::new().with_num_eigenvalues(1);
-        let result =
-            solve_eigenvalues(&matrix, &config, EigenSolverStrategy::PowerIteration).unwrap();
+        let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::PowerIteration)
+            .expect("Operation failed");
 
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 1);
@@ -289,10 +290,11 @@ mod tests {
         let data = vec![4.0, 2.0, 3.0];
         let indptr = vec![0, 1, 3];
         let indices = vec![0, 0, 1];
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let config = EigenSolverConfig::new().with_num_eigenvalues(2);
-        let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::Lanczos).unwrap();
+        let result = solve_eigenvalues(&matrix, &config, EigenSolverStrategy::Lanczos)
+            .expect("Operation failed");
 
         assert!(result.converged);
         assert!(!result.eigenvalues.is_empty());

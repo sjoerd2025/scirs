@@ -283,7 +283,7 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // y = x^2
 
-        let spline = linear_bspline(&x.view(), &y.view()).unwrap();
+        let spline = linear_bspline(&x.view(), &y.view()).expect("Operation failed");
 
         // Test evaluation
         let value = spline.evaluate(2.5);
@@ -298,7 +298,7 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = array![0.0, 1.0, 8.0, 27.0, 64.0]; // y = x^3
 
-        let spline = cubic_bspline(&x.view(), &y.view()).unwrap();
+        let spline = cubic_bspline(&x.view(), &y.view()).expect("Operation failed");
 
         // Test evaluation
         let value = spline.evaluate(2.5);
@@ -323,7 +323,7 @@ mod tests {
         );
         assert!(spline.is_ok());
 
-        let spline = spline.unwrap();
+        let spline = spline.expect("Operation failed");
 
         // Test evaluation
         let test_point = 2.5;
@@ -345,8 +345,8 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = array![1.0, 2.0, 3.0, 2.0, 1.0];
 
-        let spline =
-            make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate).unwrap();
+        let spline = make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate)
+            .expect("Operation failed");
 
         let workspace = BSplineWorkspace::new();
 
@@ -367,8 +367,8 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![0.0, 1.0, 8.0, 27.0, 64.0, 125.0]; // y = x^3
 
-        let spline =
-            make_interp_bspline(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate).unwrap();
+        let spline = make_interp_bspline(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate)
+            .expect("Operation failed");
 
         // Test fast recursive evaluation
         let fast_value = spline.evaluate_fast_recursive(2.5);
@@ -378,7 +378,7 @@ mod tests {
         let test_points = array![1.5, 2.5, 3.5];
         let batch_values = spline.evaluate_array(&test_points.view());
         assert!(batch_values.is_ok());
-        assert_eq!(batch_values.unwrap().len(), 3);
+        assert_eq!(batch_values.expect("Operation failed").len(), 3);
     }
 
     #[test]
@@ -391,7 +391,7 @@ mod tests {
         assert!(knots.is_ok());
 
         // Test least-squares fitting
-        let knots = knots.unwrap();
+        let knots = knots.expect("Operation failed");
         let lsq_spline = make_lsq_bspline(
             &x.view(),
             &y.view(),
@@ -415,22 +415,23 @@ mod tests {
 
         // Test extrapolate mode
         let spline_extrapolate =
-            make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate).unwrap();
+            make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate)
+                .expect("Operation failed");
 
         let val_out = spline_extrapolate.evaluate(5.0); // Outside domain
         assert!(val_out.is_ok());
 
         // Test NaN mode
-        let spline_nan =
-            make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Nan).unwrap();
+        let spline_nan = make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Nan)
+            .expect("Operation failed");
 
         let val_nan = spline_nan.evaluate(5.0);
         assert!(val_nan.is_ok());
-        assert!(val_nan.unwrap().is_nan());
+        assert!(val_nan.expect("Operation failed").is_nan());
 
         // Test error mode
-        let spline_error =
-            make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Error).unwrap();
+        let spline_error = make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Error)
+            .expect("Operation failed");
 
         let val_error = spline_error.evaluate(5.0);
         assert!(val_error.is_err());
@@ -441,12 +442,14 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let spline =
-            make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate).unwrap();
+        let spline = make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate)
+            .expect("Operation failed");
 
         // Test Interpolator trait
         let query_points = array![1.5, 2.5];
-        let values = spline.evaluate_array(&query_points.view()).unwrap();
+        let values = spline
+            .evaluate_array(&query_points.view())
+            .expect("Operation failed");
         assert_eq!(values.len(), 2);
 
         assert_eq!(spline.dimension(), 1);

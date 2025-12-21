@@ -361,8 +361,8 @@ fn machine_learning_applications() -> Result<(), Box<dyn std::error::Error>> {
     let predicted_class = probabilities
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .unwrap()
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed")
         .0;
 
     println!("Predicted class: {} ✓", class_names[predicted_class]);
@@ -518,7 +518,7 @@ fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn pause() {
     print!("\nPress Enter to continue...");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
+    io::stdin().read_line(&mut input).expect("Operation failed");
 }

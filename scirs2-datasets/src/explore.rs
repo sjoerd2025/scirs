@@ -301,10 +301,10 @@ impl DatasetExplorer {
             println!("  q. Quit");
 
             print!("\nEnter command: ");
-            io::stdout().flush().unwrap();
+            io::stdout().flush().expect("Operation failed");
 
             let mut input = String::new();
-            io::stdin().read_line(&mut input).unwrap();
+            io::stdin().read_line(&mut input).expect("Operation failed");
             let input = input.trim();
 
             match input {
@@ -400,7 +400,7 @@ impl DatasetExplorer {
             let std = variance.sqrt();
 
             let mut sorted_values = valid_values.clone();
-            sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             let min = sorted_values.first().copied();
             let max = sorted_values.last().copied();
@@ -661,7 +661,8 @@ impl DatasetExplorer {
         }
 
         // Sort by absolute correlation
-        correlations_with_features.sort_by(|a, b| b.1.abs().partial_cmp(&a.1.abs()).unwrap());
+        correlations_with_features
+            .sort_by(|a, b| b.1.abs().partial_cmp(&a.1.abs()).expect("Operation failed"));
 
         Ok(Some(TargetAnalysis {
             target_stats,
@@ -1042,10 +1043,10 @@ impl DatasetExplorer {
         }
 
         print!("\nEnter feature number (or 'back'): ");
-        io::stdout().flush().unwrap();
+        io::stdout().flush().expect("Operation failed");
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
+        io::stdin().read_line(&mut input).expect("Operation failed");
         let input = input.trim();
 
         if input == "back" {
@@ -1110,10 +1111,10 @@ impl DatasetExplorer {
 
     fn export_summary(&self, summary: &DatasetSummary) -> Result<()> {
         print!("Export format (json/csv/markdown): ");
-        io::stdout().flush().unwrap();
+        io::stdout().flush().expect("Operation failed");
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
+        io::stdin().read_line(&mut input).expect("Operation failed");
         let format = input.trim();
 
         let filename = format!("dataset_summary.{format}");
@@ -1241,8 +1242,8 @@ mod tests {
 
     #[test]
     fn test_basic_summary() {
-        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).unwrap();
-        let summary = convenience::quick_summary(&dataset).unwrap();
+        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).expect("Operation failed");
+        let summary = convenience::quick_summary(&dataset).expect("Operation failed");
 
         assert_eq!(summary.info.n_samples, 100);
         assert_eq!(summary.info.n_features, 5);
@@ -1251,9 +1252,11 @@ mod tests {
 
     #[test]
     fn test_feature_statistics() {
-        let dataset = make_classification(50, 3, 2, 1, 1, Some(42)).unwrap();
+        let dataset = make_classification(50, 3, 2, 1, 1, Some(42)).expect("Operation failed");
         let explorer = DatasetExplorer::default_config();
-        let statistics = explorer.compute_feature_statistics(&dataset).unwrap();
+        let statistics = explorer
+            .compute_feature_statistics(&dataset)
+            .expect("Operation failed");
 
         assert_eq!(statistics.features.len(), 3);
 
@@ -1267,9 +1270,9 @@ mod tests {
 
     #[test]
     fn test_quality_assessment() {
-        let dataset = make_classification(100, 4, 2, 1, 1, Some(42)).unwrap();
+        let dataset = make_classification(100, 4, 2, 1, 1, Some(42)).expect("Operation failed");
         let explorer = DatasetExplorer::default_config();
-        let summary = explorer.summarize(&dataset).unwrap();
+        let summary = explorer.summarize(&dataset).expect("Operation failed");
 
         // Should have high quality score for synthetic data
         assert!(summary.quality_assessment.quality_score > 80.0);

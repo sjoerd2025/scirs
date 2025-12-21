@@ -227,7 +227,7 @@ where
 ///     let x = (i as f64) / 1000.0;
 ///     xi_vec.extend_from_slice(&[x, x]);
 /// }
-/// let xi = Array2::from_shape_vec((1000, 2), xi_vec).unwrap();
+/// let xi = Array2::from_shape_vec((1000, 2), xi_vec).expect("Operation failed");
 ///
 /// // Use 4 worker threads for parallel interpolation
 /// let result = griddata_parallel(&points.view(), &values.view(), &xi.view(),
@@ -435,7 +435,7 @@ where
         points,
         values,
         kernel,
-        F::from_f64(1.0).unwrap(), // epsilon
+        F::from_f64(1.0).expect("Operation failed"), // epsilon
     )?;
 
     let n_queries = xi.nrows();
@@ -447,7 +447,9 @@ where
         .with_min_len(chunk_size)
         .map(|i| {
             let query_point = xi.slice(scirs2_core::ndarray::s![i, ..]);
-            let query_2d = query_point.to_shape((1, query_point.len())).unwrap();
+            let query_2d = query_point
+                .to_shape((1, query_point.len()))
+                .expect("Operation failed");
 
             match rbf_interpolator.interpolate(&query_2d.view()) {
                 Ok(result) => Ok(result[0]),
@@ -860,7 +862,7 @@ where
 {
     let denom = (p2[1] - p3[1]) * (p1[0] - p3[0]) + (p3[0] - p2[0]) * (p1[1] - p3[1]);
 
-    if denom.abs() < F::from_f64(1e-10).unwrap() {
+    if denom.abs() < F::from_f64(1e-10).expect("Operation failed") {
         return None; // Degenerate triangle
     }
 
@@ -906,7 +908,7 @@ where
     let mut sum_weighted_values = F::zero();
 
     for &(idx, dist_sq) in neighbors.iter().take(k) {
-        if dist_sq < F::from_f64(1e-12).unwrap() {
+        if dist_sq < F::from_f64(1e-12).expect("Operation failed") {
             // Very close to a data point
             return Ok(values[idx]);
         }
@@ -952,7 +954,7 @@ where
             dist_sq += diff * diff;
         }
 
-        if dist_sq < F::from_f64(1e-12).unwrap() {
+        if dist_sq < F::from_f64(1e-12).expect("Operation failed") {
             // Very close to a data point
             return Ok(values[i]);
         }
@@ -1039,7 +1041,8 @@ where
 
     // Initialize result array
     let mut result = Array1::zeros(n_queries);
-    let default_fill = fill_value.unwrap_or_else(|| F::from_f64(f64::NAN).unwrap());
+    let default_fill =
+        fill_value.unwrap_or_else(|| F::from_f64(f64::NAN).expect("Operation failed"));
 
     // For each query point, perform local cubic interpolation
     for (i, query) in xi.outer_iter().enumerate() {
@@ -1173,7 +1176,7 @@ where
     // Use inverse distance weighting with gradient information
     let mut sum_weights = F::zero();
     let mut sum_weighted_values = F::zero();
-    let eps = F::from_f64(1e-12).unwrap();
+    let eps = F::from_f64(1e-12).expect("Operation failed");
 
     for &i in neighbors {
         let xi = points[[i, 0]];
@@ -1250,7 +1253,7 @@ where
     // Solve 2x2 system directly for efficiency
     if n == 2 {
         let det = ata[[0, 0]] * ata[[1, 1]] - ata[[0, 1]] * ata[[1, 0]];
-        let eps = F::from_f64(1e-14).unwrap();
+        let eps = F::from_f64(1e-14).expect("Operation failed");
 
         if det.abs() < eps {
             // Singular matrix, return zero solution
@@ -1417,7 +1420,8 @@ where
         for (dim, &idx) in indices.iter().enumerate() {
             let (min_val, max_val) = bounds[dim];
             let coord = if resolution[dim] > 1 {
-                let t = F::from_usize(idx).unwrap() / F::from_usize(resolution[dim] - 1).unwrap();
+                let t = F::from_usize(idx).expect("Operation failed")
+                    / F::from_usize(resolution[dim] - 1).expect("Operation failed");
                 min_val + t * (max_val - min_val)
             } else {
                 (min_val + max_val) / (F::one() + F::one())

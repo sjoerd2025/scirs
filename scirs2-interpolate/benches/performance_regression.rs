@@ -130,7 +130,7 @@ fn bench_spline_regression(c: &mut Criterion) {
     });
 
     // Pre-construct spline for evaluation tests
-    let spline = CubicSpline::new(&x_data.view(), &y_data.view()).unwrap();
+    let spline = CubicSpline::new(&x_data.view(), &y_data.view()).expect("Test: operation failed");
 
     group.bench_function("cubic_spline_evaluation", |b| {
         b.iter(|| {
@@ -182,7 +182,7 @@ fn bench_bspline_regression(c: &mut Criterion) {
         degree,
         ExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     group.throughput(Throughput::Elements(n_queries as u64));
 
@@ -234,8 +234,8 @@ fn bench_rbf_regression(c: &mut Criterion) {
         })
     });
 
-    let rbf =
-        RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).unwrap();
+    let rbf = RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0)
+        .expect("Test: operation failed");
 
     group.bench_function("rbf_gaussian_evaluation", |b| {
         b.iter(|| black_box(rbf.evaluate(black_box(&query_points_.view()))))
@@ -294,7 +294,7 @@ fn bench_kriging_regression(c: &mut Criterion) {
     //     1.0,
     //     0.1,
     // )
-    // .unwrap();
+    // .expect("Test: operation failed");
 
     // group.bench_function("kriging_evaluation", |b| {
     //     b.iter(|| black_box(kriging.evaluate(black_box(&query_points_.view()))))

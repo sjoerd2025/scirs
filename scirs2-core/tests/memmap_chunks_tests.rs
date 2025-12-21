@@ -13,9 +13,10 @@ mod tests {
         let data = Array1::<f64>::linspace(0., 99., 100);
 
         // Create temporary memory-mapped array
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Test: operation failed");
         let file_path = temp_dir.path().join("test_chunk_count.bin");
-        let mmap = create_mmap(&data, &file_path, AccessMode::Write, 0).unwrap();
+        let mmap =
+            create_mmap(&data, &file_path, AccessMode::Write, 0).expect("Test: operation failed");
 
         // Test different chunking strategies
         assert_eq!(mmap.chunk_count(ChunkingStrategy::Fixed(10)), 10);
@@ -34,9 +35,10 @@ mod tests {
         let data = Array1::<i32>::from_vec((0..100).collect());
 
         // Create temporary memory-mapped array
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Test: operation failed");
         let file_path = temp_dir.path().join("test_process_chunks.bin");
-        let mmap = create_mmap(&data, &file_path, AccessMode::Write, 0).unwrap();
+        let mmap =
+            create_mmap(&data, &file_path, AccessMode::Write, 0).expect("Test: operation failed");
 
         // Use process_chunks to sum each chunk
         let chunk_sums = mmap.process_chunks(ChunkingStrategy::Fixed(25), |chunk, _| {
@@ -63,9 +65,10 @@ mod tests {
         println!("Original data: {:?}", data);
 
         // Create memory-mapped array
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Test: operation failed");
         let file_path = temp_dir.path().join("test_simple_mutation.bin");
-        let mut mmap = create_mmap(&data, &file_path, AccessMode::Write, 0).unwrap();
+        let mut mmap =
+            create_mmap(&data, &file_path, AccessMode::Write, 0).expect("Test: operation failed");
 
         // Process chunks to make a simple mutation
         // This is more reliable than direct mutation through array view
@@ -74,7 +77,9 @@ mod tests {
         });
 
         // Verify changes persisted
-        let array = mmap.as_array::<scirs2_core::ndarray::Ix1>().unwrap();
+        let array = mmap
+            .as_array::<scirs2_core::ndarray::Ix1>()
+            .expect("Test: operation failed");
         println!("After mutation through process_chunksmut: {:?}", array);
 
         // Test should pass if mutation worked
@@ -87,18 +92,21 @@ mod tests {
         let data = Array1::<i32>::from_vec(vec![0; 100]);
 
         // Create memory-mapped array
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Test: operation failed");
         let file_path = temp_dir.path().join("test_chunks_mutation.bin");
 
         // Use save_array to create the file with proper header
-        MemoryMappedArray::<i32>::save_array(&data, &file_path, None).unwrap();
+        MemoryMappedArray::<i32>::save_array(&data, &file_path, None)
+            .expect("Test: operation failed");
 
         // Open for read-write access
-        let mut mmap =
-            MemoryMappedArray::<i32>::open_zero_copy(&file_path, AccessMode::ReadWrite).unwrap();
+        let mut mmap = MemoryMappedArray::<i32>::open_zero_copy(&file_path, AccessMode::ReadWrite)
+            .expect("Test: operation failed");
 
         // Get the original data
-        let original = mmap.as_array::<scirs2_core::ndarray::Ix1>().unwrap();
+        let original = mmap
+            .as_array::<scirs2_core::ndarray::Ix1>()
+            .expect("Test: operation failed");
         println!(
             "Original data (first 5 elements): {:?}",
             original.slice(scirs2_core::ndarray::s![0..5])
@@ -113,7 +121,7 @@ mod tests {
         });
 
         // Flush changes to disk
-        mmap.flush().unwrap();
+        mmap.flush().expect("Test: operation failed");
 
         // Verify changes persisted by reading directly from the file
         // Drop the mmap to ensure file is closed
@@ -121,10 +129,11 @@ mod tests {
 
         // Reopen the file
         let reopened_mmap =
-            MemoryMappedArray::<i32>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
+            MemoryMappedArray::<i32>::open_zero_copy(&file_path, AccessMode::ReadOnly)
+                .expect("Test: operation failed");
         let modified = reopened_mmap
             .as_array::<scirs2_core::ndarray::Ix1>()
-            .unwrap();
+            .expect("Test: operation failed");
 
         println!(
             "Modified data (first 15 elements): {:?}",
@@ -153,9 +162,10 @@ mod tests {
         let data = Array1::<f64>::linspace(0., 99., 100);
 
         // Create temporary memory-mapped array
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Test: operation failed");
         let file_path = temp_dir.path().join("test_chunks_iterator.bin");
-        let mmap = create_mmap(&data, &file_path, AccessMode::Write, 0).unwrap();
+        let mmap =
+            create_mmap(&data, &file_path, AccessMode::Write, 0).expect("Test: operation failed");
 
         // Use chunks iterator
         let mut count = 0;

@@ -525,7 +525,7 @@ mod tests {
 
     #[test]
     fn test_backend_info() {
-        let gpu_spmv = GpuSpMatVec::new().unwrap();
+        let gpu_spmv = GpuSpMatVec::new().expect("Operation failed");
         let info = gpu_spmv.get_backend_info();
 
         assert!(!info.name.is_empty());
@@ -541,7 +541,7 @@ mod tests {
 
     #[test]
     fn test_is_gpu_available() {
-        let gpu_spmv = GpuSpMatVec::new().unwrap();
+        let gpu_spmv = GpuSpMatVec::new().expect("Operation failed");
 
         // Should not panic - either true or false is valid
         let _available = gpu_spmv.is_gpu_available();

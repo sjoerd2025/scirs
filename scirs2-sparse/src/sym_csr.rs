@@ -217,7 +217,7 @@ where
 
                 // Check if a[i,j] == a[j,i] with sufficient tolerance
                 let diff = (val - i_val).abs();
-                let epsilon = T::epsilon() * T::from(100.0).unwrap();
+                let epsilon = T::epsilon() * T::from(100.0).expect("Operation failed");
                 if diff > epsilon {
                     return false;
                 }
@@ -503,7 +503,7 @@ mod tests {
         let indices = vec![0, 0, 1, 1, 2];
         let indptr = vec![0, 1, 3, 5];
 
-        let sym = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+        let sym = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
 
         assert_eq!(sym.shape(), (3, 3));
         assert_eq!(sym.nnz_stored(), 5);
@@ -535,13 +535,13 @@ mod tests {
         let col_indices = vec![0, 1, 0, 1, 2, 1, 2];
         let data = vec![2.0, 1.0, 1.0, 2.0, 3.0, 3.0, 1.0];
 
-        let csr = CsrMatrix::new(data, row_indices, col_indices, (3, 3)).unwrap();
-        let sym = SymCsrMatrix::from_csr(&csr).unwrap();
+        let csr = CsrMatrix::new(data, row_indices, col_indices, (3, 3)).expect("Operation failed");
+        let sym = SymCsrMatrix::from_csr(&csr).expect("Operation failed");
 
         assert_eq!(sym.shape(), (3, 3));
 
         // Convert back to standard CSR to check
-        let csr2 = sym.to_csr().unwrap();
+        let csr2 = sym.to_csr().expect("Operation failed");
         let dense = csr2.to_dense();
 
         // Check the full matrix
@@ -563,13 +563,13 @@ mod tests {
         let indices = vec![0, 0, 1, 1, 2];
         let indptr = vec![0, 1, 3, 5];
 
-        let symmatrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+        let symmatrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
         let sym_array = SymCsrArray::new(symmatrix);
 
         assert_eq!(sym_array.inner().shape(), (3, 3));
 
         // Convert to standard CSR array
-        let csr_array = sym_array.to_csr_array().unwrap();
+        let csr_array = sym_array.to_csr_array().expect("Operation failed");
 
         // Verify shape and values
         assert_eq!(csr_array.shape(), (3, 3));

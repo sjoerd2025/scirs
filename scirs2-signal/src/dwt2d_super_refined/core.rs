@@ -55,7 +55,7 @@ use scirs2_core::simd_ops::PlatformCapabilities;
 /// });
 ///
 /// let config = AdvancedRefinedConfig::default();
-/// let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::DB(4), &config).unwrap();
+/// let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::DB(4), &config).expect("Operation failed");
 ///
 /// assert!(result.quality_metrics.perceptual_quality > 0.0);
 /// assert!(result.memory_stats.memory_efficiency >= 0.0);
@@ -293,7 +293,7 @@ mod tests {
         let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::DB(4), &config);
 
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.quality_metrics.perceptual_quality >= 0.0);
         assert!(result.performance_metrics.total_time_ms > 0.0);
     }
@@ -303,14 +303,14 @@ mod tests {
         let image = Array2::from_shape_fn((64, 64), |(i, j)| (i + j) as f64 / 128.0);
 
         let config = AdvancedRefinedConfig::default();
-        let decomposition =
-            advanced_refined_wavelet_packet_2d(&image, &Wavelet::DB(2), &config).unwrap();
+        let decomposition = advanced_refined_wavelet_packet_2d(&image, &Wavelet::DB(2), &config)
+            .expect("Operation failed");
 
         let reconstruction =
             advanced_refined_wavelet_packet_inverse_2d(&decomposition, &Wavelet::DB(2), &config);
 
         assert!(reconstruction.is_ok());
-        let result = reconstruction.unwrap();
+        let result = reconstruction.expect("Operation failed");
         assert_eq!(result.image.dim(), image.dim());
     }
 
@@ -334,7 +334,7 @@ mod tests {
         let result = advanced_refined_denoise_2d(&noisy_image, &Wavelet::DB(2), &denoising_config);
 
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.denoised_image.dim(), noisy_image.dim());
         assert!(denoised.quality_metrics.psnr > 0.0);
     }

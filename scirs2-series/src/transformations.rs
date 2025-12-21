@@ -12,6 +12,12 @@ use std::fmt::{Debug, Display};
 
 use crate::error::{Result, TimeSeriesError};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Box-Cox transformation parameters
 #[derive(Debug, Clone)]
 pub struct BoxCoxTransform<F> {
@@ -102,7 +108,7 @@ pub enum StationarityTestType {
 /// use scirs2_series::transformations::box_cox_transform;
 ///
 /// let ts = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-/// let (transformed, params) = box_cox_transform(&ts, Some(0.5)).unwrap();
+/// let (transformed, params) = box_cox_transform(&ts, Some(0.5)).expect("Test/example failed");
 /// ```
 #[allow(dead_code)]
 pub fn box_cox_transform<F, S>(
@@ -142,7 +148,7 @@ where
     };
 
     // Apply Box-Cox transformation
-    let transformed = if lambda_val.abs() < F::from(1e-10).unwrap() {
+    let transformed = if lambda_val.abs() < const_f64::<F>(1e-10) {
         // Lambda ≈ 0: use natural logarithm
         adjusted_ts.mapv(|x| x.ln())
     } else {
@@ -166,7 +172,7 @@ where
     F: Float + FromPrimitive + Debug + Display,
 {
     let n = ts.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert n to float");
 
     // Search over a range of lambda values
     let lambda_range = Array1::linspace(-2.0, 2.0, 41);
@@ -174,10 +180,10 @@ where
     let mut best_log_likelihood = F::neg_infinity();
 
     for &lambda_f64 in lambda_range.iter() {
-        let lambda = F::from(lambda_f64).unwrap();
+        let lambda = F::from(lambda_f64).expect("Failed to convert lambda to float");
 
         // Transform the data
-        let transformed = if lambda.abs() < F::from(1e-10).unwrap() {
+        let transformed = if lambda.abs() < const_f64::<F>(1e-10) {
             ts.mapv(|x| x.ln())
         } else {
             ts.mapv(|x| (x.powf(lambda) - F::one()) / lambda)
@@ -192,9 +198,12 @@ where
         }
 
         // Log-likelihood for normal distribution
-        let log_likelihood = -n_f / F::from(2.0).unwrap()
-            * (F::from(2.0 * std::f64::consts::PI).unwrap().ln() + variance.ln())
-            - n_f / F::from(2.0).unwrap();
+        let log_likelihood = -n_f / const_f64::<F>(2.0)
+            * (F::from(2.0 * std::f64::consts::PI)
+                .expect("Failed to convert 2*PI to float")
+                .ln()
+                + variance.ln())
+            - n_f / const_f64::<F>(2.0);
 
         // Add Jacobian term: (λ - 1) * Σ ln(x_i)
         let jacobian = (lambda - F::one()) * ts.mapv(|x| x.ln()).sum();
@@ -230,7 +239,7 @@ where
 {
     let lambda = params.lambda;
 
-    let original = if lambda.abs() < F::from(1e-10).unwrap() {
+    let original = if lambda.abs() < const_f64::<F>(1e-10) {
         // Lambda ≈ 0: inverse of ln(x) is exp(x)
         transformed_ts.mapv(|x| x.exp())
     } else {
@@ -267,7 +276,7 @@ where
 /// use scirs2_series::transformations::difference_transform;
 ///
 /// let ts = Array1::from_vec(vec![1.0, 3.0, 6.0, 10.0, 15.0]);
-/// let (differenced, params) = difference_transform(&ts, 1, None).unwrap();
+/// let (differenced, params) = difference_transform(&ts, 1, None).expect("Test/example failed");
 /// // Result: [2.0, 3.0, 4.0, 5.0] (first differences)
 /// ```
 #[allow(dead_code)]
@@ -423,7 +432,7 @@ where
 /// use scirs2_series::transformations::{normalize_transform, NormalizationMethod};
 ///
 /// let ts = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-/// let (normalized, params) = normalize_transform(&ts, NormalizationMethod::ZScore).unwrap();
+/// let (normalized, params) = normalize_transform(&ts, NormalizationMethod::ZScore).expect("Test/example failed");
 /// ```
 #[allow(dead_code)]
 pub fn normalize_transform<F, S>(
@@ -444,8 +453,9 @@ where
     let (location, scale, normalized) = match method {
         NormalizationMethod::ZScore => {
             // Z-score normalization: (x - μ) / σ
-            let mean = ts.sum() / F::from(n).unwrap();
-            let variance = ts.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(n - 1).unwrap();
+            let mean = ts.sum() / F::from(n).expect("Failed to convert n to float");
+            let variance = ts.mapv(|x| (x - mean) * (x - mean)).sum()
+                / F::from(n - 1).expect("Failed to convert (n-1) to float");
             let std_dev = variance.sqrt();
 
             if std_dev <= F::zero() {
@@ -486,8 +496,8 @@ where
                 ));
             }
 
-            let min_target_f = F::from(min_target).unwrap();
-            let max_target_f = F::from(max_target).unwrap();
+            let min_target_f = F::from(min_target).expect("Failed to convert min_target to float");
+            let max_target_f = F::from(max_target).expect("Failed to convert max_target to float");
             let target_range = max_target_f - min_target_f;
 
             let normalized = ts.mapv(|x| {
@@ -503,7 +513,7 @@ where
             sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
             let median = if n.is_multiple_of(2) {
-                (sorted_values[n / 2 - 1] + sorted_values[n / 2]) / F::from(2.0).unwrap()
+                (sorted_values[n / 2 - 1] + sorted_values[n / 2]) / const_f64::<F>(2.0)
             } else {
                 sorted_values[n / 2]
             };
@@ -566,8 +576,8 @@ where
 
         NormalizationMethod::MinMaxCustom(min_target, max_target) => {
             // Inverse custom min-max
-            let min_target_f = F::from(min_target).unwrap();
-            let max_target_f = F::from(max_target).unwrap();
+            let min_target_f = F::from(min_target).expect("Failed to convert min_target to float");
+            let max_target_f = F::from(max_target).expect("Failed to convert max_target to float");
             let target_range = max_target_f - min_target_f;
 
             normalized_ts.mapv(|x| {
@@ -667,7 +677,7 @@ where
     // Trend term
     if regression_type.contains('t') {
         for i in 0..regression_length {
-            x_matrix[[i, col_idx]] = F::from(i + 1).unwrap();
+            x_matrix[[i, col_idx]] = F::from(i + 1).expect("Failed to convert (i+1) to float");
         }
         col_idx += 1;
     }
@@ -698,7 +708,8 @@ where
     // Calculate residuals and standard errors
     let y_pred = x_matrix.dot(&beta);
     let residuals = &y_vector - &y_pred;
-    let mse = residuals.mapv(|x| x * x).sum() / F::from(regression_length - n_regressors).unwrap();
+    let mse = residuals.mapv(|x| x * x).sum()
+        / F::from(regression_length - n_regressors).expect("Test/example failed");
 
     // Standard error of the coefficient of interest (y_{t-1})
     let coeff_idx = if regression_type.contains('c') { 1 } else { 0 };
@@ -742,7 +753,7 @@ where
 
     // Simple case: 1x1 matrix
     if n == 1 {
-        if xtx[[0, 0]].abs() < F::from(1e-12).unwrap() {
+        if xtx[[0, 0]].abs() < const_f64::<F>(1e-12) {
             return Err(TimeSeriesError::NumericalInstability(
                 "Singular matrix in OLS".to_string(),
             ));
@@ -778,7 +789,7 @@ where
 
         // Eliminate
         for i in (k + 1)..n {
-            if a[[k, k]].abs() < F::from(1e-12).unwrap() {
+            if a[[k, k]].abs() < const_f64::<F>(1e-12) {
                 return Err(TimeSeriesError::NumericalInstability(
                     "Near-zero pivot in OLS".to_string(),
                 ));
@@ -811,7 +822,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     // Simplified: just return 1/diagonal for well-conditioned case
-    if matrix[[idx, idx]].abs() < F::from(1e-12).unwrap() {
+    if matrix[[idx, idx]].abs() < const_f64::<F>(1e-12) {
         return Err(TimeSeriesError::NumericalInstability(
             "Matrix is singular".to_string(),
         ));
@@ -828,24 +839,24 @@ where
     // Simplified critical values - in practice these would be more sophisticated
     match _regressiontype {
         "nc" => vec![
-            (F::from(0.01).unwrap(), F::from(-2.58).unwrap()),
-            (F::from(0.05).unwrap(), F::from(-1.95).unwrap()),
-            (F::from(0.10).unwrap(), F::from(-1.62).unwrap()),
+            (const_f64::<F>(0.01), const_f64::<F>(-2.58)),
+            (const_f64::<F>(0.05), const_f64::<F>(-1.95)),
+            (const_f64::<F>(0.10), const_f64::<F>(-1.62)),
         ],
         "c" => vec![
-            (F::from(0.01).unwrap(), F::from(-3.43).unwrap()),
-            (F::from(0.05).unwrap(), F::from(-2.86).unwrap()),
-            (F::from(0.10).unwrap(), F::from(-2.57).unwrap()),
+            (const_f64::<F>(0.01), const_f64::<F>(-3.43)),
+            (const_f64::<F>(0.05), const_f64::<F>(-2.86)),
+            (const_f64::<F>(0.10), const_f64::<F>(-2.57)),
         ],
         "ct" => vec![
-            (F::from(0.01).unwrap(), F::from(-3.96).unwrap()),
-            (F::from(0.05).unwrap(), F::from(-3.41).unwrap()),
-            (F::from(0.10).unwrap(), F::from(-3.13).unwrap()),
+            (const_f64::<F>(0.01), const_f64::<F>(-3.96)),
+            (const_f64::<F>(0.05), const_f64::<F>(-3.41)),
+            (const_f64::<F>(0.10), const_f64::<F>(-3.13)),
         ],
         _ => vec![
-            (F::from(0.01).unwrap(), F::from(-3.43).unwrap()),
-            (F::from(0.05).unwrap(), F::from(-2.86).unwrap()),
-            (F::from(0.10).unwrap(), F::from(-2.57).unwrap()),
+            (const_f64::<F>(0.01), const_f64::<F>(-3.43)),
+            (const_f64::<F>(0.05), const_f64::<F>(-2.86)),
+            (const_f64::<F>(0.10), const_f64::<F>(-2.57)),
         ],
     }
 }
@@ -857,14 +868,14 @@ where
     F: Float + FromPrimitive,
 {
     // Very simplified p-value approximation
-    if _t_stat < F::from(-3.0).unwrap() {
-        F::from(0.01).unwrap()
-    } else if _t_stat < F::from(-2.5).unwrap() {
-        F::from(0.05).unwrap()
-    } else if _t_stat < F::from(-2.0).unwrap() {
-        F::from(0.10).unwrap()
+    if _t_stat < const_f64::<F>(-3.0) {
+        const_f64::<F>(0.01)
+    } else if _t_stat < const_f64::<F>(-2.5) {
+        const_f64::<F>(0.05)
+    } else if _t_stat < const_f64::<F>(-2.0) {
+        const_f64::<F>(0.10)
     } else {
-        F::from(0.20).unwrap()
+        const_f64::<F>(0.20)
     }
 }
 
@@ -906,7 +917,7 @@ where
         detrend_linear(_ts)?
     } else {
         // Remove mean (level)
-        let mean = _ts.sum() / F::from(n).unwrap();
+        let mean = _ts.sum() / F::from(n).expect("Failed to convert n to float");
         _ts.mapv(|x| x - mean)
     };
 
@@ -919,12 +930,14 @@ where
 
     // Calculate LM statistic
     let sum_squares = partial_sums.mapv(|x| x * x).sum();
-    let _residual_variance = detrended.mapv(|x| x * x).sum() / F::from(n).unwrap();
+    let _residual_variance =
+        detrended.mapv(|x| x * x).sum() / F::from(n).expect("Failed to convert n to float");
 
     // Long-run variance estimation (Newey-West)
     let long_run_variance = estimate_long_run_variance(&detrended)?;
 
-    let lm_stat = sum_squares / (F::from(n * n).unwrap() * long_run_variance);
+    let lm_stat =
+        sum_squares / (F::from(n * n).expect("Failed to convert n*n to float") * long_run_variance);
 
     // Critical values
     let critical_values = get_kpss_critical_values(include_trend);
@@ -952,10 +965,12 @@ where
     F: Float + FromPrimitive + Debug + Clone,
 {
     let n = ts.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert n to float");
 
     // Create time index
-    let time_index: Array1<F> = (0..n).map(|i| F::from(i).unwrap()).collect();
+    let time_index: Array1<F> = (0..n)
+        .map(|i| F::from(i).expect("Failed to convert i to float"))
+        .collect();
 
     // Calculate linear regression coefficients
     let sum_t = time_index.sum();
@@ -971,7 +986,7 @@ where
     let mean_y = sum_y / n_f;
 
     let denominator = sum_tt - n_f * mean_t * mean_t;
-    if denominator.abs() < F::from(1e-12).unwrap() {
+    if denominator.abs() < const_f64::<F>(1e-12) {
         return Err(TimeSeriesError::NumericalInstability(
             "Cannot detrend: degenerate time series".to_string(),
         ));
@@ -997,7 +1012,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let n = residuals.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert n to float");
 
     // Base variance
     let mut variance = residuals.mapv(|x| x * x).sum() / n_f;
@@ -1013,11 +1028,13 @@ where
         autocovariance = autocovariance / n_f;
 
         // Bartlett kernel weights
-        let weight = F::one() - F::from(lag).unwrap() / F::from(max_lag + 1).unwrap();
-        variance = variance + F::from(2.0).unwrap() * weight * autocovariance;
+        let weight = F::one()
+            - F::from(lag).expect("Failed to convert lag to float")
+                / F::from(max_lag + 1).expect("Failed to convert (max_lag+1) to float");
+        variance = variance + const_f64::<F>(2.0) * weight * autocovariance;
     }
 
-    Ok(variance.max(F::from(1e-10).unwrap())) // Ensure positive
+    Ok(variance.max(const_f64::<F>(1e-10))) // Ensure positive
 }
 
 /// Get KPSS critical values
@@ -1028,15 +1045,15 @@ where
 {
     if _includetrend {
         vec![
-            (F::from(0.01).unwrap(), F::from(0.216).unwrap()),
-            (F::from(0.05).unwrap(), F::from(0.146).unwrap()),
-            (F::from(0.10).unwrap(), F::from(0.119).unwrap()),
+            (const_f64::<F>(0.01), const_f64::<F>(0.216)),
+            (const_f64::<F>(0.05), const_f64::<F>(0.146)),
+            (const_f64::<F>(0.10), const_f64::<F>(0.119)),
         ]
     } else {
         vec![
-            (F::from(0.01).unwrap(), F::from(0.739).unwrap()),
-            (F::from(0.05).unwrap(), F::from(0.463).unwrap()),
-            (F::from(0.10).unwrap(), F::from(0.347).unwrap()),
+            (const_f64::<F>(0.01), const_f64::<F>(0.739)),
+            (const_f64::<F>(0.05), const_f64::<F>(0.463)),
+            (const_f64::<F>(0.10), const_f64::<F>(0.347)),
         ]
     }
 }
@@ -1050,13 +1067,13 @@ where
     let critical_vals = get_kpss_critical_values::<F>(includetrend);
 
     if _lm_stat > critical_vals[0].1 {
-        F::from(0.01).unwrap()
+        const_f64::<F>(0.01)
     } else if _lm_stat > critical_vals[1].1 {
-        F::from(0.05).unwrap()
+        const_f64::<F>(0.05)
     } else if _lm_stat > critical_vals[2].1 {
-        F::from(0.10).unwrap()
+        const_f64::<F>(0.10)
     } else {
-        F::from(0.20).unwrap()
+        const_f64::<F>(0.20)
     }
 }
 
@@ -1071,7 +1088,7 @@ mod tests {
         let ts = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // Test with lambda = 0 (log transformation)
-        let (transformed, params) = box_cox_transform(&ts, Some(0.0)).unwrap();
+        let (transformed, params) = box_cox_transform(&ts, Some(0.0)).expect("Test/example failed");
         let expected: Array1<f64> = ts.mapv(|x| x.ln());
 
         for i in 0..ts.len() {
@@ -1079,7 +1096,8 @@ mod tests {
         }
 
         // Test inverse transformation
-        let recovered = inverse_box_cox_transform(&transformed, &params).unwrap();
+        let recovered =
+            inverse_box_cox_transform(&transformed, &params).expect("Test/example failed");
         for i in 0..ts.len() {
             assert_relative_eq!(recovered[i], ts[i], epsilon = 1e-10);
         }
@@ -1088,7 +1106,7 @@ mod tests {
     #[test]
     fn test_box_cox_lambda_estimation() {
         let ts = array![1.0, 4.0, 9.0, 16.0, 25.0]; // Perfect squares
-        let (transformed, params) = box_cox_transform(&ts, None).unwrap();
+        let (transformed, params) = box_cox_transform(&ts, None).expect("Test/example failed");
 
         // Should estimate a lambda that makes the series more normal
         assert!(params.lambda_estimated);
@@ -1100,7 +1118,7 @@ mod tests {
         let ts = array![1.0, 3.0, 6.0, 10.0, 15.0, 21.0];
 
         // First differences
-        let (diff1, params) = difference_transform(&ts, 1, None).unwrap();
+        let (diff1, params) = difference_transform(&ts, 1, None).expect("Test/example failed");
         let expected_diff1 = array![2.0, 3.0, 4.0, 5.0, 6.0];
 
         assert_eq!(diff1, expected_diff1);
@@ -1108,7 +1126,7 @@ mod tests {
         assert_eq!(params.seasonal_lag, None);
 
         // Second differences
-        let (diff2, _) = difference_transform(&ts, 2, None).unwrap();
+        let (diff2, _) = difference_transform(&ts, 2, None).expect("Test/example failed");
         let expected_diff2 = array![1.0, 1.0, 1.0, 1.0];
 
         assert_eq!(diff2, expected_diff2);
@@ -1119,7 +1137,8 @@ mod tests {
         let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Seasonal differencing with lag 4
-        let (seasonal_diff, params) = difference_transform(&ts, 0, Some(4)).unwrap();
+        let (seasonal_diff, params) =
+            difference_transform(&ts, 0, Some(4)).expect("Test/example failed");
         let expected = array![4.0, 4.0, 4.0, 4.0]; // [5-1, 6-2, 7-3, 8-4]
 
         assert_eq!(seasonal_diff, expected);
@@ -1129,7 +1148,8 @@ mod tests {
     #[test]
     fn test_normalize_z_score() {
         let ts = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let (normalized, params) = normalize_transform(&ts, NormalizationMethod::ZScore).unwrap();
+        let (normalized, params) =
+            normalize_transform(&ts, NormalizationMethod::ZScore).expect("Test/example failed");
 
         // Check that mean is approximately 0 and std is approximately 1
         let mean = normalized.sum() / normalized.len() as f64;
@@ -1150,7 +1170,8 @@ mod tests {
     #[test]
     fn test_normalize_min_max() {
         let ts = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let (normalized, params) = normalize_transform(&ts, NormalizationMethod::MinMax).unwrap();
+        let (normalized, params) =
+            normalize_transform(&ts, NormalizationMethod::MinMax).expect("Test/example failed");
 
         // Check that min is 0 and max is 1
         let min_val = normalized.iter().fold(f64::INFINITY, |acc, &x| acc.min(x));
@@ -1181,7 +1202,7 @@ mod tests {
             // Trending with variation and additional noise for better conditioning
         }
 
-        let result = adf_test(&ts, Some(2), "c").unwrap();
+        let result = adf_test(&ts, Some(2), "c").expect("Test/example failed");
 
         // Should have proper structure
         assert_eq!(result.test_type, StationarityTestType::ADF);
@@ -1196,7 +1217,7 @@ mod tests {
             .map(|i| (i as f64 / 10.0).sin() + 0.1 * (i as f64))
             .collect();
 
-        let result = kpss_test(&ts, "c").unwrap();
+        let result = kpss_test(&ts, "c").expect("Test/example failed");
 
         // Should have proper structure
         assert_eq!(result.test_type, StationarityTestType::KPSS);
@@ -1207,7 +1228,7 @@ mod tests {
     #[test]
     fn test_detrend_linear() {
         let ts = array![1.0, 3.0, 5.0, 7.0, 9.0]; // Perfect linear trend
-        let detrended = detrend_linear(&ts).unwrap();
+        let detrended = detrend_linear(&ts).expect("Test/example failed");
 
         // After detrending a perfect linear series, should be approximately zero
         for &val in detrended.iter() {
@@ -1220,9 +1241,11 @@ mod tests {
         let original = array![1.0, 3.0, 6.0, 10.0, 15.0];
 
         // Difference then integrate
-        let (differenced, params) = difference_transform(&original, 1, None).unwrap();
+        let (differenced, params) =
+            difference_transform(&original, 1, None).expect("Test/example failed");
         let initial_vals = array![original[0]];
-        let integrated = integrate_transform(&differenced, &params, &initial_vals).unwrap();
+        let integrated =
+            integrate_transform(&differenced, &params, &initial_vals).expect("Test/example failed");
 
         // Should recover original (approximately)
         for i in 0..original.len() {

@@ -17,10 +17,10 @@
 //!     3.7, 4.2,
 //!     3.9, 3.9,
 //!     4.2, 4.1,
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! // Run k-means with k=2
-//! let (centroids, labels) = kmeans(ArrayView2::from(&data), 2, None, None, None, None).unwrap();
+//! let (centroids, labels) = kmeans(ArrayView2::from(&data), 2, None, None, None, None).expect("Operation failed");
 //!
 //! // Print the results
 //! println!("Centroids: {:?}", centroids);
@@ -106,9 +106,9 @@ where
 ///     1.5, 2.5,
 ///     0.5, 1.5,
 ///     2.0, 3.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let whitened = whiten(&data).unwrap();
+/// let whitened = whiten(&data).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn whiten<F>(obs: &Array2<F>) -> Result<Array2<F>>
@@ -125,7 +125,7 @@ where
         for i in 0..n_samples {
             sum = sum + obs[[i, j]];
         }
-        means[j] = sum / F::from(n_samples).unwrap();
+        means[j] = sum / F::from(n_samples).expect("Failed to convert to float");
     }
 
     // Calculate standard deviation for each feature
@@ -136,10 +136,10 @@ where
             let diff = obs[[i, j]] - means[j];
             sum = sum + diff * diff;
         }
-        stds[j] = (sum / F::from(n_samples - 1).unwrap()).sqrt();
+        stds[j] = (sum / F::from(n_samples - 1).expect("Failed to convert to float")).sqrt();
 
         // Avoid division by zero
-        if stds[j] < F::from(1e-10).unwrap() {
+        if stds[j] < F::from(1e-10).expect("Failed to convert constant to float") {
             stds[j] = F::one();
         }
     }

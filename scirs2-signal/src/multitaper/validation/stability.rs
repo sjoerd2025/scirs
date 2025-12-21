@@ -88,7 +88,7 @@ mod tests {
         let result = test_numerical_stability_enhanced();
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.condition_number > 0.0);
         assert!(metrics.precision_loss >= 0.0);
         assert!(metrics.extreme_input_stable);

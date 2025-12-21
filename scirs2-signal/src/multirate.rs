@@ -1038,7 +1038,7 @@ mod tests {
     fn test_pr_filter_bank_creation() {
         let config = PerfectReconstructionConfig::default();
         let filter_bank =
-            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap();
+            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).expect("Operation failed");
 
         assert_eq!(filter_bank.config.num_channels, 4);
         assert_eq!(filter_bank.analysis_filters.nrows(), 4);
@@ -1055,16 +1055,16 @@ mod tests {
         };
 
         let filter_bank =
-            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap();
+            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).expect("Operation failed");
 
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
         // Analysis
-        let subbands = filter_bank.analysis(&input).unwrap();
+        let subbands = filter_bank.analysis(&input).expect("Operation failed");
         assert_eq!(subbands.len(), 2);
 
         // Synthesis
-        let reconstructed = filter_bank.synthesis(&subbands).unwrap();
+        let reconstructed = filter_bank.synthesis(&subbands).expect("Operation failed");
         assert!(!reconstructed.is_empty());
     }
 
@@ -1079,11 +1079,11 @@ mod tests {
         };
 
         let filter_bank =
-            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap();
+            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).expect("Operation failed");
 
         // Test with impulse signal
         let impulse = Array1::from_vec(vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        let (error_is_perfect) = filter_bank.verify_perfect_reconstruction(&impulse).unwrap();
+        let (error_is_perfect) = filter_bank.verify_perfect_reconstruction(&impulse).expect("Operation failed");
 
         // For a properly designed filter bank, reconstruction error should be reasonable
         // Note: Perfect reconstruction may not be achieved with simple designs
@@ -1100,11 +1100,11 @@ mod tests {
         };
 
         let filter_bank =
-            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Biorthogonal).unwrap();
+            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Biorthogonal).expect("Operation failed");
 
         let input = Array1::linspace(0.0, 1.0, 32);
-        let subbands = filter_bank.analysis(&input).unwrap();
-        let reconstructed = filter_bank.synthesis(&subbands).unwrap();
+        let subbands = filter_bank.analysis(&input).expect("Operation failed");
+        let reconstructed = filter_bank.synthesis(&subbands).expect("Operation failed");
 
         assert!(!reconstructed.is_empty());
         assert_eq!(subbands.len(), 4);
@@ -1120,7 +1120,7 @@ mod tests {
         };
 
         let filter_bank =
-            PerfectReconstructionFilterBank::new(config, PrFilterDesign::LinearPhase).unwrap();
+            PerfectReconstructionFilterBank::new(config, PrFilterDesign::LinearPhase).expect("Operation failed");
 
         // Verify that the linear phase prototype has symmetric properties
         // Note: The actual filters may not be perfectly symmetric due to modulation
@@ -1133,10 +1133,10 @@ mod tests {
 
     #[test]
     fn test_multirate_converter() {
-        let mut converter = MultirateConverter::new(3, 2, 32).unwrap(); // Smaller filter
+        let mut converter = MultirateConverter::new(3, 2, 32).expect("Operation failed"); // Smaller filter
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
-        let output = converter.convert(&input).unwrap();
+        let output = converter.convert(&input).expect("Operation failed");
 
         // Output length should be related to input length times conversion ratio
         // But exact length depends on filtering and boundary conditions
@@ -1155,9 +1155,9 @@ mod tests {
         };
 
         let filter_bank =
-            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).unwrap();
+            PerfectReconstructionFilterBank::new(config, PrFilterDesign::Orthogonal).expect("Operation failed");
 
-        let properties = filter_bank.analyze_properties().unwrap();
+        let properties = filter_bank.analyze_properties().expect("Operation failed");
 
         // Check that analysis provides reasonable values
         assert!(properties.aliasing_level >= 0.0);
@@ -1180,11 +1180,11 @@ mod tests {
             config,
             PrFilterDesign::CustomPrototype(prototype),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let input = Array1::from_vec(vec![1.0, -1.0, 1.0, -1.0]);
-        let subbands = filter_bank.analysis(&input).unwrap();
-        let reconstructed = filter_bank.synthesis(&subbands).unwrap();
+        let subbands = filter_bank.analysis(&input).expect("Operation failed");
+        let reconstructed = filter_bank.synthesis(&subbands).expect("Operation failed");
 
         assert!(!reconstructed.is_empty());
         assert_eq!(subbands.len(), 2);
@@ -1200,14 +1200,14 @@ mod tests {
         };
 
         let filter_bank =
-            PerfectReconstructionFilterBank::new(config, PrFilterDesign::ModulatedDft).unwrap();
+            PerfectReconstructionFilterBank::new(config, PrFilterDesign::ModulatedDft).expect("Operation failed");
 
         // Check polyphase matrix dimensions
         assert_eq!(filter_bank.analysis_polyphase.shape(), &[4, 4, 4]);
         assert_eq!(filter_bank.synthesis_polyphase.shape(), &[4, 4, 4]);
 
         let input = Array1::linspace(0.0, 15.0, 16);
-        let subbands = filter_bank.analysis(&input).unwrap();
+        let subbands = filter_bank.analysis(&input).expect("Operation failed");
         assert_eq!(subbands.len(), 4);
 
         // Each subband should be decimated

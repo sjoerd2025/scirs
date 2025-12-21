@@ -475,7 +475,7 @@ impl ZeroCopyInterface {
 
         // Store by name
         {
-            let mut named = self.named_data.write().unwrap();
+            let mut named = self.named_data.write().expect("Operation failed");
             if named.contains_key(name) {
                 return Err(CoreError::ValidationError(
                     ErrorContext::new(format!("Data with name '{name}' already exists"))
@@ -487,20 +487,20 @@ impl ZeroCopyInterface {
 
         // Store by ID
         {
-            let mut id_map = self.id_data.write().unwrap();
+            let mut id_map = self.id_data.write().expect("Operation failed");
             id_map.insert(data.id(), boxed_data.clone_box());
         }
 
         // Store by type
         {
-            let mut type_map = self.type_data.write().unwrap();
+            let mut type_map = self.type_data.write().expect("Operation failed");
             let type_id = TypeId::of::<T>();
             type_map.entry(type_id).or_default().push(boxed_data);
         }
 
         // Update statistics
         {
-            let mut stats = self.stats.write().unwrap();
+            let mut stats = self.stats.write().expect("Operation failed");
             stats.items_registered += 1;
             stats.total_memory_managed += data.metadata().size_bytes;
         }
@@ -513,7 +513,7 @@ impl ZeroCopyInterface {
         &self,
         name: &str,
     ) -> CoreResult<ZeroCopyData<T>> {
-        let named = self.named_data.read().unwrap();
+        let named = self.named_data.read().expect("Operation failed");
 
         if let Some(any_data) = named.get(name) {
             if let Some(typed_data) = any_data.as_any().downcast_ref::<ZeroCopyData<T>>() {
@@ -545,7 +545,7 @@ impl ZeroCopyInterface {
         &self,
         id: DataId,
     ) -> CoreResult<ZeroCopyData<T>> {
-        let id_map = self.id_data.read().unwrap();
+        let id_map = self.id_data.read().expect("Operation failed");
 
         if let Some(any_data) = id_map.get(&id) {
             if let Some(typed_data) = any_data.as_any().downcast_ref::<ZeroCopyData<T>>() {
@@ -576,7 +576,7 @@ impl ZeroCopyInterface {
     pub fn get_data_by_type<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
         &self,
     ) -> Vec<ZeroCopyData<T>> {
-        let type_map = self.type_data.read().unwrap();
+        let type_map = self.type_data.read().expect("Operation failed");
         let type_id = TypeId::of::<T>();
 
         if let Some(data_vec) = type_map.get(&type_id) {
@@ -599,7 +599,7 @@ impl ZeroCopyInterface {
         let view = data.view(0, data.len())?;
 
         {
-            let mut stats = self.stats.write().unwrap();
+            let mut stats = self.stats.write().expect("Operation failed");
             stats.views_created += 1;
         }
 
@@ -608,28 +608,34 @@ impl ZeroCopyInterface {
 
     /// Check if data exists by name
     pub fn has_data(&self, name: &str) -> bool {
-        self.named_data.read().unwrap().contains_key(name)
+        self.named_data
+            .read()
+            .expect("Operation failed")
+            .contains_key(name)
     }
 
     /// Check if data exists by ID
     pub fn has_data_by_id(&self, id: DataId) -> bool {
-        self.id_data.read().unwrap().contains_key(&id)
+        self.id_data
+            .read()
+            .expect("Operation failed")
+            .contains_key(&id)
     }
 
     /// Remove data by name
     pub fn remove_data(&self, name: &str) -> CoreResult<()> {
-        let mut named = self.named_data.write().unwrap();
+        let mut named = self.named_data.write().expect("Operation failed");
 
         if let Some(data) = named.remove(name) {
             let id = data.data_id();
 
             // Remove from ID map
-            let mut id_map = self.id_data.write().unwrap();
+            let mut id_map = self.id_data.write().expect("Operation failed");
             id_map.remove(&id);
 
             // Update statistics
             {
-                let mut stats = self.stats.write().unwrap();
+                let mut stats = self.stats.write().expect("Operation failed");
                 stats.total_memory_managed -= data.metadata().size_bytes;
             }
 
@@ -644,17 +650,27 @@ impl ZeroCopyInterface {
 
     /// List all registered data names
     pub fn list_data_names(&self) -> Vec<String> {
-        self.named_data.read().unwrap().keys().cloned().collect()
+        self.named_data
+            .read()
+            .expect("Operation failed")
+            .keys()
+            .cloned()
+            .collect()
     }
 
     /// List all registered data IDs
     pub fn list_data_ids(&self) -> Vec<DataId> {
-        self.id_data.read().unwrap().keys().cloned().collect()
+        self.id_data
+            .read()
+            .expect("Operation failed")
+            .keys()
+            .cloned()
+            .collect()
     }
 
     /// Get metadata for named data
     pub fn get_metadata(&self, name: &str) -> CoreResult<DataMetadata> {
-        let named = self.named_data.read().unwrap();
+        let named = self.named_data.read().expect("Operation failed");
 
         if let Some(data) = named.get(name) {
             Ok(data.metadata().clone())
@@ -668,27 +684,27 @@ impl ZeroCopyInterface {
 
     /// Get interface statistics
     pub fn stats(&self) -> InterfaceStats {
-        self.stats.read().unwrap().clone()
+        self.stats.read().expect("Operation failed").clone()
     }
 
     /// Clear all data
     pub fn clear(&self) {
-        let mut named = self.named_data.write().unwrap();
-        let mut id_map = self.id_data.write().unwrap();
-        let mut type_map = self.type_data.write().unwrap();
+        let mut named = self.named_data.write().expect("Operation failed");
+        let mut id_map = self.id_data.write().expect("Operation failed");
+        let mut type_map = self.type_data.write().expect("Operation failed");
 
         named.clear();
         id_map.clear();
         type_map.clear();
 
         {
-            let mut stats = self.stats.write().unwrap();
+            let mut stats = self.stats.write().expect("Operation failed");
             *stats = InterfaceStats::default();
         }
     }
 
     fn update_exchange_stats(&self, success: bool) {
-        let mut stats = self.stats.write().unwrap();
+        let mut stats = self.stats.write().expect("Operation failed");
         if success {
             stats.exchanges_successful += 1;
         } else {
@@ -894,7 +910,7 @@ mod tests {
     #[test]
     fn test_zero_copy_data_creation() {
         let data = vec![1, 2, 3, 4, 5];
-        let zero_copy = ZeroCopyData::new(data.clone()).unwrap();
+        let zero_copy = ZeroCopyData::new(data.clone()).expect("Operation failed");
 
         assert_eq!(zero_copy.as_slice(), &data);
         assert_eq!(zero_copy.len(), 5);
@@ -906,7 +922,7 @@ mod tests {
     #[test]
     fn test_zero_copy_data_cloning() {
         let data = vec![1, 2, 3, 4, 5];
-        let zero_copy1 = ZeroCopyData::new(data).unwrap();
+        let zero_copy1 = ZeroCopyData::new(data).expect("Operation failed");
         let zero_copy2 = zero_copy1.clone();
 
         assert_eq!(zero_copy1.ref_count(), 2);
@@ -919,14 +935,14 @@ mod tests {
     #[test]
     fn test_zero_copy_view() {
         let data = vec![1, 2, 3, 4, 5];
-        let zero_copy = ZeroCopyData::new(data).unwrap();
-        let view = zero_copy.view(1, 3).unwrap();
+        let zero_copy = ZeroCopyData::new(data).expect("Operation failed");
+        let view = zero_copy.view(1, 3).expect("Operation failed");
 
         assert_eq!(view.as_slice(), &[2, 3, 4]);
         assert_eq!(view.len(), 3);
 
         // Test subview
-        let subview = view.subview(1, 1).unwrap();
+        let subview = view.subview(1, 1).expect("Operation failed");
         assert_eq!(subview.as_slice(), &[3]);
     }
 
@@ -934,22 +950,30 @@ mod tests {
     fn test_zero_copy_interface() {
         let interface = ZeroCopyInterface::new();
         let data = vec![1.0, 2.0, 3.0];
-        let zero_copy = ZeroCopyData::new(data.clone()).unwrap();
+        let zero_copy = ZeroCopyData::new(data.clone()).expect("Operation failed");
 
         // Register data
-        interface.register_data("test_data", zero_copy).unwrap();
+        interface
+            .register_data("test_data", zero_copy)
+            .expect("Operation failed");
         assert!(interface.has_data("test_data"));
 
         // Retrieve data
-        let retrieved = interface.get_data::<f64>("test_data").unwrap();
+        let retrieved = interface
+            .get_data::<f64>("test_data")
+            .expect("Operation failed");
         assert_eq!(retrieved.as_slice(), &data);
 
         // Borrow data (create view)
-        let view = interface.borrow_data::<f64>("test_data").unwrap();
+        let view = interface
+            .borrow_data::<f64>("test_data")
+            .expect("Operation failed");
         assert_eq!(view.as_slice(), &data);
 
         // Check metadata
-        let metadata = interface.get_metadata("test_data").unwrap();
+        let metadata = interface
+            .get_metadata("test_data")
+            .expect("Operation failed");
         assert_eq!(metadata.element_count, 3);
         assert_eq!(metadata.element_size, std::mem::size_of::<f64>());
     }
@@ -958,9 +982,11 @@ mod tests {
     fn test_zero_copy_interface_type_safety() {
         let interface = ZeroCopyInterface::new();
         let data = vec![1, 2, 3];
-        let zero_copy = ZeroCopyData::new(data).unwrap();
+        let zero_copy = ZeroCopyData::new(data).expect("Operation failed");
 
-        interface.register_data("int_data", zero_copy).unwrap();
+        interface
+            .register_data("int_data", zero_copy)
+            .expect("Operation failed");
 
         // Try to retrieve with wrong type
         let result = interface.get_data::<f64>("int_data");
@@ -970,13 +996,13 @@ mod tests {
     #[test]
     fn test_weak_references() {
         let data = vec![1, 2, 3];
-        let zero_copy = ZeroCopyData::new(data).unwrap();
+        let zero_copy = ZeroCopyData::new(data).expect("Operation failed");
         let weak_ref = zero_copy.downgrade();
 
         assert!(weak_ref.is_alive());
         assert_eq!(weak_ref.id(), zero_copy.id());
 
-        let upgraded = weak_ref.upgrade().unwrap();
+        let upgraded = weak_ref.upgrade().expect("Operation failed");
         assert_eq!(upgraded.as_slice(), zero_copy.as_slice());
 
         drop(zero_copy);
@@ -990,29 +1016,29 @@ mod tests {
     #[test]
     fn test_global_interface() {
         let data = vec![1.0, 2.0, 3.0];
-        let zero_copy = ZeroCopyData::new(data.clone()).unwrap();
+        let zero_copy = ZeroCopyData::new(data.clone()).expect("Operation failed");
 
-        register_global_data("global_test", zero_copy).unwrap();
+        register_global_data("global_test", zero_copy).expect("Operation failed");
 
-        let retrieved = get_global_data::<f64>("global_test").unwrap();
+        let retrieved = get_global_data::<f64>("global_test").expect("Operation failed");
         assert_eq!(retrieved.as_slice(), &data);
     }
 
     #[test]
     fn test_into_zero_copy_trait() {
         let data = vec![1, 2, 3, 4, 5];
-        let zero_copy = data.clone().into_zero_copy().unwrap();
+        let zero_copy = data.clone().into_zero_copy().expect("Operation failed");
         assert_eq!(zero_copy.as_slice(), &data);
 
         let slice: &[i32] = &data;
-        let zero_copy2 = slice.into_zero_copy().unwrap();
+        let zero_copy2 = slice.into_zero_copy().expect("Operation failed");
         assert_eq!(zero_copy2.as_slice(), &data);
     }
 
     #[test]
     fn test_from_zero_copy_trait() {
         let data = vec![1, 2, 3, 4, 5];
-        let zero_copy = ZeroCopyData::new(data.clone()).unwrap();
+        let zero_copy = ZeroCopyData::new(data.clone()).expect("Operation failed");
 
         let extracted: Vec<i32> = FromZeroCopy::from_zero_copy(&zero_copy);
         assert_eq!(extracted, data);

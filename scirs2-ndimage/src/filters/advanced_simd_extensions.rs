@@ -778,7 +778,8 @@ mod tests {
     fn test_advanced_simd_wavelet_pyramid() {
         let input = Array2::<f64>::ones((64, 64));
 
-        let pyramid = advanced_simd_wavelet_pyramid(input.view(), 3, WaveletType::Haar).unwrap();
+        let pyramid = advanced_simd_wavelet_pyramid(input.view(), 3, WaveletType::Haar)
+            .expect("Operation failed");
 
         assert!(pyramid.levels.len() <= 3);
 
@@ -798,7 +799,8 @@ mod tests {
         let radii = [1, 2, 3];
         let sample_points = [8, 16, 24];
 
-        let result = advanced_simd_multi_scale_lbp(input.view(), &radii, &sample_points).unwrap();
+        let result = advanced_simd_multi_scale_lbp(input.view(), &radii, &sample_points)
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
 
@@ -811,7 +813,8 @@ mod tests {
         let input =
             Array2::from_shape_fn((64, 64), |(i, _j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
 
-        let result = advanced_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
+        let result = advanced_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3)
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
 
@@ -821,7 +824,8 @@ mod tests {
 
     #[test]
     fn test_generate_wavelet_filters() {
-        let (low, high) = generate_wavelet_filters::<f64>(WaveletType::Haar).unwrap();
+        let (low, high) =
+            generate_wavelet_filters::<f64>(WaveletType::Haar).expect("Operation failed");
 
         assert_eq!(low.len(), 2);
         assert_eq!(high.len(), 2);

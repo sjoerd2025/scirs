@@ -583,13 +583,13 @@ fn process_csv_chunk<P: AsRef<Path>>(
 
             // Write to shared arrays
             {
-                let mut data_lock = data.lock().unwrap();
+                let mut data_lock = data.lock().expect("Operation failed");
                 if let Some(target_idx) = csv_config.target_column {
                     let mut data_col = 0;
                     for (j, &val) in values.iter().enumerate() {
                         if j == target_idx {
                             if let Some(ref target_arc) = target {
-                                let mut target_lock = target_arc.lock().unwrap();
+                                let mut target_lock = target_arc.lock().expect("Operation failed");
                                 target_lock[current_row] = val;
                             }
                         } else {
@@ -640,13 +640,13 @@ fn load_csv_sequential<P: AsRef<Path>>(
             .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {e}")))?;
 
         {
-            let mut data_lock = data.lock().unwrap();
+            let mut data_lock = data.lock().expect("Operation failed");
             if let Some(target_idx) = csv_config.target_column {
                 let mut data_col = 0;
                 for (j, &val) in values.iter().enumerate() {
                     if j == target_idx {
                         if let Some(ref target_arc) = target {
-                            let mut target_lock = target_arc.lock().unwrap();
+                            let mut target_lock = target_arc.lock().expect("Operation failed");
                             target_lock[row_idx] = val;
                         }
                     } else {

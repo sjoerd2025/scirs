@@ -542,7 +542,7 @@ pub fn apply_evolved_strategies(
                 .partial_cmp(&b.fitness)
                 .unwrap_or(std::cmp::Ordering::Equal)
         })
-        .unwrap();
+        .expect("Operation failed");
 
     // Apply best strategy transformation
     let mut enhanced_output = input.clone();
@@ -1049,7 +1049,7 @@ fn apply_selection(
                                 .partial_cmp(&b.fitness)
                                 .unwrap_or(std::cmp::Ordering::Equal)
                         })
-                        .unwrap();
+                        .expect("Operation failed");
                     selected.push(winner.clone());
                 }
                 break;

@@ -32,10 +32,10 @@ use crate::error::{SpatialError, SpatialResult};
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 ///
-/// assert!(check_point_containment(&hull, &[0.1, 0.1]).unwrap());
-/// assert!(!check_point_containment(&hull, &[2.0, 2.0]).unwrap());
+/// assert!(check_point_containment(&hull, &[0.1, 0.1]).expect("Operation failed"));
+/// assert!(!check_point_containment(&hull, &[2.0, 2.0]).expect("Operation failed"));
 /// ```
 pub fn check_point_containment<T: AsRef<[f64]>>(
     hull: &ConvexHull,
@@ -389,10 +389,10 @@ fn check_containment_nd(_hull: &ConvexHull, _point: &[f64]) -> SpatialResult<boo
 /// use scirs2_core::ndarray::array;
 ///
 /// let hull_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&hull_points.view()).unwrap();
+/// let hull = ConvexHull::new(&hull_points.view()).expect("Operation failed");
 ///
 /// let test_points = array![[0.1, 0.1], [2.0, 2.0], [0.2, 0.2]];
-/// let results = check_multiple_containment(&hull, &test_points.view()).unwrap();
+/// let results = check_multiple_containment(&hull, &test_points.view()).expect("Operation failed");
 /// assert_eq!(results, vec![true, false, true]);
 /// ```
 pub fn check_multiple_containment(
@@ -406,15 +406,21 @@ pub fn check_multiple_containment(
     if let Some(equations) = &hull.equations {
         for i in 0..npoints {
             let point = points.row(i);
-            let is_inside =
-                check_containment_with_equations(hull, point.as_slice().unwrap(), equations)?;
+            let is_inside = check_containment_with_equations(
+                hull,
+                point.as_slice().expect("Operation failed"),
+                equations,
+            )?;
             results.push(is_inside);
         }
     } else {
         // Fallback to individual checks
         for i in 0..npoints {
             let point = points.row(i);
-            let is_inside = check_containment_convex_combination(hull, point.as_slice().unwrap())?;
+            let is_inside = check_containment_convex_combination(
+                hull,
+                point.as_slice().expect("Operation failed"),
+            )?;
             results.push(is_inside);
         }
     }
@@ -546,32 +552,32 @@ mod tests {
     #[test]
     fn test_2d_containment() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         // Point inside the triangle
-        assert!(check_point_containment(&hull, [0.1, 0.1]).unwrap());
+        assert!(check_point_containment(&hull, [0.1, 0.1]).expect("Operation failed"));
 
         // Point outside the triangle
-        assert!(!check_point_containment(&hull, [2.0, 2.0]).unwrap());
+        assert!(!check_point_containment(&hull, [2.0, 2.0]).expect("Operation failed"));
 
         // Point on the edge (should be considered inside)
-        assert!(check_point_containment(&hull, [0.5, 0.0]).unwrap());
+        assert!(check_point_containment(&hull, [0.5, 0.0]).expect("Operation failed"));
     }
 
     #[test]
     fn test_1d_containment() {
         let points = arr2(&[[0.0], [3.0], [1.0], [2.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         // Point inside the line segment
-        assert!(check_point_containment(&hull, [1.5]).unwrap());
+        assert!(check_point_containment(&hull, [1.5]).expect("Operation failed"));
 
         // Point outside the line segment
-        assert!(!check_point_containment(&hull, [5.0]).unwrap());
+        assert!(!check_point_containment(&hull, [5.0]).expect("Operation failed"));
 
         // Point at the boundary
-        assert!(check_point_containment(&hull, [0.0]).unwrap());
-        assert!(check_point_containment(&hull, [3.0]).unwrap());
+        assert!(check_point_containment(&hull, [0.0]).expect("Operation failed"));
+        assert!(check_point_containment(&hull, [3.0]).expect("Operation failed"));
     }
 
     #[test]
@@ -582,22 +588,23 @@ mod tests {
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0],
         ]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         // Point inside the tetrahedron
-        assert!(check_point_containment(&hull, [0.1, 0.1, 0.1]).unwrap());
+        assert!(check_point_containment(&hull, [0.1, 0.1, 0.1]).expect("Operation failed"));
 
         // Point outside the tetrahedron
-        assert!(!check_point_containment(&hull, [2.0, 2.0, 2.0]).unwrap());
+        assert!(!check_point_containment(&hull, [2.0, 2.0, 2.0]).expect("Operation failed"));
     }
 
     #[test]
     fn test_multiple_containment() {
         let hull_points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&hull_points.view()).unwrap();
+        let hull = ConvexHull::new(&hull_points.view()).expect("Operation failed");
 
         let test_points = arr2(&[[0.1, 0.1], [2.0, 2.0], [0.2, 0.2]]);
-        let results = check_multiple_containment(&hull, &test_points.view()).unwrap();
+        let results =
+            check_multiple_containment(&hull, &test_points.view()).expect("Operation failed");
 
         assert_eq!(results.len(), 3);
         assert!(results[0]); // Inside
@@ -608,21 +615,21 @@ mod tests {
     #[test]
     fn test_distance_to_hull() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         // Distance should be negative for interior points
-        let dist = distance_to_hull(&hull, [0.1, 0.1]).unwrap();
+        let dist = distance_to_hull(&hull, [0.1, 0.1]).expect("Operation failed");
         assert!(dist < 0.0);
 
         // Distance should be positive for exterior points
-        let dist = distance_to_hull(&hull, [2.0, 2.0]).unwrap();
+        let dist = distance_to_hull(&hull, [2.0, 2.0]).expect("Operation failed");
         assert!(dist > 0.0);
     }
 
     #[test]
     fn test_dimension_mismatch_error() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         // Test 3D point with 2D hull
         let result = check_point_containment(&hull, [0.1, 0.1, 0.1]);
@@ -647,14 +654,14 @@ mod tests {
 
         // Valid 2D triangle (minimal valid case)
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         // Point inside the triangle
-        let result = check_point_containment(&hull, [0.1, 0.1]).unwrap();
+        let result = check_point_containment(&hull, [0.1, 0.1]).expect("Operation failed");
         assert!(result);
 
         // Point outside the triangle
-        let result = check_point_containment(&hull, [2.0, 2.0]).unwrap();
+        let result = check_point_containment(&hull, [2.0, 2.0]).expect("Operation failed");
         assert!(!result);
     }
 }

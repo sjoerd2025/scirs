@@ -219,7 +219,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         priority: MessagePriority,
     ) -> Result<u64> {
         let message_id = {
-            let mut counter = self.message_counter.lock().unwrap();
+            let mut counter = self.message_counter.lock().expect("Operation failed");
             *counter += 1;
             *counter
         };

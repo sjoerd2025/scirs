@@ -179,7 +179,7 @@ impl MemoryPool {
         // Try to reuse existing buffer
         for (i, buffer) in self.buffers.iter().enumerate() {
             if !buffer.in_use && buffer._size >= _size {
-                let mut buffer = self.buffers.remove(i).unwrap();
+                let mut buffer = self.buffers.remove(i).expect("Operation failed");
                 buffer.in_use = true;
                 self.available -= buffer._size;
                 return Some(buffer);
@@ -259,19 +259,19 @@ mod tests {
         let mut accumulator = GradientAccumulator::new();
         let grad1 = Array2::ones((10, 5));
         let grad2 = Array2::ones((10, 5)) * 2.0;
-        accumulator.accumulate(&grad1).unwrap();
-        accumulator.accumulate(&grad2).unwrap();
+        accumulator.accumulate(&grad1).expect("Operation failed");
+        accumulator.accumulate(&grad2).expect("Operation failed");
         accumulator.average(2);
         // After averaging, should have (1 + 2) / 2 = 1.5
         assert_eq!(accumulator.gradients[0][[0, 0]], 1.5);
     fn test_memory_pool() {
         let mut pool = MemoryPool::new(1000);
-        let buffer1 = pool.allocate(100).unwrap();
+        let buffer1 = pool.allocate(100).expect("Operation failed");
         assert_eq!(pool.available, 900);
         pool.release(buffer1);
         assert_eq!(pool.available, 1000);
         // Should reuse the released buffer
-        let buffer2 = pool.allocate(50).unwrap();
+        let buffer2 = pool.allocate(50).expect("Operation failed");
         assert_eq!(buffer2.size, 100); // Reused the 100-size buffer
     fn test_activation_checkpointing() {
         let mut checkpointing = ActivationCheckpointing::new(3);
@@ -281,5 +281,5 @@ mod tests {
         assert!(checkpointing.should_checkpoint(3));
         let data = Array2::ones((10, 5));
         checkpointing.save_checkpoint(0, data.clone());
-        let restored = checkpointing.restore_checkpoint(0).unwrap();
+        let restored = checkpointing.restore_checkpoint(0).expect("Operation failed");
         assert_eq!(restored.shape(), &[10, 5]);

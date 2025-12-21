@@ -282,9 +282,14 @@ where
 
             input
                 .as_slice()
-                .unwrap()
+                .expect("Operation failed")
                 .par_iter()
-                .zip(output.as_slice_mut().unwrap().par_iter_mut())
+                .zip(
+                    output
+                        .as_slice_mut()
+                        .expect("Operation failed")
+                        .par_iter_mut(),
+                )
                 .for_each(|(inp, out)| {
                     *out = gamma(*inp);
                 });
@@ -321,9 +326,14 @@ where
 
             input
                 .as_slice()
-                .unwrap()
+                .expect("Operation failed")
                 .par_iter()
-                .zip(output.as_slice_mut().unwrap().par_iter_mut())
+                .zip(
+                    output
+                        .as_slice_mut()
+                        .expect("Operation failed")
+                        .par_iter_mut(),
+                )
                 .for_each(|(inp, out)| {
                     *out = j0(*inp);
                 });
@@ -355,9 +365,14 @@ where
 
             input
                 .as_slice()
-                .unwrap()
+                .expect("Operation failed")
                 .par_iter()
-                .zip(output.as_slice_mut().unwrap().par_iter_mut())
+                .zip(
+                    output
+                        .as_slice_mut()
+                        .expect("Operation failed")
+                        .par_iter_mut(),
+                )
                 .for_each(|(inp, out)| {
                     *out = erf(*inp);
                 });
@@ -400,9 +415,14 @@ where
 
             input
                 .as_slice()
-                .unwrap()
+                .expect("Operation failed")
                 .par_iter()
-                .zip(output.as_slice_mut().unwrap().par_iter_mut())
+                .zip(
+                    output
+                        .as_slice_mut()
+                        .expect("Operation failed")
+                        .par_iter_mut(),
+                )
                 .for_each(|(inp, out)| {
                     *out = digamma(*inp);
                 });
@@ -442,9 +462,14 @@ where
 
             input
                 .as_slice()
-                .unwrap()
+                .expect("Operation failed")
                 .par_iter()
-                .zip(output.as_slice_mut().unwrap().par_iter_mut())
+                .zip(
+                    output
+                        .as_slice_mut()
+                        .expect("Operation failed")
+                        .par_iter_mut(),
+                )
                 .for_each(|(inp, out)| {
                     *out = loggamma(*inp);
                 });
@@ -818,7 +843,7 @@ fn create_gpu_buffer_with_caching(
 
     // Try to reuse existing buffer if available and same size
     {
-        let input_buffers = cache.input_buffers.lock().unwrap();
+        let input_buffers = cache.input_buffers.lock().expect("Operation failed");
         if let Some(buffer) = input_buffers.get(&cache_key) {
             // Update buffer data
             if let Ok(_) = buffer.copy_from_host(data) {
@@ -834,11 +859,11 @@ fn create_gpu_buffer_with_caching(
     let buffer = ctx.create_buffer_from_slice(data);
 
     {
-        let mut input_buffers = cache.input_buffers.lock().unwrap();
+        let mut input_buffers = cache.input_buffers.lock().expect("Operation failed");
 
         // Limit cache size to prevent memory bloat
         if input_buffers.len() > 16 {
-            let oldest_key = *input_buffers.keys().next().unwrap();
+            let oldest_key = *input_buffers.keys().next().expect("Operation failed");
             input_buffers.remove(&oldest_key);
         }
 
@@ -863,7 +888,7 @@ fn create_empty_gpu_buffer_with_caching(
 
     // Try to reuse existing buffer
     {
-        let output_buffers = cache.output_buffers.lock().unwrap();
+        let output_buffers = cache.output_buffers.lock().expect("Operation failed");
         if let Some(_buffer) = output_buffers.get(&cache_key) {
             #[cfg(feature = "gpu")]
             log::debug!(
@@ -879,11 +904,11 @@ fn create_empty_gpu_buffer_with_caching(
     let buffer = ctx.create_buffer::<f64>(size);
 
     {
-        let mut output_buffers = cache.output_buffers.lock().unwrap();
+        let mut output_buffers = cache.output_buffers.lock().expect("Operation failed");
 
         // Limit cache size
         if output_buffers.len() > 16 {
-            let oldest_key = *output_buffers.keys().next().unwrap();
+            let oldest_key = *output_buffers.keys().next().expect("Operation failed");
             output_buffers.remove(&oldest_key);
         }
     }
@@ -906,7 +931,7 @@ fn get_or_create_shader_pipeline(
 
     // Try to get cached pipeline
     {
-        let pipelines = cache.shader_pipelines.lock().unwrap();
+        let pipelines = cache.shader_pipelines.lock().expect("Operation failed");
         if let Some(pipeline) = pipelines.get(shader_name) {
             #[cfg(feature = "gpu")]
             log::debug!("Using cached shader pipeline: {}", shader_name);
@@ -929,7 +954,7 @@ fn get_or_create_shader_pipeline(
     })?;
 
     {
-        let mut pipelines = cache.shader_pipelines.lock().unwrap();
+        let mut pipelines = cache.shader_pipelines.lock().expect("Operation failed");
         // Note: We don't actually cache the pipeline since GpuKernelHandle doesn't support cloning
         // This is a placeholder for when proper caching is implemented
 
@@ -1206,7 +1231,7 @@ mod tests {
         let input = Array1::linspace(0.1, 5.0, 10);
         let mut output = Array1::zeros(10);
 
-        gamma_gpu(&input.view(), &mut output.view_mut()).unwrap();
+        gamma_gpu(&input.view(), &mut output.view_mut()).expect("Operation failed");
 
         // Verify some known values
         use crate::gamma::gamma;
@@ -1223,7 +1248,7 @@ mod tests {
         let input = Array1::linspace(0.1, 10.0, 10);
         let mut output = Array1::zeros(10);
 
-        j0_gpu(&input.view(), &mut output.view_mut()).unwrap();
+        j0_gpu(&input.view(), &mut output.view_mut()).expect("Operation failed");
 
         // Verify some known values
         use crate::bessel::j0;

@@ -253,12 +253,12 @@ mod tests {
     #[test]
     fn test_advanced_basic_functionality() {
         let mut rng = scirs2_core::random::rng();
-        let graph = erdos_renyi_graph(100, 0.02, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(100, 0.02, &mut rng).expect("Operation failed");
         // Test that advanced processing works
         let result = execute_with_advanced(&graph, |g| Ok(connected_components(g)));
 
         assert!(result.is_ok());
-        let components = result.unwrap();
+        let components = result.expect("Operation failed");
         assert!(!components.is_empty());
     }
 
@@ -285,9 +285,10 @@ mod tests {
     #[test]
     fn test_advanced_performance_metrics() {
         let mut rng = scirs2_core::random::rng();
-        let graph = erdos_renyi_graph(50, 0.04, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(50, 0.04, &mut rng).expect("Operation failed");
         // Run a test algorithm
-        let _ = execute_with_advanced(&graph, |g| pagerank_centrality(g, 0.85, 1e-4)).unwrap();
+        let _ = execute_with_advanced(&graph, |g| pagerank_centrality(g, 0.85, 1e-4))
+            .expect("Operation failed");
 
         // Verify test completed successfully (placeholder since we can't access processor stats)
         assert!(true);

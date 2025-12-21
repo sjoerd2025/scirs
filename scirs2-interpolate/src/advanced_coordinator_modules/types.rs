@@ -447,11 +447,11 @@ pub struct PerformanceMetrics {
 impl<F: Float> Default for AdaptiveParameters<F> {
     fn default() -> Self {
         Self {
-            learning_rate: F::from(0.01).unwrap(),
-            adaptation_speed: F::from(0.1).unwrap(),
-            convergence_threshold: F::from(1e-6).unwrap(),
-            momentum: F::from(0.9).unwrap(),
-            regularization: F::from(1e-4).unwrap(),
+            learning_rate: F::from(0.01).expect("Failed to convert constant to float"),
+            adaptation_speed: F::from(0.1).expect("Failed to convert constant to float"),
+            convergence_threshold: F::from(1e-6).expect("Failed to convert constant to float"),
+            momentum: F::from(0.9).expect("Failed to convert constant to float"),
+            regularization: F::from(1e-4).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -481,7 +481,8 @@ impl Default for PerformancePriorities {
 impl<F: Float + std::fmt::Display> InputValidationResult<F> {
     /// Check if validation passed
     pub fn is_high_quality(&self) -> bool {
-        self.is_valid && self.quality_score > F::from(0.8).unwrap()
+        self.is_valid
+            && self.quality_score > F::from(0.8).expect("Failed to convert constant to float")
     }
 
     /// Get validation summary

@@ -8,6 +8,12 @@ use scirs2_core::numeric::{Float, NumCast};
 use scirs2_core::random::{Binomial as RandBinomial, Distribution};
 use statrs::function::gamma::ln_gamma;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Binomial distribution structure
 ///
 /// The Binomial distribution is a discrete probability distribution that models
@@ -39,7 +45,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
     /// ```
     pub fn new(n: usize, p: F) -> StatsResult<Self> {
         // Validate parameters
@@ -50,7 +56,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         }
 
         // Create RNG for Binomial distribution
-        let p_f64 = <f64 as scirs2_core::numeric::NumCast>::from(p).unwrap();
+        let p_f64 = <f64 as scirs2_core::numeric::NumCast>::from(p).expect("Test/example failed");
         let rand_distr = match RandBinomial::new(n as u64, p_f64) {
             Ok(distr) => distr,
             Err(_) => {
@@ -78,7 +84,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
     /// let pmf_at_5 = binom.pmf(5.0);
     /// assert!((pmf_at_5 - 0.24609375).abs() < 1e-7);
     /// ```
@@ -87,11 +93,14 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         let one = F::one();
 
         // Check if k is a non-negative integer
-        if k < zero || k > F::from(self.n).unwrap() || !Self::is_integer(k) {
+        if k < zero
+            || k > F::from(self.n).expect("Failed to convert to float")
+            || !Self::is_integer(k)
+        {
             return zero;
         }
 
-        let k_usize = k.to_usize().unwrap();
+        let k_usize = k.to_usize().expect("Test/example failed");
 
         // Special case for n = 0
         if self.n == 0 {
@@ -108,8 +117,11 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
 
         // Normal case: Calculate PMF using the binomial coefficient
         let binom_coef = self.binom_coef(k_usize);
-        let p_pow_k = self.p.powf(F::from(k_usize).unwrap());
-        let q_pow_nk = (one - self.p).powf(F::from(self.n - k_usize).unwrap());
+        let p_pow_k = self
+            .p
+            .powf(F::from(k_usize).expect("Failed to convert to float"));
+        let q_pow_nk =
+            (one - self.p).powf(F::from(self.n - k_usize).expect("Failed to convert to float"));
 
         binom_coef * p_pow_k * q_pow_nk
     }
@@ -129,7 +141,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
     /// let log_pmf_at_5 = binom.log_pmf(5.0);
     /// assert!((log_pmf_at_5 - (-1.402)) < 1e-3);
     /// ```
@@ -139,11 +151,14 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         let neg_infinity = F::neg_infinity();
 
         // Check if k is a non-negative integer
-        if k < zero || k > F::from(self.n).unwrap() || !Self::is_integer(k) {
+        if k < zero
+            || k > F::from(self.n).expect("Failed to convert to float")
+            || !Self::is_integer(k)
+        {
             return neg_infinity;
         }
 
-        let k_usize = k.to_usize().unwrap();
+        let k_usize = k.to_usize().expect("Test/example failed");
 
         // Special case for n = 0
         if self.n == 0 {
@@ -164,8 +179,9 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
 
         // Normal case: Calculate log-PMF
         let ln_binom_coef = self.ln_binom_coef(k_usize);
-        let ln_p_pow_k = F::from(k_usize).unwrap() * self.p.ln();
-        let ln_q_pow_nk = F::from(self.n - k_usize).unwrap() * (one - self.p).ln();
+        let ln_p_pow_k = F::from(k_usize).expect("Failed to convert to float") * self.p.ln();
+        let ln_q_pow_nk =
+            F::from(self.n - k_usize).expect("Failed to convert to float") * (one - self.p).ln();
 
         ln_binom_coef + ln_p_pow_k + ln_q_pow_nk
     }
@@ -185,7 +201,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
     /// let cdf_at_5 = binom.cdf(5.0);
     /// assert!((cdf_at_5 - 0.623046875).abs() < 1e-7);
     /// ```
@@ -199,18 +215,18 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         }
 
         // CDF = 1 for k ≥ n
-        if k >= F::from(self.n).unwrap() {
+        if k >= F::from(self.n).expect("Failed to convert to float") {
             return one;
         }
 
         // Floor k to handle non-integer values
         let k_floor = k.floor();
-        let k_int = k_floor.to_usize().unwrap();
+        let k_int = k_floor.to_usize().expect("Test/example failed");
 
         // Calculate CDF as sum of PMFs from 0 to k_int
         let mut sum = zero;
         for i in 0..=k_int {
-            sum = sum + self.pmf(F::from(i).unwrap());
+            sum = sum + self.pmf(F::from(i).expect("Failed to convert to float"));
         }
 
         sum
@@ -231,8 +247,8 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
-    /// let quant = binom.ppf(0.5).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
+    /// let quant = binom.ppf(0.5).expect("Test/example failed");
     /// assert_eq!(quant, 5.0);
     /// ```
     pub fn ppf(&self, pval: F) -> StatsResult<F> {
@@ -250,7 +266,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
             return Ok(zero);
         }
         if pval == one {
-            return Ok(F::from(self.n).unwrap());
+            return Ok(F::from(self.n).expect("Failed to convert to float"));
         }
 
         // Binary search to find the quantile
@@ -264,7 +280,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
 
         while low < high && iter < max_iter {
             mid = (low + high) / 2;
-            let mid_f = F::from(mid).unwrap();
+            let mid_f = F::from(mid).expect("Failed to convert to float");
             let cdf_mid = self.cdf(mid_f);
 
             if cdf_mid < pval {
@@ -277,7 +293,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         }
 
         // Return the quantile
-        Ok(F::from(low).unwrap())
+        Ok(F::from(low).expect("Failed to convert to float"))
     }
 
     /// Generate random samples from the distribution
@@ -295,8 +311,8 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
-    /// let samples = binom.rvs(5).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
+    /// let samples = binom.rvs(5).expect("Test/example failed");
     /// assert_eq!(samples.len(), 5);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -306,7 +322,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         for _ in 0..size {
             // Generate random Binomial sample
             let sample = self.rand_distr.sample(&mut rng);
-            let sample_f = F::from(sample).unwrap();
+            let sample_f = F::from(sample).expect("Failed to convert to float");
             samples.push(sample_f);
         }
 
@@ -324,13 +340,13 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.3f64).unwrap();
+    /// let binom = Binomial::new(10, 0.3f64).expect("Test/example failed");
     /// let mean = binom.mean();
     /// assert!((mean - 3.0).abs() < 1e-7);
     /// ```
     pub fn mean(&self) -> F {
         // Mean = n * p
-        F::from(self.n).unwrap() * self.p
+        F::from(self.n).expect("Failed to convert to float") * self.p
     }
 
     /// Calculate the variance of the distribution
@@ -344,14 +360,14 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.3f64).unwrap();
+    /// let binom = Binomial::new(10, 0.3f64).expect("Test/example failed");
     /// let variance = binom.var();
     /// assert!((variance - 2.1).abs() < 1e-7);
     /// ```
     pub fn var(&self) -> F {
         // Variance = n * p * (1 - p)
         let one = F::one();
-        F::from(self.n).unwrap() * self.p * (one - self.p)
+        F::from(self.n).expect("Failed to convert to float") * self.p * (one - self.p)
     }
 
     /// Calculate the standard deviation of the distribution
@@ -365,7 +381,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.3f64).unwrap();
+    /// let binom = Binomial::new(10, 0.3f64).expect("Test/example failed");
     /// let std_dev = binom.std();
     /// assert!((std_dev - 1.449138).abs() < 1e-6);
     /// ```
@@ -385,16 +401,16 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.3f64).unwrap();
+    /// let binom = Binomial::new(10, 0.3f64).expect("Test/example failed");
     /// let skewness = binom.skewness();
     /// assert!((skewness - 0.277350) < 1e-6);
     /// ```
     pub fn skewness(&self) -> F {
         // Skewness = (1 - 2p) / sqrt(n * p * (1 - p))
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = const_f64::<F>(2.0);
 
-        let n_f = F::from(self.n).unwrap();
+        let n_f = F::from(self.n).expect("Failed to convert to float");
         let q = one - self.p; // q = 1 - p
 
         // Handle special cases
@@ -416,16 +432,16 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.3f64).unwrap();
+    /// let binom = Binomial::new(10, 0.3f64).expect("Test/example failed");
     /// let kurtosis = binom.kurtosis();
     /// assert!((kurtosis - (-0.12380952)).abs() < 1e-6);
     /// ```
     pub fn kurtosis(&self) -> F {
         // Excess Kurtosis = (1 - 6p(1-p)) / (np(1-p))
         let one = F::one();
-        let six = F::from(6.0).unwrap();
+        let six = const_f64::<F>(6.0);
 
-        let n_f = F::from(self.n).unwrap();
+        let n_f = F::from(self.n).expect("Failed to convert to float");
         let q = one - self.p; // q = 1 - p
         let pq = self.p * q;
 
@@ -448,15 +464,16 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
     /// let entropy = binom.entropy();
     /// assert!(entropy > 0.0);
     /// ```
     pub fn entropy(&self) -> F {
         // For large n, we can approximate the entropy using the normal distribution
         // This is not exact but provides a reasonable estimate
-        let half = F::from(0.5).unwrap();
-        let two_pi_e = F::from(2.0 * std::f64::consts::PI * std::f64::consts::E).unwrap();
+        let half = const_f64::<F>(0.5);
+        let two_pi_e = F::from(2.0 * std::f64::consts::PI * std::f64::consts::E)
+            .expect("Failed to convert to float");
 
         // Handle special cases
         if self.n == 0 || self.p == F::zero() || self.p == F::one() {
@@ -479,12 +496,12 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
     /// let modes = binom.mode();
     /// assert_eq!(modes, vec![5.0]);
     /// ```
     pub fn mode(&self) -> Vec<F> {
-        let n_plus_1 = F::from(self.n + 1).unwrap();
+        let n_plus_1 = F::from(self.n + 1).expect("Failed to convert to float");
 
         // Mode calculation: floor((n+1)*p) and/or ceil((n+1)*p) - 1
         let lower_mode = ((n_plus_1) * self.p).floor();
@@ -509,7 +526,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     /// use scirs2_stats::distributions::binomial::Binomial;
     ///
-    /// let binom = Binomial::new(10, 0.5f64).unwrap();
+    /// let binom = Binomial::new(10, 0.5f64).expect("Test/example failed");
     /// let median = binom.median();
     /// assert_eq!(median, 5.0);
     /// ```
@@ -518,7 +535,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
 
         // Approximate the median as the nearest integer to the mean
         // This is not exact for all cases but works well for most
-        if mean - mean.floor() < F::from(0.5).unwrap() {
+        if mean - mean.floor() < const_f64::<F>(0.5) {
             mean.floor()
         } else {
             mean.ceil()
@@ -538,7 +555,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
             for i in 0..k {
                 result = result * (self.n - i) as u64 / (i + 1) as u64;
             }
-            F::from(result).unwrap()
+            F::from(result).expect("Failed to convert to float")
         } else {
             // For larger values, use ln_gamma for numerical stability
             self.ln_binom_coef(k).exp()
@@ -553,7 +570,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
         // ln(n choose k) = ln_gamma(n+1) - ln_gamma(k+1) - ln_gamma(n-k+1)
         let result = ln_gamma(n_f64 + 1.0) - ln_gamma(k_f64 + 1.0) - ln_gamma(n_f64 - k_f64 + 1.0);
 
-        F::from(result).unwrap()
+        F::from(result).expect("Failed to convert to float")
     }
 }
 
@@ -576,7 +593,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
 /// ```
 /// use scirs2_stats::distributions;
 ///
-/// let b = distributions::binom(10, 0.5f64).unwrap();
+/// let b = distributions::binom(10, 0.5f64).expect("Test/example failed");
 /// let pmf_at_5 = b.pmf(5.0);
 /// assert!((pmf_at_5 - 0.24609375).abs() < 1e-7);
 /// ```
@@ -603,11 +620,11 @@ mod tests {
     #[test]
     fn test_binomial_creation() {
         // Valid parameters
-        let binom1 = Binomial::new(10, 0.3).unwrap();
+        let binom1 = Binomial::new(10, 0.3).expect("Test/example failed");
         assert_eq!(binom1.n, 10);
         assert_eq!(binom1.p, 0.3);
 
-        let binom2 = Binomial::new(0, 0.5).unwrap();
+        let binom2 = Binomial::new(0, 0.5).expect("Test/example failed");
         assert_eq!(binom2.n, 0);
         assert_eq!(binom2.p, 0.5);
 
@@ -619,7 +636,7 @@ mod tests {
     #[test]
     fn test_binomial_pmf() {
         // Binomial(10, 0.5)
-        let binom = Binomial::new(10, 0.5).unwrap();
+        let binom = Binomial::new(10, 0.5).expect("Test/example failed");
 
         // PMF values for different k
         assert_relative_eq!(binom.pmf(0.0), 0.0009765625, epsilon = 1e-10);
@@ -635,17 +652,17 @@ mod tests {
         assert_eq!(binom.pmf(3.5), 0.0);
 
         // Special case: Binomial(0, 0.5)
-        let binom_zero = Binomial::new(0, 0.5).unwrap();
+        let binom_zero = Binomial::new(0, 0.5).expect("Test/example failed");
         assert_eq!(binom_zero.pmf(0.0), 1.0);
         assert_eq!(binom_zero.pmf(1.0), 0.0);
 
         // Special case: Binomial(n, 0)
-        let binom_p0 = Binomial::new(10, 0.0).unwrap();
+        let binom_p0 = Binomial::new(10, 0.0).expect("Test/example failed");
         assert_eq!(binom_p0.pmf(0.0), 1.0);
         assert_eq!(binom_p0.pmf(1.0), 0.0);
 
         // Special case: Binomial(n, 1)
-        let binom_p1 = Binomial::new(10, 1.0).unwrap();
+        let binom_p1 = Binomial::new(10, 1.0).expect("Test/example failed");
         assert_eq!(binom_p1.pmf(10.0), 1.0);
         assert_eq!(binom_p1.pmf(9.0), 0.0);
     }
@@ -653,7 +670,7 @@ mod tests {
     #[test]
     fn test_binomial_log_pmf() {
         // Binomial(10, 0.5)
-        let binom = Binomial::new(10, 0.5).unwrap();
+        let binom = Binomial::new(10, 0.5).expect("Test/example failed");
 
         // Check log_pmf against pmf
         for k in 0..=10 {
@@ -679,7 +696,7 @@ mod tests {
     #[test]
     fn test_binomial_cdf() {
         // Binomial(10, 0.5)
-        let binom = Binomial::new(10, 0.5).unwrap();
+        let binom = Binomial::new(10, 0.5).expect("Test/example failed");
 
         // CDF values for different k
         assert_relative_eq!(binom.cdf(-1.0), 0.0, epsilon = 1e-10);
@@ -696,24 +713,24 @@ mod tests {
     #[test]
     fn test_binomial_ppf() {
         // Binomial(10, 0.5)
-        let binom = Binomial::new(10, 0.5).unwrap();
+        let binom = Binomial::new(10, 0.5).expect("Test/example failed");
 
         // PPF should be the inverse of CDF
         for k in 0..=10 {
             let k_f = k as f64;
             let cdf = binom.cdf(k_f);
-            let ppf = binom.ppf(cdf).unwrap();
+            let ppf = binom.ppf(cdf).expect("Test/example failed");
 
             // Tolerance - PPF may give the smallest k such that CDF(k) >= p
             assert!(ppf <= k_f + 1.0);
         }
 
         // Specific values
-        assert_eq!(binom.ppf(0.0).unwrap(), 0.0);
-        assert_eq!(binom.ppf(1.0).unwrap(), 10.0);
+        assert_eq!(binom.ppf(0.0).expect("Operation failed"), 0.0);
+        assert_eq!(binom.ppf(1.0).expect("Operation failed"), 10.0);
 
         // PPF should be 5 for p = 0.5
-        assert_eq!(binom.ppf(0.5).unwrap(), 5.0);
+        assert_eq!(binom.ppf(0.5).expect("Operation failed"), 5.0);
 
         // Invalid probability values
         assert!(binom.ppf(-0.1).is_err());
@@ -723,10 +740,10 @@ mod tests {
     #[test]
     fn test_binomial_rvs() {
         // Binomial(10, 0.5)
-        let binom = Binomial::new(10, 0.5).unwrap();
+        let binom = Binomial::new(10, 0.5).expect("Test/example failed");
 
         // Generate samples
-        let samples = binom.rvs(100).unwrap();
+        let samples = binom.rvs(100).expect("Test/example failed");
 
         // Check number of samples
         assert_eq!(samples.len(), 100);
@@ -748,7 +765,7 @@ mod tests {
     #[test]
     fn test_binomial_moments() {
         // Test with n = 10, p = 0.3
-        let binom = Binomial::new(10, 0.3).unwrap();
+        let binom = Binomial::new(10, 0.3).expect("Test/example failed");
 
         // Mean = n * p = 10 * 0.3 = 3
         assert_eq!(binom.mean(), 3.0);
@@ -771,18 +788,18 @@ mod tests {
     #[test]
     fn test_binomial_mode() {
         // Binomial(10, 0.3) - mode = floor((n+1)*p) = floor(11*0.3) = 3
-        let binom1 = Binomial::new(10, 0.3).unwrap();
+        let binom1 = Binomial::new(10, 0.3).expect("Test/example failed");
         let modes1 = binom1.mode();
         assert_eq!(modes1, vec![3.0]);
 
         // Binomial(10, 0.5) - mode = floor((n+1)*p) = floor(11*0.5) = 5
-        let binom2 = Binomial::new(10, 0.5).unwrap();
+        let binom2 = Binomial::new(10, 0.5).expect("Test/example failed");
         let modes2 = binom2.mode();
         assert_eq!(modes2, vec![5.0]);
 
         // Edge case: Binomial(9, 0.4) - modes = {floor(10*0.4), ceil(10*0.4)-1} = {4, 3}
         // For bimodal case, both modes should be returned
-        let binom3 = Binomial::new(9, 0.4).unwrap();
+        let binom3 = Binomial::new(9, 0.4).expect("Test/example failed");
         let modes3 = binom3.mode();
         assert!(modes3.contains(&3.0) && modes3.contains(&4.0) && modes3.len() == 2);
     }
@@ -790,21 +807,21 @@ mod tests {
     #[test]
     fn test_binomial_median() {
         // Binomial(10, 0.5) - median should be equal to mean = 5
-        let binom1 = Binomial::new(10, 0.5).unwrap();
+        let binom1 = Binomial::new(10, 0.5).expect("Test/example failed");
         assert_eq!(binom1.median(), 5.0);
 
         // Binomial(10, 0.3) - median is approximately equal to mean = 3
-        let binom2 = Binomial::new(10, 0.3).unwrap();
+        let binom2 = Binomial::new(10, 0.3).expect("Test/example failed");
         assert_eq!(binom2.median(), 3.0);
 
         // Binomial(9, 0.4) - median is approximately equal to mean = 3.6 → 4
-        let binom3 = Binomial::new(9, 0.4).unwrap();
+        let binom3 = Binomial::new(9, 0.4).expect("Test/example failed");
         assert_eq!(binom3.median(), 4.0);
     }
 
     #[test]
     fn test_binomial_coef() {
-        let binom = Binomial::new(10, 0.5).unwrap();
+        let binom = Binomial::new(10, 0.5).expect("Test/example failed");
 
         // Check a few known values
         assert_eq!(binom.binom_coef(0), 1.0);
@@ -814,7 +831,7 @@ mod tests {
         assert_eq!(binom.binom_coef(10), 1.0);
 
         // Test with larger n
-        let binom_large = Binomial::new(100, 0.5).unwrap();
+        let binom_large = Binomial::new(100, 0.5).expect("Test/example failed");
 
         // C(100, 0) = 1
         assert_relative_eq!(binom_large.binom_coef(0), 1.0, epsilon = 1e-8);

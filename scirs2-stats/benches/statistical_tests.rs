@@ -35,7 +35,7 @@ use std::hint::black_box;
 #[allow(dead_code)]
 fn generate_normaldata(n: usize, mean: f64, std: f64) -> Array1<f64> {
     let mut rng = thread_rng();
-    let normal = Normal::new(mean, std).unwrap();
+    let normal = Normal::new(mean, std).expect("Operation failed");
     Array1::from_shape_fn(n, |_| rng.sample(normal))
 }
 

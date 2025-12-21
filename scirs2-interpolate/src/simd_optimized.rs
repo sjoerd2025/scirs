@@ -33,8 +33,8 @@
 //! };
 //!
 //! // Evaluate RBF at multiple points simultaneously
-//! let centers = Array2::from_shape_vec((100, 3), vec![0.0; 300]).unwrap();
-//! let queries = Array2::from_shape_vec((50, 3), vec![0.5; 150]).unwrap();
+//! let centers = Array2::from_shape_vec((100, 3), vec![0.0; 300]).expect("Operation failed");
+//! let queries = Array2::from_shape_vec((50, 3), vec![0.5; 150]).expect("Operation failed");
 //! let coefficients = vec![1.0; 100];
 //!
 //! let results = simd_rbf_evaluate(
@@ -43,7 +43,7 @@
 //!     &coefficients,
 //!     RBFKernel::Gaussian,
 //!     1.0
-//! ).unwrap();
+//! ).expect("Operation failed");
 //! ```
 
 use crate::error::{InterpolateError, InterpolateResult};
@@ -677,7 +677,7 @@ mod tests {
             RBFKernel::Gaussian,
             1.0,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(results.len(), 3);
 
@@ -693,7 +693,8 @@ mod tests {
         let points_a = array![[0.0, 0.0], [1.0, 0.0]];
         let points_b = array![[0.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 
-        let distances = simd_distance_matrix(&points_a.view(), &points_b.view()).unwrap();
+        let distances =
+            simd_distance_matrix(&points_a.view(), &points_b.view()).expect("Operation failed");
 
         assert_eq!(distances.shape(), &[2, 3]);
 
@@ -718,7 +719,7 @@ mod tests {
             RBFKernel::Gaussian,
             epsilon,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Compute scalar result manually
         let mut scalar_result = 0.0;
@@ -758,7 +759,7 @@ mod tests {
                 kernel,
                 epsilon,
             )
-            .unwrap();
+            .expect("Operation failed");
 
             assert_eq!(result.len(), 1);
             assert!(result[0].is_finite());
@@ -782,7 +783,7 @@ mod tests {
 
         let results =
             simd_bspline_batch_evaluate(&knots.view(), &coefficients.view(), 1, &x_values.view())
-                .unwrap();
+                .expect("Operation failed");
 
         assert_eq!(results.len(), 3);
         // Results should be finite (actual values computed by scalar implementation)

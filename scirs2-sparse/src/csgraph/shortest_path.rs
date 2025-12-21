@@ -66,12 +66,12 @@ impl ShortestPathMethod {
 /// let rows = vec![0, 0, 1, 2];
 /// let cols = vec![1, 2, 2, 0];
 /// let data = vec![1.0, 4.0, 2.0, 3.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Find shortest paths from vertex 0
 /// let (distances_) = shortest_path(
 ///     &graph, Some(0), None, "dijkstra", true, false
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
@@ -515,13 +515,14 @@ mod tests {
         let cols = vec![1, 2, 0, 3, 0, 3, 1, 2];
         let data = vec![1.0, 2.0, 1.0, 3.0, 2.0, 1.0, 3.0, 1.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed")
     }
 
     #[test]
     fn test_dijkstra_single_source() {
         let graph = create_test_graph();
-        let (distances_, _) = dijkstra_single_source(&graph, 0, false, false).unwrap();
+        let (distances_, _) =
+            dijkstra_single_source(&graph, 0, false, false).expect("Operation failed");
 
         assert_relative_eq!(distances_[0], 0.0);
         assert_relative_eq!(distances_[1], 1.0);
@@ -532,8 +533,9 @@ mod tests {
     #[test]
     fn test_dijkstra_withpredecessors() {
         let graph = create_test_graph();
-        let (_distances, predecessors) = dijkstra_single_source(&graph, 0, false, true).unwrap();
-        let preds = predecessors.unwrap();
+        let (_distances, predecessors) =
+            dijkstra_single_source(&graph, 0, false, true).expect("Operation failed");
+        let preds = predecessors.expect("Operation failed");
 
         assert_eq!(preds[0], -1); // Source has no predecessor
         assert_eq!(preds[1], 0); // 1's predecessor is 0
@@ -544,7 +546,8 @@ mod tests {
     #[test]
     fn test_bellman_ford() {
         let graph = create_test_graph();
-        let (distances_, _) = bellman_ford_single_source(&graph, 0, false, false).unwrap();
+        let (distances_, _) =
+            bellman_ford_single_source(&graph, 0, false, false).expect("Operation failed");
 
         assert_relative_eq!(distances_[0], 0.0);
         assert_relative_eq!(distances_[1], 1.0);
@@ -555,7 +558,7 @@ mod tests {
     #[test]
     fn test_floyd_warshall() {
         let graph = create_test_graph();
-        let (distances_, _) = floyd_warshall(&graph, false, false).unwrap();
+        let (distances_, _) = floyd_warshall(&graph, false, false).expect("Operation failed");
 
         // Check distances from vertex 0
         assert_relative_eq!(distances_[[0, 0]], 0.0);
@@ -575,23 +578,25 @@ mod tests {
         let graph = create_test_graph();
 
         // Single source
-        let (distances_, _) =
-            shortest_path(&graph, Some(0), None, "dijkstra", false, false).unwrap();
+        let (distances_, _) = shortest_path(&graph, Some(0), None, "dijkstra", false, false)
+            .expect("Operation failed");
         assert_relative_eq!(distances_[[0, 1]], 1.0);
         assert_relative_eq!(distances_[[0, 3]], 3.0);
 
         // Single pair
-        let (distance, _) = shortest_path(&graph, Some(0), Some(3), "auto", false, false).unwrap();
+        let (distance, _) = shortest_path(&graph, Some(0), Some(3), "auto", false, false)
+            .expect("Operation failed");
         assert_relative_eq!(distance[[0, 0]], 3.0);
     }
 
     #[test]
     fn test_reconstruct_path() {
         let graph = create_test_graph();
-        let (_, predecessors) = dijkstra_single_source(&graph, 0, false, true).unwrap();
-        let preds = predecessors.unwrap();
+        let (_, predecessors) =
+            dijkstra_single_source(&graph, 0, false, true).expect("Operation failed");
+        let preds = predecessors.expect("Operation failed");
 
-        let path = reconstruct_path(&preds, 0, 3).unwrap();
+        let path = reconstruct_path(&preds, 0, 3).expect("Operation failed");
         assert_eq!(path, vec![0, 2, 3]); // Shortest path 0->2->3
     }
 
@@ -602,7 +607,8 @@ mod tests {
         let cols = vec![1, 2, 0];
         let data = vec![1.0, 1.0, -3.0]; // Cycle 0->1->2->0 with total weight -1
 
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         // Bellman-Ford should detect the negative cycle
         let result = bellman_ford_single_source(&graph, 0, true, false);

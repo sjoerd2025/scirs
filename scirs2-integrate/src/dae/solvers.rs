@@ -57,7 +57,7 @@ where
         .iter()
         .fold(F::zero(), |acc, &x| acc + x.powi(2))
         .sqrt();
-    let tol = F::from_f64(1e-8).unwrap();
+    let tol = F::from_f64(1e-8).expect("Operation failed");
 
     if constraint_error > tol {
         return Err(IntegrateError::ValueError(format!(
@@ -112,11 +112,17 @@ where
 
         // Compute the Jacobian of g with respect to x
         // This is needed for the index-1 DAE solution
-        let g_x = compute_jacobian_x(&g_closure, t, x, y, F::from_f64(1e-8).unwrap());
+        let g_x = compute_jacobian_x(
+            &g_closure,
+            t,
+            x,
+            y,
+            F::from_f64(1e-8).expect("Operation failed"),
+        );
 
         // Compute the partial derivative of g with respect to t
         // We use a finite difference approximation
-        let dt = F::from_f64(1e-8).unwrap();
+        let dt = F::from_f64(1e-8).expect("Operation failed");
         let g_t_plus = g_closure(t + dt, x, y);
         let g_t = (g_t_plus - g_val.clone()) / dt;
 
@@ -312,7 +318,7 @@ where
         .iter()
         .fold(F::zero(), |acc, &x| acc + x.powi(2))
         .sqrt();
-    let tol = F::from_f64(1e-8).unwrap();
+    let tol = F::from_f64(1e-8).expect("Operation failed");
 
     if residual_norm > tol {
         return Err(IntegrateError::ValueError(format!(
@@ -344,18 +350,18 @@ where
     // Initial step size (if not provided in options)
     let mut h = opts.h0.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(0.01).unwrap() // 1% of interval
+        _span * F::from_f64(0.01).expect("Operation failed") // 1% of interval
     });
 
     // Minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        _span * F::from_f64(1e-6).expect("Operation failed") // Very small relative to interval
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(0.1).unwrap() // 10% of interval
+        _span * F::from_f64(0.1).expect("Operation failed") // 10% of interval
     });
 
     // Function to evaluate the implicit BDF formula for a given step size and order
@@ -370,29 +376,29 @@ where
         let bdf_coeffs = match k {
             1 => vec![F::one(), -F::one()], // Backward Euler
             2 => vec![
-                F::from_f64(4.0 / 3.0).unwrap(),
-                -F::from_f64(1.0 / 3.0).unwrap(),
+                F::from_f64(4.0 / 3.0).expect("Operation failed"),
+                -F::from_f64(1.0 / 3.0).expect("Operation failed"),
                 -F::one(),
             ],
             3 => vec![
-                F::from_f64(18.0 / 11.0).unwrap(),
-                -F::from_f64(9.0 / 11.0).unwrap(),
-                F::from_f64(2.0 / 11.0).unwrap(),
+                F::from_f64(18.0 / 11.0).expect("Operation failed"),
+                -F::from_f64(9.0 / 11.0).expect("Operation failed"),
+                F::from_f64(2.0 / 11.0).expect("Operation failed"),
                 -F::one(),
             ],
             4 => vec![
-                F::from_f64(48.0 / 25.0).unwrap(),
-                -F::from_f64(36.0 / 25.0).unwrap(),
-                F::from_f64(16.0 / 25.0).unwrap(),
-                -F::from_f64(3.0 / 25.0).unwrap(),
+                F::from_f64(48.0 / 25.0).expect("Operation failed"),
+                -F::from_f64(36.0 / 25.0).expect("Operation failed"),
+                F::from_f64(16.0 / 25.0).expect("Operation failed"),
+                -F::from_f64(3.0 / 25.0).expect("Operation failed"),
                 -F::one(),
             ],
             5 => vec![
-                F::from_f64(300.0 / 137.0).unwrap(),
-                -F::from_f64(300.0 / 137.0).unwrap(),
-                F::from_f64(200.0 / 137.0).unwrap(),
-                -F::from_f64(75.0 / 137.0).unwrap(),
-                F::from_f64(12.0 / 137.0).unwrap(),
+                F::from_f64(300.0 / 137.0).expect("Operation failed"),
+                -F::from_f64(300.0 / 137.0).expect("Operation failed"),
+                F::from_f64(200.0 / 137.0).expect("Operation failed"),
+                -F::from_f64(75.0 / 137.0).expect("Operation failed"),
+                F::from_f64(12.0 / 137.0).expect("Operation failed"),
                 -F::one(),
             ],
             _ => return Array1::zeros(n), // Invalid order, return zeros (will trigger error)
@@ -518,7 +524,7 @@ where
                 t_new,
                 &y_pred,
                 &f_current,
-                F::from_f64(1e-8).unwrap(),
+                F::from_f64(1e-8).expect("Operation failed"),
             );
 
             let jacobian_y_prime = crate::ode::utils::common::finite_difference_jacobian(
@@ -526,7 +532,7 @@ where
                 t_new,
                 &y_prime_pred,
                 &f_current,
-                F::from_f64(1e-8).unwrap(),
+                F::from_f64(1e-8).expect("Operation failed"),
             );
 
             n_jac += 3;
@@ -544,7 +550,7 @@ where
             if use_time_jacobian {
                 // Add a small contribution from the time Jacobian to account for
                 // the implicit time dependence in the Newton correction
-                let time_contribution_factor = F::from_f64(0.01).unwrap(); // Small factor
+                let time_contribution_factor = F::from_f64(0.01).expect("Operation failed"); // Small factor
                 for i in 0..n {
                     jacobian_effective[[i, i]] += jacobian_t[i] * time_contribution_factor;
                 }
@@ -564,10 +570,10 @@ where
             } else {
                 // For higher orders, use the BDF formula derivative with respect to y_new
                 let bdf_coeff = match order {
-                    2 => F::from_f64(4.0 / 3.0).unwrap(),
-                    3 => F::from_f64(18.0 / 11.0).unwrap(),
-                    4 => F::from_f64(48.0 / 25.0).unwrap(),
-                    5 => F::from_f64(300.0 / 137.0).unwrap(),
+                    2 => F::from_f64(4.0 / 3.0).expect("Operation failed"),
+                    3 => F::from_f64(18.0 / 11.0).expect("Operation failed"),
+                    4 => F::from_f64(48.0 / 25.0).expect("Operation failed"),
+                    5 => F::from_f64(300.0 / 137.0).expect("Operation failed"),
                     _ => F::one(), // Fallback to first-order if invalid
                 };
 
@@ -596,7 +602,7 @@ where
 
             // Update the solution approximation with damping to improve convergence
             let mut alpha = F::one(); // Full step
-            let min_alpha = F::from_f64(0.1).unwrap(); // Don't reduce step size too much
+            let min_alpha = F::from_f64(0.1).expect("Operation failed"); // Don't reduce step size too much
 
             while alpha >= min_alpha {
                 // Try the step with current alpha
@@ -613,29 +619,29 @@ where
                     // BDF coefficients for this order
                     let bdf_coeffs = match order {
                         2 => vec![
-                            F::from_f64(4.0 / 3.0).unwrap(),
-                            -F::from_f64(1.0 / 3.0).unwrap(),
+                            F::from_f64(4.0 / 3.0).expect("Operation failed"),
+                            -F::from_f64(1.0 / 3.0).expect("Operation failed"),
                             -F::one(),
                         ],
                         3 => vec![
-                            F::from_f64(18.0 / 11.0).unwrap(),
-                            -F::from_f64(9.0 / 11.0).unwrap(),
-                            F::from_f64(2.0 / 11.0).unwrap(),
+                            F::from_f64(18.0 / 11.0).expect("Operation failed"),
+                            -F::from_f64(9.0 / 11.0).expect("Operation failed"),
+                            F::from_f64(2.0 / 11.0).expect("Operation failed"),
                             -F::one(),
                         ],
                         4 => vec![
-                            F::from_f64(48.0 / 25.0).unwrap(),
-                            -F::from_f64(36.0 / 25.0).unwrap(),
-                            F::from_f64(16.0 / 25.0).unwrap(),
-                            -F::from_f64(3.0 / 25.0).unwrap(),
+                            F::from_f64(48.0 / 25.0).expect("Operation failed"),
+                            -F::from_f64(36.0 / 25.0).expect("Operation failed"),
+                            F::from_f64(16.0 / 25.0).expect("Operation failed"),
+                            -F::from_f64(3.0 / 25.0).expect("Operation failed"),
                             -F::one(),
                         ],
                         5 => vec![
-                            F::from_f64(300.0 / 137.0).unwrap(),
-                            -F::from_f64(300.0 / 137.0).unwrap(),
-                            F::from_f64(200.0 / 137.0).unwrap(),
-                            -F::from_f64(75.0 / 137.0).unwrap(),
-                            F::from_f64(12.0 / 137.0).unwrap(),
+                            F::from_f64(300.0 / 137.0).expect("Operation failed"),
+                            -F::from_f64(300.0 / 137.0).expect("Operation failed"),
+                            F::from_f64(200.0 / 137.0).expect("Operation failed"),
+                            -F::from_f64(75.0 / 137.0).expect("Operation failed"),
+                            F::from_f64(12.0 / 137.0).expect("Operation failed"),
                             -F::one(),
                         ],
                         _ => vec![F::one(), -F::one()], // Fallback to backward Euler
@@ -672,7 +678,7 @@ where
                 }
 
                 // Reduce alpha for next attempt
-                alpha *= F::from_f64(0.5).unwrap();
+                alpha *= F::from_f64(0.5).expect("Operation failed");
             }
 
             // If alpha got too small, Newton's method is diverging
@@ -702,13 +708,13 @@ where
             step += 1;
 
             // Adjust the step size based on convergence
-            h = (h * F::from_f64(1.1).unwrap()).min(max_step);
+            h = (h * F::from_f64(1.1).expect("Operation failed")).min(max_step);
         } else {
             // Reject the step
             n_rejected += 1;
 
             // Reduce the step size
-            h = (h * F::from_f64(0.5).unwrap()).max(min_step);
+            h = (h * F::from_f64(0.5).expect("Operation failed")).max(min_step);
 
             // If step size got too small, the problem might be too stiff
             if h <= min_step {
@@ -968,12 +974,12 @@ where
 
     // Reduce maximum step size to ensure better constraint tracking
     if let Some(max_step) = opts.max_step {
-        opts.max_step = Some(max_step * F::from_f64(0.5).unwrap());
+        opts.max_step = Some(max_step * F::from_f64(0.5).expect("Operation failed"));
     }
 
     // Set tighter tolerances
-    opts.rtol *= F::from_f64(0.1).unwrap();
-    opts.atol *= F::from_f64(0.1).unwrap();
+    opts.rtol *= F::from_f64(0.1).expect("Operation failed");
+    opts.atol *= F::from_f64(0.1).expect("Operation failed");
 
     // Solve using the basic semi-explicit DAE solver
     let f_clone = f.clone();
@@ -1150,12 +1156,13 @@ where
     // Use very small initial step size for index-3 systems
     let mut modified_options = options;
     if modified_options.h0.is_none() {
-        modified_options.h0 = Some(F::from_f64(1e-8).unwrap_or(F::from_f64(1e-6).unwrap()));
+        modified_options.h0 =
+            Some(F::from_f64(1e-8).unwrap_or(F::from_f64(1e-6).expect("Operation failed")));
     }
 
     // Use very strict tolerances for index-3 systems
-    modified_options.rtol *= F::from_f64(0.01).unwrap();
-    modified_options.atol *= F::from_f64(0.01).unwrap();
+    modified_options.rtol *= F::from_f64(0.01).expect("Operation failed");
+    modified_options.atol *= F::from_f64(0.01).expect("Operation failed");
 
     // Increase maximum iterations for Newton solver
     modified_options.max_newton_iterations = modified_options.max_newton_iterations.max(50);
@@ -1193,7 +1200,8 @@ where
 
         // Apply constraint stabilization by adding penalty terms
         // This helps with index-3 systems by enforcing constraint satisfaction
-        let penalty_factor = F::from_f64(1e3).unwrap_or(F::from_f64(100.0).unwrap());
+        let penalty_factor =
+            F::from_f64(1e3).unwrap_or(F::from_f64(100.0).expect("Operation failed"));
         let constraint_violation = g_clone(t, x, y);
 
         // Add penalty terms to differential equations
@@ -1230,11 +1238,11 @@ where
 {
     // Use a small perturbation for finite difference approximation
     let h = F::from_f64(1e-8)
-        .unwrap()
+        .expect("Operation failed")
         .max(F::epsilon().sqrt() * t.abs());
 
     // Ensure h is not too small to avoid numerical errors
-    let h = h.max(F::from_f64(1e-12).unwrap());
+    let h = h.max(F::from_f64(1e-12).expect("Operation failed"));
 
     // Compute F(t, y, y')
     let f_base = f(t, y.view(), y_prime.view());
@@ -1271,7 +1279,7 @@ where
 {
     // Start with a reasonable step size
     let mut h = F::from_f64(1e-6)
-        .unwrap()
+        .expect("Operation failed")
         .max(F::epsilon().sqrt() * t.abs());
 
     // Compute base function value
@@ -1302,12 +1310,12 @@ where
             .fold(F::zero(), |acc, err| acc.max(err));
 
         // Check if error is acceptable
-        if error_estimate <= tolerance || h <= F::from_f64(1e-12).unwrap() {
+        if error_estimate <= tolerance || h <= F::from_f64(1e-12).expect("Operation failed") {
             // Use central difference for better accuracy
             return Ok(jacobian_central);
         }
 
         // Reduce step size and try again
-        h *= F::from_f64(0.5).unwrap();
+        h *= F::from_f64(0.5).expect("Operation failed");
     }
 }

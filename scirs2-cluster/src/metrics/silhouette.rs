@@ -96,7 +96,8 @@ where
                 }
 
                 if cluster_count > 0 {
-                    let mean_dist = cluster_dist_sum / F::from(cluster_count).unwrap();
+                    let mean_dist = cluster_dist_sum
+                        / F::from(cluster_count).expect("Failed to convert to float");
                     inter_cluster_dists.push(mean_dist);
                 }
             }
@@ -104,7 +105,7 @@ where
 
         // Calculate a(i)
         let a_i = if intra_count > 0 {
-            intra_dist_sum / F::from(intra_count).unwrap()
+            intra_dist_sum / F::from(intra_count).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -113,8 +114,8 @@ where
         let b_i = if !inter_cluster_dists.is_empty() {
             *inter_cluster_dists
                 .iter()
-                .min_by(|a, b| a.partial_cmp(b).unwrap())
-                .unwrap()
+                .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+                .expect("Operation failed")
         } else {
             F::infinity()
         };
@@ -154,7 +155,7 @@ where
     }
 
     let sum: F = sample_scores.iter().fold(F::zero(), |acc, &val| acc + val);
-    Ok(sum / F::from(n_samples).unwrap())
+    Ok(sum / F::from(n_samples).expect("Failed to convert to float"))
 }
 
 #[cfg(test)]
@@ -170,7 +171,7 @@ mod tests {
         // Two clear clusters
         let labels = array![0, 0, 1, 1];
 
-        let scores = silhouette_samples(data.view(), labels.view()).unwrap();
+        let scores = silhouette_samples(data.view(), labels.view()).expect("Operation failed");
 
         // All scores should be positive for well-separated clusters
         for score in scores.iter() {
@@ -184,7 +185,7 @@ mod tests {
 
         let labels = array![0, 0, 1, 1];
 
-        let score = silhouette_score(data.view(), labels.view()).unwrap();
+        let score = silhouette_score(data.view(), labels.view()).expect("Operation failed");
 
         assert!(score > 0.0);
         assert!(score <= 1.0);

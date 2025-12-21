@@ -13,7 +13,7 @@ fn test_u8_csr_array() {
     let data: Vec<u8> = vec![1, 1, 1, 1, 1];
     let shape = (3, 3);
 
-    let csr = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    let csr = CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
     assert_eq!(csr.shape(), (3, 3));
     assert_eq!(csr.nnz(), 5);
@@ -30,7 +30,7 @@ fn test_i32_coo_array() {
     let data: Vec<i32> = vec![2, -1, 3, 4];
     let shape = (3, 3);
 
-    let coo = CooArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    let coo = CooArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
     assert_eq!(coo.shape(), (3, 3));
     assert_eq!(coo.nnz(), 4);
@@ -47,7 +47,8 @@ fn test_u64_sparse_operations() {
     let data: Vec<u64> = vec![10, 20, 30];
     let shape = (3, 3);
 
-    let sparse = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    let sparse =
+        CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
     // Test to_array conversion
     let dense = sparse.to_array();
@@ -66,7 +67,8 @@ fn test_u8_pauli_matrix() {
     let data: Vec<u8> = vec![1, 1]; // Pauli X matrix (binary)
     let shape = (2, 2);
 
-    let pauli_x = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    let pauli_x =
+        CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
     assert_eq!(pauli_x.get(0, 0), 0);
     assert_eq!(pauli_x.get(0, 1), 1);
@@ -85,7 +87,8 @@ fn test_integer_zero_handling() {
     let data: Vec<i32> = vec![1, 0, 3]; // Middle element is zero
     let shape = (3, 3);
 
-    let mut sparse = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    let mut sparse =
+        CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
     // Before eliminate_zeros, should have 3 elements
     assert_eq!(sparse.nnz(), 3);

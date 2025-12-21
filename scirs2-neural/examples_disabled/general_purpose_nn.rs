@@ -176,14 +176,14 @@ impl NeuralNetwork {
     /// Backward pass and update parameters
     fn backward(&mut self, x: &Array2<f32>, y: &Array2<f32>, learningrate: f32) {
         // Get the output from the last forward pass
-        let output = self.layers.last().unwrap().a.as_ref().unwrap();
+        let output = self.layers.last().expect("Operation failed").a.as_ref().expect("Operation failed");
         // Compute loss derivative
         let mut grad = self.loss_fn.derivative(output, y);
         // Store inputs for layers
         let mut inputs = Vec::with_capacity(self.layers.len());
         inputs.push(x.clone());
         for i in 0..self.layers.len() - 1 {
-            inputs.push(self.layers[i].a.as_ref().unwrap().clone());
+            inputs.push(self.layers[i].a.as_ref().expect("Operation failed").clone());
         // Backward pass through all layers
         for i in (0..self.layers.len()).rev() {
             grad = self.layers[i].backward(&inputs[i], &grad, learning_rate);

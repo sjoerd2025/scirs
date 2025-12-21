@@ -365,7 +365,7 @@ mod tests {
         let params = OptimizationParams::generate(&cpu, &memory, gpu.as_ref(), &network, &storage);
         assert!(params.is_ok());
 
-        let params = params.unwrap();
+        let params = params.expect("Operation failed");
         assert!(params.thread_count > 0);
         assert!(params.chunk_size > 0);
     }

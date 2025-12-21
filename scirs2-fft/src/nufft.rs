@@ -72,7 +72,7 @@ pub enum InterpolationType {
 ///
 /// // Compute NUFFT
 /// let m = 128;  // Output grid size
-/// let result = nufft_type1(&x, &samples, m, InterpolationType::Gaussian, 1e-6).unwrap();
+/// let result = nufft_type1(&x, &samples, m, InterpolationType::Gaussian, 1e-6).expect("Operation failed");
 ///
 /// // The transform of a Gaussian is another Gaussian
 /// assert!(result.len() == m);
@@ -224,7 +224,7 @@ pub fn nufft_type1(
 /// let x: Vec<f64> = (0..n).map(|i| -PI + 1.99 * PI * i as f64 / (n as f64 - 1.0)).collect();
 ///
 /// // Compute NUFFT Type 2
-/// let result = nufft_type2(&spectrum, &x, InterpolationType::Gaussian, 1e-6).unwrap();
+/// let result = nufft_type2(&spectrum, &x, InterpolationType::Gaussian, 1e-6).expect("Operation failed");
 ///
 /// // The output should have the same length as the non-uniform points
 /// assert_eq!(result.len(), x.len());
@@ -392,7 +392,8 @@ mod tests {
 
         // Compute NUFFT Type 1
         let m = 128;
-        let result = nufft_type1(&x, &samples, m, InterpolationType::Gaussian, 1e-6).unwrap();
+        let result = nufft_type1(&x, &samples, m, InterpolationType::Gaussian, 1e-6)
+            .expect("Operation failed");
 
         // The transform of a Gaussian is another Gaussian
         // Check that the result is not all zeros and has the expected length
@@ -431,7 +432,8 @@ mod tests {
             .collect();
 
         // Compute NUFFT Type 2
-        let result = nufft_type2(&spectrum, &x, InterpolationType::Gaussian, 1e-6).unwrap();
+        let result = nufft_type2(&spectrum, &x, InterpolationType::Gaussian, 1e-6)
+            .expect("Operation failed");
 
         // Result should be approximately constant magnitude complex exponentials
         assert_eq!(result.len(), n);
@@ -454,7 +456,8 @@ mod tests {
 
         // Compute NUFFT Type 1 with linear interpolation
         let m = 64;
-        let result = nufft_type1(&x, &samples, m, InterpolationType::Linear, 1e-6).unwrap();
+        let result = nufft_type1(&x, &samples, m, InterpolationType::Linear, 1e-6)
+            .expect("Operation failed");
 
         // For a cosine function, we expect peaks at k=±1
         assert_eq!(result.len(), m);
@@ -465,7 +468,7 @@ mod tests {
             .enumerate()
             .map(|(i, &c)| (i, c.norm()))
             .collect();
-        magnitudes.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        magnitudes.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Check that the peaks are at the expected frequencies
         let peak1 = magnitudes[0].0;

@@ -304,11 +304,11 @@ impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
             / rewards.len() as f32;
         let std_reward = variance.sqrt();
         let min_reward = rewards
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .copied()
             .unwrap_or(0.0);
         let max_reward = rewards
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
         let mean_length = lengths.iter().sum::<usize>() as f32 / lengths.len() as f32;
         Ok(EvaluationResults {
             mean_reward,

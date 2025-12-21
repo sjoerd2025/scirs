@@ -619,11 +619,11 @@ mod tests {
         let (reference, moving) = create_test_images();
         let ssd = SumOfSquaredDifferences;
         
-        let result = ssd.compute(&reference, &moving).unwrap();
+        let result = ssd.compute(&reference, &moving).expect("Operation failed");
         assert!(result > 0.0);
         
         // Test with identical images
-        let result_identical = ssd.compute(&reference, &reference).unwrap();
+        let result_identical = ssd.compute(&reference, &reference).expect("Operation failed");
         assert_eq!(result_identical, 0.0);
     }
 
@@ -632,11 +632,11 @@ mod tests {
         let (reference, moving) = create_test_images();
         let ncc = NormalizedCrossCorrelation;
         
-        let result = ncc.compute(&reference, &moving).unwrap();
+        let result = ncc.compute(&reference, &moving).expect("Operation failed");
         assert!(result >= -1.0 && result <= 1.0);
         
         // Test with identical images
-        let result_identical = ncc.compute(&reference, &reference).unwrap();
+        let result_identical = ncc.compute(&reference, &reference).expect("Operation failed");
         assert!((result_identical - 1.0).abs() < 1e-10);
     }
 
@@ -645,11 +645,11 @@ mod tests {
         let (reference, moving) = create_test_images();
         let mi = MutualInformation::new(16); // Use fewer bins for test
         
-        let result = mi.compute(&reference, &moving).unwrap();
+        let result = mi.compute(&reference, &moving).expect("Operation failed");
         assert!(result >= 0.0);
         
         // MI should be higher for identical images
-        let result_identical = mi.compute(&reference, &reference).unwrap();
+        let result_identical = mi.compute(&reference, &reference).expect("Operation failed");
         assert!(result_identical >= result);
     }
 
@@ -658,11 +658,11 @@ mod tests {
         let (reference, moving) = create_test_images();
         let mse = MeanSquaredError;
         
-        let result = mse.compute(&reference, &moving).unwrap();
+        let result = mse.compute(&reference, &moving).expect("Operation failed");
         assert!(result >= 0.0);
         
         // MSE should be 0 for identical images
-        let result_identical = mse.compute(&reference, &reference).unwrap();
+        let result_identical = mse.compute(&reference, &reference).expect("Operation failed");
         assert_eq!(result_identical, 0.0);
     }
 
@@ -671,11 +671,11 @@ mod tests {
         let (reference, moving) = create_test_images();
         let psnr = PeakSignalToNoiseRatio::default();
         
-        let result = psnr.compute(&reference, &moving).unwrap();
+        let result = psnr.compute(&reference, &moving).expect("Operation failed");
         assert!(result > 0.0);
         
         // PSNR should be infinite for identical images
-        let result_identical = psnr.compute(&reference, &reference).unwrap();
+        let result_identical = psnr.compute(&reference, &reference).expect("Operation failed");
         assert!(result_identical.is_infinite());
     }
 
@@ -685,7 +685,7 @@ mod tests {
         let moving = Array2::ones((20, 20));
         
         let ssim = StructuralSimilarity::default();
-        let result = ssim.compute(&reference, &moving).unwrap();
+        let result = ssim.compute(&reference, &moving).expect("Operation failed");
         
         // SSIM should be 1 for identical images
         assert!((result - 1.0).abs() < 1e-6);
@@ -696,7 +696,7 @@ mod tests {
         let (reference, moving) = create_test_images();
         let gc = GradientCorrelation;
         
-        let result = gc.compute(&reference, &moving).unwrap();
+        let result = gc.compute(&reference, &moving).expect("Operation failed");
         assert!(result >= -1.0 && result <= 1.0);
     }
 
@@ -705,12 +705,12 @@ mod tests {
         let (reference, moving) = create_test_images();
         
         let ssd = SumOfSquaredDifferences;
-        let result = ssd.compute(&reference, &moving).unwrap();
+        let result = ssd.compute(&reference, &moving).expect("Operation failed");
         let normalized = ssd.normalize(result);
         assert!(normalized >= 0.0 && normalized <= 1.0);
         
         let ncc = NormalizedCrossCorrelation;
-        let result = ncc.compute(&reference, &moving).unwrap();
+        let result = ncc.compute(&reference, &moving).expect("Operation failed");
         let normalized = ncc.normalize(result);
         assert!(normalized >= 0.0 && normalized <= 1.0);
     }
@@ -723,7 +723,7 @@ mod tests {
         let reference = Array2::ones((10, 10));
         let moving = Array2::ones((10, 10));
         
-        let result = measure.compute(&reference, &moving).unwrap();
+        let result = measure.compute(&reference, &moving).expect("Operation failed");
         assert!((result - 1.0).abs() < 1e-10);
     }
 

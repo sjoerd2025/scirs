@@ -62,7 +62,7 @@ where
         t,
         y,
         &f_current,
-        F::from_f64(1e-8).unwrap(),
+        F::from_f64(1e-8).expect("Operation failed"),
     ))
 }
 
@@ -226,27 +226,28 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                     let t_diff = (t - *old_t).abs();
                     let mut y_diff = F::zero();
                     for i in 0..y.len() {
-                        let rel_diff = if old_y[i].abs() > F::from_f64(1e-10).unwrap() {
-                            (y[i] - old_y[i]).abs() / old_y[i].abs()
-                        } else {
-                            (y[i] - old_y[i]).abs()
-                        };
+                        let rel_diff =
+                            if old_y[i].abs() > F::from_f64(1e-10).expect("Operation failed") {
+                                (y[i] - old_y[i]).abs() / old_y[i].abs()
+                            } else {
+                                (y[i] - old_y[i]).abs()
+                            };
                         y_diff = y_diff.max(rel_diff);
                     }
 
                     // Determine thresholds based on strategy
                     let (t_threshold, y_threshold) = match self.strategy {
                         JacobianStrategy::ModifiedNewton => (
-                            F::from_f64(0.3).unwrap(), // 30% change in time
-                            F::from_f64(0.3).unwrap(), // 30% change in y
+                            F::from_f64(0.3).expect("Operation failed"), // 30% change in time
+                            F::from_f64(0.3).expect("Operation failed"), // 30% change in y
                         ),
                         JacobianStrategy::BroydenUpdate => (
-                            F::from_f64(0.1).unwrap(), // 10% change in time
-                            F::from_f64(0.1).unwrap(), // 10% change in y
+                            F::from_f64(0.1).expect("Operation failed"), // 10% change in time
+                            F::from_f64(0.1).expect("Operation failed"), // 10% change in y
                         ),
                         _ => (
-                            F::from_f64(0.01).unwrap(), // 1% change in time
-                            F::from_f64(0.01).unwrap(), // 1% change in y
+                            F::from_f64(0.01).expect("Operation failed"), // 1% change in time
+                            F::from_f64(0.01).expect("Operation failed"), // 1% change in y
                         ),
                     };
 
@@ -271,7 +272,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     where
         Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
     {
-        let scale_val = scale.unwrap_or_else(|| F::from_f64(1.0).unwrap());
+        let scale_val = scale.unwrap_or_else(|| F::from_f64(1.0).expect("Operation failed"));
         let n = y.len();
 
         match self.strategy {
@@ -295,7 +296,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 };
 
                 // Perturbation size, scaled by variable magnitude
-                let base_eps = F::from_f64(1e-8).unwrap();
+                let base_eps = F::from_f64(1e-8).expect("Operation failed");
 
                 if self.strategy == JacobianStrategy::SparseFiniteDifference {
                     // For sparse problems, use specialized algorithm (future work)
@@ -328,7 +329,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 self.factorized = false;
 
                 // Return reference to the jacobian
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
             JacobianStrategy::ParallelFiniteDifference
             | JacobianStrategy::ParallelSparseFiniteDifference => {
@@ -343,8 +344,13 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 // Since we can't guarantee them at compile time in this generic method, we'll use
                 // the serial implementation as a fallback. For parallel computation, use the
                 // update_jacobian_parallel method which has the proper trait bounds.
-                let jac =
-                    finite_difference_jacobian(&f, t, y, &f_current, F::from_f64(1e-8).unwrap());
+                let jac = finite_difference_jacobian(
+                    &f,
+                    t,
+                    y,
+                    &f_current,
+                    F::from_f64(1e-8).expect("Operation failed"),
+                );
 
                 // Apply scaling if needed
                 let scaled_jac = if scale_val != F::one() {
@@ -371,7 +377,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 self.factorized = false;
 
                 // Return reference to the jacobian
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
             JacobianStrategy::BroydenUpdate => {
                 // Check if we need to do a full recomputation
@@ -388,8 +394,8 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 }
 
                 // Perform a Broyden update to the existing Jacobian
-                let (_old_t, old_y) = self.state_point.as_ref().unwrap();
-                let old_f = self.f_eval.as_ref().unwrap();
+                let (_old_t, old_y) = self.state_point.as_ref().expect("Operation failed");
+                let old_f = self.f_eval.as_ref().expect("Operation failed");
 
                 // Calculate new function value
                 let new_f = f(t, y.view());
@@ -399,7 +405,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 let delta_f = &new_f - old_f;
 
                 // Get existing Jacobian
-                let mut jac = self.jacobian.as_ref().unwrap().clone();
+                let mut jac = self.jacobian.as_ref().expect("Operation failed").clone();
 
                 // Broyden's update formula: J_new = J_old + (df - J_old * dy) * dy^T / (dy^T * dy)
                 let mut jac_dy = Array1::zeros(n);
@@ -410,7 +416,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 }
 
                 let dy_norm_squared: F = delta_y.iter().map(|&x| x * x).sum();
-                if dy_norm_squared > F::from_f64(1e-14).unwrap() {
+                if dy_norm_squared > F::from_f64(1e-14).expect("Operation failed") {
                     for i in 0..n {
                         for j in 0..n {
                             jac[[i, j]] += (delta_f[i] - jac_dy[i]) * delta_y[j] / dy_norm_squared;
@@ -438,7 +444,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 self.age += 1;
                 self.factorized = false;
 
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
             JacobianStrategy::ModifiedNewton => {
                 // Check if we need to do a full recomputation
@@ -460,7 +466,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 let f_current = f(t, y.view());
                 self.f_eval = Some(f_current);
 
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
             JacobianStrategy::ColoredFiniteDifference => {
                 // This is for future implementation - coloring would reduce the number of
@@ -509,7 +515,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 self.age = 0;
                 self.factorized = false;
 
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
             JacobianStrategy::Adaptive => {
                 // For adaptive strategy, try autodiff first if available
@@ -534,14 +540,14 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                         t,
                         y,
                         &f_current,
-                        F::from(1e-8).unwrap(),
+                        F::from(1e-8).expect("Failed to convert constant to float"),
                     ));
                 }
 
                 self.age = 0;
                 self.factorized = false;
 
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
         }
     }
@@ -562,7 +568,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
         self.strategy = strategy;
         self.update_jacobian(t, y, f, scale)?;
         self.strategy = original_strategy;
-        Ok(self.jacobian.as_ref().unwrap())
+        Ok(self.jacobian.as_ref().expect("Operation failed"))
     }
 
     /// Helper function to compute dense finite difference Jacobian
@@ -635,7 +641,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
         F: Send + Sync,
         Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + Sync,
     {
-        let scale_val = scale.unwrap_or_else(|| F::from_f64(1.0).unwrap());
+        let scale_val = scale.unwrap_or_else(|| F::from_f64(1.0).expect("Operation failed"));
         let n = y.len();
 
         // Handle parallel strategies with proper trait bounds
@@ -652,7 +658,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                     t,
                     y,
                     &f_current,
-                    F::from_f64(1e-8).unwrap(),
+                    F::from_f64(1e-8).expect("Operation failed"),
                 )?;
 
                 // Apply scaling if needed
@@ -678,7 +684,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 self.age = 0;
                 self.factorized = false;
 
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
             JacobianStrategy::ParallelSparseFiniteDifference => {
                 let f_current = if let Some(f_val) = &self.f_eval {
@@ -693,7 +699,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                     y,
                     &f_current,
                     None,
-                    F::from_f64(1e-8).unwrap(),
+                    F::from_f64(1e-8).expect("Operation failed"),
                 )?;
 
                 // Apply scaling if needed
@@ -719,7 +725,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 self.age = 0;
                 self.factorized = false;
 
-                Ok(self.jacobian.as_ref().unwrap())
+                Ok(self.jacobian.as_ref().expect("Operation failed"))
             }
             _ => {
                 // For non-parallel strategies, use the regular method

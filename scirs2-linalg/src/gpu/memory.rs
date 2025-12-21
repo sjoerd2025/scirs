@@ -345,16 +345,18 @@ mod tests {
     #[test]
     fn test_check_memory_requirements() {
         let backend = CpuFallbackBackend::new();
-        let context = backend.create_context(0).unwrap();
+        let context = backend.create_context(0).expect("Operation failed");
 
         // Small matrices should fit
         let matrices = vec![(10, 10), (10, 10)];
-        let fits = check_memory_requirements(context.as_ref(), &matrices, 8).unwrap();
+        let fits =
+            check_memory_requirements(context.as_ref(), &matrices, 8).expect("Operation failed");
         assert!(fits);
 
         // Very large matrices might not fit (depends on system memory)
         let matrices = vec![(100000, 100000)];
-        let fits = check_memory_requirements(context.as_ref(), &matrices, 8).unwrap();
+        let fits =
+            check_memory_requirements(context.as_ref(), &matrices, 8).expect("Operation failed");
         // Result depends on available system memory, just check it doesn't panic
         let _ = fits;
     }

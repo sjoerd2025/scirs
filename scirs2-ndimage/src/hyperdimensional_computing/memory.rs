@@ -706,7 +706,7 @@ mod tests {
         // Test retrieval
         let result = memory.retrieve(&hv1);
         assert!(result.is_some());
-        let (label, confidence) = result.unwrap();
+        let (label, confidence) = result.expect("Operation failed");
         assert_eq!(label, "pattern1");
         assert!(confidence > 0.8);
 
@@ -784,7 +784,7 @@ mod tests {
         let encoding = Hypervector::random(config.hypervector_dim, config.sparsity);
 
         // Test prediction on empty system
-        let prediction = system.predict(&encoding).unwrap();
+        let prediction = system.predict(&encoding).expect("Operation failed");
         assert_eq!(prediction.predicted_label, "unknown");
         assert_eq!(prediction.confidence, 0.0);
 
@@ -793,14 +793,14 @@ mod tests {
         let error = 0.5;
         let update_result = system
             .update_with_feedback(&encoding, "test_label", learning_rate, error)
-            .unwrap();
+            .expect("Operation failed");
         assert!(update_result.memory_updated);
         assert_eq!(update_result.learning_rate_used, learning_rate);
 
         // Test online learning step
         let result = system
             .online_learning_step(&encoding, Some("test_label"))
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.prediction.confidence > 0.0);
         assert!(result.system_performance.accuracy > 0.0);
 
@@ -849,7 +849,7 @@ mod tests {
         assert!(memory.update_pattern("test".to_string(), hv2, 0.5).is_ok());
 
         // Pattern should be updated
-        let stored = memory.patterns.get("test").unwrap();
+        let stored = memory.patterns.get("test").expect("Operation failed");
         assert!(stored.similarity(&hv1) < 1.0); // Should be different from original
     }
 }

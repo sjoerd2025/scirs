@@ -29,14 +29,14 @@ use super::super::concepts::QuantumState;
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_spatial::quantum_inspired::algorithms::QuantumNearestNeighbor;
 ///
-/// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+/// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).expect("Operation failed");
 /// let mut searcher = QuantumNearestNeighbor::new(&points.view())
 ///     .unwrap()
 ///     .with_quantum_encoding(true)
 ///     .with_amplitude_amplification(true);
 ///
 /// let query = scirs2_core::ndarray::arr1(&[0.5, 0.5]);
-/// let (indices, distances) = searcher.query_quantum(&query.view(), 2).unwrap();
+/// let (indices, distances) = searcher.query_quantum(&query.view(), 2).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct QuantumNearestNeighbor {
@@ -157,7 +157,7 @@ impl QuantumNearestNeighbor {
 
         // Find k nearest neighbors
         let mut indexed_distances: Vec<(usize, f64)> = distances.into_iter().enumerate().collect();
-        indexed_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        indexed_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
         let indices: Vec<usize> = indexed_distances
             .iter()
@@ -360,8 +360,9 @@ mod tests {
 
     #[test]
     fn test_quantum_nearest_neighbor_creation() {
-        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
-        let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0])
+            .expect("Operation failed");
+        let searcher = QuantumNearestNeighbor::new(&points.view()).expect("Operation failed");
 
         assert_eq!(searcher.len(), 3);
         assert!(!searcher.is_quantum_enabled());
@@ -370,11 +371,14 @@ mod tests {
 
     #[test]
     fn test_classical_search() {
-        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
-        let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0])
+            .expect("Operation failed");
+        let searcher = QuantumNearestNeighbor::new(&points.view()).expect("Operation failed");
 
         let query = scirs2_core::ndarray::arr1(&[0.5, 0.5]);
-        let (indices, distances) = searcher.query_quantum(&query.view(), 2).unwrap();
+        let (indices, distances) = searcher
+            .query_quantum(&query.view(), 2)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 2);
         assert_eq!(distances.len(), 2);
@@ -385,9 +389,10 @@ mod tests {
 
     #[test]
     fn test_quantum_configuration() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let searcher = QuantumNearestNeighbor::new(&points.view())
-            .unwrap()
+            .expect("Operation failed")
             .with_quantum_encoding(true)
             .with_amplitude_amplification(true)
             .with_grover_iterations(5);
@@ -399,8 +404,8 @@ mod tests {
 
     #[test]
     fn test_empty_points() {
-        let points = Array2::from_shape_vec((0, 2), vec![]).unwrap();
-        let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
+        let points = Array2::from_shape_vec((0, 2), vec![]).expect("Operation failed");
+        let searcher = QuantumNearestNeighbor::new(&points.view()).expect("Operation failed");
 
         assert!(searcher.is_empty());
         assert_eq!(searcher.len(), 0);
@@ -408,8 +413,9 @@ mod tests {
 
     #[test]
     fn test_invalid_k() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
-        let searcher = QuantumNearestNeighbor::new(&points.view()).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
+        let searcher = QuantumNearestNeighbor::new(&points.view()).expect("Operation failed");
 
         let query = scirs2_core::ndarray::arr1(&[0.5, 0.5]);
         let result = searcher.query_quantum(&query.view(), 5);

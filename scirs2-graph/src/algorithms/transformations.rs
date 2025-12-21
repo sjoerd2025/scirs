@@ -399,9 +399,9 @@ mod tests {
     #[test]
     fn test_line_graph() {
         let mut graph = create_graph::<&str, ()>();
-        graph.add_edge("A", "B", ()).unwrap();
-        graph.add_edge("B", "C", ()).unwrap();
-        graph.add_edge("C", "A", ()).unwrap();
+        graph.add_edge("A", "B", ()).expect("Operation failed");
+        graph.add_edge("B", "C", ()).expect("Operation failed");
+        graph.add_edge("C", "A", ()).expect("Operation failed");
 
         let line = line_graph(&graph);
 
@@ -415,10 +415,10 @@ mod tests {
     #[test]
     fn test_subgraph() {
         let mut graph = create_graph::<i32, ()>();
-        graph.add_edge(1, 2, ()).unwrap();
-        graph.add_edge(2, 3, ()).unwrap();
-        graph.add_edge(3, 4, ()).unwrap();
-        graph.add_edge(1, 4, ()).unwrap();
+        graph.add_edge(1, 2, ()).expect("Operation failed");
+        graph.add_edge(2, 3, ()).expect("Operation failed");
+        graph.add_edge(3, 4, ()).expect("Operation failed");
+        graph.add_edge(1, 4, ()).expect("Operation failed");
 
         let mut nodes = HashSet::new();
         nodes.insert(1);
@@ -440,10 +440,10 @@ mod tests {
     #[test]
     fn test_edge_subgraph() {
         let mut graph = create_graph::<i32, ()>();
-        graph.add_edge(1, 2, ()).unwrap();
-        graph.add_edge(2, 3, ()).unwrap();
-        graph.add_edge(3, 4, ()).unwrap();
-        graph.add_edge(1, 4, ()).unwrap();
+        graph.add_edge(1, 2, ()).expect("Operation failed");
+        graph.add_edge(2, 3, ()).expect("Operation failed");
+        graph.add_edge(3, 4, ()).expect("Operation failed");
+        graph.add_edge(1, 4, ()).expect("Operation failed");
 
         let edges = vec![(1, 2), (3, 4)];
         let sub = edge_subgraph(&graph, &edges);
@@ -463,11 +463,11 @@ mod tests {
     fn test_cartesian_product() {
         // Create K2 (complete graph on 2 vertices)
         let mut k2 = create_graph::<i32, ()>();
-        k2.add_edge(1, 2, ()).unwrap();
+        k2.add_edge(1, 2, ()).expect("Operation failed");
 
         // Create P2 (path graph on 2 vertices)
         let mut p2 = create_graph::<char, ()>();
-        p2.add_edge('A', 'B', ()).unwrap();
+        p2.add_edge('A', 'B', ()).expect("Operation failed");
 
         let product = cartesian_product(&k2, &p2);
 
@@ -483,11 +483,11 @@ mod tests {
     fn test_tensor_product() {
         // Create K2
         let mut k2_1 = create_graph::<i32, ()>();
-        k2_1.add_edge(1, 2, ()).unwrap();
+        k2_1.add_edge(1, 2, ()).expect("Operation failed");
 
         // Create another K2
         let mut k2_2 = create_graph::<char, ()>();
-        k2_2.add_edge('A', 'B', ()).unwrap();
+        k2_2.add_edge('A', 'B', ()).expect("Operation failed");
 
         let product = tensor_product(&k2_1, &k2_2);
 
@@ -502,8 +502,8 @@ mod tests {
     #[test]
     fn test_complement() {
         let mut graph = create_graph::<i32, ()>();
-        graph.add_edge(1, 2, ()).unwrap();
-        graph.add_edge(2, 3, ()).unwrap();
+        graph.add_edge(1, 2, ()).expect("Operation failed");
+        graph.add_edge(2, 3, ()).expect("Operation failed");
 
         let comp = complement(&graph);
 
@@ -520,9 +520,9 @@ mod tests {
     #[test]
     fn test_weight_filtered_subgraph() {
         let mut graph = create_graph::<i32, i32>();
-        graph.add_edge(1, 2, 10).unwrap();
-        graph.add_edge(2, 3, 20).unwrap();
-        graph.add_edge(3, 4, 10).unwrap();
+        graph.add_edge(1, 2, 10).expect("Operation failed");
+        graph.add_edge(2, 3, 20).expect("Operation failed");
+        graph.add_edge(3, 4, 10).expect("Operation failed");
 
         let mut valid_weights = HashSet::new();
         valid_weights.insert(10);

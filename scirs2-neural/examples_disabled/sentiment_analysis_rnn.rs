@@ -211,7 +211,7 @@ impl LSTMClassifier {
                 .slice(s![.., t, ..])
                 .to_owned()
                 .into_shape_with_order((batch_size, self.input_size))
-                .unwrap();
+                .expect("Operation failed");
             // Get previous hidden and cell states
             let h_prev = all_hidden_states.slice(s![.., t, ..]).to_owned();
             let c_prev = all_cell_states.slice(s![.., t, ..]).to_owned();
@@ -724,9 +724,9 @@ fn sentiment_analysis_example() {
         // Get true label
         let true_label = target
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx_)| idx)
-            .unwrap();
+            .expect("Operation failed");
         // Count correct predictions
         if lstm_pred == true_label {
             lstm_correct += 1;

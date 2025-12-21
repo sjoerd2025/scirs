@@ -12,6 +12,12 @@ use scirs2_core::ndarray::{Array1, Array2};
 use scirs2_core::numeric::Float;
 use std::f64::consts::PI;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: IntegrateFloat>(value: f64) -> F {
+    F::from_f64(value).expect("Failed to convert constant to target float type")
+}
+
 /// Represents a Lebedev quadrature rule with points and weights
 #[derive(Debug, Clone)]
 pub struct LebedevRule<F: IntegrateFloat> {
@@ -118,7 +124,7 @@ impl LebedevOrder {
 /// use scirs2_integrate::lebedev::{lebedev_rule, LebedevOrder};
 ///
 /// // Generate a 14th-order Lebedev rule
-/// let rule = lebedev_rule(LebedevOrder::Order14).unwrap();
+/// let rule = lebedev_rule(LebedevOrder::Order14).expect("Test/example failed");
 ///
 /// // Check the number of points
 /// assert_eq!(rule.points.nrows(), 26);
@@ -164,11 +170,11 @@ pub fn lebedev_rule<F: IntegrateFloat>(order: LebedevOrder) -> IntegrateResult<L
 /// use std::f64::consts::PI;
 ///
 /// // Integrate f(x,y,z) = 1 over the unit sphere (should equal 4π)
-/// let result: f64 = lebedev_integrate(|_x, _y, _z| 1.0, LebedevOrder::Order14).unwrap();
+/// let result: f64 = lebedev_integrate(|_x, _y, _z| 1.0, LebedevOrder::Order14).expect("Test/example failed");
 /// assert!((result - 4.0 * PI).abs() < 1e-10);
 ///
 /// // Integrate f(x,y,z) = x^2 + y^2 + z^2 = 1 over the unit sphere (should equal 4π)
-/// let result: f64 = lebedev_integrate(|x, y, z| x*x + y*y + z*z, LebedevOrder::Order14).unwrap();
+/// let result: f64 = lebedev_integrate(|x, y, z| x*x + y*y + z*z, LebedevOrder::Order14).expect("Test/example failed");
 /// assert!((result - 4.0 * PI).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -191,7 +197,7 @@ where
     }
 
     // Multiply by the surface area of the unit sphere (4π)
-    let four_pi = F::from(4.0 * PI).unwrap();
+    let four_pi = F::from(4.0 * PI).expect("Failed to convert to float");
     Ok(sum * four_pi)
 }
 
@@ -215,14 +221,14 @@ fn generate_order6<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 
     // Each point has equal weight
     // For 6th order Lebedev rule, the weight is 1/6
-    let weight = F::from(0.1666666666666667).unwrap(); // 1/6
+    let weight = const_f64::<F>(0.1666666666666667); // 1/6
     let weights = Array1::from_elem(6, weight);
 
     // Convert points to the required type
     let mut points = Array2::zeros((6, 3));
     for i in 0..6 {
         for j in 0..3 {
-            points[[i, j]] = F::from(points_data[i][j]).unwrap();
+            points[[i, j]] = F::from(points_data[i][j]).expect("Failed to convert to float");
         }
     }
 
@@ -258,13 +264,13 @@ fn generate_order14<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     // Weight for coordinate axis points
     // For the standard 26-point Lebedev rule (degree 14)
     // These are the correct weights for a 26-point rule of degree 14
-    let w1 = F::from(0.04761904761904762).unwrap(); // 1/21
+    let w1 = const_f64::<F>(0.04761904761904762); // 1/21
     for _ in 0..6 {
         weights.push(w1);
     }
 
     // Orbit 2: 8 points at vertices of a cube (±a,±a,±a) where a = 1/sqrt(3)
-    let a = F::from(1.0 / 3.0_f64.sqrt()).unwrap();
+    let a = F::from(1.0 / 3.0_f64.sqrt()).expect("Test/example failed");
 
     for &sx in &[a, -a] {
         for &sy in &[a, -a] {
@@ -275,13 +281,13 @@ fn generate_order14<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // Weight for cube vertices
-    let w2 = F::from(0.038_095_238_095_238_1).unwrap(); // 2/52.5
+    let w2 = F::from(0.038_095_238_095_238_1).expect("Failed to convert to float"); // 2/52.5
     for _ in 0..8 {
         weights.push(w2);
     }
 
     // Orbit 3: 12 points at edge midpoints (±b,±b,0) and cyclic permutations where b = 1/sqrt(2)
-    let b = F::from(1.0 / 2.0_f64.sqrt()).unwrap();
+    let b = F::from(1.0 / 2.0_f64.sqrt()).expect("Test/example failed");
 
     for &s1 in &[b, -b] {
         for &s2 in &[b, -b] {
@@ -292,7 +298,7 @@ fn generate_order14<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // Weight for edge midpoints
-    let w3 = F::from(0.03214285714285714).unwrap(); // 9/280
+    let w3 = const_f64::<F>(0.03214285714285714); // 9/280
     for _ in 0..12 {
         weights.push(w3);
     }
@@ -341,13 +347,13 @@ fn generate_order26<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // Weight for coordinate axis points
-    let w1 = F::from(0.0166666666666667).unwrap(); // 1/60
+    let w1 = const_f64::<F>(0.0166666666666667); // 1/60
     for _ in 0..6 {
         weights.push(w1);
     }
 
     // Type 2: 12 points at (±a,±a,0) and cyclic permutations where a = 1/sqrt(2)
-    let a = F::one() / F::from(2.0).unwrap().sqrt();
+    let a = F::one() / const_f64::<F>(2.0).sqrt();
 
     for &s1 in &[a, -a] {
         for &s2 in &[a, -a] {
@@ -358,13 +364,13 @@ fn generate_order26<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // Weight for edge midpoints
-    let w2 = F::from(0.025).unwrap(); // 1/40
+    let w2 = const_f64::<F>(0.025); // 1/40
     for _ in 0..12 {
         weights.push(w2);
     }
 
     // Type 3: 8 points at vertices of a cube (±a,±a,±a) where a = 1/sqrt(3)
-    let a = F::from(0.577_350_269_189_625_7).unwrap(); // 1/sqrt(3)
+    let a = F::from(0.577_350_269_189_625_7).expect("Failed to convert to float"); // 1/sqrt(3)
 
     for &sx in &[a, -a] {
         for &sy in &[a, -a] {
@@ -375,15 +381,15 @@ fn generate_order26<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // Weight for cube vertices
-    let w3 = F::from(0.025).unwrap(); // 1/40
+    let w3 = const_f64::<F>(0.025); // 1/40
     for _ in 0..8 {
         weights.push(w3);
     }
 
     // Type 4: 24 more points to reach 50 total
     // Use points of the form (±0.5, ±0.5, ±1/sqrt(2)) and permutations
-    let half = F::from(0.5).unwrap();
-    let b = F::one() / F::from(2.0).unwrap().sqrt();
+    let half = const_f64::<F>(0.5);
+    let b = F::one() / const_f64::<F>(2.0).sqrt();
 
     // Generate all permutations with correct normalization
     for &s1 in &[half, -half] {
@@ -399,7 +405,7 @@ fn generate_order26<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // Weight for these points
-    let w4 = F::from(0.0166666666666667).unwrap(); // 1/60
+    let w4 = const_f64::<F>(0.0166666666666667); // 1/60
     for _ in 0..24 {
         weights.push(w4);
     }
@@ -443,9 +449,9 @@ fn generate_order38<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
         for &b in &[beta, -beta] {
             for &c in &[beta, -beta] {
                 new_points.push([
-                    F::from(a).unwrap(),
-                    F::from(b).unwrap(),
-                    F::from(c).unwrap(),
+                    F::from(a).expect("Failed to convert to float"),
+                    F::from(b).expect("Failed to convert to float"),
+                    F::from(c).expect("Failed to convert to float"),
                 ]);
             }
         }
@@ -460,19 +466,19 @@ fn generate_order38<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
         for &sign2 in &[1.0, -1.0] {
             for &_sign3 in &[1.0, -1.0] {
                 new_points.push([
-                    F::from(0.0).unwrap(),
-                    F::from(sign1 * alpha).unwrap(),
-                    F::from(sign2 * beta).unwrap(),
+                    const_f64::<F>(0.0),
+                    F::from(sign1 * alpha).expect("Failed to convert to float"),
+                    F::from(sign2 * beta).expect("Failed to convert to float"),
                 ]);
                 new_points.push([
-                    F::from(sign1 * alpha).unwrap(),
-                    F::from(sign2 * beta).unwrap(),
-                    F::from(0.0).unwrap(),
+                    F::from(sign1 * alpha).expect("Failed to convert to float"),
+                    F::from(sign2 * beta).expect("Failed to convert to float"),
+                    const_f64::<F>(0.0),
                 ]);
                 new_points.push([
-                    F::from(sign1 * beta).unwrap(),
-                    F::from(0.0).unwrap(),
-                    F::from(sign2 * alpha).unwrap(),
+                    F::from(sign1 * beta).expect("Failed to convert to float"),
+                    const_f64::<F>(0.0),
+                    F::from(sign2 * alpha).expect("Failed to convert to float"),
                 ]);
             }
         }
@@ -480,13 +486,14 @@ fn generate_order38<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 
     // Normalize all new points to lie exactly on the unit sphere
     for point in &mut new_points {
-        let norm = (point[0].to_f64().unwrap().powi(2)
-            + point[1].to_f64().unwrap().powi(2)
-            + point[2].to_f64().unwrap().powi(2))
+        let norm = (point[0].to_f64().expect("Operation failed").powi(2)
+            + point[1].to_f64().expect("Operation failed").powi(2)
+            + point[2].to_f64().expect("Operation failed").powi(2))
         .sqrt();
 
         for p in point.iter_mut().take(3) {
-            *p = F::from(p.to_f64().unwrap() / norm).unwrap();
+            *p = F::from(p.to_f64().expect("Failed to convert to float") / norm)
+                .expect("Test/example failed");
         }
     }
 
@@ -519,7 +526,7 @@ fn generate_order38<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 
     // Calculate weights
     // Existing weights from order 26 need to be rescaled
-    let rescale = F::from(0.65).unwrap();
+    let rescale = const_f64::<F>(0.65);
     let mut weights = Array1::zeros(n_total);
 
     // Existing points weights are rescaled
@@ -528,7 +535,10 @@ fn generate_order38<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // New points weights - distribute the remaining weight evenly
-    let new_weight = F::from((1.0 - rescale.to_f64().unwrap()) / n_additional as f64).unwrap();
+    let new_weight = F::from(
+        (1.0 - rescale.to_f64().expect("Failed to convert to float")) / n_additional as f64,
+    )
+    .expect("Test/example failed");
     for i in 50..n_total {
         weights[i] = new_weight;
     }
@@ -573,19 +583,19 @@ fn generate_order50<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
         for &sign2 in &[1.0, -1.0] {
             for &sign3 in &[1.0, -1.0] {
                 new_points.push([
-                    F::from(sign1 * a).unwrap(),
-                    F::from(sign2 * b).unwrap(),
-                    F::from(sign3 * c).unwrap(),
+                    F::from(sign1 * a).expect("Failed to convert to float"),
+                    F::from(sign2 * b).expect("Failed to convert to float"),
+                    F::from(sign3 * c).expect("Failed to convert to float"),
                 ]);
                 new_points.push([
-                    F::from(sign1 * b).unwrap(),
-                    F::from(sign2 * c).unwrap(),
-                    F::from(sign3 * a).unwrap(),
+                    F::from(sign1 * b).expect("Failed to convert to float"),
+                    F::from(sign2 * c).expect("Failed to convert to float"),
+                    F::from(sign3 * a).expect("Failed to convert to float"),
                 ]);
                 new_points.push([
-                    F::from(sign1 * c).unwrap(),
-                    F::from(sign2 * a).unwrap(),
-                    F::from(sign3 * b).unwrap(),
+                    F::from(sign1 * c).expect("Failed to convert to float"),
+                    F::from(sign2 * a).expect("Failed to convert to float"),
+                    F::from(sign3 * b).expect("Failed to convert to float"),
                 ]);
             }
         }
@@ -606,19 +616,19 @@ fn generate_order50<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
         for &sign2 in &[1.0, -1.0] {
             for &sign3 in &[1.0, -1.0] {
                 new_points.push([
-                    F::from(sign1 * a).unwrap(),
-                    F::from(sign2 * b).unwrap(),
-                    F::from(sign3 * c).unwrap(),
+                    F::from(sign1 * a).expect("Failed to convert to float"),
+                    F::from(sign2 * b).expect("Failed to convert to float"),
+                    F::from(sign3 * c).expect("Failed to convert to float"),
                 ]);
                 new_points.push([
-                    F::from(sign1 * b).unwrap(),
-                    F::from(sign2 * c).unwrap(),
-                    F::from(sign3 * a).unwrap(),
+                    F::from(sign1 * b).expect("Failed to convert to float"),
+                    F::from(sign2 * c).expect("Failed to convert to float"),
+                    F::from(sign3 * a).expect("Failed to convert to float"),
                 ]);
                 new_points.push([
-                    F::from(sign1 * c).unwrap(),
-                    F::from(sign2 * a).unwrap(),
-                    F::from(sign3 * b).unwrap(),
+                    F::from(sign1 * c).expect("Failed to convert to float"),
+                    F::from(sign2 * a).expect("Failed to convert to float"),
+                    F::from(sign3 * b).expect("Failed to convert to float"),
                 ]);
             }
         }
@@ -653,7 +663,7 @@ fn generate_order50<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 
     // Calculate weights
     // Existing weights from order 38 need to be rescaled
-    let rescale = F::from(0.6).unwrap();
+    let rescale = const_f64::<F>(0.6);
     let mut weights = Array1::zeros(n_total);
 
     // Existing points weights are rescaled
@@ -662,7 +672,10 @@ fn generate_order50<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     }
 
     // New points weights - distribute the remaining weight evenly
-    let new_weight = F::from((1.0 - rescale.to_f64().unwrap()) / n_additional as f64).unwrap();
+    let new_weight = F::from(
+        (1.0 - rescale.to_f64().expect("Failed to convert to float")) / n_additional as f64,
+    )
+    .expect("Test/example failed");
     for i in order38.npoints..n_total {
         weights[i] = new_weight;
     }
@@ -682,7 +695,7 @@ mod tests {
 
     #[test]
     fn test_lebedev_rule_order6() {
-        let rule = lebedev_rule::<f64>(LebedevOrder::Order6).unwrap();
+        let rule = lebedev_rule::<f64>(LebedevOrder::Order6).expect("Test/example failed");
 
         // Should have 6 points
         assert_eq!(rule.npoints, 6);
@@ -704,7 +717,7 @@ mod tests {
 
     #[test]
     fn test_lebedev_rule_order14() {
-        let rule = lebedev_rule::<f64>(LebedevOrder::Order14).unwrap();
+        let rule = lebedev_rule::<f64>(LebedevOrder::Order14).expect("Test/example failed");
 
         // Should have 26 points
         assert_eq!(rule.npoints, 26);
@@ -738,7 +751,7 @@ mod tests {
         ];
 
         for &order in &orders {
-            let result = lebedev_integrate(|_x, y, _z| 1.0, order).unwrap();
+            let result = lebedev_integrate(|_x, y, _z| 1.0, order).expect("Test/example failed");
             // Our implementation may not have exact weights, so allow some tolerance
             assert!(
                 (result - 4.0 * PI).abs() < 1.0,
@@ -764,7 +777,8 @@ mod tests {
         ];
 
         for &order in &orders {
-            let result = lebedev_integrate(|_x: f64, _y: f64, z: f64| 1.0, order).unwrap();
+            let result = lebedev_integrate(|_x: f64, _y: f64, z: f64| 1.0, order)
+                .expect("Test/example failed");
             // Allow higher tolerance due to approximation in implementation
             assert!(
                 (result - 4.0 * PI).abs() < 1.0,
@@ -778,7 +792,8 @@ mod tests {
         // Test that odd functions integrate to approximately 0 due to symmetry
         // The function z should integrate to 0 on the sphere
         for &order in &[LebedevOrder::Order14, LebedevOrder::Order26] {
-            let result = lebedev_integrate(|_x: f64, y: f64, z: f64| z, order).unwrap();
+            let result =
+                lebedev_integrate(|_x: f64, y: f64, z: f64| z, order).expect("Test/example failed");
             // Higher tolerance due to approximation in weights
             assert!(
                 result.abs() < 0.5,
@@ -788,7 +803,8 @@ mod tests {
 
         // Test that x² + y² + z² = 1 on the unit sphere integrates to 4π
         for &order in &orders {
-            let result = lebedev_integrate(|x, y, z: f64| x * x + y * y + z * z, order).unwrap();
+            let result = lebedev_integrate(|x, y, z: f64| x * x + y * y + z * z, order)
+                .expect("Test/example failed");
             assert!(
                 (result - 4.0 * PI).abs() < 1.0,
                 "Order {:?}: expected ~{}, got {}",
@@ -812,9 +828,12 @@ mod tests {
         let expected = 4.0 * PI / 3.0;
 
         for &order in &orders {
-            let result_x = lebedev_integrate(|x: f64, _y: f64, z: f64| x * x, order).unwrap();
-            let result_y = lebedev_integrate(|_x: f64, y: f64, z: f64| y * y, order).unwrap();
-            let result_z = lebedev_integrate(|_x: f64, y: f64, z: f64| z * z, order).unwrap();
+            let result_x = lebedev_integrate(|x: f64, _y: f64, z: f64| x * x, order)
+                .expect("Test/example failed");
+            let result_y = lebedev_integrate(|_x: f64, y: f64, z: f64| y * y, order)
+                .expect("Test/example failed");
+            let result_z = lebedev_integrate(|_x: f64, y: f64, z: f64| z * z, order)
+                .expect("Test/example failed");
 
             // With approximate weights, allow higher tolerance
             assert_abs_diff_eq!(result_x, expected, epsilon = 0.5);
@@ -827,7 +846,8 @@ mod tests {
 
             // Sum of all second moments should be 4π (since x² + y² + z² = 1 on the sphere)
             let result_total =
-                lebedev_integrate(|x: f64, y: f64, z: f64| x * x + y * y + z * z, order).unwrap();
+                lebedev_integrate(|x: f64, y: f64, z: f64| x * x + y * y + z * z, order)
+                    .expect("Test/example failed");
             assert_abs_diff_eq!(result_total, 4.0 * PI, epsilon = 0.1);
         }
     }
@@ -835,11 +855,12 @@ mod tests {
     #[test]
     fn test_f32_support() {
         // Verify that f32 is supported
-        let rule = lebedev_rule::<f32>(LebedevOrder::Order6).unwrap();
+        let rule = lebedev_rule::<f32>(LebedevOrder::Order6).expect("Test/example failed");
         assert_eq!(rule.npoints, 6);
 
         // Integration should work with f32
-        let result = lebedev_integrate(|_x, y, _z| 1.0_f32, LebedevOrder::Order6).unwrap();
+        let result = lebedev_integrate(|_x, y, _z| 1.0_f32, LebedevOrder::Order6)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(result, 4.0 * PI as f32, epsilon = 1e-5_f32);
     }
 }

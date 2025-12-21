@@ -67,10 +67,11 @@ mod tests {
     fn test_hierarchical_cortical_processing() {
         let image =
             Array2::from_shape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
-                .unwrap();
+                .expect("Failed to create array");
         let config = BiologicalVisionConfig::default();
 
-        let cortical_layers = hierarchical_cortical_processing(image.view(), &config).unwrap();
+        let cortical_layers =
+            hierarchical_cortical_processing(image.view(), &config).expect("Operation failed");
 
         assert_eq!(cortical_layers.len(), 6);
         assert!(cortical_layers[0].feature_maps.len_of(Axis(0)) > 0);
@@ -78,17 +79,17 @@ mod tests {
 
     #[test]
     fn test_retinal_processing() {
-        let image1 =
-            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
+        let image1 = Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect())
+            .expect("Operation failed");
         let image2 = Array2::from_shape_vec(
             (16, 16),
             (0..256).map(|x| (x + 50) as f64 / 256.0).collect(),
         )
-        .unwrap();
+        .expect("Failed to create array");
         let images = vec![image1.view(), image2.view()];
         let config = BiologicalVisionConfig::default();
 
-        let retina = retinal_processing(&images, &config).unwrap();
+        let retina = retinal_processing(&images, &config).expect("Operation failed");
 
         assert_eq!(retina.photoreceptors.dim(), (16, 16));
         assert_eq!(retina.ganglion_cells.dim(), (16, 16));
@@ -97,17 +98,18 @@ mod tests {
 
     #[test]
     fn test_compound_eye_motion_detection() {
-        let image1 =
-            Array2::from_shape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect()).unwrap();
+        let image1 = Array2::from_shape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect())
+            .expect("Operation failed");
         let image2 = Array2::from_shape_vec(
             (20, 20),
             (0..400).map(|x| (x + 100) as f64 / 400.0).collect(),
         )
-        .unwrap();
+        .expect("Failed to create array");
         let images = vec![image1.view(), image2.view()];
         let config = BiologicalVisionConfig::default();
 
-        let compound_eye = compound_eye_motion_detection(&images, &config).unwrap();
+        let compound_eye =
+            compound_eye_motion_detection(&images, &config).expect("Operation failed");
 
         assert_eq!(compound_eye.ommatidia.len(), config.ommatidial_count);
         assert_eq!(compound_eye.wide_field_neurons.len(), 8);
@@ -119,13 +121,14 @@ mod tests {
 
     #[test]
     fn test_bio_inspired_attention_saccades() {
-        let image =
-            Array2::from_shape_vec((24, 24), (0..576).map(|x| x as f64 / 576.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((24, 24), (0..576).map(|x| x as f64 / 576.0).collect())
+            .expect("Operation failed");
         let feature_maps = vec![Array3::zeros((8, 12, 12)), Array3::zeros((16, 6, 6))];
         let config = BiologicalVisionConfig::default();
 
         let attention_system =
-            bio_inspired_attention_saccades(image.view(), &feature_maps, &config).unwrap();
+            bio_inspired_attention_saccades(image.view(), &feature_maps, &config)
+                .expect("Operation failed");
 
         assert_eq!(attention_system.attention_map.dim(), (24, 24));
         assert_eq!(attention_system.inhibition_of_return.dim(), (24, 24));
@@ -134,17 +137,18 @@ mod tests {
 
     #[test]
     fn test_predictive_coding_visual_processing() {
-        let image1 =
-            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
+        let image1 = Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect())
+            .expect("Operation failed");
         let image2 = Array2::from_shape_vec(
             (16, 16),
             (0..256).map(|x| (x + 30) as f64 / 256.0).collect(),
         )
-        .unwrap();
+        .expect("Failed to create array");
         let images = vec![image1.view(), image2.view()];
         let config = BiologicalVisionConfig::default();
 
-        let predictive_system = predictive_coding_visual_processing(&images, &config).unwrap();
+        let predictive_system =
+            predictive_coding_visual_processing(&images, &config).expect("Operation failed");
 
         assert_eq!(
             predictive_system.prediction_models.len(),
@@ -169,7 +173,8 @@ mod tests {
         let images = vec![color_image1, color_image2];
         let config = BiologicalVisionConfig::default();
 
-        let color_system = bio_inspired_color_constancy(&images, &config).unwrap();
+        let color_system =
+            bio_inspired_color_constancy(&images, &config).expect("Operation failed");
 
         assert_eq!(color_system.illumination_estimates.dim(), (12, 12));
         assert_eq!(color_system.surface_reflectance.dim(), (12, 12));
@@ -184,15 +189,15 @@ mod tests {
                     (16, 16),
                     (0..256).map(|x| (x + i * 10) as f64 / 256.0).collect(),
                 )
-                .unwrap()
+                .expect("Failed to create array")
             })
             .collect();
         let image_views: Vec<_> = images.iter().map(|img| img.view()).collect();
         let initial_targets = vec![(8, 8), (4, 12)];
         let config = BiologicalVisionConfig::default();
 
-        let motion_tracks =
-            bio_motion_prediction_tracking(&image_views, &initial_targets, &config).unwrap();
+        let motion_tracks = bio_motion_prediction_tracking(&image_views, &initial_targets, &config)
+            .expect("Operation failed");
 
         assert!(!motion_tracks.is_empty()); // At least one track should remain
         for track in &motion_tracks {
@@ -204,11 +209,12 @@ mod tests {
 
     #[test]
     fn test_advanced_retinal_circuits() {
-        let image =
-            Array2::from_shape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect())
+            .expect("Operation failed");
         let config = BiologicalVisionConfig::default();
 
-        let advanced_retina = advanced_retinal_circuits(image.view(), &config).unwrap();
+        let advanced_retina =
+            advanced_retinal_circuits(image.view(), &config).expect("Operation failed");
 
         assert_eq!(advanced_retina.on_center_ganglion.dim(), (20, 20));
         assert_eq!(advanced_retina.off_center_ganglion.dim(), (20, 20));
@@ -220,14 +226,16 @@ mod tests {
     #[test]
     fn test_binocular_stereo_processing() {
         let left_image =
-            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
+            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect())
+                .expect("Operation failed");
         let right_image =
             Array2::from_shape_vec((16, 16), (0..256).map(|x| (x + 5) as f64 / 256.0).collect())
-                .unwrap();
+                .expect("Failed to create array");
         let config = BiologicalVisionConfig::default();
 
         let stereo_result =
-            binocular_stereo_processing(left_image.view(), right_image.view(), &config).unwrap();
+            binocular_stereo_processing(left_image.view(), right_image.view(), &config)
+                .expect("Operation failed");
 
         assert_eq!(stereo_result.disparity_map.dim(), (16, 16));
         assert_eq!(stereo_result.depth_map.dim(), (16, 16));
@@ -244,13 +252,14 @@ mod tests {
                     (8, 8),
                     (0..64).map(|x| (x + i * 10) as f64 / 64.0).collect(),
                 )
-                .unwrap()
+                .expect("Failed to create array")
             })
             .collect();
         let image_views: Vec<_> = images.iter().map(|img| img.view()).collect();
         let config = BiologicalVisionConfig::default();
 
-        let vwm_result = visual_working_memory_processing(&image_views, &config).unwrap();
+        let vwm_result =
+            visual_working_memory_processing(&image_views, &config).expect("Operation failed");
 
         assert!(!vwm_result.memory_slots.is_empty());
         assert!(!vwm_result.attention_weights.is_empty());
@@ -259,8 +268,8 @@ mod tests {
 
     #[test]
     fn test_circadian_vision_processing() {
-        let image =
-            Array2::from_shape_vec((12, 12), (0..144).map(|x| x as f64 / 144.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((12, 12), (0..144).map(|x| x as f64 / 144.0).collect())
+            .expect("Operation failed");
         let illumination_estimate = 0.7;
         let circadian_phase = 0.3;
         let config = BiologicalVisionConfig::default();
@@ -271,7 +280,7 @@ mod tests {
             circadian_phase,
             &config,
         )
-        .unwrap();
+        .expect("Failed to create array");
 
         assert_eq!(processed_image.dim(), (12, 12));
     }
@@ -281,13 +290,14 @@ mod tests {
         let images: Vec<Array2<f64>> = (0..10)
             .map(|i| {
                 Array2::from_shape_vec((8, 8), (0..64).map(|x| (x + i * 5) as f64 / 64.0).collect())
-                    .unwrap()
+                    .expect("Failed to create array")
             })
             .collect();
         let image_views: Vec<_> = images.iter().map(|img| img.view()).collect();
         let config = BiologicalVisionConfig::default();
 
-        let adaptation_maps = neural_plasticity_adaptation(&image_views, &config).unwrap();
+        let adaptation_maps =
+            neural_plasticity_adaptation(&image_views, &config).expect("Operation failed");
 
         assert_eq!(adaptation_maps.dim(), (4, 8, 8)); // 4 adaptation types
     }

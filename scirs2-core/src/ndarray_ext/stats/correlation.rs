@@ -25,7 +25,7 @@ use num_traits::{Float, FromPrimitive};
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
-/// let corr = corrcoef(x.view(), y.view()).unwrap();
+/// let corr = corrcoef(x.view(), y.view()).expect("Operation failed");
 /// assert!((corr + 1.0_f64).abs() < 1e-10); // Perfect negative correlation (-1.0)
 /// ```
 ///
@@ -44,7 +44,7 @@ where
     }
 
     // Calculate means
-    let n = T::from_usize(x.len()).unwrap();
+    let n = T::from_usize(x.len()).expect("Operation failed");
     let mut sum_x = T::zero();
     let mut sum_y = T::zero();
 
@@ -100,7 +100,7 @@ where
 ///     [7.0, 8.0, 9.0],
 ///     [10.0, 11.0, 12.0]
 /// ];
-/// let covmatrix = cov(data.view(), 1).unwrap();
+/// let covmatrix = cov(data.view(), 1).expect("Operation failed");
 /// assert_eq!(covmatrix.shape(), &[3, 3]);
 /// ```
 ///
@@ -128,12 +128,12 @@ where
         for i in 0..n_samples {
             sum = sum + array[[i, j]];
         }
-        feature_means[j] = sum / T::from_usize(n_samples).unwrap();
+        feature_means[j] = sum / T::from_usize(n_samples).expect("Operation failed");
     }
 
     // Calculate covariance matrix
     let mut covmatrix = Array::<T, Ix2>::zeros((n_features, n_features));
-    let scale = T::from_usize(n_samples - ddof).unwrap();
+    let scale = T::from_usize(n_samples - ddof).expect("Operation failed");
 
     for i in 0..n_features {
         for j in 0..=i {

@@ -413,7 +413,7 @@ mod tests {
         assert!(registry.contains("test_dataset"));
         assert!(!registry.contains("nonexistent"));
 
-        let retrieved = registry.get("test_dataset").unwrap();
+        let retrieved = registry.get("test_dataset").expect("Operation failed");
         assert_eq!(retrieved.url, "https://example.com/test.csv");
         assert_eq!(retrieved.sha256, "abcd1234");
 

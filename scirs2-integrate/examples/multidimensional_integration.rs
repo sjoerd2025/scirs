@@ -42,7 +42,7 @@ fn main() {
 
     // Integrate using the default method (grid-based for 2D)
     let result_default = time_integration("Default method (grid-based)", || {
-        multi_romberg_with_details(f_2d, ranges, None).unwrap()
+        multi_romberg_with_details(f_2d, ranges, None).expect("Operation failed")
     });
 
     println!("  Result: {:.10}", result_default.value);
@@ -55,7 +55,8 @@ fn main() {
 
     // Integrate using Monte Carlo
     let result_mc = time_integration("Monte Carlo method", || {
-        multi_romberg_with_details(f_2d, ranges, Some(monte_carlo_opts.clone())).unwrap()
+        multi_romberg_with_details(f_2d, ranges, Some(monte_carlo_opts.clone()))
+            .expect("Operation failed")
     });
 
     println!("  Result: {:.10}", result_mc.value);
@@ -93,7 +94,7 @@ fn main() {
             &[(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
             Some(romberg_opts.clone()),
         )
-        .unwrap();
+        .expect("Operation failed");
         (raw_result.value * 8.0, raw_result.method)
     });
 
@@ -139,7 +140,7 @@ fn main() {
                 ..Default::default()
             }),
         )
-        .unwrap();
+        .expect("Operation failed");
         (
             raw_result.value * 32.0,
             raw_result.method,
@@ -174,7 +175,7 @@ fn main() {
 
         // Integration with default options
         let result = time_integration(&format!("Integration (dim={dim})"), || {
-            multi_romberg_with_details(gaussian_function, &ranges, None).unwrap()
+            multi_romberg_with_details(gaussian_function, &ranges, None).expect("Operation failed")
         });
 
         // For this special case, we can compute an analytical result

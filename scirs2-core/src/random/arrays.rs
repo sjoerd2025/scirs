@@ -44,7 +44,7 @@ where
             data.push(distribution.sample(&mut rng.rng));
         }
 
-        Array::from_shape_vec(shape, data).unwrap()
+        Array::from_shape_vec(shape, data).expect("Operation failed")
     }
 
     fn random_using_bulk<R, F>(shape: D, rng: &mut Random<R>, mut f: F) -> Self
@@ -60,14 +60,18 @@ where
             data.push(f(rng));
         }
 
-        Array::from_shape_vec(shape, data).unwrap()
+        Array::from_shape_vec(shape, data).expect("Operation failed")
     }
 }
 
 /// Convenience functions for common array operations
 /// Generate a random array with uniform distribution [0, 1)
 pub fn random_uniform_array<D: Dimension>(shape: D, rng: &mut Random<impl Rng>) -> Array<f64, D> {
-    Array::random_bulk(shape, Uniform::new(0.0, 1.0).unwrap(), rng)
+    Array::random_bulk(
+        shape,
+        Uniform::new(0.0, 1.0).expect("Operation failed"),
+        rng,
+    )
 }
 
 /// Generate a random array with normal distribution
@@ -77,7 +81,11 @@ pub fn random_normal_array<D: Dimension>(
     std_dev: f64,
     rng: &mut Random<impl Rng>,
 ) -> Array<f64, D> {
-    Array::random_bulk(shape, Normal::new(mean, std_dev).unwrap(), rng)
+    Array::random_bulk(
+        shape,
+        Normal::new(mean, std_dev).expect("Operation failed"),
+        rng,
+    )
 }
 
 /// Generate a random array with exponential distribution
@@ -86,7 +94,7 @@ pub fn random_exponential_array<D: Dimension>(
     lambda: f64,
     rng: &mut Random<impl Rng>,
 ) -> Array<f64, D> {
-    Array::random_bulk(shape, Exp::new(lambda).unwrap(), rng)
+    Array::random_bulk(shape, Exp::new(lambda).expect("Operation failed"), rng)
 }
 
 /// Generate a random array with gamma distribution
@@ -96,7 +104,11 @@ pub fn random_gamma_array<D: Dimension>(
     beta: f64,
     rng: &mut Random<impl Rng>,
 ) -> Array<f64, D> {
-    Array::random_bulk(shape, Gamma::new(alpha, beta).unwrap(), rng)
+    Array::random_bulk(
+        shape,
+        Gamma::new(alpha, beta).expect("Operation failed"),
+        rng,
+    )
 }
 
 /// Generate a random sparse array (with specified sparsity ratio)
@@ -123,7 +135,7 @@ pub fn random_xavier_weights(
     let limit = (6.0 / (fan_in + fan_out) as f64).sqrt();
     Array::random_bulk(
         crate::ndarray::Ix2(fan_out, fan_in),
-        Uniform::new(-limit, limit).unwrap(),
+        Uniform::new(-limit, limit).expect("Operation failed"),
         rng,
     )
 }
@@ -137,7 +149,7 @@ pub fn random_he_weights(
     let std_dev = (2.0 / fan_in as f64).sqrt();
     Array::random_bulk(
         crate::ndarray::Ix2(fan_out, fan_in),
-        Normal::new(0.0, std_dev).unwrap(),
+        Normal::new(0.0, std_dev).expect("Operation failed"),
         rng,
     )
 }
@@ -154,7 +166,11 @@ mod tests {
         let shape = Ix2(5, 5);
 
         // Test random_bulk method
-        let array = Array::<f64, _>::random_bulk(shape, Uniform::new(0.0, 1.0).unwrap(), &mut rng);
+        let array = Array::<f64, _>::random_bulk(
+            shape,
+            Uniform::new(0.0, 1.0).expect("Operation failed"),
+            &mut rng,
+        );
         assert_eq!(array.shape(), &[5, 5]);
         assert!(array.iter().all(|&x| (0.0..1.0).contains(&x)));
     }

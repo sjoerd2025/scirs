@@ -160,7 +160,7 @@ impl<
 
         // Step 1: Memory optimization
         if self.config.enable_memory_optimization {
-            let memory_optimizer = self.memory_optimizer.lock().unwrap();
+            let memory_optimizer = self.memory_optimizer.lock().expect("Operation failed");
             let _memory_plan = memory_optimizer.optimize_for_problem(y.len(), "rk4", 1)?;
             optimizations_applied.push("Memory hierarchy optimization".to_string());
         }
@@ -168,13 +168,13 @@ impl<
         // Step 2: Choose acceleration method based on problem size and configuration
         let solution = if self.config.enable_gpu && y.len() > 1000 {
             // Use GPU acceleration for large problems
-            let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
+            let gpu_accelerator = self.gpu_accelerator.lock().expect("Operation failed");
             let result = gpu_accelerator.advanced_rk4_step(t, y, h, f)?;
             optimizations_applied.push("GPU advanced-acceleration".to_string());
             result
         } else if self.config.enable_simd {
             // Use SIMD acceleration for smaller problems
-            let simd_accelerator = self.simd_accelerator.lock().unwrap();
+            let simd_accelerator = self.simd_accelerator.lock().expect("Operation failed");
             let result = simd_accelerator.advanced_rk4_vectorized(t, y, h, f)?;
             optimizations_applied.push("SIMD vectorization".to_string());
             result
@@ -185,7 +185,7 @@ impl<
 
         // Step 3: Real-time adaptation
         if self.config.enable_adaptive_optimization {
-            let adaptive_optimizer = self.adaptive_optimizer.lock().unwrap();
+            let adaptive_optimizer = self.adaptive_optimizer.lock().expect("Operation failed");
             self.apply_adaptive_optimization(&adaptive_optimizer, &start_time.elapsed())?;
             optimizations_applied.push("Real-time adaptation".to_string());
         }
@@ -221,7 +221,7 @@ impl<
 
         // Apply memory optimization
         if self.config.enable_memory_optimization {
-            let memory_optimizer = self.memory_optimizer.lock().unwrap();
+            let memory_optimizer = self.memory_optimizer.lock().expect("Operation failed");
             let _memory_plan =
                 memory_optimizer.optimize_for_problem(y.len(), "neural_rl_adaptive", 1)?;
             optimizations_applied.push("Neural RL memory optimization".to_string());
@@ -229,7 +229,7 @@ impl<
 
         // Use neural RL for step size prediction if enabled
         let (solution, final_step_size) = if self.config.enable_neural_rl {
-            let neural_rl_controller = self.neural_rl_controller.lock().unwrap();
+            let neural_rl_controller = self.neural_rl_controller.lock().expect("Operation failed");
 
             // Initialize neural RL if not already done
             neural_rl_controller.initialize(y.len(), h, "adaptive_ode")?;
@@ -261,12 +261,12 @@ impl<
 
             // Use the predicted step size for integration
             let solution = if self.config.enable_gpu && y.len() > 500 {
-                let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
+                let gpu_accelerator = self.gpu_accelerator.lock().expect("Operation failed");
                 let (result, new_h, accepted) =
                     gpu_accelerator.advanced_adaptive_step(t, y, predicted_step, rtol, atol, f)?;
                 result
             } else if self.config.enable_simd {
-                let simd_accelerator = self.simd_accelerator.lock().unwrap();
+                let simd_accelerator = self.simd_accelerator.lock().expect("Operation failed");
                 simd_accelerator.advanced_rk4_vectorized(t, y, predicted_step, f)?
             } else {
                 self.standard_rk4_step(t, y, predicted_step, f)?
@@ -290,7 +290,7 @@ impl<
         } else {
             // Intelligent adaptive integration with workload optimization
             let solution = if self.config.enable_gpu && y.len() > 500 {
-                let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
+                let gpu_accelerator = self.gpu_accelerator.lock().expect("Operation failed");
 
                 // Estimate problem complexity for optimal GPU utilization
                 let problem_complexity = self.estimate_problem_complexity(y, h)?;
@@ -309,7 +309,7 @@ impl<
                 result
             } else if self.config.enable_simd && y.len() > 64 {
                 // Use SIMD acceleration for medium-sized problems
-                let simd_accelerator = self.simd_accelerator.lock().unwrap();
+                let simd_accelerator = self.simd_accelerator.lock().expect("Operation failed");
                 let result = simd_accelerator.advanced_rk4_vectorized(t, y, h, f)?;
                 optimizations_applied.push("SIMD advanced-acceleration".to_string());
                 result
@@ -351,21 +351,21 @@ impl<
 
         // Apply memory optimization
         if self.config.enable_memory_optimization {
-            let memory_optimizer = self.memory_optimizer.lock().unwrap();
+            let memory_optimizer = self.memory_optimizer.lock().expect("Operation failed");
             let _memory_plan = memory_optimizer.optimize_for_problem(y.len(), "adaptive_rk4", 1)?;
             optimizations_applied.push("Adaptive memory optimization".to_string());
         }
 
         // Use GPU acceleration for adaptive stepping if available
         let (solution, new_h, accepted) = if self.config.enable_gpu && y.len() > 500 {
-            let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
+            let gpu_accelerator = self.gpu_accelerator.lock().expect("Operation failed");
             let result = gpu_accelerator.advanced_adaptive_step(t, y, h, rtol, atol, f)?;
             optimizations_applied.push("GPU adaptive stepping".to_string());
             result
         } else {
             // Fallback to SIMD or standard implementation
             let solution = if self.config.enable_simd {
-                let simd_accelerator = self.simd_accelerator.lock().unwrap();
+                let simd_accelerator = self.simd_accelerator.lock().expect("Operation failed");
                 optimizations_applied.push("SIMD adaptive stepping".to_string());
                 simd_accelerator.advanced_rk4_vectorized(t, y, h, f)?
             } else {
@@ -396,7 +396,7 @@ impl<
             return Ok(());
         }
 
-        let mut adaptive_optimizer = self.adaptive_optimizer.lock().unwrap();
+        let mut adaptive_optimizer = self.adaptive_optimizer.lock().expect("Operation failed");
         let strategy = AdaptationStrategy {
             target_metrics: TargetMetrics {
                 min_throughput: self.config.performance_targets.target_throughput,
@@ -412,9 +412,9 @@ impl<
             },
             objectives: OptimizationObjectives {
                 primary_objective: "balanced".to_string(),
-                weight_performance: F::from(0.4).unwrap(),
-                weight_accuracy: F::from(0.4).unwrap(),
-                weight_memory: F::from(0.2).unwrap(),
+                weight_performance: F::from(0.4).expect("Failed to convert constant to float"),
+                weight_accuracy: F::from(0.4).expect("Failed to convert constant to float"),
+                weight_memory: F::from(0.2).expect("Failed to convert constant to float"),
             },
             constraints: PerformanceConstraints {
                 max_memory: self.config.performance_targets.max_memory_usage,
@@ -508,7 +508,7 @@ impl<
 
         // Check GPU utilization anomalies
         if self.config.enable_gpu {
-            let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
+            let gpu_accelerator = self.gpu_accelerator.lock().expect("Operation failed");
             let gpu_metrics = self.get_gpu_metrics(&*gpu_accelerator)?;
 
             if gpu_metrics.utilization < 0.3 && gpu_metrics.expected_utilization > 0.7 {
@@ -526,7 +526,7 @@ impl<
 
         // Check memory pressure anomalies
         if self.config.enable_memory_optimization {
-            let memory_optimizer = self.memory_optimizer.lock().unwrap();
+            let memory_optimizer = self.memory_optimizer.lock().expect("Operation failed");
             let memory_metrics = self.get_memory_metrics(&*memory_optimizer)?;
 
             if memory_metrics.pressure_ratio > 0.9 {
@@ -543,7 +543,7 @@ impl<
 
         // Check SIMD efficiency anomalies
         if self.config.enable_simd {
-            let simd_accelerator = self.simd_accelerator.lock().unwrap();
+            let simd_accelerator = self.simd_accelerator.lock().expect("Operation failed");
             let simd_metrics = self.get_simd_metrics(&*simd_accelerator)?;
 
             if simd_metrics.vectorization_ratio < 0.5 {
@@ -867,20 +867,28 @@ impl<
     ) -> IntegrateResult<Array1<F>> {
         let k1 = f(t, y)?;
         let k1_scaled: Array1<F> = &k1 * h;
-        let y1 = y.to_owned() + &k1_scaled * F::from(0.5).unwrap();
+        let y1 =
+            y.to_owned() + &k1_scaled * F::from(0.5).expect("Failed to convert constant to float");
 
-        let k2 = f(t + h * F::from(0.5).unwrap(), &y1.view())?;
+        let k2 = f(
+            t + h * F::from(0.5).expect("Failed to convert constant to float"),
+            &y1.view(),
+        )?;
         let k2_scaled: Array1<F> = &k2 * h;
-        let y2 = y.to_owned() + &k2_scaled * F::from(0.5).unwrap();
+        let y2 =
+            y.to_owned() + &k2_scaled * F::from(0.5).expect("Failed to convert constant to float");
 
-        let k3 = f(t + h * F::from(0.5).unwrap(), &y2.view())?;
+        let k3 = f(
+            t + h * F::from(0.5).expect("Failed to convert constant to float"),
+            &y2.view(),
+        )?;
         let k3_scaled: Array1<F> = &k3 * h;
         let y3 = y.to_owned() + &k3_scaled;
 
         let k4 = f(t + h, &y3.view())?;
 
-        let one_sixth = F::from(1.0 / 6.0).unwrap();
-        let one_third = F::from(1.0 / 3.0).unwrap();
+        let one_sixth = F::from(1.0 / 6.0).expect("Failed to convert to float");
+        let one_third = F::from(1.0 / 3.0).expect("Failed to convert to float");
 
         let k_combination = &k1 * one_sixth + &k2 * one_third + &k3 * one_third + &k4 * one_sixth;
         let h_k_combination = &k_combination * h;
@@ -1017,7 +1025,7 @@ impl<
 
         // Accuracy reward: higher for lower _error
         let accuracy_reward = if solution.iter().any(|&x| x.is_nan() || x.is_infinite()) {
-            F::from(-10.0).unwrap() // Heavy penalty for invalid solutions
+            F::from(-10.0).expect("Failed to convert constant to float") // Heavy penalty for invalid solutions
         } else {
             let solution_norm = solution
                 .iter()
@@ -1041,12 +1049,13 @@ impl<
         };
 
         // Stability reward: penalty for extreme step sizes
-        let stability_reward = F::from(1.0).unwrap(); // Would check step size reasonableness
+        let stability_reward = F::from(1.0).expect("Failed to convert constant to float"); // Would check step size reasonableness
 
         // Combine rewards with weights
-        let total_reward = accuracy_reward * F::from(0.5).unwrap()
-            + efficiency_reward * F::from(0.3).unwrap()
-            + stability_reward * F::from(0.2).unwrap();
+        let total_reward = accuracy_reward
+            * F::from(0.5).expect("Failed to convert constant to float")
+            + efficiency_reward * F::from(0.3).expect("Failed to convert constant to float")
+            + stability_reward * F::from(0.2).expect("Failed to convert constant to float");
 
         Ok(total_reward)
     }
@@ -1087,11 +1096,17 @@ impl<
 
         // Problem characteristics (features 16-32)
         features[16] = F::from(solution.len()).unwrap_or(F::zero());
-        features[17] = step_size.ln().max(F::from(-10.0).unwrap());
-        features[18] = error.ln().max(F::from(-20.0).unwrap());
+        features[17] = step_size
+            .ln()
+            .max(F::from(-10.0).expect("Failed to convert constant to float"));
+        features[18] = error
+            .ln()
+            .max(F::from(-20.0).expect("Failed to convert constant to float"));
 
         // Performance indicators (features 32-48)
-        let estimated_complexity = F::from(solution.len() as f64).unwrap().sqrt();
+        let estimated_complexity = F::from(solution.len() as f64)
+            .expect("Operation failed")
+            .sqrt();
         features[32] = estimated_complexity;
 
         // Temporal features (features 48-64) - would include error history, step history, etc.
@@ -1513,7 +1528,7 @@ mod tests {
             enable_neural_rl: false,             // Disable for faster testing
             performance_targets: PerformanceTargets::default(),
         };
-        let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
+        let coordinator = AdvancedModeCoordinator::<f64>::new(config).expect("Operation failed");
 
         // Simple test function: dy/dt = -y
         let ode_func =
@@ -1526,7 +1541,7 @@ mod tests {
         let result = coordinator.advanced_rk4_integration(t, &y.view(), h, ode_func);
         assert!(result.is_ok());
 
-        let advanced_result = result.unwrap();
+        let advanced_result = result.expect("Test: advanced integration failed");
         assert_eq!(advanced_result.solution.len(), y.len());
         // Note: with all optimizations disabled, no optimizations will be applied
     }
@@ -1542,9 +1557,11 @@ mod tests {
             enable_neural_rl: false,
             performance_targets: PerformanceTargets::default(),
         };
-        let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
+        let coordinator = AdvancedModeCoordinator::<f64>::new(config).expect("Operation failed");
 
-        let report = coordinator.get_performance_report().unwrap();
+        let report = coordinator
+            .get_performance_report()
+            .expect("Operation failed");
         assert_eq!(report.components_active, 1); // Only memory optimization enabled
         assert!(report.estimated_speedup > 1.0);
     }
@@ -1560,7 +1577,7 @@ mod tests {
             enable_neural_rl: true,              // Only enable neural RL for this specific test
             performance_targets: PerformanceTargets::default(),
         };
-        let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
+        let coordinator = AdvancedModeCoordinator::<f64>::new(config).expect("Operation failed");
 
         // Simple test function: dy/dt = -y
         let ode_func =
@@ -1576,7 +1593,7 @@ mod tests {
             coordinator.neural_rl_adaptive_integration(t, &y.view(), h, rtol, atol, ode_func);
         assert!(result.is_ok());
 
-        let advanced_result = result.unwrap();
+        let advanced_result = result.expect("Test: advanced integration failed");
         assert_eq!(advanced_result.solution.len(), y.len());
         // Check that neural RL was used
         assert!(advanced_result

@@ -90,7 +90,7 @@ fn benchmark_and_visualize() {
                 Some(algorithm),
                 Some(42),
             )
-            .unwrap();
+            .expect("Operation failed");
             let cpu_time = cpu_start.elapsed().as_millis() as f64;
             cpusize_times.push(cpu_time);
 
@@ -104,7 +104,7 @@ fn benchmark_and_visualize() {
                     Some(algorithm),
                     None,
                 )
-                .unwrap();
+                .expect("Operation failed");
                 let gpu_time = gpu_start.elapsed().as_millis() as f64;
                 gpusize_times.push(gpu_time);
 
@@ -241,7 +241,7 @@ fn benchmark_accuracy() {
                 use scirs2_core::random::{Distribution, Normal};
 
                 let mut rng = scirs2_core::random::rng();
-                let normal = Normal::new(0.0, noise_level).unwrap();
+                let normal = Normal::new(0.0, noise_level).expect("Operation failed");
 
                 for sample in &mut signal {
                     *sample += normal.sample(&mut rng);
@@ -255,7 +255,7 @@ fn benchmark_accuracy() {
                 Some(algorithm),
                 Some(42),
             )
-            .unwrap();
+            .expect("Operation failed");
 
             // Calculate accuracy (how many true frequencies were found)
             let mut found_count = 0;
@@ -323,7 +323,7 @@ fn main() {
 
     // Check CUDA availability
     if is_cuda_available() {
-        let devices = get_cuda_devices().unwrap();
+        let devices = get_cuda_devices().expect("Operation failed");
         println!("\nCUDA is available with {} device(s):", devices.len());
 
         for (idx, device) in devices.iter().enumerate() {

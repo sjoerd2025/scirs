@@ -229,7 +229,7 @@ mod tests {
             .workers(4)
             .cache_enabled(true);
 
-        let context = builder.build().unwrap();
+        let context = builder.build().expect("Operation failed");
         // Context is created successfully
         drop(context);
     }
@@ -241,7 +241,7 @@ mod tests {
             42
         });
 
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
     }
 
     #[test]
@@ -251,7 +251,7 @@ mod tests {
             84
         });
 
-        assert_eq!(result.unwrap(), 84);
+        assert_eq!(result.expect("Operation failed"), 84);
     }
 
     #[test]
@@ -261,7 +261,7 @@ mod tests {
             168
         });
 
-        assert_eq!(result.unwrap(), 168);
+        assert_eq!(result.expect("Operation failed"), 168);
     }
 
     #[test]
@@ -277,6 +277,6 @@ mod tests {
             },
         );
 
-        assert_eq!(result.unwrap(), 336);
+        assert_eq!(result.expect("Operation failed"), 336);
     }
 }

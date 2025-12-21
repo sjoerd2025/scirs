@@ -92,7 +92,8 @@ fn main() {
     println!("Standard computation (f32):\n{:?}", y_f32);
 
     // Compute with internal f64 precision but result in f32
-    let y_mp = mixed_precision_matvec::<f32, f32, f32, f64>(&a_f32.view(), &x_f32.view()).unwrap();
+    let y_mp = mixed_precision_matvec::<f32, f32, f32, f64>(&a_f32.view(), &x_f32.view())
+        .expect("Operation failed");
     println!("Mixed-precision computation (f32->f64->f32):\n{:?}", y_mp);
 
     // Check difference
@@ -123,11 +124,12 @@ fn main() {
 
     // First solve using pure f32 precision
     let x_pure_f32 =
-        mixed_precision_solve::<f32, f32, f32, f32>(&hilbert_f32.view(), &b_f32.view()).unwrap();
+        mixed_precision_solve::<f32, f32, f32, f32>(&hilbert_f32.view(), &b_f32.view())
+            .expect("Operation failed");
 
     // Then solve using internal f64 precision
-    let x_mp =
-        mixed_precision_solve::<f32, f32, f32, f64>(&hilbert_f32.view(), &b_f32.view()).unwrap();
+    let x_mp = mixed_precision_solve::<f32, f32, f32, f64>(&hilbert_f32.view(), &b_f32.view())
+        .expect("Operation failed");
 
     println!("Solution with pure f32 precision: {:?}", x_pure_f32);
     println!("Solution with mixed precision (internal f64): {:?}", x_mp);
@@ -168,11 +170,13 @@ fn main() {
 
     // Solve with pure f32
     let x_f32_extreme =
-        mixed_precision_solve::<f32, f32, f32, f32>(&a_extreme.view(), &b_extreme.view()).unwrap();
+        mixed_precision_solve::<f32, f32, f32, f32>(&a_extreme.view(), &b_extreme.view())
+            .expect("Operation failed");
 
     // Solve with internal f64
     let x_mp_extreme =
-        mixed_precision_solve::<f32, f32, f32, f64>(&a_extreme.view(), &b_extreme.view()).unwrap();
+        mixed_precision_solve::<f32, f32, f32, f64>(&a_extreme.view(), &b_extreme.view())
+            .expect("Operation failed");
 
     println!("Solution with pure f32: {:?}", x_f32_extreme);
     println!("Solution with mixed precision: {:?}", x_mp_extreme);
@@ -204,8 +208,8 @@ fn main() {
     println!("Standard computation (f32):\n{:?}", c_f32);
 
     // Compute with internal f64 precision but result in f32
-    let c_mp =
-        mixed_precision_matmul::<f32, f32, f32, f64>(&a_mult.view(), &b_mult.view()).unwrap();
+    let c_mp = mixed_precision_matmul::<f32, f32, f32, f64>(&a_mult.view(), &b_mult.view())
+        .expect("Operation failed");
     println!("Mixed-precision computation (f32->f64->f32):\n{:?}", c_mp);
 
     // Check difference
@@ -229,16 +233,20 @@ fn main() {
     let a_severe = array![[1.0f32, 2.0f32], [1.0f32, 2.0000001f32]];
 
     // Compute condition numbers with both f32 and f64 internal precision
-    let cond_well_f32 = mixed_precision_cond::<f32, f32, f32>(&a_well.view(), None).unwrap();
-    let cond_well_f64 = mixed_precision_cond::<f32, f32, f64>(&a_well.view(), None).unwrap();
+    let cond_well_f32 =
+        mixed_precision_cond::<f32, f32, f32>(&a_well.view(), None).expect("Operation failed");
+    let cond_well_f64 =
+        mixed_precision_cond::<f32, f32, f64>(&a_well.view(), None).expect("Operation failed");
 
     let cond_moderate_f32 =
-        mixed_precision_cond::<f32, f32, f32>(&a_moderate.view(), None).unwrap();
+        mixed_precision_cond::<f32, f32, f32>(&a_moderate.view(), None).expect("Operation failed");
     let cond_moderate_f64 =
-        mixed_precision_cond::<f32, f32, f64>(&a_moderate.view(), None).unwrap();
+        mixed_precision_cond::<f32, f32, f64>(&a_moderate.view(), None).expect("Operation failed");
 
-    let cond_severe_f32 = mixed_precision_cond::<f32, f32, f32>(&a_severe.view(), None).unwrap();
-    let cond_severe_f64 = mixed_precision_cond::<f32, f32, f64>(&a_severe.view(), None).unwrap();
+    let cond_severe_f32 =
+        mixed_precision_cond::<f32, f32, f32>(&a_severe.view(), None).expect("Operation failed");
+    let cond_severe_f64 =
+        mixed_precision_cond::<f32, f32, f64>(&a_severe.view(), None).expect("Operation failed");
 
     println!("Well-conditioned matrix:");
     println!("  f32 precision: {:.2e}", cond_well_f32);
@@ -302,7 +310,7 @@ fn main() {
     let mp_time = benchmark_fn("Mixed precision (f32->f64->f32)", || {
         let _ =
             mixed_precision_matvec::<f32, f32, f32, f64>(&largematrix.view(), &large_vector.view())
-                .unwrap();
+                .expect("Operation failed");
     });
 
     let speedup = f32_time.as_nanos() as f64 / mp_time.as_nanos() as f64;
@@ -325,12 +333,12 @@ fn main() {
 
     let f32_solve_time = benchmark_fn("Pure f32 solver", || {
         let _ = mixed_precision_solve::<f32, f32, f32, f32>(&testmatrix.view(), &b_large.view())
-            .unwrap();
+            .expect("Operation failed");
     });
 
     let mp_solve_time = benchmark_fn("Mixed precision solver (f64 internal)", || {
         let _ = mixed_precision_solve::<f32, f32, f32, f64>(&testmatrix.view(), &b_large.view())
-            .unwrap();
+            .expect("Operation failed");
     });
 
     let solve_speedup = f32_solve_time.as_nanos() as f64 / mp_solve_time.as_nanos() as f64;
@@ -384,14 +392,14 @@ fn main() {
         let standard_mp_time = benchmark_fn("Regular mixed precision dot product", || {
             let _: f64 =
                 mixed_precision_dot_f32::<f32, f32, f64, f64>(&a_vec.view(), &b_vec.view())
-                    .unwrap();
+                    .expect("Operation failed");
         });
 
         let simd_time = benchmark_fn("Mixed precision dot product (alternative)", || {
             // Note: SIMD-specific functions are not available, using regular mixed precision
             let _: f64 =
                 mixed_precision_dot_f32::<f32, f32, f64, f64>(&a_vec.view(), &b_vec.view())
-                    .unwrap();
+                    .expect("Operation failed");
         });
 
         println!(
@@ -420,7 +428,7 @@ fn main() {
             || {
                 let _ =
                     mixed_precision_matvec::<f32, f32, f32, f64>(&a_mat.view(), &row_vec.view())
-                        .unwrap();
+                        .expect("Operation failed");
             },
         );
 
@@ -429,7 +437,7 @@ fn main() {
             || {
                 let _: Array1<f64> =
                     mixed_precision_matvec::<f32, f32, f64, f64>(&a_mat.view(), &row_vec.view())
-                        .unwrap();
+                        .expect("Operation failed");
             },
         );
 
@@ -455,14 +463,14 @@ fn main() {
         let standard_mp_mm_time =
             benchmark_fn("Regular mixed precision matrix multiplication", || {
                 let _ = mixed_precision_matmul::<f32, f32, f32, f64>(&a_mat.view(), &b_mat.view())
-                    .unwrap();
+                    .expect("Operation failed");
             });
 
         let simd_mm_time = benchmark_fn(
             "SIMD-accelerated mixed precision matrix multiplication",
             || {
                 let _ = simd_mixed_precision_matmul_f32_f64::<f32>(&a_mat.view(), &b_mat.view())
-                    .unwrap();
+                    .expect("Operation failed");
             },
         );
 
@@ -492,7 +500,7 @@ fn main() {
         // Compute mixed precision dot product
         let dot_simd_f64: f64 =
             mixed_precision_dot_f32::<f32, f32, f64, f64>(&a_precision.view(), &b_precision.view())
-                .unwrap();
+                .expect("Operation failed");
 
         // Compute "ground truth" with explicit f64 conversions
         let ground_truth = a_precision

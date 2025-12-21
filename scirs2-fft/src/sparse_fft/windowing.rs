@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn test_apply_window_none() {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let result = apply_window(&signal, WindowFunction::None, 14.0).unwrap();
+        let result = apply_window(&signal, WindowFunction::None, 14.0).expect("Operation failed");
 
         assert_eq!(result.len(), 4);
         assert_eq!(result[0], Complex64::new(1.0, 0.0));
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn test_apply_window_hann() {
         let signal = vec![1.0; 4];
-        let result = apply_window(&signal, WindowFunction::Hann, 14.0).unwrap();
+        let result = apply_window(&signal, WindowFunction::Hann, 14.0).expect("Operation failed");
 
         assert_eq!(result.len(), 4);
         // First and last samples should be zero for Hann window
@@ -148,7 +148,8 @@ mod tests {
     #[test]
     fn test_apply_window_hamming() {
         let signal = vec![1.0; 4];
-        let result = apply_window(&signal, WindowFunction::Hamming, 14.0).unwrap();
+        let result =
+            apply_window(&signal, WindowFunction::Hamming, 14.0).expect("Operation failed");
 
         assert_eq!(result.len(), 4);
         // Hamming window should not be zero at endpoints

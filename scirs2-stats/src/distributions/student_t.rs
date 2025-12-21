@@ -11,6 +11,12 @@ use scirs2_core::random::prelude::*;
 use scirs2_core::random::{Distribution, StudentT as RandStudentT};
 use std::f64::consts::PI;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Student's t distribution structure
 pub struct StudentT<F: Float + Send + Sync> {
     /// Degrees of freedom
@@ -42,7 +48,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// use scirs2_stats::distributions::student_t::StudentT;
     ///
     /// // Standard t-distribution with 5 degrees of freedom
-    /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
+    /// let t = StudentT::new(5.0f64, 0.0, 1.0).expect("test/example should not fail");
     /// ```
     pub fn new(df: F, loc: F, scale: F) -> StatsResult<Self> {
         if df <= F::zero() {
@@ -58,7 +64,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
         }
 
         // Convert to f64 for rand_distr
-        let df_f64 = <f64 as NumCast>::from(df).unwrap();
+        let df_f64 = NumCast::from(df).expect("Failed to convert to f64");
 
         match RandStudentT::new(df_f64) {
             Ok(rand_distr) => Ok(StudentT {
@@ -88,7 +94,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// ```
     /// use scirs2_stats::distributions::student_t::StudentT;
     ///
-    /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
+    /// let t = StudentT::new(5.0f64, 0.0, 1.0).expect("test/example should not fail");
     /// let pdf_at_zero = t.pdf(0.0);
     /// assert!((pdf_at_zero - 0.3796).abs() < 1e-4);
     /// ```
@@ -98,12 +104,12 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
         let x_std = (x - self.loc) / self.scale;
 
         // Calculate gamma values for the PDF formula
-        let df_half = self.df / F::from(2.0).unwrap();
-        let df_plus_one_half = (self.df + F::one()) / F::from(2.0).unwrap();
+        let df_half = self.df / const_f64::<F>(2.0);
+        let df_plus_one_half = (self.df + F::one()) / const_f64::<F>(2.0);
 
         // Use the formula for the PDF
         let one = F::one();
-        let pi = F::from(PI).unwrap();
+        let pi = const_f64::<F>(PI);
 
         // Calculate the PDF value
         let numerator = gamma_function(df_plus_one_half);
@@ -130,7 +136,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// ```
     /// use scirs2_stats::distributions::student_t::StudentT;
     ///
-    /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
+    /// let t = StudentT::new(5.0f64, 0.0, 1.0).expect("test/example should not fail");
     /// let cdf_at_zero = t.cdf(0.0);
     /// assert!((cdf_at_zero - 0.5).abs() < 1e-10);
     /// ```
@@ -141,7 +147,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
 
         // For t-distribution, CDF at 0 is exactly 0.5 by symmetry
         if x_std == F::zero() {
-            return F::from(0.5).unwrap();
+            return const_f64::<F>(0.5);
         }
 
         // For known common values of the t-distribution
@@ -156,28 +162,27 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
             (-3.0, 0.02),
         ];
 
-        if (self.df - F::from(5.0).unwrap()).abs() < F::from(0.001).unwrap()
+        if (self.df - const_f64::<F>(5.0)).abs() < const_f64::<F>(0.001)
             && self.loc == F::zero()
             && self.scale == F::one()
         {
             for &(val, prob) in df5_values.iter() {
-                if (x_std - F::from(val).unwrap()).abs() < F::from(0.001).unwrap() {
-                    return F::from(prob).unwrap();
+                if (x_std - const_f64::<F>(val)).abs() < const_f64::<F>(0.001) {
+                    return const_f64::<F>(prob);
                 }
             }
         }
 
         // For standard t-distribution, we use a simpler approximation
         // based on the sign of x and distance from 0
-        let half = F::from(0.5).unwrap();
+        let half = const_f64::<F>(0.5);
 
         if x_std > F::zero() {
             // 0.318... = 1/π approximately
-            half + (x_std / self.df.sqrt()).atan() * F::from(std::f64::consts::FRAC_1_PI).unwrap()
+            half + (x_std / self.df.sqrt()).atan() * const_f64::<F>(std::f64::consts::FRAC_1_PI)
         } else {
             // Use same constant for consistency
-            half - ((-x_std) / self.df.sqrt()).atan()
-                * F::from(std::f64::consts::FRAC_1_PI).unwrap()
+            half - ((-x_std) / self.df.sqrt()).atan() * const_f64::<F>(std::f64::consts::FRAC_1_PI)
         }
     }
 
@@ -196,8 +201,8 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// ```
     /// use scirs2_stats::distributions::student_t::StudentT;
     ///
-    /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
-    /// let samples = t.rvs(1000).unwrap();
+    /// let t = StudentT::new(5.0f64, 0.0, 1.0).expect("test/example should not fail");
+    /// let samples = t.rvs(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     #[inline]
@@ -221,8 +226,8 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// ```
     /// use scirs2_stats::distributions::student_t::StudentT;
     ///
-    /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
-    /// let samples = t.rvs_vec(1000).unwrap();
+    /// let t = StudentT::new(5.0f64, 0.0, 1.0).expect("test/example should not fail");
+    /// let samples = t.rvs_vec(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     #[inline]
@@ -237,7 +242,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
                 let std_sample = self.rand_distr.sample(&mut rng);
 
                 // Scale and shift according to loc and scale parameters
-                let sample = F::from(std_sample).unwrap() * self.scale + self.loc;
+                let sample = const_f64::<F>(std_sample) * self.scale + self.loc;
                 samples.push(sample);
             }
 
@@ -248,7 +253,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
         use scirs2_core::parallel_ops::parallel_map;
 
         // Clone distribution parameters for thread safety
-        let df_f64 = <f64 as NumCast>::from(self.df).unwrap();
+        let df_f64 = NumCast::from(self.df).expect("Failed to convert to f64");
         let loc = self.loc;
         let scale = self.scale;
 
@@ -258,9 +263,9 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
         // Generate samples in parallel
         let samples = parallel_map(&indices, move |_| {
             let mut rng = thread_rng();
-            let rand_distr = RandStudentT::new(df_f64).unwrap();
+            let rand_distr = RandStudentT::new(df_f64).expect("test/example should not fail");
             let sample = rand_distr.sample(&mut rng);
-            F::from(sample).unwrap() * scale + loc
+            const_f64::<F>(sample) * scale + loc
         });
 
         Ok(samples)
@@ -275,8 +280,8 @@ fn gamma_function<F: Float>(x: F) -> F {
         return F::one();
     }
 
-    if x == F::from(0.5).unwrap() {
-        return F::from(PI).unwrap().sqrt();
+    if x == const_f64::<F>(0.5) {
+        return const_f64::<F>(PI).sqrt();
     }
 
     // For integers and half-integers, use recurrence relation
@@ -286,28 +291,28 @@ fn gamma_function<F: Float>(x: F) -> F {
 
     // Use Lanczos approximation for other values
     let p = [
-        F::from(676.5203681218851).unwrap(),
-        F::from(-1259.1392167224028).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507343278686905).unwrap(),
-        F::from(-0.13857109526572012).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.5056327351493116e-7).unwrap(),
+        const_f64::<F>(676.5203681218851),
+        const_f64::<F>(-1259.1392167224028),
+        const_f64::<F>(771.323_428_777_653_1),
+        const_f64::<F>(-176.615_029_162_140_6),
+        const_f64::<F>(12.507343278686905),
+        const_f64::<F>(-0.13857109526572012),
+        const_f64::<F>(9.984_369_578_019_572e-6),
+        const_f64::<F>(1.5056327351493116e-7),
     ];
 
     let x_adj = x - F::one();
-    let t = x_adj + F::from(7.5).unwrap();
+    let t = x_adj + const_f64::<F>(7.5);
 
     let mut sum = F::zero();
     for (i, &coef) in p.iter().enumerate() {
-        sum = sum + coef / (x_adj + F::from(i + 1).unwrap());
+        sum = sum + coef / (x_adj + const_f64::<F>((i + 1) as f64));
     }
 
-    let pi = F::from(PI).unwrap();
-    let sqrt_2pi = (F::from(2.0).unwrap() * pi).sqrt();
+    let pi = const_f64::<F>(PI);
+    let sqrt_2pi = (const_f64::<F>(2.0) * pi).sqrt();
 
-    sqrt_2pi * sum * t.powf(x_adj + F::from(0.5).unwrap()) * (-t).exp()
+    sqrt_2pi * sum * t.powf(x_adj + const_f64::<F>(0.5)) * (-t).exp()
 }
 
 /// Approximation of the regularized incomplete beta function for floating point types
@@ -327,7 +332,7 @@ fn regularized_beta<F: Float>(x: F, a: F, b: F) -> F {
 
     // Use the continued fraction representation
     let max_iterations = 100;
-    let epsilon = F::from(1e-10).unwrap();
+    let epsilon = const_f64::<F>(1e-10);
 
     let one = F::one();
 
@@ -343,7 +348,7 @@ fn regularized_beta<F: Float>(x: F, a: F, b: F) -> F {
     let mut c = one;
 
     for m in 1..=max_iterations {
-        let two_m = F::from((2 * m) as f64).unwrap();
+        let two_m = F::from((2 * m) as f64).expect("test/example should not fail");
 
         // Calculate the next terms in the continued fraction
         let a_term = (a + two_m - one) * (a + b + two_m - one) * x;
@@ -378,10 +383,10 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F
     fn var(&self) -> F {
         // Variance is df/(df-2) * scale^2 for df > 2
         // Undefined for df <= 2
-        if self.df <= F::from(2.0).unwrap() {
+        if self.df <= const_f64::<F>(2.0) {
             F::nan()
         } else {
-            self.df / (self.df - F::from(2.0).unwrap()) * self.scale * self.scale
+            self.df / (self.df - const_f64::<F>(2.0)) * self.scale * self.scale
         }
     }
 
@@ -398,7 +403,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F
         // Entropy of the t-distribution is complex
         // For large df, it approaches the entropy of a normal distribution
         let df = self.df;
-        let half = F::from(0.5).unwrap();
+        let half = const_f64::<F>(0.5);
         let one = F::one();
 
         if df <= F::zero() {
@@ -406,10 +411,9 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F
         }
 
         // For very large df, use normal approximation
-        if df > F::from(1000.0).unwrap() {
-            let e = F::from(std::f64::consts::E).unwrap();
-            return half
-                * (F::from(2.0).unwrap() * F::from(std::f64::consts::PI).unwrap() * e).ln()
+        if df > const_f64::<F>(1000.0) {
+            let e = const_f64::<F>(std::f64::consts::E);
+            return half * (const_f64::<F>(2.0) * const_f64::<F>(std::f64::consts::PI) * e).ln()
                 + self.scale.ln();
         }
 
@@ -419,7 +423,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F
 
         let term1 = half_df_plus_half * (gamma_function(half) / gamma_function(half_df)).ln();
         let term2 = half_df_plus_half;
-        let term3 = half * (df * F::from(std::f64::consts::PI).unwrap()).ln();
+        let term3 = half * (df * const_f64::<F>(std::f64::consts::PI)).ln();
 
         term1 + term2 + term3
     }
@@ -455,30 +459,30 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
         if p == F::one() {
             return Ok(F::infinity());
         }
-        if p == F::from(0.5).unwrap() {
+        if p == const_f64::<F>(0.5) {
             return Ok(self.loc); // t-distribution is symmetric around loc
         }
 
         // For df = 5, use known values
-        if (self.df - F::from(5.0).unwrap()).abs() < F::from(0.001).unwrap() {
-            if (p - F::from(0.95).unwrap()).abs() < F::from(0.001).unwrap() {
-                return Ok(self.loc + F::from(2.0).unwrap() * self.scale);
+        if (self.df - const_f64::<F>(5.0)).abs() < const_f64::<F>(0.001) {
+            if (p - const_f64::<F>(0.95)).abs() < const_f64::<F>(0.001) {
+                return Ok(self.loc + const_f64::<F>(2.0) * self.scale);
             }
-            if (p - F::from(0.975).unwrap()).abs() < F::from(0.001).unwrap() {
-                return Ok(self.loc + F::from(2.571).unwrap() * self.scale);
+            if (p - const_f64::<F>(0.975)).abs() < const_f64::<F>(0.001) {
+                return Ok(self.loc + const_f64::<F>(2.571) * self.scale);
             }
-            if (p - F::from(0.05).unwrap()).abs() < F::from(0.001).unwrap() {
-                return Ok(self.loc - F::from(2.0).unwrap() * self.scale);
+            if (p - const_f64::<F>(0.05)).abs() < const_f64::<F>(0.001) {
+                return Ok(self.loc - const_f64::<F>(2.0) * self.scale);
             }
-            if (p - F::from(0.025).unwrap()).abs() < F::from(0.001).unwrap() {
-                return Ok(self.loc - F::from(2.571).unwrap() * self.scale);
+            if (p - const_f64::<F>(0.025)).abs() < const_f64::<F>(0.001) {
+                return Ok(self.loc - const_f64::<F>(2.571) * self.scale);
             }
         }
 
         // For large df, use normal approximation
-        if self.df > F::from(30.0).unwrap() {
+        if self.df > const_f64::<F>(30.0) {
             // Use normal approximation for large df
-            let z = if p > F::from(0.5).unwrap() {
+            let z = if p > const_f64::<F>(0.5) {
                 (-(F::one() - p).ln()).sqrt()
             } else {
                 -(-(p).ln()).sqrt()
@@ -487,27 +491,27 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
         }
 
         // For other cases, estimation based on df
-        let sign = if p > F::from(0.5).unwrap() {
+        let sign = if p > const_f64::<F>(0.5) {
             F::one()
         } else {
             -F::one()
         };
-        let p_adj = if p > F::from(0.5).unwrap() {
+        let p_adj = if p > const_f64::<F>(0.5) {
             p
         } else {
             F::one() - p
         };
 
         // Very rough approximation based on df
-        let factor = if self.df < F::from(3.0).unwrap() {
-            F::from(1.5).unwrap()
-        } else if self.df < F::from(10.0).unwrap() {
-            F::from(1.2).unwrap()
+        let factor = if self.df < const_f64::<F>(3.0) {
+            const_f64::<F>(1.5)
+        } else if self.df < const_f64::<F>(10.0) {
+            const_f64::<F>(1.2)
         } else {
-            F::from(1.1).unwrap()
+            const_f64::<F>(1.1)
         };
 
-        let t_value = sign * factor * (-F::from(2.0).unwrap() * (F::one() - p_adj).ln()).sqrt();
+        let t_value = sign * factor * (-const_f64::<F>(2.0) * (F::one() - p_adj).ln()).sqrt();
         Ok(self.loc + t_value * self.scale)
     }
 }
@@ -536,13 +540,13 @@ mod tests {
     #[test]
     fn test_student_t_creation() {
         // t distribution with 5 degrees of freedom
-        let t5 = StudentT::new(5.0, 0.0, 1.0).unwrap();
+        let t5 = StudentT::new(5.0, 0.0, 1.0).expect("test/example should not fail");
         assert_eq!(t5.df, 5.0);
         assert_eq!(t5.loc, 0.0);
         assert_eq!(t5.scale, 1.0);
 
         // Custom t distribution
-        let custom = StudentT::new(10.0, 1.0, 2.0).unwrap();
+        let custom = StudentT::new(10.0, 1.0, 2.0).expect("test/example should not fail");
         assert_eq!(custom.df, 10.0);
         assert_eq!(custom.loc, 1.0);
         assert_eq!(custom.scale, 2.0);
@@ -557,7 +561,7 @@ mod tests {
     #[test]
     fn test_student_t_pdf() {
         // t distribution with 5 degrees of freedom
-        let t5 = StudentT::new(5.0, 0.0, 1.0).unwrap();
+        let t5 = StudentT::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // PDF at x = 0
         let pdf_at_zero = t5.pdf(0.0);
@@ -575,7 +579,7 @@ mod tests {
     #[test]
     fn test_student_t_cdf() {
         // t distribution with 5 degrees of freedom
-        let t5 = StudentT::new(5.0, 0.0, 1.0).unwrap();
+        let t5 = StudentT::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // CDF at x = 0
         let cdf_at_zero = t5.cdf(0.0);
@@ -593,31 +597,31 @@ mod tests {
     #[test]
     fn test_student_t_ppf() {
         // t distribution with 5 degrees of freedom
-        let t5 = StudentT::new(5.0, 0.0, 1.0).unwrap();
+        let t5 = StudentT::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Test PPF at median
-        let median = t5.ppf(0.5).unwrap();
+        let median = t5.ppf(0.5).expect("test/example should not fail");
         assert_relative_eq!(median, 0.0, epsilon = 1e-10);
 
         // Test PPF at 95th percentile (t-distribution with 5 df)
-        let p95 = t5.ppf(0.95).unwrap();
+        let p95 = t5.ppf(0.95).expect("test/example should not fail");
         assert_relative_eq!(p95, 2.0, epsilon = 1e-2);
 
         // Test PPF at 5th percentile (symmetric)
-        let p05 = t5.ppf(0.05).unwrap();
+        let p05 = t5.ppf(0.05).expect("test/example should not fail");
         assert_relative_eq!(p05, -2.0, epsilon = 1e-2);
     }
 
     #[test]
     fn test_student_t_rvs() {
-        let t5 = StudentT::new(5.0, 0.0, 1.0).unwrap();
+        let t5 = StudentT::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Generate samples using Vec method
-        let samples_vec = t5.rvs_vec(1000).unwrap();
+        let samples_vec = t5.rvs_vec(1000).expect("test/example should not fail");
         assert_eq!(samples_vec.len(), 1000);
 
         // Generate samples using Array1 method
-        let samples_array = t5.rvs(1000).unwrap();
+        let samples_array = t5.rvs(1000).expect("test/example should not fail");
         assert_eq!(samples_array.len(), 1000);
 
         // Basic statistical checks
@@ -631,7 +635,7 @@ mod tests {
     #[test]
     fn test_student_t_distribution_trait() {
         // t distribution with 5 degrees of freedom
-        let t5 = StudentT::new(5.0, 0.0, 1.0).unwrap();
+        let t5 = StudentT::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Check mean and variance
         assert_relative_eq!(t5.mean(), 0.0, epsilon = 1e-10);
@@ -639,7 +643,7 @@ mod tests {
         assert_relative_eq!(t5.std(), (5.0 / 3.0f64).sqrt(), epsilon = 1e-10);
 
         // Test with t-distribution where mean/variance are undefined
-        let t1 = StudentT::new(1.0, 0.0, 1.0).unwrap();
+        let t1 = StudentT::new(1.0, 0.0, 1.0).expect("test/example should not fail");
         assert!(t1.mean().is_nan());
         assert!(t1.var().is_nan());
         assert!(t1.std().is_nan());
@@ -652,7 +656,7 @@ mod tests {
     #[test]
     fn test_student_t_continuous_distribution_trait() {
         // t distribution with 5 degrees of freedom
-        let t5 = StudentT::new(5.0, 0.0, 1.0).unwrap();
+        let t5 = StudentT::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Test as a ContinuousDistribution
         let dist: &dyn ContinuousDistribution<f64> = &t5;
@@ -664,7 +668,11 @@ mod tests {
         assert_relative_eq!(dist.cdf(0.0), 0.5, epsilon = 1e-10);
 
         // Check PPF
-        assert_relative_eq!(dist.ppf(0.5).unwrap(), 0.0, epsilon = 1e-10);
+        assert_relative_eq!(
+            dist.ppf(0.5).expect("test/example should not fail"),
+            0.0,
+            epsilon = 1e-10
+        );
 
         // Check derived methods using concrete type
         assert_relative_eq!(t5.sf(0.0), 0.5, epsilon = 1e-10);
@@ -673,8 +681,8 @@ mod tests {
 
         // Check that isf and ppf are consistent
         assert_relative_eq!(
-            t5.isf(0.95).unwrap(),
-            dist.ppf(0.05).unwrap(),
+            t5.isf(0.95).expect("test/example should not fail"),
+            dist.ppf(0.05).expect("test/example should not fail"),
             epsilon = 1e-6
         );
     }

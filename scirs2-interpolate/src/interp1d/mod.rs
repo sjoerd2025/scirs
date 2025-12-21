@@ -89,12 +89,12 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> Interp1d<F> {
     ///     &x.view(), &y.view(),
     ///     InterpolationMethod::Linear,
     ///     ExtrapolateMode::Error
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Interpolate at x = 1.5
     /// let y_interp = interp.evaluate(1.5);
     /// assert!(y_interp.is_ok());
-    /// assert!((y_interp.unwrap() - 2.5).abs() < 1e-10);
+    /// assert!((y_interp.expect("Operation failed") - 2.5).abs() < 1e-10);
     /// ```
     pub fn new(
         x: &ArrayView1<F>,
@@ -369,11 +369,11 @@ fn cubic_interp<F: Float + FromPrimitive>(
     //               (2*p0 - 5*p1 + 4*p2 - p3) * t^2 +
     //               (-p0 + 3*p1 - 3*p2 + p3) * t^3)
 
-    let two = F::from_f64(2.0).unwrap();
-    let three = F::from_f64(3.0).unwrap();
-    let four = F::from_f64(4.0).unwrap();
-    let five = F::from_f64(5.0).unwrap();
-    let half = F::from_f64(0.5).unwrap();
+    let two = F::from_f64(2.0).expect("Operation failed");
+    let three = F::from_f64(3.0).expect("Operation failed");
+    let four = F::from_f64(4.0).expect("Operation failed");
+    let five = F::from_f64(5.0).expect("Operation failed");
+    let half = F::from_f64(0.5).expect("Operation failed");
 
     let t2 = t * t;
     let t3 = t2 * t;
@@ -405,19 +405,19 @@ mod tests {
             InterpolationMethod::Nearest,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // Test points between data points
-        assert_relative_eq!(interp.evaluate(0.4).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(0.6).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(1.4).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(1.6).unwrap(), 4.0);
+        assert_relative_eq!(interp.evaluate(0.4).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(0.6).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(1.4).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(1.6).expect("Operation failed"), 4.0);
     }
 
     #[test]
@@ -431,18 +431,18 @@ mod tests {
             InterpolationMethod::Linear,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // Test points between data points
-        assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.5);
-        assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.5);
-        assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.5);
+        assert_relative_eq!(interp.evaluate(0.5).expect("Operation failed"), 0.5);
+        assert_relative_eq!(interp.evaluate(1.5).expect("Operation failed"), 2.5);
+        assert_relative_eq!(interp.evaluate(2.5).expect("Operation failed"), 6.5);
     }
 
     #[test]
@@ -456,20 +456,32 @@ mod tests {
             InterpolationMethod::Cubic,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // For this particular dataset (a quadratic y = x²),
         // cubic interpolation might not reproduce it exactly due to the specific spline algorithm
         // so we use wider tolerances
-        assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.25, epsilon = 0.1);
-        assert_relative_eq!(interp.evaluate(1.5).unwrap(), 2.25, epsilon = 0.1);
-        assert_relative_eq!(interp.evaluate(2.5).unwrap(), 6.25, epsilon = 1.0);
+        assert_relative_eq!(
+            interp.evaluate(0.5).expect("Operation failed"),
+            0.25,
+            epsilon = 0.1
+        );
+        assert_relative_eq!(
+            interp.evaluate(1.5).expect("Operation failed"),
+            2.25,
+            epsilon = 0.1
+        );
+        assert_relative_eq!(
+            interp.evaluate(2.5).expect("Operation failed"),
+            6.25,
+            epsilon = 1.0
+        );
     }
 
     #[test]
@@ -483,19 +495,19 @@ mod tests {
             InterpolationMethod::Pchip,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // For this monotonically increasing dataset,
         // PCHIP should preserve monotonicity
-        let y_05 = interp.evaluate(0.5).unwrap();
-        let y_15 = interp.evaluate(1.5).unwrap();
-        let y_25 = interp.evaluate(2.5).unwrap();
+        let y_05 = interp.evaluate(0.5).expect("Operation failed");
+        let y_15 = interp.evaluate(1.5).expect("Operation failed");
+        let y_25 = interp.evaluate(2.5).expect("Operation failed");
 
         assert!(y_05 > 0.0 && y_05 < 1.0);
         assert!(y_15 > 1.0 && y_15 < 4.0);
@@ -514,7 +526,7 @@ mod tests {
             InterpolationMethod::Linear,
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(interp_error.evaluate(-1.0).is_err());
         assert!(interp_error.evaluate(4.0).is_err());
@@ -526,10 +538,13 @@ mod tests {
             InterpolationMethod::Linear,
             ExtrapolateMode::Nearest,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        assert_relative_eq!(interp_nearest.evaluate(-1.0).unwrap(), 0.0);
-        assert_relative_eq!(interp_nearest.evaluate(4.0).unwrap(), 9.0);
+        assert_relative_eq!(
+            interp_nearest.evaluate(-1.0).expect("Operation failed"),
+            0.0
+        );
+        assert_relative_eq!(interp_nearest.evaluate(4.0).expect("Operation failed"), 9.0);
 
         // Test extrapolate mode
         let interp_extrapolate = Interp1d::new(
@@ -538,15 +553,21 @@ mod tests {
             InterpolationMethod::Linear,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // For this data, the linear extrapolation is based on the slope of the segments
         // For x=-1.0, we use the first segment (0,0) - (1,1) which has slope 1
-        assert_relative_eq!(interp_extrapolate.evaluate(-1.0).unwrap(), -1.0);
+        assert_relative_eq!(
+            interp_extrapolate.evaluate(-1.0).expect("Operation failed"),
+            -1.0
+        );
 
         // For x=4.0, we use the last segment (2,4) - (3,9) which has slope 5
         // So the result is 9 + (4-3)*5 = 9 + 5 = 14
-        assert_relative_eq!(interp_extrapolate.evaluate(4.0).unwrap(), 14.0);
+        assert_relative_eq!(
+            interp_extrapolate.evaluate(4.0).expect("Operation failed"),
+            14.0
+        );
     }
 
     #[test]
@@ -556,7 +577,8 @@ mod tests {
         let xnew = array![0.5, 1.5, 2.5];
 
         // Test nearest interpolation
-        let y_nearest = nearest_interpolate(&x.view(), &y.view(), &xnew.view()).unwrap();
+        let y_nearest =
+            nearest_interpolate(&x.view(), &y.view(), &xnew.view()).expect("Operation failed");
         // Point 0.5 is exactly halfway between x[0]=0.0 and x[1]=1.0, so we default to the left point's value
         assert_relative_eq!(y_nearest[0], 0.0);
         // Point 1.5 is exactly halfway between x[1]=1.0 and x[2]=2.0, so we default to the left point's value
@@ -565,13 +587,15 @@ mod tests {
         assert_relative_eq!(y_nearest[2], 4.0);
 
         // Test linear interpolation
-        let y_linear = linear_interpolate(&x.view(), &y.view(), &xnew.view()).unwrap();
+        let y_linear =
+            linear_interpolate(&x.view(), &y.view(), &xnew.view()).expect("Operation failed");
         assert_relative_eq!(y_linear[0], 0.5);
         assert_relative_eq!(y_linear[1], 2.5);
         assert_relative_eq!(y_linear[2], 6.5);
 
         // Test cubic interpolation
-        let y_cubic = cubic_interpolate(&x.view(), &y.view(), &xnew.view()).unwrap();
+        let y_cubic =
+            cubic_interpolate(&x.view(), &y.view(), &xnew.view()).expect("Operation failed");
         // Allow a wider tolerance for cubic interpolation since it depends on the specific spline implementation
         assert!((y_cubic[0] - 0.25).abs() < 0.15);
         assert!((y_cubic[1] - 2.25).abs() < 0.15);
@@ -579,7 +603,8 @@ mod tests {
         assert!((y_cubic[2] - 6.25).abs() < 1.0);
 
         // Test PCHIP interpolation
-        let y_pchip = pchip_interpolate(&x.view(), &y.view(), &xnew.view(), false).unwrap();
+        let y_pchip =
+            pchip_interpolate(&x.view(), &y.view(), &xnew.view(), false).expect("Operation failed");
         // For monotonically increasing data, PCHIP should preserve monotonicity
         assert!(y_pchip[0] > 0.0 && y_pchip[0] < 1.0);
         assert!(y_pchip[1] > 1.0 && y_pchip[1] < 4.0);

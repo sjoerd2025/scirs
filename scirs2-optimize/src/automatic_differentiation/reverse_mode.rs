@@ -917,7 +917,7 @@ where
     for i in 0..n {
         // Create a function that returns the i-th component of the gradient
         let gradient_i_func = |x_val: &ArrayView1<f64>| -> f64 {
-            let grad = reverse_gradient_ad(&func, x_val).unwrap();
+            let grad = reverse_gradient_ad(&func, x_val).expect("Operation failed");
             grad[i]
         };
 
@@ -1161,7 +1161,7 @@ mod tests {
         assert_abs_diff_eq!(z.value, 8.0, epsilon = 1e-10); // 2*3 + 2 = 8
 
         // Perform backpropagation
-        graph.backward(&z).unwrap();
+        graph.backward(&z).expect("Operation failed");
 
         // Check gradients: ∂z/∂x = y + 1 = 4, ∂z/∂y = x = 2
         assert_abs_diff_eq!(graph.get_gradient(&x), 4.0, epsilon = 1e-10);
@@ -1177,7 +1177,7 @@ mod tests {
 
         assert_abs_diff_eq!(exp_x.value, std::f64::consts::E, epsilon = 1e-10);
 
-        graph.backward(&exp_x).unwrap();
+        graph.backward(&exp_x).expect("Operation failed");
 
         // ∂(e^x)/∂x = e^x
         assert_abs_diff_eq!(graph.get_gradient(&x), std::f64::consts::E, epsilon = 1e-10);
@@ -1189,7 +1189,7 @@ mod tests {
         let func = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] + x[0] * x[1] + 2.0 * x[1] * x[1] };
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
-        let grad = reverse_gradient(func, &x.view()).unwrap();
+        let grad = reverse_gradient(func, &x.view()).expect("Operation failed");
 
         // ∂f/∂x = 2x + y = 2(1) + 2 = 4
         // ∂f/∂y = x + 4y = 1 + 4(2) = 9
@@ -1213,7 +1213,7 @@ mod tests {
         let func = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] + x[0] * x[1] + 2.0 * x[1] * x[1] };
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
-        let hess = reverse_hessian(func, &x.view()).unwrap();
+        let hess = reverse_hessian(func, &x.view()).expect("Operation failed");
 
         // Expected Hessian:
         // ∂²f/∂x² = 2, ∂²f/∂x∂y = 1
@@ -1241,7 +1241,7 @@ mod tests {
         };
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
-        let grad = reverse_gradient_ad(func, &x.view()).unwrap();
+        let grad = reverse_gradient_ad(func, &x.view()).expect("Operation failed");
 
         // ∂f/∂x = 2x + y = 2(1) + 2 = 4
         // ∂f/∂y = x + 4y = 1 + 4(2) = 9
@@ -1258,7 +1258,7 @@ mod tests {
 
         let x = Array1::from_vec(vec![2.0, 3.0]);
         let v = Array1::from_vec(vec![1.0, 1.0, 1.0]);
-        let vjp = reverse_vjp(func, &x.view(), &v.view()).unwrap();
+        let vjp = reverse_vjp(func, &x.view(), &v.view()).expect("Operation failed");
 
         // Jacobian at (2,3):
         // ∂f₀/∂x₀ = 2x₀ = 4, ∂f₀/∂x₁ = 0
@@ -1277,7 +1277,8 @@ mod tests {
             |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![x[0] - 1.0, x[1] - 2.0]) };
 
         let x = Array1::from_vec(vec![0.0, 0.0]);
-        let gn_hess = reverse_gauss_newton_hessian(residual_func, &x.view()).unwrap();
+        let gn_hess =
+            reverse_gauss_newton_hessian(residual_func, &x.view()).expect("Operation failed");
 
         // Jacobian is identity matrix, so J^T * J should be identity
         assert_abs_diff_eq!(gn_hess[[0, 0]], 1.0, epsilon = 1e-6);
@@ -1295,7 +1296,7 @@ mod tests {
 
         assert_abs_diff_eq!(x_cubed.value, 8.0, epsilon = 1e-10); // 2³ = 8
 
-        graph.backward(&x_cubed).unwrap();
+        graph.backward(&x_cubed).expect("Operation failed");
 
         // ∂(x³)/∂x = 3x² = 3(4) = 12 at x=2
         assert_abs_diff_eq!(graph.get_gradient(&x), 12.0, epsilon = 1e-10);
@@ -1312,11 +1313,11 @@ mod tests {
         assert_abs_diff_eq!(sin_x.value, 0.0, epsilon = 1e-10); // sin(0) = 0
         assert_abs_diff_eq!(cos_x.value, 1.0, epsilon = 1e-10); // cos(0) = 1
 
-        graph.backward(&sin_x).unwrap();
+        graph.backward(&sin_x).expect("Operation failed");
         assert_abs_diff_eq!(graph.get_gradient(&x), 1.0, epsilon = 1e-10); // d/dx(sin(x)) = cos(x) = 1 at x=0
 
         graph.zero_gradients();
-        graph.backward(&cos_x).unwrap();
+        graph.backward(&cos_x).expect("Operation failed");
         assert_abs_diff_eq!(graph.get_gradient(&x), 0.0, epsilon = 1e-10); // d/dx(cos(x)) = -sin(x) = 0 at x=0
     }
 
@@ -1411,7 +1412,7 @@ mod tests {
         let sig = sigmoid(&mut graph, &x);
         assert_abs_diff_eq!(sig.value, 0.5, epsilon = 1e-10); // sigmoid(0) = 0.5
 
-        graph.backward(&sig).unwrap();
+        graph.backward(&sig).expect("Operation failed");
         assert_abs_diff_eq!(graph.get_gradient(&x), 0.25, epsilon = 1e-10); // sigmoid'(0) = 0.25
 
         // Test ReLU function
@@ -1420,7 +1421,7 @@ mod tests {
         let relu_pos = relu(&mut graph, &x_pos);
         assert_abs_diff_eq!(relu_pos.value, 2.0, epsilon = 1e-10);
 
-        graph.backward(&relu_pos).unwrap();
+        graph.backward(&relu_pos).expect("Operation failed");
         assert_abs_diff_eq!(graph.get_gradient(&x_pos), 1.0, epsilon = 1e-10); // ReLU'(2) = 1
 
         // Test ReLU for negative input
@@ -1429,7 +1430,7 @@ mod tests {
         let relu_neg = relu(&mut graph2, &x_neg);
         assert_abs_diff_eq!(relu_neg.value, 0.0, epsilon = 1e-10);
 
-        graph2.backward(&relu_neg).unwrap();
+        graph2.backward(&relu_neg).expect("Operation failed");
         assert_abs_diff_eq!(graph2.get_gradient(&x_neg), 0.0, epsilon = 1e-10); // ReLU'(-1) = 0
     }
 
@@ -1442,7 +1443,7 @@ mod tests {
         let leaky_pos = leaky_relu(&mut graph, &x_pos, 0.01);
         assert_abs_diff_eq!(leaky_pos.value, 2.0, epsilon = 1e-10);
 
-        graph.backward(&leaky_pos).unwrap();
+        graph.backward(&leaky_pos).expect("Operation failed");
         assert_abs_diff_eq!(graph.get_gradient(&x_pos), 1.0, epsilon = 1e-10);
 
         // Test Leaky ReLU with negative input
@@ -1451,7 +1452,7 @@ mod tests {
         let leaky_neg = leaky_relu(&mut graph2, &x_neg, 0.01);
         assert_abs_diff_eq!(leaky_neg.value, -0.02, epsilon = 1e-10);
 
-        graph2.backward(&leaky_neg).unwrap();
+        graph2.backward(&leaky_neg).expect("Operation failed");
         assert_abs_diff_eq!(graph2.get_gradient(&x_neg), 0.01, epsilon = 1e-10);
     }
 
@@ -1477,7 +1478,7 @@ mod tests {
         assert!(result.value > 0.0); // Both sigmoid and tanh(0.5) are positive
 
         // Test backpropagation
-        graph.backward(&result).unwrap();
+        graph.backward(&result).expect("Operation failed");
 
         // Gradients should be finite and non-zero
         let grad_x = graph.get_gradient(&x);

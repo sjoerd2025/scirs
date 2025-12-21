@@ -24,7 +24,7 @@ pub fn simd_norm_l1_f32(input: &ArrayView1<f32>) -> f32 {
 
                 // Process 8 f32s at a time
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let vec = _mm256_loadu_ps(slice.as_ptr());
                     let abs_vec = _mm256_and_ps(vec, abs_mask);
                     sum_vec = _mm256_add_ps(sum_vec, abs_vec);
@@ -60,7 +60,7 @@ pub fn simd_norm_l1_f32(input: &ArrayView1<f32>) -> f32 {
 
                 // Process 4 f32s at a time
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = _mm_loadu_ps(slice.as_ptr());
                     let abs_vec = _mm_and_ps(vec, abs_mask);
                     sum_vec = _mm_add_ps(sum_vec, abs_vec);
@@ -101,7 +101,7 @@ pub fn simd_norm_l1_f32(input: &ArrayView1<f32>) -> f32 {
 
             // Process 4 f32s at a time
             while i + 4 <= len {
-                let slice = &input.as_slice().unwrap()[i..i + 4];
+                let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                 let vec = vld1q_f32(slice.as_ptr());
                 let abs_vec = vabsq_f32(vec);
                 sum_vec = vaddq_f32(sum_vec, abs_vec);
@@ -155,7 +155,7 @@ pub fn simd_norm_l1_f64(input: &ArrayView1<f64>) -> f64 {
 
                 // Process 4 f64s at a time
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = _mm256_loadu_pd(slice.as_ptr());
                     let abs_vec = _mm256_and_pd(vec, abs_mask);
                     sum_vec = _mm256_add_pd(sum_vec, abs_vec);
@@ -187,7 +187,7 @@ pub fn simd_norm_l1_f64(input: &ArrayView1<f64>) -> f64 {
 
                 // Process 2 f64s at a time
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let vec = _mm_loadu_pd(slice.as_ptr());
                     let abs_vec = _mm_and_pd(vec, abs_mask);
                     sum_vec = _mm_add_pd(sum_vec, abs_vec);
@@ -226,7 +226,7 @@ pub fn simd_norm_l1_f64(input: &ArrayView1<f64>) -> f64 {
 
             // Process 2 f64s at a time
             while i + 2 <= len {
-                let slice = &input.as_slice().unwrap()[i..i + 2];
+                let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                 let vec = vld1q_f64(slice.as_ptr());
                 let abs_vec = vabsq_f64(vec);
                 sum_vec = vaddq_f64(sum_vec, abs_vec);
@@ -267,7 +267,7 @@ pub fn simd_norm_l2_f32(input: &ArrayView1<f32>) -> f32 {
         return 0.0;
     }
 
-    let input_slice = input.as_slice().unwrap();
+    let input_slice = input.as_slice().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {
@@ -356,7 +356,7 @@ pub fn simd_norm_l2_f32(input: &ArrayView1<f32>) -> f32 {
 
             // Process 4 f32s at a time
             while i + 4 <= len {
-                let slice = &input.as_slice().unwrap()[i..i + 4];
+                let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                 let vec = vld1q_f32(slice.as_ptr());
                 let sq_vec = vmulq_f32(vec, vec);
                 sum_sq_vec = vaddq_f32(sum_sq_vec, sq_vec);
@@ -398,7 +398,7 @@ pub fn simd_norm_l2_f64(input: &ArrayView1<f64>) -> f64 {
         return 0.0;
     }
 
-    let input_slice = input.as_slice().unwrap();
+    let input_slice = input.as_slice().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {
@@ -450,7 +450,7 @@ pub fn simd_norm_l2_f64(input: &ArrayView1<f64>) -> f64 {
 
                 // Horizontal sum
                 let high_lane = _mm_unpackhi_pd(sum_sq_vec, sum_sq_vec);
-                let sum_scalar = _mm_add_sd(sum_sq_vec, sum_sq_vec);
+                let sum_scalar = _mm_add_sd(sum_sq_vec, high_lane);
                 let mut sum_sq = _mm_cvtsd_f64(sum_scalar);
 
                 // Handle remaining elements
@@ -481,7 +481,7 @@ pub fn simd_norm_l2_f64(input: &ArrayView1<f64>) -> f64 {
 
             // Process 2 f64s at a time
             while i + 2 <= len {
-                let slice = &input.as_slice().unwrap()[i..i + 2];
+                let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                 let vec = vld1q_f64(slice.as_ptr());
                 let sq_vec = vmulq_f64(vec, vec);
                 sum_sq_vec = vaddq_f64(sum_sq_vec, sq_vec);
@@ -536,7 +536,7 @@ pub fn simd_norm_linf_f32(input: &ArrayView1<f32>) -> f32 {
 
                 // Process 8 f32s at a time
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let vec = _mm256_loadu_ps(slice.as_ptr());
                     let abs_vec = _mm256_and_ps(vec, abs_mask);
                     max_vec = _mm256_max_ps(max_vec, abs_vec);
@@ -575,7 +575,7 @@ pub fn simd_norm_linf_f32(input: &ArrayView1<f32>) -> f32 {
 
                 // Process 4 f32s at a time
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = _mm_loadu_ps(slice.as_ptr());
                     let abs_vec = _mm_and_ps(vec, abs_mask);
                     max_vec = _mm_max_ps(max_vec, abs_vec);
@@ -622,7 +622,7 @@ pub fn simd_norm_linf_f32(input: &ArrayView1<f32>) -> f32 {
 
             // Process 4 f32s at a time
             while i + 4 <= len {
-                let slice = &input.as_slice().unwrap()[i..i + 4];
+                let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                 let vec = vld1q_f32(slice.as_ptr());
                 let abs_vec = vabsq_f32(vec);
                 max_vec = vmaxq_f32(max_vec, abs_vec);
@@ -682,7 +682,7 @@ pub fn simd_norm_linf_f64(input: &ArrayView1<f64>) -> f64 {
 
                 // Process 4 f64s at a time
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = _mm256_loadu_pd(slice.as_ptr());
                     let abs_vec = _mm256_and_pd(vec, abs_mask);
                     max_vec = _mm256_max_pd(max_vec, abs_vec);
@@ -717,7 +717,7 @@ pub fn simd_norm_linf_f64(input: &ArrayView1<f64>) -> f64 {
 
                 // Process 2 f64s at a time
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let vec = _mm_loadu_pd(slice.as_ptr());
                     let abs_vec = _mm_and_pd(vec, abs_mask);
                     max_vec = _mm_max_pd(max_vec, abs_vec);
@@ -762,7 +762,7 @@ pub fn simd_norm_linf_f64(input: &ArrayView1<f64>) -> f64 {
 
             // Process 2 f64s at a time
             while i + 2 <= len {
-                let slice = &input.as_slice().unwrap()[i..i + 2];
+                let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                 let vec = vld1q_f64(slice.as_ptr());
                 let abs_vec = vabsq_f64(vec);
                 max_vec = vmaxq_f64(max_vec, abs_vec);

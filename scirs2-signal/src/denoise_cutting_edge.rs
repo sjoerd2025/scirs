@@ -650,7 +650,7 @@ fn find_similar_patches(
     }
 
     // Sort by distance and take the most similar ones
-    candidates.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    candidates.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
     let num_to_take = config.num_similar_patches.min(candidates.len());
 
     // Create matrix of similar patches
@@ -783,7 +783,7 @@ mod tests {
             ..Default::default()
         };
 
-        let denoised = denoise_dictionary_learning(&signal, &config).unwrap();
+        let denoised = denoise_dictionary_learning(&signal, &config).expect("Operation failed");
 
         assert_eq!(denoised.len(), signal.len());
         assert!(denoised.iter().all(|&x: &f64| x.is_finite()));
@@ -811,7 +811,7 @@ mod tests {
             ..Default::default()
         };
 
-        let denoised = denoise_nlsc(&signal, &config).unwrap();
+        let denoised = denoise_nlsc(&signal, &config).expect("Operation failed");
 
         assert_eq!(denoised.len(), signal.len());
         assert!(denoised.iter().all(|&x: &f64| x.is_finite()));
@@ -832,7 +832,7 @@ mod tests {
             ..Default::default()
         };
 
-        let denoised = denoise_lista(&signal, &config).unwrap();
+        let denoised = denoise_lista(&signal, &config).expect("Operation failed");
 
         assert_eq!(denoised.len(), signal.len());
         assert!(denoised.iter().all(|&x: &f64| x.is_finite()));

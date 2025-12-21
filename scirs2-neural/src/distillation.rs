@@ -246,7 +246,7 @@ impl<F: Float + Debug + 'static + scirs2_core::numeric::FromPrimitive + scirs2_c
                 // Note: per-layer loss tracking removed for immutable methods
             }
         if layer_count > 0 {
-            total_loss = total_loss / F::from(layer_count).unwrap();
+            total_loss = total_loss / F::from(layer_count).expect("Failed to convert to float");
     fn compute_attention_loss(
         attention_layers: &[String],
         attention_type: &AttentionType,
@@ -299,7 +299,7 @@ impl<F: Float + Debug + 'static + scirs2_core::numeric::FromPrimitive + scirs2_c
         for output in &ensemble_outputs {
             let kl_loss = self.kl_divergence_loss(&ensemble_pred, output)?;
             total_loss = total_loss + kl_loss;
-        total_loss = total_loss / F::from(ensemble_outputs.len()).unwrap();
+        total_loss = total_loss / F::from(ensemble_outputs.len()).expect("Operation failed");
     fn softmax_with_temperature(&self, logits: &ArrayD<F>, temperature: F) -> Result<ArrayD<F>> {
         let scaled_logits = logits / temperature;
         self.softmax(&scaled_logits)
@@ -317,15 +317,15 @@ impl<F: Float + Debug + 'static + scirs2_core::numeric::FromPrimitive + scirs2_c
         let result = exp_vals / &sum_exp.insert_axis(axis);
         Ok(result)
     fn kl_divergence_loss(&self, target: &ArrayD<F>, prediction: &ArrayD<F>) -> Result<F> {
-        let eps = F::from(1e-8).unwrap();
+        let eps = F::from(1e-8).expect("Failed to convert constant to float");
         let log_target = target.mapv(|x| (x + eps).ln());
         let log_pred = prediction.mapv(|x| (x + eps).ln());
         let kl = target * (log_target - log_pred);
-        let loss = kl.sum() / F::from(target.len()).unwrap();
+        let loss = kl.sum() / F::from(target.len()).expect("Operation failed");
     fn cross_entropy_loss(&self, logits: &ArrayD<F>, targets: &ArrayD<F>) -> Result<F> {
         let probs = self.softmax(logits)?;
         let log_probs = probs.mapv(|x| (x + eps).ln());
-        let ce = -(targets * log_probs).sum() / F::from(targets.shape()[0]).unwrap();
+        let ce = -(targets * log_probs).sum() / F::from(targets.shape()[0]).expect("Operation failed");
         Ok(ce)
     fn adapt_features(
         student_feat: &ArrayD<F>,
@@ -414,7 +414,7 @@ impl<F: Float + Debug + 'static + scirs2_core::numeric::FromPrimitive + scirs2_c
                         diff.mapv(|x| x.abs()).sum()
                     DistanceMetric::KLDivergence => {
                         // Simplified KL divergence
-                        let eps = F::from(1e-8).unwrap();
+                        let eps = F::from(1e-8).expect("Failed to convert constant to float");
                         let p = feat_i.mapv(|x| x + eps);
                         let q = feat_j.mapv(|x| x + eps);
                         let p_norm = &p / p.sum();
@@ -442,14 +442,14 @@ impl<F: Float + Debug + 'static + scirs2_core::numeric::FromPrimitive + scirs2_c
                 let mut sum = outputs[0].clone();
                 for output in outputs.iter().skip(1) {
                     sum = sum + *output;
-                Ok(sum / F::from(outputs.len()).unwrap()), EnsembleAggregation::Weighted { weights } => {
+                Ok(sum / F::from(outputs.len()).expect("Operation failed")), EnsembleAggregation::Weighted { weights } => {
                 if weights.len() != outputs.len() {
                     return Err(NeuralError::InvalidArchitecture(
                         "Weight count doesn't match ensemble size".to_string(),
                     ));
-                let mut result = outputs[0] * F::from(weights[0]).unwrap();
+                let mut result = outputs[0] * F::from(weights[0]).expect("Failed to convert to float");
                 for (output, &weight) in outputs.iter().zip(weights.iter()).skip(1) {
-                    result = result + (*output * F::from(weight).unwrap());
+                    result = result + (*output * F::from(weight).expect("Failed to convert to float"));
                 Ok(result)
             EnsembleAggregation::SoftVoting => {
                 // Same as average for regression tasks - compute average directly
@@ -457,7 +457,7 @@ impl<F: Float + Debug + 'static + scirs2_core::numeric::FromPrimitive + scirs2_c
                 result.fill(F::zero());
                 for output in outputs {
                     result = result + *output;
-                let n = F::from(outputs.len()).unwrap();
+                let n = F::from(outputs.len()).expect("Operation failed");
                 Ok(result / n)
     /// Get training statistics
     pub fn get_statistics(&self) -> &DistillationStatistics<F> {
@@ -487,14 +487,14 @@ mod tests {
         teacher_outputs.insert(
             "output".to_string(),
             Array2::from_shape_vec((2, 3), vec![2.0, 1.0, 0.5, 1.5, 2.5, 1.0])
-                .unwrap()
+                .expect("Operation failed")
                 .into_dyn(),
         );
         student_outputs.insert(
             Array2::from_shape_vec((2, 3), vec![1.8, 1.2, 0.6, 1.4, 2.3, 1.1])
         let loss = trainer.compute_distillation_loss(&teacher_outputs, &student_outputs, None);
         assert!(loss.is_ok());
-        assert!(loss.unwrap() > 0.0);
+        assert!(loss.expect("Operation failed") > 0.0);
     fn test_feature_based_distillation() {
         let method = DistillationMethod::FeatureBased {
             feature_layers: vec!["layer1".to_string(), "layer2".to_string()],
@@ -516,12 +516,12 @@ mod tests {
             alpha: 1.0,
             beta: 0.0,
         let logits = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 0.5, 1.5, 2.5])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         let temperature = 2.0;
         let result = trainer.softmax_with_temperature(&logits, temperature);
         assert!(result.is_ok());
-        let softmax_output = result.unwrap();
+        let softmax_output = result.expect("Operation failed");
         // Check that probabilities sum to 1 for each sample
         for i in 0..2 {
             let row_sum: f64 = (0..3).map(|j| softmax_output[[i, j]]).sum();
@@ -530,7 +530,7 @@ mod tests {
         let target = Array2::from_shape_vec((2, 3), vec![0.7, 0.2, 0.1, 0.3, 0.4, 0.3])
         let prediction = Array2::from_shape_vec((2, 3), vec![0.6, 0.3, 0.1, 0.2, 0.5, 0.3])
         let loss = trainer.kl_divergence_loss(&target, &prediction);
-        assert!(loss.unwrap() >= 0.0); // KL divergence is non-negative
+        assert!(loss.expect("Operation failed") >= 0.0); // KL divergence is non-negative
     fn test_ensemble_aggregation() {
         let trainer = DistillationTrainer::<f64>::new(DistillationMethod::SelfDistillation {
             ensemble_size: 3,
@@ -540,7 +540,7 @@ mod tests {
         let output3 = Array2::from_shape_vec((2, 3), vec![0.9, 1.9, 2.9, 3.9, 4.9, 5.9])
         let outputs = vec![&output1, &output2, &output3];
         let result = trainer.aggregate_ensemble(&outputs, &EnsembleAggregation::Average);
-        let avg_output = result.unwrap();
+        let avg_output = result.expect("Operation failed");
         assert_eq!(avg_output.shape(), output1.shape());
         // Check that it's the average
         assert!((avg_output[[0, 0]] - 1.0).abs() < 1e-10);

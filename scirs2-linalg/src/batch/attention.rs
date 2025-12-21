@@ -579,13 +579,15 @@ mod tests {
                 1.0, 1.0, // Second batch, second query vector
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Shared key matrix 2x2
-        let key = Array::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0]).unwrap();
+        let key =
+            Array::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0]).expect("Operation failed");
 
         // Shared value matrix 2x2
-        let value = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let value =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 
         // Scale factor (1/sqrt(d_k))
         let scale = 1.0 / (2.0f64).sqrt();
@@ -598,7 +600,7 @@ mod tests {
             None,
             scale,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check output shape
         assert_eq!(result.shape(), &[2, 2, 2]);
@@ -656,7 +658,7 @@ mod tests {
             None,
             &config,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check output shape
         assert_eq!(result.shape(), &[batchsize, seq_len, d_model]);
@@ -694,7 +696,7 @@ mod tests {
             1.0 / (d_model as f64).sqrt(),
             2,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check output shape
         assert_eq!(result.shape(), &[batchsize, seq_len, d_model]);
@@ -724,7 +726,7 @@ mod tests {
                 1.0, 1.0, // Batch 1, Token 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Shared key matrix
         let key = Array::from_shape_vec(
@@ -735,7 +737,7 @@ mod tests {
                 1.0, 1.0, // Token 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Shared value matrix with different values for each position
         let value = Array::from_shape_vec(
@@ -746,7 +748,7 @@ mod tests {
                 5.0, 6.0, // Token 2 values
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Scale factor
         let scale = 1.0 / (2.0f64).sqrt();
@@ -762,7 +764,7 @@ mod tests {
             Some(&mask),
             scale,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check output shape
         assert_eq!(result.shape(), &[2, 3, 2]);

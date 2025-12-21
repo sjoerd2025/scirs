@@ -111,7 +111,7 @@ where
     if !config.should_parallelize(n) {
         // Sequential computation
         let sum = x.iter().fold(F::zero(), |acc, &val| acc + val);
-        return Ok(sum / F::from(n).unwrap());
+        return Ok(sum / F::from(n).expect("Failed to convert to float"));
     }
 
     // Parallel computation with better handling
@@ -123,7 +123,7 @@ where
         parallel_sum_indexed(x, &config)
     };
 
-    Ok(sum / F::from(n).unwrap())
+    Ok(sum / F::from(n).expect("Failed to convert to float"))
 }
 
 /// Parallel variance with single-pass algorithm
@@ -173,7 +173,8 @@ where
                 count += 1;
                 let val = x[i];
                 let delta = val - local_mean;
-                local_mean = local_mean + delta / F::from(count).unwrap();
+                local_mean =
+                    local_mean + delta / F::from(count).expect("Failed to convert to float");
                 let delta2 = val - local_mean;
                 local_m2 = local_m2 + delta * delta2;
             }
@@ -185,7 +186,7 @@ where
     // Combine chunk statistics
     let (_total_mean, total_m2__, total_count) = combine_welford_stats(&chunk_stats);
 
-    Ok(total_m2__ / F::from(n - ddof).unwrap())
+    Ok(total_m2__ / F::from(n - ddof).expect("Failed to convert to float"))
 }
 
 /// Parallel correlation matrix computation
@@ -348,12 +349,12 @@ where
     for &val in x.iter() {
         count += 1;
         let delta = val - mean;
-        mean = mean + delta / F::from(count).unwrap();
+        mean = mean + delta / F::from(count).expect("Failed to convert to float");
         let delta2 = val - mean;
         m2 = m2 + delta * delta2;
     }
 
-    Ok(m2 / F::from(count - ddof).unwrap())
+    Ok(m2 / F::from(count - ddof).expect("Failed to convert to float"))
 }
 
 /// Combine Welford statistics from parallel chunks
@@ -367,11 +368,16 @@ where
         |(mean_a, m2_a, count_a), &(mean_b, m2_b, count_b)| {
             let count = count_a + count_b;
             let delta = mean_b - mean_a;
-            let mean = mean_a + delta * F::from(count_b).unwrap() / F::from(count).unwrap();
+            let mean = mean_a
+                + delta * F::from(count_b).expect("Failed to convert to float")
+                    / F::from(count).expect("Failed to convert to float");
             let m2 = m2_a
                 + m2_b
-                + delta * delta * F::from(count_a).unwrap() * F::from(count_b).unwrap()
-                    / F::from(count).unwrap();
+                + delta
+                    * delta
+                    * F::from(count_a).expect("Failed to convert to float")
+                    * F::from(count_b).expect("Failed to convert to float")
+                    / F::from(count).expect("Failed to convert to float");
             (mean, m2, count)
         },
     )
@@ -423,14 +429,14 @@ mod tests {
     #[test]
     fn test_mean_parallel_enhanced() {
         let data = Array1::from_vec((0..10_000).map(|i| i as f64).collect());
-        let mean = mean_parallel_enhanced(&data.view(), None).unwrap();
+        let mean = mean_parallel_enhanced(&data.view(), None).expect("Operation failed");
         assert!((mean - 4999.5).abs() < 1e-10);
     }
 
     #[test]
     fn test_variance_parallel_enhanced() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let var = variance_parallel_enhanced(&data.view(), 1, None).unwrap();
+        let var = variance_parallel_enhanced(&data.view(), 1, None).expect("Operation failed");
         assert!((var - 2.5).abs() < 1e-10);
     }
 }

@@ -42,7 +42,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
     /// ```
     pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
         // Validate parameters
@@ -91,7 +91,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
     /// let pdf_at_one = weibull.pdf(1.0);
     /// assert!((pdf_at_one - 0.73575888).abs() < 1e-7);
     /// ```
@@ -132,7 +132,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
     /// let cdf_at_one = weibull.cdf(1.0);
     /// assert!((cdf_at_one - 0.6321206).abs() < 1e-7);
     /// ```
@@ -166,8 +166,8 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
-    /// let x = weibull.ppf(0.5).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
+    /// let x = weibull.ppf(0.5).expect("Operation failed");
     /// assert!((x - 0.8325546).abs() < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -209,8 +209,8 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
-    /// let samples = weibull.rvs(10).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
+    /// let samples = weibull.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -221,7 +221,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
         for _ in 0..size {
             // Generate uniform random number in [0, 1)
             let u = self.rand_distr.sample(&mut rng);
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             // Apply inverse CDF transform
             let sample = self.ppf(u_f)?;
@@ -242,7 +242,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
     /// let mean = weibull.mean();
     /// assert!((mean - 0.8794998845873004).abs() < 1e-7);
     /// ```
@@ -264,13 +264,13 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
     /// let var = weibull.var();
     /// assert!((var - 0.2138408798844169).abs() < 1e-7);
     /// ```
     pub fn var(&self) -> F {
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
 
         // Calculate Gamma(1 + 2/shape)
         let gamma_arg_2 = one + two / self.shape;
@@ -295,13 +295,13 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
     /// let median = weibull.median();
     /// assert!((median - 0.8325546).abs() < 1e-7);
     /// ```
     pub fn median(&self) -> F {
         // Median = scale * (ln(2))^(1/shape) + loc
-        let ln2 = F::from(std::f64::consts::LN_2).unwrap();
+        let ln2 = F::from(std::f64::consts::LN_2).expect("Failed to convert to float");
         let one = F::one();
         self.scale * ln2.powf(one / self.shape) + self.loc
     }
@@ -317,7 +317,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// ```
     /// use scirs2_stats::distributions::weibull::Weibull;
     ///
-    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
+    /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).expect("Operation failed");
     /// let mode = weibull.mode();
     /// assert!((mode - 0.7071068).abs() < 1e-7);
     /// ```
@@ -352,35 +352,35 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
 fn gamma_function<F: Float + NumCast>(x: F) -> F {
     // Lanczos approximation coefficients
     let p = [
-        F::from(676.520_368_121_885_1).unwrap(),
-        F::from(-1_259.139_216_722_402_8).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507_343_278_686_905).unwrap(),
-        F::from(-0.138_571_095_265_720_12).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.505_632_735_149_311_6e-7).unwrap(),
+        F::from(676.520_368_121_885_1).expect("Failed to convert to float"),
+        F::from(-1_259.139_216_722_402_8).expect("Failed to convert to float"),
+        F::from(771.323_428_777_653_1).expect("Failed to convert to float"),
+        F::from(-176.615_029_162_140_6).expect("Failed to convert to float"),
+        F::from(12.507_343_278_686_905).expect("Failed to convert to float"),
+        F::from(-0.138_571_095_265_720_12).expect("Failed to convert to float"),
+        F::from(9.984_369_578_019_572e-6).expect("Failed to convert to float"),
+        F::from(1.505_632_735_149_311_6e-7).expect("Failed to convert to float"),
     ];
 
-    if x < F::from(0.5).unwrap() {
+    if x < F::from(0.5).expect("Failed to convert constant to float") {
         // Reflection formula: Gamma(x) = pi / (sin(pi*x) * Gamma(1-x))
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let sin_pi_x = (pi * x).sin();
         pi / (sin_pi_x * gamma_function(F::one() - x))
     } else {
         let one = F::one();
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
         let z = x - one;
-        let y = z + F::from(7.5).unwrap(); // g+0.5, where g=7
+        let y = z + F::from(7.5).expect("Failed to convert constant to float"); // g+0.5, where g=7
 
         // Accumulate the sum
         let mut sum = F::zero();
         for (i, &coef) in p.iter().enumerate() {
-            sum = sum + coef / (z + F::from(i as f64 + 1.0).unwrap());
+            sum = sum + coef / (z + F::from(i as f64 + 1.0).expect("Failed to convert to float"));
         }
 
         // Calculate the result
-        let sqrt_2pi = F::from(2.506_628_274_631_001).unwrap(); // sqrt(2*pi)
+        let sqrt_2pi = F::from(2.506_628_274_631_001).expect("Failed to convert to float"); // sqrt(2*pi)
         sqrt_2pi * sum * y.powf(z + half) * (-y).exp()
     }
 }
@@ -405,7 +405,7 @@ fn gamma_function<F: Float + NumCast>(x: F) -> F {
 /// ```
 /// use scirs2_stats::distributions::weibull;
 ///
-/// let w = weibull::weibull(2.0f64, 1.0, 0.0).unwrap();
+/// let w = weibull::weibull(2.0f64, 1.0, 0.0).expect("Operation failed");
 /// let pdf_at_one = w.pdf(1.0);
 /// assert!((pdf_at_one - 0.73575888).abs() < 1e-7);
 /// ```
@@ -432,19 +432,19 @@ mod tests {
     #[test]
     fn test_weibull_creation() {
         // Standard Weibull with shape=1 (equivalent to exponential)
-        let weibull1 = Weibull::new(1.0, 1.0, 0.0).unwrap();
+        let weibull1 = Weibull::new(1.0, 1.0, 0.0).expect("Operation failed");
         assert_eq!(weibull1.shape, 1.0);
         assert_eq!(weibull1.scale, 1.0);
         assert_eq!(weibull1.loc, 0.0);
 
         // Weibull with shape=2 (Rayleigh distribution)
-        let weibull2 = Weibull::new(2.0, 1.0, 0.0).unwrap();
+        let weibull2 = Weibull::new(2.0, 1.0, 0.0).expect("Operation failed");
         assert_eq!(weibull2.shape, 2.0);
         assert_eq!(weibull2.scale, 1.0);
         assert_eq!(weibull2.loc, 0.0);
 
         // Custom Weibull
-        let custom = Weibull::new(3.5, 2.0, 1.0).unwrap();
+        let custom = Weibull::new(3.5, 2.0, 1.0).expect("Operation failed");
         assert_eq!(custom.shape, 3.5);
         assert_eq!(custom.scale, 2.0);
         assert_eq!(custom.loc, 1.0);
@@ -459,7 +459,7 @@ mod tests {
     #[test]
     fn test_weibull_pdf() {
         // Weibull with shape=1 (exponential with rate=1)
-        let weibull1 = Weibull::new(1.0, 1.0, 0.0).unwrap();
+        let weibull1 = Weibull::new(1.0, 1.0, 0.0).expect("Operation failed");
 
         // PDF at x = 1 should be exp(-1) = 0.36787944
         let pdf_at_one = weibull1.pdf(1.0);
@@ -470,14 +470,14 @@ mod tests {
         assert_eq!(pdf_at_zero, 0.0);
 
         // Weibull with shape=2 (Rayleigh distribution with scale=1)
-        let weibull2 = Weibull::new(2.0, 1.0, 0.0).unwrap();
+        let weibull2 = Weibull::new(2.0, 1.0, 0.0).expect("Operation failed");
 
         // PDF at x = 1 should be 2*1*exp(-1^2) = 2*exp(-1) = 0.73575888
         let pdf_at_one2 = weibull2.pdf(1.0);
         assert_relative_eq!(pdf_at_one2, 0.73575888, epsilon = 1e-7);
 
         // Custom Weibull with location
-        let custom = Weibull::new(2.0, 1.0, 1.0).unwrap();
+        let custom = Weibull::new(2.0, 1.0, 1.0).expect("Operation failed");
 
         // PDF at x = 1 (equal to loc) should be 0
         assert_eq!(custom.pdf(1.0), 0.0);
@@ -490,7 +490,7 @@ mod tests {
     #[test]
     fn test_weibull_cdf() {
         // Weibull with shape=1 (exponential with rate=1)
-        let weibull1 = Weibull::new(1.0, 1.0, 0.0).unwrap();
+        let weibull1 = Weibull::new(1.0, 1.0, 0.0).expect("Operation failed");
 
         // CDF at x = 1 should be 1 - exp(-1) = 0.6321206
         let cdf_at_one = weibull1.cdf(1.0);
@@ -501,14 +501,14 @@ mod tests {
         assert_eq!(cdf_at_zero, 0.0);
 
         // Weibull with shape=2 (Rayleigh distribution)
-        let weibull2 = Weibull::new(2.0, 1.0, 0.0).unwrap();
+        let weibull2 = Weibull::new(2.0, 1.0, 0.0).expect("Operation failed");
 
         // CDF at x = 1 should be 1 - exp(-1^2) = 1 - exp(-1) = 0.6321206
         let cdf_at_one2 = weibull2.cdf(1.0);
         assert_relative_eq!(cdf_at_one2, 0.6321206, epsilon = 1e-7);
 
         // Custom Weibull with location
-        let custom = Weibull::new(2.0, 1.0, 1.0).unwrap();
+        let custom = Weibull::new(2.0, 1.0, 1.0).expect("Operation failed");
 
         // CDF at x = 1 (equal to loc) should be 0
         assert_eq!(custom.cdf(1.0), 0.0);
@@ -521,24 +521,24 @@ mod tests {
     #[test]
     fn test_weibull_ppf() {
         // Weibull with shape=1 (exponential with rate=1)
-        let weibull1 = Weibull::new(1.0, 1.0, 0.0).unwrap();
+        let weibull1 = Weibull::new(1.0, 1.0, 0.0).expect("Operation failed");
 
         // PPF at p = 0.5 should be -ln(0.5) = 0.6931472
-        let ppf_at_half = weibull1.ppf(0.5).unwrap();
+        let ppf_at_half = weibull1.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half, 0.6931472, epsilon = 1e-7);
 
         // Weibull with shape=2 (Rayleigh distribution)
-        let weibull2 = Weibull::new(2.0, 1.0, 0.0).unwrap();
+        let weibull2 = Weibull::new(2.0, 1.0, 0.0).expect("Operation failed");
 
         // PPF at p = 0.5 should be sqrt(-ln(0.5)) = 0.8325546
-        let ppf_at_half2 = weibull2.ppf(0.5).unwrap();
+        let ppf_at_half2 = weibull2.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half2, 0.8325546, epsilon = 1e-7);
 
         // Custom Weibull with location
-        let custom = Weibull::new(2.0, 1.0, 1.0).unwrap();
+        let custom = Weibull::new(2.0, 1.0, 1.0).expect("Operation failed");
 
         // PPF at p = 0.5 should be the Weibull2 PPF plus the location
-        let ppf_at_half_shifted = custom.ppf(0.5).unwrap();
+        let ppf_at_half_shifted = custom.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half_shifted, ppf_at_half2 + 1.0, epsilon = 1e-7);
 
         // Error cases
@@ -549,7 +549,7 @@ mod tests {
     #[test]
     fn test_weibull_statistics() {
         // Weibull with shape=1 (exponential with rate=1)
-        let weibull1 = Weibull::new(1.0, 1.0, 0.0).unwrap();
+        let weibull1 = Weibull::new(1.0, 1.0, 0.0).expect("Operation failed");
 
         // Mean should be Gamma(1 + 1/1) = Gamma(2) = 1.0
         let mean1 = weibull1.mean();
@@ -568,7 +568,7 @@ mod tests {
         assert_eq!(mode1, 0.0);
 
         // Weibull with shape=2 (Rayleigh distribution)
-        let weibull2 = Weibull::new(2.0, 1.0, 0.0).unwrap();
+        let weibull2 = Weibull::new(2.0, 1.0, 0.0).expect("Operation failed");
 
         // Mean should be Gamma(1 + 1/2) * 1.0 = Gamma(1.5) * 1.0 = sqrt(π)/2 = 0.8862269
         let mean2 = weibull2.mean();
@@ -587,7 +587,7 @@ mod tests {
         assert_relative_eq!(mode2, 0.7071068, epsilon = 1e-7);
 
         // Custom Weibull with location
-        let custom = Weibull::new(2.0, 1.0, 1.0).unwrap();
+        let custom = Weibull::new(2.0, 1.0, 1.0).expect("Operation failed");
 
         // Mean should be the Weibull2 mean plus the location
         let mean_custom = custom.mean();
@@ -600,10 +600,10 @@ mod tests {
 
     #[test]
     fn test_weibull_rvs() {
-        let weibull = Weibull::new(2.0, 1.0, 0.0).unwrap();
+        let weibull = Weibull::new(2.0, 1.0, 0.0).expect("Operation failed");
 
         // Generate samples
-        let samples = weibull.rvs(1000).unwrap();
+        let samples = weibull.rvs(1000).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 1000);
@@ -622,7 +622,7 @@ mod tests {
 
         // Calculate sample median as a sanity check
         let mut sorted_samples = samples.clone();
-        sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_samples.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let median = if samples.len() % 2 == 0 {
             (sorted_samples[499] + sorted_samples[500]) / 2.0
         } else {

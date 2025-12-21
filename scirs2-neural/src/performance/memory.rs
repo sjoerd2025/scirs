@@ -130,10 +130,10 @@ impl MemoryEfficientProcessor {
     fn concatenate_results<T>(&self, results: Vec<ArrayD<T>>) -> Result<ArrayD<T>>
                 "Cannot concatenate empty results".to_string(),
         if results.len() == 1 {
-            return Ok(results.into_iter().next().unwrap());
+            return Ok(results.into_iter().next().expect("Operation failed"));
         // For this implementation, we'll return the first result
         // A full implementation would properly concatenate along axis 0
-        Ok(results.into_iter().next().unwrap())
+        Ok(results.into_iter().next().expect("Operation failed"))
     /// Get current memory settings
     pub fn get_settings(&self) -> MemorySettings {
         MemorySettings {

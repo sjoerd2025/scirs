@@ -53,7 +53,9 @@ impl ClusterManager {
     /// Get global cluster manager instance
     pub fn global() -> CoreResult<Arc<Self>> {
         Ok(GLOBAL_CLUSTER_MANAGER
-            .get_or_init(|| Arc::new(Self::new(ClusterConfiguration::default()).unwrap()))
+            .get_or_init(|| {
+                Arc::new(Self::new(ClusterConfiguration::default()).expect("Operation failed"))
+            })
             .clone())
     }
 

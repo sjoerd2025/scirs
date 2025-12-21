@@ -658,7 +658,7 @@ mod tests {
         // Test linear interpolation coefficients
         let coeffs1 = cache
             .get_coefficients(InterpolationOrder::Linear, 0.3)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(coeffs1.len(), 2);
         assert!((coeffs1[0] - 0.7).abs() < 1e-10);
         assert!((coeffs1[1] - 0.3).abs() < 1e-10);
@@ -666,7 +666,7 @@ mod tests {
         // Test that same coefficients are cached
         let coeffs2 = cache
             .get_coefficients(InterpolationOrder::Linear, 0.3)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(coeffs1, coeffs2);
     }
 
@@ -697,7 +697,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assertion failed: (result[[0, 3]] - 2.0).abs() < 0.1 at line 709"]
     fn test_zoom_optimized() {
         let input = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
         let result = zoom_optimized(&input, &[2.0, 2.0], None, None, None)

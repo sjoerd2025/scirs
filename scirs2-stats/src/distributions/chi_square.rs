@@ -11,6 +11,12 @@ use scirs2_core::random::prelude::*;
 use scirs2_core::random::{ChiSquared as RandChiSquared, Distribution};
 use std::f64::consts::PI;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Chi-square distribution structure
 pub struct ChiSquare<F: Float + Send + Sync> {
     /// Degrees of freedom
@@ -42,7 +48,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
     /// // Chi-square distribution with 2 degrees of freedom
-    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
+    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).expect("test/example should not fail");
     /// ```
     pub fn new(df: F, loc: F, scale: F) -> StatsResult<Self> {
         if df <= F::zero() {
@@ -58,7 +64,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
         }
 
         // Convert to f64 for rand_distr
-        let df_f64 = <f64 as NumCast>::from(df).unwrap();
+        let df_f64 = NumCast::from(df).expect("Failed to convert to f64");
 
         match RandChiSquared::new(df_f64) {
             Ok(rand_distr) => Ok(ChiSquare {
@@ -88,7 +94,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// ```
     /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
-    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
+    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).expect("test/example should not fail");
     /// let pdf_at_one = chi2.pdf(1.0);
     /// assert!((pdf_at_one - 0.303).abs() < 1e-3);
     /// ```
@@ -106,9 +112,9 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
         // PDF = (1 / (2^(k/2) * Gamma(k/2))) * x^(k/2 - 1) * exp(-x/2)
         // where k is the degrees of freedom
 
-        let half = F::from(0.5).unwrap();
+        let half = const_f64::<F>(0.5);
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = const_f64::<F>(2.0);
 
         let df_half = self.df * half;
         let pow_term = x_std.powf(df_half - one);
@@ -138,7 +144,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// ```
     /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
-    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
+    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).expect("test/example should not fail");
     /// let cdf_at_two = chi2.cdf(2.0);
     /// assert!((cdf_at_two - 0.632).abs() < 1e-3);
     /// ```
@@ -157,38 +163,38 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
         // where γ is the lower incomplete gamma function,
         // Γ is the gamma function, and k is the degrees of freedom
 
-        let half = F::from(0.5).unwrap();
+        let half = const_f64::<F>(0.5);
         let df_half = self.df * half;
 
         // Special case for df=2 (exponential distribution)
-        if (self.df - F::from(2.0).unwrap()).abs() < F::from(0.001).unwrap() {
+        if (self.df - const_f64::<F>(2.0)).abs() < const_f64::<F>(0.001) {
             // Known value for chi-square with df=2 at x=2.0
-            if (x_std - F::from(2.0).unwrap()).abs() < F::from(0.01).unwrap() {
-                return F::from(0.632).unwrap();
+            if (x_std - const_f64::<F>(2.0)).abs() < const_f64::<F>(0.01) {
+                return const_f64::<F>(0.632);
             }
             return one_minus_exp(-x_std * half);
         }
 
         // Special case for df=5
-        if (self.df - F::from(5.0).unwrap()).abs() < F::from(0.001).unwrap() {
+        if (self.df - const_f64::<F>(5.0)).abs() < const_f64::<F>(0.001) {
             // Known value for chi-square with df=5 at x=5.0
-            if (x_std - F::from(5.0).unwrap()).abs() < F::from(0.01).unwrap() {
-                return F::from(0.583).unwrap();
+            if (x_std - const_f64::<F>(5.0)).abs() < const_f64::<F>(0.01) {
+                return const_f64::<F>(0.583);
             }
         }
 
         // For integer degrees of freedom, we can use a simpler formula
-        let df_int = (self.df + F::from(0.5).unwrap()).floor();
-        if (self.df - df_int).abs() < F::from(0.001).unwrap() {
-            let df_int_val = <u32 as NumCast>::from(df_int).unwrap();
+        let df_int = (self.df + const_f64::<F>(0.5)).floor();
+        if (self.df - df_int).abs() < const_f64::<F>(0.001) {
+            let df_int_val = <u32 as NumCast>::from(df_int).expect("test/example should not fail");
             return chi_square_cdf_int(x_std, df_int_val);
         }
 
         // Chi-square with 1 degree of freedom - use special case values
-        if (self.df - F::one()).abs() < F::from(0.001).unwrap() {
+        if (self.df - F::one()).abs() < const_f64::<F>(0.001) {
             // For df=1, use known values at common points
-            if (x_std - F::from(3.84).unwrap()).abs() < F::from(0.01).unwrap() {
-                return F::from(0.95).unwrap();
+            if (x_std - const_f64::<F>(3.84)).abs() < const_f64::<F>(0.01) {
+                return const_f64::<F>(0.95);
             }
         }
 
@@ -211,8 +217,8 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// ```
     /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
-    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
-    /// let samples = chi2.rvs(1000).unwrap();
+    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).expect("test/example should not fail");
+    /// let samples = chi2.rvs(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     #[inline]
@@ -236,8 +242,8 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// ```
     /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
-    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
-    /// let samples = chi2.rvs_vec(1000).unwrap();
+    /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).expect("test/example should not fail");
+    /// let samples = chi2.rvs_vec(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     #[inline]
@@ -252,7 +258,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
                 let std_sample = self.rand_distr.sample(&mut rng);
 
                 // Scale and shift according to loc and scale parameters
-                let sample = F::from(std_sample).unwrap() * self.scale + self.loc;
+                let sample = const_f64::<F>(std_sample) * self.scale + self.loc;
                 samples.push(sample);
             }
 
@@ -263,7 +269,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
         use scirs2_core::parallel_ops::parallel_map;
 
         // Clone distribution parameters for thread safety
-        let df_f64 = <f64 as NumCast>::from(self.df).unwrap();
+        let df_f64 = NumCast::from(self.df).expect("Failed to convert to f64");
         let loc = self.loc;
         let scale = self.scale;
 
@@ -273,9 +279,9 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
         // Generate samples in parallel
         let samples = parallel_map(&indices, move |_| {
             let mut rng = thread_rng();
-            let rand_distr = RandChiSquared::new(df_f64).unwrap();
+            let rand_distr = RandChiSquared::new(df_f64).expect("test/example should not fail");
             let sample = rand_distr.sample(&mut rng);
-            F::from(sample).unwrap() * scale + loc
+            const_f64::<F>(sample) * scale + loc
         });
 
         Ok(samples)
@@ -289,16 +295,16 @@ fn one_minus_exp<F: Float>(x: F) -> F {
     // For small x, use the Taylor expansion: 1 - exp(-x) ≈ x - x^2/2 + x^3/6 - ...
     // This avoids catastrophic cancellation when x is small
 
-    if x.abs() < F::from(0.01).unwrap() {
+    if x.abs() < const_f64::<F>(0.01) {
         let x2 = x * x;
         let x3 = x2 * x;
         let x4 = x3 * x;
 
         // Terms in Taylor expansion
         let term1 = x;
-        let term2 = x2 * F::from(0.5).unwrap();
-        let term3 = x3 * F::from(1.0 / 6.0).unwrap();
-        let term4 = x4 * F::from(1.0 / 24.0).unwrap();
+        let term2 = x2 * const_f64::<F>(0.5);
+        let term3 = x3 * const_f64::<F>(1.0 / 6.0);
+        let term4 = x4 * const_f64::<F>(1.0 / 24.0);
 
         return term1 - term2 + term3 - term4;
     }
@@ -311,24 +317,24 @@ fn one_minus_exp<F: Float>(x: F) -> F {
 #[inline]
 #[allow(dead_code)]
 fn chi_square_cdf_int<F: Float>(x: F, df: u32) -> F {
-    let half = F::from(0.5).unwrap();
+    let half = const_f64::<F>(0.5);
     let one = F::one();
 
     if df == 1 {
         // For 1 degree of freedom
         // Special case for common critical values
-        if (x - F::from(3.84).unwrap()).abs() < F::from(0.01).unwrap() {
-            return F::from(0.95).unwrap();
+        if (x - const_f64::<F>(3.84)).abs() < const_f64::<F>(0.01) {
+            return const_f64::<F>(0.95);
         }
 
         // For other values, use normal approximation with continuity correction
         let z = x.sqrt();
-        return F::from(2.0).unwrap() * (F::from(0.5).unwrap() - half * (-z).exp());
+        return const_f64::<F>(2.0) * (const_f64::<F>(0.5) - half * (-z).exp());
     } else if df == 2 {
         // For 2 degrees of freedom, it's an exponential distribution
         // Special case for common value
-        if (x - F::from(2.0).unwrap()).abs() < F::from(0.01).unwrap() {
-            return F::from(0.632).unwrap();
+        if (x - const_f64::<F>(2.0)).abs() < const_f64::<F>(0.01) {
+            return const_f64::<F>(0.632);
         }
         return one_minus_exp(-x * half);
     } else if df == 4 {
@@ -342,7 +348,7 @@ fn chi_square_cdf_int<F: Float>(x: F, df: u32) -> F {
     let mut term = (-x * half).exp();
 
     for i in 0..df / 2 {
-        let i_f = F::from(i).unwrap();
+        let i_f = const_f64::<F>(i as f64);
         term = term * x * half / (i_f + one);
         result = result + term;
     }
@@ -357,7 +363,7 @@ fn lower_incomplete_gamma<F: Float>(a: F, x: F) -> F {
     // Implementation of the regularized lower incomplete gamma function P(a,x)
     // Using a series expansion for small x and a continued fraction for large x
 
-    let epsilon = F::from(1e-10).unwrap();
+    let epsilon = const_f64::<F>(1e-10);
     let one = F::one();
 
     if x <= F::zero() {
@@ -375,7 +381,7 @@ fn lower_incomplete_gamma<F: Float>(a: F, x: F) -> F {
             result = result + term;
             n = n + one;
 
-            if n > F::from(1000.0).unwrap() {
+            if n > const_f64::<F>(1000.0) {
                 break; // Safety limit on iterations
             }
         }
@@ -386,14 +392,14 @@ fn lower_incomplete_gamma<F: Float>(a: F, x: F) -> F {
 
     // For x >= a+1, use the continued fraction (Lentz's algorithm)
     let mut b = x + one - a;
-    let mut c = F::from(1.0 / 1e-30).unwrap();
+    let mut c = const_f64::<F>(1.0 / 1e-30);
     let mut d = one / b;
     let mut h = d;
 
     let mut i = one;
-    while i < F::from(1000.0).unwrap() {
+    while i < const_f64::<F>(1000.0) {
         let a_term = -i * (i - a);
-        let b_term = b + F::from(2.0).unwrap();
+        let b_term = b + const_f64::<F>(2.0);
 
         b = b_term;
         d = one / (b + a_term * d);
@@ -419,8 +425,8 @@ fn gamma_function<F: Float>(x: F) -> F {
         return F::one();
     }
 
-    if x == F::from(0.5).unwrap() {
-        return F::from(PI).unwrap().sqrt();
+    if x == const_f64::<F>(0.5) {
+        return const_f64::<F>(PI).sqrt();
     }
 
     // For integers and half-integers, use recurrence relation
@@ -430,28 +436,28 @@ fn gamma_function<F: Float>(x: F) -> F {
 
     // Use Lanczos approximation for other values
     let p = [
-        F::from(676.5203681218851).unwrap(),
-        F::from(-1259.1392167224028).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507343278686905).unwrap(),
-        F::from(-0.13857109526572012).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.5056327351493116e-7).unwrap(),
+        const_f64::<F>(676.5203681218851),
+        const_f64::<F>(-1259.1392167224028),
+        const_f64::<F>(771.323_428_777_653_1),
+        const_f64::<F>(-176.615_029_162_140_6),
+        const_f64::<F>(12.507343278686905),
+        const_f64::<F>(-0.13857109526572012),
+        const_f64::<F>(9.984_369_578_019_572e-6),
+        const_f64::<F>(1.5056327351493116e-7),
     ];
 
     let x_adj = x - F::one();
-    let t = x_adj + F::from(7.5).unwrap();
+    let t = x_adj + const_f64::<F>(7.5);
 
     let mut sum = F::zero();
     for (i, &coef) in p.iter().enumerate() {
-        sum = sum + coef / (x_adj + F::from(i + 1).unwrap());
+        sum = sum + coef / (x_adj + const_f64::<F>((i + 1) as f64));
     }
 
-    let pi = F::from(PI).unwrap();
-    let sqrt_2pi = (F::from(2.0).unwrap() * pi).sqrt();
+    let pi = const_f64::<F>(PI);
+    let sqrt_2pi = (const_f64::<F>(2.0) * pi).sqrt();
 
-    sqrt_2pi * sum * t.powf(x_adj + F::from(0.5).unwrap()) * (-t).exp()
+    sqrt_2pi * sum * t.powf(x_adj + const_f64::<F>(0.5)) * (-t).exp()
 }
 
 /// Implementation of Distribution trait for ChiSquare
@@ -463,7 +469,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F
 
     fn var(&self) -> F {
         // Variance of chi-square is 2 * degrees of freedom * scale^2
-        F::from(2.0).unwrap() * self.df * self.scale * self.scale
+        const_f64::<F>(2.0) * self.df * self.scale * self.scale
     }
 
     fn std(&self) -> F {
@@ -478,16 +484,16 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ScirsDist<F
     fn entropy(&self) -> F {
         // Entropy of chi-square distribution with df = k
         // is k/2 + ln(2*Gamma(k/2)) + (1-k/2)*digamma(k/2)
-        let half = F::from(0.5).unwrap();
+        let half = const_f64::<F>(0.5);
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = const_f64::<F>(2.0);
 
         let k_half = self.df * half;
 
         // Special case for known values
         if self.df == two {
             // For 2 degrees of freedom, entropy is 1 + gamma
-            let gamma = F::from(0.5772156649015329).unwrap(); // Euler-Mascheroni constant
+            let gamma = const_f64::<F>(0.5772156649015329); // Euler-Mascheroni constant
             return one + gamma + self.scale.ln();
         }
 
@@ -541,39 +547,39 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
         // Handle specific critical values for common degrees of freedom
         let df = self.df;
         let df1 = F::one();
-        let df2 = F::from(2.0).unwrap();
-        let df5 = F::from(5.0).unwrap();
+        let df2 = const_f64::<F>(2.0);
+        let df5 = const_f64::<F>(5.0);
 
-        if (df - df1).abs() < F::from(0.001).unwrap() {
+        if (df - df1).abs() < const_f64::<F>(0.001) {
             // Chi-square with 1 df at common significance levels
-            if (p - F::from(0.95).unwrap()).abs() < F::from(0.001).unwrap() {
-                return Ok(self.loc + F::from(3.841).unwrap() * self.scale);
+            if (p - const_f64::<F>(0.95)).abs() < const_f64::<F>(0.001) {
+                return Ok(self.loc + const_f64::<F>(3.841) * self.scale);
             }
-            if (p - F::from(0.99).unwrap()).abs() < F::from(0.001).unwrap() {
-                return Ok(self.loc + F::from(6.635).unwrap() * self.scale);
+            if (p - const_f64::<F>(0.99)).abs() < const_f64::<F>(0.001) {
+                return Ok(self.loc + const_f64::<F>(6.635) * self.scale);
             }
-        } else if (df - df2).abs() < F::from(0.001).unwrap() {
+        } else if (df - df2).abs() < const_f64::<F>(0.001) {
             // Chi-square with 2 df (exponential) - exact formula
-            let result = -F::from(2.0).unwrap() * (F::one() - p).ln();
+            let result = -const_f64::<F>(2.0) * (F::one() - p).ln();
             return Ok(self.loc + result * self.scale);
-        } else if (df - df5).abs() < F::from(0.001).unwrap() {
+        } else if (df - df5).abs() < const_f64::<F>(0.001) {
             // Chi-square with 5 df at common significance levels
-            if (p - F::from(0.95).unwrap()).abs() < F::from(0.001).unwrap() {
-                return Ok(self.loc + F::from(11.070).unwrap() * self.scale);
+            if (p - const_f64::<F>(0.95)).abs() < const_f64::<F>(0.001) {
+                return Ok(self.loc + const_f64::<F>(11.070) * self.scale);
             }
         }
 
         // For other cases, use a general approximation
         // Wilson-Hilferty transformation
-        let z = if p > F::from(0.5).unwrap() {
-            (F::from(-2.0).unwrap() * (F::one() - p).ln()).sqrt()
+        let z = if p > const_f64::<F>(0.5) {
+            (const_f64::<F>(-2.0) * (F::one() - p).ln()).sqrt()
         } else {
-            -(F::from(-2.0).unwrap() * p.ln()).sqrt()
+            -(const_f64::<F>(-2.0) * p.ln()).sqrt()
         };
 
-        let term1 = df * (F::one() - F::from(2.0).unwrap() / (F::from(9.0).unwrap() * df));
-        let term2 = F::from(2.0).unwrap() / F::from(9.0).unwrap() * z / df.sqrt();
-        let term3 = F::from(3.0).unwrap();
+        let term1 = df * (F::one() - const_f64::<F>(2.0) / (const_f64::<F>(9.0) * df));
+        let term2 = const_f64::<F>(2.0) / const_f64::<F>(9.0) * z / df.sqrt();
+        let term3 = const_f64::<F>(3.0);
 
         let result = term1 * (F::one() + term2).powf(term3);
         Ok(self.loc + result * self.scale)
@@ -604,13 +610,13 @@ mod tests {
     #[test]
     fn test_chi_square_creation() {
         // Chi-square with 2 degrees of freedom
-        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();
+        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).expect("test/example should not fail");
         assert_eq!(chi2.df, 2.0);
         assert_eq!(chi2.loc, 0.0);
         assert_eq!(chi2.scale, 1.0);
 
         // Custom chi-square
-        let custom = ChiSquare::new(5.0, 1.0, 2.0).unwrap();
+        let custom = ChiSquare::new(5.0, 1.0, 2.0).expect("test/example should not fail");
         assert_eq!(custom.df, 5.0);
         assert_eq!(custom.loc, 1.0);
         assert_eq!(custom.scale, 2.0);
@@ -625,7 +631,7 @@ mod tests {
     #[test]
     fn test_chi_square_pdf() {
         // Chi-square with 2 degrees of freedom
-        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();
+        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).expect("test/example should not fail");
 
         // PDF at x = 0 should be 0.5 for 2 df
         let pdf_at_zero = chi2.pdf(0.0);
@@ -640,7 +646,7 @@ mod tests {
         assert_relative_eq!(pdf_at_two, 0.184, epsilon = 1e-3);
 
         // Chi-square with 5 degrees of freedom
-        let chi5 = ChiSquare::new(5.0, 0.0, 1.0).unwrap();
+        let chi5 = ChiSquare::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // PDF at x = 5 (mode of chi-square df=5 is at x=3)
         let pdf_at_five = chi5.pdf(5.0);
@@ -650,7 +656,7 @@ mod tests {
     #[test]
     fn test_chi_square_cdf() {
         // Chi-square with 1 degree of freedom
-        let chi1 = ChiSquare::new(1.0, 0.0, 1.0).unwrap();
+        let chi1 = ChiSquare::new(1.0, 0.0, 1.0).expect("test/example should not fail");
 
         // CDF at x = 0
         let cdf_at_zero = chi1.cdf(0.0);
@@ -661,14 +667,14 @@ mod tests {
         assert_relative_eq!(chi1.cdf(3.84), 0.95, epsilon = 1e-2);
 
         // Chi-square with 2 degrees of freedom
-        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();
+        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).expect("test/example should not fail");
 
         // CDF at x = 2 for 2 df
         let cdf_at_two = chi2.cdf(2.0);
         assert_relative_eq!(cdf_at_two, 0.632, epsilon = 1e-3);
 
         // Chi-square with 5 degrees of freedom
-        let chi5 = ChiSquare::new(5.0, 0.0, 1.0).unwrap();
+        let chi5 = ChiSquare::new(5.0, 0.0, 1.0).expect("test/example should not fail");
 
         // CDF at x = 5 for 5 df
         let cdf_at_five = chi5.cdf(5.0);
@@ -678,31 +684,31 @@ mod tests {
     #[test]
     fn test_chi_square_ppf() {
         // Chi-square with 1 degree of freedom
-        let chi1 = ChiSquare::new(1.0, 0.0, 1.0).unwrap();
+        let chi1 = ChiSquare::new(1.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Test PPF at 95th percentile (critical value for chi-square df=1)
-        let p95 = chi1.ppf(0.95).unwrap();
+        let p95 = chi1.ppf(0.95).expect("test/example should not fail");
         assert_relative_eq!(p95, 3.841, epsilon = 1e-3);
 
         // Chi-square with 2 degrees of freedom (exponential)
-        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();
+        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Test PPF at 95th percentile for df=2
-        let p95_2 = chi2.ppf(0.95).unwrap();
+        let p95_2 = chi2.ppf(0.95).expect("test/example should not fail");
         assert_relative_eq!(p95_2, 5.991, epsilon = 1e-3);
     }
 
     #[test]
     #[ignore = "Statistical test might fail due to randomness"]
     fn test_chi_square_rvs() {
-        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();
+        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Generate samples using Vec method
-        let samples_vec = chi2.rvs_vec(1000).unwrap();
+        let samples_vec = chi2.rvs_vec(1000).expect("test/example should not fail");
         assert_eq!(samples_vec.len(), 1000);
 
         // Generate samples using Array1 method
-        let samples_array = chi2.rvs(1000).unwrap();
+        let samples_array = chi2.rvs(1000).expect("test/example should not fail");
         assert_eq!(samples_array.len(), 1000);
 
         // Basic statistical checks
@@ -716,7 +722,7 @@ mod tests {
     #[test]
     fn test_chi_square_distribution_trait() {
         // Chi-square with 2 degrees of freedom
-        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();
+        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Check mean and variance
         assert_relative_eq!(chi2.mean(), 2.0, epsilon = 1e-10);
@@ -728,7 +734,7 @@ mod tests {
         assert!(entropy > 0.0);
 
         // Chi-square with 5 degrees of freedom and scale 2
-        let chi5_scale2 = ChiSquare::new(5.0, 0.0, 2.0).unwrap();
+        let chi5_scale2 = ChiSquare::new(5.0, 0.0, 2.0).expect("test/example should not fail");
         assert_relative_eq!(chi5_scale2.mean(), 10.0, epsilon = 1e-10); // df * scale = 5 * 2
         assert_relative_eq!(chi5_scale2.var(), 40.0, epsilon = 1e-10); // 2 * df * scale^2 = 2 * 5 * 2^2
     }
@@ -736,7 +742,7 @@ mod tests {
     #[test]
     fn test_chi_square_continuous_distribution_trait() {
         // Chi-square with 2 degrees of freedom
-        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).unwrap();
+        let chi2 = ChiSquare::new(2.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Test as a ContinuousDistribution
         let dist: &dyn ContinuousDistribution<f64> = &chi2;
@@ -748,7 +754,11 @@ mod tests {
         assert_relative_eq!(dist.cdf(2.0), 0.632, epsilon = 1e-3);
 
         // Check PPF
-        assert_relative_eq!(dist.ppf(0.95).unwrap(), 5.991, epsilon = 1e-3);
+        assert_relative_eq!(
+            dist.ppf(0.95).expect("test/example should not fail"),
+            5.991,
+            epsilon = 1e-3
+        );
 
         // Check derived methods using concrete type
         assert_relative_eq!(chi2.sf(2.0), 1.0 - 0.632, epsilon = 1e-3);
@@ -757,8 +767,8 @@ mod tests {
 
         // Check that isf and ppf are consistent
         assert_relative_eq!(
-            chi2.isf(0.95).unwrap(),
-            dist.ppf(0.05).unwrap(),
+            chi2.isf(0.95).expect("test/example should not fail"),
+            dist.ppf(0.05).expect("test/example should not fail"),
             epsilon = 1e-3
         );
     }

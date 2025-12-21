@@ -51,7 +51,7 @@ use std::iter::Sum;
 /// data[[3, 1]] = 15.0;
 /// data[[3, 2]] = 16.0;
 ///
-/// let band = BandedMatrix::new(data.view(), 1, 2, 5, 5).unwrap();
+/// let band = BandedMatrix::new(data.view(), 1, 2, 5, 5).expect("Operation failed");
 ///
 /// // The matrix is equivalent to:
 /// // [[ 5.0, 10.0, 14.0,  0.0,  0.0 ],
@@ -61,15 +61,15 @@ use std::iter::Sum;
 /// //  [ 0.0,  0.0,  0.0,  4.0,  9.0 ]]
 ///
 /// // Get elements
-/// assert_eq!(band.get(0, 0).unwrap(), 5.0);
-/// assert_eq!(band.get(0, 1).unwrap(), 10.0);
-/// assert_eq!(band.get(0, 2).unwrap(), 14.0);
-/// assert_eq!(band.get(1, 0).unwrap(), 1.0);
-/// assert_eq!(band.get(0, 3).unwrap(), 0.0); // Outside the band
+/// assert_eq!(band.get(0, 0).expect("Operation failed"), 5.0);
+/// assert_eq!(band.get(0, 1).expect("Operation failed"), 10.0);
+/// assert_eq!(band.get(0, 2).expect("Operation failed"), 14.0);
+/// assert_eq!(band.get(1, 0).expect("Operation failed"), 1.0);
+/// assert_eq!(band.get(0, 3).expect("Operation failed"), 0.0); // Outside the band
 ///
 /// // Matrix-vector multiplication
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let y = band.matvec(&x.view()).unwrap();
+/// let y = band.matvec(&x.view()).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct BandedMatrix<A>
@@ -618,7 +618,7 @@ mod tests {
         data[[3, 1]] = 15.0;
         data[[3, 2]] = 16.0;
 
-        let band = BandedMatrix::new(data.view(), 1, 2, 5, 5).unwrap();
+        let band = BandedMatrix::new(data.view(), 1, 2, 5, 5).expect("Operation failed");
 
         assert_eq!(band.nrows(), 5);
         assert_eq!(band.ncols(), 5);
@@ -627,18 +627,18 @@ mod tests {
         assert_eq!(band.upper_bandwidth(), 2);
 
         // Check elements
-        assert_relative_eq!(band.get(0, 0).unwrap(), 5.0);
-        assert_relative_eq!(band.get(0, 1).unwrap(), 10.0);
-        assert_relative_eq!(band.get(0, 2).unwrap(), 14.0);
-        assert_relative_eq!(band.get(1, 0).unwrap(), 1.0);
-        assert_relative_eq!(band.get(1, 1).unwrap(), 6.0);
-        assert_relative_eq!(band.get(1, 2).unwrap(), 11.0);
-        assert_relative_eq!(band.get(1, 3).unwrap(), 15.0);
+        assert_relative_eq!(band.get(0, 0).expect("Operation failed"), 5.0);
+        assert_relative_eq!(band.get(0, 1).expect("Operation failed"), 10.0);
+        assert_relative_eq!(band.get(0, 2).expect("Operation failed"), 14.0);
+        assert_relative_eq!(band.get(1, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(band.get(1, 1).expect("Operation failed"), 6.0);
+        assert_relative_eq!(band.get(1, 2).expect("Operation failed"), 11.0);
+        assert_relative_eq!(band.get(1, 3).expect("Operation failed"), 15.0);
 
         // Check zero elements outside the band
-        assert_relative_eq!(band.get(0, 3).unwrap(), 0.0);
-        assert_relative_eq!(band.get(0, 4).unwrap(), 0.0);
-        assert_relative_eq!(band.get(3, 0).unwrap(), 0.0);
+        assert_relative_eq!(band.get(0, 3).expect("Operation failed"), 0.0);
+        assert_relative_eq!(band.get(0, 4).expect("Operation failed"), 0.0);
+        assert_relative_eq!(band.get(3, 0).expect("Operation failed"), 0.0);
     }
 
     #[test]
@@ -653,7 +653,7 @@ mod tests {
         ];
 
         // Convert to banded form
-        let band = BandedMatrix::frommatrix(&a.view(), 1, 2).unwrap();
+        let band = BandedMatrix::frommatrix(&a.view(), 1, 2).expect("Operation failed");
 
         assert_eq!(band.nrows(), 5);
         assert_eq!(band.ncols(), 5);
@@ -662,18 +662,18 @@ mod tests {
         assert_eq!(band.upper_bandwidth(), 2);
 
         // Check elements
-        assert_relative_eq!(band.get(0, 0).unwrap(), 5.0);
-        assert_relative_eq!(band.get(0, 1).unwrap(), 10.0);
-        assert_relative_eq!(band.get(0, 2).unwrap(), 14.0);
-        assert_relative_eq!(band.get(1, 0).unwrap(), 1.0);
-        assert_relative_eq!(band.get(1, 1).unwrap(), 6.0);
-        assert_relative_eq!(band.get(1, 2).unwrap(), 11.0);
-        assert_relative_eq!(band.get(1, 3).unwrap(), 15.0);
+        assert_relative_eq!(band.get(0, 0).expect("Operation failed"), 5.0);
+        assert_relative_eq!(band.get(0, 1).expect("Operation failed"), 10.0);
+        assert_relative_eq!(band.get(0, 2).expect("Operation failed"), 14.0);
+        assert_relative_eq!(band.get(1, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(band.get(1, 1).expect("Operation failed"), 6.0);
+        assert_relative_eq!(band.get(1, 2).expect("Operation failed"), 11.0);
+        assert_relative_eq!(band.get(1, 3).expect("Operation failed"), 15.0);
 
         // Check zero elements outside the band
-        assert_relative_eq!(band.get(0, 3).unwrap(), 0.0);
-        assert_relative_eq!(band.get(0, 4).unwrap(), 0.0);
-        assert_relative_eq!(band.get(3, 0).unwrap(), 0.0);
+        assert_relative_eq!(band.get(0, 3).expect("Operation failed"), 0.0);
+        assert_relative_eq!(band.get(0, 4).expect("Operation failed"), 0.0);
+        assert_relative_eq!(band.get(3, 0).expect("Operation failed"), 0.0);
     }
 
     #[test]
@@ -697,7 +697,7 @@ mod tests {
         data[[2, 1]] = 9.0;
         data[[2, 2]] = 10.0;
 
-        let band = BandedMatrix::new(data.view(), 1, 1, 4, 4).unwrap();
+        let band = BandedMatrix::new(data.view(), 1, 1, 4, 4).expect("Operation failed");
 
         // Matrix is equivalent to:
         // [[ 4.0, 8.0, 0.0, 0.0 ],
@@ -706,7 +706,7 @@ mod tests {
         //  [ 0.0, 0.0, 3.0, 7.0 ]]
 
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let y = band.matvec(&x.view()).unwrap();
+        let y = band.matvec(&x.view()).expect("Operation failed");
 
         // Expected: y = A * x
         let expected = array![
@@ -744,7 +744,7 @@ mod tests {
         data[[2, 1]] = 9.0;
         data[[2, 2]] = 10.0;
 
-        let band = BandedMatrix::new(data.view(), 1, 1, 4, 4).unwrap();
+        let band = BandedMatrix::new(data.view(), 1, 1, 4, 4).expect("Operation failed");
 
         // Matrix is equivalent to:
         // [[ 4.0, 8.0, 0.0, 0.0 ],
@@ -753,7 +753,7 @@ mod tests {
         //  [ 0.0, 0.0, 3.0, 7.0 ]]
 
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let y = band.matvec_transpose(&x.view()).unwrap();
+        let y = band.matvec_transpose(&x.view()).expect("Operation failed");
 
         // Expected: y = A^T * x
         let expected = array![
@@ -788,9 +788,9 @@ mod tests {
         data[[2, 0]] = 6.0;
         data[[2, 1]] = 7.0;
 
-        let band = BandedMatrix::new(data.view(), 1, 1, 3, 3).unwrap();
+        let band = BandedMatrix::new(data.view(), 1, 1, 3, 3).expect("Operation failed");
 
-        let dense = band.to_dense().unwrap();
+        let dense = band.to_dense().expect("Operation failed");
 
         let expected = array![[3.0, 6.0, 0.0], [1.0, 4.0, 7.0], [0.0, 2.0, 5.0]];
 
@@ -814,7 +814,7 @@ mod tests {
         let a = array![[2.0, -1.0, 0.0], [-1.0, 2.0, -1.0], [0.0, -1.0, 2.0]];
 
         // Convert to banded form
-        let band = BandedMatrix::frommatrix(&a.view(), 1, 1).unwrap();
+        let band = BandedMatrix::frommatrix(&a.view(), 1, 1).expect("Operation failed");
 
         // Right-hand side b = [1, 2, 3]
         let b = array![1.0, 2.0, 3.0];
@@ -823,7 +823,7 @@ mod tests {
         let expected = array![2.5, 4.0, 3.5];
 
         // Solve with our tridiagonal solver
-        let x = band.solve_tridiagonal(&b.view()).unwrap();
+        let x = band.solve_tridiagonal(&b.view()).expect("Operation failed");
 
         assert_eq!(x.len(), 3);
         assert_relative_eq!(x[0], expected[0], epsilon = 1e-10);
@@ -831,7 +831,7 @@ mod tests {
         assert_relative_eq!(x[2], expected[2], epsilon = 1e-10);
 
         // Double-check by verifying that Ax ≈ b
-        let ax = band.matvec(&x.view()).unwrap();
+        let ax = band.matvec(&x.view()).expect("Operation failed");
 
         assert_eq!(ax.len(), 3);
         assert_relative_eq!(ax[0], b[0], epsilon = 1e-10);
@@ -839,7 +839,7 @@ mod tests {
         assert_relative_eq!(ax[2], b[2], epsilon = 1e-10);
 
         // Also test the main solve function
-        let x2 = band.solve(&b.view()).unwrap();
+        let x2 = band.solve(&b.view()).expect("Operation failed");
 
         assert_eq!(x2.len(), 3);
         assert_relative_eq!(x2[0], expected[0], epsilon = 1e-10);

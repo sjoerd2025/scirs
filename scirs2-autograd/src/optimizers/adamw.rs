@@ -74,11 +74,11 @@ impl<F: Float> AdamW<F> {
         env_handle: &mut VariableEnvironment<F>,
     ) -> AdamW<F> {
         AdamW::new(
-            F::from(0.001).unwrap(), // alpha (learning rate)
-            F::from(1e-08).unwrap(), // eps
-            F::from(0.9).unwrap(),   // b1 (beta1)
-            F::from(0.999).unwrap(), // b2 (beta2)
-            F::from(0.01).unwrap(),  // weight_decay
+            F::from(0.001).expect("Failed to convert constant to float"), // alpha (learning rate)
+            F::from(1e-08).expect("Failed to convert constant to float"), // eps
+            F::from(0.9).expect("Failed to convert constant to float"),   // b1 (beta1)
+            F::from(0.999).expect("Failed to convert constant to float"), // b2 (beta2)
+            F::from(0.01).expect("Failed to convert constant to float"),  // weight_decay
             var_id_list,
             env_handle,
             unique_namespace_id,
@@ -149,11 +149,11 @@ impl<F: Float> AdamW<F> {
         env_handle: &mut VariableEnvironment<F>,
     ) -> AdamW<F> {
         AdamW::new(
-            F::from(0.001).unwrap(), // alpha (learning rate)
-            F::from(1e-08).unwrap(), // eps
-            F::from(0.9).unwrap(),   // b1 (beta1)
-            F::from(0.999).unwrap(), // b2 (beta2)
-            weight_decay,            // custom weight_decay
+            F::from(0.001).expect("Failed to convert constant to float"), // alpha (learning rate)
+            F::from(1e-08).expect("Failed to convert constant to float"), // eps
+            F::from(0.9).expect("Failed to convert constant to float"),   // b1 (beta1)
+            F::from(0.999).expect("Failed to convert constant to float"), // b2 (beta2)
+            weight_decay,                                                 // custom weight_decay
             var_id_list,
             env_handle,
             unique_namespace_id,
@@ -172,11 +172,11 @@ impl<F: Float> AdamW<F> {
         env_handle: &mut VariableEnvironment<F>,
     ) -> AdamW<F> {
         AdamW::new(
-            alpha,                   // custom learning rate
-            F::from(1e-08).unwrap(), // eps
-            F::from(0.9).unwrap(),   // b1 (beta1)
-            F::from(0.999).unwrap(), // b2 (beta2)
-            weight_decay,            // custom weight_decay
+            alpha,                                                        // custom learning rate
+            F::from(1e-08).expect("Failed to convert constant to float"), // eps
+            F::from(0.9).expect("Failed to convert constant to float"),   // b1 (beta1)
+            F::from(0.999).expect("Failed to convert constant to float"), // b2 (beta2)
+            weight_decay,                                                 // custom weight_decay
             var_id_list,
             env_handle,
             unique_namespace_id,

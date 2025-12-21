@@ -246,7 +246,7 @@ fn demonstrate_double_pendulum() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Maximum constraint violation: {max_constraint_violation:.2e}");
     println!(
         "   Final constraint violation: {:.2e}",
-        constraint_violations.last().unwrap()
+        constraint_violations.last().expect("Operation failed")
     );
 
     Ok(())
@@ -404,7 +404,9 @@ mod tests {
         );
 
         let mut integrator = MechanicalIntegrator::new(config, properties);
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // After one time step, position should have changed
         assert!(result.state.position[0] > 0.0);
@@ -435,7 +437,7 @@ mod tests {
         // Integrate for one period (1000 steps)
         for i in 0..1000 {
             let t = i as f64 * dt;
-            let result = integrator.step(t, &state).unwrap();
+            let result = integrator.step(t, &state).expect("Operation failed");
             state = result.state;
         }
 
@@ -468,7 +470,7 @@ mod tests {
         // Integrate for many steps
         for i in 0..500 {
             let t = i as f64 * dt;
-            let result = integrator.step(t, &state).unwrap();
+            let result = integrator.step(t, &state).expect("Operation failed");
             state = result.state;
         }
 

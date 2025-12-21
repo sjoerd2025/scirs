@@ -405,8 +405,8 @@ impl DistributionMetrics {
     ) -> Result<f64> {
         let mut sorted1 = samples1.to_vec();
         let mut sorted2 = samples2.to_vec();
-        sorted1.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        sorted2.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted1.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
+        sorted2.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // For equal-length samples, Wasserstein-1 is the L1 distance between sorted samples
         if sorted1.len() == sorted2.len() {
@@ -523,7 +523,7 @@ impl DistributionMetrics {
             .chain(samples2.iter())
             .copied()
             .collect::<Vec<_>>();
-        all_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        all_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         all_values.dedup();
 
         let mut max_diff = 0.0_f64;
@@ -807,7 +807,7 @@ impl TimeSeriesAnomalyMetrics {
             if label == 1 && start.is_none() {
                 start = Some(i);
             } else if label == 0 && start.is_some() {
-                ranges.push((start.unwrap(), i - 1));
+                ranges.push((start.expect("Operation failed"), i - 1));
                 start = None;
             }
         }
@@ -1037,7 +1037,9 @@ mod tests {
         let y_true = Array1::from_vec(vec![0.0, 1.0, 1.0, 0.0, 1.0, 0.0]);
         let y_score = Array1::from_vec(vec![0.2, 0.8, 0.9, 0.3, 0.7, 0.1]);
 
-        let results = metrics.evaluate_detection(&y_true, &y_score).unwrap();
+        let results = metrics
+            .evaluate_detection(&y_true, &y_score)
+            .expect("Operation failed");
 
         assert!(results.accuracy >= 0.0 && results.accuracy <= 1.0);
         assert!(results.precision >= 0.0 && results.precision <= 1.0);
@@ -1055,7 +1057,7 @@ mod tests {
 
         let results = metrics
             .evaluate_distribution_anomalies(&normal_samples, &anomaly_samples)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.kl_divergence >= 0.0);
         assert!(results.js_divergence >= 0.0);
@@ -1073,7 +1075,7 @@ mod tests {
 
         let results = metrics
             .evaluate_time_series_anomalies(&y_true, &y_pred, Some(&timestamps))
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.precision >= 0.0 && results.precision <= 1.0);
         assert!(results.recall >= 0.0 && results.recall <= 1.0);
@@ -1102,7 +1104,9 @@ mod tests {
         let y_true = Array1::from_vec(vec![0, 1, 1, 0, 0, 1, 0]);
         let y_pred = Array1::from_vec(vec![0, 1, 0, 0, 0, 1, 0]);
 
-        let score = metrics.calculate_nab_score(&y_true, &y_pred).unwrap();
+        let score = metrics
+            .calculate_nab_score(&y_true, &y_pred)
+            .expect("Operation failed");
 
         // Should get positive score for detecting both anomaly ranges
         assert!(score > 0.0);

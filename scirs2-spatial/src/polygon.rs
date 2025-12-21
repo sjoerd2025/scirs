@@ -79,7 +79,7 @@ pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool 
     }
 
     // First check if the point is on the boundary
-    let epsilon = T::from(1e-10).unwrap();
+    let epsilon = T::from(1e-10).expect("Operation failed");
     if point_on_boundary(point, polygon, epsilon) {
         return true;
     }
@@ -305,7 +305,10 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
         }
 
         if n > 0 {
-            return vec![x_sum / T::from(n).unwrap(), y_sum / T::from(n).unwrap()];
+            return vec![
+                x_sum / T::from(n).expect("Operation failed"),
+                y_sum / T::from(n).expect("Operation failed"),
+            ];
         } else {
             return vec![T::zero(), T::zero()];
         }
@@ -342,10 +345,13 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
             y_sum = y_sum + polygon[[i, 1]];
         }
 
-        return vec![x_sum / T::from(n).unwrap(), y_sum / T::from(n).unwrap()];
+        return vec![
+            x_sum / T::from(n).expect("Operation failed"),
+            y_sum / T::from(n).expect("Operation failed"),
+        ];
     }
 
-    let six = T::from(6).unwrap();
+    let six = T::from(6).expect("Operation failed");
     cx = cx / (six * area);
     cy = cy / (six * area);
 

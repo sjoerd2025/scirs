@@ -186,7 +186,7 @@ fn compute_norm(array: &Array1<f64>, normtype: NormType) -> f64 {
 ///
 /// // Integrate a function that returns a 2D vector
 /// let f = |x: f64| arr1(&[x.sin(), x.cos()]);
-/// let result = quad_vec(f, 0.0, std::f64::consts::PI, None).unwrap();
+/// let result = quad_vec(f, 0.0, std::f64::consts::PI, None).expect("Operation failed");
 ///
 /// // Result should be approximately [2.0, 0.0]
 /// assert!((result.integral[0] - 2.0).abs() < 1e-10);
@@ -238,7 +238,8 @@ where
             if point > a
                 && point < b
                 && (filtered_points.is_empty()
-                    || (point - filtered_points.last().unwrap()).abs() > f64::EPSILON)
+                    || (point - filtered_points.last().expect("Operation failed")).abs()
+                        > f64::EPSILON)
             {
                 filtered_points.push(point);
             }
@@ -256,7 +257,7 @@ where
                 intervals.push((filtered_points[i], filtered_points[i + 1]));
             }
 
-            intervals.push((*filtered_points.last().unwrap(), b));
+            intervals.push((*filtered_points.last().expect("Operation failed"), b));
         }
 
         intervals
@@ -641,7 +642,7 @@ mod tests {
     fn test_simple_integral() {
         // Integrate [x, x^2] from 0 to 1
         let f = |x: f64| arr1(&[x, x * x]);
-        let result = quad_vec(f, 0.0, 1.0, None).unwrap();
+        let result = quad_vec(f, 0.0, 1.0, None).expect("Operation failed");
 
         assert_abs_diff_eq!(result.integral[0], 0.5, epsilon = 1e-10);
         assert_abs_diff_eq!(result.integral[1], 1.0 / 3.0, epsilon = 1e-10);
@@ -652,7 +653,7 @@ mod tests {
     fn test_trig_functions() {
         // Integrate [sin(x), cos(x)] from 0 to π
         let f = |x: f64| arr1(&[x.sin(), x.cos()]);
-        let result = quad_vec(f, 0.0, PI, None).unwrap();
+        let result = quad_vec(f, 0.0, PI, None).expect("Operation failed");
 
         assert_abs_diff_eq!(result.integral[0], 2.0, epsilon = 1e-10);
         assert_abs_diff_eq!(result.integral[1], 0.0, epsilon = 1e-10);
@@ -669,7 +670,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = quad_vec(f, 0.0, 2.0, Some(options)).unwrap();
+        let result = quad_vec(f, 0.0, 2.0, Some(options)).expect("Operation failed");
 
         assert_abs_diff_eq!(result.integral[0], 2.0, epsilon = 1e-10);
         assert_abs_diff_eq!(result.integral[1], 8.0 / 3.0, epsilon = 1e-10);
@@ -696,9 +697,10 @@ mod tests {
             ..Default::default()
         };
 
-        let result_gk15 = quad_vec(f, 0.0, PI, Some(options_gk15)).unwrap();
-        let result_gk21 = quad_vec(f, 0.0, PI, Some(options_gk21)).unwrap();
-        let result_trapezoid = quad_vec(f, 0.0, PI, Some(options_trapezoid)).unwrap();
+        let result_gk15 = quad_vec(f, 0.0, PI, Some(options_gk15)).expect("Operation failed");
+        let result_gk21 = quad_vec(f, 0.0, PI, Some(options_gk21)).expect("Operation failed");
+        let result_trapezoid =
+            quad_vec(f, 0.0, PI, Some(options_trapezoid)).expect("Operation failed");
 
         assert_abs_diff_eq!(result_gk15.integral[0], 2.0, epsilon = 1e-10);
         assert_abs_diff_eq!(result_gk21.integral[0], 2.0, epsilon = 1e-10);

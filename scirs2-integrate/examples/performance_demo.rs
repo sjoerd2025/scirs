@@ -46,7 +46,7 @@ where
 
     let avg_time = total_time / runs as f64;
     println!("{name} (avg of {runs} runs): {avg_time:.6} seconds");
-    (avg_time, result.unwrap())
+    (avg_time, result.expect("Operation failed"))
 }
 
 // Test problems
@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if let Ok(sol) = result {
-            let final_value = sol.y.last().unwrap()[0];
+            let final_value = sol.y.last().expect("Operation failed")[0];
             let exact = (-5.0_f64).exp();
             let error = (final_value - exact).abs();
             println!("  Final value: {final_value:.6}, Error: {error:.2e}");
@@ -159,7 +159,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if let Ok(sol) = result {
-            let final_y = sol.y.last().unwrap();
+            let final_y = sol.y.last().expect("Operation failed");
             let energy = 0.5 * (final_y[0] * final_y[0] + final_y[1] * final_y[1]);
             let energy_error = (energy - 0.5).abs();
             println!("  Energy conservation error: {energy_error:.2e}");

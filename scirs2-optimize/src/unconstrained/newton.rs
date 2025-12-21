@@ -33,7 +33,7 @@ where
 
     // Ensure initial point is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Function evaluation counter
@@ -95,7 +95,7 @@ where
 
         // Ensure we're within bounds
         if let Some(bounds) = bounds {
-            bounds.project(x_new.as_slice_mut().unwrap());
+            bounds.project(x_new.as_slice_mut().expect("Operation failed"));
         }
 
         // Check if the step actually moved the point
@@ -257,7 +257,7 @@ where
 
         // Project onto bounds (if needed)
         if let Some(bounds) = bounds {
-            bounds.project(x_new.as_slice_mut().unwrap());
+            bounds.project(x_new.as_slice_mut().expect("Operation failed"));
         }
 
         *nfev += 1;
@@ -296,7 +296,7 @@ fn project_direction(direction: &mut Array1<f64>, x: &Array1<f64>, bounds: Optio
         return;
     }
 
-    let bounds = bounds.unwrap();
+    let bounds = bounds.expect("Operation failed");
 
     for i in 0..x.len() {
         let xi = x[i];
@@ -330,7 +330,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![2.0, 1.0]);
         let options = Options::default();
 
-        let result = minimize_newton_cg(quadratic, x0, &options).unwrap();
+        let result = minimize_newton_cg(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-4);
@@ -350,7 +350,7 @@ mod tests {
         let bounds = Bounds::new(&[(Some(0.0), Some(1.0)), (Some(0.0), Some(1.0))]);
         options.bounds = Some(bounds);
 
-        let result = minimize_newton_cg(quadratic, x0, &options).unwrap();
+        let result = minimize_newton_cg(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // The optimal point (2, 3) is outside the bounds, so we should get (1, 1)
@@ -371,7 +371,7 @@ mod tests {
         let mut options = Options::default();
         options.max_iter = 100; // Newton methods may need more iterations
 
-        let result = minimize_newton_cg(rosenbrock, x0, &options).unwrap();
+        let result = minimize_newton_cg(rosenbrock, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 1.0, epsilon = 1e-3);

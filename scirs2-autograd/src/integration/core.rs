@@ -503,12 +503,15 @@ mod tests {
             .add_parameter("learning_rate".to_string(), Parameter::Float(0.01));
 
         assert!(data.get_tensor("input").is_some());
-        assert_eq!(data.get_metadata("module_name").unwrap(), "test");
+        assert_eq!(
+            data.get_metadata("module_name").expect("Operation failed"),
+            "test"
+        );
         assert_eq!(
             data.get_parameter("learning_rate")
-                .unwrap()
+                .expect("Failed to create array")
                 .as_float()
-                .unwrap(),
+                .expect("Failed to create array"),
             0.01
         );
     }
@@ -534,13 +537,16 @@ mod tests {
     #[test]
     fn test_parameter_types() {
         let float_param = Parameter::Float(std::f64::consts::PI);
-        assert_eq!(float_param.as_float().unwrap(), std::f64::consts::PI);
+        assert_eq!(
+            float_param.as_float().expect("Operation failed"),
+            std::f64::consts::PI
+        );
 
         let bool_param = Parameter::Bool(true);
-        assert!(bool_param.as_bool().unwrap());
+        assert!(bool_param.as_bool().expect("Operation failed"));
 
         let string_param = Parameter::String("test".to_string());
-        assert_eq!(string_param.as_string().unwrap(), "test");
+        assert_eq!(string_param.as_string().expect("Operation failed"), "test");
     }
 
     #[test]
@@ -550,12 +556,18 @@ mod tests {
         assert_eq!(pipeline.current_stage, 0);
         assert!(!pipeline.is_complete());
 
-        pipeline.advance_stage("module2".to_string()).unwrap();
+        pipeline
+            .advance_stage("module2".to_string())
+            .expect("Operation failed");
         assert_eq!(pipeline.current_stage, 1);
         assert!(!pipeline.is_complete());
 
-        pipeline.advance_stage("module3".to_string()).unwrap();
-        pipeline.advance_stage("module4".to_string()).unwrap();
+        pipeline
+            .advance_stage("module3".to_string())
+            .expect("Operation failed");
+        pipeline
+            .advance_stage("module4".to_string())
+            .expect("Operation failed");
         assert!(pipeline.is_complete());
     }
 
@@ -586,8 +598,8 @@ mod tests {
             )
             .add_metadata("module_name".to_string(), "test".to_string());
 
-        let converted_data: SciRS2Data<f64> = data.convert_precision().unwrap();
-        let _converted_tensor = converted_data.get_tensor("test").unwrap();
+        let converted_data: SciRS2Data<f64> = data.convert_precision().expect("Operation failed");
+        let _converted_tensor = converted_data.get_tensor("test").expect("Operation failed");
 
         // Check that conversion succeeded - for autograd tensors, precision conversion
         // is mainly about ensuring the operation completes without error

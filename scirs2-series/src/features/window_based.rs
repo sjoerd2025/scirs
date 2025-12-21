@@ -468,10 +468,11 @@ where
         let window = _ts.slice(s![i..i + windowsize]);
 
         // Basic statistics
-        let mean = window.sum() / F::from(windowsize).unwrap();
+        let mean = window.sum() / F::from(windowsize).expect("Failed to convert to float");
         rolling_means.push(mean);
 
-        let variance = window.mapv(|x| (x - mean).powi(2)).sum() / F::from(windowsize).unwrap();
+        let variance = window.mapv(|x| (x - mean).powi(2)).sum()
+            / F::from(windowsize).expect("Failed to convert to float");
         let std = variance.sqrt();
         rolling_stds.push(std);
 
@@ -495,7 +496,8 @@ where
 
         let median_idx = windowsize / 2;
         let median = if windowsize.is_multiple_of(2) {
-            (sorted_window[median_idx - 1] + sorted_window[median_idx]) / F::from(2.0).unwrap()
+            (sorted_window[median_idx - 1] + sorted_window[median_idx])
+                / F::from(2.0).expect("Failed to convert constant to float")
         } else {
             sorted_window[median_idx]
         };
@@ -512,8 +514,9 @@ where
             let sum_cube = window.mapv(|x| ((x - mean) / std).powi(3)).sum();
             let sum_quad = window.mapv(|x| ((x - mean) / std).powi(4)).sum();
 
-            let skewness = sum_cube / F::from(windowsize).unwrap();
-            let kurtosis = sum_quad / F::from(windowsize).unwrap() - F::from(3.0).unwrap();
+            let skewness = sum_cube / F::from(windowsize).expect("Failed to convert to float");
+            let kurtosis = sum_quad / F::from(windowsize).expect("Failed to convert to float")
+                - F::from(3.0).expect("Failed to convert constant to float");
 
             rolling_skewness.push(skewness);
             rolling_kurtosis.push(kurtosis);
@@ -563,14 +566,14 @@ where
         return Ok(WindowSummaryStats::default());
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Mean and std of rolling _means
     let mean_of_means = rolling_means.iter().fold(F::zero(), |acc, &x| acc + x) / n_f;
     let std_of_means = if n > 1 {
         let variance = rolling_means.iter().fold(F::zero(), |acc, &x| {
             acc + (x - mean_of_means) * (x - mean_of_means)
-        }) / F::from(n - 1).unwrap();
+        }) / F::from(n - 1).expect("Failed to convert to float");
         variance.sqrt()
     } else {
         F::zero()
@@ -581,7 +584,7 @@ where
     let std_of_stds = if n > 1 {
         let variance = rolling_stds.iter().fold(F::zero(), |acc, &x| {
             acc + (x - mean_of_stds) * (x - mean_of_stds)
-        }) / F::from(n - 1).unwrap();
+        }) / F::from(n - 1).expect("Failed to convert to float");
         variance.sqrt()
     } else {
         F::zero()
@@ -595,7 +598,9 @@ where
     let mean_range = rolling_ranges.iter().fold(F::zero(), |acc, &x| acc + x) / n_f;
 
     // Trend calculations (linear regression slope)
-    let indices: Vec<F> = (0..n).map(|i| F::from(i).unwrap()).collect();
+    let indices: Vec<F> = (0..n)
+        .map(|i| F::from(i).expect("Failed to convert to float"))
+        .collect();
     let (trend_in_means_, _) = linear_fit(&indices, rolling_means);
     let (trend_in_stds_, _) = linear_fit(&indices, rolling_stds);
 
@@ -605,7 +610,7 @@ where
         let cv_variance = rolling_cv
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean_cv) * (x - mean_cv))
-            / F::from(n - 1).unwrap();
+            / F::from(n - 1).expect("Failed to convert to float");
         cv_variance.sqrt() / mean_cv
     } else {
         F::zero()
@@ -643,15 +648,15 @@ where
 
         for i in 0..num_windows {
             let window = _ts.slice(s![i..i + window_size]);
-            let mean = window.sum() / F::from(window_size).unwrap();
-            let variance =
-                window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
+            let mean = window.sum() / F::from(window_size).expect("Failed to convert to float");
+            let variance = window.mapv(|x| (x - mean) * (x - mean)).sum()
+                / F::from(window_size).expect("Failed to convert to float");
             scale_variances.push(variance);
         }
 
         let mean_variance = if !scale_variances.is_empty() {
             scale_variances.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from(scale_variances.len()).unwrap()
+                / F::from(scale_variances.len()).expect("Operation failed")
         } else {
             F::zero()
         };
@@ -676,7 +681,9 @@ where
 
         for i in 0..num_windows {
             let window = _ts.slice(s![i..i + window_size]);
-            let indices: Vec<F> = (0..window_size).map(|j| F::from(j).unwrap()).collect();
+            let indices: Vec<F> = (0..window_size)
+                .map(|j| F::from(j).expect("Failed to convert to float"))
+                .collect();
             let values: Vec<F> = window.iter().cloned().collect();
             let (slope_, _) = linear_fit(&indices, &values);
             scale_trends.push(slope_);
@@ -684,7 +691,7 @@ where
 
         let mean_trend = if !scale_trends.is_empty() {
             scale_trends.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from(scale_trends.len()).unwrap()
+                / F::from(scale_trends.len()).expect("Operation failed")
         } else {
             F::zero()
         };
@@ -748,13 +755,13 @@ where
         medium_large_correlation,
         small_large_correlation,
     ];
-    let mean_correlation =
-        correlations.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(3.0).unwrap();
+    let mean_correlation = correlations.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(3.0).expect("Failed to convert constant to float");
     let cross_scale_consistency = mean_correlation;
 
     // Multi-scale coherence (average of absolute correlations)
-    let multi_scale_coherence =
-        correlations.iter().fold(F::zero(), |acc, &x| acc + x.abs()) / F::from(3.0).unwrap();
+    let multi_scale_coherence = correlations.iter().fold(F::zero(), |acc, &x| acc + x.abs())
+        / F::from(3.0).expect("Failed to convert constant to float");
 
     Ok(CrossWindowFeatures {
         small_medium_correlation,
@@ -786,7 +793,7 @@ where
     }
 
     // CUSUM for mean changes
-    let target_mean = ts.sum() / F::from(n).unwrap();
+    let target_mean = ts.sum() / F::from(n).expect("Failed to convert to float");
     let mut cusum_mean = F::zero();
     let mut cusum_mean_changes = Vec::new();
     let mut mean_change_points = 0;
@@ -795,7 +802,9 @@ where
         cusum_mean = cusum_mean + (value - target_mean);
         cusum_mean_changes.push(cusum_mean);
 
-        if cusum_mean.abs() > F::from(config.change_detection_threshold).unwrap() {
+        if cusum_mean.abs()
+            > F::from(config.change_detection_threshold).expect("Failed to convert to float")
+        {
             mean_change_points += 1;
             cusum_mean = F::zero(); // Reset after detection
         }
@@ -805,7 +814,7 @@ where
     let rolling_stds = &window_features.rolling_stds;
     let target_std = if !rolling_stds.is_empty() {
         rolling_stds.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from(rolling_stds.len()).unwrap()
+            / F::from(rolling_stds.len()).expect("Operation failed")
     } else {
         F::zero()
     };
@@ -818,7 +827,9 @@ where
         cusum_variance = cusum_variance + (std_val - target_std);
         cusum_variance_changes.push(cusum_variance);
 
-        if cusum_variance.abs() > F::from(config.change_detection_threshold).unwrap() {
+        if cusum_variance.abs()
+            > F::from(config.change_detection_threshold).expect("Failed to convert to float")
+        {
             variance_change_points += 1;
             cusum_variance = F::zero(); // Reset after detection
         }
@@ -834,7 +845,9 @@ where
 
     // Stability measure
     let total_changes = mean_change_points + variance_change_points;
-    let stability_measure = F::one() - F::from(total_changes).unwrap() / F::from(n).unwrap();
+    let stability_measure = F::one()
+        - F::from(total_changes).expect("Failed to convert to float")
+            / F::from(n).expect("Failed to convert to float");
 
     // Relative change magnitude
     let data_range = ts.iter().fold(F::neg_infinity(), |a, &b| a.max(b))
@@ -904,7 +917,7 @@ fn calculate_ewma<F>(ts: &Array1<F>, alpha: f64) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
-    let alpha_f = F::from(alpha).unwrap();
+    let alpha_f = F::from(alpha).expect("Failed to convert to float");
     let one_minus_alpha = F::one() - alpha_f;
     let mut ewma = Vec::with_capacity(ts.len());
 
@@ -928,7 +941,7 @@ fn calculate_ewmv<F>(ts: &Array1<F>, ewma: &[F], alpha: f64) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
-    let alpha_f = F::from(alpha).unwrap();
+    let alpha_f = F::from(alpha).expect("Failed to convert to float");
     let one_minus_alpha = F::one() - alpha_f;
     let mut ewmv = Vec::with_capacity(ts.len());
 
@@ -957,7 +970,7 @@ where
     F: Float + FromPrimitive + Debug + Clone,
 {
     let window_size = config.bollinger_window;
-    let multiplier = F::from(config.bollinger_multiplier).unwrap();
+    let multiplier = F::from(config.bollinger_multiplier).expect("Failed to convert to float");
     let n = ts.len();
 
     if n < window_size {
@@ -971,9 +984,9 @@ where
     // Calculate rolling mean and std for Bollinger Bands
     for i in 0..=(n - window_size) {
         let window = ts.slice(s![i..i + window_size]);
-        let mean = window.sum() / F::from(window_size).unwrap();
-        let variance =
-            window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
+        let mean = window.sum() / F::from(window_size).expect("Failed to convert to float");
+        let variance = window.mapv(|x| (x - mean) * (x - mean)).sum()
+            / F::from(window_size).expect("Failed to convert to float");
         let std = variance.sqrt();
 
         let upper = mean + multiplier * std;
@@ -1000,18 +1013,21 @@ where
         }
     }
 
-    let percent_above_upper = F::from(above_upper).unwrap() / F::from(upper_band.len()).unwrap();
-    let percent_below_lower = F::from(below_lower).unwrap() / F::from(lower_band.len()).unwrap();
+    let percent_above_upper = F::from(above_upper).expect("Failed to convert to float")
+        / F::from(upper_band.len()).expect("Operation failed");
+    let percent_below_lower = F::from(below_lower).expect("Failed to convert to float")
+        / F::from(lower_band.len()).expect("Operation failed");
 
     let mean_band_width = if !band_width.is_empty() {
-        band_width.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(band_width.len()).unwrap()
+        band_width.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(band_width.len()).expect("Operation failed")
     } else {
         F::zero()
     };
 
     // Count squeeze periods (when band width is unusually low)
     let min_width = band_width.iter().fold(F::infinity(), |a, &b| a.min(b));
-    let squeeze_threshold = min_width * F::from(1.2).unwrap();
+    let squeeze_threshold = min_width * F::from(1.2).expect("Failed to convert constant to float");
     let squeeze_periods = band_width
         .iter()
         .filter(|&&w| w <= squeeze_threshold)
@@ -1077,14 +1093,15 @@ where
     }
 
     let mean_histogram = if !histogram.is_empty() {
-        histogram.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(histogram.len()).unwrap()
+        histogram.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(histogram.len()).expect("Operation failed")
     } else {
         F::zero()
     };
 
     // Calculate divergence measure (simplified)
     let divergence_measure = histogram.iter().fold(F::zero(), |acc, &x| acc + x.abs())
-        / F::from(histogram.len().max(1)).unwrap();
+        / F::from(histogram.len().max(1)).expect("Operation failed");
 
     Ok(MACDFeatures {
         macd_line,
@@ -1130,19 +1147,20 @@ where
         let avg_gain = gains[i..i + period]
             .iter()
             .fold(F::zero(), |acc, &x| acc + x)
-            / F::from(period).unwrap();
+            / F::from(period).expect("Failed to convert to float");
         let avg_loss = losses[i..i + period]
             .iter()
             .fold(F::zero(), |acc, &x| acc + x)
-            / F::from(period).unwrap();
+            / F::from(period).expect("Failed to convert to float");
 
         let rs = if avg_loss != F::zero() {
             avg_gain / avg_loss
         } else {
-            F::from(100.0).unwrap()
+            F::from(100.0).expect("Failed to convert constant to float")
         };
 
-        let rsi = F::from(100.0).unwrap() - (F::from(100.0).unwrap() / (F::one() + rs));
+        let rsi = F::from(100.0).expect("Failed to convert constant to float")
+            - (F::from(100.0).expect("Failed to convert constant to float") / (F::one() + rs));
         rsi_values.push(rsi);
     }
 
@@ -1173,9 +1191,9 @@ where
 
     for i in 0..=(n - window_size) {
         let window = ts.slice(s![i..i + window_size]);
-        let mean = window.sum() / F::from(window_size).unwrap();
-        let variance =
-            window.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(window_size).unwrap();
+        let mean = window.sum() / F::from(window_size).expect("Failed to convert to float");
+        let variance = window.mapv(|x| (x - mean) * (x - mean)).sum()
+            / F::from(window_size).expect("Failed to convert to float");
         let std = variance.sqrt();
 
         // Z-score normalization
@@ -1196,14 +1214,15 @@ where
 
         // Percentile rank
         let rank = window.iter().filter(|&&x| x <= current_value).count();
-        let percentile = F::from(rank).unwrap() / F::from(window_size).unwrap();
+        let percentile = F::from(rank).expect("Failed to convert to float")
+            / F::from(window_size).expect("Failed to convert to float");
         percentile_ranks.push(percentile);
 
         // Outlier detection (values beyond 2 standard deviations)
         let outlier_score = z_score_mean.abs();
         outlier_scores.push(outlier_score);
 
-        if outlier_score > F::from(2.0).unwrap() {
+        if outlier_score > F::from(2.0).expect("Failed to convert constant to float") {
             outlier_count += 1;
         }
     }

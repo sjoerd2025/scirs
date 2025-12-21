@@ -124,8 +124,16 @@ where
     }
 
     // Compute Q1 and Q3
-    let q1 = quantile_simd(x, F::from(0.25).unwrap(), interpolation)?;
-    let q3 = quantile_simd(x, F::from(0.75).unwrap(), interpolation)?;
+    let q1 = quantile_simd(
+        x,
+        F::from(0.25).expect("Failed to convert constant to float"),
+        interpolation,
+    )?;
+    let q3 = quantile_simd(
+        x,
+        F::from(0.75).expect("Failed to convert constant to float"),
+        interpolation,
+    )?;
 
     Ok(q3 - q1)
 }
@@ -261,7 +269,7 @@ where
 
     // Sort the data
     let mut sorteddata = x.to_owned();
-    let sorted_slice = sorteddata.as_slice_mut().unwrap();
+    let sorted_slice = sorteddata.as_slice_mut().expect("Operation failed");
     crate::quantile_simd::simd_sort(sorted_slice);
 
     // Compute cumulative sum and weighted sum using SIMD
@@ -269,7 +277,9 @@ where
 
     if optimizer.should_use_simd(n) {
         // SIMD path
-        let indices = scirs2_core::ndarray::Array1::from_shape_fn(n, |i| F::from(i + 1).unwrap());
+        let indices = scirs2_core::ndarray::Array1::from_shape_fn(n, |i| {
+            F::from(i + 1).expect("Failed to convert to float")
+        });
         let weighted = F::simd_mul(&sorteddata.view(), &indices.view());
         let weighted_sum = F::simd_sum(&weighted.view());
         let total_sum = F::simd_sum(&sorteddata.view());
@@ -278,8 +288,10 @@ where
             return Ok(F::zero()); // Perfect equality (all zeros)
         }
 
-        let gini = (F::from(2).unwrap() * weighted_sum) / (F::from(n).unwrap() * total_sum)
-            - F::from(n + 1).unwrap() / F::from(n).unwrap();
+        let gini = (F::from(2).expect("Failed to convert constant to float") * weighted_sum)
+            / (F::from(n).expect("Failed to convert to float") * total_sum)
+            - F::from(n + 1).expect("Failed to convert to float")
+                / F::from(n).expect("Failed to convert to float");
 
         Ok(gini)
     } else {
@@ -289,15 +301,17 @@ where
 
         for (i, &val) in sorted_slice.iter().enumerate() {
             cumsum = cumsum + val;
-            weighted_sum = weighted_sum + F::from(i + 1).unwrap() * val;
+            weighted_sum = weighted_sum + F::from(i + 1).expect("Failed to convert to float") * val;
         }
 
         if cumsum <= F::epsilon() {
             return Ok(F::zero());
         }
 
-        let gini = (F::from(2).unwrap() * weighted_sum) / (F::from(n).unwrap() * cumsum)
-            - F::from(n + 1).unwrap() / F::from(n).unwrap();
+        let gini = (F::from(2).expect("Failed to convert constant to float") * weighted_sum)
+            / (F::from(n).expect("Failed to convert to float") * cumsum)
+            - F::from(n + 1).expect("Failed to convert to float")
+                / F::from(n).expect("Failed to convert to float");
 
         Ok(gini)
     }
@@ -322,7 +336,7 @@ where
     }
 
     let std_dev = std_simd(x, ddof)?;
-    Ok(std_dev / F::from(n).unwrap().sqrt())
+    Ok(std_dev / F::from(n).expect("Failed to convert to float").sqrt())
 }
 
 /// SIMD-optimized median absolute deviation from median (MAD)
@@ -386,9 +400,9 @@ where
     D: DataMut<Elem = F>,
 {
     if lower_pct < F::zero()
-        || lower_pct > F::from(100).unwrap()
+        || lower_pct > F::from(100).expect("Failed to convert constant to float")
         || upper_pct < F::zero()
-        || upper_pct > F::from(100).unwrap()
+        || upper_pct > F::from(100).expect("Failed to convert constant to float")
     {
         return Err(StatsError::invalid_argument(
             "Percentiles must be between 0 and 100",
@@ -401,8 +415,8 @@ where
         ));
     }
 
-    let lower_q = lower_pct / F::from(100).unwrap();
-    let upper_q = upper_pct / F::from(100).unwrap();
+    let lower_q = lower_pct / F::from(100).expect("Failed to convert constant to float");
+    let upper_q = upper_pct / F::from(100).expect("Failed to convert constant to float");
 
     let lower_val = quantile_simd(x, lower_q, interpolation)?;
     let upper_val = quantile_simd(x, upper_q, interpolation)?;
@@ -419,7 +433,7 @@ mod tests {
     #[test]
     fn test_mad_simd() {
         let mut data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        let result = mad_simd(&mut data.view_mut(), 1.0, "propagate").unwrap();
+        let result = mad_simd(&mut data.view_mut(), 1.0, "propagate").expect("Operation failed");
 
         // MAD should be median(|x - median(x)|) = median(|x - 5|) = 2
         assert_relative_eq!(result, 2.0, epsilon = 1e-10);
@@ -428,7 +442,8 @@ mod tests {
     #[test]
     fn test_coefficient_of_variation_simd() {
         let data = array![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
-        let cv = coefficient_of_variation_simd(&data.view(), "propagate").unwrap();
+        let cv =
+            coefficient_of_variation_simd(&data.view(), "propagate").expect("Operation failed");
 
         // Mean = 5, Std ≈ 2, CV ≈ 0.4
         assert_relative_eq!(cv, 0.4, epsilon = 0.1);
@@ -437,7 +452,7 @@ mod tests {
     #[test]
     fn test_range_simd() {
         let data = array![1.0, 5.0, 3.0, 9.0, 2.0, 7.0];
-        let range = range_simd(&data.view()).unwrap();
+        let range = range_simd(&data.view()).expect("Operation failed");
         assert_relative_eq!(range, 8.0, epsilon = 1e-10); // 9 - 1 = 8
     }
 
@@ -445,19 +460,19 @@ mod tests {
     fn test_gini_simd() {
         // Test perfect equality
         let equaldata = array![5.0, 5.0, 5.0, 5.0];
-        let gini_equal = gini_simd(&equaldata.view()).unwrap();
+        let gini_equal = gini_simd(&equaldata.view()).expect("Operation failed");
         assert_relative_eq!(gini_equal, 0.0, epsilon = 1e-10);
 
         // Test some inequality
         let unequaldata = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let gini_unequal = gini_simd(&unequaldata.view()).unwrap();
+        let gini_unequal = gini_simd(&unequaldata.view()).expect("Operation failed");
         assert!(gini_unequal > 0.0 && gini_unequal < 1.0);
     }
 
     #[test]
     fn test_sem_simd() {
         let data = array![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
-        let sem = sem_simd(&data.view(), 1).unwrap();
+        let sem = sem_simd(&data.view(), 1).expect("Operation failed");
 
         // SEM = std/sqrt(n) ≈ 2/sqrt(8) ≈ 0.707
         assert_relative_eq!(sem, 0.707, epsilon = 0.1);

@@ -1181,7 +1181,7 @@ mod tests {
             let bytes = complex.as_bytes();
             assert_eq!(bytes.len(), 16); // 2 * f64 = 16 bytes
 
-            let deserialized = Complex64::from_bytes(bytes).unwrap();
+            let deserialized = Complex64::from_bytes(bytes).expect("Operation failed");
             assert_eq!(complex.real, deserialized.real);
             assert_eq!(complex.imag, deserialized.imag);
         }
@@ -1191,7 +1191,7 @@ mod tests {
     #[test]
     fn test_save_and_load_complex_array() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("complex_array.bin");
 
         // Create a 2D array of complex numbers
@@ -1207,7 +1207,7 @@ mod tests {
 
         let array =
             MemoryMappedArray::<Complex64>::save_array(&data, &filepath, Some(metadata.clone()))
-                .unwrap();
+                .expect("Operation failed");
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
@@ -1216,14 +1216,16 @@ mod tests {
         // Load from file
         let loaded =
             MemoryMappedArray::<Complex64>::open_zero_copy(&filepath, AccessMode::ReadOnly)
-                .unwrap();
+                .expect("Operation failed");
 
         // Verify load worked
         assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
+        let loaded_array = loaded
+            .readonlyarray::<crate::ndarray::Ix2>()
+            .expect("Operation failed");
 
         for i in 0..5 {
             for j in 0..5 {
@@ -1235,7 +1237,8 @@ mod tests {
         }
 
         // Read metadata
-        let loaded_metadata = MemoryMappedArray::<Complex64>::read_metadata(&filepath).unwrap();
+        let loaded_metadata =
+            MemoryMappedArray::<Complex64>::read_metadata(&filepath).expect("Operation failed");
         assert_eq!(loaded_metadata, metadata);
     }
 
@@ -1259,7 +1262,7 @@ mod tests {
             let bytes = value.as_bytes();
             assert_eq!(bytes.len(), 4);
 
-            let deserialized = i32::from_bytes(bytes).unwrap();
+            let deserialized = i32::from_bytes(bytes).expect("Operation failed");
             assert_eq!(value, deserialized);
         }
     }
@@ -1267,7 +1270,7 @@ mod tests {
     #[test]
     fn test_save_and_load_array_1d() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_array.bin");
 
         // Create a 1D array
@@ -1278,23 +1281,25 @@ mod tests {
             "description": "Test 1D array",
             "created": "2023-05-20",
         });
-        let array =
-            MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata.clone())).unwrap();
+        let array = MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata.clone()))
+            .expect("Operation failed");
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
-        let loaded =
-            MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
+        let loaded = MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Verify load worked
         assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+        let loaded_array = loaded
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
         assert_eq!(loaded_array.shape(), data.shape());
 
         for (i, &val) in loaded_array.iter().enumerate() {
@@ -1302,7 +1307,8 @@ mod tests {
         }
 
         // Read metadata
-        let loaded_metadata = MemoryMappedArray::<f64>::read_metadata(&filepath).unwrap();
+        let loaded_metadata =
+            MemoryMappedArray::<f64>::read_metadata(&filepath).expect("Operation failed");
         assert_eq!(loaded_metadata, metadata);
     }
 
@@ -1310,29 +1316,32 @@ mod tests {
     #[cfg(feature = "float32")]
     fn test_save_and_load_array_2d() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_array_2d.bin");
 
         // Create a 2D array
         let data = Array2::<f32>::from_shape_fn((10, 20), |(i, j)| (i * 20 + j) as f32);
 
         // Save without metadata
-        let array = MemoryMappedArray::<f32>::save_array(&data, &filepath, None).unwrap();
+        let array =
+            MemoryMappedArray::<f32>::save_array(&data, &filepath, None).expect("Operation failed");
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
-        let loaded =
-            MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
+        let loaded = MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Verify load worked
         assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
+        let loaded_array = loaded
+            .readonlyarray::<crate::ndarray::Ix2>()
+            .expect("Operation failed");
         assert_eq!(loaded_array.shape(), data.shape());
 
         for i in 0..10 {
@@ -1345,7 +1354,7 @@ mod tests {
     #[test]
     fn test_save_and_load_array_3d() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_array_3d.bin");
 
         // Create a 3D array
@@ -1360,22 +1369,25 @@ mod tests {
                 "z": 5
             }
         });
-        let array = MemoryMappedArray::<i32>::save_array(&data, &filepath, Some(metadata)).unwrap();
+        let array = MemoryMappedArray::<i32>::save_array(&data, &filepath, Some(metadata))
+            .expect("Operation failed");
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
-        let loaded =
-            MemoryMappedArray::<i32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
+        let loaded = MemoryMappedArray::<i32>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Verify load worked
         assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix3>().unwrap();
+        let loaded_array = loaded
+            .readonlyarray::<crate::ndarray::Ix3>()
+            .expect("Operation failed");
         assert_eq!(loaded_array.shape(), data.shape());
 
         for i in 0..5 {
@@ -1390,7 +1402,7 @@ mod tests {
     #[test]
     fn test_save_and_load_array_dynamic() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_array_dyn.bin");
 
         // Create a dynamic-dimension array (4D)
@@ -1418,22 +1430,23 @@ mod tests {
             "created": "2023-05-20",
             "format_version": "1.0"
         });
-        let array = MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata)).unwrap();
+        let array = MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata))
+            .expect("Operation failed");
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
         assert_eq!(array.size, data.len());
 
         // Load from file
-        let loaded =
-            MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
+        let loaded = MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+            .expect("Operation failed");
 
         // Verify load worked
         assert_eq!(loaded.shape.as_slice(), data.shape());
         assert_eq!(loaded.size, data.len());
 
         // Convert to ndarray and check values
-        let loaded_array = loaded.readonlyarray::<IxDyn>().unwrap();
+        let loaded_array = loaded.readonlyarray::<IxDyn>().expect("Operation failed");
         assert_eq!(loaded_array.shape(), data.shape());
 
         // Test a few specific indices
@@ -1451,7 +1464,7 @@ mod tests {
         // Also test reading data directly as slice
         let loaded_slice = loaded.as_slice();
         let data_standard = data.as_standard_layout();
-        let data_slice = data_standard.as_slice().unwrap();
+        let data_slice = data_standard.as_slice().expect("Operation failed");
 
         assert_eq!(loaded_slice.len(), data_slice.len());
         for i in 0..data_slice.len() {
@@ -1463,7 +1476,7 @@ mod tests {
     #[cfg(feature = "float32")]
     fn test_save_and_load_array_mixed_types() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
 
         // Test u32 1D array
         {
@@ -1478,20 +1491,23 @@ mod tests {
 
             let array =
                 MemoryMappedArray::<u32>::save_array(&data, &filepath, Some(metadata.clone()))
-                    .unwrap();
+                    .expect("Operation failed");
             assert_eq!(array.shape.as_slice(), data.shape());
 
             // Load and verify
-            let loaded =
-                MemoryMappedArray::<u32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-            let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+            let loaded = MemoryMappedArray::<u32>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+                .expect("Operation failed");
+            let loaded_array = loaded
+                .readonlyarray::<crate::ndarray::Ix1>()
+                .expect("Operation failed");
 
             for i in 0..data.len() {
                 assert_eq!(loaded_array[0], data[0]);
             }
 
             // Verify metadata was saved correctly
-            let loaded_metadata = MemoryMappedArray::<u32>::read_metadata(&filepath).unwrap();
+            let loaded_metadata =
+                MemoryMappedArray::<u32>::read_metadata(&filepath).expect("Operation failed");
             assert_eq!(loaded_metadata, metadata);
         }
 
@@ -1508,13 +1524,15 @@ mod tests {
 
             let array =
                 MemoryMappedArray::<i64>::save_array(&data, &filepath, Some(metadata.clone()))
-                    .unwrap();
+                    .expect("Operation failed");
             assert_eq!(array.shape.as_slice(), data.shape());
 
             // Load and verify
-            let loaded =
-                MemoryMappedArray::<i64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-            let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
+            let loaded = MemoryMappedArray::<i64>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+                .expect("Operation failed");
+            let loaded_array = loaded
+                .readonlyarray::<crate::ndarray::Ix2>()
+                .expect("Operation failed");
 
             for i in 0..data.shape()[0] {
                 for j in 0..data.shape()[1] {
@@ -1523,7 +1541,8 @@ mod tests {
             }
 
             // Verify metadata was saved correctly
-            let loaded_metadata = MemoryMappedArray::<i64>::read_metadata(&filepath).unwrap();
+            let loaded_metadata =
+                MemoryMappedArray::<i64>::read_metadata(&filepath).expect("Operation failed");
             assert_eq!(loaded_metadata, metadata);
         }
 
@@ -1541,13 +1560,15 @@ mod tests {
 
             let array =
                 MemoryMappedArray::<f32>::save_array(&data, &filepath, Some(metadata.clone()))
-                    .unwrap();
+                    .expect("Operation failed");
             assert_eq!(array.shape.as_slice(), data.shape());
 
             // Load and verify
-            let loaded =
-                MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-            let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix3>().unwrap();
+            let loaded = MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+                .expect("Operation failed");
+            let loaded_array = loaded
+                .readonlyarray::<crate::ndarray::Ix3>()
+                .expect("Operation failed");
 
             for i in 0..data.shape()[0] {
                 for j in 0..data.shape()[1] {
@@ -1558,7 +1579,8 @@ mod tests {
             }
 
             // Verify metadata was saved correctly
-            let loaded_metadata = MemoryMappedArray::<f32>::read_metadata(&filepath).unwrap();
+            let loaded_metadata =
+                MemoryMappedArray::<f32>::read_metadata(&filepath).expect("Operation failed");
             assert_eq!(loaded_metadata, metadata);
         }
     }
@@ -1566,7 +1588,7 @@ mod tests {
     #[test]
     fn test_update_metadata() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_metadata_update.bin");
 
         // Create a 1D array
@@ -1577,7 +1599,8 @@ mod tests {
             "description": "Initial metadata",
             "_version": "1.0"
         });
-        MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(initial_metadata)).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(initial_metadata))
+            .expect("Operation failed");
 
         // Update metadata
         let updated_metadata = serde_json::json!({
@@ -1585,16 +1608,20 @@ mod tests {
             "_version": "2.0",
             "updated": true
         });
-        MemoryMappedArray::<f64>::update_metadata(&filepath, updated_metadata.clone()).unwrap();
+        MemoryMappedArray::<f64>::update_metadata(&filepath, updated_metadata.clone())
+            .expect("Operation failed");
 
         // Read metadata
-        let loaded_metadata = MemoryMappedArray::<f64>::read_metadata(&filepath).unwrap();
+        let loaded_metadata =
+            MemoryMappedArray::<f64>::read_metadata(&filepath).expect("Operation failed");
         assert_eq!(loaded_metadata, updated_metadata);
 
         // Load array and check it's still correct
-        let loaded =
-            MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix1>().unwrap();
+        let loaded = MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+            .expect("Operation failed");
+        let loaded_array = loaded
+            .readonlyarray::<crate::ndarray::Ix1>()
+            .expect("Operation failed");
 
         for (i, &val) in loaded_array.iter().enumerate() {
             assert_eq!(val, data[i]);
@@ -1605,32 +1632,36 @@ mod tests {
     #[cfg(feature = "float32")]
     fn test_modify_array() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_modify.bin");
 
         // Create a 2D array
         let data = Array2::<f32>::from_shape_fn((5, 5), |(i, j)| (i * 5 + j) as f32);
 
         // Save array
-        MemoryMappedArray::<f32>::save_array(&data, &filepath, None).unwrap();
+        MemoryMappedArray::<f32>::save_array(&data, &filepath, None).expect("Operation failed");
 
         // Load in read-write mode
-        let mut mmap =
-            MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadWrite).unwrap();
+        let mut mmap = MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadWrite)
+            .expect("Operation failed");
 
         // Modify array through mmap
         {
-            let mut array = mmap.as_array_mut::<crate::ndarray::Ix2>().unwrap();
+            let mut array = mmap
+                .as_array_mut::<crate::ndarray::Ix2>()
+                .expect("Operation failed");
             array[[2, 2]] = 999.0;
         }
 
         // Flush changes
-        mmap.flush().unwrap();
+        mmap.flush().expect("Operation failed");
 
         // Load again to verify changes were saved
-        let loaded =
-            MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-        let loaded_array = loaded.readonlyarray::<crate::ndarray::Ix2>().unwrap();
+        let loaded = MemoryMappedArray::<f32>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+            .expect("Operation failed");
+        let loaded_array = loaded
+            .readonlyarray::<crate::ndarray::Ix2>()
+            .expect("Operation failed");
 
         // Verify only the specified element was changed
         for i in 0..5 {
@@ -1647,22 +1678,25 @@ mod tests {
     #[test]
     fn test_copy_on_write_mode() {
         // Create a temporary directory
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let filepath = dir.path().join("test_cow.bin");
 
         // Create a 2D array
         let data = Array2::<f64>::from_shape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
 
         // Save array
-        MemoryMappedArray::<f64>::save_array(&data, &filepath, None).unwrap();
+        MemoryMappedArray::<f64>::save_array(&data, &filepath, None).expect("Operation failed");
 
         // Load in copy-on-write mode
         let mut cow_mmap =
-            MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::CopyOnWrite).unwrap();
+            MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::CopyOnWrite)
+                .expect("Operation failed");
 
         // Modify array through copy-on-write view
         {
-            let mut array_view = cow_mmap.as_array_mut::<crate::ndarray::Ix2>().unwrap();
+            let mut array_view = cow_mmap
+                .as_array_mut::<crate::ndarray::Ix2>()
+                .expect("Operation failed");
             // Set diagonal to 100
             for i in 0..10 {
                 array_view[[i, i]] = 100.0;
@@ -1670,9 +1704,11 @@ mod tests {
         }
 
         // Load the original file to verify it wasn't modified
-        let original =
-            MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
-        let original_array = original.readonlyarray::<crate::ndarray::Ix2>().unwrap();
+        let original = MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly)
+            .expect("Operation failed");
+        let original_array = original
+            .readonlyarray::<crate::ndarray::Ix2>()
+            .expect("Operation failed");
 
         // Check original values weren't changed on disk
         for i in 0..10 {
@@ -1682,7 +1718,9 @@ mod tests {
         }
 
         // Check our copy-on-write view has the modifications
-        let cow_array = cow_mmap.as_array::<crate::ndarray::Ix2>().unwrap();
+        let cow_array = cow_mmap
+            .as_array::<crate::ndarray::Ix2>()
+            .expect("Operation failed");
         for i in 0..10 {
             for j in 0..10 {
                 if i == j {

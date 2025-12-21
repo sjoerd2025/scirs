@@ -210,7 +210,7 @@ impl NoveltyExploration {
             .map(|s| (s - state).mapv(|x| x.powi(2)).sum().sqrt())
             .collect();
         // Sort and take k nearest
-        distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let k_nearest_distances: Vec<f32> = distances.into_iter().take(self.k_nearest).collect();
         // Average distance to k nearest neighbors
         let avg_distance = k_nearest_distances.iter().sum::<f32>() / self.k_nearest as f32;
@@ -268,17 +268,17 @@ mod tests {
     use super::*;
     #[test]
     fn test_icm_creation() {
-        let icm = ICM::new(4, 2, 32, vec![64, 64], 0.01, 0.5).unwrap();
+        let icm = ICM::new(4, 2, 32, vec![64, 64], 0.01, 0.5).expect("Operation failed");
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let action = Array1::from_vec(vec![0.5, -0.5]);
         let next_state = Array1::from_vec(vec![1.1, 2.1, 3.1, 4.1]);
         let reward = icm
             .compute_intrinsic_reward(&state.view(), &action.view(), &next_state.view())
-            .unwrap();
+            .expect("Operation failed");
         assert!(reward >= 0.0);
     fn test_rnd_creation() {
-        let rnd = RND::new(4, 32, vec![64, 64], 0.001, 0.1).unwrap();
-        let reward = rnd.compute_intrinsic_reward(&state.view()).unwrap();
+        let rnd = RND::new(4, 32, vec![64, 64], 0.001, 0.1).expect("Operation failed");
+        let reward = rnd.compute_intrinsic_reward(&state.view()).expect("Operation failed");
     fn test_novelty_exploration() {
         let mut novelty = NoveltyExploration::new(100, 5, 1.0);
         // Add some states

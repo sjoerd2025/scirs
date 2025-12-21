@@ -412,7 +412,7 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.len(), signal.len());
     }
 
@@ -424,25 +424,25 @@ mod tests {
         // Test erosion
         let eroded =
             parallel_morphological_filter(&signal, &se, MorphologicalOperation::Erosion, None)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(eroded.len(), signal.len());
 
         // Test dilation
         let dilated =
             parallel_morphological_filter(&signal, &se, MorphologicalOperation::Dilation, None)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(dilated.len(), signal.len());
 
         // Test opening
         let opened =
             parallel_morphological_filter(&signal, &se, MorphologicalOperation::Opening, None)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(opened.len(), signal.len());
 
         // Test closing
         let closed =
             parallel_morphological_filter(&signal, &se, MorphologicalOperation::Closing, None)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(closed.len(), signal.len());
     }
 
@@ -452,11 +452,13 @@ mod tests {
         let se = vec![1.0, 1.0, 1.0];
 
         // Test white top-hat
-        let white_top_hat = parallel_top_hat_transform(&signal, &se, "white").unwrap();
+        let white_top_hat =
+            parallel_top_hat_transform(&signal, &se, "white").expect("Operation failed");
         assert_eq!(white_top_hat.len(), signal.len());
 
         // Test black top-hat
-        let black_top_hat = parallel_top_hat_transform(&signal, &se, "black").unwrap();
+        let black_top_hat =
+            parallel_top_hat_transform(&signal, &se, "black").expect("Operation failed");
         assert_eq!(black_top_hat.len(), signal.len());
 
         // Test invalid type
@@ -469,7 +471,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
         let se = vec![1.0, 1.0, 1.0];
 
-        let gradient = parallel_morphological_gradient(&signal, &se).unwrap();
+        let gradient = parallel_morphological_gradient(&signal, &se).expect("Operation failed");
         assert_eq!(gradient.len(), signal.len());
 
         // Gradient should be non-negative
@@ -481,12 +483,12 @@ mod tests {
     #[test]
     fn test_create_structuring_element() {
         // Test line element
-        let line = create_structuring_element("line", 5).unwrap();
+        let line = create_structuring_element("line", 5).expect("Operation failed");
         assert_eq!(line.len(), 5);
         assert!(line.iter().all(|&x| x == 1.0));
 
         // Test disk element
-        let disk = create_structuring_element("disk", 3).unwrap();
+        let disk = create_structuring_element("disk", 3).expect("Operation failed");
         assert_eq!(disk.len(), 7); // 2*3 + 1
 
         // Test invalid shape
@@ -507,7 +509,7 @@ mod tests {
             MorphologicalOperation::Dilation,
             10,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(reconstructed.len(), marker.len());
 

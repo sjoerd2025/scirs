@@ -405,7 +405,7 @@ fn demonstrate_format_validators() -> Result<(), Box<dyn std::error::Error>> {
 
     // Add a custom phone number format validator
     validator.add_format_validator("phone", |s| {
-        let phone_regex = regex::Regex::new(r"^\+?[\d\s\-\(\)]{10,15}$").unwrap();
+        let phone_regex = regex::Regex::new(r"^\+?[\d\s\-\(\)]{10,15}$").expect("Operation failed");
         phone_regex.is_match(s)
     });
 

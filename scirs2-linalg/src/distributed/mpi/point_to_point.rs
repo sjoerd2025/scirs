@@ -29,7 +29,7 @@ impl MPIPointToPoint {
             tag,
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_nanos()
         );
 
@@ -56,7 +56,7 @@ impl MPIPointToPoint {
                 RequestOperationType::PointToPoint,
             );
 
-            comm.active_operations.write().unwrap().insert(operation_id.clone(), mpi_request);
+            comm.active_operations.write().expect("Operation failed").insert(operation_id.clone(), mpi_request);
         }
 
         Ok(operation_id)
@@ -79,7 +79,7 @@ impl MPIPointToPoint {
             tag,
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_nanos()
         );
 
@@ -106,7 +106,7 @@ impl MPIPointToPoint {
                 RequestOperationType::PointToPoint,
             );
 
-            comm.active_operations.write().unwrap().insert(operation_id.clone(), mpi_request);
+            comm.active_operations.write().expect("Operation failed").insert(operation_id.clone(), mpi_request);
         }
 
         Ok(operation_id)
@@ -183,7 +183,7 @@ impl MPIPointToPoint {
 
     /// Wait for completion of a non-blocking operation
     pub fn wait(comm: &MPICommunicator, operation_id: &str) -> LinalgResult<MPIStatus> {
-        let mut active_ops = comm.active_operations.write().unwrap();
+        let mut active_ops = comm.active_operations.write().expect("Operation failed");
 
         if let Some(request) = active_ops.remove(operation_id) {
             unsafe {
@@ -218,7 +218,7 @@ impl MPIPointToPoint {
 
     /// Test if a non-blocking operation has completed
     pub fn test(comm: &MPICommunicator, operation_id: &str) -> LinalgResult<Option<MPIStatus>> {
-        let active_ops = comm.active_operations.read().unwrap();
+        let active_ops = comm.active_operations.read().expect("Operation failed");
 
         if let Some(request) = active_ops.get(operation_id) {
             unsafe {
@@ -239,7 +239,7 @@ impl MPIPointToPoint {
                 if flag != 0 {
                     // Operation completed
                     drop(active_ops);
-                    let mut active_ops = comm.active_operations.write().unwrap();
+                    let mut active_ops = comm.active_operations.write().expect("Operation failed");
                     if let Some(request) = active_ops.remove(operation_id) {
                         let elapsed = request.start_time().elapsed().as_secs_f64();
                         comm.update_stats(
@@ -271,7 +271,7 @@ impl MPIPointToPoint {
             ));
         }
 
-        let active_ops = comm.active_operations.read().unwrap();
+        let active_ops = comm.active_operations.read().expect("Operation failed");
         let mut requests: Vec<*mut c_void> = Vec::new();
         let mut valid_indices: Vec<usize> = Vec::new();
 
@@ -309,7 +309,7 @@ impl MPIPointToPoint {
 
             // Remove completed operation and update stats
             drop(active_ops);
-            let mut active_ops = comm.active_operations.write().unwrap();
+            let mut active_ops = comm.active_operations.write().expect("Operation failed");
             if let Some(request) = active_ops.remove(operation_id) {
                 let elapsed = request.start_time().elapsed().as_secs_f64();
                 comm.update_stats(
@@ -340,7 +340,7 @@ impl MPIPointToPoint {
 
     /// Cancel a non-blocking operation
     pub fn cancel(comm: &MPICommunicator, operation_id: &str) -> LinalgResult<()> {
-        let mut active_ops = comm.active_operations.write().unwrap();
+        let mut active_ops = comm.active_operations.write().expect("Operation failed");
 
         if let Some(request) = active_ops.remove(operation_id) {
             unsafe {

@@ -20,11 +20,12 @@ fn main() {
             1.0, 2.0, 1.0, 3.0, 1.0, 4.0, 1.0, 5.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let y_simple = array![5.0, 8.0, 11.0, 14.0, 17.0]; // y = 2 + 3x
 
-    let results = linear_regression(&x_simple.view(), &y_simple.view(), None).unwrap();
+    let results =
+        linear_regression(&x_simple.view(), &y_simple.view(), None).expect("Operation failed");
     println!("{}", results.summary());
 
     // Prediction example
@@ -35,9 +36,9 @@ fn main() {
             1.0, 7.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
-    let predictions = results.predict(&x_new.view()).unwrap();
+    let predictions = results.predict(&x_new.view()).expect("Operation failed");
     println!("Predictions for new data points:");
     println!("  x = 6 -> y = {:.1}", predictions[0]); // should be 20
     println!("  x = 7 -> y = {:.1}", predictions[1]); // should be 23
@@ -54,16 +55,17 @@ fn main() {
             1.0, 1.0, 2.0, 1.0, 2.0, 0.0, 1.0, 3.0, 1.0, 1.0, 4.0, 2.0, 1.0, 5.0, 0.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let y_multi = array![4.0, 9.0, 5.0, 10.0, 15.0, 11.0]; // y = 1 + 2*x1 + 3*x2
 
-    let results_multi = linear_regression(&x_multi.view(), &y_multi.view(), None).unwrap();
+    let results_multi =
+        linear_regression(&x_multi.view(), &y_multi.view(), None).expect("Operation failed");
     println!("{}", results_multi.summary());
 
     // Traditional multilinear regression (temporarily commented out due to linalg crate errors)
     /*
-    let (coeffs, residuals, rank, sv) = multilinear_regression(&x_multi.view(), &y_multi.view()).unwrap();
+    let (coeffs, residuals, rank, sv) = multilinear_regression(&x_multi.view(), &y_multi.view()).expect("Operation failed");
     println!("Traditional multilinear regression output:");
     println!("  Coefficients: {:.4?}", coeffs);
     println!("  Rank: {}", rank);
@@ -93,7 +95,7 @@ fn main() {
     ];
 
     // Fit polynomial of degree 2
-    let poly_coeffs = polyfit(&x_poly.view(), &y_poly.view(), 2).unwrap();
+    let poly_coeffs = polyfit(&x_poly.view(), &y_poly.view(), 2).expect("Operation failed");
     println!("Polynomial coefficients (highest degree first):");
     println!(
         "  y = {:.1}x^2 + {:.1}x + {:.1}",
@@ -109,7 +111,8 @@ fn main() {
         x_poly_design[[i, 2]] = x_poly[i].powi(2); // x^2
     }
 
-    let poly_results = linear_regression(&x_poly_design.view(), &y_poly.view(), None).unwrap();
+    let poly_results =
+        linear_regression(&x_poly_design.view(), &y_poly.view(), None).expect("Operation failed");
     println!("\nPolynomial regression using multiple linear regression:");
     println!("{}", poly_results.summary());
 
@@ -126,8 +129,11 @@ fn main() {
         let y_expected = 2.0 * x_f64.powi(2) - 3.0 * x_f64 + 1.0;
 
         // Create a design matrix row for prediction
-        let x_pred = Array2::from_shape_vec((1, 3), vec![1.0, x_f64, x_f64.powi(2)]).unwrap();
-        let y_pred = poly_results.predict(&x_pred.view()).unwrap()[0];
+        let x_pred = Array2::from_shape_vec((1, 3), vec![1.0, x_f64, x_f64.powi(2)])
+            .expect("Operation failed");
+        let y_pred = poly_results
+            .predict(&x_pred.view())
+            .expect("Operation failed")[0];
 
         println!(" {:.2} |   {:.4}   |   {:.4}", x_f64, y_expected, y_pred);
     }

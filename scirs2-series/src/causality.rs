@@ -854,7 +854,7 @@ impl CausalityTester {
                 distances.push((dist, j));
             }
 
-            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
             // Use nearest _neighbors to predict y value
             let mut weighted_sum = 0.0;
@@ -1154,7 +1154,9 @@ mod tests {
 
         let tester = CausalityTester::new();
         let config = GrangerConfig::default();
-        let result = tester.granger_causality(&x, &y, &config).unwrap();
+        let result = tester
+            .granger_causality(&x, &y, &config)
+            .expect("Operation failed");
 
         assert!(result.f_statistic >= 0.0);
         assert!(result.p_value >= 0.0 && result.p_value <= 1.0);
@@ -1174,7 +1176,9 @@ mod tests {
             bootstrap_samples: None,
         };
 
-        let result = tester.transfer_entropy(&x, &y, &config).unwrap();
+        let result = tester
+            .transfer_entropy(&x, &y, &config)
+            .expect("Operation failed");
 
         assert!(result.transfer_entropy >= 0.0);
         assert_eq!(result.bins, 5);
@@ -1199,12 +1203,13 @@ mod tests {
                 .collect(),
         );
 
-        let x = Array2::from_shape_vec((n, 1), (0..n).map(|i| i as f64).collect()).unwrap();
+        let x = Array2::from_shape_vec((n, 1), (0..n).map(|i| i as f64).collect())
+            .expect("Operation failed");
 
         let tester = CausalityTester::new();
         let result = tester
             .causal_impact_analysis(&y, &x, intervention_point, 0.95)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.pre_period_length, intervention_point);
         assert_eq!(result.post_period_length, n - intervention_point);

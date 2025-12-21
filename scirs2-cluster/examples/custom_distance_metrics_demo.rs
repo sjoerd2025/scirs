@@ -71,7 +71,7 @@ fn generate_testdata() -> Array2<f64> {
         data.push(y);
     }
 
-    Array2::from_shape_vec((90, 2), data).unwrap()
+    Array2::from_shape_vec((90, 2), data).expect("Operation failed")
 }
 
 #[allow(dead_code)]

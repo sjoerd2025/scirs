@@ -36,11 +36,11 @@ use crate::error::{MetricsError, Result};
 /// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let factors = local_density_factor(&x, &labels, None).unwrap();
+/// let factors = local_density_factor(&x, &labels, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn local_density_factor<F, S1, S2, D>(
@@ -137,7 +137,7 @@ where
     let mut ldf = HashMap::new();
 
     for &label in &unique_labels {
-        let cluster_indices = cluster_idx.get(&label).unwrap();
+        let cluster_indices = cluster_idx.get(&label).expect("Operation failed");
         if cluster_indices.is_empty() {
             continue;
         }
@@ -152,7 +152,7 @@ where
         }
 
         let avg_knn = if count > 0 {
-            cluster_knn_sum / F::from(count).unwrap()
+            cluster_knn_sum / F::from(count).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -197,11 +197,11 @@ where
 /// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let rdi = relative_density_index(&x, &labels, None).unwrap();
+/// let rdi = relative_density_index(&x, &labels, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn relative_density_index<F, S1, S2, D>(
@@ -304,13 +304,13 @@ where
 
     // Calculate average densities
     let avg_intra_density = if n_samples > 0 {
-        intra_density_sum / F::from(n_samples).unwrap()
+        intra_density_sum / F::from(n_samples).expect("Failed to convert to float")
     } else {
         F::zero()
     };
 
     let avg_inter_density = if n_samples > 0 {
-        inter_density_sum / F::from(n_samples).unwrap()
+        inter_density_sum / F::from(n_samples).expect("Failed to convert to float")
     } else {
         F::zero()
     };
@@ -353,11 +353,11 @@ where
 /// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let dbcv = density_based_cluster_validity(&x, &labels, None).unwrap();
+/// let dbcv = density_based_cluster_validity(&x, &labels, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn density_based_cluster_validity<F, S1, S2, D>(
@@ -430,7 +430,7 @@ where
     let mut sparseness_values = Vec::new();
 
     for &label in &unique_labels {
-        let indices = cluster_indices.get(&label).unwrap();
+        let indices = cluster_indices.get(&label).expect("Operation failed");
         if indices.len() <= 1 {
             // Single point clusters have zero sparseness
             sparseness_values.push(F::zero());
@@ -462,7 +462,7 @@ where
         // Calculate density sparseness (mutual reachability distance)
         let avg_core_distance = if !core_distances.is_empty() {
             core_distances.iter().fold(F::zero(), |sum, &val| sum + val)
-                / F::from(core_distances.len()).unwrap()
+                / F::from(core_distances.len()).expect("Operation failed")
         } else {
             F::zero()
         };
@@ -473,7 +473,7 @@ where
             let sum_squared_diff = core_distances
                 .iter()
                 .fold(F::zero(), |sum, &val| sum + (val - mean) * (val - mean));
-            sum_squared_diff / F::from(core_distances.len() - 1).unwrap()
+            sum_squared_diff / F::from(core_distances.len() - 1).expect("Operation failed")
         } else {
             F::zero()
         };
@@ -487,14 +487,14 @@ where
     let mut separation_matrix = vec![vec![F::zero(); unique_labels.len()]; unique_labels.len()];
 
     for (i, &label_i) in unique_labels.iter().enumerate() {
-        let indices_i = cluster_indices.get(&label_i).unwrap();
+        let indices_i = cluster_indices.get(&label_i).expect("Operation failed");
 
         for (j, &label_j) in unique_labels.iter().enumerate() {
             if i == j {
                 continue;
             }
 
-            let indices_j = cluster_indices.get(&label_j).unwrap();
+            let indices_j = cluster_indices.get(&label_j).expect("Operation failed");
 
             // Calculate minimum distance between clusters
             let mut min_dist = F::max_value();
@@ -544,7 +544,13 @@ where
     let mut weight_sum = F::zero();
 
     for (i, &label) in unique_labels.iter().enumerate() {
-        let weight = F::from(cluster_indices.get(&label).unwrap().len()).unwrap();
+        let weight = F::from(
+            cluster_indices
+                .get(&label)
+                .expect("Failed to convert to float")
+                .len(),
+        )
+        .expect("Operation failed");
         weighted_sum += weight * cluster_validity[i];
         weight_sum += weight;
     }
@@ -589,12 +595,13 @@ mod tests {
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = scirs2_core::ndarray::array![0, 0, 0, 1, 1, 1];
 
         // Calculate LDF with k=2 (small enough for this test case)
-        let factors = local_density_factor(&well_separated, &labels, Some(2)).unwrap();
+        let factors =
+            local_density_factor(&well_separated, &labels, Some(2)).expect("Operation failed");
 
         // Both clusters should have similar density factors
         assert!(factors.len() == 2);
@@ -609,15 +616,19 @@ mod tests {
                 5.0, 5.0, 6.0, 6.0, 7.0, 7.0, // Sparse cluster
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = scirs2_core::ndarray::array![0, 0, 0, 1, 1, 1];
 
         // Calculate LDF with k=2
-        let factors = local_density_factor(&varying_density, &labels, Some(2)).unwrap();
+        let factors =
+            local_density_factor(&varying_density, &labels, Some(2)).expect("Operation failed");
 
         // Dense cluster should have higher factor than sparse cluster
-        assert!(*factors.get(&0).unwrap() > *factors.get(&1).unwrap());
+        assert!(
+            *factors.get(&0).expect("Operation failed")
+                > *factors.get(&1).expect("Operation failed")
+        );
     }
 
     #[test]
@@ -629,12 +640,13 @@ mod tests {
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = scirs2_core::ndarray::array![0, 0, 0, 1, 1, 1];
 
         // Calculate RDI with k=2
-        let rdi = relative_density_index(&well_separated, &labels, Some(2)).unwrap();
+        let rdi =
+            relative_density_index(&well_separated, &labels, Some(2)).expect("Operation failed");
 
         // Well-separated clusters should have high RDI
         assert!(rdi > 1.0);
@@ -644,12 +656,13 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 3.0, 3.0, 3.0, 3.0, 4.0, 4.5, 5.0, 5.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = scirs2_core::ndarray::array![0, 0, 0, 1, 1, 1];
 
         // Calculate RDI for overlapping clusters
-        let rdi_overlapping = relative_density_index(&overlapping, &labels, Some(2)).unwrap();
+        let rdi_overlapping =
+            relative_density_index(&overlapping, &labels, Some(2)).expect("Operation failed");
 
         // Overlapping clusters should have lower RDI
         assert!(rdi > rdi_overlapping);
@@ -664,12 +677,13 @@ mod tests {
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = scirs2_core::ndarray::array![0, 0, 0, 1, 1, 1];
 
         // Calculate DBCV with k=2
-        let dbcv = density_based_cluster_validity(&well_separated, &labels, Some(2)).unwrap();
+        let dbcv = density_based_cluster_validity(&well_separated, &labels, Some(2))
+            .expect("Operation failed");
 
         // DBCV should be positive for well-separated clusters
         assert!(dbcv > 0.0);
@@ -679,14 +693,14 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 8.0, 9.0, 1.2, 2.2, 8.0, 9.0, 1.0, 2.0, 8.0, 9.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Labels not matching the natural clusters
         let bad_labels = scirs2_core::ndarray::array![0, 0, 0, 1, 1, 1];
 
         // Calculate DBCV for poor clustering
-        let bad_dbcv =
-            density_based_cluster_validity(&poor_clustering, &bad_labels, Some(2)).unwrap();
+        let bad_dbcv = density_based_cluster_validity(&poor_clustering, &bad_labels, Some(2))
+            .expect("Operation failed");
 
         // DBCV should be lower for poorly defined clusters
         assert!(dbcv > bad_dbcv);

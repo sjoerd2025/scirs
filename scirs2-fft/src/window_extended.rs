@@ -440,24 +440,25 @@ mod tests {
             },
             n,
         )
-        .unwrap();
+        .expect("Operation failed");
         assert_eq!(cheby.len(), n);
 
         // Test Lanczos window
-        let lanczos = get_extended_window(ExtendedWindow::Lanczos, n).unwrap();
+        let lanczos = get_extended_window(ExtendedWindow::Lanczos, n).expect("Operation failed");
         assert_eq!(lanczos.len(), n);
 
         // Test Poisson window
-        let poisson = get_extended_window(ExtendedWindow::Poisson { alpha: 2.0 }, n).unwrap();
+        let poisson = get_extended_window(ExtendedWindow::Poisson { alpha: 2.0 }, n)
+            .expect("Operation failed");
         assert_eq!(poisson.len(), n);
     }
 
     #[test]
     fn test_window_analysis() {
         let n = 64;
-        let window = crate::window::get_window(Window::Hann, n, true).unwrap();
+        let window = crate::window::get_window(Window::Hann, n, true).expect("Operation failed");
 
-        let props = analyze_window(&window, Some(1000.0)).unwrap();
+        let props = analyze_window(&window, Some(1000.0)).expect("Operation failed");
 
         // Check basic properties
         assert!(props.coherent_gain > 0.0);
@@ -472,15 +473,15 @@ mod tests {
         let windows = vec![
             (
                 "Hann".to_string(),
-                crate::window::get_window(Window::Hann, n, true).unwrap(),
+                crate::window::get_window(Window::Hann, n, true).expect("Operation failed"),
             ),
             (
                 "Hamming".to_string(),
-                crate::window::get_window(Window::Hamming, n, true).unwrap(),
+                crate::window::get_window(Window::Hamming, n, true).expect("Operation failed"),
             ),
         ];
 
-        let comparison = compare_windows(&windows).unwrap();
+        let comparison = compare_windows(&windows).expect("Operation failed");
         assert_eq!(comparison.len(), 2);
     }
 }

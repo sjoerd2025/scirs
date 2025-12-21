@@ -19,7 +19,7 @@ mod tensor_train_example {
         println!("Original tensor shape: {:?}", tensor.shape());
 
         // Decompose into tensor train format
-        let tt = tensor_train_decomposition(&tensor.view(), None, None).unwrap();
+        let tt = tensor_train_decomposition(&tensor.view(), None, None).expect("Operation failed");
 
         println!("Tensor Train ranks: {:?}", tt.ranks);
         println!("Tensor Train cores:");
@@ -28,7 +28,7 @@ mod tensor_train_example {
         }
 
         // Reconstruct the tensor
-        let reconstructed = tt.to_full().unwrap();
+        let reconstructed = tt.to_full().expect("Operation failed");
 
         println!("Reconstructed tensor shape: {:?}", reconstructed.shape());
         println!(
@@ -58,7 +58,8 @@ mod tensor_train_example {
         println!("Original 4D tensor shape: {:?}", tensor4d.shape());
 
         // Decompose with maximum rank 2
-        let tt_truncated = tensor_train_decomposition(&tensor4d.view(), Some(2), None).unwrap();
+        let tt_truncated =
+            tensor_train_decomposition(&tensor4d.view(), Some(2), None).expect("Operation failed");
 
         println!("Truncated Tensor Train ranks: {:?}", tt_truncated.ranks);
         println!("Truncated Tensor Train cores:");
@@ -67,7 +68,7 @@ mod tensor_train_example {
         }
 
         // Reconstruct the tensor
-        let reconstructed4d = tt_truncated.to_full().unwrap();
+        let reconstructed4d = tt_truncated.to_full().expect("Operation failed");
 
         println!("Reconstructed tensor shape: {:?}", reconstructed4d.shape());
         println!(
@@ -81,7 +82,7 @@ mod tensor_train_example {
 
         // Get specific elements from the tensor train
         let indices = [1, 2, 1];
-        let value = tt.get(&indices).unwrap();
+        let value = tt.get(&indices).expect("Operation failed");
         let original_value = tensor[[1, 2, 1]];
 
         println!("Original tensor at {:?}: {}", indices, original_value);
@@ -94,13 +95,13 @@ mod tensor_train_example {
 
         // Round the tensor train with different tolerances
         for &eps in &[1e-8, 1e-4, 1e-2] {
-            let rounded_tt = tt.round(eps).unwrap();
+            let rounded_tt = tt.round(eps).expect("Operation failed");
 
             println!("Rounded Tensor Train (epsilon = {:.0e}):", eps);
             println!("  Ranks: {:?}", rounded_tt.ranks);
 
             // Reconstruct and measure error
-            let reconstructed = rounded_tt.to_full().unwrap();
+            let reconstructed = rounded_tt.to_full().expect("Operation failed");
             println!(
                 "  Reconstruction error: {:.2e}",
                 compute_relative_error(&tensor.clone().into_dyn(), &reconstructed)

@@ -117,10 +117,10 @@ pub enum DistanceMetric {
 ///     5.2, 7.1,   // Cluster 2
 ///     0.0, 10.0,  // Noise
 ///     10.0, 0.0,  // Noise
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Run DBSCAN with eps=0.8 and min_samples=2
-/// let labels = dbscan(data.view(), 0.8, 2, Some(DistanceMetric::Euclidean)).unwrap();
+/// let labels = dbscan(data.view(), 0.8, 2, Some(DistanceMetric::Euclidean)).expect("Operation failed");
 ///
 /// // Print the results
 /// println!("Cluster assignments: {:?}", labels);
@@ -167,9 +167,11 @@ pub fn dbscan<F: Float + FromPrimitive + Debug + PartialOrd>(
                 DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
                 DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
                 DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
-                DistanceMetric::Minkowski => {
-                    distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
-                }
+                DistanceMetric::Minkowski => distance::minkowski(
+                    &point1,
+                    &point2,
+                    F::from(3.0).expect("Failed to convert constant to float"),
+                ),
             };
 
             distances[[i, j]] = dist;
@@ -284,8 +286,8 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Convert max_eps to f64 for use with default extraction
     let default_eps = match max_eps {
-        Some(_eps) => _eps.to_f64().unwrap() / 10.0, // Use smaller epsilon by default
-        None => 0.5,                                 // Default _eps if none provided
+        Some(_eps) => _eps.to_f64().expect("Operation failed") / 10.0, // Use smaller epsilon by default
+        None => 0.5, // Default _eps if none provided
     };
 
     Ok(optics::extract_dbscan_clustering(&result, default_eps))

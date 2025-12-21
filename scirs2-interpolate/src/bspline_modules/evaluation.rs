@@ -127,11 +127,13 @@ where
         }
 
         // Apply de Boor's algorithm (same as de_boor_eval)
+        // The standard recurrence is: alpha = (x - t_j) / (t_{j+k+1-r} - t_j)
+        // where j is the global coefficient index (idx + local_j)
         for r in 1..=self.k {
             for j in (r..=self.k).rev() {
-                let i = idx + j - r;
-                let left_idx = i;
-                let right_idx = i + self.k + 1 - r;
+                let global_j = idx + j;
+                let left_idx = global_j;
+                let right_idx = global_j + self.k + 1 - r;
 
                 // Ensure the indices are within bounds
                 if left_idx >= self.t.len() || right_idx >= self.t.len() {
@@ -304,7 +306,8 @@ where
                 let right_knot = self.t[starting_index + i + self.k + 1 - order];
 
                 if right_knot != left_knot {
-                    let factor = T::from_f64((self.k + 1 - order) as f64).unwrap();
+                    let factor =
+                        T::from_f64((self.k + 1 - order) as f64).expect("Operation failed");
                     let divisor = right_knot - left_knot;
 
                     let mut new_value = derivatives[order][i];

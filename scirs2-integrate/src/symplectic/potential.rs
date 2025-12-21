@@ -115,11 +115,11 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
     /// A harmonic oscillator Hamiltonian
     pub fn harmonic_oscillator() -> Self {
         let kinetic = |_t: F, p: &Array1<F>| -> F {
-            p.iter().map(|&pi| pi * pi).sum::<F>() * F::from_f64(0.5).unwrap()
+            p.iter().map(|&pi| pi * pi).sum::<F>() * F::from_f64(0.5).expect("Operation failed")
         };
 
         let potential = |_t: F, q: &Array1<F>| -> F {
-            q.iter().map(|&qi| qi * qi).sum::<F>() * F::from_f64(0.5).unwrap()
+            q.iter().map(|&qi| qi * qi).sum::<F>() * F::from_f64(0.5).expect("Operation failed")
         };
 
         let kinetic_grad = |_t: F, p: &Array1<F>| -> Array1<F> { p.to_owned() };
@@ -137,7 +137,9 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
     ///
     /// A pendulum Hamiltonian
     pub fn pendulum() -> Self {
-        let kinetic = |_t: F, p: &Array1<F>| -> F { F::from_f64(0.5).unwrap() * p[0] * p[0] };
+        let kinetic = |_t: F, p: &Array1<F>| -> F {
+            F::from_f64(0.5).expect("Operation failed") * p[0] * p[0]
+        };
 
         let potential = |_t: F, q: &Array1<F>| -> F { -q[0].cos() };
 
@@ -157,12 +159,13 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
     ///
     /// A Kepler problem Hamiltonian
     pub fn kepler_problem() -> Self {
-        let kinetic =
-            |_t: F, p: &Array1<F>| -> F { F::from_f64(0.5).unwrap() * (p[0] * p[0] + p[1] * p[1]) };
+        let kinetic = |_t: F, p: &Array1<F>| -> F {
+            F::from_f64(0.5).expect("Operation failed") * (p[0] * p[0] + p[1] * p[1])
+        };
 
         let potential = |_t: F, q: &Array1<F>| -> F {
             let r = (q[0] * q[0] + q[1] * q[1]).sqrt();
-            if r < F::from_f64(1e-10).unwrap() {
+            if r < F::from_f64(1e-10).expect("Operation failed") {
                 F::zero()
             } else {
                 -F::one() / r
@@ -175,7 +178,7 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
             let r2 = q[0] * q[0] + q[1] * q[1];
             let r = r2.sqrt();
 
-            if r < F::from_f64(1e-10).unwrap() {
+            if r < F::from_f64(1e-10).expect("Operation failed") {
                 Array1::zeros(q.len())
             } else {
                 let r3 = r * r2;
@@ -195,7 +198,7 @@ impl<F: IntegrateFloat> HamiltonianFn<F> for SeparableHamiltonian<F> {
             Ok(grad(t, p))
         } else {
             // Numerical approximation using finite differences
-            let h = F::from_f64(1e-6).unwrap();
+            let h = F::from_f64(1e-6).expect("Operation failed");
             let mut dq = Array1::zeros(p.len());
 
             for i in 0..p.len() {
@@ -208,7 +211,7 @@ impl<F: IntegrateFloat> HamiltonianFn<F> for SeparableHamiltonian<F> {
                 let t_plus = (self.kinetic_energy)(t, &p_plus);
                 let t_minus = (self.kinetic_energy)(t, &p_minus);
 
-                dq[i] = (t_plus - t_minus) / (F::from_f64(2.0).unwrap() * h);
+                dq[i] = (t_plus - t_minus) / (F::from_f64(2.0).expect("Operation failed") * h);
             }
 
             Ok(dq)
@@ -223,7 +226,7 @@ impl<F: IntegrateFloat> HamiltonianFn<F> for SeparableHamiltonian<F> {
             Ok(dp)
         } else {
             // Numerical approximation using finite differences
-            let h = F::from_f64(1e-6).unwrap();
+            let h = F::from_f64(1e-6).expect("Operation failed");
             let mut dp = Array1::zeros(q.len());
 
             for i in 0..q.len() {
@@ -237,7 +240,7 @@ impl<F: IntegrateFloat> HamiltonianFn<F> for SeparableHamiltonian<F> {
                 let v_minus = (self.potential_energy)(t, &q_minus);
 
                 // Negative gradient
-                dp[i] = -(v_plus - v_minus) / (F::from_f64(2.0).unwrap() * h);
+                dp[i] = -(v_plus - v_minus) / (F::from_f64(2.0).expect("Operation failed") * h);
             }
 
             Ok(dp)
@@ -354,8 +357,8 @@ mod tests {
         let t0 = 0.0_f64;
 
         // Verify equations of motion
-        let dq = system.dq_dt(t0, &q0, &p0).unwrap();
-        let dp = system.dp_dt(t0, &q0, &p0).unwrap();
+        let dq = system.dq_dt(t0, &q0, &p0).expect("Operation failed");
+        let dp = system.dp_dt(t0, &q0, &p0).expect("Operation failed");
 
         // For harmonic oscillator:
         // dq/dt = p
@@ -366,7 +369,7 @@ mod tests {
         // Verify Hamiltonian function
         let h_fn = system.hamiltonian();
         if let Some(hamiltonian) = h_fn {
-            let energy = hamiltonian(t0, &q0, &p0).unwrap();
+            let energy = hamiltonian(t0, &q0, &p0).expect("Operation failed");
             // H = p²/2 + q²/2 = 0 + 0.5 = 0.5
             assert!((energy - 0.5_f64).abs() < 1e-10);
         } else {
@@ -395,7 +398,7 @@ mod tests {
         let integrator = StormerVerlet::new();
         let result = integrator
             .integrate(&system, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Failed to integrate");
 
         // After one period, should be close to initial state
         let q_final = &result.q[result.q.len() - 1];
@@ -443,8 +446,8 @@ mod tests {
         let t0 = 0.0_f64;
 
         // Verify equations of motion
-        let dq = system.dq_dt(t0, &q0, &p0).unwrap();
-        let dp = system.dp_dt(t0, &q0, &p0).unwrap();
+        let dq = system.dq_dt(t0, &q0, &p0).expect("Operation failed");
+        let dp = system.dp_dt(t0, &q0, &p0).expect("Operation failed");
 
         assert!((dq[0] - p0[0]).abs() < 1e-10_f64);
         assert!((dp[0] + q0[0]).abs() < 1e-10_f64);
@@ -452,7 +455,7 @@ mod tests {
         // Verify Hamiltonian function
         let h_fn = system.hamiltonian();
         if let Some(hamiltonian) = h_fn {
-            let energy = hamiltonian(t0, &q0, &p0).unwrap();
+            let energy = hamiltonian(t0, &q0, &p0).expect("Operation failed");
             // H = p²/2 + q²/2 = 0 + 0.5 = 0.5
             assert!((energy - 0.5_f64).abs() < 1e-10);
         } else {

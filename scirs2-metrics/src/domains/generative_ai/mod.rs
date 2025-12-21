@@ -57,7 +57,9 @@ mod tests {
         let gan_metrics = GANEvaluationMetrics::<f64>::new();
         let features = mock_inception_features();
 
-        let result = gan_metrics.inception_score(&features, 2).unwrap();
+        let result = gan_metrics
+            .inception_score(&features, 2)
+            .expect("Operation failed");
 
         assert!(result.mean_score > 0.0);
         assert!(result.std_score >= 0.0);
@@ -77,7 +79,7 @@ mod tests {
 
         let fid = gan_metrics
             .frechet_inception_distance(&real_features, &fake_features)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(fid >= 0.0);
     }
@@ -89,7 +91,7 @@ mod tests {
 
         let uniformity = contrastive_metrics
             .uniformity(&representations, 2.0)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(uniformity.is_finite());
     }
@@ -102,7 +104,7 @@ mod tests {
 
         let alignment = contrastive_metrics
             .alignment(&anchors, &positives, 2.0)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(alignment >= 0.0);
     }
@@ -119,7 +121,7 @@ mod tests {
 
         let result = ssl_metrics
             .linear_probing_accuracy(&train_repr, &train_labels, &test_repr, &test_labels)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.overall_accuracy >= 0.0);
         assert!(result.overall_accuracy <= 1.0);
@@ -135,7 +137,7 @@ mod tests {
 
         let accuracy = foundation_metrics
             .zero_shot_accuracy(&predictions, &targets)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(accuracy >= 0.0);
         assert!(accuracy <= 1.0);
@@ -155,7 +157,7 @@ mod tests {
 
         let result = multimodal_metrics
             .cross_modal_retrieval(&query_emb, &candidate_emb, &gt_pairs)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.mean_reciprocal_rank >= 0.0);
         assert!(result.mean_reciprocal_rank <= 1.0);

@@ -213,13 +213,13 @@ impl MemoryProfiler {
         };
 
         {
-            let mut current = self.current_session.lock().unwrap();
+            let mut current = self.current_session.lock().expect("Operation failed");
             *current = Some(session);
         }
 
         // Reset collector and analytics
         self.collector.reset();
-        self.analytics.lock().unwrap().clear();
+        self.analytics.lock().expect("Operation failed").clear();
 
         sessionid
     }
@@ -227,13 +227,13 @@ impl MemoryProfiler {
     /// End the current profiling session and generate results
     pub fn end_session(&self) -> Option<ProfilingResult> {
         let session = {
-            let mut current = self.current_session.lock().unwrap();
+            let mut current = self.current_session.lock().expect("Operation failed");
             current.take()?
         };
 
         // Update session with final metrics
         let memory_report = self.collector.generate_report();
-        let analytics = self.analytics.lock().unwrap();
+        let analytics = self.analytics.lock().expect("Operation failed");
         let leak_results = analytics.get_leak_detection_results();
         let pattern_analysis = analytics.get_pattern_analysis_results();
 
@@ -268,7 +268,7 @@ impl MemoryProfiler {
 
         // Store result in history
         {
-            let mut history = self.results_history.write().unwrap();
+            let mut history = self.results_history.write().expect("Operation failed");
             history.push(result.clone());
 
             // Limit history size
@@ -293,7 +293,10 @@ impl MemoryProfiler {
         self.collector.record_event(event.clone());
 
         // Record in analytics
-        self.analytics.lock().unwrap().record_event(event);
+        self.analytics
+            .lock()
+            .expect("Operation failed")
+            .record_event(event);
     }
 
     /// Start background profiling thread
@@ -318,7 +321,7 @@ impl MemoryProfiler {
                 if last_report_time.elapsed() >= interval {
                     // Generate periodic report
                     let memory_report = collector.generate_report();
-                    let analytics_guard = analytics.lock().unwrap();
+                    let analytics_guard = analytics.lock().expect("Operation failed");
                     let leak_results = analytics_guard.get_leak_detection_results();
                     let pattern_analysis = analytics_guard.get_pattern_analysis_results();
                     drop(analytics_guard);
@@ -542,18 +545,24 @@ impl MemoryProfiler {
 
     /// Get profiling results history
     pub fn get_results_history(&self) -> Vec<ProfilingResult> {
-        self.results_history.read().unwrap().clone()
+        self.results_history
+            .read()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Get current session information
     pub fn get_current_session(&self) -> Option<ProfilingSession> {
-        self.current_session.lock().unwrap().clone()
+        self.current_session
+            .lock()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Generate a quick health check report
     pub fn health_check(&self) -> ProfilingSummary {
         let memory_report = self.collector.generate_report();
-        let analytics = self.analytics.lock().unwrap();
+        let analytics = self.analytics.lock().expect("Operation failed");
         let leak_results = analytics.get_leak_detection_results();
         let pattern_analysis = analytics.get_pattern_analysis_results();
         drop(analytics);
@@ -564,9 +573,12 @@ impl MemoryProfiler {
     /// Clear all profiling data
     pub fn clear_all_data(&self) {
         self.collector.reset();
-        self.analytics.lock().unwrap().clear();
-        self.results_history.write().unwrap().clear();
-        *self.current_session.lock().unwrap() = None;
+        self.analytics.lock().expect("Operation failed").clear();
+        self.results_history
+            .write()
+            .expect("Operation failed")
+            .clear();
+        *self.current_session.lock().expect("Operation failed") = None;
     }
 }
 
@@ -608,7 +620,7 @@ mod tests {
         let result = profiler.end_session();
         assert!(result.is_some());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert_eq!(result.session.id, "test_session");
         assert!(result.session.duration_micros > 0);
         assert!(profiler.get_current_session().is_none());

@@ -75,7 +75,8 @@ where
     // Process chunks
     let chunk_results = input_mmap.process_chunks(strategy.clone(), |chunk_data, chunk_idx| {
         // Create ArrayView from chunk data
-        let chunk_array = Array::from_shape_vec(chunk_data.len(), chunk_data.to_vec()).unwrap();
+        let chunk_array =
+            Array::from_shape_vec(chunk_data.len(), chunk_data.to_vec()).expect("Operation failed");
 
         let chunk_view = chunk_array.view().into_dyn();
 
@@ -283,12 +284,13 @@ where
     let half_size = kernel_size / 2;
 
     let mut kernel = Array1::<T>::zeros(kernel_size);
-    let norm_factor = T::from_f64(1.0 / (sigma_f64 * (2.0 * std::f64::consts::PI).sqrt())).unwrap();
+    let norm_factor = T::from_f64(1.0 / (sigma_f64 * (2.0 * std::f64::consts::PI).sqrt()))
+        .expect("Operation failed");
 
     for i in 0..kernel_size {
         let x = (i as i32 - half_size as i32) as f64;
         let value = (-0.5 * x * x / (sigma_f64 * sigma_f64)).exp();
-        kernel[i] = norm_factor * T::from_f64(value).unwrap();
+        kernel[i] = norm_factor * T::from_f64(value).expect("Operation failed");
     }
 
     // Normalize
@@ -507,7 +509,7 @@ mod tests {
             .enable_zero_copy(true)
             .build();
 
-        let result = gaussian_filter_auto(&input, &sigma, Some(config)).unwrap();
+        let result = gaussian_filter_auto(&input, &sigma, Some(config)).expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
 
@@ -526,7 +528,7 @@ mod tests {
             FilterOp::Uniform { size: vec![3, 3] },
         ];
 
-        let result = filter_pipeline(&input, operations, None).unwrap();
+        let result = filter_pipeline(&input, operations, None).expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
     }

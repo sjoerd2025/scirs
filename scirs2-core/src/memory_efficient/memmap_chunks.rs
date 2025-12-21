@@ -67,7 +67,7 @@
 //!    # use scirs2_core::memory_efficient::{create_mmap, AccessMode, ChunkingStrategy, MemoryMappedChunksParallel};
 //!    # use scirs2_core::ndarray::Array1;
 //!    # let data = Array1::<f64>::zeros(1000);
-//!    # let mmap = create_mmap(&data, "/tmp/data.bin", AccessMode::Write, 0).unwrap();
+//!    # let mmap = create_mmap(&data, "/tmp/data.bin", AccessMode::Write, 0).expect("Operation failed");
 //!    // Process chunks in parallel
 //!    let results = mmap.process_chunks_parallel(
 //!        ChunkingStrategy::Fixed(1000),
@@ -127,7 +127,7 @@ pub trait MemoryMappedChunks<A: Clone + Copy + 'static + Send + Sync> {
     /// // Create a memory-mapped array with 100 elements
     /// let data = Array1::<f64>::linspace(0., 99., 100);
     /// let file_path = "example.bin";  // In practice, use a proper temporary path
-    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).unwrap();
+    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).expect("Operation failed");
     ///
     /// // Check how many chunks we'll get with different strategies
     /// assert_eq!(mmap.chunk_count(ChunkingStrategy::Fixed(10)), 10);  // 10 chunks of 10 elements each
@@ -159,7 +159,7 @@ pub trait MemoryMappedChunks<A: Clone + Copy + 'static + Send + Sync> {
     /// // Create a memory-mapped array with 20 elements (small numbers to avoid overflow)
     /// let data = Array1::<f64>::from_vec((0..20).map(|x| x as f64).collect());
     /// let file_path = "example.bin";  // In practice, use a proper temporary path
-    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).unwrap();
+    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).expect("Operation failed");
     ///
     /// // Calculate the sum of each chunk
     /// let chunk_sums = mmap.process_chunks(
@@ -195,7 +195,7 @@ pub trait MemoryMappedChunks<A: Clone + Copy + 'static + Send + Sync> {
     /// // Create a memory-mapped array with 100 zeros
     /// let data = Array1::<f64>::zeros(100);
     /// let file_path = "example.bin";  // In practice, use a proper temporary path
-    /// let mut mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).unwrap();
+    /// let mut mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).expect("Operation failed");
     ///
     /// // Modify each chunk: set elements to their index
     /// mmap.process_chunks_mut(
@@ -253,7 +253,7 @@ pub trait MemoryMappedChunksParallel<A: Clone + Copy + 'static + Send + Sync + S
     /// // Create a memory-mapped array with 20 elements (small numbers to avoid overflow)
     /// let data = Array1::<i32>::from_vec((1..=20).collect());
     /// let file_path = "example.bin";  // In practice, use a proper temporary path
-    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).unwrap();
+    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).expect("Operation failed");
     ///
     /// // Calculate the sum of each chunk in parallel
     /// let chunk_sums = mmap.process_chunks_parallel(
@@ -291,7 +291,7 @@ pub trait MemoryMappedChunksParallel<A: Clone + Copy + 'static + Send + Sync + S
     /// // Create a memory-mapped array with 100 zeros
     /// let data = Array1::<f64>::zeros(100);
     /// let file_path = "example.bin";  // In practice, use a proper temporary path
-    /// let mut mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).unwrap();
+    /// let mut mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).expect("Operation failed");
     ///
     /// // Modify each chunk in parallel: set elements to their index
     /// mmap.process_chunks_mut_parallel(
@@ -330,7 +330,7 @@ pub trait MemoryMappedChunksParallel<A: Clone + Copy + 'static + Send + Sync + S
 /// // Create a memory-mapped array
 /// let data = Array1::<f64>::linspace(0., 99., 100);
 /// let file_path = "example.bin";  // In practice, use a proper temporary path
-/// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).unwrap();
+/// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).expect("Operation failed");
 ///
 /// // Process chunks using iterator
 /// let mut sum = 0.0;
@@ -433,13 +433,13 @@ pub trait MemoryMappedChunkIter<A: Clone + Copy + 'static + Send + Sync> {
     /// // Create a memory-mapped array
     /// let data = Array1::<f64>::linspace(0., 99., 100);
     /// let file_path = "example.bin";  // In practice, use a proper temporary path
-    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).unwrap();
+    /// let mmap = create_mmap(&data, file_path.as_ref(), AccessMode::Write, 0).expect("Operation failed");
     ///
     /// // Create a chunk iterator with chunks of size 25
     /// let mut iter = mmap.chunks(ChunkingStrategy::Fixed(25));
     ///
     /// // Get the first chunk (elements 0-24)
-    /// let chunk1 = iter.next().unwrap();
+    /// let chunk1 = iter.next().expect("Operation failed");
     /// assert_eq!(chunk1.len(), 25);
     /// assert_eq!(chunk1[0], 0.0);
     /// assert_eq!(chunk1[24], 24.0);
@@ -567,7 +567,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
                     array_1d
                         .slice(crate::s![start_idx..end_idx])
                         .as_slice()
-                        .unwrap(),
+                        .expect("Operation failed"),
                 );
             } else {
                 continue;

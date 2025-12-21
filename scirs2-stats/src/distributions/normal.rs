@@ -37,7 +37,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// ```
     /// use scirs2_stats::distributions::normal::Normal;
     ///
-    /// let norm = Normal::new(0.0f64, 1.0).unwrap();
+    /// let norm = Normal::new(0.0f64, 1.0).expect("Operation failed");
     /// ```
     pub fn new(loc: F, scale: F) -> StatsResult<Self> {
         // Validate scale parameter
@@ -74,7 +74,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// ```
     /// use scirs2_stats::distributions::normal::Normal;
     ///
-    /// let norm = Normal::new(0.0f64, 1.0).unwrap();
+    /// let norm = Normal::new(0.0f64, 1.0).expect("Operation failed");
     /// let pdf_at_zero = norm.pdf(0.0);
     /// assert!((pdf_at_zero - 0.3989423).abs() < 1e-7);
     /// ```
@@ -105,7 +105,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// ```
     /// use scirs2_stats::distributions::normal::Normal;
     ///
-    /// let norm = Normal::new(0.0f64, 1.0).unwrap();
+    /// let norm = Normal::new(0.0f64, 1.0).expect("Operation failed");
     /// let cdf_at_zero = norm.cdf(0.0);
     /// assert!((cdf_at_zero - 0.5).abs() < 1e-10);
     /// ```
@@ -142,8 +142,8 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// ```
     /// use scirs2_stats::distributions::normal::Normal;
     ///
-    /// let norm = Normal::new(0.0f64, 1.0).unwrap();
-    /// let x = norm.ppf(0.975).unwrap();
+    /// let norm = Normal::new(0.0f64, 1.0).expect("Operation failed");
+    /// let x = norm.ppf(0.975).expect("Operation failed");
     /// assert!((x - 1.96).abs() < 1e-2);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -205,8 +205,8 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// ```
     /// use scirs2_stats::distributions::normal::Normal;
     ///
-    /// let norm = Normal::new(0.0f64, 1.0).unwrap();
-    /// let samples = norm.rvs(1000).unwrap();
+    /// let norm = Normal::new(0.0f64, 1.0).expect("Operation failed");
+    /// let samples = norm.rvs(1000).expect("Operation failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
@@ -215,7 +215,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
 
         for _ in 0..size {
             let sample = self.rand_distr.sample(&mut rng);
-            samples.push(F::from(sample).unwrap());
+            samples.push(F::from(sample).expect("Failed to convert to float"));
         }
 
         Ok(Array1::from(samples))
@@ -235,12 +235,12 @@ fn erf<F: Float>(x: F) -> F {
     }
 
     // Constants for the approximation
-    let a1 = F::from(0.254829592).unwrap();
-    let a2 = F::from(-0.284496736).unwrap();
-    let a3 = F::from(1.421413741).unwrap();
-    let a4 = F::from(-1.453152027).unwrap();
-    let a5 = F::from(1.061405429).unwrap();
-    let p = F::from(0.3275911).unwrap();
+    let a1 = F::from(0.254829592).expect("Failed to convert constant to float");
+    let a2 = F::from(-0.284496736).expect("Failed to convert constant to float");
+    let a3 = F::from(1.421413741).expect("Failed to convert constant to float");
+    let a4 = F::from(-1.453152027).expect("Failed to convert constant to float");
+    let a5 = F::from(1.061405429).expect("Failed to convert constant to float");
+    let p = F::from(0.3275911).expect("Failed to convert constant to float");
 
     // Calculate the approximation
     let t = one / (one + p * x);
@@ -269,10 +269,10 @@ impl<F: Float + NumCast + std::fmt::Display> Distribution<F> for Normal<F> {
     }
 
     fn entropy(&self) -> F {
-        let half = F::from(0.5).unwrap();
-        let two = F::from(2.0).unwrap();
-        let pi = F::from(std::f64::consts::PI).unwrap();
-        let e = F::from(std::f64::consts::E).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
+        let two = F::from(2.0).expect("Failed to convert constant to float");
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+        let e = F::from(std::f64::consts::E).expect("Failed to convert to float");
 
         half + half * (two * pi * e * self.scale * self.scale).ln()
     }
@@ -309,12 +309,12 @@ mod tests {
     #[test]
     fn test_normal_creation() {
         // Standard normal
-        let norm = Normal::new(0.0, 1.0).unwrap();
+        let norm = Normal::new(0.0, 1.0).expect("Operation failed");
         assert_eq!(norm.loc, 0.0);
         assert_eq!(norm.scale, 1.0);
 
         // Custom normal
-        let custom = Normal::new(5.0, 2.0).unwrap();
+        let custom = Normal::new(5.0, 2.0).expect("Operation failed");
         assert_eq!(custom.loc, 5.0);
         assert_eq!(custom.scale, 2.0);
 
@@ -326,7 +326,7 @@ mod tests {
     #[test]
     fn test_normal_pdf() {
         // Standard normal PDF values
-        let norm = Normal::new(0.0, 1.0).unwrap();
+        let norm = Normal::new(0.0, 1.0).expect("Operation failed");
 
         // PDF at x = 0
         let pdf_at_zero = norm.pdf(0.0);
@@ -341,14 +341,14 @@ mod tests {
         assert_relative_eq!(pdf_at_neg_one, 0.2419707, epsilon = 1e-7);
 
         // Custom normal
-        let custom = Normal::new(5.0, 2.0).unwrap();
+        let custom = Normal::new(5.0, 2.0).expect("Operation failed");
         assert_relative_eq!(custom.pdf(5.0), 0.19947114, epsilon = 1e-7);
     }
 
     #[test]
     fn test_normal_cdf() {
         // Standard normal CDF values
-        let norm = Normal::new(0.0, 1.0).unwrap();
+        let norm = Normal::new(0.0, 1.0).expect("Operation failed");
 
         // CDF at x = 0
         let cdf_at_zero = norm.cdf(0.0);
@@ -366,18 +366,18 @@ mod tests {
     #[test]
     fn test_normal_ppf() {
         // Standard normal quantiles
-        let norm = Normal::new(0.0, 1.0).unwrap();
+        let norm = Normal::new(0.0, 1.0).expect("Operation failed");
 
         // Median (50th percentile)
-        let median = norm.ppf(0.5).unwrap();
+        let median = norm.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(median, 0.0, epsilon = 1e-5);
 
         // 97.5th percentile (often used for confidence intervals)
-        let p975 = norm.ppf(0.975).unwrap();
+        let p975 = norm.ppf(0.975).expect("Operation failed");
         assert_relative_eq!(p975, 1.96, epsilon = 1e-2);
 
         // 2.5th percentile
-        let p025 = norm.ppf(0.025).unwrap();
+        let p025 = norm.ppf(0.025).expect("Operation failed");
         assert_relative_eq!(p025, -1.96, epsilon = 1e-2);
 
         // Error cases
@@ -387,10 +387,10 @@ mod tests {
 
     #[test]
     fn test_normal_rvs() {
-        let norm = Normal::new(0.0, 1.0).unwrap();
+        let norm = Normal::new(0.0, 1.0).expect("Operation failed");
 
         // Generate samples
-        let samples = norm.rvs(1000).unwrap();
+        let samples = norm.rvs(1000).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 1000);

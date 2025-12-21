@@ -372,19 +372,19 @@ impl QuantumParallelProcessor {
         let processing_weights = self.determine_processing_weights(data)?;
 
         {
-            let mut state = self.quantum_state.write().unwrap();
+            let mut state = self.quantum_state.write().expect("Operation failed");
             state.superposition(&processing_weights)?;
         }
 
         // Apply quantum evolution for optimization
         {
-            let mut state = self.quantum_state.write().unwrap();
+            let mut state = self.quantum_state.write().expect("Operation failed");
             state.evolve(self.params.coherence_time)?;
         }
 
         // Measure quantum state to select processing strategy
         let selected_strategy = {
-            let state = self.quantum_state.read().unwrap();
+            let state = self.quantum_state.read().expect("Operation failed");
             state.measure()
         };
 
@@ -546,7 +546,7 @@ impl QuantumParallelProcessor {
 
     /// Record performance for adaptive optimization
     fn record_performance(&self, efficiency: f32) {
-        let mut history = self.performance_history.write().unwrap();
+        let mut history = self.performance_history.write().expect("Operation failed");
         history.push(efficiency);
         if history.len() > 1000 {
             history.remove(0);
@@ -555,7 +555,7 @@ impl QuantumParallelProcessor {
 
     /// Optimize parameters using quantum annealing
     pub fn optimize_parameters(&mut self) -> Result<()> {
-        let history = self.performance_history.read().unwrap();
+        let history = self.performance_history.read().expect("Operation failed");
         if history.len() < 10 {
             return Ok(()); // Not enough data for optimization
         }
@@ -571,7 +571,7 @@ impl QuantumParallelProcessor {
             self.params.coherence_time,
         ];
 
-        let mut optimizer = self.optimizer.write().unwrap();
+        let mut optimizer = self.optimizer.write().expect("Operation failed");
         let optimized_params = optimizer.optimize(&initial_params)?;
 
         // Update parameters
@@ -586,7 +586,7 @@ impl QuantumParallelProcessor {
 
     /// Get current performance statistics
     pub fn get_performance_stats(&self) -> QuantumPerformanceStats {
-        let history = self.performance_history.read().unwrap();
+        let history = self.performance_history.read().expect("Operation failed");
 
         if history.is_empty() {
             return QuantumPerformanceStats::default();
@@ -639,7 +639,7 @@ mod tests {
     fn test_quantum_superposition() {
         let mut state = QuantumState::new(3);
         let weights = vec![0.6, 0.8, 0.0];
-        state.superposition(&weights).unwrap();
+        state.superposition(&weights).expect("Operation failed");
 
         // Check normalization
         let norm_squared: f32 = state.amplitudes.iter().map(|&a| a * a).sum();
@@ -650,7 +650,7 @@ mod tests {
     fn test_quantum_measurement() {
         let mut state = QuantumState::new(4);
         let weights = vec![0.5, 0.5, 0.5, 0.5];
-        state.superposition(&weights).unwrap();
+        state.superposition(&weights).expect("Operation failed");
 
         let measurement = state.measure();
         assert!(measurement < 4);
@@ -660,7 +660,9 @@ mod tests {
     fn test_quantum_annealing_optimizer() {
         let mut optimizer = QuantumAnnealingOptimizer::new(5);
         let initial_params = vec![0.1, 0.2, 0.3, 0.4, 0.5];
-        let result = optimizer.optimize(&initial_params).unwrap();
+        let result = optimizer
+            .optimize(&initial_params)
+            .expect("Operation failed");
 
         assert_eq!(result.len(), 5);
         assert!(result.iter().all(|&x| (0.0..=1.0).contains(&x)));
@@ -670,7 +672,9 @@ mod tests {
     fn test_quantum_parallel_processor() {
         let mut processor = QuantumParallelProcessor::new(5);
         let test_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
-        let result = processor.process_quantum_parallel(&test_data).unwrap();
+        let result = processor
+            .process_quantum_parallel(&test_data)
+            .expect("Operation failed");
 
         assert!(!result.is_empty());
         assert!(result.len() >= test_data.len());

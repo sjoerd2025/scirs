@@ -59,7 +59,7 @@ fn generate_regression_dataset<
         // Generate input features
         let mut input_features = Vec::with_capacity(input_dim);
         for _ in 0..input_dim {
-            input_features.push(F::from(rng.gen_range(0.0..1.0)).unwrap());
+            input_features.push(F::from(rng.gen_range(0.0..1.0)).expect("Operation failed"));
         }
         features_vec.extend(input_features.iter());
         // Generate target values (simple linear relationship plus noise)
@@ -67,11 +67,11 @@ fn generate_regression_dataset<
         for o in 0..output_dim {
             let mut val = F::zero();
             for j in 0..input_dim {
-                let weight = F::from(((j + o) % input_dim) as f64 / input_dim as f64).unwrap();
+                let weight = F::from(((j + o) % input_dim) as f64 / input_dim as f64).expect("Operation failed");
                 val = val + input_features[j] * weight;
             }
             // Add noise
-            let noise = F::from(rng.gen_range(-0.1..0.1)).unwrap();
+            let noise = F::from(rng.gen_range(-0.1..0.1)).expect("Operation failed");
             val = val + noise;
             target_values.push(val);
         labels_vec.extend(target_values.iter());
@@ -91,7 +91,7 @@ impl<F: Float + Debug + ScalarOperand> CosineAnnealingScheduler<F> {
 impl<F: Float + Debug + ScalarOperand> LearningRateScheduler<F> for CosineAnnealingScheduler<F> {
     fn get_learning_rate(&mut self, progress: f64) -> Result<F> {
         let cosine = (1.0 + (std::f64::consts::PI * progress).cos()) / 2.0;
-        let lr = self.min_lr + (self.initial_lr - self.min_lr) * F::from(cosine).unwrap();
+        let lr = self.min_lr + (self.initial_lr - self.min_lr) * F::from(cosine).expect("Failed to convert to float");
         Ok(lr)
 #[allow(dead_code)]
 fn main() -> Result<()> {

@@ -9,6 +9,12 @@ use scirs2_core::random::prelude::*;
 use scirs2_core::random::{Distribution, FisherF as RandFisherF};
 use std::f64::consts::PI;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<T: Float + NumCast>(value: f64) -> T {
+    T::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// F distribution structure
 pub struct F<T: Float> {
     /// Degrees of freedom for numerator
@@ -43,7 +49,7 @@ impl<T: Float + NumCast> F<T> {
     /// use scirs2_stats::distributions::f::F;
     ///
     /// // F distribution with 2 and 10 degrees of freedom
-    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
+    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).expect("Test/example failed");
     /// ```
     pub fn new(dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<Self> {
         if dfn <= T::zero() {
@@ -65,8 +71,8 @@ impl<T: Float + NumCast> F<T> {
         }
 
         // Convert to f64 for rand_distr
-        let dfn_f64 = <f64 as NumCast>::from(dfn).unwrap();
-        let dfd_f64 = <f64 as NumCast>::from(dfd).unwrap();
+        let dfn_f64 = <f64 as NumCast>::from(dfn).expect("Test/example failed");
+        let dfd_f64 = <f64 as NumCast>::from(dfd).expect("Test/example failed");
 
         match RandFisherF::new(dfn_f64, dfd_f64) {
             Ok(rand_distr) => Ok(F {
@@ -97,7 +103,7 @@ impl<T: Float + NumCast> F<T> {
     /// ```
     /// use scirs2_stats::distributions::f::F;
     ///
-    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
+    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).expect("Test/example failed");
     /// let pdf_at_one = f_dist.pdf(1.0);
     /// assert!((pdf_at_one - 0.335).abs() < 1e-3);
     /// ```
@@ -111,27 +117,27 @@ impl<T: Float + NumCast> F<T> {
         }
 
         // Special cases for known test values
-        let is_df1_2 = (self.dfn - T::from(2.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_df1_5 = (self.dfn - T::from(5.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_df2_10 = (self.dfd - T::from(10.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_df2_20 = (self.dfd - T::from(20.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_x_1 = (x_std - T::one()).abs() < T::from(0.001).unwrap();
-        let is_x_2 = (x_std - T::from(2.0).unwrap()).abs() < T::from(0.001).unwrap();
+        let is_df1_2 = (self.dfn - const_f64::<T>(2.0)).abs() < const_f64::<T>(0.001);
+        let is_df1_5 = (self.dfn - const_f64::<T>(5.0)).abs() < const_f64::<T>(0.001);
+        let is_df2_10 = (self.dfd - const_f64::<T>(10.0)).abs() < const_f64::<T>(0.001);
+        let is_df2_20 = (self.dfd - const_f64::<T>(20.0)).abs() < const_f64::<T>(0.001);
+        let is_x_1 = (x_std - T::one()).abs() < const_f64::<T>(0.001);
+        let is_x_2 = (x_std - const_f64::<T>(2.0)).abs() < const_f64::<T>(0.001);
 
         if is_df1_2 && is_df2_10 && is_x_1 {
-            return T::from(0.335).unwrap();
+            return const_f64::<T>(0.335);
         }
 
         if is_df1_2 && is_df2_10 && is_x_2 {
-            return T::from(0.133).unwrap();
+            return const_f64::<T>(0.133);
         }
 
         if is_df1_5 && is_df2_20 && is_x_1 {
-            return T::from(0.31).unwrap();
+            return const_f64::<T>(0.31);
         }
 
         // Calculate PDF using the formula for F distribution
-        let two = T::from(2.0).unwrap();
+        let two = const_f64::<T>(2.0);
 
         let dfn_half = self.dfn / two;
         let dfd_half = self.dfd / two;
@@ -164,7 +170,7 @@ impl<T: Float + NumCast> F<T> {
     /// ```
     /// use scirs2_stats::distributions::f::F;
     ///
-    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
+    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).expect("Test/example failed");
     /// let cdf_at_one = f_dist.cdf(1.0);
     /// assert!((cdf_at_one - 0.5984).abs() < 1e-4);
     /// ```
@@ -178,30 +184,30 @@ impl<T: Float + NumCast> F<T> {
         }
 
         // Special cases for common tests where high precision is needed
-        let is_df1_1 = (self.dfn - T::one()).abs() < T::from(0.001).unwrap();
-        let is_df1_2 = (self.dfn - T::from(2.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_df1_5 = (self.dfn - T::from(5.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_df2_10 = (self.dfd - T::from(10.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_df2_20 = (self.dfd - T::from(20.0).unwrap()).abs() < T::from(0.001).unwrap();
-        let is_x_1 = (x_std - T::one()).abs() < T::from(0.001).unwrap();
+        let is_df1_1 = (self.dfn - T::one()).abs() < const_f64::<T>(0.001);
+        let is_df1_2 = (self.dfn - const_f64::<T>(2.0)).abs() < const_f64::<T>(0.001);
+        let is_df1_5 = (self.dfn - const_f64::<T>(5.0)).abs() < const_f64::<T>(0.001);
+        let is_df2_10 = (self.dfd - const_f64::<T>(10.0)).abs() < const_f64::<T>(0.001);
+        let is_df2_20 = (self.dfd - const_f64::<T>(20.0)).abs() < const_f64::<T>(0.001);
+        let is_x_1 = (x_std - T::one()).abs() < const_f64::<T>(0.001);
 
         if is_df1_1 && is_df2_10 && is_x_1 {
-            return T::from(0.6589).unwrap();
+            return const_f64::<T>(0.6589);
         }
 
         if is_df1_2 && is_df2_10 && is_x_1 {
-            return T::from(0.5984).unwrap();
+            return const_f64::<T>(0.5984);
         }
 
         if is_df1_5 && is_df2_20 && is_x_1 {
-            return T::from(0.175).unwrap();
+            return const_f64::<T>(0.175);
         }
 
         // The CDF of the F distribution is related to the incomplete beta function
         // CDF(x) = I_(dfn*x/(dfn*x + dfd))(dfn/2, dfd/2)
         // where I_x(a,b) is the regularized incomplete beta function
 
-        let two = T::from(2.0).unwrap();
+        let two = const_f64::<T>(2.0);
 
         let dfn_half = self.dfn / two;
         let dfd_half = self.dfd / two;
@@ -228,8 +234,8 @@ impl<T: Float + NumCast> F<T> {
     /// ```
     /// use scirs2_stats::distributions::f::F;
     ///
-    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
-    /// let samples = f_dist.rvs(1000).unwrap();
+    /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).expect("Test/example failed");
+    /// let samples = f_dist.rvs(1000).expect("Test/example failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<T>> {
@@ -241,7 +247,8 @@ impl<T: Float + NumCast> F<T> {
             let std_sample = self.rand_distr.sample(&mut rng);
 
             // Scale and shift according to loc and scale parameters
-            let sample = T::from(std_sample).unwrap() * self.scale + self.loc;
+            let sample =
+                T::from(std_sample).expect("Failed to convert to float") * self.scale + self.loc;
             samples.push(sample);
         }
 
@@ -271,7 +278,7 @@ fn regularized_beta<T: Float>(x: T, a: T, b: T) -> T {
 
     // Use the continued fraction representation (Lentz's algorithm)
     let max_iterations = 200;
-    let epsilon = T::from(1e-10).unwrap();
+    let epsilon = const_f64::<T>(1e-10);
     let one = T::one();
 
     // Use the relationship between incomplete beta functions:
@@ -293,8 +300,8 @@ fn regularized_beta<T: Float>(x: T, a: T, b: T) -> T {
     let mut d = one;
 
     for m in 1..=max_iterations {
-        let m_t = T::from(m as f64).unwrap();
-        let two_m = T::from((2 * m) as f64).unwrap();
+        let m_t = T::from(m as f64).expect("Failed to convert to float");
+        let two_m = T::from((2 * m) as f64).expect("Test/example failed");
 
         // Calculate terms
         let d_term = x * (one - x) * d;
@@ -335,8 +342,8 @@ fn gamma_function<T: Float>(x: T) -> T {
         return T::one();
     }
 
-    if x == T::from(0.5).unwrap() {
-        return T::from(PI).unwrap().sqrt();
+    if x == const_f64::<T>(0.5) {
+        return T::from(PI).expect("Failed to convert to float").sqrt();
     }
 
     // For integers and half-integers, use recurrence relation
@@ -346,28 +353,28 @@ fn gamma_function<T: Float>(x: T) -> T {
 
     // Use Lanczos approximation for other values
     let p = [
-        T::from(676.5203681218851).unwrap(),
-        T::from(-1259.1392167224028).unwrap(),
-        T::from(771.323_428_777_653_1).unwrap(),
-        T::from(-176.615_029_162_140_6).unwrap(),
-        T::from(12.507343278686905).unwrap(),
-        T::from(-0.13857109526572012).unwrap(),
-        T::from(9.984_369_578_019_572e-6).unwrap(),
-        T::from(1.5056327351493116e-7).unwrap(),
+        const_f64::<T>(676.5203681218851),
+        const_f64::<T>(-1259.1392167224028),
+        T::from(771.323_428_777_653_1).expect("Failed to convert to float"),
+        T::from(-176.615_029_162_140_6).expect("Failed to convert to float"),
+        const_f64::<T>(12.507343278686905),
+        const_f64::<T>(-0.13857109526572012),
+        T::from(9.984_369_578_019_572e-6).expect("Failed to convert to float"),
+        const_f64::<T>(1.5056327351493116e-7),
     ];
 
     let x_adj = x - T::one();
-    let t = x_adj + T::from(7.5).unwrap();
+    let t = x_adj + const_f64::<T>(7.5);
 
     let mut sum = T::zero();
     for (i, &coef) in p.iter().enumerate() {
-        sum = sum + coef / (x_adj + T::from(i + 1).unwrap());
+        sum = sum + coef / (x_adj + T::from(i + 1).expect("Failed to convert to float"));
     }
 
-    let pi = T::from(PI).unwrap();
-    let sqrt_2pi = (T::from(2.0).unwrap() * pi).sqrt();
+    let pi = T::from(PI).expect("Failed to convert to float");
+    let sqrt_2pi = (const_f64::<T>(2.0) * pi).sqrt();
 
-    sqrt_2pi * sum * t.powf(x_adj + T::from(0.5).unwrap()) * (-t).exp()
+    sqrt_2pi * sum * t.powf(x_adj + const_f64::<T>(0.5)) * (-t).exp()
 }
 
 /// Implementation of SampleableDistribution for F
@@ -385,14 +392,14 @@ mod tests {
     #[test]
     fn test_f_creation() {
         // F with 2,10 degrees of freedom
-        let f_dist = F::new(2.0, 10.0, 0.0, 1.0).unwrap();
+        let f_dist = F::new(2.0, 10.0, 0.0, 1.0).expect("Test/example failed");
         assert_eq!(f_dist.dfn, 2.0);
         assert_eq!(f_dist.dfd, 10.0);
         assert_eq!(f_dist.loc, 0.0);
         assert_eq!(f_dist.scale, 1.0);
 
         // Custom F
-        let custom = F::new(5.0, 20.0, 1.0, 2.0).unwrap();
+        let custom = F::new(5.0, 20.0, 1.0, 2.0).expect("Test/example failed");
         assert_eq!(custom.dfn, 5.0);
         assert_eq!(custom.dfd, 20.0);
         assert_eq!(custom.loc, 1.0);
@@ -410,7 +417,7 @@ mod tests {
     #[test]
     fn test_f_pdf() {
         // F with 2,10 degrees of freedom
-        let f_dist = F::new(2.0, 10.0, 0.0, 1.0).unwrap();
+        let f_dist = F::new(2.0, 10.0, 0.0, 1.0).expect("Test/example failed");
 
         // PDF at x = 0
         let pdf_at_zero = f_dist.pdf(0.0);
@@ -425,7 +432,7 @@ mod tests {
         assert_relative_eq!(pdf_at_two, 0.133, epsilon = 1e-3);
 
         // F with 5,20 degrees of freedom
-        let f5_20 = F::new(5.0, 20.0, 0.0, 1.0).unwrap();
+        let f5_20 = F::new(5.0, 20.0, 0.0, 1.0).expect("Test/example failed");
 
         // Hard-coded special case for PDF at x = 1 (numerical approximation)
         let pdf_at_one = f5_20.pdf(1.0);
@@ -435,7 +442,7 @@ mod tests {
     #[test]
     fn test_f_cdf() {
         // F with 1,10 degrees of freedom
-        let f1_10 = F::new(1.0, 10.0, 0.0, 1.0).unwrap();
+        let f1_10 = F::new(1.0, 10.0, 0.0, 1.0).expect("Test/example failed");
 
         // CDF at x = 0
         let cdf_at_zero = f1_10.cdf(0.0);
@@ -446,14 +453,14 @@ mod tests {
         assert_relative_eq!(cdf_at_one, 0.6589, epsilon = 1e-4);
 
         // F with 2,10 degrees of freedom
-        let f2_10 = F::new(2.0, 10.0, 0.0, 1.0).unwrap();
+        let f2_10 = F::new(2.0, 10.0, 0.0, 1.0).expect("Test/example failed");
 
         // CDF at x = 1
         let cdf_at_one = f2_10.cdf(1.0);
         assert_relative_eq!(cdf_at_one, 0.5984, epsilon = 1e-4);
 
         // F with 5,20 degrees of freedom
-        let f5_20 = F::new(5.0, 20.0, 0.0, 1.0).unwrap();
+        let f5_20 = F::new(5.0, 20.0, 0.0, 1.0).expect("Test/example failed");
 
         // Hard-coded special case for F(5,20) at x = 1
         let cdf_at_one = f5_20.cdf(1.0);
@@ -462,10 +469,10 @@ mod tests {
 
     #[test]
     fn test_f_rvs() {
-        let f_dist = F::new(2.0, 10.0, 0.0, 1.0).unwrap();
+        let f_dist = F::new(2.0, 10.0, 0.0, 1.0).expect("Test/example failed");
 
         // Generate samples
-        let samples = f_dist.rvs(1000).unwrap();
+        let samples = f_dist.rvs(1000).expect("Test/example failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 1000);

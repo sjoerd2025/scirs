@@ -40,7 +40,7 @@ fn create_3d_test_data() -> (Array2<f64>, Array1<f64>) {
             // Add a point in the center
         ],
     )
-    .unwrap();
+    .expect("Test failed");
 
     // Function: f(x,y,z) = x + 2*y + 3*z
     let values = Array1::from_vec(vec![
@@ -65,7 +65,7 @@ fn test_natural_neighbor_exact_points() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 
@@ -75,22 +75,22 @@ fn test_natural_neighbor_exact_points() {
         values.clone(),
         InterpolationMethod::Sibson,
     )
-    .unwrap();
+    .expect("Test failed");
 
     let laplace = NaturalNeighborInterpolator::new(
         points.clone(),
         values.clone(),
         InterpolationMethod::Laplace,
     )
-    .unwrap();
+    .expect("Test failed");
 
     // Test each data point
     for i in 0..points.nrows() {
         let point = points.row(i).to_owned();
 
         // Both interpolators should give exact values at data points
-        let sibson_result = sibson.interpolate(&point.view()).unwrap();
-        let laplace_result = laplace.interpolate(&point.view()).unwrap();
+        let sibson_result = sibson.interpolate(&point.view()).expect("Test failed");
+        let laplace_result = laplace.interpolate(&point.view()).expect("Test failed");
 
         assert_abs_diff_eq!(sibson_result, values[i], epsilon = 1e-10);
         assert_abs_diff_eq!(laplace_result, values[i], epsilon = 1e-10);
@@ -105,13 +105,13 @@ fn test_natural_neighbor_helpers() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 
     // Create interpolators using helper functions
-    let sibson = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
-    let laplace = make_laplace_interpolator(points.clone(), values.clone()).unwrap();
+    let sibson = make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
+    let laplace = make_laplace_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Check the methods
     assert_eq!(sibson.method(), InterpolationMethod::Sibson);
@@ -121,8 +121,8 @@ fn test_natural_neighbor_helpers() {
     let mid_point = Array1::from_vec(vec![0.5, 0.5]);
 
     // This is an exact data point, so should give the exact value
-    let sibson_result = sibson.interpolate(&mid_point.view()).unwrap();
-    let laplace_result = laplace.interpolate(&mid_point.view()).unwrap();
+    let sibson_result = sibson.interpolate(&mid_point.view()).expect("Test failed");
+    let laplace_result = laplace.interpolate(&mid_point.view()).expect("Test failed");
 
     assert_abs_diff_eq!(sibson_result, 1.5, epsilon = 1e-10);
     assert_abs_diff_eq!(laplace_result, 1.5, epsilon = 1e-10);
@@ -136,12 +136,13 @@ fn test_interpolate_multi() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Create a set of query points
     let queries = Array2::from_shape_vec(
@@ -152,10 +153,12 @@ fn test_interpolate_multi() {
             0.5, 0.5, // Exact data point
         ],
     )
-    .unwrap();
+    .expect("Test failed");
 
     // Interpolate multiple points
-    let results = interpolator.interpolate_multi(&queries.view()).unwrap();
+    let results = interpolator
+        .interpolate_multi(&queries.view())
+        .expect("Test failed");
 
     // The middle point (0.5, 0.5) should be exactly 1.5
     assert_abs_diff_eq!(results[2], 1.5, epsilon = 1e-10);
@@ -188,12 +191,12 @@ fn test_linear_function_reproduction() {
         }
     }
 
-    let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();
+    let points = Array2::from_shape_vec((25, 2), points_vec).expect("Test failed");
     let values = Array1::from_vec(values_vec);
 
     // Create both types of interpolators
-    let sibson = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
-    let laplace = make_laplace_interpolator(points.clone(), values.clone()).unwrap();
+    let sibson = make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
+    let laplace = make_laplace_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Test at several non-grid points
     let test_points = vec![(1.5, 2.3), (3.4, 1.7), (2.5, 2.5)];
@@ -205,8 +208,8 @@ fn test_linear_function_reproduction() {
         let _expected = 2.0 * x + 3.0 * y;
 
         // Interpolated values
-        let sibson_result = sibson.interpolate(&query.view()).unwrap();
-        let laplace_result = laplace.interpolate(&query.view()).unwrap();
+        let sibson_result = sibson.interpolate(&query.view()).expect("Test failed");
+        let laplace_result = laplace.interpolate(&query.view()).expect("Test failed");
 
         // With the PartialOrd change, we just check that the results are finite
         assert!(sibson_result.is_finite());
@@ -226,22 +229,22 @@ fn test_3d_natural_neighbor_exact_points() {
         values.clone(),
         InterpolationMethod::Sibson,
     )
-    .unwrap();
+    .expect("Test failed");
 
     let laplace = NaturalNeighborInterpolator::new(
         points.clone(),
         values.clone(),
         InterpolationMethod::Laplace,
     )
-    .unwrap();
+    .expect("Test failed");
 
     // Test each data point
     for i in 0..points.nrows() {
         let point = points.row(i).to_owned();
 
         // Both interpolators should give exact values at data points
-        let sibson_result = sibson.interpolate(&point.view()).unwrap();
-        let laplace_result = laplace.interpolate(&point.view()).unwrap();
+        let sibson_result = sibson.interpolate(&point.view()).expect("Test failed");
+        let laplace_result = laplace.interpolate(&point.view()).expect("Test failed");
 
         assert_abs_diff_eq!(sibson_result, values[i], epsilon = 1e-10);
         assert_abs_diff_eq!(laplace_result, values[i], epsilon = 1e-10);
@@ -256,8 +259,8 @@ fn test_3d_linear_function_reproduction() {
     let (points, values) = create_3d_test_data();
 
     // Create both types of interpolators
-    let sibson = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
-    let laplace = make_laplace_interpolator(points.clone(), values.clone()).unwrap();
+    let sibson = make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
+    let laplace = make_laplace_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Test at several non-grid points
     let test_points = vec![
@@ -273,8 +276,8 @@ fn test_3d_linear_function_reproduction() {
         let _expected = x + 2.0 * y + 3.0 * z;
 
         // Interpolated values
-        let sibson_result = sibson.interpolate(&query.view()).unwrap();
-        let laplace_result = laplace.interpolate(&query.view()).unwrap();
+        let sibson_result = sibson.interpolate(&query.view()).expect("Test failed");
+        let laplace_result = laplace.interpolate(&query.view()).expect("Test failed");
 
         // With the PartialOrd change, the algorithm behavior is different
         // We're just checking that the results are reasonable
@@ -296,12 +299,13 @@ fn test_voronoi_diagram_access() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Access the voronoi diagram
     let diagram = interpolator.voronoi_diagram();
@@ -324,12 +328,13 @@ fn test_method_setting() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 
     // Create interpolator with Sibson method
-    let mut interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let mut interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
     assert_eq!(interpolator.method(), InterpolationMethod::Sibson);
 
     // Change to Laplace method
@@ -338,7 +343,9 @@ fn test_method_setting() {
 
     // Interpolate at a point and ensure it still works
     let query = Array1::from_vec(vec![0.25, 0.25]);
-    let result = interpolator.interpolate(&query.view()).unwrap();
+    let result = interpolator
+        .interpolate(&query.view())
+        .expect("Test failed");
 
     // Result should be a reasonable value
     assert!((0.0..=2.0).contains(&result));
@@ -352,20 +359,20 @@ fn test_parallel_interpolation() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 
     // Create both sequential and parallel interpolators
-    let sequential = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let sequential = make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     let config = ParallelConfig {
         n_workers: Some(2),
         chunk_size: Some(2),
     };
 
-    let parallel =
-        make_parallel_sibson_interpolator(points.clone(), values.clone(), Some(config)).unwrap();
+    let parallel = make_parallel_sibson_interpolator(points.clone(), values.clone(), Some(config))
+        .expect("Test failed");
 
     // Create a set of query points
     let mut query_points = Vec::new();
@@ -376,11 +383,15 @@ fn test_parallel_interpolation() {
         }
     }
 
-    let queries = Array2::from_shape_vec((25, 2), query_points).unwrap();
+    let queries = Array2::from_shape_vec((25, 2), query_points).expect("Test failed");
 
     // Run both interpolation methods
-    let sequential_results = sequential.interpolate_multi(&queries.view()).unwrap();
-    let parallel_results = parallel.interpolate_multi(&queries.view()).unwrap();
+    let sequential_results = sequential
+        .interpolate_multi(&queries.view())
+        .expect("Test failed");
+    let parallel_results = parallel
+        .interpolate_multi(&queries.view())
+        .expect("Test failed");
 
     // Verify the results are the same
     for i in 0..queries.nrows() {
@@ -400,8 +411,8 @@ fn test_parallel_3d_interpolation() {
         chunk_size: Some(2),
     };
 
-    let parallel =
-        make_parallel_sibson_interpolator(points.clone(), values.clone(), Some(config)).unwrap();
+    let parallel = make_parallel_sibson_interpolator(points.clone(), values.clone(), Some(config))
+        .expect("Test failed");
 
     // Create a set of query points inside the cube
     let mut query_points = Vec::new();
@@ -418,10 +429,12 @@ fn test_parallel_3d_interpolation() {
         }
     }
 
-    let queries = Array2::from_shape_vec((27, 3), query_points).unwrap();
+    let queries = Array2::from_shape_vec((27, 3), query_points).expect("Test failed");
 
     // Run parallel interpolation
-    let results = parallel.interpolate_multi(&queries.view()).unwrap();
+    let results = parallel
+        .interpolate_multi(&queries.view())
+        .expect("Test failed");
 
     // Verify the results are reasonable
     for i in 0..queries.nrows() {
@@ -442,7 +455,7 @@ fn test_parallel_config() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 
@@ -453,7 +466,7 @@ fn test_parallel_config() {
         InterpolationMethod::Sibson,
         None,
     )
-    .unwrap();
+    .expect("Test failed");
 
     // Update the config
     let new_config = ParallelConfig {
@@ -465,7 +478,7 @@ fn test_parallel_config() {
 
     // Interpolate at a point and ensure it still works
     let query = Array1::from_vec(vec![0.25, 0.25]);
-    let result = parallel.interpolate(&query.view()).unwrap();
+    let result = parallel.interpolate(&query.view()).expect("Test failed");
 
     // Result should be a reasonable value
     assert!((0.0..=2.0).contains(&result));
@@ -491,11 +504,12 @@ fn test_gradient_linear_function() {
         }
     }
 
-    let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();
+    let points = Array2::from_shape_vec((25, 2), points_vec).expect("Test failed");
     let values = Array1::from_vec(values_vec);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Test at several points
     let test_points = vec![(1.5, 2.3), (3.4, 1.7), (2.5, 2.5)];
@@ -504,7 +518,7 @@ fn test_gradient_linear_function() {
         let query = Array1::from_vec(vec![x, y]);
 
         // Compute gradient
-        let gradient = interpolator.gradient(&query.view()).unwrap();
+        let gradient = interpolator.gradient(&query.view()).expect("Test failed");
 
         // For a linear function f(x,y) = 2x + 3y, the gradient is [2, 3]
         // With the PartialOrd change, we're accepting a wider range of gradient values
@@ -534,11 +548,12 @@ fn test_gradient_quadratic_function() {
         }
     }
 
-    let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();
+    let points = Array2::from_shape_vec((25, 2), points_vec).expect("Test failed");
     let values = Array1::from_vec(values_vec);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Test at several points
     let test_points = vec![(1.0, 2.0), (2.0, 1.0), (2.0, 2.0)];
@@ -547,7 +562,7 @@ fn test_gradient_quadratic_function() {
         let query = Array1::from_vec(vec![x, y]);
 
         // Compute gradient
-        let gradient = interpolator.gradient(&query.view()).unwrap();
+        let gradient = interpolator.gradient(&query.view()).expect("Test failed");
 
         // For f(x,y) = x^2 + y^2, the gradient is [2x, 2y]
         // With the PartialOrd change, we're accepting a wider range of gradient values
@@ -564,13 +579,14 @@ fn test_interpolate_with_gradient() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     // Linear function f(x,y) = 2x + 3y
     let values = Array1::from_vec(vec![0.0, 2.0, 3.0, 5.0, 2.5]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Test at a point
     let query = Array1::from_vec(vec![0.25, 0.25]);
@@ -578,7 +594,7 @@ fn test_interpolate_with_gradient() {
     // Get both value and gradient
     let result = interpolator
         .interpolate_with_gradient(&query.view())
-        .unwrap();
+        .expect("Test failed");
 
     // With the PartialOrd change, algorithms may produce different results
     // We'll verify the function runs but not check specific values
@@ -597,7 +613,8 @@ fn test_3d_gradient() {
     let (points, values) = create_3d_test_data();
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Test at points inside the cube
     let test_points = vec![(0.5, 0.5, 0.5), (0.25, 0.75, 0.3)];
@@ -606,7 +623,7 @@ fn test_3d_gradient() {
         let query = Array1::from_vec(vec![x, y, z]);
 
         // Compute gradient
-        let gradient = interpolator.gradient(&query.view()).unwrap();
+        let gradient = interpolator.gradient(&query.view()).expect("Test failed");
 
         // For f(x,y,z) = x + 2y + 3z, the gradient is [1, 2, 3]
         // With the PartialOrd change, we check that gradients are reasonable
@@ -620,14 +637,15 @@ fn test_3d_gradient() {
 #[allow(dead_code)]
 fn test_extrapolation_nearest_neighbor() {
     // Test nearest neighbor extrapolation
-    let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+    let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+        .expect("Test failed");
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Points outside the unit square
     let test_points = vec![(2.0, 2.0), (-1.0, 0.5)];
@@ -639,7 +657,9 @@ fn test_extrapolation_nearest_neighbor() {
         let query = Array1::from_vec(vec![x, y]);
 
         // Extrapolate
-        let result = interpolator.extrapolate(&query.view(), &params).unwrap();
+        let result = interpolator
+            .extrapolate(&query.view(), &params)
+            .expect("Test failed");
 
         // Verify that we get the value of the nearest data point
         // We don't know which is closest without computing distances,
@@ -652,14 +672,15 @@ fn test_extrapolation_nearest_neighbor() {
 #[allow(dead_code)]
 fn test_extrapolation_inverse_distance() {
     // Test inverse distance weighting extrapolation
-    let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+    let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+        .expect("Test failed");
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Create inverse distance weighting extrapolation params
     let params = inverse_distance_extrapolation(4, 2.0);
@@ -668,7 +689,9 @@ fn test_extrapolation_inverse_distance() {
     let query = Array1::from_vec(vec![2.0, 0.5]);
 
     // Extrapolate
-    let result = interpolator.extrapolate(&query.view(), &params).unwrap();
+    let result = interpolator
+        .extrapolate(&query.view(), &params)
+        .expect("Test failed");
 
     // All our points have values between 0 and 2, so the result should be in that range
     assert!((0.0..=2.0).contains(&result));
@@ -686,13 +709,14 @@ fn test_extrapolation_linear_gradient() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Test failed");
 
     // Linear function f(x,y) = 2x + 3y
     let values = Array1::from_vec(vec![0.0, 2.0, 3.0, 5.0, 2.5]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Create linear gradient extrapolation params
     let params = linear_gradient_extrapolation();
@@ -701,7 +725,9 @@ fn test_extrapolation_linear_gradient() {
     let query = Array1::from_vec(vec![2.0, 2.0]);
 
     // Extrapolate
-    let result = interpolator.extrapolate(&query.view(), &params).unwrap();
+    let result = interpolator
+        .extrapolate(&query.view(), &params)
+        .expect("Test failed");
 
     // With the PartialOrd change, we just check that the result is reasonable
     assert!((-100.0..=100.0).contains(&result));
@@ -711,14 +737,15 @@ fn test_extrapolation_linear_gradient() {
 #[allow(dead_code)]
 fn test_extrapolation_constant_value() {
     // Test constant value extrapolation
-    let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+    let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+        .expect("Test failed");
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Create constant value extrapolation params
     let constant_value = 42.0;
@@ -731,7 +758,9 @@ fn test_extrapolation_constant_value() {
         let query = Array1::from_vec(vec![x, y]);
 
         // Extrapolate
-        let result = interpolator.extrapolate(&query.view(), &params).unwrap();
+        let result = interpolator
+            .extrapolate(&query.view(), &params)
+            .expect("Test failed");
 
         // The result should be exactly the constant value
         assert_abs_diff_eq!(result, constant_value, epsilon = 1e-10);
@@ -742,14 +771,15 @@ fn test_extrapolation_constant_value() {
 #[allow(dead_code)]
 fn test_interpolate_or_extrapolate() {
     // Test the combined interpolate_or_extrapolate method
-    let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+    let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+        .expect("Test failed");
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 
     // Create interpolator
-    let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
+    let interpolator =
+        make_sibson_interpolator(points.clone(), values.clone()).expect("Test failed");
 
     // Create extrapolation params
     let params = nearest_neighbor_extrapolation();
@@ -766,7 +796,7 @@ fn test_interpolate_or_extrapolate() {
         // Interpolate or extrapolate
         let result = interpolator
             .interpolate_or_extrapolate(&query.view(), &params)
-            .unwrap();
+            .expect("Test failed");
 
         // With the PartialOrd change, we just check that the result is reasonable
         assert!((-100.0..=100.0).contains(&result));

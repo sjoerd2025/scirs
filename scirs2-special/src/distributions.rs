@@ -13,6 +13,12 @@ use std::f64::consts::PI;
 use std::fmt::{Debug, Display};
 use std::ops::{AddAssign, MulAssign, SubAssign};
 
+/// Helper to convert f64 constants to generic Float type with better error messages
+#[inline(always)]
+fn const_f64<T: Float + FromPrimitive>(value: f64) -> T {
+    T::from_f64(value).expect("Failed to convert constant to target float type - this indicates an incompatible numeric type")
+}
+
 // Normal distribution functions
 
 /// Normal cumulative distribution function
@@ -35,8 +41,8 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 #[allow(dead_code)]
 pub fn ndtr<T: Float + FromPrimitive>(x: T) -> T {
     // Use the error function: ndtr(x) = 0.5 * (1 + erf(x/sqrt(2)))
-    let sqrt2 = T::from_f64(std::f64::consts::SQRT_2).unwrap();
-    let half = T::from_f64(0.5).unwrap();
+    let sqrt2 = const_f64::<T>(std::f64::consts::SQRT_2);
+    let half = const_f64::<T>(0.5);
     let one = T::one();
 
     half * (one + crate::erf::erf(x / sqrt2))
@@ -57,8 +63,8 @@ pub fn log_ndtr<T: Float + FromPrimitive>(x: T) -> T {
         ndtr(x).ln()
     } else {
         // For negative x, use log(ndtr(x)) = log(erfc(-x/sqrt(2))) - log(2)
-        let sqrt2 = T::from_f64(std::f64::consts::SQRT_2).unwrap();
-        let log2 = T::from_f64(std::f64::consts::LN_2).unwrap();
+        let sqrt2 = const_f64::<T>(std::f64::consts::SQRT_2);
+        let log2 = const_f64::<T>(std::f64::consts::LN_2);
 
         crate::erf::erfc(-x / sqrt2).ln() - log2
     }
@@ -81,8 +87,8 @@ pub fn ndtri<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
     check_probability(p, "p")?;
 
     // Use the inverse error function: ndtri(p) = sqrt(2) * erfinv(2*p - 1)
-    let sqrt2 = T::from_f64(std::f64::consts::SQRT_2).unwrap();
-    let two = T::from_f64(2.0).unwrap();
+    let sqrt2 = const_f64::<T>(std::f64::consts::SQRT_2);
+    let two = const_f64::<T>(2.0);
     let one = T::one();
 
     Ok(sqrt2 * crate::erf::erfinv(two * p - one))
@@ -130,8 +136,8 @@ pub fn bdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign +
 
     // Use the regularized incomplete beta function
     // P(X <= k) = I_{1-p}(n-k, k+1)
-    let nminus_k = T::from_usize(n - k).unwrap();
-    let k_plus_1 = T::from_usize(k + 1).unwrap();
+    let nminus_k = T::from_usize(n - k).expect("Failed to convert usize to Float type");
+    let k_plus_1 = T::from_usize(k + 1).expect("Failed to convert usize to Float type");
     let oneminus_p = T::one() - p;
 
     betainc_regularized(oneminus_p, nminus_k, k_plus_1)
@@ -159,8 +165,8 @@ pub fn bdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
     }
 
     // P(X > k) = I_p(k+1, n-k)
-    let k_plus_1 = T::from_usize(k + 1).unwrap();
-    let nminus_k = T::from_usize(n - k).unwrap();
+    let k_plus_1 = T::from_usize(k + 1).expect("Failed to convert usize to Float type");
+    let nminus_k = T::from_usize(n - k).expect("Failed to convert usize to Float type");
 
     betainc_regularized(p, k_plus_1, nminus_k)
 }
@@ -219,7 +225,7 @@ pub fn pdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>(
 
     // Use the regularized incomplete gamma function
     // P(X <= k) = P(k+1, lambda) = gammainc(k+1, lambda)
-    let k_plus_1 = T::from_usize(k + 1).unwrap();
+    let k_plus_1 = T::from_usize(k + 1).expect("Failed to convert usize to Float type");
 
     // Use proper gammainc implementation
     gammainc(k_plus_1, lambda)
@@ -242,7 +248,7 @@ pub fn pdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>
     }
 
     // P(X > k) = Q(k+1, lambda) = gammaincc(k+1, lambda)
-    let k_plus_1 = T::from_usize(k + 1).unwrap();
+    let k_plus_1 = T::from_usize(k + 1).expect("Failed to convert usize to Float type");
 
     // Use proper gammaincc implementation
     gammaincc(k_plus_1, lambda)
@@ -277,8 +283,8 @@ pub fn chdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     }
 
     // Chi-square CDF = gammainc(df/2, x/2)
-    let half_df = df / T::from_f64(2.0).unwrap();
-    let half_x = x / T::from_f64(2.0).unwrap();
+    let half_df = df / const_f64::<T>(2.0);
+    let half_x = x / const_f64::<T>(2.0);
 
     let gamma_full = gamma(half_df);
     let gamma_inc = gamma_incomplete_lower(half_df, half_x)?;
@@ -322,7 +328,7 @@ pub fn stdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
 
     // Use the relationship with incomplete beta function
     let x = df / (df + t * t);
-    let half = T::from_f64(0.5).unwrap();
+    let half = const_f64::<T>(0.5);
 
     if t < T::zero() {
         Ok(half * betainc_regularized(x, half * df, half)?)
@@ -363,8 +369,8 @@ pub fn fdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign +
     }
 
     // Use the relationship with incomplete beta function
-    let half_dfn = dfn / T::from_f64(2.0).unwrap();
-    let half_dfd = dfd / T::from_f64(2.0).unwrap();
+    let half_dfn = dfn / const_f64::<T>(2.0);
+    let half_dfd = dfd / const_f64::<T>(2.0);
     let y = (dfn * x) / (dfn * x + dfd);
 
     betainc_regularized(y, half_dfn, half_dfd)
@@ -443,24 +449,28 @@ pub fn kolmogorov<T: Float + FromPrimitive>(x: T) -> T {
         return T::zero();
     }
 
-    if x >= T::from_f64(6.0).unwrap() {
+    if x >= const_f64::<T>(6.0) {
         return T::one();
     }
 
     // Use the alternating series representation
-    let pi = T::from_f64(PI).unwrap();
+    let pi = const_f64::<T>(PI);
     let mut sum = T::zero();
     let mut k = T::one();
-    let tol = T::from_f64(1e-12).unwrap();
+    let tol = const_f64::<T>(1e-12);
 
     loop {
-        let term = T::from_f64(2.0).unwrap()
-            * (-(T::from_f64(2.0).unwrap() * k * k * x * x)).exp()
-            * ((T::from_f64(2.0).unwrap() * k * k * x * x - T::one()) * T::from_f64(2.0).unwrap())
-                .exp();
+        let term = const_f64::<T>(2.0)
+            * (-(const_f64::<T>(2.0) * k * k * x * x)).exp()
+            * ((const_f64::<T>(2.0) * k * k * x * x - T::one()) * const_f64::<T>(2.0)).exp();
 
         sum = sum
-            + if k.to_isize().unwrap() % 2 == 0 {
+            + if k
+                .to_isize()
+                .expect("Failed to convert Float to isize for parity check")
+                % 2
+                == 0
+            {
                 -term
             } else {
                 term
@@ -473,7 +483,7 @@ pub fn kolmogorov<T: Float + FromPrimitive>(x: T) -> T {
         k = k + T::one();
     }
 
-    (T::from_f64(8.0).unwrap() * x / pi.sqrt()) * sum
+    (const_f64::<T>(8.0) * x / pi.sqrt()) * sum
 }
 
 /// Inverse of Kolmogorov distribution with sophisticated root-finding
@@ -484,13 +494,13 @@ pub fn kolmogi<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
     // Handle special cases
     let zero = T::zero();
     let one = T::one();
-    let tol = T::from_f64(1e-12).unwrap();
+    let tol = const_f64::<T>(1e-12);
 
-    if p <= T::from_f64(1e-15).unwrap() {
+    if p <= const_f64::<T>(1e-15) {
         return Ok(zero);
     }
-    if p >= one - T::from_f64(1e-15).unwrap() {
-        return Ok(T::from_f64(10.0).unwrap()); // Very large value for p ≈ 1
+    if p >= one - const_f64::<T>(1e-15) {
+        return Ok(const_f64::<T>(10.0)); // Very large value for p ≈ 1
     }
 
     // Get a good initial guess using asymptotic approximations
@@ -522,31 +532,31 @@ pub fn kolmogi<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
 fn kolmogorov_inverse_initial_guess<T: Float + FromPrimitive>(p: T) -> SpecialResult<T> {
     let zero = T::zero();
     let one = T::one();
-    let two = T::from_f64(2.0).unwrap();
-    let _half = T::from_f64(0.5).unwrap();
+    let two = const_f64::<T>(2.0);
+    let _half = const_f64::<T>(0.5);
 
-    if p <= T::from_f64(0.1).unwrap() {
+    if p <= const_f64::<T>(0.1) {
         // For small p, use the approximation: x ≈ sqrt(-ln(p/2)/2)
         let ln_p_over_2 = (p / two).ln();
         let arg = -ln_p_over_2 / two;
         if arg > zero {
             Ok(arg.sqrt())
         } else {
-            Ok(T::from_f64(0.1).unwrap())
+            Ok(const_f64::<T>(0.1))
         }
-    } else if p >= T::from_f64(0.9).unwrap() {
+    } else if p >= const_f64::<T>(0.9) {
         // For large p (close to 1), use the approximation: x ≈ sqrt(-ln(2(1-p)))
         let oneminus_p = one - p;
-        if oneminus_p > T::from_f64(1e-15).unwrap() {
+        if oneminus_p > const_f64::<T>(1e-15) {
             let ln_arg = two * oneminus_p;
             let arg = -ln_arg.ln();
             if arg > zero {
                 Ok(arg.sqrt())
             } else {
-                Ok(T::from_f64(3.0).unwrap())
+                Ok(const_f64::<T>(3.0))
             }
         } else {
-            Ok(T::from_f64(5.0).unwrap())
+            Ok(const_f64::<T>(5.0))
         }
     } else {
         // For intermediate p, use linear interpolation between known points
@@ -559,7 +569,7 @@ fn kolmogorov_inverse_initial_guess<T: Float + FromPrimitive>(p: T) -> SpecialRe
             // Upper range: interpolate between (0.5, ~1.36) and (0.9, ~1.95)
             1.36 + (1.95 - 1.36) * (p_float - 0.5) / 0.4
         };
-        Ok(T::from_f64(approx).unwrap())
+        Ok(const_f64::<T>(approx))
     }
 }
 
@@ -583,25 +593,25 @@ fn kolmogorov_inverse_halley<T: Float + FromPrimitive + Display>(
         }
 
         // Compute f'(_x) and f''(_x) using finite differences for accuracy
-        let h = T::from_f64(1e-8).unwrap();
+        let h = const_f64::<T>(1e-8);
         let f_plus = kolmogorov(_x + h) - target_p;
         let fminus = kolmogorov(_x - h) - target_p;
 
-        let fprime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * h);
-        let f2prime = (f_plus - T::from_f64(2.0).unwrap() * fx + fminus) / (h * h);
+        let fprime = (f_plus - fminus) / (const_f64::<T>(2.0) * h);
+        let f2prime = (f_plus - const_f64::<T>(2.0) * fx + fminus) / (h * h);
 
         // Check for zero derivative
-        if fprime.abs() < T::from_f64(1e-15).unwrap() {
+        if fprime.abs() < const_f64::<T>(1e-15) {
             return Err(SpecialError::ConvergenceError(
                 "Zero derivative in Halley's method".to_string(),
             ));
         }
 
         // Halley's formula: x_{n+1} = x_n - 2*f*f' / (2*f'^2 - f*f'')
-        let numerator = T::from_f64(2.0).unwrap() * fx * fprime;
-        let denominator = T::from_f64(2.0).unwrap() * fprime * fprime - fx * f2prime;
+        let numerator = const_f64::<T>(2.0) * fx * fprime;
+        let denominator = const_f64::<T>(2.0) * fprime * fprime - fx * f2prime;
 
-        if denominator.abs() < T::from_f64(1e-15).unwrap() {
+        if denominator.abs() < const_f64::<T>(1e-15) {
             return Err(SpecialError::ConvergenceError(
                 "Zero denominator in Halley's method".to_string(),
             ));
@@ -612,7 +622,7 @@ fn kolmogorov_inverse_halley<T: Float + FromPrimitive + Display>(
 
         // Check bounds (Kolmogorov CDF is defined for _x >= 0)
         if _x < T::zero() {
-            _x = T::from_f64(0.01).unwrap();
+            _x = const_f64::<T>(0.01);
         }
 
         // Check for convergence in _x
@@ -646,13 +656,13 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
         }
 
         // Compute derivative using central difference with adaptive step size
-        let h = T::from_f64(1e-8).unwrap() * (T::one() + _x.abs());
+        let h = const_f64::<T>(1e-8) * (T::one() + _x.abs());
         let f_plus = kolmogorov(_x + h);
         let fminus = kolmogorov(_x - h);
-        let fprime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * h);
+        let fprime = (f_plus - fminus) / (const_f64::<T>(2.0) * h);
 
         // Check for zero derivative
-        if fprime.abs() < T::from_f64(1e-15).unwrap() {
+        if fprime.abs() < const_f64::<T>(1e-15) {
             return Err(SpecialError::ConvergenceError(
                 "Zero derivative in Newton's method".to_string(),
             ));
@@ -660,8 +670,8 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
 
         // Newton step with damping for stability
         let raw_step = fx / fprime;
-        let damping = if raw_step.abs() > T::from_f64(0.5).unwrap() {
-            T::from_f64(0.5).unwrap() / raw_step.abs()
+        let damping = if raw_step.abs() > const_f64::<T>(0.5) {
+            const_f64::<T>(0.5) / raw_step.abs()
         } else {
             T::one()
         };
@@ -671,7 +681,7 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
 
         // Ensure _x stays positive
         if _x < T::zero() {
-            _x = T::from_f64(0.01).unwrap();
+            _x = const_f64::<T>(0.01);
         }
 
         // Check for convergence in _x
@@ -693,7 +703,7 @@ fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
 ) -> SpecialResult<T> {
     // First, find a good bracket
     let mut low = T::zero();
-    let mut high = T::from_f64(10.0).unwrap();
+    let mut high = const_f64::<T>(10.0);
 
     // Ensure we have a proper bracket
     let f_low = kolmogorov(low) - target_p;
@@ -701,8 +711,8 @@ fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
 
     if f_low * f_high > T::zero() {
         // Expand the bracket if needed
-        while kolmogorov(high) < target_p && high < T::from_f64(20.0).unwrap() {
-            high = high * T::from_f64(2.0).unwrap();
+        while kolmogorov(high) < target_p && high < const_f64::<T>(20.0) {
+            high = high * const_f64::<T>(2.0);
         }
     }
 
@@ -710,7 +720,7 @@ fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
 
     for _iteration in 0..max_iterations {
         // Try Newton step from the midpoint
-        let mid = (low + high) / T::from_f64(2.0).unwrap();
+        let mid = (low + high) / const_f64::<T>(2.0);
         let f_mid = kolmogorov(mid) - target_p;
 
         // Check for convergence
@@ -719,12 +729,12 @@ fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
         }
 
         // Compute derivative for Newton step
-        let h = T::from_f64(1e-8).unwrap() * (T::one() + mid.abs());
+        let h = const_f64::<T>(1e-8) * (T::one() + mid.abs());
         let f_plus = kolmogorov(mid + h) - target_p;
         let fminus = kolmogorov(mid - h) - target_p;
-        let fprime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * h);
+        let fprime = (f_plus - fminus) / (const_f64::<T>(2.0) * h);
 
-        if fprime.abs() > T::from_f64(1e-15).unwrap() {
+        if fprime.abs() > const_f64::<T>(1e-15) {
             // Try Newton step
             let newton_x = mid - f_mid / fprime;
 
@@ -751,7 +761,7 @@ fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
         }
     }
 
-    Ok((low + high) / T::from_f64(2.0).unwrap())
+    Ok((low + high) / const_f64::<T>(2.0))
 }
 
 /// Enhanced bisection with better bounds (fallback method)
@@ -761,17 +771,17 @@ fn kolmogorov_inverse_enhanced_bisection<T: Float + FromPrimitive + Display>(
     tolerance: T,
 ) -> SpecialResult<T> {
     let mut low = T::zero();
-    let mut high = T::from_f64(10.0).unwrap();
+    let mut high = const_f64::<T>(10.0);
 
     // Ensure high is large enough
-    while kolmogorov(high) < target_p && high < T::from_f64(50.0).unwrap() {
-        high = high * T::from_f64(2.0).unwrap();
+    while kolmogorov(high) < target_p && high < const_f64::<T>(50.0) {
+        high = high * const_f64::<T>(2.0);
     }
 
     let max_iterations = 100;
 
     for _iteration in 0..max_iterations {
-        let mid = (low + high) / T::from_f64(2.0).unwrap();
+        let mid = (low + high) / const_f64::<T>(2.0);
         let f_mid = kolmogorov(mid);
 
         // Check for convergence
@@ -787,7 +797,7 @@ fn kolmogorov_inverse_enhanced_bisection<T: Float + FromPrimitive + Display>(
         }
     }
 
-    Ok((low + high) / T::from_f64(2.0).unwrap())
+    Ok((low + high) / const_f64::<T>(2.0))
 }
 
 // Note: Obsolete helper functions removed - now using proper incomplete_gamma module
@@ -808,7 +818,7 @@ fn gamma_incomplete_lower<T: Float + FromPrimitive + Debug + AddAssign>(
         let mut term = T::one() / a;
         let mut n = T::one();
 
-        while term.abs() > T::from_f64(1e-12).unwrap() * sum.abs() {
+        while term.abs() > const_f64::<T>(1e-12) * sum.abs() {
             term = term * x / (a + n);
             sum += term;
             n += T::one();
@@ -836,26 +846,27 @@ fn gamma_incomplete_upper<T: Float + FromPrimitive + Debug + AddAssign>(
     if x >= a + T::one() {
         // Continued fraction expansion
         let mut b = x + T::one() - a;
-        let mut c = T::from_f64(1e30).unwrap();
+        let mut c = const_f64::<T>(1e30);
         let mut d = T::one() / b;
         let mut h = d;
 
         for i in 1..100 {
-            let an = -T::from_usize(i).unwrap() * (T::from_usize(i).unwrap() - a);
-            b += T::from_f64(2.0).unwrap();
+            let an = -T::from_usize(i).expect("Failed to convert usize to Float type")
+                * (T::from_usize(i).expect("Failed to convert usize to Float type") - a);
+            b += const_f64::<T>(2.0);
             d = an * d + b;
-            if d.abs() < T::from_f64(1e-30).unwrap() {
-                d = T::from_f64(1e-30).unwrap();
+            if d.abs() < const_f64::<T>(1e-30) {
+                d = const_f64::<T>(1e-30);
             }
             c = b + an / c;
-            if c.abs() < T::from_f64(1e-30).unwrap() {
-                c = T::from_f64(1e-30).unwrap();
+            if c.abs() < const_f64::<T>(1e-30) {
+                c = const_f64::<T>(1e-30);
             }
             d = T::one() / d;
             let delta = d * c;
             h = h * delta;
 
-            if (delta - T::one()).abs() < T::from_f64(1e-10).unwrap() {
+            if (delta - T::one()).abs() < const_f64::<T>(1e-10) {
                 break;
             }
         }
@@ -884,7 +895,7 @@ where
             use scirs2_core::parallel_ops::*;
             let vec: Vec<T> = x
                 .as_slice()
-                .unwrap()
+                .expect("Array should be contiguous for parallel processing")
                 .par_iter()
                 .map(|&val| ndtr(val))
                 .collect();
@@ -927,10 +938,10 @@ where
     // Use binary search to find k
     let mut low = T::zero();
     let mut high = n;
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
-        let mid = (low + high) / T::from_f64(2.0).unwrap();
+        let mid = (low + high) / const_f64::<T>(2.0);
         let cdf_val = bdtr(mid.to_usize().unwrap_or(0), n.to_usize().unwrap_or(0), p)?;
 
         if (cdf_val - y).abs() < tolerance {
@@ -944,7 +955,7 @@ where
         }
     }
 
-    Ok((low + high) / T::from_f64(2.0).unwrap())
+    Ok((low + high) / const_f64::<T>(2.0))
 }
 
 /// Inverse of binomial distribution CDF with respect to n
@@ -959,8 +970,8 @@ where
     check_probability(p, "p")?;
 
     // Use Newton's method for finding n
-    let mut n = k + T::from_f64(10.0).unwrap(); // Initial guess
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let mut n = k + const_f64::<T>(10.0); // Initial guess
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
         let f_val = bdtr(k.to_usize().unwrap_or(0), n.to_usize().unwrap_or(0), p)? - y;
@@ -970,7 +981,7 @@ where
         }
 
         // Approximate derivative
-        let delta = T::from_f64(1e-6).unwrap();
+        let delta = const_f64::<T>(1e-6);
         let f_prime = (bdtr(
             k.to_usize().unwrap_or(0),
             (n + delta).to_usize().unwrap_or(0),
@@ -979,7 +990,7 @@ where
             k.to_usize().unwrap_or(0),
             (n - delta).to_usize().unwrap_or(0),
             p,
-        )?) / (T::from_f64(2.0).unwrap() * delta);
+        )?) / (const_f64::<T>(2.0) * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -988,7 +999,7 @@ where
         n -= f_val / f_prime;
 
         if n < k {
-            n = k + T::from_f64(0.1).unwrap();
+            n = k + const_f64::<T>(0.1);
         }
     }
 
@@ -1014,7 +1025,7 @@ where
 
     // Use Newton's method
     let mut a = T::one(); // Initial guess
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
         let f_val = betainc_regularized(a, b, x)? - y;
@@ -1024,10 +1035,10 @@ where
         }
 
         // Approximate derivative using finite differences
-        let delta = T::from_f64(1e-6).unwrap();
+        let delta = const_f64::<T>(1e-6);
         let f_plus = betainc_regularized(a + delta, b, x)?;
         let fminus = betainc_regularized(a - delta, b, x)?;
-        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
+        let f_prime = (f_plus - fminus) / (const_f64::<T>(2.0) * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1036,7 +1047,7 @@ where
         a -= f_val / f_prime;
 
         if a <= T::zero() {
-            a = T::from_f64(0.01).unwrap();
+            a = const_f64::<T>(0.01);
         }
     }
 
@@ -1062,7 +1073,7 @@ where
 
     // Use Newton's method
     let mut b = T::one(); // Initial guess
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
         let f_val = betainc_regularized(a, b, x)? - y;
@@ -1072,10 +1083,10 @@ where
         }
 
         // Approximate derivative using finite differences
-        let delta = T::from_f64(1e-6).unwrap();
+        let delta = const_f64::<T>(1e-6);
         let f_plus = betainc_regularized(a, b + delta, x)?;
         let fminus = betainc_regularized(a, b - delta, x)?;
-        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
+        let f_prime = (f_plus - fminus) / (const_f64::<T>(2.0) * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1084,7 +1095,7 @@ where
         b -= f_val / f_prime;
 
         if b <= T::zero() {
-            b = T::from_f64(0.01).unwrap();
+            b = const_f64::<T>(0.01);
         }
     }
 
@@ -1108,8 +1119,8 @@ where
     }
 
     // Use Newton's method
-    let mut dfn = T::from_f64(5.0).unwrap(); // Initial guess
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let mut dfn = const_f64::<T>(5.0); // Initial guess
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
         let f_val = fdtr(dfn, dfd, x)? - y;
@@ -1119,10 +1130,10 @@ where
         }
 
         // Approximate derivative
-        let delta = T::from_f64(1e-6).unwrap();
+        let delta = const_f64::<T>(1e-6);
         let f_plus = fdtr(dfn + delta, dfd, x)?;
         let fminus = fdtr(dfn - delta, dfd, x)?;
-        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
+        let f_prime = (f_plus - fminus) / (const_f64::<T>(2.0) * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1131,7 +1142,7 @@ where
         dfn -= f_val / f_prime;
 
         if dfn <= T::zero() {
-            dfn = T::from_f64(0.1).unwrap();
+            dfn = const_f64::<T>(0.1);
         }
     }
 
@@ -1156,7 +1167,7 @@ where
 
     // Use Newton's method
     let mut a = T::one(); // Initial guess
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
         let f_val = gdtr(a, x)? - y;
@@ -1166,10 +1177,10 @@ where
         }
 
         // Approximate derivative
-        let delta = T::from_f64(1e-6).unwrap();
+        let delta = const_f64::<T>(1e-6);
         let f_plus = gdtr(a + delta, x)?;
         let fminus = gdtr(a - delta, x)?;
-        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
+        let f_prime = (f_plus - fminus) / (const_f64::<T>(2.0) * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1178,7 +1189,7 @@ where
         a -= f_val / f_prime;
 
         if a <= T::zero() {
-            a = T::from_f64(0.01).unwrap();
+            a = const_f64::<T>(0.01);
         }
     }
 
@@ -1204,7 +1215,7 @@ where
 
     // Use Newton's method
     let mut x = a; // Initial guess (mean of gamma distribution with scale=1)
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
         let f_val = gdtr(a, x)? - y;
@@ -1214,10 +1225,10 @@ where
         }
 
         // Approximate derivative
-        let delta = T::from_f64(1e-6).unwrap() * (T::one() + x.abs());
+        let delta = const_f64::<T>(1e-6) * (T::one() + x.abs());
         let f_plus = gdtr(a, x + delta)?;
         let fminus = gdtr(a, x - delta)?;
-        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
+        let f_prime = (f_plus - fminus) / (const_f64::<T>(2.0) * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1226,7 +1237,7 @@ where
         x -= f_val / f_prime;
 
         if x <= T::zero() {
-            x = T::from_f64(0.01).unwrap();
+            x = const_f64::<T>(0.01);
         }
     }
 
@@ -1252,7 +1263,7 @@ where
 
     // Use Newton's method
     let mut x = a; // Initial guess (mean of gamma distribution with scale=1)
-    let tolerance = T::from_f64(1e-10).unwrap();
+    let tolerance = const_f64::<T>(1e-10);
 
     for _ in 0..50 {
         let f_val = gdtr(a, x)? - y;
@@ -1262,10 +1273,10 @@ where
         }
 
         // Approximate derivative (PDF of gamma distribution)
-        let delta = T::from_f64(1e-6).unwrap() * (T::one() + x.abs());
+        let delta = const_f64::<T>(1e-6) * (T::one() + x.abs());
         let f_plus = gdtr(a, x + delta)?;
         let fminus = gdtr(a, x - delta)?;
-        let f_prime = (f_plus - fminus) / (T::from_f64(2.0).unwrap() * delta);
+        let f_prime = (f_plus - fminus) / (const_f64::<T>(2.0) * delta);
 
         if f_prime.abs() < T::epsilon() {
             break;
@@ -1274,7 +1285,7 @@ where
         x -= f_val / f_prime;
 
         if x <= T::zero() {
-            x = T::from_f64(0.01).unwrap();
+            x = const_f64::<T>(0.01);
         }
     }
 
@@ -1300,7 +1311,7 @@ where
 /// use scirs2_special::chdtri;
 /// use approx::assert_relative_eq;
 ///
-/// let x = chdtri(0.95, 2.0).unwrap();
+/// let x = chdtri(0.95, 2.0).expect("example should not fail");
 /// assert!(x > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -1319,8 +1330,8 @@ where
 
     // For chi-square with v degrees of freedom, use the relationship with gamma distribution
     // χ²(v) = 2 * Gamma(v/2, 2), so the inverse is 2 * gammaincinv(v/2, p)
-    let _half = T::from_f64(0.5).unwrap();
-    let two = T::from_f64(2.0).unwrap();
+    let _half = const_f64::<T>(0.5);
+    let two = const_f64::<T>(2.0);
 
     // Simplified implementation - use gamma inverse when available
     // For now, use an approximation for moderate values
@@ -1333,8 +1344,8 @@ where
 
     // Wilson-Hilferty approximation for moderate degrees of freedom
     let z = crate::erf::erfinv(two * p - T::one());
-    let h = two / (T::from_f64(9.0).unwrap() * v);
-    let term = z * h.sqrt() - h / T::from_f64(3.0).unwrap() + T::one();
+    let h = two / (const_f64::<T>(9.0) * v);
+    let term = z * h.sqrt() - h / const_f64::<T>(3.0) + T::one();
 
     Ok(v * term.powi(3))
 }
@@ -1356,7 +1367,7 @@ where
 /// use scirs2_special::pdtri;
 /// use approx::assert_relative_eq;
 ///
-/// let m = pdtri(0.5, 2.0).unwrap();
+/// let m = pdtri(0.5, 2.0).expect("example should not fail");
 /// assert!(m > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -1386,8 +1397,8 @@ where
     let one = T::one();
 
     // Simplified approximation - for larger k, use normal approximation
-    if k > T::from_f64(10.0).unwrap() {
-        let z = crate::erf::erfinv(T::from_f64(2.0).unwrap() * p - one);
+    if k > const_f64::<T>(10.0) {
+        let z = crate::erf::erfinv(const_f64::<T>(2.0) * p - one);
         let sqrt_k = k.sqrt();
         Ok(k + z * sqrt_k)
     } else {
@@ -1414,7 +1425,7 @@ where
 /// use scirs2_special::pdtrik;
 /// use approx::assert_relative_eq;
 ///
-/// let k = pdtrik(0.5, 2.0).unwrap();
+/// let k = pdtrik(0.5, 2.0).expect("example should not fail");
 /// assert!(k >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -1439,10 +1450,10 @@ where
     }
 
     // Use normal approximation for large m
-    if m > T::from_f64(10.0).unwrap() {
-        let z = crate::erf::erfinv(T::from_f64(2.0).unwrap() * p - T::one());
+    if m > const_f64::<T>(10.0) {
+        let z = crate::erf::erfinv(const_f64::<T>(2.0) * p - T::one());
         let sqrt_m = m.sqrt();
-        let result = m + z * sqrt_m - T::from_f64(0.5).unwrap();
+        let result = m + z * sqrt_m - const_f64::<T>(0.5);
         Ok(result.max(T::zero()))
     } else {
         // For small m, use simple approximation
@@ -1469,7 +1480,7 @@ where
 /// use scirs2_special::nbdtr;
 /// use approx::assert_relative_eq;
 ///
-/// let cdf = nbdtr(2.0, 3.0, 0.5).unwrap();
+/// let cdf = nbdtr(2.0, 3.0, 0.5).expect("example should not fail");
 /// assert!(cdf >= 0.0 && cdf <= 1.0);
 /// ```
 #[allow(dead_code)]
@@ -1572,32 +1583,32 @@ mod tests {
     #[test]
     fn test_binomial_distribution() {
         // Test binomial CDF
-        let cdf = bdtr(2, 5, 0.5).unwrap();
+        let cdf = bdtr(2, 5, 0.5).expect("test should not fail");
         assert_relative_eq!(cdf, 0.5, epsilon = 1e-10);
 
         // Test complement
-        let surv = bdtrc(2, 5, 0.5).unwrap();
+        let surv = bdtrc(2, 5, 0.5).expect("test should not fail");
         assert_relative_eq!(cdf + surv, 1.0, epsilon = 1e-10);
     }
 
     #[test]
     fn test_chi_square_distribution() {
         // Test chi-square CDF
-        let cdf = chdtr(2.0, 2.0).unwrap();
+        let cdf = chdtr(2.0, 2.0).expect("test should not fail");
         assert_relative_eq!(cdf, 0.6321205588285577, epsilon = 1e-8);
     }
 
     #[test]
     fn test_student_t_distribution() {
         // Test t distribution CDF
-        let cdf = stdtr(10.0, 0.0).unwrap();
+        let cdf = stdtr(10.0, 0.0).expect("test should not fail");
         assert_relative_eq!(cdf, 0.5, epsilon = 1e-10);
     }
 
     #[test]
     fn test_f_distribution() {
         // Test F distribution CDF
-        let cdf = fdtr(5.0, 10.0, 1.0).unwrap();
+        let cdf = fdtr(5.0, 10.0, 1.0).expect("test should not fail");
         assert_relative_eq!(cdf, 0.5417926019448583, epsilon = 0.5);
     }
 }

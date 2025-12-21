@@ -23,7 +23,7 @@ use super::*;
         let config = AdvancedPropertyConfig::default();
         let registry = MathematicalPropertyRegistry::new(&config);
 
-        let mean_properties = registry.get_properties_for_function("mean").unwrap();
+        let mean_properties = registry.get_properties_for_function("mean").expect("Test: operation failed");
         assert!(!mean_properties.is_empty());
     }
 
@@ -34,7 +34,7 @@ use super::*;
 
         let mean_properties = registry
             .get_properties_for_operation(&StatisticalOperationType::Mean)
-            .unwrap();
+            .expect("Test: operation failed");
         assert!(!mean_properties.is_empty());
     }
 

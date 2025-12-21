@@ -20,6 +20,11 @@ use crate::gamma::gamma;
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 /// Modified Bessel function of the first kind of order 0 with enhanced numerical stability.
 ///
 /// This implementation provides improved handling of:
@@ -53,29 +58,29 @@ pub fn i0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let abs_x = x.abs();
 
     // For very small arguments, use series expansion with higher precision
-    if abs_x < F::from(1e-6).unwrap() {
+    if abs_x < const_f64::<F>(1e-6) {
         // I₀(x) ≈ 1 + x²/4 + x⁴/64 + ...
         let x2 = abs_x * abs_x;
         let x4 = x2 * x2;
         return F::one()
-            + x2 / F::from(4.0).unwrap()
-            + x4 / F::from(64.0).unwrap()
-            + x4 * x2 / F::from(2304.0).unwrap();
+            + x2 / const_f64::<F>(4.0)
+            + x4 / const_f64::<F>(64.0)
+            + x4 * x2 / const_f64::<F>(2304.0);
     }
 
     // For moderate arguments, use the optimized polynomial approximation
-    if abs_x <= F::from(3.75).unwrap() {
-        let y = (abs_x / F::from(3.75).unwrap()).powi(2);
+    if abs_x <= const_f64::<F>(3.75) {
+        let y = (abs_x / const_f64::<F>(3.75)).powi(2);
 
         // Polynomial coefficients for I₀ expansion
         let p = [
-            F::from(1.0).unwrap(),
-            F::from(3.5156229).unwrap(),
-            F::from(3.0899424).unwrap(),
-            F::from(1.2067492).unwrap(),
-            F::from(0.2659732).unwrap(),
-            F::from(0.0360768).unwrap(),
-            F::from(0.0045813).unwrap(),
+            const_f64::<F>(1.0),
+            const_f64::<F>(3.5156229),
+            const_f64::<F>(3.0899424),
+            const_f64::<F>(1.2067492),
+            const_f64::<F>(0.2659732),
+            const_f64::<F>(0.0360768),
+            const_f64::<F>(0.0045813),
         ];
 
         // Evaluate polynomial
@@ -87,19 +92,19 @@ pub fn i0<F: Float + FromPrimitive + Debug>(x: F) -> F {
         sum
     } else {
         // For abs_x > 3.75
-        let y = F::from(3.75).unwrap() / abs_x;
+        let y = const_f64::<F>(3.75) / abs_x;
 
         // Polynomial coefficients for large argument expansion
         let p = [
-            F::from(0.39894228).unwrap(),
-            F::from(0.01328592).unwrap(),
-            F::from(0.00225319).unwrap(),
-            F::from(-0.00157565).unwrap(),
-            F::from(0.00916281).unwrap(),
-            F::from(-0.02057706).unwrap(),
-            F::from(0.02635537).unwrap(),
-            F::from(-0.01647633).unwrap(),
-            F::from(0.00392377).unwrap(),
+            const_f64::<F>(0.39894228),
+            const_f64::<F>(0.01328592),
+            const_f64::<F>(0.00225319),
+            const_f64::<F>(-0.00157565),
+            const_f64::<F>(0.00916281),
+            const_f64::<F>(-0.02057706),
+            const_f64::<F>(0.02635537),
+            const_f64::<F>(-0.01647633),
+            const_f64::<F>(0.00392377),
         ];
 
         // Evaluate polynomial
@@ -116,10 +121,10 @@ pub fn i0<F: Float + FromPrimitive + Debug>(x: F) -> F {
             sum * exp_term / abs_x.sqrt()
         } else {
             // Use logarithmic computation to avoid overflow
-            let log_result = abs_x - F::from(0.5).unwrap() * abs_x.ln() + sum.ln();
+            let log_result = abs_x - const_f64::<F>(0.5) * abs_x.ln() + sum.ln();
 
             // Only exponentiate if it won't overflow
-            if log_result < F::from(constants::f64::LN_MAX).unwrap() {
+            if log_result < F::from(constants::f64::LN_MAX).expect("Failed to convert to float") {
                 log_result.exp()
             } else {
                 F::infinity()
@@ -166,30 +171,30 @@ pub fn i1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     };
 
     // For very small arguments, use series expansion with higher precision
-    if abs_x < F::from(1e-6).unwrap() {
+    if abs_x < const_f64::<F>(1e-6) {
         // I₁(x) ≈ x/2 + x³/16 + x⁵/384 + ...
         let x2 = abs_x * abs_x;
         let x3 = abs_x * x2;
         let x5 = x3 * x2;
         return sign
-            * (abs_x / F::from(2.0).unwrap()
-                + x3 / F::from(16.0).unwrap()
-                + x5 / F::from(384.0).unwrap());
+            * (abs_x / const_f64::<F>(2.0)
+                + x3 / const_f64::<F>(16.0)
+                + x5 / const_f64::<F>(384.0));
     }
 
     // For moderate arguments, use the optimized polynomial approximation
-    if abs_x <= F::from(3.75).unwrap() {
-        let y = (abs_x / F::from(3.75).unwrap()).powi(2);
+    if abs_x <= const_f64::<F>(3.75) {
+        let y = (abs_x / const_f64::<F>(3.75)).powi(2);
 
         // Polynomial coefficients for I₁ expansion
         let p = [
-            F::from(0.5).unwrap(),
-            F::from(0.87890594).unwrap(),
-            F::from(0.51498869).unwrap(),
-            F::from(0.15084934).unwrap(),
-            F::from(0.02658733).unwrap(),
-            F::from(0.00301532).unwrap(),
-            F::from(0.00032411).unwrap(),
+            const_f64::<F>(0.5),
+            const_f64::<F>(0.87890594),
+            const_f64::<F>(0.51498869),
+            const_f64::<F>(0.15084934),
+            const_f64::<F>(0.02658733),
+            const_f64::<F>(0.00301532),
+            const_f64::<F>(0.00032411),
         ];
 
         // Evaluate polynomial
@@ -201,19 +206,19 @@ pub fn i1<F: Float + FromPrimitive + Debug>(x: F) -> F {
         sign * sum * abs_x
     } else {
         // For abs_x > 3.75
-        let y = F::from(3.75).unwrap() / abs_x;
+        let y = const_f64::<F>(3.75) / abs_x;
 
         // Polynomial coefficients for large argument expansion
         let p = [
-            F::from(0.39894228).unwrap(),
-            F::from(-0.03988024).unwrap(),
-            F::from(-0.00362018).unwrap(),
-            F::from(0.00163801).unwrap(),
-            F::from(-0.01031555).unwrap(),
-            F::from(0.02282967).unwrap(),
-            F::from(-0.02895312).unwrap(),
-            F::from(0.01787654).unwrap(),
-            F::from(-0.00420059).unwrap(),
+            const_f64::<F>(0.39894228),
+            const_f64::<F>(-0.03988024),
+            const_f64::<F>(-0.00362018),
+            const_f64::<F>(0.00163801),
+            const_f64::<F>(-0.01031555),
+            const_f64::<F>(0.02282967),
+            const_f64::<F>(-0.02895312),
+            const_f64::<F>(0.01787654),
+            const_f64::<F>(-0.00420059),
         ];
 
         // Evaluate polynomial
@@ -230,10 +235,10 @@ pub fn i1<F: Float + FromPrimitive + Debug>(x: F) -> F {
             sign * sum * exp_term / abs_x.sqrt()
         } else {
             // Use logarithmic computation to avoid overflow
-            let log_result = abs_x - F::from(0.5).unwrap() * abs_x.ln() + sum.ln();
+            let log_result = abs_x - const_f64::<F>(0.5) * abs_x.ln() + sum.ln();
 
             // Only exponentiate if it won't overflow
-            if log_result < F::from(constants::f64::LN_MAX).unwrap() {
+            if log_result < F::from(constants::f64::LN_MAX).expect("Failed to convert to float") {
                 sign * log_result.exp()
             } else {
                 sign * F::infinity()
@@ -286,7 +291,7 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
     let abs_x = x.abs();
 
     // Integer order cases
-    let v_f64 = v.to_f64().unwrap();
+    let v_f64 = v.to_f64().expect("Test/example failed");
     if v_f64.fract() == 0.0 && (0.0..=100.0).contains(&v_f64) {
         let n = v_f64 as i32;
 
@@ -301,7 +306,7 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
             let mut i_v = i1(abs_x);
 
             for k in 1..n {
-                let k_f = F::from(k).unwrap();
+                let k_f = F::from(k).expect("Failed to convert to float");
                 // The recurrence relation for modified Bessel functions is actually:
                 // I_{v+1}(x) = (2v/x) I_v(x) + I_{v-1}(x)
                 // Note the sign difference compared to regular Bessel functions
@@ -319,12 +324,12 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
     }
 
     // For small x or non-integer v, use series representation
-    let half_x = abs_x / F::from(2.0).unwrap();
+    let half_x = abs_x / const_f64::<F>(2.0);
     let log_term = v * half_x.ln() - gamma(v + F::one()).ln();
 
     // Only compute if it won't underflow/overflow
-    if log_term < F::from(constants::f64::LN_MAX).unwrap()
-        && log_term > F::from(constants::f64::LN_MIN).unwrap()
+    if log_term < F::from(constants::f64::LN_MAX).expect("Failed to convert to float")
+        && log_term > F::from(constants::f64::LN_MIN).expect("Failed to convert to float")
     {
         let prefactor = log_term.exp();
 
@@ -333,11 +338,11 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
         let x2 = half_x * half_x;
 
         for k in 1..=100 {
-            let k_f = F::from(k).unwrap();
+            let k_f = F::from(k).expect("Failed to convert to float");
             term = term * x2 / (k_f * (v + k_f));
             sum += term;
 
-            if term.abs() < F::from(1e-15).unwrap() * sum.abs() {
+            if term.abs() < const_f64::<F>(1e-15) * sum.abs() {
                 break;
             }
         }
@@ -368,22 +373,23 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 
     // For very large x, use asymptotic expansion with scaling
     // I_v(x) ~ e^x/sqrt(2πx) for large x
-    if abs_x > F::from(max(20.0, v_f64 * 1.5)).unwrap() {
-        let one_over_sqrt_2pi_x =
-            F::from(constants::f64::ONE_OVER_SQRT_2PI).unwrap() / abs_x.sqrt();
+    if abs_x > F::from(max(20.0, v_f64 * 1.5)).expect("Operation failed") {
+        let one_over_sqrt_2pi_x = F::from(constants::f64::ONE_OVER_SQRT_2PI)
+            .expect("Failed to convert to float")
+            / abs_x.sqrt();
 
         // Use logarithmic computation to avoid overflow
         let log_result = abs_x + one_over_sqrt_2pi_x.ln();
 
         // Only exponentiate if it won't overflow
-        if log_result < F::from(constants::f64::LN_MAX).unwrap() {
+        if log_result < F::from(constants::f64::LN_MAX).expect("Failed to convert to float") {
             // Add higher order terms for better accuracy
-            let mu = F::from(4.0).unwrap() * v * v; // μ = 4v²
+            let mu = const_f64::<F>(4.0) * v * v; // μ = 4v²
             let muminus_1 = mu - F::one(); // μ-1
 
-            let correction = F::one() - muminus_1 / (F::from(8.0).unwrap() * abs_x)
-                + muminus_1 * (muminus_1 + F::from(2.0).unwrap())
-                    / (F::from(128.0).unwrap() * abs_x * abs_x);
+            let correction = F::one() - muminus_1 / (const_f64::<F>(8.0) * abs_x)
+                + muminus_1 * (muminus_1 + const_f64::<F>(2.0))
+                    / (const_f64::<F>(128.0) * abs_x * abs_x);
 
             let result = log_result.exp() * correction;
 
@@ -402,8 +408,8 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
     // Fallback - use recurrence relation with numerical stability control
     // For this we would need Miller's algorithm or other advanced techniques
     // For now, we'll use a simpler approximation for mid-range values
-    let exp_term = (abs_x * F::from(0.5).unwrap()).exp();
-    let result = exp_term * (abs_x / (F::from(2.0).unwrap() * (v + F::one()))).powf(v);
+    let exp_term = (abs_x * const_f64::<F>(0.5)).exp();
+    let result = exp_term * (abs_x / (const_f64::<F>(2.0) * (v + F::one()))).powf(v);
 
     // Handle sign for negative x
     if x.is_sign_negative() && v_f64.fract() == 0.0 && (v_f64 as i32) % 2 != 0 {
@@ -448,14 +454,14 @@ pub fn k0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     }
 
     // For very small arguments, use logarithmic expansion with higher precision
-    if x < F::from(1e-8).unwrap() {
+    if x < const_f64::<F>(1e-8) {
         // K₀(x) ≈ -ln(x/2) - γ + O(x²ln(x))
-        let gamma = F::from(constants::f64::EULER_MASCHERONI).unwrap();
-        return -(x / F::from(2.0).unwrap()).ln() - gamma;
+        let gamma = F::from(constants::f64::EULER_MASCHERONI).expect("Failed to convert to float");
+        return -(x / const_f64::<F>(2.0)).ln() - gamma;
     }
 
     // Simplified implementation for initial testing
-    let pi_over_2 = F::from(constants::f64::PI_2).unwrap();
+    let pi_over_2 = F::from(constants::f64::PI_2).expect("Failed to convert to float");
     (pi_over_2 / x).sqrt() * (-x).exp()
 }
 
@@ -494,14 +500,14 @@ pub fn k1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     }
 
     // For very small arguments, use leading term of the expansion with high precision
-    if x < F::from(1e-8).unwrap() {
+    if x < const_f64::<F>(1e-8) {
         // K₁(x) ≈ 1/x + O(x·ln(x))
         return F::one() / x;
     }
 
     // Simplified implementation for initial testing
-    let pi_over_2 = F::from(constants::f64::PI_2).unwrap();
-    (pi_over_2 / x).sqrt() * (-x).exp() * (F::one() + F::one() / (F::from(8.0).unwrap() * x))
+    let pi_over_2 = F::from(constants::f64::PI_2).expect("Failed to convert to float");
+    (pi_over_2 / x).sqrt() * (-x).exp() * (F::one() + F::one() / (const_f64::<F>(8.0) * x))
 }
 
 /// Modified Bessel function of the second kind of arbitrary order with enhanced numerical stability.
@@ -546,7 +552,7 @@ pub fn kv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 
     // Handle negative order using the relation K_{-v}(x) = K_v(x)
     let abs_v = v.abs();
-    let v_f64 = abs_v.to_f64().unwrap();
+    let v_f64 = abs_v.to_f64().expect("Test/example failed");
 
     // If v is a non-negative integer, use specialized function
     if v_f64.fract() == 0.0 {
@@ -559,10 +565,10 @@ pub fn kv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
     }
 
     // Simplified implementation for initial testing
-    let pi_over_2 = F::from(constants::f64::PI_2).unwrap();
+    let pi_over_2 = F::from(constants::f64::PI_2).expect("Failed to convert to float");
     (pi_over_2 / x).sqrt()
         * (-x).exp()
-        * (F::one() + (F::from(4.0).unwrap() * v * v - F::one()) / (F::from(8.0).unwrap() * x))
+        * (F::one() + (const_f64::<F>(4.0) * v * v - F::one()) / (const_f64::<F>(8.0) * x))
 }
 
 /// Exponentially scaled modified Bessel function of the first kind of order 0.

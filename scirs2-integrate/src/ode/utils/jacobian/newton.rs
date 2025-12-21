@@ -35,11 +35,11 @@ impl<F: IntegrateFloat> Default for NewtonParameters<F> {
     fn default() -> Self {
         NewtonParameters {
             max_iterations: 10,
-            abs_tolerance: F::from_f64(1e-10).unwrap(),
-            rel_tolerance: F::from_f64(1e-8).unwrap(),
+            abs_tolerance: F::from_f64(1e-10).expect("Operation failed"),
+            rel_tolerance: F::from_f64(1e-8).expect("Operation failed"),
             jacobian_update_freq: 1,
             damping_factor: F::one(),
-            min_damping: F::from_f64(0.1).unwrap(),
+            min_damping: F::from_f64(0.1).expect("Operation failed"),
             reuse_jacobian: true,
             force_jacobian_init: false,
         }
@@ -128,10 +128,10 @@ where
         }
 
         // Get the Jacobian
-        let jacobian = jac_manager.jacobian().unwrap();
+        let jacobian = jac_manager.jacobian().expect("Operation failed");
 
         // Solve the linear system J * dx = -F(x) with optimized solver
-        let neg_residual = residual.clone() * F::from_f64(-1.0).unwrap();
+        let neg_residual = residual.clone() * F::from_f64(-1.0).expect("Operation failed");
 
         // Use auto solver selection for the best performance
         let dx = auto_solve_linear_system(
@@ -156,7 +156,7 @@ where
             let mut backtrack_count = 0;
 
             while error_new > error && damping > params.min_damping && backtrack_count < 5 {
-                damping *= F::from_f64(0.5).unwrap();
+                damping *= F::from_f64(0.5).expect("Operation failed");
                 x_new = x.clone() + &dx * damping;
                 residual_new = f(&x_new);
                 func_evals += 1;

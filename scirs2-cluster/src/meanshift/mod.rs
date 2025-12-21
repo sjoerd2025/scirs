@@ -116,7 +116,7 @@ impl<T: Float> Hash for FloatPoint<T> {
 ///     [4.0, 7.0], [3.0, 5.0], [3.0, 6.0]
 /// ];
 ///
-/// let bandwidth = estimate_bandwidth(&data.view(), Some(0.5), None, None).unwrap();
+/// let bandwidth = estimate_bandwidth(&data.view(), Some(0.5), None, None).expect("Operation failed");
 /// println!("Estimated bandwidth: {}", bandwidth);
 /// ```
 #[allow(dead_code)]
@@ -129,7 +129,7 @@ pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'st
     // Check that all data is finite
     checkarray_finite(data, "data")?;
 
-    let quantile = quantile.unwrap_or_else(|| T::from(0.3).unwrap());
+    let quantile = quantile.unwrap_or_else(|| T::from(0.3).expect("Operation failed"));
     let _quantile = check_unit_interval(quantile, "quantile", "estimate_bandwidth")?;
 
     // Select a subset of _samples if specified
@@ -155,7 +155,7 @@ pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'st
         data.to_owned()
     };
 
-    let n_neighbors = (T::from(data.nrows()).unwrap() * quantile)
+    let n_neighbors = (T::from(data.nrows()).expect("Operation failed") * quantile)
         .to_usize()
         .unwrap_or(1)
         .max(1)
@@ -180,17 +180,20 @@ pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'st
 
             if distances.len() > 1 {
                 // Skip the first distance (to itself, which is 0) and take the last (k-th neighbor)
-                let kth_dist = distances.last().copied().unwrap_or(T::from(1.0).unwrap()); // Default to 1.0 if no valid distance is found
+                let kth_dist = distances
+                    .last()
+                    .copied()
+                    .unwrap_or(T::from(1.0).expect("Operation failed")); // Default to 1.0 if no valid distance is found
 
                 bandwidth_sum = bandwidth_sum + kth_dist;
             } else if !distances.is_empty() {
                 // If we only have one distance (to itself), use a larger default value
-                bandwidth_sum = bandwidth_sum + T::from(1.0).unwrap();
+                bandwidth_sum = bandwidth_sum + T::from(1.0).expect("Operation failed");
             }
         }
     }
 
-    Ok(bandwidth_sum / T::from(data.nrows()).unwrap())
+    Ok(bandwidth_sum / T::from(data.nrows()).expect("Operation failed"))
 }
 
 /// Find seeds for mean_shift by binning data onto a grid.
@@ -282,7 +285,7 @@ fn mean_shift_single_seed<
     bandwidth: T,
     max_iter: usize,
 ) -> (Vec<T>, usize, usize) {
-    let stop_thresh = bandwidth * T::from(1e-3).unwrap();
+    let stop_thresh = bandwidth * T::from(1e-3).expect("Operation failed");
     let mut my_mean = seed.to_owned();
     let mut completed_iterations = 0;
 
@@ -315,7 +318,7 @@ fn mean_shift_single_seed<
                 *s = *s + *v;
             }
         }
-        my_mean = sum / T::from(indices.len()).unwrap();
+        my_mean = sum / T::from(indices.len()).expect("Operation failed");
 
         // Compute Euclidean distance manually for convergence check
         let mut dist_squared = T::zero();
@@ -367,7 +370,7 @@ fn mean_shift_single_seed<
 ///     ..Default::default()
 /// };
 ///
-/// let (centers, labels) = mean_shift(&data.view(), options).unwrap();
+/// let (centers, labels) = mean_shift(&data.view(), options).expect("Operation failed");
 /// println!("Number of clusters: {}", centers.nrows());
 /// ```
 #[allow(dead_code)]
@@ -435,7 +438,12 @@ impl<
         // Determine bandwidth
         let bandwidth = match self.options.bandwidth {
             Some(bw) => check_positive(bw, "bandwidth")?,
-            None => estimate_bandwidth(data, Some(T::from(0.3).unwrap()), None, None)?,
+            None => estimate_bandwidth(
+                data,
+                Some(T::from(0.3).expect("Operation failed")),
+                None,
+                None,
+            )?,
         };
 
         // Get seeds
@@ -532,7 +540,7 @@ impl<
         })?;
 
         // Use a smaller threshold for merging centers (typically bandwidth/10 or less)
-        let merge_threshold = bandwidth * T::from(0.1).unwrap();
+        let merge_threshold = bandwidth * T::from(0.1).expect("Operation failed");
 
         for i in 0..sorted_centers.nrows() {
             if unique[i] {
@@ -586,10 +594,11 @@ impl<
 
                 if !indices.is_empty() {
                     let idx = indices[0];
-                    let distance = T::from(distances[0]).unwrap();
+                    let distance = T::from(distances[0]).expect("Operation failed");
 
                     if self.options.cluster_all || (distance <= bandwidth) {
-                        labels[point_idx] = T::to_i32(&T::from(idx).unwrap()).unwrap();
+                        labels[point_idx] = T::to_i32(&T::from(idx).expect("Operation failed"))
+                            .expect("Operation failed");
                     } else {
                         // Mark as noise if not close to any cluster and not clustering all points
                         labels[point_idx] = -1;
@@ -656,7 +665,9 @@ impl<
                 })?;
 
                 if !indices_.is_empty() {
-                    labels[i + row_idx] = T::to_i32(&T::from(indices_[0]).unwrap()).unwrap();
+                    labels[i + row_idx] =
+                        T::to_i32(&T::from(indices_[0]).expect("Operation failed"))
+                            .expect("Operation failed");
                 } else {
                     // Should never happen, but just in case
                     labels[i + row_idx] = -1;
@@ -692,7 +703,8 @@ mod tests {
         let n_neighbors = ((data.nrows() as f64) * quantile) as usize;
         println!("n_neighbors calculated: {}", n_neighbors);
 
-        let bandwidth = estimate_bandwidth(&data.view(), Some(quantile), None, None).unwrap();
+        let bandwidth =
+            estimate_bandwidth(&data.view(), Some(quantile), None, None).expect("Operation failed");
 
         // The bandwidth should be a positive value
         assert!(
@@ -713,7 +725,8 @@ mod tests {
     fn test_estimate_bandwidth_small_sample() {
         let data = array![[1.0, 1.0]];
 
-        let bandwidth = estimate_bandwidth(&data.view(), Some(0.3), None, None).unwrap();
+        let bandwidth =
+            estimate_bandwidth(&data.view(), Some(0.3), None, None).expect("Operation failed");
 
         // With only one sample, we return a default value of 1.0
         assert!(
@@ -763,7 +776,7 @@ mod tests {
             ..Default::default()
         };
 
-        let (centers, labels) = mean_shift(&data.view(), options).unwrap();
+        let (centers, labels) = mean_shift(&data.view(), options).expect("Operation failed");
 
         // Should find at least 1 cluster
         assert!(centers.nrows() >= 1, "Should find at least 1 cluster");
@@ -801,7 +814,7 @@ mod tests {
             ..Default::default()
         };
 
-        let (centers, labels) = mean_shift(&data.view(), options).unwrap();
+        let (centers, labels) = mean_shift(&data.view(), options).expect("Operation failed");
 
         // Should find at least 1 cluster with bin seeding
         assert!(centers.nrows() >= 1, "Should find at least 1 cluster");
@@ -835,7 +848,7 @@ mod tests {
             ..Default::default()
         };
 
-        let (_centers, labels) = mean_shift(&data.view(), options).unwrap();
+        let (_centers, labels) = mean_shift(&data.view(), options).expect("Operation failed");
 
         // Check that we have some noise points (-1)
         assert!(labels.iter().any(|&l| l == -1));
@@ -859,7 +872,7 @@ mod tests {
         };
 
         let mut model = MeanShift::new(options);
-        model.fit(&data.view()).unwrap();
+        model.fit(&data.view()).expect("Operation failed");
 
         // With very low max_iter, we should hit the limit
         assert_eq!(model.n_iter(), 1);
@@ -882,10 +895,10 @@ mod tests {
         };
 
         let mut model = MeanShift::new(options);
-        model.fit(&data.view()).unwrap();
+        model.fit(&data.view()).expect("Operation failed");
 
         // Predict the same data
-        let predicted_labels = model.predict(&data.view()).unwrap();
+        let predicted_labels = model.predict(&data.view()).expect("Operation failed");
 
         // Predictions on the same data should match the fitted labels
         assert_eq!(predicted_labels, model.labels().clone());
@@ -914,7 +927,7 @@ mod tests {
             ..Default::default()
         };
 
-        let (centers, labels) = mean_shift(&data.view(), options).unwrap();
+        let (centers, labels) = mean_shift(&data.view(), options).expect("Operation failed");
 
         // Should find 1-2 clusters (algorithm can merge distant clusters with large bandwidth)
         assert!(centers.nrows() >= 1, "Should find at least 1 cluster");

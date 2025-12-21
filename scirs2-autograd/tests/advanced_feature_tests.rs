@@ -22,13 +22,14 @@ mod custom_activation_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Create test tensor
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Test Swish activation
             let swish_result = T::custom_activation(&x, "swish");
-            let swish_output = swish_result.eval(ctx).unwrap();
+            let swish_output = swish_result.eval(ctx).expect("Test: operation failed");
 
             // Swish(0) should be 0, Swish(1) should be positive
             assert_eq!(swish_output[1], 0.0);
@@ -36,14 +37,14 @@ mod custom_activation_tests {
 
             // Test Mish activation
             let mish_result = T::custom_activation(&x, "mish");
-            let mish_output = mish_result.eval(ctx).unwrap();
+            let mish_output = mish_result.eval(ctx).expect("Test: operation failed");
 
             // Mish should produce reasonable outputs
             assert!(mish_output.iter().all(|&val: &f32| val.is_finite()));
 
             // Test GELU activation
             let gelu_result = T::custom_activation(&x, "gelu");
-            let gelu_output = gelu_result.eval(ctx).unwrap();
+            let gelu_output = gelu_result.eval(ctx).expect("Test: operation failed");
 
             // GELU should be monotonic and produce finite outputs
             assert!(gelu_output.iter().all(|&val: &f32| val.is_finite()));
@@ -52,7 +53,7 @@ mod custom_activation_tests {
 
             // Test Parametric ReLU
             let prelu_result = T::custom_activation(&x, "parametric_relu");
-            let prelu_output = prelu_result.eval(ctx).unwrap();
+            let prelu_output = prelu_result.eval(ctx).expect("Test: operation failed");
 
             // PReLU should handle negative values with small slope
             assert!(prelu_output[0] < 0.0); // Negative input -> small negative output
@@ -79,7 +80,8 @@ mod custom_activation_tests {
     fn test_parameterized_activations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![-0.5, 1.5]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![-0.5, 1.5])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -87,8 +89,8 @@ mod custom_activation_tests {
             let result1 = T::parameterized_activation(&x, "parametric_relu", &[0.01]);
             let result2 = T::parameterized_activation(&x, "parametric_relu", &[0.1]);
 
-            let output1 = result1.eval(ctx).unwrap();
-            let output2 = result2.eval(ctx).unwrap();
+            let output1 = result1.eval(ctx).expect("Test: operation failed");
+            let output2 = result2.eval(ctx).expect("Test: operation failed");
 
             // Different parameters should produce different results for negative inputs
             assert!((output1[0] as f32).abs() < (output2[0] as f32).abs()); // Different negative slopes
@@ -107,17 +109,19 @@ mod performance_optimization_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test SIMD-optimized operations
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Test SIMD addition
             let simd_add_result = T::simd_add(&a, &b);
-            let add_output = simd_add_result.eval(ctx).unwrap();
+            let add_output = simd_add_result.eval(ctx).expect("Test: operation failed");
 
             // Should be [3.0, 5.0, 7.0, 9.0]
             for i in 0..4 {
@@ -126,7 +130,7 @@ mod performance_optimization_tests {
 
             // Test SIMD multiplication
             let simd_mul_result = T::simd_mul(&a, &b);
-            let mul_output = simd_mul_result.eval(ctx).unwrap();
+            let mul_output = simd_mul_result.eval(ctx).expect("Test: operation failed");
 
             // Should be [2.0, 6.0, 12.0, 20.0]
             let expected = [2.0, 6.0, 12.0, 20.0];
@@ -140,13 +144,14 @@ mod performance_optimization_tests {
     fn test_simd_unary_operations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 2.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Test SIMD ReLU
             let relu_result = T::simd_relu(&x);
-            let relu_output = relu_result.eval(ctx).unwrap();
+            let relu_output = relu_result.eval(ctx).expect("Test: operation failed");
 
             // Should be [0.0, 0.0, 2.0]
             assert_eq!(relu_output[0], 0.0);
@@ -155,7 +160,7 @@ mod performance_optimization_tests {
 
             // Test SIMD Sigmoid
             let sigmoid_result = T::simd_sigmoid(&x);
-            let sigmoid_output = sigmoid_result.eval(ctx).unwrap();
+            let sigmoid_output = sigmoid_result.eval(ctx).expect("Test: operation failed");
 
             // All outputs should be between 0 and 1
             for &val in sigmoid_output.iter() {
@@ -168,17 +173,19 @@ mod performance_optimization_tests {
     fn test_cache_friendly_matmul() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Test cache-friendly matrix multiplication
             let result = T::cache_friendly_matmul(&a, &b, Some(32));
-            let output = result.eval(ctx).unwrap();
+            let output = result.eval(ctx).expect("Test: operation failed");
 
             // Verify matrix multiplication result
             assert_eq!(output.shape(), &[2, 2]);
@@ -190,13 +197,14 @@ mod performance_optimization_tests {
     fn test_parallel_reductions() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4, 3]), (0..12).map(|i| i as f32).collect()).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4, 3]), (0..12).map(|i| i as f32).collect())
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Test parallel sum
             let sum_result = T::parallel_sum(&x, &[0], false);
-            let sum_output = sum_result.eval(ctx).unwrap();
+            let sum_output = sum_result.eval(ctx).expect("Test: operation failed");
 
             // Should sum along axis 0
             assert_eq!(sum_output.shape(), &[3]);
@@ -240,14 +248,18 @@ mod graph_enhancement_tests {
     #[test]
     fn test_conditional_operations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
-            let condition =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+            let condition = T::convert_to_tensor(
+                Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).expect("Test: operation failed"),
+                ctx,
+            );
             let true_branch = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
             let false_branch = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![30.0, 40.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -258,22 +270,24 @@ mod graph_enhancement_tests {
                 &false_branch,
                 T::PredicateType::GreaterThanZero,
             );
-            let output = result.eval(ctx).unwrap();
+            let output = result.eval(ctx).expect("Test: operation failed");
 
             // Should select true branch
             assert_eq!(output[0], 10.0);
             assert_eq!(output[1], 20.0);
 
             // Test with false condition
-            let false_condition =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
+            let false_condition = T::convert_to_tensor(
+                Array::from_shape_vec(IxDyn(&[1]), vec![-1.0]).expect("Test: operation failed"),
+                ctx,
+            );
             let result2 = T::conditional(
                 &false_condition,
                 &true_branch,
                 &false_branch,
                 T::PredicateType::GreaterThanZero,
             );
-            let output2 = result2.eval(ctx).unwrap();
+            let output2 = result2.eval(ctx).expect("Test: operation failed");
 
             // Should select false branch
             assert_eq!(output2[0], 30.0);
@@ -286,7 +300,7 @@ mod graph_enhancement_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
                 Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|i| i as f32).collect())
-                    .unwrap(),
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -294,8 +308,12 @@ mod graph_enhancement_tests {
             let checkpointed_small = T::smart_checkpoint(&x, 100000); // High threshold
             let checkpointed_large = T::smart_checkpoint(&x, 1000); // Low threshold
 
-            let output1 = checkpointed_small.eval(ctx).unwrap();
-            let output2 = checkpointed_large.eval(ctx).unwrap();
+            let output1 = checkpointed_small
+                .eval(ctx)
+                .expect("Test: operation failed");
+            let output2 = checkpointed_large
+                .eval(ctx)
+                .expect("Test: operation failed");
 
             // Both should produce the same result
             assert_eq!(output1.len(), output2.len());
@@ -309,7 +327,8 @@ mod graph_enhancement_tests {
     fn test_cached_operations() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 4.0, 9.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 4.0, 9.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -318,9 +337,9 @@ mod graph_enhancement_tests {
             let cached_square = T::cached_op(&x, "square");
             let cached_sqrt = T::cached_op(&x, "sqrt");
 
-            let identity_output = cached_identity.eval(ctx).unwrap();
-            let square_output = cached_square.eval(ctx).unwrap();
-            let sqrt_output = cached_sqrt.eval(ctx).unwrap();
+            let identity_output = cached_identity.eval(ctx).expect("Test: operation failed");
+            let square_output = cached_square.eval(ctx).expect("Test: operation failed");
+            let sqrt_output = cached_sqrt.eval(ctx).expect("Test: operation failed");
 
             // Verify results
             assert_eq!(identity_output[0], 1.0);
@@ -353,7 +372,7 @@ mod graph_enhancement_tests {
         // Perform some cached operations to populate cache
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).expect("Test: operation failed"),
                 ctx,
             );
             let result = T::cached_op(&x, "square");
@@ -451,7 +470,7 @@ mod integration_tests {
             let final_result = T::cached_op(&activated, "identity");
 
             // Verify the result
-            let output = final_result.eval(ctx).unwrap();
+            let output = final_result.eval(ctx).expect("Test: operation failed");
             assert_eq!(output.shape(), &[32, 64]);
             assert!(output.iter().all(|&val: &f32| val.is_finite()));
         });
@@ -464,8 +483,10 @@ mod integration_tests {
             T::set_simd_enabled(true);
             T::set_parallel_enabled(true);
 
-            let condition =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.5]).unwrap(), ctx);
+            let condition = T::convert_to_tensor(
+                Array::from_shape_vec(IxDyn(&[1]), vec![1.5]).expect("Test: operation failed"),
+                ctx,
+            );
 
             // True branch: SIMD-optimized computation
             let data = T::efficient_ones(&[100], ctx);
@@ -485,7 +506,7 @@ mod integration_tests {
             // Apply parallel reduction
             let final_result = T::parallel_sum(&result, &[0], false);
 
-            let output = final_result.eval(ctx).unwrap();
+            let output = final_result.eval(ctx).expect("Test: operation failed");
             assert!(output[0] > 0.0); // Should have selected ReLU branch (all positive)
         });
     }
@@ -512,7 +533,7 @@ mod integration_tests {
             // Custom activation with memory-friendly implementation
             let activated = T::custom_activation(&checkpointed, "parametric_relu");
 
-            let output = activated.eval(ctx).unwrap();
+            let output = activated.eval(ctx).expect("Test: operation failed");
             assert_eq!(output.len(), 2500);
 
             // Get memory statistics
@@ -543,8 +564,10 @@ mod integration_tests {
             let cached = T::cached_op(&scaled, "square");
 
             // 6. Apply conditional logic
-            let condition =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![0.5]).unwrap(), ctx);
+            let condition = T::convert_to_tensor(
+                Array::from_shape_vec(IxDyn(&[1]), vec![0.5]).expect("Test: operation failed"),
+                ctx,
+            );
             let alternative = T::efficient_zeros(&[16, 32], ctx);
             let conditional_result = T::conditional(
                 &condition,
@@ -560,7 +583,7 @@ mod integration_tests {
             let final_result = T::parallel_sum(&checkpointed, &[0], false);
 
             // Verify the entire pipeline works
-            let output = final_result.eval(ctx).unwrap();
+            let output = final_result.eval(ctx).expect("Test: operation failed");
             assert_eq!(output.shape(), &[32]);
             assert!(output.iter().all(|&val: &f32| val.is_finite()));
             assert!(output.iter().any(|&val| val > 0.0)); // Should have some positive values

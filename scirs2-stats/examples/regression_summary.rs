@@ -60,10 +60,10 @@ fn main() {
             1.0, 20.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Make predictions
-    let predictions = results.predict(&x_new.view()).unwrap();
+    let predictions = results.predict(&x_new.view()).expect("Operation failed");
 
     println!("\nPredictions for new data:");
     println!("  x = 10 -> y = {:.1}", predictions[0]); // should be 2.0 + 1.5*10 = 17.0

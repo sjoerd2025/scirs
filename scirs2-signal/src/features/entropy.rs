@@ -47,7 +47,7 @@ pub fn calculate_shannon_entropy(signal: &[f64]) -> f64 {
     let n = signal.len();
     let iqr = {
         let mut sorted = signal.to_vec();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         calculate_quantile(&sorted, 0.75) - calculate_quantile(&sorted, 0.25)
     };
 
@@ -220,12 +220,12 @@ pub fn calculate_permutation_entropy(signal: &[f64], order: usize) -> f64 {
 
         // Find rank ordering of the pattern
         let mut idx: Vec<usize> = (0..order).collect();
-        idx.sort_by(|&a, &b| pattern[a].partial_cmp(&pattern[b]).unwrap());
+        idx.sort_by(|&a, &b| pattern[a].partial_cmp(&pattern[b]).expect("Operation failed"));
 
         // Convert rank order to a hash key
         let key: String = idx
             .iter()
-            .map(|&i| char::from_digit(i as u32, 10).unwrap())
+            .map(|&i| char::from_digit(i as u32, 10).expect("Operation failed"))
             .collect();
 
         // Update count for this pattern

@@ -13,7 +13,7 @@ fn test_auc_doctest() {
     let y_score = array![0.1, 0.2, 0.9, 0.3, 0.8, 0.2, 0.4, 0.95, 0.1, 0.05];
 
     // Calculate AUC score
-    let auc = anomaly_auc_score(&y_true, &y_score).unwrap();
+    let auc = anomaly_auc_score(&y_true, &y_score).expect("Operation failed");
     assert!((0.0..=1.0).contains(&auc));
 }
 
@@ -24,7 +24,7 @@ fn test_wasserstein_doctest() {
     let v_values = array![1.5, 2.5, 3.5, 4.5, 5.5];
 
     // Calculate Wasserstein distance
-    let w_dist = wasserstein_distance(&u_values, &v_values).unwrap();
+    let w_dist = wasserstein_distance(&u_values, &v_values).expect("Operation failed");
 
     // The expected value should be approximately 0.5, but account for possible implementation differences
     if !w_dist.is_nan() {
@@ -40,11 +40,11 @@ fn test_mmd_wrapper() {
     let y = array![1.2, 2.1, 3.0, 4.1, 5.2];
 
     // Calculate MMD with default bandwidth
-    let mmd = maximum_mean_discrepancy(&x, &y, None).unwrap();
+    let mmd = maximum_mean_discrepancy(&x, &y, None).expect("Operation failed");
     assert!(mmd >= 0.0);
 
     // Calculate MMD with custom bandwidth
-    let mmd_custom = maximum_mean_discrepancy(&x, &y, Some(1.0)).unwrap();
+    let mmd_custom = maximum_mean_discrepancy(&x, &y, Some(1.0)).expect("Operation failed");
     assert!(mmd_custom >= 0.0);
 }
 
@@ -57,14 +57,15 @@ fn test_precision_recall_with_tolerance_doctest() {
     let y_pred = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0];
 
     // With a tolerance of 1, predictions at positions 2 and 8 are considered correct
-    let (precision, recall, f1) = precision_recall_with_tolerance(&y_true, &y_pred, 1).unwrap();
+    let (precision, recall, f1) =
+        precision_recall_with_tolerance(&y_true, &y_pred, 1).expect("Operation failed");
     assert!((0.0..=1.0).contains(&precision));
     assert!((0.0..=1.0).contains(&recall));
     assert!((0.0..=1.0).contains(&f1));
 
     // With a tolerance of 0, only exact matches are considered
     let (precision_strict, recall_strict, f1_strict) =
-        precision_recall_with_tolerance(&y_true, &y_pred, 0).unwrap();
+        precision_recall_with_tolerance(&y_true, &y_pred, 0).expect("Operation failed");
     assert!((0.0..=1.0).contains(&precision_strict));
     assert!((0.0..=1.0).contains(&recall_strict));
     assert!((0.0..=1.0).contains(&f1_strict));
@@ -80,7 +81,7 @@ fn test_point_adjusted_precision_recall_doctest() {
 
     // Point-adjusted evaluation considers both anomaly sequences correctly detected
     let (pa_precision, pa_recall, pa_f1) =
-        point_adjusted_precision_recall(&y_true, &y_pred).unwrap();
+        point_adjusted_precision_recall(&y_true, &y_pred).expect("Operation failed");
     assert!((0.0..=1.0).contains(&pa_precision));
     assert!((0.0..=1.0).contains(&pa_recall));
     assert!((0.0..=1.0).contains(&pa_f1));
@@ -103,10 +104,11 @@ fn test_nab_score_doctest() {
     let y_pred = scirs2_core::ndarray::Array::from(y_pred);
 
     // Calculate NAB score with default parameters
-    let score = nab_score(&y_true, &y_pred, None, None, None).unwrap();
+    let score = nab_score(&y_true, &y_pred, None, None, None).expect("Operation failed");
     assert!((0.0..=100.0).contains(&score));
 
     // Calculate NAB score with custom parameters
-    let custom_score = nab_score(&y_true, &y_pred, Some(5), Some(2.0), Some(-1.0)).unwrap();
+    let custom_score =
+        nab_score(&y_true, &y_pred, Some(5), Some(2.0), Some(-1.0)).expect("Operation failed");
     assert!((0.0..=100.0).contains(&custom_score));
 }

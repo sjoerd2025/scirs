@@ -378,7 +378,7 @@ impl DistributedCommunicator {
         match self.backend {
             CommunicationBackend::InMemory => {
                 // Clear message buffer
-                self.message_buffer.lock().unwrap().clear();
+                self.message_buffer.lock().expect("Operation failed").clear();
             },
             CommunicationBackend::MPI => {
                 // MPI finalization would go here
@@ -392,13 +392,13 @@ impl DistributedCommunicator {
     
     /// Get communication statistics
     pub fn get_stats(&self) -> CommunicationStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Operation failed").clone()
     }
     
     // Private helper methods
     
     fn next_sequence(&self) -> u64 {
-        let mut counter = self.sequence_counter.lock().unwrap();
+        let mut counter = self.sequence_counter.lock().expect("Operation failed");
         *counter += 1;
         *counter
     }
@@ -426,14 +426,14 @@ impl DistributedCommunicator {
     }
     
     fn send_in_memory(&self, message: Message<Vec<u8>>) -> LinalgResult<()> {
-        let mut buffer = self.message_buffer.lock().unwrap();
+        let mut buffer = self.message_buffer.lock().expect("Operation failed");
         let key = (message.metadata.source, message.metadata.tag);
         buffer.insert(key, message.data);
         Ok(())
     }
     
     fn recv_in_memory(&self, source: usize, tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
-        let mut buffer = self.message_buffer.lock().unwrap();
+        let mut buffer = self.message_buffer.lock().expect("Operation failed");
         let key = (source, tag);
         
         if let Some(data) = buffer.remove(&key) {
@@ -609,14 +609,14 @@ impl DistributedCommunicator {
     }
     
     fn update_send_stats(&self, bytes: usize, duration: Duration) {
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("Operation failed");
         stats.messages_sent += 1;
         stats.bytes_sent += bytes;
         stats.total_send_time += duration;
     }
     
     fn update_recv_stats(&self, bytes: usize, duration: Duration) {
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("Operation failed");
         stats.messages_received += 1;
         stats.bytes_received += bytes;
         stats.total_recv_time += duration;
@@ -741,12 +741,12 @@ mod tests {
         
         let config = DistributedConfig::default()
             .with_backend(CommunicationBackend::InMemory);
-        let comm = DistributedCommunicator::new(&config).unwrap();
+        let comm = DistributedCommunicator::new(&config).expect("Operation failed");
         
         // Test serialization
         let matrix = Array2::from_shape_fn((3, 3), |(i, j)| (i + j) as f64);
-        let serialized = comm.serializematrix(&matrix.view()).unwrap();
-        let deserialized: Array2<f64> = comm.deserializematrix(&serialized).unwrap();
+        let serialized = comm.serializematrix(&matrix.view()).expect("Operation failed");
+        let deserialized: Array2<f64> = comm.deserializematrix(&serialized).expect("Operation failed");
         
         assert_eq!(matrix, deserialized);
     }

@@ -149,7 +149,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
             ));
         }
 
-        let coeffs = self.basis_coefficients.as_ref().unwrap();
+        let coeffs = self.basis_coefficients.as_ref().expect("Operation failed");
         let n_new = xnew.len();
         let n_curves = coeffs.ncols();
 
@@ -189,23 +189,26 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
     /// Generate B-spline basis functions
     fn generate_bspline_basis(&mut self) -> InterpolateResult<()> {
         let domain_width = self.domain.1 - self.domain.0;
-        let knot_spacing = domain_width / T::from_usize(self.config.n_basis + 1).unwrap();
+        let knot_spacing =
+            domain_width / T::from_usize(self.config.n_basis + 1).expect("Operation failed");
 
         for i in 0..self.config.n_basis {
-            let knot_center = self.domain.0 + T::from_usize(i + 1).unwrap() * knot_spacing;
-            let knot_width = knot_spacing * T::from_f64(2.0).unwrap();
+            let knot_center =
+                self.domain.0 + T::from_usize(i + 1).expect("Operation failed") * knot_spacing;
+            let knot_width = knot_spacing * T::from_f64(2.0).expect("Operation failed");
 
             self.basis_functions.push(Box::new(move |x: T| -> T {
                 let distance = (x - knot_center).abs();
                 if distance <= knot_width {
                     let u = distance / knot_width;
                     // Cubic B-spline basis function
-                    if u <= T::from_f64(0.5).unwrap() {
-                        T::from_f64(2.0 / 3.0).unwrap() - u * u
-                            + u * u * u / T::from_f64(2.0).unwrap()
+                    if u <= T::from_f64(0.5).expect("Operation failed") {
+                        T::from_f64(2.0 / 3.0).expect("Operation failed") - u * u
+                            + u * u * u / T::from_f64(2.0).expect("Operation failed")
                     } else {
                         let one_minus_u = T::one() - u;
-                        one_minus_u * one_minus_u * one_minus_u / T::from_f64(6.0).unwrap()
+                        one_minus_u * one_minus_u * one_minus_u
+                            / T::from_f64(6.0).expect("Operation failed")
                     }
                 } else {
                     T::zero()
@@ -218,7 +221,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
 
     /// Generate Fourier basis functions
     fn generate_fourier_basis(&mut self) -> InterpolateResult<()> {
-        let pi = T::from_f64(std::f64::consts::PI).unwrap();
+        let pi = T::from_f64(std::f64::consts::PI).expect("Operation failed");
         let domain_width = self.domain.1 - self.domain.0;
 
         // Add constant term
@@ -227,7 +230,10 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
 
         // Add sine and cosine terms
         for k in 1..=(self.config.n_basis / 2) {
-            let freq = T::from_usize(k).unwrap() * T::from_f64(2.0).unwrap() * pi / domain_width;
+            let freq = T::from_usize(k).expect("Operation failed")
+                * T::from_f64(2.0).expect("Operation failed")
+                * pi
+                / domain_width;
             let domain_start = self.domain.0;
 
             // Cosine term
@@ -270,7 +276,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
             penalty[[i, i + 1]] = -T::one();
             if i > 0 {
                 penalty[[i, i - 1]] = -T::one();
-                penalty[[i, i]] = T::from_f64(2.0).unwrap();
+                penalty[[i, i]] = T::from_f64(2.0).expect("Operation failed");
             }
         }
 
@@ -284,7 +290,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         penalty_matrix: &Array2<T>,
         y: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
-        let lambda = T::from_f64(self.config.lambda).unwrap();
+        let lambda = T::from_f64(self.config.lambda).expect("Operation failed");
 
         // Normal equations: (B^T B + λ P) β = B^T y
         let btb = basis_matrix.t().dot(basis_matrix);
@@ -293,7 +299,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         let mut lhs = btb + &(penalty_matrix * lambda);
 
         // Add regularization for numerical stability
-        let reg = T::from_f64(1e-12).unwrap();
+        let reg = T::from_f64(1e-12).expect("Operation failed");
         for i in 0..lhs.nrows() {
             lhs[[i, i]] += reg;
         }
@@ -335,7 +341,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
             }
 
             // Check for zero pivot
-            if aug[[k, k]].abs() < T::from_f64(1e-12).unwrap() {
+            if aug[[k, k]].abs() < T::from_f64(1e-12).expect("Operation failed") {
                 return Err(InterpolateError::ComputationError(
                     "Singular matrix".to_string(),
                 ));
@@ -456,7 +462,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
             ));
         }
 
-        let parameters = self.parameters.as_ref().unwrap();
+        let parameters = self.parameters.as_ref().expect("Operation failed");
         let n_new = xnew.nrows();
         let mut predictions = Array2::zeros((n_new, self.output_dim));
 
@@ -499,8 +505,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
 
         // Generate RBF basis functions
         for i in 0..3 {
-            let center = min_val + range * T::from_f64(i as f64 / 2.0).unwrap();
-            let width = range / T::from_f64(3.0).unwrap();
+            let center = min_val + range * T::from_f64(i as f64 / 2.0).expect("Operation failed");
+            let width = range / T::from_f64(3.0).expect("Operation failed");
 
             self.basis_functions[dim].push(Box::new(move |x: T| -> T {
                 let diff = (x - center) / width;
@@ -569,7 +575,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
 
     /// Fit ridge regression for a single output
     fn fit_ridge_regression(&self, x: &Array2<T>, y: &Array1<T>) -> InterpolateResult<Array1<T>> {
-        let lambda = T::from_f64(1e-6).unwrap();
+        let lambda = T::from_f64(1e-6).expect("Operation failed");
 
         // Normal equations: (X^T X + λ I) β = X^T y
         let xtx = x.t().dot(x);
@@ -785,8 +791,11 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             ));
         }
 
-        let breakpoints = self.breakpoints.as_ref().unwrap();
-        let coefficients = self.segment_coefficients.as_ref().unwrap();
+        let breakpoints = self.breakpoints.as_ref().expect("Operation failed");
+        let coefficients = self
+            .segment_coefficients
+            .as_ref()
+            .expect("Operation failed");
 
         let mut predictions = Array1::zeros(xnew.len());
 
@@ -853,7 +862,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
         let mse = self.compute_mse(x, y, &coeffs)?;
 
         // AIC-like score: MSE + penalty for model complexity
-        let penalty = T::from_usize(coeffs.len()).unwrap() * T::from_f64(2.0).unwrap();
+        let penalty = T::from_usize(coeffs.len()).expect("Operation failed")
+            * T::from_f64(2.0).expect("Operation failed");
         Ok(mse + penalty)
     }
 
@@ -890,16 +900,17 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             let coeffs = self.fit_polynomial_segment(&x_segment, &y_segment)?;
             let mse = self.compute_mse(&x_segment, &y_segment, &coeffs)?;
 
-            total_mse += mse * T::from_usize(end_idx - start_idx).unwrap();
+            total_mse += mse * T::from_usize(end_idx - start_idx).expect("Operation failed");
             total_params += coeffs.len();
         }
 
-        total_mse /= T::from_usize(n).unwrap();
+        total_mse /= T::from_usize(n).expect("Operation failed");
 
         // Add penalties
-        let param_penalty = T::from_usize(total_params).unwrap() * T::from_f64(2.0).unwrap();
+        let param_penalty = T::from_usize(total_params).expect("Operation failed")
+            * T::from_f64(2.0).expect("Operation failed");
         let breakpoint_penalty_total =
-            T::from_usize(breakpoints.len()).unwrap() * self.breakpoint_penalty;
+            T::from_usize(breakpoints.len()).expect("Operation failed") * self.breakpoint_penalty;
 
         Ok(total_mse + param_penalty + breakpoint_penalty_total)
     }
@@ -952,7 +963,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
 
         // Add small regularization
         let mut lhs = vt_v;
-        let reg = T::from_f64(1e-12).unwrap();
+        let reg = T::from_f64(1e-12).expect("Operation failed");
         for i in 0..lhs.nrows() {
             lhs[[i, i]] += reg;
         }
@@ -979,7 +990,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             mse += residual * residual;
         }
 
-        Ok(mse / T::from_usize(x.len()).unwrap())
+        Ok(mse / T::from_usize(x.len()).expect("Operation failed"))
     }
 
     /// Find the index closest to a given value
@@ -1050,7 +1061,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             }
 
             // Check for zero pivot
-            if aug[[k, k]].abs() < T::from_f64(1e-12).unwrap() {
+            if aug[[k, k]].abs() < T::from_f64(1e-12).expect("Operation failed") {
                 return Err(InterpolateError::ComputationError(
                     "Singular matrix".to_string(),
                 ));
@@ -1111,7 +1122,7 @@ pub fn make_piecewise_polynomial_interpolator<
     PiecewisePolynomialInterpolator::new(
         max_degree.unwrap_or(3),
         min_points_per_segment.unwrap_or(5),
-        breakpoint_penalty.unwrap_or_else(|| T::from_f64(1.0).unwrap()),
+        breakpoint_penalty.unwrap_or_else(|| T::from_f64(1.0).expect("Operation failed")),
     )
 }
 
@@ -1129,13 +1140,15 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 0.5, 0.25, 1.0, 1.0, 1.5, 2.25, 2.0, 4.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = interpolator.fit(&x.view(), &y.view());
         assert!(result.is_ok());
 
         let x_new = Array1::from_vec(vec![0.1, 0.3, 0.7]);
-        let predictions = interpolator.predict(&x_new.view()).unwrap();
+        let predictions = interpolator
+            .predict(&x_new.view())
+            .expect("Operation failed");
         assert_eq!(predictions.nrows(), 3);
         assert_eq!(predictions.ncols(), 2);
     }
@@ -1144,18 +1157,21 @@ mod tests {
     fn test_multi_output_interpolator() {
         let mut interpolator = make_multi_output_interpolator::<f64>(2, 2, Some(4));
 
-        let x =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let x = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
-        let y =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+        let y = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0])
+            .expect("Operation failed");
 
         let result = interpolator.fit(&x.view(), &y.view());
         assert!(result.is_ok());
 
-        let x_new = Array2::from_shape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75]).unwrap();
+        let x_new =
+            Array2::from_shape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75]).expect("Operation failed");
 
-        let predictions = interpolator.predict(&x_new.view()).unwrap();
+        let predictions = interpolator
+            .predict(&x_new.view())
+            .expect("Operation failed");
         assert_eq!(predictions.nrows(), 2);
         assert_eq!(predictions.ncols(), 2);
     }
@@ -1174,7 +1190,9 @@ mod tests {
         assert!(result.is_ok());
 
         let x_new = Array1::from_vec(vec![0.3, 0.7, 1.3]);
-        let predictions = interpolator.predict(&x_new.view()).unwrap();
+        let predictions = interpolator
+            .predict(&x_new.view())
+            .expect("Operation failed");
         assert_eq!(predictions.len(), 3);
     }
 }

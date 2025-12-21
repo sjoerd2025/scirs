@@ -24,7 +24,7 @@
 //! ];
 //!
 //! // Compute Delaunay triangulation
-//! let tri = Delaunay::new(&points).unwrap();
+//! let tri = Delaunay::new(&points).expect("Operation failed");
 //!
 //! // Get the simplex (triangle) indices
 //! let simplices = tri.simplices();
@@ -130,7 +130,7 @@ impl Delaunay {
     ///     [1.0, 1.0]
     /// ];
     ///
-    /// let tri = Delaunay::new(&points).unwrap();
+    /// let tri = Delaunay::new(&points).expect("Operation failed");
     /// let simplices = tri.simplices();
     /// println!("Triangles: {:?}", simplices);
     /// ```
@@ -266,7 +266,7 @@ impl Delaunay {
     /// // Add constraint edges forming a square boundary
     /// let constraints = vec![(0, 1), (1, 2), (2, 3), (3, 0)];
     ///
-    /// let tri = Delaunay::new_constrained(&points, constraints).unwrap();
+    /// let tri = Delaunay::new_constrained(&points, constraints).expect("Operation failed");
     /// let simplices = tri.simplices();
     /// println!("Constrained triangles: {:?}", simplices);
     /// ```
@@ -950,7 +950,7 @@ impl Delaunay {
     ///     [1.0, 1.0]
     /// ];
     ///
-    /// let tri = Delaunay::new(&points).unwrap();
+    /// let tri = Delaunay::new(&points).expect("Operation failed");
     /// // Try to find which triangle contains the point [0.25, 0.25]
     /// if let Some(idx) = tri.find_simplex(&[0.25, 0.25]) {
     ///     println!("Point is in simplex {}", idx);
@@ -1104,7 +1104,7 @@ impl Delaunay {
     ///     [0.5, 0.5]  // Interior point
     /// ];
     ///
-    /// let tri = Delaunay::new(&points).unwrap();
+    /// let tri = Delaunay::new(&points).expect("Operation failed");
     /// let hull = tri.convex_hull();
     ///
     /// // The hull should be the three corner points, excluding the interior point
@@ -1147,7 +1147,7 @@ mod tests {
     fn test_delaunay_simple() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]);
 
-        let tri = Delaunay::new(&points).unwrap();
+        let tri = Delaunay::new(&points).expect("Operation failed");
 
         // Should have 2 triangles for 4 points in a square
         assert_eq!(tri.simplices().len(), 2);
@@ -1176,7 +1176,7 @@ mod tests {
             [0.5, 0.5], // Interior point
         ]);
 
-        let tri = Delaunay::new(&points).unwrap();
+        let tri = Delaunay::new(&points).expect("Operation failed");
 
         // Should have 3 triangles for this configuration
         assert_eq!(tri.simplices().len(), 3);
@@ -1199,7 +1199,7 @@ mod tests {
             [1.0, 1.0, 1.0],
         ]);
 
-        let tri = Delaunay::new(&points).unwrap();
+        let tri = Delaunay::new(&points).expect("Operation failed");
 
         // Each simplex should have 4 vertices (tetrahedron in 3D)
         for simplex in tri.simplices() {
@@ -1211,7 +1211,7 @@ mod tests {
     fn test_find_simplex() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
 
-        let tri = Delaunay::new(&points).unwrap();
+        let tri = Delaunay::new(&points).expect("Operation failed");
 
         // Point inside the triangle
         let inside_point = [0.3, 0.3];
@@ -1235,9 +1235,9 @@ mod tests {
             points_data.push(rng.gen_range(0.0..1.0));
         }
 
-        let points = Array2::from_shape_vec((n, 2), points_data).unwrap();
+        let points = Array2::from_shape_vec((n, 2), points_data).expect("Operation failed");
 
-        let tri = Delaunay::new(&points).unwrap();
+        let tri = Delaunay::new(&points).expect("Operation failed");
 
         // Basic checks
         assert_eq!(tri.ndim(), 2);
@@ -1265,7 +1265,8 @@ mod tests {
         // Add constraint edges forming a square boundary
         let constraints = vec![(0, 1), (1, 2), (2, 3), (3, 0)];
 
-        let tri = Delaunay::new_constrained(&points, constraints.clone()).unwrap();
+        let tri =
+            Delaunay::new_constrained(&points, constraints.clone()).expect("Operation failed");
 
         // Check that constraints are stored
         assert_eq!(tri.constraints().len(), 4);
@@ -1309,7 +1310,7 @@ mod tests {
     #[test]
     fn test_edge_exists() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let tri = Delaunay::new(&points).unwrap();
+        let tri = Delaunay::new(&points).expect("Operation failed");
 
         // Check if edges exist in the triangle
         assert!(tri.edge_exists(0, 1) || tri.edge_exists(1, 0));

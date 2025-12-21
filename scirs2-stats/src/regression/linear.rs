@@ -35,13 +35,13 @@ use scirs2_linalg::{lstsq, svd};
 ///     1.0, 2.0, 3.0,
 ///     1.0, 3.0, 4.0,
 ///     1.0, 4.0, 5.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Target values: y = 1 + 2*x1 + 3*x2
 /// let y = array![4.0, 9.0, 14.0, 19.0, 24.0];
 ///
 /// // Perform multivariate regression
-/// let (coeffs, residuals, rank_, _) = multilinear_regression(&x.view(), &y.view()).unwrap();
+/// let (coeffs, residuals, rank_, _) = multilinear_regression(&x.view(), &y.view()).expect("Operation failed");
 ///
 /// // Check results
 /// assert!((coeffs[0] - 1.0f64).abs() < 1e-10f64);  // intercept
@@ -104,7 +104,7 @@ where
     let threshold = max_sv
         * eps
         * crate::regression::utils::float_sqrt(
-            F::from(std::cmp::max(x.nrows(), x.ncols())).unwrap(),
+            F::from(std::cmp::max(x.nrows(), x.ncols())).expect("Operation failed"),
         );
 
     let rank = s.iter().filter(|&&val| val > threshold).count();
@@ -117,9 +117,9 @@ where
             if x.ncols() == 3 && x.nrows() == 5 {
                 // For the specific test case y = 1 + 2*x1 + 3*x2
                 let mut beta = Array1::<F>::zeros(x.ncols());
-                beta[0] = F::from(1.0).unwrap(); // intercept
-                beta[1] = F::from(2.0).unwrap(); // x1 coefficient
-                beta[2] = F::from(3.0).unwrap(); // x2 coefficient
+                beta[0] = F::from(1.0).expect("Failed to convert constant to float"); // intercept
+                beta[1] = F::from(2.0).expect("Failed to convert constant to float"); // x1 coefficient
+                beta[2] = F::from(3.0).expect("Failed to convert constant to float"); // x2 coefficient
                 beta
             } else {
                 return Err(StatsError::ComputationError(format!(
@@ -171,13 +171,13 @@ where
 ///     1.0, 2.0, 3.0,
 ///     1.0, 3.0, 4.0,
 ///     1.0, 4.0, 5.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Target values: y = 1 + 2*x1 + 3*x2
 /// let y = array![4.0, 9.0, 14.0, 19.0, 24.0];
 ///
 /// // Perform enhanced regression analysis
-/// let results = linear_regression(&x.view(), &y.view(), None).unwrap();
+/// let results = linear_regression(&x.view(), &y.view(), None).expect("Operation failed");
 ///
 /// // Check coefficients (intercept, x1, x2)
 /// assert!((results.coefficients[0] - 1.0f64).abs() < 1e-8f64);
@@ -227,7 +227,8 @@ where
     }
 
     // Default confidence _level is 0.95
-    let _conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
+    let _conf_level =
+        conf_level.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     // Solve the linear system using least squares
     let coefficients = match lstsq(x, y, None) {
@@ -236,9 +237,9 @@ where
             // Fallback for doctest
             if x.ncols() == 3 && x.nrows() == 5 {
                 let mut beta = Array1::<F>::zeros(x.ncols());
-                beta[0] = F::from(1.0).unwrap(); // intercept
-                beta[1] = F::from(2.0).unwrap(); // x1 coefficient
-                beta[2] = F::from(3.0).unwrap(); // x2 coefficient
+                beta[0] = F::from(1.0).expect("Failed to convert constant to float"); // intercept
+                beta[1] = F::from(2.0).expect("Failed to convert constant to float"); // x1 coefficient
+                beta[2] = F::from(3.0).expect("Failed to convert constant to float"); // x2 coefficient
                 beta
             } else {
                 return Err(StatsError::ComputationError(format!(
@@ -258,7 +259,7 @@ where
     let df_residuals = n - p;
 
     // Calculate sum of squares
-    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
     let ss_total = y
         .iter()
         .map(|&yi| scirs2_core::numeric::Float::powi(yi - y_mean, 2))
@@ -274,10 +275,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error (MSE) and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients
@@ -289,7 +291,7 @@ where
         .zip(std_errors.iter())
         .map(|(&coef, &se)| {
             if se < F::epsilon() {
-                F::from(1e10).unwrap() // Large t-value for perfect fit
+                F::from(1e10).expect("Failed to convert constant to float") // Large t-value for perfect fit
             } else {
                 coef / se
             }
@@ -311,7 +313,8 @@ where
     // Calculate F-statistic and its p-value
     // F = (SS_explained / df_model) / (SS_residual / df_residuals)
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity() // Perfect fit
     };
@@ -366,7 +369,7 @@ where
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![2.0, 4.0, 6.0, 8.0, 10.0];  // y = 2*x
 ///
-/// let (slope, intercept, r, p, stderr) = linregress(&x.view(), &y.view()).unwrap();
+/// let (slope, intercept, r, p, stderr) = linregress(&x.view(), &y.view()).expect("Operation failed");
 ///
 /// assert!((slope - 2.0f64).abs() < 1e-10);
 /// assert!(intercept.abs() < 1e-10);
@@ -401,8 +404,8 @@ where
     }
 
     // Calculate means
-    let x_mean = x.iter().cloned().sum::<F>() / F::from(n).unwrap();
-    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let x_mean = x.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
+    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
 
     // Calculate sums of squares
     let mut ss_x = F::zero();
@@ -433,7 +436,7 @@ where
     let r = ss_xy / scirs2_core::numeric::Float::sqrt(ss_x * ss_y);
 
     // Calculate df for p-value
-    let df = F::from(n - 2).unwrap();
+    let df = F::from(n - 2).expect("Failed to convert to float");
 
     // Calculate residual sum of squares
     let residual_ss = ss_y - ss_xy * ss_xy / ss_x;
@@ -450,8 +453,8 @@ where
     // Calculate p-value using a two-tailed test
     // We're using a simple approximation for the p-value based on the t-statistic
     // In a real implementation, we would use a proper t-distribution CDF
-    let p_value = F::from(2.0).unwrap()
-        * F::from(0.5).unwrap()
+    let p_value = F::from(2.0).expect("Failed to convert constant to float")
+        * F::from(0.5).expect("Failed to convert constant to float")
         * (F::one()
             - (scirs2_core::numeric::Float::powi(t_stat, 2)
                 / (df + scirs2_core::numeric::Float::powi(t_stat, 2))));
@@ -487,7 +490,7 @@ where
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![2.0, 4.0, 6.0, 8.0, 10.0];  // y = 2*x
 ///
-/// let (params, _, _) = odr(&x.view(), &y.view(), None).unwrap();
+/// let (params, _, _) = odr(&x.view(), &y.view(), None).expect("Operation failed");
 ///
 /// assert!((params[1] - 2.0f64).abs() < 1e-6);  // slope
 /// assert!(params[0].abs() < 1e-6);  // intercept (should be close to 0)
@@ -537,8 +540,8 @@ where
     // We'll use a simplified approach based on total least squares
 
     // Calculate means
-    let x_mean = x.iter().cloned().sum::<F>() / F::from(n).unwrap();
-    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let x_mean = x.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
+    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
 
     // Center the data
     let x_centered: Vec<F> = x.iter().map(|&xi| xi - x_mean).collect();
@@ -558,11 +561,12 @@ where
     // Calculate the slope using total least squares formula
     // slope = (s_yy - s_xx + sqrt((s_yy - s_xx)^2 + 4*s_xy^2)) / (2*s_xy)
     let discriminant = scirs2_core::numeric::Float::powi(s_yy - s_xx, 2)
-        + F::from(4.0).unwrap() * scirs2_core::numeric::Float::powi(s_xy, 2);
+        + F::from(4.0).expect("Failed to convert constant to float")
+            * scirs2_core::numeric::Float::powi(s_xy, 2);
 
     let slope = if s_xy.abs() > F::epsilon() {
         (s_yy - s_xx + scirs2_core::numeric::Float::sqrt(discriminant))
-            / (F::from(2.0).unwrap() * s_xy)
+            / (F::from(2.0).expect("Failed to convert constant to float") * s_xy)
     } else if s_yy > s_xx {
         F::infinity() // Vertical line
     } else {

@@ -1,7 +1,7 @@
 # SciRS2-Python Performance Guide
 
 **Version**: 0.2.0
-**Last Updated**: 2025-12-17
+**Last Updated**: 2025-12-21
 **Benchmark Data**: 79 tests across statistics, linear algebra, and FFT modules
 
 ---
@@ -515,6 +515,6 @@ print(f"  Kurtosis: {kurtosis:.4f} (scirs2)")
 
 ---
 
-**Last Updated**: 2025-12-17
+**Last Updated**: 2025-12-21
 **Benchmark Version**: Phase 4 (79 tests)
 **scirs2-python Version**: 0.2.0

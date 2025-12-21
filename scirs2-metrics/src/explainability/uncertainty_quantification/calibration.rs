@@ -46,7 +46,7 @@ impl<F: Float> TemperatureScaling<F> {
     /// Fit temperature parameter
     pub fn fit(&mut self, logits: &Array2<F>, labels: &Array1<F>) {
         // Simplified temperature scaling
-        self.temperature = F::from(1.5).unwrap(); // Would optimize this
+        self.temperature = F::from(1.5).expect("Failed to convert constant to float"); // Would optimize this
         self.original_probs = logits.clone();
     }
 
@@ -96,7 +96,7 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> DeepEnsembleUncertainty<F> 
             sum_sq = sum_sq + &pred.mapv(|x| x * x);
         }
 
-        let n = F::from(self.ensemble_predictions.len()).unwrap();
+        let n = F::from(self.ensemble_predictions.len()).expect("Operation failed");
         self.mean_prediction = sum / n;
 
         let mean_sq = sum_sq / n;

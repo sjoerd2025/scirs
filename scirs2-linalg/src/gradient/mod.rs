@@ -33,7 +33,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// let predictions = array![3.0, 1.0, 2.0];
 /// let targets = array![2.5, 0.5, 2.0];
 ///
-/// let gradient = mse_gradient(&predictions.view(), &targets.view()).unwrap();
+/// let gradient = mse_gradient(&predictions.view(), &targets.view()).expect("Operation failed");
 ///
 /// // gradients = 2 * (predictions - targets) / n
 /// // = 2 * ([3.0, 1.0, 2.0] - [2.5, 0.5, 2.0]) / 3
@@ -60,8 +60,8 @@ where
         )));
     }
 
-    let n = F::from(predictions.len()).unwrap();
-    let two = F::from(2.0).unwrap();
+    let n = F::from(predictions.len()).expect("Operation failed");
+    let two = F::from(2.0).expect("Operation failed");
 
     // Compute (predictions - targets) * 2/n
     // This is the gradient of MSE with respect to predictions
@@ -96,7 +96,7 @@ where
 /// let predictions = array![0.7, 0.3, 0.9];
 /// let targets = array![1.0, 0.0, 1.0];
 ///
-/// let gradient = binary_crossentropy_gradient(&predictions.view(), &targets.view()).unwrap();
+/// let gradient = binary_crossentropy_gradient(&predictions.view(), &targets.view()).expect("Operation failed");
 ///
 /// // gradients = -targets/predictions + (1-targets)/(1-predictions)
 /// // = -[1.0, 0.0, 1.0]/[0.7, 0.3, 0.9] + [0.0, 1.0, 0.0]/[0.3, 0.7, 0.1]
@@ -143,7 +143,7 @@ where
     }
 
     let one = F::one();
-    let eps = F::from(1e-15).unwrap(); // Small epsilon to prevent division by zero
+    let eps = F::from(1e-15).expect("Operation failed"); // Small epsilon to prevent division by zero
 
     // Compute -targets/(predictions+eps) + (1-targets)/(1-predictions+eps)
     // This is the gradient of binary cross-entropy with respect to predictions
@@ -193,7 +193,7 @@ where
 /// // One-hot encoded targets
 /// let targets = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
 ///
-/// let gradient = softmax_crossentropy_gradient(&softmax_output.view(), &targets.view()).unwrap();
+/// let gradient = softmax_crossentropy_gradient(&softmax_output.view(), &targets.view()).expect("Operation failed");
 ///
 /// // For each example, gradient = (softmax_output - targets) / batchsize
 /// // = ([0.7, 0.2, 0.1] - [1.0, 0.0, 0.0]) / 2
@@ -230,7 +230,7 @@ where
     let (batchsize, _num_classes) = softmax_output.dim();
     for i in 0..batchsize {
         let row_sum = softmax_output.slice(s![i, ..]).sum();
-        if (row_sum - F::one()).abs() > F::from(1e-5).unwrap() {
+        if (row_sum - F::one()).abs() > F::from(1e-5).expect("Operation failed") {
             return Err(LinalgError::InvalidInputError(format!(
                 "softmax_output row {i} does not sum to 1: sum is {row_sum}"
             )));
@@ -240,7 +240,7 @@ where
     // Check that targets are valid one-hot vectors
     for i in 0..batchsize {
         let row_sum = targets.slice(s![i, ..]).sum();
-        if (row_sum - F::one()).abs() > F::from(1e-6).unwrap() {
+        if (row_sum - F::one()).abs() > F::from(1e-6).expect("Operation failed") {
             return Err(LinalgError::InvalidInputError(format!(
                 "targets row {i} is not a valid one-hot vector: sum is {row_sum}"
             )));
@@ -249,7 +249,7 @@ where
         // Check that only one element is (close to) 1, rest are 0
         let mut has_one = false;
         for val in targets.slice(s![i, ..]).iter() {
-            if (*val - F::one()).abs() < F::from(1e-6).unwrap() {
+            if (*val - F::one()).abs() < F::from(1e-6).expect("Operation failed") {
                 if has_one {
                     // More than one value close to 1
                     return Err(LinalgError::InvalidInputError(format!(
@@ -257,7 +257,7 @@ where
                     )));
                 }
                 has_one = true;
-            } else if *val > F::from(1e-6).unwrap() {
+            } else if *val > F::from(1e-6).expect("Operation failed") {
                 // Value is not close to 0 or 1
                 return Err(LinalgError::InvalidInputError(format!(
                     "targets row {i} is not a valid one-hot vector: contains value {} not close to 0 or 1", *val
@@ -272,7 +272,7 @@ where
         }
     }
 
-    let batchsize_f = F::from(batchsize).unwrap();
+    let batchsize_f = F::from(batchsize).expect("Operation failed");
 
     // Compute softmax_output - targets
     let mut gradient = softmax_output.to_owned() - targets;
@@ -315,7 +315,7 @@ where
 /// let x = array![2.0, 3.0];  // Point at which to evaluate the Jacobian
 /// let epsilon = 1e-5;
 ///
-/// let jac = jacobian(&f, &x, epsilon).unwrap();
+/// let jac = jacobian(&f, &x, epsilon).expect("Operation failed");
 ///
 /// // Analytical Jacobian at (2,3) is:
 /// // [2x, 1]     [4, 1]
@@ -342,7 +342,7 @@ where
     let m = f_x.len();
 
     let mut jacobian = Array2::zeros((m, n));
-    let two_epsilon = F::from(2.0).unwrap() * epsilon;
+    let two_epsilon = F::from(2.0).expect("Operation failed") * epsilon;
 
     // Compute each column of the Jacobian by central finite differences
     for j in 0..n {
@@ -399,7 +399,7 @@ where
 /// let x = array![1.0, 2.0];  // Point at which to evaluate the Hessian
 /// let epsilon = 1e-5;
 ///
-/// let hess = hessian(&f, &x, epsilon).unwrap();
+/// let hess = hessian(&f, &x, epsilon).expect("Operation failed");
 ///
 /// // Analytical Hessian is:
 /// // [∂²f/∂x², ∂²f/∂x∂y]   [2, 1]
@@ -419,7 +419,7 @@ where
     let n = x.len();
     let mut hessian = Array2::zeros((n, n));
 
-    let two = F::from(2.0).unwrap();
+    let two = F::from(2.0).expect("Operation failed");
     let epsilon_squared = epsilon * epsilon;
 
     // Use central difference method for better accuracy
@@ -475,7 +475,7 @@ where
 
                 // Mixed partial derivative using central difference:
                 // ∂²f/∂x∂y ≈ (f(x+h,y+h) - f(x+h,y-h) - f(x-h,y+h) + f(x-h,y-h)) / (4h²)
-                let four = F::from(4.0).unwrap();
+                let four = F::from(4.0).expect("Operation failed");
                 let h_ij = (f_plus_plus - f_plus_minus - f_minus_plus + f_minus_minus)
                     / (four * epsilon_squared);
 
@@ -500,7 +500,8 @@ mod tests {
         let predictions = array![3.0, 1.0, 2.0];
         let targets = array![2.5, 0.5, 2.0];
 
-        let gradient = mse_gradient(&predictions.view(), &targets.view()).unwrap();
+        let gradient =
+            mse_gradient(&predictions.view(), &targets.view()).expect("Operation failed");
 
         // gradients = 2 * (predictions - targets) / n
         // = 2 * ([3.0, 1.0, 2.0] - [2.5, 0.5, 2.0]) / 3
@@ -517,7 +518,8 @@ mod tests {
         let predictions = array![0.7, 0.3, 0.9];
         let targets = array![1.0, 0.0, 1.0];
 
-        let gradient = binary_crossentropy_gradient(&predictions.view(), &targets.view()).unwrap();
+        let gradient = binary_crossentropy_gradient(&predictions.view(), &targets.view())
+            .expect("Operation failed");
 
         // gradients = -targets/predictions + (1-targets)/(1-predictions)
         // = -[1.0, 0.0, 1.0]/[0.7, 0.3, 0.9] + [0.0, 1.0, 0.0]/[0.3, 0.7, 0.1]
@@ -534,8 +536,8 @@ mod tests {
         let softmax_output = array![[0.7, 0.2, 0.1], [0.3, 0.6, 0.1]];
         let targets = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
 
-        let gradient =
-            softmax_crossentropy_gradient(&softmax_output.view(), &targets.view()).unwrap();
+        let gradient = softmax_crossentropy_gradient(&softmax_output.view(), &targets.view())
+            .expect("Operation failed");
 
         // For each example, gradient = (softmax_output - targets) / batchsize
         // = ([0.7, 0.2, 0.1] - [1.0, 0.0, 0.0]) / 2
@@ -564,7 +566,7 @@ mod tests {
         let x = array![2.0, 3.0]; // Point at which to evaluate the Jacobian
         let epsilon = 1e-5;
 
-        let jac = jacobian(&f, &x, epsilon).unwrap();
+        let jac = jacobian(&f, &x, epsilon).expect("Operation failed");
 
         // Analytical Jacobian at (2,3) is:
         // [2x, 1]     [4, 1]
@@ -591,7 +593,7 @@ mod tests {
         let x = array![0.5];
         let epsilon = 1e-4;
 
-        let hess = hessian(&f, &x, epsilon).unwrap();
+        let hess = hessian(&f, &x, epsilon).expect("Operation failed");
 
         // The Hessian (second derivative) of f(x) = 2x² is 4
         assert_relative_eq!(hess[[0, 0]], 4.0, epsilon = 1e-2);
@@ -610,7 +612,7 @@ mod tests {
         let x = array![1.0, 1.0, 1.0];
         let epsilon = 1e-4;
 
-        let hess = hessian(&f, &x, epsilon).unwrap();
+        let hess = hessian(&f, &x, epsilon).expect("Operation failed");
 
         // Analytical Hessian at (1,1,1) for f(x,y,z) = x²y + y²z + z²x:
         // First-order derivatives:
@@ -652,7 +654,7 @@ mod tests {
         let x = array![1.0, 2.0];
         let epsilon = 1e-5;
 
-        let hess = hessian(&f, &x, epsilon).unwrap();
+        let hess = hessian(&f, &x, epsilon).expect("Operation failed");
 
         // Analytical Hessian is:
         // [∂²f/∂x², ∂²f/∂x∂y]   [2, 1]

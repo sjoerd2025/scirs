@@ -17,7 +17,8 @@ pub struct AffineTransform {
 impl AffineTransform {
     /// Create a new affine transformation matrix from raw data
     pub fn new(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Self {
-        let matrix = Array2::from_shape_vec((2, 3), vec![a, b, c, d, e, f]).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 3), vec![a, b, c, d, e, f]).expect("Operation failed");
         Self { matrix }
     }
 
@@ -511,7 +512,7 @@ mod tests {
     #[test]
     fn test_affine_inverse() {
         let transform = AffineTransform::new(2.0, 1.0, 3.0, 0.5, 3.0, 2.0);
-        let inverse = transform.inverse().unwrap();
+        let inverse = transform.inverse().expect("Operation failed");
 
         // Apply transform then inverse should give original point
         let (x, y) = (10.0, 20.0);
@@ -548,7 +549,8 @@ mod tests {
             .collect();
 
         // Estimate transformation
-        let transform = estimate_affine_transform(&src_points, &dst_points).unwrap();
+        let transform =
+            estimate_affine_transform(&src_points, &dst_points).expect("Operation failed");
 
         // Check that the estimated transform correctly maps points
         for (i, &(x, y)) in src_points.iter().enumerate() {

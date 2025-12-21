@@ -249,8 +249,8 @@ mod tests {
     #[test]
     fn test_safe_divide() {
         // Normal cases
-        assert_eq!(safe_divide(10.0, 2.0).unwrap(), 5.0);
-        assert_eq!(safe_divide(-10.0, 2.0).unwrap(), -5.0);
+        assert_eq!(safe_divide(10.0, 2.0).expect("Operation failed"), 5.0);
+        assert_eq!(safe_divide(-10.0, 2.0).expect("Operation failed"), -5.0);
 
         // Division by zero
         assert!(safe_divide(10.0, 0.0).is_err());
@@ -263,8 +263,8 @@ mod tests {
     #[test]
     fn test_safe_sqrt() {
         // Normal cases
-        assert_eq!(safe_sqrt(4.0).unwrap(), 2.0);
-        assert_eq!(safe_sqrt(0.0).unwrap(), 0.0);
+        assert_eq!(safe_sqrt(4.0).expect("Operation failed"), 2.0);
+        assert_eq!(safe_sqrt(0.0).expect("Operation failed"), 0.0);
 
         // Negative input
         assert!(safe_sqrt(-1.0).is_err());
@@ -274,8 +274,8 @@ mod tests {
     #[test]
     fn test_safelog() {
         // Normal cases
-        assert!((safelog(std::f64::consts::E).unwrap() - 1.0).abs() < 1e-10);
-        assert_eq!(safelog(1.0).unwrap(), 0.0);
+        assert!((safelog(std::f64::consts::E).expect("Operation failed") - 1.0).abs() < 1e-10);
+        assert_eq!(safelog(1.0).expect("Operation failed"), 0.0);
 
         // Invalid inputs
         assert!(safelog(0.0).is_err());
@@ -285,8 +285,8 @@ mod tests {
     #[test]
     fn test_safe_pow() {
         // Normal cases
-        assert_eq!(safe_pow(2.0, 3.0).unwrap(), 8.0);
-        assert_eq!(safe_pow(4.0, 0.5).unwrap(), 2.0);
+        assert_eq!(safe_pow(2.0, 3.0).expect("Operation failed"), 8.0);
+        assert_eq!(safe_pow(4.0, 0.5).expect("Operation failed"), 2.0);
 
         // Invalid cases
         assert!(safe_pow(-2.0, 0.5).is_err()); // Fractional power of negative
@@ -299,8 +299,8 @@ mod tests {
     #[test]
     fn test_safe_exp() {
         // Normal cases
-        assert!((safe_exp(1.0).unwrap() - std::f64::consts::E).abs() < 1e-10);
-        assert_eq!(safe_exp(0.0).unwrap(), 1.0);
+        assert!((safe_exp(1.0).expect("Operation failed") - std::f64::consts::E).abs() < 1e-10);
+        assert_eq!(safe_exp(0.0).expect("Operation failed"), 1.0);
 
         // Overflow
         assert!(safe_exp(1000.0).is_err());
@@ -309,13 +309,13 @@ mod tests {
     #[test]
     fn test_safe_mean() {
         // Normal case
-        assert_eq!(safe_mean(&[1.0, 2.0, 3.0]).unwrap(), 2.0);
+        assert_eq!(safe_mean(&[1.0, 2.0, 3.0]).expect("Operation failed"), 2.0);
 
         // Empty array
         assert!(safe_mean::<f64>(&[]).is_err());
 
         // Single value
-        assert_eq!(safe_mean(&[5.0]).unwrap(), 5.0);
+        assert_eq!(safe_mean(&[5.0]).expect("Operation failed"), 5.0);
     }
 
     #[test]
@@ -323,7 +323,7 @@ mod tests {
         // Normal case
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let mean = 3.0;
-        assert!((safe_variance(&values, mean).unwrap() - 2.5).abs() < 1e-10);
+        assert!((safe_variance(&values, mean).expect("Operation failed") - 2.5).abs() < 1e-10);
 
         // Too few values
         assert!(safe_variance(&[1.0], 1.0).is_err());
@@ -333,12 +333,12 @@ mod tests {
     #[test]
     fn test_safe_normalize() {
         // Normal case
-        assert_eq!(safe_normalize(3.0, 4.0).unwrap(), 0.75);
+        assert_eq!(safe_normalize(3.0, 4.0).expect("Operation failed"), 0.75);
 
         // Zero norm
         assert!(safe_normalize(1.0, 0.0).is_err());
 
         // Both zero
-        assert_eq!(safe_normalize(0.0, 0.0).unwrap(), 0.0);
+        assert_eq!(safe_normalize(0.0, 0.0).expect("Operation failed"), 0.0);
     }
 }

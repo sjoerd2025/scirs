@@ -195,7 +195,10 @@ where
             for j in 0..m {
                 let mut x_h = x_val.clone();
                 x_h[j] += eps;
-                let res_h = residuals(x_h.as_slice().unwrap(), data.as_slice().unwrap());
+                let res_h = residuals(
+                    x_h.as_slice().expect("Operation failed"),
+                    data.as_slice().expect("Operation failed"),
+                );
                 count += 1;
 
                 for i in 0..n {
@@ -209,7 +212,10 @@ where
     // Main optimization loop
     while iter < options.max_iter && nfev < max_nfev {
         // Compute residuals
-        let res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+        let res = residuals(
+            x.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         nfev += 1;
 
         // Compute weighted residuals
@@ -221,7 +227,10 @@ where
         // Compute Jacobian
         let (jac, jac_evals) = match &jacobian {
             Some(jac_fn) => {
-                let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+                let j = jac_fn(
+                    x.as_slice().expect("Operation failed"),
+                    data.as_slice().expect("Operation failed"),
+                );
                 njev += 1;
                 (j, 0)
             }
@@ -270,7 +279,10 @@ where
 
                 for _ in 0..10 {
                     let x_new = &x + &step * alpha;
-                    let res_new = residuals(x_new.as_slice().unwrap(), data.as_slice().unwrap());
+                    let res_new = residuals(
+                        x_new.as_slice().expect("Operation failed"),
+                        data.as_slice().expect("Operation failed"),
+                    );
                     nfev += 1;
 
                     let weighted_res_new = &res_new * &sqrt_weights;
@@ -334,7 +346,10 @@ where
     }
 
     // Max iterations reached
-    let res_final = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+    let res_final = residuals(
+        x.as_slice().expect("Operation failed"),
+        data.as_slice().expect("Operation failed"),
+    );
     let weighted_res_final = &res_final * &sqrt_weights;
     let final_cost = 0.5 * weighted_res_final.iter().map(|&r| r * r).sum::<f64>();
 
@@ -398,8 +413,8 @@ mod tests {
 
         let x0 = array![0.0, 0.0];
 
-        let result =
-            weighted_least_squares(residual, &x0, &weights, Some(jacobian), &data, None).unwrap();
+        let result = weighted_least_squares(residual, &x0, &weights, Some(jacobian), &data, None)
+            .expect("Operation failed");
 
         assert!(result.success);
         // The solution should favor the last two points more
@@ -463,7 +478,7 @@ mod tests {
             &data,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result_robust = weighted_least_squares(
             residual,
@@ -473,7 +488,7 @@ mod tests {
             &data,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // The robust solution should have a slope closer to 1.0 (true value)
         // than the uniform weight solution

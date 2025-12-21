@@ -648,7 +648,7 @@ mod tests {
         let gaussian_spec = specs.iter().find(|s| s.name == "gaussian_filter");
         assert!(gaussian_spec.is_some());
 
-        let spec = gaussian_spec.unwrap();
+        let spec = gaussian_spec.expect("Operation failed");
         assert!(!spec.parameters.is_empty());
         assert!(spec.parameters.iter().any(|p| p.name == "input"));
         assert!(spec.parameters.iter().any(|p| p.name == "sigma"));

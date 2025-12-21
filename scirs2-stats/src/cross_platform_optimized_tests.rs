@@ -3,7 +3,6 @@ use super::*;
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_think_cross_platform_tester_creation() {
         let tester = create_advanced_think_cross_platform_tester();
         assert!(tester.config.enable_platform_detection);
@@ -49,7 +48,7 @@ use super::*;
         let config = AdvancedCrossPlatformConfig::default();
         let detector = PlatformDetector::new(&config);
         
-        let platform = detector.detect_current_platform().unwrap();
+        let platform = detector.detect_current_platform().expect("Operation failed");
         assert!(!platform.hardware_profile.cpu_architecture.is_empty());
         assert!(platform.hardware_profile.cpu_cores > 0);
     }
@@ -123,7 +122,7 @@ use super::*;
         };
         
         let mut monitoring_system = ContinuousMonitoringSystem::new(&AdvancedCrossPlatformConfig::default());
-        let session = monitoring_system.start_monitoring_session(config).unwrap();
+        let session = monitoring_system.start_monitoring_session(config).expect("Operation failed");
         
         assert!(!session.session_id.is_empty());
         assert_eq!(session.current_status, MonitoringStatus::Starting);

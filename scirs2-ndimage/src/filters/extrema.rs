@@ -39,7 +39,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///                     [7.0, 8.0, 9.0]];
 ///
 /// // Apply 3x3 minimum filter
-/// let filtered = minimum_filter(&input, &[3, 3], None, None).unwrap();
+/// let filtered = minimum_filter(&input, &[3, 3], None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn minimum_filter<T, D>(
@@ -91,7 +91,7 @@ where
 ///                     [7.0, 8.0, 9.0]];
 ///
 /// // Apply 3x3 maximum filter
-/// let filtered = maximum_filter(&input, &[3, 3], None, None).unwrap();
+/// let filtered = maximum_filter(&input, &[3, 3], None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn maximum_filter<T, D>(
@@ -802,7 +802,7 @@ mod tests {
         let input = array![[5.0, 2.0], [1.0, 8.0]];
 
         // Apply 3x3 minimum filter (smaller array for test)
-        let result = minimum_filter(&input, &[2, 2], None, None).unwrap();
+        let result = minimum_filter(&input, &[2, 2], None, None).expect("Operation failed");
 
         // Check shape
         assert_eq!(result.shape(), input.shape());
@@ -817,7 +817,7 @@ mod tests {
         let input = array![[5.0, 2.0], [1.0, 8.0]];
 
         // Apply 2x2 maximum filter
-        let result = maximum_filter(&input, &[2, 2], None, None).unwrap();
+        let result = maximum_filter(&input, &[2, 2], None, None).expect("Operation failed");
 
         // Check shape
         assert_eq!(result.shape(), input.shape());
@@ -835,10 +835,10 @@ mod tests {
         input[[2, 2, 2]] = 9.0;
 
         // Apply 3D minimum filter
-        let min_result = minimum_filter(&input, &[2, 2, 2], None, None).unwrap();
+        let min_result = minimum_filter(&input, &[2, 2, 2], None, None).expect("Operation failed");
 
         // Apply 3D maximum filter
-        let max_result = maximum_filter(&input, &[2, 2, 2], None, None).unwrap();
+        let max_result = maximum_filter(&input, &[2, 2, 2], None, None).expect("Operation failed");
 
         // Check shapes are preserved
         assert_eq!(min_result.shape(), input.shape());
@@ -861,8 +861,10 @@ mod tests {
         // Test 4D arrays to ensure general n-dimensional support
         let input = scirs2_core::ndarray::Array4::<f64>::from_elem((2, 2, 2, 2), 3.0);
 
-        let min_result = minimum_filter(&input, &[2, 2, 2, 2], None, None).unwrap();
-        let max_result = maximum_filter(&input, &[2, 2, 2, 2], None, None).unwrap();
+        let min_result =
+            minimum_filter(&input, &[2, 2, 2, 2], None, None).expect("Operation failed");
+        let max_result =
+            maximum_filter(&input, &[2, 2, 2, 2], None, None).expect("Operation failed");
 
         // All values should be 3.0 since input is uniform
         for elem in min_result.iter() {

@@ -30,8 +30,8 @@ use scirs2_core::random::{Distribution, StandardNormal};
 /// use scirs2_stats::random::random_sample;
 ///
 /// // Generate 10 random numbers from a uniform distribution [0, 1)
-/// let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
-/// let samples = random_sample(10, &uniform_dist, Some(42)).unwrap();
+/// let uniform_dist = Uniform::new(0.0, 1.0).expect("Operation failed");
+/// let samples = random_sample(10, &uniform_dist, Some(42)).expect("Operation failed");
 /// assert_eq!(samples.len(), 10);
 /// ```
 #[allow(dead_code)]
@@ -94,7 +94,7 @@ where
 /// use scirs2_stats::random::uniform;
 ///
 /// // Generate 5 random numbers from uniform distribution [0, 10)
-/// let samples = uniform(0.0, 10.0, 5, Some(123)).unwrap();
+/// let samples = uniform(0.0, 10.0, 5, Some(123)).expect("Operation failed");
 /// assert_eq!(samples.len(), 5);
 ///
 /// // All values should be in the range [0, 10)
@@ -144,7 +144,7 @@ where
 /// use scirs2_stats::random::randint;
 ///
 /// // Generate 10 random integers from 1 to 100 (inclusive)
-/// let samples = randint(1, 101, 10, Some(42)).unwrap();
+/// let samples = randint(1, 101, 10, Some(42)).expect("Operation failed");
 /// assert_eq!(samples.len(), 10);
 ///
 /// // All values should be in the range [1, 100]
@@ -189,7 +189,7 @@ pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResu
 /// use scirs2_stats::random::randn;
 ///
 /// // Generate 100 random numbers from standard normal distribution
-/// let samples = randn(100, Some(42)).unwrap();
+/// let samples = randn(100, Some(42)).expect("Operation failed");
 /// assert_eq!(samples.len(), 100);
 ///
 /// // Calculate mean and variance (should be approximately 0 and 1)
@@ -257,11 +257,11 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
 /// let options = array![10, 20, 30, 40, 50];
 ///
 /// // Choose 3 random elements with replacement
-/// let choices = choice(&options.view(), 3, true, None, Some(42)).unwrap();
+/// let choices = choice(&options.view(), 3, true, None, Some(42)).expect("Operation failed");
 /// assert_eq!(choices.len(), 3);
 ///
 /// // Choose 2 random elements without replacement
-/// let choices_no_replace = choice(&options.view(), 2, false, None, Some(123)).unwrap();
+/// let choices_no_replace = choice(&options.view(), 2, false, None, Some(123)).expect("Operation failed");
 /// assert_eq!(choices_no_replace.len(), 2);
 /// ```
 #[allow(dead_code)]
@@ -413,7 +413,7 @@ where
         // Unweighted sampling
         if replace {
             // Simple random sampling with replacement
-            let uniform = scirs2_core::random::Uniform::new(0, n).unwrap();
+            let uniform = scirs2_core::random::Uniform::new(0, n).expect("Operation failed");
 
             for _ in 0..size {
                 let idx = uniform.sample(&mut rng);
@@ -453,7 +453,7 @@ where
 ///
 /// // Permute an array
 /// let arr = array![1, 2, 3, 4, 5];
-/// let perm = permutation(&arr.view(), Some(42)).unwrap();
+/// let perm = permutation(&arr.view(), Some(42)).expect("Operation failed");
 ///
 /// // The permutation should have the same length
 /// assert_eq!(perm.len(), 5);
@@ -522,7 +522,7 @@ where
 /// use scirs2_stats::random::permutation_int;
 ///
 /// // Generate a random permutation of integers from 0 to 9
-/// let perm = permutation_int(10, Some(42)).unwrap();
+/// let perm = permutation_int(10, Some(42)).expect("Operation failed");
 ///
 /// // The permutation should have the correct length
 /// assert_eq!(perm.len(), 10);
@@ -588,7 +588,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
 /// use scirs2_stats::random::random_binary_matrix;
 ///
 /// // Generate a 5x5 binary matrix with 30% non-zero elements
-/// let matrix = random_binary_matrix(5, 5, 0.3, Some(42)).unwrap();
+/// let matrix = random_binary_matrix(5, 5, 0.3, Some(42)).expect("Operation failed");
 ///
 /// // The matrix should have the correct shape
 /// assert_eq!(matrix.shape(), &[5, 5]);
@@ -669,7 +669,7 @@ pub fn random_binary_matrix(
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 ///
 /// // Generate 10 bootstrap samples
-/// let samples = bootstrap_sample(&data.view(), 10, Some(42)).unwrap();
+/// let samples = bootstrap_sample(&data.view(), 10, Some(42)).expect("Operation failed");
 ///
 /// // Each bootstrap sample should have the same length as the original data
 /// assert_eq!(samples.shape(), &[10, 5]);
@@ -714,7 +714,7 @@ where
         }
     };
 
-    let uniform = scirs2_core::random::Uniform::new(0, n).unwrap();
+    let uniform = scirs2_core::random::Uniform::new(0, n).expect("Operation failed");
 
     let mut result = Array2::zeros((n_samples_, n));
 
@@ -737,8 +737,8 @@ mod tests {
     #[test]
     fn test_random_sample() {
         // Test with uniform distribution
-        let uniform_dist = scirs2_core::random::Uniform::new(0.0, 1.0).unwrap();
-        let samples = random_sample(100, &uniform_dist, Some(42)).unwrap();
+        let uniform_dist = scirs2_core::random::Uniform::new(0.0, 1.0).expect("Operation failed");
+        let samples = random_sample(100, &uniform_dist, Some(42)).expect("Operation failed");
 
         assert_eq!(samples.len(), 100);
         for &s in samples.iter() {
@@ -755,7 +755,7 @@ mod tests {
     #[test]
     fn test_uniform() {
         // Generate uniform samples
-        let samples = uniform(10.0, 20.0, 50, Some(42)).unwrap();
+        let samples = uniform(10.0, 20.0, 50, Some(42)).expect("Operation failed");
 
         assert_eq!(samples.len(), 50);
         for &s in samples.iter() {
@@ -771,7 +771,7 @@ mod tests {
     #[test]
     fn test_randint() {
         // Generate integer samples
-        let samples = randint(1, 101, 100, Some(42)).unwrap();
+        let samples = randint(1, 101, 100, Some(42)).expect("Operation failed");
 
         assert_eq!(samples.len(), 100);
         for &s in samples.iter() {
@@ -787,7 +787,7 @@ mod tests {
     #[test]
     fn test_randn() {
         // Generate normal samples
-        let samples = randn(1000, Some(42)).unwrap();
+        let samples = randn(1000, Some(42)).expect("Operation failed");
 
         assert_eq!(samples.len(), 1000);
 
@@ -814,7 +814,7 @@ mod tests {
         let options = array![10, 20, 30, 40, 50];
 
         // Test with replacement
-        let choices = choice(&options.view(), 10, true, None, Some(42)).unwrap();
+        let choices = choice(&options.view(), 10, true, None, Some(42)).expect("Operation failed");
         assert_eq!(choices.len(), 10);
 
         // All choices should be from the options
@@ -823,7 +823,8 @@ mod tests {
         }
 
         // Test without replacement
-        let choices_no_replace = choice(&options.view(), 3, false, None, Some(123)).unwrap();
+        let choices_no_replace =
+            choice(&options.view(), 3, false, None, Some(123)).expect("Operation failed");
         assert_eq!(choices_no_replace.len(), 3);
 
         // Values should be unique
@@ -835,8 +836,8 @@ mod tests {
 
         // Test with weights
         let weights = array![0.1, 0.2, 0.3, 0.2, 0.2];
-        let weighted_choices =
-            choice(&options.view(), 5, true, Some(&weights.view()), Some(42)).unwrap();
+        let weighted_choices = choice(&options.view(), 5, true, Some(&weights.view()), Some(42))
+            .expect("Operation failed");
         assert_eq!(weighted_choices.len(), 5);
 
         // Test error cases
@@ -861,7 +862,7 @@ mod tests {
         let arr = array![1, 2, 3, 4, 5];
 
         // Generate a permutation
-        let perm = permutation(&arr.view(), Some(42)).unwrap();
+        let perm = permutation(&arr.view(), Some(42)).expect("Operation failed");
 
         // Length should be the same
         assert_eq!(perm.len(), arr.len());
@@ -879,7 +880,7 @@ mod tests {
     #[test]
     fn test_permutation_int() {
         // Generate a permutation of integers
-        let perm = permutation_int(10, Some(42)).unwrap();
+        let perm = permutation_int(10, Some(42)).expect("Operation failed");
 
         // Length should be correct
         assert_eq!(perm.len(), 10);
@@ -896,7 +897,7 @@ mod tests {
     #[test]
     fn test_random_binary_matrix() {
         // Generate a binary matrix
-        let matrix = random_binary_matrix(5, 5, 0.5, Some(42)).unwrap();
+        let matrix = random_binary_matrix(5, 5, 0.5, Some(42)).expect("Operation failed");
 
         // Shape should be correct
         assert_eq!(matrix.shape(), &[5, 5]);
@@ -925,7 +926,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // Generate bootstrap samples
-        let samples = bootstrap_sample(&data.view(), 10, Some(42)).unwrap();
+        let samples = bootstrap_sample(&data.view(), 10, Some(42)).expect("Operation failed");
 
         // Shape should be [n_samples_, data_length]
         assert_eq!(samples.shape(), &[10, 5]);

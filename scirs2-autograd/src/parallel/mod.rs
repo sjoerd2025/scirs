@@ -243,7 +243,7 @@ impl Worker {
 
             loop {
                 let job = {
-                    let receiver = receiver.lock().unwrap();
+                    let receiver = receiver.lock().expect("Test: operation failed");
                     receiver.recv()
                 };
 
@@ -530,7 +530,7 @@ pub enum ThreadPoolError {
 /// Initialize the global thread pool with default configuration
 #[allow(dead_code)]
 pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
-    let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let mut pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     if pool.is_none() {
         *pool = Some(ThreadPool::new());
     }
@@ -540,7 +540,7 @@ pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
 /// Initialize the global thread pool with custom configuration
 #[allow(dead_code)]
 pub fn init_thread_pool_with_config(config: ThreadPoolConfig) -> Result<(), ThreadPoolError> {
-    let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let mut pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     *pool = Some(ThreadPool::with_config(config));
     Ok(())
 }
@@ -551,7 +551,7 @@ pub fn execute_global<F>(f: F) -> Result<(), ThreadPoolError>
 where
     F: FnOnce() + Send + 'static,
 {
-    let pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     if let Some(ref pool) = *pool {
         pool.execute(f)
     } else {
@@ -568,7 +568,7 @@ where
     F: FnOnce() -> R + Send + 'static,
     R: Send + 'static,
 {
-    let pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     if let Some(ref pool) = *pool {
         pool.execute_and_wait(f)
     } else {
@@ -581,14 +581,14 @@ where
 /// Get global thread pool statistics
 #[allow(dead_code)]
 pub fn get_global_thread_pool_stats() -> Option<ThreadPoolStats> {
-    let pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     pool.as_ref().map(|p| p.get_stats())
 }
 
 /// Shutdown the global thread pool
 #[allow(dead_code)]
 pub fn shutdown_global_thread_pool() -> Result<(), ThreadPoolError> {
-    let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let mut pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     if let Some(pool) = pool.take() {
         pool.shutdown()
     } else {
@@ -609,7 +609,7 @@ pub fn set_global_thread_count(count: usize) -> Result<(), ThreadPoolError> {
 /// Get the current number of threads in the global thread pool
 #[allow(dead_code)]
 pub fn get_global_thread_count() -> usize {
-    let pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     pool.as_ref()
         .map(|p| p.get_config().num_threads)
         .unwrap_or(0)
@@ -618,7 +618,7 @@ pub fn get_global_thread_count() -> usize {
 /// Check if the global thread pool is initialized
 #[allow(dead_code)]
 pub fn is_thread_pool_initialized() -> bool {
-    let pool = GLOBAL_THREAD_POOL.lock().unwrap();
+    let pool = GLOBAL_THREAD_POOL.lock().expect("Test: operation failed");
     pool.is_some()
 }
 
@@ -651,7 +651,7 @@ mod tests {
         pool.execute(move || {
             counter_clone.fetch_add(1, Ordering::SeqCst);
         })
-        .unwrap();
+        .expect("Test: thread spawn failed");
 
         // Give the task time to execute
         std::thread::sleep(Duration::from_millis(100));
@@ -662,7 +662,9 @@ mod tests {
     fn test_thread_pool_execute_and_wait() {
         let pool = ThreadPool::new();
 
-        let result = pool.execute_and_wait(|| 42).unwrap();
+        let result = pool
+            .execute_and_wait(|| 42)
+            .expect("Test: operation failed");
 
         assert_eq!(result, 42);
     }
@@ -681,7 +683,8 @@ mod tests {
             })
             .collect();
 
-        pool.execute_parallel(tasks).unwrap();
+        pool.execute_parallel(tasks)
+            .expect("Test: operation failed");
         assert_eq!(counter.load(Ordering::SeqCst), 5);
     }
 
@@ -699,7 +702,9 @@ mod tests {
     fn test_parallel_scheduler() {
         let scheduler = ParallelScheduler::new();
 
-        let result = scheduler.schedule_operation(|| 100).unwrap();
+        let result = scheduler
+            .schedule_operation(|| 100)
+            .expect("Test: operation failed");
 
         assert_eq!(result, 100);
     }
@@ -710,13 +715,13 @@ mod tests {
         let _ = shutdown_global_thread_pool();
 
         // Initialize fresh thread pool
-        init_thread_pool().unwrap();
+        init_thread_pool().expect("Test: operation failed");
         assert!(is_thread_pool_initialized());
 
         // Test execute and wait (more reliable than async execute)
         let result = execute_and_wait_global(|| 42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Test: result failed"), 42);
 
         // Get stats (handle potential poisoned mutex gracefully)
         let stats = get_global_thread_pool_stats();
@@ -727,7 +732,7 @@ mod tests {
         assert!(thread_count > 0);
 
         // Shutdown
-        shutdown_global_thread_pool().unwrap();
+        shutdown_global_thread_pool().expect("Test: operation failed");
         assert!(!is_thread_pool_initialized());
     }
 

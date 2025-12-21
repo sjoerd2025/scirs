@@ -79,7 +79,7 @@ fn test_spiking_neural_network() {
     let snn = SpikingNeuralNetwork::<f64>::new(layer_sizes, neuron_models, plasticity_rules, 0.1);
     assert!(snn.is_ok());
 
-    let mut network = snn.unwrap();
+    let mut network = snn.expect("Operation failed");
 
     // Test spike encoding
     let data = Array1::from_vec(vec![0.1, 0.5, 0.8, 0.3, 0.9]);
@@ -96,14 +96,14 @@ fn test_liquid_state_machine() {
     let lsm = LiquidStateMachine::<f64>::new(10, 3, 2, 0.9, 0.1);
     assert!(lsm.is_ok());
 
-    let mut machine = lsm.unwrap();
+    let mut machine = lsm.expect("Operation failed");
 
     // Test processing
     let data = Array1::from_vec(vec![0.1, 0.2, 0.3]);
     let result = machine.process_time_series(&data);
     assert!(result.is_ok());
 
-    let output = result.unwrap();
+    let output = result.expect("Operation failed");
     assert_eq!(output.len(), 2);
 }
 
@@ -131,8 +131,16 @@ fn test_memristive_network() {
 fn test_neuron_state() {
     let state = NeuronState::<f64>::default();
 
-    assert_abs_diff_eq!(state.v.to_f64().unwrap(), -70.0, epsilon = 1e-10);
-    assert_abs_diff_eq!(state.u.to_f64().unwrap(), 0.0, epsilon = 1e-10);
+    assert_abs_diff_eq!(
+        state.v.to_f64().expect("Operation failed"),
+        -70.0,
+        epsilon = 1e-10
+    );
+    assert_abs_diff_eq!(
+        state.u.to_f64().expect("Operation failed"),
+        0.0,
+        epsilon = 1e-10
+    );
     assert!(state.last_spike.is_none());
     assert_eq!(state.refractory, 0.0);
 }

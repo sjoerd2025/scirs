@@ -22,7 +22,7 @@ fn main() {
 
     // 1. Using median (default, recommended for skewed distributions)
     let samples = vec![a.view(), b.view(), c.view()];
-    let (stat, p_value) = levene(&samples, "median", 0.05).unwrap();
+    let (stat, p_value) = levene(&samples, "median", 0.05).expect("Operation failed");
 
     println!("Levene's test with center='median':");
     println!("Test statistic (W): {:.6}", stat);
@@ -38,7 +38,7 @@ fn main() {
     println!();
 
     // 2. Using mean (original Levene's test, good for symmetric distributions)
-    let (stat, p_value) = levene(&samples, "mean", 0.05).unwrap();
+    let (stat, p_value) = levene(&samples, "mean", 0.05).expect("Operation failed");
 
     println!("Levene's test with center='mean':");
     println!("Test statistic (W): {:.6}", stat);
@@ -54,7 +54,7 @@ fn main() {
     println!();
 
     // 3. Using trimmed mean (good for heavy-tailed distributions)
-    let (stat, p_value) = levene(&samples, "trimmed", 0.1).unwrap();
+    let (stat, p_value) = levene(&samples, "trimmed", 0.1).expect("Operation failed");
 
     println!("Levene's test with center='trimmed' (10% trim):");
     println!("Test statistic (W): {:.6}", stat);
@@ -78,7 +78,7 @@ fn main() {
     println!("Group E variance: {:.6}", variance(&e));
 
     let samples2 = vec![d.view(), e.view()];
-    let (stat, p_value) = levene(&samples2, "median", 0.05).unwrap();
+    let (stat, p_value) = levene(&samples2, "median", 0.05).expect("Operation failed");
 
     println!("Levene's test with center='median':");
     println!("Test statistic (W): {:.6}", stat);

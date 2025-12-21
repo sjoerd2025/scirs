@@ -112,7 +112,7 @@ impl PerformanceHistory {
             b.metrics
                 .throughput
                 .partial_cmp(&a.metrics.throughput)
-                .unwrap()
+                .expect("Operation failed")
         });
 
         records.into_iter().take(limit).collect()

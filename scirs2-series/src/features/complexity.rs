@@ -14,9 +14,9 @@
 //! use scirs2_series::features::complexity::*;
 //!
 //! let ts = Array1::from_vec(vec![1.0, 2.0, 1.5, 3.0, 2.5, 4.0, 3.5, 5.0]);
-//! let approx_entropy = calculate_approximate_entropy(&ts, 2, 0.1).unwrap();
-//! let perm_entropy = calculate_permutation_entropy(&ts, 3).unwrap();
-//! let lz_complexity = calculate_lempel_ziv_complexity(&ts).unwrap();
+//! let approx_entropy = calculate_approximate_entropy(&ts, 2, 0.1).expect("Test/example failed");
+//! let perm_entropy = calculate_permutation_entropy(&ts, 3).expect("Test/example failed");
+//! let lz_complexity = calculate_lempel_ziv_complexity(&ts).expect("Test/example failed");
 //! ```
 
 use crate::error::{Result, TimeSeriesError};
@@ -24,6 +24,12 @@ use scirs2_core::ndarray::{s, Array1};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
+
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 
 // Import functions from utils module
 use super::utils::{
@@ -70,8 +76,8 @@ where
             let mut is_match = true;
 
             for k in 0..m {
-                let x = *ts.get(i + k).unwrap();
-                let y = *ts.get(j + k).unwrap();
+                let x = *ts.get(i + k).expect("Test/example failed");
+                let y = *ts.get(j + k).expect("Test/example failed");
                 if (x - y).abs() > r {
                     is_match = false;
                     break;
@@ -83,10 +89,10 @@ where
             }
         }
 
-        phi_m = phi_m + (count / F::from_usize(n - m + 1).unwrap()).ln();
+        phi_m = phi_m + (count / F::from_usize(n - m + 1).expect("Operation failed")).ln();
     }
 
-    phi_m = phi_m / F::from_usize(n - m + 1).unwrap();
+    phi_m = phi_m / F::from_usize(n - m + 1).expect("Test/example failed");
 
     // Phi(m+1)
     for i in 0..=n - m - 1 {
@@ -97,8 +103,8 @@ where
             let mut is_match = true;
 
             for k in 0..m + 1 {
-                let x = *ts.get(i + k).unwrap();
-                let y = *ts.get(j + k).unwrap();
+                let x = *ts.get(i + k).expect("Test/example failed");
+                let y = *ts.get(j + k).expect("Test/example failed");
                 if (x - y).abs() > r {
                     is_match = false;
                     break;
@@ -110,10 +116,11 @@ where
             }
         }
 
-        phi_m_plus_1 = phi_m_plus_1 + (count / F::from_usize(n - m).unwrap()).ln();
+        phi_m_plus_1 =
+            phi_m_plus_1 + (count / F::from_usize(n - m).expect("Operation failed")).ln();
     }
 
-    phi_m_plus_1 = phi_m_plus_1 / F::from_usize(n - m).unwrap();
+    phi_m_plus_1 = phi_m_plus_1 / F::from_usize(n - m).expect("Test/example failed");
 
     // Approximate entropy is phi_m - phi_(m+1)
     Ok(phi_m - phi_m_plus_1)
@@ -154,8 +161,8 @@ where
             let mut is_match_m = true;
 
             for k in 0..m {
-                let x = *ts.get(i + k).unwrap();
-                let y = *ts.get(j + k).unwrap();
+                let x = *ts.get(i + k).expect("Test/example failed");
+                let y = *ts.get(j + k).expect("Test/example failed");
                 if (x - y).abs() > r {
                     is_match_m = false;
                     break;
@@ -166,8 +173,8 @@ where
                 b = b + F::one();
 
                 // Check additional element for m+1
-                let x = *ts.get(i + m).unwrap();
-                let y = *ts.get(j + m).unwrap();
+                let x = *ts.get(i + m).expect("Test/example failed");
+                let y = *ts.get(j + m).expect("Test/example failed");
                 if (x - y).abs() <= r {
                     a = a + F::one();
                 }
@@ -180,12 +187,12 @@ where
         // When no matches are found for template length m, it indicates high irregularity
         // Return a high entropy value (e.g., ln(n)) as a reasonable default
         // This is mathematically sound as it represents maximum possible entropy
-        return Ok(F::from_f64(n as f64).unwrap().ln());
+        return Ok(F::from_f64(n as f64).expect("Operation failed").ln());
     }
 
     if a == F::zero() {
         // This is actually infinity, but we'll return a large value
-        return Ok(F::from_f64(100.0).unwrap());
+        return Ok(F::from_f64(100.0).expect("Operation failed"));
     }
 
     Ok(-((a / b).ln()))
@@ -242,7 +249,8 @@ where
     let mut entropy = F::zero();
     for &count in pattern_counts.values() {
         if count > 0 {
-            let p = F::from(count).unwrap() / F::from(total_patterns).unwrap();
+            let p = F::from(count).expect("Failed to convert to float")
+                / F::from(total_patterns).expect("Failed to convert to float");
             entropy = entropy - p * p.ln();
         }
     }
@@ -271,7 +279,7 @@ where
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         let n = sorted.len();
         if n.is_multiple_of(2) {
-            (sorted[n / 2 - 1] + sorted[n / 2]) / F::from(2.0).unwrap()
+            (sorted[n / 2 - 1] + sorted[n / 2]) / const_f64::<F>(2.0)
         } else {
             sorted[n / 2]
         }
@@ -319,7 +327,8 @@ where
     }
 
     // Normalize by sequence length
-    Ok(F::from(complexity).unwrap() / F::from(n).unwrap())
+    Ok(F::from(complexity).expect("Failed to convert to float")
+        / F::from(n).expect("Failed to convert to float"))
 }
 
 /// Calculate Higuchi fractal dimension
@@ -365,14 +374,15 @@ where
                 }
             }
 
-            l_mk = l_mk * F::from(n - 1).unwrap() / (F::from(max_i * k).unwrap());
+            l_mk = l_mk * F::from(n - 1).expect("Failed to convert to float")
+                / (F::from(max_i * k).expect("Failed to convert to float"));
             l_m = l_m + l_mk;
         }
 
-        l_m = l_m / F::from(k).unwrap();
+        l_m = l_m / F::from(k).expect("Failed to convert to float");
 
         if l_m > F::zero() {
-            log_k_vec.push(F::from(k).unwrap().ln());
+            log_k_vec.push(F::from(k).expect("Failed to convert to float").ln());
             log_l_vec.push(l_m.ln());
         }
     }
@@ -391,7 +401,7 @@ where
         .fold(F::zero(), |acc, (&x, &y)| acc + x * y);
     let sum_xx: F = log_k_vec.iter().fold(F::zero(), |acc, &x| acc + x * x);
 
-    let n_f = F::from(n_points).unwrap();
+    let n_f = F::from(n_points).expect("Failed to convert to float");
     let slope = (n_f * sum_xy - sum_x * sum_y) / (n_f * sum_xx - sum_x * sum_x);
 
     Ok(-slope) // Negative because we expect negative slope
@@ -415,7 +425,7 @@ where
 {
     let n = ts.len();
     if n < 20 {
-        return Ok(F::from(0.5).unwrap());
+        return Ok(const_f64::<F>(0.5));
     }
 
     estimate_hurst_exponent(ts)
@@ -441,7 +451,7 @@ where
         return Ok(F::zero());
     }
 
-    let mean = ts.sum() / F::from(n).unwrap();
+    let mean = ts.sum() / F::from(n).expect("Failed to convert to float");
 
     // Create integrated series
     let mut integrated = Array1::zeros(n);
@@ -474,11 +484,13 @@ where
 
             // Linear detrending of the window
             let window = integrated.slice(scirs2_core::ndarray::s![start..end]);
-            let x_vals: Array1<F> = (0..window_size).map(|j| F::from(j).unwrap()).collect();
+            let x_vals: Array1<F> = (0..window_size)
+                .map(|j| F::from(j).expect("Failed to convert to float"))
+                .collect();
 
             // Linear regression coefficients
-            let x_mean = x_vals.sum() / F::from(window_size).unwrap();
-            let y_mean = window.sum() / F::from(window_size).unwrap();
+            let x_mean = x_vals.sum() / F::from(window_size).expect("Failed to convert to float");
+            let y_mean = window.sum() / F::from(window_size).expect("Failed to convert to float");
 
             let mut num = F::zero();
             let mut den = F::zero();
@@ -507,12 +519,17 @@ where
             fluctuation_sum = fluctuation_sum + fluctuation;
         }
 
-        let avg_fluctuation =
-            (fluctuation_sum / F::from(num_windows * window_size).unwrap()).sqrt();
+        let avg_fluctuation = (fluctuation_sum
+            / F::from(num_windows * window_size).expect("Failed to convert to float"))
+        .sqrt();
 
         if avg_fluctuation > F::zero() {
             log_f_vec.push(avg_fluctuation.ln());
-            log_n_vec.push(F::from(window_size).unwrap().ln());
+            log_n_vec.push(
+                F::from(window_size)
+                    .expect("Failed to convert to float")
+                    .ln(),
+            );
         }
     }
 
@@ -530,7 +547,7 @@ where
         .fold(F::zero(), |acc, (&x, &y)| acc + x * y);
     let sum_xx: F = log_n_vec.iter().fold(F::zero(), |acc, &x| acc + x * x);
 
-    let n_f = F::from(n_points).unwrap();
+    let n_f = F::from(n_points).expect("Failed to convert to float");
     let dfa_exponent = (n_f * sum_xy - sum_x * sum_y) / (n_f * sum_xx - sum_x * sum_x);
 
     Ok(dfa_exponent)
@@ -600,7 +617,7 @@ where
     }
 
     let probabilities = discretize_and_get_probabilities(ts, nbins)?;
-    let alpha_f = F::from(alpha).unwrap();
+    let alpha_f = F::from(alpha).expect("Failed to convert to float");
 
     let mut sum = F::zero();
     for &p in probabilities.iter() {
@@ -628,7 +645,7 @@ where
     }
 
     let probabilities = discretize_and_get_probabilities(ts, nbins)?;
-    let q_f = F::from(q).unwrap();
+    let q_f = F::from(q).expect("Failed to convert to float");
 
     let mut sum = F::zero();
     for &p in probabilities.iter() {
@@ -648,7 +665,7 @@ where
     F: Float + FromPrimitive + Debug + Clone,
 {
     let probabilities = discretize_and_get_probabilities(ts, nbins)?;
-    let uniform_prob = F::one() / F::from(nbins).unwrap();
+    let uniform_prob = F::one() / F::from(nbins).expect("Failed to convert to float");
 
     let mut kl_div = F::zero();
     for &p in probabilities.iter() {
@@ -678,11 +695,11 @@ where
     }
 
     // Gaussian differential entropy approximation: 0.5 * log(2πe * σ²)
-    let pi = F::from(std::f64::consts::PI).unwrap();
-    let e = F::from(std::f64::consts::E).unwrap();
-    let two = F::from(2.0).unwrap();
+    let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+    let e = F::from(std::f64::consts::E).expect("Failed to convert to float");
+    let two = const_f64::<F>(2.0);
 
-    let entropy = F::from(0.5).unwrap() * (two * pi * e * std_dev * std_dev).ln();
+    let entropy = const_f64::<F>(0.5) * (two * pi * e * std_dev * std_dev).ln();
     Ok(entropy)
 }
 
@@ -704,11 +721,12 @@ where
         let window = &ts.slice(s![i..i + order]);
 
         // Calculate relative variance as weight
-        let mean = window.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(order).unwrap();
+        let mean = window.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(order).expect("Failed to convert to float");
         let variance = window.iter().fold(F::zero(), |acc, &x| {
             let diff = x - mean;
             acc + diff * diff
-        }) / F::from(order).unwrap();
+        }) / F::from(order).expect("Failed to convert to float");
 
         let weight = variance.sqrt();
 
@@ -749,7 +767,7 @@ where
 {
     let mut entropies = Vec::new();
     let std_dev = calculate_std_dev(ts);
-    let tolerance = F::from(tolerance_fraction).unwrap() * std_dev;
+    let tolerance = F::from(tolerance_fraction).expect("Failed to convert to float") * std_dev;
 
     for scale in 1..=n_scales {
         let coarse_grained = coarse_grain_series(ts, scale)?;
@@ -774,7 +792,7 @@ where
     F: Float + FromPrimitive + Debug + Clone,
 {
     let std_dev = calculate_std_dev(ts);
-    let tolerance = F::from(0.15).unwrap() * std_dev;
+    let tolerance = const_f64::<F>(0.15) * std_dev;
 
     let mut all_entropies = Vec::new();
 
@@ -794,7 +812,7 @@ where
     }
 
     let sum = all_entropies.iter().fold(F::zero(), |acc, &x| acc + x);
-    Ok(sum / F::from(all_entropies.len()).unwrap())
+    Ok(sum / F::from(all_entropies.len()).expect("Operation failed"))
 }
 
 // =================================
@@ -811,7 +829,9 @@ where
     let entropy = calculate_shannon_entropy(ts, nbins)?;
 
     // Effective complexity balances order and disorder
-    let max_entropy = F::from(nbins as f64).unwrap().ln();
+    let max_entropy = F::from(nbins as f64)
+        .expect("Failed to convert to float")
+        .ln();
     let normalized_entropy = if max_entropy > F::zero() {
         entropy / max_entropy
     } else {
@@ -831,7 +851,7 @@ where
 {
     // Simplified fractal dimension-based entropy
     let fractal_dim = estimate_fractal_dimension(ts)?;
-    let max_dim = F::from(2.0).unwrap(); // Maximum for time series
+    let max_dim = const_f64::<F>(2.0); // Maximum for time series
 
     let normalized_dim = fractal_dim / max_dim;
     let entropy = -normalized_dim * normalized_dim.ln()
@@ -892,8 +912,8 @@ where
     // Convert Hurst exponent to entropy measure
     // Hurst = 0.5 (random) -> high entropy
     // Hurst != 0.5 (persistent/anti-persistent) -> lower entropy
-    let deviation = (hurst_exponent - F::from(0.5).unwrap()).abs();
-    let entropy = F::one() - deviation * F::from(2.0).unwrap();
+    let deviation = (hurst_exponent - const_f64::<F>(0.5)).abs();
+    let entropy = F::one() - deviation * const_f64::<F>(2.0);
 
     Ok(entropy.max(F::zero()))
 }
@@ -952,8 +972,8 @@ where
     for ((x_bin, _y_bin), &joint_count) in joint_counts.iter() {
         let marginal_count = marginal_counts[x_bin];
 
-        let p_xy = F::from(joint_count as f64 / total).unwrap();
-        let p_x = F::from(marginal_count as f64 / total).unwrap();
+        let p_xy = F::from(joint_count as f64 / total).expect("Failed to convert to float");
+        let p_x = F::from(marginal_count as f64 / total).expect("Failed to convert to float");
         let p_y_given_x = p_xy / p_x;
 
         if p_y_given_x > F::zero() {
@@ -1019,9 +1039,9 @@ where
     // Excess entropy is the limit of block entropy - block_size * entropy_rate
     // Simplified approximation
     let entropy_rate = (block_entropies[block_entropies.len() - 1] - block_entropies[0])
-        / F::from(block_entropies.len() - 1).unwrap();
-    let excess =
-        block_entropies[block_entropies.len() - 1] - F::from(maxlag).unwrap() * entropy_rate;
+        / F::from(block_entropies.len() - 1).expect("Test/example failed");
+    let excess = block_entropies[block_entropies.len() - 1]
+        - F::from(maxlag).expect("Failed to convert to float") * entropy_rate;
 
     Ok(excess.max(F::zero()))
 }
@@ -1055,7 +1075,7 @@ where
 
     for &count in joint_counts.values() {
         if count > 0 {
-            let p = F::from(count as f64 / total).unwrap();
+            let p = F::from(count as f64 / total).expect("Failed to convert to float");
             entropy = entropy - p * p.ln();
         }
     }
@@ -1090,7 +1110,7 @@ where
 
     for &count in block_counts.values() {
         if count > 0 {
-            let p = F::from(count as f64 / total).unwrap();
+            let p = F::from(count as f64 / total).expect("Failed to convert to float");
             entropy = entropy - p * p.ln();
         }
     }
@@ -1142,9 +1162,9 @@ where
     let slope = (n_points * sum_xy - sum_x * sum_y) / (n_points * sum_x2 - sum_x * sum_x);
 
     Ok(F::from(-slope)
-        .unwrap()
+        .expect("Operation failed")
         .max(F::zero())
-        .min(F::from(3.0).unwrap()))
+        .min(const_f64::<F>(3.0)))
 }
 
 /// Estimate DFA exponent
@@ -1156,11 +1176,12 @@ where
     // Simplified DFA calculation
     let n = ts.len();
     if n < 10 {
-        return Ok(F::from(0.5).unwrap());
+        return Ok(const_f64::<F>(0.5));
     }
 
     // Calculate cumulative sum
-    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(n).expect("Failed to convert to float");
     let mut cumsum = Vec::with_capacity(n);
     let mut sum = F::zero();
 
@@ -1182,27 +1203,30 @@ where
             let end = start + window_size;
 
             // Linear detrending
-            let x_vals: Vec<F> = (0..window_size).map(|j| F::from(j).unwrap()).collect();
+            let x_vals: Vec<F> = (0..window_size)
+                .map(|j| F::from(j).expect("Failed to convert to float"))
+                .collect();
             let y_vals: Vec<F> = cumsum[start..end].to_vec();
 
             let (slope, intercept) = linear_fit(&x_vals, &y_vals);
 
             let mut mse = F::zero();
             for (j, &y_val) in y_vals.iter().enumerate().take(window_size) {
-                let predicted = slope * F::from(j).unwrap() + intercept;
+                let predicted = slope * F::from(j).expect("Failed to convert to float") + intercept;
                 let residual = y_val - predicted;
                 mse = mse + residual * residual;
             }
-            mse_sum = mse_sum + mse / F::from(window_size).unwrap();
+            mse_sum = mse_sum + mse / F::from(window_size).expect("Failed to convert to float");
         }
 
-        let fluctuation = (mse_sum / F::from(n_windows).unwrap()).sqrt();
+        let fluctuation =
+            (mse_sum / F::from(n_windows).expect("Failed to convert to float")).sqrt();
         fluctuations.push(fluctuation);
         window_sizes.push(window_size);
     }
 
     if fluctuations.len() < 2 {
-        return Ok(F::from(0.5).unwrap());
+        return Ok(const_f64::<F>(0.5));
     }
 
     // Linear regression on log-log plot
@@ -1224,7 +1248,10 @@ where
 
     let slope = (n_points * sum_xy - sum_x * sum_y) / (n_points * sum_x2 - sum_x * sum_x);
 
-    Ok(F::from(slope).unwrap().max(F::zero()).min(F::one()))
+    Ok(F::from(slope)
+        .expect("Failed to convert to float")
+        .max(F::zero())
+        .min(F::one()))
 }
 
 /// Estimate Hurst exponent using R/S analysis
@@ -1235,10 +1262,11 @@ where
 {
     let n = ts.len();
     if n < 10 {
-        return Ok(F::from(0.5).unwrap());
+        return Ok(const_f64::<F>(0.5));
     }
 
-    let _mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+    let _mean = ts.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(n).expect("Failed to convert to float");
 
     // Calculate R/S statistic for different window sizes
     let mut rs_values = Vec::new();
@@ -1254,8 +1282,8 @@ where
             let window = &ts.slice(s![start..end]);
 
             // Calculate cumulative deviations
-            let window_mean =
-                window.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(window_size).unwrap();
+            let window_mean = window.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(window_size).expect("Failed to convert to float");
             let mut cumulative_devs = Vec::with_capacity(window_size);
             let mut sum_dev = F::zero();
 
@@ -1275,7 +1303,7 @@ where
             let variance = window.iter().fold(F::zero(), |acc, &x| {
                 let diff = x - window_mean;
                 acc + diff * diff
-            }) / F::from(window_size - 1).unwrap();
+            }) / F::from(window_size - 1).expect("Failed to convert to float");
             let std_dev = variance.sqrt();
 
             if std_dev > F::zero() {
@@ -1284,13 +1312,13 @@ where
         }
 
         if n_windows > 0 {
-            rs_values.push(rs_sum / F::from(n_windows).unwrap());
+            rs_values.push(rs_sum / F::from(n_windows).expect("Failed to convert to float"));
             window_sizes.push(window_size);
         }
     }
 
     if rs_values.len() < 2 {
-        return Ok(F::from(0.5).unwrap());
+        return Ok(const_f64::<F>(0.5));
     }
 
     // Linear regression on log-log plot
@@ -1312,7 +1340,10 @@ where
 
     let hurst = (n_points * sum_xy - sum_x * sum_y) / (n_points * sum_x2 - sum_x * sum_x);
 
-    Ok(F::from(hurst).unwrap().max(F::zero()).min(F::one()))
+    Ok(F::from(hurst)
+        .expect("Failed to convert to float")
+        .max(F::zero())
+        .min(F::one()))
 }
 
 // =================================
@@ -1335,7 +1366,7 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let std_dev = calculate_std_dev(signal);
-    let tolerance = F::from(0.2).unwrap() * std_dev;
+    let tolerance = const_f64::<F>(0.2) * std_dev;
     calculate_sample_entropy(signal, 2, tolerance)
 }
 
@@ -1376,7 +1407,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
         let result = calculate_approximate_entropy(&data, 2, 0.1);
         assert!(result.is_ok());
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -1384,7 +1415,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
         let result = calculate_sample_entropy(&data, 2, 0.1);
         assert!(result.is_ok());
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -1392,7 +1423,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 3.0, 2.0, 4.0, 1.0, 3.0, 2.0, 4.0]);
         let result = calculate_permutation_entropy(&data, 3);
         assert!(result.is_ok());
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -1400,7 +1431,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
         let result = calculate_lempel_ziv_complexity(&data);
         assert!(result.is_ok());
-        let value = result.unwrap();
+        let value = result.expect("Test/example failed");
         assert!(value >= 0.0);
         assert!(value <= 1.0);
     }
@@ -1410,7 +1441,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 1.5, 2.0, 2.5, 3.0, 2.5, 2.0, 1.5, 1.0]);
         let result = calculate_higuchi_fractal_dimension(&data, 5);
         assert!(result.is_ok());
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -1421,7 +1452,7 @@ mod tests {
         ]);
         let result = calculate_hurst_exponent(&data);
         assert!(result.is_ok());
-        let hurst = result.unwrap();
+        let hurst = result.expect("Test/example failed");
         assert!(hurst >= 0.0);
         assert!(hurst <= 1.0);
     }
@@ -1434,7 +1465,7 @@ mod tests {
         ]);
         let result = calculate_dfa_exponent(&data);
         assert!(result.is_ok());
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -1442,7 +1473,7 @@ mod tests {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
         let result = calculate_shannon_entropy(&data, 8);
         assert!(result.is_ok());
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -1452,7 +1483,7 @@ mod tests {
         ]);
         let result = calculate_multiscale_entropy(&data, 3, 2, 0.1);
         assert!(result.is_ok());
-        let entropies = result.unwrap();
+        let entropies = result.expect("Test/example failed");
         assert_eq!(entropies.len(), 3);
         for entropy in entropies {
             assert!(entropy >= 0.0);

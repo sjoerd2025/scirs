@@ -159,7 +159,7 @@ where
 
             match result {
                 Ok(ode_result) => {
-                    let final_value = ode_result.y.last().unwrap()[0];
+                    let final_value = ode_result.y.last().expect("Operation failed")[0];
                     let error = (final_value - exact_value).abs();
 
                     println!(
@@ -218,7 +218,7 @@ where
 
         match gragg_bulirsch_stoer_method(f, t_span, y0.clone(), opts.clone(), Some(ext_opts)) {
             Ok(result) => {
-                let final_y = result.y.last().unwrap();
+                let final_y = result.y.last().expect("Operation failed");
                 println!(
                     "{:<20}\\t{:.6}\\t\\t{:.6}\\t\\t{}\\t{}",
                     method_name, final_y[0], final_y[1], result.n_steps, result.n_eval

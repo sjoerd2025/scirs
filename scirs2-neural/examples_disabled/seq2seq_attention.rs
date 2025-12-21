@@ -221,8 +221,8 @@ impl LSTMCell {
         if self.c_t.is_none() {
             self.c_t = Some(Array2::zeros((batch_size, self.hidden_size)));
         // Get previous states
-        let h_prev = self.h_t.as_ref().unwrap();
-        let c_prev = self.c_t.as_ref().unwrap();
+        let h_prev = self.h_t.as_ref().expect("Operation failed");
+        let c_prev = self.c_t.as_ref().expect("Operation failed");
         // Input gate: i_t = sigmoid(W_ii * x_t + W_hi * h_prev + b_i)
         let i_t = Self::sigmoid(&(x.dot(&self.w_ii.t()) + h_prev.dot(&self.w_hi.t()) + &self.b_i));
         // Forget gate: f_t = sigmoid(W_if * x_t + W_hf * h_prev + b_f)

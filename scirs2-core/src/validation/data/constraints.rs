@@ -351,7 +351,11 @@ impl ConstraintBuilder {
     pub fn and(self) -> Constraint {
         match self.constraints.len() {
             0 => panic!("Cannot create AND constraint with no constraints"),
-            1 => self.constraints.into_iter().next().unwrap(),
+            1 => self
+                .constraints
+                .into_iter()
+                .next()
+                .expect("Operation failed"),
             _ => Constraint::And(self.constraints),
         }
     }
@@ -360,7 +364,11 @@ impl ConstraintBuilder {
     pub fn or(self) -> Constraint {
         match self.constraints.len() {
             0 => panic!("Cannot create OR constraint with no constraints"),
-            1 => self.constraints.into_iter().next().unwrap(),
+            1 => self
+                .constraints
+                .into_iter()
+                .next()
+                .expect("Operation failed"),
             _ => Constraint::Or(self.constraints),
         }
     }

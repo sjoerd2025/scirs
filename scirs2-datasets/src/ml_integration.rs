@@ -348,7 +348,7 @@ impl MLPipeline {
             let x_train = dataset.data.select(Axis(0), &train_indices);
             let x_val = dataset.data.select(Axis(0), &val_indices);
 
-            let target = dataset.target.as_ref().unwrap();
+            let target = dataset.target.as_ref().expect("Operation failed");
             let y_train = target.select(Axis(0), &train_indices);
             let y_val = target.select(Axis(0), &val_indices);
 
@@ -495,7 +495,8 @@ impl MLPipeline {
 
             if samples_needed > 0 {
                 for _ in 0..samples_needed {
-                    let random_idx = rng.sample(Uniform::new(0, indices.len()).unwrap());
+                    let random_idx =
+                        rng.sample(Uniform::new(0, indices.len()).expect("Operation failed"));
                     all_indices.push(indices[random_idx]);
                 }
             }
@@ -610,7 +611,7 @@ impl MLPipeline {
             }
             ScalingMethod::RobustScaler => {
                 let mut sorted_values = values.clone();
-                sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                 let median = Self::percentile(&sorted_values, 0.5).unwrap_or(0.0);
                 let mad = Self::compute_mad(&sorted_values, median);
@@ -708,7 +709,7 @@ impl MLPipeline {
         let deviations: Vec<f64> = sorted_values.iter().map(|&x| (x - median).abs()).collect();
 
         let mut sorted_deviations = deviations;
-        sorted_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         Self::percentile(&sorted_deviations, 0.5).unwrap_or(1.0)
     }
@@ -723,7 +724,10 @@ impl MLPipeline {
         // Use proper random shuffling based on configuration
         if self.config.stratify && target.is_some() {
             // Implement stratified shuffling
-            self.stratified_shuffle(&mut indices, target.unwrap())?;
+            self.stratified_shuffle(
+                &mut indices,
+                target.expect("Target required for stratified split"),
+            )?;
         } else {
             // Regular shuffling with optional random state
             match self.config.random_state {
@@ -897,8 +901,8 @@ mod tests {
 
     #[test]
     fn test_train_test_split() {
-        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).unwrap();
-        let split = convenience::train_test_split(&dataset, Some(0.3)).unwrap();
+        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).expect("Operation failed");
+        let split = convenience::train_test_split(&dataset, Some(0.3)).expect("Operation failed");
 
         assert_eq!(split.x_train.nrows() + split.x_test.nrows(), 100);
         assert_eq!(split.y_train.len() + split.y_test.len(), 100);
@@ -908,8 +912,8 @@ mod tests {
 
     #[test]
     fn test_cross_validation_split() {
-        let dataset = make_classification(100, 3, 2, 1, 1, Some(42)).unwrap();
-        let folds = convenience::cv_split(&dataset, Some(5), Some(true)).unwrap();
+        let dataset = make_classification(100, 3, 2, 1, 1, Some(42)).expect("Operation failed");
+        let folds = convenience::cv_split(&dataset, Some(5), Some(true)).expect("Operation failed");
 
         assert_eq!(folds.len(), 5);
 
@@ -925,8 +929,9 @@ mod tests {
 
     #[test]
     fn test_dataset_preparation() {
-        let dataset = make_classification(50, 4, 2, 1, 1, Some(42)).unwrap();
-        let prepared = convenience::prepare_for_ml(&dataset, true, false).unwrap();
+        let dataset = make_classification(50, 4, 2, 1, 1, Some(42)).expect("Operation failed");
+        let prepared =
+            convenience::prepare_for_ml(&dataset, true, false).expect("Operation failed");
 
         assert_eq!(prepared.n_samples(), dataset.n_samples());
         assert_eq!(prepared.n_features(), dataset.n_features());
@@ -934,7 +939,7 @@ mod tests {
 
     #[test]
     fn test_experiment_creation() {
-        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).unwrap();
+        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).expect("Operation failed");
         let experiment = convenience::create_experiment("test_experiment", &dataset);
 
         assert_eq!(experiment.name, "test_experiment");
@@ -949,11 +954,12 @@ mod tests {
         let array = Array1::from_vec(data);
         let view = array.view();
 
-        let scaler_params = MLPipeline::fit_scaler(&view, ScalingMethod::StandardScaler).unwrap();
+        let scaler_params =
+            MLPipeline::fit_scaler(&view, ScalingMethod::StandardScaler).expect("Operation failed");
 
         assert!(scaler_params.mean.is_some());
         assert!(scaler_params.std.is_some());
-        assert_eq!(scaler_params.mean.unwrap(), 3.0);
+        assert_eq!(scaler_params.mean.expect("Test: mean missing"), 3.0);
     }
 
     #[test]
@@ -962,11 +968,12 @@ mod tests {
         let array = Array1::from_vec(data);
         let view = array.view();
 
-        let scaler_params = MLPipeline::fit_scaler(&view, ScalingMethod::MinMaxScaler).unwrap();
+        let scaler_params =
+            MLPipeline::fit_scaler(&view, ScalingMethod::MinMaxScaler).expect("Operation failed");
 
         assert!(scaler_params.min.is_some());
         assert!(scaler_params.max.is_some());
-        assert_eq!(scaler_params.min.unwrap(), 1.0);
-        assert_eq!(scaler_params.max.unwrap(), 5.0);
+        assert_eq!(scaler_params.min.expect("Test: min missing"), 1.0);
+        assert_eq!(scaler_params.max.expect("Test: max missing"), 5.0);
     }
 }

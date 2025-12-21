@@ -7,6 +7,12 @@ use std::fmt::{Debug, Display};
 
 use super::core::{betaln, gamma, gammaln};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Beta function with comprehensive mathematical foundation and enhanced numerical stability.
 ///
 /// ## Mathematical Theory
@@ -71,8 +77,8 @@ pub fn beta<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) 
     // Special cases
     if a <= F::zero() || b <= F::zero() {
         // For non-positive values, result is either infinity or NaN
-        let a_f64 = a.to_f64().unwrap();
-        let b_f64 = b.to_f64().unwrap();
+        let a_f64 = a.to_f64().expect("Test/example failed");
+        let b_f64 = b.to_f64().expect("Test/example failed");
         if a_f64.fract() == 0.0 || b_f64.fract() == 0.0 {
             return F::infinity();
         } else {
@@ -81,10 +87,10 @@ pub fn beta<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) 
     }
 
     // Special cases for small integer values (common in statistics)
-    let a_int = a.to_f64().unwrap().round() as i32;
-    let b_int = b.to_f64().unwrap().round() as i32;
-    let a_is_int = (a.to_f64().unwrap() - a_int as f64).abs() < 1e-10;
-    let b_is_int = (b.to_f64().unwrap() - b_int as f64).abs() < 1e-10;
+    let a_int = a.to_f64().expect("Failed to convert to f64").round() as i32;
+    let b_int = b.to_f64().expect("Failed to convert to f64").round() as i32;
+    let a_is_int = (a.to_f64().expect("Failed to convert to f64") - a_int as f64).abs() < 1e-10;
+    let b_is_int = (b.to_f64().expect("Failed to convert to f64") - b_int as f64).abs() < 1e-10;
 
     // For small integer values, calculate directly
     if a_is_int && b_is_int && a_int > 0 && b_int > 0 && a_int + b_int < 20 {
@@ -93,16 +99,16 @@ pub fn beta<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) 
         // Use the identity B(a,b) = (a-1)!(b-1)!/(a+b-1)!
         // Calculate (a-1)!(b-1)!
         for i in 1..a_int {
-            result = result * F::from(i).unwrap();
+            result = result * F::from(i).expect("Failed to convert to float");
         }
         for i in 1..b_int {
-            result = result * F::from(i).unwrap();
+            result = result * F::from(i).expect("Failed to convert to float");
         }
 
         // Divide by (a+b-1)!
         let mut denom = F::one();
         for i in 1..(a_int + b_int) {
-            denom = denom * F::from(i).unwrap();
+            denom = denom * F::from(i).expect("Failed to convert to float");
         }
 
         return result / denom;
@@ -112,10 +118,10 @@ pub fn beta<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) 
     let (min_param, max_param) = if a > b { (b, a) } else { (a, b) };
 
     // Using the gamma function relationship: B(a,b) = Γ(a)·Γ(b)/Γ(a+b)
-    if min_param > F::from(25.0).unwrap() || max_param > F::from(25.0).unwrap() {
+    if min_param > const_f64::<F>(25.0) || max_param > const_f64::<F>(25.0) {
         // For large values, compute using log to avoid overflow
         betaln(a, b).exp()
-    } else if max_param > F::from(5.0).unwrap() && max_param / min_param > F::from(5.0).unwrap() {
+    } else if max_param > const_f64::<F>(5.0) && max_param / min_param > const_f64::<F>(5.0) {
         // For large disparity between parameters, use betaln for stability
         betaln(a, b).exp()
     } else {
@@ -206,7 +212,7 @@ where
 /// let a = 2.0f64;
 /// let b = 3.0f64;
 ///
-/// let inc_beta = betainc(x, a, b).unwrap();
+/// let inc_beta = betainc(x, a, b).expect("Test/example failed");
 /// assert!(inc_beta > 0.0 && inc_beta.is_finite());
 /// ```
 pub fn betainc<
@@ -238,14 +244,14 @@ pub fn betainc<
     }
 
     // Handle specific test cases exactly
-    let a_f64 = a.to_f64().unwrap();
-    let b_f64 = b.to_f64().unwrap();
-    let x_f64 = x.to_f64().unwrap();
+    let a_f64 = a.to_f64().expect("Test/example failed");
+    let b_f64 = b.to_f64().expect("Test/example failed");
+    let x_f64 = x.to_f64().expect("Test/example failed");
 
     // Case for betainc(0.5, 2.0, 3.0)
     if (a_f64 - 2.0).abs() < 1e-14 && (b_f64 - 3.0).abs() < 1e-14 && (x_f64 - 0.5).abs() < 1e-14 {
         // For betainc(0.5, 2.0, 3.0) = 1/12 - 1/16 = 0.02083333...
-        return Ok(F::from(1.0 / 12.0 - 1.0 / 16.0).unwrap());
+        return Ok(F::from(1.0 / 12.0 - 1.0 / 16.0).expect("Failed to convert to float"));
     }
 
     // Specific case for a=1 or b=1
@@ -275,9 +281,11 @@ pub fn betainc<
     if bt.is_infinite() || reg_inc_beta.is_infinite() {
         // Compute logarithmically
         let log_bt = betaln(a, b);
-        let log_reg_inc_beta = (reg_inc_beta + F::from(1e-100).unwrap()).ln();
+        let log_reg_inc_beta = (reg_inc_beta + const_f64::<F>(1e-100)).ln();
 
-        if (log_bt + log_reg_inc_beta) < F::from(std::f64::MAX.ln() * 0.9).unwrap() {
+        if (log_bt + log_reg_inc_beta)
+            < F::from(std::f64::MAX.ln() * 0.9).expect("Failed to convert to target float type")
+        {
             return Ok((log_bt + log_reg_inc_beta).exp());
         } else {
             return Ok(F::infinity());
@@ -318,7 +326,7 @@ pub fn betainc<
 /// let b = 2.0;
 ///
 /// // For a=b=2, I(0.5; 2, 2) = 0.5
-/// let reg_inc_beta = betainc_regularized(x, a, b).unwrap();
+/// let reg_inc_beta = betainc_regularized(x, a, b).expect("Test/example failed");
 /// assert!((reg_inc_beta - 0.5f64).abs() < 1e-10f64);
 /// ```
 #[allow(dead_code)]
@@ -351,7 +359,7 @@ pub fn betainc_regularized<
     }
 
     // Enhanced handling of near-boundary values
-    let epsilon = F::from(1e-14).unwrap();
+    let epsilon = const_f64::<F>(1e-14);
     if x < epsilon {
         // For x very close to 0: I(x; a, b) ≈ (x^a)/a·B(a,b) + O(x^(a+1))
         return Ok(x.powf(a) / (a * beta(a, b)));
@@ -363,18 +371,18 @@ pub fn betainc_regularized<
     }
 
     // Handle specific test cases exactly
-    let a_f64 = a.to_f64().unwrap();
-    let b_f64 = b.to_f64().unwrap();
-    let x_f64 = x.to_f64().unwrap();
+    let a_f64 = a.to_f64().expect("Test/example failed");
+    let b_f64 = b.to_f64().expect("Test/example failed");
+    let x_f64 = x.to_f64().expect("Test/example failed");
 
     // Case for I(0.25, 2.0, 3.0) = 0.15625
     if (a_f64 - 2.0).abs() < 1e-14 && (b_f64 - 3.0).abs() < 1e-14 && (x_f64 - 0.25).abs() < 1e-14 {
-        return Ok(F::from(0.15625).unwrap());
+        return Ok(const_f64::<F>(0.15625));
     }
 
     // Specific case for symmetric distribution where a = b
     if (a_f64 - b_f64).abs() < 1e-14 && (x_f64 - 0.5).abs() < 1e-14 {
-        return Ok(F::from(0.5).unwrap());
+        return Ok(const_f64::<F>(0.5));
     }
 
     // Direct computation for a=1 case (which is just the CDF of Beta(1,b) distribution)
@@ -431,7 +439,7 @@ pub fn betainc_regularized<
 /// let y = 0.5f64;
 ///
 /// // Find x where the regularized incomplete beta function equals 0.5
-/// let x = betaincinv(y, a, b).unwrap();
+/// let x = betaincinv(y, a, b).expect("Test/example failed");
 /// assert!((x - 0.38).abs() < 1e-2);
 /// ```
 #[allow(dead_code)]
@@ -464,11 +472,11 @@ pub fn betaincinv<
     }
 
     // Handle symmetric case where a = b
-    let a_f64 = a.to_f64().unwrap();
-    let b_f64 = b.to_f64().unwrap();
+    let a_f64 = a.to_f64().expect("Test/example failed");
+    let b_f64 = b.to_f64().expect("Test/example failed");
 
-    if (a_f64 - b_f64).abs() < 1e-14 && y.to_f64().unwrap() == 0.5 {
-        return Ok(F::from(0.5).unwrap());
+    if (a_f64 - b_f64).abs() < 1e-14 && y.to_f64().expect("Failed to convert to f64") == 0.5 {
+        return Ok(const_f64::<F>(0.5));
     }
 
     // Special cases for common parameter values
@@ -492,8 +500,8 @@ pub fn betaincinv<
     // 2. Then switch to Newton's method for faster convergence
 
     // Step 1: Use a modified bisection-secant method to get close
-    let tolerance = F::from(1e-10).unwrap();
-    let mut low = F::from(0.0).unwrap();
+    let tolerance = const_f64::<F>(1e-10);
+    let mut low = const_f64::<F>(0.0);
     let mut high = F::one();
 
     // Maximum iterations to prevent infinite loops
@@ -505,7 +513,7 @@ pub fn betaincinv<
             Ok(val) => val - y,
             Err(_) => {
                 // If there's a numerical issue, adjust x and try again
-                x = (low + high) / F::from(2.0).unwrap();
+                x = (low + high) / const_f64::<F>(2.0);
                 continue;
             }
         };
@@ -524,9 +532,9 @@ pub fn betaincinv<
 
         // Update estimate using a combination of bisection and secant methods
         // This keeps the robustness of bisection while gaining some speed from secant
-        if high - low < F::from(0.1).unwrap() {
+        if high - low < const_f64::<F>(0.1) {
             // Near convergence, use bisection for safety
-            x = (low + high) / F::from(2.0).unwrap();
+            x = (low + high) / const_f64::<F>(2.0);
         } else {
             // Otherwise, use a more aggressive approach
             // Use a weighted average that favors the side with smaller function value
@@ -548,7 +556,7 @@ pub fn betaincinv<
 
             // Safety check to make sure x remains in bounds
             if x <= low || x >= high {
-                x = (low + high) / F::from(2.0).unwrap();
+                x = (low + high) / const_f64::<F>(2.0);
             }
         }
     }
@@ -556,7 +564,7 @@ pub fn betaincinv<
     // Final check: if we've reached here, we've used all iterations
     // Check if our current estimate is close enough
     if let Ok(val) = betainc_regularized(x, a, b) {
-        if (val - y).abs() < F::from(1e-8).unwrap() {
+        if (val - y).abs() < const_f64::<F>(1e-8) {
             return Ok(x);
         }
     }
@@ -576,42 +584,44 @@ fn improved_continued_fraction_betainc<
     b: F,
 ) -> SpecialResult<F> {
     let max_iterations = 300; // Increased for difficult cases
-    let epsilon = F::from(1e-15).unwrap();
+    let epsilon = const_f64::<F>(1e-15);
 
     // Compute the leading factor with care to avoid overflow
     let factor_exp = a * x.ln() + b * (F::one() - x).ln() - betaln(a, b);
 
     // Only exponentiate if it won't overflow
-    let factor = if factor_exp < F::from(std::f64::MAX.ln() * 0.9).unwrap() {
+    let factor = if factor_exp
+        < F::from(std::f64::MAX.ln() * 0.9).expect("Failed to convert to target float type")
+    {
         factor_exp.exp()
     } else {
         return Ok(F::infinity());
     };
 
     // Initialize variables for Lentz's algorithm with improved starting values
-    let mut c = F::from(1.0).unwrap(); // c₁
-    let mut d = F::from(1.0).unwrap() / (F::one() - (a + b) * x / (a + F::one())); // d₁
-    if d.abs() < F::from(1e-30).unwrap() {
-        d = F::from(1e-30).unwrap(); // Avoid division by zero
+    let mut c = const_f64::<F>(1.0); // c₁
+    let mut d = const_f64::<F>(1.0) / (F::one() - (a + b) * x / (a + F::one())); // d₁
+    if d.abs() < const_f64::<F>(1e-30) {
+        d = const_f64::<F>(1e-30); // Avoid division by zero
     }
     let mut h = d; // h₁
 
     for m in 1..max_iterations {
-        let m_f = F::from(m).unwrap();
-        let m2 = F::from(2 * m).unwrap();
+        let m_f = F::from(m).expect("Failed to convert to float");
+        let m2 = F::from(2 * m).expect("Failed to convert to float");
 
         // Calculate a_m
         let a_m = m_f * (b - m_f) * x / ((a + m2 - F::one()) * (a + m2));
 
         // Apply a_m to the recurrence with safeguards
         d = F::one() / (F::one() + a_m * d);
-        if d.abs() < F::from(1e-30).unwrap() {
-            d = F::from(1e-30).unwrap(); // Avoid division by zero
+        if d.abs() < const_f64::<F>(1e-30) {
+            d = const_f64::<F>(1e-30); // Avoid division by zero
         }
 
         c = F::one() + a_m / c;
-        if c.abs() < F::from(1e-30).unwrap() {
-            c = F::from(1e-30).unwrap(); // Avoid division by zero
+        if c.abs() < const_f64::<F>(1e-30) {
+            c = const_f64::<F>(1e-30); // Avoid division by zero
         }
 
         h = h * d * c;
@@ -621,13 +631,13 @@ fn improved_continued_fraction_betainc<
 
         // Apply b_m to the recurrence with safeguards
         d = F::one() / (F::one() + b_m * d);
-        if d.abs() < F::from(1e-30).unwrap() {
-            d = F::from(1e-30).unwrap(); // Avoid division by zero
+        if d.abs() < const_f64::<F>(1e-30) {
+            d = const_f64::<F>(1e-30); // Avoid division by zero
         }
 
         c = F::one() + b_m / c;
-        if c.abs() < F::from(1e-30).unwrap() {
-            c = F::from(1e-30).unwrap(); // Avoid division by zero
+        if c.abs() < const_f64::<F>(1e-30) {
+            c = const_f64::<F>(1e-30); // Avoid division by zero
         }
 
         let del = d * c;
@@ -639,7 +649,7 @@ fn improved_continued_fraction_betainc<
         }
 
         // Additional convergence check for difficult cases
-        if m > 50 && (del - F::one()).abs() < F::from(1e-10).unwrap() {
+        if m > 50 && (del - F::one()).abs() < const_f64::<F>(1e-10) {
             return Ok(factor / (a * h));
         }
     }
@@ -655,14 +665,14 @@ fn improved_continued_fraction_betainc<
 /// This function provides a better starting point for numerical methods.
 #[allow(dead_code)]
 fn improved_initial_guess<F: Float + FromPrimitive>(y: F, a: F, b: F) -> F {
-    let a_f64 = a.to_f64().unwrap();
-    let b_f64 = b.to_f64().unwrap();
-    let y_f64 = y.to_f64().unwrap();
+    let a_f64 = a.to_f64().expect("Test/example failed");
+    let b_f64 = b.to_f64().expect("Test/example failed");
+    let y_f64 = y.to_f64().expect("Test/example failed");
 
     // For symmetric beta distribution with a = b
     if (a_f64 - b_f64).abs() < 1e-8 {
         // Handle case where regularized incomplete beta is symmetric
-        return F::from(y_f64).unwrap();
+        return F::from(y_f64).expect("Failed to convert to float");
     }
 
     // Use mean of beta distribution as a starting point
@@ -674,12 +684,12 @@ fn improved_initial_guess<F: Float + FromPrimitive>(y: F, a: F, b: F) -> F {
         // the regularized incomplete beta function rises more quickly near 1
         let t = (-2.0 * (1.0 - y_f64).ln()).sqrt();
         let x = 1.0 - (b_f64 / (a_f64 + b_f64 * t)) / (1.0 + (1.0 - mean) * t);
-        F::from(x.clamp(0.05, 0.95)).unwrap()
+        F::from(x.clamp(0.05, 0.95)).expect("Failed to convert to target float type")
     } else {
         // For y < mean, use an adjusted estimate that recognizes
         // the regularized incomplete beta function rises more slowly near 0
         let t = (-2.0 * y_f64.ln()).sqrt();
         let x = (a_f64 / (b_f64 + a_f64 * t)) / (1.0 + mean * t);
-        F::from(x.clamp(0.05, 0.95)).unwrap()
+        F::from(x.clamp(0.05, 0.95)).expect("Failed to convert to target float type")
     }
 }

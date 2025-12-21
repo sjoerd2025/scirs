@@ -219,7 +219,7 @@ pub fn assess_signal_quality(signal: &[f64], fs: f64) -> SignalResult<SignalQual
     // Estimate noise floor (simplified)
     let sorted_power: Vec<f64> = {
         let mut powers: Vec<f64> = signal.iter().map(|&x| x * x).collect();
-        powers.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        powers.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         powers
     };
     let noise_floor = sorted_power[sorted_power.len() / 10]; // Bottom 10th percentile
@@ -290,7 +290,7 @@ mod tests {
 
     #[test]
     fn test_sinusoid_generation() {
-        let signal = generate_sinusoid(10.0, 1000, 100.0).unwrap();
+        let signal = generate_sinusoid(10.0, 1000, 100.0).expect("Operation failed");
         assert_eq!(signal.len(), 1000);
 
         // Check that the signal has the expected frequency content
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn test_multisine_generation() {
         let freqs = vec![10.0, 20.0, 30.0];
-        let signal = generate_multisine(&freqs, 1000, 200.0).unwrap();
+        let signal = generate_multisine(&freqs, 1000, 200.0).expect("Operation failed");
         assert_eq!(signal.len(), 1000);
 
         // Signal should be normalized
@@ -313,7 +313,7 @@ mod tests {
 
     #[test]
     fn test_white_noise_generation() {
-        let signal = generate_white_noise(1000).unwrap();
+        let signal = generate_white_noise(1000).expect("Operation failed");
         assert_eq!(signal.len(), 1000);
 
         // Check that noise has reasonable statistics
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn test_chirp_generation() {
-        let signal = generate_chirp(10.0, 50.0, 1000, 200.0).unwrap();
+        let signal = generate_chirp(10.0, 50.0, 1000, 200.0).expect("Operation failed");
         assert_eq!(signal.len(), 1000);
 
         // Check amplitude bounds
@@ -334,7 +334,7 @@ mod tests {
     #[test]
     fn test_add_noise() {
         let clean_signal = vec![1.0; 100];
-        let noisy_signal = add_noise_to_signal(&clean_signal, 10.0).unwrap();
+        let noisy_signal = add_noise_to_signal(&clean_signal, 10.0).expect("Operation failed");
         assert_eq!(noisy_signal.len(), 100);
 
         // Noisy signal should have higher variance
@@ -345,8 +345,8 @@ mod tests {
 
     #[test]
     fn test_signal_quality_assessment() {
-        let signal = generate_sinusoid(10.0, 1000, 100.0).unwrap();
-        let quality = assess_signal_quality(&signal, 100.0).unwrap();
+        let signal = generate_sinusoid(10.0, 1000, 100.0).expect("Operation failed");
+        let quality = assess_signal_quality(&signal, 100.0).expect("Operation failed");
 
         assert!(quality.snr_db > 40.0); // Clean sinusoid should have high SNR
         assert!(quality.spectral_purity > 0.8); // Should have good spectral purity

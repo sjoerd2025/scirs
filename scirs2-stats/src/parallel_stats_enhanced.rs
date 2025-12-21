@@ -105,7 +105,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
         let (min_val, max_val) = if data.len() >= parallel_threshold {
             let chunksize = threshold.optimal_chunksize(data.len(), std::mem::size_of::<F>());
 
-            let (min, max) = par_chunks(data.as_slice().unwrap(), chunksize)
+            let (min, max) = par_chunks(data.as_slice().expect("Operation failed"), chunksize)
                 .map(|chunk| {
                     let mut local_min = chunk[0];
                     let mut local_max = chunk[0];
@@ -146,10 +146,10 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
 
         // Create _bins
         let range = max_val - min_val;
-        let bin_width = range / F::from(nbins).unwrap();
+        let bin_width = range / F::from(nbins).expect("Failed to convert to float");
 
         let bins: Vec<F> = (0..=nbins)
-            .map(|i| min_val + bin_width * F::from(i).unwrap())
+            .map(|i| min_val + bin_width * F::from(i).expect("Failed to convert to float"))
             .collect();
 
         let mut histogram = Self {
@@ -176,14 +176,15 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
 
         if data.len() < parallel_threshold {
             // Sequential computation
-            let bin_width = (self.max_val - self.min_val) / F::from(self.n_bins).unwrap();
+            let bin_width = (self.max_val - self.min_val)
+                / F::from(self.n_bins).expect("Failed to convert to float");
 
             for &val in data.iter() {
                 if val >= self.min_val && val <= self.max_val {
                     let bin_idx = ((val - self.min_val) / bin_width)
                         .floor()
                         .to_usize()
-                        .unwrap()
+                        .expect("Operation failed")
                         .min(self.n_bins - 1);
                     self.counts[bin_idx] += 1;
                 }
@@ -191,29 +192,31 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
         } else {
             // Parallel computation with thread-local histograms
             let chunksize = threshold.optimal_chunksize(data.len(), std::mem::size_of::<F>());
-            let bin_width = (self.max_val - self.min_val) / F::from(self.n_bins).unwrap();
+            let bin_width = (self.max_val - self.min_val)
+                / F::from(self.n_bins).expect("Failed to convert to float");
             let n_bins = self.n_bins;
             let min_val = self.min_val;
 
             // Each thread maintains its own histogram
-            let local_histograms: Vec<Vec<usize>> = par_chunks(data.as_slice().unwrap(), chunksize)
-                .map(|chunk| {
-                    let mut local_counts = vec![0; n_bins];
+            let local_histograms: Vec<Vec<usize>> =
+                par_chunks(data.as_slice().expect("Operation failed"), chunksize)
+                    .map(|chunk| {
+                        let mut local_counts = vec![0; n_bins];
 
-                    for &val in chunk {
-                        if val >= min_val && val <= self.max_val {
-                            let bin_idx = ((val - min_val) / bin_width)
-                                .floor()
-                                .to_usize()
-                                .unwrap()
-                                .min(n_bins - 1);
-                            local_counts[bin_idx] += 1;
+                        for &val in chunk {
+                            if val >= min_val && val <= self.max_val {
+                                let bin_idx = ((val - min_val) / bin_width)
+                                    .floor()
+                                    .to_usize()
+                                    .expect("Operation failed")
+                                    .min(n_bins - 1);
+                                local_counts[bin_idx] += 1;
+                            }
                         }
-                    }
 
-                    local_counts
-                })
-                .collect();
+                        local_counts
+                    })
+                    .collect();
 
             // Merge local histograms
             for local_counts in local_histograms {
@@ -252,8 +255,12 @@ where
     let parallel_threshold = threshold.calculate(std::mem::size_of::<F>(), 3.0);
 
     // Gaussian kernel constant
-    let norm_const =
-        F::one() / (F::from(2.0 * PI).unwrap().sqrt() * bandwidth * F::from(n).unwrap());
+    let norm_const = F::one()
+        / (F::from(2.0 * PI)
+            .expect("Failed to convert to float")
+            .sqrt()
+            * bandwidth
+            * F::from(n).expect("Failed to convert to float"));
 
     if eval_points.len() * n < parallel_threshold {
         // Sequential KDE
@@ -263,7 +270,8 @@ where
             let mut density = F::zero();
             for &xi in data.iter() {
                 let u = (x - xi) / bandwidth;
-                density = density + (-u * u / F::from(2.0).unwrap()).exp();
+                density = density
+                    + (-u * u / F::from(2.0).expect("Failed to convert constant to float")).exp();
             }
             result[i] = density * norm_const;
         }
@@ -272,7 +280,7 @@ where
     } else {
         // Parallel KDE
         let eval_vec: Vec<F> = eval_points.to_vec();
-        let data_slice = data.as_slice().unwrap();
+        let data_slice = data.as_slice().expect("Operation failed");
 
         let densities: Vec<F> = parallel_map(&eval_vec, |&x| {
             let chunksize = threshold.optimal_chunksize(n, std::mem::size_of::<F>());
@@ -283,7 +291,9 @@ where
                     let mut local_sum = F::zero();
                     for &xi in chunk {
                         let u = (x - xi) / bandwidth;
-                        local_sum = local_sum + (-u * u / F::from(2.0).unwrap()).exp();
+                        local_sum = local_sum
+                            + (-u * u / F::from(2.0).expect("Failed to convert constant to float"))
+                                .exp();
                     }
                     local_sum
                 })
@@ -331,7 +341,7 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
         if output_len < parallel_threshold {
             // Sequential computation
             let mut result = Array1::zeros(output_len);
-            let windowsize_f = F::from(self.windowsize).unwrap();
+            let windowsize_f = F::from(self.windowsize).expect("Failed to convert to float");
 
             // Initial window sum
             let mut window_sum = self.data[..self.windowsize]
@@ -351,7 +361,7 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
             let indices: Vec<usize> = (0..output_len).collect();
             let data_ref = Arc::clone(&self.data);
             let windowsize = self.windowsize;
-            let windowsize_f = F::from(windowsize).unwrap();
+            let windowsize_f = F::from(windowsize).expect("Failed to convert to float");
 
             let means: Vec<F> = parallel_map(&indices, |&i| {
                 let window_sum = data_ref[i..i + windowsize]
@@ -381,12 +391,12 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
         if output_len < parallel_threshold {
             // Sequential computation using Welford's algorithm
             let mut result = Array1::zeros(output_len);
-            let divisor = F::from(self.windowsize - ddof).unwrap();
+            let divisor = F::from(self.windowsize - ddof).expect("Failed to convert to float");
 
             for i in 0..output_len {
                 let window = &self.data[i..i + self.windowsize];
                 let mean = window.iter().fold(F::zero(), |acc, &x| acc + x)
-                    / F::from(self.windowsize).unwrap();
+                    / F::from(self.windowsize).expect("Failed to convert to float");
 
                 let variance = window
                     .iter()
@@ -406,12 +416,12 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
             let indices: Vec<usize> = (0..output_len).collect();
             let data_ref = Arc::clone(&self.data);
             let windowsize = self.windowsize;
-            let divisor = F::from(windowsize - ddof).unwrap();
+            let divisor = F::from(windowsize - ddof).expect("Failed to convert to float");
 
             let stds: Vec<F> = parallel_map(&indices, |&i| {
                 let window = &data_ref[i..i + windowsize];
-                let mean =
-                    window.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(windowsize).unwrap();
+                let mean = window.iter().fold(F::zero(), |acc, &x| acc + x)
+                    / F::from(windowsize).expect("Failed to convert to float");
 
                 let variance = window
                     .iter()
@@ -568,7 +578,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
         let indices: Vec<usize> = if self.shuffle {
             use crate::random::permutation_int;
             permutation_int(n_samples_, self.random_state)
-                .unwrap()
+                .expect("Operation failed")
                 .to_vec()
         } else {
             (0..n_samples_).collect()
@@ -882,7 +892,7 @@ where
                     for i in 0..n - lag {
                         sum = sum + (data[i] - mean) * (data[i + lag] - mean);
                     }
-                    sum / (F::from(n - lag).unwrap() * variance)
+                    sum / (F::from(n - lag).expect("Failed to convert to float") * variance)
                 }
             })
             .collect()
@@ -903,14 +913,14 @@ where
                 let products = F::simd_mul(&start_centered.view(), &lagged_centered.view());
                 let sum = F::simd_sum(&products.view());
 
-                sum / (F::from(n - lag).unwrap() * variance)
+                sum / (F::from(n - lag).expect("Failed to convert to float") * variance)
             } else {
                 // Scalar fallback
                 let mut sum = F::zero();
                 for i in 0..n - lag {
                     sum = sum + (data[i] - mean) * (data[i + lag] - mean);
                 }
-                sum / (F::from(n - lag).unwrap() * variance)
+                sum / (F::from(n - lag).expect("Failed to convert to float") * variance)
             }
         })
     };
@@ -925,10 +935,9 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_parallel_histogram() {
         let data = Array1::from_vec((0..10000).map(|i| i as f64 / 100.0).collect());
-        let hist = ParallelHistogram::new(&data.view(), 10).unwrap();
+        let hist = ParallelHistogram::new(&data.view(), 10).expect("Operation failed");
 
         let (bins, counts) = hist.get_histogram();
         assert_eq!(bins.len(), 10);
@@ -940,16 +949,16 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let eval_points = Array1::linspace(0.0, 6.0, 100);
 
-        let kde_result = kde_parallel(&data.view(), &eval_points, 0.5).unwrap();
+        let kde_result = kde_parallel(&data.view(), &eval_points, 0.5).expect("Operation failed");
         assert_eq!(kde_result.len(), 100);
 
         // KDE should have maximum near data points
         let max_idx = kde_result
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx_, _)| idx_)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(max_idx > 40 && max_idx < 60); // Maximum should be near middle
     }
@@ -957,9 +966,9 @@ mod tests {
     #[test]
     fn test_moving_stats() {
         let data = Array1::from_vec((0..100).map(|i| i as f64).collect());
-        let moving_stats = ParallelMovingStats::new(&data.view(), 10).unwrap();
+        let moving_stats = ParallelMovingStats::new(&data.view(), 10).expect("Operation failed");
 
-        let moving_mean = moving_stats.moving_mean().unwrap();
+        let moving_mean = moving_stats.moving_mean().expect("Operation failed");
         assert_eq!(moving_mean.len(), 91); // 100 - 10 + 1
 
         // First moving average should be mean of 0..10
@@ -973,7 +982,8 @@ mod tests {
     fn test_pairwise_distances() {
         let data = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],];
 
-        let distances = pairwise_distances_parallel(&data.view(), "euclidean").unwrap();
+        let distances =
+            pairwise_distances_parallel(&data.view(), "euclidean").expect("Operation failed");
 
         // Check diagonal is zero
         for i in 0..4 {

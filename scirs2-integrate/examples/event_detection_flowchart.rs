@@ -134,7 +134,7 @@ fn main() -> IntegrateResult<()> {
     }
 
     // Sort by time
-    all_events.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    all_events.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
     for (time, id, value, direction) in all_events {
         let dir_str = match (id.as_str(), direction) {
@@ -151,9 +151,18 @@ fn main() -> IntegrateResult<()> {
 
     // Report final state
     println!("\nFinal state:");
-    println!("  t = {:.4}", result.base_result.t.last().unwrap());
-    println!("  y = {:.6}", result.base_result.y.last().unwrap()[0]);
-    println!("  y' = {:.6}", result.base_result.y.last().unwrap()[1]);
+    println!(
+        "  t = {:.4}",
+        result.base_result.t.last().expect("Operation failed")
+    );
+    println!(
+        "  y = {:.6}",
+        result.base_result.y.last().expect("Operation failed")[0]
+    );
+    println!(
+        "  y' = {:.6}",
+        result.base_result.y.last().expect("Operation failed")[1]
+    );
     println!("  Terminated by event: {}", result.event_termination);
 
     // Step 7: Visualize dense output (just explain the capability)

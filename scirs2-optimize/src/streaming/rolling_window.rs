@@ -501,7 +501,7 @@ mod tests {
             let target = (2 * i + 1) as f64;
             let point = StreamingDataPoint::new(features, target);
 
-            optimizer.update(&point).unwrap();
+            optimizer.update(&point).expect("Operation failed");
         }
 
         // Window should be at capacity
@@ -532,7 +532,7 @@ mod tests {
         ];
 
         for point in &data_points {
-            optimizer.update(point).unwrap();
+            optimizer.update(point).expect("Operation failed");
         }
 
         assert_eq!(optimizer.stats().points_processed, 3);
@@ -552,7 +552,7 @@ mod tests {
         ];
 
         for point in &data_points {
-            optimizer.update(point).unwrap();
+            optimizer.update(point).expect("Operation failed");
         }
 
         // Parameters should be close to [2, 3] for exact linear data
@@ -581,7 +581,7 @@ mod tests {
         ];
 
         for point in &data_points {
-            optimizer.update(point).unwrap();
+            optimizer.update(point).expect("Operation failed");
         }
 
         assert_eq!(optimizer.stats().points_processed, 3);
@@ -598,7 +598,7 @@ mod tests {
             let target = i as f64;
             let point = StreamingDataPoint::new(features, target);
 
-            optimizer.update(&point).unwrap();
+            optimizer.update(&point).expect("Operation failed");
         }
 
         // Window should be at capacity, not larger
@@ -612,7 +612,7 @@ mod tests {
 
         // Add some data
         let point = StreamingDataPoint::new(Array1::from(vec![1.0, 2.0]), 3.0);
-        optimizer.update(&point).unwrap();
+        optimizer.update(&point).expect("Operation failed");
 
         assert_eq!(optimizer.data_window.len(), 1);
         assert_eq!(optimizer.stats().points_processed, 1);

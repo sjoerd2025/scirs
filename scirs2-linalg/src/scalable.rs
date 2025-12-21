@@ -168,7 +168,7 @@ pub fn classify_aspect_ratio<F>(matrix: &ArrayView2<F>, threshold: f64) -> Aspec
 ///     (i as f64 + j as f64).sin()
 /// });
 /// let config = ScalableConfig::default();
-/// let (q, r) = tsqr(&tallmatrix.view(), &config).unwrap();
+/// let (q, r) = tsqr(&tallmatrix.view(), &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn tsqr<F>(
@@ -242,7 +242,8 @@ where
     for i in 0..n {
         for j in 0..oversampled_rank {
             // Use simple random number generation for reproducibility
-            omega[[i, j]] = F::from(scirs2_core::random::random::<f64>() * 2.0 - 1.0).unwrap();
+            omega[[i, j]] = F::from(scirs2_core::random::random::<f64>() * 2.0 - 1.0)
+                .expect("Operation failed");
         }
     }
 
@@ -360,7 +361,7 @@ where
 /// });
 ///
 /// let config = ScalableConfig::default();
-/// let result = adaptive_decomposition(&tallmatrix.view(), &config).unwrap();
+/// let result = adaptive_decomposition(&tallmatrix.view(), &config).expect("Operation failed");
 /// assert_eq!(result.aspect_ratio, AspectRatio::TallSkinny);
 /// ```
 #[allow(dead_code)]
@@ -634,7 +635,7 @@ mod tests {
         let matrix = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]];
 
         let config = ScalableConfig::default().with_blocksize(2);
-        let (q, r) = tsqr(&matrix.view(), &config).unwrap();
+        let (q, r) = tsqr(&matrix.view(), &config).expect("Operation failed");
 
         // Verify Q is orthogonal (Q^T * Q = I)
         let qtq = q.t().dot(&q);
@@ -660,7 +661,7 @@ mod tests {
         let matrix = array![[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]];
 
         let config = ScalableConfig::default();
-        let (l, q) = lq_decomposition(&matrix.view(), &config).unwrap();
+        let (l, q) = lq_decomposition(&matrix.view(), &config).expect("Operation failed");
 
         // Verify L * Q = A
         let reconstructed = l.dot(&q);
@@ -686,7 +687,7 @@ mod tests {
         let tallmatrix = Array2::from_shape_fn((100, 5), |(i, j)| (i + j) as f64);
         let config = ScalableConfig::default();
 
-        let result = adaptive_decomposition(&tallmatrix.view(), &config).unwrap();
+        let result = adaptive_decomposition(&tallmatrix.view(), &config).expect("Operation failed");
 
         // Check aspect ratio detection
         assert_eq!(result.aspect_ratio, AspectRatio::TallSkinny);
@@ -736,7 +737,7 @@ mod tests {
         // Check if the function returns successfully
         assert!(result.is_ok(), "Randomized SVD failed: {:?}", result.err());
 
-        let (u_approx, s_approx, vt_approx) = result.unwrap();
+        let (u_approx, s_approx, vt_approx) = result.expect("Operation failed");
 
         // Check dimensions
         assert_eq!(u_approx.dim(), (m, true_rank));
@@ -765,7 +766,8 @@ mod tests {
         let b = Array2::from_shape_fn((30, 25), |(i, j)| (i * j) as f64);
 
         let config = ScalableConfig::default().with_blocksize(10);
-        let result_blocked = blocked_matmul(&a.view(), &b.view(), &config).unwrap();
+        let result_blocked =
+            blocked_matmul(&a.view(), &b.view(), &config).expect("Operation failed");
         let result_standard = a.dot(&b);
 
         // Results should be identical

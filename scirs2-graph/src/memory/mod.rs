@@ -442,7 +442,7 @@ impl RealTimeMemoryProfiler {
 
     /// Start monitoring memory usage
     pub fn start_monitoring(&mut self, sampleinterval: Duration) {
-        let mut is_monitoring = self.is_monitoring.lock().unwrap();
+        let mut is_monitoring = self.is_monitoring.lock().expect("Operation failed");
         if *is_monitoring {
             return; // Already monitoring
         }
@@ -450,7 +450,7 @@ impl RealTimeMemoryProfiler {
         drop(is_monitoring);
 
         // Clear previous samples
-        self.samples.lock().unwrap().clear();
+        self.samples.lock().expect("Operation failed").clear();
 
         let pid = self.pid;
         let system = Arc::clone(&self.system);
@@ -461,9 +461,9 @@ impl RealTimeMemoryProfiler {
             let mut last_memory = 0u64;
             let _start_time = Instant::now();
 
-            while *is_monitoring.lock().unwrap() {
+            while *is_monitoring.lock().expect("Operation failed") {
                 {
-                    let mut sys = system.lock().unwrap();
+                    let mut sys = system.lock().expect("Operation failed");
                     sys.refresh_processes(
                         sysinfo::ProcessesToUpdate::Some(&[(pid as usize).into()]),
                         false,
@@ -481,7 +481,7 @@ impl RealTimeMemoryProfiler {
                             growth_rate,
                         };
 
-                        samples.lock().unwrap().push(sample);
+                        samples.lock().expect("Operation failed").push(sample);
                         last_memory = physical_memory;
                     }
                 }
@@ -496,7 +496,7 @@ impl RealTimeMemoryProfiler {
     /// Stop monitoring and return collected metrics
     pub fn stop_monitoring(&mut self) -> MemoryMetrics {
         {
-            let mut is_monitoring = self.is_monitoring.lock().unwrap();
+            let mut is_monitoring = self.is_monitoring.lock().expect("Operation failed");
             *is_monitoring = false;
         }
 
@@ -504,13 +504,13 @@ impl RealTimeMemoryProfiler {
             let _ = handle.join();
         }
 
-        let samples = self.samples.lock().unwrap();
+        let samples = self.samples.lock().expect("Operation failed");
         self.calculate_metrics(&samples)
     }
 
     /// Get current memory metrics without stopping monitoring
     pub fn get_current_metrics(&self) -> MemoryMetrics {
-        let samples = self.samples.lock().unwrap();
+        let samples = self.samples.lock().expect("Operation failed");
         self.calculate_metrics(&samples)
     }
 
@@ -534,7 +534,7 @@ impl RealTimeMemoryProfiler {
         let duration = if samples.len() > 1 {
             samples
                 .last()
-                .unwrap()
+                .expect("Operation failed")
                 .timestamp
                 .duration_since(samples[0].timestamp)
         } else {
@@ -542,8 +542,8 @@ impl RealTimeMemoryProfiler {
         };
 
         let growth_rate = if duration.as_secs_f64() > 0.0 && samples.len() > 1 {
-            let total_growth =
-                samples.last().unwrap().physical_memory as i64 - samples[0].physical_memory as i64;
+            let total_growth = samples.last().expect("Operation failed").physical_memory as i64
+                - samples[0].physical_memory as i64;
             total_growth as f64 / duration.as_secs_f64()
         } else {
             0.0
@@ -583,7 +583,7 @@ impl RealTimeMemoryProfiler {
     /// Generate memory usage report
     pub fn generate_report(&self) -> String {
         let metrics = self.get_current_metrics();
-        let _samples = self.samples.lock().unwrap();
+        let _samples = self.samples.lock().expect("Operation failed");
 
         let mut report = String::new();
         report.push_str("=== Memory Usage Report ===\n");
@@ -739,7 +739,7 @@ mod tests {
 
     #[test]
     fn test_memory_profiling() {
-        let graph = generators::complete_graph(100).unwrap();
+        let graph = generators::complete_graph(100).expect("Operation failed");
         let stats = MemoryProfiler::profile_graph(&graph);
 
         assert!(stats.total_bytes > 0);
@@ -770,7 +770,7 @@ mod tests {
         for i in 0..10 {
             for j in 10..20 {
                 if i != j {
-                    graph.add_edge(i, j, 1.0).unwrap();
+                    graph.add_edge(i, j, 1.0).expect("Operation failed");
                 }
             }
         }
@@ -794,7 +794,7 @@ mod tests {
             builder.add_edge(i, i + 1, 1.0);
         }
 
-        let graph = builder.build().unwrap();
+        let graph = builder.build().expect("Operation failed");
         assert_eq!(graph.node_count(), 100);
         assert_eq!(graph.edge_count(), 99);
     }

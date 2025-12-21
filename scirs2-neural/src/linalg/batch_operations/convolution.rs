@@ -52,7 +52,7 @@ use crate::error::{NeuralError, Result};
 /// let bias = Some(Array::from_shape_fn(out_channels, |_| 0.1));
 ///
 /// // Apply convolution with stride 1 and padding 1
-/// let output = conv2d(&input.view(), &weight.view(), bias.as_ref().map(|b| b.view()), 1, 1).unwrap();
+/// let output = conv2d(&input.view(), &weight.view(), bias.as_ref().map(|b| b.view()), 1, 1).expect("Operation failed");
 ///
 /// // Output shape should be [batch_size, out_channels, height, width] with padding 1 and stride 1
 /// assert_eq!(output.shape(), &[batch_size, out_channels, height, width]);
@@ -195,7 +195,7 @@ where
 /// );
 ///
 /// // Apply max pooling with kernel_size 2, stride 2, padding 0
-/// let (output, _) = max_pool2d(&input.view(), 2, 2, 0).unwrap();
+/// let (output, _) = max_pool2d(&input.view(), 2, 2, 0).expect("Operation failed");
 ///
 /// // Output shape should be [batch_size, channels, height/stride, width/stride]
 /// assert_eq!(output.shape(), &[batch_size, channels, height/2, width/2]);
@@ -317,7 +317,7 @@ where
 /// );
 ///
 /// // Convert to column format for a 3x3 kernel
-/// let col = im2col(&input.view(), 3, 3, 1, 1).unwrap();
+/// let col = im2col(&input.view(), 3, 3, 1, 1).expect("Operation failed");
 ///
 /// // Check that the output has the expected shape
 /// let output_height = height; // With padding 1 and stride 1
@@ -435,12 +435,12 @@ where
 /// );
 ///
 /// // Convert to column format
-/// let col = im2col(&input.view(), 3, 3, 1, 1).unwrap();
+/// let col = im2col(&input.view(), 3, 3, 1, 1).expect("Operation failed");
 ///
 /// // Convert back to image format
 /// let output = col2im(
 ///     &col.view(), batch_size, channels, height, width, 3, 3, 1, 1
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(output.shape(), input.shape());
 /// ```
@@ -559,7 +559,7 @@ where
 /// );
 ///
 /// // Adaptively pool to 3x4 output size
-/// let output = adaptive_avg_pool2d(&input.view(), 3, 4).unwrap();
+/// let output = adaptive_avg_pool2d(&input.view(), 3, 4).expect("Operation failed");
 ///
 /// assert_eq!(output.shape(), &[batch_size, channels, 3, 4]);
 /// ```
@@ -611,7 +611,7 @@ where
                     }
 
                     // Divide by kernel size
-                    output[[b, c, oh, ow]] = sum / F::from(kernel_h * kernel_w).unwrap();
+                    output[[b, c, oh, ow]] = sum / F::from(kernel_h * kernel_w).expect("Failed to convert to float");
                 }
             }
         }
@@ -659,7 +659,7 @@ where
 /// );
 ///
 /// // Forward pass
-/// let output = conv2d(&input.view(), &weight.view(), None, 1, 1).unwrap();
+/// let output = conv2d(&input.view(), &weight.view(), None, 1, 1).expect("Operation failed");
 ///
 /// // Gradient of loss with respect to output
 /// let dout = Array::from_shape_fn(output.raw_dim(), |_| 0.01);
@@ -667,7 +667,7 @@ where
 /// // Backward pass
 /// let (d_input, d_weight, d_bias) = conv2d_backward(
 ///     &dout.view(), &input.view(), &weight.view(), 1, 1
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(d_input.shape(), input.shape());
 /// assert_eq!(d_weight.shape(), weight.shape());
@@ -850,7 +850,7 @@ where
 /// );
 ///
 /// // Forward pass
-/// let (output, indices) = max_pool2d(&input.view(), 2, 2, 0).unwrap();
+/// let (output, indices) = max_pool2d(&input.view(), 2, 2, 0).expect("Operation failed");
 ///
 /// // Gradient of loss with respect to output
 /// let dout = Array::from_shape_fn(output.raw_dim(), |_| 0.01);
@@ -858,7 +858,7 @@ where
 /// // Backward pass
 /// let d_input = max_pool2d_backward(
 ///     &dout.view(), &input.view(), &indices.view(), 2, 2, 0
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(d_input.shape(), input.shape());
 /// ```
@@ -963,7 +963,7 @@ where
 /// );
 ///
 /// // Forward pass
-/// let output = adaptive_avg_pool2d(&input.view(), 3, 4).unwrap();
+/// let output = adaptive_avg_pool2d(&input.view(), 3, 4).expect("Operation failed");
 ///
 /// // Gradient of loss with respect to output
 /// let dout = Array::from_shape_fn(output.raw_dim(), |_| 0.01);
@@ -971,7 +971,7 @@ where
 /// // Backward pass
 /// let d_input = adaptive_avg_pool2d_backward(
 ///     &dout.view(), &input.view(), 3, 4
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(d_input.shape(), input.shape());
 /// ```
@@ -1017,7 +1017,7 @@ where
                     let kernel_w = w_end - w_start;
 
                     // Calculate gradient factor
-                    let grad_factor = dout[[b, c, oh, ow]] / F::from(kernel_h * kernel_w).unwrap();
+                    let grad_factor = dout[[b, c, oh, ow]] / F::from(kernel_h * kernel_w).expect("Failed to convert to float");
 
                     // Distribute gradient evenly to all inputs in the region
                     for h in h_start..h_end {

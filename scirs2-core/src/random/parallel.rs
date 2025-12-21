@@ -129,7 +129,7 @@ impl ParallelRng {
         let shape = shape.into();
         let size = shape.size();
         let samples = Self::parallel_sample(distribution, size, pool);
-        Array::from_shape_vec(shape, samples).unwrap()
+        Array::from_shape_vec(shape, samples).expect("Operation failed")
     }
 
     /// Sequential fallback when parallel feature is not enabled
@@ -407,7 +407,8 @@ mod tests {
         assert_eq!(pool.base_seed(), 42);
         assert_eq!(pool.thread_counter(), 0);
 
-        let value = pool.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).unwrap()));
+        let value =
+            pool.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")));
         assert!((0.0..1.0).contains(&value));
         assert_eq!(pool.thread_counter(), 1);
     }
@@ -417,8 +418,10 @@ mod tests {
         let pool1 = ThreadLocalRngPool::new(123);
         let pool2 = ThreadLocalRngPool::new(123);
 
-        let value1 = pool1.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).unwrap()));
-        let value2 = pool2.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).unwrap()));
+        let value1 =
+            pool1.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")));
+        let value2 =
+            pool2.with_rng(|rng| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")));
 
         assert_eq!(value1, value2);
     }
@@ -438,7 +441,11 @@ mod tests {
     #[test]
     fn test_parallel_rng_sequential() {
         let pool = ThreadLocalRngPool::new(456);
-        let samples = ParallelRng::parallel_sample(Uniform::new(0.0, 1.0).unwrap(), 100, &pool);
+        let samples = ParallelRng::parallel_sample(
+            Uniform::new(0.0, 1.0).expect("Operation failed"),
+            100,
+            &pool,
+        );
 
         assert_eq!(samples.len(), 100);
         assert!(samples.iter().all(|&x| (0.0..1.0).contains(&x)));
@@ -447,8 +454,12 @@ mod tests {
     #[test]
     fn test_parallel_rng_chunked() {
         let pool = ThreadLocalRngPool::new(789);
-        let samples =
-            ParallelRng::parallel_sample_chunked(Uniform::new(0.0, 1.0).unwrap(), 100, 25, &pool);
+        let samples = ParallelRng::parallel_sample_chunked(
+            Uniform::new(0.0, 1.0).expect("Operation failed"),
+            100,
+            25,
+            &pool,
+        );
 
         assert_eq!(samples.len(), 100);
         assert!(samples.iter().all(|&x| (0.0..1.0).contains(&x)));
@@ -475,7 +486,7 @@ mod tests {
         let pool = DistributedRngPool::new(0, 4, 12345);
         assert_eq!(pool.worker_info(), (0, 4));
 
-        let samples = pool.worker_sample(Uniform::new(0.0, 1.0).unwrap(), 100);
+        let samples = pool.worker_sample(Uniform::new(0.0, 1.0).expect("Operation failed"), 100);
         assert_eq!(samples.len(), 25); // 100 / 4 = 25 samples per worker
     }
 
@@ -483,21 +494,24 @@ mod tests {
     fn test_distributed_rng_pool_uneven_distribution() {
         // Test with total samples not evenly divisible by workers
         let pool = DistributedRngPool::new(0, 3, 12345);
-        let samples = pool.worker_sample(Uniform::new(0.0, 1.0).unwrap(), 10);
+        let samples = pool.worker_sample(Uniform::new(0.0, 1.0).expect("Operation failed"), 10);
         assert_eq!(samples.len(), 4); // First worker gets 4 samples (10/3 + 1)
 
         let pool = DistributedRngPool::new(2, 3, 12345);
-        let samples = pool.worker_sample(Uniform::new(0.0, 1.0).unwrap(), 10);
+        let samples = pool.worker_sample(Uniform::new(0.0, 1.0).expect("Operation failed"), 10);
         assert_eq!(samples.len(), 3); // Last worker gets 3 samples (10/3)
     }
 
     #[test]
     fn test_batch_processing() {
         let pool = ThreadLocalRngPool::new(131415);
-        let results =
-            BatchRng::process_batches(Uniform::new(0.0, 1.0).unwrap(), 100, 25, &pool, |batch| {
-                batch.len()
-            });
+        let results = BatchRng::process_batches(
+            Uniform::new(0.0, 1.0).expect("Operation failed"),
+            100,
+            25,
+            &pool,
+            |batch| batch.len(),
+        );
 
         assert_eq!(results.len(), 4); // 100 samples / 25 per batch = 4 batches
         assert_eq!(results.iter().sum::<usize>(), 100);
@@ -508,10 +522,16 @@ mod tests {
         let pool = ThreadLocalRngPool::new(161718);
         let mut total_processed = 0;
 
-        BatchRng::stream_samples(Uniform::new(0.0, 1.0).unwrap(), 100, 30, &pool, |chunk| {
-            total_processed += chunk.len();
-            assert!(chunk.iter().all(|&x| (0.0..1.0).contains(&x)));
-        });
+        BatchRng::stream_samples(
+            Uniform::new(0.0, 1.0).expect("Operation failed"),
+            100,
+            30,
+            &pool,
+            |chunk| {
+                total_processed += chunk.len();
+                assert!(chunk.iter().all(|&x| (0.0..1.0).contains(&x)));
+            },
+        );
 
         assert_eq!(total_processed, 100);
     }

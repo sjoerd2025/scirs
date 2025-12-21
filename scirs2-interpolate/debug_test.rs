@@ -13,19 +13,19 @@ fn main() {
         &coefficients.view(),
         3,
         ExtrapolateMode::Extrapolate,
-    ).unwrap();
+    ).expect("Test: operation failed");
 
     // Test regular evaluation
     println!("Regular spline evaluation:");
     for &x in &[0.0, 0.25, 0.5, 0.75, 1.0] {
-        let result = spline.eval(x).unwrap();
+        let result = spline.eval(x).expect("Test: operation failed");
         println!("  spline.eval({}) = {}", x, result);
     }
 
     // Test SIMD evaluation
     let mut evaluator = SimdBSplineEvaluator::new(spline);
     let points = vec![0.0, 0.25, 0.5, 0.75, 1.0];
-    let results = evaluator.eval_batch(&points).unwrap();
+    let results = evaluator.eval_batch(&points).expect("Test: operation failed");
     
     println!("\nSIMD batch evaluation:");
     for (i, (&x, &result)) in points.iter().zip(results.iter()).enumerate() {

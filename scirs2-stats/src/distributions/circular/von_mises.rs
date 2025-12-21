@@ -91,7 +91,7 @@ fn bessel_i1(x: f64) -> f64 {
 /// use scirs2_stats::traits::{CircularDistribution, Distribution};
 ///
 /// // Create a von Mises distribution with mean direction 0.0 and concentration 1.0
-/// let vm = VonMises::new(0.0f64, 1.0).unwrap();
+/// let vm = VonMises::new(0.0f64, 1.0).expect("Operation failed");
 ///
 /// // Calculate PDF
 /// let pdf = vm.pdf(0.0);
@@ -100,7 +100,7 @@ fn bessel_i1(x: f64) -> f64 {
 /// let cdf = vm.cdf(1.0);
 ///
 /// // Generate a random sample
-/// let sample = vm.rvs(100).unwrap();
+/// let sample = vm.rvs(100).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct VonMises<F: Float> {
@@ -136,8 +136,8 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
         }
 
         // Normalize mu to [-π, π]
-        let two_pi = F::from(2.0 * PI).unwrap();
-        let pi = F::from(PI).unwrap();
+        let two_pi = F::from(2.0 * PI).expect("Failed to convert to float");
+        let pi = F::from(PI).expect("Failed to convert to float");
         let normalized_mu = ((mu % two_pi) + two_pi) % two_pi;
         let normalized_mu = if normalized_mu > pi {
             normalized_mu - two_pi
@@ -155,33 +155,33 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
     /// Bessel function I0(x) (modified Bessel function of the first kind of order 0)
     fn bessel_i0(&self, x: F) -> F {
         // Convert to f64 for calculation
-        let x_f64 = x.to_f64().unwrap();
+        let x_f64 = x.to_f64().expect("Operation failed");
         let result = bessel_i0(x_f64);
-        F::from(result).unwrap()
+        F::from(result).expect("Failed to convert to float")
     }
 
     /// Scaled Bessel function I0e(x) = exp(-x) * I0(x)
     fn bessel_i0e(&self, x: F) -> F {
         // Convert to f64 for calculation
-        let x_f64 = x.to_f64().unwrap();
+        let x_f64 = x.to_f64().expect("Operation failed");
         let result = bessel_i0(x_f64) * (-x_f64).exp();
-        F::from(result).unwrap()
+        F::from(result).expect("Failed to convert to float")
     }
 
     /// Bessel function I1(x) (modified Bessel function of the first kind of order 1)
     fn bessel_i1(&self, x: F) -> F {
         // Convert to f64 for calculation
-        let x_f64 = x.to_f64().unwrap();
+        let x_f64 = x.to_f64().expect("Operation failed");
         let result = bessel_i1(x_f64);
-        F::from(result).unwrap()
+        F::from(result).expect("Failed to convert to float")
     }
 
     /// Scaled Bessel function I1e(x) = exp(-x) * I1(x)
     fn bessel_i1e(&self, x: F) -> F {
         // Convert to f64 for calculation
-        let x_f64 = x.to_f64().unwrap();
+        let x_f64 = x.to_f64().expect("Operation failed");
         let result = bessel_i1(x_f64) * (-x_f64).exp();
-        F::from(result).unwrap()
+        F::from(result).expect("Failed to convert to float")
     }
 
     /// Sample from von Mises distribution using rejection sampling
@@ -195,13 +195,13 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
 
         if kappa < 1e-6 {
             // For very small kappa, distribution is nearly uniform
-            let uniform = Uniform::new(0.0, 2.0 * PI).unwrap();
+            let uniform = Uniform::new(0.0, 2.0 * PI).expect("Operation failed");
             return uniform.sample(rng);
         }
 
         // Use rejection sampling with wrapped Cauchy envelope
         // Based on Fishman & Snyder (1976) algorithm
-        let uniform = Uniform::new(0.0, 1.0).unwrap();
+        let uniform = Uniform::new(0.0, 1.0).expect("Operation failed");
 
         loop {
             let u1 = uniform.sample(rng);
@@ -237,9 +237,9 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
     fn cosm1(&self, x: F) -> F {
         // For small x, use Taylor series expansion
         // cosm1(x) = cos(x) - 1 = -x²/2 + x⁴/24 - ... ≈ -x²/2 for small x
-        let x_f64 = x.to_f64().unwrap();
+        let x_f64 = x.to_f64().expect("Operation failed");
         if x_f64.abs() < 1e-4 {
-            return F::from(-x_f64 * x_f64 / 2.0).unwrap();
+            return F::from(-x_f64 * x_f64 / 2.0).expect("Failed to convert to float");
         }
         x.cos() - F::one()
     }
@@ -251,12 +251,12 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
 #[allow(dead_code)]
 fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
     // Convert to f64 for calculation
-    let kappa_f64 = kappa.to_f64().unwrap();
-    let x_f64 = x.to_f64().unwrap();
+    let kappa_f64 = kappa.to_f64().expect("Operation failed");
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // For small kappa, approximate with wrapped normal distribution
     if kappa_f64 < 1e-8 {
-        return F::from((x_f64 + PI) / (2.0 * PI)).unwrap();
+        return F::from((x_f64 + PI) / (2.0 * PI)).expect("Operation failed");
     }
 
     // Algorithm implementation based on SciPy's von_mises_cdf
@@ -278,7 +278,7 @@ fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
         let z = x_norm / ((2.0_f64).sqrt() * sigma);
         // Use this approximation instead of erf which is unstable
         let cdf = 0.5 * (1.0 + z / (1.0 + z * z / 2.0).sqrt());
-        return F::from(cdf).unwrap();
+        return F::from(cdf).expect("Failed to convert to float");
     }
 
     // Series expansion for moderate kappa
@@ -290,7 +290,7 @@ fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
 
     // Map to [0, 1] range
     cdf = cdf / two_pi + x_norm / two_pi;
-    F::from(cdf).unwrap()
+    F::from(cdf).expect("Failed to convert to float")
 }
 
 impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distribution<F>
@@ -313,21 +313,21 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distributio
     fn std(&self) -> F {
         // Circular standard deviation is sqrt(-2 * ln(1 - var))
         let var = self.var();
-        let neg_two = F::from(-2.0).unwrap();
+        let neg_two = F::from(-2.0).expect("Failed to convert constant to float");
         (neg_two * (F::one() - var).ln()).sqrt()
     }
 
     fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
         // Convert parameters to f64 for sampling
-        let mu_f64 = self.mu.to_f64().unwrap();
-        let kappa_f64 = self.kappa.to_f64().unwrap();
+        let mu_f64 = self.mu.to_f64().expect("Operation failed");
+        let kappa_f64 = self.kappa.to_f64().expect("Operation failed");
 
         // Generate samples using custom implementation
         let mut rng = thread_rng();
         let mut samples = Array1::zeros(size);
         for i in 0..size {
             let sample = self.sample_von_mises(mu_f64, kappa_f64, &mut rng);
-            samples[i] = F::from(sample).unwrap();
+            samples[i] = F::from(sample).expect("Failed to convert to float");
         }
 
         Ok(samples)
@@ -337,7 +337,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distributio
         // von Mises entropy:
         // H = -κ * I₁(κ)/I₀(κ) + ln(2π*I₀(κ))
         let kappa = self.kappa;
-        let two_pi = F::from(2.0 * PI).unwrap();
+        let two_pi = F::from(2.0 * PI).expect("Failed to convert to float");
 
         if kappa == F::zero() {
             return two_pi.ln(); // Entropy of a uniform distribution on the circle
@@ -358,7 +358,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
     fn pdf(&self, x: F) -> F {
         // f(x; μ, κ) = (1 / (2π * I₀(κ))) * exp(κ * cos(x - μ))
 
-        let two_pi = F::from(2.0 * PI).unwrap();
+        let two_pi = F::from(2.0 * PI).expect("Failed to convert to float");
         let cos_term = (x - self.mu).cos();
         let i0 = self.bessel_i0(self.kappa);
 
@@ -373,13 +373,13 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
 
     fn rvs_single(&self) -> StatsResult<F> {
         // Convert parameters to f64 for sampling
-        let mu_f64 = self.mu.to_f64().unwrap();
-        let kappa_f64 = self.kappa.to_f64().unwrap();
+        let mu_f64 = self.mu.to_f64().expect("Operation failed");
+        let kappa_f64 = self.kappa.to_f64().expect("Operation failed");
 
         // Generate a single sample using custom implementation
         let mut rng = thread_rng();
         let sample = self.sample_von_mises(mu_f64, kappa_f64, &mut rng);
-        Ok(F::from(sample).unwrap())
+        Ok(F::from(sample).expect("Failed to convert to float"))
     }
 
     fn circular_mean(&self) -> F {
@@ -394,7 +394,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
 
     fn circular_std(&self) -> F {
         // sqrt(-2 * ln(mean_resultant_length))
-        let neg_two = F::from(-2.0).unwrap();
+        let neg_two = F::from(-2.0).expect("Failed to convert constant to float");
         (neg_two * self.mean_resultant_length().ln()).sqrt()
     }
 
@@ -450,7 +450,7 @@ mod tests {
 
     #[test]
     fn test_von_mises_pdf() {
-        let vm = von_mises(0.0f64, 1.0).unwrap();
+        let vm = von_mises(0.0f64, 1.0).expect("Operation failed");
 
         // PDF at mean: f(μ; μ, κ) = exp(κ) / (2π * I₀(κ))
         let pdf_at_mean = vm.pdf(0.0);
@@ -472,8 +472,12 @@ mod tests {
     fn test_von_mises_circular_mean() {
         // Test various means
         for mu in [-PI / 2.0, 0.0, PI / 4.0, PI / 2.0, PI] {
-            let vm = von_mises(mu, 1.0).unwrap();
-            assert_abs_diff_eq!(vm.circular_mean().to_f64().unwrap(), mu, epsilon = 1e-10);
+            let vm = von_mises(mu, 1.0).expect("Operation failed");
+            assert_abs_diff_eq!(
+                vm.circular_mean().to_f64().expect("Operation failed"),
+                mu,
+                epsilon = 1e-10
+            );
         }
     }
 
@@ -481,27 +485,31 @@ mod tests {
     fn test_von_mises_concentration() {
         // Test various concentrations
         for kappa in [0.0, 0.5, 1.0, 5.0, 10.0] {
-            let vm = von_mises(0.0, kappa).unwrap();
-            assert_abs_diff_eq!(vm.concentration().to_f64().unwrap(), kappa, epsilon = 1e-10);
+            let vm = von_mises(0.0, kappa).expect("Operation failed");
+            assert_abs_diff_eq!(
+                vm.concentration().to_f64().expect("Operation failed"),
+                kappa,
+                epsilon = 1e-10
+            );
         }
     }
 
     #[test]
     fn test_von_mises_mean_resultant_length() {
         // When kappa = 0, mean resultant length = 0 (uniform distribution)
-        let vm = von_mises(0.0f64, 0.0).unwrap();
+        let vm = von_mises(0.0f64, 0.0).expect("Operation failed");
         assert_abs_diff_eq!(vm.mean_resultant_length(), 0.0, epsilon = 1e-10);
 
         // For kappa > 0, mean resultant length = I₁(κ)/I₀(κ)
-        let vm = von_mises(0.0f64, 1.0).unwrap();
+        let vm = von_mises(0.0f64, 1.0).expect("Operation failed");
         let expected = bessel_i1(1.0) / bessel_i0(1.0);
         assert_abs_diff_eq!(vm.mean_resultant_length(), expected, epsilon = 1e-10);
     }
 
     #[test]
     fn test_von_mises_rvs() {
-        let vm = von_mises(0.0f64, 5.0).unwrap();
-        let samples = vm.rvs(1000).unwrap();
+        let vm = von_mises(0.0f64, 5.0).expect("Operation failed");
+        let samples = vm.rvs(1000).expect("Operation failed");
 
         // Check that all samples are in [-π, π]
         for &sample in samples.iter() {

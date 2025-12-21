@@ -50,7 +50,7 @@ where
     /// let offsets = vec![0, 1]; // Main diagonal and k=1
     /// let shape = (3, 3);
     ///
-    /// let matrix = DiaMatrix::new(data, offsets, shape).unwrap();
+    /// let matrix = DiaMatrix::new(data, offsets, shape).expect("Operation failed");
     /// ```
     pub fn new(
         data: Vec<Vec<T>>,
@@ -193,7 +193,7 @@ mod tests {
         let offsets = vec![0, 1]; // Main diagonal and k=1
         let shape = (3, 3);
 
-        let matrix = DiaMatrix::new(data, offsets, shape).unwrap();
+        let matrix = DiaMatrix::new(data, offsets, shape).expect("Operation failed");
 
         assert_eq!(matrix.shape(), (3, 3));
         assert_eq!(matrix.nnz(), 5); // 3 on main diagonal, 2 on upper diagonal
@@ -209,7 +209,7 @@ mod tests {
         let offsets = vec![0, 1]; // Main diagonal and k=1
         let shape = (3, 3);
 
-        let matrix = DiaMatrix::new(data, offsets, shape).unwrap();
+        let matrix = DiaMatrix::new(data, offsets, shape).expect("Operation failed");
         let dense = matrix.to_dense();
 
         let expected = vec![

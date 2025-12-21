@@ -36,7 +36,7 @@ use std::fmt::Debug;
 /// let t1 = 1.0; // End time
 /// let f1 = 10.0; // Ending frequency
 ///
-/// let signal = chirp(&t, f0, t1, f1, "linear", 0.0).unwrap();
+/// let signal = chirp(&t, f0, t1, f1, "linear", 0.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn chirp<T>(
@@ -142,7 +142,7 @@ where
 ///
 /// // Generate a basic sawtooth wave
 /// let t = (0..100).map(|i| i as f64 / 10.0).collect::<Vec<_>>();
-/// let signal = sawtooth(&t, 1.0).unwrap();
+/// let signal = sawtooth(&t, 1.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn sawtooth<T>(t: &[T], width: f64) -> SignalResult<Vec<f64>>
@@ -211,10 +211,10 @@ where
 ///
 /// // Generate a square wave with 50% duty cycle
 /// let t = (0..100).map(|i| i as f64 / 10.0).collect::<Vec<_>>();
-/// let signal = square(&t, 0.5).unwrap();
+/// let signal = square(&t, 0.5).expect("Operation failed");
 ///
 /// // Generate a square wave with 25% duty cycle
-/// let signal = square(&t, 0.25).unwrap();
+/// let signal = square(&t, 0.25).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn square<T>(t: &[T], duty: f64) -> SignalResult<Vec<f64>>
@@ -287,7 +287,7 @@ where
 /// let fc = 0.5; // Center frequency
 /// let bw = 0.5; // Fractional bandwidth
 ///
-/// let signal = gausspulse(&t, fc, bw, None, false).unwrap();
+/// let signal = gausspulse(&t, fc, bw, None, false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn gausspulse<T>(
@@ -362,7 +362,7 @@ mod tests {
         let t = vec![0.0, 0.1, 0.2, 0.3, 0.4];
 
         // Generate a linear chirp from 1Hz to 10Hz over 1 second
-        let signal = chirp(&t, 1.0, 1.0, 10.0, "linear", 0.0).unwrap();
+        let signal = chirp(&t, 1.0, 1.0, 10.0, "linear", 0.0).expect("Operation failed");
 
         // Verify signal at some points
         assert_relative_eq!(signal[0], 0.0, epsilon = 1e-10); // sin(0) = 0
@@ -381,7 +381,7 @@ mod tests {
         let t = vec![0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
         // Generate a sawtooth wave with default width
-        let signal = sawtooth(&t, 1.0).unwrap();
+        let signal = sawtooth(&t, 1.0).expect("Operation failed");
 
         // Verify values at key points
         assert_relative_eq!(signal[0], -1.0, epsilon = 1e-10); // t = 0.0
@@ -399,7 +399,7 @@ mod tests {
         let t = vec![0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
         // Generate a square wave with 50% duty cycle
-        let signal = square(&t, 0.5).unwrap();
+        let signal = square(&t, 0.5).expect("Operation failed");
 
         // Verify values at key points
         assert_relative_eq!(signal[0], 1.0, epsilon = 1e-10); // t = 0.0
@@ -409,7 +409,7 @@ mod tests {
         assert_relative_eq!(signal[4], 1.0, epsilon = 1e-10); // t = 1.0 (start of next cycle)
 
         // Generate a square wave with 25% duty cycle
-        let signal = square(&t, 0.25).unwrap();
+        let signal = square(&t, 0.25).expect("Operation failed");
 
         // Verify values at key points
         assert_relative_eq!(signal[0], 1.0, epsilon = 1e-10); // t = 0.0
@@ -427,7 +427,7 @@ mod tests {
         let t = vec![-0.1, -0.05, 0.0, 0.05, 0.1]; // Use smaller range to avoid large values
 
         // Generate a Gaussian pulse with center frequency 1Hz and bandwidth 0.5
-        let signal = gausspulse(&t, 1.0, 0.5, None, false).unwrap();
+        let signal = gausspulse(&t, 1.0, 0.5, None, false).expect("Operation failed");
 
         // Make sure the signal has the expected length
         assert_eq!(signal.len(), t.len());
@@ -467,7 +467,7 @@ mod tests {
 /// use scirs2_signal::waveforms::mls_sequence;
 ///
 /// // Generate a 7-bit MLS (length 127)
-/// let mls = mls_sequence(7, None, None).unwrap();
+/// let mls = mls_sequence(7, None, None).expect("Operation failed");
 /// assert_eq!(mls.len(), 127);
 /// ```
 #[allow(dead_code)]
@@ -990,7 +990,7 @@ mod special_signal_tests {
     #[test]
     fn test_mls_sequence() {
         // Test 4-bit MLS (length 15)
-        let mls = mls_sequence(4, None, None).unwrap();
+        let mls = mls_sequence(4, None, None).expect("Operation failed");
         assert_eq!(mls.len(), 15);
 
         // Check that all values are +1 or -1
@@ -999,7 +999,7 @@ mod special_signal_tests {
         }
 
         // Test custom taps
-        let mls_custom = mls_sequence(5, Some(&[3, 5]), None).unwrap();
+        let mls_custom = mls_sequence(5, Some(&[3, 5]), None).expect("Operation failed");
         assert_eq!(mls_custom.len(), 31);
     }
 
@@ -1015,7 +1015,7 @@ mod special_signal_tests {
 
     #[test]
     fn test_prbs_sequence() {
-        let prbs = prbs_sequence(100, None, None).unwrap();
+        let prbs = prbs_sequence(100, None, None).expect("Operation failed");
         assert_eq!(prbs.len(), 100);
 
         // Check that all values are 0 or 1
@@ -1026,7 +1026,7 @@ mod special_signal_tests {
 
     #[test]
     fn test_pink_noise() {
-        let pink = pink_noise(1000, Some(42)).unwrap();
+        let pink = pink_noise(1000, Some(42)).expect("Operation failed");
         assert_eq!(pink.len(), 1000);
 
         // Check that values are within reasonable range
@@ -1037,7 +1037,7 @@ mod special_signal_tests {
 
     #[test]
     fn test_brown_noise() {
-        let brown = brown_noise(1000, Some(42)).unwrap();
+        let brown = brown_noise(1000, Some(42)).expect("Operation failed");
         assert_eq!(brown.len(), 1000);
 
         // Check that values are bounded
@@ -1049,7 +1049,7 @@ mod special_signal_tests {
     #[test]
     fn test_exponential_sweep() {
         let t = vec![0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
-        let sweep = exponential_sweep(&t, 20.0, 20000.0, 0.5).unwrap();
+        let sweep = exponential_sweep(&t, 20.0, 20000.0, 0.5).expect("Operation failed");
 
         assert_eq!(sweep.len(), t.len());
 
@@ -1061,20 +1061,21 @@ mod special_signal_tests {
 
     #[test]
     fn test_synchronized_sweep() {
-        let (t, sweep) = synchronized_sweep(44100.0, 1.0, 20.0, 20000.0, "linear").unwrap();
+        let (t, sweep) =
+            synchronized_sweep(44100.0, 1.0, 20.0, 20000.0, "linear").expect("Operation failed");
 
         assert_eq!(t.len(), 44100);
         assert_eq!(sweep.len(), 44100);
 
         // Test logarithmic sweep
-        let (_, log_sweep) =
-            synchronized_sweep(44100.0, 1.0, 20.0, 20000.0, "logarithmic").unwrap();
+        let (_, log_sweep) = synchronized_sweep(44100.0, 1.0, 20.0, 20000.0, "logarithmic")
+            .expect("Operation failed");
         assert_eq!(log_sweep.len(), 44100);
     }
 
     #[test]
     fn test_golomb_ruler() {
-        let ruler = golomb_ruler(4, false).unwrap();
+        let ruler = golomb_ruler(4, false).expect("Operation failed");
         assert_eq!(ruler.len(), 4);
         assert_eq!(ruler[0], 0); // First mark always at 0
 
@@ -1086,7 +1087,7 @@ mod special_signal_tests {
 
     #[test]
     fn test_perfect_binary_sequence() {
-        let seq = perfect_binary_sequence(7).unwrap();
+        let seq = perfect_binary_sequence(7).expect("Operation failed");
         assert_eq!(seq.len(), 7);
 
         // Check that all values are +1 or -1
@@ -1102,8 +1103,8 @@ mod special_signal_tests {
     fn test_noise_reproducibility() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
-        let pink1 = pink_noise(100, Some(123)).unwrap();
-        let pink2 = pink_noise(100, Some(123)).unwrap();
+        let pink1 = pink_noise(100, Some(123)).expect("Operation failed");
+        let pink2 = pink_noise(100, Some(123)).expect("Operation failed");
 
         // Same seed should produce same sequence
         for (a, b) in pink1.iter().zip(pink2.iter()) {

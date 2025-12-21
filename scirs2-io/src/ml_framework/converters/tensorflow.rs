@@ -41,7 +41,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                     "name": name,
                     "shape": tensor.metadata.shape,
                     "dtype": format!("{:?}", tensor.metadata.dtype),
-                    "data": tensor.data.as_slice().unwrap().to_vec()
+                    "data": tensor.data.as_slice().expect("Operation failed").to_vec()
                 })
             }).collect::<Vec<_>>()
         });
@@ -120,7 +120,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                 "tensorshape": {
                     "dim": tensor.metadata.shape.iter().map(|&d| serde_json::json!({"size": d})).collect::<Vec<_>>()
                 },
-                "tensor_content": tensor.data.as_slice().unwrap()
+                "tensor_content": tensor.data.as_slice().expect("Operation failed")
                     .iter()
                     .flat_map(|f| f.to_le_bytes().to_vec())
                     .collect::<Vec<u8>>()

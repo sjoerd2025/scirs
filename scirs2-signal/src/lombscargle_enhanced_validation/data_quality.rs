@@ -67,8 +67,8 @@ pub fn test_irregular_sampling(
     let (peak_idx, _) = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let peak_freq = freqs[peak_idx];
 
     // Calculate metrics
@@ -77,7 +77,7 @@ pub fn test_irregular_sampling(
 
     // Resolution factor (compared to regular sampling)
     let avg_spacing =
-        (t_irregular.last().unwrap() - t_irregular[0]) / (t_irregular.len() - 1) as f64;
+        (t_irregular.last().expect("Operation failed") - t_irregular[0]) / (t_irregular.len() - 1) as f64;
     let resolution_factor = 1.0 / avg_spacing;
 
     // Estimate spectral leakage more comprehensively
@@ -157,8 +157,8 @@ pub fn test_missing_data(implementation: &str, tolerance: f64) -> SignalResult<M
     let (peak_idx, &peak_power) = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let peak_freq = freqs[peak_idx];
 
     // Estimate amplitude from peak power

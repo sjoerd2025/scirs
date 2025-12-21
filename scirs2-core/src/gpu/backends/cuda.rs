@@ -639,7 +639,7 @@ impl GpuBufferImpl for CudaBuffer {
             static SIMULATED_GPU_MEMORY: Mutex<HashMap<u64, Vec<u8>>> = Mutex::new(HashMap::new());
 
             let host_slice = std::slice::from_raw_parts(data, size);
-            let mut sim_memory = SIMULATED_GPU_MEMORY.lock().unwrap();
+            let mut sim_memory = SIMULATED_GPU_MEMORY.lock().expect("Operation failed");
             sim_memory.insert(self.device_ptr, host_slice.to_vec());
 
             #[cfg(debug_assertions)]
@@ -687,7 +687,7 @@ impl GpuBufferImpl for CudaBuffer {
             static SIMULATED_GPU_MEMORY: Mutex<HashMap<u64, Vec<u8>>> = Mutex::new(HashMap::new());
 
             let host_slice = std::slice::from_raw_parts_mut(data, size);
-            let sim_memory = SIMULATED_GPU_MEMORY.lock().unwrap();
+            let sim_memory = SIMULATED_GPU_MEMORY.lock().expect("Operation failed");
 
             if let Some(device_data) = sim_memory.get(&self.device_ptr) {
                 let copy_size = size.min(device_data.len());
@@ -913,9 +913,9 @@ impl CudaKernelHandle {
                 // cudarc 0.17 API: Use LaunchConfig and kernel.launch()
                 // Note: This requires obtaining a CudaFunction from the device
                 // In a full implementation:
-                // let func = device.get_func(&module_name, &kernel_name).unwrap();
+                // let func = device.get_func(&module_name, &kernel_name).expect("Operation failed");
                 // let cfg = LaunchConfig { grid_dim, block_dim, shared_mem_bytes: 0 };
-                // unsafe { func.launch(cfg, (&param1, &param2, ...)) }.unwrap();
+                // unsafe { func.launch(cfg, (&param1, &param2, ...)) }.expect("Operation failed");
             }
         }
     }
@@ -1339,7 +1339,7 @@ mod tests {
         assert!(ptr4.is_some());
 
         // Test deallocation
-        pool.deallocate(ptr1.unwrap(), 256);
+        pool.deallocate(ptr1.expect("Operation failed"), 256);
 
         // Should be able to allocate again
         let ptr5 = pool.allocate(256);

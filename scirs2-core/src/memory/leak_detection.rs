@@ -1012,17 +1012,19 @@ mod tests {
     #[test]
     fn test_leak_detector_creation() {
         let config = LeakDetectionConfig::default();
-        let detector = LeakDetector::new(config).unwrap();
+        let detector = LeakDetector::new(config).expect("Operation failed");
 
-        assert!(!*detector.monitoring_active.lock().unwrap());
+        assert!(!*detector.monitoring_active.lock().expect("Operation failed"));
     }
 
     #[test]
     fn test_checkpoint_creation() {
         let config = LeakDetectionConfig::default();
-        let detector = LeakDetector::new(config).unwrap();
+        let detector = LeakDetector::new(config).expect("Operation failed");
 
-        let checkpoint = detector.create_checkpoint("test").unwrap();
+        let checkpoint = detector
+            .create_checkpoint("test")
+            .expect("Operation failed");
         assert_eq!(checkpoint.name, "test");
         assert!(checkpoint.memory_usage.rss_bytes > 0);
     }
@@ -1030,28 +1032,40 @@ mod tests {
     #[test]
     fn test_allocation_tracking() {
         let config = LeakDetectionConfig::default().development_mode();
-        let detector = LeakDetector::new(config).unwrap();
+        let detector = LeakDetector::new(config).expect("Operation failed");
 
-        detector.track_allocation(1024, 0x12345678).unwrap();
-        detector.track_allocation(2048, 0x87654321).unwrap();
+        detector
+            .track_allocation(1024, 0x12345678)
+            .expect("Operation failed");
+        detector
+            .track_allocation(2048, 0x87654321)
+            .expect("Operation failed");
 
-        let count = detector.get_active_allocation_count().unwrap();
+        let count = detector
+            .get_active_allocation_count()
+            .expect("Operation failed");
         assert_eq!(count, 2);
 
-        detector.track_deallocation(0x12345678).unwrap();
-        let count = detector.get_active_allocation_count().unwrap();
+        detector
+            .track_deallocation(0x12345678)
+            .expect("Operation failed");
+        let count = detector
+            .get_active_allocation_count()
+            .expect("Operation failed");
         assert_eq!(count, 1);
     }
 
     #[test]
     fn test_leak_check_guard() {
         let config = LeakDetectionConfig::default();
-        let detector = LeakDetector::new(config).unwrap();
+        let detector = LeakDetector::new(config).expect("Operation failed");
 
         {
-            let guard = LeakCheckGuard::new(&detector, "test_guard").unwrap();
+            let guard = LeakCheckGuard::new(&detector, "test_guard").expect("Operation failed");
             // Simulate some work that might leak memory
-            detector.track_allocation(1024 * 1024, 0x12345678).unwrap();
+            detector
+                .track_allocation(1024 * 1024, 0x12345678)
+                .expect("Operation failed");
         } // Guard drops here and checks for leaks
     }
 

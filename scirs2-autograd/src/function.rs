@@ -312,13 +312,13 @@ pub fn mean<F: Float + Debug + Send + Sync + 'static>(
         }
 
         let sum = x.data.sum_axis(scirs2_core::ndarray::Axis(axis));
-        let count = F::from(x.shape()[axis]).unwrap();
+        let count = F::from(x.shape()[axis]).expect("Operation failed");
         let mean = sum.mapv(|v| v / count);
         mean.into_dyn()
     } else {
         // Mean of all elements
         let sum_val = x.data.sum();
-        let count = F::from(x.size()).unwrap();
+        let count = F::from(x.size()).expect("Operation failed");
         let mean_val = sum_val / count;
         Array::from_elem(IxDyn(&[1]), mean_val)
     };

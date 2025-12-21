@@ -44,12 +44,12 @@ use scirs2_core::numeric::Float;
 /// Maximum absolute error: ≈ 7.5 × 10⁻⁸
 pub fn normal_cdf<F: Float>(x: F) -> F {
     // Abramowitz and Stegun approximation constants
-    let a1 = F::from(0.254829592).unwrap();
-    let a2 = F::from(-0.284496736).unwrap();
-    let a3 = F::from(1.421413741).unwrap();
-    let a4 = F::from(-1.453152027).unwrap();
-    let a5 = F::from(1.061405429).unwrap();
-    let p = F::from(0.3275911).unwrap();
+    let a1 = F::from(0.254829592).expect("Failed to convert constant to float");
+    let a2 = F::from(-0.284496736).expect("Failed to convert constant to float");
+    let a3 = F::from(1.421413741).expect("Failed to convert constant to float");
+    let a4 = F::from(-1.453152027).expect("Failed to convert constant to float");
+    let a5 = F::from(1.061405429).expect("Failed to convert constant to float");
+    let p = F::from(0.3275911).expect("Failed to convert constant to float");
 
     let sign = if x < F::zero() { -F::one() } else { F::one() };
     let x_abs = x.abs();
@@ -58,9 +58,9 @@ pub fn normal_cdf<F: Float>(x: F) -> F {
     let y = F::one()
         - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1)
             * t
-            * (-x_abs * x_abs / F::from(2.0).unwrap()).exp();
+            * (-x_abs * x_abs / F::from(2.0).expect("Failed to convert constant to float")).exp();
 
-    (F::one() + sign * y) / F::from(2.0).unwrap()
+    (F::one() + sign * y) / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 /// Normal probability density function
@@ -85,8 +85,8 @@ pub fn normal_cdf<F: Float>(x: F) -> F {
 /// assert!((density - 0.3989).abs() < 0.001);
 /// ```
 pub fn normal_pdf<F: Float>(x: F) -> F {
-    let sqrt_2pi = F::from(2.506628274631).unwrap(); // √(2π)
-    (-x.powi(2) / F::from(2.0).unwrap()).exp() / sqrt_2pi
+    let sqrt_2pi = F::from(2.506628274631).expect("Failed to convert constant to float"); // √(2π)
+    (-x.powi(2) / F::from(2.0).expect("Failed to convert constant to float")).exp() / sqrt_2pi
 }
 
 /// Inverse normal cumulative distribution function (quantile function)
@@ -119,24 +119,24 @@ pub fn normal_quantile<F: Float>(p: F) -> F {
     }
 
     // Beasley-Springer-Moro approximation constants
-    let a0 = F::from(2.515517).unwrap();
-    let a1 = F::from(0.802853).unwrap();
-    let a2 = F::from(0.010328).unwrap();
-    let b1 = F::from(1.432788).unwrap();
-    let b2 = F::from(0.189269).unwrap();
-    let b3 = F::from(0.001308).unwrap();
+    let a0 = F::from(2.515517).expect("Failed to convert constant to float");
+    let a1 = F::from(0.802853).expect("Failed to convert constant to float");
+    let a2 = F::from(0.010328).expect("Failed to convert constant to float");
+    let b1 = F::from(1.432788).expect("Failed to convert constant to float");
+    let b2 = F::from(0.189269).expect("Failed to convert constant to float");
+    let b3 = F::from(0.001308).expect("Failed to convert constant to float");
 
-    let t = if p < F::from(0.5).unwrap() {
-        (-F::from(2.0).unwrap() * p.ln()).sqrt()
+    let t = if p < F::from(0.5).expect("Failed to convert constant to float") {
+        (-F::from(2.0).expect("Failed to convert constant to float") * p.ln()).sqrt()
     } else {
-        (-F::from(2.0).unwrap() * (F::one() - p).ln()).sqrt()
+        (-F::from(2.0).expect("Failed to convert constant to float") * (F::one() - p).ln()).sqrt()
     };
 
     let numerator = a0 + a1 * t + a2 * t.powi(2);
     let denominator = F::one() + b1 * t + b2 * t.powi(2) + b3 * t.powi(3);
     let z = t - numerator / denominator;
 
-    if p < F::from(0.5).unwrap() {
+    if p < F::from(0.5).expect("Failed to convert constant to float") {
         -z
     } else {
         z
@@ -212,7 +212,9 @@ pub fn future_value<F: Float>(present_value: F, rate: F, time: F) -> F {
 ///
 /// * `F` - d1 parameter value
 pub fn calculate_d1<F: Float>(spot: F, strike: F, rate: F, volatility: F, time: F) -> F {
-    ((spot / strike).ln() + (rate + volatility.powi(2) / F::from(2.0).unwrap()) * time)
+    ((spot / strike).ln()
+        + (rate + volatility.powi(2) / F::from(2.0).expect("Failed to convert constant to float"))
+            * time)
         / (volatility * time.sqrt())
 }
 
@@ -253,7 +255,7 @@ pub fn bivariate_normal_cdf<F: Float>(x: F, y: F, rho: F) -> F {
     // Simplified approximation for bivariate normal CDF
     // This is a basic implementation - more sophisticated methods exist
 
-    if rho.abs() < F::from(0.001).unwrap() {
+    if rho.abs() < F::from(0.001).expect("Failed to convert constant to float") {
         // If correlation is near zero, variables are independent
         return normal_cdf(x) * normal_cdf(y);
     }
@@ -265,7 +267,8 @@ pub fn bivariate_normal_cdf<F: Float>(x: F, y: F, rho: F) -> F {
     let cdf_y = normal_cdf(y);
 
     // Simple correction for correlation (approximation)
-    let correction = rho * normal_pdf(x) * normal_pdf(y) / F::from(4.0).unwrap();
+    let correction = rho * normal_pdf(x) * normal_pdf(y)
+        / F::from(4.0).expect("Failed to convert constant to float");
 
     (cdf_x * cdf_y + correction).min(F::one()).max(F::zero())
 }

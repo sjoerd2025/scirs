@@ -315,7 +315,7 @@ fn custom_polytope_example() -> Result<(), Box<dyn std::error::Error>> {
     // Verify the interior point satisfies all constraints
     println!("Checking interior point [1.0, 1.0]:");
     for (i, hs) in halfspaces.iter().enumerate() {
-        let satisfies = hs.contains(&interior_point.as_ref().unwrap().view());
+        let satisfies = hs.contains(&interior_point.as_ref().expect("Operation failed").view());
         println!(
             "  Constraint {}: {}",
             i + 1,

@@ -87,7 +87,7 @@ impl<F: Float> Op<F> for EfficientReshapeOp {
         }
 
         // Check cache for reshape compatibility
-        let mut cache = RESHAPE_CACHE.lock().unwrap();
+        let mut cache = RESHAPE_CACHE.lock().expect("Operation failed");
         let _is_contiguous = cache.get(inputshape, &self.newshape);
 
         let result = if self.allow_zero_copy {
@@ -102,13 +102,13 @@ impl<F: Float> Op<F> for EfficientReshapeOp {
                     // Zero-copy failed, fall back to copying
                     cache.insert(inputshape, &self.newshape, false);
                     let vec: Vec<F> = input.iter().cloned().collect();
-                    Array::from_shape_vec(IxDyn(&self.newshape), vec).unwrap()
+                    Array::from_shape_vec(IxDyn(&self.newshape), vec).expect("Operation failed")
                 }
             }
         } else {
             // Always copy (useful when zero-copy behavior is not desired)
             let vec: Vec<F> = input.iter().cloned().collect();
-            Array::from_shape_vec(IxDyn(&self.newshape), vec).unwrap()
+            Array::from_shape_vec(IxDyn(&self.newshape), vec).expect("Operation failed")
         };
 
         ctx.append_output(result);
@@ -215,8 +215,10 @@ impl<F: Float> Op<F> for EfficientSliceOp {
         }
 
         // Create slice info - using the raw slice info creation
-        let slice_info =
-            unsafe { SliceInfo::<Vec<SliceInfoElem>, IxDyn, IxDyn>::new(slice_elements).unwrap() };
+        let slice_info = unsafe {
+            SliceInfo::<Vec<SliceInfoElem>, IxDyn, IxDyn>::new(slice_elements)
+                .expect("Operation failed")
+        };
 
         // Apply the slice
         let sliced = input.slice(slice_info);
@@ -458,9 +460,12 @@ pub fn efficient_transpose<'g, F: Float>(
     let axes_tensor = crate::tensor_ops::convert_to_tensor(
         scirs2_core::ndarray::Array::from_shape_vec(
             scirs2_core::ndarray::IxDyn(&[2]),
-            vec![F::from(1).unwrap(), F::from(0).unwrap()],
+            vec![
+                F::from(1).expect("Failed to convert constant to float"),
+                F::from(0).expect("Failed to convert constant to float"),
+            ],
         )
-        .unwrap(),
+        .expect("Failed to reshape"),
         g,
     );
     crate::tensor_ops::transpose(tensor, &axes_tensor)
@@ -469,13 +474,13 @@ pub fn efficient_transpose<'g, F: Float>(
 /// Clear the reshape operation cache
 #[allow(dead_code)]
 pub fn clear_reshape_cache() {
-    RESHAPE_CACHE.lock().unwrap().clear();
+    RESHAPE_CACHE.lock().expect("Operation failed").clear();
 }
 
 /// Get statistics about the reshape cache
 #[allow(dead_code)]
 pub fn get_reshape_cache_stats() -> (usize, usize) {
-    let cache = RESHAPE_CACHE.lock().unwrap();
+    let cache = RESHAPE_CACHE.lock().expect("Operation failed");
     (cache.cache.len(), cache.max_size)
 }
 

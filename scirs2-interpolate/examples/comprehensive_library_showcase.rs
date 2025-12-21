@@ -262,7 +262,8 @@ fn demonstrate_simd_optimizations() -> InterpolateResult<()> {
 
         // Time SIMD evaluation
         let start = Instant::now();
-        let simd_results = simd_evaluator.eval_batch(large_batch.as_slice().unwrap())?;
+        let simd_results =
+            simd_evaluator.eval_batch(large_batch.as_slice().expect("Test: operation failed"))?;
         let simd_time = start.elapsed();
 
         // Time scalar evaluation for comparison
@@ -504,8 +505,10 @@ fn performance_comparison() -> InterpolateResult<()> {
                     InterpolationMethod::Linear,
                     Interp1dExtrapolateMode::Extrapolate,
                 )
-                .unwrap();
-                interp.evaluate_array(&query.view()).unwrap();
+                .expect("Test: operation failed");
+                interp
+                    .evaluate_array(&query.view())
+                    .expect("Test: operation failed");
             }) as Box<dyn Fn()>,
         ),
         (
@@ -517,8 +520,10 @@ fn performance_comparison() -> InterpolateResult<()> {
                     InterpolationMethod::Cubic,
                     Interp1dExtrapolateMode::Extrapolate,
                 )
-                .unwrap();
-                interp.evaluate_array(&query.view()).unwrap();
+                .expect("Test: operation failed");
+                interp
+                    .evaluate_array(&query.view())
+                    .expect("Test: operation failed");
             }) as Box<dyn Fn()>,
         ),
         (
@@ -532,8 +537,10 @@ fn performance_comparison() -> InterpolateResult<()> {
                     3,
                     ExtrapolateMode::Extrapolate,
                 )
-                .unwrap();
-                spline.evaluate_array(&query.view()).unwrap();
+                .expect("Test: operation failed");
+                spline
+                    .evaluate_array(&query.view())
+                    .expect("Test: operation failed");
             }) as Box<dyn Fn()>,
         ),
     ];

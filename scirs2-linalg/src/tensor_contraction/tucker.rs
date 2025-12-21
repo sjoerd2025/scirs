@@ -381,7 +381,7 @@ where
 ///                     [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]];
 ///
 /// // Decompose with full rank
-/// let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).unwrap();
+/// let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).expect("Operation failed");
 ///
 /// // The core tensor should have the specified rank
 /// assert_eq!(tucker.core.shape(), &[2, 3, 2]);
@@ -472,7 +472,7 @@ where
 ///                     [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]];
 ///
 /// // Decompose with target ranks [2, 2, 2]
-/// let tucker = tucker_als(&tensor.view(), &[2, 2, 2], 10, 1e-4).unwrap();
+/// let tucker = tucker_als(&tensor.view(), &[2, 2, 2], 10, 1e-4).expect("Operation failed");
 ///
 /// // The core tensor should have the specified rank
 /// assert_eq!(tucker.core.shape(), &[2, 2, 2]);
@@ -666,7 +666,7 @@ mod tests {
         ];
 
         // Decompose with full rank
-        let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).unwrap();
+        let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(tucker.core.shape(), &[2, 3, 2]);
@@ -676,7 +676,7 @@ mod tests {
         assert_eq!(tucker.factors[2].shape(), &[2, 2]);
 
         // Reconstruct the tensor
-        let reconstructed = tucker.to_full().unwrap();
+        let reconstructed = tucker.to_full().expect("Operation failed");
 
         // Check reconstruction
         for i in 0..2 {
@@ -702,7 +702,7 @@ mod tests {
         ];
 
         // Decompose with truncated rank
-        let tucker = tucker_decomposition(&tensor.view(), &[2, 2, 2]).unwrap();
+        let tucker = tucker_decomposition(&tensor.view(), &[2, 2, 2]).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(tucker.core.shape(), &[2, 2, 2]);
@@ -712,10 +712,12 @@ mod tests {
         assert_eq!(tucker.factors[2].shape(), &[2, 2]);
 
         // Reconstruct the tensor and verify it works
-        let _reconstructed = tucker.to_full().unwrap();
+        let _reconstructed = tucker.to_full().expect("Operation failed");
 
         // Check reconstruction error (should be small but not zero)
-        let error = tucker.reconstruction_error(&tensor.view()).unwrap();
+        let error = tucker
+            .reconstruction_error(&tensor.view())
+            .expect("Operation failed");
         assert!(error > 0.0);
         assert!(error < 0.1); // Somewhat arbitrary threshold
     }
@@ -730,7 +732,7 @@ mod tests {
         ];
 
         // Decompose with ALS and truncated rank
-        let tucker = tucker_als(&tensor.view(), &[2, 2, 2], 10, 1e-4).unwrap();
+        let tucker = tucker_als(&tensor.view(), &[2, 2, 2], 10, 1e-4).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(tucker.core.shape(), &[2, 2, 2]);
@@ -740,12 +742,17 @@ mod tests {
         assert_eq!(tucker.factors[2].shape(), &[2, 2]);
 
         // Reconstruct the tensor and verify it works
-        let _reconstructed = tucker.to_full().unwrap();
+        let _reconstructed = tucker.to_full().expect("Operation failed");
 
         // ALS should provide a better fit than HOSVD for same rank
-        let hosvd_tucker = tucker_decomposition(&tensor.view(), &[2, 2, 2]).unwrap();
-        let als_error = tucker.reconstruction_error(&tensor.view()).unwrap();
-        let hosvd_error = hosvd_tucker.reconstruction_error(&tensor.view()).unwrap();
+        let hosvd_tucker =
+            tucker_decomposition(&tensor.view(), &[2, 2, 2]).expect("Operation failed");
+        let als_error = tucker
+            .reconstruction_error(&tensor.view())
+            .expect("Operation failed");
+        let hosvd_error = hosvd_tucker
+            .reconstruction_error(&tensor.view())
+            .expect("Operation failed");
 
         // ALS should give at least as good a result as HOSVD
         assert!(als_error <= hosvd_error * 1.001); // Allow small numerical differences
@@ -761,10 +768,12 @@ mod tests {
         ];
 
         // Decompose with full rank
-        let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).unwrap();
+        let tucker = tucker_decomposition(&tensor.view(), &[2, 3, 2]).expect("Operation failed");
 
         // Compress with specified ranks
-        let compressed = tucker.compress(Some(vec![2, 2, 2]), None).unwrap();
+        let compressed = tucker
+            .compress(Some(vec![2, 2, 2]), None)
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(compressed.core.shape(), &[2, 2, 2]);
@@ -773,7 +782,7 @@ mod tests {
         assert_eq!(compressed.factors[2].shape(), &[2, 2]);
 
         // Compress with epsilon
-        let compressed_eps = tucker.compress(None, Some(0.1)).unwrap();
+        let compressed_eps = tucker.compress(None, Some(0.1)).expect("Operation failed");
 
         // Should have at least one column in each factor
         for factor in &compressed_eps.factors {

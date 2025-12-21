@@ -132,7 +132,7 @@ where
             AttentionAggregation::Average => {
                 // Average across head dimension (assuming shape: [batch, heads, seq, seq])
                 if attentionweights.ndim() >= 4 {
-                    Ok(attentionweights.mean_axis(scirs2_core::ndarray::Axis(1)).unwrap())
+                    Ok(attentionweights.mean_axis(scirs2_core::ndarray::Axis(1)).expect("Operation failed"))
                 } else {
                     Ok(attentionweights.clone())
                 }
@@ -163,12 +163,12 @@ where
                     ));
                     let mut weighted_attention =
                         attentionweights.index_axis(scirs2_core::ndarray::Axis(1), 0).to_owned()
-                            * F::from(weights[0]).unwrap();
+                            * F::from(weights[0]).expect("Failed to convert to float");
                     for (i, &weight) in weights.iter().enumerate().skip(1) {
                         let head_attention =
                             attentionweights.index_axis(scirs2_core::ndarray::Axis(1), i).to_owned();
                         weighted_attention =
-                            weighted_attention + head_attention * F::from(weight).unwrap();
+                            weighted_attention + head_attention * F::from(weight).expect("Failed to convert to float");
                     }
                     Ok(weighted_attention)
     /// Generate attention rollout visualization
@@ -179,7 +179,7 @@ where
                 "No attention weights available for rollout".to_string(),
             ));
         // For now, just return the first cached attention
-        let first_attention = self.attention_cache.values().next().unwrap();
+        let first_attention = self.attention_cache.values().next().expect("Operation failed");
         self.aggregate_attention_heads(first_attention)
     /// Visualize attention flow between tokens
     pub fn visualize_attention_flow(
@@ -216,7 +216,7 @@ pub fn generate_feature_visualization<F>(
             for _iter in 0..*num_iterations {
                 // Apply gradient ascent (simplified)
                 optimized_input = optimized_input
-                    .mapv(|x| x + F::from(*learning_rate * scirs2_core::random::random::<f64>()).unwrap());
+                    .mapv(|x| x + F::from(*learning_rate * scirs2_core::random::random::<f64>()).expect("Operation failed"));
             let mut metadata = HashMap::new();
             metadata.insert("target_layer".to_string(), target_layer.clone());
             metadata.insert("iterations".to_string(), num_iterations.to_string());
@@ -234,8 +234,8 @@ pub fn generate_feature_visualization<F>(
             let mut dream_input = scirs2_core::ndarray::Array::ones(inputshape).into_dyn();
                 // Amplify activations (simplified)
                 dream_input = dream_input.mapv(|x| {
-                    x * F::from(*amplify_factor).unwrap()
-                        + F::from(*learning_rate * scirs2_core::random::random::<f64>()).unwrap()
+                    x * F::from(*amplify_factor).expect("Failed to convert to float")
+                        + F::from(*learning_rate * scirs2_core::random::random::<f64>()).expect("Operation failed")
                 });
             metadata.insert("amplify_factor".to_string(), amplify_factor.to_string());
                 visualization_data: dream_input,
@@ -367,7 +367,7 @@ mod tests {
             learning_rate: 0.01,
         let result = generate_feature_visualization::<f64>(&method, &[3, 32, 32]);
         assert!(result.is_ok());
-        let viz_result = result.unwrap();
+        let viz_result = result.expect("Operation failed");
         assert_eq!(viz_result.visualization_data.shape(), &[3, 32, 32]);
         assert!(viz_result.metadata.contains_key("target_layer"));
     fn test_network_dissection() {
@@ -382,16 +382,16 @@ mod tests {
             &layer_activations,
             &concept_data,
             &concept_labels,
-        let dissection = result.unwrap();
+        let dissection = result.expect("Operation failed");
         assert_eq!(dissection.layer_name, "conv5");
         assert_eq!(dissection.concept_selectivity.len(), 2);
     fn test_attention_heatmap() {
         let attention = Array::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         let tokens = vec!["hello".to_string(), "world".to_string()];
         let heatmap = create_attention_heatmap(&attention, &tokens);
         assert!(heatmap.is_ok());
-        let heatmap_data = heatmap.unwrap();
+        let heatmap_data = heatmap.expect("Operation failed");
         assert_eq!(heatmap_data.len(), 2);
         assert_eq!(heatmap_data[0].len(), 2);

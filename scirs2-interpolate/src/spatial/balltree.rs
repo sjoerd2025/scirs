@@ -59,14 +59,14 @@ struct BallNode<F: Float + ordered_float::FloatCore> {
 ///     0.0, 1.0, 0.0,
 ///     0.0, 0.0, 1.0,
 ///     0.5, 0.5, 0.5,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Build Ball Tree
-/// let ball_tree = BallTree::new(points).unwrap();
+/// let ball_tree = BallTree::new(points).expect("Operation failed");
 ///
 /// // Find the nearest neighbor to point (0.6, 0.6, 0.6)
 /// let query = vec![0.6, 0.6, 0.6];
-/// let (idx, distance) = ball_tree.nearest_neighbor(&query).unwrap();
+/// let (idx, distance) = ball_tree.nearest_neighbor(&query).expect("Operation failed");
 ///
 /// // idx should be 4 (the point at (0.5, 0.5, 0.5))
 /// assert_eq!(idx, 4);
@@ -268,7 +268,12 @@ where
         let mut best_idx = 0;
 
         // Start recursive search
-        self.search_nearest(self.root.unwrap(), query, &mut best_dist, &mut best_idx);
+        self.search_nearest(
+            self.root.expect("Operation failed"),
+            query,
+            &mut best_dist,
+            &mut best_idx,
+        );
 
         Ok((best_idx, best_dist))
     }
@@ -318,7 +323,7 @@ where
         let mut heap = BinaryHeap::with_capacity(k + 1);
 
         // Start recursive search
-        self.search_k_nearest(self.root.unwrap(), query, k, &mut heap);
+        self.search_k_nearest(self.root.expect("Operation failed"), query, k, &mut heap);
 
         // Convert heap to sorted vector
         let mut results: Vec<(usize, F)> = heap
@@ -378,7 +383,12 @@ where
         let mut results = Vec::new();
 
         // Start recursive search
-        self.search_radius(self.root.unwrap(), query, radius, &mut results);
+        self.search_radius(
+            self.root.expect("Operation failed"),
+            query,
+            radius,
+            &mut results,
+        );
 
         // Sort by distance
         results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
@@ -420,8 +430,8 @@ where
 
         // Process children
         // Choose the closer ball first to potentially reduce the best_dist sooner
-        let left_idx = node.left.unwrap();
-        let right_idx = node.right.unwrap();
+        let left_idx = node.left.expect("Operation failed");
+        let right_idx = node.right.expect("Operation failed");
 
         let left_node = &self.nodes[left_idx];
         let right_node = &self.nodes[right_idx];
@@ -489,8 +499,8 @@ where
 
         // Process children
         // Choose the closer ball first to potentially reduce the kth_dist sooner
-        let left_idx = node.left.unwrap();
-        let right_idx = node.right.unwrap();
+        let left_idx = node.left.expect("Operation failed");
+        let right_idx = node.right.expect("Operation failed");
 
         let left_node = &self.nodes[left_idx];
         let right_node = &self.nodes[right_idx];
@@ -734,7 +744,7 @@ where
 
         // Start recursive search with adaptive bounds
         self.search_k_nearest_optimized(
-            self.root.unwrap(),
+            self.root.expect("Operation failed"),
             query,
             k,
             &mut heap,
@@ -848,8 +858,8 @@ where
         }
 
         // Process children with improved ordering strategy
-        let left_idx = node.left.unwrap();
-        let right_idx = node.right.unwrap();
+        let left_idx = node.left.expect("Operation failed");
+        let right_idx = node.right.expect("Operation failed");
 
         let left_node = &self.nodes[left_idx];
         let right_node = &self.nodes[right_idx];
@@ -951,7 +961,7 @@ where
         let mut nodes_to_visit = VecDeque::new();
 
         // Start with root
-        nodes_to_visit.push_back((self.root.unwrap(), F::zero()));
+        nodes_to_visit.push_back((self.root.expect("Operation failed"), F::zero()));
 
         while let Some((node_idx, _min_dist)) = nodes_to_visit.pop_front() {
             if checks_performed >= max_checks {
@@ -1048,7 +1058,7 @@ fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usi
     }
 
     // Divide by number of _points
-    let n = F::from_usize(n_points).unwrap();
+    let n = F::from_usize(n_points).expect("Operation failed");
     for val in center.iter_mut() {
         *val = *val / n;
     }
@@ -1194,9 +1204,9 @@ fn partition_by_seeds<F: Float>(
 
     // If one partition is empty, move some points from the other
     if left_indices.is_empty() && right_indices.len() >= 2 {
-        left_indices.push(right_indices.pop().unwrap());
+        left_indices.push(right_indices.pop().expect("Operation failed"));
     } else if right_indices.is_empty() && left_indices.len() >= 2 {
-        right_indices.push(left_indices.pop().unwrap());
+        right_indices.push(left_indices.pop().expect("Operation failed"));
     }
 
     (left_indices, right_indices)
@@ -1233,7 +1243,7 @@ mod tests {
             [0.5, 0.5, 0.5],
         ]);
 
-        let balltree = BallTree::new(points).unwrap();
+        let balltree = BallTree::new(points).expect("Operation failed");
 
         // Check tree properties
         assert_eq!(balltree.len(), 5);
@@ -1252,23 +1262,23 @@ mod tests {
             [0.5, 0.5, 0.5],
         ]);
 
-        let balltree = BallTree::new(points).unwrap();
+        let balltree = BallTree::new(points).expect("Operation failed");
 
         // Test exact matches
         for i in 0..5 {
             let point = balltree.points().row(i).to_vec();
-            let (idx, dist) = balltree.nearest_neighbor(&point).unwrap();
+            let (idx, dist) = balltree.nearest_neighbor(&point).expect("Operation failed");
             assert_eq!(idx, i);
             assert!(dist < 1e-10);
         }
 
         // Test near matches
         let query = vec![0.6, 0.6, 0.6];
-        let (idx, _) = balltree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = balltree.nearest_neighbor(&query).expect("Operation failed");
         assert_eq!(idx, 4); // Should be closest to (0.5, 0.5, 0.5)
 
         let query = vec![0.9, 0.1, 0.1];
-        let (idx, _) = balltree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = balltree.nearest_neighbor(&query).expect("Operation failed");
         assert_eq!(idx, 1); // Should be closest to (1.0, 0.0, 0.0)
     }
 
@@ -1283,13 +1293,15 @@ mod tests {
             [0.5, 0.5, 0.5],
         ]);
 
-        let balltree = BallTree::new(points).unwrap();
+        let balltree = BallTree::new(points).expect("Operation failed");
 
         // Test at point (0.6, 0.6, 0.6)
         let query = vec![0.6, 0.6, 0.6];
 
         // Get 3 nearest neighbors
-        let neighbors = balltree.k_nearest_neighbors(&query, 3).unwrap();
+        let neighbors = balltree
+            .k_nearest_neighbors(&query, 3)
+            .expect("Operation failed");
 
         // Should include (0.5, 0.5, 0.5) as the closest
         assert_eq!(neighbors.len(), 3);
@@ -1307,13 +1319,15 @@ mod tests {
             [0.5, 0.5, 0.5],
         ]);
 
-        let balltree = BallTree::new(points).unwrap();
+        let balltree = BallTree::new(points).expect("Operation failed");
 
         // Test at origin with radius 0.7
         let query = vec![0.0, 0.0, 0.0];
         let radius = 0.7;
 
-        let results = balltree.points_within_radius(&query, radius).unwrap();
+        let results = balltree
+            .points_within_radius(&query, radius)
+            .expect("Operation failed");
 
         // Should include the origin and possibly (0.5, 0.5, 0.5) depending on threshold
         assert!(!results.is_empty());

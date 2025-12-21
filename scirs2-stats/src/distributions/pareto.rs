@@ -42,7 +42,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
     /// ```
     pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
         // Validate parameters
@@ -91,7 +91,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
     /// let pdf_at_two = pareto.pdf(2.0);
     /// assert!((pdf_at_two - 0.1875).abs() < 1e-7);
     /// ```
@@ -125,7 +125,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
     /// let cdf_at_two = pareto.cdf(2.0);
     /// assert!((cdf_at_two - 0.875).abs() < 1e-7);
     /// ```
@@ -158,8 +158,8 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
-    /// let x = pareto.ppf(0.5).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
+    /// let x = pareto.ppf(0.5).expect("Operation failed");
     /// assert!((x - 1.2599210).abs() < 1e-6);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -202,8 +202,8 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
-    /// let samples = pareto.rvs(10).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
+    /// let samples = pareto.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -214,7 +214,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
         for _ in 0..size {
             // Generate uniform random number in [0, 1)
             let u = self.rand_distr.sample(&mut rng);
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             // Apply inverse CDF transform
             let sample = self.ppf(u_f)?;
@@ -235,7 +235,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
     /// let mean = pareto.mean();
     /// assert!((mean - 1.5).abs() < 1e-7);
     /// ```
@@ -261,19 +261,19 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
     /// let var = pareto.var();
     /// assert!((var - 0.75).abs() < 1e-7);
     /// ```
     pub fn var(&self) -> F {
         // Variance is only defined for shape > 2
-        if self.shape <= F::from(2.0).unwrap() {
+        if self.shape <= F::from(2.0).expect("Failed to convert constant to float") {
             return F::infinity();
         }
 
         // Variance = (scale^2 * shape) / ((shape - 1)^2 * (shape - 2))
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         let shape_minus_one = self.shape - one;
         let shape_minus_two = self.shape - two;
 
@@ -292,13 +292,13 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
     /// let median = pareto.median();
     /// assert!((median - 1.2599210).abs() < 1e-6);
     /// ```
     pub fn median(&self) -> F {
         // Median = scale * 2^(1/shape) + loc
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         let two_pow = two.powf(F::one() / self.shape);
         self.scale * two_pow + self.loc
     }
@@ -314,7 +314,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// ```
     /// use scirs2_stats::distributions::pareto::Pareto;
     ///
-    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
+    /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).expect("Operation failed");
     /// let mode = pareto.mode();
     /// assert!((mode - 1.0).abs() < 1e-7);
     /// ```
@@ -344,7 +344,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
 /// ```
 /// use scirs2_stats::distributions::pareto;
 ///
-/// let p = pareto::pareto(3.0f64, 1.0, 0.0).unwrap();
+/// let p = pareto::pareto(3.0f64, 1.0, 0.0).expect("Operation failed");
 /// let pdf_at_two = p.pdf(2.0);
 /// assert!((pdf_at_two - 0.1875).abs() < 1e-7);
 /// ```
@@ -371,19 +371,19 @@ mod tests {
     #[test]
     fn test_pareto_creation() {
         // Standard Pareto (shape=1, scale=1, loc=0)
-        let pareto1 = Pareto::new(1.0, 1.0, 0.0).unwrap();
+        let pareto1 = Pareto::new(1.0, 1.0, 0.0).expect("Operation failed");
         assert_eq!(pareto1.shape, 1.0);
         assert_eq!(pareto1.scale, 1.0);
         assert_eq!(pareto1.loc, 0.0);
 
         // Pareto with shape=3
-        let pareto3 = Pareto::new(3.0, 1.0, 0.0).unwrap();
+        let pareto3 = Pareto::new(3.0, 1.0, 0.0).expect("Operation failed");
         assert_eq!(pareto3.shape, 3.0);
         assert_eq!(pareto3.scale, 1.0);
         assert_eq!(pareto3.loc, 0.0);
 
         // Custom Pareto
-        let custom = Pareto::new(2.5, 2.0, 1.0).unwrap();
+        let custom = Pareto::new(2.5, 2.0, 1.0).expect("Operation failed");
         assert_eq!(custom.shape, 2.5);
         assert_eq!(custom.scale, 2.0);
         assert_eq!(custom.loc, 1.0);
@@ -398,7 +398,7 @@ mod tests {
     #[test]
     fn test_pareto_pdf() {
         // Pareto with shape=3, scale=1, loc=0
-        let pareto = Pareto::new(3.0, 1.0, 0.0).unwrap();
+        let pareto = Pareto::new(3.0, 1.0, 0.0).expect("Operation failed");
 
         // PDF at x = 1 should be shape = 3.0
         let pdf_at_one = pareto.pdf(1.0);
@@ -413,7 +413,7 @@ mod tests {
         assert_eq!(pdf_at_half, 0.0);
 
         // Custom Pareto with location
-        let custom = Pareto::new(3.0, 1.0, 1.0).unwrap();
+        let custom = Pareto::new(3.0, 1.0, 1.0).expect("Operation failed");
 
         // PDF at x = 2 (with loc=1) should equal pareto.pdf(1.0)
         let pdf_at_two_loc = custom.pdf(2.0);
@@ -427,7 +427,7 @@ mod tests {
     #[test]
     fn test_pareto_cdf() {
         // Pareto with shape=3, scale=1, loc=0
-        let pareto = Pareto::new(3.0, 1.0, 0.0).unwrap();
+        let pareto = Pareto::new(3.0, 1.0, 0.0).expect("Operation failed");
 
         // CDF at x = 1 should be 0
         let cdf_at_one = pareto.cdf(1.0);
@@ -442,7 +442,7 @@ mod tests {
         assert_eq!(cdf_at_half, 0.0);
 
         // Custom Pareto with location
-        let custom = Pareto::new(3.0, 1.0, 1.0).unwrap();
+        let custom = Pareto::new(3.0, 1.0, 1.0).expect("Operation failed");
 
         // CDF at x = 2 (with loc=1) should equal pareto.cdf(1.0)
         let cdf_at_two_loc = custom.cdf(2.0);
@@ -456,25 +456,25 @@ mod tests {
     #[test]
     fn test_pareto_ppf() {
         // Pareto with shape=3, scale=1, loc=0
-        let pareto = Pareto::new(3.0, 1.0, 0.0).unwrap();
+        let pareto = Pareto::new(3.0, 1.0, 0.0).expect("Operation failed");
 
         // PPF at p = 0 should be scale = 1.0
-        let ppf_at_zero = pareto.ppf(0.0).unwrap();
+        let ppf_at_zero = pareto.ppf(0.0).expect("Operation failed");
         assert_eq!(ppf_at_zero, 1.0);
 
         // PPF at p = 0.5 should be scale / (1 - 0.5)^(1/shape) = 1 / 0.5^(1/3) ≈ 1.2599210
-        let ppf_at_half = pareto.ppf(0.5).unwrap();
+        let ppf_at_half = pareto.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half, 1.2599210, epsilon = 1e-6);
 
         // PPF at p = 0.875 should be close to 2.0 (inverse of CDF at x = 2.0)
-        let ppf_at_875 = pareto.ppf(0.875).unwrap();
+        let ppf_at_875 = pareto.ppf(0.875).expect("Operation failed");
         assert_relative_eq!(ppf_at_875, 2.0, epsilon = 1e-6);
 
         // Custom Pareto with location
-        let custom = Pareto::new(3.0, 1.0, 1.0).unwrap();
+        let custom = Pareto::new(3.0, 1.0, 1.0).expect("Operation failed");
 
         // PPF at p = 0.5 should be pareto.ppf(0.5) + loc
-        let ppf_at_half_loc = custom.ppf(0.5).unwrap();
+        let ppf_at_half_loc = custom.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half_loc, ppf_at_half + 1.0, epsilon = 1e-6);
 
         // Error cases
@@ -485,7 +485,7 @@ mod tests {
     #[test]
     fn test_pareto_statistics() {
         // Pareto with shape=3, scale=1, loc=0
-        let pareto = Pareto::new(3.0, 1.0, 0.0).unwrap();
+        let pareto = Pareto::new(3.0, 1.0, 0.0).expect("Operation failed");
 
         // Mean should be (shape * scale) / (shape - 1) = 3 / 2 = 1.5
         let mean = pareto.mean();
@@ -505,17 +505,17 @@ mod tests {
         assert_eq!(mode, 1.0);
 
         // Pareto with shape=1 (mean is not defined)
-        let pareto1 = Pareto::new(1.0, 1.0, 0.0).unwrap();
+        let pareto1 = Pareto::new(1.0, 1.0, 0.0).expect("Operation failed");
         assert!(pareto1.mean().is_infinite());
         assert!(pareto1.var().is_infinite());
 
         // Pareto with shape=1.5 (variance is not defined but mean is)
-        let pareto15 = Pareto::new(1.5, 1.0, 0.0).unwrap();
+        let pareto15 = Pareto::new(1.5, 1.0, 0.0).expect("Operation failed");
         assert!(!pareto15.mean().is_infinite());
         assert!(pareto15.var().is_infinite());
 
         // Custom Pareto with location
-        let custom = Pareto::new(3.0, 1.0, 1.0).unwrap();
+        let custom = Pareto::new(3.0, 1.0, 1.0).expect("Operation failed");
 
         // Mean should be pareto.mean() + loc
         let mean_loc = custom.mean();
@@ -528,10 +528,10 @@ mod tests {
 
     #[test]
     fn test_pareto_rvs() {
-        let pareto = Pareto::new(3.0, 1.0, 0.0).unwrap();
+        let pareto = Pareto::new(3.0, 1.0, 0.0).expect("Operation failed");
 
         // Generate samples
-        let samples = pareto.rvs(1000).unwrap();
+        let samples = pareto.rvs(1000).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 1000);
@@ -551,7 +551,7 @@ mod tests {
 
         // Calculate sample median as a sanity check
         let mut sorted_samples = samples.clone();
-        sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_samples.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let median = if samples.len() % 2 == 0 {
             (sorted_samples[499] + sorted_samples[500]) / 2.0
         } else {

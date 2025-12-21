@@ -60,7 +60,7 @@ fn main() {
 
     // Compare snapshots
     println!("\nComparing snapshots (baseline -> allocated):");
-    let diff = compare_snapshots("baseline", "allocated").unwrap();
+    let diff = compare_snapshots("baseline", "allocated").expect("Operation failed");
     println!("{}", diff.format());
 
     // Example 2: Memory Leak Detection
@@ -88,7 +88,7 @@ fn main() {
 
     // Compare snapshots to detect leaks
     println!("\nAnalyzing for memory leaks:");
-    let leak_diff = compare_snapshots("before_leak", "after_leak").unwrap();
+    let leak_diff = compare_snapshots("before_leak", "after_leak").expect("Operation failed");
 
     println!("{}", leak_diff.format());
 

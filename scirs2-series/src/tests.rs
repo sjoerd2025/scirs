@@ -73,12 +73,14 @@ where
         _lag
     } else {
         // Use Schwert criterion for automatic _lag selection
-        let power = F::from(0.25).unwrap();
-        let max_lag = ((F::from(12).unwrap()
-            * (F::from(n).unwrap() / F::from(100).unwrap()).powf(power))
+        let power = F::from(0.25).expect("Failed to convert constant to float");
+        let max_lag = ((F::from(12).expect("Failed to convert constant to float")
+            * (F::from(n).expect("Failed to convert to float")
+                / F::from(100).expect("Failed to convert constant to float"))
+            .powf(power))
         .floor())
         .to_usize()
-        .unwrap();
+        .expect("Test operation failed");
         select_lag_aic(data, max_lag, regression)?
     };
 
@@ -104,7 +106,8 @@ where
     let residuals = &y_vec - &x_mat.dot(&coeffs);
     let n_obs = y_vec.len();
     let n_params = coeffs.len();
-    let _sigma2 = residuals.dot(&residuals) / F::from(n_obs - n_params).unwrap();
+    let _sigma2 =
+        residuals.dot(&residuals) / F::from(n_obs - n_params).expect("Failed to convert to float");
 
     // Get critical values
     let critical_values = get_adf_critical_values(n_obs, regression)?;
@@ -171,10 +174,14 @@ where
 
     // Determine number of lags for Newey-West estimator
     let lags = lags.unwrap_or_else(|| {
-        let power = F::from(0.25).unwrap();
-        ((F::from(4).unwrap() * (F::from(n).unwrap() / F::from(100).unwrap()).powf(power)).floor())
-            .to_usize()
-            .unwrap()
+        let power = F::from(0.25).expect("Failed to convert constant to float");
+        ((F::from(4).expect("Failed to convert constant to float")
+            * (F::from(n).expect("Failed to convert to float")
+                / F::from(100).expect("Failed to convert constant to float"))
+            .powf(power))
+        .floor())
+        .to_usize()
+        .expect("Test operation failed")
     });
 
     // Detrend the series
@@ -196,7 +203,8 @@ where
 
     // Calculate test statistic
     let s2 = newey_west_variance(&residuals_, lags)?;
-    let test_statistic = partial_sums.dot(&partial_sums) / (F::from(n * n).unwrap() * s2);
+    let test_statistic = partial_sums.dot(&partial_sums)
+        / (F::from(n * n).expect("Failed to convert to float") * s2);
 
     // Get critical values
     let critical_values = get_kpss_critical_values(test_type)?;
@@ -254,10 +262,14 @@ where
 
     // Determine number of lags for Newey-West
     let lags = lags.unwrap_or_else(|| {
-        let power = F::from(0.25).unwrap();
-        ((F::from(4).unwrap() * (F::from(n).unwrap() / F::from(100).unwrap()).powf(power)).floor())
-            .to_usize()
-            .unwrap()
+        let power = F::from(0.25).expect("Failed to convert constant to float");
+        ((F::from(4).expect("Failed to convert constant to float")
+            * (F::from(n).expect("Failed to convert to float")
+                / F::from(100).expect("Failed to convert constant to float"))
+            .powf(power))
+        .floor())
+        .to_usize()
+        .expect("Test operation failed")
     });
 
     // Run basic Dickey-Fuller regression
@@ -280,12 +292,15 @@ where
 
     // Newey-West variance estimation
     let s2_nw = newey_west_variance(&residuals, lags)?;
-    let s2_ols = residuals.dot(&residuals) / F::from(n - coeffs.len()).unwrap();
+    let s2_ols =
+        residuals.dot(&residuals) / F::from(n - coeffs.len()).expect("Test operation failed");
 
     // Phillips-Perron adjustment
     let t_stat = rho_hat / s2_ols.sqrt();
-    let adjustment = (s2_nw - s2_ols) / (F::from(2).unwrap() * s2_nw.sqrt());
-    let test_statistic = t_stat - adjustment * F::from(n).unwrap().sqrt();
+    let adjustment = (s2_nw - s2_ols)
+        / (F::from(2).expect("Failed to convert constant to float") * s2_nw.sqrt());
+    let test_statistic =
+        t_stat - adjustment * F::from(n).expect("Failed to convert to float").sqrt();
 
     // Get critical values and p-value
     let critical_values = get_adf_critical_values(n, regression)?;
@@ -401,7 +416,7 @@ where
     // Add trend if needed
     if regression == ADFRegression::ConstantAndTrend {
         for i in 0..n {
-            x_mat[[i, col]] = F::from(i + 1).unwrap();
+            x_mat[[i, col]] = F::from(i + 1).expect("Failed to convert to float");
         }
     }
 
@@ -420,7 +435,7 @@ where
 
     // Use regularized inversion for numerical stability
     let n = xtx.shape()[0];
-    let lambda = F::from(1e-6).unwrap();
+    let lambda = F::from(1e-6).expect("Failed to convert constant to float");
     let mut xtx_reg = xtx;
     for i in 0..n {
         xtx_reg[[i, i]] = xtx_reg[[i, i]] + lambda;
@@ -459,13 +474,17 @@ where
         {
             if let Ok(coeffs) = ols_regression(&x_mat, &y_vec) {
                 let residuals = &y_vec - &x_mat.dot(&coeffs);
-                let n = F::from(y_vec.len()).unwrap();
-                let k = F::from(coeffs.len()).unwrap();
+                let n = F::from(y_vec.len()).expect("Test operation failed");
+                let k = F::from(coeffs.len()).expect("Test operation failed");
                 let rss = residuals.dot(&residuals);
 
-                let aic = n * (F::one() + (F::from(2.0 * std::f64::consts::PI).unwrap()).ln())
+                let aic = n
+                    * (F::one()
+                        + (F::from(2.0 * std::f64::consts::PI)
+                            .expect("Failed to convert to float"))
+                        .ln())
                     + n * (rss / n).ln()
-                    + F::from(2.0).unwrap() * k;
+                    + F::from(2.0).expect("Failed to convert constant to float") * k;
 
                 if aic < best_aic {
                     best_aic = aic;
@@ -485,7 +504,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    let mean = data.mean().unwrap();
+    let mean = data.mean().expect("Test operation failed");
     let residuals = data.mapv(|x| x - mean);
     Ok((residuals, mean))
 }
@@ -505,7 +524,7 @@ where
     // Design matrix: [1 t]
     for i in 0..n {
         x_mat[[i, 0]] = F::one();
-        x_mat[[i, 1]] = F::from(i).unwrap();
+        x_mat[[i, 1]] = F::from(i).expect("Failed to convert to float");
     }
 
     let coeffs = ols_regression(&x_mat, &data.to_owned())?;
@@ -524,13 +543,17 @@ where
 {
     let n = residuals.len();
     let residuals_owned = residuals.to_owned();
-    let mut variance = residuals_owned.dot(&residuals_owned) / F::from(n).unwrap();
+    let mut variance =
+        residuals_owned.dot(&residuals_owned) / F::from(n).expect("Failed to convert to float");
 
     // Add autocovariance terms with Bartlett weights
     for lag in 1..=lags {
-        let weight = F::one() - F::from(lag).unwrap() / F::from(lags + 1).unwrap();
+        let weight = F::one()
+            - F::from(lag).expect("Failed to convert to float")
+                / F::from(lags + 1).expect("Failed to convert to float");
         if let Ok(acov) = autocovariance(&residuals.to_owned(), lag) {
-            variance = variance + F::from(2.0).unwrap() * weight * acov;
+            variance = variance
+                + F::from(2.0).expect("Failed to convert constant to float") * weight * acov;
         }
     }
 
@@ -546,19 +569,19 @@ where
     // These are approximate values - in practice would use MacKinnon tables
     let cv = match regression {
         ADFRegression::NoConstantNoTrend => CriticalValues {
-            cv_1_percent: F::from(-2.58).unwrap(),
-            cv_5_percent: F::from(-1.95).unwrap(),
-            cv_10_percent: F::from(-1.62).unwrap(),
+            cv_1_percent: F::from(-2.58).expect("Failed to convert constant to float"),
+            cv_5_percent: F::from(-1.95).expect("Failed to convert constant to float"),
+            cv_10_percent: F::from(-1.62).expect("Failed to convert constant to float"),
         },
         ADFRegression::ConstantNoTrend => CriticalValues {
-            cv_1_percent: F::from(-3.43).unwrap(),
-            cv_5_percent: F::from(-2.86).unwrap(),
-            cv_10_percent: F::from(-2.57).unwrap(),
+            cv_1_percent: F::from(-3.43).expect("Failed to convert constant to float"),
+            cv_5_percent: F::from(-2.86).expect("Failed to convert constant to float"),
+            cv_10_percent: F::from(-2.57).expect("Failed to convert constant to float"),
         },
         ADFRegression::ConstantAndTrend => CriticalValues {
-            cv_1_percent: F::from(-3.96).unwrap(),
-            cv_5_percent: F::from(-3.41).unwrap(),
-            cv_10_percent: F::from(-3.12).unwrap(),
+            cv_1_percent: F::from(-3.96).expect("Failed to convert constant to float"),
+            cv_5_percent: F::from(-3.41).expect("Failed to convert constant to float"),
+            cv_10_percent: F::from(-3.12).expect("Failed to convert constant to float"),
         },
     };
 
@@ -576,13 +599,13 @@ where
     let critical_values = get_adf_critical_values(n, regression)?;
 
     if _teststat < critical_values.cv_1_percent {
-        Ok(F::from(0.001).unwrap())
+        Ok(F::from(0.001).expect("Failed to convert constant to float"))
     } else if _teststat < critical_values.cv_5_percent {
-        Ok(F::from(0.025).unwrap())
+        Ok(F::from(0.025).expect("Failed to convert constant to float"))
     } else if _teststat < critical_values.cv_10_percent {
-        Ok(F::from(0.075).unwrap())
+        Ok(F::from(0.075).expect("Failed to convert constant to float"))
     } else {
-        Ok(F::from(0.15).unwrap())
+        Ok(F::from(0.15).expect("Failed to convert constant to float"))
     }
 }
 
@@ -594,14 +617,14 @@ where
 {
     let cv = match _testtype {
         KPSSType::Constant => CriticalValues {
-            cv_1_percent: F::from(0.739).unwrap(),
-            cv_5_percent: F::from(0.463).unwrap(),
-            cv_10_percent: F::from(0.347).unwrap(),
+            cv_1_percent: F::from(0.739).expect("Failed to convert constant to float"),
+            cv_5_percent: F::from(0.463).expect("Failed to convert constant to float"),
+            cv_10_percent: F::from(0.347).expect("Failed to convert constant to float"),
         },
         KPSSType::Trend => CriticalValues {
-            cv_1_percent: F::from(0.216).unwrap(),
-            cv_5_percent: F::from(0.146).unwrap(),
-            cv_10_percent: F::from(0.119).unwrap(),
+            cv_1_percent: F::from(0.216).expect("Failed to convert constant to float"),
+            cv_5_percent: F::from(0.146).expect("Failed to convert constant to float"),
+            cv_10_percent: F::from(0.119).expect("Failed to convert constant to float"),
         },
     };
 
@@ -617,13 +640,13 @@ where
     let critical_values = get_kpss_critical_values(testtype)?;
 
     if _test_stat > critical_values.cv_1_percent {
-        Ok(F::from(0.001).unwrap())
+        Ok(F::from(0.001).expect("Failed to convert constant to float"))
     } else if _test_stat > critical_values.cv_5_percent {
-        Ok(F::from(0.025).unwrap())
+        Ok(F::from(0.025).expect("Failed to convert constant to float"))
     } else if _test_stat > critical_values.cv_10_percent {
-        Ok(F::from(0.075).unwrap())
+        Ok(F::from(0.075).expect("Failed to convert constant to float"))
     } else {
-        Ok(F::from(0.15).unwrap())
+        Ok(F::from(0.15).expect("Failed to convert constant to float"))
     }
 }
 
@@ -671,7 +694,7 @@ where
         }
 
         // Check for singular matrix
-        if aug[[i, i]].abs() < F::from(1e-10).unwrap() {
+        if aug[[i, i]].abs() < F::from(1e-10).expect("Failed to convert constant to float") {
             return Err(TimeSeriesError::ComputationError(
                 "Matrix is singular".to_string(),
             ));

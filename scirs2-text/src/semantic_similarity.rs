@@ -132,7 +132,7 @@ impl WordMoversDistance {
                 edges.push((distances[[i, j]], word1.to_string(), word2.to_string()));
             }
         }
-        edges.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        edges.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         // Greedily assign mass
         for (distance, word1, word2) in edges {
@@ -1255,7 +1255,7 @@ impl DistributionalSimilarity {
             })
             .collect();
 
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         similarities.truncate(topk);
         similarities
     }
@@ -1384,7 +1384,7 @@ impl TopicBasedSimilarity {
             })
             .collect();
 
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         similarities.truncate(topk);
         Ok(similarities)
     }
@@ -1401,10 +1401,11 @@ mod tests {
 
         let sim1 =
             LcsSimilarity::similarity("the quick brown fox", "the fast brown fox", &tokenizer)
-                .unwrap();
+                .expect("Operation failed");
         assert!(sim1 > 0.5); // Should have high similarity
 
-        let sim2 = LcsSimilarity::similarity("hello world", "goodbye moon", &tokenizer).unwrap();
+        let sim2 = LcsSimilarity::similarity("hello world", "goodbye moon", &tokenizer)
+            .expect("Operation failed");
         assert!(sim2 < 0.3); // Should have low similarity
     }
 
@@ -1419,7 +1420,7 @@ mod tests {
 
         let sim = weighted_jaccard
             .similarity("the important document", "the important paper", &tokenizer)
-            .unwrap();
+            .expect("Operation failed");
 
         // Should give high weight to "important" which is common
         assert!(sim > 0.7);
@@ -1438,7 +1439,7 @@ mod tests {
 
         let sim = soft_cosine
             .similarity("cat dog", "dog cat", &tokenizer)
-            .unwrap();
+            .expect("Operation failed");
 
         // Should be very high as they contain the same words
         assert!(sim > 0.9);
@@ -1462,8 +1463,10 @@ mod tests {
         // Similar words should have lower distance
         let sim1 = semantic_edit
             .similarity("cat", "kitten", &tokenizer)
-            .unwrap();
-        let sim2 = semantic_edit.similarity("cat", "dog", &tokenizer).unwrap();
+            .expect("Operation failed");
+        let sim2 = semantic_edit
+            .similarity("cat", "dog", &tokenizer)
+            .expect("Operation failed");
 
         assert!(sim1 > sim2); // Cat and kitten are more similar than cat and dog
     }
@@ -1482,7 +1485,7 @@ mod tests {
 
         let sim = sentence_sim
             .similarity("the quick brown fox", "the fast brown fox", &tokenizer)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(sim > 0.7); // Should be high due to similar embeddings for quick/fast
     }
@@ -1510,9 +1513,15 @@ mod tests {
         let text1 = "high low";
         let text2 = "high high";
 
-        let mean_result = mean_sim.similarity(text1, text2, &tokenizer).unwrap();
-        let max_result = max_sim.similarity(text1, text2, &tokenizer).unwrap();
-        let weighted_result = weighted_sim.similarity(text1, text2, &tokenizer).unwrap();
+        let mean_result = mean_sim
+            .similarity(text1, text2, &tokenizer)
+            .expect("Operation failed");
+        let max_result = max_sim
+            .similarity(text1, text2, &tokenizer)
+            .expect("Operation failed");
+        let weighted_result = weighted_sim
+            .similarity(text1, text2, &tokenizer)
+            .expect("Operation failed");
 
         // All should be valid similarities
         assert!((0.0..=1.0).contains(&mean_result));
@@ -1535,7 +1544,7 @@ mod tests {
 
         let sim = ngram_sim
             .similarity("machine learning", "artificial intelligence", &tokenizer)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(sim > 0.0); // Should have some similarity due to related concepts
     }
@@ -1559,7 +1568,9 @@ mod tests {
 
         let tokenizer = WordTokenizer::default();
 
-        let sim = ensemble.similarity("cat", "kitten", &tokenizer).unwrap();
+        let sim = ensemble
+            .similarity("cat", "kitten", &tokenizer)
+            .expect("Operation failed");
         assert!(sim > 0.0 && sim <= 1.0);
     }
 
@@ -1581,7 +1592,7 @@ mod tests {
                 "the brown quick fox", // Different order but same words
                 &tokenizer,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         // Should still have some similarity due to skip-grams
         assert!(sim > 0.3);
@@ -1620,7 +1631,7 @@ mod tests {
         let tokenizer = WordTokenizer::default();
         let text_sim = conceptual_sim
             .text_similarity("cat runs", "dog runs", &tokenizer)
-            .unwrap();
+            .expect("Operation failed");
         assert!(text_sim > 0.0);
     }
 
@@ -1637,7 +1648,8 @@ mod tests {
             "cat runs in park".to_string(),
         ];
 
-        let dist_sim = DistributionalSimilarity::from_corpus(&corpus, &tokenizer, 2).unwrap();
+        let dist_sim = DistributionalSimilarity::from_corpus(&corpus, &tokenizer, 2)
+            .expect("Operation failed");
 
         // Test word similarity
         let sim_cat_dog = dist_sim.word_similarity("cat", "dog");
@@ -1650,7 +1662,7 @@ mod tests {
         // Test text similarity
         let text_sim = dist_sim
             .text_similarity("cat runs", "dog runs", &tokenizer)
-            .unwrap();
+            .expect("Operation failed");
         assert!(text_sim >= 0.0);
 
         // Test most similar words
@@ -1676,8 +1688,12 @@ mod tests {
         topic_sim.add_document_topics("doc3".to_string(), topics3);
 
         // Test cosine similarity
-        let sim_1_2 = topic_sim.similarity("doc1", "doc2").unwrap();
-        let sim_1_3 = topic_sim.similarity("doc1", "doc3").unwrap();
+        let sim_1_2 = topic_sim
+            .similarity("doc1", "doc2")
+            .expect("Operation failed");
+        let sim_1_3 = topic_sim
+            .similarity("doc1", "doc3")
+            .expect("Operation failed");
 
         // Documents with similar topic distributions should be more similar
         assert!(sim_1_2 > sim_1_3);
@@ -1685,7 +1701,9 @@ mod tests {
         assert!(sim_1_3 >= 0.0);
 
         // Test most similar documents
-        let similar_docs = topic_sim.most_similar_documents("doc1", 2).unwrap();
+        let similar_docs = topic_sim
+            .most_similar_documents("doc1", 2)
+            .expect("Operation failed");
         assert_eq!(similar_docs.len(), 2);
         assert_eq!(similar_docs[0].0, "doc2"); // Should be most similar
         assert!(similar_docs[0].1 > similar_docs[1].1);
@@ -1710,9 +1728,13 @@ mod tests {
         hellinger_sim.add_document_topics("doc1".to_string(), topics1);
         hellinger_sim.add_document_topics("doc2".to_string(), topics2);
 
-        let cosine_result = cosine_sim.similarity("doc1", "doc2").unwrap();
-        let js_result = js_sim.similarity("doc1", "doc2").unwrap();
-        let hellinger_result = hellinger_sim.similarity("doc1", "doc2").unwrap();
+        let cosine_result = cosine_sim
+            .similarity("doc1", "doc2")
+            .expect("Operation failed");
+        let js_result = js_sim.similarity("doc1", "doc2").expect("Operation failed");
+        let hellinger_result = hellinger_sim
+            .similarity("doc1", "doc2")
+            .expect("Operation failed");
 
         // All similarity measures should return valid values
         assert!((0.0..=1.0).contains(&cosine_result));
@@ -1741,7 +1763,8 @@ mod tests {
 
         // Empty corpus
         let empty_corpus = vec![];
-        let dist_sim = DistributionalSimilarity::from_corpus(&empty_corpus, &tokenizer, 2).unwrap();
+        let dist_sim = DistributionalSimilarity::from_corpus(&empty_corpus, &tokenizer, 2)
+            .expect("Operation failed");
 
         let sim = dist_sim.word_similarity("word1", "word2");
         assert_eq!(sim, 0.0);
@@ -1751,7 +1774,9 @@ mod tests {
         assert_eq!(sim_same, 1.0);
 
         // Test text similarity with empty texts
-        let text_sim = dist_sim.text_similarity("", "", &tokenizer).unwrap();
+        let text_sim = dist_sim
+            .text_similarity("", "", &tokenizer)
+            .expect("Operation failed");
         assert_eq!(text_sim, 0.0);
     }
 
@@ -1776,13 +1801,16 @@ mod tests {
             "dog animal plays".to_string(),
         ];
         let tokenizer = WordTokenizer::default();
-        let dist_sim = DistributionalSimilarity::from_corpus(&corpus, &tokenizer, 2).unwrap();
+        let dist_sim = DistributionalSimilarity::from_corpus(&corpus, &tokenizer, 2)
+            .expect("Operation failed");
 
         // Test individual components
         let conceptual_result = conceptual_sim
             .text_similarity("cat", "dog", &tokenizer)
-            .unwrap();
-        let distributional_result = dist_sim.text_similarity("cat", "dog", &tokenizer).unwrap();
+            .expect("Operation failed");
+        let distributional_result = dist_sim
+            .text_similarity("cat", "dog", &tokenizer)
+            .expect("Operation failed");
 
         assert!(conceptual_result >= 0.0);
         assert!(distributional_result >= 0.0);

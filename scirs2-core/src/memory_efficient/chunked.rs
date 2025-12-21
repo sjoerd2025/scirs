@@ -367,7 +367,7 @@ where
                 (chunk_size, num_chunks)
             }
             ChunkingStrategy::Advanced(advanced_strategy) => {
-                let opt = optimizer.as_mut().unwrap();
+                let opt = optimizer.as_mut().expect("Operation failed");
                 let chunk_size = match advanced_strategy {
                     AdvancedChunkingStrategy::CacheLineAligned => {
                         opt.calculate_cache_aware_chunk_size::<A>(total_elements)

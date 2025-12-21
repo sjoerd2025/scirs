@@ -156,7 +156,7 @@ mod tests {
         // Test that 3D uniform filter now works (implementation has been added)
         let uniform_result = uniform_filter(&input, &[3, 3, 3], None, None);
         assert!(uniform_result.is_ok());
-        let uniform_output = uniform_result.unwrap();
+        let uniform_output = uniform_result.expect("Test: operation failed");
         assert!(uniform_output[[1, 1, 1]] > 0.0); // Should smooth the center value
         assert_eq!(uniform_output.shape(), &[3, 3, 3]);
 
@@ -185,7 +185,7 @@ mod tests {
 
         let sep_result = uniform_filter_separable(&input, &[3, 3, 3], None, None);
         assert!(sep_result.is_ok());
-        let sep_output = sep_result.unwrap();
+        let sep_output = sep_result.expect("Test: operation failed");
         assert_eq!(sep_output.shape(), &[3, 3, 3]);
     }
 

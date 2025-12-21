@@ -208,7 +208,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for SqueezeExcitat
                         sum = sum + input[[b, c, h, w]];
                     }
                 }
-                x[[b, c, 0, 0]] = sum / F::from(height * width).unwrap();
+                x[[b, c, 0, 0]] = sum / F::from(height * width).expect("Failed to convert to float");
             }
         // Apply squeeze
         let x = self.fc1.forward(&x)?;
@@ -268,7 +268,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> MBConvBlock<F> {
         let kernel_size = config.kernel_size;
         let stride = config.stride;
         let use_se = config.use_se;
-        let drop_connect_rate = F::from(_config.drop_connect_rate).unwrap();
+        let drop_connect_rate = F::from(_config.drop_connect_rate).expect("Failed to convert to float");
         // Check if we use skip connection
         let has_skip_connection = input_channels == output_channels && stride == 1;
         // Create expansion convolution if needed
@@ -327,7 +327,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> MBConvBlock<F> {
             return input.clone();
         // Generate a random tensor for binary mask
         let keep_prob = F::one() - self.drop_connect_rate;
-        if rng.random::<f64>() > self.drop_connect_rate.to_f64().unwrap() {
+        if rng.random::<f64>() > self.drop_connect_rate.to_f64().expect("Operation failed") {
             // Correct the drop value to maintain same expectation
             result = result.mapv(|x| x / keep_prob);
             // Drop entire residual path
@@ -497,7 +497,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for EfficientNet<F
         let width = x.shape()[3];
         let mut pooled = Array::zeros(IxDyn(&[batch_size, channels]));
                         sum = sum + x[[b, c, h, w]];
-                pooled[[b, c]] = sum / F::from(height * width).unwrap();
+                pooled[[b, c]] = sum / F::from(height * width).expect("Failed to convert to float");
         let pooled = self.dropout.forward(&pooled)?;
         let logits = self.classifier.forward(&pooled)?;
         Ok(logits)

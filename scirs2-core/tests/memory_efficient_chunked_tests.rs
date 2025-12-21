@@ -47,7 +47,7 @@ mod tests {
             |chunk| chunk.map(|&x| x * x),
             ChunkingStrategy::Fixed(3),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Check that all elements are correctly squared
         let expected = Array1::from_vec(vec![1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0]);
@@ -66,7 +66,7 @@ mod tests {
             |chunk_a, chunk_b| chunk_a + chunk_b,
             ChunkingStrategy::Fixed(2),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Check that all elements are correctly added
         let expected = Array1::from_vec(vec![6.0, 8.0, 10.0, 12.0]);
@@ -84,7 +84,7 @@ mod tests {
             |partial_sums| partial_sums.into_iter().sum(),
             ChunkingStrategy::Fixed(3),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Check that all elements are correctly summed
         let expected: f64 = 36.0; // 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 = 36
@@ -106,7 +106,7 @@ mod tests {
             |chunk| chunk.map(|&x| x * 2.0),
             ChunkingStrategy::Auto,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert_eq!(result.shape(), data.shape());
         assert_relative_eq!(result[[0, 0]], 2.0, epsilon = 1e-10);

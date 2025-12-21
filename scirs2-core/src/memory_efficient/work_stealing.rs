@@ -749,7 +749,7 @@ impl WorkStealingScheduler {
 
         // Fall back to global queue
         let prioritized_task = PrioritizedTask::new(task, priority, numa_hint);
-        let mut global_queue = self.global_queue.lock().unwrap();
+        let mut global_queue = self.global_queue.lock().expect("Operation failed");
         global_queue.push(prioritized_task).map_err(|_| {
             CoreError::StreamError(
                 ErrorContext::new("Global task queue is full".to_string())
@@ -798,7 +798,7 @@ impl WorkStealingScheduler {
 
     /// Get current scheduler statistics
     pub fn stats(&self) -> SchedulerStats {
-        self.stats.read().unwrap().clone()
+        self.stats.read().expect("Operation failed").clone()
     }
 
     /// Stop the scheduler
@@ -820,11 +820,11 @@ impl WorkStealingScheduler {
 
     /// Get the number of pending tasks
     pub fn pending_tasks(&self) -> usize {
-        let global_pending = self.global_queue.lock().unwrap().len();
+        let global_pending = self.global_queue.lock().expect("Operation failed").len();
         let local_pending: usize = self
             .workers
             .iter()
-            .map(|w| w.local_queue.lock().unwrap().len())
+            .map(|w| w.local_queue.lock().expect("Operation failed").len())
             .sum();
 
         global_pending + local_pending
@@ -1012,11 +1012,13 @@ mod tests {
 
     #[test]
     fn test_task_submission_and_execution() {
-        let mut scheduler = create_work_stealing_scheduler().unwrap();
-        scheduler.start().unwrap();
+        let mut scheduler = create_work_stealing_scheduler().expect("Operation failed");
+        scheduler.start().expect("Operation failed");
 
         // Submit a simple task
-        scheduler.submit(TaskPriority::Normal, || 42).unwrap();
+        scheduler
+            .submit(TaskPriority::Normal, || 42)
+            .expect("Operation failed");
 
         // Wait a bit and try to receive the result
         std::thread::sleep(Duration::from_millis(100));
@@ -1025,13 +1027,13 @@ mod tests {
             assert_eq!(result, 42);
         }
 
-        scheduler.stop().unwrap();
+        scheduler.stop().expect("Operation failed");
     }
 
     #[test]
     fn test_priority_scheduling() {
-        let mut scheduler = create_work_stealing_scheduler().unwrap();
-        scheduler.start().unwrap();
+        let mut scheduler = create_work_stealing_scheduler().expect("Operation failed");
+        scheduler.start().expect("Operation failed");
 
         let counter = Arc::new(AtomicU32::new(0));
         let counter_clone = counter.clone();
@@ -1042,7 +1044,7 @@ mod tests {
                 std::thread::sleep(Duration::from_millis(50));
                 counter_clone.store(1, Ordering::Relaxed);
             })
-            .unwrap();
+            .expect("Operation failed");
 
         let counter_clone = counter.clone();
 
@@ -1051,7 +1053,7 @@ mod tests {
             .submit(TaskPriority::High, move || {
                 counter_clone.store(2, Ordering::Relaxed);
             })
-            .unwrap();
+            .expect("Operation failed");
 
         // Wait for tasks to complete
         std::thread::sleep(Duration::from_millis(200));
@@ -1059,19 +1061,19 @@ mod tests {
         // High priority task should have run (and set counter to 2)
         // Note: This test is probabilistic and may not always pass due to timing
 
-        scheduler.stop().unwrap();
+        scheduler.stop().expect("Operation failed");
     }
 
     #[test]
     fn test_scheduler_stats() {
-        let mut scheduler = create_work_stealing_scheduler().unwrap();
-        scheduler.start().unwrap();
+        let mut scheduler = create_work_stealing_scheduler().expect("Operation failed");
+        scheduler.start().expect("Operation failed");
 
         // Submit multiple tasks
         for i in 0..10 {
             scheduler
                 .submit(TaskPriority::Normal, move || i * 2)
-                .unwrap();
+                .expect("Operation failed");
         }
 
         // Wait for tasks to complete
@@ -1080,7 +1082,7 @@ mod tests {
         let stats = scheduler.stats();
         assert!(stats.tasks_submitted >= 10);
 
-        scheduler.stop().unwrap();
+        scheduler.stop().expect("Operation failed");
     }
 
     #[test]

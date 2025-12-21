@@ -160,7 +160,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         |current, total| {
             // Only print progress updates at 10% intervals
             let percent = current * 100 / total;
-            let mut last = last_progress.lock().unwrap();
+            let mut last = last_progress.lock().expect("Operation failed");
             if percent / 10 > *last / 10 {
                 println!("  Progress: {current}/{total}  ({percent}%)");
                 *last = percent;

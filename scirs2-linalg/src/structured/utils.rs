@@ -784,7 +784,8 @@ where
                 }
 
                 if i == j {
-                    new_result[[i, j]] = A::from(2.0).unwrap() * result[[i, j]] - sum;
+                    new_result[[i, j]] =
+                        A::from(2.0).expect("Operation failed") * result[[i, j]] - sum;
                 } else {
                     new_result[[i, j]] = -sum;
                 }
@@ -875,12 +876,14 @@ where
     // For small sizes, use direct computation
     if n <= 4 {
         let mut result = Array1::zeros(n);
-        let two_pi = A::from(2.0 * std::f64::consts::PI).unwrap();
+        let two_pi = A::from(2.0 * std::f64::consts::PI).expect("Operation failed");
 
         for k in 0..n {
             for j in 0..n {
-                let angle = -two_pi * A::from(k as f64).unwrap() * A::from(j as f64).unwrap()
-                    / A::from(n as f64).unwrap();
+                let angle = -two_pi
+                    * A::from(k as f64).expect("Operation failed")
+                    * A::from(j as f64).expect("Operation failed")
+                    / A::from(n as f64).expect("Operation failed");
                 let real_part = angle.cos();
                 let _imag_part = angle.sin();
 
@@ -894,12 +897,14 @@ where
     // For larger sizes, we would normally use FFT
     // This is a simplified direct implementation
     let mut result = Array1::zeros(n);
-    let two_pi = A::from(2.0 * std::f64::consts::PI).unwrap();
+    let two_pi = A::from(2.0 * std::f64::consts::PI).expect("Operation failed");
 
     for k in 0..n {
         for j in 0..n {
-            let angle = -two_pi * A::from(k as f64).unwrap() * A::from(j as f64).unwrap()
-                / A::from(n as f64).unwrap();
+            let angle = -two_pi
+                * A::from(k as f64).expect("Operation failed")
+                * A::from(j as f64).expect("Operation failed")
+                / A::from(n as f64).expect("Operation failed");
             result[k] += x[j] * angle.cos(); // Real part only for simplicity
         }
     }
@@ -949,7 +954,7 @@ where
     }
 
     // Normalize by 1/sqrt(n) for orthogonal transform
-    let norm_factor = A::one() / A::from(n as f64).unwrap().sqrt();
+    let norm_factor = A::one() / A::from(n as f64).expect("Operation failed").sqrt();
     result.mapv_inplace(|x| x * norm_factor);
 
     Ok(result)
@@ -966,7 +971,7 @@ mod tests {
         let a = array![1.0, 2.0, 3.0];
         let b = array![4.0, 5.0];
 
-        let result = convolution(a.view(), b.view(), "full").unwrap();
+        let result = convolution(a.view(), b.view(), "full").expect("Operation failed");
 
         // Expected: [1*4, 1*5+2*4, 2*5+3*4, 3*5] = [4, 13, 22, 15]
         assert_eq!(result.len(), 4);
@@ -981,7 +986,7 @@ mod tests {
         let a = array![1.0, 2.0, 3.0];
         let b = array![4.0, 5.0];
 
-        let result = convolution(a.view(), b.view(), "same").unwrap();
+        let result = convolution(a.view(), b.view(), "same").expect("Operation failed");
 
         // Full result: [4, 13, 22, 15]
         // "same" result with input size 3 should be [13, 22, 15]
@@ -996,7 +1001,7 @@ mod tests {
         let a = array![1.0, 2.0, 3.0, 4.0];
         let b = array![5.0, 6.0];
 
-        let result = convolution(a.view(), b.view(), "valid").unwrap();
+        let result = convolution(a.view(), b.view(), "valid").expect("Operation failed");
 
         // Valid convolution: [1*5+2*6, 2*5+3*6, 3*5+4*6] = [17, 28, 39]
         assert_eq!(result.len(), 3);
@@ -1010,7 +1015,7 @@ mod tests {
         let a = array![1.0, 2.0, 3.0, 4.0];
         let b = array![5.0, 6.0, 7.0, 8.0];
 
-        let result = circular_convolution(a.view(), b.view()).unwrap();
+        let result = circular_convolution(a.view(), b.view()).expect("Operation failed");
 
         // Implementation computes:
         // result[0] = 1*5 + 2*6 + 3*7 + 4*8 = 5 + 12 + 21 + 32 = 70
@@ -1036,7 +1041,7 @@ mod tests {
         // Empty inputs
         let empty = array![];
         let result = convolution(empty.view(), b.view(), "full");
-        assert_eq!(result.unwrap().len(), 0);
+        assert_eq!(result.expect("Operation failed").len(), 0);
 
         // Different lengths for circular convolution
         let a = array![1.0, 2.0, 3.0];
@@ -1053,7 +1058,7 @@ mod tests {
         let b = array![5.0, 11.0, 10.0]; // Right-hand side
 
         // Solve the system
-        let x = solve_toeplitz(c.view(), r.view(), b.view()).unwrap();
+        let x = solve_toeplitz(c.view(), r.view(), b.view()).expect("Operation failed");
 
         // For a 3x3 Toeplitz matrix, the full matrix would be:
         // [[1, 4, 5],
@@ -1080,7 +1085,7 @@ mod tests {
         let b = array![14.0, 10.0, 12.0]; // Right-hand side
 
         // Solve the system
-        let x = solve_circulant(c.view(), b.view()).unwrap();
+        let x = solve_circulant(c.view(), b.view()).expect("Operation failed");
 
         // For a 3x3 circulant matrix with first row [1, 2, 3], the full matrix would be:
         // [[1, 2, 3],

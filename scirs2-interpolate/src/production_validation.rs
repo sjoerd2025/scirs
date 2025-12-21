@@ -347,26 +347,31 @@ impl ProductionValidator {
                     for i in 0..10 {
                         let size = 50 + (thread_id * 10) + i;
                         // Generate test data inline
-                        let x = Array1::linspace(F::zero(), F::from(10.0).unwrap(), size);
+                        let x = Array1::linspace(
+                            F::zero(),
+                            F::from(10.0).expect("Failed to convert constant to float"),
+                            size,
+                        );
                         let y = x.mapv(|xi| {
                             let xi_f64 = xi.to_f64().unwrap_or(0.0);
-                            F::from((xi_f64 * 0.5).sin() + 0.1 * xi_f64).unwrap()
+                            F::from((xi_f64 * 0.5).sin() + 0.1 * xi_f64).expect("Operation failed")
                         });
 
                         // Test interpolator inline
                         match CubicSpline::new(&x.view(), &y.view()) {
                             Ok(spline) => {
                                 // Test evaluation
-                                let test_x = F::from(5.0).unwrap();
+                                let test_x =
+                                    F::from(5.0).expect("Failed to convert constant to float");
                                 if let Err(e) = spline.evaluate(test_x) {
-                                    errors_clone.lock().unwrap().push(format!(
+                                    errors_clone.lock().expect("Operation failed").push(format!(
                                         "Thread {} iteration {} evaluation failed: {}",
                                         thread_id, i, e
                                     ));
                                 }
                             }
                             Err(e) => {
-                                errors_clone.lock().unwrap().push(format!(
+                                errors_clone.lock().expect("Operation failed").push(format!(
                                     "Thread {} iteration {} spline creation failed: {}",
                                     thread_id, i, e
                                 ));
@@ -383,7 +388,7 @@ impl ProductionValidator {
         }
 
         let execution_time = start_time.elapsed().as_millis() as u64;
-        let thread_errors = errors.lock().unwrap();
+        let thread_errors = errors.lock().expect("Operation failed");
         let passed = thread_errors.is_empty();
 
         Ok(ProductionTestResult {
@@ -579,10 +584,14 @@ impl ProductionValidator {
     where
         F: Float + FromPrimitive,
     {
-        let x = Array1::linspace(F::zero(), F::from(10.0).unwrap(), n);
+        let x = Array1::linspace(
+            F::zero(),
+            F::from(10.0).expect("Failed to convert constant to float"),
+            n,
+        );
         let y = x.mapv(|xi| {
             let xi_f64 = xi.to_f64().unwrap_or(0.0);
-            F::from((xi_f64 * 0.5).sin() + 0.1 * xi_f64).unwrap()
+            F::from((xi_f64 * 0.5).sin() + 0.1 * xi_f64).expect("Operation failed")
         });
         Ok((x, y))
     }
@@ -598,7 +607,7 @@ impl ProductionValidator {
         let spline = CubicSpline::new(&x.view(), &y.view())?;
 
         // Test evaluation at a few points
-        let test_x = F::from(5.0).unwrap();
+        let test_x = F::from(5.0).expect("Failed to convert constant to float");
         let _result = spline.evaluate(test_x)?;
 
         Ok(())
@@ -643,14 +652,14 @@ impl ProductionValidator {
 
         // Test 1: NaN values
         let nan_x = Array1::from(vec![
-            F::from_f64(f64::NAN).unwrap(),
+            F::from_f64(f64::NAN).expect("Operation failed"),
             F::one(),
-            F::from_f64(2.0).unwrap(),
+            F::from_f64(2.0).expect("Operation failed"),
         ]);
         let valid_y = Array1::from(vec![
             F::one(),
-            F::from_f64(2.0).unwrap(),
-            F::from_f64(3.0).unwrap(),
+            F::from_f64(2.0).expect("Operation failed"),
+            F::from_f64(3.0).expect("Operation failed"),
         ]);
 
         match CubicSpline::new(&nan_x.view(), &valid_y.view()) {
@@ -663,8 +672,16 @@ impl ProductionValidator {
         }
 
         // Test 2: Infinite values
-        let inf_y = Array1::from(vec![F::infinity(), F::one(), F::from_f64(2.0).unwrap()]);
-        let valid_x = Array1::from(vec![F::zero(), F::one(), F::from_f64(2.0).unwrap()]);
+        let inf_y = Array1::from(vec![
+            F::infinity(),
+            F::one(),
+            F::from_f64(2.0).expect("Operation failed"),
+        ]);
+        let valid_x = Array1::from(vec![
+            F::zero(),
+            F::one(),
+            F::from_f64(2.0).expect("Operation failed"),
+        ]);
 
         match CubicSpline::new(&valid_x.view(), &inf_y.view()) {
             Err(_) => {} // Expected - should gracefully handle infinity
@@ -672,11 +689,15 @@ impl ProductionValidator {
         }
 
         // Test 3: Duplicate x values
-        let duplicate_x = Array1::from(vec![F::one(), F::one(), F::from_f64(2.0).unwrap()]);
+        let duplicate_x = Array1::from(vec![
+            F::one(),
+            F::one(),
+            F::from_f64(2.0).expect("Operation failed"),
+        ]);
         let duplicate_y = Array1::from(vec![
             F::one(),
-            F::from_f64(1.5).unwrap(),
-            F::from_f64(2.0).unwrap(),
+            F::from_f64(1.5).expect("Operation failed"),
+            F::from_f64(2.0).expect("Operation failed"),
         ]);
 
         match CubicSpline::new(&duplicate_x.view(), &duplicate_y.view()) {
@@ -689,8 +710,8 @@ impl ProductionValidator {
         let long_y = Array1::from(vec![
             F::zero(),
             F::one(),
-            F::from_f64(2.0).unwrap(),
-            F::from_f64(3.0).unwrap(),
+            F::from_f64(2.0).expect("Operation failed"),
+            F::from_f64(3.0).expect("Operation failed"),
         ]);
 
         match CubicSpline::new(&short_x.view(), &long_y.view()) {
@@ -744,7 +765,8 @@ impl ProductionValidator {
 
         // Make the matrix ill-conditioned by setting small diagonal elements
         for i in 0..size {
-            let small_value = F::from_f64(1e-12).unwrap() * F::from_usize(i + 1).unwrap();
+            let small_value = F::from_f64(1e-12).expect("Operation failed")
+                * F::from_usize(i + 1).expect("Operation failed");
             matrix[[i, i]] = small_value;
         }
 

@@ -107,12 +107,12 @@ impl CircuitBreaker {
 
     /// Get current state
     pub fn state(&self) -> CircuitState {
-        *self.state.lock().unwrap()
+        *self.state.lock().expect("Operation failed")
     }
 
     /// Record success
     pub fn record_success(&self) {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
         match *state {
             CircuitState::HalfOpen => {
                 let count = self.success_count.fetch_add(1, Ordering::SeqCst) + 1;
@@ -120,7 +120,7 @@ impl CircuitBreaker {
                     *state = CircuitState::Closed;
                     self.failure_count.store(0, Ordering::SeqCst);
                     self.success_count.store(0, Ordering::SeqCst);
-                    *self.last_state_change.lock().unwrap() = Instant::now();
+                    *self.last_state_change.lock().expect("Operation failed") = Instant::now();
                 }
             }
             CircuitState::Closed => {
@@ -132,20 +132,20 @@ impl CircuitBreaker {
 
     /// Record failure
     pub fn record_failure(&self) {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
         match *state {
             CircuitState::Closed => {
                 let count = self.failure_count.fetch_add(1, Ordering::SeqCst) + 1;
                 if count >= self.config.failure_threshold {
                     *state = CircuitState::Open;
-                    *self.last_state_change.lock().unwrap() = Instant::now();
+                    *self.last_state_change.lock().expect("Operation failed") = Instant::now();
                 }
             }
             CircuitState::HalfOpen => {
                 *state = CircuitState::Open;
                 self.failure_count.store(0, Ordering::SeqCst);
                 self.success_count.store(0, Ordering::SeqCst);
-                *self.last_state_change.lock().unwrap() = Instant::now();
+                *self.last_state_change.lock().expect("Operation failed") = Instant::now();
             }
             CircuitState::Open => {}
         }
@@ -153,13 +153,17 @@ impl CircuitBreaker {
 
     /// Check if should transition from open to half-open
     pub fn check_state(&self) {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
         if *state == CircuitState::Open {
-            let elapsed = self.last_state_change.lock().unwrap().elapsed();
+            let elapsed = self
+                .last_state_change
+                .lock()
+                .expect("Operation failed")
+                .elapsed();
             if elapsed >= self.config.timeout {
                 *state = CircuitState::HalfOpen;
                 self.success_count.store(0, Ordering::SeqCst);
-                *self.last_state_change.lock().unwrap() = Instant::now();
+                *self.last_state_change.lock().expect("Operation failed") = Instant::now();
             }
         }
     }
@@ -177,7 +181,7 @@ impl CircuitBreaker {
             state: self.state(),
             failure_count: self.failure_count.load(Ordering::SeqCst),
             success_count: self.success_count.load(Ordering::SeqCst),
-            last_state_change: *self.last_state_change.lock().unwrap(),
+            last_state_change: *self.last_state_change.lock().expect("Operation failed"),
         }
     }
 
@@ -232,7 +236,7 @@ impl RetryExecutor {
                 Err(e) => last_error = Some(e),
             }
         }
-        Err(last_error.unwrap())
+        Err(last_error.expect("Operation failed"))
     }
 }
 
@@ -291,10 +295,19 @@ static CIRCUIT_BREAKERS: Lazy<RwLock<HashMap<String, Arc<CircuitBreaker>>>> =
 
 /// Get a circuit breaker by name
 pub fn get_circuitbreaker(name: &str) -> Option<Arc<CircuitBreaker>> {
-    CIRCUIT_BREAKERS.read().unwrap().get(name).cloned()
+    CIRCUIT_BREAKERS
+        .read()
+        .expect("Operation failed")
+        .get(name)
+        .cloned()
 }
 
 /// List all circuit breakers
 pub fn list_circuitbreakers() -> Vec<String> {
-    CIRCUIT_BREAKERS.read().unwrap().keys().cloned().collect()
+    CIRCUIT_BREAKERS
+        .read()
+        .expect("Operation failed")
+        .keys()
+        .cloned()
+        .collect()
 }

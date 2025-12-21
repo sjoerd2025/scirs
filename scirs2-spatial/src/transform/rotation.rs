@@ -80,11 +80,11 @@ impl EulerConvention {
 ///
 /// // Create a rotation from a quaternion [w, x, y, z]
 /// let quat = array![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0]; // 90 degree rotation around X
-/// let rot = Rotation::from_quat(&quat.view()).unwrap();
+/// let rot = Rotation::from_quat(&quat.view()).expect("Operation failed");
 ///
 /// // Apply the rotation to a vector
 /// let vec = array![0.0, 1.0, 0.0];
-/// let rotated = rot.apply(&vec.view()).unwrap();
+/// let rotated = rot.apply(&vec.view()).expect("Operation failed");
 ///
 /// // Verify the result (should be approximately [0, 0, 1])
 /// assert!((rotated[0]).abs() < 1e-10);
@@ -93,7 +93,7 @@ impl EulerConvention {
 ///
 /// // Convert to other representations
 /// let matrix = rot.as_matrix();
-/// let euler = rot.as_euler("xyz").unwrap();
+/// let euler = rot.as_euler("xyz").expect("Operation failed");
 /// let axis_angle = rot.as_rotvec();
 /// ```
 #[derive(Clone, Debug)]
@@ -135,7 +135,7 @@ impl Rotation {
     ///
     /// // Create a quaternion for a 90-degree rotation around the x-axis
     /// let quat = array![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0];
-    /// let rot = Rotation::from_quat(&quat.view()).unwrap();
+    /// let rot = Rotation::from_quat(&quat.view()).expect("Operation failed");
     /// ```
     pub fn from_quat(quat: &ArrayView1<f64>) -> SpatialResult<Self> {
         if quat.len() != 4 {
@@ -183,7 +183,7 @@ impl Rotation {
     ///     [1.0, 0.0, 0.0],
     ///     [0.0, 0.0, 1.0]
     /// ];
-    /// let rot = Rotation::from_matrix(&matrix.view()).unwrap();
+    /// let rot = Rotation::from_matrix(&matrix.view()).expect("Operation failed");
     /// ```
     pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if matrix.shape() != [3, 3] {
@@ -269,7 +269,7 @@ impl Rotation {
     ///
     /// // Create a rotation using Euler angles in the XYZ convention
     /// let angles = array![PI/2.0, 0.0, 0.0]; // 90 degrees around X
-    /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+    /// let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
     /// ```
     pub fn from_euler(angles: &ArrayView1<f64>, convention: &str) -> SpatialResult<Self> {
         if angles.len() != 3 {
@@ -283,7 +283,7 @@ impl Rotation {
         let mut quat = Array1::zeros(4);
 
         // Compute quaternions for individual rotations
-        let _angles = angles.as_slice().unwrap();
+        let _angles = angles.as_slice().expect("Operation failed");
         let a = angles[0] / 2.0;
         let b = angles[1] / 2.0;
         let c = angles[2] / 2.0;
@@ -384,7 +384,7 @@ impl Rotation {
     ///
     /// // Create a rotation for a 90-degree rotation around the x-axis
     /// let rotvec = array![PI/2.0, 0.0, 0.0];
-    /// let rot = Rotation::from_rotvec(&rotvec.view()).unwrap();
+    /// let rot = Rotation::from_rotvec(&rotvec.view()).expect("Operation failed");
     /// ```
     pub fn from_rotvec(rotvec: &ArrayView1<f64>) -> SpatialResult<Self> {
         if rotvec.len() != 3 {
@@ -438,7 +438,7 @@ impl Rotation {
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/2.0];
-    /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+    /// let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
     /// let matrix = rot.as_matrix();
     /// // Should approximately be a 90 degree rotation around Z
     /// ```
@@ -485,8 +485,8 @@ impl Rotation {
     /// use scirs2_core::ndarray::array;
     /// use std::f64::consts::PI;
     ///
-    /// let rot = Rotation::from_rotvec(&array![PI/2.0, 0.0, 0.0].view()).unwrap();
-    /// let angles = rot.as_euler("xyz").unwrap();
+    /// let rot = Rotation::from_rotvec(&array![PI/2.0, 0.0, 0.0].view()).expect("Operation failed");
+    /// let angles = rot.as_euler("xyz").expect("Operation failed");
     /// // Should be approximately [PI/2, 0, 0]
     /// ```
     pub fn as_euler(&self, convention: &str) -> SpatialResult<Array1<f64>> {
@@ -637,7 +637,7 @@ impl Rotation {
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![PI/2.0, 0.0, 0.0];
-    /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+    /// let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
     /// let rotvec = rot.as_rotvec();
     /// // Should be approximately [PI/2, 0, 0]
     /// ```
@@ -686,7 +686,7 @@ impl Rotation {
     /// use scirs2_core::ndarray::array;
     ///
     /// let angles = array![0.0, 0.0, 0.0];
-    /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+    /// let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
     /// let quat = rot.as_quat();
     /// // Should be [1, 0, 0, 0] (identity rotation)
     /// ```
@@ -708,7 +708,7 @@ impl Rotation {
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/4.0];
-    /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+    /// let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
     /// let rot_inv = rot.inv();
     /// ```
     pub fn inv(&self) -> Rotation {
@@ -739,7 +739,7 @@ impl Rotation {
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/2.0];
-    /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+    /// let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
     /// let vec = array![1.0, 0.0, 0.0];
     /// let rotated = rot.apply(&vec.view());
     /// // Should be approximately [0, 1, 0]
@@ -774,7 +774,7 @@ impl Rotation {
     /// use std::f64::consts::PI;
     ///
     /// let angles = array![0.0, 0.0, PI/2.0];
-    /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+    /// let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
     /// let vecs = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
     /// let rotated = rot.apply_multiple(&vecs.view());
     /// // First row should be approximately [0, 1, 0]
@@ -810,9 +810,9 @@ impl Rotation {
     ///
     /// // Rotate 90 degrees around X, then 90 degrees around Y
     /// let angles1 = array![PI/2.0, 0.0, 0.0];
-    /// let rot1 = Rotation::from_euler(&angles1.view(), "xyz").unwrap();
+    /// let rot1 = Rotation::from_euler(&angles1.view(), "xyz").expect("Operation failed");
     /// let angles2 = array![0.0, PI/2.0, 0.0];
-    /// let rot2 = Rotation::from_euler(&angles2.view(), "xyz").unwrap();
+    /// let rot2 = Rotation::from_euler(&angles2.view(), "xyz").expect("Operation failed");
     /// let combined = rot1.compose(&rot2);
     /// ```
     pub fn compose(&self, other: &Rotation) -> Rotation {
@@ -922,7 +922,7 @@ impl Rotation {
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
-    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
+    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed");
     /// let interpolated = rot1.slerp(&rot2, 0.5);
     /// ```
     pub fn slerp(&self, other: &Rotation, t: f64) -> Rotation {
@@ -1018,7 +1018,7 @@ mod tests {
     fn test_rotation_identity() {
         let identity = Rotation::identity();
         let vec = array![1.0, 2.0, 3.0];
-        let rotated = identity.apply(&vec.view()).unwrap();
+        let rotated = identity.apply(&vec.view()).expect("Operation failed");
 
         assert_relative_eq!(rotated[0], vec[0], epsilon = 1e-10);
         assert_relative_eq!(rotated[1], vec[1], epsilon = 1e-10);
@@ -1034,10 +1034,10 @@ mod tests {
             0.0,
             0.0
         ];
-        let rot = Rotation::from_quat(&quat.view()).unwrap();
+        let rot = Rotation::from_quat(&quat.view()).expect("Operation failed");
 
         let vec = array![0.0, 1.0, 0.0];
-        let rotated = rot.apply(&vec.view()).unwrap();
+        let rotated = rot.apply(&vec.view()).expect("Operation failed");
 
         // Should rotate [0, 1, 0] to [0, 0, 1]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -1049,10 +1049,10 @@ mod tests {
     fn test_rotation_from_matrix() {
         // A rotation matrix for 90 degrees rotation around Z axis
         let matrix = array![[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]];
-        let rot = Rotation::from_matrix(&matrix.view()).unwrap();
+        let rot = Rotation::from_matrix(&matrix.view()).expect("Operation failed");
 
         let vec = array![1.0, 0.0, 0.0];
-        let rotated = rot.apply(&vec.view()).unwrap();
+        let rotated = rot.apply(&vec.view()).expect("Operation failed");
 
         // Should rotate [1, 0, 0] to [0, 1, 0]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -1064,10 +1064,10 @@ mod tests {
     fn test_rotation_from_euler() {
         // 90 degrees rotation around X axis
         let angles = array![PI / 2.0, 0.0, 0.0];
-        let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+        let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
 
         let vec = array![0.0, 1.0, 0.0];
-        let rotated = rot.apply(&vec.view()).unwrap();
+        let rotated = rot.apply(&vec.view()).expect("Operation failed");
 
         // Should rotate [0, 1, 0] to [0, 0, 1]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -1079,10 +1079,10 @@ mod tests {
     fn test_rotation_from_rotvec() {
         // 90 degrees rotation around X axis
         let rotvec = array![PI / 2.0, 0.0, 0.0];
-        let rot = Rotation::from_rotvec(&rotvec.view()).unwrap();
+        let rot = Rotation::from_rotvec(&rotvec.view()).expect("Operation failed");
 
         let vec = array![0.0, 1.0, 0.0];
-        let rotated = rot.apply(&vec.view()).unwrap();
+        let rotated = rot.apply(&vec.view()).expect("Operation failed");
 
         // Should rotate [0, 1, 0] to [0, 0, 1]
         assert_relative_eq!(rotated[0], 0.0, epsilon = 1e-10);
@@ -1093,13 +1093,13 @@ mod tests {
     #[test]
     fn test_rotation_compose() {
         // 90 degrees rotation around X, then 90 degrees around Y
-        let rot_x = rotation_from_euler(PI / 2.0, 0.0, 0.0, "xyz").unwrap();
-        let rot_y = rotation_from_euler(0.0, PI / 2.0, 0.0, "xyz").unwrap();
+        let rot_x = rotation_from_euler(PI / 2.0, 0.0, 0.0, "xyz").expect("Operation failed");
+        let rot_y = rotation_from_euler(0.0, PI / 2.0, 0.0, "xyz").expect("Operation failed");
 
         let composed = rot_x.compose(&rot_y);
 
         let vec = array![0.0, 0.0, 1.0];
-        let rotated = composed.apply(&vec.view()).unwrap();
+        let rotated = composed.apply(&vec.view()).expect("Operation failed");
 
         // Should rotate [0, 0, 1] to [1, 0, 0]
         assert_relative_eq!(rotated[0], 1.0, epsilon = 1e-10);
@@ -1110,12 +1110,12 @@ mod tests {
     #[test]
     fn test_rotation_inv() {
         // 45 degrees rotation around Z axis
-        let rot = rotation_from_euler(0.0, 0.0, PI / 4.0, "xyz").unwrap();
+        let rot = rotation_from_euler(0.0, 0.0, PI / 4.0, "xyz").expect("Operation failed");
         let rot_inv = rot.inv();
 
         let vec = array![1.0, 0.0, 0.0];
-        let rotated = rot.apply(&vec.view()).unwrap();
-        let rotated_back = rot_inv.apply(&rotated.view()).unwrap();
+        let rotated = rot.apply(&vec.view()).expect("Operation failed");
+        let rotated_back = rot_inv.apply(&rotated.view()).expect("Operation failed");
 
         // Should get back the original vector
         assert_relative_eq!(rotated_back[0], vec[0], epsilon = 1e-10);
@@ -1127,17 +1127,19 @@ mod tests {
     fn test_rotation_conversions() {
         // Create a rotation and verify conversion between representations
         let angles = array![PI / 4.0, PI / 6.0, PI / 3.0];
-        let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+        let rot = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
 
         // Convert to matrix and back to Euler
         let matrix = rot.as_matrix();
-        let rot_from_matrix = Rotation::from_matrix(&matrix.view()).unwrap();
-        let _angles_back = rot_from_matrix.as_euler("xyz").unwrap();
+        let rot_from_matrix = Rotation::from_matrix(&matrix.view()).expect("Operation failed");
+        let _angles_back = rot_from_matrix.as_euler("xyz").expect("Operation failed");
 
         // Allow for different but equivalent representations
         let vec = array![1.0, 2.0, 3.0];
-        let rotated1 = rot.apply(&vec.view()).unwrap();
-        let rotated2 = rot_from_matrix.apply(&vec.view()).unwrap();
+        let rotated1 = rot.apply(&vec.view()).expect("Operation failed");
+        let rotated2 = rot_from_matrix
+            .apply(&vec.view())
+            .expect("Operation failed");
 
         assert_relative_eq!(rotated1[0], rotated2[0], epsilon = 1e-10);
         assert_relative_eq!(rotated1[1], rotated2[1], epsilon = 1e-10);
@@ -1145,8 +1147,10 @@ mod tests {
 
         // Convert to axis-angle and back
         let rotvec = rot.as_rotvec();
-        let rot_from_rotvec = Rotation::from_rotvec(&rotvec.view()).unwrap();
-        let rotated3 = rot_from_rotvec.apply(&vec.view()).unwrap();
+        let rot_from_rotvec = Rotation::from_rotvec(&rotvec.view()).expect("Operation failed");
+        let rotated3 = rot_from_rotvec
+            .apply(&vec.view())
+            .expect("Operation failed");
 
         assert_relative_eq!(rotated1[0], rotated3[0], epsilon = 1e-10);
         assert_relative_eq!(rotated1[1], rotated3[1], epsilon = 1e-10);
@@ -1157,15 +1161,15 @@ mod tests {
     fn test_slerp_interpolation() {
         // Test SLERP between identity and 90-degree Z rotation
         let rot1 = Rotation::identity();
-        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
 
         // Test endpoints
         let slerp_0 = rot1.slerp(&rot2, 0.0);
         let slerp_1 = rot1.slerp(&rot2, 1.0);
 
         let vec = array![1.0, 0.0, 0.0];
-        let result_0 = slerp_0.apply(&vec.view()).unwrap();
-        let result_1 = slerp_1.apply(&vec.view()).unwrap();
+        let result_0 = slerp_0.apply(&vec.view()).expect("Operation failed");
+        let result_1 = slerp_1.apply(&vec.view()).expect("Operation failed");
 
         // At t=0, should be same as rot1 (identity)
         assert_relative_eq!(result_0[0], 1.0, epsilon = 1e-10);
@@ -1177,7 +1181,7 @@ mod tests {
 
         // Test midpoint
         let slerp_mid = rot1.slerp(&rot2, 0.5);
-        let result_mid = slerp_mid.apply(&vec.view()).unwrap();
+        let result_mid = slerp_mid.apply(&vec.view()).expect("Operation failed");
 
         // Should be roughly 45 degrees
         let expected_angle = PI / 4.0;
@@ -1188,8 +1192,8 @@ mod tests {
     #[test]
     fn test_angular_distance() {
         let rot1 = Rotation::identity();
-        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
-        let rot3 = rotation_from_euler(0.0, 0.0, PI, "xyz").unwrap();
+        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
+        let rot3 = rotation_from_euler(0.0, 0.0, PI, "xyz").expect("Operation failed");
 
         // Distance from identity to 90-degree rotation should be PI/2
         let dist1 = rot1.angular_distance(&rot2);

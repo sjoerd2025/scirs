@@ -459,22 +459,22 @@ pub mod presets {
 
     /// Create a conservative gradient clipper for fine-tuning
     pub fn conservative<F: Float>() -> ClipByGlobalNorm<F> {
-        ClipByGlobalNorm::new(F::from(0.5).unwrap())
+        ClipByGlobalNorm::new(F::from(0.5).expect("Failed to convert constant to float"))
     }
 
     /// Create a standard gradient clipper for general training
     pub fn standard<F: Float>() -> ClipByGlobalNorm<F> {
-        ClipByGlobalNorm::new(F::from(1.0).unwrap())
+        ClipByGlobalNorm::new(F::from(1.0).expect("Failed to convert constant to float"))
     }
 
     /// Create an aggressive gradient clipper for unstable training
     pub fn aggressive<F: Float>() -> ClipByGlobalNorm<F> {
-        ClipByGlobalNorm::new(F::from(0.1).unwrap())
+        ClipByGlobalNorm::new(F::from(0.1).expect("Failed to convert constant to float"))
     }
 
     /// Create a value-based clipper for preventing extreme gradients
     pub fn extreme_prevention<F: Float>() -> ClipByValue<F> {
-        ClipByValue::symmetric(F::from(10.0).unwrap())
+        ClipByValue::symmetric(F::from(10.0).expect("Failed to convert constant to float"))
     }
 }
 

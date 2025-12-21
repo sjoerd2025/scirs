@@ -463,7 +463,9 @@ mod tests {
         let topics = create_testtopics();
         let documents = create_test_documents();
 
-        let score = coherence.cv_coherence(&topics, &documents).unwrap();
+        let score = coherence
+            .cv_coherence(&topics, &documents)
+            .expect("Operation failed");
         assert!((-1.0..=1.0).contains(&score));
     }
 
@@ -473,7 +475,9 @@ mod tests {
         let topics = create_testtopics();
         let documents = create_test_documents();
 
-        let score = coherence.umass_coherence(&topics, &documents).unwrap();
+        let score = coherence
+            .umass_coherence(&topics, &documents)
+            .expect("Operation failed");
         assert!(score.is_finite());
     }
 
@@ -483,7 +487,9 @@ mod tests {
         let topics = create_testtopics();
         let documents = create_test_documents();
 
-        let score = coherence.uci_coherence(&topics, &documents).unwrap();
+        let score = coherence
+            .uci_coherence(&topics, &documents)
+            .expect("Operation failed");
         assert!(score.is_finite());
     }
 
@@ -517,7 +523,9 @@ mod tests {
         let topics: Vec<Topic> = vec![];
         let documents = create_test_documents();
 
-        let cv_score = coherence.cv_coherence(&topics, &documents).unwrap();
+        let cv_score = coherence
+            .cv_coherence(&topics, &documents)
+            .expect("Operation failed");
         assert!(cv_score.is_nan() || cv_score == 0.0);
 
         let diversity = TopicDiversity::calculate(&topics);

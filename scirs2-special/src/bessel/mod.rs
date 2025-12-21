@@ -260,7 +260,7 @@ where
     } else if v == T::one() {
         y1(z)
     } else if let Some(n) = v.to_i32() {
-        if n >= 0 && T::from(n).unwrap() == v {
+        if n >= 0 && T::from(n).expect("Operation failed") == v {
             yn(n, z)
         } else {
             // For negative or non-integer orders, we need a more general implementation
@@ -323,7 +323,7 @@ where
     } else if v == T::one() {
         y1(z)
     } else if let Some(n) = v.to_i32() {
-        if n >= 0 && T::from(n).unwrap() == v {
+        if n >= 0 && T::from(n).expect("Operation failed") == v {
             yn(n, z)
         } else {
             // For negative or non-integer orders, we need a more general implementation

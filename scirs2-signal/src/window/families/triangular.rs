@@ -23,7 +23,7 @@ use crate::error::{SignalError, SignalResult};
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::triangular::bartlett;
-/// let window = bartlett(10, true).unwrap();
+/// let window = bartlett(10, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// assert!((window[0] - 0.0).abs() < 1e-10); // Zero at endpoints
 /// assert!((window[window.len()-1] - 0.0).abs() < 1e-10);
@@ -63,7 +63,7 @@ pub fn bartlett(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::triangular::triang;
-/// let window = triang(10, true).unwrap();
+/// let window = triang(10, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// assert!(window[0] > 0.0); // Non-zero at endpoints
 /// ```
@@ -102,7 +102,7 @@ pub fn triang(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 /// ```
 /// use scirs2_signal::window::families::triangular::parzen;
-/// let window = parzen(10, true).unwrap();
+/// let window = parzen(10, true).expect("Operation failed");
 /// assert_eq!(window.len(), 10);
 /// ```
 pub fn parzen(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
@@ -219,7 +219,7 @@ pub fn analyze_triangular_window(window: &[f64]) -> TriangularWindowAnalysis {
     let (peak_idx, peak_value) = window
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .unwrap_or((n / 2, &1.0));
 
     // Check if endpoints are zero (Bartlett-style)
@@ -352,9 +352,30 @@ fn is_parzen_like(window: &[f64]) -> bool {
     let quarter = n / 4;
     let half = n / 2;
 
-    // Parzen window has a distinctive curvature pattern
+    // Parzen window has a distinctive ratio pattern due to cubic falloff
+    // Parzen ratio ~0.19 (low due to cubic polynomial), Bartlett ratio ~0.4 (linear)
     let ratio = window[quarter] / window[half];
-    ratio > 0.3 && ratio < 0.8 // Characteristic of B-spline shape
+    if ratio >= 0.3 {
+        return false; // Bartlett and other linear windows have higher ratio
+    }
+
+    // Also check for non-linearity (curvature)
+    // Parzen has polynomial curvature, Bartlett is linear
+    // Check second differences to detect curvature
+    let eighth = n / 8;
+    if eighth > 0 && quarter < n && half < n {
+        // For linear (Bartlett), second difference should be ~0
+        // For polynomial (Parzen), second difference should be significant
+        let w0 = window[eighth];
+        let w1 = window[quarter];
+        let w2 = window[quarter + eighth.max(1)];
+        let second_diff = (w2 - w1) - (w1 - w0);
+        // Parzen has noticeable curvature (positive second derivative in outer region)
+        return second_diff.abs() > 0.01;
+    }
+
+    // Fallback to ratio-only check for small windows
+    ratio < 0.3
 }
 
 /// Check if window has parabolic (Welch-like) characteristics
@@ -383,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_bartlett_zero_endpoints() {
-        let window = bartlett(5, true).unwrap();
+        let window = bartlett(5, true).expect("Operation failed");
         assert_eq!(window.len(), 5);
         assert!((window[0] - 0.0).abs() < 1e-10);
         assert!((window[4] - 0.0).abs() < 1e-10);
@@ -392,7 +413,7 @@ mod tests {
 
     #[test]
     fn test_triang_nonzero_endpoints() {
-        let window = triang(5, true).unwrap();
+        let window = triang(5, true).expect("Operation failed");
         assert_eq!(window.len(), 5);
         assert!(window[0] > 0.0);
         assert!(window[4] > 0.0);
@@ -400,7 +421,7 @@ mod tests {
 
     #[test]
     fn test_welch_parabolic() {
-        let window = welch(5, true).unwrap();
+        let window = welch(5, true).expect("Operation failed");
         assert_eq!(window.len(), 5);
 
         // Check parabolic shape
@@ -410,14 +431,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Window classification algorithm incorrectly identifies Bartlett as Parzen
     fn test_window_classification() {
-        let bartlett_win = bartlett(10, true).unwrap();
+        let bartlett_win = bartlett(10, true).expect("Operation failed");
         let analysis = analyze_triangular_window(&bartlett_win);
         assert_eq!(analysis.window_type, TriangularWindowType::Bartlett);
         assert!(analysis.zero_endpoints);
 
-        let triang_win = triang(10, true).unwrap();
+        let triang_win = triang(10, true).expect("Operation failed");
         let analysis = analyze_triangular_window(&triang_win);
         assert_eq!(analysis.window_type, TriangularWindowType::Triangle);
         assert!(!analysis.zero_endpoints);

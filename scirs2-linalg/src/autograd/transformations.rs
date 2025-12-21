@@ -62,8 +62,8 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
         .data
         .clone()
         .intoshape((ashape[1], ashape[0]))
-        .unwrap();
-    let a_data_2d = a.data.clone().intoshape((ashape[0], ashape[1])).unwrap();
+        .expect("Operation failed");
+    let a_data_2d = a.data.clone().intoshape((ashape[0], ashape[1])).expect("Operation failed");
 
     let mut a_t_a_data = Array2::<F>::zeros((ashape[1], ashape[1]));
     for i in 0..ashape[1] {
@@ -124,8 +124,8 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
         .data
         .clone()
         .intoshape((ashape[1], ashape[0]))
-        .unwrap();
-    let x_data_1d = x.data.clone().intoshape(ashape[0]).unwrap();
+        .expect("Operation failed");
+    let x_data_1d = x.data.clone().intoshape(ashape[0]).expect("Operation failed");
 
     let mut a_t_x_data = Array1::<F>::zeros(ashape[1]);
     for i in 0..ashape[1] {
@@ -144,8 +144,8 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
         .data
         .clone()
         .intoshape((ashape[1], ashape[1]))
-        .unwrap();
-    let a_t_x_data_1d = a_t_x.data.clone().intoshape(ashape[1]).unwrap();
+        .expect("Operation failed");
+    let a_t_x_data_1d = a_t_x.data.clone().intoshape(ashape[1]).expect("Operation failed");
 
     let mut temp_data = Array1::<F>::zeros(ashape[1]);
     for i in 0..ashape[1] {
@@ -160,8 +160,8 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
     let temp = Tensor::new(temp_data, a.requires_grad || x.requires_grad);
 
     // Compute A (A^T A)^(-1) A^T x manually
-    let a_data_2d = a.data.clone().intoshape((ashape[0], ashape[1])).unwrap();
-    let temp_data_1d = temp.data.clone().intoshape(ashape[1]).unwrap();
+    let a_data_2d = a.data.clone().intoshape((ashape[0], ashape[1])).expect("Operation failed");
+    let temp_data_1d = temp.data.clone().intoshape(ashape[1]).expect("Operation failed");
 
     let mut result_data = Array1::<F>::zeros(ashape[0]);
     for i in 0..ashape[0] {
@@ -272,7 +272,7 @@ pub fn rotationmatrix_2d<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                     // Convert gradient to 2x2 shape
-                    let grad_2d = grad.clone().intoshape((2, 2)).unwrap();
+                    let grad_2d = grad.clone().intoshape((2, 2)).expect("Operation failed");
 
                     // Gradient of rotation matrix with respect to angle
                     // d/dθ [cos θ, -sin θ; sin θ, cos θ] = [-sin θ, -cos θ; cos θ, -sin θ]
@@ -345,7 +345,7 @@ pub fn scalingmatrix<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                     // Convert gradient to nxn shape
-                    let grad_2d = grad.clone().intoshape((n, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((n, n)).expect("Operation failed");
 
                     // Gradient of scaling matrix with respect to scales
                     // is just the diagonal elements of the gradien
@@ -416,7 +416,7 @@ pub fn reflectionmatrix<F: Float + Debug + Send + Sync + 'static>(
     for i in 0..n {
         for j in 0..n {
             result_data[[i, j]] =
-                result_data[[i, j]] - F::from(2.0).unwrap() * unit_normal[i] * unit_normal[j];
+                result_data[[i, j]] - F::from(2.0).expect("Operation failed") * unit_normal[i] * unit_normal[j];
         }
     }
 
@@ -502,7 +502,7 @@ pub fn shearmatrix<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                     // Convert gradient to nxn shape
-                    let grad_2d = grad.clone().intoshape((n, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((n, n)).expect("Operation failed");
 
                     // Gradient of shear matrix with respect to shear _factor
                     // is just the (dim1, dim2) element of the gradien

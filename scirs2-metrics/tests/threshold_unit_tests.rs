@@ -14,7 +14,7 @@ mod tests {
         let y_prob = array![0.1, 0.4, 0.35, 0.8];
 
         let (precision, recall, thresholds) =
-            precision_recall_curve(&y_true, &y_prob, None, None).unwrap();
+            precision_recall_curve(&y_true, &y_prob, None, None).expect("Operation failed");
 
         // Check that precision and recall have the same length
         assert_eq!(precision.len(), recall.len());
@@ -41,7 +41,8 @@ mod tests {
         let y_prob_all_pos = array![0.9, 0.8, 0.7, 0.6];
 
         let (precision_all_pos, _recall_all_pos, _thresholds) =
-            precision_recall_curve(&y_true_all_pos, &y_prob_all_pos, None, None).unwrap();
+            precision_recall_curve(&y_true_all_pos, &y_prob_all_pos, None, None)
+                .expect("Operation failed");
 
         // All precisions should be 1.0 for all-positive case
         for &p in precision_all_pos.iter() {
@@ -67,7 +68,7 @@ mod tests {
         let y_true = array![0.0, 0.0, 1.0, 1.0];
         let y_prob = array![0.1, 0.4, 0.35, 0.8];
 
-        let ap = average_precision_score(&y_true, &y_prob, None, None).unwrap();
+        let ap = average_precision_score(&y_true, &y_prob, None, None).expect("Operation failed");
 
         // AP should be between 0 and 1
         assert!((0.0..=1.0).contains(&ap));
@@ -76,8 +77,8 @@ mod tests {
         let y_true_perfect = array![0.0, 0.0, 1.0, 1.0];
         let y_prob_perfect = array![0.1, 0.2, 0.8, 0.9];
 
-        let ap_perfect =
-            average_precision_score(&y_true_perfect, &y_prob_perfect, None, None).unwrap();
+        let ap_perfect = average_precision_score(&y_true_perfect, &y_prob_perfect, None, None)
+            .expect("Operation failed");
         // Just make sure we get a valid AP score (between 0 and 1)
         assert!((0.0..=1.0).contains(&ap_perfect));
 
@@ -85,7 +86,8 @@ mod tests {
         let y_true_diff = array![0.0, 0.0, 1.0, 1.0];
         let y_prob_diff = array![0.9, 0.8, 0.1, 0.2];
 
-        let ap_diff = average_precision_score(&y_true_diff, &y_prob_diff, None, None).unwrap();
+        let ap_diff = average_precision_score(&y_true_diff, &y_prob_diff, None, None)
+            .expect("Operation failed");
         // Just make sure we get a valid AP score (between 0 and 1)
         assert!((0.0..=1.0).contains(&ap_diff));
     }
@@ -96,21 +98,21 @@ mod tests {
         let y_true = array![0.0, 0.0, 1.0, 1.0];
         let y_pred = array![0.0, 0.0, 1.0, 1.0];
 
-        let g_means = g_means_score(&y_true, &y_pred, None).unwrap();
+        let g_means = g_means_score(&y_true, &y_pred, None).expect("Operation failed");
         assert_abs_diff_eq!(g_means, 1.0, epsilon = 1e-10);
 
         // All predicted as one class
         let y_true2 = array![0.0, 0.0, 1.0, 1.0];
         let y_pred2 = array![0.0, 0.0, 0.0, 0.0];
 
-        let g_means2 = g_means_score(&y_true2, &y_pred2, None).unwrap();
+        let g_means2 = g_means_score(&y_true2, &y_pred2, None).expect("Operation failed");
         assert_abs_diff_eq!(g_means2, 0.0, epsilon = 1e-10);
 
         // Balanced but not perfect predictions
         let y_true3 = array![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0];
         let y_pred3 = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0];
 
-        let g_means3 = g_means_score(&y_true3, &y_pred3, None).unwrap();
+        let g_means3 = g_means_score(&y_true3, &y_pred3, None).expect("Operation failed");
         assert_abs_diff_eq!(g_means3, 0.5, epsilon = 1e-10);
     }
 
@@ -133,7 +135,8 @@ mod tests {
             };
 
         let (threshold, score) =
-            find_optimal_threshold(&y_true, &y_prob, None, accuracy_func, None).unwrap();
+            find_optimal_threshold(&y_true, &y_prob, None, accuracy_func, None)
+                .expect("Operation failed");
 
         // Optimal threshold should be a reasonable value
         assert!((0.0..=1.0).contains(&threshold));
@@ -148,7 +151,7 @@ mod tests {
         let y_prob = array![0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9];
 
         let (threshold, score) =
-            find_optimal_threshold_g_means(&y_true, &y_prob, None, None).unwrap();
+            find_optimal_threshold_g_means(&y_true, &y_prob, None, None).expect("Operation failed");
 
         // Optimal threshold should be a reasonable value
         assert!((0.0..=1.0).contains(&threshold));
@@ -160,7 +163,8 @@ mod tests {
         let y_prob_imbal = array![0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.8, 0.9];
 
         let (threshold_imbal, score_imbal) =
-            find_optimal_threshold_g_means(&y_true_imbal, &y_prob_imbal, None, None).unwrap();
+            find_optimal_threshold_g_means(&y_true_imbal, &y_prob_imbal, None, None)
+                .expect("Operation failed");
 
         // Threshold should be a reasonable value
         assert!((0.0..=1.0).contains(&threshold_imbal));

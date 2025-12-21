@@ -1498,7 +1498,7 @@ impl Validator {
 
 impl Default for Validator {
     fn default() -> Self {
-        Self::new(ValidationConfig::default()).unwrap()
+        Self::new(ValidationConfig::default()).expect("Operation failed")
     }
 }
 

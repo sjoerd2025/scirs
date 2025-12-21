@@ -73,7 +73,7 @@ impl ECGAnalysis {
         if window_size >= squared.len() {
             // Signal too short for windowing, return empty peaks
             self.r_peaks = Some(Array1::zeros(0));
-            return Ok(self.r_peaks.as_ref().unwrap());
+            return Ok(self.r_peaks.as_ref().expect("Operation failed"));
         }
 
         let mut integrated = Array1::zeros(squared.len() - window_size + 1);
@@ -123,7 +123,7 @@ impl ECGAnalysis {
         }
 
         self.r_peaks = Some(Array1::from_vec(peaks));
-        Ok(self.r_peaks.as_ref().unwrap())
+        Ok(self.r_peaks.as_ref().expect("Operation failed"))
     }
 
     /// Calculate heart rate variability metrics
@@ -822,12 +822,14 @@ mod tests {
         }
         let signal = Array1::from_vec(signal_data);
 
-        let mut ecg = ECGAnalysis::new(signal, 250.0).unwrap();
-        let peaks = ecg.detect_r_peaks().unwrap();
+        let mut ecg = ECGAnalysis::new(signal, 250.0).expect("Operation failed");
+        let peaks = ecg.detect_r_peaks().expect("Operation failed");
 
         // Only test HRV if we have enough peaks
         if peaks.len() >= 2 {
-            let hrv = ecg.heart_rate_variability(HRVMethod::TimeDomain).unwrap();
+            let hrv = ecg
+                .heart_rate_variability(HRVMethod::TimeDomain)
+                .expect("Operation failed");
             assert!(hrv.contains_key("RMSSD"));
             assert!(hrv.contains_key("SDNN"));
         } else {
@@ -838,11 +840,11 @@ mod tests {
 
     #[test]
     fn test_eeg_analysis() {
-        let signals = Array2::from_shape_vec((2, 1000), vec![0.1; 2000]).unwrap();
+        let signals = Array2::from_shape_vec((2, 1000), vec![0.1; 2000]).expect("Operation failed");
         let channel_names = vec!["C3".to_string(), "C4".to_string()];
 
-        let eeg = EEGAnalysis::new(signals, 250.0, channel_names).unwrap();
-        let band_powers = eeg.frequency_band_powers().unwrap();
+        let eeg = EEGAnalysis::new(signals, 250.0, channel_names).expect("Operation failed");
+        let band_powers = eeg.frequency_band_powers().expect("Operation failed");
 
         assert!(band_powers.contains_key("Alpha"));
         assert!(band_powers.contains_key("Beta"));
@@ -851,22 +853,22 @@ mod tests {
     #[test]
     fn test_emg_analysis() {
         let signal = arr1(&[0.1, 0.2, 0.8, 1.0, 0.9, 0.3, 0.1, 0.05]);
-        let emg = EMGAnalysis::new(signal, 1000.0).unwrap();
+        let emg = EMGAnalysis::new(signal, 1000.0).expect("Operation failed");
 
-        let envelope = emg.muscle_activation_envelope(3).unwrap();
+        let envelope = emg.muscle_activation_envelope(3).expect("Operation failed");
         assert!(!envelope.is_empty());
 
-        let fatigue = emg.detect_muscle_fatigue().unwrap();
+        let fatigue = emg.detect_muscle_fatigue().expect("Operation failed");
         assert!(fatigue.contains_key("RMS_Amplitude"));
     }
 
     #[test]
     fn test_biomedical_analysis() {
         let ecg_signal = arr1(&[0.0, 0.1, 1.0, 0.1, 0.0]);
-        let ecg = ECGAnalysis::new(ecg_signal, 250.0).unwrap();
+        let ecg = ECGAnalysis::new(ecg_signal, 250.0).expect("Operation failed");
 
         let mut bio_analysis = BiomedicalAnalysis::new().with_ecg(ecg);
-        let assessment = bio_analysis.health_assessment().unwrap();
+        let assessment = bio_analysis.health_assessment().expect("Operation failed");
 
         assert!(assessment.contains_key("Heart_Rate_Status"));
     }

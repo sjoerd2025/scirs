@@ -31,7 +31,7 @@ where
 
     // Ensure initial point is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     let mut f = fun(&x.view()).into();
@@ -166,7 +166,7 @@ where
 
     // Final check for bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Use original function for final value
@@ -199,7 +199,8 @@ mod tests {
     #[test]
     fn test_bfgs_quadratic() {
         let quadratic = |x: &ArrayView1<f64>| -> f64 {
-            let a = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
+            let a =
+                Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).expect("Operation failed");
             let b = Array1::from_vec(vec![-4.0, -6.0]);
             0.5 * x.dot(&a.dot(x)) + b.dot(x)
         };
@@ -207,7 +208,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![0.0, 0.0]);
         let options = Options::default();
 
-        let result = minimize_bfgs(quadratic, x0, &options).unwrap();
+        let result = minimize_bfgs(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // Optimal solution: x = A^(-1) * (-b) = [2.0, 2.0]
@@ -227,7 +228,7 @@ mod tests {
         let mut options = Options::default();
         options.max_iter = 2000; // More iterations for Rosenbrock
 
-        let result = minimize_bfgs(rosenbrock, x0, &options).unwrap();
+        let result = minimize_bfgs(rosenbrock, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 1.0, epsilon = 3e-3);
@@ -246,7 +247,7 @@ mod tests {
         let bounds = Bounds::new(&[(Some(0.0), Some(1.0)), (Some(0.0), Some(1.0))]);
         options.bounds = Some(bounds);
 
-        let result = minimize_bfgs(quadratic, x0, &options).unwrap();
+        let result = minimize_bfgs(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // The optimal point (2, 3) is outside the bounds, so we should get (1, 1)

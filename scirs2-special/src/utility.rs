@@ -147,9 +147,9 @@ where
     T: Float + FromPrimitive,
 {
     if x >= T::zero() {
-        x.powf(T::from_f64(1.0 / 3.0).unwrap())
+        x.powf(T::from_f64(1.0 / 3.0).expect("Operation failed"))
     } else {
-        -(-x).powf(T::from_f64(1.0 / 3.0).unwrap())
+        -(-x).powf(T::from_f64(1.0 / 3.0).expect("Operation failed"))
     }
 }
 
@@ -167,7 +167,7 @@ pub fn exp10<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
 {
-    T::from_f64(10.0).unwrap().powf(x)
+    T::from_f64(10.0).expect("Operation failed").powf(x)
 }
 
 /// Base-2 exponential function
@@ -199,8 +199,8 @@ pub fn radian<T>(degrees: T) -> T
 where
     T: Float + FromPrimitive,
 {
-    let pi = T::from_f64(std::f64::consts::PI).unwrap();
-    degrees * pi / T::from_f64(180.0).unwrap()
+    let pi = T::from_f64(std::f64::consts::PI).expect("Operation failed");
+    degrees * pi / T::from_f64(180.0).expect("Operation failed")
 }
 
 /// Cosine of angle in degrees
@@ -260,7 +260,7 @@ pub fn cotdg<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
 {
-    T::from_f64(1.0).unwrap() / tandg(x)
+    T::from_f64(1.0).expect("Operation failed") / tandg(x)
 }
 
 /// Compute cos(x) - 1 accurately for small x
@@ -279,21 +279,21 @@ where
     T: Float + FromPrimitive,
 {
     // Use Taylor series for small x
-    if x.abs() < T::from_f64(0.1).unwrap() {
+    if x.abs() < T::from_f64(0.1).expect("Operation failed") {
         let x2 = x * x;
-        let mut sum = -x2 / T::from_f64(2.0).unwrap();
+        let mut sum = -x2 / T::from_f64(2.0).expect("Operation failed");
         let mut term = sum;
-        let mut n = T::from_f64(4.0).unwrap();
+        let mut n = T::from_f64(4.0).expect("Operation failed");
 
         while term.abs() > T::epsilon() * sum.abs() {
-            term = term * (-x2) / (n * (n - T::from_f64(1.0).unwrap()));
+            term = term * (-x2) / (n * (n - T::from_f64(1.0).expect("Operation failed")));
             sum = sum + term;
-            n = n + T::from_f64(2.0).unwrap();
+            n = n + T::from_f64(2.0).expect("Operation failed");
         }
 
         sum
     } else {
-        x.cos() - T::from_f64(1.0).unwrap()
+        x.cos() - T::from_f64(1.0).expect("Operation failed")
     }
 }
 
@@ -316,11 +316,14 @@ where
     check_finite(x, "x value")?;
     check_finite(y, "y value")?;
 
-    if x.abs() < T::from_f64(0.1).unwrap() && y.abs() < T::from_f64(10.0).unwrap() {
+    if x.abs() < T::from_f64(0.1).expect("Operation failed")
+        && y.abs() < T::from_f64(10.0).expect("Operation failed")
+    {
         // Use exp(y * log1p(x)) - 1 = expm1(y * log1p(x))
         Ok((y * x.ln_1p()).exp_m1())
     } else {
-        Ok((T::from_f64(1.0).unwrap() + x).powf(y) - T::from_f64(1.0).unwrap())
+        Ok((T::from_f64(1.0).expect("Operation failed") + x).powf(y)
+            - T::from_f64(1.0).expect("Operation failed"))
     }
 }
 
@@ -384,18 +387,18 @@ pub fn exprel<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
 {
-    if x.abs() < T::from_f64(1e-5).unwrap() {
+    if x.abs() < T::from_f64(1e-5).expect("Operation failed") {
         // Taylor series: 1 + x/2 + x²/6 + x³/24 + ...
-        let mut sum = T::from_f64(1.0).unwrap();
-        let mut term = x / T::from_f64(2.0).unwrap();
-        let mut n = T::from_f64(2.0).unwrap();
+        let mut sum = T::from_f64(1.0).expect("Operation failed");
+        let mut term = x / T::from_f64(2.0).expect("Operation failed");
+        let mut n = T::from_f64(2.0).expect("Operation failed");
 
         sum = sum + term;
 
         while term.abs() > T::epsilon() * sum.abs() {
-            term = term * x / (n + T::from_f64(1.0).unwrap());
+            term = term * x / (n + T::from_f64(1.0).expect("Operation failed"));
             sum = sum + term;
-            n = n + T::from_f64(1.0).unwrap();
+            n = n + T::from_f64(1.0).expect("Operation failed");
         }
 
         sum
@@ -440,14 +443,14 @@ where
         return T::zero();
     }
 
-    let n_f = T::from_i32(n).unwrap();
-    let half = T::from_f64(0.5).unwrap();
+    let n_f = T::from_i32(n).expect("Operation failed");
+    let half = T::from_f64(0.5).expect("Operation failed");
     let x_half = x * half;
     let sin_x_half = x_half.sin();
 
     if sin_x_half.abs() < T::epsilon() {
         // Use limit as x -> 0
-        T::from_i32(n).unwrap()
+        T::from_i32(n).expect("Operation failed")
     } else {
         (n_f * x_half).sin() / (n_f * sin_x_half)
     }
@@ -482,7 +485,7 @@ where
     let tol = T::epsilon() * a.max(b);
 
     while (a_n - b_n).abs() > tol {
-        let a_next = (a_n + b_n) / T::from_f64(2.0).unwrap();
+        let a_next = (a_n + b_n) / T::from_f64(2.0).expect("Operation failed");
         let b_next = (a_n * b_n).sqrt();
         a_n = a_next;
         b_n = b_next;
@@ -526,10 +529,10 @@ pub fn softplus<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
 {
-    if x > T::from_f64(20.0).unwrap() {
+    if x > T::from_f64(20.0).expect("Operation failed") {
         // For large x, log(1 + exp(x)) ≈ x
         x
-    } else if x < T::from_f64(-20.0).unwrap() {
+    } else if x < T::from_f64(-20.0).expect("Operation failed") {
         // For large negative x, log(1 + exp(x)) ≈ exp(x)
         x.exp()
     } else {
@@ -561,8 +564,8 @@ where
 
     let zero = T::zero();
     let one = T::one();
-    let two = T::from_f64(2.0).unwrap();
-    let pi = T::from_f64(std::f64::consts::PI).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
+    let pi = T::from_f64(std::f64::consts::PI).expect("Operation failed");
 
     // Handle special cases
     if a.is_zero() {
@@ -583,10 +586,10 @@ where
         -one
     };
 
-    let result = if abs_h < T::from_f64(0.1).unwrap() {
+    let result = if abs_h < T::from_f64(0.1).expect("Operation failed") {
         // For small |h|, use series expansion
         owens_t_series(abs_h, abs_a)?
-    } else if abs_h > T::from_f64(10.0).unwrap() {
+    } else if abs_h > T::from_f64(10.0).expect("Operation failed") {
         // For large |h|, use asymptotic expansion
         owens_t_asymptotic(abs_h, abs_a)?
     } else {
@@ -605,8 +608,8 @@ where
 {
     let zero = T::zero();
     let one = T::one();
-    let two = T::from_f64(2.0).unwrap();
-    let pi = T::from_f64(std::f64::consts::PI).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
+    let pi = T::from_f64(std::f64::consts::PI).expect("Operation failed");
 
     let h2 = h * h;
     let a2 = a * a;
@@ -628,7 +631,7 @@ where
                 (a2.ln_1p()) / two
             } else {
                 // For higher n, use recursive relation or approximation
-                a.powi(2 * n as i32 - 1) / T::from_usize(2 * n - 1).unwrap()
+                a.powi(2 * n as i32 - 1) / T::from_usize(2 * n - 1).expect("Operation failed")
             }
         };
 
@@ -640,7 +643,7 @@ where
         sum = sum + term;
 
         // Check for convergence
-        if term.abs() < T::from_f64(1e-15).unwrap() {
+        if term.abs() < T::from_f64(1e-15).expect("Operation failed") {
             break;
         }
 
@@ -657,8 +660,8 @@ where
     T: Float + FromPrimitive,
 {
     let one = T::one();
-    let two = T::from_f64(2.0).unwrap();
-    let pi = T::from_f64(std::f64::consts::PI).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
+    let pi = T::from_f64(std::f64::consts::PI).expect("Operation failed");
 
     let h2 = h * h;
     let a2 = a * a;
@@ -671,7 +674,7 @@ where
     let result = exp_factor * a / (two * pi * denominator);
 
     // Add first correction term
-    let correction = one - (T::from_f64(3.0).unwrap() * a2) / (one + a2).powi(2);
+    let correction = one - (T::from_f64(3.0).expect("Operation failed") * a2) / (one + a2).powi(2);
     let corrected_result = result * correction;
 
     Ok(corrected_result)
@@ -685,25 +688,25 @@ where
 {
     let zero = T::zero();
     let one = T::one();
-    let two = T::from_f64(2.0).unwrap();
-    let pi = T::from_f64(std::f64::consts::PI).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
+    let pi = T::from_f64(std::f64::consts::PI).expect("Operation failed");
 
     let h2 = h * h;
 
     // Use Simpson's rule for numerical integration
     let n = 1000; // Number of intervals
-    let dx = a / T::from_usize(n).unwrap();
+    let dx = a / T::from_usize(n).expect("Operation failed");
 
     let mut sum = zero;
 
     for i in 0..=n {
-        let x = T::from_usize(i).unwrap() * dx;
+        let x = T::from_usize(i).expect("Operation failed") * dx;
         let integrand = (-h2 * (one + x * x) / two).exp() / (one + x * x);
 
         let weight = if i == 0 || i == n {
             one
         } else if i % 2 == 1 {
-            T::from_f64(4.0).unwrap()
+            T::from_f64(4.0).expect("Operation failed")
         } else {
             two
         };
@@ -711,7 +714,7 @@ where
         sum = sum + weight * integrand;
     }
 
-    let result = sum * dx / (T::from_f64(3.0).unwrap() * two * pi);
+    let result = sum * dx / (T::from_f64(3.0).expect("Operation failed") * two * pi);
     Ok(result)
 }
 
@@ -779,7 +782,7 @@ where
 /// # Examples
 /// ```
 /// use scirs2_special::logit;
-/// assert!((logit(0.5).unwrap() - 0.0f64).abs() < 1e-10);
+/// assert!((logit(0.5).expect("Operation failed") - 0.0f64).abs() < 1e-10);
 /// assert!(logit(0.0).is_err());
 /// assert!(logit(1.0).is_err());
 /// ```
@@ -937,7 +940,7 @@ where
     check_finite(lat2, "lat2 value")?;
     check_finite(lon2, "lon2 value")?;
 
-    let two = T::from_f64(2.0).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
     let dlat = (lat2 - lat1) / two;
     let dlon = (lon2 - lon1) / two;
 
@@ -970,7 +973,7 @@ where
     let n = y.len();
     let mut grad = Array1::zeros(n);
     let _one = T::one(); // Unused for now but may be needed for future functionality
-    let two = T::from_f64(2.0).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
 
     if let Some(x_vals) = x {
         if x_vals.len() != n {
@@ -1089,11 +1092,15 @@ mod tests {
 
     #[test]
     fn test_agm() {
-        let result = agm(1.0, 2.0).unwrap();
+        let result = agm(1.0, 2.0).expect("Operation failed");
         assert_relative_eq!(result, 1.4567910310469068, epsilon = 1e-10);
 
         // AGM is symmetric
-        assert_relative_eq!(agm(2.0, 1.0).unwrap(), result, epsilon = 1e-10);
+        assert_relative_eq!(
+            agm(2.0, 1.0).expect("Operation failed"),
+            result,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
@@ -1115,9 +1122,9 @@ mod tests {
 
     #[test]
     fn test_logit() {
-        assert_relative_eq!(logit(0.5).unwrap(), 0.0, epsilon = 1e-10);
-        assert!(logit(0.9).unwrap() > 0.0);
-        assert!(logit(0.1).unwrap() < 0.0);
+        assert_relative_eq!(logit(0.5).expect("Operation failed"), 0.0, epsilon = 1e-10);
+        assert!(logit(0.9).expect("Operation failed") > 0.0);
+        assert!(logit(0.1).expect("Operation failed") < 0.0);
 
         // Test edge cases
         assert!(logit(0.0).is_err());
@@ -1130,7 +1137,7 @@ mod tests {
     fn test_expit_logit_inverse() {
         let values = [0.1, 0.3, 0.5, 0.7, 0.9];
         for &val in &values {
-            let logit_val = logit(val).unwrap();
+            let logit_val = logit(val).expect("Operation failed");
             let back = expit(logit_val);
             assert_relative_eq!(back, val, epsilon = 1e-10);
         }

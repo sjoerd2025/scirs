@@ -23,7 +23,7 @@ fn main() {
 
     // Create a vector and apply the operator
     let x = array![1.0, 2.0];
-    let y = spd_op.apply(&x.view()).unwrap();
+    let y = spd_op.apply(&x.view()).expect("Operation failed");
 
     println!("Matrix-vector product:");
     println!("x = [{}, {}]", x[0], x[1]);
@@ -37,14 +37,15 @@ fn main() {
     let b = array![5.0, 7.0];
 
     // Solve using matrix-free conjugate gradient
-    let solution = matrix_free_conjugate_gradient(&spd_op, &b, 10, 1e-10).unwrap();
+    let solution =
+        matrix_free_conjugate_gradient(&spd_op, &b, 10, 1e-10).expect("Operation failed");
 
     println!("Solving Ax = b with conjugate gradient:");
     println!("b = [{}, {}]", b[0], b[1]);
     println!("x = [{:.6}, {:.6}]", solution[0], solution[1]);
 
     // Verify solution
-    let ax = spd_op.apply(&solution.view()).unwrap();
+    let ax = spd_op.apply(&solution.view()).expect("Operation failed");
     println!("Ax = [{:.6}, {:.6}]", ax[0], ax[1]);
     println!("Error: {:.6e}", vector_norm(&b, &ax));
     println!();
@@ -64,14 +65,16 @@ fn main() {
     let b2 = array![4.0, 10.0];
 
     // Solve using GMRES
-    let solution2 = matrix_free_gmres(&nonsym_op, &b2, 10, 1e-10, None).unwrap();
+    let solution2 = matrix_free_gmres(&nonsym_op, &b2, 10, 1e-10, None).expect("Operation failed");
 
     println!("Solving Ax = b with GMRES:");
     println!("b = [{}, {}]", b2[0], b2[1]);
     println!("x = [{:.6}, {:.6}]", solution2[0], solution2[1]);
 
     // Verify solution
-    let ax2 = nonsym_op.apply(&solution2.view()).unwrap();
+    let ax2 = nonsym_op
+        .apply(&solution2.view())
+        .expect("Operation failed");
     println!("Ax = [{:.6}, {:.6}]", ax2[0], ax2[1]);
     println!("Error: {:.6e}", vector_norm(&b2, &ax2));
     println!();
@@ -80,18 +83,18 @@ fn main() {
     println!("Example 4: Preconditioned conjugate gradient");
 
     // Create a Jacobi preconditioner
-    let precond = jacobi_preconditioner(&spd_op).unwrap();
+    let precond = jacobi_preconditioner(&spd_op).expect("Operation failed");
 
     // Solve using preconditioned conjugate gradient
-    let solution3 =
-        matrix_free_preconditioned_conjugate_gradient(&spd_op, &precond, &b, 10, 1e-10).unwrap();
+    let solution3 = matrix_free_preconditioned_conjugate_gradient(&spd_op, &precond, &b, 10, 1e-10)
+        .expect("Operation failed");
 
     println!("Solving Ax = b with preconditioned conjugate gradient:");
     println!("b = [{}, {}]", b[0], b[1]);
     println!("x = [{:.6}, {:.6}]", solution3[0], solution3[1]);
 
     // Verify solution
-    let ax3 = spd_op.apply(&solution3.view()).unwrap();
+    let ax3 = spd_op.apply(&solution3.view()).expect("Operation failed");
     println!("Ax = [{:.6}, {:.6}]", ax3[0], ax3[1]);
     println!("Error: {:.6e}", vector_norm(&b, &ax3));
     println!();
@@ -118,7 +121,7 @@ fn main() {
 
     // Create a vector and apply the block operator
     let x5 = array![1.0, 2.0, 3.0];
-    let y5 = block_op.apply(&x5.view()).unwrap();
+    let y5 = block_op.apply(&x5.view()).expect("Operation failed");
 
     println!("Block diagonal matrix-vector product:");
     println!("x = [{}, {}, {}]", x5[0], x5[1], x5[2]);

@@ -35,9 +35,9 @@ use std::fmt::Debug;
 /// let rows = vec![0, 1, 2, 3];
 /// let cols = vec![1, 0, 3, 2];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed");
 ///
-/// let (n_components, labels) = connected_components(&graph, false, "weak", true).unwrap();
+/// let (n_components, labels) = connected_components(&graph, false, "weak", true).expect("Operation failed");
 /// assert_eq!(n_components, 2);
 /// ```
 #[allow(dead_code)]
@@ -246,7 +246,7 @@ where
         // If v is a root node, pop the stack and create an SCC
         if self.lowlinks[v] == self.indices[v] {
             loop {
-                let w = self.stack.pop().unwrap();
+                let w = self.stack.pop().expect("Operation failed");
                 self.on_stack[w] = false;
 
                 if let Some(ref mut labels) = self._labels {
@@ -283,9 +283,9 @@ where
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// assert!(is_connected(&graph, false).unwrap());
+/// assert!(is_connected(&graph, false).expect("Operation failed"));
 /// ```
 #[allow(dead_code)]
 pub fn is_connected<T, S>(graph: &S, directed: bool) -> SparseResult<bool>
@@ -321,9 +321,9 @@ where
 /// let rows = vec![0, 1, 1, 2, 2, 3, 3, 4];
 /// let cols = vec![1, 0, 2, 1, 3, 2, 4, 3];
 /// let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (5, 5), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (5, 5), false).expect("Operation failed");
 ///
-/// let (size, indices) = largest_component(&graph, false, "weak").unwrap();
+/// let (size, indices) = largest_component(&graph, false, "weak").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn largest_component<T, S>(
@@ -336,7 +336,7 @@ where
     S: SparseArray<T>,
 {
     let (n_components, labels) = connected_components(graph, directed, connection, true)?;
-    let labels = labels.unwrap();
+    let labels = labels.expect("Operation failed");
 
     // Count the size of each component
     let mut component_sizes = vec![0; n_components];
@@ -438,7 +438,7 @@ mod tests {
         let cols = vec![1, 0, 3, 2];
         let data = vec![1.0, 1.0, 1.0, 1.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed")
     }
 
     fn create_strongly_connected_graph() -> CsrArray<f64> {
@@ -449,17 +449,18 @@ mod tests {
         let cols = vec![1, 2, 0];
         let data = vec![1.0, 1.0, 1.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed")
     }
 
     #[test]
     fn test_undirected_connected_components() {
         let graph = create_disconnected_graph();
-        let (n_components, labels) = undirected_connected_components(&graph, true).unwrap();
+        let (n_components, labels) =
+            undirected_connected_components(&graph, true).expect("Operation failed");
 
         assert_eq!(n_components, 2);
 
-        let labels = labels.unwrap();
+        let labels = labels.expect("Operation failed");
         // Vertices 0 and 1 should be in the same component
         assert_eq!(labels[0], labels[1]);
         // Vertices 2 and 3 should be in the same component
@@ -473,23 +474,26 @@ mod tests {
         let graph = create_disconnected_graph();
 
         // Test undirected
-        let (n_components_, _) = connected_components(&graph, false, "weak", false).unwrap();
+        let (n_components_, _) =
+            connected_components(&graph, false, "weak", false).expect("Operation failed");
         assert_eq!(n_components_, 2);
 
         // Test directed weak connectivity
-        let (n_components_, _) = connected_components(&graph, true, "weak", false).unwrap();
+        let (n_components_, _) =
+            connected_components(&graph, true, "weak", false).expect("Operation failed");
         assert_eq!(n_components_, 2);
     }
 
     #[test]
     fn test_strongly_connected_components() {
         let graph = create_strongly_connected_graph();
-        let (n_components, labels) = strongly_connected_components(&graph, true).unwrap();
+        let (n_components, labels) =
+            strongly_connected_components(&graph, true).expect("Operation failed");
 
         // Should have 2 components: {0,1,2} and {3}
         assert_eq!(n_components, 2);
 
-        let labels = labels.unwrap();
+        let labels = labels.expect("Operation failed");
         // Vertices 0, 1, 2 should be in the same strongly connected component
         assert_eq!(labels[0], labels[1]);
         assert_eq!(labels[1], labels[2]);
@@ -500,15 +504,16 @@ mod tests {
     #[test]
     fn test_is_connected() {
         let disconnected = create_disconnected_graph();
-        assert!(!is_connected(&disconnected, false).unwrap());
+        assert!(!is_connected(&disconnected, false).expect("Operation failed"));
 
         // Create a connected graph
         let rows = vec![0, 1, 1, 2];
         let cols = vec![1, 0, 2, 1];
         let data = vec![1.0, 1.0, 1.0, 1.0];
-        let connected = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let connected =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
-        assert!(is_connected(&connected, false).unwrap());
+        assert!(is_connected(&connected, false).expect("Operation failed"));
     }
 
     #[test]
@@ -520,9 +525,10 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 3, 4];
         let cols = vec![1, 0, 2, 1, 4, 3];
         let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (6, 6), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (6, 6), false).expect("Operation failed");
 
-        let (size, indices) = largest_component(&graph, false, "weak").unwrap();
+        let (size, indices) = largest_component(&graph, false, "weak").expect("Operation failed");
 
         assert_eq!(size, 3);
         assert_eq!(indices.len(), 3);
@@ -538,12 +544,14 @@ mod tests {
         let rows = vec![0, 1, 1, 2];
         let cols = vec![1, 0, 2, 1];
         let data = vec![1.0, 1.0, 1.0, 1.0];
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
-        let (n_components_, _) = connected_components(&graph, false, "weak", false).unwrap();
+        let (n_components_, _) =
+            connected_components(&graph, false, "weak", false).expect("Operation failed");
         assert_eq!(n_components_, 1);
 
-        let (size, indices) = largest_component(&graph, false, "weak").unwrap();
+        let (size, indices) = largest_component(&graph, false, "weak").expect("Operation failed");
         assert_eq!(size, 3);
         assert_eq!(indices, vec![0, 1, 2]);
     }
@@ -554,14 +562,16 @@ mod tests {
         let rows = vec![0, 1];
         let cols = vec![1, 0];
         let data = vec![1.0, 1.0];
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed");
 
-        let (n_components, labels) = connected_components(&graph, false, "weak", true).unwrap();
+        let (n_components, labels) =
+            connected_components(&graph, false, "weak", true).expect("Operation failed");
 
         // Should have 3 components: {0,1}, {2}, {3}
         assert_eq!(n_components, 3);
 
-        let labels = labels.unwrap();
+        let labels = labels.expect("Operation failed");
         assert_eq!(labels[0], labels[1]); // 0 and 1 connected
         assert_ne!(labels[0], labels[2]); // 2 is isolated
         assert_ne!(labels[0], labels[3]); // 3 is isolated

@@ -343,20 +343,22 @@ mod tests {
             vec![serde_json::json!(2), serde_json::json!(3)],
         );
 
-        let grid = create_sklearn_param_grid("kmeans", params).unwrap();
+        let grid = create_sklearn_param_grid("kmeans", params).expect("Operation failed");
         assert!(grid.contains_key("n_clusters"));
     }
 
     #[test]
     fn test_to_numpy_format() {
-        let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
         let result = to_numpy_format(&data);
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_to_scipy_linkage_format() {
-        let linkage = Array2::from_shape_vec((1, 3), vec![0.0, 1.0, 0.5]).unwrap();
+        let linkage =
+            Array2::from_shape_vec((1, 3), vec![0.0, 1.0, 0.5]).expect("Operation failed");
         let result = to_scipy_linkage_format(&linkage);
         assert!(result.is_ok());
     }

@@ -26,7 +26,7 @@
 //!     1.0, 0.0, 2.0,
 //!     0.0, 3.0, 0.0,
 //!     4.0, 0.0, 5.0
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! let mut sparse = SparseMatrix::from_dense(&dense, 1e-10)?;
 //! println!("Sparse matrix: {} non-zeros", sparse.nnz());
@@ -211,7 +211,7 @@ where
         if self.csr.is_none() {
             self.csr = Some(self.convert_to_csr()?);
         }
-        Ok(self.csr.as_ref().unwrap())
+        Ok(self.csr.as_ref().expect("Operation failed"))
     }
 
     /// Convert to CSC format (cached)
@@ -219,7 +219,7 @@ where
         if self.csc.is_none() {
             self.csc = Some(self.convert_to_csc()?);
         }
-        Ok(self.csc.as_ref().unwrap())
+        Ok(self.csc.as_ref().expect("Operation failed"))
     }
 
     /// Convert to COO format (always available)
@@ -497,7 +497,9 @@ impl SparseMatrix<f64> {
         let mut sparse = Self::new(mm_matrix.rows, mm_matrix.cols);
 
         for entry in &mm_matrix.entries {
-            sparse.push(entry.row, entry.col, entry.value).unwrap();
+            sparse
+                .push(entry.row, entry.col, entry.value)
+                .expect("Operation failed");
         }
 
         // Copy metadata
@@ -555,7 +557,9 @@ impl SparseMatrix<f64> {
             .zip(&self.coo.col_indices)
             .zip(&self.coo.values)
         {
-            transposed.push(*col, *row, *value).unwrap();
+            transposed
+                .push(*col, *row, *value)
+                .expect("Operation failed");
         }
 
         transposed
@@ -707,9 +711,9 @@ mod tests {
     #[test]
     fn test_sparse_matrix_creation() {
         let mut sparse = SparseMatrix::new(3, 3);
-        sparse.push(0, 0, 1.0).unwrap();
-        sparse.push(1, 1, 2.0).unwrap();
-        sparse.push(2, 2, 3.0).unwrap();
+        sparse.push(0, 0, 1.0).expect("Operation failed");
+        sparse.push(1, 1, 2.0).expect("Operation failed");
+        sparse.push(2, 2, 3.0).expect("Operation failed");
 
         assert_eq!(sparse.nnz(), 3);
         assert_eq!(sparse.shape(), (3, 3));
@@ -719,18 +723,18 @@ mod tests {
     #[test]
     fn test_format_conversion() {
         let mut sparse = SparseMatrix::new(3, 3);
-        sparse.push(0, 0, 1.0).unwrap();
-        sparse.push(0, 2, 2.0).unwrap();
-        sparse.push(2, 1, 3.0).unwrap();
+        sparse.push(0, 0, 1.0).expect("Operation failed");
+        sparse.push(0, 2, 2.0).expect("Operation failed");
+        sparse.push(2, 1, 3.0).expect("Operation failed");
 
         // Test CSR conversion
-        let csr = sparse.to_csr().unwrap();
+        let csr = sparse.to_csr().expect("Operation failed");
         assert_eq!(csr.row_ptrs, vec![0, 2, 2, 3]);
         assert_eq!(csr.col_indices, vec![0, 2, 1]);
         assert_eq!(csr.values, vec![1.0, 2.0, 3.0]);
 
         // Test CSC conversion
-        let csc = sparse.to_csc().unwrap();
+        let csc = sparse.to_csc().expect("Operation failed");
         assert_eq!(csc.col_ptrs, vec![0, 1, 2, 3]);
         assert_eq!(csc.row_indices, vec![0, 2, 0]);
         assert_eq!(csc.values, vec![1.0, 3.0, 2.0]);
@@ -739,7 +743,7 @@ mod tests {
     #[test]
     fn test_dense_sparse_conversion() {
         let dense = array![[1.0, 0.0, 2.0], [0.0, 3.0, 0.0], [4.0, 0.0, 5.0]];
-        let sparse = SparseMatrix::from_dense(&dense, 0.0).unwrap();
+        let sparse = SparseMatrix::from_dense(&dense, 0.0).expect("Operation failed");
 
         assert_eq!(sparse.nnz(), 5);
 
@@ -750,14 +754,14 @@ mod tests {
     #[test]
     fn test_matrix_addition() {
         let mut a = SparseMatrix::new(2, 2);
-        a.push(0, 0, 1.0).unwrap();
-        a.push(1, 1, 2.0).unwrap();
+        a.push(0, 0, 1.0).expect("Operation failed");
+        a.push(1, 1, 2.0).expect("Operation failed");
 
         let mut b = SparseMatrix::new(2, 2);
-        b.push(0, 0, 3.0).unwrap();
-        b.push(0, 1, 4.0).unwrap();
+        b.push(0, 0, 3.0).expect("Operation failed");
+        b.push(0, 1, 4.0).expect("Operation failed");
 
-        let result = (&a + &b).unwrap();
+        let result = (&a + &b).expect("Operation failed");
         assert_eq!(result.nnz(), 3);
 
         let dense_result = result.to_dense();
@@ -768,33 +772,35 @@ mod tests {
     #[test]
     fn test_sparse_matrix_vector_multiplication() {
         let mut sparse = SparseMatrix::new(3, 3);
-        sparse.push(0, 0, 1.0).unwrap();
-        sparse.push(0, 1, 2.0).unwrap();
-        sparse.push(1, 1, 3.0).unwrap();
-        sparse.push(2, 2, 4.0).unwrap();
+        sparse.push(0, 0, 1.0).expect("Operation failed");
+        sparse.push(0, 1, 2.0).expect("Operation failed");
+        sparse.push(1, 1, 3.0).expect("Operation failed");
+        sparse.push(2, 2, 4.0).expect("Operation failed");
 
         let vector = vec![1.0, 2.0, 3.0];
-        let result = ops::spmv(&mut sparse, &vector).unwrap();
+        let result = ops::spmv(&mut sparse, &vector).expect("Operation failed");
 
         assert_eq!(result, vec![5.0, 6.0, 12.0]);
     }
 
     #[test]
     fn test_matrix_market_integration() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test.mtx");
 
         // Create a sparse matrix
         let mut sparse = SparseMatrix::new(3, 3);
-        sparse.push(0, 0, 1.5).unwrap();
-        sparse.push(1, 1, 2.5).unwrap();
-        sparse.push(2, 0, 3.5).unwrap();
+        sparse.push(0, 0, 1.5).expect("Operation failed");
+        sparse.push(1, 1, 2.5).expect("Operation failed");
+        sparse.push(2, 0, 3.5).expect("Operation failed");
 
         // Save to Matrix Market format
-        sparse.save_matrix_market(&file_path).unwrap();
+        sparse
+            .save_matrix_market(&file_path)
+            .expect("Operation failed");
 
         // Load back
-        let loaded = SparseMatrix::load_matrix_market(&file_path).unwrap();
+        let loaded = SparseMatrix::load_matrix_market(&file_path).expect("Operation failed");
 
         assert_eq!(loaded.nnz(), 3);
         assert_eq!(loaded.shape(), (3, 3));
@@ -807,13 +813,13 @@ mod tests {
 
         // Add some elements to create patterns
         for i in 0..10 {
-            sparse.push(i, i, 1.0).unwrap();
+            sparse.push(i, i, 1.0).expect("Operation failed");
             if i < 5 {
-                sparse.push(i, i + 10, 2.0).unwrap();
+                sparse.push(i, i + 10, 2.0).expect("Operation failed");
             }
         }
 
-        let stats = sparse.stats().unwrap();
+        let stats = sparse.stats().expect("Operation failed");
 
         assert_eq!(stats.rows, 100);
         assert_eq!(stats.cols, 50);
@@ -826,8 +832,8 @@ mod tests {
     #[test]
     fn test_transpose() {
         let mut sparse = SparseMatrix::new(2, 3);
-        sparse.push(0, 1, 1.0).unwrap();
-        sparse.push(1, 2, 2.0).unwrap();
+        sparse.push(0, 1, 1.0).expect("Operation failed");
+        sparse.push(1, 2, 2.0).expect("Operation failed");
 
         let transposed = sparse.transpose();
 

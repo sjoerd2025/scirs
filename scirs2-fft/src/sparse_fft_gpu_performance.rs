@@ -130,7 +130,7 @@ impl PerformanceCollector {
         self.profiles
             .iter()
             .filter(|p| p.signal_size == signal_size)
-            .min_by(|a, b| a.stats.execution_time_ms.partial_cmp(&b.stats.execution_time_ms).unwrap())
+            .min_by(|a, b| a.stats.execution_time_ms.partial_cmp(&b.stats.execution_time_ms).expect("Operation failed"))
     }
     
     /// Get best algorithm for a given signal size

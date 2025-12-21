@@ -479,7 +479,7 @@ impl Default for GpuSpMV {
         Self::new().unwrap_or_else(|_| {
             // If GPU initialization fails, create CPU-only version
             Self {
-                context: GpuContext::new(GpuBackend::Cpu).unwrap(),
+                context: GpuContext::new(GpuBackend::Cpu).expect("Operation failed"),
                 backend: GpuBackend::Cpu,
             }
         })
@@ -501,7 +501,7 @@ mod tests {
 
     #[test]
     fn test_cpu_fallback_spmv() {
-        let gpu_spmv = GpuSpMV::with_backend(GpuBackend::Cpu).unwrap();
+        let gpu_spmv = GpuSpMV::with_backend(GpuBackend::Cpu).expect("Operation failed");
 
         // Simple test matrix: [[1, 2], [0, 3]]
         let indptr = vec![0, 2, 3];
@@ -509,7 +509,9 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0];
         let x = vec![1.0, 1.0];
 
-        let result = gpu_spmv.spmv(2, 2, &indptr, &indices, &data, &x).unwrap();
+        let result = gpu_spmv
+            .spmv(2, 2, &indptr, &indices, &data, &x)
+            .expect("Operation failed");
         assert_eq!(result, vec![3.0, 3.0]); // [1*1 + 2*1, 3*1] = [3, 3]
     }
 

@@ -31,7 +31,7 @@ use crate::error::{ClusteringError, Result};
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 ///
-/// let v_measure: f64 = v_measure_score(true_labels.view(), pred_labels.view()).unwrap();
+/// let v_measure: f64 = v_measure_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
 /// assert!(v_measure >= 0.0 && v_measure <= 1.0);
 /// ```
 pub fn v_measure_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
@@ -44,7 +44,7 @@ where
     if homogeneity + completeness == F::zero() {
         Ok(F::zero())
     } else {
-        let two = F::from(2).unwrap();
+        let two = F::from(2).expect("Failed to convert constant to float");
         Ok(two * homogeneity * completeness / (homogeneity + completeness))
     }
 }
@@ -70,7 +70,7 @@ where
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let pred_labels = Array1::from_vec(vec![0, 0, 1, 1]);
 ///
-/// let homogeneity: f64 = homogeneity_score(true_labels.view(), pred_labels.view()).unwrap();
+/// let homogeneity: f64 = homogeneity_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
 /// assert!((homogeneity - 1.0).abs() < 1e-10); // Perfect homogeneity
 /// ```
 pub fn homogeneity_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
@@ -113,7 +113,7 @@ where
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let pred_labels = Array1::from_vec(vec![0, 0, 1, 1]);
 ///
-/// let completeness: f64 = completeness_score(true_labels.view(), pred_labels.view()).unwrap();
+/// let completeness: f64 = completeness_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
 /// assert!((completeness - 1.0).abs() < 1e-10); // Perfect completeness
 /// ```
 pub fn completeness_score<F>(
@@ -185,7 +185,7 @@ where
     let v_measure = if homogeneity + completeness == F::zero() {
         F::zero()
     } else {
-        let two = F::from(2).unwrap();
+        let two = F::from(2).expect("Failed to convert constant to float");
         two * homogeneity * completeness / (homogeneity + completeness)
     };
 
@@ -245,12 +245,12 @@ where
         return Ok(F::zero());
     }
 
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
     let mut entropy = F::zero();
 
     for &count in counts.values() {
         if count > 0 {
-            let p = F::from(count).unwrap() / n_samples_f;
+            let p = F::from(count).expect("Failed to convert to float") / n_samples_f;
             entropy = entropy - p * p.ln();
         }
     }
@@ -280,14 +280,15 @@ where
         *y_counts.entry(y).or_insert(0) += 1;
     }
 
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
     let mut conditional_entropy = F::zero();
 
     for (&(x, y), &n_xy) in &joint_counts {
         let n_y = y_counts[&y];
 
-        let p_xy = F::from(n_xy).unwrap() / n_samples_f;
-        let p_x_given_y = F::from(n_xy).unwrap() / F::from(n_y).unwrap();
+        let p_xy = F::from(n_xy).expect("Failed to convert to float") / n_samples_f;
+        let p_x_given_y = F::from(n_xy).expect("Failed to convert to float")
+            / F::from(n_y).expect("Failed to convert to float");
 
         if p_xy > F::zero() && p_x_given_y > F::zero() {
             conditional_entropy = conditional_entropy - p_xy * p_x_given_y.ln();
@@ -305,7 +306,8 @@ mod tests {
     #[test]
     fn test_v_measure_perfect() {
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
-        let v_measure: f64 = v_measure_score(labels.view(), labels.view()).unwrap();
+        let v_measure: f64 =
+            v_measure_score(labels.view(), labels.view()).expect("Operation failed");
         assert!((v_measure - 1.0).abs() < 1e-10);
     }
 
@@ -314,7 +316,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
         let pred_labels = Array1::from_vec(vec![0, 1, 2, 3, 4, 5]); // Each point in its own cluster
 
-        let homogeneity: f64 = homogeneity_score(true_labels.view(), pred_labels.view()).unwrap();
+        let homogeneity: f64 =
+            homogeneity_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
         assert!((homogeneity - 1.0).abs() < 1e-10); // Perfect homogeneity
     }
 
@@ -323,7 +326,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 1, 2, 3, 4, 5]);
         let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]); // All points in same clusters
 
-        let completeness: f64 = completeness_score(true_labels.view(), pred_labels.view()).unwrap();
+        let completeness: f64 =
+            completeness_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
         assert!((completeness - 1.0).abs() < 1e-10); // Perfect completeness
     }
 
@@ -333,7 +337,8 @@ mod tests {
         let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 
         let (h, c, v): (f64, f64, f64) =
-            homogeneity_completeness_v_measure(true_labels.view(), pred_labels.view()).unwrap();
+            homogeneity_completeness_v_measure(true_labels.view(), pred_labels.view())
+                .expect("Operation failed");
 
         assert!(h >= 0.0 && h <= 1.0);
         assert!(c >= 0.0 && c <= 1.0);
@@ -354,16 +359,17 @@ mod tests {
         let pred_labels = Array1::from_vec(vec![0, 1, 0, 1]);
 
         // Test different beta values
-        let v1: f64 =
-            weighted_v_measure_score(true_labels.view(), pred_labels.view(), 1.0).unwrap();
-        let v2: f64 =
-            weighted_v_measure_score(true_labels.view(), pred_labels.view(), 2.0).unwrap();
+        let v1: f64 = weighted_v_measure_score(true_labels.view(), pred_labels.view(), 1.0)
+            .expect("Operation failed");
+        let v2: f64 = weighted_v_measure_score(true_labels.view(), pred_labels.view(), 2.0)
+            .expect("Operation failed");
 
         assert!(v1 >= 0.0 && v1 <= 1.0);
         assert!(v2 >= 0.0 && v2 <= 1.0);
 
         // With beta=1, should equal regular V-measure
-        let regular_v: f64 = v_measure_score(true_labels.view(), pred_labels.view()).unwrap();
+        let regular_v: f64 =
+            v_measure_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
         assert!((v1 - regular_v).abs() < 1e-10);
     }
 
@@ -371,13 +377,13 @@ mod tests {
     fn test_entropy() {
         // Uniform distribution should have maximum entropy
         let uniform = Array1::from_vec(vec![0, 1, 2, 3]);
-        let h: f64 = entropy::<f64>(uniform.view()).unwrap();
+        let h: f64 = entropy::<f64>(uniform.view()).expect("Operation failed");
         let expected = 4.0_f64.ln();
         assert!((h - expected).abs() < 1e-10);
 
         // Single value should have zero entropy
         let single = Array1::from_vec(vec![0, 0, 0, 0]);
-        let h_single: f64 = entropy::<f64>(single.view()).unwrap();
+        let h_single: f64 = entropy::<f64>(single.view()).expect("Operation failed");
         assert!(h_single.abs() < 1e-10);
     }
 
@@ -387,7 +393,8 @@ mod tests {
         let x = Array1::from_vec(vec![0, 0, 1, 1]);
         let y = Array1::from_vec(vec![0, 0, 1, 1]); // Same as x
 
-        let h_x_given_y: f64 = conditional_entropy::<f64>(x.view(), y.view()).unwrap();
+        let h_x_given_y: f64 =
+            conditional_entropy::<f64>(x.view(), y.view()).expect("Operation failed");
         assert!(h_x_given_y.abs() < 1e-10);
     }
 
@@ -396,7 +403,8 @@ mod tests {
         // Empty arrays
         let empty = Array1::from_vec(vec![]);
         let (h, c, v): (f64, f64, f64) =
-            homogeneity_completeness_v_measure(empty.view(), empty.view()).unwrap();
+            homogeneity_completeness_v_measure(empty.view(), empty.view())
+                .expect("Operation failed");
         assert_eq!(h, 1.0);
         assert_eq!(c, 1.0);
         assert_eq!(v, 1.0);
@@ -405,7 +413,8 @@ mod tests {
         let single_true = Array1::from_vec(vec![0]);
         let single_pred = Array1::from_vec(vec![1]);
         let (h, c, v): (f64, f64, f64) =
-            homogeneity_completeness_v_measure(single_true.view(), single_pred.view()).unwrap();
+            homogeneity_completeness_v_measure(single_true.view(), single_pred.view())
+                .expect("Operation failed");
         assert_eq!(h, 1.0);
         assert_eq!(c, 1.0);
         assert_eq!(v, 1.0);

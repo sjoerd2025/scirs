@@ -309,7 +309,7 @@ impl ResourceMonitor {
         }
 
         // Get the latest snapshot
-        let latest = self.snapshots.back().unwrap();
+        let latest = self.snapshots.back().expect("Operation failed");
 
         // Check each resource
         let cpu_pressure = latest.cpu_usage > self.config.cpu_load_threshold;
@@ -346,7 +346,7 @@ impl ResourceMonitor {
         }
 
         // Get the latest snapshot
-        let latest = self.snapshots.back().unwrap();
+        let latest = self.snapshots.back().expect("Operation failed");
 
         // Calculate combined pressure
         let pressure = latest.combined_pressure();
@@ -435,7 +435,7 @@ impl ResourceMonitor {
         // Calculate trends (compare recent with older snapshots)
         let trend_duration = if count >= 2 {
             let oldest = &self.snapshots[0];
-            let newest = self.snapshots.back().unwrap();
+            let newest = self.snapshots.back().expect("Operation failed");
 
             newest.timestamp.duration_since(oldest.timestamp)
         } else {
@@ -446,7 +446,11 @@ impl ResourceMonitor {
             avg_cpu_usage: avg_cpu,
             avg_memory_pressure,
             avg_io_bytes_per_sec: avg_io_bytes,
-            combined_pressure: self.snapshots.back().unwrap().combined_pressure(),
+            combined_pressure: self
+                .snapshots
+                .back()
+                .expect("Operation failed")
+                .combined_pressure(),
             snapshot_count: count,
             duration: trend_duration,
             under_pressure: self.under_pressure,

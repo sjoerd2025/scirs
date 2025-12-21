@@ -41,8 +41,8 @@ use super::algorithms::*;
 /// let x = array![0.0, 1.0, 2.0, 3.0];
 /// let y = array![0.0, 1.0, 4.0, 9.0];
 ///
-/// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
-/// let value = spline.evaluate(1.5).unwrap();
+/// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
+/// let value = spline.evaluate(1.5).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct CubicSpline<F: InterpolationFloat> {
@@ -212,10 +212,10 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
     ///
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
     /// // Interpolate at x = 1.5
-    /// let y_interp = spline.evaluate(1.5).unwrap();
+    /// let y_interp = spline.evaluate(1.5).expect("Operation failed");
     /// println!("Interpolated value at x=1.5: {}", y_interp);
     /// ```
     pub fn new(x: &ArrayView1<F>, y: &ArrayView1<F>) -> InterpolateResult<Self> {

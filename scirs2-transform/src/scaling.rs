@@ -149,8 +149,8 @@ impl QuantileTransformer {
             ));
         }
 
-        let quantiles = self.quantiles.as_ref().unwrap();
-        let references = self.references.as_ref().unwrap();
+        let quantiles = self.quantiles.as_ref().expect("Operation failed");
+        let references = self.references.as_ref().expect("Operation failed");
 
         if n_features != quantiles.shape()[0] {
             return Err(TransformError::InvalidInput(format!(
@@ -400,7 +400,7 @@ impl MaxAbsScaler {
             ));
         }
 
-        let scale = self.scale_.as_ref().unwrap();
+        let scale = self.scale_.as_ref().expect("Operation failed");
 
         if n_features != scale.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -461,7 +461,7 @@ impl MaxAbsScaler {
             ));
         }
 
-        let max_abs = self.max_abs_.as_ref().unwrap();
+        let max_abs = self.max_abs_.as_ref().expect("Operation failed");
 
         if n_features != max_abs.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -521,10 +521,11 @@ mod tests {
                 1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0, 100.0, 1000.0,
             ], // Last row has outliers
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let mut transformer = QuantileTransformer::new(5, "uniform", true).unwrap();
-        let transformed = transformer.fit_transform(&data).unwrap();
+        let mut transformer =
+            QuantileTransformer::new(5, "uniform", true).expect("Operation failed");
+        let transformed = transformer.fit_transform(&data).expect("Operation failed");
 
         // Check that the shape is preserved
         assert_eq!(transformed.shape(), &[6, 2]);
@@ -552,10 +553,12 @@ mod tests {
     #[test]
     fn test_quantile_transformer_normal() {
         // Create test data
-        let data = Array::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let data =
+            Array::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).expect("Operation failed");
 
-        let mut transformer = QuantileTransformer::new(5, "normal", false).unwrap();
-        let transformed = transformer.fit_transform(&data).unwrap();
+        let mut transformer =
+            QuantileTransformer::new(5, "normal", false).expect("Operation failed");
+        let transformed = transformer.fit_transform(&data).expect("Operation failed");
 
         // Check that the shape is preserved
         assert_eq!(transformed.shape(), &[5, 1]);
@@ -573,8 +576,9 @@ mod tests {
         assert!(QuantileTransformer::new(100, "invalid", true).is_err());
 
         // Test fitting with insufficient data
-        let small_data = Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap();
-        let mut transformer = QuantileTransformer::new(10, "uniform", true).unwrap();
+        let small_data = Array::from_shape_vec((2, 1), vec![1.0, 2.0]).expect("Operation failed");
+        let mut transformer =
+            QuantileTransformer::new(10, "uniform", true).expect("Operation failed");
         assert!(transformer.fit(&small_data).is_err());
     }
 
@@ -595,21 +599,21 @@ mod tests {
             (5, 2),
             vec![-4.0, -10.0, -2.0, -5.0, 0.0, 0.0, 2.0, 5.0, 4.0, 10.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut scaler = MaxAbsScaler::new();
-        let scaled = scaler.fit_transform(&data).unwrap();
+        let scaled = scaler.fit_transform(&data).expect("Operation failed");
 
         // Check that the shape is preserved
         assert_eq!(scaled.shape(), &[5, 2]);
 
         // Check the maximum absolute values
-        let max_abs = scaler.max_abs().unwrap();
+        let max_abs = scaler.max_abs().expect("Operation failed");
         assert_abs_diff_eq!(max_abs[0], 4.0, epsilon = 1e-10);
         assert_abs_diff_eq!(max_abs[1], 10.0, epsilon = 1e-10);
 
         // Check the scale factors
-        let scale = scaler.scale().unwrap();
+        let scale = scaler.scale().expect("Operation failed");
         assert_abs_diff_eq!(scale[0], 0.25, epsilon = 1e-10); // 1/4
         assert_abs_diff_eq!(scale[1], 0.1, epsilon = 1e-10); // 1/10
 
@@ -635,13 +639,14 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_positive_only() {
         // Test with positive-only data
-        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 6.0, 5.0, 10.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 6.0, 5.0, 10.0])
+            .expect("Operation failed");
 
         let mut scaler = MaxAbsScaler::new();
-        let scaled = scaler.fit_transform(&data).unwrap();
+        let scaled = scaler.fit_transform(&data).expect("Operation failed");
 
         // Check maximum absolute values
-        let max_abs = scaler.max_abs().unwrap();
+        let max_abs = scaler.max_abs().expect("Operation failed");
         assert_abs_diff_eq!(max_abs[0], 5.0, epsilon = 1e-10);
         assert_abs_diff_eq!(max_abs[1], 10.0, epsilon = 1e-10);
 
@@ -654,11 +659,12 @@ mod tests {
 
     #[test]
     fn test_max_abs_scaler_inverse_transform() {
-        let data = Array::from_shape_vec((3, 2), vec![-6.0, 8.0, 0.0, -4.0, 3.0, 12.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![-6.0, 8.0, 0.0, -4.0, 3.0, 12.0])
+            .expect("Operation failed");
 
         let mut scaler = MaxAbsScaler::new();
-        let scaled = scaler.fit_transform(&data).unwrap();
-        let inverse = scaler.inverse_transform(&scaled).unwrap();
+        let scaled = scaler.fit_transform(&data).expect("Operation failed");
+        let inverse = scaler.inverse_transform(&scaled).expect("Operation failed");
 
         // Check that inverse transform recovers original data
         assert_eq!(inverse.shape(), data.shape());
@@ -672,10 +678,11 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_constant_feature() {
         // Test with a constant feature (all zeros)
-        let data = Array::from_shape_vec((3, 2), vec![0.0, 5.0, 0.0, 10.0, 0.0, 15.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![0.0, 5.0, 0.0, 10.0, 0.0, 15.0])
+            .expect("Operation failed");
 
         let mut scaler = MaxAbsScaler::new();
-        let scaled = scaler.fit_transform(&data).unwrap();
+        let scaled = scaler.fit_transform(&data).expect("Operation failed");
 
         // Constant zero feature should remain zero
         for i in 0..3 {
@@ -695,17 +702,20 @@ mod tests {
         assert!(scaler.fit(&empty_data).is_err());
 
         // Test transform before fit
-        let data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
         let unfitted_scaler = MaxAbsScaler::new();
         assert!(unfitted_scaler.transform(&data).is_err());
         assert!(unfitted_scaler.inverse_transform(&data).is_err());
 
         // Test feature dimension mismatch
-        let train_data = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let test_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let train_data = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
+        let test_data =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 
         let mut scaler = MaxAbsScaler::new();
-        scaler.fit(&train_data).unwrap();
+        scaler.fit(&train_data).expect("Operation failed");
         assert!(scaler.transform(&test_data).is_err());
         assert!(scaler.inverse_transform(&test_data).is_err());
     }
@@ -713,13 +723,14 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_single_feature() {
         // Test with single feature
-        let data = Array::from_shape_vec((4, 1), vec![-8.0, -2.0, 4.0, 6.0]).unwrap();
+        let data =
+            Array::from_shape_vec((4, 1), vec![-8.0, -2.0, 4.0, 6.0]).expect("Operation failed");
 
         let mut scaler = MaxAbsScaler::new();
-        let scaled = scaler.fit_transform(&data).unwrap();
+        let scaled = scaler.fit_transform(&data).expect("Operation failed");
 
         // Maximum absolute value should be 8.0
-        let max_abs = scaler.max_abs().unwrap();
+        let max_abs = scaler.max_abs().expect("Operation failed");
         assert_abs_diff_eq!(max_abs[0], 8.0, epsilon = 1e-10);
 
         // Check scaled values
@@ -741,10 +752,10 @@ mod tests {
                 -5.0, 10.0, 0.0, // Row with zero at end
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut scaler = MaxAbsScaler::new();
-        let scaled = scaler.fit_transform(&data).unwrap();
+        let scaled = scaler.fit_transform(&data).expect("Operation failed");
 
         // Check that zeros remain zeros
         assert_abs_diff_eq!(scaled[[0, 0]], 0.0, epsilon = 1e-10);

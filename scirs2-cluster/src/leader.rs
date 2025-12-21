@@ -44,7 +44,7 @@ use std::fmt::Debug;
 ///     [5.2, 4.1],
 /// ];
 ///
-/// let (leaders, labels) = leader_clustering(data.view(), 1.0, euclidean_distance).unwrap();
+/// let (leaders, labels) = leader_clustering(data.view(), 1.0, euclidean_distance).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn leader_clustering<F, D>(
@@ -367,7 +367,8 @@ mod tests {
     fn test_leader_clustering_basic() {
         let data = array![[1.0, 2.0], [1.2, 1.8], [5.0, 4.0], [5.2, 4.1],];
 
-        let (leaders, labels) = leader_clustering(data.view(), 1.0, euclidean_distance).unwrap();
+        let (leaders, labels) =
+            leader_clustering(data.view(), 1.0, euclidean_distance).expect("Operation failed");
 
         // Should create 2 clusters
         assert_eq!(leaders.nrows(), 2);
@@ -383,7 +384,8 @@ mod tests {
     fn test_leader_clustering_single_cluster() {
         let data = array![[1.0, 2.0], [1.2, 1.8], [1.1, 2.1], [0.9, 1.9],];
 
-        let (leaders, labels) = leader_clustering(data.view(), 2.0, euclidean_distance).unwrap();
+        let (leaders, labels) =
+            leader_clustering(data.view(), 2.0, euclidean_distance).expect("Operation failed");
 
         // Should create 1 cluster with large threshold
         assert_eq!(leaders.nrows(), 1);
@@ -394,15 +396,15 @@ mod tests {
     fn test_leader_class() {
         let data = array![[1.0, 2.0], [1.2, 1.8], [5.0, 4.0], [5.2, 4.1],];
 
-        let mut leader = LeaderClustering::new(1.0).unwrap();
-        let labels = leader.fit_predict(data.view()).unwrap();
+        let mut leader = LeaderClustering::new(1.0).expect("Operation failed");
+        let labels = leader.fit_predict(data.view()).expect("Operation failed");
 
         assert_eq!(leader.n_clusters(), 2);
         assert_eq!(labels.len(), 4);
 
         // Test prediction on new data
         let new_data = array![[1.1, 1.9], [5.1, 4.05]];
-        let new_labels = leader.predict(new_data.view()).unwrap();
+        let new_labels = leader.predict(new_data.view()).expect("Operation failed");
         assert_eq!(new_labels[0], labels[0]); // Close to first cluster
         assert_eq!(new_labels[1], labels[2]); // Close to second cluster
     }
@@ -419,7 +421,8 @@ mod tests {
         ];
 
         let thresholds = vec![6.0, 1.0];
-        let tree = LeaderTree::build_hierarchical(data.view(), &thresholds).unwrap();
+        let tree =
+            LeaderTree::build_hierarchical(data.view(), &thresholds).expect("Operation failed");
 
         // At threshold 6.0, should have 2 clusters (1,2 and 3,4,5,6)
         assert!(tree.roots.len() <= 3);

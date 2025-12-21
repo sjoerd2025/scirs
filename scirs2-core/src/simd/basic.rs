@@ -126,8 +126,8 @@ pub fn simd_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 8 f32s at a time with AVX2
                 while i + 8 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 8];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 8];
+                    let a_slice = &a.as_slice().expect("Operation failed")[i..i + 8];
+                    let b_slice = &b.as_slice().expect("Operation failed")[i..i + 8];
 
                     let a_vec = _mm256_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_ps(b_slice.as_ptr());
@@ -149,8 +149,8 @@ pub fn simd_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 4 f32s at a time with SSE
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Operation failed")[i..i + 4];
 
                     let a_vec = _mm_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm_loadu_ps(b_slice.as_ptr());
@@ -184,8 +184,8 @@ pub fn simd_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
                 // Process 4 f32s at a time with NEON
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Operation failed")[i..i + 4];
 
                     let a_vec = vld1q_f32(a_slice.as_ptr());
                     let b_vec = vld1q_f32(b_slice.as_ptr());
@@ -233,8 +233,8 @@ pub fn simd_add_f32_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array
     let mut result = vec![0.0f32; len];
 
     // Get contiguous data pointers for direct access
-    let a_ptr = a.as_slice().unwrap().as_ptr();
-    let b_ptr = b.as_slice().unwrap().as_ptr();
+    let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+    let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
     let result_ptr = result.as_mut_ptr();
 
     #[cfg(target_arch = "x86_64")]
@@ -395,8 +395,8 @@ pub fn simd_add_f32_fast(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32
     let len = a.len();
     let mut result = vec![0.0f32; len];
 
-    let a_ptr = a.as_slice().unwrap().as_ptr();
-    let b_ptr = b.as_slice().unwrap().as_ptr();
+    let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+    let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
     let result_ptr = result.as_mut_ptr();
 
     let features = get_cpu_features();
@@ -558,8 +558,8 @@ pub fn simd_add_f32_ultra(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f3
     let len = a.len();
     let mut result = vec![0.0f32; len];
 
-    let a_ptr = a.as_slice().unwrap().as_ptr();
-    let b_ptr = b.as_slice().unwrap().as_ptr();
+    let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+    let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
     let result_ptr = result.as_mut_ptr();
 
     let features = get_cpu_features();

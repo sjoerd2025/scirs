@@ -274,9 +274,9 @@ where
     let abs_r = r.abs();
 
     if abs_r <= delta {
-        Ok(r * r / T::from_f64(2.0).unwrap())
+        Ok(r * r / T::from_f64(2.0).expect("Operation failed"))
     } else {
-        Ok(delta * abs_r - delta * delta / T::from_f64(2.0).unwrap())
+        Ok(delta * abs_r - delta * delta / T::from_f64(2.0).expect("Operation failed"))
     }
 }
 
@@ -501,21 +501,41 @@ mod tests {
         let delta = 1.0;
 
         // Small residuals (quadratic region)
-        assert_relative_eq!(huber(delta, 0.5).unwrap(), 0.125, epsilon = 1e-10);
-        assert_relative_eq!(huber(delta, -0.5).unwrap(), 0.125, epsilon = 1e-10);
+        assert_relative_eq!(
+            huber(delta, 0.5).expect("Operation failed"),
+            0.125,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            huber(delta, -0.5).expect("Operation failed"),
+            0.125,
+            epsilon = 1e-10
+        );
 
         // Large residuals (linear region)
-        assert_relative_eq!(huber(delta, 2.0).unwrap(), 1.5, epsilon = 1e-10);
-        assert_relative_eq!(huber(delta, -2.0).unwrap(), 1.5, epsilon = 1e-10);
+        assert_relative_eq!(
+            huber(delta, 2.0).expect("Operation failed"),
+            1.5,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            huber(delta, -2.0).expect("Operation failed"),
+            1.5,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
     fn test_pseudo_huber() {
         let delta = 1.0;
 
-        assert_relative_eq!(pseudo_huber(delta, 0.0).unwrap(), 0.0, epsilon = 1e-10);
         assert_relative_eq!(
-            pseudo_huber(delta, 1.0).unwrap(),
+            pseudo_huber(delta, 0.0).expect("Operation failed"),
+            0.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            pseudo_huber(delta, 1.0).expect("Operation failed"),
             0.41421356237309515,
             epsilon = 1e-10
         );
@@ -524,11 +544,11 @@ mod tests {
     #[test]
     fn test_entropy() {
         let uniform = arr1(&[0.25, 0.25, 0.25, 0.25]);
-        let h = entropy(&uniform.view()).unwrap();
+        let h = entropy(&uniform.view()).expect("Operation failed");
         assert_relative_eq!(h, 1.3862943611198906, epsilon = 1e-10); // log(4)
 
         let certain = arr1(&[1.0, 0.0, 0.0, 0.0]);
-        let h = entropy(&certain.view()).unwrap();
+        let h = entropy(&certain.view()).expect("Operation failed");
         assert_relative_eq!(h, 0.0, epsilon = 1e-10);
     }
 
@@ -536,16 +556,16 @@ mod tests {
     fn test_kl_divergence() {
         let p = arr1(&[0.5, 0.5]);
         let q = arr1(&[0.9, 0.1]);
-        let kl = kl_divergence(&p.view(), &q.view()).unwrap();
+        let kl = kl_divergence(&p.view(), &q.view()).expect("Operation failed");
         assert!(kl > 0.0); // KL divergence is always non-negative
     }
 
     #[test]
     fn test_binary_entropy() {
-        assert_eq!(binary_entropy(0.0).unwrap(), 0.0);
-        assert_eq!(binary_entropy(1.0).unwrap(), 0.0);
+        assert_eq!(binary_entropy(0.0).expect("Operation failed"), 0.0);
+        assert_eq!(binary_entropy(1.0).expect("Operation failed"), 0.0);
         assert_relative_eq!(
-            binary_entropy(0.5).unwrap(),
+            binary_entropy(0.5).expect("Operation failed"),
             std::f64::consts::LN_2,
             epsilon = 1e-10
         ); // log(2)

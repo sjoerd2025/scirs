@@ -638,7 +638,7 @@ impl TimeSeriesClusterer {
             }
 
             // Sort by distance and take k nearest neighbors
-            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
             let k_neighbors = distances.iter().take(config.k).cloned().collect::<Vec<_>>();
 
             // Store neighbor distances
@@ -680,7 +680,7 @@ impl TimeSeriesClusterer {
             let predicted_class = class_votes
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
                 .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
@@ -760,7 +760,7 @@ impl TimeSeriesClusterer {
         }
 
         // Sort by information gain and select top shapelets
-        shapelet_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        shapelet_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         let n_selected = config.nshapelets.min(shapelet_scores.len());
         let mut selectedshapelets = Vec::new();
@@ -1261,7 +1261,7 @@ impl TimeSeriesClusterer {
         }
 
         // Sort by distance
-        distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        distances.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         // Compute initial entropy
         let initial_entropy = self.compute_entropy(labels)?;
@@ -1390,7 +1390,9 @@ mod tests {
             ..Default::default()
         };
 
-        let result = clusterer.kmeans_clustering(&data, &config).unwrap();
+        let result = clusterer
+            .kmeans_clustering(&data, &config)
+            .expect("Operation failed");
 
         assert_eq!(result.n_clusters, 2);
         assert_eq!(result.cluster_labels.len(), 6);
@@ -1436,7 +1438,7 @@ mod tests {
 
         let result = clusterer
             .knn_classification(&train_data, &train_labels, &test_data, &config)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.predicted_labels.len(), 2);
         assert_eq!(result.n_classes, 2);
@@ -1482,7 +1484,7 @@ mod tests {
 
         let result = clusterer
             .discovershapelets(&data, &labels, &config)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.shapelets.len() <= config.nshapelets);
         assert_eq!(result.information_gains.len(), result.shapelets.len());

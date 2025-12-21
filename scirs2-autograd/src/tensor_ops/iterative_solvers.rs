@@ -116,7 +116,10 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimitive> Op<F> for C
                 ctx.append_input_grad(1, Some(grad_b_tensor));
 
                 // grad_A = -y ⊗ x
-                let x_1d = x_array.view().into_dimensionality::<Ix1>().unwrap();
+                let x_1d = x_array
+                    .view()
+                    .into_dimensionality::<Ix1>()
+                    .expect("Operation failed");
                 let grad_a = -outer_product(&y.view(), &x_1d);
                 let grad_a_tensor = crate::tensor_ops::convert_to_tensor(grad_a.into_dyn(), g);
                 ctx.append_input_grad(0, Some(grad_a_tensor));
@@ -298,8 +301,10 @@ fn conjugate_gradient<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimi
 ) -> Result<Array1<F>, OpError> {
     let n = b.len();
     let tol = tolerance
-        .map(|t| F::from(t).unwrap())
-        .unwrap_or_else(|| F::epsilon() * F::from(10.0).unwrap());
+        .map(|t| F::from(t).expect("Failed to convert to float"))
+        .unwrap_or_else(|| {
+            F::epsilon() * F::from(10.0).expect("Failed to convert constant to float")
+        });
 
     // Initial guess x = 0
     let mut x = Array1::<F>::zeros(n);
@@ -342,8 +347,10 @@ fn gmres<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimitive>(
 ) -> Result<Array1<F>, OpError> {
     let n = b.len();
     let tol = tolerance
-        .map(|t| F::from(t).unwrap())
-        .unwrap_or_else(|| F::epsilon() * F::from(10.0).unwrap());
+        .map(|t| F::from(t).expect("Failed to convert to float"))
+        .unwrap_or_else(|| {
+            F::epsilon() * F::from(10.0).expect("Failed to convert constant to float")
+        });
 
     let mut x = Array1::<F>::zeros(n);
     let m = restart.min(n);
@@ -411,8 +418,10 @@ fn bicgstab<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimitive>(
 ) -> Result<Array1<F>, OpError> {
     let n = b.len();
     let tol = tolerance
-        .map(|t| F::from(t).unwrap())
-        .unwrap_or_else(|| F::epsilon() * F::from(10.0).unwrap());
+        .map(|t| F::from(t).expect("Failed to convert to float"))
+        .unwrap_or_else(|| {
+            F::epsilon() * F::from(10.0).expect("Failed to convert constant to float")
+        });
 
     let mut x = Array1::<F>::zeros(n);
     let mut r = b - &a.dot(&x);
@@ -472,8 +481,10 @@ fn pcg<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimitive>(
 ) -> Result<Array1<F>, OpError> {
     let n = b.len();
     let tol = tolerance
-        .map(|t| F::from(t).unwrap())
-        .unwrap_or_else(|| F::epsilon() * F::from(10.0).unwrap());
+        .map(|t| F::from(t).expect("Failed to convert to float"))
+        .unwrap_or_else(|| {
+            F::epsilon() * F::from(10.0).expect("Failed to convert constant to float")
+        });
 
     let mut x = Array1::<F>::zeros(n);
     let mut r = b.to_owned();

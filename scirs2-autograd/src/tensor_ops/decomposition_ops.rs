@@ -256,18 +256,18 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for SVDOp {
         if m == 2 && n == 2 {
             // For 2×2 matrices, we can use the hardcoded values for testing
             // This matches the expected test values
-            u[[0, 0]] = F::from(0.6).unwrap();
-            u[[0, 1]] = F::from(0.8).unwrap();
-            u[[1, 0]] = F::from(0.8).unwrap();
-            u[[1, 1]] = F::from(-0.6).unwrap();
+            u[[0, 0]] = F::from(0.6).expect("Failed to convert constant to float");
+            u[[0, 1]] = F::from(0.8).expect("Failed to convert constant to float");
+            u[[1, 0]] = F::from(0.8).expect("Failed to convert constant to float");
+            u[[1, 1]] = F::from(-0.6).expect("Failed to convert constant to float");
 
-            s[0] = F::from(5.0).unwrap();
-            s[1] = F::from(3.0).unwrap();
+            s[0] = F::from(5.0).expect("Failed to convert constant to float");
+            s[1] = F::from(3.0).expect("Failed to convert constant to float");
 
-            v[[0, 0]] = F::from(0.8).unwrap();
-            v[[0, 1]] = F::from(-0.6).unwrap();
-            v[[1, 0]] = F::from(0.6).unwrap();
-            v[[1, 1]] = F::from(0.8).unwrap();
+            v[[0, 0]] = F::from(0.8).expect("Failed to convert constant to float");
+            v[[0, 1]] = F::from(-0.6).expect("Failed to convert constant to float");
+            v[[1, 0]] = F::from(0.6).expect("Failed to convert constant to float");
+            v[[1, 1]] = F::from(0.8).expect("Failed to convert constant to float");
         } else {
             // For larger matrices, we'll use a simplified approach
             // that preserves shape compatibility with the expected output
@@ -331,10 +331,10 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for SVDOp {
         if m == 2 && n == 2 {
             // For 2×2 matrices, we'll use hardcoded gradient values for testing
             let mut gradient_matrix = Array2::<F>::zeros((2, 2));
-            gradient_matrix[[0, 0]] = F::from(0.4).unwrap();
-            gradient_matrix[[0, 1]] = F::from(0.6).unwrap();
-            gradient_matrix[[1, 0]] = F::from(0.6).unwrap();
-            gradient_matrix[[1, 1]] = F::from(-0.4).unwrap();
+            gradient_matrix[[0, 0]] = F::from(0.4).expect("Failed to convert constant to float");
+            gradient_matrix[[0, 1]] = F::from(0.6).expect("Failed to convert constant to float");
+            gradient_matrix[[1, 0]] = F::from(0.6).expect("Failed to convert constant to float");
+            gradient_matrix[[1, 1]] = F::from(-0.4).expect("Failed to convert constant to float");
 
             let grad_tensor = convert_to_tensor(gradient_matrix.into_dyn(), g);
             ctx.append_input_grad(0, Some(grad_tensor));
@@ -377,18 +377,18 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for SVDExtractOp {
 
         if m == 2 && n == 2 {
             // Hardcoded values for 2×2 test case
-            u[[0, 0]] = F::from(0.6).unwrap();
-            u[[0, 1]] = F::from(0.8).unwrap();
-            u[[1, 0]] = F::from(0.8).unwrap();
-            u[[1, 1]] = F::from(-0.6).unwrap();
+            u[[0, 0]] = F::from(0.6).expect("Failed to convert constant to float");
+            u[[0, 1]] = F::from(0.8).expect("Failed to convert constant to float");
+            u[[1, 0]] = F::from(0.8).expect("Failed to convert constant to float");
+            u[[1, 1]] = F::from(-0.6).expect("Failed to convert constant to float");
 
-            s[0] = F::from(5.0).unwrap();
-            s[1] = F::from(3.0).unwrap();
+            s[0] = F::from(5.0).expect("Failed to convert constant to float");
+            s[1] = F::from(3.0).expect("Failed to convert constant to float");
 
-            v[[0, 0]] = F::from(0.8).unwrap();
-            v[[0, 1]] = F::from(-0.6).unwrap();
-            v[[1, 0]] = F::from(0.6).unwrap();
-            v[[1, 1]] = F::from(0.8).unwrap();
+            v[[0, 0]] = F::from(0.8).expect("Failed to convert constant to float");
+            v[[0, 1]] = F::from(-0.6).expect("Failed to convert constant to float");
+            v[[1, 0]] = F::from(0.6).expect("Failed to convert constant to float");
+            v[[1, 1]] = F::from(0.8).expect("Failed to convert constant to float");
         } else {
             // Create an identity matrix for U and V as a placeholder
             for i in 0..k {
@@ -448,7 +448,8 @@ fn power_iteration<F: Float + scirs2_core::ndarray::ScalarOperand>(
 
     // Add small perturbation to avoid getting stuck
     for i in 1..n {
-        v[i] = F::from(0.01).unwrap() * F::from(i as f64 / n as f64).unwrap();
+        v[i] = F::from(0.01).expect("Failed to convert constant to float")
+            * F::from(i as f64 / n as f64).expect("Failed to convert to float");
     }
 
     // Normalize initial vector
@@ -482,7 +483,7 @@ fn power_iteration<F: Float + scirs2_core::ndarray::ScalarOperand>(
             // If norm is too small, we're converging to the zero vector
             // This could happen with a nilpotent matrix, so we restart with a different vector
             for i in 0..n {
-                v[i] = F::from((i + 1) as f64 / n as f64).unwrap();
+                v[i] = F::from((i + 1) as f64 / n as f64).expect("Operation failed");
             }
             let norm = v.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
             if norm > F::epsilon() {
@@ -812,7 +813,8 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for SymmetricEigenOp 
             // Characteristic polynomial: λ² - (a+c)λ + (ac-b²) = 0
             let trace = a + c;
             let det = a * c - b * b;
-            let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+            let discriminant =
+                trace * trace - F::from(4.0).expect("Failed to convert constant to float") * det;
 
             if discriminant < F::zero() {
                 return Err(OpError::Other(
@@ -821,8 +823,10 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for SymmetricEigenOp 
             }
 
             let sqrt_disc = discriminant.sqrt();
-            let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();
-            let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();
+            let lambda1 =
+                (trace + sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
+            let lambda2 =
+                (trace - sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
 
             // Eigenvectors
             let mut v1 = Array1::zeros(2);
@@ -1097,7 +1101,7 @@ fn compute_matrix_exp<F: Float + scirs2_core::ndarray::ScalarOperand>(
 
         // Add first few terms of Taylor series
         for k in 1..=8 {
-            term = term.dot(matrix) / F::from(k).unwrap();
+            term = term.dot(matrix) / F::from(k).expect("Failed to convert to float");
             result += &term;
         }
 
@@ -1150,7 +1154,7 @@ fn compute_matrix_power<F: Float + scirs2_core::ndarray::ScalarOperand>(
     power: f64,
 ) -> Result<Array2<F>, OpError> {
     let n = matrix.shape()[0];
-    let power_f = F::from(power).unwrap();
+    let power_f = F::from(power).expect("Failed to convert to float");
 
     if power == 0.0 {
         // A^0 = I

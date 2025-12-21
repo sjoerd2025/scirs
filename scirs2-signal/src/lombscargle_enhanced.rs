@@ -416,7 +416,11 @@ fn bootstrap_confidence_intervals(
 
         // Sort by time
         let mut indices: Vec<usize> = (0..n).collect();
-        indices.sort_by(|&i, &j| boot_times[i].partial_cmp(&boot_times[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            boot_times[i]
+                .partial_cmp(&boot_times[j])
+                .expect("Operation failed")
+        });
 
         let sorted_times: Vec<f64> = indices.iter().map(|&i| boot_times[i]).collect();
         let sorted_values: Vec<f64> = indices.iter().map(|&i| boot_values[i]).collect();
@@ -437,7 +441,7 @@ fn bootstrap_confidence_intervals(
 
     for j in 0..n_freq {
         let mut freq_powers: Vec<f64> = bootstrap_powers.iter().map(|p| p[j]).collect();
-        freq_powers.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        freq_powers.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         lower_ci[j] = freq_powers[lower_percentile];
         upper_ci[j] = freq_powers[upper_percentile.min(n_iterations - 1)];

@@ -43,7 +43,7 @@ where
 
     // Ensure initial point is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     let mut f = fun(&x.view()).into();
@@ -82,7 +82,7 @@ where
             UpdateFormula::SR1 => {
                 // For SR1, we need to solve B * p = -g
                 // Using LU decomposition or approximation
-                let b = b_mat.as_ref().unwrap();
+                let b = b_mat.as_ref().expect("Operation failed");
                 // Simple approach: use the inverse directly (not efficient for large problems)
                 // In practice, should use linear solver
                 match invert_matrix(b) {
@@ -95,7 +95,7 @@ where
                 }
             }
             UpdateFormula::DFP | UpdateFormula::BFGS => {
-                let h = h_inv.as_ref().unwrap();
+                let h = h_inv.as_ref().expect("Operation failed");
                 -h.dot(&g)
             }
         };
@@ -200,7 +200,7 @@ where
 
     // Final check for bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Use original function for final value
@@ -426,7 +426,8 @@ mod tests {
     #[test]
     fn test_sr1_quadratic() {
         let quadratic = |x: &ArrayView1<f64>| -> f64 {
-            let a = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
+            let a =
+                Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).expect("Operation failed");
             let b = Array1::from_vec(vec![-4.0, -6.0]);
             0.5 * x.dot(&a.dot(x)) + b.dot(x)
         };
@@ -434,7 +435,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![0.0, 0.0]);
         let options = Options::default();
 
-        let result = minimize_sr1(quadratic, x0, &options).unwrap();
+        let result = minimize_sr1(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // Optimal solution: x = A^(-1) * (-b) = [2.0, 2.0]
@@ -445,7 +446,8 @@ mod tests {
     #[test]
     fn test_dfp_quadratic() {
         let quadratic = |x: &ArrayView1<f64>| -> f64 {
-            let a = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
+            let a =
+                Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).expect("Operation failed");
             let b = Array1::from_vec(vec![-4.0, -6.0]);
             0.5 * x.dot(&a.dot(x)) + b.dot(x)
         };
@@ -453,7 +455,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![0.0, 0.0]);
         let options = Options::default();
 
-        let result = minimize_dfp(quadratic, x0, &options).unwrap();
+        let result = minimize_dfp(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // Optimal solution: x = A^(-1) * (-b) = [2.0, 2.0]
@@ -474,7 +476,7 @@ mod tests {
         options.max_iter = 5000; // More iterations for Rosenbrock with SR1
         options.gtol = 1e-4; // Relaxed gradient tolerance for SR1
 
-        let result = minimize_sr1(rosenbrock, x0, &options).unwrap();
+        let result = minimize_sr1(rosenbrock, x0, &options).expect("Operation failed");
 
         // SR1 can be less stable than BFGS, so we check that reasonable progress was made
         let function_value = result.fun;
@@ -504,7 +506,7 @@ mod tests {
         let mut options = Options::default();
         options.max_iter = 2000; // More iterations for Rosenbrock
 
-        let result = minimize_dfp(rosenbrock, x0, &options).unwrap();
+        let result = minimize_dfp(rosenbrock, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 1.0, epsilon = 1e-2);
@@ -523,7 +525,7 @@ mod tests {
         let bounds = Bounds::new(&[(Some(0.0), Some(1.0)), (Some(0.0), Some(1.0))]);
         options.bounds = Some(bounds);
 
-        let result = minimize_dfp(quadratic, x0, &options).unwrap();
+        let result = minimize_dfp(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // The optimal point (2, 3) is outside the bounds, so we should get (1, 1)

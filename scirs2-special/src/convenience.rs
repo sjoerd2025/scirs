@@ -300,7 +300,7 @@ pub mod data_science {
         // Normalize _probabilities
         let n = probabilities.len();
         let mut sorted_probs: Vec<f64> = probabilities.to_vec();
-        sorted_probs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_probs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mut gini = 0.0;
         for (i, &p) in sorted_probs.iter().enumerate() {
@@ -397,7 +397,7 @@ pub mod data_science {
 
         // Sort by values
         let mut indices: Vec<usize> = (0..values.len()).collect();
-        indices.sort_by(|&i, &j| values[i].partial_cmp(&values[j]).unwrap());
+        indices.sort_by(|&i, &j| values[i].partial_cmp(&values[j]).expect("Operation failed"));
 
         let mut cum_p = 0.0;
         let mut cum_q = 0.0;
@@ -600,7 +600,8 @@ mod tests {
     #[test]
     fn test_particle_in_box() {
         let x = Array1::linspace(0.0, 1.0, 100);
-        let psi = physics::particle_in_box_wavefunction(1, &x.view(), true).unwrap();
+        let psi =
+            physics::particle_in_box_wavefunction(1, &x.view(), true).expect("Operation failed");
 
         // Check normalization using trapezoidal rule
         let dx = 1.0 / (100.0 - 1.0); // spacing between points
@@ -636,7 +637,8 @@ mod tests {
     #[test]
     fn test_shannon_entropy() {
         let uniform = array![0.25, 0.25, 0.25, 0.25];
-        let entropy = data_science::shannon_entropy(&uniform.view(), 2.0).unwrap();
+        let entropy =
+            data_science::shannon_entropy(&uniform.view(), 2.0).expect("Operation failed");
 
         // Uniform distribution over 4 outcomes has entropy of 2 bits
         assert!((entropy - 2.0).abs() < 1e-10);
@@ -645,7 +647,8 @@ mod tests {
     #[test]
     fn test_black_scholes() {
         // Test case with known result
-        let call_price = finance::black_scholes_call(100.0, 100.0, 0.05, 0.2, 1.0).unwrap();
+        let call_price =
+            finance::black_scholes_call(100.0, 100.0, 0.05, 0.2, 1.0).expect("Operation failed");
 
         // Price should be reasonable
         assert!(call_price > 0.0);

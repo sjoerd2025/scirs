@@ -28,7 +28,7 @@
 //! let f_layout = MemoryLayout::new_f_order(&[100, 200]);
 //!
 //! // Convert between layouts
-//! let converted = c_layout.to_order(LayoutOrder::Fortran).unwrap();
+//! let converted = c_layout.to_order(LayoutOrder::Fortran).expect("Operation failed");
 //!
 //! // Check if layout is contiguous
 //! assert!(c_layout.is_c_contiguous());
@@ -779,11 +779,26 @@ mod tests {
 
     #[test]
     fn test_layout_order_parsing() {
-        assert_eq!(LayoutOrder::parse("C").unwrap(), LayoutOrder::C);
-        assert_eq!(LayoutOrder::parse("F").unwrap(), LayoutOrder::Fortran);
-        assert_eq!(LayoutOrder::parse("fortran").unwrap(), LayoutOrder::Fortran);
-        assert_eq!(LayoutOrder::parse("A").unwrap(), LayoutOrder::Any);
-        assert_eq!(LayoutOrder::parse("K").unwrap(), LayoutOrder::Keep);
+        assert_eq!(
+            LayoutOrder::parse("C").expect("Operation failed"),
+            LayoutOrder::C
+        );
+        assert_eq!(
+            LayoutOrder::parse("F").expect("Operation failed"),
+            LayoutOrder::Fortran
+        );
+        assert_eq!(
+            LayoutOrder::parse("fortran").expect("Operation failed"),
+            LayoutOrder::Fortran
+        );
+        assert_eq!(
+            LayoutOrder::parse("A").expect("Operation failed"),
+            LayoutOrder::Any
+        );
+        assert_eq!(
+            LayoutOrder::parse("K").expect("Operation failed"),
+            LayoutOrder::Keep
+        );
         assert!(LayoutOrder::parse("X").is_err());
     }
 
@@ -821,10 +836,10 @@ mod tests {
         let layout = MemoryLayout::new_c_order(&[3, 4]);
 
         // Test some specific indices
-        assert_eq!(layout.linear_index(&[0, 0]).unwrap(), 0);
-        assert_eq!(layout.linear_index(&[0, 1]).unwrap(), 1);
-        assert_eq!(layout.linear_index(&[1, 0]).unwrap(), 4);
-        assert_eq!(layout.linear_index(&[2, 3]).unwrap(), 11);
+        assert_eq!(layout.linear_index(&[0, 0]).expect("Operation failed"), 0);
+        assert_eq!(layout.linear_index(&[0, 1]).expect("Operation failed"), 1);
+        assert_eq!(layout.linear_index(&[1, 0]).expect("Operation failed"), 4);
+        assert_eq!(layout.linear_index(&[2, 3]).expect("Operation failed"), 11);
 
         // Test bounds checking
         assert!(layout.linear_index(&[3, 0]).is_err());
@@ -835,10 +850,22 @@ mod tests {
     fn test_multi_indexing() {
         let layout = MemoryLayout::new_c_order(&[3, 4]);
 
-        assert_eq!(layout.multi_indices(0).unwrap(), vec![0, 0]);
-        assert_eq!(layout.multi_indices(1).unwrap(), vec![0, 1]);
-        assert_eq!(layout.multi_indices(4).unwrap(), vec![1, 0]);
-        assert_eq!(layout.multi_indices(11).unwrap(), vec![2, 3]);
+        assert_eq!(
+            layout.multi_indices(0).expect("Operation failed"),
+            vec![0, 0]
+        );
+        assert_eq!(
+            layout.multi_indices(1).expect("Operation failed"),
+            vec![0, 1]
+        );
+        assert_eq!(
+            layout.multi_indices(4).expect("Operation failed"),
+            vec![1, 0]
+        );
+        assert_eq!(
+            layout.multi_indices(11).expect("Operation failed"),
+            vec![2, 3]
+        );
 
         // Test bounds
         assert!(layout.multi_indices(12).is_err());
@@ -847,7 +874,9 @@ mod tests {
     #[test]
     fn test_layout_conversion() {
         let c_layout = MemoryLayout::new_c_order(&[5, 6]);
-        let f_layout = c_layout.to_order(LayoutOrder::Fortran).unwrap();
+        let f_layout = c_layout
+            .to_order(LayoutOrder::Fortran)
+            .expect("Operation failed");
 
         assert_eq!(f_layout.order, LayoutOrder::Fortran);
         assert_eq!(f_layout.shape, c_layout.shape);
@@ -857,19 +886,21 @@ mod tests {
     #[test]
     fn test_transpose() {
         let layout = MemoryLayout::new_c_order(&[3, 4, 5]);
-        let transposed = layout.transpose(Some(&[2, 0, 1])).unwrap();
+        let transposed = layout
+            .transpose(Some(&[2, 0, 1]))
+            .expect("Operation failed");
 
         assert_eq!(transposed.shape, vec![5, 3, 4]);
 
         // Test default transpose (reverse axes)
-        let default_transposed = layout.transpose(None).unwrap();
+        let default_transposed = layout.transpose(None).expect("Operation failed");
         assert_eq!(default_transposed.shape, vec![5, 4, 3]);
     }
 
     #[test]
     fn test_reshape() {
         let layout = MemoryLayout::new_c_order(&[6, 4]);
-        let reshaped = layout.reshape(&[3, 8]).unwrap();
+        let reshaped = layout.reshape(&[3, 8]).expect("Operation failed");
 
         assert_eq!(reshaped.shape, vec![3, 8]);
         assert_eq!(reshaped.size(), layout.size());
@@ -898,12 +929,12 @@ mod tests {
             crate::ndarray::Ix2(3, 4),
             LayoutOrder::C,
         )
-        .unwrap();
+        .expect("Operation failed");
         assert!(ArrayLayout::is_c_order(&c_array));
 
         let f_array: crate::ndarray::Array2<f64> =
             ArrayCreation::array_with_order(data, crate::ndarray::Ix2(3, 4), LayoutOrder::Fortran)
-                .unwrap();
+                .expect("Operation failed");
         assert!(ArrayLayout::is_f_order(&f_array));
     }
 }

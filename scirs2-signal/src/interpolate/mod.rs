@@ -23,7 +23,7 @@
 //
 // let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 // let config = InterpolationConfig::default();
-// let result = interpolate(&signal, InterpolationMethod::Linear, &config).unwrap();
+// let result = interpolate(&signal, InterpolationMethod::Linear, &config).expect("Operation failed");
 // ```
 //
 // For automatic method selection:
@@ -34,7 +34,7 @@
 //
 // let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 // let config = InterpolationConfig::default();
-// let (result, method) = auto_interpolate(&signal, &config, false).unwrap();
+// let (result, method) = auto_interpolate(&signal, &config, false).expect("Operation failed");
 // ```
 //
 // # Algorithm Selection Guide
@@ -118,7 +118,7 @@ pub use spectral::polynomial::{
 /// use scirs2_signal::interpolate::linear;
 ///
 /// let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
-/// let result = linear(&signal).unwrap();
+/// let result = linear(&signal).expect("Operation failed");
 /// assert_eq!(result[1], 2.0); // Linear interpolation between 1.0 and 3.0
 /// ```
 #[allow(dead_code)]
@@ -145,7 +145,7 @@ pub fn linear(signal: &scirs2_core::ndarray::Array1<f64>) -> crate::error::Signa
 /// use scirs2_signal::interpolate::cubic_spline;
 ///
 /// let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
-/// let result = cubic_spline(&signal).unwrap();
+/// let result = cubic_spline(&signal).expect("Operation failed");
 /// // Result contains smooth interpolated values
 /// ```
 #[allow(dead_code)]
@@ -175,7 +175,7 @@ pub fn cubic_spline(
 /// use scirs2_signal::interpolate::auto;
 ///
 /// let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
-/// let (result, method) = auto(&signal).unwrap();
+/// let (result, method) = auto(&signal).expect("Operation failed");
 /// println!("Selected method: {:?}", method);
 /// ```
 #[allow(dead_code)]
@@ -203,7 +203,7 @@ pub fn auto(
 ///     .smoothing_factor(0.3)
 ///     .monotonic(true)
 ///     .interpolate(&signal)
-///     .unwrap();
+///     .expect("Operation failed");
 /// ```
 pub struct InterpolationBuilder {
     config: InterpolationConfig,
@@ -368,13 +368,13 @@ mod tests {
     fn test_convenience_functions() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 
-        let result1 = linear(&signal).unwrap();
+        let result1 = linear(&signal).expect("Operation failed");
         assert_eq!(result1[1], 2.0);
 
-        let result2 = cubic_spline(&signal).unwrap();
+        let result2 = cubic_spline(&signal).expect("Operation failed");
         assert!(!result2[1].is_nan());
 
-        let (result3_method) = auto(&signal).unwrap();
+        let (result3_method) = auto(&signal).expect("Operation failed");
         assert!(!result3[1].is_nan());
     }
 
@@ -387,7 +387,7 @@ mod tests {
             .smoothing(false)
             .extrapolate(false)
             .interpolate(&signal)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result[1], 2.0);
     }
@@ -428,11 +428,11 @@ mod tests {
         let config = InterpolationConfig::default();
 
         // Test that all main API functions work
-        let result1 = interpolate(&signal, InterpolationMethod::Linear, &config).unwrap();
-        let result2 = linear_interpolate(&signal).unwrap();
-        let result3 = cubic_spline_interpolate(&signal, &config).unwrap();
-        let result4 = sinc_interpolate(&signal, 0.4).unwrap();
-        let (result5_) = auto_interpolate(&signal, &config, false).unwrap();
+        let result1 = interpolate(&signal, InterpolationMethod::Linear, &config).expect("Operation failed");
+        let result2 = linear_interpolate(&signal).expect("Operation failed");
+        let result3 = cubic_spline_interpolate(&signal, &config).expect("Operation failed");
+        let result4 = sinc_interpolate(&signal, 0.4).expect("Operation failed");
+        let (result5_) = auto_interpolate(&signal, &config, false).expect("Operation failed");
 
         // All results should have no NaN values
         assert!(result1.iter().all(|&x| !x.is_nan()));
@@ -461,7 +461,7 @@ mod tests {
         // Test polynomial fitting
         let x = [0.0, 1.0, 2.0];
         let y = [1.0, 2.0, 5.0];
-        let coeffs = polynomial_fit(&x, &y, 2).unwrap();
+        let coeffs = polynomial_fit(&x, &y, 2).expect("Operation failed");
         assert_eq!(coeffs.len(), 3);
     }
 }

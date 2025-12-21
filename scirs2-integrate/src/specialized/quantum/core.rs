@@ -630,7 +630,11 @@ impl SchrodingerSolver {
 
         // Sort by energy
         let mut indices: Vec<usize> = (0..n_states).collect();
-        indices.sort_by(|&i, &j| energies[i].partial_cmp(&energies[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            energies[i]
+                .partial_cmp(&energies[j])
+                .expect("Operation failed")
+        });
 
         let sorted_energies = Array1::from_vec(indices.iter().map(|&i| energies[i]).collect());
         let mut sorted_wavefunctions = Array2::zeros((self.n_points, n_states));
@@ -698,7 +702,9 @@ mod tests {
         let potential = Box::new(HarmonicOscillator { k: 1.0, x0: 0.0 });
         let solver = SchrodingerSolver::new(100, 0.01, potential, SchrodingerMethod::SplitOperator);
 
-        let (energies, wavefunctions) = solver.solve_time_independent(-5.0, 5.0, 3).unwrap();
+        let (energies, wavefunctions) = solver
+            .solve_time_independent(-5.0, 5.0, 3)
+            .expect("Operation failed");
 
         // Ground state energy should be ℏω/2 = 0.5 (with ℏ=1, ω=1)
         assert_relative_eq!(energies[0], 0.5, epsilon = 0.01);
@@ -708,7 +714,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_wave_packet_evolution() {
         let potential = Box::new(HarmonicOscillator { k: 0.0, x0: 0.0 }); // Free particle
         let solver =
@@ -717,7 +722,9 @@ mod tests {
         let x = Array1::linspace(-10.0, 10.0, 200);
         let initial_state = SchrodingerSolver::gaussian_wave_packet(&x, -5.0, 1.0, 2.0, 1.0);
 
-        let states = solver.solve_time_dependent(&initial_state, 1.0).unwrap();
+        let states = solver
+            .solve_time_dependent(&initial_state, 1.0)
+            .expect("Operation failed");
 
         // Check normalization is preserved
         for state in &states {
@@ -727,7 +734,10 @@ mod tests {
         }
 
         // Wave packet should move to the right
-        let final_position = states.last().unwrap().expectation_position();
+        let final_position = states
+            .last()
+            .expect("Operation failed")
+            .expectation_position();
         assert!(final_position > -5.0);
     }
 }

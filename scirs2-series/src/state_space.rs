@@ -48,7 +48,7 @@ where
     fn default() -> Self {
         Self {
             max_iterations: 100,
-            tolerance: F::from(1e-6).unwrap(),
+            tolerance: F::from(1e-6).expect("Failed to convert constant to float"),
             verbose: false,
         }
     }
@@ -265,11 +265,12 @@ where
             let inv_innovation_cov = matrix_inverse(&innovation_cov)?;
             let quadratic_form = innovation.dot(&inv_innovation_cov.dot(&innovation));
 
-            let dim = F::from(innovation_cov.nrows()).unwrap();
-            let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
+            let dim = F::from(innovation_cov.nrows()).expect("Operation failed");
+            let two_pi = F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float");
 
             log_likelihood = log_likelihood
-                - F::from(0.5).unwrap() * (dim * two_pi.ln() + log_det + quadratic_form);
+                - F::from(0.5).expect("Failed to convert constant to float")
+                    * (dim * two_pi.ln() + log_det + quadratic_form);
 
             self.update(&Array1::from_elem(1, *obs))?;
         }
@@ -320,7 +321,10 @@ where
     let mut is_diagonal = true;
     for i in 0..m {
         for j in 0..n {
-            if i != j && matrix[[i, j]].abs() > F::from(1e-12).unwrap() {
+            if i != j
+                && matrix[[i, j]].abs()
+                    > F::from(1e-12).expect("Failed to convert constant to float")
+            {
                 is_diagonal = false;
                 break;
             }
@@ -335,7 +339,7 @@ where
         let mut inv = Array2::zeros((m, n));
         for i in 0..m {
             let diag = matrix[[i, i]];
-            if diag.abs() < F::from(1e-12).unwrap() {
+            if diag.abs() < F::from(1e-12).expect("Failed to convert constant to float") {
                 return Err(TimeSeriesError::NumericalInstability(
                     "Singular _matrix: zero diagonal element".to_string(),
                 ));
@@ -379,7 +383,7 @@ where
         }
 
         // Check for near-zero pivot
-        if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
+        if lu[[col, col]].abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return Err(TimeSeriesError::NumericalInstability(
                 "Singular _matrix: near-zero pivot".to_string(),
             ));
@@ -444,7 +448,7 @@ where
     }
 
     // For non-square or singular matrices, use (A'A + λI)^(-1) A'
-    let regularization = F::from(1e-8).unwrap();
+    let regularization = F::from(1e-8).expect("Failed to convert constant to float");
     let at = matrix.t();
     let ata = at.dot(matrix);
 
@@ -517,7 +521,7 @@ where
         }
 
         // Check for zero pivot (singular matrix)
-        if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
+        if lu[[col, col]].abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return F::neg_infinity(); // log(0) = -infinity
         }
 
@@ -535,7 +539,7 @@ where
     let mut log_det = F::zero();
     for i in 0..n {
         let diag_element = lu[[i, i]];
-        if diag_element.abs() < F::from(1e-12).unwrap() {
+        if diag_element.abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return F::neg_infinity(); // Singular _matrix
         }
         log_det = log_det + diag_element.abs().ln();
@@ -712,7 +716,8 @@ where
         // Create initial state
         let initial_state = StateVector {
             state: Array1::zeros(state_dim),
-            covariance: Array2::eye(state_dim) * F::from(100.0).unwrap(), // Diffuse prior
+            covariance: Array2::eye(state_dim)
+                * F::from(100.0).expect("Failed to convert constant to float"), // Diffuse prior
         };
 
         // Create combined transition and observation matrices
@@ -829,8 +834,9 @@ where
         }
 
         // Update observation noise variance (simplified for univariate case)
-        let n_f = F::from(n).unwrap();
-        let term1: F = F::from(2.0).unwrap() * sum_xy[0] * sum_y / n_f;
+        let n_f = F::from(n).expect("Failed to convert to float");
+        let term1: F =
+            F::from(2.0).expect("Failed to convert constant to float") * sum_xy[0] * sum_y / n_f;
         let term2: F = sum_xx[[0, 0]] * sum_y * sum_y / (n_f * n_f);
         let residual_variance = (sum_yy - term1 + term2) / n_f;
 
@@ -843,7 +849,8 @@ where
         if let Some(level) = &mut self.level {
             let level_variance: F = sum_xx[[0, 0]] / n_f - (sum_x[0] / n_f) * (sum_x[0] / n_f);
             if level_variance > F::zero() {
-                level.process_noise[[0, 0]] = level_variance * F::from(0.1).unwrap();
+                level.process_noise[[0, 0]] =
+                    level_variance * F::from(0.1).expect("Failed to convert constant to float");
                 // Scale down for stability
             }
         }
@@ -1049,7 +1056,8 @@ where
         let state_dim = self.transition.transition_matrix.nrows();
         let initial_state = StateVector {
             state: Array1::zeros(state_dim),
-            covariance: Array2::eye(state_dim) * F::from(100.0).unwrap(), // Diffuse prior
+            covariance: Array2::eye(state_dim)
+                * F::from(100.0).expect("Failed to convert constant to float"), // Diffuse prior
         };
 
         let mut kf = KalmanFilter::new(
@@ -1105,7 +1113,7 @@ where
         }
 
         // Update observation noise variance
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let predicted_sum = self.observation.observation_matrix.row(0).dot(&sum_xy);
         let residual_variance = (sum_yy - predicted_sum) / n_f;
 
@@ -1115,7 +1123,7 @@ where
 
         // Update transition matrix (for autoregressive models)
         if n > 1 {
-            let n_transitions = F::from(n - 1).unwrap();
+            let n_transitions = F::from(n - 1).expect("Failed to convert to float");
 
             // Simplified AR(1) parameter update
             if sum_xx_lag[[0, 0]] > F::epsilon() {
@@ -1162,7 +1170,7 @@ mod tests {
         };
 
         let mut kf = KalmanFilter::new(initial_state, transition, observation);
-        kf.predict().unwrap();
+        kf.predict().expect("Operation failed");
 
         // After prediction, covariance should increase
         assert!(kf.state.covariance[[0, 0]] > 1.0);
@@ -1170,7 +1178,7 @@ mod tests {
 
     #[test]
     fn test_local_level_model() {
-        let model = StructuralModel::local_level(0.1_f64, 0.2_f64).unwrap();
+        let model = StructuralModel::local_level(0.1_f64, 0.2_f64).expect("Operation failed");
         assert!(model.level.is_some());
         assert!(model.trend.is_none());
         assert!(model.seasonal.is_none());
@@ -1178,10 +1186,11 @@ mod tests {
 
     #[test]
     fn test_local_linear_trend_model() {
-        let model = StructuralModel::local_linear_trend(0.1_f64, 0.05_f64, 0.2_f64).unwrap();
+        let model = StructuralModel::local_linear_trend(0.1_f64, 0.05_f64, 0.2_f64)
+            .expect("Operation failed");
         assert!(model.level.is_some());
 
-        let transition = model.level.unwrap();
+        let transition = model.level.expect("Operation failed");
         assert_eq!(transition.transition_matrix.dim(), (2, 2));
     }
 
@@ -1206,7 +1215,7 @@ mod tests {
 
         // Make an observation
         let obs = array![1.0];
-        kf.update(&obs).unwrap();
+        kf.update(&obs).expect("Operation failed");
 
         // State should move towards observation
         assert!(kf.state.state[0] > 0.0);
@@ -1234,11 +1243,11 @@ mod tests {
         let mut kf = KalmanFilter::new(initial_state, transition, observation);
         let observations = array![1.0, 1.1, 0.9, 1.0];
 
-        let states = kf.filter(&observations).unwrap();
+        let states = kf.filter(&observations).expect("Operation failed");
         assert_eq!(states.len(), observations.len());
 
         // Final state should be near the observations
-        let final_state = &states.last().unwrap().state;
+        let final_state = &states.last().expect("Operation failed").state;
         assert_relative_eq!(final_state[0], 1.0, epsilon = 0.5);
     }
 
@@ -1262,7 +1271,7 @@ mod tests {
         let mut kf = KalmanFilter::new(initial_state, transition, observation);
         let observations = array![1.0, 0.9, 0.8, 0.7];
 
-        let smoother_result = kf.smooth(&observations).unwrap();
+        let smoother_result = kf.smooth(&observations).expect("Operation failed");
 
         assert_eq!(smoother_result.smoothed_states.len(), observations.len());
         assert_eq!(smoother_result.filtered_states.len(), observations.len());
@@ -1276,7 +1285,7 @@ mod tests {
     #[test]
     fn test_structural_model_em() {
         // Create a simple local level model
-        let mut model = StructuralModel::local_level(0.1_f64, 0.2_f64).unwrap();
+        let mut model = StructuralModel::local_level(0.1_f64, 0.2_f64).expect("Operation failed");
 
         // Generate some test data (random walk with noise)
         let n = 50;
@@ -1287,14 +1296,14 @@ mod tests {
         }
 
         // Fit the model using EM
-        let em_result = model.fit(&data).unwrap();
+        let em_result = model.fit(&data).expect("Operation failed");
 
         // Check that EM completed
         assert!(em_result.iterations > 0);
         assert!(!em_result.log_likelihood_history.is_empty());
 
         // Generate forecasts
-        let forecasts = model.forecast(5).unwrap();
+        let forecasts = model.forecast(5).expect("Operation failed");
         assert_eq!(forecasts.len(), 5);
     }
 
@@ -1322,7 +1331,7 @@ mod tests {
         }
 
         // Fit using EM
-        let em_result = dlm.fit(&data).unwrap();
+        let em_result = dlm.fit(&data).expect("Operation failed");
 
         // Check convergence
         assert!(em_result.iterations > 0);
@@ -1335,7 +1344,8 @@ mod tests {
 
     #[test]
     fn test_seasonal_model() {
-        let model = StructuralModel::seasonal(0.1_f64, 0.05_f64, 0.2_f64, 4).unwrap();
+        let model =
+            StructuralModel::seasonal(0.1_f64, 0.05_f64, 0.2_f64, 4).expect("Operation failed");
 
         // Check structure
         assert!(model.level.is_some());
@@ -1343,7 +1353,7 @@ mod tests {
         assert!(model.trend.is_none());
 
         // Check seasonal transition matrix dimensions
-        let seasonal = model.seasonal.unwrap();
+        let seasonal = model.seasonal.expect("Operation failed");
         assert_eq!(seasonal.transition_matrix.dim(), (3, 3)); // period - 1
 
         // First row should be all -1s
@@ -1372,7 +1382,9 @@ mod tests {
         let mut kf = KalmanFilter::new(initial_state, transition, observation);
         let observations = array![1.0, 0.9, 0.8, 0.7];
 
-        let log_likelihood = kf.compute_log_likelihood(&observations).unwrap();
+        let log_likelihood = kf
+            .compute_log_likelihood(&observations)
+            .expect("Operation failed");
 
         // Log-likelihood should be finite and negative
         assert!(log_likelihood.is_finite());

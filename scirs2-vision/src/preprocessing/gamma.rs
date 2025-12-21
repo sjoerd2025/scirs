@@ -24,8 +24,8 @@ use image::{DynamicImage, GrayImage, Luma};
 /// use scirs2_vision::preprocessing::gamma_correction;
 /// use image::open;
 ///
-/// let img = open("examples/input/input.jpg").unwrap();
-/// let corrected = gamma_correction(&img, 2.2).unwrap();
+/// let img = open("examples/input/input.jpg").expect("Operation failed");
+/// let corrected = gamma_correction(&img, 2.2).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> {
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn test_gamma_correction_identity() {
         let img = DynamicImage::new_luma8(10, 10);
-        let result = gamma_correction(&img, 1.0).unwrap();
+        let result = gamma_correction(&img, 1.0).expect("Operation failed");
 
         // Gamma = 1.0 should not change the image
         match (img, result) {
@@ -238,7 +238,7 @@ mod tests {
         let dynamic_img = DynamicImage::ImageLuma8(img);
 
         // Apply brightening gamma
-        let result = gamma_correction(&dynamic_img, 0.5).unwrap();
+        let result = gamma_correction(&dynamic_img, 0.5).expect("Operation failed");
 
         // Check that image got brighter
         match result {
@@ -261,7 +261,7 @@ mod tests {
         }
         let dynamic_img = DynamicImage::ImageLuma8(img);
 
-        let result = auto_gamma_correction(&dynamic_img, 0.5).unwrap();
+        let result = auto_gamma_correction(&dynamic_img, 0.5).expect("Operation failed");
         assert!(result.as_luma8().is_some());
     }
 
@@ -278,7 +278,7 @@ mod tests {
     #[test]
     fn test_adaptive_gamma_correction() {
         let img = DynamicImage::new_luma8(20, 20);
-        let result = adaptive_gamma_correction(&img, 5, (0.5, 2.0)).unwrap();
+        let result = adaptive_gamma_correction(&img, 5, (0.5, 2.0)).expect("Operation failed");
 
         assert!(result.as_luma8().is_some());
         assert_eq!(result.width(), 20);

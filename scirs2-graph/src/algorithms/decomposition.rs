@@ -23,7 +23,10 @@ where
 
     // Initialize degrees
     for node in graph.nodes() {
-        degrees.insert(node.clone(), graph.neighbors(node).unwrap().len());
+        degrees.insert(
+            node.clone(),
+            graph.neighbors(node).expect("Operation failed").len(),
+        );
     }
 
     // Create a sorted list of nodes by degree

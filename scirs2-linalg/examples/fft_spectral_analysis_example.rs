@@ -229,7 +229,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Energy compaction test (most energy in few coefficients)
     let mut sorted_coeffs = dct_coeffs.to_vec();
-    sorted_coeffs.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).unwrap());
+    sorted_coeffs.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).expect("Operation failed"));
     let total_energy: f64 = sorted_coeffs.iter().map(|x| x * x).sum();
     let top_8_energy: f64 = sorted_coeffs[..8].iter().map(|x| x * x).sum();
     println!(
@@ -271,8 +271,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (max_idx, max_val) = convolved
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     println!("     Peak amplitude: {:.3} at index {}", max_val, max_idx);
     println!("   ✅ FFT convolution provides efficient O(n log n) complexity");
 
@@ -311,7 +311,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             peaks.push((freqs[i], psd_periodogram[i]));
         }
     }
-    peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     println!("\n   Periodogram PSD - Top peaks:");
     for (i, (freq, power)) in peaks.iter().take(3).enumerate() {
@@ -345,7 +345,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             welch_peaks.push((welch_freqs[i], psd_welch[i]));
         }
     }
-    welch_peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    welch_peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     for (i, (freq, power)) in welch_peaks.iter().take(3).enumerate() {
         println!("     Peak {}: {:.1} Hz (power: {:.2e})", i + 1, freq, power);

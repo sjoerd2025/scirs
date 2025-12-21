@@ -24,14 +24,20 @@ fn test_per_channel_quantization_symmetric() {
 
     // Verify parameters contains channel-specific scales
     assert!(params.channel_scales.is_some());
-    let channel_scales = params.channel_scales.as_ref().unwrap();
+    let channel_scales = params
+        .channel_scales
+        .as_ref()
+        .expect("Test: operation failed");
     assert_eq!(channel_scales.len(), 4); // 4 columns
 
     // Verify first channel has much smaller scale than last channel
     assert!(channel_scales[0] < channel_scales[3]);
 
     // All zero points should be 0 for symmetric quantization
-    let zero_points = params.channel_zero_points.as_ref().unwrap();
+    let zero_points = params
+        .channel_zero_points
+        .as_ref()
+        .expect("Test: operation failed");
     for zp in zero_points.iter() {
         assert_eq!(*zp, 0);
     }
@@ -81,8 +87,14 @@ fn test_per_channel_quantization_affine() {
     assert!(params.channel_scales.is_some());
     assert!(params.channel_zero_points.is_some());
 
-    let channel_scales = params.channel_scales.as_ref().unwrap();
-    let zero_points = params.channel_zero_points.as_ref().unwrap();
+    let channel_scales = params
+        .channel_scales
+        .as_ref()
+        .expect("Test: operation failed");
+    let zero_points = params
+        .channel_zero_points
+        .as_ref()
+        .expect("Test: operation failed");
 
     assert_eq!(channel_scales.len(), 4); // 4 columns
     assert_eq!(zero_points.len(), 4); // 4 columns
@@ -166,11 +178,11 @@ fn test_per_channel_vs_regular_quantization() {
     let reg_small_error = (&small_col_orig - &small_col_reg)
         .mapv(|x| x.abs())
         .mean()
-        .unwrap();
+        .expect("Test: operation failed");
     let perchan_small_error = (&small_col_orig - &small_col_perchan)
         .mapv(|x| x.abs())
         .mean()
-        .unwrap();
+        .expect("Test: operation failed");
 
     println!("Small column regular error: {}", reg_small_error);
     println!("Small column per-channel error: {}", perchan_small_error);
@@ -198,7 +210,7 @@ fn test_quantized_matmul_with_per_channel() {
         quantize_matrix_per_channel(&b.view(), 8, QuantizationMethod::PerChannelSymmetric);
 
     // Perform quantized matrix multiplication
-    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).expect("Test: operation failed");
 
     // Calculate relative error
     let rel_error = (&c_true - &c_q).mapv(|x| x.abs()).sum() / c_true.sum();
@@ -227,7 +239,7 @@ fn test_quantized_matvec_with_per_channel() {
     let (x_q, x_params) = quantize_vector(&x.view(), 8, QuantizationMethod::Symmetric);
 
     // Perform quantized matvec
-    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();
+    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).expect("Test: operation failed");
 
     // Calculate relative error
     let rel_error = (&y_true - &y_q).mapv(|x| x.abs()).sum() / y_true.sum();

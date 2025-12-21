@@ -83,7 +83,8 @@ fn bench_matvec(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("SIMD", size), &size, |b_, _data| {
             b_.iter(|| {
                 black_box(
-                    simd_matvec_f32(&black_box(matrix.view()), &black_box(vector.view())).unwrap(),
+                    simd_matvec_f32(&black_box(matrix.view()), &black_box(vector.view()))
+                        .expect("Operation failed"),
                 )
             })
         });
@@ -93,7 +94,7 @@ fn bench_matvec(c: &mut Criterion) {
             b.iter(|| {
                 black_box(
                     blas_accelerated::gemv(1.0, &matrix.view(), &vector.view(), 0.0, &y.view())
-                        .unwrap(),
+                        .expect("Operation failed"),
                 )
             })
         });
@@ -124,7 +125,7 @@ fn bench_matmul(c: &mut Criterion) {
             b_.iter(|| {
                 black_box(
                     simd_matmul_f32(&black_box(matrix_a.view()), &black_box(matrix_b.view()))
-                        .unwrap(),
+                        .expect("Operation failed"),
                 )
             })
         });
@@ -136,7 +137,7 @@ fn bench_matmul(c: &mut Criterion) {
                         &black_box(matrix_a.view()),
                         &black_box(matrix_b.view()),
                     )
-                    .unwrap(),
+                    .expect("Operation failed"),
                 )
             })
         });
@@ -165,7 +166,10 @@ fn bench_dot(c: &mut Criterion) {
         #[cfg(feature = "simd")]
         group.bench_with_input(BenchmarkId::new("SIMD", size), &size, |b_, _data| {
             b_.iter(|| {
-                black_box(simd_dot_f32(&black_box(vec_a.view()), &black_box(vec_b.view())).unwrap())
+                black_box(
+                    simd_dot_f32(&black_box(vec_a.view()), &black_box(vec_b.view()))
+                        .expect("Operation failed"),
+                )
             })
         });
 
@@ -173,7 +177,7 @@ fn bench_dot(c: &mut Criterion) {
             b_.iter(|| {
                 black_box(
                     blas_accelerated::dot(&black_box(vec_a.view()), &black_box(vec_b.view()))
-                        .unwrap(),
+                        .expect("Operation failed"),
                 )
             })
         });

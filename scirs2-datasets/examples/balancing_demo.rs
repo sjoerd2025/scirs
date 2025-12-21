@@ -24,7 +24,7 @@ fn main() {
             10.0, 10.0, 10.1, 9.9,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0]);
 
@@ -35,7 +35,7 @@ fn main() {
     // Demonstrate random oversampling
     println!("=== Random Oversampling =======================");
     let (oversampleddata, oversampled_targets) =
-        random_oversample(&data, &targets, Some(42)).unwrap();
+        random_oversample(&data, &targets, Some(42)).expect("Operation failed");
 
     println!("After random oversampling:");
     print_class_distribution(&oversampled_targets);
@@ -44,7 +44,7 @@ fn main() {
     // Demonstrate random undersampling
     println!("=== Random Undersampling ======================");
     let (undersampleddata, undersampled_targets) =
-        random_undersample(&data, &targets, Some(42)).unwrap();
+        random_undersample(&data, &targets, Some(42)).expect("Operation failed");
 
     println!("After random undersampling:");
     print_class_distribution(&undersampled_targets);
@@ -55,7 +55,7 @@ fn main() {
 
     // Generate 4 synthetic samples for class 0 (minority class)
     let (syntheticdata, synthetic_targets) =
-        generate_synthetic_samples(&data, &targets, 0.0, 4, 1, Some(42)).unwrap();
+        generate_synthetic_samples(&data, &targets, 0.0, 4, 1, Some(42)).expect("Operation failed");
 
     println!(
         "Generated {} synthetic samples for class 0",
@@ -83,7 +83,7 @@ fn main() {
         BalancingStrategy::RandomOversample,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Strategy: Random Oversampling");
     print_class_distribution(&targets_over);
@@ -96,7 +96,7 @@ fn main() {
         BalancingStrategy::RandomUndersample,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nStrategy: Random Undersampling");
     print_class_distribution(&targets_under);
@@ -109,7 +109,7 @@ fn main() {
         BalancingStrategy::SMOTE { k_neighbors: 1 },
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nStrategy: SMOTE (k_neighbors=1)");
     print_class_distribution(&targets_smote);
@@ -118,14 +118,14 @@ fn main() {
     // Demonstrate with real-world dataset
     println!("\n=== Real-world Example: Iris Dataset ==========");
 
-    let iris = load_iris().unwrap();
+    let iris = load_iris().expect("Operation failed");
     if let Some(iris_targets) = &iris.target {
         println!("Original Iris dataset:");
         print_class_distribution(iris_targets);
 
         // Apply oversampling to iris (it's already balanced, but for demonstration)
         let (iris_balanced, iris_balanced_targets) =
-            random_oversample(&iris.data, iris_targets, Some(42)).unwrap();
+            random_oversample(&iris.data, iris_targets, Some(42)).expect("Operation failed");
 
         println!("\nIris after oversampling (should remain the same):");
         print_class_distribution(&iris_balanced_targets);
@@ -161,7 +161,7 @@ fn main() {
             BalancingStrategy::SMOTE { k_neighbors: 3 },
             Some(42),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         println!("\nAfter SMOTE rebalancing:");
         print_class_distribution(&rebalanced_targets);

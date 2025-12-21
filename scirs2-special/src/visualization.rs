@@ -1190,10 +1190,10 @@ mod tests {
 
     #[test]
     fn test_export_csv() {
-        let data =
-            export::export_plot_data(|x| x * x, (0.0, 1.0), 10, export::ExportFormat::CSV).unwrap();
+        let data = export::export_plot_data(|x| x * x, (0.0, 1.0), 10, export::ExportFormat::CSV)
+            .expect("Operation failed");
 
-        let csv = String::from_utf8(data).unwrap();
+        let csv = String::from_utf8(data).expect("Operation failed");
         assert!(csv.contains("x,y\n"));
         assert!(csv.contains("0,0\n"));
         assert!(csv.contains("1,1\n"));

@@ -101,13 +101,13 @@ where
             if !state.indices.contains_key(&w) {
                 // Successor w has not yet been visited; recurse on it
                 strongconnect(w, graph, state, components);
-                let w_lowlink = *state.lowlinks.get(&w).unwrap();
-                let v_lowlink = *state.lowlinks.get(&v).unwrap();
+                let w_lowlink = *state.lowlinks.get(&w).expect("Operation failed");
+                let v_lowlink = *state.lowlinks.get(&v).expect("Operation failed");
                 state.lowlinks.insert(v, v_lowlink.min(w_lowlink));
             } else if state.on_stack.contains(&w) {
                 // Successor w is in stack S and hence in the current SCC
-                let w_index = *state.indices.get(&w).unwrap();
-                let v_lowlink = *state.lowlinks.get(&v).unwrap();
+                let w_index = *state.indices.get(&w).expect("Operation failed");
+                let v_lowlink = *state.lowlinks.get(&v).expect("Operation failed");
                 state.lowlinks.insert(v, v_lowlink.min(w_index));
             }
         }
@@ -116,7 +116,7 @@ where
         if state.lowlinks.get(&v) == state.indices.get(&v) {
             let mut component = HashSet::new();
             loop {
-                let w = state.stack.pop().unwrap();
+                let w = state.stack.pop().expect("Operation failed");
                 state.on_stack.remove(&w);
                 component.insert(graph.inner()[w].clone());
                 if w == v {
@@ -247,23 +247,24 @@ where
                 dfs(v, graph, state, articulation_points);
 
                 // Check if the subtree rooted at v has a back edge to an ancestor of u
-                let v_low = *state.low.get(&v).unwrap();
-                let u_low = *state.low.get(&u).unwrap();
+                let v_low = *state.low.get(&v).expect("Operation failed");
+                let u_low = *state.low.get(&u).expect("Operation failed");
                 state.low.insert(u, u_low.min(v_low));
 
                 // u is an articulation point if:
                 // (1) u is root and has more than one child
                 // (2) u is not root and low[v] >= disc[u]
-                let u_disc = *state.disc.get(&u).unwrap();
-                if (state.parent.get(&u).unwrap().is_none() && children > 1)
-                    || (state.parent.get(&u).unwrap().is_some() && v_low >= u_disc)
+                let u_disc = *state.disc.get(&u).expect("Operation failed");
+                if (state.parent.get(&u).expect("Operation failed").is_none() && children > 1)
+                    || (state.parent.get(&u).expect("Operation failed").is_some()
+                        && v_low >= u_disc)
                 {
                     articulation_points.insert(graph.inner()[u].clone());
                 }
-            } else if state.parent.get(&u).unwrap() != &Some(v) {
+            } else if state.parent.get(&u).expect("Operation failed") != &Some(v) {
                 // Update low[u] for back edge
-                let v_disc = *state.disc.get(&v).unwrap();
-                let u_low = *state.low.get(&u).unwrap();
+                let v_disc = *state.disc.get(&v).expect("Operation failed");
+                let u_low = *state.low.get(&u).expect("Operation failed");
                 state.low.insert(u, u_low.min(v_disc));
             }
         }
@@ -328,7 +329,7 @@ where
         coloring.insert(start_idx, 0);
 
         while let Some(node_idx) = queue.pop_front() {
-            let node_color = *coloring.get(&node_idx).unwrap();
+            let node_color = *coloring.get(&node_idx).expect("Operation failed");
             let next_color = 1 - node_color;
 
             for neighbor in graph.inner().neighbors(node_idx) {
@@ -406,19 +407,19 @@ where
                 dfs(v, graph, state, bridges);
 
                 // Check if the subtree rooted at v has a back edge to an ancestor of u
-                let v_low = *state.low.get(&v).unwrap();
-                let u_low = *state.low.get(&u).unwrap();
+                let v_low = *state.low.get(&v).expect("Operation failed");
+                let u_low = *state.low.get(&u).expect("Operation failed");
                 state.low.insert(u, u_low.min(v_low));
 
                 // If low[v] > disc[u], then (u, v) is a bridge
-                let u_disc = *state.disc.get(&u).unwrap();
+                let u_disc = *state.disc.get(&u).expect("Operation failed");
                 if v_low > u_disc {
                     bridges.push((graph.inner()[u].clone(), graph.inner()[v].clone()));
                 }
-            } else if state.parent.get(&u).unwrap() != &Some(v) {
+            } else if state.parent.get(&u).expect("Operation failed") != &Some(v) {
                 // Update low[u] for back edge
-                let v_disc = *state.disc.get(&v).unwrap();
-                let u_low = *state.low.get(&u).unwrap();
+                let v_disc = *state.disc.get(&v).expect("Operation failed");
+                let u_low = *state.low.get(&u).expect("Operation failed");
                 state.low.insert(u, u_low.min(v_disc));
             }
         }

@@ -532,7 +532,7 @@ impl AutoFeatureEngineer {
         recommendations.sort_by(|a, b| {
             b.expected_performance
                 .partial_cmp(&a.expected_performance)
-                .unwrap()
+                .expect("Operation failed")
         });
 
         Ok(recommendations)

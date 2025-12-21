@@ -24,8 +24,8 @@ use std::fmt::Debug;
 /// ```ignore
 /// use scirs2_signal::adaptive::LmsFilter;
 ///
-/// let mut lms = LmsFilter::new(4, 0.01, 0.0).unwrap();
-/// let output = lms.adapt(&[1.0, 0.5, -0.3, 0.8], 0.5).unwrap();
+/// let mut lms = LmsFilter::new(4, 0.01, 0.0).expect("Operation failed");
+/// let output = lms.adapt(&[1.0, 0.5, -0.3, 0.8], 0.5).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct LmsFilter {
@@ -184,8 +184,8 @@ impl LmsFilter {
 /// ```ignore
 /// use scirs2_signal::adaptive::RlsFilter;
 ///
-/// let mut rls = RlsFilter::new(4, 0.99, 1000.0).unwrap();
-/// let output = rls.adapt(&[1.0, 0.5, -0.3, 0.8], 0.5).unwrap();
+/// let mut rls = RlsFilter::new(4, 0.99, 1000.0).expect("Operation failed");
+/// let output = rls.adapt(&[1.0, 0.5, -0.3, 0.8], 0.5).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct RlsFilter {
@@ -1311,7 +1311,7 @@ mod tests {
             .expect("LMS filter creation should succeed with valid parameters");
 
         // Test single adaptation
-        let (output, error_mse) = lms.adapt(1.0, 0.5).unwrap();
+        let (output, error_mse) = lms.adapt(1.0, 0.5).expect("Operation failed");
 
         // Initially weights are zero, so output should be zero
         assert_relative_eq!(output, 0.0, epsilon = 1e-10);
@@ -1325,12 +1325,12 @@ mod tests {
     fn test_lms_batch() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
-        let mut lms = LmsFilter::new(2, 0.05, 0.0).unwrap();
+        let mut lms = LmsFilter::new(2, 0.05, 0.0).expect("Operation failed");
 
         let inputs = vec![1.0, 0.5, -0.3, 0.8];
         let desired = vec![0.1, 0.2, 0.3, 0.4];
 
-        let (outputs, errors_mse) = lms.adapt_batch(&inputs, &desired).unwrap();
+        let (outputs, errors_mse) = lms.adapt_batch(&inputs, &desired).expect("Operation failed");
 
         assert_eq!(outputs.len(), 4);
         assert_eq!(errors.len(), 4);
@@ -1343,7 +1343,7 @@ mod tests {
     #[test]
     fn test_lms_system_identification() {
         // Test LMS for system identification
-        let mut lms = LmsFilter::new(3, 0.01, 0.0).unwrap();
+        let mut lms = LmsFilter::new(3, 0.01, 0.0).expect("Operation failed");
 
         // Target system: h = [0.5, -0.3, 0.2]
         let target_system = [0.5, -0.3, 0.2];
@@ -1367,7 +1367,7 @@ mod tests {
             desired.push(output);
         }
 
-        let (_outputs_errors_mse) = lms.adapt_batch(&inputs, &desired).unwrap();
+        let (_outputs_errors_mse) = lms.adapt_batch(&inputs, &desired).expect("Operation failed");
 
         // Check if weights converged towards target (approximately)
         // Note: LMS convergence depends on step size, signal properties, and training length
@@ -1385,7 +1385,7 @@ mod tests {
 
     #[test]
     fn test_rls_creation() {
-        let rls = RlsFilter::new(3, 0.99, 100.0).unwrap();
+        let rls = RlsFilter::new(3, 0.99, 100.0).expect("Operation failed");
         assert_eq!(rls.weights().len(), 3);
 
         // Test error conditions
@@ -1397,9 +1397,9 @@ mod tests {
 
     #[test]
     fn test_rls_adapt() {
-        let mut rls = RlsFilter::new(2, 0.99, 100.0).unwrap();
+        let mut rls = RlsFilter::new(2, 0.99, 100.0).expect("Operation failed");
 
-        let (output, error_mse) = rls.adapt(1.0, 0.5).unwrap();
+        let (output, error_mse) = rls.adapt(1.0, 0.5).expect("Operation failed");
 
         // Initially weights are zero, so output should be zero
         assert_relative_eq!(output, 0.0, epsilon = 1e-10);
@@ -1408,7 +1408,7 @@ mod tests {
 
     #[test]
     fn test_nlms_creation() {
-        let nlms = NlmsFilter::new(4, 0.5, 1e-6).unwrap();
+        let nlms = NlmsFilter::new(4, 0.5, 1e-6).expect("Operation failed");
         assert_eq!(nlms.weights().len(), 4);
 
         // Test error conditions
@@ -1419,9 +1419,9 @@ mod tests {
 
     #[test]
     fn test_nlms_adapt() {
-        let mut nlms = NlmsFilter::new(2, 0.5, 1e-6).unwrap();
+        let mut nlms = NlmsFilter::new(2, 0.5, 1e-6).expect("Operation failed");
 
-        let (output, error_mse) = nlms.adapt(1.0, 0.3).unwrap();
+        let (output, error_mse) = nlms.adapt(1.0, 0.3).expect("Operation failed");
 
         assert_relative_eq!(output, 0.0, epsilon = 1e-10);
         assert_relative_eq!(error, 0.3, epsilon = 1e-10);
@@ -1454,8 +1454,8 @@ mod tests {
         let target_system = [0.8, -0.4];
         let num_samples = 50;
 
-        let mut lms = LmsFilter::new(2, 0.05, 0.0).unwrap();
-        let mut rls = RlsFilter::new(2, 0.99, 100.0).unwrap();
+        let mut lms = LmsFilter::new(2, 0.05, 0.0).expect("Operation failed");
+        let mut rls = RlsFilter::new(2, 0.99, 100.0).expect("Operation failed");
 
         let mut lms_errors = Vec::new();
         let mut rls_errors = Vec::new();
@@ -1468,8 +1468,8 @@ mod tests {
                 target_system[0] * input
             };
 
-            let (_out_lms, err_lms_) = lms.adapt(input, desired).unwrap();
-            let (_out_rls, err_rls_) = rls.adapt(input, desired).unwrap();
+            let (_out_lms, err_lms_) = lms.adapt(input, desired).expect("Operation failed");
+            let (_out_rls, err_rls_) = rls.adapt(input, desired).expect("Operation failed");
 
             lms_errors.push(err_lms.abs());
             rls_errors.push(err_rls.abs());
@@ -1495,7 +1495,7 @@ mod tests {
 
     #[test]
     fn test_vs_lms_creation() {
-        let vs_lms = VsLmsFilter::new(4, 0.01, 0.05).unwrap();
+        let vs_lms = VsLmsFilter::new(4, 0.01, 0.05).expect("Operation failed");
         assert_eq!(vs_lms.weights().len(), 4);
         assert_relative_eq!(vs_lms.current_step_size(), 0.01, epsilon = 1e-10);
 
@@ -1508,9 +1508,9 @@ mod tests {
 
     #[test]
     fn test_vs_lms_adapt() {
-        let mut vs_lms = VsLmsFilter::new(2, 0.1, 0.01).unwrap();
+        let mut vs_lms = VsLmsFilter::new(2, 0.1, 0.01).expect("Operation failed");
 
-        let (output, error_mse) = vs_lms.adapt(1.0, 0.5).unwrap();
+        let (output, error_mse) = vs_lms.adapt(1.0, 0.5).expect("Operation failed");
 
         // Initially weights are zero, so output should be zero
         assert_relative_eq!(output, 0.0, epsilon = 1e-10);
@@ -1520,7 +1520,7 @@ mod tests {
         let initial_step = vs_lms.current_step_size();
 
         for _ in 0..10 {
-            vs_lms.adapt(1.0, 0.5).unwrap();
+            vs_lms.adapt(1.0, 0.5).expect("Operation failed");
         }
 
         // Step size should have changed (either increased or decreased)
@@ -1529,7 +1529,7 @@ mod tests {
 
     #[test]
     fn test_apa_creation() {
-        let apa = ApaFilter::new(4, 3, 0.1, 0.01).unwrap();
+        let apa = ApaFilter::new(4, 3, 0.1, 0.01).expect("Operation failed");
         assert_eq!(apa.weights().len(), 4);
 
         // Test error conditions
@@ -1540,10 +1540,10 @@ mod tests {
 
     #[test]
     fn test_apa_adapt() {
-        let mut apa = ApaFilter::new(2, 2, 0.1, 0.01).unwrap();
+        let mut apa = ApaFilter::new(2, 2, 0.1, 0.01).expect("Operation failed");
         let input = vec![1.0, 0.5];
 
-        let (output, error_mse) = apa.adapt(&input, 0.3).unwrap();
+        let (output, error_mse) = apa.adapt(&input, 0.3).expect("Operation failed");
 
         // Initially weights are zero, so output should be zero
         assert_relative_eq!(output, 0.0, epsilon = 1e-10);
@@ -1556,7 +1556,7 @@ mod tests {
 
     #[test]
     fn test_fdlms_creation() {
-        let fdlms = FdlmsFilter::new(8, 0.01, 0.999).unwrap();
+        let fdlms = FdlmsFilter::new(8, 0.01, 0.999).expect("Operation failed");
         assert_eq!(fdlms.weights().len(), 8);
 
         // Test error conditions
@@ -1566,11 +1566,11 @@ mod tests {
 
     #[test]
     fn test_fdlms_adapt_block() {
-        let mut fdlms = FdlmsFilter::new(4, 0.01, 0.999).unwrap();
+        let mut fdlms = FdlmsFilter::new(4, 0.01, 0.999).expect("Operation failed");
         let inputs = vec![1.0, 0.5, -0.3, 0.8, 0.2, -0.1, 0.6, -0.4];
         let desired = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
 
-        let (outputs, errors) = fdlms.adapt_block(&inputs, &desired).unwrap();
+        let (outputs, errors) = fdlms.adapt_block(&inputs, &desired).expect("Operation failed");
 
         // Should produce some outputs and errors
         assert!(!outputs.is_empty());
@@ -1584,7 +1584,7 @@ mod tests {
 
     #[test]
     fn test_lmf_creation() {
-        let lmf = LmfFilter::new(4, 0.01).unwrap();
+        let lmf = LmfFilter::new(4, 0.01).expect("Operation failed");
         assert_eq!(lmf.weights().len(), 4);
 
         // Test error conditions
@@ -1594,9 +1594,9 @@ mod tests {
 
     #[test]
     fn test_lmf_adapt() {
-        let mut lmf = LmfFilter::new(2, 0.01).unwrap();
+        let mut lmf = LmfFilter::new(2, 0.01).expect("Operation failed");
 
-        let (output, error_mse) = lmf.adapt(1.0, 0.5).unwrap();
+        let (output, error_mse) = lmf.adapt(1.0, 0.5).expect("Operation failed");
 
         // Initially weights are zero, so output should be zero
         assert_relative_eq!(output, 0.0, epsilon = 1e-10);
@@ -1604,17 +1604,17 @@ mod tests {
 
         // LMF should converge (test basic functionality)
         for _ in 0..50 {
-            lmf.adapt(1.0, 0.5).unwrap();
+            lmf.adapt(1.0, 0.5).expect("Operation failed");
         }
 
         // After many iterations, there should be some learning
-        let (final_output__) = lmf.adapt(1.0, 0.5).unwrap();
+        let (final_output__) = lmf.adapt(1.0, 0.5).expect("Operation failed");
         assert!(final_output.abs() > 1e-6); // Some non-zero output expected
     }
 
     #[test]
     fn test_sm_lms_creation() {
-        let sm_lms = SmLmsFilter::new(4, 0.1, 0.1).unwrap();
+        let sm_lms = SmLmsFilter::new(4, 0.1, 0.1).expect("Operation failed");
         assert_eq!(sm_lms.weights().len(), 4);
 
         // Test error conditions
@@ -1625,10 +1625,10 @@ mod tests {
 
     #[test]
     fn test_sm_lms_adapt() {
-        let mut sm_lms = SmLmsFilter::new(2, 0.1, 0.05).unwrap();
+        let mut sm_lms = SmLmsFilter::new(2, 0.1, 0.05).expect("Operation failed");
 
         // Small error - should not trigger update
-        let (output, error_mse) = sm_lms.adapt(1.0, 0.01).unwrap();
+        let (output, error_mse) = sm_lms.adapt(1.0, 0.01).expect("Operation failed");
         assert_relative_eq!(output, 0.0, epsilon = 1e-10);
         assert_relative_eq!(error, 0.01, epsilon = 1e-10);
 
@@ -1637,7 +1637,7 @@ mod tests {
         assert_eq!(sample_count, 1);
 
         // Large error - should trigger update
-        sm_lms.adapt(1.0, 0.5).unwrap();
+        sm_lms.adapt(1.0, 0.5).expect("Operation failed");
         let (update_count, sample_count, update_ratio) = sm_lms.update_statistics();
         assert_eq!(update_count, 1); // Update triggered
         assert_eq!(sample_count, 2);
@@ -1646,7 +1646,7 @@ mod tests {
 
     #[test]
     fn test_sm_lms_selective_updates() {
-        let mut sm_lms = SmLmsFilter::new(3, 0.1, 0.1).unwrap();
+        let mut sm_lms = SmLmsFilter::new(3, 0.1, 0.1).expect("Operation failed");
 
         // Apply mix of small and large errors
         let inputs = [1.0, 0.5, -0.3, 0.8, 0.2];
@@ -1654,7 +1654,7 @@ mod tests {
 
         for (&input, &target_error) in inputs.iter().zip(errors.iter()) {
             // Desired is computed to produce target error (since initial output is 0)
-            sm_lms.adapt(input, target_error).unwrap();
+            sm_lms.adapt(input, target_error).expect("Operation failed");
         }
 
         let (update_count, sample_count_) = sm_lms.update_statistics();
@@ -1669,10 +1669,10 @@ mod tests {
         let target_system = [0.6, -0.4, 0.2];
         let num_samples = 100;
 
-        let mut lms = LmsFilter::new(3, 0.01, 0.0).unwrap();
-        let mut vs_lms = VsLmsFilter::new(3, 0.01, 0.05).unwrap();
-        let mut nlms = NlmsFilter::new(3, 0.5, 1e-6).unwrap();
-        let mut lmf = LmfFilter::new(3, 0.001).unwrap();
+        let mut lms = LmsFilter::new(3, 0.01, 0.0).expect("Operation failed");
+        let mut vs_lms = VsLmsFilter::new(3, 0.01, 0.05).expect("Operation failed");
+        let mut nlms = NlmsFilter::new(3, 0.5, 1e-6).expect("Operation failed");
+        let mut lmf = LmfFilter::new(3, 0.001).expect("Operation failed");
 
         let mut lms_errors = Vec::new();
         let mut vs_lms_errors = Vec::new();
@@ -1691,10 +1691,10 @@ mod tests {
                 target_system[0] * input
             };
 
-            let (_, err_lms_) = lms.adapt(input, desired).unwrap();
-            let (_, err_vs_lms_) = vs_lms.adapt(input, desired).unwrap();
-            let (_, err_nlms_) = nlms.adapt(input, desired).unwrap();
-            let (_, err_lmf_) = lmf.adapt(input, desired).unwrap();
+            let (_, err_lms_) = lms.adapt(input, desired).expect("Operation failed");
+            let (_, err_vs_lms_) = vs_lms.adapt(input, desired).expect("Operation failed");
+            let (_, err_nlms_) = nlms.adapt(input, desired).expect("Operation failed");
+            let (_, err_lmf_) = lmf.adapt(input, desired).expect("Operation failed");
 
             lms_errors.push(err_lms.abs());
             vs_lms_errors.push(err_vs_lms.abs());
@@ -1748,7 +1748,7 @@ mod tests {
         let matrix = vec![vec![2.0, 1.0], vec![1.0, 3.0]];
         let rhs = vec![5.0, 6.0];
 
-        let solution = solve_linear_system_small(&matrix, &rhs).unwrap();
+        let solution = solve_linear_system_small(&matrix, &rhs).expect("Operation failed");
 
         // Verify solution: 2x + y = 5, x + 3y = 6 => x = 1.8, y = 1.4
         assert_relative_eq!(solution[0], 1.8, epsilon = 1e-10);
@@ -1766,18 +1766,18 @@ mod tests {
     #[test]
     fn test_algorithm_reset_functionality() {
         // Test that all algorithms can be properly reset
-        let mut vs_lms = VsLmsFilter::new(3, 0.01, 0.05).unwrap();
-        let mut apa = ApaFilter::new(3, 2, 0.1, 0.01).unwrap();
-        let mut lmf = LmfFilter::new(3, 0.01).unwrap();
-        let mut sm_lms = SmLmsFilter::new(3, 0.1, 0.1).unwrap();
+        let mut vs_lms = VsLmsFilter::new(3, 0.01, 0.05).expect("Operation failed");
+        let mut apa = ApaFilter::new(3, 2, 0.1, 0.01).expect("Operation failed");
+        let mut lmf = LmfFilter::new(3, 0.01).expect("Operation failed");
+        let mut sm_lms = SmLmsFilter::new(3, 0.1, 0.1).expect("Operation failed");
 
         // Adapt some samples to change internal state
         for i in 0..10 {
             let input = i as f64;
-            vs_lms.adapt(input, 0.5).unwrap();
-            apa.adapt(&[input, input * 0.5, input * 0.2], 0.5).unwrap();
-            lmf.adapt(input, 0.5).unwrap();
-            sm_lms.adapt(input, 0.5).unwrap();
+            vs_lms.adapt(input, 0.5).expect("Operation failed");
+            apa.adapt(&[input, input * 0.5, input * 0.2], 0.5).expect("Operation failed");
+            lmf.adapt(input, 0.5).expect("Operation failed");
+            sm_lms.adapt(input, 0.5).expect("Operation failed");
         }
 
         // Verify weights are not zero

@@ -196,7 +196,8 @@ where
 
     /// SGD parameter update
     fn sgd_step(&self, params: &mut NeuralParameters<F>) -> Result<(), OptimizeError> {
-        let lr = F::from(self.options.learning_rate).unwrap_or_else(|| F::from(0.01).unwrap());
+        let lr = F::from(self.options.learning_rate)
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
 
         for (param, grad) in params.parameters.iter_mut().zip(params.gradients.iter()) {
             *param = param.clone() - &(grad.clone() * lr);
@@ -207,8 +208,9 @@ where
 
     /// Momentum SGD parameter update
     fn momentum_step(&mut self, params: &mut NeuralParameters<F>) -> Result<(), OptimizeError> {
-        let lr = F::from(self.options.learning_rate).unwrap_or_else(|| F::from(0.01).unwrap());
-        let momentum = F::from(0.9).unwrap();
+        let lr = F::from(self.options.learning_rate)
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
+        let momentum = F::from(0.9).expect("Failed to convert constant to float");
 
         for (i, (param, grad)) in params
             .parameters
@@ -224,7 +226,10 @@ where
                     .insert(param_name.clone(), Array1::zeros(param.raw_dim()));
             }
 
-            let momentum_buffer = self.momentum_buffers.get_mut(&param_name).unwrap();
+            let momentum_buffer = self
+                .momentum_buffers
+                .get_mut(&param_name)
+                .expect("Operation failed");
 
             // v = momentum * v + grad
             *momentum_buffer = momentum_buffer.clone() * momentum + grad;
@@ -238,10 +243,11 @@ where
 
     /// Adam parameter update
     fn adam_step(&mut self, params: &mut NeuralParameters<F>) -> Result<(), OptimizeError> {
-        let lr = F::from(self.options.learning_rate).unwrap_or_else(|| F::from(0.001).unwrap());
-        let beta1 = F::from(0.9).unwrap();
-        let beta2 = F::from(0.999).unwrap();
-        let epsilon = F::from(1e-8).unwrap();
+        let lr = F::from(self.options.learning_rate)
+            .unwrap_or_else(|| F::from(0.001).expect("Failed to convert constant to float"));
+        let beta1 = F::from(0.9).expect("Failed to convert constant to float");
+        let beta2 = F::from(0.999).expect("Failed to convert constant to float");
+        let epsilon = F::from(1e-8).expect("Failed to convert constant to float");
 
         for (i, (param, grad)) in params
             .parameters
@@ -259,8 +265,14 @@ where
                     .insert(param_name.clone(), Array1::zeros(param.raw_dim()));
             }
 
-            let m = self.first_moment.get_mut(&param_name).unwrap();
-            let v = self.second_moment.get_mut(&param_name).unwrap();
+            let m = self
+                .first_moment
+                .get_mut(&param_name)
+                .expect("Operation failed");
+            let v = self
+                .second_moment
+                .get_mut(&param_name)
+                .expect("Operation failed");
 
             // m = beta1 * m + (1 - beta1) * grad
             *m = m.clone() * beta1 + &(grad.clone() * (F::one() - beta1));
@@ -270,7 +282,7 @@ where
             *v = v.clone() * beta2 + &(grad_squared * (F::one() - beta2));
 
             // Bias correction
-            let step_f = F::from(self.step_count).unwrap();
+            let step_f = F::from(self.step_count).expect("Failed to convert to float");
             let m_hat = m.clone() / (F::one() - beta1.powf(step_f));
             let v_hat = v.clone() / (F::one() - beta2.powf(step_f));
 
@@ -285,11 +297,12 @@ where
 
     /// AdamW parameter update (Adam with decoupled weight decay)
     fn adamw_step(&mut self, params: &mut NeuralParameters<F>) -> Result<(), OptimizeError> {
-        let lr = F::from(self.options.learning_rate).unwrap_or_else(|| F::from(0.001).unwrap());
-        let beta1 = F::from(0.9).unwrap();
-        let beta2 = F::from(0.999).unwrap();
-        let epsilon = F::from(1e-8).unwrap();
-        let weight_decay = F::from(0.01).unwrap();
+        let lr = F::from(self.options.learning_rate)
+            .unwrap_or_else(|| F::from(0.001).expect("Failed to convert constant to float"));
+        let beta1 = F::from(0.9).expect("Failed to convert constant to float");
+        let beta2 = F::from(0.999).expect("Failed to convert constant to float");
+        let epsilon = F::from(1e-8).expect("Failed to convert constant to float");
+        let weight_decay = F::from(0.01).expect("Failed to convert constant to float");
 
         for (i, (param, grad)) in params
             .parameters
@@ -307,8 +320,14 @@ where
                     .insert(param_name.clone(), Array1::zeros(param.raw_dim()));
             }
 
-            let m = self.first_moment.get_mut(&param_name).unwrap();
-            let v = self.second_moment.get_mut(&param_name).unwrap();
+            let m = self
+                .first_moment
+                .get_mut(&param_name)
+                .expect("Operation failed");
+            let v = self
+                .second_moment
+                .get_mut(&param_name)
+                .expect("Operation failed");
 
             // m = beta1 * m + (1 - beta1) * grad
             *m = m.clone() * beta1 + &(grad.clone() * (F::one() - beta1));
@@ -318,7 +337,7 @@ where
             *v = v.clone() * beta2 + &(grad_squared * (F::one() - beta2));
 
             // Bias correction
-            let step_f = F::from(self.step_count).unwrap();
+            let step_f = F::from(self.step_count).expect("Failed to convert to float");
             let m_hat = m.clone() / (F::one() - beta1.powf(step_f));
             let v_hat = v.clone() / (F::one() - beta2.powf(step_f));
 
@@ -336,9 +355,10 @@ where
 
     /// RMSprop parameter update
     fn rmsprop_step(&mut self, params: &mut NeuralParameters<F>) -> Result<(), OptimizeError> {
-        let lr = F::from(self.options.learning_rate).unwrap_or_else(|| F::from(0.001).unwrap());
-        let alpha = F::from(0.99).unwrap(); // decay rate
-        let epsilon = F::from(1e-8).unwrap();
+        let lr = F::from(self.options.learning_rate)
+            .unwrap_or_else(|| F::from(0.001).expect("Failed to convert constant to float"));
+        let alpha = F::from(0.99).expect("Failed to convert constant to float"); // decay rate
+        let epsilon = F::from(1e-8).expect("Failed to convert constant to float");
 
         for (i, (param, grad)) in params
             .parameters
@@ -354,7 +374,10 @@ where
                     .insert(param_name.clone(), Array1::zeros(param.raw_dim()));
             }
 
-            let v = self.second_moment.get_mut(&param_name).unwrap();
+            let v = self
+                .second_moment
+                .get_mut(&param_name)
+                .expect("Operation failed");
 
             // v = alpha * v + (1 - alpha) * grad^2
             let grad_squared = grad.mapv(|x| x * x);
@@ -499,7 +522,7 @@ where
 
     /// Clip gradients to prevent exploding gradients
     fn clip_gradients(&self, params: &mut NeuralParameters<F>, max_norm: f64) {
-        let max_norm_f = F::from(max_norm).unwrap();
+        let max_norm_f = F::from(max_norm).expect("Failed to convert to float");
 
         // Compute total gradient norm
         let mut total_norm_sq = F::zero();
@@ -563,14 +586,23 @@ mod tests {
 
         // Test flattening
         let flat = params.flatten_parameters();
-        assert_eq!(flat.as_slice().unwrap(), &[1.0, 2.0, 3.0, 4.0, 5.0]);
+        assert_eq!(
+            flat.as_slice().expect("Operation failed"),
+            &[1.0, 2.0, 3.0, 4.0, 5.0]
+        );
 
         // Test updating from flat
         let new_flat = Array1::from_vec(vec![6.0, 7.0, 8.0, 9.0, 10.0]);
         params.update_from_flat(&new_flat);
 
-        assert_eq!(params.parameters[0].as_slice().unwrap(), &[6.0, 7.0, 8.0]);
-        assert_eq!(params.parameters[1].as_slice().unwrap(), &[9.0, 10.0]);
+        assert_eq!(
+            params.parameters[0].as_slice().expect("Operation failed"),
+            &[6.0, 7.0, 8.0]
+        );
+        assert_eq!(
+            params.parameters[1].as_slice().expect("Operation failed"),
+            &[9.0, 10.0]
+        );
     }
 
     #[test]
@@ -584,7 +616,7 @@ mod tests {
         params.gradients[0] = Array1::from_vec(vec![0.5, 1.0]);
 
         // Perform one step
-        optimizer.step(&mut params).unwrap();
+        optimizer.step(&mut params).expect("Operation failed");
 
         // Check update: param = param - lr * grad
         let expected = [1.0 - 0.1 * 0.5, 2.0 - 0.1 * 1.0];
@@ -605,7 +637,7 @@ mod tests {
         let original_params = params.parameters[0].clone();
 
         // Perform one step
-        optimizer.step(&mut params).unwrap();
+        optimizer.step(&mut params).expect("Operation failed");
 
         // Parameters should have changed
         assert_ne!(params.parameters[0][0], original_params[0]);
@@ -633,7 +665,7 @@ mod tests {
         // Train for one epoch
         let loss = trainer
             .train_epoch(&mut params, &mut loss_fn, &mut grad_fn)
-            .unwrap();
+            .expect("Operation failed");
 
         // Loss should be computed
         assert_eq!(trainer.loss_history().len(), 1);

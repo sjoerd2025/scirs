@@ -12,22 +12,37 @@ fn main() {
         // Test QR decomposition
         println!("Testing QR decomposition...");
         let (q, r) = qr(matrix_tensor);
-        println!("Q shape: {:?}", q.eval(g).unwrap().shape());
-        println!("R shape: {:?}", r.eval(g).unwrap().shape());
+        println!(
+            "Q shape: {:?}",
+            q.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "R shape: {:?}",
+            r.eval(g).expect("Operation failed").shape()
+        );
 
         // Verify Q*R = original matrix
         let reconstructed = matmul(q, r);
         println!("Original matrix:");
-        println!("{:?}", matrix_tensor.eval(g).unwrap());
+        println!("{:?}", matrix_tensor.eval(g).expect("Operation failed"));
         println!("Q*R reconstruction:");
-        println!("{:?}", reconstructed.eval(g).unwrap());
+        println!("{:?}", reconstructed.eval(g).expect("Operation failed"));
 
         // Test SVD decomposition
         println!("\nTesting SVD decomposition...");
         let (u, s, vt) = svd(matrix_tensor);
-        println!("U shape: {:?}", u.eval(g).unwrap().shape());
-        println!("S shape: {:?}", s.eval(g).unwrap().shape());
-        println!("Vt shape: {:?}", vt.eval(g).unwrap().shape());
+        println!(
+            "U shape: {:?}",
+            u.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "S shape: {:?}",
+            s.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "Vt shape: {:?}",
+            vt.eval(g).expect("Operation failed").shape()
+        );
 
         println!("\nDecomposition tests completed successfully!");
     });

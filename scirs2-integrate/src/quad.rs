@@ -26,9 +26,9 @@ pub struct QuadOptions<F: IntegrateFloat> {
 impl<F: IntegrateFloat> Default for QuadOptions<F> {
     fn default() -> Self {
         Self {
-            abs_tol: F::from_f64(1.49e-8).unwrap(), // Default from SciPy
-            rel_tol: F::from_f64(1.49e-8).unwrap(), // Default from SciPy
-            max_evals: 500,                         // Increased from 50 to ensure convergence
+            abs_tol: F::from_f64(1.49e-8).expect("Operation failed"), // Default from SciPy
+            rel_tol: F::from_f64(1.49e-8).expect("Operation failed"), // Default from SciPy
+            max_evals: 500, // Increased from 50 to ensure convergence
             use_abs_error: false,
             use_simpson: false,
         }
@@ -80,11 +80,11 @@ where
         return F::zero();
     }
 
-    let h = (b - a) / F::from_usize(n).unwrap();
-    let mut sum = F::from_f64(0.5).unwrap() * (f(a) + f(b));
+    let h = (b - a) / F::from_usize(n).expect("Operation failed");
+    let mut sum = F::from_f64(0.5).expect("Operation failed") * (f(a) + f(b));
 
     for i in 1..n {
-        let x = a + F::from_usize(i).unwrap() * h;
+        let x = a + F::from_usize(i).expect("Operation failed") * h;
         sum += f(x);
     }
 
@@ -110,7 +110,7 @@ where
 /// use scirs2_integrate::simpson;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
-/// let result = simpson(|x: f64| x * x, 0.0, 1.0, 100).unwrap();
+/// let result = simpson(|x: f64| x * x, 0.0, 1.0, 100).expect("Operation failed");
 /// assert!((result - 1.0/3.0).abs() < 1e-6);
 /// ```
 #[allow(dead_code)]
@@ -129,12 +129,12 @@ where
         ));
     }
 
-    let h = (b - a) / F::from_usize(n).unwrap();
+    let h = (b - a) / F::from_usize(n).expect("Operation failed");
     let mut sum_even = F::zero();
     let mut sum_odd = F::zero();
 
     for i in 1..n {
-        let x = a + F::from_usize(i).unwrap() * h;
+        let x = a + F::from_usize(i).expect("Operation failed") * h;
         if i % 2 == 0 {
             sum_even += f(x);
         } else {
@@ -142,10 +142,12 @@ where
         }
     }
 
-    let result =
-        (f(a) + f(b) + F::from_f64(2.0).unwrap() * sum_even + F::from_f64(4.0).unwrap() * sum_odd)
-            * h
-            / F::from_f64(3.0).unwrap();
+    let result = (f(a)
+        + f(b)
+        + F::from_f64(2.0).expect("Operation failed") * sum_even
+        + F::from_f64(4.0).expect("Operation failed") * sum_odd)
+        * h
+        / F::from_f64(3.0).expect("Operation failed");
     Ok(result)
 }
 
@@ -168,7 +170,7 @@ where
 /// use scirs2_integrate::quad;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
-/// let result = quad(|x: f64| x * x, 0.0, 1.0, None).unwrap();
+/// let result = quad(|x: f64| x * x, 0.0, 1.0, None).expect("Operation failed");
 /// assert!((result.value - 1.0/3.0).abs() < 1e-8);
 /// assert!(result.converged);
 /// ```
@@ -192,8 +194,8 @@ where
 
         return Ok(QuadResult {
             value: result,
-            abs_error: F::from_f64(1e-8).unwrap(), // Rough estimate
-            n_evals: n + 1,                        // n+1 evaluations for n intervals
+            abs_error: F::from_f64(1e-8).expect("Operation failed"), // Rough estimate
+            n_evals: n + 1, // n+1 evaluations for n intervals
             converged: true,
         });
     }
@@ -272,7 +274,7 @@ where
 
     // If we haven't reached desired accuracy, divide and conquer
     if !converged {
-        let mid = (a + b) / F::from_f64(2.0).unwrap();
+        let mid = (a + b) / F::from_f64(2.0).expect("Operation failed");
 
         // Recursively integrate the two halves
         let (left_value, left_error, left_converged) =
@@ -314,7 +316,7 @@ where
         ));
     }
 
-    let h = (b - a) / F::from_usize(n).unwrap();
+    let h = (b - a) / F::from_usize(n).expect("Operation failed");
     let mut sum_even = F::zero();
     let mut sum_odd = F::zero();
 
@@ -323,7 +325,7 @@ where
     let fb = f(b);
 
     for i in 1..n {
-        let x = a + F::from_usize(i).unwrap() * h;
+        let x = a + F::from_usize(i).expect("Operation failed") * h;
         *count += 1;
         if i % 2 == 0 {
             sum_even += f(x);
@@ -332,9 +334,12 @@ where
         }
     }
 
-    let result =
-        (fa + fb + F::from_f64(2.0).unwrap() * sum_even + F::from_f64(4.0).unwrap() * sum_odd) * h
-            / F::from_f64(3.0).unwrap();
+    let result = (fa
+        + fb
+        + F::from_f64(2.0).expect("Operation failed") * sum_even
+        + F::from_f64(4.0).expect("Operation failed") * sum_odd)
+        * h
+        / F::from_f64(3.0).expect("Operation failed");
     Ok(result)
 }
 
@@ -361,13 +366,13 @@ mod tests {
     fn test_simpson_rule() {
         // Test with a simple function: f(x) = x²
         // Exact integral from 0 to 1 is 1/3
-        let result = simpson(|x| x * x, 0.0, 1.0, 100).unwrap();
+        let result = simpson(|x| x * x, 0.0, 1.0, 100).expect("Operation failed");
         assert_relative_eq!(result, 1.0 / 3.0, epsilon = 1e-8);
 
         // Test with another function: f(x) = sin(x)
         // Exact integral from 0 to π is 2
         let pi = std::f64::consts::PI;
-        let result = simpson(|x| x.sin(), 0.0, pi, 100).unwrap();
+        let result = simpson(|x| x.sin(), 0.0, pi, 100).expect("Operation failed");
         // Use a slightly higher epsilon since numerical integration might not be exact
         assert_relative_eq!(result, 2.0, epsilon = 1e-6);
 
@@ -380,7 +385,7 @@ mod tests {
     fn test_adaptive_quad() {
         // Test with a simple function: f(x) = x²
         // Exact integral from 0 to 1 is 1/3
-        let result = quad(|x| x * x, 0.0, 1.0, None).unwrap();
+        let result = quad(|x| x * x, 0.0, 1.0, None).expect("Operation failed");
         assert_relative_eq!(result.value, 1.0 / 3.0, epsilon = 1e-8);
         assert!(result.converged);
 
@@ -398,7 +403,7 @@ mod tests {
             std::f64::consts::PI / 2.0,
             Some(options),
         )
-        .unwrap();
+        .expect("Failed to integrate");
         assert_relative_eq!(result.value, 1.0, epsilon = 1e-6);
     }
 }

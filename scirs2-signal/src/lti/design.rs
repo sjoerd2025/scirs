@@ -34,7 +34,7 @@ use scirs2_core::numeric::Complex64;
 /// use scirs2_signal::lti::design::tf;
 ///
 /// // Create H(s) = (s + 1) / (s^2 + 2s + 1)
-/// let sys = tf(vec![1.0, 1.0], vec![1.0, 2.0, 1.0], None).unwrap();
+/// let sys = tf(vec![1.0, 1.0], vec![1.0, 2.0, 1.0], None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn tf(num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<TransferFunction> {
@@ -70,7 +70,7 @@ pub fn tf(num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<Transf
 ///     vec![Complex64::new(-2.0, 0.0), Complex64::new(-3.0, 0.0)], // poles at s = -2, -3
 ///     2.0,                                          // gain = 2
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn zpk(
@@ -112,7 +112,7 @@ pub fn zpk(
 ///     vec![1.0],  // C = [1]
 ///     vec![0.0],  // D = [0]
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn ss(
@@ -144,8 +144,8 @@ pub fn ss(
 /// ```rust
 /// use scirs2_signal::lti::design::{tf, c2d};
 ///
-/// let sys_ct = tf(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap();
-/// let sys_dt = c2d(&sys_ct, 0.1).unwrap();
+/// let sys_ct = tf(vec![1.0], vec![1.0, 1.0], Some(false)).expect("Operation failed");
+/// let sys_dt = c2d(&sys_ct, 0.1).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn c2d<T: LtiSystem>(system: &T, dt: f64) -> SignalResult<StateSpace> {
@@ -193,9 +193,9 @@ pub fn c2d<T: LtiSystem>(system: &T, dt: f64) -> SignalResult<StateSpace> {
 /// ```rust
 /// use scirs2_signal::lti::design::{tf, series};
 ///
-/// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();   // 1/(s+1)
-/// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
-/// let series_sys = series(&g1, &g2).unwrap();              // 2/((s+1)(s+2))
+/// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");   // 1/(s+1)
+/// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).expect("Operation failed");   // 2/(s+2)
+/// let series_sys = series(&g1, &g2).expect("Operation failed");              // 2/((s+1)(s+2))
 /// ```
 #[allow(dead_code)]
 pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
@@ -236,9 +236,9 @@ pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<Tr
 /// ```rust
 /// use scirs2_signal::lti::design::{tf, parallel};
 ///
-/// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();   // 1/(s+1)
-/// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
-/// let parallel_sys = parallel(&g1, &g2).unwrap();          // (3s+4)/((s+1)(s+2))
+/// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");   // 1/(s+1)
+/// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).expect("Operation failed");   // 2/(s+2)
+/// let parallel_sys = parallel(&g1, &g2).expect("Operation failed");          // (3s+4)/((s+1)(s+2))
 /// ```
 #[allow(dead_code)]
 pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
@@ -282,9 +282,9 @@ pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<
 /// ```rust
 /// use scirs2_signal::lti::design::{tf, feedback};
 ///
-/// let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
-/// let h = tf(vec![1.0], vec![1.0], None).unwrap(); // Unity feedback
-/// let closed_loop = feedback(&g, Some(&h), 1).unwrap();
+/// let g = tf(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
+/// let h = tf(vec![1.0], vec![1.0], None).expect("Operation failed"); // Unity feedback
+/// let closed_loop = feedback(&g, Some(&h), 1).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn feedback<T1: LtiSystem>(
@@ -348,8 +348,8 @@ pub fn feedback<T1: LtiSystem>(
 /// ```rust
 /// use scirs2_signal::lti::design::{tf, sensitivity};
 ///
-/// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
-/// let sens = sensitivity(&g, None).unwrap(); // Unity feedback
+/// let g = tf(vec![10.0], vec![1.0, 1.0], None).expect("Operation failed");
+/// let sens = sensitivity(&g, None).expect("Operation failed"); // Unity feedback
 /// ```
 #[allow(dead_code)]
 pub fn sensitivity<T1: LtiSystem>(
@@ -406,8 +406,8 @@ pub fn sensitivity<T1: LtiSystem>(
 /// ```rust
 /// use scirs2_signal::lti::design::{tf, complementary_sensitivity};
 ///
-/// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
-/// let comp_sens = complementary_sensitivity(&g, None).unwrap(); // Unity feedback
+/// let g = tf(vec![10.0], vec![1.0, 1.0], None).expect("Operation failed");
+/// let comp_sens = complementary_sensitivity(&g, None).expect("Operation failed"); // Unity feedback
 /// ```
 #[allow(dead_code)]
 pub fn complementary_sensitivity<T1: LtiSystem>(
@@ -718,12 +718,13 @@ mod tests {
             1.0,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
         assert_eq!(zpk_sys.zeros.len(), 1);
         assert_eq!(zpk_sys.poles.len(), 1);
 
         // Test state-space creation
-        let ss_sys = ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).unwrap();
+        let ss_sys =
+            ss(vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None).expect("Operation failed");
         assert_eq!(ss_sys.n_states, 1);
     }
 
@@ -734,7 +735,7 @@ mod tests {
         let g1 = tf(vec![1.0], vec![1.0, 1.0]);
         let g2 = tf(vec![2.0], vec![1.0, 2.0]);
 
-        let series_sys = series(&g1, &g2).unwrap();
+        let series_sys = series(&g1, &g2).expect("Operation failed");
 
         // Series: G2*G1 = 2/((s+1)(s+2)) = 2/(s^2 + 3s + 2)
         assert_eq!(series_sys.num.len(), 1);
@@ -752,7 +753,7 @@ mod tests {
         let g1 = tf(vec![1.0], vec![1.0, 1.0]);
         let g2 = tf(vec![1.0], vec![1.0, 2.0]);
 
-        let parallel_sys = parallel(&g1, &g2).unwrap();
+        let parallel_sys = parallel(&g1, &g2).expect("Operation failed");
 
         // Parallel: G1+G2 = (s+2+s+1)/((s+1)(s+2)) = (2s+3)/(s^2+3s+2)
         assert_eq!(parallel_sys.num.len(), 2);
@@ -769,7 +770,7 @@ mod tests {
         // G(s) = 1/(s+1), unity feedback
         let g = tf(vec![1.0], vec![1.0, 1.0]);
 
-        let feedback_sys = feedback(&g, None, 1).unwrap();
+        let feedback_sys = feedback(&g, None, 1).expect("Operation failed");
 
         // Feedback: T(s) = G(s)/(1+G(s)) = (1/(s+1))/(1+1/(s+1)) = 1/(s+2)
         assert_eq!(feedback_sys.num.len(), 1);
@@ -788,7 +789,7 @@ mod tests {
         let g = tf(vec![1.0], vec![1.0, 1.0]);
         let h = tf(vec![2.0], vec![1.0]);
 
-        let feedback_sys = feedback(&g, Some(&h as &dyn LtiSystem), 1).unwrap();
+        let feedback_sys = feedback(&g, Some(&h as &dyn LtiSystem), 1).expect("Operation failed");
 
         // Feedback: T(s) = G(s)/(1+G(s)*H(s)) = (1/(s+1))/(1+2/(s+1)) = 1/(s+3)
         assert_eq!(feedback_sys.num.len(), 1);
@@ -804,7 +805,7 @@ mod tests {
         // G(s) = 10/(s+1), unity feedback
         let g = tf(vec![10.0], vec![1.0, 1.0]);
 
-        let sens = sensitivity(&g, None).unwrap();
+        let sens = sensitivity(&g, None).expect("Operation failed");
 
         // Sensitivity: S(s) = 1/(1+G(s)) = (s+1)/(s+11)
         assert_eq!(sens.num.len(), 2);
@@ -821,7 +822,7 @@ mod tests {
         // G(s) = 10/(s+1), unity feedback
         let g = tf(vec![10.0], vec![1.0, 1.0]);
 
-        let comp_sens = complementary_sensitivity(&g, None).unwrap();
+        let comp_sens = complementary_sensitivity(&g, None).expect("Operation failed");
 
         // Complementary sensitivity: T(s) = G(s)/(1+G(s)) = 10/(s+11)
         assert_eq!(comp_sens.num.len(), 1);
@@ -868,7 +869,8 @@ mod tests {
         let dividend = vec![1.0, 3.0, 2.0]; // x^2 + 3x + 2
         let divisor = vec![1.0, 1.0]; // x + 1
 
-        let (quotient, remainder) = divide_polynomials(&dividend, &divisor).unwrap();
+        let (quotient, remainder) =
+            divide_polynomials(&dividend, &divisor).expect("Operation failed");
 
         assert_eq!(quotient.len(), 2);
         assert_relative_eq!(quotient[0], 1.0); // x
@@ -902,8 +904,10 @@ mod tests {
     #[test]
     fn test_system_interconnection_errors() {
         // Test error when connecting continuous and discrete-time systems
-        let g_ct = TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap(); // Continuous-time
-        let g_dt = TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(true)).unwrap(); // Discrete-time
+        let g_ct = TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(false))
+            .expect("Operation failed"); // Continuous-time
+        let g_dt =
+            TransferFunction::new(vec![1.0], vec![1.0, 1.0], Some(true)).expect("Operation failed"); // Discrete-time
 
         let result = series(&g_ct, &g_dt);
         assert!(result.is_err());

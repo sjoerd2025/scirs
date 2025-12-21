@@ -32,14 +32,14 @@ fn test_complexmatrix_operations() {
     ];
 
     // Test determinant
-    let d = det(&a.view()).unwrap();
+    let d = det(&a.view()).expect("Test: operation failed");
     // det([[1, 2+i], [3-i, 4]]) = 1*4 - (2+i)*(3-i) = 4 - (6-2i+3i-i²) = 4 - (6+i+1) = -3-i
     assert_abs_diff_eq!(d.re, -3.0, epsilon = 1e-10);
     assert_abs_diff_eq!(d.im, -1.0, epsilon = 1e-10);
 
     // Test matrix-vector multiplication
     let x = array![Complex::new(2.0, 1.0), Complex::new(1.0, -1.0)];
-    let y = matvec(&a.view(), &x.view()).unwrap();
+    let y = matvec(&a.view(), &x.view()).expect("Test: operation failed");
 
     // y[0] = (1+0i)*(2+1i) + (2+1i)*(1-1i) = 2+1i + 2+1i-2i-1 = 3+0i
     assert_abs_diff_eq!(y[0].re, 3.0, epsilon = 1e-10);
@@ -53,7 +53,7 @@ fn test_complexmatrix_operations() {
     let v1 = array![Complex::new(1.0, 2.0), Complex::new(3.0, 4.0)];
     let v2 = array![Complex::new(5.0, 6.0), Complex::new(7.0, 8.0)];
 
-    let ip = inner_product(&v1.view(), &v2.view()).unwrap();
+    let ip = inner_product(&v1.view(), &v2.view()).expect("Test: operation failed");
     // <v1,v2> = (1-2i)*(5+6i) + (3-4i)*(7+8i) = 5-10i+6i-12 + 21-28i+24i-32 = -18-8i
     assert_abs_diff_eq!(ip.re, -18.0, epsilon = 1e-10);
     assert_abs_diff_eq!(ip.im, -8.0, epsilon = 1e-10);
@@ -69,8 +69,8 @@ fn test_complexmatrix_operations() {
         [Complex::new(4.0, -1.0), Complex::new(5.0, 0.0)]
     ];
 
-    assert!(is_hermitian(&h.view(), 1e-10).unwrap());
-    assert!(!is_hermitian(&nh.view(), 1e-10).unwrap());
+    assert!(is_hermitian(&h.view(), 1e-10).expect("Test: operation failed"));
+    assert!(!is_hermitian(&nh.view(), 1e-10).expect("Test: operation failed"));
 
     // Test unitary checks
     let u = array![
@@ -83,8 +83,8 @@ fn test_complexmatrix_operations() {
         [Complex::new(3.0, 0.0), Complex::new(4.0, 0.0)]
     ];
 
-    assert!(is_unitary(&u.view(), 1e-10).unwrap());
-    assert!(!is_unitary(&nu.view(), 1e-10).unwrap());
+    assert!(is_unitary(&u.view(), 1e-10).expect("Test: operation failed"));
+    assert!(!is_unitary(&nu.view(), 1e-10).expect("Test: operation failed"));
 
     // Test Hermitian part
     let mixed = array![
@@ -92,8 +92,8 @@ fn test_complexmatrix_operations() {
         [Complex::new(4.0, 5.0), Complex::new(6.0, 0.0)]
     ];
 
-    let h_part = hermitian_part(&mixed.view()).unwrap();
-    assert!(is_hermitian(&h_part.view(), 1e-10).unwrap());
+    let h_part = hermitian_part(&mixed.view()).expect("Test: operation failed");
+    assert!(is_hermitian(&h_part.view(), 1e-10).expect("Test: operation failed"));
 
     // Verify a few elements of the Hermitian part
     // h_part[0,1] = (mixed[0,1] + conj(mixed[1,0]))/2 = (2+3i + 4-5i)/2 = (6-2i)/2 = 3-i
@@ -106,7 +106,7 @@ fn test_complexmatrix_operations() {
         [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0)]
     ];
 
-    let exp_zero = matrix_exp(&zero.view()).unwrap();
+    let exp_zero = matrix_exp(&zero.view()).expect("Test: operation failed");
     // exp(0) = I
     assert_abs_diff_eq!(exp_zero[[0, 0]].re, 1.0, epsilon = 1e-10);
     assert_abs_diff_eq!(exp_zero[[0, 0]].im, 0.0, epsilon = 1e-10);
@@ -144,7 +144,7 @@ fn test_complexmatrix_operations() {
         ],
     ];
     non_trivial *= Complex::new(0.0, -0.05);
-    let exp_non_trivial = matrix_exp(&non_trivial.view()).unwrap();
+    let exp_non_trivial = matrix_exp(&non_trivial.view()).expect("Test: operation failed");
 
     assert_abs_diff_eq!(
         exp_non_trivial[[0, 0]].re,
@@ -227,21 +227,21 @@ fn testmatrix_calculus() {
     // Test Jacobian-vector product
     let x = array![2.0, 3.0];
     let v = array![1.0, 1.0];
-    // let jvp = jacobian_vector_product(g, &x.view(), &v.view(), None).unwrap();
+    // let jvp = jacobian_vector_product(g, &x.view(), &v.view(), None).expect("Test: operation failed");
 
     // The Jacobian at [2,3] is [[4, 0], [0, 27]], so J*v = [4, 27]
     assert_abs_diff_eq!(jvp[0], 4.0, epsilon = 1e-8);
     assert_abs_diff_eq!(jvp[1], 27.0, epsilon = 1e-8);
 
     // Test vector-Jacobian product
-    let vjp = vector_jacobian_product(g, &x.view(), &v.view(), None).unwrap();
+    let vjp = vector_jacobian_product(g, &x.view(), &v.view(), None).expect("Test: operation failed");
 
     // The Jacobian at [2,3] is [[4, 0], [0, 27]], so v^T*J = [4, 27]
     assert_abs_diff_eq!(vjp[0], 4.0, epsilon = 1e-8);
     assert_abs_diff_eq!(vjp[1], 27.0, epsilon = 1e-8);
 
     // Test Hessian-vector product
-    let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).unwrap();
+    let hvp = hessian_vector_product(f, &x.view(), &v.view(), None).expect("Test: operation failed");
 
     // Hessian is diag([2, 4]), so H*v = [2, 4]
     // Using a larger epsilon for numerical stability
@@ -256,7 +256,7 @@ fn testmatrix_calculus() {
     };
 
     let matrix_x = array![[1.0, 2.0], [3.0, 4.0]];
-    let grad = matrix_gradient(matrix_f, &matrix_x.view(), None).unwrap();
+    let grad = matrix_gradient(matrix_f, &matrix_x.view(), None).expect("Test: operation failed");
 
     // The gradient of sum of squares is 2*X
     assert_abs_diff_eq!(grad[[0, 0]], 2.0, epsilon = 1e-8);
@@ -269,10 +269,10 @@ fn testmatrix_calculus() {
     let taylor_y = array![1.1, 1.2]; // Point to evaluate
 
     // Second-order approximation (add quadratic terms)
-    let approx2 = taylor_approximation(f, &taylor_x.view(), &taylor_y.view(), 2, None).unwrap();
+    let approx2 = taylor_approximation(f, &taylor_x.view(), &taylor_y.view(), 2, None).expect("Test: operation failed");
 
     // Calculate the actual value
-    let actual = f(&taylor_y.view()).unwrap();
+    let actual = f(&taylor_y.view()).expect("Test: operation failed");
 
     // Just verify that the approximation is reasonably close to the actual value
     // The specific values may differ due to special case handling in the implementation

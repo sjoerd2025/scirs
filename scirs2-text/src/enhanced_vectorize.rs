@@ -440,9 +440,11 @@ mod tests {
             "something different here",
         ];
 
-        vectorizer.fit(&documents).unwrap();
+        vectorizer.fit(&documents).expect("Operation failed");
 
-        let vector = vectorizer.transform("this is a test").unwrap();
+        let vector = vectorizer
+            .transform("this is a test")
+            .expect("Operation failed");
         assert!(!vector.is_empty());
     }
 
@@ -450,11 +452,11 @@ mod tests {
     fn test_enhanced_count_vectorizer_ngrams() {
         let mut vectorizer = EnhancedCountVectorizer::new()
             .set_ngram_range((1, 2))
-            .unwrap();
+            .expect("Operation failed");
 
         let documents = vec!["hello world", "hello there", "world peace"];
 
-        vectorizer.fit(&documents).unwrap();
+        vectorizer.fit(&documents).expect("Operation failed");
 
         // Should include both unigrams and bigrams
         let vocab = vectorizer.vocabulary();
@@ -466,7 +468,7 @@ mod tests {
         let mut vectorizer = EnhancedTfidfVectorizer::new()
             .set_smooth_idf(true)
             .set_norm(Some("l2".to_string()))
-            .unwrap();
+            .expect("Operation failed");
 
         let documents = vec![
             "this is a test",
@@ -474,9 +476,11 @@ mod tests {
             "something different here",
         ];
 
-        vectorizer.fit(&documents).unwrap();
+        vectorizer.fit(&documents).expect("Operation failed");
 
-        let vector = vectorizer.transform("this is a test").unwrap();
+        let vector = vectorizer
+            .transform("this is a test")
+            .expect("Operation failed");
 
         // Check L2 normalization
         let norm = vector.dot(&vector).sqrt();
@@ -492,7 +496,7 @@ mod tests {
             "one two three four five six seven eight nine ten",
         ];
 
-        vectorizer.fit(&documents).unwrap();
+        vectorizer.fit(&documents).expect("Operation failed");
 
         // Should only keep top 5 features
         assert_eq!(vectorizer.vocabulary().len(), 5);
@@ -500,7 +504,9 @@ mod tests {
 
     #[test]
     fn test_document_frequency_filtering() {
-        let mut vectorizer = EnhancedCountVectorizer::new().set_min_df(0.5).unwrap(); // Token must appear in at least 50% of docs
+        let mut vectorizer = EnhancedCountVectorizer::new()
+            .set_min_df(0.5)
+            .expect("Operation failed"); // Token must appear in at least 50% of docs
 
         let documents = vec![
             "common word rare",
@@ -508,7 +514,7 @@ mod tests {
             "common another distinct",
         ];
 
-        vectorizer.fit(&documents).unwrap();
+        vectorizer.fit(&documents).expect("Operation failed");
 
         // Only "common" should remain (appears in all docs)
         let vocab = vectorizer.vocabulary();

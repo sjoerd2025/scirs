@@ -77,7 +77,7 @@ pub struct LstsqResult<F: Float> {
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
 /// let b = array![2.0_f64, 3.0];
-/// let x = solve(&a.view(), &b.view(), None).unwrap();
+/// let x = solve(&a.view(), &b.view(), None).expect("Operation failed");
 /// assert!((x[0] - 2.0).abs() < 1e-10);
 /// assert!((x[1] - 3.0).abs() < 1e-10);
 /// ```
@@ -163,7 +163,7 @@ where
 /// // Lower triangular system
 /// let a = array![[1.0_f64, 0.0], [2.0, 3.0]];
 /// let b = array![2.0_f64, 8.0];
-/// let x = solve_triangular(&a.view(), &b.view(), true, false).unwrap();
+/// let x = solve_triangular(&a.view(), &b.view(), true, false).expect("Operation failed");
 /// assert!((x[0] - 2.0).abs() < 1e-10);
 /// assert!((x[1] - 4.0/3.0).abs() < 1e-10);
 /// ```
@@ -260,7 +260,7 @@ where
 ///
 /// let a = array![[1.0_f64, 1.0], [1.0, 2.0], [1.0, 3.0]];
 /// let b = array![6.0_f64, 9.0, 12.0];
-/// let result = lstsq(&a.view(), &b.view(), None).unwrap();
+/// let result = lstsq(&a.view(), &b.view(), None).expect("Operation failed");
 /// // result.x should be approximately [3.0, 3.0]
 /// ```
 #[allow(dead_code)]
@@ -400,7 +400,7 @@ where
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
 /// let b = array![[2.0_f64, 4.0], [3.0, 5.0]];
-/// let x = solve_multiple(&a.view(), &b.view(), None).unwrap();
+/// let x = solve_multiple(&a.view(), &b.view(), None).expect("Operation failed");
 /// // First column of x should be [2.0, 3.0]
 /// // Second column of x should be [4.0, 5.0]
 /// ```

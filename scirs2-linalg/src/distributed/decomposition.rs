@@ -449,7 +449,7 @@ where
     initialize_identity(&mut q_total)?;
     
     let max_iterations = 1000;
-    let tolerance = T::from(1e-12).unwrap();
+    let tolerance = T::from(1e-12).expect("Operation failed");
     
     for iteration in 0..max_iterations {
         // QR decomposition of current matrix
@@ -516,7 +516,7 @@ where
     
     let tol = tolerance.unwrap_or_else(|| {
         let max_singular_value = s.iter().cloned().fold(T::zero(), T::max);
-        max_singular_value * T::from(1e-12).unwrap()
+        max_singular_value * T::from(1e-12).expect("Operation failed")
     });
     
     let rank = s.iter().filter(|&&val| val > tol).count();
@@ -555,7 +555,7 @@ mod tests {
     fn test_decomposition_interface() {
         let matrix = Array2::from_diag(&Array1::from_vec(vec![4.0, 3.0, 2.0, 1.0]));
         let config = DistributedConfig::default();
-        let distmatrix = DistributedMatrix::from_local(matrix, config).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix, config).expect("Operation failed");
         
         // Test LU decomposition interface
         let lu_result = lu_decomposition(&distmatrix);
@@ -574,7 +574,7 @@ mod tests {
     fn testmatrix_properties() {
         let matrix = Array2::from_diag(&Array1::from_vec(vec![4.0, 3.0, 2.0, 1.0]));
         let config = DistributedConfig::default();
-        let distmatrix = DistributedMatrix::from_local(matrix, config).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix, config).expect("Operation failed");
         
         // Test rank computation
         let rank_result = matrix_rank(&distmatrix, None);
@@ -589,7 +589,7 @@ mod tests {
     fn test_helper_functions() {
         let matrix = Array2::from_diag(&Array1::from_vec(vec![2.0, 3.0]));
         let config = DistributedConfig::default();
-        let mut distmatrix = DistributedMatrix::from_local(matrix, config).unwrap();
+        let mut distmatrix = DistributedMatrix::from_local(matrix, config).expect("Operation failed");
         
         // Test identity initialization
         let init_result = initialize_identity(&mut distmatrix);
@@ -604,7 +604,7 @@ mod tests {
     fn test_eigenvalue_interface() {
         let matrix = Array2::from_diag(&Array1::from_vec(vec![3.0, 2.0, 1.0]));
         let config = DistributedConfig::default();
-        let distmatrix = DistributedMatrix::from_local(matrix, config).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix, config).expect("Operation failed");
         
         // Test eigenvalue decomposition interface
         let eigen_result = eigenvalue_decomposition(&distmatrix);

@@ -29,10 +29,10 @@ use std::collections::VecDeque;
 ///
 /// let points = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let mut clusterer = CompetitiveNeuralClusterer::new(2, 2);
-/// let assignments = clusterer.fit(&points.view(), 100).unwrap();
+/// let assignments = clusterer.fit(&points.view(), 100).expect("Operation failed");
 /// println!("Cluster assignments: {:?}", assignments);
 /// ```
 #[derive(Debug, Clone)]
@@ -305,11 +305,11 @@ impl CompetitiveNeuralClusterer {
 ///
 /// let points = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let mut clusterer = HomeostaticNeuralClusterer::new(2, 2)
 ///     .with_homeostatic_params(0.1, 1000.0);
-/// let assignments = clusterer.fit(&points.view(), 50).unwrap();
+/// let assignments = clusterer.fit(&points.view(), 50).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct HomeostaticNeuralClusterer {
@@ -954,14 +954,14 @@ mod tests {
 
     #[test]
     fn test_competitive_clustering() {
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         let mut clusterer = CompetitiveNeuralClusterer::new(2, 2);
         let result = clusterer.fit(&points.view(), 10);
         assert!(result.is_ok());
 
-        let assignments = result.unwrap();
+        let assignments = result.expect("Operation failed");
         assert_eq!(assignments.len(), 4);
 
         let centers = clusterer.get_cluster_centers();
@@ -977,8 +977,8 @@ mod tests {
 
     #[test]
     fn test_homeostatic_clustering() {
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         let mut clusterer =
             HomeostaticNeuralClusterer::new(2, 2).with_homeostatic_params(0.1, 100.0);
@@ -986,7 +986,7 @@ mod tests {
         let result = clusterer.fit(&points.view(), 10);
         assert!(result.is_ok());
 
-        let assignments = result.unwrap();
+        let assignments = result.expect("Operation failed");
         assert_eq!(assignments.len(), 4);
 
         let centers = clusterer.get_cluster_centers();
@@ -1067,12 +1067,12 @@ mod tests {
         let mut competitive = CompetitiveNeuralClusterer::new(2, 2);
         let result = competitive.fit(&points.view(), 10);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 0);
+        assert_eq!(result.expect("Operation failed").len(), 0);
 
         let mut homeostatic = HomeostaticNeuralClusterer::new(2, 2);
         let result = homeostatic.fit(&points.view(), 10);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 0);
+        assert_eq!(result.expect("Operation failed").len(), 0);
     }
 
     #[test]

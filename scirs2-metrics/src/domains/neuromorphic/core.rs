@@ -165,8 +165,8 @@ pub struct LayerParameters<F: Float> {
 impl<F: Float> Default for LayerParameters<F> {
     fn default() -> Self {
         Self {
-            excitatory_ratio: F::from(0.8).unwrap(),
-            noise_level: F::from(0.01).unwrap(),
+            excitatory_ratio: F::from(0.8).expect("Failed to convert constant to float"),
+            noise_level: F::from(0.01).expect("Failed to convert constant to float"),
             neuromodulators: HashMap::new(),
             learning_rules: vec![LearningRule::STDP {
                 window_size: Duration::from_millis(20),
@@ -191,7 +191,7 @@ pub struct LateralInhibition<F: Float> {
 impl<F: Float> Default for LateralInhibition<F> {
     fn default() -> Self {
         Self {
-            strength: F::from(0.1).unwrap(),
+            strength: F::from(0.1).expect("Failed to convert constant to float"),
             radius: 3,
             pattern: InhibitionPattern::DistanceBased,
         }
@@ -316,8 +316,14 @@ impl<F: Float> HomeostaticController<F> {
             + config.output_neurons;
 
         for i in 0..total_neurons {
-            target_rates.insert(i, F::from(5.0).unwrap()); // 5 Hz target
-            adaptation_constants.insert(i, F::from(0.01).unwrap());
+            target_rates.insert(
+                i,
+                F::from(5.0).expect("Failed to convert constant to float"),
+            ); // 5 Hz target
+            adaptation_constants.insert(
+                i,
+                F::from(0.01).expect("Failed to convert constant to float"),
+            );
             scaling_factors.insert(i, F::one());
             intrinsic_excitability.insert(i, F::one());
         }

@@ -354,7 +354,7 @@ where
                     .zip(col.iter())
                     .map(|(&vi, &ci)| vi * ci)
                     .sum::<F>();
-                let factor = F::from(2.0).unwrap() * dot_product / v_norm_sq;
+                let factor = F::from(2.0).expect("Operation failed") * dot_product / v_norm_sq;
 
                 for (i, &vi) in v.iter().enumerate() {
                     a[[k + i, j]] -= factor * vi;
@@ -370,7 +370,7 @@ where
                 .zip(row.iter())
                 .map(|(&vi, &ri)| vi * ri)
                 .sum::<F>();
-            let factor = F::from(2.0).unwrap() * dot_product / v_norm_sq;
+            let factor = F::from(2.0).expect("Operation failed") * dot_product / v_norm_sq;
 
             for (j, &vj) in v.iter().enumerate() {
                 q[[i, k + j]] -= factor * vj;
@@ -1063,7 +1063,7 @@ where
         ));
     }
 
-    if omega <= F::zero() || omega >= F::from(2.0).unwrap() {
+    if omega <= F::zero() || omega >= F::from(2.0).expect("Operation failed") {
         return Err(LinalgError::InvalidInputError(
             "Relaxation parameter omega must be in (0, 2)".to_string(),
         ));

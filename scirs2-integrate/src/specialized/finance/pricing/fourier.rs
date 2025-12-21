@@ -270,7 +270,7 @@ mod tests {
             FinanceMethod::FourierTransform,
         );
 
-        let price = price_fourier_transform(&solver, &option).unwrap();
+        let price = price_fourier_transform(&solver, &option).expect("Operation failed");
 
         // Black-Scholes analytical reference: 10.4506
         // Allow 5% tolerance for FFT approximation
@@ -305,7 +305,7 @@ mod tests {
             FinanceMethod::FourierTransform,
         );
 
-        let price = price_fourier_transform(&solver, &option).unwrap();
+        let price = price_fourier_transform(&solver, &option).expect("Operation failed");
 
         // Black-Scholes analytical reference: 5.5735
         // Allow 5% tolerance for FFT approximation
@@ -346,7 +346,7 @@ mod tests {
             FinanceMethod::FourierTransform,
         );
 
-        let price = price_fourier_transform(&solver, &option).unwrap();
+        let price = price_fourier_transform(&solver, &option).expect("Operation failed");
 
         // Should be reasonable
         assert!(price > 8.0 && price < 13.0, "Price: {}", price);

@@ -886,9 +886,12 @@ impl WorkStealingPool {
 
                     // Find k nearest
                     if k <= distances.len() {
-                        distances
-                            .select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
-                        distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                        distances.select_nth_unstable_by(k - 1, |a, b| {
+                            a.0.partial_cmp(&b.0).expect("Operation failed")
+                        });
+                        distances[..k].sort_unstable_by(|a, b| {
+                            a.0.partial_cmp(&b.0).expect("Operation failed")
+                        });
 
                         let result: Vec<(usize, f64)> = distances[..k]
                             .iter()
@@ -978,7 +981,7 @@ impl WorkStealingPool {
         self.total_work.store(_workitems.len(), Ordering::Relaxed);
         self.completed_work.store(0, Ordering::Relaxed);
 
-        let mut global_queue = self.global_queue.lock().unwrap();
+        let mut global_queue = self.global_queue.lock().expect("Operation failed");
         for item in _workitems {
             global_queue.push_back(item);
         }
@@ -1013,7 +1016,7 @@ impl WorkStealingPool {
             active_workers: self.active_workers.load(Ordering::Relaxed),
             completed_work: self.completed_work.load(Ordering::Relaxed),
             total_work: self.total_work.load(Ordering::Relaxed),
-            queue_depth: self.global_queue.lock().unwrap().len(),
+            queue_depth: self.global_queue.lock().expect("Operation failed").len(),
         }
     }
 }
@@ -1208,7 +1211,7 @@ pub fn global_work_stealing_pool() -> SpatialResult<&'static Mutex<Option<WorkSt
 #[allow(dead_code)]
 pub fn initialize_global_pool(config: WorkStealingConfig) -> SpatialResult<()> {
     let pool_mutex = global_work_stealing_pool()?;
-    let mut pool_guard = pool_mutex.lock().unwrap();
+    let mut pool_guard = pool_mutex.lock().expect("Operation failed");
 
     if pool_guard.is_none() {
         *pool_guard = Some(WorkStealingPool::new(config)?);
@@ -1303,7 +1306,7 @@ mod tests {
         let pool = WorkStealingPool::new(config);
 
         assert!(pool.is_ok());
-        let pool = pool.unwrap();
+        let pool = pool.expect("Operation failed");
         assert_eq!(pool.workers.len(), 1);
     }
 
@@ -1317,7 +1320,7 @@ mod tests {
         assert!(processor.is_ok());
 
         // Just test creation, not actual computation to avoid timeout
-        let processor = processor.unwrap();
+        let processor = processor.expect("Operation failed");
         let stats = processor.statistics();
         assert_eq!(stats.num_threads, 1);
     }
@@ -1331,11 +1334,11 @@ mod tests {
         let kmeans = AdvancedParallelKMeans::new(1, config); // Single cluster for faster testing
         assert!(kmeans.is_ok());
 
-        let kmeans = kmeans.unwrap();
+        let kmeans = kmeans.expect("Operation failed");
         let result = kmeans.fit_parallel(&points.view());
         assert!(result.is_ok());
 
-        let (centroids, assignments) = result.unwrap();
+        let (centroids, assignments) = result.expect("Operation failed");
         assert_eq!(centroids.dim(), (1, 2));
         assert_eq!(assignments.len(), 2);
     }
@@ -1410,7 +1413,7 @@ mod tests {
         assert!(processor.is_ok());
 
         // Just test creation and basic functionality
-        let processor = processor.unwrap();
+        let processor = processor.expect("Operation failed");
         let stats = processor.statistics();
         assert_eq!(stats.num_threads, 1);
         assert_eq!(stats.numa_nodes, 1);
@@ -1425,11 +1428,11 @@ mod tests {
         let kmeans = AdvancedParallelKMeans::new(1, config); // Single cluster for faster testing
         assert!(kmeans.is_ok());
 
-        let kmeans = kmeans.unwrap();
+        let kmeans = kmeans.expect("Operation failed");
         let result = kmeans.fit_parallel(&points.view());
         assert!(result.is_ok());
 
-        let (centroids, assignments) = result.unwrap();
+        let (centroids, assignments) = result.expect("Operation failed");
         assert_eq!(centroids.dim(), (1, 2));
         assert_eq!(assignments.len(), 2);
     }

@@ -124,7 +124,7 @@ impl MLFrameworkConverter for ONNXConverter {
             "name": tensor.metadata.name,
             "shape": tensor.metadata.shape,
             "dtype": "float32",
-            "data": tensor.data.as_slice().unwrap().to_vec(),
+            "data": tensor.data.as_slice().expect("Operation failed").to_vec(),
         });
 
         let file = File::create(path).map_err(IoError::Io)?;

@@ -43,7 +43,7 @@ impl CountVectorizer {
             min_df: 1.0,
             max_df: 1.0,
             lowercase: true,
-            token_pattern: Regex::new(r"\b\w+\b").unwrap(),
+            token_pattern: Regex::new(r"\b\w+\b").expect("Operation failed"),
             stop_words: HashSet::new(),
             fitted: false,
         }
@@ -380,7 +380,7 @@ impl HashingVectorizer {
         HashingVectorizer {
             n_features: _nfeatures,
             lowercase: true,
-            token_pattern: Regex::new(r"\b\w+\b").unwrap(),
+            token_pattern: Regex::new(r"\b\w+\b").expect("Operation failed"),
             binary: false,
             norm: Some("l2".to_string()),
         }
@@ -494,7 +494,7 @@ impl StreamingCountVectorizer {
             n_docs_seen: 0,
             max_features: None,
             lowercase: true,
-            token_pattern: Regex::new(r"\b\w+\b").unwrap(),
+            token_pattern: Regex::new(r"\b\w+\b").expect("Operation failed"),
         }
     }
 
@@ -542,7 +542,10 @@ impl StreamingCountVectorizer {
                                 let new_freq = self.doc_freq.get(&token).unwrap_or(&0);
 
                                 if new_freq > min_freq {
-                                    let old_idx = self.vocabulary.remove(&min_token).unwrap();
+                                    let old_idx = self
+                                        .vocabulary
+                                        .remove(&min_token)
+                                        .expect("Operation failed");
                                     self.vocabulary.insert(token, old_idx);
                                 }
                             }

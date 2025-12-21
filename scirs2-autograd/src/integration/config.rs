@@ -59,7 +59,10 @@ impl ConfigManager {
         // Check for SciRS2-specific environment variables
         for (key, value) in std::env::vars() {
             if key.starts_with("SCIRS2_") {
-                let config_key = key.strip_prefix("SCIRS2_").unwrap().to_lowercase();
+                let config_key = key
+                    .strip_prefix("SCIRS2_")
+                    .expect("Operation failed")
+                    .to_lowercase();
                 env_config.insert(config_key, value);
             }
         }
@@ -817,7 +820,9 @@ mod tests {
         env_vars.insert("auto_convert_tensors".to_string(), "false".to_string());
         env_vars.insert("strict_compatibility".to_string(), "true".to_string());
 
-        manager.merge_env_config(env_vars).unwrap();
+        manager
+            .merge_env_config(env_vars)
+            .expect("Operation failed");
 
         assert!(!manager.config.integration.auto_convert_tensors);
         assert!(manager.config.integration.strict_compatibility);

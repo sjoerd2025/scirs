@@ -30,7 +30,7 @@ pub struct QuantizedTensor {
 impl QuantizedTensor {
     /// Quantize a floating-point tensor
     pub fn from_float_tensor(tensor: &MLTensor, bits: u8) -> Result<Self> {
-        let data = tensor.data.as_slice().unwrap();
+        let data = tensor.data.as_slice().expect("Operation failed");
         let (min_val, max_val) = data
             .iter()
             .fold((f32::INFINITY, f32::NEG_INFINITY), |(min, max), &x| {

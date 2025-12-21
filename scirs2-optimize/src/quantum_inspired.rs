@@ -168,7 +168,7 @@ impl QuantumState {
         let max_prob_idx = probabilities
             .iter()
             .enumerate()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
             .map(|(i, _)| i)
             .unwrap_or(0);
 
@@ -899,7 +899,8 @@ mod tests {
         let objective = |x: &ArrayView1<f64>| (x[0] - 1.0).powi(2) + (x[1] - 2.0).powi(2);
         let initial = Array1::from(vec![0.0, 0.0]);
 
-        let result = quantum_optimize(objective, &initial.view(), Some(200), Some(16)).unwrap();
+        let result = quantum_optimize(objective, &initial.view(), Some(200), Some(16))
+            .expect("Operation failed");
 
         assert!(result.nit > 0);
         // Test that the algorithm runs and produces finite results, even if not optimal
@@ -917,7 +918,7 @@ mod tests {
         let mut state = QuantumState::new(2, 4);
         let original_states = state.basis_states.clone();
 
-        state.quantum_tunnel(5.0, 1.0).unwrap(); // Force tunneling
+        state.quantum_tunnel(5.0, 1.0).expect("Operation failed"); // Force tunneling
 
         // States should have changed due to tunneling
         let mut changed = false;
@@ -938,7 +939,8 @@ mod tests {
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let initial = Array1::from(vec![5.0, 5.0]);
 
-        let result = quantum_particle_swarm_optimize(objective, &initial.view(), 5, 20).unwrap();
+        let result = quantum_particle_swarm_optimize(objective, &initial.view(), 5, 20)
+            .expect("Operation failed");
 
         assert!(result.nit > 0);
         assert!(result.fun < objective(&initial.view()));
@@ -948,7 +950,7 @@ mod tests {
     #[test]
     fn test_quantum_superposition() {
         let mut state = QuantumState::new(2, 4);
-        state.create_superposition(1.0).unwrap();
+        state.create_superposition(1.0).expect("Operation failed");
 
         // Check that amplitudes are approximately equal (superposition)
         let n_states = state.amplitudes.len();
@@ -965,7 +967,7 @@ mod tests {
         let gradients = Array1::from(vec![1.0, -1.0]);
 
         let original_amplitudes = state.amplitudes.clone();
-        state.evolve(&gradients, 0.1).unwrap();
+        state.evolve(&gradients, 0.1).expect("Operation failed");
 
         // Amplitudes should have evolved
         let mut evolved = false;

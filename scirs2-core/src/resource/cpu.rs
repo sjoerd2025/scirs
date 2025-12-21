@@ -541,7 +541,7 @@ mod tests {
         let cpuinfo = CpuInfo::detect();
         assert!(cpuinfo.is_ok());
 
-        let cpu = cpuinfo.unwrap();
+        let cpu = cpuinfo.expect("Operation failed");
         assert!(cpu.logical_cores > 0);
         assert!(cpu.physical_cores > 0);
         assert!(cpu.physical_cores <= cpu.logical_cores);
@@ -594,9 +594,21 @@ mod tests {
 
     #[test]
     fn test_cache_size_parsing() {
-        assert_eq!(CpuInfo::parse_cache_size("32K").unwrap(), 32);
-        assert_eq!(CpuInfo::parse_cache_size("256k").unwrap(), 256);
-        assert_eq!(CpuInfo::parse_cache_size("8M").unwrap(), 8192);
-        assert_eq!(CpuInfo::parse_cache_size("1024").unwrap(), 1024);
+        assert_eq!(
+            CpuInfo::parse_cache_size("32K").expect("Operation failed"),
+            32
+        );
+        assert_eq!(
+            CpuInfo::parse_cache_size("256k").expect("Operation failed"),
+            256
+        );
+        assert_eq!(
+            CpuInfo::parse_cache_size("8M").expect("Operation failed"),
+            8192
+        );
+        assert_eq!(
+            CpuInfo::parse_cache_size("1024").expect("Operation failed"),
+            1024
+        );
     }
 }

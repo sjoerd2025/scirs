@@ -288,14 +288,14 @@ mod tests {
     #[test]
     fn test_trpo_creation() {
         let config = TRPOConfig::default();
-        let trpo = TRPO::new(4, 2, vec![64, 64], true, config).unwrap();
+        let trpo = TRPO::new(4, 2, vec![64, 64], true, config).expect("Operation failed");
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let action = trpo.act(&state.view()).unwrap();
+        let action = trpo.act(&state.view()).expect("Operation failed");
         assert_eq!(action.len(), 2);
-        let value = trpo.predict_value(&state.view()).unwrap();
+        let value = trpo.predict_value(&state.view()).expect("Operation failed");
         assert!(value.is_finite());
     fn test_gae_computation() {
-        let trpo = TRPO::new(4, 2, vec![32], false, config).unwrap();
+        let trpo = TRPO::new(4, 2, vec![32], false, config).expect("Operation failed");
         let rewards = vec![1.0, 2.0, 3.0, 4.0];
         let values = vec![0.5, 1.5, 2.5, 3.5];
         let next_value = 4.5;

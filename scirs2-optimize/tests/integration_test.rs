@@ -43,7 +43,7 @@ fn test_stochastic_optimization_integration() {
 
     let result = minimize_sgd(grad_func, x0.clone(), data_provider, options);
     assert!(result.is_ok());
-    let result = result.unwrap();
+    let result = result.expect("Operation failed");
 
     // Should converge toward zero
     assert!(result.fun < 1e-2);
@@ -70,7 +70,7 @@ fn test_adam_optimization_integration() {
 
     let result = minimize_adam(grad_func, x0, data_provider, options);
     assert!(result.is_ok());
-    let result = result.unwrap();
+    let result = result.expect("Operation failed");
 
     // Adam should converge efficiently
     assert!(result.fun < 1e-3);
@@ -91,7 +91,7 @@ fn test_bfgs_optimization_integration() {
 
     let result = minimize_bfgs(func, x0, &options);
     assert!(result.is_ok());
-    let result = result.unwrap();
+    let result = result.expect("Operation failed");
 
     // BFGS should converge quickly for quadratic functions
     assert!(result.success);
@@ -180,7 +180,7 @@ fn test_unconstrained_workflow() {
     };
 
     // Test L-BFGS
-    let result_lbfgs = minimize_lbfgs(rosenbrock, x0.clone(), &options).unwrap();
+    let result_lbfgs = minimize_lbfgs(rosenbrock, x0.clone(), &options).expect("Operation failed");
     assert!(result_lbfgs.success, "L-BFGS failed to converge");
     assert!(
         result_lbfgs.fun < 1e-1,
@@ -189,7 +189,8 @@ fn test_unconstrained_workflow() {
     );
 
     // Test Powell's method (derivative-free)
-    let result_powell = minimize_powell(rosenbrock, x0.clone(), &options).unwrap();
+    let result_powell =
+        minimize_powell(rosenbrock, x0.clone(), &options).expect("Operation failed");
     assert!(
         result_powell.fun < 1e-3,
         "Powell's method didn't reach reasonable accuracy"
@@ -229,7 +230,8 @@ fn test_stochastic_workflow() {
         ..Default::default()
     };
     let result_rmsprop =
-        minimize_rmsprop(NoisyQuadratic, x0.clone(), data_provider, rmsprop_options).unwrap();
+        minimize_rmsprop(NoisyQuadratic, x0.clone(), data_provider, rmsprop_options)
+            .expect("Operation failed");
     assert!(
         result_rmsprop.fun < 1e-2,
         "RMSProp didn't converge adequately"
@@ -244,7 +246,8 @@ fn test_stochastic_workflow() {
         tol: 1e-4,
         ..Default::default()
     };
-    let result_adamw = minimize_adamw(NoisyQuadratic, x0, data_provider2, adamw_options).unwrap();
+    let result_adamw = minimize_adamw(NoisyQuadratic, x0, data_provider2, adamw_options)
+        .expect("Operation failed");
     assert!(result_adamw.fun < 1e-2, "AdamW didn't converge adequately");
 
     println!("  ✅ Stochastic optimization algorithms working");
@@ -266,7 +269,7 @@ fn test_problem_types() {
         ..Default::default()
     };
 
-    let result = minimize_bfgs(ill_conditioned, x0.clone(), &options).unwrap();
+    let result = minimize_bfgs(ill_conditioned, x0.clone(), &options).expect("Operation failed");
     assert!(
         result.fun < 1e-3,
         "Failed on ill-conditioned problem (got {:.2e})",
@@ -278,7 +281,8 @@ fn test_problem_types() {
     let high_dim_quad = |x: &ArrayView1<f64>| -> f64 { x.mapv(|xi| xi * xi).sum() };
 
     let x0_high_dim = Array1::ones(high_dim_size);
-    let result_high_dim = minimize_bfgs(high_dim_quad, x0_high_dim, &options).unwrap();
+    let result_high_dim =
+        minimize_bfgs(high_dim_quad, x0_high_dim, &options).expect("Operation failed");
     assert!(
         result_high_dim.success,
         "Failed on high-dimensional problem"
@@ -323,7 +327,7 @@ fn test_challenging_problems() {
     };
 
     // Test with derivative-free method
-    let result = minimize_nelder_mead(himmelblau, x0, &options).unwrap();
+    let result = minimize_nelder_mead(himmelblau, x0, &options).expect("Operation failed");
     assert!(
         result.fun < 1e-3,
         "Failed to find good minimum for Himmelblau's function"
@@ -343,7 +347,7 @@ fn test_edge_cases() {
         ..Default::default()
     };
 
-    let result_1d = minimize_bfgs(simple_1d, x0_1d, &options).unwrap();
+    let result_1d = minimize_bfgs(simple_1d, x0_1d, &options).expect("Operation failed");
     assert!(result_1d.success, "Failed on 1D problem");
     assert!(
         (result_1d.x[0]).abs() < 1e-6,
@@ -353,8 +357,8 @@ fn test_edge_cases() {
     // Test with starting point at optimum
     let x0_optimal = Array1::from_vec(vec![0.0, 0.0]);
     let quad_2d = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] + x[1] * x[1] };
-    let result_optimal =
-        minimize_bfgs(quad_2d, x0_optimal, &UnconstrainedOptions::default()).unwrap();
+    let result_optimal = minimize_bfgs(quad_2d, x0_optimal, &UnconstrainedOptions::default())
+        .expect("Operation failed");
     assert!(result_optimal.success, "Failed when starting at optimum");
 
     println!("  ✅ Edge cases handled correctly");
@@ -458,7 +462,8 @@ fn test_machine_learning_workflow() {
         ..Default::default()
     };
 
-    let result = minimize_sgd_momentum(logreg, x0, data_provider, options).unwrap();
+    let result =
+        minimize_sgd_momentum(logreg, x0, data_provider, options).expect("Operation failed");
     assert!(
         result.fun < 1.0,
         "Logistic regression didn't converge to reasonable loss"
@@ -517,7 +522,8 @@ fn test_large_scale_optimization() {
         ..Default::default()
     };
 
-    let result_large = minimize_adam(large_quad, x0_large, data_provider, adam_options).unwrap();
+    let result_large =
+        minimize_adam(large_quad, x0_large, data_provider, adam_options).expect("Operation failed");
     assert!(result_large.fun < 1e-2, "Large-scale optimization failed");
 
     println!(

@@ -562,7 +562,7 @@ pub trait GpuBackend: Send + Sync {
             .enumerate()
             .max_by_key(|(_, device)| device.total_memory)
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("Operation failed");
 
         self.create_context(best_device)
     }

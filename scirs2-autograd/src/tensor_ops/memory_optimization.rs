@@ -284,7 +284,7 @@ impl<F: Float> Op<F> for InPlaceOp<F> {
         let size = target.len() * std::mem::size_of::<F>();
         MEMORY_TRACKER
             .lock()
-            .unwrap()
+            .expect("Failed to reshape")
             .record_allocation(opname, size);
 
         match self.operation {
@@ -368,7 +368,7 @@ impl<F: Float> Op<F> for InPlaceOp<F> {
                     let right_input = ctx.input(1);
                     let left_input = ctx.input(0);
                     ctx.append_input_grad(0, Some((*gy) / right_input));
-                    let neg_two = F::from(-2.0).unwrap();
+                    let neg_two = F::from(-2.0).expect("Failed to convert constant to float");
                     let right_grad = crate::tensor_ops::neg(left_input)
                         * crate::tensor_ops::pow(right_input, neg_two)
                         * (*gy);
@@ -450,13 +450,19 @@ impl<F: Float> Op<F> for ViewOp {
 /// Get a buffer from the memory pool
 #[allow(dead_code)]
 pub fn get_pooled_buffer(size: usize) -> Vec<u8> {
-    MEMORY_POOL.lock().unwrap().get_buffer(size)
+    MEMORY_POOL
+        .lock()
+        .expect("Operation failed")
+        .get_buffer(size)
 }
 
 /// Return a buffer to the memory pool  
 #[allow(dead_code)]
 pub fn return_pooled_buffer(buffer: Vec<u8>) {
-    MEMORY_POOL.lock().unwrap().return_buffer(buffer);
+    MEMORY_POOL
+        .lock()
+        .expect("Operation failed")
+        .return_buffer(buffer);
 }
 
 /// Configure the memory pool
@@ -464,50 +470,53 @@ pub fn return_pooled_buffer(buffer: Vec<u8>) {
 pub fn configure_memory_pool(_max_buffers_per_size: usize, max_poolmemory: usize) {
     MEMORY_POOL
         .lock()
-        .unwrap()
+        .expect("Failed to reshape")
         .configure(_max_buffers_per_size, max_poolmemory);
 }
 
 /// Enable or disable the memory pool
 #[allow(dead_code)]
 pub fn set_memory_pool_enabled(enabled: bool) {
-    MEMORY_POOL.lock().unwrap().set_enabled(enabled);
+    MEMORY_POOL
+        .lock()
+        .expect("Operation failed")
+        .set_enabled(enabled);
 }
 
 /// Clear all buffers from the memory pool
 #[allow(dead_code)]
 pub fn clear_memory_pool() {
-    MEMORY_POOL.lock().unwrap().clear();
+    MEMORY_POOL.lock().expect("Operation failed").clear();
 }
 
 /// Get memory pool statistics
 #[allow(dead_code)]
 pub fn get_memory_pool_stats() -> MemoryPoolStats {
-    MEMORY_POOL.lock().unwrap().stats()
+    MEMORY_POOL.lock().expect("Operation failed").stats()
 }
 
 /// Enable memory usage tracking
 #[allow(dead_code)]
 pub fn enable_memory_tracking() {
-    MEMORY_TRACKER.lock().unwrap().enable();
+    MEMORY_TRACKER.lock().expect("Operation failed").enable();
 }
 
 /// Disable memory usage tracking
 #[allow(dead_code)]
 pub fn disable_memory_tracking() {
-    MEMORY_TRACKER.lock().unwrap().disable();
+    MEMORY_TRACKER.lock().expect("Operation failed").disable();
 }
 
 /// Reset memory tracking statistics
 #[allow(dead_code)]
 pub fn reset_memory_tracking() {
-    MEMORY_TRACKER.lock().unwrap().reset();
+    MEMORY_TRACKER.lock().expect("Operation failed").reset();
 }
 
 /// Get memory tracking statistics
 #[allow(dead_code)]
 pub fn get_memory_tracking_stats() -> MemoryTrackerStats {
-    MEMORY_TRACKER.lock().unwrap().get_stats()
+    MEMORY_TRACKER.lock().expect("Operation failed").get_stats()
 }
 
 /// Create a memory-efficient view of a tensor with a new shape
@@ -603,10 +612,10 @@ pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>
                 scirs2_core::ndarray::IxDyn(&[shape.len()]),
                 shape
                     .iter()
-                    .map(|&x| F::from(x).unwrap())
+                    .map(|&x| F::from(x).expect("Failed to convert to float"))
                     .collect::<Vec<_>>(),
             )
-            .unwrap(),
+            .expect("Failed to reshape"),
             graph,
         ),
         graph,
@@ -624,10 +633,10 @@ pub fn efficient_ones<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>)
                 scirs2_core::ndarray::IxDyn(&[shape.len()]),
                 shape
                     .iter()
-                    .map(|&x| F::from(x).unwrap())
+                    .map(|&x| F::from(x).expect("Failed to convert to float"))
                     .collect::<Vec<_>>(),
             )
-            .unwrap(),
+            .expect("Failed to reshape"),
             graph,
         ),
         graph,

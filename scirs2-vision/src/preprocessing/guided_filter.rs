@@ -245,9 +245,9 @@ mod tests {
                 5.0, 6.0, 7.0, 8.0, 5.0, 6.0, 7.0, 8.0, 9.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let result = guided_filter(&input, &input, 1, 0.001).unwrap();
+        let result = guided_filter(&input, &input, 1, 0.001).expect("Operation failed");
 
         // With small epsilon and guide=input, the filter should preserve most structure
         // Check that the result is similar to input (allowing for boundary effects)
@@ -266,7 +266,7 @@ mod tests {
         input.slice_mut(s![.., 0..5]).fill(0.0);
         input.slice_mut(s![.., 5..]).fill(1.0);
 
-        let result = guided_filter(&input, &input, 2, 0.1).unwrap();
+        let result = guided_filter(&input, &input, 2, 0.1).expect("Operation failed");
 
         // Check that edge is somewhat preserved (middle values should show transition)
         assert!(result[[5, 4]] < 0.5);
@@ -287,18 +287,18 @@ mod tests {
     #[test]
     fn test_guided_filter_color() {
         let input = Array3::ones((5, 5, 3));
-        let result = guided_filter_color(&input, &input, 1, 0.1).unwrap();
+        let result = guided_filter_color(&input, &input, 1, 0.1).expect("Operation failed");
 
         assert_eq!(result.dim(), (5, 5, 3));
     }
 
     #[test]
     fn test_fast_guided_filter() {
-        let input =
-            Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f32 / 64.0).collect()).unwrap();
+        let input = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f32 / 64.0).collect())
+            .expect("Operation failed");
 
-        let normal = guided_filter(&input, &input, 2, 0.1).unwrap();
-        let fast = fast_guided_filter(&input, &input, 2, 0.1, 2).unwrap();
+        let normal = guided_filter(&input, &input, 2, 0.1).expect("Operation failed");
+        let fast = fast_guided_filter(&input, &input, 2, 0.1, 2).expect("Operation failed");
 
         // Fast version should produce similar results
         assert_eq!(normal.dim(), fast.dim());

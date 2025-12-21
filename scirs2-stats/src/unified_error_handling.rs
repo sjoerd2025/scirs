@@ -250,7 +250,7 @@ pub fn global_error_handler() -> &'static UnifiedErrorHandler {
         GLOBAL_HANDLER.call_once(|| {
             GLOBAL_HANDLER_INSTANCE = Some(UnifiedErrorHandler::new());
         });
-        GLOBAL_HANDLER_INSTANCE.as_ref().unwrap()
+        GLOBAL_HANDLER_INSTANCE.as_ref().expect("Operation failed")
     }
 }
 

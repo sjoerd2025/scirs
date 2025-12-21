@@ -190,7 +190,10 @@ where
 
     // Generate uniform mesh
     let mesh: Vec<F> = (0..n_points)
-        .map(|i| a + (b - a) * F::from_usize(i).unwrap() / F::from_usize(n_points - 1).unwrap())
+        .map(|i| {
+            a + (b - a) * F::from_usize(i).expect("Operation failed")
+                / F::from_usize(n_points - 1).expect("Operation failed")
+        })
         .collect();
 
     // Generate initial guess (zero solution for now - could be improved)
@@ -207,7 +210,8 @@ where
             {
                 // Linear interpolation between boundary values
                 for (i, y_val) in y_init.iter_mut().enumerate().take(n_points) {
-                    let t = F::from_usize(i).unwrap() / F::from_usize(n_points - 1).unwrap();
+                    let t = F::from_usize(i).expect("Operation failed")
+                        / F::from_usize(n_points - 1).expect("Operation failed");
                     y_val[0] = value * (F::one() - t) + right_value * t;
                 }
             }
@@ -406,7 +410,8 @@ where
             };
 
             for j in 0..n_seg_points {
-                let t = F::from_usize(j).unwrap() / F::from_usize(n_seg_points - 1).unwrap();
+                let t = F::from_usize(j).expect("Operation failed")
+                    / F::from_usize(n_seg_points - 1).expect("Operation failed");
                 let x = segment_start + (segment_end - segment_start) * t;
                 global_mesh.push(x);
             }
@@ -467,7 +472,7 @@ where
                 &boundary_conditions,
                 &multipoint,
                 ndim,
-                F::from(1e-6).unwrap(), // Default jacobian epsilon
+                F::from(1e-6).expect("Failed to convert constant to float"), // Default jacobian epsilon
             )?;
 
             // Solve J * delta_y = -residuals
@@ -542,7 +547,7 @@ where
         let y_next = y_solution.row(i + 1);
 
         // Compute derivatives using central differences
-        let dydt = (&y_next - &y_prev) / (F::from_f64(2.0).unwrap() * h);
+        let dydt = (&y_next - &y_prev) / (F::from_f64(2.0).expect("Operation failed") * h);
 
         // Evaluate ODE
         let f_val = fun(mesh[i], y_curr);
@@ -614,7 +619,7 @@ fn apply_interior_residuals<F: IntegrateFloat>(
         // Find closest mesh point
         let mesh_idx = mesh
             .iter()
-            .position(|&x| (x - interior_x).abs() < F::from_f64(1e-10).unwrap())
+            .position(|&x| (x - interior_x).abs() < F::from_f64(1e-10).expect("Operation failed"))
             .ok_or_else(|| {
                 IntegrateError::ValueError("Interior point not found in mesh".to_string())
             })?;
@@ -625,7 +630,7 @@ fn apply_interior_residuals<F: IntegrateFloat>(
         let dydt_at_point = if mesh_idx > 0 && mesh_idx < mesh.len() - 1 {
             let y_prev = y_solution.row(mesh_idx - 1);
             let y_next = y_solution.row(mesh_idx + 1);
-            (&y_next - &y_prev) / (F::from_f64(2.0).unwrap() * h)
+            (&y_next - &y_prev) / (F::from_f64(2.0).expect("Operation failed") * h)
         } else {
             // Use one-sided difference at boundaries
             if mesh_idx == 0 {
@@ -771,7 +776,7 @@ fn gaussian_elimination<F: IntegrateFloat>(
         }
 
         // Check for singular matrix
-        if a[[k, k]].abs() < F::from_f64(1e-12).unwrap() {
+        if a[[k, k]].abs() < F::from_f64(1e-12).expect("Operation failed") {
             return Err(IntegrateError::ComputationError(
                 "Singular matrix in Gaussian elimination".to_string(),
             ));

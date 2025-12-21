@@ -33,7 +33,7 @@ fn demonstrate_characteristic_values() {
     println!("and λₘₙ(0) = n(n+1)");
 
     for n in 0..=4 {
-        let lambda = pro_cv(0, n, 0.0).unwrap();
+        let lambda = pro_cv(0, n, 0.0).expect("Operation failed");
         let expected = n as f64 * (n as f64 + 1.0);
         println!("  λ₀,{n}(0) = {lambda:.1} = {n}×{} (Legendre)", n + 1);
         assert!((lambda - expected).abs() < 1e-12);
@@ -47,8 +47,8 @@ fn demonstrate_characteristic_values() {
 
     println!("  For λ₀,₂(c):");
     for &c in &c_values {
-        let lambda_pro = pro_cv(m, n, c).unwrap();
-        let lambda_obl = obl_cv(m, n, c).unwrap();
+        let lambda_pro = pro_cv(m, n, c).expect("Operation failed");
+        let lambda_obl = obl_cv(m, n, c).expect("Operation failed");
         println!("    c = {c:4.1}: λ_prolate = {lambda_pro:8.4}, λ_oblate = {lambda_obl:8.4}");
     }
 
@@ -57,7 +57,7 @@ fn demonstrate_characteristic_values() {
 
     let c = 1.0;
     let m = 1;
-    let sequence = pro_cv_seq(m, m + 4, c).unwrap();
+    let sequence = pro_cv_seq(m, m + 4, c).expect("Operation failed");
 
     for (i, &lambda) in sequence.iter().enumerate() {
         let n = m + i as i32;
@@ -85,7 +85,7 @@ fn demonstrate_perturbation_theory() {
     println!("  Exact formula: λ₀,₂(c) ≈ 6 + c²/(2×7) = 6 + c²/14");
 
     for &c in &small_c_values {
-        let exact = pro_cv(m, n, c).unwrap();
+        let exact = pro_cv(m, n, c).expect("Operation failed");
         let perturbation = 6.0 + c * c / 14.0;
         let error = (exact - perturbation).abs();
         let relative_error = error / exact * 100.0;
@@ -98,7 +98,7 @@ fn demonstrate_perturbation_theory() {
 
     let c_test_values = [0.5, 1.0, 1.5, 2.0];
     for &c in &c_test_values {
-        let exact = pro_cv(0, 1, c).unwrap();
+        let exact = pro_cv(0, 1, c).expect("Operation failed");
         let perturbation = 2.0 + c * c / 10.0; // Simple approximation
         let relative_error = (exact - perturbation).abs() / exact * 100.0;
 
@@ -124,7 +124,7 @@ fn demonstrate_asymptotic_behavior() {
     println!("  Testing asymptotic formula for λ₁,₃(c):");
 
     for &c in &large_c_values {
-        let exact = pro_cv(m, n, c).unwrap();
+        let exact = pro_cv(m, n, c).expect("Operation failed");
         let asymptotic = -c * c / 4.0 + (2.0 * n as f64 + 1.0) * c + n as f64 * (n as f64 + 1.0)
             - (m as f64).powi(2) / 2.0;
         let relative_error = (exact - asymptotic).abs() / exact.abs() * 100.0;
@@ -137,7 +137,7 @@ fn demonstrate_asymptotic_behavior() {
 
     let c_range: Vec<f64> = (10..=100).step_by(10).map(|i| i as f64).collect();
     for &c in &c_range {
-        let exact = pro_cv(0, 2, c).unwrap();
+        let exact = pro_cv(0, 2, c).expect("Operation failed");
         let asymptotic = -c * c / 4.0 + 5.0 * c + 6.0;
         let relative_error = (exact - asymptotic).abs() / exact.abs() * 100.0;
 
@@ -219,8 +219,8 @@ fn compare_prolate_oblate() {
     let (m, n) = (0, 2);
 
     for &c in &c_values {
-        let lambda_pro = pro_cv(m, n, c).unwrap();
-        let lambda_obl = obl_cv(m, n, c).unwrap();
+        let lambda_pro = pro_cv(m, n, c).expect("Operation failed");
+        let lambda_obl = obl_cv(m, n, c).expect("Operation failed");
         let difference = lambda_pro - lambda_obl;
 
         println!("    c = {c:4.1}: λ_prolate = {lambda_pro:8.4}, λ_oblate = {lambda_obl:8.4}, diff = {difference:8.4}");

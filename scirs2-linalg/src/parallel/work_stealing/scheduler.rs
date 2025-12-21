@@ -446,7 +446,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
         }
 
         // Extract results
-        let results = results.lock().unwrap();
+        let results = results.lock().expect("Operation failed");
         Ok((*results).clone())
     }
 
@@ -467,8 +467,10 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
 
         // Wait for work to be available
         let _started = cvar
-            .wait_while(lock.lock().unwrap(), |&mut started| !started)
-            .unwrap();
+            .wait_while(lock.lock().expect("Operation failed"), |&mut started| {
+                !started
+            })
+            .expect("Operation failed");
 
         loop {
             let work_item = {
@@ -674,7 +676,7 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
 
     /// Advanced workload prediction based on execution history
     pub fn predict_execution_time(&self, workcomplexity: WorkComplexity) -> Duration {
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("Operation failed");
 
         let base_time = if stats.total_items > 0 {
             stats.total_execution_time / stats.total_items as u32
@@ -707,8 +709,16 @@ impl<T: Send + 'static + Clone> WorkStealingScheduler<T> {
             return 1.0;
         }
 
-        let max_time = worker_times.iter().max().unwrap().as_nanos() as f64;
-        let min_time = worker_times.iter().min().unwrap().as_nanos() as f64;
+        let max_time = worker_times
+            .iter()
+            .max()
+            .expect("Operation failed")
+            .as_nanos() as f64;
+        let min_time = worker_times
+            .iter()
+            .min()
+            .expect("Operation failed")
+            .as_nanos() as f64;
 
         if max_time == 0.0 {
             1.0

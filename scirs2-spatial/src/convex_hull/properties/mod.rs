@@ -19,8 +19,8 @@
 //!
 //! // 2D square with area 1
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-//! let hull = ConvexHull::new(&points.view()).unwrap();
-//! let area = compute_volume(&hull).unwrap();
+//! let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+//! let area = compute_volume(&hull).expect("Operation failed");
 //! assert!((area - 1.0).abs() < 1e-10);
 //! ```
 //!
@@ -31,12 +31,12 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-//! let hull = ConvexHull::new(&points.view()).unwrap();
+//! let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 //!
-//! let perimeter = compute_surface_area(&hull).unwrap();
+//! let perimeter = compute_surface_area(&hull).expect("Operation failed");
 //! assert!((perimeter - 4.0).abs() < 1e-10);
 //!
-//! let compactness = compute_compactness(&hull).unwrap();
+//! let compactness = compute_compactness(&hull).expect("Operation failed");
 //! assert!(compactness > 0.7); // Square is fairly compact
 //! ```
 //!
@@ -68,12 +68,12 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-//! let hull = ConvexHull::new(&points.view()).unwrap();
+//! let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 //!
-//! let vol = volume::compute_volume(&hull).unwrap();
-//! let area = surface_area::compute_surface_area(&hull).unwrap();
-//! let ratio = surface_area::compute_surface_to_volume_ratio(&hull).unwrap();
-//! let compactness = surface_area::compute_compactness(&hull).unwrap();
+//! let vol = volume::compute_volume(&hull).expect("Operation failed");
+//! let area = surface_area::compute_surface_area(&hull).expect("Operation failed");
+//! let ratio = surface_area::compute_surface_to_volume_ratio(&hull).expect("Operation failed");
+//! let compactness = surface_area::compute_compactness(&hull).expect("Operation failed");
 //!
 //! println!("Volume: {}, Surface Area: {}, Ratio: {}, Compactness: {}",
 //!          vol, area, ratio, compactness);
@@ -146,8 +146,8 @@ pub struct HullAnalysis {
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let analysis = analyze_hull(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let analysis = analyze_hull(&hull).expect("Operation failed");
 ///
 /// println!("Hull Analysis:");
 /// println!("  Dimensions: {}", analysis.ndim);
@@ -223,8 +223,8 @@ pub fn analyze_hull(
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let stats = get_hull_statistics(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let stats = get_hull_statistics(&hull).expect("Operation failed");
 ///
 /// println!("Hull Statistics: {:#?}", stats);
 /// ```
@@ -332,8 +332,8 @@ mod tests {
     #[test]
     fn test_analyze_hull() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let analysis = analyze_hull(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let analysis = analyze_hull(&hull).expect("Operation failed");
 
         assert_eq!(analysis.ndim, 2);
         assert_eq!(analysis.num_vertices, 4);
@@ -356,8 +356,8 @@ mod tests {
             [0.0, 1.0],
             [0.5, 0.5], // Interior point
         ]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let stats = get_hull_statistics(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let stats = get_hull_statistics(&hull).expect("Operation failed");
 
         assert_eq!(stats.num_input_points, 5);
         assert!(stats.num_hull_vertices <= 4); // Interior point should not be a vertex
@@ -371,8 +371,8 @@ mod tests {
     #[test]
     fn test_triangle_analysis() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let analysis = analyze_hull(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let analysis = analyze_hull(&hull).expect("Operation failed");
 
         assert_eq!(analysis.ndim, 2);
         assert_eq!(analysis.num_vertices, 3);
@@ -388,8 +388,8 @@ mod tests {
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0],
         ]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let analysis = analyze_hull(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let analysis = analyze_hull(&hull).expect("Operation failed");
 
         assert_eq!(analysis.ndim, 3);
         assert_eq!(analysis.num_vertices, 4);

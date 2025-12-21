@@ -37,7 +37,8 @@ fn main() {
     let (b_q, b_params) = quantize_matrix(&b.view(), 8, QuantizationMethod::Symmetric);
 
     let start = Instant::now();
-    let c_q_simd = simd_quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let c_q_simd =
+        simd_quantized_matmul(&a_q, &a_params, &b_q, &b_params).expect("Operation failed");
     let simd_time = start.elapsed();
     println!("SIMD quantized matmul time: {:?}", simd_time);
 
@@ -63,7 +64,7 @@ fn main() {
 
     // Test with 8-bit symmetric quantization for matrix
     let start = Instant::now();
-    let r_q_simd = simd_quantized_matvec(&a_q, &a_params, &v.view()).unwrap();
+    let r_q_simd = simd_quantized_matvec(&a_q, &a_params, &v.view()).expect("Operation failed");
     let simd_time = start.elapsed();
     println!("SIMD quantized matvec time: {:?}", simd_time);
 
@@ -164,7 +165,8 @@ fn benchmark_quantization_methods(a: &Array2<f32>, b: &Array2<f32>) {
 
             // Benchmark SIMD quantized matmul
             let start = Instant::now();
-            let c_q = simd_quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();
+            let c_q =
+                simd_quantized_matmul(&a_q, &a_params, &b_q, &b_params).expect("Operation failed");
             let q_time = start.elapsed();
 
             // Calculate error

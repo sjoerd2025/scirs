@@ -20,7 +20,7 @@
 //! use scirs2_series::dimensionality_reduction::{PCAConfig, apply_pca};
 //!
 //! // Create sample time series data matrix (n_series × n_timepoints)
-//! let data = Array2::from_shape_vec((5, 100), (0..500).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::from_shape_vec((5, 100), (0..500).map(|x| x as f64).collect()).expect("Operation failed");
 //!
 //! // Configure PCA
 //! let config = PCAConfig {
@@ -31,7 +31,7 @@
 //! };
 //!
 //! // Apply PCA transformation
-//! let result = apply_pca(&data, &config).unwrap();
+//! let result = apply_pca(&data, &config).expect("Operation failed");
 //! println!("Explained variance ratio: {:?}", result.explained_variance_ratio);
 //! ```
 
@@ -340,9 +340,9 @@ pub struct SymbolicApproximationResult {
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_series::dimensionality_reduction::{PCAConfig, apply_pca};
 ///
-/// let data = Array2::from_shape_vec((10, 50), (0..500).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::from_shape_vec((10, 50), (0..500).map(|x| x as f64).collect()).expect("Operation failed");
 /// let config = PCAConfig::default();
-/// let result = apply_pca(&data, &config).unwrap();
+/// let result = apply_pca(&data, &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn apply_pca<F>(data: &Array2<F>, config: &PCAConfig) -> Result<PCAResult<F>>
@@ -360,7 +360,7 @@ where
     // Step 1: Center and scale the _data
     let mut processed_data = data.clone();
     let mean = if config.center_data {
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         for mut row in processed_data.axis_iter_mut(Axis(0)) {
             for (j, &mean_val) in mean.iter().enumerate() {
                 row[j] = row[j] - mean_val;
@@ -375,7 +375,7 @@ where
         let std = data.std_axis(Axis(0), F::zero());
         for mut row in processed_data.axis_iter_mut(Axis(0)) {
             for (i, val) in row.iter_mut().enumerate() {
-                if std[i] > F::from(1e-10).unwrap() {
+                if std[i] > F::from(1e-10).expect("Failed to convert constant to float") {
                     *val = *val / std[i];
                 }
             }
@@ -461,7 +461,9 @@ where
 
     // Step 3: Center the coefficients if requested
     let centered_coefficients = if config.center_functions {
-        let mean_function = basis_coefficients.mean_axis(Axis(0)).unwrap();
+        let mean_function = basis_coefficients
+            .mean_axis(Axis(0))
+            .expect("Operation failed");
         let mut centered = basis_coefficients.clone();
         for mut row in centered.axis_iter_mut(Axis(0)) {
             for (j, &mean_val) in mean_function.iter().enumerate() {
@@ -570,7 +572,8 @@ where
 
     // Iterative barycenter computation
     while iterations < config.max_iterations
-        && convergence_error > F::from(config.convergence_tolerance).unwrap()
+        && convergence_error
+            > F::from(config.convergence_tolerance).expect("Failed to convert to float")
     {
         alignment_paths.clear();
 
@@ -677,7 +680,7 @@ where
     };
 
     // Filter out small eigenvalues
-    let tolerance = F::from(config.eigenvalue_tolerance).unwrap();
+    let tolerance = F::from(config.eigenvalue_tolerance).expect("Failed to convert to float");
     let mut valid_components = 0;
     for &eigenval in sorted_eigenvalues.iter() {
         if eigenval > tolerance {
@@ -701,7 +704,7 @@ where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
 {
     let (n_samples, _n_features) = data.dim();
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
 
     // C = (1/n) * X^T * X
     let covariance = data.t().dot(data) / n_samples_f;
@@ -722,7 +725,7 @@ where
     // For demonstration, we'll create mock eigenvalues and eigenvectors
     // In a real implementation, this would use proper numerical libraries
     let eigenvalues = Array1::from_shape_fn(n, |i| {
-        F::from(n - i).unwrap() // Decreasing eigenvalues
+        F::from(n - i).expect("Failed to convert to float") // Decreasing eigenvalues
     });
 
     let eigenvectors = Array2::eye(n);
@@ -762,8 +765,10 @@ where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let total_variance = _explainedvariance.sum();
-    let min_variance_ratio = F::from(config.min_variance_ratio).unwrap();
-    let max_cumulative_variance = F::from(config.max_cumulative_variance).unwrap();
+    let min_variance_ratio =
+        F::from(config.min_variance_ratio).expect("Failed to convert to float");
+    let max_cumulative_variance =
+        F::from(config.max_cumulative_variance).expect("Failed to convert to float");
 
     if let Some(n) = config.n_components {
         return std::cmp::min(n, _explainedvariance.len());
@@ -816,9 +821,11 @@ where
 
     for j in 0..nbasis {
         for i in 0.._n_points {
-            let t = F::from(i).unwrap() / F::from(_n_points - 1).unwrap();
-            let center = F::from(j).unwrap() / F::from(nbasis - 1).unwrap();
-            let width = F::one() / F::from(nbasis).unwrap();
+            let t = F::from(i).expect("Failed to convert to float")
+                / F::from(_n_points - 1).expect("Failed to convert to float");
+            let center = F::from(j).expect("Failed to convert to float")
+                / F::from(nbasis - 1).expect("Failed to convert to float");
+            let width = F::one() / F::from(nbasis).expect("Failed to convert to float");
 
             // Simple Gaussian-like basis function
             let diff = (t - center) / width;
@@ -835,19 +842,24 @@ where
     F: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let mut basis = Array2::zeros((_n_points, nbasis));
-    let pi = F::from(std::f64::consts::PI).unwrap();
+    let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
 
     for j in 0..nbasis {
         for i in 0.._n_points {
-            let t = F::from(i).unwrap() / F::from(_n_points - 1).unwrap();
-            let freq = F::from(j + 1).unwrap();
+            let t = F::from(i).expect("Failed to convert to float")
+                / F::from(_n_points - 1).expect("Failed to convert to float");
+            let freq = F::from(j + 1).expect("Failed to convert to float");
 
             if j % 2 == 0 {
                 // Cosine terms
-                basis[(i, j)] = (F::from(2.0).unwrap() * pi * freq * t).cos();
+                basis[(i, j)] =
+                    (F::from(2.0).expect("Failed to convert constant to float") * pi * freq * t)
+                        .cos();
             } else {
                 // Sine terms
-                basis[(i, j)] = (F::from(2.0).unwrap() * pi * freq * t).sin();
+                basis[(i, j)] =
+                    (F::from(2.0).expect("Failed to convert constant to float") * pi * freq * t)
+                        .sin();
             }
         }
     }
@@ -864,10 +876,11 @@ where
 
     for j in 0..nbasis {
         for i in 0.._n_points {
-            let t = F::from(i).unwrap() / F::from(_n_points - 1).unwrap();
+            let t = F::from(i).expect("Failed to convert to float")
+                / F::from(_n_points - 1).expect("Failed to convert to float");
 
             // Polynomial basis: t^j
-            basis[(i, j)] = t.powf(F::from(j).unwrap());
+            basis[(i, j)] = t.powf(F::from(j).expect("Failed to convert to float"));
         }
     }
 
@@ -884,7 +897,10 @@ where
 
     // First basis function is constant
     for i in 0..n_points {
-        basis[(i, 0)] = F::one() / F::from(n_points).unwrap().sqrt();
+        basis[(i, 0)] = F::one()
+            / F::from(n_points)
+                .expect("Failed to convert to float")
+                .sqrt();
     }
 
     // Additional basis functions are Haar wavelets at different scales
@@ -893,16 +909,19 @@ where
         let shift = j % scale;
 
         for i in 0..n_points {
-            let t = F::from(i).unwrap() / F::from(n_points - 1).unwrap();
-            let scaled_t = t * F::from(scale).unwrap() - F::from(shift).unwrap();
+            let t = F::from(i).expect("Failed to convert to float")
+                / F::from(n_points - 1).expect("Failed to convert to float");
+            let scaled_t = t * F::from(scale).expect("Failed to convert to float")
+                - F::from(shift).expect("Failed to convert to float");
 
             if scaled_t >= F::zero() && scaled_t < F::one() {
-                if scaled_t < F::from(0.5).unwrap() {
+                if scaled_t < F::from(0.5).expect("Failed to convert constant to float") {
                     basis[(i, j)] = F::one();
                 } else {
                     basis[(i, j)] = -F::one();
                 }
-                basis[(i, j)] = basis[(i, j)] / F::from(scale).unwrap().sqrt();
+                basis[(i, j)] =
+                    basis[(i, j)] / F::from(scale).expect("Failed to convert to float").sqrt();
             }
         }
     }
@@ -938,7 +957,7 @@ where
     // This is a simplified version - would compute roughness penalty matrix in practice
 
     let covariance = compute_covariance_matrix(coefficients)?;
-    let lambda_f = F::from(lambda).unwrap();
+    let lambda_f = F::from(lambda).expect("Failed to convert to float");
     let identity = Array2::eye(covariance.ncols());
 
     // Regularized covariance = Cov - lambda * I (simplified)
@@ -965,8 +984,9 @@ where
         // Simplified smoothness measure: sum of squared differences
         let mut roughness = F::zero();
         for i in 1..component.len() - 1 {
-            let second_diff =
-                component[i + 1] - F::from(2.0).unwrap() * component[i] + component[i - 1];
+            let second_diff = component[i + 1]
+                - F::from(2.0).expect("Failed to convert constant to float") * component[i]
+                + component[i - 1];
             roughness = roughness + second_diff * second_diff;
         }
 
@@ -1161,7 +1181,7 @@ where
 
     // Accumulate weighted contributions
     for (series_idx, path) in alignment_paths.iter().enumerate() {
-        let weight = F::from(weights[series_idx]).unwrap();
+        let weight = F::from(weights[series_idx]).expect("Failed to convert to float");
         let series = &_timeseries[series_idx];
 
         for &(barycenter_idx, series_idx_in_path) in path {
@@ -1394,10 +1414,11 @@ mod tests {
 
     #[test]
     fn test_pca_basic() {
-        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let config = PCAConfig::default();
 
-        let result = apply_pca(&data, &config).unwrap();
+        let result = apply_pca(&data, &config).expect("Operation failed");
 
         assert_eq!(result.transformed_data.nrows(), 10);
         assert!(result.n_components_selected > 0);
@@ -1406,7 +1427,8 @@ mod tests {
 
     #[test]
     fn test_pca_configuration() {
-        let data = Array2::from_shape_vec((20, 10), (0..200).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 10), (0..200).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
         let config = PCAConfig {
             n_components: Some(3),
@@ -1415,7 +1437,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = apply_pca(&data, &config).unwrap();
+        let result = apply_pca(&data, &config).expect("Operation failed");
 
         assert_eq!(result.n_components_selected, 3);
         assert_eq!(result.transformed_data.ncols(), 3);
@@ -1426,10 +1448,10 @@ mod tests {
     fn test_functional_pca_basic() {
         let functional_data =
             Array2::from_shape_vec((5, 20), (0..100).map(|x| (x as f64 * 0.1).sin()).collect())
-                .unwrap();
+                .expect("Operation failed");
 
         let config = FunctionalPCAConfig::default();
-        let result = apply_functional_pca(&functional_data, &config).unwrap();
+        let result = apply_functional_pca(&functional_data, &config).expect("Operation failed");
 
         assert!(result.functional_components.nrows() > 0);
         assert!(!result.explained_variance.is_empty());
@@ -1442,7 +1464,7 @@ mod tests {
         let _timeseries = vec![ts1, ts2];
 
         let config = DTWBarycenterConfig::default();
-        let result = compute_dtw_barycenter(&_timeseries, &config).unwrap();
+        let result = compute_dtw_barycenter(&_timeseries, &config).expect("Operation failed");
 
         assert!(!result.barycenter.is_empty());
         assert_eq!(result.distances.len(), 2);
@@ -1454,7 +1476,7 @@ mod tests {
         let _timeseries = Array1::from_shape_fn(100, |i| (i as f64 * 0.1).sin());
         let config = SymbolicApproximationConfig::default();
 
-        let result = apply_symbolic_approximation(&_timeseries, &config).unwrap();
+        let result = apply_symbolic_approximation(&_timeseries, &config).expect("Operation failed");
 
         assert!(!result.symbolic_sequence.is_empty());
         assert!(result.compression_ratio > 1.0);
@@ -1463,10 +1485,11 @@ mod tests {
     #[test]
     fn test_pca_edge_cases() {
         // Test with minimal data
-        let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
         let config = PCAConfig::default();
 
-        let result = apply_pca(&data, &config).unwrap();
+        let result = apply_pca(&data, &config).expect("Operation failed");
         assert!(result.n_components_selected <= 2);
     }
 
@@ -1476,7 +1499,7 @@ mod tests {
         let _timeseries = vec![ts];
 
         let config = DTWBarycenterConfig::default();
-        let result = compute_dtw_barycenter(&_timeseries, &config).unwrap();
+        let result = compute_dtw_barycenter(&_timeseries, &config).expect("Operation failed");
 
         assert_eq!(result.barycenter.len(), 3);
         assert_eq!(result.distances.len(), 1);

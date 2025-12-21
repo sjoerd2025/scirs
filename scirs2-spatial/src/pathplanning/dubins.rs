@@ -23,7 +23,7 @@
 //! let turning_radius = 1.0;
 //!
 //! let planner = DubinsPlanner::new(turning_radius);
-//! let path = planner.plan(&start, &goal).unwrap();
+//! let path = planner.plan(&start, &goal).expect("Operation failed");
 //!
 //! println!("Path length: {}", path.length());
 //! println!("Path type: {:?}", path.path_type());
@@ -347,7 +347,7 @@ impl DubinsPlanner {
     /// let goal = Pose2D::new(5.0, 5.0, std::f64::consts::PI / 2.0);
     /// let planner = DubinsPlanner::new(1.0);
     ///
-    /// let path = planner.plan(&start, &goal).unwrap();
+    /// let path = planner.plan(&start, &goal).expect("Operation failed");
     /// println!("Path length: {}", path.length());
     /// ```
     pub fn plan(&self, start: &Pose2D, goal: &Pose2D) -> SpatialResult<DubinsPath> {
@@ -674,7 +674,7 @@ mod tests {
         let goal = Pose2D::new(5.0, 0.0, 0.0);
         let planner = DubinsPlanner::new(1.0);
 
-        let path = planner.plan(&start, &goal).unwrap();
+        let path = planner.plan(&start, &goal).expect("Operation failed");
 
         // Should be close to straight line distance
         assert!(path.length() >= 5.0);
@@ -687,15 +687,15 @@ mod tests {
         let goal = Pose2D::new(2.0, 0.0, 0.0);
         let planner = DubinsPlanner::new(1.0);
 
-        let path = planner.plan(&start, &goal).unwrap();
+        let path = planner.plan(&start, &goal).expect("Operation failed");
 
         // Sample at start (t=0)
-        let start_sample = path.sample(0.0).unwrap();
+        let start_sample = path.sample(0.0).expect("Operation failed");
         assert_relative_eq!(start_sample.x, start.x, epsilon = 1e-10);
         assert_relative_eq!(start_sample.y, start.y, epsilon = 1e-10);
 
         // Sample at goal (t=1)
-        let goal_sample = path.sample(1.0).unwrap();
+        let goal_sample = path.sample(1.0).expect("Operation failed");
         assert_relative_eq!(goal_sample.x, goal.x, epsilon = 1e-2);
         assert_relative_eq!(goal_sample.y, goal.y, epsilon = 1e-2);
     }
@@ -706,7 +706,7 @@ mod tests {
         let goal = Pose2D::new(2.0, 0.0, 0.0);
         let planner = DubinsPlanner::new(1.0);
 
-        let path = planner.plan(&start, &goal).unwrap();
+        let path = planner.plan(&start, &goal).expect("Operation failed");
 
         // Test invalid parameters
         assert!(path.sample(-0.1).is_err());

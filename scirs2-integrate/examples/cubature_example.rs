@@ -25,7 +25,7 @@ fn main() {
         (Bound::Finite(0.0), Bound::Finite(1.0)),
     ];
 
-    let result1 = cubature(f1, &bounds1, None).unwrap();
+    let result1 = cubature(f1, &bounds1, None).expect("Operation failed");
     println!("   Result: {:.10}", result1.value);
     println!("   Error estimate: {:.10e}", result1.abs_error);
     println!("   Function evaluations: {}", result1.n_evals);
@@ -42,7 +42,7 @@ fn main() {
         (Bound::Finite(0.0), Bound::Finite(1.0)),
     ];
 
-    let result2 = cubature(f2, &bounds2, None).unwrap();
+    let result2 = cubature(f2, &bounds2, None).expect("Operation failed");
     println!("   Result: {:.10}", result2.value);
     println!("   Error estimate: {:.10e}", result2.abs_error);
     println!("   Function evaluations: {}", result2.n_evals);
@@ -55,7 +55,7 @@ fn main() {
 
     let bounds3 = vec![(Bound::Finite(0.0), Bound::PosInf)];
 
-    let result3 = cubature(f3, &bounds3, None).unwrap();
+    let result3 = cubature(f3, &bounds3, None).expect("Operation failed");
     println!("   Result: {:.10}", result3.value);
     println!("   Error estimate: {:.10e}", result3.abs_error);
     println!("   Function evaluations: {}", result3.n_evals);
@@ -69,7 +69,7 @@ fn main() {
 
     let bounds4 = vec![(Bound::NegInf, Bound::PosInf)];
 
-    let result4 = cubature(f4, &bounds4, None).unwrap();
+    let result4 = cubature(f4, &bounds4, None).expect("Operation failed");
     println!("   Result: {:.10}", result4.value);
     println!("   Error estimate: {:.10e}", result4.abs_error);
     println!("   Function evaluations: {}", result4.n_evals);
@@ -86,7 +86,7 @@ fn main() {
         (Bound::NegInf, Bound::PosInf),
     ];
 
-    let result5 = cubature(f5, &bounds5, None).unwrap();
+    let result5 = cubature(f5, &bounds5, None).expect("Operation failed");
     println!("   Result: {:.10}", result5.value);
     println!("   Error estimate: {:.10e}", result5.abs_error);
     println!("   Function evaluations: {}", result5.n_evals);
@@ -99,7 +99,7 @@ fn main() {
     let f6 = |args: &[f64]| (args[0] + args[1]).sin();
     let ranges = vec![(0.0, PI), (0.0, PI)];
 
-    let result6 = nquad(f6, &ranges, None).unwrap();
+    let result6 = nquad(f6, &ranges, None).expect("Operation failed");
     println!("   Result: {:.10}", result6.value);
     println!("   Error estimate: {:.10e}", result6.abs_error);
     println!("   Function evaluations: {}", result6.n_evals);
@@ -124,7 +124,7 @@ fn main() {
         log: false,
     };
 
-    let result7 = cubature(f7, &bounds7, Some(options)).unwrap();
+    let result7 = cubature(f7, &bounds7, Some(options)).expect("Operation failed");
     println!("   Result: {:.10}", result7.value);
     println!("   Error estimate: {:.10e}", result7.abs_error);
     println!("   Function evaluations: {}", result7.n_evals);

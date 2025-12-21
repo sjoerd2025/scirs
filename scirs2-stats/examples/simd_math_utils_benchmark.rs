@@ -46,7 +46,7 @@ fn bench_abs_f64(size: usize) {
         .collect();
 
     // Warm-up
-    let _ = abs_f64(&data).unwrap();
+    let _ = abs_f64(&data).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -59,7 +59,7 @@ fn bench_abs_f64(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = abs_f64(&data).unwrap();
+        let _ = abs_f64(&data).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -78,7 +78,7 @@ fn bench_abs_f32(size: usize) {
         .collect();
 
     // Warm-up
-    let _ = abs_f32(&data).unwrap();
+    let _ = abs_f32(&data).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -91,7 +91,7 @@ fn bench_abs_f32(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = abs_f32(&data).unwrap();
+        let _ = abs_f32(&data).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -114,7 +114,7 @@ fn bench_sign_f64(size: usize) {
         .collect();
 
     // Warm-up
-    let _ = sign_f64(&data).unwrap();
+    let _ = sign_f64(&data).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -127,7 +127,7 @@ fn bench_sign_f64(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = sign_f64(&data).unwrap();
+        let _ = sign_f64(&data).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -150,7 +150,7 @@ fn bench_sign_f32(size: usize) {
         .collect();
 
     // Warm-up
-    let _ = sign_f32(&data).unwrap();
+    let _ = sign_f32(&data).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -163,7 +163,7 @@ fn bench_sign_f32(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = sign_f32(&data).unwrap();
+        let _ = sign_f32(&data).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();

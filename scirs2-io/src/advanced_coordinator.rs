@@ -136,7 +136,7 @@ impl AdvancedCoordinator {
 
     /// Apply meta-learning insights for cross-domain adaptation
     fn apply_meta_learning_insights(&self, intelligence: &ComprehensiveIntelligence) -> Result<()> {
-        let mut meta_learner = self.meta_learner.write().unwrap();
+        let mut meta_learner = self.meta_learner.write().expect("Operation failed");
         meta_learner.adapt_to_context(intelligence)?;
 
         // Update neural controller with meta-learning insights
@@ -151,7 +151,10 @@ impl AdvancedCoordinator {
         &self,
         intelligence: &ComprehensiveIntelligence,
     ) -> Result<ResourceAllocation> {
-        let mut orchestrator = self.resource_orchestrator.write().unwrap();
+        let mut orchestrator = self
+            .resource_orchestrator
+            .write()
+            .expect("Operation failed");
         orchestrator.optimize_allocation(intelligence, &self.capabilities)
     }
 
@@ -234,7 +237,7 @@ impl AdvancedCoordinator {
     /// Execute neural adaptive processing strategy
     fn execute_neural_adaptive_strategy(&mut self, data: &[u8]) -> Result<StrategyResult> {
         let start = Instant::now();
-        let mut advanced_processor = self.advanced_processor.write().unwrap();
+        let mut advanced_processor = self.advanced_processor.write().expect("Operation failed");
         let processed_data = advanced_processor.process_data_adaptive(data)?;
         let processing_time = start.elapsed();
 
@@ -252,7 +255,7 @@ impl AdvancedCoordinator {
     /// Execute quantum-inspired processing strategy
     fn execute_quantum_inspired_strategy(&mut self, data: &[u8]) -> Result<StrategyResult> {
         let start = Instant::now();
-        let mut quantum_processor = self.quantum_processor.write().unwrap();
+        let mut quantum_processor = self.quantum_processor.write().expect("Operation failed");
         let processed_data = quantum_processor.process_quantum_parallel(data)?;
         let processing_time = start.elapsed();
 
@@ -273,7 +276,7 @@ impl AdvancedCoordinator {
 
         #[cfg(feature = "gpu")]
         let processed_data = {
-            let gpu_processor_guard = self.gpu_processor.read().unwrap();
+            let gpu_processor_guard = self.gpu_processor.read().expect("Operation failed");
             if let Some(_gpu_processor) = gpu_processor_guard.as_ref() {
                 // GPU processing implementation would go here
                 // For now, we'll use a SIMD fallback
@@ -353,7 +356,7 @@ impl AdvancedCoordinator {
                     .partial_cmp(&score_b)
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .unwrap();
+            .expect("Operation failed");
 
         Ok(ProcessingResult {
             data: best_result.processed_data.clone(),
@@ -375,13 +378,16 @@ impl AdvancedCoordinator {
     ) -> Result<()> {
         // Update performance intelligence
         {
-            let mut perf_intel = self.performance_intelligence.write().unwrap();
+            let mut perf_intel = self
+                .performance_intelligence
+                .write()
+                .expect("Operation failed");
             perf_intel.record_performance_data(intelligence, result, total_time)?;
         }
 
         // Update neural controller with feedback
         {
-            let neural_controller = self.neural_controller.read().unwrap();
+            let neural_controller = self.neural_controller.read().expect("Operation failed");
             let feedback = PerformanceFeedback {
                 throughput_mbps: (intelligence.data_size as f32)
                     / (total_time.as_secs_f32() * 1024.0 * 1024.0),
@@ -410,7 +416,7 @@ impl AdvancedCoordinator {
 
     /// Detect emergent behaviors in processing results
     fn detect_emergent_behaviors(&self, result: &ProcessingResult) -> Result<()> {
-        let mut detector = self.emergent_detector.write().unwrap();
+        let mut detector = self.emergent_detector.write().expect("Operation failed");
         detector.analyze_result(result)?;
 
         if let Some(emergent_behavior) = detector.detect_emergence()? {
@@ -685,17 +691,20 @@ impl AdvancedCoordinator {
     /// Get comprehensive performance statistics
     pub fn get_comprehensive_statistics(&self) -> Result<AdvancedStatistics> {
         let neural_stats = {
-            let advanced_processor = self.advanced_processor.read().unwrap();
+            let advanced_processor = self.advanced_processor.read().expect("Operation failed");
             advanced_processor.get_performance_stats()
         };
 
         let quantum_stats = {
-            let quantum_processor = self.quantum_processor.read().unwrap();
+            let quantum_processor = self.quantum_processor.read().expect("Operation failed");
             quantum_processor.get_performance_stats()
         };
 
         let performance_intel = {
-            let intel = self.performance_intelligence.read().unwrap();
+            let intel = self
+                .performance_intelligence
+                .read()
+                .expect("Operation failed");
             intel.get_statistics()
         };
 
@@ -744,7 +753,7 @@ impl AdvancedCoordinator {
 
         // Apply emergent optimizations based on pattern analysis
         {
-            let mut emergent_detector = self.emergent_detector.write().unwrap();
+            let mut emergent_detector = self.emergent_detector.write().expect("Operation failed");
             emergent_detector.apply_emergent_optimizations(analysis)?;
         } // emergent_detector borrow ends here
 
@@ -764,7 +773,7 @@ impl AdvancedCoordinator {
 
     /// Learn from domain data
     pub fn learn_from_domain(&mut self, data: &[u8], domain: &str) -> Result<DomainLearningResult> {
-        let mut meta_learner = self.meta_learner.write().unwrap();
+        let mut meta_learner = self.meta_learner.write().expect("Operation failed");
 
         // Extract domain-specific patterns
         let patterns = meta_learner.extract_domain_patterns(data, domain)?;
@@ -780,7 +789,7 @@ impl AdvancedCoordinator {
 
     /// Apply transferred knowledge
     pub fn apply_transferred_knowledge(&mut self, data: &[u8]) -> Result<KnowledgeTransferResult> {
-        let meta_learner = self.meta_learner.read().unwrap();
+        let meta_learner = self.meta_learner.read().expect("Operation failed");
 
         // Apply learned knowledge to process data
         let improvement = meta_learner.apply_transferred_knowledge(data)?;
@@ -818,7 +827,7 @@ impl AdvancedCoordinator {
 
     /// Enable autonomous evolution
     pub fn enable_autonomous_evolution(&mut self) -> Result<()> {
-        let mut mode = self.current_mode.write().unwrap();
+        let mut mode = self.current_mode.write().expect("Operation failed");
         *mode = OptimizationMode::AutonomousEvolution;
         Ok(())
     }
@@ -853,11 +862,14 @@ impl AdvancedCoordinator {
         };
 
         // Detect new adaptations
-        let mut emergent_detector = self.emergent_detector.write().unwrap();
+        let mut emergent_detector = self.emergent_detector.write().expect("Operation failed");
         let adaptations = emergent_detector.detect_new_adaptations(&processing_result)?;
 
         // Update system efficiency
-        let mut performance_intelligence = self.performance_intelligence.write().unwrap();
+        let mut performance_intelligence = self
+            .performance_intelligence
+            .write()
+            .expect("Operation failed");
         performance_intelligence.update_efficiency_metrics(&processing_result)?;
 
         let _processing_time = start.elapsed();
@@ -872,8 +884,11 @@ impl AdvancedCoordinator {
 
     /// Get evolution summary
     pub fn get_evolution_summary(&self) -> Result<EvolutionSummary> {
-        let performance_intelligence = self.performance_intelligence.read().unwrap();
-        let meta_learner = self.meta_learner.read().unwrap();
+        let performance_intelligence = self
+            .performance_intelligence
+            .read()
+            .expect("Operation failed");
+        let meta_learner = self.meta_learner.read().expect("Operation failed");
 
         Ok(EvolutionSummary::new(
             meta_learner.get_total_adaptations(),
@@ -1869,7 +1884,7 @@ mod tests {
 
     #[test]
     fn test_entropy_calculation() {
-        let coordinator = AdvancedCoordinator::new().unwrap();
+        let coordinator = AdvancedCoordinator::new().expect("Operation failed");
         let uniform_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let repeated_data = vec![1, 1, 1, 1, 1, 1, 1, 1];
 
@@ -1881,33 +1896,35 @@ mod tests {
 
     #[test]
     fn test_data_pattern_detection() {
-        let coordinator = AdvancedCoordinator::new().unwrap();
+        let coordinator = AdvancedCoordinator::new().expect("Operation failed");
         let test_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
-        let patterns = coordinator.detect_data_patterns(&test_data).unwrap();
+        let patterns = coordinator
+            .detect_data_patterns(&test_data)
+            .expect("Operation failed");
 
         assert!(patterns.sequential_factor > 0.5); // Sequential data should have high sequential factor
     }
 
     #[test]
     fn test_processing_strategy_execution() {
-        let coordinator = AdvancedCoordinator::new().unwrap();
+        let coordinator = AdvancedCoordinator::new().expect("Operation failed");
         let test_data = vec![1, 2, 3, 4, 5];
 
         let result = coordinator
             .execute_simd_optimized_strategy(&test_data)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!result.processed_data.is_empty());
         assert_eq!(result.strategy_type, StrategyType::SimdOptimized);
     }
 
     #[test]
     fn test_comprehensive_intelligence_gathering() {
-        let coordinator = AdvancedCoordinator::new().unwrap();
+        let coordinator = AdvancedCoordinator::new().expect("Operation failed");
         let test_data = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
         let intelligence = coordinator
             .gather_comprehensive_intelligence(&test_data)
-            .unwrap();
+            .expect("Operation failed");
         assert!(intelligence.data_entropy >= 0.0 && intelligence.data_entropy <= 1.0);
         assert!(
             intelligence.compression_potential >= 0.0 && intelligence.compression_potential <= 1.0

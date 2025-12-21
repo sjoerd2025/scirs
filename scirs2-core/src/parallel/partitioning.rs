@@ -706,7 +706,9 @@ mod tests {
         let partitioner = DataPartitioner::<i32>::new(config);
         let data: Vec<i32> = (0..100).collect();
 
-        let partitions = partitioner.partition_equal_size(&data).unwrap();
+        let partitions = partitioner
+            .partition_equal_size(&data)
+            .expect("Operation failed");
         assert_eq!(partitions.len(), 4);
         assert_eq!(partitions[0].len(), 25);
         assert_eq!(partitions[3].len(), 25);
@@ -722,7 +724,9 @@ mod tests {
         let data: Vec<i32> = (0..90).collect();
         let weights = vec![1.0, 2.0, 3.0];
 
-        let partitions = partitioner.partition_weighted(&data, &weights).unwrap();
+        let partitions = partitioner
+            .partition_weighted(&data, &weights)
+            .expect("Operation failed");
         assert_eq!(partitions.len(), 3);
         assert_eq!(partitions[0].len(), 15); // 1/6 of 90
         assert_eq!(partitions[1].len(), 30); // 2/6 of 90

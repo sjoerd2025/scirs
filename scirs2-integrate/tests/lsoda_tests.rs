@@ -28,7 +28,7 @@ fn test_lsoda_basic() {
         result.err()
     );
 
-    let result = result.unwrap();
+    let result = result.expect("Operation failed");
 
     // Print the message if available
     if let Some(msg) = &result.message {
@@ -40,7 +40,7 @@ fn test_lsoda_basic() {
 
     // Check accuracy - should be close to exp(-2)
     let exact = (-2.0f64).exp();
-    let computed = result.y.last().unwrap()[0];
+    let computed = result.y.last().expect("Operation failed")[0];
     let relative_error = (computed - exact).abs() / exact;
     println!("Computed: {computed}, Exact: {exact}, Relative error: {relative_error}");
     assert!(relative_error < 2e-2, "Error too large: {relative_error}");
@@ -76,7 +76,7 @@ fn test_lsoda_with_stiffness_change() {
     // The test should now pass with our improved implementation
     assert!(result.is_ok(), "LSODA failed: {:?}", result.err());
 
-    let result = result.unwrap();
+    let result = result.expect("Operation failed");
 
     // Print debug info
     if let Some(msg) = &result.message {
@@ -135,7 +135,7 @@ fn test_lsoda_method_switching() {
         result.err()
     );
 
-    let result = result.unwrap();
+    let result = result.expect("Operation failed");
 
     // Print debug info
     if let Some(msg) = &result.message {
@@ -167,7 +167,7 @@ fn test_lsoda_method_switching() {
 
     // Basic accuracy check - value should be very small at t=10
     // But be more lenient since we may not have fully converged
-    let final_value = result.y.last().unwrap()[0];
+    let final_value = result.y.last().expect("Operation failed")[0];
     println!("Final value at t=10: {final_value}");
     assert!(
         final_value.abs() < 1e-2,

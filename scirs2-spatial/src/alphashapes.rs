@@ -170,7 +170,7 @@ mod tests {
         let alpha_shape = AlphaShape::new(&points.view(), 1.0);
         assert!(alpha_shape.is_ok());
 
-        let shape = alpha_shape.unwrap();
+        let shape = alpha_shape.expect("Operation failed");
         assert_eq!(shape.num_points(), 3);
         assert_eq!(shape.alpha, 1.0);
     }
@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_alpha_shape_contains() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]];
-        let alpha_shape = AlphaShape::new(&points.view(), 0.5).unwrap();
+        let alpha_shape = AlphaShape::new(&points.view(), 0.5).expect("Operation failed");
 
         let test_point = array![0.1, 0.1];
         let contains = alpha_shape.contains_point(&test_point.view());
@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn test_alpha_shape_area() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
-        let alpha_shape = AlphaShape::new(&points.view(), 1.0).unwrap();
+        let alpha_shape = AlphaShape::new(&points.view(), 1.0).expect("Operation failed");
 
         let area = alpha_shape.area();
         assert!(area >= 0.0);

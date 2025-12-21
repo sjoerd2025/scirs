@@ -469,7 +469,12 @@ impl AdvancedKDTree {
         let mut heap = BinaryHeap::with_capacity(k + 1);
 
         // Search starting from root
-        self.search_knn_advanced(self.root_index.unwrap(), query, k, &mut heap);
+        self.search_knn_advanced(
+            self.root_index.expect("Operation failed"),
+            query,
+            k,
+            &mut heap,
+        );
 
         // Extract results
         let mut results: Vec<(usize, f64)> = heap
@@ -648,7 +653,12 @@ impl AdvancedKDTree {
         }
 
         let mut result = Vec::new();
-        self.search_range_advanced(self.root_index.unwrap(), query, radius, &mut result);
+        self.search_range_advanced(
+            self.root_index.expect("Operation failed"),
+            query,
+            radius,
+            &mut result,
+        );
         Ok(result)
     }
 
@@ -816,23 +826,25 @@ mod tests {
         let kdtree = AdvancedKDTree::new(&points.view(), config);
         assert!(kdtree.is_ok());
 
-        let kdtree = kdtree.unwrap();
+        let kdtree = kdtree.expect("Operation failed");
         assert_eq!(kdtree.points.nrows(), 4);
         assert_eq!(kdtree.points.ncols(), 2);
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assertion `left == right` failed: left: 1, right: 2 at line 836"]
     fn test_advanced_knn_search() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
         let config = KDTreeConfig::new()
             .with_vectorized_search(true)
             .with_cache_aware_layout(true);
 
-        let kdtree = AdvancedKDTree::new(&points.view(), config).unwrap();
+        let kdtree = AdvancedKDTree::new(&points.view(), config).expect("Operation failed");
         let query = array![0.6, 0.6];
 
-        let (indices, distances) = kdtree.knn_search_advanced(&query.view(), 2).unwrap();
+        let (indices, distances) = kdtree
+            .knn_search_advanced(&query.view(), 2)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 2);
         assert_eq!(distances.len(), 2);
@@ -843,15 +855,16 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_advanced_range_search() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
         let config = KDTreeConfig::new();
 
-        let kdtree = AdvancedKDTree::new(&points.view(), config).unwrap();
+        let kdtree = AdvancedKDTree::new(&points.view(), config).expect("Operation failed");
         let query = array![0.5, 0.5];
 
-        let results = kdtree.range_search(&query.view(), 0.8).unwrap();
+        let results = kdtree
+            .range_search(&query.view(), 0.8)
+            .expect("Operation failed");
 
         // Should find several points within radius 0.8
         assert!(!results.is_empty());
@@ -863,15 +876,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assertion `left == right` failed: left: 0, right: 3 at line 879"]
     fn test_batch_knn_search() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let queries = array![[0.1, 0.1], [0.9, 0.9]];
         let mut config = KDTreeConfig::new();
         config.with_parallel_construction(true, 100);
 
-        let kdtree = AdvancedKDTree::new(&points.view(), config).unwrap();
-        let (indices, distances) = kdtree.batch_knn_search(&queries.view(), 2).unwrap();
+        let kdtree = AdvancedKDTree::new(&points.view(), config).expect("Operation failed");
+        let (indices, distances) = kdtree
+            .batch_knn_search(&queries.view(), 2)
+            .expect("Operation failed");
 
         assert_eq!(indices.dim(), (2, 2));
         assert_eq!(distances.dim(), (2, 2));
@@ -905,7 +920,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assertion failed: stats.depth > 0 at line 922"]
     fn test_tree_statistics() {
         let points = array![
             [0.0, 0.0],
@@ -919,7 +934,7 @@ mod tests {
         ];
         let config = KDTreeConfig::new();
 
-        let kdtree = AdvancedKDTree::new(&points.view(), config).unwrap();
+        let kdtree = AdvancedKDTree::new(&points.view(), config).expect("Operation failed");
         let stats = kdtree.statistics();
 
         assert!(stats.node_count > 0);

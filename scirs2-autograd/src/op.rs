@@ -22,7 +22,7 @@
 //!     ) -> Result<(), OpError> {
 //!         let x: &ag::NdArrayView<_> = &ctx.input(0);
 //!         // Use `scirs2_core::ndarray::Array::mapv` for element-wise computation.
-//!         let half = T::from(0.5).unwrap();
+//!         let half = T::from(0.5).expect("Operation failed");
 //!         let y = x.mapv(move |a| ((a * half).tanh() * half) + half);
 //!         ctx.append_output(y);
 //!         Ok(())

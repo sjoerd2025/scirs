@@ -31,11 +31,11 @@ const GLOBAL_AVGPOOL_SIMD_THRESHOLD: usize = 64;
 /// use scirs2_core::ndarray::Array4;
 ///
 /// // Create a 2x2 max pooling layer with stride 2
-/// let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), Some("maxpool")).unwrap();
+/// let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), Some("maxpool")).expect("Operation failed");
 ///
 /// // Input: (batch=1, channels=3, height=8, width=8)
 /// let input = Array4::<f64>::from_elem((1, 3, 8, 8), 1.0).into_dyn();
-/// let output = pool.forward(&input).unwrap();
+/// let output = pool.forward(&input).expect("Operation failed");
 ///
 /// // Output: (batch=1, channels=3, height=4, width=4)
 /// assert_eq!(output.shape(), &[1, 3, 4, 4]);
@@ -285,11 +285,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> Layer<F> for MaxP
 /// use scirs2_core::ndarray::Array4;
 ///
 /// // Create a 2x2 average pooling layer with stride 2
-/// let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), Some("avgpool")).unwrap();
+/// let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), Some("avgpool")).expect("Operation failed");
 ///
 /// // Input: (batch=1, channels=3, height=8, width=8)
 /// let input = Array4::<f64>::from_elem((1, 3, 8, 8), 1.0).into_dyn();
-/// let output = pool.forward(&input).unwrap();
+/// let output = pool.forward(&input).expect("Operation failed");
 ///
 /// // Output: (batch=1, channels=3, height=4, width=4)
 /// assert_eq!(output.shape(), &[1, 3, 4, 4]);
@@ -380,7 +380,8 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> Layer<F> for AvgP
         let output_shape = vec![batch_size, channels, out_h, out_w];
         let mut output = Array::zeros(IxDyn(&output_shape));
 
-        let pool_area = F::from(self.pool_size.0 * self.pool_size.1).unwrap();
+        let pool_area =
+            F::from(self.pool_size.0 * self.pool_size.1).expect("Failed to convert to float");
 
         // Perform average pooling
         for b in 0..batch_size {
@@ -405,7 +406,8 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> Layer<F> for AvgP
                             }
                         }
 
-                        output[[b, c, oh, ow]] = sum / F::from(count).unwrap();
+                        output[[b, c, oh, ow]] =
+                            sum / F::from(count).expect("Failed to convert to float");
                     }
                 }
             }
@@ -462,7 +464,8 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> Layer<F> for AvgP
                             }
                         }
 
-                        let grad_per_elem = grad_output[[b, c, oh, ow]] / F::from(count).unwrap();
+                        let grad_per_elem = grad_output[[b, c, oh, ow]]
+                            / F::from(count).expect("Failed to convert to float");
 
                         // Distribute gradient
                         for ph in 0..self.pool_size.0 {
@@ -580,7 +583,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + SimdUnifiedOps + 'static> 
         let mut output = Array::zeros(IxDyn(&output_shape));
 
         let spatial_size = height * width;
-        let spatial_size_f = F::from(spatial_size).unwrap();
+        let spatial_size_f = F::from(spatial_size).expect("Failed to convert to float");
 
         // Use SIMD for larger spatial dimensions
         if spatial_size >= GLOBAL_AVGPOOL_SIMD_THRESHOLD {
@@ -593,7 +596,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + SimdUnifiedOps + 'static> 
                     let flat_view = channel_slice
                         .to_owned()
                         .into_shape_with_order(spatial_size)
-                        .unwrap();
+                        .expect("Operation failed");
                     let view_1d: ArrayView1<F> = flat_view.view();
                     let sum = F::simd_sum(&view_1d);
                     output[[b, c, 0, 0]] = sum / spatial_size_f;
@@ -639,7 +642,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + SimdUnifiedOps + 'static> 
         let width = shape[3];
 
         let mut grad_input = Array::zeros(input.raw_dim());
-        let spatial_size = F::from(height * width).unwrap();
+        let spatial_size = F::from(height * width).expect("Failed to convert to float");
 
         for b in 0..batch_size {
             for c in 0..channels {
@@ -695,17 +698,19 @@ mod tests {
 
     #[test]
     fn test_maxpool2d_creation() {
-        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), Some("maxpool")).unwrap();
+        let pool =
+            MaxPool2D::<f64>::new((2, 2), (2, 2), Some("maxpool")).expect("Operation failed");
         assert_eq!(pool.pool_size, (2, 2));
         assert_eq!(pool.stride, (2, 2));
     }
 
     #[test]
     fn test_maxpool2d_forward_shape() {
-        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), Some("maxpool")).unwrap();
+        let pool =
+            MaxPool2D::<f64>::new((2, 2), (2, 2), Some("maxpool")).expect("Operation failed");
 
         let input = Array4::<f64>::from_elem((2, 3, 8, 8), 1.0).into_dyn();
-        let output = pool.forward(&input).unwrap();
+        let output = pool.forward(&input).expect("Operation failed");
 
         // Output: (2, 3, 4, 4)
         assert_eq!(output.shape(), &[2, 3, 4, 4]);
@@ -713,7 +718,7 @@ mod tests {
 
     #[test]
     fn test_maxpool2d_forward_values() {
-        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), None).unwrap();
+        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), None).expect("Operation failed");
 
         // Create input with known values
         let mut input = Array4::<f64>::zeros((1, 1, 4, 4));
@@ -723,7 +728,7 @@ mod tests {
         input[[0, 0, 1, 1]] = 4.0; // This should be the max for first pool
         input[[0, 0, 2, 2]] = 10.0; // This should be the max for last pool
 
-        let output = pool.forward(&input.into_dyn()).unwrap();
+        let output = pool.forward(&input.into_dyn()).expect("Operation failed");
 
         assert_eq!(output.shape(), &[1, 1, 2, 2]);
         assert_eq!(output[[0, 0, 0, 0]], 4.0); // Max of top-left 2x2
@@ -732,16 +737,20 @@ mod tests {
 
     #[test]
     fn test_maxpool2d_backward() {
-        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), None).unwrap();
+        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), None).expect("Operation failed");
 
         let mut input = Array4::<f64>::zeros((1, 1, 4, 4));
         input[[0, 0, 1, 1]] = 4.0;
         input[[0, 0, 3, 3]] = 8.0;
 
-        let _output = pool.forward(&input.clone().into_dyn()).unwrap();
+        let _output = pool
+            .forward(&input.clone().into_dyn())
+            .expect("Operation failed");
 
         let grad_output = Array4::<f64>::from_elem((1, 1, 2, 2), 1.0).into_dyn();
-        let grad_input = pool.backward(&input.into_dyn(), &grad_output).unwrap();
+        let grad_input = pool
+            .backward(&input.into_dyn(), &grad_output)
+            .expect("Operation failed");
 
         assert_eq!(grad_input.shape(), &[1, 1, 4, 4]);
         // Gradient should be at max positions
@@ -751,17 +760,18 @@ mod tests {
 
     #[test]
     fn test_avgpool2d_forward_shape() {
-        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), Some("avgpool")).unwrap();
+        let pool =
+            AvgPool2D::<f64>::new((2, 2), (2, 2), Some("avgpool")).expect("Operation failed");
 
         let input = Array4::<f64>::from_elem((2, 3, 8, 8), 1.0).into_dyn();
-        let output = pool.forward(&input).unwrap();
+        let output = pool.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), &[2, 3, 4, 4]);
     }
 
     #[test]
     fn test_avgpool2d_forward_values() {
-        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), None).unwrap();
+        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), None).expect("Operation failed");
 
         // Create input with known values
         let mut input = Array4::<f64>::zeros((1, 1, 4, 4));
@@ -770,7 +780,7 @@ mod tests {
         input[[0, 0, 1, 0]] = 3.0;
         input[[0, 0, 1, 1]] = 4.0;
 
-        let output = pool.forward(&input.into_dyn()).unwrap();
+        let output = pool.forward(&input.into_dyn()).expect("Operation failed");
 
         assert_eq!(output.shape(), &[1, 1, 2, 2]);
         // Average of (1, 2, 3, 4) = 2.5
@@ -779,13 +789,17 @@ mod tests {
 
     #[test]
     fn test_avgpool2d_backward() {
-        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), None).unwrap();
+        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), None).expect("Operation failed");
 
         let input = Array4::<f64>::from_elem((1, 1, 4, 4), 1.0);
-        let _output = pool.forward(&input.clone().into_dyn()).unwrap();
+        let _output = pool
+            .forward(&input.clone().into_dyn())
+            .expect("Operation failed");
 
         let grad_output = Array4::<f64>::from_elem((1, 1, 2, 2), 4.0).into_dyn();
-        let grad_input = pool.backward(&input.into_dyn(), &grad_output).unwrap();
+        let grad_input = pool
+            .backward(&input.into_dyn(), &grad_output)
+            .expect("Operation failed");
 
         assert_eq!(grad_input.shape(), &[1, 1, 4, 4]);
         // Gradient should be distributed equally: 4.0 / 4 = 1.0
@@ -797,7 +811,7 @@ mod tests {
         let pool = GlobalAvgPool2D::<f64>::new(Some("gap"));
 
         let input = Array4::<f64>::from_elem((2, 3, 8, 8), 2.0).into_dyn();
-        let output = pool.forward(&input).unwrap();
+        let output = pool.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), &[2, 3, 1, 1]);
         assert!((output[[0, 0, 0, 0]] - 2.0).abs() < 1e-10);
@@ -808,10 +822,14 @@ mod tests {
         let pool = GlobalAvgPool2D::<f64>::new(None);
 
         let input = Array4::<f64>::from_elem((1, 1, 4, 4), 1.0);
-        let _output = pool.forward(&input.clone().into_dyn()).unwrap();
+        let _output = pool
+            .forward(&input.clone().into_dyn())
+            .expect("Operation failed");
 
         let grad_output = Array4::<f64>::from_elem((1, 1, 1, 1), 16.0).into_dyn();
-        let grad_input = pool.backward(&input.into_dyn(), &grad_output).unwrap();
+        let grad_input = pool
+            .backward(&input.into_dyn(), &grad_output)
+            .expect("Operation failed");
 
         assert_eq!(grad_input.shape(), &[1, 1, 4, 4]);
         // Gradient per element: 16.0 / 16 = 1.0

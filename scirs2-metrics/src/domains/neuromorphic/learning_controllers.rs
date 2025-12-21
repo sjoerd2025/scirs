@@ -211,7 +211,7 @@ impl<F: Float + std::fmt::Debug> AdaptiveLearningController<F> {
         // Simplified evolutionary adaptation
         // In practice, this would involve population-based optimization
         for objective in &mut self.objectives {
-            let noise = F::from(0.01).unwrap(); // Small random perturbation
+            let noise = F::from(0.01).expect("Failed to convert constant to float"); // Small random perturbation
             objective.current = objective.current + noise;
         }
         Ok(())
@@ -221,7 +221,9 @@ impl<F: Float + std::fmt::Debug> AdaptiveLearningController<F> {
     fn apply_default_adaptation(&mut self) -> crate::error::Result<()> {
         for objective in &mut self.objectives {
             let error = objective.target - objective.current;
-            let adjustment = error * F::from(0.1).unwrap() * objective.weight;
+            let adjustment = error
+                * F::from(0.1).expect("Failed to convert constant to float")
+                * objective.weight;
             objective.current = objective.current + adjustment;
         }
         Ok(())
@@ -252,7 +254,7 @@ impl<F: Float + std::fmt::Debug> AdaptiveLearningController<F> {
             self.adaptation_state
                 .adaptation_history
                 .back()
-                .unwrap()
+                .expect("Operation failed")
                 .performance_after
         } else {
             F::zero()

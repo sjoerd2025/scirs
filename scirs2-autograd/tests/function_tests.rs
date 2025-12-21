@@ -15,14 +15,20 @@ fn test_basic_operations() {
         let div = a / b;
 
         // Test basic scalar arithmetic operations
-        assert_eq!(sum.eval(ctx).unwrap()[[]], 5.0);
-        assert_eq!(diff.eval(ctx).unwrap()[[]], 1.0);
-        assert_eq!(prod.eval(ctx).unwrap()[[]], 6.0);
-        assert_eq!(div.eval(ctx).unwrap()[[]], 1.5);
+        assert_eq!(sum.eval(ctx).expect("Test: operation failed")[[]], 5.0);
+        assert_eq!(diff.eval(ctx).expect("Test: operation failed")[[]], 1.0);
+        assert_eq!(prod.eval(ctx).expect("Test: operation failed")[[]], 6.0);
+        assert_eq!(div.eval(ctx).expect("Test: operation failed")[[]], 1.5);
 
         // Verify that scalars have correct shape (0-dimensional)
-        assert_eq!(a.eval(ctx).unwrap().shape(), &[] as &[usize]);
-        assert_eq!(sum.eval(ctx).unwrap().shape(), &[] as &[usize]);
+        assert_eq!(
+            a.eval(ctx).expect("Test: operation failed").shape(),
+            &[] as &[usize]
+        );
+        assert_eq!(
+            sum.eval(ctx).expect("Test: operation failed").shape(),
+            &[] as &[usize]
+        );
     });
 }
 
@@ -35,8 +41,8 @@ fn test_tensorshapes() {
         let ones = T::ones(&[3, 2], ctx);
 
         // Test the actual tensor shapes directly
-        let zeros_eval = zeros.eval(ctx).unwrap();
-        let ones_eval = ones.eval(ctx).unwrap();
+        let zeros_eval = zeros.eval(ctx).expect("Test: operation failed");
+        let ones_eval = ones.eval(ctx).expect("Test: operation failed");
 
         println!("Zeros tensor shape: {:?}", zeros_eval.shape());
         println!("Ones tensor shape: {:?}", ones_eval.shape());

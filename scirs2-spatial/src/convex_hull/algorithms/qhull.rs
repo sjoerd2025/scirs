@@ -34,7 +34,7 @@ use scirs2_core::ndarray::{Array2, ArrayView2};
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-/// let hull = compute_qhull(&points.view()).unwrap();
+/// let hull = compute_qhull(&points.view()).expect("Operation failed");
 /// assert_eq!(hull.ndim(), 2);
 /// ```
 pub fn compute_qhull(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
@@ -450,7 +450,7 @@ mod tests {
             [0.5, 0.5], // Interior point
         ]);
 
-        let hull = compute_qhull(&points.view()).unwrap();
+        let hull = compute_qhull(&points.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(hull.ndim(), 2);
@@ -460,7 +460,7 @@ mod tests {
         assert!(vertex_count == 3 || vertex_count == 4);
 
         // Check that a clearly outside point is detected as outside
-        assert!(!hull.contains([2.0, 2.0]).unwrap());
+        assert!(!hull.contains([2.0, 2.0]).expect("Operation failed"));
     }
 
     #[test]
@@ -473,7 +473,7 @@ mod tests {
             [0.5, 0.5, 0.5], // Interior point
         ]);
 
-        let hull = compute_qhull(&points.view()).unwrap();
+        let hull = compute_qhull(&points.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(hull.ndim(), 3);
@@ -482,15 +482,15 @@ mod tests {
         assert!(hull.vertex_indices().len() >= 4);
 
         // Check that the hull contains interior points
-        assert!(hull.contains([0.25, 0.25, 0.25]).unwrap());
-        assert!(!hull.contains([2.0, 2.0, 2.0]).unwrap());
+        assert!(hull.contains([0.25, 0.25, 0.25]).expect("Operation failed"));
+        assert!(!hull.contains([2.0, 2.0, 2.0]).expect("Operation failed"));
     }
 
     #[test]
     fn test_special_case_2d() {
         // Test triangle case
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = handle_special_case_2d(&points.view()).unwrap();
+        let hull = handle_special_case_2d(&points.view()).expect("Operation failed");
 
         assert_eq!(hull.ndim(), 2);
         assert_eq!(hull.vertex_indices().len(), 3);
@@ -506,7 +506,7 @@ mod tests {
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0],
         ]);
-        let hull = handle_special_case_3d(&points.view()).unwrap();
+        let hull = handle_special_case_3d(&points.view()).expect("Operation failed");
 
         assert_eq!(hull.ndim(), 3);
         assert_eq!(hull.vertex_indices().len(), 4);
@@ -523,11 +523,11 @@ mod tests {
         // Make sure we can handle degenerate hulls without crashing
         assert!(hull.is_ok());
 
-        let hull = hull.unwrap();
+        let hull = hull.expect("Operation failed");
         // Just check that the implementation doesn't crash and returns a valid hull
         assert!(hull.vertex_indices().len() >= 2);
 
         // A point off the line should not be contained
-        assert!(!hull.contains([1.5, 0.1]).unwrap());
+        assert!(!hull.contains([1.5, 0.1]).expect("Operation failed"));
     }
 }

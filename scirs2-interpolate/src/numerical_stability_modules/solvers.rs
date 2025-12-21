@@ -255,7 +255,8 @@ where
         }
 
         // Simple step: x = x + alpha * r
-        let alpha = F::from(0.1).unwrap_or_else(|| F::from(0.1).unwrap());
+        let alpha = F::from(0.1)
+            .unwrap_or_else(|| F::from(0.1).expect("Failed to convert constant to float"));
         for i in 0..n {
             x[i] += alpha * r[i];
         }
@@ -285,7 +286,9 @@ where
         .recommended_regularization
         .unwrap_or_else(|| {
             super::types::machine_epsilon::<F>()
-                * F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap())
+                * F::from(1000.0).unwrap_or_else(|| {
+                    F::from(1000.0).expect("Failed to convert constant to float")
+                })
         });
 
     let regularized_matrix =
@@ -353,17 +356,21 @@ where
         SolveStrategy::IterativeCG => {
             // CG convergence depends on sqrt(condition number)
             let sqrt_cond = condition_number.sqrt();
-            (sqrt_cond.ln() * F::from(10.0).unwrap_or_else(|| F::from(10.0).unwrap()))
-                .ceil()
-                .to_usize()
-                .unwrap_or(50)
+            (sqrt_cond.ln()
+                * F::from(10.0)
+                    .unwrap_or_else(|| F::from(10.0).expect("Failed to convert constant to float")))
+            .ceil()
+            .to_usize()
+            .unwrap_or(50)
         }
         SolveStrategy::IterativeGMRES => {
             // GMRES may need more iterations
-            (condition_number.ln() * F::from(5.0).unwrap_or_else(|| F::from(5.0).unwrap()))
-                .ceil()
-                .to_usize()
-                .unwrap_or(100)
+            (condition_number.ln()
+                * F::from(5.0)
+                    .unwrap_or_else(|| F::from(5.0).expect("Failed to convert constant to float")))
+            .ceil()
+            .to_usize()
+            .unwrap_or(100)
         }
         _ => 1, // Direct methods
     };
@@ -373,14 +380,16 @@ where
     // Set tolerance based on condition number
     let recommended_tolerance = condition_report.diagnostics.machine_epsilon
         * condition_number.sqrt()
-        * F::from(100.0).unwrap_or_else(|| F::from(100.0).unwrap());
+        * F::from(100.0)
+            .unwrap_or_else(|| F::from(100.0).expect("Failed to convert constant to float"));
 
     // Recommend preconditioning for iterative methods with poor conditioning
     let needs_preconditioning = matches!(
         strategy,
         SolveStrategy::IterativeCG | SolveStrategy::IterativeGMRES
     ) && condition_number
-        > F::from(1e10).unwrap_or_else(|| F::from(1e10).unwrap());
+        > F::from(1e10)
+            .unwrap_or_else(|| F::from(1e10).expect("Failed to convert constant to float"));
 
     ConvergenceInfo {
         expected_iterations,
@@ -662,14 +671,16 @@ mod tests {
 
     #[test]
     fn test_solve_well_conditioned_system() {
-        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 3.0]).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 3.0]).expect("Operation failed");
         let rhs = Array1::from_vec(vec![1.0, 2.0]);
 
         let (solution, report) =
-            solve_with_enhanced_monitoring(&matrix.view(), &rhs.view()).unwrap();
+            solve_with_enhanced_monitoring(&matrix.view(), &rhs.view()).expect("Operation failed");
 
         // Verify solution: Ax should equal b
-        let verification = matrix_vector_multiply(&matrix.view(), &solution.view()).unwrap();
+        let verification =
+            matrix_vector_multiply(&matrix.view(), &solution.view()).expect("Operation failed");
         for i in 0..rhs.len() {
             assert!((verification[i] - rhs[i]).abs() < 1e-10);
         }
@@ -682,9 +693,9 @@ mod tests {
     fn test_lu_decomposition() {
         let matrix =
             Array2::from_shape_vec((3, 3), vec![2.0, 1.0, 1.0, 1.0, 3.0, 2.0, 1.0, 0.0, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let (lu, perm) = lu_decomposition_with_pivoting(&matrix.view()).unwrap();
+        let (lu, perm) = lu_decomposition_with_pivoting(&matrix.view()).expect("Operation failed");
 
         // Verify dimensions
         assert_eq!(lu.nrows(), 3);
@@ -696,9 +707,9 @@ mod tests {
     fn test_qr_decomposition() {
         let matrix =
             Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let (q, r) = qr_decomposition(&matrix.view()).unwrap();
+        let (q, r) = qr_decomposition(&matrix.view()).expect("Operation failed");
 
         // For identity matrix, Q should be identity and R should be identity
         for i in 0..3 {
@@ -717,7 +728,8 @@ mod tests {
     #[test]
     fn test_iterative_cg() {
         // Test CG on a simple SPD system
-        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 2.0]).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 2.0]).expect("Operation failed");
         let rhs = Array1::from_vec(vec![4.0, 6.0]);
 
         let mut report = EnhancedStabilityReport {
@@ -738,7 +750,8 @@ mod tests {
             needs_iterative_refinement: false,
         };
 
-        let solution = solve_iterative_cg(&matrix.view(), &rhs.view(), &report).unwrap();
+        let solution =
+            solve_iterative_cg(&matrix.view(), &rhs.view(), &report).expect("Operation failed");
 
         // Expected solution: [2.0, 3.0]
         assert!((solution[0] - 2.0).abs() < 1e-6);

@@ -64,8 +64,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNo
             normalizedshape: self.normalizedshape.clone(),
             gamma: self.gamma.clone(),
             beta: self.beta.clone(),
-            dgamma: Arc::new(RwLock::new(self.dgamma.read().unwrap().clone())),
-            dbeta: Arc::new(RwLock::new(self.dbeta.read().unwrap().clone())),
+            dgamma: Arc::new(RwLock::new(
+                self.dgamma.read().expect("Operation failed").clone(),
+            )),
+            dbeta: Arc::new(RwLock::new(
+                self.dbeta.read().expect("Operation failed").clone(),
+            )),
             eps: self.eps,
             input_cache: Arc::new(RwLock::new(input_cache_clone)),
             norm_cache: Arc::new(RwLock::new(norm_cache_clone)),
@@ -166,7 +170,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
             for i in 0..batch_size {
                 // Extract row as 1D view for SIMD operations
                 let row_slice = reshaped.slice(scirs2_core::ndarray::s![i, ..]);
-                let row_view: ArrayView1<F> = row_slice.into_dimensionality().unwrap();
+                let row_view: ArrayView1<F> =
+                    row_slice.into_dimensionality().expect("Operation failed");
 
                 // SIMD-accelerated mean computation
                 let row_mean = F::simd_mean(&row_view);
@@ -177,7 +182,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
                 // Using simd_dot for sum of squares
                 let sum_sq = F::simd_dot(&row_view, &row_view);
                 let mean_sq = row_mean * row_mean;
-                let n = F::from(feat_dim).unwrap();
+                let n = F::from(feat_dim).expect("Failed to convert to float");
                 var[[i, 0]] = sum_sq / n - mean_sq;
             }
         } else {
@@ -187,14 +192,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
                 for j in 0..feat_dim {
                     sum = sum + reshaped[[i, j]];
                 }
-                mean[[i, 0]] = sum / F::from(feat_dim).unwrap();
+                mean[[i, 0]] = sum / F::from(feat_dim).expect("Failed to convert to float");
 
                 let mut sum_sq = F::zero();
                 for j in 0..feat_dim {
                     let diff = reshaped[[i, j]] - mean[[i, 0]];
                     sum_sq = sum_sq + diff * diff;
                 }
-                var[[i, 0]] = sum_sq / F::from(feat_dim).unwrap();
+                var[[i, 0]] = sum_sq / F::from(feat_dim).expect("Failed to convert to float");
             }
         }
 
@@ -221,7 +226,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
 
         // Cache normalized input
         if let Ok(mut cache) = self.norm_cache.write() {
-            *cache = Some(normalized.clone().into_dimensionality::<IxDyn>().unwrap());
+            *cache = Some(
+                normalized
+                    .clone()
+                    .into_dimensionality::<IxDyn>()
+                    .expect("Operation failed"),
+            );
         }
 
         // Reshape back to original shape

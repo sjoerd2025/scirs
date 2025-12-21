@@ -38,11 +38,11 @@
 //! // Create physics-informed interpolator
 //! let interpolator = PhysicsInformedInterpolator::new(
 //!     &x.view(), &y.view(), constraints
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! // Evaluate while respecting physical constraints
 //! let xnew = Array1::linspace(0.0, 10.0, 101);
-//! let y_new = interpolator.evaluate(&xnew.view()).unwrap();
+//! let y_new = interpolator.evaluate(&xnew.view()).expect("Operation failed");
 //! ```
 
 use crate::constrained::{ConstrainedSpline, Constraint, ConstraintType};
@@ -115,11 +115,11 @@ impl<T: Float + FromPrimitive> Default for PhysicsInformedConfig<T> {
         Self {
             constraints: Vec::new(),
             conservation_laws: Vec::new(),
-            penalty_weight: T::from(1.0).unwrap(),
-            constraint_tolerance: T::from(1e-6).unwrap(),
+            penalty_weight: T::from(1.0).expect("Operation failed"),
+            constraint_tolerance: T::from(1e-6).expect("Operation failed"),
             max_iterations: 100,
             adaptive_weights: true,
-            regularization: T::from(1e-8).unwrap(),
+            regularization: T::from(1e-8).expect("Operation failed"),
         }
     }
 }
@@ -369,9 +369,10 @@ where
 
             // Apply small random perturbation to escape local minima
             if iter > 10 && penalty_cost == best_penalty {
-                let perturbation_scale = T::from(0.001).unwrap();
+                let perturbation_scale = T::from(0.001).expect("Operation failed");
                 for i in 0..current_values.len() {
-                    let perturbation = perturbation_scale * T::from((i % 3) as f64 - 1.0).unwrap();
+                    let perturbation = perturbation_scale
+                        * T::from((i % 3) as f64 - 1.0).expect("Operation failed");
                     current_values[i] += perturbation;
                 }
             }
@@ -500,12 +501,12 @@ where
         let mut current_mass = T::zero();
         for i in 0..xnew.len() - 1 {
             let dx = xnew[i + 1] - xnew[i];
-            let avg_value = (values[i] + values[i + 1]) / T::from(2.0).unwrap();
+            let avg_value = (values[i] + values[i + 1]) / T::from(2.0).expect("Operation failed");
             current_mass += avg_value * dx;
         }
 
         // Apply uniform scaling to conserve _mass with improved robustness
-        if current_mass.abs() < T::from(1e-12).unwrap() {
+        if current_mass.abs() < T::from(1e-12).expect("Operation failed") {
             // If current _mass is essentially zero, create a uniform distribution
             let domain_width = xnew[xnew.len() - 1] - xnew[0];
             let uniform_value = target_mass / domain_width;
@@ -513,8 +514,8 @@ where
         } else if current_mass > T::zero() {
             let scaling_factor = target_mass / current_mass;
             // Apply reasonable bounds to prevent extreme scaling
-            let max_scaling = T::from(100.0).unwrap();
-            let min_scaling = T::from(0.01).unwrap();
+            let max_scaling = T::from(100.0).expect("Operation failed");
+            let min_scaling = T::from(0.01).expect("Operation failed");
             let bounded_scaling = scaling_factor.min(max_scaling).max(min_scaling);
             Ok(values * bounded_scaling)
         } else {
@@ -543,13 +544,13 @@ where
         let mut current_energy = T::zero();
         for i in 0..xnew.len() - 1 {
             let dx = xnew[i + 1] - xnew[i];
-            let avg_energy =
-                (values[i] * values[i] + values[i + 1] * values[i + 1]) / T::from(2.0).unwrap();
+            let avg_energy = (values[i] * values[i] + values[i + 1] * values[i + 1])
+                / T::from(2.0).expect("Operation failed");
             current_energy += avg_energy * dx;
         }
 
         // Apply scaling to achieve target _energy
-        if current_energy.abs() < T::from(1e-12).unwrap() {
+        if current_energy.abs() < T::from(1e-12).expect("Operation failed") {
             // If current _energy is essentially zero, create a uniform distribution
             let domain_width = xnew[xnew.len() - 1] - xnew[0];
             let uniform_magnitude = (target_energy / domain_width).sqrt();
@@ -557,8 +558,8 @@ where
         } else if current_energy > T::zero() {
             let energy_scaling = (target_energy / current_energy).sqrt();
             // Apply reasonable bounds to prevent extreme scaling
-            let max_scaling = T::from(10.0).unwrap();
-            let min_scaling = T::from(0.1).unwrap();
+            let max_scaling = T::from(10.0).expect("Operation failed");
+            let min_scaling = T::from(0.1).expect("Operation failed");
             let bounded_scaling = energy_scaling.min(max_scaling).max(min_scaling);
             Ok(values * bounded_scaling)
         } else {
@@ -609,7 +610,7 @@ where
             match constraint {
                 PhysicalConstraint::Positivity => {
                     // Ensure all values are positive with improved enforcement
-                    let min_positive = T::from(1e-6).unwrap(); // Larger minimum positive value
+                    let min_positive = T::from(1e-6).expect("Operation failed"); // Larger minimum positive value
                     corrected_values.mapv_inplace(|v| {
                         if v <= T::zero() {
                             min_positive
@@ -785,7 +786,7 @@ where
         let mut integral = T::zero();
         for i in 0..x.len() - 1 {
             let dx = x[i + 1] - x[i];
-            let avg_value = (values[i] + values[i + 1]) / T::from(2.0).unwrap();
+            let avg_value = (values[i] + values[i + 1]) / T::from(2.0).expect("Operation failed");
             integral += avg_value * dx;
         }
 
@@ -952,16 +953,18 @@ mod tests {
         let y = Array1::from_vec(vec![2.0, 1.0, 2.0]); // Simple parabolic-like shape
 
         let total_mass = 1.5; // Realistic target mass
-        let interpolator =
-            make_mass_conserving_interpolator(&x.view(), &y.view(), total_mass).unwrap();
+        let interpolator = make_mass_conserving_interpolator(&x.view(), &y.view(), total_mass)
+            .expect("Operation failed");
 
         let xnew = Array1::linspace(0.0, 1.0, 11); // Use fewer points for stability
-        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
+        let result = interpolator
+            .evaluate_with_iteration(&xnew.view())
+            .expect("Operation failed");
 
         // Check that mass is approximately conserved with generous tolerance
         let calculated_mass = interpolator
             .calculate_integral(&result.values, &xnew.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Use relative error check instead of absolute
         let relative_error = (calculated_mass - total_mass).abs() / total_mass;
@@ -985,11 +988,13 @@ mod tests {
         let y = Array1::from_vec(vec![1.0, -0.5, 2.0, 0.5]); // Contains negative value
 
         let constraints = vec![PhysicalConstraint::Positivity];
-        let interpolator =
-            PhysicsInformedInterpolator::new(&x.view(), &y.view(), constraints).unwrap();
+        let interpolator = PhysicsInformedInterpolator::new(&x.view(), &y.view(), constraints)
+            .expect("Operation failed");
 
         let xnew = Array1::linspace(0.0, 3.0, 31);
-        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
+        let result = interpolator
+            .evaluate_with_iteration(&xnew.view())
+            .expect("Operation failed");
 
         // Check that all values are positive
         for &value in result.values.iter() {
@@ -1002,11 +1007,13 @@ mod tests {
         let x = Array1::linspace(0.0, 5.0, 6);
         let y = Array1::from_vec(vec![1.0, 3.0, 2.0, 4.0, 6.0, 5.0]); // Non-monotonic
 
-        let interpolator =
-            make_monotonic_physics_interpolator(&x.view(), &y.view(), true, false).unwrap();
+        let interpolator = make_monotonic_physics_interpolator(&x.view(), &y.view(), true, false)
+            .expect("Operation failed");
 
         let xnew = Array1::linspace(0.0, 5.0, 51);
-        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
+        let result = interpolator
+            .evaluate_with_iteration(&xnew.view())
+            .expect("Operation failed");
 
         // Check that the result is approximately monotonic increasing
         let mut violations = 0;
@@ -1045,7 +1052,9 @@ mod tests {
             };
 
         let xnew = Array1::from_vec(vec![0.0, 2.0]); // Test at boundary and middle
-        let result = interpolator.evaluate(&xnew.view()).unwrap();
+        let result = interpolator
+            .evaluate(&xnew.view())
+            .expect("Operation failed");
 
         // Check that boundary condition is approximately satisfied
         // Allow generous tolerance due to physics-informed corrections
@@ -1073,11 +1082,13 @@ mod tests {
         let conservation_laws = vec![ConservationLaw::EnergyConservation { total_energy }];
 
         let interpolator = PhysicsInformedInterpolator::new(&x.view(), &y.view(), constraints)
-            .unwrap()
+            .expect("Operation failed")
             .with_conservation_laws(conservation_laws);
 
         let xnew = Array1::linspace(0.0, 1.0, 21);
-        let result = interpolator.evaluate(&xnew.view()).unwrap();
+        let result = interpolator
+            .evaluate(&xnew.view())
+            .expect("Operation failed");
 
         // Check that energy conservation error is small
         assert!(result.conservation_errors.contains_key("conservation_0"));
@@ -1103,12 +1114,14 @@ mod tests {
         let conservation_laws = vec![ConservationLaw::MassConservation { total_mass }];
 
         let interpolator = PhysicsInformedInterpolator::new(&x.view(), &y.view(), constraints)
-            .unwrap()
+            .expect("Operation failed")
             .with_conservation_laws(conservation_laws)
             .with_max_iterations(50);
 
         let xnew = Array1::linspace(0.0, 2.0, 21);
-        let result = interpolator.evaluate_with_iteration(&xnew.view()).unwrap();
+        let result = interpolator
+            .evaluate_with_iteration(&xnew.view())
+            .expect("Operation failed");
 
         // Check that multiple constraints are reasonably satisfied
         let total_violations: f64 = result

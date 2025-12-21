@@ -81,10 +81,10 @@ where
     ///     vec![constraint],
     ///     3, // cubic spline
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Evaluate at a new point
-    /// let value = spline.evaluate(2.5).unwrap();
+    /// let value = spline.evaluate(2.5).expect("Operation failed");
     /// # }
     /// ```
     pub fn interpolate(
@@ -230,7 +230,7 @@ where
                     &_knots.view(),
                     degree,
                     &constraints,
-                    T::from_f64(0.1).unwrap(),
+                    T::from_f64(0.1).expect("Operation failed"),
                 )?
             }
         };

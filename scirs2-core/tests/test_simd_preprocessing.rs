@@ -155,7 +155,7 @@ fn test_normalize_simd_f32_large_array() {
 #[test]
 fn test_normalize_simd_equivalence_random() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data.clone());
 
@@ -342,7 +342,7 @@ fn test_standardize_simd_f32_large_array() {
 #[test]
 fn test_standardize_simd_equivalence_random() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data.clone());
 
@@ -624,7 +624,7 @@ fn test_clip_simd_f32_large_array() {
 #[test]
 fn test_clip_simd_equivalence_random() {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data.clone());
 

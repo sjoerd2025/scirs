@@ -267,13 +267,15 @@ impl<F: Float> SpikingNeuron<F> {
             id,
             membrane_potential: F::zero(),
             resting_potential: F::zero(),
-            threshold: F::from(config.spike_threshold).unwrap(),
+            threshold: F::from(config.spike_threshold).expect("Failed to convert to float"),
             capacitance: F::one(),
             resistance: F::one(),
             time_since_spike: Duration::from_secs(0),
             refractory_period: config.refractory_period,
             spike_train: VecDeque::new(),
-            adaptive_threshold: AdaptiveThreshold::new(F::from(config.spike_threshold).unwrap()),
+            adaptive_threshold: AdaptiveThreshold::new(
+                F::from(config.spike_threshold).expect("Failed to convert to float"),
+            ),
             neuron_type,
         }
     }
@@ -291,9 +293,13 @@ impl<F: Float> SpikingNeuron<F> {
 
         // Leaky integrate-and-fire dynamics
         let decay_factor = F::from(
-            (-dt.as_secs_f64() / (self.resistance * self.capacitance).to_f64().unwrap()).exp(),
+            (-dt.as_secs_f64()
+                / (self.resistance * self.capacitance)
+                    .to_f64()
+                    .expect("Operation failed"))
+            .exp(),
         )
-        .unwrap();
+        .expect("Operation failed");
         self.membrane_potential = self.membrane_potential * decay_factor
             + self.resting_potential * (F::one() - decay_factor);
 
@@ -331,7 +337,7 @@ impl<F: Float> AdaptiveThreshold<F> {
         Self {
             base_threshold,
             adaptation: F::zero(),
-            adaptation_rate: F::from(0.01).unwrap(),
+            adaptation_rate: F::from(0.01).expect("Failed to convert constant to float"),
             decay_time_constant: Duration::from_millis(100),
             last_update: Instant::now(),
         }
@@ -340,7 +346,8 @@ impl<F: Float> AdaptiveThreshold<F> {
     /// Update threshold adaptation
     pub fn update(&mut self, dt: Duration) {
         let decay_factor =
-            F::from((-dt.as_secs_f64() / self.decay_time_constant.as_secs_f64()).exp()).unwrap();
+            F::from((-dt.as_secs_f64() / self.decay_time_constant.as_secs_f64()).exp())
+                .expect("Operation failed");
         self.adaptation = self.adaptation * decay_factor;
         self.last_update = Instant::now();
     }
@@ -378,7 +385,7 @@ impl<F: Float> NeuronLayer<F> {
         if let Some((winner_idx, _)) = outputs
             .iter()
             .enumerate()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
         {
             for (idx, neuron) in self.neurons.iter_mut().enumerate() {
                 if idx != winner_idx {
@@ -396,8 +403,8 @@ impl<F: Float> NeuronLayer<F> {
                 if i != j {
                     let distance = (i as i32 - j as i32).unsigned_abs() as usize;
                     if distance <= self.lateral_inhibition.radius {
-                        let inhibition =
-                            self.lateral_inhibition.strength / F::from(distance + 1).unwrap();
+                        let inhibition = self.lateral_inhibition.strength
+                            / F::from(distance + 1).expect("Failed to convert to float");
                         self.neurons[j].membrane_potential =
                             self.neurons[j].membrane_potential - inhibition;
                     }

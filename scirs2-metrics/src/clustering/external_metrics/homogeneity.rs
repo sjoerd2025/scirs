@@ -39,7 +39,7 @@ use crate::error::{MetricsError, Result};
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
 ///
 /// let (homogeneity, completeness, v_measure) =
-///     homogeneity_completeness_v_measure(&labels_true, &labels_pred, 1.0).unwrap();
+///     homogeneity_completeness_v_measure(&labels_true, &labels_pred, 1.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn homogeneity_completeness_v_measure<T, U, S1, S2, D1, D2>(
@@ -200,8 +200,8 @@ mod tests {
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![1, 1, 0, 0, 2, 2]; // Same clustering with different labels
 
-        let (h, c, v) =
-            homogeneity_completeness_v_measure(&labels_true, &labels_pred, 1.0).unwrap();
+        let (h, c, v) = homogeneity_completeness_v_measure(&labels_true, &labels_pred, 1.0)
+            .expect("Operation failed");
 
         assert!((h - 1.0).abs() < 1e-10);
         assert!((c - 1.0).abs() < 1e-10);
@@ -211,8 +211,8 @@ mod tests {
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![0, 0, 0, 1, 1, 1];
 
-        let (h, c, v) =
-            homogeneity_completeness_v_measure(&labels_true, &labels_pred, 1.0).unwrap();
+        let (h, c, v) = homogeneity_completeness_v_measure(&labels_true, &labels_pred, 1.0)
+            .expect("Operation failed");
 
         assert!(h > 0.0 && h < 1.0);
         assert!(c > 0.0 && c < 1.0);

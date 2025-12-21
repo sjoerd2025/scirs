@@ -225,12 +225,12 @@ mod tests {
     fn test_reference_window_functions() {
         let n = 32;
 
-        let hann_window = reference_window_function(n, "hann", &[]).unwrap();
+        let hann_window = reference_window_function(n, "hann", &[]).expect("Operation failed");
         assert_eq!(hann_window.len(), n);
         assert!((hann_window[0] - 0.0).abs() < 1e-10); // Hann window starts at 0
         assert!((hann_window[n / 2] - 1.0).abs() < 0.1); // Approximate peak at center
 
-        let hamming_window = reference_window_function(n, "hamming", &[]).unwrap();
+        let hamming_window = reference_window_function(n, "hamming", &[]).expect("Operation failed");
         assert_eq!(hamming_window.len(), n);
         assert!(hamming_window[0] > 0.0); // Hamming window doesn't start at 0
     }

@@ -476,7 +476,7 @@ fn bessel_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std:
 
         println!("\nFirst 5 zeros of J₀(x):");
         for i in 1..=5 {
-            let zero = j0_zeros::<f64>(i).unwrap();
+            let zero = j0_zeros::<f64>(i).expect("Operation failed");
             println!("  α₀,{} = {:.6}", i, zero);
         }
     }
@@ -687,7 +687,7 @@ fn wright_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn std
     println!("The Wright omega function ω(z) satisfies: ω e^ω = z");
 
     let z = 2.0;
-    let omega_val = wright_omega_real(z, 1e-12).unwrap();
+    let omega_val = wright_omega_real(z, 1e-12).expect("Operation failed");
     println!("ω({}) = {:.6}", z, omega_val);
 
     // Verification
@@ -722,7 +722,7 @@ fn spheroidal_functions_session(
     println!("\n🧮 Example: Prolate spheroidal functions");
     println!("Parameters: c = {}, m = {}, n = {}", c, m, n);
 
-    let cv = pro_cv(m, n, c).unwrap();
+    let cv = pro_cv(m, n, c).expect("Operation failed");
     println!("Characteristic value: λ_{}^{} = {:.6}", m, n, cv);
 
     profile.update_mastery("Spheroidal Functions", 1.0);
@@ -747,8 +747,8 @@ fn mathieu_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn st
     println!("\n🧮 Example: Mathieu characteristic values");
     println!("Parameters: m = {}, q = {}", m, q);
 
-    let a_val = mathieu_a(m, q).unwrap();
-    let b_val = mathieu_b(m, q).unwrap();
+    let a_val = mathieu_a(m, q).expect("Operation failed");
+    let b_val = mathieu_b(m, q).expect("Operation failed");
     println!("a_{}({}) = {:.6}", m, q, a_val);
     println!("b_{}({}) = {:.6}", m, q, b_val);
 
@@ -903,9 +903,9 @@ fn bessel_orthogonality_proof(profile: &mut UserProfile) -> Result<(), Box<dyn s
     println!("\n🔍 Numerical verification:");
     let nu = 0;
     let zeros = vec![
-        j0_zeros::<f64>(1).unwrap(),
-        j0_zeros::<f64>(2).unwrap(),
-        j0_zeros::<f64>(3).unwrap(),
+        j0_zeros::<f64>(1).expect("Operation failed"),
+        j0_zeros::<f64>(2).expect("Operation failed"),
+        j0_zeros::<f64>(3).expect("Operation failed"),
     ];
 
     for i in 0..zeros.len() {
@@ -1548,7 +1548,7 @@ fn computer_graphics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
                 m,
                 theta,
                 phi,
-                y_lm.unwrap()
+                y_lm.expect("Operation failed")
             );
         }
     }
@@ -1574,13 +1574,13 @@ fn computer_graphics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
         "Y_0^0({:.2}, {:.2}) = {:.6}",
         user_theta,
         user_phi,
-        y_00.unwrap()
+        y_00.expect("Operation failed")
     );
     println!(
         "Y_1^1({:.2}, {:.2}) = {:.6}",
         user_theta,
         user_phi,
-        y_11.unwrap()
+        y_11.expect("Operation failed")
     );
 
     profile.add_experience(45);
@@ -2124,7 +2124,7 @@ fn peer_comparison_mode(profile: &mut UserProfile) -> Result<(), Box<dyn std::er
     let weakest_subject = profile
         .mastery_scores
         .iter()
-        .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .min_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
         .map(|(subject, _score)| subject.clone());
 
     if let Some(subject) = weakest_subject {
@@ -2219,7 +2219,7 @@ fn select_adaptive_topic(profile: &UserProfile) -> String {
     let weakest_topic = profile
         .mastery_scores
         .iter()
-        .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .min_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
         .map(|(topic, _score)| topic.clone())
         .unwrap_or_else(|| "Gamma Functions".to_string());
 

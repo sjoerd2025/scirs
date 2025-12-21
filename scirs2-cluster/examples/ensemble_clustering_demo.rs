@@ -84,7 +84,7 @@ fn generate_testdata() -> Array2<f64> {
         data.push(-2.0 + (scirs2_core::random::random::<f64>() - 0.5) * 1.0);
     }
 
-    Array2::from_shape_vec((90, 2), data).unwrap()
+    Array2::from_shape_vec((90, 2), data).expect("Operation failed")
 }
 
 /// Demonstrate basic ensemble clustering

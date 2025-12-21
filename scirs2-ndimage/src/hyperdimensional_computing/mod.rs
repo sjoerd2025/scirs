@@ -43,7 +43,7 @@
 //!     &train_labels,
 //!     &test_images,
 //!     &config
-//! ).unwrap();
+//! ).expect("Operation failed");
 //! ```
 //!
 //! ## Pattern Matching
@@ -61,7 +61,7 @@
 //!     image.view(),
 //!     &patterns,
 //!     &config
-//! ).unwrap();
+//! ).expect("Operation failed");
 //! ```
 
 // Re-export all sub-modules
@@ -174,7 +174,9 @@ mod tests {
         // Test image encoder
         let encoder = ImageHDCEncoder::new(8, 8, config.clone());
         let image = Array2::<f64>::zeros((8, 8));
-        let encoded = encoder.encode_image(image.view()).unwrap();
+        let encoded = encoder
+            .encode_image(image.view())
+            .expect("Operation failed");
         assert_eq!(encoded.dimension, config.hypervector_dim);
     }
 
@@ -185,7 +187,8 @@ mod tests {
         let pattern = Array2::ones((8, 8));
         let patterns = vec![(pattern.view(), "square".to_string())];
 
-        let matches = hdc_pattern_matching(image.view(), &patterns, &config).unwrap();
+        let matches =
+            hdc_pattern_matching(image.view(), &patterns, &config).expect("Operation failed");
 
         // Should complete without error
         let _ = matches.len(); // Always >= 0 for Vec
@@ -202,8 +205,8 @@ mod tests {
         let test_zeros = Array2::<f64>::zeros((4, 4));
         let test_images = vec![test_zeros.view()];
 
-        let results =
-            hdc_image_classification(&train_images, &train_labels, &test_images, &config).unwrap();
+        let results = hdc_image_classification(&train_images, &train_labels, &test_images, &config)
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 1);
         assert!(results[0].1 >= 0.0); // Valid confidence
@@ -216,7 +219,7 @@ mod tests {
         let frame2 = Array2::<f64>::ones((4, 4));
         let sequence = vec![frame1.view(), frame2.view()];
 
-        let sequence_hv = hdc_sequence_processing(&sequence, 2, &config).unwrap();
+        let sequence_hv = hdc_sequence_processing(&sequence, 2, &config).expect("Operation failed");
         assert_eq!(sequence_hv.encoding.dimension, config.hypervector_dim);
     }
 
@@ -240,7 +243,7 @@ mod tests {
         let overlap = calculate_overlap(&matches[0], &matches[1]);
         assert!(overlap > 0.0);
 
-        let filtered = non_maximum_suppression(matches, 0.1).unwrap();
+        let filtered = non_maximum_suppression(matches, 0.1).expect("Operation failed");
         assert_eq!(filtered.len(), 1); // Should remove overlapping match
     }
 
@@ -261,7 +264,7 @@ mod tests {
 
         let result =
             advanced_hierarchical_hdc_reasoning(image.view(), 1, &concept_library, &config)
-                .unwrap();
+                .expect("Operation failed");
 
         assert_eq!(result.base_encoding.dimension, config.hypervector_dim);
     }
@@ -302,7 +305,7 @@ mod tests {
             &mut learning_system,
             &config,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.prediction.confidence >= 0.0);
         assert!(result.learning_update.memory_updated);

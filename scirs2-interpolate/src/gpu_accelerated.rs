@@ -36,11 +36,11 @@
 //!     .with_batch_size(1024);
 //!
 //! // Fit on GPU
-//! interpolator.fit(&x.view(), &y.view()).unwrap();
+//! interpolator.fit(&x.view(), &y.view()).expect("Operation failed");
 //!
 //! // Evaluate at many points using GPU acceleration
 //! let xeval = Array1::linspace(0.0, 10.0, 10000);
-//! let y_eval = interpolator.evaluate(&xeval.view()).unwrap();
+//! let y_eval = interpolator.evaluate(&xeval.view()).expect("Operation failed");
 //!
 //! println!("Evaluated {} points using GPU acceleration", y_eval.len());
 //! # }
@@ -878,13 +878,15 @@ mod tests {
             .with_kernel(GpuRBFKernel::Linear)
             .with_kernel_width(1.0);
 
-        interpolator.fit(&x.view(), &y.view()).unwrap();
+        interpolator
+            .fit(&x.view(), &y.view())
+            .expect("Operation failed");
 
         let xeval = Array1::from_vec(vec![0.5, 1.5, 2.5]);
         let result = interpolator.evaluate(&xeval.view());
 
         assert!(result.is_ok());
-        let y_eval = result.unwrap();
+        let y_eval = result.expect("Operation failed");
         assert_eq!(y_eval.len(), 3);
         assert!(y_eval.iter().all(|&val| val.is_finite()));
     }
@@ -912,7 +914,7 @@ mod tests {
         let result = make_gpu_rbf_interpolator(&x.view(), &y.view(), GpuRBFKernel::Gaussian, 1.0);
 
         assert!(result.is_ok());
-        let interpolator = result.unwrap();
+        let interpolator = result.expect("Operation failed");
         assert!(interpolator.is_trained);
     }
 

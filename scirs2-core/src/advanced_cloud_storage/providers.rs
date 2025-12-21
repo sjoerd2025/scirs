@@ -625,11 +625,11 @@ mod tests {
         let mut stream = BasicDataStream::new();
 
         let mut buffer = [0u8; 10];
-        let bytes_read = stream.read(&mut buffer).unwrap();
+        let bytes_read = stream.read(&mut buffer).expect("Operation failed");
         assert_eq!(bytes_read, 10);
 
         let write_data = [1u8; 5];
-        let bytes_written = stream.write(&write_data).unwrap();
+        let bytes_written = stream.write(&write_data).expect("Operation failed");
         assert_eq!(bytes_written, 5);
     }
 }

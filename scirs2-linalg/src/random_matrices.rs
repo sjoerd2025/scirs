@@ -115,7 +115,7 @@ where
                 LinalgError::ValueError("Invalid uniform distribution range".to_string())
             })?;
             for elem in matrix.iter_mut() {
-                *elem = F::from(uniform.sample(rng)).unwrap();
+                *elem = F::from(uniform.sample(rng)).expect("Operation failed");
             }
         }
         Distribution1D::Normal { mean, std_dev } => {
@@ -123,13 +123,13 @@ where
                 LinalgError::ValueError("Invalid normal distribution parameters".to_string())
             })?;
             for elem in matrix.iter_mut() {
-                *elem = F::from(normal.sample(rng)).unwrap();
+                *elem = F::from(normal.sample(rng)).expect("Operation failed");
             }
         }
         Distribution1D::StandardNormal => {
-            let normal = Normal::new(0.0, 1.0).unwrap();
+            let normal = Normal::new(0.0, 1.0).expect("Operation failed");
             for elem in matrix.iter_mut() {
-                *elem = F::from(normal.sample(rng)).unwrap();
+                *elem = F::from(normal.sample(rng)).expect("Operation failed");
             }
         }
     }
@@ -153,7 +153,7 @@ where
     // Make it symmetric: A = (A + A^T) / 2
     for i in 0..size {
         for j in i + 1..size {
-            let avg = (matrix[[i, j]] + matrix[[j, i]]) / F::from(2.0).unwrap();
+            let avg = (matrix[[i, j]] + matrix[[j, i]]) / F::from(2.0).expect("Operation failed");
             matrix[[i, j]] = avg;
             matrix[[j, i]] = avg;
         }
@@ -197,7 +197,7 @@ where
         .map_err(|_| LinalgError::ValueError("Invalid eigenvalue range".to_string()))?;
     let mut eigenvalues = Array1::zeros(size);
     for i in 0..size {
-        eigenvalues[i] = F::from(uniform.sample(rng)).unwrap();
+        eigenvalues[i] = F::from(uniform.sample(rng)).expect("Operation failed");
     }
 
     // Create diagonal matrix with eigenvalues
@@ -299,16 +299,23 @@ where
 
     for i in 0..rows {
         for j in 0..cols {
-            if F::from(uniform.sample(rng)).unwrap() < F::from(density).unwrap() {
+            if F::from(uniform.sample(rng)).expect("Operation failed")
+                < F::from(density).expect("Operation failed")
+            {
                 matrix[[i, j]] = match distribution {
                     Distribution1D::Uniform { a, b } => {
-                        F::from(Uniform::new(a, b).unwrap().sample(rng)).unwrap()
+                        F::from(Uniform::new(a, b).expect("Operation failed").sample(rng))
+                            .expect("Operation failed")
                     }
-                    Distribution1D::Normal { mean, std_dev } => {
-                        F::from(Normal::new(mean, std_dev).unwrap().sample(rng)).unwrap()
-                    }
+                    Distribution1D::Normal { mean, std_dev } => F::from(
+                        Normal::new(mean, std_dev)
+                            .expect("Operation failed")
+                            .sample(rng),
+                    )
+                    .expect("Operation failed"),
                     Distribution1D::StandardNormal => {
-                        F::from(Normal::new(0.0, 1.0).unwrap().sample(rng)).unwrap()
+                        F::from(Normal::new(0.0, 1.0).expect("Operation failed").sample(rng))
+                            .expect("Operation failed")
                     }
                 };
             }
@@ -337,7 +344,7 @@ where
                 LinalgError::ValueError("Invalid uniform distribution range".to_string())
             })?;
             for i in 0..size {
-                matrix[[i, i]] = F::from(uniform.sample(rng)).unwrap();
+                matrix[[i, i]] = F::from(uniform.sample(rng)).expect("Operation failed");
             }
         }
         Distribution1D::Normal { mean, std_dev } => {
@@ -345,13 +352,13 @@ where
                 LinalgError::ValueError("Invalid normal distribution parameters".to_string())
             })?;
             for i in 0..size {
-                matrix[[i, i]] = F::from(normal.sample(rng)).unwrap();
+                matrix[[i, i]] = F::from(normal.sample(rng)).expect("Operation failed");
             }
         }
         Distribution1D::StandardNormal => {
-            let normal = Normal::new(0.0, 1.0).unwrap();
+            let normal = Normal::new(0.0, 1.0).expect("Operation failed");
             for i in 0..size {
-                matrix[[i, i]] = F::from(normal.sample(rng)).unwrap();
+                matrix[[i, i]] = F::from(normal.sample(rng)).expect("Operation failed");
             }
         }
     }
@@ -380,13 +387,18 @@ where
             if should_fill {
                 matrix[[i, j]] = match distribution {
                     Distribution1D::Uniform { a, b } => {
-                        F::from(Uniform::new(a, b).unwrap().sample(rng)).unwrap()
+                        F::from(Uniform::new(a, b).expect("Operation failed").sample(rng))
+                            .expect("Operation failed")
                     }
-                    Distribution1D::Normal { mean, std_dev } => {
-                        F::from(Normal::new(mean, std_dev).unwrap().sample(rng)).unwrap()
-                    }
+                    Distribution1D::Normal { mean, std_dev } => F::from(
+                        Normal::new(mean, std_dev)
+                            .expect("Operation failed")
+                            .sample(rng),
+                    )
+                    .expect("Operation failed"),
                     Distribution1D::StandardNormal => {
-                        F::from(Normal::new(0.0, 1.0).unwrap().sample(rng)).unwrap()
+                        F::from(Normal::new(0.0, 1.0).expect("Operation failed").sample(rng))
+                            .expect("Operation failed")
                     }
                 };
             }
@@ -439,8 +451,8 @@ where
     // Make it Hermitian: A = (A + A^H) / 2
     for i in 0..size {
         for j in i + 1..size {
-            let avg =
-                (matrix[[i, j]] + matrix[[j, i]].conj()) / Complex::from(F::from(2.0).unwrap());
+            let avg = (matrix[[i, j]] + matrix[[j, i]].conj())
+                / Complex::from(F::from(2.0).expect("Operation failed"));
             matrix[[i, j]] = avg;
             matrix[[j, i]] = avg.conj();
         }
@@ -466,7 +478,7 @@ mod tests {
             MatrixType::Symmetric(Distribution1D::StandardNormal),
             &mut rng,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check symmetry
         for i in 0..5 {
@@ -479,7 +491,8 @@ mod tests {
     #[test]
     fn test_orthogonalmatrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let q = randommatrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Orthogonal, &mut rng).unwrap();
+        let q = randommatrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Orthogonal, &mut rng)
+            .expect("Operation failed");
 
         // Check Q^T * Q = I
         let qt = q.t();
@@ -505,7 +518,7 @@ mod tests {
             },
             &mut rng,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // A positive definite matrix should be symmetric
         for i in 0..3 {
@@ -523,8 +536,8 @@ mod tests {
     #[test]
     fn test_correlationmatrix() {
         let mut rng = ChaCha8Rng::seed_from_u64(42);
-        let matrix =
-            randommatrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Correlation, &mut rng).unwrap();
+        let matrix = randommatrix::<f64, ChaCha8Rng>(4, 4, MatrixType::Correlation, &mut rng)
+            .expect("Operation failed");
 
         // Check diagonal elements are 1
         for i in 0..4 {

@@ -2319,7 +2319,7 @@ impl AdvancedTensorCoreDistanceMatrix {
 
         // Initial stability assessment
         {
-            let mut monitor = self.stability_monitor.lock().unwrap();
+            let mut monitor = self.stability_monitor.lock().expect("Operation failed");
             // Skip initial stability check as we don't have a result yet
 
             if self.dynamic_precision_enabled {
@@ -2337,13 +2337,13 @@ impl AdvancedTensorCoreDistanceMatrix {
                 Ok(distances) => {
                     // Monitor stability of result
                     {
-                        let mut monitor = self.stability_monitor.lock().unwrap();
+                        let mut monitor = self.stability_monitor.lock().expect("Operation failed");
                         monitor.monitor_stability(&points.to_owned(), &distances)?;
                     }
 
                     // Check for numerical errors
                     let stability_level = {
-                        let monitor = self.stability_monitor.lock().unwrap();
+                        let monitor = self.stability_monitor.lock().expect("Operation failed");
                         monitor.current_metrics.stability_level
                     };
 

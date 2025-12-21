@@ -179,7 +179,7 @@ impl Default for AdvancedValidationConfig {
 /// use scirs2_signal::lombscargle_advanced_validation::{run_advanced_validation, AdvancedValidationConfig};
 ///
 /// let config = AdvancedValidationConfig::default();
-/// let results = run_advanced_validation(&config).unwrap();
+/// let results = run_advanced_validation(&config).expect("Operation failed");
 ///
 /// match results.validation_status {
 ///     ValidationStatus::Passed => println!("All validations passed!"),
@@ -597,9 +597,9 @@ fn validate_pure_sinusoid_accuracy(
     // Compute Lomb-Scargle
     let frequencies = Array1::linspace(0.1, 50.0, 500);
     let (_freqs, power) = lombscargle(
-        times.as_slice().unwrap(),
-        signal.as_slice().unwrap(),
-        Some(frequencies.as_slice().unwrap()),
+        times.as_slice().expect("Operation failed"),
+        signal.as_slice().expect("Operation failed"),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -613,8 +613,8 @@ fn validate_pure_sinusoid_accuracy(
     let peak_idx = power
         .iter()
         .enumerate()
-        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .unwrap()
+        .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
+        .expect("Operation failed")
         .0;
     let peak_freq = frequencies[peak_idx];
     let peak_error = (peak_freq - freq).abs() / freq;
@@ -679,9 +679,9 @@ fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<Benchma
     let start = Instant::now();
     for _ in 0..iterations {
         let _ = lombscargle(
-            t.as_slice().unwrap(),
-            signal.as_slice().unwrap(),
-            Some(frequencies.as_slice().unwrap()),
+            t.as_slice().expect("Operation failed"),
+            signal.as_slice().expect("Operation failed"),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -814,7 +814,7 @@ mod tests {
         let result = run_advanced_validation(&config);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         // Should at least run without errors
         assert_ne!(validation.validation_status, ValidationStatus::NotRun);
     }
@@ -827,7 +827,7 @@ mod tests {
         let result = validate_accuracy_comprehensive(&config, &mut issues);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.max_relative_error >= 0.0);
         assert!(metrics.peak_frequency_accuracy >= 0.0);
     }

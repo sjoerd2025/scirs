@@ -115,8 +115,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Final angle: {:.3} rad ({:.1}°)",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[0] * 180.0 / PI
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[0] * 180.0 / PI
     );
     println!(
         "   Period (theoretical): {:.3} s",
@@ -139,7 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Initial angle: {:.3} rad", y0[0]);
     println!(
         "   Final angle: {:.3} rad (energy dissipated by damping)",
-        result.y.last().unwrap()[0]
+        result.y.last().expect("Operation failed")[0]
     );
     println!("   Steps taken: {}", result.t.len());
     println!();
@@ -165,10 +165,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     println!("   Initial angle: {:.3} rad", y0_driven[0]);
-    println!("   Final angle: {:.3} rad", result.y.last().unwrap()[0]);
+    println!(
+        "   Final angle: {:.3} rad",
+        result.y.last().expect("Operation failed")[0]
+    );
     println!(
         "   Final velocity: {:.3} rad/s",
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[1]
     );
     println!("   Steps taken: {}", result.t.len());
     println!();
@@ -199,8 +202,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Final angles: θ₁={:.3} rad, θ₂={:.3} rad",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[2]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[2]
     );
     println!(
         "   Steps taken: {} (high precision needed for chaotic system)",
@@ -223,8 +226,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let final_energy = {
-        let theta = result_energy.y.last().unwrap()[0];
-        let theta_dot = result_energy.y.last().unwrap()[1];
+        let theta = result_energy.y.last().expect("Operation failed")[0];
+        let theta_dot = result_energy.y.last().expect("Operation failed")[1];
         0.5 * theta_dot * theta_dot + g / l * (1.0 - theta.cos())
     };
 
@@ -257,10 +260,11 @@ mod tests {
         let t_span = [0.0, 2.0];
         let y0 = array![0.1, 0.0]; // 0.1 rad ≈ 5.7 degrees (small angle)
 
-        let result = solve_ivp(simple_pendulum, t_span, y0.clone(), None).unwrap();
+        let result =
+            solve_ivp(simple_pendulum, t_span, y0.clone(), None).expect("Operation failed");
 
         // Check that motion is approximately periodic
-        let final_angle = result.y.last().unwrap()[0];
+        let final_angle = result.y.last().expect("Operation failed")[0];
 
         // For small angles, the theoretical period is 2π√(L/g)
         let _theoretical_period = 2.0 * PI * (1.0_f64 / 9.81).sqrt();
@@ -275,14 +279,15 @@ mod tests {
         let t_span = [0.0, 10.0];
         let y0 = array![PI / 4.0, 0.0];
 
-        let result = solve_ivp(damped_pendulum, t_span, y0.clone(), None).unwrap();
+        let result =
+            solve_ivp(damped_pendulum, t_span, y0.clone(), None).expect("Operation failed");
 
         // Initial and final kinetic + potential energy
         let g = 9.81;
         let l = 1.0;
 
         let initial_energy = g / l * (1.0 - y0[0].cos());
-        let final_state = result.y.last().unwrap();
+        let final_state = result.y.last().expect("Operation failed");
         let final_energy =
             0.5 * final_state[1] * final_state[1] + g / l * (1.0 - final_state[0].cos());
 
@@ -302,7 +307,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = solve_ivp(double_pendulum, t_span, y0.clone(), Some(options)).unwrap();
+        let result = solve_ivp(double_pendulum, t_span, y0.clone(), Some(options))
+            .expect("Operation failed");
 
         // Just verify the integration completed successfully
         assert!(result.t.len() > 2);

@@ -195,7 +195,7 @@ impl StreamingIterator {
         // Wait for a chunk to be available
         loop {
             {
-                let mut buffer = self.chunk_buffer.lock().unwrap();
+                let mut buffer = self.chunk_buffer.lock().expect("Operation failed");
                 if let Some(chunk) = buffer.pop_front() {
                     self.current_chunk += 1;
 
@@ -211,11 +211,11 @@ impl StreamingIterator {
             if let Some(handle) = &self.producer_handle {
                 if handle.is_finished() {
                     // Join the producer thread
-                    let handle = self.producer_handle.take().unwrap();
-                    handle.join().unwrap()?;
+                    let handle = self.producer_handle.take().expect("Operation failed");
+                    handle.join().expect("Operation failed")?;
 
                     // Try one more time to get remaining chunks
-                    let mut buffer = self.chunk_buffer.lock().unwrap();
+                    let mut buffer = self.chunk_buffer.lock().expect("Operation failed");
                     if let Some(chunk) = buffer.pop_front() {
                         self.current_chunk += 1;
                         if chunk.is_last {
@@ -236,7 +236,7 @@ impl StreamingIterator {
 
     /// Get streaming statistics
     pub fn stats(&self) -> StreamStats {
-        let buffer = self.chunk_buffer.lock().unwrap();
+        let buffer = self.chunk_buffer.lock().expect("Operation failed");
         StreamStats {
             current_chunk: self.current_chunk,
             total_chunks: self.total_chunks,
@@ -282,7 +282,7 @@ impl StreamingIterator {
 
                     // Wait for buffer space
                     loop {
-                        let mut buffer_guard = buffer.lock().unwrap();
+                        let mut buffer_guard = buffer.lock().expect("Operation failed");
                         if buffer_guard.len() < config.buffer_size {
                             buffer_guard.push_back(chunk);
                             break;
@@ -306,7 +306,7 @@ impl StreamingIterator {
         // Handle remaining data
         if !chunk_data.is_empty() {
             let chunk = Self::create_chunk_from_data(&chunk_data, chunk_index, true)?;
-            let mut buffer_guard = buffer.lock().unwrap();
+            let mut buffer_guard = buffer.lock().expect("Operation failed");
             buffer_guard.push_back(chunk);
         }
 
@@ -371,7 +371,7 @@ impl StreamingIterator {
 
             // Wait for buffer space
             loop {
-                let mut buffer_guard = buffer.lock().unwrap();
+                let mut buffer_guard = buffer.lock().expect("Operation failed");
                 if buffer_guard.len() < config.buffer_size {
                     buffer_guard.push_back(chunk);
                     break;
@@ -432,7 +432,7 @@ impl StreamingIterator {
 
             // Wait for buffer space
             loop {
-                let mut buffer_guard = buffer.lock().unwrap();
+                let mut buffer_guard = buffer.lock().expect("Operation failed");
                 if buffer_guard.len() < config.buffer_size {
                     buffer_guard.push_back(chunk);
                     break;
@@ -564,7 +564,7 @@ where
                 loop {
                     // Receive work chunk
                     let chunk = {
-                        let rx = work_rx_clone.lock().unwrap();
+                        let rx = work_rx_clone.lock().expect("Operation failed");
                         rx.recv().ok()
                     };
 
@@ -700,7 +700,10 @@ impl StreamTransformer {
     pub fn add_standard_scaling(self) -> Self {
         self.add_transform(|chunk| {
             // Simplified standard scaling (would need proper implementation)
-            let mean = chunk.data.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+            let mean = chunk
+                .data
+                .mean_axis(scirs2_core::ndarray::Axis(0))
+                .expect("Operation failed");
             let std = chunk.data.std_axis(scirs2_core::ndarray::Axis(0), 0.0);
 
             for mut row in chunk.data.axis_iter_mut(scirs2_core::ndarray::Axis(0)) {
@@ -718,7 +721,10 @@ impl StreamTransformer {
     pub fn add_missing_value_imputation(self) -> Self {
         self.add_transform(|chunk| {
             // Replace NaN values with column mean
-            let means = chunk.data.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+            let means = chunk
+                .data
+                .mean_axis(scirs2_core::ndarray::Axis(0))
+                .expect("Operation failed");
 
             for mut row in chunk.data.axis_iter_mut(scirs2_core::ndarray::Axis(0)) {
                 for (i, val) in row.iter_mut().enumerate() {
@@ -846,7 +852,7 @@ mod tests {
             ..Default::default()
         };
 
-        let stream = stream_classification(1000, 10, 3, config).unwrap();
+        let stream = stream_classification(1000, 10, 3, config).expect("Operation failed");
         assert!(stream.total_chunks.is_some());
     }
 

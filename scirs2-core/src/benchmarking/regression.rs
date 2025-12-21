@@ -591,7 +591,7 @@ mod tests {
         result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
             Duration::from_millis(100),
         ));
-        result.finalize().unwrap();
+        result.finalize().expect("Operation failed");
 
         let historical = HistoricalResult::from_result(&result);
 
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_regression_detector() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let config = RegressionConfig::new()
             .with_results_directory(temp_dir.path())
             .with_min_historical_samples(1);
@@ -615,11 +615,13 @@ mod tests {
         result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
             Duration::from_millis(100),
         ));
-        result.finalize().unwrap();
+        result.finalize().expect("Operation failed");
 
         // Store and analyze
-        detector.store_result(&result).unwrap();
-        let analysis = detector.analyze_regression(&result).unwrap();
+        detector.store_result(&result).expect("Operation failed");
+        let analysis = detector
+            .analyze_regression(&result)
+            .expect("Operation failed");
 
         assert_eq!(analysis.benchmark_name, "test_regression");
         assert!(!analysis.regression_detected); // First result can't be a regression

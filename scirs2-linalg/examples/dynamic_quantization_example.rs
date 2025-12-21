@@ -46,7 +46,7 @@ fn create_drifting_data_sequence(_num_matrices: usize, driftfactor: f32) -> Vec<
     for i in 0.._num_matrices {
         // Create matrix with current distribution
         let mut matrix = Array2::zeros((10, 10));
-        let normal = Normal::new(mean, std_dev).unwrap();
+        let normal = Normal::new(mean, std_dev).expect("Operation failed");
 
         for r in 0..10 {
             for c in 0..10 {
@@ -90,7 +90,8 @@ fn compare_static_vs_dynamic_calibration(datasequence: &[Array2<f32>], bits: u8)
         symmetric: true,
         ..Default::default()
     };
-    let static_params = calibrate_matrix(&datasequence[0].view(), bits, &static_config).unwrap();
+    let static_params =
+        calibrate_matrix(&datasequence[0].view(), bits, &static_config).expect("Operation failed");
 
     // Dynamic calibration using EMA
     let dynamic_config = CalibrationConfig {
@@ -100,7 +101,7 @@ fn compare_static_vs_dynamic_calibration(datasequence: &[Array2<f32>], bits: u8)
         ..Default::default()
     };
     let mut dynamic_params =
-        calibrate_matrix(&datasequence[0].view(), bits, &dynamic_config).unwrap();
+        calibrate_matrix(&datasequence[0].view(), bits, &dynamic_config).expect("Operation failed");
 
     let mut total_static_mse = 0.0;
     let mut total_dynamic_mse = 0.0;
@@ -115,7 +116,8 @@ fn compare_static_vs_dynamic_calibration(datasequence: &[Array2<f32>], bits: u8)
         // Update dynamic calibration for each batch
         if i > 0 {
             // In a real application, we would adjust parameters based on recent data
-            dynamic_params = calibrate_matrix(&data.view(), bits, &dynamic_config).unwrap();
+            dynamic_params =
+                calibrate_matrix(&data.view(), bits, &dynamic_config).expect("Operation failed");
         }
 
         let (dynamic_quantized_, _) = quantize_matrix(&data.view(), bits, dynamic_params.method);
@@ -177,8 +179,12 @@ fn compare_ema_factors(datasequence: &[Array2<f32>], bits: u8) {
         configs.push(config);
 
         // Initialize with first batch
-        let params =
-            calibrate_matrix(&datasequence[0].view(), bits, configs.last().unwrap()).unwrap();
+        let params = calibrate_matrix(
+            &datasequence[0].view(),
+            bits,
+            configs.last().expect("Operation failed"),
+        )
+        .expect("Operation failed");
         params_list.push(params);
     }
 
@@ -189,7 +195,8 @@ fn compare_ema_factors(datasequence: &[Array2<f32>], bits: u8) {
         // Test each EMA factor
         for j in 0..ema_factors.len() {
             // Update calibration parameters
-            params_list[j] = calibrate_matrix(&data.view(), bits, &configs[j]).unwrap();
+            params_list[j] =
+                calibrate_matrix(&data.view(), bits, &configs[j]).expect("Operation failed");
 
             // Quantize and measure error
             let (quantized, _) = quantize_matrix(&data.view(), bits, params_list[j].method);
@@ -237,7 +244,8 @@ fn simulate_streaming_data() {
     };
 
     // Initial calibration
-    let mut params = calibrate_matrix(&initial_data.view(), bits, &dynamic_config).unwrap();
+    let mut params =
+        calibrate_matrix(&initial_data.view(), bits, &dynamic_config).expect("Operation failed");
 
     println!("\nStreaming data simulation:");
     println!(
@@ -267,7 +275,10 @@ fn simulate_streaming_data() {
         let dequantized = dequantize_matrix(&quantized, &params);
 
         // Calculate quantization error
-        let error = (&data - &dequantized).mapv(|x| x.abs()).mean().unwrap();
+        let error = (&data - &dequantized)
+            .mapv(|x| x.abs())
+            .mean()
+            .expect("Operation failed");
 
         // Print current state
         println!(
@@ -281,7 +292,7 @@ fn simulate_streaming_data() {
         );
 
         // Update calibration parameters for next batch using newly observed data
-        params = calibrate_matrix(&data.view(), bits, &dynamic_config).unwrap();
+        params = calibrate_matrix(&data.view(), bits, &dynamic_config).expect("Operation failed");
     }
 
     println!("\nObservations:");
@@ -301,7 +312,7 @@ fn generate_sensor_batch(
     let mut data = Array2::zeros((size, 1));
 
     // Basic normal distribution for sensor readings
-    let normal = Normal::new(drift, amplitude).unwrap();
+    let normal = Normal::new(drift, amplitude).expect("Operation failed");
 
     // Fill data array
     for i in 0..size {

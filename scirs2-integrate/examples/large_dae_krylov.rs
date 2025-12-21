@@ -106,7 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         result_krylov
             .message
             .as_ref()
-            .unwrap()
+            .expect("Operation failed")
             .split(',')
             .nth(1)
             .unwrap_or("")
@@ -236,7 +236,7 @@ fn create_solution_plot(
     title: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Get the final solution (convert to 2D array)
-    let final_solution = result.x.last().unwrap();
+    let final_solution = result.x.last().expect("Operation failed");
     let mut solution_grid = Array2::zeros((N, N));
 
     for i in 0..N {
@@ -259,7 +259,7 @@ fn create_solution_plot(
     // Create heatmap
     let mut chart = ChartBuilder::on(&root)
         .caption(
-            format!("{} Solution at t={:.3}", title, result.t.last().unwrap()),
+            format!("{} Solution at t={:.3}", title, result.t.last().expect("Operation failed")),
             ("sans-serif", 30),
         )
         .margin(10)

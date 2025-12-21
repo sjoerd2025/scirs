@@ -293,7 +293,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         };
 
         let dx = x - bound;
-        let half = T::from(0.5).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
 
         Ok(value + deriv * dx + half * second_deriv * dx * dx)
     }
@@ -317,13 +317,13 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                 self.lower_bound,
                 self.lower_value,
                 self.lower_derivative,
-                self.lower_second_derivative.unwrap(),
+                self.lower_second_derivative.expect("Operation failed"),
             ),
             ExtrapolationDirection::Upper => (
                 self.upper_bound,
                 self.upper_value,
                 self.upper_derivative,
-                self.upper_second_derivative.unwrap(),
+                self.upper_second_derivative.expect("Operation failed"),
             ),
         };
 
@@ -334,11 +334,11 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         // Coefficients for cubic polynomial: a + b*dx + c*dx^2 + d*dx^3
         let a = value;
         let b = deriv;
-        let c = second_deriv / T::from(2.0).unwrap();
+        let c = second_deriv / T::from(2.0).expect("Operation failed");
 
         // The third coefficient (d) depends on the third derivative, which we don't have directly
         // Let's set it to a small value based on the rate of change of the second derivative
-        let d = T::from(0.0).unwrap(); // Simplified version sets this to zero
+        let d = T::from(0.0).expect("Operation failed"); // Simplified version sets this to zero
 
         Ok(a + b * dx + c * dx2 + d * dx3)
     }

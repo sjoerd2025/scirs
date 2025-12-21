@@ -25,7 +25,7 @@
 //! let first_row = array![1.0, 2.0, 3.0];
 //! let first_col = array![1.0, 4.0, 5.0];
 //!
-//! let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();
+//! let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).expect("Operation failed");
 //!
 //! // The matrix represented is:
 //! // [1.0, 2.0, 3.0]
@@ -34,7 +34,7 @@
 //!
 //! // Apply to a vector efficiently without forming the full matrix
 //! let x = array![1.0, 2.0, 3.0];
-//! let y = toeplitz.matvec(&x.view()).unwrap();
+//! let y = toeplitz.matvec(&x.view()).expect("Operation failed");
 //! ```
 
 use crate::error::LinalgResult;
@@ -111,7 +111,7 @@ where
         let (rows, cols) = self.shape();
 
         LinearOperator::new_rectangular(rows, cols, move |x: &ArrayView1<A>| {
-            matrix.matvec(x).unwrap()
+            matrix.matvec(x).expect("Operation failed")
         })
     }
 }
@@ -127,7 +127,7 @@ where
     let (rows, cols) = matrix.shape();
 
     LinearOperator::new_rectangular(rows, cols, move |x: &ArrayView1<A>| {
-        matrix_clone.matvec(x).unwrap()
+        matrix_clone.matvec(x).expect("Operation failed")
     })
 }
 

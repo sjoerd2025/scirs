@@ -23,8 +23,8 @@ mod tests {
             ..Default::default()
         };
 
-        let mut gmm = GaussianMixtureModel::new(2, config).unwrap();
-        let params = gmm.fit(&data.view()).unwrap();
+        let mut gmm = GaussianMixtureModel::new(2, config).expect("Test: operation failed");
+        let params = gmm.fit(&data.view()).expect("Test: operation failed");
 
         assert_eq!(params.weights.len(), 2);
         assert!(params.converged);
@@ -42,12 +42,17 @@ mod tests {
             [5.1, 6.1]
         ];
 
-        let mut robust_gmm = RobustGMM::new(2, 0.1f64, 0.2f64, GMMConfig::default()).unwrap();
+        let mut robust_gmm = RobustGMM::new(2, 0.1f64, 0.2f64, GMMConfig::default())
+            .expect("Test: operation failed");
 
-        let params = robust_gmm.fit(&data.view()).unwrap();
+        let params = robust_gmm
+            .fit(&data.view())
+            .expect("Test: operation failed");
         assert!(params.outlier_scores.is_some());
 
-        let outliers = robust_gmm.detect_outliers(&data.view()).unwrap();
+        let outliers = robust_gmm
+            .detect_outliers(&data.view())
+            .expect("Test: operation failed");
         assert_eq!(outliers.len(), data.nrows());
     }
 
@@ -57,12 +62,19 @@ mod tests {
 
         let batch2 = array![[5.0, 6.0], [5.1, 6.1], [4.9, 5.9]];
 
-        let mut streaming_gmm = StreamingGMM::new(2, 0.1f64, 0.9f64, GMMConfig::default()).unwrap();
+        let mut streaming_gmm = StreamingGMM::new(2, 0.1f64, 0.9f64, GMMConfig::default())
+            .expect("Test: operation failed");
 
-        streaming_gmm.partial_fit(&batch1.view()).unwrap();
-        streaming_gmm.partial_fit(&batch2.view()).unwrap();
+        streaming_gmm
+            .partial_fit(&batch1.view())
+            .expect("Test: operation failed");
+        streaming_gmm
+            .partial_fit(&batch2.view())
+            .expect("Test: operation failed");
 
-        let params = streaming_gmm.get_parameters().unwrap();
+        let params = streaming_gmm
+            .get_parameters()
+            .expect("Test: operation failed");
         assert_eq!(params.weights.len(), 2);
     }
 
@@ -89,7 +101,7 @@ mod tests {
                 ..Default::default()
             }),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert!(best_n >= 2 && best_n <= 4);
         assert!(params.model_selection.bic.is_finite());
@@ -107,7 +119,7 @@ mod tests {
         ];
 
         let mut vgmm = VariationalGMM::new(2, VariationalGMMConfig::default());
-        let result = vgmm.fit(&data.view()).unwrap();
+        let result = vgmm.fit(&data.view()).expect("Test: operation failed");
 
         assert!(result.lower_bound > f64::NEG_INFINITY);
         assert!(result.effective_components > 0);
@@ -224,13 +236,15 @@ where
         let (_n_samples_, n_features) = data.dim();
 
         // Initialize parameters
-        let mut weight_concentration =
-            Array1::from_elem(self.max_components, F::from(self.config.alpha).unwrap());
+        let mut weight_concentration = Array1::from_elem(
+            self.max_components,
+            F::from(self.config.alpha).expect("Failed to convert to float"),
+        );
         let mut mean_precision = Array1::from_elem(self.max_components, F::one());
         let mut means = self.initialize_means(data)?;
         let mut degrees_of_freedom = Array1::from_elem(
             self.max_components,
-            F::from(self.config.nu + n_features as f64).unwrap(),
+            F::from(self.config.nu + n_features as f64).expect("Failed to convert to float"),
         );
         let mut scale_matrices = Array3::zeros((self.max_components, n_features, n_features));
 
@@ -274,7 +288,8 @@ where
 
             // Check convergence
             if iteration > 0
-                && (new_lower_bound - lower_bound).abs() < F::from(self.config.tolerance).unwrap()
+                && (new_lower_bound - lower_bound).abs()
+                    < F::from(self.config.tolerance).expect("Failed to convert to float")
             {
                 converged = true;
             }
@@ -395,8 +410,10 @@ where
         let (n_samples_, n_features) = data.dim();
 
         // Update weight concentration
-        let mut weight_concentration =
-            Array1::from_elem(self.max_components, F::from(self.config.alpha).unwrap());
+        let mut weight_concentration = Array1::from_elem(
+            self.max_components,
+            F::from(self.config.alpha).expect("Failed to convert to float"),
+        );
         for k in 0..self.max_components {
             let nk: F = responsibilities.column(k).sum();
             weight_concentration[k] = weight_concentration[k] + nk;
@@ -407,7 +424,7 @@ where
         let mut means = Array2::zeros((self.max_components, n_features));
         let mut degrees_of_freedom = Array1::from_elem(
             self.max_components,
-            F::from(self.config.nu + n_features as f64).unwrap(),
+            F::from(self.config.nu + n_features as f64).expect("Failed to convert to float"),
         );
         let mut scale_matrices = Array3::zeros((self.max_components, n_features, n_features));
 
@@ -425,11 +442,13 @@ where
                 }
 
                 // Update degrees of freedom
-                degrees_of_freedom[k] = F::from(self.config.nu).unwrap() + nk;
+                degrees_of_freedom[k] =
+                    F::from(self.config.nu).expect("Failed to convert to float") + nk;
 
                 // Update scale matrix (simplified)
                 for i in 0..n_features {
-                    scale_matrices[[k, i, i]] = F::one() + F::from(0.1).unwrap() * nk;
+                    scale_matrices[[k, i, i]] =
+                        F::one() + F::from(0.1).expect("Failed to convert constant to float") * nk;
                 }
             }
         }
@@ -463,7 +482,7 @@ where
                         &data.row(i),
                         &means.row(k),
                         &scale_matrices.slice(s![k, .., ..]),
-                        F::from(10.0).unwrap(), // simplified
+                        F::from(10.0).expect("Failed to convert constant to float"), // simplified
                     )?;
                     lower_bound = lower_bound + responsibilities[[i, k]] * log_likelihood;
                 }
@@ -473,7 +492,8 @@ where
         // KL divergence terms (simplified)
         for k in 0..self.max_components {
             let weight_contrib = weight_concentration[k] * weight_concentration[k].ln();
-            lower_bound = lower_bound - weight_contrib * F::from(0.01).unwrap();
+            lower_bound = lower_bound
+                - weight_contrib * F::from(0.01).expect("Failed to convert constant to float");
         }
 
         Ok(lower_bound)
@@ -486,7 +506,7 @@ where
 
         for &weight in weightconcentration.iter() {
             let proportion = weight / total;
-            if proportion > F::from(0.01).unwrap() {
+            if proportion > F::from(0.01).expect("Failed to convert constant to float") {
                 // 1% threshold
                 effective += 1;
             }
@@ -524,7 +544,7 @@ where
             sum_sq = sum_sq + diff * diff;
         }
 
-        let log_likelihood = -F::from(0.5).unwrap() * sum_sq;
+        let log_likelihood = -F::from(0.5).expect("Failed to convert constant to float") * sum_sq;
         Ok(log_likelihood)
     }
 

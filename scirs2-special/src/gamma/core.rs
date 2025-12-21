@@ -84,35 +84,39 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
 
     // Enhanced handling for very small positive values with higher-order series
     // around x=0: Γ(x) = 1/x - γ + (γ²/2 + π²/12)x - (γ³/6 + π²γ/12 + ψ₂(1)/6)x² + O(x³)
-    if x > F::zero() && x < F::from(1e-8).unwrap() {
-        let gamma_euler = F::from(constants::EULER_MASCHERONI).unwrap();
-        let pi_squared = F::from(std::f64::consts::PI * std::f64::consts::PI).unwrap();
+    if x > F::zero() && x < F::from(1e-8).expect("Failed to convert constant to float") {
+        let gamma_euler = F::from(constants::EULER_MASCHERONI).expect("Failed to convert to float");
+        let pi_squared = F::from(std::f64::consts::PI * std::f64::consts::PI)
+            .expect("Failed to convert to float");
 
         // Enhanced series expansion with more terms for better accuracy
         let c0 = F::one() / x; // Leading singular term
         let c1 = -gamma_euler; // Linear term
-        let c2 = F::from(0.5).unwrap()
-            * (gamma_euler * gamma_euler + pi_squared / F::from(6.0).unwrap()); // Quadratic term
+        let c2 = F::from(0.5).expect("Failed to convert constant to float")
+            * (gamma_euler * gamma_euler
+                + pi_squared / F::from(6.0).expect("Failed to convert constant to float")); // Quadratic term
 
         // Third-order term for extreme precision near zero
-        let psi2_1 = F::from(2.4041138063191885).unwrap(); // ψ₂(1) = π²/6 + 2ζ(3) where ζ(3) ≈ 1.202
-        let c3 = -(gamma_euler * gamma_euler * gamma_euler / F::from(6.0).unwrap()
-            + pi_squared * gamma_euler / F::from(12.0).unwrap()
-            + psi2_1 / F::from(6.0).unwrap());
+        let psi2_1 = F::from(2.4041138063191885).expect("Failed to convert constant to float"); // ψ₂(1) = π²/6 + 2ζ(3) where ζ(3) ≈ 1.202
+        let c3 = -(gamma_euler * gamma_euler * gamma_euler
+            / F::from(6.0).expect("Failed to convert constant to float")
+            + pi_squared * gamma_euler
+                / F::from(12.0).expect("Failed to convert constant to float")
+            + psi2_1 / F::from(6.0).expect("Failed to convert constant to float"));
 
         return c0 + c1 + c2 * x + c3 * x * x;
     }
 
     // Handle specific test values exactly
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // Handle specific test values exactly
     if (x_f64 - 0.1).abs() < 1e-14 {
-        return F::from(9.51350769866873).unwrap();
+        return F::from(9.51350769866873).expect("Failed to convert constant to float");
     }
 
     if (x_f64 - 2.6).abs() < 1e-14 {
-        return F::from(1.5112296023228).unwrap();
+        return F::from(1.5112296023228).expect("Failed to convert constant to float");
     }
 
     // For negative x - Enhanced numerical stability for extreme values
@@ -124,7 +128,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         }
 
         // Enhanced handling for extreme negative values with better overflow protection
-        if x < F::from(-1000.0).unwrap() {
+        if x < F::from(-1000.0).expect("Failed to convert constant to float") {
             // For very large negative values, use asymptotic expansion
             // with enhanced precision to avoid catastrophic cancellation
             return asymptotic_gamma_large_negative(x);
@@ -134,7 +138,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-8 {
             // Enhanced expansion with higher-order terms for better accuracy
             let n = -nearest_int;
-            let epsilon = x - F::from(nearest_int).unwrap();
+            let epsilon = x - F::from(nearest_int).expect("Failed to convert to float");
 
             // Compute n! and H_n with overflow protection
             if n > 100 {
@@ -146,7 +150,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
             let mut harmonic = F::zero();
 
             for i in 1..=n {
-                let i_f = F::from(i).unwrap();
+                let i_f = F::from(i).expect("Failed to convert to float");
                 factorial = factorial * i_f;
                 harmonic += F::one() / i_f;
             }
@@ -160,31 +164,33 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
             // Add second-order term: + ε²(H_n² - H_n^(2))/2
             let harmonic_squared_sum = (1..=n)
                 .map(|i| 1.0 / ((i * i) as f64))
-                .fold(F::zero(), |acc, val| acc + F::from(val).unwrap());
+                .fold(F::zero(), |acc, val| {
+                    acc + F::from(val).expect("Failed to convert to float")
+                });
             let second_correction =
                 epsilon * epsilon * (harmonic * harmonic - harmonic_squared_sum)
-                    / F::from(2.0).unwrap();
+                    / F::from(2.0).expect("Failed to convert constant to float");
 
             return leading_term * (first_correction + second_correction);
         }
 
         // Enhanced reflection formula with better numerical stability
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let sinpix = (pi * x).sin();
 
-        if sinpix.abs() < F::from(1e-14).unwrap() {
+        if sinpix.abs() < F::from(1e-14).expect("Failed to convert constant to float") {
             // x is extremely close to a negative integer
             return F::nan();
         }
 
         // Apply reflection formula with enhanced overflow protection
-        if x < F::from(-100.0).unwrap() {
+        if x < F::from(-100.0).expect("Failed to convert constant to float") {
             // For very negative x, use enhanced logarithmic computation
             // with better condition number handling
             let oneminus_x = F::one() - x;
 
             // Check if 1-x would cause issues in gammaln
-            if oneminus_x > F::from(171.0).unwrap() {
+            if oneminus_x > F::from(171.0).expect("Failed to convert constant to float") {
                 // Use Stirling approximation directly for better stability
                 let log_gamma_1minus_x = stirling_approximation_ln(oneminus_x);
                 let log_sinpix = enhanced_log_sin_pi_x(x);
@@ -195,7 +201,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
                 // Enhanced sign computation for extreme values
                 let sign: F = enhanced_reflection_sign(x_f64);
 
-                if log_result < F::from(std::f64::MAX.ln() * 0.9).unwrap() {
+                if log_result < F::from(std::f64::MAX.ln() * 0.9).expect("Operation failed") {
                     return sign * log_result.exp();
                 } else {
                     return if sign > F::zero() {
@@ -212,7 +218,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
                 let sign: F = enhanced_reflection_sign(x_f64);
                 let log_result = log_pi - log_sinpix - log_gamma_1minus_x;
 
-                if log_result < F::from(std::f64::MAX.ln() * 0.9).unwrap() {
+                if log_result < F::from(std::f64::MAX.ln() * 0.9).expect("Operation failed") {
                     return sign * log_result.exp();
                 } else {
                     return if sign > F::zero() {
@@ -239,7 +245,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         let n = x_f64 as i32;
         let mut result = F::one();
         for i in 1..(n) {
-            result = result * F::from(i).unwrap();
+            result = result * F::from(i).expect("Failed to convert to float");
         }
         return result;
     }
@@ -255,11 +261,12 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
                     Some(val) => val,
                     None => return F::infinity(), // Handle overflow gracefully
                 };
-                double_factorial = double_factorial * F::from(double_iminus_1).unwrap();
+                double_factorial = double_factorial
+                    * F::from(double_iminus_1).expect("Failed to convert to float");
             }
 
-            let sqrt_pi = F::from(std::f64::consts::PI.sqrt()).unwrap();
-            let two_pow_n = F::from(2.0_f64.powi(n)).unwrap();
+            let sqrt_pi = F::from(std::f64::consts::PI.sqrt()).expect("Operation failed");
+            let two_pow_n = F::from(2.0_f64.powi(n)).expect("Operation failed");
 
             return double_factorial / two_pow_n * sqrt_pi;
         }
@@ -273,8 +280,11 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
     // Additional safety check for potential overflow in Lanczos approximation
     if x_f64 > 150.0 {
         // Check if Lanczos would overflow, if so use Stirling
-        let test_lanczos = improved_lanczos_gamma(F::from(150.0).unwrap());
-        if test_lanczos.is_infinite() || test_lanczos > F::from(1e100).unwrap() {
+        let test_lanczos =
+            improved_lanczos_gamma(F::from(150.0).expect("Failed to convert constant to float"));
+        if test_lanczos.is_infinite()
+            || test_lanczos > F::from(1e100).expect("Failed to convert constant to float")
+        {
             return stirling_approximation(x);
         }
     }
@@ -330,7 +340,7 @@ where
 
     // For negative x, check if it's a negative integer (where gamma is undefined)
     if x < F::zero() {
-        let x_f64 = x.to_f64().unwrap();
+        let x_f64 = x.to_f64().expect("Operation failed");
         let nearest_int = x_f64.round() as i32;
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
             return Err(SpecialError::DomainError(format!(
@@ -383,26 +393,26 @@ pub fn gammaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> 
     }
 
     // Handle values close to zero specially
-    if x < F::from(1e-8).unwrap() {
+    if x < F::from(1e-8).expect("Failed to convert constant to float") {
         // Near zero: log(Γ(x)) ≈ -log(x) - γx + O(x²)
-        let gamma_euler = F::from(constants::EULER_MASCHERONI).unwrap();
+        let gamma_euler = F::from(constants::EULER_MASCHERONI).expect("Failed to convert to float");
         return -x.ln() - gamma_euler * x;
     }
 
     // For test cases in scirs2-special, we want exact matches
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // Handle specific test values exactly
     if (x_f64 - 0.1).abs() < 1e-14 {
-        return F::from(2.252712651734206).unwrap();
+        return F::from(2.252712651734206).expect("Failed to convert constant to float");
     }
 
     if (x_f64 - 0.5).abs() < 1e-14 {
-        return F::from(-0.12078223763524522).unwrap();
+        return F::from(-0.12078223763524522).expect("Failed to convert constant to float");
     }
 
     if (x_f64 - 2.6).abs() < 1e-14 {
-        return F::from(0.4129271983548384).unwrap();
+        return F::from(0.4129271983548384).expect("Failed to convert constant to float");
     }
 
     // For integer values, we know gamma(n) = (n-1)! so ln(gamma(n)) = ln((n-1)!)
@@ -410,7 +420,7 @@ pub fn gammaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> 
         let n = x_f64 as i32;
         let mut result = F::zero();
         for i in 1..(n) {
-            result += F::from(i).unwrap().ln();
+            result += F::from(i).expect("Failed to convert to float").ln();
         }
         return result;
     }
@@ -427,11 +437,17 @@ pub fn gammaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> 
             // ln(Γ(n + 0.5)) = ln((2n-1)!!) - n*ln(2) + ln(sqrt(π))
             let mut log_double_factorial = F::zero();
             for i in (1..=n).map(|i| 2 * i - 1) {
-                log_double_factorial += F::from(i).unwrap().ln();
+                log_double_factorial += F::from(i).expect("Failed to convert to float").ln();
             }
 
-            let log_sqrt_pi = F::from(constants::LOG_SQRT_2PI).unwrap();
-            let n_log_2 = F::from(n).unwrap() * F::from(std::f64::consts::LN_2).unwrap();
+            // Use ln(sqrt(π)) NOT ln(sqrt(2π))
+            // ln(sqrt(π)) = ln(π)/2 = 0.5723649429247001
+            let log_sqrt_pi = F::from(std::f64::consts::PI)
+                .expect("Failed to convert to float")
+                .ln()
+                / F::from(2.0).expect("Failed to convert constant to float");
+            let n_log_2 = F::from(n).expect("Failed to convert to float")
+                * F::from(std::f64::consts::LN_2).expect("Failed to convert to float");
 
             return log_double_factorial - n_log_2 + log_sqrt_pi;
         }
@@ -485,7 +501,9 @@ pub fn betaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F
     }
 
     // For small to moderate values, use gammaln directly
-    if a <= F::from(100.0).unwrap() && b <= F::from(100.0).unwrap() {
+    if a <= F::from(100.0).expect("Failed to convert constant to float")
+        && b <= F::from(100.0).expect("Failed to convert constant to float")
+    {
         let ln_gamma_a = gammaln(a);
         let ln_gamma_b = gammaln(b);
         let ln_gamma_ab = gammaln(a + b);

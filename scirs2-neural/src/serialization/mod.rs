@@ -182,17 +182,17 @@ fn serialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
         } else if let Some(ln) = layer.as_any().downcast_ref::<LayerNorm<F>>() {
             let config = LayerConfig::LayerNorm(LayerNormConfig {
                 normalizedshape: ln.normalizedshape(),
-                eps: ln.eps().to_f64().unwrap(),
+                eps: ln.eps().to_f64().expect("Operation failed"),
             let params = extract_parameters(ln.get_parameters())?;
         } else if let Some(bn) = layer.as_any().downcast_ref::<BatchNorm<F>>() {
             let config = LayerConfig::BatchNorm(BatchNormConfig {
                 num_features: bn.num_features(),
-                momentum: bn.momentum().to_f64().unwrap(),
-                eps: bn.eps().to_f64().unwrap(),
+                momentum: bn.momentum().to_f64().expect("Operation failed"),
+                eps: bn.eps().to_f64().expect("Operation failed"),
             let params = extract_parameters(bn.get_parameters())?;
         } else if let Some(dropout) = layer.as_any().downcast_ref::<Dropout<F>>() {
             let config = LayerConfig::Dropout(DropoutConfig {
-                p: dropout.p().to_f64().unwrap(),
+                p: dropout.p().to_f64().expect("Operation failed"),
             // Dropout has no parameters
             parameters.push(Vec::new());
         } else if let Some(maxpool) = layer.as_any().downcast_ref::<MaxPool2D<F>>() {
@@ -268,8 +268,8 @@ fn deserialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
             let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([42; 32]);
             let new_bn = BatchNorm::new(
                 bn.num_features(),
-                bn.momentum().to_f64().unwrap(),
-                bn.eps().to_f64().unwrap(),
+                bn.momentum().to_f64().expect("Operation failed"),
+                bn.eps().to_f64().expect("Operation failed"),
                 &mut rng,
             )?;
             bound_layers.push(Box::new(new_bn));

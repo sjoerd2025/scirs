@@ -128,7 +128,8 @@ where
         // Calculate residuals and covariance
         let fitted = x.dot(&beta);
         let residuals = &y - &fitted;
-        self.covariance = residuals.t().dot(&residuals) / F::from(n_obs - n_regressors).unwrap();
+        self.covariance = residuals.t().dot(&residuals)
+            / F::from(n_obs - n_regressors).expect("Failed to convert to float");
 
         self.is_fitted = true;
         Ok(())
@@ -286,8 +287,8 @@ where
 
         // Placeholder implementation
         // Would implement proper F-test for coefficient restrictions
-        let f_stat = F::from(2.5).unwrap();
-        let p_value = F::from(0.05).unwrap();
+        let f_stat = F::from(2.5).expect("Failed to convert constant to float");
+        let p_value = F::from(0.05).expect("Failed to convert constant to float");
 
         Ok((f_stat, p_value))
     }
@@ -538,7 +539,7 @@ where
         }
 
         // Check for near-zero pivot
-        if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
+        if lu[[col, col]].abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return Err(TimeSeriesError::NumericalInstability(
                 "Near-zero pivot in LU decomposition".to_string(),
             ));
@@ -621,22 +622,29 @@ where
 
         let criterion_value = match criterion {
             SelectionCriterion::AIC => {
-                log_det + F::from(2.0).unwrap() * F::from(n_params).unwrap() / F::from(t).unwrap()
+                log_det
+                    + F::from(2.0).expect("Failed to convert constant to float")
+                        * F::from(n_params).expect("Failed to convert to float")
+                        / F::from(t).expect("Failed to convert to float")
             }
             SelectionCriterion::BIC => {
                 log_det
-                    + F::from(n_params).unwrap().ln() * F::from(t).unwrap() / F::from(t).unwrap()
+                    + F::from(n_params).expect("Failed to convert to float").ln()
+                        * F::from(t).expect("Failed to convert to float")
+                        / F::from(t).expect("Failed to convert to float")
             }
             SelectionCriterion::HQC => {
                 log_det
-                    + F::from(2.0).unwrap()
-                        * F::from(n_params).unwrap().ln()
-                        * F::from(t).unwrap().ln()
-                        / F::from(t).unwrap()
+                    + F::from(2.0).expect("Failed to convert constant to float")
+                        * F::from(n_params).expect("Failed to convert to float").ln()
+                        * F::from(t).expect("Failed to convert to float").ln()
+                        / F::from(t).expect("Failed to convert to float")
             }
             SelectionCriterion::FPE => {
-                let factor = (F::from(t).unwrap() + F::from(n_params).unwrap())
-                    / (F::from(t).unwrap() - F::from(n_params).unwrap());
+                let factor = (F::from(t).expect("Failed to convert to float")
+                    + F::from(n_params).expect("Failed to convert to float"))
+                    / (F::from(t).expect("Failed to convert to float")
+                        - F::from(n_params).expect("Failed to convert to float"));
                 log_det + factor.ln()
             }
         };
@@ -694,7 +702,7 @@ where
         }
 
         // Check for zero pivot (singular matrix)
-        if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
+        if lu[[col, col]].abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return F::neg_infinity(); // log(0) = -infinity
         }
 
@@ -712,7 +720,7 @@ where
     let mut log_det = F::zero();
     for i in 0..n {
         let diag_element = lu[[i, i]];
-        if diag_element.abs() < F::from(1e-12).unwrap() {
+        if diag_element.abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return F::neg_infinity(); // Singular _matrix
         }
         log_det = log_det + diag_element.abs().ln();
@@ -735,7 +743,7 @@ mod tests {
 
     #[test]
     fn test_var_creation() {
-        let model = VARModel::<f64>::new(2, 3).unwrap();
+        let model = VARModel::<f64>::new(2, 3).expect("Operation failed");
         assert_eq!(model.order, 2);
         assert_eq!(model.n_vars, 3);
         assert_eq!(model.coefficients.len(), 2);
@@ -754,30 +762,30 @@ mod tests {
             data[[t, 1]] = 0.2 * data[[t - 1, 0]] + 0.7 * data[[t - 1, 1]];
         }
 
-        let mut model = VARModel::new(1, 2).unwrap();
-        model.fit(&data).unwrap();
+        let mut model = VARModel::new(1, 2).expect("Operation failed");
+        model.fit(&data).expect("Operation failed");
         assert!(model.is_fitted);
     }
 
     #[test]
     fn test_var_predict() {
-        let mut model = VARModel::new(1, 2).unwrap();
+        let mut model = VARModel::new(1, 2).expect("Operation failed");
         model.coefficients[0] = array![[0.5, 0.1], [0.2, 0.7]];
         model.intercept = array![0.0, 0.0];
         model.is_fitted = true;
 
         let initial = array![[1.0, 0.5]];
-        let predictions = model.predict(&initial, 5).unwrap();
+        let predictions = model.predict(&initial, 5).expect("Operation failed");
         assert_eq!(predictions.dim(), (5, 2));
     }
 
     #[test]
     fn test_impulse_response() {
-        let mut model = VARModel::new(1, 2).unwrap();
+        let mut model = VARModel::new(1, 2).expect("Operation failed");
         model.coefficients[0] = array![[0.5, 0.1], [0.2, 0.7]];
         model.is_fitted = true;
 
-        let irf = model.impulse_response(10, 0).unwrap();
+        let irf = model.impulse_response(10, 0).expect("Operation failed");
         assert_eq!(irf.dim(), (10, 2));
         assert_eq!(irf[[0, 0]], 1.0);
         assert_eq!(irf[[0, 1]], 0.0);
@@ -785,7 +793,7 @@ mod tests {
 
     #[test]
     fn test_vecm_creation() {
-        let model = VECMModel::<f64>::new(3, 2, 3).unwrap();
+        let model = VECMModel::<f64>::new(3, 2, 3).expect("Operation failed");
         assert_eq!(model.rank, 2);
         assert_eq!(model.short_run.len(), 2);
         assert!(!model.is_fitted);
@@ -810,7 +818,7 @@ mod tests {
             data[[t, 1]] = 0.2 * data[[t - 1, 0]] + 0.4 * data[[t - 1, 1]] + 0.05 + noise2;
         }
 
-        let order = select_var_order(&data, 3, SelectionCriterion::AIC).unwrap();
+        let order = select_var_order(&data, 3, SelectionCriterion::AIC).expect("Operation failed");
         assert!((1..=3).contains(&order));
     }
 }

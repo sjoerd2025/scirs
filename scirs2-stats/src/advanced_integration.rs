@@ -485,7 +485,9 @@ impl DimensionalityAnalysisWorkflow {
         use crate::multivariate::efa::{bartlett_test, kmo_test};
 
         // Compute covariance matrix for eigenvalues
-        let mean = data.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let mean = data
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
         let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= &mean;
@@ -504,7 +506,7 @@ impl DimensionalityAnalysisWorkflow {
 
         // Sort eigenvalues in descending order
         let mut sorted_eigenvalues = eigenvalues.to_vec();
-        sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed"));
         let eigenvalues = Array1::from_vec(sorted_eigenvalues);
 
         // Cumulative variance
@@ -705,7 +707,7 @@ impl QMCWorkflow {
         }
 
         // Coefficient of variation of minimum distances
-        let mean_dist = min_distances.mean().unwrap();
+        let mean_dist = min_distances.mean().expect("Operation failed");
         let var_dist = min_distances.var(1.0);
         let uniformity = 1.0 / (var_dist.sqrt() / mean_dist); // Inverse CV
 

@@ -509,13 +509,28 @@ mod tests {
         let corrector = DictionaryCorrector::default();
 
         // Test some common misspellings
-        assert_eq!(corrector.correct("recieve").unwrap(), "receive");
-        assert_eq!(corrector.correct("freind").unwrap(), "friend");
-        assert_eq!(corrector.correct("belive").unwrap(), "believe");
+        assert_eq!(
+            corrector.correct("recieve").expect("Operation failed"),
+            "receive"
+        );
+        assert_eq!(
+            corrector.correct("freind").expect("Operation failed"),
+            "friend"
+        );
+        assert_eq!(
+            corrector.correct("belive").expect("Operation failed"),
+            "believe"
+        );
 
         // Test correct words
-        assert_eq!(corrector.correct("computer").unwrap(), "computer");
-        assert_eq!(corrector.correct("programming").unwrap(), "programming");
+        assert_eq!(
+            corrector.correct("computer").expect("Operation failed"),
+            "computer"
+        );
+        assert_eq!(
+            corrector.correct("programming").expect("Operation failed"),
+            "programming"
+        );
 
         // Test is_correct
         assert!(corrector.is_correct("computer"));
@@ -537,9 +552,15 @@ mod tests {
         let corrector = DictionaryCorrector::with_dictionary(dictionary);
 
         // Test domain-specific corrections
-        assert_eq!(corrector.correct("rsut").unwrap(), "rust");
-        assert_eq!(corrector.correct("crago").unwrap(), "cargo");
-        assert_eq!(corrector.correct("crat").unwrap(), "crate");
+        assert_eq!(corrector.correct("rsut").expect("Operation failed"), "rust");
+        assert_eq!(
+            corrector.correct("crago").expect("Operation failed"),
+            "cargo"
+        );
+        assert_eq!(
+            corrector.correct("crat").expect("Operation failed"),
+            "crate"
+        );
 
         // Test is_correct with domain-specific terms
         assert!(corrector.is_correct("rust"));
@@ -563,7 +584,10 @@ mod tests {
         corrector.add_word("recieve", 100); // Misspelled version
 
         // Should return "recieve" itself since it's in the dictionary (even though misspelled)
-        assert_eq!(corrector.correct("recieve").unwrap(), "recieve");
+        assert_eq!(
+            corrector.correct("recieve").expect("Operation failed"),
+            "recieve"
+        );
 
         // Test case sensitivity
         assert!(corrector.is_correct("I")); // In dictionary as uppercase
@@ -578,11 +602,15 @@ mod tests {
         corrector.add_word("programming", 100);
 
         // Test getting multiple suggestions
-        let suggestions = corrector.get_suggestions("programing", 3).unwrap();
+        let suggestions = corrector
+            .get_suggestions("programing", 3)
+            .expect("Operation failed");
         assert!(suggestions.contains(&"programming".to_string()));
 
         // Test with an artificial word that should have no suggestions
-        let suggestions = corrector.get_suggestions("xyzabc123", 3).unwrap();
+        let suggestions = corrector
+            .get_suggestions("xyzabc123", 3)
+            .expect("Operation failed");
         assert!(suggestions.is_empty());
     }
 
@@ -599,7 +627,7 @@ mod tests {
         let text = "I beleive the recieved information was corect.";
 
         // Create a custom corrector for the test to ensure consistent behavior
-        let corrected = corrector.correcttext(text).unwrap();
+        let corrected = corrector.correcttext(text).expect("Operation failed");
 
         // Check each word individually to be more robust
         assert!(corrected.contains("believe"));

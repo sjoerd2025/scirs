@@ -27,7 +27,8 @@ fn main() {
     // Compute only the 5 largest eigenvalues
     println!("\nComputing 5 largest eigenvalues...");
     let start = std::time::Instant::now();
-    let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 5, 1000, 1e-8).unwrap();
+    let (eigenvalues, eigenvectors) =
+        largest_k_eigh(&a.view(), 5, 1000, 1e-8).expect("Operation failed");
     let duration = start.elapsed();
 
     println!("Largest eigenvalues:");
@@ -49,7 +50,8 @@ fn main() {
     // Compute only the 5 smallest eigenvalues
     println!("\nComputing 5 smallest eigenvalues...");
     let start = std::time::Instant::now();
-    let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 5, 1000, 1e-8).unwrap();
+    let (eigenvalues, eigenvectors) =
+        smallest_k_eigh(&a.view(), 5, 1000, 1e-8).expect("Operation failed");
     let duration = start.elapsed();
 
     println!("Smallest eigenvalues:");
@@ -71,18 +73,18 @@ fn main() {
     // Compare with the standard eigenvalue solver for reference
     println!("\nComputing all eigenvalues with standard solver for comparison...");
     let start = std::time::Instant::now();
-    let (all_eigenvalues, _) = eigh(&a.view(), None).unwrap();
+    let (all_eigenvalues, _) = eigh(&a.view(), None).expect("Operation failed");
     let duration = start.elapsed();
 
     println!("5 largest eigenvalues from standard solver:");
     let mut sorted_eigenvalues = all_eigenvalues.to_vec();
-    sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed"));
     for (i, &val) in sorted_eigenvalues.iter().take(5).enumerate() {
         println!("λ{}: {:.6}", i + 1, val);
     }
 
     println!("\n5 smallest eigenvalues from standard solver:");
-    sorted_eigenvalues.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_eigenvalues.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     for (i, &val) in sorted_eigenvalues.iter().take(5).enumerate() {
         println!("λ{}: {:.6}", i + 1, val);
     }

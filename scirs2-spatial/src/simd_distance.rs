@@ -444,8 +444,10 @@ pub fn simd_knn_search(
                     .collect();
 
                 // Partial sort to get k smallest
-                all_distances.select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
-                all_distances[..k].sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                all_distances.select_nth_unstable_by(k - 1, |a, b| {
+                    a.0.partial_cmp(&b.0).expect("Operation failed")
+                });
+                all_distances[..k].sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
                 // Fill result arrays
                 for (i, (dist, idx)) in all_distances[..k].iter().enumerate() {
@@ -626,7 +628,7 @@ pub mod advanced_simd_clustering {
                 // Find point with maximum minimum distance
                 let max_idx = min_distances
                     .indexed_iter()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(idx_, _)| idx_)
                     .unwrap_or(k % n_points);
 
@@ -672,7 +674,7 @@ pub mod advanced_simd_clustering {
                     // Use SIMD to find minimum (argmin)
                     let best_k = distances_row
                         .indexed_iter()
-                        .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                        .min_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                         .map(|(idx_, _)| idx_)
                         .unwrap_or(0);
 
@@ -823,9 +825,12 @@ pub mod advanced_simd_clustering {
                         }
 
                         // Optimized partial sort using SIMD-aware algorithms
-                        all_distances
-                            .select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
-                        all_distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                        all_distances.select_nth_unstable_by(k - 1, |a, b| {
+                            a.0.partial_cmp(&b.0).expect("Operation failed")
+                        });
+                        all_distances[..k].sort_unstable_by(|a, b| {
+                            a.0.partial_cmp(&b.0).expect("Operation failed")
+                        });
 
                         // Fill results with square root for final distances
                         for (i, (dist_sq, idx)) in all_distances[..k].iter().enumerate() {
@@ -1114,10 +1119,12 @@ pub mod hardware_specific_simd {
                             .map(|(idx, &dist)| (dist, idx))
                             .collect();
 
-                        indexed_distances
-                            .select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
-                        indexed_distances[..k]
-                            .sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                        indexed_distances.select_nth_unstable_by(k - 1, |a, b| {
+                            a.0.partial_cmp(&b.0).expect("Operation failed")
+                        });
+                        indexed_distances[..k].sort_unstable_by(|a, b| {
+                            a.0.partial_cmp(&b.0).expect("Operation failed")
+                        });
 
                         // Fill results
                         for (i, (dist, idx)) in indexed_distances[..k].iter().enumerate() {
@@ -1292,8 +1299,10 @@ pub mod bench {
         let start = Instant::now();
         for _ in 0..iterations {
             for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
-                let _dist =
-                    crate::distance::euclidean(row1.as_slice().unwrap(), row2.as_slice().unwrap());
+                let _dist = crate::distance::euclidean(
+                    row1.as_slice().expect("Operation failed"),
+                    row2.as_slice().expect("Operation failed"),
+                );
             }
         }
         results.scalar_time = start.elapsed().as_secs_f64();
@@ -1301,7 +1310,8 @@ pub mod bench {
         // SIMD f64 benchmark
         let start = Instant::now();
         for _ in 0..iterations {
-            let _distances = simd_euclidean_distance_batch(points1, points2).unwrap();
+            let _distances =
+                simd_euclidean_distance_batch(points1, points2).expect("Operation failed");
         }
         results.simd_f64_time = start.elapsed().as_secs_f64();
 
@@ -1315,7 +1325,7 @@ pub mod bench {
             for _ in 0..iterations {
                 let _distances =
                     simd_euclidean_distance_batch_f32(&points1_f32.view(), &points2_f32.view())
-                        .unwrap();
+                        .expect("Operation failed");
             }
             results.simd_f32_time = Some(start.elapsed().as_secs_f64());
         }
@@ -1407,7 +1417,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 6.0];
 
-        let simd_dist = simd_euclidean_distance(&a, &b).unwrap();
+        let simd_dist = simd_euclidean_distance(&a, &b).expect("Operation failed");
         let scalar_dist = crate::distance::euclidean(&a, &b);
 
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);
@@ -1418,7 +1428,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 6.0];
 
-        let simd_dist = simd_manhattan_distance(&a, &b).unwrap();
+        let simd_dist = simd_manhattan_distance(&a, &b).expect("Operation failed");
         let scalar_dist = crate::distance::manhattan(&a, &b);
 
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);
@@ -1429,7 +1439,8 @@ mod tests {
         let points1 = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
         let points2 = array![[2.0, 3.0], [4.0, 5.0], [6.0, 7.0]];
 
-        let distances = simd_euclidean_distance_batch(&points1.view(), &points2.view()).unwrap();
+        let distances = simd_euclidean_distance_batch(&points1.view(), &points2.view())
+            .expect("Operation failed");
 
         assert_eq!(distances.len(), 3);
         for &dist in distances.iter() {
@@ -1450,7 +1461,7 @@ mod tests {
     fn test_parallel_pdist() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 
-        let distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+        let distances = parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
 
         // Should have n*(n-1)/2 = 6 distances
         assert_eq!(distances.len(), 6);
@@ -1467,7 +1478,8 @@ mod tests {
         let points1 = array![[0.0, 0.0], [1.0, 1.0]];
         let points2 = array![[1.0, 0.0], [0.0, 1.0], [2.0, 2.0]];
 
-        let distances = parallel_cdist(&points1.view(), &points2.view(), "euclidean").unwrap();
+        let distances = parallel_cdist(&points1.view(), &points2.view(), "euclidean")
+            .expect("Operation failed");
 
         assert_eq!(distances.shape(), &[2, 3]);
 
@@ -1484,7 +1496,8 @@ mod tests {
         let query_points = array![[0.5, 0.5], [1.5, 1.5]];
 
         let (indices, distances) =
-            simd_knn_search(&query_points.view(), &data_points.view(), 3, "euclidean").unwrap();
+            simd_knn_search(&query_points.view(), &data_points.view(), 3, "euclidean")
+                .expect("Operation failed");
 
         assert_eq!(indices.shape(), &[2, 3]);
         assert_eq!(distances.shape(), &[2, 3]);
@@ -1519,7 +1532,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 1.0];
 
-        let dist = simd_chebyshev_distance(&a, &b).unwrap();
+        let dist = simd_chebyshev_distance(&a, &b).expect("Operation failed");
 
         // Max difference should be |2 - 5| = 3
         assert_relative_eq!(dist, 3.0, epsilon = 1e-10);
@@ -1532,7 +1545,7 @@ mod tests {
         let metrics = ["euclidean", "manhattan", "sqeuclidean", "chebyshev"];
 
         for metric in &metrics {
-            let distances = parallel_pdist(&points.view(), metric).unwrap();
+            let distances = parallel_pdist(&points.view(), metric).expect("Operation failed");
             assert_eq!(distances.len(), 3); // n*(n-1)/2 = 3
 
             for &dist in distances.iter() {
@@ -1560,7 +1573,7 @@ mod tests {
         let a = vec![0.0, 1.0, 2.0];
         let b = vec![1.0, 2.0, 3.0];
 
-        let simd_dist = simd_euclidean_distance(&a, &b).unwrap();
+        let simd_dist = simd_euclidean_distance(&a, &b).expect("Operation failed");
         let scalar_dist = crate::distance::euclidean(&a, &b);
 
         // Expected: sqrt(3 * 1^2) = sqrt(3) ≈ 1.732
@@ -1571,7 +1584,7 @@ mod tests {
         let a: Vec<f64> = (0..dim).map(|i| i as f64).collect();
         let b: Vec<f64> = (0..dim).map(|i| (i + 1) as f64).collect();
 
-        let simd_dist = simd_euclidean_distance(&a, &b).unwrap();
+        let simd_dist = simd_euclidean_distance(&a, &b).expect("Operation failed");
         let scalar_dist = crate::distance::euclidean(&a, &b);
 
         // Expected: sqrt(1000 * 1^2) = sqrt(1000) ≈ 31.62
@@ -1579,7 +1592,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_hardware_optimized_distances() {
         use super::hardware_specific_simd::HardwareOptimizedDistances;
 
@@ -1590,14 +1602,16 @@ mod tests {
 
         let optimized_dist = optimizer
             .euclidean_distance_optimized(&a.view(), &b.view())
-            .unwrap();
-        let scalar_dist = crate::distance::euclidean(a.as_slice().unwrap(), b.as_slice().unwrap());
+            .expect("Operation failed");
+        let scalar_dist = crate::distance::euclidean(
+            a.as_slice().expect("Operation failed"),
+            b.as_slice().expect("Operation failed"),
+        );
 
         assert_relative_eq!(optimized_dist, scalar_dist, epsilon = 1e-10);
     }
 
     #[test]
-    #[ignore]
     fn test_hardware_optimized_batch_matrix() {
         let points = array![
             [0.0, 0.0],
@@ -1614,7 +1628,7 @@ mod tests {
         let result = optimizer.batch_distance_matrix_optimized(&points.view());
 
         assert!(result.is_ok());
-        let matrix = result.unwrap();
+        let matrix = result.expect("Operation failed");
         assert_eq!(matrix.dim(), (8, 8));
 
         // Check diagonal is zero
@@ -1631,7 +1645,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_hardware_optimized_knn() {
         let data_points = array![
             [0.0, 0.0],
@@ -1649,7 +1662,7 @@ mod tests {
         let result = optimizer.knn_search_vectorized(&query_points.view(), &data_points.view(), 3);
 
         assert!(result.is_ok());
-        let (indices, distances) = result.unwrap();
+        let (indices, distances) = result.expect("Operation failed");
 
         assert_eq!(indices.dim(), (2, 3));
         assert_eq!(distances.dim(), (2, 3));
@@ -1663,7 +1676,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_mixed_precision_adaptive() {
         use super::mixed_precision_simd::adaptive_precision_distance_matrix;
 
@@ -1673,7 +1685,7 @@ mod tests {
         let result = adaptive_precision_distance_matrix(&points.view(), 1e6);
         assert!(result.is_ok());
 
-        let matrix = result.unwrap();
+        let matrix = result.expect("Operation failed");
         assert_eq!(matrix.dim(), (4, 4));
 
         // Check diagonal is zero

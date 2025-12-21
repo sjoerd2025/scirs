@@ -38,7 +38,7 @@ use scirs2_core::parallel_ops::*;
 /// ```
 /// use scirs2_sparse::construct::eye_array;
 ///
-/// let eye: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
+/// let eye: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").expect("Operation failed");
 /// assert_eq!(eye.shape(), (3, 3));
 /// assert_eq!(eye.nnz(), 3);
 /// assert_eq!(eye.get(0, 0), 1.0);
@@ -99,19 +99,19 @@ where
 /// use scirs2_sparse::construct::eye_array_k;
 ///
 /// // Identity with main diagonal (k=0)
-/// let eye: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array_k(3, 3, 0, "csr").unwrap();
+/// let eye: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array_k(3, 3, 0, "csr").expect("Operation failed");
 /// assert_eq!(eye.get(0, 0), 1.0);
 /// assert_eq!(eye.get(1, 1), 1.0);
 /// assert_eq!(eye.get(2, 2), 1.0);
 ///
 /// // Superdiagonal (k=1)
-/// let superdiag: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array_k(3, 4, 1, "csr").unwrap();
+/// let superdiag: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array_k(3, 4, 1, "csr").expect("Operation failed");
 /// assert_eq!(superdiag.get(0, 1), 1.0);
 /// assert_eq!(superdiag.get(1, 2), 1.0);
 /// assert_eq!(superdiag.get(2, 3), 1.0);
 ///
 /// // Subdiagonal (k=-1)
-/// let subdiag: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array_k(4, 3, -1, "csr").unwrap();
+/// let subdiag: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array_k(4, 3, -1, "csr").expect("Operation failed");
 /// assert_eq!(subdiag.get(1, 0), 1.0);
 /// assert_eq!(subdiag.get(2, 1), 1.0);
 /// assert_eq!(subdiag.get(3, 2), 1.0);
@@ -196,7 +196,7 @@ where
 /// let offsets = vec![0, 1];
 /// let shape = (3, 3);
 ///
-/// let result = diags_array(&diags, &offsets, shape, "csr").unwrap();
+/// let result = diags_array(&diags, &offsets, shape, "csr").expect("Operation failed");
 /// assert_eq!(result.shape(), (3, 3));
 /// assert_eq!(result.get(0, 0), 1.0);
 /// assert_eq!(result.get(1, 1), 2.0);
@@ -301,11 +301,11 @@ where
 /// use scirs2_sparse::construct::random_array;
 ///
 /// // Create a 10x10 array with 30% non-zero elements
-/// let random = random_array::<f64>((10, 10), 0.3, None, "csr").unwrap();
+/// let random = random_array::<f64>((10, 10), 0.3, None, "csr").expect("Operation failed");
 /// assert_eq!(random.shape(), (10, 10));
 ///
 /// // Create a random array with a specific seed
-/// let seeded = random_array::<f64>((5, 5), 0.5, Some(42), "coo").unwrap();
+/// let seeded = random_array::<f64>((5, 5), 0.5, Some(42), "coo").expect("Operation failed");
 /// assert_eq!(seeded.shape(), (5, 5));
 /// ```
 #[allow(dead_code)]
@@ -372,7 +372,7 @@ where
             while val.abs() < 1e-10 {
                 val = rng.random_range(-1.0..1.0);
             }
-            data.push(T::from(val).unwrap());
+            data.push(T::from(val).expect("Operation failed"));
         }
     } else {
         // For low densities..use a set to track already-chosen positions
@@ -393,7 +393,7 @@ where
                 while val.abs() < 1e-10 {
                     val = rng.random_range(-1.0..1.0);
                 }
-                data.push(T::from(val).unwrap());
+                data.push(T::from(val).expect("Operation failed"));
             }
         }
     }
@@ -435,7 +435,7 @@ where
 /// use scirs2_sparse::construct::random_array_parallel;
 ///
 /// // Create a large random sparse array
-/// let large_random = random_array_parallel::<f64>((1000, 1000), 0.01, Some(42), "csr", 10000).unwrap();
+/// let large_random = random_array_parallel::<f64>((1000, 1000), 0.01, Some(42), "csr", 10000).expect("Operation failed");
 /// assert_eq!(large_random.shape(), (1000, 1000));
 /// assert!(large_random.nnz() > 5000); // Approximately 10000 non-zeros expected
 /// ```
@@ -532,7 +532,7 @@ where
 
                 local_rows.push(row);
                 local_cols.push(col);
-                local_data.push(T::from(val).unwrap());
+                local_data.push(T::from(val).expect("Operation failed"));
             }
         }
 
@@ -572,7 +572,7 @@ mod tests {
 
     #[test]
     fn test_eye_array() {
-        let eye = eye_array::<f64>(3, "csr").unwrap();
+        let eye = eye_array::<f64>(3, "csr").expect("Operation failed");
 
         assert_eq!(eye.shape(), (3, 3));
         assert_eq!(eye.nnz(), 3);
@@ -582,12 +582,12 @@ mod tests {
         assert_eq!(eye.get(0, 1), 0.0);
 
         // Try COO format
-        let eye_coo = eye_array::<f64>(3, "coo").unwrap();
+        let eye_coo = eye_array::<f64>(3, "coo").expect("Operation failed");
         assert_eq!(eye_coo.shape(), (3, 3));
         assert_eq!(eye_coo.nnz(), 3);
 
         // Try DOK format
-        let eye_dok = eye_array::<f64>(3, "dok").unwrap();
+        let eye_dok = eye_array::<f64>(3, "dok").expect("Operation failed");
         assert_eq!(eye_dok.shape(), (3, 3));
         assert_eq!(eye_dok.nnz(), 3);
         assert_eq!(eye_dok.get(0, 0), 1.0);
@@ -595,7 +595,7 @@ mod tests {
         assert_eq!(eye_dok.get(2, 2), 1.0);
 
         // Try LIL format
-        let eye_lil = eye_array::<f64>(3, "lil").unwrap();
+        let eye_lil = eye_array::<f64>(3, "lil").expect("Operation failed");
         assert_eq!(eye_lil.shape(), (3, 3));
         assert_eq!(eye_lil.nnz(), 3);
         assert_eq!(eye_lil.get(0, 0), 1.0);
@@ -606,25 +606,25 @@ mod tests {
     #[test]
     fn test_eye_array_k() {
         // Identity with main diagonal (k=0)
-        let eye = eye_array_k::<f64>(3, 3, 0, "csr").unwrap();
+        let eye = eye_array_k::<f64>(3, 3, 0, "csr").expect("Operation failed");
         assert_eq!(eye.get(0, 0), 1.0);
         assert_eq!(eye.get(1, 1), 1.0);
         assert_eq!(eye.get(2, 2), 1.0);
 
         // Superdiagonal (k=1)
-        let superdiag = eye_array_k::<f64>(3, 4, 1, "csr").unwrap();
+        let superdiag = eye_array_k::<f64>(3, 4, 1, "csr").expect("Operation failed");
         assert_eq!(superdiag.get(0, 1), 1.0);
         assert_eq!(superdiag.get(1, 2), 1.0);
         assert_eq!(superdiag.get(2, 3), 1.0);
 
         // Subdiagonal (k=-1)
-        let subdiag = eye_array_k::<f64>(4, 3, -1, "csr").unwrap();
+        let subdiag = eye_array_k::<f64>(4, 3, -1, "csr").expect("Operation failed");
         assert_eq!(subdiag.get(1, 0), 1.0);
         assert_eq!(subdiag.get(2, 1), 1.0);
         assert_eq!(subdiag.get(3, 2), 1.0);
 
         // Try LIL format
-        let eye_lil = eye_array_k::<f64>(3, 3, 0, "lil").unwrap();
+        let eye_lil = eye_array_k::<f64>(3, 3, 0, "lil").expect("Operation failed");
         assert_eq!(eye_lil.get(0, 0), 1.0);
         assert_eq!(eye_lil.get(1, 1), 1.0);
         assert_eq!(eye_lil.get(2, 2), 1.0);
@@ -639,7 +639,7 @@ mod tests {
         let offsets = vec![0, 1];
         let shape = (3, 3);
 
-        let result = diags_array(&diags, &offsets, shape, "csr").unwrap();
+        let result = diags_array(&diags, &offsets, shape, "csr").expect("Operation failed");
         assert_eq!(result.shape(), (3, 3));
         assert_eq!(result.get(0, 0), 1.0);
         assert_eq!(result.get(1, 1), 2.0);
@@ -656,7 +656,7 @@ mod tests {
         let offsets = vec![0, 1, -1];
         let shape = (3, 3);
 
-        let result = diags_array(&diags, &offsets, shape, "csr").unwrap();
+        let result = diags_array(&diags, &offsets, shape, "csr").expect("Operation failed");
         assert_eq!(result.shape(), (3, 3));
         assert_eq!(result.get(0, 0), 1.0);
         assert_eq!(result.get(1, 1), 2.0);
@@ -667,7 +667,7 @@ mod tests {
         assert_eq!(result.get(2, 1), 7.0);
 
         // Try LIL format
-        let result_lil = diags_array(&diags, &offsets, shape, "lil").unwrap();
+        let result_lil = diags_array(&diags, &offsets, shape, "lil").expect("Operation failed");
         assert_eq!(result_lil.shape(), (3, 3));
         assert_eq!(result_lil.get(0, 0), 1.0);
         assert_eq!(result_lil.get(1, 1), 2.0);
@@ -683,7 +683,7 @@ mod tests {
         let shape = (10, 10);
         let density = 0.3;
 
-        let random = random_array::<f64>(shape, density, None, "csr").unwrap();
+        let random = random_array::<f64>(shape, density, None, "csr").expect("Operation failed");
 
         // Check shape and sparsity
         assert_eq!(random.shape(), shape);
@@ -701,11 +701,13 @@ mod tests {
         );
 
         // Test with custom RNG seed
-        let random_seeded = random_array::<f64>(shape, density, Some(42), "csr").unwrap();
+        let random_seeded =
+            random_array::<f64>(shape, density, Some(42), "csr").expect("Operation failed");
         assert_eq!(random_seeded.shape(), shape);
 
         // Test LIL format
-        let random_lil = random_array::<f64>((5, 5), 0.5, Some(42), "lil").unwrap();
+        let random_lil =
+            random_array::<f64>((5, 5), 0.5, Some(42), "lil").expect("Operation failed");
         assert_eq!(random_lil.shape(), (5, 5));
         let nnz_lil = random_lil.nnz();
         let expected_nnz_lil = 25.0 * 0.5;

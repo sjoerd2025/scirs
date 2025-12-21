@@ -44,7 +44,9 @@ fn main() {
     // Create multiple plans in parallel
     println!("Creating multiple FFT plans in parallel...");
     let start = Instant::now();
-    let results = planner.plan_multiple(&plan_specs).unwrap();
+    let results = planner
+        .plan_multiple(&plan_specs)
+        .expect("Operation failed");
     let elapsed = start.elapsed();
 
     println!("Created {} plans in {:?}", results.len(), elapsed);
@@ -69,7 +71,9 @@ fn main() {
 
     // Execute the plan
     let start = Instant::now();
-    executor.execute(&input, &mut output).unwrap();
+    executor
+        .execute(&input, &mut output)
+        .expect("Operation failed");
     let elapsed = start.elapsed();
 
     println!("FFT of size {size} executed in {elapsed:?}");

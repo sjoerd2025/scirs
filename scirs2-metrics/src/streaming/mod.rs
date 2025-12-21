@@ -292,7 +292,8 @@ impl<F: Float> StreamingRegressionMetrics<F> {
         if self.total_samples == 0 {
             F::zero()
         } else {
-            self.sum_squared_errors / F::from(self.total_samples).unwrap()
+            self.sum_squared_errors
+                / F::from(self.total_samples).expect("Failed to convert to float")
         }
     }
 
@@ -306,7 +307,8 @@ impl<F: Float> StreamingRegressionMetrics<F> {
         if self.total_samples == 0 {
             F::zero()
         } else {
-            self.sum_absolute_errors / F::from(self.total_samples).unwrap()
+            self.sum_absolute_errors
+                / F::from(self.total_samples).expect("Failed to convert to float")
         }
     }
 
@@ -315,7 +317,7 @@ impl<F: Float> StreamingRegressionMetrics<F> {
         if self.total_samples == 0 {
             F::zero()
         } else {
-            let n = F::from(self.total_samples).unwrap();
+            let n = F::from(self.total_samples).expect("Failed to convert to float");
             let mean_true = self.sum_true_values / n;
 
             // Total sum of squares
@@ -508,7 +510,7 @@ impl<F: Float> WindowedRegressionMetrics<F> {
             })
             .fold(F::zero(), |acc, x| acc + x);
 
-        sum_squared_errors / F::from(self.predictions.len()).unwrap()
+        sum_squared_errors / F::from(self.predictions.len()).expect("Operation failed")
     }
 
     /// Computes RMSE over the current window
@@ -528,7 +530,7 @@ impl<F: Float> WindowedRegressionMetrics<F> {
             .map(|(true_val, pred_val)| (*true_val - *pred_val).abs())
             .fold(F::zero(), |acc, x| acc + x);
 
-        sum_absolute_errors / F::from(self.predictions.len()).unwrap()
+        sum_absolute_errors / F::from(self.predictions.len()).expect("Operation failed")
     }
 
     /// Gets the current window size (number of predictions in window)
@@ -668,7 +670,9 @@ mod tests {
         let true_labels = vec![1, 0, 1, 0];
         let predlabels = vec![1, 0, 0, 1];
 
-        metrics.update_batch(&true_labels, &predlabels).unwrap();
+        metrics
+            .update_batch(&true_labels, &predlabels)
+            .expect("Operation failed");
 
         assert_eq!(metrics.sample_count(), 4);
         assert_eq!(metrics.accuracy(), 0.5); // 2 correct out of 4

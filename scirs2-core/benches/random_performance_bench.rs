@@ -52,7 +52,7 @@ fn bench_core_rng(c: &mut Criterion) {
 
     // Single f64 generation
     group.bench_function("scirs2_f64", |b| {
-        b.iter(|| black_box(scirs_rng.sample(Uniform::new(0.0, 1.0).unwrap())))
+        b.iter(|| black_box(scirs_rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))))
     });
 
     group.bench_function("std_rand_f64", |b| {
@@ -71,7 +71,7 @@ fn bench_core_rng(c: &mut Criterion) {
         b.iter(|| {
             let mut vec = Vec::with_capacity(batch_size);
             for _ in 0..batch_size {
-                vec.push(scirs_rng.sample(Uniform::new(0.0, 1.0).unwrap()));
+                vec.push(scirs_rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")));
             }
             black_box(vec)
         })
@@ -164,7 +164,7 @@ fn bench_distributions(c: &mut Criterion) {
     // Normal distribution
     group.bench_function("scirs2_normal", |b| {
         b.iter(|| {
-            let normal = Normal::new(0.0, 1.0).unwrap();
+            let normal = Normal::new(0.0, 1.0).expect("Operation failed");
             let mut samples = Vec::with_capacity(sample_size as usize);
             for _ in 0..sample_size {
                 samples.push(rng.sample(normal));
@@ -175,7 +175,7 @@ fn bench_distributions(c: &mut Criterion) {
 
     group.bench_function("std_normal", |b| {
         b.iter(|| {
-            let normal = Normal::new(0.0, 1.0).unwrap();
+            let normal = Normal::new(0.0, 1.0).expect("Operation failed");
             let mut samples = Vec::with_capacity(sample_size as usize);
             for _ in 0..sample_size {
                 samples.push(std_rng.sample(normal));
@@ -187,7 +187,7 @@ fn bench_distributions(c: &mut Criterion) {
     // Beta distribution (advanced)
     group.bench_function("scirs2_beta", |b| {
         b.iter(|| {
-            let beta = Beta::new(2.0, 5.0).unwrap();
+            let beta = Beta::new(2.0, 5.0).expect("Operation failed");
             let mut samples = Vec::with_capacity(sample_size as usize);
             for _ in 0..sample_size {
                 samples.push(beta.sample(&mut rng));
@@ -204,7 +204,7 @@ fn bench_distributions(c: &mut Criterion) {
             vec![0.5, 1.0, 0.3],
             vec![0.2, 0.3, 1.0],
         ];
-        let mvn = MultivariateNormal::new(mean, cov).unwrap();
+        let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
 
         b.iter(|| {
             let mut samples = Vec::with_capacity(sample_size as usize);
@@ -391,7 +391,7 @@ fn bench_statistical_quality(c: &mut Criterion) {
 
         b.iter(|| {
             let samples: Vec<f64> = (0..10000)
-                .map(|_| rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+                .map(|_| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")))
                 .collect();
 
             // Simple uniformity check (bins)
@@ -415,8 +415,8 @@ fn bench_statistical_quality(c: &mut Criterion) {
             let pairs: Vec<(f64, f64)> = (0..5000)
                 .map(|_| {
                     (
-                        rng.sample(Uniform::new(0.0, 1.0).unwrap()),
-                        rng.sample(Uniform::new(0.0, 1.0).unwrap()),
+                        rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")),
+                        rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")),
                     )
                 })
                 .collect();

@@ -126,7 +126,7 @@ fn demonstrate_parallel_file_processing(
 
             // Store results
             {
-                let mut results_guard = results_clone.lock().unwrap();
+                let mut results_guard = results_clone.lock().expect("Operation failed");
                 results_guard.push((
                     filename.to_string(),
                     array_data.nrows(),
@@ -147,7 +147,7 @@ fn demonstrate_parallel_file_processing(
 
     // Display results
     {
-        let results_guard = results.lock().unwrap();
+        let results_guard = results.lock().expect("Operation failed");
         println!("  📊 Processing Results:");
         for (filename, original_rows, read_rows, checksum, time_ms) in &*results_guard {
             println!(
@@ -240,7 +240,7 @@ fn demonstrate_concurrent_format_conversion(
             let task_time = task_start.elapsed();
 
             {
-                let mut results = results_clone.lock().unwrap();
+                let mut results = results_clone.lock().expect("Operation failed");
                 results.push(("Matrix Market → CSV".to_string(), task_time.as_millis()));
             }
 
@@ -280,7 +280,7 @@ fn demonstrate_concurrent_format_conversion(
             let task_time = task_start.elapsed();
 
             {
-                let mut results = results_clone.lock().unwrap();
+                let mut results = results_clone.lock().expect("Operation failed");
                 results.push((
                     "Array → JSON/Binary/MessagePack".to_string(),
                     task_time.as_millis(),
@@ -335,7 +335,7 @@ fn demonstrate_concurrent_format_conversion(
             let task_time = task_start.elapsed();
 
             {
-                let mut results = results_clone.lock().unwrap();
+                let mut results = results_clone.lock().expect("Operation failed");
                 results.push((
                     format!(
                         "CSV → Validation (CRC32: {}, SHA256: {}...)",
@@ -357,7 +357,7 @@ fn demonstrate_concurrent_format_conversion(
 
     // Display results
     {
-        let results_guard = conversion_results.lock().unwrap();
+        let results_guard = conversion_results.lock().expect("Operation failed");
         println!("  🔄 Conversion Results:");
         for (conversion_type, time_ms) in &*results_guard {
             println!("    {}: {}ms", conversion_type, time_ms);
@@ -405,7 +405,7 @@ fn demonstrate_batch_operations(
 
             // Update counter
             {
-                let mut count = count_clone.lock().unwrap();
+                let mut count = count_clone.lock().expect("Operation failed");
                 *count += 1;
             }
 
@@ -422,7 +422,7 @@ fn demonstrate_batch_operations(
     pool.wait_for_completion()?;
 
     let total_time = start_time.elapsed();
-    let final_count = *processed_count.lock().unwrap();
+    let final_count = *processed_count.lock().expect("Operation failed");
 
     println!("  📊 Batch Results:");
     println!("    Tasks processed: {}/{}", final_count, batch_size);
@@ -471,7 +471,7 @@ fn demonstrate_pipeline_processing(
             }
 
             {
-                let mut gen_data = data_clone.lock().unwrap();
+                let mut gen_data = data_clone.lock().expect("Operation failed");
                 gen_data.push((format!("dataset_{}", i), data));
             }
 
@@ -487,7 +487,7 @@ fn demonstrate_pipeline_processing(
     let written_files = Arc::new(Mutex::new(Vec::new()));
 
     {
-        let generated = generated_data.lock().unwrap();
+        let generated = generated_data.lock().expect("Operation failed");
         for (dataset_name, data) in &*generated {
             let file_path = temp_dir.path().join(format!("{}.csv", dataset_name));
             let data_clone = data.clone();
@@ -527,7 +527,7 @@ fn demonstrate_pipeline_processing(
                 csv::write_csv(&file_path, &data_only, headers.as_ref(), None)?;
 
                 {
-                    let mut written = written_clone.lock().unwrap();
+                    let mut written = written_clone.lock().expect("Operation failed");
                     written.push((name_clone, file_path));
                 }
 
@@ -542,7 +542,7 @@ fn demonstrate_pipeline_processing(
 
     // Stage 3: Validation and analysis (mixed CPU/I/O)
     {
-        let written = written_files.lock().unwrap();
+        let written = written_files.lock().expect("Operation failed");
         for (dataset_name, file_path) in &*written {
             let path_clone = file_path.clone();
             let name_clone = dataset_name.clone();
@@ -578,7 +578,7 @@ fn demonstrate_pipeline_processing(
                 let is_valid = checksum == verification_checksum;
 
                 {
-                    let mut results = results_clone.lock().unwrap();
+                    let mut results = results_clone.lock().expect("Operation failed");
                     results.push((name_clone, row_count, average_value, is_valid));
                 }
 
@@ -594,7 +594,7 @@ fn demonstrate_pipeline_processing(
 
     // Display pipeline results
     {
-        let results = pipeline_results.lock().unwrap();
+        let results = pipeline_results.lock().expect("Operation failed");
         println!("  📊 Stage 3: Analysis Results:");
         for (dataset_name, row_count, avg_value, is_valid) in &*results {
             println!(

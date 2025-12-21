@@ -1287,7 +1287,7 @@ mod tests {
 
         // We can't actually run the operation without proper implementation
         // Skip the actual forward pass for now
-        // let output = layer.forward(&input).unwrap();
+        // let output = layer.forward(&input).expect("Operation failed");
 
         // For now, just make sure the layer is created correctly
         assert_eq!(layer.name(), "linear");

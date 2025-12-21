@@ -21,7 +21,7 @@ impl<F: IntegrateFloat> ForwardAD<F> {
     pub fn new(n_vars: usize) -> Self {
         ForwardAD {
             n_vars,
-            tolerance: F::from(1e-12).unwrap(),
+            tolerance: F::from(1e-12).expect("Failed to convert constant to float"),
         }
     }
 
@@ -162,7 +162,7 @@ pub fn example_rosenbrock_gradient<F: IntegrateFloat>() -> IntegrateResult<()> {
     // Rosenbrock function: f(x,y) = (1-x)^2 + 100*(y-x^2)^2
     let rosenbrock = |x: &[Dual<F>]| {
         let one = Dual::constant(F::one());
-        let hundred = Dual::constant(F::from(100.0).unwrap());
+        let hundred = Dual::constant(F::from(100.0).expect("Failed to convert constant to float"));
 
         let term1 = (one - x[0]) * (one - x[0]);
         let term2 = hundred * (x[1] - x[0] * x[0]) * (x[1] - x[0] * x[0]);
@@ -170,7 +170,10 @@ pub fn example_rosenbrock_gradient<F: IntegrateFloat>() -> IntegrateResult<()> {
         term1 + term2
     };
 
-    let x = Array1::from_vec(vec![F::from(1.0).unwrap(), F::from(2.0).unwrap()]);
+    let x = Array1::from_vec(vec![
+        F::from(1.0).expect("Failed to convert constant to float"),
+        F::from(2.0).expect("Failed to convert constant to float"),
+    ]);
     let grad = forward_gradient(rosenbrock, x.view())?;
 
     println!("Gradient at (1,2): {grad:?}");
@@ -215,7 +218,7 @@ impl<F: IntegrateFloat> VectorizedForwardAD<F> {
         VectorizedForwardAD {
             n_vars,
             n_directions,
-            tolerance: F::from(1e-12).unwrap(),
+            tolerance: F::from(1e-12).expect("Failed to convert constant to float"),
         }
     }
 
@@ -329,7 +332,7 @@ mod tests {
         let f = |x: &[Dual<f64>]| x[0] * x[0] + x[1] * x[1];
 
         let x = Array1::from_vec(vec![3.0, 4.0]);
-        let grad = forward_gradient(f, x.view()).unwrap();
+        let grad = forward_gradient(f, x.view()).expect("Operation failed");
 
         // Gradient should be [2x, 2y] = [6, 8]
         assert!((grad[0] - 6.0).abs() < 1e-10);
@@ -342,7 +345,7 @@ mod tests {
         let f = |x: &[Dual<f64>]| vec![x[0] * x[0], x[0] * x[1], x[1] * x[1]];
 
         let x = Array1::from_vec(vec![2.0, 3.0]);
-        let jac = forward_jacobian(f, x.view()).unwrap();
+        let jac = forward_jacobian(f, x.view()).expect("Operation failed");
 
         // Jacobian should be:
         // [[2x, 0 ],

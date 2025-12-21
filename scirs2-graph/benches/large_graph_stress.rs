@@ -154,7 +154,8 @@ fn bench_graph_generation(c: &mut Criterion) {
                 |b, &(n, p)| {
                     b.iter(|| {
                         let mut rng = thread_rng();
-                        let g = generators::erdos_renyi_graph(n, p, &mut rng).unwrap();
+                        let g = generators::erdos_renyi_graph(n, p, &mut rng)
+                            .expect("Operation failed");
                         black_box(g)
                     });
                 },
@@ -168,7 +169,8 @@ fn bench_graph_generation(c: &mut Criterion) {
             |b, &n| {
                 b.iter(|| {
                     let mut rng = thread_rng();
-                    let g = generators::barabasi_albert_graph(n, 3, &mut rng).unwrap();
+                    let g = generators::barabasi_albert_graph(n, 3, &mut rng)
+                        .expect("Operation failed");
                     black_box(g)
                 });
             },
@@ -194,15 +196,15 @@ fn bench_large_algorithms(c: &mut Criterion) {
     let test_graphs = vec![
         ("small", {
             let mut rng = thread_rng();
-            generators::barabasi_albert_graph(100_000, 3, &mut rng).unwrap()
+            generators::barabasi_albert_graph(100_000, 3, &mut rng).expect("Operation failed")
         }),
         ("medium", {
             let mut rng = thread_rng();
-            generators::barabasi_albert_graph(500_000, 3, &mut rng).unwrap()
+            generators::barabasi_albert_graph(500_000, 3, &mut rng).expect("Operation failed")
         }),
         ("large", {
             let mut rng = thread_rng();
-            generators::barabasi_albert_graph(1_000_000, 3, &mut rng).unwrap()
+            generators::barabasi_albert_graph(1_000_000, 3, &mut rng).expect("Operation failed")
         }),
     ];
 
@@ -212,7 +214,7 @@ fn bench_large_algorithms(c: &mut Criterion) {
         // BFS from random node
         group.bench_with_input(BenchmarkId::new("bfs", size_name), graph, |b, g| {
             b.iter(|| {
-                let result = algorithms::breadth_first_search(g, &0).unwrap();
+                let result = algorithms::breadth_first_search(g, &0).expect("Operation failed");
                 black_box(result)
             });
         });
@@ -279,7 +281,8 @@ fn bench_streaming_operations(c: &mut Criterion) {
 
                     for chunk_start in (0..total).step_by(chunk) {
                         let chunk_end = (chunk_start + chunk).min(total);
-                        let chunk_graph = generators::path_graph(chunk_end - chunk_start).unwrap();
+                        let chunk_graph = generators::path_graph(chunk_end - chunk_start)
+                            .expect("Operation failed");
 
                         for i in 0..chunk_graph.node_count() {
                             let degree = chunk_graph.degree(&i);
@@ -715,17 +718,18 @@ mod tests {
         for &size in &graph_sizes {
             println!("\nTesting graph with {} nodes:", size);
 
-            let graph = generators::barabasi_albert_graph(size, 3, None).unwrap();
+            let graph = generators::barabasi_albert_graph(size, 3, None).expect("Operation failed");
 
             // Test serial PageRank
             let start = Instant::now();
-            let _serial_result = algorithms::pagerank(&graph, 0.85, Some(50)).unwrap();
+            let _serial_result =
+                algorithms::pagerank(&graph, 0.85, Some(50)).expect("Operation failed");
             let serial_time = start.elapsed();
 
             // Test parallel PageRank (if available)
             let start = Instant::now();
-            let _parallel_result =
-                measures::parallel_pagerank_centrality(&graph, 0.85, Some(50)).unwrap();
+            let _parallel_result = measures::parallel_pagerank_centrality(&graph, 0.85, Some(50))
+                .expect("Operation failed");
             let parallel_time = start.elapsed();
 
             let speedup = serial_time.as_secs_f64() / parallel_time.as_secs_f64();
@@ -760,7 +764,8 @@ mod tests {
                 break;
             }
 
-            let graph = generators::erdos_renyi_graph(50_000, 0.001, None).unwrap();
+            let graph =
+                generators::erdos_renyi_graph(50_000, 0.001, None).expect("Operation failed");
             graphs.push(graph);
             graph_count += 1;
 
@@ -782,7 +787,7 @@ mod tests {
         println!("Testing operations under memory pressure...");
         for (i, graph) in graphs.iter().enumerate().take(10) {
             let start = Instant::now();
-            let _components = algorithms::connected_components(graph).unwrap();
+            let _components = algorithms::connected_components(graph).expect("Operation failed");
             let duration = start.elapsed();
 
             if i % 5 == 0 {
@@ -810,7 +815,7 @@ mod tests {
         println!("Testing star graph...");
         let star = generators::star_graph(1_000_000);
         let start = Instant::now();
-        let _components = algorithms::connected_components(&star).unwrap();
+        let _components = algorithms::connected_components(&star).expect("Operation failed");
         println!(
             "Star graph (1M nodes) connected_components: {:.3}s",
             start.elapsed().as_secs_f64()
@@ -820,7 +825,7 @@ mod tests {
         println!("Testing path graph...");
         let path = generators::path_graph(1_000_000);
         let start = Instant::now();
-        let _diameter = algorithms::diameter(&path).unwrap();
+        let _diameter = algorithms::diameter(&path).expect("Operation failed");
         println!(
             "Path graph (1M nodes) diameter: {:.3}s",
             start.elapsed().as_secs_f64()
@@ -830,7 +835,7 @@ mod tests {
         println!("Testing complete subgraphs...");
         let complete = generators::complete_graph(10_000);
         let start = Instant::now();
-        let _triangles = algorithms::count_triangles(&complete).unwrap();
+        let _triangles = algorithms::count_triangles(&complete).expect("Operation failed");
         println!(
             "Complete graph (10K nodes) triangle count: {:.3}s",
             start.elapsed().as_secs_f64()
@@ -838,7 +843,8 @@ mod tests {
 
         // Test 4: Disconnected components
         println!("Testing disconnected graph...");
-        let mut disconnected = generators::erdos_renyi_graph(100_000, 0.0001, None).unwrap();
+        let mut disconnected =
+            generators::erdos_renyi_graph(100_000, 0.0001, None).expect("Operation failed");
         // Artificially create multiple components by removing edges
         for i in (0..50_000).step_by(1000) {
             if let Some(neighbors) = disconnected.neighbors(i).ok() {
@@ -849,7 +855,7 @@ mod tests {
         }
 
         let start = Instant::now();
-        let components = algorithms::connected_components(&disconnected).unwrap();
+        let components = algorithms::connected_components(&disconnected).expect("Operation failed");
         println!(
             "Disconnected graph: {} components found in {:.3}s",
             components.len(),

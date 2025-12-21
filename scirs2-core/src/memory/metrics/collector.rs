@@ -155,7 +155,7 @@ impl MemoryMetricsCollector {
 
         // Sample events if sampling rate < 1.0
         if self.config.samplingrate < 1.0 {
-            let mut rng = self.rng.lock().unwrap();
+            let mut rng = self.rng.lock().expect("Operation failed");
             if rng.gen_range(0.0..1.0) > self.config.samplingrate {
                 return;
             }
@@ -168,7 +168,7 @@ impl MemoryMetricsCollector {
 
         // Store the event if we're keeping raw events
         if self.config.max_events > 0 {
-            let mut events = self.events.write().unwrap();
+            let mut events = self.events.write().expect("Operation failed");
             events.push_back(event);
 
             // Limit the number of stored events
@@ -183,27 +183,28 @@ impl MemoryMetricsCollector {
         match event.event_type {
             MemoryEventType::Allocation => {
                 // Update current usage
-                let mut current_usage = self.current_usage.write().unwrap();
+                let mut current_usage = self.current_usage.write().expect("Operation failed");
                 let component_usage = current_usage.entry(event.component.clone()).or_insert(0);
                 *component_usage += event.size;
 
                 // Update peak usage if current > peak
-                let mut peak_usage = self.peak_usage.write().unwrap();
+                let mut peak_usage = self.peak_usage.write().expect("Operation failed");
                 let peak = peak_usage.entry(event.component.clone()).or_insert(0);
                 *peak = (*peak).max(*component_usage);
 
                 // Update allocation count
-                let mut allocation_count = self.allocation_count.write().unwrap();
+                let mut allocation_count = self.allocation_count.write().expect("Operation failed");
                 let count = allocation_count.entry(event.component.clone()).or_insert(0);
                 *count += 1;
 
                 // Update total allocated
-                let mut total_allocated = self.total_allocated.write().unwrap();
+                let mut total_allocated = self.total_allocated.write().expect("Operation failed");
                 let total = total_allocated.entry(event.component.clone()).or_insert(0);
                 *total += event.size;
 
                 // Update average allocation size
-                let mut avg_allocation_size = self.avg_allocation_size.write().unwrap();
+                let mut avg_allocation_size =
+                    self.avg_allocation_size.write().expect("Operation failed");
                 let avg = avg_allocation_size
                     .entry(event.component.clone())
                     .or_insert(0.0);
@@ -211,7 +212,7 @@ impl MemoryMetricsCollector {
             }
             MemoryEventType::Deallocation => {
                 // Update current usage
-                let mut current_usage = self.current_usage.write().unwrap();
+                let mut current_usage = self.current_usage.write().expect("Operation failed");
                 let component_usage = current_usage.entry(event.component.clone()).or_insert(0);
                 *component_usage = component_usage.saturating_sub(event.size);
             }
@@ -224,7 +225,7 @@ impl MemoryMetricsCollector {
                 {
                     let size_diff = event.size as isize - old_size as isize;
 
-                    let mut current_usage = self.current_usage.write().unwrap();
+                    let mut current_usage = self.current_usage.write().expect("Operation failed");
                     let component_usage = current_usage.entry(event.component.clone()).or_insert(0);
 
                     if size_diff > 0 {
@@ -234,7 +235,7 @@ impl MemoryMetricsCollector {
                     }
 
                     // Update peak usage if needed
-                    let mut peak_usage = self.peak_usage.write().unwrap();
+                    let mut peak_usage = self.peak_usage.write().expect("Operation failed");
                     let peak = peak_usage.entry(event.component.clone()).or_insert(0);
                     *peak = (*peak).max(*component_usage);
                 }
@@ -247,25 +248,25 @@ impl MemoryMetricsCollector {
 
     /// Get the current memory usage for a specific component
     pub fn get_current_usage(&self, component: &str) -> usize {
-        let current_usage = self.current_usage.read().unwrap();
+        let current_usage = self.current_usage.read().expect("Operation failed");
         *current_usage.get(component).unwrap_or(&0)
     }
 
     /// Get the peak memory usage for a specific component
     pub fn get_peak_usage(&self, component: &str) -> usize {
-        let peak_usage = self.peak_usage.read().unwrap();
+        let peak_usage = self.peak_usage.read().expect("Operation failed");
         *peak_usage.get(component).unwrap_or(&0)
     }
 
     /// Get total memory usage across all components
     pub fn get_total_current_usage(&self) -> usize {
-        let current_usage = self.current_usage.read().unwrap();
+        let current_usage = self.current_usage.read().expect("Operation failed");
         current_usage.values().sum()
     }
 
     /// Get peak memory usage across all components
     pub fn get_total_peak_usage(&self) -> usize {
-        let peak_usage = self.peak_usage.read().unwrap();
+        let peak_usage = self.peak_usage.read().expect("Operation failed");
 
         // Either sum of component peaks or peak of total current usage
         let component_sum: usize = peak_usage.values().sum();
@@ -277,16 +278,16 @@ impl MemoryMetricsCollector {
 
     /// Get allocation statistics for a component
     pub fn get_allocation_stats(&self, component: &str) -> Option<AllocationStats> {
-        let allocation_count = self.allocation_count.read().unwrap();
+        let allocation_count = self.allocation_count.read().expect("Operation failed");
         let count = *allocation_count.get(component)?;
 
-        let total_allocated = self.total_allocated.read().unwrap();
+        let total_allocated = self.total_allocated.read().expect("Operation failed");
         let total = *total_allocated.get(component)?;
 
-        let avg_allocation_size = self.avg_allocation_size.read().unwrap();
+        let avg_allocation_size = self.avg_allocation_size.read().expect("Operation failed");
         let avg = *avg_allocation_size.get(component)?;
 
-        let peak_usage = self.peak_usage.read().unwrap();
+        let peak_usage = self.peak_usage.read().expect("Operation failed");
         let peak = *peak_usage.get(component)?;
 
         Some(AllocationStats {
@@ -299,11 +300,11 @@ impl MemoryMetricsCollector {
 
     /// Generate a memory report
     pub fn generate_report(&self) -> MemoryReport {
-        let current_usage = self.current_usage.read().unwrap();
-        let peak_usage = self.peak_usage.read().unwrap();
-        let allocation_count = self.allocation_count.read().unwrap();
-        let total_allocated = self.total_allocated.read().unwrap();
-        let avg_allocation_size = self.avg_allocation_size.read().unwrap();
+        let current_usage = self.current_usage.read().expect("Operation failed");
+        let peak_usage = self.peak_usage.read().expect("Operation failed");
+        let allocation_count = self.allocation_count.read().expect("Operation failed");
+        let total_allocated = self.total_allocated.read().expect("Operation failed");
+        let avg_allocation_size = self.avg_allocation_size.read().expect("Operation failed");
 
         let mut component_stats = HashMap::new();
 
@@ -338,28 +339,28 @@ impl MemoryMetricsCollector {
 
     /// Reset all metrics
     pub fn reset(&self) {
-        let mut events = self.events.write().unwrap();
+        let mut events = self.events.write().expect("Operation failed");
         events.clear();
 
-        let mut current_usage = self.current_usage.write().unwrap();
+        let mut current_usage = self.current_usage.write().expect("Operation failed");
         current_usage.clear();
 
-        let mut peak_usage = self.peak_usage.write().unwrap();
+        let mut peak_usage = self.peak_usage.write().expect("Operation failed");
         peak_usage.clear();
 
-        let mut allocation_count = self.allocation_count.write().unwrap();
+        let mut allocation_count = self.allocation_count.write().expect("Operation failed");
         allocation_count.clear();
 
-        let mut total_allocated = self.total_allocated.write().unwrap();
+        let mut total_allocated = self.total_allocated.write().expect("Operation failed");
         total_allocated.clear();
 
-        let mut avg_allocation_size = self.avg_allocation_size.write().unwrap();
+        let mut avg_allocation_size = self.avg_allocation_size.write().expect("Operation failed");
         avg_allocation_size.clear();
     }
 
     /// Get all recorded events
     pub fn get_events(&self) -> Vec<MemoryEvent> {
-        let events = self.events.read().unwrap();
+        let events = self.events.read().expect("Operation failed");
         events.iter().cloned().collect()
     }
 
@@ -473,7 +474,9 @@ mod tests {
         assert_eq!(collector.get_total_current_usage(), 6144);
 
         // Check allocation stats
-        let comp1_stats = collector.get_allocation_stats("Component1").unwrap();
+        let comp1_stats = collector
+            .get_allocation_stats("Component1")
+            .expect("Operation failed");
         assert_eq!(comp1_stats.count, 2);
         assert_eq!(comp1_stats.total_bytes, 3072);
         assert_eq!(comp1_stats.peak_usage, 3072);
@@ -484,7 +487,10 @@ mod tests {
         assert_eq!(report.total_allocation_count, 3);
 
         // Check component stats in report
-        let comp1_report = report.component_stats.get("Component1").unwrap();
+        let comp1_report = report
+            .component_stats
+            .get("Component1")
+            .expect("Operation failed");
         assert_eq!(comp1_report.current_usage, 2048);
         assert_eq!(comp1_report.allocation_count, 2);
     }

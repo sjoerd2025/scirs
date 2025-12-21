@@ -76,7 +76,7 @@ impl Default for MeanShiftParams {
 ///     convergence_threshold: 0.5,
 /// };
 ///
-/// let labels = mean_shift(&DynamicImage::ImageRgb8(img), &params).unwrap();
+/// let labels = mean_shift(&DynamicImage::ImageRgb8(img), &params).expect("Operation failed");
 /// assert_eq!(labels.dim(), (10, 10));
 /// ```
 #[allow(dead_code)]
@@ -444,7 +444,7 @@ mod tests {
         let result = mean_shift(&img, &params);
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Operation failed");
         assert_eq!(labels.dim(), (20, 20));
     }
 

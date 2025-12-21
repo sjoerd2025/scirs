@@ -461,9 +461,9 @@ impl<T: Clone> Ord for EntryWithDistance<T> {
 /// ];
 ///
 /// // Build R-tree with points
-/// let mut rtree = RTree::new(2, 4, 8).unwrap();
+/// let mut rtree = RTree::new(2, 4, 8).expect("Operation failed");
 /// for (i, point) in points.rows().into_iter().enumerate() {
-///     rtree.insert(point.to_owned(), i).unwrap();
+///     rtree.insert(point.to_owned(), i).expect("Operation failed");
 /// }
 ///
 /// // Search for points within a range
@@ -473,14 +473,14 @@ impl<T: Clone> Ord for EntryWithDistance<T> {
 /// // The views need to be passed explicitly in the actual code
 /// let query_min_view = query_min.view();
 /// let query_max_view = query_max.view();
-/// let results = rtree.search_range(&query_min_view, &query_max_view).unwrap();
+/// let results = rtree.search_range(&query_min_view, &query_max_view).expect("Operation failed");
 ///
 /// println!("Found {} points in range", results.len());
 ///
 /// // Find the nearest neighbors to a point
 /// let query_point = array![2.5, 2.5];
 /// let query_point_view = query_point.view();
-/// let nearest = rtree.nearest(&query_point_view, 2).unwrap();
+/// let nearest = rtree.nearest(&query_point_view, 2).expect("Operation failed");
 ///
 /// println!("Nearest points: {:?}", nearest);
 /// ```
@@ -608,7 +608,7 @@ mod tests {
         let min = array![0.0, 0.0, 0.0];
         let max = array![1.0, 2.0, 3.0];
 
-        let rect = Rectangle::new(min.clone(), max.clone()).unwrap();
+        let rect = Rectangle::new(min.clone(), max.clone()).expect("Operation failed");
 
         assert_eq!(rect.ndim(), 3);
         assert_eq!(rect.min, min);
@@ -634,7 +634,7 @@ mod tests {
         let min = array![0.0, 0.0, 0.0];
         let max = array![1.0, 2.0, 3.0];
 
-        let rect = Rectangle::new(min, max).unwrap();
+        let rect = Rectangle::new(min, max).expect("Operation failed");
 
         assert_relative_eq!(rect.area(), 6.0);
         assert_relative_eq!(rect.margin(), 12.0);
@@ -645,19 +645,25 @@ mod tests {
         let min = array![0.0, 0.0];
         let max = array![1.0, 1.0];
 
-        let rect = Rectangle::new(min, max).unwrap();
+        let rect = Rectangle::new(min, max).expect("Operation failed");
 
         // Inside
         let point_inside = array![0.5, 0.5];
-        assert!(rect.contains_point(&point_inside.view()).unwrap());
+        assert!(rect
+            .contains_point(&point_inside.view())
+            .expect("Operation failed"));
 
         // On boundary
         let point_boundary = array![0.0, 0.5];
-        assert!(rect.contains_point(&point_boundary.view()).unwrap());
+        assert!(rect
+            .contains_point(&point_boundary.view())
+            .expect("Operation failed"));
 
         // Outside
         let point_outside = array![2.0, 0.5];
-        assert!(!rect.contains_point(&point_outside.view()).unwrap());
+        assert!(!rect
+            .contains_point(&point_outside.view())
+            .expect("Operation failed"));
 
         // Dimension mismatch
         let point_dim_mismatch = array![0.5, 0.5, 0.5];
@@ -666,37 +672,38 @@ mod tests {
 
     #[test]
     fn test_rectangle_intersects() {
-        let rect1 = Rectangle::new(array![0.0, 0.0], array![2.0, 2.0]).unwrap();
+        let rect1 = Rectangle::new(array![0.0, 0.0], array![2.0, 2.0]).expect("Operation failed");
 
         // Overlap
-        let rect2 = Rectangle::new(array![1.0, 1.0], array![3.0, 3.0]).unwrap();
-        assert!(rect1.intersects(&rect2).unwrap());
+        let rect2 = Rectangle::new(array![1.0, 1.0], array![3.0, 3.0]).expect("Operation failed");
+        assert!(rect1.intersects(&rect2).expect("Operation failed"));
 
         // Touch
-        let rect3 = Rectangle::new(array![2.0, 0.0], array![3.0, 2.0]).unwrap();
-        assert!(rect1.intersects(&rect3).unwrap());
+        let rect3 = Rectangle::new(array![2.0, 0.0], array![3.0, 2.0]).expect("Operation failed");
+        assert!(rect1.intersects(&rect3).expect("Operation failed"));
 
         // No intersection
-        let rect4 = Rectangle::new(array![3.0, 3.0], array![4.0, 4.0]).unwrap();
-        assert!(!rect1.intersects(&rect4).unwrap());
+        let rect4 = Rectangle::new(array![3.0, 3.0], array![4.0, 4.0]).expect("Operation failed");
+        assert!(!rect1.intersects(&rect4).expect("Operation failed"));
 
         // Dimension mismatch
-        let rect5 = Rectangle::new(array![0.0, 0.0, 0.0], array![1.0, 1.0, 1.0]).unwrap();
+        let rect5 =
+            Rectangle::new(array![0.0, 0.0, 0.0], array![1.0, 1.0, 1.0]).expect("Operation failed");
         assert!(rect1.intersects(&rect5).is_err());
     }
 
     #[test]
     fn test_rectangle_enlarge() {
-        let rect1 = Rectangle::new(array![1.0, 1.0], array![2.0, 2.0]).unwrap();
-        let rect2 = Rectangle::new(array![0.0, 0.0], array![3.0, 1.5]).unwrap();
+        let rect1 = Rectangle::new(array![1.0, 1.0], array![2.0, 2.0]).expect("Operation failed");
+        let rect2 = Rectangle::new(array![0.0, 0.0], array![3.0, 1.5]).expect("Operation failed");
 
-        let enlarged = rect1.enlarge(&rect2).unwrap();
+        let enlarged = rect1.enlarge(&rect2).expect("Operation failed");
 
         assert_eq!(enlarged.min, array![0.0, 0.0]);
         assert_eq!(enlarged.max, array![3.0, 2.0]);
 
         // Calculate enlargement area
-        let enlargement = rect1.enlargement_area(&rect2).unwrap();
+        let enlargement = rect1.enlargement_area(&rect2).expect("Operation failed");
         let original_area = rect1.area();
         let enlarged_area = enlarged.area();
 
@@ -705,38 +712,45 @@ mod tests {
 
     #[test]
     fn test_rectangle_distance() {
-        let rect = Rectangle::new(array![1.0, 1.0], array![3.0, 3.0]).unwrap();
+        let rect = Rectangle::new(array![1.0, 1.0], array![3.0, 3.0]).expect("Operation failed");
 
         // Inside: distance should be 0
         let point_inside = array![2.0, 2.0];
         assert_relative_eq!(
-            rect.min_distance_to_point(&point_inside.view()).unwrap(),
+            rect.min_distance_to_point(&point_inside.view())
+                .expect("Operation failed"),
             0.0
         );
 
         // Outside
         let point_outside = array![0.0, 0.0];
         assert_relative_eq!(
-            rect.min_distance_to_point(&point_outside.view()).unwrap(),
+            rect.min_distance_to_point(&point_outside.view())
+                .expect("Operation failed"),
             2.0_f64.sqrt()
         );
 
         // Other rectangle - no intersection
-        let rect2 = Rectangle::new(array![4.0, 4.0], array![5.0, 5.0]).unwrap();
+        let rect2 = Rectangle::new(array![4.0, 4.0], array![5.0, 5.0]).expect("Operation failed");
         assert_relative_eq!(
-            rect.min_distance_to_rectangle(&rect2).unwrap(),
+            rect.min_distance_to_rectangle(&rect2)
+                .expect("Operation failed"),
             2.0_f64.sqrt()
         );
 
         // Other rectangle - intersection (distance = 0)
-        let rect3 = Rectangle::new(array![2.0, 2.0], array![4.0, 4.0]).unwrap();
-        assert_relative_eq!(rect.min_distance_to_rectangle(&rect3).unwrap(), 0.0);
+        let rect3 = Rectangle::new(array![2.0, 2.0], array![4.0, 4.0]).expect("Operation failed");
+        assert_relative_eq!(
+            rect.min_distance_to_rectangle(&rect3)
+                .expect("Operation failed"),
+            0.0
+        );
     }
 
     #[test]
     fn test_rtree_creation() {
         // Valid parameters
-        let rtree: RTree<usize> = RTree::new(2, 2, 5).unwrap();
+        let rtree: RTree<usize> = RTree::new(2, 2, 5).expect("Operation failed");
         assert_eq!(rtree.ndim(), 2);
         assert_eq!(rtree.size(), 0);
         assert_eq!(rtree.height(), 1);

@@ -509,7 +509,7 @@ impl HierarchicalModelResults {
             let std = samples.variance().sqrt();
 
             let mut sorted_samples = samples.to_vec();
-            sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_samples.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             let q025_idx = (0.025 * sorted_samples.len() as f64) as usize;
             let q975_idx = (0.975 * sorted_samples.len() as f64) as usize;
@@ -536,7 +536,7 @@ impl HierarchicalModelResults {
             let std = samples.variance().sqrt();
 
             let mut sorted_samples = samples.to_vec();
-            sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_samples.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             let q025_idx = (0.025 * sorted_samples.len() as f64) as usize;
             let q975_idx = (0.975 * sorted_samples.len() as f64) as usize;

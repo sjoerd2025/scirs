@@ -90,7 +90,7 @@ pub struct MonteCarloResult<F: IntegrateFloat> {
 ///     |x: ArrayView1<f64>| x[0] * x[0] + x[1] * x[1],
 ///     &[(0.0, 1.0), (0.0, 1.0)],
 ///     Some(options)
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Should be close to 2/3, but Monte Carlo has statistical error
 /// assert!((result.value - 2.0/3.0).abs() < 0.01);
@@ -140,7 +140,7 @@ where
     // Create uniform distributions for each dimension
     let distributions: Vec<_> = ranges
         .iter()
-        .map(|&(a, b)| Uniform::new_inclusive(a, b).unwrap())
+        .map(|&(a, b)| Uniform::new_inclusive(a, b).expect("Operation failed"))
         .collect();
 
     // Prepare to store samples
@@ -194,17 +194,18 @@ where
     }
 
     // Compute the mean value and scale by the volume
-    let mean = sum / F::from_usize(n_actual_samples).unwrap();
+    let mean = sum / F::from_usize(n_actual_samples).expect("Operation failed");
     let integral_value = mean * volume;
 
     // Estimate the error based on the specified method
     let std_error = match opts.error_method {
         ErrorEstimationMethod::StandardError => {
             // Standard error of the mean using sample variance
-            let variance = (sum_sq - sum * sum / F::from_usize(n_actual_samples).unwrap())
-                / F::from_usize(n_actual_samples - 1).unwrap();
+            let variance = (sum_sq
+                - sum * sum / F::from_usize(n_actual_samples).expect("Operation failed"))
+                / F::from_usize(n_actual_samples - 1).expect("Operation failed");
 
-            (variance / F::from_usize(n_actual_samples).unwrap()).sqrt() * volume
+            (variance / F::from_usize(n_actual_samples).expect("Operation failed")).sqrt() * volume
         }
         ErrorEstimationMethod::BatchMeans => {
             // Divide samples into batches and compute variance of batch means
@@ -212,10 +213,11 @@ where
             // In a real implementation, we would compute batch means from the original samples
 
             // For now, we'll just use a simplified estimate based on the standard error
-            let variance = (sum_sq - sum * sum / F::from_usize(n_actual_samples).unwrap())
-                / F::from_usize(n_actual_samples - 1).unwrap();
+            let variance = (sum_sq
+                - sum * sum / F::from_usize(n_actual_samples).expect("Operation failed"))
+                / F::from_usize(n_actual_samples - 1).expect("Operation failed");
 
-            (variance / F::from_usize(n_actual_samples).unwrap()).sqrt() * volume
+            (variance / F::from_usize(n_actual_samples).expect("Operation failed")).sqrt() * volume
         }
     };
 
@@ -283,7 +285,7 @@ where
 ///     uniform_sampler,
 ///     &[(0.0, 1.0)],
 ///     Some(options)
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert!((result.value - 1.0/3.0).abs() < 0.01);
 /// ```
@@ -347,7 +349,7 @@ where
 
         // Avoid division by zero or very small values that could lead to instability
         // Use a higher threshold than just epsilon to avoid numerical instability
-        if gx <= F::from_f64(1e-10).unwrap() {
+        if gx <= F::from_f64(1e-10).expect("Operation failed") {
             continue;
         }
 
@@ -378,12 +380,13 @@ where
     }
 
     // Calculate the mean and standard error using valid samples
-    let valid_samples_f = F::from_usize(valid_samples).unwrap();
+    let valid_samples_f = F::from_usize(valid_samples).expect("Operation failed");
     let mean = sum / valid_samples_f;
 
     // Compute the standard error
     let variance = if valid_samples > 1 {
-        (sum_sq - sum * sum / valid_samples_f) / F::from_usize(valid_samples - 1).unwrap()
+        (sum_sq - sum * sum / valid_samples_f)
+            / F::from_usize(valid_samples - 1).expect("Operation failed")
     } else {
         // If we have only one valid sample, we can't estimate variance
         F::zero()
@@ -433,7 +436,7 @@ where
 ///     &[(-2.0, 2.0), (-2.0, 2.0)],
 ///     Some(options),
 ///     Some(4)
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn monte_carlo_parallel<F, Func>(
@@ -498,7 +501,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = monte_carlo(|x| x[0] * x[0], &[(0.0, 1.0)], Some(options)).unwrap();
+        let result =
+            monte_carlo(|x| x[0] * x[0], &[(0.0, 1.0)], Some(options)).expect("Operation failed");
 
         // Monte Carlo is a statistical method, so we use a loose tolerance
         assert!(is_close_enough(result.value, 1.0 / 3.0, 0.01));
@@ -519,7 +523,7 @@ mod tests {
             &[(0.0, 1.0), (0.0, 1.0)],
             Some(options),
         )
-        .unwrap();
+        .expect("Failed to integrate");
 
         assert!(is_close_enough(result.value, 2.0 / 3.0, 0.01));
     }
@@ -535,7 +539,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = monte_carlo(|x| x[0] * x[0], &[(0.0, 1.0)], Some(options)).unwrap();
+        let result =
+            monte_carlo(|x| x[0] * x[0], &[(0.0, 1.0)], Some(options)).expect("Operation failed");
 
         assert!(is_close_enough(result.value, 1.0 / 3.0, 0.01));
 
@@ -553,7 +558,7 @@ mod tests {
         let sampler = |rng: &mut StdRng, dims: usize| {
             let mut point = Array1::zeros(dims);
             // Use a normal distribution centered at 0 with std dev 1
-            let normal = scirs2_core::random::Normal::new(0.0, 1.0).unwrap();
+            let normal = scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed");
 
             for i in 0..dims {
                 // Sample and truncate to the integration range [0, 3]
@@ -608,7 +613,7 @@ mod tests {
             &[(0.0, 3.0)],
             Some(options),
         )
-        .unwrap();
+        .expect("Failed to integrate");
 
         // Check result within reasonable error bounds
         assert!(is_close_enough(result.value, exact_value, 0.1));
@@ -629,7 +634,8 @@ mod tests {
         };
 
         // Test with 2 workers
-        let result = monte_carlo_parallel(f, &ranges, Some(options), Some(2)).unwrap();
+        let result =
+            monte_carlo_parallel(f, &ranges, Some(options), Some(2)).expect("Operation failed");
 
         // Expected integral of x^2 over [0,1] is 1/3
         assert!(is_close_enough(result.value, 1.0 / 3.0, 0.1));

@@ -18,6 +18,12 @@ use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Advanced-advanced quantum-inspired statistical analyzer
 pub struct AdvancedQuantumAnalyzer<F> {
     /// Quantum-inspired configuration
@@ -744,10 +750,10 @@ where
         let _n_samples_ = data.shape()[0];
 
         // Simplified QAE implementation
-        let target_amplitude = F::from(0.3).unwrap(); // Would compute actual amplitude
+        let target_amplitude = const_f64::<F>(0.3); // Would compute actual amplitude
         let confidence_interval = (
-            target_amplitude - F::from(0.05).unwrap(),
-            target_amplitude + F::from(0.05).unwrap(),
+            target_amplitude - const_f64::<F>(0.05),
+            target_amplitude + const_f64::<F>(0.05),
         );
 
         // Estimate oracle calls based on target accuracy
@@ -775,16 +781,18 @@ where
 
         // Generate synthetic eigenvalues (decreasing order)
         for i in 0..num_components {
-            eigenvalues[i] = F::from(1.0 / (i + 1) as f64).unwrap();
-            explained_variance_ratio[i] = eigenvalues[i] / F::from(num_components).unwrap();
+            eigenvalues[i] = F::from(1.0 / (i + 1) as f64).expect("Failed to convert to float");
+            explained_variance_ratio[i] =
+                eigenvalues[i] / F::from(num_components).expect("Failed to convert to float");
 
             // Generate random eigenvectors (would use actual quantum algorithm)
             for j in 0..n_features {
-                eigenvectors[[j, i]] = F::from((i + j) as f64 / n_features as f64).unwrap();
+                eigenvectors[[j, i]] = F::from((i + j) as f64 / n_features as f64)
+                    .expect("Failed to convert to float");
             }
         }
 
-        let reconstruction_error = F::from(0.1).unwrap(); // Simplified error estimate
+        let reconstruction_error = const_f64::<F>(0.1); // Simplified error estimate
 
         Ok(QPCAResults {
             eigenvalues,
@@ -805,8 +813,8 @@ where
         let decision_function = Array1::zeros(n_samples_);
 
         // Simplified metrics
-        let accuracy = F::from(0.85).unwrap();
-        let margin_width = F::from(1.5).unwrap();
+        let accuracy = const_f64::<F>(0.85);
+        let margin_width = const_f64::<F>(1.5);
 
         Ok(QSVMResults {
             support_vectors,
@@ -832,13 +840,13 @@ where
         }
 
         let quality_metrics = ClusteringQualityMetrics {
-            silhouette_score: F::from(0.7).unwrap(),
-            calinski_harabasz_index: F::from(100.0).unwrap(),
-            davies_bouldin_index: F::from(0.5).unwrap(),
-            quantum_coherence: F::from(0.8).unwrap(),
+            silhouette_score: const_f64::<F>(0.7),
+            calinski_harabasz_index: const_f64::<F>(100.0),
+            davies_bouldin_index: const_f64::<F>(0.5),
+            quantum_coherence: const_f64::<F>(0.8),
         };
 
-        let final_energy = F::from(-50.0).unwrap(); // Ground state energy
+        let final_energy = const_f64::<F>(-50.0); // Ground state energy
 
         Ok(QClusteringResults {
             cluster_labels,
@@ -856,13 +864,14 @@ where
         let _n_features = data.ncols();
 
         // Simplified VQE for matrix eigenvalue problem
-        let min_eigenvalue = F::from(-1.5).unwrap(); // Lowest eigenvalue found
+        let min_eigenvalue = const_f64::<F>(-1.5); // Lowest eigenvalue found
         let optimal_parameters = Array1::ones(self.config.vqe_config.max_iterations);
         let mut convergence_history = Array1::zeros(self.config.vqe_config.max_iterations);
 
         // Generate convergence curve
         for i in 0..self.config.vqe_config.max_iterations {
-            convergence_history[i] = min_eigenvalue + F::from(0.1 * (-(i as f64)).exp()).unwrap();
+            convergence_history[i] = min_eigenvalue
+                + F::from(0.1 * (-(i as f64)).exp()).expect("Failed to convert to float");
         }
 
         Ok(VQEResults {
@@ -870,7 +879,7 @@ where
             optimal_parameters,
             convergence_history,
             iterations: self.config.vqe_config.max_iterations,
-            gradient_norm: F::from(1e-6).unwrap(),
+            gradient_norm: const_f64::<F>(1e-6),
         })
     }
 
@@ -894,8 +903,8 @@ where
             compressed_tensors.push(tensor);
         }
 
-        let compression_ratio = F::from(0.1).unwrap(); // 10x compression
-        let reconstruction_fidelity = F::from(0.95).unwrap();
+        let compression_ratio = const_f64::<F>(0.1); // 10x compression
+        let reconstruction_fidelity = const_f64::<F>(0.95);
         let bond_dimensions =
             Array1::from_elem(num_tensors, self.config.tensor_network_config.max_bond_dim);
 
@@ -923,10 +932,11 @@ where
 
         // Generate training loss curve
         for i in 0..epochs {
-            loss_history[i] = F::from((-(i as f64) / 10.0).exp()).unwrap();
+            loss_history[i] =
+                F::from((-(i as f64) / 10.0).exp()).expect("Failed to convert to float");
         }
 
-        let validation_accuracy = F::from(0.92).unwrap();
+        let validation_accuracy = const_f64::<F>(0.92);
         let circuit_depth = self.config.qnn_config.quantum_layers.len();
 
         Ok(QNNResults {
@@ -975,12 +985,14 @@ where
             QuantumKernelType::QuantumFeatureKernel => {
                 // Feature map kernel
                 let feature_overlap = F::simd_dot(x1, x2);
-                Ok((feature_overlap / F::from(x1.len()).unwrap()).exp())
+                Ok((feature_overlap
+                    / F::from(x1.len()).expect("Failed to convert length to float"))
+                .exp())
             }
             QuantumKernelType::SwapTestKernel => {
                 // Swap test based kernel
                 let overlap = F::simd_dot(x1, x2);
-                Ok((F::one() + overlap) / F::from(2.0).unwrap())
+                Ok((F::one() + overlap) / const_f64::<F>(2.0))
             }
         }
     }
@@ -1006,13 +1018,14 @@ where
 
         for run in 0..num_runs {
             let temperature = temp_max
-                - (temp_max - temp_min) * F::from(run).unwrap() / F::from(num_runs).unwrap();
+                - (temp_max - temp_min) * F::from(run).expect("Failed to convert to float")
+                    / F::from(num_runs).expect("Failed to convert to float");
 
             // Quantum annealing step (simplified)
             for i in 0..current_state.len() {
                 let old_value = current_state[i];
-                let perturbation = F::from(0.1).unwrap()
-                    * (F::from(2.0).unwrap() * F::from(0.5).unwrap() - F::one());
+                let perturbation =
+                    const_f64::<F>(0.1) * (const_f64::<F>(2.0) * const_f64::<F>(0.5) - F::one());
                 current_state[i] = old_value + perturbation;
 
                 let new_energy = objective_function(&current_state.view());
@@ -1025,7 +1038,7 @@ where
                     (-delta_energy / temperature).exp()
                 };
 
-                if F::from(0.5).unwrap() < accept_prob {
+                if const_f64::<F>(0.5) < accept_prob {
                     // Would use proper random number
                     best_energy = new_energy;
                     best_state = current_state.clone();
@@ -1049,17 +1062,17 @@ where
             circuit_depth: 5,
             qae_config: QuantumAmplitudeEstimationConfig {
                 evaluation_qubits: 3,
-                target_accuracy: F::from(0.01).unwrap(),
+                target_accuracy: const_f64::<F>(0.01),
                 max_iterations: 100,
                 use_mlae: true,
                 use_iqae: false,
             },
             qpca_config: QuantumPCAConfig {
                 num_components: 5,
-                matrix_exp_precision: F::from(1e-6).unwrap(),
+                matrix_exp_precision: const_f64::<F>(1e-6),
                 use_variational: true,
                 block_encoding: BlockEncodingConfig {
-                    precision: F::from(1e-8).unwrap(),
+                    precision: const_f64::<F>(1e-8),
                     alpha: F::one(),
                     ancilla_qubits: 2,
                 },
@@ -1079,10 +1092,10 @@ where
                 num_clusters: 3,
                 annealing_config: QuantumAnnealingConfig {
                     annealing_schedule: AnnealingSchedule::Linear {
-                        duration: F::from(100.0).unwrap(),
+                        duration: const_f64::<F>(100.0),
                     },
                     num_runs: 100,
-                    temperature_range: (F::from(0.01).unwrap(), F::from(10.0).unwrap()),
+                    temperature_range: (const_f64::<F>(0.01), const_f64::<F>(10.0)),
                     use_simulated_fallback: true,
                 },
                 use_qaoa: false,
@@ -1090,14 +1103,14 @@ where
             vqe_config: VQEConfig {
                 ansatz_type: VQEAnsatz::HardwareEfficient { layers: 3 },
                 optimizer: ClassicalOptimizer::COBYLA,
-                tolerance: F::from(1e-6).unwrap(),
+                tolerance: const_f64::<F>(1e-6),
                 max_iterations: 1000,
                 measurement_shots: 1024,
             },
             tensor_network_config: TensorNetworkConfig {
                 network_type: TensorNetworkType::MPS,
                 max_bond_dim: 50,
-                truncation_threshold: F::from(1e-12).unwrap(),
+                truncation_threshold: const_f64::<F>(1e-12),
                 use_gpu: false,
                 contraction_strategy: ContractionStrategy::Optimal,
             },
@@ -1119,21 +1132,21 @@ where
                 },
                 classical_layers: vec![],
                 training_config: QuantumTrainingConfig {
-                    learning_rate: F::from(0.01).unwrap(),
+                    learning_rate: const_f64::<F>(0.01),
                     epochs: 100,
                     batchsize: 32,
                     use_parameter_shift: true,
-                    regularization: F::from(0.001).unwrap(),
+                    regularization: const_f64::<F>(0.001),
                 },
             },
             noise_model: NoiseModel {
                 gate_errors: HashMap::new(),
                 decoherence_times: DecoherenceConfig {
-                    t1: F::from(100.0).unwrap(), // microseconds
-                    t2: F::from(50.0).unwrap(),
-                    t2_star: F::from(30.0).unwrap(),
+                    t1: const_f64::<F>(100.0), // microseconds
+                    t2: const_f64::<F>(50.0),
+                    t2_star: const_f64::<F>(30.0),
                 },
-                readout_errors: F::from(0.01).unwrap(),
+                readout_errors: const_f64::<F>(0.01),
                 enable_noise: false,
             },
         }
@@ -1206,7 +1219,7 @@ where
         let values: Vec<F> = _samples
             .outer_iter()
             .into_par_iter()
-            .map(|sample| function(sample.as_slice().unwrap()))
+            .map(|sample| function(sample.as_slice().expect("Failed to convert to slice")))
             .collect();
 
         // Compute integral estimate with quantum variance reduction
@@ -1219,7 +1232,8 @@ where
             variance,
             num_samples,
             quantum_speedup,
-            convergence_rate: F::from(1.0 / (num_samples as f64).sqrt()).unwrap(),
+            convergence_rate: F::from(1.0 / (num_samples as f64).sqrt())
+                .expect("Failed to convert convergence rate to float"),
         })
     }
 
@@ -1236,7 +1250,7 @@ where
         for i in 0..num_samples {
             for (j, (lower, upper)) in bounds.iter().enumerate() {
                 // Quantum-inspired quasi-random sequence
-                let t = F::from(i as f64 / num_samples as f64).unwrap();
+                let t = F::from(i as f64 / num_samples as f64).expect("Failed to convert to float");
                 let quasi_random = self.quantum_quasi_random(t, j);
                 samples[[i, j]] = *lower + (*upper - *lower) * quasi_random;
             }
@@ -1248,14 +1262,17 @@ where
     /// Quantum-inspired quasi-random number generation
     fn quantum_quasi_random(&self, t: F, dim: usize) -> F {
         // Simplified van der Corput sequence with quantum enhancement
-        let _phi = F::from((1.0 + 5.0_f64.sqrt()) / 2.0).unwrap(); // Golden ratio
-        let base = F::from(2.0 + dim as f64).unwrap();
+        let _phi = F::from((1.0 + 5.0_f64.sqrt()) / 2.0).expect("Failed to convert to float"); // Golden ratio
+        let base = F::from(2.0 + dim as f64).expect("Failed to convert to float");
 
         // Quantum-inspired modification using Hadamard-like transformation
-        let quantum_phase = (t * F::from(std::f64::consts::PI).unwrap()).sin();
+        let quantum_phase =
+            (t * F::from(std::f64::consts::PI).expect("Failed to convert to float")).sin();
         let classical_vdc = self.van_der_corput(t.to_f64().unwrap_or(0.5), 2 + dim);
 
-        let quantum_enhanced = (F::from(classical_vdc).unwrap() + quantum_phase) % F::one();
+        let quantum_enhanced = (F::from(classical_vdc).expect("Failed to convert to float")
+            + quantum_phase)
+            % F::one();
         quantum_enhanced.abs()
     }
 
@@ -1281,28 +1298,31 @@ where
             .map(|(lower, upper)| *upper - *lower)
             .fold(F::one(), |acc, x| acc * x);
 
-        let mean_value = values.iter().copied().sum::<F>() / F::from(values.len()).unwrap();
+        let mean_value = values.iter().copied().sum::<F>()
+            / F::from(values.len()).expect("Failed to convert length to float");
         Ok(volume * mean_value)
     }
 
     /// Compute quantum-enhanced variance estimate
     fn compute_quantum_variance(&self, values: &[F], mean: F) -> StatsResult<F> {
-        let n = F::from(values.len()).unwrap();
+        let n = F::from(values.len()).expect("Failed to convert length to float");
         let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / (n - F::one());
 
         // Quantum error correction reduces variance
-        let quantum_correction = F::from(0.8).unwrap(); // Simplified correction factor
+        let quantum_correction = const_f64::<F>(0.8); // Simplified correction factor
         Ok(variance * quantum_correction)
     }
 
     /// Estimate quantum speedup factor
     fn estimate_quantum_speedup(&self, dimension: usize, numsamples: usize) -> F {
         // Theoretical quantum speedup for Monte Carlo is quadratic
-        let classical_error = F::from(1.0 / (numsamples as f64).sqrt()).unwrap();
-        let quantum_error = F::from(1.0 / numsamples as f64).unwrap();
+        let classical_error =
+            F::from(1.0 / (numsamples as f64).sqrt()).expect("Failed to convert to float");
+        let quantum_error = F::from(1.0 / numsamples as f64).expect("Failed to convert to float");
 
         // Account for dimension-dependent effects
-        let dimension_factor = F::from((dimension as f64).ln()).unwrap();
+        let dimension_factor =
+            F::from((dimension as f64).ln()).expect("Failed to convert to float");
         classical_error / (quantum_error * dimension_factor)
     }
 
@@ -1373,10 +1393,10 @@ where
         for i in 0..num_latent {
             for j in 0..num_features {
                 // Quantum superposition-inspired initialization
-                let phase =
-                    F::from(2.0 * std::f64::consts::PI * i as f64 / num_latent as f64).unwrap();
-                means[[i, j]] = (phase.cos() + phase.sin()) / F::from(2.0).unwrap();
-                log_vars[[i, j]] = F::from(-2.0).unwrap(); // Small initial variance
+                let phase = F::from(2.0 * std::f64::consts::PI * i as f64 / num_latent as f64)
+                    .expect("Failed to convert to float");
+                means[[i, j]] = (phase.cos() + phase.sin()) / const_f64::<F>(2.0);
+                log_vars[[i, j]] = const_f64::<F>(-2.0); // Small initial variance
             }
         }
 
@@ -1397,7 +1417,7 @@ where
         let kl_divergence = self.compute_quantum_kl_divergence(params)?;
 
         // Quantum enhancement reduces the effective KL divergence
-        let quantum_kl_reduction = F::from(0.9).unwrap();
+        let quantum_kl_reduction = const_f64::<F>(0.9);
         Ok(-reconstruction_loss - quantum_kl_reduction * kl_divergence)
     }
 
@@ -1420,7 +1440,7 @@ where
             }
         }
 
-        Ok(total_loss / F::from(n_samples_ * n_features).unwrap())
+        Ok(total_loss / F::from(n_samples_ * n_features).expect("Failed to convert to float"))
     }
 
     /// Compute quantum-enhanced KL divergence
@@ -1438,7 +1458,7 @@ where
                 let var = log_var.exp();
 
                 // KL divergence between Gaussian and standard normal
-                let kl_component = (var + mean * mean - F::one() - log_var) / F::from(2.0).unwrap();
+                let kl_component = (var + mean * mean - F::one() - log_var) / const_f64::<F>(2.0);
                 kl_div = kl_div + kl_component;
             }
         }
@@ -1456,7 +1476,7 @@ where
         let mut grad_means = Array2::zeros((num_latent, num_features));
         let mut grad_log_vars = Array2::zeros((num_latent, num_features));
 
-        let shift = F::from(std::f64::consts::PI / 2.0).unwrap(); // Quantum parameter shift
+        let shift = F::from(std::f64::consts::PI / 2.0).expect("Failed to convert to float"); // Quantum parameter shift
 
         for i in 0..num_latent {
             for j in 0..num_features {
@@ -1470,10 +1490,10 @@ where
                 let elbo_plus = self.compute_quantum_elbo(data, &params_plus)?;
                 let elbo_minus = self.compute_quantum_elbo(data, &params_minus)?;
 
-                grad_means[[i, j]] = (elbo_plus - elbo_minus) / (F::from(2.0).unwrap() * shift);
+                grad_means[[i, j]] = (elbo_plus - elbo_minus) / (const_f64::<F>(2.0) * shift);
 
                 // Similar for log_vars (simplified)
-                grad_log_vars[[i, j]] = F::from(0.01).unwrap(); // Simplified gradient
+                grad_log_vars[[i, j]] = const_f64::<F>(0.01); // Simplified gradient
             }
         }
 
@@ -1521,7 +1541,9 @@ where
             for j in 0..num_latent_ {
                 // Use quantum sampling from the learned distribution
                 latent_vars[[i, j]] = params.means[[j, 0]]
-                    + F::from(0.1).unwrap() * F::from(i as f64 / n_samples_ as f64).unwrap();
+                    + const_f64::<F>(0.1)
+                        * F::from(i as f64 / n_samples_ as f64)
+                            .expect("Failed to convert to float");
             }
         }
 
@@ -1572,8 +1594,8 @@ where
             predictions,
             uncertainties,
             model_weights,
-            ensemble_accuracy: F::from(0.92).unwrap(), // Would compute actual accuracy
-            quantum_diversity: F::from(0.85).unwrap(),
+            ensemble_accuracy: const_f64::<F>(0.92), // Would compute actual accuracy
+            quantum_diversity: const_f64::<F>(0.85),
         })
     }
 
@@ -1584,11 +1606,13 @@ where
         n_features: usize,
     ) -> StatsResult<QuantumModel<F>> {
         // Quantum-inspired model initialization with diversity
-        let phase_offset = F::from(2.0 * std::f64::consts::PI * model_idx as f64 / 10.0).unwrap();
+        let phase_offset = F::from(2.0 * std::f64::consts::PI * model_idx as f64 / 10.0)
+            .expect("Failed to convert to float");
 
         let mut circuit_params = Array1::zeros(n_features * 2); // Rotation angles
         for i in 0..circuit_params.len() {
-            circuit_params[i] = phase_offset + F::from(i as f64 * 0.1).unwrap();
+            circuit_params[i] =
+                phase_offset + F::from(i as f64 * 0.1).expect("Failed to convert to float");
         }
 
         Ok(QuantumModel {
@@ -1607,7 +1631,7 @@ where
         mut model: QuantumModel<F>,
     ) -> StatsResult<QuantumModel<F>> {
         let max_iterations = 50;
-        let learning_rate = F::from(0.01).unwrap();
+        let learning_rate = const_f64::<F>(0.01);
 
         for _iteration in 0..max_iterations {
             // Compute quantum gradients
@@ -1633,7 +1657,7 @@ where
         model: &QuantumModel<F>,
     ) -> StatsResult<Array1<F>> {
         let mut gradients = Array1::zeros(model.circuit_params.len());
-        let shift = F::from(std::f64::consts::PI / 2.0).unwrap();
+        let shift = F::from(std::f64::consts::PI / 2.0).expect("Failed to convert to float");
 
         for i in 0..model.circuit_params.len() {
             // Parameter shift rule for quantum gradients
@@ -1646,7 +1670,7 @@ where
             let loss_plus = self.compute_quantum_loss(data, labels, &model_plus)?;
             let loss_minus = self.compute_quantum_loss(data, labels, &model_minus)?;
 
-            gradients[i] = (loss_plus - loss_minus) / (F::from(2.0).unwrap() * shift);
+            gradients[i] = (loss_plus - loss_minus) / (const_f64::<F>(2.0) * shift);
         }
 
         Ok(gradients)
@@ -1668,7 +1692,7 @@ where
             total_loss = total_loss + diff * diff;
         }
 
-        Ok(total_loss / F::from(n_samples_).unwrap())
+        Ok(total_loss / F::from(n_samples_).expect("Failed to convert to float"))
     }
 
     /// Make quantum prediction for single sample
@@ -1688,7 +1712,7 @@ where
             }
         }
 
-        Ok(result / F::from(sample.len()).unwrap())
+        Ok(result / F::from(sample.len()).expect("Failed to convert length to float"))
     }
 
     /// Compute training fidelity for quantum model
@@ -1709,12 +1733,13 @@ where
                 F::zero()
             };
 
-            if (predicted_class - labels[i]).abs() < F::from(0.5).unwrap() {
+            if (predicted_class - labels[i]).abs() < const_f64::<F>(0.5) {
                 correct_predictions += 1;
             }
         }
 
-        Ok(F::from(correct_predictions as f64 / n_samples_ as f64).unwrap())
+        Ok(F::from(correct_predictions as f64 / n_samples_ as f64)
+            .expect("Failed to convert to float"))
     }
 
     /// Compute quantum model weight based on performance
@@ -1726,7 +1751,7 @@ where
     ) -> StatsResult<F> {
         // Weight based on training fidelity and quantum advantages
         let base_weight = model.training_fidelity;
-        let quantum_bonus = F::from(0.1).unwrap(); // Bonus for quantum advantages
+        let quantum_bonus = const_f64::<F>(0.1); // Bonus for quantum advantages
 
         Ok(base_weight + quantum_bonus)
     }
@@ -1773,13 +1798,13 @@ where
             }
 
             // Compute prediction variance as uncertainty measure
-            let mean_prediction =
-                predictions.iter().copied().sum::<F>() / F::from(predictions.len()).unwrap();
+            let mean_prediction = predictions.iter().copied().sum::<F>()
+                / F::from(predictions.len()).expect("Failed to convert length to float");
             let variance = predictions
                 .iter()
                 .map(|&p| (p - mean_prediction) * (p - mean_prediction))
                 .sum::<F>()
-                / F::from(predictions.len()).unwrap();
+                / F::from(predictions.len()).expect("Failed to convert length to float");
 
             uncertainties[i] = variance.sqrt();
         }
@@ -1886,7 +1911,7 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
 
         // Data should be in reasonable range for quantum encoding
         let range = max_val - min_val;
-        if range > F::from(1000.0).unwrap() || range < F::from(1e-6).unwrap() {
+        if range > const_f64::<F>(1000.0) || range < const_f64::<F>(1e-6) {
             return Ok(false);
         }
 
@@ -1914,8 +1939,8 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
                 let original_value = sourcedata[[i, j]];
 
                 // Quantum teleportation with fidelity loss
-                let fidelity = F::from(0.95).unwrap(); // 95% teleportation fidelity
-                let noise = F::from(0.01).unwrap() * self.generate_quantum_noise();
+                let fidelity = const_f64::<F>(0.95); // 95% teleportation fidelity
+                let noise = const_f64::<F>(0.01) * self.generate_quantum_noise();
 
                 let teleported_value = original_value * fidelity + noise;
                 transferreddata[[i, j]] = teleported_value;
@@ -1980,7 +2005,7 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
 
         let mut rng = scirs2_core::random::thread_rng();
         let noise: f64 = rng.gen_range(-0.01..0.01);
-        F::from(noise).unwrap()
+        F::from(noise).expect("Failed to convert to float")
     }
 
     /// Compute entanglement entropy between two features
@@ -1999,7 +2024,8 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
             correlation_sum = correlation_sum + val1 * val2;
         }
 
-        let normalized_correlation = correlation_sum / F::from(n as f64).unwrap();
+        let normalized_correlation =
+            correlation_sum / F::from(n as f64).expect("Failed to convert to float");
         let entropy = -normalized_correlation * normalized_correlation.ln();
 
         Ok(entropy.abs()) // Entanglement entropy is always positive
@@ -2008,10 +2034,10 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     /// Compute quantum error correction
     fn compute_error_correction(&self, syndrome: F) -> StatsResult<F> {
         // Simplified error correction lookup table
-        let correction = if syndrome > F::from(0.5).unwrap() {
-            F::from(0.1).unwrap() // Bit flip error
-        } else if syndrome > F::from(0.2).unwrap() {
-            F::from(0.05).unwrap() // Phase flip error
+        let correction = if syndrome > const_f64::<F>(0.5) {
+            const_f64::<F>(0.1) // Bit flip error
+        } else if syndrome > const_f64::<F>(0.2) {
+            const_f64::<F>(0.05) // Phase flip error
         } else {
             F::zero() // No error detected
         };

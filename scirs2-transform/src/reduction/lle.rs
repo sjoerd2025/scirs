@@ -213,7 +213,11 @@ impl LLE {
 
         // Sort eigenvalues and eigenvectors
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            eigenvalues[i]
+                .partial_cmp(&eigenvalues[j])
+                .expect("Operation failed")
+        });
 
         // Skip the first eigenvector (corresponding to eigenvalue 0)
         // and take the next n_components eigenvectors
@@ -307,7 +311,7 @@ impl LLE {
 
         // Check if this is the training data
         if self.is_same_data(&x_f64, training_data) {
-            return Ok(self.embedding.as_ref().unwrap().clone());
+            return Ok(self.embedding.as_ref().expect("Operation failed").clone());
         }
 
         // Implement out-of-sample extension
@@ -359,8 +363,8 @@ impl LLE {
 
     /// Transform new data using out-of-sample extension
     fn transform_new_data(&self, xnew: &Array2<f64>) -> Result<Array2<f64>> {
-        let training_data = self.training_data.as_ref().unwrap();
-        let training_embedding = self.embedding.as_ref().unwrap();
+        let training_data = self.training_data.as_ref().expect("Operation failed");
+        let training_embedding = self.embedding.as_ref().expect("Operation failed");
 
         let (n_new, n_features) = xnew.dim();
         let (_n_training_, _) = training_data.dim();
@@ -411,7 +415,7 @@ impl LLE {
         }
 
         // Sort by distance and take k nearest
-        distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        distances.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
         let k = self.n_neighbors.min(n_training);
         let neighbor_indices: Vec<usize> =
             distances.into_iter().take(k).map(|(_, idx)| idx).collect();
@@ -508,11 +512,11 @@ mod tests {
             data.extend_from_slice(&[x, y, z]);
         }
 
-        let x = Array::from_shape_vec((n_points, 3), data).unwrap();
+        let x = Array::from_shape_vec((n_points, 3), data).expect("Operation failed");
 
         // Fit LLE with reduced neighbors for faster testing
         let mut lle = LLE::new(5, 2);
-        let embedding = lle.fit_transform(&x).unwrap();
+        let embedding = lle.fit_transform(&x).expect("Operation failed");
 
         // Check shape
         assert_eq!(embedding.shape(), &[n_points, 2]);
@@ -531,7 +535,7 @@ mod tests {
         let result = lle.fit_transform(&x);
 
         assert!(result.is_ok());
-        let embedding = result.unwrap();
+        let embedding = result.expect("Operation failed");
         assert_eq!(embedding.shape(), &[10, 2]);
     }
 

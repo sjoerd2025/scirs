@@ -191,11 +191,11 @@ impl RBFKernel {
 ///     RBFKernel::Gaussian,
 ///     Some(1.0),
 ///     None,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Interpolate at a point
 /// let query_point = array![0.5, 0.5];
-/// let result = interp.interpolate(&query_point.view()).unwrap();
+/// let result = interp.interpolate(&query_point.view()).expect("Operation failed");
 ///
 /// // For this simple example, should be close to 1.5
 /// ```
@@ -651,14 +651,22 @@ mod tests {
 
         for kernel in &kernels {
             // Create the interpolator
-            let interp =
-                RBFInterpolator::new(&points.view(), &values.view(), *kernel, None, None).unwrap();
+            let interp = RBFInterpolator::new(&points.view(), &values.view(), *kernel, None, None)
+                .expect("Operation failed");
 
             // Test at the data points (should interpolate exactly)
-            let val_00 = interp.interpolate(&array![0.0, 0.0].view()).unwrap();
-            let val_10 = interp.interpolate(&array![1.0, 0.0].view()).unwrap();
-            let val_01 = interp.interpolate(&array![0.0, 1.0].view()).unwrap();
-            let val_11 = interp.interpolate(&array![1.0, 1.0].view()).unwrap();
+            let val_00 = interp
+                .interpolate(&array![0.0, 0.0].view())
+                .expect("Operation failed");
+            let val_10 = interp
+                .interpolate(&array![1.0, 0.0].view())
+                .expect("Operation failed");
+            let val_01 = interp
+                .interpolate(&array![0.0, 1.0].view())
+                .expect("Operation failed");
+            let val_11 = interp
+                .interpolate(&array![1.0, 1.0].view())
+                .expect("Operation failed");
 
             assert_relative_eq!(val_00, 0.0, epsilon = 1e-6);
             assert_relative_eq!(val_10, 1.0, epsilon = 1e-6);
@@ -666,7 +674,9 @@ mod tests {
             assert_relative_eq!(val_11, 2.0, epsilon = 1e-6);
 
             // Test at the center - we don't check exact value as it varies by kernel
-            let val_center = interp.interpolate(&array![0.5, 0.5].view()).unwrap();
+            let val_center = interp
+                .interpolate(&array![0.5, 0.5].view())
+                .expect("Operation failed");
 
             // Instead of checking against 1.0, just make sure the value is finite
             assert!(val_center.is_finite());
@@ -689,15 +699,23 @@ mod tests {
             Some(1.0),
             Some(true),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(interp.has_polynomial());
 
         // Test at data points
-        let val_00 = interp.interpolate(&array![0.0, 0.0].view()).unwrap();
-        let val_10 = interp.interpolate(&array![1.0, 0.0].view()).unwrap();
-        let val_01 = interp.interpolate(&array![0.0, 1.0].view()).unwrap();
-        let val_11 = interp.interpolate(&array![1.0, 1.0].view()).unwrap();
+        let val_00 = interp
+            .interpolate(&array![0.0, 0.0].view())
+            .expect("Operation failed");
+        let val_10 = interp
+            .interpolate(&array![1.0, 0.0].view())
+            .expect("Operation failed");
+        let val_01 = interp
+            .interpolate(&array![0.0, 1.0].view())
+            .expect("Operation failed");
+        let val_11 = interp
+            .interpolate(&array![1.0, 1.0].view())
+            .expect("Operation failed");
 
         assert_relative_eq!(val_00, 1.0, epsilon = 1e-6);
         assert_relative_eq!(val_10, 3.0, epsilon = 1e-6);
@@ -705,7 +723,9 @@ mod tests {
         assert_relative_eq!(val_11, 6.0, epsilon = 1e-6);
 
         // Test at a new point - should follow linear pattern
-        let val_new = interp.interpolate(&array![2.0, 2.0].view()).unwrap();
+        let val_new = interp
+            .interpolate(&array![2.0, 2.0].view())
+            .expect("Operation failed");
         // 2*x + 3*y + 1 = 2*2 + 3*2 + 1 = 11
         assert_relative_eq!(val_new, 11.0, epsilon = 0.1);
     }
@@ -726,12 +746,14 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test multiple points at once
         let query_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5],];
 
-        let results = interp.interpolate_many(&query_points.view()).unwrap();
+        let results = interp
+            .interpolate_many(&query_points.view())
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 5);
         assert_relative_eq!(results[0], 0.0, epsilon = 1e-6);
@@ -780,7 +802,7 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = interp.interpolate(&array![0.0, 0.0, 0.0].view());
         assert!(result.is_err());

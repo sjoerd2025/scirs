@@ -181,7 +181,7 @@ impl AdvancedWorkStealingScheduler {
 
                                 if interleaved_idx < n {
                                     let result = f_ref(&items_ref[interleaved_idx]);
-                                    let mut results_guard = results.lock().unwrap();
+                                    let mut results_guard = results.lock().expect("Operation failed");
                                     results_guard[interleaved_idx] = result;
                                 }
                             }
@@ -191,7 +191,7 @@ impl AdvancedWorkStealingScheduler {
                 .collect();
 
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 
@@ -292,7 +292,7 @@ impl AdvancedWorkStealingScheduler {
                             // Process chunk with NUMA-aware memory access
                             for i in start..end {
                                 let result = f_ref(&items_ref[i]);
-                                let mut results_guard = results.lock().unwrap();
+                                let mut results_guard = results.lock().expect("Operation failed");
                                 results_guard[i] = result;
                             }
                         }
@@ -301,7 +301,7 @@ impl AdvancedWorkStealingScheduler {
                 .collect();
 
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 

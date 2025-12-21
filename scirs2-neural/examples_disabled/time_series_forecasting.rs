@@ -32,7 +32,7 @@ impl LSTMCell {
         // Xavier/Glorot initialization
         let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Input gate weights
-        let uniform = Uniform::new(-bound, bound).unwrap();
+        let uniform = Uniform::new(-bound, bound).expect("Operation failed");
         let mut rng = rand::rng();
         let w_ii = Array::from_shape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
         let w_hi = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
@@ -80,8 +80,8 @@ impl LSTMCell {
         if self.c_t.is_none() {
             self.c_t = Some(Array2::zeros((batch_size, self.hidden_size)));
         // Get previous states
-        let h_prev = self.h_t.as_ref().unwrap();
-        let c_prev = self.c_t.as_ref().unwrap();
+        let h_prev = self.h_t.as_ref().expect("Operation failed");
+        let c_prev = self.c_t.as_ref().expect("Operation failed");
         // Input gate: i_t = sigmoid(W_ii * x_t + W_hi * h_prev + b_i)
         let i_t = Self::sigmoid(&(x.dot(&self.w_ii.t()) + h_prev.dot(&self.w_hi.t()) + &self.b_i));
         // Forget gate: f_t = sigmoid(W_if * x_t + W_hf * h_prev + b_f)
@@ -221,8 +221,8 @@ impl LSTMEncoder {
                         }
                     }
         // Get final hidden and cell states from the last layer
-        let h_n = self.lstm_cells.last().unwrap().h_t.clone().unwrap();
-        let c_n = self.lstm_cells.last().unwrap().c_t.clone().unwrap();
+        let h_n = self.lstm_cells.last().expect("Operation failed").h_t.clone().expect("Operation failed");
+        let c_n = self.lstm_cells.last().expect("Operation failed").c_t.clone().expect("Operation failed");
         (all_hidden_states, h_n, c_n)
 // Attention-based forecasting model
 struct TimeSeriesForecaster {
@@ -257,14 +257,14 @@ impl TimeSeriesForecaster {
         let attention = TimeSeriesAttention::new(hidden_size);
         // Decoder initial state projection
         let bound_init = (6.0 / (hidden_size + hidden_size) as f32).sqrt();
-        let uniform_init = Uniform::new(-bound_init, bound_init).unwrap();
+        let uniform_init = Uniform::new(-bound_init, bound_init).expect("Operation failed");
         let w_decoder_init = Array::from_shape_fn((hidden_size, hidden_size), |_| {
             uniform_init.sample(&mut rng)
         });
         let b_decoder_init = Array1::zeros(hidden_size);
         // Output projection
         let bound_out = (6.0 / (hidden_size + output_size) as f32).sqrt();
-        let uniform_out = Uniform::new(-bound_out, bound_out).unwrap();
+        let uniform_out = Uniform::new(-bound_out, bound_out).expect("Operation failed");
         let w_out =
             Array::from_shape_fn((output_size, hidden_size), |_| uniform_out.sample(&mut rng));
         let b_out = Array1::zeros(output_size);
@@ -302,7 +302,7 @@ impl TimeSeriesForecaster {
         for t in 0..self.forecast_horizon {
             // Apply attention
             let context = self.attention.forward(
-                self.decoder_cell.h_t.as_ref().unwrap(),
+                self.decoder_cell.h_t.as_ref().expect("Operation failed"),
                 &encoder_states,
             );
             // Concatenate context with decoder input
@@ -381,7 +381,7 @@ fn generate_synthetic_time_series(_n_samples: usize, nfeatures: usize) -> Array2
     // Generate time range
     let time: Vec<f32> = (0.._n_samples).map(|i| i as f32 / 100.0).collect();
     // Feature 1: Sine wave with noise
-    let normal = Normal::new(0.0, 0.1).unwrap();
+    let normal = Normal::new(0.0, 0.1).expect("Operation failed");
     let mut rng = rand::rng();
     for (i, &t) in time.iter().enumerate() {
         let sine_val = (t * 2.0 * PI).sin();
@@ -390,7 +390,7 @@ fn generate_synthetic_time_series(_n_samples: usize, nfeatures: usize) -> Array2
     // If we have more features, add them
     if n_features > 1 {
         // Feature 2: Cosine wave with different frequency and noise
-        let normal = Normal::new(0.0, 0.1).unwrap();
+        let normal = Normal::new(0.0, 0.1).expect("Operation failed");
         for (i, &t) in time.iter().enumerate() {
             let cosine_val = (t * 1.5 * PI).cos();
             let noise: f32 = normal.sample(&mut rng);
@@ -398,7 +398,7 @@ fn generate_synthetic_time_series(_n_samples: usize, nfeatures: usize) -> Array2
     // Add more features if needed (e.g., trend, seasonality, etc.)
     if n_features > 2 {
         // Feature 3: Linear trend
-        let normal = Normal::new(0.0, 0.05).unwrap();
+        let normal = Normal::new(0.0, 0.05).expect("Operation failed");
         for i in 0.._n_samples {
             let trend = i as f32 / _n_samples as f32;
             data[[i, 2]] = trend + noise;

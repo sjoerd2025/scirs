@@ -522,7 +522,7 @@ fn compute_reassigned_spectrogram(
             let max_idx = neighbors
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
@@ -612,7 +612,7 @@ fn compute_synchrosqueezed_wt(
                     (*a - inst_freq)
                         .abs()
                         .partial_cmp(&(*b - inst_freq).abs())
-                        .unwrap()
+                        .expect("Operation failed")
                 })
                 .map(|(idx, _)| idx)
                 .unwrap_or(i);
@@ -748,7 +748,7 @@ mod tests {
         };
 
         // Compute STFT
-        let result = compute_stft(&signal, &config, Some(sample_rate)).unwrap();
+        let result = compute_stft(&signal, &config, Some(sample_rate)).expect("Operation failed");
 
         // Check dimensions
         assert!(!result.times.is_empty());
@@ -802,7 +802,7 @@ mod tests {
         };
 
         // Compute CWT
-        let result = compute_cwt(&signal, &config, Some(sample_rate)).unwrap();
+        let result = compute_cwt(&signal, &config, Some(sample_rate)).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(result.times.len(), signal.len().min(config.max_size));

@@ -135,27 +135,27 @@ impl<F: IntegrateFloat> PooledBuffer<F> {
 
     /// Get reference to the buffer
     pub fn as_slice(&mut self) -> &[F] {
-        self.buffer.as_ref().unwrap()
+        self.buffer.as_ref().expect("Operation failed")
     }
 
     /// Get mutable reference to the buffer
     pub fn as_mut_slice(&mut self) -> &mut [F] {
-        self.buffer.as_mut().unwrap()
+        self.buffer.as_mut().expect("Operation failed")
     }
 
     /// Convert to owned Vec (consumes the buffer)
     pub fn into_vec(&mut self) -> Vec<F> {
-        self.buffer.take().unwrap()
+        self.buffer.take().expect("Operation failed")
     }
 
     /// Get length of buffer
     pub fn len(&self) -> usize {
-        self.buffer.as_ref().unwrap().len()
+        self.buffer.as_ref().expect("Operation failed").len()
     }
 
     /// Check if buffer is empty
     pub fn is_empty(&self) -> bool {
-        self.buffer.as_ref().unwrap().is_empty()
+        self.buffer.as_ref().expect("Operation failed").is_empty()
     }
 }
 

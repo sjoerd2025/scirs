@@ -424,13 +424,29 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         self.advanced_scalar_multiply_inplace(&mut k1, h)?;
 
         // Stage 2: k2 = h * f(t + h/2, y + k1/2)
-        self.advanced_vector_add_scalar(&mut temp_y, y, &k1.view(), F::from(0.5).unwrap())?;
-        let mut k2 = f(t + h / F::from(2.0).unwrap(), &temp_y.view())?;
+        self.advanced_vector_add_scalar(
+            &mut temp_y,
+            y,
+            &k1.view(),
+            F::from(0.5).expect("Failed to convert constant to float"),
+        )?;
+        let mut k2 = f(
+            t + h / F::from(2.0).expect("Failed to convert constant to float"),
+            &temp_y.view(),
+        )?;
         self.advanced_scalar_multiply_inplace(&mut k2, h)?;
 
         // Stage 3: k3 = h * f(t + h/2, y + k2/2)
-        self.advanced_vector_add_scalar(&mut temp_y, y, &k2.view(), F::from(0.5).unwrap())?;
-        let mut k3 = f(t + h / F::from(2.0).unwrap(), &temp_y.view())?;
+        self.advanced_vector_add_scalar(
+            &mut temp_y,
+            y,
+            &k2.view(),
+            F::from(0.5).expect("Failed to convert constant to float"),
+        )?;
+        let mut k3 = f(
+            t + h / F::from(2.0).expect("Failed to convert constant to float"),
+            &temp_y.view(),
+        )?;
         self.advanced_scalar_multiply_inplace(&mut k3, h)?;
 
         // Stage 4: k4 = h * f(t + h, y + k3)
@@ -794,12 +810,18 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
         k3: &ArrayView1<F>,
         k4: &ArrayView1<F>,
     ) -> IntegrateResult<()> {
-        let one_sixth = F::one() / F::from(6.0).unwrap();
+        let one_sixth = F::one() / F::from(6.0).expect("Failed to convert constant to float");
 
         if F::simd_available() {
             // Vectorized: y + (k1 + 2*k2 + 2*k3 + k4) / 6
-            let k2_doubled = F::simd_scalar_mul(k2, F::from(2.0).unwrap());
-            let k3_doubled = F::simd_scalar_mul(k3, F::from(2.0).unwrap());
+            let k2_doubled = F::simd_scalar_mul(
+                k2,
+                F::from(2.0).expect("Failed to convert constant to float"),
+            );
+            let k3_doubled = F::simd_scalar_mul(
+                k3,
+                F::from(2.0).expect("Failed to convert constant to float"),
+            );
 
             let sum1 = F::simd_add(k1, &k2_doubled.view());
             let sum2 = F::simd_add(&k3_doubled.view(), k4);
@@ -818,8 +840,10 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
                     *r = y_val
                         + one_sixth
                             * (k1_val
-                                + F::from(2.0).unwrap() * k2_val
-                                + F::from(2.0).unwrap() * k3_val
+                                + F::from(2.0).expect("Failed to convert constant to float")
+                                    * k2_val
+                                + F::from(2.0).expect("Failed to convert constant to float")
+                                    * k3_val
                                 + k4_val);
                 });
         }
@@ -1596,7 +1620,7 @@ mod tests {
 
     #[test]
     fn test_advanced_vector_add_fma() {
-        let accelerator = AdvancedSimdAccelerator::<f64>::new().unwrap();
+        let accelerator = AdvancedSimdAccelerator::<f64>::new().expect("Operation failed");
         let a = array![1.0, 2.0, 3.0, 4.0];
         let b = array![0.1, 0.2, 0.3, 0.4];
         let c = array![0.01, 0.02, 0.03, 0.04];
@@ -1606,7 +1630,7 @@ mod tests {
         assert!(result.is_ok());
 
         let expected = array![1.12, 2.24, 3.36, 4.48]; // a + b + scale * c
-        let actual = result.unwrap();
+        let actual = result.expect("Operation failed");
         for (exp, act) in expected.iter().zip(actual.iter()) {
             assert!((exp - act).abs() < 1e-10);
         }
@@ -1614,7 +1638,7 @@ mod tests {
 
     #[test]
     fn test_advanced_dot_product() {
-        let accelerator = AdvancedSimdAccelerator::<f64>::new().unwrap();
+        let accelerator = AdvancedSimdAccelerator::<f64>::new().expect("Operation failed");
         let a = array![1.0, 2.0, 3.0, 4.0];
         let b = array![0.1, 0.2, 0.3, 0.4];
 
@@ -1622,20 +1646,20 @@ mod tests {
         assert!(result.is_ok());
 
         let expected = 3.0; // 1*0.1 + 2*0.2 + 3*0.3 + 4*0.4
-        let actual = result.unwrap();
+        let actual = result.expect("Operation failed");
         assert!((expected - actual).abs() < 1e-10);
     }
 
     #[test]
     fn test_advanced_reduce_sum() {
-        let accelerator = AdvancedSimdAccelerator::<f64>::new().unwrap();
+        let accelerator = AdvancedSimdAccelerator::<f64>::new().expect("Operation failed");
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         let result = accelerator.advanced_reduce_sum(&data.view());
         assert!(result.is_ok());
 
         let expected = 15.0;
-        let actual = result.unwrap();
+        let actual = result.expect("Operation failed");
         assert!((expected - actual).abs() < 1e-10);
     }
 }

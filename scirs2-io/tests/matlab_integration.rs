@@ -8,7 +8,7 @@ use tempfile::tempdir;
 #[test]
 #[allow(dead_code)]
 fn test_matlab_write_read_roundtrip() {
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempdir().expect("Operation failed");
     let mat_file = temp_dir.path().join("test.mat");
 
     // Create test data

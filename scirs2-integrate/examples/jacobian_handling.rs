@@ -53,7 +53,10 @@ fn main() {
             println!("  Number of function evaluations: {}", res.n_eval);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
             println!("  Execution time: {duration:?}");
-            println!("  Final state: {:?}", res.y.last().unwrap());
+            println!(
+                "  Final state: {:?}",
+                res.y.last().expect("Operation failed")
+            );
         }
         Err(e) => println!("  Error: {e:?}"),
     }
@@ -89,7 +92,10 @@ fn main() {
             println!("  Number of function evaluations: {}", res.n_eval);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
             println!("  Execution time: {duration:?}");
-            println!("  Final state: {:?}", res.y.last().unwrap());
+            println!(
+                "  Final state: {:?}",
+                res.y.last().expect("Operation failed")
+            );
         }
         Err(e) => println!("  Error: {e:?}"),
     }
@@ -140,7 +146,10 @@ fn main() {
             println!("  Number of function evaluations: {}", res.n_eval);
             println!("  Number of Jacobian evaluations: {}", res.n_jac);
             println!("  Execution time: {duration:?}");
-            println!("  Final state: {:?}", res.y.last().unwrap());
+            println!(
+                "  Final state: {:?}",
+                res.y.last().expect("Operation failed")
+            );
         }
         Err(e) => println!("  Error: {e:?}"),
     }

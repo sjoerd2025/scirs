@@ -152,7 +152,7 @@ fn main() {
             // Evaluate and return the loss
             let result = ctx.evaluator().push(&loss).set_feeder(feeder).run()[0]
                 .clone()
-                .unwrap()[[]] as f32;
+                .expect("Operation failed")[[]] as f32;
 
             CheckpointProfiler::stop_tracking();
             result
@@ -277,7 +277,7 @@ fn main() {
             // Evaluate and return the loss
             let result = ctx.evaluator().push(&loss).set_feeder(feeder).run()[0]
                 .clone()
-                .unwrap()[[]] as f32;
+                .expect("Operation failed")[[]] as f32;
 
             // Track memory savings
             memory_saved = CheckpointProfiler::memory_saved();

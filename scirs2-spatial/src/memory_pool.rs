@@ -157,12 +157,12 @@ impl DistancePool {
         let buffer = if is_large {
             self.get_large_buffer(size)
         } else {
-            let mut buffers = self.distance_buffers.lock().unwrap();
+            let mut buffers = self.distance_buffers.lock().expect("Operation failed");
 
             // Try to reuse an existing buffer of appropriate size
             for i in 0..buffers.len() {
                 if buffers[i].len() >= size && buffers[i].len() <= size * 2 {
-                    let buffer = buffers.remove(i).unwrap();
+                    let buffer = buffers.remove(i).expect("Operation failed");
                     self.stats.record_hit();
                     return DistanceBuffer::new(buffer, self);
                 }
@@ -182,12 +182,12 @@ impl DistancePool {
 
     /// Get a buffer for large objects with special handling
     fn get_large_buffer(&self, size: usize) -> Box<[f64]> {
-        let mut buffers = self.large_buffers.lock().unwrap();
+        let mut buffers = self.large_buffers.lock().expect("Operation failed");
 
         // For large buffers, be more strict about size matching
         for i in 0..buffers.len() {
             if buffers[i].len() == size {
-                let buffer = buffers.remove(i).unwrap();
+                let buffer = buffers.remove(i).expect("Operation failed");
                 self.stats.record_hit();
                 return buffer;
             }
@@ -204,12 +204,12 @@ impl DistancePool {
 
     /// Get an index buffer for storing indices
     pub fn get_index_buffer(&self, size: usize) -> IndexBuffer {
-        let mut buffers = self.index_buffers.lock().unwrap();
+        let mut buffers = self.index_buffers.lock().expect("Operation failed");
 
         // Try to reuse existing buffer
         for i in 0..buffers.len() {
             if buffers[i].len() >= size && buffers[i].len() <= size * 2 {
-                let buffer = buffers.remove(i).unwrap();
+                let buffer = buffers.remove(i).expect("Operation failed");
                 self.stats.record_hit();
                 return IndexBuffer::new(buffer, self);
             }
@@ -223,13 +223,13 @@ impl DistancePool {
 
     /// Get a distance matrix buffer
     pub fn get_matrix_buffer(&self, rows: usize, cols: usize) -> MatrixBuffer {
-        let mut buffers = self.matrix_buffers.lock().unwrap();
+        let mut buffers = self.matrix_buffers.lock().expect("Operation failed");
 
         // Try to reuse existing matrix
         for i in 0..buffers.len() {
             let (r, c) = buffers[i].dim();
             if r >= rows && c >= cols && r <= rows * 2 && c <= cols * 2 {
-                let mut matrix = buffers.remove(i).unwrap();
+                let mut matrix = buffers.remove(i).expect("Operation failed");
                 // Resize to exact dimensions needed
                 matrix = matrix.slice_mut(s![..rows, ..cols]).to_owned();
                 self.stats.record_hit();
@@ -249,7 +249,7 @@ impl DistancePool {
             size * std::mem::size_of::<f64>(),
             self.config.cache_line_size,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         unsafe {
             let ptr = System.alloc(layout) as *mut f64;
@@ -648,7 +648,7 @@ impl DistancePool {
         let cleanup_ratio = 0.25; // Clean up 25% of buffers
 
         {
-            let mut buffers = self.distance_buffers.lock().unwrap();
+            let mut buffers = self.distance_buffers.lock().expect("Operation failed");
             let cleanup_count = (buffers.len() as f64 * cleanup_ratio) as usize;
             for _ in 0..cleanup_count {
                 if let Some(buffer) = buffers.pop_back() {
@@ -660,7 +660,7 @@ impl DistancePool {
         }
 
         {
-            let mut buffers = self.large_buffers.lock().unwrap();
+            let mut buffers = self.large_buffers.lock().expect("Operation failed");
             let cleanup_count = (buffers.len() as f64 * cleanup_ratio) as usize;
             for _ in 0..cleanup_count {
                 if let Some(buffer) = buffers.pop_back() {
@@ -682,13 +682,13 @@ impl DistancePool {
             .fetch_sub(buffer_size_bytes, std::sync::atomic::Ordering::Relaxed);
 
         if is_large {
-            let mut buffers = self.large_buffers.lock().unwrap();
+            let mut buffers = self.large_buffers.lock().expect("Operation failed");
             if buffers.len() < self.config.max_pool_size / 10 {
                 buffers.push_back(buffer);
             }
             // Otherwise let it drop and deallocate
         } else {
-            let mut buffers = self.distance_buffers.lock().unwrap();
+            let mut buffers = self.distance_buffers.lock().expect("Operation failed");
             if buffers.len() < self.config.max_pool_size {
                 buffers.push_back(buffer);
             }
@@ -698,7 +698,7 @@ impl DistancePool {
 
     /// Return an index buffer to the pool
     fn return_index_buffer(&self, buffer: Box<[usize]>) {
-        let mut buffers = self.index_buffers.lock().unwrap();
+        let mut buffers = self.index_buffers.lock().expect("Operation failed");
         if buffers.len() < self.config.max_pool_size {
             buffers.push_back(buffer);
         }
@@ -706,7 +706,7 @@ impl DistancePool {
 
     /// Return a matrix buffer to the pool
     fn return_matrix_buffer(&self, matrix: Array2<f64>) {
-        let mut buffers = self.matrix_buffers.lock().unwrap();
+        let mut buffers = self.matrix_buffers.lock().expect("Operation failed");
         if buffers.len() < self.config.max_pool_size / 4 {
             // Keep fewer matrices
             buffers.push_back(matrix);
@@ -730,10 +730,14 @@ impl DistancePool {
 
     /// Get detailed pool information
     pub fn pool_info(&self) -> PoolInfo {
-        let distance_count = self.distance_buffers.lock().unwrap().len();
-        let index_count = self.index_buffers.lock().unwrap().len();
-        let matrix_count = self.matrix_buffers.lock().unwrap().len();
-        let large_count = self.large_buffers.lock().unwrap().len();
+        let distance_count = self
+            .distance_buffers
+            .lock()
+            .expect("Operation failed")
+            .len();
+        let index_count = self.index_buffers.lock().expect("Operation failed").len();
+        let matrix_count = self.matrix_buffers.lock().expect("Operation failed").len();
+        let large_count = self.large_buffers.lock().expect("Operation failed").len();
 
         PoolInfo {
             distance_buffer_count: distance_count,
@@ -748,10 +752,16 @@ impl DistancePool {
 
     /// Clear all pools and free memory
     pub fn clear(&self) {
-        self.distance_buffers.lock().unwrap().clear();
-        self.index_buffers.lock().unwrap().clear();
-        self.matrix_buffers.lock().unwrap().clear();
-        self.large_buffers.lock().unwrap().clear();
+        self.distance_buffers
+            .lock()
+            .expect("Operation failed")
+            .clear();
+        self.index_buffers.lock().expect("Operation failed").clear();
+        self.matrix_buffers
+            .lock()
+            .expect("Operation failed")
+            .clear();
+        self.large_buffers.lock().expect("Operation failed").clear();
         self.memory_usage
             .store(0, std::sync::atomic::Ordering::Relaxed);
         self.stats.reset();
@@ -777,17 +787,17 @@ impl<'a> DistanceBuffer<'a> {
 
     /// Get a mutable slice of the buffer
     pub fn as_mut_slice(&mut self) -> &mut [f64] {
-        self.buffer.as_mut().unwrap().as_mut()
+        self.buffer.as_mut().expect("Operation failed").as_mut()
     }
 
     /// Get an immutable slice of the buffer
     pub fn as_slice(&self) -> &[f64] {
-        self.buffer.as_ref().unwrap().as_ref()
+        self.buffer.as_ref().expect("Operation failed").as_ref()
     }
 
     /// Get the length of the buffer
     pub fn len(&self) -> usize {
-        self.buffer.as_ref().unwrap().len()
+        self.buffer.as_ref().expect("Operation failed").len()
     }
 
     /// Check if buffer is empty
@@ -825,17 +835,17 @@ impl<'a> IndexBuffer<'a> {
 
     /// Get a mutable slice of the buffer
     pub fn as_mut_slice(&mut self) -> &mut [usize] {
-        self.buffer.as_mut().unwrap().as_mut()
+        self.buffer.as_mut().expect("Operation failed").as_mut()
     }
 
     /// Get an immutable slice of the buffer
     pub fn as_slice(&self) -> &[usize] {
-        self.buffer.as_ref().unwrap().as_ref()
+        self.buffer.as_ref().expect("Operation failed").as_ref()
     }
 
     /// Get the length of the buffer
     pub fn len(&self) -> usize {
-        self.buffer.as_ref().unwrap().len()
+        self.buffer.as_ref().expect("Operation failed").len()
     }
 
     /// Check if buffer is empty
@@ -868,17 +878,17 @@ impl<'a> MatrixBuffer<'a> {
 
     /// Get a mutable view of the matrix
     pub fn as_mut(&mut self) -> ArrayViewMut2<f64> {
-        self.matrix.as_mut().unwrap().view_mut()
+        self.matrix.as_mut().expect("Operation failed").view_mut()
     }
 
     /// Get the dimensions of the matrix
     pub fn dim(&mut self) -> (usize, usize) {
-        self.matrix.as_ref().unwrap().dim()
+        self.matrix.as_ref().expect("Operation failed").dim()
     }
 
     /// Fill the matrix with a value
     pub fn fill(&mut self, value: f64) {
-        self.matrix.as_mut().unwrap().fill(value);
+        self.matrix.as_mut().expect("Operation failed").fill(value);
     }
 }
 
@@ -916,7 +926,7 @@ impl ClusteringArena {
 
     /// Allocate a temporary vector in the arena
     pub fn alloc_temp_vec<T: Default + Clone>(&self, size: usize) -> ArenaVec<T> {
-        let layout = Layout::array::<T>(size).unwrap();
+        let layout = Layout::array::<T>(size).expect("Operation failed");
         let ptr = self.allocate_raw(layout);
 
         unsafe {
@@ -931,23 +941,31 @@ impl ClusteringArena {
 
     /// Allocate raw memory with proper alignment
     fn allocate_raw(&self, layout: Layout) -> NonNull<u8> {
-        let mut current = self.current_block.lock().unwrap();
+        let mut current = self.current_block.lock().expect("Operation failed");
 
-        if current.is_none() || !current.as_ref().unwrap().can_allocate(layout) {
+        if current.is_none()
+            || !current
+                .as_ref()
+                .expect("Operation failed")
+                .can_allocate(layout)
+        {
             // Need a new block
             if let Some(old_block) = current.take() {
-                self.full_blocks.lock().unwrap().push(old_block);
+                self.full_blocks
+                    .lock()
+                    .expect("Operation failed")
+                    .push(old_block);
             }
             *current = Some(ArenaBlock::new(self.config.arena_block_size));
         }
 
-        current.as_mut().unwrap().allocate(layout)
+        current.as_mut().expect("Operation failed").allocate(layout)
     }
 
     /// Reset the arena, keeping allocated blocks for reuse
     pub fn reset(&self) {
-        let mut current = self.current_block.lock().unwrap();
-        let mut full_blocks = self.full_blocks.lock().unwrap();
+        let mut current = self.current_block.lock().expect("Operation failed");
+        let mut full_blocks = self.full_blocks.lock().expect("Operation failed");
 
         if let Some(block) = current.take() {
             full_blocks.push(block);
@@ -991,7 +1009,7 @@ unsafe impl Sync for ArenaBlock {}
 
 impl ArenaBlock {
     fn new(size: usize) -> Self {
-        let layout = Layout::from_size_align(size, 64).unwrap(); // 64-byte aligned
+        let layout = Layout::from_size_align(size, 64).expect("Operation failed"); // 64-byte aligned
         let memory =
             unsafe { NonNull::new(System.alloc(layout)).expect("Failed to allocate arena block") };
 
@@ -1026,7 +1044,7 @@ impl ArenaBlock {
 
 impl Drop for ArenaBlock {
     fn drop(&mut self) {
-        let layout = Layout::from_size_align(self.size, 64).unwrap();
+        let layout = Layout::from_size_align(self.size, 64).expect("Operation failed");
         unsafe {
             System.dealloc(self.memory.as_ptr(), layout);
         }

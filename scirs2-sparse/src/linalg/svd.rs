@@ -124,10 +124,10 @@ where
 /// let rows = vec![0, 0, 1, 2, 2];
 /// let cols = vec![0, 2, 1, 0, 2];
 /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Compute 2 largest singular values
-/// let result = svds(&matrix, Some(2), None).unwrap();
+/// let result = svds(&matrix, Some(2), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn svds<T, S>(
@@ -285,7 +285,7 @@ where
         let beta_j = (u_next.iter().map(|&val| val * val).sum::<T>()).sqrt();
         beta.push(beta_j);
 
-        if beta_j < T::from(options.tol).unwrap() {
+        if beta_j < T::from(options.tol).expect("Operation failed") {
             converged = true;
             break;
         }
@@ -310,7 +310,8 @@ where
                 let mut sum = T::sparse_zero();
                 for l in 0..u_vectors.len().min(u_bidiag.len()) {
                     if j < u_bidiag[l].len() {
-                        sum = sum + T::from(u_bidiag[l][j]).unwrap() * u_vectors[l][i];
+                        sum = sum
+                            + T::from(u_bidiag[l][j]).expect("Operation failed") * u_vectors[l][i];
                     }
                 }
                 u_final[[i, j]] = sum;
@@ -328,7 +329,8 @@ where
                 let mut sum = T::sparse_zero();
                 for l in 0..v_vectors.len().min(vt_bidiag.len()) {
                     if j < vt_bidiag[l].len() {
-                        sum = sum + T::from(vt_bidiag[l][j]).unwrap() * v_vectors[l][i];
+                        sum = sum
+                            + T::from(vt_bidiag[l][j]).expect("Operation failed") * v_vectors[l][i];
                     }
                 }
                 vt_final[[j, i]] = sum;
@@ -365,7 +367,8 @@ where
     S: SparseArray<T>,
 {
     let (m, n) = matrix.shape();
-    let l = k + options.n_oversamples;
+    // Limit l to the smaller dimension to ensure we can form orthonormal basis
+    let l = (k + options.n_oversamples).min(m).min(n);
 
     // Generate random matrix
     let mut omega = Array2::zeros((n, l));
@@ -373,7 +376,7 @@ where
         for j in 0..l {
             // Simple pseudo-random generation (replace with proper RNG in production)
             let val = ((i * 17 + j * 13) % 1000) as f64 / 1000.0 - 0.5;
-            omega[[i, j]] = T::from(val).unwrap();
+            omega[[i, j]] = T::from(val).expect("Operation failed");
         }
     }
 
@@ -406,12 +409,15 @@ where
     let q = qr_decomposition_orthogonal(&y)?;
 
     // B = Q^T * A
+    // Q has shape (m, l) with orthonormal columns
+    // Q^T * A has shape (l, n)
+    // The i-th row of Q^T is the i-th column of Q
     let mut b = Array2::zeros((l, n));
     for i in 0..l {
-        let q_row = q.row(i).to_owned();
+        let q_col = q.column(i).to_owned();
 
-        // Compute A^T * q_row (equivalent to q_row^T * A)
-        let b_row = matrix_transpose_vector_product(matrix, &q_row)?;
+        // Compute A^T * q_col which gives the i-th row of Q^T * A
+        let b_row = matrix_transpose_vector_product(matrix, &q_col)?;
         for j in 0..n {
             b[[i, j]] = b_row[j];
         }
@@ -421,15 +427,16 @@ where
     let b_svd = dense_svd(&b, k)?;
 
     // Compute final U and V^T
+    // U = Q * U_B where Q is (m, l) and U_B is (l, k)
+    // So U is (m, k) with U[i,j] = sum_l Q[i,l] * U_B[l,j]
     let final_u = if options.compute_u {
-        // U = Q * U_B
         if let Some(ref u_b) = b_svd.u {
             let mut u_result = Array2::zeros((m, k));
             for i in 0..m {
                 for j in 0..k {
                     let mut sum = T::sparse_zero();
                     for l_idx in 0..l {
-                        sum = sum + q[[l_idx, i]] * u_b[[l_idx, j]];
+                        sum = sum + q[[i, l_idx]] * u_b[[l_idx, j]];
                     }
                     u_result[[i, j]] = sum;
                 }
@@ -725,13 +732,13 @@ mod tests {
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![3.0, 2.0, 1.0, 4.0, 5.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed")
     }
 
     #[test]
     fn test_svds_basic() {
         let matrix = create_test_matrix();
-        let result = svds(&matrix, Some(2), None).unwrap();
+        let result = svds(&matrix, Some(2), None).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(result.s.len(), 2);
@@ -756,7 +763,7 @@ mod tests {
         let matrix = create_test_matrix();
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let y = matrix_vector_product(&matrix, &x).unwrap();
+        let y = matrix_vector_product(&matrix, &x).expect("Operation failed");
 
         // Check result dimensions
         assert_eq!(y.len(), 3);
@@ -772,7 +779,7 @@ mod tests {
         let matrix = create_test_matrix();
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let y = matrix_transpose_vector_product(&matrix, &x).unwrap();
+        let y = matrix_transpose_vector_product(&matrix, &x).expect("Operation failed");
 
         // Check result dimensions
         assert_eq!(y.len(), 3);
@@ -795,7 +802,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = svds(&matrix, Some(1), Some(options)).unwrap();
+        let result = svds(&matrix, Some(1), Some(options)).expect("Operation failed");
 
         assert_eq!(result.s.len(), 1);
         assert!(result.u.is_none());
@@ -806,7 +813,8 @@ mod tests {
     fn test_svd_truncated_api() {
         let matrix = create_test_matrix();
 
-        let result = svd_truncated(&matrix, 2, "lanczos", Some(1e-8), Some(100)).unwrap();
+        let result =
+            svd_truncated(&matrix, 2, "lanczos", Some(1e-8), Some(100)).expect("Operation failed");
 
         assert_eq!(result.s.len(), 2);
         assert!(result.u.is_some());
@@ -814,7 +822,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix randomized SVD algorithm - currently has dimension mismatch issues
     fn test_randomized_svd() {
         let matrix = create_test_matrix();
 
@@ -826,7 +833,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = svds(&matrix, Some(2), Some(options)).unwrap();
+        let result = svds(&matrix, Some(2), Some(options)).expect("Operation failed");
 
         assert_eq!(result.s.len(), 2);
         assert!(result.converged);
@@ -834,9 +841,10 @@ mod tests {
 
     #[test]
     fn test_qr_decomposition() {
-        let matrix = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let matrix = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
 
-        let q = qr_decomposition_orthogonal(&matrix).unwrap();
+        let q = qr_decomposition_orthogonal(&matrix).expect("Operation failed");
 
         // Check orthogonality (Q^T * Q = I)
         assert_eq!(q.shape(), [3, 2]);
@@ -853,12 +861,18 @@ mod tests {
 
     #[test]
     fn test_svd_method_parsing() {
-        assert_eq!(SVDMethod::from_str("lanczos").unwrap(), SVDMethod::Lanczos);
         assert_eq!(
-            SVDMethod::from_str("randomized").unwrap(),
+            SVDMethod::from_str("lanczos").expect("Operation failed"),
+            SVDMethod::Lanczos
+        );
+        assert_eq!(
+            SVDMethod::from_str("randomized").expect("Operation failed"),
             SVDMethod::Randomized
         );
-        assert_eq!(SVDMethod::from_str("power").unwrap(), SVDMethod::Power);
+        assert_eq!(
+            SVDMethod::from_str("power").expect("Operation failed"),
+            SVDMethod::Power
+        );
         assert!(SVDMethod::from_str("invalid").is_err());
     }
 

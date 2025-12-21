@@ -130,7 +130,7 @@ pub fn validate_bootstrap_confidence_intervals(
 
         // Sort by time to maintain temporal order
         let mut indices: Vec<usize> = (0..n).collect();
-        indices.sort_by(|&a, &b| bootstrap_time[a].partial_cmp(&bootstrap_time[b]).unwrap());
+        indices.sort_by(|&a, &b| bootstrap_time[a].partial_cmp(&bootstrap_time[b]).expect("Operation failed"));
 
         let sorted_signal: Vec<f64> = indices.iter().map(|&i| bootstrap_signal[i]).collect();
         let sorted_time: Vec<f64> = indices.iter().map(|&i| bootstrap_time[i]).collect();
@@ -597,7 +597,7 @@ fn compute_consistency_score(bootstrappowers: &[Vec<f64>]) -> SignalResult<f64> 
 #[allow(dead_code)]
 fn compute_percentile_interval(_values: &[f64], confidencelevel: f64) -> (f64, f64) {
     let mut sorted_values = values.to_vec();
-    sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let alpha = 1.0 - confidence_level;
     let lower_idx = ((alpha / 2.0) * (sorted_values.len() - 1) as f64) as usize;
@@ -609,7 +609,7 @@ fn compute_percentile_interval(_values: &[f64], confidencelevel: f64) -> (f64, f
 #[allow(dead_code)]
 fn compute_median(values: &[f64]) -> f64 {
     let mut sorted_values = values.to_vec();
-    sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = sorted_values.len();
     if n % 2 == 0 {
@@ -1040,7 +1040,7 @@ mod tests {
             validate_bootstrap_confidence_intervals(&signal, &time, 50, &confidence_levels);
 
         assert!(result.is_ok());
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert_eq!(validation.coverage_accuracy.len(), confidence_levels.len());
         assert!(validation.successful_iterations > 0);
     }
@@ -1054,7 +1054,7 @@ mod tests {
         let result = analyze_numerical_precision(&signal, &time);
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert!(analysis.f32_f64_max_error >= 0.0);
         assert!(analysis.stability_score >= 0.0);
         assert!(analysis.stability_score <= 100.0);
@@ -1069,7 +1069,7 @@ mod tests {
         let result = validate_cross_implementation_consistency(&signal, &time);
         assert!(result.is_ok());
 
-        let consistency = result.unwrap();
+        let consistency = result.expect("Operation failed");
         assert!(consistency.standard_enhanced_correlation >= 0.0);
         assert!(consistency.standard_enhanced_correlation <= 1.0);
         assert!(consistency.consistency_score >= 0.0);

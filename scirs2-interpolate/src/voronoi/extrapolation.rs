@@ -49,7 +49,7 @@ impl<F: Float + FromPrimitive + Debug + ordered_float::FloatCore> Default
         ExtrapolationParams {
             method: ExtrapolationMethod::NearestNeighbor,
             n_neighbors: 3,
-            idw_power: F::from(2.0).unwrap(), // Default to inverse squared distance
+            idw_power: F::from(2.0).expect("Failed to convert constant to float"), // Default to inverse squared distance
             constant_value: F::zero(),
         }
     }
@@ -194,7 +194,8 @@ impl<
                     let weight = F::one()
                         / scirs2_core::numeric::Float::powf(
                             dist_sq,
-                            params.idw_power / F::from(2.0).unwrap(),
+                            params.idw_power
+                                / F::from(2.0).expect("Failed to convert constant to float"),
                         );
 
                     weighted_sum = weighted_sum + weight * self.values[idx];

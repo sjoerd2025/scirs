@@ -23,7 +23,7 @@
 //! options.n_initial_points = 5;
 //!
 //! // Run optimization with more iterations
-//! let result = bayesian_optimization(objective, bounds, 30, Some(options)).unwrap();
+//! let result = bayesian_optimization(objective, bounds, 30, Some(options)).expect("Operation failed");
 //!
 //! // Check result - should find a good solution
 //! assert!(result.success);
@@ -60,13 +60,14 @@ impl GaussianProcess {
         for row in &x_data {
             x_flat.extend_from_slice(row);
         }
-        let x_array = Array2::from_shape_vec((n_samples, n_features), x_flat).unwrap();
+        let x_array =
+            Array2::from_shape_vec((n_samples, n_features), x_flat).expect("Operation failed");
         let y_array = Array1::from_vec(y_data);
 
         // Create and fit the regressor
         let kernel = SquaredExponential::default();
         let mut regressor = GaussianProcessRegressor::new(kernel);
-        regressor.fit(&x_array, &y_array).unwrap();
+        regressor.fit(&x_array, &y_array).expect("Operation failed");
 
         Self {
             regressor,
@@ -76,15 +77,20 @@ impl GaussianProcess {
 
     /// Predict mean at a single point (friedrich-compatible API)
     fn predict(&self, x: &Vec<f64>) -> f64 {
-        let x_array = Array2::from_shape_vec((1, self.n_features), x.clone()).unwrap();
-        let predictions = self.regressor.predict(&x_array).unwrap();
+        let x_array =
+            Array2::from_shape_vec((1, self.n_features), x.clone()).expect("Operation failed");
+        let predictions = self.regressor.predict(&x_array).expect("Operation failed");
         predictions[0]
     }
 
     /// Predict variance at a single point (friedrich-compatible API)
     fn predict_variance(&self, x: &Vec<f64>) -> f64 {
-        let x_array = Array2::from_shape_vec((1, self.n_features), x.clone()).unwrap();
-        let (_mean, std) = self.regressor.predict_with_std(&x_array).unwrap();
+        let x_array =
+            Array2::from_shape_vec((1, self.n_features), x.clone()).expect("Operation failed");
+        let (_mean, std) = self
+            .regressor
+            .predict_with_std(&x_array)
+            .expect("Operation failed");
         std[0] * std[0] // return variance (std²)
     }
 }
@@ -699,7 +705,7 @@ impl BayesianOptimizer {
     /// Create an acquisition function
     fn create_acquisition_function(&self) -> Box<dyn AcquisitionFunction> {
         let model = self.build_model();
-        let y_best = self.best_observation.as_ref().unwrap().y;
+        let y_best = self.best_observation.as_ref().expect("Operation failed").y;
 
         match self.options.acq_func {
             AcquisitionFunctionType::ExpectedImprovement => {
@@ -750,7 +756,7 @@ impl BayesianOptimizer {
                             bounds.iter().map(|b| Some(b.0)).collect(),
                             bounds.iter().map(|b| Some(b.1)).collect(),
                         )
-                        .unwrap(),
+                        .expect("Operation failed"),
                     ),
                     ..Default::default()
                 }),
@@ -811,7 +817,7 @@ impl BayesianOptimizer {
         }
 
         // Return final result
-        let best = self.best_observation.as_ref().unwrap();
+        let best = self.best_observation.as_ref().expect("Operation failed");
         OptimizeResult {
             x: best.x.clone(),
             fun: best.y,
@@ -898,7 +904,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = bayesian_optimization(f, bounds, 15, Some(options)).unwrap();
+        let result = bayesian_optimization(f, bounds, 15, Some(options)).expect("Operation failed");
 
         // Should find minimum near (0, 0)
         assert!(result.fun < 0.5);

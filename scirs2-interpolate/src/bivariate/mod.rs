@@ -519,9 +519,9 @@ impl<
 
         // Add interior knots
         if n_interior_x > 0 {
-            let dx = (x_max - x_min) / F::from_usize(n_interior_x + 1).unwrap();
+            let dx = (x_max - x_min) / F::from_usize(n_interior_x + 1).expect("Operation failed");
             for i in 1..=n_interior_x {
-                tx.push(x_min + F::from_usize(i).unwrap() * dx);
+                tx.push(x_min + F::from_usize(i).expect("Operation failed") * dx);
             }
         }
 
@@ -536,9 +536,9 @@ impl<
         }
 
         if n_interior_y > 0 {
-            let dy = (y_max - y_min) / F::from_usize(n_interior_y + 1).unwrap();
+            let dy = (y_max - y_min) / F::from_usize(n_interior_y + 1).expect("Operation failed");
             for i in 1..=n_interior_y {
-                ty.push(y_min + F::from_usize(i).unwrap() * dy);
+                ty.push(y_min + F::from_usize(i).expect("Operation failed") * dy);
             }
         }
 
@@ -619,7 +619,7 @@ impl<
 
                         // Weighted average of neighboring coefficients
                         let neighbors_sum = c[idx - n_y] + c[idx + n_y] + c[idx - 1] + c[idx + 1];
-                        let local_avg = neighbors_sum / F::from_f64(4.0).unwrap();
+                        let local_avg = neighbors_sum / F::from_f64(4.0).expect("Operation failed");
 
                         c_smoothed[idx] =
                             (F::one() - smoothing_factor) * c[idx] + smoothing_factor * local_avg;
@@ -874,7 +874,7 @@ impl<
 
                         // Weighted average of neighboring coefficients
                         let neighbors_sum = c[idx - n_y] + c[idx + n_y] + c[idx - 1] + c[idx + 1];
-                        let local_avg = neighbors_sum / F::from_f64(4.0).unwrap();
+                        let local_avg = neighbors_sum / F::from_f64(4.0).expect("Operation failed");
 
                         c_smoothed[idx] =
                             (F::one() - smoothing_factor) * c[idx] + smoothing_factor * local_avg;
@@ -955,15 +955,15 @@ mod tests {
         let y = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let z = Array2::ones((5, 5));
 
-        let spline =
-            RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 1, 1, None).unwrap();
+        let spline = RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 1, 1, None)
+            .expect("Operation failed");
 
         // Test at a subset of grid points (2-4 range to avoid edge cases)
         let test_x = array![2.0, 3.0, 4.0];
         let test_y = array![2.0, 3.0, 4.0];
         let result = spline
             .evaluate(&test_x.view(), &test_y.view(), true)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.shape(), &[3, 3]);
 
         // Values should be close to 1.0
@@ -976,7 +976,9 @@ mod tests {
         // Test at a specific point within the interpolation range
         let xi = array![2.5];
         let yi = array![2.5];
-        let result = spline.evaluate(&xi.view(), &yi.view(), false).unwrap();
+        let result = spline
+            .evaluate(&xi.view(), &yi.view(), false)
+            .expect("Operation failed");
         assert_abs_diff_eq!(result[[0, 0]], 1.0, epsilon = 1e-10);
     }
 
@@ -990,7 +992,7 @@ mod tests {
         let spline = SmoothBivariateSplineBuilder::new(&x.view(), &y.view(), &z.view())
             .with_degrees(1, 1)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         // Test at interpolation points within the domain
         let test_x = array![1.8, 2.0, 2.2];
@@ -999,7 +1001,7 @@ mod tests {
         // Check that we can evaluate without errors at these points
         let result = spline
             .evaluate(&test_x.view(), &test_y.view(), true)
-            .unwrap();
+            .expect("Operation failed");
 
         // Current implementation doesn't actually fit the data, so we're not testing values yet
         assert_eq!(result.shape(), &[3, 3]);

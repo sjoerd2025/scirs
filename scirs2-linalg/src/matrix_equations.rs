@@ -32,7 +32,7 @@ use std::fmt::{Debug, Display};
 /// let d = array![[0.25, 0.0], [0.0, 0.25]];
 /// let e = array![[1.0, 2.0], [3.0, 4.0]];
 ///
-/// let x = solve_generalized_sylvester(&a.view(), &b.view(), &c.view(), &d.view(), &e.view()).unwrap();
+/// let x = solve_generalized_sylvester(&a.view(), &b.view(), &c.view(), &d.view(), &e.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn solve_generalized_sylvester<A>(
@@ -142,7 +142,7 @@ where
 /// let b = array![[-4.0, 0.0], [0.0, -5.0]];
 /// let c = array![[1.0, 2.0], [3.0, 4.0]];
 ///
-/// let x = solve_sylvester(&a.view(), &b.view(), &c.view()).unwrap();
+/// let x = solve_sylvester(&a.view(), &b.view(), &c.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn solve_sylvester<A>(
@@ -252,7 +252,7 @@ where
 /// let q = array![[1.0, 0.0], [0.0, 1.0]];
 /// let r = array![[1.0]];
 ///
-/// let x = solve_continuous_riccati(&a.view(), &b.view(), &q.view(), &r.view()).unwrap();
+/// let x = solve_continuous_riccati(&a.view(), &b.view(), &q.view(), &r.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn solve_continuous_riccati<A>(
@@ -357,7 +357,7 @@ where
     let x = u2.dot(&u1_inv);
 
     // Make symmetric (X should be symmetric)
-    Ok((x.clone() + x.t()) * A::from(0.5).unwrap())
+    Ok((x.clone() + x.t()) * A::from(0.5).expect("Operation failed"))
 }
 
 /// Solves the discrete-time algebraic Riccati equation (DARE)
@@ -420,7 +420,7 @@ where
 
     let mut x = q.to_owned(); // Initial guess
     let max_iterations = 100;
-    let tolerance = A::from(1e-10).unwrap();
+    let tolerance = A::from(1e-10).expect("Operation failed");
 
     for _ in 0..max_iterations {
         let x_old = x.clone();
@@ -452,7 +452,7 @@ where
 
         if error < tolerance {
             // Make symmetric
-            return Ok((x.clone() + x.t()) * A::from(0.5).unwrap());
+            return Ok((x.clone() + x.t()) * A::from(0.5).expect("Operation failed"));
         }
     }
 
@@ -546,7 +546,7 @@ mod tests {
         let b = array![[-3.0, 0.0], [0.0, -4.0]];
         let c = array![[1.0, 2.0], [3.0, 4.0]];
 
-        let x = solve_sylvester(&a.view(), &b.view(), &c.view()).unwrap();
+        let x = solve_sylvester(&a.view(), &b.view(), &c.view()).expect("Operation failed");
 
         // Verify AX + XB = C
         let ax = a.dot(&x);
@@ -574,7 +574,7 @@ mod tests {
         let a = array![[0.5, 0.1], [0.0, 0.6]];
         let q = array![[1.0, 0.0], [0.0, 1.0]];
 
-        let x = solve_stein(&a.view(), &q.view()).unwrap();
+        let x = solve_stein(&a.view(), &q.view()).expect("Operation failed");
 
         // Verify AXA^T - X + Q = 0
         let axat = a.dot(&x).dot(&a.t());
@@ -596,7 +596,8 @@ mod tests {
         let q = array![[1.0, 0.0], [0.0, 0.0]];
         let r = array![[1.0]];
 
-        let x = solve_continuous_riccati(&a.view(), &b.view(), &q.view(), &r.view()).unwrap();
+        let x = solve_continuous_riccati(&a.view(), &b.view(), &q.view(), &r.view())
+            .expect("Operation failed");
 
         // X should be symmetric
         for i in 0..2 {
@@ -610,7 +611,7 @@ mod tests {
         let x_a = x.dot(&a);
         let x_br_inv_bt_x = x
             .dot(&b)
-            .dot(&crate::inv(&r.view(), None).unwrap())
+            .dot(&crate::inv(&r.view(), None).expect("Operation failed"))
             .dot(&b.t())
             .dot(&x);
         let lhs = &at_x + &x_a - &x_br_inv_bt_x + &q;

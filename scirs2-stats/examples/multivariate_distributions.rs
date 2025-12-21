@@ -28,7 +28,7 @@ fn main() {
     // Generate random samples
     let n_samples = 1000;
     let samples = mvn.rvs(n_samples).expect("Failed to generate samples");
-    let sample_mean = samples.mean_axis(Axis(0)).unwrap();
+    let sample_mean = samples.mean_axis(Axis(0)).expect("Operation failed");
 
     println!("\nNormal distribution sample statistics (1000 samples):");
     println!("Mean: [{:.4}, {:.4}]", sample_mean[0], sample_mean[1]);
@@ -59,7 +59,7 @@ fn main() {
 
     // Generate samples from t-distribution
     let t_samples = mvt.rvs(n_samples).expect("Failed to generate t samples");
-    let t_sample_mean = t_samples.mean_axis(Axis(0)).unwrap();
+    let t_sample_mean = t_samples.mean_axis(Axis(0)).expect("Operation failed");
 
     println!("\nT-distribution sample statistics (1000 samples):");
     println!("Mean: [{:.4}, {:.4}]", t_sample_mean[0], t_sample_mean[1]);
@@ -88,7 +88,7 @@ fn main() {
 #[allow(dead_code)]
 fn calculate_variance(samples: &Array2<f64>, dim: usize) -> f64 {
     let n = samples.shape()[0];
-    let mean = samples.mean_axis(Axis(0)).unwrap()[dim];
+    let mean = samples.mean_axis(Axis(0)).expect("Operation failed")[dim];
     let mut sum_sq = 0.0;
 
     for i in 0..n {

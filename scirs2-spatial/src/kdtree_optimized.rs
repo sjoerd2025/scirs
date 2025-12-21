@@ -171,7 +171,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
                     .into_par_iter()
                     .map(|i| {
                         let point = points.row(i).to_vec();
-                        let (idx, dist) = self.query(&point, 1).unwrap();
+                        let (idx, dist) = self.query(&point, 1).expect("Operation failed");
                         (i, idx[0], dist[0])
                     })
                     .collect();
@@ -209,13 +209,15 @@ mod tests {
         // Create a simple KD-tree
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],];
 
-        let kdtree = KDTree::new(&points).unwrap();
+        let kdtree = KDTree::new(&points).expect("Operation failed");
 
         // Query points
         let query_points = array![[0.1, 0.1], [0.9, 0.1], [0.1, 0.9], [0.9, 0.9],];
 
         // Find nearest neighbors
-        let (indices, distances) = kdtree.batch_nearest_neighbor(&query_points.view()).unwrap();
+        let (indices, distances) = kdtree
+            .batch_nearest_neighbor(&query_points.view())
+            .expect("Operation failed");
 
         // Just verify the arrays have the expected length
         assert_eq!(indices.len(), 4);
@@ -236,12 +238,12 @@ mod tests {
         let points2 = array![[0.0, 0.5], [1.0, 0.5], [0.5, 1.0],];
 
         // Create KD-tree from the first set
-        let kdtree = KDTree::new(&points1).unwrap();
+        let kdtree = KDTree::new(&points1).expect("Operation failed");
 
         // Compute Hausdorff distance
         let dist = kdtree
             .hausdorff_distance(&points2.view(), Some(42))
-            .unwrap();
+            .expect("Operation failed");
 
         // There can be small differences between the KDTree-based implementation
         // and the direct computation due to different search strategies.

@@ -119,8 +119,8 @@ impl<F: Float> LRScheduler<F> for LinearLR<F> {
             return self.start_lr;
         }
 
-        let progress =
-            F::from(step.min(self.total_steps)).unwrap() / F::from(self.total_steps).unwrap();
+        let progress = F::from(step.min(self.total_steps)).expect("Operation failed")
+            / F::from(self.total_steps).expect("Failed to convert to float");
         let lr_diff = self.end_lr - self.start_lr;
         self.start_lr + lr_diff * progress
     }

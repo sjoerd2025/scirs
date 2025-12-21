@@ -56,13 +56,14 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap() * F::from_f64(0.1).unwrap() // 0.1% of interval
+        _span / F::from_usize(100).expect("Operation failed")
+            * F::from_f64(0.1).expect("Operation failed") // 0.1% of interval
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-10).unwrap() // Minimal step size
+        _span * F::from_f64(1e-10).expect("Operation failed") // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -78,23 +79,23 @@ where
     // c = [4-sqrt(6))/10, (4+sqrt(6))/10, 1]
     // Exact values would be irrational, so we use high precision approximations
 
-    let c1 = F::from_f64(0.1550510257).unwrap();
-    let c2 = F::from_f64(0.6449489743).unwrap();
+    let c1 = F::from_f64(0.1550510257).expect("Operation failed");
+    let c2 = F::from_f64(0.6449489743).expect("Operation failed");
     let c3 = F::one();
 
     // Runge-Kutta _matrix A (coefficients a_ij)
     // We're using a 3-stage Radau IIA method
-    let a11 = F::from_f64(0.1968154772).unwrap();
-    let a12 = F::from_f64(-0.0678338608).unwrap();
-    let a13 = F::from_f64(-0.0207959730).unwrap();
+    let a11 = F::from_f64(0.1968154772).expect("Operation failed");
+    let a12 = F::from_f64(-0.0678338608).expect("Operation failed");
+    let a13 = F::from_f64(-0.0207959730).expect("Operation failed");
 
-    let a21 = F::from_f64(0.3944243147).unwrap();
-    let a22 = F::from_f64(0.2921005631).unwrap();
-    let a23 = F::from_f64(0.0416635118).unwrap();
+    let a21 = F::from_f64(0.3944243147).expect("Operation failed");
+    let a22 = F::from_f64(0.2921005631).expect("Operation failed");
+    let a23 = F::from_f64(0.0416635118).expect("Operation failed");
 
-    let a31 = F::from_f64(0.3764030627).unwrap();
-    let a32 = F::from_f64(0.5124858261).unwrap();
-    let a33 = F::from_f64(0.1111111111).unwrap();
+    let a31 = F::from_f64(0.3764030627).expect("Operation failed");
+    let a32 = F::from_f64(0.5124858261).expect("Operation failed");
+    let a33 = F::from_f64(0.1111111111).expect("Operation failed");
 
     // Weight coefficients b_j (same as last row of A for Radau IIA)
     let b1 = a31;
@@ -132,7 +133,7 @@ where
     let atol = opts.atol;
 
     // Newton iteration parameters
-    let base_newton_tol = F::from_f64(1e-6).unwrap(); // Base tolerance
+    let base_newton_tol = F::from_f64(1e-6).expect("Operation failed"); // Base tolerance
     let max_newton_iters = 20; // More iterations allowed
 
     // Create a Jacobian approximation for Newton iteration
@@ -218,21 +219,21 @@ where
         // k_i = y + h * sum(a_ij * k'_j) where M(t_j, k_j) * k'_j = f(t_j, k_j)
 
         // Adaptive Newton tolerance based on step size and mass _matrix conditioning
-        let mut newton_tol = base_newton_tol * h.max(F::from_f64(1e-3).unwrap());
+        let mut newton_tol = base_newton_tol * h.max(F::from_f64(1e-3).expect("Operation failed"));
 
         // For mass _matrix systems, adapt tolerance based on _matrix condition
         if mass_matrix.matrix_type != MassMatrixType::Identity {
             // Estimate condition number heuristically and adjust tolerance accordingly
             let condition_factor = match mass_matrix.matrix_type {
-                MassMatrixType::Constant => F::from_f64(5.0).unwrap(), // Moderate relaxation
-                MassMatrixType::TimeDependent => F::from_f64(8.0).unwrap(), // More relaxation
-                MassMatrixType::StateDependent => F::from_f64(12.0).unwrap(), // Most relaxation
-                MassMatrixType::Identity => F::one(),                  // No change
+                MassMatrixType::Constant => F::from_f64(5.0).expect("Operation failed"), // Moderate relaxation
+                MassMatrixType::TimeDependent => F::from_f64(8.0).expect("Operation failed"), // More relaxation
+                MassMatrixType::StateDependent => F::from_f64(12.0).expect("Operation failed"), // Most relaxation
+                MassMatrixType::Identity => F::one(), // No change
             };
             newton_tol *= condition_factor;
 
             // Cap the tolerance to prevent excessive relaxation
-            newton_tol = newton_tol.min(F::from_f64(1e-4).unwrap());
+            newton_tol = newton_tol.min(F::from_f64(1e-4).expect("Operation failed"));
         }
 
         // Ensure we have a Jacobian for the first iteration
@@ -283,7 +284,7 @@ where
                         .map(|(r, &w)| (*r / w).powi(2))
                         .sum::<F>())
                 .sqrt()
-                    / F::from_f64(3.0).unwrap().sqrt();
+                    / F::from_f64(3.0).expect("Operation failed").sqrt();
 
                 if error_norm < newton_tol {
                     newton_converged = true;
@@ -297,7 +298,7 @@ where
                         t3,
                         &k3,
                         &f3,
-                        F::from_f64(1e-8).unwrap(),
+                        F::from_f64(1e-8).expect("Operation failed"),
                     );
                     jac_option = Some(jacobian_matrix);
                     compute_new_jacobian = false;
@@ -305,7 +306,7 @@ where
                 }
 
                 // Get Jacobian
-                let jac = jac_option.as_ref().unwrap();
+                let jac = jac_option.as_ref().expect("Operation failed");
 
                 // Construct the system Jacobian for Newton iteration
                 // J_i = I/h - a_ii·J
@@ -383,7 +384,7 @@ where
                         .map(|(r, &w)| (*r / w).powi(2))
                         .sum::<F>())
                 .sqrt()
-                    / F::from_f64(3.0).unwrap().sqrt();
+                    / F::from_f64(3.0).expect("Operation failed").sqrt();
 
                 if error_norm < newton_tol {
                     newton_converged = true;
@@ -400,7 +401,7 @@ where
                         t3,
                         &k3,
                         &f3,
-                        F::from_f64(1e-8).unwrap(),
+                        F::from_f64(1e-8).expect("Operation failed"),
                     );
                     jac_option = Some(jacobian_matrix);
                     compute_new_jacobian = false;
@@ -408,7 +409,7 @@ where
                 }
 
                 // Get Jacobian
-                let jac = jac_option.as_ref().unwrap();
+                let jac = jac_option.as_ref().expect("Operation failed");
 
                 // For mass _matrix systems, solve the correct Newton system
                 // The Newton system for mass _matrix DAEs has the form:
@@ -488,7 +489,8 @@ where
                                                 .sqrt();
 
                                             if residual_norm
-                                                < F::from_f64(1e-10).unwrap() * (F::one() + b_norm)
+                                                < F::from_f64(1e-10).expect("Operation failed")
+                                                    * (F::one() + b_norm)
                                             {
                                                 Ok(solution)
                                             } else {
@@ -510,7 +512,8 @@ where
                                 Err(_) => {
                                     // Apply Tikhonov regularization for better conditioning
                                     let mut regularized = newton_matrix.clone();
-                                    let reg_param = F::from_f64(1e-10).unwrap() * h;
+                                    let reg_param =
+                                        F::from_f64(1e-10).expect("Operation failed") * h;
 
                                     for i in 0..n_dim {
                                         regularized[[i, i]] += reg_param;
@@ -520,7 +523,8 @@ where
                                         Ok(dk) => Ok(dk),
                                         Err(_) => {
                                             // Last resort: stronger regularization
-                                            let strong_reg = F::from_f64(1e-8).unwrap() * h;
+                                            let strong_reg =
+                                                F::from_f64(1e-8).expect("Operation failed") * h;
                                             for i in 0..n_dim {
                                                 regularized[[i, i]] += strong_reg;
                                             }
@@ -556,11 +560,11 @@ where
                 n_lu += 3;
 
                 // Apply adaptive damping based on Newton iteration progress
-                let mut damping = F::from_f64(1.0).unwrap();
+                let mut damping = F::from_f64(1.0).expect("Operation failed");
                 if newton_iterations > 5 {
-                    damping = F::from_f64(0.7).unwrap(); // More conservative damping for slow convergence
+                    damping = F::from_f64(0.7).expect("Operation failed"); // More conservative damping for slow convergence
                 } else if newton_iterations > 10 {
-                    damping = F::from_f64(0.5).unwrap(); // Even more conservative
+                    damping = F::from_f64(0.5).expect("Operation failed"); // Even more conservative
                 }
 
                 // Apply damped Newton corrections
@@ -573,7 +577,7 @@ where
         // Check if Newton iteration converged
         if !newton_converged {
             // Reduce step size more gradually and recompute Jacobian
-            h *= F::from_f64(0.8).unwrap(); // Even less aggressive step reduction
+            h *= F::from_f64(0.8).expect("Operation failed"); // Even less aggressive step reduction
             rejected_steps += 1;
 
             // Force recomputation of Jacobian on next iteration
@@ -581,7 +585,7 @@ where
 
             // Be more tolerant for mass _matrix systems before giving up
             let min_step_tolerance = if mass_matrix.matrix_type != MassMatrixType::Identity {
-                min_step * F::from_f64(0.1).unwrap() // Allow smaller steps for mass _matrix problems
+                min_step * F::from_f64(0.1).expect("Operation failed") // Allow smaller steps for mass _matrix problems
             } else {
                 min_step
             };
@@ -624,7 +628,7 @@ where
                     let mut scaled_error = Array1::<F>::zeros(n_dim);
                     for i in 0..n_dim {
                         let m_ii = m3_matrix[[i, i]];
-                        if m_ii.abs() > F::from_f64(1e-12).unwrap() {
+                        if m_ii.abs() > F::from_f64(1e-12).expect("Operation failed") {
                             scaled_error[i] = stage_diff[i] / m_ii.sqrt();
                         } else {
                             scaled_error[i] = stage_diff[i];
@@ -665,16 +669,16 @@ where
             accepted_steps += 1;
 
             // Increase step size for next step if error is small
-            if error_norm < F::from_f64(0.1).unwrap() {
-                h *= F::from_f64(2.0).unwrap();
+            if error_norm < F::from_f64(0.1).expect("Operation failed") {
+                h *= F::from_f64(2.0).expect("Operation failed");
             }
         } else {
             // Reject the step and reduce step size
-            let factor = F::from_f64(0.9).unwrap()
-                * (F::one() / error_norm).powf(F::from_f64(1.0 / 5.0).unwrap());
+            let factor = F::from_f64(0.9).expect("Operation failed")
+                * (F::one() / error_norm).powf(F::from_f64(1.0 / 5.0).expect("Operation failed"));
             h *= factor
-                .max(F::from_f64(0.1).unwrap())
-                .min(F::from_f64(0.5).unwrap());
+                .max(F::from_f64(0.1).expect("Operation failed"))
+                .min(F::from_f64(0.5).expect("Operation failed"));
             rejected_steps += 1;
         }
     }

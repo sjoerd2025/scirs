@@ -192,7 +192,7 @@ impl NeuralNetwork {
         let mut inputs = Vec::with_capacity(self.layers.len());
         inputs.push(x.clone());
         for i in 0..self.layers.len() - 1 {
-            inputs.push(self.layers[i].a.as_ref().unwrap().clone());
+            inputs.push(self.layers[i].a.as_ref().expect("Operation failed").clone());
         // Backward pass to compute gradients
         for i in (0..self.layers.len()).rev() {
             grad = self.layers[i].compute_gradients(&inputs[i], &grad);
@@ -235,7 +235,7 @@ impl NeuralNetwork {
                 let mut inputs = Vec::with_capacity(self.layers.len());
                 inputs.push(batch_x);
                 for i in 0..self.layers.len() - 1 {
-                    inputs.push(self.layers[i].a.as_ref().unwrap().clone());
+                    inputs.push(self.layers[i].a.as_ref().expect("Operation failed").clone());
                 // Backward pass to compute gradients
                 for i in (0..self.layers.len()).rev() {
                     grad = self.layers[i].compute_gradients(&inputs[i], &grad);

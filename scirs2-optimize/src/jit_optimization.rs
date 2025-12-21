@@ -157,7 +157,7 @@ impl JitCompiler {
 
         // Check cache first
         if self.options.enable_caching {
-            let cache = self.cache.lock().unwrap();
+            let cache = self.cache.lock().expect("Operation failed");
             if let Some(compiled) = cache.get(&signature) {
                 return Ok(compiled.clone());
             }
@@ -198,7 +198,7 @@ impl JitCompiler {
 
         // Add to cache
         if self.options.enable_caching {
-            let mut cache = self.cache.lock().unwrap();
+            let mut cache = self.cache.lock().expect("Operation failed");
             if cache.len() >= self.options.max_cache_size {
                 // Remove oldest entry (simple FIFO eviction)
                 if let Some((&oldest_key, _)) = cache.iter().next() {
@@ -409,7 +409,7 @@ impl JitCompiler {
 
     /// Get compilation statistics
     pub fn get_stats(&self) -> JitStats {
-        let cache = self.cache.lock().unwrap();
+        let cache = self.cache.lock().expect("Operation failed");
         JitStats {
             total_compiled: cache.len(),
             cache_hits: 0, // Would track this in a real implementation
@@ -658,7 +658,9 @@ mod tests {
         // Simple quadratic function
         let quadratic = |x: &ArrayView1<f64>| x[0] * x[0] + x[1] * x[1];
 
-        let pattern = detector.detect_pattern(&quadratic, 2).unwrap();
+        let pattern = detector
+            .detect_pattern(&quadratic, 2)
+            .expect("Operation failed");
 
         // Pattern detection is conservative in this implementation
         assert!(matches!(
@@ -671,7 +673,7 @@ mod tests {
     fn test_function_optimization() {
         let quadratic = |x: &ArrayView1<f64>| x[0] * x[0] + x[1] * x[1];
 
-        let optimized = optimize_function(quadratic, 2, None).unwrap();
+        let optimized = optimize_function(quadratic, 2, None).expect("Operation failed");
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
         let result = (*optimized)(&x.view());

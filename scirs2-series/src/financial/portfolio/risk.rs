@@ -37,7 +37,7 @@ use crate::error::{Result, TimeSeriesError};
 /// let confidence = 0.95; // 95% confidence
 /// let horizon = 1; // 1-day VaR
 ///
-/// let var = portfolio_var_parametric(portfolio_value, mean_return, std_return, confidence, horizon).unwrap();
+/// let var = portfolio_var_parametric(portfolio_value, mean_return, std_return, confidence, horizon).expect("Operation failed");
 /// println!("1-day 95% VaR: ${:.2}", var);
 /// ```
 pub fn portfolio_var_parametric<F: Float + Clone>(
@@ -63,20 +63,23 @@ pub fn portfolio_var_parametric<F: Float + Clone>(
 
     // Standard normal quantiles for common confidence levels
     let z_score = match confidence_level {
-        c if c >= 0.99 => F::from(-2.326).unwrap(), // 99% VaR
-        c if c >= 0.975 => F::from(-1.96).unwrap(), // 97.5% VaR
-        c if c >= 0.95 => F::from(-1.645).unwrap(), // 95% VaR
-        c if c >= 0.90 => F::from(-1.282).unwrap(), // 90% VaR
+        c if c >= 0.99 => F::from(-2.326).expect("Failed to convert constant to float"), // 99% VaR
+        c if c >= 0.975 => F::from(-1.96).expect("Failed to convert constant to float"), // 97.5% VaR
+        c if c >= 0.95 => F::from(-1.645).expect("Failed to convert constant to float"), // 95% VaR
+        c if c >= 0.90 => F::from(-1.282).expect("Failed to convert constant to float"), // 90% VaR
         _ => {
             // For other confidence levels, use approximation
             let p = 1.0 - confidence_level;
-            F::from(normal_inverse_cdf(p)).unwrap()
+            F::from(normal_inverse_cdf(p)).expect("Operation failed")
         }
     };
 
     // Scale for time horizon (square root rule)
-    let horizon_scaling = F::from(time_horizon).unwrap().sqrt();
-    let horizon_mean = portfolio_return_mean * F::from(time_horizon).unwrap();
+    let horizon_scaling = F::from(time_horizon)
+        .expect("Failed to convert to float")
+        .sqrt();
+    let horizon_mean =
+        portfolio_return_mean * F::from(time_horizon).expect("Failed to convert to float");
     let horizon_std = portfolio_return_std * horizon_scaling;
 
     // Calculate VaR
@@ -124,7 +127,7 @@ pub fn calculate_component_var<F: Float + Clone + std::iter::Sum>(
     // Calculate marginal VaR for each asset
     for i in 0..weights.len() {
         // Small perturbation for numerical derivative
-        let epsilon = F::from(0.001).unwrap();
+        let epsilon = F::from(0.001).expect("Failed to convert constant to float");
         let mut perturbed_weights = weights.clone();
         perturbed_weights[i] = perturbed_weights[i] + epsilon;
 
@@ -239,7 +242,7 @@ pub fn calculate_component_es<F: Float + Clone + std::iter::Sum>(
     // Calculate marginal ES for each asset
     for i in 0..weights.len() {
         // Small perturbation for numerical derivative
-        let epsilon = F::from(0.001).unwrap();
+        let epsilon = F::from(0.001).expect("Failed to convert constant to float");
         let mut perturbed_weights = weights.clone();
         perturbed_weights[i] = perturbed_weights[i] + epsilon;
 
@@ -399,8 +402,8 @@ pub fn monte_carlo_portfolio_var<F: Float + Clone>(
 
             // Scale by volatility and add expected return
             let individual_volatility = covariance_matrix[[i, i]].sqrt();
-            let simulated_return =
-                expected_returns[i] + individual_volatility * F::from(z).unwrap();
+            let simulated_return = expected_returns[i]
+                + individual_volatility * F::from(z).expect("Failed to convert to float");
 
             portfolio_return = portfolio_return + weights[i] * simulated_return;
         }
@@ -409,7 +412,7 @@ pub fn monte_carlo_portfolio_var<F: Float + Clone>(
     }
 
     // Sort and find VaR
-    simulated_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    simulated_returns.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let var_index = ((1.0 - confidence_level) * num_simulations as f64) as usize;
     let var_index = var_index.min(simulated_returns.len() - 1);
 
@@ -465,7 +468,7 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        let var = result.unwrap();
+        let var = result.expect("Operation failed");
         assert!(var > 0.0);
         assert!(var < portfolio_value); // VaR should be less than portfolio value
     }
@@ -479,13 +482,13 @@ mod tests {
                 0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let confidence = 0.95;
 
         let result = calculate_component_var(&weights, &returns, confidence);
         assert!(result.is_ok());
 
-        let comp_var = result.unwrap();
+        let comp_var = result.expect("Operation failed");
         assert_eq!(comp_var.len(), 2);
 
         // Component VaR values should be finite
@@ -500,13 +503,13 @@ mod tests {
             (4, 2),
             vec![0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012],
         )
-        .unwrap();
+        .expect("Operation failed");
         let stress_factors = arr1(&[1.5, 2.0, 3.0]); // 50%, 100%, 200% stress
 
         let result = stress_test_portfolio(&weights, &returns, &stress_factors);
         assert!(result.is_ok());
 
-        let stressed_returns = result.unwrap();
+        let stressed_returns = result.expect("Operation failed");
         assert_eq!(stressed_returns.len(), 3);
 
         // Stressed returns should generally be negative and increasing in magnitude
@@ -518,13 +521,14 @@ mod tests {
     #[test]
     fn test_correlation_risk_analysis() {
         let weights = arr1(&[0.5, 0.5]);
-        let correlation_matrix = Array2::from_shape_vec((2, 2), vec![1.0, 0.3, 0.3, 1.0]).unwrap();
+        let correlation_matrix =
+            Array2::from_shape_vec((2, 2), vec![1.0, 0.3, 0.3, 1.0]).expect("Operation failed");
         let volatilities = arr1(&[0.15, 0.20]);
 
         let result = analyze_correlation_risk(&weights, &correlation_matrix, &volatilities);
         assert!(result.is_ok());
 
-        let (portfolio_vol, div_ratio, concentration) = result.unwrap();
+        let (portfolio_vol, div_ratio, concentration) = result.expect("Operation failed");
         assert!(portfolio_vol > 0.0);
         assert!(div_ratio >= 1.0); // Diversification ratio should be >= 1
         assert!(concentration > 0.0 && concentration <= 1.0);
@@ -534,7 +538,8 @@ mod tests {
     fn test_monte_carlo_var() {
         let weights = arr1(&[0.6, 0.4]);
         let expected_returns = arr1(&[0.08, 0.12]);
-        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015])
+            .expect("Operation failed");
         let confidence = 0.95;
         let num_simulations = 1000;
 
@@ -547,7 +552,7 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        let var = result.unwrap();
+        let var = result.expect("Operation failed");
         assert!(var >= 0.0);
     }
 
@@ -569,7 +574,7 @@ mod tests {
     #[test]
     fn test_dimension_mismatches() {
         let weights = arr1(&[0.6, 0.4]);
-        let returns = Array2::from_shape_vec((3, 3), vec![0.0; 9]).unwrap();
+        let returns = Array2::from_shape_vec((3, 3), vec![0.0; 9]).expect("Operation failed");
 
         let result = calculate_component_var(&weights, &returns, 0.95);
         assert!(result.is_err());

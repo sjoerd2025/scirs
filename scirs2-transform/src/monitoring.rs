@@ -436,8 +436,8 @@ impl TransformationMonitor {
 
         // Calculate trends (change from first to last measurement)
         if recent_metrics.len() >= 2 {
-            let first = recent_metrics.first().unwrap();
-            let last = recent_metrics.last().unwrap();
+            let first = recent_metrics.first().expect("Operation failed");
+            let last = recent_metrics.last().expect("Operation failed");
 
             trends.insert(
                 "processing_time_trend".to_string(),
@@ -536,8 +536,8 @@ impl TransformationMonitor {
     ) -> Result<(f64, f64)> {
         let mut x_sorted = x.to_vec();
         let mut y_sorted = y.to_vec();
-        x_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        y_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        x_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
+        y_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let n1 = x_sorted.len() as f64;
         let n2 = y_sorted.len() as f64;
@@ -550,7 +550,7 @@ impl TransformationMonitor {
         for val in &y_sorted {
             combined.push((*val, 2)); // Mark as from second sample
         }
-        combined.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        combined.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         let mut cdf1 = 0.0;
         let mut cdf2 = 0.0;
@@ -596,7 +596,7 @@ impl TransformationMonitor {
     ) -> Result<f64> {
         // Create bins based on reference _data
         let mut ref_sorted = reference.to_vec();
-        ref_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        ref_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let n_bins = 10;
         let mut bins = Vec::new();

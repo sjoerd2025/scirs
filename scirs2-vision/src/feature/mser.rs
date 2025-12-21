@@ -144,7 +144,7 @@ pub fn mser_detect(img: &DynamicImage, config: MserConfig) -> Result<Vec<MserReg
                 }
                 std::cmp::Ordering::Equal => {
                     // Single component
-                    let root = roots.into_iter().next().unwrap();
+                    let root = roots.into_iter().next().expect("Operation failed");
                     components[root].pixels.push((x, y));
                     components[root].area += 1;
                     pixel_component.insert((x, y), root);

@@ -546,7 +546,7 @@ pub fn scale<T: Float + FromPrimitive>(
 /// let b = Array1::from_vec(vec![1.0, 1.0]);
 ///
 /// let qrng = Halton::new(2, Some(42));
-/// let result = qmc_quad(f, &a, &b, None, None, Some(Box::new(qrng)), false).unwrap();
+/// let result = qmc_quad(f, &a, &b, None, None, Some(Box::new(qrng)), false).expect("Operation failed");
 /// println!("Integral: {}, Error: {}", result.integral, result.standard_error);
 /// ```
 #[allow(dead_code)]
@@ -758,7 +758,7 @@ where
 /// let qrng = Halton::new(2, Some(42));
 /// let result = qmc_quad_parallel(
 ///     f, &a, &b, None, None, Some(Box::new(qrng)), false, Some(4)
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// println!("Integral: {}, Error: {}", result.integral, result.standard_error);
 /// ```
 #[allow(dead_code)]
@@ -1089,7 +1089,8 @@ mod tests {
         let a = Array1::from_vec(vec![0.0]);
         let b = Array1::from_vec(vec![1.0]);
 
-        let result = qmc_quad(f, &a, &b, Some(8), Some(1000), None, false).unwrap();
+        let result =
+            qmc_quad(f, &a, &b, Some(8), Some(1000), None, false).expect("Operation failed");
 
         assert_abs_diff_eq!(result.integral, 1.0 / 3.0, epsilon = 0.01);
     }
@@ -1101,7 +1102,8 @@ mod tests {
         let a = Array1::from_vec(vec![0.0, 0.0]);
         let b = Array1::from_vec(vec![1.0, 1.0]);
 
-        let result = qmc_quad(f, &a, &b, Some(8), Some(1000), None, false).unwrap();
+        let result =
+            qmc_quad(f, &a, &b, Some(8), Some(1000), None, false).expect("Operation failed");
 
         assert_abs_diff_eq!(result.integral, 0.25, epsilon = 0.01);
     }
@@ -1113,7 +1115,8 @@ mod tests {
         let a = Array1::from_vec(vec![-5.0]); // approximating infinity with a large value
         let b = Array1::from_vec(vec![5.0]);
 
-        let result = qmc_quad(f, &a, &b, Some(8), Some(1000), None, false).unwrap();
+        let result =
+            qmc_quad(f, &a, &b, Some(8), Some(1000), None, false).expect("Operation failed");
 
         assert_abs_diff_eq!(result.integral, std::f64::consts::PI.sqrt(), epsilon = 0.05);
     }
@@ -1157,8 +1160,8 @@ mod tests {
         let b = Array1::from_vec(vec![1.0, 1.0]);
 
         let faure = Faure::new(2, Some(42));
-        let result =
-            qmc_quad(f, &a, &b, Some(8), Some(1000), Some(Box::new(faure)), false).unwrap();
+        let result = qmc_quad(f, &a, &b, Some(8), Some(1000), Some(Box::new(faure)), false)
+            .expect("Operation failed");
 
         // Expected result is 1/4 = 0.25
         // Note: This simplified Faure implementation may not achieve optimal convergence
@@ -1174,8 +1177,8 @@ mod tests {
         let b = Array1::from_vec(vec![1.0, 1.0]);
 
         // Test with 2 workers
-        let result =
-            qmc_quad_parallel(f, &a, &b, Some(8), Some(1000), None, false, Some(2)).unwrap();
+        let result = qmc_quad_parallel(f, &a, &b, Some(8), Some(1000), None, false, Some(2))
+            .expect("Operation failed");
 
         // Expected integral of x^2 + y^2 over [0,1]×[0,1] is 2/3
         assert_abs_diff_eq!(result.integral, 2.0 / 3.0, epsilon = 0.1);

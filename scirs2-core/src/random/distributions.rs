@@ -26,8 +26,8 @@ impl Beta {
             return Err("Alpha and beta parameters must be positive".to_string());
         }
 
-        let gamma_alpha = Gamma::new(alpha, 1.0).unwrap();
-        let gamma_beta = Gamma::new(beta, 1.0).unwrap();
+        let gamma_alpha = Gamma::new(alpha, 1.0).expect("Operation failed");
+        let gamma_beta = Gamma::new(beta, 1.0).expect("Operation failed");
 
         Ok(Self {
             alpha,
@@ -111,12 +111,12 @@ impl Categorical {
 
     /// Sample from the Categorical distribution, returning the index
     pub fn sample<R: Rng>(&self, rng: &mut Random<R>) -> usize {
-        let u = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+        let u = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
 
         // Binary search for the cumulative probability
         match self
             .cumulative
-            .binary_search_by(|&x| x.partial_cmp(&u).unwrap())
+            .binary_search_by(|&x| x.partial_cmp(&u).expect("Operation failed"))
         {
             Ok(idx) => idx,
             Err(idx) => idx.min(self.cumulative.len() - 1),
@@ -218,7 +218,7 @@ impl ExponentialDist {
             return Err("Lambda parameter must be positive".to_string());
         }
 
-        let exponential = rand_distr::Exp::new(lambda).unwrap();
+        let exponential = rand_distr::Exp::new(lambda).expect("Operation failed");
 
         Ok(Self {
             lambda,
@@ -273,7 +273,7 @@ impl GammaDist {
             return Err("Alpha and beta parameters must be positive".to_string());
         }
 
-        let gamma = Gamma::new(alpha, beta).unwrap();
+        let gamma = Gamma::new(alpha, beta).expect("Operation failed");
 
         Ok(Self { alpha, beta, gamma })
     }
@@ -331,7 +331,7 @@ impl VonMises {
     pub fn sample<R: Rng>(&self, rng: &mut Random<R>) -> f64 {
         if self.kappa < 1e-6 {
             // Uniform distribution for very small kappa
-            return rng.sample(Uniform::new(0.0, 2.0 * PI).unwrap());
+            return rng.sample(Uniform::new(0.0, 2.0 * PI).expect("Operation failed"));
         }
 
         // Use Best and Fisher algorithm for rejection sampling
@@ -339,13 +339,13 @@ impl VonMises {
         let r = s + (1.0 + s * s).sqrt();
 
         loop {
-            let u1 = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+            let u1 = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
             let z = (r * u1).cos();
             let d = z / (r + z);
-            let u2 = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+            let u2 = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
 
             if u2 < 1.0 - d * d || u2 <= (1.0 - d) * (-self.kappa * d).exp() {
-                let u3 = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+                let u3 = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
                 let theta = if u3 > 0.5 {
                     self.mu + d.acos()
                 } else {
@@ -441,7 +441,7 @@ impl MultivariateNormal {
     /// Sample from the Multivariate Normal distribution
     pub fn sample<R: Rng>(&self, rng: &mut Random<R>) -> Vec<f64> {
         // Generate standard normal samples
-        let standard_normal = Normal::new(0.0, 1.0).unwrap();
+        let standard_normal = Normal::new(0.0, 1.0).expect("Operation failed");
         let z: Vec<f64> = (0..self.dimension)
             .map(|_| rng.sample(standard_normal))
             .collect();
@@ -508,7 +508,7 @@ impl Dirichlet {
         let gamma_distributions: Result<Vec<_>, _> =
             alphas.iter().map(|&alpha| Gamma::new(alpha, 1.0)).collect();
 
-        let gamma_distributions = gamma_distributions.unwrap();
+        let gamma_distributions = gamma_distributions.expect("Operation failed");
 
         Ok(Self {
             alphas,
@@ -574,7 +574,7 @@ mod tests {
 
     #[test]
     fn test_beta_distribution() {
-        let beta = Beta::new(2.0, 3.0).unwrap();
+        let beta = Beta::new(2.0, 3.0).expect("Operation failed");
         let mut rng = seeded_rng(42);
 
         let sample = beta.sample(&mut rng);
@@ -596,7 +596,7 @@ mod tests {
     #[test]
     fn test_categorical_distribution() {
         let weights = vec![0.2, 0.3, 0.5];
-        let categorical = Categorical::new(weights).unwrap();
+        let categorical = Categorical::new(weights).expect("Operation failed");
         let mut rng = seeded_rng(123);
 
         let samples = categorical.sample_vec(&mut rng, 1000);
@@ -614,9 +614,21 @@ mod tests {
         assert!(count_2 > 0);
 
         // Test probabilities
-        assert_abs_diff_eq!(categorical.probability(0).unwrap(), 0.2, epsilon = 1e-10);
-        assert_abs_diff_eq!(categorical.probability(1).unwrap(), 0.3, epsilon = 1e-10);
-        assert_abs_diff_eq!(categorical.probability(2).unwrap(), 0.5, epsilon = 1e-10);
+        assert_abs_diff_eq!(
+            categorical.probability(0).expect("Operation failed"),
+            0.2,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            categorical.probability(1).expect("Operation failed"),
+            0.3,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            categorical.probability(2).expect("Operation failed"),
+            0.5,
+            epsilon = 1e-10
+        );
 
         // Test error cases
         assert!(Categorical::new(vec![]).is_err());
@@ -628,7 +640,7 @@ mod tests {
         let mean = vec![0.0, 0.0];
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
 
-        let mvn = MultivariateNormal::new(mean, cov).unwrap();
+        let mvn = MultivariateNormal::new(mean, cov).expect("Operation failed");
         let mut rng = seeded_rng(456);
         let sample = mvn.sample(&mut rng);
 
@@ -643,7 +655,7 @@ mod tests {
     #[test]
     fn test_dirichlet_distribution() {
         let alphas = vec![1.0, 2.0, 3.0];
-        let dirichlet = Dirichlet::new(alphas).unwrap();
+        let dirichlet = Dirichlet::new(alphas).expect("Operation failed");
 
         let mut rng = seeded_rng(789);
         let sample = dirichlet.sample(&mut rng);
@@ -659,7 +671,7 @@ mod tests {
 
     #[test]
     fn test_von_mises_distribution() {
-        let von_mises = VonMises::mu(0.0, 1.0).unwrap();
+        let von_mises = VonMises::mu(0.0, 1.0).expect("Operation failed");
         let mut rng = seeded_rng(101112);
 
         let samples = von_mises.sample_vec(&mut rng, 100);
@@ -675,7 +687,7 @@ mod tests {
     fn test_weighted_choice() {
         let items = vec!["A", "B", "C"];
         let weights = vec![0.2, 0.3, 0.5];
-        let weighted_choice = WeightedChoice::new(items, weights).unwrap();
+        let weighted_choice = WeightedChoice::new(items, weights).expect("Operation failed");
         let mut rng = seeded_rng(131415);
 
         let samples = weighted_choice.sample_vec(&mut rng, 100);

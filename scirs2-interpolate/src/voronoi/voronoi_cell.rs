@@ -80,7 +80,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand> Vor
             }
 
             // Take absolute value and divide by 2
-            area = area.abs() / (F::from(2).unwrap());
+            area = area.abs() / (F::from(2).expect("Failed to convert constant to float"));
             self.measure = area;
         } else if dim == 3 {
             // Compute volume of 3D polyhedron using the divergence theorem
@@ -108,7 +108,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand> Vor
                     centroid[j] = centroid[j] + self.vertices[[i, j]];
                 }
             }
-            centroid = centroid / F::from(n).unwrap();
+            centroid = centroid / F::from(n).expect("Failed to convert to float");
 
             // Calculate volume by summing the volumes of tetrahedra
             // formed by each triangular face and the centroid
@@ -136,7 +136,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand> Vor
                 let dot = centroid[0] * cross_x + centroid[1] * cross_y + centroid[2] * cross_z;
 
                 // Add to total volume
-                volume = volume + dot / F::from(6).unwrap();
+                volume = volume + dot / F::from(6).expect("Failed to convert constant to float");
             }
 
             self.measure = volume.abs();
@@ -188,7 +188,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand> Vor
                     break;
                 }
 
-                let s = input_list.last().unwrap().clone();
+                let s = input_list.last().expect("Operation failed").clone();
 
                 for e in &input_list {
                     if inside_edge(e, &clip_edge_start, &clip_edge_end) {
@@ -235,7 +235,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand> Vor
                 area = area + (xi * yj - xj * yi);
             }
 
-            area = area.abs() / (F::from(2).unwrap());
+            area = area.abs() / (F::from(2).expect("Failed to convert constant to float"));
 
             Ok((intersection_polygon, area))
         } else if dim == 3 {
@@ -467,7 +467,8 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
             // Add padding to avoid numerical issues (10% on each side)
             let mut bounds_vec = Vec::with_capacity(2 * dim);
             for j in 0..dim {
-                let padding = (max_coords[j] - min_coords[j]) * F::from(0.1).unwrap();
+                let padding = (max_coords[j] - min_coords[j])
+                    * F::from(0.1).expect("Failed to convert constant to float");
                 bounds_vec.push(min_coords[j] - padding); // Min bound
                 bounds_vec.push(max_coords[j] + padding); // Max bound
             }
@@ -573,8 +574,10 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                     let site_j = &self.cells[j].site;
 
                     // Compute midpoint between site_i and site_j
-                    let mid_x = (site_i[0] + site_j[0]) / F::from(2).unwrap();
-                    let mid_y = (site_i[1] + site_j[1]) / F::from(2).unwrap();
+                    let mid_x = (site_i[0] + site_j[0])
+                        / F::from(2).expect("Failed to convert constant to float");
+                    let mid_y = (site_i[1] + site_j[1])
+                        / F::from(2).expect("Failed to convert constant to float");
                     let midpoint = Array1::from_vec(vec![mid_x, mid_y]);
 
                     // Compute normal vector to the line from site_i to site_j
@@ -657,7 +660,9 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
 
                             // If the point is very close to the boundary of this half-plane,
                             // add the corresponding site as a neighbor
-                            if dot_product.abs() < F::from(1e-10).unwrap() && !neighbors.contains(j)
+                            if dot_product.abs()
+                                < F::from(1e-10).expect("Failed to convert constant to float")
+                                && !neighbors.contains(j)
                             {
                                 neighbors.push(*j);
                             }
@@ -679,7 +684,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                 sorted_vertices.sort_by(|a, b| {
                     let angle_a = (a[1] - center_y).atan2(a[0] - center_x);
                     let angle_b = (b[1] - center_y).atan2(b[0] - center_x);
-                    angle_a.partial_cmp(&angle_b).unwrap()
+                    angle_a.partial_cmp(&angle_b).expect("Operation failed")
                 });
 
                 // Convert to Array2 for storage
@@ -717,7 +722,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                     max_y, max_z,
                 ],
             )
-            .unwrap();
+            .expect("Operation failed");
 
             for i in 0..n_sites {
                 let site_i = &self.cells[i].site;
@@ -762,16 +767,16 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                     let dist = (dx * dx + dy * dy + dz * dz).sqrt();
 
                     // Add to neighbors if close enough
-                    if dist < F::from(5.0).unwrap() {
+                    if dist < F::from(5.0).expect("Failed to convert constant to float") {
                         neighbors.push(j);
                     }
 
                     // Check each direction
                     for (dir_idx, dir) in directions.iter().enumerate() {
                         // Project the vector to site_j onto this direction
-                        let proj = dx * F::from(dir[0]).unwrap()
-                            + dy * F::from(dir[1]).unwrap()
-                            + dz * F::from(dir[2]).unwrap();
+                        let proj = dx * F::from(dir[0]).expect("Failed to convert to float")
+                            + dy * F::from(dir[1]).expect("Failed to convert to float")
+                            + dz * F::from(dir[2]).expect("Failed to convert to float");
 
                         // If the projection is positive (site_j is in this direction)
                         // and the distance in this direction is smaller than current minimum
@@ -787,12 +792,18 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                 // Create a bounding box for this Voronoi cell
                 // using half the distance to the nearest neighbor in each direction
                 let mut cell_bounds = [
-                    site_i[0] - min_dist[0] / F::from(2).unwrap(), // min_x
-                    site_i[1] - min_dist[2] / F::from(2).unwrap(), // min_y
-                    site_i[2] - min_dist[4] / F::from(2).unwrap(), // min_z
-                    site_i[0] + min_dist[1] / F::from(2).unwrap(), // max_x
-                    site_i[1] + min_dist[3] / F::from(2).unwrap(), // max_y
-                    site_i[2] + min_dist[5] / F::from(2).unwrap(), // max_z
+                    site_i[0]
+                        - min_dist[0] / F::from(2).expect("Failed to convert constant to float"), // min_x
+                    site_i[1]
+                        - min_dist[2] / F::from(2).expect("Failed to convert constant to float"), // min_y
+                    site_i[2]
+                        - min_dist[4] / F::from(2).expect("Failed to convert constant to float"), // min_z
+                    site_i[0]
+                        + min_dist[1] / F::from(2).expect("Failed to convert constant to float"), // max_x
+                    site_i[1]
+                        + min_dist[3] / F::from(2).expect("Failed to convert constant to float"), // max_y
+                    site_i[2]
+                        + min_dist[5] / F::from(2).expect("Failed to convert constant to float"), // max_z
                 ];
 
                 // Clamp to domain bounds
@@ -833,7 +844,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                         cell_bounds[5], // min_x, max_y, max_z
                     ],
                 )
-                .unwrap();
+                .expect("Operation failed");
 
                 // Update the cell
                 self.cells[i].set_vertices(vertices);
@@ -881,7 +892,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                 (4, 2),
                 vec![min_x, min_y, max_x, min_y, max_x, max_y, min_x, max_y],
             )
-            .unwrap();
+            .expect("Operation failed");
 
             query_cell.set_vertices(corners);
             let _ = query_cell.compute_measure();
@@ -925,7 +936,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                     max_y, max_z,
                 ],
             )
-            .unwrap();
+            .expect("Operation failed");
 
             query_cell.set_vertices(corners);
             let _ = query_cell.compute_measure();
@@ -961,7 +972,7 @@ impl<F: Float + FromPrimitive + Debug + scirs2_core::ndarray::ScalarOperand + 's
                 }
 
                 // Sort by distance
-                distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                distances.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
                 // Take the k nearest sites
                 let k = 4.min(distances.len()); // Use 4 neighbors for 3D

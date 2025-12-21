@@ -22,7 +22,7 @@ use std::fmt::Debug;
 /// 
 /// let gelu = GELU::new();
 /// let input = Array::from_vec(vec![1.0, -1.0, 2.0, -2.0]).into_dyn();
-/// let output = gelu.forward(&input).unwrap();
+/// let output = gelu.forward(&input).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct GELU {
@@ -55,9 +55,9 @@ impl<F: Float + Debug> Activation<F> for GELU {
         
         if self.fast {
             // Fast approximation: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
-            let sqrt_2_over_pi = F::from(0.7978845608028654).unwrap(); // sqrt(2/π)
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_2_over_pi = F::from(0.7978845608028654).expect("Failed to convert constant to float"); // sqrt(2/π)
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
             
             Zip::from(&mut output).for_each(|x| {
@@ -69,9 +69,9 @@ impl<F: Float + Debug> Activation<F> for GELU {
             // Exact formula: 0.5 * x * (1 + erf(x/sqrt(2)))
             // Since erf is not directly available in num_traits, we use the
             // related function: 0.5 * (1 + tanh(sqrt(π/2) * x * (1 + 0.044715 * x^2)))
-            let sqrt_pi_over_2 = F::from(1.2533141373155).unwrap(); // sqrt(π/2)
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_pi_over_2 = F::from(1.2533141373155).expect("Failed to convert constant to float"); // sqrt(π/2)
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
             
             Zip::from(&mut output).for_each(|x| {
@@ -92,11 +92,11 @@ impl<F: Float + Debug> Activation<F> for GELU {
         let mut grad_input = Array::zeros(grad_output.raw_dim());
         
         if self.fast {
-            let sqrt_2_over_pi = F::from(0.7978845608028654).unwrap(); // sqrt(2/π)
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_2_over_pi = F::from(0.7978845608028654).expect("Failed to convert constant to float"); // sqrt(2/π)
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
-            let three = F::from(3.0).unwrap();
+            let three = F::from(3.0).expect("Failed to convert constant to float");
             
             Zip::from(&mut grad_input)
                 .and(grad_output)
@@ -112,11 +112,11 @@ impl<F: Float + Debug> Activation<F> for GELU {
                     *grad_in = grad_out * dgelu_dx;
                 });
         } else {
-            let sqrt_pi_over_2 = F::from(1.2533141373155).unwrap(); // sqrt(π/2)
-            let coeff = F::from(0.044715).unwrap();
-            let half = F::from(0.5).unwrap();
+            let sqrt_pi_over_2 = F::from(1.2533141373155).expect("Failed to convert constant to float"); // sqrt(π/2)
+            let coeff = F::from(0.044715).expect("Failed to convert constant to float");
+            let half = F::from(0.5).expect("Failed to convert constant to float");
             let one = F::one();
-            let three = F::from(3.0).unwrap();
+            let three = F::from(3.0).expect("Failed to convert constant to float");
             
             Zip::from(&mut grad_input)
                 .and(grad_output)

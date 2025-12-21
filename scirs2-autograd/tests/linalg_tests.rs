@@ -8,7 +8,7 @@ mod tests {
     fn test_eye() {
         ag::run(|ctx| {
             let eye_matrix: ag::Tensor<f64> = eye(3, ctx);
-            let result = eye_matrix.eval(ctx).unwrap();
+            let result = eye_matrix.eval(ctx).expect("Test: operation failed");
 
             assert_eq!(result.shape(), &[3, 3]);
             for i in 0..3 {
@@ -32,7 +32,7 @@ mod tests {
             );
 
             let tr = trace(matrix);
-            let result = tr.eval(ctx).unwrap();
+            let result = tr.eval(ctx).expect("Test: operation failed");
 
             assert_eq!(result.shape(), &[] as &[usize]);
             assert_eq!(result[[]], 5.0); // 1 + 4 = 5
@@ -49,7 +49,7 @@ mod tests {
             );
 
             let diag_matrix = diag(vector);
-            let result = diag_matrix.eval(ctx).unwrap();
+            let result = diag_matrix.eval(ctx).expect("Test: operation failed");
 
             assert_eq!(result.shape(), &[3, 3]);
             assert_eq!(result[[0, 0]], 1.0);
@@ -58,7 +58,7 @@ mod tests {
 
             // Test diagonal extraction
             let extracted = extract_diag(diag_matrix);
-            let extracted_result = extracted.eval(ctx).unwrap();
+            let extracted_result = extracted.eval(ctx).expect("Test: operation failed");
 
             assert_eq!(extracted_result.shape(), &[3]);
             assert_eq!(extracted_result[[0]], 1.0);
@@ -85,8 +85,8 @@ mod tests {
 
             // Check that A = QR
             let reconstructed = ag::tensor_ops::matmul(q, r);
-            let a_val = a.eval(ctx).unwrap();
-            let reconstructed_val = reconstructed.eval(ctx).unwrap();
+            let a_val = a.eval(ctx).expect("Test: operation failed");
+            let reconstructed_val = reconstructed.eval(ctx).expect("Test: operation failed");
 
             for i in 0..4 {
                 for j in 0..3 {

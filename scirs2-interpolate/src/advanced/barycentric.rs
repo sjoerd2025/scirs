@@ -47,10 +47,10 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     /// let y = array![0.0f64, 1.0, 4.0, 9.0, 16.0];
     ///
     /// // Create a barycentric interpolator with polynomial order 2
-    /// let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 2).unwrap();
+    /// let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 2).expect("Operation failed");
     ///
     /// // Interpolate at x = 2.5
-    /// let y_interp = interp.evaluate(2.5).unwrap();
+    /// let y_interp = interp.evaluate(2.5).expect("Operation failed");
     /// println!("Interpolated value at x=2.5: {}", y_interp);
     /// ```
     pub fn new(x: &ArrayView1<F>, y: &ArrayView1<F>, order: usize) -> InterpolateResult<Self> {
@@ -92,9 +92,9 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
             for j in 0..n {
                 if j != i {
                     let diff = x[i] - x[j];
-                    if diff.abs() < F::from_f64(1e-14).unwrap() {
+                    if diff.abs() < F::from_f64(1e-14).expect("Operation failed") {
                         // Handle nearly identical points to avoid division by zero
-                        w = F::from_f64(1e14).unwrap();
+                        w = F::from_f64(1e14).expect("Operation failed");
                         break;
                     }
                     w = w / diff;
@@ -117,7 +117,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
     /// The interpolated value at `xnew`
     pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
         // Check if xnew is exactly one of the data points
-        let eps = F::from_f64(1e-14).unwrap();
+        let eps = F::from_f64(1e-14).expect("Operation failed");
         for i in 0..self.x.len() {
             if (xnew - self.x[i]).abs() < eps {
                 return Ok(self.y[i]);
@@ -165,9 +165,9 @@ impl<F: Float + FromPrimitive + Debug> BarycentricInterpolator<F> {
             for j in 0..n {
                 if j != i {
                     let diff = self.x[indices[i]] - self.x[indices[j]];
-                    if diff.abs() < F::from_f64(1e-14).unwrap() {
+                    if diff.abs() < F::from_f64(1e-14).expect("Operation failed") {
                         // Handle nearly identical points
-                        w = F::from_f64(1e14).unwrap();
+                        w = F::from_f64(1e14).expect("Operation failed");
                         break;
                     }
                     w = w / diff;
@@ -282,10 +282,10 @@ impl<F: Float + FromPrimitive + Debug> BarycentricTriangulation<F> {
     /// let triangles = vec![[0, 1, 2], [0, 2, 3]];
     ///
     /// // Create a barycentric triangulation interpolator
-    /// let interp = BarycentricTriangulation::new(&points.view(), &values.view(), triangles).unwrap();
+    /// let interp = BarycentricTriangulation::new(&points.view(), &values.view(), triangles).expect("Operation failed");
     ///
     /// // Interpolate at a point (0.5, 0.5)
-    /// let value = interp.interpolate(0.5, 0.5).unwrap();
+    /// let value = interp.interpolate(0.5, 0.5).expect("Operation failed");
     /// println!("Interpolated value at (0.5, 0.5): {}", value);
     /// ```
     pub fn new(
@@ -346,22 +346,25 @@ impl<F: Float + FromPrimitive + Debug> BarycentricTriangulation<F> {
         let y3 = self.points[triangle[2] * 2 + 1];
 
         // Calculate area of the full triangle
-        let area =
-            F::from_f64(0.5).unwrap() * ((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)).abs();
+        let area = F::from_f64(0.5).expect("Operation failed")
+            * ((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)).abs();
 
         if area == F::zero() {
             // Degenerate triangle, return equal weights
             return [
-                F::from_f64(1.0 / 3.0).unwrap(),
-                F::from_f64(1.0 / 3.0).unwrap(),
-                F::from_f64(1.0 / 3.0).unwrap(),
+                F::from_f64(1.0 / 3.0).expect("Operation failed"),
+                F::from_f64(1.0 / 3.0).expect("Operation failed"),
+                F::from_f64(1.0 / 3.0).expect("Operation failed"),
             ];
         }
 
         // Calculate areas of sub-triangles
-        let area1 = F::from_f64(0.5).unwrap() * ((x2 - x) * (y3 - y) - (x3 - x) * (y2 - y)).abs();
-        let area2 = F::from_f64(0.5).unwrap() * ((x3 - x) * (y1 - y) - (x1 - x) * (y3 - y)).abs();
-        let area3 = F::from_f64(0.5).unwrap() * ((x1 - x) * (y2 - y) - (x2 - x) * (y1 - y)).abs();
+        let area1 = F::from_f64(0.5).expect("Operation failed")
+            * ((x2 - x) * (y3 - y) - (x3 - x) * (y2 - y)).abs();
+        let area2 = F::from_f64(0.5).expect("Operation failed")
+            * ((x3 - x) * (y1 - y) - (x1 - x) * (y3 - y)).abs();
+        let area3 = F::from_f64(0.5).expect("Operation failed")
+            * ((x1 - x) * (y2 - y) - (x2 - x) * (y1 - y)).abs();
 
         // Barycentric coordinates are proportional to areas
         let w1 = area1 / area;
@@ -378,7 +381,7 @@ impl<F: Float + FromPrimitive + Debug> BarycentricTriangulation<F> {
 
             // Point is inside if all coordinates are between 0 and 1
             // We allow a small tolerance for numerical precision
-            let eps = F::from_f64(1e-10).unwrap();
+            let eps = F::from_f64(1e-10).expect("Operation failed");
             if coords.iter().all(|&w| w >= -eps && w <= F::one() + eps) {
                 return Some(i);
             }
@@ -467,10 +470,10 @@ impl<F: Float + FromPrimitive + Debug> BarycentricTriangulation<F> {
 /// let y = array![0.0f64, 1.0, 4.0, 9.0, 16.0];
 ///
 /// // Create a barycentric interpolator with polynomial order 3
-/// let interp = make_barycentric_interpolator(&x.view(), &y.view(), 3).unwrap();
+/// let interp = make_barycentric_interpolator(&x.view(), &y.view(), 3).expect("Operation failed");
 ///
 /// // Interpolate at x = 2.5
-/// let y_interp = interp.evaluate(2.5).unwrap();
+/// let y_interp = interp.evaluate(2.5).expect("Operation failed");
 /// println!("Interpolated value at x=2.5: {}", y_interp);
 /// ```
 #[allow(dead_code)]
@@ -495,18 +498,39 @@ mod tests {
         let y = array![1.0, 3.0, 5.0, 7.0, 9.0];
 
         // Create a barycentric interpolator with order 1 (linear)
-        let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 1).unwrap();
+        let interp =
+            BarycentricInterpolator::new(&x.view(), &y.view(), 1).expect("Operation failed");
 
         // Test at the data points
         for i in 0..x.len() {
-            assert_abs_diff_eq!(interp.evaluate(x[i]).unwrap(), y[i], epsilon = 1e-10);
+            assert_abs_diff_eq!(
+                interp.evaluate(x[i]).expect("Operation failed"),
+                y[i],
+                epsilon = 1e-10
+            );
         }
 
         // Test at intermediate points
-        assert_abs_diff_eq!(interp.evaluate(0.5).unwrap(), 2.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(interp.evaluate(1.5).unwrap(), 4.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(interp.evaluate(2.5).unwrap(), 6.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(interp.evaluate(3.5).unwrap(), 8.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(
+            interp.evaluate(0.5).expect("Operation failed"),
+            2.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            interp.evaluate(1.5).expect("Operation failed"),
+            4.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            interp.evaluate(2.5).expect("Operation failed"),
+            6.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            interp.evaluate(3.5).expect("Operation failed"),
+            8.0,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
@@ -516,20 +540,26 @@ mod tests {
         let y = array![0.0, 1.0, 4.0, 9.0, 16.0];
 
         // Create a barycentric interpolator with order 2 (quadratic)
-        let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 2).unwrap();
+        let interp =
+            BarycentricInterpolator::new(&x.view(), &y.view(), 2).expect("Operation failed");
 
         // Test at the data points
         for i in 0..x.len() {
-            assert_abs_diff_eq!(interp.evaluate(x[i]).unwrap(), y[i], epsilon = 1e-10);
+            assert_abs_diff_eq!(
+                interp.evaluate(x[i]).expect("Operation failed"),
+                y[i],
+                epsilon = 1e-10
+            );
         }
 
         // Test at intermediate points (should be very close to x² for quadratic data)
         // Using a larger epsilon for our simplified algorithm
-        assert!((interp.evaluate(0.5).unwrap() - 0.25).abs() < 5.0);
+        assert!((interp.evaluate(0.5).expect("Operation failed") - 0.25).abs() < 5.0);
         // Using a larger epsilon for our simplified algorithm
-        assert!((interp.evaluate(1.5).unwrap() - 2.25).abs() < 5.0);
-        assert!((interp.evaluate(2.5).unwrap() - 6.25).abs() < 5.0);
-        assert!((interp.evaluate(3.5).unwrap() - 12.25).abs() < 15.0); // Increased tolerance
+        assert!((interp.evaluate(1.5).expect("Operation failed") - 2.25).abs() < 5.0);
+        assert!((interp.evaluate(2.5).expect("Operation failed") - 6.25).abs() < 5.0);
+        assert!((interp.evaluate(3.5).expect("Operation failed") - 12.25).abs() < 15.0);
+        // Increased tolerance
     }
 
     #[test]
@@ -538,11 +568,14 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = array![1.0, 3.0, 5.0, 7.0, 9.0];
 
-        let interp = BarycentricInterpolator::new(&x.view(), &y.view(), 1).unwrap();
+        let interp =
+            BarycentricInterpolator::new(&x.view(), &y.view(), 1).expect("Operation failed");
 
         // Evaluate at multiple points
         let xnew = array![0.5, 1.5, 2.5, 3.5];
-        let y_new = interp.evaluate_array(&xnew.view()).unwrap();
+        let y_new = interp
+            .evaluate_array(&xnew.view())
+            .expect("Operation failed");
 
         // Expected values: y = 2x + 1
         let expected = array![2.0, 4.0, 6.0, 8.0];
@@ -568,27 +601,27 @@ mod tests {
         // Triangulate the square into two triangles
         let triangles = vec![[0, 1, 2], [0, 2, 3]];
 
-        let interp =
-            BarycentricTriangulation::new(&points.view(), &values.view(), triangles).unwrap();
+        let interp = BarycentricTriangulation::new(&points.view(), &values.view(), triangles)
+            .expect("Operation failed");
 
         // Test at corners
         // Using a larger epsilon for our simplified algorithm
-        assert!((interp.interpolate(0.0, 0.0).unwrap() - 0.0).abs() < 5.0);
-        assert!((interp.interpolate(1.0, 0.0).unwrap() - 1.0).abs() < 5.0);
-        assert!((interp.interpolate(1.0, 1.0).unwrap() - 2.0).abs() < 5.0);
-        assert!((interp.interpolate(0.0, 1.0).unwrap() - 1.0).abs() < 5.0);
+        assert!((interp.interpolate(0.0, 0.0).expect("Operation failed") - 0.0).abs() < 5.0);
+        assert!((interp.interpolate(1.0, 0.0).expect("Operation failed") - 1.0).abs() < 5.0);
+        assert!((interp.interpolate(1.0, 1.0).expect("Operation failed") - 2.0).abs() < 5.0);
+        assert!((interp.interpolate(0.0, 1.0).expect("Operation failed") - 1.0).abs() < 5.0);
 
         // Test at center (should be 1.0 due to linear interpolation)
         // Using a larger epsilon for our simplified algorithm
-        assert!((interp.interpolate(0.5, 0.5).unwrap() - 1.0).abs() < 5.0);
+        assert!((interp.interpolate(0.5, 0.5).expect("Operation failed") - 1.0).abs() < 5.0);
 
         // Test bottom edge midpoint
         // Using a larger epsilon for our simplified algorithm
-        assert!((interp.interpolate(0.5, 0.0).unwrap() - 0.5).abs() < 5.0);
+        assert!((interp.interpolate(0.5, 0.0).expect("Operation failed") - 0.5).abs() < 5.0);
 
         // Test right edge midpoint
         // Using a larger epsilon for our simplified algorithm
-        assert!((interp.interpolate(1.0, 0.5).unwrap() - 1.5).abs() < 5.0);
+        assert!((interp.interpolate(1.0, 0.5).expect("Operation failed") - 1.5).abs() < 5.0);
 
         // Point outside should fail
         assert!(interp.interpolate(2.0, 2.0).is_err());
@@ -601,20 +634,21 @@ mod tests {
         let y = array![0.0, 1.0, 8.0, 27.0, 64.0, 125.0];
 
         // Create a barycentric interpolator with order 3 (cubic)
-        let interp = make_barycentric_interpolator(&x.view(), &y.view(), 3).unwrap();
+        let interp =
+            make_barycentric_interpolator(&x.view(), &y.view(), 3).expect("Operation failed");
 
         // Test at data points (should be exact)
         for i in 0..x.len() {
-            assert!((interp.evaluate(x[i]).unwrap() - y[i]).abs() < 1e-10);
+            assert!((interp.evaluate(x[i]).expect("Operation failed") - y[i]).abs() < 1e-10);
         }
 
         // Test at intermediate points (should be accurate for cubic interpolation)
-        assert!((interp.evaluate(1.5).unwrap() - 3.375).abs() < 1e-10);
-        assert!((interp.evaluate(2.5).unwrap() - 15.625).abs() < 1e-10);
-        assert!((interp.evaluate(3.5).unwrap() - 42.875).abs() < 1e-10);
+        assert!((interp.evaluate(1.5).expect("Operation failed") - 3.375).abs() < 1e-10);
+        assert!((interp.evaluate(2.5).expect("Operation failed") - 15.625).abs() < 1e-10);
+        assert!((interp.evaluate(3.5).expect("Operation failed") - 42.875).abs() < 1e-10);
 
         // Test edge interpolation
-        assert!((interp.evaluate(0.5).unwrap() - 0.125).abs() < 1e-10);
-        assert!((interp.evaluate(4.5).unwrap() - 91.125).abs() < 1e-10);
+        assert!((interp.evaluate(0.5).expect("Operation failed") - 0.125).abs() < 1e-10);
+        assert!((interp.evaluate(4.5).expect("Operation failed") - 91.125).abs() < 1e-10);
     }
 }

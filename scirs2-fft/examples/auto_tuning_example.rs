@@ -74,7 +74,7 @@ fn main() {
 
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = scirs2_fft::fft(&input, None).unwrap();
+            let _ = scirs2_fft::fft(&input, None).expect("Operation failed");
             let elapsed = start.elapsed();
             standard_total += elapsed.as_nanos() as u64;
         }
@@ -86,7 +86,9 @@ fn main() {
 
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = tuner.run_optimal_fft(&input, None, true).unwrap();
+            let _ = tuner
+                .run_optimal_fft(&input, None, true)
+                .expect("Operation failed");
             let elapsed = start.elapsed();
             tuned_total += elapsed.as_nanos() as u64;
         }

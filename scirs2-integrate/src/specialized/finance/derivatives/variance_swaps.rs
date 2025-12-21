@@ -114,10 +114,10 @@ impl VarianceSwap {
                 (k1 - forward)
                     .abs()
                     .partial_cmp(&(k2 - forward).abs())
-                    .unwrap()
+                    .expect("Operation failed")
             })
             .map(|(i, _)| i)
-            .unwrap();
+            .expect("Operation failed");
 
         // OTM puts: K < F
         for i in 0..atm_idx {
@@ -357,7 +357,7 @@ mod tests {
 
     #[test]
     fn test_variance_swap_creation() {
-        let swap = VarianceSwap::new(0.04, 100000.0, 1.0, 252, 0.05).unwrap();
+        let swap = VarianceSwap::new(0.04, 100000.0, 1.0, 252, 0.05).expect("Operation failed");
 
         assert_eq!(swap.strike, 0.04);
         assert_eq!(swap.notional, 100000.0);
@@ -366,7 +366,7 @@ mod tests {
 
     #[test]
     fn test_variance_swap_payoff() {
-        let swap = VarianceSwap::new(0.04, 100000.0, 1.0, 252, 0.05).unwrap();
+        let swap = VarianceSwap::new(0.04, 100000.0, 1.0, 252, 0.05).expect("Operation failed");
 
         // Realized variance = 0.05 (higher than strike)
         let payoff = swap.payoff(0.05);
@@ -382,7 +382,8 @@ mod tests {
         // Generate sample daily returns (1% daily vol)
         let returns = vec![0.01, -0.01, 0.005, -0.005, 0.015, -0.01, 0.01, -0.015];
 
-        let realized_var = VarianceSwap::realized_variance(&returns, 252.0).unwrap();
+        let realized_var =
+            VarianceSwap::realized_variance(&returns, 252.0).expect("Operation failed");
 
         // With these returns, annualized variance should be around 0.01-0.02
         assert!(
@@ -403,9 +404,9 @@ mod tests {
             (50.0, 150.0),
             50,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let fair_strike = chain.fair_variance_strike().unwrap();
+        let fair_strike = chain.fair_variance_strike().expect("Operation failed");
 
         // Should be close to 0.04 (0.2²)
         assert!(
@@ -417,7 +418,7 @@ mod tests {
 
     #[test]
     fn test_volatility_swap_creation() {
-        let swap = VolatilitySwap::new(0.2, 100000.0, 1.0).unwrap();
+        let swap = VolatilitySwap::new(0.2, 100000.0, 1.0).expect("Operation failed");
 
         assert_eq!(swap.strike, 0.2);
         assert_eq!(swap.notional, 100000.0);
@@ -428,7 +429,7 @@ mod tests {
 
     #[test]
     fn test_volatility_swap_payoff() {
-        let swap = VolatilitySwap::new(0.2, 100000.0, 1.0).unwrap();
+        let swap = VolatilitySwap::new(0.2, 100000.0, 1.0).expect("Operation failed");
 
         // Realized vol = 0.25
         let payoff = swap.payoff(0.25);
@@ -446,7 +447,7 @@ mod tests {
 
         let vol_strike =
             VolatilitySwap::fair_strike_from_variance(variance_strike, variance_of_variance)
-                .unwrap();
+                .expect("Operation failed");
 
         // Convexity adjustment formula: (Vvol / 8) * Var^(-3/2)
         // = 0.001 / 8 * 0.04^(-1.5) ≈ 0.0156
@@ -462,7 +463,8 @@ mod tests {
     fn test_realized_volatility() {
         let returns = vec![0.01, -0.01, 0.005, -0.005, 0.015, -0.01];
 
-        let realized_vol = VolatilitySwap::realized_volatility(&returns, 252.0).unwrap();
+        let realized_vol =
+            VolatilitySwap::realized_volatility(&returns, 252.0).expect("Operation failed");
 
         // Should be positive and reasonable
         assert!(
@@ -474,8 +476,8 @@ mod tests {
 
     #[test]
     fn test_option_chain_consistency() {
-        let chain =
-            OptionChain::from_black_scholes(100.0, 1.0, 0.05, 0.0, 0.2, (80.0, 120.0), 20).unwrap();
+        let chain = OptionChain::from_black_scholes(100.0, 1.0, 0.05, 0.0, 0.2, (80.0, 120.0), 20)
+            .expect("Operation failed");
 
         // Check put-call parity at ATM
         let mid_idx = chain.strikes.len() / 2;
@@ -498,13 +500,14 @@ mod tests {
     #[test]
     fn test_variance_swap_fair_value() {
         // Create option chain
-        let chain =
-            OptionChain::from_black_scholes(100.0, 1.0, 0.05, 0.0, 0.2, (70.0, 130.0), 30).unwrap();
+        let chain = OptionChain::from_black_scholes(100.0, 1.0, 0.05, 0.0, 0.2, (70.0, 130.0), 30)
+            .expect("Operation failed");
 
-        let fair_strike = chain.fair_variance_strike().unwrap();
+        let fair_strike = chain.fair_variance_strike().expect("Operation failed");
 
         // Create swap at fair strike
-        let swap = VarianceSwap::new(fair_strike, 100000.0, 1.0, 252, 0.05).unwrap();
+        let swap =
+            VarianceSwap::new(fair_strike, 100000.0, 1.0, 252, 0.05).expect("Operation failed");
 
         // At inception with fair strike, swap value should be approximately zero
         // (we can't test this exactly without realized variance, but we verify the strike is reasonable)

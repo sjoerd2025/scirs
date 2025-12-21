@@ -356,19 +356,21 @@ mod tests {
 
     #[test]
     fn test_out_of_core_manager_creation() {
-        let temp_dir = TempDir::new().unwrap();
-        let manager = OutOfCoreManager::new(temp_dir.path().to_str().unwrap());
+        let temp_dir = TempDir::new().expect("Operation failed");
+        let manager = OutOfCoreManager::new(temp_dir.path().to_str().expect("Operation failed"));
         assert!(manager.is_ok());
 
-        let manager = manager.unwrap();
+        let manager = manager.expect("Operation failed");
         assert_eq!(manager.get_active_file_count(), 0);
         assert_eq!(manager.get_disk_usage(), 0);
     }
 
     #[test]
     fn test_block_write_read_roundtrip() {
-        let temp_dir = TempDir::new().unwrap();
-        let mut manager = OutOfCoreManager::new(temp_dir.path().to_str().unwrap()).unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
+        let mut manager =
+            OutOfCoreManager::new(temp_dir.path().to_str().expect("Operation failed"))
+                .expect("Operation failed");
 
         let block_id = BlockId::new(1, 0, 0);
         let original_block = CompressedBlock::new(
@@ -380,13 +382,17 @@ mod tests {
         );
 
         // Write block to disk
-        let file_name = manager.write_block_to_disk(&original_block).unwrap();
+        let file_name = manager
+            .write_block_to_disk(&original_block)
+            .expect("Operation failed");
         assert!(!file_name.is_empty());
         assert_eq!(manager.get_active_file_count(), 1);
         assert!(manager.has_block(&block_id));
 
         // Read block from disk
-        let read_block = manager.read_block_from_disk(&block_id).unwrap();
+        let read_block = manager
+            .read_block_from_disk(&block_id)
+            .expect("Operation failed");
         assert_eq!(read_block.blockid, original_block.blockid);
         assert_eq!(read_block.block_type, original_block.block_type);
         assert_eq!(read_block.compressed_data, original_block.compressed_data);
@@ -399,8 +405,10 @@ mod tests {
 
     #[test]
     fn test_block_removal() {
-        let temp_dir = TempDir::new().unwrap();
-        let mut manager = OutOfCoreManager::new(temp_dir.path().to_str().unwrap()).unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
+        let mut manager =
+            OutOfCoreManager::new(temp_dir.path().to_str().expect("Operation failed"))
+                .expect("Operation failed");
 
         let block_id = BlockId::new(1, 0, 0);
         let block = CompressedBlock::new(
@@ -412,18 +420,22 @@ mod tests {
         );
 
         // Write and then remove block
-        manager.write_block_to_disk(&block).unwrap();
+        manager
+            .write_block_to_disk(&block)
+            .expect("Operation failed");
         assert!(manager.has_block(&block_id));
 
-        manager.remove_block(&block_id).unwrap();
+        manager.remove_block(&block_id).expect("Operation failed");
         assert!(!manager.has_block(&block_id));
         assert_eq!(manager.get_active_file_count(), 0);
     }
 
     #[test]
     fn test_storage_stats() {
-        let temp_dir = TempDir::new().unwrap();
-        let mut manager = OutOfCoreManager::new(temp_dir.path().to_str().unwrap()).unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
+        let mut manager =
+            OutOfCoreManager::new(temp_dir.path().to_str().expect("Operation failed"))
+                .expect("Operation failed");
 
         let stats = manager.get_storage_stats();
         assert_eq!(stats.total_blocks, 0);
@@ -437,7 +449,9 @@ mod tests {
             100,
             1,
         );
-        manager.write_block_to_disk(&block).unwrap();
+        manager
+            .write_block_to_disk(&block)
+            .expect("Operation failed");
 
         let stats = manager.get_storage_stats();
         assert_eq!(stats.total_blocks, 1);
@@ -447,8 +461,10 @@ mod tests {
 
     #[test]
     fn test_cleanup() {
-        let temp_dir = TempDir::new().unwrap();
-        let mut manager = OutOfCoreManager::new(temp_dir.path().to_str().unwrap()).unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
+        let mut manager =
+            OutOfCoreManager::new(temp_dir.path().to_str().expect("Operation failed"))
+                .expect("Operation failed");
 
         // Add multiple blocks
         for i in 0..5 {
@@ -459,21 +475,25 @@ mod tests {
                 100,
                 1,
             );
-            manager.write_block_to_disk(&block).unwrap();
+            manager
+                .write_block_to_disk(&block)
+                .expect("Operation failed");
         }
 
         assert_eq!(manager.get_active_file_count(), 5);
 
         // Cleanup all blocks
-        manager.cleanup().unwrap();
+        manager.cleanup().expect("Operation failed");
         assert_eq!(manager.get_active_file_count(), 0);
         assert_eq!(manager.get_disk_usage(), 0);
     }
 
     #[test]
     fn test_storage_compaction() {
-        let temp_dir = TempDir::new().unwrap();
-        let mut manager = OutOfCoreManager::new(temp_dir.path().to_str().unwrap()).unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
+        let mut manager =
+            OutOfCoreManager::new(temp_dir.path().to_str().expect("Operation failed"))
+                .expect("Operation failed");
 
         // Add blocks
         for i in 0..3 {
@@ -484,11 +504,13 @@ mod tests {
                 100,
                 1,
             );
-            manager.write_block_to_disk(&block).unwrap();
+            manager
+                .write_block_to_disk(&block)
+                .expect("Operation failed");
         }
 
         let initial_count = manager.get_active_file_count();
-        let compacted = manager.compact_storage().unwrap();
+        let compacted = manager.compact_storage().expect("Operation failed");
 
         assert_eq!(compacted, initial_count);
         assert_eq!(manager.get_active_file_count(), initial_count);

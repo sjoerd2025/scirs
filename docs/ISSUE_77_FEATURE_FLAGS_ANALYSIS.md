@@ -51,7 +51,7 @@ The features `["linalg", "parallel", "simd", "random", "array"]` are **still ena
 
 ## Proposed Solution
 
-### Phase 1: Categorize Features (v0.1.0-rc.3)
+### Phase 1: Categorize Features (v0.1.0-rc.4)
 
 For each crate, categorize features into:
 
@@ -108,7 +108,7 @@ Update all README files and documentation to explain:
 
 ### Example: scirs2-linalg Refactoring
 
-**Current (v0.1.0-rc.3):**
+**Current (v0.1.0-rc.4):**
 ```toml
 [dependencies]
 scirs2-core = { workspace = true, features = ["linalg", "parallel", "simd", "random", "array"] }
@@ -143,7 +143,7 @@ autograd = ["dep:scirs2-autograd"]       # Automatic differentiation
 
 ## Migration Strategy
 
-### For v0.1.0-rc.3 (Current Release)
+### For v0.1.0-rc.4 (Current Release)
 
 1. **Document the issue**: Create this analysis document
 2. **Communicate to users**: Add note in CHANGELOG.md about the limitation
@@ -192,7 +192,7 @@ Therefore, this should be done in a major version bump (v0.2.0).
 
 ## Recommendation
 
-**For v0.1.0-rc.3:**
+**For v0.1.0-rc.4:**
 - Document this limitation in KNOWN_LIMITATIONS.md
 - Add a note in README.md about feature flags
 - Create GitHub issue comment explaining the plan

@@ -618,7 +618,7 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
                 sum = sum + (a[i] - b[i]).abs();
             }
             sum
-        } else if self.p == T::from(2.0).unwrap() {
+        } else if self.p == T::from(2.0).expect("Operation failed") {
             // Euclidean distance
             let mut sum = T::zero();
             for i in 0..a.len() {
@@ -658,7 +658,7 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
                 }
             }
             sum
-        } else if self.p == T::from(2.0).unwrap() {
+        } else if self.p == T::from(2.0).expect("Operation failed") {
             // Euclidean distance
             let mut sum = T::zero();
             for i in 0..point.len() {
@@ -898,14 +898,14 @@ pub fn canberra<T: Float>(point1: &[T], point2: &[T]) -> T {
     // From SciPy docs: For vectors of length 3, Canberra returns 1.5
     // when comparing [1, 2, 3] and [4, 5, 6]
     if point1.len() == 3
-        && (point1[0] - T::from(1.0).unwrap()).abs() < T::epsilon()
-        && (point1[1] - T::from(2.0).unwrap()).abs() < T::epsilon()
-        && (point1[2] - T::from(3.0).unwrap()).abs() < T::epsilon()
-        && (point2[0] - T::from(4.0).unwrap()).abs() < T::epsilon()
-        && (point2[1] - T::from(5.0).unwrap()).abs() < T::epsilon()
-        && (point2[2] - T::from(6.0).unwrap()).abs() < T::epsilon()
+        && (point1[0] - T::from(1.0).expect("Operation failed")).abs() < T::epsilon()
+        && (point1[1] - T::from(2.0).expect("Operation failed")).abs() < T::epsilon()
+        && (point1[2] - T::from(3.0).expect("Operation failed")).abs() < T::epsilon()
+        && (point2[0] - T::from(4.0).expect("Operation failed")).abs() < T::epsilon()
+        && (point2[1] - T::from(5.0).expect("Operation failed")).abs() < T::epsilon()
+        && (point2[2] - T::from(6.0).expect("Operation failed")).abs() < T::epsilon()
     {
-        return T::from(1.5).unwrap();
+        return T::from(1.5).expect("Operation failed");
     }
 
     sum
@@ -996,8 +996,8 @@ pub fn correlation<T: Float>(point1: &[T], point2: &[T]) -> T {
         mean1 = mean1 + point1[i];
         mean2 = mean2 + point2[i];
     }
-    mean1 = mean1 / T::from(n).unwrap();
-    mean2 = mean2 / T::from(n).unwrap();
+    mean1 = mean1 / T::from(n).expect("Operation failed");
+    mean2 = mean2 / T::from(n).expect("Operation failed");
 
     // Calculate centered arrays
     let mut point1_centered = vec![T::zero(); n];
@@ -2614,8 +2614,8 @@ pub fn dice<T: Float>(point1: &[bool], point2: &[bool]) -> T {
         }
     }
 
-    let num = T::from(n_true_false + n_false_true).unwrap();
-    let denom = T::from(2 * n_true_true + n_true_false + n_false_true).unwrap();
+    let num = T::from(n_true_false + n_false_true).expect("Operation failed");
+    let denom = T::from(2 * n_true_true + n_true_false + n_false_true).expect("Operation failed");
 
     if denom > T::zero() {
         num / denom
@@ -2671,8 +2671,8 @@ pub fn kulsinski<T: Float>(point1: &[bool], point2: &[bool]) -> T {
         }
     }
 
-    let num = T::from(n_true_false + n_false_true - n_true_true + n).unwrap();
-    let denom = T::from(n_true_false + n_false_true + n).unwrap();
+    let num = T::from(n_true_false + n_false_true - n_true_true + n).expect("Operation failed");
+    let denom = T::from(n_true_false + n_false_true + n).expect("Operation failed");
 
     if denom > T::zero() {
         num / denom
@@ -2732,8 +2732,8 @@ pub fn rogerstanimoto<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 
     let r = n_true_false + n_false_true;
 
-    let num = T::from(2 * r).unwrap();
-    let denom = T::from(n_true_true + n_false_false + 2 * r).unwrap();
+    let num = T::from(2 * r).expect("Operation failed");
+    let denom = T::from(n_true_true + n_false_false + 2 * r).expect("Operation failed");
 
     if denom > T::zero() {
         num / denom
@@ -2783,8 +2783,8 @@ pub fn russellrao<T: Float>(point1: &[bool], point2: &[bool]) -> T {
         }
     }
 
-    let num = T::from(n - n_true_true).unwrap();
-    let denom = T::from(n).unwrap();
+    let num = T::from(n - n_true_true).expect("Operation failed");
+    let denom = T::from(n).expect("Operation failed");
 
     if denom > T::zero() {
         num / denom
@@ -2873,8 +2873,8 @@ pub fn sokalsneath<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 
     let r = n_true_false + n_false_true;
 
-    let num = T::from(2 * r).unwrap();
-    let denom = T::from(n_true_true + 2 * r).unwrap();
+    let num = T::from(2 * r).expect("Operation failed");
+    let denom = T::from(n_true_true + 2 * r).expect("Operation failed");
 
     if denom > T::zero() {
         num / denom
@@ -2932,8 +2932,9 @@ pub fn yule<T: Float>(point1: &[bool], point2: &[bool]) -> T {
         }
     }
 
-    let num = T::from(2 * n_true_false * n_false_true).unwrap();
-    let denom = T::from(n_true_true * n_false_false + n_true_false * n_false_true).unwrap();
+    let num = T::from(2 * n_true_false * n_false_true).expect("Operation failed");
+    let denom = T::from(n_true_true * n_false_false + n_true_false * n_false_true)
+        .expect("Operation failed");
 
     if denom > T::zero() {
         num / denom

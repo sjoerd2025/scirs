@@ -375,8 +375,8 @@ fn n4sid_algorithm(
         .svd(true, true)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
-    let u_svd = u_svd.unwrap();
-    let vt = vt.unwrap();
+    let u_svd = u_svd.expect("Operation failed");
+    let vt = vt.expect("Operation failed");
 
     // Extract system matrices
     let u1 = u_svd.slice(s![.., 0..order]).to_owned();
@@ -1163,8 +1163,8 @@ fn compute_pseudoinverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
         .svd(true, true)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
-    let u = u.unwrap();
-    let vt = vt.unwrap();
+    let u = u.expect("Operation failed");
+    let vt = vt.expect("Operation failed");
 
     let tolerance = 1e-10;
     let mut s_inv = Array2::zeros((vt.nrows(), u.ncols()));
@@ -1231,7 +1231,7 @@ mod tests {
                 + 0.1 * rng.gen_range(-1.0..1.0);
         }
 
-        let (model__, converged_) = identify_armax_complete(&input, &output, 2, 2, 1, 1).unwrap();
+        let (model__, converged_) = identify_armax_complete(&input, &output, 2, 2, 1, 1).expect("Operation failed");
 
         assert!(converged);
         assert!(matches!(model, SystemModel::ARMAX { .. }));
@@ -1243,7 +1243,7 @@ mod tests {
         let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
         let output = Array1::from_shape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin());
 
-        let (model__, converged_) = identify_state_space_complete(&input, &output, 2).unwrap();
+        let (model__, converged_) = identify_state_space_complete(&input, &output, 2).expect("Operation failed");
 
         assert!(converged);
         assert!(matches!(model, SystemModel::StateSpace(_)));

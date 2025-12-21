@@ -34,7 +34,7 @@ pub type NestedCVResult = Vec<(Vec<usize>, Vec<usize>, Vec<(Vec<usize>, Vec<usiz
 /// ```
 /// use scirs2_metrics::evaluation::cross_validation::k_fold_cross_validation;
 ///
-/// let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
+/// let splits = k_fold_cross_validation(10, 3, false, None).expect("Operation failed");
 /// assert_eq!(splits.len(), 3); // 3 folds
 ///
 /// // Check first fold
@@ -128,7 +128,7 @@ pub fn k_fold_cross_validation(
 /// ```
 /// use scirs2_metrics::evaluation::cross_validation::leave_one_out_cv;
 ///
-/// let splits = leave_one_out_cv(5).unwrap();
+/// let splits = leave_one_out_cv(5).expect("Operation failed");
 /// assert_eq!(splits.len(), 5); // 5 splits for 5 samples
 ///
 /// // Check first split
@@ -187,7 +187,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 /// use scirs2_metrics::evaluation::cross_validation::stratified_k_fold;
 ///
 /// let y = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
-/// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
+/// let splits = stratified_k_fold(&y, 3, true, Some(42)).expect("Operation failed");
 /// assert_eq!(splits.len(), 3); // 3 folds
 /// ```
 #[allow(dead_code)]
@@ -254,7 +254,7 @@ where
 
     // Shuffle class indices if needed
     if shuffle {
-        let rng = rng.as_mut().unwrap();
+        let rng = rng.as_mut().expect("Operation failed");
 
         for indices in class_counts.values_mut() {
             indices.shuffle(rng);
@@ -316,7 +316,7 @@ where
 /// ```
 /// use scirs2_metrics::evaluation::cross_validation::time_series_split;
 ///
-/// let splits = time_series_split(10, 3, 2, 0, None).unwrap();
+/// let splits = time_series_split(10, 3, 2, 0, None).expect("Operation failed");
 /// assert_eq!(splits.len(), 3); // 3 splits
 ///
 /// // Check first split
@@ -419,7 +419,7 @@ pub fn time_series_split(
 ///
 /// // Each sample belongs to one of three groups: A, B, or C
 /// let groups = array!["A", "A", "A", "B", "B", "C", "C", "C"];
-/// let splits = grouped_k_fold(&groups, 3).unwrap();
+/// let splits = grouped_k_fold(&groups, 3).expect("Operation failed");
 /// assert_eq!(splits.len(), 3); // 3 folds
 ///
 /// // Check if groups are properly separated
@@ -514,7 +514,7 @@ where
             .enumerate()
             .min_by_key(|&(_, &size)| size)
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("Operation failed");
 
         folds[fold_idx].extend_from_slice(&indices);
         fold_sizes[fold_idx] += indices.len();
@@ -567,7 +567,7 @@ where
 /// ```
 /// use scirs2_metrics::evaluation::nested_cross_validation;
 ///
-/// let nested_cv = nested_cross_validation(20, 5, 3, true, Some(42)).unwrap();
+/// let nested_cv = nested_cross_validation(20, 5, 3, true, Some(42)).expect("Operation failed");
 /// assert_eq!(nested_cv.len(), 5); // 5 outer folds
 ///
 /// // Check first outer fold
@@ -651,7 +651,7 @@ mod tests {
     #[test]
     fn test_k_fold_cross_validation() {
         // Test 10 samples with 3 folds
-        let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
+        let splits = k_fold_cross_validation(10, 3, false, None).expect("Operation failed");
 
         // Check number of folds
         assert_eq!(splits.len(), 3);
@@ -675,7 +675,7 @@ mod tests {
 
     #[test]
     fn test_leave_one_out_cv() {
-        let splits = leave_one_out_cv(5).unwrap();
+        let splits = leave_one_out_cv(5).expect("Operation failed");
 
         // Check number of splits
         assert_eq!(splits.len(), 5);
@@ -698,7 +698,7 @@ mod tests {
         // We need at least 3 samples for each class when n_folds=3
         let y = array![0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2];
 
-        let splits = stratified_k_fold(&y, 3, false, None).unwrap();
+        let splits = stratified_k_fold(&y, 3, false, None).expect("Operation failed");
 
         // Check number of folds
         assert_eq!(splits.len(), 3);
@@ -740,7 +740,7 @@ mod tests {
     #[test]
     fn test_time_series_split() {
         // Test with 10 samples, 3 splits, test_size=2, no gap
-        let splits = time_series_split(10, 3, 2, 0, None).unwrap();
+        let splits = time_series_split(10, 3, 2, 0, None).expect("Operation failed");
 
         // Check number of splits
         assert_eq!(splits.len(), 3);
@@ -761,7 +761,7 @@ mod tests {
         assert_eq!(test_indices, &[8, 9]);
 
         // Test with gap
-        let splits = time_series_split(12, 3, 2, 1, None).unwrap();
+        let splits = time_series_split(12, 3, 2, 1, None).expect("Operation failed");
 
         // Check first split
         let (train_indices, test_indices) = &splits[0];
@@ -769,7 +769,7 @@ mod tests {
         assert_eq!(test_indices, &[4, 5]); // Gap of 1 between train and test
 
         // Test with max_train_size
-        let splits = time_series_split(10, 3, 2, 0, Some(3)).unwrap();
+        let splits = time_series_split(10, 3, 2, 0, Some(3)).expect("Operation failed");
 
         // Check splits with limited training size
         let (train_indices, test_indices) = &splits[0];
@@ -786,7 +786,7 @@ mod tests {
         // Create a dataset with 3 groups
         let groups = array!["A", "A", "A", "B", "B", "C", "C", "C"];
 
-        let splits = grouped_k_fold(&groups, 3).unwrap();
+        let splits = grouped_k_fold(&groups, 3).expect("Operation failed");
 
         // Check number of folds
         assert_eq!(splits.len(), 3);
@@ -823,7 +823,8 @@ mod tests {
     #[test]
     fn test_nested_cross_validation() {
         // Test with 20 samples, 5 outer folds, 3 inner folds
-        let nested_cv = nested_cross_validation(20, 5, 3, true, Some(42)).unwrap();
+        let nested_cv =
+            nested_cross_validation(20, 5, 3, true, Some(42)).expect("Operation failed");
 
         // Check number of outer folds
         assert_eq!(nested_cv.len(), 5);

@@ -45,15 +45,15 @@ where
 
     let mut result = Array1::zeros(num);
     let div = if endpoint {
-        T::from(num - 1).unwrap()
+        T::from(num - 1).expect("Operation failed")
     } else {
-        T::from(num).unwrap()
+        T::from(num).expect("Operation failed")
     };
 
     let step = (stop - start) / div;
     
     for (i, val) in result.iter_mut().enumerate() {
-        *val = start + step * T::from(i).unwrap();
+        *val = start + step * T::from(i).expect("Operation failed");
     }
 
     result
@@ -113,7 +113,7 @@ where
 ///
 /// ```
 /// use scirs2::utils::geomspace;
-/// let x = geomspace(1.0, 1000.0, 4, true, 10.0).unwrap();
+/// let x = geomspace(1.0, 1000.0, 4, true, 10.0).expect("Operation failed");
 /// assert_eq!(x.len(), 4);
 /// assert!((x[0] - 1.0).abs() < 1e-10);
 /// assert!((x[3] - 1000.0).abs() < 1e-10);
@@ -298,7 +298,7 @@ pub fn arange<T: Float + FromPrimitive>(start: T, stop: T, step: T) -> Array1<T>
     let mut result = Array1::zeros(size);
     
     for i in 0..size {
-        result[i] = start + T::from(i).unwrap() * step;
+        result[i] = start + T::from(i).expect("Operation failed") * step;
     }
     
     result

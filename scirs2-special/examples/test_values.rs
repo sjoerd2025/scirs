@@ -86,10 +86,10 @@ fn main() {
     println!("Wright omega values:");
     println!(
         "wright_omega_real(0.0, 1e-10) = {}",
-        wright_omega_real(0.0, 1e-10).unwrap()
+        wright_omega_real(0.0, 1e-10).expect("Operation failed")
     );
     println!(
         "wright_omega_real(1.0, 1e-10) = {}",
-        wright_omega_real(1.0, 1e-10).unwrap()
+        wright_omega_real(1.0, 1e-10).expect("Operation failed")
     );
 }

@@ -15,19 +15,24 @@ fn bench_interpolation_operations(c: &mut Criterion) {
     let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
 
     group.bench_function("shift", |b| {
-        b.iter(|| shift(black_box(&input), &[2.5, 3.5], None, None, None, None).unwrap())
+        b.iter(|| {
+            shift(black_box(&input), &[2.5, 3.5], None, None, None, None).expect("Operation failed")
+        })
     });
 
     group.bench_function("zoom_2x", |b| {
-        b.iter(|| zoom(black_box(&input), 2.0, None, None, None, None).unwrap())
+        b.iter(|| zoom(black_box(&input), 2.0, None, None, None, None).expect("Operation failed"))
     });
 
     group.bench_function("zoom_0.5x", |b| {
-        b.iter(|| zoom(black_box(&input), 0.5, None, None, None, None).unwrap())
+        b.iter(|| zoom(black_box(&input), 0.5, None, None, None, None).expect("Operation failed"))
     });
 
     group.bench_function("rotate_45deg", |b| {
-        b.iter(|| rotate(black_box(&input), 45.0, None, None, None, None, None, None).unwrap())
+        b.iter(|| {
+            rotate(black_box(&input), 45.0, None, None, None, None, None, None)
+                .expect("Operation failed")
+        })
     });
 
     group.finish();
@@ -42,18 +47,20 @@ fn bench_affine_transform(c: &mut Criterion) {
     let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
 
     // Identity matrix (no transformation)
-    let identity_matrix =
-        Array2::from_shape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0]).unwrap();
+    let identity_matrix = Array2::from_shape_vec((2, 3), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+        .expect("Operation failed");
 
     // Rotation matrix (45 degrees)
     let angle = std::f64::consts::PI / 4.0;
     let cos_a = angle.cos();
     let sin_a = angle.sin();
     let rotation_matrix =
-        Array2::from_shape_vec((2, 3), vec![cos_a, -sin_a, 0.0, sin_a, cos_a, 0.0]).unwrap();
+        Array2::from_shape_vec((2, 3), vec![cos_a, -sin_a, 0.0, sin_a, cos_a, 0.0])
+            .expect("Operation failed");
 
     // Scale matrix (2x zoom)
-    let scale_matrix = Array2::from_shape_vec((2, 3), vec![2.0, 0.0, 0.0, 0.0, 2.0, 0.0]).unwrap();
+    let scale_matrix = Array2::from_shape_vec((2, 3), vec![2.0, 0.0, 0.0, 0.0, 2.0, 0.0])
+        .expect("Operation failed");
 
     group.bench_function("identity", |b| {
         b.iter(|| {
@@ -67,7 +74,7 @@ fn bench_affine_transform(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -83,7 +90,7 @@ fn bench_affine_transform(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -99,7 +106,7 @@ fn bench_affine_transform(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -125,7 +132,10 @@ fn bench_interpolation_orders(c: &mut Criterion) {
             BenchmarkId::new("zoom", format!("{:?}", order)),
             &order,
             |b, order| {
-                b.iter(|| zoom(black_box(&input), 1.5, Some(*order), None, None, None).unwrap())
+                b.iter(|| {
+                    zoom(black_box(&input), 1.5, Some(*order), None, None, None)
+                        .expect("Operation failed")
+                })
             },
         );
     }
@@ -145,7 +155,7 @@ fn bench_map_coordinates(c: &mut Criterion) {
     let (rows, cols) = input.dim();
     let coordinates = Array2::from_shape_fn((rows, cols), |(i, j)| (i * j) as f64 + 0.5)
         .into_dimensionality::<scirs2_core::ndarray::IxDyn>()
-        .unwrap();
+        .expect("Operation failed");
 
     group.bench_function("map_coordinates_linear", |b| {
         b.iter(|| {
@@ -157,7 +167,7 @@ fn bench_map_coordinates(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -171,7 +181,7 @@ fn bench_map_coordinates(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -188,11 +198,14 @@ fn bench_3d_interpolation(c: &mut Criterion) {
     let input = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| (i * j * k) as f64);
 
     group.bench_function("shift_3d", |b| {
-        b.iter(|| shift(black_box(&input), &[1.5, 2.5, 1.0], None, None, None, None).unwrap())
+        b.iter(|| {
+            shift(black_box(&input), &[1.5, 2.5, 1.0], None, None, None, None)
+                .expect("Operation failed")
+        })
     });
 
     group.bench_function("zoom_3d", |b| {
-        b.iter(|| zoom(black_box(&input), 1.5, None, None, None, None).unwrap())
+        b.iter(|| zoom(black_box(&input), 1.5, None, None, None, None).expect("Operation failed"))
     });
 
     group.finish();
@@ -213,14 +226,21 @@ fn bench_scaling_behavior(c: &mut Criterion) {
             BenchmarkId::new("shift", format!("{}x{}", rows, cols)),
             &input,
             |b, input| {
-                b.iter(|| shift(black_box(input), &[2.5, 3.5], None, None, None, None).unwrap())
+                b.iter(|| {
+                    shift(black_box(input), &[2.5, 3.5], None, None, None, None)
+                        .expect("Operation failed")
+                })
             },
         );
 
         group.bench_with_input(
             BenchmarkId::new("zoom", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| b.iter(|| zoom(black_box(input), 1.5, None, None, None, None).unwrap()),
+            |b, input| {
+                b.iter(|| {
+                    zoom(black_box(input), 1.5, None, None, None, None).expect("Operation failed")
+                })
+            },
         );
     }
 

@@ -38,7 +38,7 @@ fn basic_bspline_example() {
         degree,
         BSplineExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Evaluate at different points
     let points = array![1.5, 2.5, 3.5, 4.5];
@@ -52,7 +52,7 @@ fn basic_bspline_example() {
     println!("------|--------");
 
     for point in points.iter() {
-        let value = spline.evaluate(*point).unwrap();
+        let value = spline.evaluate(*point).expect("Operation failed");
         println!(" {:.1} |  {:.4}", point, value);
     }
 
@@ -65,12 +65,12 @@ fn basic_bspline_example() {
         &knots.view(),
         BSplineExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("B-spline basis element B_{{1,2}}");
 
     for point in array![1.5, 2.0, 2.5, 3.0, 3.5].iter() {
-        let value = basis.evaluate(*point).unwrap();
+        let value = basis.evaluate(*point).expect("Operation failed");
         println!("B_{{1,2}}({:.1}) = {:.4}", point, value);
     }
 
@@ -94,7 +94,7 @@ fn bspline_calculus_example() {
         degree,
         BSplineExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Evaluate at different points
     let points = array![0.5, 1.5, 2.5, 3.5];
@@ -107,9 +107,9 @@ fn bspline_calculus_example() {
     println!("------|----------|----------|----------");
 
     for point in points.iter() {
-        let value = spline.evaluate(*point).unwrap();
-        let first_deriv = spline.derivative(*point, 1).unwrap();
-        let second_deriv = spline.derivative(*point, 2).unwrap();
+        let value = spline.evaluate(*point).expect("Operation failed");
+        let first_deriv = spline.derivative(*point, 1).expect("Operation failed");
+        let second_deriv = spline.derivative(*point, 2).expect("Operation failed");
 
         println!(
             " {:.1} |  {:.4}  |  {:.4}  |  {:.4}",
@@ -125,7 +125,7 @@ fn bspline_calculus_example() {
     println!("---------|----------");
 
     for (a, b) in intervals.iter() {
-        let integral = spline.integrate(*a, *b).unwrap();
+        let integral = spline.integrate(*a, *b).expect("Operation failed");
         println!("[{:.1}, {:.1}] |  {:.4}", a, b, integral);
     }
 
@@ -154,7 +154,7 @@ fn bspline_interpolation_example() {
         3, // Cubic spline
         BSplineExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Generate test points
     let test_points = array![0.5, 1.5, 2.5, 3.5, 4.5];
@@ -164,7 +164,7 @@ fn bspline_interpolation_example() {
     println!("------|--------");
 
     for point in test_points.iter() {
-        let value = cubic_spline.evaluate(*point).unwrap();
+        let value = cubic_spline.evaluate(*point).expect("Operation failed");
         println!(" {:.1} |  {:.4}", point, value);
     }
 
@@ -174,7 +174,7 @@ fn bspline_interpolation_example() {
     let styles = ["uniform", "average", "clamped"];
 
     for style in styles.iter() {
-        let knots = generate_knots(&x.view(), 3, style).unwrap();
+        let knots = generate_knots(&x.view(), 3, style).expect("Operation failed");
         println!("{} knots: {:?}", style, knots);
     }
 
@@ -219,7 +219,7 @@ fn bspline_least_squares_example() {
         None, // No weights
         BSplineExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Generate test points
     let test_points = array![0.0, 1.0, 2.0, 3.0, 4.0];
@@ -229,7 +229,7 @@ fn bspline_least_squares_example() {
     println!("------|----------|-----------|--------");
 
     for point in test_points.iter() {
-        let value = lsq_spline.evaluate(*point).unwrap();
+        let value = lsq_spline.evaluate(*point).expect("Operation failed");
         let true_value = f64::sin(*point);
         let error = value - true_value;
 
@@ -255,15 +255,15 @@ fn bspline_least_squares_example() {
         Some(&weights.view()),
         BSplineExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nWeighted least-squares B-spline fit (higher weights near x=2):");
     println!("  x   |  Weighted f(x) |  Unweighted f(x)");
     println!("------|----------------|------------------");
 
     for point in test_points.iter() {
-        let weighted_value = weighted_spline.evaluate(*point).unwrap();
-        let unweighted_value = lsq_spline.evaluate(*point).unwrap();
+        let weighted_value = weighted_spline.evaluate(*point).expect("Operation failed");
+        let unweighted_value = lsq_spline.evaluate(*point).expect("Operation failed");
 
         println!(
             " {:.1} |     {:.6}    |      {:.6}",

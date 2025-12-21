@@ -33,7 +33,7 @@ where
         cov = cov + (data[i] - mean) * (data[i - lag] - mean);
     }
 
-    Ok(cov / F::from(n - lag).unwrap())
+    Ok(cov / F::from(n - lag).expect("Failed to convert to float"))
 }
 /// This function uses the Augmented Dickey-Fuller test to check for stationarity.
 ///
@@ -53,7 +53,7 @@ where
 /// use scirs2_series::utils::is_stationary;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let (adf_stat, p_value) = is_stationary(&ts, None).unwrap();
+/// let (adf_stat, p_value) = is_stationary(&ts, None).expect("Operation failed");
 ///
 /// // If p_value < 0.05, we can reject the null hypothesis (time series is stationary)
 /// println!("ADF Statistic: {}, p-value: {}", adf_stat, p_value);
@@ -112,8 +112,8 @@ where
     // If β (the coefficient for y(t-1)) is significantly < 0, the series is stationary
     // The test statistic is the t-statistic for the β coefficient
 
-    let adf_stat = F::from_f64(-2.5).unwrap(); // Dummy value
-    let p_value = F::from_f64(0.1).unwrap(); // Dummy value
+    let adf_stat = F::from_f64(-2.5).expect("Operation failed"); // Dummy value
+    let p_value = F::from_f64(0.1).expect("Operation failed"); // Dummy value
 
     Ok((adf_stat, p_value))
 }
@@ -142,13 +142,13 @@ where
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 ///
 /// // First-order differencing
-/// let diff_ts = transform_to_stationary(&ts, "diff", None).unwrap();
+/// let diff_ts = transform_to_stationary(&ts, "diff", None).expect("Operation failed");
 ///
 /// // Log transformation
-/// let log_ts = transform_to_stationary(&ts, "log", None).unwrap();
+/// let log_ts = transform_to_stationary(&ts, "log", None).expect("Operation failed");
 ///
 /// // Seasonal differencing with period 4
-/// let seasonal_diff_ts = transform_to_stationary(&ts, "seasonal_diff", Some(4)).unwrap();
+/// let seasonal_diff_ts = transform_to_stationary(&ts, "seasonal_diff", Some(4)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn transform_to_stationary<F>(
@@ -236,7 +236,7 @@ where
 /// use scirs2_series::utils::moving_average;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let ma = moving_average(&ts, 3).unwrap();
+/// let ma = moving_average(&ts, 3).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn moving_average<F>(_ts: &Array1<F>, windowsize: usize) -> Result<Array1<F>>
@@ -313,7 +313,7 @@ where
 /// use scirs2_series::utils::autocorrelation;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-/// let acf = autocorrelation(&ts, None).unwrap();
+/// let acf = autocorrelation(&ts, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn autocorrelation<F>(_ts: &Array1<F>, maxlag: Option<usize>) -> Result<Array1<F>>
@@ -329,7 +329,8 @@ where
     let max_lag = std::cmp::min(maxlag.unwrap_or(_ts.len() - 1), _ts.len() - 1);
 
     // Calculate mean
-    let mean = _ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(_ts.len()).unwrap();
+    let mean = _ts.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from_usize(_ts.len()).expect("Operation failed");
 
     // Calculate denominator (variance * n)
     let denominator = _ts
@@ -378,7 +379,7 @@ where
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![2.0, 3.0, 4.0, 5.0, 6.0];
-/// let ccf = cross_correlation(&x, &y, Some(3)).unwrap();
+/// let ccf = cross_correlation(&x, &y, Some(3)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cross_correlation<F>(
@@ -400,8 +401,8 @@ where
     let default_max_lag = min_len / 4;
     let max_lag = max_lag.unwrap_or(default_max_lag).min(min_len - 1);
 
-    let x_mean = x.sum() / F::from(x.len()).unwrap();
-    let y_mean = y.sum() / F::from(y.len()).unwrap();
+    let x_mean = x.sum() / F::from(x.len()).expect("Operation failed");
+    let y_mean = y.sum() / F::from(y.len()).expect("Operation failed");
 
     let mut result = Array1::zeros(max_lag + 1);
 
@@ -415,7 +416,7 @@ where
         }
 
         if count > 0 {
-            result[_lag] = numerator / F::from(count).unwrap();
+            result[_lag] = numerator / F::from(count).expect("Failed to convert to float");
         }
     }
 
@@ -440,7 +441,7 @@ where
 /// use scirs2_series::utils::partial_autocorrelation;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-/// let pacf = partial_autocorrelation(&ts, None).unwrap();
+/// let pacf = partial_autocorrelation(&ts, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn partial_autocorrelation<F>(_ts: &Array1<F>, maxlag: Option<usize>) -> Result<Array1<F>>
@@ -529,7 +530,7 @@ where
 /// use scirs2_series::utils::detrend;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let detrended = detrend(&x.view(), 0, "constant", None).unwrap();
+/// let detrended = detrend(&x.view(), 0, "constant", None).expect("Operation failed");
 /// println!("Detrended: {:?}", detrended);
 /// ```
 #[allow(dead_code)]
@@ -645,8 +646,8 @@ where
 {
     let n = data.len();
     let x = Array1::linspace(
-        F::from(offset).unwrap(),
-        F::from(offset + n - 1).unwrap(),
+        F::from(offset).expect("Failed to convert to float"),
+        F::from(offset + n - 1).expect("Failed to convert to float"),
         n,
     );
     let y = data.to_owned();
@@ -697,7 +698,7 @@ where
 /// use scirs2_series::utils::resample;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let resampled = resample(&x.view(), 10, 0, None).unwrap();
+/// let resampled = resample(&x.view(), 10, 0, None).expect("Operation failed");
 /// assert_eq!(resampled.len(), 10);
 /// ```
 #[allow(dead_code)]
@@ -728,11 +729,12 @@ where
     // For now, use a simple linear interpolation as a placeholder
     // In practice, we'd use FFT-based resampling
     let mut result = Array1::zeros(num);
-    let scale = F::from(n - 1).unwrap() / F::from(num - 1).unwrap();
+    let scale = F::from(n - 1).expect("Failed to convert to float")
+        / F::from(num - 1).expect("Failed to convert to float");
 
     for i in 0..num {
-        let pos = F::from(i).unwrap() * scale;
-        let idx = pos.floor().to_usize().unwrap();
+        let pos = F::from(i).expect("Failed to convert to float") * scale;
+        let idx = pos.floor().to_usize().expect("Operation failed");
         let frac = pos - pos.floor();
 
         if idx + 1 < n {
@@ -766,7 +768,7 @@ where
 /// use scirs2_series::utils::decimate;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-/// let decimated = decimate(&x.view(), 2, Some(4), Some("iir"), 0).unwrap();
+/// let decimated = decimate(&x.view(), 2, Some(4), Some("iir"), 0).expect("Operation failed");
 /// assert_eq!(decimated.len(), 4);
 /// ```
 #[allow(dead_code)]
@@ -798,7 +800,8 @@ where
     let filter_type = ftype.unwrap_or("iir");
 
     // Design low-pass filter with cutoff at Nyquist/q
-    let cutoff = F::from(0.5).unwrap() / F::from(q).unwrap();
+    let cutoff = F::from(0.5).expect("Failed to convert constant to float")
+        / F::from(q).expect("Failed to convert to float");
 
     let filtered = match filter_type {
         "iir" => {
@@ -848,7 +851,7 @@ where
         };
 
         let sum: F = x.slice(s![start..end]).sum();
-        filtered[i] = sum / F::from(end - start).unwrap();
+        filtered[i] = sum / F::from(end - start).expect("Failed to convert to float");
     }
 
     Ok(filtered)
@@ -869,17 +872,22 @@ where
     for i in 0..=order {
         let n = i as i32 - half_order as i32;
         if n == 0 {
-            coeffs[i] = F::from(2.0).unwrap() * fc;
+            coeffs[i] = F::from(2.0).expect("Failed to convert constant to float") * fc;
         } else {
-            let n_f = F::from(n).unwrap();
-            let pi = F::from(std::f64::consts::PI).unwrap();
-            coeffs[i] = (F::from(2.0).unwrap() * fc * pi * n_f).sin() / (pi * n_f);
+            let n_f = F::from(n).expect("Failed to convert to float");
+            let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+            coeffs[i] =
+                (F::from(2.0).expect("Failed to convert constant to float") * fc * pi * n_f).sin()
+                    / (pi * n_f);
 
             // Apply Hamming window
-            let window = F::from(0.54).unwrap()
-                - F::from(0.46).unwrap()
-                    * (F::from(2.0).unwrap() * pi * F::from(i).unwrap() / F::from(order).unwrap())
-                        .cos();
+            let window = F::from(0.54).expect("Failed to convert constant to float")
+                - F::from(0.46).expect("Failed to convert constant to float")
+                    * (F::from(2.0).expect("Failed to convert constant to float")
+                        * pi
+                        * F::from(i).expect("Failed to convert to float")
+                        / F::from(order).expect("Failed to convert to float"))
+                    .cos();
             coeffs[i] = coeffs[i] * window;
         }
     }
@@ -938,7 +946,7 @@ where
 /// use scirs2_series::utils::create_time_series;
 ///
 /// let values = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
-/// let (dates, ts) = create_time_series("2023-01-01", "2023-01-07", &values).unwrap();
+/// let (dates, ts) = create_time_series("2023-01-01", "2023-01-07", &values).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn create_time_series<F>(
@@ -1143,7 +1151,7 @@ mod tests {
     #[test]
     fn test_detrend_constant() {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let detrended = detrend(&x.view(), 0, "constant", None).unwrap();
+        let detrended = detrend(&x.view(), 0, "constant", None).expect("Operation failed");
 
         // Mean should be removed
         assert_relative_eq!(detrended.clone().mean(), 0.0, epsilon = 1e-10);
@@ -1157,7 +1165,7 @@ mod tests {
     #[test]
     fn test_detrend_linear() {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let detrended = detrend(&x.view(), 0, "linear", None).unwrap();
+        let detrended = detrend(&x.view(), 0, "linear", None).expect("Operation failed");
 
         // Linear trend should be removed, result should be constant
         for i in 1..detrended.len() {
@@ -1169,7 +1177,8 @@ mod tests {
     fn test_detrend_linear_with_breakpoints() {
         let x = array![1.0, 2.0, 3.0, 4.0, 2.0, 3.0, 4.0, 5.0];
         let breakpoints = vec![4];
-        let detrended = detrend(&x.view(), 0, "linear", Some(&breakpoints)).unwrap();
+        let detrended =
+            detrend(&x.view(), 0, "linear", Some(&breakpoints)).expect("Operation failed");
 
         // Each segment should have its linear trend removed
         assert_relative_eq!(detrended[0], 0.0, epsilon = 1e-10);
@@ -1181,10 +1190,10 @@ mod tests {
     #[test]
     fn test_detrend_2d() {
         let x = Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-            .unwrap();
+            .expect("Operation failed");
 
         // Detrend along columns (axis=0)
-        let detrended = detrend_2d(&x.view(), 0, "constant", None).unwrap();
+        let detrended = detrend_2d(&x.view(), 0, "constant", None).expect("Operation failed");
 
         // Each column should have zero mean
         for col in detrended.columns() {
@@ -1195,7 +1204,7 @@ mod tests {
     #[test]
     fn test_resample_upsample() {
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let resampled = resample(&x.view(), 8, 0, None).unwrap();
+        let resampled = resample(&x.view(), 8, 0, None).expect("Operation failed");
 
         assert_eq!(resampled.len(), 8);
         // First and last values should be preserved
@@ -1210,7 +1219,7 @@ mod tests {
     #[test]
     fn test_resample_downsample() {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let resampled = resample(&x.view(), 4, 0, None).unwrap();
+        let resampled = resample(&x.view(), 4, 0, None).expect("Operation failed");
 
         assert_eq!(resampled.len(), 4);
     }
@@ -1218,7 +1227,7 @@ mod tests {
     #[test]
     fn test_decimate() {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let decimated = decimate(&x.view(), 2, Some(4), Some("iir"), 0).unwrap();
+        let decimated = decimate(&x.view(), 2, Some(4), Some("iir"), 0).expect("Operation failed");
 
         assert_eq!(decimated.len(), 4);
     }

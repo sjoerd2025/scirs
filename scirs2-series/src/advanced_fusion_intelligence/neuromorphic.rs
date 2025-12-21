@@ -106,7 +106,10 @@ impl<F: Float + Debug + FromPrimitive> SynapticPlasticityManager<F> {
     pub fn new() -> Self {
         SynapticPlasticityManager {
             plasticity_rules: vec![PlasticityRule::STDP, PlasticityRule::Hebbian],
-            adaptation_rates: vec![F::from_f64(0.01).unwrap(), F::from_f64(0.05).unwrap()],
+            adaptation_rates: vec![
+                F::from_f64(0.01).expect("Operation failed"),
+                F::from_f64(0.05).expect("Operation failed"),
+            ],
             homeostatic_scaling: true,
         }
     }
@@ -117,15 +120,18 @@ impl<F: Float + Debug + FromPrimitive> SynapticPlasticityManager<F> {
             match connection.plasticity_rule {
                 PlasticityRule::STDP => {
                     // Implement spike-timing dependent plasticity
-                    connection.weight = connection.weight * F::from_f64(1.01).unwrap();
+                    connection.weight =
+                        connection.weight * F::from_f64(1.01).expect("Operation failed");
                 }
                 PlasticityRule::Hebbian => {
                     // Implement Hebbian learning
-                    connection.weight = connection.weight * F::from_f64(1.005).unwrap();
+                    connection.weight =
+                        connection.weight * F::from_f64(1.005).expect("Operation failed");
                 }
                 _ => {
                     // Default plasticity update
-                    connection.weight = connection.weight * F::from_f64(1.001).unwrap();
+                    connection.weight =
+                        connection.weight * F::from_f64(1.001).expect("Operation failed");
                 }
             }
         }
@@ -207,16 +213,16 @@ impl<F: Float + Debug + FromPrimitive> HomeostaticController<F> {
     /// Create new homeostatic controller
     pub fn new() -> Self {
         HomeostaticController {
-            target_firing_rate: F::from_f64(10.0).unwrap(), // 10 Hz target
-            scaling_factor: F::from_f64(1.0).unwrap(),
-            time_constant: F::from_f64(1000.0).unwrap(), // 1 second
+            target_firing_rate: F::from_f64(10.0).expect("Operation failed"), // 10 Hz target
+            scaling_factor: F::from_f64(1.0).expect("Operation failed"),
+            time_constant: F::from_f64(1000.0).expect("Operation failed"), // 1 second
         }
     }
 
     /// Regulate neuron to maintain target activity
     pub fn regulate_neuron(&mut self, neuron: &mut SpikingNeuron<F>) -> Result<()> {
         // Adjust threshold to maintain target firing rate
-        let threshold_adjustment = F::from_f64(0.01).unwrap();
+        let threshold_adjustment = F::from_f64(0.01).expect("Operation failed");
         neuron.threshold = neuron.threshold + threshold_adjustment * self.scaling_factor;
         Ok(())
     }
@@ -276,10 +282,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
         for (i, &value) in data.iter().enumerate() {
             // Convert value to spike probability using Poisson process
             let spike_probability = value.abs();
-            let spike_threshold = F::from_f64(0.5).unwrap();
+            let spike_threshold = F::from_f64(0.5).expect("Operation failed");
 
             spike_train[i] = if spike_probability > spike_threshold {
-                F::from_f64(1.0).unwrap()
+                F::from_f64(1.0).expect("Operation failed")
             } else {
                 F::zero()
             };
@@ -308,7 +314,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
 
             // Apply neuron dynamics
             if weighted_input > neuron.threshold {
-                output_spikes[i] = F::from_f64(1.0).unwrap();
+                output_spikes[i] = F::from_f64(1.0).expect("Operation failed");
             }
         }
 
@@ -339,16 +345,16 @@ impl<F: Float + Debug + FromPrimitive> AdvancedSpikingLayer<F> {
         let neurons = (0..num_neurons)
             .map(|_| SpikingNeuron {
                 potential: F::zero(),
-                threshold: F::from_f64(1.0).unwrap(),
+                threshold: F::from_f64(1.0).expect("Operation failed"),
                 reset_potential: F::zero(),
-                tau_membrane: F::from_f64(10.0).unwrap(),
+                tau_membrane: F::from_f64(10.0).expect("Operation failed"),
             })
             .collect();
 
         let connections = (0..numconnections)
             .map(|_| SynapticConnection {
-                weight: F::from_f64(0.5).unwrap(),
-                delay: F::from_f64(1.0).unwrap(),
+                weight: F::from_f64(0.5).expect("Operation failed"),
+                delay: F::from_f64(1.0).expect("Operation failed"),
                 plasticity_rule: PlasticityRule::STDP,
             })
             .collect();
@@ -356,14 +362,14 @@ impl<F: Float + Debug + FromPrimitive> AdvancedSpikingLayer<F> {
         AdvancedSpikingLayer {
             neurons,
             connections,
-            learning_rate: F::from_f64(0.01).unwrap(),
+            learning_rate: F::from_f64(0.01).expect("Operation failed"),
         }
     }
 
     /// Forward pass through the spiking layer (Array1 interface)
     pub fn forward(&mut self, input_spikes: &Array1<F>) -> Result<Array1<F>> {
         // Convert Array1 to slice and call update
-        let input_slice = input_spikes.as_slice().unwrap();
+        let input_slice = input_spikes.as_slice().expect("Operation failed");
         let output_vec = self.update(input_slice)?;
         Ok(Array1::from_vec(output_vec))
     }
@@ -382,12 +388,12 @@ impl<F: Float + Debug + FromPrimitive> AdvancedSpikingLayer<F> {
             }
 
             // Update membrane potential
-            let leak_factor = F::from_f64(0.9).unwrap();
+            let leak_factor = F::from_f64(0.9).expect("Operation failed");
             neuron.potential = neuron.potential * leak_factor + input_current;
 
             // Check for spike
             if neuron.potential > neuron.threshold {
-                output_spikes[i] = F::from_f64(1.0).unwrap();
+                output_spikes[i] = F::from_f64(1.0).expect("Operation failed");
                 neuron.potential = neuron.reset_potential;
             }
         }
@@ -407,9 +413,9 @@ impl<F: Float + Debug + FromPrimitive> SpikingNeuron<F> {
     pub fn new() -> Self {
         SpikingNeuron {
             potential: F::zero(),
-            threshold: F::from_f64(1.0).unwrap(),
+            threshold: F::from_f64(1.0).expect("Operation failed"),
             reset_potential: F::zero(),
-            tau_membrane: F::from_f64(10.0).unwrap(),
+            tau_membrane: F::from_f64(10.0).expect("Operation failed"),
         }
     }
 
@@ -434,17 +440,17 @@ impl<F: Float + Debug + FromPrimitive> AdvancedDendriticTree<F> {
     pub fn new(numbranches: usize) -> Self {
         let branches = (0..numbranches)
             .map(|_| DendriticBranch {
-                length: F::from_f64(100.0).unwrap(),
-                diameter: F::from_f64(2.0).unwrap(),
-                resistance: F::from_f64(10.0).unwrap(),
-                capacitance: F::from_f64(1.0).unwrap(),
+                length: F::from_f64(100.0).expect("Operation failed"),
+                diameter: F::from_f64(2.0).expect("Operation failed"),
+                resistance: F::from_f64(10.0).expect("Operation failed"),
+                capacitance: F::from_f64(1.0).expect("Operation failed"),
             })
             .collect();
 
         AdvancedDendriticTree {
             branches,
             integration_function: IntegrationFunction::Sigmoid,
-            backpropagation_efficiency: F::from_f64(0.8).unwrap(),
+            backpropagation_efficiency: F::from_f64(0.8).expect("Operation failed"),
         }
     }
 
@@ -471,12 +477,12 @@ impl<F: Float + Debug + FromPrimitive> AdvancedDendriticTree<F> {
             IntegrationFunction::Sigmoid => {
                 let sigmoid_input = integrated_input.to_f64().unwrap_or(0.0);
                 let sigmoid_output = 1.0 / (1.0 + (-sigmoid_input).exp());
-                Ok(F::from_f64(sigmoid_output).unwrap())
+                Ok(F::from_f64(sigmoid_output).expect("Operation failed"))
             }
             IntegrationFunction::Exponential => {
                 let exp_input = integrated_input.to_f64().unwrap_or(0.0);
                 let exp_output = exp_input.exp();
-                Ok(F::from_f64(exp_output).unwrap())
+                Ok(F::from_f64(exp_output).expect("Operation failed"))
             }
             IntegrationFunction::NonLinear => {
                 // Simple non-linear transformation

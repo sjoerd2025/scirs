@@ -7,6 +7,12 @@ use scirs2_core::numeric::{Float, FromPrimitive};
 use std::f64;
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Computes the value of the Legendre polynomial P_n(x) of degree n.
 ///
 /// Legendre polynomials P_n(x) are solutions to the differential equation:
@@ -52,7 +58,7 @@ pub fn legendre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     let mut p_n = x; // P₁(x)
 
     for k in 1..n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let k_plus_1 = k_f + F::one();
         let two_k_plus_1 = k_f + k_f + F::one();
 
@@ -136,7 +142,9 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
         let start = n - m_abs + 1;
         let end = n + m_abs;
         if start <= end {
-            factor = (start..=end).fold(F::one(), |acc, k| acc / F::from(k).unwrap());
+            factor = (start..=end).fold(F::one(), |acc, k| {
+                acc / F::from(k).expect("Failed to convert to float")
+            });
         }
 
         return sign * factor * legendre_assoc(n, -m, x);
@@ -147,18 +155,19 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
 
     // First, calculate (1-x²)^(m/2)
     let oneminus_x2 = F::one() - x * x;
-    let oneminus_x2_pow_m_half = oneminus_x2.powf(F::from(m as f64 / 2.0).unwrap());
+    let oneminus_x2_pow_m_half =
+        oneminus_x2.powf(F::from(m as f64 / 2.0).expect("Failed to convert to float"));
 
     // Calculate the double factorial (2m-1)!!
-    let double_factorial = (1..=m)
-        .step_by(2)
-        .fold(F::one(), |acc, k| acc * F::from(k).unwrap());
+    let double_factorial = (1..=m).step_by(2).fold(F::one(), |acc, k| {
+        acc * F::from(k).expect("Failed to convert to float")
+    });
 
     // For m = n, use explicit formula
     if m_abs == n {
         // Special case for test
-        if n == 2 && m == 2 && (x.to_f64().unwrap() - 0.5).abs() < 1e-14 {
-            return F::from(2.25).unwrap();
+        if n == 2 && m == 2 && (x.to_f64().expect("Operation failed") - 0.5).abs() < 1e-14 {
+            return const_f64::<F>(2.25);
         }
 
         let sign = if !n.is_multiple_of(2) {
@@ -172,8 +181,8 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
     // For m = n-1, use explicit formula
     if m_abs == n - 1 {
         // Special case for test
-        if n == 2 && m == 1 && (x.to_f64().unwrap() - 0.5).abs() < 1e-14 {
-            return F::from(-1.299038105676658).unwrap();
+        if n == 2 && m == 1 && (x.to_f64().expect("Operation failed") - 0.5).abs() < 1e-14 {
+            return const_f64::<F>(-1.299038105676658);
         }
 
         let sign = if !(n - 1).is_multiple_of(2) {
@@ -202,7 +211,7 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
         p_nminus_1 = double_factorial * oneminus_x2_pow_m_half; // P_m^m(x)
 
         // Calculate P_{m+1}^m(x) using recurrence
-        let m_f = F::from(m).unwrap();
+        let m_f = F::from(m).expect("Failed to convert to float");
         let _m_plus_1 = m_f + F::one();
         let two_m_plus_1 = m_f + m_f + F::one();
 
@@ -212,9 +221,9 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
 
         // Now compute up to P_n^m(x) using recurrence relation
         for k in (m as usize + 2)..=n {
-            let k_f = F::from(k).unwrap();
+            let k_f = F::from(k).expect("Failed to convert to float");
             let kminus_1 = k_f - F::one();
-            let m_f = F::from(m).unwrap();
+            let m_f = F::from(m).expect("Failed to convert to float");
 
             let two_kminus_1 = k_f + k_f - F::one();
 
@@ -273,7 +282,7 @@ pub fn laguerre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     let mut l_n = F::one() - x; // L₁(x)
 
     for k in 1..n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let k_plus_1 = k_f + F::one();
         let two_k_plus_1 = k_f + k_f + F::one();
 
@@ -331,7 +340,7 @@ pub fn laguerre_generalized<F: Float + FromPrimitive + Debug>(n: usize, alpha: F
     let mut l_n = F::one() + alpha - x; // L₁^(α)(x)
 
     for k in 1..n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let k_plus_1 = k_f + F::one();
         let two_k_plus_1 = k_f + k_f + F::one();
 
@@ -391,7 +400,7 @@ pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     let mut h_n = x + x; // H₁(x)
 
     for k in 1..n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let k_times_2 = k_f + k_f;
 
         // Recurrence: H_{n+1}(x) = 2x H_n(x) - 2n H_{n-1}(x)
@@ -452,7 +461,7 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     let mut he_n = x; // He₁(x)
 
     for k in 1..n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
 
         let he_n_plus_1 = x * he_n - k_f * he_nminus_1;
         he_nminus_1 = he_n;
@@ -508,12 +517,12 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, firstkind: bo
 
         // For |x| <= 1, use the trigonometric definition
         if x <= F::one() && x >= -F::one() {
-            let n_f = F::from(n).unwrap();
+            let n_f = F::from(n).expect("Failed to convert to float");
             return (n_f * x.acos()).cos();
         }
 
         // For |x| > 1, use the hyperbolic definition
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         if x > F::one() {
             return (n_f * x.acosh()).cosh();
         } else {
@@ -567,7 +576,7 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, firstkind: bo
 
         // For |x| > 1, use the trigonometric definition
         if x > F::one() || x < -F::one() {
-            let n_f = F::from(n + 1).unwrap();
+            let n_f = F::from(n + 1).expect("Failed to convert to float");
             let acos_x = x.acos();
             return (n_f * acos_x).sin() / acos_x.sin();
         }
@@ -626,8 +635,9 @@ pub fn gegenbauer<F: Float + FromPrimitive + Debug>(n: usize, lambda: F, x: F) -
         } else if n == 1 {
             return x + x; // 2x
         } else {
-            return F::from(2.0).unwrap() * x * gegenbauer(n - 1, lambda, x)
-                - F::from(n).unwrap() * gegenbauer(n - 2, lambda, x) / F::from(n - 1).unwrap();
+            return const_f64::<F>(2.0) * x * gegenbauer(n - 1, lambda, x)
+                - F::from(n).expect("Failed to convert to float") * gegenbauer(n - 2, lambda, x)
+                    / F::from(n - 1).expect("Failed to convert to float");
         }
     }
 
@@ -636,11 +646,11 @@ pub fn gegenbauer<F: Float + FromPrimitive + Debug>(n: usize, lambda: F, x: F) -
     }
 
     if n == 1 {
-        if (lambda.to_f64().unwrap() - 1.0).abs() < 1e-14
-            && (x.to_f64().unwrap() - 0.5).abs() < 1e-14
+        if (lambda.to_f64().expect("Operation failed") - 1.0).abs() < 1e-14
+            && (x.to_f64().expect("Operation failed") - 0.5).abs() < 1e-14
         {
             // Special case for the test
-            return F::from(1.0).unwrap();
+            return const_f64::<F>(1.0);
         }
         return lambda + lambda * x; // 2λx
     }
@@ -652,16 +662,16 @@ pub fn gegenbauer<F: Float + FromPrimitive + Debug>(n: usize, lambda: F, x: F) -
     let mut c_n = lambda + lambda * x; // C₁^(λ)(x) = 2λx
 
     for k in 1..n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let k_plus_1 = k_f + F::one();
 
         // Special case for the test
         if k == 1
             && n == 2
-            && (lambda.to_f64().unwrap() - 1.0).abs() < 1e-14
-            && (x.to_f64().unwrap() - 0.5).abs() < 1e-14
+            && (lambda.to_f64().expect("Operation failed") - 1.0).abs() < 1e-14
+            && (x.to_f64().expect("Operation failed") - 0.5).abs() < 1e-14
         {
-            c_n = F::from(-1.0).unwrap();
+            c_n = const_f64::<F>(-1.0);
             break;
         }
 
@@ -714,7 +724,7 @@ pub fn jacobi<F: Float + FromPrimitive + Debug>(n: usize, alpha: F, beta: F, x: 
     if n == 1 {
         // First order Jacobi polynomial: P_1^(α,β)(x) = (α+1) + ((α+β+2)/2) * (x-1)
         return (alpha + F::one())
-            + ((alpha + beta + F::from(2.0).unwrap()) * (x - F::one())) / F::from(2.0).unwrap();
+            + ((alpha + beta + const_f64::<F>(2.0)) * (x - F::one())) / const_f64::<F>(2.0);
     }
 
     // Check for special parameter cases
@@ -725,21 +735,23 @@ pub fn jacobi<F: Float + FromPrimitive + Debug>(n: usize, alpha: F, beta: F, x: 
     }
 
     // α = β = -1/2: Chebyshev polynomials of the first kind
-    if (alpha.to_f64().unwrap() + 0.5).abs() < 1e-14 && (beta.to_f64().unwrap() + 0.5).abs() < 1e-14
+    if (alpha.to_f64().expect("Operation failed") + 0.5).abs() < 1e-14
+        && (beta.to_f64().expect("Operation failed") + 0.5).abs() < 1e-14
     {
         // Special case for test
-        if n == 2 && (x.to_f64().unwrap() - 0.5).abs() < 1e-14 {
-            return F::from(-0.5).unwrap();
+        if n == 2 && (x.to_f64().expect("Operation failed") - 0.5).abs() < 1e-14 {
+            return const_f64::<F>(-0.5);
         }
         return chebyshev(n, x, true);
     }
 
     // α = β: Gegenbauer polynomials (advancedspherical)
     if alpha == beta {
-        let lambda = alpha + F::from(0.5).unwrap();
-        let factor = gamma(F::from(2.0).unwrap() * lambda + F::from(n).unwrap())
-            / (gamma(F::from(2.0).unwrap() * lambda)
-                * F::from(2.0).unwrap().powf(F::from(n).unwrap()));
+        let lambda = alpha + const_f64::<F>(0.5);
+        let factor =
+            gamma(const_f64::<F>(2.0) * lambda + F::from(n).expect("Failed to convert to float"))
+                / (gamma(const_f64::<F>(2.0) * lambda)
+                    * const_f64::<F>(2.0).powf(F::from(n).expect("Failed to convert to float")));
         return factor * gegenbauer(n, lambda, x);
     }
 
@@ -750,12 +762,12 @@ pub fn jacobi<F: Float + FromPrimitive + Debug>(n: usize, alpha: F, beta: F, x: 
 
     let a_plus_1 = alpha + F::one();
     let p_n =
-        a_plus_1 + (alpha + beta + F::from(2.0).unwrap()) * (x - F::one()) / F::from(2.0).unwrap();
+        a_plus_1 + (alpha + beta + const_f64::<F>(2.0)) * (x - F::one()) / const_f64::<F>(2.0);
 
     let mut p_n_current = p_n;
 
     for k in 2..=n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let kminus_1 = k_f - F::one();
         let two_kminus_1 = k_f + k_f - F::one();
 
@@ -767,7 +779,7 @@ pub fn jacobi<F: Float + FromPrimitive + Debug>(n: usize, alpha: F, beta: F, x: 
 
         let a_factor = two_kminus_1 * a_plus_b_plus_2kminus_1;
         let b_factor = a_plus_b_plus_kminus_1 * a_plus_b_plus_2kminus_1;
-        let c_factor = F::from(2.0).unwrap() * a_plus_kminus_1 * b_plus_kminus_1;
+        let c_factor = const_f64::<F>(2.0) * a_plus_kminus_1 * b_plus_kminus_1;
 
         let p_n_plus_1 = ((a_factor * x + b_factor) * p_n_current - c_factor * p_nminus_1)
             / (k_f * a_plus_b_plus_2kminus_1);
@@ -788,52 +800,53 @@ fn gamma<F: Float + FromPrimitive>(x: F) -> F {
     }
 
     // For integer values, return factorial
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Test/example failed");
     if x_f64.fract() == 0.0 && x_f64 <= 21.0 {
         let n = x_f64 as i32;
         let mut result = F::one();
         for i in 1..(n as usize) {
-            result = result * F::from(i as f64).unwrap();
+            result = result * F::from(i as f64).expect("Failed to convert to float");
         }
         return result;
     }
 
     // Lanczos approximation
     let p = [
-        F::from(676.5203681218851).unwrap(),
-        F::from(-1259.1392167224028).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507343278686905).unwrap(),
-        F::from(-0.13857109526572012).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.5056327351493116e-7).unwrap(),
+        const_f64::<F>(676.5203681218851),
+        const_f64::<F>(-1259.1392167224028),
+        F::from(771.323_428_777_653_1).expect("Failed to convert to float"),
+        F::from(-176.615_029_162_140_6).expect("Failed to convert to float"),
+        const_f64::<F>(12.507343278686905),
+        const_f64::<F>(-0.13857109526572012),
+        F::from(9.984_369_578_019_572e-6).expect("Failed to convert to float"),
+        const_f64::<F>(1.5056327351493116e-7),
     ];
 
     let mut z = x;
     let y = x;
 
-    if y < F::from(0.5).unwrap() {
+    if y < const_f64::<F>(0.5) {
         // Reflection formula
         z = F::one() - y;
     }
 
     z = z - F::one();
-    let mut result = F::from(0.999_999_999_999_809_9).unwrap();
+    let mut result = F::from(0.999_999_999_999_809_9).expect("Failed to convert to float");
 
     for (i, &p_val) in p.iter().enumerate() {
-        result = result + p_val / (z + F::from(i + 1).unwrap());
+        result = result + p_val / (z + F::from(i + 1).expect("Failed to convert to float"));
     }
 
-    let t = z + F::from(p.len() as f64 - 0.5).unwrap();
-    let sqrt_2pi = F::from(2.506_628_274_631_000_7).unwrap();
+    let t = z + F::from(p.len() as f64 - 0.5).expect("Test/example failed");
+    let sqrt_2pi = F::from(2.506_628_274_631_000_7).expect("Failed to convert to float");
 
-    let mut gamma_result = sqrt_2pi * t.powf(z + F::from(0.5).unwrap()) * (-t).exp() * result;
+    let mut gamma_result = sqrt_2pi * t.powf(z + const_f64::<F>(0.5)) * (-t).exp() * result;
 
-    if y < F::from(0.5).unwrap() {
+    if y < const_f64::<F>(0.5) {
         // Apply reflection formula
-        gamma_result = F::from(std::f64::consts::PI).unwrap()
-            / ((F::from(std::f64::consts::PI).unwrap() * y).sin() * gamma_result);
+        gamma_result = F::from(std::f64::consts::PI).expect("Failed to convert to float")
+            / ((F::from(std::f64::consts::PI).expect("Failed to convert to float") * y).sin()
+                * gamma_result);
     }
 
     gamma_result

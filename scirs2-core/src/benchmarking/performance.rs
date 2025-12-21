@@ -566,7 +566,7 @@ mod tests {
         result.add_measurement(crate::benchmarking::BenchmarkMeasurement::new(
             Duration::from_millis(50),
         ));
-        result.finalize().unwrap();
+        result.finalize().expect("Operation failed");
 
         let target =
             PerformanceTarget::new(BenchmarkCategory::Computation, Duration::from_millis(100));
@@ -592,7 +592,7 @@ mod tests {
                 },
                 1.0,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.benchmark_result.statistics.mean_execution_time > Duration::from_micros(50));
         assert_eq!(result.target.category, BenchmarkCategory::Computation);

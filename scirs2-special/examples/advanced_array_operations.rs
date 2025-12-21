@@ -178,7 +178,10 @@ async fn demo_lazy_evaluation() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Computation completed in {:?}", duration);
     println!("Result shape: {:?}", result.shape());
-    println!("First 5 values: {:?}", &result.as_slice().unwrap()[0..5]);
+    println!(
+        "First 5 values: {:?}",
+        &result.as_slice().expect("Operation failed")[0..5]
+    );
 
     // Demonstrate caching
     println!("\nTesting computation caching...");
@@ -207,7 +210,7 @@ async fn demo_gpu_acceleration() -> Result<(), Box<dyn std::error::Error>> {
             println!("Result shape: {:?}", gpu_result.shape());
             println!(
                 "First 5 values: {:?}",
-                &gpu_result.as_slice().unwrap()[0..5]
+                &gpu_result.as_slice().expect("Operation failed")[0..5]
             );
 
             // Compare with CPU result
@@ -335,7 +338,7 @@ async fn demo_memory_efficient_operations() -> Result<(), Box<dyn std::error::Er
     println!("Result shape: {:?}", chunked_result.shape());
     println!(
         "Sample values: {:?}",
-        &chunked_result.as_slice().unwrap()[0..5]
+        &chunked_result.as_slice().expect("Operation failed")[0..5]
     );
 
     // Parallel processing comparison

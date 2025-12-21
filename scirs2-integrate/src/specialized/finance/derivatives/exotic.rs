@@ -481,7 +481,7 @@ mod tests {
             OptionType::Call,
             BarrierType::UpAndOut,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(option.spot, 100.0);
         assert_eq!(option.barrier, 110.0);
@@ -501,9 +501,11 @@ mod tests {
             OptionType::Call,
             BarrierType::UpAndOut,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let price = option.price_monte_carlo(10000, 100).unwrap();
+        let price = option
+            .price_monte_carlo(10000, 100)
+            .expect("Operation failed");
 
         // Up-and-out should be cheaper than vanilla
         let vanilla = black_scholes_price(100.0, 100.0, 0.05, 0.0, 0.2, 1.0, OptionType::Call);
@@ -530,7 +532,7 @@ mod tests {
             AveragingMethod::Arithmetic,
             252,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(option.n_observations, 252);
     }
@@ -548,9 +550,9 @@ mod tests {
             AveragingMethod::Arithmetic,
             50,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let price = option.price_monte_carlo(10000).unwrap();
+        let price = option.price_monte_carlo(10000).expect("Operation failed");
 
         // Asian should be cheaper than vanilla due to averaging reducing volatility
         let vanilla = black_scholes_price(100.0, 100.0, 0.05, 0.0, 0.2, 1.0, OptionType::Call);
@@ -577,9 +579,11 @@ mod tests {
             AveragingMethod::Geometric,
             50,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let price = option.price_geometric_closed_form().unwrap();
+        let price = option
+            .price_geometric_closed_form()
+            .expect("Operation failed");
 
         assert!(price > 5.0 && price < 15.0, "Price: {}", price);
     }
@@ -596,7 +600,7 @@ mod tests {
             OptionType::Call,
             LookbackType::FixedStrike,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(option.spot, 100.0);
     }
@@ -613,9 +617,11 @@ mod tests {
             OptionType::Call,
             LookbackType::FixedStrike,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let price = option.price_monte_carlo(10000, 100).unwrap();
+        let price = option
+            .price_monte_carlo(10000, 100)
+            .expect("Operation failed");
 
         // Lookback should be more expensive than vanilla
         let vanilla = black_scholes_price(100.0, 100.0, 0.05, 0.0, 0.2, 1.0, OptionType::Call);
@@ -640,7 +646,7 @@ mod tests {
             OptionType::Call,
             DigitalType::CashOrNothing { cash_amount: 10.0 },
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let price = option.price();
 
@@ -660,7 +666,7 @@ mod tests {
             OptionType::Call,
             DigitalType::AssetOrNothing,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let price = option.price();
 
@@ -685,7 +691,7 @@ mod tests {
             OptionType::Call,
             BarrierType::UpAndIn,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let up_out = BarrierOption::new(
             100.0,
@@ -699,11 +705,15 @@ mod tests {
             OptionType::Call,
             BarrierType::UpAndOut,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Reduced from 50000 to 10000 paths for faster testing (still statistically valid)
-        let in_price = up_in.price_monte_carlo(10000, 100).unwrap();
-        let out_price = up_out.price_monte_carlo(10000, 100).unwrap();
+        let in_price = up_in
+            .price_monte_carlo(10000, 100)
+            .expect("Operation failed");
+        let out_price = up_out
+            .price_monte_carlo(10000, 100)
+            .expect("Operation failed");
         let vanilla = black_scholes_price(100.0, 100.0, 0.05, 0.0, 0.2, 1.0, OptionType::Call);
 
         // Allow 15% error due to Monte Carlo variance (increased tolerance for fewer paths)
@@ -728,7 +738,7 @@ mod tests {
             OptionType::Call,
             DigitalType::CashOrNothing { cash_amount: 10.0 },
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let put = DigitalOption::new(
             100.0,
@@ -740,7 +750,7 @@ mod tests {
             OptionType::Put,
             DigitalType::CashOrNothing { cash_amount: 10.0 },
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let sum = call.price() + put.price();
         let expected = 10.0 * (-0.05_f64).exp();

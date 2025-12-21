@@ -510,13 +510,13 @@ mod tests {
 
     #[test]
     fn test_spectral_chebyshev_solver() {
-        let solver = SpectralChebyshevSolver::new(10).unwrap();
+        let solver = SpectralChebyshevSolver::new(10).expect("Operation failed");
         assert_eq!(solver.n_nodes, 10);
     }
 
     #[test]
     fn test_chebyshev_nodes() {
-        let solver = SpectralChebyshevSolver::new(5).unwrap();
+        let solver = SpectralChebyshevSolver::new(5).expect("Operation failed");
         let nodes = solver.chebyshev_nodes();
 
         // Nodes should be in [-1, 1]
@@ -531,13 +531,13 @@ mod tests {
 
     #[test]
     fn test_spectral_poisson() {
-        let solver = SpectralChebyshevSolver::new(20).unwrap();
+        let solver = SpectralChebyshevSolver::new(20).expect("Operation failed");
 
         // Solve u'' = -2 with u(-1) = 0, u(1) = 0
         // Exact solution: u(x) = 1 - x²
         let f = |_x: f64| -2.0;
 
-        let u = solver.solve_poisson(f, 0.0, 0.0).unwrap();
+        let u = solver.solve_poisson(f, 0.0, 0.0).expect("Operation failed");
         let nodes = solver.chebyshev_nodes();
 
         // Check solution at some interior points
@@ -555,18 +555,20 @@ mod tests {
 
     #[test]
     fn test_rbf_solver_creation() {
-        let solver = RBFSolver::new(RBFType::Gaussian, 1.0, 10).unwrap();
+        let solver = RBFSolver::new(RBFType::Gaussian, 1.0, 10).expect("Operation failed");
         assert_eq!(solver.rbf_type, RBFType::Gaussian);
     }
 
     #[test]
     fn test_rbf_interpolation() {
-        let solver = RBFSolver::new(RBFType::Gaussian, 2.0, 5).unwrap();
+        let solver = RBFSolver::new(RBFType::Gaussian, 2.0, 5).expect("Operation failed");
 
         let points = Array1::from_vec(vec![0.0, 0.25, 0.5, 0.75, 1.0]);
         let values = Array1::from_vec(vec![0.0, 0.25, 0.5, 0.75, 1.0]);
 
-        let weights = solver.interpolate(&points, &values).unwrap();
+        let weights = solver
+            .interpolate(&points, &values)
+            .expect("Operation failed");
 
         // Should find weights (not checking exact values due to RBF nature)
         assert_eq!(weights.len(), 5);
@@ -574,7 +576,7 @@ mod tests {
 
     #[test]
     fn test_multigrid_solver_creation() {
-        let solver = MultigridSolver::new(3, 2, 2).unwrap();
+        let solver = MultigridSolver::new(3, 2, 2).expect("Operation failed");
         assert_eq!(solver.n_levels, 3);
         assert_eq!(solver.n_pre_smooth, 2);
         assert_eq!(solver.n_post_smooth, 2);
@@ -582,13 +584,15 @@ mod tests {
 
     #[test]
     fn test_multigrid_poisson() {
-        let solver = MultigridSolver::new(3, 3, 3).unwrap();
+        let solver = MultigridSolver::new(3, 3, 3).expect("Operation failed");
 
         // Solve u'' = -2 with u(0) = 0, u(1) = 0
         // Exact solution: u(x) = x(1-x)
         let f = |_x: f64| -2.0;
 
-        let u = solver.solve_poisson(f, (0.0, 1.0), 33, 5).unwrap();
+        let u = solver
+            .solve_poisson(f, (0.0, 1.0), 33, 5)
+            .expect("Operation failed");
 
         // Check solution at midpoint
         let mid_idx = u.len() / 2;
@@ -605,10 +609,12 @@ mod tests {
 
     #[test]
     fn test_rbf_types() {
-        let solver_gaussian = RBFSolver::new(RBFType::Gaussian, 1.0, 5).unwrap();
-        let solver_mq = RBFSolver::new(RBFType::Multiquadric, 1.0, 5).unwrap();
-        let solver_imq = RBFSolver::new(RBFType::InverseMultiquadric, 1.0, 5).unwrap();
-        let solver_tps = RBFSolver::new(RBFType::ThinPlateSpline, 1.0, 5).unwrap();
+        let solver_gaussian = RBFSolver::new(RBFType::Gaussian, 1.0, 5).expect("Operation failed");
+        let solver_mq = RBFSolver::new(RBFType::Multiquadric, 1.0, 5).expect("Operation failed");
+        let solver_imq =
+            RBFSolver::new(RBFType::InverseMultiquadric, 1.0, 5).expect("Operation failed");
+        let solver_tps =
+            RBFSolver::new(RBFType::ThinPlateSpline, 1.0, 5).expect("Operation failed");
 
         // Test RBF evaluations
         assert!(solver_gaussian.rbf(0.0) > 0.0);
@@ -619,8 +625,8 @@ mod tests {
 
     #[test]
     fn test_differentiation_matrix() {
-        let solver = SpectralChebyshevSolver::new(5).unwrap();
-        let d = solver.differentiation_matrix().unwrap();
+        let solver = SpectralChebyshevSolver::new(5).expect("Operation failed");
+        let d = solver.differentiation_matrix().expect("Operation failed");
 
         // Matrix should be square
         assert_eq!(d.nrows(), 5);
@@ -629,7 +635,7 @@ mod tests {
 
     #[test]
     fn test_gauss_seidel_convergence() {
-        let solver = MultigridSolver::new(1, 10, 10).unwrap();
+        let solver = MultigridSolver::new(1, 10, 10).expect("Operation failed");
 
         let n = 11;
         let dx = 1.0 / (n - 1) as f64;

@@ -716,7 +716,9 @@ mod tests {
     fn test_condition_number_analysis() {
         let analyzer = NumericalStabilityAnalyzer::default();
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = analyzer.analyze_condition_number(&data.view()).unwrap();
+        let result = analyzer
+            .analyze_condition_number(&data.view())
+            .expect("Operation failed");
 
         assert_eq!(
             result.conditioning_class,
@@ -743,7 +745,7 @@ mod tests {
 
         let result = analyzer
             .analyze_function("mean", |x| mean(x), &data.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.function_name, "mean");
         assert!(matches!(

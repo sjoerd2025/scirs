@@ -31,7 +31,7 @@ fn main() {
     // Compute batch multi-query attention
     let output =
         batch_multi_query_attention(&batch_query.view(), &key.view(), &value.view(), None, scale)
-            .unwrap();
+            .expect("Operation failed");
 
     println!("Input batch query shape: {:?}", batch_query.shape());
     println!("Shared key shape: {:?}", key.shape());
@@ -84,7 +84,7 @@ fn main() {
         Some(&mask),
         &config,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!(
         "Input shapes - batchsize: {}, seq_len: {}, d_model: {}",
@@ -120,7 +120,7 @@ fn main() {
         scale,
         blocksize,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!(
         "Input shapes - batchsize: {}, seq_len: {}, d_model: {}",

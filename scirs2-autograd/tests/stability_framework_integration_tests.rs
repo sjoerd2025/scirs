@@ -25,7 +25,7 @@ fn test_basic_stability_framework() {
     let result = run_basic_stability_tests::<f32>();
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     assert!(summary.total_tests > 0);
     println!(
         "Basic stability tests completed: {}/{} passed",
@@ -40,7 +40,7 @@ fn test_comprehensive_stability_testing() {
     let result = run_comprehensive_stability_tests::<f32>();
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     assert!(summary.total_tests > 0);
     println!(
         "Comprehensive tests: {} total, {} passed, {} failed",
@@ -69,7 +69,7 @@ fn test_custom_stability_config() {
     let result = run_stability_tests_with_config::<f32>(config);
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     assert!(summary.total_tests > 0);
     println!(
         "Custom config tests: success rate = {:.1}%",
@@ -125,7 +125,7 @@ fn test_scenario_based_testing() {
     let result = suite.run_all_tests();
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     println!(
         "Scenario test results: {}/{} passed",
         summary.passed_tests, summary.total_tests
@@ -172,11 +172,11 @@ fn test_stability_metrics_integration() {
     // Test backward stability
     // Note: Since test_function always returns error, we skip backward stability test
     // In real implementation, this would use the actual function output
-    // let output = test_function(input).unwrap();
+    // let output = test_function(input).expect("Test: operation failed");
     // let backward_result = metrics.compute_backward_stability(test_function, &input, &output);
     // assert!(backward_result.is_ok());
     //
-    // let backward_metrics = backward_result.unwrap();
+    // let backward_metrics = backward_result.expect("Test: operation failed");
     // println!("Backward stability metrics:");
     // println!("  Grade: {:?}", backward_metrics.stability_grade);
     // println!("  Error: {:.2e}", backward_metrics.backward_error);
@@ -230,7 +230,7 @@ fn test_full_pipeline_integration() {
     let result = suite.run_all_tests();
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     println!("\n=== FULL PIPELINE INTEGRATION RESULTS ===");
     summary.print_summary();
 
@@ -258,7 +258,7 @@ fn test_edge_case_handling() {
     let result = run_stability_tests_with_config::<f32>(config);
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     println!("Edge case test results:");
     println!("  Total tests: {}", summary.total_tests);
     println!("  Success rate: {:.1}%", summary.success_rate());
@@ -285,7 +285,7 @@ fn test_performance_benchmarking() {
     let result = run_stability_tests_with_config::<f32>(config);
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     println!("Performance benchmark results:");
     println!(
         "  Avg analysis duration: {:.3}s",
@@ -320,7 +320,7 @@ fn test_precision_sensitivity() {
     let result = run_stability_tests_with_config::<f32>(config);
     assert!(result.is_ok());
 
-    let summary = result.unwrap();
+    let summary = result.expect("Test: operation failed");
     println!("Precision sensitivity test completed");
     println!("  Tests performed: {}", summary.total_tests);
 
@@ -349,7 +349,7 @@ fn test_different_function_types() {
         let result = test_function_stability(move |x| test_func(x), &input, name);
         assert!(result.is_ok(), "Function {} failed stability test", name);
 
-        let test_result = result.unwrap();
+        let test_result = result.expect("Test: operation failed");
         println!(
             "Function '{}' stability: {:?} (passed: {})",
             name, test_result.actual_grade, test_result.passed
@@ -378,7 +378,7 @@ fn test_large_tensor_stability() {
     );
     assert!(result.is_ok());
 
-    let test_result = result.unwrap();
+    let test_result = result.expect("Test: operation failed");
     println!("Large tensor stability test:");
     println!("  Input shape: {:?}", large_input.shape());
     println!("  Stability grade: {:?}", test_result.actual_grade);
@@ -402,12 +402,12 @@ fn test_mixed_precision_scenarios() {
     // Test with f32
     let f32_result = run_basic_stability_tests::<f32>();
     assert!(f32_result.is_ok());
-    let f32_summary = f32_result.unwrap();
+    let f32_summary = f32_result.expect("Test: operation failed");
 
     // Test with f64
     let f64_result = run_basic_stability_tests::<f64>();
     assert!(f64_result.is_ok());
-    let f64_summary = f64_result.unwrap();
+    let f64_summary = f64_result.expect("Test: operation failed");
 
     println!("Mixed precision comparison:");
     println!("  f32 success rate: {:.1}%", f32_summary.success_rate());
@@ -519,7 +519,7 @@ fn test_complete_stability_workflow() {
     println!("3. Running comprehensive test suite...");
     let comprehensive_result = run_comprehensive_stability_tests::<f32>();
     assert!(comprehensive_result.is_ok());
-    let summary = comprehensive_result.unwrap();
+    let summary = comprehensive_result.expect("Test: operation failed");
     println!("   ✓ Comprehensive tests completed");
 
     // Step 4: Analyze results

@@ -824,24 +824,28 @@ mod tests {
     fn test_dataset_generator() {
         let config = LargeScaleTestConfig::default().with_max_dataset_size(1024); // Small size for test
 
-        let generator = LargeDatasetGenerator::new(config).unwrap();
-        let dataset_path = generator.generate_numeric_dataset(1024).unwrap();
+        let generator = LargeDatasetGenerator::new(config).expect("Operation failed");
+        let dataset_path = generator
+            .generate_numeric_dataset(1024)
+            .expect("Operation failed");
 
         assert!(dataset_path.exists());
 
-        let metadata = fs::metadata(&dataset_path).unwrap();
+        let metadata = fs::metadata(&dataset_path).expect("Operation failed");
         assert_eq!(metadata.len() as usize, 1024);
     }
 
     #[test]
     fn test_sparse_dataset_generator() {
         let config = LargeScaleTestConfig::default();
-        let generator = LargeDatasetGenerator::new(config).unwrap();
+        let generator = LargeDatasetGenerator::new(config).expect("Operation failed");
 
-        let dataset_path = generator.generate_sparse_dataset(1024, 0.5).unwrap();
+        let dataset_path = generator
+            .generate_sparse_dataset(1024, 0.5)
+            .expect("Operation failed");
         assert!(dataset_path.exists());
 
-        let metadata = fs::metadata(&dataset_path).unwrap();
+        let metadata = fs::metadata(&dataset_path).expect("Operation failed");
         assert_eq!(metadata.len() as usize, 1024);
     }
 
@@ -849,14 +853,16 @@ mod tests {
     fn test_chunked_processing() {
         let config = LargeScaleTestConfig::default().with_chunk_size(256);
 
-        let generator = LargeDatasetGenerator::new(config.clone()).unwrap();
+        let generator = LargeDatasetGenerator::new(config.clone()).expect("Operation failed");
         let processor = LargeScaleProcessor::new(config);
 
-        let dataset_path = generator.generate_numeric_dataset(1024).unwrap();
+        let dataset_path = generator
+            .generate_numeric_dataset(1024)
+            .expect("Operation failed");
 
         let result = processor
             .test_chunked_processing(&dataset_path, |chunk| Ok(chunk.len() as f64))
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.success);
         assert_eq!(result.dataset_size, 1024);

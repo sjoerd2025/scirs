@@ -559,9 +559,9 @@ impl SystemResourceMonitor {
 
     /// Get resource usage statistics
     pub fn get_stats(&self) -> ResourceStats {
-        let cpu_hist = self.cpu_history.lock().unwrap();
-        let memory_hist = self.memory_history.lock().unwrap();
-        let network_hist = self.network_history.lock().unwrap();
+        let cpu_hist = self.cpu_history.lock().expect("Operation failed");
+        let memory_hist = self.memory_history.lock().expect("Operation failed");
+        let network_hist = self.network_history.lock().expect("Operation failed");
 
         let avg_cpu = if cpu_hist.is_empty() {
             0.0

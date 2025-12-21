@@ -179,9 +179,9 @@ impl Default for ICOptions {
 /// let rows = vec![0, 0, 1, 2];
 /// let cols = vec![0, 1, 1, 2];
 /// let data = vec![2.0, 1.0, 3.0, 4.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let lu_result = lu_decomposition(&matrix, 0.1).unwrap();
+/// let lu_result = lu_decomposition(&matrix, 0.1).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn lu_decomposition<T, S>(_matrix: &S, pivotthreshold: f64) -> SparseResult<LUResult<T>>
@@ -231,14 +231,14 @@ where
 /// let rows = vec![0, 0, 1, 2];
 /// let cols = vec![0, 1, 1, 2];
 /// let data = vec![2.0, 1.0, 3.0, 4.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// let options = LUOptions {
 ///     pivoting: PivotingStrategy::ScaledPartial,
 ///     zero_threshold: 1e-12,
 ///     check_singular: true,
 /// };
-/// let lu_result = lu_decomposition_with_options(&matrix, Some(options)).unwrap();
+/// let lu_result = lu_decomposition_with_options(&matrix, Some(options)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn lu_decomposition_with_options<T, S>(
@@ -267,9 +267,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        row_indices.as_slice().unwrap(),
-        col_indices.as_slice().unwrap(),
-        values.as_slice().unwrap(),
+        row_indices.as_slice().expect("Operation failed"),
+        col_indices.as_slice().expect("Operation failed"),
+        values.as_slice().expect("Operation failed"),
         n,
     );
 
@@ -322,7 +322,9 @@ where
         let pivot_value = working_matrix.get(actual_pivot_row, actual_pivot_col);
 
         // Check for numerical singularity
-        if opts.check_singular && pivot_value.abs() < T::from(opts.zero_threshold).unwrap() {
+        if opts.check_singular
+            && pivot_value.abs() < T::from(opts.zero_threshold).expect("Operation failed")
+        {
             return Ok(LUResult {
                 l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
                 u: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
@@ -388,9 +390,9 @@ where
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 0, 1];
 /// let data = vec![1.0, 2.0, 3.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).expect("Operation failed");
 ///
-/// let qr_result = qr_decomposition(&matrix).unwrap();
+/// let qr_result = qr_decomposition(&matrix).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn qr_decomposition<T, S>(matrix: &S) -> SparseResult<QRResult<T>>
@@ -482,9 +484,9 @@ where
 /// let rows = vec![0, 1, 1, 2, 2, 2];
 /// let cols = vec![0, 0, 1, 0, 1, 2];
 /// let data = vec![4.0, 2.0, 5.0, 1.0, 3.0, 6.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let chol_result = cholesky_decomposition(&matrix).unwrap();
+/// let chol_result = cholesky_decomposition(&matrix).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cholesky_decomposition<T, S>(matrix: &S) -> SparseResult<CholeskyResult<T>>
@@ -509,9 +511,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        row_indices.as_slice().unwrap(),
-        col_indices.as_slice().unwrap(),
-        values.as_slice().unwrap(),
+        row_indices.as_slice().expect("Operation failed"),
+        col_indices.as_slice().expect("Operation failed"),
+        values.as_slice().expect("Operation failed"),
         n,
     );
 
@@ -582,9 +584,9 @@ where
 /// let rows = vec![0, 1, 1, 2, 2, 2];
 /// let cols = vec![0, 0, 1, 0, 1, 2];  
 /// let data = vec![1.0, 2.0, -1.0, 3.0, 1.0, 2.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let chol_result = pivoted_cholesky_decomposition(&matrix, Some(1e-12)).unwrap();
+/// let chol_result = pivoted_cholesky_decomposition(&matrix, Some(1e-12)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn pivoted_cholesky_decomposition<T, S>(
@@ -609,14 +611,14 @@ where
         ));
     }
 
-    let threshold = threshold.unwrap_or_else(|| T::from(1e-12).unwrap());
+    let threshold = threshold.unwrap_or_else(|| T::from(1e-12).expect("Operation failed"));
 
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        row_indices.as_slice().unwrap(),
-        col_indices.as_slice().unwrap(),
-        values.as_slice().unwrap(),
+        row_indices.as_slice().expect("Operation failed"),
+        col_indices.as_slice().expect("Operation failed"),
+        values.as_slice().expect("Operation failed"),
         n,
     );
 
@@ -740,9 +742,9 @@ where
 /// let rows = vec![0, 1, 1, 2, 2, 2];
 /// let cols = vec![0, 0, 1, 0, 1, 2];  
 /// let data = vec![1.0, 2.0, -1.0, 3.0, 1.0, 2.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let ldlt_result = ldlt_decomposition(&matrix, Some(true), Some(1e-12)).unwrap();
+/// let ldlt_result = ldlt_decomposition(&matrix, Some(true), Some(1e-12)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn ldlt_decomposition<T, S>(
@@ -769,14 +771,14 @@ where
     }
 
     let use_pivoting = pivoting.unwrap_or(true);
-    let threshold = threshold.unwrap_or_else(|| T::from(1e-12).unwrap());
+    let threshold = threshold.unwrap_or_else(|| T::from(1e-12).expect("Operation failed"));
 
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        row_indices.as_slice().unwrap(),
-        col_indices.as_slice().unwrap(),
-        values.as_slice().unwrap(),
+        row_indices.as_slice().expect("Operation failed"),
+        col_indices.as_slice().expect("Operation failed"),
+        values.as_slice().expect("Operation failed"),
         n,
     );
 
@@ -954,9 +956,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        row_indices.as_slice().unwrap(),
-        col_indices.as_slice().unwrap(),
-        values.as_slice().unwrap(),
+        row_indices.as_slice().expect("Operation failed"),
+        col_indices.as_slice().expect("Operation failed"),
+        values.as_slice().expect("Operation failed"),
         n,
     );
 
@@ -964,7 +966,7 @@ where
     for k in 0..n - 1 {
         let pivot_val = working_matrix.get(k, k);
 
-        if pivot_val.abs() < T::from(1e-14).unwrap() {
+        if pivot_val.abs() < T::from(1e-14).expect("Operation failed") {
             continue; // Skip singular pivot
         }
 
@@ -975,7 +977,7 @@ where
             let factor = working_matrix.get(row_i, k) / pivot_val;
 
             // Drop small factors
-            if factor.abs() < T::from(opts.drop_tol).unwrap() {
+            if factor.abs() < T::from(opts.drop_tol).expect("Operation failed") {
                 working_matrix.set(row_i, k, T::sparse_zero());
                 continue;
             }
@@ -990,7 +992,7 @@ where
                     let new_val = old_val - factor * val_kj;
 
                     // Drop small values
-                    if new_val.abs() < T::from(opts.drop_tol).unwrap() {
+                    if new_val.abs() < T::from(opts.drop_tol).expect("Operation failed") {
                         working_matrix.set(row_i, *col_j, T::sparse_zero());
                     } else {
                         working_matrix.set(row_i, *col_j, new_val);
@@ -1057,9 +1059,9 @@ where
     // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
-        row_indices.as_slice().unwrap(),
-        col_indices.as_slice().unwrap(),
-        values.as_slice().unwrap(),
+        row_indices.as_slice().expect("Operation failed"),
+        col_indices.as_slice().expect("Operation failed"),
+        values.as_slice().expect("Operation failed"),
         n,
     );
 
@@ -1103,7 +1105,7 @@ where
             let l_ik = (a_ik - sum) / l_kk;
 
             // Drop small values
-            if l_ik.abs() < T::from(opts.drop_tol).unwrap() {
+            if l_ik.abs() < T::from(opts.drop_tol).expect("Operation failed") {
                 working_matrix.set(row_i, k, T::sparse_zero());
             } else {
                 working_matrix.set(row_i, k, l_ik);
@@ -1274,7 +1276,7 @@ where
 
         PivotingStrategy::Threshold(threshold) => {
             // Threshold pivoting - use first element above threshold
-            let threshold_val = T::from(*threshold).unwrap();
+            let threshold_val = T::from(*threshold).expect("Operation failed");
             let mut max_val = T::sparse_zero();
             let mut pivot_row = k;
 
@@ -1359,7 +1361,7 @@ where
             }
 
             // If we found a good pivot, check if we can improve by column pivoting
-            if max_val > T::from(opts.zero_threshold).unwrap() {
+            if max_val > T::from(opts.zero_threshold).expect("Operation failed") {
                 let actual_best_row = row_perm[best_row];
                 let mut col_max = T::sparse_zero();
 
@@ -1373,7 +1375,7 @@ where
                 }
 
                 // Use column pivot if it's significantly better
-                let improvement_threshold = T::from(1.5).unwrap();
+                let improvement_threshold = T::from(1.5).expect("Operation failed");
                 if col_max > max_val * improvement_threshold {
                     // Recompute row pivot for the new column
                     max_val = T::sparse_zero();
@@ -1508,7 +1510,7 @@ mod tests {
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, 1.0, 1.0, 3.0, 2.0, 4.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed")
     }
 
     fn create_spd_matrix() -> CsrArray<f64> {
@@ -1517,13 +1519,13 @@ mod tests {
         let cols = vec![0, 0, 1, 0, 1, 2];
         let data = vec![4.0, 2.0, 5.0, 1.0, 3.0, 6.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed")
     }
 
     #[test]
     fn test_lu_decomposition() {
         let matrix = create_test_matrix();
-        let lu_result = lu_decomposition(&matrix, 0.1).unwrap();
+        let lu_result = lu_decomposition(&matrix, 0.1).expect("Operation failed");
 
         assert!(lu_result.success);
         assert_eq!(lu_result.l.shape(), (3, 3));
@@ -1536,9 +1538,10 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 0, 1];
         let data = vec![1.0, 2.0, 3.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).expect("Operation failed");
 
-        let qr_result = qr_decomposition(&matrix).unwrap();
+        let qr_result = qr_decomposition(&matrix).expect("Operation failed");
 
         assert!(qr_result.success);
         assert_eq!(qr_result.q.shape(), (3, 2));
@@ -1548,7 +1551,7 @@ mod tests {
     #[test]
     fn test_cholesky_decomposition() {
         let matrix = create_spd_matrix();
-        let chol_result = cholesky_decomposition(&matrix).unwrap();
+        let chol_result = cholesky_decomposition(&matrix).expect("Operation failed");
 
         assert!(chol_result.success);
         assert_eq!(chol_result.l.shape(), (3, 3));
@@ -1562,7 +1565,7 @@ mod tests {
             ..Default::default()
         };
 
-        let ilu_result = incomplete_lu(&matrix, Some(options)).unwrap();
+        let ilu_result = incomplete_lu(&matrix, Some(options)).expect("Operation failed");
 
         assert!(ilu_result.success);
         assert_eq!(ilu_result.l.shape(), (3, 3));
@@ -1577,7 +1580,7 @@ mod tests {
             ..Default::default()
         };
 
-        let ic_result = incomplete_cholesky(&matrix, Some(options)).unwrap();
+        let ic_result = incomplete_cholesky(&matrix, Some(options)).expect("Operation failed");
 
         assert!(ic_result.success);
         assert_eq!(ic_result.l.shape(), (3, 3));
@@ -1606,8 +1609,9 @@ mod tests {
 
     #[test]
     fn test_dense_to_sparse_conversion() {
-        let dense = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 2.0, 3.0]).unwrap();
-        let sparse = dense_to_sparse(&dense).unwrap();
+        let dense =
+            Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 2.0, 3.0]).expect("Operation failed");
+        let sparse = dense_to_sparse(&dense).expect("Operation failed");
 
         assert_eq!(sparse.nnz(), 3);
         assert_eq!(sparse.get(0, 0), 1.0);

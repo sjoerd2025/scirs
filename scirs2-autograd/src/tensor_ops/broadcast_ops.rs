@@ -290,7 +290,7 @@ impl<F: Float> Op<F> for OptimizedBroadcastOp<F> {
             BinaryOperation::Multiply => ((*gy) * right_input, (*gy) * left_input),
             BinaryOperation::Divide => {
                 let left_grad = (*gy) / right_input;
-                let neg_two = F::from(-2.0).unwrap();
+                let neg_two = F::from(-2.0).expect("Failed to convert constant to float");
                 let right_grad =
                     tensor_ops::neg(left_input) * tensor_ops::pow(right_input, neg_two) * (*gy);
                 (left_grad, right_grad)
@@ -354,7 +354,7 @@ fn apply_binary_op_sameshape<'a, F: Float>(
                 .zip(right.iter())
                 .map(|(&a, &b)| a.powf(b))
                 .collect();
-            Array::from_shape_vec(IxDyn(left.shape()), vec).unwrap()
+            Array::from_shape_vec(IxDyn(left.shape()), vec).expect("Operation failed")
         }
         BinaryOperation::Maximum => {
             let vec: Vec<F> = left
@@ -362,7 +362,7 @@ fn apply_binary_op_sameshape<'a, F: Float>(
                 .zip(right.iter())
                 .map(|(&a, &b)| a.max(b))
                 .collect();
-            Array::from_shape_vec(IxDyn(left.shape()), vec).unwrap()
+            Array::from_shape_vec(IxDyn(left.shape()), vec).expect("Operation failed")
         }
         BinaryOperation::Minimum => {
             let vec: Vec<F> = left
@@ -370,7 +370,7 @@ fn apply_binary_op_sameshape<'a, F: Float>(
                 .zip(right.iter())
                 .map(|(&a, &b)| a.min(b))
                 .collect();
-            Array::from_shape_vec(IxDyn(left.shape()), vec).unwrap()
+            Array::from_shape_vec(IxDyn(left.shape()), vec).expect("Operation failed")
         }
     }
 }
@@ -487,7 +487,8 @@ fn apply_standard_broadcast<'a, F: Float>(
                 .zip(broadcasted_right.iter())
                 .map(|(&a, &b)| a.powf(b))
                 .collect();
-            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec).unwrap();
+            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec)
+                .expect("Operation failed");
             Ok(result)
         }
         BinaryOperation::Maximum => {
@@ -503,7 +504,8 @@ fn apply_standard_broadcast<'a, F: Float>(
                 .zip(broadcasted_right.iter())
                 .map(|(&a, &b)| a.max(b))
                 .collect();
-            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec).unwrap();
+            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec)
+                .expect("Operation failed");
             Ok(result)
         }
         BinaryOperation::Minimum => {
@@ -519,7 +521,8 @@ fn apply_standard_broadcast<'a, F: Float>(
                 .zip(broadcasted_right.iter())
                 .map(|(&a, &b)| a.min(b))
                 .collect();
-            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec).unwrap();
+            let result = Array::from_shape_vec(IxDyn(broadcasted_left.shape()), vec)
+                .expect("Operation failed");
             Ok(result)
         }
     }
@@ -661,7 +664,7 @@ mod tests {
     fn test_broadcast_analysis_sameshape() {
         let leftshape = vec![3, 4];
         let rightshape = vec![3, 4];
-        let info = analyze_broadcast(&leftshape, &rightshape).unwrap();
+        let info = analyze_broadcast(&leftshape, &rightshape).expect("Operation failed");
 
         assert_eq!(info.strategy, BroadcastStrategy::NoOp);
         assert!(!info.left_needs_broadcast);
@@ -673,7 +676,7 @@ mod tests {
     fn test_broadcast_analysis_scalar() {
         let leftshape = vec![];
         let rightshape = vec![3, 4];
-        let info = analyze_broadcast(&leftshape, &rightshape).unwrap();
+        let info = analyze_broadcast(&leftshape, &rightshape).expect("Operation failed");
 
         assert_eq!(info.strategy, BroadcastStrategy::ScalarBroadcast);
         assert!(info.left_needs_broadcast);
@@ -694,7 +697,7 @@ mod tests {
     fn test_broadcast_analysis_compatible() {
         let leftshape = vec![1, 4];
         let rightshape = vec![3, 1];
-        let info = analyze_broadcast(&leftshape, &rightshape).unwrap();
+        let info = analyze_broadcast(&leftshape, &rightshape).expect("Operation failed");
 
         assert_eq!(info.outputshape, vec![3, 4]);
         assert!(info.left_needs_broadcast);

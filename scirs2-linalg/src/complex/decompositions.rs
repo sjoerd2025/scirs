@@ -244,7 +244,12 @@ where
 
     // Sort eigenvalues and eigenvectors in descending order
     let mut indices: Vec<usize> = (0..n).collect();
-    indices.sort_by(|&i, &j| eigenvalues[j].re.partial_cmp(&eigenvalues[i].re).unwrap());
+    indices.sort_by(|&i, &j| {
+        eigenvalues[j]
+            .re
+            .partial_cmp(&eigenvalues[i].re)
+            .expect("Operation failed")
+    });
 
     let mut s = Array1::zeros(k);
     let vh_rows = if full_matrices { n } else { k.min(n) };
@@ -286,8 +291,8 @@ where
             // Start with a random vector
             for i in 0..m {
                 // Use a simple pattern to generate a "random" starting vector
-                let real_part = F::from((i + j) as f64 / m as f64).unwrap();
-                let imag_part = F::from((i * j) as f64 / (m * m) as f64).unwrap();
+                let real_part = F::from((i + j) as f64 / m as f64).expect("Operation failed");
+                let imag_part = F::from((i * j) as f64 / (m * m) as f64).expect("Operation failed");
                 u[[i, j]] = Complex::new(real_part, imag_part);
             }
 
@@ -368,7 +373,7 @@ where
 
     // Use QR algorithm with shifts for general complex matrices
     let max_iterations = 1000;
-    let tolerance = F::from(1e-10).unwrap();
+    let tolerance = F::from(1e-10).expect("Operation failed");
 
     let mut h = a.to_owned(); // Working matrix (will become Schur form)
     let mut q_total = Array2::eye(n); // Accumulated transformations
@@ -403,8 +408,10 @@ where
                     for i in 0..v.len() {
                         sum = sum + v[i].conj() * h[[i + col + 1, j]];
                     }
-                    let factor =
-                        Complex::<F>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero()) * sum;
+                    let factor = Complex::<F>::new(
+                        F::from(2.0).expect("Operation failed") / v_norm_sq,
+                        F::zero(),
+                    ) * sum;
 
                     for i in 0..v.len() {
                         h[[i + col + 1, j]] = h[[i + col + 1, j]] - factor * v[i];
@@ -417,8 +424,10 @@ where
                     for j in 0..v.len() {
                         sum = sum + h[[i, j + col + 1]] * v[j];
                     }
-                    let factor =
-                        Complex::<F>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero()) * sum;
+                    let factor = Complex::<F>::new(
+                        F::from(2.0).expect("Operation failed") / v_norm_sq,
+                        F::zero(),
+                    ) * sum;
 
                     for j in 0..v.len() {
                         h[[i, j + col + 1]] = h[[i, j + col + 1]] - factor * v[j].conj();
@@ -455,14 +464,14 @@ where
 
                 let trace = a11 + a22;
                 let det = a11 * a22 - a12 * a21;
-                let discriminant =
-                    trace * trace - Complex::<F>::new(F::from(4.0).unwrap(), F::zero()) * det;
+                let discriminant = trace * trace
+                    - Complex::<F>::new(F::from(4.0).expect("Operation failed"), F::zero()) * det;
                 let sqrt_disc = discriminant.sqrt();
 
-                let eig1 =
-                    (trace + sqrt_disc) / Complex::<F>::new(F::from(2.0).unwrap(), F::zero());
-                let eig2 =
-                    (trace - sqrt_disc) / Complex::<F>::new(F::from(2.0).unwrap(), F::zero());
+                let eig1 = (trace + sqrt_disc)
+                    / Complex::<F>::new(F::from(2.0).expect("Operation failed"), F::zero());
+                let eig2 = (trace - sqrt_disc)
+                    / Complex::<F>::new(F::from(2.0).expect("Operation failed"), F::zero());
 
                 // Choose eigenvalue closer to a22
                 shift = if (eig1 - a22).norm() < (eig2 - a22).norm() {
@@ -479,14 +488,16 @@ where
             }
 
             let qr = complex_qr(&h_shifted.view())?;
-            h = crate::complex::complex_matmul(&qr.r.view(), &qr.q.view()).unwrap();
+            h = crate::complex::complex_matmul(&qr.r.view(), &qr.q.view())
+                .expect("Operation failed");
 
             for i in 0..n {
                 h[[i, i]] = h[[i, i]] + shift;
             }
 
             // Update eigenvector matrix
-            q_total = crate::complex::complex_matmul(&q_total.view(), &qr.q.view()).unwrap();
+            q_total = crate::complex::complex_matmul(&q_total.view(), &qr.q.view())
+                .expect("Operation failed");
         }
     }
 
@@ -514,7 +525,7 @@ where
     let n = a.nrows();
 
     // Verify matrix is Hermitian
-    let tolerance = F::from(1e-10).unwrap();
+    let tolerance = F::from(1e-10).expect("Operation failed");
 
     for i in 0..n {
         for j in i..n {
@@ -571,7 +582,10 @@ where
                 }
 
                 // Update T = T - (2/||v||^2) * T * v * v^H
-                let factor = Complex::<F>::new(F::from(2.0).unwrap() / v_norm_sq, F::zero());
+                let factor = Complex::<F>::new(
+                    F::from(2.0).expect("Operation failed") / v_norm_sq,
+                    F::zero(),
+                );
                 for i in 0..n {
                     for j in 0..v.len() {
                         t[[i, j + k + 1]] = t[[i, j + k + 1]] - factor * tv[i] * v[j].conj();
@@ -647,7 +661,7 @@ where
         }
 
         // Wilkinson shift
-        let d = (diagonal[n - 2] - diagonal[n - 1]) / F::from(2.0).unwrap();
+        let d = (diagonal[n - 2] - diagonal[n - 1]) / F::from(2.0).expect("Operation failed");
         let sign = if d >= F::zero() { F::one() } else { -F::one() };
         let shift = diagonal[n - 1]
             - subdiagonal[n - 2].powi(2)
@@ -674,8 +688,12 @@ where
                 let d2 = diagonal[k + 1];
                 let e = subdiagonal[k];
 
-                diagonal[k] = c * c * d1 + F::from(2.0).unwrap() * c * sn * e + sn * sn * d2;
-                diagonal[k + 1] = sn * sn * d1 - F::from(2.0).unwrap() * c * sn * e + c * c * d2;
+                diagonal[k] = c * c * d1
+                    + F::from(2.0).expect("Operation failed") * c * sn * e
+                    + sn * sn * d2;
+                diagonal[k + 1] = sn * sn * d1
+                    - F::from(2.0).expect("Operation failed") * c * sn * e
+                    + c * c * d2;
 
                 if k < n - 2 {
                     subdiagonal[k] = (c * c - sn * sn) * e + c * sn * (d2 - d1);
@@ -724,7 +742,7 @@ where
 
     // Verify matrix is Hermitian
     let ah = hermitian_transpose(a);
-    let tolerance = F::from(1e-10).unwrap();
+    let tolerance = F::from(1e-10).expect("Operation failed");
 
     for i in 0..n {
         for j in 0..n {
@@ -807,7 +825,7 @@ mod tests {
             ]
         ];
 
-        let lu_result = complex_lu(&a.view()).unwrap();
+        let lu_result = complex_lu(&a.view()).expect("Operation failed");
 
         // Verify that P * L * U = A
         let n = a.nrows();
@@ -915,7 +933,7 @@ mod tests {
             [Complex::<f64>::new(0.0, 1.0), Complex::<f64>::new(1.0, 0.0)]
         ];
 
-        let qr_result = complex_qr(&a.view()).unwrap();
+        let qr_result = complex_qr(&a.view()).expect("Operation failed");
 
         println!(
             "Q shape: {:?}, R shape: {:?}",
@@ -927,7 +945,8 @@ mod tests {
 
         // Verify Q is unitary: Q^H * Q = I
         let qh = hermitian_transpose(&qr_result.q.view());
-        let should_be_i = crate::complex::complex_matmul(&qh.view(), &qr_result.q.view()).unwrap();
+        let should_be_i = crate::complex::complex_matmul(&qh.view(), &qr_result.q.view())
+            .expect("Operation failed");
 
         let m = qr_result.q.nrows();
         for i in 0..m {
@@ -949,7 +968,8 @@ mod tests {
         }
 
         // Verify Q * R = A
-        let qr = crate::complex::complex_matmul(&qr_result.q.view(), &qr_result.r.view()).unwrap();
+        let qr = crate::complex::complex_matmul(&qr_result.q.view(), &qr_result.r.view())
+            .expect("Operation failed");
 
         println!("Q*R = {:?}", qr);
         println!("A = {:?}", a);
@@ -985,11 +1005,11 @@ mod tests {
             [Complex::<f64>::new(1.0, 1.0), Complex::<f64>::new(3.0, 0.0)]
         ];
 
-        let l = complex_cholesky(&a.view()).unwrap();
+        let l = complex_cholesky(&a.view()).expect("Operation failed");
 
         // Verify L * L^H = A
         let lh = hermitian_transpose(&l.view());
-        let llh = crate::complex::complex_matmul(&l.view(), &lh.view()).unwrap();
+        let llh = crate::complex::complex_matmul(&l.view(), &lh.view()).expect("Operation failed");
 
         for i in 0..a.nrows() {
             for j in 0..a.ncols() {
@@ -1007,7 +1027,7 @@ mod tests {
             [Complex::<f64>::new(0.0, 0.0), Complex::<f64>::new(2.0, 0.0)]
         ];
 
-        let svd = complex_svd(&a.view(), false).unwrap();
+        let svd = complex_svd(&a.view(), false).expect("Operation failed");
         assert_eq!(svd.u.shape(), &[2, 2]);
         assert_eq!(svd.s.shape(), &[2]);
         assert_eq!(svd.vh.shape(), &[2, 2]);
@@ -1018,7 +1038,7 @@ mod tests {
         }
 
         // Test full matrices option
-        let svd_full = complex_svd(&a.view(), true).unwrap();
+        let svd_full = complex_svd(&a.view(), true).expect("Operation failed");
         assert_eq!(svd_full.u.shape(), &[2, 2]);
         assert_eq!(svd_full.s.shape(), &[2]);
         assert_eq!(svd_full.vh.shape(), &[2, 2]);
@@ -1033,7 +1053,7 @@ mod tests {
             [Complex::<f64>::new(3.0, 0.0), Complex::<f64>::new(0.0, 0.0)]
         ];
 
-        let svd_rect = complex_svd(&b.view(), false).unwrap();
+        let svd_rect = complex_svd(&b.view(), false).expect("Operation failed");
         assert_eq!(svd_rect.u.shape(), &[3, 2]);
         assert_eq!(svd_rect.s.shape(), &[2]);
         assert_eq!(svd_rect.vh.shape(), &[2, 2]);
@@ -1052,7 +1072,7 @@ mod tests {
             ]
         ];
 
-        let svd_wide = complex_svd(&c.view(), false).unwrap();
+        let svd_wide = complex_svd(&c.view(), false).expect("Operation failed");
         assert_eq!(svd_wide.u.shape(), &[2, 2]);
         assert_eq!(svd_wide.s.shape(), &[2]);
         assert_eq!(svd_wide.vh.shape(), &[2, 3]);

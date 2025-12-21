@@ -85,7 +85,7 @@ impl<F: Float> Op<F> for CheckpointOp {
         // Use ID 0 as a placeholder - we'll just track memory savings
         CHECKPOINT_REGISTRY
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .register_checkpoint(0, estimated_size);
 
         Ok(())
@@ -121,10 +121,10 @@ impl<F: Float> Op<F> for CheckpointOp {
                             scirs2_core::ndarray::IxDyn(&[inputshape.len()]),
                             inputshape
                                 .iter()
-                                .map(|&x| F::from(x).unwrap())
+                                .map(|&x| F::from(x).expect("Failed to convert to float"))
                                 .collect::<Vec<_>>(),
                         )
-                        .unwrap(),
+                        .expect("Operation failed"),
                         g,
                     );
 
@@ -608,26 +608,42 @@ pub struct CheckpointProfiler;
 impl CheckpointProfiler {
     /// Start tracking memory usage for checkpoint operations
     pub fn start_tracking() {
-        CHECKPOINT_REGISTRY.lock().unwrap().enable_tracking();
+        CHECKPOINT_REGISTRY
+            .lock()
+            .expect("Operation failed")
+            .enable_tracking();
     }
 
     /// Stop tracking memory usage
     pub fn stop_tracking() {
-        CHECKPOINT_REGISTRY.lock().unwrap().disable_tracking();
+        CHECKPOINT_REGISTRY
+            .lock()
+            .expect("Operation failed")
+            .disable_tracking();
     }
 
     /// Reset memory usage statistics
     pub fn reset_statistics() {
-        CHECKPOINT_REGISTRY.lock().unwrap().reset_statistics();
+        CHECKPOINT_REGISTRY
+            .lock()
+            .expect("Operation failed")
+            .reset_statistics();
     }
 
     /// Get the estimated memory saved by checkpointing (in bytes)
     pub fn memory_saved() -> usize {
-        CHECKPOINT_REGISTRY.lock().unwrap().get_memory_saved()
+        CHECKPOINT_REGISTRY
+            .lock()
+            .expect("Operation failed")
+            .get_memory_saved()
     }
 
     /// Get the number of checkpointed operations
     pub fn checkpoint_count() -> usize {
-        CHECKPOINT_REGISTRY.lock().unwrap().checkpoint_ops.len()
+        CHECKPOINT_REGISTRY
+            .lock()
+            .expect("Operation failed")
+            .checkpoint_ops
+            .len()
     }
 }

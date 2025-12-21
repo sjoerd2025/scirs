@@ -219,17 +219,17 @@ impl PredictionEngine {
 
         // Calculate overall performance change trend
         let cpu_change = if cpu_prediction.len() >= 2 {
-            cpu_prediction.last().unwrap() - cpu_prediction.first().unwrap()
+            cpu_prediction.last().expect("Operation failed") - cpu_prediction.first().expect("Operation failed")
         } else {
             0.0
         };
         let memory_change = if memory_prediction.len() >= 2 {
-            memory_prediction.last().unwrap() - memory_prediction.first().unwrap()
+            memory_prediction.last().expect("Operation failed") - memory_prediction.first().expect("Operation failed")
         } else {
             0.0
         };
         let throughput_change = if throughput_prediction.len() >= 2 {
-            (throughput_prediction.last().unwrap() - throughput_prediction.first().unwrap()) / throughput_prediction.first().unwrap()
+            (throughput_prediction.last().expect("Operation failed") - throughput_prediction.first().expect("Operation failed")) / throughput_prediction.first().expect("Operation failed")
         } else {
             0.0
         };

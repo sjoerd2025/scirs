@@ -489,7 +489,7 @@ mod tests {
 
         let result = processor
             .process_signal_streaming(&signal, identity_processor)
-            .unwrap();
+            .expect("Operation failed");
 
         // Result should be approximately the same as input
         assert_eq!(result.len(), signal.len());
@@ -514,7 +514,7 @@ mod tests {
 
         let result = processor
             .memory_optimized_convolution(&signal, &kernel)
-            .unwrap();
+            .expect("Operation failed");
 
         // Check expected convolution length
         assert_eq!(result.len(), signal.len() + kernel.len() - 1);
@@ -529,7 +529,7 @@ mod tests {
         let matrix = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let result = CacheOptimizedOps::cache_friendly_matvec(&matrix, &vector, 64).unwrap();
+        let result = CacheOptimizedOps::cache_friendly_matvec(&matrix, &vector, 64).expect("Operation failed");
 
         // Expected: [1*1 + 2*2 + 3*3, 4*1 + 5*2 + 6*3] = [14, 32]
         assert!(((result[0] - 14.0) as f64).abs() < 1e-10);

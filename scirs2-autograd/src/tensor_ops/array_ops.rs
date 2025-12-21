@@ -110,12 +110,12 @@ impl<T: Float> op::Op<T> for InferBinOpShape {
         let ashape_float = ctx.input(0);
         let bshape_float = ctx.input(1);
         let ashape: Vec<usize> = ashape_float
-            .map(|x| x.to_usize().unwrap())
+            .map(|x| x.to_usize().expect("Operation failed"))
             .iter()
             .cloned()
             .collect();
         let bshape: Vec<usize> = bshape_float
-            .map(|x| x.to_usize().unwrap())
+            .map(|x| x.to_usize().expect("Operation failed"))
             .iter()
             .cloned()
             .collect();
@@ -133,10 +133,11 @@ impl<T: Float> op::Op<T> for InferBinOpShape {
             let max = ashape
                 .iter()
                 .zip(bshape)
-                .map(|(a, b)| T::from((*a).max(b)).unwrap())
+                .map(|(a, b)| T::from((*a).max(b)).expect("Operation failed"))
                 .collect::<Vec<T>>();
             ctx.append_output(
-                NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[a_rank]), max).unwrap(),
+                NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[a_rank]), max)
+                    .expect("Operation failed"),
             )
         } else if !a_is_scalar {
             ctx.append_output(ashape_float.to_owned());
@@ -156,9 +157,12 @@ impl<T: Float> op::Op<T> for Shape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = &ctx.input(0);
         let shape_vec = ndarray_ext::shape_of_view(x);
-        let shape_t: Vec<T> = shape_vec.iter().map(|&s| T::from(s).unwrap()).collect();
+        let shape_t: Vec<T> = shape_vec
+            .iter()
+            .map(|&s| T::from(s).expect("Operation failed"))
+            .collect();
         let ret = NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[shape_vec.len()]), shape_t)
-            .unwrap();
+            .expect("Failed to create shape vector");
         ctx.append_output(ret);
         Ok(())
     }
@@ -171,7 +175,10 @@ impl<T: Float> op::Op<T> for Shape {
 impl<T: Float> op::Op<T> for Rank {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
-        let ret = NdArray::from_elem(scirs2_core::ndarray::IxDyn(&[]), T::from(x.ndim()).unwrap());
+        let ret = NdArray::from_elem(
+            scirs2_core::ndarray::IxDyn(&[]),
+            T::from(x.ndim()).expect("Operation failed"),
+        );
         ctx.append_output(ret);
         Ok(())
     }
@@ -184,7 +191,10 @@ impl<T: Float> op::Op<T> for Rank {
 impl<T: Float> op::Op<T> for Size {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
-        let ret = NdArray::from_elem(scirs2_core::ndarray::IxDyn(&[]), T::from(x.len()).unwrap());
+        let ret = NdArray::from_elem(
+            scirs2_core::ndarray::IxDyn(&[]),
+            T::from(x.len()).expect("Operation failed"),
+        );
         ctx.append_output(ret);
         Ok(())
     }
@@ -202,10 +212,10 @@ impl<T: Float> op::Op<T> for Reshape {
             .iter()
             .map(|&dim_size| {
                 if dim_size != -T::one() {
-                    dim_size.to_usize().unwrap()
+                    dim_size.to_usize().expect("Operation failed")
                 } else {
                     let product: T = shape_arr.iter().fold(T::one(), |acc, &x| acc * x);
-                    x.len() / product.neg().to_usize().unwrap()
+                    x.len() / product.neg().to_usize().expect("Operation failed")
                 }
             })
             .collect::<Vec<_>>();
@@ -264,16 +274,16 @@ impl<T: Float> op::Op<T> for SetDiff1D {
 
         let set_a: crate::FxHashSet<isize> = crate::FxHashSet::from_iter(
             x0.as_slice()
-                .unwrap()
+                .expect("Failed to get slice")
                 .iter()
-                .map(|&a| a.to_isize().unwrap()),
+                .map(|&a| a.to_isize().expect("Operation failed")),
         );
 
         let set_b: crate::FxHashSet<isize> = crate::FxHashSet::from_iter(
             x1.as_slice()
-                .unwrap()
+                .expect("Failed to get slice")
                 .iter()
-                .map(|&a| a.to_isize().unwrap()),
+                .map(|&a| a.to_isize().expect("Operation failed")),
         );
 
         let diff = set_a.difference(&set_b);
@@ -282,11 +292,12 @@ impl<T: Float> op::Op<T> for SetDiff1D {
         vec.sort();
         let vec = vec
             .into_iter()
-            .map(|&a| T::from(a).unwrap())
+            .map(|&a| T::from(a).expect("Operation failed"))
             .collect::<Vec<T>>();
         let len = vec.len();
         // safe unwrap
-        let ret = NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[len]), vec).unwrap();
+        let ret = NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[len]), vec)
+            .expect("Operation failed");
         ctx.append_output(ret);
         Ok(())
     }
@@ -306,7 +317,10 @@ impl<T: Float> op::Op<T> for IndexOp {
             self.index as usize
         };
         // unwrap is safe
-        let flat_x = x.view().into_shape_with_order(x.len()).unwrap();
+        let flat_x = x
+            .view()
+            .into_shape_with_order(x.len())
+            .expect("Operation failed");
         if let Some(ret) = flat_x.get(i) {
             ctx.append_output(scirs2_core::ndarray::arr0(*ret).into_dyn());
             Ok(())
@@ -348,7 +362,7 @@ impl<T: Float> op::Op<T> for IndexOpGrad {
         if let Some(a) = result
             .view_mut()
             .into_shape_with_order(len)
-            .unwrap() // safe unwrap
+            .expect("Failed to reshape")
             .get_mut(i)
         {
             *a = gy[scirs2_core::ndarray::IxDyn(&[])];
@@ -405,7 +419,7 @@ impl<T: Float> op::Op<T> for Gather {
         );
         let ret = selected
             .into_shape_with_order(outputshape.as_slice())
-            .unwrap();
+            .expect("Failed to reshape output");
         ctx.append_output(ret);
         Ok(())
     }
@@ -447,13 +461,15 @@ impl<T: Float> op::Op<T> for GatherGrad {
                 .chain(latter)
                 .cloned()
                 .collect();
-            gy.view().into_shape_with_order(shape).unwrap()
+            gy.view()
+                .into_shape_with_order(shape)
+                .expect("Operation failed")
         };
 
         let mut gx = NdArray::zeros(param.shape());
 
         for (gy_sub, &i) in gy.axis_iter(scirs2_core::ndarray::Axis(axis)).zip(indices) {
-            let i = i.to_isize().unwrap();
+            let i = i.to_isize().expect("Operation failed");
             // get gx's sub view
             let gx_sliced = unsafe {
                 gx.slice_mut(
@@ -480,7 +496,7 @@ impl<T: Float> op::Op<T> for GatherGrad {
                             })
                             .collect::<Vec<_>>(),
                     )
-                    .unwrap()
+                    .expect("Failed to create slice")
                     .as_ref(),
                 )
             };
@@ -565,7 +581,8 @@ impl<T: Float> op::Op<T> for ClipGrad<T> {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut ret = ctx.input(0).mapv(move |x| {
             // x > min && x < max
-            T::from((((x > self.min) as i32) as f32) * (((x < self.max) as i32) as f32)).unwrap()
+            T::from((((x > self.min) as i32) as f32) * (((x < self.max) as i32) as f32))
+                .expect("Operation failed")
         });
         ret *= &ctx.input(1);
         ctx.append_output(ret);
@@ -755,7 +772,7 @@ impl<T: Float> op::Op<T> for SplitGrad {
                     scirs2_core::ndarray::IxDyn,
                     scirs2_core::ndarray::IxDyn,
                 >::new(indices)
-                .unwrap()
+                .expect("Failed to create indices")
                 .as_ref(),
             )
             .zip_mut_with(&ctx.input(1), |a, &g| *a = g);
@@ -834,7 +851,7 @@ impl<T: Float> op::Op<T> for SliceGrad {
                     scirs2_core::ndarray::IxDyn,
                     scirs2_core::ndarray::IxDyn,
                 >::new(&self.indices)
-                .unwrap()
+                .expect("Failed to create indices")
                 .as_ref(),
             )
             .zip_mut_with(&ctx.input(1), |a, &g| *a = g);
@@ -855,7 +872,7 @@ impl<T: Float> op::Op<T> for Squeeze {
         let mut axes = ctx
             .input(1)
             .iter()
-            .map(|a| a.to_isize().unwrap())
+            .map(|a| a.to_isize().expect("Operation failed"))
             .collect::<Vec<_>>();
         axes.sort();
         for (adjust, &i) in axes.iter().enumerate() {
@@ -885,7 +902,7 @@ impl<T: Float> op::Op<T> for ExpandDims {
         let mut axes = ctx
             .input(1)
             .iter()
-            .map(|a| a.to_isize().unwrap())
+            .map(|a| a.to_isize().expect("Operation failed"))
             .collect::<Vec<_>>();
         axes.sort();
         let mut outputshape = ret.shape().to_vec();
@@ -897,7 +914,11 @@ impl<T: Float> op::Op<T> for ExpandDims {
             };
             outputshape.insert(axis, 1);
         }
-        ctx.append_output(ret.into_shape_with_order(outputshape).unwrap().to_owned());
+        ctx.append_output(
+            ret.into_shape_with_order(outputshape)
+                .expect("Operation failed")
+                .to_owned(),
+        );
         Ok(())
     }
 

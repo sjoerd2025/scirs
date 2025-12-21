@@ -180,7 +180,7 @@ impl<
         // Record computation metrics (placeholder - no-op)
         // let processing_time = Duration::from_millis(1); // Simplified timing
         // self.performance_monitor.record_computation(metric_type,
-        //     final_output.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(final_output.len()).unwrap(),
+        //     final_output.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(final_output.len()).expect("Operation failed"),
         //     processing_time)?;
 
         Ok(final_output)
@@ -196,9 +196,10 @@ impl<
             let mut spike_train = Vec::new();
 
             // Generate spikes based on rate (simplified)
-            let num_spikes = (spike_rate * F::from(10.0).unwrap())
-                .to_usize()
-                .unwrap_or(0);
+            let num_spikes = (spike_rate
+                * F::from(10.0).expect("Failed to convert constant to float"))
+            .to_usize()
+            .unwrap_or(0);
             for _ in 0..num_spikes {
                 spike_train.push(F::one());
             }
@@ -229,8 +230,9 @@ impl<
         for (i, &neural_val) in neural_output.iter().enumerate() {
             if let Some(&quantum_val) = quantum_enhanced.get(i) {
                 // Simple combination: weighted average
-                let combined =
-                    neural_val * F::from(0.7).unwrap() + quantum_val * F::from(0.3).unwrap();
+                let combined = neural_val
+                    * F::from(0.7).expect("Failed to convert constant to float")
+                    + quantum_val * F::from(0.3).expect("Failed to convert constant to float");
                 combined_output.push(combined);
             } else {
                 combined_output.push(neural_val);
@@ -243,26 +245,26 @@ impl<
     /// Get comprehensive system statistics
     pub fn get_system_statistics(&self) -> NeuromorphicSystemStats<F> {
         let network_stats = NetworkStatistics {
-            average_firing_rate: F::from(10.5).unwrap(),
-            synchrony: F::from(0.7).unwrap(),
-            activity_variance: F::from(0.3).unwrap(),
-            connection_efficiency: F::from(0.8).unwrap(),
+            average_firing_rate: F::from(10.5).expect("Failed to convert constant to float"),
+            synchrony: F::from(0.7).expect("Failed to convert constant to float"),
+            activity_variance: F::from(0.3).expect("Failed to convert constant to float"),
+            connection_efficiency: F::from(0.8).expect("Failed to convert constant to float"),
         };
 
         let plasticity_stats = PlasticityStatistics {
-            average_strength: F::from(0.6).unwrap(),
-            plasticity_changes: F::from(0.1).unwrap(),
-            adaptation_rate: F::from(0.05).unwrap(),
-            stability: F::from(0.9).unwrap(),
+            average_strength: F::from(0.6).expect("Failed to convert constant to float"),
+            plasticity_changes: F::from(0.1).expect("Failed to convert constant to float"),
+            adaptation_rate: F::from(0.05).expect("Failed to convert constant to float"),
+            stability: F::from(0.9).expect("Failed to convert constant to float"),
         };
 
         let performance_stats = self.performance_monitor.get_statistics();
 
         let memory_stats = MemoryStatistics {
-            utilization: F::from(0.75).unwrap(),
-            consolidation_rate: F::from(0.02).unwrap(),
-            recall_accuracy: F::from(0.85).unwrap(),
-            storage_efficiency: F::from(0.7).unwrap(),
+            utilization: F::from(0.75).expect("Failed to convert constant to float"),
+            consolidation_rate: F::from(0.02).expect("Failed to convert constant to float"),
+            recall_accuracy: F::from(0.85).expect("Failed to convert constant to float"),
+            storage_efficiency: F::from(0.7).expect("Failed to convert constant to float"),
         };
 
         let learning_stats = self.learning_controller.get_adaptation_stats();
@@ -283,14 +285,14 @@ impl<
     fn get_quantum_coherence(&self) -> Option<F> {
         self.quantum_processor.as_ref().map(|qp| {
             // Simplified coherence measure
-            F::from(0.8).unwrap()
+            F::from(0.8).expect("Failed to convert constant to float")
         })
     }
 
     /// Get meta-learning progress
     fn get_meta_learning_progress(&self) -> F {
         // Simplified progress measure
-        F::from(0.6).unwrap()
+        F::from(0.6).expect("Failed to convert constant to float")
     }
 
     /// Enable distributed processing
@@ -530,7 +532,7 @@ mod tests {
 
     #[test]
     fn test_neuromorphic_computation() {
-        let mut computer = create_default_neuromorphic_computer::<f64>().unwrap();
+        let mut computer = create_default_neuromorphic_computer::<f64>().expect("Operation failed");
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let result = computer.compute_neuromorphic_metrics(&data, "test", None);
         assert!(result.is_ok());
@@ -538,7 +540,7 @@ mod tests {
 
     #[test]
     fn test_memory_operations() {
-        let mut computer = create_default_neuromorphic_computer::<f64>().unwrap();
+        let mut computer = create_default_neuromorphic_computer::<f64>().expect("Operation failed");
         let data = vec![1.0, 2.0, 3.0];
 
         // Store memory
@@ -552,7 +554,7 @@ mod tests {
 
     #[test]
     fn test_consciousness_simulation() {
-        let mut computer = create_default_neuromorphic_computer::<f64>().unwrap();
+        let mut computer = create_default_neuromorphic_computer::<f64>().expect("Operation failed");
         let input = vec![0.5, 0.8, 0.3, 0.9];
         let result = computer.simulate_consciousness(&input);
         assert!(result.is_ok());
@@ -560,7 +562,7 @@ mod tests {
 
     #[test]
     fn test_meta_learning() {
-        let mut computer = create_default_neuromorphic_computer::<f64>().unwrap();
+        let mut computer = create_default_neuromorphic_computer::<f64>().expect("Operation failed");
         let task_data = vec![1.0, 2.0, 3.0];
         let result = computer.meta_learn_task(&task_data);
         assert!(result.is_ok());
@@ -568,14 +570,14 @@ mod tests {
 
     #[test]
     fn test_system_state_save_load() {
-        let mut computer = create_default_neuromorphic_computer::<f64>().unwrap();
+        let mut computer = create_default_neuromorphic_computer::<f64>().expect("Operation failed");
 
         // Save state
         let state = computer.save_state();
         assert!(state.is_ok());
 
         // Load state
-        let load_result = computer.load_state(state.unwrap());
+        let load_result = computer.load_state(state.expect("Operation failed"));
         assert!(load_result.is_ok());
     }
 

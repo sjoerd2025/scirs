@@ -7,7 +7,7 @@ use scirs2_core::ndarray::Array2;
 #[test]
 fn test_sliding_windows() {
     let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
-    let (x, y) = utils::create_sliding_windows(&data, 3, 2).unwrap();
+    let (x, y) = utils::create_sliding_windows(&data, 3, 2).expect("Operation failed");
 
     assert_eq!(x.nrows(), 6);
     assert_eq!(x.ncols(), 3);
@@ -25,7 +25,7 @@ fn test_sliding_windows() {
 #[test]
 fn test_normalize_data() {
     let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-    let (normalized, min_val, max_val) = utils::normalize_data(&data).unwrap();
+    let (normalized, min_val, max_val) = utils::normalize_data(&data).expect("Operation failed");
 
     assert_abs_diff_eq!(min_val, 1.0);
     assert_abs_diff_eq!(max_val, 5.0);
@@ -41,10 +41,13 @@ fn test_normalize_data() {
 
 #[test]
 fn test_train_val_split() {
-    let x = Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64).collect()).unwrap();
-    let y = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
+    let x = Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64).collect())
+        .expect("Operation failed");
+    let y = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect())
+        .expect("Operation failed");
 
-    let (x_train, x_val, y_train, y_val) = utils::train_val_split(&x, &y, 0.2).unwrap();
+    let (x_train, x_val, y_train, y_val) =
+        utils::train_val_split(&x, &y, 0.2).expect("Operation failed");
 
     assert_eq!(x_train.nrows(), 8);
     assert_eq!(x_val.nrows(), 2);
@@ -107,12 +110,12 @@ fn test_neural_prediction() {
     let data = Array1::from_vec((0..50).map(|i| (i as f64 * 0.1).sin()).collect());
 
     let mut transformer = TransformerForecaster::<f64>::with_default_config();
-    transformer.fit(&data).unwrap();
+    transformer.fit(&data).expect("Operation failed");
 
     let forecast = transformer.predict(5);
     assert!(forecast.is_ok(), "Transformer prediction should succeed");
 
-    let result = forecast.unwrap();
+    let result = forecast.expect("Operation failed");
     assert_eq!(result.forecast.len(), 5, "Should predict 5 steps");
 }
 
@@ -133,7 +136,7 @@ fn test_uncertainty_prediction() {
         ..Default::default()
     };
     let mut nbeats = NBeatsForecaster::<f64>::new(config);
-    nbeats.fit(&data).unwrap();
+    nbeats.fit(&data).expect("Operation failed");
 
     let forecast = nbeats.predict_with_uncertainty(3, 0.95);
     assert!(
@@ -141,7 +144,7 @@ fn test_uncertainty_prediction() {
         "N-BEATS uncertainty prediction should succeed"
     );
 
-    let result = forecast.unwrap();
+    let result = forecast.expect("Operation failed");
     assert_eq!(result.forecast.len(), 3);
     // Check that confidence intervals are not all zeros (indicating they were computed)
     assert!(result.lower_ci.iter().any(|&x| x != 0.0) || result.upper_ci.iter().any(|&x| x != 0.0));
@@ -315,7 +318,10 @@ pub mod advanced {
             let validation_size = (data.len() as f64 * 0.2) as usize;
             if validation_size < self.config.forecast_horizon * 3 {
                 // Use equal weights if not enough validation data
-                self.combination_weights = Some(Array1::from_elem(3, F::from(1.0 / 3.0).unwrap()));
+                self.combination_weights = Some(Array1::from_elem(
+                    3,
+                    F::from(1.0 / 3.0).expect("Failed to convert to float"),
+                ));
                 return Ok(());
             }
 
@@ -354,12 +360,19 @@ pub mod advanced {
             }
 
             // Optimize weights using simple grid search
-            let mut best_weights = Array1::from_elem(3, F::from(1.0 / 3.0).unwrap());
+            let mut best_weights =
+                Array1::from_elem(3, F::from(1.0 / 3.0).expect("Failed to convert to float"));
             let mut best_error = F::infinity();
 
             // Grid search over possible weight combinations
-            for w1 in (0..=10).map(|x| F::from(x).unwrap() / F::from(10).unwrap()) {
-                for w2 in (0..=10).map(|x| F::from(x).unwrap() / F::from(10).unwrap()) {
+            for w1 in (0..=10).map(|x| {
+                F::from(x).expect("Failed to convert to float")
+                    / F::from(10).expect("Failed to convert constant to float")
+            }) {
+                for w2 in (0..=10).map(|x| {
+                    F::from(x).expect("Failed to convert to float")
+                        / F::from(10).expect("Failed to convert constant to float")
+                }) {
                     let w3 = F::one() - w1 - w2;
                     if w3 >= F::zero() && w3 <= F::one() {
                         let weights = Array1::from_vec(vec![w1, w2, w3]);
@@ -421,7 +434,7 @@ pub mod advanced {
             }
 
             if count > 0 {
-                total_error / F::from(count).unwrap()
+                total_error / F::from(count).expect("Failed to convert to float")
             } else {
                 F::infinity()
             }
@@ -441,7 +454,7 @@ pub mod advanced {
             let long_pred = self.long_term.predict(steps)?;
 
             // Combine predictions using learned weights
-            let weights = self.combination_weights.as_ref().unwrap();
+            let weights = self.combination_weights.as_ref().expect("Operation failed");
             let combined_forecast = &short_pred.forecast * weights[0]
                 + &medium_pred.forecast * weights[1]
                 + &long_pred.forecast * weights[2];
@@ -546,7 +559,8 @@ pub mod advanced {
                 base_model: LSTMForecaster::new(lstm_config),
                 data_buffer: VecDeque::with_capacity(config.buffer_size),
                 max_buffer_size: config.buffer_size,
-                incremental_lr: F::from(config.incremental_learning_rate).unwrap(),
+                incremental_lr: F::from(config.incremental_learning_rate)
+                    .expect("Failed to convert to float"),
                 update_frequency: config.update_frequency,
                 observation_count: 0,
                 config,
@@ -694,7 +708,8 @@ pub mod advanced {
                 }
 
                 if batch_count > 0 {
-                    epoch_loss = epoch_loss / F::from(batch_count).unwrap();
+                    epoch_loss =
+                        epoch_loss / F::from(batch_count).expect("Failed to convert to float");
                     self.loss_history.push(epoch_loss);
                 }
 
@@ -723,17 +738,29 @@ pub mod advanced {
 
             // Simple random initialization (in practice, would use proper initialization)
             self.model_weights = Some(ModelWeights {
-                attention_query: Array2::from_elem((h, i), F::from(0.1).unwrap()),
-                attention_key: Array2::from_elem((h, i), F::from(0.1).unwrap()),
-                attention_value: Array2::from_elem((h, i), F::from(0.1).unwrap()),
-                output_projection: Array2::from_elem((o, h), F::from(0.1).unwrap()),
+                attention_query: Array2::from_elem(
+                    (h, i),
+                    F::from(0.1).expect("Failed to convert constant to float"),
+                ),
+                attention_key: Array2::from_elem(
+                    (h, i),
+                    F::from(0.1).expect("Failed to convert constant to float"),
+                ),
+                attention_value: Array2::from_elem(
+                    (h, i),
+                    F::from(0.1).expect("Failed to convert constant to float"),
+                ),
+                output_projection: Array2::from_elem(
+                    (o, h),
+                    F::from(0.1).expect("Failed to convert constant to float"),
+                ),
                 bias: Array1::zeros(o),
             });
         }
 
         /// Forward pass with attention mechanism
         fn forward_with_attention(&mut self, input: &Array1<F>) -> Result<Array1<F>> {
-            let weights = self.model_weights.as_ref().unwrap();
+            let weights = self.model_weights.as_ref().expect("Operation failed");
 
             // Compute attention scores (simplified)
             let query = weights.attention_query.dot(input);
@@ -749,7 +776,7 @@ pub mod advanced {
             // Store attention weights for interpretability
             self.attention_weights = Some(
                 Array2::from_shape_vec((1, attention_weights.len()), attention_weights.to_vec())
-                    .unwrap(),
+                    .expect("Operation failed"),
             );
 
             // Apply attention to values
@@ -768,7 +795,7 @@ pub mod advanced {
                 let diff = *p - *t;
                 loss = loss + diff * diff;
             }
-            loss / F::from(prediction.len()).unwrap()
+            loss / F::from(prediction.len()).expect("Operation failed")
         }
 
         /// Update parameters (simplified gradient descent)
@@ -809,10 +836,10 @@ pub mod advanced {
             let std_dev = if !self.loss_history.is_empty() {
                 self.loss_history[self.loss_history.len() - 1].sqrt()
             } else {
-                F::from(0.1).unwrap()
+                F::from(0.1).expect("Failed to convert constant to float")
             };
 
-            let margin = std_dev * F::from(1.96).unwrap();
+            let margin = std_dev * F::from(1.96).expect("Failed to convert constant to float");
             let lower_ci = prediction.mapv(|x| x - margin);
             let upper_ci = prediction.mapv(|x| x + margin);
 
@@ -923,7 +950,10 @@ pub mod advanced {
             match self.ensemble_method {
                 EnsembleMethod::Average => {
                     let n = self.forecasters.len();
-                    self.weights = Some(Array1::from_elem(n, F::one() / F::from(n).unwrap()));
+                    self.weights = Some(Array1::from_elem(
+                        n,
+                        F::one() / F::from(n).expect("Failed to convert to float"),
+                    ));
                 }
                 EnsembleMethod::WeightedAverage => {
                     self.learn_weights(data)?;
@@ -961,7 +991,7 @@ pub mod advanced {
             }
 
             // Combine predictions based on ensemble method
-            let weights = self.weights.as_ref().unwrap();
+            let weights = self.weights.as_ref().expect("Operation failed");
             let mut combined_forecast = Array1::zeros(steps);
             let mut combined_lower = Array1::zeros(steps);
             let mut combined_upper = Array1::zeros(steps);
@@ -995,7 +1025,10 @@ pub mod advanced {
             if validation_size < 10 {
                 // Fall back to equal weights
                 let n = self.forecasters.len();
-                self.weights = Some(Array1::from_elem(n, F::one() / F::from(n).unwrap()));
+                self.weights = Some(Array1::from_elem(
+                    n,
+                    F::one() / F::from(n).expect("Failed to convert to float"),
+                ));
                 return Ok(());
             }
 
@@ -1020,7 +1053,8 @@ pub mod advanced {
                         let error = result.forecast[j] - actual[j];
                         mse = mse + error * error;
                     }
-                    validation_errors[i] = mse / F::from(forecast_horizon).unwrap();
+                    validation_errors[i] =
+                        mse / F::from(forecast_horizon).expect("Failed to convert to float");
                 }
             }
 
@@ -1138,7 +1172,10 @@ pub mod advanced {
             } else {
                 // Fall back to equal weights
                 let n = self.forecasters.len();
-                self.weights = Some(Array1::from_elem(n, F::one() / F::from(n).unwrap()));
+                self.weights = Some(Array1::from_elem(
+                    n,
+                    F::one() / F::from(n).expect("Failed to convert to float"),
+                ));
             }
 
             Ok(())
@@ -1175,7 +1212,7 @@ pub mod advanced {
             } else {
                 // Fall back to equal weights
                 for weight in weights.iter_mut() {
-                    *weight = F::one() / F::from(n_features).unwrap();
+                    *weight = F::one() / F::from(n_features).expect("Failed to convert to float");
                 }
             }
 
@@ -1188,7 +1225,10 @@ pub mod advanced {
             if validation_size < 10 {
                 // Fall back to equal weights
                 let n = self.forecasters.len();
-                self.weights = Some(Array1::from_elem(n, F::one() / F::from(n).unwrap()));
+                self.weights = Some(Array1::from_elem(
+                    n,
+                    F::one() / F::from(n).expect("Failed to convert to float"),
+                ));
                 return Ok(());
             }
 
@@ -1211,7 +1251,7 @@ pub mod advanced {
                         let error = result.forecast[j] - actual[j];
                         mse = mse + error * error;
                     }
-                    mse = mse / F::from(forecast_horizon).unwrap();
+                    mse = mse / F::from(forecast_horizon).expect("Failed to convert to float");
 
                     if mse < best_error {
                         best_error = mse;
@@ -1324,8 +1364,8 @@ pub mod advanced {
             search_space.insert(
                 "learning_rate".to_string(),
                 ParameterRange::FloatRange {
-                    min: F::from(0.0001).unwrap(),
-                    max: F::from(0.1).unwrap(),
+                    min: F::from(0.0001).expect("Failed to convert constant to float"),
+                    max: F::from(0.1).expect("Failed to convert constant to float"),
                 },
             );
             search_space.insert(
@@ -1339,8 +1379,8 @@ pub mod advanced {
             search_space.insert(
                 "dropout".to_string(),
                 ParameterRange::FloatRange {
-                    min: F::from(0.0).unwrap(),
-                    max: F::from(0.5).unwrap(),
+                    min: F::from(0.0).expect("Failed to convert constant to float"),
+                    max: F::from(0.5).expect("Failed to convert constant to float"),
                 },
             );
             search_space.insert(
@@ -1439,7 +1479,8 @@ pub mod advanced {
             match range {
                 ParameterRange::FloatRange { min, max } => {
                     // Simple pseudo-random sampling
-                    let ratio = F::from((self.evaluations as f64 * 0.12345) % 1.0).unwrap();
+                    let ratio = F::from((self.evaluations as f64 * 0.12345) % 1.0)
+                        .expect("Operation failed");
                     let value = *min + ratio * (*max - *min);
                     ParameterValue::Float(value)
                 }
@@ -1488,7 +1529,7 @@ pub mod advanced {
                 let error = result.forecast[i] - test_data[i];
                 mse = mse + error * error;
             }
-            mse = mse / F::from(forecast_horizon).unwrap();
+            mse = mse / F::from(forecast_horizon).expect("Failed to convert to float");
 
             Ok(mse)
         }
@@ -1570,7 +1611,7 @@ pub mod advanced {
         ) -> F {
             match params.get(name) {
                 Some(ParameterValue::Float(f)) => *f,
-                _ => F::from(default).unwrap(),
+                _ => F::from(default).expect("Failed to convert to float"),
             }
         }
 
@@ -1624,7 +1665,7 @@ pub mod advanced {
             let prediction = forecaster.predict(5);
             assert!(prediction.is_ok(), "Multi-scale prediction should succeed");
 
-            let forecast = prediction.unwrap();
+            let forecast = prediction.expect("Operation failed");
             assert_eq!(forecast.forecast.len(), 5);
 
             // Check that combination weights are learned

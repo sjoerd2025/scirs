@@ -929,7 +929,7 @@ mod tests {
         let result = memristive_gradient_descent(objective, &initial.view(), 0.1, 100);
         assert!(result.is_ok());
 
-        let final_params = result.unwrap();
+        let final_params = result.expect("Operation failed");
         let final_obj = objective(&final_params.view());
         let initial_obj = objective(&initial.view());
 

@@ -115,7 +115,7 @@ where
         let mut cov_i = covariancematrix(group, Some(1))?;
 
         // Add small regularization to diagonal for numerical stability
-        let reg_factor = F::from(1e-10).unwrap();
+        let reg_factor = F::from(1e-10).expect("Failed to convert constant to float");
         for j in 0..cov_i.nrows() {
             cov_i[[j, j]] += reg_factor;
         }
@@ -141,12 +141,13 @@ where
     let mut pooled_cov = Array2::zeros((p, p));
 
     for (i, cov_i) in group_covs.iter().enumerate() {
-        let weight = F::from(samplesizes[i] - 1).unwrap() / F::from(total_dof).unwrap();
+        let weight = F::from(samplesizes[i] - 1).expect("Failed to convert to float")
+            / F::from(total_dof).expect("Failed to convert to float");
         pooled_cov += &(cov_i * weight);
     }
 
     // Add regularization to pooled covariance matrix
-    let reg_factor = F::from(1e-10).unwrap();
+    let reg_factor = F::from(1e-10).expect("Failed to convert constant to float");
     for i in 0..pooled_cov.nrows() {
         pooled_cov[[i, i]] += reg_factor;
     }
@@ -163,10 +164,10 @@ where
     let log_det_pooled = det_pooled.ln();
 
     // Compute Box's M statistic
-    let mut m_statistic = F::from(total_dof).unwrap() * log_det_pooled;
+    let mut m_statistic = F::from(total_dof).expect("Failed to convert to float") * log_det_pooled;
 
     for (i, &log_det_i) in log_dets.iter().enumerate() {
-        m_statistic -= F::from(samplesizes[i] - 1).unwrap() * log_det_i;
+        m_statistic -= F::from(samplesizes[i] - 1).expect("Failed to convert to float") * log_det_i;
     }
 
     // Convert to chi-square statistic using Box's correction
@@ -245,16 +246,19 @@ where
     let geometric_mean = eigenvals
         .iter()
         .fold(F::one(), |acc, &val| acc * val)
-        .powf(F::one() / F::from(p).unwrap());
-    let arithmetic_mean = eigenvals.sum() / F::from(p).unwrap();
+        .powf(F::one() / F::from(p).expect("Failed to convert to float"));
+    let arithmetic_mean = eigenvals.sum() / F::from(p).expect("Failed to convert to float");
 
-    let w_statistic = (geometric_mean / arithmetic_mean).powf(F::from(p).unwrap());
+    let w_statistic =
+        (geometric_mean / arithmetic_mean).powf(F::from(p).expect("Failed to convert to float"));
 
     // Convert to chi-square using Mauchly's transformation
-    let n_f = F::from(n - 1).unwrap();
-    let _f = F::from(p * (p + 1) / 2 - 1).unwrap();
-    let chi_square_stat =
-        -(n_f - F::from(2 * p * p + p + 2).unwrap() / F::from(6 * p).unwrap()) * w_statistic.ln();
+    let n_f = F::from(n - 1).expect("Failed to convert to float");
+    let _f = F::from(p * (p + 1) / 2 - 1).expect("Test: operation failed");
+    let chi_square_stat = -(n_f
+        - F::from(2 * p * p + p + 2).expect("Failed to convert to float")
+            / F::from(6 * p).expect("Failed to convert to float"))
+        * w_statistic.ln();
 
     let df = p * (p + 1) / 2 - 1;
     let p_value = chi_square_survival_function(chi_square_stat, df)?;
@@ -310,11 +314,11 @@ where
     }
 
     // Compute sample mean and covariance with regularization
-    let mean = data.mean_axis(Axis(0)).unwrap();
+    let mean = data.mean_axis(Axis(0)).expect("Test: operation failed");
     let mut cov = covariancematrix(data, Some(1))?;
 
     // Add small regularization to diagonal for numerical stability
-    let reg_factor = F::from(1e-10).unwrap();
+    let reg_factor = F::from(1e-10).expect("Failed to convert constant to float");
     for i in 0..cov.nrows() {
         cov[[i, i]] += reg_factor;
     }
@@ -347,24 +351,27 @@ where
         }
     }
 
-    let skewness_stat = skewness_sum / (F::from(n).unwrap().powi(2));
+    let skewness_stat = skewness_sum / (F::from(n).expect("Failed to convert to float").powi(2));
 
     // Mardia's kurtosis statistic
     let kurtosis_sum = distances.iter().fold(F::zero(), |acc, &d| acc + d.powi(2));
-    let kurtosis_stat = kurtosis_sum / F::from(n).unwrap();
+    let kurtosis_stat = kurtosis_sum / F::from(n).expect("Failed to convert to float");
 
     // Convert to test statistics
-    let skewness_chi2 = F::from(n).unwrap() * skewness_stat / F::from(6.0).unwrap();
-    let kurtosis_z = (kurtosis_stat - F::from(p * (p + 2)).unwrap())
-        / (F::from(8 * p * (p + 2)).unwrap() / F::from(n).unwrap()).sqrt();
+    let skewness_chi2 = F::from(n).expect("Failed to convert to float") * skewness_stat
+        / F::from(6.0).expect("Failed to convert constant to float");
+    let kurtosis_z = (kurtosis_stat - F::from(p * (p + 2)).expect("Test: operation failed"))
+        / (F::from(8 * p * (p + 2)).expect("Test: operation failed")
+            / F::from(n).expect("Failed to convert to float"))
+        .sqrt();
 
     // Degrees of freedom and p-values
     let skewness_df = p * (p + 1) * (p + 2) / 6;
     let skewness_p_value = chi_square_survival_function(skewness_chi2, skewness_df)?;
 
     // For kurtosis, use standard normal approximation
-    let kurtosis_p_value =
-        F::from(2.0).unwrap() * standard_normal_survival_function(kurtosis_z.abs());
+    let kurtosis_p_value = F::from(2.0).expect("Failed to convert constant to float")
+        * standard_normal_survival_function(kurtosis_z.abs());
 
     let skewness_result = TestResult::new(
         skewness_chi2,
@@ -423,7 +430,7 @@ where
     }
 
     // Compute sample mean
-    let sample_mean = data.mean_axis(Axis(0)).unwrap();
+    let sample_mean = data.mean_axis(Axis(0)).expect("Test: operation failed");
 
     // Use zero vector if no hypothesized mean is provided
     let hypothesized_mean = match mu0 {
@@ -447,7 +454,7 @@ where
     let mut cov = covariancematrix(data, Some(1))?;
 
     // Add small regularization to diagonal for numerical stability
-    let reg_factor = F::from(1e-10).unwrap();
+    let reg_factor = F::from(1e-10).expect("Failed to convert constant to float");
     for i in 0..cov.nrows() {
         cov[[i, i]] += reg_factor;
     }
@@ -455,11 +462,12 @@ where
     let cov_inv = inv(&cov.view(), None)?;
 
     // Compute Hotelling's T² statistic
-    let t2_stat = F::from(n).unwrap() * diff.dot(&cov_inv).dot(&diff);
+    let t2_stat = F::from(n).expect("Failed to convert to float") * diff.dot(&cov_inv).dot(&diff);
 
     // Convert to F-statistic
-    let f_stat =
-        t2_stat * F::from(n - p).unwrap() / (F::from(n - 1).unwrap() * F::from(p).unwrap());
+    let f_stat = t2_stat * F::from(n - p).expect("Failed to convert to float")
+        / (F::from(n - 1).expect("Failed to convert to float")
+            * F::from(p).expect("Failed to convert to float"));
 
     // Degrees of freedom for F-distribution
     let df1 = p;
@@ -488,14 +496,16 @@ where
     let mut sum_inv = F::zero();
 
     for &n_i in _samplesizes {
-        sum_inv = sum_inv + F::one() / F::from(n_i - 1).unwrap();
+        sum_inv = sum_inv + F::one() / F::from(n_i - 1).expect("Failed to convert to float");
     }
 
     let total_dof: usize = _samplesizes.iter().map(|&n| n - 1).sum();
-    let inv_total = F::one() / F::from(total_dof).unwrap();
+    let inv_total = F::one() / F::from(total_dof).expect("Failed to convert to float");
 
-    let numerator = F::from(2 * p * p + 3 * p - 1).unwrap();
-    let denominator = F::from(6).unwrap() * F::from(p + 1).unwrap() * F::from(k - 1).unwrap();
+    let numerator = F::from(2 * p * p + 3 * p - 1).expect("Failed to convert to float");
+    let denominator = F::from(6).expect("Failed to convert constant to float")
+        * F::from(p + 1).expect("Failed to convert to float")
+        * F::from(k - 1).expect("Failed to convert to float");
     let c1 = (numerator / denominator) * (sum_inv - inv_total);
 
     Ok(c1)
@@ -514,12 +524,13 @@ where
 
     // Very rough approximation using normal approximation for large df
     if df > 30 {
-        let z = (x - F::from(df).unwrap()) / F::from(2 * df).unwrap().sqrt();
+        let z = (x - F::from(df).expect("Failed to convert to float"))
+            / F::from(2 * df).expect("Failed to convert to float").sqrt();
         return Ok(standard_normal_survival_function(z));
     }
 
     // For small df, use a simple approximation
-    let approx = (-x / F::from(2.0).unwrap()).exp();
+    let approx = (-x / F::from(2.0).expect("Failed to convert constant to float")).exp();
     Ok(approx.min(F::one()))
 }
 
@@ -545,12 +556,15 @@ where
 {
     // Simplified approximation for standard normal survival function
     if z <= F::zero() {
-        return F::from(0.5).unwrap();
+        return F::from(0.5).expect("Failed to convert constant to float");
     }
 
     // Very rough approximation using complementary error function approximation
-    let approx = (-z * z / F::from(2.0).unwrap()).exp() / (z * F::from(2.0 * PI).unwrap().sqrt());
-    approx.min(F::from(0.5).unwrap())
+    let approx = (-z * z / F::from(2.0).expect("Failed to convert constant to float")).exp()
+        / (z * F::from(2.0 * PI)
+            .expect("Failed to convert to float")
+            .sqrt());
+    approx.min(F::from(0.5).expect("Failed to convert constant to float"))
 }
 
 #[cfg(test)]
@@ -570,7 +584,7 @@ fn test_hotelling_t2_test() {
         [3.2, 3.7]
     ];
 
-    let result = hotelling_t2_test(&data.view(), None, 0.05).unwrap();
+    let result = hotelling_t2_test(&data.view(), None, 0.05).expect("Test: operation failed");
 
     // Should produce finite statistics
     assert!(result.statistic.is_finite());
@@ -616,7 +630,8 @@ fn test_mardia_normality_test() {
         [-0.5, 0.5]
     ];
 
-    let (skewness_result, kurtosis_result) = mardia_normality_test(&data.view(), 0.05).unwrap();
+    let (skewness_result, kurtosis_result) =
+        mardia_normality_test(&data.view(), 0.05).expect("Test: operation failed");
 
     assert!(skewness_result.statistic.is_finite());
     assert!(skewness_result.p_value.is_finite());
@@ -647,7 +662,7 @@ fn test_box_m_test() {
     ];
 
     let groups = vec![group1.view(), group2.view()];
-    let result = box_m_test(&groups, 0.05).unwrap();
+    let result = box_m_test(&groups, 0.05).expect("Test: operation failed");
 
     assert!(result.statistic.is_finite());
     assert!(result.p_value.is_finite());

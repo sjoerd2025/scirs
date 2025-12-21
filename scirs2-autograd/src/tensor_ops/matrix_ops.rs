@@ -304,7 +304,8 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for GeneralDeterminan
                 Err(_) => {
                     println!("Matrix is nearly singular, using approximate gradient");
                     // For nearly singular matrices, use regularized inverse
-                    let eps = F::epsilon() * F::from(10.0).unwrap();
+                    let eps =
+                        F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
                     let n = input_2d.shape()[0];
                     let regularized = &input_2d + &(Array2::<F>::eye(n) * eps);
 
@@ -575,22 +576,38 @@ fn compute_matrix_exp_pade<F: Float + scirs2_core::ndarray::ScalarOperand + From
 
     // Scaling parameter
     let s = if norm > F::one() {
-        (norm.ln() / F::from(2.0).unwrap().ln()).ceil()
+        (norm.ln()
+            / F::from(2.0)
+                .expect("Failed to convert constant to float")
+                .ln())
+        .ceil()
     } else {
         F::zero()
     };
 
-    let scale = F::from(2.0).unwrap().powf(s);
+    let scale = F::from(2.0)
+        .expect("Failed to convert constant to float")
+        .powf(s);
     let scaled_matrix = matrix.mapv(|x| x / scale);
 
     // Padé approximation coefficients (order 6)
-    let c0 = F::from(1.0).unwrap();
-    let c1 = F::from(0.5).unwrap();
-    let c2 = F::from(12.0).unwrap().recip();
-    let c3 = F::from(120.0).unwrap().recip();
-    let c4 = F::from(3360.0).unwrap().recip();
-    let c5 = F::from(30240.0).unwrap().recip();
-    let c6 = F::from(1209600.0).unwrap().recip();
+    let c0 = F::from(1.0).expect("Failed to convert constant to float");
+    let c1 = F::from(0.5).expect("Failed to convert constant to float");
+    let c2 = F::from(12.0)
+        .expect("Failed to convert constant to float")
+        .recip();
+    let c3 = F::from(120.0)
+        .expect("Failed to convert constant to float")
+        .recip();
+    let c4 = F::from(3360.0)
+        .expect("Failed to convert constant to float")
+        .recip();
+    let c5 = F::from(30240.0)
+        .expect("Failed to convert constant to float")
+        .recip();
+    let c6 = F::from(1209600.0)
+        .expect("Failed to convert constant to float")
+        .recip();
 
     // Compute powers of matrix
     let i = Array2::<F>::eye(n);
@@ -667,13 +684,13 @@ fn compute_matrix_exp_taylor<F: Float + scirs2_core::ndarray::ScalarOperand>(
 
     // Use more terms for better accuracy
     for k in 1..=20 {
-        term = term.dot(matrix) / F::from(k).unwrap();
+        term = term.dot(matrix) / F::from(k).expect("Failed to convert to float");
         let old_result = result.clone();
         result += &term;
 
         // Check convergence
         let diff = (&result - &old_result).mapv(|x| x.abs()).sum();
-        if diff < F::epsilon() * F::from(n as f64).unwrap() {
+        if diff < F::epsilon() * F::from(n as f64).expect("Failed to convert to float") {
             break;
         }
     }
@@ -753,7 +770,9 @@ fn is_symmetric_matrix<F: Float>(matrix: &scirs2_core::ndarray::ArrayView2<F>) -
     let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs()
+                > F::epsilon() * F::from(10.0).expect("Failed to convert constant to float")
+            {
                 return false;
             }
         }
@@ -778,15 +797,18 @@ fn compute_symmetric_eigen_simple<
 
         let trace = a + c;
         let det = a * c - b * b;
-        let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+        let discriminant =
+            trace * trace - F::from(4.0).expect("Failed to convert constant to float") * det;
 
         if discriminant < F::zero() {
             return Err(OpError::Other("Complex eigenvalues".into()));
         }
 
         let sqrt_disc = discriminant.sqrt();
-        let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();
-        let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();
+        let lambda1 =
+            (trace + sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
+        let lambda2 =
+            (trace - sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
 
         let eigenvalues = Array1::from_vec(vec![lambda1, lambda2]);
 

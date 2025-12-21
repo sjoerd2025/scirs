@@ -203,7 +203,7 @@ impl<F: Float + FromPrimitive> Default for HDBSCANOptions<F> {
 ///     7.8, 9.2,
 ///     8.5, 8.9,
 ///     7.9, 9.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Run HDBSCAN with adjusted parameters for this dataset
 /// let options = HDBSCANOptions {
@@ -212,7 +212,7 @@ impl<F: Float + FromPrimitive> Default for HDBSCANOptions<F> {
 ///     ..Default::default()
 /// };
 ///
-/// let result = hdbscan(data.view(), Some(options)).unwrap();
+/// let result = hdbscan(data.view(), Some(options)).expect("Operation failed");
 ///
 /// // Print the cluster labels
 /// println!("Cluster labels: {:?}", result.labels);
@@ -315,7 +315,7 @@ where
         return Ok((None, None));
     }
 
-    let store_centers = store_centers.unwrap();
+    let store_centers = store_centers.expect("Operation failed");
     let compute_centroids =
         store_centers == StoreCenter::Centroid || store_centers == StoreCenter::Both;
     let compute_medoids =
@@ -357,7 +357,8 @@ where
         for i in 0..n_clusters as usize {
             if counts[i] > 0 {
                 for j in 0..n_features {
-                    centroids[[i, j]] = centroids[[i, j]] / F::from_usize(counts[i]).unwrap();
+                    centroids[[i, j]] =
+                        centroids[[i, j]] / F::from_usize(counts[i]).expect("Operation failed");
                 }
             }
         }
@@ -455,13 +456,13 @@ where
 ///     7.8, 9.2,
 ///     8.5, 8.9,
 ///     7.9, 9.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Run HDBSCAN with default parameters
-/// let result = hdbscan(data.view(), None).unwrap();
+/// let result = hdbscan(data.view(), None).expect("Operation failed");
 ///
 /// // Extract DBSCAN-like clustering with eps=1.0
-/// let dbscan_labels = dbscan_clustering(&result, 1.0).unwrap();
+/// let dbscan_labels = dbscan_clustering(&result, 1.0).expect("Operation failed");
 ///
 /// // Print the cluster labels
 /// println!("DBSCAN cluster labels: {:?}", dbscan_labels);
@@ -680,9 +681,11 @@ where
                 DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
                 DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
                 DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
-                DistanceMetric::Minkowski => {
-                    distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
-                }
+                DistanceMetric::Minkowski => distance::minkowski(
+                    &point1,
+                    &point2,
+                    F::from(3.0).expect("Failed to convert constant to float"),
+                ),
             };
 
             distances[[i, j]] = dist;
@@ -754,9 +757,11 @@ where
                 DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
                 DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
                 DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
-                DistanceMetric::Minkowski => {
-                    distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
-                }
+                DistanceMetric::Minkowski => distance::minkowski(
+                    &point1,
+                    &point2,
+                    F::from(3.0).expect("Failed to convert constant to float"),
+                ),
             };
 
             let mrd = mutual_reachability_distance(dist, core_distances[i], core_distances[j]);
@@ -1041,7 +1046,7 @@ where
         F::zero()
     } else {
         let max_val = lambdas.iter().fold(F::zero(), |max, &val| max.max(val));
-        max_val / F::from(1000.0).unwrap() // Small fraction of max lambda
+        max_val / F::from(1000.0).expect("Failed to convert constant to float") // Small fraction of max lambda
     };
 
     // Node sizes (initial: all nodes are individual points)
@@ -1222,7 +1227,7 @@ where
         // Calculate stability
         if is_leaf.contains(&child) && child >= 0 {
             // Leaf _cluster's stability is its lambda times its size
-            let stability = lambda * F::from_usize(size).unwrap();
+            let stability = lambda * F::from_usize(size).expect("Operation failed");
             subtree_stability.insert(child, stability);
         } else if child >= 0 {
             // For internal nodes, add the stability of the child
@@ -1248,7 +1253,7 @@ where
 
             // Only count positive differences
             if lambda_diff > F::zero() {
-                let stability_delta = lambda_diff * F::from_usize(size).unwrap();
+                let stability_delta = lambda_diff * F::from_usize(size).expect("Operation failed");
 
                 // Add to parent's stability
                 let parent_stability = subtree_stability.entry(parent).or_insert(F::zero());
@@ -1401,7 +1406,9 @@ where
                     // Found a path to a selected cluster
                     if path_max_lambda > max_lambda {
                         max_lambda = path_max_lambda;
-                        cluster_label = *leaf_cluster_map.get(&current_node).unwrap();
+                        cluster_label = *leaf_cluster_map
+                            .get(&current_node)
+                            .expect("Operation failed");
                     }
                     break;
                 }
@@ -1489,7 +1496,7 @@ mod tests {
                 8.0, 9.0, 8.2, 8.8, 7.8, 9.1,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run HDBSCAN with very small parameters for this tiny dataset
         let options = HDBSCANOptions {
@@ -1505,7 +1512,7 @@ mod tests {
         // Check for error first
         assert!(result.is_ok(), "HDBSCAN failed: {:?}", result.err());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
 
         // Check that we get a result with the right shape
         assert_eq!(

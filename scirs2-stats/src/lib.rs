@@ -47,7 +47,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-stats = "0.1.0-rc.3"
+//! scirs2-stats = "0.1.0-rc.4"
 //! ```
 //!
 //! ```rust
@@ -56,11 +56,11 @@
 //!
 //! let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 //!
-//! let mean_val = mean(&data.view()).unwrap();        // 3.0
-//! let median_val = median(&data.view()).unwrap();    // 3.0
-//! let std_val = std(&data.view(), 1, None).unwrap(); // Sample std dev
-//! let skewness = skew(&data.view(), false, None).unwrap();
-//! let kurt = kurtosis(&data.view(), true, false, None).unwrap();
+//! let mean_val = mean(&data.view()).expect("Operation failed");        // 3.0
+//! let median_val = median(&data.view()).expect("Operation failed");    // 3.0
+//! let std_val = std(&data.view(), 1, None).expect("Operation failed"); // Sample std dev
+//! let skewness = skew(&data.view(), false, None).expect("Operation failed");
+//! let kurt = kurtosis(&data.view(), true, false, None).expect("Operation failed");
 //! ```
 //!
 //! ### Probability Distributions
@@ -70,13 +70,13 @@
 //! use scirs2_stats::Distribution;
 //!
 //! // Normal distribution: N(μ=0, σ²=1)
-//! let normal = distributions::norm(0.0f64, 1.0).unwrap();
+//! let normal = distributions::norm(0.0f64, 1.0).expect("Operation failed");
 //! let pdf = normal.pdf(0.0);          // Probability density at x=0
 //! let cdf = normal.cdf(1.96);         // P(X ≤ 1.96) ≈ 0.975
-//! let samples = normal.rvs(1000).unwrap();  // Generate 1000 samples
+//! let samples = normal.rvs(1000).expect("Operation failed");  // Generate 1000 samples
 //!
 //! // Poisson distribution: Poisson(λ=3)
-//! let poisson = distributions::poisson(3.0f64, 0.0).unwrap();
+//! let poisson = distributions::poisson(3.0f64, 0.0).expect("Operation failed");
 //! let pmf = poisson.pmf(2.0);         // P(X = 2)
 //! let mean = poisson.mean();          // E[X] = 3.0
 //!
@@ -84,8 +84,8 @@
 //! use scirs2_core::ndarray::array;
 //! let mean = array![0.0, 0.0];
 //! let cov = array![[1.0, 0.5], [0.5, 2.0]];
-//! let mvn = distributions::multivariate::multivariate_normal(mean, cov).unwrap();
-//! let samples = mvn.rvs(100).unwrap();
+//! let mvn = distributions::multivariate::multivariate_normal(mean, cov).expect("Operation failed");
+//! let samples = mvn.rvs(100).expect("Operation failed");
 //! ```
 //!
 //! ### Hypothesis Testing
@@ -97,19 +97,19 @@
 //!
 //! // One-sample t-test: H₀: μ = 5.0
 //! let data = array![5.1, 4.9, 6.2, 5.7, 5.5];
-//! let result = ttest_1samp(&data.view(), 5.0, Alternative::TwoSided, "propagate").unwrap();
+//! let result = ttest_1samp(&data.view(), 5.0, Alternative::TwoSided, "propagate").expect("Operation failed");
 //! println!("t-statistic: {}, p-value: {}", result.statistic, result.pvalue);
 //!
 //! // Two-sample t-test: H₀: μ₁ = μ₂
 //! let group1 = array![5.1, 4.9, 6.2, 5.7, 5.5];
 //! let group2 = array![4.8, 5.2, 5.1, 4.7, 4.9];
-//! let result = ttest_ind(&group1.view(), &group2.view(), true, Alternative::TwoSided, "propagate").unwrap();
+//! let result = ttest_ind(&group1.view(), &group2.view(), true, Alternative::TwoSided, "propagate").expect("Operation failed");
 //!
 //! // Non-parametric Mann-Whitney U test
-//! let (u, p) = mann_whitney(&group1.view(), &group2.view(), "two-sided", true).unwrap();
+//! let (u, p) = mann_whitney(&group1.view(), &group2.view(), "two-sided", true).expect("Operation failed");
 //!
 //! // Normality test
-//! let (w, p) = shapiro(&data.view()).unwrap();
+//! let (w, p) = shapiro(&data.view()).expect("Operation failed");
 //! ```
 //!
 //! ### Correlation Analysis
@@ -122,17 +122,17 @@
 //! let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 //!
 //! // Pearson correlation: r ≈ -1.0 (linear relationship)
-//! let (r, p) = pearsonr(&x.view(), &y.view(), "two-sided").unwrap();
+//! let (r, p) = pearsonr(&x.view(), &y.view(), "two-sided").expect("Operation failed");
 //!
 //! // Spearman rank correlation (monotonic relationship)
-//! let rho = spearmanr(&x.view(), &y.view(), "two-sided").unwrap();
+//! let rho = spearmanr(&x.view(), &y.view(), "two-sided").expect("Operation failed");
 //!
 //! // Kendall's tau correlation
-//! let tau = kendall_tau(&x.view(), &y.view(), "b").unwrap();
+//! let tau = kendall_tau(&x.view(), &y.view(), "b").expect("Operation failed");
 //!
 //! // Correlation matrix for multiple variables
 //! let data = array![[1.0, 5.0], [2.0, 4.0], [3.0, 3.0], [4.0, 2.0], [5.0, 1.0]];
-//! let corr_matrix = corrcoef(&data.view(), "pearson").unwrap();
+//! let corr_matrix = corrcoef(&data.view(), "pearson").expect("Operation failed");
 //! ```
 //!
 //! ### Regression Analysis
@@ -145,14 +145,14 @@
 //! let y = array![2.1, 4.0, 5.9, 8.1, 10.0];
 //!
 //! // Ordinary least squares
-//! let result = linear_regression(&x.view(), &y.view(), None).unwrap();
+//! let result = linear_regression(&x.view(), &y.view(), None).expect("Operation failed");
 //! println!("Slope: {}, R²: {}", result.coefficients[0], result.r_squared);
 //!
 //! // Ridge regression (L2 regularization)
-//! let ridge_result = ridge_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).unwrap();
+//! let ridge_result = ridge_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).expect("Operation failed");
 //!
 //! // Lasso regression (L1 regularization)
-//! let lasso_result = lasso_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).unwrap();
+//! let lasso_result = lasso_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).expect("Operation failed");
 //! ```
 //!
 //! ## 🏗️ Architecture
@@ -205,8 +205,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.3
-//! - **Release Date**: October 03, 2025
+//! - **Version**: 0.1.0-rc.4
+//! - **Release Date**: December 21, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-stats](https://docs.rs/scirs2-stats)
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)
@@ -222,27 +222,27 @@
 //! let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0];  // Note the outlier
 //!
 //! // Mean absolute deviation (from mean)
-//! let mad = mean_abs_deviation(&data.view(), None).unwrap();
+//! let mad = mean_abs_deviation(&data.view(), None).expect("Operation failed");
 //! println!("Mean absolute deviation: {}", mad);
 //!
 //! // Median absolute deviation (robust to outliers)
-//! let median_ad = median_abs_deviation(&data.view(), None, None).unwrap();
+//! let median_ad = median_abs_deviation(&data.view(), None, None).expect("Operation failed");
 //! println!("Median absolute deviation: {}", median_ad);
 //!
 //! // Scaled median absolute deviation (consistent with std dev for normal distributions)
-//! let median_ad_scaled = median_abs_deviation(&data.view(), None, Some(1.4826)).unwrap();
+//! let median_ad_scaled = median_abs_deviation(&data.view(), None, Some(1.4826)).expect("Operation failed");
 //! println!("Scaled median absolute deviation: {}", median_ad_scaled);
 //!
 //! // Interquartile range (Q3 - Q1)
-//! let iqr_val = iqr(&data.view(), None).unwrap();
+//! let iqr_val = iqr(&data.view(), None).expect("Operation failed");
 //! println!("Interquartile range: {}", iqr_val);
 //!
 //! // Range (max - min)
-//! let range_val = data_range(&data.view()).unwrap();
+//! let range_val = data_range(&data.view()).expect("Operation failed");
 //! println!("Range: {}", range_val);
 //!
 //! // Coefficient of variation (std/mean, unitless measure)
-//! let cv = coef_variation(&data.view(), 1).unwrap();
+//! let cv = coef_variation(&data.view(), 1).expect("Operation failed");
 //! println!("Coefficient of variation: {}", cv);
 //! ```
 //!
@@ -252,30 +252,30 @@
 //! use scirs2_stats::distributions;
 //!
 //! // Normal distribution
-//! let normal = distributions::norm(0.0f64, 1.0).unwrap();
+//! let normal = distributions::norm(0.0f64, 1.0).expect("Operation failed");
 //! let pdf = normal.pdf(0.0);
 //! let cdf = normal.cdf(1.96);
-//! let samples = normal.rvs(100).unwrap();
+//! let samples = normal.rvs(100).expect("Operation failed");
 //!
 //! // Poisson distribution
-//! let poisson = distributions::poisson(3.0f64, 0.0).unwrap();
+//! let poisson = distributions::poisson(3.0f64, 0.0).expect("Operation failed");
 //! let pmf = poisson.pmf(2.0);
 //! let cdf = poisson.cdf(4.0);
-//! let samples = poisson.rvs(100).unwrap();
+//! let samples = poisson.rvs(100).expect("Operation failed");
 //!
 //! // Gamma distribution
-//! let gamma = distributions::gamma(2.0f64, 1.0, 0.0).unwrap();
+//! let gamma = distributions::gamma(2.0f64, 1.0, 0.0).expect("Operation failed");
 //! let pdf = gamma.pdf(1.0);
 //! let cdf = gamma.cdf(2.0);
-//! let samples = gamma.rvs(100).unwrap();
+//! let samples = gamma.rvs(100).expect("Operation failed");
 //!
 //! // Beta distribution
-//! let beta = distributions::beta(2.0f64, 3.0, 0.0, 1.0).unwrap();
+//! let beta = distributions::beta(2.0f64, 3.0, 0.0, 1.0).expect("Operation failed");
 //! let pdf = beta.pdf(0.5);
-//! let samples = beta.rvs(100).unwrap();
+//! let samples = beta.rvs(100).expect("Operation failed");
 //!
 //! // Exponential distribution
-//! let exp = distributions::expon(1.0f64, 0.0).unwrap();
+//! let exp = distributions::expon(1.0f64, 0.0).expect("Operation failed");
 //! let pdf = exp.pdf(1.0);
 //! let mean = exp.mean(); // Should be 1.0
 //!
@@ -283,9 +283,9 @@
 //! use scirs2_core::ndarray::array;
 //! let mvn_mean = array![0.0, 0.0];
 //! let mvn_cov = array![[1.0, 0.5], [0.5, 2.0]];
-//! let mvn = distributions::multivariate::multivariate_normal(mvn_mean, mvn_cov).unwrap();
+//! let mvn = distributions::multivariate::multivariate_normal(mvn_mean, mvn_cov).expect("Operation failed");
 //! let pdf = mvn.pdf(&array![0.0, 0.0]);
-//! let samples = mvn.rvs(100).unwrap();
+//! let samples = mvn.rvs(100).expect("Operation failed");
 //! ```
 //!
 //! ### Statistical Tests
@@ -304,7 +304,7 @@
 //!     5.1, 4.9, 6.2, 5.7, 5.5, 5.1, 5.2, 5.0, 5.3, 5.4,
 //!     5.6, 5.8, 5.9, 6.0, 5.2, 5.4, 5.3, 5.1, 5.2, 5.0
 //! ];
-//! let result = ttest_1samp(&data.view(), 5.0, TTestAlternative::TwoSided, "propagate").unwrap();
+//! let result = ttest_1samp(&data.view(), 5.0, TTestAlternative::TwoSided, "propagate").expect("Operation failed");
 //! let t_stat = result.statistic;
 //! let p_value = result.pvalue;
 //! println!("One-sample t-test: t={}, p={}", t_stat, p_value);
@@ -312,25 +312,25 @@
 //! // Two-sample t-test
 //! let group1 = array![5.1, 4.9, 6.2, 5.7, 5.5];
 //! let group2 = array![4.8, 5.2, 5.1, 4.7, 4.9];
-//! let result = ttest_ind(&group1.view(), &group2.view(), true, TTestAlternative::TwoSided, "propagate").unwrap();
+//! let result = ttest_ind(&group1.view(), &group2.view(), true, TTestAlternative::TwoSided, "propagate").expect("Operation failed");
 //! let t_stat = result.statistic;
 //! let p_value = result.pvalue;
 //! println!("Two-sample t-test: t={}, p={}", t_stat, p_value);
 //!
 //! // Normality tests
-//! let (w_stat, p_value) = shapiro(&data.view()).unwrap();
+//! let (w_stat, p_value) = shapiro(&data.view()).expect("Operation failed");
 //! println!("Shapiro-Wilk test: W={}, p={}", w_stat, p_value);
 //!
 //! // More accurate Shapiro-Wilk test implementation
-//! let (w_stat, p_value) = shapiro_wilk(&data.view()).unwrap();
+//! let (w_stat, p_value) = shapiro_wilk(&data.view()).expect("Operation failed");
 //! println!("Improved Shapiro-Wilk test: W={}, p={}", w_stat, p_value);
 //!
 //! // Anderson-Darling test for normality
-//! let (a2_stat, p_value) = anderson_darling(&data.view()).unwrap();
+//! let (a2_stat, p_value) = anderson_darling(&data.view()).expect("Operation failed");
 //! println!("Anderson-Darling test: A²={}, p={}", a2_stat, p_value);
 //!
 //! // D'Agostino's K² test combining skewness and kurtosis
-//! let (k2_stat, p_value) = dagostino_k2(&data.view()).unwrap();
+//! let (k2_stat, p_value) = dagostino_k2(&data.view()).expect("Operation failed");
 //! println!("D'Agostino K² test: K²={}, p={}", k2_stat, p_value);
 //!
 //! // Non-parametric tests
@@ -338,13 +338,13 @@
 //! // Wilcoxon signed-rank test (paired samples)
 //! let before = array![125.0, 115.0, 130.0, 140.0, 140.0];
 //! let after = array![110.0, 122.0, 125.0, 120.0, 140.0];
-//! let (w, p_value) = wilcoxon(&before.view(), &after.view(), "wilcox", true).unwrap();
+//! let (w, p_value) = wilcoxon(&before.view(), &after.view(), "wilcox", true).expect("Operation failed");
 //! println!("Wilcoxon signed-rank test: W={}, p={}", w, p_value);
 //!
 //! // Mann-Whitney U test (independent samples)
 //! let males = array![19.0, 22.0, 16.0, 29.0, 24.0];
 //! let females = array![20.0, 11.0, 17.0, 12.0];
-//! let (u, p_value) = mann_whitney(&males.view(), &females.view(), "two-sided", true).unwrap();
+//! let (u, p_value) = mann_whitney(&males.view(), &females.view(), "two-sided", true).expect("Operation failed");
 //! println!("Mann-Whitney U test: U={}, p={}", u, p_value);
 //!
 //! // Kruskal-Wallis test (unpaired samples)
@@ -352,7 +352,7 @@
 //! let group2 = array![3.8, 3.7, 3.9, 4.0, 4.2];
 //! let group3 = array![2.8, 3.4, 3.7, 2.2, 2.0];
 //! let samples = vec![group1.view(), group2.view(), group3.view()];
-//! let (h, p_value) = kruskal_wallis(&samples).unwrap();
+//! let (h, p_value) = kruskal_wallis(&samples).expect("Operation failed");
 //! println!("Kruskal-Wallis test: H={}, p={}", h, p_value);
 //!
 //! // Friedman test (repeated measures)
@@ -362,19 +362,19 @@
 //!     [9.0, 7.0, 6.0],
 //!     [8.0, 5.0, 6.0]
 //! ];
-//! let (chi2, p_value) = friedman(&data.view()).unwrap();
+//! let (chi2, p_value) = friedman(&data.view()).expect("Operation failed");
 //! println!("Friedman test: Chi²={}, p={}", chi2, p_value);
 //!
 //! // One-sample distribution fit test
-//! let normal = distributions::norm(0.0f64, 1.0).unwrap();
+//! let normal = distributions::norm(0.0f64, 1.0).expect("Operation failed");
 //! let standardizeddata = array![0.1, -0.2, 0.3, -0.1, 0.2];
-//! let (ks_stat, p_value) = kstest(&standardizeddata.view(), |x| normal.cdf(x)).unwrap();
+//! let (ks_stat, p_value) = kstest(&standardizeddata.view(), |x| normal.cdf(x)).expect("Operation failed");
 //! println!("Kolmogorov-Smirnov one-sample test: D={}, p={}", ks_stat, p_value);
 //!
 //! // Two-sample KS test
 //! let sample1 = array![0.1, 0.2, 0.3, 0.4, 0.5];
 //! let sample2 = array![0.6, 0.7, 0.8, 0.9, 1.0];
-//! let (ks_stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "two-sided").unwrap();
+//! let (ks_stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "two-sided").expect("Operation failed");
 //! println!("Kolmogorov-Smirnov two-sample test: D={}, p={}", ks_stat, p_value);
 //! ```
 //!
@@ -385,17 +385,17 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! // Generate uniform random numbers between 0 and 1
-//! let uniform_samples = uniform(0.0, 1.0, 10, Some(42)).unwrap();
+//! let uniform_samples = uniform(0.0, 1.0, 10, Some(42)).expect("Operation failed");
 //!
 //! // Generate standard normal random numbers
-//! let normal_samples = randn(10, Some(123)).unwrap();
+//! let normal_samples = randn(10, Some(123)).expect("Operation failed");
 //!
 //! // Generate random integers between 1 and 100
-//! let int_samples = randint(1, 101, 5, Some(456)).unwrap();
+//! let int_samples = randint(1, 101, 5, Some(456)).expect("Operation failed");
 //!
 //! // Randomly choose elements from an array
 //! let options = array!["apple", "banana", "cherry", "date", "elderberry"];
-//! let choices = choice(&options.view(), 3, false, None, Some(789)).unwrap();
+//! let choices = choice(&options.view(), 3, false, None, Some(789)).expect("Operation failed");
 //! ```
 //!
 //! ### Statistical Sampling
@@ -408,10 +408,10 @@
 //! let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 //!
 //! // Generate bootstrap samples
-//! let bootstrap_samples = sampling::bootstrap(&data.view(), 10, Some(42)).unwrap();
+//! let bootstrap_samples = sampling::bootstrap(&data.view(), 10, Some(42)).expect("Operation failed");
 //!
 //! // Generate a random permutation
-//! let permutation = sampling::permutation(&data.view(), Some(123)).unwrap();
+//! let permutation = sampling::permutation(&data.view(), Some(123)).expect("Operation failed");
 //! ```
 // Linear algebra operations provided by scirs2-linalg
 

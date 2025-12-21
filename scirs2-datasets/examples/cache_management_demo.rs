@@ -41,7 +41,7 @@ fn main() {
     println!();
 
     // Create a temporary cache for demonstration
-    let tempdir = tempfile::tempdir().unwrap();
+    let tempdir = tempfile::tempdir().expect("Operation failed");
     let demo_cachedir = tempdir.path().join("demo_cache");
 
     // Demonstrate cache with size limits
@@ -65,9 +65,15 @@ fn main() {
     let mediumdata = vec![1u8; 10240]; // 10KB
     let largedata = vec![2u8; 102400]; // 100KB
 
-    cache.write_cached("small_file.dat", &smalldata).unwrap();
-    cache.write_cached("medium_file.dat", &mediumdata).unwrap();
-    cache.write_cached("large_file.dat", &largedata).unwrap();
+    cache
+        .write_cached("small_file.dat", &smalldata)
+        .expect("Operation failed");
+    cache
+        .write_cached("medium_file.dat", &mediumdata)
+        .expect("Operation failed");
+    cache
+        .write_cached("large_file.dat", &largedata)
+        .expect("Operation failed");
 
     println!("Added test files to cache");
     println!();
@@ -122,7 +128,7 @@ fn main() {
     println!("=== Cache Management Operations ===============");
     println!("Available operations:");
     println!("1. List cached files");
-    let cached_files = cache_manager.list_cached_files().unwrap();
+    let cached_files = cache_manager.list_cached_files().expect("Operation failed");
     for file in &cached_files {
         println!("   - {file}");
     }
@@ -138,11 +144,16 @@ fn main() {
     );
 
     println!("3. Remove specific file");
-    cache_manager.remove("medium_file.dat").unwrap();
+    cache_manager
+        .remove("medium_file.dat")
+        .expect("Operation failed");
     println!("   Removed medium_file.dat");
     println!(
         "   Files remaining: {}",
-        cache_manager.list_cached_files().unwrap().len()
+        cache_manager
+            .list_cached_files()
+            .expect("Operation failed")
+            .len()
     );
     println!();
 
@@ -171,9 +182,11 @@ fn main() {
     let very_largedata = vec![3u8; 400 * 1024]; // 400KB
     cache
         .write_cached("very_large_file.dat", &very_largedata)
-        .unwrap();
+        .expect("Operation failed");
 
-    let final_stats = cache_manager.get_detailed_stats().unwrap();
+    let final_stats = cache_manager
+        .get_detailed_stats()
+        .expect("Operation failed");
     println!(
         "Final cache size: {} (should be within limit)",
         final_stats.formatted_size()
@@ -188,22 +201,31 @@ fn main() {
     println!("=== Cache Cleanup ==============================");
     println!(
         "Files before cleanup: {}",
-        cache_manager.list_cached_files().unwrap().len()
+        cache_manager
+            .list_cached_files()
+            .expect("Operation failed")
+            .len()
     );
-    cache_manager.cleanup_old_files(100 * 1024).unwrap(); // Clean up to fit 100KB
-    let cleanup_stats = cache_manager.get_detailed_stats().unwrap();
+    cache_manager
+        .cleanup_old_files(100 * 1024)
+        .expect("Operation failed"); // Clean up to fit 100KB
+    let cleanup_stats = cache_manager
+        .get_detailed_stats()
+        .expect("Operation failed");
     println!("Files after cleanup: {}", cleanup_stats.file_count);
     println!("Size after cleanup: {}", cleanup_stats.formatted_size());
     println!();
 
     // Demonstrate cache report
     println!("=== Complete Cache Report ======================");
-    cache_manager.print_cache_report().unwrap();
+    cache_manager
+        .print_cache_report()
+        .expect("Operation failed");
     println!();
 
     // Clear all cache data
     println!("=== Cache Clearing =============================");
-    cache_manager.clear_all().unwrap();
+    cache_manager.clear_all().expect("Operation failed");
     let empty_stats = cache_manager.get_stats();
     println!("Files after clearing: {}", empty_stats.file_count);
     println!("Size after clearing: {}", empty_stats.formatted_size());

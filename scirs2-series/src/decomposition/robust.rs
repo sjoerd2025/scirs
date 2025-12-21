@@ -34,7 +34,7 @@ use crate::error::{Result, TimeSeriesError};
 /// use scirs2_series::decomposition::{decompose_robust_seasonal, DecompositionModel};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
-/// let result = decompose_robust_seasonal(&ts, 4, DecompositionModel::Additive, 50, 1e-6).unwrap();
+/// let result = decompose_robust_seasonal(&ts, 4, DecompositionModel::Additive, 50, 1e-6).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn decompose_robust_seasonal<F>(
@@ -415,10 +415,10 @@ where
 {
     let n = ts.len();
     let mut seasonal = Array1::zeros(n);
-    let window_size = ((bandwidth * F::from_usize(n).unwrap())
+    let window_size = ((bandwidth * F::from_usize(n).expect("Operation failed"))
         .round()
         .to_usize()
-        .unwrap())
+        .expect("Operation failed"))
     .max(1);
 
     for i in 0..n {
@@ -432,7 +432,7 @@ where
         let mut weighted_values = Vec::new();
         for j in start..end {
             let weight = weights[j];
-            for _ in 0..(weight * F::from_f64(100.0).unwrap())
+            for _ in 0..(weight * F::from_f64(100.0).expect("Operation failed"))
                 .round()
                 .to_usize()
                 .unwrap_or(1)
@@ -458,10 +458,10 @@ where
 {
     let n = ts.len();
     let mut trend = Array1::zeros(n);
-    let window_size = ((bandwidth * F::from_usize(n).unwrap())
+    let window_size = ((bandwidth * F::from_usize(n).expect("Operation failed"))
         .round()
         .to_usize()
-        .unwrap())
+        .expect("Operation failed"))
     .max(1);
 
     for i in 0..n {
@@ -475,7 +475,7 @@ where
         let mut weighted_values = Vec::new();
         for j in start..end {
             let weight = weights[j];
-            for _ in 0..(weight * F::from_f64(100.0).unwrap())
+            for _ in 0..(weight * F::from_f64(100.0).expect("Operation failed"))
                 .round()
                 .to_usize()
                 .unwrap_or(1)
@@ -510,14 +510,14 @@ where
         .map(|&r| (r - median_residual).abs())
         .collect();
 
-    let mad = median(&abs_deviations) * F::from_f64(1.4826).unwrap(); // 1.4826 for normal distribution
+    let mad = median(&abs_deviations) * F::from_f64(1.4826).expect("Operation failed"); // 1.4826 for normal distribution
 
     if mad == F::zero() {
         return Ok(weights);
     }
 
     // Calculate Tukey bisquare weights
-    let c = F::from_f64(4.685).unwrap(); // Tukey constant
+    let c = F::from_f64(4.685).expect("Operation failed"); // Tukey constant
     for i in 0..n {
         let u = (residuals[i] - median_residual).abs() / mad;
         if u <= c {
@@ -576,14 +576,14 @@ where
     match model {
         DecompositionModel::Additive => {
             let mean_seasonal = seasonal_pattern.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(period).unwrap();
+                / F::from_usize(period).expect("Operation failed");
             for i in 0..period {
                 seasonal_pattern[i] = seasonal_pattern[i] - mean_seasonal;
             }
         }
         DecompositionModel::Multiplicative => {
             let mean_seasonal = seasonal_pattern.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(period).unwrap();
+                / F::from_usize(period).expect("Operation failed");
             if mean_seasonal == F::zero() {
                 return Err(TimeSeriesError::DecompositionError(
                     "Division by zero in multiplicative seasonal normalization".to_string(),
@@ -662,14 +662,14 @@ where
             .collect::<Vec<_>>();
         let mut sorted_abs = abs_deviations;
         sorted_abs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        median(&sorted_abs) * F::from_f64(1.4826).unwrap()
+        median(&sorted_abs) * F::from_f64(1.4826).expect("Operation failed")
     };
 
     if mad == F::zero() {
         return Ok(median_val);
     }
 
-    let c = F::from_f64(1.345).unwrap(); // Huber constant
+    let c = F::from_f64(1.345).expect("Operation failed"); // Huber constant
     let threshold = c * mad;
 
     // Iteratively reweighted least squares
@@ -697,7 +697,7 @@ where
             sum_weighted / sum_weights
         };
 
-        if (new_estimate - estimate).abs() < F::from_f64(1e-8).unwrap() {
+        if (new_estimate - estimate).abs() < F::from_f64(1e-8).expect("Operation failed") {
             break;
         }
         estimate = new_estimate;
@@ -725,14 +725,14 @@ where
             .collect::<Vec<_>>();
         let mut sorted_abs = abs_deviations;
         sorted_abs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        median(&sorted_abs) * F::from_f64(1.4826).unwrap()
+        median(&sorted_abs) * F::from_f64(1.4826).expect("Operation failed")
     };
 
     if mad == F::zero() {
         return Ok(median_val);
     }
 
-    let c = F::from_f64(4.685).unwrap(); // Tukey constant
+    let c = F::from_f64(4.685).expect("Operation failed"); // Tukey constant
 
     // Iteratively reweighted least squares
     let mut estimate = median_val;
@@ -760,7 +760,7 @@ where
             sum_weighted / sum_weights
         };
 
-        if (new_estimate - estimate).abs() < F::from_f64(1e-8).unwrap() {
+        if (new_estimate - estimate).abs() < F::from_f64(1e-8).expect("Operation failed") {
             break;
         }
         estimate = new_estimate;
@@ -788,14 +788,14 @@ where
             .collect::<Vec<_>>();
         let mut sorted_abs = abs_deviations;
         sorted_abs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        median(&sorted_abs) * F::from_f64(1.4826).unwrap()
+        median(&sorted_abs) * F::from_f64(1.4826).expect("Operation failed")
     };
 
     if mad == F::zero() {
         return Ok(median_val);
     }
 
-    let c = F::from_f64(1.339).unwrap(); // Andrews constant
+    let c = F::from_f64(1.339).expect("Operation failed"); // Andrews constant
 
     // Iteratively reweighted least squares
     let mut estimate = median_val;
@@ -807,7 +807,7 @@ where
         for &value in values {
             let u = (value - estimate).abs() / mad;
             let weight = if u <= c {
-                let pi_val = F::from_f64(std::f64::consts::PI).unwrap();
+                let pi_val = F::from_f64(std::f64::consts::PI).expect("Operation failed");
                 ((u * pi_val / c).sin() / (u * pi_val / c)).abs()
             } else {
                 F::zero()
@@ -823,7 +823,7 @@ where
             sum_weighted / sum_weights
         };
 
-        if (new_estimate - estimate).abs() < F::from_f64(1e-8).unwrap() {
+        if (new_estimate - estimate).abs() < F::from_f64(1e-8).expect("Operation failed") {
             break;
         }
         estimate = new_estimate;

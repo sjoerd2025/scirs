@@ -369,7 +369,7 @@ impl Vectorizer for TfidfVectorizer {
         let mut count_vector = self.count_vectorizer.transform(text)?;
 
         // Apply TF-IDF transformation
-        let idf = self.idf.as_ref().unwrap();
+        let idf = self.idf.as_ref().expect("Operation failed");
         for i in 0..count_vector.len() {
             count_vector[i] *= idf[i];
         }
@@ -395,7 +395,7 @@ impl Vectorizer for TfidfVectorizer {
         let mut count_matrix = self.count_vectorizer.transform_batch(texts)?;
 
         // Apply TF-IDF transformation
-        let idf = self.idf.as_ref().unwrap();
+        let idf = self.idf.as_ref().expect("Operation failed");
         for mut row in count_matrix.axis_iter_mut(Axis(0)) {
             for i in 0..row.len() {
                 row[i] *= idf[i];
@@ -443,13 +443,13 @@ mod tests {
         ];
 
         // Fit the vectorizer
-        vectorizer.fit(&corpus).unwrap();
+        vectorizer.fit(&corpus).expect("Operation failed");
 
         // Check vocabulary
         assert_eq!(vectorizer.vocabulary_size(), 6);
 
         // Transform a document
-        let vec = vectorizer.transform(corpus[0]).unwrap();
+        let vec = vectorizer.transform(corpus[0]).expect("Operation failed");
         assert_eq!(vec.len(), 6);
 
         // Check that document frequencies are correct
@@ -466,10 +466,10 @@ mod tests {
         ];
 
         // Fit the vectorizer
-        vectorizer.fit(&corpus).unwrap();
+        vectorizer.fit(&corpus).expect("Operation failed");
 
         // Transform a document
-        let vec = vectorizer.transform(corpus[0]).unwrap();
+        let vec = vectorizer.transform(corpus[0]).expect("Operation failed");
         assert_eq!(vec.len(), 6);
 
         // Check that the vector is normalized (using L2 norm)
@@ -483,7 +483,7 @@ mod tests {
         let corpus = ["this this this is a document", "this is another document"];
 
         // Fit and transform
-        let matrix = vectorizer.fit_transform(&corpus).unwrap();
+        let matrix = vectorizer.fit_transform(&corpus).expect("Operation failed");
 
         // First document should have binary values (all 1.0 or 0.0)
         for val in matrix.row(0).iter() {

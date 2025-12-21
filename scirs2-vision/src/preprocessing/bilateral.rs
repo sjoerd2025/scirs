@@ -48,7 +48,7 @@ impl Default for BilateralParams {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let filtered = bilateral_filter_advanced(&img, &BilateralParams::default())?;
 /// # Ok(())
 /// # }
@@ -362,7 +362,7 @@ mod tests {
         let result = bilateral_filter_advanced(&img, &params);
         assert!(result.is_ok());
 
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.dimensions(), (20, 20));
     }
 

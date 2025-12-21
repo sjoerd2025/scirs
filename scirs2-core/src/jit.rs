@@ -669,7 +669,7 @@ impl JitCompiler {
 
         // Check cache first
         if self.config.enable_caching {
-            let cache = self.cache.read().unwrap();
+            let cache = self.cache.read().expect("Operation failed");
             if cache.contains_kernel(&kernel_id) {
                 return Ok(kernel_id);
             }
@@ -687,7 +687,7 @@ impl JitCompiler {
 
         // Cache compiled kernel
         if self.config.enable_caching {
-            let mut cache = self.cache.write().unwrap();
+            let mut cache = self.cache.write().expect("Operation failed");
             cache.insert(compiled_kernel);
         }
 
@@ -703,7 +703,7 @@ impl JitCompiler {
     ) -> Result<(), JitError> {
         // Get compiled kernel from cache
         let kernel = {
-            let cache = self.cache.read().unwrap();
+            let cache = self.cache.read().expect("Operation failed");
             cache
                 .get_readonly(kernel_id)
                 .ok_or_else(|| JitError::CacheError(format!("{kernel_id}")))?
@@ -723,13 +723,13 @@ impl JitCompiler {
 
         // Update profiling data
         if self.config.enable_profiling {
-            let mut profiler = self.profiler.lock().unwrap();
+            let mut profiler = self.profiler.lock().expect("Operation failed");
             profiler.record_execution(kernel_id, profile);
         }
 
         // Update adaptive optimization
         if self.config.adaptive_optimization {
-            let mut optimizer = self.adaptive_optimizer.lock().unwrap();
+            let mut optimizer = self.adaptive_optimizer.lock().expect("Operation failed");
             optimizer.update_performance_data(&kernel.performance);
         }
 
@@ -738,25 +738,25 @@ impl JitCompiler {
 
     /// Get kernel performance statistics
     pub fn get_kernel_performance(&self, kernel_id: &str) -> Option<KernelPerformance> {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("Operation failed");
         cache.get(kernel_id).map(|k| k.performance.clone())
     }
 
     /// Get compilation statistics
     pub fn get_compilation_stats(&self) -> CompilationStats {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("Operation failed");
         cache.get_stats()
     }
 
     /// Clear kernel cache
     pub fn clear_cache(&self) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("Operation failed");
         cache.clear();
     }
 
     /// Optimize existing kernel
     pub fn optimize_kernel(&self, kernel_id: &str) -> Result<String, JitError> {
-        let optimizer = self.adaptive_optimizer.lock().unwrap();
+        let optimizer = self.adaptive_optimizer.lock().expect("Operation failed");
         optimizer.optimize_kernel(kernel_id, &self.config)
     }
 }
@@ -1290,7 +1290,7 @@ mod tests {
             ..Default::default()
         };
 
-        let compiler = JitCompiler::new(config).unwrap();
+        let compiler = JitCompiler::new(config).expect("Operation failed");
 
         let source = KernelSource {
             id: "test_kernel".to_string(),

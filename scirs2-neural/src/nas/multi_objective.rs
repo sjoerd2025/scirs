@@ -215,7 +215,7 @@ impl MultiObjectiveOptimizer {
             solution.objectives = vec![weighted_sum];
         // Sort by weighted sum and select best
         self.population
-            .sort_by(|a, b| a.objectives[0].partial_cmp(&b.objectives[0]).unwrap());
+            .sort_by(|a, b| a.objectives[0].partial_cmp(&b.objectives[0]).expect("Operation failed"));
         // Create new population through mutation of best solutions
         self.population.extend(offspring);
         self.population.truncate(self._config.population_size);
@@ -228,7 +228,7 @@ impl MultiObjectiveOptimizer {
             let a_violations: f64 = a.constraint_violations.iter().sum();
             let b_violations: f64 = b.constraint_violations.iter().sum();
             if a_violations != b_violations {
-                a_violations.partial_cmp(&b_violations).unwrap()
+                a_violations.partial_cmp(&b_violations).expect("Operation failed")
                 // Both feasible or equally infeasible, compare objectives
                 self.compare_objectives(a, b)
         });
@@ -297,7 +297,7 @@ impl MultiObjectiveOptimizer {
             sorted_indices.sort_by(|&a, &b| {
                 population[a].objectives[obj_idx]
                     .partial_cmp(&population[b].objectives[obj_idx])
-                    .unwrap()
+                    .expect("Operation failed")
             });
             // Set boundary points to infinity
                 let first_mut = &mut *(population[sorted_indices[0]] as *const _
@@ -341,7 +341,7 @@ impl MultiObjectiveOptimizer {
                         .iter()
                         .map(|&i| (i, population[i].crowding_distance))
                         .collect();
-                    front_with_distance.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+                    front_with_distance.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
                     let remaining = self.config.population_size - result.len();
                     for i in 0..remaining {
                         let idx = front_with_distance[i].0;
@@ -467,12 +467,12 @@ impl MultiObjectiveOptimizer {
                 let max_val = self.pareto_front
                     .iter()
                     .map(|s| s.objectives[i])
-                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                     .unwrap_or(1.0);
                 reference[i] = max_val * 1.1;
                 // For maximization, use the minimum value found minus a margin
                 let min_val = self.pareto_front
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                     .unwrap_or(0.0);
                 reference[i] = min_val * 0.9;
         reference
@@ -490,7 +490,7 @@ impl MultiObjectiveOptimizer {
                 (x.max(0.0), y.max(0.0))
             .collect();
         // Sort by x-coordinate (descending for maximization)
-        points.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        points.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
         let mut volume = 0.0;
         let mut prev_y = 0.0;
         for (x, y) in points {
@@ -609,7 +609,7 @@ impl MultiObjectiveOptimizer {
             let mut distances = Vec::new();
                     let distance = self.euclidean_distance(&population[i], &population[j]);
                     distances.push(distance);
-            distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             let kth_distance = if k < distances.len() {
                 distances[k - 1]
                 distances.last().copied().unwrap_or(0.0)
@@ -619,7 +619,7 @@ impl MultiObjectiveOptimizer {
     /// SPEA2 environmental selection
     fn spea2_environmental_selection(
         // Sort by SPEA2 fitness (stored in crowding_distance field)
-        population.sort_by(|a, b| a.crowding_distance.partial_cmp(&b.crowding_distance).unwrap());
+        population.sort_by(|a, b| a.crowding_distance.partial_cmp(&b.crowding_distance).expect("Operation failed"));
         // Select the best individuals
         let mut selected = Vec::new();
         // First, add all non-dominated solutions (fitness < 1.0)
@@ -756,7 +756,7 @@ impl MultiObjectiveOptimizer {
         b: &MultiObjectiveSolution,
     ) -> std::cmp::Ordering {
         // Simple comparison based on first objective
-        a.objectives[0].partial_cmp(&b.objectives[0]).unwrap()
+        a.objectives[0].partial_cmp(&b.objectives[0]).expect("Operation failed")
     fn constraint_environmental_selection(
 #[cfg(test)]
 mod tests {

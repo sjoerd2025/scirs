@@ -529,7 +529,7 @@ mod tests {
 
         // Simulate a few steps
         for _ in 0..10 {
-            let _spiked = network.simulate_step(1.0).unwrap();
+            let _spiked = network.simulate_step(1.0).expect("Operation failed");
             // Should complete without error
         }
 
@@ -551,7 +551,7 @@ mod tests {
 
         // Simulate to generate spikes
         for _ in 0..100 {
-            network.simulate_step(0.0).unwrap();
+            network.simulate_step(0.0).expect("Operation failed");
         }
 
         let rates = network.get_firing_rates(0.1);
@@ -565,7 +565,7 @@ mod tests {
 
         // Simulate to change state
         for _ in 0..10 {
-            network.simulate_step(1.0).unwrap();
+            network.simulate_step(1.0).expect("Operation failed");
         }
 
         let _time_before_reset = network.current_time;

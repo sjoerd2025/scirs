@@ -103,7 +103,7 @@ mod tests {
     use tempfile::TempDir;
     #[test]
     fn test_binding_generator_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let config = BindingConfig::default();
         let metadata = PackageMetadata {
             name: "test_model".to_string(),
@@ -130,8 +130,8 @@ mod tests {
         // Create a simple sequential model for testing
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
-        model.add_layer(Dense::new(5, 2, None, &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
+        model.add_layer(Dense::new(5, 2, None, &mut rng).expect("Operation failed"));
         let generator =
             BindingGenerator::new(model, config, metadata, temp_dir.path().to_path_buf());
         assert_eq!(generator.config().library_name, "scirs2_model");

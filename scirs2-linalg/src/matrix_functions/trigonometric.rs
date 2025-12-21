@@ -30,7 +30,7 @@ use crate::validation::validate_decomposition;
 /// use scirs2_linalg::matrix_functions::cosm;
 ///
 /// let a = array![[0.0_f64, 1.0], [-1.0, 0.0]]; // Rotation matrix
-/// let cos_a = cosm(&a.view()).unwrap();
+/// let cos_a = cosm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -94,7 +94,7 @@ where
     let mut result = Array2::eye(n);
 
     // Subtract A²/2!
-    let two_factorial = F::from(2.0).unwrap();
+    let two_factorial = F::from(2.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] -= a2[[i, j]] / two_factorial;
@@ -102,7 +102,7 @@ where
     }
 
     // Add A⁴/4!
-    let four_factorial = F::from(24.0).unwrap();
+    let four_factorial = F::from(24.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a4[[i, j]] / four_factorial;
@@ -110,7 +110,7 @@ where
     }
 
     // Subtract A⁶/6!
-    let six_factorial = F::from(720.0).unwrap();
+    let six_factorial = F::from(720.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] -= a6[[i, j]] / six_factorial;
@@ -143,7 +143,7 @@ where
 /// use scirs2_linalg::matrix_functions::sinm;
 ///
 /// let a = array![[0.0_f64, 1.0], [-1.0, 0.0]]; // Rotation matrix
-/// let sin_a = sinm(&a.view()).unwrap();
+/// let sin_a = sinm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn sinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -216,7 +216,7 @@ where
     let mut result = a.to_owned();
 
     // Subtract A³/3!
-    let three_factorial = F::from(6.0).unwrap();
+    let three_factorial = F::from(6.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] -= a3[[i, j]] / three_factorial;
@@ -224,7 +224,7 @@ where
     }
 
     // Add A⁵/5!
-    let five_factorial = F::from(120.0).unwrap();
+    let five_factorial = F::from(120.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] += a5[[i, j]] / five_factorial;
@@ -232,7 +232,7 @@ where
     }
 
     // Subtract A⁷/7!
-    let seven_factorial = F::from(5040.0).unwrap();
+    let seven_factorial = F::from(5040.0).expect("Operation failed");
     for i in 0..n {
         for j in 0..n {
             result[[i, j]] -= a7[[i, j]] / seven_factorial;
@@ -261,7 +261,7 @@ where
 /// use scirs2_linalg::matrix_functions::tanm;
 ///
 /// let a = array![[0.1_f64, 0.0], [0.0, 0.1]];
-/// let tan_a = tanm(&a.view()).unwrap();
+/// let tan_a = tanm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn tanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -298,7 +298,7 @@ where
 /// use scirs2_linalg::matrix_functions::acosm;
 ///
 /// let a = array![[0.5_f64, 0.0], [0.0, 0.5]];
-/// let acos_a = acosm(&a.view()).unwrap();
+/// let acos_a = acosm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn acosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -367,7 +367,7 @@ where
 /// use scirs2_linalg::matrix_functions::asinm;
 ///
 /// let a = array![[0.5_f64, 0.0], [0.0, 0.5]];
-/// let asin_a = asinm(&a.view()).unwrap();
+/// let asin_a = asinm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn asinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -436,7 +436,7 @@ where
 /// use scirs2_linalg::matrix_functions::atanm;
 ///
 /// let a = array![[0.5_f64, 0.0], [0.0, 0.5]];
-/// let atan_a = atanm(&a.view()).unwrap();
+/// let atan_a = atanm(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn atanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>

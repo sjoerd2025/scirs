@@ -27,9 +27,9 @@ use std::ops::{Add, AddAssign, Div, Mul, Sub};
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::hstack;
 ///
-/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
-/// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
-/// let c = hstack(&[&*a, &*b], "csr").unwrap();
+/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").expect("Test: failed to create eye array");
+/// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").expect("Test: failed to create eye array");
+/// let c = hstack(&[&*a, &*b], "csr").expect("Test: hstack failed");
 ///
 /// assert_eq!(c.shape(), (2, 4));
 /// assert_eq!(c.get(0, 0), 1.0);
@@ -126,9 +126,9 @@ where
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::vstack;
 ///
-/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
-/// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
-/// let c = vstack(&[&*a, &*b], "csr").unwrap();
+/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").expect("Test: failed to create eye array");
+/// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").expect("Test: failed to create eye array");
+/// let c = vstack(&[&*a, &*b], "csr").expect("Test: vstack failed");
 ///
 /// assert_eq!(c.shape(), (4, 2));
 /// assert_eq!(c.get(0, 0), 1.0);
@@ -225,9 +225,9 @@ where
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::block_diag;
 ///
-/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
-/// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
-/// let c = block_diag(&[&*a, &*b], "csr").unwrap();
+/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").expect("Test: failed to create eye array");
+/// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").expect("Test: failed to create eye array");
+/// let c = block_diag(&[&*a, &*b], "csr").expect("Test: block_diag failed");
 ///
 /// assert_eq!(c.shape(), (5, 5));
 /// // First block (2x2 identity)
@@ -322,8 +322,8 @@ where
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::tril;
 ///
-/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
-/// let b = tril(&*a, 0, "csr").unwrap();
+/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").expect("Test: failed to create eye array");
+/// let b = tril(&*a, 0, "csr").expect("Test: tril failed");
 ///
 /// assert_eq!(b.shape(), (3, 3));
 /// assert_eq!(b.get(0, 0), 1.0);
@@ -332,7 +332,7 @@ where
 /// assert_eq!(b.get(1, 0), 0.0);  // No non-zero elements below diagonal
 ///
 /// // With k=1, include first superdiagonal
-/// let c = tril(&*a, 1, "csr").unwrap();
+/// let c = tril(&*a, 1, "csr").expect("Test: tril failed");
 /// assert_eq!(c.get(0, 1), 0.0);  // Nothing in superdiagonal of identity matrix
 /// ```
 #[allow(dead_code)]
@@ -399,8 +399,8 @@ where
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::triu;
 ///
-/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
-/// let b = triu(&*a, 0, "csr").unwrap();
+/// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").expect("Test: failed to create eye array");
+/// let b = triu(&*a, 0, "csr").expect("Test: triu failed");
 ///
 /// assert_eq!(b.shape(), (3, 3));
 /// assert_eq!(b.get(0, 0), 1.0);
@@ -409,7 +409,7 @@ where
 /// assert_eq!(b.get(0, 1), 0.0);  // No non-zero elements above diagonal
 ///
 /// // With k=-1, include first subdiagonal
-/// let c = triu(&*a, -1, "csr").unwrap();
+/// let c = triu(&*a, -1, "csr").expect("Test: triu failed");
 /// assert_eq!(c.get(1, 0), 0.0);  // Nothing in subdiagonal of identity matrix
 /// ```
 #[allow(dead_code)]
@@ -483,9 +483,9 @@ where
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::kron;
 ///
-/// let a = eye_array::<f64>(2, "csr").unwrap();
-/// let b = eye_array::<f64>(2, "csr").unwrap();
-/// let c = kron(&*a, &*b, "csr").unwrap();
+/// let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+/// let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
+/// let c = kron(&*a, &*b, "csr").expect("Test: kron failed");
 ///
 /// assert_eq!(c.shape(), (4, 4));
 /// // Kronecker product of two identity matrices is an identity matrix of larger size
@@ -542,14 +542,14 @@ where
     }
 
     // Convert B to COO format for easier handling
-    let b_coo = b.to_coo().unwrap();
+    let b_coo = b.to_coo().expect("Failed to convert to COO");
     let (b_rows, b_cols, b_data) = b_coo.find();
 
     // Note: BSR optimization removed - we'll use COO format for all cases
 
     // Default: Use COO format for general case
     // Convert A to COO format
-    let a_coo = a.to_coo().unwrap();
+    let a_coo = a.to_coo().expect("Failed to convert to COO");
     let (a_rows, a_cols, a_data) = a_coo.find();
 
     // Calculate dimensions
@@ -615,9 +615,9 @@ where
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::kronsum;
 ///
-/// let a = eye_array::<f64>(2, "csr").unwrap();
-/// let b = eye_array::<f64>(2, "csr").unwrap();
-/// let c = kronsum(&*a, &*b, "csr").unwrap();
+/// let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+/// let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
+/// let c = kronsum(&*a, &*b, "csr").expect("Test: kronsum failed");
 ///
 /// // Verify the shape of Kronecker sum
 /// assert_eq!(c.shape(), (4, 4));
@@ -786,13 +786,13 @@ where
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::combine::bmat;
 ///
-/// let a = eye_array::<f64>(2, "csr").unwrap();
-/// let b = eye_array::<f64>(2, "csr").unwrap();
+/// let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+/// let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
 /// let blocks = vec![
 ///     vec![Some(&*a), Some(&*b)],
 ///     vec![None, Some(&*a)],
 /// ];
-/// let c = bmat(&blocks, "csr").unwrap();
+/// let c = bmat(&blocks, "csr").expect("Test: bmat failed");
 ///
 /// assert_eq!(c.shape(), (4, 4));
 /// // Values from first block row
@@ -1028,9 +1028,9 @@ mod tests {
 
     #[test]
     fn test_hstack() {
-        let a = eye_array::<f64>(2, "csr").unwrap();
-        let b = eye_array::<f64>(2, "csr").unwrap();
-        let c = hstack(&[&*a, &*b], "csr").unwrap();
+        let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let c = hstack(&[&*a, &*b], "csr").expect("Test: hstack failed");
 
         assert_eq!(c.shape(), (2, 4));
         assert_eq!(c.get(0, 0), 1.0);
@@ -1043,9 +1043,9 @@ mod tests {
 
     #[test]
     fn test_vstack() {
-        let a = eye_array::<f64>(2, "csr").unwrap();
-        let b = eye_array::<f64>(2, "csr").unwrap();
-        let c = vstack(&[&*a, &*b], "csr").unwrap();
+        let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let c = vstack(&[&*a, &*b], "csr").expect("Test: vstack failed");
 
         assert_eq!(c.shape(), (4, 2));
         assert_eq!(c.get(0, 0), 1.0);
@@ -1058,9 +1058,9 @@ mod tests {
 
     #[test]
     fn test_block_diag() {
-        let a = eye_array::<f64>(2, "csr").unwrap();
-        let b = eye_array::<f64>(3, "csr").unwrap();
-        let c = block_diag(&[&*a, &*b], "csr").unwrap();
+        let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let b = eye_array::<f64>(3, "csr").expect("Test operation failed");
+        let c = block_diag(&[&*a, &*b], "csr").expect("Test: block_diag failed");
 
         assert_eq!(c.shape(), (5, 5));
         // First block (2x2 identity)
@@ -1078,9 +1078,9 @@ mod tests {
     #[test]
     fn test_kron() {
         // Test kronecker product of identity matrices
-        let a = eye_array::<f64>(2, "csr").unwrap();
-        let b = eye_array::<f64>(2, "csr").unwrap();
-        let c = kron(&*a, &*b, "csr").unwrap();
+        let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let c = kron(&*a, &*b, "csr").expect("Test: kron failed");
 
         assert_eq!(c.shape(), (4, 4));
         // Kronecker product of two identity matrices is an identity matrix of larger size
@@ -1096,14 +1096,16 @@ mod tests {
         let rowsa = vec![0, 0, 1];
         let cols_a = vec![0, 1, 0];
         let data_a = vec![1.0, 2.0, 3.0];
-        let a = CooArray::from_triplets(&rowsa, &cols_a, &data_a, (2, 2), false).unwrap();
+        let a = CooArray::from_triplets(&rowsa, &cols_a, &data_a, (2, 2), false)
+            .expect("Test operation failed");
 
         let rowsb = vec![0, 1];
         let cols_b = vec![0, 1];
         let data_b = vec![4.0, 5.0];
-        let b = CooArray::from_triplets(&rowsb, &cols_b, &data_b, (2, 2), false).unwrap();
+        let b = CooArray::from_triplets(&rowsb, &cols_b, &data_b, (2, 2), false)
+            .expect("Test operation failed");
 
-        let c = kron(&a, &b, "csr").unwrap();
+        let c = kron(&a, &b, "csr").expect("Test: kron failed");
         assert_eq!(c.shape(), (4, 4));
 
         // Expected result:
@@ -1138,9 +1140,9 @@ mod tests {
     #[test]
     fn test_kronsum() {
         // Test kronecker sum of identity matrices with csr format
-        let a = eye_array::<f64>(2, "csr").unwrap();
-        let b = eye_array::<f64>(2, "csr").unwrap();
-        let c = kronsum(&*a, &*b, "csr").unwrap();
+        let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let c = kronsum(&*a, &*b, "csr").expect("Test: kronsum failed");
 
         // For Kronecker sum, we expect diagonal elements to be non-zero
         // and some connectivity pattern between blocks
@@ -1154,7 +1156,7 @@ mod tests {
         assert!(!data.is_empty());
 
         // Now test with COO format to ensure both formats work
-        let c_coo = kronsum(&*a, &*b, "coo").unwrap();
+        let c_coo = kronsum(&*a, &*b, "coo").expect("Test: kronsum failed");
         assert_eq!(c_coo.shape(), (4, 4));
 
         // Verify the COO format also has non-zero entries
@@ -1169,10 +1171,11 @@ mod tests {
         let rows = vec![0, 0, 0, 1, 1, 1, 2, 2, 2];
         let cols = vec![0, 1, 2, 0, 1, 2, 0, 1, 2];
         let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-        let a = CooArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let a = CooArray::from_triplets(&rows, &cols, &data, (3, 3), false)
+            .expect("Test operation failed");
 
         // Extract lower triangular part (k=0)
-        let b = tril(&a, 0, "csr").unwrap();
+        let b = tril(&a, 0, "csr").expect("Test: tril failed");
         assert_eq!(b.shape(), (3, 3));
         assert_eq!(b.get(0, 0), 1.0);
         assert_eq!(b.get(1, 0), 1.0);
@@ -1185,7 +1188,7 @@ mod tests {
         assert_eq!(b.get(1, 2), 0.0);
 
         // With k=1, include first superdiagonal
-        let c = tril(&a, 1, "csr").unwrap();
+        let c = tril(&a, 1, "csr").expect("Test: tril failed");
         assert_eq!(c.get(0, 0), 1.0);
         assert_eq!(c.get(0, 1), 1.0); // Included with k=1
         assert_eq!(c.get(0, 2), 0.0); // Still excluded
@@ -1199,10 +1202,11 @@ mod tests {
         let rows = vec![0, 0, 0, 1, 1, 1, 2, 2, 2];
         let cols = vec![0, 1, 2, 0, 1, 2, 0, 1, 2];
         let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-        let a = CooArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let a = CooArray::from_triplets(&rows, &cols, &data, (3, 3), false)
+            .expect("Test operation failed");
 
         // Extract upper triangular part (k=0)
-        let b = triu(&a, 0, "csr").unwrap();
+        let b = triu(&a, 0, "csr").expect("Test: triu failed");
         assert_eq!(b.shape(), (3, 3));
         assert_eq!(b.get(0, 0), 1.0);
         assert_eq!(b.get(0, 1), 1.0);
@@ -1215,7 +1219,7 @@ mod tests {
         assert_eq!(b.get(2, 1), 0.0);
 
         // With k=-1, include first subdiagonal
-        let c = triu(&a, -1, "csr").unwrap();
+        let c = triu(&a, -1, "csr").expect("Test: triu failed");
         assert_eq!(c.get(0, 0), 1.0);
         assert_eq!(c.get(1, 0), 1.0); // Included with k=-1
         assert_eq!(c.get(2, 0), 0.0); // Still excluded
@@ -1225,12 +1229,12 @@ mod tests {
 
     #[test]
     fn test_bmat() {
-        let a = eye_array::<f64>(2, "csr").unwrap();
-        let b = eye_array::<f64>(2, "csr").unwrap();
+        let a = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let b = eye_array::<f64>(2, "csr").expect("Test operation failed");
 
         // Test with all blocks present
         let blocks1 = vec![vec![Some(&*a), Some(&*b)], vec![Some(&*b), Some(&*a)]];
-        let c1 = bmat(&blocks1, "csr").unwrap();
+        let c1 = bmat(&blocks1, "csr").expect("Test: bmat failed");
 
         assert_eq!(c1.shape(), (4, 4));
         // Check diagonal elements (all should be 1.0)
@@ -1251,7 +1255,7 @@ mod tests {
 
         // Test with some None blocks
         let blocks2 = vec![vec![Some(&*a), Some(&*b)], vec![None, Some(&*a)]];
-        let c2 = bmat(&blocks2, "csr").unwrap();
+        let c2 = bmat(&blocks2, "csr").expect("Test: bmat failed");
 
         assert_eq!(c2.shape(), (4, 4));
         // Check diagonal elements
@@ -1263,11 +1267,11 @@ mod tests {
         assert_eq!(c2.get(3, 3), 1.0);
 
         // Let's use blocks with consistent dimensions
-        let b1 = eye_array::<f64>(2, "csr").unwrap();
-        let b2 = eye_array::<f64>(2, "csr").unwrap();
+        let b1 = eye_array::<f64>(2, "csr").expect("Test operation failed");
+        let b2 = eye_array::<f64>(2, "csr").expect("Test operation failed");
 
         let blocks3 = vec![vec![Some(&*b1), Some(&*b2)], vec![Some(&*b2), Some(&*b1)]];
-        let c3 = bmat(&blocks3, "csr").unwrap();
+        let c3 = bmat(&blocks3, "csr").expect("Test: bmat failed");
 
         assert_eq!(c3.shape(), (4, 4));
         assert_eq!(c3.get(0, 0), 1.0);

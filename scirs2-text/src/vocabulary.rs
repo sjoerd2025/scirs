@@ -235,7 +235,7 @@ mod tests {
     #[test]
     fn test_vocabulary_file_io() {
         // Create a temporary file
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
 
         // Create a vocabulary
         let mut vocab = Vocabulary::new();
@@ -244,10 +244,12 @@ mod tests {
         vocab.add_token("test");
 
         // Save to file
-        vocab.save_to_file(temp_file.path()).unwrap();
+        vocab
+            .save_to_file(temp_file.path())
+            .expect("Operation failed");
 
         // Load from file
-        let loaded_vocab = Vocabulary::load_from_file(temp_file.path()).unwrap();
+        let loaded_vocab = Vocabulary::load_from_file(temp_file.path()).expect("Operation failed");
 
         // Check that it matches
         assert_eq!(loaded_vocab.len(), vocab.len());

@@ -721,7 +721,7 @@ where
     /// Compute covariance matrix using SIMD
     fn compute_covariance_simd(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let (n_samples_, n_features) = data.dim();
-        let n_f = F::from(n_samples_ - 1).unwrap();
+        let n_f = F::from(n_samples_ - 1).expect("Failed to convert to float");
 
         // Compute data.T @ data using SIMD operations
         let data_t = F::simd_transpose(data);
@@ -740,7 +740,8 @@ where
     ) -> StatsResult<(Array1<F>, Array2<F>)> {
         // In a real implementation, would use LAPACK bindings with SIMD optimizations
         let n = matrix.nrows();
-        let eigenvalues = Array1::from_shape_fn(n, |i| F::from(n - i).unwrap());
+        let eigenvalues =
+            Array1::from_shape_fn(n, |i| F::from(n - i).expect("Failed to convert to float"));
         let eigenvectors = Array2::eye(n);
         Ok((eigenvalues, eigenvectors))
     }
@@ -771,7 +772,7 @@ where
         let convergence_info = ConvergenceInfo {
             converged: true,
             iterations: 100,
-            final_error: tolerance / F::from(10.0).unwrap(),
+            final_error: tolerance / F::from(10.0).expect("Failed to convert constant to float"),
             error_history: vec![tolerance; 10],
         };
 
@@ -797,7 +798,7 @@ where
 
         // Simplified t-SNE - would implement actual algorithm
         let embedding = Array2::zeros((n_samples_, n_components));
-        let kl_divergence = F::from(10.0).unwrap();
+        let kl_divergence = F::from(10.0).expect("Failed to convert constant to float");
         let iterations = 1000;
 
         let tsne_model = TSNEModel {
@@ -851,8 +852,8 @@ where
             decomposition_type: "CP".to_string(),
             factors: vec![Array2::eye(3), Array2::eye(3)],
             core_tensor: Some(Array3::zeros((3, 3, 3))),
-            reconstruction_error: F::from(0.1).unwrap(),
-            explained_variance: F::from(0.95).unwrap(),
+            reconstruction_error: F::from(0.1).expect("Failed to convert constant to float"),
+            explained_variance: F::from(0.95).expect("Failed to convert constant to float"),
         };
 
         Ok(MultivariateModel::Tensor(tensor_model))
@@ -867,14 +868,14 @@ where
         let mut validation_scores = HashMap::new();
         validation_scores.insert(
             ClusterValidationMetric::SilhouetteScore,
-            F::from(0.8).unwrap(),
+            F::from(0.8).expect("Failed to convert constant to float"),
         );
 
         let clustering_model = ClusteringModel {
             labels,
             cluster_centers: None,
             probabilities: None,
-            inertia: Some(F::from(100.0).unwrap()),
+            inertia: Some(F::from(100.0).expect("Failed to convert constant to float")),
             validation_scores,
         };
 
@@ -889,8 +890,12 @@ where
         // Simplified multi-view analysis
         let view_embeddings = vec![Array2::zeros((n_samples_, 2)); n_views];
         let shared_embedding = Array2::zeros((n_samples_, 2));
-        let view_weights = Array1::ones(n_views) / F::from(n_views).unwrap();
-        let correlation_scores = Array1::from_elem(n_views, F::from(0.9).unwrap());
+        let view_weights =
+            Array1::ones(n_views) / F::from(n_views).expect("Failed to convert to float");
+        let correlation_scores = Array1::from_elem(
+            n_views,
+            F::from(0.9).expect("Failed to convert constant to float"),
+        );
 
         let multiview_model = MultiViewModel {
             view_embeddings,
@@ -911,15 +916,18 @@ where
         let mut trade_offs = HashMap::new();
 
         for (method_name, result) in results {
-            scores.insert(method_name.clone(), F::from(0.8).unwrap());
+            scores.insert(
+                method_name.clone(),
+                F::from(0.8).expect("Failed to convert constant to float"),
+            );
             trade_offs.insert(
                 method_name.clone(),
                 TradeOffAnalysis {
-                    accuracy: F::from(0.8).unwrap(),
-                    interpretability: F::from(0.7).unwrap(),
-                    computational_cost: F::from(0.5).unwrap(),
-                    scalability: F::from(0.9).unwrap(),
-                    robustness: F::from(0.6).unwrap(),
+                    accuracy: F::from(0.8).expect("Failed to convert constant to float"),
+                    interpretability: F::from(0.7).expect("Failed to convert constant to float"),
+                    computational_cost: F::from(0.5).expect("Failed to convert constant to float"),
+                    scalability: F::from(0.9).expect("Failed to convert constant to float"),
+                    robustness: F::from(0.6).expect("Failed to convert constant to float"),
                 },
             );
         }
@@ -952,14 +960,26 @@ where
         for method_name in results.keys() {
             cross_validation_scores.insert(
                 method_name.clone(),
-                Array1::from_elem(5, F::from(0.85).unwrap()),
+                Array1::from_elem(
+                    5,
+                    F::from(0.85).expect("Failed to convert constant to float"),
+                ),
             );
             bootstrap_confidence_intervals.insert(
                 method_name.clone(),
-                (F::from(0.75).unwrap(), F::from(0.95).unwrap()),
+                (
+                    F::from(0.75).expect("Failed to convert constant to float"),
+                    F::from(0.95).expect("Failed to convert constant to float"),
+                ),
             );
-            stability_scores.insert(method_name.clone(), F::from(0.9).unwrap());
-            significance_tests.insert(method_name.clone(), F::from(0.01).unwrap());
+            stability_scores.insert(
+                method_name.clone(),
+                F::from(0.9).expect("Failed to convert constant to float"),
+            );
+            significance_tests.insert(
+                method_name.clone(),
+                F::from(0.01).expect("Failed to convert constant to float"),
+            );
         }
 
         Ok(ValidationResults {
@@ -1005,14 +1025,14 @@ where
                 estimate_intrinsic_dim: true,
                 neighborhoodsize: 10,
                 distance_metric: DistanceMetric::Euclidean,
-                regularization: F::from(0.01).unwrap(),
+                regularization: F::from(0.01).expect("Failed to convert constant to float"),
                 adaptive_neighborhoods: false,
             },
             tensor_config: TensorConfig {
                 decomposition_methods: vec![],
                 estimate_rank: true,
                 max_rank: 10,
-                tolerance: F::from(1e-6).unwrap(),
+                tolerance: F::from(1e-6).expect("Failed to convert constant to float"),
                 max_iter: 1000,
             },
             clustering_config: ClusteringConfig {
@@ -1038,7 +1058,7 @@ where
                 metrics: vec![ValidationMetric::ReconstructionError],
                 bootstrap_samples: Some(1000),
                 stability_analysis: true,
-                alpha: F::from(0.05).unwrap(),
+                alpha: F::from(0.05).expect("Failed to convert constant to float"),
             },
         }
     }
@@ -1050,7 +1070,7 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Panics in simd/reductions.rs:249 - Option::unwrap() on None"]
     fn test_advanced_multivariate_analysis() {
         // Use faster config for testing
         let mut config = AdvancedMultivariateConfig::default();
@@ -1069,13 +1089,13 @@ mod tests {
         let result = analyzer.fit(&data.view());
         assert!(result.is_ok());
 
-        let results = result.unwrap();
+        let results = result.expect("Operation failed");
         assert!(!results.method_results.is_empty());
         assert!(!results.recommendations.is_empty());
     }
 
+    #[ignore = "Panics in simd/reductions.rs:249 - Option::unwrap() on None"]
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_pca() {
         // Use faster config for testing
         let mut config = AdvancedMultivariateConfig::default();
@@ -1089,7 +1109,7 @@ mod tests {
         let result = analyzer.advanced_pca(&data.view(), PCAVariant::Standard, 2);
         assert!(result.is_ok());
 
-        if let MultivariateModel::PCA(pca_model) = result.unwrap() {
+        if let MultivariateModel::PCA(pca_model) = result.expect("Operation failed") {
             assert_eq!(pca_model.components.ncols(), 2);
             assert_eq!(pca_model.explained_variance.len(), 2);
         }

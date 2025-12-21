@@ -577,14 +577,14 @@ mod tests {
         let image1 = Array2::from_shape_fn((8, 8), |(i, j)| (i + j) as f64);
         let image2 = image1.clone();
 
-        let ssim = compute_structural_similarity(&image1, &image2).unwrap();
+        let ssim = compute_structural_similarity(&image1, &image2).expect("Operation failed");
         assert!((ssim - 1.0).abs() < 0.01); // Should be very close to 1 for identical images
     }
 
     #[test]
     fn test_resize_image_bilinear() {
         let image = Array2::from_shape_fn((4, 4), |(i, j)| (i * j) as f64);
-        let resized = resize_image_bilinear(&image, (8, 8)).unwrap();
+        let resized = resize_image_bilinear(&image, (8, 8)).expect("Operation failed");
 
         assert_eq!(resized.dim(), (8, 8));
     }
@@ -599,7 +599,7 @@ mod tests {
             } // Step edge
         });
 
-        let edges = detect_edges_sobel(&image, 1).unwrap();
+        let edges = detect_edges_sobel(&image, 1).expect("Operation failed");
         assert_eq!(edges.dim(), image.dim());
 
         // Check that edge is detected around the middle

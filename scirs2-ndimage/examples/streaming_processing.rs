@@ -51,7 +51,7 @@ fn process_largeimage_gaussian() {
     //     shape,
     //     op,
     //     Some(config),
-    // ).unwrap();
+    // ).expect("Operation failed");
 }
 
 /// Process with Fourier domain filters
@@ -78,7 +78,7 @@ fn process_largeimage_fourier() {
     //     shape,
     //     sigma,
     //     Some(config),
-    // ).unwrap();
+    // ).expect("Operation failed");
 }
 
 /// Custom streaming operation
@@ -151,7 +151,9 @@ mod tests {
         let processor = StreamProcessor::<f64>::new(config);
         let op = StreamingGaussianFilter::new(vec![1.0, 1.0], None);
 
-        let result = processor.process_in_memory(&input.view(), op).unwrap();
+        let result = processor
+            .process_in_memory(&input.view(), op)
+            .expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
 
         // Check that values are smoothed

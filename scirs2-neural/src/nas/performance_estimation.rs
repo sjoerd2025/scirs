@@ -109,7 +109,7 @@ impl SuperNetEstimator {
             let key = format!("dense_{}", size);
             let weight_matrix = Array2::random(
                 (size, size),
-                scirs2_core::random::Normal::new(0.0, (2.0 / size as f32).sqrt()).unwrap(),
+                scirs2_core::random::Normal::new(0.0, (2.0 / size as f32).sqrt()).expect("Operation failed"),
             );
             weights.insert(key, weight_matrix);
         // Convolutional layers with different filter sizes
@@ -117,7 +117,7 @@ impl SuperNetEstimator {
             let key = format!("conv_{}", filters);
             let weight_tensor = Array2::random(
                 (filters, 64), // Simplified 2D representation
-                scirs2_core::random::Normal::new(0.0, (2.0 / filters as f32).sqrt()).unwrap(),
+                scirs2_core::random::Normal::new(0.0, (2.0 / filters as f32).sqrt()).expect("Operation failed"),
             weights.insert(key, weight_tensor);
         self.shared_weights = Some(weights);
         Ok(())
@@ -148,8 +148,8 @@ use statrs::statistics::Statistics;
         let num_layers = rng.gen_range(3..8);
         for _ in 0..num_layers {
             let layer_type = match rng.gen_range(0..4) {
-                0 => format!("dense_{}"..[64, 128, 256, 512].choose(&mut rng).unwrap()),
-                1 => format!("conv_{}", [32, 64, 128, 256].choose(&mut rng).unwrap()),
+                0 => format!("dense_{}"..[64, 128, 256, 512].choose(&mut rng).expect("Operation failed")),
+                1 => format!("conv_{}", [32, 64, 128, 256].choose(&mut rng).expect("Operation failed")),
                 2 => "dropout".to_string(, _ => "batchnorm".to_string(),
             };
             architecture.push(layer_type);
@@ -235,7 +235,7 @@ use statrs::statistics::Statistics;
                     .row(i)
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(idx_)| idx)
                     .unwrap_or(0);
                 if predicted_class == label {
@@ -303,9 +303,9 @@ impl PerformanceEstimator for LearningCurveEstimator {
         // Fit curve and extrapolate
         // Simplified - in practice would use proper curve fitting
         let final_estimate = if learning_curve.len() >= 2 {
-            let rate = (learning_curve.last().unwrap() - learning_curve.first().unwrap())
+            let rate = (learning_curve.last().expect("Operation failed") - learning_curve.first().expect("Operation failed"))
                 / learning_curve.len() as f64;
-            let extrapolated = learning_curve.last().unwrap()
+            let extrapolated = learning_curve.last().expect("Operation failed")
                 + rate * (self.extrapolate_to - self._initial_epochs) as f64;
             extrapolated.min(0.99)
         metrics.insert("validation_accuracy".to_string(), final_estimate);
@@ -484,7 +484,7 @@ impl ZeroCostEstimator {
         // Placeholder implementation
         Ok(Array1::random(
             param_size,
-            scirs2_core::random::Normal::new(0.0, 0.1).unwrap(),
+            scirs2_core::random::Normal::new(0.0, 0.1).expect("Operation failed"),
         ))
     fn compute_determinant(&self, matrix: &Array2<f64>) -> f64 {
         // Simplified determinant computation for small matrices
@@ -507,7 +507,7 @@ impl ZeroCostEstimator {
         // In practice, would use the actual model
         let output_size = 10;
             output_size,
-            scirs2_core::random::Normal::new(0.0, 1.0).unwrap(),
+            scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed"),
     fn compute_loss_gradient(&self, output: &Array1<f32>, target: usize) -> Result<Array1<f32>> {
         // Simplified gradient computation
         let mut grad = output.clone();
@@ -574,7 +574,7 @@ impl PerformanceEstimator for MultiFidelityEstimator {
                 fidelity_score,
         // Extrapolate to final fidelity
         if performance_curve.len() >= 2 {
-            let (last_epochs, last_score) = performance_curve.last().unwrap();
+            let (last_epochs, last_score) = performance_curve.last().expect("Operation failed");
             let (prev_epochs, prev_score) = performance_curve[performance_curve.len() - 2];
             let rate = (last_score - prev_score) / ((*last_epochs - prev_epochs) as f64);
             let final_estimate = last_score
@@ -604,7 +604,7 @@ mod tests {
                 &val_data.view(),
                 &val_labels.view(),
             )
-            .unwrap();
+            .expect("Operation failed");
         assert!(metrics.contains_key("validation_accuracy"));
         assert!(metrics.contains_key("validation_loss"));
     fn test_zero_cost_estimator() {

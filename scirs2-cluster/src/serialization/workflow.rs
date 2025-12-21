@@ -703,7 +703,7 @@ mod tests {
         };
 
         let workflow = ClusteringWorkflow::new("test_workflow".to_string(), workflow_config);
-        manager.add_workflow(workflow).unwrap();
+        manager.add_workflow(workflow).expect("Operation failed");
 
         assert!(manager.get_workflow("test_workflow").is_some());
         assert_eq!(manager.workflows.len(), 1);

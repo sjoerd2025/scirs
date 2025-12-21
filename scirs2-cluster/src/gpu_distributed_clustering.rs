@@ -607,7 +607,7 @@ impl DistributedAdvancedClusterer {
         let total_execution_time: f64 = worker_results
             .iter()
             .map(|r| r.performance_stats.execution_time)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .unwrap_or(0.0);
 
         let avg_ai_speedup: f64 = worker_results
@@ -669,7 +669,7 @@ impl DistributedAdvancedClusterer {
         let total_execution_time = worker_results
             .iter()
             .map(|r| r.performance_stats.execution_time)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .unwrap_or(0.0);
 
         let total_data_processed = worker_results

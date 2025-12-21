@@ -183,7 +183,7 @@ pub fn run_ransac<M: RansacModel>(
         ));
     }
 
-    let mut best_model = best_model.unwrap();
+    let mut best_model = best_model.expect("Operation failed");
 
     // Refine model using all inliers
     if !best_inliers.is_empty() && config.refinement_iterations > 0 {
@@ -226,7 +226,8 @@ pub struct Homography {
 impl Homography {
     /// Create a new homography matrix from raw data
     pub fn new(_matrixdata: &[f64; 9]) -> Self {
-        let matrix = Array2::from_shape_vec((3, 3), _matrixdata.to_vec()).unwrap();
+        let matrix =
+            Array2::from_shape_vec((3, 3), _matrixdata.to_vec()).expect("Operation failed");
         let inverse = match Self::invert_matrix(&matrix) {
             Ok(inv) => inv,
             Err(_) => Array2::eye(3),
@@ -663,7 +664,7 @@ mod tests {
             refinement_iterations: 1,
         };
 
-        let result = run_ransac::<TranslationScale>(&matches, &config).unwrap();
+        let result = run_ransac::<TranslationScale>(&matches, &config).expect("Operation failed");
 
         // Check that the estimated model is close to the true model
         assert!((result.model.tx - true_model.tx).abs() < 1.0);

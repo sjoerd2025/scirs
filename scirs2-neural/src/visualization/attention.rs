@@ -855,7 +855,7 @@ impl<
                         min_weight = weight;
                     total_weight = total_weight + weight;
             let avg_weight = if !headweights.is_empty() {
-                total_weight / F::from(headweights.len()).unwrap(), F::zero()
+                total_weight / F::from(headweights.len()).expect("Operation failed"), F::zero()
             };
             // Draw attention matrix for this head
             for (local_i, i) in (start_row..end_row).enumerate() {
@@ -1075,7 +1075,7 @@ mod tests {
     fn test_attention_visualizer_creation() {
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
         let config = VisualizationConfig::default();
         let visualizer = AttentionVisualizer::new(model, config);
         assert!(visualizer.attention_cache.is_empty());

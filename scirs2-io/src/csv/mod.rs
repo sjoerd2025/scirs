@@ -69,7 +69,7 @@ impl Default for CsvReaderConfig {
 /// use scirs2_io::csv::{read_csv, CsvReaderConfig};
 ///
 /// // Read with default configuration
-/// let (headers, data) = read_csv("data.csv", None).unwrap();
+/// let (headers, data) = read_csv("data.csv", None).expect("Operation failed");
 /// println!("Headers: {:?}", headers);
 /// println!("Data shape: {:?}", data.shape());
 ///
@@ -79,7 +79,7 @@ impl Default for CsvReaderConfig {
 ///     has_header: false,
 ///     ..Default::default()
 /// };
-/// let (_, data) = read_csv("data.csv", Some(config)).unwrap();
+/// let (_, data) = read_csv("data.csv", Some(config)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn read_csv<P: AsRef<Path>>(
@@ -236,7 +236,7 @@ fn parse_csv_line(line: &str, config: &CsvReaderConfig) -> Vec<String> {
 /// ```no_run
 /// use scirs2_io::csv::{read_csv_numeric, CsvReaderConfig};
 ///
-/// let (headers, data) = read_csv_numeric("data.csv", None).unwrap();
+/// let (headers, data) = read_csv_numeric("data.csv", None).expect("Operation failed");
 /// println!("Numeric data shape: {:?}", data.shape());
 /// ```
 #[allow(dead_code)]
@@ -714,7 +714,7 @@ fn convert_value(
 /// let headers = vec!["A".to_string(), "B".to_string(), "C".to_string()];
 ///
 /// // Write with default configuration
-/// write_csv("output.csv", &data, Some(&headers), None).unwrap();
+/// write_csv("output.csv", &data, Some(&headers), None).expect("Operation failed");
 ///
 /// // Write with custom configuration
 /// let config = CsvWriterConfig {
@@ -722,7 +722,7 @@ fn convert_value(
 ///     always_quote: true,
 ///     ..Default::default()
 /// };
-/// write_csv("output_custom.csv", &data, Some(&headers), Some(config)).unwrap();
+/// write_csv("output_custom.csv", &data, Some(&headers), Some(config)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn write_csv<P: AsRef<Path>, T: std::fmt::Display>(
@@ -841,7 +841,7 @@ fn format_csv_line(fields: &[String], config: &CsvWriterConfig) -> String {
 /// use scirs2_io::csv::{read_csv_typed, ColumnType, CsvReaderConfig, MissingValueOptions};
 ///
 /// // Read with automatic type detection
-/// let (headers, data) = read_csv_typed("data.csv", None, None, None).unwrap();
+/// let (headers, data) = read_csv_typed("data.csv", None, None, None).expect("Operation failed");
 ///
 /// // Read with specified column types
 /// let col_types = vec![
@@ -850,14 +850,14 @@ fn format_csv_line(fields: &[String], config: &CsvWriterConfig) -> String {
 ///     ColumnType::Float,
 ///     ColumnType::Boolean,
 /// ];
-/// let (headers, data) = read_csv_typed("data.csv", None, Some(&col_types), None).unwrap();
+/// let (headers, data) = read_csv_typed("data.csv", None, Some(&col_types), None).expect("Operation failed");
 ///
 /// // Read with custom missing value handling
 /// let missing_opts = MissingValueOptions {
 ///     values: vec!["missing".to_string(), "unknown".to_string()],
 ///     fill_value: Some(0.0),
 /// };
-/// let (headers, data) = read_csv_typed("data.csv", None, None, Some(missing_opts)).unwrap();
+/// let (headers, data) = read_csv_typed("data.csv", None, None, Some(missing_opts)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn read_csv_typed<P: AsRef<Path>>(
@@ -934,7 +934,7 @@ pub fn read_csv_typed<P: AsRef<Path>>(
 ///     println!("Processing chunk with {} rows", chunk.shape()[0]);
 ///     total_rows += chunk.shape()[0];
 ///     true // continue processing
-/// }).unwrap();
+/// }).expect("Operation failed");
 ///
 /// println!("Total rows processed: {}", total_rows);
 /// ```
@@ -1088,7 +1088,7 @@ where
 ///     "Active".to_string(),
 /// ];
 ///
-/// write_csv_typed("typed_data.csv", &data, Some(&headers), None).unwrap();
+/// write_csv_typed("typed_data.csv", &data, Some(&headers), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn write_csv_typed<P: AsRef<Path>>(
@@ -1197,7 +1197,7 @@ pub fn write_csv_typed<P: AsRef<Path>>(
 /// let columns = vec![col1, col2];
 /// let headers = vec!["X".to_string(), "Y".to_string()];
 ///
-/// write_csv_columns("columns.csv", &columns, Some(&headers), None).unwrap();
+/// write_csv_columns("columns.csv", &columns, Some(&headers), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn write_csv_columns<P: AsRef<Path>, T: std::fmt::Display + Clone>(
@@ -1574,7 +1574,7 @@ where
             // Update peak memory
             let memory_usage = chunk.len() * std::mem::size_of::<String>();
             {
-                let mut peak = peak_memory.lock().unwrap();
+                let mut peak = peak_memory.lock().expect("Operation failed");
                 if memory_usage > *peak {
                     *peak = memory_usage;
                 }
@@ -1583,7 +1583,7 @@ where
             match processor(&chunk, headers.as_ref()) {
                 Ok(result) => Some(result),
                 Err(_) => {
-                    *error_count.lock().unwrap() += 1;
+                    *error_count.lock().expect("Operation failed") += 1;
                     None
                 }
             }
@@ -1598,8 +1598,8 @@ where
         chunks_processed: results.len(),
         total_time_ms: elapsed.as_secs_f64() * 1000.0,
         rows_per_second: total_rows as f64 / elapsed.as_secs_f64(),
-        peak_memory_bytes: *peak_memory.lock().unwrap(),
-        error_count: *error_count.lock().unwrap(),
+        peak_memory_bytes: *peak_memory.lock().expect("Operation failed"),
+        error_count: *error_count.lock().expect("Operation failed"),
     };
 
     Ok((results, stats))

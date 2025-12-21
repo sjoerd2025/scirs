@@ -76,7 +76,7 @@ fn bench_rbf_interpolation(c: &mut Criterion) {
                 *kernel,
                 1.0, // epsilon
             )
-            .unwrap();
+            .expect("Test: operation failed");
 
             let queries = generate_query_points_2d(100);
 
@@ -155,7 +155,7 @@ fn bench_kriging_interpolation(c: &mut Criterion) {
                 0.01, // nugget
                 1.0,  // alpha
             )
-            .unwrap();
+            .expect("Test: operation failed");
 
             let queries = generate_query_points_2d(50);
 
@@ -244,7 +244,8 @@ fn bench_thin_plate_splines(c: &mut Criterion) {
 
     for data_size in [50, 100, 250, 500].iter() {
         let (points, values) = generate_2d_test_data(*data_size);
-        let interpolator = ThinPlateSpline::new(&points.view(), &values.view(), 0.0).unwrap();
+        let interpolator = ThinPlateSpline::new(&points.view(), &values.view(), 0.0)
+            .expect("Test: operation failed");
 
         let queries = generate_query_points_2d(100);
 
@@ -319,7 +320,7 @@ fn bench_moving_least_squares(c: &mut Criterion) {
                 *poly_basis,
                 0.5, // bandwidth
             )
-            .unwrap();
+            .expect("Test: operation failed");
 
             let queries = generate_query_points_2d(50);
 

@@ -29,8 +29,8 @@
 //! ];
 //!
 //! // Calculate spatial autocorrelation
-//! let moran = morans_i(&values.view(), &weights.view()).unwrap();
-//! let geary = gearys_c(&values.view(), &weights.view()).unwrap();
+//! let moran = morans_i(&values.view(), &weights.view()).expect("Operation failed");
+//! let geary = gearys_c(&values.view(), &weights.view()).expect("Operation failed");
 //!
 //! println!("Moran's I: {:.3}", moran);
 //! println!("Geary's C: {:.3}", geary);
@@ -71,7 +71,7 @@ use crate::error::{SpatialError, SpatialResult};
 ///     [1.0, 0.0, 0.0, 1.0, 0.0],
 /// ];
 ///
-/// let moran = morans_i(&values.view(), &weights.view()).unwrap();
+/// let moran = morans_i(&values.view(), &weights.view()).expect("Operation failed");
 /// println!("Moran's I: {:.3}", moran);
 /// ```
 #[allow(dead_code)]
@@ -85,7 +85,7 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
     }
 
     // Calculate mean
-    let mean = values.sum() / T::from(n).unwrap();
+    let mean = values.sum() / T::from(n).expect("Operation failed");
 
     // Calculate deviations from mean
     let deviations: Array1<T> = values.map(|&x| x - mean);
@@ -119,7 +119,7 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
     }
 
     // Moran's I = (n / W) * (numerator / denominator)
-    let morans_i = (T::from(n).unwrap() / w_sum) * (numerator / denominator);
+    let morans_i = (T::from(n).expect("Operation failed") / w_sum) * (numerator / denominator);
 
     Ok(morans_i)
 }
@@ -154,7 +154,7 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 ///     [1.0, 0.0, 0.0, 1.0, 0.0],
 /// ];
 ///
-/// let geary = gearys_c(&values.view(), &weights.view()).unwrap();
+/// let geary = gearys_c(&values.view(), &weights.view()).expect("Operation failed");
 /// println!("Geary's C: {:.3}", geary);
 /// ```
 #[allow(dead_code)]
@@ -168,7 +168,7 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
     }
 
     // Calculate mean
-    let mean = values.sum() / T::from(n).unwrap();
+    let mean = values.sum() / T::from(n).expect("Operation failed");
 
     // Calculate sum of weights
     let w_sum = weights.sum();
@@ -207,7 +207,7 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
     let denominator = (T::one() + T::one()) * w_sum * variance_sum;
 
     // Geary's C = ((n-1) / 2W) * (numerator / variance_sum)
-    let gearys_c = (T::from((n - 1) as i32).unwrap() / denominator) * numerator;
+    let gearys_c = (T::from((n - 1) as i32).expect("Operation failed") / denominator) * numerator;
 
     Ok(gearys_c)
 }
@@ -242,7 +242,7 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 ///     [1.0, 0.0, 0.0, 1.0, 0.0],
 /// ];
 ///
-/// let local_i = local_morans_i(&values.view(), &weights.view()).unwrap();
+/// let local_i = local_morans_i(&values.view(), &weights.view()).expect("Operation failed");
 /// println!("Local Moran's I values: {:?}", local_i);
 /// ```
 #[allow(dead_code)]
@@ -259,7 +259,7 @@ pub fn local_morans_i<T: Float>(
     }
 
     // Calculate global mean
-    let mean = values.sum() / T::from(n).unwrap();
+    let mean = values.sum() / T::from(n).expect("Operation failed");
 
     // Calculate global variance
     let variance: T = values
@@ -268,7 +268,7 @@ pub fn local_morans_i<T: Float>(
             diff * diff
         })
         .sum()
-        / T::from(n).unwrap();
+        / T::from(n).expect("Operation failed");
 
     if variance.is_zero() {
         return Err(SpatialError::ValueError(
@@ -326,7 +326,7 @@ pub fn local_morans_i<T: Float>(
 ///     [1.0, 0.0, 0.0, 1.0, 0.0],
 /// ];
 ///
-/// let gi_stats = getis_ord_gi(&values.view(), &weights.view(), false).unwrap();
+/// let gi_stats = getis_ord_gi(&values.view(), &weights.view(), false).expect("Operation failed");
 /// println!("Gi statistics: {:?}", gi_stats);
 /// ```
 #[allow(dead_code)]
@@ -344,14 +344,14 @@ pub fn getis_ord_gi<T: Float>(
     }
 
     // Calculate global mean and variance
-    let mean = values.sum() / T::from(n).unwrap();
+    let mean = values.sum() / T::from(n).expect("Operation failed");
     let variance: T = values
         .map(|&x| {
             let diff = x - mean;
             diff * diff
         })
         .sum()
-        / T::from(n).unwrap();
+        / T::from(n).expect("Operation failed");
 
     if variance.is_zero() {
         return Err(SpatialError::ValueError(
@@ -384,7 +384,7 @@ pub fn getis_ord_gi<T: Float>(
         }
 
         if weight_sum > T::zero() {
-            let n_f = T::from(n).unwrap();
+            let n_f = T::from(n).expect("Operation failed");
             let expected = weight_sum * mean;
 
             // Calculate standard deviation of the sum
@@ -434,7 +434,7 @@ pub fn getis_ord_gi<T: Float>(
 ///     2.0,
 ///     "inverse",
 ///     1.0
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// println!("Distance-based weights matrix: {:?}", weights);
 /// ```
@@ -521,7 +521,7 @@ pub fn distance_weights_matrix<T: Float>(
 ///     [1.0, 1.0],
 /// ];
 ///
-/// let ce_index = clark_evans_index(&coords.view(), 4.0).unwrap();
+/// let ce_index = clark_evans_index(&coords.view(), 4.0).expect("Operation failed");
 /// println!("Clark-Evans index: {:.3}", ce_index);
 /// ```
 #[allow(dead_code)]
@@ -562,12 +562,12 @@ pub fn clark_evans_index<T: Float>(coordinates: &ArrayView2<T>, study_area: T) -
     }
 
     // Calculate observed mean nearest neighbor distance
-    let observed_mean =
-        nn_distances.iter().fold(T::zero(), |acc, &d| acc + d) / T::from(n).unwrap();
+    let observed_mean = nn_distances.iter().fold(T::zero(), |acc, &d| acc + d)
+        / T::from(n).expect("Operation failed");
 
     // Calculate expected mean nearest neighbor distance for random pattern
-    let density = T::from(n).unwrap() / study_area;
-    let expected_mean = T::one() / (T::from(2.0).unwrap() * density.sqrt());
+    let density = T::from(n).expect("Operation failed") / study_area;
+    let expected_mean = T::one() / (T::from(2.0).expect("Operation failed") * density.sqrt());
 
     // Clark-Evans index
     let clark_evans = observed_mean / expected_mean;
@@ -593,7 +593,7 @@ mod tests {
             [0.0, 0.0, 0.0, 1.0, 0.0],
         ];
 
-        let moran = morans_i(&values.view(), &weights.view()).unwrap();
+        let moran = morans_i(&values.view(), &weights.view()).expect("Operation failed");
 
         // Should be positive due to spatial clustering
         assert!(moran > 0.0);
@@ -611,7 +611,7 @@ mod tests {
             [0.0, 0.0, 0.0, 1.0, 0.0],
         ];
 
-        let geary = gearys_c(&values.view(), &weights.view()).unwrap();
+        let geary = gearys_c(&values.view(), &weights.view()).expect("Operation failed");
 
         // Should be less than 1 due to positive spatial autocorrelation
         assert!(geary < 1.0);
@@ -628,7 +628,7 @@ mod tests {
             [0.0, 0.0, 0.0, 1.0, 0.0],
         ];
 
-        let local_i = local_morans_i(&values.view(), &weights.view()).unwrap();
+        let local_i = local_morans_i(&values.view(), &weights.view()).expect("Operation failed");
 
         // Should have 5 values (one for each location)
         assert_eq!(local_i.len(), 5);
@@ -638,7 +638,8 @@ mod tests {
     fn test_distance_weights_matrix() {
         let coords = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [2.0, 2.0],];
 
-        let weights = distance_weights_matrix(&coords.view(), 1.5, "inverse", 1.0).unwrap();
+        let weights =
+            distance_weights_matrix(&coords.view(), 1.5, "inverse", 1.0).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(weights.shape(), &[4, 4]);
@@ -661,7 +662,7 @@ mod tests {
         // Perfect grid pattern should have R > 1 (regular)
         let coords = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],];
 
-        let ce_index = clark_evans_index(&coords.view(), 4.0).unwrap();
+        let ce_index = clark_evans_index(&coords.view(), 4.0).expect("Operation failed");
 
         // Grid pattern should be regular (R > 1)
         assert!(ce_index > 1.0);

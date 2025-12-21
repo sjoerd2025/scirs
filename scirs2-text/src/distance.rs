@@ -412,16 +412,18 @@ mod tests {
 
     #[test]
     fn test_jaccard_similarity() {
-        let result = jaccard_similarity("this is a test", "this is another test", None).unwrap();
+        let result = jaccard_similarity("this is a test", "this is another test", None)
+            .expect("Operation failed");
         assert!(result > 0.5 && result < 1.0);
 
-        let result = jaccard_similarity("identical", "identical", None).unwrap();
+        let result = jaccard_similarity("identical", "identical", None).expect("Operation failed");
         assert_eq!(result, 1.0);
 
-        let result = jaccard_similarity("completely different", "not the same", None).unwrap();
+        let result = jaccard_similarity("completely different", "not the same", None)
+            .expect("Operation failed");
         assert_eq!(result, 0.0);
 
-        let result = jaccard_similarity("", "", None).unwrap();
+        let result = jaccard_similarity("", "", None).expect("Operation failed");
         assert_eq!(result, 1.0);
     }
 
@@ -429,30 +431,32 @@ mod tests {
     fn test_cosine_similarity() {
         let v1 = array![1.0, 0.0, 0.0];
         let v2 = array![0.0, 1.0, 0.0];
-        let result = cosine_similarity(v1.view(), v2.view()).unwrap();
+        let result = cosine_similarity(v1.view(), v2.view()).expect("Operation failed");
         assert_eq!(result, 0.0);
 
         let v1 = array![1.0, 1.0, 1.0];
         let v2 = array![1.0, 1.0, 1.0];
-        let result = cosine_similarity(v1.view(), v2.view()).unwrap();
+        let result = cosine_similarity(v1.view(), v2.view()).expect("Operation failed");
         assert!((result - 1.0).abs() < 1e-10);
 
         let v1 = array![1.0, 2.0, 3.0];
         let v2 = array![4.0, 5.0, 6.0];
-        let result = cosine_similarity(v1.view(), v2.view()).unwrap();
+        let result = cosine_similarity(v1.view(), v2.view()).expect("Operation failed");
         assert!(result > 0.9 && result < 1.0);
     }
 
     #[test]
     fn testtext_cosine_similarity() {
-        let result =
-            text_cosine_similarity("this is a test", "this is another test", None).unwrap();
+        let result = text_cosine_similarity("this is a test", "this is another test", None)
+            .expect("Operation failed");
         assert!(result > 0.5 && result < 1.0);
 
-        let result = text_cosine_similarity("identical", "identical", None).unwrap();
+        let result =
+            text_cosine_similarity("identical", "identical", None).expect("Operation failed");
         assert_eq!(result, 1.0);
 
-        let result = text_cosine_similarity("completely different", "not the same", None).unwrap();
+        let result = text_cosine_similarity("completely different", "not the same", None)
+            .expect("Operation failed");
         assert_eq!(result, 0.0);
     }
 

@@ -226,7 +226,7 @@ impl ErrorDiagnostics {
     pub fn recorderror(&self, error: &CoreError, context: String) {
         let occurrence = ErrorOccurrence::error(error, context);
 
-        let mut history = self.error_history.lock().unwrap();
+        let mut history = self.error_history.lock().expect("Operation failed");
         history.push(occurrence);
 
         // Keep only the most recent errors
@@ -288,7 +288,7 @@ impl ErrorDiagnostics {
             .to_string();
         let cutoff = SystemTime::now() - window;
 
-        let history = self.error_history.lock().unwrap();
+        let history = self.error_history.lock().expect("Operation failed");
         history
             .iter()
             .filter(|occurrence| {
@@ -496,7 +496,7 @@ impl ErrorDiagnostics {
     #[allow(dead_code)]
     pub fn predict_potentialerrors(&self, context: &str) -> Vec<String> {
         let mut predictions = Vec::new();
-        let history = self.error_history.lock().unwrap();
+        let history = self.error_history.lock().expect("Operation failed");
 
         // Analyze error frequency patterns
         let mut error_counts: HashMap<String, usize> = HashMap::new();

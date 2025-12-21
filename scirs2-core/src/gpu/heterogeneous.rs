@@ -376,7 +376,7 @@ impl HeterogeneousScheduler {
         );
         self.performance_history
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert(key, execution_time);
 
         Ok(result)
@@ -384,7 +384,7 @@ impl HeterogeneousScheduler {
 
     /// Get performance statistics
     pub fn get_performance_stats(&self) -> HeterogeneousStats {
-        let history = self.performance_history.lock().unwrap();
+        let history = self.performance_history.lock().expect("Operation failed");
 
         let total_executions = history.len();
         let avgexecution_time = if total_executions > 0 {
@@ -424,7 +424,7 @@ impl HeterogeneousScheduler {
             workload_type = workload.workload_type,
             problemsize = workload.problemsize
         );
-        let history = self.performance_history.lock().unwrap();
+        let history = self.performance_history.lock().expect("Operation failed");
 
         // If we have historical data, use it to refine the _strategy
         if let Some(&_historical_time) = history.get(&key) {

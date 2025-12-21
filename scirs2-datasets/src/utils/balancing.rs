@@ -48,9 +48,9 @@ pub enum BalancingStrategy {
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_datasets::utils::random_oversample;
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
+/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).expect("Operation failed");
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
-/// let (balanced_data, balanced_targets) = random_oversample(&data, &targets, Some(42)).unwrap();
+/// let (balanced_data, balanced_targets) = random_oversample(&data, &targets, Some(42)).expect("Operation failed");
 /// // Now both classes have 4 samples each
 /// ```
 #[allow(dead_code)]
@@ -79,7 +79,11 @@ pub fn random_oversample(
     }
 
     // Find the majority class size
-    let max_class_size = class_indices.values().map(|v| v.len()).max().unwrap();
+    let max_class_size = class_indices
+        .values()
+        .map(|v| v.len())
+        .max()
+        .expect("Operation failed");
 
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
@@ -102,7 +106,7 @@ pub fn random_oversample(
         if class_size < max_class_size {
             let samples_needed = max_class_size - class_size;
             for _ in 0..samples_needed {
-                let random_idx = rng.sample(Uniform::new(0, class_size).unwrap());
+                let random_idx = rng.sample(Uniform::new(0, class_size).expect("Operation failed"));
                 resampled_indices.push(indices[random_idx]);
             }
         }
@@ -136,9 +140,9 @@ pub fn random_oversample(
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_datasets::utils::random_undersample;
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
+/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).expect("Operation failed");
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
-/// let (balanced_data, balanced_targets) = random_undersample(&data, &targets, Some(42)).unwrap();
+/// let (balanced_data, balanced_targets) = random_undersample(&data, &targets, Some(42)).expect("Operation failed");
 /// // Now both classes have 2 samples each
 /// ```
 #[allow(dead_code)]
@@ -167,7 +171,11 @@ pub fn random_undersample(
     }
 
     // Find the minority class size
-    let min_class_size = class_indices.values().map(|v| v.len()).min().unwrap();
+    let min_class_size = class_indices
+        .values()
+        .map(|v| v.len())
+        .min()
+        .expect("Operation failed");
 
     let mut rng = match random_seed {
         Some(_seed) => StdRng::seed_from_u64(_seed),
@@ -222,9 +230,9 @@ pub fn random_undersample(
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_datasets::utils::generate_synthetic_samples;
 ///
-/// let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
+/// let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).expect("Operation failed");
 /// let targets = Array1::from(vec![0.0, 0.0, 0.0, 1.0]);
-/// let (synthetic_data, synthetic_targets) = generate_synthetic_samples(&data, &targets, 0.0, 2, 2, Some(42)).unwrap();
+/// let (synthetic_data, synthetic_targets) = generate_synthetic_samples(&data, &targets, 0.0, 2, 2, Some(42)).expect("Operation failed");
 /// assert_eq!(synthetic_data.nrows(), 2);
 /// assert_eq!(synthetic_targets.len(), 2);
 /// ```
@@ -289,7 +297,8 @@ pub fn generate_synthetic_samples(
 
     for i in 0..n_synthetic {
         // Randomly select a sample from the target _class
-        let base_idx = class_indices[rng.sample(Uniform::new(0, class_indices.len()).unwrap())];
+        let base_idx = class_indices
+            [rng.sample(Uniform::new(0, class_indices.len()).expect("Operation failed"))];
         let base_sample = data.row(base_idx);
 
         // Find k nearest _neighbors within the same _class
@@ -308,11 +317,12 @@ pub fn generate_synthetic_samples(
             })
             .collect();
 
-        distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        distances.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
         let k_nearest = &distances[0..k_neighbors.min(distances.len())];
 
         // Select a random neighbor from the k nearest
-        let neighbor_idx = k_nearest[rng.sample(Uniform::new(0, k_nearest.len()).unwrap())].0;
+        let neighbor_idx =
+            k_nearest[rng.sample(Uniform::new(0, k_nearest.len()).expect("Operation failed"))].0;
         let neighbor_sample = data.row(neighbor_idx);
 
         // Generate _synthetic sample by interpolation
@@ -347,9 +357,9 @@ pub fn generate_synthetic_samples(
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_datasets::utils::{create_balanced_dataset, BalancingStrategy};
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
+/// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).expect("Operation failed");
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
-/// let (balanced_data, balanced_targets) = create_balanced_dataset(&data, &targets, BalancingStrategy::RandomOversample, Some(42)).unwrap();
+/// let (balanced_data, balanced_targets) = create_balanced_dataset(&data, &targets, BalancingStrategy::RandomOversample, Some(42)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn create_balanced_dataset(
@@ -369,7 +379,7 @@ pub fn create_balanced_dataset(
                 *class_counts.entry(class).or_default() += 1;
             }
 
-            let max_count = *class_counts.values().max().unwrap();
+            let max_count = *class_counts.values().max().expect("Operation failed");
             let mut combined_data = data.clone();
             let mut combined_targets = targets.clone();
 
@@ -422,11 +432,11 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Test: SMOTE operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
 
         let (balanced_data, balanced_targets) =
-            random_oversample(&data, &targets, Some(42)).unwrap();
+            random_oversample(&data, &targets, Some(42)).expect("Operation failed");
 
         // Check that we now have equal number of each class
         let class_0_count = balanced_targets.iter().filter(|&&x| x == 0.0).count();
@@ -444,7 +454,8 @@ mod tests {
 
     #[test]
     fn test_random_oversample_invalid_params() {
-        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
         let targets = Array1::from(vec![0.0, 1.0]);
 
         // Mismatched data and targets
@@ -464,11 +475,11 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Test: ADASYN operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
 
         let (balanced_data, balanced_targets) =
-            random_undersample(&data, &targets, Some(42)).unwrap();
+            random_undersample(&data, &targets, Some(42)).expect("Operation failed");
 
         // Check that we now have equal number of each class (minimum)
         let class_0_count = balanced_targets.iter().filter(|&&x| x == 0.0).count();
@@ -486,7 +497,8 @@ mod tests {
 
     #[test]
     fn test_random_undersample_invalid_params() {
-        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
         let targets = Array1::from(vec![0.0, 1.0]);
 
         // Mismatched data and targets
@@ -500,12 +512,13 @@ mod tests {
 
     #[test]
     fn test_generate_synthetic_samples() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5])
+            .expect("Operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 0.0, 1.0]);
 
         let (synthetic_data, synthetic_targets) =
-            generate_synthetic_samples(&data, &targets, 0.0, 2, 2, Some(42)).unwrap();
+            generate_synthetic_samples(&data, &targets, 0.0, 2, 2, Some(42))
+                .expect("Operation failed");
 
         // Check that we generated the correct number of synthetic samples
         assert_eq!(synthetic_data.nrows(), 2);
@@ -530,8 +543,8 @@ mod tests {
 
     #[test]
     fn test_generate_synthetic_samples_invalid_params() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5])
+            .expect("Operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 0.0, 1.0]);
 
         // Mismatched data and targets
@@ -559,7 +572,7 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Test: undersample operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
 
         let (balanced_data, balanced_targets) = create_balanced_dataset(
@@ -568,7 +581,7 @@ mod tests {
             BalancingStrategy::RandomOversample,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: undersample operation failed");
 
         // Check that classes are balanced
         let class_0_count = balanced_targets.iter().filter(|&&x| x == 0.0).count();
@@ -585,7 +598,7 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Test: cluster centroids operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
 
         let (balanced_data, balanced_targets) = create_balanced_dataset(
@@ -594,7 +607,7 @@ mod tests {
             BalancingStrategy::RandomUndersample,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: cluster centroids operation failed");
 
         // Check that classes are balanced
         let class_0_count = balanced_targets.iter().filter(|&&x| x == 0.0).count();
@@ -611,7 +624,7 @@ mod tests {
                 1.0, 1.0, 1.5, 1.5, 2.0, 2.0, 2.5, 2.5, 5.0, 5.0, 6.0, 6.0, 7.0, 7.0, 8.0, 8.0,
             ],
         )
-        .unwrap();
+        .expect("Test: edited operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Already balanced for easier testing
 
         let (balanced_data, balanced_targets) = create_balanced_dataset(
@@ -620,7 +633,7 @@ mod tests {
             BalancingStrategy::SMOTE { k_neighbors: 2 },
             Some(42),
         )
-        .unwrap();
+        .expect("Test: edited operation failed");
 
         // Check that classes remain balanced
         let class_0_count = balanced_targets.iter().filter(|&&x| x == 0.0).count();
@@ -632,7 +645,8 @@ mod tests {
     #[test]
     fn test_balancing_strategy_with_multiple_classes() {
         // Test with 3 classes of different sizes
-        let data = Array2::from_shape_vec((9, 2), (0..18).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((9, 2), (0..18).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0]);
         // Class distribution: 0 (2 samples), 1 (4 samples), 2 (3 samples)
 
@@ -643,7 +657,7 @@ mod tests {
             BalancingStrategy::RandomOversample,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: borderline SMOTE operation failed");
 
         let over_class_0_count = over_targets.iter().filter(|&&x| x == 0.0).count();
         let over_class_1_count = over_targets.iter().filter(|&&x| x == 1.0).count();
@@ -661,7 +675,7 @@ mod tests {
             BalancingStrategy::RandomUndersample,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: borderline SMOTE operation failed");
 
         let under_class_0_count = under_targets.iter().filter(|&&x| x == 0.0).count();
         let under_class_1_count = under_targets.iter().filter(|&&x| x == 1.0).count();

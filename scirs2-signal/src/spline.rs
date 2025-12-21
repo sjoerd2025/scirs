@@ -89,7 +89,7 @@ impl std::str::FromStr for SplineOrder {
 ///
 /// // Compute cubic B-spline basis at several points
 /// let x: Vec<f64> = (0..10).map(|i| i as f64 / 9.0).collect();
-/// let y = bspline_basis(&x, SplineOrder::Cubic).unwrap();
+/// let y = bspline_basis(&x, SplineOrder::Cubic).expect("Operation failed");
 ///
 /// // Verify that we got the expected number of values
 /// assert_eq!(y.len(), x.len());
@@ -482,7 +482,7 @@ fn apply_anticausal_filter(c: &mut [f64], n: SplineOrder) {
 /// let signal = vec![1.0, 1.2, 0.9, 1.1, 0.95, 1.05, 0.9, 1.1];
 ///
 /// // Apply cubic B-spline filter
-/// let filtered = bspline_filter(&signal, SplineOrder::Cubic).unwrap();
+/// let filtered = bspline_filter(&signal, SplineOrder::Cubic).expect("Operation failed");
 ///
 /// // Filtered signal should be smoother
 /// assert_eq!(filtered.len(), signal.len());
@@ -533,7 +533,7 @@ where
 /// let signal = vec![1.0, 2.0, 1.5, 0.5, 1.0, 2.0, 1.5];
 ///
 /// // Compute cubic B-spline coefficients
-/// let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();
+/// let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).expect("Operation failed");
 ///
 /// // Coefficients should have the same length as input
 /// assert_eq!(coeffs.len(), signal.len());
@@ -614,11 +614,11 @@ where
 /// let signal = vec![1.0, 2.0, 1.5, 0.5, 1.0, 2.0, 1.5];
 ///
 /// // Compute cubic B-spline coefficients
-/// let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();
+/// let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).expect("Operation failed");
 ///
 /// // Evaluate at non-integer positions
 /// let x = vec![0.5, 1.5, 2.5, 3.5, 4.5, 5.5];
-/// let values = bspline_evaluate(&coeffs, &x, SplineOrder::Cubic).unwrap();
+/// let values = bspline_evaluate(&coeffs, &x, SplineOrder::Cubic).expect("Operation failed");
 ///
 /// // Should get same number of output values as input positions
 /// assert_eq!(values.len(), x.len());
@@ -803,7 +803,7 @@ where
 /// let signal = vec![1.0, 1.2, 0.9, 1.1, 0.95, 1.05, 0.9, 1.1];
 ///
 /// // Smooth the signal with cubic B-spline
-/// let smoothed = bspline_smooth(&signal, SplineOrder::Cubic, 1.0).unwrap();
+/// let smoothed = bspline_smooth(&signal, SplineOrder::Cubic, 1.0).expect("Operation failed");
 ///
 /// // Smoothed signal should have the same length
 /// assert_eq!(smoothed.len(), signal.len());
@@ -889,11 +889,11 @@ where
 /// let signal = vec![1.0, 2.0, 1.5, 0.5, 1.0, 2.0, 1.5];
 ///
 /// // Compute cubic B-spline coefficients
-/// let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();
+/// let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).expect("Operation failed");
 ///
 /// // Evaluate first derivative at integer positions
 /// let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let deriv = bspline_derivative(&coeffs, &x, SplineOrder::Cubic, 1).unwrap();
+/// let deriv = bspline_derivative(&coeffs, &x, SplineOrder::Cubic, 1).expect("Operation failed");
 ///
 /// // Should get same number of output values as input positions
 /// assert_eq!(deriv.len(), x.len());
@@ -993,7 +993,7 @@ mod tests {
     fn test_bspline_basis_cubic() {
         // Test cubic B-spline basis function
         let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
-        let basis = bspline_basis(&x, SplineOrder::Cubic).unwrap();
+        let basis = bspline_basis(&x, SplineOrder::Cubic).expect("Operation failed");
 
         // Check values at specific points
         assert_relative_eq!(basis[0], 0.0, epsilon = 1e-10); // B(0) = 0
@@ -1007,7 +1007,7 @@ mod tests {
         let b = vec![0.5, 0.5];
         // Test B-spline filter on a constant signal
         let signal = vec![1.0; 10];
-        let filtered = bspline_filter(&signal, SplineOrder::Cubic).unwrap();
+        let filtered = bspline_filter(&signal, SplineOrder::Cubic).expect("Operation failed");
 
         // For now, just check that the filter doesn't crash and produces reasonable output
         assert_eq!(filtered.len(), signal.len());
@@ -1019,7 +1019,7 @@ mod tests {
 
         // Test on a ramp signal
         let ramp: Vec<f64> = (0..10).map(|i| i as f64).collect();
-        let filtered_ramp = bspline_filter(&ramp, SplineOrder::Cubic).unwrap();
+        let filtered_ramp = bspline_filter(&ramp, SplineOrder::Cubic).expect("Operation failed");
 
         // Check that the filter produces reasonable output
         assert_eq!(filtered_ramp.len(), ramp.len());
@@ -1034,7 +1034,7 @@ mod tests {
         let b = vec![0.5, 0.5];
         // Test B-spline coefficients on a constant signal
         let signal = vec![1.0; 10];
-        let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();
+        let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).expect("Operation failed");
 
         // Coefficient length should match signal length
         assert_eq!(coeffs.len(), signal.len());
@@ -1053,11 +1053,11 @@ mod tests {
         let signal: Vec<f64> = vec![1.0, 2.0, 3.0, 2.0, 1.0];
 
         // Compute cubic B-spline coefficients
-        let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();
+        let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).expect("Operation failed");
 
         // Evaluate at points within the valid range [0, n-1]
         let x: Vec<f64> = vec![0.0, 1.0, 2.0, 3.0, 4.0];
-        let values = bspline_evaluate(&coeffs, &x, SplineOrder::Cubic).unwrap();
+        let values = bspline_evaluate(&coeffs, &x, SplineOrder::Cubic).expect("Operation failed");
 
         // Check that values are finite
         for &val in values.iter() {
@@ -1066,7 +1066,8 @@ mod tests {
 
         // Also test evaluation at intermediate points
         let x_mid: Vec<f64> = vec![0.5, 1.5, 2.5, 3.5];
-        let values_mid = bspline_evaluate(&coeffs, &x_mid, SplineOrder::Cubic).unwrap();
+        let values_mid =
+            bspline_evaluate(&coeffs, &x_mid, SplineOrder::Cubic).expect("Operation failed");
 
         for &val in values_mid.iter() {
             assert!(val.is_finite());
@@ -1074,7 +1075,8 @@ mod tests {
 
         // Evaluate at intermediate points
         let x_half: Vec<f64> = vec![0.5, 1.5, 2.5, 3.5];
-        let values_half = bspline_evaluate(&coeffs, &x_half, SplineOrder::Cubic).unwrap();
+        let values_half =
+            bspline_evaluate(&coeffs, &x_half, SplineOrder::Cubic).expect("Operation failed");
 
         // Values at intermediate points should be reasonable
         for &val in values_half.iter() {
@@ -1090,7 +1092,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 1.5, 3.0, 2.5, 4.0, 3.5, 2.0, 1.0];
 
         // Smooth with cubic B-spline
-        let smoothed = bspline_smooth(&signal, SplineOrder::Cubic, 1.0).unwrap();
+        let smoothed = bspline_smooth(&signal, SplineOrder::Cubic, 1.0).expect("Operation failed");
 
         // Check that smoothed signal is valid
         assert_eq!(smoothed.len(), signal.len());
@@ -1099,13 +1101,14 @@ mod tests {
         }
 
         // Test with zero smoothing (should return original signal)
-        let no_smooth = bspline_smooth(&signal, SplineOrder::Cubic, 0.0).unwrap();
+        let no_smooth = bspline_smooth(&signal, SplineOrder::Cubic, 0.0).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(no_smooth[i], signal[i], epsilon = 1e-10);
         }
 
         // Test with high smoothing (should approach mean)
-        let high_smooth = bspline_smooth(&signal, SplineOrder::Cubic, 1e7).unwrap();
+        let high_smooth =
+            bspline_smooth(&signal, SplineOrder::Cubic, 1e7).expect("Operation failed");
         let mean = signal.iter().sum::<f64>() / signal.len() as f64;
         for &val in &high_smooth {
             assert_relative_eq!(val, mean, epsilon = 1e-6);
@@ -1120,12 +1123,13 @@ mod tests {
         let signal: Vec<f64> = vec![1.0, 2.0, 4.0, 2.0, 1.0];
 
         // Compute cubic B-spline coefficients
-        let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();
+        let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).expect("Operation failed");
 
         // Evaluate first derivative at points within valid range
         // For n=5 coefficients and 1st derivative, valid range is [0, 3]
         let x1: Vec<f64> = vec![0.5, 1.0, 1.5, 2.0];
-        let deriv = bspline_derivative(&coeffs, &x1, SplineOrder::Cubic, 1).unwrap();
+        let deriv =
+            bspline_derivative(&coeffs, &x1, SplineOrder::Cubic, 1).expect("Operation failed");
 
         // Just check that derivatives are finite
         for &val in deriv.iter() {
@@ -1135,7 +1139,8 @@ mod tests {
         // Evaluate second derivative
         // For n=5 coefficients and 2nd derivative, valid range is [0, 2]
         let x2: Vec<f64> = vec![0.5, 1.0, 1.5];
-        let deriv2 = bspline_derivative(&coeffs, &x2, SplineOrder::Cubic, 2).unwrap();
+        let deriv2 =
+            bspline_derivative(&coeffs, &x2, SplineOrder::Cubic, 2).expect("Operation failed");
 
         // Just check that second derivatives are finite
         for &val in deriv2.iter() {

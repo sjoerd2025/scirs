@@ -1843,7 +1843,7 @@ mod tests {
         let result = validator.validate_production_readiness();
         assert!(result.is_ok());
 
-        let validation_results = result.unwrap();
+        let validation_results = result.expect("Operation failed");
         assert!(validation_results.readiness_score >= 0.0);
         assert!(validation_results.readiness_score <= 1.0);
     }
@@ -1886,7 +1886,7 @@ mod tests {
 
         let metric = monitor.get_metric("test_metric");
         assert!(metric.is_some());
-        assert!(!metric.unwrap().values.is_empty());
+        assert!(!metric.expect("Operation failed").values.is_empty());
     }
 
     #[test]
@@ -1910,7 +1910,7 @@ mod tests {
 
         let results = checker.run_health_checks();
         assert!(results.is_ok());
-        assert_eq!(results.unwrap().len(), 1);
+        assert_eq!(results.expect("Operation failed").len(), 1);
         assert_eq!(checker.current_status, HealthStatus::Healthy);
     }
 }

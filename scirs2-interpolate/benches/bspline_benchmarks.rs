@@ -24,7 +24,7 @@ fn generate_bspline(degree: usize, ncoeffs: usize) -> BSpline<f64> {
         degree,
         ExtrapolateMode::Extrapolate,
     )
-    .unwrap()
+    .expect("Test: operation failed")
 }
 
 #[allow(dead_code)]
@@ -134,7 +134,7 @@ fn bench_cached_bspline(c: &mut Criterion) {
             ExtrapolateMode::Extrapolate,
             cache,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let queries = Array1::linspace(0.5, 9.5, 1000);
 
@@ -203,7 +203,7 @@ fn bench_bspline_construction(c: &mut Criterion) {
     // Test least-squares spline construction
     for data_size in [100, 500, 1000, 2000].iter() {
         let (x, y) = generate_test_data(*data_size);
-        let knots = generate_knots(&x.view(), 3, "uniform").unwrap();
+        let knots = generate_knots(&x.view(), 3, "uniform").expect("Test: operation failed");
 
         group.bench_with_input(
             BenchmarkId::new("least_squares", data_size),
@@ -283,7 +283,7 @@ fn bench_basis_element_evaluation(c: &mut Criterion) {
         // Create basis element
         let basis =
             BSpline::basis_element(*degree, 10, &knots.view(), ExtrapolateMode::Extrapolate)
-                .unwrap();
+                .expect("Test: operation failed");
 
         group.throughput(Throughput::Elements(queries.len() as u64));
         group.bench_with_input(BenchmarkId::new("degree", degree), degree, |b, _| {

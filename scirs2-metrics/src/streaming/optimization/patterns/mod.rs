@@ -98,7 +98,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
         };
 
         if adaptation_needed.is_some() {
-            let trigger = adaptation_needed.unwrap();
+            let trigger = adaptation_needed.expect("Operation failed");
             let new_size = self.adapt_window_size(&trigger)?;
             
             if new_size != self.current_window_size {
@@ -144,7 +144,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
                     // This would typically be triggered by external drift detection
                     // For now, we'll use a simple heuristic based on variance
                     let metrics = self.performance_tracker.get_current_metrics();
-                    if metrics.variance > F::from(*confidence).unwrap() {
+                    if metrics.variance > F::from(*confidence).expect("Failed to convert to float") {
                         return Ok(Some(trigger.clone()));
                     }
                 }
@@ -199,8 +199,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
             WindowAdaptationStrategy::Fixed => self.current_window_size,
             
             WindowAdaptationStrategy::ExponentialDecay { decay_rate } => {
-                let decay = F::from(*decay_rate).unwrap();
-                let adapted_size = F::from(self.current_window_size).unwrap() * decay;
+                let decay = F::from(*decay_rate).expect("Failed to convert to float");
+                let adapted_size = F::from(self.current_window_size).expect("Failed to convert to float") * decay;
                 adapted_size.to_usize().unwrap_or(self.current_window_size)
             }
             
@@ -227,7 +227,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
                     }
                     _ => {
                         // Gradual adaptation
-                        if current_metrics.variance > F::from(0.1).unwrap() {
+                        if current_metrics.variance > F::from(0.1).expect("Failed to convert constant to float") {
                             (self.current_window_size as f64 * 0.9) as usize
                         } else {
                             (self.current_window_size as f64 * 1.1) as usize
@@ -311,19 +311,19 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
         }
 
         let values: Vec<F> = self.window_data.iter().map(|p| p.value).collect();
-        let mean = values.iter().copied().fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).unwrap();
+        let mean = values.iter().copied().fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).expect("Operation failed");
         
         let variance = values.iter()
             .map(|&x| {
                 let diff = x - mean;
                 diff * diff
             })
-            .fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).unwrap();
+            .fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).expect("Operation failed");
 
         let min_value = values.iter().copied().fold(F::infinity(), |acc, x| acc.min(x));
         let max_value = values.iter().copied().fold(F::neg_infinity(), |acc, x| acc.max(x));
 
-        let oldest_timestamp = self.window_data.front().unwrap().timestamp;
+        let oldest_timestamp = self.window_data.front().expect("Operation failed").timestamp;
         let age = SystemTime::now().duration_since(oldest_timestamp).unwrap_or(Duration::from_secs(0));
 
         WindowStatistics {
@@ -464,23 +464,23 @@ impl<F: Float + std::fmt::Debug> WindowPerformanceTracker<F> {
         }
 
         let values: Vec<F> = window_data.iter().map(|p| p.value).collect();
-        let mean = values.iter().copied().fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).unwrap();
+        let mean = values.iter().copied().fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).expect("Operation failed");
         
         let variance = values.iter()
             .map(|&x| {
                 let diff = x - mean;
                 diff * diff
             })
-            .fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).unwrap();
+            .fold(F::zero(), |acc, x| acc + x) / F::from(values.len()).expect("Operation failed");
 
         let processing_time = self.last_update.elapsed();
 
         self.current_metrics = WindowPerformanceMetrics {
-            accuracy: F::from(0.95).unwrap(), // Placeholder - would be calculated based on predictions
+            accuracy: F::from(0.95).expect("Failed to convert constant to float"), // Placeholder - would be calculated based on predictions
             variance,
             processing_latency: processing_time,
-            throughput: F::from(values.len()).unwrap() / F::from(processing_time.as_secs_f64()).unwrap(),
-            memory_usage: F::from(values.len() * std::mem::size_of::<F>()).unwrap(),
+            throughput: F::from(values.len()).expect("Operation failed") / F::from(processing_time.as_secs_f64()).expect("Operation failed"),
+            memory_usage: F::from(values.len() * std::mem::size_of::<F>()).expect("Operation failed"),
         };
 
         // Store metrics history
@@ -555,7 +555,7 @@ mod tests {
             WindowAdaptationStrategy::Fixed
         );
         
-        let result = manager.add_data_point(1.0, SystemTime::now()).unwrap();
+        let result = manager.add_data_point(1.0, SystemTime::now()).expect("Operation failed");
         assert_eq!(result.window_size, 100);
         assert!(!result.adaptation_performed);
     }
@@ -570,11 +570,11 @@ mod tests {
         );
         
         // Try to set size below minimum
-        manager.set_window_size(5).unwrap();
+        manager.set_window_size(5).expect("Operation failed");
         assert_eq!(manager.get_current_size(), 10);
         
         // Try to set size above maximum
-        manager.set_window_size(200).unwrap();
+        manager.set_window_size(200).expect("Operation failed");
         assert_eq!(manager.get_current_size(), 100);
     }
 
@@ -589,7 +589,7 @@ mod tests {
         
         // Add some data points
         for i in 0..5 {
-            manager.add_data_point(i as f64, SystemTime::now()).unwrap();
+            manager.add_data_point(i as f64, SystemTime::now()).expect("Operation failed");
         }
         
         let stats = manager.get_window_statistics();

@@ -11,7 +11,7 @@ fn main() {
         let matrix = convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], g);
         println!(
             "Original matrix shape: {:?}",
-            matrix.eval(g).unwrap().shape()
+            matrix.eval(g).expect("Operation failed").shape()
         );
 
         // Compute SVD
@@ -128,18 +128,22 @@ fn main() {
         println!("\nReconstruction error check:");
         let orig_mat = matrix
             .eval(g)
-            .unwrap()
+            .expect("Operation failed")
             .into_dimensionality::<Ix2>()
-            .unwrap();
+            .expect("Operation failed");
 
         // Recreate the S diagonal matrix
-        let s_eval = s.eval(g).unwrap();
-        let u_eval = u.eval(g).unwrap();
-        let v_eval = v.eval(g).unwrap();
+        let s_eval = s.eval(g).expect("Operation failed");
+        let u_eval = u.eval(g).expect("Operation failed");
+        let v_eval = v.eval(g).expect("Operation failed");
 
         // Convert to 2D arrays for matrix multiplication
-        let u_2d = u_eval.into_dimensionality::<Ix2>().unwrap();
-        let v_2d = v_eval.into_dimensionality::<Ix2>().unwrap();
+        let u_2d = u_eval
+            .into_dimensionality::<Ix2>()
+            .expect("Operation failed");
+        let v_2d = v_eval
+            .into_dimensionality::<Ix2>()
+            .expect("Operation failed");
 
         // Manually perform A ≈ U * diag(S) * V^T
         // First create a diagonal matrix from S

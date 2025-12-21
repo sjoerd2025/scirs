@@ -489,7 +489,7 @@ mod tests {
         let baseline =
             history.get_baseline(ProcessorType::QuantumInspired, "test", "execution_time");
         assert!(baseline.is_some());
-        assert!(baseline.unwrap() > 100.0);
+        assert!(baseline.expect("Operation failed") > 100.0);
     }
 
     #[test]

@@ -36,7 +36,8 @@ pub struct MambaBlock<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
     /// Create new Mamba block
     pub fn new(input_dim: usize, state_dim: usize) -> Self {
-        let scale = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         Self {

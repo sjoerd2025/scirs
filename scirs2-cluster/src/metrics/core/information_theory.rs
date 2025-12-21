@@ -33,7 +33,7 @@ use crate::utils::contingency::build_contingency_matrix;
 ///
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let labels_pred = Array1::from_vec(vec![0, 1, 0, 1]);
-/// let js: f64 = jensen_shannon_divergence(labels_true.view(), labels_pred.view()).unwrap();
+/// let js: f64 = jensen_shannon_divergence(labels_true.view(), labels_pred.view()).expect("Operation failed");
 /// ```
 pub fn jensen_shannon_divergence<F>(
     labels_true: ArrayView1<i32>,
@@ -60,10 +60,12 @@ where
     // Compute average distribution
     let mut m = HashMap::new();
     for (label, &prob) in &p {
-        *m.entry(*label).or_insert(F::zero()) += prob / F::from(2.0).unwrap();
+        *m.entry(*label).or_insert(F::zero()) +=
+            prob / F::from(2.0).expect("Failed to convert constant to float");
     }
     for (label, &prob) in &q {
-        *m.entry(*label).or_insert(F::zero()) += prob / F::from(2.0).unwrap();
+        *m.entry(*label).or_insert(F::zero()) +=
+            prob / F::from(2.0).expect("Failed to convert constant to float");
     }
 
     // Compute KL divergences
@@ -71,7 +73,7 @@ where
     let kl_qm = kl_divergence(&q, &m)?;
 
     // Jensen-Shannon divergence
-    let js = (kl_pm + kl_qm) / F::from(2.0).unwrap();
+    let js = (kl_pm + kl_qm) / F::from(2.0).expect("Failed to convert constant to float");
     Ok(js.sqrt()) // Return the Jensen-Shannon distance
 }
 
@@ -94,7 +96,7 @@ where
 ///
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let labels_pred = Array1::from_vec(vec![0, 1, 0, 1]);
-/// let vi: f64 = variation_of_information(labels_true.view(), labels_pred.view()).unwrap();
+/// let vi: f64 = variation_of_information(labels_true.view(), labels_pred.view()).expect("Operation failed");
 /// ```
 pub fn variation_of_information<F>(
     labels_true: ArrayView1<i32>,
@@ -185,11 +187,11 @@ where
         }
 
         total_within_cluster_entropy +=
-            cluster_entropy * F::from_usize(cluster_indices.len()).unwrap();
+            cluster_entropy * F::from_usize(cluster_indices.len()).expect("Operation failed");
     }
 
     // Normalize by total samples
-    total_within_cluster_entropy /= F::from_usize(n_samples).unwrap();
+    total_within_cluster_entropy /= F::from_usize(n_samples).expect("Operation failed");
 
     // Higher entropy within clusters indicates worse clustering
     // Return inverse of entropy as quality measure
@@ -233,7 +235,7 @@ where
         return Ok(F::zero());
     }
 
-    let bin_width = range / F::from_usize(n_bins).unwrap();
+    let bin_width = range / F::from_usize(n_bins).expect("Operation failed");
 
     // Count values in each bin
     let mut bin_counts = vec![0; n_bins];
@@ -248,11 +250,11 @@ where
     }
 
     // Calculate entropy
-    let n_total = F::from_usize(values.len()).unwrap();
+    let n_total = F::from_usize(values.len()).expect("Operation failed");
     let mut entropy = F::zero();
     for &count in &bin_counts {
         if count > 0 {
-            let prob = F::from_usize(count).unwrap() / n_total;
+            let prob = F::from_usize(count).expect("Operation failed") / n_total;
             entropy = entropy - prob * prob.ln();
         }
     }
@@ -281,7 +283,11 @@ where
 
     let mut distribution = HashMap::new();
     for (label, count) in counts {
-        distribution.insert(label, F::from(count).unwrap() / F::from(total).unwrap());
+        distribution.insert(
+            label,
+            F::from(count).expect("Failed to convert to float")
+                / F::from(total).expect("Failed to convert to float"),
+        );
     }
 
     Ok(distribution)
@@ -295,7 +301,10 @@ where
     let mut kl = F::zero();
     for (label, &p_val) in p {
         if p_val > F::zero() {
-            let q_val = q.get(label).cloned().unwrap_or(F::from(1e-10).unwrap()); // Smoothing
+            let q_val = q
+                .get(label)
+                .cloned()
+                .unwrap_or(F::from(1e-10).expect("Failed to convert constant to float")); // Smoothing
             if q_val > F::zero() {
                 kl += p_val * (p_val / q_val).ln();
             }
@@ -322,7 +331,7 @@ where
                 let n_ij = contingency[[i, j]] as f64;
                 if n_ij > 0.0 {
                     let term = n_ij / n * (n_ij / n_j).ln();
-                    h_xy = h_xy - F::from(term).unwrap();
+                    h_xy = h_xy - F::from(term).expect("Failed to convert to float");
                 }
             }
         }
@@ -341,7 +350,8 @@ mod tests {
         let labels_true = Array1::from_vec(vec![0, 0, 1, 1]);
         let labels_pred = Array1::from_vec(vec![0, 1, 0, 1]);
 
-        let js: f64 = jensen_shannon_divergence(labels_true.view(), labels_pred.view()).unwrap();
+        let js: f64 = jensen_shannon_divergence(labels_true.view(), labels_pred.view())
+            .expect("Operation failed");
         assert!(js >= 0.0 && js <= 1.0);
     }
 
@@ -350,31 +360,33 @@ mod tests {
         let labels_true = Array1::from_vec(vec![0, 0, 1, 1]);
         let labels_pred = Array1::from_vec(vec![0, 1, 0, 1]);
 
-        let vi: f64 = variation_of_information(labels_true.view(), labels_pred.view()).unwrap();
+        let vi: f64 = variation_of_information(labels_true.view(), labels_pred.view())
+            .expect("Operation failed");
         assert!(vi >= 0.0);
     }
 
     #[test]
     fn test_information_cluster_quality() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let quality = information_cluster_quality(data.view(), labels.view()).unwrap();
+        let quality =
+            information_cluster_quality(data.view(), labels.view()).expect("Operation failed");
         assert!(quality.is_finite() && quality > 0.0);
     }
 
     #[test]
     fn test_calculate_entropy() {
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let entropy = calculate_entropy(&values).unwrap();
+        let entropy = calculate_entropy(&values).expect("Operation failed");
         assert!(entropy > 0.0);
     }
 
     #[test]
     fn test_label_distribution() {
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 1]);
-        let dist = label_distribution::<f64>(labels.view()).unwrap();
+        let dist = label_distribution::<f64>(labels.view()).expect("Operation failed");
 
         assert!((dist[&0] - 0.4).abs() < 1e-10);
         assert!((dist[&1] - 0.6).abs() < 1e-10);

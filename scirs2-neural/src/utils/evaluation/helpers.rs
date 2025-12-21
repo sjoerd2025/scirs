@@ -38,8 +38,8 @@ pub(crate) fn draw_line_with_coords(
         // Check bounds if max dimensions are provided
         let in_bounds = x >= 0
             && y >= 0
-            && (max_width.is_none() || x < max_width.unwrap() as isize)
-            && (max_height.is_none() || y < max_height.unwrap() as isize);
+            && (max_width.is_none() || x < max_width.expect("Operation failed") as isize)
+            && (max_height.is_none() || y < max_height.expect("Operation failed") as isize);
         if in_bounds {
             coords.push((x as usize, y as usize));
         }
@@ -54,8 +54,8 @@ pub(crate) fn draw_line_with_coords(
         }
     }
     // Add the endpoint if in bounds
-    let end_in_bounds = (max_width.is_none() || x2 < max_width.unwrap())
-        && (max_height.is_none() || y2 < max_height.unwrap());
+    let end_in_bounds = (max_width.is_none() || x2 < max_width.expect("Operation failed"))
+        && (max_height.is_none() || y2 < max_height.expect("Operation failed"));
     if end_in_bounds {
         coords.push((x2, y2));
     }

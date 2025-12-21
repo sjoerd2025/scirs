@@ -38,10 +38,10 @@
 //!
 //! // Create Kriging interpolator with spherical variogram
 //! let variogram = VariogramModel::spherical(1.0, 0.1, 0.0);
-//! let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
+//! let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).expect("Operation failed");
 //!
 //! // Interpolate at new location
-//! let prediction = kriging.predict(&[0.25, 0.25]).unwrap();
+//! let prediction = kriging.predict(&[0.25, 0.25]).expect("Operation failed");
 //! println!("Predicted value: {:.3}", prediction.value);
 //! println!("Prediction variance: {:.3}", prediction.variance);
 //! ```
@@ -303,7 +303,7 @@ impl OrdinaryKriging {
     /// let values = array![1.0, 2.0, 3.0];
     /// let variogram = VariogramModel::spherical(1.0, 0.5, 0.1);
     ///
-    /// let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
+    /// let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).expect("Operation failed");
     /// ```
     pub fn new(
         points: &ArrayView2<'_, f64>,
@@ -370,10 +370,10 @@ impl OrdinaryKriging {
     /// let values = array![1.0, 2.0, 3.0, 4.0];
     /// let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
     ///
-    /// let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
-    /// kriging.fit().unwrap();
+    /// let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).expect("Operation failed");
+    /// kriging.fit().expect("Operation failed");
     ///
-    /// let prediction = kriging.predict(&[0.5, 0.5]).unwrap();
+    /// let prediction = kriging.predict(&[0.5, 0.5]).expect("Operation failed");
     /// println!("Predicted: {:.3} ± {:.3}", prediction.value, prediction.variance.sqrt());
     /// ```
     pub fn predict(&self, location: &[f64]) -> SpatialResult<KrigingPrediction> {
@@ -870,16 +870,17 @@ mod tests {
     #[test]
     fn test_ordinary_kriging_basic() {
         // Simple 2D case
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
         let values = arr1(&[1.0, 2.0, 3.0, 4.0]);
 
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
-        let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
-        kriging.fit().unwrap();
+        let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram)
+            .expect("Operation failed");
+        kriging.fit().expect("Operation failed");
 
         // Predict at center
-        let prediction = kriging.predict(&[0.5, 0.5]).unwrap();
+        let prediction = kriging.predict(&[0.5, 0.5]).expect("Operation failed");
 
         // Should be close to the average of surrounding points
         assert!(prediction.value > 1.0);
@@ -894,14 +895,16 @@ mod tests {
     #[test]
     fn test_ordinary_kriging_exact_interpolation() {
         // Test that predictions at data locations are exact
-        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
         let values = arr1(&[1.0, 2.0, 3.0]);
 
         let variogram = VariogramModel::spherical(1.0, 0.5, 0.01); // Small nugget
-        let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
+        let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram)
+            .expect("Operation failed");
 
         // Predict at first data point
-        let prediction = kriging.predict(&[0.0, 0.0]).unwrap();
+        let prediction = kriging.predict(&[0.0, 0.0]).expect("Operation failed");
         assert_relative_eq!(prediction.value, 1.0, epsilon = 1e-6);
 
         // Variance should be small at data locations
@@ -910,14 +913,16 @@ mod tests {
 
     #[test]
     fn test_simple_kriging() {
-        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
         let values = arr1(&[1.5, 2.5, 3.5]);
         let mean = 2.0;
 
         let variogram = VariogramModel::exponential(1.0, 0.8, 0.1);
-        let kriging = SimpleKriging::new(&points.view(), &values.view(), mean, variogram).unwrap();
+        let kriging = SimpleKriging::new(&points.view(), &values.view(), mean, variogram)
+            .expect("Operation failed");
 
-        let prediction = kriging.predict(&[0.5, 0.5]).unwrap();
+        let prediction = kriging.predict(&[0.5, 0.5]).expect("Operation failed");
 
         // Should give reasonable prediction
         assert!(prediction.value > 1.0);
@@ -927,18 +932,21 @@ mod tests {
 
     #[test]
     fn test_batch_prediction() {
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
         let values = arr1(&[1.0, 2.0, 3.0, 4.0]);
 
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
-        let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
-        kriging.fit().unwrap();
+        let mut kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram)
+            .expect("Operation failed");
+        kriging.fit().expect("Operation failed");
 
-        let test_points =
-            Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.5, 0.5, 0.75, 0.75]).unwrap();
+        let test_points = Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.5, 0.5, 0.75, 0.75])
+            .expect("Operation failed");
 
-        let predictions = kriging.predict_batch(&test_points.view()).unwrap();
+        let predictions = kriging
+            .predict_batch(&test_points.view())
+            .expect("Operation failed");
 
         assert_eq!(predictions.len(), 3);
         for prediction in &predictions {
@@ -957,13 +965,14 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
         let values = arr1(&[1.0, 2.0, 3.0, 4.0, 2.5]);
 
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
-        let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
+        let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram)
+            .expect("Operation failed");
 
-        let errors = kriging.cross_validate().unwrap();
+        let errors = kriging.cross_validate().expect("Operation failed");
 
         assert_eq!(errors.len(), 5);
 
@@ -989,7 +998,8 @@ mod tests {
 
     #[test]
     fn test_error_cases() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).expect("Operation failed");
         let values = arr1(&[1.0, 2.0, 3.0]); // Wrong length
         let variogram = VariogramModel::spherical(1.0, 0.5, 0.1);
 
@@ -997,7 +1007,8 @@ mod tests {
         assert!(result.is_err());
 
         // Too few points
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).expect("Operation failed");
         let values = arr1(&[1.0, 2.0]);
         let variogram = VariogramModel::spherical(1.0, 0.5, 0.1);
 

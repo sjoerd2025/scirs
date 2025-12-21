@@ -414,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_eye_matrix() {
-        let eye_matrix = eye::<f64>(3).unwrap();
+        let eye_matrix = eye::<f64>(3).expect("Operation failed");
         assert_eq!(eye_matrix.shape(), (3, 3));
         assert_eq!(eye_matrix.get(0, 0), 1.0);
         assert_eq!(eye_matrix.get(1, 1), 1.0);
@@ -425,7 +425,7 @@ mod tests {
     #[test]
     fn test_diag_matrix() {
         let diag = vec![2.0, 3.0, 4.0];
-        let diag_matrix = diag_matrix(&diag, None).unwrap();
+        let diag_matrix = diag_matrix(&diag, None).expect("Operation failed");
         assert_eq!(diag_matrix.shape(), (3, 3));
         assert_eq!(diag_matrix.get(0, 0), 2.0);
         assert_eq!(diag_matrix.get(1, 1), 3.0);
@@ -435,15 +435,15 @@ mod tests {
     #[test]
     fn test_matrix_power() {
         let diag = vec![2.0, 3.0];
-        let matrix = diag_matrix(&diag, None).unwrap();
+        let matrix = diag_matrix(&diag, None).expect("Operation failed");
 
         // Test power 2
-        let matrix2 = matrix_power(&matrix, 2).unwrap();
+        let matrix2 = matrix_power(&matrix, 2).expect("Operation failed");
         assert_eq!(matrix2.get(0, 0), 4.0);
         assert_eq!(matrix2.get(1, 1), 9.0);
 
         // Test power 0 (identity)
-        let matrix0 = matrix_power(&matrix, 0).unwrap();
+        let matrix0 = matrix_power(&matrix, 0).expect("Operation failed");
         assert_eq!(matrix0.get(0, 0), 1.0);
         assert_eq!(matrix0.get(1, 1), 1.0);
     }

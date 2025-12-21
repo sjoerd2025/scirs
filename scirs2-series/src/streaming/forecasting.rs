@@ -95,7 +95,7 @@ impl<F: Float + Debug + Clone> StreamingForecaster<F> {
             return Ok(());
         }
 
-        let current_level = self.level.unwrap();
+        let current_level = self.level.expect("Operation failed");
         let mut new_level = value;
 
         // Handle seasonality
@@ -118,7 +118,7 @@ impl<F: Float + Debug + Clone> StreamingForecaster<F> {
         // Update trend if enabled
         if let Some(beta) = self.beta {
             if let Some(current_trend) = self.trend {
-                let new_trend = beta * (self.level.unwrap() - current_level)
+                let new_trend = beta * (self.level.expect("Operation failed") - current_level)
                     + (F::one() - beta) * current_trend;
                 self.trend = Some(new_trend);
             }
@@ -129,8 +129,8 @@ impl<F: Float + Debug + Clone> StreamingForecaster<F> {
             if self.seasonal.len() >= period {
                 let seasonal_idx = (self.observation_count - 1) % period;
                 let current_seasonal = self.seasonal[seasonal_idx];
-                let new_seasonal =
-                    gamma * (value - self.level.unwrap()) + (F::one() - gamma) * current_seasonal;
+                let new_seasonal = gamma * (value - self.level.expect("Operation failed"))
+                    + (F::one() - gamma) * current_seasonal;
                 self.seasonal[seasonal_idx] = new_seasonal;
             }
         }
@@ -147,11 +147,11 @@ impl<F: Float + Debug + Clone> StreamingForecaster<F> {
         }
 
         let mut forecasts = Array1::zeros(steps);
-        let level = self.level.unwrap();
+        let level = self.level.expect("Operation failed");
         let trend = self.trend.unwrap_or(F::zero());
 
         for h in 0..steps {
-            let h_f = F::from(h + 1).unwrap();
+            let h_f = F::from(h + 1).expect("Failed to convert to float");
             let mut forecast = level + trend * h_f;
 
             // Add seasonal component if available

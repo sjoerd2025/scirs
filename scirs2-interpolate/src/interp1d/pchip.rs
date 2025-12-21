@@ -65,7 +65,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
     /// let y = array![0.0f64, 1.0, 4.0, 9.0];
     ///
     /// // Create a PCHIP interpolator
-    /// let interp = PchipInterpolator::new(&x.view(), &y.view(), true).unwrap();
+    /// let interp = PchipInterpolator::new(&x.view(), &y.view(), true).expect("Operation failed");
     ///
     /// // Interpolate at x = 1.5
     /// let y_interp = interp.evaluate(1.5);
@@ -208,22 +208,22 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 
     /// Hermite basis function h₀₀(t)
     fn h00(t: F) -> F {
-        let two = F::from_f64(2.0).unwrap();
-        let three = F::from_f64(3.0).unwrap();
+        let two = F::from_f64(2.0).expect("Operation failed");
+        let three = F::from_f64(3.0).expect("Operation failed");
         (two * t * t * t) - (three * t * t) + F::one()
     }
 
     /// Hermite basis function h₁₀(t)
     fn h10(t: F) -> F {
-        let two = F::from_f64(2.0).unwrap();
+        let two = F::from_f64(2.0).expect("Operation failed");
         // three is not used in this function
         (t * t * t) - (two * t * t) + t
     }
 
     /// Hermite basis function h₀₁(t)
     fn h01(t: F) -> F {
-        let two = F::from_f64(2.0).unwrap();
-        let three = F::from_f64(3.0).unwrap();
+        let two = F::from_f64(2.0).expect("Operation failed");
+        let three = F::from_f64(3.0).expect("Operation failed");
         -(two * t * t * t) + (three * t * t)
     }
 
@@ -247,8 +247,8 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
     /// The estimated derivative at the endpoint
     fn edge_case(h0: F, h1: F, m0: F, m1: F) -> F {
         // One-sided three-point estimate for the derivative
-        let two = F::from_f64(2.0).unwrap();
-        let three = F::from_f64(3.0).unwrap();
+        let two = F::from_f64(2.0).expect("Operation failed");
+        let three = F::from_f64(3.0).expect("Operation failed");
 
         let d = ((two * h0 + h1) * m0 - h0 * m1) / (h0 + h1);
 
@@ -302,7 +302,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
         }
 
         // For interior points, use PCHIP formula
-        let two = F::from_f64(2.0).unwrap();
+        let two = F::from_f64(2.0).expect("Operation failed");
 
         for i in 1..n - 1 {
             // Determine if slopes have different signs or if either is zero
@@ -377,7 +377,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
 /// let xnew = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = pchip_interpolate(&x.view(), &y.view(), &xnew.view(), true).unwrap();
+/// let y_interp = pchip_interpolate(&x.view(), &y.view(), &xnew.view(), true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn pchip_interpolate<F: crate::traits::InterpolationFloat>(
@@ -401,18 +401,18 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let interp = PchipInterpolator::new(&x.view(), &y.view(), false).unwrap();
+        let interp = PchipInterpolator::new(&x.view(), &y.view(), false).expect("Operation failed");
 
         // Test points exactly at data points
-        assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-        assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-        assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-        assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+        assert_relative_eq!(interp.evaluate(0.0).expect("Operation failed"), 0.0);
+        assert_relative_eq!(interp.evaluate(1.0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(interp.evaluate(2.0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(interp.evaluate(3.0).expect("Operation failed"), 9.0);
 
         // Test points between data points - PCHIP should preserve shape
-        let y_interp_0_5 = interp.evaluate(0.5).unwrap();
-        let y_interp_1_5 = interp.evaluate(1.5).unwrap();
-        let y_interp_2_5 = interp.evaluate(2.5).unwrap();
+        let y_interp_0_5 = interp.evaluate(0.5).expect("Operation failed");
+        let y_interp_1_5 = interp.evaluate(1.5).expect("Operation failed");
+        let y_interp_2_5 = interp.evaluate(2.5).expect("Operation failed");
 
         // For this monotonically increasing data, PCHIP should preserve monotonicity
         assert!(y_interp_0_5 > 0.0 && y_interp_0_5 < 1.0);
@@ -426,24 +426,24 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![0.0, 1.0, 0.5, 0.0, 0.5, 2.0];
 
-        let interp = PchipInterpolator::new(&x.view(), &y.view(), false).unwrap();
+        let interp = PchipInterpolator::new(&x.view(), &y.view(), false).expect("Operation failed");
 
         // Check monotonicity preservation in the first segment (increasing)
-        let y_0_25 = interp.evaluate(0.25).unwrap();
-        let y_0_50 = interp.evaluate(0.50).unwrap();
-        let y_0_75 = interp.evaluate(0.75).unwrap();
+        let y_0_25 = interp.evaluate(0.25).expect("Operation failed");
+        let y_0_50 = interp.evaluate(0.50).expect("Operation failed");
+        let y_0_75 = interp.evaluate(0.75).expect("Operation failed");
         assert!(y_0_25 <= y_0_50 && y_0_50 <= y_0_75);
 
         // Check monotonicity preservation in the second segment (decreasing)
-        let y_1_25 = interp.evaluate(1.25).unwrap();
-        let y_1_50 = interp.evaluate(1.50).unwrap();
-        let y_1_75 = interp.evaluate(1.75).unwrap();
+        let y_1_25 = interp.evaluate(1.25).expect("Operation failed");
+        let y_1_50 = interp.evaluate(1.50).expect("Operation failed");
+        let y_1_75 = interp.evaluate(1.75).expect("Operation failed");
         assert!(y_1_25 >= y_1_50 && y_1_50 >= y_1_75);
 
         // Check monotonicity preservation in the last segment (increasing)
-        let y_4_25 = interp.evaluate(4.25).unwrap();
-        let y_4_50 = interp.evaluate(4.50).unwrap();
-        let y_4_75 = interp.evaluate(4.75).unwrap();
+        let y_4_25 = interp.evaluate(4.25).expect("Operation failed");
+        let y_4_50 = interp.evaluate(4.50).expect("Operation failed");
+        let y_4_75 = interp.evaluate(4.75).expect("Operation failed");
         assert!(y_4_25 <= y_4_50 && y_4_50 <= y_4_75);
     }
 
@@ -453,12 +453,14 @@ mod tests {
         let y = array![0.0, 1.0, 4.0, 9.0];
 
         // Test with extrapolation enabled
-        let interp_extrap = PchipInterpolator::new(&x.view(), &y.view(), true).unwrap();
-        let _y_minus_1 = interp_extrap.evaluate(-1.0).unwrap();
-        let _y_plus_4 = interp_extrap.evaluate(4.0).unwrap();
+        let interp_extrap =
+            PchipInterpolator::new(&x.view(), &y.view(), true).expect("Operation failed");
+        let _y_minus_1 = interp_extrap.evaluate(-1.0).expect("Operation failed");
+        let _y_plus_4 = interp_extrap.evaluate(4.0).expect("Operation failed");
 
         // Test with extrapolation disabled
-        let interp_no_extrap = PchipInterpolator::new(&x.view(), &y.view(), false).unwrap();
+        let interp_no_extrap =
+            PchipInterpolator::new(&x.view(), &y.view(), false).expect("Operation failed");
         assert!(interp_no_extrap.evaluate(-1.0).is_err());
         assert!(interp_no_extrap.evaluate(4.0).is_err());
     }
@@ -469,7 +471,8 @@ mod tests {
         let y = array![0.0, 1.0, 4.0, 9.0];
         let xnew = array![0.5, 1.5, 2.5];
 
-        let y_interp = pchip_interpolate(&x.view(), &y.view(), &xnew.view(), false).unwrap();
+        let y_interp =
+            pchip_interpolate(&x.view(), &y.view(), &xnew.view(), false).expect("Operation failed");
 
         // Test that the function returns the expected number of points
         assert_eq!(y_interp.len(), 3);

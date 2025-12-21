@@ -40,7 +40,7 @@
 //!
 //! // Solve the system efficiently
 //! let rhs = Array1::linspace(0.0, 1.0, n);
-//! let solution = solve_band_system(&band_matrix, &rhs.view()).unwrap();
+//! let solution = solve_band_system(&band_matrix, &rhs.view()).expect("Operation failed");
 //! ```
 
 use crate::error::{InterpolateError, InterpolateResult};
@@ -486,7 +486,7 @@ where
 /// matrix.set_subdiagonal(2, -1.0);
 ///
 /// let rhs = Array1::from_vec(vec![1.0, 2.0, 1.0]);
-/// let solution = solve_band_system(&matrix, &rhs.view()).unwrap();
+/// let solution = solve_band_system(&matrix, &rhs.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn solve_band_system<T>(
@@ -584,7 +584,7 @@ where
         }
 
         // Check for singular matrix
-        if max_val < T::from_f64(1e-14).unwrap() {
+        if max_val < T::from_f64(1e-14).expect("Operation failed") {
             return Err(InterpolateError::invalid_input(
                 "matrix is singular or nearly singular".to_string(),
             ));
@@ -679,7 +679,7 @@ where
                 }
             }
 
-            if diagonal.abs() < T::from_f64(1e-14).unwrap() {
+            if diagonal.abs() < T::from_f64(1e-14).expect("Operation failed") {
                 return Err(InterpolateError::invalid_input(
                     "_matrix has zero diagonal element".to_string(),
                 ));
@@ -955,7 +955,9 @@ mod tests {
 
         // Test matrix-vector multiplication
         let x = array![1.0, 2.0, 3.0];
-        let y = band_matrix.multiply_vector(&x.view()).unwrap();
+        let y = band_matrix
+            .multiply_vector(&x.view())
+            .expect("Operation failed");
 
         // Expected: [2*1 + (-1)*2, (-1)*1 + 2*2 + (-1)*3, (-1)*2 + 2*3] = [0, 0, 4]
         assert_relative_eq!(y[0], 0.0, epsilon = 1e-10);
@@ -981,7 +983,7 @@ mod tests {
 
         // Test matrix-vector multiplication
         let x = array![1.0, 2.0, 3.0];
-        let y = sparse.multiply_vector(&x.view()).unwrap();
+        let y = sparse.multiply_vector(&x.view()).expect("Operation failed");
 
         assert_relative_eq!(y[0], 0.0, epsilon = 1e-10);
         assert_relative_eq!(y[1], 0.0, epsilon = 1e-10);
@@ -1006,10 +1008,12 @@ mod tests {
         matrix.set_subdiagonal(2, 1.0);
 
         let rhs = array![2.0, 4.0, 2.0];
-        let solution = solve_band_system(&matrix, &rhs.view()).unwrap();
+        let solution = solve_band_system(&matrix, &rhs.view()).expect("Operation failed");
 
         // Verify solution by substitution
-        let verification = matrix.multiply_vector(&solution.view()).unwrap();
+        let verification = matrix
+            .multiply_vector(&solution.view())
+            .expect("Operation failed");
         for i in 0..3 {
             assert_relative_eq!(verification[i], rhs[i], epsilon = 1e-10);
         }
@@ -1023,7 +1027,8 @@ mod tests {
         let sparse = CSRMatrix::from_dense(&dense.view(), 1e-12);
         let rhs = array![4.0, 9.0, 16.0];
 
-        let solution = solve_sparse_system(&sparse, &rhs.view(), 1e-10, 100).unwrap();
+        let solution =
+            solve_sparse_system(&sparse, &rhs.view(), 1e-10, 100).expect("Operation failed");
 
         // Expected solution: [2, 3, 4]
         assert_relative_eq!(solution[0], 2.0, epsilon = 1e-8);
@@ -1046,7 +1051,8 @@ mod tests {
         let matrix = array![[1.0, 1.0], [2.0, 1.0], [3.0, 1.0]];
         let rhs = array![2.0, 3.0, 4.0];
 
-        let solution = solve_structured_least_squares(&matrix.view(), &rhs.view(), None).unwrap();
+        let solution = solve_structured_least_squares(&matrix.view(), &rhs.view(), None)
+            .expect("Operation failed");
 
         // Verify that the solution minimizes the residual
         let residual = {

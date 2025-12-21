@@ -97,7 +97,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // SIMD evaluation
             let start = Instant::now();
-            let simd_results = simd_evaluator_smooth.eval_batch(eval_points.as_slice().unwrap())?;
+            let simd_results = simd_evaluator_smooth
+                .eval_batch(eval_points.as_slice().expect("Test: operation failed"))?;
             let simd_duration = start.elapsed();
 
             // Scalar evaluation for comparison
@@ -150,7 +151,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("   Testing {} specific points:", test_points.len());
 
         // Test smooth spline
-        let simd_smooth = simd_evaluator_smooth.eval_batch(test_points.as_slice().unwrap())?;
+        let simd_smooth = simd_evaluator_smooth
+            .eval_batch(test_points.as_slice().expect("Test: operation failed"))?;
         println!("   Smooth spline results:");
         for (&point, &result) in test_points.iter().zip(simd_smooth.iter()) {
             println!("     f({:.3}) = {:8.5}", point, result);
@@ -168,7 +170,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Test oscillatory spline
         let osc_test_points = Array1::linspace(0.0, 4.0 * std::f64::consts::PI, 8);
-        let simd_osc = simd_evaluator_osc.eval_batch(osc_test_points.as_slice().unwrap())?;
+        let simd_osc = simd_evaluator_osc
+            .eval_batch(osc_test_points.as_slice().expect("Test: operation failed"))?;
 
         println!("\n   Oscillatory spline results:");
         for (&point, &result) in osc_test_points.iter().zip(simd_osc.iter()) {
@@ -182,7 +185,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Batch evaluation
         let start = Instant::now();
-        let _batch_results = simd_evaluator_smooth.eval_batch(large_batch.as_slice().unwrap())?;
+        let _batch_results = simd_evaluator_smooth
+            .eval_batch(large_batch.as_slice().expect("Test: operation failed"))?;
         let batch_time = start.elapsed();
 
         // Individual evaluations
@@ -218,7 +222,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         for &size in &chunk_sizes {
             let points = Array1::linspace(2.0, 8.0, size);
-            let results = simd_evaluator_smooth.eval_batch(points.as_slice().unwrap())?;
+            let results = simd_evaluator_smooth
+                .eval_batch(points.as_slice().expect("Test: operation failed"))?;
 
             println!(
                 "   {} points -> {} results (SIMD chunks: {})",
@@ -238,8 +243,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (knots[0] + knots[knots.len() - 1]) / 2.0, // Middle
         ]);
 
-        let boundary_results =
-            simd_evaluator_smooth.eval_batch(boundary_points.as_slice().unwrap())?;
+        let boundary_results = simd_evaluator_smooth
+            .eval_batch(boundary_points.as_slice().expect("Test: operation failed"))?;
 
         println!("   Boundary value tests:");
         for (i, (&point, &result)) in boundary_points
@@ -253,7 +258,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Test very small batch (should fall back to scalar)
         let tiny_batch = Array1::from_vec(vec![5.0]);
-        let tiny_result = simd_evaluator_smooth.eval_batch(tiny_batch.as_slice().unwrap())?;
+        let tiny_result = simd_evaluator_smooth
+            .eval_batch(tiny_batch.as_slice().expect("Test: operation failed"))?;
         println!(
             "   Single point batch: f({}) = {:.5}",
             tiny_batch[0], tiny_result[0]

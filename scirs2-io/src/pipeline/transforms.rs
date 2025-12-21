@@ -47,8 +47,8 @@ where
             let normalized = match &self.method {
                 NormalizationMethod::MinMax { min, max } => normalize_minmax(
                     *array,
-                    T::from_f64(*min).unwrap(),
-                    T::from_f64(*max).unwrap(),
+                    T::from_f64(*min).expect("Operation failed"),
+                    T::from_f64(*max).expect("Operation failed"),
                 ),
                 NormalizationMethod::ZScore => normalize_zscore(*array),
                 NormalizationMethod::L1 => normalize_l1(*array),
@@ -86,7 +86,7 @@ fn normalize_zscore<T>(mut array: Array2<T>) -> Array2<T>
 where
     T: Float + FromPrimitive,
 {
-    let n = T::from_usize(array.len()).unwrap();
+    let n = T::from_usize(array.len()).expect("Operation failed");
     let mean = array.iter().fold(T::zero(), |a, &b| a + b) / n;
     let variance = array.iter().fold(T::zero(), |a, &b| {
         let diff = b - mean;
@@ -242,7 +242,8 @@ impl DataTransformer for AggregateTransform {
                     Box::new(array.sum_axis(axis)) as Box<dyn Any + Send + Sync>
                 }
                 (AggregationMethod::Mean, Some(axis)) => {
-                    Box::new(array.mean_axis(axis).unwrap()) as Box<dyn Any + Send + Sync>
+                    Box::new(array.mean_axis(axis).expect("Operation failed"))
+                        as Box<dyn Any + Send + Sync>
                 }
                 (AggregationMethod::Sum, None) => {
                     Box::new(array.sum()) as Box<dyn Any + Send + Sync>
@@ -452,7 +453,7 @@ impl DataTransformer for OutlierTransform {
 
                     for row in array.axis_iter(Axis(0)) {
                         let mut values: Vec<f64> = row.to_vec();
-                        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                        values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                         let n = values.len();
                         let q1_idx = n / 4;
@@ -521,7 +522,7 @@ impl PCATransform {
         }
 
         // Center the data
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let centered = data - &mean.clone().insert_axis(Axis(0));
 
         // Compute covariance matrix
@@ -613,7 +614,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                             Axis(1),
                             &[result.view(), log_features.view()],
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                     }
                     FeatureOperation::Sqrt => {
                         let sqrt_features = result.mapv(|x| if x >= 0.0 { x.sqrt() } else { 0.0 });
@@ -621,7 +622,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                             Axis(1),
                             &[result.view(), sqrt_features.view()],
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                     }
                     FeatureOperation::Square => {
                         let square_features = result.mapv(|x| x * x);
@@ -629,7 +630,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                             Axis(1),
                             &[result.view(), square_features.view()],
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                     }
                     FeatureOperation::Polynomial { degree } => {
                         let mut poly_features = result.clone();
@@ -639,7 +640,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                                 Axis(1),
                                 &[poly_features.view(), power_features.view()],
                             )
-                            .unwrap();
+                            .expect("Operation failed");
                         }
                         result = poly_features;
                     }
@@ -655,7 +656,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                                 Axis(1),
                                 &[result.view(), interaction_col.insert_axis(Axis(1)).view()],
                             )
-                            .unwrap();
+                            .expect("Operation failed");
                         }
                     }
                     FeatureOperation::Binning { n_bins, strategy } => {
@@ -678,7 +679,7 @@ impl DataTransformer for FeatureEngineeringTransform {
                             Axis(1),
                             &[result.view(), binned_features.view()],
                         )
-                        .unwrap();
+                        .expect("Operation failed");
                     }
                 }
             }
@@ -780,8 +781,8 @@ mod tests {
         let transform =
             NormalizeTransform::<f64>::new(NormalizationMethod::MinMax { min: 0.0, max: 1.0 });
         let data = Box::new(arr2(&[[1.0, 2.0], [3.0, 4.0]])) as Box<dyn Any + Send + Sync>;
-        let result = transform.transform(data).unwrap();
-        let normalized = result.downcast::<Array2<f64>>().unwrap();
+        let result = transform.transform(data).expect("Operation failed");
+        let normalized = result.downcast::<Array2<f64>>().expect("Operation failed");
 
         assert!((normalized[[0, 0]] - 0.0).abs() < 1e-6);
         assert!((normalized[[1, 1]] - 1.0).abs() < 1e-6);
@@ -795,8 +796,8 @@ mod tests {
             "dog".to_string(),
             "cat".to_string(),
         ]) as Box<dyn Any + Send + Sync>;
-        let result = transform.transform(data).unwrap();
-        let encoded = result.downcast::<Vec<i32>>().unwrap();
+        let result = transform.transform(data).expect("Operation failed");
+        let encoded = result.downcast::<Vec<i32>>().expect("Operation failed");
 
         assert_eq!(*encoded, vec![0, 1, 0]);
     }

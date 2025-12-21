@@ -44,19 +44,19 @@
 //! use scirs2_graph::io::graphml::{read_graphml_format, write_graphml_format};
 //!
 //! // Create a temporary file with GraphML data
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#).unwrap();
-//! writeln!(temp_file, r#"<graphml xmlns="http://graphml.graphdrawing.org/xmlns">"#).unwrap();
-//! writeln!(temp_file, r#"  <graph id="G" edgedefault="undirected">"#).unwrap();
-//! writeln!(temp_file, r#"    <node id="1"/>"#).unwrap();
-//! writeln!(temp_file, r#"    <node id="2"/>"#).unwrap();
-//! writeln!(temp_file, r#"    <edge source="1" target="2"/>"#).unwrap();
-//! writeln!(temp_file, r#"  </graph>"#).unwrap();
-//! writeln!(temp_file, r#"</graphml>"#).unwrap();
-//! temp_file.flush().unwrap();
+//! let mut temp_file = NamedTempFile::new().expect("Test: failed to create temp file");
+//! writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#).expect("Test: failed to write to temp file");
+//! writeln!(temp_file, r#"<graphml xmlns="http://graphml.graphdrawing.org/xmlns">"#).expect("Test: failed to write to temp file");
+//! writeln!(temp_file, r#"  <graph id="G" edgedefault="undirected">"#).expect("Test: failed to write to temp file");
+//! writeln!(temp_file, r#"    <node id="1"/>"#).expect("Test: failed to write to temp file");
+//! writeln!(temp_file, r#"    <node id="2"/>"#).expect("Test: failed to write to temp file");
+//! writeln!(temp_file, r#"    <edge source="1" target="2"/>"#).expect("Test: failed to write to temp file");
+//! writeln!(temp_file, r#"  </graph>"#).expect("Test: failed to write to temp file");
+//! writeln!(temp_file, r#"</graphml>"#).expect("Test: failed to write to temp file");
+//! temp_file.flush().expect("Test: failed to flush temp file");
 //!
 //! // Read the graph
-//! let graph: Graph<i32, f64> = read_graphml_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, f64> = read_graphml_format(temp_file.path(), false).expect("Test operation failed");
 //! assert_eq!(graph.node_count(), 2);
 //! assert_eq!(graph.edge_count(), 1);
 //! ```
@@ -667,24 +667,29 @@ mod tests {
 
     #[test]
     fn test_read_simple_graphml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#).unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test: failed to create temp file");
+        writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#)
+            .expect("Test: failed to write to temp file");
         writeln!(
             temp_file,
             r#"<graphml xmlns="http://graphml.graphdrawing.org/xmlns">"#
         )
-        .unwrap();
-        writeln!(temp_file, r#"  <graph id="G" edgedefault="undirected">"#).unwrap();
-        writeln!(temp_file, r#"    <node id="1"/>"#).unwrap();
-        writeln!(temp_file, r#"    <node id="2"/>"#).unwrap();
-        writeln!(temp_file, r#"    <node id="3"/>"#).unwrap();
-        writeln!(temp_file, r#"    <edge source="1" target="2"/>"#).unwrap();
-        writeln!(temp_file, r#"    <edge source="2" target="3"/>"#).unwrap();
-        writeln!(temp_file, r#"  </graph>"#).unwrap();
-        writeln!(temp_file, r#"</graphml>"#).unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"  <graph id="G" edgedefault="undirected">"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="1"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="2"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="3"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <edge source="1" target="2"/>"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <edge source="2" target="3"/>"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"  </graph>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"</graphml>"#).expect("Test: failed to write to temp file");
+        temp_file.flush().expect("Test: failed to flush temp file");
 
-        let graph: Graph<i32, f64> = read_graphml_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_graphml_format(temp_file.path(), false).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -692,25 +697,29 @@ mod tests {
 
     #[test]
     fn test_read_directed_graphml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#).unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test: failed to create temp file");
+        writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#)
+            .expect("Test: failed to write to temp file");
         writeln!(
             temp_file,
             r#"<graphml xmlns="http://graphml.graphdrawing.org/xmlns">"#
         )
-        .unwrap();
-        writeln!(temp_file, r#"  <graph id="G" edgedefault="directed">"#).unwrap();
-        writeln!(temp_file, r#"    <node id="1"/>"#).unwrap();
-        writeln!(temp_file, r#"    <node id="2"/>"#).unwrap();
-        writeln!(temp_file, r#"    <node id="3"/>"#).unwrap();
-        writeln!(temp_file, r#"    <edge source="1" target="2"/>"#).unwrap();
-        writeln!(temp_file, r#"    <edge source="2" target="3"/>"#).unwrap();
-        writeln!(temp_file, r#"  </graph>"#).unwrap();
-        writeln!(temp_file, r#"</graphml>"#).unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"  <graph id="G" edgedefault="directed">"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="1"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="2"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="3"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <edge source="1" target="2"/>"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <edge source="2" target="3"/>"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"  </graph>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"</graphml>"#).expect("Test: failed to write to temp file");
+        temp_file.flush().expect("Test: failed to flush temp file");
 
         let graph: DiGraph<i32, f64> =
-            read_graphml_format_digraph(temp_file.path(), false).unwrap();
+            read_graphml_format_digraph(temp_file.path(), false).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -719,13 +728,19 @@ mod tests {
     #[test]
     fn test_write_read_roundtrip() {
         let mut original_graph: Graph<i32, f64> = Graph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Test: failed to add edge");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Test: failed to add edge");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_graphml_format(&original_graph, temp_file.path(), false).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test: failed to create temp file");
+        write_graphml_format(&original_graph, temp_file.path(), false)
+            .expect("Test operation failed");
 
-        let read_graph: Graph<i32, f64> = read_graphml_format(temp_file.path(), false).unwrap();
+        let read_graph: Graph<i32, f64> =
+            read_graphml_format(temp_file.path(), false).expect("Test operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -734,14 +749,19 @@ mod tests {
     #[test]
     fn test_digraph_write_read_roundtrip() {
         let mut original_graph: DiGraph<i32, f64> = DiGraph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Test: failed to add edge");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Test: failed to add edge");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_graphml_format_digraph(&original_graph, temp_file.path(), false).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test: failed to create temp file");
+        write_graphml_format_digraph(&original_graph, temp_file.path(), false)
+            .expect("Test operation failed");
 
         let read_graph: DiGraph<i32, f64> =
-            read_graphml_format_digraph(temp_file.path(), false).unwrap();
+            read_graphml_format_digraph(temp_file.path(), false).expect("Test operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -749,9 +769,9 @@ mod tests {
 
     #[test]
     fn test_invalid_xml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "<invalid>xml</invalid>").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test: failed to create temp file");
+        writeln!(temp_file, "<invalid>xml</invalid>").expect("Test: failed to write to temp file");
+        temp_file.flush().expect("Test: failed to flush temp file");
 
         let result: Result<Graph<i32, f64>> = read_graphml_format(temp_file.path(), false);
         assert!(result.is_err());
@@ -759,20 +779,23 @@ mod tests {
 
     #[test]
     fn test_directed_mismatch() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#).unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test: failed to create temp file");
+        writeln!(temp_file, r#"<?xml version="1.0" encoding="UTF-8"?>"#)
+            .expect("Test: failed to write to temp file");
         writeln!(
             temp_file,
             r#"<graphml xmlns="http://graphml.graphdrawing.org/xmlns">"#
         )
-        .unwrap();
-        writeln!(temp_file, r#"  <graph id="G" edgedefault="directed">"#).unwrap();
-        writeln!(temp_file, r#"    <node id="1"/>"#).unwrap();
-        writeln!(temp_file, r#"    <node id="2"/>"#).unwrap();
-        writeln!(temp_file, r#"    <edge source="1" target="2"/>"#).unwrap();
-        writeln!(temp_file, r#"  </graph>"#).unwrap();
-        writeln!(temp_file, r#"</graphml>"#).unwrap();
-        temp_file.flush().unwrap();
+        .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"  <graph id="G" edgedefault="directed">"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="1"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <node id="2"/>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"    <edge source="1" target="2"/>"#)
+            .expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"  </graph>"#).expect("Test: failed to write to temp file");
+        writeln!(temp_file, r#"</graphml>"#).expect("Test: failed to write to temp file");
+        temp_file.flush().expect("Test: failed to flush temp file");
 
         // Try to read as undirected graph - should fail
         let result: Result<Graph<i32, f64>> = read_graphml_format(temp_file.path(), false);

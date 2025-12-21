@@ -80,11 +80,11 @@ impl Default for AttentionConfig {
 ///     causal: false,
 ///     scale: None,
 /// };
-/// let mha = MultiHeadAttention::<f64>::new(64, config, &mut rng).unwrap();
+/// let mha = MultiHeadAttention::<f64>::new(64, config, &mut rng).expect("Operation failed");
 ///
 /// // Forward pass with a batch of 2 samples, sequence length 3
 /// let input = Array3::<f64>::from_elem((2, 3, 64), 0.1).into_dyn();
-/// let output = mha.forward(&input).unwrap();
+/// let output = mha.forward(&input).expect("Operation failed");
 ///
 /// // Output shape should match input shape
 /// assert_eq!(output.shape(), input.shape());
@@ -655,7 +655,7 @@ mod tests {
             causal: false,
             scale: None,
         };
-        let mha = MultiHeadAttention::<f64>::new(64, config, &mut rng).unwrap();
+        let mha = MultiHeadAttention::<f64>::new(64, config, &mut rng).expect("Operation failed");
         assert_eq!(mha.layer_type(), "MultiHeadAttention");
         assert_eq!(mha.parameter_count(), 4 * 64 * 64);
     }
@@ -670,11 +670,11 @@ mod tests {
             causal: false,
             scale: None,
         };
-        let mha = MultiHeadAttention::<f64>::new(16, config, &mut rng).unwrap();
+        let mha = MultiHeadAttention::<f64>::new(16, config, &mut rng).expect("Operation failed");
 
         // Batch of 2, sequence length 4, embedding dim 16
         let input = Array3::<f64>::from_elem((2, 4, 16), 0.1).into_dyn();
-        let output = mha.forward(&input).unwrap();
+        let output = mha.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), &[2, 4, 16]);
     }
@@ -689,10 +689,10 @@ mod tests {
             causal: true,
             scale: None,
         };
-        let mha = MultiHeadAttention::<f64>::new(16, config, &mut rng).unwrap();
+        let mha = MultiHeadAttention::<f64>::new(16, config, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((1, 3, 16), 0.5).into_dyn();
-        let output = mha.forward(&input).unwrap();
+        let output = mha.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), &[1, 3, 16]);
     }
@@ -707,7 +707,7 @@ mod tests {
             causal: false,
             scale: None,
         };
-        let sa = SelfAttention::<f64>::new(64, config, &mut rng).unwrap();
+        let sa = SelfAttention::<f64>::new(64, config, &mut rng).expect("Operation failed");
         assert_eq!(sa.layer_type(), "SelfAttention");
     }
 
@@ -721,10 +721,10 @@ mod tests {
             causal: false,
             scale: None,
         };
-        let sa = SelfAttention::<f64>::new(32, config, &mut rng).unwrap();
+        let sa = SelfAttention::<f64>::new(32, config, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((1, 5, 32), 0.2).into_dyn();
-        let output = sa.forward(&input).unwrap();
+        let output = sa.forward(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), &[1, 5, 32]);
     }
@@ -764,7 +764,7 @@ mod tests {
             scale: None,
         };
         let mha = MultiHeadAttention::<f64>::new(16, config, &mut rng)
-            .unwrap()
+            .expect("Operation failed")
             .with_name("my_attention");
         assert_eq!(mha.name(), Some("my_attention"));
     }

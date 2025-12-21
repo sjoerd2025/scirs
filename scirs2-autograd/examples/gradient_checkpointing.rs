@@ -29,7 +29,7 @@ fn main() {
             rng.standard_normal(&[feature_size, feature_size])
                 .mapv(|x| x * 0.01) // Scale down to prevent explosion
                 .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-                .unwrap()
+                .expect("Operation failed")
         })
         .collect();
 
@@ -62,7 +62,7 @@ fn main() {
             non_ckpt_memory_estimate += feature_size * std::mem::size_of::<f32>();
         }
 
-        let output = activations.last().unwrap();
+        let output = activations.last().expect("Operation failed");
         let loss = T::sum_all(output);
 
         // Backward pass
@@ -121,7 +121,7 @@ fn main() {
             }
         }
 
-        let output = activations.last().unwrap();
+        let output = activations.last().expect("Operation failed");
         let loss = T::sum_all(output);
 
         // Backward pass
@@ -173,7 +173,7 @@ fn main() {
         let f1 = T::relu(e1);
         let result1 = T::sum_all(f1);
 
-        let val1 = result1.eval(ctx).unwrap();
+        let val1 = result1.eval(ctx).expect("Operation failed");
         let normal_time = start.elapsed();
 
         // Run with checkpoint operations manually
@@ -189,7 +189,7 @@ fn main() {
         let f2 = T::relu(e2_ckpt);
         let result2 = T::sum_all(f2);
 
-        let val2 = result2.eval(ctx).unwrap();
+        let val2 = result2.eval(ctx).expect("Operation failed");
         let checkpoint_time = start.elapsed();
 
         println!("  Normal result: {}", val1[[]]);
@@ -201,12 +201,12 @@ fn main() {
         // Test gradients
         let start = Instant::now();
         let grad1 = T::grad(&[result1], &[&a])[0];
-        let grad_val1 = grad1.eval(ctx).unwrap();
+        let grad_val1 = grad1.eval(ctx).expect("Operation failed");
         let grad1_time = start.elapsed();
 
         let start = Instant::now();
         let grad2 = T::grad(&[result2], &[&a])[0];
-        let grad_val2 = grad2.eval(ctx).unwrap();
+        let grad_val2 = grad2.eval(ctx).expect("Operation failed");
         let grad2_time = start.elapsed();
 
         println!("\nGradient computation:");

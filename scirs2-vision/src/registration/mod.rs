@@ -830,7 +830,7 @@ mod tests {
             },
         ];
 
-        let transform = estimate_rigid_transform(&matches).unwrap();
+        let transform = estimate_rigid_transform(&matches).expect("Operation failed");
 
         // Verify transformation
         let transformed1 = transform_point(matches[0].source, &transform);
@@ -862,7 +862,7 @@ mod tests {
             },
         ];
 
-        let transform = estimate_affine_transform(&matches).unwrap();
+        let transform = estimate_affine_transform(&matches).expect("Operation failed");
 
         // Verify transformation
         for m in &matches {
@@ -888,7 +888,7 @@ mod tests {
         transform[[0, 2]] = 1.0; // Translation
         transform[[1, 2]] = 2.0;
 
-        let inverse = invert_transform(&transform).unwrap();
+        let inverse = invert_transform(&transform).expect("Operation failed");
         let composed = compose_transforms(&transform, &inverse);
 
         // Should be close to identity

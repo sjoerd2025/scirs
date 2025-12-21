@@ -1164,7 +1164,7 @@ mod tests {
 
         // Simple test case: [1, 0, 0, 0] -> [1, 1, 1, 1]
         let input = vec![1.0, 0.0, 0.0, 0.0];
-        let output = fft.fft(&input, None).unwrap();
+        let output = fft.fft(&input, None).expect("Operation failed");
 
         assert_eq!(output.len(), 4);
         for val in &output {
@@ -1182,7 +1182,7 @@ mod tests {
         // Run a few FFTs
         let input = vec![1.0, 2.0, 3.0, 4.0];
         for _ in 0..5 {
-            let _ = fft.fft(&input, None).unwrap();
+            let _ = fft.fft(&input, None).expect("Operation failed");
         }
 
         let stats = fft.get_stats();

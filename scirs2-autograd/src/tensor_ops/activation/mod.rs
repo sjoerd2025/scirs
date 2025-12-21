@@ -25,7 +25,7 @@ use crate::tensor_ops::{activation_ops, scalar, shape, xent_ops};
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
 ///    let y = sigmoid(x);
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // sigmoid(0) ≈ 0.5, sigmoid(1) ≈ 0.73, sigmoid(-1) ≈ 0.27
 /// });
 /// ```
@@ -53,7 +53,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
 ///    let y = tanh(x);
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // tanh(0) = 0, tanh(1) ≈ 0.76, tanh(-1) ≈ -0.76
 /// });
 /// ```
@@ -143,7 +143,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![-1., 0., 1., 2.], g);
 ///    let y = elu(x, 1.0);
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // ELU smoothly transitions from exponential to linear
 /// });
 /// ```
@@ -173,7 +173,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
 ///    let y = softplus(x);
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // Softplus is a smooth approximation to ReLU
 /// });
 /// ```
@@ -204,7 +204,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
 ///    let y = swish(x);
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // Swish: x * sigmoid(x)
 /// });
 /// ```
@@ -235,7 +235,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
 ///    let y = gelu(x);
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // GELU is commonly used in transformer models
 /// });
 /// ```
@@ -266,7 +266,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![0., 1., -1.], g);
 ///    let y = mish(x);
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // Mish: x * tanh(softplus(x))
 /// });
 /// ```
@@ -297,7 +297,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
 ///    let y = softmax(x, 1); // softmax along columns
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // Each row should sum to 1
 /// });
 /// ```
@@ -328,7 +328,7 @@ where
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
 ///    let y = log_softmax(x, 1); // log softmax along columns
-///    let result = y.eval(g).unwrap();
+///    let result = y.eval(g).expect("Operation failed");
 ///    // Log of softmax probabilities
 /// });
 /// ```
@@ -370,7 +370,7 @@ where
 ///    let logits = ag::tensor_ops::convert_to_tensor(array![0.5, -0.5, 1.0], g);
 ///    let targets = ag::tensor_ops::convert_to_tensor(array![1., 0., 1.], g);
 ///    let loss = sigmoid_cross_entropy(logits, targets);
-///    let result = loss.eval(g).unwrap();
+///    let result = loss.eval(g).expect("Operation failed");
 ///    // Binary cross-entropy loss
 /// });
 /// ```
@@ -413,7 +413,7 @@ where
 ///    let logits = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
 ///    let targets = ag::tensor_ops::convert_to_tensor(array![[0., 0., 1.], [1., 0., 0.]], g);
 ///    let loss = softmax_cross_entropy(logits, targets);
-///    let result = loss.eval(g).unwrap();
+///    let result = loss.eval(g).expect("Operation failed");
 ///    // Categorical cross-entropy loss
 /// });
 /// ```
@@ -455,7 +455,7 @@ where
 ///    let logits = ag::tensor_ops::convert_to_tensor(array![[1., 2., 3.], [4., 5., 6.]], g);
 ///    let labels = ag::tensor_ops::convert_to_tensor(array![2., 0.], g); // class indices
 ///    let loss = sparse_softmax_cross_entropy(logits, labels);
-///    let result = loss.eval(g).unwrap();
+///    let result = loss.eval(g).expect("Operation failed");
 ///    // Sparse categorical cross-entropy loss
 /// });
 /// ```
@@ -489,7 +489,7 @@ where
 ///    let predictions = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
 ///    let targets = ag::tensor_ops::convert_to_tensor(array![1.5, 2.5, 2.5], g);
 ///    let loss = mean_squared_error(predictions, targets);
-///    let result = loss.eval(g).unwrap();
+///    let result = loss.eval(g).expect("Operation failed");
 ///    // MSE loss
 /// });
 /// ```
@@ -522,8 +522,8 @@ where
 ///    let evaluated = g.evaluator().extend(&[y1, y2]).run();
 ///    let e0 = &evaluated[0];
 ///    let e1 = &evaluated[1];
-///    assert_eq!(e0.as_ref().unwrap().shape(), &[3, 4]);
-///    assert_eq!(e1.as_ref().unwrap().shape(), &[3, 4]);
+///    assert_eq!(e0.as_ref().expect("Operation failed").shape(), &[3, 4]);
+///    assert_eq!(e1.as_ref().expect("Operation failed").shape(), &[3, 4]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -542,7 +542,10 @@ where
         &_axes,
         true,
     );
-    let em5 = scalar(F::from(1e-5).unwrap(), g);
+    let em5 = scalar(
+        F::from(1e-5).expect("Failed to convert constant to float"),
+        g,
+    );
     centered * crate::tensor_ops::arithmetic::inv_sqrt(variance + em5)
 }
 
@@ -567,7 +570,7 @@ where
 ///    let x = ag::tensor_ops::standard_normal(&[3, 4], g);
 ///    let norm = batch_norm(x, g.variable(scale), g.variable(shift));
 ///
-///    assert_eq!(norm.eval(g).unwrap().shape(), &[3, 4]);
+///    assert_eq!(norm.eval(g).expect("Operation failed").shape(), &[3, 4]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -605,7 +608,10 @@ where
     let x = x.as_ref();
     let g = x.graph();
     let one = scalar(F::one(), g);
-    let two = scalar(F::from(2.0).unwrap(), g);
+    let two = scalar(
+        F::from(2.0).expect("Failed to convert constant to float"),
+        g,
+    );
     let zero = scalar(F::zero(), g);
 
     let shifted = (x + one) / two;
@@ -670,7 +676,10 @@ where
     let x = x.as_ref();
     let g = x.graph();
     let zero = scalar(F::zero(), g);
-    let six = scalar(F::from(6.0).unwrap(), g);
+    let six = scalar(
+        F::from(6.0).expect("Failed to convert constant to float"),
+        g,
+    );
 
     crate::tensor_ops::arithmetic::minimum(crate::tensor_ops::arithmetic::maximum(zero, x), six)
 }
@@ -690,16 +699,22 @@ mod tests {
             // Test ReLU
             let relu_result = relu(x);
             let expected_relu = array![0.0_f32, 0.0, 1.0];
-            assert_eq!(relu_result.eval(g).unwrap(), expected_relu.into_dyn());
+            assert_eq!(
+                relu_result.eval(g).expect("Operation failed"),
+                expected_relu.into_dyn()
+            );
 
             // Test Leaky ReLU
             let leaky_result = leaky_relu(x, 0.1);
             let expected_leaky = array![-0.1_f32, 0.0, 1.0];
-            assert_eq!(leaky_result.eval(g).unwrap(), expected_leaky.into_dyn());
+            assert_eq!(
+                leaky_result.eval(g).expect("Operation failed"),
+                expected_leaky.into_dyn()
+            );
 
             // Test sigmoid
             let sigmoid_result = sigmoid(x);
-            let actual_sigmoid = sigmoid_result.eval(g).unwrap();
+            let actual_sigmoid = sigmoid_result.eval(g).expect("Operation failed");
             // sigmoid(-1) ≈ 0.27, sigmoid(0) = 0.5, sigmoid(1) ≈ 0.73
             assert_relative_eq!(actual_sigmoid[0], 0.2689414, epsilon = 1e-6);
             assert_relative_eq!(actual_sigmoid[1], 0.5, epsilon = 1e-6);
@@ -714,14 +729,14 @@ mod tests {
 
             // Test ELU
             let elu_result = elu(x, 1.0);
-            let actual_elu = elu_result.eval(g).unwrap();
+            let actual_elu = elu_result.eval(g).expect("Operation failed");
             // elu(-1, 1.0) ≈ -0.632, elu(0) = 0, elu(1) = 1
             assert_relative_eq!(actual_elu[1], 0.0, epsilon = 1e-6);
             assert_relative_eq!(actual_elu[2], 1.0, epsilon = 1e-6);
 
             // Test softplus
             let softplus_result = softplus(x);
-            let actual_softplus = softplus_result.eval(g).unwrap();
+            let actual_softplus = softplus_result.eval(g).expect("Operation failed");
             // All values should be positive
             assert!(actual_softplus[0] > 0.0);
             assert!(actual_softplus[1] > 0.0);
@@ -736,7 +751,7 @@ mod tests {
 
             // Test softmax with 2D input (batch of 1)
             let softmax_result = softmax(x, 1); // Apply softmax along last axis
-            let actual = softmax_result.eval(g).unwrap();
+            let actual = softmax_result.eval(g).expect("Operation failed");
 
             // Check that probabilities sum to 1
             let sum: f32 = actual.iter().sum();
@@ -744,7 +759,7 @@ mod tests {
 
             // Test log softmax
             let log_softmax_result = log_softmax(x, 1);
-            let log_actual = log_softmax_result.eval(g).unwrap();
+            let log_actual = log_softmax_result.eval(g).expect("Operation failed");
 
             // Log probabilities should be negative - access as 2D array
             let log_slice = log_actual.index_axis(scirs2_core::ndarray::Axis(0), 0);
@@ -762,7 +777,7 @@ mod tests {
 
             // Test sigmoid cross entropy
             let loss = sigmoid_cross_entropy(logits, targets);
-            let loss_val = loss.eval(g).unwrap();
+            let loss_val = loss.eval(g).expect("Operation failed");
 
             // Loss should be positive
             assert!(loss_val[0] > 0.0);
@@ -772,7 +787,7 @@ mod tests {
             let predictions = convert_to_tensor(array![1.0_f32, 2.0, 3.0], g);
             let true_vals = convert_to_tensor(array![1.5_f32, 2.5, 2.5], g);
             let mse = mean_squared_error(predictions, true_vals);
-            let mse_val = mse.eval(g).unwrap();
+            let mse_val = mse.eval(g).expect("Operation failed");
 
             // MSE should be positive
             assert!(mse_val[scirs2_core::ndarray::IxDyn(&[])] > 0.0);
@@ -788,7 +803,7 @@ mod tests {
             let hard_sig_result = hard_sigmoid(x);
             let expected_hard_sig = array![0.0_f32, 0.5, 1.0];
             assert_eq!(
-                hard_sig_result.eval(g).unwrap(),
+                hard_sig_result.eval(g).expect("Operation failed"),
                 expected_hard_sig.into_dyn()
             );
 
@@ -796,7 +811,7 @@ mod tests {
             let hard_tanh_result = hard_tanh(x);
             let expected_hard_tanh = array![-1.0_f32, 0.0, 1.0];
             assert_eq!(
-                hard_tanh_result.eval(g).unwrap(),
+                hard_tanh_result.eval(g).expect("Operation failed"),
                 expected_hard_tanh.into_dyn()
             );
 
@@ -804,7 +819,10 @@ mod tests {
             let x2 = convert_to_tensor(array![-1.0_f32, 3.0, 8.0], g);
             let relu6_result = relu6(x2);
             let expected_relu6 = array![0.0_f32, 3.0, 6.0];
-            assert_eq!(relu6_result.eval(g).unwrap(), expected_relu6.into_dyn());
+            assert_eq!(
+                relu6_result.eval(g).expect("Operation failed"),
+                expected_relu6.into_dyn()
+            );
         });
     }
 
@@ -815,7 +833,7 @@ mod tests {
 
             // Test normalize
             let normalized = normalize(x, &[0]);
-            let result = normalized.eval(g).unwrap();
+            let result = normalized.eval(g).expect("Operation failed");
 
             // After normalization along axis 0, mean should be close to 0
             assert_eq!(result.shape(), &[2, 2]);

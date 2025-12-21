@@ -8,13 +8,13 @@ fn main() {
     let y = array![1.0, 4.0, 9.0, 16.0, 25.0]; // y = x²
 
     // Calculate Spearman correlation coefficient (without p-value)
-    let rho = spearman_r(&x.view(), &y.view()).unwrap();
+    let rho = spearman_r(&x.view(), &y.view()).expect("Operation failed");
     println!("Spearman correlation coefficient: {}", rho);
     // Perfect monotonic relationship (rho should be 1.0)
     assert!((rho - 1.0f64).abs() < 1e-10f64);
 
     // Calculate Spearman correlation coefficient with p-value
-    let (rho, p_value) = spearmanr(&x.view(), &y.view(), "two-sided").unwrap();
+    let (rho, p_value) = spearmanr(&x.view(), &y.view(), "two-sided").expect("Operation failed");
     println!("Spearman correlation coefficient: {}", rho);
     println!("Two-sided p-value: {}", p_value);
     // Perfect monotonic relationship (rho should be 1.0)
@@ -29,13 +29,13 @@ fn main() {
 
     // Try with a non-perfect correlation
     let y2 = array![1.0, 3.8, 8.7, 17.2, 23.5]; // Slightly noisy data
-    let (rho2, p_value2) = spearmanr(&x.view(), &y2.view(), "two-sided").unwrap();
+    let (rho2, p_value2) = spearmanr(&x.view(), &y2.view(), "two-sided").expect("Operation failed");
     println!("\nSpearman correlation with noisy data: {}", rho2);
     println!("Two-sided p-value: {}", p_value2);
 
     // Try with a negative correlation (decreasing relationship)
     let y3 = array![25.0, 16.0, 9.0, 4.0, 1.0]; // y = (6-x)²
-    let (rho3, p_value3) = spearmanr(&x.view(), &y3.view(), "two-sided").unwrap();
+    let (rho3, p_value3) = spearmanr(&x.view(), &y3.view(), "two-sided").expect("Operation failed");
     println!(
         "\nSpearman correlation with negative relationship: {}",
         rho3
@@ -45,15 +45,15 @@ fn main() {
     assert!((rho3 - (-1.0f64)).abs() < 1e-10f64);
 
     // Try with one-sided tests
-    let (_, p_greater) = spearmanr(&x.view(), &y.view(), "greater").unwrap();
-    let (_, p_less) = spearmanr(&x.view(), &y.view(), "less").unwrap();
+    let (_, p_greater) = spearmanr(&x.view(), &y.view(), "greater").expect("Operation failed");
+    let (_, p_less) = spearmanr(&x.view(), &y.view(), "less").expect("Operation failed");
     println!("\nOne-sided tests for positive correlation:");
     println!("P-value (greater): {}", p_greater); // Should be small
     println!("P-value (less): {}", p_less); // Should be 1.0
 
     // Try with no correlation
     let y4 = array![10.0, 5.0, 15.0, 8.0, 12.0]; // Random values
-    let (rho4, p_value4) = spearmanr(&x.view(), &y4.view(), "two-sided").unwrap();
+    let (rho4, p_value4) = spearmanr(&x.view(), &y4.view(), "two-sided").expect("Operation failed");
     println!("\nSpearman correlation with uncorrelated data: {}", rho4);
     println!("Two-sided p-value: {}", p_value4);
     // Probably not significant given small sample size

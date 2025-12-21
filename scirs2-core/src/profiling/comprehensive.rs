@@ -79,7 +79,7 @@ impl ComprehensiveProfiler {
     /// Start comprehensive profiling
     pub fn start(&mut self) -> Result<(), crate::profiling::system_monitor::SystemMonitorError> {
         // Start application profiler
-        self.app_profiler.lock().unwrap().start();
+        self.app_profiler.lock().expect("Operation failed").start();
 
         // Start system monitor
         self.systemmonitor.start()?;
@@ -90,7 +90,7 @@ impl ComprehensiveProfiler {
 
     /// Stop comprehensive profiling
     pub fn stop(&mut self) {
-        self.app_profiler.lock().unwrap().stop();
+        self.app_profiler.lock().expect("Operation failed").stop();
         self.systemmonitor.stop();
     }
 
@@ -123,14 +123,19 @@ impl ComprehensiveProfiler {
 
     /// Generate comprehensive profiling report
     pub fn generate_report(&mut self) -> ComprehensiveReport {
-        let app_report = self.app_profiler.lock().unwrap().get_report();
+        let app_report = self
+            .app_profiler
+            .lock()
+            .expect("Operation failed")
+            .get_report();
         let system_metrics = self.systemmonitor.get_metrics_history();
         let alerts = self.system_alerter.get_alert_history();
 
         let mut bottleneck_reports = Vec::new();
         if self.config.enable_bottleneck_detection {
             let mut detector = BottleneckDetector::new(BottleneckConfig::default());
-            bottleneck_reports = detector.analyze(&self.app_profiler.lock().unwrap());
+            bottleneck_reports =
+                detector.analyze(&self.app_profiler.lock().expect("Operation failed"));
         }
 
         let flame_graph = if self.config.enable_flame_graphs {
@@ -253,23 +258,23 @@ impl ComprehensiveReport {
         use std::fmt::Write;
         let mut report = String::new();
 
-        writeln!(report, "=== {} ===", self.session_name).unwrap();
+        writeln!(report, "=== {} ===", self.session_name).expect("Operation failed");
         writeln!(
             report,
             "Session Duration: {:.2} seconds",
             self.session_duration.as_secs_f64()
         )
-        .unwrap();
-        writeln!(report, "Generated At: {:?}", self.generated_at).unwrap();
-        writeln!(report).unwrap();
+        .expect("Test: operation failed");
+        writeln!(report, "Generated At: {:?}", self.generated_at).expect("Operation failed");
+        writeln!(report).expect("Operation failed");
 
         // Application profiling
-        writeln!(report, "=== Application Performance ===").unwrap();
-        writeln!(report, "{}", self.application_report).unwrap();
+        writeln!(report, "=== Application Performance ===").expect("Operation failed");
+        writeln!(report, "{}", self.application_report).expect("Operation failed");
 
         // System metrics summary
         if !self.system_metrics.is_empty() {
-            writeln!(report, "=== System Resource Summary ===").unwrap();
+            writeln!(report, "=== System Resource Summary ===").expect("Operation failed");
             let avg_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).sum::<f64>()
                 / self.system_metrics.len() as f64;
             let avg_memory = self
@@ -290,30 +295,32 @@ impl ComprehensiveReport {
                 .max()
                 .unwrap_or(0);
 
-            writeln!(report, "Average CPU Usage: {avg_cpu:.1}%").unwrap();
-            writeln!(report, "Maximum CPU Usage: {max_cpu:.1}%").unwrap();
+            writeln!(report, "Average CPU Usage: {avg_cpu:.1}%").expect("Operation failed");
+            writeln!(report, "Maximum CPU Usage: {max_cpu:.1}%").expect("Operation failed");
             writeln!(
                 report,
                 "Average Memory Usage: {:.1} MB",
                 avg_memory as f64 / (1024.0 * 1024.0)
             )
-            .unwrap();
+            .expect("Test: operation failed");
             writeln!(
                 report,
                 "Maximum Memory Usage: {:.1} MB",
                 max_memory as f64 / (1024.0 * 1024.0)
             )
-            .unwrap();
-            writeln!(report).unwrap();
+            .expect("Test: operation failed");
+            writeln!(report).expect("Operation failed");
         }
 
         // Alerts
         if !self.alerts.is_empty() {
-            writeln!(report, "=== System Alerts ({}) ===", self.alerts.len()).unwrap();
+            writeln!(report, "=== System Alerts ({}) ===", self.alerts.len())
+                .expect("Operation failed");
             for alert in &self.alerts {
-                writeln!(report, "[{:?}] {}", alert.severity, alert.message).unwrap();
+                writeln!(report, "[{:?}] {}", alert.severity, alert.message)
+                    .expect("Operation failed");
             }
-            writeln!(report).unwrap();
+            writeln!(report).expect("Operation failed");
         }
 
         // Bottlenecks
@@ -323,19 +330,21 @@ impl ComprehensiveReport {
                 "=== Performance Bottlenecks ({}) ===",
                 self.bottleneck_reports.len()
             )
-            .unwrap();
+            .expect("Test: operation failed");
             for bottleneck in &self.bottleneck_reports {
-                writeln!(report, "Operation: {}", bottleneck.operation).unwrap();
-                writeln!(report, "Type: {:?}", bottleneck.bottleneck_type).unwrap();
-                writeln!(report, "Severity: {:.2}", bottleneck.severity).unwrap();
-                writeln!(report, "Description: {}", bottleneck.description).unwrap();
+                writeln!(report, "Operation: {}", bottleneck.operation).expect("Operation failed");
+                writeln!(report, "Type: {:?}", bottleneck.bottleneck_type)
+                    .expect("Operation failed");
+                writeln!(report, "Severity: {:.2}", bottleneck.severity).expect("Operation failed");
+                writeln!(report, "Description: {}", bottleneck.description)
+                    .expect("Operation failed");
                 if !bottleneck.suggestions.is_empty() {
-                    writeln!(report, "Suggestions:").unwrap();
+                    writeln!(report, "Suggestions:").expect("Operation failed");
                     for suggestion in &bottleneck.suggestions {
-                        writeln!(report, "  - {suggestion}").unwrap();
+                        writeln!(report, "  - {suggestion}").expect("Operation failed");
                     }
                 }
-                writeln!(report).unwrap();
+                writeln!(report).expect("Operation failed");
             }
         }
 
@@ -348,27 +357,27 @@ impl ComprehensiveReport {
         use std::fmt::Write;
         let mut json = String::new();
 
-        writeln!(json, "{{").unwrap();
-        writeln!(json, "  \"session_name\": \"{}\",", self.session_name).unwrap();
+        writeln!(json, "{{").expect("Operation failed");
+        writeln!(json, "  \"session_name\": \"{}\",", self.session_name).expect("Operation failed");
         writeln!(
             json,
             "  \"session_duration_seconds\": {},",
             self.session_duration.as_secs_f64()
         )
-        .unwrap();
-        writeln!(json, "  \"alert_count\": {},", self.alerts.len()).unwrap();
+        .expect("Test: operation failed");
+        writeln!(json, "  \"alert_count\": {},", self.alerts.len()).expect("Operation failed");
         writeln!(
             json,
             "  \"bottleneck_count\": {},",
             self.bottleneck_reports.len()
         )
-        .unwrap();
+        .expect("Test: operation failed");
         writeln!(
             json,
             "  \"system_sample_count\": {}",
             self.system_metrics.len()
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         if !self.system_metrics.is_empty() {
             let avg_cpu = self.system_metrics.iter().map(|m| m.cpu_usage).sum::<f64>()
@@ -378,11 +387,11 @@ impl ComprehensiveReport {
                 .iter()
                 .map(|m| m.cpu_usage)
                 .fold(0.0, f64::max);
-            writeln!(json, "  \"average_cpu_usage\": {avg_cpu},").unwrap();
-            writeln!(json, "  \"maximum_cpu_usage\": {max_cpu}").unwrap();
+            writeln!(json, "  \"average_cpu_usage\": {avg_cpu},").expect("Operation failed");
+            writeln!(json, "  \"maximum_cpu_usage\": {max_cpu}").expect("Operation failed");
         }
 
-        writeln!(json, "}}").unwrap();
+        writeln!(json, "}}").expect("Operation failed");
         json
     }
 
@@ -413,7 +422,7 @@ mod tests {
         };
 
         let mut profiler = ComprehensiveProfiler::new(config);
-        profiler.start().unwrap();
+        profiler.start().expect("Operation failed");
 
         // Profile some work
         let result = profiler.time_function("test_work", || {

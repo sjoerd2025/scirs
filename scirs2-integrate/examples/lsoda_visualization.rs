@@ -56,8 +56,8 @@ fn main() {
             }
 
             // Save detailed results for visualization
-            let mut file = File::create("lsoda_visualization_data.csv").unwrap();
-            writeln!(&mut file, "t,y1,y2,stiffness,h,method").unwrap();
+            let mut file = File::create("lsoda_visualization_data.csv").expect("Operation failed");
+            writeln!(&mut file, "t,y1,y2,stiffness,h,method").expect("Operation failed");
 
             // Method string representations for CSV output
             let method_names = ["unknown", "Adams", "BDF"];
@@ -82,7 +82,7 @@ fn main() {
                     if i > 0 { res.t[i] - res.t[i - 1] } else { 0.1 },
                     method_names[method_idx]
                 )
-                .unwrap();
+                .expect("Operation failed");
             }
 
             println!("\nData saved to lsoda_visualization_data.csv");
@@ -90,7 +90,8 @@ fn main() {
             println!("You can use this data to visualize the solution and method switching");
 
             // Generate instructions for plotting
-            let mut readme = File::create("lsoda_visualization_plotting_guide.txt").unwrap();
+            let mut readme =
+                File::create("lsoda_visualization_plotting_guide.txt").expect("Operation failed");
             writeln!(
                 &mut readme,
                 "LSODA Method Switching Visualization Guide\n\
@@ -154,7 +155,7 @@ fn main() {
                 For optimal visualization of LSODA's behavior, consider enhancing the solver\n\
                 to output additional diagnostic information during integration."
             )
-            .unwrap();
+            .expect("Operation failed");
 
             println!("A plotting guide has been saved to lsoda_visualization_plotting_guide.txt");
         }
@@ -208,8 +209,8 @@ fn main() {
             }
 
             // Save solution trajectory
-            let mut file = File::create("robertson_solution.csv").unwrap();
-            writeln!(&mut file, "t,y1,y2,y3,step_size").unwrap();
+            let mut file = File::create("robertson_solution.csv").expect("Operation failed");
+            writeln!(&mut file, "t,y1,y2,y3,step_size").expect("Operation failed");
 
             for i in 0..res.t.len() {
                 let step_size = if i > 0 { res.t[i] - res.t[i - 1] } else { 0.0 };
@@ -218,7 +219,7 @@ fn main() {
                     "{:.8e},{:.8e},{:.8e},{:.8e},{:.8e}",
                     res.t[i], res.y[i][0], res.y[i][1], res.y[i][2], step_size
                 )
-                .unwrap();
+                .expect("Operation failed");
             }
 
             println!("\nSolution saved to robertson_solution.csv");

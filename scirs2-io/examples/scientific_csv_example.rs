@@ -359,7 +359,7 @@ fn process_time_series_data(output_dir: &str) -> Result<(), Box<dyn Error>> {
 
     // Sort each time series by time
     for (_, series) in time_series.iter_mut() {
-        series.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        series.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
     }
 
     // Calculate derived values: rate of change and moving average

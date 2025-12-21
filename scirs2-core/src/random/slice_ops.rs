@@ -48,7 +48,7 @@ impl<T> ScientificSliceRandom<T> for [T] {
     fn scientific_shuffle<R: Rng>(&mut self, rng: &mut Random<R>) {
         // Use Fisher-Yates shuffle for guaranteed uniform distribution
         for i in (1..self.len()).rev() {
-            let j = rng.sample(Uniform::new(0, i + 1).unwrap());
+            let j = rng.sample(Uniform::new(0, i + 1).expect("Operation failed"));
             self.swap(i, j);
         }
     }
@@ -128,7 +128,7 @@ impl<T> ScientificSliceRandom<T> for [T] {
         let mut result = Vec::with_capacity(amount);
         for _ in 0..amount {
             let u = rng.gen_range(0.0..1.0);
-            match cumulative.binary_search_by(|&x| x.partial_cmp(&u).unwrap()) {
+            match cumulative.binary_search_by(|&x| x.partial_cmp(&u).expect("Operation failed")) {
                 Ok(idx) => result.push(&self[idx]),
                 Err(idx) => result.push(&self[idx.min(self.len() - 1)]),
             }
@@ -151,7 +151,7 @@ impl<T> ScientificSliceRandom<T> for [T] {
 
         // Replace elements with gradually decreasing probability
         for (i, item) in self.iter().enumerate().skip(k) {
-            let j = rng.sample(Uniform::new(0, i + 1).unwrap());
+            let j = rng.sample(Uniform::new(0, i + 1).expect("Operation failed"));
             if j < k {
                 reservoir[j] = item;
             }
@@ -378,7 +378,7 @@ mod tests {
 
         let choice = data.scientific_choose(&mut rng);
         assert!(choice.is_some());
-        assert!(data.contains(choice.unwrap()));
+        assert!(data.contains(choice.expect("Operation failed")));
     }
 
     #[test]
@@ -405,7 +405,7 @@ mod tests {
 
         let samples = items
             .scientific_weighted_sample(&mut rng, &weights, 100)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(samples.len(), 100);
 
         // Check that all samples are valid

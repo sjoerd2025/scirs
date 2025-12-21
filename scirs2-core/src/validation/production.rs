@@ -923,7 +923,7 @@ mod tests {
         validator.validate_numeric(150, &constraints); // This will fail
         validator.validate_numeric(25, &constraints);
 
-        let metrics = validator.get_metrics().unwrap();
+        let metrics = validator.get_metrics().expect("Operation failed");
         assert_eq!(metrics.total_validations, 3);
         assert_eq!(metrics.success_rate, 2.0 / 3.0);
         assert!(metrics.commonerrors.contains_key("VALUE_TOO_LARGE"));

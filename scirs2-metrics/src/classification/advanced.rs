@@ -37,7 +37,7 @@ use std::collections::BTreeSet;
 /// let y_true = array![1, 0, 1, 1, 0, 0];
 /// let y_pred = array![1, 0, 1, 0, 0, 1];
 ///
-/// let mcc = matthews_corrcoef(&y_true, &y_pred).unwrap();
+/// let mcc = matthews_corrcoef(&y_true, &y_pred).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn matthews_corrcoef<T, S1, S2, D1, D2>(
@@ -187,7 +187,7 @@ where
 /// let y_true = array![0, 0, 0, 1, 1, 1];
 /// let y_pred = array![0, 0, 1, 1, 0, 1];
 ///
-/// let bal_acc = balanced_accuracy_score(&y_true, &y_pred).unwrap();
+/// let bal_acc = balanced_accuracy_score(&y_true, &y_pred).expect("Operation failed");
 /// // Recall for class 0: 2/3, recall for class 1: 2/3
 /// // Balanced accuracy: (2/3 + 2/3) / 2 = 2/3
 /// assert!((bal_acc - 2.0/3.0).abs() < 1e-10);
@@ -296,7 +296,7 @@ where
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 0, 2, 0, 0, 2];
 ///
-/// let kappa = cohen_kappa_score(&y_true, &y_pred).unwrap();
+/// let kappa = cohen_kappa_score(&y_true, &y_pred).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cohen_kappa_score<T, S1, S2, D1, D2>(
@@ -412,7 +412,7 @@ where
 /// let y_true = array![0, 1, 1, 0];
 /// let y_prob = array![0.1, 0.9, 0.8, 0.4];
 ///
-/// let brier = brier_score_loss(&y_true, &y_prob).unwrap();
+/// let brier = brier_score_loss(&y_true, &y_prob).expect("Operation failed");
 /// // Brier = [(0.1-0)² + (0.9-1)² + (0.8-1)² + (0.4-0)²] / 4
 /// //       = [0.01 + 0.01 + 0.04 + 0.16] / 4 = 0.055
 /// assert!((brier - 0.055).abs() < 1e-10);
@@ -500,7 +500,7 @@ where
 /// let y_true = array![0, 1, 1, 0, 1];
 /// let y_pred = array![0, 0, 1, 1, 1];
 ///
-/// let jaccard = jaccard_score(&y_true, &y_pred, 1).unwrap();
+/// let jaccard = jaccard_score(&y_true, &y_pred, 1).expect("Operation failed");
 /// // jaccard = |intersection| / |union| = 2 / 4 = 0.5
 /// assert!((jaccard - 0.5).abs() < 1e-10);
 /// ```
@@ -581,7 +581,7 @@ where
 /// let y_true = array![0, 1, 0, 1];
 /// let y_pred = array![1, 1, 0, 0];
 ///
-/// let loss = hamming_loss(&y_true, &y_pred).unwrap();
+/// let loss = hamming_loss(&y_true, &y_pred).expect("Operation failed");
 /// // 2 out of 4 labels are incorrect: loss = 2/4 = 0.5
 /// assert!((loss - 0.5).abs() < 1e-10);
 /// ```
@@ -959,7 +959,7 @@ where
 /// let y_true = array![0, 0, 0, 0, 1, 1, 1, 1, 1];
 /// let y_prob = array![0.1, 0.2, 0.3, 0.4, 0.65, 0.7, 0.8, 0.9, 0.99];
 ///
-/// let (prob_true, prob_pred, counts) = calibration_curve(&y_true, &y_prob, 5, "uniform").unwrap();
+/// let (prob_true, prob_pred, counts) = calibration_curve(&y_true, &y_prob, 5, "uniform").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn calibration_curve<S1, S2, D1, D2>(
@@ -1033,7 +1033,7 @@ where
     } else {
         // Create quantile _bins
         let mut probs_sorted: Vec<f64> = y_prob.iter().copied().collect();
-        probs_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        probs_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mut edges = Vec::with_capacity(n_bins + 1);
         edges.push(0.0);

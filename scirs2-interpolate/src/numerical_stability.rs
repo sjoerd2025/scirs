@@ -36,7 +36,7 @@
 //!
 //! // Assess the condition of a matrix
 //! let matrix = Array2::<f64>::eye(3);
-//! let report = assess_matrix_condition(&matrix.view()).unwrap();
+//! let report = assess_matrix_condition(&matrix.view()).expect("Operation failed");
 //!
 //! match report.stability_level {
 //!     StabilityLevel::Excellent => println!("Matrix is well-conditioned"),
@@ -105,19 +105,20 @@ mod tests {
     #[test]
     fn test_quick_condition_check() {
         let well_conditioned = Array2::<f64>::eye(3);
-        assert!(quick_condition_check(&well_conditioned.view()).unwrap());
+        assert!(quick_condition_check(&well_conditioned.view()).expect("Operation failed"));
 
-        let ill_conditioned =
-            Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0 + 1e-15]).unwrap();
-        assert!(!quick_condition_check(&ill_conditioned.view()).unwrap());
+        let ill_conditioned = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0 + 1e-15])
+            .expect("Operation failed");
+        assert!(!quick_condition_check(&ill_conditioned.view()).expect("Operation failed"));
     }
 
     #[test]
     fn test_quick_stable_solve() {
-        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 3.0]).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 3.0]).expect("Operation failed");
         let rhs = Array1::from_vec(vec![1.0, 2.0]);
 
-        let solution = quick_stable_solve(&matrix.view(), &rhs.view()).unwrap();
+        let solution = quick_stable_solve(&matrix.view(), &rhs.view()).expect("Operation failed");
         assert_eq!(solution.len(), 2);
 
         // Verify solution: Ax should equal b
@@ -132,22 +133,22 @@ mod tests {
         // Test the complete workflow using the modular API
         let matrix =
             Array2::from_shape_vec((3, 3), vec![4.0, 1.0, 0.0, 1.0, 4.0, 1.0, 0.0, 1.0, 4.0])
-                .unwrap();
+                .expect("Operation failed");
         let rhs = Array1::from_vec(vec![5.0, 6.0, 5.0]);
 
         // Test condition assessment
-        let condition_report = assess_matrix_condition(&matrix.view()).unwrap();
+        let condition_report = assess_matrix_condition(&matrix.view()).expect("Operation failed");
         assert!(condition_report.is_well_conditioned);
         assert_eq!(condition_report.stability_level, StabilityLevel::Excellent);
 
         // Test enhanced solving
         let (solution, enhanced_report) =
-            solve_with_enhanced_monitoring(&matrix.view(), &rhs.view()).unwrap();
+            solve_with_enhanced_monitoring(&matrix.view(), &rhs.view()).expect("Operation failed");
         assert_eq!(solution.len(), 3);
         assert!(enhanced_report.condition_report.is_well_conditioned);
 
         // Test edge case detection
-        let edge_report = detect_edge_cases(&matrix.view()).unwrap();
+        let edge_report = detect_edge_cases(&matrix.view()).expect("Operation failed");
         assert!(!edge_report.is_nearly_singular);
         assert!(edge_report.has_diagonal_dominance);
     }
@@ -159,15 +160,17 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 1.0, 2.0, 4.0, 3.0, 9.0, 4.0, 16.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let values = Array1::from_vec(vec![0.0, 1.0, 4.0, 9.0, 16.0]);
 
-        let analysis = analyze_interpolation_edge_cases(&points.view(), &values.view()).unwrap();
+        let analysis = analyze_interpolation_edge_cases(&points.view(), &values.view())
+            .expect("Operation failed");
         assert!(analysis.is_solvable);
         assert!(analysis.function_values.is_smooth);
         assert!(analysis.function_values.is_monotonic);
 
-        let data_report = analyze_interpolation_data(&points.view(), &values.view()).unwrap();
+        let data_report =
+            analyze_interpolation_data(&points.view(), &values.view()).expect("Operation failed");
         assert!(matches!(
             data_report
                 .interpolation_method_recommendation
@@ -181,19 +184,23 @@ mod tests {
     #[test]
     fn test_regularization_workflow() {
         // Test regularization on a poorly conditioned matrix
-        let ill_conditioned =
-            Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0 + 1e-15]).unwrap();
+        let ill_conditioned = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 1.0, 1.0 + 1e-15])
+            .expect("Operation failed");
 
-        let condition_report = assess_matrix_condition(&ill_conditioned.view()).unwrap();
+        let condition_report =
+            assess_matrix_condition(&ill_conditioned.view()).expect("Operation failed");
         assert!(!condition_report.is_well_conditioned);
         assert!(condition_report.recommended_regularization.is_some());
 
         // Apply Tikhonov regularization
-        let reg_param = condition_report.recommended_regularization.unwrap();
-        let regularized =
-            apply_tikhonov_regularization(&ill_conditioned.view(), reg_param).unwrap();
+        let reg_param = condition_report
+            .recommended_regularization
+            .expect("Operation failed");
+        let regularized = apply_tikhonov_regularization(&ill_conditioned.view(), reg_param)
+            .expect("Operation failed");
 
-        let regularized_report = assess_matrix_condition(&regularized.view()).unwrap();
+        let regularized_report =
+            assess_matrix_condition(&regularized.view()).expect("Operation failed");
         assert!(regularized_report.condition_number < condition_report.condition_number);
     }
 
@@ -205,7 +212,7 @@ mod tests {
 
         // Test safe reciprocal
         assert!(safe_reciprocal(2.0).is_ok());
-        assert_eq!(safe_reciprocal(2.0).unwrap(), 0.5);
+        assert_eq!(safe_reciprocal(2.0).expect("Operation failed"), 0.5);
         assert!(safe_reciprocal(1e-20).is_err());
     }
 
@@ -231,20 +238,23 @@ mod tests {
     fn test_data_analysis_features() {
         // Test comprehensive data analysis features
         let uniform_points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+                .expect("Operation failed");
         let smooth_values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
 
-        let data_analysis = analyze_data_points(&uniform_points.view()).unwrap();
+        let data_analysis = analyze_data_points(&uniform_points.view()).expect("Operation failed");
         assert!(!data_analysis.is_collinear);
         assert!(data_analysis.clustering_score < 0.5);
 
-        let function_analysis = analyze_function_values(&smooth_values.view()).unwrap();
+        let function_analysis =
+            analyze_function_values(&smooth_values.view()).expect("Operation failed");
         assert!(function_analysis.is_smooth);
         assert!(function_analysis.is_monotonic);
         assert!(!function_analysis.has_outliers);
 
         let boundary_analysis =
-            analyze_boundary_conditions(&uniform_points.view(), &smooth_values.view()).unwrap();
+            analyze_boundary_conditions(&uniform_points.view(), &smooth_values.view())
+                .expect("Operation failed");
         assert!(matches!(
             boundary_analysis.extrapolation_risk,
             ExtrapolationRisk::Low | ExtrapolationRisk::Medium
@@ -253,8 +263,10 @@ mod tests {
 
     #[test]
     fn test_sampling_density_analysis() {
-        let sparse_points = Array2::from_shape_vec((3, 1), vec![0.0, 5.0, 10.0]).unwrap();
-        let analysis = analyze_sampling_density(&sparse_points.view(), 0.1).unwrap();
+        let sparse_points =
+            Array2::from_shape_vec((3, 1), vec![0.0, 5.0, 10.0]).expect("Operation failed");
+        let analysis =
+            analyze_sampling_density(&sparse_points.view(), 0.1).expect("Operation failed");
 
         assert!(analysis.current_density > 0.0);
         assert!(analysis.recommended_density >= analysis.current_density);
@@ -268,9 +280,11 @@ mod tests {
     fn test_preconditioning() {
         use super::numerical_stability_modules::regularization::PreconditionerType;
 
-        let matrix = Array2::from_shape_vec((2, 2), vec![4.0, 1.0, 1.0, 9.0]).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 2), vec![4.0, 1.0, 1.0, 9.0]).expect("Operation failed");
         let (precond, inv_precond) =
-            apply_preconditioning(&matrix.view(), PreconditionerType::Diagonal).unwrap();
+            apply_preconditioning(&matrix.view(), PreconditionerType::Diagonal)
+                .expect("Operation failed");
 
         assert_eq!(precond.nrows(), 2);
         assert_eq!(precond.ncols(), 2);

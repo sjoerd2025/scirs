@@ -34,7 +34,7 @@ use std::fmt::Debug;
 ///
 /// let a = vec![1.0, 2.0, 3.0];
 /// let v = vec![0.5, 0.5];
-/// let result = convolve(&a, &v, "full").unwrap();
+/// let result = convolve(&a, &v, "full").expect("Operation failed");
 ///
 /// // Full convolution: [0.5, 1.5, 2.5, 1.5]
 /// assert_eq!(result.len(), a.len() + v.len() - 1);
@@ -135,7 +135,7 @@ where
 ///
 /// let signal = vec![1.0f32, 2.0, 3.0, 4.0, 5.0];
 /// let kernel = vec![0.25f32, 0.5, 0.25];
-/// let result = convolve_simd_ultra(&signal, &kernel, "same").unwrap();
+/// let result = convolve_simd_ultra(&signal, &kernel, "same").expect("Operation failed");
 /// ```
 pub fn convolve_simd_ultra(a: &[f32], v: &[f32], mode: &str) -> SignalResult<Vec<f32>> {
     if a.is_empty() || v.is_empty() {
@@ -341,7 +341,7 @@ fn apply_convolution_mode(
 ///
 /// let a = vec![1.0, 2.0, 3.0];
 /// let v = vec![0.5, 0.5];
-/// let result = correlate(&a, &v, "full").unwrap();
+/// let result = correlate(&a, &v, "full").expect("Operation failed");
 ///
 /// // Full correlation: [1.5, 2.5, 1.5, 0.0]
 /// assert_eq!(result.len(), a.len() + v.len() - 1);
@@ -629,7 +629,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0];
         let v = vec![0.5, 0.5];
 
-        let result = convolve(&a, &v, "full").unwrap();
+        let result = convolve(&a, &v, "full").expect("Operation failed");
 
         assert_eq!(result.len(), a.len() + v.len() - 1);
         assert_relative_eq!(result[0], 0.5, epsilon = 1e-10); // 1.0 * 0.5
@@ -643,7 +643,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0];
         let v = vec![0.5, 0.5];
 
-        let result = convolve(&a, &v, "same").unwrap();
+        let result = convolve(&a, &v, "same").expect("Operation failed");
 
         assert_eq!(result.len(), a.len());
         assert_relative_eq!(result[0], 0.5, epsilon = 1e-10);
@@ -656,7 +656,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0];
         let v = vec![0.5, 0.5];
 
-        let result = convolve(&a, &v, "valid").unwrap();
+        let result = convolve(&a, &v, "valid").expect("Operation failed");
 
         assert_eq!(result.len(), a.len() - v.len() + 1);
         assert_relative_eq!(result[0], 1.5, epsilon = 1e-10); // 1.0 * 0.5 + 2.0 * 0.5
@@ -669,7 +669,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0];
         let v = vec![0.5, 0.5];
 
-        let result = correlate(&a, &v, "full").unwrap();
+        let result = correlate(&a, &v, "full").expect("Operation failed");
 
         assert_eq!(result.len(), a.len() + v.len() - 1);
         assert_relative_eq!(result[0], 0.5, epsilon = 1e-10); // 1.0 * 0.5

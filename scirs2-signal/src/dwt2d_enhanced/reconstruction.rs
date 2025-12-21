@@ -702,8 +702,14 @@ fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalRe
 ///
 /// * `SignalResult<f64>` - Correlation coefficient (-1.0 to 1.0)
 fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
-    let edges1_flat = edges1.view().into_shape_with_order(edges1.len()).unwrap();
-    let edges2_flat = edges2.view().into_shape_with_order(edges2.len()).unwrap();
+    let edges1_flat = edges1
+        .view()
+        .into_shape_with_order(edges1.len())
+        .expect("Operation failed");
+    let edges2_flat = edges2
+        .view()
+        .into_shape_with_order(edges2.len())
+        .expect("Operation failed");
 
     // Compute means
     let mean1 = edges1_flat.sum() / edges1_flat.len() as f64;
@@ -792,9 +798,9 @@ mod tests {
     fn test_gradient_magnitude() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let magnitude = compute_gradient_magnitude(&image).unwrap();
+        let magnitude = compute_gradient_magnitude(&image).expect("Operation failed");
         assert_eq!(magnitude.dim(), (3, 3));
         // Center pixel should have non-zero gradient
         assert!(magnitude[[1, 1]] > 0.0);
@@ -802,8 +808,9 @@ mod tests {
 
     #[test]
     fn test_resize_to_match() {
-        let source = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let resized = resize_to_match(&source, (4, 4)).unwrap();
+        let source =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let resized = resize_to_match(&source, (4, 4)).expect("Operation failed");
         assert_eq!(resized.dim(), (4, 4));
     }
 }

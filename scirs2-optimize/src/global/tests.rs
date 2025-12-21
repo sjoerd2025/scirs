@@ -29,7 +29,8 @@ fn test_differential_evolution_rosenbrock() {
         ..Default::default()
     };
 
-    let result = differential_evolution(rosenbrock, bounds, Some(options), None).unwrap();
+    let result =
+        differential_evolution(rosenbrock, bounds, Some(options), None).expect("Operation failed");
 
     assert!(result.success);
     assert!((result.x[0] - 1.0).abs() < 0.1);
@@ -51,7 +52,7 @@ fn test_basinhopping_sphere() {
         ..Default::default()
     };
 
-    let result = basinhopping(sphere, x0, Some(options), None, None).unwrap();
+    let result = basinhopping(sphere, x0, Some(options), None, None).expect("Operation failed");
 
     assert!(result.success);
     assert!(result.x.iter().all(|&xi| xi.abs() < 0.2));
@@ -79,7 +80,7 @@ fn test_dual_annealing_rastrigin() {
         ..Default::default()
     };
 
-    let result = dual_annealing(rastrigin, x0, bounds, Some(options)).unwrap();
+    let result = dual_annealing(rastrigin, x0, bounds, Some(options)).expect("Operation failed");
 
     // Rastrigin global minimum is at origin with value 0
     assert!(result.x.iter().all(|&xi| xi.abs() < 0.5));
@@ -101,7 +102,8 @@ fn test_differential_evolution_bounds() {
         ..Default::default()
     };
 
-    let result = differential_evolution(func, bounds, Some(options), None).unwrap();
+    let result =
+        differential_evolution(func, bounds, Some(options), None).expect("Operation failed");
 
     // Constrained minimum should be at (0, 0)
     assert!(result.success);
@@ -126,7 +128,7 @@ fn test_basinhopping_with_bounds() {
         ..Default::default()
     };
 
-    let result = basinhopping(func, x0, Some(options), None, None).unwrap();
+    let result = basinhopping(func, x0, Some(options), None, None).expect("Operation failed");
 
     // With bounds, minimum should be at (0.5, 0.5)
     assert!(result.success);
@@ -150,8 +152,8 @@ fn test_differential_evolution_different_strategies() {
             ..Default::default()
         };
 
-        let result =
-            differential_evolution(sphere, bounds.clone(), Some(options), Some(strategy)).unwrap();
+        let result = differential_evolution(sphere, bounds.clone(), Some(options), Some(strategy))
+            .expect("Operation failed");
         assert!(result.fun < 0.1, "Strategy {} failed to converge", strategy);
     }
 }
@@ -170,7 +172,7 @@ fn test_particle_swarm_sphere() {
         ..Default::default()
     };
 
-    let result = particle_swarm(sphere, bounds, Some(options)).unwrap();
+    let result = particle_swarm(sphere, bounds, Some(options)).expect("Operation failed");
 
     assert!(result.x.iter().all(|&xi| xi.abs() < 0.1));
     assert!(result.fun < 0.01);
@@ -199,7 +201,8 @@ fn test_simulated_annealing_rosenbrock() {
         ..Default::default()
     };
 
-    let result = simulated_annealing(rosenbrock, x0, bounds, Some(options)).unwrap();
+    let result =
+        simulated_annealing(rosenbrock, x0, bounds, Some(options)).expect("Operation failed");
 
     // Simulated annealing might not always find exact solution
     assert!((result.x[0] - 1.0).abs() < 0.5);
@@ -221,7 +224,7 @@ fn test_particle_swarm_with_bounds() {
         ..Default::default()
     };
 
-    let result = particle_swarm(func, bounds, Some(options)).unwrap();
+    let result = particle_swarm(func, bounds, Some(options)).expect("Operation failed");
 
     // Constrained minimum should be at (0, 0)
     assert!(result.success);
@@ -245,7 +248,7 @@ fn test_multi_start_basic() {
         ..Default::default()
     };
 
-    let result = multi_start(sphere, bounds, Some(options)).unwrap();
+    let result = multi_start(sphere, bounds, Some(options)).expect("Operation failed");
 
     assert!(result.success);
     assert!(result.x.iter().all(|&xi| xi.abs() < 0.1));
@@ -271,7 +274,7 @@ fn test_multi_start_latin_hypercube() {
         ..Default::default()
     };
 
-    let result = multi_start(func, bounds, Some(options)).unwrap();
+    let result = multi_start(func, bounds, Some(options)).expect("Operation failed");
 
     // Should find a good minimum
     assert!(result.success);
@@ -297,7 +300,7 @@ fn test_multi_start_grid() {
         ..Default::default()
     };
 
-    let result = multi_start(himmelblau, bounds, Some(options)).unwrap();
+    let result = multi_start(himmelblau, bounds, Some(options)).expect("Operation failed");
 
     // Himmelblau's function has 4 global minima, all with value 0
     assert!(result.success);
@@ -325,7 +328,8 @@ fn test_differential_evolution_parallel_basic() {
         parallel_gradient: true,
     });
 
-    let result = differential_evolution(sphere, bounds, Some(options), None).unwrap();
+    let result =
+        differential_evolution(sphere, bounds, Some(options), None).expect("Operation failed");
 
     // Should find minimum near origin
     assert!(result.x[0].abs() < 1.0);
@@ -358,7 +362,8 @@ fn test_differential_evolution_parallel_correctness() {
         parallel_gradient: true,
     });
 
-    let result = differential_evolution(rosenbrock, bounds, Some(options), None).unwrap();
+    let result =
+        differential_evolution(rosenbrock, bounds, Some(options), None).expect("Operation failed");
 
     // Check that we found the minimum
     assert!(result.fun < 0.1); // Should be very close to 0

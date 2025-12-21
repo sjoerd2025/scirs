@@ -39,13 +39,13 @@ use std::collections::VecDeque;
 ///     1.0, 0.0, 0.0, 1.0,
 ///     0.0, 1.0, 1.0, 0.0,
 ///     1.0, 1.0, 0.0, 0.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let targets = Array1::from_vec(vec![0.0, 1.0, 1.0, 0.0]);
 ///
 /// // Train the system
 /// # tokio_test::block_on(async {
 /// let result = learning_system.train_spatial_data(&spatial_data.view(), &targets.view(), 50).await.unwrap();
-/// println!("Final accuracy: {:.2}", result.training_metrics.last().unwrap().accuracy);
+/// println!("Final accuracy: {:.2}", result.training_metrics.last().expect("Operation failed").accuracy);
 /// # });
 /// ```
 #[derive(Debug, Clone)]
@@ -629,7 +629,7 @@ impl AdvancedMemristiveLearning {
             generalization: self.estimate_generalization(),
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_secs_f64(),
         })
     }
@@ -1206,7 +1206,7 @@ impl AdvancedMemristiveLearning {
             strength: 1.0,
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_secs_f64(),
         };
 
@@ -1255,7 +1255,7 @@ impl AdvancedMemristiveLearning {
         percentile: f64,
     ) -> f64 {
         let mut values: Vec<f64> = importance_matrix.iter().cloned().collect();
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let index = (values.len() as f64 * percentile) as usize;
         values.get(index).cloned().unwrap_or(0.0)
@@ -1582,7 +1582,7 @@ mod tests {
         let input = array![0.5, 0.8, 0.3];
         let result = learning_system.forward_pass(&input.view()).await;
         assert!(result.is_ok());
-        let output = result.unwrap();
+        let output = result.expect("Operation failed");
         assert!((0.0..=1.0).contains(&output)); // Sigmoid output
     }
 
@@ -1620,7 +1620,7 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        let training_result = result.unwrap();
+        let training_result = result.expect("Operation failed");
         assert_eq!(training_result.training_metrics.len(), 5);
         assert!(!training_result.final_weights.is_empty());
     }

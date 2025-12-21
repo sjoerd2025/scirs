@@ -53,7 +53,7 @@ use scirs2_core::validation::{check_positive, check_finite};
 /// let mut noisy = original.clone();
 /// noisy[[0, 0]] += 0.1; // Add small noise
 ///
-/// let psnr = calculate_psnr(&original, &noisy).unwrap();
+/// let psnr = calculate_psnr(&original, &noisy).expect("Operation failed");
 /// println!("PSNR: {:.2} dB", psnr);
 /// ```
 pub fn calculate_psnr(original: &Array2<f64>, reconstructed: &Array2<f64>) -> SignalResult<f64> {
@@ -158,7 +158,7 @@ pub fn calculate_psnr(original: &Array2<f64>, reconstructed: &Array2<f64>) -> Si
 ///     *val += ((i + j) as f64 * 0.1).sin();
 /// }
 ///
-/// let ssim = calculate_ssim(&original, &processed, 8, 0.01, 0.03).unwrap();
+/// let ssim = calculate_ssim(&original, &processed, 8, 0.01, 0.03).expect("Operation failed");
 /// println!("SSIM: {:.4}", ssim);
 /// ```
 pub fn calculate_ssim(
@@ -475,7 +475,7 @@ mod tests {
         let original = Array2::from_shape_fn((4, 4), |(i, j)| (i + j) as f64);
         let identical = original.clone();
 
-        let psnr = calculate_psnr(&original, &identical).unwrap();
+        let psnr = calculate_psnr(&original, &identical).expect("Operation failed");
         assert!(psnr.is_infinite());
     }
 
@@ -493,7 +493,7 @@ mod tests {
         let original = Array2::from_shape_fn((8, 8), |(i, j)| (i * j) as f64);
         let identical = original.clone();
 
-        let ssim = calculate_ssim(&original, &identical, 4, 0.01, 0.03).unwrap();
+        let ssim = calculate_ssim(&original, &identical, 4, 0.01, 0.03).expect("Operation failed");
         assert!((ssim - 1.0).abs() < 1e-10);
     }
 
@@ -523,7 +523,7 @@ mod tests {
         let denoised = denoise_dwt2d_adaptive(&noisy_image, Wavelet::DB(4), Some(0.25), ThresholdMethod::Soft);
         assert!(denoised.is_ok());
 
-        let denoised = denoised.unwrap();
+        let denoised = denoised.expect("Operation failed");
         assert_eq!(denoised.shape(), noisy_image.shape());
     }
 
@@ -533,7 +533,7 @@ mod tests {
         let result = wavedec2_enhanced(&data, Wavelet::Haar, 2, None);
 
         assert!(result.is_ok());
-        let coeffs = result.unwrap();
+        let coeffs = result.expect("Operation failed");
         assert_eq!(coeffs.len(), 2);
     }
 }

@@ -91,7 +91,7 @@ impl Default for PeriodDetectionOptions {
 ///                 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
 ///
 /// let options = PeriodDetectionOptions::default();
-/// let result = detect_periods(&ts, &options).unwrap();
+/// let result = detect_periods(&ts, &options).expect("Operation failed");
 ///
 /// // Should detect a period of 4
 /// for (period, strength) in &result.periods {
@@ -185,7 +185,7 @@ where
 
     // Find peaks in the ACF
     let mut peaks = Vec::new();
-    let threshold = F::from_f64(options.threshold).unwrap();
+    let threshold = F::from_f64(options.threshold).expect("Operation failed");
 
     // For test stability, always include the highest ACF value if within the valid period range
     let mut max_acf = F::min_value();
@@ -252,7 +252,8 @@ where
     let mut periodogram = Array1::zeros(n / 2 + 1);
 
     // Remove the mean to center the data
-    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
+    let mean =
+        ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).expect("Operation failed");
     let centered_ts = Array1::from_shape_fn(n, |i| ts[i] - mean);
 
     // Compute the periodogram using DFT
@@ -261,14 +262,15 @@ where
         let mut imag_part = F::zero();
 
         for (j, &x) in centered_ts.iter().enumerate() {
-            let angle =
-                F::from_f64(-2.0 * std::f64::consts::PI * k as f64 * j as f64 / n as f64).unwrap();
+            let angle = F::from_f64(-2.0 * std::f64::consts::PI * k as f64 * j as f64 / n as f64)
+                .expect("Operation failed");
             real_part = real_part + x * angle.cos();
             imag_part = imag_part + x * angle.sin();
         }
 
         // Power spectral density
-        let power = (real_part * real_part + imag_part * imag_part) / F::from_usize(n).unwrap();
+        let power = (real_part * real_part + imag_part * imag_part)
+            / F::from_usize(n).expect("Operation failed");
         periodogram[k] = power;
     }
 
@@ -278,7 +280,8 @@ where
     // Find peaks in the periodogram
     let mut peaks = Vec::new();
     let max_power = periodogram.iter().fold(F::zero(), |acc, &x| acc.max(x));
-    let threshold = F::from_f64(options.threshold * max_power.to_f64().unwrap()).unwrap();
+    let threshold = F::from_f64(options.threshold * max_power.to_f64().expect("Operation failed"))
+        .expect("Operation failed");
 
     // For test stability, track the highest power
     let mut max_period = 0;
@@ -455,7 +458,7 @@ where
 ///     DecompositionType::MSTL => {
 ///         let mut mstl_options = scirs2_series::decomposition::MSTLOptions::default();
 ///         mstl_options.seasonal_periods = vec![4]; // Force a known period
-///         let mstl_result = scirs2_series::decomposition::mstl_decomposition(&ts, &mstl_options).unwrap();
+///         let mstl_result = scirs2_series::decomposition::mstl_decomposition(&ts, &mstl_options).expect("Operation failed");
 ///         
 ///         // Wrap in AutoDecompositionResult
 ///         scirs2_series::detection::AutoDecompositionResult {
@@ -599,19 +602,19 @@ mod tests {
         }
 
         // Calculate ACF directly
-        let acf = autocorrelation(&ts, Some(50)).unwrap();
+        let acf = autocorrelation(&ts, Some(50)).expect("Operation failed");
 
         // ACF at lag 0 should be 1.0
         assert!((acf[0] - 1.0).abs() < 1e-10);
 
         // ACF at lag 7 should be higher than surrounding values
-        let lag7 = acf[7].to_f64().unwrap();
-        let _lag6 = acf[6].to_f64().unwrap();
-        let _lag8 = acf[8].to_f64().unwrap();
+        let lag7 = acf[7].to_f64().expect("Operation failed");
+        let _lag6 = acf[6].to_f64().expect("Operation failed");
+        let _lag8 = acf[8].to_f64().expect("Operation failed");
 
         // Either lag 7 is high, or lag 14 (multiple of 7) is high
         let lag14 = if acf.len() > 14 {
-            acf[14].to_f64().unwrap()
+            acf[14].to_f64().expect("Operation failed")
         } else {
             0.0
         };
@@ -634,7 +637,7 @@ mod tests {
         }
 
         // Calculate ACF
-        let acf = autocorrelation(&ts, Some(50)).unwrap();
+        let acf = autocorrelation(&ts, Some(50)).expect("Operation failed");
 
         // Create periodogram from ACF
         let n = ts.len();
@@ -643,7 +646,7 @@ mod tests {
             let mut power = 0.0;
             for j in 1..acf.len() {
                 let cos_term = (2.0 * std::f64::consts::PI * j as f64 * i as f64 / n as f64).cos();
-                power += acf[j].to_f64().unwrap() * cos_term;
+                power += acf[j].to_f64().expect("Operation failed") * cos_term;
             }
             periodogram[i] = power.abs();
         }
@@ -698,7 +701,8 @@ mod tests {
             seasonal_periods: vec![forced_period],
             ..Default::default()
         };
-        let mstl_result = crate::decomposition::mstl_decomposition(&ts, &mstl_options).unwrap();
+        let mstl_result =
+            crate::decomposition::mstl_decomposition(&ts, &mstl_options).expect("Operation failed");
         assert_eq!(mstl_result.trend.len(), ts.len());
         assert_eq!(mstl_result.seasonal_components.len(), 1);
 
@@ -707,7 +711,8 @@ mod tests {
             seasonal_periods: vec![forced_period as f64],
             ..Default::default()
         };
-        let tbats_result = crate::decomposition::tbats_decomposition(&ts, &tbats_options).unwrap();
+        let tbats_result = crate::decomposition::tbats_decomposition(&ts, &tbats_options)
+            .expect("Operation failed");
         assert_eq!(tbats_result.trend.len(), ts.len());
         assert_eq!(tbats_result.seasonal_components.len(), 1);
 
@@ -716,7 +721,8 @@ mod tests {
             seasonal_periods: vec![forced_period as f64],
             ..Default::default()
         };
-        let str_result = crate::decomposition::str_decomposition(&ts, &str_options).unwrap();
+        let str_result =
+            crate::decomposition::str_decomposition(&ts, &str_options).expect("Operation failed");
         assert_eq!(str_result.trend.len(), ts.len());
         assert_eq!(str_result.seasonal_components.len(), 1);
 

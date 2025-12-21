@@ -172,13 +172,17 @@ impl Isomap {
         let squared_distances = distances.mapv(|d| d * d);
 
         // Row means
-        let row_means = squared_distances.mean_axis(Axis(1)).unwrap();
+        let row_means = squared_distances
+            .mean_axis(Axis(1))
+            .expect("Operation failed");
 
         // Column means
-        let col_means = squared_distances.mean_axis(Axis(0)).unwrap();
+        let col_means = squared_distances
+            .mean_axis(Axis(0))
+            .expect("Operation failed");
 
         // Grand mean
-        let grand_mean = row_means.mean().unwrap();
+        let grand_mean = row_means.mean().expect("Operation failed");
 
         // Double centering
         let mut gram = Array2::zeros((n, n));
@@ -200,7 +204,11 @@ impl Isomap {
 
         // Sort eigenvalues and eigenvectors in descending order
         let mut indices: Vec<usize> = (0..n).collect();
-        indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+        indices.sort_by(|&i, &j| {
+            eigenvalues[j]
+                .partial_cmp(&eigenvalues[i])
+                .expect("Operation failed")
+        });
 
         // Extract the top n_components eigenvectors
         let mut embedding = Array2::zeros((n, self.n_components));
@@ -300,7 +308,7 @@ impl Isomap {
 
         // Check if this is the training data
         if self.is_same_data(&x_f64, training_data) {
-            return Ok(self.embedding.as_ref().unwrap().clone());
+            return Ok(self.embedding.as_ref().expect("Operation failed").clone());
         }
 
         // Implement Landmark MDS for out-of-sample extension
@@ -352,9 +360,9 @@ impl Isomap {
 
     /// Implement Landmark MDS for out-of-sample extension
     fn landmark_mds(&self, xnew: &Array2<f64>) -> Result<Array2<f64>> {
-        let training_data = self.training_data.as_ref().unwrap();
-        let training_embedding = self.embedding.as_ref().unwrap();
-        let geodesic_distances = self.geodesic_distances.as_ref().unwrap();
+        let training_data = self.training_data.as_ref().expect("Operation failed");
+        let training_embedding = self.embedding.as_ref().expect("Operation failed");
+        let geodesic_distances = self.geodesic_distances.as_ref().expect("Operation failed");
 
         let (n_new, n_features) = xnew.dim();
         let (n_training_, _) = training_data.dim();
@@ -420,7 +428,7 @@ impl Isomap {
             .indexed_iter()
             .map(|(idx, &dist)| (dist, idx))
             .collect();
-        landmark_dists.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        landmark_dists.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         // Use the k nearest _landmarks
         let selected_landmarks: Vec<usize> = landmark_dists
@@ -558,11 +566,11 @@ mod tests {
             data.extend_from_slice(&[x, y, z]);
         }
 
-        let x = Array::from_shape_vec((n_points, 3), data).unwrap();
+        let x = Array::from_shape_vec((n_points, 3), data).expect("Operation failed");
 
         // Fit Isomap
         let mut isomap = Isomap::new(5, 2);
-        let embedding = isomap.fit_transform(&x).unwrap();
+        let embedding = isomap.fit_transform(&x).expect("Operation failed");
 
         // Check shape
         assert_eq!(embedding.shape(), &[n_points, 2]);
@@ -583,7 +591,7 @@ mod tests {
         // This should work as the identity matrix forms a connected graph with epsilon=1.5
         assert!(result.is_ok());
 
-        let embedding = result.unwrap();
+        let embedding = result.expect("Operation failed");
         assert_eq!(embedding.shape(), &[5, 2]);
     }
 

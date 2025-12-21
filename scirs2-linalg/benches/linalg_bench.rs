@@ -204,7 +204,10 @@ fn bench_structured_matrices(c: &mut Criterion) {
             BenchmarkId::new("toeplitz_solve", size),
             &(&first_row, &rhs),
             |b, (r, rhs)| {
-                b.iter(|| solve_toeplitz(r.view(), r.view(), black_box(rhs.view())).unwrap())
+                b.iter(|| {
+                    solve_toeplitz(r.view(), r.view(), black_box(rhs.view()))
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -212,7 +215,11 @@ fn bench_structured_matrices(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("circulant_solve", size),
             &(&first_row, &rhs),
-            |b, (r, rhs)| b.iter(|| solve_circulant(r.view(), black_box(rhs.view())).unwrap()),
+            |b, (r, rhs)| {
+                b.iter(|| {
+                    solve_circulant(r.view(), black_box(rhs.view())).expect("Operation failed")
+                })
+            },
         );
     }
 
@@ -409,8 +416,8 @@ fn bench_projection_operations(c: &mut Criterion) {
             BenchmarkId::new("gaussian_projection", size),
             &(&matrix, target_dim),
             |bencher, (m, d)| {
-                let projmatrix =
-                    gaussian_randommatrix(black_box(*d), black_box(m.ncols())).unwrap();
+                let projmatrix = gaussian_randommatrix(black_box(*d), black_box(m.ncols()))
+                    .expect("Operation failed");
                 bencher.iter(|| project(black_box(&m.view()), black_box(&projmatrix.view())))
             },
         );

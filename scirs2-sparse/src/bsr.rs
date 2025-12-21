@@ -51,7 +51,7 @@ where
     /// use scirs2_sparse::bsr::BsrMatrix;
     ///
     /// // Create a 6x6 sparse matrix with 2x2 blocks
-    /// let matrix = BsrMatrix::<f64>::new((6, 6), (2, 2)).unwrap();
+    /// let matrix = BsrMatrix::<f64>::new((6, 6), (2, 2)).expect("Operation failed");
     /// ```
     pub fn new(shape: (usize, usize), block_size: (usize, usize)) -> SparseResult<Self> {
         let (rows, cols) = shape;
@@ -292,7 +292,7 @@ mod tests {
     #[test]
     fn test_bsr_create() {
         // Create a 6x6 sparse matrix with 2x2 blocks
-        let matrix = BsrMatrix::<f64>::new((6, 6), (2, 2)).unwrap();
+        let matrix = BsrMatrix::<f64>::new((6, 6), (2, 2)).expect("Operation failed");
 
         assert_eq!(matrix.shape(), (6, 6));
         assert_eq!(matrix.block_size(), (2, 2));
@@ -315,7 +315,8 @@ mod tests {
         let indices = vec![vec![0], vec![1]];
         let indptr = vec![0, 1, 2];
 
-        let matrix = BsrMatrix::from_blocks(data, indices, indptr, (4, 4), (2, 2)).unwrap();
+        let matrix = BsrMatrix::from_blocks(data, indices, indptr, (4, 4), (2, 2))
+            .expect("Operation failed");
 
         assert_eq!(matrix.shape(), (4, 4));
         assert_eq!(matrix.block_size(), (2, 2));

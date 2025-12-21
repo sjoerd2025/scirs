@@ -10,7 +10,7 @@ mod dwt_boundary_tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Extend with filter length 4 (pad by 3)
-        let extended = extend_signal(&signal, 4, "symmetric").unwrap();
+        let extended = extend_signal(&signal, 4, "symmetric").expect("Test: operation failed");
 
         // For symmetric extension, signal is reflected at the boundaries
         // Expected pattern: [2, 1, *1, 2, 3, 4*, 4, 3]
@@ -32,7 +32,7 @@ mod dwt_boundary_tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Extend with filter length 4 (pad by 3)
-        let extended = extend_signal(&signal, 4, "periodic").unwrap();
+        let extended = extend_signal(&signal, 4, "periodic").expect("Test: operation failed");
 
         // For periodic extension, signal is repeated
         // Expected pattern: [2, 3, 4, *1, 2, 3, 4*, 1, 2, 3]
@@ -54,7 +54,7 @@ mod dwt_boundary_tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Extend with filter length 4 (pad by 3)
-        let extended = extend_signal(&signal, 4, "zero").unwrap();
+        let extended = extend_signal(&signal, 4, "zero").expect("Test: operation failed");
 
         // For zero extension, signal is padded with zeros
         // Expected pattern: [0, 0, 0, *1, 2, 3, 4*, 0, 0, 0]
@@ -76,7 +76,7 @@ mod dwt_boundary_tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Extend with filter length 4 (pad by 3)
-        let extended = extend_signal(&signal, 4, "constant").unwrap();
+        let extended = extend_signal(&signal, 4, "constant").expect("Test: operation failed");
 
         // For constant extension, signal is padded with edge values
         // Expected pattern: [1, 1, 1, *1, 2, 3, 4*, 4, 4, 4]
@@ -98,7 +98,7 @@ mod dwt_boundary_tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Extend with filter length 4 (pad by 3)
-        let extended = extend_signal(&signal, 4, "reflect").unwrap();
+        let extended = extend_signal(&signal, 4, "reflect").expect("Test: operation failed");
 
         // For reflect extension, signal is reflected without repeating edge values
         // Expected pattern: [3, 2, 1, *1, 2, 3, 4*, 3, 2, 1]
@@ -128,7 +128,7 @@ mod dwt_boundary_tests {
         let signal: Vec<f64> = vec![];
 
         // Should return an empty extended signal
-        let extended = extend_signal(&signal, 4, "symmetric").unwrap();
+        let extended = extend_signal(&signal, 4, "symmetric").expect("Test: operation failed");
         assert_eq!(extended.len(), 2 * (4 - 1));
     }
 }

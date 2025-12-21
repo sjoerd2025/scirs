@@ -516,9 +516,9 @@ where
     fn to_coo(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (rows, cols, data) = self.find();
         let coo = crate::coo_array::CooArray::from_triplets(
-            rows.as_slice().unwrap(),
-            cols.as_slice().unwrap(),
-            data.as_slice().unwrap(),
+            rows.as_slice().expect("Operation failed"),
+            cols.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
             self.shape,
             false,
         )?;
@@ -528,9 +528,9 @@ where
     fn to_csr(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (rows, cols, data) = self.find();
         let csr = crate::csr_array::CsrArray::from_triplets(
-            rows.as_slice().unwrap(),
-            cols.as_slice().unwrap(),
-            data.as_slice().unwrap(),
+            rows.as_slice().expect("Operation failed"),
+            cols.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
             self.shape,
             false,
         )?;
@@ -540,9 +540,9 @@ where
     fn to_csc(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (rows, cols, data) = self.find();
         let csc = crate::csc_array::CscArray::from_triplets(
-            rows.as_slice().unwrap(),
-            cols.as_slice().unwrap(),
-            data.as_slice().unwrap(),
+            rows.as_slice().expect("Operation failed"),
+            cols.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
             self.shape,
             false,
         )?;
@@ -923,9 +923,9 @@ mod tests {
                 8.0, 9.0, 10.0, 0.0, // Lower diagonal
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let banded = BandedArray::new(data, 1, 1, (4, 4)).unwrap();
+        let banded = BandedArray::new(data, 1, 1, (4, 4)).expect("Operation failed");
 
         assert_eq!(banded.shape(), (4, 4));
         assert_eq!(banded.kl(), 1);
@@ -958,7 +958,7 @@ mod tests {
         let lower = vec![1.0, 1.0];
         let upper = vec![5.0, 6.0];
 
-        let banded = BandedArray::tridiagonal(&diag, &lower, &upper).unwrap();
+        let banded = BandedArray::tridiagonal(&diag, &lower, &upper).expect("Operation failed");
 
         assert_eq!(banded.shape(), (3, 3));
         assert_eq!(banded.get(0, 0), 2.0);
@@ -976,10 +976,10 @@ mod tests {
         let lower = vec![1.0, 1.0];
         let upper = vec![5.0, 6.0];
 
-        let banded = BandedArray::tridiagonal(&diag, &lower, &upper).unwrap();
+        let banded = BandedArray::tridiagonal(&diag, &lower, &upper).expect("Operation failed");
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let y = banded.matvec(&x.view()).unwrap();
+        let y = banded.matvec(&x.view()).expect("Operation failed");
 
         // Manual calculation:
         // [2 5 0] [1]   [2*1 + 5*2 + 0*3] = [12]
@@ -998,13 +998,13 @@ mod tests {
         let lower = vec![-1.0, -1.0];
         let upper = vec![-1.0, -1.0];
 
-        let banded = BandedArray::tridiagonal(&diag, &lower, &upper).unwrap();
+        let banded = BandedArray::tridiagonal(&diag, &lower, &upper).expect("Operation failed");
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
 
-        let x = banded.solve(&b.view()).unwrap();
+        let x = banded.solve(&b.view()).expect("Operation failed");
 
         // Verify solution by computing A*x
-        let ax = banded.matvec(&x.view()).unwrap();
+        let ax = banded.matvec(&x.view()).expect("Operation failed");
 
         for i in 0..3 {
             assert_relative_eq!(ax[i], b[i], epsilon = 1e-10);

@@ -50,7 +50,7 @@ mod tests {
         ner.add_organizations(vec!["Microsoft".to_string(), "Google".to_string()]);
 
         let text = "John works at Microsoft. His email is john@example.com";
-        let entities = ner.extract_entities(text).unwrap();
+        let entities = ner.extract_entities(text).expect("Operation failed");
 
         assert!(entities.len() >= 3); // John, Microsoft, email
         assert!(entities.iter().any(|e| e.entity_type == EntityType::Person));
@@ -69,7 +69,9 @@ mod tests {
         let text = "machine learning is important. machine learning algorithms are complex.";
         let tokenizer = WordTokenizer::default();
 
-        let phrases = extractor.extract(text, &tokenizer).unwrap();
+        let phrases = extractor
+            .extract(text, &tokenizer)
+            .expect("Operation failed");
 
         assert!(!phrases.is_empty());
         assert!(phrases.iter().any(|(p, _)| p.contains("machine learning")));
@@ -80,11 +82,11 @@ mod tests {
         let mut extractor = PatternExtractor::new();
         extractor.add_pattern(
             "price".to_string(),
-            Regex::new(r"\$\d+(?:\.\d{2})?").unwrap(),
+            Regex::new(r"\$\d+(?:\.\d{2})?").expect("Operation failed"),
         );
 
         let text = "The product costs $29.99 and shipping is $5.00";
-        let results = extractor.extract(text).unwrap();
+        let results = extractor.extract(text).expect("Operation failed");
 
         assert!(results.contains_key("price"));
         assert_eq!(results["price"].len(), 2);
@@ -97,7 +99,7 @@ mod tests {
         let pipeline = InformationExtractionPipeline::new().with_ner(ner);
 
         let text = "Apple Inc. announced that Tim Cook will visit London on January 15, 2024. Contact: info@apple.com";
-        let info = pipeline.extract(text).unwrap();
+        let info = pipeline.extract(text).expect("Operation failed");
 
         assert!(!info.entities.is_empty());
         assert!(info
@@ -127,7 +129,7 @@ mod tests {
         let extractor = TemporalExtractor::new();
 
         let text = "The meeting is scheduled for next Monday from 2:00-4:00 PM. It will last 2 hours during winter season.";
-        let entities = extractor.extract(text).unwrap();
+        let entities = extractor.extract(text).expect("Operation failed");
 
         assert!(!entities.is_empty());
         assert!(entities.iter().any(|e| e.text.contains("next Monday")));
@@ -159,7 +161,9 @@ mod tests {
             confidence: 0.7,
         }];
 
-        let linked = linker.link_entities(&mut entities).unwrap();
+        let linked = linker
+            .link_entities(&mut entities)
+            .expect("Operation failed");
         assert!(!linked.is_empty());
         assert_eq!(linked[0].canonical_name, "Apple Inc.");
     }
@@ -177,7 +181,7 @@ mod tests {
         }];
 
         let text = "John Smith is a CEO. He founded the company in 2020.";
-        let chains = resolver.resolve(text, &entities).unwrap();
+        let chains = resolver.resolve(text, &entities).expect("Operation failed");
 
         // Should find a coreference chain for "He" -> "John Smith"
         assert!(!chains.is_empty());
@@ -209,7 +213,7 @@ mod tests {
         let pipeline = AdvancedExtractionPipeline::new().with_ner(ner);
 
         let text = "Microsoft Corp. announced today that CEO Satya Nadella will visit New York next week. He will meet with partners.";
-        let info = pipeline.extract_advanced(text).unwrap();
+        let info = pipeline.extract_advanced(text).expect("Operation failed");
 
         // Should extract basic entities
         assert!(!info.entities.is_empty());
@@ -271,7 +275,7 @@ mod tests {
 
         let result = extractor
             .extract_structured_information(&documents, &pipeline)
-            .unwrap();
+            .expect("Operation failed");
 
         // Should have processed all documents
         assert_eq!(result.documents.len(), 3);
@@ -314,7 +318,9 @@ mod tests {
             },
         ];
 
-        let clusters = extractor.cluster_entities(&entities).unwrap();
+        let clusters = extractor
+            .cluster_entities(&entities)
+            .expect("Operation failed");
 
         // Should cluster similar entities (Apple variations)
         assert_eq!(clusters.len(), 2);
@@ -323,7 +329,7 @@ mod tests {
         let apple_cluster = clusters
             .iter()
             .find(|c| c.representative.text.to_lowercase().contains("apple"))
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(apple_cluster.members.len(), 2);
     }
 
@@ -389,7 +395,9 @@ mod tests {
             },
         ];
 
-        let events = extractor.extract_events(&relations, &entities).unwrap();
+        let events = extractor
+            .extract_events(&relations, &entities)
+            .expect("Operation failed");
 
         // Should extract at least one event
         assert!(!events.is_empty());
@@ -475,7 +483,9 @@ mod tests {
             },
         ];
 
-        let topics = extractor.identify_topics(&summaries).unwrap();
+        let topics = extractor
+            .identify_topics(&summaries)
+            .expect("Operation failed");
 
         // Should identify "machine learning" as a topic (appears in both documents)
         assert!(!topics.is_empty());
@@ -484,7 +494,7 @@ mod tests {
         let ml_topic = topics
             .iter()
             .find(|t| t.name.contains("machine learning"))
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(ml_topic.document_indices.len(), 2);
     }
 
@@ -513,7 +523,9 @@ mod tests {
             confidence: 0.8,
         }];
 
-        let linked = linker.link_entities(&mut entities).unwrap();
+        let linked = linker
+            .link_entities(&mut entities)
+            .expect("Operation failed");
         assert_eq!(linked.len(), 1);
         assert_eq!(linked[0].canonical_name, "International Business Machines");
         assert!(linked[0].metadata.contains_key("industry"));

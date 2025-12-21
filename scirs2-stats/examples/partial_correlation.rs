@@ -9,14 +9,15 @@ fn main() {
 
     // Control variable
     let z1 = array![7.0, 5.0, 8.0, 7.0, 8.0, 7.0, 5.0, 3.0, 9.0, 4.0, 6.0];
-    let z = Array2::from_shape_vec((11, 1), z1.to_vec()).unwrap();
+    let z = Array2::from_shape_vec((11, 1), z1.to_vec()).expect("Operation failed");
 
     // Calculate partial correlation coefficient (without p-value)
-    let pr = partial_corr(&x.view(), &y.view(), &z.view()).unwrap();
+    let pr = partial_corr(&x.view(), &y.view(), &z.view()).expect("Operation failed");
     println!("Partial correlation coefficient: {}", pr);
 
     // Calculate partial correlation with p-value
-    let (pr, p_value) = partial_corrr(&x.view(), &y.view(), &z.view(), "two-sided").unwrap();
+    let (pr, p_value) =
+        partial_corrr(&x.view(), &y.view(), &z.view(), "two-sided").expect("Operation failed");
     println!("Partial correlation coefficient: {}", pr);
     println!("Two-sided p-value: {}", p_value);
 
@@ -35,13 +36,16 @@ fn main() {
     }
 
     let (pr_multi, p_value_multi) =
-        partial_corrr(&x.view(), &y.view(), &z_multi.view(), "two-sided").unwrap();
+        partial_corrr(&x.view(), &y.view(), &z_multi.view(), "two-sided")
+            .expect("Operation failed");
     println!("\nPartial correlation with multiple controls: {}", pr_multi);
     println!("Two-sided p-value: {}", p_value_multi);
 
     // Try with one-sided tests
-    let (_, p_greater) = partial_corrr(&x.view(), &y.view(), &z.view(), "greater").unwrap();
-    let (_, p_less) = partial_corrr(&x.view(), &y.view(), &z.view(), "less").unwrap();
+    let (_, p_greater) =
+        partial_corrr(&x.view(), &y.view(), &z.view(), "greater").expect("Operation failed");
+    let (_, p_less) =
+        partial_corrr(&x.view(), &y.view(), &z.view(), "less").expect("Operation failed");
     println!("\nOne-sided tests:");
     println!("P-value (greater): {}", p_greater);
     println!("P-value (less): {}", p_less);

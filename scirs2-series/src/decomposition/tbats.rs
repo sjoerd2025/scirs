@@ -133,7 +133,7 @@ pub struct TBATSParameters {
 /// options.seasonal_periods = vec![4.0, 12.0]; // Both quarterly and yearly patterns
 /// options.use_box_cox = false; // Disable Box-Cox transformation for this example
 ///
-/// let result = tbats_decomposition(&ts, &options).unwrap();
+/// let result = tbats_decomposition(&ts, &options).expect("Operation failed");
 /// println!("Trend: {:?}", result.trend);
 /// println!("Seasonal Components: {:?}", result.seasonal_components);
 /// println!("Residuals: {:?}", result.residuals);
@@ -322,7 +322,7 @@ where
             for i in 0..trend_points {
                 trend_sum = trend_sum + (ts[i + 1] - ts[i]);
             }
-            state[idx] = trend_sum / F::from_usize(trend_points).unwrap();
+            state[idx] = trend_sum / F::from_usize(trend_points).expect("Operation failed");
         }
         idx += 1;
     }
@@ -336,7 +336,7 @@ where
     {
         // Simple initialization: small random values
         for _ in 0..(2 * k) {
-            state[idx] = F::from_f64(0.01 * (s_idx as f64 + 1.0)).unwrap();
+            state[idx] = F::from_f64(0.01 * (s_idx as f64 + 1.0)).expect("Operation failed");
             idx += 1;
         }
     }
@@ -414,10 +414,10 @@ where
 
         // Create Fourier design matrix
         for t in 0..n {
-            let t_f = F::from_usize(t).unwrap();
+            let t_f = F::from_usize(t).expect("Operation failed");
             for j in 0..k {
-                let freq =
-                    F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period).unwrap();
+                let freq = F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period)
+                    .expect("Operation failed");
 
                 // Sin term
                 design_matrix[[t, 2 * j]] = Float::sin(freq * t_f);
@@ -433,7 +433,7 @@ where
         // Regularized normal equations for numerical stability
         let n = xtx.shape()[0];
         let mut xtx_reg = xtx.clone();
-        let lambda = F::from(1e-6).unwrap();
+        let lambda = F::from(1e-6).expect("Failed to convert constant to float");
         for i in 0..n {
             xtx_reg[[i, i]] = xtx_reg[[i, i]] + lambda;
         }
@@ -470,7 +470,7 @@ where
 
     for t in 0..n {
         let mut seasonal_sum = F::zero();
-        let t_f = F::from_usize(t).unwrap();
+        let t_f = F::from_usize(t).expect("Operation failed");
 
         for (&period, coeffs) in options
             .seasonal_periods
@@ -478,10 +478,10 @@ where
             .zip(fourier_coefficients.iter())
         {
             for (j, &(a, b)) in coeffs.iter().enumerate() {
-                let freq =
-                    F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period).unwrap();
-                let a_f = F::from_f64(a).unwrap();
-                let b_f = F::from_f64(b).unwrap();
+                let freq = F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period)
+                    .expect("Operation failed");
+                let a_f = F::from_f64(a).expect("Operation failed");
+                let b_f = F::from_f64(b).expect("Operation failed");
 
                 seasonal_sum =
                     seasonal_sum + a_f * Float::sin(freq * t_f) + b_f * Float::cos(freq * t_f);
@@ -492,7 +492,7 @@ where
         residual_sum = residual_sum + residual * residual;
     }
 
-    (residual_sum / F::from_usize(n).unwrap())
+    (residual_sum / F::from_usize(n).expect("Operation failed"))
         .to_f64()
         .unwrap_or(1.0)
 }
@@ -518,8 +518,9 @@ where
     // For simplicity, just track the level and seasonal components
     for t in 1..n {
         // Level evolution (simplified)
-        states[[t, 0]] = F::from(parameters.alpha).unwrap() * ts[t]
-            + (F::one() - F::from(parameters.alpha).unwrap()) * states[[t - 1, 0]];
+        states[[t, 0]] = F::from(parameters.alpha).expect("Failed to convert to float") * ts[t]
+            + (F::one() - F::from(parameters.alpha).expect("Failed to convert to float"))
+                * states[[t - 1, 0]];
 
         // Copy other state components (simplified)
         for i in 1..state_size {
@@ -569,14 +570,14 @@ where
         let coeffs = &parameters.fourier_coefficients[s_idx];
 
         for t in 0..n {
-            let t_f = F::from_usize(t).unwrap();
+            let t_f = F::from_usize(t).expect("Operation failed");
             let mut seasonal_value = F::zero();
 
             for (j, &(a, b)) in coeffs.iter().enumerate() {
-                let freq =
-                    F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period).unwrap();
-                let a_f = F::from_f64(a).unwrap();
-                let b_f = F::from_f64(b).unwrap();
+                let freq = F::from_f64(2.0 * std::f64::consts::PI * (j + 1) as f64 / period)
+                    .expect("Operation failed");
+                let a_f = F::from_f64(a).expect("Operation failed");
+                let b_f = F::from_f64(b).expect("Operation failed");
 
                 seasonal_value =
                     seasonal_value + a_f * Float::sin(freq * t_f) + b_f * Float::cos(freq * t_f);
@@ -602,7 +603,8 @@ where
     }
 
     // Compute log-likelihood (simplified)
-    let residual_variance = residuals.mapv(|x| x * x).sum() / F::from_usize(n).unwrap();
+    let residual_variance =
+        residuals.mapv(|x| x * x).sum() / F::from_usize(n).expect("Operation failed");
     let log_likelihood = -0.5
         * n as f64
         * (2.0 * std::f64::consts::PI * residual_variance.to_f64().unwrap_or(1.0)).ln()
@@ -663,7 +665,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = tbats_decomposition(&ts, &options).unwrap();
+        let result = tbats_decomposition(&ts, &options).expect("Operation failed");
 
         // Check that we have the expected number of components
         assert_eq!(result.seasonal_components.len(), 1);
@@ -691,7 +693,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = tbats_decomposition(&ts, &options).unwrap();
+        let result = tbats_decomposition(&ts, &options).expect("Operation failed");
 
         // Check that we have the right number of seasonal components
         assert_eq!(result.seasonal_components.len(), 2);
@@ -742,7 +744,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = tbats_decomposition(&ts, &options).unwrap();
+        let result = tbats_decomposition(&ts, &options).expect("Operation failed");
 
         // Check that we have no seasonal components
         assert_eq!(result.seasonal_components.len(), 0);

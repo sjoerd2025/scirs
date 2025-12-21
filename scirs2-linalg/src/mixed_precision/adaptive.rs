@@ -42,7 +42,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// let x = mixed_precision_solve::<f32, f32, f32, f64>(
 ///     &a_f32.view(),
 ///     &b_f32.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(x.len(), 2);
 /// ```
@@ -179,7 +179,7 @@ where
 /// ];
 ///
 /// // Compute condition number with internal f64 precision
-/// let cond = mixed_precision_cond::<f32, f32, f64>(&a_f32.view(), None).unwrap();
+/// let cond = mixed_precision_cond::<f32, f32, f64>(&a_f32.view(), None).expect("Operation failed");
 ///
 /// // The condition number should indicate poor conditioning
 /// println!("Condition number: {}", cond);
@@ -276,7 +276,7 @@ where
 /// // Use f32 as working precision and f64 as higher precision
 /// let x = iterative_refinement_solve::<f64, f64, f64, f64, f32>(
 ///     &a.view(), &b.view(), None, None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // The exact solution is [1.0, 2.0]
 /// assert!((x[0] - 1.0).abs() < 1e-10);
@@ -318,7 +318,7 @@ where
 {
     // Set default values
     let max_iter = max_iter.unwrap_or(10);
-    let tol = tol.unwrap_or(NumCast::from(1e-8).unwrap());
+    let tol = tol.unwrap_or(NumCast::from(1e-8).expect("Operation failed"));
 
     // Check dimensions
     if a.nrows() != a.ncols() {
@@ -428,7 +428,7 @@ where
 /// let a = array![[1.0_f32, 2.0], [3.0, 4.0]];
 ///
 /// // Perform QR decomposition using f64 precision internally
-/// let (q, r) = mixed_precision_qr::<_, f32, f64>(&a.view()).unwrap();
+/// let (q, r) = mixed_precision_qr::<_, f32, f64>(&a.view()).expect("Operation failed");
 ///
 /// // Verify Q is orthogonal: Q^T * Q ≈ I
 /// let qt = q.t();
@@ -480,7 +480,7 @@ where
         norm_x = norm_x.sqrt();
 
         // Skip if column is already zeros below diagonal
-        if norm_x <= NumCast::from(1e-15).unwrap() {
+        if norm_x <= NumCast::from(1e-15).expect("Operation failed") {
             continue;
         }
 
@@ -502,7 +502,7 @@ where
 
         // Normalize v
         let v_norm = v.iter().fold(H::zero(), |sum, &x| sum + x * x).sqrt();
-        if v_norm > NumCast::from(1e-15).unwrap() {
+        if v_norm > NumCast::from(1e-15).expect("Operation failed") {
             for i in 0..m - k {
                 v[i] /= v_norm;
             }
@@ -516,7 +516,7 @@ where
             }
 
             for i in 0..m - k {
-                r_h[[k + i, j]] -= H::from(2.0).unwrap() * v[i] * dot_product;
+                r_h[[k + i, j]] -= H::from(2.0).expect("Operation failed") * v[i] * dot_product;
             }
         }
 
@@ -528,7 +528,7 @@ where
             }
 
             for j in 0..m - k {
-                q_h[[i, k + j]] -= H::from(2.0).unwrap() * dot_product * v[j];
+                q_h[[i, k + j]] -= H::from(2.0).expect("Operation failed") * dot_product * v[j];
             }
         }
     }
@@ -548,7 +548,7 @@ where
         }
         col_norm = col_norm.sqrt();
 
-        if col_norm > H::from(1e-15).unwrap() {
+        if col_norm > H::from(1e-15).expect("Operation failed") {
             for i in 0..m {
                 q_h[[i, j]] /= col_norm;
             }
@@ -631,7 +631,8 @@ mod tests {
         let a = array![[2.0f32, 1.0f32], [1.0f32, 3.0f32]];
         let b = array![5.0f32, 8.0f32];
 
-        let x = mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let x = mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         assert_eq!(x.len(), 2);
         // Verify solution: 2*x[0] + 1*x[1] = 5, 1*x[0] + 3*x[1] = 8
@@ -644,12 +645,14 @@ mod tests {
     fn test_mixed_precision_cond() {
         // Well-conditioned matrix
         let a = array![[2.0f32, 0.0f32], [0.0f32, 2.0f32]];
-        let cond = mixed_precision_cond::<f32, f32, f64>(&a.view(), None).unwrap();
+        let cond =
+            mixed_precision_cond::<f32, f32, f64>(&a.view(), None).expect("Operation failed");
         assert_relative_eq!(cond, 1.0f32, epsilon = 1e-5);
 
         // Ill-conditioned matrix
         let b = array![[1.0f32, 1.0f32], [1.0f32, 1.0001f32]];
-        let cond_b = mixed_precision_cond::<f32, f32, f64>(&b.view(), None).unwrap();
+        let cond_b =
+            mixed_precision_cond::<f32, f32, f64>(&b.view(), None).expect("Operation failed");
         assert!(cond_b > 1000.0f32); // Should be very large
     }
 
@@ -657,7 +660,7 @@ mod tests {
     fn test_mixed_precision_qr() {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
 
-        let (q, r) = mixed_precision_qr::<f32, f32, f64>(&a.view()).unwrap();
+        let (q, r) = mixed_precision_qr::<f32, f32, f64>(&a.view()).expect("Operation failed");
 
         assert_eq!(q.shape(), &[2, 2]);
         assert_eq!(r.shape(), &[2, 2]);
@@ -686,7 +689,8 @@ mod tests {
     fn test_mixed_precision_svd() {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
 
-        let (u, s, vt) = mixed_precision_svd::<f32, f32, f64>(&a.view(), false).unwrap();
+        let (u, s, vt) =
+            mixed_precision_svd::<f32, f32, f64>(&a.view(), false).expect("Operation failed");
 
         assert_eq!(u.shape()[0], 2);
         assert_eq!(s.len(), 2);

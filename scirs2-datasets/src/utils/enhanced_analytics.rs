@@ -164,7 +164,7 @@ impl AdvancedDatasetAnalyzer {
     fn calculate_feature_complexity(&self, feature: ArrayView1<f64>) -> Result<f64> {
         // Use histogram-based entropy calculation
         let mut values = feature.to_vec();
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Dynamic binning based on data distribution
         let n_bins = ((values.len() as f64).sqrt() as usize).clamp(10, 100);
@@ -311,7 +311,7 @@ impl AdvancedDatasetAnalyzer {
         }
 
         // Use Mahalanobis distance for multivariate outlier detection
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
 
         // Calculate covariance matrix
         let cov_matrix = self.calculate_covariance_matrix(data, &mean)?;
@@ -486,7 +486,7 @@ impl AdvancedDatasetAnalyzer {
         }
 
         let mut sorted_data = data.to_vec();
-        sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Simplified normality score based on skewness and kurtosis
         let mean = {
@@ -800,7 +800,8 @@ mod tests {
 
     #[allow(dead_code)]
     fn create_test_dataset() -> Dataset {
-        let data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let target = Array1::from_vec((0..100).map(|x| (x % 2) as f64).collect());
         Dataset::new(data, Some(target))
     }
@@ -817,7 +818,7 @@ mod tests {
         let dataset = create_test_dataset();
         let quality = quick_quality_assessment(&dataset);
         assert!(quality.is_ok());
-        let quality_score = quality.unwrap();
+        let quality_score = quality.expect("Operation failed");
         assert!((0.0..=1.0).contains(&quality_score));
     }
 }

@@ -1236,12 +1236,12 @@ impl LieAlgebra for Gln {
 
     fn from_vector(v: &ArrayView1<f64>) -> Self {
         let n = (v.len() as f64).sqrt() as usize;
-        let matrix = Array2::from_shape_vec((n, n), v.to_vec()).unwrap();
+        let matrix = Array2::from_shape_vec((n, n), v.to_vec()).expect("Operation failed");
         Gln { n, matrix }
     }
 
     fn to_vector(&self) -> Array1<f64> {
-        Array1::from_vec(self.matrix.as_slice().unwrap().to_vec())
+        Array1::from_vec(self.matrix.as_slice().expect("Operation failed").to_vec())
     }
 
     fn norm(&self) -> f64 {
@@ -1329,7 +1329,7 @@ mod tests {
         let angular_velocity = Array1::from_vec(vec![0.1, 0.5, 0.3]);
         let inertia =
             Array2::from_shape_vec((3, 3), vec![2.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 4.0])
-                .unwrap();
+                .expect("Operation failed");
         let external_torque = Array1::zeros(3);
 
         // Initial energy
@@ -1344,10 +1344,10 @@ mod tests {
                 &external_torque,
                 100,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         // Check energy conservation
-        let (_, final_omega) = &states.last().unwrap();
+        let (_, final_omega) = &states.last().expect("Operation failed");
         let final_energy = 0.5 * final_omega.dot(&inertia.dot(final_omega));
 
         assert_relative_eq!(initial_energy, final_energy, epsilon = 1e-4);

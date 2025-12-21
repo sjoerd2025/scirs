@@ -199,13 +199,13 @@ pub mod high_performance {
         let errors_clone = errors.clone();
         (0..outputs.len()).into_par_iter().for_each(|i| {
             if let Err(e) = outputs[i].backward() {
-                let mut error_vec = errors_clone.lock().unwrap();
+                let mut error_vec = errors_clone.lock().expect("Operation failed");
                 error_vec.push(e);
             }
         });
 
         // Check for errors
-        let final_errors = errors.lock().unwrap();
+        let final_errors = errors.lock().expect("Operation failed");
         if !final_errors.is_empty() {
             return Err(format!(
                 "Parallel backward pass failed: {} errors",
@@ -221,13 +221,13 @@ pub mod high_performance {
 
         (0..inputs.len()).into_par_iter().for_each(move |i| {
             if let Ok(grad) = env_clone.get_variable(inputs[i]) {
-                let mut grad_vec = gradients_clone.lock().unwrap();
+                let mut grad_vec = gradients_clone.lock().expect("Operation failed");
                 grad_vec[i] = Some(grad);
             }
         });
 
         // Extract results
-        let result_gradients = gradients.lock().unwrap();
+        let result_gradients = gradients.lock().expect("Operation failed");
         let mut final_gradients = Vec::with_capacity(inputs.len());
 
         for (i, grad_opt) in result_gradients.iter().enumerate() {
@@ -265,14 +265,14 @@ pub mod high_performance {
         outputs.par_chunks(chunk_size).for_each(|chunk| {
             for output in chunk {
                 if let Err(e) = output.backward() {
-                    let mut error_vec = errors_clone.lock().unwrap();
+                    let mut error_vec = errors_clone.lock().expect("Operation failed");
                     error_vec.push(e);
                 }
             }
         });
 
         // Check for errors
-        let final_errors = errors.lock().unwrap();
+        let final_errors = errors.lock().expect("Operation failed");
         if !final_errors.is_empty() {
             return Err(
                 format!("Ultra backward pass failed: {} errors", final_errors.len()).into(),
@@ -307,14 +307,14 @@ pub mod high_performance {
             // Process each element in the chunk
             for i in start..end {
                 if let Ok(grad) = env_clone.get_variable(inputs[i]) {
-                    let mut result_vec = results_clone.lock().unwrap();
+                    let mut result_vec = results_clone.lock().expect("Operation failed");
                     result_vec[i] = Some(grad);
                 }
             }
         });
 
         // Extract final results
-        let final_results = results.lock().unwrap();
+        let final_results = results.lock().expect("Operation failed");
         let mut gradients = Vec::with_capacity(inputs.len());
 
         for (i, result_opt) in final_results.iter().enumerate() {

@@ -289,10 +289,10 @@ fn main() {
                     .min_by(|(_, a), (_, b)| {
                         let diff_a = f64::abs(mapped_x - *a);
                         let diff_b = f64::abs(mapped_x - *b);
-                        diff_a.partial_cmp(&diff_b).unwrap()
+                        diff_a.partial_cmp(&diff_b).expect("Test: operation failed")
                     })
                     .map(|(idx_, _)| idx_)
-                    .unwrap();
+                    .expect("Test: operation failed");
                 println!(
                     "  f({:.2}) → mapped to: f({:.2}) ≈ {:.6}",
                     x, mapped_x, values[nearest_idx]
@@ -314,10 +314,10 @@ fn main() {
                     .min_by(|(_, a), (_, b)| {
                         let diff_a = f64::abs(mapped_x - *a);
                         let diff_b = f64::abs(mapped_x - *b);
-                        diff_a.partial_cmp(&diff_b).unwrap()
+                        diff_a.partial_cmp(&diff_b).expect("Test: operation failed")
                     })
                     .map(|(idx_, _)| idx_)
-                    .unwrap();
+                    .expect("Test: operation failed");
                 println!(
                     "  f({:.2}) → mapped to: f({:.2}) ≈ {:.6}",
                     x, mapped_x, values[nearest_idx]

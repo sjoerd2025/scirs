@@ -617,7 +617,9 @@ mod tests {
         library.levels.insert(1, level1_concepts);
 
         let retrieved_concepts = library.get_concepts_at_level(1);
-        assert!(retrieved_concepts.unwrap().contains_key("test_concept"));
+        assert!(retrieved_concepts
+            .expect("Operation failed")
+            .contains_key("test_concept"));
 
         let retrieved_concept = library.get_concept("test_concept");
         assert!(retrieved_concept.is_some());
@@ -629,8 +631,8 @@ mod tests {
     #[test]
     fn test_advanced_hierarchical_hdc_reasoning() {
         let config = HDCConfig::default();
-        let image =
-            Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect())
+            .expect("Operation failed");
 
         let mut concept_library = HierarchicalConceptLibrary::new();
 
@@ -655,7 +657,7 @@ mod tests {
 
         let result =
             advanced_hierarchical_hdc_reasoning(image.view(), 2, &concept_library, &config)
-                .unwrap();
+                .expect("Operation failed");
 
         assert_eq!(result.base_encoding.dimension, config.hypervector_dim);
         assert!(result.abstraction_levels.len() <= 2);
@@ -686,14 +688,15 @@ mod tests {
         let config = HDCConfig::default();
         let concepts = vec!["cat".to_string(), "dog".to_string(), "bird".to_string()];
 
-        let encoded = encode_semantic_concepts(&concepts, &config).unwrap();
+        let encoded = encode_semantic_concepts(&concepts, &config).expect("Operation failed");
 
         assert_eq!(encoded.dimension, config.hypervector_dim);
         assert!(!encoded.sparse_data.is_empty());
 
         // Test with different concepts should produce different encodings
         let other_concepts = vec!["car".to_string(), "house".to_string()];
-        let other_encoded = encode_semantic_concepts(&other_concepts, &config).unwrap();
+        let other_encoded =
+            encode_semantic_concepts(&other_concepts, &config).expect("Operation failed");
 
         let similarity = encoded.similarity(&other_encoded);
         assert!(similarity < 0.8); // Should be relatively dissimilar

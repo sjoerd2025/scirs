@@ -178,8 +178,8 @@ fn print_ascii_visualization(path: &[[f64; 2]], planner: &VisibilityGraphPlanner
     // Mark start and goal
     let (start_x, start_y) = (path[0][0] as usize, path[0][1] as usize);
     let (goal_x, goal_y) = (
-        path.last().unwrap()[0] as usize,
-        path.last().unwrap()[1] as usize,
+        path.last().expect("Operation failed")[0] as usize,
+        path.last().expect("Operation failed")[1] as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {

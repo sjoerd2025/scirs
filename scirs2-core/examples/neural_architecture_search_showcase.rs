@@ -297,9 +297,13 @@ fn demonstrate_progressive_nas() -> CoreResult<()> {
         let initial_fitness = search_results
             .progress_history
             .first()
-            .unwrap()
+            .expect("Operation failed")
             .best_fitness;
-        let final_fitness = search_results.progress_history.last().unwrap().best_fitness;
+        let final_fitness = search_results
+            .progress_history
+            .last()
+            .expect("Operation failed")
+            .best_fitness;
         let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📈 Progression Analysis:");
@@ -695,7 +699,11 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
     // Convergence analysis
     if !results.progress_history.is_empty() {
         let initial_fitness = results.progress_history[0].best_fitness;
-        let final_fitness = results.progress_history.last().unwrap().best_fitness;
+        let final_fitness = results
+            .progress_history
+            .last()
+            .expect("Operation failed")
+            .best_fitness;
         let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📉 Convergence Analysis:");
@@ -706,7 +714,11 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
 
         // Show fitness evolution
         let initial_avg = results.progress_history[0].avg_fitness;
-        let final_avg = results.progress_history.last().unwrap().avg_fitness;
+        let final_avg = results
+            .progress_history
+            .last()
+            .expect("Operation failed")
+            .avg_fitness;
         println!("   - Average fitness: {initial_avg:.3} → {final_avg:.3}");
     }
 
@@ -806,7 +818,9 @@ mod tests {
 
         assert_eq!(mobile_constraints.target_platform, HardwarePlatform::Mobile);
         assert_eq!(mobile_constraints.max_memory, Some(512 * 1024 * 1024));
-        assert!(mobile_constraints.max_latency.unwrap() < Duration::from_millis(50));
+        assert!(
+            mobile_constraints.max_latency.expect("Operation failed") < Duration::from_millis(50)
+        );
     }
 
     #[test]

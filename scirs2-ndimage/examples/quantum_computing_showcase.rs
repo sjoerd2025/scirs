@@ -161,7 +161,7 @@ fn create_testimages() -> TestImages {
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("   ✓ Original image: {}x{}", size, size);
     println!("   ✓ Noisy image created");
@@ -191,15 +191,17 @@ fn demonstrate_quantum_superposition_filtering(
 
     // Create multiple filter states
     let gaussian_filter =
-        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0]).unwrap()
+        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0])
+            .expect("Operation failed")
             / 16.0;
 
     let edge_filter =
         Array2::from_shape_vec((3, 3), vec![-1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])
-            .unwrap();
+            .expect("Operation failed");
 
     let identity_filter =
-        Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
+        Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
+            .expect("Operation failed");
 
     let filterstates = vec![gaussian_filter, edge_filter, identity_filter];
 
@@ -470,11 +472,11 @@ fn demonstrate_quantum_amplitude_amplification(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let corner_feature =
         Array2::from_shape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
-            .unwrap();
+            .expect("Operation failed");
 
     let targetfeatures = vec![edge_feature, corner_feature];
 

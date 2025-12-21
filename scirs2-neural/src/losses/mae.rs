@@ -115,7 +115,9 @@ mod tests {
         let predictions = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
         let targets = Array::from_vec(vec![1.5, 1.5, 3.5]).into_dyn();
 
-        let loss = mae.forward(&predictions, &targets).unwrap();
+        let loss = mae
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
         assert!((loss - 0.5).abs() < 1e-6);
     }
 
@@ -125,7 +127,9 @@ mod tests {
         let predictions = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
         let targets = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
 
-        let loss = mae.forward(&predictions, &targets).unwrap();
+        let loss = mae
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
         assert!(loss.abs() < 1e-10);
     }
 
@@ -135,7 +139,9 @@ mod tests {
         let predictions = Array::from_vec(vec![1.0, 3.0, 2.0]).into_dyn();
         let targets = Array::from_vec(vec![2.0, 2.0, 2.0]).into_dyn();
 
-        let gradients = mae.backward(&predictions, &targets).unwrap();
+        let gradients = mae
+            .backward(&predictions, &targets)
+            .expect("Operation failed");
 
         // predictions - targets = [-1, 1, 0]
         // signs = [-1, 1, 0], divided by n=3
@@ -151,7 +157,9 @@ mod tests {
         let predictions = Array::from_vec(vec![-1.0, -2.0, 0.0]).into_dyn();
         let targets = Array::from_vec(vec![1.0, -1.0, -1.0]).into_dyn();
 
-        let loss = mae.forward(&predictions, &targets).unwrap();
+        let loss = mae
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
         // |−1 − 1| + |−2 − (−1)| + |0 − (−1)| = 2 + 1 + 1 = 4, mean = 4/3
         assert!((loss - 4.0 / 3.0).abs() < 1e-6);
     }
@@ -160,13 +168,15 @@ mod tests {
     fn test_mae_2d() {
         let mae = MeanAbsoluteError::new();
         let predictions = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         let targets = Array::from_shape_vec((2, 2), vec![1.0, 3.0, 2.0, 5.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
 
-        let loss = mae.forward(&predictions, &targets).unwrap();
+        let loss = mae
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
         // Differences: |0|, |1|, |1|, |1| = sum 3, mean = 0.75
         assert!((loss - 0.75).abs() < 1e-6);
     }

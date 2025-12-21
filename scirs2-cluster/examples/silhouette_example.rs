@@ -22,19 +22,20 @@ fn main() {
             Some(true),
             Some(42),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Convert labels to i32 array for silhouette calculation
         let labels_i32 = labels.mapv(|x| x as i32);
 
         // Calculate silhouette score
-        let score = silhouette_score(data.view(), labels_i32.view()).unwrap();
+        let score = silhouette_score(data.view(), labels_i32.view()).expect("Operation failed");
 
         println!("K = {}: Silhouette score = {:.4}", k, score);
 
         // For k=3, also show individual sample scores
         if k == 3 {
-            let sample_scores = silhouette_samples(data.view(), labels_i32.view()).unwrap();
+            let sample_scores =
+                silhouette_samples(data.view(), labels_i32.view()).expect("Operation failed");
 
             println!("\nSilhouette scores for individual samples (k=3):");
 
@@ -62,7 +63,7 @@ fn main() {
                     let mean = sum / (cluster_scores.len() as f64);
 
                     // Sort scores for percentiles
-                    cluster_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    cluster_scores.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                     println!(
                         "Cluster {}: {} samples, Mean score: {:.4}, Min: {:.4}, Max: {:.4}",
@@ -111,5 +112,5 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Convert to ndarray
-    Array2::from_shape_vec((90, 2), data).unwrap()
+    Array2::from_shape_vec((90, 2), data).expect("Operation failed")
 }

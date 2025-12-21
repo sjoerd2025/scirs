@@ -1920,14 +1920,14 @@ where
     /// Get or create memory pool
     fn get_or_create_pool(&self, poolsize: usize) -> StatsResult<Arc<MemoryPool>> {
         {
-            let pools = self.memory_pools.read().unwrap();
+            let pools = self.memory_pools.read().expect("Operation failed");
             if let Some(pool) = pools.get(&poolsize) {
                 return Ok(Arc::clone(pool));
             }
         }
 
         // Create new pool
-        let mut pools = self.memory_pools.write().unwrap();
+        let mut pools = self.memory_pools.write().expect("Operation failed");
         if let Some(pool) = pools.get(&poolsize) {
             return Ok(Arc::clone(pool));
         }
@@ -2013,7 +2013,12 @@ where
     /// Pool deallocation
     fn deallocate_pool(&self, ptr: *mut u8, size: usize) -> StatsResult<()> {
         let poolsize = self.calculate_poolsize(size);
-        if let Some(pool) = self.memory_pools.read().unwrap().get(&poolsize) {
+        if let Some(pool) = self
+            .memory_pools
+            .read()
+            .expect("Operation failed")
+            .get(&poolsize)
+        {
             pool.deallocate(ptr)
         } else {
             Err(StatsError::InvalidArgument("Pool not found".to_string()))
@@ -2082,7 +2087,7 @@ where
     fn calculate_total_allocated(&self) -> usize {
         self.memory_pools
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .values()
             .map(|pool| pool.get_allocatedsize())
             .sum()
@@ -2092,7 +2097,7 @@ where
     fn calculate_peak_allocated(&self) -> usize {
         self.memory_pools
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .values()
             .map(|pool| pool.get_peaksize())
             .max()
@@ -2155,7 +2160,7 @@ impl MemoryPool {
     fn allocate(&self) -> StatsResult<*mut u8> {
         // Try to get chunk from available pool
         {
-            let mut available = self.available_chunks.lock().unwrap();
+            let mut available = self.available_chunks.lock().expect("Operation failed");
             if let Some(ptr) = available.pop_front() {
                 self.allocated_chunks.fetch_add(1, Ordering::Relaxed);
                 return Ok(ptr);
@@ -2185,7 +2190,7 @@ impl MemoryPool {
     }
 
     fn deallocate(&self, ptr: *mut u8) -> StatsResult<()> {
-        let mut available = self.available_chunks.lock().unwrap();
+        let mut available = self.available_chunks.lock().expect("Operation failed");
         available.push_back(ptr);
         self.allocated_chunks.fetch_sub(1, Ordering::Relaxed);
         Ok(())
@@ -2668,7 +2673,7 @@ impl MemoryPerformanceMonitor {
     }
 
     fn get_current_metrics(&self) -> MemoryPerformanceMetrics {
-        (*self.performance_metrics.read().unwrap()).clone()
+        (*self.performance_metrics.read().expect("Operation failed")).clone()
     }
 }
 

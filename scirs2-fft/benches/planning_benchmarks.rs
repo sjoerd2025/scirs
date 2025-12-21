@@ -42,12 +42,12 @@ fn bench_always_new(c: &mut Criterion) {
                     .forward(true)
                     .strategy(PlanningStrategy::AlwaysNew)
                     .build()
-                    .unwrap();
+                    .expect("Operation failed");
 
                 let executor = FftPlanExecutor::new(plan);
                 executor
                     .execute(black_box(&signal), black_box(&mut output))
-                    .unwrap();
+                    .expect("Operation failed");
             });
         });
     }
@@ -78,11 +78,13 @@ fn bench_cache_first(c: &mut Criterion) {
                 },
                 |_| {
                     // Get plan from cache if available
-                    let plan = planner.plan_fft(&[size], true, Default::default()).unwrap();
+                    let plan = planner
+                        .plan_fft(&[size], true, Default::default())
+                        .expect("Operation failed");
                     let executor = FftPlanExecutor::new(plan);
                     executor
                         .execute(black_box(&signal), black_box(&mut output))
-                        .unwrap();
+                        .expect("Operation failed");
                 },
             );
         });
@@ -98,7 +100,7 @@ fn bench_serialized(c: &mut Criterion) {
     let sizes = [1024, 2048, 4096, 8192];
 
     // Create a temporary directory for serialized plans
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempdir().expect("Operation failed");
     let db_path = temp_dir.path().join("benchmark_plans.json");
 
     for size in &sizes {
@@ -109,15 +111,17 @@ fn bench_serialized(c: &mut Criterion) {
             // Setup: create a planner with serialization
             let config = PlanningConfig {
                 strategy: PlanningStrategy::SerializedFirst,
-                serialized_db_path: Some(db_path.to_str().unwrap().to_string()),
+                serialized_db_path: Some(db_path.to_str().expect("Operation failed").to_string()),
                 ..Default::default()
             };
 
             let mut planner = AdvancedFftPlanner::with_config(config);
 
             // Pre-create plans to simulate previous runs
-            let _ = planner.plan_fft(&[size], true, Default::default()).unwrap();
-            planner.save_plans().unwrap();
+            let _ = planner
+                .plan_fft(&[size], true, Default::default())
+                .expect("Operation failed");
+            planner.save_plans().expect("Operation failed");
 
             b.iter_with_setup(
                 || {
@@ -125,11 +129,13 @@ fn bench_serialized(c: &mut Criterion) {
                 },
                 |_| {
                     // Get plan from serialized cache
-                    let plan = planner.plan_fft(&[size], true, Default::default()).unwrap();
+                    let plan = planner
+                        .plan_fft(&[size], true, Default::default())
+                        .expect("Operation failed");
                     let executor = FftPlanExecutor::new(plan);
                     executor
                         .execute(black_box(&signal), black_box(&mut output))
-                        .unwrap();
+                        .expect("Operation failed");
                 },
             );
         });
@@ -149,7 +155,7 @@ fn bench_repeated_execution(c: &mut Criterion) {
     let repetitions = 10; // Number of FFTs to perform in each iteration
 
     // Create a temporary directory for serialized plans
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempdir().expect("Operation failed");
     let db_path = temp_dir.path().join("benchmark_repeated.json");
 
     // Benchmark with AlwaysNew
@@ -162,12 +168,12 @@ fn bench_repeated_execution(c: &mut Criterion) {
                     .forward(true)
                     .strategy(PlanningStrategy::AlwaysNew)
                     .build()
-                    .unwrap();
+                    .expect("Operation failed");
 
                 let executor = FftPlanExecutor::new(plan);
                 executor
                     .execute(black_box(&signal), black_box(&mut output))
-                    .unwrap();
+                    .expect("Operation failed");
             }
         });
     });
@@ -182,11 +188,13 @@ fn bench_repeated_execution(c: &mut Criterion) {
         b.iter(|| {
             let mut output = vec![Complex64::default(); size];
             for _ in 0..repetitions {
-                let plan = planner.plan_fft(&[size], true, Default::default()).unwrap();
+                let plan = planner
+                    .plan_fft(&[size], true, Default::default())
+                    .expect("Operation failed");
                 let executor = FftPlanExecutor::new(plan);
                 executor
                     .execute(black_box(&signal), black_box(&mut output))
-                    .unwrap();
+                    .expect("Operation failed");
             }
         });
     });
@@ -196,24 +204,28 @@ fn bench_repeated_execution(c: &mut Criterion) {
         // Setup: create a planner with serialization
         let config = PlanningConfig {
             strategy: PlanningStrategy::SerializedFirst,
-            serialized_db_path: Some(db_path.to_str().unwrap().to_string()),
+            serialized_db_path: Some(db_path.to_str().expect("Operation failed").to_string()),
             ..Default::default()
         };
 
         let mut planner = AdvancedFftPlanner::with_config(config);
 
         // Pre-create plans to simulate previous runs
-        let _ = planner.plan_fft(&[size], true, Default::default()).unwrap();
-        planner.save_plans().unwrap();
+        let _ = planner
+            .plan_fft(&[size], true, Default::default())
+            .expect("Operation failed");
+        planner.save_plans().expect("Operation failed");
 
         b.iter(|| {
             let mut output = vec![Complex64::default(); size];
             for _ in 0..repetitions {
-                let plan = planner.plan_fft(&[size], true, Default::default()).unwrap();
+                let plan = planner
+                    .plan_fft(&[size], true, Default::default())
+                    .expect("Operation failed");
                 let executor = FftPlanExecutor::new(plan);
                 executor
                     .execute(black_box(&signal), black_box(&mut output))
-                    .unwrap();
+                    .expect("Operation failed");
             }
         });
     });
@@ -250,11 +262,11 @@ fn bench_cache_sizes(c: &mut Criterion) {
                             let mut output = vec![Complex64::default(); *size];
                             let plan = planner
                                 .plan_fft(&[*size], true, Default::default())
-                                .unwrap();
+                                .expect("Operation failed");
                             let executor = FftPlanExecutor::new(plan);
                             executor
                                 .execute(black_box(signal), black_box(&mut output))
-                                .unwrap();
+                                .expect("Operation failed");
                         }
                     }
                 });

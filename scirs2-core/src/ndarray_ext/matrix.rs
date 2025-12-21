@@ -153,15 +153,15 @@ where
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 ///
 /// // Extract main diagonal
-/// let main_diag = diagonal(a.view(), 0).unwrap();
+/// let main_diag = diagonal(a.view(), 0).expect("Operation failed");
 /// assert_eq!(main_diag, array![1, 5, 9]);
 ///
 /// // Extract superdiagonal
-/// let super_diag = diagonal(a.view(), 1).unwrap();
+/// let super_diag = diagonal(a.view(), 1).expect("Operation failed");
 /// assert_eq!(super_diag, array![2, 6]);
 ///
 /// // Extract subdiagonal
-/// let sub_diag = diagonal(a.view(), -1).unwrap();
+/// let sub_diag = diagonal(a.view(), -1).expect("Operation failed");
 /// assert_eq!(sub_diag, array![4, 8]);
 /// ```
 #[allow(dead_code)]
@@ -360,7 +360,7 @@ where
 ///
 /// let first_row = array![1, 2, 3];
 /// let first_col = array![1, 4, 5];
-/// let result = toeplitz(first_row.view(), first_col.view()).unwrap();
+/// let result = toeplitz(first_row.view(), first_col.view()).expect("Operation failed");
 /// assert_eq!(result.shape(), &[3, 3]);
 /// assert_eq!(result, array![
 ///     [1, 2, 3],
@@ -495,7 +495,7 @@ where
 /// let lower = array![4, 5];
 /// let upper = array![6, 7];
 ///
-/// let result = tridiagonal(diag.view(), lower.view(), upper.view()).unwrap();
+/// let result = tridiagonal(diag.view(), lower.view(), upper.view()).expect("Operation failed");
 /// assert_eq!(result.shape(), &[3, 3]);
 /// assert_eq!(result, array![
 ///     [1, 6, 0],
@@ -559,7 +559,7 @@ where
 /// let first_col = array![1, 2, 3];
 /// let last_row = array![3, 4, 5];
 ///
-/// let result = hankel(first_col.view(), last_row.view()).unwrap();
+/// let result = hankel(first_col.view(), last_row.view()).expect("Operation failed");
 /// assert_eq!(result.shape(), &[3, 3]);
 /// assert_eq!(result, array![
 ///     [1, 2, 3],
@@ -630,7 +630,7 @@ where
 /// use scirs2_core::ndarray_ext::matrix::trace;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-/// let tr = trace(a.view()).unwrap();
+/// let tr = trace(a.view()).expect("Operation failed");
 /// assert_eq!(tr, 15);  // 1 + 5 + 9 = 15
 /// ```
 #[allow(dead_code)]
@@ -674,7 +674,7 @@ where
 /// let x = array![1.0, 2.0, 3.0];
 ///
 /// // Default behavior: decreasing powers from n-1 to 0
-/// let v1 = vander(x.view(), None, None).unwrap();
+/// let v1 = vander(x.view(), None, None).expect("Operation failed");
 /// assert_eq!(v1.shape(), &[3, 3]);
 /// // Powers: x^2, x^1, x^0
 /// assert_eq!(v1, array![
@@ -684,7 +684,7 @@ where
 /// ]);
 ///
 /// // Increasing powers: 0 to n-1
-/// let v2 = vander(x.view(), None, Some(true)).unwrap();
+/// let v2 = vander(x.view(), None, Some(true)).expect("Operation failed");
 /// assert_eq!(v2.shape(), &[3, 3]);
 /// // Powers: x^0, x^1, x^2
 /// assert_eq!(v2, array![
@@ -694,7 +694,7 @@ where
 /// ]);
 ///
 /// // Specify 4 columns
-/// let v3 = vander(x.view(), Some(4), None).unwrap();
+/// let v3 = vander(x.view(), Some(4), None).expect("Operation failed");
 /// assert_eq!(v3.shape(), &[3, 4]);
 /// // Powers: x^3, x^2, x^1, x^0
 /// assert_eq!(v3, array![
@@ -818,15 +818,15 @@ mod tests {
         let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
         // Extract main diagonal
-        let main_diag = diagonal(a.view(), 0).unwrap();
+        let main_diag = diagonal(a.view(), 0).expect("Operation failed");
         assert_eq!(main_diag, array![1, 5, 9]);
 
         // Extract superdiagonal
-        let super_diag = diagonal(a.view(), 1).unwrap();
+        let super_diag = diagonal(a.view(), 1).expect("Operation failed");
         assert_eq!(super_diag, array![2, 6]);
 
         // Extract subdiagonal
-        let sub_diag = diagonal(a.view(), -1).unwrap();
+        let sub_diag = diagonal(a.view(), -1).expect("Operation failed");
         assert_eq!(sub_diag, array![4, 8]);
 
         // Test out of bounds (should return error)
@@ -880,7 +880,7 @@ mod tests {
         let first_row = array![1, 2, 3];
         let first_col = array![1, 4, 5];
 
-        let result = toeplitz(first_row.view(), first_col.view()).unwrap();
+        let result = toeplitz(first_row.view(), first_col.view()).expect("Operation failed");
         assert_eq!(result.shape(), &[3, 3]);
         assert_eq!(result, array![[1, 2, 3], [4, 1, 2], [5, 4, 1]]);
 
@@ -919,7 +919,8 @@ mod tests {
         let lower = array![4, 5];
         let upper = array![6, 7];
 
-        let result = tridiagonal(diag.view(), lower.view(), upper.view()).unwrap();
+        let result =
+            tridiagonal(diag.view(), lower.view(), upper.view()).expect("Operation failed");
         assert_eq!(result.shape(), &[3, 3]);
         assert_eq!(result, array![[1, 6, 0], [4, 2, 7], [0, 5, 3]]);
 
@@ -933,7 +934,7 @@ mod tests {
         let first_col = array![1, 2, 3];
         let last_row = array![3, 4, 5];
 
-        let result = hankel(first_col.view(), last_row.view()).unwrap();
+        let result = hankel(first_col.view(), last_row.view()).expect("Operation failed");
         assert_eq!(result.shape(), &[3, 3]);
         assert_eq!(result, array![[1, 2, 3], [2, 3, 4], [3, 4, 5]]);
 
@@ -945,7 +946,7 @@ mod tests {
     #[test]
     fn test_trace() {
         let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-        let tr = trace(a.view()).unwrap();
+        let tr = trace(a.view()).expect("Operation failed");
         assert_eq!(tr, 15); // 1 + 5 + 9 = 15
 
         // Test non-square matrix (should return error)
@@ -958,7 +959,7 @@ mod tests {
         let x = array![1.0, 2.0, 3.0];
 
         // Default behavior: decreasing powers from n-1 to 0
-        let v1 = vander(x.view(), None, None).unwrap();
+        let v1 = vander(x.view(), None, None).expect("Operation failed");
         assert_eq!(v1.shape(), &[3, 3]);
         // Should be equivalent to [x^2, x^1, x^0]
         for i in 0..3 {
@@ -968,7 +969,7 @@ mod tests {
         }
 
         // Increasing powers from 0 to n-1
-        let v2 = vander(x.view(), None, Some(true)).unwrap();
+        let v2 = vander(x.view(), None, Some(true)).expect("Operation failed");
         assert_eq!(v2.shape(), &[3, 3]);
         // Should be equivalent to [x^0, x^1, x^2]
         for i in 0..3 {
@@ -978,7 +979,7 @@ mod tests {
         }
 
         // Specify 4 columns (decreasing power)
-        let v3 = vander(x.view(), Some(4), None).unwrap();
+        let v3 = vander(x.view(), Some(4), None).expect("Operation failed");
         assert_eq!(v3.shape(), &[3, 4]);
         // Should be equivalent to [x^3, x^2, x^1, x^0]
         for i in 0..3 {

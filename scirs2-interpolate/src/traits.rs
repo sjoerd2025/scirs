@@ -40,7 +40,8 @@ pub trait InterpolationFloat:
 
     /// Default tolerance for iterative algorithms
     fn default_tolerance() -> Self {
-        Self::from_f64(1e-12).unwrap_or_else(|| Self::epsilon() * Self::from_f64(100.0).unwrap())
+        Self::from_f64(1e-12)
+            .unwrap_or_else(|| Self::epsilon() * Self::from_f64(100.0).expect("Operation failed"))
     }
 }
 

@@ -180,7 +180,7 @@ fn bench_parallel_operations(c: &mut Criterion) {
     });
 
     group.bench_function("large_variance", |b| {
-        b.iter(|| black_box(var(&data.view(), 1, None).unwrap()));
+        b.iter(|| black_box(var(&data.view(), 1, None).expect("Operation failed")));
     });
 
     // Multiple independent calculations

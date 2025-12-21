@@ -11,9 +11,16 @@ use scirs2_core::ndarray::Array1;
 pub fn create_large_test_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
-    let y =
-        x.mapv(|xi| xi.sin() + T::from_f64(0.1).unwrap() * (xi * T::from_f64(10.0).unwrap()).cos());
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
+    let y = x.mapv(|xi| {
+        xi.sin()
+            + T::from_f64(0.1).expect("Operation failed")
+                * (xi * T::from_f64(10.0).expect("Operation failed")).cos()
+    });
     Ok((x, y))
 }
 
@@ -21,8 +28,12 @@ pub fn create_large_test_data<T: InterpolationFloat>(
 pub fn create_constant_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
-    let y = Array1::from_elem(size, T::from_f64(5.0).unwrap());
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
+    let y = Array1::from_elem(size, T::from_f64(5.0).expect("Operation failed"));
     Ok((x, y))
 }
 
@@ -30,7 +41,11 @@ pub fn create_constant_data<T: InterpolationFloat>(
 pub fn create_duplicate_x_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let mut x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let mut x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let y = Array1::ones(size);
 
     // Introduce duplicates
@@ -46,14 +61,18 @@ pub fn create_duplicate_x_data<T: InterpolationFloat>(
 pub fn create_extreme_y_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let mut y = Array1::zeros(size);
 
     for (i, &_xi) in x.iter().enumerate() {
         y[i] = if i % 2 == 0 {
-            T::from_f64(1e10).unwrap()
+            T::from_f64(1e10).expect("Operation failed")
         } else {
-            T::from_f64(-1e10).unwrap()
+            T::from_f64(-1e10).expect("Operation failed")
         };
     }
 
@@ -64,7 +83,11 @@ pub fn create_extreme_y_data<T: InterpolationFloat>(
 pub fn create_nan_inf_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let mut y = x.mapv(|xi| xi.sin());
 
     // Introduce problematic values
@@ -81,7 +104,11 @@ pub fn create_sparse_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
     let sparse_size = (size / 100).max(3);
-    let x = Array1::linspace(T::zero(), T::from_f64(1000.0).unwrap(), sparse_size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(1000.0).expect("Operation failed"),
+        sparse_size,
+    );
     let y = x.mapv(|xi| xi.sin());
     Ok((x, y))
 }
@@ -90,8 +117,12 @@ pub fn create_sparse_data<T: InterpolationFloat>(
 pub fn create_oscillatory_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
-    let y = x.mapv(|xi| (xi * T::from_f64(100.0).unwrap()).sin());
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
+    let y = x.mapv(|xi| (xi * T::from_f64(100.0).expect("Operation failed")).sin());
     Ok((x, y))
 }
 
@@ -99,7 +130,11 @@ pub fn create_oscillatory_data<T: InterpolationFloat>(
 pub fn create_monotonic_extreme_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let y = x.mapv(|xi| xi.powi(10));
     Ok((x, y))
 }
@@ -111,11 +146,11 @@ pub fn create_edge_case_data<T: InterpolationFloat>(
     max_val: f64,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
     let x = Array1::linspace(
-        T::from_f64(min_val).unwrap(),
-        T::from_f64(max_val).unwrap(),
+        T::from_f64(min_val).expect("Operation failed"),
+        T::from_f64(max_val).expect("Operation failed"),
         size,
     );
-    let y = x.mapv(|xi| xi * T::from_f64(1.1).unwrap());
+    let y = x.mapv(|xi| xi * T::from_f64(1.1).expect("Operation failed"));
     Ok((x, y))
 }
 
@@ -123,8 +158,15 @@ pub fn create_edge_case_data<T: InterpolationFloat>(
 pub fn create_linear_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
-    let y = x.mapv(|xi| xi * T::from_f64(2.0).unwrap() + T::from_f64(3.0).unwrap());
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
+    let y = x.mapv(|xi| {
+        xi * T::from_f64(2.0).expect("Operation failed")
+            + T::from_f64(3.0).expect("Operation failed")
+    });
     Ok((x, y))
 }
 
@@ -132,8 +174,16 @@ pub fn create_linear_data<T: InterpolationFloat>(
 pub fn create_quadratic_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::from_f64(-5.0).unwrap(), T::from_f64(5.0).unwrap(), size);
-    let y = x.mapv(|xi| xi * xi + T::from_f64(2.0).unwrap() * xi + T::from_f64(1.0).unwrap());
+    let x = Array1::linspace(
+        T::from_f64(-5.0).expect("Operation failed"),
+        T::from_f64(5.0).expect("Operation failed"),
+        size,
+    );
+    let y = x.mapv(|xi| {
+        xi * xi
+            + T::from_f64(2.0).expect("Operation failed") * xi
+            + T::from_f64(1.0).expect("Operation failed")
+    });
     Ok((x, y))
 }
 
@@ -142,12 +192,17 @@ pub fn create_noisy_data<T: InterpolationFloat>(
     size: usize,
     noise_level: f64,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let mut y = x.mapv(|xi| xi.sin());
 
     // Add noise (simplified - real implementation would use proper random number generation)
     for (i, yi) in y.iter_mut().enumerate() {
-        let noise = T::from_f64(noise_level * ((i as f64 * 12345.0).sin() * 0.1)).unwrap();
+        let noise = T::from_f64(noise_level * ((i as f64 * 12345.0).sin() * 0.1))
+            .expect("Operation failed");
         *yi += noise;
     }
 
@@ -158,8 +213,8 @@ pub fn create_noisy_data<T: InterpolationFloat>(
 pub fn create_exponential_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(5.0).unwrap(), size);
-    let y = x.mapv(|xi| (xi * T::from_f64(0.5).unwrap()).exp());
+    let x = Array1::linspace(T::zero(), T::from_f64(5.0).expect("Operation failed"), size);
+    let y = x.mapv(|xi| (xi * T::from_f64(0.5).expect("Operation failed")).exp());
     Ok((x, y))
 }
 
@@ -167,9 +222,13 @@ pub fn create_exponential_data<T: InterpolationFloat>(
 pub fn create_step_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let y = x.mapv(|xi| {
-        if xi < T::from_f64(5.0).unwrap() {
+        if xi < T::from_f64(5.0).expect("Operation failed") {
             T::zero()
         } else {
             T::one()
@@ -182,11 +241,15 @@ pub fn create_step_data<T: InterpolationFloat>(
 pub fn create_pseudo_random_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let y = x.mapv(|xi| {
         // Deterministic pseudo-random using sine functions
-        let val = xi.to_f64().unwrap();
-        T::from_f64((val * 12.34).sin() + (val * 56.78).cos() * 0.3).unwrap()
+        let val = xi.to_f64().expect("Operation failed");
+        T::from_f64((val * 12.34).sin() + (val * 56.78).cos() * 0.3).expect("Operation failed")
     });
     Ok((x, y))
 }
@@ -195,11 +258,15 @@ pub fn create_pseudo_random_data<T: InterpolationFloat>(
 pub fn create_rapid_change_data<T: InterpolationFloat>(
     size: usize,
 ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
-    let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
+    let x = Array1::linspace(
+        T::zero(),
+        T::from_f64(10.0).expect("Operation failed"),
+        size,
+    );
     let y = x.mapv(|xi| {
-        let val = xi.to_f64().unwrap();
+        let val = xi.to_f64().expect("Operation failed");
         if val > 4.9 && val < 5.1 {
-            T::from_f64(100.0).unwrap() // Rapid change around x=5
+            T::from_f64(100.0).expect("Operation failed") // Rapid change around x=5
         } else {
             xi
         }
@@ -231,10 +298,10 @@ pub fn create_mismatched_data<T: InterpolationFloat>() -> InterpolateResult<(Arr
 pub fn create_unsorted_x_data<T: InterpolationFloat>() -> InterpolateResult<(Array1<T>, Array1<T>)>
 {
     let x = Array1::from_vec(vec![
-        T::from_f64(1.0).unwrap(),
-        T::from_f64(3.0).unwrap(),
-        T::from_f64(2.0).unwrap(),
-        T::from_f64(4.0).unwrap(),
+        T::from_f64(1.0).expect("Operation failed"),
+        T::from_f64(3.0).expect("Operation failed"),
+        T::from_f64(2.0).expect("Operation failed"),
+        T::from_f64(4.0).expect("Operation failed"),
     ]);
     let y = Array1::ones(4);
     Ok((x, y))

@@ -437,7 +437,7 @@ mod tests {
     #[test]
     fn test_rtree_insert_and_search() {
         // Create a new R-tree
-        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).unwrap();
+        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).expect("Operation failed");
 
         // Insert some points
         let points = vec![
@@ -454,7 +454,7 @@ mod tests {
         ];
 
         for (point, value) in points {
-            rtree.insert(point, value).unwrap();
+            rtree.insert(point, value).expect("Operation failed");
         }
 
         // Check the size
@@ -465,7 +465,7 @@ mod tests {
     #[test]
     fn test_rtree_insert_rectangle() {
         // Create a new R-tree
-        let mut rtree: RTree<&str> = RTree::new(2, 2, 4).unwrap();
+        let mut rtree: RTree<&str> = RTree::new(2, 2, 4).expect("Operation failed");
 
         // Insert some rectangles
         let rectangles = vec![
@@ -476,7 +476,9 @@ mod tests {
         ];
 
         for (min, max, value) in rectangles {
-            rtree.insert_rectangle(min, max, value).unwrap();
+            rtree
+                .insert_rectangle(min, max, value)
+                .expect("Operation failed");
         }
 
         // Check the size
@@ -485,7 +487,7 @@ mod tests {
         // Test searching for rectangles that overlap with a query range
         let results = rtree
             .search_range(&array![0.5, 0.5].view(), &array![2.0, 2.0].view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Should find all rectangles A, B, C, and D (B overlaps at boundary point (2.0, 2.0))
         assert_eq!(results.len(), 4);

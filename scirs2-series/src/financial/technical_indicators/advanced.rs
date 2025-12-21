@@ -37,7 +37,7 @@
 //!     ma_type: MovingAverageType::Simple,
 //! };
 //!
-//! let bands = bollinger_bands(&prices, &config).unwrap();
+//! let bands = bollinger_bands(&prices, &config).expect("Operation failed");
 //! println!("Bandwidth: {:?}", bands.bandwidth);
 //! println!("%B Position: {:?}", bands.percent_b);
 //! ```
@@ -55,7 +55,7 @@
 //! let close = Array1::from_vec(close);
 //! let config = IchimokuConfig::default();
 //!
-//! let cloud = ichimoku_cloud(&high, &low, &close, &config).unwrap();
+//! let cloud = ichimoku_cloud(&high, &low, &close, &config).expect("Operation failed");
 //! ```
 //!
 //! ## Adaptive Moving Average
@@ -64,7 +64,7 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let prices = array![10.0, 12.0, 11.0, 13.0, 15.0, 14.0, 16.0, 18.0];
-//! let kama_values = kama(&prices, 5, 2, 30).unwrap();
+//! let kama_values = kama(&prices, 5, 2, 30).expect("Operation failed");
 //! ```
 
 use scirs2_core::ndarray::{s, Array1};
@@ -141,7 +141,7 @@ pub struct BollingerBands<F: Float> {
 ///
 /// let prices = array![20.0, 21.0, 19.5, 22.0, 21.5, 20.0, 19.0, 23.0, 22.5, 21.0, 20.5, 22.5, 23.0, 21.5, 20.0, 22.0, 21.0, 19.5, 21.5, 22.0, 20.5];
 /// let config = BollingerBandsConfig::default();
-/// let bands = bollinger_bands(&prices, &config).unwrap();
+/// let bands = bollinger_bands(&prices, &config).expect("Operation failed");
 /// ```
 pub fn bollinger_bands<F: Float + Clone>(
     prices: &Array1<F>,
@@ -162,16 +162,19 @@ pub fn bollinger_bands<F: Float + Clone>(
     let mut bandwidth = Array1::zeros(output_len);
     let mut percent_b = Array1::zeros(output_len);
 
-    let std_multiplier = F::from(config.std_dev_multiplier).unwrap();
+    let std_multiplier = F::from(config.std_dev_multiplier).expect("Failed to convert to float");
 
     for i in 0..output_len {
         let window = prices.slice(s![i..i + config.period]);
 
         // Calculate moving average
         let ma = match config.ma_type {
-            MovingAverageType::Simple => window.sum() / F::from(config.period).unwrap(),
+            MovingAverageType::Simple => {
+                window.sum() / F::from(config.period).expect("Failed to convert to float")
+            }
             MovingAverageType::Exponential => {
-                let alpha = F::from(2.0).unwrap() / F::from(config.period + 1).unwrap();
+                let alpha = F::from(2.0).expect("Failed to convert constant to float")
+                    / F::from(config.period + 1).expect("Failed to convert to float");
                 let mut ema = window[0];
                 for &price in window.iter().skip(1) {
                     ema = alpha * price + (F::one() - alpha) * ema;
@@ -182,7 +185,7 @@ pub fn bollinger_bands<F: Float + Clone>(
                 let mut sum = F::zero();
                 let mut weight_sum = F::zero();
                 for (j, &price) in window.iter().enumerate() {
-                    let weight = F::from(j + 1).unwrap();
+                    let weight = F::from(j + 1).expect("Failed to convert to float");
                     sum = sum + weight * price;
                     weight_sum = weight_sum + weight;
                 }
@@ -195,7 +198,7 @@ pub fn bollinger_bands<F: Float + Clone>(
             .iter()
             .map(|&price| (price - ma).powi(2))
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(config.period).unwrap();
+            / F::from(config.period).expect("Failed to convert to float");
         let std_dev = variance.sqrt();
 
         middle_band[i] = ma;
@@ -214,7 +217,7 @@ pub fn bollinger_bands<F: Float + Clone>(
         percent_b[i] = if upper_band[i] != lower_band[i] {
             (current_price - lower_band[i]) / (upper_band[i] - lower_band[i])
         } else {
-            F::from(0.5).unwrap()
+            F::from(0.5).expect("Failed to convert constant to float")
         };
     }
 
@@ -313,9 +316,11 @@ pub fn stochastic_oscillator<F: Float + Clone>(
         let current_close = close[window_end - 1];
 
         percent_k[i] = if highest_high != lowest_low {
-            F::from(100.0).unwrap() * (current_close - lowest_low) / (highest_high - lowest_low)
+            F::from(100.0).expect("Failed to convert constant to float")
+                * (current_close - lowest_low)
+                / (highest_high - lowest_low)
         } else {
-            F::from(50.0).unwrap()
+            F::from(50.0).expect("Failed to convert constant to float")
         };
     }
 
@@ -331,9 +336,12 @@ pub fn stochastic_oscillator<F: Float + Clone>(
     for i in 0..d_output_len {
         let k_window = percent_k.slice(s![i..i + config.d_period]);
         percent_d[i] = match config.d_smoothing {
-            MovingAverageType::Simple => k_window.sum() / F::from(config.d_period).unwrap(),
+            MovingAverageType::Simple => {
+                k_window.sum() / F::from(config.d_period).expect("Failed to convert to float")
+            }
             MovingAverageType::Exponential => {
-                let alpha = F::from(2.0).unwrap() / F::from(config.d_period + 1).unwrap();
+                let alpha = F::from(2.0).expect("Failed to convert constant to float")
+                    / F::from(config.d_period + 1).expect("Failed to convert to float");
                 let mut ema = k_window[0];
                 for &k_val in k_window.iter().skip(1) {
                     ema = alpha * k_val + (F::one() - alpha) * ema;
@@ -344,7 +352,7 @@ pub fn stochastic_oscillator<F: Float + Clone>(
                 let mut sum = F::zero();
                 let mut weight_sum = F::zero();
                 for (j, &k_val) in k_window.iter().enumerate() {
-                    let weight = F::from(j + 1).unwrap();
+                    let weight = F::from(j + 1).expect("Failed to convert to float");
                     sum = sum + weight * k_val;
                     weight_sum = weight_sum + weight;
                 }
@@ -446,7 +454,7 @@ pub fn ichimoku_cloud<F: Float + Clone>(
             .iter()
             .fold(F::neg_infinity(), |acc, &x| acc.max(x));
         let lowest = low_slice.iter().fold(F::infinity(), |acc, &x| acc.min(x));
-        (highest + lowest) / F::from(2.0).unwrap()
+        (highest + lowest) / F::from(2.0).expect("Failed to convert constant to float")
     };
 
     // Calculate Tenkan-sen
@@ -480,7 +488,8 @@ pub fn ichimoku_cloud<F: Float + Clone>(
     // Calculate Senkou Span A
     let mut senkou_span_a = Array1::zeros(n);
     for i in 0..n {
-        senkou_span_a[i] = (tenkan_sen[i] + kijun_sen[i]) / F::from(2.0).unwrap();
+        senkou_span_a[i] = (tenkan_sen[i] + kijun_sen[i])
+            / F::from(2.0).expect("Failed to convert constant to float");
     }
 
     // Calculate Senkou Span B
@@ -582,16 +591,18 @@ pub fn adx<F: Float + Clone + scirs2_core::numeric::FromPrimitive>(
     }
 
     // Calculate ADX using exponential moving average
-    let alpha = F::from(2.0).unwrap() / F::from(period + 1).unwrap();
+    let alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(period + 1).expect("Failed to convert to float");
     let mut ema_dx = dx[0];
 
     for i in 0..adx.len() {
         if i == 0 {
-            ema_dx = dx.slice(s![0..period]).sum() / F::from(period).unwrap();
+            ema_dx = dx.slice(s![0..period]).sum()
+                / F::from(period).expect("Failed to convert to float");
         } else {
             ema_dx = alpha * dx[i + period - 1] + (F::one() - alpha) * ema_dx;
         }
-        adx[i] = ema_dx * F::from(100.0).unwrap();
+        adx[i] = ema_dx * F::from(100.0).expect("Failed to convert constant to float");
     }
 
     Ok(adx)
@@ -743,7 +754,7 @@ pub fn mfi<F: Float + Clone + std::iter::Sum>(
     let n = high.len();
     let mut typical_prices = Array1::zeros(n);
     let mut money_flows = Array1::zeros(n - 1);
-    let three = F::from(3.0).unwrap();
+    let three = F::from(3.0).expect("Failed to convert constant to float");
 
     // Calculate typical prices
     for i in 0..n {
@@ -763,7 +774,7 @@ pub fn mfi<F: Float + Clone + std::iter::Sum>(
     }
 
     let mut mfi = Array1::zeros(money_flows.len() - period + 1);
-    let hundred = F::from(100.0).unwrap();
+    let hundred = F::from(100.0).expect("Failed to convert constant to float");
 
     for i in 0..mfi.len() {
         let slice = money_flows.slice(s![i..i + period]);
@@ -819,8 +830,8 @@ pub fn aroon<F: Float + Clone>(
     let result_len = n - period + 1;
     let mut aroon_up = Array1::zeros(result_len);
     let mut aroon_down = Array1::zeros(result_len);
-    let hundred = F::from(100.0).unwrap();
-    let period_f = F::from(period).unwrap();
+    let hundred = F::from(100.0).expect("Failed to convert constant to float");
+    let period_f = F::from(period).expect("Failed to convert to float");
 
     for i in 0..result_len {
         let slice_high = high.slice(s![i..i + period]);
@@ -830,20 +841,24 @@ pub fn aroon<F: Float + Clone>(
         let max_pos = slice_high
             .iter()
             .enumerate()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .unwrap()
+            .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
+            .expect("Operation failed")
             .0;
 
         let min_pos = slice_low
             .iter()
             .enumerate()
-            .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .unwrap()
+            .min_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
+            .expect("Operation failed")
             .0;
 
         // Calculate Aroon Up and Aroon Down
-        aroon_up[i] = hundred * (period_f - F::from(period - 1 - max_pos).unwrap()) / period_f;
-        aroon_down[i] = hundred * (period_f - F::from(period - 1 - min_pos).unwrap()) / period_f;
+        aroon_up[i] = hundred
+            * (period_f - F::from(period - 1 - max_pos).expect("Failed to convert to float"))
+            / period_f;
+        aroon_down[i] = hundred
+            * (period_f - F::from(period - 1 - min_pos).expect("Failed to convert to float"))
+            / period_f;
     }
 
     // Calculate Aroon Oscillator
@@ -884,7 +899,7 @@ pub fn vwap<F: Float + Clone>(
     let mut vwap = Array1::zeros(n);
     let mut cumulative_pv = F::zero();
     let mut cumulative_volume = F::zero();
-    let three = F::from(3.0).unwrap();
+    let three = F::from(3.0).expect("Failed to convert constant to float");
 
     for i in 0..n {
         let typical_price = (high[i] + low[i] + close[i]) / three;
@@ -954,8 +969,10 @@ pub fn chaikin_oscillator<F: Float + Clone>(
     }
 
     // Calculate fast and slow EMAs of A/D line
-    let fast_alpha = F::from(2.0).unwrap() / F::from(fast_period + 1).unwrap();
-    let slow_alpha = F::from(2.0).unwrap() / F::from(slow_period + 1).unwrap();
+    let fast_alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(fast_period + 1).expect("Failed to convert to float");
+    let slow_alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(slow_period + 1).expect("Failed to convert to float");
 
     // Use basic EMA calculation
     use crate::financial::technical_indicators::basic::ema;
@@ -1011,11 +1028,11 @@ pub fn fibonacci_retracement<F: Float + Clone>(
     }
 
     let range = high_price - low_price;
-    let fib_23_6 = F::from(0.236).unwrap();
-    let fib_38_2 = F::from(0.382).unwrap();
-    let fib_50_0 = F::from(0.5).unwrap();
-    let fib_61_8 = F::from(0.618).unwrap();
-    let fib_78_6 = F::from(0.786).unwrap();
+    let fib_23_6 = F::from(0.236).expect("Failed to convert constant to float");
+    let fib_38_2 = F::from(0.382).expect("Failed to convert constant to float");
+    let fib_50_0 = F::from(0.5).expect("Failed to convert constant to float");
+    let fib_61_8 = F::from(0.618).expect("Failed to convert constant to float");
+    let fib_78_6 = F::from(0.786).expect("Failed to convert constant to float");
 
     Ok(FibonacciLevels {
         level_100: high_price,
@@ -1062,8 +1079,10 @@ pub fn kama<F: Float + Clone>(
     let mut kama = Array1::zeros(n);
     kama[period - 1] = data[period - 1];
 
-    let fast_alpha = F::from(2.0).unwrap() / F::from(fast_sc + 1).unwrap();
-    let slow_alpha = F::from(2.0).unwrap() / F::from(slow_sc + 1).unwrap();
+    let fast_alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(fast_sc + 1).expect("Failed to convert to float");
+    let slow_alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(slow_sc + 1).expect("Failed to convert to float");
 
     for i in period..n {
         // Calculate efficiency ratio
@@ -1106,7 +1125,7 @@ mod tests {
         let result = bollinger_bands(&data, &config);
         assert!(result.is_ok());
 
-        let bands = result.unwrap();
+        let bands = result.expect("Test: technical indicator calculation failed");
         assert_eq!(bands.upper_band.len(), data.len() - config.period + 1);
 
         // Upper band should be above middle, middle above lower
@@ -1136,7 +1155,7 @@ mod tests {
         let result = stochastic_oscillator(&high, &low, &close, &config);
         assert!(result.is_ok());
 
-        let stoch = result.unwrap();
+        let stoch = result.expect("Test: technical indicator calculation failed");
 
         // All values should be between 0 and 100
         for &value in stoch.percent_k.iter() {
@@ -1172,7 +1191,7 @@ mod tests {
         let result = ichimoku_cloud(&high, &low, &close, &config);
         assert!(result.is_ok());
 
-        let cloud = result.unwrap();
+        let cloud = result.expect("Test: technical indicator calculation failed");
         assert_eq!(cloud.tenkan_sen.len(), high.len());
         assert_eq!(cloud.kijun_sen.len(), high.len());
         assert_eq!(cloud.chikou_span.len(), high.len());
@@ -1188,7 +1207,7 @@ mod tests {
         let result = parabolic_sar(&high, &low, 0.02, 0.2);
         assert!(result.is_ok());
 
-        let sar = result.unwrap();
+        let sar = result.expect("Test: technical indicator calculation failed");
         assert_eq!(sar.len(), high.len());
 
         // All SAR values should be positive
@@ -1202,7 +1221,7 @@ mod tests {
         let result = fibonacci_retracement(100.0, 50.0);
         assert!(result.is_ok());
 
-        let fib = result.unwrap();
+        let fib = result.expect("Test: technical indicator calculation failed");
         assert_eq!(fib.level_100, 100.0);
         assert_eq!(fib.level_0, 50.0);
         // Check that levels are properly calculated (between 0 and 100)
@@ -1217,7 +1236,7 @@ mod tests {
         let result = kama(&data, 5, 2, 30);
         assert!(result.is_ok());
 
-        let kama_values = result.unwrap();
+        let kama_values = result.expect("Test: technical indicator calculation failed");
         assert_eq!(kama_values.len(), data.len());
 
         // First period-1 values should be zero
@@ -1271,7 +1290,7 @@ mod tests {
         let result = adx(&high, &low, &close, 5);
         assert!(result.is_ok());
 
-        let adx_values = result.unwrap();
+        let adx_values = result.expect("Test: technical indicator calculation failed");
 
         // All ADX values should be between 0 and 100
         for &value in adx_values.iter() {

@@ -30,8 +30,8 @@ impl FilterMethods {
     /// use scirs2_core::ndarray::Array2;
     /// use scirs2_series::feature_selection::FilterMethods;
     ///
-    /// let features = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
-    /// let result = FilterMethods::variance_threshold(&features, 0.1).unwrap();
+    /// let features = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).expect("Operation failed");
+    /// let result = FilterMethods::variance_threshold(&features, 0.1).expect("Operation failed");
     /// println!("Selected {} features", result.selected_features.len());
     /// ```
     pub fn variance_threshold(

@@ -223,7 +223,7 @@ impl DistributedLogger {
 
     /// Start the distributed logger
     pub fn start(&self) -> Result<(), DistributedLogError> {
-        let mut running = self.running.lock().unwrap();
+        let mut running = self.running.lock().expect("Operation failed");
         if *running {
             return Ok(());
         }
@@ -238,7 +238,7 @@ impl DistributedLogger {
                 last_heartbeat: SystemTime::now(),
                 status: NodeStatus::Healthy,
             };
-            self.nodes.lock().unwrap().insert(node.id.clone(), node);
+            self.nodes.lock().expect("Operation failed").insert(node.id.clone(), node);
         }
 
         // Start background tasks
@@ -250,7 +250,7 @@ impl DistributedLogger {
 
     /// Stop the distributed logger
     pub fn stop(&self) {
-        *self.running.lock().unwrap() = false;
+        *self.running.lock().expect("Operation failed") = false;
     }
 
     /// Log a distributed entry
@@ -262,10 +262,10 @@ impl DistributedLogger {
             service.to_string(),
         );
 
-        self.buffer.lock().unwrap().push(entry);
+        self.buffer.lock().expect("Operation failed").push(entry);
 
         // Check if buffer needs immediate flush
-        if self.buffer.lock().unwrap().len() >= self.config.buffersize {
+        if self.buffer.lock().expect("Operation failed").len() >= self.config.buffersize {
             self.flush_buffer();
         }
     }
@@ -281,12 +281,12 @@ impl DistributedLogger {
         )
         .with_correlation_id(correlation_id.to_string());
 
-        self.buffer.lock().unwrap().push(entry);
+        self.buffer.lock().expect("Operation failed").push(entry);
     }
 
     /// Flush buffered log entries
     pub fn flush_buffer(&self) {
-        let mut buffer = self.buffer.lock().unwrap();
+        let mut buffer = self.buffer.lock().expect("Operation failed");
         if buffer.is_empty() {
             return;
         }
@@ -313,7 +313,7 @@ impl DistributedLogger {
 
     /// Forward entries to first available aggregator
     fn forward_entries(&self, entries: &[DistributedLogEntry]) {
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = self.nodes.lock().expect("Operation failed");
         let aggregator = nodes
             .values()
             .find(|node| node.role == NodeRole::Aggregator && node.status == NodeStatus::Healthy);
@@ -325,7 +325,7 @@ impl DistributedLogger {
 
     /// Load balance entries across available aggregators
     fn load_balance_entries(&self, entries: &[DistributedLogEntry]) {
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = self.nodes.lock().expect("Operation failed");
         let aggregators: Vec<_> = nodes
             .values()
             .filter(|node| node.role == NodeRole::Aggregator && node.status == NodeStatus::Healthy)
@@ -343,7 +343,7 @@ impl DistributedLogger {
 
     /// Replicate entries to all available aggregators
     fn replicate_entries(&self, entries: &[DistributedLogEntry]) {
-        let nodes = self.nodes.lock().unwrap();
+        let nodes = self.nodes.lock().expect("Operation failed");
         for node in nodes.values() {
             if node.role == NodeRole::Aggregator && node.status == NodeStatus::Healthy {
                 self.send_entries_to_node(entries, node);
@@ -368,11 +368,11 @@ impl DistributedLogger {
         let flush_interval = self.config.flush_interval;
 
         std::thread::spawn(move || {
-            while *running.lock().unwrap() {
+            while *running.lock().expect("Operation failed") {
                 std::thread::sleep(flush_interval);
 
                 // This is a simplified version - real implementation would call flush_buffer
-                let buffersize = buffer.lock().unwrap().len();
+                let buffersize = buffer.lock().expect("Operation failed").len();
                 if buffersize > 0 {
                     println!("Background flush: {} entries buffered", buffersize);
                 }
@@ -387,11 +387,11 @@ impl DistributedLogger {
         let heartbeat_interval = self.config.heartbeat_interval;
 
         std::thread::spawn(move || {
-            while *running.lock().unwrap() {
+            while *running.lock().expect("Operation failed") {
                 std::thread::sleep(heartbeat_interval);
 
                 // Send heartbeats and check node health
-                let mut nodes_guard = nodes.lock().unwrap();
+                let mut nodes_guard = nodes.lock().expect("Operation failed");
                 for node in nodes_guard.values_mut() {
                     // In real implementation, would send actual heartbeat
                     if node.last_heartbeat.elapsed().unwrap_or(Duration::ZERO)
@@ -406,8 +406,8 @@ impl DistributedLogger {
 
     /// Get node statistics
     pub fn get_node_stats(&self) -> NodeStats {
-        let buffersize = self.buffer.lock().unwrap().len();
-        let nodes = self.nodes.lock().unwrap();
+        let buffersize = self.buffer.lock().expect("Operation failed").len();
+        let nodes = self.nodes.lock().expect("Operation failed");
 
         let healthy_nodes = nodes
             .values()
@@ -472,7 +472,7 @@ impl LogAggregator {
 
     /// Start the aggregator
     pub fn start(&self) -> Result<(), DistributedLogError> {
-        *self.running.lock().unwrap() = true;
+        *self.running.lock().expect("Operation failed") = true;
 
         // In a real implementation, would start HTTP/gRPC server
         println!("Log aggregator started on node: {}", self.config.nodeid);
@@ -482,12 +482,12 @@ impl LogAggregator {
 
     /// Stop the aggregator
     pub fn stop(&self) {
-        *self.running.lock().unwrap() = false;
+        *self.running.lock().expect("Operation failed") = false;
     }
 
     /// Receive log entries from remote nodes
     pub fn receivelogs(&self, entries: Vec<DistributedLogEntry>) {
-        let mut logs = self.collectedlogs.lock().unwrap();
+        let mut logs = self.collectedlogs.lock().expect("Operation failed");
         logs.extend(entries);
 
         // Keep only recent logs (simple cleanup)
@@ -502,7 +502,7 @@ impl LogAggregator {
         service: Option<&str>,
         level: Option<crate::logging::LogLevel>,
     ) -> Vec<DistributedLogEntry> {
-        let logs = self.collectedlogs.lock().unwrap();
+        let logs = self.collectedlogs.lock().expect("Operation failed");
 
         logs.iter()
             .filter(|entry| {
@@ -524,7 +524,7 @@ impl LogAggregator {
 
     /// Get aggregated statistics
     pub fn get_stats(&self) -> AggregatorStats {
-        let logs = self.collectedlogs.lock().unwrap();
+        let logs = self.collectedlogs.lock().expect("Operation failed");
 
         let mut service_counts = HashMap::new();
         let mut level_counts = HashMap::new();
@@ -622,7 +622,7 @@ mod tests {
         let config = DistributedConfig::default();
         let logger = DistributedLogger::new(config);
 
-        assert_eq!(*logger.running.lock().unwrap(), false);
+        assert_eq!(*logger.running.lock().expect("Operation failed"), false);
     }
 
     #[test]

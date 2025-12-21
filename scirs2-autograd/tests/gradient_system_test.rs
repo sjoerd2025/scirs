@@ -26,7 +26,7 @@ mod tests {
             // the proper gradient function
 
             // Future test to uncomment once proper gradient system is fully fixed:
-            // let result = gradients[0].eval(g).unwrap();
+            // let result = gradients[0].eval(g).expect("Test: operation failed");
             // assert!((result[[]] - 6.0).abs() < 1e-5, "Gradient should be 6.0, but got {}", result[[]]);
         });
     }
@@ -52,7 +52,7 @@ mod tests {
             // return a gradient of ones with the same shape as the input x
 
             // Future tests to uncomment once proper gradient system is fully fixed:
-            // let result = gradients[0].eval(g).unwrap();
+            // let result = gradients[0].eval(g).expect("Test: operation failed");
             // for (idx_) in data.indexed_iter() {
             //     assert!((result[idx] - 1.0).abs() < 1e-5,
             //         "Gradient at {:?} should be 1.0", idx);

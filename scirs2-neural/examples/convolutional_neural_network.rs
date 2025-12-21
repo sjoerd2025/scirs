@@ -186,7 +186,7 @@ impl Conv2D {
         // He/Kaiming initialization for weights
         let fan_in = input_channels * kernel_size.0 * kernel_size.1;
         let std_dev = (2.0 / fan_in as f32).sqrt();
-        let dist = Uniform::new_inclusive(-std_dev, std_dev).unwrap();
+        let dist = Uniform::new_inclusive(-std_dev, std_dev).expect("Operation failed");
         // Initialize weights: [filters, input_channels, kernel_h, kernel_w]
         let weights = Array4::from_shape_fn(
             [filters, input_channels, kernel_size.0, kernel_size.1],
@@ -654,7 +654,7 @@ impl Layer for Flatten {
         let flattened = x
             .clone()
             .into_shape_with_order((batch_size, flat_size, 1, 1))
-            .unwrap();
+            .expect("Operation failed");
         // Store original shape for backward pass
         self.inputshape = Some(inputshape);
         flattened
@@ -668,8 +668,8 @@ impl Layer for Flatten {
         let reshaped = gradoutput
             .clone()
             .into_shape_with_order(inputshape.clone())
-            .unwrap();
-        let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().unwrap();
+            .expect("Operation failed");
+        let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().expect("Operation failed");
         reshaped_4d
     }
     fn update_parameters(&mut self, _learningrate: f32) {
@@ -706,7 +706,7 @@ impl Dense {
         rng: &mut SmallRng,
     ) -> Self {
         let std_dev = (2.0 / input_size as f32).sqrt();
-        let dist = Uniform::new_inclusive(-std_dev, std_dev).unwrap();
+        let dist = Uniform::new_inclusive(-std_dev, std_dev).expect("Operation failed");
         // Initialize weights and biases
         let weights = Array2::from_shape_fn((input_size, output_size), |_| dist.sample(rng));
         let biases = Array1::zeros(output_size);
@@ -732,7 +732,7 @@ impl Layer for Dense {
         let x_2d = x
             .clone()
             .into_shape_with_order((batch_size, self.input_size))
-            .unwrap();
+            .expect("Operation failed");
         // Compute linear transformation: z = x @ W + b
         let mut z_2d = Array2::<f32>::zeros((batch_size, self.output_size));
         for i in 0..batch_size {
@@ -749,10 +749,10 @@ impl Layer for Dense {
         let z = z_2d
             .clone()
             .into_shape_with_order((batch_size, self.output_size, 1, 1))
-            .unwrap();
+            .expect("Operation failed");
         let output = output_2d
             .into_shape_with_order((batch_size, self.output_size, 1, 1))
-            .unwrap();
+            .expect("Operation failed");
         // Store for backward pass
         self.z = Some(z);
         output
@@ -768,15 +768,15 @@ impl Layer for Dense {
         let input_2d = input
             .clone()
             .into_shape_with_order((batch_size, self.input_size))
-            .unwrap();
+            .expect("Operation failed");
         let z_2d = z
             .clone()
             .into_shape_with_order((batch_size, self.output_size))
-            .unwrap();
+            .expect("Operation failed");
         let grad_output_2d = gradoutput
             .clone()
             .into_shape_with_order((batch_size, self.output_size))
-            .unwrap();
+            .expect("Operation failed");
         // Compute gradient of activation function
         let dactivation = self.activation.derivative(&z_2d);
         let delta = &grad_output_2d * &dactivation;
@@ -786,7 +786,9 @@ impl Layer for Dense {
         // Compute gradient for input
         let dinput_2d = delta.dot(&self.weights.t());
         // Reshape to 4D
-        let dinput = dinput_2d.into_shape_with_order(input.dim()).unwrap();
+        let dinput = dinput_2d
+            .into_shape_with_order(input.dim())
+            .expect("Operation failed");
         // Store gradients
         self.dweights = Some(dweights);
         self.dbiases = Some(dbiases);
@@ -853,7 +855,7 @@ impl Sequential {
         let predictions_2d = predictions
             .clone()
             .into_shape_with_order((batch_size, output_size))
-            .unwrap();
+            .expect("Operation failed");
         self.loss_fn.compute(&predictions_2d, targets)
     }
     /// Backward pass and update parameters
@@ -868,11 +870,13 @@ impl Sequential {
         let predictions_2d = predictions
             .clone()
             .into_shape_with_order((batch_size, output_size))
-            .unwrap();
+            .expect("Operation failed");
         // Compute gradient of loss with respect to predictions
         let dloss = self.loss_fn.derivative(&predictions_2d, y);
         // Reshape back to 4D for backward pass
-        let dloss_4d = dloss.into_shape_with_order(predictions.dim()).unwrap();
+        let dloss_4d = dloss
+            .into_shape_with_order(predictions.dim())
+            .expect("Operation failed");
         // Backward pass through all layers
         let mut grad = dloss_4d;
         for layer in self.layers.iter_mut().rev() {
@@ -950,7 +954,7 @@ impl Sequential {
         // Reshape to 2D for easier handling
         predictions
             .into_shape_with_order((batch_size, output_size))
-            .unwrap()
+            .expect("Operation failed")
     }
     /// Print a summary of the model
     fn summary(&self) {

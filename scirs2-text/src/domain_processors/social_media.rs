@@ -20,14 +20,16 @@ impl SocialMediaTextProcessor {
         // Ensure domain is set to SocialMedia
         config.domain = Domain::SocialMedia;
         // Hashtag patterns
-        let hashtag_regex = Regex::new(r"#\w+").unwrap_or_else(|_| Regex::new(r"#").unwrap());
+        let hashtag_regex =
+            Regex::new(r"#\w+").unwrap_or_else(|_| Regex::new(r"#").expect("Operation failed"));
 
         // Mention patterns
-        let mention_regex = Regex::new(r"@\w+").unwrap_or_else(|_| Regex::new(r"@").unwrap());
+        let mention_regex =
+            Regex::new(r"@\w+").unwrap_or_else(|_| Regex::new(r"@").expect("Operation failed"));
 
         // URL patterns
-        let url_regex =
-            Regex::new(r"https?://\S+").unwrap_or_else(|_| Regex::new(r"http").unwrap());
+        let url_regex = Regex::new(r"https?://\S+")
+            .unwrap_or_else(|_| Regex::new(r"http").expect("Operation failed"));
 
         Self {
             config,

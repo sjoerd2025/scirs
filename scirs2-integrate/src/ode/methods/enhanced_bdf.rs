@@ -58,13 +58,14 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap() * F::from_f64(0.1).unwrap() // 0.1% of interval
+        _span / F::from_usize(100).expect("Operation failed")
+            * F::from_f64(0.1).expect("Operation failed") // 0.1% of interval
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-10).unwrap() // Minimal step size
+        _span * F::from_f64(1e-10).expect("Operation failed") // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -109,7 +110,7 @@ where
 
     // Generate initial points using RK4 (more accurate than Euler)
     if order > 1 {
-        let two = F::from_f64(2.0).unwrap();
+        let two = F::from_f64(2.0).expect("Operation failed");
         let mut t = t_start;
         let mut y = y0.clone();
 
@@ -129,7 +130,8 @@ where
             func_evals += 4;
 
             // Combine slopes with appropriate weights
-            let slope = (k1 + k2.clone() * two + k3.clone() * two + k4) / F::from_f64(6.0).unwrap();
+            let slope = (k1 + k2.clone() * two + k3.clone() * two + k4)
+                / F::from_f64(6.0).expect("Operation failed");
             y = y + slope * h;
 
             // Update time
@@ -150,8 +152,8 @@ where
     }
 
     // Now we have enough points to start BDF
-    let mut t = *t_values.last().unwrap();
-    let mut y = y_values.last().unwrap().clone();
+    let mut t = *t_values.last().expect("Operation failed");
+    let mut y = y_values.last().expect("Operation failed").clone();
 
     // BDF coefficients for different orders
     // These are the coefficients for the BDF formula
@@ -160,36 +162,36 @@ where
     // Coefficients for BDF1 (Implicit Euler) through BDF5
     let bdf_coefs: [Vec<F>; 5] = [
         // BDF1 (Implicit Euler): y_{n+1} - y_n = h * f(t_{n+1}, y_{n+1})
-        vec![F::one(), F::from_f64(-1.0).unwrap()],
+        vec![F::one(), F::from_f64(-1.0).expect("Operation failed")],
         // BDF2: 3/2 * y_{n+1} - 2 * y_n + 1/2 * y_{n-1} = h * f(t_{n+1}, y_{n+1})
         vec![
-            F::from_f64(3.0 / 2.0).unwrap(),
-            F::from_f64(-2.0).unwrap(),
-            F::from_f64(1.0 / 2.0).unwrap(),
+            F::from_f64(3.0 / 2.0).expect("Operation failed"),
+            F::from_f64(-2.0).expect("Operation failed"),
+            F::from_f64(1.0 / 2.0).expect("Operation failed"),
         ],
         // BDF3
         vec![
-            F::from_f64(11.0 / 6.0).unwrap(),
-            F::from_f64(-3.0).unwrap(),
-            F::from_f64(3.0 / 2.0).unwrap(),
-            F::from_f64(-1.0 / 3.0).unwrap(),
+            F::from_f64(11.0 / 6.0).expect("Operation failed"),
+            F::from_f64(-3.0).expect("Operation failed"),
+            F::from_f64(3.0 / 2.0).expect("Operation failed"),
+            F::from_f64(-1.0 / 3.0).expect("Operation failed"),
         ],
         // BDF4
         vec![
-            F::from_f64(25.0 / 12.0).unwrap(),
-            F::from_f64(-4.0).unwrap(),
-            F::from_f64(3.0).unwrap(),
-            F::from_f64(-4.0 / 3.0).unwrap(),
-            F::from_f64(1.0 / 4.0).unwrap(),
+            F::from_f64(25.0 / 12.0).expect("Operation failed"),
+            F::from_f64(-4.0).expect("Operation failed"),
+            F::from_f64(3.0).expect("Operation failed"),
+            F::from_f64(-4.0 / 3.0).expect("Operation failed"),
+            F::from_f64(1.0 / 4.0).expect("Operation failed"),
         ],
         // BDF5
         vec![
-            F::from_f64(137.0 / 60.0).unwrap(),
-            F::from_f64(-5.0).unwrap(),
-            F::from_f64(5.0).unwrap(),
-            F::from_f64(-10.0 / 3.0).unwrap(),
-            F::from_f64(5.0 / 4.0).unwrap(),
-            F::from_f64(-1.0 / 5.0).unwrap(),
+            F::from_f64(137.0 / 60.0).expect("Operation failed"),
+            F::from_f64(-5.0).expect("Operation failed"),
+            F::from_f64(5.0).expect("Operation failed"),
+            F::from_f64(-10.0 / 3.0).expect("Operation failed"),
+            F::from_f64(5.0 / 4.0).expect("Operation failed"),
+            F::from_f64(-1.0 / 5.0).expect("Operation failed"),
         ],
     ];
 
@@ -267,11 +269,11 @@ where
 
         let newton_params = NewtonParameters {
             max_iterations: 10,
-            abs_tolerance: opts.rtol * F::from_f64(0.1).unwrap(),
+            abs_tolerance: opts.rtol * F::from_f64(0.1).expect("Operation failed"),
             rel_tolerance: opts.rtol,
             jacobian_update_freq: update_freq,
             damping_factor: F::one(),
-            min_damping: F::from_f64(0.1).unwrap(),
+            min_damping: F::from_f64(0.1).expect("Operation failed"),
             force_jacobian_init: step_count == 0, // Force update on first step
             ..Default::default()
         };
@@ -286,7 +288,7 @@ where
                 func_evals += result.func_evals;
                 n_jac += result.jac_evals;
                 n_lu += result.linear_solves;
-                newton_iters += F::from(result.iterations).unwrap();
+                newton_iters += F::from(result.iterations).expect("Failed to convert to float");
 
                 // Update state
                 let y_next = result.solution;
@@ -333,16 +335,17 @@ where
                 };
 
                 // Step size adjustment based on error
-                let err_order = F::from_usize(current_order + 1).unwrap();
+                let err_order = F::from_usize(current_order + 1).expect("Operation failed");
                 let mut factor = if error > F::zero() {
-                    F::from_f64(0.9).unwrap() * (F::one() / error).powf(F::one() / err_order)
+                    F::from_f64(0.9).expect("Operation failed")
+                        * (F::one() / error).powf(F::one() / err_order)
                 } else {
-                    F::from_f64(5.0).unwrap() // Maximum increase if error is zero
+                    F::from_f64(5.0).expect("Operation failed") // Maximum increase if error is zero
                 };
 
                 // Apply safety factors
-                let factor_max = F::from_f64(5.0).unwrap();
-                let factor_min = F::from_f64(0.2).unwrap();
+                let factor_max = F::from_f64(5.0).expect("Operation failed");
+                let factor_min = F::from_f64(0.2).expect("Operation failed");
                 factor = factor.min(factor_max).max(factor_min);
 
                 // Check if step is acceptable
@@ -372,7 +375,8 @@ where
                             current_order += 1;
                             last_order_change = step_count;
                         } else if current_order > 1
-                            && (error > F::from_f64(0.5).unwrap() || result.iterations > 8)
+                            && (error > F::from_f64(0.5).expect("Operation failed")
+                                || result.iterations > 8)
                         {
                             // Consider decreasing order
                             current_order -= 1;
@@ -394,7 +398,7 @@ where
             }
             Err(e) => {
                 // Newton failed to converge
-                h *= F::from_f64(0.5).unwrap();
+                h *= F::from_f64(0.5).expect("Operation failed");
                 rejected_steps += 1;
 
                 // If step size is too small, return error

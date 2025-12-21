@@ -29,7 +29,7 @@ use std::ops::{Add, Div, Mul, Sub};
 /// use scirs2_sparse::construct_sym::eye_sym_array;
 ///
 /// // Create a 3x3 symmetric identity matrix in CSR format
-/// let eye = eye_sym_array::<f64>(3, "csr").unwrap();
+/// let eye = eye_sym_array::<f64>(3, "csr").expect("Operation failed");
 ///
 /// assert_eq!(eye.shape(), (3, 3));
 /// assert_eq!(eye.get(0, 0), 1.0);
@@ -117,7 +117,7 @@ where
 ///
 /// // Create a 3x3 tridiagonal matrix with main diagonal [2, 2, 2]
 /// // and off-diagonal [1, 1]
-/// let tri = tridiagonal_sym_array(&[2.0, 2.0, 2.0], &[1.0, 1.0], "csr").unwrap();
+/// let tri = tridiagonal_sym_array(&[2.0, 2.0, 2.0], &[1.0, 1.0], "csr").expect("Operation failed");
 ///
 /// assert_eq!(tri.shape(), (3, 3));
 /// assert_eq!(tri.get(0, 0), 2.0); // Main diagonal
@@ -289,7 +289,7 @@ where
 ///     vec![0.5, 0.5, 0.5],                 // Second off-diagonal
 /// ];
 ///
-/// let banded = banded_sym_array(&diagonals, 5, "csr").unwrap();
+/// let banded = banded_sym_array(&diagonals, 5, "csr").expect("Operation failed");
 ///
 /// assert_eq!(banded.shape(), (5, 5));
 /// assert_eq!(banded.get(0, 0), 2.0);  // Main diagonal
@@ -416,7 +416,7 @@ where
 /// use scirs2_sparse::construct_sym::random_sym_array;
 ///
 /// // Create a 10x10 symmetric random matrix with 20% density
-/// let random = random_sym_array::<f64>(10, 0.2, "csr").unwrap();
+/// let random = random_sym_array::<f64>(10, 0.2, "csr").expect("Operation failed");
 ///
 /// assert_eq!(random.shape(), (10, 10));
 ///
@@ -497,7 +497,7 @@ mod tests {
     #[test]
     fn test_eye_sym_array() {
         // Test CSR format
-        let eye_csr = eye_sym_array::<f64>(3, "csr").unwrap();
+        let eye_csr = eye_sym_array::<f64>(3, "csr").expect("Operation failed");
 
         assert_eq!(eye_csr.shape(), (3, 3));
         assert_eq!(eye_csr.nnz(), 3);
@@ -510,7 +510,7 @@ mod tests {
         assert_eq!(eye_csr.get(0, 1), 0.0);
 
         // Test COO format
-        let eye_coo = eye_sym_array::<f64>(3, "coo").unwrap();
+        let eye_coo = eye_sym_array::<f64>(3, "coo").expect("Operation failed");
 
         assert_eq!(eye_coo.shape(), (3, 3));
         assert_eq!(eye_coo.nnz(), 3);
@@ -532,7 +532,7 @@ mod tests {
         let offdiag = vec![1.0, 1.0, 1.0];
 
         // Test CSR format
-        let tri_csr = tridiagonal_sym_array(&diag, &offdiag, "csr").unwrap();
+        let tri_csr = tridiagonal_sym_array(&diag, &offdiag, "csr").expect("Operation failed");
 
         assert_eq!(tri_csr.shape(), (4, 4));
         assert_eq!(tri_csr.nnz(), 10); // 4 diagonal + 6 off-diagonal elements
@@ -555,7 +555,7 @@ mod tests {
         assert_eq!(tri_csr.get(1, 3), 0.0);
 
         // Test COO format
-        let tri_coo = tridiagonal_sym_array(&diag, &offdiag, "coo").unwrap();
+        let tri_coo = tridiagonal_sym_array(&diag, &offdiag, "coo").expect("Operation failed");
 
         assert_eq!(tri_coo.shape(), (4, 4));
         assert_eq!(tri_coo.nnz(), 10); // 4 diagonal + 6 off-diagonal elements
@@ -580,7 +580,7 @@ mod tests {
         ];
 
         // Test CSR format
-        let band_csr = banded_sym_array(&diagonals, 5, "csr").unwrap();
+        let band_csr = banded_sym_array(&diagonals, 5, "csr").expect("Operation failed");
 
         assert_eq!(band_csr.shape(), (5, 5));
 
@@ -607,7 +607,7 @@ mod tests {
         assert_eq!(band_csr.get(1, 4), 0.0);
 
         // Test COO format
-        let band_coo = banded_sym_array(&diagonals, 5, "coo").unwrap();
+        let band_coo = banded_sym_array(&diagonals, 5, "coo").expect("Operation failed");
 
         assert_eq!(band_coo.shape(), (5, 5));
 
@@ -644,7 +644,7 @@ mod tests {
         }
 
         // Test COO format
-        let rand_coo = random_sym_array::<f64>(n, density, "coo").unwrap();
+        let rand_coo = random_sym_array::<f64>(n, density, "coo").expect("Operation failed");
 
         assert_eq!(rand_coo.shape(), (n, n));
         assert!(rand_coo.is_symmetric());

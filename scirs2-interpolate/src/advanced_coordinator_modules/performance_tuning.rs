@@ -794,7 +794,8 @@ mod tests {
 
     #[test]
     fn test_performance_tuning_system_creation() {
-        let system: PerformanceTuningSystem<f64> = PerformanceTuningSystem::new().unwrap();
+        let system: PerformanceTuningSystem<f64> =
+            PerformanceTuningSystem::new().expect("Operation failed");
         assert!(matches!(
             system.strategy,
             PerformanceTuningStrategy::Balanced
@@ -811,14 +812,15 @@ mod tests {
 
     #[test]
     fn test_resource_monitor_creation() {
-        let monitor = ResourceMonitor::new().unwrap();
+        let monitor = ResourceMonitor::new().expect("Operation failed");
         assert_eq!(monitor.monitoring_interval, 1000);
         assert_eq!(monitor.available_memory, 8_000_000_000);
     }
 
     #[test]
     fn test_improvement_score_calculation() {
-        let system: PerformanceTuningSystem<f64> = PerformanceTuningSystem::new().unwrap();
+        let system: PerformanceTuningSystem<f64> =
+            PerformanceTuningSystem::new().expect("Operation failed");
 
         let original = PerformanceMetrics {
             execution_time: 1000.0,

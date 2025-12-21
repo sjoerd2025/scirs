@@ -541,7 +541,7 @@ impl TestDataGenerator {
                 }
             }
             DataDistribution::Uniform { min, max } => {
-                let uniform = UniformDist::new(*min, *max).unwrap();
+                let uniform = UniformDist::new(*min, *max).expect("Operation failed");
                 for val in data.iter_mut() {
                     *val = uniform.sample(&mut rng);
                 }
@@ -682,7 +682,7 @@ mod tests {
     #[test]
     fn test_testdata_generation() {
         let generator = TestDataGenerator::new(TestDataConfig::default());
-        let data = generator.generate_1ddata(100).unwrap();
+        let data = generator.generate_1ddata(100).expect("Operation failed");
         assert_eq!(data.len(), 100);
     }
 
@@ -710,7 +710,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Test failure - needs investigation"]
     fn test_benchmark_integration() {
         let mut framework = ScipyBenchmarkFramework::new(BenchmarkConfig {
             testsizes: vec![100],
@@ -724,7 +724,7 @@ mod tests {
 
         let results = framework
             .benchmark_function("mean", |data| mean(data), scipy_mean)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].function_name, "mean");

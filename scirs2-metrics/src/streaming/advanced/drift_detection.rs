@@ -167,7 +167,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
         }
 
         let mut change_detected = false;
-        let delta = F::from((1.0 / self.confidence).ln() / 2.0).unwrap();
+        let delta = F::from((1.0 / self.confidence).ln() / 2.0).expect("Operation failed");
 
         // Check for significant difference in subwindows
         for cut_point in 1..self.width {
@@ -182,8 +182,10 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
                 let var0 = self.calculate_subwindow_variance(0, cut_point, mean0);
                 let var1 = self.calculate_subwindow_variance(cut_point, self.width, mean1);
 
-                let epsilon =
-                    (delta * (var0 / F::from(w0).unwrap() + var1 / F::from(w1).unwrap())).sqrt();
+                let epsilon = (delta
+                    * (var0 / F::from(w0).expect("Failed to convert to float")
+                        + var1 / F::from(w1).expect("Failed to convert to float")))
+                .sqrt();
 
                 if (mean0 - mean1).abs() > epsilon {
                     // Change detected - remove old data
@@ -203,7 +205,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
         }
 
         let sum = self.window.range(start..end).cloned().sum::<F>();
-        sum / F::from(end - start).unwrap()
+        sum / F::from(end - start).expect("Failed to convert to float")
     }
 
     fn calculate_subwindow_variance(&self, start: usize, end: usize, mean: F) -> F {
@@ -216,7 +218,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
             .range(start..end)
             .map(|&x| (x - mean) * (x - mean))
             .sum::<F>();
-        variance / F::from(end - start).unwrap()
+        variance / F::from(end - start).expect("Failed to convert to float")
     }
 
     fn remove_subwindow(&mut self, start: usize, end: usize) {
@@ -236,13 +238,13 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
             return;
         }
 
-        let mean = self.total_sum / F::from(self.width).unwrap();
+        let mean = self.total_sum / F::from(self.width).expect("Failed to convert to float");
         self.variance = self
             .window
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .sum::<F>()
-            / F::from(self.width - 1).unwrap();
+            / F::from(self.width - 1).expect("Failed to convert to float");
     }
 }
 
@@ -326,7 +328,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
 
     fn get_statistics(&self) -> DriftStatistics<F> {
         let current_error_rate = if self.width > 0 {
-            self.total_sum / F::from(self.width).unwrap()
+            self.total_sum / F::from(self.width).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -340,7 +342,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
                 // Use first 10% as baseline
                 let baseline_size = self.width / 10;
                 self.window.iter().take(baseline_size).cloned().sum::<F>()
-                    / F::from(baseline_size).unwrap()
+                    / F::from(baseline_size).expect("Failed to convert to float")
             } else {
                 current_error_rate
             },
@@ -400,8 +402,11 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         }
 
         if self.num_instances >= self.min_instances {
-            let p = F::from(self.num_errors).unwrap() / F::from(self.num_instances).unwrap();
-            let s = (p * (F::one() - p) / F::from(self.num_instances).unwrap()).sqrt();
+            let p = F::from(self.num_errors).expect("Failed to convert to float")
+                / F::from(self.num_instances).expect("Failed to convert to float");
+            let s = (p * (F::one() - p)
+                / F::from(self.num_instances).expect("Failed to convert to float"))
+            .sqrt();
 
             self.p_last = p;
             self.s_last = s;
@@ -411,8 +416,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
                 self.s_min = s;
             }
 
-            let warning_threshold = F::from(self.warning_level).unwrap();
-            let drift_threshold = F::from(self.drift_level).unwrap();
+            let warning_threshold =
+                F::from(self.warning_level).expect("Failed to convert to float");
+            let drift_threshold = F::from(self.drift_level).expect("Failed to convert to float");
 
             if p + s > self.p_min + warning_threshold * self.s_min {
                 if p + s > self.p_min + drift_threshold * self.s_min {
@@ -464,7 +470,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
             warnings_count: self.warning_count,
             drifts_count: self.drift_count,
             current_error_rate: if self.num_instances > 0 {
-                F::from(self.num_errors).unwrap() / F::from(self.num_instances).unwrap()
+                F::from(self.num_errors).expect("Failed to convert to float")
+                    / F::from(self.num_instances).expect("Failed to convert to float")
             } else {
                 F::zero()
             },
@@ -514,7 +521,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         } else {
             F::one()
         };
-        let mu = F::from(self.alpha).unwrap();
+        let mu = F::from(self.alpha).expect("Failed to convert to float");
 
         self.cumulative_sum = self.cumulative_sum + x - mu;
 
@@ -523,7 +530,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
         }
 
         let ph_value = self.cumulative_sum - self.min_cumulative_sum;
-        let threshold = F::from(self.threshold).unwrap();
+        let threshold = F::from(self.threshold).expect("Failed to convert to float");
 
         self.status = if ph_value > threshold {
             self.drift_count += 1;

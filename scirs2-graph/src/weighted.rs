@@ -283,7 +283,7 @@ where
             }
             NormalizationMethod::Robust => {
                 let mut sorted_weights = weights.clone();
-                sorted_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted_weights.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let median = if sorted_weights.len().is_multiple_of(2) {
                     (sorted_weights[sorted_weights.len() / 2 - 1]
                         + sorted_weights[sorted_weights.len() / 2])
@@ -293,7 +293,7 @@ where
                 };
                 let mad: Vec<f64> = sorted_weights.iter().map(|w| (w - median).abs()).collect();
                 let mut sorted_mad = mad.clone();
-                sorted_mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted_mad.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let mad_median = if sorted_mad.len().is_multiple_of(2) {
                     (sorted_mad[sorted_mad.len() / 2 - 1] + sorted_mad[sorted_mad.len() / 2]) / 2.0
                 } else {
@@ -590,7 +590,7 @@ where
             }
             NormalizationMethod::Robust => {
                 let mut sorted_weights = weights.clone();
-                sorted_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted_weights.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let median = if sorted_weights.len().is_multiple_of(2) {
                     (sorted_weights[sorted_weights.len() / 2 - 1]
                         + sorted_weights[sorted_weights.len() / 2])
@@ -600,7 +600,7 @@ where
                 };
                 let mad: Vec<f64> = sorted_weights.iter().map(|w| (w - median).abs()).collect();
                 let mut sorted_mad = mad.clone();
-                sorted_mad.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted_mad.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let mad_median = if sorted_mad.len().is_multiple_of(2) {
                     (sorted_mad[sorted_mad.len() / 2 - 1] + sorted_mad[sorted_mad.len() / 2]) / 2.0
                 } else {
@@ -883,11 +883,11 @@ mod tests {
     #[test]
     fn test_weight_statistics() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
-        graph.add_edge(3, 4, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
+        graph.add_edge(3, 4, 3.0).expect("Operation failed");
 
-        let stats = graph.weight_statistics().unwrap();
+        let stats = graph.weight_statistics().expect("Operation failed");
         assert_eq!(stats.min_weight, 1.0);
         assert_eq!(stats.max_weight, 3.0);
         assert_eq!(stats.total_weight, 6.0);
@@ -897,24 +897,26 @@ mod tests {
     #[test]
     fn test_filter_by_weight() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
-        graph.add_edge(3, 4, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
+        graph.add_edge(3, 4, 3.0).expect("Operation failed");
 
-        let filtered = graph.filter_by_weight(Some(2.0), None).unwrap();
+        let filtered = graph
+            .filter_by_weight(Some(2.0), None)
+            .expect("Operation failed");
         assert_eq!(filtered.edge_count(), 2);
     }
 
     #[test]
     fn test_normalize_weights() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
-        graph.add_edge(3, 4, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
+        graph.add_edge(3, 4, 3.0).expect("Operation failed");
 
         let normalized = graph
             .normalize_weights(NormalizationMethod::MinMax)
-            .unwrap();
+            .expect("Test: operation failed");
         let edges = normalized.edges();
 
         // Check that weights are in [0, 1] range
@@ -927,12 +929,12 @@ mod tests {
     #[test]
     fn test_transform_weights() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
 
         let transformed = graph
             .transform_weights(WeightTransform::Linear { a: 2.0, b: 1.0 })
-            .unwrap();
+            .expect("Test: operation failed");
         let edges = transformed.edges();
 
         assert_eq!(edges[0].weight, 3.0); // 2*1 + 1
@@ -942,42 +944,44 @@ mod tests {
     #[test]
     fn test_weight_distribution() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
-        graph.add_edge(3, 4, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
+        graph.add_edge(3, 4, 3.0).expect("Operation failed");
 
-        let distribution = graph.weight_distribution(3).unwrap();
+        let distribution = graph.weight_distribution(3).expect("Operation failed");
         assert_eq!(distribution.len(), 3);
     }
 
     #[test]
     fn test_weighted_degree_centrality() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 2.0).unwrap();
-        graph.add_edge(2, 4, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 2.0).expect("Operation failed");
+        graph.add_edge(2, 4, 3.0).expect("Operation failed");
 
-        let centrality = graph.weighted_degree_centrality().unwrap();
+        let centrality = graph
+            .weighted_degree_centrality()
+            .expect("Operation failed");
         assert_eq!(centrality[&2], 6.0); // Node 2 has weighted degree 1+2+3=6
     }
 
     #[test]
     fn test_total_weight() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.5).unwrap();
-        graph.add_edge(2, 3, 2.5).unwrap();
+        graph.add_edge(1, 2, 1.5).expect("Operation failed");
+        graph.add_edge(2, 3, 2.5).expect("Operation failed");
 
-        let total = graph.total_weight().unwrap();
+        let total = graph.total_weight().expect("Operation failed");
         assert_eq!(total, 4.0);
     }
 
     #[test]
     fn test_average_weight() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 3.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 3.0).expect("Operation failed");
 
-        let avg = graph.average_weight().unwrap();
+        let avg = graph.average_weight().expect("Operation failed");
         assert_eq!(avg, 2.0);
     }
 
@@ -996,16 +1000,16 @@ mod tests {
     #[test]
     fn test_edges_by_weight() {
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(1, 2, 3.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(3, 4, 2.0).unwrap();
+        graph.add_edge(1, 2, 3.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(3, 4, 2.0).expect("Operation failed");
 
-        let sorted_edges = graph.edges_by_weight(true).unwrap();
+        let sorted_edges = graph.edges_by_weight(true).expect("Operation failed");
         assert_eq!(sorted_edges[0].2, 1.0);
         assert_eq!(sorted_edges[1].2, 2.0);
         assert_eq!(sorted_edges[2].2, 3.0);
 
-        let sorted_edges_desc = graph.edges_by_weight(false).unwrap();
+        let sorted_edges_desc = graph.edges_by_weight(false).expect("Operation failed");
         assert_eq!(sorted_edges_desc[0].2, 3.0);
         assert_eq!(sorted_edges_desc[1].2, 2.0);
         assert_eq!(sorted_edges_desc[2].2, 1.0);

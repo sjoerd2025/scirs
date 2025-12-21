@@ -197,7 +197,7 @@ impl PersonalizedFL {
     fn meta_learn_for_client(
         if self.global_model.is_none() {
                 "No global model for meta-learning".to_string(),
-        let global_model = self.global_model.as_ref().unwrap();
+        let global_model = self.global_model.as_ref().expect("Operation failed");
         let mut adapted_model = global_model.clone();
         // Split data into support and query sets
         let split_point = client_data.nrows() / 2;
@@ -393,7 +393,7 @@ use scirs2_core::ndarray::ArrayView1;
     pub fn get_personalization_stats(&self) -> PersonalizationStats {
         if self.personalization_history.is_empty() {
             return PersonalizationStats::default();
-        let latest_round = self.personalization_history.last().unwrap();
+        let latest_round = self.personalization_history.last().expect("Operation failed");
         let avg_improvement = latest_round.improvements.values().sum::<f32>()
             / latest_round.improvements.len() as f32;
         let total_clients_personalized = self.client_models.len();
@@ -469,6 +469,6 @@ mod tests {
             accuracy: 0.9,
         }];
         let weights = vec![1.0];
-        let result = aggregator.aggregate(&updates, &weights).unwrap();
+        let result = aggregator.aggregate(&updates, &weights).expect("Operation failed");
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].shape(), &[2, 2]);

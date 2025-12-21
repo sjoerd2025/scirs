@@ -27,12 +27,12 @@ impl<F: IntegrateFloat> Default for BVPOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 50,
-            tol: F::from_f64(1e-6).unwrap(),
+            tol: F::from_f64(1e-6).expect("Operation failed"),
             n_nodes: 10,
             ode_options: ODEOptions {
                 method: ODEMethod::RK45,
-                rtol: F::from_f64(1e-4).unwrap(),
-                atol: F::from_f64(1e-6).unwrap(),
+                rtol: F::from_f64(1e-4).expect("Operation failed"),
+                atol: F::from_f64(1e-6).expect("Operation failed"),
                 ..Default::default()
             },
             fixed_mesh: false,
@@ -157,10 +157,10 @@ where
             let a = F::zero();
             let b = F::one();
             let n_points = y_init.len();
-            let h = (b - a) / F::from_usize(n_points - 1).unwrap();
+            let h = (b - a) / F::from_usize(n_points - 1).expect("Operation failed");
 
             (0..n_points)
-                .map(|i| a + F::from_usize(i).unwrap() * h)
+                .map(|i| a + F::from_usize(i).expect("Operation failed") * h)
                 .collect()
         }
     };
@@ -215,7 +215,7 @@ where
             // For the harmonic oscillator example: bc = [ya[0], yb[0]]
             // So we need derivatives of bc with respect to y variables
             // For now, use finite differences to approximate the Jacobian
-            let eps = F::from_f64(1e-8).unwrap();
+            let eps = F::from_f64(1e-8).expect("Operation failed");
 
             // Derivatives with respect to ya (first point)
             for k in 0..n_dim {
@@ -249,7 +249,8 @@ where
                 jac[[equation_idx, var_idx_right]] = F::one() / h;
 
                 // Average of function values at endpoints for midpoint collocation
-                let f_avg = (f_values[i][j] + f_values[i + 1][j]) / F::from_f64(2.0).unwrap();
+                let f_avg = (f_values[i][j] + f_values[i + 1][j])
+                    / F::from_f64(2.0).expect("Operation failed");
                 residuals[equation_idx] = (y[i + 1][j] - y[i][j]) / h - f_avg;
             }
         }
@@ -272,7 +273,8 @@ where
         }
 
         // Check convergence
-        residual_norm = delta_y.mapv(|v| v.abs()).sum() / F::from_usize(n_variables).unwrap();
+        residual_norm =
+            delta_y.mapv(|v| v.abs()).sum() / F::from_usize(n_variables).expect("Operation failed");
 
         if residual_norm < opts.tol {
             success = true;
@@ -305,15 +307,17 @@ where
             new_y.push(y[0].clone());
 
             for i in 0..(n_points - 1) {
-                if errors[i] > median_error * F::from_f64(2.0).unwrap()
+                if errors[i] > median_error * F::from_f64(2.0).expect("Operation failed")
                     && new_mesh.len() < opts.n_nodes * 2
                 {
                     // Add a midpoint
-                    let mid_x = (mesh[i] + mesh[i + 1]) / F::from_f64(2.0).unwrap();
+                    let mid_x =
+                        (mesh[i] + mesh[i + 1]) / F::from_f64(2.0).expect("Operation failed");
                     new_mesh.push(mid_x);
 
                     // Interpolate solution at midpoint
-                    let mid_y = (y[i].clone() + y[i + 1].clone()) / F::from_f64(2.0).unwrap();
+                    let mid_y = (y[i].clone() + y[i + 1].clone())
+                        / F::from_f64(2.0).expect("Operation failed");
                     new_y.push(mid_y);
                 }
 
@@ -391,7 +395,7 @@ fn solve_linear_system<F: IntegrateFloat>(
         }
 
         // Check if the system is singular
-        if max_val < F::from_f64(1e-10).unwrap() {
+        if max_val < F::from_f64(1e-10).expect("Operation failed") {
             return Err(IntegrateError::ComputationError(
                 "Matrix is singular or near-singular".to_string(),
             ));
@@ -420,7 +424,7 @@ fn solve_linear_system<F: IntegrateFloat>(
 
     // Check if the system is consistent
     for i in n_cols..n_rows {
-        if aug[[i, n_cols]].abs() > F::from_f64(1e-10).unwrap() {
+        if aug[[i, n_cols]].abs() > F::from_f64(1e-10).expect("Operation failed") {
             return Err(IntegrateError::ComputationError(
                 "Linear system is inconsistent (no solution exists)".to_string(),
             ));
@@ -479,7 +483,10 @@ where
 
     // Generate uniform mesh
     let mesh: Vec<F> = (0..n_points)
-        .map(|i| a + (b - a) * F::from_usize(i).unwrap() / F::from_usize(n_points - 1).unwrap())
+        .map(|i| {
+            a + (b - a) * F::from_usize(i).expect("Operation failed")
+                / F::from_usize(n_points - 1).expect("Operation failed")
+        })
         .collect();
 
     let n_dim = bc_values[0].len();
@@ -492,7 +499,8 @@ where
     // Generate initial guess as a linear interpolation between boundary conditions
     let mut y_init = Vec::with_capacity(n_points);
     for i in 0..n_points {
-        let t = F::from_usize(i).unwrap() / F::from_usize(n_points - 1).unwrap();
+        let t = F::from_usize(i).expect("Operation failed")
+            / F::from_usize(n_points - 1).expect("Operation failed");
         let y_i = bc_values[0].clone() * (F::one() - t) + bc_values[1].clone() * t;
         y_init.push(y_i);
     }

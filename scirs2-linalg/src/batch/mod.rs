@@ -44,13 +44,13 @@ pub use attention::{
 ///     3.0, 4.0,  //               [3.0, 4.0]]
 ///     5.0, 6.0,  // Second matrix: [[5.0, 6.0],
 ///     7.0, 8.0   //                [7.0, 8.0]]
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Create a 2x1 matrix to multiply with each batch matrix
 /// let b = array![[10.0], [20.0]];
 ///
 /// // Perform batch multiplication
-/// let result = batch_matmul(&batch_a.view(), &b.view()).unwrap();
+/// let result = batch_matmul(&batch_a.view(), &b.view()).expect("Operation failed");
 ///
 /// // Expected results:
 /// // First result: [[1.0, 2.0], [3.0, 4.0]] × [[10.0], [20.0]] = [[50.0], [110.0]]
@@ -142,13 +142,13 @@ where
 ///     3.0, 4.0,  //               [3.0, 4.0]]
 ///     5.0, 6.0,  // Second matrix: [[5.0, 6.0],
 ///     7.0, 8.0   //                [7.0, 8.0]]
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Create a vector to multiply with each batch matrix
 /// let x = array![10.0, 20.0];
 ///
 /// // Perform batch matrix-vector multiplication
-/// let result = batch_matvec(&batch_a.view(), &x.view()).unwrap();
+/// let result = batch_matvec(&batch_a.view(), &x.view()).expect("Operation failed");
 ///
 /// // Expected results:
 /// // First result: [[1.0, 2.0], [3.0, 4.0]] × [10.0, 20.0] = [50.0, 110.0]
@@ -239,13 +239,13 @@ where
 ///     3.0, 4.0,  //               [3.0, 4.0]]
 ///     5.0, 6.0,  // Second matrix: [[5.0, 6.0],
 ///     7.0, 8.0   //                [7.0, 8.0]]
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Create a vector to add to each row of each matrix
 /// let v = array![10.0, 20.0];
 ///
 /// // Add to each row (axis=1)
-/// let result = batch_add(&batch_a.view(), &v.view(), 1).unwrap();
+/// let result = batch_add(&batch_a.view(), &v.view(), 1).expect("Operation failed");
 ///
 /// // Expected results:
 /// // First matrix: [[1.0+10.0, 2.0+20.0], [3.0+10.0, 4.0+20.0]] = [[11.0, 22.0], [13.0, 24.0]]
@@ -354,7 +354,7 @@ where
 ///     3.0, 4.0,  //               [3.0, 4.0]]
 ///     5.0, 6.0,  // Second matrix: [[5.0, 6.0],
 ///     7.0, 8.0   //                [7.0, 8.0]]
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Compute the sum of all matrices in the batch
 /// let result = batch_sum(&batch_a.view());
@@ -392,13 +392,13 @@ mod tests {
                 7.0, 8.0, //                [7.0, 8.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a 2x2 matrix to multiply with each batch matrix
         let b = array![[1.0, 2.0], [3.0, 4.0]];
 
         // Perform batch multiplication
-        let result = batch_matmul(&batch_a.view(), &b.view()).unwrap();
+        let result = batch_matmul(&batch_a.view(), &b.view()).expect("Operation failed");
 
         // Expected results:
         // First result: [[1.0, 2.0], [3.0, 4.0]] × [[1.0, 2.0], [3.0, 4.0]] = [[7.0, 10.0], [15.0, 22.0]]
@@ -426,13 +426,13 @@ mod tests {
                 10.0, 11.0, 12.0, //              [10.0, 11.0, 12.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a vector to multiply with each batch matrix
         let x = array![1.0, 2.0, 3.0];
 
         // Perform batch matrix-vector multiplication
-        let result = batch_matvec(&batch_a.view(), &x.view()).unwrap();
+        let result = batch_matvec(&batch_a.view(), &x.view()).expect("Operation failed");
 
         // Expected results:
         // First result: [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]] × [1.0, 2.0, 3.0] = [14.0, 32.0]
@@ -456,13 +456,13 @@ mod tests {
                 7.0, 8.0, //                [7.0, 8.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a vector to add to each row of each matrix
         let v = array![10.0, 20.0];
 
         // Add to each row (axis=1)
-        let result = batch_add(&batch_a.view(), &v.view(), 1).unwrap();
+        let result = batch_add(&batch_a.view(), &v.view(), 1).expect("Operation failed");
 
         // Expected results:
         // First matrix: [[1.0+10.0, 2.0+20.0], [3.0+10.0, 4.0+20.0]] = [[11.0, 22.0], [13.0, 24.0]]
@@ -490,13 +490,13 @@ mod tests {
                 7.0, 8.0, //                [7.0, 8.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a vector to add to each column of each matrix
         let v = array![10.0, 20.0];
 
         // Add to each column (axis=0)
-        let result = batch_add(&batch_a.view(), &v.view(), 0).unwrap();
+        let result = batch_add(&batch_a.view(), &v.view(), 0).expect("Operation failed");
 
         // Expected results:
         // First matrix: [[1.0+10.0, 2.0+10.0], [3.0+20.0, 4.0+20.0]] = [[11.0, 12.0], [23.0, 24.0]]
@@ -524,7 +524,7 @@ mod tests {
                 7.0, 8.0, //                [7.0, 8.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Compute the sum of all matrices in the batch
         let result = batch_sum(&batch_a.view());
@@ -549,7 +549,7 @@ mod tests {
                 10.0, 11.0, 12.0, //              [10.0, 11.0, 12.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a 2x2 matrix (incompatible dimensions)
         let b = array![[1.0, 2.0], [3.0, 4.0]];
@@ -571,7 +571,7 @@ mod tests {
                 10.0, 11.0, 12.0, //              [10.0, 11.0, 12.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a vector with incompatible dimension
         let x = array![1.0, 2.0];
@@ -593,7 +593,7 @@ mod tests {
                 7.0, 8.0, //                [7.0, 8.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a vector with incompatible dimension
         let v = array![10.0, 20.0, 30.0];
@@ -615,7 +615,7 @@ mod tests {
                 7.0, 8.0, //                [7.0, 8.0]]
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a vector
         let v = array![10.0, 20.0];

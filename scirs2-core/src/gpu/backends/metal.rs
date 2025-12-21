@@ -277,7 +277,7 @@ impl MetalCompiler {
         // Check cache first
         let cache_key = source.to_string();
         {
-            let cache = self.pipeline_cache.read().unwrap();
+            let cache = self.pipeline_cache.read().expect("Operation failed");
             if let Some(pipeline) = cache.get(&cache_key) {
                 return Ok(pipeline.clone());
             }
@@ -320,7 +320,7 @@ impl MetalCompiler {
 
         // Cache the compiled pipeline
         {
-            let mut cache = self.pipeline_cache.write().unwrap();
+            let mut cache = self.pipeline_cache.write().expect("Operation failed");
             cache.insert(cache_key, pipeline.clone());
         }
 
@@ -429,33 +429,33 @@ impl MetalKernel {
 
 impl GpuKernelImpl for MetalKernel {
     fn set_buffer(&self, name: &str, buffer: &Arc<dyn GpuBufferImpl>) {
-        let mut params = self.parameters.lock().unwrap();
+        let mut params = self.parameters.lock().expect("Operation failed");
         params.buffers.insert(name.to_string(), buffer.clone());
     }
 
     fn set_u32(&self, name: &str, value: u32) {
-        let mut params = self.parameters.lock().unwrap();
+        let mut params = self.parameters.lock().expect("Operation failed");
         params
             .scalars
             .insert(name.to_string(), ScalarValue::U32(value));
     }
 
     fn set_i32(&self, name: &str, value: i32) {
-        let mut params = self.parameters.lock().unwrap();
+        let mut params = self.parameters.lock().expect("Operation failed");
         params
             .scalars
             .insert(name.to_string(), ScalarValue::I32(value));
     }
 
     fn set_f32(&self, name: &str, value: f32) {
-        let mut params = self.parameters.lock().unwrap();
+        let mut params = self.parameters.lock().expect("Operation failed");
         params
             .scalars
             .insert(name.to_string(), ScalarValue::F32(value));
     }
 
     fn set_f64(&self, name: &str, value: f64) {
-        let mut params = self.parameters.lock().unwrap();
+        let mut params = self.parameters.lock().expect("Operation failed");
         params
             .scalars
             .insert(name.to_string(), ScalarValue::F64(value));
@@ -475,7 +475,7 @@ impl GpuKernelImpl for MetalKernel {
         encoder.set_compute_pipeline_state(pipeline);
 
         // Bind parameters
-        let params = self.parameters.lock().unwrap();
+        let params = self.parameters.lock().expect("Operation failed");
 
         // Bind buffers in a specific order based on common kernel conventions
         // For AXPY: x at index 0, y at index 1

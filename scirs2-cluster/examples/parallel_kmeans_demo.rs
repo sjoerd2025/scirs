@@ -34,7 +34,7 @@ fn main() {
 
         let start = Instant::now();
         let (std_centroids, std_labels) =
-            kmeans_with_options(data.view(), k, Some(std_options)).unwrap();
+            kmeans_with_options(data.view(), k, Some(std_options)).expect("Operation failed");
         let std_duration = start.elapsed();
 
         // Parallel K-means
@@ -47,7 +47,7 @@ fn main() {
 
         let start = Instant::now();
         let (par_centroids, par_labels) =
-            parallel_kmeans(data.view(), k, Some(par_options)).unwrap();
+            parallel_kmeans(data.view(), k, Some(par_options)).expect("Operation failed");
         let par_duration = start.elapsed();
 
         // Calculate speedup
@@ -86,7 +86,7 @@ fn main() {
         };
 
         let start = Instant::now();
-        let _ = parallel_kmeans(data.view(), k, Some(options)).unwrap();
+        let _ = parallel_kmeans(data.view(), k, Some(options)).expect("Operation failed");
         let duration = start.elapsed();
 
         println!("{} thread(s): {:?}", n_threads, duration);
@@ -115,11 +115,11 @@ fn main() {
         };
 
         let start = Instant::now();
-        let _ = kmeans_with_options(data.view(), k, Some(std_options)).unwrap();
+        let _ = kmeans_with_options(data.view(), k, Some(std_options)).expect("Operation failed");
         let std_duration = start.elapsed();
 
         let start = Instant::now();
-        let _ = parallel_kmeans(data.view(), k, Some(par_options)).unwrap();
+        let _ = parallel_kmeans(data.view(), k, Some(par_options)).expect("Operation failed");
         let par_duration = start.elapsed();
 
         let speedup = std_duration.as_secs_f64() / par_duration.as_secs_f64();
@@ -150,7 +150,7 @@ fn generate_clustered_data(n_samples: usize, n_features: usize, nclusters: usize
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples, n_features), data).expect("Operation failed")
 }
 
 #[allow(dead_code)]

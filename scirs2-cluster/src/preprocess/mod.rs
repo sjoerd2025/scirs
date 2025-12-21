@@ -38,10 +38,10 @@ use crate::error::{ClusteringError, Result};
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Whiten the data
-/// let whitened = whiten(data.view(), true).unwrap();
+/// let whitened = whiten(data.view(), true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn whiten<F: Float + FromPrimitive + Debug>(
@@ -112,10 +112,10 @@ pub fn whiten<F: Float + FromPrimitive + Debug>(
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Standardize the data
-/// let standardized = standardize(data.view(), true).unwrap();
+/// let standardized = standardize(data.view(), true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn standardize<F: Float + FromPrimitive + Debug>(
@@ -141,7 +141,7 @@ pub fn standardize<F: Float + FromPrimitive + Debug>(
     }
 
     // Calculate the mean for each feature
-    let mean = data.mean_axis(Axis(0)).unwrap();
+    let mean = data.mean_axis(Axis(0)).expect("Operation failed");
 
     // Calculate the standard deviation for each feature
     let std_dev = standard_deviation(data, Axis(0))?;
@@ -192,10 +192,10 @@ pub fn standardize<F: Float + FromPrimitive + Debug>(
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Normalize the data using L2 norm
-/// let normalized = normalize(data.view(), NormType::L2, true).unwrap();
+/// let normalized = normalize(data.view(), NormType::L2, true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn normalize<F: Float + FromPrimitive + Debug>(
@@ -299,10 +299,10 @@ pub fn normalize<F: Float + FromPrimitive + Debug>(
 ///     1.9, 2.3, 1.7,
 ///     1.5, 2.5, 2.2,
 ///     0.8, 0.6, 1.7,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Scale the data to the range [0, 1]
-/// let scaled = min_max_scale(data.view(), (0.0, 1.0), true).unwrap();
+/// let scaled = min_max_scale(data.view(), (0.0, 1.0), true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn min_max_scale<F: Float + FromPrimitive + Debug>(
@@ -335,8 +335,8 @@ pub fn min_max_scale<F: Float + FromPrimitive + Debug>(
         ));
     }
 
-    let feature_min = F::from_f64(min_val).unwrap();
-    let feature_max = F::from_f64(max_val).unwrap();
+    let feature_min = F::from_f64(min_val).expect("Operation failed");
+    let feature_max = F::from_f64(max_val).expect("Operation failed");
 
     // Calculate the min and max for each feature
     let mut min_values = Array1::zeros(n_features);
@@ -363,7 +363,7 @@ pub fn min_max_scale<F: Float + FromPrimitive + Debug>(
 
         if range_j <= F::epsilon() {
             // If the feature has no variation, set to the middle of the feature range
-            let middle = (feature_min + feature_max) / F::from_f64(2.0).unwrap();
+            let middle = (feature_min + feature_max) / F::from_f64(2.0).expect("Operation failed");
             for i in 0..n_samples {
                 result[[i, j]] = middle;
             }
@@ -397,13 +397,13 @@ fn standard_deviation<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     axis: Axis,
 ) -> Result<Array1<F>> {
-    let mean = data.mean_axis(axis).unwrap();
+    let mean = data.mean_axis(axis).expect("Operation failed");
     let n = F::from_usize(match axis {
         Axis(0) => data.shape()[0],
         Axis(1) => data.shape()[1],
         _ => return Err(ClusteringError::InvalidInput("Invalid axis".into())),
     })
-    .unwrap();
+    .expect("Operation failed");
 
     let mut variance = match axis {
         Axis(0) => Array1::zeros(data.shape()[1]),
@@ -464,12 +464,12 @@ mod tests {
     fn test_whiten() {
         let data =
             Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+                .expect("Operation failed");
 
-        let whitened = whiten(data.view(), true).unwrap();
+        let whitened = whiten(data.view(), true).expect("Operation failed");
 
         // Check that each feature has approximately unit variance
-        let std_dev = standard_deviation(whitened.view(), Axis(0)).unwrap();
+        let std_dev = standard_deviation(whitened.view(), Axis(0)).expect("Operation failed");
         for &std in std_dev.iter() {
             assert_abs_diff_eq!(std, 1.0, epsilon = 1e-10);
         }
@@ -479,18 +479,18 @@ mod tests {
     fn test_standardize() {
         let data =
             Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+                .expect("Operation failed");
 
-        let standardized = standardize(data.view(), true).unwrap();
+        let standardized = standardize(data.view(), true).expect("Operation failed");
 
         // Check that each feature has approximately zero mean
-        let mean = standardized.mean_axis(Axis(0)).unwrap();
+        let mean = standardized.mean_axis(Axis(0)).expect("Operation failed");
         for mean_val in mean.iter() {
             assert_abs_diff_eq!(*mean_val, 0.0, epsilon = 1e-10);
         }
 
         // Check that each feature has approximately unit variance
-        let std_dev = standard_deviation(standardized.view(), Axis(0)).unwrap();
+        let std_dev = standard_deviation(standardized.view(), Axis(0)).expect("Operation failed");
         for std_val in std_dev.iter() {
             assert_abs_diff_eq!(*std_val, 1.0, epsilon = 1e-10);
         }
@@ -500,9 +500,9 @@ mod tests {
     fn test_normalize_l2() {
         let data =
             Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+                .expect("Operation failed");
 
-        let normalized = normalize(data.view(), NormType::L2, true).unwrap();
+        let normalized = normalize(data.view(), NormType::L2, true).expect("Operation failed");
 
         // Check that each sample has L2 norm approximately equal to 1
         for i in 0..data.shape()[0] {
@@ -517,9 +517,9 @@ mod tests {
     fn test_min_max_scale() {
         let data =
             Array2::from_shape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+                .expect("Operation failed");
 
-        let scaled = min_max_scale(data.view(), (0.0, 1.0), true).unwrap();
+        let scaled = min_max_scale(data.view(), (0.0, 1.0), true).expect("Operation failed");
 
         // Check that all values are in the range [0, 1]
         for val in scaled.iter() {

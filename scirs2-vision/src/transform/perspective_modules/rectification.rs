@@ -397,7 +397,7 @@ fn find_corner_points(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
             }
         }
 
-        corner_angles.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        corner_angles.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
         corners = corner_angles
             .into_iter()
             .take(4)

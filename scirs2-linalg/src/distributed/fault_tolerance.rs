@@ -298,7 +298,7 @@ impl NodeHealthMonitor {
         };
 
         self.node_health.entry(node_id).or_insert(status);
-        self.node_health.get(&node_id).unwrap()
+        self.node_health.get(&node_id).expect("Operation failed")
     }
 }
 

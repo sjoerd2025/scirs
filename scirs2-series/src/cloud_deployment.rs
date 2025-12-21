@@ -672,7 +672,11 @@ impl CloudDeploymentOrchestrator {
         self.deployment_state
             .active_instances
             .iter()
-            .min_by(|a, b| a.cpu_utilization.partial_cmp(&b.cpu_utilization).unwrap())
+            .min_by(|a, b| {
+                a.cpu_utilization
+                    .partial_cmp(&b.cpu_utilization)
+                    .expect("Operation failed")
+            })
             .ok_or_else(|| TimeSeriesError::InvalidOperation("No active instances".to_string()))
     }
 

@@ -12,14 +12,16 @@ fn test_demographic_parity_difference() {
     // Both groups have 2/5 = 40% positive predictions
     let y_pred_1 = array![1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0];
     let protected_1 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    let dp_diff_1 = demographic_parity_difference(&y_pred_1, &protected_1).unwrap();
+    let dp_diff_1 =
+        demographic_parity_difference(&y_pred_1, &protected_1).expect("Test: operation failed");
     assert_abs_diff_eq!(dp_diff_1, 0.0, epsilon = 1e-10);
 
     // Test case 2: Disparate predictions
     let y_pred_2 = array![1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     let protected_2 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Protected group: 80% positive, Unprotected group: 0% positive
-    let dp_diff_2 = demographic_parity_difference(&y_pred_2, &protected_2).unwrap();
+    let dp_diff_2 =
+        demographic_parity_difference(&y_pred_2, &protected_2).expect("Test: operation failed");
     assert_abs_diff_eq!(dp_diff_2, 0.8, epsilon = 1e-10);
 
     // Test case 3: No protected group members
@@ -41,7 +43,8 @@ fn test_demographic_parity_difference() {
     let y_pred_6 = array![0.5, 0.7, 0.3, 0.8, 0.1, 0.9, 0.2, 0.4, 0.6, 0.3];
     let protected_6 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Values are thresholded at 0, so all non-zero values are considered positive
-    let dp_diff_6 = demographic_parity_difference(&y_pred_6, &protected_6).unwrap();
+    let dp_diff_6 =
+        demographic_parity_difference(&y_pred_6, &protected_6).expect("Test: operation failed");
     assert!((0.0..=1.0).contains(&dp_diff_6));
 }
 
@@ -52,7 +55,7 @@ fn test_disparate_impact() {
     // Both groups have 2/5 = 40% positive predictions
     let y_pred_1 = array![1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0];
     let protected_1 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    let di_1 = disparate_impact(&y_pred_1, &protected_1).unwrap();
+    let di_1 = disparate_impact(&y_pred_1, &protected_1).expect("Test: operation failed");
     assert_abs_diff_eq!(di_1, 1.0, epsilon = 1e-10);
 
     // Test case 2: Disparate impact
@@ -60,21 +63,21 @@ fn test_disparate_impact() {
     let protected_2 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Protected group: 80% positive, Unprotected group: 0% positive
     // Since unprotected rate is 0, and dividing by 0 is infinity, we handle this specially
-    let di_2 = disparate_impact(&y_pred_2, &protected_2).unwrap();
+    let di_2 = disparate_impact(&y_pred_2, &protected_2).expect("Test: operation failed");
     assert!(di_2 > 1.0); // Should be Infinity
 
     // Test case 3: Inverse disparate impact
     let y_pred_3 = array![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0];
     let protected_3 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Protected group: 0% positive, Unprotected group: 100% positive
-    let di_3 = disparate_impact(&y_pred_3, &protected_3).unwrap();
+    let di_3 = disparate_impact(&y_pred_3, &protected_3).expect("Test: operation failed");
     assert_abs_diff_eq!(di_3, 0.0, epsilon = 1e-10);
 
     // Test case 4: Zero positives in both groups
     let y_pred_4 = array![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     let protected_4 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Special case: should be 1.0 (equal rates of 0%)
-    let di_4 = disparate_impact(&y_pred_4, &protected_4).unwrap();
+    let di_4 = disparate_impact(&y_pred_4, &protected_4).expect("Test: operation failed");
     assert_abs_diff_eq!(di_4, 1.0, epsilon = 1e-10);
 }
 
@@ -86,7 +89,8 @@ fn test_equalized_odds_difference() {
     let y_pred_1 = array![0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0];
     let protected_1 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Both groups have perfect FPR and TPR
-    let eod_1 = equalized_odds_difference(&y_true_1, &y_pred_1, &protected_1).unwrap();
+    let eod_1 = equalized_odds_difference(&y_true_1, &y_pred_1, &protected_1)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(eod_1, 0.0, epsilon = 1e-10);
 
     // Test case 2: Different error rates
@@ -96,7 +100,8 @@ fn test_equalized_odds_difference() {
     // Protected: FPR=1/3, TPR=0/2
     // Unprotected: FPR=0/3, TPR=2/2
     // Max diff: max(|1/3 - 0/3|, |0/2 - 2/2|) = max(1/3, 1) = 1
-    let eod_2 = equalized_odds_difference(&y_true_2, &y_pred_2, &protected_2).unwrap();
+    let eod_2 = equalized_odds_difference(&y_true_2, &y_pred_2, &protected_2)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(eod_2, 1.0, epsilon = 1e-10);
 
     // Test case 3: Only false positives differ
@@ -106,7 +111,8 @@ fn test_equalized_odds_difference() {
     // Protected: FPR=1/3, TPR=2/2
     // Unprotected: FPR=0/3, TPR=2/2
     // Max diff: max(|1/3 - 0/3|, |2/2 - 2/2|) = max(1/3, 0) = 1/3
-    let eod_3 = equalized_odds_difference(&y_true_3, &y_pred_3, &protected_3).unwrap();
+    let eod_3 = equalized_odds_difference(&y_true_3, &y_pred_3, &protected_3)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(eod_3, 1.0 / 3.0, epsilon = 1e-10);
 
     // Test case 4: Only true positives differ
@@ -116,7 +122,8 @@ fn test_equalized_odds_difference() {
     // Protected: FPR=0/3, TPR=0/2
     // Unprotected: FPR=0/3, TPR=2/2
     // Max diff: max(|0/3 - 0/3|, |0/2 - 2/2|) = max(0, 1) = 1
-    let eod_4 = equalized_odds_difference(&y_true_4, &y_pred_4, &protected_4).unwrap();
+    let eod_4 = equalized_odds_difference(&y_true_4, &y_pred_4, &protected_4)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(eod_4, 1.0, epsilon = 1e-10);
 }
 
@@ -128,7 +135,8 @@ fn test_equal_opportunity_difference() {
     let y_pred_1 = array![0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0];
     let protected_1 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Both groups have perfect TPR (2/2 and 2/2)
-    let eo_1 = equal_opportunity_difference(&y_true_1, &y_pred_1, &protected_1).unwrap();
+    let eo_1 = equal_opportunity_difference(&y_true_1, &y_pred_1, &protected_1)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(eo_1, 0.0, epsilon = 1e-10);
 
     // Test case 2: Different true positive rates
@@ -137,7 +145,8 @@ fn test_equal_opportunity_difference() {
     let protected_2 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Protected: TPR=0/2, Unprotected: TPR=2/2
     // Difference: |0 - 1| = 1
-    let eo_2 = equal_opportunity_difference(&y_true_2, &y_pred_2, &protected_2).unwrap();
+    let eo_2 = equal_opportunity_difference(&y_true_2, &y_pred_2, &protected_2)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(eo_2, 1.0, epsilon = 1e-10);
 
     // Test case 3: No positive examples in protected group
@@ -160,7 +169,8 @@ fn test_equal_opportunity_difference() {
     let protected_5 = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     // Protected: TPR=1/2=0.5, Unprotected: TPR=1/2=0.5
     // Difference: |0.5 - 0.5| = 0
-    let eo_5 = equal_opportunity_difference(&y_true_5, &y_pred_5, &protected_5).unwrap();
+    let eo_5 = equal_opportunity_difference(&y_true_5, &y_pred_5, &protected_5)
+        .expect("Test: operation failed");
     assert_abs_diff_eq!(eo_5, 0.0, epsilon = 1e-10);
 }
 
@@ -177,12 +187,13 @@ fn test_consistency_score() {
             0.85, 0.91, 0.82, 0.88,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
     // Predictions match clusters perfectly
     let predictions_1 = array![0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
 
     // With k=2, each point should be perfectly consistent with its neighbors
-    let consistency_1 = consistency_score(&features_1, &predictions_1, 2).unwrap();
+    let consistency_1 =
+        consistency_score(&features_1, &predictions_1, 2).expect("Test: operation failed");
     assert_abs_diff_eq!(consistency_1, 1.0, epsilon = 1e-10);
 
     // Test case 2: Inconsistent predictions
@@ -191,29 +202,30 @@ fn test_consistency_score() {
     let predictions_2 = array![0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
 
     // With k=2, neighbors often have different predictions
-    let consistency_2 = consistency_score(&features_2, &predictions_2, 2).unwrap();
+    let consistency_2 =
+        consistency_score(&features_2, &predictions_2, 2).expect("Test: operation failed");
     assert!(consistency_2 < 1.0);
 
     // Test case 3: Wrong dimensions
-    let features_3 =
-        Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
+    let features_3 = Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
+        .expect("Test: operation failed");
     let predictions_3 = array![0.0, 0.0, 0.0, 0.0, 0.0];
     assert!(consistency_score(&features_3, &predictions_3, 2).is_err());
 
     // Test case 4: k too large
-    let features_4 =
-        Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
+    let features_4 = Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
+        .expect("Test: operation failed");
     let predictions_4 = array![0.0, 0.0, 0.0, 0.0];
     assert!(consistency_score(&features_4, &predictions_4, 4).is_err());
 
     // Test case 5: k=0
-    let features_5 =
-        Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]).unwrap();
+    let features_5 = Array2::from_shape_vec((4, 2), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
+        .expect("Test: operation failed");
     let predictions_5 = array![0.0, 0.0, 0.0, 0.0];
     assert!(consistency_score(&features_5, &predictions_5, 0).is_err());
 
     // Test case 6: Empty arrays
-    let features_6 = Array2::<f64>::from_shape_vec((0, 2), vec![]).unwrap();
+    let features_6 = Array2::<f64>::from_shape_vec((0, 2), vec![]).expect("Test: operation failed");
     let predictions_6 = array![];
     assert!(consistency_score(&features_6, &predictions_6, 2).is_err());
 }

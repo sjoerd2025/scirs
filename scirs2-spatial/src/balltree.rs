@@ -717,7 +717,7 @@ mod tests {
     fn test_ball_tree_construction() {
         let data = arr2(&[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]]);
 
-        let tree = BallTree::with_euclidean_distance(&data.view(), 2).unwrap();
+        let tree = BallTree::with_euclidean_distance(&data.view(), 2).expect("Operation failed");
 
         assert_eq!(tree.get_n_samples(), 5);
         assert_eq!(tree.get_n_features(), 2);
@@ -728,23 +728,26 @@ mod tests {
     fn test_ball_tree_nearest_neighbor() {
         let data = arr2(&[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]]);
 
-        let tree = BallTree::with_euclidean_distance(&data.view(), 2).unwrap();
+        let tree = BallTree::with_euclidean_distance(&data.view(), 2).expect("Operation failed");
 
         // Test 1-NN
-        let (indices, distances) = tree.query(&[5.1, 5.9], 1, true).unwrap();
+        let (indices, distances) = tree.query(&[5.1, 5.9], 1, true).expect("Operation failed");
         assert_eq!(indices, vec![2]); // Index of [5.0, 6.0]
         assert!(distances.is_some());
-        assert_relative_eq!(distances.unwrap()[0], euclidean(&[5.1, 5.9], &[5.0, 6.0]));
+        assert_relative_eq!(
+            distances.expect("Operation failed")[0],
+            euclidean(&[5.1, 5.9], &[5.0, 6.0])
+        );
 
         // Test 3-NN
-        let (indices, distances) = tree.query(&[5.1, 5.9], 3, true).unwrap();
+        let (indices, distances) = tree.query(&[5.1, 5.9], 3, true).expect("Operation failed");
         assert_eq!(indices.len(), 3);
         assert!(indices.contains(&2)); // Should contain index of [5.0, 6.0]
         assert!(distances.is_some());
-        assert_eq!(distances.unwrap().len(), 3);
+        assert_eq!(distances.expect("Operation failed").len(), 3);
 
         // Test without distances
-        let (indices, distances) = tree.query(&[5.1, 5.9], 1, false).unwrap();
+        let (indices, distances) = tree.query(&[5.1, 5.9], 1, false).expect("Operation failed");
         assert_eq!(indices, vec![2]);
         assert!(distances.is_none());
     }
@@ -753,19 +756,25 @@ mod tests {
     fn test_ball_tree_radius_search() {
         let data = arr2(&[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]]);
 
-        let tree = BallTree::with_euclidean_distance(&data.view(), 2).unwrap();
+        let tree = BallTree::with_euclidean_distance(&data.view(), 2).expect("Operation failed");
 
         // Search with small radius
-        let (indices, _distances) = tree.query_radius(&[5.0, 6.0], 1.0, true).unwrap();
+        let (indices, _distances) = tree
+            .query_radius(&[5.0, 6.0], 1.0, true)
+            .expect("Operation failed");
         assert_eq!(indices.len(), 1);
         assert_eq!(indices[0], 2); // Only [5.0, 6.0] itself should be within radius 1.0
 
         // Search with larger radius
-        let (indices, _distances) = tree.query_radius(&[5.0, 6.0], 3.0, true).unwrap();
+        let (indices, _distances) = tree
+            .query_radius(&[5.0, 6.0], 3.0, true)
+            .expect("Operation failed");
         assert!(indices.len() > 1); // Should include neighbors
 
         // Test without distances
-        let (indices, distances) = tree.query_radius(&[5.0, 6.0], 3.0, false).unwrap();
+        let (indices, distances) = tree
+            .query_radius(&[5.0, 6.0], 3.0, false)
+            .expect("Operation failed");
         assert!(indices.len() > 1);
         assert!(distances.is_none());
     }
@@ -776,15 +785,19 @@ mod tests {
 
         let data2 = arr2(&[[2.0, 2.0], [4.0, 4.0], [6.0, 6.0]]);
 
-        let tree1 = BallTree::with_euclidean_distance(&data1.view(), 2).unwrap();
-        let tree2 = BallTree::with_euclidean_distance(&data2.view(), 2).unwrap();
+        let tree1 = BallTree::with_euclidean_distance(&data1.view(), 2).expect("Operation failed");
+        let tree2 = BallTree::with_euclidean_distance(&data2.view(), 2).expect("Operation failed");
 
         // Test dual tree search with small radius
-        let pairs = tree1.query_radius_tree(&tree2, 1.5).unwrap();
+        let pairs = tree1
+            .query_radius_tree(&tree2, 1.5)
+            .expect("Operation failed");
         assert_eq!(pairs.len(), 3); // Each point in data1 should be close to its corresponding point in data2
 
         // Test dual tree search with large radius
-        let pairs = tree1.query_radius_tree(&tree2, 10.0).unwrap();
+        let pairs = tree1
+            .query_radius_tree(&tree2, 10.0)
+            .expect("Operation failed");
         assert_eq!(pairs.len(), 9); // All pairs should be within radius 10.0
     }
 
@@ -799,7 +812,7 @@ mod tests {
     fn test_ball_tree_dimension_mismatch() {
         let data = arr2(&[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]);
 
-        let tree = BallTree::with_euclidean_distance(&data.view(), 2).unwrap();
+        let tree = BallTree::with_euclidean_distance(&data.view(), 2).expect("Operation failed");
 
         // Query with wrong dimension
         let result = tree.query(&[1.0], 1, false);
@@ -813,7 +826,7 @@ mod tests {
     fn test_ball_tree_invalid_parameters() {
         let data = arr2(&[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]);
 
-        let tree = BallTree::with_euclidean_distance(&data.view(), 2).unwrap();
+        let tree = BallTree::with_euclidean_distance(&data.view(), 2).expect("Operation failed");
 
         // Query with k > n_samples
         let result = tree.query(&[1.0, 2.0], 4, false);

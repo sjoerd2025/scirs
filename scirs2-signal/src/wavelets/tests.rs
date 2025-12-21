@@ -10,7 +10,7 @@ use std::f64::consts::PI;
 fn test_morlet_wavelet() {
     // Test basic creation
     let points = 32;
-    let wavelet = morlet(points, 6.0, 1.0).unwrap();
+    let wavelet = morlet(points, 6.0, 1.0).expect("Operation failed");
 
     // Check correct length
     assert_eq!(wavelet.len(), points);
@@ -32,7 +32,7 @@ fn test_scale_to_frequency() {
     let central_freq = 0.85; // Representative value for Morlet with w0=6.0
 
     // Compute corresponding frequencies
-    let freqs = scale_to_frequency(&scales, central_freq, dt).unwrap();
+    let freqs = scale_to_frequency(&scales, central_freq, dt).expect("Operation failed");
 
     // Should have same length as scales
     assert_eq!(freqs.len(), scales.len());
@@ -63,14 +63,14 @@ fn test_cwt_simple_signal() {
     let wavelet_fn = |points, scale| morlet(points, 6.0, scale);
 
     // Compute CWT
-    let coeffs = transform::cwt(&signal, wavelet_fn, &scales).unwrap();
+    let coeffs = transform::cwt(&signal, wavelet_fn, &scales).expect("Operation failed");
 
     // Shape check
     assert_eq!(coeffs.len(), scales.len());
     assert_eq!(coeffs[0].len(), signal.len());
 
     // Compute magnitude
-    let magnitude = cwt_magnitude(&signal, wavelet_fn, &scales, None).unwrap();
+    let magnitude = cwt_magnitude(&signal, wavelet_fn, &scales, None).expect("Operation failed");
 
     // Check shape
     assert_eq!(magnitude.len(), scales.len());

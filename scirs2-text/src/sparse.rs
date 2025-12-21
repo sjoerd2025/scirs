@@ -1342,7 +1342,7 @@ mod tests {
         let v1 = SparseVector::from_dense(&arr1(&[1.0, 0.0, 2.0, 0.0]));
         let v2 = SparseVector::from_dense(&arr1(&[0.0, 3.0, 2.0, 0.0]));
 
-        let dot = v1.dotsparse(&v2).unwrap();
+        let dot = v1.dotsparse(&v2).expect("Operation failed");
         assert_eq!(dot, 4.0); // 1*0 + 0*3 + 2*2 + 0*0 = 4
     }
 
@@ -1350,9 +1350,9 @@ mod tests {
     fn test_dok_matrix() {
         let mut dok = DokMatrix::new(3, 3);
 
-        dok.set(0, 0, 1.0).unwrap();
-        dok.set(1, 1, 2.0).unwrap();
-        dok.set(2, 0, 3.0).unwrap();
+        dok.set(0, 0, 1.0).expect("Operation failed");
+        dok.set(1, 1, 2.0).expect("Operation failed");
+        dok.set(2, 0, 3.0).expect("Operation failed");
 
         assert_eq!(dok.get(0, 0), 1.0);
         assert_eq!(dok.get(0, 1), 0.0);
@@ -1368,10 +1368,10 @@ mod tests {
 
         builder
             .add_row(SparseVector::from_dense(&arr1(&[1.0, 0.0, 2.0, 0.0])))
-            .unwrap();
+            .expect("Operation failed");
         builder
             .add_row(SparseVector::from_dense(&arr1(&[0.0, 3.0, 0.0, 4.0])))
-            .unwrap();
+            .expect("Operation failed");
 
         let matrix = builder.build();
         assert_eq!(matrix.shape(), (2, 4));
@@ -1411,10 +1411,10 @@ mod tests {
     fn test_coo_matrix() {
         let mut coo = CooMatrix::new(3, 3);
 
-        coo.push(0, 0, 1.0).unwrap();
-        coo.push(1, 1, 2.0).unwrap();
-        coo.push(2, 0, 3.0).unwrap();
-        coo.push(1, 2, 4.0).unwrap();
+        coo.push(0, 0, 1.0).expect("Operation failed");
+        coo.push(1, 1, 2.0).expect("Operation failed");
+        coo.push(2, 0, 3.0).expect("Operation failed");
+        coo.push(1, 2, 4.0).expect("Operation failed");
 
         assert_eq!(coo.nnz(), 4);
 
@@ -1434,21 +1434,21 @@ mod tests {
     #[test]
     fn test_csc_matrix() {
         let mut coo = CooMatrix::new(3, 3);
-        coo.push(0, 0, 1.0).unwrap();
-        coo.push(1, 1, 2.0).unwrap();
-        coo.push(2, 0, 3.0).unwrap();
+        coo.push(0, 0, 1.0).expect("Operation failed");
+        coo.push(1, 1, 2.0).expect("Operation failed");
+        coo.push(2, 0, 3.0).expect("Operation failed");
 
         let csc = CscMatrix::from_coo(&coo);
 
         // Get column 0
-        let col0 = csc.get_col(0).unwrap();
+        let col0 = csc.get_col(0).expect("Operation failed");
         assert_eq!(col0.nnz(), 2);
         let dense_col0 = col0.to_dense();
         assert_eq!(dense_col0[0], 1.0);
         assert_eq!(dense_col0[2], 3.0);
 
         // Get column 1
-        let col1 = csc.get_col(1).unwrap();
+        let col1 = csc.get_col(1).expect("Operation failed");
         assert_eq!(col1.nnz(), 1);
         let dense_col1 = col1.to_dense();
         assert_eq!(dense_col1[1], 2.0);
@@ -1459,9 +1459,9 @@ mod tests {
         let mut blocksparse = BlockSparseMatrix::new(10, 10, 3);
 
         // Set some values
-        blocksparse.set(0, 0, 1.0).unwrap();
-        blocksparse.set(5, 5, 2.0).unwrap();
-        blocksparse.set(9, 9, 3.0).unwrap();
+        blocksparse.set(0, 0, 1.0).expect("Operation failed");
+        blocksparse.set(5, 5, 2.0).expect("Operation failed");
+        blocksparse.set(9, 9, 3.0).expect("Operation failed");
 
         // Get values
         assert_eq!(blocksparse.get(0, 0), 1.0);

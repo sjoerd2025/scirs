@@ -159,7 +159,7 @@ pub trait Loss<F: Float + Debug> {
     ///   let gradients = mse.backward(&predictions, &targets)?;
     ///   // MSE gradient = 2 * (predictions - targets) / n
     ///   // For our example: [2*(1-0)/2, 2*(2-1)/2] = [1.0, 1.0]
-    ///   assert_eq!(gradients.as_slice().unwrap(), &[1.0, 1.0]);
+    ///   assert_eq!(gradients.as_slice().expect("Operation failed"), &[1.0, 1.0]);
     fn backward(
         &self,
         predictions: &Array<F, scirs2_core::ndarray::IxDyn>,

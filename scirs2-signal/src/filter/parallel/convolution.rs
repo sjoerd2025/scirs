@@ -346,7 +346,7 @@ mod tests {
 
         let result = parallel_convolve(&signal, &kernel, "same", None);
         assert!(result.is_ok());
-        let convolved = result.unwrap();
+        let convolved = result.expect("Operation failed");
         assert_eq!(convolved.len(), signal.len());
     }
 
@@ -356,15 +356,18 @@ mod tests {
         let kernel = vec![1.0, 0.5];
 
         // Test "full" mode
-        let full_result = parallel_convolve(&signal, &kernel, "full", None).unwrap();
+        let full_result =
+            parallel_convolve(&signal, &kernel, "full", None).expect("Operation failed");
         assert_eq!(full_result.len(), signal.len() + kernel.len() - 1);
 
         // Test "same" mode
-        let same_result = parallel_convolve(&signal, &kernel, "same", None).unwrap();
+        let same_result =
+            parallel_convolve(&signal, &kernel, "same", None).expect("Operation failed");
         assert_eq!(same_result.len(), signal.len());
 
         // Test "valid" mode
-        let valid_result = parallel_convolve(&signal, &kernel, "valid", None).unwrap();
+        let valid_result =
+            parallel_convolve(&signal, &kernel, "valid", None).expect("Operation failed");
         assert_eq!(valid_result.len(), signal.len() - kernel.len() + 1);
     }
 
@@ -372,20 +375,22 @@ mod tests {
     fn test_parallel_convolve2d() {
         let image =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let kernel = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.25, 0.25]).unwrap();
+        let kernel =
+            Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.25, 0.25]).expect("Operation failed");
 
         let result = parallel_convolve2d(&image, &kernel, "valid", "zero");
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.dim(), (2, 2));
     }
 
     #[test]
     fn test_pad_image_zero() {
-        let image = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let padded = pad_image(&image, 1, 1, "zero").unwrap();
+        let image =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let padded = pad_image(&image, 1, 1, "zero").expect("Operation failed");
 
         assert_eq!(padded.dim(), (4, 4));
         assert_eq!(padded[[1, 1]], 1.0); // Original top-left
@@ -394,8 +399,9 @@ mod tests {
 
     #[test]
     fn test_pad_image_reflect() {
-        let image = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let padded = pad_image(&image, 1, 1, "reflect").unwrap();
+        let image =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let padded = pad_image(&image, 1, 1, "reflect").expect("Operation failed");
 
         assert_eq!(padded.dim(), (4, 4));
         assert_eq!(padded[[1, 1]], 1.0); // Original top-left

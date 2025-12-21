@@ -53,10 +53,22 @@ pub struct PerformanceDegradation {
 impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
     pub fn new(interval: Duration) -> Self {
         let mut thresholds = HashMap::new();
-        thresholds.insert("accuracy".to_string(), F::from(0.8).unwrap()); // 80% accuracy threshold
-        thresholds.insert("precision".to_string(), F::from(0.75).unwrap());
-        thresholds.insert("recall".to_string(), F::from(0.75).unwrap());
-        thresholds.insert("f1_score".to_string(), F::from(0.75).unwrap());
+        thresholds.insert(
+            "accuracy".to_string(),
+            F::from(0.8).expect("Failed to convert constant to float"),
+        ); // 80% accuracy threshold
+        thresholds.insert(
+            "precision".to_string(),
+            F::from(0.75).expect("Failed to convert constant to float"),
+        );
+        thresholds.insert(
+            "recall".to_string(),
+            F::from(0.75).expect("Failed to convert constant to float"),
+        );
+        thresholds.insert(
+            "f1_score".to_string(),
+            F::from(0.75).expect("Failed to convert constant to float"),
+        );
 
         Self {
             monitoring_interval: interval,

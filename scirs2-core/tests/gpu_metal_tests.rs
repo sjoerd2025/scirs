@@ -87,7 +87,9 @@ fn test_metal_buffer_creation() {
 
     // Test buffer copy operations
     let mut result = vec![0.0f32; 4];
-    buffer.copy_to_host(&mut result).unwrap();
+    buffer
+        .copy_to_host(&mut result)
+        .expect("Test: operation failed");
     assert_eq!(result, data);
 }
 
@@ -179,7 +181,9 @@ fn test_metal_kernel_execution() {
 
     // Verify results
     let mut result = vec![0.0f32; 4];
-    y_buffer.copy_to_host(&mut result).unwrap();
+    y_buffer
+        .copy_to_host(&mut result)
+        .expect("Test: operation failed");
 
     // Expected: y = alpha * x + y = 2 * [1,2,3,4] + [5,6,7,8] = [7,10,13,16]
     let expected = [7.0f32, 10.0, 13.0, 16.0];
@@ -239,7 +243,9 @@ fn test_metal_complex_operations() {
 
     // Verify results
     let mut result = vec![0.0f32; 8];
-    result_buffer.copy_to_host(&mut result).unwrap();
+    result_buffer
+        .copy_to_host(&mut result)
+        .expect("Test: operation failed");
 
     // Expected complex multiplication results:
     // (1+0i) * (2+0i) = 2+0i
@@ -338,7 +344,9 @@ fn test_metal_buffer_overflow() {
 
     let buffer = context.create_buffer::<f32>(4);
     let data = vec![1.0f32; 8]; // Too large
-    buffer.copy_from_host(&data).unwrap(); // Should panic
+    buffer
+        .copy_from_host(&data)
+        .expect("Test: operation failed"); // Should panic
 }
 
 mod benchmarks {
@@ -366,7 +374,9 @@ mod benchmarks {
             // Benchmark device to host transfer
             let mut result = vec![0.0f32; size];
             let start = Instant::now();
-            buffer.copy_to_host(&mut result).unwrap();
+            buffer
+                .copy_to_host(&mut result)
+                .expect("Test: operation failed");
             let d2h_time = start.elapsed();
 
             let size_mb = (size * 4) as f64 / (1024.0 * 1024.0);

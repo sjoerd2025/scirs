@@ -130,12 +130,12 @@ fn main() -> IntegrateResult<()> {
     println!("  Number of time steps: {}", result.base_result.t.len());
     println!(
         "  Integration terminated at t = {:.4}",
-        result.base_result.t.last().unwrap()
+        result.base_result.t.last().expect("Operation failed")
     );
     println!(
         "  Final state: X = {:.6}, Y = {:.6}",
-        result.base_result.y.last().unwrap()[0],
-        result.base_result.y.last().unwrap()[1]
+        result.base_result.y.last().expect("Operation failed")[0],
+        result.base_result.y.last().expect("Operation failed")[1]
     );
 
     // Analyze the oscillation period
@@ -197,7 +197,7 @@ fn main() -> IntegrateResult<()> {
             let next_time = if i + 1 < threshold_events.len() {
                 threshold_events[i + 1].time
             } else {
-                *result.base_result.t.last().unwrap()
+                *result.base_result.t.last().expect("Operation failed")
             };
 
             let interval = next_time - current_time;
@@ -211,8 +211,8 @@ fn main() -> IntegrateResult<()> {
             above = !above; // Flip state after each crossing
         }
 
-        let total_time =
-            *result.base_result.t.last().unwrap() - *result.base_result.t.first().unwrap();
+        let total_time = *result.base_result.t.last().expect("Operation failed")
+            - *result.base_result.t.first().expect("Operation failed");
         println!(
             "  Time spent above threshold: {:.1}% ({:.4} time units)",
             100.0 * time_above / total_time,

@@ -886,9 +886,9 @@ mod tests {
 
         registry
             .register("test_counter".to_string(), counter)
-            .unwrap();
+            .expect("Operation failed");
 
-        let metrics = registry.get_all_metrics().unwrap();
+        let metrics = registry.get_all_metrics().expect("Operation failed");
         assert_eq!(metrics.len(), 1);
         assert_eq!(metrics[0].name, "test_counter");
     }
@@ -899,9 +899,11 @@ mod tests {
 
         // Register memory health check
         let memory_check = MemoryHealthCheck::new(0.8, 0.95);
-        monitor.register_check(memory_check).unwrap();
+        monitor
+            .register_check(memory_check)
+            .expect("Operation failed");
 
-        let results = monitor.check_all().unwrap();
+        let results = monitor.check_all().expect("Operation failed");
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "memory");
     }
@@ -914,9 +916,9 @@ mod tests {
 
         registry
             .register("test_counter".to_string(), counter)
-            .unwrap();
+            .expect("Operation failed");
 
-        let prometheus_output = registry.export_prometheus().unwrap();
+        let prometheus_output = registry.export_prometheus().expect("Operation failed");
         assert!(prometheus_output.contains("test_counter"));
         assert!(prometheus_output.contains("counter"));
     }

@@ -506,9 +506,10 @@ mod tests {
             (4, 3),
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let queries = Array2::from_shape_vec((2, 3), vec![0.5, 0.5, 0.0, 1.0, 1.0, 0.0]).unwrap();
+        let queries = Array2::from_shape_vec((2, 3), vec![0.5, 0.5, 0.0, 1.0, 1.0, 0.0])
+            .expect("Operation failed");
 
         let distance_matrix =
             AdvancedSimdOps::vectorized_distance_matrix(&queries.view(), &points.view());
@@ -527,7 +528,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let query = Array1::from(vec![0.6, 0.6]);
         let knn = AdvancedSimdOps::simd_single_knn(&points.view(), &query.view(), 3);
@@ -544,7 +545,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let query = Array1::from(vec![0.5, 0.5]);
         let radius_sq = 0.5; // Radius of sqrt(0.5) ≈ 0.707

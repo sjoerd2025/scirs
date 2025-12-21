@@ -532,7 +532,7 @@ impl NumaWorkloadBalancer {
 
     /// Get optimal work distribution for a given workload
     pub fn distribute_work(&self, total_workunits: usize) -> Vec<usize> {
-        let load_history = self.load_history.lock().unwrap();
+        let load_history = self.load_history.lock().expect("Operation failed");
 
         // Calculate load-adjusted capacity for each node
         let node_capacities: Vec<f64> = self
@@ -570,7 +570,7 @@ impl NumaWorkloadBalancer {
 
     /// Update load history after completing work
     pub fn update_load_history(&self, node_id: usize, completion_time: f64, expected_time: f64) {
-        let mut load_history = self.load_history.lock().unwrap();
+        let mut load_history = self.load_history.lock().expect("Operation failed");
 
         // Exponential moving average with alpha = 0.1
         let load_ratio = completion_time / expected_time;
@@ -579,7 +579,7 @@ impl NumaWorkloadBalancer {
 
     /// Get current load information
     pub fn get_load_info(&self) -> Vec<f64> {
-        self.load_history.lock().unwrap().clone()
+        self.load_history.lock().expect("Operation failed").clone()
     }
 }
 

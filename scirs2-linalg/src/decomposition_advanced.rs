@@ -30,7 +30,7 @@ use std::fmt::{Debug, Display};
 /// use scirs2_linalg::decomposition_advanced::jacobi_svd;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
-/// let (u, s, vt) = jacobi_svd(&a.view(), 100, 1e-14).unwrap();
+/// let (u, s, vt) = jacobi_svd(&a.view(), 100, 1e-14).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn jacobi_svd<A>(
@@ -94,9 +94,9 @@ where
 
         // For symmetric part
         let theta = if (app - aqq).abs() < A::epsilon() {
-            A::from(std::f64::consts::PI / 4.0).unwrap()
+            A::from(std::f64::consts::PI / 4.0).expect("Operation failed")
         } else {
-            ((apq + aqp) / (app - aqq)).atan() * A::from(0.5).unwrap()
+            ((apq + aqp) / (app - aqq)).atan() * A::from(0.5).expect("Operation failed")
         };
 
         let c = theta.cos();
@@ -143,7 +143,7 @@ where
 
     // Sort singular values in descending order
     let mut indices: Vec<usize> = (0..n).collect();
-    indices.sort_by(|&i, &j| s[j].partial_cmp(&s[i]).unwrap());
+    indices.sort_by(|&i, &j| s[j].partial_cmp(&s[i]).expect("Operation failed"));
 
     // Reorder singular values, U, and V
     let mut s_sorted = Array1::zeros(n);
@@ -187,7 +187,7 @@ where
 /// use scirs2_linalg::decomposition_advanced::polar_decomposition;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
-/// let (u, p) = polar_decomposition(&a.view(), true).unwrap();
+/// let (u, p) = polar_decomposition(&a.view(), true).expect("Operation failed");
 /// assert!(p.is_some());
 /// ```
 #[allow(dead_code)]
@@ -293,7 +293,7 @@ where
             }
         };
 
-        let u_new = (&u + &ut_inv) * A::from(0.5).unwrap();
+        let u_new = (&u + &ut_inv) * A::from(0.5).expect("Operation failed");
 
         // Check convergence
         let diff = &u_new - &u;
@@ -334,7 +334,7 @@ where
 /// use scirs2_linalg::decomposition_advanced::qr_with_column_pivoting;
 ///
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-/// let (q, r, p, rank) = qr_with_column_pivoting(&a.view(), 1e-10).unwrap();
+/// let (q, r, p, rank) = qr_with_column_pivoting(&a.view(), 1e-10).expect("Operation failed");
 /// assert!(rank < 3); // Matrix is rank-deficient
 /// ```
 pub type QRPivotingResult<A> = (Array2<A>, Array2<A>, Array2<A>, usize);
@@ -384,7 +384,7 @@ mod tests {
     #[test]
     fn test_jacobi_svd_2x2() {
         let a = array![[3.0, 1.0], [1.0, 3.0]];
-        let (u, s, vt) = jacobi_svd(&a.view(), 100, 1e-14).unwrap();
+        let (u, s, vt) = jacobi_svd(&a.view(), 100, 1e-14).expect("Operation failed");
 
         // Verify dimensions
         assert_eq!(u.shape(), &[2, 2]);
@@ -422,8 +422,8 @@ mod tests {
     #[test]
     fn test_polar_decomposition() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let (u, p_opt) = polar_decomposition(&a.view(), true).unwrap();
-        let p = p_opt.unwrap();
+        let (u, p_opt) = polar_decomposition(&a.view(), true).expect("Operation failed");
+        let p = p_opt.expect("Operation failed");
 
         // Verify U is orthogonal
         let u_ut = u.dot(&u.t());
@@ -446,7 +446,7 @@ mod tests {
     #[test]
     fn test_polar_decomposition_newton() {
         let a = array![[1.0, 0.5], [0.5, 2.0]];
-        let (u, p) = polar_decomposition_newton(&a.view(), 10, 1e-12).unwrap();
+        let (u, p) = polar_decomposition_newton(&a.view(), 10, 1e-12).expect("Operation failed");
 
         // Verify U is orthogonal
         let u_ut = u.dot(&u.t());
@@ -470,7 +470,7 @@ mod tests {
     fn test_qr_with_column_pivoting() {
         // Rank-deficient matrix
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let (q, r, p, rank) = qr_with_column_pivoting(&a.view(), 1e-10).unwrap();
+        let (q, r, p, rank) = qr_with_column_pivoting(&a.view(), 1e-10).expect("Operation failed");
 
         // Matrix should have rank 2
         assert_eq!(rank, 2);

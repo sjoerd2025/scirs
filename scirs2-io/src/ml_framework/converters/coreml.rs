@@ -54,7 +54,7 @@ impl MLFrameworkConverter for CoreMLConverter {
             "weights": model.weights.iter().map(|(name, tensor)| {
                 (name.clone(), serde_json::json!({
                     "shape": tensor.metadata.shape,
-                    "floatValue": tensor.data.as_slice().unwrap().to_vec()
+                    "floatValue": tensor.data.as_slice().expect("Operation failed").to_vec()
                 }))
             }).collect::<serde_json::Map<String, serde_json::Value>>()
         });
@@ -157,7 +157,7 @@ impl MLFrameworkConverter for CoreMLConverter {
             "coreml_multiarray": {
                 "shape": tensor.metadata.shape,
                 "dataType": "FLOAT32",
-                "floatValue": tensor.data.as_slice().unwrap().to_vec()
+                "floatValue": tensor.data.as_slice().expect("Operation failed").to_vec()
             }
         });
 

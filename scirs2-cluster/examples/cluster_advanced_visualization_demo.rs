@@ -457,10 +457,11 @@ fn generate_2d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
             0.6, 6.8, 1.5, 7.6, 1.0, 6.5, 1.3, 7.1, 1.7,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let labels = Array1::from_vec((0..60).map(|i| i / 20).collect());
-    let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
+    let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0])
+        .expect("Operation failed");
 
     (data, labels, centroids)
 }
@@ -494,9 +495,10 @@ fn generate_2d_clustering_data_size(size: usize) -> (Array2<f64>, Array1<i32>, A
         }
     }
 
-    let data = Array2::from_shape_vec((size, 2), data_vec).unwrap();
+    let data = Array2::from_shape_vec((size, 2), data_vec).expect("Operation failed");
     let labels = Array1::from_vec(labels_vec);
-    let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
+    let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0])
+        .expect("Operation failed");
 
     (data, labels, centroids)
 }
@@ -516,11 +518,12 @@ fn generate_3d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
             6.7, 6.8, 1.1, 7.0, 6.9, 0.8, 7.2, 7.1, 0.7, 7.3, 6.7, 1.4, 6.9,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let labels = Array1::from_vec((0..30).map(|i| i / 10).collect());
     let centroids =
-        Array2::from_shape_vec((3, 3), vec![1.0, 1.0, 1.0, 4.0, 4.0, 4.0, 7.0, 1.0, 7.0]).unwrap();
+        Array2::from_shape_vec((3, 3), vec![1.0, 1.0, 1.0, 4.0, 4.0, 4.0, 7.0, 1.0, 7.0])
+            .expect("Operation failed");
 
     (data, labels, centroids)
 }
@@ -551,7 +554,7 @@ fn generate_high_dimensional_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
         }
     }
 
-    let data = Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap();
+    let data = Array2::from_shape_vec((n_samples, n_features), data_vec).expect("Operation failed");
     let labels = Array1::from_vec(labels_vec);
     let centroids = Array2::zeros((n_clusters, n_features)); // Simplified for demo
 

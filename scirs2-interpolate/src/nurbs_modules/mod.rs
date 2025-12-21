@@ -42,9 +42,9 @@
 //     &knots.view(),
 //     degree,
 //     ExtrapolateMode::Extrapolate
-// ).unwrap();
+// ).expect("Operation failed");
 //
-// let point = curve.evaluate(0.5).unwrap();
+// let point = curve.evaluate(0.5).expect("Operation failed");
 // ```
 //
 // ## NURBS Surface
@@ -70,9 +70,9 @@
 //     &knotsv.view(),
 //     1, 1,  // degreeu, degreev
 //     ExtrapolateMode::Extrapolate
-// ).unwrap();
+// ).expect("Operation failed");
 //
-// let point = surface.evaluate(0.5, 0.5).unwrap();
+// let point = surface.evaluate(0.5, 0.5).expect("Operation failed");
 // ```
 
 // Core types and validation
@@ -189,8 +189,8 @@ pub mod api {
         end_angle: Option<T>,
     ) -> InterpolateResult<NurbsCurve<T>> {
         let start = start_angle.unwrap_or_else(|| T::zero());
-        let end = end_angle.unwrap_or_else(|| T::from(2.0 * std::f64::consts::PI).unwrap());
-        let two = T::from(2.0).unwrap();
+        let end = end_angle.unwrap_or_else(|| T::from(2.0 * std::f64::consts::PI).expect("Operation failed"));
+        let two = T::from(2.0).expect("Operation failed");
         let sqrt2_inv = T::one() / two.sqrt();
 
         // Create control points for a circle
@@ -210,8 +210,8 @@ pub mod api {
                              sqrt2_inv, T::one(), sqrt2_inv, T::one()];
 
         let knots = array![T::zero(), T::zero(), T::zero(), T::one(), T::one(),
-                          two, two, T::from(3.0).unwrap(), T::from(3.0).unwrap(),
-                          T::from(4.0).unwrap(), T::from(4.0).unwrap(), T::from(4.0).unwrap()];
+                          two, two, T::from(3.0).expect("Operation failed"), T::from(3.0).expect("Operation failed"),
+                          T::from(4.0).expect("Operation failed"), T::from(4.0).expect("Operation failed"), T::from(4.0).expect("Operation failed")];
 
         NurbsCurve::new(
             &control_points.view(),
@@ -280,7 +280,7 @@ mod tests {
         );
 
         assert!(curve.is_ok());
-        let curve = curve.unwrap();
+        let curve = curve.expect("Operation failed");
         assert_eq!(curve.dimension(), 2);
         assert_eq!(curve.len(), 3);
     }
@@ -306,7 +306,7 @@ mod tests {
         );
 
         assert!(surface.is_ok());
-        let surface = surface.unwrap();
+        let surface = surface.expect("Operation failed");
         assert_eq!(surface.dimension(), 3);
         assert_eq!(surface.len(), 4);
     }
@@ -316,7 +316,7 @@ mod tests {
         let circle = make_nurbs_circle([0.0, 0.0], 1.0, Some(0.0), Some(2.0 * std::f64::consts::PI));
         assert!(circle.is_ok());
 
-        let circle = circle.unwrap();
+        let circle = circle.expect("Operation failed");
         assert_eq!(circle.dimension(), 2);
     }
 }

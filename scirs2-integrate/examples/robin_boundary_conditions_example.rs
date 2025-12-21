@@ -105,9 +105,9 @@ fn heat_conduction_example() -> Result<(), Box<dyn std::error::Error>> {
 
         // Check heat flux balance at boundaries
         let q_left = -k * result.y[0][1]; // -k * u'(0)
-        let q_right = -k * result.y.last().unwrap()[1]; // -k * u'(L)
+        let q_right = -k * result.y.last().expect("Operation failed")[1]; // -k * u'(L)
         let q_conv_left = h * (result.y[0][0] - t_env);
-        let q_conv_right = h * (result.y.last().unwrap()[0] - t_env);
+        let q_conv_right = h * (result.y.last().expect("Operation failed")[0] - t_env);
 
         println!("\nHeat flux balance check:");
         println!("Left:  Conduction = {q_left:.2} W/m², Convection = {q_conv_left:.2} W/m²");
@@ -221,8 +221,8 @@ fn beam_deflection_example() -> Result<(), Box<dyn std::error::Error>> {
         // Check boundary conditions
         let u0 = result.y[0][0];
         let u_prime_0 = result.y[0][1];
-        let u_l = result.y.last().unwrap()[0];
-        let u_double_prime_l = result.y.last().unwrap()[2];
+        let u_l = result.y.last().expect("Operation failed")[0];
+        let u_double_prime_l = result.y.last().expect("Operation failed")[2];
 
         println!("Boundary condition verification:");
         println!("u(0) = {u0:.2e} (should be 0)");
@@ -301,8 +301,8 @@ fn reaction_diffusion_example() -> Result<(), Box<dyn std::error::Error>> {
         let u_prime_0 = result.y[0][1];
         let bc_left = 2.0 * u0 + u_prime_0;
 
-        let u1 = result.y.last().unwrap()[0];
-        let u_prime_1 = result.y.last().unwrap()[1];
+        let u1 = result.y.last().expect("Operation failed")[0];
+        let u_prime_1 = result.y.last().expect("Operation failed")[1];
         let bc_right = u1 - 0.5 * u_prime_1;
 
         println!("\nBoundary condition verification:");
@@ -365,8 +365,8 @@ fn periodic_example() -> Result<(), Box<dyn std::error::Error>> {
         // Verify periodic boundary conditions
         let u0 = result.y[0][0];
         let u_prime_0 = result.y[0][1];
-        let u1 = result.y.last().unwrap()[0];
-        let u_prime_1 = result.y.last().unwrap()[1];
+        let u1 = result.y.last().expect("Operation failed")[0];
+        let u_prime_1 = result.y.last().expect("Operation failed")[1];
 
         println!("\nPeriodic boundary condition verification:");
         println!(

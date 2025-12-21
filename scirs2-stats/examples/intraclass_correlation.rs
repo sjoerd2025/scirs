@@ -19,7 +19,7 @@ fn main() {
     ];
 
     // Calculate ICC - type 1 (one-way random effects)
-    let (icc1, conf_int1) = icc(&data.view(), 1, None).unwrap();
+    let (icc1, conf_int1) = icc(&data.view(), 1, None).expect("Operation failed");
     println!("ICC(1) - One-way random effects model:");
     println!("ICC = {}", icc1);
     println!(
@@ -28,7 +28,7 @@ fn main() {
     );
 
     // Calculate ICC - type 2 (two-way random effects)
-    let (icc2, conf_int2) = icc(&data.view(), 2, None).unwrap();
+    let (icc2, conf_int2) = icc(&data.view(), 2, None).expect("Operation failed");
     println!("\nICC(2) - Two-way random effects model:");
     println!("ICC = {}", icc2);
     println!(
@@ -37,7 +37,7 @@ fn main() {
     );
 
     // Calculate ICC - type 3 (two-way mixed effects)
-    let (icc3, conf_int3) = icc(&data.view(), 3, None).unwrap();
+    let (icc3, conf_int3) = icc(&data.view(), 3, None).expect("Operation failed");
     println!("\nICC(3) - Two-way mixed effects model:");
     println!("ICC = {}", icc3);
     println!(
@@ -54,7 +54,7 @@ fn main() {
         [8.0, 4.0, 7.0, 9.5],
     ];
 
-    let (icc_poor, conf_int_poor) = icc(&data_poor.view(), 2, None).unwrap();
+    let (icc_poor, conf_int_poor) = icc(&data_poor.view(), 2, None).expect("Operation failed");
     println!("\nICC(2) with poor agreement data:");
     println!("ICC = {}", icc_poor);
     println!(

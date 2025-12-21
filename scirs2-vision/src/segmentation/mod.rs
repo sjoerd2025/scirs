@@ -291,7 +291,7 @@ pub fn connected_components(binary: &GrayImage) -> Result<(LabeledImage, u16)> {
                 }
             } else {
                 // Find minimum label among neighbors
-                let min_label = *neighbors.iter().min().unwrap();
+                let min_label = *neighbors.iter().min().expect("Operation failed");
                 labels.put_pixel(x, y, Luma([min_label]));
 
                 // Record equivalences

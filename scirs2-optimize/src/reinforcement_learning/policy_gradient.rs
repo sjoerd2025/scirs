@@ -51,7 +51,7 @@ impl MetaPolicyNetwork {
         layer_sizes.push(output_size);
 
         let num_layers = layer_sizes.len() - 1;
-        let max_layer_size = *layer_sizes.iter().max().unwrap();
+        let max_layer_size = *layer_sizes.iter().max().expect("Operation failed");
 
         // Initialize weights with Xavier initialization
         let mut policy_weights = Array3::zeros((num_layers, max_layer_size, max_layer_size));
@@ -589,7 +589,12 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
     /// Compute meta-gradients for higher-order learning
     fn compute_meta_gradients(&self, metabatch: &[MetaTrajectory]) -> MetaGradients {
         let num_layers = self.meta_policy.layer_sizes.len() - 1;
-        let max_size = *self.meta_policy.layer_sizes.iter().max().unwrap();
+        let max_size = *self
+            .meta_policy
+            .layer_sizes
+            .iter()
+            .max()
+            .expect("Operation failed");
 
         let mut meta_gradients = MetaGradients {
             policy_gradients: Array3::zeros((num_layers, max_size, max_size)),
@@ -1141,7 +1146,7 @@ mod tests {
 
         let result =
             advanced_advanced_policy_gradient_optimize(objective, &initial.view(), Some(config))
-                .unwrap();
+                .expect("Operation failed");
 
         assert!(result.nit > 0);
         assert!(result.fun <= objective(&initial.view()) * 1.01);

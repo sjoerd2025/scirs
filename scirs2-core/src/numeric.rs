@@ -351,7 +351,7 @@ pub trait SparseElement:
     /// This method is deprecated to avoid ambiguity with `num_traits::Zero::zero()`.
     /// Use `sparse_zero()` instead.
     #[deprecated(
-        since = "0.1.0-rc.3",
+        since = "0.1.0-rc.4",
         note = "Use `sparse_zero()` instead to avoid ambiguity with num_traits::Zero"
     )]
     #[must_use]
@@ -366,7 +366,7 @@ pub trait SparseElement:
     /// This method is deprecated to avoid ambiguity with `num_traits::One::one()`.
     /// Use `sparse_one()` instead.
     #[deprecated(
-        since = "0.1.0-rc.3",
+        since = "0.1.0-rc.4",
         note = "Use `sparse_one()` instead to avoid ambiguity with num_traits::One"
     )]
     #[must_use]
@@ -1522,7 +1522,7 @@ mod tests {
         assert!(a.is_even());
         assert!(!a.is_odd());
         assert_eq!(a.mod_pow(2, 10), 4); // 12^2 mod 10 = 4
-        assert_eq!(5_i32.factorial().unwrap(), 120);
+        assert_eq!(5_i32.factorial().expect("Operation failed"), 120);
         assert_eq!(5_i32.binomial(2), 10); // 5 choose 2 = 10
     }
 
@@ -1544,11 +1544,11 @@ mod tests {
     #[test]
     fn test_angle_conversion() {
         let degrees: f64 = 180.0;
-        let radians = <f64 as AngleConversion>::to_radians(&degrees).unwrap();
+        let radians = <f64 as AngleConversion>::to_radians(&degrees).expect("Operation failed");
         assert!((radians - std::f64::consts::PI).abs() < 1e-10);
 
         let radians: f64 = std::f64::consts::PI / 2.0;
-        let degrees = <f64 as AngleConversion>::to_degrees(&radians).unwrap();
+        let degrees = <f64 as AngleConversion>::to_degrees(&radians).expect("Operation failed");
         assert!((degrees - 90.0).abs() < 1e-10);
     }
 

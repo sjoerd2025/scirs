@@ -78,11 +78,12 @@ pub fn simd_powi_f32(base: &ArrayView1<f32>, n: i32) -> Array1<f32> {
             unsafe {
                 use std::arch::x86_64::*;
 
-                let result_slice = result.as_slice_mut().unwrap();
+                let result_slice = result.as_slice_mut().expect("Operation failed");
 
                 // Exponentiation by squaring with SIMD
                 let mut current_power = actual_base.clone();
-                let mut current_power_slice = current_power.as_slice_mut().unwrap();
+                let mut current_power_slice =
+                    current_power.as_slice_mut().expect("Operation failed");
                 let mut exp = actual_n;
 
                 while exp > 0 {
@@ -130,10 +131,11 @@ pub fn simd_powi_f32(base: &ArrayView1<f32>, n: i32) -> Array1<f32> {
             unsafe {
                 use std::arch::aarch64::*;
 
-                let result_slice = result.as_slice_mut().unwrap();
+                let result_slice = result.as_slice_mut().expect("Operation failed");
 
                 let mut current_power = actual_base.clone();
-                let mut current_power_slice = current_power.as_slice_mut().unwrap();
+                let mut current_power_slice =
+                    current_power.as_slice_mut().expect("Operation failed");
                 let mut exp = actual_n;
 
                 while exp > 0 {
@@ -239,10 +241,11 @@ pub fn simd_powi_f64(base: &ArrayView1<f64>, n: i32) -> Array1<f64> {
             unsafe {
                 use std::arch::x86_64::*;
 
-                let result_slice = result.as_slice_mut().unwrap();
+                let result_slice = result.as_slice_mut().expect("Operation failed");
 
                 let mut current_power = actual_base.clone();
-                let mut current_power_slice = current_power.as_slice_mut().unwrap();
+                let mut current_power_slice =
+                    current_power.as_slice_mut().expect("Operation failed");
                 let mut exp = actual_n;
 
                 while exp > 0 {
@@ -286,10 +289,11 @@ pub fn simd_powi_f64(base: &ArrayView1<f64>, n: i32) -> Array1<f64> {
             unsafe {
                 use std::arch::aarch64::*;
 
-                let result_slice = result.as_slice_mut().unwrap();
+                let result_slice = result.as_slice_mut().expect("Operation failed");
 
                 let mut current_power = actual_base.clone();
-                let mut current_power_slice = current_power.as_slice_mut().unwrap();
+                let mut current_power_slice =
+                    current_power.as_slice_mut().expect("Operation failed");
                 let mut exp = actual_n;
 
                 while exp > 0 {
@@ -359,8 +363,8 @@ fn simd_square_f32(input: &ArrayView1<f32>) -> Array1<f32> {
         if is_x86_feature_detected!("avx2") {
             unsafe {
                 use std::arch::x86_64::*;
-                let input_slice = input.as_slice().unwrap();
-                let result_slice: &mut [f32] = result.as_slice_mut().unwrap();
+                let input_slice = input.as_slice().expect("Operation failed");
+                let result_slice: &mut [f32] = result.as_slice_mut().expect("Operation failed");
 
                 let mut i = 0;
                 while i + 8 <= len {
@@ -382,8 +386,8 @@ fn simd_square_f32(input: &ArrayView1<f32>) -> Array1<f32> {
         if std::arch::is_aarch64_feature_detected!("neon") {
             unsafe {
                 use std::arch::aarch64::*;
-                let input_slice = input.as_slice().unwrap();
-                let result_slice: &mut [f32] = result.as_slice_mut().unwrap();
+                let input_slice = input.as_slice().expect("Operation failed");
+                let result_slice: &mut [f32] = result.as_slice_mut().expect("Operation failed");
 
                 let mut i = 0;
                 while i + 4 <= len {
@@ -416,8 +420,8 @@ fn simd_square_f64(input: &ArrayView1<f64>) -> Array1<f64> {
         if is_x86_feature_detected!("avx2") {
             unsafe {
                 use std::arch::x86_64::*;
-                let input_slice = input.as_slice().unwrap();
-                let result_slice: &mut [f64] = result.as_slice_mut().unwrap();
+                let input_slice = input.as_slice().expect("Operation failed");
+                let result_slice: &mut [f64] = result.as_slice_mut().expect("Operation failed");
 
                 let mut i = 0;
                 while i + 4 <= len {
@@ -439,8 +443,8 @@ fn simd_square_f64(input: &ArrayView1<f64>) -> Array1<f64> {
         if std::arch::is_aarch64_feature_detected!("neon") {
             unsafe {
                 use std::arch::aarch64::*;
-                let input_slice = input.as_slice().unwrap();
-                let result_slice: &mut [f64] = result.as_slice_mut().unwrap();
+                let input_slice = input.as_slice().expect("Operation failed");
+                let result_slice: &mut [f64] = result.as_slice_mut().expect("Operation failed");
 
                 let mut i = 0;
                 while i + 2 <= len {

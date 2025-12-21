@@ -605,9 +605,14 @@ mod tests {
         assert!(registry.register("test_function", hints.clone()).is_ok());
 
         // Retrieve hints
-        let retrieved = registry.get_hint("test_function").unwrap();
+        let retrieved = registry
+            .get_hint("test_function")
+            .expect("Operation failed");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().complexity, ComplexityClass::Linear);
+        assert_eq!(
+            retrieved.expect("Operation failed").complexity,
+            ComplexityClass::Linear
+        );
 
         // Record execution
         assert!(registry
@@ -615,9 +620,11 @@ mod tests {
             .is_ok());
 
         // Get stats
-        let stats = registry.get_stats("test_function").unwrap();
+        let stats = registry
+            .get_stats("test_function")
+            .expect("Operation failed");
         assert!(stats.is_some());
-        assert_eq!(stats.unwrap().total_calls, 1);
+        assert_eq!(stats.expect("Operation failed").total_calls, 1);
     }
 
     #[test]
@@ -631,11 +638,13 @@ mod tests {
             .gpu_friendly()
             .with_memory_pattern(MemoryPattern::Random);
 
-        registry.register("test_function", hints).unwrap();
+        registry
+            .register("test_function", hints)
+            .expect("Operation failed");
 
         let recommendations = registry
             .get_optimization_recommendations("test_function")
-            .unwrap();
+            .expect("Operation failed");
         assert!(!recommendations.is_empty());
 
         // Should recommend enabling optimizations since hints indicate suitability
@@ -648,9 +657,11 @@ mod tests {
         thread::sleep(Duration::from_millis(10));
         tracker.finish();
 
-        let stats = global_registry().get_stats("test_tracker").unwrap();
+        let stats = global_registry()
+            .get_stats("test_tracker")
+            .expect("Operation failed");
         assert!(stats.is_some());
-        let stats = stats.unwrap();
+        let stats = stats.expect("Operation failed");
         assert_eq!(stats.total_calls, 1);
         assert!(stats.average_duration >= Duration::from_millis(10));
     }

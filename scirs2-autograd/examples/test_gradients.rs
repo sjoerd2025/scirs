@@ -20,7 +20,7 @@ fn main() {
         let gx = T::grad(&[z], &[x])[0];
 
         // Evaluate dz/dy (should be 3)
-        let gy_result = gy.eval(ctx).unwrap();
+        let gy_result = gy.eval(ctx).expect("Operation failed");
         println!(
             "dz/dy = {:?} (expected: 3.0)",
             gy_result[scirs2_core::ndarray::IxDyn(&[])]
@@ -34,7 +34,7 @@ fn main() {
             .run();
         println!(
             "dz/dx at x=2 = {:?} (expected: 8.0)",
-            gx_result[0].as_ref().unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+            gx_result[0].as_ref().expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])]
         );
 
         // Let's also trace the intermediate values
@@ -44,7 +44,7 @@ fn main() {
         let g_three_y = T::grad(&[three_y], &[y])[0];
         println!(
             "d(3y)/dy = {:?} (expected: 3.0)",
-            g_three_y.eval(ctx).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+            g_three_y.eval(ctx).expect("Operation failed")[scirs2_core::ndarray::IxDyn(&[])]
         );
 
         // Test gradient of x^2
@@ -56,7 +56,8 @@ fn main() {
             .run();
         println!(
             "d(x^2)/dx at x=2 = {:?} (expected: 4.0)",
-            g_x_squared_at_2[0].as_ref().unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+            g_x_squared_at_2[0].as_ref().expect("Operation failed")
+                [scirs2_core::ndarray::IxDyn(&[])]
         );
 
         // Test gradient of 2*x^2
@@ -68,7 +69,8 @@ fn main() {
             .run();
         println!(
             "d(2x^2)/dx at x=2 = {:?} (expected: 8.0)",
-            g_two_x_squared_at_2[0].as_ref().unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+            g_two_x_squared_at_2[0].as_ref().expect("Operation failed")
+                [scirs2_core::ndarray::IxDyn(&[])]
         );
     });
 }

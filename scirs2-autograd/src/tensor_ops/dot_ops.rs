@@ -165,7 +165,7 @@ fn batch_mat_mul_impl_slow<F: Float>(
 fn batch_mat_mul_requires_copy(stride: &[scirs2_core::ndarray::Ixs]) -> bool {
     let rank = stride.len();
     // unwrap is ok since stride.len() > 2
-    let min_str = *stride[0..rank - 2].iter().min().unwrap();
+    let min_str = *stride[0..rank - 2].iter().min().expect("Operation failed");
     let row_str = stride[rank - 2];
     let col_str = stride[rank - 1];
     min_str < row_str || min_str < col_str
@@ -441,7 +441,7 @@ fn tensordot_preprocess<T: Float>(
     {
         for &i in &free {
             prod_free_dims *= shape[i];
-            free_dims.push(T::from(shape[i]).unwrap());
+            free_dims.push(T::from(shape[i]).expect("Operation failed"));
         }
     }
     let prod_axes_dims = axes.iter().map(|&i| shape[i]).product::<usize>();
@@ -451,22 +451,22 @@ fn tensordot_preprocess<T: Float>(
     let second = if flip { &free } else { axes };
     let mut perm = Vec::with_capacity(first.len() + second.len());
     for &a in first {
-        perm.push(T::from(a).unwrap());
+        perm.push(T::from(a).expect("Operation failed"));
     }
     for &a in second {
-        perm.push(T::from(a).unwrap());
+        perm.push(T::from(a).expect("Operation failed"));
     }
 
     // make new shape
     let newshape = if flip {
         vec![
-            T::from(prod_axes_dims).unwrap(),
-            T::from(prod_free_dims).unwrap(),
+            T::from(prod_axes_dims).expect("Operation failed"),
+            T::from(prod_free_dims).expect("Operation failed"),
         ]
     } else {
         vec![
-            T::from(prod_free_dims).unwrap(),
-            T::from(prod_axes_dims).unwrap(),
+            T::from(prod_free_dims).expect("Operation failed"),
+            T::from(prod_axes_dims).expect("Operation failed"),
         ]
     };
 
@@ -486,17 +486,17 @@ impl<T: Float> op::Op<T> for TensordotPreprocess {
 
         let r0 =
             NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[free_dims0.len()]), free_dims0)
-                .unwrap();
-        let r1 =
-            NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[perm0.len()]), perm0).unwrap();
-        let r2 =
-            NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[perm1.len()]), perm1).unwrap();
+                .expect("Failed to add gradient");
+        let r1 = NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[perm0.len()]), perm0)
+            .expect("Operation failed");
+        let r2 = NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[perm1.len()]), perm1)
+            .expect("Operation failed");
         let r3 =
             NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[newshape0.len()]), newshape0)
-                .unwrap();
+                .expect("Failed to add gradient");
         let r4 =
             NdArray::from_shape_vec(scirs2_core::ndarray::IxDyn(&[newshape1.len()]), newshape1)
-                .unwrap();
+                .expect("Failed to add gradient");
 
         ctx.append_output(r0);
         ctx.append_output(r1);

@@ -42,7 +42,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> M
         self.num_batches = 0;
     fn result(&self) -> F {
         if self.num_batches > 0 {
-            self.total_loss / F::from(self.num_batches).unwrap()
+            self.total_loss / F::from(self.num_batches).expect("Failed to convert to float")
         } else {
             F::zero()
     fn name(&self) -> &str {
@@ -71,13 +71,13 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> A
             let total_classes = preds.len() / batch_size;
             preds
                 .into_shape_with_order(IxDyn(&[batch_size, total_classes]))
-                .unwrap()
+                .expect("Operation failed")
                 .into_dimensionality::<Ix2>()
         } else if preds.ndim() == 1 {
             // Binary classification with single output
                 .clone()
                 .into_shape_with_order(IxDyn(&[preds.len(), 1]))
-            preds.into_dimensionality::<Ix2>().unwrap()
+            preds.into_dimensionality::<Ix2>().expect("Operation failed")
         };
         let targets_2d = if targets.ndim() > 2 {
             let batch_size = targets.shape()[0];
@@ -85,7 +85,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> A
             targets
         } else if targets.ndim() == 1 {
                 .into_shape_with_order(IxDyn(&[targets.len(), 1]))
-            targets.into_dimensionality::<Ix2>().unwrap()
+            targets.into_dimensionality::<Ix2>().expect("Operation failed")
         // Get predicted classes (argmax along class dimension)
         let pred_classes = preds_2d.map_axis(Axis(1), |row| {
             let mut max_idx = 0;
@@ -96,7 +96,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> A
                     max_val = val;
                 }
             }
-            F::from(max_idx).unwrap()
+            F::from(max_idx).expect("Failed to convert to float")
         });
         // Get target classes (argmax for one-hot, direct for class indices)
         let target_classes = if targets_2d.shape()[1] > 1 {
@@ -109,19 +109,19 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> A
                         max_idx = i;
                         max_val = val;
                     }
-                F::from(max_idx).unwrap()
+                F::from(max_idx).expect("Failed to convert to float")
             })
             // Direct class indices
             targets_2d.index_axis(Axis(1), 0).to_owned()
         // Count correct predictions
         for (pred, target) in pred_classes.iter().zip(target_classes.iter()) {
-            if (*pred - *target).abs() < F::from(1e-6).unwrap() {
+            if (*pred - *target).abs() < F::from(1e-6).expect("Failed to convert constant to float") {
                 self.correct += 1;
         self.total += pred_classes.len();
         self.correct = 0;
         self.total = 0;
         if self.total > 0 {
-            F::from(self.correct as f64 / self.total as f64).unwrap()
+            F::from(self.correct as f64 / self.total as f64).expect("Failed to convert to float")
         "accuracy"
 /// Precision metric for classification tasks
 pub struct PrecisionMetric<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync>
@@ -136,7 +136,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> P
     /// Create a new precision metric
             tp: 0,
             fp: 0,
-            threshold: F::from(0.5).unwrap(),
+            threshold: F::from(0.5).expect("Failed to convert constant to float"),
     /// Create a new precision metric with a custom threshold
     pub fn with_threshold(threshold: F) -> Self {
             threshold,
@@ -147,7 +147,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> P
                     predictions
                         .clone()
                         .into_shape_with_order(IxDyn(&[predictions.len(), 1]))
-                        .unwrap()
+                        .expect("Operation failed")
                         .into_dimensionality::<Ix2>()
                 });
             let targets = targets
@@ -156,7 +156,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> P
             // Apply threshold
             for (pred, target) in preds.iter().zip(targets.iter()) {
                 let pred_class = if *pred >= self.threshold { 1 } else { 0 };
-                let target_class = if *target >= F::from(0.5).unwrap() {
+                let target_class = if *target >= F::from(0.5).expect("Failed to convert constant to float") {
                     1
                 } else {
                     0
@@ -174,16 +174,16 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> P
                 let total_classes = preds.len() / batch_size;
                 preds
                     .into_shape_with_order(IxDyn(&[batch_size, total_classes]))
-                    .unwrap()
+                    .expect("Operation failed")
                     .into_dimensionality::<Ix2>()
             } else {
-                preds.into_dimensionality::<Ix2>().unwrap()
+                preds.into_dimensionality::<Ix2>().expect("Operation failed")
             };
             let targets_2d = if targets.ndim() > 2 {
                 let batch_size = targets.shape()[0];
                 let total_classes = targets.len() / batch_size;
                 targets
-                targets.into_dimensionality::<Ix2>().unwrap()
+                targets.into_dimensionality::<Ix2>().expect("Operation failed")
             // Get predicted classes (argmax along class dimension)
             let pred_classes = preds_2d.map_axis(Axis(1), |row| {
                 max_idx
@@ -218,7 +218,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> P
         self.tp = 0;
         self.fp = 0;
         if self.tp + self.fp > 0 {
-            F::from(self.tp as f64 / (self.tp + self.fp) as f64).unwrap()
+            F::from(self.tp as f64 / (self.tp + self.fp) as f64).expect("Operation failed")
         "precision"
 /// Recall metric for classification tasks
 pub struct RecallMetric<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> {
@@ -236,7 +236,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> R
                         self.fn_ += 1;
         self.fn_ = 0;
         if self.tp + self.fn_ > 0 {
-            F::from(self.tp as f64 / (self.tp + self.fn_) as f64).unwrap()
+            F::from(self.tp as f64 / (self.tp + self.fn_) as f64).expect("Operation failed")
         "recall"
 /// F1 score metric for classification tasks
 pub struct F1ScoreMetric<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> {
@@ -259,7 +259,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> F
         let precision = self.precision.result();
         let recall = self.recall.result();
         if precision + recall > F::zero() {
-            let two = F::from(2.0).unwrap();
+            let two = F::from(2.0).expect("Failed to convert constant to float");
             (two * precision * recall) / (precision + recall)
         "f1_score"
 /// Mean squared error metric for regression tasks
@@ -280,9 +280,9 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync>
         let preds_flat = predictions
             .clone()
             .into_shape_with_order(IxDyn(&[predictions.len()]))
-            .unwrap()
+            .expect("Operation failed")
             .into_dimensionality::<Ix1>()
-            .unwrap();
+            .expect("Operation failed");
         let targets_flat = targets
             .into_shape_with_order(IxDyn(&[targets.len()]))
         // Compute squared error
@@ -293,7 +293,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync>
         self.sum_squared_error = F::zero();
         self.count = 0;
         if self.count > 0 {
-            self.sum_squared_error / F::from(self.count).unwrap()
+            self.sum_squared_error / F::from(self.count).expect("Failed to convert to float")
         "mean_squared_error"
 /// Mean absolute error metric for regression tasks
 pub struct MeanAbsoluteErrorMetric<
@@ -307,7 +307,7 @@ pub struct MeanAbsoluteErrorMetric<
             let error = (*pred - *target).abs();
             self.sum_absolute_error = self.sum_absolute_error + error;
         self.sum_absolute_error = F::zero();
-            self.sum_absolute_error / F::from(self.count).unwrap()
+            self.sum_absolute_error / F::from(self.count).expect("Failed to convert to float")
         "mean_absolute_error"
 /// R-squared metric for regression tasks
 pub struct RSquaredMetric<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync>
@@ -328,7 +328,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> R
             let mut sum = F::zero();
             for &target in targets_flat.iter() {
                 sum = sum + target;
-            self.mean = sum / F::from(targets_flat.len()).unwrap();
+            self.mean = sum / F::from(targets_flat.len()).expect("Operation failed");
             self.first_update = false;
         // Compute squared error and total
             let diff_from_mean = *target - self.mean;
@@ -362,7 +362,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> A
             .zip(self.labels.iter().cloned())
             .collect();
         // Sort by score in descending order
-        pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
         // Count positive and negative samples
         let num_pos = self.labels.iter().filter(|&&l| l > F::zero()).count();
         let num_neg = self.labels.len() - num_pos;
@@ -372,13 +372,13 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> A
         let mut pos_count = 0;
         for (i, (_, label)) in pairs.iter().enumerate() {
             if *label > F::zero() {
-                sum_ranks = sum_ranks + F::from(i + 1).unwrap();
+                sum_ranks = sum_ranks + F::from(i + 1).expect("Failed to convert to float");
                 pos_count += 1;
-        let pos_count = F::from(pos_count).unwrap();
-        let num_pos = F::from(num_pos).unwrap();
-        let num_neg = F::from(num_neg).unwrap();
+        let pos_count = F::from(pos_count).expect("Failed to convert to float");
+        let num_pos = F::from(num_pos).expect("Failed to convert to float");
+        let num_neg = F::from(num_neg).expect("Failed to convert to float");
         // Calculate AUC
-        (sum_ranks - (pos_count * (pos_count + F::one())) / F::from(2.0).unwrap())
+        (sum_ranks - (pos_count * (pos_count + F::one())) / F::from(2.0).expect("Failed to convert constant to float"))
             / (num_pos * num_neg)
         // Handle binary classification
         let preds = if predictions.ndim() == 2 && predictions.shape()[1] == 2 {

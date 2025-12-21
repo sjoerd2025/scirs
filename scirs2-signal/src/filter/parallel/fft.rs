@@ -430,7 +430,7 @@ mod tests {
 
         let result = parallel_fft_filter(&signal, &impulse_response, Some(256));
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.len(), signal.len());
     }
 
@@ -448,7 +448,7 @@ mod tests {
 
         let result = parallel_fft_filter_design(&frequency_response, 16, "hamming");
         assert!(result.is_ok());
-        let coefficients = result.unwrap();
+        let coefficients = result.expect("Operation failed");
         assert_eq!(coefficients.len(), 16);
     }
 
@@ -459,7 +459,7 @@ mod tests {
 
         let result = parallel_overlap_add_convolution(&signal, &kernel, 8);
         assert!(result.is_ok());
-        let convolved = result.unwrap();
+        let convolved = result.expect("Operation failed");
         assert_eq!(convolved.len(), signal.len() + kernel.len() - 1);
     }
 
@@ -470,7 +470,7 @@ mod tests {
 
         let result = parallel_overlap_save_convolution(&signal, &kernel, 4);
         assert!(result.is_ok());
-        let convolved = result.unwrap();
+        let convolved = result.expect("Operation failed");
         assert_eq!(convolved.len(), signal.len());
     }
 

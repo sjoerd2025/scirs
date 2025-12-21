@@ -17,7 +17,7 @@ fn main() {
     }
 
     // Convert to complex spectrum with ihfft, using "backward" normalization
-    let spectrum = ihfft(&signal, None, Some("backward")).unwrap();
+    let spectrum = ihfft(&signal, None, Some("backward")).expect("Operation failed");
 
     println!("\nComplex spectrum (Hermitian-symmetric):");
     for (i, val) in spectrum.iter().enumerate() {

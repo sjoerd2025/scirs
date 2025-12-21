@@ -301,7 +301,7 @@ impl PerformanceCounter for LinuxPerfCounter {
             // For now, simulate with a dummy file descriptor
             let fd = 42; // Would be actual fd from perf_event_open
 
-            let mut counters = self.active_counters.write().unwrap();
+            let mut counters = self.active_counters.write().expect("Operation failed");
             counters.insert(countertype.clone(), fd);
 
             Ok(())
@@ -311,7 +311,7 @@ impl PerformanceCounter for LinuxPerfCounter {
     }
 
     fn stop_counter(&self, countertype: &CounterType) -> CoreResult<()> {
-        let mut counters = self.active_counters.write().unwrap();
+        let mut counters = self.active_counters.write().expect("Operation failed");
         if let Some(fd) = counters.remove(countertype) {
             // In real implementation: close(fd)
             let _ = fd;
@@ -322,7 +322,7 @@ impl PerformanceCounter for LinuxPerfCounter {
     }
 
     fn read_counter(&self, countertype: &CounterType) -> CoreResult<CounterValue> {
-        let counters = self.active_counters.read().unwrap();
+        let counters = self.active_counters.read().expect("Operation failed");
         if let Some(_fd) = counters.get(countertype) {
             // In real implementation: read() from fd
             // For now, return a mock value
@@ -354,7 +354,7 @@ impl PerformanceCounter for LinuxPerfCounter {
     }
 
     fn reset_counter(&self, countertype: &CounterType) -> CoreResult<()> {
-        let counters = self.active_counters.read().unwrap();
+        let counters = self.active_counters.read().expect("Operation failed");
         if counters.contains_key(countertype) {
             // In real implementation: ioctl(fd, PERF_EVENT_IOC_RESET, 0)
             Ok(())
@@ -364,7 +364,7 @@ impl PerformanceCounter for LinuxPerfCounter {
     }
 
     fn is_overflowed(&self, countertype: &CounterType) -> CoreResult<bool> {
-        let counters = self.active_counters.read().unwrap();
+        let counters = self.active_counters.read().expect("Operation failed");
         if counters.contains_key(countertype) {
             // In real implementation: check overflow bit from perf_event read
             // For now, always return false (not overflowed)
@@ -427,7 +427,7 @@ impl PerformanceCounter for WindowsPdhCounter {
     fn start_counter(&self, countertype: &CounterType) -> CoreResult<()> {
         if let Some(path) = Self::counter_to_path(countertype) {
             // In real implementation: PDH API calls
-            let mut counters = self.active_counters.write().unwrap();
+            let mut counters = self.active_counters.write().expect("Operation failed");
             counters.insert(countertype.clone(), path);
             Ok(())
         } else {
@@ -436,7 +436,7 @@ impl PerformanceCounter for WindowsPdhCounter {
     }
 
     fn stop_counter(&self, countertype: &CounterType) -> CoreResult<()> {
-        let mut counters = self.active_counters.write().unwrap();
+        let mut counters = self.active_counters.write().expect("Operation failed");
         if counters.remove(countertype).is_some() {
             Ok(())
         } else {
@@ -445,7 +445,7 @@ impl PerformanceCounter for WindowsPdhCounter {
     }
 
     fn read_counter(&self, countertype: &CounterType) -> CoreResult<CounterValue> {
-        let counters = self.active_counters.read().unwrap();
+        let counters = self.active_counters.read().expect("Operation failed");
         if counters.contains_key(countertype) {
             // Mock values for Windows
             let mock_value = match countertype {
@@ -529,7 +529,7 @@ impl PerformanceCounter for MacOSCounter {
 
     fn start_counter(&self, countertype: &CounterType) -> CoreResult<()> {
         if self.is_available(countertype) {
-            let mut counters = self.active_counters.write().unwrap();
+            let mut counters = self.active_counters.write().expect("Operation failed");
             counters.insert(countertype.clone(), true);
             Ok(())
         } else {
@@ -538,7 +538,7 @@ impl PerformanceCounter for MacOSCounter {
     }
 
     fn stop_counter(&self, countertype: &CounterType) -> CoreResult<()> {
-        let mut counters = self.active_counters.write().unwrap();
+        let mut counters = self.active_counters.write().expect("Operation failed");
         if counters.remove(countertype).is_some() {
             Ok(())
         } else {
@@ -547,7 +547,7 @@ impl PerformanceCounter for MacOSCounter {
     }
 
     fn read_counter(&self, countertype: &CounterType) -> CoreResult<CounterValue> {
-        let counters = self.active_counters.read().unwrap();
+        let counters = self.active_counters.read().expect("Operation failed");
         if counters.contains_key(countertype) {
             // Mock values for macOS
             let mock_value = match countertype {
@@ -640,7 +640,7 @@ impl HardwareCounterManager {
         }
 
         // Register session
-        let mut sessions = self.session_counters.write().unwrap();
+        let mut sessions = self.session_counters.write().expect("Operation failed");
         sessions.insert(sessionname.to_string(), counters);
 
         Ok(())
@@ -648,7 +648,7 @@ impl HardwareCounterManager {
 
     /// Stop a profiling session
     pub fn stop_session(&self, sessionname: &str) -> CoreResult<()> {
-        let mut sessions = self.session_counters.write().unwrap();
+        let mut sessions = self.session_counters.write().expect("Operation failed");
 
         if let Some(counters) = sessions.remove(sessionname) {
             for counter in &counters {
@@ -665,7 +665,7 @@ impl HardwareCounterManager {
 
     /// Sample all active counters
     pub fn sample_counters(&self) -> CoreResult<HashMap<CounterType, CounterValue>> {
-        let sessions = self.session_counters.read().unwrap();
+        let sessions = self.session_counters.read().expect("Operation failed");
         let active_counters: Vec<CounterType> = sessions
             .values()
             .flat_map(|counters| counters.iter())
@@ -677,7 +677,7 @@ impl HardwareCounterManager {
         let values = self.backend.read_counters(&active_counters)?;
 
         // Store in history
-        let mut history = self.counter_history.write().unwrap();
+        let mut history = self.counter_history.write().expect("Operation failed");
         for value in &values {
             let counter_history = history.entry(value.countertype.clone()).or_default();
 
@@ -700,7 +700,7 @@ impl HardwareCounterManager {
 
     /// Get counter history
     pub fn get_counter_history(&self, countertype: &CounterType) -> Vec<CounterValue> {
-        let history = self.counter_history.read().unwrap();
+        let history = self.counter_history.read().expect("Operation failed");
         history.get(countertype).cloned().unwrap_or_default()
     }
 
@@ -753,7 +753,7 @@ impl HardwareCounterManager {
 
     /// Generate performance report
     pub fn generate_report(&self, sessionname: &str) -> PerformanceReport {
-        let sessions = self.session_counters.read().unwrap();
+        let sessions = self.session_counters.read().expect("Operation failed");
         let counters = sessions.get(sessionname).cloned().unwrap_or_default();
 
         let current_values = self.sample_counters().unwrap_or_default();
@@ -928,7 +928,7 @@ pub mod utils {
     /// Start monitoring basic CPU performance counters
     pub fn start_basic_cpumonitoring(sessionname: &str) -> CoreResult<()> {
         let manager = global_manager();
-        let manager = manager.lock().unwrap();
+        let manager = manager.lock().expect("Operation failed");
 
         let counters = vec![
             CounterType::CpuCycles,
@@ -943,7 +943,7 @@ pub mod utils {
     /// Start monitoring cache performance
     pub fn start_cachemonitoring(sessionname: &str) -> CoreResult<()> {
         let manager = global_manager();
-        let manager = manager.lock().unwrap();
+        let manager = manager.lock().expect("Operation failed");
 
         let counters = vec![
             CounterType::L1DCacheLoads,
@@ -960,14 +960,14 @@ pub mod utils {
     /// Get a quick performance snapshot
     pub fn get_performance_snapshot() -> CoreResult<HashMap<CounterType, CounterValue>> {
         let manager = global_manager();
-        let manager = manager.lock().unwrap();
+        let manager = manager.lock().expect("Operation failed");
         manager.sample_counters()
     }
 
     /// Check if hardware performance counters are available
     pub fn counters_available() -> bool {
         let manager = global_manager();
-        let manager = manager.lock().unwrap();
+        let manager = manager.lock().expect("Operation failed");
         !manager.available_counters().is_empty()
     }
 }

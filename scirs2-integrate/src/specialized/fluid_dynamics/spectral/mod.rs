@@ -45,7 +45,7 @@
 //! let initial_vorticity = solver.initialize_taylor_green_vortex_2d();
 //!
 //! // Solve for time evolution
-//! let solution = solver.solve_2d_spectral(&initial_vorticity, 1.0).unwrap();
+//! let solution = solver.solve_2d_spectral(&initial_vorticity, 1.0).expect("Operation failed");
 //! ```
 //!
 //! # Advantages of Spectral Methods
@@ -129,14 +129,14 @@ mod tests {
         // Test FFT operations work with solver
         let field = Array2::ones((8, 8));
 
-        let field_hat = FFTOperations::fft_2d_forward(&field).unwrap();
+        let field_hat = FFTOperations::fft_2d_forward(&field).expect("Operation failed");
         assert_eq!(field_hat.dim(), (8, 8));
 
-        let recovered = FFTOperations::fft_2d_backward(&field_hat).unwrap();
+        let recovered = FFTOperations::fft_2d_backward(&field_hat).expect("Operation failed");
         assert_eq!(recovered.dim(), (8, 8));
 
         // Test energy spectrum
-        let spectrum = FFTOperations::compute_energy_spectrum_2d(&field).unwrap();
+        let spectrum = FFTOperations::compute_energy_spectrum_2d(&field).expect("Operation failed");
         assert!(!spectrum.is_empty());
     }
 
@@ -147,7 +147,7 @@ mod tests {
 
         let dealiased =
             DealiasingOperations::apply_dealiasing_2d(&field, DealiasingStrategy::TwoThirds)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(dealiased.dim(), field.dim());
 
         // Test strategy recommendation

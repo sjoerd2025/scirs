@@ -557,12 +557,12 @@ impl TPURuntime {
     fn parse_tpu_config(_tpuname: &str) -> Result<(TPUGeneration, u32)> {
         // Parse names like "v4-8", "v3-32", etc.
         if let Some(caps) = regex::Regex::new(r"v(\d+)-(\d+)")
-            .unwrap()
+            .expect("Operation failed")
             .captures(_tpu_name)
         {
-            let version = caps.get(1).unwrap().as_str();
+            let version = caps.get(1).expect("Operation failed").as_str();
             let cores =
-                caps.get(2).unwrap().as_str().parse::<u32>().map_err(|_| {
+                caps.get(2).expect("Operation failed").as_str().parse::<u32>().map_err(|_| {
                     NeuralError::InvalidArgument("Invalid TPU core count".to_string())
                 })?;
             let generation = match version {
@@ -784,7 +784,7 @@ impl TPURuntime {
             "prog_{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_nanos()
         )
     /// Generate unique task ID
@@ -1086,7 +1086,7 @@ impl TPUMemoryPool {
                 self.total_size - self.allocated_size
             ))
         })?;
-        let mut free_block = self.free_blocks.remove(block_index).unwrap();
+        let mut free_block = self.free_blocks.remove(block_index).expect("Operation failed");
         // Create allocated block
         let allocated_block = MemoryBlock {
             offset: free_block.offset,

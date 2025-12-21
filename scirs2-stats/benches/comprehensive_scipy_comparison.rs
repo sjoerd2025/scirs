@@ -38,19 +38,19 @@ mod data_generators {
 
     pub fn normal(n: usize, mean: f64, std: f64) -> Array1<f64> {
         let mut rng = thread_rng();
-        let normal = Normal::new(mean, std).unwrap();
+        let normal = Normal::new(mean, std).expect("Operation failed");
         Array1::from_shape_fn(n, |_| rng.sample(normal))
     }
 
     pub fn uniform(n: usize, low: f64, high: f64) -> Array1<f64> {
         let mut rng = thread_rng();
-        let uniform = Uniform::new(low, high).unwrap();
+        let uniform = Uniform::new(low, high).expect("Operation failed");
         Array1::from_shape_fn(n, |_| rng.sample(uniform))
     }
 
     pub fn exponential(n: usize, lambda: f64) -> Array1<f64> {
         let mut rng = thread_rng();
-        let exp = Exponential::new(lambda).unwrap();
+        let exp = Exponential::new(lambda).expect("Operation failed");
         Array1::from_shape_fn(n, |_| rng.sample(exp))
     }
 
@@ -228,7 +228,7 @@ fn bench_distributions(c: &mut Criterion) {
         let x = data_generators::uniform(n, -3.0, 3.0);
 
         // Normal distribution
-        let normal = distributions::Normal::new(0.0, 1.0).unwrap();
+        let normal = distributions::Normal::new(0.0, 1.0).expect("Operation failed");
         group.bench_with_input(BenchmarkId::new("normal_pdf", n), &x, |b, x| {
             b.iter(|| {
                 for &xi in x.iter() {
@@ -246,7 +246,7 @@ fn bench_distributions(c: &mut Criterion) {
         });
 
         // Student's t distribution
-        let t_dist = distributions::StudentT::new(10.0, 0.0, 1.0).unwrap();
+        let t_dist = distributions::StudentT::new(10.0, 0.0, 1.0).expect("Operation failed");
         group.bench_with_input(BenchmarkId::new("t_pdf", n), &x, |b, x| {
             b.iter(|| {
                 for &xi in x.iter() {
@@ -256,7 +256,7 @@ fn bench_distributions(c: &mut Criterion) {
         });
 
         // Chi-square distribution
-        let chi2 = distributions::ChiSquare::new(5.0, 0.0, 1.0).unwrap();
+        let chi2 = distributions::ChiSquare::new(5.0, 0.0, 1.0).expect("Operation failed");
         let x_positive = data_generators::uniform(n, 0.1, 10.0);
         group.bench_with_input(BenchmarkId::new("chi2_pdf", n), &x_positive, |b, x| {
             b.iter(|| {
@@ -417,7 +417,10 @@ fn bench_random_sampling(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let mut rng = scirs2_core::random::rng();
-                    black_box(random::choice(&data.view(), 100.min(n), true, None, None).unwrap())
+                    black_box(
+                        random::choice(&data.view(), 100.min(n), true, None, None)
+                            .expect("Operation failed"),
+                    )
                 })
             },
         );
@@ -431,7 +434,8 @@ fn bench_random_sampling(c: &mut Criterion) {
                     b.iter(|| {
                         let mut rng = scirs2_core::random::rng();
                         black_box(
-                            random::choice(&data.view(), 100.min(n), false, None, None).unwrap(),
+                            random::choice(&data.view(), 100.min(n), false, None, None)
+                                .expect("Operation failed"),
                         )
                     })
                 },

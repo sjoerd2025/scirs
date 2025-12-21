@@ -84,7 +84,7 @@ where
         .iter()
         .map(|&r| scirs2_core::numeric::Float::powi(r, 2))
         .sum::<F>()
-        / F::from(df).unwrap();
+        / F::from(df).expect("Failed to convert to float");
 
     // Calculate X'X
     let xtx = x.t().dot(x);
@@ -117,7 +117,7 @@ where
         .zip(stderrors.iter())
         .map(|(&coef, &se)| {
             if se < F::epsilon() {
-                F::from(1e10).unwrap() // Large t-value for small standard error
+                F::from(1e10).expect("Failed to convert constant to float") // Large t-value for small standard error
             } else {
                 coef / se
             }
@@ -187,7 +187,7 @@ where
     // Get median slope
     let mid = slopes.len() / 2;
     if slopes.len() % 2 == 0 && !slopes.is_empty() {
-        (slopes[mid - 1] + slopes[mid]) / F::from(2.0).unwrap()
+        (slopes[mid - 1] + slopes[mid]) / F::from(2.0).expect("Failed to convert constant to float")
     } else if !slopes.is_empty() {
         slopes[mid]
     } else {
@@ -205,30 +205,31 @@ where
 
     // Handle edge cases
     let p = p
-        .min(F::from(0.9999).unwrap())
-        .max(F::from(0.0001).unwrap());
+        .min(F::from(0.9999).expect("Failed to convert constant to float"))
+        .max(F::from(0.0001).expect("Failed to convert constant to float"));
 
     // Constants for Abramowitz and Stegun formula
     let a = [
-        F::from(2.515517).unwrap(),
-        F::from(0.802853).unwrap(),
-        F::from(0.010328).unwrap(),
+        F::from(2.515517).expect("Failed to convert constant to float"),
+        F::from(0.802853).expect("Failed to convert constant to float"),
+        F::from(0.010328).expect("Failed to convert constant to float"),
     ];
 
     let b = [
-        F::from(1.432788).unwrap(),
-        F::from(0.189269).unwrap(),
-        F::from(0.001308).unwrap(),
+        F::from(1.432788).expect("Failed to convert constant to float"),
+        F::from(0.189269).expect("Failed to convert constant to float"),
+        F::from(0.001308).expect("Failed to convert constant to float"),
     ];
 
     // Calculate intermediate values
-    let p_adj = if p <= F::from(0.5).unwrap() {
+    let p_adj = if p <= F::from(0.5).expect("Failed to convert constant to float") {
         p
     } else {
         F::one() - p
     };
     let t = scirs2_core::numeric::Float::sqrt(
-        -F::from(2.0).unwrap() * scirs2_core::numeric::Float::ln(p_adj),
+        -F::from(2.0).expect("Failed to convert constant to float")
+            * scirs2_core::numeric::Float::ln(p_adj),
     );
 
     // Apply Abramowitz and Stegun approximation
@@ -240,7 +241,7 @@ where
                 + b[2] * scirs2_core::numeric::Float::powi(t, 3));
 
     // Adjust sign for p > 0.5
-    if p <= F::from(0.5).unwrap() {
+    if p <= F::from(0.5).expect("Failed to convert constant to float") {
         -v
     } else {
         v
@@ -266,7 +267,8 @@ where
 
     let mid = n / 2;
     if n.is_multiple_of(2) {
-        (sorted_abs_x[mid - 1] + sorted_abs_x[mid]) / F::from(2.0).unwrap()
+        (sorted_abs_x[mid - 1] + sorted_abs_x[mid])
+            / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         sorted_abs_x[mid]
     }
@@ -314,7 +316,7 @@ where
     F: Float + std::iter::Sum<F> + 'static + std::fmt::Display,
 {
     let n = y.len();
-    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
 
     // Total sum of squares
     let ss_total = y

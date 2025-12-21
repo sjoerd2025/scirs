@@ -174,7 +174,7 @@ fn wright_bessel_complex_asymptotic(
 ///
 /// // Wright Bessel function with rho=1, beta=1 at z=1
 /// // This equals J_0(2) where J_0 is the ordinary Bessel function
-/// let result = wright_bessel(1.0, 1.0, 1.0).unwrap();
+/// let result = wright_bessel(1.0, 1.0, 1.0).expect("Operation failed");
 /// assert!((result - 0.2239).abs() < 1e-4);
 /// ```
 #[allow(dead_code)]
@@ -863,15 +863,15 @@ mod tests {
     #[test]
     fn test_wright_bessel_special_cases() {
         // For z=0, beta=1, the result should be 1/Gamma(1) = 1
-        let result = wright_bessel(1.0, 1.0, 0.0).unwrap();
+        let result = wright_bessel(1.0, 1.0, 0.0).expect("Operation failed");
         assert_relative_eq!(result, 1.0, epsilon = 1e-10);
 
         // For z=0, beta=2, the result should be 1/Gamma(2) = 1/1 = 1
-        let result = wright_bessel(1.0, 2.0, 0.0).unwrap();
+        let result = wright_bessel(1.0, 2.0, 0.0).expect("Operation failed");
         assert_relative_eq!(result, 1.0, epsilon = 1e-10);
 
         // For z=0, beta=3, the result should be 1/Gamma(3) = 1/2! = 0.5
-        let result = wright_bessel(1.0, 3.0, 0.0).unwrap();
+        let result = wright_bessel(1.0, 3.0, 0.0).expect("Operation failed");
         assert_relative_eq!(result, 0.5, epsilon = 1e-10);
     }
 
@@ -882,9 +882,15 @@ mod tests {
         assert!(wright_bessel(-1.0, 1.0, 1.0).is_err());
 
         // Test with NaN parameters
-        assert!(wright_bessel(1.0, 1.0, f64::NAN).unwrap().is_nan());
-        assert!(wright_bessel(1.0, f64::NAN, 1.0).unwrap().is_nan());
-        assert!(wright_bessel(f64::NAN, 1.0, 1.0).unwrap().is_nan());
+        assert!(wright_bessel(1.0, 1.0, f64::NAN)
+            .expect("Operation failed")
+            .is_nan());
+        assert!(wright_bessel(1.0, f64::NAN, 1.0)
+            .expect("Operation failed")
+            .is_nan());
+        assert!(wright_bessel(f64::NAN, 1.0, 1.0)
+            .expect("Operation failed")
+            .is_nan());
     }
 
     #[test]
@@ -892,20 +898,20 @@ mod tests {
         use scirs2_core::numeric::Complex64;
 
         // For z=0, beta=1, the result should be 1/Gamma(1) = 1
-        let result =
-            wright_bessel_complex(1.0, Complex64::new(1.0, 0.0), Complex64::new(0.0, 0.0)).unwrap();
+        let result = wright_bessel_complex(1.0, Complex64::new(1.0, 0.0), Complex64::new(0.0, 0.0))
+            .expect("Operation failed");
         assert_relative_eq!(result.re, 1.0, epsilon = 1e-10);
         assert_relative_eq!(result.im, 0.0, epsilon = 1e-10);
 
         // For z=0, beta=2, the result should be 1/Gamma(2) = 1
-        let result =
-            wright_bessel_complex(1.0, Complex64::new(2.0, 0.0), Complex64::new(0.0, 0.0)).unwrap();
+        let result = wright_bessel_complex(1.0, Complex64::new(2.0, 0.0), Complex64::new(0.0, 0.0))
+            .expect("Operation failed");
         assert_relative_eq!(result.re, 1.0, epsilon = 1e-10);
         assert_relative_eq!(result.im, 0.0, epsilon = 1e-10);
 
         // Test with complex beta and z=0
-        let result =
-            wright_bessel_complex(1.0, Complex64::new(1.0, 0.5), Complex64::new(0.0, 0.0)).unwrap();
+        let result = wright_bessel_complex(1.0, Complex64::new(1.0, 0.5), Complex64::new(0.0, 0.0))
+            .expect("Operation failed");
         assert!(result.re.is_finite());
         assert!(result.im.is_finite());
     }
@@ -926,7 +932,7 @@ mod tests {
         // Test with NaN parameters
         let result =
             wright_bessel_complex(1.0, Complex64::new(1.0, 0.0), Complex64::new(f64::NAN, 0.0))
-                .unwrap();
+                .expect("Operation failed");
         assert!(result.re.is_nan());
         assert!(result.im.is_nan());
     }
@@ -940,7 +946,7 @@ mod tests {
                 assert!(zeros[0] > 0.0);
 
                 // Verify it's actually close to a zero
-                let verification = wright_bessel(1.0, 1.0, zeros[0]).unwrap();
+                let verification = wright_bessel(1.0, 1.0, zeros[0]).expect("Operation failed");
                 assert!(verification.abs() < 1e-8);
             }
             Err(_) => {

@@ -186,7 +186,11 @@ impl QuantumInspiredOptimizer {
             return ConvergenceMetrics::default();
         }
 
-        let current_value = self.optimization_history.last().unwrap().objective_value;
+        let current_value = self
+            .optimization_history
+            .last()
+            .expect("Operation failed")
+            .objective_value;
         let best_value = self
             .optimization_history
             .iter()
@@ -256,14 +260,14 @@ mod tests {
         let optimizer = QuantumInspiredOptimizer::new(10);
         assert!(optimizer.is_ok());
 
-        let opt = optimizer.unwrap();
+        let opt = optimizer.expect("Operation failed");
         assert_eq!(opt.get_parameters().len(), 10);
         assert_eq!(opt.get_history().len(), 0);
     }
 
     #[test]
     fn test_optimization_step() {
-        let mut optimizer = QuantumInspiredOptimizer::new(2).unwrap();
+        let mut optimizer = QuantumInspiredOptimizer::new(2).expect("Operation failed");
 
         // Simple quadratic function: f(x) = x^2 + y^2
         let objective = |params: &[f64]| params.iter().map(|x| x.powi(2)).sum();
@@ -271,7 +275,7 @@ mod tests {
         let step = optimizer.optimize_step(&objective, 0.01);
         assert!(step.is_ok());
 
-        let step = step.unwrap();
+        let step = step.expect("Operation failed");
         assert_eq!(step.step, 0);
         assert_eq!(step.parameters.len(), 2);
         assert!(step.objective_value >= 0.0);
@@ -279,7 +283,7 @@ mod tests {
 
     #[test]
     fn test_entanglement_pattern() {
-        let mut optimizer = QuantumInspiredOptimizer::new(4).unwrap();
+        let mut optimizer = QuantumInspiredOptimizer::new(4).expect("Operation failed");
 
         let result = optimizer.add_entanglement(vec![0, 1], 0.5, EntanglementType::Bipartite);
         assert!(result.is_ok());
@@ -288,7 +292,7 @@ mod tests {
 
     #[test]
     fn test_convergence_metrics() {
-        let optimizer = QuantumInspiredOptimizer::new(2).unwrap();
+        let optimizer = QuantumInspiredOptimizer::new(2).expect("Operation failed");
         let metrics = optimizer.get_convergence_metrics();
 
         // Empty optimizer should have default metrics

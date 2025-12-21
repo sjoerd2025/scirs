@@ -428,7 +428,7 @@ pub fn validate_numerical_robustness_extreme() -> SignalResult<NumericalRobustne
             // Check if main frequency is still detectable
             let peak_freq_idx = power.iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(i, _)| i)
                 .unwrap_or(0);
             let detected_freq = freqs[peak_freq_idx];

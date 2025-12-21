@@ -854,15 +854,17 @@ mod tests {
         let registry = UnitRegistry::new();
 
         // Meter to kilometer
-        let result = registry.convert(1000.0, "m", "km").unwrap();
+        let result = registry
+            .convert(1000.0, "m", "km")
+            .expect("Operation failed");
         assert!((result - 1.0).abs() < 1e-10);
 
         // Meter to foot
-        let result = registry.convert(1.0, "m", "ft").unwrap();
+        let result = registry.convert(1.0, "m", "ft").expect("Operation failed");
         assert!((result - 3.280_839_895).abs() < 1e-6);
 
         // Inch to centimeter
-        let result = registry.convert(1.0, "in", "cm").unwrap();
+        let result = registry.convert(1.0, "in", "cm").expect("Operation failed");
         assert!((result - 2.54).abs() < 1e-10);
     }
 
@@ -871,15 +873,17 @@ mod tests {
         let registry = UnitRegistry::new();
 
         // Celsius to Kelvin
-        let result = registry.convert(0.0, "°C", "K").unwrap();
+        let result = registry.convert(0.0, "°C", "K").expect("Operation failed");
         assert!((result - 273.15).abs() < 1e-10);
 
         // Fahrenheit to Celsius
-        let result = registry.convert(32.0, "°F", "°C").unwrap();
+        let result = registry
+            .convert(32.0, "°F", "°C")
+            .expect("Operation failed");
         assert!((result - 0.0).abs() < 1e-10);
 
         // Fahrenheit to Kelvin
-        let result = registry.convert(32.0, "°F", "K").unwrap();
+        let result = registry.convert(32.0, "°F", "K").expect("Operation failed");
         assert!((result - 273.15).abs() < 1e-10);
     }
 
@@ -888,13 +892,15 @@ mod tests {
         let registry = UnitRegistry::new();
 
         // Degrees to radians
-        let result = registry.convert(180.0, "°", "rad").unwrap();
+        let result = registry
+            .convert(180.0, "°", "rad")
+            .expect("Operation failed");
         assert!((result - std::f64::consts::PI).abs() < 1e-10);
 
         // Radians to degrees
         let result = registry
             .convert(std::f64::consts::PI / 2.0, "rad", "°")
-            .unwrap();
+            .expect("Operation failed");
         assert!((result - 90.0).abs() < 1e-10);
     }
 
@@ -903,11 +909,13 @@ mod tests {
         let registry = UnitRegistry::new();
 
         // Joules to calories
-        let result = registry.convert(4.184, "J", "cal").unwrap();
+        let result = registry
+            .convert(4.184, "J", "cal")
+            .expect("Operation failed");
         assert!((result - 1.0).abs() < 1e-10);
 
         // eV to Joules
-        let result = registry.convert(1.0, "eV", "J").unwrap();
+        let result = registry.convert(1.0, "eV", "J").expect("Operation failed");
         assert!((result - 1.602_176_634e-19).abs() < 1e-25);
     }
 
@@ -927,7 +935,9 @@ mod tests {
         let registry = UnitRegistry::new();
         let value = UnitValue::new(1000.0, "m".to_string());
 
-        let converted: UnitValue<f64> = registry.convert_value(&value, "km").unwrap();
+        let converted: UnitValue<f64> = registry
+            .convert_value(&value, "km")
+            .expect("Operation failed");
         assert!((converted.value() - 1.0).abs() < 1e-10);
         assert_eq!(converted.unit(), "km");
     }
@@ -971,7 +981,7 @@ mod tests {
 
     #[test]
     fn test_global_convert_function() {
-        let result = convert(1000.0, "m", "km").unwrap();
+        let result = convert(1000.0, "m", "km").expect("Operation failed");
         assert!((result - 1.0).abs() < 1e-10);
     }
 

@@ -17,42 +17,42 @@ use scirs2_core::random::Distribution;
 #[test]
 fn test_argmin_simd_f64_basic() {
     let x = array![3.0f64, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 1, "Should find first occurrence of minimum (1.0)");
 }
 
 #[test]
 fn test_argmin_simd_f32_basic() {
     let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 1, "Should find first occurrence of minimum (1.0)");
 }
 
 #[test]
 fn test_argmin_simd_f64_negative() {
     let x = array![1.0f64, -5.0, 3.0, -2.0];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 1, "Should find minimum negative value");
 }
 
 #[test]
 fn test_argmin_simd_f32_negative() {
     let x = array![-10.0f32, -5.0, -20.0, -2.0];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 2, "Should find most negative value");
 }
 
 #[test]
 fn test_argmin_simd_f64_single() {
     let x = array![42.0f64];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 0, "Single element should return index 0");
 }
 
 #[test]
 fn test_argmin_simd_f32_single() {
     let x = array![42.0f32];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 0, "Single element should return index 0");
 }
 
@@ -73,7 +73,7 @@ fn test_argmin_simd_f64_large() {
     data[5000] = -999.0; // Minimum value at index 5000
 
     let x = Array1::from_vec(data);
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 5000, "Should find minimum in large array");
 }
 
@@ -83,14 +83,14 @@ fn test_argmin_simd_f32_large() {
     data[7500] = -999.0; // Minimum value at index 7500
 
     let x = Array1::from_vec(data);
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 7500, "Should find minimum in large f32 array");
 }
 
 #[test]
 fn test_argmin_simd_f64_first_minimum() {
     let x = array![1.0f64, 2.0, 1.0, 3.0, 1.0];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(
         idx, 0,
         "Should find FIRST occurrence when multiple minimums"
@@ -100,7 +100,7 @@ fn test_argmin_simd_f64_first_minimum() {
 #[test]
 fn test_argmin_simd_f64_last_minimum() {
     let x = array![5.0f64, 4.0, 3.0, 2.0, 1.0];
-    let idx = argmin_simd(&x.view()).unwrap();
+    let idx = argmin_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 4, "Should find minimum at last position");
 }
 
@@ -111,42 +111,42 @@ fn test_argmin_simd_f64_last_minimum() {
 #[test]
 fn test_argmax_simd_f64_basic() {
     let x = array![3.0f64, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 5, "Should find maximum value (9.0)");
 }
 
 #[test]
 fn test_argmax_simd_f32_basic() {
     let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 5, "Should find maximum value (9.0)");
 }
 
 #[test]
 fn test_argmax_simd_f64_negative() {
     let x = array![-10.0f64, -5.0, -20.0, -2.0];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 3, "Should find least negative value (-2.0)");
 }
 
 #[test]
 fn test_argmax_simd_f32_negative() {
     let x = array![-10.0f32, -5.0, -20.0, -2.0];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 3, "Should find least negative value");
 }
 
 #[test]
 fn test_argmax_simd_f64_single() {
     let x = array![42.0f64];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 0, "Single element should return index 0");
 }
 
 #[test]
 fn test_argmax_simd_f32_single() {
     let x = array![42.0f32];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 0, "Single element should return index 0");
 }
 
@@ -167,7 +167,7 @@ fn test_argmax_simd_f64_large() {
     data[5000] = 999.0; // Maximum value at index 5000
 
     let x = Array1::from_vec(data);
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 5000, "Should find maximum in large array");
 }
 
@@ -177,14 +177,14 @@ fn test_argmax_simd_f32_large() {
     data[7500] = 999.0; // Maximum value at index 7500
 
     let x = Array1::from_vec(data);
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 7500, "Should find maximum in large f32 array");
 }
 
 #[test]
 fn test_argmax_simd_f64_first_maximum() {
     let x = array![9.0f64, 2.0, 9.0, 3.0, 9.0];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(
         idx, 0,
         "Should find FIRST occurrence when multiple maximums"
@@ -194,7 +194,7 @@ fn test_argmax_simd_f64_first_maximum() {
 #[test]
 fn test_argmax_simd_f64_last_maximum() {
     let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-    let idx = argmax_simd(&x.view()).unwrap();
+    let idx = argmax_simd(&x.view()).expect("Test: operation failed");
     assert_eq!(idx, 4, "Should find maximum at last position");
 }
 
@@ -205,7 +205,7 @@ fn test_argmax_simd_f64_last_maximum() {
 #[test]
 fn test_argmin_k_basic() {
     let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-    let indices = argmin_k(&x.view(), 3).unwrap();
+    let indices = argmin_k(&x.view(), 3).expect("Test: operation failed");
 
     assert_eq!(indices.len(), 3, "Should return 3 indices");
 
@@ -223,7 +223,7 @@ fn test_argmin_k_basic() {
 #[test]
 fn test_argmin_k_all_elements() {
     let x = array![3.0f32, 1.0, 4.0];
-    let indices = argmin_k(&x.view(), 10).unwrap();
+    let indices = argmin_k(&x.view(), 10).expect("Test: operation failed");
 
     // Should cap at array length
     assert_eq!(indices.len(), 3, "Should cap at array length");
@@ -248,7 +248,7 @@ fn test_argmin_k_empty() {
 #[test]
 fn test_argmin_k_large() {
     let x: Array1<f32> = Array1::from_vec((0..10000).map(|i| (i as f32) % 100.0).collect());
-    let indices = argmin_k(&x.view(), 5).unwrap();
+    let indices = argmin_k(&x.view(), 5).expect("Test: operation failed");
 
     assert_eq!(indices.len(), 5, "Should return 5 indices");
 
@@ -265,7 +265,7 @@ fn test_argmin_k_large() {
 #[test]
 fn test_argmax_k_basic() {
     let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-    let indices = argmax_k(&x.view(), 3).unwrap();
+    let indices = argmax_k(&x.view(), 3).expect("Test: operation failed");
 
     assert_eq!(indices.len(), 3, "Should return 3 indices");
 
@@ -283,7 +283,7 @@ fn test_argmax_k_basic() {
 #[test]
 fn test_argmax_k_all_elements() {
     let x = array![3.0f32, 1.0, 4.0];
-    let indices = argmax_k(&x.view(), 10).unwrap();
+    let indices = argmax_k(&x.view(), 10).expect("Test: operation failed");
 
     // Should cap at array length
     assert_eq!(indices.len(), 3, "Should cap at array length");
@@ -308,7 +308,7 @@ fn test_argmax_k_empty() {
 #[test]
 fn test_argmax_k_large() {
     let x: Array1<f32> = Array1::from_vec((0..10000).map(|i| (i as f32) % 100.0).collect());
-    let indices = argmax_k(&x.view(), 5).unwrap();
+    let indices = argmax_k(&x.view(), 5).expect("Test: operation failed");
 
     assert_eq!(indices.len(), 5, "Should return 5 indices");
 
@@ -328,14 +328,14 @@ fn test_argmin_simd_equivalence_random() {
     use scirs2_core::random::{thread_rng, Uniform};
 
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-1000.0, 1000.0).unwrap();
+    let uniform = Uniform::new(-1000.0, 1000.0).expect("Test: operation failed");
 
     // Generate random data
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data.clone());
 
     // Find minimum using SIMD
-    let simd_idx = argmin_simd(&x.view()).unwrap();
+    let simd_idx = argmin_simd(&x.view()).expect("Test: operation failed");
 
     // Verify using scalar approach
     let mut scalar_idx = 0;
@@ -363,14 +363,14 @@ fn test_argmax_simd_equivalence_random() {
     use scirs2_core::random::{thread_rng, Uniform};
 
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-1000.0, 1000.0).unwrap();
+    let uniform = Uniform::new(-1000.0, 1000.0).expect("Test: operation failed");
 
     // Generate random data
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
     let x = Array1::from_vec(data.clone());
 
     // Find maximum using SIMD
-    let simd_idx = argmax_simd(&x.view()).unwrap();
+    let simd_idx = argmax_simd(&x.view()).expect("Test: operation failed");
 
     // Verify using scalar approach
     let mut scalar_idx = 0;
@@ -402,7 +402,7 @@ fn test_argmin_simd_2d_axis_none() {
 
     let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 
-    let result = argmin_simd_2d(a.view(), None).unwrap();
+    let result = argmin_simd_2d(a.view(), None).expect("Test: operation failed");
     assert_eq!(
         result[0], 4,
         "Should find global minimum at index 4 (value 1.0)"
@@ -415,7 +415,7 @@ fn test_argmin_simd_2d_axis_0() {
 
     let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 
-    let result = argmin_simd_2d(a.view(), Some(0)).unwrap();
+    let result = argmin_simd_2d(a.view(), Some(0)).expect("Test: operation failed");
     assert_eq!(result.len(), 3, "Should return 3 column minimums");
     assert_eq!(result[0], 1, "Column 0 minimum at row 1");
     assert_eq!(result[1], 1, "Column 1 minimum at row 1");
@@ -428,7 +428,7 @@ fn test_argmin_simd_2d_axis_1() {
 
     let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 
-    let result = argmin_simd_2d(a.view(), Some(1)).unwrap();
+    let result = argmin_simd_2d(a.view(), Some(1)).expect("Test: operation failed");
     assert_eq!(result.len(), 2, "Should return 2 row minimums");
     assert_eq!(result[0], 1, "Row 0 minimum at col 1");
     assert_eq!(result[1], 1, "Row 1 minimum at col 1");
@@ -444,7 +444,7 @@ fn test_argmax_simd_2d_axis_none() {
 
     let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 
-    let result = argmax_simd_2d(a.view(), None).unwrap();
+    let result = argmax_simd_2d(a.view(), None).expect("Test: operation failed");
     assert_eq!(
         result[0], 5,
         "Should find global maximum at index 5 (value 6.0)"
@@ -457,7 +457,7 @@ fn test_argmax_simd_2d_axis_0() {
 
     let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 
-    let result = argmax_simd_2d(a.view(), Some(0)).unwrap();
+    let result = argmax_simd_2d(a.view(), Some(0)).expect("Test: operation failed");
     assert_eq!(result.len(), 3, "Should return 3 column maximums");
     assert_eq!(result[0], 0, "Column 0 maximum at row 0");
     assert_eq!(result[1], 0, "Column 1 maximum at row 0");
@@ -470,7 +470,7 @@ fn test_argmax_simd_2d_axis_1() {
 
     let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 
-    let result = argmax_simd_2d(a.view(), Some(1)).unwrap();
+    let result = argmax_simd_2d(a.view(), Some(1)).expect("Test: operation failed");
     assert_eq!(result.len(), 2, "Should return 2 row maximums");
     assert_eq!(result[0], 0, "Row 0 maximum at col 0");
     assert_eq!(result[1], 2, "Row 1 maximum at col 2");
@@ -484,9 +484,9 @@ fn test_argmax_simd_2d_large() {
     let mut data = vec![1.0f32; 1000 * 100];
     data[50 * 100 + 37] = 999.0; // Maximum at row 50, col 37
 
-    let a = Array2::from_shape_vec((1000, 100), data).unwrap();
+    let a = Array2::from_shape_vec((1000, 100), data).expect("Test: operation failed");
 
-    let result = argmax_simd_2d(a.view(), None).unwrap();
+    let result = argmax_simd_2d(a.view(), None).expect("Test: operation failed");
     assert_eq!(
         result[0],
         50 * 100 + 37,
@@ -720,7 +720,7 @@ fn test_cumsum_simd_equivalence_random() {
     use scirs2_core::random::{thread_rng, Uniform};
 
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-100.0, 100.0).unwrap();
+    let uniform = Uniform::new(-100.0, 100.0).expect("Test: operation failed");
 
     // Generate random data
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();
@@ -749,7 +749,7 @@ fn test_cumprod_simd_equivalence_random() {
     use scirs2_core::random::{thread_rng, Uniform};
 
     let mut rng = thread_rng();
-    let uniform = Uniform::new(0.95, 1.05).unwrap(); // Small range to avoid overflow/underflow
+    let uniform = Uniform::new(0.95, 1.05).expect("Test: operation failed"); // Small range to avoid overflow/underflow
 
     // Generate random data
     let data: Vec<f64> = (0..5000).map(|_| uniform.sample(&mut rng)).collect();

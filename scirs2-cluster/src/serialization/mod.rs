@@ -12,15 +12,15 @@
 //! use scirs2_core::ndarray::Array2;
 //!
 //! // Pretend we trained a KMeans and have centroids
-//! let centroids = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+//! let centroids = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).expect("Operation failed");
 //! let model = scirs2_cluster::KMeansModel::new(centroids, 3, 10, 0.5, None);
 //!
 //! // Save model with enhanced metadata
 //! let enhanced_model = EnhancedModel::with_auto_metadata(model, "kmeans");
-//! enhanced_model.save_to_file("model.json").unwrap();
+//! enhanced_model.save_to_file("model.json").expect("Operation failed");
 //!
 //! // Load model back
-//! let loaded_model: EnhancedModel<scirs2_cluster::KMeansModel> = EnhancedModel::load_from_file("model.json").unwrap();
+//! let loaded_model: EnhancedModel<scirs2_cluster::KMeansModel> = EnhancedModel::load_from_file("model.json").expect("Operation failed");
 //! ```
 //!
 //! ## Advanced Export with Multiple Formats
@@ -31,15 +31,15 @@
 //! use scirs2_cluster::serialization::utils::create_default_metadata;
 //!
 //! // Export model in different formats
-//! let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+//! let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
 //! let model = scirs2_cluster::KMeansModel::new(centroids, 2, 10, 0.1, None);
 //! let metadata = create_default_metadata("kmeans");
-//! let json_data = model.export_with_metadata(ExportFormat::Json, Some(metadata)).unwrap();
+//! let json_data = model.export_with_metadata(ExportFormat::Json, Some(metadata)).expect("Operation failed");
 //! // YAML export requires enabling the `yaml` feature
 //!
 //! // Export for compatibility with other libraries
-//! let sklearn_format = model.export_compatible("sklearn").unwrap();
-//! let pytorch_format = model.export_compatible("pytorch").unwrap();
+//! let sklearn_format = model.export_compatible("sklearn").expect("Operation failed");
+//! let pytorch_format = model.export_compatible("pytorch").expect("Operation failed");
 //! ```
 //!
 //! ## Workflow Management
@@ -61,7 +61,7 @@
 //!     execution_time: None,
 //!     results: None,
 //! });
-//! workflow.execute().unwrap();
+//! workflow.execute().expect("Operation failed");
 //!
 //! // Save and resume workflow state
 //! // Save and load checkpoint using default path in config
@@ -255,7 +255,8 @@ mod tests {
 
     #[test]
     fn test_create_kmeans_model() {
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let model = create_kmeans_model(centroids, 2, 10, 0.5, None);
         assert_eq!(model.n_clusters, 2);
         assert_eq!(model.n_iter, 10);
@@ -264,8 +265,8 @@ mod tests {
     #[test]
     fn test_create_dbscan_model() {
         let core_samples = vec![0, 1, 2];
-        let components =
-            Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+        let components = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0])
+            .expect("Operation failed");
         let labels = scirs2_core::ndarray::Array1::from_vec(vec![0, 0, 1]);
         let model = create_dbscan_model(core_samples, components, labels, 0.5, 2);
         assert_eq!(model.eps, 0.5);

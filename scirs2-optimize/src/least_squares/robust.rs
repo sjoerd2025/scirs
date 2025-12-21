@@ -351,7 +351,10 @@ where
     let mut iter = 0;
 
     // Compute initial residuals
-    let mut res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+    let mut res = residuals(
+        x.as_slice().expect("Operation failed"),
+        data.as_slice().expect("Operation failed"),
+    );
     nfev += 1;
     let n = res.len();
 
@@ -369,7 +372,10 @@ where
             for j in 0..m {
                 let mut x_h = x_val.clone();
                 x_h[j] += eps;
-                let res_h = residuals(x_h.as_slice().unwrap(), data.as_slice().unwrap());
+                let res_h = residuals(
+                    x_h.as_slice().expect("Operation failed"),
+                    data.as_slice().expect("Operation failed"),
+                );
                 count += 1;
 
                 for i in 0..n {
@@ -404,7 +410,10 @@ where
         // Compute Jacobian
         let (jac, jac_evals) = match &jacobian {
             Some(jac_fn) => {
-                let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+                let j = jac_fn(
+                    x.as_slice().expect("Operation failed"),
+                    data.as_slice().expect("Operation failed"),
+                );
                 njev += 1;
                 (j, 0)
             }
@@ -442,7 +451,10 @@ where
                 // Simple backtracking line search
                 for _ in 0..10 {
                     let x_new = &x + &step * line_search_alpha;
-                    let res_new = residuals(x_new.as_slice().unwrap(), data.as_slice().unwrap());
+                    let res_new = residuals(
+                        x_new.as_slice().expect("Operation failed"),
+                        data.as_slice().expect("Operation failed"),
+                    );
                     nfev += 1;
 
                     let new_cost = compute_robust_cost(&res_new, &loss);
@@ -461,14 +473,20 @@ where
 
                 if step_norm < options.xtol * (1.0 + x_norm) {
                     x = best_x;
-                    res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+                    res = residuals(
+                        x.as_slice().expect("Operation failed"),
+                        data.as_slice().expect("Operation failed"),
+                    );
                     nfev += 1;
                     break;
                 }
 
                 // Update x and residuals
                 x = best_x;
-                res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+                res = residuals(
+                    x.as_slice().expect("Operation failed"),
+                    data.as_slice().expect("Operation failed"),
+                );
                 nfev += 1;
             }
             None => {
@@ -632,7 +650,7 @@ mod tests {
         let huber_loss = HuberLoss::new(1.0);
         let result =
             robust_least_squares(residual, &x0, huber_loss, Some(jacobian), &data_array, None)
-                .unwrap();
+                .expect("Operation failed");
 
         // The robust solution should be less affected by the outlier
         // Expected slope should be close to 1.0 (ignoring the outlier)
@@ -658,8 +676,8 @@ mod tests {
 
         // Test with Huber loss (should converge to [1.0, 2.0])
         let huber_loss = HuberLoss::new(1.0);
-        let result =
-            robust_least_squares(residual, &x0, huber_loss, Some(jacobian), &data, None).unwrap();
+        let result = robust_least_squares(residual, &x0, huber_loss, Some(jacobian), &data, None)
+            .expect("Operation failed");
 
         assert!(result.success);
         assert!((result.x[0] - 1.0).abs() < 1e-3);

@@ -71,7 +71,7 @@ impl DynamicsModel {
         // Get features for reward prediction
         let features = x.clone();
         // Predict next state
-        let state_output = self.layers.last().unwrap().forward(&x.view())?;
+        let state_output = self.layers.last().expect("Operation failed").forward(&x.view())?;
         let state_output = state_output.remove_axis(Axis(0));
         let (next_state, uncertainty) = if self.uncertainty_estimation {
             let mean = state_output.slice(s![..self.state_dim]).to_owned();
@@ -350,7 +350,7 @@ impl LatentDynamics {
         let input = concatenate![Axis(0), *latent, *action];
         for layer in &self.layers[..self.layers.len() - 1] {
         // Predict next latent state
-        let next_latent = self.layers.last().unwrap().forward(&x.view())?;
+        let next_latent = self.layers.last().expect("Operation failed").forward(&x.view())?;
         let next_latent = next_latent.remove_axis(Axis(0));
         let reward = self.reward_head.forward(&features.view())?;
         let reward = reward[[0, 0]];
@@ -367,25 +367,25 @@ mod tests {
     use super::*;
     #[test]
     fn test_dynamics_model() {
-        let model = DynamicsModel::new(4, 2, vec![32, 32], false).unwrap();
+        let model = DynamicsModel::new(4, 2, vec![32, 32], false).expect("Operation failed");
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let action = Array1::from_vec(vec![0.5, -0.5]);
         let (next_state, reward, uncertainty) =
-            model.predict(&state.view(), &action.view()).unwrap();
+            model.predict(&state.view(), &action.view()).expect("Operation failed");
         assert_eq!(next_state.len(), 4);
         assert!(reward.is_finite());
         assert!(uncertainty.is_none());
     fn test_mpc_planner() {
-        let dynamics_model = DynamicsModel::new(4, 2, vec![32], false).unwrap();
+        let dynamics_model = DynamicsModel::new(4, 2, vec![32], false).expect("Operation failed");
         let mpc = MPC::new(dynamics_model, 10, 100, 2, None);
-        let action = mpc.plan(&state.view()).unwrap();
+        let action = mpc.plan(&state.view()).expect("Operation failed");
         assert_eq!(action.len(), 2);
     fn test_world_model() {
-        let world_model = WorldModel::new(4, 2, 8, vec![32]).unwrap();
+        let world_model = WorldModel::new(4, 2, 8, vec![32]).expect("Operation failed");
         // Test encoding/decoding
-        let latent = world_model.encode(&state.view()).unwrap();
+        let latent = world_model.encode(&state.view()).expect("Operation failed");
         assert_eq!(latent.len(), 8);
-        let reconstructed = world_model.decode(&latent.view()).unwrap();
+        let reconstructed = world_model.decode(&latent.view()).expect("Operation failed");
         assert_eq!(reconstructed.len(), 4);
         // Test prediction
-        let (next_state, reward) = world_model.predict(&state.view(), &action.view()).unwrap();
+        let (next_state, reward) = world_model.predict(&state.view(), &action.view()).expect("Operation failed");

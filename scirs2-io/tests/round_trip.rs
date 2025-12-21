@@ -27,7 +27,7 @@ use tempfile::tempdir;
 #[test]
 #[allow(dead_code)]
 fn test_csv_round_trip_basic() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test.csv");
 
     // Original data
@@ -42,7 +42,8 @@ fn test_csv_round_trip_basic() {
     let rows = original_data.len();
     let cols = if rows > 0 { original_data[0].len() } else { 0 };
     let flat_data: Vec<String> = original_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::from_shape_vec((rows, cols), flat_data).unwrap();
+    let array_data =
+        Array2::from_shape_vec((rows, cols), flat_data).expect("Test operation failed");
 
     // Extract headers
     let headers = if array_data.nrows() > 0 {
@@ -55,7 +56,7 @@ fn test_csv_round_trip_basic() {
             .slice(scirs2_core::ndarray::s![1.., ..])
             .to_owned()
     } else {
-        Array2::from_shape_vec((0, cols), Vec::new()).unwrap()
+        Array2::from_shape_vec((0, cols), Vec::new()).expect("Test operation failed")
     };
 
     let write_result = csv::write_csv(&file_path, &data_only, headers.as_ref(), None);
@@ -69,7 +70,7 @@ fn test_csv_round_trip_basic() {
     let read_result = csv::read_csv(&file_path, None);
     assert!(read_result.is_ok(), "Failed to read CSV: {:?}", read_result);
 
-    let (read_headers, read_array) = read_result.unwrap();
+    let (read_headers, read_array) = read_result.expect("Operation failed");
 
     // Verify data integrity
     let total_rows = read_array.nrows() + if read_headers.is_empty() { 0 } else { 1 };
@@ -94,7 +95,7 @@ fn test_csv_round_trip_basic() {
 #[test]
 #[allow(dead_code)]
 fn test_csv_round_trip_with_options() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test_semicolon.csv");
 
     // Original data with semicolon delimiter
@@ -128,7 +129,8 @@ fn test_csv_round_trip_with_options() {
     let rows = original_data.len();
     let cols = if rows > 0 { original_data[0].len() } else { 0 };
     let flat_data: Vec<String> = original_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::from_shape_vec((rows, cols), flat_data).unwrap();
+    let array_data =
+        Array2::from_shape_vec((rows, cols), flat_data).expect("Test operation failed");
 
     // Extract headers
     let headers = if array_data.nrows() > 0 {
@@ -141,7 +143,7 @@ fn test_csv_round_trip_with_options() {
             .slice(scirs2_core::ndarray::s![1.., ..])
             .to_owned()
     } else {
-        Array2::from_shape_vec((0, cols), Vec::new()).unwrap()
+        Array2::from_shape_vec((0, cols), Vec::new()).expect("Test operation failed")
     };
 
     // Create write options that match read options
@@ -155,8 +157,9 @@ fn test_csv_round_trip_with_options() {
         headers.as_ref(),
         Some(write_options),
     )
-    .unwrap();
-    let (_headers, read_array) = csv::read_csv(&file_path, Some(options)).unwrap();
+    .expect("Operation failed");
+    let (_headers, read_array) =
+        csv::read_csv(&file_path, Some(options)).expect("Test operation failed");
 
     // Verify round-trip
     assert_eq!(read_array.nrows(), data_only.nrows());
@@ -166,7 +169,7 @@ fn test_csv_round_trip_with_options() {
 #[test]
 #[allow(dead_code)]
 fn test_matrix_market_sparse_round_trip() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test.mtx");
 
     // Create original sparse matrix
@@ -230,7 +233,7 @@ fn test_matrix_market_sparse_round_trip() {
         read_result
     );
 
-    let read_matrix = read_result.unwrap();
+    let read_matrix = read_result.expect("Operation failed");
 
     // Verify matrix properties
     assert_eq!(read_matrix.rows, original_matrix.rows);
@@ -266,7 +269,7 @@ fn test_matrix_market_sparse_round_trip() {
 #[test]
 #[allow(dead_code)]
 fn test_matrix_market_parallel_round_trip() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test_parallel.mtx");
 
     // Create a larger matrix for parallel processing
@@ -315,7 +318,7 @@ fn test_matrix_market_parallel_round_trip() {
         read_result
     );
 
-    let (read_matrix, stats) = read_result.unwrap();
+    let (read_matrix, stats) = read_result.expect("Operation failed");
 
     // Verify matrix integrity
     assert_eq!(read_matrix.rows, original_matrix.rows);
@@ -341,7 +344,7 @@ fn test_matrix_market_parallel_round_trip() {
 #[cfg(feature = "hdf5")]
 #[allow(dead_code)]
 fn test_hdf5_round_trip_basic() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test.h5");
 
     // Original data
@@ -368,14 +371,16 @@ fn test_hdf5_round_trip_basic() {
         read_result
     );
 
-    let root_group = read_result.unwrap();
+    let root_group = read_result.expect("Operation failed");
 
     // Verify datasets exist
     assert!(root_group.has_dataset("array1d"));
     assert!(root_group.has_dataset("array2d"));
 
     // Verify 1D array
-    let dataset1d = root_group.get_dataset("array1d").unwrap();
+    let dataset1d = root_group
+        .get_dataset("array1d")
+        .expect("Test operation failed");
     assert_eq!(dataset1d.shape, vec![5]);
     if let Some(data_vec) = dataset1d.as_float_vec() {
         assert_eq!(data_vec.len(), 5);
@@ -387,7 +392,9 @@ fn test_hdf5_round_trip_basic() {
     }
 
     // Verify 2D array
-    let dataset2d = root_group.get_dataset("array2d").unwrap();
+    let dataset2d = root_group
+        .get_dataset("array2d")
+        .expect("Test operation failed");
     assert_eq!(dataset2d.shape, vec![2, 3]);
     if let Some(data_vec) = dataset2d.as_float_vec() {
         assert_eq!(data_vec.len(), 6);
@@ -404,7 +411,7 @@ fn test_hdf5_round_trip_basic() {
 #[cfg(feature = "hdf5")]
 #[allow(dead_code)]
 fn test_hdf5_round_trip_with_groups_and_attributes() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("structured.h5");
 
     // Create structured HDF5 file
@@ -455,7 +462,7 @@ fn test_hdf5_round_trip_with_groups_and_attributes() {
         read_result
     );
 
-    let root_group = read_result.unwrap();
+    let root_group = read_result.expect("Operation failed");
 
     // Verify root attributes
     assert!(root_group.has_attribute("file_version"));
@@ -469,7 +476,9 @@ fn test_hdf5_round_trip_with_groups_and_attributes() {
 
     // Verify group structure
     assert!(root_group.has_group("experiment"));
-    let experiment_group = root_group.get_group("experiment").unwrap();
+    let experiment_group = root_group
+        .get_group("experiment")
+        .expect("Test operation failed");
 
     assert!(experiment_group.has_attribute("experiment_id"));
     assert!(experiment_group.has_attribute("temperature"));
@@ -482,7 +491,9 @@ fn test_hdf5_round_trip_with_groups_and_attributes() {
 
     // Verify nested group
     assert!(experiment_group.has_group("measurements"));
-    let measurements_group = experiment_group.get_group("measurements").unwrap();
+    let measurements_group = experiment_group
+        .get_group("measurements")
+        .expect("Test operation failed");
 
     assert!(measurements_group.has_attribute("sensor_type"));
     if let Some(AttributeValue::String(sensor)) = measurements_group.get_attribute("sensor_type") {
@@ -495,17 +506,21 @@ fn test_hdf5_round_trip_with_groups_and_attributes() {
     assert!(measurements_group.has_dataset("temperature"));
     assert!(measurements_group.has_dataset("pressure"));
 
-    let temp_dataset = measurements_group.get_dataset("temperature").unwrap();
+    let temp_dataset = measurements_group
+        .get_dataset("temperature")
+        .expect("Test operation failed");
     assert_eq!(temp_dataset.shape, vec![5]);
 
-    let pressure_dataset = measurements_group.get_dataset("pressure").unwrap();
+    let pressure_dataset = measurements_group
+        .get_dataset("pressure")
+        .expect("Test operation failed");
     assert_eq!(pressure_dataset.shape, vec![2, 2]);
 }
 
 #[test]
 #[allow(dead_code)]
 fn test_serialize_round_trip_json() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test.json");
 
     // Original array
@@ -527,7 +542,7 @@ fn test_serialize_round_trip_json() {
         read_result
     );
 
-    let read_array = read_result.unwrap();
+    let read_array = read_result.expect("Operation failed");
 
     // Verify array integrity
     assert_eq!(read_array.shape(), original_array.shape());
@@ -542,7 +557,7 @@ fn test_serialize_round_trip_json() {
 #[test]
 #[allow(dead_code)]
 fn test_serialize_round_trip_messagepack() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test.msgpack");
 
     // Original array
@@ -565,7 +580,7 @@ fn test_serialize_round_trip_messagepack() {
         read_result
     );
 
-    let read_array = read_result.unwrap();
+    let read_array = read_result.expect("Operation failed");
 
     // Verify array integrity
     assert_eq!(read_array.shape(), original_array.shape());
@@ -580,7 +595,7 @@ fn test_serialize_round_trip_messagepack() {
 #[test]
 #[allow(dead_code)]
 fn test_serialize_round_trip_binary() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("test.bin");
 
     // Original array
@@ -603,7 +618,7 @@ fn test_serialize_round_trip_binary() {
         read_result
     );
 
-    let read_array = read_result.unwrap();
+    let read_array = read_result.expect("Operation failed");
 
     // Verify array integrity
     assert_eq!(read_array.shape(), original_array.shape());
@@ -618,7 +633,7 @@ fn test_serialize_round_trip_binary() {
 #[test]
 #[allow(dead_code)]
 fn test_validation_round_trip() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("data.csv");
 
     // Create test data
@@ -632,7 +647,8 @@ fn test_validation_round_trip() {
     let rows = test_data.len();
     let cols = if rows > 0 { test_data[0].len() } else { 0 };
     let flat_data: Vec<String> = test_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::from_shape_vec((rows, cols), flat_data).unwrap();
+    let array_data =
+        Array2::from_shape_vec((rows, cols), flat_data).expect("Test operation failed");
 
     // Extract headers and data
     let headers = if array_data.nrows() > 0 {
@@ -645,31 +661,35 @@ fn test_validation_round_trip() {
             .slice(scirs2_core::ndarray::s![1.., ..])
             .to_owned()
     } else {
-        Array2::from_shape_vec((0, cols), Vec::new()).unwrap()
+        Array2::from_shape_vec((0, cols), Vec::new()).expect("Test operation failed")
     };
 
-    csv::write_csv(&file_path, &data_only, headers.as_ref(), None).unwrap();
+    csv::write_csv(&file_path, &data_only, headers.as_ref(), None).expect("Test operation failed");
 
     // Calculate checksums
-    let original_crc32 = validation::calculate_crc32(&file_path).unwrap();
-    let original_sha256 = validation::calculate_sha256(&file_path).unwrap();
+    let original_crc32 = validation::calculate_crc32(&file_path).expect("Test operation failed");
+    let original_sha256 = validation::calculate_sha256(&file_path).expect("Test operation failed");
 
     // Read and write again (round-trip)
-    let (headers, read_array) = csv::read_csv(&file_path, None).unwrap();
+    let (headers, read_array) = csv::read_csv(&file_path, None).expect("Test operation failed");
     let round_trip_path = dir.path().join("data_round_trip.csv");
-    csv::write_csv(&round_trip_path, &read_array, Some(&headers), None).unwrap();
+    csv::write_csv(&round_trip_path, &read_array, Some(&headers), None)
+        .expect("Test operation failed");
 
     // Calculate checksums for round-trip file
-    let round_trip_crc32 = validation::calculate_crc32(&round_trip_path).unwrap();
-    let round_trip_sha256 = validation::calculate_sha256(&round_trip_path).unwrap();
+    let round_trip_crc32 =
+        validation::calculate_crc32(&round_trip_path).expect("Test operation failed");
+    let round_trip_sha256 =
+        validation::calculate_sha256(&round_trip_path).expect("Test operation failed");
 
     // Verify checksums match (indicating identical file content)
     assert_eq!(original_crc32, round_trip_crc32);
     assert_eq!(original_sha256, round_trip_sha256);
 
     // Verify file checksums match
-    let original_recalc = validation::calculate_sha256(&file_path).unwrap();
-    let round_trip_recalc = validation::calculate_sha256(&round_trip_path).unwrap();
+    let original_recalc = validation::calculate_sha256(&file_path).expect("Test operation failed");
+    let round_trip_recalc =
+        validation::calculate_sha256(&round_trip_path).expect("Test operation failed");
     assert_eq!(original_sha256, original_recalc);
     assert_eq!(round_trip_sha256, round_trip_recalc);
 }
@@ -678,7 +698,7 @@ fn test_validation_round_trip() {
 #[cfg(feature = "hdf5")]
 #[allow(dead_code)]
 fn test_compression_round_trip() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let file_path = dir.path().join("compressed.h5");
 
     // Create test data
@@ -699,17 +719,18 @@ fn test_compression_round_trip() {
     };
 
     // Write with compression
-    let mut file = hdf5::HDF5File::create(&file_path).unwrap();
+    let mut file = hdf5::HDF5File::create(&file_path).expect("Test operation failed");
     let result = file.create_dataset_from_array("compressed_data", &large_array, Some(options));
     assert!(
         result.is_ok(),
         "Failed to create compressed dataset: {:?}",
         result
     );
-    file.close().unwrap();
+    file.close().expect("Test operation failed");
 
     // Read back from a new file handle
-    let read_file = hdf5::HDF5File::open(&file_path, hdf5::FileMode::ReadOnly).unwrap();
+    let read_file =
+        hdf5::HDF5File::open(&file_path, hdf5::FileMode::ReadOnly).expect("Test operation failed");
     let read_result = read_file.read_dataset("compressed_data");
     assert!(
         read_result.is_ok(),
@@ -717,7 +738,7 @@ fn test_compression_round_trip() {
         read_result
     );
 
-    let read_array = read_result.unwrap();
+    let read_array = read_result.expect("Operation failed");
 
     // Verify data integrity
     assert_eq!(read_array.shape(), large_array.shape());
@@ -732,7 +753,7 @@ fn test_compression_round_trip() {
 #[test]
 #[allow(dead_code)]
 fn test_large_data_round_trip() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
     let matrix_file = dir.path().join("large_matrix.mtx");
 
     // Create a moderately large sparse matrix
@@ -767,13 +788,14 @@ fn test_large_data_round_trip() {
     // Write matrix
     let write_stats =
         matrix_market::write_sparse_matrix_parallel(&matrix_file, &original_matrix, config.clone())
-            .unwrap();
+            .expect("Operation failed");
     assert!(write_stats.entries_processed > 0);
     assert!(write_stats.io_time_ms > 0.0);
 
     // Read matrix back
     let (read_matrix, read_stats) =
-        matrix_market::read_sparse_matrix_parallel(&matrix_file, config).unwrap();
+        matrix_market::read_sparse_matrix_parallel(&matrix_file, config)
+            .expect("Test operation failed");
     assert!(read_stats.entries_processed > 0);
     assert!(read_stats.io_time_ms > 0.0);
 
@@ -816,7 +838,7 @@ fn test_large_data_round_trip() {
 #[test]
 #[allow(dead_code)]
 fn test_precision_round_trip() {
-    let dir = tempdir().unwrap();
+    let dir = tempdir().expect("Test operation failed");
 
     // Test various precision scenarios
     let precision_values = [
@@ -835,13 +857,14 @@ fn test_precision_round_trip() {
         let original_array = Array1::from(vec![value, -value, value * 2.0, value / 2.0]).into_dyn();
 
         // Test JSON round-trip
-        serialize::write_array_json(&json_file, &original_array).unwrap();
-        let json_read = serialize::read_array_json(&json_file).unwrap();
+        serialize::write_array_json(&json_file, &original_array).expect("Test operation failed");
+        let json_read = serialize::read_array_json(&json_file).expect("Test operation failed");
 
         // Test binary round-trip
-        serialize::write_array_binary(&binary_file, &original_array).unwrap();
+        serialize::write_array_binary(&binary_file, &original_array)
+            .expect("Test operation failed");
         let binary_read: scirs2_core::ndarray::Array<f64, scirs2_core::ndarray::IxDyn> =
-            serialize::read_array_binary(&binary_file).unwrap();
+            serialize::read_array_binary(&binary_file).expect("Test operation failed");
 
         // Verify precision preservation
         for j in 0..original_array.len() {

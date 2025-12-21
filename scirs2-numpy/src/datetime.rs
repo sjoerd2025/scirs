@@ -29,7 +29,7 @@
 //!         .cast_into::<PyArray1<Datetime<units::Days>>>()?;
 //!
 //!     assert_eq!(
-//!         array.get_owned(0).unwrap(),
+//!         array.get_owned(0).expect("Operation failed"),
 //!         Datetime::<units::Days>::from(17_277)
 //!     );
 //!
@@ -42,7 +42,7 @@
 //!         .cast_into::<PyArray1<Timedelta<units::Days>>>()?;
 //!
 //!     assert_eq!(
-//!         array.get_owned(0).unwrap(),
+//!         array.get_owned(0).expect("Operation failed"),
 //!         Timedelta::<units::Days>::from(1_803)
 //!     );
 //! #   Ok(())
@@ -268,9 +268,9 @@ mod tests {
         Python::attach(|py| {
             let locals = py
                 .eval(c_str!("{ 'np': __import__('numpy') }"), None, None)
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyDict>()
-                .unwrap();
+                .expect("Operation failed");
 
             let array = py
                 .eval(
@@ -278,11 +278,11 @@ mod tests {
                     None,
                     Some(&locals),
                 )
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<Datetime<units::Days>>>()
-                .unwrap();
+                .expect("Operation failed");
 
-            let value: i64 = array.get_owned(0).unwrap().into();
+            let value: i64 = array.get_owned(0).expect("Operation failed").into();
             assert_eq!(value, 0);
         });
     }
@@ -292,13 +292,14 @@ mod tests {
         Python::attach(|py| {
             let array = PyArray1::<Timedelta<units::Minutes>>::zeros(py, 1, false);
 
-            *array.readwrite().get_mut(0).unwrap() = Timedelta::<units::Minutes>::from(5);
+            *array.readwrite().get_mut(0).expect("Operation failed") =
+                Timedelta::<units::Minutes>::from(5);
 
             let np = py
                 .eval(c_str!("__import__('numpy')"), None, None)
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyModule>()
-                .unwrap();
+                .expect("Operation failed");
 
             py_run!(py, array np, "assert array.dtype == np.dtype('timedelta64[m]')");
             py_run!(py, array np, "assert array[0] == np.timedelta64(5, 'm')");
@@ -323,9 +324,11 @@ mod tests {
         #[track_caller]
         fn convert<'py, S: Unit, D: Unit>(py: Python<'py>, expected_value: i64) {
             let array = PyArray1::<Timedelta<S>>::from_slice(py, &[Timedelta::<S>::from(1)]);
-            let array = array.cast_array::<Timedelta<D>>(false).unwrap();
+            let array = array
+                .cast_array::<Timedelta<D>>(false)
+                .expect("Operation failed");
 
-            let value: i64 = array.get_owned(0).unwrap().into();
+            let value: i64 = array.get_owned(0).expect("Operation failed").into();
             assert_eq!(value, expected_value);
         }
 

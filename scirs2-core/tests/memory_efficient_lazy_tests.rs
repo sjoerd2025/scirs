@@ -45,7 +45,7 @@ mod tests {
         let lazy = LazyArray::new(data.clone());
 
         // Evaluate the array
-        let result = evaluate(&lazy).unwrap();
+        let result = evaluate(&lazy).expect("Test: operation failed");
 
         // Check that the result matches the original data
         assert_eq!(result, data);
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(lazy_map.sources.len(), 1);
 
         // This would evaluate the operation, but our implementation is just a placeholder
-        // let result = evaluate(&lazy_map).unwrap();
+        // let result = evaluate(&lazy_map).expect("Test: operation failed");
         // let expected = data.map(|&x| x * x);
         // assert_eq!(result, expected);
     }

@@ -13,9 +13,9 @@
 //! use scirs2_cluster::advanced::quantum::{quantum_kmeans, QuantumConfig};
 //! use scirs2_core::ndarray::Array2;
 //!
-//! let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).expect("Operation failed");
 //! let config = QuantumConfig::default();
-//! let (centroids, labels) = quantum_kmeans(data.view(), 3, Some(config)).unwrap();
+//! let (centroids, labels) = quantum_kmeans(data.view(), 3, Some(config)).expect("Operation failed");
 //! ```
 //!
 //! ## Adaptive Online Clustering
@@ -24,9 +24,9 @@
 //! use scirs2_cluster::advanced::online::{adaptive_online_clustering, AdaptiveOnlineConfig};
 //! use scirs2_core::ndarray::Array2;
 //!
-//! let data = Array2::from_shape_vec((20, 3), (0..60).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::from_shape_vec((20, 3), (0..60).map(|x| x as f64).collect()).expect("Operation failed");
 //! let config = AdaptiveOnlineConfig::default();
-//! let (centers, labels) = adaptive_online_clustering(data.view(), Some(config)).unwrap();
+//! let (centers, labels) = adaptive_online_clustering(data.view(), Some(config)).expect("Operation failed");
 //! ```
 
 pub mod online;
@@ -107,22 +107,24 @@ mod tests {
 
     #[test]
     fn test_quick_quantum_clustering() {
-        let data = Array2::from_shape_vec((8, 2), (0..16).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((8, 2), (0..16).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_quantum_clustering(data.view(), 2);
         assert!(result.is_ok());
 
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Operation failed");
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(labels.len(), 8);
     }
 
     #[test]
     fn test_quick_online_clustering() {
-        let data = Array2::from_shape_vec((6, 2), (0..12).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((6, 2), (0..12).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_online_clustering(data.view());
         assert!(result.is_ok());
 
-        let (centers, labels) = result.unwrap();
+        let (centers, labels) = result.expect("Operation failed");
         assert_eq!(labels.len(), 6);
     }
 }

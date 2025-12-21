@@ -443,7 +443,7 @@ where
     fn compile(&self, expression: &str) -> CoreResult<Box<dyn JITFunction>> {
         // Get the JIT manager
         let jit_manager = JITManager::global();
-        let jit_manager = jit_manager.read().unwrap();
+        let jit_manager = jit_manager.read().expect("Operation failed");
 
         // Compile the function
         (*jit_manager).compile(expression, TypeId::of::<A>())
@@ -452,7 +452,7 @@ where
     fn supports_jit(&self) -> bool {
         // Check if there's a factory that supports this array type
         let jit_manager = JITManager::global();
-        let jit_manager = jit_manager.read().unwrap();
+        let jit_manager = jit_manager.read().expect("Operation failed");
 
         jit_manager
             .get_factory_for_array_type(TypeId::of::<A>())
@@ -469,7 +469,7 @@ where
         if supported {
             // Get the JIT manager
             let jit_manager = JITManager::global();
-            let jit_manager = jit_manager.read().unwrap();
+            let jit_manager = jit_manager.read().expect("Operation failed");
 
             // Get the factory
             if jit_manager
@@ -545,12 +545,15 @@ mod tests {
         let array_typeid = TypeId::of::<NdarrayWrapper<f64, crate::ndarray::Ix2>>();
         let jit_function = factory
             .create_jit_function(expression, array_typeid)
-            .unwrap();
+            .expect("Operation failed");
 
         // Check the function's properties
         assert_eq!(jit_function.source(), expression);
         let compile_info = jit_function.compile_info();
-        assert_eq!(compile_info.get("backend").unwrap(), "LLVM");
+        assert_eq!(
+            compile_info.get("backend").expect("Operation failed"),
+            "LLVM"
+        );
     }
 
     #[test]
@@ -567,7 +570,9 @@ mod tests {
 
         // Compile a function
         let expression = "x + y";
-        let jit_function = jit_manager.compile(expression, array_typeid).unwrap();
+        let jit_function = jit_manager
+            .compile(expression, array_typeid)
+            .expect("Operation failed");
 
         // Check the function's properties
         assert_eq!(jit_function.source(), expression);
@@ -584,7 +589,7 @@ mod tests {
 
         // Initialize the JIT manager
         {
-            let mut jit_manager = JITManager::global().write().unwrap();
+            let mut jit_manager = JITManager::global().write().expect("Operation failed");
             jit_manager.initialize();
         }
 
@@ -593,7 +598,7 @@ mod tests {
 
         // Compile a function
         let expression = "x + y";
-        let jit_function = jit_array.compile(expression).unwrap();
+        let jit_function = jit_array.compile(expression).expect("Operation failed");
 
         // Check the function's properties
         assert_eq!(jit_function.source(), expression);

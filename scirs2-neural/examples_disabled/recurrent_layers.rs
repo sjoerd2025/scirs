@@ -99,7 +99,7 @@ impl RecurrentLayer for SimpleRNN {
                 .slice(s![.., t, ..])
                 .to_owned()
                 .into_shape_with_order((batch_size, self.input_size))
-                .unwrap();
+                .expect("Operation failed");
             // Get previous hidden state [batch_size, hidden_size]
             let h_prev = all_hidden_states.slice(s![.., t, ..]).to_owned();
             // Calculate new hidden state: h_t = tanh(W_ih * x_t + b_ih + W_hh * h_prev + b_hh)
@@ -642,19 +642,19 @@ fn sequence_prediction_example() {
     for epoch in 0..num_epochs {
         // Train SimpleRNN
         let rnn_output = simple_rnn.forward(&inputs, true);
-        let rnn_loss = (&rnn_output - &targets).mapv(|x| x * x).mean().unwrap();
+        let rnn_loss = (&rnn_output - &targets).mapv(|x| x * x).mean().expect("Operation failed");
         let rnn_grad = 2.0 * (&rnn_output - &targets) / (batch_size * seq_len) as f32;
         simple_rnn.backward(&rnn_grad);
         simple_rnn.update_params(learning_rate);
         // Train LSTM
         let lstm_output = lstm.forward(&inputs, true);
-        let lstm_loss = (&lstm_output - &targets).mapv(|x| x * x).mean().unwrap();
+        let lstm_loss = (&lstm_output - &targets).mapv(|x| x * x).mean().expect("Operation failed");
         let lstm_grad = 2.0 * (&lstm_output - &targets) / (batch_size * seq_len) as f32;
         lstm.backward(&lstm_grad);
         lstm.update_params(learning_rate);
         // Train GRU
         let gru_output = gru.forward(&inputs, true);
-        let gru_loss = (&gru_output - &targets).mapv(|x| x * x).mean().unwrap();
+        let gru_loss = (&gru_output - &targets).mapv(|x| x * x).mean().expect("Operation failed");
         let gru_grad = 2.0 * (&gru_output - &targets) / (batch_size * seq_len) as f32;
         gru.backward(&gru_grad);
         gru.update_params(learning_rate);
@@ -746,21 +746,21 @@ fn compare_recurrent_networks() {
                     targets[[i, t, 0]] = all_targets[idx][t];
             // Train SimpleRNN
             let rnn_output = simple_rnn.forward(&inputs, true);
-            let rnn_loss = (&rnn_output - &targets).mapv(|x| x * x).mean().unwrap();
+            let rnn_loss = (&rnn_output - &targets).mapv(|x| x * x).mean().expect("Operation failed");
             let rnn_grad = 2.0 * (&rnn_output - &targets) / (batch_size * seq_len) as f32;
             simple_rnn.backward(&rnn_grad);
             simple_rnn.update_params(learning_rate);
             rnn_total_loss += rnn_loss;
             // Train LSTM
             let lstm_output = lstm.forward(&inputs, true);
-            let lstm_loss = (&lstm_output - &targets).mapv(|x| x * x).mean().unwrap();
+            let lstm_loss = (&lstm_output - &targets).mapv(|x| x * x).mean().expect("Operation failed");
             let lstm_grad = 2.0 * (&lstm_output - &targets) / (batch_size * seq_len) as f32;
             lstm.backward(&lstm_grad);
             lstm.update_params(learning_rate);
             lstm_total_loss += lstm_loss;
             // Train GRU
             let gru_output = gru.forward(&inputs, true);
-            let gru_loss = (&gru_output - &targets).mapv(|x| x * x).mean().unwrap();
+            let gru_loss = (&gru_output - &targets).mapv(|x| x * x).mean().expect("Operation failed");
             let gru_grad = 2.0 * (&gru_output - &targets) / (batch_size * seq_len) as f32;
             gru.backward(&gru_grad);
             gru.update_params(learning_rate);

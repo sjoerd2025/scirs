@@ -313,7 +313,7 @@ impl WorkloadAnalysisReport {
         bottlenecks.sort_by(|a, b| {
             b.impact_percentage
                 .partial_cmp(&a.impact_percentage)
-                .unwrap()
+                .expect("Operation failed")
         });
         bottlenecks
     }
@@ -326,7 +326,11 @@ impl WorkloadAnalysisReport {
     /// Get most significant regressions
     pub fn significant_regressions(&self) -> Vec<&PerformanceRegression> {
         let mut regressions: Vec<_> = self.regressions.iter().collect();
-        regressions.sort_by(|a, b| b.significance.partial_cmp(&a.significance).unwrap());
+        regressions.sort_by(|a, b| {
+            b.significance
+                .partial_cmp(&a.significance)
+                .expect("Operation failed")
+        });
         regressions
     }
 
@@ -620,7 +624,7 @@ impl ProductionProfiler {
             });
         }
 
-        let session = session.unwrap();
+        let session = session.expect("Operation failed");
 
         // Generate synthetic performance data for demonstration
         let total_samples = (1000.0 * self.config.samplingrate) as usize;
@@ -973,7 +977,7 @@ mod tests {
     #[test]
     fn test_workload_analysis_lifecycle() {
         let config = ProfileConfig::development().with_samplingrate(1.0); // Ensure 100% sampling for test
-        let mut profiler = ProductionProfiler::new(config).unwrap();
+        let mut profiler = ProductionProfiler::new(config).expect("Operation failed");
 
         // Start workload analysis
         let start_time = std::time::SystemTime::now();
@@ -989,7 +993,7 @@ mod tests {
         );
         assert!(report.is_ok());
 
-        let report = report.unwrap();
+        let report = report.expect("Operation failed");
         assert_eq!(report.workload_id, "test_workload");
         assert_eq!(report.workload_type, WorkloadType::ComputeIntensive);
     }
@@ -997,9 +1001,11 @@ mod tests {
     #[test]
     fn test_bottleneck_identification() {
         let config = ProfileConfig::development();
-        let profiler = ProductionProfiler::new(config).unwrap();
+        let profiler = ProductionProfiler::new(config).expect("Operation failed");
 
-        let bottlenecks = profiler.identify_bottlenecks("test_workload").unwrap();
+        let bottlenecks = profiler
+            .identify_bottlenecks("test_workload")
+            .expect("Operation failed");
         assert!(!bottlenecks.is_empty());
 
         for bottleneck in &bottlenecks {
@@ -1024,9 +1030,11 @@ mod tests {
     #[test]
     fn test_performance_statistics() {
         let config = ProfileConfig::development();
-        let profiler = ProductionProfiler::new(config).unwrap();
+        let profiler = ProductionProfiler::new(config).expect("Operation failed");
 
-        let stats = profiler.calculate_statistics("test_workload").unwrap();
+        let stats = profiler
+            .calculate_statistics("test_workload")
+            .expect("Operation failed");
 
         assert!(stats.mean_time > Duration::ZERO);
         assert!(stats.p95_time >= stats.median_time);

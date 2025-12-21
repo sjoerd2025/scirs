@@ -482,13 +482,13 @@ mod tests {
     fn test_multi_agent_grid_world() {
         let mut env = MultiAgentGridWorld::new(5, 5, 2, 1, false);
         assert_eq!(env.num_agents(), 2);
-        let observations = env.reset().unwrap();
+        let observations = env.reset().expect("Operation failed");
         assert_eq!(observations.len(), 2);
         let actions = vec![
             Array1::from_vec(vec![0.1]), // up
             Array1::from_vec(vec![0.9]), // stay
         ];
-        let (next_obs, rewards, dones, infos) = env.step(&actions).unwrap();
+        let (next_obs, rewards, dones, infos) = env.step(&actions).expect("Operation failed");
         assert_eq!(next_obs.len(), 2);
         assert_eq!(rewards.len(), 2);
         assert_eq!(dones.len(), 2);
@@ -504,11 +504,11 @@ mod tests {
         assert_eq!(rewards.len(), 3);
     fn test_multi_agent_wrapper() {
         let env = MultiAgentGridWorld::new(3, 3, 2, 1, false);
-        let mut wrapper = MultiAgentWrapper::new(env, 0).unwrap();
-        let obs = wrapper.reset().unwrap();
+        let mut wrapper = MultiAgentWrapper::new(env, 0).expect("Operation failed");
+        let obs = wrapper.reset().expect("Operation failed");
         assert!(obs.len() > 0);
         let action = Array1::from_vec(vec![0.5]);
-        let (next_obs, reward, done, info) = wrapper.step(&action).unwrap();
+        let (next_obs, reward, done, info) = wrapper.step(&action).expect("Operation failed");
         assert!(next_obs.len() > 0);
         assert!(reward.is_finite());
         assert!(info.contains_key("position_x"));

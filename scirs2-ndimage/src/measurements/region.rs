@@ -66,7 +66,7 @@ fn pattern_to_coords<D: Dimension>(pattern: &D::Pattern, shape: &[usize]) -> Vec
 ///     [3, 3, 3, 3]
 /// ];
 ///
-/// let props = region_properties(&image, &labels, None).unwrap();
+/// let props = region_properties(&image, &labels, None).expect("Operation failed");
 ///
 /// for prop in &props {
 ///     println!("Region {}: area={}, centroid={:?}",
@@ -100,7 +100,7 @@ fn pattern_to_coords<D: Dimension>(pattern: &D::Pattern, shape: &[usize]) -> Vec
 /// });
 ///
 /// // Extract all cell properties
-/// let cell_props = region_properties(&cell_intensities, &cell_labels, None).unwrap();
+/// let cell_props = region_properties(&cell_intensities, &cell_labels, None).expect("Operation failed");
 ///
 /// // Analyze cell characteristics
 /// for cell in &cell_props {
@@ -130,7 +130,7 @@ fn pattern_to_coords<D: Dimension>(pattern: &D::Pattern, shape: &[usize]) -> Vec
 ///
 /// // Extract only area and centroid properties
 /// let props = region_properties(&data, &regions,
-///                              Some(vec!["area", "centroid"])).unwrap();
+///                              Some(vec!["area", "centroid"])).expect("Operation failed");
 ///
 /// // Properties will only contain the requested measurements
 /// ```
@@ -160,7 +160,7 @@ fn pattern_to_coords<D: Dimension>(pattern: &D::Pattern, shape: &[usize]) -> Vec
 ///     ((i / 25) * 2 + (j / 25)) + 1
 /// });
 ///
-/// let grain_props = region_properties(&grainimage, &grain_labels, None).unwrap();
+/// let grain_props = region_properties(&grainimage, &grain_labels, None).expect("Operation failed");
 ///
 /// // Quality control: identify grains with unusual properties
 /// let total_area: usize = grain_props.iter().map(|g| g.area).sum();
@@ -212,7 +212,7 @@ fn pattern_to_coords<D: Dimension>(pattern: &D::Pattern, shape: &[usize]) -> Vec
 ///     }
 /// });
 ///
-/// let lesion_props = region_properties(&medical_scan, &lesion_segmentation, None).unwrap();
+/// let lesion_props = region_properties(&medical_scan, &lesion_segmentation, None).expect("Operation failed");
 ///
 /// // Clinical analysis
 /// for lesion in &lesion_props {
@@ -306,7 +306,7 @@ where
                 // Update sum for centroid calculation
                 let coord_vec = pattern_to_coords::<D>(&coords, input.shape());
                 for (i, coord) in coord_vec.iter().enumerate() {
-                    sum_coords[i] += T::from_usize(*coord).unwrap() * value;
+                    sum_coords[i] += T::from_usize(*coord).expect("Operation failed") * value;
                     min_coords[i] = min_coords[i].min(*coord);
                     max_coords[i] = max_coords[i].max(*coord);
                 }
@@ -330,7 +330,7 @@ where
             // Fallback to geometric centroid if intensity is zero
             sum_coords
                 .iter()
-                .map(|&s| s / T::from_usize(area).unwrap())
+                .map(|&s| s / T::from_usize(area).expect("Operation failed"))
                 .collect()
         };
 
@@ -390,7 +390,7 @@ where
 ///     [3, 3, 0, 0, 0]
 /// ];
 ///
-/// let objects = find_objects(&labeledimage).unwrap();
+/// let objects = find_objects(&labeledimage).expect("Operation failed");
 ///
 /// // objects[0] = bounding box for object 1: [0, 2, 1, 3] (rows 0-1, cols 1-2)
 /// // objects[1] = bounding box for object 2: [1, 4, 4, 5] (rows 1-3, cols 4-4)  
@@ -414,7 +414,7 @@ where
 ///     }
 /// });
 ///
-/// let cell_bboxes = find_objects(&cell_labels).unwrap();
+/// let cell_bboxes = find_objects(&cell_labels).expect("Operation failed");
 ///
 /// // Process each detected cell
 /// for (cell_id, bbox) in cell_bboxes.iter().enumerate() {
@@ -451,7 +451,7 @@ where
 ///     }
 /// });
 ///
-/// let object_bboxes = find_objects(&labeled_volume).unwrap();
+/// let object_bboxes = find_objects(&labeled_volume).expect("Operation failed");
 ///
 /// for (obj_id, bbox) in object_bboxes.iter().enumerate() {
 ///     println!("3D Object {}: ", obj_id + 1);
@@ -480,7 +480,7 @@ where
 ///     }
 /// });
 ///
-/// let bboxes = find_objects(&segmentedimage).unwrap();
+/// let bboxes = find_objects(&segmentedimage).expect("Operation failed");
 ///
 /// // Extract each object as a separate sub-array
 /// for (obj_id, bbox) in bboxes.iter().enumerate() {
@@ -514,7 +514,7 @@ where
 ///     }
 /// });
 ///
-/// let all_bboxes = find_objects(&detection_result).unwrap();
+/// let all_bboxes = find_objects(&detection_result).expect("Operation failed");
 ///
 /// // Filter objects by minimum size
 /// let min_area = 100;  // Minimum area threshold
@@ -640,7 +640,7 @@ mod tests {
     fn test_region_properties() {
         let input: Array2<f64> = Array2::eye(3);
         let labels: Array2<usize> = Array2::from_elem((3, 3), 1);
-        let props = region_properties(&input, &labels, None).unwrap();
+        let props = region_properties(&input, &labels, None).expect("Operation failed");
 
         assert_eq!(props.len(), 1);
         assert_eq!(props[0].label, 1);
@@ -650,7 +650,7 @@ mod tests {
     #[test]
     fn test_find_objects() {
         let input: Array2<usize> = Array2::from_elem((3, 3), 1);
-        let objects = find_objects(&input).unwrap();
+        let objects = find_objects(&input).expect("Operation failed");
 
         assert!(!objects.is_empty());
     }

@@ -133,7 +133,7 @@ impl Wishart {
     /// // Create a 2D Wishart distribution with 5 degrees of freedom
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let wishart = Wishart::new(scale, df).unwrap();
+    /// let wishart = Wishart::new(scale, df).expect("Operation failed");
     /// ```
     pub fn new<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
     where
@@ -198,7 +198,7 @@ impl Wishart {
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
-    /// let wishart = Wishart::new(scale, df).unwrap();
+    /// let wishart = Wishart::new(scale, df).expect("Operation failed");
     ///
     /// let x = array![[5.0, 1.0], [1.0, 5.0]];
     /// let pdf_value = wishart.pdf(&x);
@@ -278,7 +278,7 @@ impl Wishart {
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
-    /// let wishart = Wishart::new(scale, df).unwrap();
+    /// let wishart = Wishart::new(scale, df).expect("Operation failed");
     ///
     /// let x = array![[5.0, 1.0], [1.0, 5.0]];
     /// let logpdf_value = wishart.logpdf(&x);
@@ -321,15 +321,15 @@ impl Wishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let wishart = Wishart::new(scale, df).unwrap();
+    /// let wishart = Wishart::new(scale, df).expect("Operation failed");
     ///
-    /// let samples = wishart.rvs(10).unwrap();
+    /// let samples = wishart.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// assert_eq!(samples[0].shape(), &[2, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array2<f64>>> {
         let mut rng = thread_rng();
-        let normal_dist = RandNormal::new(0.0, 1.0).unwrap();
+        let normal_dist = RandNormal::new(0.0, 1.0).expect("Operation failed");
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -423,9 +423,9 @@ impl Wishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let wishart = Wishart::new(scale, df).unwrap();
+    /// let wishart = Wishart::new(scale, df).expect("Operation failed");
     ///
-    /// let sample = wishart.rvs_single().unwrap();
+    /// let sample = wishart.rvs_single().expect("Operation failed");
     /// assert_eq!(sample.shape(), &[2, 2]);
     /// ```
     pub fn rvs_single(&self) -> StatsResult<Array2<f64>> {
@@ -447,7 +447,7 @@ impl Wishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let wishart = Wishart::new(scale, df).unwrap();
+    /// let wishart = Wishart::new(scale, df).expect("Operation failed");
     ///
     /// let mean = wishart.mean();
     /// ```
@@ -472,7 +472,7 @@ impl Wishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;  // For 2x2 matrix, mode exists when df ≥ 3
-    /// let wishart = Wishart::new(scale, df).unwrap();
+    /// let wishart = Wishart::new(scale, df).expect("Operation failed");
     ///
     /// if let Some(mode) = wishart.mode() {
     ///     println!("Mode exists: {:?}", mode);
@@ -512,7 +512,7 @@ impl Wishart {
 ///
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
 /// let df = 5.0;
-/// let wishart = multivariate::wishart(scale, df).unwrap();
+/// let wishart = multivariate::wishart(scale, df).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Wishart>
@@ -540,7 +540,7 @@ mod tests {
         // 2x2 Wishart with identity scale
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
         let df = 5.0;
-        let wishart = Wishart::new(scale.clone(), df).unwrap();
+        let wishart = Wishart::new(scale.clone(), df).expect("Operation failed");
 
         assert_eq!(wishart.dim, 2);
         assert_eq!(wishart.df, df);
@@ -549,7 +549,7 @@ mod tests {
         // 3x3 Wishart with custom scale
         let scale3 = array![[2.0, 0.5, 0.3], [0.5, 1.0, 0.1], [0.3, 0.1, 1.5]];
         let df3 = 10.0;
-        let wishart3 = Wishart::new(scale3.clone(), df3).unwrap();
+        let wishart3 = Wishart::new(scale3.clone(), df3).expect("Operation failed");
 
         assert_eq!(wishart3.dim, 3);
         assert_eq!(wishart3.df, df3);
@@ -575,7 +575,7 @@ mod tests {
     fn test_wishart_mean() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0;
-        let wishart = Wishart::new(scale.clone(), df).unwrap();
+        let wishart = Wishart::new(scale.clone(), df).expect("Operation failed");
 
         let mean = wishart.mean();
         let expected_mean = scale * df;
@@ -591,9 +591,9 @@ mod tests {
     fn test_wishart_mode() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0; // df = 5 > p + 1 = 3, so mode exists
-        let wishart = Wishart::new(scale.clone(), df).unwrap();
+        let wishart = Wishart::new(scale.clone(), df).expect("Operation failed");
 
-        let mode = wishart.mode().unwrap(); // Mode should exist
+        let mode = wishart.mode().expect("Operation failed"); // Mode should exist
         let expected_mode = scale.clone() * (df - 3.0); // (ν - p - 1) × Σ where p = 2
 
         for i in 0..2 {
@@ -603,7 +603,7 @@ mod tests {
         }
 
         // Test case when mode doesn't exist
-        let wishart2 = Wishart::new(scale, 2.5).unwrap(); // df = 2.5 < p + 1 = 3
+        let wishart2 = Wishart::new(scale, 2.5).expect("Operation failed"); // df = 2.5 < p + 1 = 3
         assert!(wishart2.mode().is_none()); // Mode should not exist
     }
 
@@ -612,7 +612,7 @@ mod tests {
         // Simple identity scale case
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
         let df = 5.0;
-        let wishart = Wishart::new(scale, df).unwrap();
+        let wishart = Wishart::new(scale, df).expect("Operation failed");
 
         // PDF at identity matrix
         let x = array![[1.0, 0.0], [0.0, 1.0]];
@@ -633,7 +633,7 @@ mod tests {
     fn test_wishart_logpdf() {
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
         let df = 5.0;
-        let wishart = Wishart::new(scale, df).unwrap();
+        let wishart = Wishart::new(scale, df).expect("Operation failed");
 
         // Check that exp(logPDF) = PDF
         let x = array![[2.0, 0.5], [0.5, 3.0]];
@@ -650,11 +650,11 @@ mod tests {
     fn test_wishart_rvs() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0;
-        let wishart = Wishart::new(scale.clone(), df).unwrap();
+        let wishart = Wishart::new(scale.clone(), df).expect("Operation failed");
 
         // Generate samples
         let n_samples_ = 100;
-        let samples = wishart.rvs(n_samples_).unwrap();
+        let samples = wishart.rvs(n_samples_).expect("Operation failed");
 
         // Check number of samples
         assert_eq!(samples.len(), n_samples_);
@@ -691,9 +691,9 @@ mod tests {
     fn test_wishart_rvs_single() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0;
-        let wishart = Wishart::new(scale, df).unwrap();
+        let wishart = Wishart::new(scale, df).expect("Operation failed");
 
-        let sample = wishart.rvs_single().unwrap();
+        let sample = wishart.rvs_single().expect("Operation failed");
 
         // Check dimensions
         assert_eq!(sample.shape(), &[2, 2]);

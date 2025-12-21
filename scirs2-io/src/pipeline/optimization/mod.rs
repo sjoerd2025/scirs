@@ -167,7 +167,7 @@ mod tests {
         let result = optimizer.optimize_pipeline_configuration("test_pipeline", 1024 * 1024);
         
         assert!(result.is_ok());
-        let config = result.unwrap();
+        let config = result.expect("Operation failed");
         assert!(config.thread_count > 0);
         assert!(config.chunk_size > 0);
     }

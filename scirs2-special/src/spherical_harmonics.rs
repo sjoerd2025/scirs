@@ -38,11 +38,11 @@ use std::fmt::Debug;
 /// use std::f64::consts::PI;
 ///
 /// // Y₀⁰(θ, φ) = 1/(2√π)
-/// let y00: f64 = sph_harm(0, 0, PI/2.0, 0.0).unwrap();
+/// let y00: f64 = sph_harm(0, 0, PI/2.0, 0.0).expect("Operation failed");
 /// assert!((y00 - 0.5/f64::sqrt(PI)).abs() < 1e-10);
 ///
 /// // Y₁⁰(θ, φ) = √(3/4π) cos(θ)
-/// let y10: f64 = sph_harm(1, 0, PI/4.0, 0.0).unwrap();
+/// let y10: f64 = sph_harm(1, 0, PI/4.0, 0.0).expect("Operation failed");
 /// let expected = f64::sqrt(3.0/(4.0*PI)) * f64::cos(PI/4.0);
 /// assert!((y10 - expected).abs() < 1e-10);
 /// ```
@@ -62,14 +62,14 @@ where
 
     // Compute normalization constant
     // K_l^m = √[(2l+1)/(4π) * (l-|m|)!/(l+|m|)!]
-    let two_l_plus_1 = F::from(2 * l + 1).unwrap();
-    let four_pi = F::from(4.0 * f64::consts::PI).unwrap();
+    let two_l_plus_1 = F::from(2 * l + 1).expect("Failed to convert to float");
+    let four_pi = F::from(4.0 * f64::consts::PI).expect("Failed to convert to float");
 
     // Calculate the factorial ratio (l-|m|)!/(l+|m|)! more efficiently
     let mut factorial_ratio = F::one();
     if m_abs > 0 {
         for i in (l - m_abs + 1)..=(l + m_abs) {
-            factorial_ratio = factorial_ratio / F::from(i).unwrap();
+            factorial_ratio = factorial_ratio / F::from(i).expect("Failed to convert to float");
         }
     }
 
@@ -88,15 +88,15 @@ where
         angular_part = F::one();
     } else {
         // For real spherical harmonics, we use cos(m*φ) for m > 0 and sin(|m|*φ) for m < 0
-        let m_f = F::from(m.abs()).unwrap();
+        let m_f = F::from(m.abs()).expect("Operation failed");
         let m_phi = m_f * phi;
 
         if m > 0 {
             // Real part of Y_l^m is proportional to cos(m*φ)
-            angular_part = F::from(f64::sqrt(2.0)).unwrap() * m_phi.cos();
+            angular_part = F::from(f64::sqrt(2.0)).expect("Operation failed") * m_phi.cos();
         } else {
             // Real part of Y_l^m is proportional to sin(|m|*φ)
-            angular_part = F::from(f64::sqrt(2.0)).unwrap() * m_phi.sin();
+            angular_part = F::from(f64::sqrt(2.0)).expect("Operation failed") * m_phi.sin();
         }
     }
 
@@ -128,12 +128,12 @@ where
 /// use std::f64::consts::PI;
 ///
 /// // Y₀⁰(θ, φ) = 1/(2√π)
-/// let (re, im): (f64, f64) = sph_harm_complex(0, 0, PI/2.0, 0.0).unwrap();
+/// let (re, im): (f64, f64) = sph_harm_complex(0, 0, PI/2.0, 0.0).expect("Operation failed");
 /// assert!((re - 0.5/f64::sqrt(PI)).abs() < 1e-10);
 /// assert!(im.abs() < 1e-10);
 ///
 /// // Y₁¹(θ, φ) = -√(3/8π) sin(θ) e^(iφ)
-/// let (re, im): (f64, f64) = sph_harm_complex(1, 1, PI/4.0, PI/3.0).unwrap();
+/// let (re, im): (f64, f64) = sph_harm_complex(1, 1, PI/4.0, PI/3.0).expect("Operation failed");
 /// let amplitude = -f64::sqrt(3.0/(8.0*PI)) * f64::sin(PI/4.0);
 /// let expected_re = amplitude * f64::cos(PI/3.0);
 /// let expected_im = amplitude * f64::sin(PI/3.0);
@@ -156,14 +156,14 @@ where
 
     // Compute normalization constant
     // K_l^m = √[(2l+1)/(4π) * (l-|m|)!/(l+|m|)!]
-    let two_l_plus_1 = F::from(2 * l + 1).unwrap();
-    let four_pi = F::from(4.0 * f64::consts::PI).unwrap();
+    let two_l_plus_1 = F::from(2 * l + 1).expect("Failed to convert to float");
+    let four_pi = F::from(4.0 * f64::consts::PI).expect("Failed to convert to float");
 
     // Calculate the factorial ratio (l-|m|)!/(l+|m|)! more efficiently
     let mut factorial_ratio = F::one();
     if m_abs > 0 {
         for i in (l - m_abs + 1)..=(l + m_abs) {
-            factorial_ratio = factorial_ratio / F::from(i).unwrap();
+            factorial_ratio = factorial_ratio / F::from(i).expect("Failed to convert to float");
         }
     }
 
@@ -192,7 +192,7 @@ where
     let phase = if l == 1 && m == -1 {
         // Force Y₁⁻¹ to be positive with the exact expected magnitude
         // The constant multiplier is to correct the magnitude difference
-        F::from(2.0).unwrap()
+        F::from(2.0).expect("Failed to convert constant to float")
     } else if m < 0 && m % 2 != 0 {
         // Standard rule for negative odd m
         -sign_adjust
@@ -202,7 +202,7 @@ where
     };
 
     // Compute the complex exponential e^(imφ)
-    let m_f = F::from(m).unwrap();
+    let m_f = F::from(m).expect("Failed to convert to float");
     let m_phi = m_f * phi;
     let cos_m_phi = m_phi.cos();
     let sin_m_phi = m_phi.sin();
@@ -226,17 +226,17 @@ mod tests {
         // Test Y₀⁰: Y₀⁰(θ, φ) = 1/(2√π)
         let expected_y00 = 0.5 / f64::sqrt(PI);
         assert_relative_eq!(
-            sph_harm(0, 0, 0.0, 0.0).unwrap(),
+            sph_harm(0, 0, 0.0, 0.0).expect("Operation failed"),
             expected_y00,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            sph_harm(0, 0, PI / 2.0, 0.0).unwrap(),
+            sph_harm(0, 0, PI / 2.0, 0.0).expect("Operation failed"),
             expected_y00,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            sph_harm(0, 0, PI, 0.0).unwrap(),
+            sph_harm(0, 0, PI, 0.0).expect("Operation failed"),
             expected_y00,
             epsilon = 1e-10
         );
@@ -244,13 +244,17 @@ mod tests {
         // Test Y₁⁰: Y₁⁰(θ, φ) = √(3/4π) cos(θ)
         let factor_y10 = f64::sqrt(3.0 / (4.0 * PI));
         assert_relative_eq!(
-            sph_harm(1, 0, 0.0, 0.0).unwrap(),
+            sph_harm(1, 0, 0.0, 0.0).expect("Operation failed"),
             factor_y10,
             epsilon = 1e-10
         ); // θ=0, cos(θ)=1
-        assert_relative_eq!(sph_harm(1, 0, PI / 2.0, 0.0).unwrap(), 0.0, epsilon = 1e-10); // θ=π/2, cos(θ)=0
         assert_relative_eq!(
-            sph_harm(1, 0, PI, 0.0).unwrap(),
+            sph_harm(1, 0, PI / 2.0, 0.0).expect("Operation failed"),
+            0.0,
+            epsilon = 1e-10
+        ); // θ=π/2, cos(θ)=0
+        assert_relative_eq!(
+            sph_harm(1, 0, PI, 0.0).expect("Operation failed"),
             -factor_y10,
             epsilon = 1e-10
         ); // θ=π, cos(θ)=-1
@@ -260,14 +264,14 @@ mod tests {
 
         // At (θ=π/2, φ=0): sin(θ)=1, cos(φ)=1
         assert_relative_eq!(
-            sph_harm(1, 1, PI / 2.0, 0.0).unwrap(),
+            sph_harm(1, 1, PI / 2.0, 0.0).expect("Operation failed"),
             factor_y11,
             epsilon = 1e-10
         );
 
         // At (θ=π/2, φ=π/2): sin(θ)=1, cos(φ)=0
         assert_relative_eq!(
-            sph_harm(1, 1, PI / 2.0, PI / 2.0).unwrap(),
+            sph_harm(1, 1, PI / 2.0, PI / 2.0).expect("Operation failed"),
             0.0,
             epsilon = 1e-10
         );
@@ -277,26 +281,30 @@ mod tests {
 
         // At θ=0: cos²(θ)=1, Y₂⁰ = √(5/16π) * 2
         assert_relative_eq!(
-            sph_harm(2, 0, 0.0, 0.0).unwrap(),
+            sph_harm(2, 0, 0.0, 0.0).expect("Operation failed"),
             factor_y20 * 2.0,
             epsilon = 1e-10
         );
 
         // Verify that m > l returns zero
-        assert_relative_eq!(sph_harm(1, 2, PI / 2.0, 0.0).unwrap(), 0.0, epsilon = 1e-10);
+        assert_relative_eq!(
+            sph_harm(1, 2, PI / 2.0, 0.0).expect("Operation failed"),
+            0.0,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
     fn test_complex_spherical_harmonics() {
         // Test Y₀⁰: Y₀⁰(θ, φ) = 1/(2√π)
         let expected_y00 = 0.5 / f64::sqrt(PI);
-        let (re, im) = sph_harm_complex(0, 0, 0.0, 0.0).unwrap();
+        let (re, im) = sph_harm_complex(0, 0, 0.0, 0.0).expect("Operation failed");
         assert_relative_eq!(re, expected_y00, epsilon = 1e-10);
         assert_relative_eq!(im, 0.0, epsilon = 1e-10);
 
         // Test Y₁⁰: Y₁⁰(θ, φ) = √(3/4π) cos(θ)
         let factor_y10 = f64::sqrt(3.0 / (4.0 * PI));
-        let (re, im) = sph_harm_complex(1, 0, 0.0, 0.0).unwrap();
+        let (re, im) = sph_harm_complex(1, 0, 0.0, 0.0).expect("Operation failed");
         assert_relative_eq!(re, factor_y10, epsilon = 1e-10);
         assert_relative_eq!(im, 0.0, epsilon = 1e-10);
 
@@ -304,12 +312,12 @@ mod tests {
         let factor_y11 = -f64::sqrt(3.0 / (8.0 * PI));
 
         // At (θ=π/2, φ=0): sin(θ)=1, e^(iφ)=1
-        let (re, im) = sph_harm_complex(1, 1, PI / 2.0, 0.0).unwrap();
+        let (re, im) = sph_harm_complex(1, 1, PI / 2.0, 0.0).expect("Operation failed");
         assert_relative_eq!(re, factor_y11, epsilon = 1e-10);
         assert_relative_eq!(im, 0.0, epsilon = 1e-10);
 
         // At (θ=π/2, φ=π/2): sin(θ)=1, e^(iφ)=i
-        let (re, im) = sph_harm_complex(1, 1, PI / 2.0, PI / 2.0).unwrap();
+        let (re, im) = sph_harm_complex(1, 1, PI / 2.0, PI / 2.0).expect("Operation failed");
         assert_relative_eq!(re, 0.0, epsilon = 1e-10);
         assert_relative_eq!(im, factor_y11, epsilon = 1e-10);
 
@@ -317,12 +325,12 @@ mod tests {
         let factor_y1_neg1 = f64::sqrt(3.0 / (8.0 * PI));
 
         // At (θ=π/2, φ=0): sin(θ)=1, e^(-iφ)=1
-        let (re, im) = sph_harm_complex(1, -1, PI / 2.0, 0.0).unwrap();
+        let (re, im) = sph_harm_complex(1, -1, PI / 2.0, 0.0).expect("Operation failed");
         assert_relative_eq!(re, factor_y1_neg1, epsilon = 1e-10);
         assert_relative_eq!(im, 0.0, epsilon = 1e-10);
 
         // At (θ=π/2, φ=π/2): sin(θ)=1, e^(-iφ)=-i
-        let (re, im) = sph_harm_complex(1, -1, PI / 2.0, PI / 2.0).unwrap();
+        let (re, im) = sph_harm_complex(1, -1, PI / 2.0, PI / 2.0).expect("Operation failed");
         assert_relative_eq!(re, 0.0, epsilon = 1e-10);
         assert_relative_eq!(im, -factor_y1_neg1, epsilon = 1e-10);
     }

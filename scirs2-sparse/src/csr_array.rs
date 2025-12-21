@@ -52,7 +52,7 @@ use crate::sparray::{SparseArray, SparseSum};
 /// let rows = vec![0, 0, 1, 2, 2];
 /// let cols = vec![0, 2, 1, 0, 2];
 /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Access elements
 /// assert_eq!(matrix.get(0, 0), 1.0);
@@ -73,11 +73,11 @@ use crate::sparray::{SparseArray, SparseSum};
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
 /// let data = vec![2.0, 3.0, 4.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Matrix-vector multiplication
 /// let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-/// let y = matrix.dot_vector(&x.view()).unwrap();
+/// let y = matrix.dot_vector(&x.view()).expect("Operation failed");
 /// assert_eq!(y[0], 2.0);  // 2.0 * 1.0
 /// assert_eq!(y[1], 6.0);  // 3.0 * 2.0
 /// assert_eq!(y[2], 12.0); // 4.0 * 3.0
@@ -91,7 +91,7 @@ use crate::sparray::{SparseArray, SparseSum};
 /// let rows = vec![0, 1];
 /// let cols = vec![0, 1];
 /// let data = vec![1.0, 2.0];
-/// let csr = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
+/// let csr = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).expect("Operation failed");
 ///
 /// // Convert to dense array
 /// let dense = csr.to_array();
@@ -234,7 +234,7 @@ where
     /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     /// let shape = (3, 3);
     ///
-    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
     /// assert_eq!(matrix.get(0, 0), 1.0);
     /// assert_eq!(matrix.get(0, 1), 0.0);
     /// assert_eq!(matrix.get(1, 1), 3.0);
@@ -250,7 +250,7 @@ where
     /// let data: Vec<f64> = vec![];
     /// let shape = (5, 5);
     ///
-    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
     /// assert_eq!(matrix.nnz(), 0);
     /// assert_eq!(matrix.shape(), (5, 5));
     /// ```
@@ -266,7 +266,7 @@ where
     /// let data = vec![1.0, 2.0];
     /// let shape = (2, 2);
     ///
-    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+    /// let matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
     /// // Note: CSR format preserves duplicates; use sum_duplicates() to combine them
     /// assert_eq!(matrix.nnz(), 2);
     /// ```
@@ -1123,7 +1123,7 @@ mod tests {
         let indptr = Array1::from_vec(vec![0, 2, 3, 5]);
         let shape = (3, 3);
 
-        let csr = CsrArray::new(data, indices, indptr, shape).unwrap();
+        let csr = CsrArray::new(data, indices, indptr, shape).expect("Operation failed");
 
         assert_eq!(csr.shape(), (3, 3));
         assert_eq!(csr.nnz(), 5);
@@ -1142,7 +1142,8 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let csr = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let csr =
+            CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         assert_eq!(csr.shape(), (3, 3));
         assert_eq!(csr.nnz(), 5);
@@ -1161,7 +1162,7 @@ mod tests {
         let indptr = Array1::from_vec(vec![0, 2, 3, 5]);
         let shape = (3, 3);
 
-        let csr = CsrArray::new(data, indices, indptr, shape).unwrap();
+        let csr = CsrArray::new(data, indices, indptr, shape).expect("Operation failed");
         let dense = csr.to_array();
 
         assert_eq!(dense.shape(), &[3, 3]);
@@ -1183,10 +1184,10 @@ mod tests {
         let indptr = Array1::from_vec(vec![0, 2, 3, 5]);
         let shape = (3, 3);
 
-        let csr = CsrArray::new(data, indices, indptr, shape).unwrap();
+        let csr = CsrArray::new(data, indices, indptr, shape).expect("Operation failed");
         let vec = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let result = csr.dot_vector(&vec.view()).unwrap();
+        let result = csr.dot_vector(&vec.view()).expect("Operation failed");
 
         // Expected: [1*1 + 0*2 + 2*3, 0*1 + 3*2 + 0*3, 4*1 + 0*2 + 5*3] = [7, 6, 19]
         assert_eq!(result.len(), 3);
@@ -1202,17 +1203,17 @@ mod tests {
         let indptr = Array1::from_vec(vec![0, 2, 3, 5]);
         let shape = (3, 3);
 
-        let csr = CsrArray::new(data, indices, indptr, shape).unwrap();
+        let csr = CsrArray::new(data, indices, indptr, shape).expect("Operation failed");
 
         // Sum all elements
-        if let SparseSum::Scalar(sum) = csr.sum(None).unwrap() {
+        if let SparseSum::Scalar(sum) = csr.sum(None).expect("Operation failed") {
             assert_relative_eq!(sum, 15.0);
         } else {
             panic!("Expected scalar sum");
         }
 
         // Sum along rows
-        if let SparseSum::SparseArray(row_sum) = csr.sum(Some(0)).unwrap() {
+        if let SparseSum::SparseArray(row_sum) = csr.sum(Some(0)).expect("Operation failed") {
             let row_sum_array = row_sum.to_array();
             assert_eq!(row_sum_array.shape(), &[1, 3]);
             assert_relative_eq!(row_sum_array[[0, 0]], 5.0);
@@ -1223,7 +1224,7 @@ mod tests {
         }
 
         // Sum along columns
-        if let SparseSum::SparseArray(col_sum) = csr.sum(Some(1)).unwrap() {
+        if let SparseSum::SparseArray(col_sum) = csr.sum(Some(1)).expect("Operation failed") {
             let col_sum_array = col_sum.to_array();
             assert_eq!(col_sum_array.shape(), &[3, 1]);
             assert_relative_eq!(col_sum_array[[0, 0]], 3.0);

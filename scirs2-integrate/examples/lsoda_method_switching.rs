@@ -56,8 +56,9 @@ fn main() {
             }
 
             // Save data to file for potential plotting
-            let mut file = File::create("lsoda_method_switching_ex1.txt").unwrap();
-            writeln!(&mut file, "# t, y1, y2, stiffness_param").unwrap();
+            let mut file =
+                File::create("lsoda_method_switching_ex1.txt").expect("Operation failed");
+            writeln!(&mut file, "# t, y1, y2, stiffness_param").expect("Operation failed");
 
             for i in 0..res.t.len() {
                 let t = res.t[i];
@@ -67,7 +68,8 @@ fn main() {
                 // Calculate the stiffness parameter at each time point
                 let delta = 0.1 + 999.9 / (1.0 + (-2.0 * (t - 5.0)).exp());
 
-                writeln!(&mut file, "{t:.6} {y1:.10e} {y2:.10e} {delta:.6}").unwrap();
+                writeln!(&mut file, "{t:.6} {y1:.10e} {y2:.10e} {delta:.6}")
+                    .expect("Operation failed");
 
                 // Also print selected points to console
                 if i % (res.t.len() / 10).max(1) == 0 || i == res.t.len() - 1 {
@@ -141,8 +143,9 @@ fn main() {
             }
 
             // Save data to file for potential plotting
-            let mut file = File::create("lsoda_method_switching_ex2.txt").unwrap();
-            writeln!(&mut file, "# t, y1, y2, y3, k2_value").unwrap();
+            let mut file =
+                File::create("lsoda_method_switching_ex2.txt").expect("Operation failed");
+            writeln!(&mut file, "# t, y1, y2, y3, k2_value").expect("Operation failed");
 
             for i in 0..res.t.len() {
                 let t = res.t[i];
@@ -154,7 +157,8 @@ fn main() {
                 let base_k2 = 3.0e7;
                 let k2 = base_k2 * (-(t - 50.0).powi(2) / 500.0).exp().max(0.01);
 
-                writeln!(&mut file, "{t:.6} {y1:.10e} {y2:.10e} {y3:.10e} {k2:.6e}").unwrap();
+                writeln!(&mut file, "{t:.6} {y1:.10e} {y2:.10e} {y3:.10e} {k2:.6e}")
+                    .expect("Operation failed");
 
                 // Print selected points to console
                 if i % (res.t.len() / 10).max(1) == 0 || i == res.t.len() - 1 {
@@ -222,8 +226,8 @@ fn main() {
                 println!("  Rejected steps: {}", res.n_rejected);
 
                 // Calculate final error compared to analytical solution for component 2
-                let exact_y2 = (-res.t.last().unwrap()).exp();
-                let error_y2 = (res.y.last().unwrap()[1] - exact_y2).abs();
+                let exact_y2 = (-res.t.last().expect("Operation failed")).exp();
+                let error_y2 = (res.y.last().expect("Operation failed")[1] - exact_y2).abs();
                 println!("  Final error for reference component: {error_y2:.6e}");
 
                 if let Some(msg) = &res.message {

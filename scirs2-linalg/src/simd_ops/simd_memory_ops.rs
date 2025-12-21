@@ -890,7 +890,9 @@ mod tests {
         let mut cache_ops = CacheAwareMatrixOperations::new();
 
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
-        let result = cache_ops.cache_aware_transpose_f32(&input.view()).unwrap();
+        let result = cache_ops
+            .cache_aware_transpose_f32(&input.view())
+            .expect("Operation failed");
 
         let expected = array![[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]];
 
@@ -921,7 +923,7 @@ mod tests {
         let duration = profiler.end_session();
 
         assert!(duration.is_some());
-        assert!(duration.unwrap() >= Duration::from_millis(1));
+        assert!(duration.expect("Operation failed") >= Duration::from_millis(1));
 
         let recommendations = profiler.analyze_and_recommend();
         // Should provide some recommendations based on timing
@@ -965,7 +967,7 @@ mod tests {
 
         let result = engine
             .adaptivematrix_multiply_f32(&a.view(), &b.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Verify result correctness
         let expected = array![[19.0f32, 22.0], [43.0, 50.0]];

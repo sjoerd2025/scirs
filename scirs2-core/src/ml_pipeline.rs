@@ -406,9 +406,9 @@ impl FeatureTransformer {
         let processing_time = start_time.elapsed().as_millis() as f64;
         self.metrics
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert("processing_time_ms".to_string(), processing_time);
-        self.metrics.lock().unwrap().insert(
+        self.metrics.lock().expect("Operation failed").insert(
             "samples_processed".to_string(),
             transformed_batch.size() as f64,
         );
@@ -675,7 +675,7 @@ impl PipelineNode for FeatureTransformer {
     }
 
     fn metrics(&self) -> HashMap<String, f64> {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
 }
 
@@ -773,9 +773,9 @@ impl ModelPredictor {
         let processing_time = start_time.elapsed().as_millis() as f64;
         self.metrics
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .insert("inference_time_ms".to_string(), processing_time);
-        self.metrics.lock().unwrap().insert(
+        self.metrics.lock().expect("Operation failed").insert(
             "samples_predicted".to_string(),
             prediction_batch.size() as f64,
         );
@@ -852,7 +852,7 @@ impl PipelineNode for ModelPredictor {
     }
 
     fn metrics(&self) -> HashMap<String, f64> {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     }
 }
 
@@ -1150,7 +1150,10 @@ impl MLPipeline {
 
     /// Get current pipeline metrics
     pub fn get_metrics(&self) -> PipelineMetrics {
-        self.pipeline_metrics.read().unwrap().clone()
+        self.pipeline_metrics
+            .read()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Get pipeline configuration
@@ -1204,7 +1207,7 @@ impl StreamingProcessor {
     /// Start streaming processing
     pub async fn start(&self) -> Result<(), MLPipelineError> {
         {
-            let mut running = self.is_running.lock().unwrap();
+            let mut running = self.is_running.lock().expect("Operation failed");
             if *running {
                 return Err(MLPipelineError::ExecutionError(
                     "Processor already running".to_string(),
@@ -1226,14 +1229,14 @@ impl StreamingProcessor {
             loop {
                 interval.tick().await;
 
-                if !*is_running.lock().unwrap() {
+                if !*is_running.lock().expect("Operation failed") {
                     break;
                 }
 
                 // Process available data
                 let mut batch = DataBatch::new();
                 {
-                    let mut input = input_buffer.lock().unwrap();
+                    let mut input = input_buffer.lock().expect("Operation failed");
                     let mut count = 0;
                     while count < batchsize && !input.is_empty() {
                         if let Some(sample) = input.pop_front() {
@@ -1246,7 +1249,7 @@ impl StreamingProcessor {
                 if !batch.is_empty() {
                     match pipeline.execute(batch) {
                         Ok(processed_batch) => {
-                            let mut output = output_buffer.lock().unwrap();
+                            let mut output = output_buffer.lock().expect("Operation failed");
                             for sample in processed_batch.samples {
                                 output.push_back(sample);
                             }
@@ -1264,17 +1267,20 @@ impl StreamingProcessor {
 
     /// Stop streaming processing
     pub fn stop(&self) {
-        *self.is_running.lock().unwrap() = false;
+        *self.is_running.lock().expect("Operation failed") = false;
     }
 
     /// Add a sample to the input buffer
     pub fn add_sample(&self, sample: DataSample) {
-        self.input_buffer.lock().unwrap().push_back(sample);
+        self.input_buffer
+            .lock()
+            .expect("Operation failed")
+            .push_back(sample);
     }
 
     /// Get processed samples from output buffer
     pub fn get_samples(&self, maxcount: usize) -> Vec<DataSample> {
-        let mut output = self.output_buffer.lock().unwrap();
+        let mut output = self.output_buffer.lock().expect("Operation failed");
         let mut samples = Vec::new();
         let mut _count = 0;
 
@@ -1290,8 +1296,8 @@ impl StreamingProcessor {
 
     /// Get current buffer sizes
     pub fn get_buffer_stats(&self) -> (usize, usize) {
-        let input_size = self.input_buffer.lock().unwrap().len();
-        let output_size = self.output_buffer.lock().unwrap().len();
+        let input_size = self.input_buffer.lock().expect("Operation failed").len();
+        let output_size = self.output_buffer.lock().expect("Operation failed").len();
         (input_size, output_size)
     }
 }
@@ -1311,7 +1317,9 @@ pub mod utils {
             featurenames.clone(),
             featurenames.clone(),
         );
-        pipeline.add_node(Box::new(scaler)).unwrap();
+        pipeline
+            .add_node(Box::new(scaler))
+            .expect("Operation failed");
 
         pipeline
     }
@@ -1333,7 +1341,9 @@ pub mod utils {
             output_features,
             vec![], // Empty model data for now
         );
-        pipeline.add_node(Box::new(predictor)).unwrap();
+        pipeline
+            .add_node(Box::new(predictor))
+            .expect("Operation failed");
 
         pipeline
     }
@@ -1382,7 +1392,7 @@ pub mod utils {
             return None;
         }
 
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
         let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
@@ -1437,7 +1447,9 @@ mod tests {
 
         // Test feature matrix extraction
         let featurenames = vec!["feature1".to_string(), "feature2".to_string()];
-        let matrix = batch.extract_featurematrix(&featurenames).unwrap();
+        let matrix = batch
+            .extract_featurematrix(&featurenames)
+            .expect("Operation failed");
         assert_eq!(matrix.len(), 1);
         assert_eq!(matrix[0], vec![1.0, 2.0]);
     }
@@ -1480,7 +1492,9 @@ mod tests {
             vec!["feature1_scaled".to_string()],
         );
 
-        pipeline.add_node(Box::new(transformer)).unwrap();
+        pipeline
+            .add_node(Box::new(transformer))
+            .expect("Operation failed");
         assert!(pipeline.validate().is_ok());
     }
 
@@ -1502,13 +1516,17 @@ mod tests {
             vec!["feature1_normalized".to_string()],
         );
 
-        pipeline.add_node(Box::new(node1)).unwrap();
-        pipeline.add_node(Box::new(node2)).unwrap();
+        pipeline
+            .add_node(Box::new(node1))
+            .expect("Operation failed");
+        pipeline
+            .add_node(Box::new(node2))
+            .expect("Operation failed");
 
         // Set dependencies
         pipeline.set_dependencies("node2".to_string(), vec!["node1".to_string()]);
 
-        let execution_order = pipeline.get_execution_order().unwrap();
+        let execution_order = pipeline.get_execution_order().expect("Operation failed");
         assert_eq!(execution_order, vec!["node1", "node2"]);
     }
 
@@ -1533,7 +1551,8 @@ mod tests {
         let featurenames = vec!["feature1".to_string()];
         let batch = utils::create_sample_batch(&featurenames, 100);
 
-        let stats = utils::calculate_feature_statistics(&batch, "feature1").unwrap();
+        let stats =
+            utils::calculate_feature_statistics(&batch, "feature1").expect("Operation failed");
         let (mean, std_dev, min, max) = stats;
 
         assert!(mean >= 0.0);

@@ -81,14 +81,14 @@ impl<F: IntegrateFloat> Default for DAEOptions<F> {
             dae_type: DAEType::default(),
             index: DAEIndex::default(),
             method: ODEMethod::Radau, // Use Radau by default, as it's suitable for index-1 DAEs
-            rtol: F::from_f64(1e-3).unwrap(),
-            atol: F::from_f64(1e-6).unwrap(),
+            rtol: F::from_f64(1e-3).expect("Operation failed"),
+            atol: F::from_f64(1e-6).expect("Operation failed"),
             h0: None,
             max_steps: 500,
             max_step: None,
             min_step: None,
             max_newton_iterations: 10,
-            newton_tol: F::from_f64(1e-8).unwrap(),
+            newton_tol: F::from_f64(1e-8).expect("Operation failed"),
             max_order: None,
         }
     }

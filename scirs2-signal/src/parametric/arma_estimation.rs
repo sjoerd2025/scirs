@@ -466,7 +466,7 @@ fn analyze_poles_zeros(
     }
 
     // Sort frequency peaks
-    frequency_peaks.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    frequency_peaks.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     Ok(PoleZeroAnalysis {
         poles,
@@ -677,7 +677,7 @@ fn compute_spectrum_metrics(
     let peak_idx = spectrum
         .iter()
         .enumerate()
-        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
         .map(|(i, _)| i)
         .unwrap_or(0);
 

@@ -418,7 +418,11 @@ impl GpuTopologyMap {
         // Simplified GPU selection based on utilization
         self.gpus
             .iter()
-            .min_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap())
+            .min_by(|a, b| {
+                a.utilization
+                    .partial_cmp(&b.utilization)
+                    .expect("Operation failed")
+            })
             .map(|gpu| gpu.id)
     }
 }
@@ -585,7 +589,7 @@ mod tests {
 
     #[test]
     fn test_multi_gpu_coordinator_creation() {
-        let coordinator = AdvancedMultiGpuCoordinator::new().unwrap();
+        let coordinator = AdvancedMultiGpuCoordinator::new().expect("Operation failed");
         assert!(coordinator.gpu_topology.gpus.is_empty());
     }
 
@@ -607,7 +611,9 @@ mod tests {
         let mut allocator = BandwidthAllocator::new();
         allocator.available_bandwidth.insert((0, 1), 100.0);
 
-        let allocated = allocator.allocate_bandwidth((0, 1), 50.0).unwrap();
+        let allocated = allocator
+            .allocate_bandwidth((0, 1), 50.0)
+            .expect("Operation failed");
         assert_eq!(allocated, 50.0);
     }
 }

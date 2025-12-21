@@ -593,7 +593,7 @@ mod tests {
         // Test function: (x - 2)^2
         let f = |x: f64| (x - 2.0).powi(2);
 
-        let result = minimize_scalar(f, None, Method::Brent, None).unwrap();
+        let result = minimize_scalar(f, None, Method::Brent, None).expect("Operation failed");
         assert!(result.success);
         assert_abs_diff_eq!(result.x, 2.0, epsilon = 2e-5);
         assert_abs_diff_eq!(result.fun, 0.0, epsilon = 5e-10);
@@ -604,7 +604,8 @@ mod tests {
         // Test function: (x - 2)^2, but constrained to [-1, 1]
         let f = |x: f64| (x - 2.0).powi(2);
 
-        let result = minimize_scalar(f, Some((-1.0, 1.0)), Method::Bounded, None).unwrap();
+        let result =
+            minimize_scalar(f, Some((-1.0, 1.0)), Method::Bounded, None).expect("Operation failed");
         assert!(result.success);
         // Allow for some numerical tolerance
         assert!(result.x > 0.99 && result.x <= 1.0);
@@ -616,7 +617,7 @@ mod tests {
         // Test function: x^4 - 2x^2 + x
         let f = |x: f64| x.powi(4) - 2.0 * x.powi(2) + x;
 
-        let result = minimize_scalar(f, None, Method::Golden, None).unwrap();
+        let result = minimize_scalar(f, None, Method::Golden, None).expect("Operation failed");
         assert!(result.success);
         // The actual minimum depends on the implementation details
         // For the test, we just check it's in a reasonable range
@@ -628,7 +629,7 @@ mod tests {
         // Test with a more complex function
         let f = |x: f64| (x - 2.0) * x * (x + 2.0).powi(2);
 
-        let result = minimize_scalar(f, None, Method::Brent, None).unwrap();
+        let result = minimize_scalar(f, None, Method::Brent, None).expect("Operation failed");
         assert!(result.success);
         // The minimum occurs somewhere - test that optimization works and finds reasonable result
         assert!(result.x > -5.0 && result.x < 5.0);

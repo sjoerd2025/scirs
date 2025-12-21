@@ -98,7 +98,7 @@ mod tests {
         let first_frame = frames.next();
         assert!(first_frame.is_some());
 
-        let frame = first_frame.unwrap();
+        let frame = first_frame.expect("Operation failed");
         assert_eq!(frame.data.dim(), (240, 320));
         if let Some(metadata) = frame.metadata {
             assert_eq!(metadata.width, 320);
@@ -138,7 +138,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_perspective_transform_stage() {
         // Create identity transformation
         let transform = crate::transform::perspective::PerspectiveTransform::identity();
@@ -164,12 +163,11 @@ mod tests {
         let result = stage.process(frame);
         assert!(result.is_ok());
 
-        let processed = result.unwrap();
+        let processed = result.expect("Operation failed");
         assert_eq!(processed.data.dim(), (100, 100));
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_stages() {
         let frame = Frame {
             data: Array2::from_shape_fn((100, 100), |(y, x)| (x + y) as f32 / 200.0),

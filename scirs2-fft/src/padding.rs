@@ -395,7 +395,7 @@ where
     let x_dyn = x
         .to_owned()
         .into_shape_with_order(x.shape().to_vec())
-        .unwrap()
+        .expect("Operation failed")
         .into_dyn();
 
     // For simplicity, copy to origin (0,0,...) - a full implementation would handle centering
@@ -425,7 +425,7 @@ where
                     &x_dyn
                         .view()
                         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-                        .unwrap(),
+                        .expect("Operation failed"),
                 );
         }
         _ => {
@@ -465,7 +465,8 @@ mod tests {
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let config = AutoPadConfig::new(PaddingMode::Zero);
 
-        let padded = auto_pad_complex(&x.mapv(|v| Complex::new(v, 0.0)), &config).unwrap();
+        let padded =
+            auto_pad_complex(&x.mapv(|v| Complex::new(v, 0.0)), &config).expect("Operation failed");
 
         // Should pad to next fast length
         assert!(padded.len() >= x.len());
@@ -481,7 +482,8 @@ mod tests {
         let x = Array1::from_vec(vec![1.0; 5]);
         let config = AutoPadConfig::new(PaddingMode::Zero).with_power_of_2();
 
-        let padded = auto_pad_complex(&x.mapv(|v| Complex::new(v, 0.0)), &config).unwrap();
+        let padded =
+            auto_pad_complex(&x.mapv(|v| Complex::new(v, 0.0)), &config).expect("Operation failed");
 
         // Should pad to 8 (next power of 2)
         assert_eq!(padded.len(), 8);
@@ -494,7 +496,10 @@ mod tests {
 
         let unpadded = remove_padding_1d(&padded, 4, &config);
         assert_eq!(unpadded.len(), 4);
-        assert_eq!(unpadded.as_slice().unwrap(), &[0.0, 1.0, 2.0, 3.0]);
+        assert_eq!(
+            unpadded.as_slice().expect("Operation failed"),
+            &[0.0, 1.0, 2.0, 3.0]
+        );
     }
 
     #[test]
@@ -504,7 +509,8 @@ mod tests {
             .with_center()
             .with_min_pad(3);
 
-        let padded = auto_pad_complex(&x.mapv(|v| Complex::new(v, 0.0)), &config).unwrap();
+        let padded =
+            auto_pad_complex(&x.mapv(|v| Complex::new(v, 0.0)), &config).expect("Operation failed");
 
         // Should center the data
         assert!(padded.len() >= 6);

@@ -369,18 +369,18 @@ impl<'a, F: Float> SGDOptimizer<'a, F> {
         // Simplified SGD update: _param = _param - lr * _grad
         // In practice, would implement proper momentum and weight decay
 
-        let _lr = F::from(config.learning_rate).unwrap();
+        let _lr = F::from(config.learning_rate).expect("Failed to convert to float");
 
         // Apply weight decay if configured
         if config.weight_decay > 0.0 {
-            let _decay = F::from(config.weight_decay).unwrap();
+            let _decay = F::from(config.weight_decay).expect("Failed to convert to float");
             // param_data = param_data - decay * param_data (simplified)
         }
 
         // Update with momentum if configured
         if config.momentum > 0.0 {
             if let Some(ref mut momentum_buffer) = param_state.momentum {
-                let _momentum = F::from(config.momentum).unwrap();
+                let _momentum = F::from(config.momentum).expect("Failed to convert to float");
                 // momentum_buffer = momentum * momentum_buffer + lr * _grad
                 // param_data = param_data - momentum_buffer
             }

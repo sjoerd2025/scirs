@@ -44,16 +44,16 @@
 //! use scirs2_graph::io::matrix_market::{read_matrix_market_format, write_matrix_market_format};
 //!
 //! // Create a temporary file with Matrix Market data
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, "%%MatrixMarket matrix coordinate pattern general").unwrap();
-//! writeln!(temp_file, "3 3 3").unwrap();
-//! writeln!(temp_file, "1 2").unwrap();
-//! writeln!(temp_file, "2 3").unwrap();
-//! writeln!(temp_file, "3 1").unwrap();
-//! temp_file.flush().unwrap();
+//! let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+//! writeln!(temp_file, "%%MatrixMarket matrix coordinate pattern general").expect("Test operation failed");
+//! writeln!(temp_file, "3 3 3").expect("Test operation failed");
+//! writeln!(temp_file, "1 2").expect("Test operation failed");
+//! writeln!(temp_file, "2 3").expect("Test operation failed");
+//! writeln!(temp_file, "3 1").expect("Test operation failed");
+//! temp_file.flush().expect("Test operation failed");
 //!
 //! // Read the graph
-//! let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), false).expect("Test operation failed");
 //! assert_eq!(graph.node_count(), 3);
 //! assert_eq!(graph.edge_count(), 3);
 //! ```
@@ -612,7 +612,7 @@ mod tests {
     fn test_parse_header_line() {
         let header = "%%MatrixMarket matrix coordinate real general";
         let (object, format, field, symmetry) =
-            MatrixMarketHeader::parse_header_line(header).unwrap();
+            MatrixMarketHeader::parse_header_line(header).expect("Test operation failed");
 
         assert_eq!(object, "matrix");
         assert_eq!(format, "coordinate");
@@ -623,7 +623,8 @@ mod tests {
     #[test]
     fn test_parse_size_line() {
         let size_line = "10 10 20";
-        let (rows, cols, nnz) = MatrixMarketHeader::parse_size_line(size_line).unwrap();
+        let (rows, cols, nnz) =
+            MatrixMarketHeader::parse_size_line(size_line).expect("Test operation failed");
 
         assert_eq!(rows, 10);
         assert_eq!(cols, 10);
@@ -632,20 +633,21 @@ mod tests {
 
     #[test]
     fn test_read_pattern_matrix_market() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
         writeln!(
             temp_file,
             "%%MatrixMarket matrix coordinate pattern general"
         )
-        .unwrap();
-        writeln!(temp_file, "% Test pattern matrix").unwrap();
-        writeln!(temp_file, "3 3 3").unwrap();
-        writeln!(temp_file, "1 2").unwrap();
-        writeln!(temp_file, "2 3").unwrap();
-        writeln!(temp_file, "3 1").unwrap();
-        temp_file.flush().unwrap();
+        .expect("Operation failed");
+        writeln!(temp_file, "% Test pattern matrix").expect("Test operation failed");
+        writeln!(temp_file, "3 3 3").expect("Test operation failed");
+        writeln!(temp_file, "1 2").expect("Test operation failed");
+        writeln!(temp_file, "2 3").expect("Test operation failed");
+        writeln!(temp_file, "3 1").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
-        let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_matrix_market_format(temp_file.path(), false).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
@@ -653,15 +655,17 @@ mod tests {
 
     #[test]
     fn test_read_real_matrix_market() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "%%MatrixMarket matrix coordinate real general").unwrap();
-        writeln!(temp_file, "3 3 3").unwrap();
-        writeln!(temp_file, "1 2 1.5").unwrap();
-        writeln!(temp_file, "2 3 2.0").unwrap();
-        writeln!(temp_file, "3 1 0.5").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "%%MatrixMarket matrix coordinate real general")
+            .expect("Test operation failed");
+        writeln!(temp_file, "3 3 3").expect("Test operation failed");
+        writeln!(temp_file, "1 2 1.5").expect("Test operation failed");
+        writeln!(temp_file, "2 3 2.0").expect("Test operation failed");
+        writeln!(temp_file, "3 1 0.5").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
-        let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), true).unwrap();
+        let graph: Graph<i32, f64> =
+            read_matrix_market_format(temp_file.path(), true).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
@@ -669,14 +673,16 @@ mod tests {
 
     #[test]
     fn test_read_symmetric_matrix_market() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "%%MatrixMarket matrix coordinate real symmetric").unwrap();
-        writeln!(temp_file, "3 3 2").unwrap();
-        writeln!(temp_file, "1 2 1.5").unwrap();
-        writeln!(temp_file, "2 3 2.0").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "%%MatrixMarket matrix coordinate real symmetric")
+            .expect("Test operation failed");
+        writeln!(temp_file, "3 3 2").expect("Test operation failed");
+        writeln!(temp_file, "1 2 1.5").expect("Test operation failed");
+        writeln!(temp_file, "2 3 2.0").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
-        let graph: Graph<i32, f64> = read_matrix_market_format(temp_file.path(), true).unwrap();
+        let graph: Graph<i32, f64> =
+            read_matrix_market_format(temp_file.path(), true).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 4); // 2 original + 2 symmetric
@@ -684,16 +690,17 @@ mod tests {
 
     #[test]
     fn test_read_digraph_matrix_market() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "%%MatrixMarket matrix coordinate real general").unwrap();
-        writeln!(temp_file, "3 3 3").unwrap();
-        writeln!(temp_file, "1 2 1.5").unwrap();
-        writeln!(temp_file, "2 3 2.0").unwrap();
-        writeln!(temp_file, "3 1 0.5").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "%%MatrixMarket matrix coordinate real general")
+            .expect("Test operation failed");
+        writeln!(temp_file, "3 3 3").expect("Test operation failed");
+        writeln!(temp_file, "1 2 1.5").expect("Test operation failed");
+        writeln!(temp_file, "2 3 2.0").expect("Test operation failed");
+        writeln!(temp_file, "3 1 0.5").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
-        let graph: DiGraph<i32, f64> =
-            read_matrix_market_format_digraph(temp_file.path(), true).unwrap();
+        let graph: DiGraph<i32, f64> = read_matrix_market_format_digraph(temp_file.path(), true)
+            .expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
@@ -702,14 +709,19 @@ mod tests {
     #[test]
     fn test_write_read_roundtrip() {
         let mut original_graph: Graph<i32, f64> = Graph::new();
-        original_graph.add_edge(0i32, 1i32, 1.5f64).unwrap();
-        original_graph.add_edge(1i32, 2i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(0i32, 1i32, 1.5f64)
+            .expect("Test operation failed");
+        original_graph
+            .add_edge(1i32, 2i32, 2.0f64)
+            .expect("Test operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_matrix_market_format(&original_graph, temp_file.path(), true).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test operation failed");
+        write_matrix_market_format(&original_graph, temp_file.path(), true)
+            .expect("Test operation failed");
 
         let read_graph: Graph<i32, f64> =
-            read_matrix_market_format(temp_file.path(), true).unwrap();
+            read_matrix_market_format(temp_file.path(), true).expect("Test operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -717,9 +729,9 @@ mod tests {
 
     #[test]
     fn test_invalid_header() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "%%InvalidHeader").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "%%InvalidHeader").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
         let result: Result<Graph<i32, f64>> = read_matrix_market_format(temp_file.path(), false);
         assert!(result.is_err());
@@ -727,7 +739,7 @@ mod tests {
 
     #[test]
     fn test_empty_file() {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Test operation failed");
 
         let result: Result<Graph<i32, f64>> = read_matrix_market_format(temp_file.path(), false);
         assert!(result.is_err());

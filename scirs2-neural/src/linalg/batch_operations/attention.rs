@@ -48,17 +48,17 @@ type FeedForwardReturn<F> = (Array3<F>, Array2<F>, Array1<F>, Array2<F>, Array1<
 /// let query = Array::from_shape_vec(
 ///     (batch_size, seq_len_q, d_k),
 ///     vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// let key = Array::from_shape_vec(
 ///     (batch_size, seq_len_k, d_k),
 ///     vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// let value = Array::from_shape_vec(
 ///     (batch_size, seq_len_k, d_v),
 ///     vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Compute attention (without mask)
 /// let (output, weights) = scaled_dot_product_attention(
@@ -66,7 +66,7 @@ type FeedForwardReturn<F> = (Array3<F>, Array2<F>, Array1<F>, Array2<F>, Array1<
 ///     &key.view(),
 ///     &value.view(),
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(output.shape(), &[batch_size, seq_len_q, d_v]);
 /// assert_eq!(weights.shape(), &[batch_size, seq_len_q, seq_len_k]);
@@ -115,7 +115,7 @@ where
     }
 
     // Initialize attention scores: Q * K^T / sqrt(d_k)
-    let scale = F::one() / F::from(d_k).unwrap().sqrt();
+    let scale = F::one() / F::from(d_k).expect("Failed to convert to float").sqrt();
     let mut attention_scores = Array3::<F>::zeros((batch_size, seq_len_q, seq_len_k));
 
     // Compute Q * K^T
@@ -140,7 +140,7 @@ where
                 for j in 0..seq_len_k {
                     if m[[b, i, j]] == F::zero() {
                         // Set masked positions to large negative value for softmax
-                        attention_scores[[b, i, j]] = F::from(-1e9).unwrap();
+                        attention_scores[[b, i, j]] = F::from(-1e9).expect("Failed to convert constant to float");
                     }
                 }
             }
@@ -262,7 +262,7 @@ where
 ///     &wo.view(),
 ///     num_heads,
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(output.shape(), &[batch_size, seq_len_q, d_model]);
 /// ```
@@ -500,7 +500,7 @@ where
 ///
 /// // Generate positional encoding for a sequence of length 10
 /// // with embedding dimension 16
-/// let pos_encoding = positional_encoding::<f64>(10, 16, None).unwrap();
+/// let pos_encoding = positional_encoding::<f64>(10, 16, None).expect("Operation failed");
 /// assert_eq!(pos_encoding.shape(), &[10, 16]);
 /// ```
 pub fn positional_encoding<F: Float + Debug>(
@@ -532,8 +532,8 @@ pub fn positional_encoding<F: Float + Debug>(
     for pos in 0..max_len {
         for i in 0..d_model / 2 {
             let div_term =
-                (F::from(2 * i).unwrap() / F::from(d_model).unwrap()).exp() * F::from(1e4).unwrap();
-            let pos_f = F::from(pos).unwrap();
+                (F::from(2 * i).expect("Failed to convert to float") / F::from(d_model).expect("Failed to convert to float")).exp() * F::from(1e4).expect("Failed to convert constant to float");
+            let pos_f = F::from(pos).expect("Failed to convert to float");
 
             // Even indices: sin
             pos_encoding[[pos, 2 * i]] = (pos_f / div_term).sin();
@@ -595,7 +595,7 @@ pub fn positional_encoding<F: Float + Debug>(
 ///     &b1.view(),
 ///     &w2.view(),
 ///     &b2.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(output.shape(), x.shape());
 /// ```
@@ -721,7 +721,7 @@ where
 /// let b2 = Array::from_shape_fn(d_model, |_| 0.1);
 ///
 /// // Forward pass
-/// let out = transformer_ffn(&x.view(), &w1.view(), &b1.view(), &w2.view(), &b2.view()).unwrap();
+/// let out = transformer_ffn(&x.view(), &w1.view(), &b1.view(), &w2.view(), &b2.view()).expect("Operation failed");
 ///
 /// // Assume gradient of loss with respect to output
 /// let dout = Array::from_shape_fn(out.raw_dim(), |_| 0.01);
@@ -729,7 +729,7 @@ where
 /// // Backward pass
 /// let (dx, dw1, db1, dw2, db2) = transformer_ffn_backward(
 ///     &dout.view(), &x.view(), &w1.view(), &b1.view(), &w2.view(), &b2.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(dx.shape(), x.shape());
 /// assert_eq!(dw1.shape(), w1.shape());

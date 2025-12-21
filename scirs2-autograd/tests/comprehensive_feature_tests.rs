@@ -22,12 +22,14 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let mask = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -35,7 +37,7 @@ mod advanced_indexing_tests {
             let result = T::boolean_mask(&data, &mask);
 
             // The result should be a 1D tensor with selected elements
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // Should contain elements where mask was true: [1.0, 3.0, 5.0]
             assert_eq!(result_array.len(), 3);
@@ -47,13 +49,15 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data: [10, 20, 30, 40, 50]
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[5]), vec![10.0, 20.0, 30.0, 40.0, 50.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[5]), vec![10.0, 20.0, 30.0, 40.0, 50.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Indices to take: [0, 2, 4, 1]
             let indices = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![0.0, 2.0, 4.0, 1.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![0.0, 2.0, 4.0, 1.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -61,7 +65,7 @@ mod advanced_indexing_tests {
             let result = T::take(&data, &indices, 0);
 
             // Verify result
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
             assert_eq!(result_array.len(), 4);
 
             // Should contain [10.0, 30.0, 50.0, 20.0]
@@ -77,17 +81,20 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test tensors
             let condition = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 0.0, 1.0, 0.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 0.0, 1.0, 0.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let y = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![10.0, 20.0, 30.0, 40.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![10.0, 20.0, 30.0, 40.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -95,7 +102,7 @@ mod advanced_indexing_tests {
             let result = T::where_op(&condition, &x, &y);
 
             // Verify result: should be [1.0, 20.0, 3.0, 40.0]
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
             let expected = [1.0, 20.0, 3.0, 40.0];
             for (i, &expected_val) in expected.iter().enumerate() {
                 assert!((result_array[i] - expected_val).abs() < 1e-6_f32);
@@ -108,12 +115,14 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create indices and updates
             let indices = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 1.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 1.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let updates = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![10.0, 30.0, 20.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![10.0, 30.0, 20.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -121,7 +130,7 @@ mod advanced_indexing_tests {
             let result = T::scatter(&indices, &updates, 5, 0);
 
             // Verify result: should be [10.0, 20.0, 30.0, 0.0, 0.0]
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
             assert_eq!(result_array.len(), 5);
 
             let expected = [10.0, 20.0, 30.0, 0.0, 0.0];
@@ -142,7 +151,7 @@ mod broadcasting_tests {
         // Test same shape (no broadcasting needed)
         let leftshape = vec![3, 4];
         let rightshape = vec![3, 4];
-        let info = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
+        let info = T::analyze_broadcast(&leftshape, &rightshape).expect("Test: operation failed");
 
         assert_eq!(info.strategy, T::BroadcastStrategy::NoOp);
         assert!(!info.left_needs_broadcast);
@@ -155,7 +164,7 @@ mod broadcasting_tests {
         // Test scalar broadcasting
         let leftshape = vec![];
         let rightshape = vec![3, 4];
-        let info = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
+        let info = T::analyze_broadcast(&leftshape, &rightshape).expect("Test: operation failed");
 
         assert_eq!(info.strategy, T::BroadcastStrategy::ScalarBroadcast);
         assert!(info.left_needs_broadcast);
@@ -168,7 +177,7 @@ mod broadcasting_tests {
         // Test compatible broadcasting
         let leftshape = vec![1, 4];
         let rightshape = vec![3, 1];
-        let info = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
+        let info = T::analyze_broadcast(&leftshape, &rightshape).expect("Test: operation failed");
 
         assert_eq!(info.outputshape, vec![3, 4]);
         assert!(info.left_needs_broadcast);
@@ -189,25 +198,27 @@ mod broadcasting_tests {
     fn test_broadcast_operations() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 1]), vec![1.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 1]), vec![1.0, 2.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1, 3]), vec![10.0, 20.0, 30.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[1, 3]), vec![10.0, 20.0, 30.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Test broadcast addition
             let result = T::broadcast_add(&a, &b);
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // Result should be 2x3 matrix
             assert_eq!(result_array.shape(), &[2, 3]);
 
             // Test broadcast multiplication
             let result = T::broadcast_mul(&a, &b);
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
             assert_eq!(result_array.shape(), &[2, 3]);
         });
     }
@@ -222,7 +233,7 @@ mod broadcasting_tests {
         // After some operations, cache should have entries
         let leftshape = vec![2, 3];
         let rightshape = vec![2, 3];
-        let _ = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
+        let _ = T::analyze_broadcast(&leftshape, &rightshape).expect("Test: operation failed");
 
         let (size_, _) = T::get_broadcast_cache_stats();
         assert!(size_ > 0);
@@ -278,14 +289,16 @@ mod memory_optimization_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::ones(
                 &T::convert_to_tensor(
-                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
+                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0])
+                        .expect("Test: operation failed"),
                     ctx,
                 ),
                 ctx,
             );
             let b = T::ones(
                 &T::convert_to_tensor(
-                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
+                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0])
+                        .expect("Test: operation failed"),
                     ctx,
                 ),
                 ctx,
@@ -331,18 +344,20 @@ mod memory_optimization_tests {
     fn test_inplace_operations() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Test in-place operations
             let add_result = T::inplace_add(&a, &b);
-            let add_array = add_result.eval(ctx).unwrap();
+            let add_array = add_result.eval(ctx).expect("Test: operation failed");
 
             // Should be [5.0, 7.0, 9.0]
             // Debug print the actual values
@@ -368,7 +383,7 @@ mod memory_optimization_tests {
             }
 
             let mul_result = T::inplace_mul(&a, &b);
-            let mul_array = mul_result.eval(ctx).unwrap();
+            let mul_array = mul_result.eval(ctx).expect("Test: operation failed");
 
             // Should be [4.0, 10.0, 18.0]
             let expected = [4.0, 10.0, 18.0];
@@ -416,13 +431,14 @@ mod efficient_operations_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create a 2x3 matrix
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Reshape to 3x2
             let reshaped = T::efficient_reshape_withshape(&data, &[3, 2]);
-            let reshaped_array = reshaped.eval(ctx).unwrap();
+            let reshaped_array = reshaped.eval(ctx).expect("Test: operation failed");
 
             assert_eq!(reshaped_array.shape(), &[3, 2]);
             assert_eq!(reshaped_array.len(), 6);
@@ -434,7 +450,8 @@ mod efficient_operations_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create a 4x4 matrix
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f32).collect()).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f32).collect())
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -445,7 +462,7 @@ mod efficient_operations_tests {
             ];
 
             let sliced = T::efficient_slice(&data, &slices);
-            let sliced_array = sliced.eval(ctx).unwrap();
+            let sliced_array = sliced.eval(ctx).expect("Test: operation failed");
 
             // Should be a 2x2 matrix
             assert_eq!(sliced_array.shape(), &[2, 2]);
@@ -457,18 +474,20 @@ mod efficient_operations_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test tensors
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Concatenate along axis 0
             let concat_result = T::efficient_concat(&[&a, &b], 0);
-            let concat_array = concat_result.eval(ctx).unwrap();
+            let concat_array = concat_result.eval(ctx).expect("Test: operation failed");
 
             // Should be a 4x2 matrix
             assert_eq!(concat_array.shape(), &[4, 2]);
@@ -499,20 +518,22 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a + b = b + a
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let ab = a + b;
             let ba = b + a;
 
-            let ab_array = ab.eval(ctx).unwrap();
-            let ba_array = ba.eval(ctx).unwrap();
+            let ab_array = ab.eval(ctx).expect("Test: operation failed");
+            let ba_array = ba.eval(ctx).expect("Test: operation failed");
 
             for i in 0..3 {
                 assert!((ab_array[i] - ba_array[i]).abs() < 1e-10_f32);
@@ -525,25 +546,25 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that (a * b) * c = a * (b * c)
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             let c = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             let ab_c = (a * b) * c;
             let a_bc = a * (b * c);
 
-            let ab_c_array = ab_c.eval(ctx).unwrap();
-            let a_bc_array = a_bc.eval(ctx).unwrap();
+            let ab_c_array = ab_c.eval(ctx).expect("Test: operation failed");
+            let a_bc_array = a_bc.eval(ctx).expect("Test: operation failed");
 
             for i in 0..2 {
                 assert!((ab_c_array[i] - a_bc_array[i]).abs() < 1e-10_f32);
@@ -556,25 +577,25 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a * (b + c) = a * b + a * c
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             let c = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             let left = a * (b + c);
             let right = (a * b) + (a * c);
 
-            let left_array = left.eval(ctx).unwrap();
-            let right_array = right.eval(ctx).unwrap();
+            let left_array = left.eval(ctx).expect("Test: operation failed");
+            let right_array = right.eval(ctx).expect("Test: operation failed");
 
             for i in 0..2 {
                 assert!((left_array[i] - right_array[i]).abs() < 1e-10_f32);
@@ -587,18 +608,22 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a + 0 = a
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let zero = T::zeros(
-                &T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
+                &T::convert_to_tensor(
+                    Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).expect("Test: operation failed"),
+                    ctx,
+                ),
                 ctx,
             );
 
             let result = a + zero;
-            let result_array = result.eval(ctx).unwrap();
-            let a_array = a.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
+            let a_array = a.eval(ctx).expect("Test: operation failed");
 
             for i in 0..3 {
                 assert!((result_array[i] - a_array[i]).abs() < 1e-10_f32);
@@ -611,18 +636,22 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a * 1 = a
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let one = T::ones(
-                &T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
+                &T::convert_to_tensor(
+                    Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).expect("Test: operation failed"),
+                    ctx,
+                ),
                 ctx,
             );
 
             let result = a * one;
-            let result_array = result.eval(ctx).unwrap();
-            let a_array = a.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
+            let a_array = a.eval(ctx).expect("Test: operation failed");
 
             for i in 0..3 {
                 assert!((result_array[i] - a_array[i]).abs() < 1e-10_f32);
@@ -642,18 +671,19 @@ mod numerical_stability_tests {
             // Test operations with large numbers
             let large_val = 1e10_f32;
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![large_val, large_val]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![large_val, large_val])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             // Addition should maintain precision
             let result = a + b;
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // Check that small increments are preserved
             assert!((result_array[0] - (large_val + 1.0)).abs() < 1e-6);
@@ -667,13 +697,14 @@ mod numerical_stability_tests {
             // Test operations with very small numbers
             let small_val = 1e-10_f32;
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![small_val, small_val * 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![small_val, small_val * 2.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Multiplication should not underflow to zero inappropriately
             let result = a * a;
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // Should not be exactly zero (unless actually zero)
             assert!(result_array[0] > 0.0);
@@ -685,18 +716,18 @@ mod numerical_stability_tests {
     fn test_zero_division_handling() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             let zero = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![0.0, 0.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![0.0, 0.0]).expect("Test: operation failed"),
                 ctx,
             );
 
             // Division by zero should produce infinity or NaN, not crash
             let result = a / zero;
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // Check that we get infinity or NaN, not a crash
             assert!(result_array[0].is_infinite() || result_array[0].is_nan());
@@ -709,7 +740,8 @@ mod numerical_stability_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test gradient computation with challenging inputs
             let x = T::variable(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1e-8_f32, 1e8_f32]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1e-8_f32, 1e8_f32])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -719,7 +751,7 @@ mod numerical_stability_tests {
 
             // Compute gradients
             let grad = T::grad(&[loss], &[&x])[0];
-            let grad_array = grad.eval(ctx).unwrap();
+            let grad_array = grad.eval(ctx).expect("Test: operation failed");
 
             // Gradients should be finite and reasonable
             for &g in grad_array.iter() {
@@ -734,18 +766,20 @@ mod numerical_stability_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test broadcasting with mixed scales
             let large = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1, 3]), vec![1e6, 2e6, 3e6]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[1, 3]), vec![1e6, 2e6, 3e6])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             let small = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 1]), vec![1e-6, 2e-6]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 1]), vec![1e-6, 2e-6])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Broadcasting operations should maintain numerical stability
             let result = T::broadcast_add(&large, &small);
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // All results should be finite
             for &val in result_array.iter() {
@@ -788,7 +822,7 @@ mod integration_tests {
             let result = T::reduce_sum(reshaped, &[0], false);
 
             // Verify result
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // Debug print the shape
             println!("Result shape: {:?}", result_array.shape());
@@ -817,13 +851,15 @@ mod integration_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f32).collect()).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f32).collect())
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
             // Create row indices
             let row_indices = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 3.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 3.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -831,11 +867,13 @@ mod integration_tests {
             let selected_rows = T::select_rows(&data, &row_indices);
 
             // Apply broadcasting operation
-            let scalar =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![10.0]).unwrap(), ctx);
+            let scalar = T::convert_to_tensor(
+                Array::from_shape_vec(IxDyn(&[1]), vec![10.0]).expect("Test: operation failed"),
+                ctx,
+            );
 
             let result = T::broadcast_mul(&selected_rows, &scalar);
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             // Should be 3x5 matrix with values multiplied by 10
             assert_eq!(result_array.shape(), &[3, 5]);
@@ -852,7 +890,8 @@ mod integration_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create variable tensors
             let x = T::variable(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -872,10 +911,13 @@ mod integration_tests {
 
             // Compute gradients
             let grad = T::grad(&[loss], &[&x])[0];
-            let grad_array = grad.eval(ctx).unwrap();
+            let grad_array = grad.eval(ctx).expect("Test: operation failed");
 
             // Gradients should have the same shape as input
-            assert_eq!(grad_array.shape(), x.eval(ctx).unwrap().shape());
+            assert_eq!(
+                grad_array.shape(),
+                x.eval(ctx).expect("Test: operation failed").shape()
+            );
 
             // All gradient values should be finite
             for &g in grad_array.iter() {
@@ -900,7 +942,7 @@ mod stress_tests {
 
             // This should create a 100x100 result via broadcasting
             let result = T::broadcast_mul(&large_a, &large_b);
-            let result_array = result.eval(ctx).unwrap();
+            let result_array = result.eval(ctx).expect("Test: operation failed");
 
             assert_eq!(result_array.shape(), &[100, 100]);
             assert_eq!(result_array.len(), 10000);

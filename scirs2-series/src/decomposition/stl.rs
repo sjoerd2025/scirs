@@ -100,7 +100,7 @@ pub struct MultiSeasonalDecompositionResult<F> {
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
 /// let options = STLOptions::default();
-/// let result = stl_decomposition(&ts, 4, &options).unwrap();
+/// let result = stl_decomposition(&ts, 4, &options).expect("Operation failed");
 /// println!("Trend: {:?}", result.trend);
 /// println!("Seasonal: {:?}", result.seasonal);
 /// println!("Residual: {:?}", result.residual);
@@ -211,7 +211,7 @@ where
                     }
 
                     if count > 0 {
-                        smoothed_values[i] = sum / F::from_usize(count).unwrap();
+                        smoothed_values[i] = sum / F::from_usize(count).expect("Operation failed");
                     } else {
                         smoothed_values[i] = values_array[i];
                     }
@@ -252,7 +252,7 @@ where
                 }
 
                 if count > 0 {
-                    new_trend[i] = sum / F::from_usize(count).unwrap();
+                    new_trend[i] = sum / F::from_usize(count).expect("Operation failed");
                 } else {
                     new_trend[i] = deseasonalized[i];
                 }
@@ -277,7 +277,7 @@ where
             if max_residual > F::zero() {
                 for i in 0..n {
                     let r = abs_residuals[i] / max_residual;
-                    if r < F::from_f64(0.5).unwrap() {
+                    if r < F::from_f64(0.5).expect("Operation failed") {
                         weights[i] = F::one();
                     } else if r < F::one() {
                         let tmp = F::one() - r * r;
@@ -328,7 +328,7 @@ where
 /// let mut options = MSTLOptions::default();
 /// options.seasonal_periods = vec![4, 12]; // Weekly and monthly patterns
 ///
-/// let result = mstl_decomposition(&ts, &options).unwrap();
+/// let result = mstl_decomposition(&ts, &options).expect("Operation failed");
 /// println!("Trend: {:?}", result.trend);
 /// println!("Seasonal Components: {}", result.seasonal_components.len());
 /// println!("Residual: {:?}", result.residual);

@@ -537,7 +537,7 @@ mod tests {
         let analysis = analyze_noise_characteristics(&noisy_image, &wavelet);
 
         assert!(analysis.is_ok());
-        let analysis = analysis.unwrap();
+        let analysis = analysis.expect("Operation failed");
         assert!(analysis.estimated_variance > 0.0);
     }
 
@@ -585,7 +585,7 @@ mod tests {
             apply_adaptive_denoising(&coefficients, &noise_analysis, &tree, &denoising_config);
 
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.shape(), coefficients.shape());
     }
 
@@ -608,7 +608,7 @@ mod tests {
         let result = reconstruct_from_coefficients_simple(&coefficients);
         assert!(result.is_ok());
 
-        let reconstructed = result.unwrap();
+        let reconstructed = result.expect("Operation failed");
         assert_eq!(reconstructed.dim(), (8, 8));
     }
 }

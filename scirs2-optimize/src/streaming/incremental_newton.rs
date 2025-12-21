@@ -538,7 +538,9 @@ mod tests {
         let y = Array1::from(vec![0.05, 0.1]);
 
         let original_hessian = optimizer.hessian_inv.clone();
-        optimizer.update_bfgs(&s.view(), &y.view()).unwrap();
+        optimizer
+            .update_bfgs(&s.view(), &y.view())
+            .expect("Operation failed");
 
         // Hessian should have changed
         assert!(&optimizer.hessian_inv != &original_hessian);
@@ -563,7 +565,7 @@ mod tests {
         let original_hessian = optimizer.hessian_inv.clone();
         optimizer
             .update_sherman_morrison(&u.view(), &v.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Hessian should have changed
         assert!(&optimizer.hessian_inv != &original_hessian);
@@ -585,7 +587,7 @@ mod tests {
 
         for _epoch in 0..20 {
             for point in &data_points {
-                optimizer.update(point).unwrap();
+                optimizer.update(point).expect("Operation failed");
                 if optimizer.converged() {
                     break;
                 }

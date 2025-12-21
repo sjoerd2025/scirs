@@ -159,10 +159,12 @@ mod gamma_properties {
     #[quickcheck]
     fn log_gamma_additive_property(x: PositiveF64, n: SmallInt) -> TestResult {
         let x = x.0;
-        let n = n.0 as f64;
+        let n_usize = n.0;
+        let n = n_usize as f64;
 
         // Tighter bounds to avoid numerical issues with large values
-        if !(1.0..=14.0).contains(&x) || x + n > 20.0 || n > 10.0 {
+        // Discard zero n as it's trivial
+        if n_usize == 0 || !(1.0..=14.0).contains(&x) || x + n > 20.0 || n > 10.0 {
             return TestResult::discard();
         }
 
@@ -171,7 +173,7 @@ mod gamma_properties {
 
         // Calculate sum of logarithms
         let mut log_sum = log_gamma_x;
-        for i in 0..(n as usize) {
+        for i in 0..n_usize {
             log_sum += (x + i as f64).ln();
         }
 
@@ -179,7 +181,57 @@ mod gamma_properties {
             return TestResult::discard();
         }
 
-        TestResult::from_bool((log_gamma_x_n - log_sum).abs() < 1e-8)
+        // Use relative error tolerance for better numerical stability
+        let abs_error = (log_gamma_x_n - log_sum).abs();
+        let rel_error = abs_error / log_gamma_x_n.abs().max(1.0);
+
+        TestResult::from_bool(abs_error < 1e-8 || rel_error < 1e-10)
+    }
+
+    /// Regression test for specific log_gamma_additive_property case
+    #[test]
+    fn log_gamma_additive_property_regression() {
+        // Test the exact case that was failing: x=1.5, n=1
+        let x = 1.5000000000000002f64;
+        let n = 1usize;
+
+        let log_gamma_x = crate::gamma::loggamma(x);
+        let log_gamma_x_n = crate::gamma::loggamma(x + n as f64);
+
+        println!("log_gamma({}) = {}", x, log_gamma_x);
+        println!("log_gamma({}) = {}", x + n as f64, log_gamma_x_n);
+
+        // Expected values based on Γ(1.5) = sqrt(π)/2
+        let gamma_1_5 = 0.88622692545275801364908374167057f64;
+        let gamma_2_5 = 1.329340388179137f64;
+        println!("Expected log_gamma(1.5) = {}", gamma_1_5.ln());
+        println!("Expected log_gamma(2.5) = {}", gamma_2_5.ln());
+
+        let mut log_sum = log_gamma_x;
+        for i in 0..n {
+            log_sum += (x + i as f64).ln();
+        }
+
+        println!("log_sum = {} + {} = {}", log_gamma_x, x.ln(), log_sum);
+        println!("Difference: {}", (log_gamma_x_n - log_sum).abs());
+
+        let abs_error = (log_gamma_x_n - log_sum).abs();
+        let rel_error = abs_error / log_gamma_x_n.abs().max(1.0);
+
+        assert!(
+            abs_error < 1e-8 || rel_error < 1e-10,
+            "log_gamma property failed: abs_error={}, rel_error={}\n\
+             log_gamma({}) = {} (expected {})\n\
+             log_gamma({}) = {} (expected {})",
+            abs_error,
+            rel_error,
+            x,
+            log_gamma_x,
+            gamma_1_5.ln(),
+            x + n as f64,
+            log_gamma_x_n,
+            gamma_2_5.ln()
+        );
     }
 
     /// Beta function symmetry test

@@ -24,7 +24,7 @@ impl ConnectionPool {
     }
 
     pub fn get_connection(&self) -> Result<Box<dyn DatabaseConnection>> {
-        let mut pool = self.connections.lock().unwrap();
+        let mut pool = self.connections.lock().expect("Operation failed");
 
         if let Some(conn) = pool.pop() {
             Ok(conn)
@@ -38,7 +38,7 @@ impl ConnectionPool {
 
     #[allow(dead_code)]
     pub fn return_connection(&self, conn: Box<dyn DatabaseConnection>) {
-        let mut pool = self.connections.lock().unwrap();
+        let mut pool = self.connections.lock().expect("Operation failed");
         if pool.len() < self.max_connections {
             pool.push(conn);
         }

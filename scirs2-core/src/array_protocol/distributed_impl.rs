@@ -255,7 +255,10 @@ where
 
         // Reduce phase
         // In a real distributed system, this might happen on a single node
-        results.into_iter().reduce(reducefn).unwrap()
+        results
+            .into_iter()
+            .reduce(reducefn)
+            .expect("Operation failed")
     }
 }
 
@@ -629,7 +632,7 @@ mod tests {
         let dist_array = DistributedNdarray::from_array(&array, config);
 
         // Convert back to a regular array
-        let result = dist_array.to_array().unwrap();
+        let result = dist_array.to_array().expect("Operation failed");
 
         // Check that the result matches the original array's shape
         assert_eq!(result.shape(), array.shape());

@@ -88,7 +88,7 @@ impl WorkStealingScheduler {
                             // Process the chunk
                             for i in start..end {
                                 let result = f_ref(&items_ref[i]);
-                                let mut results_guard = results.lock().unwrap();
+                                let mut results_guard = results.lock().expect("Operation failed");
                                 results_guard[i] = result;
                             }
                         }
@@ -98,7 +98,7 @@ impl WorkStealingScheduler {
 
             // Wait for all threads to complete
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 
@@ -183,7 +183,7 @@ impl WorkStealingScheduler {
 
                         // Add local results to global results
                         if !local_results.is_empty() {
-                            let mut global_results = results_vec.lock().unwrap();
+                            let mut global_results = results_vec.lock().expect("Operation failed");
                             global_results.extend(local_results);
                         }
                     })
@@ -191,7 +191,7 @@ impl WorkStealingScheduler {
                 .collect();
 
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 
@@ -288,13 +288,13 @@ impl DynamicLoadBalancer {
                             local_count += 1;
 
                             // Store result
-                            let mut results_guard = results.lock().unwrap();
+                            let mut results_guard = results.lock().expect("Operation failed");
                             results_guard[idx] = result;
                         }
 
                         // Update global statistics
                         if local_count > 0 {
-                            let mut stats = timing_stats.lock().unwrap();
+                            let mut stats = timing_stats.lock().expect("Operation failed");
                             stats.total_items += local_count;
                             stats.total_time_ms += local_total;
                             stats.min_time_ms = stats.min_time_ms.min(local_min);
@@ -305,7 +305,7 @@ impl DynamicLoadBalancer {
                 .collect();
 
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 
@@ -317,7 +317,7 @@ impl DynamicLoadBalancer {
 
     /// Get average execution time per item
     pub fn get_average_time_ms(&self) -> f64 {
-        let stats = self.timing_stats.lock().unwrap();
+        let stats = self.timing_stats.lock().expect("Operation failed");
         if stats.total_items > 0 {
             stats.total_time_ms as f64 / stats.total_items as f64
         } else {
@@ -327,7 +327,7 @@ impl DynamicLoadBalancer {
 
     /// Get timing variance to detect irregular workloads
     pub fn get_time_variance(&self) -> f64 {
-        let stats = self.timing_stats.lock().unwrap();
+        let stats = self.timing_stats.lock().expect("Operation failed");
         if stats.total_items > 0 && stats.max_time_ms > stats.min_time_ms {
             (stats.max_time_ms - stats.min_time_ms) as f64 / stats.min_time_ms as f64
         } else {
@@ -507,7 +507,8 @@ impl AdvancedWorkStealingScheduler {
 
                                 if interleaved_idx < n {
                                     let result = f_ref(&items_ref[interleaved_idx]);
-                                    let mut results_guard = results.lock().unwrap();
+                                    let mut results_guard =
+                                        results.lock().expect("Operation failed");
                                     results_guard[interleaved_idx] = result;
                                 }
                             }
@@ -517,7 +518,7 @@ impl AdvancedWorkStealingScheduler {
                 .collect();
 
             for handle in handles {
-                handle.join().unwrap();
+                handle.join().expect("Operation failed");
             }
         });
 

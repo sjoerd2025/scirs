@@ -183,7 +183,7 @@ impl ThreadPool {
 
         // Update statistics
         {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("Operation failed");
             stats.tasks_submitted += 1;
         }
 
@@ -285,7 +285,7 @@ impl ThreadPool {
 
     /// Get current thread pool statistics
     pub fn get_stats(&self) -> ThreadPoolStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Operation failed").clone()
     }
 
     /// Get the number of pending tasks
@@ -307,7 +307,7 @@ impl ThreadPool {
     pub fn shutdown(mut self) -> Result<()> {
         // Signal shutdown
         {
-            let mut shutdown = self.shutdown.lock().unwrap();
+            let mut shutdown = self.shutdown.lock().expect("Operation failed");
             *shutdown = true;
         }
 
@@ -346,13 +346,13 @@ impl ThreadPool {
     ) {
         loop {
             // Check for shutdown
-            if *shutdown.lock().unwrap() {
+            if *shutdown.lock().expect("Operation failed") {
                 break;
             }
 
             // Try to receive work
             let work_item = {
-                let receiver = receiver.lock().unwrap();
+                let receiver = receiver.lock().expect("Operation failed");
                 receiver.recv_timeout(Duration::from_millis(100))
             };
 
@@ -367,7 +367,7 @@ impl ThreadPool {
 
                     // Update statistics
                     {
-                        let mut stats_guard = stats.lock().unwrap();
+                        let mut stats_guard = stats.lock().expect("Operation failed");
                         match result {
                             Ok(_) => {
                                 stats_guard.tasks_completed += 1;

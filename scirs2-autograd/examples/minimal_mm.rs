@@ -18,7 +18,7 @@ fn main() {
         let c = matmul(a, b_t);
 
         // Show result
-        println!("a * b^T = {:?}", c.eval(g).unwrap());
+        println!("a * b^T = {:?}", c.eval(g).expect("Operation failed"));
 
         println!("Matrix multiplication completed successfully!");
     });

@@ -274,42 +274,43 @@ mod tests {
         let first_row = array![1.0, 2.0, 3.0];
         let first_col = array![1.0, 4.0, 5.0];
 
-        let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();
+        let toeplitz =
+            ToeplitzMatrix::new(first_row.view(), first_col.view()).expect("Operation failed");
 
         assert_eq!(toeplitz.nrows(), 3);
         assert_eq!(toeplitz.ncols(), 3);
 
         // Check the elements
-        assert_relative_eq!(toeplitz.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(toeplitz.get(0, 1).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(0, 2).unwrap(), 3.0);
-        assert_relative_eq!(toeplitz.get(1, 0).unwrap(), 4.0);
-        assert_relative_eq!(toeplitz.get(1, 1).unwrap(), 1.0);
-        assert_relative_eq!(toeplitz.get(1, 2).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(2, 0).unwrap(), 5.0);
-        assert_relative_eq!(toeplitz.get(2, 1).unwrap(), 4.0);
-        assert_relative_eq!(toeplitz.get(2, 2).unwrap(), 1.0);
+        assert_relative_eq!(toeplitz.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(toeplitz.get(0, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(0, 2).expect("Operation failed"), 3.0);
+        assert_relative_eq!(toeplitz.get(1, 0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(toeplitz.get(1, 1).expect("Operation failed"), 1.0);
+        assert_relative_eq!(toeplitz.get(1, 2).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(2, 0).expect("Operation failed"), 5.0);
+        assert_relative_eq!(toeplitz.get(2, 1).expect("Operation failed"), 4.0);
+        assert_relative_eq!(toeplitz.get(2, 2).expect("Operation failed"), 1.0);
     }
 
     #[test]
     fn test_toeplitz_symmetric() {
         let first_row = array![1.0, 2.0, 3.0];
 
-        let toeplitz = ToeplitzMatrix::new_symmetric(first_row.view()).unwrap();
+        let toeplitz = ToeplitzMatrix::new_symmetric(first_row.view()).expect("Operation failed");
 
         assert_eq!(toeplitz.nrows(), 3);
         assert_eq!(toeplitz.ncols(), 3);
 
         // Check the elements
-        assert_relative_eq!(toeplitz.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(toeplitz.get(0, 1).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(0, 2).unwrap(), 3.0);
-        assert_relative_eq!(toeplitz.get(1, 0).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(1, 1).unwrap(), 1.0);
-        assert_relative_eq!(toeplitz.get(1, 2).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(2, 0).unwrap(), 3.0);
-        assert_relative_eq!(toeplitz.get(2, 1).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(2, 2).unwrap(), 1.0);
+        assert_relative_eq!(toeplitz.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(toeplitz.get(0, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(0, 2).expect("Operation failed"), 3.0);
+        assert_relative_eq!(toeplitz.get(1, 0).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(1, 1).expect("Operation failed"), 1.0);
+        assert_relative_eq!(toeplitz.get(1, 2).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(2, 0).expect("Operation failed"), 3.0);
+        assert_relative_eq!(toeplitz.get(2, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(2, 2).expect("Operation failed"), 1.0);
     }
 
     #[test]
@@ -318,21 +319,21 @@ mod tests {
         let l = array![4.0, 5.0];
         let c = 1.0;
 
-        let toeplitz = ToeplitzMatrix::from_parts(c, r.view(), l.view()).unwrap();
+        let toeplitz = ToeplitzMatrix::from_parts(c, r.view(), l.view()).expect("Operation failed");
 
         assert_eq!(toeplitz.nrows(), 3);
         assert_eq!(toeplitz.ncols(), 3);
 
         // Check the elements
-        assert_relative_eq!(toeplitz.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(toeplitz.get(0, 1).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(0, 2).unwrap(), 3.0);
-        assert_relative_eq!(toeplitz.get(1, 0).unwrap(), 4.0);
-        assert_relative_eq!(toeplitz.get(1, 1).unwrap(), 1.0);
-        assert_relative_eq!(toeplitz.get(1, 2).unwrap(), 2.0);
-        assert_relative_eq!(toeplitz.get(2, 0).unwrap(), 5.0);
-        assert_relative_eq!(toeplitz.get(2, 1).unwrap(), 4.0);
-        assert_relative_eq!(toeplitz.get(2, 2).unwrap(), 1.0);
+        assert_relative_eq!(toeplitz.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(toeplitz.get(0, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(0, 2).expect("Operation failed"), 3.0);
+        assert_relative_eq!(toeplitz.get(1, 0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(toeplitz.get(1, 1).expect("Operation failed"), 1.0);
+        assert_relative_eq!(toeplitz.get(1, 2).expect("Operation failed"), 2.0);
+        assert_relative_eq!(toeplitz.get(2, 0).expect("Operation failed"), 5.0);
+        assert_relative_eq!(toeplitz.get(2, 1).expect("Operation failed"), 4.0);
+        assert_relative_eq!(toeplitz.get(2, 2).expect("Operation failed"), 1.0);
     }
 
     #[test]
@@ -340,7 +341,8 @@ mod tests {
         let first_row = array![1.0, 2.0, 3.0];
         let first_col = array![1.0, 4.0, 5.0];
 
-        let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();
+        let toeplitz =
+            ToeplitzMatrix::new(first_row.view(), first_col.view()).expect("Operation failed");
 
         // A full 3x3 matrix would be:
         // [1 2 3]
@@ -348,7 +350,7 @@ mod tests {
         // [5 4 1]
 
         let x = array![1.0, 2.0, 3.0];
-        let y = toeplitz.matvec(&x.view()).unwrap();
+        let y = toeplitz.matvec(&x.view()).expect("Operation failed");
 
         // Actual calculated result with current implementation:
         // = [14, 12, 16]
@@ -363,7 +365,8 @@ mod tests {
         let first_row = array![1.0, 2.0, 3.0];
         let first_col = array![1.0, 4.0, 5.0];
 
-        let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();
+        let toeplitz =
+            ToeplitzMatrix::new(first_row.view(), first_col.view()).expect("Operation failed");
 
         // Transpose of the 3x3 matrix would be:
         // [1 4 5]
@@ -371,7 +374,9 @@ mod tests {
         // [3 2 1]
 
         let x = array![1.0, 2.0, 3.0];
-        let y = toeplitz.matvec_transpose(&x.view()).unwrap();
+        let y = toeplitz
+            .matvec_transpose(&x.view())
+            .expect("Operation failed");
 
         // Actual calculated result with current implementation:
         // = [24, 16, 10]
@@ -386,9 +391,10 @@ mod tests {
         let first_row = array![1.0, 2.0, 3.0];
         let first_col = array![1.0, 4.0, 5.0];
 
-        let toeplitz = ToeplitzMatrix::new(first_row.view(), first_col.view()).unwrap();
+        let toeplitz =
+            ToeplitzMatrix::new(first_row.view(), first_col.view()).expect("Operation failed");
 
-        let dense = toeplitz.to_dense().unwrap();
+        let dense = toeplitz.to_dense().expect("Operation failed");
 
         assert_eq!(dense.shape(), &[3, 3]);
 

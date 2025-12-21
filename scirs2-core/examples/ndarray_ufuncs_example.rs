@@ -20,12 +20,12 @@ fn main() {
     println!("{:?}\n", a);
 
     // Reshape
-    let reshaped = reshape_2d(a.view(), (6, 1)).unwrap();
+    let reshaped = reshape_2d(a.view(), (6, 1)).expect("Operation failed");
     println!("Reshaped a (6x1):");
     println!("{:?}\n", reshaped);
 
     // Stack
-    let stacked = stack_2d(&[a.view(), b.view()], 0).unwrap();
+    let stacked = stack_2d(&[a.view(), b.view()], 0).expect("Operation failed");
     println!("Stack a and b along rows:");
     println!("{:?}\n", stacked);
 
@@ -35,7 +35,7 @@ fn main() {
     println!("{:?}\n", transposed);
 
     // Mask select
-    let masked = mask_select(a.view(), mask.view()).unwrap();
+    let masked = mask_select(a.view(), mask.view()).expect("Operation failed");
     println!("Mask select from a:");
     println!("{:?}\n", masked);
 
@@ -53,11 +53,11 @@ fn main() {
     println!("{:?}\n", cos_a);
 
     // Binary operations with broadcasting
-    let add_broadcast = binary2d::add(&a.view(), &c.view()).unwrap();
+    let add_broadcast = binary2d::add(&a.view(), &c.view()).expect("Operation failed");
     println!("a + c (broadcasting):");
     println!("{:?}\n", add_broadcast);
 
-    let mul_broadcast = binary2d::multiply(&a.view(), &c.view()).unwrap();
+    let mul_broadcast = binary2d::multiply(&a.view(), &c.view()).expect("Operation failed");
     println!("a * c (broadcasting):");
     println!("{:?}\n", mul_broadcast);
 

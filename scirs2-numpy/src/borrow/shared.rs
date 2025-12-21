@@ -139,7 +139,7 @@ fn insert_shared<'py>(py: Python<'py>) -> PyResult<NonNull<Shared>> {
             let capsule = PyCapsule::new_with_destructor(
                 py,
                 shared,
-                Some(CString::new("_RUST_NUMPY_BORROW_CHECKING_API").unwrap()),
+                Some(CString::new("_RUST_NUMPY_BORROW_CHECKING_API").expect("Operation failed")),
                 |shared, _ctx| {
                     // SAFETY: `shared.flags` was initialized using `Box::into_raw`.
                     let _ = unsafe { Box::from_raw(shared.flags as *mut BorrowFlags) };
@@ -261,7 +261,7 @@ struct BorrowFlags(Mutex<BorrowFlagsInner>);
 
 impl BorrowFlags {
     fn acquire(&self, address: *mut c_void, key: BorrowKey) -> Result<(), ()> {
-        let mut borrow_flags = self.0.lock().unwrap();
+        let mut borrow_flags = self.0.lock().expect("Operation failed");
         match borrow_flags.entry(address) {
             Entry::Occupied(entry) => {
                 let same_base_arrays = entry.into_mut();
@@ -302,24 +302,24 @@ impl BorrowFlags {
     }
 
     fn release(&self, address: *mut c_void, key: BorrowKey) {
-        let mut borrow_flags = self.0.lock().unwrap();
+        let mut borrow_flags = self.0.lock().expect("Operation failed");
 
-        let same_base_arrays = borrow_flags.get_mut(&address).unwrap();
-        let readers = same_base_arrays.get_mut(&key).unwrap();
+        let same_base_arrays = borrow_flags.get_mut(&address).expect("Operation failed");
+        let readers = same_base_arrays.get_mut(&key).expect("Operation failed");
 
         *readers -= 1;
 
         if *readers == 0 {
             if same_base_arrays.len() > 1 {
-                same_base_arrays.remove(&key).unwrap();
+                same_base_arrays.remove(&key).expect("Operation failed");
             } else {
-                borrow_flags.remove(&address).unwrap();
+                borrow_flags.remove(&address).expect("Operation failed");
             }
         }
     }
 
     fn acquire_mut(&self, address: *mut c_void, key: BorrowKey) -> Result<(), ()> {
-        let mut borrow_flags = self.0.lock().unwrap();
+        let mut borrow_flags = self.0.lock().expect("Operation failed");
 
         match borrow_flags.entry(address) {
             Entry::Occupied(entry) => {
@@ -355,12 +355,12 @@ impl BorrowFlags {
     }
 
     fn release_mut(&self, address: *mut c_void, key: BorrowKey) {
-        let mut borrow_flags = self.0.lock().unwrap();
+        let mut borrow_flags = self.0.lock().expect("Operation failed");
 
-        let same_base_arrays = borrow_flags.get_mut(&address).unwrap();
+        let same_base_arrays = borrow_flags.get_mut(&address).expect("Operation failed");
 
         if same_base_arrays.len() > 1 {
-            same_base_arrays.remove(&key).unwrap();
+            same_base_arrays.remove(&key).expect("Operation failed");
         } else {
             borrow_flags.remove(&address);
         }
@@ -466,11 +466,11 @@ mod tests {
         base: *mut c_void,
         key: &BorrowKey,
     ) -> BorrowFlagsState {
-        let shared = get_or_insert_shared(py).unwrap();
+        let shared = get_or_insert_shared(py).expect("Operation failed");
         assert_eq!(shared.version, 1);
         let inner = unsafe { &(*(shared.flags as *mut BorrowFlags)).0 }
             .lock()
-            .unwrap();
+            .expect("Operation failed");
         if let Some(base_arrays) = inner.get(&base) {
             BorrowFlagsState {
                 #[cfg(not(Py_GIL_DISABLED))]
@@ -530,12 +530,14 @@ mod tests {
         Python::attach(|py| {
             let array = PyArray::<f64, _>::zeros(py, (1, 2, 3), false);
 
-            let locals = [("array", &array)].into_py_dict(py).unwrap();
+            let locals = [("array", &array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let view = py
                 .eval(c_str!("array[:,:,0]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
             assert_ne!(
                 view.as_ptr().cast::<c_void>(),
                 array.as_ptr().cast::<c_void>()
@@ -559,12 +561,14 @@ mod tests {
         Python::attach(|py| {
             let array = Array::<f64, _>::zeros((1, 2, 3)).into_pyarray(py);
 
-            let locals = [("array", &array)].into_py_dict(py).unwrap();
+            let locals = [("array", &array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let view = py
                 .eval(c_str!("array[:,:,0]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
             assert_ne!(
                 view.as_ptr().cast::<c_void>(),
                 array.as_ptr().cast::<c_void>(),
@@ -594,23 +598,27 @@ mod tests {
         Python::attach(|py| {
             let array = PyArray::<f64, _>::zeros(py, (1, 2, 3), false);
 
-            let locals = [("array", &array)].into_py_dict(py).unwrap();
+            let locals = [("array", &array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let view1 = py
                 .eval(c_str!("array[:,:,0]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
             assert_ne!(
                 view1.as_ptr().cast::<c_void>(),
                 array.as_ptr().cast::<c_void>()
             );
 
-            let locals = [("view1", &view1)].into_py_dict(py).unwrap();
+            let locals = [("view1", &view1)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let view2 = py
                 .eval(c_str!("view1[:,0]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<f64>>()
-                .unwrap();
+                .expect("Operation failed");
             assert_ne!(
                 view2.as_ptr().cast::<c_void>(),
                 array.as_ptr().cast::<c_void>()
@@ -642,23 +650,27 @@ mod tests {
         Python::attach(|py| {
             let array = Array::<f64, _>::zeros((1, 2, 3)).into_pyarray(py);
 
-            let locals = [("array", &array)].into_py_dict(py).unwrap();
+            let locals = [("array", &array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let view1 = py
                 .eval(c_str!("array[:,:,0]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
             assert_ne!(
                 view1.as_ptr().cast::<c_void>(),
                 array.as_ptr().cast::<c_void>(),
             );
 
-            let locals = [("view1", &view1)].into_py_dict(py).unwrap();
+            let locals = [("view1", &view1)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let view2 = py
                 .eval(c_str!("view1[:,0]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<f64>>()
-                .unwrap();
+                .expect("Operation failed");
             assert_ne!(
                 view2.as_ptr().cast::<c_void>(),
                 array.as_ptr().cast::<c_void>(),
@@ -696,12 +708,14 @@ mod tests {
         Python::attach(|py| {
             let array = PyArray::<f64, _>::zeros(py, (1, 2, 3), false);
 
-            let locals = [("array", &array)].into_py_dict(py).unwrap();
+            let locals = [("array", &array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
             let view = py
                 .eval(c_str!("array[::-1,:,::-1]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray3<f64>>()
-                .unwrap();
+                .expect("Operation failed");
             assert_ne!(
                 view.as_ptr().cast::<c_void>(),
                 array.as_ptr().cast::<c_void>()
@@ -744,13 +758,15 @@ mod tests {
     fn view_with_non_dividing_strides() {
         Python::attach(|py| {
             let array = PyArray::<f64, _>::zeros(py, (10, 10), false);
-            let locals = [("array", array)].into_py_dict(py).unwrap();
+            let locals = [("array", array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
 
             let view1 = py
                 .eval(c_str!("array[:,::3]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key1 = borrow_key(py, view1.as_array_ptr());
 
@@ -759,9 +775,9 @@ mod tests {
 
             let view2 = py
                 .eval(c_str!("array[:,1::3]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key2 = borrow_key(py, view2.as_array_ptr());
 
@@ -770,9 +786,9 @@ mod tests {
 
             let view3 = py
                 .eval(c_str!("array[:,::2]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key3 = borrow_key(py, view3.as_array_ptr());
 
@@ -781,9 +797,9 @@ mod tests {
 
             let view4 = py
                 .eval(c_str!("array[:,1::2]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray2<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key4 = borrow_key(py, view4.as_array_ptr());
 
@@ -846,13 +862,15 @@ mod tests {
             let array = PyArray::<f64, _>::zeros(py, 10, false);
             let base = base_address(py, array.as_array_ptr());
 
-            let locals = [("array", array)].into_py_dict(py).unwrap();
+            let locals = [("array", array)]
+                .into_py_dict(py)
+                .expect("Operation failed");
 
             let view1 = py
                 .eval(c_str!("array[:5]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key1 = borrow_key(py, view1.as_array_ptr());
             let exclusive1 = view1.readwrite();
@@ -869,9 +887,9 @@ mod tests {
 
             let view2 = py
                 .eval(c_str!("array[5:]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key2 = borrow_key(py, view2.as_array_ptr());
             let shared2 = view2.readonly();
@@ -890,9 +908,9 @@ mod tests {
 
             let view3 = py
                 .eval(c_str!("array[5:]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key3 = borrow_key(py, view3.as_array_ptr());
             let shared3 = view3.readonly();
@@ -914,9 +932,9 @@ mod tests {
 
             let view4 = py
                 .eval(c_str!("array[7:]"), None, Some(&locals))
-                .unwrap()
+                .expect("Operation failed")
                 .cast_into::<PyArray1<f64>>()
-                .unwrap();
+                .expect("Operation failed");
 
             let key4 = borrow_key(py, view4.as_array_ptr());
             let shared4 = view4.readonly();

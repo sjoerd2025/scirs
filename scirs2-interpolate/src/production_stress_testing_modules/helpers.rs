@@ -237,7 +237,11 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
 
         // Create ill-conditioned data
         let (x, y) = create_duplicate_x_data(100)?;
-        let x_query = Array1::linspace(T::from_f64(1.0).unwrap(), T::from_f64(9.0).unwrap(), 10);
+        let x_query = Array1::linspace(
+            T::from_f64(1.0).expect("Operation failed"),
+            T::from_f64(9.0).expect("Operation failed"),
+            10,
+        );
 
         let result = crate::interp1d::cubic_interpolate(&x.view(), &y.view(), &x_query.view());
         let duration = start.elapsed();
@@ -297,8 +301,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
         // Test with very small differences
         let (x, y) = create_edge_case_data(100, 0.0, f64::EPSILON * 100.0)?;
         let x_query = Array1::linspace(
-            T::from_f64(f64::EPSILON).unwrap(),
-            T::from_f64(f64::EPSILON * 50.0).unwrap(),
+            T::from_f64(f64::EPSILON).expect("Operation failed"),
+            T::from_f64(f64::EPSILON * 50.0).expect("Operation failed"),
             10,
         );
 
@@ -345,7 +349,11 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
 
         // Create data with steep gradients
         let (x, y) = create_rapid_change_data(1000)?;
-        let x_query = Array1::linspace(T::from_f64(4.5).unwrap(), T::from_f64(5.5).unwrap(), 20);
+        let x_query = Array1::linspace(
+            T::from_f64(4.5).expect("Operation failed"),
+            T::from_f64(5.5).expect("Operation failed"),
+            20,
+        );
 
         let result = crate::interp1d::cubic_interpolate(&x.view(), &y.view(), &x_query.view());
         let duration = start.elapsed();
@@ -357,7 +365,9 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                 let max_val = values.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x));
                 let min_val = values.iter().fold(T::infinity(), |acc, &x| acc.min(x));
 
-                if max_val > T::from_f64(150.0).unwrap() || min_val < T::from_f64(-50.0).unwrap() {
+                if max_val > T::from_f64(150.0).expect("Operation failed")
+                    || min_val < T::from_f64(-50.0).expect("Operation failed")
+                {
                     issues.push(StressTestIssue {
                         description: "Steep gradients caused interpolation overshoots".to_string(),
                         severity: IssueSeverity::Medium,
@@ -395,7 +405,11 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
         let start = Instant::now();
 
         let (x, y) = create_oscillatory_data(1000)?;
-        let x_query = Array1::linspace(T::from_f64(1.0).unwrap(), T::from_f64(9.0).unwrap(), 100);
+        let x_query = Array1::linspace(
+            T::from_f64(1.0).expect("Operation failed"),
+            T::from_f64(9.0).expect("Operation failed"),
+            100,
+        );
 
         let result = crate::interp1d::cubic_interpolate(&x.view(), &y.view(), &x_query.view());
         let duration = start.elapsed();
@@ -425,7 +439,11 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
         let start = Instant::now();
 
         let (x, y) = create_extreme_y_data(100)?;
-        let x_query = Array1::linspace(T::from_f64(1.0).unwrap(), T::from_f64(9.0).unwrap(), 10);
+        let x_query = Array1::linspace(
+            T::from_f64(1.0).expect("Operation failed"),
+            T::from_f64(9.0).expect("Operation failed"),
+            10,
+        );
 
         let result = crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_query.view());
         let duration = start.elapsed();
@@ -476,7 +494,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
     /// Test empty data error messages
     fn test_empty_data_error_messages(&self) -> InterpolateResult<StressTestResult> {
         let (x, y) = create_empty_data()?;
-        let x_query = Array1::from_vec(vec![T::from_f64(1.0).unwrap()]);
+        let x_query = Array1::from_vec(vec![T::from_f64(1.0).expect("Operation failed")]);
 
         let result = crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_query.view());
 
@@ -510,7 +528,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
     /// Test dimension mismatch errors
     fn test_dimension_mismatch_errors(&self) -> InterpolateResult<StressTestResult> {
         let (x, y) = create_mismatched_data()?;
-        let x_query = Array1::from_vec(vec![T::from_f64(1.0).unwrap()]);
+        let x_query = Array1::from_vec(vec![T::from_f64(1.0).expect("Operation failed")]);
 
         let result = crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_query.view());
 
@@ -566,7 +584,11 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
     /// Test numerical error messages
     fn test_numerical_error_messages(&self) -> InterpolateResult<StressTestResult> {
         let (x, y) = create_nan_inf_data(100)?;
-        let x_query = Array1::linspace(T::from_f64(1.0).unwrap(), T::from_f64(9.0).unwrap(), 10);
+        let x_query = Array1::linspace(
+            T::from_f64(1.0).expect("Operation failed"),
+            T::from_f64(9.0).expect("Operation failed"),
+            10,
+        );
 
         let result = crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_query.view());
 
@@ -614,8 +636,8 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
 
                     // Try to process the large dataset
                     let x_query = Array1::linspace(
-                        T::from_f64(1.0).unwrap(),
-                        T::from_f64(9.0).unwrap(),
+                        T::from_f64(1.0).expect("Operation failed"),
+                        T::from_f64(9.0).expect("Operation failed"),
                         1000,
                     );
 

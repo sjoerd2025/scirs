@@ -140,12 +140,12 @@ fn aggregate_example(tempdir: &Path) -> Result<(), Box<dyn std::error::Error>> {
         .iter()
         .map(|&(min, _, _, _, _)| min)
         .min()
-        .unwrap();
+        .expect("Operation failed");
     let global_max = chunk_stats
         .iter()
         .map(|&(_, max, _, _, _)| max)
         .max()
-        .unwrap();
+        .expect("Operation failed");
     let global_sum = chunk_stats
         .iter()
         .map(|&(_, _, sum, _, _)| sum)
@@ -193,12 +193,12 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     let sum_no_chunks: f32 = array.sum();
     let min_no_chunks = *array
         .iter()
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let max_no_chunks = *array
         .iter()
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
 
     let time_no_chunks = start.elapsed();
     println!("  Time: {:?}", time_no_chunks);
@@ -220,12 +220,12 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
         let sum = chunk.sum();
         let min = *chunk
             .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
         let max = *chunk
             .iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
         (sum, min, max)
     });
 
@@ -233,13 +233,13 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     let min_chunks = chunk_results
         .iter()
         .map(|&(_, min, _)| min)
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let max_chunks = chunk_results
         .iter()
         .map(|&(_, _, max)| max)
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
 
     let time_chunks = start.elapsed();
     println!("  Time: {:?}", time_chunks);
@@ -263,12 +263,12 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
         let sum = array.sum();
         let min = *array
             .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
         let max = *array
             .iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
 
         sum_iter += sum;
         min_iter = min_iter.min(min);

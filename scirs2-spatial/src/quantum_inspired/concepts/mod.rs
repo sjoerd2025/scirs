@@ -455,7 +455,7 @@ mod tests {
     #[test]
     fn test_hadamard_gate() {
         let mut state = QuantumState::zero_state(1);
-        state.hadamard(0).unwrap();
+        state.hadamard(0).expect("Operation failed");
 
         // Should create equal superposition
         assert!((state.probability(0) - 0.5).abs() < 1e-10);
@@ -466,7 +466,7 @@ mod tests {
     #[test]
     fn test_pauli_x_gate() {
         let mut state = QuantumState::zero_state(1);
-        state.pauli_x(0).unwrap();
+        state.pauli_x(0).expect("Operation failed");
 
         // Should flip |0⟩ to |1⟩
         assert_eq!(state.probability(0), 0.0);
@@ -477,7 +477,7 @@ mod tests {
     #[test]
     fn test_phase_rotation() {
         let mut state = QuantumState::uniform_superposition(1);
-        state.phase_rotation(0, PI).unwrap();
+        state.phase_rotation(0, PI).expect("Operation failed");
 
         // Should apply -1 phase to |1⟩ component
         assert!(state.is_normalized());
@@ -489,8 +489,10 @@ mod tests {
     fn test_controlled_rotation() {
         let mut state = QuantumState::zero_state(2);
         // First create entanglement
-        state.hadamard(0).unwrap();
-        state.controlled_rotation(0, 1, PI).unwrap();
+        state.hadamard(0).expect("Operation failed");
+        state
+            .controlled_rotation(0, 1, PI)
+            .expect("Operation failed");
 
         assert!(state.is_normalized());
         // Should be entangled Bell state
@@ -529,7 +531,7 @@ mod tests {
             Complex64::new(0.0, 0.0),
             Complex64::new(0.0, 0.0),
         ]);
-        let mut state = QuantumState::new(amplitudes).unwrap();
+        let mut state = QuantumState::new(amplitudes).expect("Operation failed");
 
         assert!(!state.is_normalized());
         state.normalize();

@@ -175,11 +175,11 @@ impl TensorStats {
         self.min = self.min.min(
             *tensor
                 .iter()
-                .min_by(|a, b| a.partial_cmp(b).unwrap())
-                .unwrap(),
+                .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+                .expect("Operation failed"),
         );
         self.max = self.max.max(
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
         let sum: f32 = tensor.sum();
         let count = tensor.len() as f32;
         self.mean = sum / count;
@@ -391,7 +391,7 @@ impl MixedBitWidthQuantizer {
             .map(|(name, &score)| (name.clone(), score))
             .collect();
         // Sort by sensitivity (higher sensitivity gets more bits)
-        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         // Assign bit-widths: high sensitivity layers get 8 bits, others get 4-6 bits
         for (i, (layer_name_)) in scores.iter().enumerate() {
             let bits = if i < scores.len() / 3 {
@@ -502,7 +502,7 @@ mod tests {
         assert_eq!(params.qmax, 127);
     fn test_symmetric_quantization() {
         let tensor = array![[1.0, -1.0], [2.0, -2.0]].into_dyn();
-        let quantized = QuantizedTensor::from_float(&tensor, &config).unwrap();
+        let quantized = QuantizedTensor::from_float(&tensor, &config).expect("Operation failed");
         let _dequantized = quantized.dequantize();
         // Check that quantization preserves approximate values
         let error = utils::compute_quantization_error(&tensor, &quantized);
@@ -517,13 +517,13 @@ mod tests {
         // Add calibration data
         let calib_data = Array2::random((100, 50), Standard).into_dyn();
         ptq.add_calibration_data("layer1", &calib_data);
-        let params = ptq.finalize_calibration().unwrap();
+        let params = ptq.finalize_calibration().expect("Operation failed");
         assert!(params.contains_key("layer1"));
     fn test_quantization_aware_training() {
         let mut qat = QuantizationAwareTraining::new(QuantizationConfig::default());
         let tensor = Array2::ones((10, 10)).into_dyn();
-        qat.init_layer_params("layer1", &tensor).unwrap();
-        let fake_quantized = qat.fake_quantize("layer1", &tensor).unwrap();
+        qat.init_layer_params("layer1", &tensor).expect("Operation failed");
+        let fake_quantized = qat.fake_quantize("layer1", &tensor).expect("Operation failed");
         assert_eq!(fake_quantized.shape(), tensor.shape());
     fn test_mixed_bitwidth_quantization() {
         let mut mbq = MixedBitWidthQuantizer::new();
@@ -532,20 +532,20 @@ mod tests {
             "layer1".to_string(),
             Array2::random((50, 50), Standard).into_dyn(),
         outputs.insert("layer2".to_string(), Array2::ones((50, 50)).into_dyn());
-        mbq.analyze_sensitivity(&outputs).unwrap();
+        mbq.analyze_sensitivity(&outputs).expect("Operation failed");
         assert!(mbq.get_sensitivity_score("layer1").is_some());
         assert!(mbq.get_layer_config("layer1").is_some());
     fn test_dynamic_quantization() {
         let mut dq = DynamicQuantizer::new(QuantizationConfig::default());
         let tensor = Array2::random((20, 20), Standard).into_dyn();
-        let quantized = dq.quantize(&tensor, Some("test_key")).unwrap();
+        let quantized = dq.quantize(&tensor, Some("test_key")).expect("Operation failed");
         assert_eq!(quantized.shape, tensor.shape().to_vec());
         let (cache_size_) = dq.cache_stats();
         assert_eq!(cache_size, 1);
     fn test_quantization_utilities() {
         let original = Array2::random((10, 10), Standard).into_dyn();
         let quantized =
-            QuantizedTensor::from_float(&original, &QuantizationConfig::default()).unwrap();
+            QuantizedTensor::from_float(&original, &QuantizationConfig::default()).expect("Operation failed");
         let error = utils::compute_quantization_error(&original, &quantized);
         assert!(error >= 0.0);
         let size_reduction = utils::estimate_size_reduction(8);
@@ -554,7 +554,7 @@ mod tests {
         assert_eq!(perf_gain, 2.0);
     fn test_compression_ratio() {
         let tensor = Array2::ones((100, 100)).into_dyn();
-            QuantizedTensor::from_float(&tensor, &QuantizationConfig::default()).unwrap();
+            QuantizedTensor::from_float(&tensor, &QuantizationConfig::default()).expect("Operation failed");
         let ratio = quantized.compression_ratio();
         assert!(ratio > 1.0); // Should be compressed
     fn test_power_of_two_quantization() {
@@ -566,5 +566,5 @@ mod tests {
     fn test_quantization_scheme_conversion() {
         let converted =
             utils::convert_quantization_scheme(&quantized, QuantizationScheme::Asymmetric, 4)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(converted.params.bits, 4);

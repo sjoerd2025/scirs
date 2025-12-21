@@ -222,7 +222,7 @@ fn extract_temporalfeatures(
     // Feature 2: Temporal gradient (rate of change)
     let temporal_gradient = if temporal_memory.len() >= 2 {
         let current = pixel_value;
-        let previous = temporal_memory.back().unwrap()[(0, 0, 0)];
+        let previous = temporal_memory.back().expect("Operation failed")[(0, 0, 0)];
         current - previous
     } else {
         0.0

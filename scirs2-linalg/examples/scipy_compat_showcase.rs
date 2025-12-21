@@ -243,15 +243,16 @@ mod tests {
         let a = array![[2.0, 1.0], [1.0, 2.0]];
 
         // Test determinant
-        let det_result = compat::det(&a.view(), false, true).unwrap();
+        let det_result = compat::det(&a.view(), false, true).expect("Operation failed");
         assert!((det_result - 3.0_f64).abs() < 1e-10);
 
         // Test matrix norm
-        let norm_result = compat::norm(&a.view(), Some("fro"), None, false, true).unwrap();
+        let norm_result =
+            compat::norm(&a.view(), Some("fro"), None, false, true).expect("Operation failed");
         assert!(norm_result > 0.0);
 
         // Test matrix rank
-        let rank = compat::matrix_rank(&a.view(), None, false, true).unwrap();
+        let rank = compat::matrix_rank(&a.view(), None, false, true).expect("Operation failed");
         assert_eq!(rank, 2);
     }
 
@@ -260,18 +261,20 @@ mod tests {
         let a = array![[4.0, 2.0], [2.0, 3.0]];
 
         // Test LU decomposition
-        let (p, l, u) = compat::lu(&a.view(), false, false, true, false).unwrap();
+        let (p, l, u) = compat::lu(&a.view(), false, false, true, false).expect("Operation failed");
         assert_eq!(p.shape(), [2, 2]);
         assert_eq!(l.shape(), [2, 2]);
         assert_eq!(u.shape(), [2, 2]);
 
         // Test QR decomposition
-        let (q_opt, r) = compat::qr(&a.view(), false, None, "full", false, true).unwrap();
+        let (q_opt, r) =
+            compat::qr(&a.view(), false, None, "full", false, true).expect("Operation failed");
         assert!(q_opt.is_some());
         assert_eq!(r.shape(), [2, 2]);
 
         // Test SVD
-        let (u_opt, s, vt_opt) = compat::svd(&a.view(), true, true, false, true, "gesdd").unwrap();
+        let (u_opt, s, vt_opt) =
+            compat::svd(&a.view(), true, true, false, true, "gesdd").expect("Operation failed");
         assert!(u_opt.is_some());
         assert_eq!(s.len(), 2);
         assert!(vt_opt.is_some());
@@ -282,15 +285,15 @@ mod tests {
         let a = array![[1.0, 0.1], [0.1, 1.0]];
 
         // Test matrix exponential
-        let exp_result = compat::expm(&a.view(), None).unwrap();
+        let exp_result = compat::expm(&a.view(), None).expect("Operation failed");
         assert_eq!(exp_result.shape(), [2, 2]);
 
         // Test matrix square root
-        let sqrt_result = compat::sqrtm(&a.view(), None).unwrap();
+        let sqrt_result = compat::sqrtm(&a.view(), None).expect("Operation failed");
         assert_eq!(sqrt_result.shape(), [2, 2]);
 
         // Test pseudoinverse
-        let pinv_result = compat::pinv(&a.view(), None, false, true).unwrap();
+        let pinv_result = compat::pinv(&a.view(), None, false, true).expect("Operation failed");
         assert_eq!(pinv_result.shape(), [2, 2]);
     }
 
@@ -299,15 +302,16 @@ mod tests {
         let v = array![3.0, 4.0];
 
         // Test vector 2-norm
-        let norm_2 = compat::vector_norm(&v.view(), Some(2.0), true).unwrap();
+        let norm_2 = compat::vector_norm(&v.view(), Some(2.0), true).expect("Operation failed");
         assert!((norm_2 - 5.0_f64).abs() < 1e-10);
 
         // Test vector 1-norm
-        let norm_1 = compat::vector_norm(&v.view(), Some(1.0), true).unwrap();
+        let norm_1 = compat::vector_norm(&v.view(), Some(1.0), true).expect("Operation failed");
         assert!((norm_1 - 7.0_f64).abs() < 1e-10);
 
         // Test vector infinity norm
-        let norm_inf = compat::vector_norm(&v.view(), Some(f64::INFINITY), true).unwrap();
+        let norm_inf =
+            compat::vector_norm(&v.view(), Some(f64::INFINITY), true).expect("Operation failed");
         assert!((norm_inf - 4.0_f64).abs() < 1e-10);
     }
 
@@ -317,7 +321,7 @@ mod tests {
         let block2 = array![[5.0]];
 
         let blocks = [block1.view(), block2.view()];
-        let block_diag = compat::block_diag(&blocks).unwrap();
+        let block_diag = compat::block_diag(&blocks).expect("Operation failed");
 
         assert_eq!(block_diag.shape(), [3, 3]);
         assert_eq!(block_diag[[0, 0]], 1.0);

@@ -42,11 +42,11 @@ pub fn extract_intensity_features(
     let min = *flat_image
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let max = *flat_image
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     features.insert("intensity_min".to_string(), min);
     features.insert("intensity_max".to_string(), max);
     features.insert("intensity_range".to_string(), max - min);

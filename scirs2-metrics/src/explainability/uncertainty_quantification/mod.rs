@@ -87,7 +87,9 @@ impl<
         Self {
             quantifier,
             bayesian: Some(BayesianUncertainty::new(1000, 10)),
-            conformal: Some(ConformalPrediction::new(F::from(0.95).unwrap())),
+            conformal: Some(ConformalPrediction::new(
+                F::from(0.95).expect("Failed to convert constant to float"),
+            )),
             temperature_scaling: Some(TemperatureScaling::new()),
             deep_ensemble: Some(DeepEnsembleUncertainty::new(5)),
             advanced_analysis: Some(AdvancedUncertaintyAnalysis::new()),
@@ -288,7 +290,7 @@ impl<
                 .mean()
                 .unwrap_or(F::zero()),
             calibration_error: core.calibration_metrics.expected_calibration_error,
-            coverage: F::from(0.95).unwrap(), // Would compute actual coverage
+            coverage: F::from(0.95).expect("Failed to convert constant to float"), // Would compute actual coverage
         }
     }
 }

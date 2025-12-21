@@ -498,7 +498,7 @@ mod tests {
             let target = 2.0 * i as f64 + 1.0;
             let point = StreamingDataPoint::new(features, target);
 
-            estimator.update(&point).unwrap();
+            estimator.update(&point).expect("Operation failed");
         }
 
         assert_eq!(estimator.stats().points_processed, 10);
@@ -523,7 +523,7 @@ mod tests {
         ];
 
         for point in &data_points {
-            estimator.update(point).unwrap();
+            estimator.update(point).expect("Operation failed");
         }
 
         assert_eq!(estimator.stats().points_processed, 3);
@@ -544,7 +544,7 @@ mod tests {
             let target = 2.0 * i as f64;
             let point = StreamingDataPoint::new(features, target);
 
-            estimator.update(&point).unwrap();
+            estimator.update(&point).expect("Operation failed");
         }
 
         // Should have processed all points but window is limited
@@ -567,7 +567,7 @@ mod tests {
         let target = 1.0;
         let point = StreamingDataPoint::new(features, target);
 
-        estimator.update(&point).unwrap();
+        estimator.update(&point).expect("Operation failed");
 
         // Covariance should change after update
         assert!(&estimator.covariance != &initial_covariance);
@@ -591,7 +591,7 @@ mod tests {
 
         // Update should complete quickly (might skip processing due to timing)
         let start = Instant::now();
-        estimator.update(&point).unwrap();
+        estimator.update(&point).expect("Operation failed");
         let elapsed = start.elapsed();
 
         // Should not take more than a reasonable amount of time
@@ -615,7 +615,7 @@ mod tests {
             let target = i as f64; // Potentially changing relationship
             let point = StreamingDataPoint::new(features, target);
 
-            estimator.update(&point).unwrap();
+            estimator.update(&point).expect("Operation failed");
         }
 
         // Forgetting factor may have been adapted

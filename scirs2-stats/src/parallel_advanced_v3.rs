@@ -109,7 +109,8 @@ where
 
         if n < self.config.minsize {
             // Sequential computation for small datasets
-            let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+            let mean = data.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(n).expect("Failed to convert to float");
             let variance = data
                 .iter()
                 .map(|&x| {
@@ -117,7 +118,7 @@ where
                     diff * diff
                 })
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(n - 1).unwrap();
+                / F::from(n - 1).expect("Failed to convert to float");
             let min = data
                 .iter()
                 .fold(data[0], |min_val, &x| if x < min_val { x } else { min_val });
@@ -134,7 +135,7 @@ where
         // Parallel reduction for statistics
         let results: Vec<(F, F, F, F, usize)> = data
             .as_slice()
-            .unwrap()
+            .expect("Operation failed")
             .par_chunks(chunksize)
             .map(|chunk| {
                 let len = chunk.len();
@@ -149,7 +150,7 @@ where
                 );
 
                 // Local mean for variance calculation
-                let local_mean = sum / F::from(len).unwrap();
+                let local_mean = sum / F::from(len).expect("Failed to convert to float");
                 let sum_sq_dev = chunk
                     .iter()
                     .map(|&x| {
@@ -168,7 +169,7 @@ where
             .map(|(sum__, _, _, _, _)| *sum__)
             .fold(F::zero(), |acc, x| acc + x);
         let total_len = results.iter().map(|(_, _, _, _, len)| *len).sum::<usize>();
-        let global_mean = total_sum / F::from(total_len).unwrap();
+        let global_mean = total_sum / F::from(total_len).expect("Failed to convert to float");
 
         let global_min =
             results
@@ -188,7 +189,7 @@ where
                 );
 
         // Recalculate variance with global mean (more accurate)
-        let global_variance = par_chunks(data.as_slice().unwrap(), chunksize)
+        let global_variance = par_chunks(data.as_slice().expect("Operation failed"), chunksize)
             .map(|chunk| {
                 chunk
                     .iter()
@@ -199,7 +200,7 @@ where
                     .fold(F::zero(), |acc, x| acc + x)
             })
             .reduce(|| F::zero(), |a, b| a + b)
-            / F::from(total_len - 1).unwrap();
+            / F::from(total_len - 1).expect("Failed to convert to float");
 
         Ok((global_mean, global_variance, global_min, global_max))
     }
@@ -286,8 +287,8 @@ where
             .collect();
 
         // Compute mean and standard deviation of correlations
-        let mean_corr =
-            correlations.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(self.k_folds).unwrap();
+        let mean_corr = correlations.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(self.k_folds).expect("Failed to convert to float");
         let var_corr = correlations
             .iter()
             .map(|&corr| {
@@ -295,7 +296,7 @@ where
                 diff * diff
             })
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(self.k_folds - 1).unwrap();
+            / F::from(self.k_folds - 1).expect("Failed to convert to float");
         let std_corr = var_corr.sqrt();
 
         Ok((mean_corr, std_corr))
@@ -303,8 +304,10 @@ where
 
     fn compute_pearson_correlation(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F> {
         let n = x.len();
-        let mean_x = x.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(n).unwrap();
-        let mean_y = y.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(n).unwrap();
+        let mean_x = x.iter().fold(F::zero(), |acc, &val| acc + val)
+            / F::from(n).expect("Failed to convert to float");
+        let mean_y = y.iter().fold(F::zero(), |acc, &val| acc + val)
+            / F::from(n).expect("Failed to convert to float");
 
         let mut sum_xy = F::zero();
         let mut sum_x2 = F::zero();
@@ -318,7 +321,8 @@ where
             sum_y2 = sum_y2 + y_dev * y_dev;
         }
 
-        let epsilon = F::from(1e-15).unwrap_or_else(|| F::from(0.0).unwrap());
+        let epsilon = F::from(1e-15)
+            .unwrap_or_else(|| F::from(0.0).expect("Failed to convert constant to float"));
         if sum_x2 <= epsilon || sum_y2 <= epsilon {
             return Ok(F::zero());
         }
@@ -399,17 +403,19 @@ where
 
         // Calculate confidence interval
         let alpha = F::one() - confidence_level;
-        let lower_percentile = alpha / F::from(2.0).unwrap();
+        let lower_percentile = alpha / F::from(2.0).expect("Failed to convert constant to float");
         let upper_percentile = F::one() - lower_percentile;
 
-        let lower_idx = (lower_percentile * F::from(self.n_simulations - 1).unwrap())
-            .floor()
-            .to_usize()
-            .unwrap();
-        let upper_idx = (upper_percentile * F::from(self.n_simulations - 1).unwrap())
-            .ceil()
-            .to_usize()
-            .unwrap();
+        let lower_idx = (lower_percentile
+            * F::from(self.n_simulations - 1).expect("Failed to convert to float"))
+        .floor()
+        .to_usize()
+        .expect("Operation failed");
+        let upper_idx = (upper_percentile
+            * F::from(self.n_simulations - 1).expect("Failed to convert to float"))
+        .ceil()
+        .to_usize()
+        .expect("Operation failed");
 
         let original_estimate = statistic_fn(&data.view());
         let lower_bound = sorted_stats[lower_idx];
@@ -465,13 +471,14 @@ where
 
             // Check if permuted _statistic is as extreme as observed
             if perm_stat.abs() >= observed_stat.abs() {
-                let mut count = count_extreme.lock().unwrap();
+                let mut count = count_extreme.lock().expect("Operation failed");
                 *count += 1;
             }
         });
 
-        let extreme_count = *count_extreme.lock().unwrap();
-        let p_value = F::from(extreme_count).unwrap() / F::from(self.n_simulations).unwrap();
+        let extreme_count = *count_extreme.lock().expect("Operation failed");
+        let p_value = F::from(extreme_count).expect("Failed to convert to float")
+            / F::from(self.n_simulations).expect("Failed to convert to float");
 
         Ok(p_value)
     }
@@ -578,7 +585,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_parallel_batch_processor() {
         let datasets = vec![
             array![1.0, 2.0, 3.0, 4.0, 5.0],
@@ -587,7 +593,9 @@ mod tests {
         ];
 
         let processor = ParallelBatchProcessor::new(AdvancedParallelConfig::default());
-        let results = processor.batch_descriptive_stats(&datasets).unwrap();
+        let results = processor
+            .batch_descriptive_stats(&datasets)
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 3);
         assert_relative_eq!(results[0].0, 3.0, epsilon = 1e-10); // Mean of first dataset
@@ -596,7 +604,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_parallel_cross_validator() {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0]; // Perfect correlation
@@ -604,20 +611,19 @@ mod tests {
         let validator = ParallelCrossValidator::new(5, AdvancedParallelConfig::default());
         let (mean_corr, std_corr) = validator
             .cross_validate_correlation(&x.view(), &y.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(mean_corr > 0.9); // Should be close to 1.0 for perfect correlation
         assert!(std_corr < 0.1); // Should have low variance
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_parallel_matrix_ops() {
         let matrix = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let vector = array![1.0, 2.0, 3.0];
 
-        let result =
-            ParallelMatrixOps::matvec_parallel(&matrix.view(), &vector.view(), None).unwrap();
+        let result = ParallelMatrixOps::matvec_parallel(&matrix.view(), &vector.view(), None)
+            .expect("Operation failed");
 
         assert_relative_eq!(result[0], 14.0, epsilon = 1e-10); // 1*1 + 2*2 + 3*3
         assert_relative_eq!(result[1], 32.0, epsilon = 1e-10); // 4*1 + 5*2 + 6*3

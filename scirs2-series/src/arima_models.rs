@@ -223,7 +223,7 @@ where
 
         // Initialize MA coefficients
         for i in 0..self.q {
-            self.ma_coeffs[i] = F::from(0.1).unwrap();
+            self.ma_coeffs[i] = F::from(0.1).expect("Failed to convert constant to float");
         }
 
         // Initialize intercept
@@ -275,14 +275,18 @@ where
 
             // Calculate residuals and log-likelihood
             if let Ok(residuals) = model.calculate_residuals(&data_clone) {
-                let n = F::from(data_clone.len()).unwrap();
+                let n = F::from(data_clone.len()).expect("Operation failed");
                 let sigma2 = residuals.dot(&residuals) / n;
 
                 // Negative log-likelihood
-                n / F::from(2.0).unwrap()
-                    * (F::one() + F::from(2.0 * std::f64::consts::PI).unwrap().ln())
-                    + n / F::from(2.0).unwrap() * sigma2.ln()
-                    + residuals.dot(&residuals) / (F::from(2.0).unwrap() * sigma2)
+                n / F::from(2.0).expect("Failed to convert constant to float")
+                    * (F::one()
+                        + F::from(2.0 * std::f64::consts::PI)
+                            .expect("Failed to convert to float")
+                            .ln())
+                    + n / F::from(2.0).expect("Failed to convert constant to float") * sigma2.ln()
+                    + residuals.dot(&residuals)
+                        / (F::from(2.0).expect("Failed to convert constant to float") * sigma2)
             } else {
                 F::infinity()
             }
@@ -303,7 +307,7 @@ where
             model.intercept = params[p + q];
 
             if let Ok(residuals) = model.calculate_residuals(&data_clone) {
-                let n = F::from(data_clone.len()).unwrap();
+                let n = F::from(data_clone.len()).expect("Operation failed");
                 model.sigma2 = residuals.dot(&residuals) / n;
 
                 // AR gradients
@@ -341,7 +345,7 @@ where
 
         // Update sigma2
         let residuals = self.calculate_residuals(data)?;
-        self.sigma2 = residuals.dot(&residuals) / F::from(data.len()).unwrap();
+        self.sigma2 = residuals.dot(&residuals) / F::from(data.len()).expect("Operation failed");
 
         Ok(())
     }
@@ -385,7 +389,7 @@ where
             }
         }
 
-        Ok(grad / F::from(n).unwrap())
+        Ok(grad / F::from(n).expect("Failed to convert to float"))
     }
 
     /// Calculate gradient for MA coefficient
@@ -399,18 +403,22 @@ where
             }
         }
 
-        Ok(grad / F::from(n).unwrap())
+        Ok(grad / F::from(n).expect("Failed to convert to float"))
     }
 
     /// Calculate log-likelihood
     fn calculate_log_likelihood(&self, data: &Array1<F>) -> Result<F> {
         let residuals = self.calculate_residuals(data)?;
-        let n = F::from(data.len()).unwrap();
+        let n = F::from(data.len()).expect("Operation failed");
 
-        let ll = -n / F::from(2.0).unwrap()
-            * (F::one() + F::from(2.0).unwrap() * F::from(std::f64::consts::PI).unwrap()).ln()
-            - n / F::from(2.0).unwrap() * self.sigma2.ln()
-            - residuals.dot(&residuals) / (F::from(2.0).unwrap() * self.sigma2);
+        let ll = -n / F::from(2.0).expect("Failed to convert constant to float")
+            * (F::one()
+                + F::from(2.0).expect("Failed to convert constant to float")
+                    * F::from(std::f64::consts::PI).expect("Failed to convert to float"))
+            .ln()
+            - n / F::from(2.0).expect("Failed to convert constant to float") * self.sigma2.ln()
+            - residuals.dot(&residuals)
+                / (F::from(2.0).expect("Failed to convert constant to float") * self.sigma2);
 
         Ok(ll)
     }
@@ -485,29 +493,34 @@ where
 
     /// Calculate information criteria
     pub fn aic(&self) -> F {
-        let k = F::from(self.p + self.q + 1).unwrap(); // +1 for intercept
-        F::from(2.0).unwrap() * k - F::from(2.0).unwrap() * self.log_likelihood
+        let k = F::from(self.p + self.q + 1).expect("Failed to convert to float"); // +1 for intercept
+        F::from(2.0).expect("Failed to convert constant to float") * k
+            - F::from(2.0).expect("Failed to convert constant to float") * self.log_likelihood
     }
 
     /// Calculate corrected AIC (AICc) for small samples
     pub fn aicc(&self) -> F {
-        let k = F::from(self.p + self.q + 1).unwrap();
-        let n = F::from(self.n_obs).unwrap();
-        self.aic() + F::from(2.0).unwrap() * k * (k + F::one()) / (n - k - F::one())
+        let k = F::from(self.p + self.q + 1).expect("Failed to convert to float");
+        let n = F::from(self.n_obs).expect("Failed to convert to float");
+        self.aic()
+            + F::from(2.0).expect("Failed to convert constant to float") * k * (k + F::one())
+                / (n - k - F::one())
     }
 
     /// Calculate Bayesian Information Criterion (BIC)
     pub fn bic(&self) -> F {
-        let k = F::from(self.p + self.q + 1).unwrap();
-        let n = F::from(self.n_obs).unwrap();
-        k * n.ln() - F::from(2.0).unwrap() * self.log_likelihood
+        let k = F::from(self.p + self.q + 1).expect("Failed to convert to float");
+        let n = F::from(self.n_obs).expect("Failed to convert to float");
+        k * n.ln()
+            - F::from(2.0).expect("Failed to convert constant to float") * self.log_likelihood
     }
 
     /// Calculate Hannan-Quinn Information Criterion (HQC)
     pub fn hqc(&self) -> F {
-        let k = F::from(self.p + self.q + 1).unwrap();
-        let n = F::from(self.n_obs).unwrap();
-        F::from(2.0).unwrap() * k * n.ln().ln() - F::from(2.0).unwrap() * self.log_likelihood
+        let k = F::from(self.p + self.q + 1).expect("Failed to convert to float");
+        let n = F::from(self.n_obs).expect("Failed to convert to float");
+        F::from(2.0).expect("Failed to convert constant to float") * k * n.ln().ln()
+            - F::from(2.0).expect("Failed to convert constant to float") * self.log_likelihood
     }
 
     /// Get information criterion value
@@ -544,7 +557,7 @@ where
     let seasonal_d = if options.seasonal && options.seasonal_period.is_some() {
         determine_seasonal_differencing_order(
             data,
-            options.seasonal_period.unwrap(),
+            options.seasonal_period.expect("Operation failed"),
             options.max_seasonal_d,
         )?
     } else {
@@ -679,7 +692,7 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     // Use ADF test to determine optimal differencing order
-    let alpha = F::from(0.05).unwrap();
+    let alpha = F::from(0.05).expect("Failed to convert constant to float");
 
     for d in 0..=max_d {
         let diff_data = apply_single_differencing(data, d)?;
@@ -712,7 +725,7 @@ where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let alpha = F::from(0.05).unwrap();
+    let alpha = F::from(0.05).expect("Failed to convert constant to float");
 
     for d in 0..=max_d {
         let diff_data = apply_seasonal_differencing(data, period, d)?;
@@ -804,7 +817,8 @@ where
     let mut result = apply_single_differencing(data, d)?;
 
     if seasonal_d > 0 && period.is_some() {
-        result = apply_seasonal_differencing(&result, period.unwrap(), seasonal_d)?;
+        result =
+            apply_seasonal_differencing(&result, period.expect("Operation failed"), seasonal_d)?;
     }
 
     Ok(result)
@@ -817,7 +831,7 @@ mod tests {
 
     #[test]
     fn test_arima_creation() {
-        let model = ArimaModel::<f64>::new(2, 1, 1).unwrap();
+        let model = ArimaModel::<f64>::new(2, 1, 1).expect("Operation failed");
         assert_eq!(model.p, 2);
         assert_eq!(model.d, 1);
         assert_eq!(model.q, 1);
@@ -842,8 +856,8 @@ mod tests {
     #[test]
     fn test_differencing() {
         let data = array![1.0, 2.0, 4.0, 7.0, 11.0];
-        let model = ArimaModel::<f64>::new(0, 1, 0).unwrap();
-        let diff = model.difference(&data).unwrap();
+        let model = ArimaModel::<f64>::new(0, 1, 0).expect("Operation failed");
+        let diff = model.difference(&data).expect("Operation failed");
 
         assert_eq!(diff.len(), 4);
         assert_eq!(diff[0], 1.0);
@@ -855,7 +869,7 @@ mod tests {
     #[test]
     fn test_arima_fit() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        let mut model = ArimaModel::new(1, 0, 1).unwrap();
+        let mut model = ArimaModel::new(1, 0, 1).expect("Operation failed");
 
         let result = model.fit(&data);
         assert!(result.is_ok());
@@ -870,7 +884,7 @@ mod tests {
         let result = auto_arima(&data, &options);
         assert!(result.is_ok());
 
-        let (model, params) = result.unwrap();
+        let (model, params) = result.expect("Operation failed");
         assert!(model.is_fitted);
         assert_eq!(params.pdq.1, model.d);
     }
@@ -878,7 +892,7 @@ mod tests {
     #[test]
     fn test_determine_differencing() {
         let data = array![1.0, 2.0, 4.0, 7.0, 11.0, 16.0, 22.0, 29.0];
-        let d = determine_differencing_order(&data, 2).unwrap();
+        let d = determine_differencing_order(&data, 2).expect("Operation failed");
         assert!(d <= 2);
     }
 
@@ -886,10 +900,10 @@ mod tests {
     fn test_forecast() {
         // Use a more complex series to avoid constant series after differencing
         let data = array![1.0, 2.4, 3.2, 4.1, 5.5, 6.2, 7.8, 8.3, 9.7, 10.1];
-        let mut model = ArimaModel::new(1, 0, 0).unwrap();
-        model.fit(&data).unwrap();
+        let mut model = ArimaModel::new(1, 0, 0).expect("Operation failed");
+        model.fit(&data).expect("Operation failed");
 
-        let forecasts = model.forecast(3, &data).unwrap();
+        let forecasts = model.forecast(3, &data).expect("Operation failed");
         assert_eq!(forecasts.len(), 3);
     }
 }

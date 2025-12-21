@@ -469,7 +469,7 @@ impl BenchmarkSuite {
 
         // Initialize memory tracking if enabled
         if let Some(ref tracker) = self.memory_tracker {
-            let mut tracker_guard = tracker.lock().unwrap();
+            let mut tracker_guard = tracker.lock().expect("Operation failed");
             tracker_guard.reset();
         }
 
@@ -483,12 +483,12 @@ impl BenchmarkSuite {
 
         // Collect memory statistics if tracking is enabled
         if let Some(ref tracker) = self.memory_tracker {
-            let tracker_guard = tracker.lock().unwrap();
+            let tracker_guard = tracker.lock().expect("Operation failed");
             memory_stats = Some(tracker_guard.get_stats());
         }
 
         // Calculate timing statistics
-        timings.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        timings.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let timing_stats = TimingStats {
             mean_ns: timings.iter().sum::<f64>() / timings.len() as f64,
             std_dev_ns: self.calculate_std_dev(&timings),
@@ -950,15 +950,17 @@ mod tests {
     #[test]
     fn test_testdata_generation() {
         let suite = BenchmarkSuite::new();
-        let data = suite.generate_testdata(1000).unwrap();
+        let data = suite.generate_testdata(1000).expect("Operation failed");
         assert_eq!(data.len(), 1000);
     }
 
     #[test]
     fn test_correlateddata_generation() {
         let suite = BenchmarkSuite::new();
-        let basedata = suite.generate_testdata(100).unwrap();
-        let correlateddata = suite.generate_correlateddata(&basedata, 0.8).unwrap();
+        let basedata = suite.generate_testdata(100).expect("Operation failed");
+        let correlateddata = suite
+            .generate_correlateddata(&basedata, 0.8)
+            .expect("Operation failed");
         assert_eq!(correlateddata.len(), 100);
     }
 

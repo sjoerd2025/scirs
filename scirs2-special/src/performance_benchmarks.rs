@@ -451,8 +451,8 @@ impl GammaBenchmarks {
 
         let total: Duration = times.iter().sum();
         let average = total / times.len() as u32;
-        let min_time = *times.iter().min().unwrap();
-        let max_time = *times.iter().max().unwrap();
+        let min_time = *times.iter().min().expect("Operation failed");
+        let max_time = *times.iter().max().expect("Operation failed");
 
         // Calculate standard deviation
         let variance: f64 = times
@@ -755,7 +755,7 @@ impl BenchmarkSuite {
             a.speedup_factor
                 .unwrap_or(1.0)
                 .partial_cmp(&b.speedup_factor.unwrap_or(1.0))
-                .unwrap()
+                .expect("Operation failed")
         }) {
             report.push_str(&format!(
                 "Best implementation: {} ({:.2}x speedup)\n",
@@ -849,7 +849,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_config_creation() {
         let config = BenchmarkConfig::default();
         assert!(!config.arraysizes.is_empty());

@@ -39,7 +39,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
     /// use scirs2_core::ndarray::Array1;
     /// let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2, 0]);
     /// let y_pred = Array1::from_vec(vec![0, 1, 1, 0, 1, 2, 0]);
-    /// let cm = ConfusionMatrix::<f32>::new(&y_true.view(), &y_pred.view(), None, None).unwrap();
+    /// let cm = ConfusionMatrix::<f32>::new(&y_true.view(), &y_pred.view(), None, None).expect("Operation failed");
     /// ```
     pub fn new(
         y_true: &ArrayView1<usize>,
@@ -188,7 +188,10 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
         for i in 0..self.num_classes {
             let denom = precision[i] + recall[i];
             if denom > F::zero() {
-                f1[i] = F::from(2.0).unwrap() * precision[i] * recall[i] / denom;
+                f1[i] = F::from(2.0).expect("Failed to convert constant to float")
+                    * precision[i]
+                    * recall[i]
+                    / denom;
             }
         }
         f1
@@ -198,7 +201,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
     pub fn macro_f1(&self) -> F {
         let f1 = self.f1_score();
         let sum = f1.sum();
-        sum / F::from(self.num_classes).unwrap()
+        sum / F::from(self.num_classes).expect("Failed to convert to float")
     }
 
     /// Get class-wise metrics as a HashMap
@@ -505,7 +508,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
     /// let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2, 0, 1, 2, 0]);
     /// let y_pred = Array1::from_vec(vec![0, 1, 1, 0, 1, 2, 1, 1, 0, 0]);
     /// let class_labels = vec!["Class A".to_string(), "Class B".to_string(), "Class C".to_string()];
-    /// let cm = ConfusionMatrix::<f32>::new(&y_true.view(), &y_pred.view(), None, Some(class_labels)).unwrap();
+    /// let cm = ConfusionMatrix::<f32>::new(&y_true.view(), &y_pred.view(), None, Some(class_labels)).expect("Operation failed");
     /// // Generate the error pattern heatmap
     /// let error_viz = cm.error_heatmap(Some("Misclassification Analysis"));
     /// println!("{}", error_viz);

@@ -170,7 +170,10 @@ fn demonstrate_real_time_adaptation() -> Result<(), Box<dyn std::error::Error>> 
     println!(
         "   Learning acceleration: {:.1}x",
         adaptation_history[0].adaptation_time as f64
-            / adaptation_history.last().unwrap().adaptation_time as f64
+            / adaptation_history
+                .last()
+                .expect("Operation failed")
+                .adaptation_time as f64
     );
 
     println!();

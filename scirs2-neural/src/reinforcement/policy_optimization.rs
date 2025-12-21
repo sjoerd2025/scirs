@@ -185,7 +185,7 @@ impl RLAgent for NaturalPolicyGradient {
         self.experience_buffer.push(batch.clone());
         self.update_npg(batch)
     fn save(&self, path: &str) -> Result<()> {
-        std::fs::create_dir_all(std::path::Path::new(path).parent().unwrap())?;
+        std::fs::create_dir_all(std::path::Path::new(path).parent().expect("Operation failed"))?;
         Ok(())
     fn load(&mut self, path: &str) -> Result<()> {
 /// Curiosity-Driven Exploration using Intrinsic Curiosity Module (ICM)
@@ -365,9 +365,9 @@ impl CuriosityDrivenAgent {
         metrics.insert("forward_loss".to_string(), forward_loss);
         metrics.insert("inverse_loss".to_string(), inverse_loss);
             "avg_intrinsic_reward".to_string(),
-            intrinsic_rewards.mean().unwrap(),
+            intrinsic_rewards.mean().expect("Operation failed"),
             "avg_extrinsic_reward".to_string(),
-            batch.rewards.mean().unwrap(),
+            batch.rewards.mean().expect("Operation failed"),
             value_loss: None,
             total_loss,
 impl RLAgent for CuriosityDrivenAgent {
@@ -496,17 +496,17 @@ mod tests {
     #[test]
     fn test_natural_policy_gradient() {
         let config = NPGConfig::default();
-        let npg = NaturalPolicyGradient::new(4, 2, vec![64], true, config).unwrap();
+        let npg = NaturalPolicyGradient::new(4, 2, vec![64], true, config).expect("Operation failed");
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let action = npg.act(&state.view(), true).unwrap();
+        let action = npg.act(&state.view(), true).expect("Operation failed");
         assert_eq!(action.len(), 2);
     fn test_curiosity_driven_agent() {
         let config = CuriosityConfig::default();
-        let agent = CuriosityDrivenAgent::new(4, 2, vec![32], true, config).unwrap();
-        let action = agent.act(&state.view(), true).unwrap();
+        let agent = CuriosityDrivenAgent::new(4, 2, vec![32], true, config).expect("Operation failed");
+        let action = agent.act(&state.view(), true).expect("Operation failed");
     fn test_maml_agent() {
         let config = MAMLConfig::default();
-        let agent = MAMLAgent::new(4, 2, vec![32], true, config).unwrap();
+        let agent = MAMLAgent::new(4, 2, vec![32], true, config).expect("Operation failed");
     fn test_running_stats() {
         let mut stats = RunningStats::new();
         stats.update(1.0);

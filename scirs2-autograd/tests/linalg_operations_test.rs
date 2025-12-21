@@ -14,7 +14,7 @@ fn test_matrix_inverse_and_gradient() {
 
         // Test matrix inverse
         let inv_a = matinv(&a);
-        let result = inv_a.eval(g).unwrap();
+        let result = inv_a.eval(g).expect("Test: operation failed");
 
         // Expected inverse: [2/5, -1/5; -1/5, 3/5]
         assert_relative_eq!(result[[0, 0]], 0.4, epsilon = 1e-6);
@@ -26,13 +26,13 @@ fn test_matrix_inverse_and_gradient() {
         let trace_inv = trace(inv_a);
         println!(
             "Trace result shape: {:?}",
-            trace_inv.eval(g).unwrap().shape()
+            trace_inv.eval(g).expect("Test: operation failed").shape()
         );
 
         let grads = grad(&[&trace_inv], &[&a]);
         println!("Number of gradients returned: {}", grads.len());
 
-        let grad_a = grads[0].eval(g).unwrap();
+        let grad_a = grads[0].eval(g).expect("Test: operation failed");
 
         // Check the shape of the gradient
         println!("Gradient shape: {:?}", grad_a.shape());
@@ -47,7 +47,7 @@ fn test_matrix_inverse_and_gradient() {
 
         // Gradient should be -inv(A)^T * inv(A)^T
         let expected_grad = matmul(neg(transpose(inv_a, &[1, 0])), transpose(inv_a, &[1, 0]));
-        let expected = expected_grad.eval(g).unwrap();
+        let expected = expected_grad.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -66,12 +66,12 @@ fn test_determinant_and_gradient() {
 
         // Test determinant
         let det_a = det(&a);
-        let result = det_a.eval(g).unwrap();
+        let result = det_a.eval(g).expect("Test: operation failed");
         assert_relative_eq!(result[[]], 5.0, epsilon = 1e-6); // 3*2 - 1*1 = 5
 
         // Test gradient of determinant
         let grads = grad(&[&det_a], &[&a]);
-        let grad_a = grads[0].eval(g).unwrap();
+        let grad_a = grads[0].eval(g).expect("Test: operation failed");
 
         // Check the shape of the gradient
         println!("Determinant gradient shape: {:?}", grad_a.shape());
@@ -94,9 +94,9 @@ fn test_svd_decomposition() {
         // Test SVD
         let (u, s, v) = svd(a);
 
-        let u_val = u.eval(g).unwrap();
-        let s_val = s.eval(g).unwrap();
-        let v_val = v.eval(g).unwrap();
+        let u_val = u.eval(g).expect("Test: operation failed");
+        let s_val = s.eval(g).expect("Test: operation failed");
+        let v_val = v.eval(g).expect("Test: operation failed");
 
         // Check shapes
         assert_eq!(u_val.shape(), &[3, 2]);
@@ -109,11 +109,11 @@ fn test_svd_decomposition() {
         // Verify reconstruction: A ≈ U * diag(S) * V^T
         let s_diag = diag(s);
         let reconstructed = matmul(matmul(u, &s_diag), &transpose(v, &[1, 0]));
-        let reconstructed_val = reconstructed.eval(g).unwrap();
+        let reconstructed_val = reconstructed.eval(g).expect("Test: operation failed");
 
         for i in 0..3 {
             for j in 0..2 {
-                assert_relative_eq!(reconstructed_val[[i, j]], a.eval(g).unwrap()[[i, j]], epsilon = 1e-5);
+                assert_relative_eq!(reconstructed_val[[i, j]], a.eval(g).expect("Test: operation failed")[[i, j]], epsilon = 1e-5);
             }
         }
         */
@@ -130,8 +130,8 @@ fn test_eigendecomposition() {
         // Test eigendecomposition
         let (eigenvals, eigenvecs) = eig(&a);
 
-        let vals = eigenvals.eval(g).unwrap();
-        let vecs = eigenvecs.eval(g).unwrap();
+        let vals = eigenvals.eval(g).expect("Test: operation failed");
+        let vecs = eigenvecs.eval(g).expect("Test: operation failed");
 
         // Check shapes
         assert_eq!(vals.shape(), &[2]);
@@ -156,20 +156,20 @@ fn test_pseudo_inverse() {
 
         // Test pseudo-inverse
         let pinv_a = pinv(&a);
-        let result = pinv_a.eval(g).unwrap();
+        let result = pinv_a.eval(g).expect("Test: operation failed");
 
         // Check shape
         assert_eq!(result.shape(), &[2, 3]);
 
         // Verify: A * pinv(A) * A ≈ A
         let check = matmul(matmul(a, pinv_a), a);
-        let check_val = check.eval(g).unwrap();
+        let check_val = check.eval(g).expect("Test: operation failed");
 
         for i in 0..3 {
             for j in 0..2 {
                 assert_relative_eq!(
                     check_val[[i, j]],
-                    a.eval(g).unwrap()[[i, j]],
+                    a.eval(g).expect("Test: operation failed")[[i, j]],
                     epsilon = 1e-5
                 );
             }
@@ -186,17 +186,17 @@ fn test_matrix_square_root() {
 
         // Test matrix square root
         let sqrt_a = sqrtm(&a);
-        let _result = sqrt_a.eval(g).unwrap();
+        let _result = sqrt_a.eval(g).expect("Test: operation failed");
 
         // Verify: sqrtm(A) * sqrtm(A) ≈ A
         let squared = matmul(sqrt_a, sqrt_a);
-        let squared_val = squared.eval(g).unwrap();
+        let squared_val = squared.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
                 assert_relative_eq!(
                     squared_val[[i, j]],
-                    a.eval(g).unwrap()[[i, j]],
+                    a.eval(g).expect("Test: operation failed")[[i, j]],
                     epsilon = 1e-5
                 );
             }
@@ -205,7 +205,7 @@ fn test_matrix_square_root() {
         // Test gradient
         let trace_sqrt = trace(sqrt_a);
         let grads = grad(&[&trace_sqrt], &[&a]);
-        let grad_a = grads[0].eval(g).unwrap();
+        let grad_a = grads[0].eval(g).expect("Test: operation failed");
 
         // Gradient should be computed (may be zeros due to current implementation)
         assert_eq!(grad_a.shape(), &[2, 2]);
@@ -224,11 +224,15 @@ fn test_matrix_logarithm() {
 
         // Verify: exp(log(A)) ≈ A
         let exp_log = matrix_exp(&log_a);
-        let result = exp_log.eval(g).unwrap();
+        let result = exp_log.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
-                assert_relative_eq!(result[[i, j]], a.eval(g).unwrap()[[i, j]], epsilon = 1e-5);
+                assert_relative_eq!(
+                    result[[i, j]],
+                    a.eval(g).expect("Test: operation failed")[[i, j]],
+                    epsilon = 1e-5
+                );
             }
         }
     });
@@ -243,8 +247,8 @@ fn test_qr_decomposition() {
         // Test QR decomposition
         let (q, r) = qr(a);
 
-        let q_val = q.eval(g).unwrap();
-        let r_val = r.eval(g).unwrap();
+        let q_val = q.eval(g).expect("Test: operation failed");
+        let r_val = r.eval(g).expect("Test: operation failed");
 
         // Check shapes
         assert_eq!(q_val.shape(), &[3, 2]);
@@ -252,7 +256,7 @@ fn test_qr_decomposition() {
 
         // Q should have orthonormal columns
         let qtq = matmul(transpose(q, &[1, 0]), q);
-        let qtq_val = qtq.eval(g).unwrap();
+        let qtq_val = qtq.eval(g).expect("Test: operation failed");
 
         // Should be close to identity
         assert_relative_eq!(qtq_val[[0, 0]], 1.0, epsilon = 1e-5);
@@ -262,13 +266,13 @@ fn test_qr_decomposition() {
 
         // Verify reconstruction: A ≈ Q * R
         let reconstructed = matmul(q, r);
-        let reconstructed_val = reconstructed.eval(g).unwrap();
+        let reconstructed_val = reconstructed.eval(g).expect("Test: operation failed");
 
         for i in 0..3 {
             for j in 0..2 {
                 assert_relative_eq!(
                     reconstructed_val[[i, j]],
-                    a.eval(g).unwrap()[[i, j]],
+                    a.eval(g).expect("Test: operation failed")[[i, j]],
                     epsilon = 1e-5
                 );
             }
@@ -286,7 +290,7 @@ fn test_cholesky_decomposition() {
 
         // Test Cholesky decomposition
         let l = cholesky(&a);
-        let l_val = l.eval(g).unwrap();
+        let l_val = l.eval(g).expect("Test: operation failed");
 
         // Check shape
         assert_eq!(l_val.shape(), &[2, 2]);
@@ -296,11 +300,15 @@ fn test_cholesky_decomposition() {
 
         // Verify: L * L^T = A
         let llt = matmul(l, transpose(l, &[1, 0]));
-        let llt_val = llt.eval(g).unwrap();
+        let llt_val = llt.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
-                assert_relative_eq!(llt_val[[i, j]], a.eval(g).unwrap()[[i, j]], epsilon = 1e-5);
+                assert_relative_eq!(
+                    llt_val[[i, j]],
+                    a.eval(g).expect("Test: operation failed")[[i, j]],
+                    epsilon = 1e-5
+                );
             }
         }
     });
@@ -315,22 +323,38 @@ fn test_solve_linear_system() {
 
         // Solve Ax = b
         let x = solve(a, b);
-        let _x_val = x.eval(g).unwrap();
+        let _x_val = x.eval(g).expect("Test: operation failed");
 
         // Verify solution
         let ax = matmul(a, x);
-        let ax_val = ax.eval(g).unwrap();
+        let ax_val = ax.eval(g).expect("Test: operation failed");
 
-        assert_relative_eq!(ax_val[[0, 0]], b.eval(g).unwrap()[[0, 0]], epsilon = 1e-5);
-        assert_relative_eq!(ax_val[[1, 0]], b.eval(g).unwrap()[[1, 0]], epsilon = 1e-5);
+        assert_relative_eq!(
+            ax_val[[0, 0]],
+            b.eval(g).expect("Test: operation failed")[[0, 0]],
+            epsilon = 1e-5
+        );
+        assert_relative_eq!(
+            ax_val[[1, 0]],
+            b.eval(g).expect("Test: operation failed")[[1, 0]],
+            epsilon = 1e-5
+        );
 
         // Test gradient
         let sum_x = sum_all(x);
         let grads = grad(&[&sum_x], &[&a, &b]);
 
         // Gradients should be non-zero
-        assert!(grads[0].eval(g).unwrap().iter().any(|&x| x.abs() > 1e-6));
-        assert!(grads[1].eval(g).unwrap().iter().any(|&x| x.abs() > 1e-6));
+        assert!(grads[0]
+            .eval(g)
+            .expect("Test: operation failed")
+            .iter()
+            .any(|&x| x.abs() > 1e-6));
+        assert!(grads[1]
+            .eval(g)
+            .expect("Test: operation failed")
+            .iter()
+            .any(|&x| x.abs() > 1e-6));
     });
 }
 
@@ -350,12 +374,12 @@ fn test_complex_linear_algebra_chain() {
         let result = add(tr, det_a);
 
         // Evaluate the result
-        let result_val = result.eval(g).unwrap();
+        let result_val = result.eval(g).expect("Test: operation failed");
         assert!(result_val[[]] > 0.0);
 
         // Compute gradient
         let grads = grad(&[&result], &[&a]);
-        let grad_a = grads[0].eval(g).unwrap();
+        let grad_a = grads[0].eval(g).expect("Test: operation failed");
 
         // Gradient should be non-zero
         assert!(grad_a.iter().any(|&x| x.abs() > 1e-6));
@@ -377,7 +401,7 @@ fn test_batch_operations() {
         );
 
         let c = batch_matmul(a, b);
-        let c_val = c.eval(g).unwrap();
+        let c_val = c.eval(g).expect("Test: operation failed");
 
         // Check shape
         assert_eq!(c_val.shape(), &[2, 2, 2]);

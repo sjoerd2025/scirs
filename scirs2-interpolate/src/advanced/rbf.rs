@@ -94,17 +94,17 @@ impl<
     ///     0.0, 1.0,
     ///     1.0, 1.0,
     ///     0.5, 0.5
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
     /// // Create values at those points (z = x² + y²)
     /// let values = array![0.0f64, 1.0, 1.0, 2.0, 0.5];
     ///
     /// // Create an RBF interpolator with a Gaussian kernel
-    /// let interp = RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).unwrap();
+    /// let interp = RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).expect("Operation failed");
     ///
     /// // Interpolate at a new point
-    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
-    /// let result = interp.interpolate(&test_point.view()).unwrap();
+    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).expect("Operation failed");
+    /// let result = interp.interpolate(&test_point.view()).expect("Operation failed");
     /// println!("Interpolated value at (0.25, 0.25): {}", result[0]);
     /// ```
     pub fn new(
@@ -152,7 +152,7 @@ impl<
     ///     0.0, 1.0,
     ///     1.0, 1.0,
     ///     0.5, 0.5
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
     /// // Create values at those points (z = x² + y²)
     /// let values = array![0.0f64, 1.0, 1.0, 2.0, 0.5];
@@ -160,11 +160,11 @@ impl<
     /// // Create an RBF interpolator with parallel matrix construction
     /// // Use 0 workers for automatic detection
     /// let interp = RBFInterpolator::new_parallel(&points.view(), &values.view(),
-    ///                                          RBFKernel::Gaussian, 1.0, 0).unwrap();
+    ///                                          RBFKernel::Gaussian, 1.0, 0).expect("Operation failed");
     ///
     /// // Interpolate at a new point
-    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
-    /// let result = interp.interpolate(&test_point.view()).unwrap();
+    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).expect("Operation failed");
+    /// let result = interp.interpolate(&test_point.view()).expect("Operation failed");
     /// println!("Interpolated value at (0.25, 0.25): {}", result[0]);
     /// ```
     pub fn new_parallel(
@@ -326,7 +326,7 @@ impl<
 
                 // Apply stronger regularization
                 let mut regularized_matrix = a_matrix.clone();
-                let regularization = F::from_f64(1e-6).unwrap();
+                let regularization = F::from_f64(1e-6).expect("Operation failed");
                 for i in 0..n_points {
                     regularized_matrix[[i, i]] += regularization;
                 }
@@ -482,10 +482,10 @@ impl<
     /// use scirs2_interpolate::numerical_stability::StabilityLevel;
     ///
     /// // Create interpolator (example data)
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).expect("Operation failed");
     /// let values = scirs2_core::ndarray::array![0.0, 1.0, 1.0];
     /// let interp = RBFInterpolator::new(&points.view(), &values.view(),
-    ///                                   RBFKernel::Gaussian, 1.0).unwrap();
+    ///                                   RBFKernel::Gaussian, 1.0).expect("Operation failed");
     ///
     /// // Check numerical stability
     /// if let Some(report) = interp.condition_report() {
@@ -570,10 +570,10 @@ impl<
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).expect("Operation failed");
     /// let values = array![0.0, 1.0, 1.0];
     ///
-    /// rbf.fit(&points.view(), &values.view()).unwrap();
+    /// rbf.fit(&points.view(), &values.view()).expect("Operation failed");
     /// ```
     pub fn fit(&mut self, points: &ArrayView2<F>, values: &ArrayView1<F>) -> InterpolateResult<()> {
         // Create a new interpolator with the provided data
@@ -608,13 +608,13 @@ impl<
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).expect("Operation failed");
     /// let values = array![0.0, 1.0, 1.0];
     ///
-    /// rbf.fit(&points.view(), &values.view()).unwrap();
+    /// rbf.fit(&points.view(), &values.view()).expect("Operation failed");
     ///
-    /// let query_points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
-    /// let result = rbf.predict(&query_points.view()).unwrap();
+    /// let query_points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).expect("Operation failed");
+    /// let result = rbf.predict(&query_points.view()).expect("Operation failed");
     /// ```
     pub fn predict(&self, querypoints: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check if the interpolator has been fitted
@@ -767,23 +767,28 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5];
 
         // Create RBF interpolators with different kernels
         let interp_gaussian =
-            RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).unwrap();
+            RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0)
+                .expect("Operation failed");
 
         let interp_multiquadric =
             RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Multiquadric, 1.0)
-                .unwrap();
+                .expect("Operation failed");
 
         // Test interpolation at the sample points
         // The interpolator should exactly reproduce the sample values
-        let result_gaussian = interp_gaussian.interpolate(&points.view()).unwrap();
-        let result_multiquadric = interp_multiquadric.interpolate(&points.view()).unwrap();
+        let result_gaussian = interp_gaussian
+            .interpolate(&points.view())
+            .expect("Operation failed");
+        let result_multiquadric = interp_multiquadric
+            .interpolate(&points.view())
+            .expect("Operation failed");
 
         for i in 0..values.len() {
             // Using a larger epsilon for our simplified algorithm
@@ -792,9 +797,14 @@ mod tests {
         }
 
         // Test interpolation at a new point
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
-        let result_gaussian = interp_gaussian.interpolate(&test_point.view()).unwrap();
-        let result_multiquadric = interp_multiquadric.interpolate(&test_point.view()).unwrap();
+        let test_point =
+            Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).expect("Operation failed");
+        let result_gaussian = interp_gaussian
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
+        let result_multiquadric = interp_multiquadric
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
 
         // The result should be close to x² + y² = 0.25² + 0.25² = 0.125
         // But we allow some tolerance as RBF isn't designed to exactly reproduce polynomials
@@ -878,7 +888,7 @@ mod tests {
             (4, 3),
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create values at those points (w = x + y + z)
         let values = array![0.0, 1.0, 1.0, 1.0];
@@ -886,11 +896,14 @@ mod tests {
         // Create RBF interpolator
         let interp =
             RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Multiquadric, 1.0)
-                .unwrap();
+                .expect("Operation failed");
 
         // Test interpolation at a new point
-        let test_point = Array2::from_shape_vec((1, 3), vec![0.5, 0.5, 0.5]).unwrap();
-        let result = interp.interpolate(&test_point.view()).unwrap();
+        let test_point =
+            Array2::from_shape_vec((1, 3), vec![0.5, 0.5, 0.5]).expect("Operation failed");
+        let result = interp
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
 
         // The result should be close to x + y + z = 0.5 + 0.5 + 0.5 = 1.5
         // Using a larger epsilon for our simplified algorithm
@@ -907,14 +920,15 @@ mod tests {
                 0.75,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5, 0.125, 1.125, 0.625];
 
         // Create RBF interpolators with serial and parallel construction
         let interp_serial =
-            RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).unwrap();
+            RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0)
+                .expect("Operation failed");
 
         let interp_parallel = RBFInterpolator::new_parallel(
             &points.view(),
@@ -923,12 +937,16 @@ mod tests {
             1.0,
             2,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation at the same point with both methods
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.3, 0.7]).unwrap();
-        let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();
-        let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.3, 0.7]).expect("Operation failed");
+        let result_serial = interp_serial
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
+        let result_parallel = interp_parallel
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
 
         // Results should be very close (allowing for small numerical differences)
         assert!((result_serial[0] - result_parallel[0]).abs() < 1e-10);
@@ -941,8 +959,10 @@ mod tests {
             1.0,
             0,
         )
-        .unwrap();
-        let result_auto = interp_auto.interpolate(&test_point.view()).unwrap();
+        .expect("Operation failed");
+        let result_auto = interp_auto
+            .interpolate(&test_point.view())
+            .expect("Operation failed");
 
         // Results should be very close
         assert!((result_serial[0] - result_auto[0]).abs() < 1e-10);
@@ -955,7 +975,7 @@ mod tests {
             (6, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.25, 0.75],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create values at those points
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5, 0.625];
@@ -969,17 +989,22 @@ mod tests {
         ];
 
         for kernel in kernels.iter() {
-            let interp_serial =
-                RBFInterpolator::new(&points.view(), &values.view(), *kernel, 1.0).unwrap();
+            let interp_serial = RBFInterpolator::new(&points.view(), &values.view(), *kernel, 1.0)
+                .expect("Operation failed");
 
             let interp_parallel =
                 RBFInterpolator::new_parallel(&points.view(), &values.view(), *kernel, 1.0, 4)
-                    .unwrap();
+                    .expect("Operation failed");
 
             // Test interpolation at a new point
-            let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.4]).unwrap();
-            let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();
-            let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();
+            let test_point =
+                Array2::from_shape_vec((1, 2), vec![0.6, 0.4]).expect("Operation failed");
+            let result_serial = interp_serial
+                .interpolate(&test_point.view())
+                .expect("Operation failed");
+            let result_parallel = interp_parallel
+                .interpolate(&test_point.view())
+                .expect("Operation failed");
 
             // Results should be very close (allowing for small numerical differences)
             assert!(

@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let edges_sobel = edge_detector_simple(&image_dyn, None, None)?;
     let edges_sobel_2d = edges_sobel
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
     print_array(&edges_sobel_2d);
 
     // 2. Edge detection using Scharr operator for better rotational invariance
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let edges_scharr = edge_detector_simple(&image_dyn, Some(GradientMethod::Scharr), None)?;
     let edges_scharr_2d = edges_scharr
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
     print_array(&edges_scharr_2d);
 
     // 3. Canny edge detection with Sobel operator

@@ -104,7 +104,7 @@ mod tests {
     fn test_model_checkpoint_creation() {
         // Test creating with default values
         let checkpoint = ModelCheckpoint::<f32>::new("test_path", true);
-        assert_eq!(checkpoint.filepath.to_str().unwrap(), "test_path");
+        assert_eq!(checkpoint.filepath.to_str().expect("Operation failed"), "test_path");
         assert!(checkpoint.save_best_only);
         assert!(checkpoint.monitor_val_loss);
         assert!(checkpoint.monitor_decrease);

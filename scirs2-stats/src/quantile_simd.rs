@@ -177,19 +177,25 @@ where
         return Ok(x[0]);
     }
     if q == F::zero() {
-        return Ok(*x.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap());
+        return Ok(*x
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed"));
     }
     if q == F::one() {
-        return Ok(*x.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap());
+        return Ok(*x
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed"));
     }
 
     // Get mutable slice for in-place operations
-    let data = x.as_slice_mut().unwrap();
+    let data = x.as_slice_mut().expect("Operation failed");
 
     // Calculate the exact position
-    let pos = q * F::from(n - 1).unwrap();
-    let lower_idx = pos.floor().to_usize().unwrap();
-    let upper_idx = pos.ceil().to_usize().unwrap();
+    let pos = q * F::from(n - 1).expect("Failed to convert to float");
+    let lower_idx = pos.floor().to_usize().expect("Operation failed");
+    let upper_idx = pos.ceil().to_usize().expect("Operation failed");
     let fraction = pos - pos.floor();
 
     // Use quickselect to find the required elements
@@ -203,9 +209,10 @@ where
             "linear" => Ok(lower_val + fraction * (upper_val - lower_val)),
             "lower" => Ok(lower_val),
             "higher" => Ok(upper_val),
-            "midpoint" => Ok((lower_val + upper_val) / F::from(2.0).unwrap()),
+            "midpoint" => Ok((lower_val + upper_val)
+                / F::from(2.0).expect("Failed to convert constant to float")),
             "nearest" => {
-                if fraction < F::from(0.5).unwrap() {
+                if fraction < F::from(0.5).expect("Failed to convert constant to float") {
                     Ok(lower_val)
                 } else {
                     Ok(upper_val)
@@ -264,7 +271,7 @@ where
     // Sort the array once if we have multiple quantiles
     if quantiles.len() > 1 {
         // Use SIMD-accelerated sort if available
-        let data = x.as_slice_mut().unwrap();
+        let data = x.as_slice_mut().expect("Operation failed");
         simd_sort(data);
 
         // Now compute each quantile from the sorted array
@@ -412,9 +419,9 @@ where
         return Ok(sorteddata[n - 1]);
     }
 
-    let pos = q * F::from(n - 1).unwrap();
-    let lower_idx = pos.floor().to_usize().unwrap();
-    let upper_idx = pos.ceil().to_usize().unwrap();
+    let pos = q * F::from(n - 1).expect("Failed to convert to float");
+    let lower_idx = pos.floor().to_usize().expect("Operation failed");
+    let upper_idx = pos.ceil().to_usize().expect("Operation failed");
     let fraction = pos - pos.floor();
 
     if lower_idx == upper_idx {
@@ -427,9 +434,10 @@ where
             "linear" => Ok(lower_val + fraction * (upper_val - lower_val)),
             "lower" => Ok(lower_val),
             "higher" => Ok(upper_val),
-            "midpoint" => Ok((lower_val + upper_val) / F::from(2.0).unwrap()),
+            "midpoint" => Ok((lower_val + upper_val)
+                / F::from(2.0).expect("Failed to convert constant to float")),
             "nearest" => {
-                if fraction < F::from(0.5).unwrap() {
+                if fraction < F::from(0.5).expect("Failed to convert constant to float") {
                     Ok(lower_val)
                 } else {
                     Ok(upper_val)
@@ -452,7 +460,11 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: DataMut<Elem = F>,
 {
-    quantile_simd(x, F::from(0.5).unwrap(), "linear")
+    quantile_simd(
+        x,
+        F::from(0.5).expect("Failed to convert constant to float"),
+        "linear",
+    )
 }
 
 /// SIMD-optimized percentile computation
@@ -464,13 +476,17 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: DataMut<Elem = F>,
 {
-    if p < F::zero() || p > F::from(100.0).unwrap() {
+    if p < F::zero() || p > F::from(100.0).expect("Failed to convert constant to float") {
         return Err(StatsError::invalid_argument(
             "Percentile must be between 0 and 100",
         ));
     }
 
-    quantile_simd(x, p / F::from(100.0).unwrap(), method)
+    quantile_simd(
+        x,
+        p / F::from(100.0).expect("Failed to convert constant to float"),
+        method,
+    )
 }
 
 #[cfg(test)]
@@ -491,24 +507,24 @@ mod tests {
         let mut data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
 
         // Test median
-        let median = quantile_simd(&mut data.view_mut(), 0.5, "linear").unwrap();
+        let median = quantile_simd(&mut data.view_mut(), 0.5, "linear").expect("Operation failed");
         assert_relative_eq!(median, 5.0, epsilon = 1e-10);
 
         // Test quartiles
-        let q1 = quantile_simd(&mut data.view_mut(), 0.25, "linear").unwrap();
+        let q1 = quantile_simd(&mut data.view_mut(), 0.25, "linear").expect("Operation failed");
         assert_relative_eq!(q1, 3.0, epsilon = 1e-10);
 
-        let q3 = quantile_simd(&mut data.view_mut(), 0.75, "linear").unwrap();
+        let q3 = quantile_simd(&mut data.view_mut(), 0.75, "linear").expect("Operation failed");
         assert_relative_eq!(q3, 7.0, epsilon = 1e-10);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_quantiles_simd() {
         let mut data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let quantiles = array![0.1, 0.25, 0.5, 0.75, 0.9];
 
-        let results = quantiles_simd(&mut data.view_mut(), &quantiles.view(), "linear").unwrap();
+        let results = quantiles_simd(&mut data.view_mut(), &quantiles.view(), "linear")
+            .expect("Operation failed");
 
         assert_relative_eq!(results[0], 1.9, epsilon = 1e-10); // 10th percentile
         assert_relative_eq!(results[1], 3.25, epsilon = 1e-10); // 25th percentile

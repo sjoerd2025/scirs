@@ -21,7 +21,7 @@ use std::fmt::Debug;
 /// 
 /// let softmax = Softmax::new(0);
 /// let input = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
-/// let output = softmax.forward(&input).unwrap();
+/// let output = softmax.forward(&input).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Softmax {
@@ -61,7 +61,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
             // Try f64 SIMD path
             if std::mem::size_of::<F>() == 8 {
                 // Safety: We know F is f64 from size check
-                let input_slice = input.as_slice().unwrap();
+                let input_slice = input.as_slice().expect("Operation failed");
                 let input_f64: Vec<f64> = input_slice
                     .iter()
                     .map(|&v| {
@@ -86,7 +86,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
             // Try f32 SIMD path
             else if std::mem::size_of::<F>() == 4 {
                 // Safety: We know F is f32 from size check
-                let input_slice = input.as_slice().unwrap();
+                let input_slice = input.as_slice().expect("Operation failed");
                 let input_f32: Vec<f32> = input_slice
                     .iter()
                     .map(|&v| {
@@ -192,7 +192,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         let mut sumshape = output.shape().to_vec();
         sumshape[self.axis] = 1;
         let weighted_sum_reshaped = weighted_sum.into_shape_with_order(sumshape)?;
-        let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(output.shape()).unwrap();
+        let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(output.shape()).expect("Operation failed");
 
         // Compute gradient: softmax * (grad_output - weighted_sum)
         let grad_input = output * (grad_output - &weighted_sum_broadcast);

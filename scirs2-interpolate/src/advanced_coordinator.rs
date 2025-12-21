@@ -275,7 +275,7 @@ mod tests {
 
     #[test]
     fn test_basic_recommendation() {
-        let coordinator = create_default_advanced_coordinator::<f64>().unwrap();
+        let coordinator = create_default_advanced_coordinator::<f64>().expect("Operation failed");
 
         let x_data = Array1::linspace(0.0, 10.0, 11);
         let y_data = x_data.mapv(|x: f64| x.sin());

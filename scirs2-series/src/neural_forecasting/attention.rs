@@ -33,7 +33,8 @@ pub struct FlashAttention<F: Float + Debug> {
 impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
     /// Create new Flash Attention layer
     pub fn new(model_dim: usize, num_heads: usize) -> Self {
-        let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(model_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         Self {

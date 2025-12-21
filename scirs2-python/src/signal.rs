@@ -35,8 +35,8 @@ fn convolve_py(
 ) -> PyResult<Py<PyArray1<f64>>> {
     let a_arr = a.as_array();
     let v_arr = v.as_array();
-    let a_slice = a_arr.as_slice().unwrap();
-    let v_slice = v_arr.as_slice().unwrap();
+    let a_slice = a_arr.as_slice().expect("Operation failed");
+    let v_slice = v_arr.as_slice().expect("Operation failed");
     let n = a_slice.len();
     let m = v_slice.len();
 
@@ -93,8 +93,8 @@ fn correlate_py(
 ) -> PyResult<Py<PyArray1<f64>>> {
     let a_arr = a.as_array();
     let v_arr = v.as_array();
-    let a_slice = a_arr.as_slice().unwrap();
-    let v_slice = v_arr.as_slice().unwrap();
+    let a_slice = a_arr.as_slice().expect("Operation failed");
+    let v_slice = v_arr.as_slice().expect("Operation failed");
     let n = a_slice.len();
     let m = v_slice.len();
 

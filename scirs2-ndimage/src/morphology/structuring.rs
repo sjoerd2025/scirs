@@ -22,7 +22,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use scirs2_ndimage::morphology::{generate_binary_structure, Connectivity};
 ///
 /// // Create a 2D structure with face connectivity (4-connectivity in 2D)
-/// let structure = generate_binary_structure(2, Connectivity::Face).unwrap();
+/// let structure = generate_binary_structure(2, Connectivity::Face).expect("Operation failed");
 /// assert_eq!(structure.shape(), &[3, 3]);
 /// // Center element and face neighbors
 /// assert!(structure[[1, 1]]);  // Center
@@ -306,20 +306,20 @@ mod tests {
     #[test]
     fn test_iterate_structure() {
         let input = Array2::from_elem((3, 3), true);
-        let result = iterate_structure(&input, 1).unwrap();
+        let result = iterate_structure(&input, 1).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
     #[test]
     fn test_box_structure() {
-        let result = box_structure(&[3, 3]).unwrap();
+        let result = box_structure(&[3, 3]).expect("Operation failed");
         assert_eq!(result.shape(), &[3, 3]);
         assert!(result.iter().all(|&x| x));
     }
 
     #[test]
     fn test_disk_structure() {
-        let result = disk_structure(1.5, None).unwrap();
+        let result = disk_structure(1.5, None).expect("Operation failed");
         // For radius 1.5, we expect a 3x3 structure (2 * 1.5 = 3)
         assert_eq!(result.shape(), &[3, 3]);
 

@@ -286,7 +286,7 @@ mod tests {
                 .iter().cloned().collect(),
         };
 
-        let signal = generate_test_signal(&config).unwrap();
+        let signal = generate_test_signal(&config).expect("Operation failed");
         assert_eq!(signal.len(), 100);
         assert!(find_max_abs(&signal) <= 2.1); // Allow small numerical error
     }
@@ -296,7 +296,7 @@ mod tests {
         let original = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let reconstructed = Array1::from_vec(vec![1.01, 1.99, 3.02, 3.98]);
 
-        let error = calculate_reconstruction_error(&original, &reconstructed).unwrap();
+        let error = calculate_reconstruction_error(&original, &reconstructed).expect("Operation failed");
         assert!(error.max_error < 0.1);
         assert!(error.rms_error < 0.1);
     }
@@ -315,7 +315,7 @@ mod tests {
         let signal1 = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let signal2 = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
 
-        let correlation = calculate_correlation(&signal1, &signal2).unwrap();
+        let correlation = calculate_correlation(&signal1, &signal2).expect("Operation failed");
         assert!((correlation - 1.0).abs() < 1e-10);
     }
 
@@ -324,7 +324,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let noise = Array1::from_vec(vec![0.1, 0.1, 0.1, 0.1]);
 
-        let snr = calculate_snr_db(&signal, &noise).unwrap();
+        let snr = calculate_snr_db(&signal, &noise).expect("Operation failed");
         assert!(snr > 10.0); // Should be significantly positive
     }
 
@@ -336,7 +336,7 @@ mod tests {
         assert!((window[window.len()-1] - 0.0).abs() < 1e-10);
 
         let signal = Array1::ones(10);
-        let windowed = apply_window(&signal, &window).unwrap();
+        let windowed = apply_window(&signal, &window).expect("Operation failed");
         assert_eq!(windowed.len(), 10);
     }
 

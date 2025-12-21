@@ -28,8 +28,8 @@ pub(crate) fn cut_tree<F: Float + FromPrimitive + PartialOrd>(
 
     // Perform merges
     for i in 0..n_merges {
-        let cluster1 = z[[i, 0]].to_usize().unwrap();
-        let cluster2 = z[[i, 1]].to_usize().unwrap();
+        let cluster1 = z[[i, 0]].to_usize().expect("Operation failed");
+        let cluster2 = z[[i, 1]].to_usize().expect("Operation failed");
 
         // Check if cluster IDs are valid
         if cluster1 >= n_samples + i || cluster2 >= n_samples + i {
@@ -79,8 +79,8 @@ pub fn cut_tree_by_distance<F: Float + FromPrimitive + PartialOrd>(
 
     // Process the linkage matrix
     for i in 0..z.shape()[0] {
-        let cluster1 = z[[i, 0]].to_usize().unwrap();
-        let cluster2 = z[[i, 1]].to_usize().unwrap();
+        let cluster1 = z[[i, 0]].to_usize().expect("Operation failed");
+        let cluster2 = z[[i, 1]].to_usize().expect("Operation failed");
         let distance = z[[i, 2]];
 
         if distance < threshold {
@@ -139,8 +139,8 @@ pub fn cut_tree_by_inconsistency<F: Float + FromPrimitive + PartialOrd>(
 
     // Process the linkage matrix
     for i in 0..z.shape()[0] {
-        let cluster1 = z[[i, 0]].to_usize().unwrap();
-        let cluster2 = z[[i, 1]].to_usize().unwrap();
+        let cluster1 = z[[i, 0]].to_usize().expect("Operation failed");
+        let cluster2 = z[[i, 1]].to_usize().expect("Operation failed");
         let inconsistency_value = inconsistency[[i, 3]];
 
         if inconsistency_value < threshold {

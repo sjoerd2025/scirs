@@ -53,21 +53,24 @@ pub fn digamma<
     mut x: F,
 ) -> F {
     // Euler-Mascheroni constant with high precision
-    let gamma = F::from(constants::EULER_MASCHERONI).unwrap();
+    let gamma = F::from(constants::EULER_MASCHERONI).expect("Failed to convert to float");
 
     // For test cases in scirs2-special, we want exact matches
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     if x_f64 == 1.0 {
-        return F::from(-gamma.to_f64().unwrap()).unwrap();
+        return F::from(-gamma.to_f64().expect("Failed to convert to float"))
+            .expect("Operation failed");
     }
 
     if x_f64 == 2.0 {
-        return F::from(1.0 - gamma.to_f64().unwrap()).unwrap();
+        return F::from(1.0 - gamma.to_f64().expect("Failed to convert to float"))
+            .expect("Operation failed");
     }
 
     if x_f64 == 3.0 {
-        return F::from(1.5 - gamma.to_f64().unwrap()).unwrap();
+        return F::from(1.5 - gamma.to_f64().expect("Failed to convert to float"))
+            .expect("Operation failed");
     }
 
     // Enhanced handling of negative x
@@ -82,12 +85,12 @@ pub fn digamma<
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-8 {
             // Near negative integers, ψ(x) ≈ 1/(x+n) + ψ(1+n)
             let n = -nearest_int;
-            let epsilon = x - F::from(nearest_int).unwrap();
+            let epsilon = x - F::from(nearest_int).expect("Failed to convert to float");
 
             // Compute ψ(1+n)
             let mut psi_n_plus_1 = -gamma;
             for i in 1..=n {
-                psi_n_plus_1 += F::from(1.0 / i as f64).unwrap();
+                psi_n_plus_1 += F::from(1.0 / i as f64).expect("Failed to convert to float");
             }
 
             return F::one() / epsilon + psi_n_plus_1;
@@ -95,12 +98,12 @@ pub fn digamma<
 
         // Use the reflection formula for other negative values
         // ψ(1-x) - ψ(x) = π/tan(πx)
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let sinpix = (pi * x).sin();
         let cospix = (pi * x).cos();
 
         // Protect against division by zero
-        if sinpix.abs() < F::from(1e-15).unwrap() {
+        if sinpix.abs() < F::from(1e-15).expect("Failed to convert constant to float") {
             return F::nan();
         }
 
@@ -109,11 +112,14 @@ pub fn digamma<
     }
 
     // Enhanced handling of small positive arguments
-    if x < F::from(1e-6).unwrap() {
+    if x < F::from(1e-6).expect("Failed to convert constant to float") {
         // Near zero approximation with higher-order terms
         // ψ(x) ≈ -1/x - γ + π²/6·x + O(x²)
-        let pi_squared = F::from(std::f64::consts::PI).unwrap().powi(2);
-        return -F::one() / x - gamma + pi_squared / F::from(6.0).unwrap() * x;
+        let pi_squared = F::from(std::f64::consts::PI)
+            .expect("Failed to convert to float")
+            .powi(2);
+        return -F::one() / x - gamma
+            + pi_squared / F::from(6.0).expect("Failed to convert constant to float") * x;
     }
 
     let mut result = F::zero();
@@ -125,7 +131,7 @@ pub fn digamma<
     }
 
     // For large values, use the asymptotic expansion
-    if x > F::from(20.0).unwrap() {
+    if x > F::from(20.0).expect("Failed to convert constant to float") {
         return asymptotic_digamma(x) + result;
     }
 
@@ -136,13 +142,13 @@ pub fn digamma<
     }
 
     // For x in (1, 2), use a rational approximation
-    if x < F::from(2.0).unwrap() {
+    if x < F::from(2.0).expect("Failed to convert constant to float") {
         let z = x - F::one();
         return rational_digamma_1_to_2(z) + result;
     }
 
     // For values in [2, 20], use forward recurrence to get to (1,2) interval
-    while x > F::from(2.0).unwrap() {
+    while x > F::from(2.0).expect("Failed to convert constant to float") {
         x -= F::one();
         result += F::one() / x;
     }
@@ -196,7 +202,7 @@ where
 
     // Check for poles (negative integers and zero)
     if x <= F::zero() {
-        let x_f64 = x.to_f64().unwrap();
+        let x_f64 = x.to_f64().expect("Operation failed");
         let nearest_int = x_f64.round() as i32;
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
             return Err(SpecialError::DomainError(format!(
@@ -222,15 +228,15 @@ where
 #[allow(dead_code)]
 fn rational_digamma_1_to_2<F: Float + FromPrimitive>(z: F) -> F {
     // From Boost's implementation: rational approximation for x in [1, 2]
-    let r1 = F::from(-0.5772156649015329).unwrap();
-    let r2 = F::from(0.9999999999999884).unwrap();
-    let r3 = F::from(-0.5000000000000152).unwrap();
-    let r4 = F::from(0.1666666664216816).unwrap();
-    let r5 = F::from(-0.0333333333334895).unwrap();
-    let r6 = F::from(0.0238095238090735).unwrap();
-    let r7 = F::from(-0.0333333333333158).unwrap();
-    let r8 = F::from(0.0757575756821292).unwrap();
-    let r9 = F::from(-0.253113553933395).unwrap();
+    let r1 = F::from(-0.5772156649015329).expect("Failed to convert constant to float");
+    let r2 = F::from(0.9999999999999884).expect("Failed to convert constant to float");
+    let r3 = F::from(-0.5000000000000152).expect("Failed to convert constant to float");
+    let r4 = F::from(0.1666666664216816).expect("Failed to convert constant to float");
+    let r5 = F::from(-0.0333333333334895).expect("Failed to convert constant to float");
+    let r6 = F::from(0.0238095238090735).expect("Failed to convert constant to float");
+    let r7 = F::from(-0.0333333333333158).expect("Failed to convert constant to float");
+    let r8 = F::from(0.0757575756821292).expect("Failed to convert constant to float");
+    let r9 = F::from(-0.253113553933395).expect("Failed to convert constant to float");
 
     r1 + z * (r2 + z * (r3 + z * (r4 + z * (r5 + z * (r6 + z * (r7 + z * (r8 + z * r9)))))))
 }
@@ -246,7 +252,11 @@ fn asymptotic_digamma<F: Float + FromPrimitive>(x: F) -> F {
     let one_over_x = F::one() / x;
     let one_over_x2 = one_over_x * one_over_x;
 
-    ln_x - F::from(0.5).unwrap() * one_over_x - F::from(1.0 / 12.0).unwrap() * one_over_x2
-        + F::from(1.0 / 120.0).unwrap() * one_over_x2 * one_over_x2
-        - F::from(1.0 / 252.0).unwrap() * one_over_x2 * one_over_x2 * one_over_x2
+    ln_x - F::from(0.5).expect("Failed to convert constant to float") * one_over_x
+        - F::from(1.0 / 12.0).expect("Failed to convert to float") * one_over_x2
+        + F::from(1.0 / 120.0).expect("Failed to convert to float") * one_over_x2 * one_over_x2
+        - F::from(1.0 / 252.0).expect("Failed to convert to float")
+            * one_over_x2
+            * one_over_x2
+            * one_over_x2
 }

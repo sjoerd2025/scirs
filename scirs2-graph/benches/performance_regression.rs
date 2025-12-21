@@ -39,15 +39,15 @@ impl GraphGenerator {
     }
 
     fn barabasi_albert(&mut self, n: usize, m: usize) -> Graph<usize, f64> {
-        barabasi_albert_graph(n, m, &mut self.rng).unwrap()
+        barabasi_albert_graph(n, m, &mut self.rng).expect("Operation failed")
     }
 
     fn erdos_renyi(&mut self, n: usize, p: f64) -> Graph<usize, f64> {
-        erdos_renyi_graph(n, p, &mut self.rng).unwrap()
+        erdos_renyi_graph(n, p, &mut self.rng).expect("Operation failed")
     }
 
     fn watts_strogatz(&mut self, n: usize, k: usize, p: f64) -> Graph<usize, f64> {
-        watts_strogatz_graph(n, k, p, &mut self.rng).unwrap()
+        watts_strogatz_graph(n, k, p, &mut self.rng).expect("Operation failed")
     }
 
     fn complete(&self, n: usize) -> Graph<usize, f64> {
@@ -94,7 +94,7 @@ fn bench_centrality_algorithms(c: &mut Criterion) {
 
         // PageRank
         group.bench_with_input(BenchmarkId::new("pagerank", graph_name), &graph, |b, g| {
-            b.iter(|| pagerank_centrality(black_box(g), 0.85, 1e-6).unwrap())
+            b.iter(|| pagerank_centrality(black_box(g), 0.85, 1e-6).expect("Operation failed"))
         });
 
         // Betweenness centrality (only for smaller graphs)
@@ -110,7 +110,11 @@ fn bench_centrality_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("eigenvector_centrality", graph_name),
             &graph,
-            |b, g| b.iter(|| eigenvector_centrality(black_box(g), 100, 1e-6).unwrap()),
+            |b, g| {
+                b.iter(|| {
+                    eigenvector_centrality(black_box(g), 100, 1e-6).expect("Operation failed")
+                })
+            },
         );
 
         // Closeness centrality (only for smaller graphs)
@@ -152,7 +156,7 @@ fn bench_community_detection(c: &mut Criterion) {
                 for i in start..end {
                     for j in (i + 1)..end {
                         if generator.rng.random::<f64>() < 0.3 {
-                            g.add_edge(i, j, 1.0).unwrap();
+                            g.add_edge(i, j, 1.0).expect("Operation failed");
                         }
                     }
                 }
@@ -161,7 +165,7 @@ fn bench_community_detection(c: &mut Criterion) {
             for i in 0..500 {
                 for j in (i + 1)..500 {
                     if i / 100 != j / 100 && generator.rng.random::<f64>() < 0.01 {
-                        g.add_edge(i, j, 1.0).unwrap();
+                        g.add_edge(i, j, 1.0).expect("Operation failed");
                     }
                 }
             }
@@ -240,14 +244,22 @@ fn bench_path_algorithms(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("breadth_first_search", graph_name),
                 &(graph, source),
-                |b, (g, s)| b.iter(|| breadth_first_search(black_box(g), black_box(s)).unwrap()),
+                |b, (g, s)| {
+                    b.iter(|| {
+                        breadth_first_search(black_box(g), black_box(s)).expect("Operation failed")
+                    })
+                },
             );
 
             // DFS
             group.bench_with_input(
                 BenchmarkId::new("depth_first_search", graph_name),
                 &(graph, source),
-                |b, (g, s)| b.iter(|| depth_first_search(black_box(g), black_box(s)).unwrap()),
+                |b, (g, s)| {
+                    b.iter(|| {
+                        depth_first_search(black_box(g), black_box(s)).expect("Operation failed")
+                    })
+                },
             );
         }
     }
@@ -289,7 +301,7 @@ fn bench_graph_measures(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("clustering_coefficient", graph_name),
             &graph,
-            |b, g| b.iter(|| clustering_coefficient(black_box(g)).unwrap()),
+            |b, g| b.iter(|| clustering_coefficient(black_box(g)).expect("Operation failed")),
         );
 
         // Graph density
@@ -334,7 +346,7 @@ fn bench_spanning_and_matching(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("minimum_spanning_tree", graph_name),
             &graph,
-            |b, g| b.iter(|| minimum_spanning_tree(black_box(g)).unwrap()),
+            |b, g| b.iter(|| minimum_spanning_tree(black_box(g)).expect("Operation failed")),
         );
 
         // Maximum cardinality matching
@@ -367,7 +379,7 @@ fn bench_graph_generation(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("erdos_renyi", size_name), &n, |b, &n| {
             b.iter(|| {
                 let mut rng = StdRng::seed_from_u64(42);
-                erdos_renyi_graph(black_box(n), 0.01, &mut rng).unwrap()
+                erdos_renyi_graph(black_box(n), 0.01, &mut rng).expect("Operation failed")
             })
         });
 
@@ -378,7 +390,7 @@ fn bench_graph_generation(c: &mut Criterion) {
             |b, &n| {
                 b.iter(|| {
                     let mut rng = StdRng::seed_from_u64(42);
-                    barabasi_albert_graph(black_box(n), 3, &mut rng).unwrap()
+                    barabasi_albert_graph(black_box(n), 3, &mut rng).expect("Operation failed")
                 })
             },
         );
@@ -390,7 +402,7 @@ fn bench_graph_generation(c: &mut Criterion) {
             |b, &n| {
                 b.iter(|| {
                     let mut rng = StdRng::seed_from_u64(42);
-                    watts_strogatz_graph(black_box(n), 6, 0.3, &mut rng).unwrap()
+                    watts_strogatz_graph(black_box(n), 6, 0.3, &mut rng).expect("Operation failed")
                 })
             },
         );
@@ -474,7 +486,12 @@ fn bench_parallel_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("parallel_pagerank", graph_name),
             &graph,
-            |b, g| b.iter(|| parallel_pagerank_centrality(black_box(g), 0.85, 1e-6, None).unwrap()),
+            |b, g| {
+                b.iter(|| {
+                    parallel_pagerank_centrality(black_box(g), 0.85, 1e-6, None)
+                        .expect("Operation failed")
+                })
+            },
         );
 
         // Parallel Louvain
@@ -488,7 +505,9 @@ fn bench_parallel_algorithms(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sequential_pagerank", graph_name),
             &graph,
-            |b, g| b.iter(|| pagerank_centrality(black_box(g), 0.85, 1e-6).unwrap()),
+            |b, g| {
+                b.iter(|| pagerank_centrality(black_box(g), 0.85, 1e-6).expect("Operation failed"))
+            },
         );
 
         group.bench_with_input(
@@ -534,7 +553,8 @@ fn bench_large_graph_scalability(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    pagerank_centrality(black_box(g), 0.85, 1e-3).unwrap() // Relaxed tolerance for speed
+                    pagerank_centrality(black_box(g), 0.85, 1e-3).expect("Operation failed")
+                    // Relaxed tolerance for speed
                 })
             },
         );
@@ -548,7 +568,7 @@ fn bench_large_graph_scalability(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("large_clustering_coefficient", graph_name),
             &graph,
-            |b, g| b.iter(|| clustering_coefficient(black_box(g)).unwrap()),
+            |b, g| b.iter(|| clustering_coefficient(black_box(g)).expect("Operation failed")),
         );
 
         // Community detection for large graphs

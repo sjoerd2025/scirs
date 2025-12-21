@@ -350,8 +350,8 @@ impl KMeansModel {
         use serde_json::json;
 
         Ok(json!({
-            "cluster_centers_": self.centroids.as_slice().unwrap(),
-            "labels_": self.labels.as_ref().map(|l| l.as_slice().unwrap()),
+            "cluster_centers_": self.centroids.as_slice().expect("Operation failed"),
+            "labels_": self.labels.as_ref().map(|l| l.as_slice().expect("Operation failed")),
             "inertia_": self.inertia,
             "n_iter_": self.n_iter,
             "n_clusters": self.n_clusters,
@@ -365,7 +365,7 @@ impl KMeansModel {
 
         Ok(json!({
             "centroids": {
-                "data": self.centroids.as_slice().unwrap(),
+                "data": self.centroids.as_slice().expect("Operation failed"),
                 "shape": [self.centroids.nrows(), self.centroids.ncols()],
                 "dtype": "float64"
             },
@@ -383,7 +383,7 @@ impl KMeansModel {
 
         Ok(json!({
             "state_dict": {
-                "centroids": self.centroids.as_slice().unwrap()
+                "centroids": self.centroids.as_slice().expect("Operation failed")
             },
             "hyperparameters": {
                 "n_clusters": self.n_clusters
@@ -494,10 +494,11 @@ mod tests {
 
     #[test]
     fn test_kmeans_export_summary() {
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let model = KMeansModel::new(centroids, 2, 10, 0.5, None);
 
-        let summary = model.export_summary().unwrap();
+        let summary = model.export_summary().expect("Operation failed");
         assert!(summary.contains("K-Means"));
         assert!(summary.contains("\"n_clusters\": 2"));
     }
@@ -505,25 +506,28 @@ mod tests {
     #[test]
     fn test_format_detection() {
         assert_eq!(
-            detect_format_from_extension("model.json").unwrap(),
+            detect_format_from_extension("model.json").expect("Operation failed"),
             ExportFormat::Json
         );
         assert_eq!(
-            detect_format_from_extension("model.yaml").unwrap(),
+            detect_format_from_extension("model.yaml").expect("Operation failed"),
             ExportFormat::Yaml
         );
         assert_eq!(
-            detect_format_from_extension("model.csv").unwrap(),
+            detect_format_from_extension("model.csv").expect("Operation failed"),
             ExportFormat::Csv
         );
     }
 
     #[test]
     fn test_sklearn_compatibility() {
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let model = KMeansModel::new(centroids, 2, 10, 0.5, None);
 
-        let sklearn_format = model.export_compatible("sklearn").unwrap();
+        let sklearn_format = model
+            .export_compatible("sklearn")
+            .expect("Operation failed");
         assert!(sklearn_format.get("cluster_centers_").is_some());
         assert!(sklearn_format.get("_sklearn_version").is_some());
     }

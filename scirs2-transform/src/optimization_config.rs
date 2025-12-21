@@ -566,7 +566,10 @@ impl AutoTuner {
             .push(record);
 
         // Keep only recent records (last 100)
-        let records = self.performance_history.get_mut(transformation).unwrap();
+        let records = self
+            .performance_history
+            .get_mut(transformation)
+            .expect("Operation failed");
         if records.len() > 100 {
             records.remove(0);
         }
@@ -1237,9 +1240,9 @@ mod tests {
 
     #[test]
     fn test_data_characteristics_analysis() {
-        let data =
-            Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
-        let chars = DataCharacteristics::analyze(&data.view()).unwrap();
+        let data = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect())
+            .expect("Operation failed");
+        let chars = DataCharacteristics::analyze(&data.view()).expect("Operation failed");
 
         assert_eq!(chars.n_samples, 100);
         assert_eq!(chars.nfeatures, 10);
@@ -1250,7 +1253,7 @@ mod tests {
     #[test]
     fn test_optimization_config_for_standardization() {
         let data = Array2::ones((1000, 50));
-        let chars = DataCharacteristics::analyze(&data.view()).unwrap();
+        let chars = DataCharacteristics::analyze(&data.view()).expect("Operation failed");
         let system = SystemResources::detect();
 
         let config = OptimizationConfig::for_standardization(&chars, &system);
@@ -1260,7 +1263,7 @@ mod tests {
     #[test]
     fn test_optimization_config_for_pca() {
         let data = Array2::ones((500, 20));
-        let chars = DataCharacteristics::analyze(&data.view()).unwrap();
+        let chars = DataCharacteristics::analyze(&data.view()).expect("Operation failed");
         let system = SystemResources::detect();
 
         let config = OptimizationConfig::for_pca(&chars, &system, 10);
@@ -1282,11 +1285,11 @@ mod tests {
     fn test_auto_tuner() {
         let tuner = AutoTuner::new();
         let data = Array2::ones((100, 10));
-        let chars = DataCharacteristics::analyze(&data.view()).unwrap();
+        let chars = DataCharacteristics::analyze(&data.view()).expect("Operation failed");
 
         let config = tuner
             .optimize_for_transformation("standardization", &chars, &HashMap::new())
-            .unwrap();
+            .expect("Operation failed");
         assert!(config.memory_limit_mb > 0);
 
         let report = tuner.generate_report(&chars);

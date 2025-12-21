@@ -157,7 +157,7 @@ impl AdvancedMemoryManager {
 
         // Profile current memory state
         let memory_state = if self.config.enable_memory_profiling {
-            Some(self.memory_profiler.read().unwrap().current_memory_state())
+            Some(self.memory_profiler.read().expect("Operation failed").current_memory_state())
         } else {
             None
         };
@@ -187,7 +187,7 @@ impl AdvancedMemoryManager {
 
         // Track allocation for profiling
         if self.config.enable_memory_profiling {
-            self.allocation_tracker.write().unwrap().track_allocation(
+            self.allocation_tracker.write().expect("Operation failed").track_allocation(
                 &allocation,
                 allocation_time,
                 &allocation_strategy,
@@ -195,7 +195,7 @@ impl AdvancedMemoryManager {
         }
 
         // Update performance metrics
-        self.performance_monitor.write().unwrap().record_allocation(
+        self.performance_monitor.write().expect("Operation failed").record_allocation(
             size * std::mem::size_of::<T>(),
             allocation_time,
             &allocation_strategy,
@@ -222,7 +222,7 @@ impl AdvancedMemoryManager {
         let cache_strategy = self
             .cache_optimizer
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .select_optimal_strategy(&data_characteristics)?;
 
         // Execute with cache optimization
@@ -254,7 +254,7 @@ impl AdvancedMemoryManager {
         let numa_layout = self
             .numa_manager
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .optimize_matrix_placement(&matrix_characteristics)?;
 
         // Execute with NUMA optimization
@@ -320,7 +320,7 @@ impl AdvancedMemoryManager {
         let usage_patterns = self
             .memory_profiler
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .analyze_usage_patterns(&memory_metrics)?;
 
         // Generate optimization recommendations
@@ -349,8 +349,8 @@ impl AdvancedMemoryManager {
 
     /// Get current memory statistics
     pub fn get_memory_statistics(&self) -> MemoryStatistics {
-        let allocation_tracker = self.allocation_tracker.read().unwrap();
-        let performance_monitor = self.performance_monitor.read().unwrap();
+        let allocation_tracker = self.allocation_tracker.read().expect("Operation failed");
+        let performance_monitor = self.performance_monitor.read().expect("Operation failed");
 
         MemoryStatistics {
             total_allocated: allocation_tracker.total_allocated(),
@@ -640,7 +640,7 @@ impl AdvancedMemoryManager {
         }
 
         Ok(OptimizedAllocation {
-            ptr: NonNull::new(ptr).unwrap(),
+            ptr: NonNull::new(ptr).expect("Operation failed"),
             size,
             layout,
             allocation_type: AllocationType::Pool,
@@ -668,7 +668,7 @@ impl AdvancedMemoryManager {
         }
 
         Ok(OptimizedAllocation {
-            ptr: NonNull::new(ptr).unwrap(),
+            ptr: NonNull::new(ptr).expect("Operation failed"),
             size,
             layout,
             allocation_type: AllocationType::Direct,
@@ -1725,7 +1725,6 @@ mod tests {
     use scirs2_core::ndarray::Array1;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_think_memory_manager_creation() {
         let manager = create_advanced_think_memory_manager();
         assert!(manager.config.enable_memory_profiling);
@@ -1758,7 +1757,7 @@ mod tests {
 
         let characteristics = manager
             .analyze_allocation_requirements::<f64>(1000, &hint)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(characteristics.element_count, 1000);
         assert_eq!(characteristics.elementsize, std::mem::size_of::<f64>());
         assert_eq!(
@@ -1810,7 +1809,7 @@ mod tests {
 
         let strategy = manager
             .select_allocation_strategy(&characteristics, &None)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(strategy, AllocationStrategy::Pool); // Should use pool for small allocations
     }
 

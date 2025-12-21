@@ -680,7 +680,7 @@ mod tests {
     #[test]
     fn test_validation_basic() {
         let image = Array2::eye(32);
-        let result = validate_dwt2d(&image, Wavelet::Haar, 1e-10).unwrap();
+        let result = validate_dwt2d(&image, Wavelet::Haar, 1e-10).expect("Operation failed");
 
         assert!(result.overall_score > 80.0);
         assert!(result.reconstruction_error.max_error < 1e-10);
@@ -689,7 +689,7 @@ mod tests {
     #[test]
     fn test_energy_conservation() {
         let image = Array2::from_elem((64, 64), 1.0);
-        let metrics = test_energy_conservation(&image, Wavelet::DB(4)).unwrap();
+        let metrics = test_energy_conservation(&image, Wavelet::DB(4)).expect("Operation failed");
 
         assert!(((metrics.energy_ratio - 1.0) as f64).abs() < 1e-10);
     }
@@ -698,6 +698,6 @@ mod tests {
     fn test_multilevel_validation() {
         let image = Array2::from_shape_fn((128, 128), |(i, j)| ((i + j) as f64).sin());
 
-        assert!(validate_multilevel_dwt2d(&image, Wavelet::Sym(8), 4, 1e-10).unwrap());
+        assert!(validate_multilevel_dwt2d(&image, Wavelet::Sym(8), 4, 1e-10).expect("Operation failed"));
     }
 }

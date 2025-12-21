@@ -170,7 +170,7 @@ pub fn estimate_signal_noise_ratio_advanced(
         return Ok(5.0); // Conservative fallback
     }
 
-    valid_estimates.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    valid_estimates.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let median_snr = valid_estimates[valid_estimates.len() / 2];
 
     Ok(median_snr)
@@ -281,7 +281,7 @@ fn estimate_snr_wavelet_denoising(signal: &Array1<f64>) -> SignalResult<f64> {
         let end = (i + window_size / 2 + 1).min(n);
 
         let mut window: Vec<f64> = signal.slice(s![start..end]).to_vec();
-        window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        window.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         denoised[i] = window[window.len() / 2]; // Median
     }
@@ -509,7 +509,7 @@ pub fn enhanced_cross_validation(
         bootstrap_errors.push(bootstrap_mean);
     }
 
-    bootstrap_errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    bootstrap_errors.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let ci_lower = bootstrap_errors[(0.025 * n_bootstrap as f64) as usize];
     let ci_upper = bootstrap_errors[(0.975 * n_bootstrap as f64) as usize];
 
@@ -749,12 +749,12 @@ fn compute_mad(data: &[f64]) -> f64 {
     }
 
     let mut sorted = data.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let median = sorted[sorted.len() / 2];
 
     let deviations: Vec<f64> = data.iter().map(|&x| (x - median).abs()).collect();
     let mut sorted_dev = deviations;
-    sorted_dev.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_dev.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     sorted_dev[sorted_dev.len() / 2]
 }
 
@@ -979,7 +979,7 @@ mod tests {
             noisy_signal[i] += 0.1 * (i as f64 * 0.1).sin();
         }
 
-        let snr = estimate_signal_noise_ratio_advanced(&clean_signal, &noisy_signal).unwrap();
+        let snr = estimate_signal_noise_ratio_advanced(&clean_signal, &noisy_signal).expect("Operation failed");
         assert!(snr > 0.0);
         assert!(snr < 50.0);
     }
@@ -1000,7 +1000,7 @@ mod tests {
         }
 
         let config = RobustSysIdConfig::default();
-        let params = robust_least_squares(&phi, &y, &config).unwrap();
+        let params = robust_least_squares(&phi, &y, &config).expect("Operation failed");
 
         assert_eq!(params.len(), n);
         // Parameters should be approximately [1.0, 2.0, 0.5]
@@ -1013,7 +1013,7 @@ mod tests {
     fn test_polynomial_stability() {
         // Stable polynomial: z^2 - 0.5z + 0.1
         let poly = Array1::from_vec(vec![1.0, -0.5, 0.1]);
-        let stability = analyze_polynomial_stability(&poly).unwrap();
+        let stability = analyze_polynomial_stability(&poly).expect("Operation failed");
 
         assert!(stability.is_stable);
         assert!(stability.stability_margin > 0.0);

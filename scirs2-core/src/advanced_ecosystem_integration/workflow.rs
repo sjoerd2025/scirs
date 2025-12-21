@@ -199,9 +199,9 @@ impl WorkflowExecutor {
             for dep in deps {
                 adjacency_list
                     .get_mut(dep)
-                    .unwrap()
+                    .expect("Operation failed")
                     .push(stage_name.clone());
-                *in_degree.get_mut(stage_name).unwrap() += 1;
+                *in_degree.get_mut(stage_name).expect("Operation failed") += 1;
             }
         }
 
@@ -219,7 +219,7 @@ impl WorkflowExecutor {
 
             if let Some(neighbors) = adjacency_list.get(&current) {
                 for neighbor in neighbors {
-                    let degree = in_degree.get_mut(neighbor).unwrap();
+                    let degree = in_degree.get_mut(neighbor).expect("Operation failed");
                     *degree -= 1;
                     if *degree == 0 {
                         queue.push_back(neighbor.clone());

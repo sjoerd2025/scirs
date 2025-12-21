@@ -140,7 +140,7 @@ where
                 .fusion_engine
                 .operation_graph
                 .read()
-                .unwrap()
+                .expect("Operation failed")
                 .fusion_candidates
                 .len(),
         }
@@ -277,7 +277,7 @@ mod tests {
 
     #[test]
     fn test_advanced_framework_creation() {
-        let framework = AdvancedGpuAccelerationFramework::<f32>::new(0).unwrap();
+        let framework = AdvancedGpuAccelerationFramework::<f32>::new(0).expect("Operation failed");
         assert_eq!(framework.memory_manager.gpu_id, 0);
     }
 
@@ -315,7 +315,7 @@ mod tests {
 
     #[test]
     fn test_initialize_advanced_gpu_acceleration() {
-        let framework = initialize_advanced_gpu_acceleration::<f32>(0).unwrap();
+        let framework = initialize_advanced_gpu_acceleration::<f32>(0).expect("Operation failed");
         assert_eq!(framework.memory_manager.gpu_id, 0);
     }
 }

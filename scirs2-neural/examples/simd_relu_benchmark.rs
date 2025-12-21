@@ -49,7 +49,7 @@ fn bench_relu_f64(size: usize) {
     let input = Array::from_vec(data).into_dyn();
 
     // Warm-up
-    let _ = relu.forward(&input).unwrap();
+    let _ = relu.forward(&input).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -62,7 +62,7 @@ fn bench_relu_f64(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = relu.forward(&input).unwrap();
+        let _ = relu.forward(&input).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -82,7 +82,7 @@ fn bench_relu_f32(size: usize) {
     let input = Array::from_vec(data).into_dyn();
 
     // Warm-up
-    let _ = relu.forward(&input).unwrap();
+    let _ = relu.forward(&input).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -95,7 +95,7 @@ fn bench_relu_f32(size: usize) {
     };
 
     for _ in 0..iterations {
-        let _ = relu.forward(&input).unwrap();
+        let _ = relu.forward(&input).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -115,7 +115,7 @@ fn bench_leaky_relu_f64(size: usize, alpha: f64) {
     let input = Array::from_vec(data).into_dyn();
 
     // Warm-up
-    let _ = relu.forward(&input).unwrap();
+    let _ = relu.forward(&input).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -128,7 +128,7 @@ fn bench_leaky_relu_f64(size: usize, alpha: f64) {
     };
 
     for _ in 0..iterations {
-        let _ = relu.forward(&input).unwrap();
+        let _ = relu.forward(&input).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();
@@ -148,7 +148,7 @@ fn bench_leaky_relu_f32(size: usize, alpha: f64) {
     let input = Array::from_vec(data).into_dyn();
 
     // Warm-up
-    let _ = relu.forward(&input).unwrap();
+    let _ = relu.forward(&input).expect("Operation failed");
 
     // Benchmark
     let start = Instant::now();
@@ -161,7 +161,7 @@ fn bench_leaky_relu_f32(size: usize, alpha: f64) {
     };
 
     for _ in 0..iterations {
-        let _ = relu.forward(&input).unwrap();
+        let _ = relu.forward(&input).expect("Operation failed");
     }
 
     let elapsed = start.elapsed();

@@ -281,7 +281,7 @@ mod tests {
     #[test]
     fn test_rtree_nearest_neighbors() {
         // Create a new R-tree
-        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).unwrap();
+        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).expect("Operation failed");
 
         // Insert some points
         let points = vec![
@@ -298,18 +298,22 @@ mod tests {
         ];
 
         for (point, value) in points {
-            rtree.insert(point, value).unwrap();
+            rtree.insert(point, value).expect("Operation failed");
         }
 
         // Find the nearest neighbor to (0.6, 0.6)
-        let nn_results = rtree.nearest(&array![0.6, 0.6].view(), 1).unwrap();
+        let nn_results = rtree
+            .nearest(&array![0.6, 0.6].view(), 1)
+            .expect("Operation failed");
 
         // Should be (0.5, 0.5)
         assert_eq!(nn_results.len(), 1);
         assert_eq!(nn_results[0].1, 4);
 
         // Find the 3 nearest neighbors to (0.0, 0.0)
-        let nn_results = rtree.nearest(&array![0.0, 0.0].view(), 3).unwrap();
+        let nn_results = rtree
+            .nearest(&array![0.0, 0.0].view(), 3)
+            .expect("Operation failed");
 
         // Should be (0.0, 0.0), (1.0, 0.0), and (0.0, 1.0)
         assert_eq!(nn_results.len(), 3);
@@ -331,19 +335,23 @@ mod tests {
         assert_relative_eq!(nn_results[2].2, 1.0);
 
         // Test k=0
-        let nn_empty = rtree.nearest(&array![0.0, 0.0].view(), 0).unwrap();
+        let nn_empty = rtree
+            .nearest(&array![0.0, 0.0].view(), 0)
+            .expect("Operation failed");
         assert_eq!(nn_empty.len(), 0);
 
         // Test k > size
-        let nn_all = rtree.nearest(&array![0.0, 0.0].view(), 20).unwrap();
+        let nn_all = rtree
+            .nearest(&array![0.0, 0.0].view(), 20)
+            .expect("Operation failed");
         assert_eq!(nn_all.len(), 10); // Should return all points
     }
 
     #[test]
     fn test_rtree_spatial_join() {
         // Create two R-trees
-        let mut rtree1: RTree<i32> = RTree::new(2, 2, 4).unwrap();
-        let mut rtree2: RTree<char> = RTree::new(2, 2, 4).unwrap();
+        let mut rtree1: RTree<i32> = RTree::new(2, 2, 4).expect("Operation failed");
+        let mut rtree2: RTree<char> = RTree::new(2, 2, 4).expect("Operation failed");
 
         // Insert rectangles into the first R-tree
         let rectangles1 = vec![
@@ -356,7 +364,7 @@ mod tests {
         for (min_corner, max_corner, value) in rectangles1 {
             rtree1
                 .insert_rectangle(min_corner, max_corner, value)
-                .unwrap();
+                .expect("Operation failed");
         }
 
         // Insert rectangles into the second R-tree
@@ -370,13 +378,13 @@ mod tests {
         for (min_corner, max_corner, value) in rectangles2 {
             rtree2
                 .insert_rectangle(min_corner, max_corner, value)
-                .unwrap();
+                .expect("Operation failed");
         }
 
         // Perform a spatial join with an intersection predicate
         let join_results = rtree1
             .spatial_join(&rtree2, |mbr1, mbr2| mbr1.intersects(mbr2))
-            .unwrap();
+            .expect("Operation failed");
 
         // There should be multiple pairs since several rectangles intersect
         assert!(
@@ -400,7 +408,7 @@ mod tests {
         // Test a more restrictive join predicate (contains)
         let strict_join_results = rtree1
             .spatial_join(&rtree2, |mbr1, mbr2| mbr1.contains_rectangle(mbr2))
-            .unwrap();
+            .expect("Operation failed");
 
         // Should be fewer results than with just intersection
         assert!(strict_join_results.len() <= join_results.len());

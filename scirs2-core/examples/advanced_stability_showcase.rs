@@ -422,7 +422,7 @@ mod tests {
     fn test_advanced_stability_showcase() {
         // Test that the showcase runs without panicking
         let result = std::panic::catch_unwind(|| {
-            main().unwrap();
+            main().expect("Operation failed");
         });
 
         assert!(
@@ -481,12 +481,14 @@ mod tests {
             deprecation: None,
         };
 
-        manager.register_contract(contract).unwrap();
+        manager
+            .register_contract(contract)
+            .expect("Operation failed");
 
         let retrieved = manager.get_contract("test_api", "test_module");
         assert!(retrieved.is_some());
 
-        let contract = retrieved.unwrap();
+        let contract = retrieved.expect("Operation failed");
         assert!(!contract.contract_hash.is_empty());
         assert_ne!(contract.created_at, SystemTime::UNIX_EPOCH);
     }

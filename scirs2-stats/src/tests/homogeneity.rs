@@ -39,7 +39,7 @@ use std::cmp::Ordering;
 /// let samples = vec![a.view(), b.view(), c.view()];
 ///
 /// // Test for homogeneity of variance using the median (default)
-/// let (stat, p_value) = levene(&samples, "median", 0.05).unwrap();
+/// let (stat, p_value) = levene(&samples, "median", 0.05).expect("Operation failed");
 ///
 /// println!("Levene's test statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -103,7 +103,7 @@ where
 
     for sample in samples_processed.iter() {
         let size = sample.len();
-        n_i.push(F::from(size).unwrap());
+        n_i.push(F::from(size).expect("Failed to convert to float"));
 
         // Calculate central value based on the chosen method
         let central_value = match center {
@@ -146,7 +146,7 @@ where
     for i in 0..k {
         numerator = numerator + n_i[i] * (z_i[i] - z_bar).powi(2);
     }
-    numerator = numerator * (n_tot - F::from(k).unwrap());
+    numerator = numerator * (n_tot - F::from(k).expect("Failed to convert to float"));
 
     // Calculate denominator of test statistic
     let mut denominator = F::zero();
@@ -155,14 +155,14 @@ where
             denominator = denominator + (z_ij[i][j] - z_i[i]).powi(2);
         }
     }
-    denominator = denominator * F::from(k - 1).unwrap();
+    denominator = denominator * F::from(k - 1).expect("Failed to convert to float");
 
     // Calculate the test statistic (W)
     let w = numerator / denominator;
 
     // Calculate the p-value from F distribution
-    let df1 = F::from(k - 1).unwrap();
-    let df2 = n_tot - F::from(k).unwrap();
+    let df1 = F::from(k - 1).expect("Failed to convert to float");
+    let df2 = n_tot - F::from(k).expect("Failed to convert to float");
     let p_value = f_distribution_sf(w, df1, df2);
 
     Ok((w, p_value))
@@ -175,7 +175,7 @@ where
     F: Float + std::iter::Sum<F> + std::fmt::Display,
 {
     let sum = data.iter().cloned().sum::<F>();
-    sum / F::from(data.len()).unwrap()
+    sum / F::from(data.len()).expect("Operation failed")
 }
 
 // Helper function to calculate the median
@@ -191,7 +191,8 @@ where
     if n.is_multiple_of(2) {
         let mid_right = n / 2;
         let mid_left = mid_right - 1;
-        (sorted[mid_left] + sorted[mid_right]) / F::from(2.0).unwrap()
+        (sorted[mid_left] + sorted[mid_right])
+            / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         sorted[n / 2]
     }
@@ -203,13 +204,15 @@ fn trim_both<F>(sorteddata: &[F], proportion: F) -> Vec<F>
 where
     F: Float + Copy + std::fmt::Display,
 {
-    if proportion <= F::zero() || proportion >= F::from(0.5).unwrap() {
+    if proportion <= F::zero()
+        || proportion >= F::from(0.5).expect("Failed to convert constant to float")
+    {
         return sorteddata.to_vec();
     }
 
     let n = sorteddata.len();
-    let k = (F::from(n).unwrap() * proportion).floor();
-    let k_int = k.to_usize().unwrap();
+    let k = (F::from(n).expect("Failed to convert to float") * proportion).floor();
+    let k_int = k.to_usize().expect("Operation failed");
 
     if k_int == 0 {
         return sorteddata.to_vec();
@@ -221,9 +224,9 @@ where
 // Helper function: F-distribution survival function (1 - CDF)
 #[allow(dead_code)]
 fn f_distribution_sf<F: Float + NumCast>(f: F, df1: F, df2: F) -> F {
-    let f_f64 = <f64 as NumCast>::from(f).unwrap();
-    let df1_f64 = <f64 as NumCast>::from(df1).unwrap();
-    let df2_f64 = <f64 as NumCast>::from(df2).unwrap();
+    let f_f64 = <f64 as NumCast>::from(f).expect("Operation failed");
+    let df1_f64 = <f64 as NumCast>::from(df1).expect("Operation failed");
+    let df2_f64 = <f64 as NumCast>::from(df2).expect("Operation failed");
 
     // Approximation using beta distribution relationship
     // P(F > f) = I_x(df2/2, df1/2) where x = df2/(df2 + df1*f)
@@ -232,7 +235,7 @@ fn f_distribution_sf<F: Float + NumCast>(f: F, df1: F, df2: F) -> F {
     // Use the regularized incomplete beta function
     let p = beta_cdf(x, df2_f64 / 2.0, df1_f64 / 2.0);
 
-    F::from(p).unwrap()
+    F::from(p).expect("Failed to convert to float")
 }
 
 // Regularized incomplete beta function (approximation)
@@ -386,7 +389,7 @@ fn gamma_function(x: f64) -> f64 {
 /// let samples = vec![a.view(), b.view(), c.view()];
 ///
 /// // Test for homogeneity of variance
-/// let (stat, p_value) = bartlett(&samples).unwrap();
+/// let (stat, p_value) = bartlett(&samples).expect("Operation failed");
 ///
 /// println!("Bartlett's test statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -433,7 +436,7 @@ where
             ));
         }
 
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let df = n_f - F::one();
 
         // Calculate sample variance with Bessel's correction (n-1)
@@ -447,7 +450,7 @@ where
 
     // Calculate total sample size and degrees of freedom
     let n_tot = n_i.iter().cloned().sum::<F>();
-    let df_tot = n_tot - F::from(k).unwrap();
+    let df_tot = n_tot - F::from(k).expect("Failed to convert to float");
 
     // Calculate the pooled variance estimate
     let mut numerator = F::zero();
@@ -463,7 +466,9 @@ where
     }
 
     let correction_factor = F::one()
-        + (F::one() / (F::from(3).unwrap() * F::from(k - 1).unwrap()))
+        + (F::one()
+            / (F::from(3).expect("Failed to convert constant to float")
+                * F::from(k - 1).expect("Failed to convert to float")))
             * (df_i.iter().map(|&df| F::one() / df).sum::<F>() - F::one() / df_tot);
 
     let test_statistic = (df_tot * pooled_var.ln()
@@ -475,7 +480,7 @@ where
         / correction_factor;
 
     // Calculate p-value using chi-square distribution
-    let df_chi2 = F::from(k - 1).unwrap();
+    let df_chi2 = F::from(k - 1).expect("Failed to convert to float");
     let p_value = chi_square_sf(test_statistic, df_chi2);
 
     Ok((test_statistic, p_value))
@@ -484,8 +489,8 @@ where
 // Helper function: Chi-square survival function (1 - CDF)
 #[allow(dead_code)]
 fn chi_square_sf<F: Float + NumCast>(x: F, df: F) -> F {
-    let x_f64 = <f64 as NumCast>::from(x).unwrap();
-    let df_f64 = <f64 as NumCast>::from(df).unwrap();
+    let x_f64 = <f64 as NumCast>::from(x).expect("Operation failed");
+    let df_f64 = <f64 as NumCast>::from(df).expect("Operation failed");
 
     // Ensure non-negative values
     if x_f64 <= 0.0 {
@@ -495,7 +500,7 @@ fn chi_square_sf<F: Float + NumCast>(x: F, df: F) -> F {
     // Approximation for the chi-square upper tail probability
     let p_value = 1.0 - chi_square_cdf(x_f64, df_f64);
 
-    F::from(p_value).unwrap()
+    F::from(p_value).expect("Failed to convert to float")
 }
 
 // Chi-square cumulative distribution function approximation
@@ -630,7 +635,7 @@ fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
 /// let samples = vec![a.view(), b.view(), c.view()];
 ///
 /// // Test for homogeneity of variance
-/// let (stat, p_value) = brown_forsythe(&samples).unwrap();
+/// let (stat, p_value) = brown_forsythe(&samples).expect("Operation failed");
 ///
 /// println!("Brown-Forsythe test statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -647,5 +652,9 @@ where
         + std::fmt::Display,
 {
     // The Brown-Forsythe test is just Levene's test with center="median"
-    levene(samples, "median", F::from(0.05).unwrap())
+    levene(
+        samples,
+        "median",
+        F::from(0.05).expect("Failed to convert constant to float"),
+    )
 }

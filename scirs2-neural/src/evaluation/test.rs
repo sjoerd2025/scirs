@@ -252,7 +252,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                     if combined_preds[[i, j]] > max_val {
                         max_idx = j;
                         max_val = combined_preds[[i, j]];
-                class_indices[[i, 0]] = F::from(max_idx).unwrap();
+                class_indices[[i, 0]] = F::from(max_idx).expect("Failed to convert to float");
             Some(class_indices)
         } else {
             // Binary classification or regression
@@ -318,13 +318,13 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                                 max_val = outputs.targets[[i, j]];
                             }
                         }
-                        class_indices[[i, 0]] = F::from(max_idx).unwrap();
+                        class_indices[[i, 0]] = F::from(max_idx).expect("Failed to convert to float");
                     class_indices
                 } else if outputs.targets.ndim() == 2 && outputs.targets.shape()[1] == 1 {
                     // Binary targets
-                        class_indices[[i, 0]] = if outputs.targets[[i, 0]] >= F::from(0.5).unwrap()
+                        class_indices[[i, 0]] = if outputs.targets[[i, 0]] >= F::from(0.5).expect("Failed to convert constant to float")
                         {
-                            F::from(1).unwrap()
+                            F::from(1).expect("Failed to convert constant to float")
                         } else {
                             F::zero()
                         };
@@ -344,7 +344,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                         unique_classes.insert(target_classes[[i, 0]].to_usize().unwrap_or(0));
                     unique_classes.len()
                 for class_idx in 0..n_classes {
-                    let class_f = F::from(class_idx).unwrap();
+                    let class_f = F::from(class_idx).expect("Failed to convert to float");
                     // Count TP, FP, FN, TN
                     let mut tp = 0;
                     let mut fp = 0;

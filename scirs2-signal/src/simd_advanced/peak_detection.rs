@@ -231,7 +231,7 @@ fn apply_minimum_distance_constraint(
     }
 
     // Sort by peak height (descending)
-    peak_candidates.sort_by(|&a, &b| signal[b].partial_cmp(&signal[a]).unwrap());
+    peak_candidates.sort_by(|&a, &b| signal[b].partial_cmp(&signal[a]).expect("Operation failed"));
 
     let mut filtered_peaks = Vec::new();
 
@@ -290,7 +290,7 @@ mod tests {
         let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0];
         let config = SimdConfig::default();
 
-        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).unwrap();
+        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).expect("Operation failed");
 
         assert!(peaks.contains(&1));
         assert!(peaks.contains(&3));
@@ -303,11 +303,11 @@ mod tests {
         let config = SimdConfig::default();
 
         // Low threshold should find all peaks
-        let peaks_low = simd_peak_detection(&signal, 0.1, 1, &config).unwrap();
+        let peaks_low = simd_peak_detection(&signal, 0.1, 1, &config).expect("Operation failed");
         assert_eq!(peaks_low.len(), 3);
 
         // High threshold should filter out small peak
-        let peaks_high = simd_peak_detection(&signal, 1.0, 1, &config).unwrap();
+        let peaks_high = simd_peak_detection(&signal, 1.0, 1, &config).expect("Operation failed");
         assert_eq!(peaks_high.len(), 2);
         assert!(peaks_high.contains(&3));
         assert!(peaks_high.contains(&5));
@@ -319,11 +319,13 @@ mod tests {
         let config = SimdConfig::default();
 
         // No distance constraint
-        let peaks_no_dist = simd_peak_detection(&signal, 0.5, 0, &config).unwrap();
+        let peaks_no_dist =
+            simd_peak_detection(&signal, 0.5, 0, &config).expect("Operation failed");
         assert_eq!(peaks_no_dist.len(), 2); // Both peaks at indices 1 and 3
 
         // Distance constraint should keep only the higher peak
-        let peaks_with_dist = simd_peak_detection(&signal, 0.5, 3, &config).unwrap();
+        let peaks_with_dist =
+            simd_peak_detection(&signal, 0.5, 3, &config).expect("Operation failed");
         assert_eq!(peaks_with_dist.len(), 1);
         assert!(peaks_with_dist.contains(&3)); // Higher peak should be kept
     }
@@ -336,7 +338,7 @@ mod tests {
             ..Default::default()
         };
 
-        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).unwrap();
+        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).expect("Operation failed");
         assert_eq!(peaks.len(), 2);
         assert!(peaks.contains(&1));
         assert!(peaks.contains(&3));
@@ -347,7 +349,7 @@ mod tests {
         let signal = vec![];
         let config = SimdConfig::default();
 
-        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).unwrap();
+        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).expect("Operation failed");
         assert!(peaks.is_empty());
     }
 
@@ -356,7 +358,7 @@ mod tests {
         let signal = vec![1.0, 2.0]; // Too short for peaks
         let config = SimdConfig::default();
 
-        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).unwrap();
+        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).expect("Operation failed");
         assert!(peaks.is_empty());
     }
 
@@ -365,7 +367,7 @@ mod tests {
         let signal = vec![1.0, 0.0, 0.0, 0.0, 1.0]; // No local maxima
         let config = SimdConfig::default();
 
-        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).unwrap();
+        let peaks = simd_peak_detection(&signal, 0.5, 1, &config).expect("Operation failed");
         assert!(peaks.is_empty());
     }
 }

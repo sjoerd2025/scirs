@@ -47,7 +47,7 @@ use crate::error::{Result, TimeSeriesError};
 /// };
 ///
 /// // Estimate trend
-/// let trend = estimate_spline_trend(&ts, &options).unwrap();
+/// let trend = estimate_spline_trend(&ts, &options).expect("Operation failed");
 ///
 /// // The trend should have the same length as the input
 /// assert_eq!(trend.len(), ts.len());
@@ -106,7 +106,7 @@ where
             ts,
             &knots,
             options.degree,
-            F::from_f64(options.lambda).unwrap(),
+            F::from_f64(options.lambda).expect("Operation failed"),
             options.extrapolate,
         ),
     }
@@ -174,13 +174,13 @@ where
 
     // Set up the tridiagonal system
     for i in 1..(num_knots - 1) {
-        let h_i_minus_1 = F::from_usize(knots[i] - knots[i - 1]).unwrap();
-        let h_i = F::from_usize(knots[i + 1] - knots[i]).unwrap();
+        let h_i_minus_1 = F::from_usize(knots[i] - knots[i - 1]).expect("Operation failed");
+        let h_i = F::from_usize(knots[i + 1] - knots[i]).expect("Operation failed");
 
         // Diagonal elements
-        a[[i, i - 1]] = h_i_minus_1 / F::from_f64(6.0).unwrap();
-        a[[i, i]] = (h_i_minus_1 + h_i) / F::from_f64(3.0).unwrap();
-        a[[i, i + 1]] = h_i / F::from_f64(6.0).unwrap();
+        a[[i, i - 1]] = h_i_minus_1 / F::from_f64(6.0).expect("Operation failed");
+        a[[i, i]] = (h_i_minus_1 + h_i) / F::from_f64(3.0).expect("Operation failed");
+        a[[i, i + 1]] = h_i / F::from_f64(6.0).expect("Operation failed");
 
         // Right-hand side
         let f_i_minus_1 = ts[knots[i - 1]];
@@ -205,7 +205,7 @@ where
     for i in 0..(num_knots - 1) {
         let x_left = knots[i];
         let x_right = knots[i + 1];
-        let h = F::from_usize(x_right - x_left).unwrap();
+        let h = F::from_usize(x_right - x_left).expect("Operation failed");
 
         let y_left = ts[x_left];
         let y_right = ts[x_right];
@@ -215,7 +215,7 @@ where
 
         // Apply cubic spline formula for each point in this interval
         for x in x_left..=x_right {
-            let t = F::from_usize(x - x_left).unwrap() / h;
+            let t = F::from_usize(x - x_left).expect("Operation failed") / h;
             let one_minus_t = F::one() - t;
 
             result[x] = one_minus_t * y_left
@@ -223,7 +223,7 @@ where
                 + ((one_minus_t.powi(3) - one_minus_t) * d2_left + (t.powi(3) - t) * d2_right)
                     * h
                     * h
-                    / F::from_f64(6.0).unwrap();
+                    / F::from_f64(6.0).expect("Operation failed");
         }
     }
 
@@ -233,19 +233,20 @@ where
         // Left endpoint
         let x_0 = knots[0];
         let x_1 = knots[1];
-        let h = F::from_usize(x_1 - x_0).unwrap();
+        let h = F::from_usize(x_1 - x_0).expect("Operation failed");
         let _slope_left = (ts[x_1] - ts[x_0]) / h
-            - h * (F::from_f64(2.0).unwrap() * second_derivs[0] + second_derivs[1])
-                / F::from_f64(6.0).unwrap();
+            - h * (F::from_f64(2.0).expect("Operation failed") * second_derivs[0]
+                + second_derivs[1])
+                / F::from_f64(6.0).expect("Operation failed");
 
         // Right endpoint
         let x_n_minus_1 = knots[num_knots - 2];
         let x_n = knots[num_knots - 1];
-        let h = F::from_usize(x_n - x_n_minus_1).unwrap();
+        let h = F::from_usize(x_n - x_n_minus_1).expect("Operation failed");
         let _slope_right = (ts[x_n] - ts[x_n_minus_1]) / h
             + h * (second_derivs[num_knots - 2]
-                + F::from_f64(2.0).unwrap() * second_derivs[num_knots - 1])
-                / F::from_f64(6.0).unwrap();
+                + F::from_f64(2.0).expect("Operation failed") * second_derivs[num_knots - 1])
+                / F::from_f64(6.0).expect("Operation failed");
 
         // No need to extrapolate in this implementation as we already include all data points
     }
@@ -282,7 +283,9 @@ where
     let n = ts.len();
 
     // Convert knot indices to float values
-    let x_values: Vec<F> = (0..n).map(|i| F::from_usize(i).unwrap()).collect();
+    let x_values: Vec<F> = (0..n)
+        .map(|i| F::from_usize(i).expect("Operation failed"))
+        .collect();
 
     // Create B-spline basis
     let basis = create_bspline_basis(x_values, knots, degree)?;
@@ -320,7 +323,9 @@ where
     let n = ts.len();
 
     // Convert knot indices to float values
-    let x_values: Vec<F> = (0..n).map(|i| F::from_usize(i).unwrap()).collect();
+    let x_values: Vec<F> = (0..n)
+        .map(|i| F::from_usize(i).expect("Operation failed"))
+        .collect();
 
     // Create B-spline basis
     let basis = create_bspline_basis(x_values, knots, degree)?;
@@ -360,15 +365,15 @@ where
 
     // Add p knots at the beginning and end for proper boundary behavior
     for _ in 0..degree {
-        augmented_knots.push(F::from_usize(knots[0]).unwrap());
+        augmented_knots.push(F::from_usize(knots[0]).expect("Operation failed"));
     }
 
     for &k in knots {
-        augmented_knots.push(F::from_usize(k).unwrap());
+        augmented_knots.push(F::from_usize(k).expect("Operation failed"));
     }
 
     for _ in 0..degree {
-        augmented_knots.push(F::from_usize(knots[knots.len() - 1]).unwrap());
+        augmented_knots.push(F::from_usize(knots[knots.len() - 1]).expect("Operation failed"));
     }
 
     // Implement the Cox-de Boor recursion formula
@@ -482,7 +487,7 @@ where
     let mut penalty = Array2::<F>::zeros((p, p));
     for i in 0..(p - 2) {
         penalty[[i, i]] = F::one();
-        penalty[[i, i + 1]] = F::from_f64(-2.0).unwrap();
+        penalty[[i, i + 1]] = F::from_f64(-2.0).expect("Operation failed");
         penalty[[i, i + 2]] = F::one();
     }
 

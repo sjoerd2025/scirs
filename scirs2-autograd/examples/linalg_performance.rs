@@ -28,7 +28,7 @@ fn main() {
             let random_data: Vec<f64> = (0..n * n)
                 .map(|_| scirs2_core::random::random::<f64>())
                 .collect();
-            let a_raw = Array2::from_shape_vec((n, n), random_data).unwrap();
+            let a_raw = Array2::from_shape_vec((n, n), random_data).expect("Operation failed");
             let a_sym = &a_raw + &a_raw.t();
             let a_pd = &a_sym + Array2::eye(n) * (n as f64);
 
@@ -36,60 +36,60 @@ fn main() {
 
             // Benchmark basic operations
             benchmark!("Identity matrix", {
-                let _ = eye(n, g).eval(g).unwrap();
+                let _ = eye(n, g).eval(g).expect("Operation failed");
             });
 
             benchmark!("Matrix trace", {
-                let _ = trace(a).eval(g).unwrap();
+                let _ = trace(a).eval(g).expect("Operation failed");
             });
 
             benchmark!("Determinant", {
-                let _ = determinant(a).eval(g).unwrap();
+                let _ = determinant(a).eval(g).expect("Operation failed");
             });
 
             benchmark!("Frobenius norm", {
-                let _ = frobenius_norm(a).eval(g).unwrap();
+                let _ = frobenius_norm(a).eval(g).expect("Operation failed");
             });
 
             // Benchmark decompositions
             benchmark!("QR decomposition", {
                 let (q, r) = qr(a);
-                let _ = q.eval(g).unwrap();
-                let _ = r.eval(g).unwrap();
+                let _ = q.eval(g).expect("Operation failed");
+                let _ = r.eval(g).expect("Operation failed");
             });
 
             if n <= 100 {
                 // SVD is expensive for large matrices
                 benchmark!("SVD", {
                     let (u, s, v) = svd(a);
-                    let _ = u.eval(g).unwrap();
-                    let _ = s.eval(g).unwrap();
-                    let _ = v.eval(g).unwrap();
+                    let _ = u.eval(g).expect("Operation failed");
+                    let _ = s.eval(g).expect("Operation failed");
+                    let _ = v.eval(g).expect("Operation failed");
                 });
             }
 
             benchmark!("Cholesky decomposition", {
-                let _ = cholesky(&a).eval(g).unwrap();
+                let _ = cholesky(&a).eval(g).expect("Operation failed");
             });
 
             if n <= 100 {
                 // Eigendecomposition is expensive
                 benchmark!("Eigendecomposition", {
                     let (vals, vecs) = eigen(a);
-                    let _ = vals.eval(g).unwrap();
-                    let _ = vecs.eval(g).unwrap();
+                    let _ = vals.eval(g).expect("Operation failed");
+                    let _ = vecs.eval(g).expect("Operation failed");
                 });
             }
 
             // Benchmark matrix operations
             benchmark!("Matrix inverse", {
-                let _ = matrix_inverse(a).eval(g).unwrap();
+                let _ = matrix_inverse(a).eval(g).expect("Operation failed");
             });
 
             // Benchmark linear solver
             let b = convert_to_tensor(Array2::ones((n, 1)), g);
             benchmark!("Linear solve (Ax=b)", {
-                let _ = solve(a, b).eval(g).unwrap();
+                let _ = solve(a, b).eval(g).expect("Operation failed");
             });
 
             // Benchmark with gradients
@@ -99,14 +99,14 @@ fn main() {
                 benchmark!("Determinant with gradient", {
                     let det = determinant(a_var);
                     let grads = grad(&[&det], &[&a_var]);
-                    let _ = grads[0].eval(g).unwrap();
+                    let _ = grads[0].eval(g).expect("Operation failed");
                 });
 
                 benchmark!("Solve with gradient", {
                     let x = solve(a_var, b);
                     let loss = sum_all(square(x));
                     let grads = grad(&[&loss], &[&a_var]);
-                    let _ = grads[0].eval(g).unwrap();
+                    let _ = grads[0].eval(g).expect("Operation failed");
                 });
             }
         }
@@ -120,15 +120,16 @@ fn main() {
         let large_data: Vec<f64> = (0..large_n * large_n)
             .map(|i| (i as f64) / (large_n * large_n) as f64)
             .collect();
-        let large_matrix = Array2::from_shape_vec((large_n, large_n), large_data).unwrap();
+        let large_matrix =
+            Array2::from_shape_vec((large_n, large_n), large_data).expect("Operation failed");
         let large_a = convert_to_tensor(large_matrix, g);
 
         benchmark!("Large matrix trace", {
-            let _ = trace(large_a).eval(g).unwrap();
+            let _ = trace(large_a).eval(g).expect("Operation failed");
         });
 
         benchmark!("Large matrix norm", {
-            let _ = frobenius_norm(large_a).eval(g).unwrap();
+            let _ = frobenius_norm(large_a).eval(g).expect("Operation failed");
         });
 
         // Demonstrate operation chaining
@@ -143,7 +144,7 @@ fn main() {
             let norm = frobenius_norm(result);
             let det = determinant(result);
             let combined = add(norm, det);
-            let _ = combined.eval(g).unwrap();
+            let _ = combined.eval(g).expect("Operation failed");
         });
 
         println!("\n=== Benchmark completed ===");

@@ -391,7 +391,7 @@ mod tests {
         let func = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] + x[0] * x[1] + 2.0 * x[1] * x[1] };
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
-        let grad = forward_gradient(func, &x.view()).unwrap();
+        let grad = forward_gradient(func, &x.view()).expect("Operation failed");
 
         // ∂f/∂x = 2x + y = 2(1) + 2 = 4
         // ∂f/∂y = x + 4y = 1 + 4(2) = 9
@@ -405,7 +405,7 @@ mod tests {
         let func = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] + x[0] * x[1] + 2.0 * x[1] * x[1] };
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
-        let hess_diag = forward_hessian_diagonal(func, &x.view()).unwrap();
+        let hess_diag = forward_hessian_diagonal(func, &x.view()).expect("Operation failed");
 
         // ∂²f/∂x² = 2
         // ∂²f/∂y² = 4
@@ -440,7 +440,7 @@ mod tests {
         };
 
         let x = Array1::from_vec(vec![2.0, 3.0]);
-        let jac = forward_jacobian(func, &x.view(), 3).unwrap();
+        let jac = forward_jacobian(func, &x.view(), 3).expect("Operation failed");
 
         // Expected Jacobian at (2, 3):
         // ∂f₁/∂x = 2x = 4, ∂f₁/∂y = 1

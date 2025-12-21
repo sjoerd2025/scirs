@@ -807,7 +807,7 @@ mod tests {
         for _ in 0..n_steps {
             let (q_new, p_new) = integrator
                 .discrete_gradient_step(&q.view(), &p.view(), dt)
-                .unwrap();
+                .expect("Operation failed");
             q = q_new;
             p = p_new;
         }
@@ -838,7 +838,9 @@ mod tests {
 
         let initial_momentum: f64 = (&v0 * &mass).sum();
 
-        let (_x1, v1) = integrator.step(&x0.view(), &v0.view(), 0.01).unwrap();
+        let (_x1, v1) = integrator
+            .step(&x0.view(), &v0.view(), 0.01)
+            .expect("Operation failed");
         let final_momentum: f64 = (&v1 * &mass).sum();
 
         assert_relative_eq!(initial_momentum, final_momentum, epsilon = 1e-12);

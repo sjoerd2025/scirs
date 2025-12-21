@@ -60,7 +60,7 @@ impl DifferentialPrivacy {
             NoiseMethod::Gaussian => {
                 let sigma =
                     self.clip_threshold * (2.0 * (1.0 / self.delta).ln()).sqrt() / self.epsilon;
-                let noise_dist = Normal::new(0.0, sigma as f32).unwrap();
+                let noise_dist = Normal::new(0.0, sigma as f32).expect("Operation failed");
                 for grad in gradients.iter_mut() {
                     for elem in grad.iter_mut() {
                         *elem += noise_dist.sample(&mut rng);
@@ -129,7 +129,7 @@ pub struct HomomorphicEncryption {
         // Placeholder - would use actual HE library
         Ok(weights
             .as_slice()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .flat_map(|x| x.to_ne_bytes())
             .collect())
@@ -150,13 +150,13 @@ mod tests {
     fn test_differential_privacy() {
         let dp = DifferentialPrivacy::new(1.0, 1e-5);
         let mut gradients = vec![Array2::ones((2, 2))];
-        dp.apply_to_gradients(&mut gradients).unwrap();
+        dp.apply_to_gradients(&mut gradients).expect("Operation failed");
         // Check that noise was added
         assert_ne!(gradients[0][[0, 0]], 1.0);
     fn test_gradient_clipping() {
         let dp = DifferentialPrivacy::new(1.0, 1e-5).with_clipping(1.0);
         let mut gradients = vec![Array2::ones((2, 2)) * 10.0];
-        dp.clip_gradients(&mut gradients).unwrap();
+        dp.clip_gradients(&mut gradients).expect("Operation failed");
         // Check that gradients were clipped
         let norm: f32 = gradients[0].iter().map(|x| x * x).sum::<f32>().sqrt();
         assert!((norm - 1.0).abs() < 0.01);

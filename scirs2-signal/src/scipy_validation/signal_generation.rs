@@ -118,10 +118,10 @@ mod tests {
         let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let freq = 100.0;
 
-        let chirp_signal = reference_signal_generation(&t, fs, "chirp", freq).unwrap();
+        let chirp_signal = reference_signal_generation(&t, fs, "chirp", freq).expect("Operation failed");
         assert_eq!(chirp_signal.len(), n);
 
-        let square_signal = reference_signal_generation(&t, fs, "square", freq).unwrap();
+        let square_signal = reference_signal_generation(&t, fs, "square", freq).expect("Operation failed");
         assert_eq!(square_signal.len(), n);
         // Square wave should be either 1.0 or -1.0
         assert!(square_signal

@@ -75,7 +75,7 @@ fn create_and_write_matrix(tempdir: &tempfile::TempDir) -> Result<(), Box<dyn st
 
     println!(
         "  ✅ Matrix written to Harwell-Boeing file: {:?}",
-        hb_file.file_name().unwrap()
+        hb_file.file_name().expect("Operation failed")
     );
 
     Ok(())
@@ -142,9 +142,18 @@ fn demonstrate_format_conversion(
     let (colptr, rowind, values) = hb_to_ccs(&hb_matrix);
 
     println!("  📊 CCS Format representation:");
-    println!("     Column pointers: {:?}", colptr.as_slice().unwrap());
-    println!("     Row indices: {:?}", rowind.as_slice().unwrap());
-    println!("     Values: {:?}", values.as_slice().unwrap());
+    println!(
+        "     Column pointers: {:?}",
+        colptr.as_slice().expect("Operation failed")
+    );
+    println!(
+        "     Row indices: {:?}",
+        rowind.as_slice().expect("Operation failed")
+    );
+    println!(
+        "     Values: {:?}",
+        values.as_slice().expect("Operation failed")
+    );
 
     // Convert back to Harwell-Boeing
     let reconverted = ccs_to_hb(
@@ -183,7 +192,7 @@ fn demonstrate_format_conversion(
 
     println!(
         "  💾 Reconverted matrix saved as: {:?}",
-        reconverted_file.file_name().unwrap()
+        reconverted_file.file_name().expect("Operation failed")
     );
 
     Ok(())
@@ -216,7 +225,7 @@ fn demonstrate_different_matrix_types(
     harwell_boeing::write_harwell_boeing(&sym_file, &symmetricmatrix)?;
     println!(
         "  ✅ Symmetric matrix saved: {:?}",
-        sym_file.file_name().unwrap()
+        sym_file.file_name().expect("Operation failed")
     );
 
     // 2. Pattern matrix (no values, structure only)
@@ -234,7 +243,7 @@ fn demonstrate_different_matrix_types(
     harwell_boeing::write_harwell_boeing(&pattern_file, &patternmatrix)?;
     println!(
         "  ✅ Pattern matrix saved: {:?}",
-        pattern_file.file_name().unwrap()
+        pattern_file.file_name().expect("Operation failed")
     );
 
     // 3. Read back and verify

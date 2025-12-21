@@ -33,10 +33,10 @@ use crate::error::{Result, TimeSeriesError};
 ///
 /// let expected_returns = array![0.10, 0.12, 0.08];
 /// let cov_matrix = Array2::from_shape_vec((3, 3),
-///     vec![0.01, 0.002, 0.001, 0.002, 0.015, 0.003, 0.001, 0.003, 0.008]).unwrap();
+///     vec![0.01, 0.002, 0.001, 0.002, 0.015, 0.003, 0.001, 0.003, 0.008]).expect("Operation failed");
 /// let target_return = 0.10;
 ///
-/// let weights = calculate_efficient_portfolio(&expected_returns, &cov_matrix, target_return).unwrap();
+/// let weights = calculate_efficient_portfolio(&expected_returns, &cov_matrix, target_return).expect("Operation failed");
 /// ```
 pub fn calculate_efficient_portfolio<F: Float + Clone>(
     expected_returns: &Array1<F>,
@@ -59,12 +59,15 @@ pub fn calculate_efficient_portfolio<F: Float + Clone>(
     }
 
     // Equal weight as starting point
-    let mut weights = Array1::from_elem(n, F::one() / F::from(n).unwrap());
+    let mut weights = Array1::from_elem(
+        n,
+        F::one() / F::from(n).expect("Failed to convert to float"),
+    );
 
     // Simple iterative adjustment toward target return
     let max_iterations = 1000;
-    let convergence_tolerance = F::from(1e-6).unwrap();
-    let learning_rate = F::from(0.01).unwrap();
+    let convergence_tolerance = F::from(1e-6).expect("Failed to convert constant to float");
+    let learning_rate = F::from(0.01).expect("Failed to convert constant to float");
 
     for iteration in 0..max_iterations {
         let current_return = weights
@@ -97,14 +100,19 @@ pub fn calculate_efficient_portfolio<F: Float + Clone>(
             weights.mapv_inplace(|w| w / weight_sum);
         } else {
             // Reset to equal weights if all became zero
-            weights = Array1::from_elem(n, F::one() / F::from(n).unwrap());
+            weights = Array1::from_elem(
+                n,
+                F::one() / F::from(n).expect("Failed to convert to float"),
+            );
         }
 
         // Add damping for later iterations to prevent oscillation
         if iteration > max_iterations / 2 {
-            let damping_factor = F::from(0.95).unwrap();
+            let damping_factor = F::from(0.95).expect("Failed to convert constant to float");
             weights.mapv_inplace(|w| {
-                w * damping_factor + (F::one() / F::from(n).unwrap()) * (F::one() - damping_factor)
+                w * damping_factor
+                    + (F::one() / F::from(n).expect("Failed to convert to float"))
+                        * (F::one() - damping_factor)
             });
         }
     }
@@ -132,8 +140,8 @@ pub fn calculate_efficient_portfolio<F: Float + Clone>(
 /// use scirs2_series::financial::portfolio::optimization::risk_parity_portfolio;
 /// use scirs2_core::ndarray::Array2;
 ///
-/// let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
-/// let weights = risk_parity_portfolio(&cov_matrix).unwrap();
+/// let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).expect("Operation failed");
+/// let weights = risk_parity_portfolio(&cov_matrix).expect("Operation failed");
 /// ```
 pub fn risk_parity_portfolio<F: Float + Clone>(covariance_matrix: &Array2<F>) -> Result<Array1<F>> {
     let n = covariance_matrix.nrows();
@@ -163,7 +171,7 @@ pub fn risk_parity_portfolio<F: Float + Clone>(covariance_matrix: &Array2<F>) ->
             total_inv_vol = total_inv_vol + inv_volatility;
         } else {
             // Handle zero variance by assigning small weight
-            weights[i] = F::from(1e-6).unwrap();
+            weights[i] = F::from(1e-6).expect("Failed to convert constant to float");
             total_inv_vol = total_inv_vol + weights[i];
         }
     }
@@ -173,7 +181,10 @@ pub fn risk_parity_portfolio<F: Float + Clone>(covariance_matrix: &Array2<F>) ->
         weights.mapv_inplace(|w| w / total_inv_vol);
     } else {
         // Fallback to equal weights if all assets have zero variance
-        weights = Array1::from_elem(n, F::one() / F::from(n).unwrap());
+        weights = Array1::from_elem(
+            n,
+            F::one() / F::from(n).expect("Failed to convert to float"),
+        );
     }
 
     Ok(weights)
@@ -199,8 +210,8 @@ pub fn risk_parity_portfolio<F: Float + Clone>(covariance_matrix: &Array2<F>) ->
 /// use scirs2_series::financial::portfolio::optimization::minimum_variance_portfolio;
 /// use scirs2_core::ndarray::Array2;
 ///
-/// let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
-/// let weights = minimum_variance_portfolio(&cov_matrix).unwrap();
+/// let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).expect("Operation failed");
+/// let weights = minimum_variance_portfolio(&cov_matrix).expect("Operation failed");
 /// ```
 pub fn minimum_variance_portfolio<F: Float + Clone>(
     covariance_matrix: &Array2<F>,
@@ -285,7 +296,7 @@ pub fn maximum_diversification_portfolio<F: Float + Clone>(
         if variance > F::zero() {
             weights[i] = F::one() / variance.sqrt();
         } else {
-            weights[i] = F::from(1e-6).unwrap();
+            weights[i] = F::from(1e-6).expect("Failed to convert constant to float");
         }
     }
 
@@ -314,7 +325,8 @@ pub fn maximum_diversification_portfolio<F: Float + Clone>(
 
             // Increase weight if asset has high individual vol but low portfolio contribution
             if individual_vol > contribution {
-                let adjustment = F::from(0.01).unwrap() * (individual_vol - contribution);
+                let adjustment = F::from(0.01).expect("Failed to convert constant to float")
+                    * (individual_vol - contribution);
                 new_weights[i] = new_weights[i] + adjustment;
             }
         }
@@ -362,7 +374,10 @@ pub fn maximum_sharpe_portfolio<F: Float + Clone>(
     let excess_returns: Array1<F> = expected_returns.mapv(|r| r - risk_free_rate);
 
     // Start with equal weights
-    let mut weights = Array1::from_elem(n, F::one() / F::from(n).unwrap());
+    let mut weights = Array1::from_elem(
+        n,
+        F::one() / F::from(n).expect("Failed to convert to float"),
+    );
     let mut best_sharpe = F::neg_infinity();
 
     // Grid search with refinement (simplified optimization)
@@ -375,7 +390,8 @@ pub fn maximum_sharpe_portfolio<F: Float + Clone>(
                 let mut test_weights = weights.clone();
 
                 // Adjust weight i
-                test_weights[i] = test_weights[i] + F::from(*delta).unwrap();
+                test_weights[i] =
+                    test_weights[i] + F::from(*delta).expect("Failed to convert to float");
                 test_weights[i] = test_weights[i].max(F::zero());
 
                 // Normalize
@@ -493,8 +509,8 @@ fn calculate_portfolio_sharpe_ratio<F: Float + Clone>(
 /// use scirs2_core::ndarray::Array2;
 ///
 /// let returns = Array2::from_shape_vec((5, 2),
-///     vec![0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008]).unwrap();
-/// let corr_matrix = calculate_correlation_matrix(&returns).unwrap();
+///     vec![0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008]).expect("Operation failed");
+/// let corr_matrix = calculate_correlation_matrix(&returns).expect("Operation failed");
 /// ```
 pub fn calculate_correlation_matrix<F: Float + Clone>(
     returns: &Array2<F>, // rows: time, cols: assets
@@ -516,7 +532,7 @@ pub fn calculate_correlation_matrix<F: Float + Clone>(
     let means: Array1<F> = (0..n_assets)
         .map(|i| {
             let col = returns.column(i);
-            col.sum() / F::from(n_periods).unwrap()
+            col.sum() / F::from(n_periods).expect("Failed to convert to float")
         })
         .collect();
 
@@ -567,13 +583,13 @@ mod tests {
             (3, 3),
             vec![0.01, 0.002, 0.001, 0.002, 0.015, 0.003, 0.001, 0.003, 0.008],
         )
-        .unwrap();
+        .expect("Operation failed");
         let target_return = 0.10;
 
         let result = calculate_efficient_portfolio(&expected_returns, &cov_matrix, target_return);
         assert!(result.is_ok());
 
-        let weights = result.unwrap();
+        let weights = result.expect("Operation failed");
         assert_eq!(weights.len(), 3);
 
         // Weights should sum to approximately 1.0
@@ -588,12 +604,13 @@ mod tests {
 
     #[test]
     fn test_risk_parity_portfolio() {
-        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015])
+            .expect("Operation failed");
 
         let result = risk_parity_portfolio(&cov_matrix);
         assert!(result.is_ok());
 
-        let weights = result.unwrap();
+        let weights = result.expect("Operation failed");
         assert_eq!(weights.len(), 2);
 
         // Weights should sum to 1.0
@@ -606,12 +623,13 @@ mod tests {
 
     #[test]
     fn test_minimum_variance_portfolio() {
-        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015])
+            .expect("Operation failed");
 
         let result = minimum_variance_portfolio(&cov_matrix);
         assert!(result.is_ok());
 
-        let weights = result.unwrap();
+        let weights = result.expect("Operation failed");
         assert_eq!(weights.len(), 2);
 
         // Weights should sum to 1.0
@@ -625,12 +643,13 @@ mod tests {
     #[test]
     fn test_portfolio_variance() {
         let weights = arr1(&[0.6, 0.4]);
-        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015])
+            .expect("Operation failed");
 
         let result = calculate_portfolio_variance(&weights, &cov_matrix);
         assert!(result.is_ok());
 
-        let variance = result.unwrap();
+        let variance = result.expect("Operation failed");
         assert!(variance > 0.0);
 
         // Manual calculation: 0.6² * 0.01 + 0.4² * 0.015 + 2 * 0.6 * 0.4 * 0.002
@@ -646,12 +665,12 @@ mod tests {
                 0.01, 0.02, -0.01, 0.005, 0.015, -0.008, 0.005, 0.012, -0.002, 0.008,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = calculate_correlation_matrix(&returns);
         assert!(result.is_ok());
 
-        let corr_matrix = result.unwrap();
+        let corr_matrix = result.expect("Operation failed");
         assert_eq!(corr_matrix.shape(), &[2, 2]);
 
         // Diagonal should be 1.0
@@ -668,7 +687,7 @@ mod tests {
     #[test]
     fn test_dimension_mismatch() {
         let expected_returns = arr1(&[0.10, 0.12]);
-        let cov_matrix = Array2::from_shape_vec((3, 3), vec![0.0; 9]).unwrap();
+        let cov_matrix = Array2::from_shape_vec((3, 3), vec![0.0; 9]).expect("Operation failed");
         let target_return = 0.10;
 
         let result = calculate_efficient_portfolio(&expected_returns, &cov_matrix, target_return);
@@ -681,7 +700,7 @@ mod tests {
             (2, 2),
             vec![0.0, 0.0, 0.0, 0.015], // First asset has zero variance
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = minimum_variance_portfolio(&cov_matrix);
         assert!(result.is_err());
@@ -690,13 +709,14 @@ mod tests {
     #[test]
     fn test_maximum_sharpe_portfolio() {
         let expected_returns = arr1(&[0.10, 0.12]);
-        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015]).unwrap();
+        let cov_matrix = Array2::from_shape_vec((2, 2), vec![0.01, 0.002, 0.002, 0.015])
+            .expect("Operation failed");
         let risk_free_rate = 0.02;
 
         let result = maximum_sharpe_portfolio(&expected_returns, &cov_matrix, risk_free_rate);
         assert!(result.is_ok());
 
-        let weights = result.unwrap();
+        let weights = result.expect("Operation failed");
         assert_eq!(weights.len(), 2);
 
         // Weights should sum to approximately 1.0

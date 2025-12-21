@@ -936,7 +936,7 @@ impl AdvancedDenoiser {
         }
 
         // Sort by similarity and take best matches
-        similarities.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        similarities.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
         similarities.truncate(max_blocks.min(similarities.len()));
 
         // Collect similar _blocks into 3D array
@@ -1305,26 +1305,28 @@ mod tests {
         let result = processor.create_hdr(&images);
         assert!(result.is_ok());
 
-        let hdr_image = result.unwrap();
+        let hdr_image = result.expect("Operation failed");
         assert_eq!(hdr_image.dim(), (2, 2));
     }
 
     #[test]
     fn test_super_resolution_processor() {
-        let processor = SuperResolutionProcessor::new(2, SuperResolutionMethod::Bicubic).unwrap();
+        let processor = SuperResolutionProcessor::new(2, SuperResolutionMethod::Bicubic)
+            .expect("Operation failed");
 
         let input = arr2(&[[0.1, 0.2], [0.3, 0.4]]);
-        let result = processor.upscale(&input.view()).unwrap();
+        let result = processor.upscale(&input.view()).expect("Operation failed");
 
         assert_eq!(result.dim(), (4, 4)); // 2x upscaling
     }
 
     #[test]
     fn test_bicubic_interpolation() {
-        let processor = SuperResolutionProcessor::new(2, SuperResolutionMethod::Bicubic).unwrap();
+        let processor = SuperResolutionProcessor::new(2, SuperResolutionMethod::Bicubic)
+            .expect("Operation failed");
 
         let input = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
-        let result = processor.upscale(&input.view()).unwrap();
+        let result = processor.upscale(&input.view()).expect("Operation failed");
 
         // Check that upscaled image has correct dimensions
         assert_eq!(result.dim(), (4, 4));
@@ -1340,7 +1342,9 @@ mod tests {
         // Create noisy test image
         let noisy_image = arr2(&[[0.5, 0.6], [0.7, 0.8]]);
 
-        let result = denoiser.denoise(&noisy_image.view()).unwrap();
+        let result = denoiser
+            .denoise(&noisy_image.view())
+            .expect("Operation failed");
 
         assert_eq!(result.dim(), noisy_image.dim());
     }
@@ -1361,7 +1365,7 @@ mod tests {
             let result = processor.apply_tone_mapping(&radiancemap);
 
             assert!(result.is_ok());
-            let mapped = result.unwrap();
+            let mapped = result.expect("Operation failed");
 
             // Check that tone mapped values are in valid range
             assert!(mapped

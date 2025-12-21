@@ -37,10 +37,10 @@ use crate::metrics::silhouette_score;
 ///     0.1, 0.1,
 ///     5.0, 5.0,
 ///     5.1, 5.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 ///
-/// let score = davies_bouldin_score(data.view(), labels.view()).unwrap();
+/// let score = davies_bouldin_score(data.view(), labels.view()).expect("Operation failed");
 /// assert!(score < 0.5);  // Should be low for well-separated clusters
 /// ```
 pub fn davies_bouldin_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
@@ -75,7 +75,10 @@ where
 
     for (i, &label) in labels.iter().enumerate() {
         if label >= 0 {
-            let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
+            let cluster_idx = unique_labels
+                .iter()
+                .position(|&l| l == label)
+                .expect("Operation failed");
             centers
                 .row_mut(cluster_idx)
                 .scaled_add(F::one(), &data.row(i));
@@ -88,7 +91,7 @@ where
         if size > 0 {
             centers
                 .row_mut(i)
-                .mapv_inplace(|x| x / F::from(size).unwrap());
+                .mapv_inplace(|x| x / F::from(size).expect("Failed to convert to float"));
         }
     }
 
@@ -96,7 +99,10 @@ where
     let mut scatter = vec![F::zero(); n_clusters];
     for (i, &label) in labels.iter().enumerate() {
         if label >= 0 {
-            let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
+            let cluster_idx = unique_labels
+                .iter()
+                .position(|&l| l == label)
+                .expect("Operation failed");
             let center = centers.row(cluster_idx);
             let diff = &data.row(i) - &center;
             let distance = diff.dot(&diff).sqrt();
@@ -107,7 +113,7 @@ where
     // Compute average within-cluster scatter
     for (i, &size) in cluster_sizes.iter().enumerate() {
         if size > 0 {
-            scatter[i] = scatter[i] / F::from(size).unwrap();
+            scatter[i] = scatter[i] / F::from(size).expect("Failed to convert to float");
         }
     }
 
@@ -136,7 +142,7 @@ where
         db_index = db_index + max_ratio;
     }
 
-    db_index = db_index / F::from(n_clusters).unwrap();
+    db_index = db_index / F::from(n_clusters).expect("Failed to convert to float");
     Ok(db_index)
 }
 
@@ -166,10 +172,10 @@ where
 ///     0.1, 0.1,
 ///     5.0, 5.0,
 ///     5.1, 5.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 ///
-/// let score = calinski_harabasz_score(data.view(), labels.view()).unwrap();
+/// let score = calinski_harabasz_score(data.view(), labels.view()).expect("Operation failed");
 /// assert!(score > 50.0);  // Should be high for well-separated clusters
 /// ```
 pub fn calinski_harabasz_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
@@ -218,7 +224,7 @@ where
         }
     }
 
-    overall_mean.mapv_inplace(|x| x / F::from(valid_samples).unwrap());
+    overall_mean.mapv_inplace(|x| x / F::from(valid_samples).expect("Failed to convert to float"));
 
     // Compute cluster centers and sizes
     let mut centers = Array2::<F>::zeros((n_clusters, n_features));
@@ -226,7 +232,10 @@ where
 
     for (i, &label) in labels.iter().enumerate() {
         if label >= 0 {
-            let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
+            let cluster_idx = unique_labels
+                .iter()
+                .position(|&l| l == label)
+                .expect("Operation failed");
             centers
                 .row_mut(cluster_idx)
                 .scaled_add(F::one(), &data.row(i));
@@ -239,7 +248,7 @@ where
         if size > 0 {
             centers
                 .row_mut(i)
-                .mapv_inplace(|x| x / F::from(size).unwrap());
+                .mapv_inplace(|x| x / F::from(size).expect("Failed to convert to float"));
         }
     }
 
@@ -248,7 +257,7 @@ where
     for (i, &size) in cluster_sizes.iter().enumerate() {
         if size > 0 {
             let diff = &centers.row(i) - &overall_mean;
-            ssb = ssb + F::from(size).unwrap() * diff.dot(&diff);
+            ssb = ssb + F::from(size).expect("Failed to convert to float") * diff.dot(&diff);
         }
     }
 
@@ -256,7 +265,10 @@ where
     let mut ssw = F::zero();
     for (i, &label) in labels.iter().enumerate() {
         if label >= 0 {
-            let cluster_idx = unique_labels.iter().position(|&l| l == label).unwrap();
+            let cluster_idx = unique_labels
+                .iter()
+                .position(|&l| l == label)
+                .expect("Operation failed");
             let diff = &data.row(i) - &centers.row(cluster_idx);
             ssw = ssw + diff.dot(&diff);
         }
@@ -267,8 +279,9 @@ where
         return Ok(F::infinity());
     }
 
-    let score = (ssb / ssw) * F::from(valid_samples - n_clusters).unwrap()
-        / F::from(n_clusters - 1).unwrap();
+    let score = (ssb / ssw)
+        * F::from(valid_samples - n_clusters).expect("Failed to convert to float")
+        / F::from(n_clusters - 1).expect("Failed to convert to float");
 
     Ok(score)
 }
@@ -289,10 +302,10 @@ where
 ///     0.1, 0.1,
 ///     5.0, 5.0,
 ///     5.1, 5.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 ///
-/// let score = mean_silhouette_score(data.view(), labels.view()).unwrap();
+/// let score = mean_silhouette_score(data.view(), labels.view()).expect("Operation failed");
 /// ```
 pub fn mean_silhouette_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
 where
@@ -327,7 +340,7 @@ where
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let labels_pred = Array1::from_vec(vec![0, 0, 2, 2, 1, 1]);
 ///
-/// let ari: f64 = adjusted_rand_index(labels_true.view(), labels_pred.view()).unwrap();
+/// let ari: f64 = adjusted_rand_index(labels_true.view(), labels_pred.view()).expect("Operation failed");
 /// assert!(ari > 0.0);  // Should be positive for similar clusterings
 /// ```
 pub fn adjusted_rand_index<F>(
@@ -411,10 +424,13 @@ where
     let n_choose_2 = if n >= 2 { (n * (n - 1)) / 2 } else { 0 };
 
     // Calculate expected index
-    let expected_index =
-        F::from(sum_a).unwrap() * F::from(sum_b).unwrap() / F::from(n_choose_2).unwrap();
-    let max_index = (F::from(sum_a).unwrap() + F::from(sum_b).unwrap()) / F::from(2.0).unwrap();
-    let index = F::from(sum_comb_c).unwrap();
+    let expected_index = F::from(sum_a).expect("Failed to convert to float")
+        * F::from(sum_b).expect("Failed to convert to float")
+        / F::from(n_choose_2).expect("Failed to convert to float");
+    let max_index = (F::from(sum_a).expect("Failed to convert to float")
+        + F::from(sum_b).expect("Failed to convert to float"))
+        / F::from(2.0).expect("Failed to convert constant to float");
+    let index = F::from(sum_comb_c).expect("Failed to convert to float");
 
     // Handle edge cases
     if max_index == expected_index {
@@ -450,7 +466,7 @@ where
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let labels_pred = Array1::from_vec(vec![0, 0, 1, 1]);
 ///
-/// let nmi: f64 = normalized_mutual_info(labels_true.view(), labels_pred.view(), "arithmetic").unwrap();
+/// let nmi: f64 = normalized_mutual_info(labels_true.view(), labels_pred.view(), "arithmetic").expect("Operation failed");
 /// assert!((nmi - 1.0).abs() < 1e-6);  // Perfect agreement
 /// ```
 pub fn normalized_mutual_info<F>(
@@ -486,7 +502,9 @@ where
 
     // Compute normalization
     let normalizer = match average_method {
-        "arithmetic" => (h_true + h_pred) / F::from(2.0).unwrap(),
+        "arithmetic" => {
+            (h_true + h_pred) / F::from(2.0).expect("Failed to convert constant to float")
+        }
         "geometric" => (h_true * h_pred).sqrt(),
         "min" => h_true.min(h_pred),
         "max" => h_true.max(h_pred),
@@ -532,7 +550,7 @@ where
 /// let labels_true = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let labels_pred = Array1::from_vec(vec![0, 0, 1, 1, 1, 1]);
 ///
-/// let (h, c, v): (f64, f64, f64) = homogeneity_completeness_v_measure(labels_true.view(), labels_pred.view()).unwrap();
+/// let (h, c, v): (f64, f64, f64) = homogeneity_completeness_v_measure(labels_true.view(), labels_pred.view()).expect("Operation failed");
 /// assert!(h > 0.5);  // Good homogeneity
 /// assert!(c > 0.9);  // High completeness (all members of each class in single clusters)
 /// ```
@@ -588,7 +606,8 @@ where
     let v_measure = if homogeneity + completeness == F::zero() {
         F::zero()
     } else {
-        F::from(2.0).unwrap() * homogeneity * completeness / (homogeneity + completeness)
+        F::from(2.0).expect("Failed to convert constant to float") * homogeneity * completeness
+            / (homogeneity + completeness)
     };
 
     Ok((homogeneity, completeness, v_measure))
@@ -619,7 +638,7 @@ where
                 let n_i = row_sums[i] as f64;
                 let n_j = col_sums[j] as f64;
                 let term = n_ij / n * (n_ij / (n_i * n_j / n)).ln();
-                mi = mi + F::from(term).unwrap();
+                mi = mi + F::from(term).expect("Failed to convert to float");
             }
         }
     }
@@ -643,7 +662,7 @@ where
     for &count in label_counts.values() {
         if count > 0 {
             let p = count as f64 / n;
-            h = h - F::from(p * p.ln()).unwrap();
+            h = h - F::from(p * p.ln()).expect("Operation failed");
         }
     }
 
@@ -704,7 +723,7 @@ where
                 let n_ij = contingency[[i, j]] as f64;
                 if n_ij > 0.0 {
                     let term = n_ij / n * (n_ij / n_j).ln();
-                    h_xy = h_xy - F::from(term).unwrap();
+                    h_xy = h_xy - F::from(term).expect("Failed to convert to float");
                 }
             }
         }
@@ -720,21 +739,21 @@ mod tests {
 
     #[test]
     fn test_davies_bouldin_score() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 5.0, 5.0, 5.1, 5.1])
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let score = davies_bouldin_score(data.view(), labels.view()).unwrap();
+        let score = davies_bouldin_score(data.view(), labels.view()).expect("Operation failed");
         assert!(score >= 0.0);
     }
 
     #[test]
     fn test_calinski_harabasz_score() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 5.0, 5.0, 5.1, 5.1])
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let score = calinski_harabasz_score(data.view(), labels.view()).unwrap();
+        let score = calinski_harabasz_score(data.view(), labels.view()).expect("Operation failed");
         assert!(score > 0.0);
     }
 
@@ -743,7 +762,8 @@ mod tests {
         let labels_true = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
         let labels_pred = Array1::from_vec(vec![0, 0, 2, 2, 1, 1]);
 
-        let ari: f64 = adjusted_rand_index(labels_true.view(), labels_pred.view()).unwrap();
+        let ari: f64 =
+            adjusted_rand_index(labels_true.view(), labels_pred.view()).expect("Operation failed");
         assert!(ari >= -1.0 && ari <= 1.0);
     }
 
@@ -752,8 +772,8 @@ mod tests {
         let labels_true = Array1::from_vec(vec![0, 0, 1, 1]);
         let labels_pred = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let nmi: f64 =
-            normalized_mutual_info(labels_true.view(), labels_pred.view(), "arithmetic").unwrap();
+        let nmi: f64 = normalized_mutual_info(labels_true.view(), labels_pred.view(), "arithmetic")
+            .expect("Operation failed");
         assert!((nmi - 1.0).abs() < 1e-6);
     }
 
@@ -763,7 +783,8 @@ mod tests {
         let labels_pred = Array1::from_vec(vec![0, 0, 1, 1, 1, 1]);
 
         let (h, c, v): (f64, f64, f64) =
-            homogeneity_completeness_v_measure(labels_true.view(), labels_pred.view()).unwrap();
+            homogeneity_completeness_v_measure(labels_true.view(), labels_pred.view())
+                .expect("Operation failed");
 
         assert!(h >= 0.0 && h <= 1.0);
         assert!(c >= 0.0 && c <= 1.0);

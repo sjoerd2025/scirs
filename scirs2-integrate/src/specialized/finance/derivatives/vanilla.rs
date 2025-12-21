@@ -461,7 +461,9 @@ mod tests {
         );
 
         let market_price = option.price();
-        let implied_vol = option.implied_volatility(market_price).unwrap();
+        let implied_vol = option
+            .implied_volatility(market_price)
+            .expect("Operation failed");
 
         // Should recover the original volatility
         assert!(

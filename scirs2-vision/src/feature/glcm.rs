@@ -415,7 +415,7 @@ mod tests {
         let result = computeglcm(&img, &params);
         assert!(result.is_ok());
 
-        let glcm = result.unwrap();
+        let glcm = result.expect("Operation failed");
         assert_eq!(glcm.dim(), (8, 8));
     }
 

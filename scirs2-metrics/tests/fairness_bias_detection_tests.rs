@@ -17,7 +17,7 @@ fn test_slice_analysis() {
             0.0, 0.0, 28.0, 1.0, 2.0, 50.0, 1.0, 0.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let y_true = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0];
     let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
@@ -29,7 +29,7 @@ fn test_slice_analysis() {
         let y_p_array = scirs2_core::ndarray::Array::from_vec(y_p.to_vec());
         accuracy_score(&y_t_array, &y_p_array).unwrap_or(0.0)
     })
-    .unwrap();
+    .expect("Operation failed");
 
     // Check that we get the overall accuracy
     assert!(results.contains_key("overall"));
@@ -93,7 +93,7 @@ fn test_subgroup_performance() {
             1.0, 1.0, // female, old
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let group_names = vec!["gender".to_string(), "age_group".to_string()];
 
@@ -103,7 +103,7 @@ fn test_subgroup_performance() {
         let y_p_array = scirs2_core::ndarray::Array::from_vec(y_p.to_vec());
         accuracy_score(&y_t_array, &y_p_array).unwrap_or(0.0)
     })
-    .unwrap();
+    .expect("Operation failed");
 
     // Check that we get the overall accuracy
     assert!(results.contains_key("overall"));
@@ -160,13 +160,13 @@ fn test_intersectional_fairness() {
             0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let feature_names = vec!["gender".to_string(), "race".to_string()];
 
     // Analyze intersectional fairness
-    let results =
-        intersectional_fairness(&y_true, &y_pred, &protected_features, &feature_names).unwrap();
+    let results = intersectional_fairness(&y_true, &y_pred, &protected_features, &feature_names)
+        .expect("Operation failed");
 
     // Check that we get individual group results
     assert!(results.contains_key("gender=0")); // Male
@@ -213,13 +213,13 @@ fn test_edge_cases() {
         (4, 1),
         vec![1.0, 1.0, 1.0, 1.0], // All samples in the same group
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let feature_names = vec!["group".to_string()];
 
     // This should work but might not have any intersectional results since all samples are in one group
-    let results =
-        intersectional_fairness(&y_true, &y_pred, &all_same_group, &feature_names).unwrap();
+    let results = intersectional_fairness(&y_true, &y_pred, &all_same_group, &feature_names)
+        .expect("Operation failed");
     assert_eq!(results.len(), 0); // Should have no results since all samples are in one group
 
     // Edge case: small groups
@@ -230,12 +230,12 @@ fn test_edge_cases() {
         (2, 1),
         vec![0.0, 1.0], // One sample in each group
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Should work with small groups, but might have limited statistical significance
     let results_small =
         intersectional_fairness(&y_true_small, &y_pred_small, &small_groups, &feature_names)
-            .unwrap();
+            .expect("Operation failed");
     assert!(results_small.contains_key("group=0"));
     assert!(results_small.contains_key("group=1"));
 }

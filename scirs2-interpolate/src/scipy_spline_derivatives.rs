@@ -150,10 +150,10 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// let y = array![0.0, 1.0, 4.0, 9.0];
     /// let spline = SciPyCompatibleCubicSpline::new(
     ///     &x.view(), &y.view(), SciPyBoundaryType::Natural, None, 0
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Get first derivative spline
-    /// let deriv_spline = spline.derivative(Some(1)).unwrap();
+    /// let deriv_spline = spline.derivative(Some(1)).expect("Operation failed");
     /// ```
     pub fn derivative(&self, n: Option<usize>) -> InterpolateResult<Self> {
         let order = n.unwrap_or(1);
@@ -186,10 +186,10 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// let y = array![0.0, 1.0, 4.0, 9.0];
     /// let spline = SciPyCompatibleCubicSpline::new(
     ///     &x.view(), &y.view(), SciPyBoundaryType::Natural, None, 0
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Get first antiderivative spline
-    /// let antideriv_spline = spline.antiderivative(Some(1)).unwrap();
+    /// let antideriv_spline = spline.antiderivative(Some(1)).expect("Operation failed");
     /// ```
     pub fn antiderivative(&self, n: Option<usize>) -> InterpolateResult<Self> {
         let order = n.unwrap_or(1);
@@ -224,10 +224,10 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// let y = array![0.0, 1.0, 4.0, 9.0];
     /// let spline = SciPyCompatibleCubicSpline::new(
     ///     &x.view(), &y.view(), SciPyBoundaryType::Natural, None, 0
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Integrate from 0 to 3
-    /// let integral = spline.integrate(0.0, 3.0, None).unwrap();
+    /// let integral = spline.integrate(0.0, 3.0, None).expect("Operation failed");
     /// ```
     pub fn integrate(&self, a: f64, b: f64, extrapolate: Option<bool>) -> InterpolateResult<T> {
         let a_t = T::from_f64(a).ok_or_else(|| {
@@ -502,7 +502,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
                 for d in 0..order {
                     let power = (k - 1 - i) as i32 - d as i32;
                     if power >= 0 {
-                        coeff = coeff * T::from_usize(power as usize + 1).unwrap();
+                        coeff = coeff * T::from_usize(power as usize + 1).expect("Operation failed");
                     } else {
                         coeff = T::zero();
                         break;
@@ -548,7 +548,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
                 // Apply antiderivative operation m times
                 for d in 0..order {
                     let power = (k - 1 - i) as i32 + d as i32 + 1;
-                    coeff = coeff / T::from_i32(power).unwrap();
+                    coeff = coeff / T::from_i32(power).expect("Operation failed");
                 }
 
                 antideriv_coeffs[[i, j]] = coeff;
@@ -723,12 +723,12 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
-        let deriv_spline = spline.derivative(Some(1)).unwrap();
+        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).expect("Operation failed");
+        let deriv_spline = spline.derivative(Some(1)).expect("Operation failed");
 
         // Test that derivative spline works
         let test_x = array![0.5, 1.5, 2.5];
-        let _deriv_values = deriv_spline.__call__(&test_x.view(), None, None).unwrap();
+        let _deriv_values = deriv_spline.__call__(&test_x.view(), None, None).expect("Operation failed");
     }
 
     #[test]
@@ -736,14 +736,14 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
-        let antideriv_spline = spline.antiderivative(Some(1)).unwrap();
+        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).expect("Operation failed");
+        let antideriv_spline = spline.antiderivative(Some(1)).expect("Operation failed");
 
         // Test that antiderivative spline works
         let test_x = array![0.5, 1.5, 2.5];
         let _antideriv_values = antideriv_spline
             .__call__(&test_x.view(), None, None)
-            .unwrap();
+            .expect("Operation failed");
     }
 
     #[test]
@@ -751,8 +751,8 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
-        let integral = spline.integrate(0.0, 3.0, None).unwrap();
+        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).expect("Operation failed");
+        let integral = spline.integrate(0.0, 3.0, None).expect("Operation failed");
 
         // Integral should be positive for this increasing function
         assert!(integral > 0.0);
@@ -763,8 +763,8 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 4.0, 9.0];
 
-        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).unwrap();
-        let roots = spline.solve(1.0, None, None).unwrap();
+        let spline = make_scipy_cubic_spline(&x.view(), &y.view()).expect("Operation failed");
+        let roots = spline.solve(1.0, None, None).expect("Operation failed");
 
         // Should find at least one solution
         assert!(roots.len() >= 1);
@@ -776,8 +776,8 @@ mod tests {
         let coeffs = array![[1.0, 1.0], [0.0, 0.0], [0.0, 0.0]]; // [a, a], [b, b], [c, c] format
         let breakpoints = array![0.0, 1.0, 2.0];
 
-        let ppoly = make_scipy_ppoly(coeffs, breakpoints, true).unwrap();
-        let deriv_ppoly = ppoly.derivative(Some(1)).unwrap();
+        let ppoly = make_scipy_ppoly(coeffs, breakpoints, true).expect("Operation failed");
+        let deriv_ppoly = ppoly.derivative(Some(1)).expect("Operation failed");
 
         // Derivative of x^2 should be 2x
         assert_eq!(deriv_ppoly.coefficients.nrows(), 2); // One degree less
@@ -789,8 +789,8 @@ mod tests {
         let coeffs = array![[1.0, 1.0], [0.0, 0.0]]; // [a, a], [b, b] format
         let breakpoints = array![0.0, 1.0, 2.0];
 
-        let ppoly = make_scipy_ppoly(coeffs, breakpoints, true).unwrap();
-        let antideriv_ppoly = ppoly.antiderivative(Some(1)).unwrap();
+        let ppoly = make_scipy_ppoly(coeffs, breakpoints, true).expect("Operation failed");
+        let antideriv_ppoly = ppoly.antiderivative(Some(1)).expect("Operation failed");
 
         // Antiderivative should have one more degree
         assert_eq!(antideriv_ppoly.coefficients.nrows(), 3);

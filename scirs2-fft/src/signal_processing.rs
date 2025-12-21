@@ -559,7 +559,7 @@ mod tests {
         };
 
         // Apply filter
-        let filtered = frequency_filter(&signal, &filter_spec).unwrap();
+        let filtered = frequency_filter(&signal, &filter_spec).expect("Operation failed");
 
         // Check that the high frequency component is attenuated
         // This is a simple test - in a real test we would verify
@@ -574,7 +574,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0];
         let kernel = vec![0.5, 0.5];
 
-        let result = convolve(&signal, &kernel).unwrap();
+        let result = convolve(&signal, &kernel).expect("Operation failed");
 
         assert_eq!(result.len(), signal.len() + kernel.len() - 1);
         assert_relative_eq!(result[0], 0.5, epsilon = 1e-10);

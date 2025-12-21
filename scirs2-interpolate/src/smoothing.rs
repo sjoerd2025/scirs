@@ -33,10 +33,10 @@
 //!     &x.view(),
 //!     &y.view(),
 //!     KnotStrategy::Adaptive { maxknots: 20, tolerance: 1e-6 }
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! // Evaluate at any point
-//! let y_interp = spline.evaluate(0.55).unwrap();
+//! let y_interp = spline.evaluate(0.55).expect("Operation failed");
 //! ```
 
 use crate::bspline::{BSpline, ExtrapolateMode};
@@ -186,7 +186,7 @@ where
         tolerance: f64,
         strategy: KnotStrategy,
     ) -> InterpolateResult<Self> {
-        let tolerance_f = F::from_f64(tolerance).unwrap();
+        let tolerance_f = F::from_f64(tolerance).expect("Operation failed");
 
         // Start with minimal knots (just endpoints)
         let mut knots = vec![x[0], x[x.len() - 1]];
@@ -202,7 +202,8 @@ where
 
         if initial_interior > 0 {
             for i in 1..=initial_interior {
-                let t = F::from_f64(i as f64 / (initial_interior + 1) as f64).unwrap();
+                let t = F::from_f64(i as f64 / (initial_interior + 1) as f64)
+                    .expect("Operation failed");
                 let knot_pos = x[0] * (F::one() - t) + x[x.len() - 1] * t;
                 knots.insert(knots.len() - 1, knot_pos);
             }
@@ -262,8 +263,8 @@ where
                 Err(_) => {
                     // If fitting fails, try adding a knot at the middle
                     let mid_idx = knots.len() / 2;
-                    let mid_point =
-                        (knots[mid_idx - 1] + knots[mid_idx]) / F::from_f64(2.0).unwrap();
+                    let mid_point = (knots[mid_idx - 1] + knots[mid_idx])
+                        / F::from_f64(2.0).expect("Operation failed");
                     knots.insert(mid_idx, mid_point);
                 }
             }
@@ -300,7 +301,7 @@ where
         // Start with equally spaced knots
         let mut knots = Vec::with_capacity(numknots);
         for i in 0..numknots {
-            let t = F::from_f64(i as f64 / (numknots - 1) as f64).unwrap();
+            let t = F::from_f64(i as f64 / (numknots - 1) as f64).expect("Operation failed");
             let knot_pos = x[0] * (F::one() - t) + x[x.len() - 1] * t;
             knots.push(knot_pos);
         }
@@ -331,13 +332,14 @@ where
                 }
 
                 // Try small perturbations to interior knots
-                let step_size = (x[x.len() - 1] - x[0]) / F::from_f64(100.0).unwrap();
+                let step_size =
+                    (x[x.len() - 1] - x[0]) / F::from_f64(100.0).expect("Operation failed");
                 let mut improved = false;
 
                 for i in 1..knots.len() - 1 {
                     // Try moving knot left and right
                     for direction in [-1.0, 1.0] {
-                        let delta = step_size * F::from_f64(direction).unwrap();
+                        let delta = step_size * F::from_f64(direction).expect("Operation failed");
                         let new_pos = knots[i] + delta;
 
                         // Ensure knot stays in valid range
@@ -405,7 +407,7 @@ where
         error_threshold: f64,
         strategy: KnotStrategy,
     ) -> InterpolateResult<Self> {
-        let error_threshold_f = F::from_f64(error_threshold).unwrap();
+        let error_threshold_f = F::from_f64(error_threshold).expect("Operation failed");
 
         // Start with a simple cubic spline
         let initial_spline = CubicSpline::new(x, y)?;
@@ -417,7 +419,7 @@ where
         for i in 0..x.len() - 1 {
             let n_samples = 10;
             for j in 1..n_samples {
-                let t = F::from_f64(j as f64 / n_samples as f64).unwrap();
+                let t = F::from_f64(j as f64 / n_samples as f64).expect("Operation failed");
                 let x_sample = x[i] * (F::one() - t) + x[i + 1] * t;
 
                 // Interpolate true value
@@ -524,7 +526,7 @@ where
         y: &ArrayView1<F>,
     ) -> InterpolateResult<F> {
         let mut sum_squared_error = F::zero();
-        let n = F::from_usize(x.len()).unwrap();
+        let n = F::from_usize(x.len()).expect("Operation failed");
 
         for i in 0..x.len() {
             let y_pred = spline.evaluate(x[i])?;
@@ -546,8 +548,8 @@ where
 
         // Check midpoints between data points
         for i in 0..x.len() - 1 {
-            let x_mid = (x[i] + x[i + 1]) / F::from_f64(2.0).unwrap();
-            let y_mid = (y[i] + y[i + 1]) / F::from_f64(2.0).unwrap(); // Linear interpolation
+            let x_mid = (x[i] + x[i + 1]) / F::from_f64(2.0).expect("Operation failed");
+            let y_mid = (y[i] + y[i + 1]) / F::from_f64(2.0).expect("Operation failed"); // Linear interpolation
             let y_spline = spline.evaluate(x_mid)?;
             let error = (y_mid - y_spline).abs();
 
@@ -790,16 +792,16 @@ mod tests {
                 tolerance: 1e-3,
             },
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test evaluation at data points
         for i in 0..x.len() {
-            let y_pred = spline.evaluate(x[i]).unwrap();
+            let y_pred = spline.evaluate(x[i]).expect("Operation failed");
             assert_relative_eq!(y_pred, y[i], epsilon = 1.0); // Adjust for spline approximation
         }
 
         // Test intermediate points
-        let y_mid = spline.evaluate(0.55).unwrap();
+        let y_mid = spline.evaluate(0.55).expect("Operation failed");
         assert_relative_eq!(y_mid, 0.3025, epsilon = 0.2); // 0.55^2 = 0.3025 (adjust for spline approximation)
     }
 
@@ -816,14 +818,14 @@ mod tests {
                 max_iterations: 10,
             },
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check that we get the expected number of knots
         assert_eq!(spline.numknots(), 6);
 
         // Test evaluation
         for i in 0..x.len() {
-            let y_pred = spline.evaluate(x[i]).unwrap();
+            let y_pred = spline.evaluate(x[i]).expect("Operation failed");
             assert_relative_eq!(y_pred, y[i], epsilon = 0.5); // Adjust for spline approximation
         }
     }
@@ -889,10 +891,10 @@ mod tests {
                 tolerance: 1e-6,
             },
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // For y = x^2, dy/dx = 2x
-        let derivative_at_half = spline.derivative(0.5, 1).unwrap();
+        let derivative_at_half = spline.derivative(0.5, 1).expect("Operation failed");
         assert_relative_eq!(derivative_at_half, 1.0, epsilon = 2.0); // 2 * 0.5 = 1.0 (adjust for spline approximation)
     }
 

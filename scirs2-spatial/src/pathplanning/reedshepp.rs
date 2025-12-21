@@ -960,7 +960,7 @@ mod tests {
 
         if let Ok(path) = planner.plan(&start, &goal) {
             // Sample at start (t=0)
-            let start_sample = path.sample(0.0).unwrap();
+            let start_sample = path.sample(0.0).expect("Operation failed");
             assert_relative_eq!(start_sample.x, start.x, epsilon = 1e-2);
             assert_relative_eq!(start_sample.y, start.y, epsilon = 1e-2);
 
@@ -1178,8 +1178,8 @@ mod tests {
         let path = planner.plan(&start, &goal);
         if let Ok(path) = path {
             // Sample the path at the beginning and end
-            let start_sample = path.sample(0.0).unwrap();
-            let end_sample = path.sample(1.0).unwrap();
+            let start_sample = path.sample(0.0).expect("Operation failed");
+            let end_sample = path.sample(1.0).expect("Operation failed");
 
             // Should be close to the actual start and goal
             assert_relative_eq!(start_sample.x, start.x, epsilon = 1e-2);

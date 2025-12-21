@@ -1278,7 +1278,7 @@ pub fn global_stability_manager() -> &'static mut StabilityGuaranteeManager {
             STABILITY_MANAGER = Some(manager);
         });
 
-        STABILITY_MANAGER.as_mut().unwrap()
+        STABILITY_MANAGER.as_mut().expect("Operation failed")
     }
 }
 
@@ -1411,11 +1411,16 @@ mod tests {
             deprecation: None,
         };
 
-        manager.register_contract(contract).unwrap();
+        manager
+            .register_contract(contract)
+            .expect("Operation failed");
 
         let retrieved = manager.get_contract("test_function", "test_module");
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().stability, StabilityLevel::Stable);
+        assert_eq!(
+            retrieved.expect("Operation failed").stability,
+            StabilityLevel::Stable
+        );
 
         assert!(manager.has_stability_guarantees("test_function", "test_module"));
     }
@@ -1423,7 +1428,9 @@ mod tests {
     #[test]
     fn test_usage_context_validation() {
         let mut manager = StabilityGuaranteeManager::new();
-        manager.initialize_core_contracts().unwrap();
+        manager
+            .initialize_core_contracts()
+            .expect("Operation failed");
 
         let context = UsageContext {
             required_stability: StabilityLevel::Stable,
@@ -1474,7 +1481,9 @@ mod tests {
     #[test]
     fn test_stability_report_generation() {
         let mut manager = StabilityGuaranteeManager::new();
-        manager.initialize_core_contracts().unwrap();
+        manager
+            .initialize_core_contracts()
+            .expect("Operation failed");
 
         let report = manager.generate_stability_report();
 

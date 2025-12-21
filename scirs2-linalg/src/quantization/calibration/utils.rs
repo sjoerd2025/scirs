@@ -736,13 +736,13 @@ mod tests {
     #[test]
     fn test_create_params_from_range() {
         // Test symmetric quantization
-        let params = create_params_from_range(8, -5.0, 5.0, true).unwrap();
+        let params = create_params_from_range(8, -5.0, 5.0, true).expect("Operation failed");
         assert_eq!(params.method, QuantizationMethod::Symmetric);
         assert_eq!(params.zero_point, 0);
         assert_relative_eq!(params.scale, 5.0 / 127.0, epsilon = 1e-6);
 
         // Test affine quantization
-        let params = create_params_from_range(8, 1.0, 9.0, false).unwrap();
+        let params = create_params_from_range(8, 1.0, 9.0, false).expect("Operation failed");
         assert_eq!(params.method, QuantizationMethod::Affine);
         assert_relative_eq!(params.scale, 8.0 / 255.0, epsilon = 1e-6);
         assert_eq!(params.zero_point, (-1.0 / params.scale).round() as i32);

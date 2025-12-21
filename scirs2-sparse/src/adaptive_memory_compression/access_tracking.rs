@@ -174,7 +174,7 @@ impl AccessTracker {
             .map(|(id, pattern)| (id.clone(), pattern.access_frequency))
             .collect();
 
-        blocks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        blocks.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         blocks.truncate(limit);
         blocks
     }
@@ -187,7 +187,7 @@ impl AccessTracker {
             .map(|(id, pattern)| (id.clone(), pattern.access_frequency))
             .collect();
 
-        blocks.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        blocks.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
         blocks.truncate(limit);
         blocks
     }
@@ -251,7 +251,7 @@ impl AccessTracker {
 
         // Use 90th percentile as hot threshold
         let mut sorted_freq = frequencies;
-        sorted_freq.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_freq.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let index = (sorted_freq.len() as f64 * 0.9) as usize;
         sorted_freq.get(index).copied().unwrap_or(0.0)
     }
@@ -270,7 +270,7 @@ impl AccessTracker {
 
         // Use 10th percentile as cold threshold
         let mut sorted_freq = frequencies;
-        sorted_freq.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_freq.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let index = (sorted_freq.len() as f64 * 0.1) as usize;
         sorted_freq.get(index).copied().unwrap_or(0.0)
     }

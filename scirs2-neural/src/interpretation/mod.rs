@@ -172,7 +172,7 @@ mod tests {
         let layer_analysis = interpreter.analyze_layer_activations("conv5");
         assert!(layer_analysis.is_ok());
         // Generate comprehensive report
-        let comp_report = report.unwrap();
+        let comp_report = report.expect("Operation failed");
         assert!(comp_report.basic_report.attributions.len() >= 2);
         assert!(comp_report
             .basic_report
@@ -194,7 +194,7 @@ mod tests {
         let input: ArrayD<f64> = Array::ones((2, 3, 3)).into_dyn();
         let zero_baseline = create_baseline(&input, &BaselineMethod::Zero);
         assert!(zero_baseline.is_ok());
-        assert_eq!(zero_baseline.unwrap().sum(), 0.0);
+        assert_eq!(zero_baseline.expect("Operation failed").sum(), 0.0);
         let random_baseline = create_baseline(&input, &BaselineMethod::Random { seed: 42 });
         assert!(random_baseline.is_ok());
         let custom_data = Array::from_elem((2, 3, 3), 0.5_f32).into_dyn();
@@ -210,7 +210,7 @@ mod tests {
         };
         let result = generate_feature_visualization::<f64>(&method, &[3, 16, 16]);
         assert!(result.is_ok());
-        let viz_result = result.unwrap();
+        let viz_result = result.expect("Operation failed");
         assert_eq!(viz_result.visualization_data.shape(), &[3, 16, 16]);
         assert!(viz_result.metadata.contains_key("target_layer"));
 }

@@ -100,7 +100,7 @@ impl FftBackend for RustFftBackend {
         }
 
         // Get cached plan from the planner
-        let mut planner = self.planner.lock().unwrap();
+        let mut planner = self.planner.lock().expect("Operation failed");
         let fft = planner.plan_fft_forward(size);
 
         // Convert to rustfft's Complex type
@@ -133,7 +133,7 @@ impl FftBackend for RustFftBackend {
         }
 
         // Get cached plan from the planner
-        let mut planner = self.planner.lock().unwrap();
+        let mut planner = self.planner.lock().expect("Operation failed");
         let fft = planner.plan_fft_inverse(size);
 
         // Convert to rustfft's Complex type
@@ -182,7 +182,7 @@ impl BackendManager {
 
     /// Register a new backend
     pub fn register_backend(&self, name: String, backend: Arc<dyn FftBackend>) -> FFTResult<()> {
-        let mut backends = self.backends.lock().unwrap();
+        let mut backends = self.backends.lock().expect("Operation failed");
         if backends.contains_key(&name) {
             return Err(FFTError::ValueError(format!(
                 "Backend '{name}' already exists"
@@ -194,13 +194,13 @@ impl BackendManager {
 
     /// Get available backends
     pub fn list_backends(&self) -> Vec<String> {
-        let backends = self.backends.lock().unwrap();
+        let backends = self.backends.lock().expect("Operation failed");
         backends.keys().cloned().collect()
     }
 
     /// Set the current backend
     pub fn set_backend(&self, name: &str) -> FFTResult<()> {
-        let backends = self.backends.lock().unwrap();
+        let backends = self.backends.lock().expect("Operation failed");
         if !backends.contains_key(name) {
             return Err(FFTError::ValueError(format!("Backend '{name}' not found")));
         }
@@ -214,19 +214,22 @@ impl BackendManager {
             }
         }
 
-        *self.current_backend.lock().unwrap() = name.to_string();
+        *self.current_backend.lock().expect("Operation failed") = name.to_string();
         Ok(())
     }
 
     /// Get current backend name
     pub fn get_backend_name(&self) -> String {
-        self.current_backend.lock().unwrap().clone()
+        self.current_backend
+            .lock()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Get current backend
     pub fn get_backend(&self) -> Arc<dyn FftBackend> {
-        let current_name = self.current_backend.lock().unwrap();
-        let backends = self.backends.lock().unwrap();
+        let current_name = self.current_backend.lock().expect("Operation failed");
+        let backends = self.backends.lock().expect("Operation failed");
         backends
             .get(&*current_name)
             .cloned()
@@ -235,7 +238,7 @@ impl BackendManager {
 
     /// Get backend info
     pub fn get_backend_info(&self, name: &str) -> Option<BackendInfo> {
-        let backends = self.backends.lock().unwrap();
+        let backends = self.backends.lock().expect("Operation failed");
         backends.get(name).map(|backend| BackendInfo {
             name: backend.name().to_string(),
             description: backend.description().to_string(),
@@ -368,7 +371,9 @@ mod tests {
         assert!(backends.contains(&"rustfft".to_string()));
 
         // Get backend info
-        let info = manager.get_backend_info("rustfft").unwrap();
+        let info = manager
+            .get_backend_info("rustfft")
+            .expect("Operation failed");
         assert!(info.available);
     }
 
@@ -378,7 +383,7 @@ mod tests {
         let original = manager.get_backend_name();
 
         {
-            let _ctx = BackendContext::new("rustfft").unwrap();
+            let _ctx = BackendContext::new("rustfft").expect("Operation failed");
             assert_eq!(manager.get_backend_name(), "rustfft");
         }
 

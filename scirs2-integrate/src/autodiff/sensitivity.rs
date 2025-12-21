@@ -86,7 +86,7 @@ impl<F: IntegrateFloat> SensitivityAnalysis<F> {
                 for i in 0..n_time {
                     sum += sens.sensitivity[[i, j]].abs();
                 }
-                avg_sens[j] = sum / F::from(n_time).unwrap();
+                avg_sens[j] = sum / F::from(n_time).expect("Failed to convert to float");
             }
 
             result.insert(sens.name.clone(), avg_sens);
@@ -157,13 +157,13 @@ where
                 .slice(scirs2_core::ndarray::s![n_states..])
                 .to_owned()
                 .into_shape_with_order((n_states,))
-                .unwrap();
+                .expect("Failed to integrate");
 
             // Compute f(t, y, p)
             let f = system_clone(t, y, params.view());
 
             // Compute ∂f/∂y using finite differences
-            let eps = F::from(1e-8).unwrap();
+            let eps = F::from(1e-8).expect("Failed to convert constant to float");
             let mut df_dy = Array2::zeros((n_states, n_states));
 
             for j in 0..n_states {
@@ -372,7 +372,8 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
             let mut sample = Array1::zeros(n_params);
             for j in 0..n_params {
                 let (low, high) = self.param_bounds[j];
-                let u = F::from(i).unwrap() / F::from(self.n_samples - 1).unwrap();
+                let u = F::from(i).expect("Failed to convert to float")
+                    / F::from(self.n_samples - 1).expect("Failed to convert to float");
                 sample[j] = low + (high - low) * u;
             }
             samples.push(sample);
@@ -414,12 +415,12 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
 
     /// Compute variance of model outputs
     fn compute_variance(y_a: &[F], y_b: &[F], n_samples: usize) -> F {
-        let n = F::from(n_samples).unwrap();
+        let n = F::from(n_samples).expect("Failed to convert to float");
         let mut sum = F::zero();
         let mut sum_sq = F::zero();
 
         for i in 0..n_samples {
-            let y = (y_a[i] + y_b[i]) / F::from(2.0).unwrap();
+            let y = (y_a[i] + y_b[i]) / F::from(2.0).expect("Failed to convert constant to float");
             sum += y;
             sum_sq += y * y;
         }
@@ -436,7 +437,7 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
         var_y: F,
         n_samples: usize,
     ) -> F {
-        let n = F::from(n_samples).unwrap();
+        let n = F::from(n_samples).expect("Failed to convert to float");
         let mut sum = F::zero();
 
         for i in 0..n_samples {
@@ -449,7 +450,7 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
 
     /// Compute total Sobol index
     fn compute_total_index(y_a: &[F], y_ci: &[F], var_y: F, n_samples: usize) -> F {
-        let n = F::from(n_samples).unwrap();
+        let n = F::from(n_samples).expect("Failed to convert to float");
         let mut sum = F::zero();
 
         for i in 0..n_samples {
@@ -457,7 +458,7 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
             sum += diff * diff;
         }
 
-        let e_i = sum / (F::from(2.0).unwrap() * n);
+        let e_i = sum / (F::from(2.0).expect("Failed to convert constant to float") * n);
         (e_i / var_y).max(F::zero()).min(F::one())
     }
 }
@@ -532,7 +533,8 @@ impl<F: IntegrateFloat> EFAST<F> {
         let mut samples = Vec::with_capacity(self.n_samples);
 
         for k in 0..self.n_samples {
-            let s = F::from(k).unwrap() / F::from(self.n_samples).unwrap();
+            let s = F::from(k).expect("Failed to convert to float")
+                / F::from(self.n_samples).expect("Failed to convert to float");
             let mut sample = Array1::zeros(n_params);
 
             for j in 0..n_params {
@@ -540,14 +542,20 @@ impl<F: IntegrateFloat> EFAST<F> {
 
                 if j == _param_index {
                     // Use higher frequency for parameter of interest
-                    let angle = F::from(2.0 * std::f64::consts::PI * omega as f64).unwrap() * s;
-                    let x = (F::one() + angle.sin()) / F::from(2.0).unwrap();
+                    let angle = F::from(2.0 * std::f64::consts::PI * omega as f64)
+                        .expect("Failed to convert to float")
+                        * s;
+                    let x = (F::one() + angle.sin())
+                        / F::from(2.0).expect("Failed to convert constant to float");
                     sample[j] = low + (high - low) * x;
                 } else {
                     // Use lower frequencies for other parameters
                     let omega_j = if j < _param_index { j + 1 } else { j };
-                    let angle = F::from(2.0 * std::f64::consts::PI * omega_j as f64).unwrap() * s;
-                    let x = (F::one() + angle.sin()) / F::from(2.0).unwrap();
+                    let angle = F::from(2.0 * std::f64::consts::PI * omega_j as f64)
+                        .expect("Failed to convert to float")
+                        * s;
+                    let x = (F::one() + angle.sin())
+                        / F::from(2.0).expect("Failed to convert constant to float");
                     sample[j] = low + (high - low) * x;
                 }
             }
@@ -565,14 +573,16 @@ impl<F: IntegrateFloat> EFAST<F> {
         let mut b_omega = F::zero();
 
         for (k, y_value) in y_values.iter().enumerate().take(n) {
-            let angle =
-                F::from(2.0 * std::f64::consts::PI * omega as f64 * k as f64 / n as f64).unwrap();
+            let angle = F::from(2.0 * std::f64::consts::PI * omega as f64 * k as f64 / n as f64)
+                .expect("Failed to convert to float");
             a_omega += *y_value * angle.cos();
             b_omega += *y_value * angle.sin();
         }
 
-        a_omega *= F::from(2.0).unwrap() / F::from(n).unwrap();
-        b_omega *= F::from(2.0).unwrap() / F::from(n).unwrap();
+        a_omega *= F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(n).expect("Failed to convert to float");
+        b_omega *= F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(n).expect("Failed to convert to float");
 
         // Return normalized sensitivity
         (a_omega * a_omega + b_omega * b_omega).sqrt()
@@ -664,7 +674,8 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
                 let u: f64 = rng.random();
-                a_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
+                a_matrix[[i, j]] =
+                    lower + (upper - lower) * F::from(u).expect("Failed to convert to float");
             }
         }
 
@@ -674,7 +685,8 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
                 let u: f64 = rng.random();
-                b_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
+                b_matrix[[i, j]] =
+                    lower + (upper - lower) * F::from(u).expect("Failed to convert to float");
             }
         }
 
@@ -744,7 +756,9 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
         }
 
         // Compute variance of outputs
-        let _mean_y = y_a.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let _mean_y = y_a
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
         let var_y = y_a.var_axis(scirs2_core::ndarray::Axis(0), F::zero());
 
         let mut first_order_indices = HashMap::new();
@@ -786,7 +800,7 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
                 for sample in 0..self.n_samples {
                     sum += y_a[[sample, j]] * (y_c_i[[sample, j]] - y_b[[sample, j]]);
                 }
-                let v_i = sum / F::from(self.n_samples).unwrap();
+                let v_i = sum / F::from(self.n_samples).expect("Failed to convert to float");
                 s_i[j] = v_i / var_y[j];
             }
             first_order_indices.insert(param_idx, s_i);
@@ -798,7 +812,7 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
                 for sample in 0..self.n_samples {
                     sum += y_b[[sample, j]] * (y_c_i[[sample, j]] - y_a[[sample, j]]);
                 }
-                let v_not_i = sum / F::from(self.n_samples).unwrap();
+                let v_not_i = sum / F::from(self.n_samples).expect("Failed to convert to float");
                 st_i[j] = F::one() - v_not_i / var_y[j];
             }
             total_indices.insert(param_idx, st_i);
@@ -839,7 +853,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
         MorrisScreening {
             n_params: param_bounds.len(),
             n_trajectories,
-            delta: F::from(0.1).unwrap(),
+            delta: F::from(0.1).expect("Failed to convert constant to float"),
             param_bounds,
             grid_levels: 4,
         }
@@ -865,7 +879,8 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
                 let u: f64 = rng.random();
-                trajectory[[0, j]] = lower + (upper - lower) * F::from(u).unwrap();
+                trajectory[[0, j]] =
+                    lower + (upper - lower) * F::from(u).expect("Failed to convert to float");
             }
 
             // Generate trajectory by changing one parameter at a time
@@ -933,7 +948,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
 
         for j in 0..self.n_params {
             let effects = &elementary_effects[j];
-            let n = F::from(effects.len()).unwrap();
+            let n = F::from(effects.len()).expect("Operation failed");
 
             // Mean of absolute effects (mu*)
             let sum_abs: F = effects
@@ -1001,7 +1016,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
                     let ee = (y2 - y1) / delta;
 
                     let name = &param_names[j];
-                    let (sum, sum_sq) = effects.get_mut(name).unwrap();
+                    let (sum, sum_sq) = effects.get_mut(name).expect("Operation failed");
                     *sum += ee;
                     *sum_sq += ee * ee;
                 }
@@ -1009,7 +1024,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
         }
 
         // Compute mean and standard deviation
-        let n_traj = F::from(self.n_trajectories).unwrap();
+        let n_traj = F::from(self.n_trajectories).expect("Failed to convert to float");
         let mut results = HashMap::new();
 
         for (name, (sum, sum_sq)) in effects {
@@ -1030,14 +1045,16 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
         // Random starting point
         for i in 0..n_params {
             let (low, high) = self.param_bounds[i];
-            current[i] = low + (high - low) * F::from(0.5).unwrap();
+            current[i] =
+                low + (high - low) * F::from(0.5).expect("Failed to convert constant to float");
         }
         trajectory.push(current.clone());
 
         // Change one parameter at a time
         for i in 0..n_params {
             let (low, high) = self.param_bounds[i];
-            let delta = (high - low) / F::from((self.grid_levels - 1) as f64).unwrap();
+            let delta =
+                (high - low) / F::from((self.grid_levels - 1) as f64).expect("Operation failed");
             current[i] += delta;
             trajectory.push(current.clone());
         }

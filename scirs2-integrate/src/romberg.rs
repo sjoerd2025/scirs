@@ -32,8 +32,8 @@ impl<F: IntegrateFloat> Default for RombergOptions<F> {
     fn default() -> Self {
         Self {
             max_iters: 20,
-            abs_tol: F::from_f64(1.0e-10).unwrap(),
-            rel_tol: F::from_f64(1.0e-10).unwrap(),
+            abs_tol: F::from_f64(1.0e-10).expect("Operation failed"),
+            rel_tol: F::from_f64(1.0e-10).expect("Operation failed"),
             max_true_dimension: 3,
             min_monte_carlo_samples: 10000,
         }
@@ -74,7 +74,7 @@ pub struct RombergResult<F: IntegrateFloat> {
 /// use scirs2_integrate::romberg::romberg;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
-/// let result = romberg(|x: f64| x * x, 0.0, 1.0, None).unwrap();
+/// let result = romberg(|x: f64| x * x, 0.0, 1.0, None).expect("Operation failed");
 /// assert!((result.value - 1.0/3.0).abs() < 1e-10);
 /// assert!(result.converged);
 /// ```
@@ -109,7 +109,7 @@ where
         // Apply Richardson extrapolation to compute the Romberg table
         for j in 1..=i {
             // R(i,j) = R(i,j-1) + (R(i,j-1) - R(i-1,j-1))/(4^j - 1)
-            let coef = F::from_f64(4.0_f64.powi(j as i32) - 1.0).unwrap();
+            let coef = F::from_f64(4.0_f64.powi(j as i32) - 1.0).expect("Operation failed");
             r_table[[i, j]] =
                 r_table[[i, j - 1]] + (r_table[[i, j - 1]] - r_table[[i - 1, j - 1]]) / coef;
         }
@@ -138,7 +138,7 @@ where
         (value - r_table[[n_iters - 2, n_iters - 2]]).abs()
     } else {
         // If we only have one iteration, use a conservative error estimate
-        F::from_f64(1.0e-3).unwrap() * value.abs()
+        F::from_f64(1.0e-3).expect("Operation failed") * value.abs()
     };
 
     // Create a new array with just the used portion of the table
@@ -297,25 +297,25 @@ where
         // Use a grid-based approach with an appropriate number of points
         let n_points = (opts.max_iters + 1).min(31); // Cap at a reasonable max to avoid excessive memory use
 
-        let h1 = (b1 - a1) / F::from_usize(n_points - 1).unwrap();
-        let h2 = (b2 - a2) / F::from_usize(n_points - 1).unwrap();
+        let h1 = (b1 - a1) / F::from_usize(n_points - 1).expect("Operation failed");
+        let h2 = (b2 - a2) / F::from_usize(n_points - 1).expect("Operation failed");
 
         let mut sum = F::zero();
         let mut sum_refined = F::zero(); // For error estimation
 
         // First pass: Calculate on coarse grid
         for i in 0..n_points {
-            let x = a1 + F::from_usize(i).unwrap() * h1;
+            let x = a1 + F::from_usize(i).expect("Operation failed") * h1;
             let weight_x = if i == 0 || i == n_points - 1 {
-                F::from_f64(0.5).unwrap()
+                F::from_f64(0.5).expect("Operation failed")
             } else {
                 F::one()
             };
 
             for j in 0..n_points {
-                let y = a2 + F::from_usize(j).unwrap() * h2;
+                let y = a2 + F::from_usize(j).expect("Operation failed") * h2;
                 let weight_y = if j == 0 || j == n_points - 1 {
-                    F::from_f64(0.5).unwrap()
+                    F::from_f64(0.5).expect("Operation failed")
                 } else {
                     F::one()
                 };
@@ -336,21 +336,21 @@ where
         // This gives us an error estimate without doubling the function evaluations
         if n_points > 4 {
             let refined_n = n_points / 2 + (n_points % 2);
-            let refined_h1 = (b1 - a1) / F::from_usize(refined_n - 1).unwrap();
-            let refined_h2 = (b2 - a2) / F::from_usize(refined_n - 1).unwrap();
+            let refined_h1 = (b1 - a1) / F::from_usize(refined_n - 1).expect("Operation failed");
+            let refined_h2 = (b2 - a2) / F::from_usize(refined_n - 1).expect("Operation failed");
 
             for i in 0..refined_n {
-                let x = a1 + F::from_usize(i).unwrap() * refined_h1;
+                let x = a1 + F::from_usize(i).expect("Operation failed") * refined_h1;
                 let weight_x = if i == 0 || i == refined_n - 1 {
-                    F::from_f64(0.5).unwrap()
+                    F::from_f64(0.5).expect("Operation failed")
                 } else {
                     F::one()
                 };
 
                 for j in 0..refined_n {
-                    let y = a2 + F::from_usize(j).unwrap() * refined_h2;
+                    let y = a2 + F::from_usize(j).expect("Operation failed") * refined_h2;
                     let weight_y = if j == 0 || j == refined_n - 1 {
-                        F::from_f64(0.5).unwrap()
+                        F::from_f64(0.5).expect("Operation failed")
                     } else {
                         F::one()
                     };
@@ -377,7 +377,7 @@ where
         }
 
         // If we don't have enough points for a refined grid, use a conservative error estimate
-        let abs_error = result.abs() * F::from_f64(1e-3).unwrap();
+        let abs_error = result.abs() * F::from_f64(1e-3).expect("Operation failed");
 
         return Ok(MultiRombergResult {
             value: result,
@@ -393,33 +393,33 @@ where
         // Use fewer grid points for 3D to keep performance reasonable
         let n_points = (opts.max_iters / 2 + 1).min(11);
 
-        let h1 = (b1 - a1) / F::from_usize(n_points - 1).unwrap();
-        let h2 = (b2 - a2) / F::from_usize(n_points - 1).unwrap();
-        let h3 = (b3 - a3) / F::from_usize(n_points - 1).unwrap();
+        let h1 = (b1 - a1) / F::from_usize(n_points - 1).expect("Operation failed");
+        let h2 = (b2 - a2) / F::from_usize(n_points - 1).expect("Operation failed");
+        let h3 = (b3 - a3) / F::from_usize(n_points - 1).expect("Operation failed");
 
         let mut sum = F::zero();
 
         // First, compute all grid points
         for i in 0..n_points {
-            let x = a1 + F::from_usize(i).unwrap() * h1;
+            let x = a1 + F::from_usize(i).expect("Operation failed") * h1;
             let weight_x = if i == 0 || i == n_points - 1 {
-                F::from_f64(0.5).unwrap()
+                F::from_f64(0.5).expect("Operation failed")
             } else {
                 F::one()
             };
 
             for j in 0..n_points {
-                let y = a2 + F::from_usize(j).unwrap() * h2;
+                let y = a2 + F::from_usize(j).expect("Operation failed") * h2;
                 let weight_y = if j == 0 || j == n_points - 1 {
-                    F::from_f64(0.5).unwrap()
+                    F::from_f64(0.5).expect("Operation failed")
                 } else {
                     F::one()
                 };
 
                 for k in 0..n_points {
-                    let z = a3 + F::from_usize(k).unwrap() * h3;
+                    let z = a3 + F::from_usize(k).expect("Operation failed") * h3;
                     let weight_z = if k == 0 || k == n_points - 1 {
-                        F::from_f64(0.5).unwrap()
+                        F::from_f64(0.5).expect("Operation failed")
                     } else {
                         F::one()
                     };
@@ -439,7 +439,7 @@ where
 
         // Error estimate based on some sampling
         // We'll use a rough approximation since a full refinement would be too expensive
-        let abs_error = result.abs() * F::from_f64(1e-2).unwrap();
+        let abs_error = result.abs() * F::from_f64(1e-2).expect("Operation failed");
 
         return Ok(MultiRombergResult {
             value: result,
@@ -477,7 +477,7 @@ where
     // Prepare uniform samplers for each dimension
     let uniforms: Vec<_> = ranges
         .iter()
-        .map(|&(a, b)| Uniform::new_inclusive(a, b).unwrap())
+        .map(|&(a, b)| Uniform::new_inclusive(a, b).expect("Operation failed"))
         .collect();
 
     // Estimate the volume of the integration domain
@@ -522,7 +522,7 @@ where
     }
 
     // Calculate the Monte Carlo estimate
-    let n_samples_f = F::from_usize(n_actual_samples).unwrap();
+    let n_samples_f = F::from_usize(n_actual_samples).expect("Operation failed");
     let mean = sum / n_samples_f;
     let result = mean * volume;
 
@@ -545,18 +545,18 @@ mod tests {
     #[test]
     fn test_romberg_integration() {
         // Test integrating x² from 0 to 1 (exact result: 1/3)
-        let result = romberg(|x| x * x, 0.0, 1.0, None).unwrap();
+        let result = romberg(|x| x * x, 0.0, 1.0, None).expect("Operation failed");
         assert_relative_eq!(result.value, 1.0 / 3.0, epsilon = 1e-10);
         assert!(result.converged);
 
         // Test integrating sin(x) from 0 to π (exact result: 2)
-        let result = romberg(|x: f64| x.sin(), 0.0, PI, None).unwrap();
+        let result = romberg(|x: f64| x.sin(), 0.0, PI, None).expect("Operation failed");
         assert_relative_eq!(result.value, 2.0, epsilon = 1e-10);
         assert!(result.converged);
 
         // Test integrating exp(-x²) from -1 to 1
         // This is related to the error function, with exact result: sqrt(π)·erf(1)
-        let result = romberg(|x: f64| (-x * x).exp(), -1.0, 1.0, None).unwrap();
+        let result = romberg(|x: f64| (-x * x).exp(), -1.0, 1.0, None).expect("Operation failed");
         let exact = PI.sqrt() * libm::erf(1.0);
         assert_relative_eq!(result.value, exact, epsilon = 1e-10);
         assert!(result.converged);
@@ -573,7 +573,7 @@ mod tests {
             min_monte_carlo_samples: 10000,
         };
 
-        let result = romberg(|x| x * x, 0.0, 1.0, Some(options)).unwrap();
+        let result = romberg(|x| x * x, 0.0, 1.0, Some(options)).expect("Operation failed");
         assert_relative_eq!(result.value, 1.0 / 3.0, epsilon = 1e-12);
         assert!(result.converged);
     }
@@ -587,7 +587,7 @@ mod tests {
             &[(0.0, 1.0), (0.0, 1.0)],
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Our new implementation should be able to achieve better accuracy
         assert_relative_eq!(result.value, 2.0 / 3.0, epsilon = 1e-3);
@@ -601,7 +601,7 @@ mod tests {
             &[(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_relative_eq!(result.value, 1.0 / 27.0, epsilon = 1e-2);
         // Verify the method used is the adaptive nested method
@@ -615,7 +615,7 @@ mod tests {
             &[(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Monte Carlo will have lower accuracy but should still be reasonable
         assert_relative_eq!(result.value, 1.0 / 81.0, epsilon = 1e-1);
@@ -634,7 +634,7 @@ mod tests {
             &[(0.0, 1.0), (0.0, 1.0)],
             Some(custom_opts),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_relative_eq!(result.value, 2.0 / 3.0, epsilon = 5e-2);
         assert_eq!(result.method, IntegrationMethod::MonteCarlo);

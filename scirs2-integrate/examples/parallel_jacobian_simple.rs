@@ -26,7 +26,7 @@ where
     let mut jacobian = Array2::<F>::zeros((n_dim, n_dim));
 
     // Calculate base perturbation size
-    let eps_base = F::from_f64(1e-8).unwrap() * perturbation_scale;
+    let eps_base = F::from_f64(1e-8).expect("Operation failed") * perturbation_scale;
 
     // Compute columns serially
     for j in 0..n_dim {
@@ -70,7 +70,7 @@ where
         use scirs2_core::parallel_ops::*;
 
         // Calculate base perturbation size
-        let eps_base = F::from_f64(1e-8).unwrap() * perturbation_scale;
+        let eps_base = F::from_f64(1e-8).expect("Operation failed") * perturbation_scale;
 
         // Compute columns in parallel using rayon
         let columns: Vec<(usize, Array1<F>)> = (0..n_dim)

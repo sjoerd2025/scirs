@@ -1330,15 +1330,20 @@ impl GenericConvexHull {
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| {
-                let y_cmp = a.coordinate(1).partial_cmp(&b.coordinate(1)).unwrap();
+                let y_cmp = a
+                    .coordinate(1)
+                    .partial_cmp(&b.coordinate(1))
+                    .expect("Operation failed");
                 if y_cmp == Ordering::Equal {
-                    a.coordinate(0).partial_cmp(&b.coordinate(0)).unwrap()
+                    a.coordinate(0)
+                        .partial_cmp(&b.coordinate(0))
+                        .expect("Operation failed")
                 } else {
                     y_cmp
                 }
             })
             .map(|(idx_, _)| idx_)
-            .unwrap();
+            .expect("Operation failed");
 
         generic_points.swap(0, start_idx);
         let start_point = generic_points[0].clone();
@@ -1732,7 +1737,10 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
         // Convert K-means result to GMM initialization
         let mut means = kmeans_result.centroids;
-        let mut weights = vec![T::one() / T::from(self._ncomponents).unwrap(); self._ncomponents];
+        let mut weights = vec![
+            T::one() / T::from(self._ncomponents).expect("Operation failed");
+            self._ncomponents
+        ];
 
         // Initialize covariances based on data spread
         let mut covariances =
@@ -1762,7 +1770,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
                 for i in 0..n_features {
                     for j in 0..n_features {
                         let mut cov_sum = T::zero();
-                        let count = T::from(cluster_points.len()).unwrap();
+                        let count = T::from(cluster_points.len()).expect("Operation failed");
 
                         for point in &cluster_points {
                             let pi = point.coordinate(i).unwrap_or(T::zero())
@@ -1849,7 +1857,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
                     nk = nk + responsibilities[i][k];
                 }
                 nk_values[k] = nk;
-                weights[k] = nk / T::from(n_samples).unwrap();
+                weights[k] = nk / T::from(n_samples).expect("Operation failed");
             }
 
             // Update means
@@ -1993,12 +2001,13 @@ impl<T: SpatialScalar> GenericGMM<T> {
         }
 
         // Compute log probability: -0.5 * (k*log(2π) + log|Σ| + (x-μ)ᵀΣ⁻¹(x-μ))
-        let two_pi =
-            T::from(std::f64::consts::TAU).unwrap_or(T::from(std::f64::consts::TAU).unwrap());
-        let log_2pi_k = T::from(n_features).unwrap() * two_pi.ln();
+        let two_pi = T::from(std::f64::consts::TAU)
+            .unwrap_or(T::from(std::f64::consts::TAU).expect("Operation failed"));
+        let log_2pi_k = T::from(n_features).expect("Operation failed") * two_pi.ln();
         let log_det = det.abs().ln();
 
-        let log_prob = -T::from(0.5).unwrap() * (log_2pi_k + log_det + quadratic_form);
+        let log_prob =
+            -T::from(0.5).expect("Operation failed") * (log_2pi_k + log_det + quadratic_form);
 
         // Handle numerical issues
         if Float::is_finite(log_prob) {

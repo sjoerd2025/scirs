@@ -223,12 +223,12 @@ where
                         b.iter().map(|&(lb, _)| Some(lb)).collect(),
                         b.iter().map(|&(_, ub)| Some(ub)).collect(),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 }),
                 ..Default::default()
             }),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let storage = Storage::new(
             initial_result.x.clone(),
@@ -265,12 +265,12 @@ where
                         b.iter().map(|&(lb, _)| Some(lb)).collect(),
                         b.iter().map(|&(_, ub)| Some(ub)).collect(),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 }),
                 ..Default::default()
             }),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         self.nfev += result.nfev;
 

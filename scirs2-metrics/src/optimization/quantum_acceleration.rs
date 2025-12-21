@@ -296,7 +296,11 @@ impl<F: Float> Clone for ClassicalFallback<F> {
 impl Default for QuantumConfig {
     fn default() -> Self {
         Self {
-            _numqubits: 20, // Sufficient for most metric computations
+            // CRITICAL: Reduced from 20 to 10 to prevent catastrophic memory allocation
+            // 20 qubits → 2^20 × 2^20 entanglement matrix = 17.6 TB memory (causes SIGKILL)
+            // 10 qubits → 2^10 × 2^10 entanglement matrix = ~16 MB memory (reasonable)
+            // For larger quantum simulations, explicitly construct with smaller qubit count
+            _numqubits: 10,
             coherence_time: Duration::from_micros(100),
             gate_fidelity: 0.999,
             enable_error_correction: true,
@@ -402,7 +406,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         if self.config.enable_error_correction {
             let classicalresult = self.classical_fallback.correlation(x, y)?;
             let error = (correlation - classicalresult).abs();
-            if error > F::from(1e-10).unwrap() {
+            if error > F::from(1e-10).expect("Failed to convert constant to float") {
                 // Quantum error detected, apply correction
                 return self.apply_quantum_error_correction(correlation, classicalresult);
             }
@@ -455,7 +459,9 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
             self.update_vqe_parameters(&mut parameters, energy, matrix)?;
 
             // Check convergence
-            if (energy - best_energy).abs() < F::from(convergence_threshold).unwrap() {
+            if (energy - best_energy).abs()
+                < F::from(convergence_threshold).expect("Failed to convert to float")
+            {
                 eigenvalues.push(energy);
                 if eigenvalues.len() >= matrix.nrows() {
                     break;
@@ -711,12 +717,13 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
         // Normalize correlation to [-1, 1] range
         let normalized_correlation = correlation_sum / (n as f64 * n as f64);
-        Ok(F::from(normalized_correlation.clamp(-1.0, 1.0)).unwrap())
+        Ok(F::from(normalized_correlation.clamp(-1.0, 1.0)).expect("Operation failed"))
     }
 
     fn apply_quantum_error_correction(&self, quantum_result: F, classicalresult: F) -> Result<F> {
         // Simple error correction using majority voting with quantum redundancy
-        let corrected_result = (quantum_result + classicalresult) / F::from(2.0).unwrap();
+        let corrected_result = (quantum_result + classicalresult)
+            / F::from(2.0).expect("Failed to convert constant to float");
         Ok(corrected_result)
     }
 
@@ -764,7 +771,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
             // Limit to first 8 eigenvalues
             // Extract phase from quantum state amplitude
             let phase = state[k].arg();
-            let eigenvalue = F::from(phase / (2.0 * PI)).unwrap();
+            let eigenvalue = F::from(phase / (2.0 * PI)).expect("Operation failed");
             eigenvalues.push(eigenvalue);
         }
 
@@ -835,7 +842,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
             }
         }
 
-        Ok(F::from(expectation).unwrap())
+        Ok(F::from(expectation).expect("Failed to convert to float"))
     }
 
     fn update_vqe_parameters(
@@ -988,7 +995,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let mut solution = vec![F::zero(); numvariables];
         for i in 0..numvariables {
             let bit = (measured_state >> i) & 1;
-            solution[i] = F::from(bit).unwrap();
+            solution[i] = F::from(bit).expect("Failed to convert to float");
         }
 
         Ok(solution)
@@ -1143,7 +1150,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let num_bits = (finalstate.len() as f64).log2().ceil() as usize;
         for i in 0..num_bits {
             let bit = (max_index >> i) & 1;
-            solution.push(F::from(bit).unwrap());
+            solution.push(F::from(bit).expect("Failed to convert to float"));
         }
 
         Ok(solution)
@@ -1201,7 +1208,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         // Simplified quantum SVM computation
         let trace = kernel.diag().sum();
         let metric_value = trace / kernel.nrows() as f64;
-        Ok(F::from(metric_value).unwrap())
+        Ok(F::from(metric_value).expect("Failed to convert to float"))
     }
 }
 
@@ -1579,7 +1586,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> ClassicalFallback
 
         if self.simd_capabilities.simd_available {
             // Use SIMD acceleration
-            let n = F::from(x.len()).unwrap();
+            let n = F::from(x.len()).expect("Operation failed");
             let mean_x = F::simd_sum(&x.view()) / n;
             let mean_y = F::simd_sum(&y.view()) / n;
 
@@ -1606,7 +1613,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> ClassicalFallback
             }
         } else {
             // Fallback to scalar computation
-            let n = F::from(x.len()).unwrap();
+            let n = F::from(x.len()).expect("Operation failed");
             let mean_x = x.iter().cloned().sum::<F>() / n;
             let mean_y = y.iter().cloned().sum::<F>() / n;
 
@@ -1641,14 +1648,14 @@ mod tests {
     #[test]
     fn test_quantum_config_creation() {
         let config = QuantumConfig::default();
-        assert_eq!(config._numqubits, 20);
+        assert_eq!(config._numqubits, 10); // Reduced from 20 to prevent SIGKILL
         assert!(config.enable_error_correction);
         assert!(config.enable_qaoa);
     }
 
     #[test]
     fn test_quantum_processor_creation() {
-        let processor = QuantumProcessor::<f64>::new(4).unwrap();
+        let processor = QuantumProcessor::<f64>::new(4).expect("Operation failed");
         assert_eq!(processor._numqubits, 4);
         assert_eq!(processor.state_vector.len(), 16); // 2^4
         assert_eq!(processor.state_vector[0], Complex::new(1.0, 0.0)); // |0000⟩
@@ -1656,10 +1663,10 @@ mod tests {
 
     #[test]
     fn test_quantum_gates() {
-        let mut processor = QuantumProcessor::<f64>::new(2).unwrap();
+        let mut processor = QuantumProcessor::<f64>::new(2).expect("Operation failed");
 
         // Apply Hadamard to qubit 0 (LSB)
-        processor.apply_hadamard(0).unwrap();
+        processor.apply_hadamard(0).expect("Operation failed");
 
         // State should be (|00⟩ + |01⟩)/√2
         // In binary: |00⟩ = index 0, |01⟩ = index 1
@@ -1671,7 +1678,7 @@ mod tests {
 
         // Apply CNOT(0, 1) - control=0, target=1
         // Flips qubit 1 when qubit 0 is 1
-        processor.apply_cnot(0, 1).unwrap();
+        processor.apply_cnot(0, 1).expect("Operation failed");
 
         // State should be (|00⟩ + |11⟩)/√2 (Bell state)
         // |00⟩ → |00⟩ (qubit 0 is 0, no flip)
@@ -1683,21 +1690,47 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: This test causes SIGKILL - memory issues or system resource exhaustion
     fn test_quantum_computer_creation() {
+        // This test now works after reducing default qubits from 20 to 10
+        // Previous 20 qubits caused 17.6 TB memory allocation → SIGKILL
         let config = QuantumConfig::default();
-        let computer = QuantumMetricsComputer::<f64>::new(config).unwrap();
-        assert_eq!(computer.config._numqubits, 20);
+        let computer = QuantumMetricsComputer::<f64>::new(config).expect("Operation failed");
+        assert_eq!(computer.config._numqubits, 10);
     }
 
     #[test]
-    #[ignore = "timeout"]
+    fn test_quantum_computer_small() {
+        // Test with even smaller qubit count for fast execution
+        let mut config = QuantumConfig::default();
+        config._numqubits = 5; // 2^5 = 32 states, very manageable
+        let computer = QuantumMetricsComputer::<f64>::new(config).expect("Operation failed");
+        assert_eq!(computer.config._numqubits, 5);
+        // Verify entanglement matrix is reasonable size
+        assert_eq!(computer.entanglement_matrix.shape(), &[32, 32]);
+    }
+
+    #[test]
+    fn test_quantum_memory_limits() {
+        // Safety check: verify we don't accidentally set default too high
+        // Each qubit doubles memory: 2^n × 2^n × 16 bytes
+        // 10 qubits = 16 MB, 12 qubits = 256 MB, 15 qubits = 16 GB
+        let config = QuantumConfig::default();
+        assert!(
+            config._numqubits <= 12,
+            "Default qubits ({}) too high - risk of memory exhaustion",
+            config._numqubits
+        );
+    }
+
+    #[test]
     fn test_classical_fallback_correlation() {
-        let fallback = ClassicalFallback::<f64>::new().unwrap();
+        let fallback = ClassicalFallback::<f64>::new().expect("Operation failed");
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0]; // Perfect correlation
 
-        let correlation = fallback.correlation(&x.view(), &y.view()).unwrap();
+        let correlation = fallback
+            .correlation(&x.view(), &y.view())
+            .expect("Operation failed");
         assert!((correlation - 1.0).abs() < 1e-10);
     }
 
@@ -1718,7 +1751,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_quantum_benchmark_results() {
         let mut results = QuantumBenchmarkResults::new();
 

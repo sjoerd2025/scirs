@@ -709,7 +709,7 @@ mod tests {
         // Create a plan
         let plan = planner
             .plan_fft(&shape, true, PlannerBackend::default())
-            .unwrap();
+            .expect("Operation failed");
 
         // Check that the plan has the right shape
         assert_eq!(plan.shape(), &shape);
@@ -727,7 +727,7 @@ mod tests {
         // Create a plan
         let plan = planner
             .plan_fft(&shape, true, PlannerBackend::default())
-            .unwrap();
+            .expect("Operation failed");
 
         // Create an executor
         let executor = FftPlanExecutor::new(plan);
@@ -746,7 +746,9 @@ mod tests {
         let mut output = vec![Complex64::default(); 8];
 
         // Execute the plan
-        executor.execute(&input, &mut output).unwrap();
+        executor
+            .execute(&input, &mut output)
+            .expect("Operation failed");
 
         // Check that the output makes sense for this input
         // (an impulse at the beginning should have a flat frequency response)
@@ -765,7 +767,7 @@ mod tests {
             .strategy(PlanningStrategy::AlwaysNew)
             .measure_performance(true);
 
-        let plan = builder.build().unwrap();
+        let plan = builder.build().expect("Operation failed");
 
         assert_eq!(plan.shape(), &[16]);
     }
@@ -773,12 +775,12 @@ mod tests {
     #[test]
     fn test_serialization() {
         // Create a temporary directory for test
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let db_path = temp_dir.path().join("test_plan_db.json");
 
         // Create a planner with serialization enabled
         let mut config = PlanningConfig::default();
-        config.serialized_db_path = Some(db_path.to_str().unwrap().to_string());
+        config.serialized_db_path = Some(db_path.to_str().expect("Operation failed").to_string());
         config.strategy = PlanningStrategy::SerializedFirst;
 
         let mut planner = AdvancedFftPlanner::with_config(config);
@@ -787,10 +789,10 @@ mod tests {
         let shape = vec![32];
         let _ = planner
             .plan_fft(&shape, true, PlannerBackend::default())
-            .unwrap();
+            .expect("Operation failed");
 
         // Save plans
-        planner.save_plans().unwrap();
+        planner.save_plans().expect("Operation failed");
 
         // Check that the file exists
         assert!(db_path.exists());
@@ -802,11 +804,11 @@ mod tests {
         let planner = get_global_planner();
 
         // Create a plan with the global planner
-        let mut planner_guard = planner.lock().unwrap();
+        let mut planner_guard = planner.lock().expect("Operation failed");
         let shape = vec![64];
         let plan = planner_guard
             .plan_fft(&shape, true, PlannerBackend::default())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(plan.shape(), &shape);
     }
@@ -814,12 +816,13 @@ mod tests {
     #[test]
     fn test_ahead_of_time_planning() {
         // Create a temporary directory for test
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let db_path = temp_dir.path().join("ahead_of_time.json");
 
         // Plan ahead of time for some common sizes
         let sizes = [8, 16, 32, 64];
-        plan_ahead_of_time(&sizes, Some(db_path.to_str().unwrap())).unwrap();
+        plan_ahead_of_time(&sizes, Some(db_path.to_str().expect("Operation failed")))
+            .expect("Operation failed");
 
         // Check that the file exists
         assert!(db_path.exists());

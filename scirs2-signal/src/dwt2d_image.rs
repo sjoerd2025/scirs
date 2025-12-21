@@ -25,7 +25,7 @@
 //
 // // Apply wavelet denoising
 // let denoised = denoise_image(&image, Wavelet::DB(4), 2, 5.0,
-//                             DenoisingMethod::VisuShrink, None).unwrap();
+//                             DenoisingMethod::VisuShrink, None).expect("Operation failed");
 //
 // // Check that the result has the same shape as the input
 // assert_eq!(denoised.shape(), image.shape());
@@ -94,7 +94,7 @@ pub enum DenoisingMethod {
 ///
 /// // Apply soft thresholding denoising
 /// let denoised = denoise_image(&image, Wavelet::Haar, 2, 1.5,
-///                             DenoisingMethod::Soft, Some(true)).unwrap();
+///                             DenoisingMethod::Soft, Some(true)).expect("Operation failed");
 ///
 /// // The denoised image should have the same shape as the input
 /// assert_eq!(denoised.shape(), image.shape());
@@ -228,7 +228,7 @@ where
 /// }
 ///
 /// // Detect edges
-/// let edges = detect_edges(&image, Wavelet::Haar, 1, Some(10.0)).unwrap();
+/// let edges = detect_edges(&image, Wavelet::Haar, 1, Some(10.0)).expect("Operation failed");
 ///
 /// // The edge image should have the same dimensions as the input
 /// assert_eq!(edges.shape(), image.shape());
@@ -298,7 +298,7 @@ where
 /// }
 ///
 /// // Compress image with 50% compression ratio
-/// let (compressed, ratio) = compress_image(&image, Wavelet::DB(4), 2, 0.5).unwrap();
+/// let (compressed, ratio) = compress_image(&image, Wavelet::DB(4), 2, 0.5).expect("Operation failed");
 ///
 /// // Check that the result has the same shape as the input
 /// assert_eq!(compressed.shape(), image.shape());
@@ -345,7 +345,7 @@ where
         let mut all_coeffs = Vec::with_capacity(total_coeffs);
         for level in &coeffs {
             // Skip approximation coefficients at the coarsest level
-            if level != coeffs.first().unwrap() {
+            if level != coeffs.first().expect("Operation failed") {
                 all_coeffs.extend(level.approx.iter().map(|&x: &f64| x.abs()));
             }
             all_coeffs.extend(level.detail_h.iter().map(|&x: &f64| x.abs()));
@@ -566,7 +566,7 @@ mod tests {
             DenoisingMethod::Hard,
             Some(true),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let denoised_soft = denoise_image(
             &image,
@@ -576,7 +576,7 @@ mod tests {
             DenoisingMethod::Soft,
             Some(true),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let denoised_visu = denoise_image(
             &image,
@@ -586,7 +586,7 @@ mod tests {
             DenoisingMethod::VisuShrink,
             Some(true),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(denoised_hard.shape(), image.shape());
@@ -612,7 +612,7 @@ mod tests {
         }
 
         // Detect edges
-        let edges = detect_edges(&image, Wavelet::Haar, 1, Some(0.5)).unwrap();
+        let edges = detect_edges(&image, Wavelet::Haar, 1, Some(0.5)).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(edges.shape(), image.shape());
@@ -644,8 +644,8 @@ mod tests {
         }
 
         // Compress with different ratios
-        let (compressed_low, ratio_low) = compress_image(&image, Wavelet::DB(2), 2, 0.3).unwrap();
-        let (compressed_high, ratio_high) = compress_image(&image, Wavelet::DB(2), 2, 0.7).unwrap();
+        let (compressed_low, ratio_low) = compress_image(&image, Wavelet::DB(2), 2, 0.3).expect("Operation failed");
+        let (compressed_high, ratio_high) = compress_image(&image, Wavelet::DB(2), 2, 0.7).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(compressed_low.shape(), image.shape());
@@ -656,7 +656,7 @@ mod tests {
         assert!(ratio_high > ratio_low); // Higher ratio should give more compression
 
         // Test edge case - no compression
-        let (no_compression, ratio_zero) = compress_image(&image, Wavelet::DB(2), 2, 0.0).unwrap();
+        let (no_compression, ratio_zero) = compress_image(&image, Wavelet::DB(2), 2, 0.0).expect("Operation failed");
         assert_eq!(no_compression.shape(), image.shape());
         assert_eq!(ratio_zero, 0.0);
 

@@ -361,9 +361,13 @@ mod tests {
         let mut registry = IntegrationRegistry::new();
 
         let info = ModuleInfo::new("test-module".to_string(), "1.0.0".to_string());
-        registry.register_module(info.clone()).unwrap();
+        registry
+            .register_module(info.clone())
+            .expect("Operation failed");
 
-        let retrieved = registry.get_module("test-module").unwrap();
+        let retrieved = registry
+            .get_module("test-module")
+            .expect("Operation failed");
         assert_eq!(retrieved.name, "test-module");
         assert_eq!(retrieved.version, "1.0.0");
     }
@@ -380,10 +384,10 @@ mod tests {
     #[test]
     fn test_global_registry() {
         // Test that we can get module info
-        let info = get_module_info("scirs2-autograd").unwrap();
+        let info = get_module_info("scirs2-autograd").expect("Operation failed");
         assert!(info.is_some());
 
-        let autograd_info = info.unwrap();
+        let autograd_info = info.expect("Operation failed");
         assert_eq!(autograd_info.name, "scirs2-autograd");
         assert!(autograd_info
             .features

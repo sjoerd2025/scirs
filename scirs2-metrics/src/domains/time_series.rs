@@ -568,7 +568,7 @@ impl TimeSeriesAnomalyMetrics {
             if label == 1 && start.is_none() {
                 start = Some(i);
             } else if label == 0 && start.is_some() {
-                segments.push((start.unwrap(), i - 1));
+                segments.push((start.expect("Operation failed"), i - 1));
                 start = None;
             }
         }
@@ -952,7 +952,6 @@ mod tests {
     use scirs2_core::ndarray::Array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_forecasting_metrics() {
         let metrics = ForecastingMetrics::new();
 
@@ -962,7 +961,7 @@ mod tests {
 
         let results = metrics
             .evaluate_forecast(&y_true, &ypred, Some(&y_train))
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.mae >= 0.0);
         assert!(results.rmse >= 0.0);
@@ -978,7 +977,9 @@ mod tests {
         let y_true = Array1::from_vec(vec![100.0, 200.0, 300.0]);
         let ypred = Array1::from_vec(vec![110.0, 190.0, 320.0]);
 
-        let mape = metrics.calculate_mape(&y_true, &ypred).unwrap();
+        let mape = metrics
+            .calculate_mape(&y_true, &ypred)
+            .expect("Operation failed");
 
         // Expected: (10/100 + 10/200 + 20/300) / 3 * 100 = (0.1 + 0.05 + 0.067) / 3 * 100 ≈ 7.22%
         assert!(mape > 6.0 && mape < 8.0);
@@ -994,7 +995,7 @@ mod tests {
 
         let results = metrics
             .evaluate_anomaly_detection(&y_true, &ypred, Some(&yscore))
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.precision >= 0.0 && results.precision <= 1.0);
         assert!(results.recall >= 0.0 && results.recall <= 1.0);
@@ -1011,7 +1012,7 @@ mod tests {
 
         let results = metrics
             .evaluate_trend_analysis(&trend_data, Some(4))
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.trend_strength >= 0.0 && results.trend_strength <= 1.0);
         assert!(results.seasonality_strength >= 0.0 && results.seasonality_strength <= 1.0);
@@ -1026,7 +1027,7 @@ mod tests {
         let constant_series = Array1::from_elem(10, 5.0);
         let autocorr = metrics
             .calculate_autocorrelation(&constant_series, 1)
-            .unwrap();
+            .expect("Operation failed");
 
         // Should be close to 1 or 0 (undefined for constant series)
         assert!((-1.0..=1.0).contains(&autocorr));

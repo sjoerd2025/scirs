@@ -696,7 +696,7 @@ impl VolumeChecker {
         for i in 0..npoints {
             let x0 = points.row(i);
             let trajectory = integrator.integrate(&x0, t0, t_final, flow)?;
-            let (_, x_final) = trajectory.last().unwrap();
+            let (_, x_final) = trajectory.last().expect("Operation failed");
             evolvedpoints.row_mut(i).assign(x_final);
         }
 
@@ -757,7 +757,7 @@ mod tests {
 
         let volume_change =
             VolumeChecker::check_volume_preservation(&points, &integrator, &flow, 0.0, 2.0 * PI)
-                .unwrap();
+                .expect("Operation failed");
 
         assert!(
             volume_change < 0.01,
@@ -787,7 +787,9 @@ mod tests {
             VolumePreservingIntegrator::new(dt, VolumePreservingMethod::ImplicitMidpoint);
         let x0 = Array1::from_vec(vec![1.0, 0.0]);
 
-        let x1 = integrator.step(&x0.view(), 0.0, &flow).unwrap();
+        let x1 = integrator
+            .step(&x0.view(), 0.0, &flow)
+            .expect("Operation failed");
 
         // After one step, should approximately be at (cos(dt), sin(dt))
         assert_relative_eq!(x1[0], dt.cos(), epsilon = 1e-3);

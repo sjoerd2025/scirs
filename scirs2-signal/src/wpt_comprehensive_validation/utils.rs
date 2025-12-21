@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_generate_white_noise() {
-        let signal = generate_test_signal(TestSignalType::WhiteNoise, 100, 42).unwrap();
+        let signal = generate_test_signal(TestSignalType::WhiteNoise, 100, 42).expect("Operation failed");
         assert_eq!(signal.len(), 100);
 
         // Check that it's roughly zero-mean
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_generate_sinusoidal() {
-        let signal = generate_test_signal(TestSignalType::Sinusoidal, 100, 42).unwrap();
+        let signal = generate_test_signal(TestSignalType::Sinusoidal, 100, 42).expect("Operation failed");
         assert_eq!(signal.len(), 100);
 
         // Check that it's bounded
@@ -332,11 +332,11 @@ mod tests {
         let signal1 = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let signal2 = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let correlation = compute_correlation(&signal1, &signal2).unwrap();
+        let correlation = compute_correlation(&signal1, &signal2).expect("Operation failed");
         assert!((correlation - 1.0).abs() < 1e-10); // Should be perfectly correlated
 
         let signal3 = vec![5.0, 4.0, 3.0, 2.0, 1.0];
-        let correlation2 = compute_correlation(&signal1, &signal3).unwrap();
+        let correlation2 = compute_correlation(&signal1, &signal3).expect("Operation failed");
         assert!((correlation2 + 1.0).abs() < 1e-10); // Should be perfectly anti-correlated
     }
 

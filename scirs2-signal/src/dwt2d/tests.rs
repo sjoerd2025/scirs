@@ -17,10 +17,10 @@ fn test_dwt2d_haar_basic() {
             16.0,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Decompose using Haar wavelet
-    let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+    let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).expect("Test: operation failed");
 
     // Check shape
     assert_eq!(decomposition.approx.shape(), &[2, 2]);
@@ -29,7 +29,7 @@ fn test_dwt2d_haar_basic() {
     assert_eq!(decomposition.detail_d.shape(), &[2, 2]);
 
     // Reconstruct
-    let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).unwrap();
+    let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).expect("Test: operation failed");
 
     // Check shape matches
     assert_eq!(reconstructed.shape(), data.shape());
@@ -47,13 +47,13 @@ fn test_wavedec2_waverec2_multilevel() {
 
     // Multi-level decomposition (using 1 level for reliability)
     let levels = 1;
-    let coeffs = wavedec2(&data, Wavelet::Haar, levels, None).unwrap();
+    let coeffs = wavedec2(&data, Wavelet::Haar, levels, None).expect("Test: operation failed");
 
     // Check number of levels
     assert_eq!(coeffs.len(), levels);
 
     // Reconstruct
-    let reconstructed = waverec2(&coeffs, Wavelet::Haar, None).unwrap();
+    let reconstructed = waverec2(&coeffs, Wavelet::Haar, None).expect("Test: operation failed");
 
     // Check shape matches
     assert_eq!(reconstructed.shape(), data.shape());
@@ -70,7 +70,7 @@ fn test_threshold_dwt2d_hard() {
     }
 
     // Decompose using Haar wavelet
-    let mut decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+    let mut decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).expect("Test: operation failed");
 
     // Count non-zero coefficients before thresholding
     let (before_count, _) = count_nonzeros(&decomposition, true);
@@ -158,7 +158,7 @@ fn test_calculate_energy_distribution() {
     }
 
     // Decompose using Haar wavelet
-    let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+    let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).expect("Test: operation failed");
 
     // Calculate energy including approximation coefficients
     let (total_energy_with_approx, energy_by_subband) = calculate_energy(&decomposition, true);
@@ -193,7 +193,7 @@ fn test_dwt2d_db2_wavelets() {
     }
 
     // Decompose using DB2 wavelet
-    let decomposition = dwt2d_decompose(&data, Wavelet::DB(2), None).unwrap();
+    let decomposition = dwt2d_decompose(&data, Wavelet::DB(2), None).expect("Test: operation failed");
 
     // Check shape
     assert_eq!(decomposition.approx.shape(), &[3, 3]);
@@ -202,7 +202,7 @@ fn test_dwt2d_db2_wavelets() {
     assert_eq!(decomposition.detail_d.shape(), &[3, 3]);
 
     // Reconstruct
-    let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::DB(2), None).unwrap();
+    let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::DB(2), None).expect("Test: operation failed");
 
     // Check shape matches
     assert_eq!(reconstructed.shape(), data.shape());
@@ -215,13 +215,13 @@ fn test_psnr_calculation() {
     let mut noisy = original.clone();
     noisy[[0, 0]] += 0.1; // Add small noise
 
-    let psnr = calculate_psnr(&original, &noisy).unwrap();
+    let psnr = calculate_psnr(&original, &noisy).expect("Test: operation failed");
 
     // PSNR should be finite and positive
     assert!(psnr.is_finite() && psnr > 0.0);
 
     // Perfect reconstruction should give infinite PSNR
-    let psnr_perfect = calculate_psnr(&original, &original).unwrap();
+    let psnr_perfect = calculate_psnr(&original, &original).expect("Test: operation failed");
     assert!(psnr_perfect.is_infinite());
 }
 
@@ -238,13 +238,13 @@ fn test_ssim_calculation() {
         *val += ((i + j) as f64 * 0.1).sin();
     }
 
-    let ssim = calculate_ssim(&original, &processed, 8, 0.01, 0.03).unwrap();
+    let ssim = calculate_ssim(&original, &processed, 8, 0.01, 0.03).expect("Test: operation failed");
 
     // SSIM should be between -1 and 1
     assert!(ssim >= -1.0 && ssim <= 1.0);
 
     // Perfect match should give SSIM = 1.0
-    let ssim_perfect = calculate_ssim(&original, &original, 8, 0.01, 0.03).unwrap();
+    let ssim_perfect = calculate_ssim(&original, &original, 8, 0.01, 0.03).expect("Test: operation failed");
     assert!((ssim_perfect - 1.0).abs() < 1e-10);
 }
 
@@ -311,14 +311,14 @@ fn test_simd_capabilities_detection() {
 fn test_multilevel_thresholding() {
     // Create test data
     let data = Array2::from_shape_fn((16, 16), |(i, j)| (i * j) as f64);
-    let mut coeffs = wavedec2(&data, Wavelet::Haar, 2, None).unwrap();
+    let mut coeffs = wavedec2(&data, Wavelet::Haar, 2, None).expect("Test: operation failed");
 
     // Apply different thresholds for each level
     let thresholds = vec![2.0, 4.0];
     threshold_wavedec2(&mut coeffs, &thresholds, ThresholdMethod::Soft);
 
     // Reconstruct and verify
-    let reconstructed = waverec2(&coeffs, Wavelet::Haar, None).unwrap();
+    let reconstructed = waverec2(&coeffs, Wavelet::Haar, None).expect("Test: operation failed");
     assert_eq!(reconstructed.shape(), data.shape());
 }
 
@@ -339,7 +339,7 @@ fn test_adaptive_denoising() {
     let denoised = denoise_dwt2d_adaptive(&noisy_image, Wavelet::DB(4), Some(0.25), ThresholdMethod::Soft);
     assert!(denoised.is_ok());
 
-    let denoised = denoised.unwrap();
+    let denoised = denoised.expect("Test: operation failed");
     assert_eq!(denoised.shape(), noisy_image.shape());
 }
 
@@ -349,7 +349,7 @@ fn test_enhanced_wavedec2() {
     let result = wavedec2_enhanced(&data, Wavelet::Haar, 2, None);
 
     assert!(result.is_ok());
-    let coeffs = result.unwrap();
+    let coeffs = result.expect("Test: operation failed");
     assert_eq!(coeffs.len(), 2);
 
     // Verify shapes are as expected for 2-level decomposition
@@ -373,8 +373,8 @@ fn test_validation_config_defaults() {
 #[test]
 fn test_count_nonzeros_functionality() {
     let decomp = Dwt2dResult {
-        approx: Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 3.0, 0.0]).unwrap(),
-        detail_h: Array2::from_shape_vec((2, 2), vec![0.0, 2.0, 0.0, 4.0]).unwrap(),
+        approx: Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 3.0, 0.0]).expect("Test: operation failed"),
+        detail_h: Array2::from_shape_vec((2, 2), vec![0.0, 2.0, 0.0, 4.0]).expect("Test: operation failed"),
         detail_v: Array2::zeros((2, 2)),
         detail_d: Array2::ones((2, 2)),
     };

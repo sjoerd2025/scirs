@@ -264,8 +264,8 @@ impl ResourceAllocator {
         }
 
         // Sort by load difference (most extreme first)
-        overloaded_nodes.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
-        underloaded_nodes.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+        overloaded_nodes.sort_by(|a, b| b.2.partial_cmp(&a.2).expect("Operation failed"));
+        underloaded_nodes.sort_by(|a, b| b.2.partial_cmp(&a.2).expect("Operation failed"));
 
         let mut rebalancing_actions = 0;
         let initial_variance = self.calculate_load_variance(&nodeloads);

@@ -138,12 +138,12 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Test: operation failed");
     let target_idx = graph
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *target)
-        .unwrap();
+        .expect("Test: operation failed");
 
     // Use petgraph's Dijkstra algorithm implementation
     let results = dijkstra(graph.inner(), source_idx, Some(target_idx), |e| *e.weight());
@@ -230,9 +230,9 @@ where
 /// let mut graph: Graph<String, f64> = Graph::new();
 /// graph.add_node("A".to_string());
 /// graph.add_node("B".to_string());
-/// graph.add_edge("A".to_string(), "B".to_string(), 1.0).unwrap();
+/// graph.add_edge("A".to_string(), "B".to_string(), 1.0).expect("Operation failed");
 ///
-/// let path = dijkstra_path(&graph, &"A".to_string(), &"B".to_string()).unwrap();
+/// let path = dijkstra_path(&graph, &"A".to_string(), &"B".to_string()).expect("Operation failed");
 /// assert!(path.is_some());
 /// ```
 #[allow(dead_code)]
@@ -302,12 +302,12 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Test: operation failed");
     let target_idx = graph
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *target)
-        .unwrap();
+        .expect("Test: operation failed");
 
     // Use petgraph's Dijkstra algorithm implementation
     let results = dijkstra(graph.inner(), source_idx, Some(target_idx), |e| *e.weight());
@@ -603,7 +603,9 @@ where
                     let tentative_g = current_g + edge_weight;
 
                     let current_neighbor_g = g_score.get(&neighbor);
-                    if current_neighbor_g.is_none() || tentative_g < *current_neighbor_g.unwrap() {
+                    if current_neighbor_g.is_none()
+                        || tentative_g < *current_neighbor_g.expect("Test: operation failed")
+                    {
                         came_from.insert(neighbor.clone(), current.clone());
                         g_score.insert(neighbor.clone(), tentative_g);
 
@@ -684,7 +686,9 @@ where
                     let tentative_g = current_g + edge_weight;
 
                     let current_neighbor_g = g_score.get(&neighbor);
-                    if current_neighbor_g.is_none() || tentative_g < *current_neighbor_g.unwrap() {
+                    if current_neighbor_g.is_none()
+                        || tentative_g < *current_neighbor_g.expect("Test: operation failed")
+                    {
                         came_from.insert(neighbor.clone(), current.clone());
                         g_score.insert(neighbor.clone(), tentative_g);
 
@@ -811,7 +815,7 @@ where
     // Extract paths from candidates
     while paths.len() < k && !candidates.is_empty() {
         let (std::cmp::Reverse(ordered_float::OrderedFloat(weight)), path) =
-            candidates.pop().unwrap();
+            candidates.pop().expect("Operation failed");
 
         // Check if this path is already in our result
         let is_duplicate = paths.iter().any(|(_, p)| p == &path);
@@ -910,13 +914,15 @@ mod tests {
         let mut graph: Graph<i32, f64> = Graph::new();
 
         // Create a simple graph
-        graph.add_edge(1, 2, 4.0).unwrap();
-        graph.add_edge(1, 3, 2.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(2, 4, 5.0).unwrap();
-        graph.add_edge(3, 4, 8.0).unwrap();
+        graph.add_edge(1, 2, 4.0).expect("Operation failed");
+        graph.add_edge(1, 3, 2.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(2, 4, 5.0).expect("Operation failed");
+        graph.add_edge(3, 4, 8.0).expect("Operation failed");
 
-        let path = shortest_path(&graph, &1, &4).unwrap().unwrap();
+        let path = shortest_path(&graph, &1, &4)
+            .expect("Operation failed")
+            .expect("Test: operation failed");
 
         // The shortest path from 1 to 4 should be 1 -> 3 -> 2 -> 4 with total weight 8.0
         assert_eq!(path.total_weight, 8.0);
@@ -928,11 +934,11 @@ mod tests {
         let mut graph: Graph<i32, f64> = Graph::new();
 
         // Create a triangle
-        graph.add_edge(0, 1, 1.0).unwrap();
-        graph.add_edge(1, 2, 2.0).unwrap();
-        graph.add_edge(2, 0, 3.0).unwrap();
+        graph.add_edge(0, 1, 1.0).expect("Operation failed");
+        graph.add_edge(1, 2, 2.0).expect("Operation failed");
+        graph.add_edge(2, 0, 3.0).expect("Operation failed");
 
-        let distances = floyd_warshall(&graph).unwrap();
+        let distances = floyd_warshall(&graph).expect("Operation failed");
 
         // Check some distances
         assert_eq!(distances[[0, 0]], 0.0);
@@ -946,16 +952,24 @@ mod tests {
         let mut graph: Graph<(i32, i32), f64> = Graph::new();
 
         // Create a simple grid
-        graph.add_edge((0, 0), (0, 1), 1.0).unwrap();
-        graph.add_edge((0, 1), (1, 1), 1.0).unwrap();
-        graph.add_edge((1, 1), (1, 0), 1.0).unwrap();
-        graph.add_edge((1, 0), (0, 0), 1.0).unwrap();
+        graph
+            .add_edge((0, 0), (0, 1), 1.0)
+            .expect("Operation failed");
+        graph
+            .add_edge((0, 1), (1, 1), 1.0)
+            .expect("Operation failed");
+        graph
+            .add_edge((1, 1), (1, 0), 1.0)
+            .expect("Operation failed");
+        graph
+            .add_edge((1, 0), (0, 0), 1.0)
+            .expect("Operation failed");
 
         // Manhattan distance heuristic
         let heuristic = |&(x, y): &(i32, i32)| -> f64 { ((1 - x).abs() + (1 - y).abs()) as f64 };
 
         let result = astar_search(&graph, &(0, 0), &(1, 1), heuristic);
-        let result = result.unwrap();
+        let result = result.expect("Test: operation failed");
         assert_eq!(result.cost, 2.0);
         assert_eq!(result.path.len(), 3); // Start, one intermediate, goal
     }
@@ -965,13 +979,13 @@ mod tests {
         let mut graph: Graph<char, f64> = Graph::new();
 
         // Create a graph with multiple paths
-        graph.add_edge('A', 'B', 2.0).unwrap();
-        graph.add_edge('B', 'D', 2.0).unwrap();
-        graph.add_edge('A', 'C', 1.0).unwrap();
-        graph.add_edge('C', 'D', 4.0).unwrap();
-        graph.add_edge('B', 'C', 1.0).unwrap();
+        graph.add_edge('A', 'B', 2.0).expect("Operation failed");
+        graph.add_edge('B', 'D', 2.0).expect("Operation failed");
+        graph.add_edge('A', 'C', 1.0).expect("Operation failed");
+        graph.add_edge('C', 'D', 4.0).expect("Operation failed");
+        graph.add_edge('B', 'C', 1.0).expect("Operation failed");
 
-        let paths = k_shortest_paths(&graph, &'A', &'D', 3).unwrap();
+        let paths = k_shortest_paths(&graph, &'A', &'D', 3).expect("Operation failed");
 
         assert!(paths.len() >= 2);
         assert_eq!(paths[0].0, 4.0); // A->B->D

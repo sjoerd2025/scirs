@@ -128,9 +128,9 @@ impl<K: Kernel, P: Prior> GaussianProcess<K, P> {
             );
         }
 
-        let x_train = self.x_train.as_ref().unwrap();
-        let alpha = self.alpha.as_ref().unwrap();
-        let l = self.l_matrix.as_ref().unwrap();
+        let x_train = self.x_train.as_ref().expect("Operation failed");
+        let alpha = self.alpha.as_ref().expect("Operation failed");
+        let l = self.l_matrix.as_ref().expect("Operation failed");
 
         // Compute K(X_test, X_train)
         let k_trans = self.kernel.compute_cross_matrix(x, x_train);
@@ -190,9 +190,9 @@ impl<K: Kernel, P: Prior> GaussianProcess<K, P> {
             );
         }
 
-        let y = self.y_train_centered.as_ref().unwrap();
-        let l = self.l_matrix.as_ref().unwrap();
-        let alpha = self.alpha.as_ref().unwrap();
+        let y = self.y_train_centered.as_ref().expect("Operation failed");
+        let l = self.l_matrix.as_ref().expect("Operation failed");
+        let alpha = self.alpha.as_ref().expect("Operation failed");
 
         let n = y.len() as f64;
 
@@ -315,13 +315,14 @@ mod tests {
         let mut gp = GaussianProcess::new(kernel, prior, 0.01);
 
         // Simple training data
-        let x_train = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let x_train =
+            Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
         let y_train = array![0.0, 1.0, 0.0];
 
-        gp.fit(&x_train, &y_train).unwrap();
+        gp.fit(&x_train, &y_train).expect("Operation failed");
 
         // Predict at training points
-        let predictions = gp.predict(&x_train).unwrap();
+        let predictions = gp.predict(&x_train).expect("Operation failed");
 
         // Should be close to training values
         for i in 0..3 {
@@ -335,14 +336,14 @@ mod tests {
         let prior = ZeroPrior::new();
         let mut gp = GaussianProcess::new(kernel, prior, 0.01);
 
-        let x_train = Array2::from_shape_vec((2, 1), vec![0.0, 2.0]).unwrap();
+        let x_train = Array2::from_shape_vec((2, 1), vec![0.0, 2.0]).expect("Operation failed");
         let y_train = array![1.0, -1.0];
 
-        gp.fit(&x_train, &y_train).unwrap();
+        gp.fit(&x_train, &y_train).expect("Operation failed");
 
         // Predict at interpolation point
-        let x_test = Array2::from_shape_vec((1, 1), vec![1.0]).unwrap();
-        let (_mean, std) = gp.predict_with_std(&x_test).unwrap();
+        let x_test = Array2::from_shape_vec((1, 1), vec![1.0]).expect("Operation failed");
+        let (_mean, std) = gp.predict_with_std(&x_test).expect("Operation failed");
 
         // Uncertainty should be positive and reasonable
         assert!(std[0] > 0.0);

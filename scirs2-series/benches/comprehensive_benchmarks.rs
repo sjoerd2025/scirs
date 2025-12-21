@@ -279,7 +279,7 @@ fn advanced_bench_anomaly_detection(_c: &mut Criterion) {
                             seasonal_adjustment: false,
                             seasonal_period: None,
                         };
-                        black_box(detect_anomalies(data, &options).unwrap());
+                        black_box(detect_anomalies(data, &options).expect("Test: operation failed"));
                     });
                 },
             );
@@ -325,11 +325,11 @@ fn advanced_bench_forecasting(_c: &mut Criterion) {
             &data,
             |b, data| {
                 b.iter(|| {
-                    let mut model = ArimaModel::new(2, 1, 2).unwrap();
-                    black_box(model.fit(data).unwrap());
+                    let mut model = ArimaModel::new(2, 1, 2).expect("Test: operation failed");
+                    black_box(model.fit(data).expect("Test: operation failed"));
                     // ArimaModel predict needs future time points
                     let future_times = Array1::from_iter((data.len()..data.len()+24).map(|i| i as f64));
-                    black_box(model.predict(&future_times).unwrap());
+                    black_box(model.predict(&future_times).expect("Test: operation failed"));
                 });
             },
         );
@@ -339,10 +339,10 @@ fn advanced_bench_forecasting(_c: &mut Criterion) {
             &data,
             |b, data| {
                 b.iter(|| {
-                    let mut model = scirs2_series::sarima_models::SarimaModel::new(1, 1, 1, 1, 1, 1, 24).unwrap();
-                    black_box(model.fit(data).unwrap());
+                    let mut model = scirs2_series::sarima_models::SarimaModel::new(1, 1, 1, 1, 1, 1, 24).expect("Test: operation failed");
+                    black_box(model.fit(data).expect("Test: operation failed"));
                     // SarimaModel predict
-                    black_box(model.predict(24).unwrap());
+                    black_box(model.predict(24).expect("Test: operation failed"));
                 });
             },
         );
@@ -359,16 +359,16 @@ fn advanced_bench_forecasting(_c: &mut Criterion) {
                         {
                             let mut vec = Vec::new();
                             for window in data.windows(50) {
-                                vec.extend_from_slice(window.as_slice().unwrap());
+                                vec.extend_from_slice(window.as_slice().expect("Test: operation failed"));
                             }
                             vec
                         },
                     )
-                    .unwrap();
+                    .expect("Test: operation failed");
                     let targets = Array1::from_iter(data.iter().skip(50).copied());
                     // Skip training for benchmark (model doesn't have train method)
                     let last_50 = Array1::from_iter(data.iter().skip(data.len()-50).take(50).copied());
-                    black_box(model.forward(&last_50, None).unwrap());
+                    black_box(model.forward(&last_50, None).expect("Test: operation failed"));
                 });
             },
         );
@@ -381,7 +381,7 @@ fn advanced_bench_forecasting(_c: &mut Criterion) {
                 b.iter(|| {
                     let mut model = QuantumNeuralNetwork::<f64>::new(2, 4, 10, 1);
                     let input = Array1::from_iter(data.iter().take(10).copied());
-                    black_box(model.forward(&input).unwrap());
+                    black_box(model.forward(&input).expect("Test: operation failed"));
                 });
             },
         );
@@ -423,10 +423,10 @@ fn advanced_bench_advanced_training(_c: &mut Criterion) {
                         (10, 10),
                         (0..100).map(|i| i as f64 * 0.01).collect(),
                     )
-                    .unwrap();
+                    .expect("Test: operation failed");
                     let support_y =
                         Array2::from_shape_vec((10, 1), (0..10).map(|i| (i as f64).sin()).collect())
-                            .unwrap();
+                            .expect("Test: operation failed");
                     let query_x = support_x.clone();
                     let query_y = support_y.clone();
 
@@ -437,7 +437,7 @@ fn advanced_bench_advanced_training(_c: &mut Criterion) {
                         query_y,
                     };
 
-                    black_box(maml.meta_train(&[task]).unwrap());
+                    black_box(maml.meta_train(&[task]).expect("Test: operation failed"));
                 });
             },
         );
@@ -458,7 +458,7 @@ fn advanced_bench_advanced_training(_c: &mut Criterion) {
                     let node = NeuralODE::<f64>::new(3, 16, time_steps, solver_config);
                     let initial_state = Array1::from_vec(vec![1.0, 0.0, -0.5]);
 
-                    black_box(node.forward(&initial_state).unwrap());
+                    black_box(node.forward(&initial_state).expect("Test: operation failed"));
                 });
             },
         );
@@ -472,9 +472,9 @@ fn advanced_bench_advanced_training(_c: &mut Criterion) {
                     let vae = TimeSeriesVAE::<f64>::new(20, 3, 8, 32, 32);
                     let input =
                         Array2::from_shape_vec((20, 3), data.iter().take(60).copied().collect())
-                            .unwrap();
+                            .expect("Test: operation failed");
 
-                    black_box(vae.forward(&input).unwrap());
+                    black_box(vae.forward(&input).expect("Test: operation failed"));
                 });
             },
         );
@@ -488,9 +488,9 @@ fn advanced_bench_advanced_training(_c: &mut Criterion) {
                     let transformer = TimeSeriesTransformer::<f64>::new(50, 10, 128, 8, 4, 512);
                     let input =
                         Array2::from_shape_vec((2, 50), data.iter().take(100).copied().collect())
-                            .unwrap();
+                            .expect("Test: operation failed");
 
-                    black_box(transformer.forward(&input).unwrap());
+                    black_box(transformer.forward(&input).expect("Test: operation failed"));
                 });
             },
         );
@@ -575,7 +575,7 @@ fn advanced_bench_domain_applications(_c: &mut Criterion) {
 
     group.bench_function("ECG_analysis_complete", |b| {
         b.iter(|| {
-            let analyzer = ECGAnalysis::new(ecg_data.clone(), 250.0).unwrap();
+            let analyzer = ECGAnalysis::new(ecg_data.clone(), 250.0).expect("Test: operation failed");
             black_box(&analyzer.r_peaks);
             // Analysis methods would go here
         });
@@ -592,7 +592,7 @@ fn advanced_bench_domain_applications(_c: &mut Criterion) {
             analyzer.add_temperature_data(temp_data.clone());
             analyzer.add_humidity_data(humidity_data.clone());
             analyzer.add_pressure_data(pressure_data.clone());
-            black_box(analyzer.analyze().unwrap());
+            black_box(analyzer.analyze().expect("Test: operation failed"));
         });
     });
 
@@ -612,7 +612,7 @@ fn advanced_bench_domain_applications(_c: &mut Criterion) {
             // Risk metrics
             let sorted_returns = {
                 let mut r = returns.to_vec();
-                r.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                r.sort_by(|a, b| a.partial_cmp(b).expect("Test: operation failed"));
                 r
             };
             let var_95 = sorted_returns[(sorted_returns.len() as f64 * 0.05) as usize];
@@ -642,7 +642,7 @@ fn advanced_bench_comparative_analysis(_c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     // STL decomposition
-                    let stl_result = stl_decomposition(data, 12, Some(7), Some(7), None, None, None).unwrap();
+                    let stl_result = stl_decomposition(data, 12, Some(7), Some(7), None, None, None).expect("Test: operation failed");
                     black_box(stl_result);
 
                     // Classical decomposition (simple moving average for comparison)
@@ -651,7 +651,7 @@ fn advanced_bench_comparative_analysis(_c: &mut Criterion) {
                     for i in window_size / 2..data.len() - window_size / 2 {
                         let start = i - window_size / 2;
                         let end = i + window_size / 2;
-                        trend[i] = data.slice(scirs2_core::ndarray::s![start..end]).mean().unwrap();
+                        trend[i] = data.slice(scirs2_core::ndarray::s![start..end]).mean().expect("Test: operation failed");
                     }
                     black_box(trend);
                 });
@@ -671,14 +671,14 @@ fn advanced_bench_comparative_analysis(_c: &mut Criterion) {
                         ClusteringAlgorithm::KMeans(scirs2_series::clustering::KMeansConfig::default()),
                         TimeSeriesDistance::Euclidean,
                     );
-                    black_box(kmeans_clusterer.cluster(data).unwrap());
+                    black_box(kmeans_clusterer.cluster(data).expect("Test: operation failed"));
 
                     // Hierarchical clustering
                     let hierarchical_clusterer = TimeSeriesClusterer::new(
                         ClusteringAlgorithm::Hierarchical(scirs2_series::clustering::HierarchicalConfig::default()),
                         TimeSeriesDistance::DTW,
                     );
-                    black_box(hierarchical_clusterer.cluster(data).unwrap());
+                    black_box(hierarchical_clusterer.cluster(data).expect("Test: operation failed"));
                 });
             },
         );
@@ -787,7 +787,7 @@ fn advanced_bench_robustness(_c: &mut Criterion) {
                     for i in window_size/2..cleaned_data.len()-window_size/2 {
                         let mut window: Vec<f64> = (i-window_size/2..i+window_size/2+1)
                             .map(|j| cleaned_data[j]).collect();
-                        window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                        window.sort_by(|a, b| a.partial_cmp(b).expect("Test: operation failed"));
                         filtered[i] = window[window_size/2];
                     }
                     black_box(filtered);

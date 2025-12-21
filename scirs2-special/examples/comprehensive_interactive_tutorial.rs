@@ -1142,7 +1142,7 @@ impl TutorialSystem {
             if let Ok(choice) = answer.parse::<usize>() {
                 if choice > 0 && choice <= options.len() {
                     let style = styles[choice - 1].to_string();
-                    *style_scores.get_mut(&style).unwrap() += 1;
+                    *style_scores.get_mut(&style).expect("Operation failed") += 1;
                 }
             }
             println!();
@@ -1728,7 +1728,7 @@ impl TutorialSystem {
     fn evaluate_function_call(&self, input: &str) -> Result<(), Box<dyn std::error::Error>> {
         // Simple parser for function calls
         if let Some(captures) = regex::Regex::new(r"(\w+)\(([^)]+)\)")
-            .unwrap()
+            .expect("Operation failed")
             .captures(input)
         {
             let func_name = &captures[1];

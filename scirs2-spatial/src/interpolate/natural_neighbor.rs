@@ -40,11 +40,11 @@ use std::fmt;
 /// let values = array![0.0, 1.0, 2.0, 3.0];
 ///
 /// // Create interpolator
-/// let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view()).unwrap();
+/// let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view()).expect("Operation failed");
 ///
 /// // Interpolate at a point
 /// let query_point = array![0.5, 0.5];
-/// let result = interp.interpolate(&query_point.view()).unwrap();
+/// let result = interp.interpolate(&query_point.view()).expect("Operation failed");
 ///
 /// // Should be close to 1.5 (average of the 4 corners)
 /// assert!((result - 1.5).abs() < 1e-10);
@@ -69,8 +69,8 @@ pub struct NaturalNeighborInterpolator {
 impl Clone for NaturalNeighborInterpolator {
     fn clone(&self) -> Self {
         // We need to recreate the Delaunay and Voronoi structures
-        let delaunay = Delaunay::new(&self.points).unwrap();
-        let voronoi = Voronoi::new(&self.points.view(), false).unwrap();
+        let delaunay = Delaunay::new(&self.points).expect("Operation failed");
+        let voronoi = Voronoi::new(&self.points.view(), false).expect("Operation failed");
 
         Self {
             points: self.points.clone(),
@@ -178,7 +178,9 @@ impl NaturalNeighborInterpolator {
         }
 
         // Find the simplex (triangle) containing the point
-        let simplex_idx = self.delaunay.find_simplex(point.as_slice().unwrap());
+        let simplex_idx = self
+            .delaunay
+            .find_simplex(point.as_slice().expect("Operation failed"));
 
         if simplex_idx.is_none() {
             return Err(SpatialError::ValueError(
@@ -261,7 +263,9 @@ impl NaturalNeighborInterpolator {
         // into the Voronoi diagram.
 
         // First, find the triangle containing the query point
-        let simplex_idx = self.delaunay.find_simplex(point.as_slice().unwrap());
+        let simplex_idx = self
+            .delaunay
+            .find_simplex(point.as_slice().expect("Operation failed"));
 
         if simplex_idx.is_none() {
             return Err(SpatialError::ValueError(
@@ -269,7 +273,7 @@ impl NaturalNeighborInterpolator {
             ));
         }
 
-        let simplex_idx = simplex_idx.unwrap();
+        let simplex_idx = simplex_idx.expect("Operation failed");
         let simplex = &self.delaunay.simplices()[simplex_idx];
 
         // For 2D interpolation, implement proper Sibson natural neighbor interpolation
@@ -726,18 +730,21 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - Expected 0.0 at corner, got 0.9863365525860783 at line 748"]
     fn test_natural_neighbor_interpolator() {
         // Create sample points in a square
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],];
         let values = array![0.0, 1.0, 2.0, 3.0];
 
         // Create interpolator
-        let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view()).unwrap();
+        let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view())
+            .expect("Operation failed");
 
         // Test interpolation at center point
         let query_point = array![0.5, 0.5];
-        let result = interp.interpolate(&query_point.view()).unwrap();
+        let result = interp
+            .interpolate(&query_point.view())
+            .expect("Operation failed");
 
         // The center of the square should have equal weights from all corners
         // Expected value: (0 + 1 + 2 + 3) / 4 = 1.5
@@ -745,7 +752,9 @@ mod tests {
 
         // Test interpolation at a corner (should return exact value)
         let corner = array![0.0, 0.0];
-        let corner_result = interp.interpolate(&corner.view()).unwrap();
+        let corner_result = interp
+            .interpolate(&corner.view())
+            .expect("Operation failed");
         assert!(
             (corner_result - 0.0).abs() < 1e-6,
             "Expected 0.0 at corner, got {corner_result}"
@@ -758,7 +767,8 @@ mod tests {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0],];
         let values = array![0.0, 1.0, 2.0];
 
-        let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view()).unwrap();
+        let interp = NaturalNeighborInterpolator::new(&points.view(), &values.view())
+            .expect("Operation failed");
 
         // Test point outside convex hull
         let outside_point = array![2.0, 2.0];
@@ -776,7 +786,9 @@ mod tests {
             [0.25, 0.25], // Inside
         ];
 
-        let results = interp.interpolate_many(&query_points.view()).unwrap();
+        let results = interp
+            .interpolate_many(&query_points.view())
+            .expect("Operation failed");
         assert!(
             !results[0].is_nan(),
             "Inside point should have valid result"

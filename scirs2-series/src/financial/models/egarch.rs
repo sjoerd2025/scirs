@@ -42,7 +42,7 @@
 //!                   0.007, -0.009, 0.013, -0.003, 0.006, 0.004, -0.007, 0.016, -0.002, 0.010,
 //!                   0.001, -0.005, 0.012, -0.001, 0.008]; // Returns (35 points for EGARCH)
 //!
-//! let result = model.fit(&data).unwrap();
+//! let result = model.fit(&data).expect("Operation failed");
 //! println!("EGARCH Parameters: {:?}", result.parameters);
 //! println!("Log-likelihood: {}", result.log_likelihood);
 //! ```
@@ -73,7 +73,7 @@
 //!                   0.001, -0.005, 0.012, -0.001, 0.008]; // Returns (35 points for EGARCH)
 //!
 //! // Fit model
-//! let result = model.fit(&data).unwrap();
+//! let result = model.fit(&data).expect("Operation failed");
 //!
 //! // Check for leverage effect
 //! let gamma = &result.parameters.gamma[0];
@@ -251,17 +251,24 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
         };
 
         let n = returns.len();
-        let mean = returns.sum() / F::from(n).unwrap();
+        let mean = returns.sum() / F::from(n).expect("Failed to convert to float");
         let centered_returns: Array1<F> = returns.mapv(|r| r - mean);
 
         // Initialize parameters with reasonable starting values
-        let sample_var = centered_returns.mapv(|r| r.powi(2)).sum() / F::from(n - 1).unwrap();
+        let sample_var = centered_returns.mapv(|r| r.powi(2)).sum()
+            / F::from(n - 1).expect("Failed to convert to float");
 
         // EGARCH parameters initialization
-        let omega = sample_var.ln() * F::from(0.01).unwrap(); // Small constant in log-variance
-        let alpha = Array1::from_vec(vec![F::from(0.1).unwrap()]); // Magnitude effect
-        let beta = Array1::from_vec(vec![F::from(0.85).unwrap()]); // Persistence effect
-        let gamma = Array1::from_vec(vec![F::from(-0.05).unwrap()]); // Asymmetry effect (leverage)
+        let omega = sample_var.ln() * F::from(0.01).expect("Failed to convert constant to float"); // Small constant in log-variance
+        let alpha = Array1::from_vec(vec![
+            F::from(0.1).expect("Failed to convert constant to float")
+        ]); // Magnitude effect
+        let beta = Array1::from_vec(vec![
+            F::from(0.85).expect("Failed to convert constant to float")
+        ]); // Persistence effect
+        let gamma = Array1::from_vec(vec![
+            F::from(-0.05).expect("Failed to convert constant to float")
+        ]); // Asymmetry effect (leverage)
 
         // Calculate conditional variance using EGARCH(1,1) formula
         let mut log_conditional_variance = Array1::zeros(n);
@@ -274,7 +281,9 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
 
             // EGARCH(1,1) equation:
             // ln(σ²_t) = ω + α[|z_{t-1}| - E|z_{t-1}|] + γz_{t-1} + β*ln(σ²_{t-1})
-            let expected_abs_z = F::from(2.0 / std::f64::consts::PI).unwrap().sqrt(); // E[|Z|] for standard normal
+            let expected_abs_z = F::from(2.0 / std::f64::consts::PI)
+                .expect("Failed to convert to float")
+                .sqrt(); // E[|Z|] for standard normal
             let magnitude_effect = alpha[0] * (standardized_residual.abs() - expected_abs_z);
             let asymmetry_effect = gamma[0] * standardized_residual;
             let persistence_effect = beta[0] * log_conditional_variance[i - 1];
@@ -295,12 +304,14 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
 
         // Calculate log-likelihood for normal distribution
         let mut log_likelihood = F::zero();
-        let ln_2pi = F::from(2.0 * std::f64::consts::PI).unwrap().ln();
+        let ln_2pi = F::from(2.0 * std::f64::consts::PI)
+            .expect("Failed to convert to float")
+            .ln();
 
         for i in 0..n {
             let variance = conditional_variance[i];
             if variance > F::zero() {
-                let term = -F::from(0.5).unwrap()
+                let term = -F::from(0.5).expect("Failed to convert constant to float")
                     * (ln_2pi + variance.ln() + centered_returns[i].powi(2) / variance);
                 log_likelihood = log_likelihood + term;
             }
@@ -315,10 +326,12 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
         };
 
         // Calculate information criteria
-        let k = F::from(4).unwrap(); // Number of parameters (ω, α, β, γ)
-        let n_f = F::from(n).unwrap();
-        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
-        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+        let k = F::from(4).expect("Failed to convert constant to float"); // Number of parameters (ω, α, β, γ)
+        let n_f = F::from(n).expect("Failed to convert to float");
+        let aic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + F::from(2.0).expect("Failed to convert constant to float") * k;
+        let bic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + k * n_f.ln();
 
         // Update model state
         self.fitted = true;
@@ -381,8 +394,11 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
             ));
         }
 
-        let parameters = self.parameters.as_ref().unwrap();
-        let conditional_variance = self.conditional_variance.as_ref().unwrap();
+        let parameters = self.parameters.as_ref().expect("Operation failed");
+        let conditional_variance = self
+            .conditional_variance
+            .as_ref()
+            .expect("Operation failed");
 
         let mut forecasts = Array1::zeros(steps);
 
@@ -391,7 +407,9 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
         let mut current_log_var = last_log_var;
 
         // Expected value of |z| for standard normal
-        let expected_abs_z = F::from(2.0 / std::f64::consts::PI).unwrap().sqrt();
+        let expected_abs_z = F::from(2.0 / std::f64::consts::PI)
+            .expect("Failed to convert to float")
+            .sqrt();
 
         for i in 0..steps {
             // For multi-step forecasts, we use E[z_t] = 0 (expected innovation is zero)
@@ -454,12 +472,12 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
 #[allow(dead_code)]
 pub fn normal_cdf<F: Float>(x: F) -> F {
     // Abramowitz and Stegun approximation
-    let a1 = F::from(0.254829592).unwrap();
-    let a2 = F::from(-0.284496736).unwrap();
-    let a3 = F::from(1.421413741).unwrap();
-    let a4 = F::from(-1.453152027).unwrap();
-    let a5 = F::from(1.061405429).unwrap();
-    let p = F::from(0.3275911).unwrap();
+    let a1 = F::from(0.254829592).expect("Failed to convert constant to float");
+    let a2 = F::from(-0.284496736).expect("Failed to convert constant to float");
+    let a3 = F::from(1.421413741).expect("Failed to convert constant to float");
+    let a4 = F::from(-1.453152027).expect("Failed to convert constant to float");
+    let a5 = F::from(1.061405429).expect("Failed to convert constant to float");
+    let p = F::from(0.3275911).expect("Failed to convert constant to float");
 
     let sign = if x < F::zero() { -F::one() } else { F::one() };
     let x_abs = x.abs();
@@ -468,9 +486,9 @@ pub fn normal_cdf<F: Float>(x: F) -> F {
     let y = F::one()
         - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1)
             * t
-            * (-x_abs * x_abs / F::from(2.0).unwrap()).exp();
+            * (-x_abs * x_abs / F::from(2.0).expect("Failed to convert constant to float")).exp();
 
-    (F::one() + sign * y) / F::from(2.0).unwrap()
+    (F::one() + sign * y) / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 #[cfg(test)]
@@ -490,7 +508,7 @@ mod tests {
         let result = model.fit(&data);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert_eq!(result.parameters.alpha.len(), 1);
         assert_eq!(result.parameters.beta.len(), 1);
         assert_eq!(result.parameters.gamma.len(), 1);
@@ -507,7 +525,7 @@ mod tests {
             0.004, -0.008, 0.012, 0.001, -0.007, 0.010, -0.003,
         ]);
 
-        model.fit(&data).unwrap();
+        model.fit(&data).expect("Operation failed");
 
         let leverage = model.leverage_effect();
         assert!(leverage.is_some());
@@ -517,7 +535,10 @@ mod tests {
 
         let persistence = model.volatility_persistence();
         assert!(persistence.is_some());
-        assert!(persistence.unwrap() > 0.0 && persistence.unwrap() < 1.0);
+        assert!(
+            persistence.expect("Operation failed") > 0.0
+                && persistence.expect("Operation failed") < 1.0
+        );
     }
 
     #[test]
@@ -529,9 +550,9 @@ mod tests {
             0.004, -0.008, 0.012, 0.001, -0.007, 0.010, -0.003,
         ]);
 
-        model.fit(&data).unwrap();
+        model.fit(&data).expect("Operation failed");
 
-        let forecasts = model.forecast_variance(5).unwrap();
+        let forecasts = model.forecast_variance(5).expect("Operation failed");
         assert_eq!(forecasts.len(), 5);
         assert!(forecasts.iter().all(|&x| x > 0.0));
     }

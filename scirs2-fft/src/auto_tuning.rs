@@ -686,7 +686,7 @@ mod tests {
     #[test]
     fn test_auto_tuner_basic() {
         // Create a temporary directory for test
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let db_path = temp_dir.path().join("test_tuning_db.json");
 
         // Create configuration with minimal benchmarking

@@ -60,7 +60,7 @@ mod test_robust_methods {
         let y = vec![3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0, 17.0, 19.0, 30.0]; // Last point is an outlier
 
         // Calculate slope using simple implementation
-        let theil = simple_theilslopes(&x, &y).unwrap();
+        let theil = simple_theilslopes(&x, &y).expect("Test: operation failed");
 
         // Create a design matrix for OLS
         let _x_design =

@@ -1132,7 +1132,8 @@ mod tests {
             BenchmarkMeasurement::new(Duration::from_millis(105)),
         ];
 
-        let stats = BenchmarkStatistics::from_measurements(&measurements).unwrap();
+        let stats =
+            BenchmarkStatistics::from_measurements(&measurements).expect("Operation failed");
 
         assert_eq!(stats.sample_count, 4);
         assert!(stats.mean_execution_time > Duration::from_millis(95));
@@ -1153,7 +1154,7 @@ mod tests {
                 std::thread::sleep(Duration::from_micros(100));
                 Ok(())
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.name, "test_benchmark");
         assert_eq!(result.measurements.len(), 5);

@@ -448,7 +448,10 @@ impl<T: Clone + Default> AdvancedBufferPool<T> {
             nodes: vec![NumaNode {
                 id: 0,
                 memory_size: 16 * 1024 * 1024 * 1024, // 16GB
-                cpu_cores: (0..std::thread::available_parallelism().unwrap().get()).collect(),
+                cpu_cores: (0..std::thread::available_parallelism()
+                    .expect("Operation failed")
+                    .get())
+                    .collect(),
             }],
             current_node: 0,
         }
@@ -770,7 +773,7 @@ impl GlobalBufferPool {
         &self,
     ) -> Arc<Mutex<BufferPool<T>>> {
         let type_id = TypeId::of::<T>();
-        let mut pools = self.pools.lock().unwrap();
+        let mut pools = self.pools.lock().expect("Operation failed");
 
         use std::collections::hash_map::Entry;
         match pools.entry(type_id) {
@@ -792,7 +795,7 @@ impl GlobalBufferPool {
 
     /// Clear all pools, releasing all memory
     pub fn clear_all(&self) {
-        let mut pools = self.pools.lock().unwrap();
+        let mut pools = self.pools.lock().expect("Operation failed");
         pools.clear();
     }
 }
@@ -871,13 +874,13 @@ impl Default for MemoryTracker {
 impl MemoryTracker {
     /// Track a memory allocation
     pub fn track_allocation(&self, name: &str, size: usize) {
-        let mut allocations = self.allocations.lock().unwrap();
+        let mut allocations = self.allocations.lock().expect("Operation failed");
         *allocations.entry(name.to_string()).or_insert(0) += size;
     }
 
     /// Track a memory deallocation
     pub fn track_deallocation(&self, name: &str, size: usize) {
-        let mut allocations = self.allocations.lock().unwrap();
+        let mut allocations = self.allocations.lock().expect("Operation failed");
         if let Some(current) = allocations.get_mut(name) {
             *current = current.saturating_sub(size);
         }
@@ -885,19 +888,19 @@ impl MemoryTracker {
 
     /// Get the current memory usage for a specific allocation
     pub fn get_usage(&self, name: &str) -> usize {
-        let allocations = self.allocations.lock().unwrap();
+        let allocations = self.allocations.lock().expect("Operation failed");
         allocations.get(name).copied().unwrap_or_default()
     }
 
     /// Get the total memory usage across all tracked allocations
     pub fn get_total_usage(&self) -> usize {
-        let allocations = self.allocations.lock().unwrap();
+        let allocations = self.allocations.lock().expect("Operation failed");
         allocations.values().sum()
     }
 
     /// Reset all tracking data
     pub fn reset(&self) {
-        let mut allocations = self.allocations.lock().unwrap();
+        let mut allocations = self.allocations.lock().expect("Operation failed");
         allocations.clear();
     }
 }
@@ -952,7 +955,7 @@ impl ArenaAllocator {
 
     /// Add a new chunk to the arena
     fn add_chunk(&mut self) {
-        let layout = Layout::from_size_align(self.chunk_size, 64).unwrap();
+        let layout = Layout::from_size_align(self.chunk_size, 64).expect("Operation failed");
         if let Some(ptr) = NonNull::new(unsafe { alloc(layout) }) {
             self.chunks.push(ArenaChunk {
                 ptr,
@@ -975,7 +978,7 @@ impl ArenaAllocator {
 impl Drop for ArenaAllocator {
     fn drop(&mut self) {
         for chunk in &self.chunks {
-            let layout = Layout::from_size_align(chunk.size, 64).unwrap();
+            let layout = Layout::from_size_align(chunk.size, 64).expect("Operation failed");
             unsafe {
                 dealloc(chunk.ptr.as_ptr(), layout);
             }
@@ -1231,7 +1234,7 @@ impl BandwidthOptimizer {
         for (pattern, strategies) in pattern_performance {
             if let Some((&best_strategy, _)) = strategies
                 .iter()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             {
                 self.optimal_strategies.insert(pattern, best_strategy);
             }
@@ -1519,7 +1522,7 @@ mod tests {
         // Get bandwidth stats
         let stats = optimizer.get_bandwidth_stats(AccessPattern::Sequential);
         assert!(stats.is_some());
-        let (avg, min, max) = stats.unwrap();
+        let (avg, min, max) = stats.expect("Operation failed");
         assert_eq!(avg, 25.0);
         assert_eq!(min, 25.0);
         assert_eq!(max, 25.0);
@@ -1614,7 +1617,7 @@ mod tests {
         for i in 0..4 {
             let pool_clone = Arc::clone(&pool);
             let handle = thread::spawn(move || {
-                let mut pool = pool_clone.lock().unwrap();
+                let mut pool = pool_clone.lock().expect("Operation failed");
                 let vec = pool.acquire_vec_advanced(100 + i * 50);
                 thread::sleep(Duration::from_millis(10));
                 pool.release_vec_advanced(vec);
@@ -1623,10 +1626,10 @@ mod tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("Operation failed");
         }
 
-        let pool = pool.lock().unwrap();
+        let pool = pool.lock().expect("Operation failed");
         let stats = pool.get_statistics();
         assert_eq!(stats.total_allocations.load(Ordering::Relaxed), 4);
         assert_eq!(stats.total_deallocations.load(Ordering::Relaxed), 4);
@@ -1666,7 +1669,7 @@ mod tests {
         // The optimizer should learn that CacheAligned is best for Sequential
         let stats = optimizer.get_bandwidth_stats(AccessPattern::Sequential);
         assert!(stats.is_some());
-        let (avg, min, max) = stats.unwrap();
+        let (avg, min, max) = stats.expect("Operation failed");
         assert!(avg > 20.0);
         assert_eq!(min, 20.0);
         assert_eq!(max, 30.0);

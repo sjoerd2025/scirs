@@ -46,7 +46,7 @@ pub fn ica(
     }
 
     // Center the signals
-    let means = signals.mean_axis(Axis(1)).unwrap();
+    let means = signals.mean_axis(Axis(1)).expect("Operation failed");
     let mut centered = signals.clone();
 
     for i in 0..n_signals {

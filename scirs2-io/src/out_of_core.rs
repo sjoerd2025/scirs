@@ -25,7 +25,7 @@
 //! // Process in chunks
 //! array.process_chunks(1000, |chunk| {
 //!     // Process each chunk
-//!     let mean = chunk.mean().unwrap();
+//!     let mean = chunk.mean().expect("Operation failed");
 //!     Ok(mean)
 //! })?;
 //!
@@ -412,7 +412,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     fn get_chunk(&self, chunkid: usize) -> Result<Vec<T>> {
         // Check cache first
         {
-            let cache = self.cache.read().unwrap();
+            let cache = self.cache.read().expect("Operation failed");
             if let Some(cached) = cache.chunks.get(&chunkid) {
                 return Ok(cached.data.clone());
             }
@@ -423,7 +423,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
         // Update cache
         {
-            let mut cache = self.cache.write().unwrap();
+            let mut cache = self.cache.write().expect("Operation failed");
             self.update_cache(&mut cache, chunkid, data.clone());
         }
 
@@ -932,7 +932,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
                 // 5. Mark chunk as dirty in cache or write back immediately
                 {
-                    let mut cache = self.cache.write().unwrap();
+                    let mut cache = self.cache.write().expect("Operation failed");
                     if let Some(cached_chunk) = cache.chunks.get_mut(&chunk_id) {
                         cached_chunk.data = chunk_data;
                         cached_chunk.dirty = true;
@@ -1018,7 +1018,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
     /// Flush all cached data to disk
     pub fn flush(&mut self) -> Result<()> {
-        let cache = self.cache.write().unwrap();
+        let cache = self.cache.write().expect("Operation failed");
 
         for (&chunk_id, chunk) in &cache.chunks {
             if chunk.dirty {
@@ -1240,7 +1240,7 @@ impl<T: Clone> VirtualArray<T> {
         }
 
         // Simple concatenation - in reality would use ndarray's concatenate
-        Ok(result_parts.into_iter().next().unwrap())
+        Ok(result_parts.into_iter().next().expect("Operation failed"))
     }
 }
 
@@ -1341,7 +1341,7 @@ mod tests {
 
     #[test]
     fn test_out_of_core_array_creation() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let file_path = temp_dir.path().join("test_array.ooc");
 
         let array = OutOfCoreArray::<f64>::create(&file_path, &[1000, 1000])?;
@@ -1367,7 +1367,7 @@ mod tests {
 
     #[test]
     fn test_sliding_window() -> Result<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let file_path = temp_dir.path().join("test_window.ooc");
 
         let array = OutOfCoreArray::<f64>::create(&file_path, &[100, 100])?;

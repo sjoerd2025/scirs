@@ -124,7 +124,7 @@ fn main() {
 
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = fft2(&test_array, None, None, None).unwrap();
+            let _ = fft2(&test_array, None, None, None).expect("Operation failed");
             total_time += start.elapsed();
         }
 
@@ -198,7 +198,7 @@ fn main() {
 
     // Get global planner stats
     let planner = get_global_planner();
-    let planner_guard = planner.lock().unwrap();
+    let planner_guard = planner.lock().expect("Operation failed");
 
     // Clear cache to make sure subsequent runs will benefit from serialized plans
     planner_guard.clear_cache();

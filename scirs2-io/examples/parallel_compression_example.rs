@@ -368,7 +368,7 @@ fn demonstrate_algorithm_benchmarking(data: &[u8]) -> Result<(), Box<dyn std::er
     if let Some(best_speed) = results.iter().max_by(|a, b| {
         (a.compression_speedup() + a.decompression_speedup())
             .partial_cmp(&(b.compression_speedup() + b.decompression_speedup()))
-            .unwrap()
+            .expect("Operation failed")
     }) {
         println!("  🏆 Best overall speed: {:?} level {} with {} threads (speedup: {:.1}x comp, {:.1}x decomp)",
                  best_speed.algorithm, best_speed.level, best_speed.config.num_threads,
@@ -378,7 +378,7 @@ fn demonstrate_algorithm_benchmarking(data: &[u8]) -> Result<(), Box<dyn std::er
     if let Some(best_ratio) = results.iter().max_by(|a, b| {
         a.compression_ratio
             .partial_cmp(&b.compression_ratio)
-            .unwrap()
+            .expect("Operation failed")
     }) {
         println!(
             "  📐 Best compression ratio: {:?} level {} ({:.2}x compression)",

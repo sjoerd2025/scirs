@@ -278,9 +278,10 @@ where
     };
 
     // Rough thresholds
-    let mean_threshold =
-        F::from(0.2).unwrap() * (var1.sqrt() + var2.sqrt()) / F::from(2.0).unwrap();
-    let var_threshold = F::from(2.0).unwrap();
+    let mean_threshold = F::from(0.2).expect("Failed to convert constant to float")
+        * (var1.sqrt() + var2.sqrt())
+        / F::from(2.0).expect("Failed to convert constant to float");
+    let var_threshold = F::from(2.0).expect("Failed to convert constant to float");
 
     Ok(mean_diff < mean_threshold && var_ratio < var_threshold)
 }

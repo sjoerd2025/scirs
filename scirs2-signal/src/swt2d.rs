@@ -41,7 +41,7 @@
 // }
 //
 // // Perform 2D SWT using the Haar wavelet at level 1
-// let result = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
+// let result = swt2d_decompose(&image, Wavelet::Haar, 1, None).expect("Operation failed");
 //
 // // Verify that coefficients have the same shape as input
 // assert_eq!(result.approx.shape(), image.shape());
@@ -107,10 +107,10 @@ pub struct Swt2dResult {
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
 ///     13.0, 14.0, 15.0, 16.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Perform 2D SWT using the Haar wavelet at level 1
-/// let result = swt2d_decompose(&data, Wavelet::Haar, 1, None).unwrap();
+/// let result = swt2d_decompose(&data, Wavelet::Haar, 1, None).expect("Operation failed");
 ///
 /// // Check the shape of the result (should be same as original image)
 /// assert_eq!(result.approx.shape(), data.shape());
@@ -294,7 +294,7 @@ where
 /// }
 ///
 /// // Perform 3-level 2D SWT
-/// let decomp = swt2d(&image, Wavelet::Haar, 3, None).unwrap();
+/// let decomp = swt2d(&image, Wavelet::Haar, 3, None).expect("Operation failed");
 ///
 /// // Check number of levels
 /// assert_eq!(decomp.len(), 3);
@@ -374,13 +374,13 @@ where
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
 ///     13.0, 14.0, 15.0, 16.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Decompose
-/// let decomposition = swt2d_decompose(&data, Wavelet::Haar, 1, None).unwrap();
+/// let decomposition = swt2d_decompose(&data, Wavelet::Haar, 1, None).expect("Operation failed");
 ///
 /// // Reconstruct
-/// let reconstructed = swt2d_reconstruct(&decomposition, Wavelet::Haar, 1, None).unwrap();
+/// let reconstructed = swt2d_reconstruct(&decomposition, Wavelet::Haar, 1, None).expect("Operation failed");
 ///
 /// // Check that reconstruction has the same shape as original
 /// assert_eq!(reconstructed.shape(), data.shape());
@@ -563,10 +563,10 @@ pub fn swt2d_reconstruct(
 /// }
 ///
 /// // Perform 3-level 2D SWT
-/// let decomp = swt2d(&image, Wavelet::Haar, 3, None).unwrap();
+/// let decomp = swt2d(&image, Wavelet::Haar, 3, None).expect("Operation failed");
 ///
 /// // Reconstruct
-/// let reconstructed = iswt2d(&decomp, Wavelet::Haar, None).unwrap();
+/// let reconstructed = iswt2d(&decomp, Wavelet::Haar, None).expect("Operation failed");
 ///
 /// // Check that reconstruction has the same shape as original
 /// assert_eq!(reconstructed.shape(), image.shape());
@@ -632,7 +632,7 @@ mod tests {
         }
 
         // Apply SWT with Haar wavelet
-        let result = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
+        let result = swt2d_decompose(&image, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Check dimensions - all subbands should have same size as input
         assert_eq!(result.approx.shape(), image.shape());
@@ -657,13 +657,13 @@ mod tests {
                 16.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Decompose
-        let decomposition = swt2d_decompose(&data, Wavelet::Haar, 1, None).unwrap();
+        let decomposition = swt2d_decompose(&data, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Reconstruct
-        let reconstructed = swt2d_reconstruct(&decomposition, Wavelet::Haar, 1, None).unwrap();
+        let reconstructed = swt2d_reconstruct(&decomposition, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(reconstructed.shape(), data.shape());
@@ -708,7 +708,7 @@ mod tests {
 
         // Apply multi-level SWT
         let levels = 3;
-        let decompositions = swt2d(&image, Wavelet::Haar, levels, None).unwrap();
+        let decompositions = swt2d(&image, Wavelet::Haar, levels, None).expect("Operation failed");
 
         // Check number of levels
         assert_eq!(decompositions.len(), levels);
@@ -722,7 +722,7 @@ mod tests {
         }
 
         // Reconstruct
-        let reconstructed = iswt2d(&decompositions, Wavelet::Haar, None).unwrap();
+        let reconstructed = iswt2d(&decompositions, Wavelet::Haar, None).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(reconstructed.shape(), image.shape());

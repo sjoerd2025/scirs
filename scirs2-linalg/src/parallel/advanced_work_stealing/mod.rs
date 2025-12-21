@@ -105,13 +105,22 @@ impl<T> AdvancedWorkStealingQueue<T> {
 
         match priority {
             0..=33 => {
-                self.low_priority.lock().unwrap().push_back(work_item);
+                self.low_priority
+                    .lock()
+                    .expect("Operation failed")
+                    .push_back(work_item);
             }
             34..=66 => {
-                self.normal_priority.lock().unwrap().push_back(work_item);
+                self.normal_priority
+                    .lock()
+                    .expect("Operation failed")
+                    .push_back(work_item);
             }
             _ => {
-                self.high_priority.lock().unwrap().push(work_item);
+                self.high_priority
+                    .lock()
+                    .expect("Operation failed")
+                    .push(work_item);
             }
         }
 
@@ -205,14 +214,14 @@ impl<T> AdvancedWorkStealingQueue<T> {
 
     /// Get current queue statistics
     pub fn get_stats(&self) -> WorkStealingStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Operation failed").clone()
     }
 
     /// Get estimated remaining work
     pub fn estimated_remaining_work(&self) -> Duration {
-        let high_count = self.high_priority.lock().unwrap().len();
-        let normal_count = self.normal_priority.lock().unwrap().len();
-        let low_count = self.low_priority.lock().unwrap().len();
+        let high_count = self.high_priority.lock().expect("Operation failed").len();
+        let normal_count = self.normal_priority.lock().expect("Operation failed").len();
+        let low_count = self.low_priority.lock().expect("Operation failed").len();
 
         // Rough estimates based on priority
         Duration::from_millis((high_count * 100 + normal_count * 50 + low_count * 10) as u64)
@@ -333,9 +342,11 @@ impl MatrixAdaptiveChunking {
 
             if !similar_ops.is_empty() {
                 // Find the _chunk size with best throughput
-                let best_perf = similar_ops
-                    .iter()
-                    .max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap());
+                let best_perf = similar_ops.iter().max_by(|a, b| {
+                    a.throughput
+                        .partial_cmp(&b.throughput)
+                        .expect("Operation failed")
+                });
 
                 if let Some(best) = best_perf {
                     // Interpolate between base _chunk and historically best
@@ -406,7 +417,7 @@ impl PredictiveLoadBalancer {
 
     /// Predict execution time for a task
     pub fn predict_execution_time(&self, taskfeatures: &TaskFeatures) -> Duration {
-        let weights = self.model_weights.lock().unwrap();
+        let weights = self.model_weights.lock().expect("Operation failed");
 
         // Extract _features
         let _features = [
@@ -430,14 +441,14 @@ impl PredictiveLoadBalancer {
     /// Assign task to optimal worker based on predicted load
     pub fn assign_task(&self, taskfeatures: &TaskFeatures) -> usize {
         let predicted_time = self.predict_execution_time(taskfeatures);
-        let mut loads = self.worker_loads.lock().unwrap();
+        let mut loads = self.worker_loads.lock().expect("Operation failed");
 
         // Find worker with minimum predicted finish time
         let (best_worker, min_load) = loads
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
 
         // Update predicted load
         loads[best_worker] += predicted_time.as_secs_f64();

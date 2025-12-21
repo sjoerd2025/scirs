@@ -772,7 +772,9 @@ mod tests {
         let recovery = TensorConversionRecovery;
 
         let shape_error = IntegrationError::TensorConversion("shape mismatch".to_string());
-        let result = recovery.attempt_recovery(&shape_error).unwrap();
+        let result = recovery
+            .attempt_recovery(&shape_error)
+            .expect("Operation failed");
 
         assert!(matches!(result, RecoveryAction::RetryWithConfig(_)));
     }
@@ -788,9 +790,15 @@ mod tests {
         mapper.push_context(context2);
 
         assert_eq!(mapper.context_stack.len(), 2);
-        assert_eq!(mapper.current_context().unwrap().module_name, "module2");
+        assert_eq!(
+            mapper
+                .current_context()
+                .expect("Operation failed")
+                .module_name,
+            "module2"
+        );
 
-        let popped = mapper.pop_context().unwrap();
+        let popped = mapper.pop_context().expect("Operation failed");
         assert_eq!(popped.module_name, "module2");
         assert_eq!(mapper.context_stack.len(), 1);
     }
@@ -808,10 +816,10 @@ mod tests {
     fn test_global_context_management() {
         let context = ErrorContext::new("test_module".to_string());
 
-        push_error_context(context).unwrap();
-        let popped = pop_error_context().unwrap();
+        push_error_context(context).expect("Operation failed");
+        let popped = pop_error_context().expect("Operation failed");
 
         assert!(popped.is_some());
-        assert_eq!(popped.unwrap().module_name, "test_module");
+        assert_eq!(popped.expect("Operation failed").module_name, "test_module");
     }
 }

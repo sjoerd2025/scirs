@@ -13,14 +13,14 @@ use std::collections::HashMap;
 
 lazy_static! {
     // Common word patterns for POS disambiguation
-    static ref VERB_PATTERNS: Regex = Regex::new(r"(?i)(ing|ed|s)$").unwrap();
-    static ref NOUN_PATTERNS: Regex = Regex::new(r"(?i)(tion|sion|ness|ment|ship|hood|ity|cy|th|ing|er|or|ar|ist|ism|age|al|ance|ence|dom|tude|ure|ery|ary|ory|ly)$").unwrap();
-    static ref ADJ_PATTERNS: Regex = Regex::new(r"(?i)(ful|less|ous|ious|eous|ary|ory|ic|ical|al|able|ible|ive|ative|itive|ent|ant|ed|ing|er|est|ward)$").unwrap();
-    static ref ADV_PATTERNS: Regex = Regex::new(r"(?i)(ly|ward|wise|like)$").unwrap();
+    static ref VERB_PATTERNS: Regex = Regex::new(r"(?i)(ing|ed|s)$").expect("Operation failed");
+    static ref NOUN_PATTERNS: Regex = Regex::new(r"(?i)(tion|sion|ness|ment|ship|hood|ity|cy|th|ing|er|or|ar|ist|ism|age|al|ance|ence|dom|tude|ure|ery|ary|ory|ly)$").expect("Operation failed");
+    static ref ADJ_PATTERNS: Regex = Regex::new(r"(?i)(ful|less|ous|ious|eous|ary|ory|ic|ical|al|able|ible|ive|ative|itive|ent|ant|ed|ing|er|est|ward)$").expect("Operation failed");
+    static ref ADV_PATTERNS: Regex = Regex::new(r"(?i)(ly|ward|wise|like)$").expect("Operation failed");
 
     // Capitalization patterns
-    static ref PROPER_NOUN_PATTERN: Regex = Regex::new(r"^[A-Z][a-z]+$").unwrap();
-    static ref ALL_CAPS_PATTERN: Regex = Regex::new(r"^[A-Z]{2,}$").unwrap();
+    static ref PROPER_NOUN_PATTERN: Regex = Regex::new(r"^[A-Z][a-z]+$").expect("Operation failed");
+    static ref ALL_CAPS_PATTERN: Regex = Regex::new(r"^[A-Z]{2,}$").expect("Operation failed");
 }
 
 /// A context-aware POS tagger that uses statistical and rule-based approaches
@@ -1413,7 +1413,7 @@ impl MorphologicalAnalyzer {
 
         // Convert to sorted vector
         let mut result: Vec<(PosTag, f64)> = predictions.into_iter().collect();
-        result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        result.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Normalize scores and apply length-based confidence penalty
         if !result.is_empty() {
@@ -1462,7 +1462,7 @@ impl MorphologicalAnalyzer {
             return "123number".to_string();
         }
         if has_upper && has_lower {
-            if word.chars().next().unwrap().is_uppercase()
+            if word.chars().next().expect("Operation failed").is_uppercase()
                 && word.chars().skip(1).all(|c| c.is_lowercase())
             {
                 return "Title".to_string();

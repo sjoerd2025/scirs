@@ -23,12 +23,12 @@ fn bench_matmul_optimizations(c: &mut Criterion) {
     for size in &sizes {
         let a = Array2::from_shape_fn((*size, *size), |_| {
             let mut rng = thread_rng();
-            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform_dist = Uniform::new(-1.0, 1.0).expect("Operation failed");
             rng.sample(uniform_dist)
         });
         let b = Array2::from_shape_fn((*size, *size), |_| {
             let mut rng = thread_rng();
-            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform_dist = Uniform::new(-1.0, 1.0).expect("Operation failed");
             rng.sample(uniform_dist)
         });
 
@@ -42,16 +42,20 @@ fn bench_matmul_optimizations(c: &mut Criterion) {
         // Our blocked matrix multiplication
         group.bench_with_input(BenchmarkId::new("blocked", size), size, |bench_, _data| {
             bench_.iter(|| {
-                let _result =
-                    black_box(blocked_matmul(&a.view(), &b.view(), &config_blocked).unwrap());
+                let _result = black_box(
+                    blocked_matmul(&a.view(), &b.view(), &config_blocked)
+                        .expect("Operation failed"),
+                );
             });
         });
 
         // Adaptive algorithm selection
         group.bench_with_input(BenchmarkId::new("adaptive", size), size, |bench_, _data| {
             bench_.iter(|| {
-                let _result =
-                    black_box(blocked_matmul(&a.view(), &b.view(), &config_adaptive).unwrap());
+                let _result = black_box(
+                    blocked_matmul(&a.view(), &b.view(), &config_adaptive)
+                        .expect("Operation failed"),
+                );
             });
         });
     }
@@ -67,12 +71,12 @@ fn bench_inplace_operations(c: &mut Criterion) {
     for size in &sizes {
         let a = Array2::from_shape_fn((*size, *size), |_| {
             let mut rng = thread_rng();
-            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform_dist = Uniform::new(-1.0, 1.0).expect("Operation failed");
             rng.sample(uniform_dist)
         });
         let b = Array2::from_shape_fn((*size, *size), |_| {
             let mut rng = thread_rng();
-            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform_dist = Uniform::new(-1.0, 1.0).expect("Operation failed");
             rng.sample(uniform_dist)
         });
 
@@ -94,7 +98,7 @@ fn bench_inplace_operations(c: &mut Criterion) {
             |bench_, _data| {
                 bench_.iter(|| {
                     let mut a_copy = a.clone();
-                    inplace_add(&mut a_copy.view_mut(), &b.view()).unwrap();
+                    inplace_add(&mut a_copy.view_mut(), &b.view()).expect("Operation failed");
                     black_box(&a_copy);
                 });
             },
@@ -135,7 +139,7 @@ fn bench_transpose_optimizations(c: &mut Criterion) {
     for size in &sizes {
         let a = Array2::from_shape_fn((*size, *size), |_| {
             let mut rng = thread_rng();
-            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform_dist = Uniform::new(-1.0, 1.0).expect("Operation failed");
             rng.sample(uniform_dist)
         });
 
@@ -152,7 +156,8 @@ fn bench_transpose_optimizations(c: &mut Criterion) {
             size,
             |bench_, _data| {
                 bench_.iter(|| {
-                    let _result = black_box(optimized_transpose(&a.view()).unwrap());
+                    let _result =
+                        black_box(optimized_transpose(&a.view()).expect("Operation failed"));
                 });
             },
         );
@@ -170,12 +175,12 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
     for size in &sizes {
         let a = Array2::from_shape_fn((*size, *size), |_| {
             let mut rng = thread_rng();
-            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform_dist = Uniform::new(-1.0, 1.0).expect("Operation failed");
             rng.sample(uniform_dist)
         });
         let b = Array2::from_shape_fn((*size, *size), |_| {
             let mut rng = thread_rng();
-            let uniform_dist = Uniform::new(-1.0, 1.0).unwrap();
+            let uniform_dist = Uniform::new(-1.0, 1.0).expect("Operation failed");
             rng.sample(uniform_dist)
         });
 
@@ -186,8 +191,9 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("serial", size), size, |bench_, _data| {
             bench_.iter(|| {
-                let _result =
-                    black_box(blocked_matmul(&a.view(), &b.view(), &config_serial).unwrap());
+                let _result = black_box(
+                    blocked_matmul(&a.view(), &b.view(), &config_serial).expect("Operation failed"),
+                );
             });
         });
 
@@ -199,8 +205,10 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("parallel", size), size, |bench_, _data| {
             bench_.iter(|| {
-                let _result =
-                    black_box(blocked_matmul(&a.view(), &b.view(), &config_parallel).unwrap());
+                let _result = black_box(
+                    blocked_matmul(&a.view(), &b.view(), &config_parallel)
+                        .expect("Operation failed"),
+                );
             });
         });
     }

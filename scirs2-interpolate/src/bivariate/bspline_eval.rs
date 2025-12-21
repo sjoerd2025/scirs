@@ -198,12 +198,12 @@ pub fn basis_funs_derivatives<F: crate::traits::InterpolationFloat>(
     }
 
     // Multiply by the correct factors
-    let mut fac = F::from_usize(k).unwrap();
+    let mut fac = F::from_usize(k).expect("Operation failed");
     for j in 1..=n {
         for i in 0..=k {
             derivs[[j, i]] *= fac;
         }
-        fac *= F::from_usize(k - j).unwrap();
+        fac *= F::from_usize(k - j).expect("Operation failed");
     }
 
     derivs
@@ -378,10 +378,10 @@ pub fn integrate_bispline<F: crate::traits::InterpolationFloat>(
 
     // Scale the quadrature points to the integration domain
     let mut sum = F::zero();
-    let half_width_x = (xb - xa) / F::from_f64(2.0).unwrap();
-    let half_width_y = (yb - ya) / F::from_f64(2.0).unwrap();
-    let mid_x = (xa + xb) / F::from_f64(2.0).unwrap();
-    let mid_y = (ya + yb) / F::from_f64(2.0).unwrap();
+    let half_width_x = (xb - xa) / F::from_f64(2.0).expect("Operation failed");
+    let half_width_y = (yb - ya) / F::from_f64(2.0).expect("Operation failed");
+    let mid_x = (xa + xb) / F::from_f64(2.0).expect("Operation failed");
+    let mid_y = (ya + yb) / F::from_f64(2.0).expect("Operation failed");
 
     // Perform integration using Gauss-Legendre quadrature
     for i in 0..n {
@@ -399,7 +399,7 @@ pub fn integrate_bispline<F: crate::traits::InterpolationFloat>(
     }
 
     // Scale by the area of the integration domain
-    sum * half_width_x * half_width_y * F::from_f64(4.0).unwrap()
+    sum * half_width_x * half_width_y * F::from_f64(4.0).expect("Operation failed")
 }
 
 /// Generate Gauss-Legendre quadrature points and weights
@@ -419,47 +419,48 @@ fn gauss_legendre_quadrature<F: Float + FromPrimitive + Debug>(n: usize) -> (Vec
     match n {
         1 => {
             points.push(F::zero());
-            weights.push(F::from_f64(2.0).unwrap());
+            weights.push(F::from_f64(2.0).expect("Operation failed"));
         }
         2 => {
-            let p = F::from_f64(1.0 / 3.0_f64.sqrt()).unwrap();
+            let p = F::from_f64(1.0 / 3.0_f64.sqrt()).expect("Operation failed");
             points.push(-p);
             points.push(p);
             weights.push(F::one());
             weights.push(F::one());
         }
         3 => {
-            let p = F::from_f64((3.0 / 5.0_f64).sqrt()).unwrap();
+            let p = F::from_f64((3.0 / 5.0_f64).sqrt()).expect("Operation failed");
             points.push(-p);
             points.push(F::zero());
             points.push(p);
-            weights.push(F::from_f64(5.0 / 9.0).unwrap());
-            weights.push(F::from_f64(8.0 / 9.0).unwrap());
-            weights.push(F::from_f64(5.0 / 9.0).unwrap());
+            weights.push(F::from_f64(5.0 / 9.0).expect("Operation failed"));
+            weights.push(F::from_f64(8.0 / 9.0).expect("Operation failed"));
+            weights.push(F::from_f64(5.0 / 9.0).expect("Operation failed"));
         }
         4 => {
             let p1 = F::from_f64((3.0 - 2.0 * 6.0_f64.sqrt()) / 7.0)
-                .unwrap()
+                .expect("Operation failed")
                 .sqrt();
             let p2 = F::from_f64((3.0 + 2.0 * 6.0_f64.sqrt()) / 7.0)
-                .unwrap()
+                .expect("Operation failed")
                 .sqrt();
             points.push(-p2);
             points.push(-p1);
             points.push(p1);
             points.push(p2);
-            weights.push(F::from_f64((18.0 - 6.0_f64.sqrt()) / 36.0).unwrap());
-            weights.push(F::from_f64((18.0 + 6.0_f64.sqrt()) / 36.0).unwrap());
-            weights.push(F::from_f64((18.0 + 6.0_f64.sqrt()) / 36.0).unwrap());
-            weights.push(F::from_f64((18.0 - 6.0_f64.sqrt()) / 36.0).unwrap());
+            weights.push(F::from_f64((18.0 - 6.0_f64.sqrt()) / 36.0).expect("Operation failed"));
+            weights.push(F::from_f64((18.0 + 6.0_f64.sqrt()) / 36.0).expect("Operation failed"));
+            weights.push(F::from_f64((18.0 + 6.0_f64.sqrt()) / 36.0).expect("Operation failed"));
+            weights.push(F::from_f64((18.0 - 6.0_f64.sqrt()) / 36.0).expect("Operation failed"));
         }
         _ => {
             // For simplicity, use high-order cases from precomputed values
             // In a real implementation, we would compute these values dynamically
 
             // Use a simpler approximation for higher orders
-            let dx = F::from_f64(2.0 / (n as f64)).unwrap();
-            let mut x = F::from_f64(-1.0).unwrap() + dx / F::from_f64(2.0).unwrap();
+            let dx = F::from_f64(2.0 / (n as f64)).expect("Operation failed");
+            let mut x = F::from_f64(-1.0).expect("Operation failed")
+                + dx / F::from_f64(2.0).expect("Operation failed");
 
             for _ in 0..n {
                 points.push(x);

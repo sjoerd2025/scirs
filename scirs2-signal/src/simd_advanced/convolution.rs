@@ -298,7 +298,8 @@ mod tests {
         let mut output = vec![0.0; signal.len() + kernel.len() - 1];
         let config = SimdConfig::default();
 
-        simd_enhanced_convolution(&signal, &kernel, &mut output, &config).unwrap();
+        simd_enhanced_convolution(&signal, &kernel, &mut output, &config)
+            .expect("Operation failed");
 
         // Convolution with impulse should give kernel coefficients
         assert!((output[0] - 0.5).abs() < 1e-10);
@@ -353,10 +354,12 @@ mod tests {
         let config = SimdConfig::default();
 
         // Test signal * kernel
-        simd_enhanced_convolution(&signal, &kernel, &mut output1, &config).unwrap();
+        simd_enhanced_convolution(&signal, &kernel, &mut output1, &config)
+            .expect("Operation failed");
 
         // Test kernel * signal (should be different due to convolution definition)
-        simd_enhanced_convolution(&kernel, &signal, &mut output2, &config).unwrap();
+        simd_enhanced_convolution(&kernel, &signal, &mut output2, &config)
+            .expect("Operation failed");
 
         assert_eq!(output1.len(), output2.len());
         assert!(output1.iter().all(|&x| x.is_finite()));

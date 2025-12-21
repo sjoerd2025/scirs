@@ -492,7 +492,7 @@ mod tests {
         let tokens = get_test_tokens();
 
         // Keep tokens that start with 'b'
-        let filter = RegexFilter::new(r"^b", true).unwrap();
+        let filter = RegexFilter::new(r"^b", true).expect("Operation failed");
         let filtered = filter.apply(&tokens);
 
         assert_eq!(filtered, vec!["brown"]);
@@ -507,7 +507,7 @@ mod tests {
         ];
 
         // Remove tokens containing 'o'
-        let filter = RegexFilter::new(r"o", false).unwrap();
+        let filter = RegexFilter::new(r"o", false).expect("Operation failed");
         let filtered = filter.apply(&test_tokens);
 
         // Sort for consistent comparison
@@ -540,7 +540,7 @@ mod tests {
 
         // Create filters
         let length_filter = LengthFilter::new(4, usize::MAX);
-        let regex_filter = RegexFilter::new(r"o", true).unwrap();
+        let regex_filter = RegexFilter::new(r"o", true).expect("Operation failed");
 
         // Combine filters
         let composite = CompositeFilter::new()
@@ -574,7 +574,9 @@ mod tests {
 
         // Filter out short words
         let filter = LengthFilter::new(5, usize::MAX);
-        let filtered = filter.filtertext(text, &tokenizer).unwrap();
+        let filtered = filter
+            .filtertext(text, &tokenizer)
+            .expect("Operation failed");
 
         assert_eq!(filtered, "quick brown jumps");
     }

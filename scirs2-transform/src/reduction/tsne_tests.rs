@@ -27,7 +27,7 @@ fn test_tsne_simple() {
         .with_max_iter(250)
         .with_verbose(false);
 
-    let embedding_exact = tsne_exact.fit_transform(&x).unwrap();
+    let embedding_exact = tsne_exact.fit_transform(&x).expect("Operation failed");
 
     // Check that the shape is correct
     assert_eq!(embedding_exact.shape(), &[8, 2]);
@@ -74,7 +74,7 @@ fn test_tsne_barnes_hut() {
         .with_max_iter(250)
         .with_verbose(false);
 
-    let embedding_bh = tsne_bh.fit_transform(&x).unwrap();
+    let embedding_bh = tsne_bh.fit_transform(&x).expect("Operation failed");
 
     // Check that the shape is correct
     assert_eq!(embedding_bh.shape(), &[8, 2]);
@@ -98,7 +98,7 @@ fn test_tsne_barnes_hut() {
 
     // For Barnes-Hut approximation, the KL divergence might not always be finite
     // due to the approximation nature, so we just check that it's a number
-    let kl_div = tsne_bh.kl_divergence().unwrap();
+    let kl_div = tsne_bh.kl_divergence().expect("Operation failed");
     if !kl_div.is_finite() {
         // This is acceptable for Barnes-Hut approximation
         println!(
@@ -134,7 +134,7 @@ fn test_tsne_multicore() {
             .with_max_iter(100) // Shorter for testing
             .with_verbose(false);
 
-    let embedding_multicore = tsne_multicore.fit_transform(&x).unwrap();
+    let embedding_multicore = tsne_multicore.fit_transform(&x).expect("Operation failed");
 
     // Check that the shape is correct
     assert_eq!(embedding_multicore.shape(), &[8, 2]);
@@ -167,7 +167,7 @@ fn test_tsne_multicore() {
             .with_max_iter(100)
             .with_verbose(false);
 
-    let embedding_singlecore = tsne_singlecore.fit_transform(&x).unwrap();
+    let embedding_singlecore = tsne_singlecore.fit_transform(&x).expect("Operation failed");
 
     // Both should produce finite results (exact numerical match is not expected due to randomness)
     assert!(embedding_multicore.iter().all(|&x| x.is_finite()));
@@ -198,7 +198,7 @@ fn test_tsne_3d_barnes_hut() {
         .with_max_iter(250)
         .with_verbose(false);
 
-    let embedding_3d = tsne_3d.fit_transform(&x).unwrap();
+    let embedding_3d = tsne_3d.fit_transform(&x).expect("Operation failed");
 
     // Check that the shape is correct
     assert_eq!(embedding_3d.shape(), &[8, 3]);
@@ -277,7 +277,8 @@ fn test_trustworthiness() {
 
     // A perfect embedding would preserve all neighborhoods
     let perfect_embedding = x.clone();
-    let t_perfect = trustworthiness(&x, &perfect_embedding, 3, "euclidean").unwrap();
+    let t_perfect =
+        trustworthiness(&x, &perfect_embedding, 3, "euclidean").expect("Operation failed");
     assert_abs_diff_eq!(t_perfect, 1.0, epsilon = 1e-10);
 
     // A random embedding would have low trustworthiness
@@ -292,6 +293,7 @@ fn test_trustworthiness() {
         [0.2, 0.8],
     ]);
 
-    let t_random = trustworthiness(&x, &random_embedding, 3, "euclidean").unwrap();
+    let t_random =
+        trustworthiness(&x, &random_embedding, 3, "euclidean").expect("Operation failed");
     assert!(t_random < 1.0);
 }

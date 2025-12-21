@@ -42,14 +42,14 @@
 // }
 //
 // // Perform 2D wavelet packet decomposition up to level 2
-// let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();
+// let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).expect("Operation failed");
 //
 // // Access the packet at level 2, position (1, 2)
 // // This corresponds to the pattern LH-HL
-// let packet = decomp.get_packet(2, 1, 2).unwrap();
+// let packet = decomp.get_packet(2, 1, 2).expect("Operation failed");
 //
 // // Reconstruct the original image
-// let reconstructed = decomp.reconstruct().unwrap();
+// let reconstructed = decomp.reconstruct().expect("Operation failed");
 // ```
 
 use crate::dwt::{Wavelet, WaveletFilters};
@@ -285,7 +285,7 @@ impl WaveletPacketTree2D {
 /// }
 ///
 /// // Perform full wavelet packet decomposition up to level 2
-/// let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();
+/// let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).expect("Operation failed");
 ///
 /// // Check that we have the expected number of packets:
 /// // 1 at level 0, 4 at level 1, 16 at level 2
@@ -639,7 +639,7 @@ fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> 
 /// };
 ///
 /// // Perform selective wavelet packet decomposition
-/// let decomp = wpt2d_selective(&image, Wavelet::Haar, 3, energy_criterion, None).unwrap();
+/// let decomp = wpt2d_selective(&image, Wavelet::Haar, 3, energy_criterion, None).expect("Operation failed");
 ///
 /// // The resulting tree will have fewer nodes than the full decomposition
 /// assert!(decomp.len() < 1 + 4 + 16 + 64); // Max possible for level 3
@@ -855,7 +855,7 @@ mod tests {
         let image = create_test_image(16);
 
         // Perform 2-level wavelet packet decomposition
-        let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();
+        let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).expect("Operation failed");
 
         // Check that we have the expected number of packets
         // Level 0: 1 node
@@ -895,7 +895,7 @@ mod tests {
         };
 
         // Perform selective wavelet packet decomposition
-        let decomp = wpt2d_selective(&image, Wavelet::Haar, 3, ll_only_criterion, None).unwrap();
+        let decomp = wpt2d_selective(&image, Wavelet::Haar, 3, ll_only_criterion, None).expect("Operation failed");
 
         // Check that we have the expected number of packets
         // Level 0: 1 node
@@ -928,20 +928,20 @@ mod tests {
         let image = create_test_image(16);
 
         // Perform 2-level wavelet packet decomposition
-        let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();
+        let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).expect("Operation failed");
 
         // Check root path (empty string)
-        assert_eq!(decomp.get_packet(0, 0, 0).unwrap().path, "");
+        assert_eq!(decomp.get_packet(0, 0, 0).expect("Operation failed").path, "");
 
         // Check level 1 paths
-        assert_eq!(decomp.get_packet(1, 0, 0).unwrap().path, "LL");
-        assert_eq!(decomp.get_packet(1, 0, 1).unwrap().path, "LH");
-        assert_eq!(decomp.get_packet(1, 1, 0).unwrap().path, "HL");
-        assert_eq!(decomp.get_packet(1, 1, 1).unwrap().path, "HH");
+        assert_eq!(decomp.get_packet(1, 0, 0).expect("Operation failed").path, "LL");
+        assert_eq!(decomp.get_packet(1, 0, 1).expect("Operation failed").path, "LH");
+        assert_eq!(decomp.get_packet(1, 1, 0).expect("Operation failed").path, "HL");
+        assert_eq!(decomp.get_packet(1, 1, 1).expect("Operation failed").path, "HH");
 
         // Check a few level 2 paths
         // We'll just test the LL and HH patterns which should be predictable
-        assert_eq!(decomp.get_packet(2, 0, 0).unwrap().path, "LL-LL");
-        assert_eq!(decomp.get_packet(2, 3, 3).unwrap().path, "HH-HH");
+        assert_eq!(decomp.get_packet(2, 0, 0).expect("Operation failed").path, "LL-LL");
+        assert_eq!(decomp.get_packet(2, 3, 3).expect("Operation failed").path, "HH-HH");
     }
 }

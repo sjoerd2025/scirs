@@ -164,7 +164,7 @@ mod parameter_stability_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let (evals_with_evecs, evecs_some) = compat::eigh(
             &symmetricmatrix.view(),
@@ -179,7 +179,7 @@ mod parameter_stability_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Eigenvalues should be consistent
         assert!(vectors_consistent(
@@ -206,7 +206,7 @@ mod parameter_stability_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let (evals_upper, _) = compat::eigh(
             &symmetricmatrix.view(),
@@ -221,7 +221,7 @@ mod parameter_stability_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert!(vectors_consistent(
             &evals_lower,
@@ -523,7 +523,7 @@ mod api_contract_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Should get eigenvalues but no eigenvectors
         assert_eq!(eigenvals.len(), symmetricmatrix.nrows());
@@ -548,7 +548,7 @@ mod api_contract_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Should get both eigenvalues and eigenvectors
         assert_eq!(eigenvals_with_vecs.len(), symmetricmatrix.nrows());
@@ -676,9 +676,12 @@ mod regression_tests {
         let identity_3x3 = Array2::eye(3);
         let identity_5x5 = Array2::eye(5);
 
-        let det_2x2: f64 = compat::det(&identity_2x2.view(), false, true).unwrap();
-        let det_3x3: f64 = compat::det(&identity_3x3.view(), false, true).unwrap();
-        let det_5x5: f64 = compat::det(&identity_5x5.view(), false, true).unwrap();
+        let det_2x2: f64 =
+            compat::det(&identity_2x2.view(), false, true).expect("Test operation failed");
+        let det_3x3: f64 =
+            compat::det(&identity_3x3.view(), false, true).expect("Test operation failed");
+        let det_5x5: f64 =
+            compat::det(&identity_5x5.view(), false, true).expect("Test operation failed");
 
         assert!((det_2x2 - 1.0).abs() < STABILITY_TOL);
         assert!((det_3x3 - 1.0).abs() < STABILITY_TOL);
@@ -686,13 +689,15 @@ mod regression_tests {
 
         // Specific matrix with known determinant: [[2,3],[1,2]] has det = 1
         let known_detmatrix = array![[2.0, 3.0], [1.0, 2.0]];
-        let known_det: f64 = compat::det(&known_detmatrix.view(), false, true).unwrap();
+        let known_det: f64 =
+            compat::det(&known_detmatrix.view(), false, true).expect("Test operation failed");
         assert!((known_det - 1.0).abs() < STABILITY_TOL);
 
         // Known inverse: [[3,1],[2,1]] has inverse [[1,-1],[-2,3]]
         let known_invmatrix = array![[3.0, 1.0], [2.0, 1.0]];
         let expected_inverse = array![[1.0, -1.0], [-2.0, 3.0]];
-        let computed_inverse = compat::inv(&known_invmatrix.view(), false, true).unwrap();
+        let computed_inverse =
+            compat::inv(&known_invmatrix.view(), false, true).expect("Test operation failed");
         assert!(arrays_consistent(
             &computed_inverse,
             &expected_inverse,
@@ -714,7 +719,7 @@ mod regression_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
         let expected_eigenvals = array![1.0, 3.0, 5.0]; // Should be sorted
         assert!(vectors_consistent(
             &eigenvals,
@@ -725,16 +730,16 @@ mod regression_tests {
         // Known norms
         let norm_testmatrix = array![[3.0, 4.0], [0.0, 0.0]];
         // Frobenius norm should be 5.0
-        let fro_norm: f64 =
-            compat::norm(&norm_testmatrix.view(), Some("fro"), None, false, true).unwrap();
+        let fro_norm: f64 = compat::norm(&norm_testmatrix.view(), Some("fro"), None, false, true)
+            .expect("Test operation failed");
         assert!((fro_norm - 5.0).abs() < STABILITY_TOL);
         // 1-norm should be 4.0 (max column sum)
-        let norm_1: f64 =
-            compat::norm(&norm_testmatrix.view(), Some("1"), None, false, true).unwrap();
+        let norm_1: f64 = compat::norm(&norm_testmatrix.view(), Some("1"), None, false, true)
+            .expect("Test operation failed");
         assert!((norm_1 - 4.0).abs() < STABILITY_TOL);
         // inf-norm should be 7.0 (max row sum)
-        let norm_inf: f64 =
-            compat::norm(&norm_testmatrix.view(), Some("inf"), None, false, true).unwrap();
+        let norm_inf: f64 = compat::norm(&norm_testmatrix.view(), Some("inf"), None, false, true)
+            .expect("Test operation failed");
         assert!((norm_inf - 7.0).abs() < STABILITY_TOL);
     }
 
@@ -747,15 +752,16 @@ mod regression_tests {
         let rotation = array![[angle.cos(), -angle.sin()], [angle.sin(), angle.cos()]];
 
         // Determinant should be ±1
-        let det = compat::det(&rotation.view(), false, true).unwrap();
+        let det = compat::det(&rotation.view(), false, true).expect("Test operation failed");
         assert!((det.abs() - 1.0).abs() < STABILITY_TOL);
 
         // Condition number should be 1
-        let cond = compat::cond(&rotation.view(), Some("2")).unwrap();
+        let cond = compat::cond(&rotation.view(), Some("2")).expect("Test operation failed");
         assert!((cond - 1.0).abs() < 1e-10);
 
         // QR decomposition of orthogonal matrix
-        let (q_opt, r) = compat::qr(&rotation.view(), false, None, "full", false, true).unwrap();
+        let (q_opt, r) = compat::qr(&rotation.view(), false, None, "full", false, true)
+            .expect("Test operation failed");
         if let Some(q) = q_opt {
             // Q should be essentially the same as the original (or with sign flips)
             let reconstruction_error = (&rotation - &q).mapv(|x| x * x).sum().sqrt();
@@ -789,7 +795,7 @@ mod regression_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         if let Some(eigenvecs) = eigenvecs_opt {
             // Eigenvectors should be orthogonal
@@ -810,7 +816,7 @@ mod regression_tests {
         assert!((trace - eigenval_sum).abs() < STABILITY_TOL);
 
         // Determinant should equal product of eigenvalues
-        let det = compat::det(&symmetric.view(), false, true).unwrap();
+        let det = compat::det(&symmetric.view(), false, true).expect("Test operation failed");
         let eigenval_product = eigenvals.iter().product::<f64>();
         assert!((det - eigenval_product).abs() < STABILITY_TOL);
     }
@@ -825,18 +831,20 @@ mod regression_tests {
         // Should detect as nearly rank deficient
         // Use a more appropriate tolerance that's larger than the numerical noise
         // The perturbation creates a second singular value ~2e-8, so we need tolerance > 2e-8
-        let rank = compat::matrix_rank(&nearly_singular.view(), Some(1e-7), false, true).unwrap();
+        let rank = compat::matrix_rank(&nearly_singular.view(), Some(1e-7), false, true)
+            .expect("Test operation failed");
         assert_eq!(rank, 1);
 
         // Condition number should be very large
-        let cond = compat::cond(&nearly_singular.view(), Some("2")).unwrap();
+        let cond = compat::cond(&nearly_singular.view(), Some("2")).expect("Test operation failed");
         // Adjust expectation based on the actual singular values
         // cond = max_singular_value / min_singular_value ≈ 2.0 / 2.1e-8 ≈ 9.5e7
         assert!(cond > 1e7);
 
         // Very small but well-conditioned matrix
         let smallmatrix = Array2::eye(2) * 1e-10;
-        let det_small: f64 = compat::det(&smallmatrix.view(), false, true).unwrap();
+        let det_small: f64 =
+            compat::det(&smallmatrix.view(), false, true).expect("Test operation failed");
         assert!((det_small - 1e-20).abs() < 1e-25);
 
         // Matrix with large dynamic range - condition number calculation may be limited by numerical precision
@@ -867,22 +875,27 @@ mod version_compatibility_tests {
         let testmatrix = array![[2.0, 1.0], [1.0, 2.0]];
 
         // These should be equivalent ways to call functions with defaults
-        let det1: f64 = compat::det(&testmatrix.view(), false, true).unwrap();
-        let det2: f64 = compat::det(&testmatrix.view(), false, true).unwrap(); // Same call
+        let det1: f64 =
+            compat::det(&testmatrix.view(), false, true).expect("Test operation failed");
+        let det2: f64 =
+            compat::det(&testmatrix.view(), false, true).expect("Test operation failed"); // Same call
 
         assert!((det1 - det2).abs() < f64::EPSILON);
 
         // Norm with default (None) vs explicit "fro"
-        let norm_default: f64 = compat::norm(&testmatrix.view(), None, None, false, true).unwrap();
-        let norm_explicit: f64 =
-            compat::norm(&testmatrix.view(), Some("fro"), None, false, true).unwrap();
+        let norm_default: f64 = compat::norm(&testmatrix.view(), None, None, false, true)
+            .expect("Test operation failed");
+        let norm_explicit: f64 = compat::norm(&testmatrix.view(), Some("fro"), None, false, true)
+            .expect("Test operation failed");
 
         assert!((norm_default - norm_explicit).abs() < STABILITY_TOL);
 
         // Vector norm with default (None) vs explicit 2.0
         let vector = array![3.0, 4.0];
-        let vnorm_default: f64 = compat::vector_norm(&vector.view(), None, true).unwrap();
-        let vnorm_explicit: f64 = compat::vector_norm(&vector.view(), Some(2.0), true).unwrap();
+        let vnorm_default: f64 =
+            compat::vector_norm(&vector.view(), None, true).expect("Test operation failed");
+        let vnorm_explicit: f64 =
+            compat::vector_norm(&vector.view(), Some(2.0), true).expect("Test operation failed");
 
         assert!((vnorm_default - vnorm_explicit).abs() < STABILITY_TOL);
     }
@@ -907,7 +920,7 @@ mod version_compatibility_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Same call with explicit None values
         let (eigenvals2, _) = compat::eigh(
@@ -923,13 +936,15 @@ mod version_compatibility_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert!(vectors_consistent(&eigenvals1, &eigenvals2, STABILITY_TOL));
 
         // Pseudoinverse with and without explicit None
-        let pinv1 = compat::pinv(&testmatrix.view(), None, false, true).unwrap();
-        let pinv2 = compat::pinv(&testmatrix.view(), None, false, true).unwrap();
+        let pinv1 =
+            compat::pinv(&testmatrix.view(), None, false, true).expect("Test operation failed");
+        let pinv2 =
+            compat::pinv(&testmatrix.view(), None, false, true).expect("Test operation failed");
 
         assert!(arrays_consistent(&pinv1, &pinv2, STABILITY_TOL));
     }
@@ -943,16 +958,21 @@ mod version_compatibility_tests {
         let f64_vector = array![1.0_f64, 2.0];
 
         // These should all compile and run without type issues
-        let _det: f64 = compat::det(&f64matrix.view(), false, true).unwrap();
-        let _inv: Array2<f64> = compat::inv(&f64matrix.view(), false, true).unwrap();
-        let _norm: f64 = compat::norm(&f64matrix.view(), Some("fro"), None, false, true).unwrap();
-        let _vnorm: f64 = compat::vector_norm(&f64_vector.view(), Some(2.0), true).unwrap();
+        let _det: f64 = compat::det(&f64matrix.view(), false, true).expect("Test operation failed");
+        let _inv: Array2<f64> =
+            compat::inv(&f64matrix.view(), false, true).expect("Test operation failed");
+        let _norm: f64 = compat::norm(&f64matrix.view(), Some("fro"), None, false, true)
+            .expect("Test operation failed");
+        let _vnorm: f64 = compat::vector_norm(&f64_vector.view(), Some(2.0), true)
+            .expect("Test operation failed");
 
         // Decomposition return types should be consistent
         let (p, l, u): (Array2<f64>, Array2<f64>, Array2<f64>) =
-            compat::lu(&f64matrix.view(), false, false, true, false).unwrap();
+            compat::lu(&f64matrix.view(), false, false, true, false)
+                .expect("Test operation failed");
         let (q_opt, r): (Option<Array2<f64>>, Array2<f64>) =
-            compat::qr(&f64matrix.view(), false, None, "full", false, true).unwrap();
+            compat::qr(&f64matrix.view(), false, None, "full", false, true)
+                .expect("Test operation failed");
         let (eigenvals, eigenvecs_opt): (Array1<f64>, Option<Array2<f64>>) = compat::eigh(
             &f64matrix_symmetric.view(),
             None,
@@ -966,7 +986,7 @@ mod version_compatibility_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Use the values to prevent unused variable warnings
         assert!(p.shape()[0] > 0);
@@ -1003,10 +1023,12 @@ mod integration_stability_tests {
             let mut workflow_results = HashMap::new();
 
             // Step 1: Matrix analysis
-            let det = compat::det(&basematrix.view(), false, true).unwrap();
-            let cond = compat::cond(&basematrix.view(), Some("2")).unwrap();
-            let rank = compat::matrix_rank(&basematrix.view(), None, false, true).unwrap();
-            let norm = compat::norm(&basematrix.view(), Some("fro"), None, false, true).unwrap();
+            let det = compat::det(&basematrix.view(), false, true).expect("Test operation failed");
+            let cond = compat::cond(&basematrix.view(), Some("2")).expect("Test operation failed");
+            let rank = compat::matrix_rank(&basematrix.view(), None, false, true)
+                .expect("Test operation failed");
+            let norm = compat::norm(&basematrix.view(), Some("fro"), None, false, true)
+                .expect("Test operation failed");
 
             workflow_results.insert("det", det);
             workflow_results.insert("cond", cond);
@@ -1014,8 +1036,10 @@ mod integration_stability_tests {
             workflow_results.insert("norm", norm);
 
             // Step 2: Decompositions
-            let (_, l, u) = compat::lu(&basematrix.view(), false, false, true, false).unwrap();
-            let (_, r) = compat::qr(&basematrix.view(), false, None, "full", false, true).unwrap();
+            let (_, l, u) = compat::lu(&basematrix.view(), false, false, true, false)
+                .expect("Test operation failed");
+            let (_, r) = compat::qr(&basematrix.view(), false, None, "full", false, true)
+                .expect("Test operation failed");
             let (eigenvals, _) = compat::eigh(
                 &basematrix.view(),
                 None,
@@ -1029,19 +1053,22 @@ mod integration_stability_tests {
                 None,
                 1,
             )
-            .unwrap();
+            .expect("Test: operation failed");
 
             workflow_results.insert(
                 "l_norm",
-                compat::norm(&l.view(), Some("fro"), None, false, true).unwrap(),
+                compat::norm(&l.view(), Some("fro"), None, false, true)
+                    .expect("Test operation failed"),
             );
             workflow_results.insert(
                 "u_norm",
-                compat::norm(&u.view(), Some("fro"), None, false, true).unwrap(),
+                compat::norm(&u.view(), Some("fro"), None, false, true)
+                    .expect("Test operation failed"),
             );
             workflow_results.insert(
                 "r_norm",
-                compat::norm(&r.view(), Some("fro"), None, false, true).unwrap(),
+                compat::norm(&r.view(), Some("fro"), None, false, true)
+                    .expect("Test operation failed"),
             );
             workflow_results.insert("eigenval_sum", eigenvals.sum());
             workflow_results.insert("eigenval_product", eigenvals.iter().product());
@@ -1057,15 +1084,16 @@ mod integration_stability_tests {
                 None,
                 false,
             )
-            .unwrap();
-            let solution_norm =
-                compat::norm(&solution.view(), Some("fro"), None, false, true).unwrap();
+            .expect("Test: operation failed");
+            let solution_norm = compat::norm(&solution.view(), Some("fro"), None, false, true)
+                .expect("Test operation failed");
             workflow_results.insert("solution_norm", solution_norm);
 
             // Step 4: Matrix functions
-            let matrix_exp = compat::expm(&(basematrix.clone() * 0.1).view(), None).unwrap();
-            let exp_norm =
-                compat::norm(&matrix_exp.view(), Some("fro"), None, false, true).unwrap();
+            let matrix_exp = compat::expm(&(basematrix.clone() * 0.1).view(), None)
+                .expect("Test operation failed");
+            let exp_norm = compat::norm(&matrix_exp.view(), Some("fro"), None, false, true)
+                .expect("Test operation failed");
             workflow_results.insert("exp_norm", exp_norm);
 
             results.push(workflow_results);

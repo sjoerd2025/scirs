@@ -766,7 +766,11 @@ impl VisualReasoningEngine {
         }
 
         // Sort by similarity score
-        analogies.sort_by(|a, b| b.similarity_score.partial_cmp(&a.similarity_score).unwrap());
+        analogies.sort_by(|a, b| {
+            b.similarity_score
+                .partial_cmp(&a.similarity_score)
+                .expect("Operation failed")
+        });
 
         Ok(analogies)
     }

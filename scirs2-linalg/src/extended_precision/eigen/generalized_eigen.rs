@@ -386,7 +386,7 @@ where
             }
 
             // Form shift
-            let g = (d[l + 1] - d[l]) / (I::from(2.0).unwrap() * e[l]);
+            let g = (d[l + 1] - d[l]) / (I::from(2.0).expect("Operation failed") * e[l]);
             let mut r = (g * g + I::one()).sqrt();
             let mut g = d[m] - d[l] + e[l] / (g + if g >= I::zero() { r } else { -r });
 
@@ -418,7 +418,7 @@ where
                 }
 
                 g = d[i + 1] - p;
-                r = (d[i] - g) * s + I::from(2.0).unwrap() * c * b;
+                r = (d[i] - g) * s + I::from(2.0).expect("Operation failed") * c * b;
                 p = s * r;
                 d[i + 1] = g + p;
                 g = c * r - b;
@@ -529,7 +529,7 @@ where
             let t = if h.abs() < tol {
                 I::one()
             } else {
-                I::from(2.0).unwrap() * e[i] / h
+                I::from(2.0).expect("Operation failed") * e[i] / h
             };
 
             let r = (t * t + I::one()).sqrt();
@@ -551,8 +551,10 @@ where
 
             let temp_i = d[i];
             let temp_ip1 = d[i + 1];
-            d[i] = c2 * temp_i + s2 * temp_ip1 - I::from(2.0).unwrap() * cs * e[i];
-            d[i + 1] = s2 * temp_i + c2 * temp_ip1 + I::from(2.0).unwrap() * cs * e[i];
+            d[i] =
+                c2 * temp_i + s2 * temp_ip1 - I::from(2.0).expect("Operation failed") * cs * e[i];
+            d[i + 1] =
+                s2 * temp_i + c2 * temp_ip1 + I::from(2.0).expect("Operation failed") * cs * e[i];
 
             // Update off-diagonal elements
             if i < m - 1 {

@@ -72,7 +72,7 @@ where
     /// let offsets = vec![0, 1]; // Main diagonal and k=1
     /// let shape = (3, 3);
     ///
-    /// let array = DiaArray::new(data, offsets, shape).unwrap();
+    /// let array = DiaArray::new(data, offsets, shape).expect("Operation failed");
     /// assert_eq!(array.shape(), (3, 3));
     /// assert_eq!(array.nnz(), 5); // 3 on main diagonal, 2 on upper diagonal
     /// ```
@@ -179,7 +179,10 @@ where
         // Fill in the data
         for (&r, (&c, &val)) in row.iter().zip(col.iter().zip(data.iter())) {
             let offset = c as isize - r as isize;
-            let diag_idx = offsets.iter().position(|&o| o == offset).unwrap();
+            let diag_idx = offsets
+                .iter()
+                .position(|&o| o == offset)
+                .expect("Operation failed");
 
             // For upper diagonals (k > 0), the index is row
             // For lower diagonals (k < 0), the index is column
@@ -542,7 +545,10 @@ where
                 self.data = offset_data.into_iter().map(|(_, data)| data).collect();
 
                 // Get the index of the newly added diagonal
-                self.offsets.iter().position(|&o| o == offset).unwrap()
+                self.offsets
+                    .iter()
+                    .position(|&o| o == offset)
+                    .expect("Operation failed")
             }
         };
 
@@ -924,7 +930,7 @@ mod tests {
         let offsets = vec![0, 1]; // Main diagonal and k=1
         let shape = (3, 3);
 
-        let array = DiaArray::new(data, offsets, shape).unwrap();
+        let array = DiaArray::new(data, offsets, shape).expect("Operation failed");
 
         assert_eq!(array.shape(), (3, 3));
         assert_eq!(array.nnz(), 5); // 3 on main diagonal, 2 on upper diagonal
@@ -946,7 +952,7 @@ mod tests {
         let data = vec![1.0, 4.0, 2.0, 3.0, 5.0, 6.0, 7.0];
         let shape = (3, 3);
 
-        let array = DiaArray::from_triplets(&row, &col, &data, shape).unwrap();
+        let array = DiaArray::from_triplets(&row, &col, &data, shape).expect("Operation failed");
 
         // Should have 3 diagonals: main (0), upper (1), and lower (-1)
         assert_eq!(array.offsets.len(), 3);
@@ -975,10 +981,10 @@ mod tests {
         let offsets = vec![0, 1, -1]; // Main, upper, lower
         let shape = (3, 3);
 
-        let array = DiaArray::new(data, offsets, shape).unwrap();
+        let array = DiaArray::new(data, offsets, shape).expect("Operation failed");
 
         // Convert to COO and check
-        let coo = array.to_coo().unwrap();
+        let coo = array.to_coo().expect("Operation failed");
         assert_eq!(coo.shape(), (3, 3));
         assert_eq!(coo.nnz(), 6); // Zero value at (2,1) is not stored
 
@@ -989,7 +995,7 @@ mod tests {
 
         let expected =
             Array2::from_shape_vec((3, 3), vec![1.0, 4.0, 0.0, 0.0, 3.0, 5.0, 0.0, 2.0, 7.0])
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(dense, expected);
     }
 
@@ -999,27 +1005,27 @@ mod tests {
         let data1 = vec![Array1::from_vec(vec![1.0, 2.0, 3.0])]; // Main diagonal
         let offsets1 = vec![0];
         let shape1 = (3, 3);
-        let array1 = DiaArray::new(data1, offsets1, shape1).unwrap();
+        let array1 = DiaArray::new(data1, offsets1, shape1).expect("Operation failed");
 
         let data2 = vec![Array1::from_vec(vec![4.0, 5.0, 6.0])]; // Main diagonal
         let offsets2 = vec![0];
         let shape2 = (3, 3);
-        let array2 = DiaArray::new(data2, offsets2, shape2).unwrap();
+        let array2 = DiaArray::new(data2, offsets2, shape2).expect("Operation failed");
 
         // Test addition
-        let sum = array1.add(&array2).unwrap();
+        let sum = array1.add(&array2).expect("Operation failed");
         assert_eq!(sum.get(0, 0), 5.0);
         assert_eq!(sum.get(1, 1), 7.0);
         assert_eq!(sum.get(2, 2), 9.0);
 
         // Test multiplication
-        let product = array1.mul(&array2).unwrap();
+        let product = array1.mul(&array2).expect("Operation failed");
         assert_eq!(product.get(0, 0), 4.0);
         assert_eq!(product.get(1, 1), 10.0);
         assert_eq!(product.get(2, 2), 18.0);
 
         // Test dot product (matrix multiplication)
-        let dot = array1.dot(&array2).unwrap();
+        let dot = array1.dot(&array2).expect("Operation failed");
         assert_eq!(dot.get(0, 0), 4.0);
         assert_eq!(dot.get(1, 1), 10.0);
         assert_eq!(dot.get(2, 2), 18.0);
@@ -1036,13 +1042,13 @@ mod tests {
         let offsets = vec![0, 1, -1]; // Main, upper, lower
         let shape = (3, 3);
 
-        let array = DiaArray::new(data, offsets, shape).unwrap();
+        let array = DiaArray::new(data, offsets, shape).expect("Operation failed");
 
         // Create a vector
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
         // Test matrix-vector multiplication
-        let result = array.dot_vector(&vector.view()).unwrap();
+        let result = array.dot_vector(&vector.view()).expect("Operation failed");
 
         // Expected: [1*1 + 4*2 + 0*3, 6*1 + 2*2 + 5*3, 0*1 + 7*2 + 3*3]
         // = [9, 19, 21]
@@ -1061,8 +1067,8 @@ mod tests {
         let offsets = vec![0, 1, -1]; // Main, upper, lower
         let shape = (3, 3);
 
-        let array = DiaArray::new(data, offsets, shape).unwrap();
-        let transposed = array.transpose().unwrap();
+        let array = DiaArray::new(data, offsets, shape).expect("Operation failed");
+        let transposed = array.transpose().expect("Operation failed");
 
         // Check shape
         assert_eq!(transposed.shape(), (3, 3));
@@ -1088,17 +1094,17 @@ mod tests {
         let offsets = vec![0, 1]; // Main, upper
         let shape = (3, 3);
 
-        let array = DiaArray::new(data, offsets, shape).unwrap();
+        let array = DiaArray::new(data, offsets, shape).expect("Operation failed");
 
         // Test sum of entire array
-        if let SparseSum::Scalar(sum) = array.sum(None).unwrap() {
+        if let SparseSum::Scalar(sum) = array.sum(None).expect("Operation failed") {
             assert_eq!(sum, 15.0); // 1+2+3+4+5 = 15
         } else {
             panic!("Expected SparseSum::Scalar");
         }
 
         // Test sum along rows
-        if let SparseSum::SparseArray(row_sum) = array.sum(Some(0)).unwrap() {
+        if let SparseSum::SparseArray(row_sum) = array.sum(Some(0)).expect("Operation failed") {
             assert_eq!(row_sum.shape(), (1, 3));
             assert_eq!(row_sum.get(0, 0), 1.0);
             assert_eq!(row_sum.get(0, 1), 6.0); // 2+4 = 6
@@ -1108,7 +1114,7 @@ mod tests {
         }
 
         // Test sum along columns
-        if let SparseSum::SparseArray(col_sum) = array.sum(Some(1)).unwrap() {
+        if let SparseSum::SparseArray(col_sum) = array.sum(Some(1)).expect("Operation failed") {
             assert_eq!(col_sum.shape(), (3, 1));
             assert_eq!(col_sum.get(0, 0), 5.0); // 1+4 = 5
             assert_eq!(col_sum.get(1, 0), 7.0); // 2+5 = 7

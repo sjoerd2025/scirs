@@ -264,17 +264,17 @@ impl FedNovaCoordinator {
             .map(|&tau| (tau - mean).powi(2))
             / self.tau_history.len() as f32;
         TauStatistics {
-            current_tau: *self.tau_history.last().unwrap(),
+            current_tau: *self.tau_history.last().expect("Operation failed"),
             mean_tau: mean,
             std_tau: variance.sqrt(),
             min_tau: self
                 .tau_history
                 .iter()
-                .min_by(|a, b| a.partial_cmp(b).unwrap())
+                .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .cloned()
                 .unwrap_or(0.0),
             max_tau: self
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
 /// Statistics about tau_eff values
 #[derive(Debug, Default)]
 pub struct TauStatistics {
@@ -302,7 +302,7 @@ mod tests {
             create_test_update(0, 1000).into(),
             create_test_update(1, 500).into(),
             create_test_update(2, 2000).into(),
-        let result = aggregator.aggregate(&updates).unwrap();
+        let result = aggregator.aggregate(&updates).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].shape(), &[10, 10]);
         assert_eq!(result[1].shape(), &[10, 5]);
@@ -315,7 +315,7 @@ mod tests {
         let labels = Array1::from_elem(100, 0);
         let update = client
             .local_train(&global_weights, &data.view(), &labels.view(), 5)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(update.client_id, 0);
         assert_eq!(update.num_samples, 100);
         assert!(update.local_steps > 0);
@@ -324,7 +324,7 @@ mod tests {
             create_test_update(0, 1000),
             create_test_update(1, 500),
             create_test_update(2, 2000),
-        let result = coordinator.coordinate_round(updates).unwrap();
+        let result = coordinator.coordinate_round(updates).expect("Operation failed");
         assert!(!result.is_empty());
         let stats = coordinator.get_tau_stats();
         assert!(stats.current_tau > 0.0);

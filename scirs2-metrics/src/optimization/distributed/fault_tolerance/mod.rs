@@ -234,7 +234,7 @@ impl FaultRecoveryManager {
         }
 
         let action_id = action.id.clone();
-        let mut active_recoveries = self.active_recoveries.lock().unwrap();
+        let mut active_recoveries = self.active_recoveries.lock().expect("Operation failed");
 
         let recovery_op = RecoveryOperation {
             action: action.clone(),
@@ -285,7 +285,7 @@ impl FaultRecoveryManager {
         // Queue node replacement if configured
         match self.config.replacement_strategy {
             NodeReplacementStrategy::Immediate | NodeReplacementStrategy::HotStandby => {
-                let mut queue = self.replacement_queue.lock().unwrap();
+                let mut queue = self.replacement_queue.lock().expect("Operation failed");
                 queue.push_back(NodeReplacementRequest {
                     failed_node: action.target_node.clone(),
                     replacement_type: self.config.replacement_strategy.clone(),
@@ -347,7 +347,7 @@ impl FaultRecoveryManager {
 
     /// Log a recovery action
     fn log_action(&self, action: RecoveryAction) {
-        let mut history = self.recovery_history.write().unwrap();
+        let mut history = self.recovery_history.write().expect("Operation failed");
         history.push_back(action);
 
         // Keep only recent history
@@ -358,13 +358,13 @@ impl FaultRecoveryManager {
 
     /// Get recovery history
     pub fn get_recovery_history(&self) -> Vec<RecoveryAction> {
-        let history = self.recovery_history.read().unwrap();
+        let history = self.recovery_history.read().expect("Operation failed");
         history.iter().cloned().collect()
     }
 
     /// Get active recovery operations
     pub fn get_active_recoveries(&self) -> Vec<RecoveryOperation> {
-        let active = self.active_recoveries.lock().unwrap();
+        let active = self.active_recoveries.lock().expect("Operation failed");
         active.values().cloned().collect()
     }
 
@@ -375,7 +375,7 @@ impl FaultRecoveryManager {
         success: bool,
         error: Option<String>,
     ) -> Result<()> {
-        let mut active_recoveries = self.active_recoveries.lock().unwrap();
+        let mut active_recoveries = self.active_recoveries.lock().expect("Operation failed");
 
         if let Some(mut recovery_op) = active_recoveries.remove(action_id) {
             recovery_op.action.completed_at = Some(SystemTime::now());
@@ -406,7 +406,7 @@ impl FaultRecoveryManager {
 
     /// Process node replacement requests
     pub fn process_replacement_requests(&mut self) -> Result<Vec<NodeReplacementRequest>> {
-        let mut queue = self.replacement_queue.lock().unwrap();
+        let mut queue = self.replacement_queue.lock().expect("Operation failed");
         let requests: Vec<_> = queue.drain(..).collect();
         Ok(requests)
     }
@@ -488,7 +488,7 @@ impl HealthMonitor {
 
     /// Start monitoring
     pub fn start(&mut self) -> Result<()> {
-        let mut is_monitoring = self.is_monitoring.write().unwrap();
+        let mut is_monitoring = self.is_monitoring.write().expect("Operation failed");
         *is_monitoring = true;
 
         // TODO: Start monitoring thread
@@ -497,7 +497,7 @@ impl HealthMonitor {
 
     /// Stop monitoring
     pub fn stop(&mut self) -> Result<()> {
-        let mut is_monitoring = self.is_monitoring.write().unwrap();
+        let mut is_monitoring = self.is_monitoring.write().expect("Operation failed");
         *is_monitoring = false;
 
         // TODO: Stop monitoring thread
@@ -506,7 +506,7 @@ impl HealthMonitor {
 
     /// Register a node for monitoring
     pub fn register_node(&mut self, node_id: String, metrics: NodeMetrics) -> Result<()> {
-        let mut nodes = self.nodes.write().unwrap();
+        let mut nodes = self.nodes.write().expect("Operation failed");
 
         let monitoring_info = NodeMonitoringInfo {
             node_id: node_id.clone(),
@@ -524,14 +524,14 @@ impl HealthMonitor {
 
     /// Unregister a node from monitoring
     pub fn unregister_node(&mut self, node_id: &str) -> Result<()> {
-        let mut nodes = self.nodes.write().unwrap();
+        let mut nodes = self.nodes.write().expect("Operation failed");
         nodes.remove(node_id);
         Ok(())
     }
 
     /// Update node metrics
     pub fn update_metrics(&mut self, node_id: &str, metrics: NodeMetrics) -> Result<()> {
-        let mut nodes = self.nodes.write().unwrap();
+        let mut nodes = self.nodes.write().expect("Operation failed");
 
         if let Some(monitoring_info) = nodes.get_mut(node_id) {
             monitoring_info.current_metrics = metrics;
@@ -573,7 +573,7 @@ impl HealthMonitor {
 
     /// Get health summary for all nodes
     pub fn get_health_summary(&self) -> HealthSummary {
-        let nodes = self.nodes.read().unwrap();
+        let nodes = self.nodes.read().expect("Operation failed");
 
         let mut summary = HealthSummary {
             total_nodes: nodes.len(),
@@ -602,13 +602,13 @@ impl HealthMonitor {
 
     /// Get node health status
     pub fn get_node_health(&self, node_id: &str) -> Option<NodeHealthStatus> {
-        let nodes = self.nodes.read().unwrap();
+        let nodes = self.nodes.read().expect("Operation failed");
         nodes.get(node_id).map(|info| info.health_status.clone())
     }
 
     /// List all monitored nodes
     pub fn list_nodes(&self) -> Vec<String> {
-        let nodes = self.nodes.read().unwrap();
+        let nodes = self.nodes.read().expect("Operation failed");
         nodes.keys().cloned().collect()
     }
 }
@@ -823,7 +823,9 @@ mod tests {
         let mut monitor = HealthMonitor::new(30);
         let metrics = NodeMetrics::healthy();
 
-        monitor.register_node("node1".to_string(), metrics).unwrap();
+        monitor
+            .register_node("node1".to_string(), metrics)
+            .expect("Operation failed");
         assert_eq!(monitor.list_nodes().len(), 1);
         assert_eq!(
             monitor.get_node_health("node1"),

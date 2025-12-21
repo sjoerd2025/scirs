@@ -33,7 +33,7 @@ fn test_iterative_solvers() {
         let b = convert_to_tensor(array![1.0_f32, 2.0], g);
 
         let x_cg = conjugate_gradient_solve(&a, &b, 100, Some(1e-6));
-        let result_cg = x_cg.eval(g).unwrap();
+        let result_cg = x_cg.eval(g).expect("Test: operation failed");
         assert_eq!(result_cg.shape(), &[2]);
 
         // Verify Ax = b
@@ -41,17 +41,18 @@ fn test_iterative_solvers() {
         let ax_flat = reshape(ax, &[2]);
         let diff = sub(ax_flat, b);
         let error = normfro(&reshape(diff, &[2, 1]));
-        let error_val = error.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])];
+        let error_val =
+            error.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])];
         assert!(error_val < 1e-4, "CG solver error too large: {}", error_val);
 
         // Test GMRES
         let x_gmres = gmres_solve(&a, &b, 100, 10, Some(1e-6));
-        let result_gmres = x_gmres.eval(g).unwrap();
+        let result_gmres = x_gmres.eval(g).expect("Test: operation failed");
         assert_eq!(result_gmres.shape(), &[2]);
 
         // Test BiCGSTAB
         let x_bicgstab = bicgstab_solve(&a, &b, 100, Some(1e-6));
-        let result_bicgstab = x_bicgstab.eval(g).unwrap();
+        let result_bicgstab = x_bicgstab.eval(g).expect("Test: operation failed");
         assert_eq!(result_bicgstab.shape(), &[2]);
     });
 }
@@ -63,19 +64,19 @@ fn test_matrix_trig_functions() {
         // Test matrix sine
         let a = convert_to_tensor(array![[0.0_f32, 1.0], [-1.0, 0.0]], g);
         let sin_a = sinm(&a);
-        let sin_result = sin_a.eval(g).unwrap();
+        let sin_result = sin_a.eval(g).expect("Test: operation failed");
         assert_eq!(sin_result.shape(), &[2, 2]);
 
         // Test matrix cosine
         let cos_a = cosm(&a);
-        let cos_result = cos_a.eval(g).unwrap();
+        let cos_result = cos_a.eval(g).expect("Test: operation failed");
         assert_eq!(cos_result.shape(), &[2, 2]);
 
         // Test identity: sin²(A) + cos²(A) = I (approximately for small matrices)
         let sin2 = matmul(sin_a, sin_a);
         let cos2 = matmul(cos_a, cos_a);
         let sum = add(sin2, cos2);
-        let sum_result = sum.eval(g).unwrap();
+        let sum_result = sum.eval(g).expect("Test: operation failed");
 
         // Should be close to identity for this specific matrix
         assert!((sum_result[[0, 0]] - 1.0).abs() < 0.1);
@@ -85,8 +86,14 @@ fn test_matrix_trig_functions() {
         let sinh_a = sinhm(&a);
         let cosh_a = coshm(&a);
 
-        assert_eq!(sinh_a.eval(g).unwrap().shape(), &[2, 2]);
-        assert_eq!(cosh_a.eval(g).unwrap().shape(), &[2, 2]);
+        assert_eq!(
+            sinh_a.eval(g).expect("Test: operation failed").shape(),
+            &[2, 2]
+        );
+        assert_eq!(
+            cosh_a.eval(g).expect("Test: operation failed").shape(),
+            &[2, 2]
+        );
     });
 }
 
@@ -129,7 +136,7 @@ fn test_preconditioned_cg() {
         // Test with Jacobi preconditioner
         let x_pcg = pcg_solve(&a, &b, 100, Some(1e-6), PreconditionerType::Jacobi);
 
-        let result_pcg = x_pcg.eval(g).unwrap();
+        let result_pcg = x_pcg.eval(g).expect("Test: operation failed");
         assert_eq!(result_pcg.shape(), &[2]);
 
         // Verify solution
@@ -137,7 +144,8 @@ fn test_preconditioned_cg() {
         let ax_flat = reshape(ax, &[2]);
         let diff = sub(ax_flat, b);
         let error = normfro(&reshape(diff, &[2, 1]));
-        let error_val = error.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])];
+        let error_val =
+            error.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])];
         assert!(
             error_val < 1e-4,
             "PCG solver error too large: {}",
@@ -153,13 +161,13 @@ fn test_matrix_sign_function() {
         // Test matrix sign function
         let a = convert_to_tensor(array![[1.0_f32, 2.0], [0.0, -1.0]], g);
         let sign_a = signm(&a);
-        let sign_result = sign_a.eval(g).unwrap();
+        let sign_result = sign_a.eval(g).expect("Test: operation failed");
 
         assert_eq!(sign_result.shape(), &[2, 2]);
 
         // Test property: sign(A)² = I for non-singular matrices
         let sign2 = matmul(sign_a, sign_a);
-        let sign2_result = sign2.eval(g).unwrap();
+        let sign2_result = sign2.eval(g).expect("Test: operation failed");
 
         assert!((sign2_result[[0, 0]] - 1.0).abs() < 0.1);
         assert!((sign2_result[[1, 1]] - 1.0).abs() < 0.1);
@@ -174,7 +182,7 @@ fn test_general_matrix_function() {
         // Using a symmetric matrix since the current implementation only works for symmetric matrices
         let a = convert_to_tensor(array![[0.0_f32, 1.0], [1.0, 0.0]], g);
         let exp_a = funm(&a, |x: f32| x.exp(), "exp");
-        let exp_result = exp_a.eval(g).unwrap();
+        let exp_result = exp_a.eval(g).expect("Test: operation failed");
 
         assert_eq!(exp_result.shape(), &[2, 2]);
 

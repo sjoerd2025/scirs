@@ -44,8 +44,8 @@ pub fn simd_cosine_similarity_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f
 
                 // Process 8 f32s at a time, computing all three sums together
                 while i + 8 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 8];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 8];
+                    let a_slice = &a.as_slice().expect("Operation failed")[i..i + 8];
+                    let b_slice = &b.as_slice().expect("Operation failed")[i..i + 8];
                     let a_vec = _mm256_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_ps(b_slice.as_ptr());
 
@@ -101,8 +101,8 @@ pub fn simd_cosine_similarity_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Operation failed")[i..i + 4];
                     let a_vec = _mm_loadu_ps(a_slice.as_ptr());
                     let b_vec = _mm_loadu_ps(b_slice.as_ptr());
 
@@ -164,8 +164,8 @@ pub fn simd_cosine_similarity_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f
             let mut i = 0;
 
             while i + 4 <= len {
-                let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                let a_slice = &a.as_slice().expect("Operation failed")[i..i + 4];
+                let b_slice = &b.as_slice().expect("Operation failed")[i..i + 4];
                 let a_vec = vld1q_f32(a_slice.as_ptr());
                 let b_vec = vld1q_f32(b_slice.as_ptr());
 
@@ -243,8 +243,8 @@ pub fn simd_cosine_similarity_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f
 
                 // Process 4 f64s at a time
                 while i + 4 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 4];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 4];
+                    let a_slice = &a.as_slice().expect("Operation failed")[i..i + 4];
+                    let b_slice = &b.as_slice().expect("Operation failed")[i..i + 4];
                     let a_vec = _mm256_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm256_loadu_pd(b_slice.as_ptr());
 
@@ -287,8 +287,8 @@ pub fn simd_cosine_similarity_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f
                 let mut i = 0;
 
                 while i + 2 <= len {
-                    let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                    let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                    let a_slice = &a.as_slice().expect("Operation failed")[i..i + 2];
+                    let b_slice = &b.as_slice().expect("Operation failed")[i..i + 2];
                     let a_vec = _mm_loadu_pd(a_slice.as_ptr());
                     let b_vec = _mm_loadu_pd(b_slice.as_ptr());
 
@@ -348,8 +348,8 @@ pub fn simd_cosine_similarity_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f
             let mut i = 0;
 
             while i + 2 <= len {
-                let a_slice = &a.as_slice().unwrap()[i..i + 2];
-                let b_slice = &b.as_slice().unwrap()[i..i + 2];
+                let a_slice = &a.as_slice().expect("Operation failed")[i..i + 2];
+                let b_slice = &b.as_slice().expect("Operation failed")[i..i + 2];
                 let a_vec = vld1q_f64(a_slice.as_ptr());
                 let b_vec = vld1q_f64(b_slice.as_ptr());
 

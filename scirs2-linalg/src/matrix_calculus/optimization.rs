@@ -30,9 +30,9 @@ impl<F: Float> Default for OptimizationConfig<F> {
     fn default() -> Self {
         Self {
             max_iterations: 1000,
-            gradient_tolerance: F::from(1e-6).unwrap(),
-            initial_stepsize: F::from(1.0).unwrap(),
-            backtrack_factor: F::from(0.5).unwrap(),
+            gradient_tolerance: F::from(1e-6).expect("Operation failed"),
+            initial_stepsize: F::from(1.0).expect("Operation failed"),
+            backtrack_factor: F::from(0.5).expect("Operation failed"),
             max_backtrack_steps: 20,
         }
     }
@@ -85,7 +85,7 @@ pub struct OptimizationResult<F: Float> {
 /// let x0 = array![[1.0, 1.0], [1.0, 1.0]];  // Start from ones matrix
 /// let config = OptimizationConfig::default();
 ///
-/// let result = matrix_gradient_descent(&f, &x0.view(), &config).unwrap();
+/// let result = matrix_gradient_descent(&f, &x0.view(), &config).expect("Operation failed");
 /// // Should converge to the target matrix
 /// ```
 #[allow(dead_code)]
@@ -136,8 +136,8 @@ where
             let f_new = f(&x_new.view())?;
 
             // Armijo condition: sufficient decrease
-            let sufficient_decrease =
-                f_val - f_new >= F::from(1e-4).unwrap() * stepsize * grad_norm * grad_norm;
+            let sufficient_decrease = f_val - f_new
+                >= F::from(1e-4).expect("Operation failed") * stepsize * grad_norm * grad_norm;
 
             if sufficient_decrease {
                 break;
@@ -199,7 +199,7 @@ where
 /// let x0 = array![[0.0, 0.0], [0.0, 0.0]];
 /// let config = OptimizationConfig::default();
 ///
-/// let result = matrix_newton_method(&f, &x0.view(), &config).unwrap();
+/// let result = matrix_newton_method(&f, &x0.view(), &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn matrix_newton_method<F>(
@@ -248,7 +248,7 @@ where
             let f_prev = f_history[f_history.len() - 2];
             let f_change = (f_val - f_prev).abs();
             let adaptive_step = if f_change > F::epsilon() {
-                config.initial_stepsize * F::from(0.1).unwrap() / f_change
+                config.initial_stepsize * F::from(0.1).expect("Operation failed") / f_change
             } else {
                 config.initial_stepsize
             };
@@ -319,7 +319,7 @@ where
 /// let x0 = array![[1.0, 0.0], [0.0, 1.0]];  // Start from identity
 /// let config = OptimizationConfig::default();
 ///
-/// let result = projected_gradient_descent(&f, project, &x0.view(), &config).unwrap();
+/// let result = projected_gradient_descent(&f, project, &x0.view(), &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn projected_gradient_descent<F>(
@@ -562,11 +562,11 @@ pub mod common_problems {
         // Project onto positive definite matrices (simplified)
         let project_pd = |x: &ArrayView2<F>| -> LinalgResult<Array2<F>> {
             // Simple heuristic: make symmetric and add small diagonal regularization
-            let sym = (x + &x.t()) / F::from(2.0).unwrap();
+            let sym = (x + &x.t()) / F::from(2.0).expect("Operation failed");
             let mut result = sym;
 
             // Add regularization to diagonal
-            let reg = F::from(1e-6).unwrap();
+            let reg = F::from(1e-6).expect("Operation failed");
             for i in 0..size {
                 result[[i, i]] = result[[i, i]] + reg;
             }
@@ -603,7 +603,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = matrix_gradient_descent(&objective, &x0.view(), &config).unwrap();
+        let result =
+            matrix_gradient_descent(&objective, &x0.view(), &config).expect("Operation failed");
 
         // Should converge to the zero matrix (global minimum of ||X||_F^2)
         assert!(result.converged);
@@ -637,7 +638,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = projected_gradient_descent(&objective, project, &x0.view(), &config).unwrap();
+        let result = projected_gradient_descent(&objective, project, &x0.view(), &config)
+            .expect("Operation failed");
 
         // Should converge to zero diagonal matrix
         assert!(result.converged);

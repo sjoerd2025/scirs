@@ -25,7 +25,7 @@ use std::sync::LazyLock;
 /// ```
 /// use scirs2_fft::fftfreq;
 ///
-/// let freq = fftfreq(8, 0.1).unwrap();
+/// let freq = fftfreq(8, 0.1).expect("Operation failed");
 /// // frequencies for n=8, sample spacing of 0.1
 /// // [0.0, 1.25, 2.5, 3.75, -5.0, -3.75, -2.5, -1.25]
 /// assert!((freq[0] - 0.0).abs() < 1e-10);
@@ -94,7 +94,7 @@ pub fn fftfreq(n: usize, d: f64) -> FFTResult<Vec<f64>> {
 /// ```
 /// use scirs2_fft::rfftfreq;
 ///
-/// let freq = rfftfreq(8, 0.1).unwrap();
+/// let freq = rfftfreq(8, 0.1).expect("Operation failed");
 /// // frequencies for n=8, sample spacing of 0.1
 /// // [0.0, 1.25, 2.5, 3.75, 5.0]
 /// assert!((freq[0] - 0.0).abs() < 1e-10);
@@ -129,7 +129,7 @@ pub fn rfftfreq(n: usize, d: f64) -> FFTResult<Vec<f64>> {
 /// use scirs2_core::ndarray::Array1;
 ///
 /// let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
-/// let shifted = fftshift(&x).unwrap();
+/// let shifted = fftshift(&x).expect("Operation failed");
 /// assert_eq!(shifted, Array1::from_vec(vec![2.0, 3.0, 0.0, 1.0]));
 /// ```
 #[allow(dead_code)]
@@ -187,8 +187,8 @@ where
 /// use scirs2_core::ndarray::Array1;
 ///
 /// let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
-/// let shifted = fftshift(&x).unwrap();
-/// let unshifted = ifftshift(&shifted).unwrap();
+/// let shifted = fftshift(&x).expect("Operation failed");
+/// let unshifted = ifftshift(&shifted).expect("Operation failed");
 /// assert_eq!(x, unshifted);
 /// ```
 #[allow(dead_code)]
@@ -245,7 +245,7 @@ where
 /// ```
 /// use scirs2_fft::helper::freq_bins;
 ///
-/// let bins = freq_bins(1024, 44100.0).unwrap();
+/// let bins = freq_bins(1024, 44100.0).expect("Operation failed");
 /// assert_eq!(bins.len(), 1024);
 /// assert!((bins[0] - 0.0).abs() < 1e-10);
 /// assert!((bins[1] - 43.066).abs() < 0.001);
@@ -398,7 +398,7 @@ mod tests {
     #[test]
     fn test_fftfreq() {
         // Test even n
-        let freq = fftfreq(8, 1.0).unwrap();
+        let freq = fftfreq(8, 1.0).expect("Operation failed");
         let expected = [0.0, 0.125, 0.25, 0.375, -0.5, -0.375, -0.25, -0.125];
         assert_eq!(freq.len(), expected.len());
         for (a, b) in freq.iter().zip(expected.iter()) {
@@ -406,7 +406,7 @@ mod tests {
         }
 
         // Test odd n
-        let freq = fftfreq(7, 1.0).unwrap();
+        let freq = fftfreq(7, 1.0).expect("Operation failed");
         // Expected values from test case
         let expected = [
             0.0,
@@ -423,7 +423,7 @@ mod tests {
         }
 
         // Test with sample spacing
-        let freq = fftfreq(4, 0.1).unwrap();
+        let freq = fftfreq(4, 0.1).expect("Operation failed");
         let expected = [0.0, 2.5, -5.0, -2.5];
         for (a, b) in freq.iter().zip(expected.iter()) {
             assert_relative_eq!(a, b, epsilon = 1e-10);
@@ -433,7 +433,7 @@ mod tests {
     #[test]
     fn test_rfftfreq() {
         // Test even n
-        let freq = rfftfreq(8, 1.0).unwrap();
+        let freq = rfftfreq(8, 1.0).expect("Operation failed");
         let expected = [0.0, 0.125, 0.25, 0.375, 0.5];
         assert_eq!(freq.len(), expected.len());
         for (a, b) in freq.iter().zip(expected.iter()) {
@@ -441,7 +441,7 @@ mod tests {
         }
 
         // Test odd n
-        let freq = rfftfreq(7, 1.0).unwrap();
+        let freq = rfftfreq(7, 1.0).expect("Operation failed");
         let expected = [0.0, 0.14285714, 0.28571429, 0.42857143];
         assert_eq!(freq.len(), 4);
         for (a, b) in freq.iter().zip(expected.iter()) {
@@ -449,7 +449,7 @@ mod tests {
         }
 
         // Test with sample spacing
-        let freq = rfftfreq(4, 0.1).unwrap();
+        let freq = rfftfreq(4, 0.1).expect("Operation failed");
         let expected = [0.0, 2.5, 5.0];
         for (a, b) in freq.iter().zip(expected.iter()) {
             assert_relative_eq!(a, b, epsilon = 1e-10);
@@ -460,20 +460,21 @@ mod tests {
     fn test_fftshift() {
         // Test 1D even
         let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
-        let shifted = fftshift(&x).unwrap();
+        let shifted = fftshift(&x).expect("Operation failed");
         let expected = Array1::from_vec(vec![2.0, 3.0, 0.0, 1.0]);
         assert_eq!(shifted, expected);
 
         // Test 1D odd
         let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
-        let shifted = fftshift(&x).unwrap();
+        let shifted = fftshift(&x).expect("Operation failed");
         let expected = Array1::from_vec(vec![3.0, 4.0, 0.0, 1.0, 2.0]);
         assert_eq!(shifted, expected);
 
         // Test 2D
-        let x = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
-        let shifted = fftshift(&x).unwrap();
-        let expected = Array2::from_shape_vec((2, 2), vec![3.0, 2.0, 1.0, 0.0]).unwrap();
+        let x = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).expect("Operation failed");
+        let shifted = fftshift(&x).expect("Operation failed");
+        let expected =
+            Array2::from_shape_vec((2, 2), vec![3.0, 2.0, 1.0, 0.0]).expect("Operation failed");
         assert_eq!(shifted, expected);
     }
 
@@ -481,26 +482,27 @@ mod tests {
     fn test_ifftshift() {
         // Test 1D even
         let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
-        let shifted = fftshift(&x).unwrap();
-        let unshifted = ifftshift(&shifted).unwrap();
+        let shifted = fftshift(&x).expect("Operation failed");
+        let unshifted = ifftshift(&shifted).expect("Operation failed");
         assert_eq!(unshifted, x);
 
         // Test 1D odd
         let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
-        let shifted = fftshift(&x).unwrap();
-        let unshifted = ifftshift(&shifted).unwrap();
+        let shifted = fftshift(&x).expect("Operation failed");
+        let unshifted = ifftshift(&shifted).expect("Operation failed");
         assert_eq!(unshifted, x);
 
         // Test 2D
-        let x = Array2::from_shape_vec((2, 3), vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
-        let shifted = fftshift(&x).unwrap();
-        let unshifted = ifftshift(&shifted).unwrap();
+        let x = Array2::from_shape_vec((2, 3), vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+            .expect("Operation failed");
+        let shifted = fftshift(&x).expect("Operation failed");
+        let unshifted = ifftshift(&shifted).expect("Operation failed");
         assert_eq!(unshifted, x);
     }
 
     #[test]
     fn test_freq_bins() {
-        let bins = freq_bins(8, 16000.0).unwrap();
+        let bins = freq_bins(8, 16000.0).expect("Operation failed");
         let expected = [
             0.0, 2000.0, 4000.0, 6000.0, -8000.0, -6000.0, -4000.0, -2000.0,
         ];

@@ -28,9 +28,9 @@ fn main() {
     println!("=== Arbitrary Precision Special Functions Demo ===\n");
 
     // Create precision contexts with different bit precisions
-    let ctx_256 = PrecisionContext::new(256).unwrap();
-    let ctx_512 = PrecisionContext::new(512).unwrap();
-    let ctx_1024 = PrecisionContext::new(1024).unwrap();
+    let ctx_256 = PrecisionContext::new(256).expect("Operation failed");
+    let ctx_512 = PrecisionContext::new(512).expect("Operation failed");
+    let ctx_1024 = PrecisionContext::new(1024).expect("Operation failed");
 
     // Demonstrate Gamma function with increasing precision
     println!("1. Gamma Function with Different Precisions");
@@ -43,15 +43,15 @@ fn main() {
     println!("Γ(0.5) with f64:        {:.20}", gamma_f64);
 
     // 256-bit precision
-    let gamma_256 = gamma_ap(x, &ctx_256).unwrap();
+    let gamma_256 = gamma_ap(x, &ctx_256).expect("Operation failed");
     println!("Γ(0.5) with 256 bits:   {:.30}", gamma_256);
 
     // 512-bit precision
-    let gamma_512 = gamma_ap(x, &ctx_512).unwrap();
+    let gamma_512 = gamma_ap(x, &ctx_512).expect("Operation failed");
     println!("Γ(0.5) with 512 bits:   {:.50}", gamma_512);
 
     // 1024-bit precision
-    let gamma_1024 = gamma_ap(x, &ctx_1024).unwrap();
+    let gamma_1024 = gamma_ap(x, &ctx_1024).expect("Operation failed");
     println!("Γ(0.5) with 1024 bits:  {:.80}", gamma_1024);
 
     // Compare with theoretical value √π
@@ -70,7 +70,7 @@ fn main() {
     println!("log Γ(100) with f64:     {:.20}", log_gamma_f64);
 
     // High precision computation
-    let log_gamma_hp = log_gamma_ap(large_x, &ctx_512).unwrap();
+    let log_gamma_hp = log_gamma_ap(large_x, &ctx_512).expect("Operation failed");
     println!("log Γ(100) with 512 bits: {:.50}", log_gamma_hp);
 
     // Demonstrate Bessel functions
@@ -82,13 +82,13 @@ fn main() {
 
     // Compare J_5(10) at different precisions
     let j5_f64 = scirs2_special::jn(n, x);
-    let j5_hp = bessel_j_ap(n, x, &ctx_512).unwrap();
+    let j5_hp = bessel_j_ap(n, x, &ctx_512).expect("Operation failed");
 
     println!("J_5(10) with f64:      {:.20}", j5_f64);
     println!("J_5(10) with 512 bits: {:.50}", j5_hp);
 
     // Bessel Y function (second kind)
-    let y5_hp = bessel_y_ap(n, x, &ctx_512).unwrap();
+    let y5_hp = bessel_y_ap(n, x, &ctx_512).expect("Operation failed");
     println!("Y_5(10) with 512 bits: {:.50}", y5_hp);
 
     // Demonstrate error functions
@@ -98,8 +98,8 @@ fn main() {
     let x = 2.5;
 
     let erf_f64 = scirs2_special::erf(x);
-    let erf_hp = erf_ap(x, &ctx_512).unwrap();
-    let erfc_hp = erfc_ap(x, &ctx_512).unwrap();
+    let erf_hp = erf_ap(x, &ctx_512).expect("Operation failed");
+    let erfc_hp = erfc_ap(x, &ctx_512).expect("Operation failed");
 
     println!("erf(2.5) with f64:      {:.20}", erf_f64);
     println!("erf(2.5) with 512 bits: {:.50}", erf_hp);

@@ -281,7 +281,7 @@ impl PyInterp2d {
         // Convert Array2_17 to Array2 (ndarray 0.16)
         let shape = result.dim();
         let vec: Vec<f64> = result.into_iter().collect();
-        scirs_to_numpy_array2(Array2::from_shape_vec(shape, vec).unwrap(), py)
+        scirs_to_numpy_array2(Array2::from_shape_vec(shape, vec).expect("Operation failed"), py)
     }
 }
 
@@ -309,8 +309,8 @@ fn interp_py(
         return Err(pyo3::exceptions::PyValueError::new_err("xp and fp must have same length"));
     }
 
-    let xp_slice = xp_arr.as_slice().unwrap();
-    let fp_slice = fp_arr.as_slice().unwrap();
+    let xp_slice = xp_arr.as_slice().expect("Operation failed");
+    let fp_slice = fp_arr.as_slice().expect("Operation failed");
 
     // Pre-allocate result
     let mut result = Vec::with_capacity(x_arr.len());

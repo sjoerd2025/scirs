@@ -138,21 +138,21 @@ static LOGGER_CONFIG: Lazy<Mutex<LoggerConfig>> = Lazy::new(|| Mutex::new(Logger
 /// Configure the global logger
 #[allow(dead_code)]
 pub fn configurelogger(config: LoggerConfig) {
-    let mut global_config = LOGGER_CONFIG.lock().unwrap();
+    let mut global_config = LOGGER_CONFIG.lock().expect("Operation failed");
     *global_config = config;
 }
 
 /// Set the global minimum log level
 #[allow(dead_code)]
 pub fn set_level(level: LogLevel) {
-    let mut config = LOGGER_CONFIG.lock().unwrap();
+    let mut config = LOGGER_CONFIG.lock().expect("Operation failed");
     config.min_level = level;
 }
 
 /// Set a module-specific log level
 #[allow(dead_code)]
 pub fn set_module_level(module: &str, level: LogLevel) {
-    let mut config = LOGGER_CONFIG.lock().unwrap();
+    let mut config = LOGGER_CONFIG.lock().expect("Operation failed");
     config.module_levels.insert(module.to_string(), level);
 }
 
@@ -271,21 +271,21 @@ static LOG_HANDLERS: Lazy<Mutex<Vec<Arc<dyn LogHandler>>>> = Lazy::new(|| {
 /// Register a log handler
 #[allow(dead_code)]
 pub fn set_handler(handler: Arc<dyn LogHandler>) {
-    let mut handlers = LOG_HANDLERS.lock().unwrap();
+    let mut handlers = LOG_HANDLERS.lock().expect("Operation failed");
     handlers.push(handler);
 }
 
 /// Clear all log handlers
 #[allow(dead_code)]
 pub fn clearlog_handlers() {
-    let mut handlers = LOG_HANDLERS.lock().unwrap();
+    let mut handlers = LOG_HANDLERS.lock().expect("Operation failed");
     handlers.clear();
 }
 
 /// Reset log handlers to the default configuration
 #[allow(dead_code)]
 pub fn resetlog_handlers() {
-    let mut handlers = LOG_HANDLERS.lock().unwrap();
+    let mut handlers = LOG_HANDLERS.lock().expect("Operation failed");
     handlers.clear();
     handlers.push(Arc::new(ConsoleLogHandler::default()));
 }
@@ -334,7 +334,7 @@ impl Logger {
     /// Log a message at a specific level
     pub fn writelog(&self, level: LogLevel, message: &str) {
         // Check if this log should be processed based on configuration
-        let config = LOGGER_CONFIG.lock().unwrap();
+        let config = LOGGER_CONFIG.lock().expect("Operation failed");
         let module_level = config
             .module_levels
             .get(&self.module)
@@ -355,7 +355,7 @@ impl Logger {
         };
 
         // Process the log entry with all registered handlers
-        let handlers = LOG_HANDLERS.lock().unwrap();
+        let handlers = LOG_HANDLERS.lock().expect("Operation failed");
         for handler in handlers.iter() {
             handler.handle(&entry);
         }
@@ -557,7 +557,7 @@ impl ProgressTracker {
 #[allow(dead_code)]
 pub fn init() {
     // Register the default console handler if not already done
-    let handlers = LOG_HANDLERS.lock().unwrap();
+    let handlers = LOG_HANDLERS.lock().expect("Operation failed");
     if handlers.is_empty() {
         drop(handlers);
         resetlog_handlers();
@@ -669,7 +669,7 @@ pub mod distributed {
                 nodeid,
                 timestamp: SystemTime::now()
                     .duration_since(UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Test: operation failed")
                     .as_millis() as u64,
                 level,
                 logger,
@@ -683,7 +683,7 @@ pub mod distributed {
         pub fn age(&self) -> Duration {
             let now = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .expect("Test: operation failed")
                 .as_millis() as u64;
             Duration::from_millis(now.saturating_sub(self.timestamp))
         }
@@ -724,8 +724,8 @@ pub mod distributed {
 
         /// Add a log entry to the aggregator
         pub fn add_entry(&self, entry: DistributedLogEntry) {
-            let mut entries = self.entries.write().unwrap();
-            let mut stats = self.stats.write().unwrap();
+            let mut entries = self.entries.write().expect("Operation failed");
+            let mut stats = self.stats.write().expect("Operation failed");
 
             // Remove old entries beyond the window
             let cutoff = entry
@@ -735,7 +735,7 @@ pub mod distributed {
                 if front.timestamp >= cutoff {
                     break;
                 }
-                let removed = entries.pop_front().unwrap();
+                let removed = entries.pop_front().expect("Operation failed");
                 // Update stats for removed entry
                 if let Some(count) = stats.entries_by_level.get_mut(&removed.level) {
                     *count = count.saturating_sub(1);
@@ -772,14 +772,19 @@ pub mod distributed {
 
         /// Get all entries within the aggregation window
         pub fn get_entries(&self) -> Vec<DistributedLogEntry> {
-            self.entries.read().unwrap().iter().cloned().collect()
+            self.entries
+                .read()
+                .expect("Operation failed")
+                .iter()
+                .cloned()
+                .collect()
         }
 
         /// Get entries filtered by level
         pub fn get_entries_by_level(&self, level: LogLevel) -> Vec<DistributedLogEntry> {
             self.entries
                 .read()
-                .unwrap()
+                .expect("Test: operation failed")
                 .iter()
                 .filter(|entry| entry.level == level)
                 .cloned()
@@ -790,7 +795,7 @@ pub mod distributed {
         pub fn get_entries_by_node(&self, nodeid: &NodeId) -> Vec<DistributedLogEntry> {
             self.entries
                 .read()
-                .unwrap()
+                .expect("Test: operation failed")
                 .iter()
                 .filter(|entry| &entry.nodeid == nodeid)
                 .cloned()
@@ -799,13 +804,13 @@ pub mod distributed {
 
         /// Get aggregation statistics
         pub fn stats(&self) -> AggregationStats {
-            self.stats.read().unwrap().clone()
+            self.stats.read().expect("Operation failed").clone()
         }
 
         /// Clear all entries
         pub fn clear(&self) {
-            self.entries.write().unwrap().clear();
-            *self.stats.write().unwrap() = AggregationStats::default();
+            self.entries.write().expect("Operation failed").clear();
+            *self.stats.write().expect("Operation failed") = AggregationStats::default();
         }
     }
 
@@ -845,14 +850,14 @@ pub mod distributed {
             let now = Instant::now();
             let count = self.message_count.fetch_add(1, Ordering::Relaxed);
 
-            let mut last_reset = self.last_reset.lock().unwrap();
+            let mut last_reset = self.last_reset.lock().expect("Operation failed");
             let elapsed = now.duration_since(*last_reset);
 
             if elapsed >= self.window_duration {
                 // Reset window and update current rate
                 let actual_rate = count as f64 / elapsed.as_secs_f64();
                 {
-                    let mut current_rate = self.current_rate.lock().unwrap();
+                    let mut current_rate = self.current_rate.lock().expect("Operation failed");
                     *current_rate = actual_rate;
                 }
 
@@ -871,7 +876,7 @@ pub mod distributed {
                     true
                 } else {
                     let current_rate = count as f64 / elapsed_secs;
-                    let max_rate = *self.max_rate.lock().unwrap();
+                    let max_rate = *self.max_rate.lock().expect("Operation failed");
                     current_rate <= max_rate
                 }
             }
@@ -879,7 +884,7 @@ pub mod distributed {
 
         /// Adapt the maximum rate based on observed patterns
         fn adapt_rate(&self, actualrate: f64) {
-            let mut max_rate = self.max_rate.lock().unwrap();
+            let mut max_rate = self.max_rate.lock().expect("Operation failed");
 
             // If actual rate is consistently lower, reduce max rate
             // If actual rate hits the limit, increase max rate
@@ -895,8 +900,8 @@ pub mod distributed {
 
         /// Get current rate statistics
         pub fn get_stats(&self) -> RateLimitStats {
-            let current_rate = *self.current_rate.lock().unwrap();
-            let max_rate = *self.max_rate.lock().unwrap();
+            let current_rate = *self.current_rate.lock().expect("Operation failed");
+            let max_rate = *self.max_rate.lock().expect("Operation failed");
             RateLimitStats {
                 current_rate,
                 max_rate,
@@ -907,8 +912,8 @@ pub mod distributed {
 
         /// Reset the rate limiter
         pub fn reset(&self) {
-            *self.current_rate.lock().unwrap() = 0.0;
-            *self.last_reset.lock().unwrap() = Instant::now();
+            *self.current_rate.lock().expect("Operation failed") = 0.0;
+            *self.last_reset.lock().expect("Operation failed") = Instant::now();
             self.message_count.store(0, Ordering::Relaxed);
         }
     }
@@ -968,14 +973,14 @@ pub mod distributed {
 
             // Get or create rate limiter for this logger
             let shouldlog = {
-                let rate_limiters = self.rate_limiters.read().unwrap();
+                let rate_limiters = self.rate_limiters.read().expect("Operation failed");
                 if let Some(limiter) = rate_limiters.get(&logger_key) {
                     limiter.try_acquire()
                 } else {
                     drop(rate_limiters);
 
                     // Create new rate limiter
-                    let mut rate_limiters = self.rate_limiters.write().unwrap();
+                    let mut rate_limiters = self.rate_limiters.write().expect("Operation failed");
                     let limiter = AdaptiveRateLimiter::new(
                         self.default_rate_limit,
                         Duration::from_secs(1),
@@ -1031,7 +1036,7 @@ pub mod distributed {
         pub fn get_rate_stats(&self) -> HashMap<String, RateLimitStats> {
             self.rate_limiters
                 .read()
-                .unwrap()
+                .expect("Test: operation failed")
                 .iter()
                 .map(|(k, v)| (k.clone(), v.get_stats()))
                 .collect()
@@ -1051,7 +1056,7 @@ pub mod distributed {
                 "nodeid": self.nodeid.to_string(),
                 "timestamp": SystemTime::now()
                     .duration_since(UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Test: operation failed")
                     .as_millis(),
                 "stats": {
                     "total_entries": stats.total_entries,
@@ -1078,7 +1083,7 @@ pub mod distributed {
             self.aggregator.clear();
 
             // Reset rate limiters
-            let rate_limiters = self.rate_limiters.write().unwrap();
+            let rate_limiters = self.rate_limiters.write().expect("Operation failed");
             for limiter in rate_limiters.values() {
                 limiter.reset();
             }
@@ -1113,13 +1118,13 @@ pub mod distributed {
 
         /// Register a distributed logger
         pub fn register_node(&self, nodeid: NodeId, logger: Arc<DistributedLogger>) {
-            let mut nodes = self.nodes.write().unwrap();
+            let mut nodes = self.nodes.write().expect("Operation failed");
             nodes.insert(nodeid, logger);
         }
 
         /// Unregister a node
         pub fn unregister_node(&self, nodeid: &NodeId) {
-            let mut nodes = self.nodes.write().unwrap();
+            let mut nodes = self.nodes.write().expect("Operation failed");
             nodes.remove(nodeid);
         }
 
@@ -1138,7 +1143,7 @@ pub mod distributed {
                 thread::spawn(move || {
                     while running.load(Ordering::Relaxed) == 1 {
                         // Collect logs from all nodes
-                        let nodes_guard = nodes.read().unwrap();
+                        let nodes_guard = nodes.read().expect("Operation failed");
                         for logger in nodes_guard.values() {
                             let entries = logger.get_aggregatedlogs();
                             for entry in entries {
@@ -1177,12 +1182,12 @@ pub mod distributed {
                 "coordinator": "global",
                 "timestamp": SystemTime::now()
                     .duration_since(UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Test: operation failed")
                     .as_millis(),
                 "stats": {
                     "total_entries": stats.total_entries,
                     "dropped_entries": stats.dropped_entries,
-                    "nodes_count": self.nodes.read().unwrap().len(),
+                    "nodes_count": self.nodes.read().expect("Operation failed").len(),
                     "entries_by_level": stats.entries_by_level.iter().map(|(k, v)| (format!("{k:?}"), *v)).collect::<HashMap<String, u64>>()
                 },
                 "entries": entries.iter().map(|entry| serde_json::json!({
@@ -1311,7 +1316,7 @@ mod distributed_tests {
 
         logger.info_adaptive("Export test message");
 
-        let json_export = logger.exportlogs_json().unwrap();
+        let json_export = logger.exportlogs_json().expect("Operation failed");
         assert!(json_export.contains("export_test"));
         assert!(json_export.contains("Export test message"));
     }

@@ -177,8 +177,8 @@ where
         if self.fpr.is_some() && self.tpr.is_some() {
             // Return pre-computed values
             return Ok((
-                self.fpr.clone().unwrap(),
-                self.tpr.clone().unwrap(),
+                self.fpr.clone().expect("Operation failed"),
+                self.tpr.clone().expect("Operation failed"),
                 self.thresholds.clone().unwrap_or_default(),
                 self.auc,
             ));
@@ -190,8 +190,8 @@ where
             ));
         }
 
-        let y_true = self.y_true.unwrap();
-        let y_score = self.y_score.unwrap();
+        let y_true = self.y_true.expect("Operation failed");
+        let y_score = self.y_score.expect("Operation failed");
 
         // Compute ROC curve
         let (fpr, tpr, thresholds) = roc_curve(y_true, y_score)?;
@@ -245,7 +245,10 @@ where
         let mut series_names = Vec::new();
 
         if self.show_auc && auc.is_some() {
-            series_names.push(format!("ROC curve (AUC = {:.3})", auc.unwrap()));
+            series_names.push(format!(
+                "ROC curve (AUC = {:.3})",
+                auc.expect("Operation failed")
+            ));
         } else {
             series_names.push("ROC curve".to_string());
         }

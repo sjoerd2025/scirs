@@ -46,7 +46,7 @@ fn bench_sparse_construction(c: &mut Criterion) {
                         black_box(shape),
                         false,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -63,7 +63,7 @@ fn bench_sparse_construction(c: &mut Criterion) {
                         black_box(shape),
                         false,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -80,7 +80,7 @@ fn bench_sparse_construction(c: &mut Criterion) {
                         black_box(shape),
                         false,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -97,19 +97,20 @@ fn bench_sparse_operations(c: &mut Criterion) {
         let (rows, cols, data) = generate_sparse_matrix(*size, 0.05);
         let shape = (*size, *size);
 
-        let csr = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let csr =
+            CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
         let vector = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
 
         group.throughput(Throughput::Elements(data.len() as u64));
 
         // Matrix-vector multiplication
         group.bench_with_input(BenchmarkId::new("csr_matvec", size), size, |b, &size| {
-            b.iter(|| csr.dot_vector(&vector.view()).unwrap())
+            b.iter(|| csr.dot_vector(&vector.view()).expect("Operation failed"))
         });
 
         // Transpose operation
         group.bench_with_input(BenchmarkId::new("csr_transpose", size), size, |b, &size| {
-            b.iter(|| csr.transpose().unwrap())
+            b.iter(|| csr.transpose().expect("Operation failed"))
         });
     }
 
@@ -125,14 +126,20 @@ fn bench_sparse_sparse_ops(c: &mut Criterion) {
         let (rows2, cols2, data2) = generate_sparse_matrix(*size, 0.02);
         let shape = (*size, *size);
 
-        let csr1 = CsrArray::from_triplets(&rows1, &cols1, &data1, shape, false).unwrap();
-        let csr2 = CsrArray::from_triplets(&rows2, &cols2, &data2, shape, false).unwrap();
+        let csr1 = CsrArray::from_triplets(&rows1, &cols1, &data1, shape, false)
+            .expect("Operation failed");
+        let csr2 = CsrArray::from_triplets(&rows2, &cols2, &data2, shape, false)
+            .expect("Operation failed");
 
         group.throughput(Throughput::Elements((data1.len() + data2.len()) as u64));
 
         // Matrix-matrix multiplication
         group.bench_with_input(BenchmarkId::new("csr_matmul", size), size, |b, &size| {
-            b.iter(|| black_box(&csr1).dot(black_box(&csr2)).unwrap())
+            b.iter(|| {
+                black_box(&csr1)
+                    .dot(black_box(&csr2))
+                    .expect("Operation failed")
+            })
         });
     }
 
@@ -147,22 +154,25 @@ fn bench_format_conversions(c: &mut Criterion) {
         let (rows, cols, data) = generate_sparse_matrix(*size, 0.05);
         let shape = (*size, *size);
 
-        let coo = CooArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let csr = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let csc = CscArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let coo =
+            CooArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
+        let csr =
+            CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
+        let csc =
+            CscArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         group.throughput(Throughput::Elements(data.len() as u64));
 
         group.bench_with_input(BenchmarkId::new("coo_to_csr", size), size, |b, &size| {
-            b.iter(|| black_box(&coo).to_csr().unwrap())
+            b.iter(|| black_box(&coo).to_csr().expect("Operation failed"))
         });
 
         group.bench_with_input(BenchmarkId::new("csr_to_csc", size), size, |b, &size| {
-            b.iter(|| black_box(&csr).to_csc().unwrap())
+            b.iter(|| black_box(&csr).to_csc().expect("Operation failed"))
         });
 
         group.bench_with_input(BenchmarkId::new("csc_to_csr", size), size, |b, &size| {
-            b.iter(|| black_box(&csc).to_csr().unwrap())
+            b.iter(|| black_box(&csc).to_csr().expect("Operation failed"))
         });
     }
 
@@ -203,7 +213,8 @@ fn bench_linear_solvers(c: &mut Criterion) {
         }
 
         let shape = (*size, *size);
-        let _matrix = CsrArray::from_triplets(&rows, &cols, &data, shape, true).unwrap();
+        let _matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, shape, true).expect("Operation failed");
         let _rhs = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
 
         group.throughput(Throughput::Elements(*size as u64));
@@ -265,7 +276,13 @@ fn bench_symmetric_operations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sym_csr_matvec", size),
             size,
-            |b, &size| b.iter(|| sym_csr.dot_vector(&vector.view()).unwrap()),
+            |b, &size| {
+                b.iter(|| {
+                    sym_csr
+                        .dot_vector(&vector.view())
+                        .expect("Operation failed")
+                })
+            },
         );
     }
 
@@ -285,19 +302,20 @@ fn bench_special_formats(c: &mut Criterion) {
             diagonals.push(diag);
         }
 
-        let dia = DiaArray::new(diagonals, offsets.clone(), (*size, *size)).unwrap();
+        let dia =
+            DiaArray::new(diagonals, offsets.clone(), (*size, *size)).expect("Operation failed");
         let vector = Array1::from_iter((0..*size).map(|i| (i + 1) as f64));
 
         group.throughput(Throughput::Elements(*size as u64));
 
         // DIA matrix-vector multiplication
         group.bench_with_input(BenchmarkId::new("dia_matvec", size), size, |b, &size| {
-            b.iter(|| dia.dot_vector(&vector.view()).unwrap())
+            b.iter(|| dia.dot_vector(&vector.view()).expect("Operation failed"))
         });
 
         // DIA to CSR conversion
         group.bench_with_input(BenchmarkId::new("dia_to_csr", size), size, |b, &size| {
-            b.iter(|| black_box(&dia).to_csr().unwrap())
+            b.iter(|| black_box(&dia).to_csr().expect("Operation failed"))
         });
     }
 
@@ -321,7 +339,7 @@ fn bench_dok_lil_operations(c: &mut Criterion) {
                     for i in 0..size {
                         for j in 0..size {
                             if (i + j) % 20 == 0 {
-                                dok.set(i, j, (i + j) as f64).unwrap();
+                                dok.set(i, j, (i + j) as f64).expect("Operation failed");
                             }
                         }
                     }
@@ -340,7 +358,7 @@ fn bench_dok_lil_operations(c: &mut Criterion) {
                     for i in 0..size {
                         for j in 0..size {
                             if (i + j) % 20 == 0 {
-                                lil.set(i, j, (i + j) as f64).unwrap();
+                                lil.set(i, j, (i + j) as f64).expect("Operation failed");
                             }
                         }
                     }

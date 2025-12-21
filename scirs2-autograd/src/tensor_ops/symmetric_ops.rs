@@ -90,19 +90,22 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimitive> Op<F> for S
         let eigen_vals = y_array.slice(scirs2_core::ndarray::s![0..values_size]);
         let eigen_vecs = y_array.slice(scirs2_core::ndarray::s![vectors_start..]);
 
-        let eigen_vals_1d = eigen_vals.to_shape(n).unwrap().to_owned();
-        let eigen_vecs_2d = eigen_vecs.to_shape((n, n)).unwrap().to_owned();
+        let eigen_vals_1d = eigen_vals.to_shape(n).expect("Operation failed").to_owned();
+        let eigen_vecs_2d = eigen_vecs
+            .to_shape((n, n))
+            .expect("Operation failed")
+            .to_owned();
 
         // Get gradients
         let grad_vals = gy_array
             .slice(scirs2_core::ndarray::s![0..values_size])
             .to_shape(n)
-            .unwrap()
+            .expect("Failed to reshape")
             .to_owned();
         let grad_vecs = gy_array
             .slice(scirs2_core::ndarray::s![vectors_start..])
             .to_shape((n, n))
-            .unwrap()
+            .expect("Failed to reshape")
             .to_owned();
 
         // Compute gradient for symmetric eigendecomposition
@@ -175,7 +178,7 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimitive> Op<F>
 #[allow(dead_code)]
 fn is_symmetric<F: Float>(matrix: &ArrayView2<F>) -> bool {
     let n = matrix.shape()[0];
-    let tol = F::epsilon() * F::from(10.0).unwrap();
+    let tol = F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
 
     for i in 0..n {
         for j in i + 1..n {
@@ -198,7 +201,8 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
     if n == 1 {
         let eigenvalue = matrix[[0, 0]];
         let eigenvalues = Array1::from_vec(vec![eigenvalue]);
-        let eigenvectors = Array2::from_shape_vec((1, 1), vec![F::one()]).unwrap();
+        let eigenvectors =
+            Array2::from_shape_vec((1, 1), vec![F::one()]).expect("Operation failed");
         return Ok((eigenvalues, eigenvectors));
     } else if n == 2 {
         // For 2x2 symmetric matrices, use analytical formula
@@ -208,7 +212,8 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
 
         let trace = a + d;
         let det = a * d - b * b;
-        let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+        let discriminant =
+            trace * trace - F::from(4.0).expect("Failed to convert constant to float") * det;
 
         if discriminant < F::zero() {
             return Err(OpError::Other(
@@ -217,8 +222,10 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
         }
 
         let sqrt_disc = discriminant.sqrt();
-        let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();
-        let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();
+        let lambda1 =
+            (trace + sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
+        let lambda2 =
+            (trace - sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
 
         let eigenvalues = if lambda1 >= lambda2 {
             Array1::from_vec(vec![lambda1, lambda2])
@@ -279,7 +286,7 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
 
     // Jacobi iterations
     let max_iter = 100;
-    let tol = F::epsilon() * F::from(100.0).unwrap();
+    let tol = F::epsilon() * F::from(100.0).expect("Failed to convert constant to float");
 
     for _iter in 0..max_iter {
         // Find off-diagonal element with largest magnitude
@@ -308,9 +315,11 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
         let apq = a[[p, q]];
 
         let theta = if (app - aqq).abs() < F::epsilon() {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap()
+            F::from(std::f64::consts::FRAC_PI_4).expect("Failed to convert to float")
         } else {
-            F::from(0.5).unwrap() * ((F::from(2.0).unwrap() * apq) / (aqq - app)).atan()
+            F::from(0.5).expect("Failed to convert constant to float")
+                * ((F::from(2.0).expect("Failed to convert constant to float") * apq) / (aqq - app))
+                    .atan()
         };
 
         let c = theta.cos();
@@ -320,8 +329,11 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
         let cs = c * s;
 
         // Update matrix A
-        let app_new = c2 * app + s2 * aqq - F::from(2.0).unwrap() * cs * apq;
-        let aqq_new = s2 * app + c2 * aqq + F::from(2.0).unwrap() * cs * apq;
+        let app_new = c2 * app + s2 * aqq
+            - F::from(2.0).expect("Failed to convert constant to float") * cs * apq;
+        let aqq_new = s2 * app
+            + c2 * aqq
+            + F::from(2.0).expect("Failed to convert constant to float") * cs * apq;
 
         a[[p, p]] = app_new;
         a[[q, q]] = aqq_new;
@@ -360,7 +372,11 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
 
     // Sort eigenvalues and eigenvectors in descending order
     let mut indices: Vec<usize> = (0..n).collect();
-    indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+    indices.sort_by(|&i, &j| {
+        eigenvalues[j]
+            .partial_cmp(&eigenvalues[i])
+            .expect("Operation failed")
+    });
 
     let mut sorted_eigenvalues = Array1::<F>::zeros(n);
     let mut sorted_eigenvectors = Array2::<F>::zeros((n, n));
@@ -402,7 +418,9 @@ fn symmetric_eigen_gradient<F: Float + scirs2_core::ndarray::ScalarOperand + Fro
             if i != j {
                 let lambda_diff = eigenvalues[j] - eigenvalues[i];
 
-                if lambda_diff.abs() > F::epsilon() * F::from(10.0).unwrap() {
+                if lambda_diff.abs()
+                    > F::epsilon() * F::from(10.0).expect("Failed to convert constant to float")
+                {
                     let factor = F::one() / lambda_diff;
 
                     // Compute v_i^T @ grad_vecs[:, j]
@@ -427,7 +445,8 @@ fn symmetric_eigen_gradient<F: Float + scirs2_core::ndarray::ScalarOperand + Fro
     let mut sym_grad = Array2::<F>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
-            sym_grad[[i, j]] = (grad[[i, j]] + grad[[j, i]]) / F::from(2.0).unwrap();
+            sym_grad[[i, j]] = (grad[[i, j]] + grad[[j, i]])
+                / F::from(2.0).expect("Failed to convert constant to float");
         }
     }
 

@@ -330,12 +330,12 @@ mod tests {
     #[test]
     fn test_source_generator_creation() {
         let config = BindingConfig::default();
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let output_dir = temp_dir.path().to_path_buf();
         let generator = SourceGenerator::new(&config, &output_dir);
         assert_eq!(generator.config.library_name, "scirs2_model");
     fn test_implementation_generation() {
-        let impl_code = generator.generate_implementation().unwrap();
+        let impl_code = generator.generate_implementation().expect("Operation failed");
         assert!(impl_code.contains("scirs2_model_load"));
         assert!(impl_code.contains("scirs2_tensor_create"));
         assert!(impl_code.contains("scirs2_get_error_string"));

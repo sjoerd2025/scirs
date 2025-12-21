@@ -308,13 +308,13 @@ fn compute_matrix_sine<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrim
 
     // sin(A) = A - A³/3! + A⁵/5! - A⁷/7! + ...
     for k in 1..10 {
-        term = -term.dot(&a2) / F::from((2 * k) * (2 * k + 1)).unwrap();
+        term = -term.dot(&a2) / F::from((2 * k) * (2 * k + 1)).expect("Operation failed");
         let old_result = result.clone();
         result += &term;
 
         // Check convergence
         let diff = (&result - &old_result).mapv(|x| x.abs()).sum();
-        if diff < F::epsilon() * F::from(n as f64).unwrap() {
+        if diff < F::epsilon() * F::from(n as f64).expect("Failed to convert to float") {
             break;
         }
     }
@@ -334,13 +334,13 @@ fn compute_matrix_cosine<F: Float + scirs2_core::ndarray::ScalarOperand + FromPr
 
     // cos(A) = I - A²/2! + A⁴/4! - A⁶/6! + ...
     for k in 1..10 {
-        term = -term.dot(&a2) / F::from((2 * k - 1) * (2 * k)).unwrap();
+        term = -term.dot(&a2) / F::from((2 * k - 1) * (2 * k)).expect("Operation failed");
         let old_result = result.clone();
         result += &term;
 
         // Check convergence
         let diff = (&result - &old_result).mapv(|x| x.abs()).sum();
-        if diff < F::epsilon() * F::from(n as f64).unwrap() {
+        if diff < F::epsilon() * F::from(n as f64).expect("Failed to convert to float") {
             break;
         }
     }
@@ -356,18 +356,18 @@ fn compute_matrix_sign<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrim
     let n = matrix.shape()[0];
     let mut x = matrix.to_owned();
     let max_iter = 20;
-    let tol = F::epsilon() * F::from(100.0).unwrap();
+    let tol = F::epsilon() * F::from(100.0).expect("Failed to convert constant to float");
 
     // Newton iteration: X_{k+1} = (X_k + X_k^{-1}) / 2
     for _ in 0..max_iter {
         let x_inv = compute_matrix_inverse(&x.view())?;
-        let x_new = (&x + &x_inv) / F::from(2.0).unwrap();
+        let x_new = (&x + &x_inv) / F::from(2.0).expect("Failed to convert constant to float");
 
         // Check convergence
         let diff = (&x_new - &x).mapv(|x| x.abs()).sum();
         x = x_new;
 
-        if diff < tol * F::from(n as f64).unwrap() {
+        if diff < tol * F::from(n as f64).expect("Failed to convert to float") {
             break;
         }
     }
@@ -385,7 +385,7 @@ fn compute_matrix_sinh<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrim
     let neg_a = matrix.mapv(|x| -x);
     let exp_neg_a = compute_matrix_exp(&neg_a.view())?;
 
-    Ok((exp_a - exp_neg_a) / F::from(2.0).unwrap())
+    Ok((exp_a - exp_neg_a) / F::from(2.0).expect("Failed to convert constant to float"))
 }
 
 /// Compute matrix hyperbolic cosine
@@ -398,7 +398,7 @@ fn compute_matrix_cosh<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrim
     let neg_a = matrix.mapv(|x| -x);
     let exp_neg_a = compute_matrix_exp(&neg_a.view())?;
 
-    Ok((exp_a + exp_neg_a) / F::from(2.0).unwrap())
+    Ok((exp_a + exp_neg_a) / F::from(2.0).expect("Failed to convert constant to float"))
 }
 
 /// Compute matrix exponential (from matrix_ops.rs)
@@ -412,13 +412,13 @@ fn compute_matrix_exp<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimi
 
     // Use Taylor series with more terms for accuracy
     for k in 1..=20 {
-        term = term.dot(matrix) / F::from(k).unwrap();
+        term = term.dot(matrix) / F::from(k).expect("Failed to convert to float");
         let old_result = result.clone();
         result += &term;
 
         // Check convergence
         let diff = (&result - &old_result).mapv(|x| x.abs()).sum();
-        if diff < F::epsilon() * F::from(n as f64).unwrap() {
+        if diff < F::epsilon() * F::from(n as f64).expect("Failed to convert to float") {
             break;
         }
     }
@@ -525,7 +525,9 @@ fn is_symmetric_matrix<F: Float>(matrix: &scirs2_core::ndarray::ArrayView2<F>) -
     let n = matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs()
+                > F::epsilon() * F::from(10.0).expect("Failed to convert constant to float")
+            {
                 return false;
             }
         }
@@ -548,15 +550,18 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
 
         let trace = a + c;
         let det = a * c - b * b;
-        let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+        let discriminant =
+            trace * trace - F::from(4.0).expect("Failed to convert constant to float") * det;
 
         if discriminant < F::zero() {
             return Err(OpError::Other("Complex eigenvalues".into()));
         }
 
         let sqrt_disc = discriminant.sqrt();
-        let lambda1 = (trace + sqrt_disc) / F::from(2.0).unwrap();
-        let lambda2 = (trace - sqrt_disc) / F::from(2.0).unwrap();
+        let lambda1 =
+            (trace + sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
+        let lambda2 =
+            (trace - sqrt_disc) / F::from(2.0).expect("Failed to convert constant to float");
 
         let eigenvalues = Array1::from_vec(vec![lambda1, lambda2]);
 
@@ -592,7 +597,7 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
     let mut a = matrix.to_owned();
 
     let max_iter = 50;
-    let tol = F::epsilon() * F::from(10.0).unwrap();
+    let tol = F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
 
     for _ in 0..max_iter {
         // Find largest off-diagonal element
@@ -615,7 +620,8 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
         }
 
         // Compute rotation
-        let theta = (a[[q, q]] - a[[p, p]]) / (F::from(2.0).unwrap() * a[[p, q]]);
+        let theta = (a[[q, q]] - a[[p, p]])
+            / (F::from(2.0).expect("Failed to convert constant to float") * a[[p, q]]);
         let t = if theta >= F::zero() {
             F::one() / (theta + (F::one() + theta * theta).sqrt())
         } else {
@@ -630,8 +636,12 @@ fn compute_symmetric_eigen<F: Float + scirs2_core::ndarray::ScalarOperand + From
         let aqq = a[[q, q]];
         let apq = a[[p, q]];
 
-        a[[p, p]] = c * c * app - F::from(2.0).unwrap() * s * c * apq + s * s * aqq;
-        a[[q, q]] = s * s * app + F::from(2.0).unwrap() * s * c * apq + c * c * aqq;
+        a[[p, p]] = c * c * app
+            - F::from(2.0).expect("Failed to convert constant to float") * s * c * apq
+            + s * s * aqq;
+        a[[q, q]] = s * s * app
+            + F::from(2.0).expect("Failed to convert constant to float") * s * c * apq
+            + c * c * aqq;
         a[[p, q]] = F::zero();
         a[[q, p]] = F::zero();
 

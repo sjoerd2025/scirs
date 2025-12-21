@@ -228,7 +228,7 @@ where
 
     /// Get a chunk from cache
     pub fn get(&self, chunkid: &ChunkId) -> Option<Array<T, IxDyn>> {
-        let chunks = self.chunks.read().unwrap();
+        let chunks = self.chunks.read().expect("Operation failed");
         if let Some(chunk) = chunks.get(chunkid) {
             // Update access statistics
             self.update_access_stats(chunkid);
@@ -256,10 +256,10 @@ where
         let chunk_size = chunk.len() * std::mem::size_of::<T>();
 
         {
-            let mut chunks = self.chunks.write().unwrap();
-            let mut metadata_map = self.metadata.write().unwrap();
-            let mut access_order = self.access_order.lock().unwrap();
-            let mut current_memory = self.current_memory.lock().unwrap();
+            let mut chunks = self.chunks.write().expect("Operation failed");
+            let mut metadata_map = self.metadata.write().expect("Operation failed");
+            let mut access_order = self.access_order.lock().expect("Operation failed");
+            let mut current_memory = self.current_memory.lock().expect("Operation failed");
 
             chunks.insert(chunk_id.clone(), chunk);
             metadata_map.insert(chunk_id.clone(), metadata);
@@ -283,10 +283,10 @@ where
 
     /// Remove a chunk from cache
     pub fn remove(&self, chunkid: &ChunkId) -> Option<Array<T, IxDyn>> {
-        let mut chunks = self.chunks.write().unwrap();
-        let mut metadata_map = self.metadata.write().unwrap();
-        let mut access_order = self.access_order.lock().unwrap();
-        let mut current_memory = self.current_memory.lock().unwrap();
+        let mut chunks = self.chunks.write().expect("Operation failed");
+        let mut metadata_map = self.metadata.write().expect("Operation failed");
+        let mut access_order = self.access_order.lock().expect("Operation failed");
+        let mut current_memory = self.current_memory.lock().expect("Operation failed");
 
         if let Some(chunk) = chunks.remove(chunkid) {
             let chunk_size = chunk.len() * std::mem::size_of::<T>();
@@ -303,13 +303,13 @@ where
 
     /// Update access statistics for a chunk
     fn update_access_stats(&self, chunkid: &ChunkId) {
-        let mut metadata_map = self.metadata.write().unwrap();
+        let mut metadata_map = self.metadata.write().expect("Operation failed");
         if let Some(metadata) = metadata_map.get_mut(chunkid) {
             metadata.touch();
         }
 
         // Update access order for LRU
-        let mut access_order = self.access_order.lock().unwrap();
+        let mut access_order = self.access_order.lock().expect("Operation failed");
         access_order.retain(|id| id != chunkid);
         access_order.push_back(chunkid.clone());
     }
@@ -323,8 +323,8 @@ where
     where
         F: Fn(&ChunkId) -> CoreResult<()>,
     {
-        let current_memory = *self.current_memory.lock().unwrap();
-        let current_count = self.chunks.read().unwrap().len();
+        let current_memory = *self.current_memory.lock().expect("Operation failed");
+        let current_count = self.chunks.read().expect("Operation failed").len();
 
         // Check if we need to evict based on memory or count limits
         let needs_eviction = current_memory + new_metadata.size_bytes
@@ -353,7 +353,12 @@ where
 
         for chunk_id in chunks_to_evict {
             // Check if chunk is dirty and write back to storage if needed
-            if let Some(metadata) = self.metadata.read().unwrap().get(&chunk_id) {
+            if let Some(metadata) = self
+                .metadata
+                .read()
+                .expect("Operation failed")
+                .get(&chunk_id)
+            {
                 if metadata.is_dirty {
                     writer(&chunk_id)?;
                 }
@@ -372,8 +377,8 @@ where
 
     /// Select chunks for eviction based on policy
     fn select_eviction_candidates(&self, count: usize) -> CoreResult<Vec<ChunkId>> {
-        let access_order = self.access_order.lock().unwrap();
-        let metadata_map = self.metadata.read().unwrap();
+        let access_order = self.access_order.lock().expect("Operation failed");
+        let metadata_map = self.metadata.read().expect("Operation failed");
 
         let candidates: Vec<ChunkId> = match self.config.cache_policy {
             CachePolicy::Lru => {
@@ -412,9 +417,9 @@ where
 
     /// Get cache statistics
     pub fn get_statistics(&self) -> CacheStatistics {
-        let chunks = self.chunks.read().unwrap();
-        let metadata_map = self.metadata.read().unwrap();
-        let current_memory = *self.current_memory.lock().unwrap();
+        let chunks = self.chunks.read().expect("Operation failed");
+        let metadata_map = self.metadata.read().expect("Operation failed");
+        let current_memory = *self.current_memory.lock().expect("Operation failed");
 
         let dirty_count = metadata_map.values().filter(|m| m.is_dirty).count();
 
@@ -428,7 +433,7 @@ where
 
     /// Flush all dirty chunks to storage
     pub fn flush_dirty_chunks(&self) -> CoreResult<Vec<ChunkId>> {
-        let metadata_map = self.metadata.read().unwrap();
+        let metadata_map = self.metadata.read().expect("Operation failed");
         let dirty_chunks: Vec<ChunkId> = metadata_map
             .iter()
             .filter(|(_, metadata)| metadata.is_dirty)
@@ -440,7 +445,7 @@ where
 
     /// Mark a chunk as clean (not dirty)
     pub fn mark_clean(&self, chunkid: &ChunkId) {
-        let mut metadata_map = self.metadata.write().unwrap();
+        let mut metadata_map = self.metadata.write().expect("Operation failed");
         if let Some(metadata) = metadata_map.get_mut(chunkid) {
             metadata.is_dirty = false;
         }
@@ -448,7 +453,7 @@ where
 
     /// Mark a chunk as dirty (modified)
     pub fn mark_dirty(&self, chunkid: &ChunkId) {
-        let mut metadata_map = self.metadata.write().unwrap();
+        let mut metadata_map = self.metadata.write().expect("Operation failed");
         if let Some(metadata) = metadata_map.get_mut(chunkid) {
             metadata.mark_dirty();
         }
@@ -508,7 +513,7 @@ impl FileStorageBackend {
 
     /// Get file handle for an array
     fn get_file_handle(&self, arrayid: &str) -> CoreResult<Arc<Mutex<File>>> {
-        let mut handles = self.file_handles.write().unwrap();
+        let mut handles = self.file_handles.write().expect("Operation failed");
 
         if let Some(handle) = handles.get(arrayid) {
             Ok(handle.clone())
@@ -531,7 +536,7 @@ impl FileStorageBackend {
 impl StorageBackend for FileStorageBackend {
     fn read_chunk(&self, metadata: &ChunkMetadata) -> CoreResult<Vec<u8>> {
         let file_handle = self.get_file_handle(&metadata.id.array_id)?;
-        let mut file = file_handle.lock().unwrap();
+        let mut file = file_handle.lock().expect("Operation failed");
 
         file.seek(SeekFrom::Start(metadata.file_offset))?;
         let mut buffer = vec![0u8; metadata.size_bytes];
@@ -542,7 +547,7 @@ impl StorageBackend for FileStorageBackend {
 
     fn write_chunk(&self, metadata: &ChunkMetadata, data: &[u8]) -> CoreResult<()> {
         let file_handle = self.get_file_handle(&metadata.id.array_id)?;
-        let mut file = file_handle.lock().unwrap();
+        let mut file = file_handle.lock().expect("Operation failed");
 
         file.seek(SeekFrom::Start(metadata.file_offset))?;
         file.write_all(data)?;
@@ -552,29 +557,29 @@ impl StorageBackend for FileStorageBackend {
 
     fn allocate_chunk(&self, chunkid: &ChunkId, size: usize) -> CoreResult<ChunkMetadata> {
         let file_handle = self.get_file_handle(&chunkid.array_id)?;
-        let file = file_handle.lock().unwrap();
+        let file = file_handle.lock().expect("Operation failed");
 
         let file_offset = file.metadata()?.len();
         let shape = vec![size / std::mem::size_of::<f64>()]; // Simplified shape calculation
 
         let metadata = ChunkMetadata::new(chunkid.clone(), shape, file_offset);
 
-        let mut registry = self.chunk_registry.write().unwrap();
+        let mut registry = self.chunk_registry.write().expect("Operation failed");
         registry.insert(chunkid.clone(), metadata.clone());
 
         Ok(metadata)
     }
 
     fn deallocate_chunk(&self, chunkid: &ChunkId) -> CoreResult<()> {
-        let mut registry = self.chunk_registry.write().unwrap();
+        let mut registry = self.chunk_registry.write().expect("Operation failed");
         registry.remove(chunkid);
         Ok(())
     }
 
     fn flush(&self) -> CoreResult<()> {
-        let handles = self.file_handles.read().unwrap();
+        let handles = self.file_handles.read().expect("Operation failed");
         for handle in handles.values() {
-            let mut file = handle.lock().unwrap();
+            let mut file = handle.lock().expect("Operation failed");
             file.flush()?;
         }
         Ok(())
@@ -660,7 +665,7 @@ where
     fn get_chunk(&self, chunkcoords: &[usize]) -> CoreResult<Array<T, IxDyn>> {
         // Check if chunk exists and get its ID
         let chunk_id_opt = {
-            let chunk_map = self.chunk_map.read().unwrap();
+            let chunk_map = self.chunk_map.read().expect("Operation failed");
             chunk_map.get(chunkcoords).cloned()
         };
 
@@ -686,7 +691,7 @@ where
 
         // Get the chunk ID to mark it as dirty - release lock immediately
         {
-            let chunk_map = self.chunk_map.read().unwrap();
+            let chunk_map = self.chunk_map.read().expect("Operation failed");
             if let Some(chunk_id) = chunk_map.get(chunkcoords) {
                 // Mark chunk as dirty since it will be modified
                 self.cache.mark_dirty(chunk_id);
@@ -703,7 +708,7 @@ where
 
         // Get the chunk ID - release lock immediately after cloning
         let chunk_id = {
-            let chunk_map = self.chunk_map.read().unwrap();
+            let chunk_map = self.chunk_map.read().expect("Operation failed");
             chunk_map
                 .get(chunkcoords)
                 .ok_or_else(|| {
@@ -767,7 +772,7 @@ where
         let metadata = self.storage.allocate_chunk(&chunk_id, chunk_size)?;
 
         // Update chunk mapping
-        let mut chunk_map = self.chunk_map.write().unwrap();
+        let mut chunk_map = self.chunk_map.write().expect("Operation failed");
         chunk_map.insert(chunkcoords.to_vec(), chunk_id.clone());
 
         // Cache the chunk
@@ -903,7 +908,7 @@ where
         // Get chunk from cache
         if let Some(chunk) = self.cache.get(chunkid) {
             // Get metadata from chunk map or create new
-            let chunk_map = self.chunk_map.read().unwrap();
+            let chunk_map = self.chunk_map.read().expect("Operation failed");
             let _chunk_coords = chunk_map
                 .iter()
                 .find(|(_, id)| *id == chunkid)
@@ -933,7 +938,7 @@ where
     /// Get array statistics
     pub fn get_statistics(&self) -> ArrayStatistics {
         let cache_stats = self.cache.get_statistics();
-        let chunk_map = self.chunk_map.read().unwrap();
+        let chunk_map = self.chunk_map.read().expect("Operation failed");
 
         ArrayStatistics {
             array_id: self.array_id.clone(),
@@ -1082,7 +1087,7 @@ impl OutOfCoreManager {
 
     /// Register a storage backend
     pub fn register_storage_backend(&self, name: String, backend: Arc<dyn StorageBackend>) {
-        let mut backends = self.storage_backends.write().unwrap();
+        let mut backends = self.storage_backends.write().expect("Operation failed");
         backends.insert(name, backend);
     }
 
@@ -1097,7 +1102,7 @@ impl OutOfCoreManager {
     where
         T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
-        let storage_backends = self.storage_backends.read().unwrap();
+        let storage_backends = self.storage_backends.read().expect("Operation failed");
         let storage = if let Some(name) = storage_name {
             storage_backends
                 .get(&name)
@@ -1119,7 +1124,7 @@ impl OutOfCoreManager {
             config,
         ));
 
-        let mut arrays = self.arrays.write().unwrap();
+        let mut arrays = self.arrays.write().expect("Operation failed");
         arrays.insert(array_id, Box::new(array.clone()));
 
         Ok(array)
@@ -1130,7 +1135,7 @@ impl OutOfCoreManager {
     where
         T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
-        let arrays = self.arrays.read().unwrap();
+        let arrays = self.arrays.read().expect("Operation failed");
         arrays
             .get(arrayid)
             .and_then(|boxed| boxed.downcast_ref::<Arc<OutOfCoreArray<T>>>())
@@ -1139,19 +1144,19 @@ impl OutOfCoreManager {
 
     /// Remove an array
     pub fn remove_array(&self, arrayid: &str) -> bool {
-        let mut arrays = self.arrays.write().unwrap();
+        let mut arrays = self.arrays.write().expect("Operation failed");
         arrays.remove(arrayid).is_some()
     }
 
     /// List all array IDs
     pub fn list_arrays(&self) -> Vec<String> {
-        let arrays = self.arrays.read().unwrap();
+        let arrays = self.arrays.read().expect("Operation failed");
         arrays.keys().cloned().collect()
     }
 
     /// Get overall statistics
     pub fn get_overall_statistics(&self) -> ManagerStatistics {
-        let arrays = self.arrays.read().unwrap();
+        let arrays = self.arrays.read().expect("Operation failed");
         let total_arrays = arrays.len();
 
         // Aggregate statistics from all arrays
@@ -1260,14 +1265,18 @@ pub mod utils {
     {
         // Create storage backend for the data file
         let storage = Arc::new(FileStorageBackend::new(
-            data_path.parent().unwrap(),
+            data_path.parent().expect("Operation failed"),
             data_path,
         )?);
 
         // Create out-of-core array
         let config = OutOfCoreConfig::default();
         let array = OutOfCoreArray::new(
-            data_path.file_stem().unwrap().to_string_lossy().to_string(),
+            data_path
+                .file_stem()
+                .expect("Operation failed")
+                .to_string_lossy()
+                .to_string(),
             shape,
             storage,
             config,
@@ -1461,7 +1470,7 @@ mod tests {
 
     #[test]
     fn test_file_storage_backend() -> CoreResult<()> {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let storage = FileStorageBackend::new(temp_dir.path(), temp_dir.path())?;
 
         let chunk_id = ChunkId::new("test_array".to_string(), vec![0, 0]);

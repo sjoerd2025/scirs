@@ -1085,7 +1085,7 @@ mod tests {
             ..Default::default()
         };
 
-        let context = GpuContext::new(config).unwrap();
+        let context = GpuContext::new(config).expect("Operation failed");
         assert!(context.is_available());
         assert_eq!(context.device_info.name, "CPU Fallback");
     }
@@ -1098,10 +1098,10 @@ mod tests {
             ..Default::default()
         };
 
-        let context = GpuContext::new(config).unwrap();
+        let context = GpuContext::new(config).expect("Operation failed");
         let dataset = context
             .make_classification_gpu(100, 10, 3, 2, 8, Some(42))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 10);
@@ -1120,7 +1120,7 @@ mod tests {
 
     #[test]
     fn test_list_gpu_devices() {
-        let devices = list_gpu_devices().unwrap();
+        let devices = list_gpu_devices().expect("Operation failed");
         assert!(!devices.is_empty());
 
         // Should always have at least the CPU fallback
@@ -1128,7 +1128,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_gpu_benchmark_creation() {
         let config = GpuConfig {
             backend: GpuBackend::Cpu,
@@ -1136,7 +1135,7 @@ mod tests {
             ..Default::default()
         };
 
-        let _benchmark = GpuBenchmark::new(config).unwrap();
+        let _benchmark = GpuBenchmark::new(config).expect("Operation failed");
         // Should not panic during creation
     }
 }

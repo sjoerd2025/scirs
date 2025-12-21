@@ -145,7 +145,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 5, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 5, &mut rng).expect("Operation failed");
 
         // Parallel degree computation
         group.bench_with_input(
@@ -247,7 +247,7 @@ fn bench_memmap_operations(c: &mut Criterion) {
     for &size in &sizes {
         // Create test CSR graph
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed");
 
         let edges: Vec<(usize, usize, f64)> = (0..graph.node_count())
             .flat_map(|u| {
@@ -259,11 +259,12 @@ fn bench_memmap_operations(c: &mut Criterion) {
             })
             .collect();
 
-        let csr_graph = CSRGraph::from_edges(size, edges).unwrap();
+        let csr_graph = CSRGraph::from_edges(size, edges).expect("Operation failed");
 
         // Create temporary file for memory mapping
-        let temp_file = NamedTempFile::new().unwrap();
-        let mut memmap_graph = MemmapGraph::from_csr(&csr_graph, temp_file.path()).unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
+        let mut memmap_graph =
+            MemmapGraph::from_csr(&csr_graph, temp_file.path()).expect("Operation failed");
 
         // Benchmark CSR neighbor access
         group.bench_with_input(
@@ -350,7 +351,7 @@ fn bench_lazy_metrics(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed");
 
         // Test expensive computation with lazy evaluation - simplified
         group.bench_with_input(
@@ -405,7 +406,10 @@ fn bench_lazy_metrics(c: &mut Criterion) {
                         })
                         .collect();
 
-                    let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+                    let results: Vec<_> = handles
+                        .into_iter()
+                        .map(|h| h.join().expect("Operation failed"))
+                        .collect();
                     black_box(results)
                 });
             },
@@ -424,7 +428,7 @@ fn bench_large_graph_iterators(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 5, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 5, &mut rng).expect("Operation failed");
 
         // Standard iterator
         group.bench_with_input(

@@ -152,7 +152,7 @@ mod tests {
 
         let result =
             memory_efficient_convolution(input.view(), kernel.view(), BorderMode::Constant)
-                .unwrap();
+                .expect("Operation failed");
 
         // Identity convolution should preserve center values
         assert_abs_diff_eq!(result[[1, 1]], input[[1, 1]], epsilon = 1e-10);
@@ -168,7 +168,7 @@ mod tests {
 
         let result =
             memory_efficient_convolution(input.view(), kernel.view(), BorderMode::Constant)
-                .unwrap();
+                .expect("Operation failed");
 
         // Center and immediate neighbors should have the same value due to smoothing
         // but should be greater than edge pixels that don't see the point source
@@ -193,7 +193,7 @@ mod tests {
         ] {
             let result = memory_efficient_convolution(input.view(), kernel.view(), mode);
             assert!(result.is_ok());
-            assert_eq!(result.unwrap().shape(), input.shape());
+            assert_eq!(result.expect("Operation failed").shape(), input.shape());
         }
     }
 

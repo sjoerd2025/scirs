@@ -298,7 +298,11 @@ impl AdaptiveMemoryCompressor {
         let current_usage = self.memory_usage.load(Ordering::Relaxed);
         let usage_ratio = current_usage as f64 / self.config.memory_budget as f64;
 
-        let compression_stats = self.compression_stats.lock().unwrap().clone();
+        let compression_stats = self
+            .compression_stats
+            .lock()
+            .expect("Operation failed")
+            .clone();
         let cache_stats = self.get_cache_stats();
 
         let mut memory_stats = MemoryStats::new(self.config.memory_budget, self.config.out_of_core);
@@ -312,7 +316,10 @@ impl AdaptiveMemoryCompressor {
 
     /// Get compression statistics
     pub fn get_stats(&self) -> CompressionStats {
-        self.compression_stats.lock().unwrap().clone()
+        self.compression_stats
+            .lock()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Optimize for sequential access patterns
@@ -572,7 +579,7 @@ impl AdaptiveMemoryCompressor {
     }
 
     fn get_access_pattern_info(&self, _matrix_id: u64) -> AccessPatternInfo {
-        let access_tracker = self.access_tracker.lock().unwrap();
+        let access_tracker = self.access_tracker.lock().expect("Operation failed");
         // AccessTracker doesn't have get_matrix_access_info, so we'll use available methods
         let stats = access_tracker.get_statistics();
         AccessPatternInfo {
@@ -937,7 +944,7 @@ mod tests {
             memory_mapping: false,
             ..Default::default()
         };
-        let mut compressor = AdaptiveMemoryCompressor::new(config).unwrap();
+        let mut compressor = AdaptiveMemoryCompressor::new(config).expect("Operation failed");
 
         let indptr = vec![0, 2, 3];
         let indices = vec![0, 1, 1];
@@ -945,10 +952,11 @@ mod tests {
 
         let compressed = compressor
             .compress_matrix(1, 2, &indptr, &indices, &data)
-            .unwrap();
+            .expect("Operation failed");
 
-        let (decompressed_indptr, decompressed_indices, decompressed_data) =
-            compressor.decompress_matrix(&compressed).unwrap();
+        let (decompressed_indptr, decompressed_indices, decompressed_data) = compressor
+            .decompress_matrix(&compressed)
+            .expect("Operation failed");
 
         assert_eq!(decompressed_indptr, indptr);
         assert_eq!(decompressed_indices, indices);
@@ -958,7 +966,7 @@ mod tests {
     #[test]
     fn test_memory_stats() {
         let config = AdaptiveCompressionConfig::default();
-        let compressor = AdaptiveMemoryCompressor::new(config).unwrap();
+        let compressor = AdaptiveMemoryCompressor::new(config).expect("Operation failed");
         let stats = compressor.get_memory_stats();
 
         assert_eq!(stats.current_memory_usage, 0);
@@ -968,7 +976,7 @@ mod tests {
     #[test]
     fn test_access_pattern_optimization() {
         let config = AdaptiveCompressionConfig::default();
-        let mut compressor = AdaptiveMemoryCompressor::new(config).unwrap();
+        let mut compressor = AdaptiveMemoryCompressor::new(config).expect("Operation failed");
 
         // Test sequential optimization
         compressor.optimize_for_sequential_access();
@@ -981,12 +989,16 @@ mod tests {
 
     #[test]
     fn test_compressor_reset() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let config = AdaptiveCompressionConfig {
-            temp_directory: temp_dir.path().to_str().unwrap().to_string(),
+            temp_directory: temp_dir
+                .path()
+                .to_str()
+                .expect("Operation failed")
+                .to_string(),
             ..Default::default()
         };
-        let mut compressor = AdaptiveMemoryCompressor::new(config).unwrap();
+        let mut compressor = AdaptiveMemoryCompressor::new(config).expect("Operation failed");
 
         // Add some data
         let indptr = vec![0, 1];

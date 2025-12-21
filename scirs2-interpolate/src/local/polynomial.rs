@@ -68,13 +68,13 @@ pub struct LocalPolynomialConfig<F: Float> {
 impl<F: Float + FromPrimitive> Default for LocalPolynomialConfig<F> {
     fn default() -> Self {
         Self {
-            bandwidth: F::from_f64(0.2).unwrap(),
+            bandwidth: F::from_f64(0.2).expect("Operation failed"),
             weight_fn: WeightFunction::Gaussian,
             basis: PolynomialBasis::Linear,
             confidence_level: None,
             robust_se: false,
             max_points: None,
-            epsilon: F::from_f64(1e-10).unwrap(),
+            epsilon: F::from_f64(1e-10).expect("Operation failed"),
         }
     }
 }
@@ -128,11 +128,11 @@ impl<F: Float + FromPrimitive> Default for LocalPolynomialConfig<F> {
 ///     points,
 ///     y,
 ///     config
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Predict at a new point
 /// let query = Array1::from_vec(vec![5.0]);
-/// let result = loess.fit_at_point(&query.view()).unwrap();
+/// let result = loess.fit_at_point(&query.view()).expect("Operation failed");
 ///
 /// // Access the fitted value
 /// println!("Fitted value: {}", result.value);
@@ -234,9 +234,9 @@ where
         }
 
         // Precompute standard deviation of the response for standardization
-        let mean = values.sum() / F::from_usize(values.len()).unwrap();
+        let mean = values.sum() / F::from_usize(values.len()).expect("Operation failed");
         let sum_squared_dev = values.fold(F::zero(), |acc, &v| acc + (v - mean).powi(2));
-        let variance = sum_squared_dev / F::from_usize(values.len() - 1).unwrap();
+        let variance = sum_squared_dev / F::from_usize(values.len() - 1).expect("Operation failed");
         let response_sd = variance.sqrt();
 
         Ok(Self {
@@ -410,7 +410,7 @@ where
                 WeightFunction::WendlandC2 => {
                     if r < F::one() {
                         let t = F::one() - r;
-                        let factor = F::from_f64(4.0).unwrap() * r + F::one();
+                        let factor = F::from_f64(4.0).expect("Operation failed") * r + F::one();
                         t.powi(4) * factor
                     } else {
                         F::zero()
@@ -418,14 +418,16 @@ where
                 }
                 WeightFunction::InverseDistance => F::one() / (self.config.epsilon + r * r),
                 WeightFunction::CubicSpline => {
-                    if r < F::from_f64(1.0 / 3.0).unwrap() {
+                    if r < F::from_f64(1.0 / 3.0).expect("Operation failed") {
                         let r2 = r * r;
                         let r3 = r2 * r;
-                        F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2
-                            + F::from_f64(19.0).unwrap() * r3
+                        F::from_f64(2.0 / 3.0).expect("Operation failed")
+                            - F::from_f64(9.0).expect("Operation failed") * r2
+                            + F::from_f64(19.0).expect("Operation failed") * r3
                     } else if r < F::one() {
-                        let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;
-                        F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)
+                        let t = F::from_f64(2.0).expect("Operation failed")
+                            - F::from_f64(3.0).expect("Operation failed") * r;
+                        F::from_f64(1.0 / 3.0).expect("Operation failed") * t.powi(3)
                     } else {
                         F::zero()
                     }
@@ -441,7 +443,7 @@ where
             weights.mapv_inplace(|w| w / sum);
         } else {
             // If all weights are zero (shouldn't happen), use equal weights
-            weights.fill(F::from_f64(1.0 / n as f64).unwrap());
+            weights.fill(F::from_f64(1.0 / n as f64).expect("Operation failed"));
         }
 
         Ok(weights)
@@ -563,10 +565,10 @@ where
         #[cfg(feature = "linalg")]
         let coefficients = {
             use scirs2_linalg::solve;
-            let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
-            let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
+            let xtx_f64 = xtx.mapv(|x| x.to_f64().expect("Operation failed"));
+            let xty_f64 = xty.mapv(|x| x.to_f64().expect("Operation failed"));
             match solve(&xtx_f64.view(), &xty_f64.view(), None) {
-                Ok(c) => c.mapv(|_x| F::from_f64(_x).unwrap()),
+                Ok(c) => c.mapv(|_x| F::from_f64(_x).expect("Operation failed")),
                 Err(_) => {
                     // Fallback: use local weighted mean for numerical stability
                     let mut mean = F::zero();
@@ -625,9 +627,9 @@ where
         #[cfg(feature = "linalg")]
         let xtx_inv = {
             use scirs2_linalg::inv;
-            let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
+            let xtx_f64 = xtx.mapv(|x| x.to_f64().expect("Operation failed"));
             match inv(&xtx_f64.view(), None) {
-                Ok(inv) => inv.mapv(|_x| F::from_f64(_x).unwrap()),
+                Ok(inv) => inv.mapv(|_x| F::from_f64(_x).expect("Operation failed")),
                 Err(_) => {
                     // If inversion fails, return a simpler result without diagnostics
                     return Ok(RegressionResult {
@@ -635,7 +637,7 @@ where
                         std_error: F::zero(),
                         confidence_interval: None,
                         coefficients,
-                        effective_df: F::from_f64(1.0).unwrap(),
+                        effective_df: F::from_f64(1.0).expect("Operation failed"),
                         r_squared: F::zero(),
                     });
                 }
@@ -650,7 +652,7 @@ where
                 std_error: F::zero(),
                 confidence_interval: None,
                 coefficients,
-                effective_df: F::from_f64(1.0).unwrap(),
+                effective_df: F::from_f64(1.0).expect("Operation failed"),
                 r_squared: F::zero(),
             })
         }
@@ -706,7 +708,7 @@ where
             let xtx_inv_row1 = xtx_inv.row(0);
 
             // Compute variance of residuals (MSE)
-            let n_effective = F::from_usize(n_points).unwrap() - effective_df;
+            let n_effective = F::from_usize(n_points).expect("Operation failed") - effective_df;
             let mse = if n_effective > F::zero() {
                 ssr / n_effective
             } else {
@@ -743,22 +745,22 @@ where
             let confidence_interval = self.config.confidence_level.map(|level| {
                 // Get t-critical value (approximate with normal distribution for simplicity)
                 let alpha = F::one() - level;
-                let half_alpha = alpha / F::from_f64(2.0).unwrap();
+                let half_alpha = alpha / F::from_f64(2.0).expect("Operation failed");
 
                 // Approximate critical value assuming a normal distribution
                 // More accurate would be a t-distribution with n_effective degrees of freedom
-                let z_critical = if half_alpha <= F::from_f64(0.001).unwrap() {
-                    F::from_f64(3.09).unwrap() // ~99.9% CI
-                } else if half_alpha <= F::from_f64(0.005).unwrap() {
-                    F::from_f64(2.81).unwrap() // ~99% CI
-                } else if half_alpha <= F::from_f64(0.01).unwrap() {
-                    F::from_f64(2.58).unwrap() // ~98% CI
-                } else if half_alpha <= F::from_f64(0.025).unwrap() {
-                    F::from_f64(1.96).unwrap() // ~95% CI
-                } else if half_alpha <= F::from_f64(0.05).unwrap() {
-                    F::from_f64(1.645).unwrap() // ~90% CI
+                let z_critical = if half_alpha <= F::from_f64(0.001).expect("Operation failed") {
+                    F::from_f64(3.09).expect("Operation failed") // ~99.9% CI
+                } else if half_alpha <= F::from_f64(0.005).expect("Operation failed") {
+                    F::from_f64(2.81).expect("Operation failed") // ~99% CI
+                } else if half_alpha <= F::from_f64(0.01).expect("Operation failed") {
+                    F::from_f64(2.58).expect("Operation failed") // ~98% CI
+                } else if half_alpha <= F::from_f64(0.025).expect("Operation failed") {
+                    F::from_f64(1.96).expect("Operation failed") // ~95% CI
+                } else if half_alpha <= F::from_f64(0.05).expect("Operation failed") {
+                    F::from_f64(1.645).expect("Operation failed") // ~90% CI
                 } else {
-                    F::from_f64(1.28).unwrap() // ~80% CI
+                    F::from_f64(1.28).expect("Operation failed") // ~80% CI
                 };
 
                 let margin = z_critical * std_error;
@@ -840,7 +842,7 @@ where
             }
 
             // Compute mean squared error
-            let mse = total_squared_error / F::from_usize(n_points).unwrap();
+            let mse = total_squared_error / F::from_usize(n_points).expect("Operation failed");
 
             // Update best bandwidth if this one is better
             if mse < min_error {
@@ -910,7 +912,7 @@ where
         confidence_level: Some(confidence_level),
         robust_se: true,
         max_points: None,
-        epsilon: F::from_f64(1e-10).unwrap(),
+        epsilon: F::from_f64(1e-10).expect("Operation failed"),
     };
 
     LocalPolynomialRegression::with_config(points, values, config)
@@ -933,11 +935,11 @@ mod tests {
             y.clone(),
             1.5, // bandwidth
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test at x = 2.5 (should be close to 6.25)
         let query = array![2.5];
-        let result = loess.fit_at_point(&query.view()).unwrap();
+        let result = loess.fit_at_point(&query.view()).expect("Operation failed");
 
         assert_abs_diff_eq!(result.value, 6.25, epsilon = 1.5);
     }
@@ -954,17 +956,18 @@ mod tests {
             ..LocalPolynomialConfig::default()
         };
 
-        let loess = LocalPolynomialRegression::with_config(x.clone(), y.clone(), config).unwrap();
+        let loess = LocalPolynomialRegression::with_config(x.clone(), y.clone(), config)
+            .expect("Operation failed");
 
         // Test at x = 2.5
         let query = array![2.5];
-        let result = loess.fit_at_point(&query.view()).unwrap();
+        let result = loess.fit_at_point(&query.view()).expect("Operation failed");
 
         // Confidence interval should exist and contain the true value (6.25)
         // Note: confidence intervals require the linalg feature
         #[cfg(feature = "linalg")]
         {
-            let (lower, upper) = result.confidence_interval.unwrap();
+            let (lower, upper) = result.confidence_interval.expect("Operation failed");
             assert!(lower < 6.25);
             assert!(upper > 6.25);
         }

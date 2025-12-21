@@ -96,7 +96,7 @@ fn main() {
                 Err(_) => {
                     // For functions that don't converge with adaptive quadrature,
                     // fallback to Gauss-Legendre with 10 points (the max implemented)
-                    gauss_legendre(f_scalar, *a, *b, 10).unwrap()
+                    gauss_legendre(f_scalar, *a, *b, 10).expect("Operation failed")
                 }
             }
         });
@@ -152,7 +152,7 @@ fn main() {
 
         let (mc_result, mc_time) = time_execution(|| {
             monte_carlo(f_array, &[(*a, *b)], Some(options.clone()))
-                .unwrap()
+                .expect("Operation failed")
                 .value
         });
         let mc_error = (mc_result - exact).abs();
@@ -194,7 +194,7 @@ fn main() {
 
     let (mc_result, mc_time) = time_execution(|| {
         monte_carlo(&f_2d, &[(0.0, PI), (0.0, PI / 2.0)], Some(options))
-            .unwrap()
+            .expect("Operation failed")
             .value
     });
 

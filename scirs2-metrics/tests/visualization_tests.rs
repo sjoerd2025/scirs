@@ -172,7 +172,7 @@ fn test_confusion_matrix_visualizer() {
     let y_true = array![0, 1, 2, 0, 1, 2];
     let y_pred = array![0, 2, 1, 0, 0, 2];
 
-    let (cm_, _labels) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+    let (cm_, _labels) = confusion_matrix(&y_true, &y_pred, None).expect("Operation failed");
     let cm_f64 = cm_.mapv(|x| x as f64);
 
     // Test creating a visualizer
@@ -187,7 +187,7 @@ fn test_confusion_matrix_visualizer() {
     );
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     assert!(data.z.is_some());
 
     // Test metadata
@@ -204,14 +204,14 @@ fn test_roc_curve_visualizer() {
     let y_score = array![0.1, 0.8, 0.7, 0.3, 0.9, 0.2];
 
     // Compute ROC curve
-    let (fpr, tpr, thresholds) = roc_curve(&y_true, &y_score).unwrap();
+    let (fpr, tpr, thresholds) = roc_curve(&y_true, &y_score).expect("Operation failed");
 
     // Test creating a visualizer
     let visualizer =
         helpers::visualize_roc_curve(fpr.view(), tpr.view(), Some(thresholds.view()), Some(0.85));
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     // Just check that data is present - specific lengths may vary based on visualization implementation
     assert!(!data.x.is_empty());
     assert!(!data.y.is_empty());
@@ -230,7 +230,8 @@ fn test_precision_recall_visualizer() {
     let y_score = array![0.1, 0.8, 0.7, 0.3, 0.9, 0.2];
 
     // Compute precision-recall curve
-    let (precision, recall, thresholds) = precision_recall_curve(&y_true, &y_score).unwrap();
+    let (precision, recall, thresholds) =
+        precision_recall_curve(&y_true, &y_score).expect("Operation failed");
 
     // Test creating a visualizer
     let visualizer = helpers::visualize_precision_recall_curve(
@@ -241,7 +242,7 @@ fn test_precision_recall_visualizer() {
     );
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     // Just check that data is present - specific lengths may vary based on visualization implementation
     assert!(!data.x.is_empty());
     assert!(!data.y.is_empty());
@@ -260,14 +261,15 @@ fn test_calibration_visualizer() {
     let y_score = array![0.1, 0.8, 0.7, 0.3, 0.9, 0.2];
 
     // Compute calibration curve
-    let (prob_true, prob_pred_, _counts) = calibration_curve(&y_true, &y_score, Some(3)).unwrap();
+    let (prob_true, prob_pred_, _counts) =
+        calibration_curve(&y_true, &y_score, Some(3)).expect("Operation failed");
 
     // Test creating a visualizer
     let visualizer =
         helpers::visualize_calibration_curve(prob_true.view(), prob_pred_.view(), 3, "uniform");
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     // Just check that data is present - specific lengths may vary based on visualization implementation
     assert!(!data.x.is_empty());
     assert!(!data.y.is_empty());
@@ -296,7 +298,7 @@ fn test_generic_metric_visualizer() {
     );
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     assert_eq!(data.x, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
     assert_eq!(data.y, vec![2.0, 4.0, 1.0, 3.0, 5.0]);
 
@@ -332,7 +334,7 @@ fn test_multi_curve_visualizer() {
     );
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     assert_eq!(data.x, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
     assert_eq!(data.y, vec![2.0, 4.0, 1.0, 3.0, 5.0]);
     assert!(data.series.contains_key("Series 2"));
@@ -352,8 +354,8 @@ fn test_multi_curve_visualizer() {
 #[allow(dead_code)]
 fn test_heatmap_visualizer() {
     // Create a matrix
-    let matrix =
-        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]).unwrap();
+    let matrix = Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        .expect("Operation failed");
 
     // Test creating a visualizer
     let visualizer = helpers::visualize_heatmap(
@@ -365,10 +367,10 @@ fn test_heatmap_visualizer() {
     );
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     assert!(data.z.is_some());
-    assert_eq!(data.z.as_ref().unwrap().len(), 3);
-    assert_eq!(data.z.as_ref().unwrap()[0].len(), 3);
+    assert_eq!(data.z.as_ref().expect("Operation failed").len(), 3);
+    assert_eq!(data.z.as_ref().expect("Operation failed")[0].len(), 3);
     assert_eq!(
         data.x_labels,
         Some(vec!["A".to_string(), "B".to_string(), "C".to_string()])
@@ -402,7 +404,7 @@ fn test_histogram_visualizer() {
     );
 
     // Test preparing data
-    let data = visualizer.prepare_data().unwrap();
+    let data = visualizer.prepare_data().expect("Operation failed");
     assert_eq!(data.y.len(), 5); // 5 bins
 
     // Test metadata

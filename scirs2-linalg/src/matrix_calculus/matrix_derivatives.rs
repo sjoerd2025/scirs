@@ -33,7 +33,7 @@ use crate::norm::matrix_norm;
 /// use scirs2_linalg::matrix_calculus::matrix_derivatives::det_derivative;
 ///
 /// let x = array![[2.0, 1.0], [1.0, 2.0]];
-/// let d_det = det_derivative(&x.view()).unwrap();
+/// let d_det = det_derivative(&x.view()).expect("Operation failed");
 ///
 /// // For this matrix: det(X) = 3, X^{-1} = [[2/3, -1/3], [-1/3, 2/3]]
 /// // So d(det)/dX = 3 * [[2/3, -1/3], [-1/3, 2/3]]^T = [[2, -1], [-1, 2]]
@@ -98,7 +98,7 @@ where
 /// use scirs2_linalg::matrix_calculus::matrix_derivatives::trace_derivative;
 ///
 /// // Derivative of tr(X) with respect to X is identity
-/// let d_trace: scirs2_core::ndarray::Array2<f64> = trace_derivative(None, (3, 3)).unwrap();
+/// let d_trace: scirs2_core::ndarray::Array2<f64> = trace_derivative(None, (3, 3)).expect("Operation failed");
 ///
 /// // Should be a 3x3 identity matrix
 /// assert!((d_trace[[0, 0]] - 1.0).abs() < 1e-10);
@@ -154,7 +154,7 @@ where
 /// let x = array![[2.0, 0.0], [0.0, 2.0]];  // 2*I
 /// let v = array![[1.0, 0.0], [0.0, 0.0]];  // E_{1,1}
 ///
-/// let d_inv = inv_directional_derivative(&x.view(), &v.view()).unwrap();
+/// let d_inv = inv_directional_derivative(&x.view(), &v.view()).expect("Operation failed");
 ///
 /// // For X = 2*I, X^{-1} = 0.5*I, so derivative should be -0.5*I * E_{1,1} * 0.5*I
 /// ```
@@ -225,7 +225,7 @@ where
 /// let x = array![[0.0, 1.0], [-1.0, 0.0]];  // Skew-symmetric (rotation generator)
 /// let v = array![[1.0, 0.0], [0.0, 1.0]];   // Identity direction
 ///
-/// let d_exp = exp_directional_derivative(&x.view(), &v.view(), 10).unwrap();
+/// let d_exp = exp_directional_derivative(&x.view(), &v.view(), 10).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn exp_directional_derivative<F>(
@@ -269,7 +269,7 @@ where
     // Use the series: d(exp(X))/dX[V] = sum_{k=0}^∞ (1/k!) * sum_{j=0}^{k-1} X^j * V * X^{k-1-j}
     for k in 0..num_terms {
         if k > 0 {
-            factorial *= F::from(k).unwrap();
+            factorial *= F::from(k).expect("Operation failed");
             x_power = x_power.dot(x);
         }
 
@@ -324,7 +324,7 @@ where
 /// let x = array![[2.0, 1.0], [1.0, 2.0]];  // Symmetric matrix
 /// let v = array![[1.0, 0.0], [0.0, 1.0]];  // Identity direction
 ///
-/// let d_eigs = eigenvalue_derivatives(&x.view(), &v.view()).unwrap();
+/// let d_eigs = eigenvalue_derivatives(&x.view(), &v.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigenvalue_derivatives<F>(
@@ -363,7 +363,9 @@ where
     let n = x.nrows();
     for i in 0..n {
         for j in 0..n {
-            if (x[[i, j]] - x[[j, i]]).abs() > F::epsilon() * F::from(100.0).unwrap() {
+            if (x[[i, j]] - x[[j, i]]).abs()
+                > F::epsilon() * F::from(100.0).expect("Operation failed")
+            {
                 return Err(LinalgError::InvalidInputError(
                     "Matrix must be symmetric for eigenvalue derivatives".to_string(),
                 ));
@@ -411,7 +413,7 @@ where
 /// use scirs2_linalg::matrix_calculus::matrix_derivatives::norm_derivative;
 ///
 /// let x = array![[3.0, 4.0], [0.0, 0.0]];
-/// let d_norm = norm_derivative(&x.view(), "fro").unwrap();
+/// let d_norm = norm_derivative(&x.view(), "fro").expect("Operation failed");
 ///
 /// // For Frobenius norm ||X||_F = sqrt(sum(X_ij^2)),
 /// // derivative is X / ||X||_F
@@ -501,7 +503,7 @@ where
 /// let b = array![[5.0, 6.0], [7.0, 8.0]];
 /// let va = array![[1.0, 0.0], [0.0, 0.0]];  // Direction for A
 ///
-/// let d_ab = matmul_derivative(&a.view(), &b.view(), Some(&va.view()), None).unwrap();
+/// let d_ab = matmul_derivative(&a.view(), &b.view(), Some(&va.view()), None).expect("Operation failed");
 /// // Should equal va.dot(&b) = [[5, 6], [0, 0]]
 /// ```
 #[allow(dead_code)]
@@ -611,7 +613,7 @@ mod tests {
     #[test]
     fn test_det_derivative() {
         let x = array![[2.0, 1.0], [1.0, 2.0]];
-        let d_det = det_derivative(&x.view()).unwrap();
+        let d_det = det_derivative(&x.view()).expect("Operation failed");
 
         // For this matrix: det(X) = 3, X^{-1} = [[2/3, -1/3], [-1/3, 2/3]]
         // So d(det)/dX = 3 * [[2/3, -1/3], [-1/3, 2/3]]^T = [[2, -1], [-1, 2]]
@@ -624,7 +626,7 @@ mod tests {
     #[test]
     fn test_trace_derivative() {
         // Test d(tr(X))/dX = I
-        let d_trace = trace_derivative::<f64>(None, (3, 3)).unwrap();
+        let d_trace = trace_derivative::<f64>(None, (3, 3)).expect("Operation failed");
 
         for i in 0..3 {
             for j in 0..3 {
@@ -638,7 +640,7 @@ mod tests {
 
         // Test d(tr(AX))/dX = A^T
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let d_trace_a = trace_derivative(Some(&a.view()), (2, 2)).unwrap();
+        let d_trace_a = trace_derivative(Some(&a.view()), (2, 2)).expect("Operation failed");
         let expected = a.t().to_owned();
 
         for i in 0..2 {
@@ -651,7 +653,7 @@ mod tests {
     #[test]
     fn test_norm_derivative() {
         let x = array![[3.0, 4.0], [0.0, 0.0]];
-        let d_norm = norm_derivative(&x.view(), "fro").unwrap();
+        let d_norm = norm_derivative(&x.view(), "fro").expect("Operation failed");
 
         // Frobenius norm of this matrix is 5.0
         // So derivative should be X / 5.0
@@ -667,7 +669,8 @@ mod tests {
         let b = array![[5.0, 6.0], [7.0, 8.0]];
         let va = array![[1.0, 0.0], [0.0, 0.0]];
 
-        let d_ab = matmul_derivative(&a.view(), &b.view(), Some(&va.view()), None).unwrap();
+        let d_ab = matmul_derivative(&a.view(), &b.view(), Some(&va.view()), None)
+            .expect("Operation failed");
 
         // Should equal va.dot(&b) = [[5, 6], [0, 0]]
         assert_abs_diff_eq!(d_ab[[0, 0]], 5.0, epsilon = 1e-10);
@@ -711,20 +714,20 @@ pub mod differential_operators {
             let mut div_k = F::zero();
 
             // ∂F₁₁/∂x (using central difference)
-            div_k +=
-                (field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            div_k += (field[[0, 0, k + 1]] - field[[0, 0, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             // ∂F₁₂/∂y
-            div_k +=
-                (field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            div_k += (field[[0, 1, k + 1]] - field[[0, 1, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             // ∂F₂₁/∂x
-            div_k +=
-                (field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            div_k += (field[[1, 0, k + 1]] - field[[1, 0, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             // ∂F₂₂/∂y
-            div_k +=
-                (field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            div_k += (field[[1, 1, k + 1]] - field[[1, 1, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             divergence[k] = div_k;
         }
@@ -768,20 +771,20 @@ pub mod differential_operators {
             let mut curl_k = F::zero();
 
             // ∂F₁₂/∂x
-            curl_k +=
-                (field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            curl_k += (field[[0, 1, k + 1]] - field[[0, 1, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             // -∂F₁₁/∂y (approximated as derivative in k direction)
-            curl_k -=
-                (field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            curl_k -= (field[[0, 0, k + 1]] - field[[0, 0, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             // ∂F₂₂/∂x
-            curl_k +=
-                (field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            curl_k += (field[[1, 1, k + 1]] - field[[1, 1, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             // -∂F₂₁/∂y
-            curl_k -=
-                (field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+            curl_k -= (field[[1, 0, k + 1]] - field[[1, 0, k - 1]])
+                / (F::from(2.0).expect("Operation failed") * spacing);
 
             curl[k] = curl_k;
         }
@@ -827,7 +830,7 @@ pub mod differential_operators {
                 for k in 1..n_points - 1 {
                     // Second derivative approximation: (f[k-1] - 2*f[k] + f[k+1]) / h²
                     laplacian[[i, j, k]] = (field[[i, j, k - 1]]
-                        - F::from(2.0).unwrap() * field[[i, j, k]]
+                        - F::from(2.0).expect("Operation failed") * field[[i, j, k]]
                         + field[[i, j, k + 1]])
                         / h_sq;
                 }
@@ -877,7 +880,7 @@ pub mod differential_operators {
                 for k in 1..n_points - 1 {
                     // Central difference: (f[k+1] - f[k-1]) / (2*h)
                     gradient[[i, j, k]] = (field[[i, j, k + 1]] - field[[i, j, k - 1]])
-                        / (F::from(2.0).unwrap() * spacing);
+                        / (F::from(2.0).expect("Operation failed") * spacing);
                 }
 
                 // Handle boundaries with forward/backward differences
@@ -911,7 +914,7 @@ pub mod differential_operators {
                 field[[1, 1, k]] = x; // F₂₂ = x
             }
 
-            let div = matrix_divergence(&field, 1.0).unwrap();
+            let div = matrix_divergence(&field, 1.0).expect("Operation failed");
 
             // For this field, divergence should be approximately constant = 1 + 1 + 0 + 1 = 3
             assert!(div.len() == 5);
@@ -929,7 +932,7 @@ pub mod differential_operators {
                 field[[1, 1, k]] = x * x; // F₂₂ = x²
             }
 
-            let laplacian = matrix_laplacian(&field, 1.0).unwrap();
+            let laplacian = matrix_laplacian(&field, 1.0).expect("Operation failed");
 
             // For f(x) = x², d²f/dx² = 2, so laplacian should be approximately 2
             assert_abs_diff_eq!(laplacian[[0, 0, 2]], 2.0, epsilon = 1e-10);
@@ -947,7 +950,7 @@ pub mod differential_operators {
                 field[[1, 1, k]] = 3.0 * x; // F₂₂ = 3x
             }
 
-            let gradient = matrix_gradient(&field, 1.0).unwrap();
+            let gradient = matrix_gradient(&field, 1.0).expect("Operation failed");
 
             // For f(x) = ax, df/dx = a
             assert_abs_diff_eq!(gradient[[0, 0, 2]], 2.0, epsilon = 1e-10);

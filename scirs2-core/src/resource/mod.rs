@@ -599,11 +599,11 @@ mod tests {
         // These should work on any system
         let thread_count = get_recommended_thread_count();
         assert!(thread_count.is_ok());
-        assert!(thread_count.unwrap() > 0);
+        assert!(thread_count.expect("Operation failed") > 0);
 
         let chunk_size = get_recommended_chunk_size();
         assert!(chunk_size.is_ok());
-        assert!(chunk_size.unwrap() > 0);
+        assert!(chunk_size.expect("Operation failed") > 0);
     }
 
     #[test]

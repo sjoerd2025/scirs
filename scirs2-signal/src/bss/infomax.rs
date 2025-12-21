@@ -42,7 +42,7 @@ pub fn infomax_ica(
         }
     };
 
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
     let mut w = Array2::<f64>::zeros((n_components, n_signals));
 
     for i in 0..n_components {
@@ -144,7 +144,7 @@ pub fn extended_infomax_ica(
         }
     };
 
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
     let mut w = Array2::<f64>::zeros((n_components, n_signals));
 
     for i in 0..n_components {

@@ -203,7 +203,7 @@ where
     F: Float + FromPrimitive + Debug + Send + Sync,
 {
     fn distance(&self, x: ArrayView1<F>, y: ArrayView1<F>) -> F {
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
 
         // Calculate means
         let mean_x = x.sum() / n;
@@ -304,7 +304,7 @@ where
     }
 
     // Compute means
-    let means = data.mean_axis(Axis(0)).unwrap();
+    let means = data.mean_axis(Axis(0)).expect("Operation failed");
 
     // Center the data
     let mut centereddata = Array2::zeros((n_samples, n_features));
@@ -315,7 +315,8 @@ where
     }
 
     // Compute covariance matrix: (1/(n-1)) * X^T * X
-    let cov = centereddata.t().dot(&centereddata) / F::from(n_samples - 1).unwrap();
+    let cov = centereddata.t().dot(&centereddata)
+        / F::from(n_samples - 1).expect("Failed to convert to float");
     Ok(cov)
 }
 
@@ -432,7 +433,7 @@ where
         MetricType::Manhattan => Ok(Box::new(ManhattanDistance)),
         MetricType::Chebyshev => Ok(Box::new(ChebyshevDistance)),
         MetricType::Minkowski => {
-            let p = p.unwrap_or_else(|| F::from(2.0).unwrap());
+            let p = p.unwrap_or_else(|| F::from(2.0).expect("Failed to convert constant to float"));
             Ok(Box::new(MinkowskiDistance::new(p)))
         }
         MetricType::Cosine => Ok(Box::new(CosineDistance)),
@@ -512,9 +513,9 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 2.0, 1.0, 3.0, 4.0, 4.0, 3.0, 5.0, 6.0, 6.0, 5.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let metric = MahalanobisDistance::fromdata(data.view()).unwrap();
+        let metric = MahalanobisDistance::fromdata(data.view()).expect("Operation failed");
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
         let y = Array1::from_vec(vec![2.0, 3.0]);
@@ -529,7 +530,8 @@ mod tests {
     #[test]
     fn test_pairwise_distances() {
         let metric = EuclideanDistance;
-        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
 
         let distances = metric.pairwise_distances(data.view());
 
@@ -545,9 +547,10 @@ mod tests {
     #[test]
     fn test_distances_to_centroids() {
         let metric = EuclideanDistance;
-        let data = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let data =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
 
-        let centroids = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+        let centroids = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).expect("Operation failed");
 
         let distances = metric.distances_to_centroids(data.view(), centroids.view());
 

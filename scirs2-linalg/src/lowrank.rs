@@ -248,14 +248,14 @@ where
     // Center the data by subtracting the mean of each feature
     let mut centered_data = data.to_owned();
     for j in 0..n_features {
-        let mean = data.column(j).sum() / F::from(n_samples).unwrap();
+        let mean = data.column(j).sum() / F::from(n_samples).expect("Operation failed");
         for i in 0..n_samples {
             centered_data[[i, j]] -= mean;
         }
     }
 
     // Scale by sqrt(n_samples - 1) for proper variance computation
-    let scale = F::from(n_samples - 1).unwrap().sqrt();
+    let scale = F::from(n_samples - 1).expect("Operation failed").sqrt();
     centered_data.mapv_inplace(|x| x / scale);
 
     // Compute SVD of centered and scaled data
@@ -313,7 +313,7 @@ where
 {
     let (m, n) = a.dim();
     let max_iter = max_iter.unwrap_or(100);
-    let tolerance = tolerance.unwrap_or_else(|| F::from(1e-6).unwrap());
+    let tolerance = tolerance.unwrap_or_else(|| F::from(1e-6).expect("Operation failed"));
 
     if k == 0 {
         return Err(LinalgError::ShapeError(
@@ -350,17 +350,17 @@ where
 
     for i in 0..m {
         for j in 0..k {
-            w[[i, j]] = F::from(rng.random::<f64>()).unwrap();
+            w[[i, j]] = F::from(rng.random::<f64>()).expect("Operation failed");
         }
     }
 
     for i in 0..k {
         for j in 0..n {
-            h[[i, j]] = F::from(rng.random::<f64>()).unwrap();
+            h[[i, j]] = F::from(rng.random::<f64>()).expect("Operation failed");
         }
     }
 
-    let mut prev_error = F::from(f64::INFINITY).unwrap();
+    let mut prev_error = F::from(f64::INFINITY).expect("Operation failed");
 
     // Multiplicative update iterations
     for _iter in 0..max_iter {
@@ -526,7 +526,7 @@ where
     for _ in 0..k {
         // Weighted random sampling based on leverage scores
         let r: f64 = rng.random();
-        let r_f = F::from(r).unwrap();
+        let r_f = F::from(r).expect("Operation failed");
         let mut cumsum = F::zero();
 
         for (j, &score) in col_leverage_scores.iter().enumerate() {
@@ -587,7 +587,7 @@ where
 
     for _ in 0..k {
         let r: f64 = rng.random();
-        let r_f = F::from(r).unwrap();
+        let r_f = F::from(r).expect("Operation failed");
         let mut cumsum = F::zero();
 
         for (i, &score) in row_leverage_scores.iter().enumerate() {
@@ -704,7 +704,8 @@ mod tests {
         // Simple 2D data
         let data = array![[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0]];
 
-        let (components, explained_var, explained_var_ratio) = pca(&data.view(), 1, None).unwrap();
+        let (components, explained_var, explained_var_ratio) =
+            pca(&data.view(), 1, None).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(components.shape(), [1, 2]);
@@ -720,7 +721,7 @@ mod tests {
         // Simple non-negative matrix
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
-        let (w, h) = nmf(&a.view(), 2, Some(50), Some(1e-4), None).unwrap();
+        let (w, h) = nmf(&a.view(), 2, Some(50), Some(1e-4), None).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(w.shape(), [2, 2]);

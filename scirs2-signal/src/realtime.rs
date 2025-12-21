@@ -149,14 +149,14 @@ impl CircularBuffer {
 
     /// Write data to buffer (non-blocking)
     pub fn write(&self, data: &[f64]) -> SignalResult<usize> {
-        let mut buffer = self.buffer.lock().unwrap();
+        let mut buffer = self.buffer.lock().expect("Operation failed");
         let mut written = 0;
 
         for &sample in data {
             if buffer.len() >= self.capacity {
                 // Buffer full - drop oldest sample
                 buffer.pop_front();
-                *self.overrun_count.lock().unwrap() += 1;
+                *self.overrun_count.lock().expect("Operation failed") += 1;
             }
             buffer.push_back(sample);
             written += 1;
@@ -167,7 +167,7 @@ impl CircularBuffer {
 
     /// Read data from buffer (non-blocking)
     pub fn read(&self, data: &mut [f64]) -> SignalResult<usize> {
-        let mut buffer = self.buffer.lock().unwrap();
+        let mut buffer = self.buffer.lock().expect("Operation failed");
         let mut read = 0;
 
         for sample in data.iter_mut() {
@@ -185,17 +185,17 @@ impl CircularBuffer {
 
     /// Get current buffer fill level
     pub fn fill_level(&self) -> usize {
-        self.buffer.lock().unwrap().len()
+        self.buffer.lock().expect("Operation failed").len()
     }
 
     /// Get overrun count
     pub fn overrun_count(&self) -> u64 {
-        *self.overrun_count.lock().unwrap()
+        *self.overrun_count.lock().expect("Operation failed")
     }
 
     /// Clear buffer
     pub fn clear(&self) {
-        self.buffer.lock().unwrap().clear();
+        self.buffer.lock().expect("Operation failed").clear();
     }
 }
 
@@ -232,7 +232,7 @@ impl StreamProcessor {
 
     /// Start real-time processing
     pub fn start(&mut self) -> SignalResult<()> {
-        let mut running = self.running.lock().unwrap();
+        let mut running = self.running.lock().expect("Operation failed");
         if *running {
             return Err(SignalError::ValueError(
                 "Processor already running".to_string(),
@@ -261,7 +261,7 @@ impl StreamProcessor {
 
     /// Stop real-time processing
     pub fn stop(&mut self) -> SignalResult<()> {
-        *self.running.lock().unwrap() = false;
+        *self.running.lock().expect("Operation failed") = false;
 
         if let Some(thread) = self._process_thread.take() {
             thread.join().map_err(|_| {
@@ -285,12 +285,12 @@ impl StreamProcessor {
 
     /// Get processing statistics
     pub fn get_stats(&self) -> RealtimeStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Operation failed").clone()
     }
 
     /// Reset statistics
     pub fn reset_stats(&self) {
-        *self.stats.lock().unwrap() = RealtimeStats::default();
+        *self.stats.lock().expect("Operation failed") = RealtimeStats::default();
     }
 
     /// Processing loop (runs in separate thread)
@@ -304,12 +304,12 @@ impl StreamProcessor {
         let mut processing_buffer = vec![0.0; config.buffer_size];
         let mut block_sequence = 0u64;
 
-        while *running.lock().unwrap() {
+        while *running.lock().expect("Operation failed") {
             let start_time = Instant::now();
 
             // Read input block
             let samples_read = {
-                let mut input_buf = input_buffer.lock().unwrap();
+                let mut input_buf = input_buffer.lock().expect("Operation failed");
                 let mut read = 0;
 
                 for sample in processing_buffer.iter_mut() {
@@ -326,7 +326,7 @@ impl StreamProcessor {
 
             if samples_read < config.buffer_size {
                 // Not enough input data - add to underrun count
-                let mut stats_guard = stats.lock().unwrap();
+                let mut stats_guard = stats.lock().expect("Operation failed");
                 stats_guard.underruns += 1;
 
                 // Sleep briefly to avoid busy waiting
@@ -346,7 +346,7 @@ impl StreamProcessor {
 
             // Write output block
             {
-                let mut output_buf = output_buffer.lock().unwrap();
+                let mut output_buf = output_buffer.lock().expect("Operation failed");
                 for &sample in &_stream_block.data {
                     if output_buf.len() >= config.buffer_size * 4 {
                         output_buf.pop_front(); // Drop oldest if _buffer full
@@ -358,7 +358,7 @@ impl StreamProcessor {
             // Update statistics
             let processing_time = start_time.elapsed().as_secs_f64() * 1000.0;
             {
-                let mut stats_guard = stats.lock().unwrap();
+                let mut stats_guard = stats.lock().expect("Operation failed");
                 stats_guard.blocks_processed += 1;
                 stats_guard.samples_processed += samples_read as u64;
 
@@ -377,8 +377,8 @@ impl StreamProcessor {
 
                 // Estimate current latency
                 let samples_per_ms = config.sample_rate / 1000.0;
-                let buffer_latency = (input_buffer.lock().unwrap().len()
-                    + output_buffer.lock().unwrap().len())
+                let buffer_latency = (input_buffer.lock().expect("Operation failed").len()
+                    + output_buffer.lock().expect("Operation failed").len())
                     as f64
                     / samples_per_ms;
                 stats_guard.current_latency_ms = buffer_latency + processing_time;
@@ -673,10 +673,10 @@ mod tests {
 
         // Test write/read
         let input_data = [1.0, 2.0, 3.0, 4.0, 5.0];
-        buffer.write(&input_data).unwrap();
+        buffer.write(&input_data).expect("Operation failed");
 
         let mut output_data = [0.0; 5];
-        let read_count = buffer.read(&mut output_data).unwrap();
+        let read_count = buffer.read(&mut output_data).expect("Operation failed");
 
         assert_eq!(read_count, 5);
         assert_eq!(output_data, input_data);
@@ -688,7 +688,7 @@ mod tests {
 
         // Write more data than capacity
         let input_data = [1.0, 2.0, 3.0, 4.0, 5.0];
-        buffer.write(&input_data).unwrap();
+        buffer.write(&input_data).expect("Operation failed");
 
         assert_eq!(buffer.overrun_count(), 2); // 2 samples dropped
         assert_eq!(buffer.fill_level(), 3);
@@ -714,7 +714,7 @@ mod tests {
         let mut processor = GainProcessor::new(2.0);
         let mut block = StreamBlock::new(vec![1.0, 2.0, 3.0, 4.0], 1, 0);
 
-        processor.process_block(&mut block).unwrap();
+        processor.process_block(&mut block).expect("Operation failed");
 
         assert_eq!(block.data, vec![2.0, 4.0, 6.0, 8.0]);
     }
@@ -724,7 +724,7 @@ mod tests {
         let mut processor = MovingAverageProcessor::new(3);
         let mut block = StreamBlock::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], 1, 0);
 
-        processor.process_block(&mut block).unwrap();
+        processor.process_block(&mut block).expect("Operation failed");
 
         // First sample: average of [1.0] = 1.0
         // Second sample: average of [1.0, 2.0] = 1.5
@@ -741,8 +741,8 @@ mod tests {
 
         assert_eq!(block.samples_per_channel(), 3);
 
-        let ch0 = block.channel_data(0).unwrap();
-        let ch1 = block.channel_data(1).unwrap();
+        let ch0 = block.channel_data(0).expect("Operation failed");
+        let ch1 = block.channel_data(1).expect("Operation failed");
 
         assert_eq!(ch0, vec![1.0, 3.0, 5.0]);
         assert_eq!(ch1, vec![2.0, 4.0, 6.0]);

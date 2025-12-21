@@ -1054,8 +1054,10 @@ mod tests {
 
     #[test]
     fn test_s3_url_building() {
-        let client = public_s3_client("us-east-1", "test-bucket").unwrap();
-        let url = client.build_url("path/to/dataset.csv").unwrap();
+        let client = public_s3_client("us-east-1", "test-bucket").expect("Operation failed");
+        let url = client
+            .build_url("path/to/dataset.csv")
+            .expect("Operation failed");
         assert_eq!(
             url,
             "https://test-bucket.s3.us-east-1.amazonaws.com/path/to/dataset.csv"
@@ -1074,8 +1076,8 @@ mod tests {
             headers: HashMap::new(),
         };
 
-        let client = CloudClient::new(config).unwrap();
-        let url = client.build_url("test.csv").unwrap();
+        let client = CloudClient::new(config).expect("Operation failed");
+        let url = client.build_url("test.csv").expect("Operation failed");
         assert_eq!(
             url,
             "https://s3.us-east-1.amazonaws.com/test-bucket/test.csv"
@@ -1084,8 +1086,10 @@ mod tests {
 
     #[test]
     fn test_gcs_url_building() {
-        let client = gcs_client("test-bucket", "dummy-key.json").unwrap();
-        let url = client.build_url("data/file.json").unwrap();
+        let client = gcs_client("test-bucket", "dummy-key.json").expect("Operation failed");
+        let url = client
+            .build_url("data/file.json")
+            .expect("Operation failed");
         assert_eq!(
             url,
             "https://storage.googleapis.com/test-bucket/data/file.json"
@@ -1094,8 +1098,9 @@ mod tests {
 
     #[test]
     fn test_azure_url_building() {
-        let client = azure_client("testaccount", "dummykey", "container").unwrap();
-        let url = client.build_url("blob.txt").unwrap();
+        let client =
+            azure_client("testaccount", "dummykey", "container").expect("Operation failed");
+        let url = client.build_url("blob.txt").expect("Operation failed");
         assert_eq!(
             url,
             "https://testaccount.blob.core.windows.net/container/blob.txt"
@@ -1111,9 +1116,9 @@ mod tests {
             "secret",
             true,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let url = client.build_url("file.csv").unwrap();
+        let url = client.build_url("file.csv").expect("Operation failed");
         assert_eq!(url, "https://minio.example.com/my-bucket/file.csv");
     }
 

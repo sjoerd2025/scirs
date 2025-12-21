@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tokenizer = WhitespaceTokenizer::new();
     let tokenized_docs: Vec<Vec<String>> = documents
         .iter()
-        .map(|doc| tokenizer.tokenize(doc).unwrap())
+        .map(|doc| tokenizer.tokenize(doc).expect("Operation failed"))
         .collect();
 
     // Create a simple vocabulary for demonstration
@@ -148,9 +148,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Balance coherence and diversity
             let score_a = a.1 + 0.5 * a.2;
             let score_b = b.1 + 0.5 * b.2;
-            score_a.partial_cmp(&score_b).unwrap()
+            score_a.partial_cmp(&score_b).expect("Operation failed")
         })
-        .unwrap();
+        .expect("Operation failed");
 
     println!(
         "\nOptimal number of topics: {} (coherence={:.4}, diversity={:.4})",

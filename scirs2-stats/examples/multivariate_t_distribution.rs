@@ -68,7 +68,9 @@ fn main() {
     }
 
     // Compute sample statistics
-    let sample_mean = samples.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+    let sample_mean = samples
+        .mean_axis(scirs2_core::ndarray::Axis(0))
+        .expect("Operation failed");
     println!(
         "\nSample mean: [{:.3}, {:.3}] (Expected: [0, 0])",
         sample_mean[0], sample_mean[1]

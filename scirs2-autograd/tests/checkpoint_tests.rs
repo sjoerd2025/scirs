@@ -19,8 +19,8 @@ fn test_checkpoint_basic() {
         let d2 = T::sum_all(c2);
 
         // Both computations should yield the same result
-        let result1 = d1.eval(ctx).unwrap();
-        let result2 = d2.eval(ctx).unwrap();
+        let result1 = d1.eval(ctx).expect("Test: operation failed");
+        let result2 = d2.eval(ctx).expect("Test: operation failed");
 
         assert_eq!(result1[[]], result2[[]]);
 
@@ -56,18 +56,18 @@ fn test_detach() {
         let c = T::sum_all(b);
 
         // The forward computation should work as normal
-        let result = c.eval(ctx).unwrap();
+        let result = c.eval(ctx).expect("Test: operation failed");
         assert_eq!(result[[]], 10.0); // 1+2+3+4 = 10
 
         // But gradients should not propagate through the detached tensor
         let grad = T::grad(&[c], &[&a])[0];
-        let grad_result = grad.eval(ctx).unwrap();
+        let grad_result = grad.eval(ctx).expect("Test: operation failed");
 
         // Gradient should be zeros since we detached
         let grad_2d = grad_result
             .view()
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
         for i in 0..2 {
             for j in 0..2 {
                 assert_eq!(grad_2d[[i, j]], 0.0);
@@ -95,8 +95,8 @@ fn test_checkpoint_segment() {
         let result2 = T::sum_all(d2);
 
         // Both should produce the same result
-        let val1 = result1.eval(ctx).unwrap();
-        let val2 = result2.eval(ctx).unwrap();
+        let val1 = result1.eval(ctx).expect("Test: operation failed");
+        let val2 = result2.eval(ctx).expect("Test: operation failed");
 
         assert!((val1[[]] - val2[[]] as f64).abs() < 1e-10_f64);
 
@@ -147,8 +147,8 @@ fn test_checkpoint_deep_network() {
         let loss_ckpt = T::sum_all(output_ckpt);
 
         // Both computations should produce the same result
-        let result = loss.eval(ctx).unwrap();
-        let result_ckpt = loss_ckpt.eval(ctx).unwrap();
+        let result = loss.eval(ctx).expect("Test: operation failed");
+        let result_ckpt = loss_ckpt.eval(ctx).expect("Test: operation failed");
 
         assert!((result[[]] - result_ckpt[[]] as f64).abs() < 1e-10_f64);
 
@@ -202,8 +202,8 @@ fn test_adaptive_checkpoint() {
         let _large_result = T::adaptive_checkpoint(&large_tensor, threshold);
 
         // Both computations should yield the same result for small tensors
-        let result1 = d1.eval(ctx).unwrap();
-        let result2 = d2.eval(ctx).unwrap();
+        let result1 = d1.eval(ctx).expect("Test: operation failed");
+        let result2 = d2.eval(ctx).expect("Test: operation failed");
 
         assert_eq!(result1[[]], result2[[]]);
 
@@ -252,20 +252,20 @@ fn test_checkpoint_group() {
         });
 
         // Verify results are the same
-        let c1_val = c1.eval(ctx).unwrap();
-        let c2_val = c2.eval(ctx).unwrap();
-        let d1_val = d1.eval(ctx).unwrap();
-        let d2_val = d2.eval(ctx).unwrap();
+        let c1_val = c1.eval(ctx).expect("Test: operation failed");
+        let c2_val = c2.eval(ctx).expect("Test: operation failed");
+        let d1_val = d1.eval(ctx).expect("Test: operation failed");
+        let d2_val = d2.eval(ctx).expect("Test: operation failed");
 
         // Compare c1 and c2
         let c1_2d = c1_val
             .view()
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
         let c2_2d = c2_val
             .view()
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -278,11 +278,11 @@ fn test_checkpoint_group() {
         let d1_2d = d1_val
             .view()
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
         let d2_2d = d2_val
             .view()
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -327,17 +327,17 @@ fn test_stop_gradient() {
         let d = T::sum_all(c);
 
         // Forward pass should work normally
-        let result = d.eval(ctx).unwrap();
+        let result = d.eval(ctx).expect("Test: operation failed");
         assert_eq!(result[[]], 30.0); // 1²+2²+3²+4² = 1+4+9+16 = 30
 
         // But gradients should be zero
         let grad = T::grad(&[d], &[&a])[0];
-        let grad_val = grad.eval(ctx).unwrap();
+        let grad_val = grad.eval(ctx).expect("Test: operation failed");
 
         let grad_2d = grad_val
             .view()
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
+            .expect("Test: operation failed");
         for i in 0..2 {
             for j in 0..2 {
                 assert_eq!(grad_2d[[i, j]], 0.0);
@@ -359,7 +359,7 @@ fn test_checkpoint_profiler() {
         // Create a tensor and checkpoint it
         let a = T::convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], ctx);
         let b = T::checkpoint(&a);
-        let _ = b.eval(ctx).unwrap();
+        let _ = b.eval(ctx).expect("Test: operation failed");
 
         // Check that one checkpoint was recorded
         assert!(T::CheckpointProfiler::checkpoint_count() > 0);

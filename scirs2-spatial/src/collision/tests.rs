@@ -180,7 +180,7 @@ mod collision_tests {
 
         // Check the distance
         let (distance, _contact_point) =
-            ray_sphere_collision(&ray_origin1, &ray_direction1, &sphere).unwrap();
+            ray_sphere_collision(&ray_origin1, &ray_direction1, &sphere).expect("Operation failed");
         assert!((distance - 4.0).abs() < 1e-10);
     }
 
@@ -209,7 +209,7 @@ mod collision_tests {
 
         // Check the distance
         let (min_t, _max_t, _contact_point) =
-            ray_box3d_collision(&ray_origin1, &ray_direction1, &box3d).unwrap();
+            ray_box3d_collision(&ray_origin1, &ray_direction1, &box3d).expect("Operation failed");
         assert!((min_t - 4.0).abs() < 1e-10);
     }
 
@@ -239,7 +239,7 @@ mod collision_tests {
         );
 
         assert!(collision_time.is_some());
-        let (time, _pos1, _pos2) = collision_time.unwrap();
+        let (time, _pos1, _pos2) = collision_time.expect("Operation failed");
         assert!((time - 1.5).abs() < 1e-10);
 
         // Now with a time step that's too short

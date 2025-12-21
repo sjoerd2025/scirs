@@ -8,13 +8,13 @@ fn debug_svd_reconstruction() {
     ag::run(|g| {
         let a = convert_to_tensor(array![[1.0_f64, 2.0], [3.0, 4.0], [5.0, 6.0]], g);
         println!("Original matrix A:");
-        println!("{:?}", a.eval(g).unwrap());
+        println!("{:?}", a.eval(g).expect("Test: operation failed"));
 
         let (u, s, v) = svd(a);
 
-        let u_val = u.eval(g).unwrap();
-        let s_val = s.eval(g).unwrap();
-        let v_val = v.eval(g).unwrap();
+        let u_val = u.eval(g).expect("Test: operation failed");
+        let s_val = s.eval(g).expect("Test: operation failed");
+        let v_val = v.eval(g).expect("Test: operation failed");
 
         println!("\nU shape: {:?}", u_val.shape());
         println!("U:\n{:?}", u_val);

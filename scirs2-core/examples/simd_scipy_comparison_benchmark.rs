@@ -141,7 +141,7 @@ fn benchmark_f64_operations(size: usize, results: &mut Vec<BenchmarkResult>) {
         iterations,
     });
 
-    let time_us = benchmark_operation(|| data.mean().unwrap(), iterations, 10);
+    let time_us = benchmark_operation(|| data.mean().expect("Operation failed"), iterations, 10);
     println!(
         "    {:15} f64: {:10.2} μs ({} iterations)",
         "mean", time_us, iterations
@@ -310,7 +310,7 @@ fn benchmark_f32_operations(size: usize, results: &mut Vec<BenchmarkResult>) {
         iterations,
     });
 
-    let time_us = benchmark_operation(|| data.mean().unwrap(), iterations, 10);
+    let time_us = benchmark_operation(|| data.mean().expect("Operation failed"), iterations, 10);
     println!(
         "    {:15} f32: {:10.2} μs ({} iterations)",
         "mean", time_us, iterations

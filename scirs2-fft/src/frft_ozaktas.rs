@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn test_ozaktas_identity() {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let result = frft_ozaktas(&signal, 0.0).unwrap();
+        let result = frft_ozaktas(&signal, 0.0).expect("Operation failed");
 
         for (i, &val) in signal.iter().enumerate() {
             assert_relative_eq!(result[i].re, val, epsilon = 1e-10);
@@ -222,7 +222,7 @@ mod tests {
     #[test]
     fn test_ozaktas_fourier() {
         let signal = vec![1.0, 0.0, -1.0, 0.0];
-        let frft_result = frft_ozaktas(&signal, 1.0).unwrap();
+        let frft_result = frft_ozaktas(&signal, 1.0).expect("Operation failed");
         let fft_result = fft(
             &signal
                 .iter()
@@ -230,7 +230,7 @@ mod tests {
                 .collect::<Vec<_>>(),
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // The Ozaktas algorithm may have different normalization
         // Just check that the relative shape is preserved
@@ -254,15 +254,15 @@ mod tests {
         let alpha2 = 0.4;
 
         // Direct computation
-        let direct = frft_ozaktas(&signal, alpha1 + alpha2).unwrap();
+        let direct = frft_ozaktas(&signal, alpha1 + alpha2).expect("Operation failed");
 
         // Sequential computation
-        let intermediate = frft_ozaktas(&signal, alpha1).unwrap();
+        let intermediate = frft_ozaktas(&signal, alpha1).expect("Operation failed");
         let sequential = frft_ozaktas(
             &intermediate.iter().map(|&c| c.re).collect::<Vec<_>>(),
             alpha2,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Energy comparison
         let direct_energy: f64 = direct.iter().map(|c| c.norm_sqr()).sum();

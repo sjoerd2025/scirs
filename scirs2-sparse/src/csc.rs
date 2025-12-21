@@ -53,7 +53,7 @@ where
     /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     /// let shape = (3, 3);
     ///
-    /// let matrix = CscMatrix::new(data.clone(), rows, cols, shape).unwrap();
+    /// let matrix = CscMatrix::new(data.clone(), rows, cols, shape).expect("Operation failed");
     /// ```
     pub fn new(
         data: Vec<T>,
@@ -347,7 +347,7 @@ where
             transposed.indices,
             (self.rows, self.cols),
         )
-        .unwrap()
+        .expect("Operation failed")
     }
 }
 
@@ -404,9 +404,9 @@ impl CscMatrix<f64> {
     /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     /// let shape = (3, 3);
     ///
-    /// let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+    /// let matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
     /// let vec = vec![1.0, 2.0, 3.0];
-    /// let result = matrix.gpu_dot(&vec).unwrap();
+    /// let result = matrix.gpu_dot(&vec).expect("Operation failed");
     /// ```
     pub fn gpu_dot(&self, vec: &[f64]) -> SparseResult<Vec<f64>> {
         // Convert to CSR and use GPU-accelerated CSR SpMV
@@ -513,7 +513,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         assert_eq!(matrix.shape(), (3, 3));
         assert_eq!(matrix.nnz(), 5);
@@ -527,7 +527,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let dense = matrix.to_dense();
 
         let expected = vec![
@@ -547,7 +547,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         // Matrix:
         // [1 0 2]
@@ -555,7 +555,7 @@ mod tests {
         // [4 5 0]
 
         let vec = vec![1.0, 2.0, 3.0];
-        let result = matrix.dot(&vec).unwrap();
+        let result = matrix.dot(&vec).expect("Operation failed");
 
         // Expected:
         // 1*1 + 0*2 + 2*3 = 7
@@ -577,7 +577,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let transposed = matrix.transpose();
 
         assert_eq!(transposed.shape(), (3, 3));
@@ -601,7 +601,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let csc_matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let csc_matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let csr_matrix = csc_matrix.to_csr();
 
         assert_eq!(csr_matrix.shape(), (3, 3));
@@ -621,7 +621,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let vec = vec![1.0, 2.0, 3.0];
 
         // Test GPU-accelerated SpMV
@@ -649,7 +649,8 @@ mod tests {
     #[test]
     fn test_csc_should_use_gpu() {
         // Small matrix - should not use GPU
-        let small_matrix = CscMatrix::new(vec![1.0, 2.0], vec![0, 1], vec![0, 1], (2, 2)).unwrap();
+        let small_matrix = CscMatrix::new(vec![1.0, 2.0], vec![0, 1], vec![0, 1], (2, 2))
+            .expect("Operation failed");
         assert!(
             !small_matrix.should_use_gpu(),
             "Small matrix should not use GPU"
@@ -659,8 +660,8 @@ mod tests {
         let large_data = vec![1.0; 15000];
         let large_rows: Vec<usize> = (0..15000).collect();
         let large_cols: Vec<usize> = (0..15000).collect();
-        let large_matrix =
-            CscMatrix::new(large_data, large_rows, large_cols, (15000, 15000)).unwrap();
+        let large_matrix = CscMatrix::new(large_data, large_rows, large_cols, (15000, 15000))
+            .expect("Operation failed");
         assert!(
             large_matrix.should_use_gpu(),
             "Large sparse matrix should use GPU"
@@ -697,7 +698,7 @@ mod tests {
         let data = vec![1.0f32, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CscMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let vec = vec![1.0f32, 2.0, 3.0];
 
         // Test generic GPU SpMV with f32

@@ -9,6 +9,12 @@ use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Sub};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Additional radial basis function kernels for specialized applications
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum EnhancedRBFKernel {
@@ -188,10 +194,10 @@ where
     pub fn new() -> Self {
         Self {
             kernel: KernelType::Standard(RBFKernel::Gaussian),
-            epsilon: F::from_f64(1.0).unwrap(),
+            epsilon: F::from_f64(1.0).expect("Operation failed"),
             width_strategy: KernelWidthStrategy::Fixed,
             scale_factors: None,
-            lambda: F::from_f64(1e-10).unwrap(),
+            lambda: F::from_f64(1e-10).expect("Operation failed"),
             use_polynomial: false,
             use_multiscale: false,
             scale_parameters: None,
@@ -333,7 +339,7 @@ where
                     // Handle case with only one point or no points
                     self.epsilon
                 } else {
-                    total_dist / F::from_usize(pair_count).unwrap()
+                    total_dist / F::from_usize(pair_count).expect("Operation failed")
                 }
             }
             KernelWidthStrategy::MaxNearestNeighbor => {
@@ -399,10 +405,10 @@ where
                 None => {
                     // Default: geometric sequence of scales
                     let n_scales = 3; // Default number of scales
-                    let min_scale = epsilon * F::from_f64(0.1).unwrap();
-                    let max_scale = epsilon * F::from_f64(10.0).unwrap();
+                    let min_scale = epsilon * F::from_f64(0.1).expect("Test/example failed");
+                    let max_scale = epsilon * F::from_f64(10.0).expect("Test/example failed");
                     let ratio = (max_scale / min_scale)
-                        .powf(F::one() / F::from_usize(n_scales - 1).unwrap());
+                        .powf(F::one() / F::from_usize(n_scales - 1).expect("Operation failed"));
 
                     let mut scales = Array1::zeros(n_scales);
                     let mut current_scale = min_scale;
@@ -535,18 +541,18 @@ where
         // Solve the linear system using scirs2-linalg
         let coefficients = {
             // Convert to f64 for linear algebra operations
-            let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());
-            let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
+            let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
+            let rhs_f64 = rhs.mapv(|x| x.to_f64().expect("Operation failed"));
 
             // Use scirs2-linalg's solve function
             use scirs2_linalg::solve;
             match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
-                Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
+                Ok(c) => c.mapv(|x| F::from_f64(x).expect("Operation failed")),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
                     use scirs2_linalg::lstsq;
                     match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
-                        Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
+                        Ok(result) => result.x.mapv(|x| F::from_f64(x).expect("Operation failed")),
                         Err(_) => {
                             return Err(InterpolateError::ComputationError(
                                 "Failed to solve the linear system".to_string(),
@@ -607,12 +613,14 @@ where
                                 let _eps_product = epsilon1 * epsilon2;
                                 let eps_sum = epsilon1 * epsilon1 + epsilon2 * epsilon2;
                                 (-(r * r) / eps_sum).exp()
-                                    * (F::from_f64(2.0).unwrap() * (epsilon1 * epsilon2).sqrt()
+                                    * (F::from_f64(2.0).expect("Operation failed")
+                                        * (epsilon1 * epsilon2).sqrt()
                                         / eps_sum.sqrt())
                             }
                             _ => {
                                 // For other kernels, use the average epsilon
-                                let avg_eps = (epsilon1 + epsilon2) * F::from_f64(0.5).unwrap();
+                                let avg_eps = (epsilon1 + epsilon2)
+                                    * F::from_f64(0.5).expect("Test/example failed");
                                 Self::evaluate_kernel(r, avg_eps, kernel)
                             }
                         };
@@ -672,18 +680,18 @@ where
         // Solve the linear system using scirs2-linalg
         let coefficients = {
             // Convert to f64 for linear algebra operations
-            let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());
-            let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
+            let a_matrix_f64 = a_matrix.mapv(|x| x.to_f64().expect("Operation failed"));
+            let rhs_f64 = rhs.mapv(|x| x.to_f64().expect("Operation failed"));
 
             // Use scirs2-linalg's solve function
             use scirs2_linalg::solve;
             match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
-                Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
+                Ok(c) => c.mapv(|x| F::from_f64(x).expect("Operation failed")),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
                     use scirs2_linalg::lstsq;
                     match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
-                        Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
+                        Ok(result) => result.x.mapv(|x| F::from_f64(x).expect("Operation failed")),
                         Err(_) => {
                             return Err(InterpolateError::ComputationError(
                                 "Failed to solve the multi-scale linear system".to_string(),
@@ -726,11 +734,11 @@ where
         // Generate candidate epsilon values based on data characteristics
         let mean_dist = Self::calculate_mean_distance(points, scale_factors);
         let candidates = vec![
-            mean_dist * F::from_f64(0.1).unwrap(),
-            mean_dist * F::from_f64(0.5).unwrap(),
+            mean_dist * F::from_f64(0.1).expect("Operation failed"),
+            mean_dist * F::from_f64(0.5).expect("Operation failed"),
             mean_dist,
-            mean_dist * F::from_f64(2.0).unwrap(),
-            mean_dist * F::from_f64(5.0).unwrap(),
+            mean_dist * F::from_f64(2.0).expect("Operation failed"),
+            mean_dist * F::from_f64(5.0).expect("Operation failed"),
         ];
 
         let mut best_epsilon = candidates[0];
@@ -822,11 +830,11 @@ where
     ) -> InterpolateResult<F> {
         let mean_dist = Self::calculate_mean_distance(points, scale_factors);
         let candidates = vec![
-            mean_dist * F::from_f64(0.1).unwrap(),
-            mean_dist * F::from_f64(0.5).unwrap(),
+            mean_dist * F::from_f64(0.1).expect("Operation failed"),
+            mean_dist * F::from_f64(0.5).expect("Operation failed"),
             mean_dist,
-            mean_dist * F::from_f64(2.0).unwrap(),
-            mean_dist * F::from_f64(5.0).unwrap(),
+            mean_dist * F::from_f64(2.0).expect("Operation failed"),
+            mean_dist * F::from_f64(5.0).expect("Operation failed"),
         ];
 
         let mut best_epsilon = candidates[0];
@@ -866,11 +874,11 @@ where
         let n_points = points.shape()[0];
         let mean_dist = Self::calculate_mean_distance(points, scale_factors);
         let candidates = vec![
-            mean_dist * F::from_f64(0.1).unwrap(),
-            mean_dist * F::from_f64(0.5).unwrap(),
+            mean_dist * F::from_f64(0.1).expect("Operation failed"),
+            mean_dist * F::from_f64(0.5).expect("Operation failed"),
             mean_dist,
-            mean_dist * F::from_f64(2.0).unwrap(),
-            mean_dist * F::from_f64(5.0).unwrap(),
+            mean_dist * F::from_f64(2.0).expect("Operation failed"),
+            mean_dist * F::from_f64(5.0).expect("Operation failed"),
         ];
 
         let mut best_epsilon = candidates[0];
@@ -947,7 +955,7 @@ where
         if pair_count == 0 {
             F::one()
         } else {
-            total_dist / F::from_usize(pair_count).unwrap()
+            total_dist / F::from_usize(pair_count).expect("Operation failed")
         }
     }
 
@@ -1007,7 +1015,7 @@ where
         // For GCV, we need tr(I - S) which equals tr(I) - tr(S) = n - tr(S)
 
         // Convert to f64 for linear algebra
-        let _a_f64 = a_matrix.mapv(|x| x.to_f64().unwrap()); // Reserved for future use
+        let _a_f64 = a_matrix.mapv(|x| x.to_f64().expect("Operation failed")); // Reserved for future use
 
         // For simplicity, estimate the trace without computing the full inverse
         // This is an approximation of the GCV score
@@ -1039,8 +1047,11 @@ where
         }
 
         // Approximate GCV score (simplified)
-        let effective_dof = F::from_usize(n_points).unwrap() * F::from_f64(0.7).unwrap(); // Rough approximation
-        let gcv_score = rss / (F::one() - effective_dof / F::from_usize(n_points).unwrap()).powi(2);
+        let effective_dof = F::from_usize(n_points).expect("Operation failed")
+            * F::from_f64(0.7).expect("Test/example failed"); // Rough approximation
+        let gcv_score = rss
+            / (F::one() - effective_dof / F::from_usize(n_points).expect("Operation failed"))
+                .powi(2);
 
         Ok(gcv_score)
     }
@@ -1088,16 +1099,16 @@ where
             }
             EnhancedRBFKernel::Matern32 => {
                 // Matern with ν=3/2: exp(-√3·r/ε)·(1+√3·r/ε)
-                let sqrt3 = F::from_f64(3.0).unwrap().sqrt();
+                let sqrt3 = F::from_f64(3.0).expect("Operation failed").sqrt();
                 let arg = sqrt3 * r / epsilon;
                 (-arg).exp() * (F::one() + arg)
             }
             EnhancedRBFKernel::Matern52 => {
                 // Matern with ν=5/2: exp(-√5·r/ε)·(1+√5·r/ε+5r²/(3ε²))
-                let sqrt5 = F::from_f64(5.0).unwrap().sqrt();
+                let sqrt5 = F::from_f64(5.0).expect("Operation failed").sqrt();
                 let arg = sqrt5 * r / epsilon;
                 let term1 = F::one() + arg;
-                let term2 = arg * arg / F::from_f64(3.0).unwrap();
+                let term2 = arg * arg / F::from_f64(3.0).expect("Test/example failed");
                 (-arg).exp() * (term1 + term2)
             }
             EnhancedRBFKernel::Wendland => {
@@ -1107,7 +1118,7 @@ where
                 }
                 let q = F::one() - r / epsilon;
                 let q4 = q * q * q * q;
-                let term = F::one() + F::from_f64(4.0).unwrap() * r / epsilon;
+                let term = F::one() + F::from_f64(4.0).expect("Operation failed") * r / epsilon;
                 q4 * term
             }
             EnhancedRBFKernel::AdaptiveGaussian => {
@@ -1119,7 +1130,7 @@ where
                 // Polyharmonic spline r^k
                 // For even k, we use r^k·log(r)
                 // For odd k, we use r^k
-                let k_float = F::from_usize(k).unwrap();
+                let k_float = F::from_usize(k).expect("Test/example failed");
 
                 if r == F::zero() {
                     return F::zero();
@@ -1137,7 +1148,7 @@ where
                 if r >= epsilon {
                     return F::zero();
                 }
-                let alpha = F::from_f64(alpha).unwrap();
+                let alpha = F::from_f64(alpha).expect("Test/example failed");
                 (F::one() - r / epsilon).powf(alpha)
             }
         }
@@ -1191,7 +1202,11 @@ where
 
         if self.use_multiscale {
             // Multi-scale evaluation
-            let n_scales = self.scale_parameters.as_ref().unwrap().len();
+            let n_scales = self
+                .scale_parameters
+                .as_ref()
+                .expect("Operation failed")
+                .len();
 
             for q in 0..n_query {
                 let query_point = querypoints.slice(scirs2_core::ndarray::s![q, ..]);
@@ -1199,7 +1214,8 @@ where
 
                 // Evaluate contribution from each scale
                 for scale_idx in 0..n_scales {
-                    let epsilon = self.scale_parameters.as_ref().unwrap()[scale_idx];
+                    let epsilon =
+                        self.scale_parameters.as_ref().expect("Operation failed")[scale_idx];
 
                     for i in 0..n_points {
                         let sample_point = self.points.slice(scirs2_core::ndarray::s![i, ..]);
@@ -1283,8 +1299,10 @@ where
             sum_abs_error += error;
         }
 
-        let mean_sq_error = sum_sq_error / F::from_usize(self.values.len()).unwrap();
-        let mean_abs_error = sum_abs_error / F::from_usize(self.values.len()).unwrap();
+        let mean_sq_error =
+            sum_sq_error / F::from_usize(self.values.len()).expect("Test/example failed");
+        let mean_abs_error =
+            sum_abs_error / F::from_usize(self.values.len()).expect("Test/example failed");
 
         Ok((mean_sq_error, mean_abs_error, max_error))
     }
@@ -1303,7 +1321,8 @@ where
 
         // Apply a correction factor to estimate LOO error
         // This is a very rough approximation
-        let correction = F::from_f64(n_points as f64 / (n_points as f64 - 1.0)).unwrap();
+        let correction =
+            F::from_f64(n_points as f64 / (n_points as f64 - 1.0)).expect("Test/example failed");
         let loo_error = mse * correction;
 
         Ok(loo_error)
@@ -1478,7 +1497,7 @@ where
     EnhancedRBFInterpolator::builder()
         .with_enhanced_kernel(EnhancedRBFKernel::Matern52)
         .with_width_strategy(KernelWidthStrategy::LeaveOneOut)
-        .with_lambda(F::from_f64(1e-12).unwrap())
+        .with_lambda(F::from_f64(1e-12).expect("Operation failed"))
         .with_polynomial(true)
         .with_multiscale(true)
         .build(points, values)
@@ -1520,7 +1539,7 @@ where
     EnhancedRBFInterpolator::builder()
         .with_enhanced_kernel(EnhancedRBFKernel::Wendland)
         .with_width_strategy(KernelWidthStrategy::MeanDistance)
-        .with_lambda(F::from_f64(1e-8).unwrap())
+        .with_lambda(F::from_f64(1e-8).expect("Operation failed"))
         .with_polynomial(false)
         .with_multiscale(false)
         .build(points, values)
@@ -1586,7 +1605,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Test/example failed");
 
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5];
@@ -1595,13 +1614,13 @@ mod tests {
             .with_standard_kernel(RBFKernel::Gaussian)
             .with_epsilon(1.0)
             .build(&points.view(), &values.view())
-            .unwrap();
+            .expect("Test/example failed");
 
         // Test that we can call interpolate without errors
         let result = interp.interpolate(&points.view());
         assert!(result.is_ok());
 
-        let interpolated = result.unwrap();
+        let interpolated = result.expect("Test/example failed");
 
         // The interpolated values at the data points should approximately match the original values
         for i in 0..values.len() {
@@ -1667,7 +1686,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Test/example failed");
 
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5];
@@ -1678,13 +1697,13 @@ mod tests {
             .with_multiscale(true)
             .with_scale_parameters(array![0.5, 1.0, 2.0])
             .build(&points.view(), &values.view())
-            .unwrap();
+            .expect("Test/example failed");
 
         // Test that we can call interpolate without errors
         let result = interp.interpolate(&points.view());
         assert!(result.is_ok());
 
-        let interpolated = result.unwrap();
+        let interpolated = result.expect("Test/example failed");
 
         // Multiscale RBF uses multiple scales which can lead to less exact interpolation
         // at the data points but better overall approximation. We verify the general
@@ -1718,7 +1737,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Test/example failed");
 
         // Create values with a linear trend: z = x + 2*y
         let values = array![0.0, 1.0, 2.0, 3.0, 1.5];
@@ -1728,18 +1747,18 @@ mod tests {
             .with_epsilon(1.0)
             .with_polynomial(true)
             .build(&points.view(), &values.view())
-            .unwrap();
+            .expect("Test/example failed");
 
         // Test that we can call interpolate without errors
-        let test_points =
-            Array2::from_shape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();
+        let test_points = Array2::from_shape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0])
+            .expect("Test/example failed");
         let result = interp.interpolate(&test_points.view());
         assert!(result.is_ok());
 
         // Verify interpolation at original points
         let result_orig = interp.interpolate(&points.view());
         assert!(result_orig.is_ok());
-        let interpolated = result_orig.unwrap();
+        let interpolated = result_orig.expect("Test/example failed");
 
         for i in 0..values.len() {
             assert!(
@@ -1759,26 +1778,34 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Test/example failed");
 
         // Create values at those points (z = x² + y²)
         let values = array![0.0, 1.0, 1.0, 2.0, 0.5];
 
         // Test the automatic parameter selection function
-        let auto_rbf = make_auto_rbf(&points.view(), &values.view()).unwrap();
+        let auto_rbf = make_auto_rbf(&points.view(), &values.view()).expect("Test/example failed");
 
         // Test the accuracy-optimized function
-        let accurate_rbf = make_accurate_rbf(&points.view(), &values.view()).unwrap();
+        let accurate_rbf =
+            make_accurate_rbf(&points.view(), &values.view()).expect("Test/example failed");
 
         // Test the efficiency-optimized function
-        let fast_rbf = make_fast_rbf(&points.view(), &values.view()).unwrap();
+        let fast_rbf = make_fast_rbf(&points.view(), &values.view()).expect("Test/example failed");
 
         // Verify that all interpolators can evaluate at a test point
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+        let test_point =
+            Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).expect("Test/example failed");
 
-        let result_auto = auto_rbf.interpolate(&test_point.view()).unwrap();
-        let result_accurate = accurate_rbf.interpolate(&test_point.view()).unwrap();
-        let result_fast = fast_rbf.interpolate(&test_point.view()).unwrap();
+        let result_auto = auto_rbf
+            .interpolate(&test_point.view())
+            .expect("Test/example failed");
+        let result_accurate = accurate_rbf
+            .interpolate(&test_point.view())
+            .expect("Test/example failed");
+        let result_fast = fast_rbf
+            .interpolate(&test_point.view())
+            .expect("Test/example failed");
 
         // Check that all methods produce reasonable results,
         // but don't enforce exact equality since they use different approaches

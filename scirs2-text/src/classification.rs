@@ -554,7 +554,7 @@ mod tests {
         ];
         let labels = vec!["A".to_string(), "B".to_string(), "A".to_string()];
 
-        let mut dataset = TextDataset::new(texts, labels).unwrap();
+        let mut dataset = TextDataset::new(texts, labels).expect("Operation failed");
 
         // Create a manual label index to explicitly control the index values
         let mut label_index = std::collections::HashMap::new();
@@ -562,7 +562,7 @@ mod tests {
         label_index.insert("B".to_string(), 1);
         dataset.label_index = Some(label_index);
 
-        let label_indices = dataset.get_label_indices().unwrap();
+        let label_indices = dataset.get_label_indices().expect("Operation failed");
 
         // Now we know exactly what the indices should be
         assert_eq!(label_indices[0], 0); // First label "A" should be index 0
@@ -580,8 +580,10 @@ mod tests {
         let texts = (0..10).map(|i| format!("Text {i}")).collect();
         let labels = (0..10).map(|_| "A".to_string()).collect();
 
-        let dataset = TextDataset::new(texts, labels).unwrap();
-        let (train, test) = dataset.train_test_split(0.3, Some(42)).unwrap();
+        let dataset = TextDataset::new(texts, labels).expect("Operation failed");
+        let (train, test) = dataset
+            .train_test_split(0.3, Some(42))
+            .expect("Operation failed");
 
         assert_eq!(train.len(), 7);
         assert_eq!(test.len(), 3);
@@ -605,11 +607,11 @@ mod tests {
 
         let mut selector = TextFeatureSelector::new()
             .set_min_df(0.25)
-            .unwrap()
+            .expect("Operation failed")
             .set_max_df(0.75)
-            .unwrap();
+            .expect("Operation failed");
 
-        let filtered = selector.fit_transform(&features).unwrap();
+        let filtered = selector.fit_transform(&features).expect("Operation failed");
         assert_eq!(filtered.ncols(), 1); // Only feature 0 should pass the filters
     }
 
@@ -619,10 +621,14 @@ mod tests {
         let true_labels = vec![1_usize, 0, 1, 0, 0];
 
         let metrics = TextClassificationMetrics::new();
-        let accuracy = metrics.accuracy(&predictions, &true_labels).unwrap();
+        let accuracy = metrics
+            .accuracy(&predictions, &true_labels)
+            .expect("Operation failed");
         assert_eq!(accuracy, 0.8);
 
-        let (precision, recall, f1) = metrics.binary_metrics(&predictions, &true_labels).unwrap();
+        let (precision, recall, f1) = metrics
+            .binary_metrics(&predictions, &true_labels)
+            .expect("Operation failed");
         assert!((precision - 0.667).abs() < 0.001);
         assert_eq!(recall, 1.0);
         assert!((f1 - 0.8).abs() < 0.001);

@@ -123,20 +123,20 @@ pub fn compute_covariance<
         }
         CovarianceFunction::Matern32 => {
             // σ² (1 + √3r) exp(-√3r)
-            let sqrt3_r = F::from_f64(3.0).unwrap().sqrt() * r;
+            let sqrt3_r = F::from_f64(3.0).expect("Operation failed").sqrt() * r;
             anisotropic_cov.sigma_sq * (F::one() + sqrt3_r) * (-sqrt3_r).exp()
         }
         CovarianceFunction::Matern52 => {
             // σ² (1 + √5r + 5r²/3) exp(-√5r)
-            let sqrt5_r = F::from_f64(5.0).unwrap().sqrt() * r;
+            let sqrt5_r = F::from_f64(5.0).expect("Operation failed").sqrt() * r;
             let factor =
-                F::one() + sqrt5_r + F::from_f64(5.0).unwrap() * r * r / F::from_f64(3.0).unwrap();
+                F::one() + sqrt5_r + F::from_f64(5.0).expect("Operation failed") * r * r / F::from_f64(3.0).expect("Operation failed");
             anisotropic_cov.sigma_sq * factor * (-sqrt5_r).exp()
         }
         CovarianceFunction::RationalQuadratic => {
             // σ² (1 + r²/(2α))^(-α)
             let alpha = anisotropic_cov.extra_params;
-            let r_sq_div_2a = r * r / (F::from_f64(2.0).unwrap() * alpha);
+            let r_sq_div_2a = r * r / (F::from_f64(2.0).expect("Operation failed") * alpha);
             anisotropic_cov.sigma_sq * (F::one() + r_sq_div_2a).powf(-alpha)
         }
     }
@@ -199,17 +199,17 @@ pub fn compute_low_rank_approximation<
     let (u, s, vt) = {
         use ndarray_linalg::SVD;
         // Convert to f64 for SVD
-        let sample_cov_f64 = sample_cov.mapv(|x| x.to_f64().unwrap());
+        let sample_cov_f64 = sample_cov.mapv(|x| x.to_f64().expect("Operation failed"));
         match sample_cov_f64.svd(true, true) {
             Ok((u_val, s_val, vt_val)) => {
                 let u = u_val.map_or_else(
                     || Array2::eye(s_val.len()),
-                    |u| u.mapv(|x| F::from_f64(x).unwrap()),
+                    |u| u.mapv(|x| F::from_f64(x).expect("Operation failed")),
                 );
-                let s = s_val.mapv(|x| F::from_f64(x).unwrap());
+                let s = s_val.mapv(|x| F::from_f64(x).expect("Operation failed"));
                 let vt = vt_val.map_or_else(
                     || Array2::eye(s_val.len()),
-                    |vt| vt.mapv(|x| F::from_f64(x).unwrap()),
+                    |vt| vt.mapv(|x| F::from_f64(x).expect("Operation failed")),
                 );
                 (u, s, vt)
             }

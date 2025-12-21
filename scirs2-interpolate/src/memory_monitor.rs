@@ -1420,8 +1420,13 @@ mod tests {
         let _monitor1 = MemoryMonitor::new("global_test_1");
         let _monitor2 = MemoryMonitor::new("global_test_2");
 
-        let stats = get_global_stats().unwrap();
-        assert_eq!(stats.active_interpolators, 2);
+        let stats = get_global_stats().expect("Operation failed");
+        // Test may run in parallel with other tests, so check >= 2 instead of == 2
+        assert!(
+            stats.active_interpolators >= 2,
+            "Expected at least 2 active interpolators, got {}",
+            stats.active_interpolators
+        );
 
         stop_monitoring();
     }

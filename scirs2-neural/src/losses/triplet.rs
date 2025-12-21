@@ -37,9 +37,9 @@ use std::fmt::Debug;
 /// // Targets not used in triplet loss (can be dummy)
 /// let targets = Array::zeros(embeddings.raw_dim());
 /// // Forward pass to calculate loss
-/// let loss = triplet.forward(&embeddings, &targets).unwrap();
+/// let loss = triplet.forward(&embeddings, &targets).expect("Operation failed");
 /// // Backward pass to calculate gradients
-/// let gradients = triplet.backward(&embeddings, &targets).unwrap();
+/// let gradients = triplet.backward(&embeddings, &targets).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct TripletLoss {
@@ -155,8 +155,10 @@ impl<F: Float + Debug> Loss<F> for TripletLoss {
             let neg_distance = neg_distance_squared.sqrt();
 
             // To avoid division by zero
-            let pos_distance_safe = pos_distance.max(F::from(1e-10).unwrap());
-            let neg_distance_safe = neg_distance.max(F::from(1e-10).unwrap());
+            let pos_distance_safe =
+                pos_distance.max(F::from(1e-10).expect("Failed to convert constant to float"));
+            let neg_distance_safe =
+                neg_distance.max(F::from(1e-10).expect("Failed to convert constant to float"));
 
             // Only compute gradients if the triplet is active (loss > 0)
             if pos_distance - neg_distance + margin > F::zero() {

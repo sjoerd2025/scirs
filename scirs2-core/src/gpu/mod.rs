@@ -1169,7 +1169,7 @@ mod tests {
         let buffer = GpuBuffer::<f32>::new(inner, 2);
 
         let data = vec![1.0f32, 2.0, 3.0]; // 3 elements > 2 buffer size
-        buffer.copy_from_host(&data).unwrap();
+        buffer.copy_from_host(&data).expect("Operation failed");
     }
 
     #[test]
@@ -1179,7 +1179,7 @@ mod tests {
         let buffer = GpuBuffer::<f32>::new(inner, 2);
 
         let mut data = vec![0.0f32; 3]; // 3 elements > 2 buffer size
-        buffer.copy_to_host(&mut data).unwrap();
+        buffer.copy_to_host(&mut data).expect("Operation failed");
     }
 
     #[test]
@@ -1201,7 +1201,7 @@ mod tests {
 
     #[test]
     fn test_gpu_context_cpu_backend() {
-        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+        let context = GpuContext::new(GpuBackend::Cpu).expect("Operation failed");
         assert_eq!(context.backend(), GpuBackend::Cpu);
         assert_eq!(context.backend_name(), "CPU");
 
@@ -1212,7 +1212,7 @@ mod tests {
 
     #[test]
     fn test_gpu_context_buffer_creation() {
-        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+        let context = GpuContext::new(GpuBackend::Cpu).expect("Operation failed");
 
         let buffer = context.create_buffer::<f32>(100);
         assert_eq!(buffer.len(), 100);
@@ -1250,7 +1250,9 @@ mod tests {
         let compiler = GpuCompiler::new(compiler_impl);
 
         // Test compiling from source
-        let kernel = compiler.compile("dummy kernel source").unwrap();
+        let kernel = compiler
+            .compile("dummy kernel source")
+            .expect("Operation failed");
         kernel.dispatch([1, 1, 1]);
 
         // Test typed compilation
@@ -1260,7 +1262,7 @@ mod tests {
 
     #[test]
     fn test_gpu_context_execute() {
-        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+        let context = GpuContext::new(GpuBackend::Cpu).expect("Operation failed");
 
         let result = context.execute(|compiler| compiler.compile("test kernel").is_ok());
 
@@ -1269,7 +1271,7 @@ mod tests {
 
     #[test]
     fn test_gpu_context_kernel_registry() {
-        let context = GpuContext::new(GpuBackend::Cpu).unwrap();
+        let context = GpuContext::new(GpuBackend::Cpu).expect("Operation failed");
 
         // Test getting a non-existent kernel
         let result = context.get_kernel("non_existent_kernel");

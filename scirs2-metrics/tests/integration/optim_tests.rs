@@ -29,7 +29,9 @@ fn test_metric_optimizer() {
     optimizer.add_additional_value("loss", 0.35);
 
     // Check additional metrics history
-    let loss_history = optimizer.additional_metric_history("loss").unwrap();
+    let loss_history = optimizer
+        .additional_metric_history("loss")
+        .expect("Operation failed");
     assert_eq!(loss_history.len(), 3);
     assert_abs_diff_eq!(loss_history[0], 0.5, epsilon = 1e-10);
 
@@ -113,7 +115,7 @@ fn test_hyperparameter() {
     assert_eq!(hp_continuous.value(), 0.01);
 
     // Test setting value
-    hp_continuous.set_value(0.05).unwrap();
+    hp_continuous.set_value(0.05).expect("Operation failed");
     assert_eq!(hp_continuous.value(), 0.05);
 
     // Test discrete hyperparameter
@@ -122,8 +124,8 @@ fn test_hyperparameter() {
     assert_eq!(hp_discrete.value(), 32.0);
 
     // Test categorical hyperparameter
-    let hp_categorical =
-        HyperParameter::categorical("activation", 0.0, vec![0.0, 1.0, 2.0]).unwrap();
+    let hp_categorical = HyperParameter::categorical("activation", 0.0, vec![0.0, 1.0, 2.0])
+        .expect("Operation failed");
     assert_eq!(hp_categorical.name(), "activation");
     assert_eq!(hp_categorical.value(), 0.0);
 
@@ -149,7 +151,7 @@ fn test_hyperparameter_tuner() {
     let tuner = HyperParameterTuner::new(params, "accuracy", true, 5);
 
     // Test random parameter generation
-    let mut tuner = tuner.unwrap();
+    let mut tuner = tuner.expect("Operation failed");
     let random_params = tuner.random_params();
     assert!(random_params.contains_key("learning_rate"));
     assert!(random_params.contains_key("weight_decay"));
@@ -168,7 +170,7 @@ fn test_hyperparameter_tuner() {
         Ok(score)
     };
 
-    let result = tuner.random_search(eval_fn).unwrap();
+    let result = tuner.random_search(eval_fn).expect("Operation failed");
 
     // Check result properties
     assert!(result.best_metric() > 0.0);

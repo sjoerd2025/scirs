@@ -819,7 +819,7 @@ impl SwinTransformer {
         let mut features = vec![image.to_owned().insert_axis(Axis(2))]; // Add channel dimension
 
         for stage in &self.stages {
-            let stage_input = features.last().unwrap();
+            let stage_input = features.last().expect("Operation failed");
             let stage_output = stage.forward(stage_input)?;
             features.push(stage_output);
         }
@@ -1151,7 +1151,7 @@ impl CrossAttentionMatcher {
             if let Some((j, &score)) = row
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             {
                 matches.push((j, score));
             }

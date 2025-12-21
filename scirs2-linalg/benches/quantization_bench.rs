@@ -132,7 +132,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
                                 &qb_clone,
                                 &qb_params_clone,
                             )
-                            .unwrap(),
+                            .expect("Operation failed"),
                         )
                     })
                 },
@@ -151,7 +151,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
                     b_.iter(|| {
                         black_box(
                             simd_quantized_matvec(&qa_clone2, &qa_params_clone2, &vector.view())
-                                .unwrap(),
+                                .expect("Operation failed"),
                         )
                     })
                 },
@@ -202,18 +202,29 @@ fn bench_calibration(c: &mut Criterion) {
         // Benchmark different calibration methods
         group.bench_with_input(BenchmarkId::new("MinMax", size), &size, |b_, _data| {
             b_.iter(|| {
-                black_box(calibrate_matrix(&matrix.view(), 8, &minmax_config_clone).unwrap())
+                black_box(
+                    calibrate_matrix(&matrix.view(), 8, &minmax_config_clone)
+                        .expect("Operation failed"),
+                )
             })
         });
 
         group.bench_with_input(BenchmarkId::new("Percentile", size), &size, |b_, _data| {
             b_.iter(|| {
-                black_box(calibrate_matrix(&matrix.view(), 8, &percentile_config_clone).unwrap())
+                black_box(
+                    calibrate_matrix(&matrix.view(), 8, &percentile_config_clone)
+                        .expect("Operation failed"),
+                )
             })
         });
 
         group.bench_with_input(BenchmarkId::new("EMA", size), &size, |b_, _data| {
-            b_.iter(|| black_box(calibrate_matrix(&matrix.view(), 8, &ema_config_clone).unwrap()))
+            b_.iter(|| {
+                black_box(
+                    calibrate_matrix(&matrix.view(), 8, &ema_config_clone)
+                        .expect("Operation failed"),
+                )
+            })
         });
     }
 

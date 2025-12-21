@@ -946,11 +946,11 @@ mod tests {
         state_dict.insert(
             "linear1.weight".to_string(),
             Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect())
-                .unwrap()
+                .expect("Operation failed")
                 .into_dyn(),
             "linear1.bias".to_string(),
             Array2::from_shape_vec((10, 1), (0..10).map(|x| x as f64).collect())
-        let converted = manager.convert_pytorch_weights(state_dict).unwrap();
+        let converted = manager.convert_pytorch_weights(state_dict).expect("Operation failed");
         assert!(converted.contains_key("linear1.kernel"));
         assert!(converted.contains_key("linear1.bias"));
         // Check that weight matrix was transposed

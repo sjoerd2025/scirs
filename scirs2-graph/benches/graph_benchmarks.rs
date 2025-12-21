@@ -78,7 +78,7 @@ fn bench_traversal(c: &mut Criterion) {
 
     for size in &[100, 1000, 10000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).expect("Operation failed");
 
         group.bench_with_input(BenchmarkId::new("bfs", size), &graph, |b, graph| {
             b.iter(|| {
@@ -105,7 +105,7 @@ fn bench_shortest_paths(c: &mut Criterion) {
 
     for size in &[100, 500, 1000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(*size, 0.05, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(*size, 0.05, &mut rng).expect("Operation failed");
         let target = *size - 1;
 
         group.bench_with_input(
@@ -130,7 +130,7 @@ fn bench_connectivity(c: &mut Criterion) {
 
     for size in &[100, 1000, 5000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).expect("Operation failed");
 
         group.bench_with_input(
             BenchmarkId::new("connected_components", size),
@@ -180,7 +180,7 @@ fn bench_centrality(c: &mut Criterion) {
 
     for size in &[50, 100, 200] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = barabasi_albert_graph(*size, 3, &mut rng).unwrap();
+        let graph = barabasi_albert_graph(*size, 3, &mut rng).expect("Operation failed");
 
         group.bench_with_input(BenchmarkId::new("pagerank", size), &graph, |b, graph| {
             b.iter(|| {
@@ -213,7 +213,7 @@ fn bench_mst(c: &mut Criterion) {
 
     for size in &[100, 500, 1000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(*size, 0.1, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(*size, 0.1, &mut rng).expect("Operation failed");
 
         group.bench_with_input(BenchmarkId::new("kruskal", size), &graph, |b, graph| {
             b.iter(|| {
@@ -233,7 +233,7 @@ fn bench_io(c: &mut Criterion) {
 
     for size in &[1000, 10000] {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(*size, 0.01, &mut rng).expect("Operation failed");
 
         group.bench_with_input(
             BenchmarkId::new("adjacency_matrix", size),

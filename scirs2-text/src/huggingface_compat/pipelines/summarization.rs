@@ -58,7 +58,7 @@ impl SummarizationPipeline {
             .collect();
 
         // Sort by score and take top sentences
-        scored_sentences.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        scored_sentences.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
         let mut summary_length = 0;
         let mut summary_parts = Vec::new();

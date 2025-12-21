@@ -159,7 +159,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> SelectiveSSM<F> {
             for j in 0..d_state {
                 // Log-spaced from 1 to d_state
                 let val = (j as f64 + 1.0).ln();
-                a_log[[i, j]] = F::from(val).unwrap();
+                a_log[[i, j]] = F::from(val).expect("Failed to convert to float");
             }
         }
 
@@ -231,7 +231,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> SelectiveSSM<F> {
 
         // Apply softplus to delta: delta = softplus(delta_proj)
         let delta = delta_proj.mapv(|v| {
-            if v > F::from(20.0).unwrap() {
+            if v > F::from(20.0).expect("Failed to convert constant to float") {
                 v
             } else {
                 (F::one() + v.exp()).ln()
@@ -319,14 +319,14 @@ struct Conv1D<F: Float + Debug + ScalarOperand + Send + Sync> {
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Conv1D<F> {
     fn new<R: Rng>(channels: usize, kernel_size: usize, rng: &mut R) -> Result<Self> {
-        let std = (F::from(2.0).unwrap() / F::from(channels * kernel_size).unwrap()).sqrt();
+        let std = (F::from(2.0).expect("Failed to convert constant to float") / F::from(channels * kernel_size).expect("Failed to convert to float")).sqrt();
 
         let mut weights = Array2::<F>::zeros((channels, kernel_size));
         for w in weights.iter_mut() {
             let u1: f64 = rng.random();
             let u2: f64 = rng.random();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            *w = F::from(z).unwrap() * std;
+            *w = F::from(z).expect("Failed to convert to float") * std;
         }
 
         let bias = Array1::<F>::zeros(channels);
@@ -423,7 +423,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> MambaBlock<F> {
         let out_proj = Dense::<F>::new(d_inner, config.d_model, Some("out_proj"), rng)?;
 
         // Layer norm
-        let norm = LayerNorm::<F>::new(config.d_model, F::from(1e-5).unwrap(), Some("norm"))?;
+        let norm = LayerNorm::<F>::new(config.d_model, F::from(1e-5).expect("Failed to convert constant to float"), Some("norm"))?;
 
         Ok(Self {
             d_model: config.d_model,
@@ -525,11 +525,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> MambaBlock<F> {
 ///     .with_n_layers(4)
 ///     .with_d_state(16);
 ///
-/// let mamba = Mamba::<f64>::new(config, &mut rng).unwrap();
+/// let mamba = Mamba::<f64>::new(config, &mut rng).expect("Operation failed");
 ///
 /// // Input: [batch, seq_len, d_model]
 /// let input = Array3::<f64>::from_elem((2, 32, 256), 0.1).into_dyn();
-/// let output = mamba.forward(&input).unwrap();
+/// let output = mamba.forward(&input).expect("Operation failed");
 /// ```
 #[derive(Debug)]
 pub struct Mamba<F: Float + Debug + ScalarOperand + Send + Sync> {
@@ -554,7 +554,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Mamba<F> {
 
         // Final layer norm
         let final_norm =
-            LayerNorm::<F>::new(config.d_model, F::from(1e-5).unwrap(), Some("final_norm"))?;
+            LayerNorm::<F>::new(config.d_model, F::from(1e-5).expect("Failed to convert constant to float"), Some("final_norm"))?;
 
         // Optional classifier
         let classifier = if let Some(num_classes) = config.num_classes {
@@ -633,7 +633,7 @@ where
         if let Some(ref classifier) = self.classifier {
             // Mean pooling over sequence
             let mut pooled = Array::zeros(IxDyn(&[batch_size, self.config.d_model]));
-            let seq_len_f = F::from(seq_len).unwrap();
+            let seq_len_f = F::from(seq_len).expect("Failed to convert to float");
 
             for b in 0..batch_size {
                 for d in 0..self.config.d_model {
@@ -703,7 +703,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> S4Layer<F> {
                 } else {
                     0.0
                 };
-                a[[i, j]] = F::from(val).unwrap();
+                a[[i, j]] = F::from(val).expect("Failed to convert to float");
             }
         }
 
@@ -713,7 +713,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> S4Layer<F> {
             let val = (2.0 * i as f64 + 1.0).sqrt();
             for j in 0..d_model {
                 let u: f64 = rng.random();
-                b[[i, j]] = F::from(val * (u - 0.5) * 0.1).unwrap();
+                b[[i, j]] = F::from(val * (u - 0.5) * 0.1).expect("Operation failed");
             }
         }
 
@@ -725,7 +725,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> S4Layer<F> {
                 let u1: f64 = rng.random();
                 let u2: f64 = rng.random();
                 let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-                c[[i, j]] = F::from(z * std).unwrap();
+                c[[i, j]] = F::from(z * std).expect("Failed to convert to float");
             }
         }
 
@@ -733,7 +733,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> S4Layer<F> {
         let d = Array1::<F>::from_elem(d_model, F::one());
 
         // Default step size
-        let delta = F::from(0.001).unwrap();
+        let delta = F::from(0.001).expect("Failed to convert constant to float");
 
         Ok(Self {
             d_model,
@@ -850,14 +850,14 @@ mod tests {
             .with_d_state(8)
             .with_expand(2);
 
-        let mamba = Mamba::<f64>::new(config, &mut rng).unwrap();
+        let mamba = Mamba::<f64>::new(config, &mut rng).expect("Operation failed");
 
         // Input: [batch=2, seq_len=8, d_model=32]
         let input = Array3::<f64>::from_elem((2, 8, 32), 0.1).into_dyn();
         let output = mamba.forward(&input);
 
         assert!(output.is_ok());
-        let output = output.unwrap();
+        let output = output.expect("Operation failed");
         assert_eq!(output.shape(), &[2, 8, 32]);
     }
 
@@ -869,13 +869,13 @@ mod tests {
             .with_d_state(8)
             .with_num_classes(10);
 
-        let mamba = Mamba::<f64>::new(config, &mut rng).unwrap();
+        let mamba = Mamba::<f64>::new(config, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((2, 8, 32), 0.1).into_dyn();
         let output = mamba.forward(&input);
 
         assert!(output.is_ok());
-        let output = output.unwrap();
+        let output = output.expect("Operation failed");
         // With classifier, output should be [batch, num_classes]
         assert_eq!(output.shape(), &[2, 10]);
     }
@@ -887,13 +887,13 @@ mod tests {
         let d_state = 4;
         let dt_rank = 2;
 
-        let ssm = SelectiveSSM::<f64>::new(d_inner, d_state, dt_rank, &mut rng).unwrap();
+        let ssm = SelectiveSSM::<f64>::new(d_inner, d_state, dt_rank, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((2, 4, d_inner), 0.1).into_dyn();
         let output = ssm.forward(&input);
 
         assert!(output.is_ok());
-        assert_eq!(output.unwrap().shape(), &[2, 4, d_inner]);
+        assert_eq!(output.expect("Operation failed").shape(), &[2, 4, d_inner]);
     }
 
     #[test]
@@ -902,13 +902,13 @@ mod tests {
         let d_model = 16;
         let d_state = 8;
 
-        let s4 = S4Layer::<f64>::new(d_model, d_state, &mut rng).unwrap();
+        let s4 = S4Layer::<f64>::new(d_model, d_state, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((2, 8, d_model), 0.1).into_dyn();
         let output = s4.forward(&input);
 
         assert!(output.is_ok());
-        assert_eq!(output.unwrap().shape(), &[2, 8, d_model]);
+        assert_eq!(output.expect("Operation failed").shape(), &[2, 8, d_model]);
     }
 
     #[test]
@@ -916,13 +916,13 @@ mod tests {
         let mut rng = scirs2_core::random::rng();
         let config = MambaConfig::new(32).with_d_state(8);
 
-        let block = MambaBlock::<f64>::new(&config, &mut rng).unwrap();
+        let block = MambaBlock::<f64>::new(&config, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((2, 4, 32), 0.1).into_dyn();
         let output = block.forward(&input);
 
         assert!(output.is_ok());
-        assert_eq!(output.unwrap().shape(), &[2, 4, 32]);
+        assert_eq!(output.expect("Operation failed").shape(), &[2, 4, 32]);
     }
 
     #[test]
@@ -930,7 +930,7 @@ mod tests {
         let mut rng = scirs2_core::random::rng();
         let config = MambaConfig::new(16).with_n_layers(1).with_d_state(4);
 
-        let mamba = Mamba::<f64>::new(config, &mut rng).unwrap();
+        let mamba = Mamba::<f64>::new(config, &mut rng).expect("Operation failed");
 
         // Test with varying input values
         let mut input = Array3::<f64>::zeros((1, 8, 16));
@@ -944,7 +944,7 @@ mod tests {
         assert!(output.is_ok());
 
         // Check all values are finite
-        for val in output.unwrap().iter() {
+        for val in output.expect("Operation failed").iter() {
             assert!(val.is_finite(), "Output contains non-finite values");
         }
     }
@@ -952,12 +952,12 @@ mod tests {
     #[test]
     fn test_conv1d() {
         let mut rng = scirs2_core::random::rng();
-        let conv = Conv1D::<f64>::new(8, 3, &mut rng).unwrap();
+        let conv = Conv1D::<f64>::new(8, 3, &mut rng).expect("Operation failed");
 
         let input = Array3::<f64>::from_elem((2, 4, 8), 0.1).into_dyn();
         let output = conv.forward(&input);
 
         assert!(output.is_ok());
-        assert_eq!(output.unwrap().shape(), &[2, 4, 8]);
+        assert_eq!(output.expect("Operation failed").shape(), &[2, 4, 8]);
     }
 }

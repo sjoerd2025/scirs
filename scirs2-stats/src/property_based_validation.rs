@@ -313,7 +313,7 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
         use scirs2_core::random::{Distribution, Normal};
 
         let mut rng = StdRng::seed_from_u64(config.seed);
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
@@ -457,7 +457,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
         use scirs2_core::random::{Distribution, Normal};
 
         let mut rng = StdRng::seed_from_u64(config.seed);
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
@@ -1061,7 +1061,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_correlation_bounds() {
         let property = CorrelationBounds;
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -1073,14 +1072,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_comprehensive_test_suite() {
         let config = PropertyTestConfig {
             test_cases_per_property: 10, // Smaller for testing
             ..Default::default()
         };
         let mut suite = ComprehensivePropertyTestSuite::new(config);
-        let report = suite.run_all_tests().unwrap();
+        let report = suite.run_all_tests().expect("Operation failed");
 
         assert!(report.total_properties > 0);
         assert_eq!(report.overall_status, PropertyTestStatus::Pass);

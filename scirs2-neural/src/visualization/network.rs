@@ -1020,7 +1020,7 @@ mod tests {
     fn test_network_visualizer_creation() {
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
         let config = VisualizationConfig::default();
         let visualizer = NetworkVisualizer::new(model, config);
         assert!(visualizer.layout_cache.is_none());

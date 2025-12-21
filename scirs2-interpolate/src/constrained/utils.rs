@@ -59,9 +59,9 @@ where
     ///     vec![constraint],
     ///     3,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
-    /// let value = spline.evaluate(2.5).unwrap();
+    /// let value = spline.evaluate(2.5).expect("Operation failed");
     /// # }
     /// ```
     pub fn evaluate(&self, x: T) -> InterpolateResult<T> {
@@ -197,10 +197,10 @@ where
     ///     vec![constraint],
     ///     3,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// let x_eval = array![1.5, 2.5, 3.5];
-    /// let derivatives = spline.derivative_array(&x_eval.view(), 1).unwrap();
+    /// let derivatives = spline.derivative_array(&x_eval.view(), 1).expect("Operation failed");
     /// # }
     /// ```
     pub fn derivative_array(
@@ -249,10 +249,10 @@ where
     ///     vec![constraint],
     ///     3,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Get function value, first derivative, and second derivative at x=2.5
-    /// let derivatives = spline.derivatives_all(2.5, 2).unwrap();
+    /// let derivatives = spline.derivatives_all(2.5, 2).expect("Operation failed");
     /// let function_value = derivatives[0];
     /// let first_deriv = derivatives[1];
     /// let second_deriv = derivatives[2];
@@ -305,11 +305,11 @@ where
     ///     vec![constraint],
     ///     3,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Create a spline representing the first derivative
-    /// let derivative_spline = spline.derivative_spline(1).unwrap();
-    /// let slope_at_2_5 = derivative_spline.evaluate(2.5).unwrap();
+    /// let derivative_spline = spline.derivative_spline(1).expect("Operation failed");
+    /// let slope_at_2_5 = derivative_spline.evaluate(2.5).expect("Operation failed");
     /// # }
     /// ```
     pub fn derivative_spline(&self, order: usize) -> InterpolateResult<BSpline<T>> {
@@ -351,11 +351,11 @@ where
     ///     vec![constraint],
     ///     3,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Create the antiderivative (should be approximately linear)
-    /// let antiderivative = spline.antiderivative_spline(1).unwrap();
-    /// let integral_at_3 = antiderivative.evaluate(3.0).unwrap(); // Should be ~3.0
+    /// let antiderivative = spline.antiderivative_spline(1).expect("Operation failed");
+    /// let integral_at_3 = antiderivative.evaluate(3.0).expect("Operation failed"); // Should be ~3.0
     /// # }
     /// ```
     pub fn antiderivative_spline(&self, order: usize) -> InterpolateResult<BSpline<T>> {
@@ -396,10 +396,10 @@ where
     ///     vec![constraint],
     ///     3,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Integrate from 0 to 3 (should be approximately x^3/3 = 9.0)
-    /// let integral = spline.integrate(0.0, 3.0).unwrap();
+    /// let integral = spline.integrate(0.0, 3.0).expect("Operation failed");
     /// # }
     /// ```
     pub fn integrate(&self, a: T, b: T) -> InterpolateResult<T> {
@@ -440,10 +440,10 @@ where
     ///     vec![constraint],
     ///     3,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Verify that the monotonicity constraint is satisfied
-    /// let is_valid = spline.validate_constraints(50).unwrap();
+    /// let is_valid = spline.validate_constraints(50).expect("Operation failed");
     /// assert!(is_valid, "Monotonicity constraint should be satisfied");
     /// # }
     /// ```
@@ -459,10 +459,11 @@ where
             let check_end = constraint.x_max.unwrap_or(domain_end);
 
             // Generate check _points across the constraint region
-            let step = (check_end - check_start) / T::from_usize(num_checkpoints - 1).unwrap();
+            let step = (check_end - check_start)
+                / T::from_usize(num_checkpoints - 1).expect("Operation failed");
 
             for i in 0..num_checkpoints {
-                let x = check_start + T::from_usize(i).unwrap() * step;
+                let x = check_start + T::from_usize(i).expect("Operation failed") * step;
 
                 if !self.check_constraint(constraint.constraint_type, x, constraint.parameter)? {
                     return Ok(false);
@@ -501,14 +502,15 @@ where
             let check_start = constraint.x_min.unwrap_or(domain_start);
             let check_end = constraint.x_max.unwrap_or(domain_end);
 
-            let step = (check_end - check_start) / T::from_usize(num_check_points - 1).unwrap();
+            let step = (check_end - check_start)
+                / T::from_usize(num_check_points - 1).expect("Operation failed");
 
             let mut violations = 0;
             let mut max_violation = T::zero();
             let mut max_violation_location = check_start;
 
             for i in 0..num_check_points {
-                let x = check_start + T::from_usize(i).unwrap() * step;
+                let x = check_start + T::from_usize(i).expect("Operation failed") * step;
 
                 // Calculate violation magnitude
                 let violation = self.calculate_constraint_violation(
@@ -533,7 +535,8 @@ where
                 max_violation,
                 max_violation_location,
                 satisfaction_rate: T::one()
-                    - T::from_usize(violations).unwrap() / T::from_usize(num_check_points).unwrap(),
+                    - T::from_usize(violations).expect("Operation failed")
+                        / T::from_usize(num_check_points).expect("Operation failed"),
             });
         }
 
@@ -618,7 +621,7 @@ impl<T: Float + FromPrimitive + Debug + Display> ConstraintSatisfactionSummary<T
             .map(|info| info.satisfaction_rate)
             .fold(T::zero(), |acc, rate| acc + rate);
 
-        total_rate / T::from_usize(self.constraint_violations.len()).unwrap()
+        total_rate / T::from_usize(self.constraint_violations.len()).expect("Operation failed")
     }
 }
 

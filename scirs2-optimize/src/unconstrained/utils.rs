@@ -193,7 +193,8 @@ mod tests {
         let mut quadratic = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] + 2.0 * x[1] * x[1] };
 
         let x = Array1::from_vec(vec![1.0, 2.0]);
-        let grad = finite_difference_gradient(&mut quadratic, &x.view(), 1e-8).unwrap();
+        let grad =
+            finite_difference_gradient(&mut quadratic, &x.view(), 1e-8).expect("Operation failed");
 
         assert_abs_diff_eq!(grad[0], 2.0, epsilon = 1e-6);
         assert_abs_diff_eq!(grad[1], 8.0, epsilon = 1e-6);

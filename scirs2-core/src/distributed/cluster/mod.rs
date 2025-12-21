@@ -89,7 +89,7 @@ mod tests {
     #[test]
     fn test_cluster_manager_creation() {
         let config = ClusterConfiguration::default();
-        let manager = ClusterManager::new(config).unwrap();
+        let manager = ClusterManager::new(config).expect("Operation failed");
         // Basic functionality test
     }
 
@@ -107,7 +107,9 @@ mod tests {
             metadata: NodeMetadata::default(),
         };
 
-        let is_new = registry.register_node(node.clone()).unwrap();
+        let is_new = registry
+            .register_node(node.clone())
+            .expect("Operation failed");
         assert!(is_new);
 
         let healthy_nodes = registry.get_healthy_nodes();
@@ -137,7 +139,9 @@ mod tests {
             metadata: NodeMetadata::default(),
         }];
 
-        allocator.update_available_resources(&nodes).unwrap();
+        allocator
+            .update_available_resources(&nodes)
+            .expect("Operation failed");
 
         let requirements = ResourceRequirements {
             cpu_cores: 4,
@@ -147,14 +151,16 @@ mod tests {
             specialized_requirements: Vec::new(),
         };
 
-        let allocation = allocator.allocate_resources(&requirements).unwrap();
+        let allocation = allocator
+            .allocate_resources(&requirements)
+            .expect("Operation failed");
         assert_eq!(allocation.allocated_resources.cpu_cores, 4);
         assert_eq!(allocation.allocated_resources.memory_gb, 8);
     }
 
     #[test]
     fn test_health_monitor() {
-        let mut monitor = HealthMonitor::new().unwrap();
+        let mut monitor = HealthMonitor::new().expect("Operation failed");
 
         let node = NodeInfo {
             id: "test_node".to_string(),
@@ -166,7 +172,7 @@ mod tests {
             metadata: NodeMetadata::default(),
         };
 
-        let health_status = monitor.check_node_health(&node).unwrap();
+        let health_status = monitor.check_node_health(&node).expect("Operation failed");
         assert!(health_status.health_score >= 0.0 && health_status.health_score <= 100.0f64);
     }
 
@@ -251,7 +257,7 @@ mod tests {
             },
         ];
 
-        let leader = ClusterCoordination::elect_leader(&nodes).unwrap();
+        let leader = ClusterCoordination::elect_leader(&nodes).expect("Operation failed");
         assert_eq!(leader, Some("node_a".to_string())); // Should elect lexicographically first
     }
 }

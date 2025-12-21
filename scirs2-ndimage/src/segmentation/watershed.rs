@@ -84,7 +84,7 @@ impl<T: PartialOrd> Ord for PriorityPoint<T> {
 ///     [0, 0, 2],
 /// ];
 ///
-/// let segmented = watershed(&image, &markers).unwrap();
+/// let segmented = watershed(&image, &markers).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn watershed<T>(
@@ -297,7 +297,7 @@ where
 ///     [0, 0, 0],
 /// ];
 ///
-/// let segmented = marker_watershed(&image, &markers, 1).unwrap();
+/// let segmented = marker_watershed(&image, &markers, 1).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn marker_watershed<T>(
@@ -385,7 +385,10 @@ where
 
         // If we have labeled neighbors, assign this pixel to the most frequent label
         if !labels.is_empty() {
-            let (most_common_label_, _) = labels.iter().max_by_key(|&(_, count)| count).unwrap();
+            let (most_common_label_, _) = labels
+                .iter()
+                .max_by_key(|&(_, count)| count)
+                .expect("Operation failed");
 
             output[[r, c]] = *most_common_label_;
 

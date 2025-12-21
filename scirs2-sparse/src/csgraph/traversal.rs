@@ -59,10 +59,10 @@ impl TraversalOrder {
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Perform BFS from vertex 0
-/// let (order, _) = traversegraph(&graph, 0, false, "bfs", false).unwrap();
+/// let (order, _) = traversegraph(&graph, 0, false, "bfs", false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn traversegraph<T, S>(
@@ -281,9 +281,9 @@ fn dfs_recursive_helper<T>(
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let distances = bfs_distances(&graph, 0, false).unwrap();
+/// let distances = bfs_distances(&graph, 0, false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn bfs_distances<T, S>(graph: &S, start: usize, directed: bool) -> SparseResult<Array1<isize>>
@@ -343,9 +343,9 @@ where
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// assert!(has_path(&graph, 0, 2, false).unwrap());
+/// assert!(has_path(&graph, 0, 2, false).expect("Operation failed"));
 /// ```
 #[allow(dead_code)]
 pub fn has_path<T, S>(graph: &S, source: usize, target: usize, directed: bool) -> SparseResult<bool>
@@ -390,9 +390,9 @@ where
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let reachable = reachable_vertices(&graph, 0, false).unwrap();
+/// let reachable = reachable_vertices(&graph, 0, false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn reachable_vertices<T, S>(
@@ -428,9 +428,9 @@ where
 /// let rows = vec![0, 1];
 /// let cols = vec![1, 2];
 /// let data = vec![1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let topo_order = topological_sort(&graph).unwrap();
+/// let topo_order = topological_sort(&graph).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn topological_sort<T, S>(graph: &S) -> SparseResult<Vec<usize>>
@@ -495,7 +495,7 @@ mod tests {
         let cols = vec![1, 2, 0, 3, 0, 3, 1, 2];
         let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed")
     }
 
     fn create_dag() -> CsrArray<f64> {
@@ -504,13 +504,14 @@ mod tests {
         let cols = vec![1, 2, 3, 3];
         let data = vec![1.0, 1.0, 1.0, 1.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed")
     }
 
     #[test]
     fn test_bfs() {
         let graph = create_testgraph();
-        let (order, predecessors) = breadth_first_search(&graph, 0, false, true).unwrap();
+        let (order, predecessors) =
+            breadth_first_search(&graph, 0, false, true).expect("Operation failed");
 
         // Should visit all vertices
         assert_eq!(order.len(), 4);
@@ -523,7 +524,7 @@ mod tests {
         assert_eq!(order[0], 0);
 
         // Check predecessors
-        let preds = predecessors.unwrap();
+        let preds = predecessors.expect("Operation failed");
         assert_eq!(preds[0], -1); // Start vertex has no predecessor
         assert!(preds[1] == 0); // 1's predecessor should be 0
         assert!(preds[2] == 0); // 2's predecessor should be 0
@@ -532,7 +533,7 @@ mod tests {
     #[test]
     fn test_dfs() {
         let graph = create_testgraph();
-        let (order, _) = depth_first_search(&graph, 0, false, false).unwrap();
+        let (order, _) = depth_first_search(&graph, 0, false, false).expect("Operation failed");
 
         // Should visit all vertices
         assert_eq!(order.len(), 4);
@@ -548,7 +549,8 @@ mod tests {
     #[test]
     fn test_dfs_recursive() {
         let graph = create_testgraph();
-        let (order, _) = depth_first_search_recursive(&graph, 0, false, false).unwrap();
+        let (order, _) =
+            depth_first_search_recursive(&graph, 0, false, false).expect("Operation failed");
 
         // Should visit all vertices
         assert_eq!(order.len(), 4);
@@ -566,12 +568,14 @@ mod tests {
         let graph = create_testgraph();
 
         // Test BFS
-        let (bfs_order, _) = traversegraph(&graph, 0, false, "bfs", false).unwrap();
+        let (bfs_order, _) =
+            traversegraph(&graph, 0, false, "bfs", false).expect("Operation failed");
         assert_eq!(bfs_order[0], 0);
         assert_eq!(bfs_order.len(), 4);
 
         // Test DFS
-        let (dfs_order, _) = traversegraph(&graph, 0, false, "dfs", false).unwrap();
+        let (dfs_order, _) =
+            traversegraph(&graph, 0, false, "dfs", false).expect("Operation failed");
         assert_eq!(dfs_order[0], 0);
         assert_eq!(dfs_order.len(), 4);
     }
@@ -579,7 +583,7 @@ mod tests {
     #[test]
     fn test_bfs_distances() {
         let graph = create_testgraph();
-        let distances = bfs_distances(&graph, 0, false).unwrap();
+        let distances = bfs_distances(&graph, 0, false).expect("Operation failed");
 
         assert_eq!(distances[0], 0); // Distance to self is 0
         assert_eq!(distances[1], 1); // Direct neighbor_
@@ -592,24 +596,25 @@ mod tests {
         let graph = create_testgraph();
 
         // All vertices are connected
-        assert!(has_path(&graph, 0, 3, false).unwrap());
-        assert!(has_path(&graph, 1, 2, false).unwrap());
-        assert!(has_path(&graph, 0, 0, false).unwrap()); // Self path
+        assert!(has_path(&graph, 0, 3, false).expect("Operation failed"));
+        assert!(has_path(&graph, 1, 2, false).expect("Operation failed"));
+        assert!(has_path(&graph, 0, 0, false).expect("Operation failed")); // Self path
 
         // Test disconnected graph
         let rows = vec![0, 2];
         let cols = vec![1, 3];
         let data = vec![1.0, 1.0];
-        let disconnected = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
+        let disconnected =
+            CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed");
 
-        assert!(has_path(&disconnected, 0, 1, false).unwrap());
-        assert!(!has_path(&disconnected, 0, 2, false).unwrap());
+        assert!(has_path(&disconnected, 0, 1, false).expect("Operation failed"));
+        assert!(!has_path(&disconnected, 0, 2, false).expect("Operation failed"));
     }
 
     #[test]
     fn test_reachable_vertices() {
         let graph = create_testgraph();
-        let reachable = reachable_vertices(&graph, 0, false).unwrap();
+        let reachable = reachable_vertices(&graph, 0, false).expect("Operation failed");
 
         // All vertices should be reachable
         assert_eq!(reachable.len(), 4);
@@ -622,15 +627,27 @@ mod tests {
     #[test]
     fn test_topological_sort() {
         let dag = create_dag();
-        let topo_order = topological_sort(&dag).unwrap();
+        let topo_order = topological_sort(&dag).expect("Operation failed");
 
         assert_eq!(topo_order.len(), 4);
 
         // 0 should come before 1 and 2
-        let pos_0 = topo_order.iter().position(|&x| x == 0).unwrap();
-        let pos_1 = topo_order.iter().position(|&x| x == 1).unwrap();
-        let pos_2 = topo_order.iter().position(|&x| x == 2).unwrap();
-        let pos_3 = topo_order.iter().position(|&x| x == 3).unwrap();
+        let pos_0 = topo_order
+            .iter()
+            .position(|&x| x == 0)
+            .expect("Operation failed");
+        let pos_1 = topo_order
+            .iter()
+            .position(|&x| x == 1)
+            .expect("Operation failed");
+        let pos_2 = topo_order
+            .iter()
+            .position(|&x| x == 2)
+            .expect("Operation failed");
+        let pos_3 = topo_order
+            .iter()
+            .position(|&x| x == 3)
+            .expect("Operation failed");
 
         assert!(pos_0 < pos_1);
         assert!(pos_0 < pos_2);
@@ -644,7 +661,8 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![1, 2, 0];
         let data = vec![1.0, 1.0, 1.0];
-        let cyclic = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let cyclic =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         // Should fail due to cycle
         assert!(topological_sort(&cyclic).is_err());

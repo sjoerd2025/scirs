@@ -49,7 +49,7 @@ pub trait ExactSolution<F: IntegrateFloat> {
     /// Evaluate mixed partial derivatives (for PDEs)
     fn mixed_derivative(&self, coordinates: &[F], var1: usize, var2: usize) -> F {
         // Default implementation using finite differences
-        let h = F::from(1e-8).unwrap();
+        let h = F::from(1e-8).expect("Failed to convert constant to float");
         let mut coords_plus = coordinates.to_vec();
         let mut coords_minus = coordinates.to_vec();
 
@@ -59,7 +59,8 @@ pub trait ExactSolution<F: IntegrateFloat> {
         let deriv_plus = self.derivative(&coords_plus, var1);
         let deriv_minus = self.derivative(&coords_minus, var1);
 
-        (deriv_plus - deriv_minus) / (F::from(2.0).unwrap() * h)
+        (deriv_plus - deriv_minus)
+            / (F::from(2.0).expect("Failed to convert constant to float") * h)
     }
 
     /// Get the dimensionality of the problem
@@ -99,7 +100,7 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         let mut t_power = F::one();
 
         for (i, &coeff) in self.coefficients.iter().enumerate().skip(1) {
-            result += F::from(i).unwrap() * coeff * t_power;
+            result += F::from(i).expect("Failed to convert to float") * coeff * t_power;
             t_power *= t;
         }
 
@@ -112,7 +113,7 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         let mut t_power = F::one();
 
         for (i, &coeff) in self.coefficients.iter().enumerate().skip(2) {
-            let factor = F::from(i * (i - 1)).unwrap();
+            let factor = F::from(i * (i - 1)).expect("Operation failed");
             result += factor * coeff * t_power;
             t_power *= t;
         }
@@ -545,10 +546,10 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
             sum_log_h_log_e += log_h * log_e;
         }
 
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let denominator = n_f * sum_log_h_sq - sum_log_h * sum_log_h;
 
-        if denominator.abs() < F::from(1e-12).unwrap() {
+        if denominator.abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return Err(IntegrateError::ComputationError(
                 "Cannot compute order - insufficient variation in grid sizes".to_string(),
             ));
@@ -557,7 +558,7 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
         let order = (n_f * sum_log_h_log_e - sum_log_h * sum_log_e) / denominator;
 
         // Simple confidence interval (±0.1 for demonstration)
-        let confidence_delta = F::from(0.1).unwrap();
+        let confidence_delta = F::from(0.1).expect("Failed to convert constant to float");
         let order_confidence = (order - confidence_delta, order + confidence_delta);
 
         Ok(Self {
@@ -617,7 +618,7 @@ impl ErrorAnalysis {
             sum_sq += diff * diff;
         }
 
-        Ok((sum_sq / F::from(exact.len()).unwrap()).sqrt())
+        Ok((sum_sq / F::from(exact.len()).expect("Operation failed")).sqrt())
     }
 
     /// Compute maximum norm of error
@@ -662,7 +663,7 @@ impl ErrorAnalysis {
             count += 1;
         }
 
-        Ok((sum_sq / F::from(count).unwrap()).sqrt())
+        Ok((sum_sq / F::from(count).expect("Failed to convert to float")).sqrt())
     }
 }
 
@@ -1188,7 +1189,8 @@ mod tests {
         let grid_sizes = vec![0.1, 0.05, 0.025, 0.0125];
         let errors = vec![0.01, 0.0025, 0.000625, 0.00015625]; // ∝ h²
 
-        let analysis = ConvergenceAnalysis::compute_order(grid_sizes, errors).unwrap();
+        let analysis =
+            ConvergenceAnalysis::compute_order(grid_sizes, errors).expect("Operation failed");
 
         // Should detect order ≈ 2
         assert!((analysis.order - 2.0_f64).abs() < 0.1);
@@ -1200,8 +1202,10 @@ mod tests {
         let exact = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let numerical = Array1::from_vec(vec![1.1, 1.9, 3.05, 3.98]);
 
-        let l2_error = ErrorAnalysis::l2_norm(exact.view(), numerical.view()).unwrap();
-        let max_error = ErrorAnalysis::max_norm(exact.view(), numerical.view()).unwrap();
+        let l2_error =
+            ErrorAnalysis::l2_norm(exact.view(), numerical.view()).expect("Operation failed");
+        let max_error =
+            ErrorAnalysis::max_norm(exact.view(), numerical.view()).expect("Operation failed");
 
         // L2 error should be around sqrt((0.1² + 0.1² + 0.05² + 0.02²)/4)
         assert!(l2_error > 0.0 && l2_error < 0.2);
@@ -1351,8 +1355,18 @@ mod tests {
         let results = workflow.run_verification(mock_solver);
         assert_eq!(results.len(), 1);
         assert!(results[0].passed);
-        assert!(results[0].computed_order.unwrap() > 1.8);
-        assert!(results[0].computed_order.unwrap() < 2.2);
+        assert!(
+            results[0]
+                .computed_order
+                .expect("Test: computed_order missing")
+                > 1.8
+        );
+        assert!(
+            results[0]
+                .computed_order
+                .expect("Test: computed_order missing")
+                < 2.2
+        );
     }
 
     #[test]

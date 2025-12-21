@@ -42,7 +42,7 @@ mod simd_spectral {
                 let a_view = scirs2_core::ndarray::ArrayView1::from(a_slice);
                 let b_view = scirs2_core::ndarray::ArrayView1::from(b_slice);
                 let result_array = f64::simd_sub(&a_view, &b_view);
-                result_slice.copy_from_slice(result_array.as_slice().unwrap());
+                result_slice.copy_from_slice(result_array.as_slice().expect("Operation failed"));
             } else {
                 // Fallback to element-wise operation if not contiguous
                 for j in 0..cols {
@@ -434,7 +434,7 @@ fn solve_tridiagonal_eigenvalue(
     if n == 1 {
         return Ok((
             vec![alpha[0]],
-            Array2::from_shape_vec((1, 1), vec![1.0]).unwrap(),
+            Array2::from_shape_vec((1, 1), vec![1.0]).expect("Operation failed"),
         ));
     }
 
@@ -476,7 +476,7 @@ fn solve_small_symmetric_eigenvalue(
     if n == 1 {
         return Ok((
             vec![matrix[[0, 0]]],
-            Array2::from_shape_vec((1, 1), vec![1.0]).unwrap(),
+            Array2::from_shape_vec((1, 1), vec![1.0]).expect("Operation failed"),
         ));
     }
 
@@ -1390,13 +1390,13 @@ mod tests {
         // |         |
         // +----3----+
 
-        graph.add_edge(0, 1, 1.0).unwrap();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(3, 0, 1.0).unwrap();
+        graph.add_edge(0, 1, 1.0).expect("Operation failed");
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(3, 0, 1.0).expect("Operation failed");
 
         // Test standard Laplacian
-        let lap = laplacian(&graph, LaplacianType::Standard).unwrap();
+        let lap = laplacian(&graph, LaplacianType::Standard).expect("Operation failed");
 
         // Expected Laplacian:
         // [[ 2, -1,  0, -1],
@@ -1411,7 +1411,7 @@ mod tests {
                 2.0,
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Check that the matrices are approximately equal
         for i in 0..4 {
@@ -1421,7 +1421,7 @@ mod tests {
         }
 
         // Test normalized Laplacian
-        let lap_norm = laplacian(&graph, LaplacianType::Normalized).unwrap();
+        let lap_norm = laplacian(&graph, LaplacianType::Normalized).expect("Operation failed");
 
         // Each node has degree 2, so D^(-1/2) = diag(1/sqrt(2), 1/sqrt(2), 1/sqrt(2), 1/sqrt(2))
         // For normalized Laplacian, check key properties rather than exact values
@@ -1445,12 +1445,13 @@ mod tests {
         // Test a path graph P4 (4 nodes in a line)
         let mut path_graph: Graph<i32, f64> = Graph::new();
 
-        path_graph.add_edge(0, 1, 1.0).unwrap();
-        path_graph.add_edge(1, 2, 1.0).unwrap();
-        path_graph.add_edge(2, 3, 1.0).unwrap();
+        path_graph.add_edge(0, 1, 1.0).expect("Operation failed");
+        path_graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        path_graph.add_edge(2, 3, 1.0).expect("Operation failed");
 
         // For a path graph P4, the algebraic connectivity should be positive and reasonable
-        let conn = algebraic_connectivity(&path_graph, LaplacianType::Standard).unwrap();
+        let conn =
+            algebraic_connectivity(&path_graph, LaplacianType::Standard).expect("Operation failed");
         // Check that it's in a reasonable range for a path graph (approximation may vary)
         assert!(
             conn > 0.3 && conn < 1.0,
@@ -1460,13 +1461,14 @@ mod tests {
         // Test a cycle graph C4 (4 nodes in a cycle)
         let mut cycle_graph: Graph<i32, f64> = Graph::new();
 
-        cycle_graph.add_edge(0, 1, 1.0).unwrap();
-        cycle_graph.add_edge(1, 2, 1.0).unwrap();
-        cycle_graph.add_edge(2, 3, 1.0).unwrap();
-        cycle_graph.add_edge(3, 0, 1.0).unwrap();
+        cycle_graph.add_edge(0, 1, 1.0).expect("Operation failed");
+        cycle_graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        cycle_graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        cycle_graph.add_edge(3, 0, 1.0).expect("Operation failed");
 
         // For a cycle graph C4, the algebraic connectivity should be positive and higher than path
-        let conn = algebraic_connectivity(&cycle_graph, LaplacianType::Standard).unwrap();
+        let conn = algebraic_connectivity(&cycle_graph, LaplacianType::Standard)
+            .expect("Operation failed");
 
         // Check that it's reasonable for a cycle graph (more connected than path graph)
         assert!(
@@ -1479,21 +1481,21 @@ mod tests {
     fn test_spectral_radius() {
         // Test with a complete graph K3
         let mut graph: Graph<i32, f64> = Graph::new();
-        graph.add_edge(0, 1, 1.0).unwrap();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 0, 1.0).unwrap();
+        graph.add_edge(0, 1, 1.0).expect("Operation failed");
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 0, 1.0).expect("Operation failed");
 
-        let radius = spectral_radius(&graph).unwrap();
+        let radius = spectral_radius(&graph).expect("Operation failed");
         // For K3, spectral radius should be 2.0
         assert!((radius - 2.0).abs() < 0.1);
 
         // Test with a star graph S3 (3 leaves)
         let mut star: Graph<i32, f64> = Graph::new();
-        star.add_edge(0, 1, 1.0).unwrap();
-        star.add_edge(0, 2, 1.0).unwrap();
-        star.add_edge(0, 3, 1.0).unwrap();
+        star.add_edge(0, 1, 1.0).expect("Operation failed");
+        star.add_edge(0, 2, 1.0).expect("Operation failed");
+        star.add_edge(0, 3, 1.0).expect("Operation failed");
 
-        let radius_star = spectral_radius(&star).unwrap();
+        let radius_star = spectral_radius(&star).expect("Operation failed");
         // For S3, spectral radius should be sqrt(3) ≈ 1.732
         assert!(radius_star > 1.5 && radius_star < 2.0);
     }
@@ -1504,28 +1506,28 @@ mod tests {
         let mut graph: Graph<i32, f64> = Graph::new();
 
         // Cluster 1: 0, 1, 2 (complete)
-        graph.add_edge(0, 1, 1.0).unwrap();
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 0, 1.0).unwrap();
+        graph.add_edge(0, 1, 1.0).expect("Operation failed");
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 0, 1.0).expect("Operation failed");
 
         // Cluster 2: 3, 4, 5 (complete)
-        graph.add_edge(3, 4, 1.0).unwrap();
-        graph.add_edge(4, 5, 1.0).unwrap();
-        graph.add_edge(5, 3, 1.0).unwrap();
+        graph.add_edge(3, 4, 1.0).expect("Operation failed");
+        graph.add_edge(4, 5, 1.0).expect("Operation failed");
+        graph.add_edge(5, 3, 1.0).expect("Operation failed");
 
         // Bridge between clusters
-        graph.add_edge(2, 3, 1.0).unwrap();
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
 
         // Perfect partition
         let partition = vec![true, true, true, false, false, false];
-        let ncut = normalized_cut(&graph, &partition).unwrap();
+        let ncut = normalized_cut(&graph, &partition).expect("Operation failed");
 
         // This should be a good cut with low normalized cut value
         assert!(ncut < 0.5);
 
         // Bad partition (splits a cluster)
         let bad_partition = vec![true, true, false, false, false, false];
-        let bad_ncut = normalized_cut(&graph, &bad_partition).unwrap();
+        let bad_ncut = normalized_cut(&graph, &bad_partition).expect("Operation failed");
 
         // This should have a higher normalized cut value
         assert!(bad_ncut > ncut);

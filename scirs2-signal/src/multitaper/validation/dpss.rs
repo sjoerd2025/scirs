@@ -64,7 +64,7 @@ mod tests {
         let result = validate_dpss_comprehensive(1024, 4.0, 7);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.orthogonality_error < 1e-6);
         assert!(metrics.concentration_accuracy > 0.8);
         assert!(metrics.eigenvalue_ordering_valid);

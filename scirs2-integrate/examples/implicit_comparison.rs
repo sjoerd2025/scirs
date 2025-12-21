@@ -221,8 +221,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Compare final solutions
     compare_solutions(
         &mol_result.u[0],
-        cn_result.u.last().unwrap(),
-        be_result.u.last().unwrap(),
+        cn_result.u.last().expect("Operation failed"),
+        be_result.u.last().expect("Operation failed"),
         &domain,
     )?;
 

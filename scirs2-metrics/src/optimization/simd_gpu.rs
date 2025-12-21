@@ -239,7 +239,7 @@ impl SimdMetrics {
             let squared_diff = F::simd_sub(y_true, ypred);
             let squared = F::simd_mul(&squared_diff.view(), &squared_diff.view());
             let sum = F::simd_sum(&squared.view());
-            Ok(sum / F::from(y_true.len()).unwrap())
+            Ok(sum / F::from(y_true.len()).expect("Operation failed"))
         } else {
             // Fallback to scalar implementation
             self.scalar_mse(y_true, ypred)
@@ -261,7 +261,7 @@ impl SimdMetrics {
             let diff = F::simd_sub(y_true, ypred);
             let abs_diff = F::simd_abs(&diff.view());
             let sum = F::simd_sum(&abs_diff.view());
-            Ok(sum / F::from(y_true.len()).unwrap())
+            Ok(sum / F::from(y_true.len()).expect("Operation failed"))
         } else {
             self.scalar_mae(y_true, ypred)
         }
@@ -280,7 +280,7 @@ impl SimdMetrics {
 
         if self.enable_simd && self.capabilities.simd_available {
             // Compute mean of y_true using SIMD
-            let mean_true = F::simd_sum(y_true) / F::from(y_true.len()).unwrap();
+            let mean_true = F::simd_sum(y_true) / F::from(y_true.len()).expect("Operation failed");
 
             // Create array filled with mean value
             let mean_array = Array1::from_elem(y_true.len(), mean_true);
@@ -317,7 +317,7 @@ impl SimdMetrics {
         }
 
         if self.enable_simd && self.capabilities.simd_available {
-            let n = F::from(x.len()).unwrap();
+            let n = F::from(x.len()).expect("Operation failed");
 
             // Compute means using SIMD
             let mean_x = F::simd_sum(x) / n;
@@ -419,7 +419,7 @@ impl SimdMetrics {
             let log_values = self.simd_fast_log(values)?;
             let log_sum = F::simd_sum(&log_values.view());
             let log_product = log_sum; // log(a*b*c) = log(a) + log(b) + log(c)
-            let geometric_mean = (log_sum / F::from(values.len()).unwrap()).exp();
+            let geometric_mean = (log_sum / F::from(values.len()).expect("Operation failed")).exp();
 
             Ok(LogOperationResults {
                 log_values,
@@ -656,7 +656,7 @@ impl SimdMetrics {
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum();
 
-        Ok(diff_squared / F::from(y_true.len()).unwrap())
+        Ok(diff_squared / F::from(y_true.len()).expect("Operation failed"))
     }
 
     /// Simulated GPU kernel for MAE computation
@@ -670,7 +670,7 @@ impl SimdMetrics {
             .map(|(&t, &p)| (t - p).abs())
             .sum();
 
-        Ok(abs_diff / F::from(y_true.len()).unwrap())
+        Ok(abs_diff / F::from(y_true.len()).expect("Operation failed"))
     }
 
     /// Simulated GPU kernel for R² computation
@@ -678,7 +678,8 @@ impl SimdMetrics {
     where
         F: Float + std::iter::Sum,
     {
-        let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
+        let mean_true =
+            y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).expect("Operation failed");
 
         let ss_tot: F = y_true
             .iter()
@@ -703,7 +704,7 @@ impl SimdMetrics {
     where
         F: Float + std::iter::Sum,
     {
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
         let mean_x = x.iter().cloned().sum::<F>() / n;
         let mean_y = y.iter().cloned().sum::<F>() / n;
 
@@ -792,7 +793,7 @@ impl SimdMetrics {
             .zip(ypred.iter())
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
         Ok(mse)
     }
 
@@ -805,7 +806,7 @@ impl SimdMetrics {
             .zip(ypred.iter())
             .map(|(&t, &p)| (t - p).abs())
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
         Ok(mae)
     }
 
@@ -813,7 +814,8 @@ impl SimdMetrics {
     where
         F: Float + std::iter::Sum,
     {
-        let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
+        let mean_true =
+            y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).expect("Operation failed");
 
         let ss_tot = y_true
             .iter()
@@ -837,7 +839,7 @@ impl SimdMetrics {
     where
         F: Float + std::iter::Sum,
     {
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
         let mean_x = x.iter().cloned().sum::<F>() / n;
         let mean_y = y.iter().cloned().sum::<F>() / n;
 
@@ -880,7 +882,7 @@ impl SimdMetrics {
         }
 
         let geometric_mean = if values.len() > 0 {
-            (log_sum / F::from(values.len()).unwrap()).exp()
+            (log_sum / F::from(values.len()).expect("Operation failed")).exp()
         } else {
             F::zero()
         };
@@ -941,7 +943,7 @@ impl SimdMetrics {
                 sign *= -1;
             }
 
-            if lu[[i, i]].abs() < F::from(1e-10).unwrap() {
+            if lu[[i, i]].abs() < F::from(1e-10).expect("Failed to convert constant to float") {
                 return Ok(F::zero()); // Singular matrix
             }
 
@@ -956,7 +958,7 @@ impl SimdMetrics {
             }
         }
 
-        Ok(F::from(sign).unwrap() * det)
+        Ok(F::from(sign).expect("Failed to convert to float") * det)
     }
 
     /// Scalar fallback for trace computation
@@ -1104,63 +1106,64 @@ mod tests {
 
     #[test]
     fn test_simd_metrics_creation() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         assert!(metrics.enable_simd);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_mse() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9];
 
-        let mse = metrics.simd_mse(&y_true.view(), &ypred.view()).unwrap();
+        let mse = metrics
+            .simd_mse(&y_true.view(), &ypred.view())
+            .expect("Operation failed");
         assert!(mse > 0.0);
         assert!(mse < 0.02); // Should be small for close predictions
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_mae() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9];
 
-        let mae = metrics.simd_mae(&y_true.view(), &ypred.view()).unwrap();
+        let mae = metrics
+            .simd_mae(&y_true.view(), &ypred.view())
+            .expect("Operation failed");
         assert!(mae > 0.0);
         assert!(mae < 0.15);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_r2_score() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9];
 
         let r2 = metrics
             .simd_r2_score(&y_true.view(), &ypred.view())
-            .unwrap();
+            .expect("Operation failed");
         assert!(r2 > 0.9); // Should be high for good predictions
         assert!(r2 <= 1.0);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_correlation() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0]; // Perfect correlation
 
-        let corr = metrics.simd_correlation(&x.view(), &y.view()).unwrap();
+        let corr = metrics
+            .simd_correlation(&x.view(), &y.view())
+            .expect("Operation failed");
         assert!((corr - 1.0).abs() < 1e-10); // Should be very close to 1
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_gpu_batch_metrics() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
 
         // Create batch data
         let y_true_batch = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -1168,7 +1171,7 @@ mod tests {
 
         let results = metrics
             .gpu_batch_metrics(&y_true_batch.view(), &y_pred_batch.view(), &["mse", "mae"])
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert!(results[0].contains_key("mse"));
@@ -1178,15 +1181,14 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_implementations() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let ypred = array![1.1, 2.1, 2.9, 4.1, 4.9, 6.1, 6.9, 8.1, 8.9, 10.1];
 
         let benchmark = metrics
             .benchmark_implementations(&y_true.view(), &ypred.view(), 10)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(benchmark.scalar_time.as_nanos() > 0);
 
@@ -1195,15 +1197,14 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_exponential_moving_average() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         let values = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let alpha = 0.3;
 
         let ema = metrics
             .simd_exponential_moving_average(&values.view(), alpha)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(ema.len(), values.len());
         assert_eq!(ema[0], values[0]); // First value should be unchanged
@@ -1216,12 +1217,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_log_operations() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
         let values = array![1.0, 2.0, 4.0, 8.0]; // Powers of 2 for easy verification
 
-        let log_results = metrics.simd_log_operations(&values.view()).unwrap();
+        let log_results = metrics
+            .simd_log_operations(&values.view())
+            .expect("Operation failed");
 
         assert_eq!(log_results.log_values.len(), values.len());
 
@@ -1235,7 +1237,7 @@ mod tests {
 
     #[test]
     fn test_simd_batch_matrix_operations() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
 
         // Create test matrices
         let matrix1 = array![[1.0, 2.0], [3.0, 4.0]];
@@ -1244,7 +1246,7 @@ mod tests {
 
         let results = metrics
             .simd_batch_matrix_operations(&matrices, MatrixOperation::All)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.determinants.len(), 2);
         assert_eq!(results.traces.len(), 2);
@@ -1297,13 +1299,14 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_log_operation_edge_cases() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
 
         // Test with zero and negative values
         let values = array![0.0, -1.0, 1.0, 2.0];
-        let log_results = metrics.simd_log_operations(&values.view()).unwrap();
+        let log_results = metrics
+            .simd_log_operations(&values.view())
+            .expect("Operation failed");
 
         assert!(log_results.log_values[0].is_infinite()); // log(0) = -∞
         assert!(log_results.log_values[1].is_infinite()); // log(-1) = -∞
@@ -1315,21 +1318,27 @@ mod tests {
 
     #[test]
     fn test_determinant_edge_cases() {
-        let metrics = SimdMetrics::new().unwrap();
+        let metrics = SimdMetrics::new().expect("Operation failed");
 
         // Test 1x1 matrix
         let matrix1x1 = array![[5.0]];
-        let det1 = metrics.simd_determinant(&matrix1x1).unwrap();
+        let det1 = metrics
+            .simd_determinant(&matrix1x1)
+            .expect("Operation failed");
         assert!((det1 - 5.0).abs() < 1e-10);
 
         // Test 2x2 identity matrix
         let identity2x2 = array![[1.0, 0.0], [0.0, 1.0]];
-        let det2 = metrics.simd_determinant(&identity2x2).unwrap();
+        let det2 = metrics
+            .simd_determinant(&identity2x2)
+            .expect("Operation failed");
         assert!((det2 - 1.0).abs() < 1e-10);
 
         // Test singular matrix (determinant should be 0)
         let singular = array![[1.0, 2.0], [2.0, 4.0]];
-        let det3 = metrics.simd_determinant(&singular).unwrap();
+        let det3 = metrics
+            .simd_determinant(&singular)
+            .expect("Operation failed");
         assert!(det3.abs() < 1e-10);
     }
 }

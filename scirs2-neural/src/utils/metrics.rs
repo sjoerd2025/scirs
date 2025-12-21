@@ -77,8 +77,14 @@ impl<F: Float + Debug> Metric<F> for CategoricalAccuracy {
     fn compute(&self, predictions: &Array<F, IxDyn>, targets: &Array<F, IxDyn>) -> Result<F> {
         if predictions.ndim() >= 2 && targets.ndim() >= 2 {
             categorical_accuracy(
-                &predictions.to_owned().into_dimensionality::<Ix2>().unwrap(),
-                &targets.to_owned().into_dimensionality::<Ix2>().unwrap(),
+                &predictions
+                    .to_owned()
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed"),
+                &targets
+                    .to_owned()
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed"),
             )
         } else {
             Err(NeuralError::Other(
@@ -137,7 +143,7 @@ impl<F: Float> Metric<F> for R2Score {
 ///
 /// let predictions = arr1(&[1.0f64, 2.0, 3.0]).into_dyn();
 /// let targets = arr1(&[1.5f64, 1.8, 2.5]).into_dyn();
-/// let mse = mean_squared_error(&predictions, &targets).unwrap();
+/// let mse = mean_squared_error(&predictions, &targets).expect("Operation failed");
 /// assert!(mse > 0.0f64);
 /// ```
 #[allow(dead_code)]
@@ -182,7 +188,7 @@ pub fn mean_squared_error<F: Float + Debug>(
 ///
 /// let predictions = arr1(&[0.7f64, 0.3, 0.8, 0.2]);
 /// let targets = arr1(&[1.0f64, 0.0, 1.0, 0.0]);
-/// let accuracy = binary_accuracy(&predictions, &targets, 0.5f64).unwrap();
+/// let accuracy = binary_accuracy(&predictions, &targets, 0.5f64).expect("Operation failed");
 /// assert_eq!(accuracy, 1.0f64); // All predictions are correct
 /// ```
 #[allow(dead_code)]
@@ -238,7 +244,7 @@ pub fn binary_accuracy<F: Float + Debug>(
 ///     [0.0f64, 1.0, 0.0],  // True class: 1
 ///     [0.0f64, 0.0, 1.0]   // True class: 2
 /// ]);
-/// let accuracy = categorical_accuracy(&predictions, &targets).unwrap();
+/// let accuracy = categorical_accuracy(&predictions, &targets).expect("Operation failed");
 /// assert_eq!(accuracy, 1.0f64); // All predictions are correct
 /// ```
 #[allow(dead_code)]

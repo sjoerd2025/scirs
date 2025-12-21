@@ -28,13 +28,13 @@
 //!
 //! // GARCH(1,1) model
 //! let mut garch = GarchModel::new();
-//! garch.fit(&returns).unwrap();
-//! let forecast = garch.forecast(5).unwrap(); // 5-day ahead forecast
+//! garch.fit(&returns).expect("Operation failed");
+//! let forecast = garch.forecast(5).expect("Operation failed"); // 5-day ahead forecast
 //! println!("GARCH forecast: {:?}", forecast);
 //!
 //! // EWMA (RiskMetrics lambda = 0.94)
 //! let ewma = EWMAModel::new(0.94);
-//! let current_vol = ewma.estimate(&returns).unwrap();
+//! let current_vol = ewma.estimate(&returns).expect("Operation failed");
 //! println!("Current volatility: {:.4}", current_vol);
 //! ```
 
@@ -538,16 +538,16 @@ mod tests {
     fn test_garch_forecast() {
         let returns = generate_test_returns();
         let mut garch = GarchModel::new();
-        garch.fit(&returns).unwrap();
+        garch.fit(&returns).expect("Operation failed");
 
-        let forecast = garch.forecast(5).unwrap();
+        let forecast = garch.forecast(5).expect("Operation failed");
         assert_eq!(forecast.len(), 5);
 
         // All forecasts should be positive
         assert!(forecast.iter().all(|&v| v > 0.0));
 
         // Forecasts should converge to long-run volatility
-        let long_run = garch.unconditional_volatility().unwrap();
+        let long_run = garch.unconditional_volatility().expect("Operation failed");
         assert!(forecast[4] > forecast[0] * 0.5); // Some convergence observed
     }
 
@@ -557,7 +557,7 @@ mod tests {
         assert_eq!(ewma.lambda, 0.94);
 
         let returns = generate_test_returns();
-        let vol = ewma.estimate(&returns).unwrap();
+        let vol = ewma.estimate(&returns).expect("Operation failed");
 
         assert!(vol > 0.0);
         assert!(vol < 1.0); // Reasonable volatility range
@@ -577,7 +577,7 @@ mod tests {
         let ewma = EWMAModel::new(0.94);
         let returns = generate_test_returns();
 
-        let series = ewma.compute_series(&returns).unwrap();
+        let series = ewma.compute_series(&returns).expect("Operation failed");
         assert_eq!(series.len(), returns.len());
 
         // All volatilities should be positive
@@ -600,7 +600,7 @@ mod tests {
     #[test]
     fn test_historical_simple() {
         let returns = generate_test_returns();
-        let vol = HistoricalVolatility::simple(&returns).unwrap();
+        let vol = HistoricalVolatility::simple(&returns).expect("Operation failed");
 
         assert!(vol > 0.0);
         assert!(vol < 0.5); // Reasonable range
@@ -609,7 +609,7 @@ mod tests {
     #[test]
     fn test_historical_realized() {
         let returns = generate_test_returns();
-        let vol = HistoricalVolatility::realized(&returns).unwrap();
+        let vol = HistoricalVolatility::realized(&returns).expect("Operation failed");
 
         assert!(vol > 0.0);
         assert!(vol < 0.5);
@@ -620,7 +620,7 @@ mod tests {
         let highs = vec![101.0, 102.5, 103.0, 102.0, 104.0];
         let lows = vec![99.0, 100.5, 101.0, 100.0, 102.0];
 
-        let vol = HistoricalVolatility::parkinson(&highs, &lows).unwrap();
+        let vol = HistoricalVolatility::parkinson(&highs, &lows).expect("Operation failed");
         assert!(vol > 0.0);
     }
 

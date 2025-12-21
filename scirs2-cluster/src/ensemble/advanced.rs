@@ -932,7 +932,7 @@ fn calculate_clustering_tendency(data: &Array2<f64>) -> f64 {
     let total_variance = data.var(0.0);
     let mean_variance = data
         .mean_axis(scirs2_core::ndarray::Axis(0))
-        .unwrap()
+        .expect("Operation failed")
         .var(0.0);
 
     if total_variance > 0.0 {

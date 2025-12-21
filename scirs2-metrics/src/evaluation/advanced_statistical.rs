@@ -13,6 +13,12 @@ use crate::error::{MetricsError, Result};
 use statrs::distribution::{ContinuousCDF, StudentsT};
 use statrs::statistics::Statistics;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + scirs2_core::numeric::FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Advanced statistical analysis results
 #[derive(Debug, Clone)]
 pub struct AdvancedStatisticalResults<F: Float> {
@@ -102,9 +108,9 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
     /// Create a new advanced statistical analyzer
     pub fn new() -> Self {
         Self {
-            alpha: F::from(0.05).unwrap(),
-            beta: F::from(0.20).unwrap(),
-            confidence_level: F::from(0.95).unwrap(),
+            alpha: const_f64::<F>(0.05),
+            beta: const_f64::<F>(0.20),
+            confidence_level: const_f64::<F>(0.95),
             use_bayesian: true,
             _phantom: std::marker::PhantomData,
         }
@@ -213,12 +219,12 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let var_a = self.variance(group_a)?;
         let var_b = self.variance(group_b)?;
 
-        let n_a = F::from(group_a.len()).unwrap();
-        let n_b = F::from(group_b.len()).unwrap();
+        let n_a = F::from(group_a.len()).expect("Test/example failed");
+        let n_b = F::from(group_b.len()).expect("Test/example failed");
 
         // Pooled standard deviation
         let pooled_sd = ((var_a * (n_a - F::one()) + var_b * (n_b - F::one()))
-            / (n_a + n_b - F::from(2).unwrap()))
+            / (n_a + n_b - const_f64::<F>(2.0)))
         .sqrt();
 
         if pooled_sd == F::zero() {
@@ -241,17 +247,17 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let var_a = self.variance(group_a)?;
         let var_b = self.variance(group_b)?;
 
-        let n_a = F::from(group_a.len()).unwrap();
-        let n_b = F::from(group_b.len()).unwrap();
+        let n_a = F::from(group_a.len()).expect("Test/example failed");
+        let n_b = F::from(group_b.len()).expect("Test/example failed");
 
         // Standard error of difference
         let se_diff = (var_a / n_a + var_b / n_b).sqrt();
 
         // Critical value (approximation for t-distribution)
-        let alpha_half = self.alpha / F::from(2).unwrap();
+        let alpha_half = self.alpha / const_f64::<F>(2.0);
         let t_critical = self.inverse_t_cdf(
             F::one() - alpha_half,
-            (n_a + n_b - F::from(2).unwrap()).to_usize().unwrap_or(100),
+            (n_a + n_b - const_f64::<F>(2.0)).to_usize().unwrap_or(100),
         )?;
 
         let margin = t_critical * se_diff;
@@ -289,11 +295,11 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let mean_diff = diff_array.mean_or(F::zero());
         let sd_diff = self.std_dev(diff_array.view())?;
 
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let df = n - 1;
 
         // Handle zero or near-zero variance case (all differences are identical or nearly so)
-        let epsilon = F::epsilon() * F::from(100).unwrap(); // Numerical tolerance
+        let epsilon = F::epsilon() * const_f64::<F>(100.0); // Numerical tolerance
         if sd_diff < epsilon {
             if mean_diff.abs() < epsilon {
                 // No difference at all - p-value = 1.0
@@ -328,7 +334,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let t_stat = mean_diff / (sd_diff / n_f.sqrt());
 
         // Calculate p-value (two-tailed), ensuring it's at least epsilon
-        let mut p_value = F::from(2).unwrap() * (F::one() - self.t_cdf(t_stat.abs(), df)?);
+        let mut p_value = const_f64::<F>(2.0) * (F::one() - self.t_cdf(t_stat.abs(), df)?);
 
         // Clamp p-value to be at least epsilon (avoid exact zero)
         if p_value < F::epsilon() {
@@ -383,7 +389,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
             }
 
             // Average rank for tied values
-            let avg_rank = F::from(i + j + 1).unwrap() / F::from(2).unwrap();
+            let avg_rank =
+                F::from(i + j + 1).expect("Failed to convert to float") / const_f64::<F>(2.0);
             for k in i..j {
                 ranks[k] = avg_rank;
             }
@@ -399,18 +406,18 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
             .sum();
 
         // Calculate U statistic
-        let n_a_f = F::from(n_a).unwrap();
-        let n_b_f = F::from(n_b).unwrap();
-        let u_a = rank_sum_a - n_a_f * (n_a_f + F::one()) / F::from(2).unwrap();
+        let n_a_f = F::from(n_a).expect("Failed to convert to float");
+        let n_b_f = F::from(n_b).expect("Failed to convert to float");
+        let u_a = rank_sum_a - n_a_f * (n_a_f + F::one()) / const_f64::<F>(2.0);
         let u_b = n_a_f * n_b_f - u_a;
         let u_stat = u_a.min(u_b);
 
         // Approximate p-value using normal approximation
-        let mean_u = n_a_f * n_b_f / F::from(2).unwrap();
-        let std_u = (n_a_f * n_b_f * (n_a_f + n_b_f + F::one()) / F::from(12).unwrap()).sqrt();
+        let mean_u = n_a_f * n_b_f / const_f64::<F>(2.0);
+        let std_u = (n_a_f * n_b_f * (n_a_f + n_b_f + F::one()) / const_f64::<F>(12.0)).sqrt();
 
         let z_stat = (u_stat - mean_u) / std_u;
-        let p_value = F::from(2).unwrap() * (F::one() - self.standard_normal_cdf(z_stat.abs())?);
+        let p_value = const_f64::<F>(2.0) * (F::one() - self.standard_normal_cdf(z_stat.abs())?);
 
         Ok(StatisticalTest {
             statistic: u_stat,
@@ -434,8 +441,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let var_a = self.variance(group_a)?;
         let var_b = self.variance(group_b)?;
 
-        let n_a = F::from(group_a.len()).unwrap();
-        let n_b = F::from(group_b.len()).unwrap();
+        let n_a = F::from(group_a.len()).expect("Test/example failed");
+        let n_b = F::from(group_b.len()).expect("Test/example failed");
 
         // Posterior parameters for difference
         let posterior_mean = mean_a - mean_b;
@@ -444,13 +451,13 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
 
         // Bayes factor approximation (simplified)
         let effect_size = posterior_mean / posterior_std;
-        let bayes_factor = (-effect_size * effect_size / F::from(2).unwrap()).exp();
+        let bayes_factor = (-effect_size * effect_size / const_f64::<F>(2.0)).exp();
 
         // Posterior probability that A is better than B
         let posterior_prob_a_better = F::one() - self.standard_normal_cdf(-effect_size)?;
 
         // 95% credible interval
-        let z_critical = F::from(1.96).unwrap(); // 95% CI
+        let z_critical = const_f64::<F>(1.96); // 95% CI
         let margin = z_critical * posterior_std;
         let credible_interval = (posterior_mean - margin, posterior_mean + margin);
 
@@ -469,19 +476,19 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         group_b: ArrayView1<F>,
     ) -> Result<PowerAnalysisResults<F>> {
         let effect_size = self.cohensd(group_a, group_b)?;
-        let n = F::from(group_a.len()).unwrap();
+        let n = F::from(group_a.len()).expect("Test/example failed");
 
         // Calculate actual power
         let delta = effect_size * n.sqrt();
         let power = F::one()
             - self.t_cdf(
                 self.inverse_t_cdf(
-                    F::one() - self.alpha / F::from(2).unwrap(),
-                    (F::from(2).unwrap() * n - F::from(2).unwrap())
+                    F::one() - self.alpha / const_f64::<F>(2.0),
+                    (const_f64::<F>(2.0) * n - const_f64::<F>(2.0))
                         .to_usize()
                         .unwrap_or(100),
                 )? - delta,
-                (F::from(2).unwrap() * n - F::from(2).unwrap())
+                (const_f64::<F>(2.0) * n - const_f64::<F>(2.0))
                     .to_usize()
                     .unwrap_or(100),
             )?;
@@ -489,17 +496,17 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         // Required sample size for 80% power
         let desired_power = F::one() - self.beta;
         let z_alpha =
-            self.inverse_standard_normal_cdf(F::one() - self.alpha / F::from(2).unwrap())?;
+            self.inverse_standard_normal_cdf(F::one() - self.alpha / const_f64::<F>(2.0))?;
         let z_beta = self.inverse_standard_normal_cdf(desired_power)?;
 
-        let required_n_per_group = ((z_alpha + z_beta) / effect_size).powi(2) * F::from(2).unwrap();
-        let required_sample_size = (required_n_per_group * F::from(2).unwrap())
+        let required_n_per_group = ((z_alpha + z_beta) / effect_size).powi(2) * const_f64::<F>(2.0);
+        let required_sample_size = (required_n_per_group * const_f64::<F>(2.0))
             .ceil()
             .to_usize()
             .unwrap_or(0);
 
         // Minimum detectable effect size with current sample size
-        let min_detectable_effect = (z_alpha + z_beta) / (n / F::from(2).unwrap()).sqrt();
+        let min_detectable_effect = (z_alpha + z_beta) / (n / const_f64::<F>(2.0)).sqrt();
 
         Ok(PowerAnalysisResults {
             power,
@@ -513,13 +520,13 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
     pub fn interpret_effect_size(&self, cohensd: F) -> EffectSizeMagnitude {
         let abs_d = cohensd.abs();
 
-        if abs_d < F::from(0.2).unwrap() {
+        if abs_d < const_f64::<F>(0.2) {
             EffectSizeMagnitude::Negligible
-        } else if abs_d < F::from(0.5).unwrap() {
+        } else if abs_d < const_f64::<F>(0.5) {
             EffectSizeMagnitude::Small
-        } else if abs_d < F::from(0.8).unwrap() {
+        } else if abs_d < const_f64::<F>(0.8) {
             EffectSizeMagnitude::Medium
-        } else if abs_d < F::from(0.9).unwrap() {
+        } else if abs_d < const_f64::<F>(0.9) {
             EffectSizeMagnitude::Large
         } else {
             EffectSizeMagnitude::VeryLarge
@@ -537,7 +544,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
         let mean = data.mean_or(F::zero());
         let sum_sq_diff: F = data.iter().map(|&x| (x - mean) * (x - mean)).sum();
 
-        Ok(sum_sq_diff / F::from(n - 1).unwrap())
+        Ok(sum_sq_diff / F::from(n - 1).expect("Failed to convert to float"))
     }
 
     fn std_dev(&self, data: ArrayView1<F>) -> Result<F> {
@@ -580,36 +587,36 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
 
     fn standard_normal_cdf(&self, z: F) -> Result<F> {
         // Approximation using the error function
-        let x = z / F::from(2.0).unwrap().sqrt();
-        Ok((F::one() + self.erf(x)) / F::from(2).unwrap())
+        let x = z / const_f64::<F>(2.0).sqrt();
+        Ok((F::one() + self.erf(x)) / const_f64::<F>(2.0))
     }
 
     fn inverse_standard_normal_cdf(&self, p: F) -> Result<F> {
         // Beasley-Springer-Moro algorithm approximation
         let a = [
-            F::from(-3.969_683_028_665_376e1).unwrap(),
-            F::from(2.209_460_984_245_205e2).unwrap(),
-            F::from(-2.759_285_104_469_687e2).unwrap(),
-            F::from(1.383_577_518_672_69e2).unwrap(),
-            F::from(-3.066_479_806_614_716e1).unwrap(),
-            F::from(2.506_628_277_459_239).unwrap(),
+            F::from(-3.969_683_028_665_376e1).expect("Failed to convert to float"),
+            F::from(2.209_460_984_245_205e2).expect("Failed to convert to float"),
+            F::from(-2.759_285_104_469_687e2).expect("Failed to convert to float"),
+            F::from(1.383_577_518_672_69e2).expect("Failed to convert to float"),
+            F::from(-3.066_479_806_614_716e1).expect("Failed to convert to float"),
+            F::from(2.506_628_277_459_239).expect("Failed to convert to float"),
         ];
 
         let b = [
-            F::from(-5.447_609_879_822_406e1).unwrap(),
-            F::from(1.615_858_368_580_409e2).unwrap(),
-            F::from(-1.556_989_798_598_866e2).unwrap(),
-            F::from(6.680_131_188_771_972e1).unwrap(),
-            F::from(-1.328_068_155_288_572e1).unwrap(),
+            F::from(-5.447_609_879_822_406e1).expect("Failed to convert to float"),
+            F::from(1.615_858_368_580_409e2).expect("Failed to convert to float"),
+            F::from(-1.556_989_798_598_866e2).expect("Failed to convert to float"),
+            F::from(6.680_131_188_771_972e1).expect("Failed to convert to float"),
+            F::from(-1.328_068_155_288_572e1).expect("Failed to convert to float"),
         ];
 
         if p <= F::zero() || p >= F::one() {
             return Err(MetricsError::InvalidInput("p must be in (0,1)".to_string()));
         }
 
-        let y = p - F::from(0.5).unwrap();
+        let y = p - const_f64::<F>(0.5);
 
-        if y.abs() < F::from(0.42).unwrap() {
+        if y.abs() < const_f64::<F>(0.42) {
             let r = y * y;
             let mut num = a[5];
             let mut den = F::one();
@@ -631,12 +638,12 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum>
 
     fn erf(&self, x: F) -> F {
         // Approximation for error function
-        let a1 = F::from(0.254829592).unwrap();
-        let a2 = F::from(-0.284496736).unwrap();
-        let a3 = F::from(1.421413741).unwrap();
-        let a4 = F::from(-1.453152027).unwrap();
-        let a5 = F::from(1.061405429).unwrap();
-        let p = F::from(0.3275911).unwrap();
+        let a1 = const_f64::<F>(0.254829592);
+        let a2 = const_f64::<F>(-0.284496736);
+        let a3 = const_f64::<F>(1.421413741);
+        let a4 = const_f64::<F>(-1.453152027);
+        let a5 = const_f64::<F>(1.061405429);
+        let p = const_f64::<F>(0.3275911);
 
         let sign = if x >= F::zero() { F::one() } else { -F::one() };
         let x = x.abs();
@@ -671,13 +678,13 @@ pub fn multi_dimensional_effect_size<
     }
 
     // Calculate Mahalanobis distance-like measure for multidimensional effect size
-    let mean_effect: F =
-        effect_sizes.iter().cloned().sum::<F>() / F::from(effect_sizes.len()).unwrap();
+    let mean_effect: F = effect_sizes.iter().cloned().sum::<F>()
+        / F::from(effect_sizes.len()).expect("Test/example failed");
     let variance: F = effect_sizes
         .iter()
         .map(|&x| (x - mean_effect) * (x - mean_effect))
         .sum::<F>()
-        / F::from(effect_sizes.len()).unwrap();
+        / F::from(effect_sizes.len()).expect("Test/example failed");
 
     if variance == F::zero() {
         Ok(mean_effect.abs())
@@ -698,7 +705,9 @@ mod tests {
         let group_a = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let group_b = array![2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let effect_size = analyzer.cohensd(group_a.view(), group_b.view()).unwrap();
+        let effect_size = analyzer
+            .cohensd(group_a.view(), group_b.view())
+            .expect("Test/example failed");
         // The expected value should be approximately -0.632, not -1.0
         assert!((effect_size - (-0.6324555320336759)).abs() < 1e-10);
     }
@@ -712,7 +721,7 @@ mod tests {
 
         let result = analyzer
             .paired_t_test(group_a.view(), group_b.view())
-            .unwrap();
+            .expect("Test/example failed");
         assert!(result.p_value > 0.0);
         assert!(result.p_value <= 1.0);
     }
@@ -749,7 +758,9 @@ mod tests {
         model_a.insert("accuracy".to_string(), array![0.85, 0.87, 0.86, 0.88, 0.84]);
         model_b.insert("accuracy".to_string(), array![0.82, 0.84, 0.83, 0.85, 0.81]);
 
-        let results = analyzer.compare_models(&model_a, &model_b).unwrap();
+        let results = analyzer
+            .compare_models(&model_a, &model_b)
+            .expect("Test/example failed");
 
         assert!(results.effect_sizes.contains_key("accuracy"));
         assert!(results.confidence_intervals.contains_key("accuracy"));
@@ -767,7 +778,8 @@ mod tests {
         metrics_b.insert("accuracy".to_string(), array![0.82, 0.84, 0.83]);
         metrics_b.insert("precision".to_string(), array![0.77, 0.79, 0.78]);
 
-        let effect_size = multi_dimensional_effect_size(&metrics_a, &metrics_b).unwrap();
+        let effect_size =
+            multi_dimensional_effect_size(&metrics_a, &metrics_b).expect("Test/example failed");
         assert!(effect_size > 0.0);
     }
 }

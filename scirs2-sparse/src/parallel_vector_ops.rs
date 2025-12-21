@@ -205,7 +205,7 @@ where
                 let x_view = ArrayView1::from(x_slice);
                 let y_view = ArrayView1::from(y_slice);
                 let result = T::simd_add(&x_view, &y_view);
-                z_slice.copy_from_slice(result.as_slice().unwrap());
+                z_slice.copy_from_slice(result.as_slice().expect("Operation failed"));
             } else {
                 // Scalar computation for small chunks
                 for ((xi, yi), zi) in x_slice.iter().zip(y_slice).zip(z_slice.iter_mut()) {
@@ -218,7 +218,7 @@ where
         let x_view = ArrayView1::from(x);
         let y_view = ArrayView1::from(y);
         let result = T::simd_add(&x_view, &y_view);
-        z.copy_from_slice(result.as_slice().unwrap());
+        z.copy_from_slice(result.as_slice().expect("Operation failed"));
     } else {
         // Fallback to scalar computation
         for ((xi, yi), zi) in x.iter().zip(y).zip(z) {
@@ -270,7 +270,7 @@ where
                 let x_view = ArrayView1::from(x_chunk);
                 let y_view = ArrayView1::from(y_chunk);
                 let result = T::simd_sub(&x_view, &y_view);
-                z_chunk.copy_from_slice(result.as_slice().unwrap());
+                z_chunk.copy_from_slice(result.as_slice().expect("Operation failed"));
             } else {
                 // Scalar computation for small chunks
                 for ((xi, yi), zi) in x_chunk.iter().zip(y_chunk).zip(z_chunk) {
@@ -283,7 +283,7 @@ where
         let x_view = ArrayView1::from(x);
         let y_view = ArrayView1::from(y);
         let result = T::simd_sub(&x_view, &y_view);
-        z.copy_from_slice(result.as_slice().unwrap());
+        z.copy_from_slice(result.as_slice().expect("Operation failed"));
     } else {
         // Fallback to scalar computation
         for ((xi, yi), zi) in x.iter().zip(y).zip(z) {
@@ -335,7 +335,7 @@ where
                 let scaled = T::simd_scalar_mul(&x_view, a);
                 let y_view = ArrayView1::from(&y_chunk[..]);
                 let result = T::simd_add(&scaled.view(), &y_view);
-                y_chunk.copy_from_slice(result.as_slice().unwrap());
+                y_chunk.copy_from_slice(result.as_slice().expect("Operation failed"));
             } else {
                 // Scalar computation for small chunks
                 for (xi, yi) in x_chunk.iter().zip(y_chunk) {
@@ -349,7 +349,7 @@ where
         let scaled = T::simd_scalar_mul(&x_view, a);
         let y_view = ArrayView1::from(&y[..]);
         let result = T::simd_add(&scaled.view(), &y_view);
-        y.copy_from_slice(result.as_slice().unwrap());
+        y.copy_from_slice(result.as_slice().expect("Operation failed"));
     } else {
         // Fallback to scalar computation
         for (xi, yi) in x.iter().zip(y) {
@@ -398,7 +398,7 @@ where
                 // Use SIMD acceleration for large chunks
                 let x_view = ArrayView1::from(x_chunk);
                 let result = T::simd_scalar_mul(&x_view, a);
-                y_chunk.copy_from_slice(result.as_slice().unwrap());
+                y_chunk.copy_from_slice(result.as_slice().expect("Operation failed"));
             } else {
                 // Scalar computation for small chunks
                 for (xi, yi) in x_chunk.iter().zip(y_chunk) {
@@ -410,7 +410,7 @@ where
         // Use SIMD without parallelization
         let x_view = ArrayView1::from(x);
         let result = T::simd_scalar_mul(&x_view, a);
-        y.copy_from_slice(result.as_slice().unwrap());
+        y.copy_from_slice(result.as_slice().expect("Operation failed"));
     } else {
         // Fallback to scalar computation
         for (xi, yi) in x.iter().zip(y) {
@@ -516,7 +516,7 @@ pub fn parallel_linear_combination<T>(
                 let ax = T::simd_scalar_mul(&x_view, a);
                 let by = T::simd_scalar_mul(&y_view, b);
                 let result = T::simd_add(&ax.view(), &by.view());
-                z_chunk.copy_from_slice(result.as_slice().unwrap());
+                z_chunk.copy_from_slice(result.as_slice().expect("Operation failed"));
             } else {
                 // Scalar computation for small chunks
                 for ((xi, yi), zi) in x_chunk.iter().zip(y_chunk).zip(z_chunk) {
@@ -531,7 +531,7 @@ pub fn parallel_linear_combination<T>(
         let ax = T::simd_scalar_mul(&x_view, a);
         let by = T::simd_scalar_mul(&y_view, b);
         let result = T::simd_add(&ax.view(), &by.view());
-        z.copy_from_slice(result.as_slice().unwrap());
+        z.copy_from_slice(result.as_slice().expect("Operation failed"));
     } else {
         // Fallback to scalar computation
         for ((xi, yi), zi) in x.iter().zip(y).zip(z) {
@@ -982,7 +982,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_large_vectors_trigger_parallel() {
         let opts = ParallelVectorOptions {
             parallel_threshold: 100,

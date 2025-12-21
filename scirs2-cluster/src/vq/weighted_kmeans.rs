@@ -30,7 +30,7 @@ impl<F: Float + FromPrimitive> Default for WeightedKMeansOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 300,
-            tol: F::from(1e-4).unwrap(),
+            tol: F::from(1e-4).expect("Failed to convert constant to float"),
             random_seed: None,
             n_init: 10,
             init_method: KMeansInit::KMeansPlusPlus,
@@ -69,12 +69,12 @@ impl<F: Float + FromPrimitive> Default for WeightedKMeansOptions<F> {
 ///     3.7, 4.2,
 ///     3.9, 3.9,
 ///     4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Give higher weight to the first three points
 /// let weights = Array1::from_vec(vec![2.0, 2.0, 2.0, 1.0, 1.0, 1.0]);
 ///
-/// let (centroids, labels) = weighted_kmeans(data.view(), weights.view(), 2, None).unwrap();
+/// let (centroids, labels) = weighted_kmeans(data.view(), weights.view(), 2, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn weighted_kmeans<F>(
@@ -142,7 +142,10 @@ where
         }
     }
 
-    Ok((bestcentroids.unwrap(), best_labels.unwrap()))
+    Ok((
+        bestcentroids.expect("Operation failed"),
+        best_labels.expect("Operation failed"),
+    ))
 }
 
 /// Run a single weighted k-means clustering iteration
@@ -333,7 +336,7 @@ where
         cumulative_weights[i] = cumulative_weights[i - 1] + weights[i] / total_weight;
     }
 
-    let rand_val = F::from(rng.random::<f64>()).unwrap();
+    let rand_val = F::from(rng.random::<f64>()).expect("Operation failed");
     let mut first_idx = 0;
     for i in 0..n_samples {
         if rand_val <= cumulative_weights[i] {
@@ -391,7 +394,7 @@ where
         }
 
         // Sample the next centroid based on the weighted probability distribution
-        let rand_val = F::from(rng.random::<f64>()).unwrap();
+        let rand_val = F::from(rng.random::<f64>()).expect("Operation failed");
         let mut next_idx = 0;
 
         for j in 0..n_samples {
@@ -423,7 +426,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Equal weights (should behave like regular k-means)
         let weights = Array1::from_elem(6, 1.0);
@@ -434,8 +437,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (centroids, labels) =
-            weighted_kmeans(data.view(), weights.view(), 2, Some(options)).unwrap();
+        let (centroids, labels) = weighted_kmeans(data.view(), weights.view(), 2, Some(options))
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -458,7 +461,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Give higher weight to the first three points
         let weights = Array1::from_vec(vec![10.0, 10.0, 10.0, 1.0, 1.0, 1.0]);
@@ -469,8 +472,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (centroids, labels) =
-            weighted_kmeans(data.view(), weights.view(), 2, Some(options)).unwrap();
+        let (centroids, labels) = weighted_kmeans(data.view(), weights.view(), 2, Some(options))
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -499,12 +502,12 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let weights = Array1::from_vec(vec![1.0, 1.0, 1.0, 10.0, 10.0, 10.0]);
 
-        let centroids =
-            weighted_kmeans_plus_plus(data.view(), weights.view(), 2, Some(42)).unwrap();
+        let centroids = weighted_kmeans_plus_plus(data.view(), weights.view(), 2, Some(42))
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -517,8 +520,8 @@ mod tests {
 
     #[test]
     fn test_weighted_kmeans_zero_weights() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8])
+            .expect("Operation failed");
 
         // Some zero weights should still work
         let weights = Array1::from_vec(vec![1.0, 0.0, 1.0, 0.0]);
@@ -532,15 +535,15 @@ mod tests {
         let result = weighted_kmeans(data.view(), weights.view(), 2, Some(options));
         assert!(result.is_ok());
 
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Operation failed");
         assert_eq!(centroids.shape(), &[2, 2]);
         assert_eq!(labels.len(), 4);
     }
 
     #[test]
     fn test_weighted_kmeans_negative_weights() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 4.0, 5.0, 4.2, 4.8])
+            .expect("Operation failed");
 
         // Negative weights should cause an error
         let weights = Array1::from_vec(vec![1.0, -1.0, 1.0, 1.0]);

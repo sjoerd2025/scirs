@@ -96,15 +96,20 @@ pub fn velocity_verlet<F: IntegrateFloat>(
 
     // Step 1: Half-step momentum update using force at current position
     let dp_old = system.dp_dt(t, q, p)?;
-    let p_half = p + &(&dp_old * (dt / F::from(2.0).unwrap()));
+    let p_half = p + &(&dp_old * (dt / F::from(2.0).expect("Failed to convert constant to float")));
 
     // Step 2: Full-step position update using the half-step momentum
-    let dq = system.dq_dt(t + dt / F::from(2.0).unwrap(), q, &p_half)?;
+    let dq = system.dq_dt(
+        t + dt / F::from(2.0).expect("Failed to convert constant to float"),
+        q,
+        &p_half,
+    )?;
     let q_new = q + &(&dq * dt);
 
     // Step 3: Another half-step momentum update using force at new position
     let dp_new = system.dp_dt(t + dt, &q_new, &p_half)?;
-    let p_new = &p_half + &(&dp_new * (dt / F::from(2.0).unwrap()));
+    let p_new =
+        &p_half + &(&dp_new * (dt / F::from(2.0).expect("Failed to convert constant to float")));
 
     Ok((q_new, p_new))
 }
@@ -163,7 +168,9 @@ mod tests {
         let mut t = t0;
 
         for _ in 0..steps {
-            let (q_new, p_new) = integrator.step(&system, t, &q, &p, dt).unwrap();
+            let (q_new, p_new) = integrator
+                .step(&system, t, &q, &p, dt)
+                .expect("Operation failed");
             q = q_new;
             p = p_new;
             t += dt;
@@ -201,7 +208,7 @@ mod tests {
         for _ in 0..steps {
             let (q_new, p_new) = StormerVerlet::new()
                 .step(&system, t0, &q1, &p1, dt)
-                .unwrap();
+                .expect("Operation failed");
             q1 = q_new;
             p1 = p_new;
         }
@@ -211,7 +218,8 @@ mod tests {
         let mut q2 = q0.clone();
         let mut p2 = p0.clone();
         for _ in 0..steps {
-            let (q_new, p_new) = velocity_verlet(&system, t0, &q2, &p2, dt).unwrap();
+            let (q_new, p_new) =
+                velocity_verlet(&system, t0, &q2, &p2, dt).expect("Operation failed");
             q2 = q_new;
             p2 = p_new;
         }
@@ -257,7 +265,7 @@ mod tests {
         let integrator = StormerVerlet::new();
         let result = integrator
             .integrate(&kepler, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Operation failed");
 
         // Check energy conservation
         if let Some(error) = result.energy_relative_error {

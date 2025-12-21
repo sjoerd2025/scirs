@@ -31,7 +31,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 /// use scirs2_stats::mean_simd;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let mean = mean_simd(&data.view()).unwrap();
+/// let mean = mean_simd(&data.view()).expect("Operation failed");
 /// assert!((mean - 3.0_f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -56,7 +56,7 @@ where
         x.iter().fold(F::zero(), |acc, &val| acc + val)
     };
 
-    Ok(sum / F::from(n).unwrap())
+    Ok(sum / F::from(n).expect("Failed to convert to float"))
 }
 
 /// Calculate variance using SIMD operations
@@ -113,7 +113,7 @@ where
             .fold(F::zero(), |acc, val| acc + val)
     };
 
-    Ok(sum_sq_dev / F::from(n - ddof).unwrap())
+    Ok(sum_sq_dev / F::from(n - ddof).expect("Failed to convert to float"))
 }
 
 /// Calculate standard deviation using SIMD operations
@@ -166,7 +166,7 @@ where
     if optimizer.should_use_simd(n) && capabilities.simd_available {
         // Use SIMD operations for all statistics
         let sum = F::simd_sum(&x.view());
-        let mean = sum / F::from(n).unwrap();
+        let mean = sum / F::from(n).expect("Failed to convert to float");
 
         // For min/max, we use element reduction operations
         let min = F::simd_min_element(&x.view());
@@ -177,7 +177,7 @@ where
         let deviations = F::simd_sub(&x.view(), &mean_array.view());
         let squared_devs = F::simd_mul(&deviations.view(), &deviations.view());
         let sum_sq_dev = F::simd_sum(&squared_devs.view());
-        let variance = sum_sq_dev / F::from(n - 1).unwrap();
+        let variance = sum_sq_dev / F::from(n - 1).expect("Failed to convert to float");
 
         Ok((mean, variance, min, max))
     } else {
@@ -198,8 +198,9 @@ where
             }
         }
 
-        let mean = sum / F::from(n).unwrap();
-        let variance = (sum_sq - sum * sum / F::from(n).unwrap()) / F::from(n - 1).unwrap();
+        let mean = sum / F::from(n).expect("Failed to convert to float");
+        let variance = (sum_sq - sum * sum / F::from(n).expect("Failed to convert to float"))
+            / F::from(n - 1).expect("Failed to convert to float");
 
         Ok((mean, variance, min, max))
     }
@@ -214,14 +215,14 @@ mod tests {
     #[test]
     fn test_mean_simd() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let result = mean_simd(&data.view()).unwrap();
+        let result = mean_simd(&data.view()).expect("Operation failed");
         assert_relative_eq!(result, 4.5, epsilon = 1e-10);
     }
 
     #[test]
     fn test_variance_simd() {
         let data = array![2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
-        let result = variance_simd(&data.view(), 1).unwrap();
+        let result = variance_simd(&data.view(), 1).expect("Operation failed");
         // Expected sample variance with ddof=1: sum_sq_dev / (n-1) = 32 / 7 = 4.571428571428571
         assert_relative_eq!(result, 32.0 / 7.0, epsilon = 1e-10);
     }
@@ -229,7 +230,7 @@ mod tests {
     #[test]
     fn test_descriptive_stats_simd() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let (mean, var, min, max) = descriptive_stats_simd(&data.view()).unwrap();
+        let (mean, var, min, max) = descriptive_stats_simd(&data.view()).expect("Operation failed");
 
         assert_relative_eq!(mean, 3.0, epsilon = 1e-10);
         assert_relative_eq!(var, 2.5, epsilon = 1e-10); // Sample variance
@@ -243,8 +244,8 @@ mod tests {
         let data = array![1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9];
 
         // Compare with non-SIMD version
-        let simd_mean = mean_simd(&data.view()).unwrap();
-        let scalar_mean = crate::descriptive::mean(&data.view()).unwrap();
+        let simd_mean = mean_simd(&data.view()).expect("Operation failed");
+        let scalar_mean = crate::descriptive::mean(&data.view()).expect("Operation failed");
 
         assert_relative_eq!(simd_mean, scalar_mean, epsilon = 1e-10);
     }

@@ -13,7 +13,7 @@ use serde_json::json;
 #[allow(dead_code)]
 fn testshape_constraint_1d_array() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints for 1D array
     let shape_constraints = ShapeConstraints::new().with_dimensions(vec![Some(5)]);
@@ -27,7 +27,9 @@ fn testshape_constraint_1d_array() {
         "vector": [1.0, 2.0, 3.0, 4.0, 5.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         result.is_valid(),
         "Valid 1D array shape should pass validation"
@@ -39,7 +41,7 @@ fn testshape_constraint_1d_array() {
 #[allow(dead_code)]
 fn testshape_constraint_1d_wrong_size() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints for 1D array
     let shape_constraints = ShapeConstraints::new().with_dimensions(vec![Some(5)]);
@@ -53,7 +55,9 @@ fn testshape_constraint_1d_wrong_size() {
         "vector": [1.0, 2.0, 3.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "Wrong array size should fail validation"
@@ -70,7 +74,7 @@ fn testshape_constraint_1d_wrong_size() {
 #[allow(dead_code)]
 fn testshape_constraint_2d_array() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints for 2D array (3x4)
     let shape_constraints = ShapeConstraints::new().with_dimensions(vec![Some(3), Some(4)]);
@@ -91,7 +95,9 @@ fn testshape_constraint_2d_array() {
         ]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         result.is_valid(),
         "Valid 2D array shape should pass validation"
@@ -103,7 +109,7 @@ fn testshape_constraint_2d_array() {
 #[allow(dead_code)]
 fn testshape_constraint_jagged_array() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints for 2D array
     let shape_constraints = ShapeConstraints::new().with_dimensions(vec![Some(3), Some(4)]);
@@ -124,7 +130,9 @@ fn testshape_constraint_jagged_array() {
         ]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid(), "Jagged array should fail validation");
 
     let errors = result.errors();
@@ -138,7 +146,7 @@ fn testshape_constraint_jagged_array() {
 #[allow(dead_code)]
 fn testshape_constraint_squarematrix() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints for square matrix
     let shape_constraints = ShapeConstraints::new()
@@ -161,7 +169,9 @@ fn testshape_constraint_squarematrix() {
         ]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         result.is_valid(),
         "Valid square matrix should pass validation"
@@ -173,7 +183,7 @@ fn testshape_constraint_squarematrix() {
 #[allow(dead_code)]
 fn testshape_constraint_non_square_fails() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints requiring square matrix
     let shape_constraints = ShapeConstraints::new().require_square();
@@ -193,7 +203,9 @@ fn testshape_constraint_non_square_fails() {
         ]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "Non-square matrix should fail when square is required"
@@ -210,7 +222,7 @@ fn testshape_constraint_non_square_fails() {
 #[allow(dead_code)]
 fn testshape_constraint_element_count() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints with element count limits
     let shape_constraints = ShapeConstraints::new().with_element_range(10, 20);
@@ -224,7 +236,9 @@ fn testshape_constraint_element_count() {
         "array": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         result.is_valid(),
         "Valid element count should pass validation"
@@ -236,7 +250,7 @@ fn testshape_constraint_element_count() {
 #[allow(dead_code)]
 fn testshape_constraint_too_few_elements() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints with minimum element count
     let shape_constraints = ShapeConstraints::new().with_element_range(10, 20);
@@ -250,7 +264,9 @@ fn testshape_constraint_too_few_elements() {
         "array": [1.0, 2.0, 3.0, 4.0, 5.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "Too few elements should fail validation"
@@ -267,7 +283,7 @@ fn testshape_constraint_too_few_elements() {
 #[allow(dead_code)]
 fn testshape_constraint_too_many_elements() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints with maximum element count
     let shape_constraints = ShapeConstraints::new().with_element_range(5, 10);
@@ -281,7 +297,9 @@ fn testshape_constraint_too_many_elements() {
         "array": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "Too many elements should fail validation"
@@ -298,7 +316,7 @@ fn testshape_constraint_too_many_elements() {
 #[allow(dead_code)]
 fn testshape_constraint_flexible_dimensions() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create shape constraints with flexible dimensions (None means any size)
     let shape_constraints = ShapeConstraints::new().with_dimensions(vec![None, Some(3)]);
@@ -320,7 +338,9 @@ fn testshape_constraint_flexible_dimensions() {
         ]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         result.is_valid(),
         "Matrix with flexible row count should pass validation"

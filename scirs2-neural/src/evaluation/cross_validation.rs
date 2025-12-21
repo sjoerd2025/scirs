@@ -315,12 +315,12 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
             if !values.is_empty() {
                 // Calculate mean
                 let sum = values.iter().fold(F::zero(), |acc, &x| acc + x);
-                let mean = sum / F::from(values.len()).unwrap();
+                let mean = sum / F::from(values.len()).expect("Operation failed");
                 // Calculate std
                 let variance_sum = values
                     .iter()
                     .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean));
-                let std = (variance_sum / F::from(values.len()).unwrap()).sqrt();
+                let std = (variance_sum / F::from(values.len()).expect("Operation failed")).sqrt();
                 if self.config.verbose > 0 {
                     println!("{}: {:.4} ± {:.4}", name, mean, std);
         Ok(results)

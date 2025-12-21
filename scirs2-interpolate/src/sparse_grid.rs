@@ -44,11 +44,11 @@
 //!     .with_max_level(max_level)
 //!     .with_adaptive_refinement(true)
 //!     .build(|x: &[f64]| x.iter().sum::<f64>()) // f(x) = x1 + x2 + ... + x5
-//!     .unwrap();
+//!     .expect("Operation failed");
 //!
 //! // Interpolate at a query point
 //! let query = vec![0.3, 0.7, 0.1, 0.9, 0.5];
-//! let result = interpolator.interpolate(&query).unwrap();
+//! let result = interpolator.interpolate(&query).expect("Operation failed");
 //! ```
 
 use crate::error::{InterpolateError, InterpolateResult};
@@ -163,7 +163,7 @@ where
             bounds: None,
             max_level: 3,
             adaptive: false,
-            tolerance: F::from_f64(1e-6).unwrap(),
+            tolerance: F::from_f64(1e-6).expect("Operation failed"),
             initial_points: None,
         }
     }
@@ -419,14 +419,15 @@ where
 
         if level == 0 {
             // Only the center point
-            vec![min_bound + range / F::from_f64(2.0).unwrap()]
+            vec![min_bound + range / F::from_f64(2.0).expect("Operation failed")]
         } else {
             // Hierarchical points: 2^level + 1 points
             let n_points = (1 << level) + 1;
             let mut points = Vec::new();
 
             for i in 0..n_points {
-                let t = F::from_usize(i).unwrap() / F::from_usize(n_points - 1).unwrap();
+                let t = F::from_usize(i).expect("Operation failed")
+                    / F::from_usize(n_points - 1).expect("Operation failed");
                 points.push(min_bound + t * range);
             }
 
@@ -441,7 +442,7 @@ where
 
         // Add coordinate-based information to make unique
         for (i, &coord) in coords.iter().enumerate() {
-            let discretized = (coord * F::from_f64(1000.0).unwrap())
+            let discretized = (coord * F::from_f64(1000.0).expect("Operation failed"))
                 .round()
                 .to_usize()
                 .unwrap_or(0);
@@ -561,9 +562,9 @@ where
             for dim in 0..self.dimension {
                 for direction in [-1.0, 1.0] {
                     let mut new_coords = center_coords.clone();
-                    let step =
-                        (self.bounds[dim].1 - self.bounds[dim].0) / F::from_f64(32.0).unwrap();
-                    new_coords[dim] += F::from_f64(direction).unwrap() * step;
+                    let step = (self.bounds[dim].1 - self.bounds[dim].0)
+                        / F::from_f64(32.0).expect("Operation failed");
+                    new_coords[dim] += F::from_f64(direction).expect("Operation failed") * step;
 
                     // Check bounds
                     if new_coords[dim] >= self.bounds[dim].0
@@ -643,7 +644,8 @@ where
 
         for i in 0..self.dimension {
             // Adaptive grid spacing based on level and dimension
-            let level_spacing = F::from_f64(2.0_f64.powi(-(self.max_level as i32))).unwrap();
+            let level_spacing =
+                F::from_f64(2.0_f64.powi(-(self.max_level as i32))).expect("Operation failed");
             let h = (self.bounds[i].1 - self.bounds[i].0) * level_spacing;
             let dist = (query[i] - gridpoint[i]).abs();
 
@@ -651,9 +653,10 @@ where
                 weight *= F::one() - dist / h;
             } else {
                 // Use a broader support for sparse grids
-                let broad_h = h * F::from_f64(4.0).unwrap();
+                let broad_h = h * F::from_f64(4.0).expect("Operation failed");
                 if dist <= broad_h {
-                    weight *= F::from_f64(0.25).unwrap() * (F::one() - dist / broad_h);
+                    weight *=
+                        F::from_f64(0.25).expect("Operation failed") * (F::one() - dist / broad_h);
                 } else {
                     return F::zero(); // Outside support
                 }
@@ -770,10 +773,10 @@ mod tests {
             3,
             |x: &[f64]| x[0] * x[0], // f(x) = x^2
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation
-        let result = interpolator.interpolate(&[0.5]).unwrap();
+        let result = interpolator.interpolate(&[0.5]).expect("Operation failed");
         assert!((0.0..=1.0).contains(&result));
         assert!(interpolator.num_points() > 0);
     }
@@ -787,10 +790,12 @@ mod tests {
             2,
             |x: &[f64]| x[0] + x[1], // f(x,y) = x + y
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation at center
-        let result = interpolator.interpolate(&[0.5, 0.5]).unwrap();
+        let result = interpolator
+            .interpolate(&[0.5, 0.5])
+            .expect("Operation failed");
         assert_relative_eq!(result, 1.0, epsilon = 0.5); // Should be close to 0.5 + 0.5 = 1.0
 
         // Check grid efficiency
@@ -808,13 +813,17 @@ mod tests {
             1e-3,
             |x: &[f64]| (x[0] - 0.5).powi(2) + (x[1] - 0.5).powi(2), // Peak at center
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation
-        let result = interpolator.interpolate(&[0.5, 0.5]).unwrap();
+        let result = interpolator
+            .interpolate(&[0.5, 0.5])
+            .expect("Operation failed");
         assert_relative_eq!(result, 0.0, epsilon = 0.1);
 
-        let result_corner = interpolator.interpolate(&[0.0, 0.0]).unwrap();
+        let result_corner = interpolator
+            .interpolate(&[0.0, 0.0])
+            .expect("Operation failed");
         // Sparse grid approximation may differ significantly from expected value
         assert_relative_eq!(result_corner, 0.5, epsilon = 8.0);
     }
@@ -828,11 +837,11 @@ mod tests {
             2,
             |x: &[f64]| x.iter().sum::<f64>(), // f(x) = x1 + x2 + ... + x5
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation
         let query = vec![0.2; 5];
-        let result = interpolator.interpolate(&query).unwrap();
+        let result = interpolator.interpolate(&query).expect("Operation failed");
         // High-dimensional sparse grid may have significant approximation error
         assert_relative_eq!(result, 1.0, epsilon = 1.0); // Should be close to 5 * 0.2 = 1.0
 
@@ -854,11 +863,12 @@ mod tests {
         ];
         let values = vec![0.0, 1.0, 1.0, 2.0, 1.0];
 
-        let interpolator = make_sparse_grid_from_data(bounds, &points, &values).unwrap();
+        let interpolator =
+            make_sparse_grid_from_data(bounds, &points, &values).expect("Operation failed");
 
         // Test interpolation at data points
         for (point, &expected) in points.iter().zip(values.iter()) {
-            let result = interpolator.interpolate(point).unwrap();
+            let result = interpolator.interpolate(point).expect("Operation failed");
             assert_relative_eq!(result, expected, epsilon = 0.1);
         }
     }
@@ -871,7 +881,7 @@ mod tests {
             2,
             |x: &[f64]| x[0] * x[1], // f(x,y) = x * y
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let queries = vec![
             vec![0.25, 0.25],
@@ -880,7 +890,9 @@ mod tests {
             vec![0.75, 0.75],
         ];
 
-        let results = interpolator.interpolate_multi(&queries).unwrap();
+        let results = interpolator
+            .interpolate_multi(&queries)
+            .expect("Operation failed");
         assert_eq!(results.len(), 4);
 
         // Check that results are reasonable
@@ -899,7 +911,7 @@ mod tests {
             .with_adaptive_refinement(false)
             .with_tolerance(1e-4)
             .build(|x: &[f64]| x[0] + x[1])
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(interpolator.dimension(), 2);
         assert!(interpolator.num_points() > 0);
@@ -909,8 +921,8 @@ mod tests {
     fn test_error_handling() {
         // Test dimension mismatch
         let bounds = vec![(0.0, 1.0), (0.0, 1.0)];
-        let interpolator =
-            make_sparse_grid_interpolator(bounds, 2, |x: &[f64]| x[0] + x[1]).unwrap();
+        let interpolator = make_sparse_grid_interpolator(bounds, 2, |x: &[f64]| x[0] + x[1])
+            .expect("Operation failed");
 
         // Query with wrong dimension
         let result = interpolator.interpolate(&[0.5]);

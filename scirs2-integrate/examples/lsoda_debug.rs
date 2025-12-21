@@ -42,12 +42,12 @@ fn main() {
                     );
                     println!(
                         "  Final value: {}, Exact: {}",
-                        res.y.last().unwrap()[0],
+                        res.y.last().expect("Operation failed")[0],
                         (-1.0f64).exp()
                     );
                     println!(
                         "  Error: {:.2e}",
-                        (res.y.last().unwrap()[0] - (-1.0f64).exp()).abs()
+                        (res.y.last().expect("Operation failed")[0] - (-1.0f64).exp()).abs()
                     );
 
                     if let Some(msg) = res.message {
@@ -98,8 +98,8 @@ fn main() {
                 );
                 println!(
                     "  Final state: [{:.4}, {:.4}]",
-                    res.y.last().unwrap()[0],
-                    res.y.last().unwrap()[1]
+                    res.y.last().expect("Operation failed")[0],
+                    res.y.last().expect("Operation failed")[1]
                 );
 
                 if let Some(msg) = res.message {

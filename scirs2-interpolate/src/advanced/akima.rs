@@ -45,10 +45,10 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     /// let x = array![0.0f64, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0f64, 1.0, 4.0, 9.0, 16.0];
     ///
-    /// let spline = AkimaSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = AkimaSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
     /// // Interpolate at x = 2.5
-    /// let y_interp = spline.evaluate(2.5).unwrap();
+    /// let y_interp = spline.evaluate(2.5).expect("Operation failed");
     /// println!("Interpolated value at x=2.5: {}", y_interp);
     /// ```
     pub fn new(x: &ArrayView1<F>, y: &ArrayView1<F>) -> InterpolateResult<Self> {
@@ -86,11 +86,12 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
 
         // Set up the artificial end slopes
         // Akima's original method uses a special formula for the endpoints
-        slopes[0] = F::from_f64(3.0).unwrap() * slopes[2] - F::from_f64(2.0).unwrap() * slopes[3];
-        slopes[1] = F::from_f64(2.0).unwrap() * slopes[2] - slopes[3];
-        slopes[n + 1] = F::from_f64(2.0).unwrap() * slopes[n] - slopes[n - 1];
-        slopes[n + 2] =
-            F::from_f64(3.0).unwrap() * slopes[n] - F::from_f64(2.0).unwrap() * slopes[n - 1];
+        slopes[0] = F::from_f64(3.0).expect("Operation failed") * slopes[2]
+            - F::from_f64(2.0).expect("Operation failed") * slopes[3];
+        slopes[1] = F::from_f64(2.0).expect("Operation failed") * slopes[2] - slopes[3];
+        slopes[n + 1] = F::from_f64(2.0).expect("Operation failed") * slopes[n] - slopes[n - 1];
+        slopes[n + 2] = F::from_f64(3.0).expect("Operation failed") * slopes[n]
+            - F::from_f64(2.0).expect("Operation failed") * slopes[n - 1];
 
         // Calculate the derivatives at each point using Akima's formula
         let mut derivatives = Array1::zeros(n);
@@ -100,7 +101,8 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
 
             if w1 + w2 == F::zero() {
                 // If both weights are zero, use the average of the slopes
-                derivatives[i] = (slopes[i + 1] + slopes[i + 2]) / F::from_f64(2.0).unwrap();
+                derivatives[i] =
+                    (slopes[i + 1] + slopes[i + 2]) / F::from_f64(2.0).expect("Operation failed");
             } else {
                 // Otherwise, use weighted average
                 derivatives[i] = (w1 * slopes[i + 1] + w2 * slopes[i + 2]) / (w1 + w2);
@@ -115,11 +117,12 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
 
             let a = y[i];
             let b = derivatives[i];
-            let c = (F::from_f64(3.0).unwrap() * dy / dx
-                - F::from_f64(2.0).unwrap() * derivatives[i]
+            let c = (F::from_f64(3.0).expect("Operation failed") * dy / dx
+                - F::from_f64(2.0).expect("Operation failed") * derivatives[i]
                 - derivatives[i + 1])
                 / dx;
-            let d = (derivatives[i] + derivatives[i + 1] - F::from_f64(2.0).unwrap() * dy / dx)
+            let d = (derivatives[i] + derivatives[i + 1]
+                - F::from_f64(2.0).expect("Operation failed") * dy / dx)
                 / (dx * dx);
 
             coeffs[[i, 0]] = a;
@@ -229,8 +232,8 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
             let c = self.coeffs[[idx, 2]];
             let d = self.coeffs[[idx, 3]];
             return Ok(b
-                + F::from_f64(2.0).unwrap() * c * dx
-                + F::from_f64(3.0).unwrap() * d * dx * dx);
+                + F::from_f64(2.0).expect("Operation failed") * c * dx
+                + F::from_f64(3.0).expect("Operation failed") * d * dx * dx);
         }
 
         // Evaluate the derivative at xnew
@@ -239,8 +242,9 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
         let c = self.coeffs[[idx, 2]];
         let d = self.coeffs[[idx, 3]];
 
-        let result =
-            b + F::from_f64(2.0).unwrap() * c * dx + F::from_f64(3.0).unwrap() * d * dx * dx;
+        let result = b
+            + F::from_f64(2.0).expect("Operation failed") * c * dx
+            + F::from_f64(3.0).expect("Operation failed") * d * dx * dx;
         Ok(result)
     }
 }
@@ -265,10 +269,10 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
 /// let x = array![0.0f64, 1.0, 2.0, 3.0, 4.0];
 /// let y = array![0.0f64, 1.0, 4.0, 9.0, 16.0];
 ///
-/// let spline = make_akima_spline(&x.view(), &y.view()).unwrap();
+/// let spline = make_akima_spline(&x.view(), &y.view()).expect("Operation failed");
 ///
 /// // Interpolate at x = 2.5
-/// let y_interp = spline.evaluate(2.5).unwrap();
+/// let y_interp = spline.evaluate(2.5).expect("Operation failed");
 /// println!("Interpolated value at x=2.5: {}", y_interp);
 /// ```
 #[allow(dead_code)]
@@ -302,20 +306,44 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![0.0, 1.0, 4.0, 20.0, 16.0, 25.0]; // Point at x=3 is an outlier
 
-        let spline = AkimaSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = AkimaSpline::new(&x.view(), &y.view()).expect("Operation failed");
 
         // Test at the knot points
-        assert_abs_diff_eq!(spline.evaluate(0.0).unwrap(), 0.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(1.0).unwrap(), 1.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(2.0).unwrap(), 4.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(3.0).unwrap(), 20.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(4.0).unwrap(), 16.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(spline.evaluate(5.0).unwrap(), 25.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(
+            spline.evaluate(0.0).expect("Operation failed"),
+            0.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            spline.evaluate(1.0).expect("Operation failed"),
+            1.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            spline.evaluate(2.0).expect("Operation failed"),
+            4.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            spline.evaluate(3.0).expect("Operation failed"),
+            20.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            spline.evaluate(4.0).expect("Operation failed"),
+            16.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            spline.evaluate(5.0).expect("Operation failed"),
+            25.0,
+            epsilon = 1e-10
+        );
 
         // Test at some intermediate points
         // Akima should handle the outlier more gracefully than a cubic spline
-        let y_2_5 = spline.evaluate(2.5).unwrap();
-        let y_3_5 = spline.evaluate(3.5).unwrap();
+        let y_2_5 = spline.evaluate(2.5).expect("Operation failed");
+        let y_3_5 = spline.evaluate(3.5).expect("Operation failed");
 
         // Ensure we're interpolating and not just jumping
         assert!(y_2_5 > 4.0);
@@ -334,13 +362,13 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = array![0.0, 1.0, 4.0, 9.0, 16.0];
 
-        let spline = AkimaSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = AkimaSpline::new(&x.view(), &y.view()).expect("Operation failed");
 
         // Test derivatives at some points
         // For x^2, the derivative is 2x
-        let d_1 = spline.derivative(1.0).unwrap();
-        let d_2 = spline.derivative(2.0).unwrap();
-        let d_3 = spline.derivative(3.0).unwrap();
+        let d_1 = spline.derivative(1.0).expect("Operation failed");
+        let d_2 = spline.derivative(2.0).expect("Operation failed");
+        let d_3 = spline.derivative(3.0).expect("Operation failed");
 
         // Allow some error but should be close to the exact values
         assert!((d_1 - 2.0).abs() < 0.3);
@@ -353,7 +381,11 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = array![0.0, 1.0, 4.0, 9.0, 16.0];
 
-        let spline = make_akima_spline(&x.view(), &y.view()).unwrap();
-        assert_abs_diff_eq!(spline.evaluate(2.5).unwrap(), 6.25, epsilon = 0.5);
+        let spline = make_akima_spline(&x.view(), &y.view()).expect("Operation failed");
+        assert_abs_diff_eq!(
+            spline.evaluate(2.5).expect("Operation failed"),
+            6.25,
+            epsilon = 0.5
+        );
     }
 }

@@ -154,9 +154,9 @@ mod tests {
     fn test_greedy_coloring() {
         // Create a triangle (needs 3 colors with greedy)
         let mut graph = create_graph::<char, ()>();
-        graph.add_edge('A', 'B', ()).unwrap();
-        graph.add_edge('B', 'C', ()).unwrap();
-        graph.add_edge('C', 'A', ()).unwrap();
+        graph.add_edge('A', 'B', ()).expect("Operation failed");
+        graph.add_edge('B', 'C', ()).expect("Operation failed");
+        graph.add_edge('C', 'A', ()).expect("Operation failed");
 
         let coloring = greedy_coloring(&graph);
         assert_eq!(coloring.num_colors, 3);
@@ -173,10 +173,10 @@ mod tests {
         let mut graph = create_graph::<i32, ()>();
 
         // Bipartite structure: 0-1, 0-3, 2-1, 2-3
-        graph.add_edge(0, 1, ()).unwrap();
-        graph.add_edge(0, 3, ()).unwrap();
-        graph.add_edge(2, 1, ()).unwrap();
-        graph.add_edge(2, 3, ()).unwrap();
+        graph.add_edge(0, 1, ()).expect("Operation failed");
+        graph.add_edge(0, 3, ()).expect("Operation failed");
+        graph.add_edge(2, 1, ()).expect("Operation failed");
+        graph.add_edge(2, 3, ()).expect("Operation failed");
 
         let coloring = greedy_coloring(&graph);
         assert!(coloring.num_colors <= 2);
@@ -187,19 +187,19 @@ mod tests {
         // Triangle graph needs exactly 3 colors
         let mut triangle = create_graph::<i32, ()>();
 
-        triangle.add_edge(0, 1, ()).unwrap();
-        triangle.add_edge(1, 2, ()).unwrap();
-        triangle.add_edge(2, 0, ()).unwrap();
+        triangle.add_edge(0, 1, ()).expect("Operation failed");
+        triangle.add_edge(1, 2, ()).expect("Operation failed");
+        triangle.add_edge(2, 0, ()).expect("Operation failed");
 
         assert_eq!(chromatic_number(&triangle, 5), Some(3));
 
         // Bipartite graph needs exactly 2 colors
         let mut bipartite = create_graph::<i32, ()>();
 
-        bipartite.add_edge(0, 1, ()).unwrap();
-        bipartite.add_edge(1, 2, ()).unwrap();
-        bipartite.add_edge(2, 3, ()).unwrap();
-        bipartite.add_edge(3, 0, ()).unwrap();
+        bipartite.add_edge(0, 1, ()).expect("Operation failed");
+        bipartite.add_edge(1, 2, ()).expect("Operation failed");
+        bipartite.add_edge(2, 3, ()).expect("Operation failed");
+        bipartite.add_edge(3, 0, ()).expect("Operation failed");
 
         assert_eq!(chromatic_number(&bipartite, 5), Some(2));
 

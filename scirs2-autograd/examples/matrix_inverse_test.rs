@@ -17,7 +17,7 @@ fn main() {
 
         // Print the matrix
         println!("Original matrix:");
-        let result = matrix.eval(ctx).unwrap();
+        let result = matrix.eval(ctx).expect("Operation failed");
         println!("{:?}", result);
 
         // Compute the inverse

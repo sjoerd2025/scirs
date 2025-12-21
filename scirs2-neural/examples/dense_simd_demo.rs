@@ -20,11 +20,12 @@ fn main() {
     println!("Test 1: Small MLP Layer");
     println!("-----------------------");
     {
-        let layer: Dense<f32> = Dense::new(128, 64, Some("relu"), &mut rng).unwrap();
+        let layer: Dense<f32> =
+            Dense::new(128, 64, Some("relu"), &mut rng).expect("Operation failed");
         let input = Array::from_shape_fn(IxDyn(&[32, 128]), |_| 0.1f32);
 
         let start = Instant::now();
-        let _output = layer.forward(&input).unwrap();
+        let _output = layer.forward(&input).expect("Operation failed");
         let elapsed = start.elapsed();
 
         println!("Configuration:");
@@ -43,7 +44,7 @@ fn main() {
     println!("\nTest 2: Typical Hidden Layer (256 -> 256)");
     println!("------------------------------------------");
     {
-        let layer: Dense<f32> = Dense::new(256, 256, None, &mut rng).unwrap();
+        let layer: Dense<f32> = Dense::new(256, 256, None, &mut rng).expect("Operation failed");
         let batch_sizes = vec![8, 16, 32, 64, 128];
 
         println!("Batch Size   Time (μs)   Throughput (samples/sec)");
@@ -53,7 +54,7 @@ fn main() {
             let input = Array::from_shape_fn(IxDyn(&[batch_size, 256]), |_| 0.1f32);
 
             let start = Instant::now();
-            let _output = layer.forward(&input).unwrap();
+            let _output = layer.forward(&input).expect("Operation failed");
             let elapsed = start.elapsed();
 
             println!(
@@ -69,11 +70,12 @@ fn main() {
     println!("\nTest 3: Large Output Layer (Classification)");
     println!("--------------------------------------------");
     {
-        let layer: Dense<f64> = Dense::new(512, 1000, Some("softmax"), &mut rng).unwrap();
+        let layer: Dense<f64> =
+            Dense::new(512, 1000, Some("softmax"), &mut rng).expect("Operation failed");
         let input = Array::from_shape_fn(IxDyn(&[64, 512]), |_| 0.1f64);
 
         let start = Instant::now();
-        let _output = layer.forward(&input).unwrap();
+        let _output = layer.forward(&input).expect("Operation failed");
         let elapsed = start.elapsed();
 
         println!("Configuration:");
@@ -93,11 +95,11 @@ fn main() {
     println!("----------------------------------------------");
     {
         let layers: Vec<Dense<f32>> = vec![
-            Dense::new(784, 512, Some("relu"), &mut rng).unwrap(),
-            Dense::new(512, 256, Some("relu"), &mut rng).unwrap(),
-            Dense::new(256, 128, Some("relu"), &mut rng).unwrap(),
-            Dense::new(128, 64, Some("relu"), &mut rng).unwrap(),
-            Dense::new(64, 10, Some("softmax"), &mut rng).unwrap(),
+            Dense::new(784, 512, Some("relu"), &mut rng).expect("Operation failed"),
+            Dense::new(512, 256, Some("relu"), &mut rng).expect("Operation failed"),
+            Dense::new(256, 128, Some("relu"), &mut rng).expect("Operation failed"),
+            Dense::new(128, 64, Some("relu"), &mut rng).expect("Operation failed"),
+            Dense::new(64, 10, Some("softmax"), &mut rng).expect("Operation failed"),
         ];
 
         let batch_size = 128;
@@ -105,7 +107,7 @@ fn main() {
 
         let start = Instant::now();
         for layer in &layers {
-            x = layer.forward(&x).unwrap();
+            x = layer.forward(&x).expect("Operation failed");
         }
         let elapsed = start.elapsed();
 
@@ -130,7 +132,8 @@ fn main() {
     println!("\nTest 5: Batch Size Impact");
     println!("-------------------------");
     {
-        let layer: Dense<f32> = Dense::new(512, 512, Some("relu"), &mut rng).unwrap();
+        let layer: Dense<f32> =
+            Dense::new(512, 512, Some("relu"), &mut rng).expect("Operation failed");
 
         println!("Batch   Time (μs)   Samples/sec   μs/sample");
         println!("-----   ---------   -----------   ---------");
@@ -139,7 +142,7 @@ fn main() {
             let input = Array::from_shape_fn(IxDyn(&[batch_size, 512]), |_| 0.1f32);
 
             let start = Instant::now();
-            let _output = layer.forward(&input).unwrap();
+            let _output = layer.forward(&input).expect("Operation failed");
             let elapsed = start.elapsed();
 
             let throughput = batch_size as f64 / elapsed.as_secs_f64();

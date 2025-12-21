@@ -658,7 +658,7 @@ mod tests {
         let result = encoder.encode_image(image.view());
 
         assert!(result.is_ok());
-        let encoded = result.unwrap();
+        let encoded = result.expect("Operation failed");
         assert_eq!(encoded.dimension, encoder.config.hypervector_dim);
         assert!(encoded.norm > 0.0);
     }
@@ -686,7 +686,7 @@ mod tests {
         let result = encoder.encode_patch(patch.view(), "edge");
 
         assert!(result.is_ok());
-        let encoded = result.unwrap();
+        let encoded = result.expect("Operation failed");
         assert_eq!(encoded.dimension, encoder.config.hypervector_dim);
     }
 
@@ -703,7 +703,7 @@ mod tests {
         let result = multiscale_encoding(image.view(), &scales, &config);
         assert!(result.is_ok());
 
-        let encoded = result.unwrap();
+        let encoded = result.expect("Operation failed");
         assert_eq!(encoded.dimension, config.hypervector_dim);
         assert!(encoded.norm > 0.0);
     }
@@ -732,14 +732,14 @@ mod tests {
         let result = encode_semantic_concepts(&concepts, &config);
         assert!(result.is_ok());
 
-        let encoded = result.unwrap();
+        let encoded = result.expect("Operation failed");
         assert_eq!(encoded.dimension, config.hypervector_dim);
         assert!(encoded.norm > 0.0);
 
         // Test that the function can be called multiple times successfully
         let result2 = encode_semantic_concepts(&concepts, &config);
         assert!(result2.is_ok());
-        let encoded2 = result2.unwrap();
+        let encoded2 = result2.expect("Operation failed");
         assert_eq!(encoded2.dimension, config.hypervector_dim);
         assert!(encoded2.norm > 0.0);
     }
@@ -748,16 +748,20 @@ mod tests {
     fn test_analyze_patch_for_feature() {
         let patch = Array2::<f64>::ones((5, 5));
 
-        let edge_strength = analyze_patch_for_feature(&patch.view(), "edge").unwrap();
+        let edge_strength =
+            analyze_patch_for_feature(&patch.view(), "edge").expect("Operation failed");
         assert_eq!(edge_strength, 0.8);
 
-        let corner_strength = analyze_patch_for_feature(&patch.view(), "corner").unwrap();
+        let corner_strength =
+            analyze_patch_for_feature(&patch.view(), "corner").expect("Operation failed");
         assert_eq!(corner_strength, 0.6);
 
-        let texture_strength = analyze_patch_for_feature(&patch.view(), "texture").unwrap();
+        let texture_strength =
+            analyze_patch_for_feature(&patch.view(), "texture").expect("Operation failed");
         assert_eq!(texture_strength, 0.7);
 
-        let unknown_strength = analyze_patch_for_feature(&patch.view(), "unknown").unwrap();
+        let unknown_strength =
+            analyze_patch_for_feature(&patch.view(), "unknown").expect("Operation failed");
         assert_eq!(unknown_strength, 0.5);
     }
 
@@ -805,7 +809,7 @@ mod tests {
         let result = hdc_sequence_processing(&sequence, 3, &config);
 
         assert!(result.is_ok());
-        let seq_encoding = result.unwrap();
+        let seq_encoding = result.expect("Operation failed");
 
         assert_eq!(seq_encoding.encoding.dimension, config.hypervector_dim);
         assert_eq!(seq_encoding.temporal_positions.len(), 3);

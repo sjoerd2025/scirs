@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn test_infer_schema_f64() {
         let arr = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let schema = infer_arrow_schema(&arr).unwrap();
+        let schema = infer_arrow_schema(&arr).expect("Operation failed");
         assert_eq!(schema.fields().len(), 1);
         assert_eq!(schema.field(0).name(), "value");
         assert_eq!(*schema.field(0).data_type(), DataType::Float64);
@@ -148,7 +148,7 @@ mod tests {
     #[test]
     fn test_infer_schema_i32() {
         let arr = Array1::from_vec(vec![1i32, 2, 3]);
-        let schema = infer_arrow_schema(&arr).unwrap();
+        let schema = infer_arrow_schema(&arr).expect("Operation failed");
         assert_eq!(*schema.field(0).data_type(), DataType::Int32);
     }
 

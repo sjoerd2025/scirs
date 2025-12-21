@@ -40,7 +40,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// let y = mixed_precision_matvec_f32::<f32, f32, f32, f64>(
 ///     &a_f32.view(),
 ///     &x_f32.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(y.len(), 2);
 /// assert!((y[0] - 1.5f32).abs() < 1e-6);
@@ -297,8 +297,8 @@ mod tests {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
         let x = array![0.5f32, 0.5f32];
 
-        let result =
-            mixed_precision_matvec_f32::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
+        let result = mixed_precision_matvec_f32::<f32, f32, f32, f64>(&a.view(), &x.view())
+            .expect("Operation failed");
 
         assert_eq!(result.len(), 2);
         assert_relative_eq!(result[0], 1.5f32, epsilon = 1e-6);
@@ -310,8 +310,8 @@ mod tests {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
         let b = array![[5.0f32, 6.0f32], [7.0f32, 8.0f32]];
 
-        let result =
-            mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result = mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 19.0f32, epsilon = 1e-5);
@@ -327,8 +327,8 @@ mod tests {
         let a = Array2::<f32>::ones((size, size));
         let b = Array2::<f32>::ones((size, size));
 
-        let result =
-            mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result = mixed_precision_matmul_f32_basic::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), &[size, size]);
         // Each element should be size (sum of 1*1 over size elements)
@@ -344,7 +344,8 @@ mod tests {
         let a = array![1.0f32, 2.0f32, 3.0f32];
         let b = array![4.0f32, 5.0f32, 6.0f32];
 
-        let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         // Expected: 1*4 + 2*5 + 3*6 = 4 + 10 + 18 = 32
         assert_relative_eq!(result, 32.0f32, epsilon = 1e-6);
@@ -356,7 +357,8 @@ mod tests {
         let a = array![1.0f32, 2.0f32];
         let b = array![3.0f32, 4.0f32];
 
-        let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         // Expected: 1*3 + 2*4 = 3 + 8 = 11
         assert_relative_eq!(result, 11.0f32, epsilon = 1e-6);
@@ -368,7 +370,8 @@ mod tests {
         let a = array![1e-6f32, 2e6f32, 3e-6f32];
         let b = array![4e6f32, 5e-6f32, 6e6f32];
 
-        let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result = mixed_precision_dot_f32::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         // Expected: 1e-6*4e6 + 2e6*5e-6 + 3e-6*6e6 = 4 + 10 + 18 = 32
         assert_relative_eq!(result, 32.0f32, epsilon = 1e-3);

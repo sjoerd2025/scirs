@@ -27,13 +27,13 @@
 //! };
 //!
 //! // Small scattered dataset for demonstration
-//! let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+//! let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).expect("Operation failed");
 //! let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 //! let config = ScatteredConfig::for_large_dataset();
 //!
 //! let interpolator = OptimizedScatteredInterpolator::new(
 //!     points, values, config
-//! ).unwrap();
+//! ).expect("Operation failed");
 //! ```
 
 use crate::advanced::rbf::RBFKernel;
@@ -384,7 +384,8 @@ where
 
         // Calculate cell size
         let cell_size = Array1::from_shape_fn(n_dims, |i| {
-            (bounding_box.max[i] - bounding_box.min[i]) / F::from_usize(resolution).unwrap()
+            (bounding_box.max[i] - bounding_box.min[i])
+                / F::from_usize(resolution).expect("Operation failed")
         });
 
         // Create cells
@@ -396,7 +397,8 @@ where
 
             // Compute cell bounds
             let cell_min = Array1::from_shape_fn(n_dims, |i| {
-                bounding_box.min[i] + cell_size[i] * F::from_usize(cell_coords[i]).unwrap()
+                bounding_box.min[i]
+                    + cell_size[i] * F::from_usize(cell_coords[i]).expect("Operation failed")
             });
             let cell_max = Array1::from_shape_fn(n_dims, |i| cell_min[i] + cell_size[i]);
 
@@ -617,7 +619,8 @@ where
             let weight = if dist == F::zero() {
                 return Ok(value); // Exact match
             } else {
-                F::one() / (dist + F::from_f64(1e-10).unwrap()) // Add small epsilon
+                F::one() / (dist + F::from_f64(1e-10).expect("Operation failed"))
+                // Add small epsilon
             };
 
             weighted_sum = weighted_sum + weight * value;
@@ -637,7 +640,7 @@ where
         let neighbors = self
             .spatial_index
             .write()
-            .unwrap()
+            .expect("Operation failed")
             .k_nearest_neighbors(query, 5)?;
 
         if neighbors.is_empty() {
@@ -653,7 +656,7 @@ where
             let weight = if distance == F::zero() {
                 return Ok(value); // Exact match
             } else {
-                F::one() / (distance + F::from_f64(1e-10).unwrap())
+                F::one() / (distance + F::from_f64(1e-10).expect("Operation failed"))
             };
 
             weighted_sum = weighted_sum + weight * value;

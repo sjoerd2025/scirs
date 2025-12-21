@@ -375,8 +375,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousAttentionSystem<F> {
                 AttentionMechanism::new(AttentionType::TopDown),
                 AttentionMechanism::new(AttentionType::Executive),
             ],
-            focus_strength: F::from_f64(1.0).unwrap(),
-            awareness_level: F::from_f64(0.8).unwrap(),
+            focus_strength: F::from_f64(1.0).expect("Test failed"),
+            awareness_level: F::from_f64(0.8).expect("Test failed"),
             metacognitive_controller: MetacognitiveController::new(),
         }
     }
@@ -407,20 +407,22 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousAttentionSystem<F> {
 
         // Calculate attention coherence
         let mean = attentionoutput.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(attentionoutput.len()).unwrap();
+            / F::from_usize(attentionoutput.len()).expect("Test failed");
 
         let variance = attentionoutput
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-            / F::from_usize(attentionoutput.len()).unwrap();
+            / F::from_usize(attentionoutput.len()).expect("Test failed");
 
         // Higher coherence (lower variance) increases awareness
-        let coherence = F::from_f64(1.0).unwrap() / (F::from_f64(1.0).unwrap() + variance);
+        let coherence = F::from_f64(1.0).expect("Operation failed")
+            / (F::from_f64(1.0).expect("Operation failed") + variance);
 
         // Update awareness level with exponential moving average
-        let alpha = F::from_f64(0.1).unwrap();
-        self.awareness_level =
-            (F::from_f64(1.0).unwrap() - alpha) * self.awareness_level + alpha * coherence;
+        let alpha = F::from_f64(0.1).expect("Test failed");
+        self.awareness_level = (F::from_f64(1.0).expect("Operation failed") - alpha)
+            * self.awareness_level
+            + alpha * coherence;
 
         Ok(())
     }
@@ -443,7 +445,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     pub fn new(mechanismtype: AttentionType) -> Self {
         AttentionMechanism {
             mechanism_type: mechanismtype,
-            salience_map: vec![F::from_f64(1.0).unwrap(); 100], // Default salience map
+            salience_map: vec![F::from_f64(1.0).expect("Test failed"); 100], // Default salience map
             focus_window: FocusWindow::new(),
         }
     }
@@ -500,13 +502,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     /// Apply executive attention for cognitive control
     fn apply_executive_attention(&mut self, input: &mut Array1<F>) -> Result<()> {
         // Apply executive control through selective enhancement
-        let threshold = F::from_f64(0.5).unwrap();
+        let threshold = F::from_f64(0.5).expect("Test failed");
 
         for value in input.iter_mut() {
             if value.abs() > threshold {
-                *value = *value * F::from_f64(1.2).unwrap(); // Enhance above-threshold values
+                *value = *value * F::from_f64(1.2).expect("Test failed"); // Enhance above-threshold values
             } else {
-                *value = *value * F::from_f64(0.8).unwrap(); // Suppress below-threshold values
+                *value = *value * F::from_f64(0.8).expect("Test failed"); // Suppress below-threshold values
             }
         }
         Ok(())
@@ -531,7 +533,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
             let attention_weight = if distance <= radius {
                 self.focus_window.intensity
             } else {
-                F::from_f64(0.1).unwrap() // Background attention
+                F::from_f64(0.1).expect("Operation failed") // Background attention
             };
             *value = *value * attention_weight;
         }
@@ -541,7 +543,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AttentionMechanism<F> {
     /// Apply alerting attention for readiness
     fn apply_alerting_attention(&mut self, input: &mut Array1<F>) -> Result<()> {
         // Apply alerting modulation to enhance overall processing
-        let alerting_factor = F::from_f64(1.1).unwrap();
+        let alerting_factor = F::from_f64(1.1).expect("Test failed");
         input.mapv_inplace(|x| x * alerting_factor);
         Ok(())
     }
@@ -558,8 +560,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> FocusWindow<F> {
     pub fn new() -> Self {
         FocusWindow {
             center: vec![F::zero(); 3], // 3D center by default
-            radius: F::from_f64(5.0).unwrap(),
-            intensity: F::from_f64(1.5).unwrap(),
+            radius: F::from_f64(5.0).expect("Test failed"),
+            intensity: F::from_f64(1.5).expect("Test failed"),
         }
     }
 
@@ -589,7 +591,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetacognitiveController<F> {
                 ControlStrategy::new(StrategyType::ResourceAllocation),
                 ControlStrategy::new(StrategyType::AttentionControl),
             ],
-            meta_awareness: F::from_f64(0.7).unwrap(),
+            meta_awareness: F::from_f64(0.7).expect("Test failed"),
         }
     }
 
@@ -622,8 +624,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetacognitiveController<F> {
     /// Update meta-awareness level
     fn update_meta_awareness(&mut self, monitoring_results: &HashMap<String, F>) -> Result<()> {
         if let Some(&performance_score) = monitoring_results.get("overall_performance") {
-            let alpha = F::from_f64(0.1).unwrap();
-            self.meta_awareness = (F::from_f64(1.0).unwrap() - alpha) * self.meta_awareness
+            let alpha = F::from_f64(0.1).expect("Test failed");
+            self.meta_awareness = (F::from_f64(1.0).expect("Operation failed") - alpha)
+                * self.meta_awareness
                 + alpha * performance_score;
         }
         Ok(())
@@ -675,7 +678,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MonitoringSystem<F> {
 
         // Calculate overall performance
         let overall_performance = results.values().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(results.len()).unwrap();
+            / F::from_usize(results.len()).expect("Test failed");
         results.insert("overall_performance".to_string(), overall_performance);
 
         Ok(results)
@@ -687,9 +690,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> PerformanceMonitor<F> {
     pub fn new(metric_type: MetricType) -> Self {
         PerformanceMonitor {
             metric_type,
-            current_value: F::from_f64(0.5).unwrap(),
-            target_value: F::from_f64(0.8).unwrap(),
-            threshold: F::from_f64(0.6).unwrap(),
+            current_value: F::from_f64(0.5).expect("Test failed"),
+            target_value: F::from_f64(0.8).expect("Test failed"),
+            threshold: F::from_f64(0.6).expect("Test failed"),
         }
     }
 
@@ -703,7 +706,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> PerformanceMonitor<F> {
 
         // Assess performance relative to target
         let performance_ratio = self.current_value / self.target_value;
-        let performance_score = performance_ratio.min(F::from_f64(1.0).unwrap());
+        let performance_score = performance_ratio.min(F::from_f64(1.0).expect("Operation failed"));
 
         Ok(performance_score)
     }
@@ -755,8 +758,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetector<F> {
     pub fn new(detector_type: ErrorType) -> Self {
         ErrorDetector {
             detector_type,
-            sensitivity: F::from_f64(0.8).unwrap(),
-            detection_threshold: F::from_f64(0.3).unwrap(),
+            sensitivity: F::from_f64(0.8).expect("Test failed"),
+            detection_threshold: F::from_f64(0.3).expect("Test failed"),
         }
     }
 
@@ -767,19 +770,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> ErrorDetector<F> {
             ErrorType::ProcessingError => cognitive_state
                 .get("processing_quality")
                 .copied()
-                .unwrap_or(F::from_f64(1.0).unwrap()),
+                .unwrap_or(F::from_f64(1.0).expect("Operation failed")),
             ErrorType::MemoryError => cognitive_state
                 .get("memory_coherence")
                 .copied()
-                .unwrap_or(F::from_f64(1.0).unwrap()),
+                .unwrap_or(F::from_f64(1.0).expect("Operation failed")),
             ErrorType::AttentionError => cognitive_state
                 .get("attention_stability")
                 .copied()
-                .unwrap_or(F::from_f64(1.0).unwrap()),
+                .unwrap_or(F::from_f64(1.0).expect("Operation failed")),
             ErrorType::ConsciousnessError => cognitive_state
                 .get("consciousness_level")
                 .copied()
-                .unwrap_or(F::from_f64(1.0).unwrap()),
+                .unwrap_or(F::from_f64(1.0).expect("Operation failed")),
         };
 
         let error_level = if error_indicator < self.detection_threshold {
@@ -797,8 +800,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> CorrectionMechanism<F> {
     pub fn new(mechanism_type: CorrectionType) -> Self {
         CorrectionMechanism {
             mechanism_type,
-            effectiveness: F::from_f64(0.8).unwrap(),
-            activation_threshold: F::from_f64(0.5).unwrap(),
+            effectiveness: F::from_f64(0.8).expect("Test failed"),
+            activation_threshold: F::from_f64(0.5).expect("Test failed"),
         }
     }
 }
@@ -849,8 +852,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceMetric<F> {
     pub fn new(metric_name: String) -> Self {
         ConfidenceMetric {
             metric_name,
-            confidence_value: F::from_f64(0.5).unwrap(),
-            reliability_score: F::from_f64(0.8).unwrap(),
+            confidence_value: F::from_f64(0.5).expect("Test failed"),
+            reliability_score: F::from_f64(0.8).expect("Test failed"),
         }
     }
 
@@ -858,9 +861,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConfidenceMetric<F> {
     pub fn update_confidence(&mut self, cognitive_state: &HashMap<String, F>) -> Result<F> {
         // Update confidence based on relevant state variables
         if let Some(&state_value) = cognitive_state.get(&self.metric_name) {
-            let alpha = F::from_f64(0.1).unwrap();
-            self.confidence_value =
-                (F::from_f64(1.0).unwrap() - alpha) * self.confidence_value + alpha * state_value;
+            let alpha = F::from_f64(0.1).expect("Test failed");
+            self.confidence_value = (F::from_f64(1.0).expect("Operation failed") - alpha)
+                * self.confidence_value
+                + alpha * state_value;
         }
 
         Ok(self.confidence_value * self.reliability_score)
@@ -877,9 +881,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> UncertaintyEstimation<F> {
     /// Create new uncertainty estimation system
     pub fn new() -> Self {
         UncertaintyEstimation {
-            epistemic_uncertainty: F::from_f64(0.3).unwrap(),
-            aleatoric_uncertainty: F::from_f64(0.2).unwrap(),
-            total_uncertainty: F::from_f64(0.5).unwrap(),
+            epistemic_uncertainty: F::from_f64(0.3).expect("Test failed"),
+            aleatoric_uncertainty: F::from_f64(0.2).expect("Test failed"),
+            total_uncertainty: F::from_f64(0.5).expect("Test failed"),
         }
     }
 
@@ -911,14 +915,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> ControlStrategy<F> {
     pub fn new(strategy_type: StrategyType) -> Self {
         ControlStrategy {
             strategy_type,
-            parameters: vec![F::from_f64(1.0).unwrap(); 5],
-            effectiveness_score: F::from_f64(0.8).unwrap(),
+            parameters: vec![F::from_f64(1.0).expect("Test failed"); 5],
+            effectiveness_score: F::from_f64(0.8).expect("Test failed"),
         }
     }
 
     /// Check if strategy should be activated
     pub fn should_activate(&self, monitoring_results: &HashMap<String, F>) -> Result<bool> {
-        let activation_threshold = F::from_f64(0.6).unwrap();
+        let activation_threshold = F::from_f64(0.6).expect("Test failed");
 
         let relevant_metric = match self.strategy_type {
             StrategyType::ResourceAllocation => "efficiency",
@@ -961,7 +965,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
             working_memory: ConsciousWorkingMemory::new(),
             global_workspace: GlobalWorkspace::new(),
             self_awareness: SelfAwarenessModule::new(),
-            consciousness_level: F::from_f64(0.5).unwrap(),
+            consciousness_level: F::from_f64(0.5).expect("Test failed"),
         }
     }
 
@@ -987,8 +991,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
         let state = ConsciousnessState {
             consciousness_level: self.consciousness_level,
             attention_strength: self.attention_system.focus_strength,
-            memory_load: F::from_usize(self.working_memory.memory_buffers.len()).unwrap()
-                / F::from_usize(self.working_memory.capacity).unwrap(),
+            memory_load: F::from_usize(self.working_memory.memory_buffers.len())
+                .expect("Operation failed")
+                / F::from_usize(self.working_memory.capacity).expect("Test failed"),
             self_awareness: self
                 .self_awareness
                 .meta_consciousness
@@ -1004,13 +1009,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
 
     /// Update overall consciousness level
     fn update_consciousness_level(&mut self) -> Result<()> {
-        let attention_weight = F::from_f64(0.3).unwrap();
-        let memory_weight = F::from_f64(0.2).unwrap();
-        let workspace_weight = F::from_f64(0.3).unwrap();
-        let awareness_weight = F::from_f64(0.2).unwrap();
+        let attention_weight = F::from_f64(0.3).expect("Test failed");
+        let memory_weight = F::from_f64(0.2).expect("Test failed");
+        let workspace_weight = F::from_f64(0.3).expect("Test failed");
+        let awareness_weight = F::from_f64(0.2).expect("Test failed");
 
         let attention_contribution = self.attention_system.awareness_level * attention_weight;
-        let memory_contribution = F::from_f64(0.8).unwrap() * memory_weight; // Placeholder
+        let memory_contribution = F::from_f64(0.8).expect("Operation failed") * memory_weight; // Placeholder
         let workspace_contribution = self.global_workspace.consciousness_level * workspace_weight;
         let awareness_contribution = self
             .self_awareness
@@ -1039,8 +1044,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousWorkingMemory<F> {
         ConsciousWorkingMemory {
             memory_buffers: Vec::new(),
             capacity: 7, // Miller's magic number
-            decay_rate: F::from_f64(0.1).unwrap(),
-            consolidation_strength: F::from_f64(0.8).unwrap(),
+            decay_rate: F::from_f64(0.1).expect("Test failed"),
+            consolidation_strength: F::from_f64(0.8).expect("Test failed"),
         }
     }
 
@@ -1051,28 +1056,28 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousWorkingMemory<F> {
             let new_buffer = MemoryBuffer {
                 buffer_type: BufferType::Executive,
                 content: input.to_vec(),
-                activation_level: F::from_f64(1.0).unwrap(),
+                activation_level: F::from_f64(1.0).expect("Test failed"),
                 age: F::zero(),
             };
             self.memory_buffers.push(new_buffer);
         } else {
             // Replace least active buffer
-            if let Some(min_buffer) = self
-                .memory_buffers
-                .iter_mut()
-                .min_by(|a, b| a.activation_level.partial_cmp(&b.activation_level).unwrap())
-            {
+            if let Some(min_buffer) = self.memory_buffers.iter_mut().min_by(|a, b| {
+                a.activation_level
+                    .partial_cmp(&b.activation_level)
+                    .expect("Operation failed")
+            }) {
                 min_buffer.content = input.to_vec();
-                min_buffer.activation_level = F::from_f64(1.0).unwrap();
+                min_buffer.activation_level = F::from_f64(1.0).expect("Test failed");
                 min_buffer.age = F::zero();
             }
         }
 
         // Apply decay to all buffers
         for buffer in &mut self.memory_buffers {
-            buffer.activation_level =
-                buffer.activation_level * (F::from_f64(1.0).unwrap() - self.decay_rate);
-            buffer.age = buffer.age + F::from_f64(1.0).unwrap();
+            buffer.activation_level = buffer.activation_level
+                * (F::from_f64(1.0).expect("Operation failed") - self.decay_rate);
+            buffer.age = buffer.age + F::from_f64(1.0).expect("Test failed");
         }
 
         Ok(())
@@ -1090,8 +1095,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> GlobalWorkspace<F> {
     pub fn new() -> Self {
         GlobalWorkspace {
             workspace_memory: Vec::new(),
-            global_access_threshold: F::from_f64(0.7).unwrap(),
-            consciousness_level: F::from_f64(0.5).unwrap(),
+            global_access_threshold: F::from_f64(0.7).expect("Test failed"),
+            consciousness_level: F::from_f64(0.5).expect("Test failed"),
             integration_coalitions: Vec::new(),
         }
     }
@@ -1101,7 +1106,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> GlobalWorkspace<F> {
         // Create workspace item
         let workspace_item = WorkspaceItem {
             content: input.to_vec(),
-            activation_strength: F::from_f64(1.0).unwrap(),
+            activation_strength: F::from_f64(1.0).expect("Test failed"),
             consciousness_access: true,
             source_module: "input".to_string(),
         };
@@ -1109,9 +1114,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> GlobalWorkspace<F> {
         self.workspace_memory.push(workspace_item);
 
         // Update consciousness level based on integration
-        let integration_factor = F::from_f64(0.1).unwrap();
+        let integration_factor = F::from_f64(0.1).expect("Test failed");
         self.consciousness_level = self.consciousness_level + integration_factor;
-        self.consciousness_level = self.consciousness_level.min(F::from_f64(1.0).unwrap());
+        self.consciousness_level = self
+            .consciousness_level
+            .min(F::from_f64(1.0).expect("Operation failed"));
 
         Ok(())
     }
@@ -1163,9 +1170,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> SelfModel<F> {
     /// Create new self-model
     pub fn new() -> Self {
         SelfModel {
-            self_representation: vec![F::from_f64(0.5).unwrap(); 10],
-            capabilities_model: vec![F::from_f64(0.8).unwrap(); 5],
-            limitations_awareness: vec![F::from_f64(0.3).unwrap(); 5],
+            self_representation: vec![F::from_f64(0.5).expect("Test failed"); 10],
+            capabilities_model: vec![F::from_f64(0.8).expect("Test failed"); 5],
+            limitations_awareness: vec![F::from_f64(0.3).expect("Test failed"); 5],
             goal_hierarchy: vec![Goal::new("primary_goal".to_string())],
         }
     }
@@ -1174,9 +1181,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> SelfModel<F> {
     pub fn update_self_representation(&mut self) -> Result<()> {
         // Simple self-representation update
         for repr in &mut self.self_representation {
-            let update = F::from_f64(0.01).unwrap()
-                * (F::from_f64(scirs2_core::random::random::<f64>()).unwrap()
-                    - F::from_f64(0.5).unwrap());
+            let update = F::from_f64(0.01).expect("Operation failed")
+                * (F::from_f64(scirs2_core::random::random::<f64>()).expect("Operation failed")
+                    - F::from_f64(0.5).expect("Operation failed"));
             *repr = *repr + update;
         }
         Ok(())
@@ -1188,7 +1195,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> Goal<F> {
     pub fn new(description: String) -> Self {
         Goal {
             goal_description: description,
-            priority: F::from_f64(1.0).unwrap(),
+            priority: F::from_f64(1.0).expect("Test failed"),
             progress: F::zero(),
             sub_goals: Vec::new(),
         }
@@ -1201,14 +1208,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> IntrospectionMechanism<F> {
         IntrospectionMechanism {
             mechanism_type,
             monitoring_targets: vec!["attention".to_string(), "memory".to_string()],
-            reflection_depth: F::from_f64(1.0).unwrap(),
+            reflection_depth: F::from_f64(1.0).expect("Test failed"),
         }
     }
 
     /// Apply introspection
     pub fn apply_introspection(&mut self) -> Result<()> {
         // Simple introspection update
-        self.reflection_depth = self.reflection_depth * F::from_f64(1.01).unwrap();
+        self.reflection_depth = self.reflection_depth * F::from_f64(1.01).expect("Test failed");
         Ok(())
     }
 }
@@ -1223,19 +1230,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaConsciousness<F> {
     /// Create new meta-consciousness
     pub fn new() -> Self {
         MetaConsciousness {
-            consciousness_of_consciousness: F::from_f64(0.6).unwrap(),
+            consciousness_of_consciousness: F::from_f64(0.6).expect("Test failed"),
             recursive_awareness: 2, // Second-order awareness
-            self_modification_capability: F::from_f64(0.7).unwrap(),
+            self_modification_capability: F::from_f64(0.7).expect("Test failed"),
         }
     }
 
     /// Update recursive awareness
     pub fn update_recursive_awareness(&mut self) -> Result<()> {
         // Update consciousness of consciousness
-        let awareness_increment = F::from_f64(0.01).unwrap();
+        let awareness_increment = F::from_f64(0.01).expect("Test failed");
         self.consciousness_of_consciousness = (self.consciousness_of_consciousness
             + awareness_increment)
-            .min(F::from_f64(1.0).unwrap());
+            .min(F::from_f64(1.0).expect("Operation failed"));
 
         Ok(())
     }
@@ -1244,11 +1251,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaConsciousness<F> {
 impl<F: Float + FromPrimitive> Default for ConsciousnessState<F> {
     fn default() -> Self {
         Self {
-            consciousness_level: F::from_f64(0.5).unwrap(),
-            attention_strength: F::from_f64(1.0).unwrap(),
-            memory_load: F::from_f64(0.3).unwrap(),
-            self_awareness: F::from_f64(0.6).unwrap(),
-            metacognitive_control: F::from_f64(0.7).unwrap(),
+            consciousness_level: F::from_f64(0.5).expect("Test failed"),
+            attention_strength: F::from_f64(1.0).expect("Test failed"),
+            memory_load: F::from_f64(0.3).expect("Test failed"),
+            self_awareness: F::from_f64(0.6).expect("Test failed"),
+            metacognitive_control: F::from_f64(0.7).expect("Test failed"),
         }
     }
 }

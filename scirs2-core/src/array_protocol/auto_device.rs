@@ -316,7 +316,10 @@ where
             self.device_array = Some(convert_to_device(self.array.clone(), device));
         }
 
-        self.device_array.as_ref().unwrap().as_ref()
+        self.device_array
+            .as_ref()
+            .expect("Operation failed")
+            .as_ref()
     }
 
     /// Get the current device.

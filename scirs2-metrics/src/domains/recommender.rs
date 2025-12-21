@@ -744,7 +744,7 @@ mod tests {
 
         let results = metrics
             .evaluate_ranking(&y_true, &y_score, &recommendeditems)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.ndcg_at_k.contains_key(&5));
         assert!(results.precision_at_k.contains_key(&5));
@@ -754,7 +754,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_rating_prediction_metrics() {
         let metrics = RatingPredictionMetrics::new();
 
@@ -763,7 +762,7 @@ mod tests {
 
         let results = metrics
             .evaluate_rating_prediction(&y_true, &y_pred)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.rmse >= 0.0);
         assert!(results.mae >= 0.0);
@@ -780,7 +779,7 @@ mod tests {
 
         let results = metrics
             .evaluate_diversity(&recommendeditems, 10, 3, 0.1)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.item_coverage >= 0.0 && results.item_coverage <= 1.0);
         assert!(results.user_coverage >= 0.0 && results.user_coverage <= 1.0);
@@ -802,7 +801,9 @@ mod tests {
             vec![1, 3, 0, 2], // First relevant item (1) at position 0 (0-indexed) -> rank 1 -> RR = 1.0
         ];
 
-        let mrr = metrics.calculate_mrr(&y_true, &recommendeditems).unwrap();
+        let mrr = metrics
+            .calculate_mrr(&y_true, &recommendeditems)
+            .expect("Operation failed");
 
         // Expected MRR = (0.5 + 1.0) / 2 = 0.75
         assert!((mrr - 0.75).abs() < 1e-6);
@@ -814,7 +815,9 @@ mod tests {
 
         // Perfect equality: all items recommended equally
         let equal_items = vec![vec![0, 1, 2], vec![0, 1, 2], vec![0, 1, 2]];
-        let gini_equal = metrics.calculate_gini_coefficient(&equal_items).unwrap();
+        let gini_equal = metrics
+            .calculate_gini_coefficient(&equal_items)
+            .expect("Operation failed");
         assert!(gini_equal < 0.1); // Should be close to 0
 
         // Inequality: one item heavily recommended vs others
@@ -825,7 +828,9 @@ mod tests {
             vec![0],
             vec![0],
         ];
-        let gini_unequal = metrics.calculate_gini_coefficient(&unequal_items).unwrap();
+        let gini_unequal = metrics
+            .calculate_gini_coefficient(&unequal_items)
+            .expect("Operation failed");
         assert!(gini_unequal > 0.1); // Should be higher than equal distribution
     }
 

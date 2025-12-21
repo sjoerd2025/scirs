@@ -1135,7 +1135,7 @@ pub fn simd_non_maximum_suppression_advanced(
     }
 
     // Sort candidates by response value (descending) for better early termination
-    candidates.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+    candidates.sort_by(|a, b| b.2.partial_cmp(&a.2).expect("Test: operation failed"));
 
     // Track suppressed pixels to avoid redundant checks
     let mut suppressed = vec![vec![false; width]; height];
@@ -1233,7 +1233,7 @@ fn simd_convolve_3x3_specialized(
     let mut output = Array2::zeros((height, width));
 
     // Flatten kernel for fast access
-    let k = kernel.as_slice().unwrap();
+    let k = kernel.as_slice().expect("Test: operation failed");
     let k00 = k[0];
     let k01 = k[1];
     let k02 = k[2];
@@ -1410,7 +1410,6 @@ mod tests {
     use scirs2_core::ndarray::arr2;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_convolve_2d() {
         let image = arr2(&[
             [1.0, 2.0, 3.0, 4.0],
@@ -1424,12 +1423,11 @@ mod tests {
         let result = simd_convolve_2d(&image.view(), &kernel.view());
         assert!(result.is_ok());
 
-        let output = result.unwrap();
+        let output = result.expect("Test: operation failed");
         assert_eq!(output.dim(), (4, 4));
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_sobel_gradients() {
         let image = arr2(&[
             [0.0, 0.0, 1.0, 1.0],
@@ -1441,7 +1439,7 @@ mod tests {
         let result = simd_sobel_gradients(&image.view());
         assert!(result.is_ok());
 
-        let (grad_x, grad_y, magnitude) = result.unwrap();
+        let (grad_x, grad_y, magnitude) = result.expect("Test: gradient calculation failed");
         assert_eq!(grad_x.dim(), (4, 4));
         assert_eq!(grad_y.dim(), (4, 4));
         assert_eq!(magnitude.dim(), (4, 4));
@@ -1451,7 +1449,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Test failure - unwrap on None in scirs2-core/src/simd/dot.rs:511"]
     fn test_simd_gaussian_blur() {
         let image = arr2(&[
             [1.0, 1.0, 1.0, 1.0],
@@ -1463,7 +1461,7 @@ mod tests {
         let result = simd_gaussian_blur(&image.view(), 1.0);
         assert!(result.is_ok());
 
-        let blurred = result.unwrap();
+        let blurred = result.expect("Test: blur operation failed");
         assert_eq!(blurred.dim(), (4, 4));
 
         // Center should be smoothed (values should be between original values)
@@ -1475,7 +1473,7 @@ mod tests {
         // Test with small sigma (should return original)
         let small_sigma_result = simd_gaussian_blur(&image.view(), 0.05);
         assert!(small_sigma_result.is_ok());
-        let small_sigma_blurred = small_sigma_result.unwrap();
+        let small_sigma_blurred = small_sigma_result.expect("Test: blur operation failed");
         assert_eq!(small_sigma_blurred, image);
 
         // Test with very large image to test normal path
@@ -1488,7 +1486,7 @@ mod tests {
         });
         let large_result = simd_gaussian_blur(&large_image.view(), 2.0);
         assert!(large_result.is_ok());
-        let large_blurred = large_result.unwrap();
+        let large_blurred = large_result.expect("Test: blur operation failed");
         assert_eq!(large_blurred.dim(), (100, 100));
 
         // Center area should be smoothed
@@ -1497,14 +1495,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_normalize_image() {
         let image = arr2(&[[0.0, 50.0, 100.0], [25.0, 75.0, 100.0], [0.0, 50.0, 100.0]]);
 
         let result = simd_normalize_image(&image.view());
         assert!(result.is_ok());
 
-        let normalized = result.unwrap();
+        let normalized = result.expect("Test: normalization failed");
         assert_eq!(normalized.dim(), (3, 3));
 
         // Check range [0, 1]
@@ -1526,7 +1523,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_convolve_2d_blocked() {
         let image = arr2(&[
             [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
@@ -1542,11 +1538,12 @@ mod tests {
         let result = simd_convolve_2d_blocked(&image.view(), &kernel.view(), 2);
         assert!(result.is_ok());
 
-        let output = result.unwrap();
+        let output = result.expect("Test: operation failed");
         assert_eq!(output.dim(), (6, 6));
 
         // Compare with regular convolution
-        let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
+        let regular_result =
+            simd_convolve_2d(&image.view(), &kernel.view()).expect("Test: operation failed");
 
         // Results should be identical within floating point precision
         for ((y, x), &expected) in regular_result.indexed_iter() {
@@ -1559,7 +1556,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_convolve_2d_parallel() {
         let image = arr2(&[
             [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -1574,11 +1570,12 @@ mod tests {
         let result = simd_convolve_2d_parallel(&image.view(), &kernel.view());
         assert!(result.is_ok());
 
-        let output = result.unwrap();
+        let output = result.expect("Test: operation failed");
         assert_eq!(output.dim(), (5, 5));
 
         // Compare with regular convolution
-        let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
+        let regular_result =
+            simd_convolve_2d(&image.view(), &kernel.view()).expect("Test: operation failed");
 
         // Results should be identical within floating point precision
         for ((y, x), &expected) in regular_result.indexed_iter() {
@@ -1591,7 +1588,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_simd_image_statistics() {
         let image = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
 

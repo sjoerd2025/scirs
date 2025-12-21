@@ -68,17 +68,17 @@ fn distribution_examples() {
     let mut rng = CoreRandom::default();
 
     // Sample from uniform distribution
-    let uniform = Uniform::new(0.0, 10.0).unwrap();
+    let uniform = Uniform::new(0.0, 10.0).expect("Operation failed");
     let uniform_sample = rng.sample(uniform);
     println!("Uniform(0, 10) sample: {:.4}", uniform_sample);
 
     // Sample from normal distribution
-    let normal = Normal::new(5.0, 2.0).unwrap();
+    let normal = Normal::new(5.0, 2.0).expect("Operation failed");
     let normal_sample = rng.sample(normal);
     println!("Normal(mean=5, std=2) sample: {:.4}", normal_sample);
 
     // Sample from Bernoulli distribution
-    let bernoulli = Bernoulli::new(0.7).unwrap();
+    let bernoulli = Bernoulli::new(0.7).expect("Operation failed");
     let bernoulli_sample = rng.sample(bernoulli);
     println!("Bernoulli(p=0.7) sample: {}", bernoulli_sample);
 
@@ -93,18 +93,18 @@ fn random_array_example() {
     let mut rng = CoreRandom::default();
 
     // Create a 1D array with uniform random values
-    let uniform = Uniform::new(0.0, 1.0).unwrap();
+    let uniform = Uniform::new(0.0, 1.0).expect("Operation failed");
     let array1d = rng.sample_array(IxDyn(&[5]), uniform);
     println!("1D random array: {}", array1d);
 
     // Create a 2D array with normal random values
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
     let array2d = rng.sample_array(IxDyn(&[3, 4]), normal);
     println!("2D random array (3x4):");
     println!("{}", array2d);
 
     // Using the DistributionExt trait
-    let dist = Uniform::new(1, 100).unwrap();
+    let dist = Uniform::new(1, 100).expect("Operation failed");
     let random_array = dist.random_array(&mut rng, IxDyn(&[2, 3]));
     println!("Random array using DistributionExt:");
     println!("{}", random_array);
@@ -159,12 +159,18 @@ fn sampling_functions_example() {
 
     // Sample from various distributions using helper functions
     let uniform01 = rng.gen_range(0.0..1.0); // Using CoreRandom directly
-    let standard_normal = Normal::new(0.0, 1.0).unwrap().sample(rng.rng_mut()); // Using CoreRandom directly
-    let custom_normal = Normal::new(10.0, 2.0).unwrap().sample(rng.rng_mut()); // Using CoreRandom directly
-                                                                               // Note: Using direct distribution for now - will be migrated to SciRS2-Core in POLICY refactor
-    let lognormal_dist = LogNormal::new(0.0, 1.0).unwrap();
+    let standard_normal = Normal::new(0.0, 1.0)
+        .expect("Operation failed")
+        .sample(rng.rng_mut()); // Using CoreRandom directly
+    let custom_normal = Normal::new(10.0, 2.0)
+        .expect("Operation failed")
+        .sample(rng.rng_mut()); // Using CoreRandom directly
+                                // Note: Using direct distribution for now - will be migrated to SciRS2-Core in POLICY refactor
+    let lognormal_dist = LogNormal::new(0.0, 1.0).expect("Operation failed");
     let lognormal = lognormal_dist.sample(rng.rng_mut());
-    let exponential = Exp::new(2.0).unwrap().sample(rng.rng_mut());
+    let exponential = Exp::new(2.0)
+        .expect("Operation failed")
+        .sample(rng.rng_mut());
 
     println!("Uniform[0,1): {:.6}", uniform01);
     println!("Standard Normal: {:.6}", standard_normal);
@@ -174,12 +180,12 @@ fn sampling_functions_example() {
 
     // Generate arrays of random values
     // Note: Using direct array generation - will be migrated to SciRS2-Core in POLICY refactor
-    let uniform_int = Uniform::new(1, 100).unwrap();
+    let uniform_int = Uniform::new(1, 100).expect("Operation failed");
     let random_ints = rng.sample_array(IxDyn(&[2, 2]), uniform_int);
     println!("\nRandom integers array (1-100):");
     println!("{}", random_ints);
 
-    let uniform_float = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform_float = Uniform::new(-1.0, 1.0).expect("Operation failed");
     let random_floats = rng.sample_array(IxDyn(&[2, 3]), uniform_float);
     println!("\nRandom floats array (-1 to 1):");
     println!("{}", random_floats);

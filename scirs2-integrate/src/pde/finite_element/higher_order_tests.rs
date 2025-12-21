@@ -19,7 +19,7 @@ mod tests {
 
         // Test quadratic mesh generation
         let (quad_points, quad_elements) =
-            HigherOrderMeshGenerator::linear_to_quadratic(&linear_mesh).unwrap();
+            HigherOrderMeshGenerator::linear_to_quadratic(&linear_mesh).expect("Operation failed");
 
         // Original mesh had 9 points (3x3 grid), quadratic should have more
         assert!(quad_points.len() > linear_mesh.points.len());
@@ -33,7 +33,7 @@ mod tests {
 
         // Test cubic mesh generation
         let (cubic_points, cubic_elements) =
-            HigherOrderMeshGenerator::linear_to_cubic(&linear_mesh).unwrap();
+            HigherOrderMeshGenerator::linear_to_cubic(&linear_mesh).expect("Operation failed");
 
         // Cubic mesh should have even more points
         assert!(cubic_points.len() > quad_points.len());
@@ -51,7 +51,7 @@ mod tests {
         // Test that quadrature rules integrate polynomials exactly
 
         // Test 1-point rule integrates constants exactly
-        let (xi, eta, w) = TriangularQuadrature::get_rule(1).unwrap();
+        let (xi, eta, w) = TriangularQuadrature::get_rule(1).expect("Operation failed");
         let mut integral = 0.0;
         for i in 0..xi.len() {
             integral += w[i]; // integrating f(xi,eta) = 1
@@ -59,7 +59,7 @@ mod tests {
         assert_relative_eq!(integral, 0.5, epsilon = 1e-12); // area of reference triangle
 
         // Test 3-point rule integrates linear functions exactly
-        let (xi, eta, w) = TriangularQuadrature::get_rule(3).unwrap();
+        let (xi, eta, w) = TriangularQuadrature::get_rule(3).expect("Operation failed");
 
         // Integrate f(xi,eta) = xi
         let mut integral_xi = 0.0;
@@ -92,17 +92,20 @@ mod tests {
             // Skip points outside reference triangle
             if xi >= 0.0 && eta >= 0.0 && xi + eta <= 1.0 {
                 // Test linear elements
-                let n_linear = ShapeFunctions::evaluate(ElementType::Linear, xi, eta).unwrap();
+                let n_linear = ShapeFunctions::evaluate(ElementType::Linear, xi, eta)
+                    .expect("Operation failed");
                 let sum_linear: f64 = n_linear.iter().sum();
                 assert_relative_eq!(sum_linear, 1.0, epsilon = 1e-12);
 
                 // Test quadratic elements
-                let n_quad = ShapeFunctions::evaluate(ElementType::Quadratic, xi, eta).unwrap();
+                let n_quad = ShapeFunctions::evaluate(ElementType::Quadratic, xi, eta)
+                    .expect("Operation failed");
                 let sum_quad: f64 = n_quad.iter().sum();
                 assert_relative_eq!(sum_quad, 1.0, epsilon = 1e-12);
 
                 // Test cubic elements
-                let n_cubic = ShapeFunctions::evaluate(ElementType::Cubic, xi, eta).unwrap();
+                let n_cubic = ShapeFunctions::evaluate(ElementType::Cubic, xi, eta)
+                    .expect("Operation failed");
                 let sum_cubic: f64 = n_cubic.iter().sum();
                 assert_relative_eq!(sum_cubic, 1.0, epsilon = 1e-12);
             }
@@ -204,15 +207,15 @@ mod tests {
             ..Default::default()
         };
 
-        let solver =
-            FEMPoissonSolver::new(mesh, source_term, boundary_conditions, Some(options)).unwrap();
+        let solver = FEMPoissonSolver::new(mesh, source_term, boundary_conditions, Some(options))
+            .expect("Operation failed");
 
         // Get the first higher-order element for testing
         if let Some(ho_elements) = &solver.higher_order_elements {
             if !ho_elements.is_empty() {
                 let (a_e, b_e) = solver
                     .element_matrices_higher_order(&ho_elements[0])
-                    .unwrap();
+                    .expect("Operation failed");
 
                 // Check symmetry
                 let n = a_e.shape()[0];

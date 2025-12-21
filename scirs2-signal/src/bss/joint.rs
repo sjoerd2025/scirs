@@ -44,7 +44,7 @@ pub fn joint_bss(
         dataset_dims.push(n_signals);
 
         // Center the dataset
-        let means = dataset.mean_axis(Axis(1)).unwrap();
+        let means = dataset.mean_axis(Axis(1)).expect("Operation failed");
         let mut centered = dataset.clone();
 
         for i in 0..n_signals {
@@ -158,7 +158,7 @@ pub fn joint_diagonalization(
     let (n_signals, n_samples) = signals.dim();
 
     // Center the signals
-    let means = signals.mean_axis(Axis(1)).unwrap();
+    let means = signals.mean_axis(Axis(1)).expect("Operation failed");
     let mut centered = signals.clone();
 
     for i in 0..n_signals {

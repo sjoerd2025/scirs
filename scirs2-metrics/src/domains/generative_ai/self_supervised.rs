@@ -41,7 +41,7 @@ impl<
     pub fn new() -> Self {
         Self {
             n_probe_epochs: 100,
-            probe_learning_rate: F::from(0.001).unwrap(),
+            probe_learning_rate: F::from(0.001).expect("Failed to convert constant to float"),
             n_clustering_runs: 5,
             _phantom: std::marker::PhantomData,
         }
@@ -99,7 +99,7 @@ impl<
         // Normalize centroids
         for class in 0..n_classes {
             if class_counts[class] > 0 {
-                let count = F::from(class_counts[class]).unwrap();
+                let count = F::from(class_counts[class]).expect("Failed to convert to float");
                 for j in 0..n_features {
                     class_centroids[[class, j]] = class_centroids[[class, j]] / count;
                 }
@@ -138,23 +138,23 @@ impl<
             }
         }
 
-        let overall_accuracy =
-            F::from(correct_predictions).unwrap() / F::from(test_labels.len()).unwrap();
+        let overall_accuracy = F::from(correct_predictions).expect("Failed to convert to float")
+            / F::from(test_labels.len()).expect("Operation failed");
 
         // Compute per-class accuracies
         let mut per_class_accuracies = Vec::with_capacity(n_classes);
         for class in 0..n_classes {
             if per_class_total[class] > 0 {
-                let acc = F::from(per_class_correct[class]).unwrap()
-                    / F::from(per_class_total[class]).unwrap();
+                let acc = F::from(per_class_correct[class]).expect("Failed to convert to float")
+                    / F::from(per_class_total[class]).expect("Failed to convert to float");
                 per_class_accuracies.push(acc);
             } else {
                 per_class_accuracies.push(F::zero());
             }
         }
 
-        let balanced_accuracy =
-            per_class_accuracies.iter().copied().sum::<F>() / F::from(n_classes).unwrap();
+        let balanced_accuracy = per_class_accuracies.iter().copied().sum::<F>()
+            / F::from(n_classes).expect("Failed to convert to float");
 
         Ok(LinearProbingResult {
             overall_accuracy,
@@ -290,7 +290,7 @@ impl<
         }
 
         // Center the data
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let centered = data - &mean.insert_axis(Axis(0));
 
         // Compute covariance
@@ -302,7 +302,7 @@ impl<
                 for k in 0..n_samples {
                     sum = sum + centered[[k, i]] * centered[[k, j]];
                 }
-                let cov_val = sum / F::from(n_samples - 1).unwrap();
+                let cov_val = sum / F::from(n_samples - 1).expect("Failed to convert to float");
                 cov[[i, j]] = cov_val;
                 if i != j {
                     cov[[j, i]] = cov_val;
@@ -381,7 +381,7 @@ impl<
             // Normalize centroids
             for i in 0..k {
                 if cluster_counts[i] > 0 {
-                    let count = F::from(cluster_counts[i]).unwrap();
+                    let count = F::from(cluster_counts[i]).expect("Failed to convert to float");
                     for j in 0..n_features {
                         centroids[[i, j]] = centroids[[i, j]] / count;
                     }
@@ -434,9 +434,12 @@ impl<
         for i in 0..max_true {
             for j in 0..max_pred {
                 if contingency[i][j] > 0 {
-                    let p_ij = F::from(contingency[i][j]).unwrap() / F::from(n).unwrap();
-                    let p_i = F::from(true_marginal[i]).unwrap() / F::from(n).unwrap();
-                    let p_j = F::from(pred_marginal[j]).unwrap() / F::from(n).unwrap();
+                    let p_ij = F::from(contingency[i][j]).expect("Failed to convert to float")
+                        / F::from(n).expect("Failed to convert to float");
+                    let p_i = F::from(true_marginal[i]).expect("Failed to convert to float")
+                        / F::from(n).expect("Failed to convert to float");
+                    let p_j = F::from(pred_marginal[j]).expect("Failed to convert to float")
+                        / F::from(n).expect("Failed to convert to float");
 
                     if p_i > F::zero() && p_j > F::zero() {
                         mi = mi + p_ij * (p_ij / (p_i * p_j)).ln();
@@ -451,20 +454,23 @@ impl<
 
         for i in 0..max_true {
             if true_marginal[i] > 0 {
-                let p_i = F::from(true_marginal[i]).unwrap() / F::from(n).unwrap();
+                let p_i = F::from(true_marginal[i]).expect("Failed to convert to float")
+                    / F::from(n).expect("Failed to convert to float");
                 h_true = h_true - p_i * p_i.ln();
             }
         }
 
         for j in 0..max_pred {
             if pred_marginal[j] > 0 {
-                let p_j = F::from(pred_marginal[j]).unwrap() / F::from(n).unwrap();
+                let p_j = F::from(pred_marginal[j]).expect("Failed to convert to float")
+                    / F::from(n).expect("Failed to convert to float");
                 h_pred = h_pred - p_j * p_j.ln();
             }
         }
 
         // Normalize
-        let denominator = (h_true + h_pred) / F::from(2.0).unwrap();
+        let denominator =
+            (h_true + h_pred) / F::from(2.0).expect("Failed to convert constant to float");
         if denominator > F::zero() {
             Ok(mi / denominator)
         } else {
@@ -508,7 +514,8 @@ impl<
         }
 
         // Simplified ARI (just agreement ratio)
-        Ok(F::from(agreements).unwrap() / F::from(total_pairs).unwrap())
+        Ok(F::from(agreements).expect("Failed to convert to float")
+            / F::from(total_pairs).expect("Failed to convert to float"))
     }
 
     /// Compute silhouette score
@@ -548,7 +555,8 @@ impl<
             }
 
             if intra_count > 0 {
-                intra_distance = intra_distance / F::from(intra_count).unwrap();
+                intra_distance =
+                    intra_distance / F::from(intra_count).expect("Failed to convert to float");
             }
 
             // Compute minimum average inter-cluster distance
@@ -572,7 +580,8 @@ impl<
                     }
 
                     if inter_count > 0 {
-                        inter_distance = inter_distance / F::from(inter_count).unwrap();
+                        inter_distance = inter_distance
+                            / F::from(inter_count).expect("Failed to convert to float");
                         min_inter_distance = min_inter_distance.min(inter_distance);
                     }
                 }
@@ -590,7 +599,7 @@ impl<
         }
 
         if valid_samples > 0 {
-            Ok(total_silhouette / F::from(valid_samples).unwrap())
+            Ok(total_silhouette / F::from(valid_samples).expect("Failed to convert to float"))
         } else {
             Ok(F::zero())
         }

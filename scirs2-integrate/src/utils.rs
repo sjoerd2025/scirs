@@ -286,7 +286,7 @@ where
     Func: Fn(ArrayView1<F>) -> Array1<F>,
 {
     let mut x = x0.to_owned();
-    let eps = F::from_f64(1e-8).unwrap();
+    let eps = F::from_f64(1e-8).expect("Operation failed");
 
     for _ in 0..max_iter {
         // Evaluate function at current iterate
@@ -348,7 +348,7 @@ where
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     let mut x = x0.to_owned();
-    let eps = F::from_f64(1e-8).unwrap();
+    let eps = F::from_f64(1e-8).expect("Operation failed");
 
     for _ in 0..max_iter {
         // Evaluate function at current iterate

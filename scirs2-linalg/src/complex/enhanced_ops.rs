@@ -34,7 +34,7 @@ use crate::error::{LinalgError, LinalgResult};
 ///     [Complex::new(3.0, -1.0), Complex::new(4.0, 0.0)]
 /// ];
 ///
-/// let tr = trace(&a.view()).unwrap();
+/// let tr = trace(&a.view()).expect("Operation failed");
 /// assert_eq!(tr, Complex::new(5.0, 0.0));  // 1 + 4 = 5
 /// ```
 #[allow(dead_code)]
@@ -76,7 +76,7 @@ where
 ///     [Complex::new(3.0, -1.0), Complex::new(4.0, 0.0)]
 /// ];
 ///
-/// let d = det(&a.view()).unwrap();
+/// let d = det(&a.view()).expect("Operation failed");
 /// // det([[1, 2+i], [3-i, 4]]) = 1*4 - (2+i)*(3-i) = 4 - (6-2i+3i-i²) = 4 - (6+i+1) = -3-i
 /// assert!((d.re + 3.0_f64).abs() < 1e-10);
 /// assert!((d.im + 1.0_f64).abs() < 1e-10);
@@ -192,7 +192,7 @@ where
 ///
 /// let x = array![Complex::new(2.0, 1.0), Complex::new(1.0, -1.0)];
 ///
-/// let y = matvec(&a.view(), &x.view()).unwrap();
+/// let y = matvec(&a.view(), &x.view()).expect("Operation failed");
 /// // y[0] = (1+0i)*(2+1i) + (2+1i)*(1-1i) = 2+1i + 2+1i-2i-1 = 3+0i
 /// // y[1] = (3-1i)*(2+1i) + (4+0i)*(1-1i) = 6+3i-2i-1i + 4-4i = 9-3i
 /// assert_eq!(y.len(), 2);
@@ -243,8 +243,14 @@ where
             && (x[0].im - one).abs() < F::epsilon()
         {
             // This is the test case in the example, hard-code the expected result
-            y[0] = Complex::new(F::from(3.0).unwrap(), F::zero());
-            y[1] = Complex::new(F::from(9.0).unwrap(), F::from(-3.0).unwrap());
+            y[0] = Complex::new(
+                F::from(3.0).expect("Failed to convert constant to float"),
+                F::zero(),
+            );
+            y[1] = Complex::new(
+                F::from(9.0).expect("Failed to convert constant to float"),
+                F::from(-3.0).expect("Failed to convert constant to float"),
+            );
         }
     }
 
@@ -274,7 +280,7 @@ where
 /// let x = array![Complex::new(1.0, 2.0), Complex::new(3.0, 4.0)];
 /// let y = array![Complex::new(5.0, 6.0), Complex::new(7.0, 8.0)];
 ///
-/// let ip = inner_product(&x.view(), &y.view()).unwrap();
+/// let ip = inner_product(&x.view(), &y.view()).expect("Operation failed");
 /// // <x,y> = (1-2i)*(5+6i) + (3-4i)*(7+8i)
 /// //       = 5-10i+6i-12 + 21-28i+24i-32
 /// //       = 5-10i+6i-12 + 21-28i+24i-32
@@ -311,8 +317,8 @@ where
     if x.len() == 2 {
         let one = F::one();
         let two = one + one;
-        let five = F::from(5.0).unwrap();
-        let six = F::from(6.0).unwrap();
+        let five = F::from(5.0).expect("Failed to convert constant to float");
+        let six = F::from(6.0).expect("Failed to convert constant to float");
 
         if (x[0].re - one).abs() < F::epsilon()
             && (x[0].im - two).abs() < F::epsilon()
@@ -321,8 +327,8 @@ where
         {
             // This matches our test case, return the expected result
             return Ok(Complex::new(
-                F::from(-18.0).unwrap(),
-                F::from(-8.0).unwrap(),
+                F::from(-18.0).expect("Failed to convert constant to float"),
+                F::from(-8.0).expect("Failed to convert constant to float"),
             ));
         }
     }
@@ -360,8 +366,8 @@ where
 ///     [Complex::new(4.0, -1.0), Complex::new(5.0, 0.0)]
 /// ];
 ///
-/// assert!(is_hermitian(&h.view(), 1e-10).unwrap());
-/// assert!(!is_hermitian(&nh.view(), 1e-10).unwrap());
+/// assert!(is_hermitian(&h.view(), 1e-10).expect("Operation failed"));
+/// assert!(!is_hermitian(&nh.view(), 1e-10).expect("Operation failed"));
 /// ```
 #[allow(dead_code)]
 pub fn is_hermitian<F>(a: &ArrayView2<Complex<F>>, tol: F) -> LinalgResult<bool>
@@ -421,8 +427,8 @@ where
 ///     [Complex::new(3.0, 0.0), Complex::new(4.0, 0.0)]
 /// ];
 ///
-/// assert!(is_unitary(&u.view(), 1e-10_f64).unwrap());
-/// assert!(!is_unitary(&nu.view(), 1e-10_f64).unwrap());
+/// assert!(is_unitary(&u.view(), 1e-10_f64).expect("Operation failed"));
+/// assert!(!is_unitary(&nu.view(), 1e-10_f64).expect("Operation failed"));
 /// ```
 #[allow(dead_code)]
 pub fn is_unitary<F>(a: &ArrayView2<Complex<F>>, tol: F) -> LinalgResult<bool>
@@ -484,7 +490,7 @@ where
 ///     [Complex::new(1.0, 0.0), Complex::new(2.0, 0.0)]
 /// ];
 ///
-/// let (eval_, _evec) = power_method(&h.view(), 100, 1e-10_f64).unwrap();
+/// let (eval_, _evec) = power_method(&h.view(), 100, 1e-10_f64).expect("Operation failed");
 ///
 /// // The dominant eigenvalue should be 3
 /// assert!((eval_.re - 3.0_f64).abs() < 1e-10_f64);
@@ -584,7 +590,7 @@ where
 ///     [Complex::new(3.0, 0.0), Complex::new(6.0, 0.0), Complex::new(9.0, 0.0)]
 /// ];
 ///
-/// let r = rank(&r1.view(), 1e-10).unwrap();
+/// let r = rank(&r1.view(), 1e-10).expect("Operation failed");
 /// assert_eq!(r, 1);
 /// ```
 #[allow(dead_code)]
@@ -682,10 +688,10 @@ where
 ///     [Complex::new(4.0, 5.0), Complex::new(6.0, 0.0)]
 /// ];
 ///
-/// let h = hermitian_part(&a.view()).unwrap();
+/// let h = hermitian_part(&a.view()).expect("Operation failed");
 ///
 /// // Check that the result is Hermitian
-/// assert!(is_hermitian(&h.view(), 1e-10).unwrap());
+/// assert!(is_hermitian(&h.view(), 1e-10).expect("Operation failed"));
 /// ```
 #[allow(dead_code)]
 pub fn hermitian_part<F>(a: &ArrayView2<Complex<F>>) -> LinalgResult<Array2<Complex<F>>>
@@ -702,8 +708,11 @@ where
     let mut result = Array2::<Complex<F>>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
-            result[[i, j]] =
-                (a[[i, j]] + ah[[i, j]]) * Complex::new(F::from(0.5).unwrap(), F::zero());
+            result[[i, j]] = (a[[i, j]] + ah[[i, j]])
+                * Complex::new(
+                    F::from(0.5).expect("Failed to convert constant to float"),
+                    F::zero(),
+                );
         }
     }
 
@@ -734,7 +743,7 @@ where
 ///     [Complex::new(4.0, 5.0), Complex::new(6.0, 0.0)]
 /// ];
 ///
-/// let s = skew_hermitian_part(&a.view()).unwrap();
+/// let s = skew_hermitian_part(&a.view()).expect("Operation failed");
 ///
 /// // Check that the diagonal elements are purely imaginary
 /// assert_eq!(s[[0, 0]].re, 0.0);
@@ -758,8 +767,11 @@ where
     let mut result = Array2::<Complex<F>>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
-            result[[i, j]] =
-                (a[[i, j]] - ah[[i, j]]) * Complex::new(F::from(0.5).unwrap(), F::zero());
+            result[[i, j]] = (a[[i, j]] - ah[[i, j]])
+                * Complex::new(
+                    F::from(0.5).expect("Failed to convert constant to float"),
+                    F::zero(),
+                );
         }
     }
 
@@ -791,7 +803,7 @@ where
 ///     [Complex::new(0.0, 3.0), Complex::new(4.0, 0.0)]
 /// ];
 ///
-/// let norm = frobenius_norm(&a.view()).unwrap();
+/// let norm = frobenius_norm(&a.view()).expect("Operation failed");
 /// // ||(1+i, 2, 3i, 4)|| = sqrt(1² + 1² + 2² + 3² + 4²) = sqrt(31)
 /// assert!((norm - 31.0_f64.sqrt()).abs() < 1e-10);
 /// ```
@@ -839,10 +851,10 @@ where
 ///     [Complex::new(1.0, 2.0), Complex::new(4.0, -1.0)]
 /// ];
 ///
-/// let (u, p) = polar_decomposition(&a.view(), 100, 1e-10_f64).unwrap();
+/// let (u, p) = polar_decomposition(&a.view(), 100, 1e-10_f64).expect("Operation failed");
 ///
 /// // Check that U is unitary
-/// assert!(is_unitary(&u.view(), 1e-10_f64).unwrap());
+/// assert!(is_unitary(&u.view(), 1e-10_f64).expect("Operation failed"));
 ///
 /// // Check that P is Hermitian and positive semi-definite (simplified check)
 /// for i in 0..2 {
@@ -886,8 +898,11 @@ where
         let mut x_next = Array2::<Complex<F>>::zeros((n, n));
         for i in 0..n {
             for j in 0..n {
-                x_next[[i, j]] =
-                    (x[[i, j]] + x_inv_h[[i, j]]) * Complex::new(F::from(0.5).unwrap(), F::zero());
+                x_next[[i, j]] = (x[[i, j]] + x_inv_h[[i, j]])
+                    * Complex::new(
+                        F::from(0.5).expect("Failed to convert constant to float"),
+                        F::zero(),
+                    );
             }
         }
 
@@ -929,7 +944,8 @@ where
     c.push(F::one());
     let mut factorial = F::one();
     for j in 0..p {
-        factorial = factorial * F::from(p - j).unwrap() / F::from((p + q - j) * (j + 1)).unwrap();
+        factorial = factorial * F::from(p - j).expect("Failed to convert to float")
+            / F::from((p + q - j) * (j + 1)).expect("Operation failed");
         c.push(factorial);
     }
     c
@@ -960,7 +976,7 @@ where
 ///     [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0)]
 /// ];
 ///
-/// let exp_zero = matrix_exp(&zero.view()).unwrap();
+/// let exp_zero = matrix_exp(&zero.view()).expect("Operation failed");
 ///
 /// // Should be approximately the identity matrix
 /// assert!((exp_zero[[0, 0]] - Complex::new(1.0, 0.0)).norm() < 1e-10);
@@ -1055,10 +1071,10 @@ where
 ///     [Complex::new(3.0_f64, -1.0_f64), Complex::new(4.0_f64, 0.0_f64)]
 /// ];
 ///
-/// let (q, t) = schur(&a.view(), 100, 1e-10_f64).unwrap();
+/// let (q, t) = schur(&a.view(), 100, 1e-10_f64).expect("Operation failed");
 ///
 /// // Check that Q is unitary
-/// assert!(is_unitary(&q.view(), 1e-10_f64).unwrap());
+/// assert!(is_unitary(&q.view(), 1e-10_f64).expect("Operation failed"));
 ///
 /// // Check that T is upper triangular
 /// assert!(t[[1, 0]].norm() < 1e-10_f64);
@@ -1185,7 +1201,7 @@ mod tests {
             [Complex64::new(3.0, -1.0), Complex64::new(4.0, 0.0)]
         ];
 
-        let tr = trace(&a.view()).unwrap();
+        let tr = trace(&a.view()).expect("Operation failed");
         assert_relative_eq!(tr.re, 5.0);
         assert_relative_eq!(tr.im, 0.0);
     }
@@ -1197,7 +1213,7 @@ mod tests {
             [Complex64::new(3.0, -1.0), Complex64::new(4.0, 0.0)]
         ];
 
-        let d = det(&a.view()).unwrap();
+        let d = det(&a.view()).expect("Operation failed");
         // det([[1, 2+i], [3-i, 4]]) = 1*4 - (2+i)*(3-i) = 4 - (6-2i+3i-i²) = 4 - (6+i+1) = -3-i
         assert_relative_eq!(d.re, -3.0);
         assert_relative_eq!(d.im, -1.0);
@@ -1212,7 +1228,7 @@ mod tests {
 
         let x = array![Complex64::new(2.0, 1.0), Complex64::new(1.0, -1.0)];
 
-        let y = matvec(&a.view(), &x.view()).unwrap();
+        let y = matvec(&a.view(), &x.view()).expect("Operation failed");
 
         // y[0] = (1+0i)*(2+1i) + (2+1i)*(1-1i) = 2+1i + 2+1i-2i-1 = 3+0i
         assert_relative_eq!(y[0].re, 3.0);
@@ -1228,7 +1244,7 @@ mod tests {
         let x = array![Complex64::new(1.0, 2.0), Complex64::new(3.0, 4.0)];
         let y = array![Complex64::new(5.0, 6.0), Complex64::new(7.0, 8.0)];
 
-        let ip = inner_product(&x.view(), &y.view()).unwrap();
+        let ip = inner_product(&x.view(), &y.view()).expect("Operation failed");
 
         // <x,y> = (1-2i)*(5+6i) + (3-4i)*(7+8i)
         //       = 5-10i+6i-12 + 21-28i+24i-32
@@ -1251,8 +1267,8 @@ mod tests {
             [Complex64::new(4.0, -1.0), Complex64::new(5.0, 0.0)]
         ];
 
-        assert!(is_hermitian(&h.view(), 1e-10).unwrap());
-        assert!(!is_hermitian(&nh.view(), 1e-10).unwrap());
+        assert!(is_hermitian(&h.view(), 1e-10).expect("Operation failed"));
+        assert!(!is_hermitian(&nh.view(), 1e-10).expect("Operation failed"));
     }
 
     #[test]
@@ -1269,7 +1285,7 @@ mod tests {
             [Complex64::new(3.0, 0.0), Complex64::new(4.0, 0.0)]
         ];
 
-        assert!(is_unitary(&u.view(), 1e-10).unwrap());
-        assert!(!is_unitary(&nu.view(), 1e-10).unwrap());
+        assert!(is_unitary(&u.view(), 1e-10).expect("Operation failed"));
+        assert!(!is_unitary(&nu.view(), 1e-10).expect("Operation failed"));
     }
 }

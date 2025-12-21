@@ -405,7 +405,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adam(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_adam(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should converge to zero
         assert!(result.success || result.fun < 1e-4);
@@ -429,7 +430,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adam(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_adam(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // AMSGrad should converge reliably
         assert!(result.success || result.fun < 1e-4);
@@ -449,7 +451,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adam_with_warmup(grad_func, x0, data_provider, options, 10).unwrap();
+        let result = minimize_adam_with_warmup(grad_func, x0, data_provider, options, 10)
+            .expect("Operation failed");
 
         // Warmup should help with convergence
         assert!(result.success || result.fun < 1e-3);
@@ -469,7 +472,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_adam(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_adam(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should still converge even with large initial gradients (relaxed tolerance for clipped gradients)
         assert!(result.success || result.fun < 1e-1);

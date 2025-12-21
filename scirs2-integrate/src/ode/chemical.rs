@@ -585,7 +585,11 @@ impl ChemicalIntegrator {
         let total_concentration = self.properties.initial_concentrations.sum();
         let num_reactions = self.properties.reactions.len();
         let avg_rate = if !self.reaction_rate_history.is_empty() {
-            self.reaction_rate_history.last().unwrap().sum() / num_reactions as f64
+            self.reaction_rate_history
+                .last()
+                .expect("Operation failed")
+                .sum()
+                / num_reactions as f64
         } else {
             0.0
         };
@@ -690,7 +694,9 @@ pub mod systems {
             reactions,
             temperature: 298.15,
             volume: 1.0,
-            conservation_matrix: Some(Array2::from_shape_vec((1, 2), vec![1.0, 1.0]).unwrap()),
+            conservation_matrix: Some(
+                Array2::from_shape_vec((1, 2), vec![1.0, 1.0]).expect("Operation failed"),
+            ),
         };
 
         let state = ChemicalState {
@@ -767,7 +773,7 @@ pub mod systems {
                         0.0, 1.0, 1.0, 1.0, // Mass conservation: S + P + ES = constant
                     ],
                 )
-                .unwrap(),
+                .expect("Operation failed"),
             ),
         };
 
@@ -903,7 +909,9 @@ mod tests {
         let (config, properties, initial_state) = systems::first_order_reaction(0.1, 1.0, 0.0);
         let mut integrator = ChemicalIntegrator::new(config, properties);
 
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // Check that A decreases and B increases
         assert!(result.state.concentrations[0] < initial_state.concentrations[0]);
@@ -916,7 +924,9 @@ mod tests {
         let (config, properties, initial_state) = systems::reversible_reaction(0.1, 0.05, 1.0, 0.0);
         let mut integrator = ChemicalIntegrator::new(config, properties);
 
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // System should evolve toward equilibrium
         assert!(result.state.concentrations[0] < initial_state.concentrations[0]);
@@ -929,7 +939,9 @@ mod tests {
         let (config, properties, initial_state) = systems::reversible_reaction(0.1, 0.05, 1.0, 0.0);
         let mut integrator = ChemicalIntegrator::new(config, properties);
 
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // Total concentration should be conserved
         let initial_total = initial_state.concentrations.sum();
@@ -945,7 +957,9 @@ mod tests {
         );
         let mut integrator = ChemicalIntegrator::new(config, properties);
 
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // Check that the system evolves
         assert!(result.success);
@@ -959,7 +973,9 @@ mod tests {
         config.dt = 1.0; // Large time step that might cause negative concentrations
 
         let mut integrator = ChemicalIntegrator::new(config, properties);
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // All concentrations should be non-negative
         for &conc in result.state.concentrations.iter() {
@@ -976,7 +992,9 @@ mod tests {
         );
         let mut integrator = ChemicalIntegrator::new(config, properties);
 
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // The stiffness ratio calculation is based on reaction rates, not rate constants
         // For very small time steps, the actual reaction rates may be small
@@ -993,7 +1011,9 @@ mod tests {
         );
         let mut integrator = ChemicalIntegrator::new(config, properties);
 
-        let result = integrator.step(0.0, &initial_state).unwrap();
+        let result = integrator
+            .step(0.0, &initial_state)
+            .expect("Operation failed");
 
         // A should decrease (consumed by both reactions)
         assert!(result.state.concentrations[0] < initial_state.concentrations[0]);

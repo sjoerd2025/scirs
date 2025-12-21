@@ -14,15 +14,15 @@ pub(super) fn asymptotic_gamma_large_negative<F: Float + FromPrimitive + std::op
 ) -> F {
     // For very large negative x, use the reflection formula with asymptotic expansions
     // to avoid catastrophic cancellation
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
     let n = (-x_f64).floor() as i32;
-    let _z = x + F::from(n).unwrap(); // z is the fractional part in [0,1)
+    let _z = x + F::from(n).expect("Failed to convert to float"); // z is the fractional part in [0,1)
 
     // Use asymptotic expansion for large negative arguments
     // Γ(x) = π / (sin(πx) * Γ(1-x))
     // For large |x|, Γ(1-x) ≈ Stirling's approximation
 
-    let pi = F::from(std::f64::consts::PI).unwrap();
+    let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
     let oneminus_x = F::one() - x;
 
     // Use Stirling for the positive large argument
@@ -33,7 +33,7 @@ pub(super) fn asymptotic_gamma_large_negative<F: Float + FromPrimitive + std::op
     let sign: F = enhanced_reflection_sign(x_f64);
     let log_result = log_pi - log_sin_pi_x - log_gamma_pos;
 
-    if log_result < F::from(std::f64::MAX.ln() * 0.9).unwrap() {
+    if log_result < F::from(std::f64::MAX.ln() * 0.9).expect("Operation failed") {
         sign * log_result.exp()
     } else if sign > F::zero() {
         F::infinity()
@@ -50,13 +50,13 @@ pub(super) fn stable_gamma_near_large_negative_integer<
     x: F,
     n: i32,
 ) -> F {
-    let epsilon = x + F::from(n).unwrap();
+    let epsilon = x + F::from(n).expect("Failed to convert to float");
 
     // For large n, use logarithmic computation to avoid overflow
     // Γ(x) ≈ (-1)^n / (n! * ε) where ε = x + n
 
     // Use Stirling's approximation for log(n!)
-    let n_f = F::from(n as f64).unwrap();
+    let n_f = F::from(n as f64).expect("Failed to convert to float");
     let log_n_factorial = stirling_approximation_ln(n_f + F::one());
 
     let sign = if n % 2 == 0 { F::one() } else { -F::one() };
@@ -64,7 +64,7 @@ pub(super) fn stable_gamma_near_large_negative_integer<
 
     let log_result = -log_n_factorial - log_epsilon;
 
-    if log_result < F::from(std::f64::MAX.ln() * 0.9).unwrap() {
+    if log_result < F::from(std::f64::MAX.ln() * 0.9).expect("Operation failed") {
         sign / epsilon * log_result.exp()
     } else if epsilon > F::zero() {
         if sign > F::zero() {
@@ -82,12 +82,12 @@ pub(super) fn stable_gamma_near_large_negative_integer<
 /// Enhanced computation of log(|sin(πx)|) for better numerical stability
 #[allow(dead_code)]
 pub(super) fn enhanced_log_sin_pi_x<F: Float + FromPrimitive>(x: F) -> F {
-    let pi = F::from(std::f64::consts::PI).unwrap();
-    let x_f64 = x.to_f64().unwrap();
+    let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // Reduce x to the fundamental period to improve accuracy
     let x_reduced = x_f64 - x_f64.floor();
-    let x_red = F::from(x_reduced).unwrap();
+    let x_red = F::from(x_reduced).expect("Failed to convert to float");
 
     // Use different approaches based on the reduced value
     if x_reduced < 0.5 {
@@ -148,7 +148,7 @@ pub(super) fn validate_gamma_computation<
     x: F,
     result: F,
 ) -> SpecialResult<F> {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // Check for obvious invalid inputs
     if x.is_nan() {
@@ -221,7 +221,7 @@ pub(super) fn estimate_gamma_condition_number<
 >(
     x: F,
 ) -> f64 {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
     let h = 1e-8;
 
     // For condition number estimation: κ = |x * Γ'(x) / Γ(x)|
@@ -313,7 +313,7 @@ pub fn polygamma<
 
     // For x = 1, use exact values based on Riemann zeta function
     // ψ^(n)(1) = (-1)^(n+1) n! ζ(n+1)
-    if (x - F::one()).abs() < F::from(1e-10).unwrap() {
+    if (x - F::one()).abs() < F::from(1e-10).expect("Failed to convert constant to float") {
         // Compute using known values of ζ(n+1)
         let zeta_value = match n {
             1 => std::f64::consts::PI.powi(2) / 6.0, // ζ(2) = π²/6
@@ -336,12 +336,12 @@ pub fn polygamma<
                 F::one()
             };
             let n_factorial = factorial_f(n);
-            return sign * F::from(n_factorial * zeta_value).unwrap();
+            return sign * F::from(n_factorial * zeta_value).expect("Failed to convert to float");
         }
     }
 
     // For large x, use asymptotic expansion
-    if x > F::from(20.0).unwrap() {
+    if x > F::from(20.0).expect("Failed to convert constant to float") {
         // Asymptotic series: ψ^(n)(x) ~ (-1)^(n+1) n!/x^(n+1) * [1 + (n+1)/(2x) + ...]
         // Sign convention: (-1)^(n+1), so for n=1 (trigamma) we get +1, for n=2 we get -1, etc.
         let sign = if n.is_multiple_of(2) {
@@ -352,10 +352,12 @@ pub fn polygamma<
         let n_factorial = factorial_f(n);
         let x_power = x.powi(n as i32 + 1);
 
-        let leading_term = sign * F::from(n_factorial).unwrap() / x_power;
+        let leading_term =
+            sign * F::from(n_factorial).expect("Failed to convert to float") / x_power;
 
         // Add first correction term
-        let correction = F::from(n + 1).unwrap() / (F::from(2.0).unwrap() * x);
+        let correction = F::from(n + 1).expect("Failed to convert to float")
+            / (F::from(2.0).expect("Failed to convert constant to float") * x);
 
         return leading_term * (F::one() + correction);
     }
@@ -375,17 +377,19 @@ pub fn polygamma<
 
     // Sum the series with improved convergence check
     for k in 0..10000 {
-        let term = (x + F::from(k).unwrap()).powi(-(n_plus_1 as i32));
+        let term = (x + F::from(k).expect("Failed to convert to float")).powi(-(n_plus_1 as i32));
         sum += term;
 
         // Check for convergence - use absolute value comparison
         // Need term.abs() < eps * sum.abs() for proper convergence
-        if k > 10 && term.abs() < F::from(1e-16).unwrap() * sum.abs() {
+        if k > 10
+            && term.abs() < F::from(1e-16).expect("Failed to convert constant to float") * sum.abs()
+        {
             break;
         }
     }
 
-    sign * F::from(n_factorial).unwrap() * sum
+    sign * F::from(n_factorial).expect("Failed to convert to float") * sum
 }
 
 /// Helper function to compute factorial as f64

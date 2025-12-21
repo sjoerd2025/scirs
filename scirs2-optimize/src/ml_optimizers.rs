@@ -33,7 +33,7 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
             lambda,
             learning_rate,
             max_iter: 1000,
-            tol: F::from(1e-6).unwrap(),
+            tol: F::from(1e-6).expect("Failed to convert constant to float"),
             accelerated: false,
         }
     }
@@ -44,7 +44,7 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
             lambda,
             learning_rate,
             max_iter: 1000,
-            tol: F::from(1e-6).unwrap(),
+            tol: F::from(1e-6).expect("Failed to convert constant to float"),
             accelerated: true,
         }
     }
@@ -102,8 +102,11 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
 
             // FISTA acceleration
             if self.accelerated {
-                let t_new = (F::one() + (F::one() + F::from(4).unwrap() * t * t).sqrt())
-                    / F::from(2).unwrap();
+                let t_new = (F::one()
+                    + (F::one()
+                        + F::from(4).expect("Failed to convert constant to float") * t * t)
+                        .sqrt())
+                    / F::from(2).expect("Failed to convert constant to float");
                 let beta = (t - F::one()) / t_new;
                 y = &x_prox + &((&x_prox - &x) * beta);
                 t = t_new;
@@ -156,7 +159,7 @@ impl<F: Float + ScalarOperand> GroupLassoOptimizer<F> {
             lambda,
             learning_rate,
             max_iter: 1000,
-            tol: F::from(1e-6).unwrap(),
+            tol: F::from(1e-6).expect("Failed to convert constant to float"),
             groups,
         }
     }
@@ -267,7 +270,7 @@ impl<F: Float + ScalarOperand> ElasticNetOptimizer<F> {
             lambda2,
             learning_rate,
             max_iter: 1000,
-            tol: F::from(1e-6).unwrap(),
+            tol: F::from(1e-6).expect("Failed to convert constant to float"),
         }
     }
 
@@ -353,8 +356,8 @@ impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
     pub fn new(rho: F) -> Self {
         Self {
             rho,
-            eps_pri: F::from(1e-3).unwrap(),
-            eps_dual: F::from(1e-3).unwrap(),
+            eps_pri: F::from(1e-3).expect("Failed to convert constant to float"),
+            eps_dual: F::from(1e-3).expect("Failed to convert constant to float"),
             max_iter: 1000,
         }
     }
@@ -387,7 +390,7 @@ impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
             let lr = if grad_norm > F::epsilon() {
                 F::one() / (F::one() + self.rho)
             } else {
-                F::from(0.1).unwrap()
+                F::from(0.1).expect("Failed to convert constant to float")
             };
             x = &x - &(&grad_augmented * lr);
 
@@ -415,9 +418,13 @@ impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
             let z_norm = z.mapv(|xi| xi * xi).sum().sqrt();
             let u_norm = u.mapv(|xi| xi * xi).sum().sqrt();
 
-            let eps_pri_thresh =
-                self.eps_pri * (F::sqrt(F::from(n).unwrap()) + F::max(x_norm, z_norm));
-            let eps_dual_thresh = self.eps_dual * F::sqrt(F::from(n).unwrap()) * self.rho * u_norm;
+            let eps_pri_thresh = self.eps_pri
+                * (F::sqrt(F::from(n).expect("Failed to convert to float"))
+                    + F::max(x_norm, z_norm));
+            let eps_dual_thresh = self.eps_dual
+                * F::sqrt(F::from(n).expect("Failed to convert to float"))
+                * self.rho
+                * u_norm;
 
             if r_norm < eps_pri_thresh && s_norm < eps_dual_thresh {
                 return Ok(OptimizeResult {
@@ -455,7 +462,7 @@ impl<F: Float + ScalarOperand> Default for CoordinateDescentOptimizer<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            tol: F::from(1e-6).unwrap(),
+            tol: F::from(1e-6).expect("Failed to convert constant to float"),
             random: false,
         }
     }
@@ -471,7 +478,7 @@ impl<F: Float + ScalarOperand> CoordinateDescentOptimizer<F> {
     pub fn random() -> Self {
         Self {
             max_iter: 1000,
-            tol: F::from(1e-6).unwrap(),
+            tol: F::from(1e-6).expect("Failed to convert constant to float"),
             random: true,
         }
     }
@@ -509,7 +516,7 @@ impl<F: Float + ScalarOperand> CoordinateDescentOptimizer<F> {
                 let grad_i = grad_1d_fn(&x.view(), i);
 
                 // Simple gradient step for coordinate i
-                let lr = F::from(0.01).unwrap();
+                let lr = F::from(0.01).expect("Failed to convert constant to float");
                 x[i] = x[i] - lr * grad_i;
             }
 
@@ -548,7 +555,8 @@ pub mod ml_problems {
         lambda: F,
         learning_rate: Option<F>,
     ) -> Result<OptimizeResult<F>, OptimizeError> {
-        let lr = learning_rate.unwrap_or_else(|| F::from(0.01).unwrap());
+        let lr = learning_rate
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
         let optimizer = LassoOptimizer::new(lambda, lr);
 
         let n = a.ncols();
@@ -556,7 +564,7 @@ pub mod ml_problems {
 
         let grad_fn = |x: &ArrayView1<F>| -> Array1<F> {
             let residual = a.dot(x) - b;
-            a.t().dot(&residual) * F::from(2).unwrap()
+            a.t().dot(&residual) * F::from(2).expect("Failed to convert constant to float")
         };
 
         optimizer.minimize(grad_fn, &x0)
@@ -570,7 +578,8 @@ pub mod ml_problems {
         groups: Vec<usize>,
         learning_rate: Option<F>,
     ) -> Result<OptimizeResult<F>, OptimizeError> {
-        let lr = learning_rate.unwrap_or_else(|| F::from(0.01).unwrap());
+        let lr = learning_rate
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
         let optimizer = GroupLassoOptimizer::new(lambda, lr, groups);
 
         let n = a.ncols();
@@ -578,7 +587,7 @@ pub mod ml_problems {
 
         let grad_fn = |x: &ArrayView1<F>| -> Array1<F> {
             let residual = a.dot(x) - b;
-            a.t().dot(&residual) * F::from(2).unwrap()
+            a.t().dot(&residual) * F::from(2).expect("Failed to convert constant to float")
         };
 
         optimizer.minimize(grad_fn, &x0)
@@ -592,7 +601,8 @@ pub mod ml_problems {
         lambda2: F,
         learning_rate: Option<F>,
     ) -> Result<OptimizeResult<F>, OptimizeError> {
-        let lr = learning_rate.unwrap_or_else(|| F::from(0.01).unwrap());
+        let lr = learning_rate
+            .unwrap_or_else(|| F::from(0.01).expect("Failed to convert constant to float"));
         let optimizer = ElasticNetOptimizer::new(lambda1, lambda2, lr);
 
         let n = a.ncols();
@@ -600,7 +610,7 @@ pub mod ml_problems {
 
         let grad_fn = |x: &ArrayView1<F>| -> Array1<F> {
             let residual = a.dot(x) - b;
-            a.t().dot(&residual) * F::from(2).unwrap()
+            a.t().dot(&residual) * F::from(2).expect("Failed to convert constant to float")
         };
 
         optimizer.minimize(grad_fn, &x0)
@@ -671,7 +681,9 @@ mod tests {
         let grad_1d_fn = |x: &ArrayView1<f64>, i: usize| 2.0 * x[i];
 
         let x0 = array![1.0, 1.0];
-        let result = optimizer.minimize(obj_fn, grad_1d_fn, &x0).unwrap();
+        let result = optimizer
+            .minimize(obj_fn, grad_1d_fn, &x0)
+            .expect("Operation failed");
 
         // Should converge to origin
         assert!(result.x[0].abs() < 0.1);
@@ -688,7 +700,9 @@ mod tests {
 
         let x0 = array![2.0];
         let lambda = 1.0;
-        let result = optimizer.solve_lasso(loss_grad, lambda, &x0, &()).unwrap();
+        let result = optimizer
+            .solve_lasso(loss_grad, lambda, &x0, &())
+            .expect("Operation failed");
 
         // Should converge to a sparse solution
         assert!(result.x[0].abs() < 1.0); // Should be shrunk
@@ -702,7 +716,8 @@ mod tests {
         let b = array![1.0, 1.1, 0.9];
         let lambda = 0.1;
 
-        let result = ml_problems::lasso_regression(&a.view(), &b.view(), lambda, None).unwrap();
+        let result = ml_problems::lasso_regression(&a.view(), &b.view(), lambda, None)
+            .expect("Operation failed");
 
         // x1 should be close to 1, x2 should be close to 0
         assert!(result.x[0] > 0.5);

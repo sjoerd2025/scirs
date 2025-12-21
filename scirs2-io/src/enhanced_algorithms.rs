@@ -515,7 +515,9 @@ impl AdvancedPatternRecognizer {
     fn calculate_complexity_index(&self, features: &Array2<f32>) -> f32 {
         // Calculate weighted sum across scales
         let weights = Array1::from(vec![0.4, 0.3, 0.2, 0.1]); // Higher weight for finer scales
-        let scale_complexities = features.mean_axis(scirs2_core::ndarray::Axis(1)).unwrap();
+        let scale_complexities = features
+            .mean_axis(scirs2_core::ndarray::Axis(1))
+            .expect("Operation failed");
         weights.dot(&scale_complexities)
     }
 
@@ -643,7 +645,7 @@ impl PatternNetwork {
 
     fn analyze(&mut self, features: &Array2<f32>) -> Result<f32> {
         // Flatten features for network input
-        let flattened = features.as_slice().unwrap();
+        let flattened = features.as_slice().expect("Operation failed");
         let input = Array1::from(flattened.to_vec());
 
         // Resize input to match network size if necessary
@@ -945,7 +947,9 @@ mod tests {
         let mut recognizer = AdvancedPatternRecognizer::new();
         let test_data = vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5];
 
-        let analysis = recognizer.analyze_patterns(&test_data).unwrap();
+        let analysis = recognizer
+            .analyze_patterns(&test_data)
+            .expect("Operation failed");
         assert!(!analysis.pattern_scores.is_empty());
         assert!(analysis.complexity_index >= 0.0 && analysis.complexity_index <= 1.0);
         assert!(analysis.predictability_score >= 0.0 && analysis.predictability_score <= 1.0);
@@ -956,7 +960,9 @@ mod tests {
         let recognizer = AdvancedPatternRecognizer::new();
         let test_data = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-        let features = recognizer.extract_multiscale_features(&test_data).unwrap();
+        let features = recognizer
+            .extract_multiscale_features(&test_data)
+            .expect("Operation failed");
         assert_eq!(features.nrows(), 4); // 4 scales
         assert!(features.ncols() > 0);
     }
@@ -982,7 +988,7 @@ mod tests {
         let mut rng = scirs2_core::random::rng();
         let features = Array2::from_shape_fn((2, 5), |_| rng.random::<f32>());
 
-        let score = network.analyze(&features).unwrap();
+        let score = network.analyze(&features).expect("Operation failed");
         assert!((0.0..=1.0).contains(&score));
     }
 }

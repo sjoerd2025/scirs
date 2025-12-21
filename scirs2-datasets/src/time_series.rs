@@ -60,7 +60,7 @@ lazy_static::lazy_static! {
 /// ```
 /// use scirs2_datasets::time_series::electrocardiogram;
 ///
-/// let ecg = electrocardiogram().unwrap();
+/// let ecg = electrocardiogram().expect("Operation failed");
 /// println!("ECG data shape: ({}, {})", ecg.n_samples(), ecg.n_features());
 /// ```
 #[allow(dead_code)]
@@ -109,7 +109,9 @@ pub fn electrocardiogram() -> Result<Dataset> {
     let len = ecg_array.len();
 
     // Convert the 1D array to a 2D column vector using reshape which should be safer
-    let data = ecg_array.into_shape_with_order((len, 1)).unwrap();
+    let data = ecg_array
+        .into_shape_with_order((len, 1))
+        .expect("Operation failed");
 
     // Create the dataset
     let mut dataset = Dataset::new(data, None);
@@ -160,7 +162,7 @@ struct StockPrice {
 /// ```ignore
 /// use scirs2_datasets::time_series::stock_market;
 ///
-/// let stock_data = stock_market(true).unwrap(); // Get price changes
+/// let stock_data = stock_market(true).expect("Operation failed"); // Get price changes
 /// println!("Stock data shape: ({}, {})", stock_data.n_samples(), stock_data.n_features());
 /// ```
 #[allow(dead_code)]
@@ -294,11 +296,11 @@ struct WeatherObservation {
 /// use scirs2_datasets::time_series::weather;
 ///
 /// // Get temperature data for all locations
-/// let temp_data = weather(Some("temperature")).unwrap();
+/// let temp_data = weather(Some("temperature")).expect("Operation failed");
 /// println!("Temperature data shape: ({}, {})", temp_data.n_samples(), temp_data.n_features());
 ///
 /// // Get all weather features
-/// let all_weather = weather(None).unwrap();
+/// let all_weather = weather(None).expect("Operation failed");
 /// println!("All weather data shape: ({}, {})", all_weather.n_samples(), all_weather.n_features());
 /// ```
 #[allow(dead_code)]

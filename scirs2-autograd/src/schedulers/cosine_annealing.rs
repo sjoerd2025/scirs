@@ -123,7 +123,7 @@ impl<F: Float> CosineAnnealingLR<F> {
     /// * `eta_max` - Maximum learning rate
     /// * `t_max` - Maximum number of steps in one cycle
     pub fn standard(eta_max: F, t_max: usize) -> Self {
-        let eta_min = eta_max / F::from(100.0).unwrap();
+        let eta_min = eta_max / F::from(100.0).expect("Failed to convert constant to float");
         Self::new(eta_max, eta_min, t_max)
     }
 
@@ -135,7 +135,7 @@ impl<F: Float> CosineAnnealingLR<F> {
     /// * `eta_max` - Maximum learning rate
     /// * `t_max` - Maximum number of steps in one cycle
     pub fn for_fine_tuning(eta_max: F, t_max: usize) -> Self {
-        let eta_min = eta_max / F::from(10.0).unwrap();
+        let eta_min = eta_max / F::from(10.0).expect("Failed to convert constant to float");
         Self::new(eta_max, eta_min, t_max)
     }
 
@@ -185,17 +185,18 @@ impl<F: Float> CosineAnnealingLR<F> {
         }
 
         // Cosine annealing formula
-        let t_cur = F::from(step_in_cycle).unwrap();
-        let t_max = F::from(cycle_length).unwrap();
+        let t_cur = F::from(step_in_cycle).expect("Failed to convert to float");
+        let t_max = F::from(cycle_length).expect("Failed to convert to float");
 
         // cos(π * t_cur / t_max)
-        let cos_arg = F::from(PI).unwrap() * t_cur / t_max;
-        let cos_val = cos_arg.to_f64().unwrap().cos();
-        let cos_f = F::from(cos_val).unwrap();
+        let cos_arg = F::from(PI).expect("Failed to convert to float") * t_cur / t_max;
+        let cos_val = cos_arg.to_f64().expect("Operation failed").cos();
+        let cos_f = F::from(cos_val).expect("Failed to convert to float");
 
         // lr = eta_min + (eta_max - eta_min) * (1 + cos(π * t_cur / t_max)) / 2
         let lr_range = self.eta_max - self.eta_min;
-        let factor = (F::one() + cos_f) / F::from(2.0).unwrap();
+        let factor =
+            (F::one() + cos_f) / F::from(2.0).expect("Failed to convert constant to float");
 
         self.eta_min + lr_range * factor
     }

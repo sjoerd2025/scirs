@@ -30,7 +30,7 @@ fn main() {
             ..Default::default()
         }),
     )
-    .unwrap();
+    .expect("Operation failed");
     let standard_duration = standard_start.elapsed();
 
     // Solve with enhanced LSODA
@@ -46,7 +46,7 @@ fn main() {
             ..Default::default()
         }),
     )
-    .unwrap();
+    .expect("Operation failed");
     let enhanced_duration = enhanced_start.elapsed();
 
     // Print comparison for simple case
@@ -69,8 +69,8 @@ fn main() {
     );
     println!(
         "Final error:               {:.2e}       {:.2e}",
-        (standard_result.y.last().unwrap()[0] - (-10.0f64).exp()).abs(),
-        (enhanced_result.y.last().unwrap()[0] - (-10.0f64).exp()).abs()
+        (standard_result.y.last().expect("Operation failed")[0] - (-10.0f64).exp()).abs(),
+        (enhanced_result.y.last().expect("Operation failed")[0] - (-10.0f64).exp()).abs()
     );
     println!("--------------------------------------------------");
 
@@ -151,13 +151,13 @@ fn main() {
             println!("\nFinal state (y0, y1):");
             println!(
                 "Standard: [{:.6}, {:.6}]",
-                std_res.y.last().unwrap()[0],
-                std_res.y.last().unwrap()[1]
+                std_res.y.last().expect("Operation failed")[0],
+                std_res.y.last().expect("Operation failed")[1]
             );
             println!(
                 "Enhanced: [{:.6}, {:.6}]",
-                enh_res.y.last().unwrap()[0],
-                enh_res.y.last().unwrap()[1]
+                enh_res.y.last().expect("Operation failed")[0],
+                enh_res.y.last().expect("Operation failed")[1]
             );
 
             // Print method switching information from enhanced LSODA

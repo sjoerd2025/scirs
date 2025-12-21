@@ -568,10 +568,14 @@ mod tests {
         let guide = MigrationGuide::new();
 
         // Test known mappings
-        let gamma_mapping = guide.get_mapping("scipy.special.gamma").unwrap();
+        let gamma_mapping = guide
+            .get_mapping("scipy.special.gamma")
+            .expect("Operation failed");
         assert_eq!(gamma_mapping.scirs2_name, "gamma");
 
-        let expit_mapping = guide.get_mapping("scipy.special.expit").unwrap();
+        let expit_mapping = guide
+            .get_mapping("scipy.special.expit")
+            .expect("Operation failed");
         assert_eq!(expit_mapping.scirs2_name, "logistic");
     }
 
@@ -593,7 +597,7 @@ mod tests {
     #[test]
     fn test_codegen() {
         let _scipycode = "result = scipy.special.gamma(x)";
-        let rust_code = codegen::generate_rust_equivalent(_scipycode).unwrap();
+        let rust_code = codegen::generate_rust_equivalent(_scipycode).expect("Operation failed");
 
         assert!(rust_code.contains("use scirs2_special::gamma"));
     }

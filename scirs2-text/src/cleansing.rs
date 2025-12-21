@@ -10,22 +10,22 @@ use std::collections::HashMap;
 
 lazy_static! {
     // HTML/XML tag pattern
-    static ref HTML_TAG_PATTERN: Regex = Regex::new(r"<[^>]+>").unwrap();
+    static ref HTML_TAG_PATTERN: Regex = Regex::new(r"<[^>]+>").expect("Operation failed");
 
     // URL pattern
     static ref URL_PATTERN: Regex = Regex::new(
         r"(?i)https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&/=]*)"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Email pattern
     static ref EMAIL_PATTERN: Regex = Regex::new(
         r"(?i)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Phone number pattern (simplified, US-style)
     static ref PHONE_PATTERN: Regex = Regex::new(
         r"(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Common contractions mapping
     static ref CONTRACTIONS: HashMap<&'static str, &'static str> = {
@@ -64,89 +64,89 @@ lazy_static! {
             "\u{2700}-\u{27BF}",   // Dingbats
             "]"
         )
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Number patterns for normalization
     static ref NUMBER_PATTERN: Regex = Regex::new(
         r"(?i)\b[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Currency pattern
     static ref CURRENCY_PATTERN: Regex = Regex::new(
         r"(?i)(?:[$€£¥₹])[ \t]*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?|(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?[ \t]*(?:dollars?|euros?|pounds?|yen|rupees?|USD|EUR|GBP|JPY|INR)\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Percentage pattern
     static ref PERCENTAGE_PATTERN: Regex = Regex::new(
         r"(?i)[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?%"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Ordinal pattern
     static ref ORDINAL_PATTERN: Regex = Regex::new(
         r"(?i)\b(\d+)(?:st|nd|rd|th)\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Advanced number patterns for enhanced normalization
 
     // Date patterns (various formats)
     static ref DATE_PATTERN: Regex = Regex::new(
         r"(?i)\b(?:(?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12][0-9]|3[01])[/-](?:19|20)?\d{2})|(?:(?:19|20)\d{2}[/-](?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12][0-9]|3[01]))|(?:(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2},?\s+\d{4})|(?:\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4})\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Time patterns
     static ref TIME_PATTERN: Regex = Regex::new(
         r"(?i)\b(?:[01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?(?:\s*[aApP][mM])?\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Fraction patterns
     static ref FRACTION_PATTERN: Regex = Regex::new(
         r"\b\d+\s*/\s*\d+\b|\b\d+\s+\d+\s*/\s*\d+\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Roman numeral patterns
     static ref ROMAN_NUMERAL_PATTERN: Regex = Regex::new(
         r"(?i)\b[MDCLXVI]+\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Scientific notation (enhanced)
     static ref SCIENTIFIC_NOTATION_PATTERN: Regex = Regex::new(
         r"(?i)[-+]?(?:\d+\.?\d*|\.\d+)[eE][-+]?\d+"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Temperature patterns
     static ref TEMPERATURE_PATTERN: Regex = Regex::new(
         r"(?i)[-+]?(?:\d+\.?\d*|\.\d+)\s*(?:°[CFK]|[CFK](?:\s+degrees?)?\s*(?:celsius|fahrenheit|kelvin)?|degrees?\s+(?:celsius|fahrenheit|kelvin))\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Measurement unit patterns
     static ref MEASUREMENT_PATTERN: Regex = Regex::new(
         r"(?i)[-+]?(?:\d+\.?\d*|\.\d+)\s*(?:mm|cm|m|km|in|ft|yd|mi|g|kg|lb|oz|ml|l|gal|mph|kph|Hz|kHz|MHz|GHz|KB|MB|GB|TB|°|rad|sq|cu)\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Enhanced currency pattern with more currencies and formats
     static ref ENHANCED_CURRENCY_PATTERN: Regex = Regex::new(
         r"(?i)(?:[$€£¥₹₽₩¢₪₨₦₴₵₡₲₱₫₭₦₨]\s*\d+(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:,\d{3})*(?:\.\d{1,2})?\s*(?:USD|EUR|GBP|JPY|INR|RUB|KRW|CNY|CAD|AUD|CHF|SGD|dollars?|euros?|pounds?|yen|rupees?|yuan|won|rubles?))\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Version numbers
     static ref VERSION_PATTERN: Regex = Regex::new(
         r"\bv?\d+(?:\.\d+){1,3}(?:-[a-zA-Z]+\d*)?\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // IP addresses
     static ref IP_ADDRESS_PATTERN: Regex = Regex::new(
         r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Hexadecimal numbers
     static ref HEX_PATTERN: Regex = Regex::new(
         r"(?i)\b0x[0-9a-f]+\b|#[0-9a-f]{3,8}\b"
-    ).unwrap();
+    ).expect("Operation failed");
 
     // Binary numbers
     static ref BINARY_PATTERN: Regex = Regex::new(
         r"\b0b[01]+\b"
-    ).unwrap();
+    ).expect("Operation failed");
 }
 
 /// Advanced text cleaner with various cleaning options
@@ -793,7 +793,7 @@ pub fn normalize_whitespace(text: &str) -> String {
     }
 
     lazy_static! {
-        static ref WHITESPACE_PATTERN: Regex = Regex::new(r"\s+").unwrap();
+        static ref WHITESPACE_PATTERN: Regex = Regex::new(r"\s+").expect("Operation failed");
     }
 
     WHITESPACE_PATTERN.replace_all(text.trim(), " ").to_string()
@@ -813,7 +813,8 @@ pub fn remove_accents(text: &str) -> String {
 #[allow(dead_code)]
 pub fn normalize_dashes(text: &str) -> String {
     lazy_static! {
-        static ref DASH_PATTERN: Regex = Regex::new(r"[\u{2010}-\u{2015}\u{2212}]").unwrap();
+        static ref DASH_PATTERN: Regex =
+            Regex::new(r"[\u{2010}-\u{2015}\u{2212}]").expect("Operation failed");
     }
 
     DASH_PATTERN.replace_all(text, "-").to_string()
@@ -824,9 +825,9 @@ pub fn normalize_dashes(text: &str) -> String {
 pub fn normalize_quotes(text: &str) -> String {
     lazy_static! {
         static ref SINGLE_QUOTE_PATTERN: Regex =
-            Regex::new(r"[\u{2018}\u{2019}\u{201A}\u{201B}]").unwrap();
+            Regex::new(r"[\u{2018}\u{2019}\u{201A}\u{201B}]").expect("Operation failed");
         static ref DOUBLE_QUOTE_PATTERN: Regex =
-            Regex::new(r"[\u{201C}\u{201D}\u{201E}\u{201F}]").unwrap();
+            Regex::new(r"[\u{201C}\u{201D}\u{201E}\u{201F}]").expect("Operation failed");
     }
 
     let text = SINGLE_QUOTE_PATTERN.replace_all(text, "'");
@@ -1011,7 +1012,7 @@ mod tests {
     fn test_advanced_cleaner() {
         let cleaner = AdvancedTextCleaner::new();
         let text = "<p>Check out https://example.com! Email: test@example.com</p>";
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
         assert_eq!(cleaned, "check out [url]! email: [email]");
     }
 
@@ -1019,7 +1020,7 @@ mod tests {
     fn test_privacy_focused_cleaner() {
         let cleaner = AdvancedTextCleaner::privacy_focused();
         let text = "Call me at (555) 123-4567 or email john@example.com";
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
         assert_eq!(cleaned, "call me at [phone] or email [email]");
     }
 
@@ -1071,7 +1072,7 @@ mod tests {
             .set_normalize_ordinals(true);
 
         let text = "The 1st item costs $99.99 with a 15% discount, total: 84.99";
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
         assert_eq!(
             cleaned,
             "the [ordinal] item costs [currency] with a [percent] discount, total: [number]"
@@ -1168,7 +1169,7 @@ mod tests {
     fn test_enhanced_currency_normalization() {
         let text = "Cost is $100.50, €75.25, ¥10000, or 50 USD";
         let cleaner = AdvancedTextCleaner::new().set_normalize_currencies(true);
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
         assert_eq!(
             cleaned,
             "cost is [currency], [currency], [currency], or [currency]"
@@ -1190,7 +1191,7 @@ mod tests {
             .set_normalize_binary_numbers(true);
 
         let text = "On 12/25/2023 at 14:30, server 192.168.1.1 v2.1.0 measured 25°C, processed 0xFF data with 1/2 efficiency, used 6.022e23 molecules";
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
 
         // Should normalize all the different number/data types
         assert!(cleaned.contains("[date]"));
@@ -1207,7 +1208,7 @@ mod tests {
     fn test_privacy_focused_cleaner_with_advanced_features() {
         let cleaner = AdvancedTextCleaner::privacy_focused();
         let text = "Meeting on 01/15/2024 at 14:30, contact john@example.com or call (555) 123-4567, server: 192.168.1.100";
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
 
         // Privacy-focused should normalize sensitive information
         assert_eq!(
@@ -1246,7 +1247,7 @@ mod tests {
             );
 
         let text = "Date: 12/25/2023, temp: 25°C, color: #FF0000";
-        let cleaned = cleaner.clean(text).unwrap();
+        let cleaned = cleaner.clean(text).expect("Operation failed");
         assert_eq!(
             cleaned,
             "date: [custom_date], temp: [custom_temp], color: [custom_hex]"

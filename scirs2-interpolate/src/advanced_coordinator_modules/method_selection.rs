@@ -392,7 +392,7 @@ impl<F: Float + Debug> IntelligentMethodSelector<F> {
             primary_method: primary_recommendation,
             alternatives: alternative_recommendations,
             expected_performance,
-            confidence: F::from(primary_score).unwrap(),
+            confidence: F::from(primary_score).expect("Failed to convert to float"),
             reasoning: self.generate_reasoning(best_method, data_profile),
         })
     }
@@ -449,7 +449,8 @@ impl<F: Float + Debug> IntelligentMethodSelector<F> {
             // Update model confidence based on recent success rate
             let success_rate = recent_records.iter().filter(|r| r.success).count() as f64
                 / recent_records.len() as f64;
-            self.selection_model.model_confidence = F::from(success_rate * 0.9 + 0.1).unwrap();
+            self.selection_model.model_confidence =
+                F::from(success_rate * 0.9 + 0.1).expect("Failed to convert to float");
         }
 
         Ok(())
@@ -574,7 +575,7 @@ impl<F: Float> MethodSelectionModel<F> {
             feature_weights: HashMap::new(),
             decision_tree: Vec::new(),
             learning_rate: 0.01,
-            model_confidence: F::from(0.8).unwrap(),
+            model_confidence: F::from(0.8).expect("Failed to convert constant to float"),
         };
 
         // Initialize with default rules
@@ -637,7 +638,8 @@ impl<F: Float> MethodSelectionModel<F> {
         if feedback.len() >= 5 {
             let success_rate =
                 feedback.iter().filter(|r| r.success).count() as f64 / feedback.len() as f64;
-            self.model_confidence = F::from(success_rate * 0.9 + 0.1).unwrap();
+            self.model_confidence =
+                F::from(success_rate * 0.9 + 0.1).expect("Failed to convert to float");
         }
         Ok(())
     }

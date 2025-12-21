@@ -36,7 +36,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// ```
     pub fn new(p: F) -> StatsResult<Self> {
         // Validate parameters
@@ -47,7 +47,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
         }
 
         // Create RNG for Geometric distribution
-        let p_f64 = <f64 as scirs2_core::numeric::NumCast>::from(p).unwrap();
+        let p_f64 = <f64 as scirs2_core::numeric::NumCast>::from(p).expect("Operation failed");
         let rand_distr = match RandGeometric::new(p_f64) {
             Ok(distr) => distr,
             Err(_) => {
@@ -75,7 +75,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let pmf_at_2 = geom.pmf(2.0);
     /// assert!((pmf_at_2 - 0.147).abs() < 1e-3);
     /// ```
@@ -88,11 +88,11 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
             return zero;
         }
 
-        let k_usize = k.to_usize().unwrap();
+        let k_usize = k.to_usize().expect("Operation failed");
 
         // PMF = p * (1 - p)^k
         let q = one - self.p; // q = 1 - p
-        self.p * q.powf(F::from(k_usize).unwrap())
+        self.p * q.powf(F::from(k_usize).expect("Failed to convert to float"))
     }
 
     /// Calculate the log of the probability mass function (log-PMF) at a given point
@@ -110,7 +110,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let log_pmf_at_2 = geom.log_pmf(2.0);
     /// assert!((log_pmf_at_2 - (-1.9164)) < 1e-4);
     /// ```
@@ -123,8 +123,8 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
             return neg_infinity;
         }
 
-        let k_usize = k.to_usize().unwrap();
-        let k_f = F::from(k_usize).unwrap();
+        let k_usize = k.to_usize().expect("Operation failed");
+        let k_f = F::from(k_usize).expect("Failed to convert to float");
 
         // log-PMF = ln(p) + k * ln(1 - p)
         let one = F::one();
@@ -148,7 +148,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let cdf_at_2 = geom.cdf(2.0);
     /// assert!((cdf_at_2 - 0.657).abs() < 1e-3);
     /// ```
@@ -163,11 +163,11 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
 
         // Floor k to handle non-integer values
         let k_floor = k.floor();
-        let k_int = k_floor.to_usize().unwrap();
+        let k_int = k_floor.to_usize().expect("Operation failed");
 
         // Calculate CDF = 1 - (1 - p)^(k+1)
         let q = one - self.p; // q = 1 - p
-        one - q.powf(F::from(k_int + 1).unwrap())
+        one - q.powf(F::from(k_int + 1).expect("Failed to convert to float"))
     }
 
     /// Inverse of the cumulative distribution function (quantile function)
@@ -185,8 +185,8 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
-    /// let quant = geom.ppf(0.5).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
+    /// let quant = geom.ppf(0.5).expect("Operation failed");
     /// assert_eq!(quant, 1.0);
     /// ```
     pub fn ppf(&self, pval: F) -> StatsResult<F> {
@@ -240,8 +240,8 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
-    /// let samples = geom.rvs(10).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
+    /// let samples = geom.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -251,7 +251,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
         for _ in 0..size {
             // Generate random Geometric sample
             let sample = self.rand_distr.sample(&mut rng);
-            let sample_f = F::from(sample).unwrap();
+            let sample_f = F::from(sample).expect("Failed to convert to float");
             samples.push(sample_f);
         }
 
@@ -269,7 +269,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let mean = geom.mean();
     /// assert!((mean - 2.333333).abs() < 1e-6);
     /// ```
@@ -291,7 +291,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let variance = geom.var();
     /// assert!((variance - 7.777778).abs() < 1e-6);
     /// ```
@@ -313,7 +313,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let std_dev = geom.std();
     /// assert!((std_dev - 2.788867).abs() < 1e-6);
     /// ```
@@ -333,14 +333,14 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let skewness = geom.skewness();
     /// assert!((skewness - 2.0318891).abs() < 1e-6);
     /// ```
     pub fn skewness(&self) -> F {
         // Skewness = (2-p) / sqrt(1-p)
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
 
         let q = one - self.p; // q = 1 - p
         (two - self.p) / q.sqrt()
@@ -357,14 +357,14 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let kurtosis = geom.kurtosis();
     /// assert!((kurtosis - 6.9) < 1e-1);
     /// ```
     pub fn kurtosis(&self) -> F {
         // Excess Kurtosis = 6 + p^2/(1-p)
         let one = F::one();
-        let six = F::from(6.0).unwrap();
+        let six = F::from(6.0).expect("Failed to convert constant to float");
 
         let q = one - self.p; // q = 1 - p
         six + (self.p * self.p) / q
@@ -381,7 +381,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let entropy = geom.entropy();
     /// assert!((entropy - 2.937588) < 1e-6);
     /// ```
@@ -404,13 +404,13 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let median = geom.median();
     /// assert_eq!(median, 1.0);
     /// ```
     pub fn median(&self) -> F {
         // Median = ceiling(ln(0.5)/ln(1-p)) - 1
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
         let one = F::one();
         let q = one - self.p; // q = 1 - p
 
@@ -428,7 +428,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     /// use scirs2_stats::distributions::geometric::Geometric;
     ///
-    /// let geom = Geometric::new(0.3f64).unwrap();
+    /// let geom = Geometric::new(0.3f64).expect("Operation failed");
     /// let mode = geom.mode();
     /// assert_eq!(mode, 0.0);
     /// ```
@@ -461,7 +461,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
 /// ```
 /// use scirs2_stats::distributions;
 ///
-/// let g = distributions::geom(0.3f64).unwrap();
+/// let g = distributions::geom(0.3f64).expect("Operation failed");
 /// let pmf_at_2 = g.pmf(2.0);
 /// assert!((pmf_at_2 - 0.147).abs() < 1e-3);
 /// ```
@@ -488,10 +488,10 @@ mod tests {
     #[test]
     fn test_geometric_creation() {
         // Valid p values
-        let geom1 = Geometric::new(0.3).unwrap();
+        let geom1 = Geometric::new(0.3).expect("Operation failed");
         assert_eq!(geom1.p, 0.3);
 
-        let geom2 = Geometric::new(1.0).unwrap();
+        let geom2 = Geometric::new(1.0).expect("Operation failed");
         assert_eq!(geom2.p, 1.0);
 
         // Invalid p values
@@ -503,7 +503,7 @@ mod tests {
     #[test]
     fn test_geometric_pmf() {
         // Geometric(0.3)
-        let geom = Geometric::new(0.3).unwrap();
+        let geom = Geometric::new(0.3).expect("Operation failed");
 
         // PMF values for different k
         assert_relative_eq!(geom.pmf(0.0), 0.3, epsilon = 1e-10);
@@ -518,7 +518,7 @@ mod tests {
         assert_eq!(geom.pmf(1.5), 0.0);
 
         // Special case: Geometric(1.0)
-        let geom_p1 = Geometric::new(1.0).unwrap();
+        let geom_p1 = Geometric::new(1.0).expect("Operation failed");
         assert_eq!(geom_p1.pmf(0.0), 1.0);
         assert_eq!(geom_p1.pmf(1.0), 0.0);
         assert_eq!(geom_p1.pmf(2.0), 0.0);
@@ -527,7 +527,7 @@ mod tests {
     #[test]
     fn test_geometric_log_pmf() {
         // Geometric(0.3)
-        let geom = Geometric::new(0.3).unwrap();
+        let geom = Geometric::new(0.3).expect("Operation failed");
 
         // Check log_pmf against pmf
         for k in 0..5 {
@@ -550,7 +550,7 @@ mod tests {
     #[test]
     fn test_geometric_cdf() {
         // Geometric(0.3)
-        let geom = Geometric::new(0.3).unwrap();
+        let geom = Geometric::new(0.3).expect("Operation failed");
 
         // CDF for k = 0 should be 1 - (1-p)^1 = 1 - 0.7^1 = 0.3
         assert_relative_eq!(geom.cdf(0.0), 0.3, epsilon = 1e-10);
@@ -571,7 +571,7 @@ mod tests {
         assert_relative_eq!(geom.cdf(2.5), geom.cdf(2.0), epsilon = 1e-10);
 
         // Special case: Geometric(1.0)
-        let geom_p1 = Geometric::new(1.0).unwrap();
+        let geom_p1 = Geometric::new(1.0).expect("Operation failed");
         assert_eq!(geom_p1.cdf(0.0), 1.0);
         assert_eq!(geom_p1.cdf(1.0), 1.0);
     }
@@ -579,7 +579,7 @@ mod tests {
     #[test]
     fn test_geometric_ppf() {
         // Geometric(0.3)
-        let geom = Geometric::new(0.3).unwrap();
+        let geom = Geometric::new(0.3).expect("Operation failed");
 
         // Verify the ppf against the cdf
         for k in 0..10 {
@@ -591,21 +591,21 @@ mod tests {
             if k > 0 {
                 let cdf_k_minus_1 = geom.cdf(k_f - 1.0);
                 let p_mid = (cdf_k + cdf_k_minus_1) / 2.0; // A value between CDF(k-1) and CDF(k)
-                assert_eq!(geom.ppf(p_mid).unwrap(), k_f);
+                assert_eq!(geom.ppf(p_mid).expect("Operation failed"), k_f);
             } else {
                 // For k=0, just test a small value of p
-                assert_eq!(geom.ppf(cdf_k / 2.0).unwrap(), k_f);
+                assert_eq!(geom.ppf(cdf_k / 2.0).expect("Operation failed"), k_f);
             }
         }
 
         // Test edge cases
-        assert_eq!(geom.ppf(0.0).unwrap(), 0.0);
-        assert!(geom.ppf(1.0).unwrap().is_infinite()); // For p=1, the result should be infinity
+        assert_eq!(geom.ppf(0.0).expect("Operation failed"), 0.0);
+        assert!(geom.ppf(1.0).expect("Operation failed").is_infinite()); // For p=1, the result should be infinity
 
         // The PPF should be the inverse of the CDF
         let test_values = vec![0.1, 0.3, 0.5, 0.7, 0.9];
         for p in test_values {
-            let k = geom.ppf(p).unwrap();
+            let k = geom.ppf(p).expect("Operation failed");
 
             // Special case for p = 1.0 which gives infinity
             if p == 1.0 {
@@ -633,10 +633,10 @@ mod tests {
     #[test]
     fn test_geometric_rvs() {
         // Geometric(0.3)
-        let geom = Geometric::new(0.3).unwrap();
+        let geom = Geometric::new(0.3).expect("Operation failed");
 
         // Generate samples
-        let samples = geom.rvs(100).unwrap();
+        let samples = geom.rvs(100).expect("Operation failed");
 
         // Check number of samples
         assert_eq!(samples.len(), 100);
@@ -658,7 +658,7 @@ mod tests {
     #[test]
     fn test_geometric_moments() {
         // Test with p = 0.3
-        let geom = Geometric::new(0.3).unwrap();
+        let geom = Geometric::new(0.3).expect("Operation failed");
 
         // Mean = (1-p)/p = 0.7/0.3 = 2.333...
         assert_relative_eq!(geom.mean(), 2.333333, epsilon = 1e-6);
@@ -689,7 +689,7 @@ mod tests {
     #[test]
     fn test_geometric_edge_cases() {
         // Test with p = 1.0 (special case, only k=0 has non-zero probability)
-        let geom_p1 = Geometric::new(1.0).unwrap();
+        let geom_p1 = Geometric::new(1.0).expect("Operation failed");
 
         // PMF is 1 for k=0, 0 elsewhere
         assert_eq!(geom_p1.pmf(0.0), 1.0);
@@ -706,7 +706,7 @@ mod tests {
         assert_eq!(geom_p1.var(), 0.0);
 
         // PPF is 0 for all p < 1, infinity for p=1
-        assert_eq!(geom_p1.ppf(0.5).unwrap(), 0.0);
-        assert!(geom_p1.ppf(1.0).unwrap().is_infinite());
+        assert_eq!(geom_p1.ppf(0.5).expect("Operation failed"), 0.0);
+        assert!(geom_p1.ppf(1.0).expect("Operation failed").is_infinite());
     }
 }

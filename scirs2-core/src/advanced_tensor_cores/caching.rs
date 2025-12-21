@@ -471,7 +471,7 @@ impl SmartCacheSystem {
         }
 
         // Sort by eviction score and remove the highest scoring entry
-        eviction_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        eviction_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         if let Some((key, _)) = eviction_scores.first() {
             self.configuration_cache.remove(key);
@@ -856,7 +856,7 @@ impl CacheOptimizer {
             let total_error: f64 = predictions_with_actuals
                 .iter()
                 .map(|d| {
-                    let actual = d.actual_improvement.unwrap();
+                    let actual = d.actual_improvement.expect("Operation failed");
                     let predicted = d.expected_improvement;
                     (actual - predicted).abs()
                 })

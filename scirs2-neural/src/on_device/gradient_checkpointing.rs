@@ -295,7 +295,7 @@ mod tests {
         let input = Array2::ones((10, 5));
         let output = Array2::zeros((10, 3));
         let layer_info = LayerInfo::dense(5, 3);
-        checkpointing.save_checkpoint(0, input.clone(), output.clone(), layer_info).unwrap();
-        let checkpoint = checkpointing.get_checkpoint(0).unwrap();
+        checkpointing.save_checkpoint(0, input.clone(), output.clone(), layer_info).expect("Operation failed");
+        let checkpoint = checkpointing.get_checkpoint(0).expect("Operation failed");
         assert_eq!(checkpoint.layer_idx, 0);
         assert_eq!(checkpoint.input.shape(), &[10, 5]);

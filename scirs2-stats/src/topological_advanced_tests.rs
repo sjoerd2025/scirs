@@ -22,7 +22,7 @@ fn test_distance_computation() {
 
     let dist = analyzer
         .compute_distance(&p1.view(), &p2.view(), DistanceMetric::Euclidean)
-        .unwrap();
+        .expect("Test: operation failed");
 
     assert!((dist - 5.0).abs() < 1e-10);
 }
@@ -35,7 +35,9 @@ fn test_point_cloud_analysis() {
     // Simple 2D point cloud
     let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
 
-    let result = analyzer.analyze_point_cloud(&points.view()).unwrap();
+    let result = analyzer
+        .analyze_point_cloud(&points.view())
+        .expect("Test: operation failed");
 
     assert!(!result.persistence_diagrams.is_empty());
     assert!(result.betti_numbers.nrows() > 0);
@@ -49,7 +51,9 @@ fn test_simplicial_complex_construction() {
 
     let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 
-    let complex = analyzer.build_simplicial_complex(&points.view()).unwrap();
+    let complex = analyzer
+        .build_simplicial_complex(&points.view())
+        .expect("Test: operation failed");
 
     assert_eq!(complex.simplices_by_dim[0].len(), 3); // 3 vertices
     assert!(complex.simplices_by_dim[1].len() > 0); // Some edges
@@ -90,7 +94,9 @@ fn test_persistence_computation() {
         max_dimension: 1,
     };
 
-    let diagrams = analyzer.compute_persistent_homology(&complex).unwrap();
+    let diagrams = analyzer
+        .compute_persistent_homology(&complex)
+        .expect("Test: operation failed");
 
     assert!(diagrams.contains_key(&0)); // H_0
     assert!(diagrams.contains_key(&1)); // H_1

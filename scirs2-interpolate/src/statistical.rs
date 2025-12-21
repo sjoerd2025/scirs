@@ -123,9 +123,9 @@ impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInter
         }
 
         // Calculate statistics
-        let alpha = T::from(1.0 - self.config.confidence_level).unwrap();
-        let lower_percentile = alpha / T::from(2.0).unwrap();
-        let upper_percentile = T::one() - alpha / T::from(2.0).unwrap();
+        let alpha = T::from(1.0 - self.config.confidence_level).expect("Operation failed");
+        let lower_percentile = alpha / T::from(2.0).expect("Operation failed");
+        let upper_percentile = T::one() - alpha / T::from(2.0).expect("Operation failed");
 
         let mut estimate = Array1::zeros(m);
         let mut lower_bound = Array1::zeros(m);
@@ -135,29 +135,31 @@ impl<T: Float + FromPrimitive + Debug + Display + std::iter::Sum> BootstrapInter
         for j in 0..m {
             let column = bootstrap_results.index_axis(Axis(1), j);
             let mut sorted_col = column.to_vec();
-            sorted_col.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_col.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             // Median as point estimate
             let median_idx = self.config.n_samples / 2;
             estimate[j] = sorted_col[median_idx];
 
             // Confidence bounds
-            let lower_idx = (lower_percentile * T::from(self.config.n_samples).unwrap())
-                .to_usize()
-                .unwrap();
-            let upper_idx = (upper_percentile * T::from(self.config.n_samples).unwrap())
-                .to_usize()
-                .unwrap();
+            let lower_idx = (lower_percentile
+                * T::from(self.config.n_samples).expect("Operation failed"))
+            .to_usize()
+            .expect("Operation failed");
+            let upper_idx = (upper_percentile
+                * T::from(self.config.n_samples).expect("Operation failed"))
+            .to_usize()
+            .expect("Operation failed");
             lower_bound[j] = sorted_col[lower_idx];
             upper_bound[j] = sorted_col[upper_idx];
 
             // Standard error
-            let mean = column.mean().unwrap();
+            let mean = column.mean().expect("Operation failed");
             let variance = column
                 .iter()
                 .map(|&val| (val - mean) * (val - mean))
                 .sum::<T>()
-                / T::from(self.config.n_samples - 1).unwrap();
+                / T::from(self.config.n_samples - 1).expect("Operation failed");
             std_error[j] = variance.sqrt();
         }
 
@@ -189,7 +191,7 @@ impl<T: Float + FromPrimitive> Default for BayesianConfig<T> {
         Self {
             prior_mean: Box::new(|_| T::zero()),
             prior_variance: T::one(),
-            noise_variance: T::from(0.01).unwrap(),
+            noise_variance: T::from(0.01).expect("Operation failed"),
             length_scale: T::one(),
             n_posterior_samples: 100,
         }
@@ -283,7 +285,8 @@ impl<
             for j in 0..n {
                 let dist_sq = (self.x_obs[i] - self.x_obs[j]).powi(2);
                 k_xx[[i, j]] = self.config.prior_variance
-                    * (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
+                    * (-dist_sq / (T::from(2.0).expect("Operation failed") * length_scale.powi(2)))
+                        .exp();
 
                 // Add noise variance to diagonal
                 if i == j {
@@ -298,7 +301,7 @@ impl<
             Ok(w) => w,
             Err(_) => {
                 // Fallback to regularized system if Cholesky fails
-                let regularization = T::from(1e-6).unwrap();
+                let regularization = T::from(1e-6).expect("Operation failed");
                 for i in 0..n {
                     k_xx[[i, i]] += regularization;
                 }
@@ -312,7 +315,8 @@ impl<
             for j in 0..n {
                 let dist_sq = (xnew[i] - self.x_obs[j]).powi(2);
                 k_star_x[[i, j]] = self.config.prior_variance
-                    * (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
+                    * (-dist_sq / (T::from(2.0).expect("Operation failed") * length_scale.powi(2)))
+                        .exp();
             }
         }
 
@@ -344,7 +348,8 @@ impl<
             Err(_) => {
                 // Additional fallback: use simple weighted average if _matrix is ill-conditioned
                 let n = y_obs.len();
-                let weights = Array1::from_elem(n, T::one() / T::from(n).unwrap());
+                let weights =
+                    Array1::from_elem(n, T::one() / T::from(n).expect("Operation failed"));
                 Ok(weights)
             }
         }
@@ -376,7 +381,9 @@ impl<
 
             for i in 0..self.x_obs.len() {
                 let dist_sq = (xnew[j] - self.x_obs[i]).powi(2);
-                let influence = (-dist_sq / (T::from(2.0).unwrap() * length_scale.powi(2))).exp();
+                let influence = (-dist_sq
+                    / (T::from(2.0).expect("Operation failed") * length_scale.powi(2)))
+                .exp();
                 total_influence += influence;
                 reduction_factor += influence * influence;
             }
@@ -385,17 +392,23 @@ impl<
             let noise_ratio = self.config.noise_variance / self.config.prior_variance;
             let posterior_var = self.config.prior_variance
                 * (T::one()
-                    - reduction_factor / (total_influence + noise_ratio + T::from(1e-8).unwrap()));
+                    - reduction_factor
+                        / (total_influence
+                            + noise_ratio
+                            + T::from(1e-8).expect("Operation failed")));
 
             // Ensure positive variance
-            let std_dev = posterior_var.max(T::from(1e-12).unwrap()).sqrt();
+            let std_dev = posterior_var
+                .max(T::from(1e-12).expect("Operation failed"))
+                .sqrt();
 
             // Draw _samples for this query point
             for i in 0..n_samples {
-                if let Ok(normal) =
-                    Normal::new(mean[j].to_f64().unwrap(), std_dev.to_f64().unwrap())
-                {
-                    samples[[i, j]] = T::from(normal.sample(&mut rng)).unwrap();
+                if let Ok(normal) = Normal::new(
+                    mean[j].to_f64().expect("Operation failed"),
+                    std_dev.to_f64().expect("Operation failed"),
+                ) {
+                    samples[[i, j]] = T::from(normal.sample(&mut rng)).expect("Operation failed");
                 } else {
                     samples[[i, j]] = mean[j];
                 }
@@ -478,13 +491,15 @@ where
                 let nearest_idx = x
                     .iter()
                     .enumerate()
-                    .min_by_key(|(_, &xi)| ((xi - x_target).abs().to_f64().unwrap() * 1e6) as i64)
+                    .min_by_key(|(_, &xi)| {
+                        ((xi - x_target).abs().to_f64().expect("Operation failed") * 1e6) as i64
+                    })
                     .map(|(i_, _)| i_)
-                    .unwrap();
+                    .expect("Operation failed");
                 result[j] = y[nearest_idx];
             } else {
                 // Sort by value
-                weighted_values.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                weighted_values.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
                 // Find weighted quantile
                 let total_weight: T = weights.iter().sum();
@@ -521,7 +536,7 @@ impl<T: Float + FromPrimitive + Debug + Display> RobustInterpolator<T> {
         Self {
             tuning_constant: _tuningconstant,
             max_iterations: 100,
-            tolerance: T::from(1e-6).unwrap(),
+            tolerance: T::from(1e-6).expect("Operation failed"),
         }
     }
 
@@ -657,10 +672,11 @@ impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
                 };
 
                 // Add stochastic component
-                let std_dev =
-                    (self.field_variance * (T::one() - weight_sum / T::from(n).unwrap())).sqrt();
+                let std_dev = (self.field_variance
+                    * (T::one() - weight_sum / T::from(n).expect("Operation failed")))
+                .sqrt();
                 let normal_sample: f64 = StandardNormal.sample(&mut rng);
-                let noise: T = T::from(normal_sample).unwrap() * std_dev;
+                let noise: T = T::from(normal_sample).expect("Operation failed") * std_dev;
 
                 realizations[[r, j]] = mean + noise;
             }
@@ -678,8 +694,8 @@ impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
     ) -> InterpolateResult<(Array1<T>, Array1<T>)> {
         let realizations = self.interpolate_realizations(x, y, xnew)?;
 
-        let mean = realizations.mean_axis(Axis(0)).unwrap();
-        let variance = realizations.var_axis(Axis(0), T::from(1.0).unwrap());
+        let mean = realizations.mean_axis(Axis(0)).expect("Operation failed");
+        let variance = realizations.var_axis(Axis(0), T::from(1.0).expect("Operation failed"));
 
         Ok((mean, variance))
     }
@@ -735,13 +751,13 @@ pub fn make_median_interpolator<T>(bandwidth: T) -> InterpolateResult<QuantileIn
 where
     T: Float + FromPrimitive + Debug + Display + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T>,
 {
-    QuantileInterpolator::new(T::from(0.5).unwrap(), bandwidth)
+    QuantileInterpolator::new(T::from(0.5).expect("Operation failed"), bandwidth)
 }
 
 /// Create a robust interpolator with default Huber tuning
 #[allow(dead_code)]
 pub fn make_robust_interpolator<T: crate::traits::InterpolationFloat>() -> RobustInterpolator<T> {
-    RobustInterpolator::new(T::from(1.345).unwrap()) // Huber's recommended value
+    RobustInterpolator::new(T::from(1.345).expect("Operation failed")) // Huber's recommended value
 }
 
 /// Create a stochastic interpolator with default parameters
@@ -1059,13 +1075,13 @@ impl CrossValidationUncertainty {
         for j in 0..m {
             let col = predictions.column(j);
             let sum: T = col.iter().copied().sum();
-            mean[j] = sum / T::from(n).unwrap();
+            mean[j] = sum / T::from(n).expect("Operation failed");
 
             let var_sum: T = col
                 .iter()
                 .map(|&val| (val - mean[j]) * (val - mean[j]))
                 .sum();
-            variance[j] = var_sum / T::from(n - 1).unwrap();
+            variance[j] = var_sum / T::from(n - 1).expect("Operation failed");
         }
 
         Ok((mean, variance))
@@ -1141,13 +1157,13 @@ impl CrossValidationUncertainty {
         for j in 0..m {
             let values: Vec<T> = predictions.iter().map(|pred| pred[j]).collect();
             let sum: T = values.iter().copied().sum();
-            mean[j] = sum / T::from(self.k_folds).unwrap();
+            mean[j] = sum / T::from(self.k_folds).expect("Operation failed");
 
             let var_sum: T = values
                 .iter()
                 .map(|&val| (val - mean[j]) * (val - mean[j]))
                 .sum();
-            variance[j] = var_sum / T::from(self.k_folds - 1).unwrap();
+            variance[j] = var_sum / T::from(self.k_folds - 1).expect("Operation failed");
         }
 
         Ok((mean, variance))
@@ -1166,8 +1182,8 @@ pub fn make_ensemble_interpolator<
         + crate::traits::InterpolationFloat,
 >() -> EnsembleInterpolator<T> {
     EnsembleInterpolator::new()
-        .add_linear_method(T::from(0.6).unwrap())
-        .add_cubic_method(T::from(0.4).unwrap())
+        .add_linear_method(T::from(0.6).expect("Operation failed"))
+        .add_cubic_method(T::from(0.4).expect("Operation failed"))
 }
 
 /// Create a cross-validation uncertainty estimator with leave-one-out
@@ -1214,7 +1230,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum> Isotoni
 
         // Sort by x values
         let mut indices: Vec<usize> = (0..x.len()).collect();
-        indices.sort_by(|&i, &j| x[i].partial_cmp(&x[j]).unwrap());
+        indices.sort_by(|&i, &j| x[i].partial_cmp(&x[j]).expect("Operation failed"));
 
         let x_sorted: Array1<T> = indices.iter().map(|&i| x[i]).collect();
         let y_sorted: Array1<T> = indices.iter().map(|&i| y[i]).collect();
@@ -1280,8 +1296,8 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum> Isotoni
             let idx = match self
                 .x_data
                 .as_slice()
-                .unwrap()
-                .binary_search_by(|&probe| probe.partial_cmp(&x).unwrap())
+                .expect("Operation failed")
+                .binary_search_by(|&probe| probe.partial_cmp(&x).expect("Operation failed"))
             {
                 Ok(exact_idx) => {
                     result[i] = self.fitted_values[exact_idx];
@@ -1370,14 +1386,14 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy> KDEInterpolator<T> {
     fn kernel(&self, u: T) -> T {
         match self.kernel_type {
             KDEKernel::Gaussian => {
-                let pi = T::from(std::f64::consts::PI).unwrap();
-                let two = T::from(2.0).unwrap();
+                let pi = T::from(std::f64::consts::PI).expect("Operation failed");
+                let two = T::from(2.0).expect("Operation failed");
                 let exp_arg = -u * u / two;
                 exp_arg.exp() / (two * pi).sqrt()
             }
             KDEKernel::Epanechnikov => {
                 if u.abs() <= T::one() {
-                    let three_fourths = T::from(0.75).unwrap();
+                    let three_fourths = T::from(0.75).expect("Operation failed");
                     three_fourths * (T::one() - u * u)
                 } else {
                     T::zero()
@@ -1392,7 +1408,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy> KDEInterpolator<T> {
             }
             KDEKernel::Uniform => {
                 if u.abs() <= T::one() {
-                    T::from(0.5).unwrap()
+                    T::from(0.5).expect("Operation failed")
                 } else {
                     T::zero()
                 }
@@ -1475,15 +1491,15 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum>
         }
 
         // Estimate prior mean (overall mean)
-        let prior_mean = y.iter().copied().sum::<T>() / T::from(y.len()).unwrap();
+        let prior_mean = y.iter().copied().sum::<T>() / T::from(y.len()).expect("Operation failed");
 
         // Estimate noise variance using residuals
         let residuals: Array1<T> = y.iter().map(|&yi| yi - prior_mean).collect();
-        let noise_variance =
-            residuals.iter().map(|&r| r * r).sum::<T>() / T::from(residuals.len() - 1).unwrap();
+        let noise_variance = residuals.iter().map(|&r| r * r).sum::<T>()
+            / T::from(residuals.len() - 1).expect("Operation failed");
 
         // Compute shrinkage factor using James-Stein type estimator
-        let signal_variance = noise_variance.max(T::from(1e-10).unwrap());
+        let signal_variance = noise_variance.max(T::from(1e-10).expect("Operation failed"));
         let shrinkage_factor = noise_variance / (noise_variance + signal_variance);
 
         Ok(Self {
@@ -1509,8 +1525,8 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum>
         }
 
         let residuals: Array1<T> = y.iter().map(|&yi| yi - prior_mean).collect();
-        let noise_variance =
-            residuals.iter().map(|&r| r * r).sum::<T>() / T::from(residuals.len().max(1)).unwrap();
+        let noise_variance = residuals.iter().map(|&r| r * r).sum::<T>()
+            / T::from(residuals.len().max(1)).expect("Operation failed");
 
         Ok(Self {
             x_data: x.to_owned(),
@@ -1533,7 +1549,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum>
                 .enumerate()
                 .map(|(j, &xi)| ((x - xi).abs(), j))
                 .collect();
-            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
             // Use k nearest neighbors (k = 3 or n/2, whichever is smaller)
             let k = (3_usize).min(self.x_data.len() / 2).max(1);
@@ -1623,14 +1639,14 @@ pub fn make_auto_kde_interpolator<
     y: &ArrayView1<T>,
 ) -> InterpolateResult<KDEInterpolator<T>> {
     // Scott's rule for bandwidth selection
-    let n = T::from(x.len()).unwrap();
+    let n = T::from(x.len()).expect("Operation failed");
     let x_std = {
         let mean = x.iter().copied().sum::<T>() / n;
         let variance = x.iter().map(|&xi| (xi - mean) * (xi - mean)).sum::<T>() / (n - T::one());
         variance.sqrt()
     };
 
-    let bandwidth = x_std * n.powf(-T::from(0.2).unwrap()); // n^(-1/5)
+    let bandwidth = x_std * n.powf(-T::from(0.2).expect("Operation failed")); // n^(-1/5)
     KDEInterpolator::new(x, y, bandwidth, KDEKernel::Gaussian)
 }
 

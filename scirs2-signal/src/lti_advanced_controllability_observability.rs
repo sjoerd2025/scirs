@@ -1686,7 +1686,7 @@ fn setup_real_time_monitoring(
             adaptation_rules: vec!["Exponential".to_string(), "Linear".to_string()],
             adaptation_rates: Array1::from_vec(vec![0.01, 0.001]),
             threshold_bounds: Array2::from_shape_vec((2, 2), vec![0.001, 0.1, 0.0005, 0.05])
-                .unwrap(),
+                .expect("Operation failed"),
             performance_metrics: Array1::ones(2) * 0.95,
         },
     })
@@ -1793,13 +1793,13 @@ mod tests {
             vec![0.0],                  // 1x1 D matrix
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let config = AdvancedAnalysisConfig::default();
         let result = advanced_controllability_observability_analysis(&ss, &config);
 
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
 
         // Basic checks
         assert!(result.performance_metrics.computation_time >= 0.0);

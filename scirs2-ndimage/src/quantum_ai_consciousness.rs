@@ -51,13 +51,13 @@ mod tests {
     fn test_consciousness_processing() {
         let image =
             Array2::from_shape_vec((3, 3), vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9])
-                .unwrap();
+                .expect("Operation failed");
 
         let config = QuantumAIConsciousnessConfig::default();
         let result = quantum_ai_consciousness_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (output, _state, insights) = result.unwrap();
+        let (output, _state, insights) = result.expect("Operation failed");
         assert_eq!(output.dim(), (3, 3));
         assert!(output.iter().all(|&x: &f64| x.is_finite()));
         assert!(insights.consciousness_level >= 0.0);
@@ -133,18 +133,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_enhanced_consciousness_processing() {
         let image =
             Array2::from_shape_vec((3, 3), vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9])
-                .unwrap();
+                .expect("Operation failed");
 
         let config = QuantumAIConsciousnessConfig::default();
         // Test the basic consciousness processing instead
         let result = quantum_ai_consciousness_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (output, _state, insights) = result.unwrap();
+        let (output, _state, insights) = result.expect("Operation failed");
         assert_eq!(output.dim(), (3, 3));
         assert!(output.iter().all(|&x: &f64| x.is_finite()));
         assert!(insights.consciousness_level >= 0.0);

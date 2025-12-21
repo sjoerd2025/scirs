@@ -788,7 +788,7 @@ mod tests {
 
         let nu_sgs = solver.compute_sgs_viscosity(&velocity, 0.2, 0.1, 0.1, 0.1);
         assert!(nu_sgs.is_ok());
-        let viscosity = nu_sgs.unwrap();
+        let viscosity = nu_sgs.expect("Operation failed");
         assert_eq!(viscosity.dim(), (4, 4, 4));
     }
 }

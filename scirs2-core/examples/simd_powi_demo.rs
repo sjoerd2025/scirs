@@ -34,7 +34,7 @@ fn main() {
     println!("------------------------------------");
     {
         let size = 10_000;
-        let base = Uniform::new(1.0f32, 10.0).unwrap();
+        let base = Uniform::new(1.0f32, 10.0).expect("Operation failed");
         let data = Array1::from_shape_fn(size, |_| base.sample(&mut rng));
 
         let exponents = [2, 3, 4, 5, 8, 10, 16, 32];
@@ -64,7 +64,7 @@ fn main() {
     println!("--------------------------------------------------");
     {
         let size = 10_000;
-        let base = Uniform::new(1.0f64, 10.0).unwrap();
+        let base = Uniform::new(1.0f64, 10.0).expect("Operation failed");
         let data = Array1::from_shape_fn(size, |_| base.sample(&mut rng));
 
         let exponents = [-2, -3, -4, -5, -8, -10];
@@ -99,7 +99,7 @@ fn main() {
         println!("----         ---------   ----------------------   ----------");
 
         for &size in &sizes {
-            let base = Uniform::new(1.0f32, 10.0).unwrap();
+            let base = Uniform::new(1.0f32, 10.0).expect("Operation failed");
             let data = Array1::from_shape_fn(size, |_| base.sample(&mut rng));
 
             let start = Instant::now();
@@ -124,7 +124,7 @@ fn main() {
     println!("---------------------------------------------");
     {
         let size = 10_000;
-        let base = Uniform::new(1.0f32, 10.0).unwrap();
+        let base = Uniform::new(1.0f32, 10.0).expect("Operation failed");
         let data = Array1::from_shape_fn(size, |_| base.sample(&mut rng));
 
         // Powers of 2 are most efficient (require only squaring)
@@ -170,7 +170,7 @@ fn main() {
         let n = 5;
 
         // f32 benchmark
-        let base_f32 = Uniform::new(1.0f32, 10.0).unwrap();
+        let base_f32 = Uniform::new(1.0f32, 10.0).expect("Operation failed");
         let data_f32 = Array1::from_shape_fn(size, |_| base_f32.sample(&mut rng));
 
         let start = Instant::now();
@@ -178,7 +178,7 @@ fn main() {
         let elapsed_f32 = start.elapsed();
 
         // f64 benchmark
-        let base_f64 = Uniform::new(1.0f64, 10.0).unwrap();
+        let base_f64 = Uniform::new(1.0f64, 10.0).expect("Operation failed");
         let data_f64 = Array1::from_shape_fn(size, |_| base_f64.sample(&mut rng));
 
         let start = Instant::now();
@@ -216,7 +216,7 @@ fn main() {
         // Example 1: Statistical moments (variance = sum((x - mean)^2) / n)
         println!("\nApplication 1: Statistical Variance Calculation");
         let size = 50_000;
-        let data_dist = Uniform::new(0.0f32, 100.0).unwrap();
+        let data_dist = Uniform::new(0.0f32, 100.0).expect("Operation failed");
         let data = Array1::from_shape_fn(size, |_| data_dist.sample(&mut rng));
 
         let start = Instant::now();
@@ -250,7 +250,7 @@ fn main() {
         // Example 3: Distance metrics (Manhattan, Euclidean)
         println!("\nApplication 3: Distance Metrics (L1, L2 norms)");
         let size = 10_000;
-        let dist_f32 = Uniform::new(0.0f32, 100.0).unwrap();
+        let dist_f32 = Uniform::new(0.0f32, 100.0).expect("Operation failed");
         let p1 = Array1::from_shape_fn(size, |_| dist_f32.sample(&mut rng));
         let p2 = Array1::from_shape_fn(size, |_| dist_f32.sample(&mut rng));
 

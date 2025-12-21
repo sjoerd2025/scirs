@@ -38,7 +38,7 @@ use crate::error::{MetricsError, Result};
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
 ///
-/// let nmi = normalized_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
+/// let nmi = normalized_mutual_info_score(&labels_true, &labels_pred, "arithmetic").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn normalized_mutual_info_score<T, U, S1, S2, D1, D2>(
@@ -208,7 +208,7 @@ where
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
 ///
-/// let ami = adjusted_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
+/// let ami = adjusted_mutual_info_score(&labels_true, &labels_pred, "arithmetic").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn adjusted_mutual_info_score<T, U, S1, S2, D1, D2>(
@@ -398,12 +398,14 @@ mod tests {
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![1, 1, 0, 0, 2, 2]; // Same clustering with different labels
 
-        let nmi_arithmetic =
-            normalized_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
-        let nmi_geometric =
-            normalized_mutual_info_score(&labels_true, &labels_pred, "geometric").unwrap();
-        let nmi_min = normalized_mutual_info_score(&labels_true, &labels_pred, "min").unwrap();
-        let nmi_max = normalized_mutual_info_score(&labels_true, &labels_pred, "max").unwrap();
+        let nmi_arithmetic = normalized_mutual_info_score(&labels_true, &labels_pred, "arithmetic")
+            .expect("Operation failed");
+        let nmi_geometric = normalized_mutual_info_score(&labels_true, &labels_pred, "geometric")
+            .expect("Operation failed");
+        let nmi_min = normalized_mutual_info_score(&labels_true, &labels_pred, "min")
+            .expect("Operation failed");
+        let nmi_max = normalized_mutual_info_score(&labels_true, &labels_pred, "max")
+            .expect("Operation failed");
 
         assert!((nmi_arithmetic - 1.0).abs() < 1e-10);
         assert!((nmi_geometric - 1.0).abs() < 1e-10);
@@ -414,7 +416,8 @@ mod tests {
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![0, 0, 0, 1, 1, 1];
 
-        let nmi = normalized_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
+        let nmi = normalized_mutual_info_score(&labels_true, &labels_pred, "arithmetic")
+            .expect("Operation failed");
         assert!(nmi > 0.0 && nmi < 1.0);
     }
 
@@ -424,14 +427,16 @@ mod tests {
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![1, 1, 0, 0, 2, 2]; // Same clustering with different labels
 
-        let ami = adjusted_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
+        let ami = adjusted_mutual_info_score(&labels_true, &labels_pred, "arithmetic")
+            .expect("Operation failed");
         assert!((ami - 1.0).abs() < 1e-10);
 
         // Partial match
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![0, 0, 0, 1, 1, 1];
 
-        let ami = adjusted_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
+        let ami = adjusted_mutual_info_score(&labels_true, &labels_pred, "arithmetic")
+            .expect("Operation failed");
         assert!(ami > 0.0 && ami < 1.0);
     }
 }

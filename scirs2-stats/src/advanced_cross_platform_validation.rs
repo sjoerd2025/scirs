@@ -218,7 +218,6 @@ impl CrossPlatformValidator {
     }
 
     /// Test basic statistical functions across configurations
-    #[ignore = "timeout"]
     fn test_basic_statistics(&self) -> StatsResult<Vec<CrossPlatformTestResult>> {
         let mut results = Vec::new();
 
@@ -317,7 +316,7 @@ impl CrossPlatformValidator {
                 let execution_time = start_time.elapsed();
 
                 // Also compute reference result
-                let reference_mean = data.mean().unwrap();
+                let reference_mean = data.mean().expect("Operation failed");
 
                 match simd_result {
                     Ok(stats) => {
@@ -386,7 +385,7 @@ impl CrossPlatformValidator {
 
             match result {
                 Ok(stats) => {
-                    let reference_mean = data.mean().unwrap();
+                    let reference_mean = data.mean().expect("Operation failed");
                     let accuracy =
                         1.0 - ((stats.mean - reference_mean).abs() / reference_mean.abs()).min(1.0);
                     let performance_score = self.calculate_parallel_performance_score(

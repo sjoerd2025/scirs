@@ -720,12 +720,18 @@ where
             means: Array1::zeros(n_params),
             stds: Array1::ones(n_params),
             credible_intervals: Array2::zeros((n_params, 2)),
-            ess: Array1::from_elem(n_params, F::from(500.0).unwrap()),
+            ess: Array1::from_elem(
+                n_params,
+                F::from(500.0).expect("Failed to convert constant to float"),
+            ),
             rhat: Array1::ones(n_params),
         };
 
         let diagnostics = MCMCDiagnostics {
-            acceptance_rates: Array1::from_elem(1, F::from(0.6).unwrap()),
+            acceptance_rates: Array1::from_elem(
+                1,
+                F::from(0.6).expect("Failed to convert constant to float"),
+            ),
             autocorrelations: Array2::zeros((n_params, 100)),
             geweke_diagnostic: Array1::zeros(n_params),
             heidelberger_welch: Array1::from_elem(n_params, true),
@@ -733,11 +739,11 @@ where
         };
 
         let model_fit = ModelFitMetrics {
-            dic: F::from(100.0).unwrap(),
-            waic: F::from(105.0).unwrap(),
-            lppd: F::from(-50.0).unwrap(),
-            p_eff: F::from(n_params).unwrap(),
-            posterior_p_value: F::from(0.5).unwrap(),
+            dic: F::from(100.0).expect("Failed to convert constant to float"),
+            waic: F::from(105.0).expect("Failed to convert constant to float"),
+            lppd: F::from(-50.0).expect("Failed to convert constant to float"),
+            p_eff: F::from(n_params).expect("Failed to convert to float"),
+            posterior_p_value: F::from(0.5).expect("Failed to convert constant to float"),
         };
 
         let predictions = PredictiveDistribution {
@@ -765,10 +771,19 @@ where
         match criterion {
             ModelSelectionCriterion::DIC => Ok(result.model_fit.dic),
             ModelSelectionCriterion::WAIC => Ok(result.model_fit.waic),
-            ModelSelectionCriterion::LooCv => Ok(result.model_fit.waic + F::from(1.0).unwrap()),
+            ModelSelectionCriterion::LooCv => {
+                Ok(result.model_fit.waic
+                    + F::from(1.0).expect("Failed to convert constant to float"))
+            }
             ModelSelectionCriterion::MarginalLikelihood => Ok(result.model_fit.lppd),
-            ModelSelectionCriterion::PPL => Ok(result.model_fit.waic + F::from(2.0).unwrap()),
-            ModelSelectionCriterion::CVIC => Ok(result.model_fit.waic + F::from(0.5).unwrap()),
+            ModelSelectionCriterion::PPL => {
+                Ok(result.model_fit.waic
+                    + F::from(2.0).expect("Failed to convert constant to float"))
+            }
+            ModelSelectionCriterion::CVIC => {
+                Ok(result.model_fit.waic
+                    + F::from(0.5).expect("Failed to convert constant to float"))
+            }
         }
     }
 
@@ -782,8 +797,8 @@ where
         let k = self.cv_config.k_folds;
         let fold_scores = Array1::ones(k);
         let mean_score = F::one();
-        let std_error = F::from(0.1).unwrap();
-        let effective_n_params = F::from(x.ncols()).unwrap();
+        let std_error = F::from(0.1).expect("Failed to convert constant to float");
+        let effective_n_params = F::from(x.ncols()).expect("Operation failed");
 
         Ok(CrossValidationResult {
             mean_score,
@@ -813,11 +828,17 @@ where
 
         let weight_sum: F = waic_values
             .iter()
-            .map(|(_, waic)| (-((*waic - min_waic) / F::from(2.0).unwrap())).exp())
+            .map(|(_, waic)| {
+                (-((*waic - min_waic) / F::from(2.0).expect("Failed to convert constant to float")))
+                    .exp()
+            })
             .sum();
 
         for (id, waic) in waic_values {
-            let weight = (-(waic - min_waic) / F::from(2.0).unwrap()).exp() / weight_sum;
+            let weight = (-(waic - min_waic)
+                / F::from(2.0).expect("Failed to convert constant to float"))
+            .exp()
+                / weight_sum;
             weights.insert(id, weight);
         }
 
@@ -962,7 +983,7 @@ where
     fn kernel_function(&self, x1: &ArrayView1<F>, x2: &ArrayView1<F>) -> StatsResult<F> {
         match &self.kernel {
             KernelType::RBF { length_scale } => {
-                let length_scale = F::from(*length_scale).unwrap();
+                let length_scale = F::from(*length_scale).expect("Failed to convert to float");
                 let mut squared_dist = F::zero();
 
                 for (a, b) in x1.iter().zip(x2.iter()) {
@@ -970,11 +991,15 @@ where
                     squared_dist = squared_dist + diff * diff;
                 }
 
-                Ok((-squared_dist / (F::from(2.0).unwrap() * length_scale * length_scale)).exp())
+                Ok((-squared_dist
+                    / (F::from(2.0).expect("Failed to convert constant to float")
+                        * length_scale
+                        * length_scale))
+                    .exp())
             }
             KernelType::Matern { nu, length_scale } => {
-                let nu = F::from(*nu).unwrap();
-                let length_scale = F::from(*length_scale).unwrap();
+                let nu = F::from(*nu).expect("Failed to convert to float");
+                let length_scale = F::from(*length_scale).expect("Failed to convert to float");
                 let mut dist = F::zero();
 
                 for (a, b) in x1.iter().zip(x2.iter()) {
@@ -984,28 +1009,35 @@ where
                 dist = dist.sqrt();
 
                 // Simplified Matern kernel for nu = 1.5
-                if nu == F::from(1.5).unwrap() {
-                    let sqrt3_r_l = F::from(3.0).unwrap().sqrt() * dist / length_scale;
+                if nu == F::from(1.5).expect("Failed to convert constant to float") {
+                    let sqrt3_r_l = F::from(3.0)
+                        .expect("Failed to convert constant to float")
+                        .sqrt()
+                        * dist
+                        / length_scale;
                     Ok((F::one() + sqrt3_r_l) * (-sqrt3_r_l).exp())
                 } else {
                     // Fallback to RBF for other nu values
-                    Ok(
-                        (-dist * dist / (F::from(2.0).unwrap() * length_scale * length_scale))
-                            .exp(),
-                    )
+                    Ok((-dist * dist
+                        / (F::from(2.0).expect("Failed to convert constant to float")
+                            * length_scale
+                            * length_scale))
+                        .exp())
                 }
             }
             KernelType::Linear { variance } => {
-                let variance = F::from(*variance).unwrap();
+                let variance = F::from(*variance).expect("Failed to convert to float");
                 let dot_product = F::simd_dot(x1, x2);
                 Ok(variance * dot_product)
             }
             KernelType::WhiteNoise { variance } => {
-                let variance = F::from(*variance).unwrap();
+                let variance = F::from(*variance).expect("Failed to convert to float");
                 // White noise kernel is only non-zero when x1 == x2
                 let mut is_equal = true;
                 for (a, b) in x1.iter().zip(x2.iter()) {
-                    if (*a - *b).abs() > F::from(1e-10).unwrap() {
+                    if (*a - *b).abs()
+                        > F::from(1e-10).expect("Failed to convert constant to float")
+                    {
                         is_equal = false;
                         break;
                     }
@@ -1019,7 +1051,10 @@ where
                     let diff = *a - *b;
                     squared_dist = squared_dist + diff * diff;
                 }
-                Ok((-squared_dist / F::from(2.0).unwrap()).exp())
+                Ok(
+                    (-squared_dist / F::from(2.0).expect("Failed to convert constant to float"))
+                        .exp(),
+                )
             }
         }
     }
@@ -1095,7 +1130,7 @@ where
         // Initialize priors with appropriate scales based on layer sizes
         let weight_priors = (0..n_layers)
             .map(|i| {
-                let fan_in = F::from(architecture[i]).unwrap();
+                let fan_in = F::from(architecture[i]).expect("Failed to convert to float");
                 let precision = fan_in; // Xavier initialization scale
                 DistributionType::Normal {
                     mean: F::zero(),
@@ -1107,7 +1142,7 @@ where
         let bias_priors = (0..n_layers)
             .map(|_| DistributionType::Normal {
                 mean: F::zero(),
-                precision: F::from(0.1).unwrap(),
+                precision: F::from(0.1).expect("Failed to convert constant to float"),
             })
             .collect();
 
@@ -1136,10 +1171,12 @@ where
             ActivationType::Swish => x / (F::one() + (-x).exp()),
             ActivationType::GELU => {
                 // Approximate GELU: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
-                let sqrt_2_pi = F::from(0.7978845608).unwrap(); // sqrt(2/π)
-                let coeff = F::from(0.044715).unwrap();
+                let sqrt_2_pi = F::from(0.7978845608).expect("Failed to convert constant to float"); // sqrt(2/π)
+                let coeff = F::from(0.044715).expect("Failed to convert constant to float");
                 let inner = sqrt_2_pi * (x + coeff * x * x * x);
-                F::from(0.5).unwrap() * x * (F::one() + inner.tanh())
+                F::from(0.5).expect("Failed to convert constant to float")
+                    * x
+                    * (F::one() + inner.tanh())
             }
         }
     }
@@ -1223,11 +1260,11 @@ where
     /// Sample parameters from priors
     fn sample_from_normal(mean: F, precision: F) -> StatsResult<F> {
         // Simple Box-Muller transform
-        let u1 = F::from(0.5).unwrap(); // Would use actual random numbers
-        let u2 = F::from(0.5).unwrap();
+        let u1 = F::from(0.5).expect("Failed to convert constant to float"); // Would use actual random numbers
+        let u2 = F::from(0.5).expect("Failed to convert constant to float");
 
-        let z = (-F::from(2.0).unwrap() * u1.ln()).sqrt()
-            * (F::from(2.0 * std::f64::consts::PI).unwrap() * u2).cos();
+        let z = (-F::from(2.0).expect("Failed to convert constant to float") * u1.ln()).sqrt()
+            * (F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float") * u2).cos();
 
         let std_dev = F::one() / precision.sqrt();
         Ok(mean + std_dev * z)
@@ -1242,7 +1279,7 @@ where
         checkarray_finite(x, "x")?;
 
         let n_test = x.nrows();
-        let output_dim = self.architecture.last().unwrap();
+        let output_dim = self.architecture.last().expect("Operation failed");
 
         let mut predictions = Array2::zeros((n_test, *output_dim));
         let mut prediction_vars = Array2::zeros((n_test, *output_dim));
@@ -1265,7 +1302,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_model_comparison() {
         let mut comparison = BayesianModelComparison::<f64>::new();
 
@@ -1298,7 +1334,7 @@ mod tests {
             KernelType::RBF { length_scale: 1.0 },
             0.1,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test creation
         assert_eq!(gp.x_train.nrows(), 3);
@@ -1316,7 +1352,7 @@ mod tests {
             vec![2, 5, 1],
             vec![ActivationType::ReLU, ActivationType::Sigmoid],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test creation
         assert_eq!(bnn.architecture.len(), 3);

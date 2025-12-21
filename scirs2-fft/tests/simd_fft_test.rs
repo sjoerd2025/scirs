@@ -15,10 +15,10 @@ mod tests {
         let signal: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0];
 
         // Compute FFT with standard implementation
-        let standard_result = fft(&signal, None).unwrap();
+        let standard_result = fft(&signal, None).expect("Operation failed");
 
         // Compute FFT with SIMD implementation
-        let simd_result = fft_simd(&signal, None).unwrap();
+        let simd_result = fft_simd(&signal, None).expect("Operation failed");
 
         // Compare results
         assert_eq!(standard_result.len(), simd_result.len());

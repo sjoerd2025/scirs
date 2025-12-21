@@ -1878,7 +1878,8 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Cylinders (4, 6, 8)
-            data[[i, 0]] = [4.0, 6.0, 8.0][rng.sample(Uniform::new(0, 3).unwrap())];
+            data[[i, 0]] =
+                [4.0, 6.0, 8.0][rng.sample(Uniform::new(0, 3).expect("Operation failed"))];
             // Displacement
             data[[i, 1]] = rng.gen_range(68.0..455.0);
             // Horsepower
@@ -2070,7 +2071,8 @@ impl RealWorldDatasets {
             // Interest rate
             data[[i, 1]] = rng.gen_range(5.0..25.0);
             // Loan term (months)
-            data[[i, 2]] = [12.0, 24.0, 36.0, 48.0, 60.0][rng.sample(Uniform::new(0, 5).unwrap())];
+            data[[i, 2]] = [12.0, 24.0, 36.0, 48.0, 60.0]
+                [rng.sample(Uniform::new(0, 5).expect("Operation failed"))];
             // Annual income
             data[[i, 3]] = rng.gen_range(20000.0..200000.0);
             // Credit score
@@ -2211,7 +2213,7 @@ impl RealWorldDatasets {
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
-            let class = rng.sample(Uniform::new(0, 10).unwrap()) as f64;
+            let class = rng.sample(Uniform::new(0, 10).expect("Operation failed")) as f64;
             target[i] = class;
 
             // Generate synthetic image data that has class-dependent patterns
@@ -2251,7 +2253,7 @@ impl RealWorldDatasets {
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
-            let class = rng.sample(Uniform::new(0, 10).unwrap()) as f64;
+            let class = rng.sample(Uniform::new(0, 10).expect("Operation failed")) as f64;
             target[i] = class;
 
             // Generate synthetic fashion item patterns
@@ -2340,7 +2342,7 @@ impl RealWorldDatasets {
         let words_per_topic = n_features / 5; // 5 topics
 
         for i in 0..n_samples {
-            let topic = rng.sample(Uniform::new(0, 5).unwrap()) as f64;
+            let topic = rng.sample(Uniform::new(0, 5).expect("Operation failed")) as f64;
             target[i] = topic;
 
             for j in 0..n_features {
@@ -2408,7 +2410,7 @@ pub fn load_red_wine_quality() -> Result<Dataset> {
 #[allow(dead_code)]
 pub fn list_real_world_datasets() -> Vec<String> {
     let config = RealWorldConfig::default();
-    let loader = RealWorldDatasets::new(config).unwrap();
+    let loader = RealWorldDatasets::new(config).expect("Operation failed");
     loader.list_datasets()
 }
 

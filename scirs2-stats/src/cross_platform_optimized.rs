@@ -298,7 +298,7 @@ impl AdvancedCrossPlatformTester {
         
         // Detect current platform characteristics
         let current_platform = if self.config.enable_platform_detection {
-            Some(self.platform_detector.read().unwrap().detect_current_platform()?)
+            Some(self.platform_detector.read().expect("Operation failed").detect_current_platform()?)
         } else {
             None
         };
@@ -369,7 +369,7 @@ impl AdvancedCrossPlatformTester {
 
         // Store result for regression detection
         if self.config.enable_regression_detection {
-            self.regression_detector.write().unwrap()
+            self.regression_detector.write().expect("Operation failed")
                 .storebaseline_result(function_name, &result);
         }
 
@@ -437,7 +437,7 @@ impl AdvancedCrossPlatformTester {
         &self,
         platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<PerformanceVarianceAnalysis> {
-        self.performance_analyzer.read().unwrap()
+        self.performance_analyzer.read().expect("Operation failed")
             .analyze_variance_across_platforms(platform_results)
     }
 
@@ -446,7 +446,7 @@ impl AdvancedCrossPlatformTester {
         &self,
         platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<NumericalPrecisionConsistencyResult> {
-        self.precision_validator.read().unwrap()
+        self.precision_validator.read().expect("Operation failed")
             .validate_consistency_across_platforms(platform_results)
     }
 
@@ -455,7 +455,7 @@ impl AdvancedCrossPlatformTester {
         &self,
         platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<HardwareOptimizationTestResult> {
-        self.hardware_optimizer_tester.read().unwrap()
+        self.hardware_optimizer_tester.read().expect("Operation failed")
             .test_optimizations_across_platforms(platform_results)
     }
 
@@ -469,7 +469,7 @@ impl AdvancedCrossPlatformTester {
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
         + std::fmt::Display,
     {
-        self.edge_case_generator.read().unwrap()
+        self.edge_case_generator.read().expect("Operation failed")
             .test_platform_specific_edge_cases(function_name, test_suite)
     }
 
@@ -480,7 +480,7 @@ impl AdvancedCrossPlatformTester {
         baseline_result: &ComprehensiveCrossPlatformResult,
         current_result: &ComprehensiveCrossPlatformResult,
     ) -> StatsResult<CrossPlatformRegressionResult> {
-        self.regression_detector.read().unwrap()
+        self.regression_detector.read().expect("Operation failed")
             .detect_regressions(function_name, baseline_result, current_result)
     }
 
@@ -495,7 +495,7 @@ impl AdvancedCrossPlatformTester {
             ));
         }
 
-        self.monitoring_system.write().unwrap()
+        self.monitoring_system.write().expect("Operation failed")
             .start_monitoring_session(monitoring_config)
     }
 
@@ -504,7 +504,7 @@ impl AdvancedCrossPlatformTester {
         &self,
         target_platform: &TargetPlatform,
     ) -> StatsResult<PlatformCompatibilityAssessment> {
-        let current_platform = self.platform_detector.read().unwrap()
+        let current_platform = self.platform_detector.read().expect("Operation failed")
             .detect_current_platform()?;
 
         Ok(PlatformCompatibilityAssessment {
@@ -551,15 +551,15 @@ impl AdvancedCrossPlatformTester {
         let execution_result = match &test.test_function {
             TestFunction::Mean(data) => {
                 // Placeholder - would call actual mean function
-                TestExecutionResult::Success(F::from(0.0).unwrap())
+                TestExecutionResult::Success(F::from(0.0).expect("Failed to convert constant to float"))
             }
             TestFunction::Variance(data, ddof) => {
                 // Placeholder - would call actual variance function
-                TestExecutionResult::Success(F::from(1.0).unwrap())
+                TestExecutionResult::Success(F::from(1.0).expect("Failed to convert constant to float"))
             }
             TestFunction::Custom(__) => {
                 // Placeholder - would execute custom function
-                TestExecutionResult::Success(F::from(0.0).unwrap())
+                TestExecutionResult::Success(F::from(0.0).expect("Failed to convert constant to float"))
             }
         };
 
@@ -611,9 +611,9 @@ impl AdvancedCrossPlatformTester {
             
             // Execute the test function (placeholder)
             let _result = match &test.test_function {
-                TestFunction::Mean(_) => F::from(0.0).unwrap(),
-                TestFunction::Variance(__) => F::from(1.0).unwrap(),
-                TestFunction::Custom(__) => F::from(0.0).unwrap(),
+                TestFunction::Mean(_) => F::from(0.0).expect("Failed to convert constant to float"),
+                TestFunction::Variance(__) => F::from(1.0).expect("Failed to convert constant to float"),
+                TestFunction::Custom(__) => F::from(0.0).expect("Failed to convert constant to float"),
             };
             
             let iter_time = iter_start.elapsed();
@@ -664,9 +664,9 @@ impl AdvancedCrossPlatformTester {
         
         // Execute precision test and compare with expected result
         let actual_result = match &test.test_function {
-            TestFunction::Mean(_) => F::from(0.0).unwrap(),
-            TestFunction::Variance(__) => F::from(1.0).unwrap(),
-            TestFunction::Custom(__) => F::from(0.0).unwrap(),
+            TestFunction::Mean(_) => F::from(0.0).expect("Failed to convert constant to float"),
+            TestFunction::Variance(__) => F::from(1.0).expect("Failed to convert constant to float"),
+            TestFunction::Custom(__) => F::from(0.0).expect("Failed to convert constant to float"),
         };
 
         let precision_error = if let Some(expected) = test.expected_result {
@@ -682,7 +682,7 @@ impl AdvancedCrossPlatformTester {
             expected_result: test.expected_result,
             actual_result,
             precision_error,
-            meets_tolerance: precision_error <= F::from(test.tolerance).unwrap(),
+            meets_tolerance: precision_error <= F::from(test.tolerance).expect("Failed to convert to float"),
             execution_time,
         })
     }
@@ -740,7 +740,7 @@ impl AdvancedCrossPlatformTester {
         &self,
         platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<CrossPlatformConsistencyAnalysis> {
-        self.consistency_tester.read().unwrap()
+        self.consistency_tester.read().expect("Operation failed")
             .analyze_consistency(platform_results)
     }
 
@@ -1846,7 +1846,7 @@ impl ContinuousMonitoringSystem {
         &mut self,
         config: ContinuousMonitoringConfig,
     ) -> StatsResult<MonitoringSession> {
-        let session_id = format!("session_{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs());
+        let session_id = format!("session_{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Operation failed").as_secs());
         
         let session = MonitoringSession {
             session_id: session_id.clone(),

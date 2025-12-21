@@ -71,7 +71,7 @@ impl LinalgBridge {
         let mut a = Array2::zeros((size, size));
         for i in 0..size {
             for j in 0..size {
-                a[[i, j]] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                a[[i, j]] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             }
         }
 
@@ -101,7 +101,7 @@ impl LinalgBridge {
 
         for i in 0..size {
             for j in i..size {
-                let value = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                let value = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
                 matrix[[i, j]] = value;
                 matrix[[j, i]] = value;
             }
@@ -118,7 +118,7 @@ impl LinalgBridge {
         let mut a = Array2::zeros((size, size));
         for i in 0..size {
             for j in 0..size {
-                a[[i, j]] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                a[[i, j]] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             }
         }
 
@@ -166,9 +166,10 @@ impl LinalgBridge {
         // Generate random eigenvalues
         let mut eigenvalues = Vec::with_capacity(size);
         for _ in 0..size {
-            eigenvalues.push(rng.sample(Uniform::new(0.1, eigenvalue_spread).unwrap()));
+            eigenvalues
+                .push(rng.sample(Uniform::new(0.1, eigenvalue_spread).expect("Operation failed")));
         }
-        eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap()); // Sort descending
+        eigenvalues.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed")); // Sort descending
 
         // Generate random orthogonal eigenvector matrix
         let eigenvectors = Self::random_orthogonal_matrix(size, seed + 1)?;
@@ -223,9 +224,9 @@ impl LinalgBridge {
         let nnz = (total_elements as f64 * density) as usize;
 
         for _ in 0..nnz {
-            let row = rng.sample(Uniform::new(0, rows).unwrap());
-            let col = rng.sample(Uniform::new(0, cols).unwrap());
-            let value = rng.sample(Normal::new(0.0, 1.0).unwrap());
+            let row = rng.sample(Uniform::new(0, rows).expect("Operation failed"));
+            let col = rng.sample(Uniform::new(0, cols).expect("Operation failed"));
+            let value = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             triplets.push((row, col, value));
         }
 
@@ -254,13 +255,13 @@ impl StatsBridge {
         for (name, spec) in properties.features.iter() {
             let feature_data = match &spec.distribution {
                 FeatureDistribution::Normal { mean, std } => {
-                    let normal = Normal::new(*mean, *std).unwrap();
+                    let normal = Normal::new(*mean, *std).expect("Operation failed");
                     (0..properties.n_samples)
                         .map(|_| rng.sample(normal))
                         .collect::<Vec<f64>>()
                 }
                 FeatureDistribution::Uniform { low, high } => {
-                    let uniform = Uniform::new(*low, *high).unwrap();
+                    let uniform = Uniform::new(*low, *high).expect("Operation failed");
                     (0..properties.n_samples)
                         .map(|_| rng.sample(uniform))
                         .collect::<Vec<f64>>()
@@ -333,7 +334,7 @@ impl StatsBridge {
             .collect();
 
         let mut sorted_stats = bootstrap_stats;
-        sorted_stats.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_stats.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let alpha = 1.0 - confidence_level;
         let lower_idx = (alpha / 2.0 * sorted_stats.len() as f64) as usize;
@@ -364,7 +365,7 @@ impl NeuralBridge {
             let fan_out = layer_sizes[i + 1] as f64;
             let std = (2.0 / (fan_in + fan_out)).sqrt();
 
-            let normal = Normal::new(0.0, std).unwrap();
+            let normal = Normal::new(0.0, std).expect("Operation failed");
             let mut weight_matrix = Array2::zeros((layer_sizes[i + 1], layer_sizes[i]));
 
             for j in 0..layer_sizes[i + 1] {
@@ -388,7 +389,7 @@ impl NeuralBridge {
             let fan_in = layer_sizes[i] as f64;
             let std = (2.0 / fan_in).sqrt();
 
-            let normal = Normal::new(0.0, std).unwrap();
+            let normal = Normal::new(0.0, std).expect("Operation failed");
             let mut weight_matrix = Array2::zeros((layer_sizes[i + 1], layer_sizes[i]));
 
             for j in 0..layer_sizes[i + 1] {
@@ -415,7 +416,7 @@ impl NeuralBridge {
             let fan_in = layer_sizes[i] as f64;
             let std = (1.0 / fan_in).sqrt();
 
-            let normal = Normal::new(0.0, std).unwrap();
+            let normal = Normal::new(0.0, std).expect("Operation failed");
             let mut weight_matrix = Array2::zeros((layer_sizes[i + 1], layer_sizes[i]));
 
             for j in 0..layer_sizes[i + 1] {
@@ -440,7 +441,7 @@ impl NeuralBridge {
         let mut masks = Vec::new();
 
         let keep_prob = 1.0 - dropout_rate;
-        let uniform = Uniform::new(0.0, 1.0).unwrap();
+        let uniform = Uniform::new(0.0, 1.0).expect("Operation failed");
 
         for &(rows, cols) in shapes {
             let mut mask = Array2::zeros((rows, cols));
@@ -468,7 +469,7 @@ impl NeuralBridge {
         let mut rng = seeded_rng(seed);
         let mut noisy_gradients = Vec::new();
 
-        let normal = Normal::new(0.0, noise_scale).unwrap();
+        let normal = Normal::new(0.0, noise_scale).expect("Operation failed");
 
         for gradient in gradients {
             let mut noisy_gradient = gradient.clone();
@@ -492,20 +493,27 @@ impl NeuralBridge {
 
         for _ in 0..batch_size {
             let rotation = if config.rotation_range > 0.0 {
-                rng.sample(Uniform::new(-config.rotation_range, config.rotation_range).unwrap())
+                rng.sample(
+                    Uniform::new(-config.rotation_range, config.rotation_range)
+                        .expect("Operation failed"),
+                )
             } else {
                 0.0
             };
 
             let scale = if config.scale_range.0 < config.scale_range.1 {
-                rng.sample(Uniform::new(config.scale_range.0, config.scale_range.1).unwrap())
+                rng.sample(
+                    Uniform::new(config.scale_range.0, config.scale_range.1)
+                        .expect("Operation failed"),
+                )
             } else {
                 1.0
             };
 
             let translation_x = if config.translation_range.0 > 0.0 {
                 rng.sample(
-                    Uniform::new(-config.translation_range.0, config.translation_range.0).unwrap(),
+                    Uniform::new(-config.translation_range.0, config.translation_range.0)
+                        .expect("Operation failed"),
                 )
             } else {
                 0.0
@@ -513,7 +521,8 @@ impl NeuralBridge {
 
             let translation_y = if config.translation_range.1 > 0.0 {
                 rng.sample(
-                    Uniform::new(-config.translation_range.1, config.translation_range.1).unwrap(),
+                    Uniform::new(-config.translation_range.1, config.translation_range.1)
+                        .expect("Operation failed"),
                 )
             } else {
                 0.0
@@ -523,9 +532,9 @@ impl NeuralBridge {
                 rotation,
                 scale,
                 translation: (translation_x, translation_y),
-                horizontal_flip: rng.sample(Uniform::new(0.0, 1.0).unwrap())
+                horizontal_flip: rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
                     < config.horizontal_flip_prob,
-                vertical_flip: rng.sample(Uniform::new(0.0, 1.0).unwrap())
+                vertical_flip: rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
                     < config.vertical_flip_prob,
             });
         }
@@ -559,7 +568,7 @@ impl OptimizationBridge {
     ) -> Vec<f64> {
         let mut rng = seeded_rng(seed);
         let std = perturbation_scale * temperature.sqrt();
-        let normal = Normal::new(0.0, std).unwrap();
+        let normal = Normal::new(0.0, std).expect("Operation failed");
 
         current_state
             .iter()
@@ -580,7 +589,7 @@ impl OptimizationBridge {
             // Generate random unit vector
             let mut direction = vec![0.0; dimensions];
             for j in 0..dimensions {
-                direction[j] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                direction[j] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             }
 
             // Normalize
@@ -604,20 +613,20 @@ impl OptimizationBridge {
 
         match noise_type {
             ExplorationNoiseType::Gaussian { std } => {
-                let normal = Normal::new(0.0, std).unwrap();
+                let normal = Normal::new(0.0, std).expect("Operation failed");
                 (0..action_dimensions).map(|_| rng.sample(normal)).collect()
             }
             ExplorationNoiseType::OrnsteinUhlenbeck { theta, sigma, mu } => {
                 // Simplified OU process (would need state for full implementation)
                 let dt = 1.0;
                 let std = sigma * (2.0 * theta * dt).sqrt();
-                let normal = Normal::new(0.0, std).unwrap();
+                let normal = Normal::new(0.0, std).expect("Operation failed");
                 (0..action_dimensions)
                     .map(|_| mu + rng.sample(normal))
                     .collect()
             }
             ExplorationNoiseType::EpsilonGreedy { epsilon } => {
-                let uniform = Uniform::new(0.0, 1.0).unwrap();
+                let uniform = Uniform::new(0.0, 1.0).expect("Operation failed");
                 (0..action_dimensions)
                     .map(|_| {
                         if rng.sample(uniform) < epsilon {
@@ -713,7 +722,8 @@ impl ExperimentDesignBuilder {
                 for _ in 0..n_points {
                     let mut point = Vec::new();
                     for factor in &self.factors {
-                        let idx = rng.sample(Uniform::new(0, factor.len()).unwrap());
+                        let idx =
+                            rng.sample(Uniform::new(0, factor.len()).expect("Operation failed"));
                         point.push(factor[idx]);
                     }
                     points.push(point);
@@ -827,7 +837,7 @@ mod tests {
 
     #[test]
     fn test_linalg_bridge_symmetric_matrix() {
-        let matrix = LinalgBridge::random_symmetric_matrix(5, 42).unwrap();
+        let matrix = LinalgBridge::random_symmetric_matrix(5, 42).expect("Operation failed");
 
         // Check symmetry
         for i in 0..5 {
@@ -839,7 +849,8 @@ mod tests {
 
     #[test]
     fn test_linalg_bridge_positive_definite() {
-        let matrix = LinalgBridge::random_symmetric_positive_definite(3, 42).unwrap();
+        let matrix =
+            LinalgBridge::random_symmetric_positive_definite(3, 42).expect("Operation failed");
 
         // Check that all diagonal elements are positive
         for i in 0..3 {
@@ -857,7 +868,8 @@ mod tests {
     #[test]
     fn test_neural_bridge_xavier_init() {
         let layer_sizes = vec![784, 128, 64, 10];
-        let weights = NeuralBridge::xavier_initialization(&layer_sizes, 42).unwrap();
+        let weights =
+            NeuralBridge::xavier_initialization(&layer_sizes, 42).expect("Operation failed");
 
         assert_eq!(weights.len(), 3); // 3 weight matrices
         assert_eq!(weights[0].shape(), [128, 784]);
@@ -877,7 +889,7 @@ mod tests {
             1000,
             42,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert_relative_eq!(point_est, 5.5, epsilon = 0.1);
         assert!(lower < point_est);
@@ -890,7 +902,7 @@ mod tests {
             10,
             |rng| {
                 (0..5)
-                    .map(|_| rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+                    .map(|_| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")))
                     .collect::<Vec<f64>>()
             },
             42,
@@ -912,7 +924,7 @@ mod tests {
             .replications(3)
             .randomization_seed(42)
             .build()
-            .unwrap();
+            .expect("Test: operation failed");
 
         assert_eq!(design.design_points.len(), 4); // 2x2 factorial
         assert_eq!(design.replications, 3);

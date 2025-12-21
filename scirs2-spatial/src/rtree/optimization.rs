@@ -309,7 +309,7 @@ mod tests {
     #[test]
     fn test_rtree_optimize() {
         // Create a new R-tree
-        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).unwrap();
+        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).expect("Operation failed");
 
         // Insert some points
         let points = vec![
@@ -326,11 +326,11 @@ mod tests {
         ];
 
         for (point, value) in points {
-            rtree.insert(point, value).unwrap();
+            rtree.insert(point, value).expect("Operation failed");
         }
 
         // Optimize the tree
-        rtree.optimize().unwrap();
+        rtree.optimize().expect("Operation failed");
 
         // Check that all data is still present
         assert_eq!(rtree.size(), 10);
@@ -338,7 +338,7 @@ mod tests {
         // Try to search for a point
         let results = rtree
             .search_range(&array![0.4, 0.4].view(), &array![0.6, 0.6].view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].1, 4);
@@ -361,7 +361,7 @@ mod tests {
         ];
 
         // Bulk load
-        let rtree = RTree::bulk_load(2, 2, 4, points).unwrap();
+        let rtree = RTree::bulk_load(2, 2, 4, points).expect("Operation failed");
 
         // Check that all data is present
         assert_eq!(rtree.size(), 10);
@@ -369,7 +369,7 @@ mod tests {
         // Try to search for a point
         let results = rtree
             .search_range(&array![0.4, 0.4].view(), &array![0.6, 0.6].view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].1, 4);

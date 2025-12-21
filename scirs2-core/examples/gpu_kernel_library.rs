@@ -66,10 +66,10 @@ fn demo_gemm_kernel(ctx: &GpuContext) -> Result<(), GpuError> {
             1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
-    let b =
-        Array2::from_shape_vec((4, 2), vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+    let b = Array2::from_shape_vec((4, 2), vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+        .expect("Operation failed");
 
     println!("Matrix A ({}x{}):", a.shape()[0], a.shape()[1]);
     for i in 0..a.shape()[0] {
@@ -99,8 +99,8 @@ fn demo_gemm_kernel(ctx: &GpuContext) -> Result<(), GpuError> {
     let kernel = ctx.get_specialized_kernel("gemm", &params)?;
 
     // Create GPU buffers
-    let a_buffer = ctx.create_buffer_from_slice(a.as_slice().unwrap());
-    let b_buffer = ctx.create_buffer_from_slice(b.as_slice().unwrap());
+    let a_buffer = ctx.create_buffer_from_slice(a.as_slice().expect("Operation failed"));
+    let b_buffer = ctx.create_buffer_from_slice(b.as_slice().expect("Operation failed"));
     let c_buffer = ctx.create_buffer::<f32>(a.shape()[0] * b.shape()[1]);
 
     // Set kernel parameters
@@ -122,7 +122,8 @@ fn demo_gemm_kernel(ctx: &GpuContext) -> Result<(), GpuError> {
 
     // Get result
     let result_vec = c_buffer.to_vec();
-    let result = Array2::from_shape_vec((a.shape()[0], b.shape()[1]), result_vec).unwrap();
+    let result =
+        Array2::from_shape_vec((a.shape()[0], b.shape()[1]), result_vec).expect("Operation failed");
 
     println!(
         "Result C = A * B ({}x{}):",
@@ -165,8 +166,8 @@ fn demo_axpy_kernel(ctx: &GpuContext) -> Result<(), GpuError> {
     let kernel = ctx.get_kernel("axpy")?;
 
     // Create GPU buffers
-    let x_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
-    let y_buffer = ctx.create_buffer_from_slice(y.as_slice().unwrap());
+    let x_buffer = ctx.create_buffer_from_slice(x.as_slice().expect("Operation failed"));
+    let y_buffer = ctx.create_buffer_from_slice(y.as_slice().expect("Operation failed"));
 
     // Alpha value for the operation y = alpha * x + y
     let alpha: f32 = 2.0;
@@ -182,7 +183,7 @@ fn demo_axpy_kernel(ctx: &GpuContext) -> Result<(), GpuError> {
     kernel.dispatch([(x.len() as u32).div_ceil(256), 1, 1]);
 
     // Get result (overwrite y)
-    let _ = y_buffer.copy_to_host(y.as_slice_mut().unwrap());
+    let _ = y_buffer.copy_to_host(y.as_slice_mut().expect("Operation failed"));
 
     println!("Result: {:?}", y);
 
@@ -214,7 +215,7 @@ fn demo_sum_reduction(ctx: &GpuContext) -> Result<(), GpuError> {
     // In practice, we'd need to do multiple passes for large vectors
 
     // Create GPU buffers
-    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
+    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().expect("Operation failed"));
     let output_buffer = ctx.create_buffer::<f32>(1);
 
     // Set kernel parameters
@@ -255,7 +256,7 @@ fn demo_l2_norm(ctx: &GpuContext) -> Result<(), GpuError> {
     let kernel = ctx.get_specialized_kernel("norm_l2", &params)?;
 
     // Create GPU buffers
-    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
+    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().expect("Operation failed"));
     let output_buffer = ctx.create_buffer::<f32>(1);
 
     // Set kernel parameters
@@ -295,7 +296,7 @@ fn demo_activation_functions(ctx: &GpuContext) -> Result<(), GpuError> {
     let relu_kernel = ctx.get_kernel("relu")?;
 
     // Create GPU buffers
-    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
+    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().expect("Operation failed"));
     let output_buffer = ctx.create_buffer::<f32>(x.len());
 
     // Set kernel parameters

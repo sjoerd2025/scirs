@@ -564,7 +564,7 @@ impl CloudStorageClient {
         if let Some(cache) = &self.cache {
             cache
                 .lock()
-                .unwrap()
+                .expect("Operation failed")
                 .put_metadata(remote_key.to_string(), result.clone());
         }
 
@@ -598,7 +598,7 @@ impl CloudStorageClient {
         if let Some(cache) = &self.cache {
             cache
                 .lock()
-                .unwrap()
+                .expect("Operation failed")
                 .put_metadata(remote_key.to_string(), result.clone());
         }
 
@@ -616,7 +616,7 @@ impl CloudStorageClient {
     pub async fn get_metadata(&self, key: &str) -> Result<CloudObjectMetadata, CloudError> {
         // Check cache first
         if let Some(cache) = &self.cache {
-            if let Some(metadata) = cache.lock().unwrap().get_metadata(key) {
+            if let Some(metadata) = cache.lock().expect("Operation failed").get_metadata(key) {
                 return Ok(metadata);
             }
         }
@@ -628,7 +628,7 @@ impl CloudStorageClient {
         if let Some(cache) = &self.cache {
             cache
                 .lock()
-                .unwrap()
+                .expect("Operation failed")
                 .put_metadata(key.to_string(), metadata.clone());
         }
 
@@ -648,7 +648,7 @@ impl CloudStorageClient {
 
         // Invalidate cache
         if let Some(cache) = &self.cache {
-            cache.lock().unwrap().invalidate(key);
+            cache.lock().expect("Operation failed").invalidate(key);
         }
 
         result
@@ -681,7 +681,7 @@ impl CloudStorageClient {
         if let Some(cache) = &self.cache {
             cache
                 .lock()
-                .unwrap()
+                .expect("Operation failed")
                 .put_metadata(dest_key.to_string(), result.clone());
         }
 
@@ -704,7 +704,7 @@ impl CloudStorageClient {
     /// Clear all cached data
     pub fn clear_cache(&self) {
         if let Some(cache) = &self.cache {
-            cache.lock().unwrap().clear();
+            cache.lock().expect("Operation failed").clear();
         }
     }
 
@@ -1480,15 +1480,21 @@ mod tests {
     async fn test_s3_backend_operations() {
         let config =
             CloudConfig::new_bucket("test-bucket".to_string(), CloudCredentials::Anonymous);
-        let backend = S3Backend::new(config).unwrap();
+        let backend = S3Backend::new(config).expect("Operation failed");
 
         // Test metadata retrieval
-        let metadata = backend.get_metadata("test-key").await.unwrap();
+        let metadata = backend
+            .get_metadata("test-key")
+            .await
+            .expect("Operation failed");
         assert_eq!(metadata.key, "test-key");
         assert!(metadata.size > 0);
 
         // Test existence check
-        let exists = backend.object_exists("test-key").await.unwrap();
+        let exists = backend
+            .object_exists("test-key")
+            .await
+            .expect("Operation failed");
         assert!(exists);
 
         // Test data upload
@@ -1496,16 +1502,22 @@ mod tests {
         let result = backend
             .upload_data(data, "test-upload", TransferOptions::default())
             .await
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.key, "test-upload");
         assert_eq!(result.size, data.len() as u64);
 
         // Test data download
-        let downloaded = backend.get_object("test-key").await.unwrap();
+        let downloaded = backend
+            .get_object("test-key")
+            .await
+            .expect("Operation failed");
         assert!(!downloaded.is_empty());
 
         // Test listing
-        let list_result = backend.list_objects(None, Some("5")).await.unwrap();
+        let list_result = backend
+            .list_objects(None, Some("5"))
+            .await
+            .expect("Operation failed");
         assert!(!list_result.objects.is_empty());
         assert!(list_result.objects.len() <= 10);
 
@@ -1513,7 +1525,7 @@ mod tests {
         let url = backend
             .generate_presigned_url("test-key", Duration::from_secs(3600), HttpMethod::Get)
             .await
-            .unwrap();
+            .expect("Operation failed");
         assert!(url.contains("test-key"));
         assert!(url.contains("expires=3600"));
     }
@@ -1523,11 +1535,17 @@ mod tests {
     async fn test_cloud_storage_client() {
         let config =
             CloudConfig::new_bucket("test-bucket".to_string(), CloudCredentials::Anonymous);
-        let client = CloudStorageClient::new(config).unwrap();
+        let client = CloudStorageClient::new(config).expect("Operation failed");
 
         // Test metadata with caching
-        let metadata1 = client.get_metadata("test-key").await.unwrap();
-        let metadata2 = client.get_metadata("test-key").await.unwrap(); // Should hit cache
+        let metadata1 = client
+            .get_metadata("test-key")
+            .await
+            .expect("Operation failed");
+        let metadata2 = client
+            .get_metadata("test-key")
+            .await
+            .expect("Operation failed"); // Should hit cache
         assert_eq!(metadata1.key, metadata2.key);
 
         // Test cache clearing
@@ -1538,7 +1556,7 @@ mod tests {
         let result = client
             .upload_data(data, "client-test", TransferOptions::default())
             .await
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.size, data.len() as u64);
     }
 

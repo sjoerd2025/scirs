@@ -379,7 +379,7 @@ impl CorrelationAnalyzer {
         let max_idx = correlations
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.abs().partial_cmp(&b.abs()).unwrap())
+            .max_by(|(_, a), (_, b)| a.abs().partial_cmp(&b.abs()).expect("Operation failed"))
             .map(|(idx_, _)| idx_)
             .unwrap_or(0);
 
@@ -816,7 +816,7 @@ impl CorrelationAnalyzer {
     fn compute_ranks(&self, x: &Array1<f64>) -> Array1<f64> {
         let mut indexed_values: Vec<(usize, f64)> =
             x.iter().enumerate().map(|(i, &val)| (i, val)).collect();
-        indexed_values.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        indexed_values.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
         let mut ranks = Array1::zeros(x.len());
         for (rank, &(original_index, _)) in indexed_values.iter().enumerate() {
@@ -1022,7 +1022,7 @@ impl CorrelationAnalyzer {
             let (next_i, next_j_, _) = candidates
                 .into_iter()
                 .filter(|(ni, nj_, _)| *ni > 0 && *nj_ > 0)
-                .min_by(|a, b| a.2.partial_cmp(&b.2).unwrap())
+                .min_by(|a, b| a.2.partial_cmp(&b.2).expect("Operation failed"))
                 .unwrap_or((1, 1, 0.0));
 
             i = next_i;
@@ -1284,7 +1284,9 @@ mod tests {
 
         let analyzer = CorrelationAnalyzer::new();
         let config = CrossCorrelationConfig::default();
-        let result = analyzer.cross_correlation(&x, &y, &config).unwrap();
+        let result = analyzer
+            .cross_correlation(&x, &y, &config)
+            .expect("Operation failed");
 
         assert_eq!(result.correlations.len(), 2 * config.max_lag + 1);
         assert!(result.max_correlation.abs() <= 1.0 + f64::EPSILON * 10.0);
@@ -1298,7 +1300,9 @@ mod tests {
 
         let analyzer = CorrelationAnalyzer::new();
         let config = DTWConfig::default();
-        let result = analyzer.dynamic_time_warping(&x, &y, &config).unwrap();
+        let result = analyzer
+            .dynamic_time_warping(&x, &y, &config)
+            .expect("Operation failed");
 
         assert!(result.distance >= 0.0);
         assert!(!result.warping_path.is_empty());
@@ -1318,7 +1322,9 @@ mod tests {
 
         let analyzer = CorrelationAnalyzer::new();
         let config = CoherenceConfig::default();
-        let result = analyzer.coherence_analysis(&x, &y, &config).unwrap();
+        let result = analyzer
+            .coherence_analysis(&x, &y, &config)
+            .expect("Operation failed");
 
         assert!(!result.coherence.is_empty());
         assert!(!result.frequencies.is_empty());

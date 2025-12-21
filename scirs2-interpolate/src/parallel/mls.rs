@@ -37,7 +37,7 @@ use crate::spatial::kdtree::KdTree;
 ///     0.0, 1.0,
 ///     1.0, 1.0,
 ///     0.5, 0.5,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 /// let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 1.5]);
 ///
 /// // Create parallel MLS interpolator
@@ -47,18 +47,18 @@ use crate::spatial::kdtree::KdTree;
 ///     WeightFunction::Gaussian,
 ///     PolynomialBasis::Linear,
 ///     0.5, // bandwidth parameter
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Create test points
 /// let test_points = Array2::from_shape_vec((3, 2), vec![
 ///     0.25, 0.25,
 ///     0.75, 0.75,
 ///     0.5, 0.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Parallel evaluation
 /// let config = ParallelConfig::new();
-/// let results = parallel_mls.evaluate_parallel(&test_points.view(), &config).unwrap();
+/// let results = parallel_mls.evaluate_parallel(&test_points.view(), &config).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct ParallelMovingLeastSquares<F>
@@ -329,22 +329,26 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weightfn: WeightFunction) -> F {
         WeightFunction::WendlandC2 => {
             if r < F::one() {
                 let t = F::one() - r;
-                let factor = F::from_f64(4.0).unwrap() * r + F::one();
+                let factor = F::from_f64(4.0).expect("Operation failed") * r + F::one();
                 t.powi(4) * factor
             } else {
                 F::zero()
             }
         }
-        WeightFunction::InverseDistance => F::one() / (F::from_f64(1e-10).unwrap() + r * r),
+        WeightFunction::InverseDistance => {
+            F::one() / (F::from_f64(1e-10).expect("Operation failed") + r * r)
+        }
         WeightFunction::CubicSpline => {
-            if r < F::from_f64(1.0 / 3.0).unwrap() {
+            if r < F::from_f64(1.0 / 3.0).expect("Operation failed") {
                 let r2 = r * r;
                 let r3 = r2 * r;
-                F::from_f64(2.0 / 3.0).unwrap() - F::from_f64(9.0).unwrap() * r2
-                    + F::from_f64(19.0).unwrap() * r3
+                F::from_f64(2.0 / 3.0).expect("Operation failed")
+                    - F::from_f64(9.0).expect("Operation failed") * r2
+                    + F::from_f64(19.0).expect("Operation failed") * r3
             } else if r < F::one() {
-                let t = F::from_f64(2.0).unwrap() - F::from_f64(3.0).unwrap() * r;
-                F::from_f64(1.0 / 3.0).unwrap() * t.powi(3)
+                let t = F::from_f64(2.0).expect("Operation failed")
+                    - F::from_f64(3.0).expect("Operation failed") * r;
+                F::from_f64(1.0 / 3.0).expect("Operation failed") * t.powi(3)
             } else {
                 F::zero()
             }
@@ -401,7 +405,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Simple plane: z = x + y
         let values = array![0.0, 1.0, 1.0, 2.0, 1.0];
@@ -414,7 +418,7 @@ mod tests {
             PolynomialBasis::Linear,
             0.5,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create parallel MLS
         let parallel_mls = ParallelMovingLeastSquares::new(
@@ -424,20 +428,22 @@ mod tests {
             PolynomialBasis::Linear,
             0.5,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test points
-        let test_points =
-            Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.75, 0.75, 0.5, 0.0]).unwrap();
+        let test_points = Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.75, 0.75, 0.5, 0.0])
+            .expect("Operation failed");
 
         // Sequential evaluation
-        let sequential_results = sequential_mls.evaluate_multi(&test_points.view()).unwrap();
+        let sequential_results = sequential_mls
+            .evaluate_multi(&test_points.view())
+            .expect("Operation failed");
 
         // Parallel evaluation
         let config = ParallelConfig::new();
         let parallel_results = parallel_mls
             .evaluate_parallel(&test_points.view(), &config)
-            .unwrap();
+            .expect("Operation failed");
 
         // Results should match closely (may not be identical due to implementation differences)
         for i in 0..3 {
@@ -469,7 +475,7 @@ mod tests {
             values_vec.push(value);
         }
 
-        let points = Array2::from_shape_vec((n_points, 2), points_vec).unwrap();
+        let points = Array2::from_shape_vec((n_points, 2), points_vec).expect("Operation failed");
         let values = Array1::from_vec(values_vec);
 
         // Create parallel MLS
@@ -480,7 +486,7 @@ mod tests {
             PolynomialBasis::Linear,
             0.1,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create test points
         let test_points = Array2::from_shape_vec(
@@ -490,7 +496,7 @@ mod tests {
                 0.9, 0.9, 0.5, 0.1,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test with different thread counts
         let configs = vec![
@@ -504,7 +510,7 @@ mod tests {
         for config in &configs {
             let result = parallel_mls
                 .evaluate_parallel(&test_points.view(), config)
-                .unwrap();
+                .expect("Operation failed");
             results.push(result);
         }
 

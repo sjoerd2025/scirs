@@ -92,7 +92,7 @@ mod tests {
         let result = validate_memory_safety_comprehensive(&config);
         assert!(result.is_ok());
 
-        let safety = result.unwrap();
+        let safety = result.expect("Operation failed");
         assert_eq!(safety.memory_leaks_detected, 0);
         assert!(safety.buffer_safety_verified);
         assert_eq!(safety.safety_score, 1.0);
@@ -125,10 +125,10 @@ mod tests {
 
     #[test]
     fn test_individual_safety_checks() {
-        assert_eq!(detect_memory_leaks().unwrap(), 0);
-        assert!(verify_buffer_safety().unwrap());
-        assert_eq!(detect_use_after_free().unwrap(), 0);
-        assert_eq!(detect_double_free().unwrap(), 0);
-        assert!(verify_memory_alignment().unwrap());
+        assert_eq!(detect_memory_leaks().expect("Operation failed"), 0);
+        assert!(verify_buffer_safety().expect("Operation failed"));
+        assert_eq!(detect_use_after_free().expect("Operation failed"), 0);
+        assert_eq!(detect_double_free().expect("Operation failed"), 0);
+        assert!(verify_memory_alignment().expect("Operation failed"));
     }
 }

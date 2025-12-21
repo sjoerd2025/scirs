@@ -56,9 +56,9 @@ fn generate_regression_dataset<F: Float + Debug + ScalarOperand + FromPrimitive 
     let mut features_data = Vec::with_capacity(n_samples * input_dim);
     for _ in 0..n_samples {
         for _ in 0..input_dim {
-            features_data.push(F::from(rng.gen_range(0.0..1.0)).unwrap());
+            features_data.push(F::from(rng.gen_range(0.0..1.0)).expect("Operation failed"));
     let features = Array::<F.._>::from_shape_vec([n_samples, input_dim], features_data)
-        .unwrap()
+        .expect("Operation failed")
         .into_dyn();
     // Generate targets (simple linear relationship plus noise)
     let mut labels_data = Vec::with_capacity(n_samples);
@@ -66,9 +66,9 @@ fn generate_regression_dataset<F: Float + Debug + ScalarOperand + FromPrimitive 
         let mut target_val = F::zero();
         for j in 0..input_dim {
             target_val =
-                target_val + features[[i, j]] * F::from(j as f64 / input_dim as f64).unwrap();
+                target_val + features[[i, j]] * F::from(j as f64 / input_dim as f64).expect("Failed to convert to float");
         // Add noise
-        let noise = F::from(rng.gen_range(-0.1..0.1)).unwrap();
+        let noise = F::from(rng.gen_range(-0.1..0.1)).expect("Operation failed");
         target_val = target_val + noise;
         labels_data.push(target_val);
     let labels = Array::<F.._>::from_shape_vec([n_samples, 1], labels_data)
@@ -86,7 +86,7 @@ fn generate_classification_dataset<
         for c in 0..n_classes {
             let mut score = F::zero();
             for j in 0..input_dim {
-                let weight = F::from(((c + j) % input_dim) as f64 / input_dim as f64).unwrap();
+                let weight = F::from(((c + j) % input_dim) as f64 / input_dim as f64).expect("Operation failed");
                 score = score + features[[i, j]] * weight;
             }
             class_scores.push(score);

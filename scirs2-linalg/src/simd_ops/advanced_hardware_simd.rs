@@ -828,7 +828,7 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];
         
-        let result = dispatcher.adaptive_gemm_f32(&a.view(), &b.view()).unwrap();
+        let result = dispatcher.adaptive_gemm_f32(&a.view(), &b.view()).expect("Operation failed");
         
         // Expected: [[58, 64], [139, 154]]
         let expected = array![[58.0, 64.0], [139.0, 154.0]];
@@ -844,7 +844,7 @@ mod tests {
         let cache_ops = CacheOptimizedOperations::new(&caps);
         
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let result = cache_ops.cache_optimized_transpose_f32(&input.view()).unwrap();
+        let result = cache_ops.cache_optimized_transpose_f32(&input.view()).expect("Operation failed");
         
         let expected = array![[1.0, 4.0, 7.0], [2.0, 5.0, 8.0], [3.0, 6.0, 9.0]];
         

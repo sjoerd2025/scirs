@@ -50,7 +50,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 ///     [3, 3, 3]
 /// ];
 ///
-/// let sums = sum_labels(&image, &labels, None).unwrap();
+/// let sums = sum_labels(&image, &labels, None).expect("Operation failed");
 /// // sums[0] = sum of region 1 = 1+2+4 = 7
 /// // sums[1] = sum of region 2 = 3+5+6 = 14  
 /// // sums[2] = sum of region 3 = 7+8+9 = 24
@@ -72,7 +72,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// ];
 ///
 /// // Only compute sums for regions 1 and 3
-/// let partial_sums = sum_labels(&values, &regions, Some(&[1, 3])).unwrap();
+/// let partial_sums = sum_labels(&values, &regions, Some(&[1, 3])).expect("Operation failed");
 /// // Returns sums only for the specified regions
 /// assert_eq!(partial_sums.len(), 2);
 /// ```
@@ -92,7 +92,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 ///     ((i / 10) * 10 + (j / 10)) + 1  // Create grid-like segments
 /// });
 ///
-/// let total_intensities = sum_labels(&intensityimage, &segmentation, None).unwrap();
+/// let total_intensities = sum_labels(&intensityimage, &segmentation, None).expect("Operation failed");
 /// // Each element contains total intensity for that segment
 /// ```
 #[allow(dead_code)]
@@ -193,7 +193,7 @@ where
 ///     [3, 3, 3]       // Region 3: medium bright area
 /// ];
 ///
-/// let means = mean_labels(&image, &regions, None).unwrap();
+/// let means = mean_labels(&image, &regions, None).expect("Operation failed");
 /// // means[0] = mean of region 1 = (10+20+15+25)/4 = 17.5
 /// // means[1] = mean of region 2 = (100+110)/2 = 105.0
 /// // means[2] = mean of region 3 = (80+85+90)/3 = 85.0
@@ -221,7 +221,7 @@ where
 ///     }
 /// });
 ///
-/// let tissue_means = mean_labels(&intensity_map, &tissue_labels, None).unwrap();
+/// let tissue_means = mean_labels(&intensity_map, &tissue_labels, None).expect("Operation failed");
 /// // Analyze mean intensities of different tissue types
 /// for (i, &mean_intensity) in tissue_means.iter().enumerate() {
 ///     println!("Tissue type {}: mean intensity = {:.1}", i+1, mean_intensity);
@@ -246,7 +246,7 @@ where
 /// ];
 ///
 /// // Only analyze regions 2 and 4
-/// let selected_means = mean_labels(&values, &labels, Some(&[2, 4])).unwrap();
+/// let selected_means = mean_labels(&values, &labels, Some(&[2, 4])).expect("Operation failed");
 /// // Returns means only for regions 2 and 4
 /// assert_eq!(selected_means.len(), 2);
 /// ```
@@ -269,7 +269,7 @@ where
 /// });
 ///
 /// // Extract mean intensity for each segment
-/// let segmentfeatures = mean_labels(&originalimage, &segmentation_result, None).unwrap();
+/// let segmentfeatures = mean_labels(&originalimage, &segmentation_result, None).expect("Operation failed");
 ///
 /// // Filter segments by mean intensity threshold
 /// let bright_segments: Vec<usize> = segmentfeatures.iter()
@@ -390,7 +390,7 @@ where
 ///     [3, 3, 3]
 /// ];
 ///
-/// let variances = variance_labels(&values, &regions, None).unwrap();
+/// let variances = variance_labels(&values, &regions, None).expect("Operation failed");
 /// // Region 1: variance of [1.0, 2.0, 1.5, 2.5]
 /// // Region 2: variance of [10.0, 10.5]
 /// // Region 3: variance of [5.0, 5.0, 5.0] = 0.0 (no variation)
@@ -522,7 +522,7 @@ where
 ///     [4, 4, 4, 3]
 /// ];
 ///
-/// let counts = count_labels(&segmentation, None).unwrap();
+/// let counts = count_labels(&segmentation, None).expect("Operation failed");
 /// // counts[0] = 3 pixels in region 1
 /// // counts[1] = 3 pixels in region 2  
 /// // counts[2] = 2 pixels in region 3
@@ -546,7 +546,7 @@ where
 ///     }
 /// });
 ///
-/// let object_sizes = count_labels(&labels, None).unwrap();
+/// let object_sizes = count_labels(&labels, None).expect("Operation failed");
 ///
 /// // Filter objects by minimum size (remove small noise)
 /// let min_size = 100;
@@ -574,7 +574,7 @@ where
 ///     [4, 4, 5, 5, 5, 5]
 /// ];
 ///
-/// let cell_sizes = count_labels(&cell_labels, None).unwrap();
+/// let cell_sizes = count_labels(&cell_labels, None).expect("Operation failed");
 ///
 /// // Analyze cell size distribution
 /// let total_cells = cell_sizes.len();
@@ -607,7 +607,7 @@ where
 /// ];
 ///
 /// // Only count regions 2, 4, and 5
-/// let selected_counts = count_labels(&labels, Some(&[2, 4, 5])).unwrap();
+/// let selected_counts = count_labels(&labels, Some(&[2, 4, 5])).expect("Operation failed");
 /// assert_eq!(selected_counts.len(), 3);
 /// // Each selected region has 3 pixels
 /// assert_eq!(selected_counts[0], 3); // Region 2
@@ -629,7 +629,7 @@ where
 ///     else { 4 }
 /// });
 ///
-/// let region_sizes = count_labels(&segmentation_result, None).unwrap();
+/// let region_sizes = count_labels(&segmentation_result, None).expect("Operation failed");
 ///
 /// // Validation: check for reasonable region sizes
 /// let image_area = 50 * 50;
@@ -765,7 +765,7 @@ where
 /// ];
 ///
 /// // Create histogram with 5 bins from 0.0 to 1.0
-/// let (counts, edges) = histogram(&image, 0.0, 1.0, 5, None, None).unwrap();
+/// let (counts, edges) = histogram(&image, 0.0, 1.0, 5, None, None).expect("Operation failed");
 ///
 /// // edges will be [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 /// // counts shows how many pixels fall in each bin
@@ -792,11 +792,11 @@ where
 ///
 /// // Histogram only region 1 (low intensity values)
 /// let (hist_region1, edges1) = histogram(&intensities, 10.0, 30.0, 4,
-///                                        Some(&regions), Some(&[1])).unwrap();
+///                                        Some(&regions), Some(&[1])).expect("Operation failed");
 ///
 /// // Histogram only region 2 (high intensity values)  
 /// let (hist_region2, edges2) = histogram(&intensities, 100.0, 120.0, 4,
-///                                        Some(&regions), Some(&[2])).unwrap();
+///                                        Some(&regions), Some(&[2])).expect("Operation failed");
 /// ```
 ///
 /// ## Texture analysis workflow
@@ -827,7 +827,7 @@ where
 /// // Analyze histogram characteristics of each texture region
 /// for region_id in 1..=4 {
 ///     let (hist_counts, _hist_edges) = histogram(&textureimage, 0.0, 1.0, 10,
-///                               Some(&texture_labels), Some(&[region_id])).unwrap();
+///                               Some(&texture_labels), Some(&[region_id])).expect("Operation failed");
 ///
 ///     // Calculate histogram statistics
 ///     let total_pixels: usize = hist_counts.iter().sum();
@@ -872,7 +872,7 @@ where
 /// for tissue_type in 1..=3 {
 ///     let (tissue_hist, bin_edges) = histogram(&medicalimage, 0.0, 200.0, 20,
 ///                                              Some(&tissue_segmentation),
-///                                              Some(&[tissue_type])).unwrap();
+///                                              Some(&[tissue_type])).expect("Operation failed");
 ///     
 ///     // Find peak intensity for this tissue type
 ///     let peak_bin = tissue_hist.iter()
@@ -902,11 +902,11 @@ where
 /// });
 ///
 /// // Calculate histogram to find optimal threshold
-/// let (hist, edges) = histogram(&image, 0.0, 255.0, 25, None, None).unwrap();
+/// let (hist, edges) = histogram(&image, 0.0, 255.0, 25, None, None).expect("Operation failed");
 ///
 /// // Find valley between peaks (simplified Otsu-like approach)
-/// let peak1 = hist.iter().take(10).enumerate().max_by_key(|(_, &v)| v).unwrap().0;
-/// let peak2 = hist.iter().skip(15).enumerate().max_by_key(|(_, &v)| v).unwrap().0 + 15;
+/// let peak1 = hist.iter().take(10).enumerate().max_by_key(|(_, &v)| v).expect("Operation failed").0;
+/// let peak2 = hist.iter().skip(15).enumerate().max_by_key(|(_, &v)| v).expect("Operation failed").0 + 15;
 ///
 /// // Threshold is approximately between the peaks
 /// let threshold = (edges[peak1] + edges[peak2]) / 2.0;
@@ -983,10 +983,10 @@ where
     }
 
     // Create bin edges
-    let bin_width = (max - min) / T::from_usize(bins).unwrap();
+    let bin_width = (max - min) / T::from_usize(bins).expect("Operation failed");
     let mut edges = Array1::<T>::zeros(bins + 1);
     for i in 0..=bins {
-        edges[i] = min + T::from_usize(i).unwrap() * bin_width;
+        edges[i] = min + T::from_usize(i).expect("Operation failed") * bin_width;
     }
 
     // Initialize histogram

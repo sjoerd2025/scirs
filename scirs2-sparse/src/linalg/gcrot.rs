@@ -81,13 +81,13 @@ pub struct GCROTResult<T> {
 /// let rows = vec![0, 0, 1, 1, 2, 2];
 /// let cols = vec![0, 1, 0, 1, 1, 2];
 /// let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Right-hand side
 /// let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
 ///
 /// // Solve using GCROT
-/// let result = gcrot(&matrix, &b.view(), None, GCROTOptions::default()).unwrap();
+/// let result = gcrot(&matrix, &b.view(), None, GCROTOptions::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn gcrot<T, S>(
@@ -123,7 +123,7 @@ where
     // Check if already converged
     let initial_residual_norm = l2_norm(&r.view());
     let b_norm = l2_norm(b);
-    let tolerance = T::from(options.tol).unwrap() * b_norm;
+    let tolerance = T::from(options.tol).expect("Operation failed") * b_norm;
 
     if initial_residual_norm <= tolerance {
         return Ok(GCROTResult {
@@ -290,7 +290,7 @@ where
 
     // Renormalize
     let v_norm = l2_norm(&v.view());
-    if v_norm > T::from(1e-12).unwrap() {
+    if v_norm > T::from(1e-12).expect("Operation failed") {
         for i in 0..n {
             v[i] = v[i] / v_norm;
         }
@@ -303,7 +303,7 @@ where
     let av_norm_sq = dot_product(&av.view(), &av.view());
     let av_r_dot = dot_product(&av.view(), r);
 
-    if av_norm_sq > T::from(1e-12).unwrap() {
+    if av_norm_sq > T::from(1e-12).expect("Operation failed") {
         let alpha = av_r_dot / av_norm_sq;
         let mut delta_x = Array1::zeros(n);
 
@@ -377,15 +377,17 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
-        let result = gcrot(&matrix, &b.view(), None, GCROTOptions::default()).unwrap();
+        let result =
+            gcrot(&matrix, &b.view(), None, GCROTOptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
         // Verify solution by computing residual
-        let ax = matrix_vector_multiply(&matrix, &result.x.view()).unwrap();
+        let ax = matrix_vector_multiply(&matrix, &result.x.view()).expect("Operation failed");
         let residual = &b - &ax;
         let residual_norm = l2_norm(&residual.view());
 
@@ -398,16 +400,18 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![5.0, 5.0, 5.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![5.0, 10.0, 15.0]);
 
-        let result = gcrot(&matrix, &b.view(), None, GCROTOptions::default()).unwrap();
+        let result =
+            gcrot(&matrix, &b.view(), None, GCROTOptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
         // Verify solution by computing residual
-        let ax = matrix_vector_multiply(&matrix, &result.x.view()).unwrap();
+        let ax = matrix_vector_multiply(&matrix, &result.x.view()).expect("Operation failed");
         let residual = &b - &ax;
         let residual_norm = l2_norm(&residual.view());
 
@@ -420,7 +424,8 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
 
@@ -429,7 +434,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = gcrot(&matrix, &b.view(), None, options).unwrap();
+        let result = gcrot(&matrix, &b.view(), None, options).expect("Operation failed");
 
         // Should still converge even with small truncation
         assert!(result.converged);

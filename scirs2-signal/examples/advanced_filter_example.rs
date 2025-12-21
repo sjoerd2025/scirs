@@ -23,12 +23,12 @@ fn main() {
     println!("1. Improved Butterworth Filter Design");
     println!("------------------------------------");
 
-    let (b_butter, a_butter) = butter(4, 0.3, "lowpass").unwrap();
+    let (b_butter, a_butter) = butter(4, 0.3, "lowpass").expect("Test: operation failed");
     println!("4th-order Butterworth lowpass filter:");
     println!("  Numerator:   {:?}", format_coeffs(&b_butter));
     println!("  Denominator: {:?}", format_coeffs(&a_butter));
 
-    let (b_butter_hp, a_butter_hp) = butter(3, 0.4, "highpass").unwrap();
+    let (b_butter_hp, a_butter_hp) = butter(3, 0.4, "highpass").expect("Test: operation failed");
     println!("3rd-order Butterworth highpass filter:");
     println!("  Numerator:   {:?}", format_coeffs(&b_butter_hp));
     println!("  Denominator: {:?}", format_coeffs(&a_butter_hp));
@@ -37,7 +37,7 @@ fn main() {
     println!("\n\n2. Chebyshev Type I Filter Design");
     println!("--------------------------------");
 
-    let (b_cheb1, a_cheb1) = cheby1(4, 0.5, 0.3, "lowpass").unwrap(); // 0.5 dB ripple
+    let (b_cheb1, a_cheb1) = cheby1(4, 0.5, 0.3, "lowpass").expect("Test: operation failed"); // 0.5 dB ripple
     println!("4th-order Chebyshev I filter (0.5 dB ripple):");
     println!("  Numerator:   {:?}", format_coeffs(&b_cheb1));
     println!("  Denominator: {:?}", format_coeffs(&a_cheb1));
@@ -46,7 +46,7 @@ fn main() {
     println!("\n\n3. Chebyshev Type II Filter Design");
     println!("---------------------------------");
 
-    let (b_cheb2, a_cheb2) = cheby2(4, 40.0, 0.3, "lowpass").unwrap(); // 40 dB stopband attenuation
+    let (b_cheb2, a_cheb2) = cheby2(4, 40.0, 0.3, "lowpass").expect("Test: operation failed"); // 40 dB stopband attenuation
     println!("4th-order Chebyshev II filter (40 dB stopband attenuation):");
     println!("  Numerator:   {:?}", format_coeffs(&b_cheb2));
     println!("  Denominator: {:?}", format_coeffs(&a_cheb2));
@@ -55,7 +55,7 @@ fn main() {
     println!("\n\n4. Elliptic (Cauer) Filter Design");
     println!("--------------------------------");
 
-    let (b_ellip, a_ellip) = ellip(4, 0.5, 40.0, 0.3, "lowpass").unwrap(); // 0.5 dB ripple, 40 dB attenuation
+    let (b_ellip, a_ellip) = ellip(4, 0.5, 40.0, 0.3, "lowpass").expect("Test: operation failed"); // 0.5 dB ripple, 40 dB attenuation
     println!("4th-order Elliptic filter (0.5 dB ripple, 40 dB stopband attenuation):");
     println!("  Numerator:   {:?}", format_coeffs(&b_ellip));
     println!("  Denominator: {:?}", format_coeffs(&a_ellip));
@@ -64,15 +64,17 @@ fn main() {
     println!("\n\n5. Bessel Filter Design");
     println!("----------------------");
 
-    let (b_bessel, a_bessel) = bessel(4, 0.3, "lowpass").unwrap();
+    let (b_bessel, a_bessel) = bessel(4, 0.3, "lowpass").expect("Test: operation failed");
     println!("4th-order Bessel filter (maximally flat group delay):");
     println!("  Numerator:   {:?}", format_coeffs(&b_bessel));
     println!("  Denominator: {:?}", format_coeffs(&a_bessel));
 
     // Compare group delays
     let frequencies = vec![0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
-    let gd_butter = group_delay(&b_butter, &a_butter, &frequencies).unwrap();
-    let gd_bessel = group_delay(&b_bessel, &a_bessel, &frequencies).unwrap();
+    let gd_butter =
+        group_delay(&b_butter, &a_butter, &frequencies).expect("Test: operation failed");
+    let gd_bessel =
+        group_delay(&b_bessel, &a_bessel, &frequencies).expect("Test: operation failed");
 
     println!("\nGroup delay comparison (samples):");
     println!("Freq (norm) | Butterworth | Bessel");
@@ -89,7 +91,7 @@ fn main() {
     println!("--------------------");
 
     // FIR comb filter for echo enhancement
-    let (b_comb_fir, a_comb_fir) = comb_filter(20, 0.0, 0.5).unwrap();
+    let (b_comb_fir, a_comb_fir) = comb_filter(20, 0.0, 0.5).expect("Test: operation failed");
     println!("FIR comb filter (20-sample delay, 0.5 gain):");
     println!("  Numerator length: {}", b_comb_fir.len());
     println!(
@@ -98,7 +100,7 @@ fn main() {
     );
 
     // IIR comb filter for echo removal
-    let (_b_comb_iir, a_comb_iir) = comb_filter(15, -0.7, 1.0).unwrap();
+    let (_b_comb_iir, a_comb_iir) = comb_filter(15, -0.7, 1.0).expect("Test: operation failed");
     println!("IIR comb filter (15-sample delay, -0.7 gain):");
     println!("  Denominator length: {}", a_comb_iir.len());
     println!(
@@ -111,13 +113,13 @@ fn main() {
     println!("------------------------");
 
     // Notch filter to remove 60 Hz interference (assuming 1000 Hz sample rate)
-    let (b_notch, a_notch) = notch_filter(0.12, 30.0).unwrap(); // 60/(1000/2) = 0.12
+    let (b_notch, a_notch) = notch_filter(0.12, 30.0).expect("Test: operation failed"); // 60/(1000/2) = 0.12
     println!("Notch filter (60 Hz removal, Q=30):");
     println!("  Numerator:   {:?}", format_coeffs(&b_notch));
     println!("  Denominator: {:?}", format_coeffs(&a_notch));
 
     // Peak filter to enhance a specific frequency
-    let (b_peak, a_peak) = peak_filter(0.2, 5.0, 6.0).unwrap(); // 6 dB boost at 0.2 normalized freq
+    let (b_peak, a_peak) = peak_filter(0.2, 5.0, 6.0).expect("Test: operation failed"); // 6 dB boost at 0.2 normalized freq
     println!("Peak filter (0.2 normalized freq, Q=5, +6dB gain):");
     println!("  Numerator:   {:?}", format_coeffs(&b_peak));
     println!("  Denominator: {:?}", format_coeffs(&a_peak));
@@ -127,13 +129,13 @@ fn main() {
     println!("----------------------------------------");
 
     // First-order allpass
-    let (b_ap1, a_ap1) = allpass_filter(0.25, 0.9).unwrap();
+    let (b_ap1, a_ap1) = allpass_filter(0.25, 0.9).expect("Test: operation failed");
     println!("1st-order allpass filter (0.25 normalized freq):");
     println!("  Numerator:   {:?}", format_coeffs(&b_ap1));
     println!("  Denominator: {:?}", format_coeffs(&a_ap1));
 
     // Second-order allpass
-    let (b_ap2, a_ap2) = allpass_filter(0.3, 0.8).unwrap();
+    let (b_ap2, a_ap2) = allpass_filter(0.3, 0.8).expect("Test: operation failed");
     println!("2nd-order allpass filter (0.3 normalized freq, Q=2):");
     println!("  Numerator:   {:?}", format_coeffs(&b_ap2));
     println!("  Denominator: {:?}", format_coeffs(&a_ap2));
@@ -157,11 +159,11 @@ fn main() {
         .collect();
 
     // Apply different filters
-    let filtered_butter = lfilter(&b_butter, &a_butter, &signal).unwrap();
-    let filtered_cheb1 = lfilter(&b_cheb1, &a_cheb1, &signal).unwrap();
-    let filtered_ellip = lfilter(&b_ellip, &a_ellip, &signal).unwrap();
-    let filtered_bessel = lfilter(&b_bessel, &a_bessel, &signal).unwrap();
-    let filtered_notch = lfilter(&b_notch, &a_notch, &signal).unwrap();
+    let filtered_butter = lfilter(&b_butter, &a_butter, &signal).expect("Test: operation failed");
+    let filtered_cheb1 = lfilter(&b_cheb1, &a_cheb1, &signal).expect("Test: operation failed");
+    let filtered_ellip = lfilter(&b_ellip, &a_ellip, &signal).expect("Test: operation failed");
+    let filtered_bessel = lfilter(&b_bessel, &a_bessel, &signal).expect("Test: operation failed");
+    let filtered_notch = lfilter(&b_notch, &a_notch, &signal).expect("Test: operation failed");
 
     // Calculate RMS values for comparison
     let rms_original = calculate_rms(&signal);

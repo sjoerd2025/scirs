@@ -181,7 +181,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
         let mut position_ids = Array::zeros(IxDyn(&[batch_size, seq_len]));
         for b in 0..batch_size {
             for s in 0..seq_len {
-                position_ids[[b, s]] = F::from(s).unwrap();
+                position_ids[[b, s]] = F::from(s).expect("Failed to convert to float");
             }
         }
 
@@ -268,8 +268,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
         // Apply GELU activation
         let hidden_states = hidden_states.mapv(|x| {
             let x3 = x * x * x;
-            x * F::from(0.5).unwrap()
-                * (F::one() + (x + F::from(0.044715).unwrap() * x3).tanh())
+            x * F::from(0.5).expect("Failed to convert constant to float")
+                * (F::one() + (x + F::from(0.044715).expect("Failed to convert constant to float") * x3).tanh())
         });
 
         // Apply second dense layer
@@ -369,7 +369,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + SimdUnifiedOps + 'static> 
         let mut rng6 = scirs2_core::random::rngs::SmallRng::from_seed([53; 32]);
         let resid_dropout = Dropout::new(config.hidden_dropout_prob, &mut rng6)?;
 
-        let scale = F::from(1.0 / (attention_head_size as f64).sqrt()).unwrap();
+        let scale = F::from(1.0 / (attention_head_size as f64).sqrt()).expect("Operation failed");
 
         Ok(Self {
             num_attention_heads,

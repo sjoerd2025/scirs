@@ -161,7 +161,7 @@ pub struct QualityMetrics {
 ///
 /// // Use default wavelet denoising
 /// let config = UnifiedDenoisingConfig::default();
-/// let result = denoise_unified(&signal, &config, None).unwrap();
+/// let result = denoise_unified(&signal, &config, None).expect("Operation failed");
 ///
 /// // Use advanced wavelet denoising
 /// let advanced_config = UnifiedDenoisingConfig {
@@ -170,7 +170,7 @@ pub struct QualityMetrics {
 ///     },
 ///     ..Default::default()
 /// };
-/// let advanced_result = denoise_unified(&signal, &advanced_config, None).unwrap();
+/// let advanced_result = denoise_unified(&signal, &advanced_config, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn denoise_unified(
@@ -200,7 +200,7 @@ pub fn denoise_unified(
             threshold_select,
         } => {
             let denoised_vec = denoise_wavelet(
-                preprocessed.as_slice().unwrap(),
+                preprocessed.as_slice().expect("Operation failed"),
                 *wavelet,
                 *levels,
                 *threshold_method,
@@ -214,7 +214,7 @@ pub fn denoise_unified(
             (denoised, noise_level)
         }
         DenoisingMethod::WaveletAdvanced { config: adv_config } => {
-            let result = advanced_denoise(preprocessed.as_slice().unwrap(), adv_config)?;
+            let result = advanced_denoise(preprocessed.as_slice().expect("Operation failed"), adv_config)?;
             (Array1::from_vec(result.signal), result.noise_level)
         }
         DenoisingMethod::DictionaryLearning {
@@ -423,7 +423,7 @@ fn estimate_noise_level(signal: &Array1<f64>) -> f64 {
     }
 
     // Use median of differences as robust noise estimate
-    diffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    diffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     diffs[diffs.len() / 2] * 0.6745 // Scale factor for Gaussian noise
 }
 
@@ -472,7 +472,7 @@ fn calculate_quality_metrics(
     let psnr = mse.map(|mse_val| {
         if mse_val > 0.0 {
             let max_val = reference
-                .unwrap()
+                .expect("Operation failed")
                 .mapv(|x| x.abs())
                 .into_iter()
                 .fold(0.0, f64::max);
@@ -896,7 +896,7 @@ mod tests {
         });
 
         let config = UnifiedDenoisingConfig::default();
-        let result = denoise_unified(&signal, &config, None).unwrap();
+        let result = denoise_unified(&signal, &config, None).expect("Operation failed");
 
         assert_eq!(result.denoised.len(), signal.len());
         assert!(result.estimated_noise_level >= 0.0);
@@ -910,7 +910,7 @@ mod tests {
         let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = Array1::from_vec(vec![1.0, 2.0, 1.5, 3.0, 2.5, 1.0]);
-        let config = auto_select_denoising_method(&signal, None).unwrap();
+        let config = auto_select_denoising_method(&signal, None).expect("Operation failed");
 
         // Should select a method appropriate for short signals
         match config.method {

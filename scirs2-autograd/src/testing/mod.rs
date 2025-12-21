@@ -211,10 +211,10 @@ impl<F: Float> NumericalStabilityTester<F> {
 
         // Test sensitivity to small input perturbations
         for perturbation_magnitude in [
-            F::from(1e-8).unwrap(),
-            F::from(1e-6).unwrap(),
-            F::from(1e-4).unwrap(),
-            F::from(1e-2).unwrap(),
+            F::from(1e-8).expect("Failed to convert constant to float"),
+            F::from(1e-6).expect("Failed to convert constant to float"),
+            F::from(1e-4).expect("Failed to convert constant to float"),
+            F::from(1e-2).expect("Failed to convert constant to float"),
         ] {
             let sensitivity = self
                 .measure_perturbation_sensitivity(perturbation_magnitude.to_f64().unwrap_or(0.0))?;
@@ -249,10 +249,10 @@ impl<F: Float> NumericalStabilityTester<F> {
 
         // Test with extreme input values
         let extreme_values = vec![
-            F::from(1e-100).unwrap(), // Very small
-            F::from(1e-10).unwrap(),  // Small
-            F::from(1e10).unwrap(),   // Large
-            F::from(1e100).unwrap(),  // Very large
+            F::from(1e-100).expect("Failed to convert constant to float"), // Very small
+            F::from(1e-10).expect("Failed to convert constant to float"),  // Small
+            F::from(1e10).expect("Failed to convert constant to float"),   // Large
+            F::from(1e100).expect("Failed to convert constant to float"),  // Very large
         ];
 
         for &extreme_value in &extreme_values {

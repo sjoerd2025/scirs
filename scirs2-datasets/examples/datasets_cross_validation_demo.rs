@@ -11,7 +11,8 @@ fn main() {
     println!("=== Cross-Validation Demonstration ===\n");
 
     // Create sample dataset
-    let data = Array2::from_shape_vec((20, 3), (0..60).map(|x| x as f64 / 10.0).collect()).unwrap();
+    let data = Array2::from_shape_vec((20, 3), (0..60).map(|x| x as f64 / 10.0).collect())
+        .expect("Operation failed");
     let target = Array1::from(
         (0..20)
             .map(|i| if i % 2 == 0 { 0.0 } else { 1.0 })
@@ -24,11 +25,14 @@ fn main() {
     println!("Dataset info:");
     println!("- Samples: {}", dataset.n_samples());
     println!("- Features: {}", dataset.n_features());
-    println!("- Description: {}\n", dataset.description.as_ref().unwrap());
+    println!(
+        "- Description: {}\n",
+        dataset.description.as_ref().expect("Operation failed")
+    );
 
     // Demonstrate K-fold cross-validation
     println!("=== K-Fold Cross-Validation (k=5) ===");
-    let k_folds = k_fold_split(dataset.n_samples(), 5, true, Some(42)).unwrap();
+    let k_folds = k_fold_split(dataset.n_samples(), 5, true, Some(42)).expect("Operation failed");
 
     for (i, (train_indices, val_indices)) in k_folds.iter().enumerate() {
         println!(
@@ -47,7 +51,8 @@ fn main() {
 
     // Demonstrate Stratified K-fold cross-validation
     println!("=== Stratified K-Fold Cross-Validation (k=4) ===");
-    let stratified_folds = stratified_k_fold_split(&target, 4, true, Some(42)).unwrap();
+    let stratified_folds =
+        stratified_k_fold_split(&target, 4, true, Some(42)).expect("Operation failed");
 
     for (i, (train_indices, val_indices)) in stratified_folds.iter().enumerate() {
         // Calculate class distribution in validation set
@@ -69,7 +74,7 @@ fn main() {
 
     // Demonstrate Time Series cross-validation
     println!("=== Time Series Cross-Validation ===");
-    let ts_folds = time_series_split(dataset.n_samples(), 3, 3, 1).unwrap();
+    let ts_folds = time_series_split(dataset.n_samples(), 3, 3, 1).expect("Operation failed");
 
     for (i, (train_indices, val_indices)) in ts_folds.iter().enumerate() {
         println!(

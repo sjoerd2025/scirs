@@ -319,7 +319,7 @@ mod tests {
         let tree = build_optimal_decomposition_tree(&coefficients, CostFunction::Entropy, 2, 4);
 
         assert!(tree.is_ok());
-        let tree = tree.unwrap();
+        let tree = tree.expect("Operation failed");
         assert!(!tree.nodes.is_empty());
         assert!(tree.traversal_stats.total_nodes > 0);
     }
@@ -330,14 +330,14 @@ mod tests {
         let entropy = compute_shannon_entropy(&coefficients);
 
         assert!(entropy.is_ok());
-        let entropy = entropy.unwrap();
+        let entropy = entropy.expect("Operation failed");
         assert!(entropy > 0.0);
     }
 
     #[test]
     fn test_node_statistics() {
         let coefficients = vec![1.0, -2.0, 3.0, -4.0];
-        let (energy, entropy) = compute_node_statistics(&coefficients).unwrap();
+        let (energy, entropy) = compute_node_statistics(&coefficients).expect("Operation failed");
 
         assert_eq!(energy, 30.0); // 1 + 4 + 9 + 16
         assert!(entropy > 0.0);

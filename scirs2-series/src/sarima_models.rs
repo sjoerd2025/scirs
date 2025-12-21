@@ -176,11 +176,11 @@ where
         // Optimize
         let options = OptimizationOptions {
             max_iter: 500,
-            tolerance: F::from(1e-8).unwrap(),
-            grad_tolerance: F::from(1e-6).unwrap(),
-            initial_step: F::from(0.1).unwrap(),
-            line_search_alpha: F::from(0.4).unwrap(),
-            line_search_beta: F::from(0.9).unwrap(),
+            tolerance: F::from(1e-8).expect("Failed to convert constant to float"),
+            grad_tolerance: F::from(1e-6).expect("Failed to convert constant to float"),
+            initial_step: F::from(0.1).expect("Failed to convert constant to float"),
+            line_search_alpha: F::from(0.4).expect("Failed to convert constant to float"),
+            line_search_beta: F::from(0.9).expect("Failed to convert constant to float"),
         };
 
         let mut optimizer = LBFGSOptimizer::new(options);
@@ -191,10 +191,12 @@ where
 
         // Calculate final metrics
         self.log_likelihood = self.log_likelihood_full(&result.x, &diff_data)?;
-        self.aic = F::from(2.0).unwrap() * F::from(n_params).unwrap()
-            - F::from(2.0).unwrap() * self.log_likelihood;
-        self.bic = F::from(n_params).unwrap() * F::from(diff_data.len()).unwrap().ln()
-            - F::from(2.0).unwrap() * self.log_likelihood;
+        self.aic = F::from(2.0).expect("Failed to convert constant to float")
+            * F::from(n_params).expect("Failed to convert to float")
+            - F::from(2.0).expect("Failed to convert constant to float") * self.log_likelihood;
+        self.bic = F::from(n_params).expect("Failed to convert to float")
+            * F::from(diff_data.len()).expect("Operation failed").ln()
+            - F::from(2.0).expect("Failed to convert constant to float") * self.log_likelihood;
 
         self.is_fitted = true;
 
@@ -207,7 +209,7 @@ where
         let mut params = Array1::zeros(n_params);
 
         // Initialize intercept
-        params[0] = data.mean().unwrap();
+        params[0] = data.mean().expect("Operation failed");
 
         // Initialize AR parameters using partial autocorrelations
         if self.p > 0 {
@@ -220,11 +222,12 @@ where
         // Initialize seasonal parameters with small values
         let offset = 1 + self.p + self.q;
         for i in 0..self.p_seasonal {
-            params[offset + i] = F::from(0.1).unwrap();
+            params[offset + i] = F::from(0.1).expect("Failed to convert constant to float");
         }
 
         for i in 0..self.q_seasonal {
-            params[offset + self.p_seasonal + i] = F::from(0.1).unwrap();
+            params[offset + self.p_seasonal + i] =
+                F::from(0.1).expect("Failed to convert constant to float");
         }
 
         Ok(params)
@@ -325,10 +328,14 @@ where
         )?;
 
         // Calculate log-likelihood (assuming Gaussian errors)
-        let sigma2 = residuals.dot(&residuals) / F::from(n).unwrap();
-        let log_likelihood = -F::from(0.5).unwrap()
-            * F::from(n).unwrap()
-            * (F::from(2.0 * std::f64::consts::PI).unwrap().ln() + sigma2.ln() + F::one());
+        let sigma2 = residuals.dot(&residuals) / F::from(n).expect("Failed to convert to float");
+        let log_likelihood = -F::from(0.5).expect("Failed to convert constant to float")
+            * F::from(n).expect("Failed to convert to float")
+            * (F::from(2.0 * std::f64::consts::PI)
+                .expect("Failed to convert to float")
+                .ln()
+                + sigma2.ln()
+                + F::one());
 
         Ok(log_likelihood)
     }
@@ -401,7 +408,7 @@ where
     fn gradient_log_likelihood(&self, params: &Array1<F>, data: &Array1<F>) -> Result<Array1<F>> {
         let n_params = params.len();
         let mut gradient = Array1::zeros(n_params);
-        let epsilon = F::from(1e-6).unwrap();
+        let epsilon = F::from(1e-6).expect("Failed to convert constant to float");
 
         // Numerical gradient
         for i in 0..n_params {
@@ -414,7 +421,8 @@ where
             let ll_plus = self.log_likelihood_full(&params_plus, data)?;
             let ll_minus = self.log_likelihood_full(&params_minus, data)?;
 
-            gradient[i] = (ll_plus - ll_minus) / (F::from(2.0).unwrap() * epsilon);
+            gradient[i] = (ll_plus - ll_minus)
+                / (F::from(2.0).expect("Failed to convert constant to float") * epsilon);
         }
 
         Ok(-gradient) // Negative because we're maximizing
@@ -544,18 +552,28 @@ where
                                         SelectionCriterion::BIC => model.bic,
                                         SelectionCriterion::AICc => {
                                             // AICc = AIC + 2k(k+1)/(n-k-1)
-                                            let k = F::from(n_params).unwrap();
-                                            let n = F::from(data.len()).unwrap();
+                                            let k = F::from(n_params)
+                                                .expect("Failed to convert to float");
+                                            let n = F::from(data.len()).expect("Operation failed");
                                             model.aic
-                                                + F::from(2.0).unwrap() * k * (k + F::one())
+                                                + F::from(2.0)
+                                                    .expect("Failed to convert constant to float")
+                                                    * k
+                                                    * (k + F::one())
                                                     / (n - k - F::one())
                                         }
                                         SelectionCriterion::HQC => {
                                             // HQC = -2*logL + 2*k*log(log(n))
-                                            let k = F::from(n_params).unwrap();
-                                            let n = F::from(data.len()).unwrap();
-                                            F::from(2.0).unwrap() * k * n.ln().ln()
-                                                - F::from(2.0).unwrap() * model.log_likelihood
+                                            let k = F::from(n_params)
+                                                .expect("Failed to convert to float");
+                                            let n = F::from(data.len()).expect("Operation failed");
+                                            F::from(2.0)
+                                                .expect("Failed to convert constant to float")
+                                                * k
+                                                * n.ln().ln()
+                                                - F::from(2.0)
+                                                    .expect("Failed to convert constant to float")
+                                                    * model.log_likelihood
                                         }
                                     };
 
@@ -576,13 +594,13 @@ where
         Some(model) => {
             let params = {
                 let mut _p = Array1::zeros(7);
-                _p[0] = F::from(model.p).unwrap();
-                _p[1] = F::from(model.d).unwrap();
-                _p[2] = F::from(model.q).unwrap();
-                _p[3] = F::from(model.p_seasonal).unwrap();
-                _p[4] = F::from(model.d_seasonal).unwrap();
-                _p[5] = F::from(model.q_seasonal).unwrap();
-                _p[6] = F::from(model.period).unwrap();
+                _p[0] = F::from(model.p).expect("Failed to convert to float");
+                _p[1] = F::from(model.d).expect("Failed to convert to float");
+                _p[2] = F::from(model.q).expect("Failed to convert to float");
+                _p[3] = F::from(model.p_seasonal).expect("Failed to convert to float");
+                _p[4] = F::from(model.d_seasonal).expect("Failed to convert to float");
+                _p[5] = F::from(model.q_seasonal).expect("Failed to convert to float");
+                _p[6] = F::from(model.period).expect("Failed to convert to float");
                 _p
             };
             Ok((model, params))
@@ -613,7 +631,7 @@ mod tests {
     #[test]
     fn test_seasonal_differencing() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let model = SarimaModel::new(0, 0, 0, 0, 1, 0, 4).unwrap();
+        let model = SarimaModel::new(0, 0, 0, 0, 1, 0, 4).expect("Operation failed");
         let diff = model.seasonal_difference(&data);
 
         assert_eq!(diff.len(), 4);

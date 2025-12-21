@@ -1569,12 +1569,12 @@ impl FusionOptimizer {
                     *out = if *inp > F::zero() { *inp } else { F::zero() };
                     *out = F::one() / (F::one() + (-*inp).exp());
                     let x = *inp;
-                    let sqrt_2_pi = F::from(0.797885).unwrap();
-                    let coeff = F::from(0.044715).unwrap();
+                    let sqrt_2_pi = F::from(0.797885).expect("Failed to convert constant to float");
+                    let coeff = F::from(0.044715).expect("Failed to convert constant to float");
                     let inner = sqrt_2_pi * (x + coeff * x * x * x);
-                    *out = F::from(0.5).unwrap() * x * (F::one() + inner.tanh());
+                    *out = F::from(0.5).expect("Failed to convert constant to float") * x * (F::one() + inner.tanh());
                     *out = x / (F::one() + (-x).exp());
-                let alpha_f = F::from(*alpha).unwrap();
+                let alpha_f = F::from(*alpha).expect("Failed to convert to float");
                     *out = if *inp > F::zero() { *inp } else { alpha_f * *inp };
                     "Unsupported activation function: {:?}",
                     kernel.activation
@@ -1670,7 +1670,7 @@ mod tests {
             transpose_b: false,
         let result = compiler.compile_operation(&operation);
         assert!(result.is_ok());
-        let kernel = result.unwrap();
+        let kernel = result.expect("Operation failed");
         assert!(kernel.code.contains("matmul"));
         assert!(kernel.entry_point.starts_with("kernel_"));
     fn test_element_wise_compilation() {
@@ -1711,13 +1711,13 @@ mod tests {
             bshape: vec![200, 300],
         let requirements = compiler.analyze_memory_requirements(&operation);
         assert!(requirements.is_ok());
-        let mem_req = requirements.unwrap();
+        let mem_req = requirements.expect("Operation failed");
         assert!(mem_req.min_memory > 0);
         assert!(mem_req.optimal_memory >= mem_req.min_memory);
     fn test_performance_estimation() {
         let performance = compiler.estimate_performance(&operation);
         assert!(performance.is_ok());
-        let perf_hints = performance.unwrap();
+        let perf_hints = performance.expect("Operation failed");
         assert!(perf_hints.estimated_flops > 0);
         assert!(perf_hints.compute_intensity >= 0.0);
     fn test_target_architecture_detection() {

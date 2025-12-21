@@ -36,7 +36,7 @@ pub fn simd_abs_f32(input: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
 
                 while i + 8 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 8];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let input_vec = _mm256_loadu_ps(input_slice.as_ptr());
                     let abs_vec = _mm256_and_ps(input_vec, sign_mask);
 
@@ -63,7 +63,7 @@ pub fn simd_abs_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 4];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let input_vec = vld1q_f32(input_slice.as_ptr());
                     let abs_vec = vabsq_f32(input_vec);
 
@@ -110,7 +110,7 @@ pub fn simd_abs_f64(input: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 4];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let input_vec = _mm256_loadu_pd(input_slice.as_ptr());
                     let abs_vec = _mm256_and_pd(input_vec, sign_mask);
 
@@ -137,7 +137,7 @@ pub fn simd_abs_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 2 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 2];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let input_vec = vld1q_f64(input_slice.as_ptr());
                     let abs_vec = vabsq_f64(input_vec);
 
@@ -181,7 +181,7 @@ pub fn simd_sqrt_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 8];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let input_vec = _mm256_loadu_ps(input_slice.as_ptr());
                     let sqrt_vec = _mm256_sqrt_ps(input_vec);
 
@@ -208,7 +208,7 @@ pub fn simd_sqrt_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 4];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let input_vec = vld1q_f32(input_slice.as_ptr());
                     let sqrt_vec = vsqrtq_f32(input_vec);
 
@@ -252,7 +252,7 @@ pub fn simd_sqrt_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 4];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let input_vec = _mm256_loadu_pd(input_slice.as_ptr());
                     let sqrt_vec = _mm256_sqrt_pd(input_vec);
 
@@ -279,7 +279,7 @@ pub fn simd_sqrt_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 2 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 2];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let input_vec = vld1q_f64(input_slice.as_ptr());
                     let sqrt_vec = vsqrtq_f64(input_vec);
 
@@ -329,7 +329,7 @@ pub fn simd_sign_f32(input: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
 
                 while i + 8 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 8];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let input_vec = _mm256_loadu_ps(input_slice.as_ptr());
 
                     // Compare: input > 0
@@ -376,7 +376,7 @@ pub fn simd_sign_f32(input: &ArrayView1<f32>) -> Array1<f32> {
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 4];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let input_vec = vld1q_f32(input_slice.as_ptr());
 
                     // Compare masks
@@ -444,7 +444,7 @@ pub fn simd_sign_f64(input: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 4];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let input_vec = _mm256_loadu_pd(input_slice.as_ptr());
 
                     let pos_mask = _mm256_cmp_pd(input_vec, zero, _CMP_GT_OQ);
@@ -488,7 +488,7 @@ pub fn simd_sign_f64(input: &ArrayView1<f64>) -> Array1<f64> {
                 let mut i = 0;
 
                 while i + 2 <= len {
-                    let input_slice = &input.as_slice().unwrap()[i..i + 2];
+                    let input_slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let input_vec = vld1q_f64(input_slice.as_ptr());
 
                     let pos_mask = vcgtq_f64(input_vec, zero);

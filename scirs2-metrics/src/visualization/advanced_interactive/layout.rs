@@ -219,7 +219,7 @@ impl LayoutManager {
             let shortest_col = column_heights
                 .iter()
                 .enumerate()
-                .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .min_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
                 .map(|(i, _)| i)
                 .unwrap_or(0);
 

@@ -426,7 +426,7 @@ impl RRTPlanner {
 
         // Find all nodes within the neighborhood
         let (near_indices, near_distances) = kdtree
-            .query_radius(new_point.as_slice().unwrap(), radius)
+            .query_radius(new_point.as_slice().expect("Operation failed"), radius)
             .expect("KDTree query failed");
 
         // Check each nearby node as a potential parent
@@ -466,7 +466,7 @@ impl RRTPlanner {
 
         // Find all nodes within the neighborhood
         let (near_indices, near_distances) = kdtree
-            .query_radius(new_point.as_slice().unwrap(), radius)
+            .query_radius(new_point.as_slice().expect("Operation failed"), radius)
             .expect("KDTree query failed");
 
         // Check if we can improve the path to any nearby node by going through the new node
@@ -879,22 +879,24 @@ mod tests {
             [10.0, 10.0], // Max bounds
             0.1,          // Collision step size
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Find a path from (1,1) to (9,9)
         let start = [1.0, 1.0];
         let goal = [9.0, 9.0];
         let goal_threshold = 0.5;
 
-        let path = planner.find_path(start, goal, goal_threshold).unwrap();
+        let path = planner
+            .find_path(start, goal, goal_threshold)
+            .expect("Operation failed");
 
         // A path should be found
         assert!(path.is_some());
-        let path = path.unwrap();
+        let path = path.expect("Operation failed");
 
         // Path should start at start and end near goal
         assert_eq!(path.nodes[0], start);
-        let last_node = path.nodes.last().unwrap();
+        let last_node = path.nodes.last().expect("Operation failed");
         let dist_to_goal =
             ((last_node[0] - goal[0]).powi(2) + (last_node[1] - goal[1]).powi(2)).sqrt();
         assert!(dist_to_goal <= goal_threshold);
@@ -920,22 +922,24 @@ mod tests {
             [10.0, 10.0], // Max bounds
             0.1,          // Collision step size
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Find a path from (1,1) to (9,9)
         let start = [1.0, 1.0];
         let goal = [9.0, 9.0];
         let goal_threshold = 0.5;
 
-        let path = planner.find_path(start, goal, goal_threshold).unwrap();
+        let path = planner
+            .find_path(start, goal, goal_threshold)
+            .expect("Operation failed");
 
         // A path should be found
         assert!(path.is_some());
-        let path = path.unwrap();
+        let path = path.expect("Operation failed");
 
         // Path should start at start and end near goal
         assert_eq!(path.nodes[0], start);
-        let last_node = path.nodes.last().unwrap();
+        let last_node = path.nodes.last().expect("Operation failed");
         let dist_to_goal =
             ((last_node[0] - goal[0]).powi(2) + (last_node[1] - goal[1]).powi(2)).sqrt();
         assert!(dist_to_goal <= goal_threshold);
@@ -966,22 +970,24 @@ mod tests {
             [10.0, 10.0], // Max bounds
             0.1,          // Collision step size
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Find a path from (1,1) to (9,9)
         let start = [1.0, 1.0];
         let goal = [9.0, 9.0];
         let goal_threshold = 0.5;
 
-        let path = planner.find_path(start, goal, goal_threshold).unwrap();
+        let path = planner
+            .find_path(start, goal, goal_threshold)
+            .expect("Operation failed");
 
         // A path should be found
         assert!(path.is_some());
-        let path = path.unwrap();
+        let path = path.expect("Operation failed");
 
         // Path should start at start and end near goal
         assert_eq!(path.nodes[0], start);
-        let last_node = path.nodes.last().unwrap();
+        let last_node = path.nodes.last().expect("Operation failed");
         let dist_to_goal =
             ((last_node[0] - goal[0]).powi(2) + (last_node[1] - goal[1]).powi(2)).sqrt();
         assert!(dist_to_goal <= goal_threshold);
@@ -1010,22 +1016,24 @@ mod tests {
             [10.0, 10.0], // Max bounds
             0.1,          // Collision step size
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Find a path from left side to right side of the wall
         let start = [2.0, 5.0];
         let goal = [7.0, 5.0];
         let goal_threshold = 0.5;
 
-        let path = planner.find_path(start, goal, goal_threshold).unwrap();
+        let path = planner
+            .find_path(start, goal, goal_threshold)
+            .expect("Operation failed");
 
         // A path should be found
         assert!(path.is_some());
-        let path = path.unwrap();
+        let path = path.expect("Operation failed");
 
         // Path should start at start and end near goal
         assert_eq!(path.nodes[0], start);
-        let last_node = path.nodes.last().unwrap();
+        let last_node = path.nodes.last().expect("Operation failed");
         let dist_to_goal =
             ((last_node[0] - goal[0]).powi(2) + (last_node[1] - goal[1]).powi(2)).sqrt();
         assert!(dist_to_goal <= goal_threshold);

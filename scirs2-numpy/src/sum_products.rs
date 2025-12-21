@@ -36,7 +36,7 @@ impl<'a, 'py, T> ArrayOrScalar<'a, 'py, T> for T where T: Element + FromPyObject
 ///
 /// Python::attach(|py| {
 ///     let vector = pyarray![py, 1.0, 2.0, 3.0];
-///     let result: f64 = inner(&vector, &vector).unwrap();
+///     let result: f64 = inner(&vector, &vector).expect("Operation failed");
 ///     assert_eq!(result, 14.0);
 /// });
 /// ```
@@ -50,7 +50,7 @@ impl<'a, 'py, T> ArrayOrScalar<'a, 'py, T> for T where T: Element + FromPyObject
 ///
 /// Python::attach(|py| {
 ///     let vector = pyarray![py, 1, 2, 3];
-///     let result: Bound<'_, PyArray0<_>> = inner(&vector, &vector).unwrap();
+///     let result: Bound<'_, PyArray0<_>> = inner(&vector, &vector).expect("Operation failed");
 ///     assert_eq!(result.item(), 14);
 /// });
 /// ```
@@ -91,7 +91,7 @@ where
 ///     let matrix = pyarray![py, [1, 0], [0, 1]];
 ///     let another_matrix = pyarray![py, [4, 1], [2, 2]];
 ///
-///     let result: Bound<'_, PyArray2<_>> = dot(&matrix, &another_matrix).unwrap();
+///     let result: Bound<'_, PyArray2<_>> = dot(&matrix, &another_matrix).expect("Operation failed");
 ///
 ///     assert_eq!(
 ///         result.readonly().as_array(),
@@ -108,7 +108,7 @@ where
 ///
 /// Python::attach(|py| {
 ///     let vector = pyarray![py, 1.0, 2.0, 3.0];
-///     let result: f64 = dot(&vector, &vector).unwrap();
+///     let result: f64 = dot(&vector, &vector).expect("Operation failed");
 ///     assert_eq!(result, 14.0);
 /// });
 /// ```
@@ -145,7 +145,7 @@ where
 {
     let subscripts = match CStr::from_bytes_with_nul(subscripts.as_bytes()) {
         Ok(subscripts) => Cow::Borrowed(subscripts),
-        Err(_) => Cow::Owned(CString::new(subscripts).unwrap()),
+        Err(_) => Cow::Owned(CString::new(subscripts).expect("Operation failed")),
     };
 
     let py = arrays[0].py();
@@ -178,10 +178,10 @@ where
 /// use numpy::{einsum, pyarray, PyArray, PyArray2, PyArrayMethods};
 ///
 /// Python::attach(|py| {
-///     let tensor = PyArray::arange(py, 0, 2 * 3 * 4, 1).reshape([2, 3, 4]).unwrap();
+///     let tensor = PyArray::arange(py, 0, 2 * 3 * 4, 1).reshape([2, 3, 4]).expect("Operation failed");
 ///     let another_tensor = pyarray![py, [20, 30], [40, 50], [60, 70]];
 ///
-///     let result: Bound<'_, PyArray2<_>> = einsum!("ijk,ji->ik", tensor, another_tensor).unwrap();
+///     let result: Bound<'_, PyArray2<_>> = einsum!("ijk,ji->ik", tensor, another_tensor).expect("Operation failed");
 ///
 ///     assert_eq!(
 ///         result.readonly().as_array(),

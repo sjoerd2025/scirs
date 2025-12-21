@@ -58,7 +58,7 @@ impl<F: IntegrateFloat, S: SymplecticIntegrator<F>> CompositionMethod<F, S> {
     pub fn fourth_order(_basemethod: S) -> Self {
         // Constants for Yoshida 4th-order composition
         let two = F::one() + F::one();
-        let two_to_third = two.powf(F::from_f64(1.0 / 3.0).unwrap());
+        let two_to_third = two.powf(F::from_f64(1.0 / 3.0).expect("Operation failed"));
         let w1 = F::one() / (two - two_to_third);
         let w0 = -two_to_third / (two - two_to_third);
 
@@ -84,10 +84,10 @@ impl<F: IntegrateFloat, S: SymplecticIntegrator<F>> CompositionMethod<F, S> {
     /// A sixth-order symplectic integrator
     pub fn sixth_order(_basemethod: S) -> Self {
         // Coefficients for 6th-order composition _method (Yoshida 1990)
-        let w1 = F::from_f64(0.784513610477560).unwrap();
-        let w2 = F::from_f64(0.235573213359357).unwrap();
-        let w3 = F::from_f64(-1.17767998417887).unwrap();
-        let w4 = F::from_f64(1.31518632068391).unwrap();
+        let w1 = F::from_f64(0.784513610477560).expect("Operation failed");
+        let w2 = F::from_f64(0.235573213359357).expect("Operation failed");
+        let w3 = F::from_f64(-1.17767998417887).expect("Operation failed");
+        let w4 = F::from_f64(1.31518632068391).expect("Operation failed");
 
         // Create symmetric coefficients
         let coefficients = vec![w1, w2, w3, w4, w3, w2, w1];
@@ -112,14 +112,14 @@ impl<F: IntegrateFloat, S: SymplecticIntegrator<F>> CompositionMethod<F, S> {
     pub fn eighth_order(_basemethod: S) -> Self {
         // Coefficients for 8th-order composition (Yoshida 1990)
         let w = [
-            F::from_f64(0.74167036435061).unwrap(),
-            F::from_f64(-0.40910082580003).unwrap(),
-            F::from_f64(0.19075471029623).unwrap(),
-            F::from_f64(-0.57386247111608).unwrap(),
-            F::from_f64(0.29906418130365).unwrap(),
-            F::from_f64(0.33462491824529).unwrap(),
-            F::from_f64(0.31529309239676).unwrap(),
-            F::from_f64(-0.79688793935291).unwrap(),
+            F::from_f64(0.74167036435061).expect("Operation failed"),
+            F::from_f64(-0.40910082580003).expect("Operation failed"),
+            F::from_f64(0.19075471029623).expect("Operation failed"),
+            F::from_f64(-0.57386247111608).expect("Operation failed"),
+            F::from_f64(0.29906418130365).expect("Operation failed"),
+            F::from_f64(0.33462491824529).expect("Operation failed"),
+            F::from_f64(0.31529309239676).expect("Operation failed"),
+            F::from_f64(-0.79688793935291).expect("Operation failed"),
         ];
 
         // Create symmetric coefficients [w0, w1, ..., w7, w7, ..., w1, w0]
@@ -211,7 +211,7 @@ mod tests {
             // Integrate to t=1.0 with base method
             let base_result = base_method
                 .integrate(&system, 0.0, 1.0, dt, q0.clone(), p0.clone())
-                .unwrap();
+                .expect("Test: integration failed");
 
             // Compute error
             let idx = base_result.q.len() - 1;
@@ -224,7 +224,7 @@ mod tests {
             // Integrate with 4th-order method
             let fourth_result = fourth_order
                 .integrate(&system, 0.0, 1.0, dt, q0.clone(), p0.clone())
-                .unwrap();
+                .expect("Test: integration failed");
 
             // Compute error
             let idx = fourth_result.q.len() - 1;
@@ -296,10 +296,10 @@ mod tests {
         // Integrate with both methods
         let base_result = base_method
             .integrate(&kepler, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Test: integration failed");
         let fourth_result = fourth_order
             .integrate(&kepler, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Test: integration failed");
 
         // Check energy conservation - 4th-order should be better
         if let (Some(base_error), Some(fourth_error)) = (

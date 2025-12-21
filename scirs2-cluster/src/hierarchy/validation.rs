@@ -108,7 +108,7 @@ pub fn validate_linkage_matrix<
         }
 
         // Check cluster count is at least 2 (since it's a merge)
-        if count < F::from(2).unwrap() {
+        if count < F::from(2).expect("Failed to convert constant to float") {
             return Err(ClusteringError::InvalidInput(format!(
                 "Cluster count should be >= 2 at row {}, got {}",
                 i, count
@@ -151,7 +151,9 @@ pub fn validate_monotonic_distances<
                     curr_distance, prev_distance, i
                 )));
             }
-        } else if curr_distance < prev_distance - F::from(1e-10).unwrap() {
+        } else if curr_distance
+            < prev_distance - F::from(1e-10).expect("Failed to convert constant to float")
+        {
             return Err(ClusteringError::InvalidInput(format!(
                 "Merge distances should be non-decreasing: {} < {} at merge {}",
                 curr_distance, prev_distance, i
@@ -325,7 +327,9 @@ pub fn validate_square_distance_matrix<
     // Check diagonal is zero
     for i in 0..n {
         let diag_val = distance_matrix[[i, i]];
-        if !diag_val.is_finite() || diag_val.abs() > F::from(1e-10).unwrap() {
+        if !diag_val.is_finite()
+            || diag_val.abs() > F::from(1e-10).expect("Failed to convert constant to float")
+        {
             return Err(ClusteringError::InvalidInput(format!(
                 "Diagonal element at ({}, {}) should be zero, got {}",
                 i, i, diag_val
@@ -361,7 +365,7 @@ pub fn validate_square_distance_matrix<
                 let val_ji = distance_matrix[[j, i]];
                 let diff = (val_ij - val_ji).abs();
 
-                if diff > F::from(1e-10).unwrap() {
+                if diff > F::from(1e-10).expect("Failed to convert constant to float") {
                     return Err(ClusteringError::InvalidInput(format!(
                         "Distance _matrix is not symmetric: d({}, {}) = {} != d({}, {}) = {}",
                         i, j, val_ij, j, i, val_ji
@@ -381,7 +385,11 @@ pub fn validate_square_distance_matrix<
                         let d_jk = distance_matrix[[j, k]];
                         let d_ik = distance_matrix[[i, k]];
 
-                        if d_ik > d_ij + d_jk + F::from(1e-10).unwrap() {
+                        if d_ik
+                            > d_ij
+                                + d_jk
+                                + F::from(1e-10).expect("Failed to convert constant to float")
+                        {
                             return Err(ClusteringError::InvalidInput(format!(
                                 "Triangle _inequality violated: d({}, {}) = {} > d({}, {}) + d({}, {}) = {} + {}",
                                 i, k, d_ik, i, j, j, k, d_ij, d_jk
@@ -471,7 +479,7 @@ mod tests {
                 4.0, 5.0, 1.2, 4.0, // Merge clusters 4 and 5 at distance 1.2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = validate_linkage_matrix(linkage.view(), 4);
         assert!(
@@ -483,8 +491,8 @@ mod tests {
     #[test]
     fn test_validate_linkage_matrix_wrong_dimensions() {
         // Wrong number of rows
-        let linkage =
-            Array2::from_shape_vec((2, 4), vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0]).unwrap();
+        let linkage = Array2::from_shape_vec((2, 4), vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0])
+            .expect("Operation failed");
 
         let result = validate_linkage_matrix(linkage.view(), 4);
         assert!(result.is_err(), "Wrong dimensions should fail validation");
@@ -499,7 +507,7 @@ mod tests {
                 2.0, 3.0, 0.8, 2.0, 4.0, 5.0, 1.2, 4.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = validate_linkage_matrix(linkage.view(), 4);
         assert!(result.is_err(), "Negative distance should fail validation");
@@ -514,7 +522,7 @@ mod tests {
                 2.0, 3.0, 0.8, 2.0, 4.0, 5.0, 1.2, 4.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = validate_linkage_matrix(linkage.view(), 4);
         assert!(result.is_err(), "Self-merge should fail validation");
@@ -526,7 +534,7 @@ mod tests {
             (3, 4),
             vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0, 4.0, 5.0, 1.2, 4.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = validate_monotonic_distances(linkage.view(), false);
         assert!(result.is_ok(), "Monotonic distances should pass validation");
@@ -542,7 +550,7 @@ mod tests {
                 4.0, 5.0, 1.5, 4.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result = validate_monotonic_distances(linkage.view(), false);
         assert!(
@@ -578,7 +586,7 @@ mod tests {
             (3, 4),
             vec![0.0, 1.0, 0.5, 2.0, 2.0, 3.0, 0.8, 2.0, 4.0, 5.0, 1.2, 4.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Valid parameters
         assert!(validate_cluster_extraction_params(linkage.view(), "distance", 1.0).is_ok());

@@ -14,7 +14,8 @@ fn test_largest_k_eigh_diagonal() {
     ];
 
     // Get 2 largest eigenvalues
-    let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        largest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Test: operation failed");
 
     // Eigenvalues should be 5.0 and 3.0
     assert_relative_eq!(eigenvalues[0], 5.0, epsilon = 1e-10);
@@ -44,7 +45,8 @@ fn test_smallest_k_eigh_diagonal() {
     ];
 
     // Get 2 smallest eigenvalues
-    let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        smallest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Test: operation failed");
 
     // Eigenvalues should be 1.0 and 2.0
     assert_relative_eq!(eigenvalues[0], 1.0, epsilon = 1e-10);
@@ -74,7 +76,8 @@ fn test_largest_k_eigh_symmetric() {
     ];
 
     // Get 2 largest eigenvalues
-    let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        largest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Test: operation failed");
 
     // Verify eigenvectors satisfy Av = λv
     for i in 0..2 {
@@ -105,7 +108,8 @@ fn test_smallest_k_eigh_symmetric() {
     ];
 
     // Get 2 smallest eigenvalues
-    let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 2, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        smallest_k_eigh(&a.view(), 2, 100, 1e-10).expect("Test: operation failed");
 
     // Verify eigenvectors satisfy Av = λv
     for i in 0..2 {
@@ -130,12 +134,14 @@ fn test_k_equal_zero() {
     let a = array![[1.0_f64, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]];
 
     // Request 0 eigenvalues
-    let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 0, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        largest_k_eigh(&a.view(), 0, 100, 1e-10).expect("Test: operation failed");
 
     assert_eq!(eigenvalues.len(), 0);
     assert_eq!(eigenvectors.shape(), &[3, 0]);
 
-    let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 0, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        smallest_k_eigh(&a.view(), 0, 100, 1e-10).expect("Test: operation failed");
 
     assert_eq!(eigenvalues.len(), 0);
     assert_eq!(eigenvectors.shape(), &[3, 0]);
@@ -152,7 +158,8 @@ fn test_k_equal_n() {
     ];
 
     // Request all eigenvalues
-    let (eigenvalues, eigenvectors) = largest_k_eigh(&a.view(), 4, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        largest_k_eigh(&a.view(), 4, 100, 1e-10).expect("Test: operation failed");
 
     assert_eq!(eigenvalues.len(), 4);
     assert_eq!(eigenvectors.shape(), &[4, 4]);
@@ -163,7 +170,8 @@ fn test_k_equal_n() {
     assert_relative_eq!(eigenvalues[2], 2.0, epsilon = 1e-10);
     assert_relative_eq!(eigenvalues[3], 1.0, epsilon = 1e-10);
 
-    let (eigenvalues, eigenvectors) = smallest_k_eigh(&a.view(), 4, 100, 1e-10).unwrap();
+    let (eigenvalues, eigenvectors) =
+        smallest_k_eigh(&a.view(), 4, 100, 1e-10).expect("Test: operation failed");
 
     assert_eq!(eigenvalues.len(), 4);
     assert_eq!(eigenvectors.shape(), &[4, 4]);

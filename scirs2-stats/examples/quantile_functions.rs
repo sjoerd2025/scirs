@@ -17,77 +17,89 @@ fn main() {
     println!("\nSample data: {:?}", data_normal);
 
     // Basic quantiles
-    let median = quantile(&data_normal.view(), 0.5, QuantileInterpolation::Linear).unwrap();
+    let median = quantile(&data_normal.view(), 0.5, QuantileInterpolation::Linear)
+        .expect("Operation failed");
     println!("\nMedian (0.5 quantile): {:.1}", median);
 
-    let q1 = quantile(&data_normal.view(), 0.25, QuantileInterpolation::Linear).unwrap();
+    let q1 = quantile(&data_normal.view(), 0.25, QuantileInterpolation::Linear)
+        .expect("Operation failed");
     println!("First quartile (0.25 quantile): {:.1}", q1);
 
-    let q3 = quantile(&data_normal.view(), 0.75, QuantileInterpolation::Linear).unwrap();
+    let q3 = quantile(&data_normal.view(), 0.75, QuantileInterpolation::Linear)
+        .expect("Operation failed");
     println!("Third quartile (0.75 quantile): {:.1}", q3);
 
     // Demonstrate different interpolation methods
     println!("\nQuantile 0.4 with different interpolation methods:");
     println!(
         "  Linear: {:.2}",
-        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Linear).unwrap()
+        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Linear)
+            .expect("Operation failed")
     );
     println!(
         "  Lower: {:.2}",
-        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Lower).unwrap()
+        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Lower).expect("Operation failed")
     );
     println!(
         "  Higher: {:.2}",
-        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Higher).unwrap()
+        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Higher)
+            .expect("Operation failed")
     );
     println!(
         "  Nearest: {:.2}",
-        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Nearest).unwrap()
+        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Nearest)
+            .expect("Operation failed")
     );
     println!(
         "  Midpoint: {:.2}",
-        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Midpoint).unwrap()
+        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Midpoint)
+            .expect("Operation failed")
     );
     println!(
         "  Hazen: {:.2}",
-        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Hazen).unwrap()
+        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Hazen).expect("Operation failed")
     );
     println!(
         "  Weibull: {:.2}",
-        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Weibull).unwrap()
+        quantile(&data_normal.view(), 0.4, QuantileInterpolation::Weibull)
+            .expect("Operation failed")
     );
 
     // Percentiles (same as quantiles but with 0-100 scale)
     println!("\nPercentiles:");
     println!(
         "  25th percentile: {:.2}",
-        percentile(&data_normal.view(), 25.0, QuantileInterpolation::Linear).unwrap()
+        percentile(&data_normal.view(), 25.0, QuantileInterpolation::Linear)
+            .expect("Operation failed")
     );
     println!(
         "  50th percentile: {:.2}",
-        percentile(&data_normal.view(), 50.0, QuantileInterpolation::Linear).unwrap()
+        percentile(&data_normal.view(), 50.0, QuantileInterpolation::Linear)
+            .expect("Operation failed")
     );
     println!(
         "  75th percentile: {:.2}",
-        percentile(&data_normal.view(), 75.0, QuantileInterpolation::Linear).unwrap()
+        percentile(&data_normal.view(), 75.0, QuantileInterpolation::Linear)
+            .expect("Operation failed")
     );
     println!(
         "  90th percentile: {:.2}",
-        percentile(&data_normal.view(), 90.0, QuantileInterpolation::Linear).unwrap()
+        percentile(&data_normal.view(), 90.0, QuantileInterpolation::Linear)
+            .expect("Operation failed")
     );
 
     // Quartiles, quintiles, and deciles
     println!(
         "\nQuartiles: {:?}",
-        quartiles(&data_normal.view(), QuantileInterpolation::Linear).unwrap()
+        quartiles(&data_normal.view(), QuantileInterpolation::Linear).expect("Operation failed")
     );
     println!(
         "Quintiles: {:?}",
-        quintiles(&data_normal.view(), QuantileInterpolation::Linear).unwrap()
+        quintiles(&data_normal.view(), QuantileInterpolation::Linear).expect("Operation failed")
     );
     println!(
         "Deciles: {:?}",
-        deciles(&data_normal.view(), QuantileInterpolation::Linear).unwrap()
+        deciles(&data_normal.view(), QuantileInterpolation::Linear).expect("Operation failed")
     );
 
     // Boxplot statistics
@@ -98,7 +110,7 @@ fn main() {
         Some(1.5),
         QuantileInterpolation::Linear,
     )
-    .unwrap();
+    .expect("Operation failed");
     println!("  Q1: {:.2}", q1);
     println!("  Median: {:.2}", median);
     println!("  Q3: {:.2}", q3);
@@ -112,7 +124,7 @@ fn main() {
         Some(1.5),
         QuantileInterpolation::Linear,
     )
-    .unwrap();
+    .expect("Operation failed");
     println!("  Q1: {:.2}", q1);
     println!("  Median: {:.2}", median);
     println!("  Q3: {:.2}", q3);
@@ -136,13 +148,15 @@ fn main() {
     println!("  Regular variance (sample): {:.2}", var);
 
     // Winsorized mean and variance
-    let win_mean_10 = winsorized_mean(&data_with_outlier.view(), 0.1).unwrap();
-    let win_var_10 = winsorized_variance(&data_with_outlier.view(), 0.1, 1).unwrap();
+    let win_mean_10 = winsorized_mean(&data_with_outlier.view(), 0.1).expect("Operation failed");
+    let win_var_10 =
+        winsorized_variance(&data_with_outlier.view(), 0.1, 1).expect("Operation failed");
     println!("  10% winsorized mean: {:.2}", win_mean_10);
     println!("  10% winsorized variance: {:.2}", win_var_10);
 
-    let win_mean_20 = winsorized_mean(&data_with_outlier.view(), 0.2).unwrap();
-    let win_var_20 = winsorized_variance(&data_with_outlier.view(), 0.2, 1).unwrap();
+    let win_mean_20 = winsorized_mean(&data_with_outlier.view(), 0.2).expect("Operation failed");
+    let win_var_20 =
+        winsorized_variance(&data_with_outlier.view(), 0.2, 1).expect("Operation failed");
     println!("  20% winsorized mean: {:.2}", win_mean_20);
     println!("  20% winsorized variance: {:.2}", win_var_20);
 }

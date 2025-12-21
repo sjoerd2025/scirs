@@ -111,7 +111,7 @@ where
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
     let iterations = iter.unwrap_or(10);
-    let threshold = thresh.unwrap_or(F::from(1e-5).unwrap());
+    let threshold = thresh.unwrap_or(F::from(1e-5).expect("Failed to convert constant to float"));
     let missing_method = missing.unwrap_or(MissingMethod::Warn);
     let check_finite_flag = check_finite.unwrap_or(true);
 
@@ -196,7 +196,8 @@ where
             } else {
                 // Normalize by the number of points in the cluster
                 for j in 0..n_features {
-                    new_centroids[[i, j]] = new_centroids[[i, j]] / F::from(counts[i]).unwrap();
+                    new_centroids[[i, j]] = new_centroids[[i, j]]
+                        / F::from(counts[i]).expect("Failed to convert to float");
                 }
             }
         }
@@ -257,12 +258,12 @@ where
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 1.0, 1.1, 1.1, 0.9, 0.9,
 ///     8.0, 8.0, 8.1, 8.1, 7.9, 7.9,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let (centroids, labels) = kmeans2_str(
 ///     data.view(), 2, Some(20), Some(1e-5), Some("k-means++"),
 ///     Some("warn"), Some(true), Some(42)
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
@@ -333,14 +334,14 @@ where
         for i in 0..n_samples {
             sum = sum + data[[i, j]];
         }
-        means[j] = sum / F::from(n_samples).unwrap();
+        means[j] = sum / F::from(n_samples).expect("Failed to convert to float");
 
         let mut var_sum = F::zero();
         for i in 0..n_samples {
             let diff = data[[i, j]] - means[j];
             var_sum = var_sum + diff * diff;
         }
-        vars[j] = var_sum / F::from(n_samples).unwrap();
+        vars[j] = var_sum / F::from(n_samples).expect("Failed to convert to float");
     }
 
     // Generate random centroids from Gaussian distribution
@@ -355,13 +356,13 @@ where
     for i in 0..k {
         for j in 0..n_features {
             // Convert to f64 for normal distribution
-            let mean = means[j].to_f64().unwrap();
-            let std = vars[j].sqrt().to_f64().unwrap();
+            let mean = means[j].to_f64().expect("Operation failed");
+            let std = vars[j].sqrt().to_f64().expect("Operation failed");
 
             if std > 0.0 {
-                let normal = Normal::new(mean, std).unwrap();
+                let normal = Normal::new(mean, std).expect("Operation failed");
                 let value = normal.sample(&mut rng);
-                centroids[[i, j]] = F::from(value).unwrap();
+                centroids[[i, j]] = F::from(value).expect("Failed to convert to float");
             } else {
                 centroids[[i, j]] = means[j];
             }
@@ -455,7 +456,7 @@ where
 
         // Choose next centroid based on weighted probability
         let mut cumsum = F::zero();
-        let r = F::from(rng.random::<f64>()).unwrap();
+        let r = F::from(rng.random::<f64>()).expect("Operation failed");
         let mut next_idx = n_samples - 1;
 
         for j in 0..n_samples {
@@ -502,7 +503,7 @@ mod tests {
             Some(true),
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Should have 2 centroids
         assert_eq!(centroids.shape(), [2, 2]);
@@ -579,7 +580,7 @@ mod tests {
             );
 
             assert!(result.is_ok(), "Failed with method: {:?}", method);
-            let (centroids, labels) = result.unwrap();
+            let (centroids, labels) = result.expect("Test: operation failed");
             assert_eq!(centroids.shape(), [2, 2]);
             assert_eq!(labels.len(), 6);
         }
@@ -606,7 +607,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let (centroids2, labels2) = kmeans2(
             data.view(),
@@ -618,7 +619,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // With same seed, results should be identical
         assert_eq!(labels1, labels2);
@@ -645,7 +646,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Should have 1 centroid
         assert_eq!(centroids.shape(), [1, 2]);
@@ -668,7 +669,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Should still produce valid results
         assert_eq!(centroids.shape(), [2, 2]);
@@ -721,7 +722,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let (centroids_many_) = kmeans2(
             data.view(),
@@ -733,7 +734,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Results should be valid for both
         assert_eq!(centroids_few_.0.shape(), [2, 2]);
@@ -755,7 +756,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert_eq!(centroids.shape(), [5, 2]);
         assert_eq!(labels.len(), 5);
@@ -821,7 +822,7 @@ mod tests {
         );
 
         assert!(result1.is_ok());
-        let (centroids1, labels1) = result1.unwrap();
+        let (centroids1, labels1) = result1.expect("Test: operation failed");
         assert_eq!(centroids1.shape(), [2, 2]);
         assert_eq!(labels1.len(), 6);
 
@@ -838,7 +839,7 @@ mod tests {
         );
 
         assert!(result2.is_ok());
-        let (centroids2, labels2) = result2.unwrap();
+        let (centroids2, labels2) = result2.expect("Test: operation failed");
         assert_eq!(centroids2.shape(), [2, 2]);
         assert_eq!(labels2.len(), 6);
     }
@@ -912,7 +913,7 @@ mod tests {
             None,
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert_eq!(centroids.shape(), [3, 3]);
         assert_eq!(labels.len(), 100);
@@ -946,7 +947,7 @@ mod tests {
             Some(true),
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert_eq!(centroids.shape(), [2, 2]);
         assert_eq!(labels.len(), 6);
@@ -982,7 +983,7 @@ mod tests {
             );
 
             assert!(result.is_ok(), "Failed with method: '{}'", method);
-            let (centroids, labels) = result.unwrap();
+            let (centroids, labels) = result.expect("Test: operation failed");
             assert_eq!(centroids.shape(), [2, 2]);
             assert_eq!(labels.len(), 6);
         }
@@ -1111,7 +1112,7 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Test: operation failed");
         assert_eq!(centroids.shape(), [2, 2]);
         assert_eq!(labels.len(), 4);
     }
@@ -1138,7 +1139,7 @@ mod tests {
             Some(true),
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let (centroids_str, labels_str) = kmeans2_str(
             data.view(),
@@ -1150,7 +1151,7 @@ mod tests {
             Some(true),
             Some(42),
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Results should be identical
         assert_eq!(labels_enum, labels_str);
@@ -1170,35 +1171,35 @@ mod tests {
     fn test_minit_method_from_str() {
         // Test MinitMethod::from_str function directly
         assert_eq!(
-            MinitMethod::from_str("random").unwrap(),
+            MinitMethod::from_str("random").expect("Operation failed"),
             MinitMethod::Random
         );
         assert_eq!(
-            MinitMethod::from_str("RANDOM").unwrap(),
+            MinitMethod::from_str("RANDOM").expect("Operation failed"),
             MinitMethod::Random
         );
         assert_eq!(
-            MinitMethod::from_str("points").unwrap(),
+            MinitMethod::from_str("points").expect("Operation failed"),
             MinitMethod::Points
         );
         assert_eq!(
-            MinitMethod::from_str("POINTS").unwrap(),
+            MinitMethod::from_str("POINTS").expect("Operation failed"),
             MinitMethod::Points
         );
         assert_eq!(
-            MinitMethod::from_str("k-means++").unwrap(),
+            MinitMethod::from_str("k-means++").expect("Operation failed"),
             MinitMethod::PlusPlus
         );
         assert_eq!(
-            MinitMethod::from_str("kmeans++").unwrap(),
+            MinitMethod::from_str("kmeans++").expect("Operation failed"),
             MinitMethod::PlusPlus
         );
         assert_eq!(
-            MinitMethod::from_str("plusplus").unwrap(),
+            MinitMethod::from_str("plusplus").expect("Operation failed"),
             MinitMethod::PlusPlus
         );
         assert_eq!(
-            MinitMethod::from_str("K-MEANS++").unwrap(),
+            MinitMethod::from_str("K-MEANS++").expect("Operation failed"),
             MinitMethod::PlusPlus
         );
 

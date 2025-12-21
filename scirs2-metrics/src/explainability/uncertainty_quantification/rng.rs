@@ -30,7 +30,7 @@ impl LcgRng {
 impl RandomNumberGeneratorTrait for LcgRng {
     fn uniform_01<F: Float + scirs2_core::numeric::FromPrimitive>(&mut self) -> F {
         self.state = self.state.wrapping_mul(1103515245).wrapping_add(12345);
-        F::from((self.state >> 16) as f64 / (1u64 << 32) as f64).unwrap()
+        F::from((self.state >> 16) as f64 / (1u64 << 32) as f64).expect("Operation failed")
     }
 
     fn normal<F: Float + scirs2_core::numeric::FromPrimitive>(&mut self) -> F {
@@ -38,7 +38,8 @@ impl RandomNumberGeneratorTrait for LcgRng {
         let u1 = self.uniform_01::<F>();
         let u2 = self.uniform_01::<F>();
 
-        (-F::from(2.0).unwrap() * u1.ln()).sqrt() * (F::from(2.0 * PI).unwrap() * u2).cos()
+        (-F::from(2.0).expect("Failed to convert constant to float") * u1.ln()).sqrt()
+            * (F::from(2.0 * PI).expect("Failed to convert to float") * u2).cos()
     }
 
     fn seed(&mut self, seed: u64) {
@@ -64,7 +65,7 @@ impl RandomNumberGeneratorTrait for XorshiftRng {
         self.state ^= self.state << 13;
         self.state ^= self.state >> 7;
         self.state ^= self.state << 17;
-        F::from(self.state as f64 / u64::MAX as f64).unwrap()
+        F::from(self.state as f64 / u64::MAX as f64).expect("Failed to convert to float")
     }
 
     fn normal<F: Float + scirs2_core::numeric::FromPrimitive>(&mut self) -> F {
@@ -72,7 +73,8 @@ impl RandomNumberGeneratorTrait for XorshiftRng {
         let u1 = self.uniform_01::<F>();
         let u2 = self.uniform_01::<F>();
 
-        (-F::from(2.0).unwrap() * u1.ln()).sqrt() * (F::from(2.0 * PI).unwrap() * u2).cos()
+        (-F::from(2.0).expect("Failed to convert constant to float") * u1.ln()).sqrt()
+            * (F::from(2.0 * PI).expect("Failed to convert to float") * u2).cos()
     }
 
     fn seed(&mut self, seed: u64) {
@@ -104,7 +106,7 @@ impl RandomNumberGeneratorTrait for PcgRng {
         let xorshifted = ((oldstate >> 18) ^ oldstate) >> 27;
         let rot = oldstate >> 59;
         let output = (xorshifted >> rot) | (xorshifted << ((!rot + 1) & 31));
-        F::from(output as f64 / u32::MAX as f64).unwrap()
+        F::from(output as f64 / u32::MAX as f64).expect("Failed to convert to float")
     }
 
     fn normal<F: Float + scirs2_core::numeric::FromPrimitive>(&mut self) -> F {
@@ -112,7 +114,8 @@ impl RandomNumberGeneratorTrait for PcgRng {
         let u1 = self.uniform_01::<F>();
         let u2 = self.uniform_01::<F>();
 
-        (-F::from(2.0).unwrap() * u1.ln()).sqrt() * (F::from(2.0 * PI).unwrap() * u2).cos()
+        (-F::from(2.0).expect("Failed to convert constant to float") * u1.ln()).sqrt()
+            * (F::from(2.0 * PI).expect("Failed to convert to float") * u2).cos()
     }
 
     fn seed(&mut self, seed: u64) {
@@ -140,7 +143,7 @@ impl RandomNumberGeneratorTrait for ChaChaRng {
         // Simplified ChaCha implementation
         self.counter = self.counter.wrapping_add(1);
         let output = self.state[0].wrapping_add(self.counter as u32);
-        F::from(output as f64 / u32::MAX as f64).unwrap()
+        F::from(output as f64 / u32::MAX as f64).expect("Failed to convert to float")
     }
 
     fn normal<F: Float + scirs2_core::numeric::FromPrimitive>(&mut self) -> F {
@@ -148,7 +151,8 @@ impl RandomNumberGeneratorTrait for ChaChaRng {
         let u1 = self.uniform_01::<F>();
         let u2 = self.uniform_01::<F>();
 
-        (-F::from(2.0).unwrap() * u1.ln()).sqrt() * (F::from(2.0 * PI).unwrap() * u2).cos()
+        (-F::from(2.0).expect("Failed to convert constant to float") * u1.ln()).sqrt()
+            * (F::from(2.0 * PI).expect("Failed to convert to float") * u2).cos()
     }
 
     fn seed(&mut self, seed: u64) {

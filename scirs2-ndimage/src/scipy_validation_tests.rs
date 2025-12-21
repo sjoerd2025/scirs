@@ -39,7 +39,7 @@ mod tests {
 
     /// Test median filter against known reference values
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assert_abs_diff_eq! failed: left=6.0, right=1.0, epsilon=2.0 at line 58"]
     fn test_median_filter_scipy_reference() {
         // Test case with known outliers
         let input = array![
@@ -129,7 +129,7 @@ mod tests {
 
     /// Test uniform filter mathematical properties
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assert_abs_diff_eq! failed: left=37.33.., right=42.0, epsilon=1e-10 at line 138"]
     fn test_uniform_filter_properties() {
         // Uniform filter on constant array should preserve values
         let constant = Array2::from_elem((5, 5), 42.0);
@@ -192,7 +192,7 @@ mod tests {
 
     /// Test affine transformation properties
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assert_abs_diff_eq! failed: left=4.0, right=0.0, epsilon=1e-6 at line 202"]
     fn test_affine_transform_properties() {
         let input = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
 

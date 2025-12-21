@@ -233,7 +233,7 @@ impl SafetyTracker {
 
     /// Get allocation statistics
     pub fn get_allocation_stats(&self) -> AllocationStats {
-        let allocations = self.allocations.lock().unwrap();
+        let allocations = self.allocations.lock().expect("Operation failed");
         let total_allocations = allocations.len();
         let total_size: usize = allocations.values().map(|info| info.size).sum();
         let average_size = if total_allocations > 0 {
@@ -621,19 +621,31 @@ mod tests {
     #[test]
     fn test_safe_arithmetic() {
         // Test safe addition
-        assert_eq!(SafeArithmetic::safe_add(5u32, 10u32).unwrap(), 15u32);
+        assert_eq!(
+            SafeArithmetic::safe_add(5u32, 10u32).expect("Operation failed"),
+            15u32
+        );
         assert!(SafeArithmetic::safe_add(u32::MAX, 1u32).is_err());
 
         // Test safe subtraction
-        assert_eq!(SafeArithmetic::safe_sub(10u32, 5u32).unwrap(), 5u32);
+        assert_eq!(
+            SafeArithmetic::safe_sub(10u32, 5u32).expect("Operation failed"),
+            5u32
+        );
         assert!(SafeArithmetic::safe_sub(5u32, 10u32).is_err());
 
         // Test safe multiplication
-        assert_eq!(SafeArithmetic::safe_mul(5u32, 10u32).unwrap(), 50u32);
+        assert_eq!(
+            SafeArithmetic::safe_mul(5u32, 10u32).expect("Operation failed"),
+            50u32
+        );
         assert!(SafeArithmetic::safe_mul(u32::MAX, 2u32).is_err());
 
         // Test safe division
-        assert_eq!(SafeArithmetic::safe_div(10u32, 2u32).unwrap(), 5u32);
+        assert_eq!(
+            SafeArithmetic::safe_div(10u32, 2u32).expect("Operation failed"),
+            5u32
+        );
         assert!(SafeArithmetic::safe_div(10u32, 0u32).is_err());
     }
 
@@ -642,11 +654,14 @@ mod tests {
         let array = [1, 2, 3, 4, 5];
 
         // Test safe indexing
-        assert_eq!(*SafeArrayOps::safe_index(&array, 2).unwrap(), 3);
+        assert_eq!(
+            *SafeArrayOps::safe_index(&array, 2).expect("Operation failed"),
+            3
+        );
         assert!(SafeArrayOps::safe_index(&array, 10).is_err());
 
         // Test safe slicing
-        let slice = SafeArrayOps::safe_slice(&array, 1, 4).unwrap();
+        let slice = SafeArrayOps::safe_slice(&array, 1, 4).expect("Operation failed");
         assert_eq!(slice, &[2, 3, 4]);
         assert!(SafeArrayOps::safe_slice(&array, 4, 2).is_err());
         assert!(SafeArrayOps::safe_slice(&array, 0, 10).is_err());
@@ -659,24 +674,24 @@ mod tests {
 
         {
             let guard = ResourceGuard::new(42, move |_| {
-                *cleanup_called_clone.lock().unwrap() = true;
+                *cleanup_called_clone.lock().expect("Operation failed") = true;
             });
         } // Guard is dropped here
 
-        assert!(*cleanup_called.lock().unwrap());
+        assert!(*cleanup_called.lock().expect("Operation failed"));
     }
 
     #[test]
     fn test_safe_macros() {
         // Test safe arithmetic macros
-        assert_eq!(safe_op!(add 5u32, 10u32).unwrap(), 15u32);
-        assert_eq!(safe_op!(sub 10u32, 5u32).unwrap(), 5u32);
-        assert_eq!(safe_op!(mul 5u32, 10u32).unwrap(), 50u32);
-        assert_eq!(safe_op!(div 10u32, 2u32).unwrap(), 5u32);
+        assert_eq!(safe_op!(add 5u32, 10u32).expect("Operation failed"), 15u32);
+        assert_eq!(safe_op!(sub 10u32, 5u32).expect("Operation failed"), 5u32);
+        assert_eq!(safe_op!(mul 5u32, 10u32).expect("Operation failed"), 50u32);
+        assert_eq!(safe_op!(div 10u32, 2u32).expect("Operation failed"), 5u32);
 
         // Test safe array access macros
         let array = [1, 2, 3, 4, 5];
-        assert_eq!(*safe_get!(&array, 2).unwrap(), 3);
+        assert_eq!(*safe_get!(&array, 2).expect("Operation failed"), 3);
         assert!(safe_get!(&array, 10).is_err());
     }
 
@@ -686,8 +701,12 @@ mod tests {
         let ptr1 = 0x1000 as *mut u8;
         let ptr2 = 0x2000 as *mut u8;
 
-        tracker.track_allocation(ptr1, 1024, None).unwrap();
-        tracker.track_allocation(ptr2, 2048, None).unwrap();
+        tracker
+            .track_allocation(ptr1, 1024, None)
+            .expect("Operation failed");
+        tracker
+            .track_allocation(ptr2, 2048, None)
+            .expect("Operation failed");
 
         let stats = tracker.get_allocation_stats();
         assert_eq!(stats.current_usage, 3072);

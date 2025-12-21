@@ -237,7 +237,7 @@ where
         // Solve unconstrained subproblem
         let result = minimize(
             augmented_lagrangian,
-            x.as_slice().unwrap(),
+            x.as_slice().expect("Operation failed"),
             options.unconstrained_method,
             Some(options.unconstrained_options.clone()),
         )?;
@@ -437,7 +437,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_equality_constrained(fun, x0, eq_con, Some(options)).unwrap();
+        let result = minimize_equality_constrained(fun, x0, eq_con, Some(options))
+            .expect("Operation failed");
 
         // Just check that the algorithm runs without error - optimization may not converge perfectly
         assert!(result.nit > 0);
@@ -461,7 +462,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_inequality_constrained(fun, x0, ineq_con, Some(options)).unwrap();
+        let result = minimize_inequality_constrained(fun, x0, ineq_con, Some(options))
+            .expect("Operation failed");
 
         // Just check that the algorithm runs without error - optimization may not converge perfectly
         assert!(result.nit > 0);
@@ -488,7 +490,7 @@ mod tests {
 
         let result =
             minimize_augmented_lagrangian(fun, x0, Some(eq_con), Some(ineq_con), Some(options))
-                .unwrap();
+                .expect("Operation failed");
 
         // Just check that the algorithm runs without error - optimization may not converge perfectly
         assert!(result.nit > 0);
@@ -516,7 +518,7 @@ mod tests {
             None::<fn(&ArrayView1<f64>) -> Array1<f64>>,
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Just check that the algorithm runs and makes some progress
         assert!(result.fun < 4.0); // Should reduce from initial objective value

@@ -184,11 +184,11 @@ mod tests {
     #[test]
     fn test_get_structure_center() {
         let structure = Array2::from_elem((3, 3), true);
-        let center = get_structure_center(&structure, None).unwrap();
+        let center = get_structure_center(&structure, None).expect("Operation failed");
         assert_eq!(center, vec![1, 1]);
 
         let structure = Array2::from_elem((5, 5), true);
-        let center = get_structure_center(&structure, None).unwrap();
+        let center = get_structure_center(&structure, None).expect("Operation failed");
         assert_eq!(center, vec![2, 2]);
     }
 }

@@ -140,7 +140,7 @@ fn demo_stable_variance() -> CoreResult<()> {
     println!("Naive single-pass variance: {naive_var}");
     println!(
         "Welford's algorithm variance: {}",
-        welford.variance().unwrap()
+        welford.variance().expect("Operation failed")
     );
     println!("Two-pass stable variance: {stable_var}");
 

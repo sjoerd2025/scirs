@@ -474,7 +474,7 @@ where
     )?;
 
     // Convert result to 1D array
-    Ok(result.into_shape((n_points,)).unwrap())
+    Ok(result.into_shape((n_points,)).expect("Operation failed"))
 }
 
 #[cfg(test)]
@@ -484,7 +484,7 @@ mod tests {
     use scirs2_core::ndarray::Array2;
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - index out of bounds: IxDynImpl(Inline(3, [0, 0, 3, 0])) for shape [2, 3, 3] at line 101"]
     fn test_map_coordinates_identity() {
         let input: Array2<f64> = Array2::eye(3);
 
@@ -497,7 +497,8 @@ mod tests {
             }
         }
 
-        let result = map_coordinates(&input, &coordinates, Some(1), None, None, None).unwrap();
+        let result = map_coordinates(&input, &coordinates, Some(1), None, None, None)
+            .expect("Operation failed");
         assert_eq!(result.shape(), &[3, 3]);
 
         // Check some values
@@ -510,7 +511,7 @@ mod tests {
     fn test_value_at_coordinates() {
         let input: Array2<f64> = Array2::eye(3);
         let indices = vec![1, 1];
-        let value = value_at_coordinates(&input, &indices).unwrap();
+        let value = value_at_coordinates(&input, &indices).expect("Operation failed");
         assert_eq!(value, 1.0);
     }
 
@@ -518,7 +519,7 @@ mod tests {
     fn test_interpn() {
         let input: Array2<f64> = Array2::eye(3);
         let points = vec![Array1::linspace(0.0, 2.0, 5), Array1::linspace(0.0, 2.0, 5)];
-        let result = interpn(&input, &points, None, None, None).unwrap();
+        let result = interpn(&input, &points, None, None, None).expect("Operation failed");
         assert_eq!(result.len(), 5);
     }
 }

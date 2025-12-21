@@ -100,7 +100,7 @@ pub struct SynchroCwtResult {
 ///     |points, scale| wavelets::morlet(points, 5.0, scale),
 ///     5.0,
 ///     config
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // The result.sst contains the synchrosqueezed transform
 /// ```
@@ -570,7 +570,7 @@ mod tests {
             5.0,
             config,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Verify dimensions
         assert_eq!(result.sst.shape()[0], 64); // Frequencies
@@ -578,7 +578,7 @@ mod tests {
 
         // The CWT should be returned
         assert!(result.cwt.is_some());
-        assert_eq!(result.cwt.unwrap().shape()[0], 32); // Scales
+        assert_eq!(result.cwt.expect("Operation failed").shape()[0], 32); // Scales
 
         // The instantaneous frequencies should be returned
         assert!(result.omega.is_some());

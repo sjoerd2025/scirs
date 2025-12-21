@@ -1077,14 +1077,14 @@ mod tests {
         let device = GpuDevice::new();
         assert!(device.is_ok());
 
-        let device = device.unwrap();
+        let device = device.expect("Operation failed");
         // Even without actual GPU, should have CPU fallback
         assert!(!device.capabilities().supported_backends.is_empty());
     }
 
     #[test]
     fn test_processing_strategy_selection() {
-        let processor = HybridProcessor::new().unwrap();
+        let processor = HybridProcessor::new().expect("Operation failed");
 
         // Small dataset should use CPU
         let strategy = processor.choose_strategy(500);
@@ -1104,7 +1104,7 @@ mod tests {
     fn test_gpu_distance_matrix() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 
-        let gpu_matrix = GpuDistanceMatrix::new().unwrap();
+        let gpu_matrix = GpuDistanceMatrix::new().expect("Operation failed");
         // GPU functionality not available in this configuration
         let points_view = points.view();
         let _result = gpu_matrix.compute_parallel(&points_view);
@@ -1112,7 +1112,7 @@ mod tests {
         // GPU functionality not available in this configuration
         // Tests are disabled pending proper async runtime setup
         // assert!(result.is_ok());
-        // let matrix = result.unwrap();
+        // let matrix = result.expect("Operation failed");
         // assert_eq!(matrix.dim(), (4, 4));
     }
 
@@ -1128,7 +1128,7 @@ mod tests {
             [5.0, 5.1], // Cluster 2
         ];
 
-        let gpu_kmeans = GpuKMeans::new(2).unwrap();
+        let gpu_kmeans = GpuKMeans::new(2).expect("Operation failed");
         // GPU functionality not available in this configuration
         let points_view = points.view();
         let _result = gpu_kmeans.fit(&points_view);
@@ -1136,7 +1136,7 @@ mod tests {
         // GPU functionality not available in this configuration
         // Tests are disabled pending proper async runtime setup
         // assert!(result.is_ok());
-        // let (centroids, assignments) = result.unwrap();
+        // let (centroids, assignments) = result.expect("Operation failed");
     }
 
     #[test]
@@ -1145,7 +1145,7 @@ mod tests {
         let data_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let query_points = array![[0.1, 0.1], [0.9, 0.9]];
 
-        let gpu_nn = GpuNearestNeighbors::new().unwrap();
+        let gpu_nn = GpuNearestNeighbors::new().expect("Operation failed");
         let query_view = query_points.view();
         let data_view = data_points.view();
         let _result = gpu_nn.knn_search(&query_view, &data_view, 2);
@@ -1153,7 +1153,7 @@ mod tests {
         // GPU functionality not available in this configuration
         // Tests are disabled pending proper async runtime setup
         // assert!(result.is_ok());
-        // let (indices, distances) = result.unwrap();
+        // let (indices, distances) = result.expect("Operation failed");
 
         // GPU functionality not available in this configuration
         // Verify results make sense (closest to first query should be [0,0])

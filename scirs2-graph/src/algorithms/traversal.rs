@@ -45,7 +45,7 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Operation failed");
 
     queue.push_back(start_idx);
     visited.insert(start_idx);
@@ -105,7 +105,7 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Operation failed");
 
     queue.push_back(start_idx);
     visited.insert(start_idx);
@@ -166,7 +166,7 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Operation failed");
 
     stack.push(start_idx);
 
@@ -219,7 +219,7 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Operation failed");
 
     stack.push(start_idx);
 
@@ -318,7 +318,7 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Operation failed");
 
     priority_queue.push(PriorityState {
         node: source.clone(),
@@ -340,7 +340,7 @@ where
             .inner()
             .node_indices()
             .find(|&idx| graph.inner()[idx] == *current_node)
-            .unwrap();
+            .expect("Operation failed");
 
         // Add all unvisited neighbors to the priority queue
         for neighbor_idx in graph.inner().neighbors(current_idx) {
@@ -409,7 +409,7 @@ where
             .inner()
             .node_indices()
             .find(|&idx| graph.inner()[idx] == *current_node)
-            .unwrap();
+            .expect("Operation failed");
 
         // Add all unvisited successors to the priority queue (directed graph)
         for neighbor_idx in graph
@@ -468,12 +468,12 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Operation failed");
     let goal_idx = graph
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *goal)
-        .unwrap();
+        .expect("Operation failed");
 
     let mut forward_queue = VecDeque::new();
     let mut backward_queue = VecDeque::new();
@@ -496,7 +496,7 @@ where
     while !forward_queue.is_empty() || !backward_queue.is_empty() {
         // Forward search step
         if !forward_queue.is_empty() {
-            let current = forward_queue.pop_front().unwrap();
+            let current = forward_queue.pop_front().expect("Operation failed");
 
             // Check if we've met the backward search
             if backward_visited.contains(&current) {
@@ -521,7 +521,7 @@ where
 
         // Backward search step
         if !backward_queue.is_empty() {
-            let current = backward_queue.pop_front().unwrap();
+            let current = backward_queue.pop_front().expect("Operation failed");
 
             // Check if we've met the forward search
             if forward_visited.contains(&current) {
@@ -575,12 +575,12 @@ where
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *source)
-        .unwrap();
+        .expect("Operation failed");
     let goal_idx = graph
         .inner()
         .node_indices()
         .find(|&idx| graph.inner()[idx] == *goal)
-        .unwrap();
+        .expect("Operation failed");
 
     let mut forward_queue = VecDeque::new();
     let mut backward_queue = VecDeque::new();
@@ -603,7 +603,7 @@ where
     while !forward_queue.is_empty() || !backward_queue.is_empty() {
         // Forward search step (follow outgoing edges)
         if !forward_queue.is_empty() {
-            let current = forward_queue.pop_front().unwrap();
+            let current = forward_queue.pop_front().expect("Operation failed");
 
             // Check if we've met the backward search
             if backward_visited.contains(&current) {
@@ -631,7 +631,7 @@ where
 
         // Backward search step (follow incoming edges)
         if !backward_queue.is_empty() {
-            let current = backward_queue.pop_front().unwrap();
+            let current = backward_queue.pop_front().expect("Operation failed");
 
             // Check if we've met the forward search
             if forward_visited.contains(&current) {
@@ -772,11 +772,11 @@ mod tests {
         // Create a simple graph: 1 -- 2 -- 3
         //                             |
         //                             4
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(2, 4, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(2, 4, 1.0).expect("Operation failed");
 
-        let result = breadth_first_search(&graph, &1).unwrap();
+        let result = breadth_first_search(&graph, &1).expect("Operation failed");
 
         // BFS should visit nodes level by level
         assert_eq!(result[0], 1);
@@ -795,11 +795,11 @@ mod tests {
         //                               |
         //                               v
         //                               4
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(2, 4, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(2, 4, 1.0).expect("Operation failed");
 
-        let result = breadth_first_search_digraph(&graph, &1).unwrap();
+        let result = breadth_first_search_digraph(&graph, &1).expect("Operation failed");
 
         assert_eq!(result[0], 1);
         assert_eq!(result[1], 2);
@@ -813,11 +813,11 @@ mod tests {
         let mut graph: Graph<i32, f64> = Graph::new();
 
         // Create a simple graph
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(1, 3, 1.0).unwrap();
-        graph.add_edge(2, 4, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(1, 3, 1.0).expect("Operation failed");
+        graph.add_edge(2, 4, 1.0).expect("Operation failed");
 
-        let result = depth_first_search(&graph, &1).unwrap();
+        let result = depth_first_search(&graph, &1).expect("Operation failed");
 
         // DFS should visit nodes depth-first
         assert_eq!(result[0], 1);
@@ -832,11 +832,11 @@ mod tests {
         let mut graph: DiGraph<i32, f64> = DiGraph::new();
 
         // Create a directed graph
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(1, 3, 1.0).unwrap();
-        graph.add_edge(2, 4, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(1, 3, 1.0).expect("Operation failed");
+        graph.add_edge(2, 4, 1.0).expect("Operation failed");
 
-        let result = depth_first_search_digraph(&graph, &1).unwrap();
+        let result = depth_first_search_digraph(&graph, &1).expect("Operation failed");
 
         assert_eq!(result[0], 1);
         assert_eq!(result.len(), 4);
@@ -850,26 +850,30 @@ mod tests {
         let mut graph: Graph<i32, f64> = Graph::new();
 
         // Create a chain: 1 -- 2 -- 3 -- 4 -- 5
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(3, 4, 1.0).unwrap();
-        graph.add_edge(4, 5, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(3, 4, 1.0).expect("Operation failed");
+        graph.add_edge(4, 5, 1.0).expect("Operation failed");
 
         // Test finding path from 1 to 5
-        let path = bidirectional_search(&graph, &1, &5).unwrap().unwrap();
+        let path = bidirectional_search(&graph, &1, &5)
+            .expect("Path search failed")
+            .expect("No path found");
         assert_eq!(path[0], 1);
         assert_eq!(path[path.len() - 1], 5);
         assert!(path.len() <= 5);
 
         // Test path from node to itself
-        let same_path = bidirectional_search(&graph, &3, &3).unwrap().unwrap();
+        let same_path = bidirectional_search(&graph, &3, &3)
+            .expect("Path search failed")
+            .expect("No path found");
         assert_eq!(same_path, vec![3]);
 
         // Test disconnected graph
         let mut disconnected: Graph<i32, f64> = Graph::new();
         disconnected.add_node(1);
         disconnected.add_node(2);
-        let no_path = bidirectional_search(&disconnected, &1, &2).unwrap();
+        let no_path = bidirectional_search(&disconnected, &1, &2).expect("Operation failed");
         assert_eq!(no_path, None);
     }
 
@@ -878,20 +882,20 @@ mod tests {
         let mut graph: DiGraph<i32, f64> = DiGraph::new();
 
         // Create a directed chain: 1 -> 2 -> 3 -> 4 -> 5
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(3, 4, 1.0).unwrap();
-        graph.add_edge(4, 5, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(3, 4, 1.0).expect("Operation failed");
+        graph.add_edge(4, 5, 1.0).expect("Operation failed");
 
         // Test finding path from 1 to 5
         let path = bidirectional_search_digraph(&graph, &1, &5)
-            .unwrap()
-            .unwrap();
+            .expect("Operation failed")
+            .expect("Operation failed");
         assert_eq!(path[0], 1);
         assert_eq!(path[path.len() - 1], 5);
 
         // Test no path in wrong direction
-        let no_path = bidirectional_search_digraph(&graph, &5, &1).unwrap();
+        let no_path = bidirectional_search_digraph(&graph, &5, &1).expect("Operation failed");
         assert_eq!(no_path, None);
     }
 
@@ -902,12 +906,12 @@ mod tests {
         // Create a simple graph: 1 -- 2 -- 3
         //                             |
         //                             4
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(2, 4, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(2, 4, 1.0).expect("Operation failed");
 
         // Test with node value as priority (lower values first)
-        let result = priority_first_search(&graph, &1, |node| *node).unwrap();
+        let result = priority_first_search(&graph, &1, |node| *node).expect("Operation failed");
 
         // Should visit in order: 1, 2, 3, 4 (based on node values)
         assert_eq!(result[0], 1);
@@ -917,7 +921,8 @@ mod tests {
         assert_eq!(result.len(), 4);
 
         // Test with reverse priority (higher values first)
-        let result_reverse = priority_first_search(&graph, &1, |node| -node).unwrap();
+        let result_reverse =
+            priority_first_search(&graph, &1, |node| -node).expect("Operation failed");
         assert_eq!(result_reverse[0], 1);
         // Since 2 is connected to 1, it should be visited next
         assert_eq!(result_reverse[1], 2);
@@ -936,12 +941,13 @@ mod tests {
         //                               |
         //                               v
         //                               4
-        graph.add_edge(1, 2, 1.0).unwrap();
-        graph.add_edge(2, 3, 1.0).unwrap();
-        graph.add_edge(2, 4, 1.0).unwrap();
+        graph.add_edge(1, 2, 1.0).expect("Operation failed");
+        graph.add_edge(2, 3, 1.0).expect("Operation failed");
+        graph.add_edge(2, 4, 1.0).expect("Operation failed");
 
         // Test with node value as priority
-        let result = priority_first_search_digraph(&graph, &1, |node| *node).unwrap();
+        let result =
+            priority_first_search_digraph(&graph, &1, |node| *node).expect("Operation failed");
 
         assert_eq!(result[0], 1);
         assert_eq!(result[1], 2);
@@ -950,7 +956,8 @@ mod tests {
         assert_eq!(result.len(), 4);
 
         // Test with constant priority (should behave like BFS)
-        let result_constant = priority_first_search_digraph(&graph, &1, |_| 1).unwrap();
+        let result_constant =
+            priority_first_search_digraph(&graph, &1, |_| 1).expect("Operation failed");
         assert_eq!(result_constant[0], 1);
         assert_eq!(result_constant[1], 2);
         assert_eq!(result_constant.len(), 4);

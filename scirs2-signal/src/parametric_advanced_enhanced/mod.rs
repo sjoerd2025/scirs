@@ -155,7 +155,7 @@ mod tests {
         }
         assert!(result.is_ok());
 
-        let arma_result = result.unwrap();
+        let arma_result = result.expect("Operation failed");
         assert_eq!(arma_result.ar_coeffs.len(), 3); // [1, a1, a2]
         assert_eq!(arma_result.ma_coeffs.len(), 2); // [1, b1]
         assert!(arma_result.noise_variance > 0.0);
@@ -184,7 +184,7 @@ mod tests {
         }
         assert!(result.is_ok());
 
-        let adaptive_result = result.unwrap();
+        let adaptive_result = result.expect("Operation failed");
         assert!(!adaptive_result.time_vector.is_empty());
         assert!(!adaptive_result.orders.is_empty());
         assert_eq!(
@@ -218,7 +218,7 @@ mod tests {
             return;
         }
 
-        let estimation_result = result.unwrap();
+        let estimation_result = result.expect("Operation failed");
         if estimation_result.is_err() {
             // Computation returned an error - also a known limitation
             return;
@@ -227,7 +227,7 @@ mod tests {
         // If we get here, everything worked
         assert!(estimation_result.is_ok());
 
-        let robust_result = estimation_result.unwrap();
+        let robust_result = estimation_result.expect("Operation failed");
         assert_eq!(robust_result.ar_coeffs.len(), 2); // AR(1) has 2 coefficients
         assert_eq!(robust_result.ma_coeffs.len(), 1); // MA(0) has 1 coefficient
         assert!(robust_result.robust_scale > 0.0);
@@ -250,7 +250,7 @@ mod tests {
         }
         assert!(result.is_ok());
 
-        let hr_result = result.unwrap();
+        let hr_result = result.expect("Operation failed");
         assert!(!hr_result.frequency_estimates.is_empty());
         assert!(!hr_result.eigenvalues.is_empty());
         assert!(hr_result.signal_subspace_dim > 0);
@@ -272,7 +272,7 @@ mod tests {
         }
         assert!(result.is_ok());
 
-        let mt_result = result.unwrap();
+        let mt_result = result.expect("Operation failed");
         assert!(!mt_result.combined_spectrum.psd.is_empty());
         assert!(!mt_result.individual_estimates.is_empty());
         assert!(mt_result.degrees_of_freedom > 0.0);
@@ -289,13 +289,13 @@ mod tests {
 
         let psd = compute_ar_psd(&ar_coeffs, noise_variance, &frequencies);
         assert!(psd.is_ok());
-        assert_eq!(psd.unwrap().len(), 10);
+        assert_eq!(psd.expect("Operation failed").len(), 10);
 
         // Test residual computation
         let signal = Array1::from_vec(vec![1.0, 2.0, 1.5, 2.5, 1.8, 2.2]);
         let residuals = compute_ar_residuals(&signal, &ar_coeffs);
         assert!(residuals.is_ok());
-        assert_eq!(residuals.unwrap().len(), signal.len());
+        assert_eq!(residuals.expect("Operation failed").len(), signal.len());
     }
 
     #[test]

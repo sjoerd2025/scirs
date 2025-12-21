@@ -165,7 +165,7 @@ mod tests {
     #[test]
     fn test_dft_identity() {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let result = frft_dft(&signal, 0.0).unwrap();
+        let result = frft_dft(&signal, 0.0).expect("Operation failed");
 
         for (i, &val) in signal.iter().enumerate() {
             assert_relative_eq!(result[i].re, val, epsilon = 1e-6);
@@ -180,7 +180,7 @@ mod tests {
 
         // Test special cases - FFT may have different normalization
         for alpha in &[0.0, 2.0] {
-            let result = frft_dft(&signal, *alpha).unwrap();
+            let result = frft_dft(&signal, *alpha).expect("Operation failed");
             let output_energy: f64 = result.iter().map(|c| c.norm_sqr()).sum();
 
             // For identity and time reversal, energy should be perfectly conserved
@@ -189,7 +189,7 @@ mod tests {
 
         // FFT and IFFT may have different normalization
         for alpha in &[1.0, 3.0] {
-            let result = frft_dft(&signal, *alpha).unwrap();
+            let result = frft_dft(&signal, *alpha).expect("Operation failed");
             let output_energy: f64 = result.iter().map(|c| c.norm_sqr()).sum();
 
             // Check that the ratio is reasonable (FFT normalization varies)
@@ -203,7 +203,7 @@ mod tests {
         // For general alpha values, the algorithm has known issues
         // Just check that the result is not completely unreasonable
         for alpha in &[0.1, 0.5, 1.5, 2.5, 3.5] {
-            let result = frft_dft(&signal, *alpha).unwrap();
+            let result = frft_dft(&signal, *alpha).expect("Operation failed");
             let output_energy: f64 = result.iter().map(|c| c.norm_sqr()).sum();
 
             let ratio = output_energy / input_energy;

@@ -116,7 +116,7 @@ fn bench_simd_bspline_batch(c: &mut Criterion) {
                 degree,
                 ExtrapolateMode::Extrapolate,
             )
-            .unwrap();
+            .expect("Test: operation failed");
 
             group.throughput(Throughput::Elements(batch_size as u64));
             group.bench_with_input(

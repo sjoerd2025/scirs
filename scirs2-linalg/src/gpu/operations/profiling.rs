@@ -34,7 +34,11 @@ impl GpuPerformanceProfiler {
     pub fn best_time(&self, operation: &str) -> Option<f64> {
         self.measurements
             .get(operation)
-            .and_then(|times| times.iter().min_by(|a, b| a.partial_cmp(b).unwrap()))
+            .and_then(|times| {
+                times
+                    .iter()
+                    .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            })
             .copied()
     }
 

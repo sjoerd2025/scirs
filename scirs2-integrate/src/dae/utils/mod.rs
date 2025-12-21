@@ -22,7 +22,7 @@ pub fn compute_constraint_jacobian<F: IntegrateFloat>(
 ) -> Array2<F> {
     let n = x.len();
     let m = y.len();
-    let epsilon = F::from_f64(1e-8).unwrap();
+    let epsilon = F::from_f64(1e-8).expect("Operation failed");
 
     // Compute g at the current point
     let g0 = g(t, x, y);
@@ -65,12 +65,12 @@ pub fn is_singular_matrix<F: IntegrateFloat>(matrix: ArrayView2<F>) -> bool {
 
     // Use a simple determinant check for small matrices
     if n == 1 {
-        return matrix[(0, 0)].abs() < F::from_f64(1e-10).unwrap();
+        return matrix[(0, 0)].abs() < F::from_f64(1e-10).expect("Operation failed");
     }
 
     // For larger matrices, check condition number or use LU decomposition
     // For now, use a simple diagonal dominance check as a heuristic
-    let epsilon = F::from_f64(1e-10).unwrap();
+    let epsilon = F::from_f64(1e-10).expect("Operation failed");
 
     for i in 0..n {
         let diagonal = matrix[(i, i)].abs();
@@ -82,7 +82,9 @@ pub fn is_singular_matrix<F: IntegrateFloat>(matrix: ArrayView2<F>) -> bool {
             }
         }
 
-        if diagonal < epsilon || diagonal < off_diagonal_sum * F::from_f64(0.1).unwrap() {
+        if diagonal < epsilon
+            || diagonal < off_diagonal_sum * F::from_f64(0.1).expect("Operation failed")
+        {
             return true;
         }
     }

@@ -22,7 +22,7 @@ use scirs2_core::numeric::{SparseElement, Zero};
 /// use scirs2_sparse::utils::identity;
 ///
 /// // Create a 3x3 identity matrix
-/// let eye = identity(3).unwrap();
+/// let eye = identity(3).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn identity(n: usize) -> SparseResult<CsrMatrix<f64>> {
@@ -61,7 +61,7 @@ pub fn identity(n: usize) -> SparseResult<CsrMatrix<f64>> {
 /// use scirs2_sparse::utils::diag;
 ///
 /// // Create a diagonal matrix with elements [1, 2, 3]
-/// let d = diag(&[1.0, 2.0, 3.0]).unwrap();
+/// let d = diag(&[1.0, 2.0, 3.0]).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn diag(diag: &[f64]) -> SparseResult<CsrMatrix<f64>> {
@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn test_identity() {
         let n = 3;
-        let eye = identity(n).unwrap();
+        let eye = identity(n).expect("Operation failed");
 
         assert_eq!(eye.shape(), (n, n));
         assert_eq!(eye.nnz(), n);
@@ -259,7 +259,7 @@ mod tests {
     #[test]
     fn test_diag() {
         let diag_elements = [1.0, 2.0, 3.0];
-        let d = diag(&diag_elements).unwrap();
+        let d = diag(&diag_elements).expect("Operation failed");
 
         assert_eq!(d.shape(), (3, 3));
         assert_eq!(d.nnz(), 3);
@@ -293,7 +293,7 @@ mod tests {
         let data = vec![1.0, 2.0, 2.0, 3.0, 0.0, 4.0]; // Note: explicitly setting a zero
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         // A symmetric matrix should have the same value at (i,j) and (j,i)
         assert!(is_symmetric(&matrix));
@@ -304,7 +304,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 3.0, 0.0, 4.0]; // Changed 2.0 to 3.0
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         assert!(!is_symmetric(&matrix));
     }
@@ -317,7 +317,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         // Calculate sparsity pattern
         let pattern = sparsity_pattern(&matrix);

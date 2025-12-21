@@ -636,12 +636,21 @@ impl NeuralArchitectureSearch {
             }
 
             // Sort by fitness
-            evaluated.sort_by(|a, b| b.1.accuracy.partial_cmp(&a.1.accuracy).unwrap());
+            evaluated.sort_by(|a, b| {
+                b.1.accuracy
+                    .partial_cmp(&a.1.accuracy)
+                    .expect("Operation failed")
+            });
 
             // Update best
             if let Some((arch, perf)) = evaluated.first() {
                 if best_architecture.is_none()
-                    || perf.accuracy > best_architecture.as_ref().unwrap().1.accuracy
+                    || perf.accuracy
+                        > best_architecture
+                            .as_ref()
+                            .expect("Operation failed")
+                            .1
+                            .accuracy
                 {
                     best_architecture = Some((arch.clone(), perf.clone()));
                 }
@@ -652,7 +661,11 @@ impl NeuralArchitectureSearch {
                 evaluated.iter().map(|(_, p)| p.accuracy).sum::<f64>() / evaluated.len() as f64;
             progress_history.push(SearchProgress {
                 generation,
-                best_fitness: best_architecture.as_ref().unwrap().1.accuracy,
+                best_fitness: best_architecture
+                    .as_ref()
+                    .expect("Operation failed")
+                    .1
+                    .accuracy,
                 avg_fitness,
             });
 
@@ -730,7 +743,7 @@ impl NeuralArchitectureSearch {
                 "child1_{}",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_nanos()
             ),
             layers: child1_layers,
@@ -762,7 +775,7 @@ impl NeuralArchitectureSearch {
                 "child2_{}",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_nanos()
             ),
             layers: child2_layers,
@@ -937,7 +950,12 @@ impl NeuralArchitectureSearch {
             let performance = self.evaluate_architecture(&arch)?;
 
             if best_architecture.is_none()
-                || performance.accuracy > best_architecture.as_ref().unwrap().1.accuracy
+                || performance.accuracy
+                    > best_architecture
+                        .as_ref()
+                        .expect("Operation failed")
+                        .1
+                        .accuracy
             {
                 best_architecture = Some((arch.clone(), performance.clone()));
             }

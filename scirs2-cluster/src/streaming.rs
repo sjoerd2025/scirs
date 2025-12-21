@@ -107,7 +107,8 @@ impl<F: Float + FromPrimitive + Debug> StreamingKMeans<F> {
 
             // Choose next center with probability proportional to squared distance
             let mut cumsum = F::zero();
-            let target = total_distance * F::from(0.5).unwrap(); // Simplified selection
+            let target =
+                total_distance * F::from(0.5).expect("Failed to convert constant to float"); // Simplified selection
 
             for j in 0..n_samples {
                 cumsum = cumsum + distances[j];
@@ -137,8 +138,8 @@ impl<F: Float + FromPrimitive + Debug> StreamingKMeans<F> {
             return Ok(());
         }
 
-        let centers = self.centers.as_mut().unwrap();
-        let weights = self.weights.as_mut().unwrap();
+        let centers = self.centers.as_mut().expect("Operation failed");
+        let weights = self.weights.as_mut().expect("Operation failed");
 
         // Assign each point to the nearest center and update centers
         for i in 0..n_samples {
@@ -188,7 +189,7 @@ impl<F: Float + FromPrimitive + Debug> StreamingKMeans<F> {
             ));
         }
 
-        let centers = self.centers.as_ref().unwrap();
+        let centers = self.centers.as_ref().expect("Operation failed");
         let n_samples = data.shape()[0];
         let mut labels = Array1::zeros(n_samples);
 
@@ -285,13 +286,14 @@ impl<F: Float + FromPrimitive + Debug> ProgressiveHierarchical<F> {
             }
 
             // Merge with closest representative or create new one
-            let threshold = F::from(0.1).unwrap(); // Distance threshold for merging
+            let threshold = F::from(0.1).expect("Failed to convert constant to float"); // Distance threshold for merging
 
             if min_dist < threshold && closest_idx < self.representative_points.len() {
                 // Merge with existing representative
                 let old_size = self.cluster_sizes[closest_idx];
                 let new_size = old_size + 1;
-                let weight = F::from(old_size).unwrap() / F::from(new_size).unwrap();
+                let weight = F::from(old_size).expect("Failed to convert to float")
+                    / F::from(new_size).expect("Failed to convert to float");
 
                 // Update representative as weighted average
                 let mut repr = self.representative_points[closest_idx].clone();
@@ -355,8 +357,10 @@ impl<F: Float + FromPrimitive + Debug> ProgressiveHierarchical<F> {
             let size_j = self.cluster_sizes[merge_j];
             let total_size = size_i + size_j;
 
-            let weight_i = F::from(size_i).unwrap() / F::from(total_size).unwrap();
-            let weight_j = F::from(size_j).unwrap() / F::from(total_size).unwrap();
+            let weight_i = F::from(size_i).expect("Failed to convert to float")
+                / F::from(total_size).expect("Failed to convert to float");
+            let weight_j = F::from(size_j).expect("Failed to convert to float")
+                / F::from(total_size).expect("Failed to convert to float");
 
             // Create merged representative
             let repr_i = &self.representative_points[merge_i];
@@ -469,22 +473,29 @@ mod tests {
         let mut streaming_kmeans = StreamingKMeans::new(config);
 
         // First batch
-        let batch1 =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 1.0, 1.0, 1.1, 1.1]).unwrap();
+        let batch1 = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 1.0, 1.0, 1.1, 1.1])
+            .expect("Operation failed");
 
-        streaming_kmeans.partial_fit(batch1.view()).unwrap();
+        streaming_kmeans
+            .partial_fit(batch1.view())
+            .expect("Operation failed");
         assert!(streaming_kmeans.cluster_centers().is_some());
 
         // Second batch
-        let batch2 =
-            Array2::from_shape_vec((4, 2), vec![0.2, 0.2, 0.0, 0.1, 1.2, 1.0, 1.0, 1.2]).unwrap();
+        let batch2 = Array2::from_shape_vec((4, 2), vec![0.2, 0.2, 0.0, 0.1, 1.2, 1.0, 1.0, 1.2])
+            .expect("Operation failed");
 
-        streaming_kmeans.partial_fit(batch2.view()).unwrap();
+        streaming_kmeans
+            .partial_fit(batch2.view())
+            .expect("Operation failed");
 
         // Test prediction
-        let test_data = Array2::from_shape_vec((2, 2), vec![0.05, 0.05, 1.05, 1.05]).unwrap();
+        let test_data =
+            Array2::from_shape_vec((2, 2), vec![0.05, 0.05, 1.05, 1.05]).expect("Operation failed");
 
-        let labels = streaming_kmeans.predict(test_data.view()).unwrap();
+        let labels = streaming_kmeans
+            .predict(test_data.view())
+            .expect("Operation failed");
         assert_eq!(labels.len(), 2);
 
         // Points should be assigned to different clusters
@@ -501,9 +512,11 @@ mod tests {
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
-        progressive.partial_fit(batch1.view()).unwrap();
+        progressive
+            .partial_fit(batch1.view())
+            .expect("Operation failed");
         let (representatives, sizes) = progressive.get_representatives();
 
         assert!(!representatives.is_empty());
@@ -513,8 +526,8 @@ mod tests {
 
     #[test]
     fn test_chunked_distance_matrix() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         let chunked_matrix = ChunkedDistanceMatrix::new(4, 1); // 1 MB limit
         let mut distance_count = 0;
@@ -526,7 +539,7 @@ mod tests {
                 distance_count += 1;
                 Ok(())
             })
-            .unwrap();
+            .expect("Test: operation failed");
 
         // Should process 6 distances for 4 points: (0,1), (0,2), (0,3), (1,2), (1,3), (2,3)
         assert_eq!(distance_count, 6);
@@ -930,8 +943,14 @@ pub mod advanced_streaming {
                     .insert(param_name.to_string(), vec![F::zero(); gradient.len()]);
             }
 
-            let params = self.model_state.get_mut(param_name).unwrap();
-            let momentum_grad = self.gradient_memory.get_mut(param_name).unwrap();
+            let params = self
+                .model_state
+                .get_mut(param_name)
+                .expect("Operation failed");
+            let momentum_grad = self
+                .gradient_memory
+                .get_mut(param_name)
+                .expect("Operation failed");
 
             // Update with momentum
             for i in 0..params.len() {
@@ -1113,8 +1132,8 @@ pub mod intelligent_loading {
         /// Update running mean and variance
         fn update_statistics(&mut self, data: &Array2<F>) -> Result<()> {
             let (n_samples, n_features) = (data.shape()[0], data.shape()[1]);
-            let mean = self.running_mean.as_mut().unwrap();
-            let var = self.running_var.as_mut().unwrap();
+            let mean = self.running_mean.as_mut().expect("Operation failed");
+            let var = self.running_var.as_mut().expect("Operation failed");
 
             for i in 0..n_samples {
                 self.sample_count += 1;
@@ -1124,7 +1143,9 @@ pub mod intelligent_loading {
                     if sample[j].is_finite() {
                         // Online update of mean and variance (Welford's algorithm)
                         let delta = sample[j] - mean[j];
-                        mean[j] = mean[j] + delta / F::from(self.sample_count).unwrap();
+                        mean[j] = mean[j]
+                            + delta
+                                / F::from(self.sample_count).expect("Failed to convert to float");
                         let delta2 = sample[j] - mean[j];
                         var[j] = var[j] + delta * delta2;
                     }
@@ -1167,8 +1188,10 @@ pub mod intelligent_loading {
                     for mut row in data.rows_mut().into_iter() {
                         for (j, elem) in row.iter_mut().enumerate() {
                             if j < mean.len() && var[j] > F::zero() {
-                                let std_dev =
-                                    (var[j] / F::from(self.sample_count - 1).unwrap()).sqrt();
+                                let std_dev = (var[j]
+                                    / F::from(self.sample_count - 1)
+                                        .expect("Failed to convert to float"))
+                                .sqrt();
                                 if std_dev > F::zero() {
                                     *elem = (*elem - mean[j]) / std_dev;
                                 }
@@ -1287,12 +1310,12 @@ pub mod online_algorithms {
         ) -> Self {
             let n_clusters = initial_centers.nrows();
             let adaptive_params = AdaptiveParams {
-                momentum: F::from(0.9).unwrap(),
+                momentum: F::from(0.9).expect("Failed to convert constant to float"),
                 stability_scores: vec![F::zero(); n_clusters],
                 center_movements: VecDeque::with_capacity(100),
                 auto_k_adjustment: false,
-                split_threshold: F::from(2.0).unwrap(),
-                merge_threshold: F::from(0.5).unwrap(),
+                split_threshold: F::from(2.0).expect("Failed to convert constant to float"),
+                merge_threshold: F::from(0.5).expect("Failed to convert constant to float"),
             };
 
             Self {
@@ -1454,7 +1477,7 @@ pub mod online_algorithms {
             sample: ArrayView1<F>,
             lr: f64,
         ) -> Result<()> {
-            let learning_rate = F::from(lr).unwrap();
+            let learning_rate = F::from(lr).expect("Failed to convert to float");
             let momentum = self.adaptive_params.momentum;
 
             let mut center = self.centers.row_mut(cluster_idx);
@@ -1504,12 +1527,13 @@ pub mod online_algorithms {
                     }
 
                     let avg_movement = recent_movements.iter().fold(F::zero(), |acc, x| acc + *x)
-                        / F::from(recent_movements.len()).unwrap();
+                        / F::from(recent_movements.len()).expect("Operation failed");
                     let stability = F::one() / (F::one() + avg_movement);
 
                     // High stability = low learning rate, low stability = high learning rate
-                    let adaptive_lr =
-                        min_lr + (max_lr - min_lr) * (F::one() - stability).to_f64().unwrap();
+                    let adaptive_lr = min_lr
+                        + (max_lr - min_lr)
+                            * (F::one() - stability).to_f64().expect("Operation failed");
                     adaptive_lr.clamp(*min_lr, *max_lr)
                 }
             }
@@ -1520,7 +1544,7 @@ pub mod online_algorithms {
             self.metrics.samples_processed += 1;
 
             // Update WCSS estimate
-            let distance_sq = distance.to_f64().unwrap().powi(2);
+            let distance_sq = distance.to_f64().expect("Operation failed").powi(2);
             let n = self.metrics.samples_processed as f64;
             self.metrics.wcss = ((n - 1.0) * self.metrics.wcss + distance_sq) / n;
 

@@ -484,7 +484,7 @@ mod tests {
         image[[2, 1]] = f64::NAN;
         image[[2, 2]] = 9.0;
 
-        let result = nearest_neighbor_interpolate_2d(&image).unwrap();
+        let result = nearest_neighbor_interpolate_2d(&image).expect("Operation failed");
 
         // All values should be valid (non-NaN)
         assert!(result.iter().all(|&x| !x.is_nan()));

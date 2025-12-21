@@ -631,7 +631,7 @@ impl AdvancedBenchmarkSuite {
         }
 
         let mut sorted_values = values.to_vec();
-        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
         let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;

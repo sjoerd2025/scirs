@@ -211,7 +211,7 @@ impl LoadBalancer {
         nodes
             .iter()
             .min_by_key(|node| node.active_connections)
-            .unwrap()
+            .expect("Operation failed")
             .clone()
     }
 
@@ -238,16 +238,24 @@ impl LoadBalancer {
     fn select_resource_aware(&self, nodes: &[NodeLoad]) -> NodeLoad {
         nodes
             .iter()
-            .min_by(|a, b| a.load_score().partial_cmp(&b.load_score()).unwrap())
-            .unwrap()
+            .min_by(|a, b| {
+                a.load_score()
+                    .partial_cmp(&b.load_score())
+                    .expect("Operation failed")
+            })
+            .expect("Operation failed")
             .clone()
     }
 
     fn select_latencybased(&self, nodes: &[NodeLoad]) -> NodeLoad {
         nodes
             .iter()
-            .min_by(|a, b| a.average_latency.partial_cmp(&b.average_latency).unwrap())
-            .unwrap()
+            .min_by(|a, b| {
+                a.average_latency
+                    .partial_cmp(&b.average_latency)
+                    .expect("Operation failed")
+            })
+            .expect("Operation failed")
             .clone()
     }
 
@@ -384,8 +392,12 @@ mod tests {
         assert!(balancer.register_node(node1).is_ok());
         assert!(balancer.register_node(node2).is_ok());
 
-        let assignment1 = balancer.assign_task("task1".to_string()).unwrap();
-        let assignment2 = balancer.assign_task("task2".to_string()).unwrap();
+        let assignment1 = balancer
+            .assign_task("task1".to_string())
+            .expect("Operation failed");
+        let assignment2 = balancer
+            .assign_task("task2".to_string())
+            .expect("Operation failed");
 
         // Should alternate between nodes
         assert_ne!(assignment1.nodeid, assignment2.nodeid);

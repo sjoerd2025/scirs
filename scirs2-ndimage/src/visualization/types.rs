@@ -361,12 +361,12 @@ mod tests {
 
     #[test]
     fn test_rgb_from_hex() {
-        let color = RgbColor::from_hex("#FF0000").unwrap();
+        let color = RgbColor::from_hex("#FF0000").expect("Operation failed");
         assert_eq!(color.r, 255);
         assert_eq!(color.g, 0);
         assert_eq!(color.b, 0);
 
-        let color = RgbColor::from_hex("#00FF00").unwrap();
+        let color = RgbColor::from_hex("#00FF00").expect("Operation failed");
         assert_eq!(color.r, 0);
         assert_eq!(color.g, 255);
         assert_eq!(color.b, 0);

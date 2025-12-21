@@ -726,7 +726,7 @@ mod tests {
     #[test]
     fn test_custom_asic_creation() {
         let config = create_test_asic_config();
-        let asic = CustomASIC::new(_config).unwrap();
+        let asic = CustomASIC::new(_config).expect("Operation failed");
         assert_eq!(asic.accelerator_type(), AcceleratorType::ASIC);
         assert!(asic.is_available());
     fn test_asic_operation_compilation() {
@@ -735,7 +735,7 @@ mod tests {
             n: 128,
             k: 128,
             datatype: DataType::Float32,
-        let program = asic.compile_operation(&operation).unwrap();
+        let program = asic.compile_operation(&operation).expect("Operation failed");
         assert!(!program.instructions.is_empty());
     fn test_datatype_support() {
         let dt1 = DataType::FixedPoint {

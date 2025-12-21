@@ -100,7 +100,7 @@ impl MultiDimensionalVisualizer {
         let (n_samples, n_features) = data.dim();
 
         // Center the data
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let centered_data = data - &mean.insert_axis(Axis(0));
 
         // Compute covariance matrix
@@ -111,7 +111,11 @@ impl MultiDimensionalVisualizer {
 
         // Sort by eigenvalue magnitude (descending)
         let mut eigenvalue_indices: Vec<usize> = (0..eigenvalues.len()).collect();
-        eigenvalue_indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+        eigenvalue_indices.sort_by(|&i, &j| {
+            eigenvalues[j]
+                .partial_cmp(&eigenvalues[i])
+                .expect("Operation failed")
+        });
 
         // Project data onto principal components
         let n_components = self.target_dimensions.min(n_features);
@@ -177,8 +181,12 @@ impl MultiDimensionalVisualizer {
         let squared_distances = distance_matrix.mapv(|d| d * d);
 
         // Double centering
-        let row_means = squared_distances.mean_axis(Axis(1)).unwrap();
-        let col_means = squared_distances.mean_axis(Axis(0)).unwrap();
+        let row_means = squared_distances
+            .mean_axis(Axis(1))
+            .expect("Operation failed");
+        let col_means = squared_distances
+            .mean_axis(Axis(0))
+            .expect("Operation failed");
         let grand_mean = squared_distances.iter().sum::<f64>() / squared_distances.len() as f64;
 
         let mut b_matrix = Array2::zeros((n_samples, n_samples));
@@ -194,7 +202,11 @@ impl MultiDimensionalVisualizer {
 
         // Sort eigenvalues in descending order
         let mut eigenvalue_indices: Vec<usize> = (0..eigenvalues.len()).collect();
-        eigenvalue_indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+        eigenvalue_indices.sort_by(|&i, &j| {
+            eigenvalues[j]
+                .partial_cmp(&eigenvalues[i])
+                .expect("Operation failed")
+        });
 
         // Construct embedding
         let n_components = self.target_dimensions.min(n_samples);

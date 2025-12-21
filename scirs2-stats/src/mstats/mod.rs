@@ -100,9 +100,9 @@ impl<T: Copy> MaskedArray2<T> {
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let mask = array![true, true, false, true, true]; // 3.0 is masked
-/// let masked_arr = MaskedArray::new(data, mask).unwrap();
+/// let masked_arr = MaskedArray::new(data, mask).expect("Operation failed");
 ///
-/// let mean = masked_mean(&masked_arr, None).unwrap();
+/// let mean = masked_mean(&masked_arr, None).expect("Operation failed");
 /// assert!((mean - 3.0).abs() < 1e-10); // Mean of [1, 2, 4, 5] = 3.0
 /// ```
 #[allow(dead_code)]
@@ -207,7 +207,7 @@ where
     }
 
     let mut valid_values = maskedarray.valid_values();
-    valid_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    valid_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = valid_values.len();
     let median = if n % 2 == 1 {
@@ -252,7 +252,7 @@ where
     }
 
     let mut valid_values = maskedarray.valid_values();
-    valid_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    valid_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = valid_values.len() as f64;
     let mut quantiles = Array1::zeros(q.len());
@@ -366,8 +366,8 @@ where
                 .map(|(i, (_, y))| ((*y).into(), i))
                 .collect();
 
-            x_values.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-            y_values.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            x_values.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
+            y_values.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
             let mut x_ranks = vec![0.0; valid_pairs.len()];
             let mut y_ranks = vec![0.0; valid_pairs.len()];
@@ -650,7 +650,7 @@ where
     }
 
     let mut valid_values = maskedarray.valid_values();
-    valid_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    valid_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let n = valid_values.len();
     let ncut = (n as f64 * proportiontocut).floor() as usize;

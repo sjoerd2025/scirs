@@ -37,7 +37,7 @@
 //! let b = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 //!
 //! // Solve the system using matrix-free conjugate gradient
-//! let x = conjugate_gradient(&diag_op, &b, 10, 1e-10).unwrap();
+//! let x = conjugate_gradient(&diag_op, &b, 10, 1e-10).expect("Operation failed");
 //!
 //! // Expected solution: [1.0, 1.0, 1.0]
 //! assert!((x[0] - 1.0).abs() < 1e-10);
@@ -332,7 +332,7 @@ where
                 let x_block = x.slice(s![col_offset..col_offset + n_block_cols]);
 
                 // Apply the block operator
-                let result_block = block.apply(&x_block.view()).unwrap();
+                let result_block = block.apply(&x_block.view()).expect("Operation failed");
 
                 // Place the result in the output vector
                 for (i, &val) in result_block.iter().enumerate() {
@@ -855,14 +855,14 @@ mod tests {
         F: Float + NumAssign + Zero + Sum + One + ScalarOperand + Debug + Send + Sync,
         A: MatrixFreeOp<F>,
     {
-        let ax = a.apply(x).unwrap();
+        let ax = a.apply(x).expect("Operation failed");
         let mut diff = Array1::zeros(x.len());
         for i in 0..x.len() {
             diff[i] = ax[i] - b[i];
         }
 
-        let diff_norm = vector_norm(&diff.view(), 2).unwrap();
-        let b_norm = vector_norm(b, 2).unwrap();
+        let diff_norm = vector_norm(&diff.view(), 2).expect("Operation failed");
+        let b_norm = vector_norm(b, 2).expect("Operation failed");
 
         diff_norm < tol * b_norm.max(F::one())
     }
@@ -874,7 +874,7 @@ mod tests {
 
         // Apply to a vector
         let x = array![1.0, 2.0];
-        let y = identity.apply(&x.view()).unwrap();
+        let y = identity.apply(&x.view()).expect("Operation failed");
 
         // Result should equal input for identity operator
         assert_relative_eq!(y[0], 1.0, epsilon = 1e-10);
@@ -889,7 +889,7 @@ mod tests {
 
         // Apply to a vector
         let x = array![1.0, 2.0];
-        let y = diag_op.apply(&x.view()).unwrap();
+        let y = diag_op.apply(&x.view()).expect("Operation failed");
 
         // Result should be [2.0*1.0, 3.0*2.0] = [2.0, 6.0]
         assert_relative_eq!(y[0], 2.0, epsilon = 1e-10);
@@ -910,7 +910,7 @@ mod tests {
 
         // Apply to a vector
         let x = array![1.0, 2.0, 3.0];
-        let y = block_op.apply(&x.view()).unwrap();
+        let y = block_op.apply(&x.view()).expect("Operation failed");
 
         // Result should be [2.0*1.0, 3.0*2.0, 4.0*3.0] = [2.0, 6.0, 12.0]
         assert_relative_eq!(y[0], 2.0, epsilon = 1e-10);
@@ -936,7 +936,7 @@ mod tests {
         let b = array![1.0, 2.0];
 
         // Solve using matrix-free conjugate gradient
-        let x = conjugate_gradient(&spd_op, &b, 10, 1e-10).unwrap();
+        let x = conjugate_gradient(&spd_op, &b, 10, 1e-10).expect("Operation failed");
 
         // Check solution
         assert!(check_solution(&spd_op, &x.view(), &b.view(), 1e-8));
@@ -958,7 +958,7 @@ mod tests {
         let b = array![4.0, 3.0];
 
         // Solve using matrix-free GMRES
-        let x = gmres(&op, &b, 10, 1e-10, None).unwrap();
+        let x = gmres(&op, &b, 10, 1e-10, None).expect("Operation failed");
 
         // Check solution
         assert!(check_solution(&op, &x.view(), &b.view(), 1e-8));
@@ -981,11 +981,11 @@ mod tests {
         });
 
         // Create a Jacobi preconditioner
-        let precond = jacobi_preconditioner(&op).unwrap();
+        let precond = jacobi_preconditioner(&op).expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0, 2.0];
-        let y = precond.apply(&x.view()).unwrap();
+        let y = precond.apply(&x.view()).expect("Operation failed");
 
         // The preconditioner should be the inverse of the diagonal of A
         // Diagonal of A: [4.0, 3.0]
@@ -1017,7 +1017,8 @@ mod tests {
         let b = array![1.0, 2.0];
 
         // Solve using preconditioned matrix-free conjugate gradient
-        let x = preconditioned_conjugate_gradient(&spd_op, &precond, &b, 10, 1e-10).unwrap();
+        let x = preconditioned_conjugate_gradient(&spd_op, &precond, &b, 10, 1e-10)
+            .expect("Operation failed");
 
         // Check solution
         assert!(check_solution(&spd_op, &x.view(), &b.view(), 1e-8));

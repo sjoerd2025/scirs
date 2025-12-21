@@ -77,7 +77,7 @@ pub struct ValidationMetrics {
 ///     ..Default::default()
 /// };
 ///
-/// let result = simd_lombscargle(&times, &values, &config).unwrap();
+/// let result = simd_lombscargle(&times, &values, &config).expect("Operation failed");
 /// assert!(result.validation.snr > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -214,7 +214,7 @@ fn validate_time_series(times: &[f64]) -> SignalResult<()> {
 
     // Check for duplicate _times
     let mut sorted_times = times.to_vec();
-    sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     for i in 1..sorted_times.len() {
         if (sorted_times[i] - sorted_times[i - 1]).abs() < 1e-15 {
             return Err(SignalError::ValueError(format!(
@@ -273,7 +273,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
     let mut windowed = vec![0.0; n];
     let values_view = ArrayView1::from(_values);
     let window_view = ArrayView1::from(&window);
-    let windowed_view = ArrayView1::fromshape(n, &mut windowed).unwrap();
+    let windowed_view = ArrayView1::fromshape(n, &mut windowed).expect("Operation failed");
 
     f64::simd_mul(&values_view, &window_view, &windowed_view);
 
@@ -295,7 +295,7 @@ fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalRe
     for i in 0..n - 1 {
         dts[i] = times[i + 1] - times[i];
     }
-    dts.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    dts.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Use median sampling interval for robustness
     let median_dt = if (n - 1) % 2 == 0 {
@@ -343,7 +343,7 @@ fn compute_simd_fast_lombscargle(
     let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
     let mut values_centered = vec![0.0; n];
     let values_view = ArrayView1::from(values);
-    let centered_view = ArrayView1::fromshape(n, &mut values_centered).unwrap();
+    let centered_view = ArrayView1::fromshape(n, &mut values_centered).expect("Operation failed");
 
     // SIMD subtraction for centering
     f64::simd_sub_scalar(&values_view, mean_val, &centered_view);
@@ -352,7 +352,7 @@ fn compute_simd_fast_lombscargle(
     let t_mean = times.iter().sum::<f64>() / n as f64;
     let mut times_shifted = vec![0.0; n];
     let times_view = ArrayView1::from(times);
-    let shifted_view = ArrayView1::fromshape(n, &mut times_shifted).unwrap();
+    let shifted_view = ArrayView1::fromshape(n, &mut times_shifted).expect("Operation failed");
 
     f64::simd_sub_scalar(&times_view, t_mean, &shifted_view);
 
@@ -478,7 +478,7 @@ fn compute_validation_metrics(
     let (peak_idx, &max_power) = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .ok_or_else(|| SignalError::ComputationError("No peak found".to_string()))?;
 
     let peak_freq = frequencies[peak_idx];
@@ -574,7 +574,7 @@ fn compute_parallel_bootstrap_ci(
 
             // Sort by time
             let mut indices: Vec<usize> = (0..n).collect();
-            indices.sort_by(|&i, &j| resampled_times[i].partial_cmp(&resampled_times[j]).unwrap());
+            indices.sort_by(|&i, &j| resampled_times[i].partial_cmp(&resampled_times[j]).expect("Operation failed"));
 
             let sorted_times: Vec<f64> = indices.iter().map(|&i| resampled_times[i]).collect();
             let sorted_values: Vec<f64> = indices.iter().map(|&i| resampled_values[i]).collect();
@@ -600,7 +600,7 @@ fn compute_parallel_bootstrap_ci(
 
     for i in 0..n_freq {
         let mut freq_powers: Vec<f64> = bootstrap_powers.iter().map(|p| p[i]).collect();
-        freq_powers.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        freq_powers.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         lower_ci[i] = freq_powers[lower_idx];
         upper_ci[i] = freq_powers[upper_idx.min(n_bootstrap - 1)];
@@ -638,7 +638,7 @@ mod tests {
         let values = vec![1.0, 0.5, -0.5, -1.0, -0.5, 0.5, 1.0, 0.5];
 
         let config = LombScargleConfig::default();
-        let result = simd_lombscargle(&times, &values, &config).unwrap();
+        let result = simd_lombscargle(&times, &values, &config).expect("Operation failed");
 
         assert!(result.frequencies.len() > 0);
         assert_eq!(result.frequencies.len(), result.power.len());

@@ -5,7 +5,7 @@ use scirs2_core::numeric::Float;
 
 /// Safely convert a numeric literal to type T
 ///
-/// This function replaces the pattern `T::from(value).unwrap()` with proper error handling
+/// This function replaces the pattern `T::from(value).expect("Operation failed")` with proper error handling
 #[allow(dead_code)]
 pub fn safe_from<T: Float>(value: f64, context: &str) -> SpatialResult<T> {
     T::from(value).ok_or_else(|| {
@@ -121,14 +121,14 @@ mod tests {
     fn test_safe_from() {
         let result: SpatialResult<f32> = safe_from(2.0, "test");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 2.0f32);
+        assert_eq!(result.expect("Operation failed"), 2.0f32);
     }
 
     #[test]
     fn test_safe_partial_cmp() {
         let result = safe_partial_cmp(&2.0, &3.0, "test");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), std::cmp::Ordering::Less);
+        assert_eq!(result.expect("Operation failed"), std::cmp::Ordering::Less);
     }
 
     #[test]
@@ -136,7 +136,7 @@ mod tests {
         let values = vec![3.0, 1.0, 4.0, 2.0];
         let result = safe_min(values.into_iter(), "test");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 1.0);
+        assert_eq!(result.expect("Operation failed"), 1.0);
     }
 
     #[test]
@@ -145,7 +145,7 @@ mod tests {
 
         let result = safe_index(&array, 1, "test");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 2.0);
+        assert_eq!(result.expect("Operation failed"), 2.0);
 
         let result = safe_index(&array, 5, "test");
         assert!(result.is_err());

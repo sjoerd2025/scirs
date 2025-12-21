@@ -111,8 +111,16 @@ impl OptimizedLinearDiscriminantAnalysis {
         let handler = global_error_handler();
 
         // Basic shape validation
-        handler.validate_finite_array_or_error(x.as_slice().unwrap(), "x", "Optimized LDA fit")?;
-        handler.validate_array_or_error(y.as_slice().unwrap(), "y", "Optimized LDA fit")?;
+        handler.validate_finite_array_or_error(
+            x.as_slice().expect("Operation failed"),
+            "x",
+            "Optimized LDA fit",
+        )?;
+        handler.validate_array_or_error(
+            y.as_slice().expect("Operation failed"),
+            "y",
+            "Optimized LDA fit",
+        )?;
 
         let (n_samples_, _) = x.dim();
         if n_samples_ != y.len() {
@@ -346,7 +354,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
         let (_n_samples_, n_features) = x.dim();
-        let overall_mean = x.mean_axis(Axis(0)).unwrap();
+        let overall_mean = x.mean_axis(Axis(0)).expect("Operation failed");
 
         let mut sw = Array2::zeros((n_features, n_features));
         let mut sb = Array2::zeros((n_features, n_features));
@@ -406,7 +414,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
         let (_n_samples_, n_features) = x.dim();
-        let overall_mean = x.mean_axis(Axis(0)).unwrap();
+        let overall_mean = x.mean_axis(Axis(0)).expect("Operation failed");
 
         // Parallel computation of within-class scatter contributions
         let sw_contributions: Vec<Array2<f64>> = (0..classes.len())
@@ -523,8 +531,8 @@ impl OptimizedCanonicalCorrelationAnalysis {
             None
         };
         let _handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "Optimized CCA fit");
-        validate_or_error!(finite: y.as_slice().unwrap(), "y", "Optimized CCA fit");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "Optimized CCA fit");
+        validate_or_error!(finite: y.as_slice().expect("Operation failed"), "y", "Optimized CCA fit");
 
         let datasize = x.nrows() * (x.ncols() + y.ncols());
         let use_parallel =
@@ -720,7 +728,7 @@ impl PerformanceBenchmark {
         use scirs2_core::random::{Distribution, Normal};
 
         let mut rng = thread_rng();
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
         let mut x = Array2::zeros((n_samples_, n_features));
         let mut y = Array1::zeros(n_samples_);
@@ -794,7 +802,7 @@ mod tests {
 
         let config = PerformanceConfig::default();
         let mut opt_lda = OptimizedLinearDiscriminantAnalysis::new(config);
-        let result = opt_lda.fit(x.view(), y.view()).unwrap();
+        let result = opt_lda.fit(x.view(), y.view()).expect("Operation failed");
 
         assert_eq!(result.classes.len(), 2);
         assert_eq!(result.scalings.nrows(), 2);
@@ -815,7 +823,7 @@ mod tests {
 
         let config = PerformanceConfig::default();
         let mut opt_cca = OptimizedCanonicalCorrelationAnalysis::new(config);
-        let result = opt_cca.fit(x.view(), y.view()).unwrap();
+        let result = opt_cca.fit(x.view(), y.view()).expect("Operation failed");
 
         assert!(result.correlations.len() > 0);
         assert_eq!(result.x_weights.nrows(), 2);

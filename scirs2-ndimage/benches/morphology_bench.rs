@@ -50,7 +50,7 @@ fn bench_binary_morphology(c: &mut Criterion) {
                         None,
                         None,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -69,7 +69,7 @@ fn bench_binary_morphology(c: &mut Criterion) {
                         None,
                         None,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -89,32 +89,36 @@ fn bench_grayscale_morphology(c: &mut Criterion) {
 
     group.bench_function("grey_erosion", |b| {
         b.iter(|| {
-            grey_erosion(black_box(&input), None, Some(&structure), None, None, None).unwrap()
+            grey_erosion(black_box(&input), None, Some(&structure), None, None, None)
+                .expect("Operation failed")
         })
     });
 
     group.bench_function("grey_dilation", |b| {
         b.iter(|| {
-            grey_dilation(black_box(&input), None, Some(&structure), None, None, None).unwrap()
+            grey_dilation(black_box(&input), None, Some(&structure), None, None, None)
+                .expect("Operation failed")
         })
     });
 
     group.bench_function("morphological_gradient", |b| {
         b.iter(|| {
             morphological_gradient(black_box(&input), None, Some(&structure), None, None, None)
-                .unwrap()
+                .expect("Operation failed")
         })
     });
 
     group.bench_function("white_tophat", |b| {
         b.iter(|| {
-            white_tophat(black_box(&input), None, Some(&structure), None, None, None).unwrap()
+            white_tophat(black_box(&input), None, Some(&structure), None, None, None)
+                .expect("Operation failed")
         })
     });
 
     group.bench_function("black_tophat", |b| {
         b.iter(|| {
-            black_tophat(black_box(&input), None, Some(&structure), None, None, None).unwrap()
+            black_tophat(black_box(&input), None, Some(&structure), None, None, None)
+                .expect("Operation failed")
         })
     });
 
@@ -146,7 +150,7 @@ fn bench_hit_or_miss(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -170,7 +174,10 @@ fn bench_structuring_sizes(c: &mut Criterion) {
             BenchmarkId::new("grey_erosion", format!("{}x{}", size, size)),
             &structure,
             |b, _structure| {
-                b.iter(|| grey_erosion(black_box(&input), None, None, None, None, None).unwrap())
+                b.iter(|| {
+                    grey_erosion(black_box(&input), None, None, None, None, None)
+                        .expect("Operation failed")
+                })
             },
         );
     }
@@ -202,7 +209,7 @@ fn bench_3d_morphology(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -217,7 +224,7 @@ fn bench_3d_morphology(c: &mut Criterion) {
                 None,
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -246,7 +253,10 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             BenchmarkId::new("grey_erosion_simple", format!("{}x{}", size, size)),
             &grayscale_input,
             |b, input| {
-                b.iter(|| grey_erosion_2d(black_box(input), None, None, None, None).unwrap())
+                b.iter(|| {
+                    grey_erosion_2d(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -255,7 +265,8 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             &grayscale_input,
             |b, input| {
                 b.iter(|| {
-                    grey_erosion_2d_optimized(black_box(input), None, None, None, None).unwrap()
+                    grey_erosion_2d_optimized(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -265,7 +276,10 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             BenchmarkId::new("grey_dilation_simple", format!("{}x{}", size, size)),
             &grayscale_input,
             |b, input| {
-                b.iter(|| grey_dilation_2d(black_box(input), None, None, None, None).unwrap())
+                b.iter(|| {
+                    grey_dilation_2d(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -274,7 +288,8 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             &grayscale_input,
             |b, input| {
                 b.iter(|| {
-                    grey_dilation_2d_optimized(black_box(input), None, None, None, None).unwrap()
+                    grey_dilation_2d_optimized(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -284,7 +299,10 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             BenchmarkId::new("binary_erosion_simple", format!("{}x{}", size, size)),
             &binary_input,
             |b, input| {
-                b.iter(|| binary_erosion_2d(black_box(input), None, None, None, None).unwrap())
+                b.iter(|| {
+                    binary_erosion_2d(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -293,7 +311,8 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             &binary_input,
             |b, input| {
                 b.iter(|| {
-                    binary_erosion_2d_optimized(black_box(input), None, None, None, None).unwrap()
+                    binary_erosion_2d_optimized(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -303,7 +322,10 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             BenchmarkId::new("binary_dilation_simple", format!("{}x{}", size, size)),
             &binary_input,
             |b, input| {
-                b.iter(|| binary_dilation_2d(black_box(input), None, None, None, None).unwrap())
+                b.iter(|| {
+                    binary_dilation_2d(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -312,7 +334,8 @@ fn bench_optimized_vs_simple(c: &mut Criterion) {
             &binary_input,
             |b, input| {
                 b.iter(|| {
-                    binary_dilation_2d_optimized(black_box(input), None, None, None, None).unwrap()
+                    binary_dilation_2d_optimized(black_box(input), None, None, None, None)
+                        .expect("Operation failed")
                 })
             },
         );

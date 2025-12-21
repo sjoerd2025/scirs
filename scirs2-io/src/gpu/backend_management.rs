@@ -345,7 +345,9 @@ mod tests {
     #[test]
     fn test_backend_capabilities() {
         if let Ok(processor) = GpuIoProcessor::new() {
-            let capabilities = processor.get_backend_capabilities().unwrap();
+            let capabilities = processor
+                .get_backend_capabilities()
+                .expect("Operation failed");
             assert!(capabilities.memory_gb > 0.0);
             assert!(capabilities.compute_units > 0);
         }

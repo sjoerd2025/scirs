@@ -151,7 +151,7 @@ mod tests {
         let signal1 = vec![1.0, 2.0, 3.0, 4.0];
         let signal2 = vec![1.1, 1.9, 3.1, 3.9];
 
-        let (abs_err, rel_err, rmse) = calculate_errors(&signal1, &signal2).unwrap();
+        let (abs_err, rel_err, rmse) = calculate_errors(&signal1, &signal2).expect("Operation failed");
 
         assert!(abs_err > 0.0);
         assert!(rel_err > 0.0);
@@ -197,7 +197,7 @@ mod tests {
         let results = validate_quick();
         assert!(results.is_ok());
 
-        let validation_results = results.unwrap();
+        let validation_results = results.expect("Operation failed");
         assert!(validation_results.summary.total_tests > 0);
     }
 

@@ -115,7 +115,7 @@ where
 ///     aspect_ratio: None,
 /// };
 ///
-/// let result = gabor_filter(&image.view(), &params, None, Some(BorderMode::Reflect)).unwrap();
+/// let result = gabor_filter(&image.view(), &params, None, Some(BorderMode::Reflect)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn gabor_filter<T>(
@@ -1385,7 +1385,7 @@ mod tests {
             aspect_ratio: None,
         };
 
-        let result = gabor_filter(&input.view(), &params, Some(5), None).unwrap();
+        let result = gabor_filter(&input.view(), &params, Some(5), None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1394,7 +1394,8 @@ mod tests {
         let input = array![[1.0, 0.0, 1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 1.0]];
 
         let params = GaborParams::default();
-        let results = gabor_filter_bank(&input.view(), &params, 4, Some(3), None).unwrap();
+        let results =
+            gabor_filter_bank(&input.view(), &params, 4, Some(3), None).expect("Operation failed");
 
         assert_eq!(results.len(), 4);
         for result in results {
@@ -1406,8 +1407,8 @@ mod tests {
     fn test_steerable_filter() {
         let input = array![[0.0, 1.0, 0.0], [1.0, 2.0, 1.0], [0.0, 1.0, 0.0]];
 
-        let result =
-            steerable_filter(&input.view(), 1, std::f64::consts::PI / 4.0, 1.0, None).unwrap();
+        let result = steerable_filter(&input.view(), 1, std::f64::consts::PI / 4.0, 1.0, None)
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
     }
@@ -1416,7 +1417,8 @@ mod tests {
     fn test_bilateral_gradient_filter() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = bilateral_gradient_filter(&input.view(), 1.0, 2.0, 'x').unwrap();
+        let result =
+            bilateral_gradient_filter(&input.view(), 1.0, 2.0, 'x').expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 }

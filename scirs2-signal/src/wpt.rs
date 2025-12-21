@@ -156,7 +156,7 @@ impl WaveletPacket {
         // Create parent node
         let parent = WaveletPacket::new(
             left.level - 1,
-            left.parent_position().unwrap(),
+            left.parent_position().expect("Operation failed"),
             reconstructed,
             left.wavelet,
             &_left.mode,
@@ -333,8 +333,8 @@ impl WaveletPacketTree {
 
         // If all nodes are at the same level, try a direct reconstruction
         if nodes_by_level.len() == 1 {
-            let level = *nodes_by_level.keys().next().unwrap();
-            let positions = nodes_by_level.get(&level).unwrap();
+            let level = *nodes_by_level.keys().next().expect("Operation failed");
+            let positions = nodes_by_level.get(&level).expect("Operation failed");
 
             // If we have all nodes at this level, we can reconstruct
             let nodes_at_level = 1 << level; // 2^level
@@ -765,7 +765,7 @@ impl WaveletPacketTree {
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Perform wavelet packet decomposition to level 2
-/// let wpt = wp_decompose(&signal, Wavelet::DB(4), 2, None).unwrap();
+/// let wpt = wp_decompose(&signal, Wavelet::DB(4), 2, None).expect("Operation failed");
 ///
 /// // Check that we have the expected number of nodes
 /// // At level 0: 1 node
@@ -818,7 +818,7 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 ///
 /// // Perform wavelet packet decomposition to level 2
-/// let wpt = wp_decompose(&signal, Wavelet::DB(4), 2, None).unwrap();
+/// let wpt = wp_decompose(&signal, Wavelet::DB(4), 2, None).expect("Operation failed");
 ///
 /// // Get all coefficients at level 2
 /// let coeffs = get_level_coefficients(&wpt, 2);
@@ -859,11 +859,11 @@ pub fn get_level_coefficients(tree: &WaveletPacketTree, level: usize) -> Vec<Vec
 ///
 /// // Perform wavelet packet decomposition to level 2 using Haar wavelet
 /// // (Haar is simpler and doesn't introduce as much padding)
-/// let wpt = wp_decompose(&signal, Wavelet::Haar, 2, None).unwrap();
+/// let wpt = wp_decompose(&signal, Wavelet::Haar, 2, None).expect("Operation failed");
 ///
 /// // Reconstruct using all nodes at level 2
 /// let nodes = vec![(2, 0), (2, 1), (2, 2), (2, 3)];
-/// let reconstructed = reconstruct_from_nodes(&wpt, &nodes).unwrap();
+/// let reconstructed = reconstruct_from_nodes(&wpt, &nodes).expect("Operation failed");
 ///
 /// // Check that reconstruction occurred (might have different length due to padding)
 /// assert!(!reconstructed.is_empty());
@@ -920,7 +920,7 @@ mod tests {
         let root = WaveletPacket::new(0, 0, signal, Wavelet::Haar, "symmetric");
 
         // Decompose
-        let (left, right) = root.decompose().unwrap();
+        let (left, right) = root.decompose().expect("Operation failed");
 
         // For a constant signal with Haar wavelet:
         // - Approximation should be constant values (possibly scaled)
@@ -947,7 +947,7 @@ mod tests {
         let right = WaveletPacket::new(1, 1, vec![0.0; 4], Wavelet::Haar, "symmetric");
 
         // Reconstruct
-        let parent = WaveletPacket::reconstruct(&left, &right).unwrap();
+        let parent = WaveletPacket::reconstruct(&left, &right).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(parent.level, 0);
@@ -970,7 +970,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Perform WPT decomposition to level 2
-        let tree = wp_decompose(&signal, Wavelet::Haar, 2, None).unwrap();
+        let tree = wp_decompose(&signal, Wavelet::Haar, 2, None).expect("Operation failed");
 
         // Check that we have all nodes
         assert!(tree.nodes.contains_key(&(0, 0))); // Root
@@ -985,7 +985,7 @@ mod tests {
         assert_eq!(tree.nodes.len(), 7);
 
         // Check the root data
-        let root = tree.get_node(0, 0).unwrap();
+        let root = tree.get_node(0, 0).expect("Operation failed");
         assert_eq!(root.data, signal);
     }
 
@@ -997,14 +997,14 @@ mod tests {
         let signal = vec![1.0; 8];
 
         // Perform WPT decomposition to level 1
-        let tree = wp_decompose(&signal, Wavelet::Haar, 1, None).unwrap();
+        let tree = wp_decompose(&signal, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Verify we have the root node
         assert!(tree.nodes.contains_key(&(0, 0)));
 
         // Reconstruct from the root node directly
         let nodes = vec![(0, 0)];
-        let reconstructed = reconstruct_from_nodes(&tree, &nodes).unwrap();
+        let reconstructed = reconstruct_from_nodes(&tree, &nodes).expect("Operation failed");
 
         // Check length
         assert_eq!(reconstructed.len(), signal.len());
@@ -1023,18 +1023,18 @@ mod tests {
         let signal = vec![1.0; 8];
 
         // Perform WPT decomposition to level 1
-        let tree = wp_decompose(&signal, Wavelet::Haar, 1, None).unwrap();
+        let tree = wp_decompose(&signal, Wavelet::Haar, 1, None).expect("Operation failed");
 
         // Verify that we have the expected level 1 nodes
         assert!(tree.nodes.contains_key(&(1, 0))); // Level 1, approximation
 
         // Get node data directly
-        let approx_node = tree.get_node(1, 0).unwrap();
+        let approx_node = tree.get_node(1, 0).expect("Operation failed");
         let approx_data = &approx_node.data;
 
         // Reconstruction from a single node should return that node's data
         let nodes = vec![(1, 0)]; // Just use the approximation node
-        let approx_only = reconstruct_from_nodes(&tree, &nodes).unwrap();
+        let approx_only = reconstruct_from_nodes(&tree, &nodes).expect("Operation failed");
 
         // Check that this gives us the node's data directly
         assert_eq!(approx_only.len(), approx_data.len());

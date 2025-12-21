@@ -302,9 +302,9 @@ mod tests {
     #[test]
     fn test_circular_layout() {
         let mut graph: Graph<char, f64> = Graph::new();
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('B', 'C', 1.0).unwrap();
-        graph.add_edge('C', 'A', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Operation failed");
+        graph.add_edge('B', 'C', 1.0).expect("Operation failed");
+        graph.add_edge('C', 'A', 1.0).expect("Operation failed");
 
         let layout = circular_layout(&graph, 10.0);
 
@@ -320,10 +320,10 @@ mod tests {
     #[test]
     fn test_spring_layout() {
         let mut graph: Graph<char, f64> = Graph::new();
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('B', 'C', 1.0).unwrap();
-        graph.add_edge('C', 'D', 1.0).unwrap();
-        graph.add_edge('D', 'A', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Operation failed");
+        graph.add_edge('B', 'C', 1.0).expect("Operation failed");
+        graph.add_edge('C', 'D', 1.0).expect("Operation failed");
+        graph.add_edge('D', 'A', 1.0).expect("Operation failed");
 
         let layout = spring_layout(&graph, 50, 100.0, 100.0);
 
@@ -340,12 +340,12 @@ mod tests {
     fn test_hierarchical_layout() {
         let mut graph: crate::base::DiGraph<char, f64> = crate::base::DiGraph::new();
         // Create a DAG
-        graph.add_edge('A', 'B', 1.0).unwrap();
-        graph.add_edge('A', 'C', 1.0).unwrap();
-        graph.add_edge('B', 'D', 1.0).unwrap();
-        graph.add_edge('C', 'D', 1.0).unwrap();
+        graph.add_edge('A', 'B', 1.0).expect("Operation failed");
+        graph.add_edge('A', 'C', 1.0).expect("Operation failed");
+        graph.add_edge('B', 'D', 1.0).expect("Operation failed");
+        graph.add_edge('C', 'D', 1.0).expect("Operation failed");
 
-        let layout = hierarchical_layout(&graph, 50.0, 30.0).unwrap();
+        let layout = hierarchical_layout(&graph, 50.0, 30.0).expect("Operation failed");
 
         assert_eq!(layout.len(), 4);
 

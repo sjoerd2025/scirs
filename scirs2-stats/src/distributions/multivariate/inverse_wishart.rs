@@ -48,7 +48,7 @@ impl InverseWishart {
     /// // Create a 2D Inverse Wishart distribution with 5 degrees of freedom
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
+    /// let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
     /// ```
     pub fn new<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
     where
@@ -114,7 +114,7 @@ impl InverseWishart {
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
-    /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
+    /// let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
     ///
     /// let x = array![[0.2, 0.05], [0.05, 0.3]];
     /// let pdf_value = inv_wishart.pdf(&x);
@@ -196,7 +196,7 @@ impl InverseWishart {
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
-    /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
+    /// let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
     ///
     /// let x = array![[0.2, 0.05], [0.05, 0.3]];
     /// let logpdf_value = inv_wishart.logpdf(&x);
@@ -239,9 +239,9 @@ impl InverseWishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
+    /// let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
     ///
-    /// let samples = inv_wishart.rvs(10).unwrap();
+    /// let samples = inv_wishart.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// assert_eq!(samples[0].shape(), &[2, 2]);
     /// ```
@@ -284,9 +284,9 @@ impl InverseWishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
+    /// let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
     ///
-    /// let sample = inv_wishart.rvs_single().unwrap();
+    /// let sample = inv_wishart.rvs_single().expect("Operation failed");
     /// assert_eq!(sample.shape(), &[2, 2]);
     /// ```
     pub fn rvs_single(&self) -> StatsResult<Array2<f64>> {
@@ -308,7 +308,7 @@ impl InverseWishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
+    /// let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
     ///
     /// if let Ok(mean) = inv_wishart.mean() {
     ///     println!("Mean: {:?}", mean);
@@ -345,7 +345,7 @@ impl InverseWishart {
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
-    /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
+    /// let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
     ///
     /// let mode = inv_wishart.mode();
     /// ```
@@ -382,7 +382,7 @@ impl InverseWishart {
 ///
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
 /// let df = 5.0;
-/// let inv_wishart = multivariate::inverse_wishart(scale, df).unwrap();
+/// let inv_wishart = multivariate::inverse_wishart(scale, df).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn inverse_wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<InverseWishart>
@@ -410,7 +410,7 @@ mod tests {
         // 2x2 Inverse Wishart with identity scale
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
         let df = 5.0;
-        let inv_wishart = InverseWishart::new(scale.clone(), df).unwrap();
+        let inv_wishart = InverseWishart::new(scale.clone(), df).expect("Operation failed");
 
         assert_eq!(inv_wishart.dim, 2);
         assert_eq!(inv_wishart.df, df);
@@ -419,7 +419,7 @@ mod tests {
         // 3x3 Inverse Wishart with custom scale
         let scale3 = array![[2.0, 0.5, 0.3], [0.5, 1.0, 0.1], [0.3, 0.1, 1.5]];
         let df3 = 10.0;
-        let inv_wishart3 = InverseWishart::new(scale3.clone(), df3).unwrap();
+        let inv_wishart3 = InverseWishart::new(scale3.clone(), df3).expect("Operation failed");
 
         assert_eq!(inv_wishart3.dim, 3);
         assert_eq!(inv_wishart3.df, df3);
@@ -445,9 +445,9 @@ mod tests {
     fn test_inverse_wishart_mean() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0;
-        let inv_wishart = InverseWishart::new(scale.clone(), df).unwrap();
+        let inv_wishart = InverseWishart::new(scale.clone(), df).expect("Operation failed");
 
-        let mean = inv_wishart.mean().unwrap();
+        let mean = inv_wishart.mean().expect("Operation failed");
         let expected_mean = scale.clone() / (df - 3.0); // (df - p - 1) where p = 2
 
         for i in 0..2 {
@@ -461,7 +461,7 @@ mod tests {
     fn test_inverse_wishart_mode() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0;
-        let inv_wishart = InverseWishart::new(scale.clone(), df).unwrap();
+        let inv_wishart = InverseWishart::new(scale.clone(), df).expect("Operation failed");
 
         let mode = inv_wishart.mode();
         let expected_mode = scale.clone() / (df + 3.0); // (df + p + 1) where p = 2
@@ -478,7 +478,7 @@ mod tests {
         // Simple identity scale case
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
         let df = 5.0;
-        let inv_wishart = InverseWishart::new(scale, df).unwrap();
+        let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
 
         // PDF at identity matrix (should be positive)
         let x = array![[1.0, 0.0], [0.0, 1.0]];
@@ -499,7 +499,7 @@ mod tests {
     fn test_inverse_wishart_logpdf() {
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
         let df = 5.0;
-        let inv_wishart = InverseWishart::new(scale, df).unwrap();
+        let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
 
         // Check that exp(logPDF) = PDF
         let x = array![[0.5, 0.1], [0.1, 0.8]];
@@ -516,11 +516,11 @@ mod tests {
     fn test_inverse_wishart_rvs() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0;
-        let inv_wishart = InverseWishart::new(scale.clone(), df).unwrap();
+        let inv_wishart = InverseWishart::new(scale.clone(), df).expect("Operation failed");
 
         // Generate samples
         let n_samples_ = 100;
-        let samples = inv_wishart.rvs(n_samples_).unwrap();
+        let samples = inv_wishart.rvs(n_samples_).expect("Operation failed");
 
         // Check number of samples
         assert_eq!(samples.len(), n_samples_);
@@ -557,9 +557,9 @@ mod tests {
     fn test_inverse_wishart_rvs_single() {
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
         let df = 5.0;
-        let inv_wishart = InverseWishart::new(scale, df).unwrap();
+        let inv_wishart = InverseWishart::new(scale, df).expect("Operation failed");
 
-        let sample = inv_wishart.rvs_single().unwrap();
+        let sample = inv_wishart.rvs_single().expect("Operation failed");
 
         // Check dimensions
         assert_eq!(sample.shape(), &[2, 2]);

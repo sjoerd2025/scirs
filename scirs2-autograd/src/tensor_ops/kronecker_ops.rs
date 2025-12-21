@@ -93,9 +93,18 @@ impl<F: Float> Op<F> for KroneckerOp {
 
         match (gy.eval(g), a.eval(g), b.eval(g)) {
             (Ok(gy_val), Ok(a_val), Ok(b_val)) => {
-                let gy_2d = gy_val.view().into_dimensionality::<Ix2>().unwrap();
-                let a_2d = a_val.view().into_dimensionality::<Ix2>().unwrap();
-                let b_2d = b_val.view().into_dimensionality::<Ix2>().unwrap();
+                let gy_2d = gy_val
+                    .view()
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed");
+                let a_2d = a_val
+                    .view()
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed");
+                let b_2d = b_val
+                    .view()
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed");
 
                 // Gradient w.r.t. A
                 let mut grad_a = Array2::<F>::zeros((m, n));
@@ -159,7 +168,7 @@ impl<F: Float> Op<F> for KroneckerOp {
 ///     //  [6, 7, 12, 14],
 ///     //  [0, 15, 0, 20],
 ///     //  [18, 21, 24, 28]]
-///     assert_eq!(c.eval(g).unwrap().shape(), &[4, 4]);
+///     assert_eq!(c.eval(g).expect("Operation failed").shape(), &[4, 4]);
 /// });
 /// ```
 #[allow(dead_code)]
@@ -185,7 +194,7 @@ mod tests {
             let b = convert_to_tensor(array![[0.0_f32, 5.0], [6.0, 7.0]], g);
             let c = kron(&a, &b);
 
-            let result = c.eval(g).unwrap();
+            let result = c.eval(g).expect("Operation failed");
             assert_eq!(result.shape(), &[4, 4]);
 
             // Check specific values
@@ -213,8 +222,8 @@ mod tests {
             // Compute gradients
             let grads = crate::tensor_ops::grad(&[&sum_c], &[&a, &b]);
 
-            let grad_a = grads[0].eval(g).unwrap();
-            let grad_b = grads[1].eval(g).unwrap();
+            let grad_a = grads[0].eval(g).expect("Operation failed");
+            let grad_b = grads[1].eval(g).expect("Operation failed");
 
             // TODO: Fix gradient shape issue - gradients return as scalars
             // The grad function has known issues with shapes and values

@@ -164,7 +164,7 @@ fn translation_invariant_denoise(
                 }
 
                 // Denoise shifted signal
-                let (denoised_shifted, _) = standard_denoise(&shifted, config, noise_level).unwrap();
+                let (denoised_shifted, _) = standard_denoise(&shifted, config, noise_level).expect("Operation failed");
 
                 // Inverse shift
                 let mut result = vec![0.0; n];
@@ -234,7 +234,7 @@ fn bayesian_denoise(
 
     for (level_idx, detail) in coeffs.details.iter().enumerate() {
         // Estimate signal variance at this scale
-        let signal_var = estimate_signal_variance(detail.as_slice().unwrap(), noise_level);
+        let signal_var = estimate_signal_variance(detail.as_slice().expect("Operation failed"), noise_level);
 
         // Bayesian shrinkage
         let shrinkage_factor = signal_var / (signal_var + noise_level * noise_level);
@@ -345,7 +345,7 @@ fn standard_denoise(
 
         // Apply thresholding
         let thresholded = threshold_coefficients(
-            detail.as_slice().unwrap(),
+            detail.as_slice().expect("Operation failed"),
             threshold,
             config.threshold_method,
         );
@@ -373,12 +373,12 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
 
             // Compute median
             let mut sorted = detail.clone();
-            sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             let median = sorted[sorted.len() / 2];
 
             // Compute MAD
             let mut deviations: Vec<f64> = detail.iter().map(|&x| (x - median).abs()).collect();
-            deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             let mad = deviations[deviations.len() / 2];
 
             // Scale factor for Gaussian noise
@@ -401,7 +401,7 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
             let coeffs_raw = wavedec(_signal, config.wavelet, Some(1), None)?;
             let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
             let mut detail = coeffs.details[0].to_vec();
-            detail.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            detail.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             let q1_idx = detail.len() / 4;
             let q3_idx = 3 * detail.len() / 4;
@@ -423,7 +423,7 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
             }
 
             // Use minimum variance as noise estimate
-            variances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            variances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             Ok(variances[0].sqrt())
         }
     }
@@ -503,7 +503,7 @@ mod tests {
         }
 
         let config = AdvancedDenoiseConfig::default();
-        let result = advanced_denoise(&noisy, &config).unwrap();
+        let result = advanced_denoise(&noisy, &config).expect("Operation failed");
 
         assert_eq!(result.signal.len(), n);
         assert!(result.noise_level > 0.0);
@@ -521,7 +521,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = advanced_denoise(&signal, &config).unwrap();
+        let result = advanced_denoise(&signal, &config).expect("Operation failed");
         assert_eq!(result.signal.len(), signal.len());
     }
 }

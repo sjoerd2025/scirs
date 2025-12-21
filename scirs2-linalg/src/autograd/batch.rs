@@ -607,8 +607,8 @@ pub fn batch_inv<F: Float + Debug + Send + Sync + 'static>(
             Some(Box::new(
                 move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
                     // Gradient of matrix inverse: dL/dA = -A^(-1) * dL/dA^(-1) * A^(-1)
-                    let grad_3d = grad.clone().intoshape((batchsize, n, n)).unwrap();
-                    let inv_3d = inv_data.clone().intoshape((batchsize, n, n)).unwrap();
+                    let grad_3d = grad.clone().intoshape((batchsize, n, n)).expect("Operation failed");
+                    let inv_3d = inv_data.clone().intoshape((batchsize, n, n)).expect("Operation failed");
 
                     let mut grad_a = Array::zeros((batchsize, n, n));
 
@@ -731,7 +731,7 @@ pub fn batch_det<F: Float + Debug + Send + Sync + 'static>(
             Some(Box::new(
                 move |grad: Array<F, IxDyn>| -> AutogradResult<Array<F, IxDyn>> {
                     // Gradient of determinant is adj(A)^T * grad
-                    let grad_2d = grad.clone().intoshape((batchsize, 1)).unwrap();
+                    let grad_2d = grad.clone().intoshape((batchsize, 1)).expect("Operation failed");
 
                     let mut grad_a = Array::zeros((batchsize, n, n));
 

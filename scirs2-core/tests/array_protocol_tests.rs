@@ -135,7 +135,7 @@ fn test_distributed_array() {
     assert_eq!(dist_array.num_chunks(), 3);
 
     // Convert back to a regular array
-    let result = dist_array.to_array().unwrap();
+    let result = dist_array.to_array().expect("Test: operation failed");
     assert_eq!(result.shape(), arr.shape());
 
     // Convert both arrays to IxDyn for comparison
@@ -162,14 +162,19 @@ fn test_jit_array() {
 
     // Compile a function
     let expression = "x + y";
-    let jit_function = jitarray.compile(expression).unwrap();
+    let jit_function = jitarray
+        .compile(expression)
+        .expect("Test: operation failed");
 
     // Check function properties
     assert_eq!(jit_function.source(), expression);
 
     // Get JIT info
     let info = jitarray.jit_info();
-    assert_eq!(info.get("supports_jit").unwrap(), "true");
+    assert_eq!(
+        info.get("supports_jit").expect("Test: operation failed"),
+        "true"
+    );
 }
 
 #[test]
@@ -199,7 +204,7 @@ fn test_array_function_dispatch() {
     // Register the function with the global registry
     let registry = array_protocol::ArrayFunctionRegistry::global();
     {
-        let mut registry_write = registry.write().unwrap();
+        let mut registry_write = registry.write().expect("Test: operation failed");
         registry_write.register(func);
     }
 
@@ -221,7 +226,7 @@ fn test_array_function_dispatch() {
 
     // Check that the function was registered with the global registry
     let registry = array_protocol::ArrayFunctionRegistry::global();
-    let registry = registry.read().unwrap();
+    let registry = registry.read().expect("Test: operation failed");
 
     // Check for our custom function first
     if let Some(func) = registry.get(test_function_name) {
@@ -285,12 +290,12 @@ fn test_array_interoperability() {
                     .as_array()
                     .to_owned()
                     .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-                    .unwrap();
+                    .expect("Test: operation failed");
                 let b_arr = b
                     .as_array()
                     .to_owned()
                     .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-                    .unwrap();
+                    .expect("Test: operation failed");
                 let result = a_arr.dot(&b_arr);
                 Ok(Box::new(NdarrayWrapper::new(result)))
             } else {
@@ -324,7 +329,7 @@ fn test_array_interoperability() {
     // Register the function with the global registry
     let registry = array_protocol::ArrayFunctionRegistry::global();
     {
-        let mut registry_write = registry.write().unwrap();
+        let mut registry_write = registry.write().expect("Test: operation failed");
         registry_write.register(func);
     }
 
@@ -547,7 +552,7 @@ fn test_mixed_array_types() {
     // Register the function with the global registry
     let registry = array_protocol::ArrayFunctionRegistry::global();
     {
-        let mut registry_write = registry.write().unwrap();
+        let mut registry_write = registry.write().expect("Test: operation failed");
         registry_write.register(add_func);
     }
 
@@ -717,7 +722,9 @@ fn test_custom_array_type() {
                 &[],
                 &HashMap::new(),
             ) {
-                Ok(result) => Ok(*result.downcast_ref::<f64>().unwrap()),
+                Ok(result) => Ok(*result
+                    .downcast_ref::<f64>()
+                    .expect("Test: operation failed")),
                 Err(_) => Err(NotImplemented),
             }
         },
@@ -732,5 +739,5 @@ fn test_custom_array_type() {
     let sum = sum_func(custom_array_ref);
 
     assert!(sum.is_ok());
-    assert_eq!(sum.unwrap(), 42.0);
+    assert_eq!(sum.expect("Test: operation failed"), 42.0);
 }

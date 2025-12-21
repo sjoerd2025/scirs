@@ -31,7 +31,7 @@ use crate::validation::validate_decomposition;
 /// use scirs2_linalg::matrix_functions::fractionalmatrix_power;
 ///
 /// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
-/// let a_half = fractionalmatrix_power(&a.view(), 0.5, "eigen").unwrap();
+/// let a_half = fractionalmatrix_power(&a.view(), 0.5, "eigen").expect("Operation failed");
 /// // Should be approximately [[2.0, 0.0], [0.0, 3.0]]
 /// ```
 #[allow(dead_code)]
@@ -131,10 +131,10 @@ where
 
     // For non-integer powers close to small rationals, use root extraction
     // This is a simplified implementation
-    if (p - F::from(0.5).unwrap()).abs() < F::epsilon() {
+    if (p - F::from(0.5).expect("Operation failed")).abs() < F::epsilon() {
         // Square root case
         use super::exponential::sqrtm;
-        return sqrtm(a, 50, F::from(1e-12).unwrap());
+        return sqrtm(a, 50, F::from(1e-12).expect("Operation failed"));
     }
 
     // For other cases, fall back to eigendecomposition
@@ -218,7 +218,7 @@ where
 /// use scirs2_linalg::matrix_functions::spdmatrix_function;
 ///
 /// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
-/// let sqrt_a = spdmatrix_function(&a.view(), |x| x.sqrt(), true).unwrap();
+/// let sqrt_a = spdmatrix_function(&a.view(), |x| x.sqrt(), true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn spdmatrix_function<F, Func>(

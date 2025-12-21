@@ -81,7 +81,7 @@ impl DistributedCoordinator {
     
     /// Wait for all nodes to reach a checkpoint
     pub fn checkpoint(&self, checkpointid: u64) -> LinalgResult<()> {
-        let mut state = self.sync_state.lock().unwrap();
+        let mut state = self.sync_state.lock().expect("Operation failed");
         
         // Mark this node as reached checkpoint
         state.checkpoints.insert(self.node_rank, checkpoint_id);
@@ -109,7 +109,7 @@ impl DistributedCoordinator {
     
     /// Handle node failure and initiate recovery
     pub fn handle_node_failure(&self, failednode: usize) -> LinalgResult<RecoveryPlan> {
-        let mut state = self.sync_state.lock().unwrap();
+        let mut state = self.sync_state.lock().expect("Operation failed");
         
         // Mark _node as failed
         state.failed_nodes.insert(failed_node);
@@ -134,7 +134,7 @@ impl DistributedCoordinator {
     
     /// Get current coordination statistics
     pub fn get_stats(&self) -> CoordinationStats {
-        let state = self.sync_state.lock().unwrap();
+        let state = self.sync_state.lock().expect("Operation failed");
         CoordinationStats {
             active_nodes: state.active_nodes,
             failed_nodes: state.failed_nodes.len(),
@@ -148,7 +148,7 @@ impl DistributedCoordinator {
     
     fn simulate_barrier(&self, timeout: Duration) -> LinalgResult<()> {
         let start_time = Instant::now();
-        let mut state = self.sync_state.lock().unwrap();
+        let mut state = self.sync_state.lock().expect("Operation failed");
         
         state.barrier_participants.insert(self.node_rank);
         state.barrier_count += 1;
@@ -164,7 +164,7 @@ impl DistributedCoordinator {
             // In a real implementation, we would wait for communication
             drop(state);
             std::thread::sleep(Duration::from_millis(1));
-            state = self.sync_state.lock().unwrap();
+            state = self.sync_state.lock().expect("Operation failed");
         }
         
         // Clear barrier state
@@ -245,7 +245,7 @@ impl DistributedLock {
         let start_time = Instant::now();
         
         loop {
-            let mut state = self.state.lock().unwrap();
+            let mut state = self.state.lock().expect("Operation failed");
             
             match *state {
                 LockState::Unlocked => {
@@ -275,7 +275,7 @@ impl DistributedLock {
     
     /// Release the distributed lock
     pub fn release(&mut self) -> LinalgResult<()> {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
         
         match *state {
             LockState::Locked(owner) if owner == self.node_rank => {
@@ -340,7 +340,7 @@ impl SynchronizationBarrier {
     
     /// Wait at barrier with timeout
     pub fn wait_timeout(&self, noderank: usize, timeout: Duration) -> LinalgResult<()> {
-        let mut arrived = self.arrived_nodes.lock().unwrap();
+        let mut arrived = self.arrived_nodes.lock().expect("Operation failed");
         
         // Add this node to arrived set
         arrived.insert(node_rank);
@@ -355,7 +355,7 @@ impl SynchronizationBarrier {
         // Wait for other nodes
         let (_guard, timeout_result) = self.condition
             .wait_timeout(arrived, timeout)
-            .unwrap();
+            .expect("Operation failed");
         
         if timeout_result.timed_out() {
             Err(LinalgError::TimeoutError(
@@ -368,7 +368,7 @@ impl SynchronizationBarrier {
     
     /// Reset the barrier for reuse
     pub fn reset(&self) {
-        let mut arrived = self.arrived_nodes.lock().unwrap();
+        let mut arrived = self.arrived_nodes.lock().expect("Operation failed");
         arrived.clear();
     }
 }
@@ -550,7 +550,7 @@ mod tests {
         use super::super::DistributedConfig;
         
         let config = DistributedConfig::default().with_num_nodes(3).with_node_rank(0);
-        let coordinator = DistributedCoordinator::new(&config).unwrap();
+        let coordinator = DistributedCoordinator::new(&config).expect("Operation failed");
         
         let stats = coordinator.get_stats();
         assert_eq!(stats.active_nodes, 3);
@@ -559,7 +559,7 @@ mod tests {
     
     #[test]
     fn test_distributed_lock() {
-        let mut lock = DistributedLock::new("test_lock".to_string(), 0, 2).unwrap();
+        let mut lock = DistributedLock::new("test_lock".to_string(), 0, 2).expect("Operation failed");
         
         // Should be able to acquire lock
         assert!(lock.acquire().is_ok());
@@ -585,7 +585,7 @@ mod tests {
     
     #[test]
     fn test_reduction_coordination() {
-        let reduction = ReductionCoordination::new(ReductionOperation::Sum, 0, 4).unwrap();
+        let reduction = ReductionCoordination::new(ReductionOperation::Sum, 0, 4).expect("Operation failed");
         
         assert!(reduction.is_root());
         assert!(reduction.get_send_node().is_none());

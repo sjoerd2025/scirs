@@ -35,7 +35,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 {
     /// Create new Mixture of Experts layer
     pub fn new(input_dim: usize, output_dim: usize, num_experts: usize) -> Self {
-        let scale = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         let mut expert_weights = Vec::new();
@@ -64,6 +65,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
     /// Compute gating weights for expert selection
     pub fn compute_gates(&self, input: &Array1<F>) -> Array1<F> {
         // Simplified implementation - preserves interface
-        Array1::ones(self.num_experts) / F::from(self.num_experts).unwrap()
+        Array1::ones(self.num_experts)
+            / F::from(self.num_experts).expect("Failed to convert to float")
     }
 }

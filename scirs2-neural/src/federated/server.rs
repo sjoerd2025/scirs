@@ -87,7 +87,7 @@ impl FederatedServer {
     pub fn get_model_parameters(&self, model: &Sequential<f32>) -> Result<Vec<Array2<f32>>> {
         // Simplified implementation - extract model parameters
         // In practice, would extract actual weights from the model
-        let state = self.global_model_state.read().unwrap();
+        let state = self.global_model_state.read().expect("Operation failed");
         if state.parameters.is_empty() {
             // Initialize with dummy parameters
             Ok(vec![Array2::zeros((10, 10)); 5])
@@ -184,7 +184,7 @@ impl FederatedServer {
         model: &mut Sequential<f32>,
         update: &AggregatedUpdate,
     ) -> Result<()> {
-        let mut state = self.global_model_state.write().unwrap();
+        let mut state = self.global_model_state.write().expect("Operation failed");
         // Update model parameters
         state.parameters = update.aggregatedweights.clone();
         state.version += 1;
@@ -232,7 +232,7 @@ impl FederatedServer {
             active_clients,
             total_samples_processed: total_samples,
             average_rounds_per_client: avg_rounds_per_client,
-            model_version: self.global_model_state.read().unwrap().version,
+            model_version: self.global_model_state.read().expect("Operation failed").version,
     /// Reset server state
     pub fn reset(&mut self) {
         self.current_round = 0;
@@ -264,11 +264,11 @@ mod tests {
     fn test_server_creation() {
         let config = FederatedConfig::default();
         let server_config = ServerConfig::from(&config);
-        let server = FederatedServer::new(server_config).unwrap();
+        let server = FederatedServer::new(server_config).expect("Operation failed");
         assert_eq!(server.current_round, 0);
     fn test_sample_weights() {
         let config = ServerConfig::from(&FederatedConfig::default());
-        let server = FederatedServer::new(config).unwrap();
+        let server = FederatedServer::new(config).expect("Operation failed");
         let updates = vec![
             ClientUpdate {
                 client_id: 0,

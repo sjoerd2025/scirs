@@ -635,7 +635,7 @@ mod tests {
     fn test_single_ar_estimation() {
         let result = test_single_ar_estimation(128, 1000.0, 4, 1e-6);
         assert!(result.is_ok());
-        let test_result = result.unwrap();
+        let test_result = result.expect("Operation failed");
         assert!(test_result.passed);
     }
 }

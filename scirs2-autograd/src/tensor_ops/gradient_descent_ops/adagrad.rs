@@ -18,7 +18,7 @@ impl<F: Float> crate::op::Op<F> for AdaGradOp<F> {
 
         // Update parameters
         let mut param = ctx.input_mut(0);
-        let eps = F::from(1e-7).unwrap();
+        let eps = F::from(1e-7).expect("Failed to convert constant to float");
         scirs2_core::ndarray::Zip::from(&mut param)
             .and(&grad)
             .and(&h_clone)

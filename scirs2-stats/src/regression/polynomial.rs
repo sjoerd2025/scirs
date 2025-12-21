@@ -31,7 +31,7 @@ use scirs2_linalg::lstsq;
 /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
 /// let y = array![1.0, 3.0, 9.0, 19.0, 33.0];  // y = 1 + 2x + x^2
 ///
-/// let result = polyfit(&x.view(), &y.view(), 2).unwrap();
+/// let result = polyfit(&x.view(), &y.view(), 2).expect("Operation failed");
 ///
 /// // Check we get the correct number of coefficients (intercept, x, x^2)
 /// assert_eq!(result.coefficients.len(), 3);
@@ -118,10 +118,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Operation failed")
+            / F::from(df_residuals).expect("Operation failed");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Operation failed");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients
@@ -146,7 +147,8 @@ where
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Operation failed"))
+            / (ss_residual / F::from(df_residuals).expect("Operation failed"))
     } else {
         F::infinity()
     };

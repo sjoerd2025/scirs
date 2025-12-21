@@ -73,7 +73,7 @@ fn main() {
 #[allow(dead_code)]
 fn generate_uniform_data(size: usize) -> Array2<f32> {
     let mut rng = thread_rng();
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
 
     let mut data = Array2::zeros((size, size));
     for i in 0..size {
@@ -89,7 +89,7 @@ fn generate_uniform_data(size: usize) -> Array2<f32> {
 #[allow(dead_code)]
 fn generate_normal_data(size: usize) -> Array2<f32> {
     let mut rng = thread_rng();
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
     let mut data = Array2::zeros((size, size));
     for i in 0..size {
@@ -105,7 +105,7 @@ fn generate_normal_data(size: usize) -> Array2<f32> {
 #[allow(dead_code)]
 fn generate_lognormal_data(size: usize) -> Array2<f32> {
     let mut rng = thread_rng();
-    let lognormal = LogNormal::new(0.0, 1.0).unwrap();
+    let lognormal = LogNormal::new(0.0, 1.0).expect("Operation failed");
 
     let mut data = Array2::zeros((size, size));
     for i in 0..size {
@@ -121,8 +121,8 @@ fn generate_lognormal_data(size: usize) -> Array2<f32> {
 #[allow(dead_code)]
 fn generate_bimodal_data(size: usize) -> Array2<f32> {
     let mut rng = thread_rng();
-    let normal1 = Normal::new(-2.0, 0.5).unwrap();
-    let normal2 = Normal::new(2.0, 0.5).unwrap();
+    let normal1 = Normal::new(-2.0, 0.5).expect("Operation failed");
+    let normal2 = Normal::new(2.0, 0.5).expect("Operation failed");
 
     let mut data = Array2::zeros((size, size));
     for i in 0..size {
@@ -184,7 +184,7 @@ fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
 #[allow(dead_code)]
 fn generate_heavy_tailed_data(size: usize) -> Array2<f32> {
     let mut rng = thread_rng();
-    let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+    let cauchy = Cauchy::new(0.0, 1.0).expect("Operation failed");
 
     let mut data = Array2::zeros((size, size));
     for i in 0..size {
@@ -230,7 +230,8 @@ fn benchmark_methods(
             let mut total_mse = 0.0;
 
             for _ in 0..NUM_ITERATIONS {
-                let params = calibrate_matrix(&data.view(), BITS, &config).unwrap();
+                let params =
+                    calibrate_matrix(&data.view(), BITS, &config).expect("Operation failed");
                 _q_params = Some(params.clone());
 
                 // Quantize and dequantize
@@ -289,7 +290,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
             };
 
             // Calibrate parameters
-            let params = calibrate_matrix(&data.view(), bits, &config).unwrap();
+            let params = calibrate_matrix(&data.view(), bits, &config).expect("Operation failed");
 
             // Quantize and dequantize
             let (quantized, _) = quantize_matrix(&data.view(), bits, params.method);

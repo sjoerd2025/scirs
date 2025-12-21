@@ -98,7 +98,7 @@ pub fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<
             if let Some(peak_idx) = power
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
                 .map(|(i, _)| i)
             {
                 let detected_freq = freq_grid[peak_idx];

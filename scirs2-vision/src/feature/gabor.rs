@@ -104,7 +104,7 @@ pub fn gabor_kernel(params: &GaborParams, size: usize) -> Array2<f32> {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let params = GaborParams {
 ///     wavelength: 10.0,
 ///     orientation: std::f32::consts::PI / 4.0,
@@ -332,7 +332,7 @@ mod tests {
         let result = gabor_filter(&img, &params);
 
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.dimensions(), (50, 50));
     }
 
@@ -348,7 +348,7 @@ mod tests {
         let result = gabor_filter_bank(&img, &bank);
         assert!(result.is_ok());
 
-        let responses = result.unwrap();
+        let responses = result.expect("Operation failed");
         assert_eq!(responses.dim(), (4, 30, 30)); // 2 wavelengths × 2 orientations
     }
 

@@ -165,7 +165,7 @@ pub fn simd_spectral_rolloff(
 
     // Use SIMD element-wise multiplication
     let energy_result = f64::simd_mul(&mag_view, &mag_view);
-    energy_spectrum.copy_from_slice(energy_result.as_slice().unwrap());
+    energy_spectrum.copy_from_slice(energy_result.as_slice().expect("Operation failed"));
 
     // Compute total energy using SIMD
     let total_energy = f64::simd_sum(&ArrayView1::from(&energy_spectrum));
@@ -264,7 +264,12 @@ pub fn simd_batch_spectral_analysis(
             .into_par_iter()
             .map(|i| {
                 let signal = signals.row(i);
-                process_single_signal_simd(signal.as_slice().unwrap(), &window, nfft, config)
+                process_single_signal_simd(
+                    signal.as_slice().expect("Operation failed"),
+                    &window,
+                    nfft,
+                    config,
+                )
             })
             .collect::<SignalResult<Vec<_>>>()?
     } else {
@@ -272,7 +277,12 @@ pub fn simd_batch_spectral_analysis(
         (0..n_signals)
             .map(|i| {
                 let signal = signals.row(i);
-                process_single_signal_simd(signal.as_slice().unwrap(), &window, nfft, config)
+                process_single_signal_simd(
+                    signal.as_slice().expect("Operation failed"),
+                    &window,
+                    nfft,
+                    config,
+                )
             })
             .collect::<SignalResult<Vec<_>>>()?
     };
@@ -879,7 +889,8 @@ mod tests {
         let frequencies = vec![0.0, 1000.0, 2000.0, 3000.0, 4000.0];
         let config = SimdConfig::default();
 
-        let centroid = simd_spectral_centroid(&magnitude, &frequencies, &config).unwrap();
+        let centroid =
+            simd_spectral_centroid(&magnitude, &frequencies, &config).expect("Operation failed");
         assert!(centroid > 0.0 && centroid < 4000.0);
     }
 
@@ -889,7 +900,8 @@ mod tests {
         let frequencies = vec![0.0, 1000.0, 2000.0, 3000.0, 4000.0];
         let config = SimdConfig::default();
 
-        let rolloff = simd_spectral_rolloff(&magnitude, &frequencies, 0.85, &config).unwrap();
+        let rolloff = simd_spectral_rolloff(&magnitude, &frequencies, 0.85, &config)
+            .expect("Operation failed");
         assert!(rolloff >= 0.0 && rolloff <= 4000.0);
     }
 }

@@ -68,7 +68,7 @@ impl Default for ParallelCorrelationConfig {
 /// ];
 ///
 /// let config = ParallelCorrelationConfig::default();
-/// let corr_matrix = corrcoef_parallel_enhanced(&data.view(), "pearson", &config).unwrap();
+/// let corr_matrix = corrcoef_parallel_enhanced(&data.view(), "pearson", &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn corrcoef_parallel_enhanced<F>(
@@ -173,11 +173,14 @@ where
                 local_results.push((i, j, corr));
             }
 
-            let mut global_results = results.lock().unwrap();
+            let mut global_results = results.lock().expect("Operation failed");
             global_results.extend(local_results);
         });
 
-        let all_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let all_results = Arc::try_unwrap(results)
+            .expect("Operation failed")
+            .into_inner()
+            .expect("Operation failed");
 
         // Write results back to matrix
         for (i, j, corr) in all_results {
@@ -235,7 +238,7 @@ where
     }
 
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let optimizer = AutoOptimizer::new();
 
     // Use SIMD for mean calculations if beneficial
@@ -396,19 +399,25 @@ where
             }
 
             if has_error {
-                *error_occurred.lock().unwrap() = true;
+                *error_occurred.lock().expect("Operation failed") = true;
             } else {
-                results.lock().unwrap().extend(local_results);
+                results
+                    .lock()
+                    .expect("Operation failed")
+                    .extend(local_results);
             }
         });
 
-        if *error_occurred.lock().unwrap() {
+        if *error_occurred.lock().expect("Operation failed") {
             return Err(StatsError::InvalidArgument(
                 "Error occurred during batch correlation computation".to_string(),
             ));
         }
 
-        let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        let final_results = Arc::try_unwrap(results)
+            .expect("Operation failed")
+            .into_inner()
+            .expect("Operation failed");
         Ok(final_results)
     } else {
         // Sequential processing
@@ -532,8 +541,9 @@ mod tests {
         ];
 
         let config = ParallelCorrelationConfig::default();
-        let parallel_result = corrcoef_parallel_enhanced(&data.view(), "pearson", &config).unwrap();
-        let sequential_result = corrcoef(&data.view(), "pearson").unwrap();
+        let parallel_result =
+            corrcoef_parallel_enhanced(&data.view(), "pearson", &config).expect("Operation failed");
+        let sequential_result = corrcoef(&data.view(), "pearson").expect("Operation failed");
 
         for i in 0..3 {
             for j in 0..3 {
@@ -554,8 +564,8 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 
-        let simd_result = pearson_r_simd_enhanced(&x.view(), &y.view()).unwrap();
-        let standard_result = pearson_r(&x.view(), &y.view()).unwrap();
+        let simd_result = pearson_r_simd_enhanced(&x.view(), &y.view()).expect("Operation failed");
+        let standard_result = pearson_r(&x.view(), &y.view()).expect("Operation failed");
 
         assert!((simd_result - standard_result).abs() < 1e-10);
     }
@@ -570,7 +580,8 @@ mod tests {
         let pairs = vec![(x1.view(), y1.view()), (x2.view(), y2.view())];
         let config = ParallelCorrelationConfig::default();
 
-        let results = batch_correlations_parallel(&pairs, "pearson", &config).unwrap();
+        let results =
+            batch_correlations_parallel(&pairs, "pearson", &config).expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert!((results[0] - (-1.0)).abs() < 1e-10); // Perfect negative correlation
@@ -584,7 +595,8 @@ mod tests {
 
         let config = ParallelCorrelationConfig::default();
         let rolling_corrs =
-            rolling_correlation_parallel(&x.view(), &y.view(), 3, "pearson", &config).unwrap();
+            rolling_correlation_parallel(&x.view(), &y.view(), 3, "pearson", &config)
+                .expect("Operation failed");
 
         assert_eq!(rolling_corrs.len(), 8); // 10 - 3 + 1
 

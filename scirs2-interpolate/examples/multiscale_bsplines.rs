@@ -56,12 +56,12 @@ fn main() {
         None,
         BSplineExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Create a multiscale B-spline starting with few knots
     let mut adaptive_spline =
         MultiscaleBSpline::new(&x.view(), &y.view(), 4, 3, 5, 0.02, ExtrapolateMode::Error)
-            .unwrap();
+            .expect("Operation failed");
 
     println!("Initial B-spline (level 0):");
     println!(
@@ -72,7 +72,7 @@ fn main() {
     // Perform adaptive refinement
     let num_added = adaptive_spline
         .auto_refine(RefinementCriterion::AbsoluteError, 4)
-        .unwrap();
+        .expect("Operation failed");
 
     println!("After auto-refinement:");
     println!("  Number of refinement levels added: {}", num_added);
@@ -93,7 +93,7 @@ fn main() {
     let y_regular = Array1::from_vec(
         x_fine
             .iter()
-            .map(|&x| regular_spline.evaluate(x).unwrap())
+            .map(|&x| regular_spline.evaluate(x).expect("Operation failed"))
             .collect(),
     );
     let y_adaptive = Array1::from_vec(
@@ -102,7 +102,9 @@ fn main() {
             .map(|&x| {
                 // Create a single-element array for evaluation
                 let x_single = Array1::from_vec(vec![x]);
-                adaptive_spline.evaluate(&x_single.view()).unwrap()[0]
+                adaptive_spline
+                    .evaluate(&x_single.view())
+                    .expect("Operation failed")[0]
             })
             .collect(),
     );
@@ -157,7 +159,7 @@ fn main() {
         3,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let spline_curv = make_adaptive_bspline(
         &x2.view(),
@@ -169,7 +171,7 @@ fn main() {
         3,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let spline_comb = make_adaptive_bspline(
         &x2.view(),
@@ -181,25 +183,34 @@ fn main() {
         3,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nRefinement levels and knots:");
     println!(
         "  AbsoluteError criterion: {} levels, {} total knots",
         spline_abs.get_num_levels(),
-        spline_abs.get_knots_per_level().last().unwrap()
+        spline_abs
+            .get_knots_per_level()
+            .last()
+            .expect("Operation failed")
     );
 
     println!(
         "  Curvature criterion:     {} levels, {} total knots",
         spline_curv.get_num_levels(),
-        spline_curv.get_knots_per_level().last().unwrap()
+        spline_curv
+            .get_knots_per_level()
+            .last()
+            .expect("Operation failed")
     );
 
     println!(
         "  Combined criterion:      {} levels, {} total knots",
         spline_comb.get_num_levels(),
-        spline_comb.get_knots_per_level().last().unwrap()
+        spline_comb
+            .get_knots_per_level()
+            .last()
+            .expect("Operation failed")
     );
 
     // Evaluate at points around the transition zone
@@ -211,7 +222,11 @@ fn main() {
                 {
                     // Create a single-element array for evaluation
                     let x_single = Array1::from_vec(vec![x]);
-                    extract_scalar(&spline_abs.evaluate(&x_single.view()).unwrap())
+                    extract_scalar(
+                        &spline_abs
+                            .evaluate(&x_single.view())
+                            .expect("Operation failed"),
+                    )
                 }
             })
             .collect(),
@@ -223,7 +238,11 @@ fn main() {
                 {
                     // Create a single-element array for evaluation
                     let x_single = Array1::from_vec(vec![x]);
-                    extract_scalar(&spline_curv.evaluate(&x_single.view()).unwrap())
+                    extract_scalar(
+                        &spline_curv
+                            .evaluate(&x_single.view())
+                            .expect("Operation failed"),
+                    )
                 }
             })
             .collect(),
@@ -235,7 +254,11 @@ fn main() {
                 {
                     // Create a single-element array for evaluation
                     let x_single = Array1::from_vec(vec![x]);
-                    extract_scalar(&spline_comb.evaluate(&x_single.view()).unwrap())
+                    extract_scalar(
+                        &spline_comb
+                            .evaluate(&x_single.view())
+                            .expect("Operation failed"),
+                    )
                 }
             })
             .collect(),
@@ -301,7 +324,7 @@ fn main() {
         5,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let num_levels = multi_spline.get_num_levels();
     println!(
@@ -327,7 +350,9 @@ fn main() {
                     {
                         // Create a single-element array for evaluation
                         let x_single = Array1::from_vec(vec![x]);
-                        multi_spline.evaluate(&x_single.view()).unwrap()[0]
+                        multi_spline
+                            .evaluate(&x_single.view())
+                            .expect("Operation failed")[0]
                     }
                 })
                 .collect(),
@@ -385,7 +410,7 @@ fn main() {
         4,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Created multiscale B-spline to fit complex data:");
     println!("  Number of levels: {}", adaptive_spline.get_num_levels());
@@ -395,7 +420,10 @@ fn main() {
     );
     println!(
         "  Final knots: {}",
-        adaptive_spline.get_knots_per_level().last().unwrap()
+        adaptive_spline
+            .get_knots_per_level()
+            .last()
+            .expect("Operation failed")
     );
 
     // Evaluate the spline at the original points
@@ -404,7 +432,9 @@ fn main() {
             .map(|&x| {
                 // Create a single-element array for evaluation
                 let x_single = Array1::from_vec(vec![x]);
-                adaptive_spline.evaluate(&x_single.view()).unwrap()[0]
+                adaptive_spline
+                    .evaluate(&x_single.view())
+                    .expect("Operation failed")[0]
             })
             .collect(),
     );
@@ -435,8 +465,12 @@ fn main() {
         let x_single = Array1::from_vec(vec![x]);
 
         // Get derivatives at this point
-        let d1 = adaptive_spline.derivative(1, &x_single.view()).unwrap();
-        let d2 = adaptive_spline.derivative(2, &x_single.view()).unwrap();
+        let d1 = adaptive_spline
+            .derivative(1, &x_single.view())
+            .expect("Operation failed");
+        let d2 = adaptive_spline
+            .derivative(2, &x_single.view())
+            .expect("Operation failed");
 
         // Store the derivatives
         first_deriv[i] = d1[0]; // Extract scalar value

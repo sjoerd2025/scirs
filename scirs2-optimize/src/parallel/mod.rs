@@ -221,9 +221,11 @@ where
 
     /// Find the best result among all runs
     pub fn best_result(results: &[OptimizationResult]) -> Option<&OptimizationResult> {
-        results
-            .iter()
-            .min_by(|a, b| a.function_value.partial_cmp(&b.function_value).unwrap())
+        results.iter().min_by(|a, b| {
+            a.function_value
+                .partial_cmp(&b.function_value)
+                .expect("Operation failed")
+        })
     }
 }
 
@@ -486,7 +488,7 @@ where
     // Find the best step size
     evaluations
         .into_iter()
-        .min_by(|(_, v1), (_, v2)| v1.partial_cmp(v2).unwrap())
+        .min_by(|(_, v1), (_, v2)| v1.partial_cmp(v2).expect("Operation failed"))
         .unwrap_or((0.0, f64::INFINITY))
 }
 

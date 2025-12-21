@@ -51,10 +51,10 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     ///     [4.0, 0.0]   // End point
     /// ];
     ///
-    /// let curve = BezierCurve::new(&control_points.view()).unwrap();
+    /// let curve = BezierCurve::new(&control_points.view()).expect("Operation failed");
     ///
     /// // Evaluate the curve at parameter t = 0.5 (midpoint)
-    /// let point = curve.evaluate(0.5).unwrap();
+    /// let point = curve.evaluate(0.5).expect("Operation failed");
     /// ```
     pub fn new(controlpoints: &ArrayView2<F>) -> InterpolateResult<Self> {
         if controlpoints.is_empty() {
@@ -162,7 +162,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
         let mut deriv_control_points = Array2::zeros((self.degree, dim));
 
         // Derivative control points are scaled differences between original control points
-        let n = F::from_usize(self.degree).unwrap();
+        let n = F::from_usize(self.degree).expect("Operation failed");
         for i in 0..self.degree {
             for d in 0..dim {
                 deriv_control_points[[i, d]] =
@@ -298,10 +298,10 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     ///     [2.0, 2.0, 0.0],  // (2,2)
     /// ];
     ///
-    /// let surface = BezierSurface::new(&control_points.view(), 3, 3).unwrap();
+    /// let surface = BezierSurface::new(&control_points.view(), 3, 3).expect("Operation failed");
     ///
     /// // Evaluate the surface at parameters (u,v) = (0.5, 0.5)
-    /// let point = surface.evaluate(0.5, 0.5).unwrap();
+    /// let point = surface.evaluate(0.5, 0.5).expect("Operation failed");
     /// ```
     pub fn new(controlpoints: &ArrayView2<F>, nu: usize, nv: usize) -> InterpolateResult<Self> {
         if controlpoints.is_empty() {
@@ -456,7 +456,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
 
         // Compute control points for the derivative surface
         let mut deriv_control_points = Array2::zeros(((self.nu - 1) * self.nv, self.dim));
-        let degree_u = F::from_usize(self.nu - 1).unwrap();
+        let degree_u = F::from_usize(self.nu - 1).expect("Operation failed");
 
         for i in 0..self.nu - 1 {
             for j in 0..self.nv {
@@ -488,7 +488,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
 
         // Compute control points for the derivative surface
         let mut deriv_control_points = Array2::zeros((self.nu * (self.nv - 1), self.dim));
-        let degree_v = F::from_usize(self.nv - 1).unwrap();
+        let degree_v = F::from_usize(self.nv - 1).expect("Operation failed");
 
         for i in 0..self.nu {
             for j in 0..self.nv - 1 {
@@ -552,7 +552,8 @@ pub fn bernstein<F: Float + FromPrimitive + std::fmt::Display>(
     // Compute binomial coefficient (n choose i)
     let mut binomial = F::one();
     for j in 0..i {
-        binomial = binomial * F::from_usize(n - j).unwrap() / F::from_usize(j + 1).unwrap();
+        binomial = binomial * F::from_usize(n - j).expect("Operation failed")
+            / F::from_usize(j + 1).expect("Operation failed");
     }
 
     // Compute Bernstein polynomial
@@ -615,29 +616,29 @@ mod tests {
     #[test]
     fn test_bernstein_polynomials() {
         // For degree 1, we should have B_{0,1}(t) = 1-t and B_{1,1}(t) = t
-        assert_relative_eq!(bernstein(0.0, 0, 1).unwrap(), 1.0);
-        assert_relative_eq!(bernstein(0.0, 1, 1).unwrap(), 0.0);
-        assert_relative_eq!(bernstein(1.0, 0, 1).unwrap(), 0.0);
-        assert_relative_eq!(bernstein(1.0, 1, 1).unwrap(), 1.0);
-        assert_relative_eq!(bernstein(0.5, 0, 1).unwrap(), 0.5);
-        assert_relative_eq!(bernstein(0.5, 1, 1).unwrap(), 0.5);
+        assert_relative_eq!(bernstein(0.0, 0, 1).expect("Operation failed"), 1.0);
+        assert_relative_eq!(bernstein(0.0, 1, 1).expect("Operation failed"), 0.0);
+        assert_relative_eq!(bernstein(1.0, 0, 1).expect("Operation failed"), 0.0);
+        assert_relative_eq!(bernstein(1.0, 1, 1).expect("Operation failed"), 1.0);
+        assert_relative_eq!(bernstein(0.5, 0, 1).expect("Operation failed"), 0.5);
+        assert_relative_eq!(bernstein(0.5, 1, 1).expect("Operation failed"), 0.5);
 
         // Test degree 2
-        assert_relative_eq!(bernstein(0.5, 0, 2).unwrap(), 0.25);
-        assert_relative_eq!(bernstein(0.5, 1, 2).unwrap(), 0.5);
-        assert_relative_eq!(bernstein(0.5, 2, 2).unwrap(), 0.25);
+        assert_relative_eq!(bernstein(0.5, 0, 2).expect("Operation failed"), 0.25);
+        assert_relative_eq!(bernstein(0.5, 1, 2).expect("Operation failed"), 0.5);
+        assert_relative_eq!(bernstein(0.5, 2, 2).expect("Operation failed"), 0.25);
     }
 
     #[test]
     fn test_compute_bernstein_all() {
         // For degree 1 at t=0.5, we should have [0.5, 0.5]
-        let result = compute_bernstein_all(0.5, 1).unwrap();
+        let result = compute_bernstein_all(0.5, 1).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_relative_eq!(result[0], 0.5);
         assert_relative_eq!(result[1], 0.5);
 
         // Test degree 2 at t=0.5
-        let result = compute_bernstein_all(0.5, 2).unwrap();
+        let result = compute_bernstein_all(0.5, 2).expect("Operation failed");
         assert_eq!(result.len(), 3);
         assert_relative_eq!(result[0], 0.25);
         assert_relative_eq!(result[1], 0.5);
@@ -651,12 +652,12 @@ mod tests {
     fn test_bezier_curve() {
         // Create a linear Bezier curve (straight line)
         let control_points = array![[0.0, 0.0], [1.0, 1.0]];
-        let curve = BezierCurve::new(&control_points.view()).unwrap();
+        let curve = BezierCurve::new(&control_points.view()).expect("Operation failed");
 
         // Test evaluation
-        let p0 = curve.evaluate(0.0).unwrap();
-        let p1 = curve.evaluate(1.0).unwrap();
-        let p_mid = curve.evaluate(0.5).unwrap();
+        let p0 = curve.evaluate(0.0).expect("Operation failed");
+        let p1 = curve.evaluate(1.0).expect("Operation failed");
+        let p_mid = curve.evaluate(0.5).expect("Operation failed");
 
         assert_relative_eq!(p0[0], 0.0);
         assert_relative_eq!(p0[1], 0.0);
@@ -667,9 +668,9 @@ mod tests {
 
         // Test quadratic Bezier curve
         let control_points = array![[0.0, 0.0], [1.0, 2.0], [2.0, 0.0]];
-        let curve = BezierCurve::new(&control_points.view()).unwrap();
+        let curve = BezierCurve::new(&control_points.view()).expect("Operation failed");
 
-        let p_mid = curve.evaluate(0.5).unwrap();
+        let p_mid = curve.evaluate(0.5).expect("Operation failed");
         assert_relative_eq!(p_mid[0], 1.0);
         assert_relative_eq!(p_mid[1], 1.0);
     }
@@ -678,9 +679,9 @@ mod tests {
     fn test_bezier_curve_derivative() {
         // For a quadratic curve, the derivative should be a linear curve
         let control_points = array![[0.0, 0.0], [1.0, 2.0], [2.0, 0.0]];
-        let curve = BezierCurve::new(&control_points.view()).unwrap();
+        let curve = BezierCurve::new(&control_points.view()).expect("Operation failed");
 
-        let deriv = curve.derivative().unwrap();
+        let deriv = curve.derivative().expect("Operation failed");
         assert_eq!(deriv.degree(), 1); // Linear
 
         // The derivative control points should be 2*([1,2]-[0,0]) and 2*([2,0]-[1,2])
@@ -695,19 +696,19 @@ mod tests {
     fn test_bezier_curve_split() {
         // Split a quadratic curve at t=0.5
         let control_points = array![[0.0, 0.0], [1.0, 2.0], [2.0, 0.0]];
-        let curve = BezierCurve::new(&control_points.view()).unwrap();
+        let curve = BezierCurve::new(&control_points.view()).expect("Operation failed");
 
-        let (left, right) = curve.split(0.5).unwrap();
+        let (left, right) = curve.split(0.5).expect("Operation failed");
 
         // Check degrees
         assert_eq!(left.degree(), 2);
         assert_eq!(right.degree(), 2);
 
         // Check end points
-        let left_start = left.evaluate(0.0).unwrap();
-        let left_end = left.evaluate(1.0).unwrap();
-        let right_start = right.evaluate(0.0).unwrap();
-        let right_end = right.evaluate(1.0).unwrap();
+        let left_start = left.evaluate(0.0).expect("Operation failed");
+        let left_end = left.evaluate(1.0).expect("Operation failed");
+        let right_start = right.evaluate(0.0).expect("Operation failed");
+        let right_end = right.evaluate(1.0).expect("Operation failed");
 
         assert_relative_eq!(left_start[0], 0.0);
         assert_relative_eq!(left_start[1], 0.0);
@@ -720,7 +721,7 @@ mod tests {
 
         // The point at t=0.5 on the original curve should be the same as
         // the end point of the left curve and the start point of the right curve
-        let mid = curve.evaluate(0.5).unwrap();
+        let mid = curve.evaluate(0.5).expect("Operation failed");
         assert_relative_eq!(mid[0], left_end[0]);
         assert_relative_eq!(mid[1], left_end[1]);
         assert_relative_eq!(mid[0], right_start[0]);
@@ -736,13 +737,13 @@ mod tests {
             [0.0, 1.0, 0.0], // (1,0)
             [1.0, 1.0, 0.0], // (1,1)
         ];
-        let surface = BezierSurface::new(&control_points.view(), 2, 2).unwrap();
+        let surface = BezierSurface::new(&control_points.view(), 2, 2).expect("Operation failed");
 
         // Test evaluation at corners
-        let p00 = surface.evaluate(0.0, 0.0).unwrap();
-        let p01 = surface.evaluate(0.0, 1.0).unwrap();
-        let p10 = surface.evaluate(1.0, 0.0).unwrap();
-        let p11 = surface.evaluate(1.0, 1.0).unwrap();
+        let p00 = surface.evaluate(0.0, 0.0).expect("Operation failed");
+        let p01 = surface.evaluate(0.0, 1.0).expect("Operation failed");
+        let p10 = surface.evaluate(1.0, 0.0).expect("Operation failed");
+        let p11 = surface.evaluate(1.0, 1.0).expect("Operation failed");
 
         assert_relative_eq!(p00[0], 0.0);
         assert_relative_eq!(p00[1], 0.0);
@@ -761,7 +762,7 @@ mod tests {
         assert_relative_eq!(p11[2], 0.0);
 
         // Test evaluation at center
-        let p_mid = surface.evaluate(0.5, 0.5).unwrap();
+        let p_mid = surface.evaluate(0.5, 0.5).expect("Operation failed");
         assert_relative_eq!(p_mid[0], 0.5);
         assert_relative_eq!(p_mid[1], 0.5);
         assert_relative_eq!(p_mid[2], 0.0);
@@ -781,19 +782,19 @@ mod tests {
             [1.0, 2.0, 1.0], // (2,1)
             [2.0, 2.0, 0.0], // (2,2)
         ];
-        let surface = BezierSurface::new(&control_points.view(), 3, 3).unwrap();
+        let surface = BezierSurface::new(&control_points.view(), 3, 3).expect("Operation failed");
 
         // Get partial derivatives
-        let deriv_u = surface.derivative_u().unwrap();
-        let deriv_v = surface.derivative_v().unwrap();
+        let deriv_u = surface.derivative_u().expect("Operation failed");
+        let deriv_v = surface.derivative_v().expect("Operation failed");
 
         // Check dimensions
         assert_eq!(deriv_u.grid_dimensions(), (2, 3)); // Degree 1 in u, 2 in v
         assert_eq!(deriv_v.grid_dimensions(), (3, 2)); // Degree 2 in u, 1 in v
 
         // Evaluate derivatives at (u,v) = (0.5, 0.5)
-        let du = deriv_u.evaluate(0.5, 0.5).unwrap();
-        let dv = deriv_v.evaluate(0.5, 0.5).unwrap();
+        let du = deriv_u.evaluate(0.5, 0.5).expect("Operation failed");
+        let dv = deriv_v.evaluate(0.5, 0.5).expect("Operation failed");
 
         // The partial derivatives should be non-zero for this non-flat surface
         assert_eq!(du.len(), 3); // 3D point
@@ -807,7 +808,7 @@ mod tests {
         assert!(dv_magnitude > 0.1); // Should be non-zero
 
         // Verify the surface itself evaluates correctly at the center
-        let center = surface.evaluate(0.5, 0.5).unwrap();
+        let center = surface.evaluate(0.5, 0.5).expect("Operation failed");
         assert_eq!(center.len(), 3);
 
         // The center point should be approximately at (1, 1, z) for some z value

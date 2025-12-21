@@ -94,10 +94,10 @@ where
     let mut regularized_ata = ata.clone();
     let reg = if a.nrows() < a.ncols() {
         // Underdetermined system - add more regularization
-        T::from_f64(1e-8).unwrap()
+        T::from_f64(1e-8).expect("Operation failed")
     } else {
         // Square or overdetermined system - add minimal regularization
-        T::from_f64(1e-10).unwrap()
+        T::from_f64(1e-10).expect("Operation failed")
     };
 
     for i in 0..regularized_ata.nrows() {
@@ -110,7 +110,7 @@ where
         Err(_) => {
             // Increase regularization significantly
             for i in 0..regularized_ata.nrows() {
-                regularized_ata[[i, i]] += T::from_f64(1e-6).unwrap();
+                regularized_ata[[i, i]] += T::from_f64(1e-6).expect("Operation failed");
             }
             solve_linear_system(&regularized_ata.view(), &atb.view())
         }
@@ -155,7 +155,7 @@ where
 fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(matrix: &ArrayView2<T>) -> usize {
     let n = matrix.nrows();
     let mut max_bandwidth = 0;
-    let tolerance = T::from_f64(1e-14).unwrap();
+    let tolerance = T::from_f64(1e-14).expect("Operation failed");
 
     for i in 0..n {
         for j in 0..n {
@@ -216,8 +216,10 @@ where
 
         // Check for singular matrix with more reasonable threshold
         // Use machine epsilon * matrix size as threshold for singularity
-        let eps = T::from_f64(2.22e-16).unwrap(); // Machine epsilon for f64
-        let threshold = eps * T::from_usize(n).unwrap() * T::from_f64(1e8).unwrap();
+        let eps = T::from_f64(2.22e-16).expect("Operation failed"); // Machine epsilon for f64
+        let threshold = eps
+            * T::from_usize(n).expect("Operation failed")
+            * T::from_f64(1e8).expect("Operation failed");
         if max_val < threshold {
             return Err(InterpolateError::invalid_input(
                 "matrix is singular or nearly singular".to_string(),
@@ -375,8 +377,10 @@ where
 
         // Check for singular matrix with more reasonable threshold
         // Use machine epsilon * matrix size as threshold for singularity
-        let eps = T::from_f64(2.22e-16).unwrap(); // Machine epsilon for f64
-        let threshold = eps * T::from_usize(n).unwrap() * T::from_f64(1000.0).unwrap();
+        let eps = T::from_f64(2.22e-16).expect("Operation failed"); // Machine epsilon for f64
+        let threshold = eps
+            * T::from_usize(n).expect("Operation failed")
+            * T::from_f64(1000.0).expect("Operation failed");
         if max_val < threshold {
             return Err(InterpolateError::invalid_input(
                 "matrix is singular or nearly singular".to_string(),
@@ -526,7 +530,7 @@ where
         }
     }
 
-    if min_diag < T::from_f64(1e-14).unwrap() {
+    if min_diag < T::from_f64(1e-14).expect("Operation failed") {
         Ok(T::infinity())
     } else {
         Ok(matrix_norm / min_diag)
@@ -555,10 +559,10 @@ mod tests {
         let a = array![[2.0, 1.0], [1.0, 3.0]];
         let b = array![1.0, 2.0];
 
-        let x = solve_dense_fallback(&a.view(), &b.view()).unwrap();
+        let x = solve_dense_fallback(&a.view(), &b.view()).expect("Operation failed");
 
         // Verify solution: Ax should equal b
-        let verification = matrix_vector_multiply(&a.view(), &x.view()).unwrap();
+        let verification = matrix_vector_multiply(&a.view(), &x.view()).expect("Operation failed");
         for i in 0..b.len() {
             assert!((verification[i] - b[i]).abs() < 1e-10);
         }
@@ -569,7 +573,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let result = matrix_multiply(&a.view(), &b.view()).unwrap();
+        let result = matrix_multiply(&a.view(), &b.view()).expect("Operation failed");
 
         // Expected: [[19, 22], [43, 50]]
         assert_eq!(result[[0, 0]], 19.0);
@@ -585,7 +589,7 @@ mod tests {
         let result = lu_decomposition(&a.view());
         assert!(result.is_ok());
 
-        let (l, u, _perm) = result.unwrap();
+        let (l, u, _perm) = result.expect("Operation failed");
 
         // L should be lower triangular with ones on diagonal
         for i in 0..l.nrows() {

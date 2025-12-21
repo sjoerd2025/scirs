@@ -89,10 +89,10 @@ where
     /// let coeffs = array![-1.0, 2.0, 0.0, -1.0];
     /// let degree = 2;
     ///
-    /// let spline = BSpline::new(&knots.view(), &coeffs.view(), degree, ExtrapolateMode::Extrapolate).unwrap();
+    /// let spline = BSpline::new(&knots.view(), &coeffs.view(), degree, ExtrapolateMode::Extrapolate).expect("Operation failed");
     ///
     /// // Evaluate at x = 2.5
-    /// let y_interp = spline.evaluate(2.5).unwrap();
+    /// let y_interp = spline.evaluate(2.5).expect("Operation failed");
     /// ```
     pub fn new(
         t: &ArrayView1<T>,
@@ -416,7 +416,9 @@ where
             for i in 0..n - 1 {
                 let dt = self.t[i + k + 1] - self.t[i + 1];
                 if dt > T::zero() {
-                    new_c[i] = T::from_f64(k as f64).unwrap() * (self.c[i + 1] - self.c[i]) / dt;
+                    new_c[i] = T::from_f64(k as f64).expect("Operation failed")
+                        * (self.c[i + 1] - self.c[i])
+                        / dt;
                 }
             }
         } else {
@@ -459,7 +461,8 @@ where
             for i in 0..n {
                 let dt = self.t[i + self.k + 1] - self.t[i];
                 if dt > T::zero() {
-                    integral += self.c[i] * dt / T::from_f64((self.k + 1) as f64).unwrap();
+                    integral += self.c[i] * dt
+                        / T::from_f64((self.k + 1) as f64).expect("Operation failed");
                 }
                 new_c[i] = integral;
             }
@@ -528,11 +531,13 @@ where
         }
 
         // Apply de Boor's algorithm to compute the value at x
+        // The standard recurrence is: alpha = (x - t_j) / (t_{j+k+1-r} - t_j)
+        // where j is the global coefficient index (idx + local_j)
         for r in 1..=self.k {
             for j in (r..=self.k).rev() {
-                let i = idx + j - r;
-                let left_idx = i;
-                let right_idx = i + self.k + 1 - r;
+                let global_j = idx + j;
+                let left_idx = global_j;
+                let right_idx = global_j + self.k + 1 - r;
 
                 // Ensure the indices are within bounds
                 if left_idx >= self.t.len() || right_idx >= self.t.len() {
@@ -597,11 +602,13 @@ where
             }
 
             // Apply de Boor's algorithm to compute the value at x
+            // The standard recurrence is: alpha = (x - t_j) / (t_{j+k+1-r} - t_j)
+            // where j is the global coefficient index (idx + local_j)
             for r in 1..=self.k {
                 for j in (r..=self.k).rev() {
-                    let i = idx + j - r;
-                    let left_idx = i;
-                    let right_idx = i + self.k + 1 - r;
+                    let global_j = idx + j;
+                    let left_idx = global_j;
+                    let right_idx = global_j + self.k + 1 - r;
 
                     // Ensure the indices are within bounds
                     if left_idx >= self.t.len() || right_idx >= self.t.len() {

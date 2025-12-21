@@ -330,7 +330,7 @@ mod tests {
         let result = adaptive_ar_spectral_estimation(&signal, 2, &config);
         if result.is_err() {
             // Some numerical configurations may fail due to stability issues
-            let error = result.as_ref().err().unwrap();
+            let error = result.as_ref().err().expect("Operation failed");
             match error {
                 crate::error::SignalError::ComputationError(msg)
                     if msg.contains("denominator too small") =>
@@ -348,7 +348,7 @@ mod tests {
         // If we get here, the result was successful
         assert!(result.is_ok());
 
-        let adaptive_result = result.unwrap();
+        let adaptive_result = result.expect("Operation failed");
         assert!(!adaptive_result.time_vector.is_empty());
         assert!(!adaptive_result.orders.is_empty());
     }
@@ -363,7 +363,7 @@ mod tests {
         let result = select_optimal_order_adaptive(&signal, &config);
         assert!(result.is_ok());
 
-        let order = result.unwrap();
+        let order = result.expect("Operation failed");
         assert!(order >= config.initial_order);
         assert!(order <= config.max_order);
     }
@@ -376,7 +376,7 @@ mod tests {
         let result = estimate_weighted_burg(&signal, 2, &weights);
         assert!(result.is_ok());
 
-        let (ar_coeffs, variance) = result.unwrap();
+        let (ar_coeffs, variance) = result.expect("Operation failed");
         assert_eq!(ar_coeffs.len(), 3);
         assert!(variance > 0.0);
     }

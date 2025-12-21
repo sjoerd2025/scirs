@@ -1091,7 +1091,7 @@ mod tests {
             let input = Tensor::from_vec(vec![1.0f32, 2.0, 3.0, 4.0], vec![2, 2], g);
             let context = LinalgContext::new(LinalgOperation::Trace).add_input(input);
 
-            let result = context.execute().unwrap();
+            let result = context.execute().expect("Operation failed");
 
             // Try to evaluate the tensor in the graph context
             if let Ok(evaluated) = result.primary_output.eval(g) {
@@ -1113,7 +1113,7 @@ mod tests {
                 .add_input(input)
                 .add_parameter("ord".to_string(), LinalgParameter::String("2".to_string()));
 
-            let result = context.execute().unwrap();
+            let result = context.execute().expect("Operation failed");
 
             // Try to evaluate the tensor in the graph context
             if let Ok(evaluated) = result.primary_output.eval(g) {
@@ -1142,10 +1142,13 @@ mod tests {
     #[test]
     fn test_linalg_parameter() {
         let float_param = LinalgParameter::Float(std::f64::consts::PI);
-        assert_eq!(float_param.as_float().unwrap(), std::f64::consts::PI);
+        assert_eq!(
+            float_param.as_float().expect("Operation failed"),
+            std::f64::consts::PI
+        );
 
         let string_param = LinalgParameter::String("test".to_string());
-        assert_eq!(string_param.as_string().unwrap(), "test");
+        assert_eq!(string_param.as_string().expect("Operation failed"), "test");
     }
 
     #[test]
@@ -1168,7 +1171,7 @@ mod tests {
 
             assert_eq!(result.primary_output.data(), tensor.data());
 
-            let reconstructed_tensor = result.to_autograd_tensor().unwrap();
+            let reconstructed_tensor = result.to_autograd_tensor().expect("Operation failed");
             assert_eq!(reconstructed_tensor.data(), tensor.data());
         });
     }

@@ -137,7 +137,7 @@ fn test_terminal_event() -> IntegrateResult<()> {
     assert_relative_eq!(event.state[0], 0.0, epsilon = 1e-8);
 
     // Verify integration stopped at the event time
-    let final_time = result.base_result.t.last().unwrap();
+    let final_time = result.base_result.t.last().expect("Operation failed");
     assert_relative_eq!(*final_time, event.time, epsilon = 1e-10);
 
     Ok(())
@@ -312,7 +312,11 @@ fn test_max_count() -> IntegrateResult<()> {
     );
 
     // Check that integration continued to the end time
-    assert_relative_eq!(*result.base_result.t.last().unwrap(), t_end, epsilon = 1e-3);
+    assert_relative_eq!(
+        *result.base_result.t.last().expect("Operation failed"),
+        t_end,
+        epsilon = 1e-3
+    );
 
     Ok(())
 }

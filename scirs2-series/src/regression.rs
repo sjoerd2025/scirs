@@ -1273,7 +1273,9 @@ mod tests {
             ..Default::default()
         };
 
-        let result = regression.fit_distributed_lag(&y, &x, &config).unwrap();
+        let result = regression
+            .fit_distributed_lag(&y, &x, &config)
+            .expect("Operation failed");
 
         assert_eq!(result.max_lag, 2);
         eprintln!("Distributed lag R-squared: {}", result.r_squared);
@@ -1304,7 +1306,9 @@ mod tests {
             ..Default::default()
         };
 
-        let result = regression.fit_ardl(&y, &x, &config).unwrap();
+        let result = regression
+            .fit_ardl(&y, &x, &config)
+            .expect("Operation failed");
 
         assert_eq!(result.y_lags, 1);
         assert_eq!(result.x_lags, 1);
@@ -1322,14 +1326,15 @@ mod tests {
                 .map(|i| i as f64 + 0.1 * scirs2_core::random::random::<f64>())
                 .collect(),
         );
-        let x = Array2::from_shape_vec((n, 1), (0..n).map(|i| (i as f64).sin()).collect()).unwrap();
+        let x = Array2::from_shape_vec((n, 1), (0..n).map(|i| (i as f64).sin()).collect())
+            .expect("Operation failed");
 
         let regression = TimeSeriesRegression::new();
         let config = ARIMAErrorsConfig::default();
 
         let result = regression
             .fit_regression_with_arima_errors(&y, &x, &config)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.regression_r_squared >= 0.0 && result.regression_r_squared <= 1.0);
         assert!(result.aic.is_finite());

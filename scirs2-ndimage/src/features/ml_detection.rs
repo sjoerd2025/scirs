@@ -782,7 +782,7 @@ impl ObjectProposalGenerator {
         proposals: &mut Vec<ObjectProposal>,
     ) -> Vec<ObjectProposal> {
         // Sort by score in descending order
-        proposals.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        proposals.sort_by(|a, b| b.score.partial_cmp(&a.score).expect("Operation failed"));
 
         let mut keep = Vec::new();
         let mut suppressed = vec![false; proposals.len()];
@@ -857,7 +857,9 @@ mod tests {
         ]);
 
         let detector = LearnedEdgeDetector::new(None, None);
-        let edges = detector.detect_edges(&image.view()).unwrap();
+        let edges = detector
+            .detect_edges(&image.view())
+            .expect("Operation failed");
 
         assert_eq!(edges.dim(), image.dim());
         // Should detect edges at boundaries
@@ -879,7 +881,7 @@ mod tests {
 
         let descriptors = descriptor
             .extract_descriptors(&image.view(), &keypoints)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(descriptors.len(), 1);
         assert_eq!(descriptors[0].len(), 16);
@@ -901,7 +903,7 @@ mod tests {
         let mut extractor = SemanticFeatureExtractor::new(None);
         let features = extractor
             .extractfeatures(&image.view(), &["texture", "shape", "color"])
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(features.len(), 3);
         assert!(features.contains_key("texture"));
@@ -926,7 +928,9 @@ mod tests {
         }
 
         let generator = ObjectProposalGenerator::new(None);
-        let proposals = generator.generate_proposals(&image.view(), None).unwrap();
+        let proposals = generator
+            .generate_proposals(&image.view(), None)
+            .expect("Operation failed");
 
         assert!(!proposals.is_empty());
 

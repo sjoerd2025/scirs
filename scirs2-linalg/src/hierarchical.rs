@@ -165,7 +165,7 @@ where
     /// let matrix = Array2::from_shape_fn((100, 100), |(i, j)| {
     ///     1.0 / (1.0 + (i as f64 - j as f64).abs())
     /// });
-    /// let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-6, 20, 32).unwrap();
+    /// let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-6, 20, 32).expect("Operation failed");
     /// ```
     pub fn from_dense(
         matrix: &ArrayView2<F>,
@@ -285,8 +285,8 @@ where
             ]
         } else {
             vec![
-                *row_cluster.left.clone().unwrap(),
-                *row_cluster.right.clone().unwrap(),
+                *row_cluster.left.clone().expect("Operation failed"),
+                *row_cluster.right.clone().expect("Operation failed"),
             ]
         };
 
@@ -298,8 +298,8 @@ where
             ]
         } else {
             vec![
-                *col_cluster.left.clone().unwrap(),
-                *col_cluster.right.clone().unwrap(),
+                *col_cluster.left.clone().expect("Operation failed"),
+                *col_cluster.right.clone().expect("Operation failed"),
             ]
         };
 
@@ -757,8 +757,8 @@ mod tests {
         assert_eq!(tree.end, 16);
         assert!(!tree.is_leaf());
 
-        let left = tree.left.unwrap();
-        let right = tree.right.unwrap();
+        let left = tree.left.expect("Operation failed");
+        let right = tree.right.expect("Operation failed");
 
         assert_eq!(left.start, 0);
         assert_eq!(left.end, 8);
@@ -794,12 +794,12 @@ mod tests {
             [0.05, 0.1, 0.5, 1.0]
         ];
 
-        let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-6, 2, 2).unwrap();
+        let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-6, 2, 2).expect("Operation failed");
 
         // Test matrix-vector multiplication
         let x = array![1.0, 2.0, 3.0, 4.0];
         let y_dense = matrix.dot(&x);
-        let y_h = hmatrix.matvec(&x.view()).unwrap();
+        let y_h = hmatrix.matvec(&x.view()).expect("Operation failed");
 
         for i in 0..4 {
             assert_relative_eq!(y_dense[i], y_h[i], epsilon = 1e-6);
@@ -807,18 +807,20 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_hmatrix_memory_info() {
-        // Reduced size from 128x128 to 32x32 for faster test execution
+        // Reduced size from 128x128 → 32x32 → 16x16 for faster test execution
+        // 16x16 is sufficient to test the memory info API while avoiding expensive SVD operations
         let matrix =
-            Array2::from_shape_fn((32, 32), |(i, j)| 1.0 / (1.0 + (i as f64 - j as f64).abs()));
+            Array2::from_shape_fn((16, 16), |(i, j)| 1.0 / (1.0 + (i as f64 - j as f64).abs()));
 
-        let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-4, 8, 8).unwrap();
+        // Use larger min_blocksize (4 instead of 8) to reduce recursion depth
+        let hmatrix = HMatrix::from_dense(&matrix.view(), 1e-4, 8, 4).expect("Operation failed");
         let memory_info = hmatrix.memory_info();
 
         // Basic sanity checks for memory info
         assert!(memory_info.compression_ratio > 0.0);
         assert!(memory_info.originalsize > 0);
+        assert_eq!(memory_info.originalsize, 16 * 16);
     }
 
     #[test]
@@ -832,12 +834,12 @@ mod tests {
             }
         });
 
-        let hssmatrix = HSSMatrix::from_dense(&matrix.view(), 1e-6).unwrap();
+        let hssmatrix = HSSMatrix::from_dense(&matrix.view(), 1e-6).expect("Operation failed");
 
         // Test matrix-vector multiplication
         let x = Array1::from_shape_fn(16, |i| (i + 1) as f64);
         let y_dense = matrix.dot(&x);
-        let y_hss = hssmatrix.matvec(&x.view()).unwrap();
+        let y_hss = hssmatrix.matvec(&x.view()).expect("Operation failed");
 
         // HSS approximation should be reasonably accurate
         for i in 0..16 {
@@ -854,7 +856,8 @@ mod tests {
 
         // Test matvec with wrong size
         let squarematrix = Array2::eye(4);
-        let hmatrix = HMatrix::from_dense(&squarematrix.view(), 1e-6, 2, 2).unwrap();
+        let hmatrix =
+            HMatrix::from_dense(&squarematrix.view(), 1e-6, 2, 2).expect("Operation failed");
         let wrongsize_x = array![1.0, 2.0]; // Wrong size
 
         let result = hmatrix.matvec(&wrongsize_x.view());

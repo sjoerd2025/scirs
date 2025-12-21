@@ -18,6 +18,12 @@ use crate::constants;
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Bessel function of the second kind of order 0 with enhanced numerical stability.
 ///
 /// Y₀(x) is the second linearly independent solution to the differential equation:
@@ -52,56 +58,57 @@ pub fn y0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     }
 
     // Use known reference values for specific test points
-    if x == F::from(1.0).unwrap() {
-        return F::from(constants::lookup::y0::AT_1).unwrap();
+    if x == const_f64::<F>(1.0) {
+        return F::from(constants::lookup::y0::AT_1).expect("Failed to convert to float");
     }
-    if x == F::from(2.0).unwrap() {
-        return F::from(constants::lookup::y0::AT_2).unwrap();
+    if x == const_f64::<F>(2.0) {
+        return F::from(constants::lookup::y0::AT_2).expect("Failed to convert to float");
     }
-    if x == F::from(5.0).unwrap() {
-        return F::from(constants::lookup::y0::AT_5).unwrap();
+    if x == const_f64::<F>(5.0) {
+        return F::from(constants::lookup::y0::AT_5).expect("Failed to convert to float");
     }
-    if x == F::from(10.0).unwrap() {
-        return F::from(constants::lookup::y0::AT_10).unwrap();
+    if x == const_f64::<F>(10.0) {
+        return F::from(constants::lookup::y0::AT_10).expect("Failed to convert to float");
     }
 
     // For very small arguments, use the logarithmic term and series expansion
-    if x < F::from(1e-6).unwrap() {
+    if x < const_f64::<F>(1e-6) {
         // For x → 0, Y₀(x) ≈ (2/π)(ln(x/2) + γ) + O(x²)
-        let gamma = F::from(constants::f64::EULER_MASCHERONI).unwrap();
-        let ln_term = (x / F::from(2.0).unwrap()).ln() + gamma;
-        let two_over_pi = F::from(2.0).unwrap() / F::from(constants::f64::PI).unwrap();
+        let gamma = F::from(constants::f64::EULER_MASCHERONI).expect("Failed to convert to float");
+        let ln_term = (x / const_f64::<F>(2.0)).ln() + gamma;
+        let two_over_pi =
+            const_f64::<F>(2.0) / F::from(constants::f64::PI).expect("Failed to convert to float");
 
         return two_over_pi * ln_term;
     }
 
     // For large argument, use enhanced asymptotic expansion
-    if x > F::from(25.0).unwrap() {
+    if x > const_f64::<F>(25.0) {
         return enhanced_asymptotic_y0(x);
     }
 
     // For moderate arguments, use the optimized polynomial approximation
-    if x <= F::from(3.0).unwrap() {
+    if x <= const_f64::<F>(3.0) {
         // Polynomial approximation for small x
         let y = x * x;
 
         // R0 and S0 polynomials for Chebyshev expansion
         let r = [
-            F::from(-2957821389.0).unwrap(),
-            F::from(7062834065.0).unwrap(),
-            F::from(-512359803.6).unwrap(),
-            F::from(10879881.29).unwrap(),
-            F::from(-86327.92757).unwrap(),
-            F::from(228.4622733).unwrap(),
+            const_f64::<F>(-2957821389.0),
+            const_f64::<F>(7062834065.0),
+            const_f64::<F>(-512359803.6),
+            const_f64::<F>(10879881.29),
+            const_f64::<F>(-86327.92757),
+            const_f64::<F>(228.4622733),
         ];
 
         let s = [
-            F::from(40076544269.0).unwrap(),
-            F::from(745249964.8).unwrap(),
-            F::from(7189466.438).unwrap(),
-            F::from(47447.26470).unwrap(),
-            F::from(226.1030244).unwrap(),
-            F::from(1.0).unwrap(),
+            const_f64::<F>(40076544269.0),
+            const_f64::<F>(745249964.8),
+            const_f64::<F>(7189466.438),
+            const_f64::<F>(47447.26470),
+            const_f64::<F>(226.1030244),
+            const_f64::<F>(1.0),
         ];
 
         // Evaluate R0(y) and S0(y)
@@ -116,31 +123,32 @@ pub fn y0<F: Float + FromPrimitive + Debug>(x: F) -> F {
         // Calculate Y0(x) = R0(y) + (2/π)ln(x)J0(x)
         let ln_x = x.ln();
         let j0_x = j0(x);
-        let two_over_pi = F::from(2.0).unwrap() / F::from(constants::f64::PI).unwrap();
+        let two_over_pi =
+            const_f64::<F>(2.0) / F::from(constants::f64::PI).expect("Failed to convert to float");
 
         r_sum / s_sum + two_over_pi * ln_x * j0_x
     } else {
         // For 3 < x <= 25
         // Use Chebyshev approximation for moderate x
-        let y = F::from(3.0).unwrap() / x - F::one();
+        let y = const_f64::<F>(3.0) / x - F::one();
 
         // P0 and Q0 polynomials
         let p = [
-            F::from(-0.0253273).unwrap(),
-            F::from(0.0434198).unwrap(),
-            F::from(0.0645892).unwrap(),
-            F::from(0.1311030).unwrap(),
-            F::from(0.4272690).unwrap(),
-            F::from(1.0).unwrap(),
+            const_f64::<F>(-0.0253273),
+            const_f64::<F>(0.0434198),
+            const_f64::<F>(0.0645892),
+            const_f64::<F>(0.1311030),
+            const_f64::<F>(0.4272690),
+            const_f64::<F>(1.0),
         ];
 
         let q = [
-            F::from(0.00249411).unwrap(),
-            F::from(-0.00277069).unwrap(),
-            F::from(-0.02121727).unwrap(),
-            F::from(-0.11563961).unwrap(),
-            F::from(-0.41275647).unwrap(),
-            F::from(-1.0).unwrap(),
+            const_f64::<F>(0.00249411),
+            const_f64::<F>(-0.00277069),
+            const_f64::<F>(-0.02121727),
+            const_f64::<F>(-0.11563961),
+            const_f64::<F>(-0.41275647),
+            const_f64::<F>(-1.0),
         ];
 
         // Evaluate P0(y) and Q0(y)
@@ -153,8 +161,10 @@ pub fn y0<F: Float + FromPrimitive + Debug>(x: F) -> F {
         }
 
         // Calculate phase
-        let z = x - F::from(constants::f64::PI_4).unwrap();
-        let factor = (F::from(constants::f64::PI).unwrap() * x).sqrt().recip();
+        let z = x - F::from(constants::f64::PI_4).expect("Failed to convert to float");
+        let factor = (F::from(constants::f64::PI).expect("Failed to convert to float") * x)
+            .sqrt()
+            .recip();
 
         // Final result
         factor * (p_sum * z.sin() + q_sum * z.cos())
@@ -165,36 +175,40 @@ pub fn y0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// Provides better accuracy compared to the standard formula.
 #[allow(dead_code)]
 fn enhanced_asymptotic_y0<F: Float + FromPrimitive>(x: F) -> F {
-    let theta = x - F::from(constants::f64::PI_4).unwrap();
+    let theta = x - F::from(constants::f64::PI_4).expect("Failed to convert to float");
 
     // Compute amplitude factor with higher precision
-    let one_over_sqrt_pi_x = F::from(constants::f64::ONE_OVER_SQRT_PI).unwrap() / x.sqrt();
+    let one_over_sqrt_pi_x =
+        F::from(constants::f64::ONE_OVER_SQRT_PI).expect("Failed to convert to float") / x.sqrt();
 
     // Use more terms of the asymptotic series for better accuracy
     let mut p = F::one();
-    let mut q = F::from(-0.125).unwrap() / x;
+    let mut q = const_f64::<F>(-0.125) / x;
 
-    if x > F::from(100.0).unwrap() {
+    if x > const_f64::<F>(100.0) {
         // For extremely large x, just use the leading term
-        return one_over_sqrt_pi_x * p * theta.sin() * F::from(constants::f64::SQRT_2).unwrap();
+        return one_over_sqrt_pi_x
+            * p
+            * theta.sin()
+            * F::from(constants::f64::SQRT_2).expect("Failed to convert to float");
     }
 
     // Add correction terms for better accuracy
-    let z = F::from(8.0).unwrap() * x;
+    let z = const_f64::<F>(8.0) * x;
     let z2 = z * z;
 
     // Calculate more terms in the asymptotic series
     // P polynomial for the asymptotic form
-    p = p - F::from(9.0).unwrap() / z2 + F::from(225.0).unwrap() / (z2 * z2)
-        - F::from(11025.0).unwrap() / (z2 * z2 * z2);
+    p = p - const_f64::<F>(9.0) / z2 + const_f64::<F>(225.0) / (z2 * z2)
+        - const_f64::<F>(11025.0) / (z2 * z2 * z2);
 
     // Q polynomial for the asymptotic form
-    q = q + F::from(15.0).unwrap() / z2 - F::from(735.0).unwrap() / (z2 * z2)
-        + F::from(51975.0).unwrap() / (z2 * z2 * z2);
+    q = q + const_f64::<F>(15.0) / z2 - const_f64::<F>(735.0) / (z2 * z2)
+        + const_f64::<F>(51975.0) / (z2 * z2 * z2);
 
     // Combine with the phase term
     one_over_sqrt_pi_x
-        * F::from(constants::f64::SQRT_2).unwrap()
+        * F::from(constants::f64::SQRT_2).expect("Failed to convert to float")
         * (p * theta.sin() + q * theta.cos())
 }
 
@@ -233,9 +247,10 @@ pub fn y1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     }
 
     // For very small arguments, use series expansion with leading term
-    if x < F::from(1e-6).unwrap() {
+    if x < const_f64::<F>(1e-6) {
         // For x → 0, Y₁(x) ≈ -(2/π)/x + O(x ln(x))
-        let neg_two_over_pi = -F::from(2.0).unwrap() / F::from(constants::f64::PI).unwrap();
+        let neg_two_over_pi =
+            -const_f64::<F>(2.0) / F::from(constants::f64::PI).expect("Failed to convert to float");
         return neg_two_over_pi / x;
     }
 
@@ -252,7 +267,8 @@ pub fn y1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let j1_val = j1(x);
     let y0_val = y0(x);
 
-    let two_over_pi_x = F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * x);
+    let two_over_pi_x = const_f64::<F>(2.0)
+        / (F::from(constants::f64::PI).expect("Failed to convert to float") * x);
 
     (j1_val * y0_val - two_over_pi_x) / j0_val
 }
@@ -319,7 +335,7 @@ pub fn yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     let mut y_n_cur = y_n;
 
     for k in 1..n {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let y_n_plus_1 = (k_f + k_f) / x * y_n_cur - y_nminus_2;
         y_nminus_2 = y_n_cur;
         y_n_cur = y_n_plus_1;
@@ -336,29 +352,33 @@ pub fn yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// arguments with better precision.
 #[allow(dead_code)]
 fn enhanced_asymptotic_yn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Calculate the phase with high precision
-    let theta =
-        x - (n_f * F::from(constants::f64::PI_2).unwrap() + F::from(constants::f64::PI_4).unwrap());
+    let theta = x
+        - (n_f * F::from(constants::f64::PI_2).expect("Failed to convert to float")
+            + F::from(constants::f64::PI_4).expect("Failed to convert to float"));
 
     // Compute amplitude factor with higher precision
-    let one_over_sqrt_pi_x = F::from(constants::f64::ONE_OVER_SQRT_PI).unwrap() / x.sqrt();
+    let one_over_sqrt_pi_x =
+        F::from(constants::f64::ONE_OVER_SQRT_PI).expect("Failed to convert to float") / x.sqrt();
 
     // Calculate leading terms of asymptotic expansion
-    let mu = F::from(4.0).unwrap() * n_f * n_f;
+    let mu = const_f64::<F>(4.0) * n_f * n_f;
     let muminus_1 = mu - F::one();
 
     // Enhanced formula for large x and moderate to large n
-    let term_1 = muminus_1 / (F::from(8.0).unwrap() * x);
-    let term_2 =
-        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) / (F::from(128.0).unwrap() * x * x);
+    let term_1 = muminus_1 / (const_f64::<F>(8.0) * x);
+    let term_2 = muminus_1 * (muminus_1 - const_f64::<F>(8.0)) / (const_f64::<F>(128.0) * x * x);
 
     // Amplitude with enhanced precision
     let ampl = F::one() + term_1 + term_2;
 
     // Final result with phase correction
-    one_over_sqrt_pi_x * F::from(constants::f64::SQRT_2).unwrap() * ampl * theta.sin()
+    one_over_sqrt_pi_x
+        * F::from(constants::f64::SQRT_2).expect("Failed to convert to float")
+        * ampl
+        * theta.sin()
 }
 
 /// Exponentially scaled Bessel function of the second kind of order 0.

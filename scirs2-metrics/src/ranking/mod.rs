@@ -27,19 +27,19 @@
 //!     1.0, 0.0, 1.0, 0.0, 0.0,  // Sample 1: labels 0 and 2 are relevant
 //!     0.0, 0.0, 1.0, 1.0, 0.0,  // Sample 2: labels 2 and 3 are relevant
 //!     0.0, 1.0, 1.0, 0.0, 1.0,  // Sample 3: labels 1, 2, and 4 are relevant
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! // Predicted scores for each label
 //! let y_score = Array2::from_shape_vec((3, 5), vec![
 //!     0.9, 0.2, 0.8, 0.3, 0.1,  // Scores for sample 1
 //!     0.2, 0.3, 0.9, 0.7, 0.1,  // Scores for sample 2
 //!     0.1, 0.9, 0.8, 0.2, 0.7,  // Scores for sample 3
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! // Calculate label ranking metrics
-//! let coverage = coverage_error_multiple(&y_true, &y_score).unwrap();
-//! let loss = label_ranking_loss(&y_true, &y_score).unwrap();
-//! let precision = label_ranking_average_precision_score(&y_true, &y_score).unwrap();
+//! let coverage = coverage_error_multiple(&y_true, &y_score).expect("Operation failed");
+//! let loss = label_ranking_loss(&y_true, &y_score).expect("Operation failed");
+//! let precision = label_ranking_average_precision_score(&y_true, &y_score).expect("Operation failed");
 //! ```
 //!
 //! ```
@@ -59,19 +59,19 @@
 //! ];
 //!
 //! // Mean Reciprocal Rank
-//! let mrr = mean_reciprocal_rank(&y_true, &y_score).unwrap();
+//! let mrr = mean_reciprocal_rank(&y_true, &y_score).expect("Operation failed");
 //!
 //! // Normalized Discounted Cumulative Gain
-//! let ndcg = ndcg_score(&y_true, &y_score, Some(5)).unwrap();
+//! let ndcg = ndcg_score(&y_true, &y_score, Some(5)).expect("Operation failed");
 //!
 //! // Mean Average Precision
-//! let map = mean_average_precision(&y_true, &y_score, None).unwrap();
+//! let map = mean_average_precision(&y_true, &y_score, None).expect("Operation failed");
 //!
 //! // Precision at k=3
-//! let precision = precision_at_k(&y_true, &y_score, 3).unwrap();
+//! let precision = precision_at_k(&y_true, &y_score, 3).expect("Operation failed");
 //!
 //! // Recall at k=3
-//! let recall = recall_at_k(&y_true, &y_score, 3).unwrap();
+//! let recall = recall_at_k(&y_true, &y_score, 3).expect("Operation failed");
 //! ```
 
 use scirs2_core::ndarray::{ArrayBase, Data, Ix1};
@@ -119,7 +119,7 @@ pub mod label;
 /// // First query: 1/1 = 1.0 (the highest score 0.9 corresponds to the relevant item)
 /// // Second query: 1/1 = 1.0 (the highest score 0.9 corresponds to the relevant item)
 /// // So the MRR is (1.0 + 1.0) / 2 = 1.0
-/// let mrr = mean_reciprocal_rank(&y_true, &y_score).unwrap();
+/// let mrr = mean_reciprocal_rank(&y_true, &y_score).expect("Operation failed");
 /// assert!((mrr - 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -243,7 +243,7 @@ where
 /// ];
 ///
 /// // NDCG at k=5 (all results)
-/// let ndcg = ndcg_score(&y_true, &y_score, Some(5)).unwrap();
+/// let ndcg = ndcg_score(&y_true, &y_score, Some(5)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn ndcg_score<T, S, R>(
@@ -390,7 +390,7 @@ where
 /// ];
 ///
 /// // MAP at k=5 (all results)
-/// let map = mean_average_precision(&y_true, &y_score, None).unwrap();
+/// let map = mean_average_precision(&y_true, &y_score, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn mean_average_precision<T, S, R>(
@@ -485,7 +485,7 @@ where
 /// ];
 ///
 /// // Precision at k=3
-/// let prec = precision_at_k(&y_true, &y_score, 3).unwrap();
+/// let prec = precision_at_k(&y_true, &y_score, 3).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn precision_at_k<T, S, R>(
@@ -592,7 +592,7 @@ where
 /// ];
 ///
 /// // Recall at k=3
-/// let rec = recall_at_k(&y_true, &y_score, 3).unwrap();
+/// let rec = recall_at_k(&y_true, &y_score, 3).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn recall_at_k<T, S, R>(
@@ -701,7 +701,7 @@ where
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 ///
 /// // Perfect disagreement -> tau = -1.0
-/// let tau = kendalls_tau(&x, &y).unwrap();
+/// let tau = kendalls_tau(&x, &y).expect("Operation failed");
 /// assert!((tau + 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -733,10 +733,10 @@ where
     // Compare each pair of observations
     for i in 0..n {
         for j in (i + 1)..n {
-            let x_i = x[i].to_f64().unwrap();
-            let x_j = x[j].to_f64().unwrap();
-            let y_i = y[i].to_f64().unwrap();
-            let y_j = y[j].to_f64().unwrap();
+            let x_i = x[i].to_f64().expect("Operation failed");
+            let x_j = x[j].to_f64().expect("Operation failed");
+            let y_i = y[i].to_f64().expect("Operation failed");
+            let y_j = y[j].to_f64().expect("Operation failed");
 
             // Check if concordant or discordant
             let x_diff = x_j - x_i;
@@ -791,7 +791,7 @@ where
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 ///
 /// // Perfect negative correlation -> rho = -1.0
-/// let rho = spearmans_rho(&x, &y).unwrap();
+/// let rho = spearmans_rho(&x, &y).expect("Operation failed");
 /// assert!((rho + 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -920,7 +920,7 @@ where
 /// ];
 ///
 /// // MAP@3 - consider only top 3 ranked items
-/// let map_k = map_at_k(&y_true, &y_score, 3).unwrap();
+/// let map_k = map_at_k(&y_true, &y_score, 3).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn map_at_k<T, S, R>(
@@ -978,7 +978,7 @@ where
 /// ];
 ///
 /// // CTR at k=3
-/// let ctr = click_through_rate(&y_true, &y_score, 3).unwrap();
+/// let ctr = click_through_rate(&y_true, &y_score, 3).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn click_through_rate<T, S, R>(

@@ -38,7 +38,7 @@ fn main() -> CoreResult<()> {
     #[cfg(feature = "async")]
     {
         tokio::runtime::Runtime::new()
-            .unwrap()
+            .expect("Operation failed")
             .block_on(async { asyncerror_handling_demo().await })?;
     }
 

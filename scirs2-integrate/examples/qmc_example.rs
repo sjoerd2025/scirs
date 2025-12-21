@@ -15,7 +15,8 @@ fn main() {
     let a1 = Array1::from_vec(vec![0.0]);
     let b1 = Array1::from_vec(vec![1.0]);
 
-    let result1 = qmc_quad(f1, &a1, &b1, Some(8), Some(1000), None, false).unwrap();
+    let result1 =
+        qmc_quad(f1, &a1, &b1, Some(8), Some(1000), None, false).expect("Operation failed");
 
     println!("QMC result: {:.10}", result1.integral);
     println!("Error estimate: {:.10}", result1.standard_error);
@@ -39,7 +40,7 @@ fn main() {
         Some(Box::new(qrng)),
         false,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("QMC result: {:.10}", result2.integral);
     println!("Error estimate: {:.10}", result2.standard_error);
@@ -63,7 +64,7 @@ fn main() {
         Some(Box::new(qrng)),
         false,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("QMC result: {:.10}", result3.integral);
     println!("Error estimate: {:.10}", result3.standard_error);
@@ -78,7 +79,8 @@ fn main() {
     let a4 = Array1::from_vec(vec![-10.0]);
     let b4 = Array1::from_vec(vec![10.0]);
 
-    let result4 = qmc_quad(f4, &a4, &b4, Some(16), Some(2048), None, false).unwrap();
+    let result4 =
+        qmc_quad(f4, &a4, &b4, Some(16), Some(2048), None, false).expect("Operation failed");
 
     println!("QMC result: {:.10}", result4.integral);
     println!("Error estimate: {:.10}", result4.standard_error);
@@ -96,7 +98,8 @@ fn main() {
     let a5 = Array1::from_vec(vec![-0.5]);
     let b5 = Array1::from_vec(vec![0.5]);
 
-    let result5_log = qmc_quad(f5_log, &a5, &b5, Some(16), Some(2048), None, true).unwrap();
+    let result5_log =
+        qmc_quad(f5_log, &a5, &b5, Some(16), Some(2048), None, true).expect("Operation failed");
 
     println!("QMC log result: {:.10}", result5_log.integral);
     println!("QMC result: {:.10}", result5_log.integral.exp());

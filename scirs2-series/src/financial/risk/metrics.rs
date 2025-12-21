@@ -45,11 +45,11 @@
 //! let confidence = 0.95; // 95% confidence level
 //!
 //! // Historical VaR
-//! let var_95 = var_historical(&returns, confidence).unwrap();
+//! let var_95 = var_historical(&returns, confidence).expect("Test/example failed");
 //! println!("95% VaR: {:.4}", var_95);
 //!
 //! // Expected Shortfall (Conditional VaR)
-//! let es_95 = expected_shortfall(&returns, confidence).unwrap();
+//! let es_95 = expected_shortfall(&returns, confidence).expect("Test/example failed");
 //! println!("95% ES: {:.4}", es_95);
 //! ```
 //!
@@ -63,10 +63,10 @@
 //! let periods_per_year = 252; // Daily data
 //!
 //! // Sharpe ratio
-//! let sharpe = sharpe_ratio(&returns, risk_free_rate, periods_per_year).unwrap();
+//! let sharpe = sharpe_ratio(&returns, risk_free_rate, periods_per_year).expect("Test/example failed");
 //!
 //! // Sortino ratio (uses downside deviation)
-//! let sortino = sortino_ratio(&returns, risk_free_rate, periods_per_year).unwrap();
+//! let sortino = sortino_ratio(&returns, risk_free_rate, periods_per_year).expect("Test/example failed");
 //! ```
 //!
 //! ## Market Beta Analysis
@@ -80,16 +80,22 @@
 //! let periods_per_year = 252;
 //!
 //! // Calculate beta (systematic risk)
-//! let beta_coef = beta(&asset_returns, &market_returns).unwrap();
+//! let beta_coef = beta(&asset_returns, &market_returns).expect("Test/example failed");
 //!
 //! // Calculate Jensen's alpha (risk-adjusted excess return)
-//! let alpha = jensens_alpha(&asset_returns, &market_returns, risk_free_rate, periods_per_year).unwrap();
+//! let alpha = jensens_alpha(&asset_returns, &market_returns, risk_free_rate, periods_per_year).expect("Test/example failed");
 //! ```
 
 use scirs2_core::ndarray::Array1;
 use scirs2_core::numeric::Float;
 
 use crate::error::{Result, TimeSeriesError};
+
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + scirs2_core::numeric::FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 
 /// Calculate Value at Risk (VaR) using historical simulation
 ///
@@ -113,7 +119,7 @@ use crate::error::{Result, TimeSeriesError};
 /// use scirs2_core::ndarray::array;
 ///
 /// let returns = array![-0.05, 0.02, -0.03, 0.01, -0.02, 0.03, -0.01, 0.04];
-/// let var_95 = var_historical(&returns, 0.95).unwrap();
+/// let var_95 = var_historical(&returns, 0.95).expect("Test/example failed");
 /// ```
 pub fn var_historical<F: Float + Clone>(returns: &Array1<F>, confidence: f64) -> Result<F> {
     if returns.is_empty() {
@@ -130,7 +136,7 @@ pub fn var_historical<F: Float + Clone>(returns: &Array1<F>, confidence: f64) ->
     }
 
     let mut sorted_returns = returns.to_vec();
-    sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_returns.sort_by(|a, b| a.partial_cmp(b).expect("Float comparison failed"));
 
     let index = ((1.0 - confidence) * sorted_returns.len() as f64) as usize;
     let index = index.min(sorted_returns.len() - 1);
@@ -160,7 +166,7 @@ pub fn var_historical<F: Float + Clone>(returns: &Array1<F>, confidence: f64) ->
 /// use scirs2_core::ndarray::array;
 ///
 /// let returns = array![-0.05, 0.02, -0.03, 0.01, -0.02, 0.03, -0.01, 0.04];
-/// let es_95 = expected_shortfall(&returns, 0.95).unwrap();
+/// let es_95 = expected_shortfall(&returns, 0.95).expect("Test/example failed");
 /// ```
 pub fn expected_shortfall<F: Float + Clone + std::iter::Sum>(
     returns: &Array1<F>,
@@ -175,7 +181,7 @@ pub fn expected_shortfall<F: Float + Clone + std::iter::Sum>(
     }
 
     let sum = tail_returns.iter().fold(F::zero(), |acc, &x| acc + x);
-    Ok(-(sum / F::from(tail_returns.len()).unwrap()))
+    Ok(-(sum / F::from(tail_returns.len()).expect("Failed to convert length to float")))
 }
 
 /// Calculate Value at Risk using parametric method
@@ -199,9 +205,12 @@ pub fn expected_shortfall<F: Float + Clone + std::iter::Sum>(
 /// use scirs2_core::ndarray::array;
 ///
 /// let returns = array![0.01, -0.02, 0.015, -0.01, 0.005];
-/// let var = parametric_var(&returns, 0.95).unwrap();
+/// let var = parametric_var(&returns, 0.95).expect("Test/example failed");
 /// ```
-pub fn parametric_var<F: Float + Clone>(returns: &Array1<F>, confidence_level: F) -> Result<F> {
+pub fn parametric_var<F: Float + Clone + scirs2_core::numeric::FromPrimitive>(
+    returns: &Array1<F>,
+    confidence_level: F,
+) -> Result<F> {
     if returns.is_empty() {
         return Err(TimeSeriesError::InvalidInput(
             "Returns array cannot be empty".to_string(),
@@ -209,12 +218,12 @@ pub fn parametric_var<F: Float + Clone>(returns: &Array1<F>, confidence_level: F
     }
 
     let n = returns.len();
-    let mean = returns.sum() / F::from(n).unwrap();
+    let mean = returns.sum() / F::from(n).expect("Failed to convert to float");
     let variance = returns
         .iter()
         .map(|&r| (r - mean).powi(2))
         .fold(F::zero(), |acc, x| acc + x)
-        / F::from(n - 1).unwrap();
+        / F::from(n - 1).expect("Failed to convert to float");
     let std_dev = variance.sqrt();
 
     // Normal distribution inverse CDF approximation
@@ -251,12 +260,12 @@ pub fn monte_carlo_var<F: Float + Clone>(
     }
 
     let n = returns.len();
-    let mean = returns.sum() / F::from(n).unwrap();
+    let mean = returns.sum() / F::from(n).expect("Failed to convert to float");
     let variance = returns
         .iter()
         .map(|&r| (r - mean).powi(2))
         .fold(F::zero(), |acc, x| acc + x)
-        / F::from(n - 1).unwrap();
+        / F::from(n - 1).expect("Failed to convert to float");
     let std_dev = variance.sqrt();
 
     // Simple Monte Carlo simulation using normal distribution
@@ -274,15 +283,16 @@ pub fn monte_carlo_var<F: Float + Clone>(
 
         // Box-Muller transformation
         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-        let simulated_return = mean + std_dev * F::from(z).unwrap();
+        let simulated_return = mean + std_dev * F::from(z).expect("Failed to convert to float");
         simulated_returns.push(simulated_return);
     }
 
     // Sort and find VaR
-    simulated_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let var_index = ((F::one() - confidence_level) * F::from(num_simulations).unwrap())
-        .to_usize()
-        .unwrap();
+    simulated_returns.sort_by(|a, b| a.partial_cmp(b).expect("Float comparison failed"));
+    let var_index = ((F::one() - confidence_level)
+        * F::from(num_simulations).expect("Failed to convert to float"))
+    .to_usize()
+    .expect("Test/example failed");
     let var = if var_index < simulated_returns.len() {
         -simulated_returns[var_index]
     } else {
@@ -314,7 +324,7 @@ pub fn monte_carlo_var<F: Float + Clone>(
 /// use scirs2_core::ndarray::array;
 ///
 /// let returns = array![0.01, -0.02, 0.015, -0.008, 0.012];
-/// let sharpe = sharpe_ratio(&returns, 0.02, 252).unwrap();
+/// let sharpe = sharpe_ratio(&returns, 0.02, 252).expect("Test/example failed");
 /// ```
 pub fn sharpe_ratio<F: Float + Clone>(
     returns: &Array1<F>,
@@ -328,15 +338,16 @@ pub fn sharpe_ratio<F: Float + Clone>(
     }
 
     // Calculate excess returns
-    let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
+    let annualized_rf =
+        risk_free_rate / F::from(periods_per_year).expect("Failed to convert to float");
     let excess_returns: Array1<F> = returns.mapv(|r| r - annualized_rf);
 
     // Calculate mean excess return
-    let mean_excess = excess_returns.sum() / F::from(returns.len()).unwrap();
+    let mean_excess = excess_returns.sum() / F::from(returns.len()).expect("Test/example failed");
 
     // Calculate standard deviation of excess returns
     let variance = excess_returns.mapv(|r| (r - mean_excess).powi(2)).sum()
-        / F::from(returns.len() - 1).unwrap();
+        / F::from(returns.len() - 1).expect("Test/example failed");
 
     let std_dev = variance.sqrt();
 
@@ -344,8 +355,12 @@ pub fn sharpe_ratio<F: Float + Clone>(
         Ok(F::infinity())
     } else {
         // Annualize the ratio
-        let annualized_excess = mean_excess * F::from(periods_per_year).unwrap();
-        let annualized_std = std_dev * F::from(periods_per_year).unwrap().sqrt();
+        let annualized_excess =
+            mean_excess * F::from(periods_per_year).expect("Failed to convert to float");
+        let annualized_std = std_dev
+            * F::from(periods_per_year)
+                .expect("Failed to convert to float")
+                .sqrt();
         Ok(annualized_excess / annualized_std)
     }
 }
@@ -376,11 +391,12 @@ pub fn sortino_ratio<F: Float + Clone>(
     }
 
     // Calculate excess returns
-    let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
+    let annualized_rf =
+        risk_free_rate / F::from(periods_per_year).expect("Failed to convert to float");
     let excess_returns: Array1<F> = returns.mapv(|r| r - annualized_rf);
 
     // Calculate mean excess return
-    let mean_excess = excess_returns.sum() / F::from(returns.len()).unwrap();
+    let mean_excess = excess_returns.sum() / F::from(returns.len()).expect("Test/example failed");
 
     // Calculate downside deviation (only negative excess returns)
     let downside_returns: Vec<F> = excess_returns
@@ -397,7 +413,7 @@ pub fn sortino_ratio<F: Float + Clone>(
         .iter()
         .map(|&r| r.powi(2))
         .fold(F::zero(), |acc, x| acc + x)
-        / F::from(downside_returns.len()).unwrap();
+        / F::from(downside_returns.len()).expect("Test/example failed");
 
     let downside_deviation = downside_variance.sqrt();
 
@@ -405,8 +421,12 @@ pub fn sortino_ratio<F: Float + Clone>(
         Ok(F::infinity())
     } else {
         // Annualize the ratio
-        let annualized_excess = mean_excess * F::from(periods_per_year).unwrap();
-        let annualized_downside = downside_deviation * F::from(periods_per_year).unwrap().sqrt();
+        let annualized_excess =
+            mean_excess * F::from(periods_per_year).expect("Failed to convert to float");
+        let annualized_downside = downside_deviation
+            * F::from(periods_per_year)
+                .expect("Failed to convert to float")
+                .sqrt();
         Ok(annualized_excess / annualized_downside)
     }
 }
@@ -450,11 +470,12 @@ pub fn information_ratio<F: Float + Clone>(
         .collect();
 
     // Calculate mean active return
-    let mean_active = active_returns.sum() / F::from(active_returns.len()).unwrap();
+    let mean_active =
+        active_returns.sum() / F::from(active_returns.len()).expect("Test/example failed");
 
     // Calculate tracking error (standard deviation of active returns)
     let variance = active_returns.mapv(|r| (r - mean_active).powi(2)).sum()
-        / F::from(active_returns.len() - 1).unwrap();
+        / F::from(active_returns.len() - 1).expect("Test/example failed");
 
     let tracking_error = variance.sqrt();
 
@@ -495,8 +516,10 @@ pub fn beta<F: Float + Clone>(asset_returns: &Array1<F>, market_returns: &Array1
     }
 
     // Calculate means
-    let asset_mean = asset_returns.sum() / F::from(asset_returns.len()).unwrap();
-    let market_mean = market_returns.sum() / F::from(market_returns.len()).unwrap();
+    let asset_mean =
+        asset_returns.sum() / F::from(asset_returns.len()).expect("Test/example failed");
+    let market_mean =
+        market_returns.sum() / F::from(market_returns.len()).expect("Test/example failed");
 
     // Calculate covariance and market variance
     let mut covariance = F::zero();
@@ -510,7 +533,7 @@ pub fn beta<F: Float + Clone>(asset_returns: &Array1<F>, market_returns: &Array1
         market_variance = market_variance + market_dev.powi(2);
     }
 
-    let n = F::from(asset_returns.len() - 1).unwrap();
+    let n = F::from(asset_returns.len() - 1).expect("Test/example failed");
     covariance = covariance / n;
     market_variance = market_variance / n;
 
@@ -552,10 +575,12 @@ pub fn treynor_ratio<F: Float + Clone>(
     }
 
     // Calculate annualized excess return
-    let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
-    let mean_return = returns.sum() / F::from(returns.len()).unwrap();
+    let annualized_rf =
+        risk_free_rate / F::from(periods_per_year).expect("Failed to convert to float");
+    let mean_return = returns.sum() / F::from(returns.len()).expect("Test/example failed");
     let excess_return = mean_return - annualized_rf;
-    let annualized_excess = excess_return * F::from(periods_per_year).unwrap();
+    let annualized_excess =
+        excess_return * F::from(periods_per_year).expect("Failed to convert to float");
 
     Ok(annualized_excess / portfolio_beta)
 }
@@ -585,9 +610,11 @@ pub fn jensens_alpha<F: Float + Clone>(
     let portfolio_beta = beta(returns, market_returns)?;
 
     // Calculate mean returns
-    let annualized_rf = risk_free_rate / F::from(periods_per_year).unwrap();
-    let mean_portfolio = returns.sum() / F::from(returns.len()).unwrap();
-    let mean_market = market_returns.sum() / F::from(market_returns.len()).unwrap();
+    let annualized_rf =
+        risk_free_rate / F::from(periods_per_year).expect("Failed to convert to float");
+    let mean_portfolio = returns.sum() / F::from(returns.len()).expect("Test/example failed");
+    let mean_market =
+        market_returns.sum() / F::from(market_returns.len()).expect("Test/example failed");
 
     // Calculate alpha using CAPM formula
     // Alpha = Portfolio Return - (Risk Free Rate + Beta * (Market Return - Risk Free Rate))
@@ -595,7 +622,8 @@ pub fn jensens_alpha<F: Float + Clone>(
     let market_excess = mean_market - annualized_rf;
     let expected_excess = portfolio_beta * market_excess;
 
-    Ok((portfolio_excess - expected_excess) * F::from(periods_per_year).unwrap())
+    Ok((portfolio_excess - expected_excess)
+        * F::from(periods_per_year).expect("Failed to convert to float"))
 }
 
 /// Calculate Omega ratio (probability-weighted gains over losses)
@@ -639,25 +667,25 @@ pub fn omega_ratio<F: Float + Clone>(returns: &Array1<F>, threshold: F) -> Resul
 }
 
 /// Approximate normal inverse CDF using Beasley-Springer-Moro algorithm
-fn normal_inverse_cdf<F: Float>(p: F) -> F {
-    let a0 = F::from(2.515517).unwrap();
-    let a1 = F::from(0.802853).unwrap();
-    let a2 = F::from(0.010328).unwrap();
-    let b1 = F::from(1.432788).unwrap();
-    let b2 = F::from(0.189269).unwrap();
-    let b3 = F::from(0.001308).unwrap();
+fn normal_inverse_cdf<F: Float + scirs2_core::numeric::FromPrimitive>(p: F) -> F {
+    let a0 = const_f64::<F>(2.515517);
+    let a1 = const_f64::<F>(0.802853);
+    let a2 = const_f64::<F>(0.010328);
+    let b1 = const_f64::<F>(1.432788);
+    let b2 = const_f64::<F>(0.189269);
+    let b3 = const_f64::<F>(0.001308);
 
-    let t = if p < F::from(0.5).unwrap() {
-        (-F::from(2.0).unwrap() * (p.ln())).sqrt()
+    let t = if p < const_f64::<F>(0.5) {
+        (-const_f64::<F>(2.0) * (p.ln())).sqrt()
     } else {
-        (-F::from(2.0).unwrap() * ((F::one() - p).ln())).sqrt()
+        (-const_f64::<F>(2.0) * ((F::one() - p).ln())).sqrt()
     };
 
     let numerator = a0 + a1 * t + a2 * t.powi(2);
     let denominator = F::one() + b1 * t + b2 * t.powi(2) + b3 * t.powi(3);
     let z = t - numerator / denominator;
 
-    if p < F::from(0.5).unwrap() {
+    if p < const_f64::<F>(0.5) {
         -z
     } else {
         z
@@ -672,7 +700,7 @@ mod tests {
     #[test]
     fn test_var_historical() {
         let returns = arr1(&[-0.05, 0.02, -0.03, 0.01, -0.02, 0.03, -0.01, 0.04]);
-        let var = var_historical(&returns, 0.95).unwrap();
+        let var = var_historical(&returns, 0.95).expect("Test/example failed");
 
         // VaR should be positive (loss magnitude)
         assert!(var > 0.0);
@@ -684,8 +712,8 @@ mod tests {
     #[test]
     fn test_expected_shortfall() {
         let returns = arr1(&[-0.05, 0.02, -0.03, 0.01, -0.02, 0.03, -0.01, 0.04]);
-        let var = var_historical(&returns, 0.95).unwrap();
-        let es = expected_shortfall(&returns, 0.95).unwrap();
+        let var = var_historical(&returns, 0.95).expect("Test/example failed");
+        let es = expected_shortfall(&returns, 0.95).expect("Test/example failed");
 
         // ES should be >= VaR
         assert!(es >= var);
@@ -695,7 +723,7 @@ mod tests {
     #[test]
     fn test_parametric_var() {
         let returns = arr1(&[0.01, -0.02, 0.015, -0.01, 0.005]);
-        let var = parametric_var(&returns, 0.95).unwrap();
+        let var = parametric_var(&returns, 0.95).expect("Test/example failed");
 
         assert!(var > 0.0);
     }
@@ -706,7 +734,7 @@ mod tests {
         let result = sharpe_ratio(&returns, 0.02, 252);
         assert!(result.is_ok());
 
-        let sharpe = result.unwrap();
+        let sharpe = result.expect("Test/example failed");
         // Sharpe ratio should be finite
         assert!(sharpe.is_finite());
     }
@@ -717,7 +745,7 @@ mod tests {
         let result = sortino_ratio(&returns, 0.02, 252);
         assert!(result.is_ok());
 
-        let sortino = result.unwrap();
+        let sortino = result.expect("Test/example failed");
         // Sortino ratio should be finite or infinity (if no downside)
         assert!(sortino.is_finite() || sortino.is_infinite());
     }
@@ -730,7 +758,7 @@ mod tests {
         let result = beta(&asset_returns, &market_returns);
         assert!(result.is_ok());
 
-        let beta_coef = result.unwrap();
+        let beta_coef = result.expect("Test/example failed");
         // Beta should be reasonable (typically between -3 and 3)
         assert!(beta_coef.abs() < 5.0);
     }
@@ -743,7 +771,7 @@ mod tests {
         let result = information_ratio(&portfolio_returns, &benchmark_returns);
         assert!(result.is_ok());
 
-        let ir = result.unwrap();
+        let ir = result.expect("Test/example failed");
         assert!(ir.is_finite() || ir.is_infinite());
     }
 
@@ -755,7 +783,7 @@ mod tests {
         let result = jensens_alpha(&returns, &market_returns, 0.02, 252);
         assert!(result.is_ok());
 
-        let alpha = result.unwrap();
+        let alpha = result.expect("Test/example failed");
         // Alpha should be finite
         assert!(alpha.is_finite());
     }
@@ -768,7 +796,7 @@ mod tests {
         let result = omega_ratio(&returns, threshold);
         assert!(result.is_ok());
 
-        let omega = result.unwrap();
+        let omega = result.expect("Test/example failed");
         assert!(omega > 0.0);
     }
 

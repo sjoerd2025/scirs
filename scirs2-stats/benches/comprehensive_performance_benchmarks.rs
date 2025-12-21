@@ -60,27 +60,29 @@ fn bench_descriptive_stats(c: &mut Criterion) {
 
         // Mean benchmark
         group.bench_with_input(BenchmarkId::new("mean", size), &data, |b, data| {
-            b.iter(|| black_box(mean(&data.view()).unwrap()))
+            b.iter(|| black_box(mean(&data.view()).expect("Operation failed")))
         });
 
         // Variance benchmark
         group.bench_with_input(BenchmarkId::new("variance", size), &data, |b, data| {
-            b.iter(|| black_box(var(&data.view(), 0, None).unwrap()))
+            b.iter(|| black_box(var(&data.view(), 0, None).expect("Operation failed")))
         });
 
         // Standard deviation benchmark
         group.bench_with_input(BenchmarkId::new("std_dev", size), &data, |b, data| {
-            b.iter(|| black_box(std(&data.view(), 0, None).unwrap()))
+            b.iter(|| black_box(std(&data.view(), 0, None).expect("Operation failed")))
         });
 
         // Skewness benchmark
         group.bench_with_input(BenchmarkId::new("skewness", size), &data, |b, data| {
-            b.iter(|| black_box(skew(&data.view(), false, None).unwrap()))
+            b.iter(|| black_box(skew(&data.view(), false, None).expect("Operation failed")))
         });
 
         // Kurtosis benchmark
         group.bench_with_input(BenchmarkId::new("kurtosis", size), &data, |b, data| {
-            b.iter(|| black_box(kurtosis(&data.view(), true, false, None).unwrap()))
+            b.iter(|| {
+                black_box(kurtosis(&data.view(), true, false, None).expect("Operation failed"))
+            })
         });
 
         // Combined stats benchmark (demonstrates SIMD advantages)
@@ -89,10 +91,13 @@ fn bench_descriptive_stats(c: &mut Criterion) {
             &data,
             |b, data| {
                 b.iter(|| {
-                    let _mean = black_box(mean(&data.view()).unwrap());
-                    let _var = black_box(var(&data.view(), 0, None).unwrap());
-                    let _skew = black_box(skew(&data.view(), false, None).unwrap());
-                    let _kurt = black_box(kurtosis(&data.view(), true, false, None).unwrap());
+                    let _mean = black_box(mean(&data.view()).expect("Operation failed"));
+                    let _var = black_box(var(&data.view(), 0, None).expect("Operation failed"));
+                    let _skew =
+                        black_box(skew(&data.view(), false, None).expect("Operation failed"));
+                    let _kurt = black_box(
+                        kurtosis(&data.view(), true, false, None).expect("Operation failed"),
+                    );
                 })
             },
         );
@@ -117,14 +122,17 @@ fn bench_quantile_operations(c: &mut Criterion) {
             &data,
             |b, data| {
                 b.iter(|| {
-                    black_box(quantile(&data.view(), 0.5, QuantileInterpolation::Linear).unwrap())
+                    black_box(
+                        quantile(&data.view(), 0.5, QuantileInterpolation::Linear)
+                            .expect("Operation failed"),
+                    )
                 })
             },
         );
 
         // Median (optimized quantile)
         group.bench_with_input(BenchmarkId::new("median", size), &data, |b, data| {
-            b.iter(|| black_box(median(&data.view()).unwrap()))
+            b.iter(|| black_box(median(&data.view()).expect("Operation failed")))
         });
 
         // Multiple quantiles
@@ -134,16 +142,20 @@ fn bench_quantile_operations(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let _q25 = black_box(
-                        quantile(&data.view(), 0.25, QuantileInterpolation::Linear).unwrap(),
+                        quantile(&data.view(), 0.25, QuantileInterpolation::Linear)
+                            .expect("Operation failed"),
                     );
                     let _q50 = black_box(
-                        quantile(&data.view(), 0.5, QuantileInterpolation::Linear).unwrap(),
+                        quantile(&data.view(), 0.5, QuantileInterpolation::Linear)
+                            .expect("Operation failed"),
                     );
                     let _q75 = black_box(
-                        quantile(&data.view(), 0.75, QuantileInterpolation::Linear).unwrap(),
+                        quantile(&data.view(), 0.75, QuantileInterpolation::Linear)
+                            .expect("Operation failed"),
                     );
                     let _q95 = black_box(
-                        quantile(&data.view(), 0.95, QuantileInterpolation::Linear).unwrap(),
+                        quantile(&data.view(), 0.95, QuantileInterpolation::Linear)
+                            .expect("Operation failed"),
                     );
                 })
             },
@@ -152,8 +164,10 @@ fn bench_quantile_operations(c: &mut Criterion) {
         // IQR computation
         group.bench_with_input(BenchmarkId::new("iqr", size), &data, |b, data| {
             b.iter(|| {
-                let q25 = quantile(&data.view(), 0.25, QuantileInterpolation::Linear).unwrap();
-                let q75 = quantile(&data.view(), 0.75, QuantileInterpolation::Linear).unwrap();
+                let q25 = quantile(&data.view(), 0.25, QuantileInterpolation::Linear)
+                    .expect("Operation failed");
+                let q75 = quantile(&data.view(), 0.75, QuantileInterpolation::Linear)
+                    .expect("Operation failed");
                 black_box(q75 - q25)
             })
         });
@@ -176,14 +190,26 @@ fn bench_correlation_operations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("pearson_correlation", size),
             &(x.clone(), y.clone()),
-            |b, (x, y)| b.iter(|| black_box(pearsonr(&x.view(), &y.view(), "propagate").unwrap())),
+            |b, (x, y)| {
+                b.iter(|| {
+                    black_box(
+                        pearsonr(&x.view(), &y.view(), "propagate").expect("Operation failed"),
+                    )
+                })
+            },
         );
 
         // Spearman correlation
         group.bench_with_input(
             BenchmarkId::new("spearman_correlation", size),
             &(x.clone(), y.clone()),
-            |b, (x, y)| b.iter(|| black_box(spearmanr(&x.view(), &y.view(), "propagate").unwrap())),
+            |b, (x, y)| {
+                b.iter(|| {
+                    black_box(
+                        spearmanr(&x.view(), &y.view(), "propagate").expect("Operation failed"),
+                    )
+                })
+            },
         );
 
         // Kendall tau correlation
@@ -192,7 +218,10 @@ fn bench_correlation_operations(c: &mut Criterion) {
             &(x.clone(), y.clone()),
             |b, (x, y)| {
                 b.iter(|| {
-                    black_box(kendalltau(&x.view(), &y.view(), "nan_policy", "method").unwrap())
+                    black_box(
+                        kendalltau(&x.view(), &y.view(), "nan_policy", "method")
+                            .expect("Operation failed"),
+                    )
                 })
             },
         );
@@ -207,7 +236,9 @@ fn bench_correlation_operations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("correlation_matrix", format!("{}x{}", rows, cols)),
             &data,
-            |b, data| b.iter(|| black_box(corrcoef(&data.view(), "pearson").unwrap())),
+            |b, data| {
+                b.iter(|| black_box(corrcoef(&data.view(), "pearson").expect("Operation failed")))
+            },
         );
     }
 
@@ -237,7 +268,7 @@ fn bench_regression_operations(c: &mut Criterion) {
         //     |b, (x, y)| {
         //         b.iter(|| {
         //             let mut model = LinearRegression::new();
-        //             black_box(model.fit(&x.view(), &y.view()).unwrap())
+        //             black_box(model.fit(&x.view(), &y.view()).expect("Operation failed"))
         //         })
         //     },
         // );
@@ -250,7 +281,7 @@ fn bench_regression_operations(c: &mut Criterion) {
         //     |b, (x, y)| {
         //         b.iter(|| {
         //             let mut model = RidgeRegression::new(1.0);
-        //             black_box(model.fit(&x.view(), &y.view()).unwrap())
+        //             black_box(model.fit(&x.view(), &y.view()).expect("Operation failed"))
         //         })
         //     },
         // );
@@ -258,7 +289,7 @@ fn bench_regression_operations(c: &mut Criterion) {
         // TODO: Fix LinearRegression struct availability
         // Prediction benchmark
         // let mut ols_model = LinearRegression::new();
-        // let ols_result = ols_model.fit(&x.view(), &y.view()).unwrap();
+        // let ols_result = ols_model.fit(&x.view(), &y.view()).expect("Operation failed");
         let test_x = generate_matrixdata(*n_samples / 10, *n_features, 123);
 
         // TODO: Comment out until LinearRegression is available
@@ -268,7 +299,7 @@ fn bench_regression_operations(c: &mut Criterion) {
         //         format!("{}x{}", n_samples / 10, n_features),
         //     ),
         //     &(ols_result, test_x),
-        //     |b, (result, test_x)| b.iter(|| black_box(result.predict(&test_x.view()).unwrap())),
+        //     |b, (result, test_x)| b.iter(|| black_box(result.predict(&test_x.view()).expect("Operation failed"))),
         // );
     }
 
@@ -290,7 +321,8 @@ fn bench_statistical_tests(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("ttest_1samp", size), &data1, |b, data| {
             b.iter(|| {
                 black_box(
-                    ttest_1samp(&data.view(), 0.0, Alternative::TwoSided, "propagate").unwrap(),
+                    ttest_1samp(&data.view(), 0.0, Alternative::TwoSided, "propagate")
+                        .expect("Operation failed"),
                 )
             })
         });
@@ -309,7 +341,7 @@ fn bench_statistical_tests(c: &mut Criterion) {
                             Alternative::TwoSided,
                             "propagate",
                         )
-                        .unwrap(),
+                        .expect("Operation failed"),
                     )
                 })
             },
@@ -322,7 +354,8 @@ fn bench_statistical_tests(c: &mut Criterion) {
             |b, (data1, data2)| {
                 b.iter(|| {
                     black_box(
-                        mann_whitney(&data1.view(), &data2.view(), "two-sided", true).unwrap(),
+                        mann_whitney(&data1.view(), &data2.view(), "two-sided", true)
+                            .expect("Operation failed"),
                     )
                 })
             },
@@ -333,14 +366,19 @@ fn bench_statistical_tests(c: &mut Criterion) {
             BenchmarkId::new("ks_2samp", size),
             &(data1.clone(), data2.clone()),
             |b, (data1, data2)| {
-                b.iter(|| black_box(ks_2samp(&data1.view(), &data2.view(), "two-sided").unwrap()))
+                b.iter(|| {
+                    black_box(
+                        ks_2samp(&data1.view(), &data2.view(), "two-sided")
+                            .expect("Operation failed"),
+                    )
+                })
             },
         );
 
         // Shapiro-Wilk normality test (limited to smaller sizes)
         if *size <= 10_000 {
             group.bench_with_input(BenchmarkId::new("shapiro_wilk", size), &data1, |b, data| {
-                b.iter(|| black_box(shapiro(&data.view()).unwrap()))
+                b.iter(|| black_box(shapiro(&data.view()).expect("Operation failed")))
             });
         }
     }
@@ -364,7 +402,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
             &x_values,
             |b, x_values| {
                 b.iter(|| {
-                    let normal = Normal::new(0.0, 1.0).unwrap();
+                    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
                     for &x in x_values.iter() {
                         black_box(normal.pdf(x));
                     }
@@ -378,7 +416,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
             &x_values,
             |b, x_values| {
                 b.iter(|| {
-                    let normal = Normal::new(0.0, 1.0).unwrap();
+                    let normal = Normal::new(0.0, 1.0).expect("Operation failed");
                     for &x in x_values.iter() {
                         black_box(normal.cdf(x));
                     }
@@ -392,7 +430,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
             &x_values,
             |b, x_values| {
                 b.iter(|| {
-                    let gamma_dist = Gamma::new(2.0, 1.0, 0.0).unwrap();
+                    let gamma_dist = Gamma::new(2.0, 1.0, 0.0).expect("Operation failed");
                     for &x in x_values.iter() {
                         if x > 0.0 {
                             black_box(gamma_dist.pdf(x));
@@ -408,7 +446,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
             &Array1::linspace(0.001, 0.999, *size),
             |b, x_values| {
                 b.iter(|| {
-                    let beta_dist = Beta::new(2.0, 3.0, 0.0, 1.0).unwrap();
+                    let beta_dist = Beta::new(2.0, 3.0, 0.0, 1.0).expect("Operation failed");
                     for &x in x_values.iter() {
                         black_box(beta_dist.pdf(x));
                     }
@@ -423,16 +461,20 @@ fn bench_distribution_operations(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("normal_rvs", size), size, |b, &size| {
             b.iter(|| {
-                let normal = Normal::new(0.0, 1.0).unwrap();
-                let samples: Vec<f64> = (0..size).map(|_| normal.rvs(1).unwrap()[0]).collect();
+                let normal = Normal::new(0.0, 1.0).expect("Operation failed");
+                let samples: Vec<f64> = (0..size)
+                    .map(|_| normal.rvs(1).expect("Operation failed")[0])
+                    .collect();
                 black_box(samples)
             })
         });
 
         group.bench_with_input(BenchmarkId::new("uniform_rvs", size), size, |b, &size| {
             b.iter(|| {
-                let uniform = StatsUniform::new(0.0, 1.0).unwrap();
-                let samples: Vec<f64> = (0..size).map(|_| uniform.rvs(1).unwrap()[0]).collect();
+                let uniform = StatsUniform::new(0.0, 1.0).expect("Operation failed");
+                let samples: Vec<f64> = (0..size)
+                    .map(|_| uniform.rvs(1).expect("Operation failed")[0])
+                    .collect();
                 black_box(samples)
             })
         });
@@ -504,12 +546,12 @@ fn bench_parallel_processing(c: &mut Criterion) {
 
         // Row-wise operations (potentially parallel)
         group.bench_with_input(BenchmarkId::new("row_means", size), &data, |b, data| {
-            b.iter(|| black_box(data.mean_axis(Axis(1)).unwrap()))
+            b.iter(|| black_box(data.mean_axis(Axis(1)).expect("Operation failed")))
         });
 
         // Column-wise operations (potentially parallel)
         group.bench_with_input(BenchmarkId::new("column_means", size), &data, |b, data| {
-            b.iter(|| black_box(data.mean_axis(Axis(0)).unwrap()))
+            b.iter(|| black_box(data.mean_axis(Axis(0)).expect("Operation failed")))
         });
 
         // Element-wise operations (SIMD + parallel)
@@ -537,28 +579,28 @@ fn bench_numerical_stability(c: &mut Criterion) {
 
     // Stability of mean computation
     group.bench_function("mean_tiny_values", |b| {
-        b.iter(|| black_box(mean(&tiny_values.view()).unwrap()))
+        b.iter(|| black_box(mean(&tiny_values.view()).expect("Operation failed")))
     });
 
     group.bench_function("mean_large_values", |b| {
-        b.iter(|| black_box(mean(&large_values.view()).unwrap()))
+        b.iter(|| black_box(mean(&large_values.view()).expect("Operation failed")))
     });
 
     group.bench_function("mean_mixed_scale", |b| {
-        b.iter(|| black_box(mean(&mixed_scale.view()).unwrap()))
+        b.iter(|| black_box(mean(&mixed_scale.view()).expect("Operation failed")))
     });
 
     // Stability of variance computation
     group.bench_function("var_tiny_values", |b| {
-        b.iter(|| black_box(var(&tiny_values.view(), 0, None).unwrap()))
+        b.iter(|| black_box(var(&tiny_values.view(), 0, None).expect("Operation failed")))
     });
 
     group.bench_function("var_large_values", |b| {
-        b.iter(|| black_box(var(&large_values.view(), 0, None).unwrap()))
+        b.iter(|| black_box(var(&large_values.view(), 0, None).expect("Operation failed")))
     });
 
     group.bench_function("var_mixed_scale", |b| {
-        b.iter(|| black_box(var(&mixed_scale.view(), 0, None).unwrap()))
+        b.iter(|| black_box(var(&mixed_scale.view(), 0, None).expect("Operation failed")))
     });
 
     group.finish();
@@ -606,7 +648,7 @@ fn bench_simd_vs_scalar(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("optimized_variance", size),
             &data,
-            |b, data| b.iter(|| black_box(var(&data.view(), 0, None).unwrap())),
+            |b, data| b.iter(|| black_box(var(&data.view(), 0, None).expect("Operation failed"))),
         );
     }
 
@@ -630,16 +672,21 @@ fn bench_comprehensive_comparison(c: &mut Criterion) {
     // Complete descriptive statistics pipeline
     group.bench_function("complete_descriptive_pipeline", |b| {
         b.iter(|| {
-            let _mean = black_box(mean(&data.view()).unwrap());
-            let _median = black_box(median(&data.view()).unwrap());
-            let _var = black_box(var(&data.view(), 0, None).unwrap());
-            let _std = black_box(std(&data.view(), 0, None).unwrap());
-            let _skew = black_box(skew(&data.view(), false, None).unwrap());
-            let _kurt = black_box(kurtosis(&data.view(), true, false, None).unwrap());
-            let _q25 =
-                black_box(quantile(&data.view(), 0.25, QuantileInterpolation::Linear).unwrap());
-            let _q75 =
-                black_box(quantile(&data.view(), 0.75, QuantileInterpolation::Linear).unwrap());
+            let _mean = black_box(mean(&data.view()).expect("Operation failed"));
+            let _median = black_box(median(&data.view()).expect("Operation failed"));
+            let _var = black_box(var(&data.view(), 0, None).expect("Operation failed"));
+            let _std = black_box(std(&data.view(), 0, None).expect("Operation failed"));
+            let _skew = black_box(skew(&data.view(), false, None).expect("Operation failed"));
+            let _kurt =
+                black_box(kurtosis(&data.view(), true, false, None).expect("Operation failed"));
+            let _q25 = black_box(
+                quantile(&data.view(), 0.25, QuantileInterpolation::Linear)
+                    .expect("Operation failed"),
+            );
+            let _q75 = black_box(
+                quantile(&data.view(), 0.75, QuantileInterpolation::Linear)
+                    .expect("Operation failed"),
+            );
             let _min = black_box(data.fold(f64::INFINITY, |acc, &x| acc.min(x)));
             let _max = black_box(data.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x)));
         })
@@ -648,17 +695,20 @@ fn bench_comprehensive_comparison(c: &mut Criterion) {
     // Complete correlation analysis pipeline
     group.bench_function("complete_correlation_pipeline", |b| {
         b.iter(|| {
-            let _pearson = black_box(pearsonr(&x.view(), &y.view(), "propagate").unwrap());
-            let _spearman = black_box(spearmanr(&x.view(), &y.view(), "propagate").unwrap());
-            let _kendall =
-                black_box(kendalltau(&x.view(), &y.view(), "nan_policy", "method").unwrap());
+            let _pearson =
+                black_box(pearsonr(&x.view(), &y.view(), "propagate").expect("Operation failed"));
+            let _spearman =
+                black_box(spearmanr(&x.view(), &y.view(), "propagate").expect("Operation failed"));
+            let _kendall = black_box(
+                kendalltau(&x.view(), &y.view(), "nan_policy", "method").expect("Operation failed"),
+            );
         })
     });
 
     // Large matrix operations
     let matrix = generate_matrixdata(10_000, 100, 42);
     group.bench_function("large_matrix_correlation", |b| {
-        b.iter(|| black_box(corrcoef(&matrix.view(), "pearson").unwrap()))
+        b.iter(|| black_box(corrcoef(&matrix.view(), "pearson").expect("Operation failed")))
     });
 
     group.finish();
@@ -752,7 +802,7 @@ if __name__ == "__main__":
     benchmark_scipy()
 "#;
 
-        fs::write("scipy_benchmark.py", python_script).unwrap();
+        fs::write("scipy_benchmark.py", python_script).expect("Operation failed");
 
         // Run SciPy benchmarks
         let output = Command::new("python").arg("scipy_benchmark.py").output();

@@ -27,13 +27,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_binary_2d(&input);
 
     // Calculate the Euclidean distance transform
-    let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+    let input_dyn = input
+        .clone()
+        .into_dimensionality::<IxDyn>()
+        .expect("Operation failed");
     let (edt_result, _) =
         distance_transform_edt(&input_dyn, None, true, false).expect("Distance transform failed");
     let edt = edt_result
-        .unwrap()
+        .expect("Operation failed")
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
 
     println!(
         "\nEuclidean Distance Transform (distance from each true pixel to nearest false pixel):"
@@ -44,9 +47,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (cdt_result, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false)
         .expect("City block distance transform failed");
     let cdt = cdt_result
-        .unwrap()
+        .expect("Operation failed")
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
 
     println!("\nCity Block (Manhattan) Distance Transform:");
     print_integer_distance_2d(&cdt);
@@ -55,9 +58,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (chess_result, _) = distance_transform_cdt(&input_dyn, "chessboard", true, false)
         .expect("Chessboard distance transform failed");
     let chess = chess_result
-        .unwrap()
+        .expect("Operation failed")
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
 
     println!("\nChessboard Distance Transform:");
     print_integer_distance_2d(&chess);
@@ -66,9 +69,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (bf_edt_result, _) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)
         .expect("Brute force distance transform failed");
     let bf_edt = bf_edt_result
-        .unwrap()
+        .expect("Operation failed")
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
 
     println!("\nBrute Force Euclidean Distance Transform:");
     print_distance_2d(&bf_edt);
@@ -76,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate distance transform with indices
     let (_, indices) = distance_transform_edt(&input_dyn, None, false, true)
         .expect("Distance transform with indices failed");
-    let indices = indices.unwrap();
+    let indices = indices.expect("Operation failed");
 
     println!("\nDistance Transform with Indices (showing a slice of the indices):");
     println!("For each true pixel, these indices show the coordinates of the nearest false pixel");
@@ -91,9 +94,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (custom_edt_result, _) = distance_transform_edt(&input_dyn, Some(&sampling), true, false)
         .expect("Custom sampling distance transform failed");
     let custom_edt = custom_edt_result
-        .unwrap()
+        .expect("Operation failed")
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
 
     println!("\nEuclidean Distance Transform with Custom Sampling [1.0, 0.5]:");
     println!("(Distances in column direction are halved due to sampling)");

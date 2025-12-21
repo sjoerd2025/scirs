@@ -37,15 +37,15 @@
 //! use scirs2_graph::io::dot::{read_dot_format, write_dot_format};
 //!
 //! // Create a temporary file with DOT data
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, "graph G {{").unwrap();
-//! writeln!(temp_file, "    1 -- 2;").unwrap();
-//! writeln!(temp_file, "    2 -- 3;").unwrap();
-//! writeln!(temp_file, "}}").unwrap();
-//! temp_file.flush().unwrap();
+//! let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+//! writeln!(temp_file, "graph G {{").expect("Test operation failed");
+//! writeln!(temp_file, "    1 -- 2;").expect("Test operation failed");
+//! writeln!(temp_file, "    2 -- 3;").expect("Test operation failed");
+//! writeln!(temp_file, "}}").expect("Test operation failed");
+//! temp_file.flush().expect("Test operation failed");
 //!
 //! // Read the graph
-//! let graph: Graph<i32, f64> = read_dot_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, f64> = read_dot_format(temp_file.path(), false).expect("Test operation failed");
 //! assert_eq!(graph.node_count(), 3);
 //! assert_eq!(graph.edge_count(), 2);
 //! ```
@@ -500,7 +500,7 @@ where
 
     // Parse target node and attributes
     let (target_str, attributes) = if target_part.contains('[') {
-        let bracket_pos = target_part.find('[').unwrap();
+        let bracket_pos = target_part.find('[').expect("Test operation failed");
         (
             target_part[..bracket_pos].trim(),
             Some(&target_part[bracket_pos..]),
@@ -517,7 +517,7 @@ where
 
     // Parse weight from attributes if needed
     let weight = if weighted && attributes.is_some() {
-        parse_weight_from_attributes(attributes.unwrap())?
+        parse_weight_from_attributes(attributes.expect("Operation failed"))?
     } else {
         E::default()
     };
@@ -561,7 +561,7 @@ where
 
     // Parse target node and attributes
     let (target_str, attributes) = if target_part.contains('[') {
-        let bracket_pos = target_part.find('[').unwrap();
+        let bracket_pos = target_part.find('[').expect("Test operation failed");
         (
             target_part[..bracket_pos].trim(),
             Some(&target_part[bracket_pos..]),
@@ -578,7 +578,7 @@ where
 
     // Parse weight from attributes if needed
     let weight = if weighted && attributes.is_some() {
-        parse_weight_from_attributes(attributes.unwrap())?
+        parse_weight_from_attributes(attributes.expect("Operation failed"))?
     } else {
         E::default()
     };
@@ -629,14 +629,15 @@ mod tests {
 
     #[test]
     fn test_read_undirected_dot() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "graph G {{").unwrap();
-        writeln!(temp_file, "    1 -- 2;").unwrap();
-        writeln!(temp_file, "    2 -- 3;").unwrap();
-        writeln!(temp_file, "}}").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "graph G {{").expect("Test operation failed");
+        writeln!(temp_file, "    1 -- 2;").expect("Test operation failed");
+        writeln!(temp_file, "    2 -- 3;").expect("Test operation failed");
+        writeln!(temp_file, "}}").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
-        let graph: Graph<i32, f64> = read_dot_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_dot_format(temp_file.path(), false).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -644,14 +645,15 @@ mod tests {
 
     #[test]
     fn test_read_directed_dot() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "digraph G {{").unwrap();
-        writeln!(temp_file, "    1 -> 2;").unwrap();
-        writeln!(temp_file, "    2 -> 3;").unwrap();
-        writeln!(temp_file, "}}").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "digraph G {{").expect("Test operation failed");
+        writeln!(temp_file, "    1 -> 2;").expect("Test operation failed");
+        writeln!(temp_file, "    2 -> 3;").expect("Test operation failed");
+        writeln!(temp_file, "}}").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
-        let graph: DiGraph<i32, f64> = read_dot_format_digraph(temp_file.path(), false).unwrap();
+        let graph: DiGraph<i32, f64> =
+            read_dot_format_digraph(temp_file.path(), false).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -659,14 +661,15 @@ mod tests {
 
     #[test]
     fn test_read_weighted_dot() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "graph G {{").unwrap();
-        writeln!(temp_file, "    1 -- 2 [weight=1.5];").unwrap();
-        writeln!(temp_file, "    2 -- 3 [weight=2.0];").unwrap();
-        writeln!(temp_file, "}}").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "graph G {{").expect("Test operation failed");
+        writeln!(temp_file, "    1 -- 2 [weight=1.5];").expect("Test operation failed");
+        writeln!(temp_file, "    2 -- 3 [weight=2.0];").expect("Test operation failed");
+        writeln!(temp_file, "}}").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
-        let graph: Graph<i32, f64> = read_dot_format(temp_file.path(), true).unwrap();
+        let graph: Graph<i32, f64> =
+            read_dot_format(temp_file.path(), true).expect("Test operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -675,13 +678,18 @@ mod tests {
     #[test]
     fn test_write_read_roundtrip() {
         let mut original_graph: Graph<i32, f64> = Graph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Test operation failed");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Test operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_dot_format(&original_graph, temp_file.path(), true).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test operation failed");
+        write_dot_format(&original_graph, temp_file.path(), true).expect("Test operation failed");
 
-        let read_graph: Graph<i32, f64> = read_dot_format(temp_file.path(), true).unwrap();
+        let read_graph: Graph<i32, f64> =
+            read_dot_format(temp_file.path(), true).expect("Test operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -690,14 +698,19 @@ mod tests {
     #[test]
     fn test_digraph_write_read_roundtrip() {
         let mut original_graph: DiGraph<i32, f64> = DiGraph::new();
-        original_graph.add_edge(1i32, 2i32, 1.5f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 2.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 1.5f64)
+            .expect("Test operation failed");
+        original_graph
+            .add_edge(2i32, 3i32, 2.0f64)
+            .expect("Test operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_dot_format_digraph(&original_graph, temp_file.path(), true).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test operation failed");
+        write_dot_format_digraph(&original_graph, temp_file.path(), true)
+            .expect("Test operation failed");
 
         let read_graph: DiGraph<i32, f64> =
-            read_dot_format_digraph(temp_file.path(), true).unwrap();
+            read_dot_format_digraph(temp_file.path(), true).expect("Test operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -721,21 +734,24 @@ mod tests {
 
     #[test]
     fn test_parse_weight_from_attributes() {
-        let weight: f64 = parse_weight_from_attributes("[weight=1.5]").unwrap();
+        let weight: f64 =
+            parse_weight_from_attributes("[weight=1.5]").expect("Test operation failed");
         assert_eq!(weight, 1.5);
 
-        let weight: f64 = parse_weight_from_attributes("[label=\"edge\", weight=2.0]").unwrap();
+        let weight: f64 = parse_weight_from_attributes("[label=\"edge\", weight=2.0]")
+            .expect("Test operation failed");
         assert_eq!(weight, 2.0);
 
-        let weight: f64 = parse_weight_from_attributes("[color=red]").unwrap();
+        let weight: f64 =
+            parse_weight_from_attributes("[color=red]").expect("Test operation failed");
         assert_eq!(weight, 0.0); // default
     }
 
     #[test]
     fn test_invalid_dot_format() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "invalid format").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test operation failed");
+        writeln!(temp_file, "invalid format").expect("Test operation failed");
+        temp_file.flush().expect("Test operation failed");
 
         let result: Result<Graph<i32, f64>> = read_dot_format(temp_file.path(), false);
         assert!(result.is_err());

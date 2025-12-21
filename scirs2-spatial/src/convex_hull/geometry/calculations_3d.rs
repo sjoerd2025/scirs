@@ -112,7 +112,7 @@ pub fn triangle_area_3d(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3]) -> f64 {
 ///     vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]
 /// ];
 ///
-/// let volume = compute_polyhedron_volume(&points.view(), &simplices).unwrap();
+/// let volume = compute_polyhedron_volume(&points.view(), &simplices).expect("Operation failed");
 /// assert!(volume > 0.0);
 /// ```
 pub fn compute_polyhedron_volume(
@@ -195,7 +195,7 @@ pub fn compute_polyhedron_volume(
 ///     vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]
 /// ];
 ///
-/// let surface_area = compute_polyhedron_surface_area(&points.view(), &simplices).unwrap();
+/// let surface_area = compute_polyhedron_surface_area(&points.view(), &simplices).expect("Operation failed");
 /// assert!(surface_area > 0.0);
 /// ```
 pub fn compute_polyhedron_surface_area(
@@ -415,7 +415,8 @@ mod tests {
         ]);
         let simplices = vec![vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]];
 
-        let volume = compute_polyhedron_volume(&points.view(), &simplices).unwrap();
+        let volume =
+            compute_polyhedron_volume(&points.view(), &simplices).expect("Operation failed");
         assert!(volume > 0.0);
         // Unit tetrahedron volume should be 1/6
         assert!((volume - 1.0 / 6.0).abs() < 0.1); // Allow some numerical error
@@ -432,7 +433,8 @@ mod tests {
         ]);
         let simplices = vec![vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]];
 
-        let surface_area = compute_polyhedron_surface_area(&points.view(), &simplices).unwrap();
+        let surface_area =
+            compute_polyhedron_surface_area(&points.view(), &simplices).expect("Operation failed");
         assert!(surface_area > 0.0);
     }
 }

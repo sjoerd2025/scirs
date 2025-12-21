@@ -488,7 +488,7 @@ impl LearnedOptimizer for MetaLearningOptimizer {
             if direction
                 .iter()
                 .map(|&x| x.abs())
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
                 .unwrap_or(0.0)
                 < 1e-8
             {
@@ -567,7 +567,9 @@ mod tests {
             target_accuracy: 1e-6,
         };
 
-        let task_optimizer = optimizer.create_task_optimizer(&problem).unwrap();
+        let task_optimizer = optimizer
+            .create_task_optimizer(&problem)
+            .expect("Operation failed");
         assert_eq!(task_optimizer.task_id, "test");
         assert!(!task_optimizer.parameters.is_empty());
     }
@@ -582,7 +584,7 @@ mod tests {
 
         let direction = optimizer
             .compute_meta_direction(&params, &objective)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(direction.len(), 2);
         assert!(direction.iter().all(|&x| x.is_finite()));
@@ -597,7 +599,9 @@ mod tests {
         optimizer.meta_state.meta_params[0] = 0.5;
 
         let task_params = Array1::from(vec![0.1, 0.2, 0.3]);
-        let step_size = optimizer.compute_meta_step_size(&task_params).unwrap();
+        let step_size = optimizer
+            .compute_meta_step_size(&task_params)
+            .expect("Operation failed");
 
         assert!(step_size > 0.0);
         assert!(step_size < 1.0);
@@ -619,10 +623,10 @@ mod tests {
 
         let similarity1 = optimizer
             .compute_task_similarity(&problem, "quadratic_task")
-            .unwrap();
+            .expect("Operation failed");
         let similarity2 = optimizer
             .compute_task_similarity(&problem, "neural_network_task")
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(similarity1 > similarity2);
     }
@@ -638,7 +642,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = meta_learning_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result = meta_learning_optimize(objective, &initial.view(), Some(config))
+            .expect("Operation failed");
 
         assert!(result.fun >= 0.0);
         assert_eq!(result.x.len(), 2);
@@ -660,7 +665,9 @@ mod tests {
         };
 
         let initial_params = optimizer.meta_state.meta_params.clone();
-        optimizer.update_meta_parameters(&problem, 1.5).unwrap();
+        optimizer
+            .update_meta_parameters(&problem, 1.5)
+            .expect("Operation failed");
 
         // Parameters should have changed
         assert!(optimizer.meta_state.meta_params != initial_params);

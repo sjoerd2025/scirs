@@ -151,7 +151,7 @@ impl Default for OpFusion {
 pub fn register_fusion<T: 'static>(op: Arc<dyn FusedOp>) -> Result<(), CoreError> {
     let type_id = TypeId::of::<T>();
 
-    let mut registry = FUSION_REGISTRY.lock().unwrap();
+    let mut registry = FUSION_REGISTRY.lock().expect("Operation failed");
     let ops = registry.entry(type_id).or_default();
     ops.push(op);
 
@@ -163,7 +163,7 @@ pub fn register_fusion<T: 'static>(op: Arc<dyn FusedOp>) -> Result<(), CoreError
 pub fn get_fusions<T: 'static>() -> Vec<Arc<dyn FusedOp>> {
     let type_id = TypeId::of::<T>();
 
-    let registry = FUSION_REGISTRY.lock().unwrap();
+    let registry = FUSION_REGISTRY.lock().expect("Operation failed");
     match registry.get(&type_id) {
         Some(ops) => ops.clone(),
         None => Vec::new(),

@@ -37,7 +37,7 @@ use scirs2_core::numeric::{Float, NumCast};
 /// ];
 ///
 /// // Calculate ICC using a two-way random effects model
-/// let (icc_val, conf_interval) = icc(&data.view(), 2, Some(0.95)).unwrap();
+/// let (icc_val, conf_interval) = icc(&data.view(), 2, Some(0.95)).expect("Operation failed");
 ///
 /// println!("ICC = {}", icc_val);
 /// println!("95% Confidence interval: [{}, {}]", conf_interval[0], conf_interval[1]);
@@ -76,7 +76,8 @@ where
     }
 
     // Set confidence level, default to 0.95
-    let alpha = F::one() - conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
+    let alpha = F::one()
+        - conf_level.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     // Calculate mean for each subject and rater
     let mut subject_means = vec![F::zero(); n];
@@ -89,7 +90,7 @@ where
         for j in 0..k {
             sum = sum + data[[i, j]];
         }
-        subject_means[i] = sum / F::from(k).unwrap();
+        subject_means[i] = sum / F::from(k).expect("Failed to convert to float");
         grand_mean = grand_mean + sum;
     }
 
@@ -99,11 +100,11 @@ where
         for i in 0..n {
             sum = sum + data[[i, j]];
         }
-        rater_means[j] = sum / F::from(n).unwrap();
+        rater_means[j] = sum / F::from(n).expect("Failed to convert to float");
     }
 
     // Calculate grand mean
-    grand_mean = grand_mean / F::from(n * k).unwrap();
+    grand_mean = grand_mean / F::from(n * k).expect("Failed to convert to float");
 
     // Calculate sum of squares
     let mut ss_total = F::zero();
@@ -119,21 +120,23 @@ where
 
     // Between-subjects sum of squares
     for &mean in subject_means.iter().take(n) {
-        ss_subjects = ss_subjects + F::from(k).unwrap() * (mean - grand_mean).powi(2);
+        ss_subjects = ss_subjects
+            + F::from(k).expect("Failed to convert to float") * (mean - grand_mean).powi(2);
     }
 
     // Between-raters sum of squares
     for &mean in rater_means.iter().take(k) {
-        ss_raters = ss_raters + F::from(n).unwrap() * (mean - grand_mean).powi(2);
+        ss_raters = ss_raters
+            + F::from(n).expect("Failed to convert to float") * (mean - grand_mean).powi(2);
     }
 
     // Residual (error) sum of squares
     let ss_residual = ss_total - ss_subjects - ss_raters;
 
     // Calculate mean squares
-    let ms_subjects = ss_subjects / F::from(n - 1).unwrap();
-    let ms_raters = ss_raters / F::from(k - 1).unwrap();
-    let ms_residual = ss_residual / F::from((n - 1) * (k - 1)).unwrap();
+    let ms_subjects = ss_subjects / F::from(n - 1).expect("Failed to convert to float");
+    let ms_raters = ss_raters / F::from(k - 1).expect("Failed to convert to float");
+    let ms_residual = ss_residual / F::from((n - 1) * (k - 1)).expect("Operation failed");
 
     // Calculate ICC based on the selected model
     let icc_val = match model {
@@ -143,14 +146,16 @@ where
             // ICC(1) = (MSB - MSW) / (MSB + (k-1)*MSW)
 
             // Recalculate for one-way model (ignoring rater effects)
-            let ms_within = (ss_raters + ss_residual) / F::from(n * (k - 1)).unwrap();
+            let ms_within =
+                (ss_raters + ss_residual) / F::from(n * (k - 1)).expect("Operation failed");
             let ms_between = ms_subjects;
 
             if ms_between <= ms_within {
                 // Handle case where between-variance is smaller than within-variance
                 F::zero() // Return 0 as the ICC value
             } else {
-                (ms_between - ms_within) / (ms_between + F::from(k - 1).unwrap() * ms_within)
+                (ms_between - ms_within)
+                    / (ms_between + F::from(k - 1).expect("Failed to convert to float") * ms_within)
             }
         }
         2 => {
@@ -164,8 +169,9 @@ where
             } else {
                 let numerator = ms_subjects - ms_residual;
                 let denominator = ms_subjects
-                    + F::from(k - 1).unwrap() * ms_residual
-                    + (F::from(k).unwrap() * (ms_raters - ms_residual)) / F::from(n).unwrap();
+                    + F::from(k - 1).expect("Failed to convert to float") * ms_residual
+                    + (F::from(k).expect("Failed to convert to float") * (ms_raters - ms_residual))
+                        / F::from(n).expect("Failed to convert to float");
                 numerator / denominator
             }
         }
@@ -178,7 +184,9 @@ where
                 // Handle case where between-variance is smaller than residual-variance
                 F::zero() // Return 0 as the ICC value
             } else {
-                (ms_subjects - ms_residual) / (ms_subjects + F::from(k - 1).unwrap() * ms_residual)
+                (ms_subjects - ms_residual)
+                    / (ms_subjects
+                        + F::from(k - 1).expect("Failed to convert to float") * ms_residual)
             }
         }
         _ => unreachable!(), // Already validated model parameter
@@ -187,14 +195,14 @@ where
     // Calculate confidence intervals
     // For ICC calculation, we use the F-distribution to compute confidence intervals
     let f_value_lower = f_distribution_quantile(
-        F::one() - alpha / F::from(2.0).unwrap(),
-        F::from(n - 1).unwrap(),
-        F::from((n - 1) * (k - 1)).unwrap(),
+        F::one() - alpha / F::from(2.0).expect("Failed to convert constant to float"),
+        F::from(n - 1).expect("Failed to convert to float"),
+        F::from((n - 1) * (k - 1)).expect("Operation failed"),
     );
     let f_value_upper = f_distribution_quantile(
-        alpha / F::from(2.0).unwrap(),
-        F::from(n - 1).unwrap(),
-        F::from((n - 1) * (k - 1)).unwrap(),
+        alpha / F::from(2.0).expect("Failed to convert constant to float"),
+        F::from(n - 1).expect("Failed to convert to float"),
+        F::from((n - 1) * (k - 1)).expect("Operation failed"),
     );
 
     // Different CI formulas based on the ICC model
@@ -205,10 +213,12 @@ where
             let f_u = f_value_upper;
 
             let lower = (f_l * ms_subjects - ms_residual)
-                / (f_l * ms_subjects + F::from(k - 1).unwrap() * ms_residual);
+                / (f_l * ms_subjects
+                    + F::from(k - 1).expect("Failed to convert to float") * ms_residual);
 
             let upper = (f_u * ms_subjects - ms_residual)
-                / (f_u * ms_subjects + F::from(k - 1).unwrap() * ms_residual);
+                / (f_u * ms_subjects
+                    + F::from(k - 1).expect("Failed to convert to float") * ms_residual);
 
             (lower.max(F::zero()), upper.min(F::one()))
         }
@@ -219,13 +229,15 @@ where
 
             let lower = (f_l * ms_subjects - ms_residual)
                 / (f_l * ms_subjects
-                    + F::from(k - 1).unwrap() * ms_residual
-                    + F::from(k).unwrap() * (ms_raters - ms_residual) / F::from(n).unwrap());
+                    + F::from(k - 1).expect("Failed to convert to float") * ms_residual
+                    + F::from(k).expect("Failed to convert to float") * (ms_raters - ms_residual)
+                        / F::from(n).expect("Failed to convert to float"));
 
             let upper = (f_u * ms_subjects - ms_residual)
                 / (f_u * ms_subjects
-                    + F::from(k - 1).unwrap() * ms_residual
-                    + F::from(k).unwrap() * (ms_raters - ms_residual) / F::from(n).unwrap());
+                    + F::from(k - 1).expect("Failed to convert to float") * ms_residual
+                    + F::from(k).expect("Failed to convert to float") * (ms_raters - ms_residual)
+                        / F::from(n).expect("Failed to convert to float"));
 
             (lower.max(F::zero()), upper.min(F::one()))
         }
@@ -235,10 +247,12 @@ where
             let f_u = f_value_upper;
 
             let lower = (f_l * ms_subjects - ms_residual)
-                / (f_l * ms_subjects + F::from(k - 1).unwrap() * ms_residual);
+                / (f_l * ms_subjects
+                    + F::from(k - 1).expect("Failed to convert to float") * ms_residual);
 
             let upper = (f_u * ms_subjects - ms_residual)
-                / (f_u * ms_subjects + F::from(k - 1).unwrap() * ms_residual);
+                / (f_u * ms_subjects
+                    + F::from(k - 1).expect("Failed to convert to float") * ms_residual);
 
             (lower.max(F::zero()), upper.min(F::one()))
         }
@@ -251,9 +265,9 @@ where
 // Helper function: F-distribution quantile function (using approximation)
 #[allow(dead_code)]
 fn f_distribution_quantile<F: Float + NumCast>(p: F, df1: F, df2: F) -> F {
-    let p_f64 = <f64 as NumCast>::from(p).unwrap();
-    let df1_f64 = <f64 as NumCast>::from(df1).unwrap();
-    let df2_f64 = <f64 as NumCast>::from(df2).unwrap();
+    let p_f64 = <f64 as NumCast>::from(p).expect("Operation failed");
+    let df1_f64 = <f64 as NumCast>::from(df1).expect("Operation failed");
+    let df2_f64 = <f64 as NumCast>::from(df2).expect("Operation failed");
 
     // Approximation of F-quantile function
     // This is a simple approximation based on normal approximation
@@ -261,10 +275,10 @@ fn f_distribution_quantile<F: Float + NumCast>(p: F, df1: F, df2: F) -> F {
 
     // Special cases
     if p_f64 <= 0.0 {
-        return F::from(0.0).unwrap();
+        return F::from(0.0).expect("Failed to convert constant to float");
     }
     if p_f64 >= 1.0 {
-        return F::from(1e10).unwrap(); // Very large value
+        return F::from(1e10).expect("Failed to convert constant to float"); // Very large value
     }
 
     // Simple approximation based on Wilson-Hilferty
@@ -277,7 +291,7 @@ fn f_distribution_quantile<F: Float + NumCast>(p: F, df1: F, df2: F) -> F {
 
     let res = ((1.0 - b) * ((1.0 - c).powi(3) / (1.0 - a))).powi(-1);
 
-    F::from(res).unwrap()
+    F::from(res).expect("Failed to convert to float")
 }
 
 // Helper function: Normal quantile function (inverse of CDF)

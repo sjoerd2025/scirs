@@ -112,15 +112,16 @@ mod integration_tests {
         // Test a complete numerical stability workflow using the modular API
         let matrix =
             Array2::from_shape_vec((3, 3), vec![2.0, 1.0, 0.0, 1.0, 3.0, 1.0, 0.0, 1.0, 2.0])
-                .unwrap();
+                .expect("Operation failed");
         let rhs = Array1::from_vec(vec![1.0, 2.0, 1.0]);
 
         // Assess matrix condition
-        let condition_report = assess_matrix_condition(&matrix.view()).unwrap();
+        let condition_report = assess_matrix_condition(&matrix.view()).expect("Operation failed");
         assert!(condition_report.is_well_conditioned);
 
         // Solve with stability monitoring
-        let solution = solve_with_stability_monitoring(&matrix.view(), &rhs.view()).unwrap();
+        let solution =
+            solve_with_stability_monitoring(&matrix.view(), &rhs.view()).expect("Operation failed");
 
         // Verify solution quality
         assert_eq!(solution.len(), 3);
@@ -138,10 +139,11 @@ mod integration_tests {
                 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0, // Collinear points
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let values = Array1::from_vec(vec![0.0, 1.0, 4.0, 9.0, 16.0]); // y = x^2
 
-        let analysis = analyze_interpolation_edge_cases(&points.view(), &values.view()).unwrap();
+        let analysis = analyze_interpolation_edge_cases(&points.view(), &values.view())
+            .expect("Operation failed");
 
         assert!(analysis.data_points.is_collinear);
         assert!(analysis.function_values.is_smooth);
@@ -166,19 +168,23 @@ mod integration_tests {
                 1.0 + 1e-15, // Nearly singular
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let condition_report = assess_matrix_condition(&ill_conditioned.view()).unwrap();
+        let condition_report =
+            assess_matrix_condition(&ill_conditioned.view()).expect("Operation failed");
         assert!(!condition_report.is_well_conditioned);
         assert!(condition_report.recommended_regularization.is_some());
 
         // Apply regularization
-        let reg_param = condition_report.recommended_regularization.unwrap();
-        let regularized =
-            apply_tikhonov_regularization(&ill_conditioned.view(), reg_param).unwrap();
+        let reg_param = condition_report
+            .recommended_regularization
+            .expect("Operation failed");
+        let regularized = apply_tikhonov_regularization(&ill_conditioned.view(), reg_param)
+            .expect("Operation failed");
 
         // Check that regularization improved the matrix
-        let regularized_condition = assess_matrix_condition(&regularized.view()).unwrap();
+        let regularized_condition =
+            assess_matrix_condition(&regularized.view()).expect("Operation failed");
         assert!(regularized_condition.condition_number < condition_report.condition_number);
     }
 
@@ -191,10 +197,11 @@ mod integration_tests {
                 0.0, 0.0, 1.0, 1.0, 2.0, 4.0, 3.0, 9.0, 4.0, 16.0, 5.0, 25.0, // y = x^2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let values = Array1::from_vec(vec![0.0, 1.0, 4.0, 9.0, 16.0, 25.0]);
 
-        let report = analyze_interpolation_data(&points.view(), &values.view()).unwrap();
+        let report =
+            analyze_interpolation_data(&points.view(), &values.view()).expect("Operation failed");
 
         assert!(!report.data_points.is_collinear);
         assert!(report.function_values.is_smooth);
@@ -219,11 +226,11 @@ mod integration_tests {
                 4.0, 1.0, 0.0, 1.0, 4.0, 1.0, 0.0, 1.0, 4.0, // Well-conditioned tridiagonal
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let rhs = Array1::from_vec(vec![5.0, 6.0, 5.0]);
 
         let (solution, report) =
-            solve_with_enhanced_monitoring(&matrix.view(), &rhs.view()).unwrap();
+            solve_with_enhanced_monitoring(&matrix.view(), &rhs.view()).expect("Operation failed");
 
         // Check solution quality
         assert_eq!(solution.len(), 3);
@@ -244,10 +251,11 @@ mod integration_tests {
     #[test]
     fn test_sampling_density_analysis() {
         // Test sampling density analysis
-        let sparse_points =
-            Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 5.0, 0.0, 10.0, 0.0]).unwrap();
+        let sparse_points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 5.0, 0.0, 10.0, 0.0])
+            .expect("Operation failed");
 
-        let analysis = analyze_sampling_density(&sparse_points.view(), 0.1).unwrap();
+        let analysis =
+            analyze_sampling_density(&sparse_points.view(), 0.1).expect("Operation failed");
 
         assert!(analysis.current_density > 0.0);
         assert!(analysis.recommended_density > 0.0);
@@ -259,15 +267,15 @@ mod integration_tests {
     fn test_noise_analysis() {
         // Test with clean data
         let clean_values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
-        let clean_analysis =
-            data_analysis::analyze_noise_characteristics(&clean_values.view()).unwrap();
+        let clean_analysis = data_analysis::analyze_noise_characteristics(&clean_values.view())
+            .expect("Operation failed");
         assert!(!clean_analysis.is_noisy);
         assert_eq!(clean_analysis.denoising_strategy, DenoisingStrategy::None);
 
         // Test with noisy data
         let noisy_values = Array1::from_vec(vec![0.1, 0.9, 2.1, 2.95, 4.05]);
-        let noisy_analysis =
-            data_analysis::analyze_noise_characteristics(&noisy_values.view()).unwrap();
+        let noisy_analysis = data_analysis::analyze_noise_characteristics(&noisy_values.view())
+            .expect("Operation failed");
         assert!(noisy_analysis.estimated_noise_level > 0.0);
         assert!(noisy_analysis.signal_noise_ratio < f64::INFINITY);
     }
@@ -278,7 +286,7 @@ mod integration_tests {
 
         // Test that prelude imports work correctly
         let matrix = Array2::<f64>::eye(2);
-        let report = assess_matrix_condition(&matrix.view()).unwrap();
+        let report = assess_matrix_condition(&matrix.view()).expect("Operation failed");
         assert_eq!(report.stability_level, StabilityLevel::Excellent);
 
         let eps = machine_epsilon::<f64>();

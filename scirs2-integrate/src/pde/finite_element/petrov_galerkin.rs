@@ -145,17 +145,17 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
         let mut y_coords = Array1::<f64>::zeros(n_nodes);
         
         for i in 0..n_nodes {
-            x_coords[i] = self.nodes[[i, 0]].to_f64().unwrap();
-            y_coords[i] = self.nodes[[i, 1]].to_f64().unwrap();
+            x_coords[i] = self.nodes[[i, 0]].to_f64().expect("Operation failed");
+            y_coords[i] = self.nodes[[i, 1]].to_f64().expect("Operation failed");
         }
         
         // Get unique sorted coordinates for structured grid
         let mut unique_x: Vec<f64> = x_coords.to_vec();
-        unique_x.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        unique_x.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         unique_x.dedup();
         
         let mut unique_y: Vec<f64> = y_coords.to_vec();
-        unique_y.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        unique_y.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         unique_y.dedup();
         
         Ok(PDESolution {
@@ -192,7 +192,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
         
         // Compute element geometry
         let (det_j, inv_j) = self.compute_jacobian(&node_coords)?;
-        let area = det_j.abs() / F::from(2.0).unwrap(); // For triangular elements
+        let area = det_j.abs() / F::from(2.0).expect("Failed to convert constant to float"); // For triangular elements
         
         // SUPG stabilization parameter
         let tau_supg = tau.unwrap_or_else(|| self.compute_supg_tau(convection, diffusion, &node_coords));
@@ -262,13 +262,13 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
         
         if b_magnitude > F::zero() {
             // Element Peclet number
-            let pe = b_magnitude * h / (F::from(2.0).unwrap() * diffusion);
+            let pe = b_magnitude * h / (F::from(2.0).expect("Failed to convert constant to float") * diffusion);
             
             // SUPG parameter: τ = h/(2|b|) * coth(Pe) - 1/(2Pe)
-            if pe > F::from(1.0).unwrap() {
-                h / (F::from(2.0).unwrap() * b_magnitude)
+            if pe > F::from(1.0).expect("Failed to convert constant to float") {
+                h / (F::from(2.0).expect("Failed to convert constant to float") * b_magnitude)
             } else {
-                h * h / (F::from(12.0).unwrap() * diffusion)
+                h * h / (F::from(12.0).expect("Failed to convert constant to float") * diffusion)
             }
         } else {
             F::zero()
@@ -369,7 +369,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
         
         let det_j = j11 * j22 - j12 * j21;
         
-        if det_j.abs() < F::from(1e-12).unwrap() {
+        if det_j.abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return Err(IntegrateError::ComputationError(
                 "Degenerate element (zero Jacobian)".to_string()
             ));
@@ -422,18 +422,18 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
     fn get_gauss_points() -> Vec<[F; 2]> {
         // 3-point Gauss rule for triangles
         vec![
-            [F::from(1.0/6.0).unwrap(), F::from(1.0/6.0).unwrap()],
-            [F::from(2.0/3.0).unwrap(), F::from(1.0/6.0).unwrap()],
-            [F::from(1.0/6.0).unwrap(), F::from(2.0/3.0).unwrap()],
+            [F::from(1.0/6.0).expect("Failed to convert to float"), F::from(1.0/6.0).expect("Failed to convert to float")],
+            [F::from(2.0/3.0).expect("Failed to convert to float"), F::from(1.0/6.0).expect("Failed to convert to float")],
+            [F::from(1.0/6.0).expect("Failed to convert to float"), F::from(2.0/3.0).expect("Failed to convert to float")],
         ]
     }
     
     /// Gauss integration weights for triangular elements
     fn get_gauss_weights() -> Vec<F> {
         vec![
-            F::from(1.0/6.0).unwrap(),
-            F::from(1.0/6.0).unwrap(),
-            F::from(1.0/6.0).unwrap(),
+            F::from(1.0/6.0).expect("Failed to convert to float"),
+            F::from(1.0/6.0).expect("Failed to convert to float"),
+            F::from(1.0/6.0).expect("Failed to convert to float"),
         ]
     }
     
@@ -506,7 +506,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
                             if node1 < stiffness.nrows() && node2 < stiffness.nrows() {
                                 // Constraint: u[node1] - u[node2] = 0
                                 // Add penalty method: λ(u₁ - u₂) = 0
-                                let penalty = F::from(1e6).unwrap(); // Large penalty parameter
+                                let penalty = F::from(1e6).expect("Failed to convert constant to float"); // Large penalty parameter
                                 
                                 stiffness[[node1, node1]] = stiffness[[node1, node1]] + penalty;
                                 stiffness[[node2, node2]] = stiffness[[node2, node2]] + penalty;
@@ -526,7 +526,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
     fn estimate_boundary_length_at_node(_nodeidx: usize) -> F {
         // Simplified estimate - in a complete implementation this would
         // compute the actual boundary segment length associated with the node
-        F::from(0.1).unwrap() // Default boundary segment length
+        F::from(0.1).expect("Failed to convert constant to float") // Default boundary segment length
     }
     
     /// Solve linear system Ax = b
@@ -563,7 +563,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
             }
             
             // Check for singular matrix
-            if aug[[k, k]].abs() < F::from(1e-12).unwrap() {
+            if aug[[k, k]].abs() < F::from(1e-12).expect("Failed to convert constant to float") {
                 return Err(IntegrateError::ComputationError(
                     "Singular matrix in linear system".to_string()
                 ));
@@ -646,9 +646,9 @@ mod tests {
             0.0, 0.0,
             1.0, 0.0,
             0.0, 1.0,
-        ]).unwrap();
+        ]).expect("Operation failed");
         
-        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).unwrap();
+        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).expect("Operation failed");
         
         let formulation = StabilizedFormulations::supg((1.0, 0.0), 0.1);
         let solver = PetrovGalerkinSolver::new(formulation, nodes, elements, 1, 1);
@@ -672,14 +672,14 @@ mod tests {
             0.0, 0.0,
             1.0, 0.0,
             0.0, 1.0,
-        ]).unwrap();
+        ]).expect("Operation failed");
         
-        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).unwrap();
+        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).expect("Operation failed");
         let formulation = StabilizedFormulations::supg((1.0, 0.0), 0.1);
         let solver = PetrovGalerkinSolver::new(formulation, nodes, elements, 1, 1);
         
-        let element_coords = solver.get_element_coordinates(elements.row(0)).unwrap();
-        let (det_j_inv_j) = solver.compute_jacobian(&element_coords).unwrap();
+        let element_coords = solver.get_element_coordinates(elements.row(0)).expect("Operation failed");
+        let (det_j_inv_j) = solver.compute_jacobian(&element_coords).expect("Operation failed");
         
         // For unit right triangle, Jacobian determinant should be 1
         assert_abs_diff_eq!(det_j, 1.0, epsilon = 1e-10);

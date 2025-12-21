@@ -847,7 +847,7 @@ impl PerformanceMonitor {
     }
 
     fn get_current_metrics(&self) -> PerformanceMetrics {
-        self.metrics.read().unwrap().clone()
+        self.metrics.read().expect("Operation failed").clone()
     }
 }
 
@@ -977,20 +977,18 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_strategy_selection() {
         let processor = AdvancedParallelProcessor::<f64>::new();
         let smalldata = Array2::<f64>::zeros((10, 10));
         let strategy = processor
             .select_optimal_strategy(&smalldata.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Should select CPU optimal for small data
         assert!(matches!(strategy, ParallelStrategy::CpuOptimal));
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_monitor() {
         let monitor = PerformanceMonitor::new();
         let metrics = monitor.get_current_metrics();

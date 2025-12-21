@@ -141,7 +141,7 @@ where
     let planner = PLANNER_CACHE.get_or_init(|| std::sync::Mutex::new(FftPlanner::new()));
     
     let fft_plan = {
-        let mut planner = planner.lock().unwrap();
+        let mut planner = planner.lock().expect("Operation failed");
         planner.plan_fft_forward(fft_size)
     };
     
@@ -245,7 +245,7 @@ where
     let planner = PLANNER_CACHE.get_or_init(|| std::sync::Mutex::new(FftPlanner::new()));
     
     let ifft_plan = {
-        let mut planner = planner.lock().unwrap();
+        let mut planner = planner.lock().expect("Operation failed");
         planner.plan_fft_inverse(fft_size)
     };
     

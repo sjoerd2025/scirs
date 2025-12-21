@@ -54,7 +54,7 @@ fn main() {
         Some(num_classes),
         Some(class_labels),
     )
-    .unwrap();
+    .expect("Operation failed");
     // Example 1: Standard confusion matrix
     println!("Example 1: Standard Confusion Matrix\n");
     let regular_output = cm.to_ascii(Some("Animal Classification Results"), false);

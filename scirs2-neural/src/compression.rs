@@ -107,11 +107,11 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
         // Create histogram for distribution analysis
         let num_bins = 2048;
         let range = max_val - min_val;
-        let bin_width = range / F::from(num_bins).unwrap();
+        let bin_width = range / F::from(num_bins).expect("Failed to convert to float");
         let mut histogram = vec![0u32; num_bins];
         let mut bin_edges = Vec::with_capacity(num_bins + 1);
         for i in 0..=num_bins {
-            bin_edges.push(min_val + bin_width * F::from(i).unwrap());
+            bin_edges.push(min_val + bin_width * F::from(i).expect("Failed to convert to float"));
         // Fill histogram
         for &val in activations.iter() {
             if val.is_finite() {
@@ -158,10 +158,10 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
         let (scale, zero_point) = match self.scheme {
             QuantizationScheme::Symmetric => {
                 let max_abs = F::max(min_val.abs(), max_val.abs());
-                let scale = max_abs / F::from(qmax).unwrap();
+                let scale = max_abs / F::from(qmax).expect("Failed to convert to float");
                 (scale, 0i32)
             QuantizationScheme::Asymmetric => {
-                let scale = (max_val - min_val) / F::from(qmax - qmin).unwrap();
+                let scale = (max_val - min_val) / F::from(qmax - qmin).expect("Failed to convert to float");
                 let zero_point = qmin - (min_val / scale).round().to_i32().unwrap_or(0);
                 (scale, zero_point)
             QuantizationScheme::Dynamic => {
@@ -219,10 +219,10 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
         if total_count == 0 {
             return F::infinity();
         for i in start..end {
-            let p = F::from(stats.histogram[i]).unwrap() / F::from(total_count).unwrap();
+            let p = F::from(stats.histogram[i]).expect("Failed to convert to float") / F::from(total_count).expect("Failed to convert to float");
             if p > F::zero() {
                 // Assume uniform quantized distribution for simplicity
-                let q = F::one() / F::from(end - start).unwrap();
+                let q = F::one() / F::from(end - start).expect("Failed to convert to float");
                 kl_div = kl_div + p * (p / q).ln();
         kl_div
     fn compute_entropy_optimal_range(&self, stats: &CalibrationStatistics<F>) -> Result<(F, F)> {
@@ -245,10 +245,10 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
             NeuralError::ComputationError("Quantization params not found".to_string())
         let quantized = tensor.mapv(|x| {
             let scaled = x / params.scale;
-            let shifted = scaled + F::from(params.zero_point).unwrap();
+            let shifted = scaled + F::from(params.zero_point).expect("Failed to convert to float");
             let clamped = shifted
-                .max(F::from(params.qmin).unwrap())
-                .min(F::from(params.qmax).unwrap());
+                .max(F::from(params.qmin).expect("Failed to convert to float"))
+                .min(F::from(params.qmax).expect("Failed to convert to float"));
             clamped.round().to_i32().unwrap_or(0)
         });
         Ok(quantized)
@@ -258,7 +258,7 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
         quantized: &ArrayD<i32>,
     ) -> Result<ArrayD<F>> {
         let dequantized = quantized.mapv(|q| {
-            let shifted = F::from(q).unwrap() - F::from(params.zero_point).unwrap();
+            let shifted = F::from(q).expect("Failed to convert to float") - F::from(params.zero_point).expect("Failed to convert to float");
             shifted * params.scale
         Ok(dequantized)
     /// Get compression ratio achieved
@@ -403,7 +403,7 @@ impl<F: Float + Debug + 'static> ModelPruner<F> {
             let channel_slice = weights.slice(scirs2_core::ndarray::s![i, ..]);
             let l2_norm = channel_slice.mapv(|x| x * x).sum().sqrt();
             // Simple heuristic: prune channels with norm below median
-            let threshold = F::from(0.1).unwrap(); // Simplified threshold
+            let threshold = F::from(0.1).expect("Failed to convert constant to float"); // Simplified threshold
             if l2_norm < threshold {
                 mask.slice_mut(scirs2_core::ndarray::s![i, ..]).fill(false);
     fn filter_wise_mask(&self, weights: &ArrayD<F>) -> Result<ArrayD<bool>> {
@@ -423,7 +423,7 @@ impl<F: Float + Debug + 'static> ModelPruner<F> {
                 let block = weights.slice(scirs2_core::ndarray::s![i..end_i, j..end_j]);
                 let block_norm = block.mapv(|x| x * x).sum().sqrt();
                 // Keep block if norm is above threshold
-                let threshold = F::from(0.1).unwrap();
+                let threshold = F::from(0.1).expect("Failed to convert constant to float");
                 if block_norm >= threshold {
                     mask.slice_mut(scirs2_core::ndarray::s![i..end_i, j..end_j]).fill(true);
     fn compute_gradual_sparsity(
@@ -570,13 +570,13 @@ mod tests {
         );
         let activations =
             Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64 / 10.0).collect())
-                .unwrap()
+                .expect("Operation failed")
                 .into_dyn();
         quantizer
             .calibrate("layer1".to_string(), &activations)
-            .unwrap();
-        let quantized = quantizer.quantize_tensor("layer1", &activations).unwrap();
-        let dequantized = quantizer.dequantize_tensor("layer1", &quantized).unwrap();
+            .expect("Operation failed");
+        let quantized = quantizer.quantize_tensor("layer1", &activations).expect("Operation failed");
+        let dequantized = quantizer.dequantize_tensor("layer1", &quantized).expect("Operation failed");
         assert_eq!(quantized.shape(), activations.shape());
         assert_eq!(dequantized.shape(), activations.shape());
         let compression_ratio = quantizer.get_compression_ratio();
@@ -599,7 +599,7 @@ mod tests {
     fn test_top_k_pruning() {
         let mut pruner = ModelPruner::<f64>::new(PruningMethod::TopK { k: 3 });
         let weights = Array2::from_shape_vec((2, 3), vec![0.1, 0.6, 0.3, 0.8, 0.2, 0.7])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         // Should keep 3 largest weights: 0.8, 0.7, 0.6
         let kept_count = mask.iter().filter(|&&x| x).count();

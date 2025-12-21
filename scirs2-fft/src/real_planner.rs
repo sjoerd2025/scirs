@@ -127,7 +127,7 @@ impl RealToComplex<f64> for RealFftPlanF64 {
         let mut buffer: Vec<Complex<f64>> = input.iter().map(|&x| Complex::new(x, 0.0)).collect();
 
         // Get FFT plan and process
-        let mut planner = self.planner.lock().unwrap();
+        let mut planner = self.planner.lock().expect("Operation failed");
         let fft = planner.plan_fft_forward(self.length);
         drop(planner); // Release lock before processing
 
@@ -193,7 +193,7 @@ impl ComplexToReal<f64> for InverseRealFftPlanF64 {
         }
 
         // Get inverse FFT plan and process
-        let mut planner = self.planner.lock().unwrap();
+        let mut planner = self.planner.lock().expect("Operation failed");
         let ifft = planner.plan_fft_inverse(self.length);
         drop(planner); // Release lock before processing
 
@@ -245,7 +245,7 @@ impl RealToComplex<f32> for RealFftPlanF32 {
         let mut buffer: Vec<Complex<f32>> = input.iter().map(|&x| Complex::new(x, 0.0)).collect();
 
         // Get FFT plan and process
-        let mut planner = self.planner.lock().unwrap();
+        let mut planner = self.planner.lock().expect("Operation failed");
         let fft = planner.plan_fft_forward(self.length);
         drop(planner); // Release lock before processing
 
@@ -311,7 +311,7 @@ impl ComplexToReal<f32> for InverseRealFftPlanF32 {
         }
 
         // Get inverse FFT plan and process
-        let mut planner = self.planner.lock().unwrap();
+        let mut planner = self.planner.lock().expect("Operation failed");
         let ifft = planner.plan_fft_inverse(self.length);
         drop(planner); // Release lock before processing
 
@@ -528,8 +528,8 @@ mod tests {
         let (peak_idx, &peak_mag) = magnitudes
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
 
         assert_eq!(
             peak_idx, freq_index,

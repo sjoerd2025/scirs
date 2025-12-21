@@ -40,10 +40,10 @@ pub type CrossValidationFolds = Vec<(Vec<usize>, Vec<usize>)>;
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::{Dataset, train_test_split};
 ///
-/// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).expect("Operation failed");
 /// let dataset = Dataset::new(data, None);
 ///
-/// let (train, test) = train_test_split(&dataset, 0.3, Some(42)).unwrap();
+/// let (train, test) = train_test_split(&dataset, 0.3, Some(42)).expect("Operation failed");
 /// assert_eq!(train.n_samples() + test.n_samples(), 10);
 /// ```
 #[allow(dead_code)]
@@ -140,7 +140,7 @@ pub fn train_test_split(
 /// ```rust
 /// use scirs2_datasets::utils::k_fold_split;
 ///
-/// let folds = k_fold_split(10, 3, true, Some(42)).unwrap();
+/// let folds = k_fold_split(10, 3, true, Some(42)).expect("Operation failed");
 /// assert_eq!(folds.len(), 3);
 ///
 /// // Each fold should have roughly equal size
@@ -224,7 +224,7 @@ pub fn k_fold_split(
 /// use scirs2_datasets::utils::stratified_k_fold_split;
 ///
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0]);
-/// let folds = stratified_k_fold_split(&targets, 2, true, Some(42)).unwrap();
+/// let folds = stratified_k_fold_split(&targets, 2, true, Some(42)).expect("Operation failed");
 /// assert_eq!(folds.len(), 2);
 ///
 /// // Each fold should maintain class proportions
@@ -330,7 +330,7 @@ pub fn stratified_k_fold_split(
 /// ```rust
 /// use scirs2_datasets::utils::time_series_split;
 ///
-/// let folds = time_series_split(100, 5, 10, 0).unwrap();
+/// let folds = time_series_split(100, 5, 10, 0).expect("Operation failed");
 /// assert_eq!(folds.len(), 5);
 ///
 /// // Training sets should be increasing in size
@@ -407,7 +407,7 @@ mod tests {
         let target = Some(array![0.0, 1.0, 0.0, 1.0, 0.0]);
         let dataset = Dataset::new(data, target);
 
-        let (train, test) = train_test_split(&dataset, 0.4, Some(42)).unwrap();
+        let (train, test) = train_test_split(&dataset, 0.4, Some(42)).expect("Operation failed");
 
         assert_eq!(train.n_samples() + test.n_samples(), 5);
         assert_eq!(test.n_samples(), 2); // 40% of 5 samples
@@ -427,7 +427,7 @@ mod tests {
 
     #[test]
     fn test_k_fold_split() {
-        let folds = k_fold_split(10, 3, false, Some(42)).unwrap();
+        let folds = k_fold_split(10, 3, false, Some(42)).expect("Operation failed");
 
         assert_eq!(folds.len(), 3);
 
@@ -454,7 +454,8 @@ mod tests {
     #[test]
     fn test_stratified_k_fold_split() {
         let targets = array![0.0, 0.0, 1.0, 1.0, 0.0, 1.0]; // 3 class 0, 3 class 1
-        let folds = stratified_k_fold_split(&targets, 2, false, Some(42)).unwrap();
+        let folds =
+            stratified_k_fold_split(&targets, 2, false, Some(42)).expect("Operation failed");
 
         assert_eq!(folds.len(), 2);
 
@@ -471,7 +472,7 @@ mod tests {
 
     #[test]
     fn test_time_series_split() {
-        let folds = time_series_split(20, 3, 5, 1).unwrap();
+        let folds = time_series_split(20, 3, 5, 1).expect("Operation failed");
 
         assert_eq!(folds.len(), 3);
 

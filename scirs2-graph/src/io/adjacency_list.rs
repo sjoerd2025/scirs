@@ -29,14 +29,14 @@
 //! use scirs2_graph::io::adjacency_list::{read_adjacency_list_format, write_adjacency_list_format};
 //!
 //! // Create a temporary file with adjacency list data
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, "1: 2 3").unwrap();
-//! writeln!(temp_file, "2: 1 3").unwrap();
-//! writeln!(temp_file, "3: 1 2").unwrap();
-//! temp_file.flush().unwrap();
+//! let mut temp_file = NamedTempFile::new().expect("Operation failed");
+//! writeln!(temp_file, "1: 2 3").expect("Operation failed");
+//! writeln!(temp_file, "2: 1 3").expect("Operation failed");
+//! writeln!(temp_file, "3: 1 2").expect("Operation failed");
+//! temp_file.flush().expect("Operation failed");
 //!
 //! // Read the graph
-//! let graph: Graph<i32, i32> = read_adjacency_list_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, i32> = read_adjacency_list_format(temp_file.path(), false).expect("Operation failed");
 //! assert_eq!(graph.node_count(), 3);
 //! assert_eq!(graph.edge_count(), 3); // Each edge is only stored once in undirected graph
 //! ```
@@ -484,14 +484,15 @@ mod tests {
 
     #[test]
     fn test_read_unweighted_adjacency_list() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "# Test adjacency list").unwrap();
-        writeln!(temp_file, "1: 2 3").unwrap();
-        writeln!(temp_file, "2: 1 3").unwrap();
-        writeln!(temp_file, "3: 1 2").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "# Test adjacency list").expect("Operation failed");
+        writeln!(temp_file, "1: 2 3").expect("Operation failed");
+        writeln!(temp_file, "2: 1 3").expect("Operation failed");
+        writeln!(temp_file, "3: 1 2").expect("Operation failed");
+        temp_file.flush().expect("Operation failed");
 
-        let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_adjacency_list_format(temp_file.path(), false).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3); // Each undirected edge stored once
@@ -499,12 +500,13 @@ mod tests {
 
     #[test]
     fn test_read_weighted_adjacency_list() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1: 2 0.5 3 1.0").unwrap();
-        writeln!(temp_file, "2: 1 0.5").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "1: 2 0.5 3 1.0").expect("Operation failed");
+        writeln!(temp_file, "2: 1 0.5").expect("Operation failed");
+        temp_file.flush().expect("Operation failed");
 
-        let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), true).unwrap();
+        let graph: Graph<i32, f64> =
+            read_adjacency_list_format(temp_file.path(), true).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
@@ -512,14 +514,14 @@ mod tests {
 
     #[test]
     fn test_read_directed_adjacency_list() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1: 2 3").unwrap();
-        writeln!(temp_file, "2: 3").unwrap();
-        writeln!(temp_file, "3:").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "1: 2 3").expect("Operation failed");
+        writeln!(temp_file, "2: 3").expect("Operation failed");
+        writeln!(temp_file, "3:").expect("Operation failed");
+        temp_file.flush().expect("Operation failed");
 
         let graph: DiGraph<i32, f64> =
-            read_adjacency_list_format_digraph(temp_file.path(), false).unwrap();
+            read_adjacency_list_format_digraph(temp_file.path(), false).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3); // Directed edges
@@ -528,14 +530,19 @@ mod tests {
     #[test]
     fn test_write_read_roundtrip() {
         let mut original_graph: Graph<i32, f64> = Graph::new();
-        original_graph.add_edge(1i32, 2i32, 0.0f64).unwrap();
-        original_graph.add_edge(2i32, 3i32, 0.0f64).unwrap();
+        original_graph
+            .add_edge(1i32, 2i32, 0.0f64)
+            .expect("Operation failed");
+        original_graph
+            .add_edge(2i32, 3i32, 0.0f64)
+            .expect("Operation failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
-        write_adjacency_list_format(&original_graph, temp_file.path(), false).unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
+        write_adjacency_list_format(&original_graph, temp_file.path(), false)
+            .expect("Operation failed");
 
         let read_graph: Graph<i32, f64> =
-            read_adjacency_list_format(temp_file.path(), false).unwrap();
+            read_adjacency_list_format(temp_file.path(), false).expect("Operation failed");
 
         assert_eq!(read_graph.node_count(), original_graph.node_count());
         assert_eq!(read_graph.edge_count(), original_graph.edge_count());
@@ -543,9 +550,9 @@ mod tests {
 
     #[test]
     fn test_malformed_line_handling() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1 2 3").unwrap(); // Missing colon
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "1 2 3").expect("Operation failed"); // Missing colon
+        temp_file.flush().expect("Operation failed");
 
         let result: Result<Graph<i32, f64>> = read_adjacency_list_format(temp_file.path(), false);
         assert!(result.is_err());
@@ -553,9 +560,10 @@ mod tests {
 
     #[test]
     fn test_empty_file() {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
 
-        let graph: Graph<i32, f64> = read_adjacency_list_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_adjacency_list_format(temp_file.path(), false).expect("Operation failed");
         assert_eq!(graph.node_count(), 0);
         assert_eq!(graph.edge_count(), 0);
     }

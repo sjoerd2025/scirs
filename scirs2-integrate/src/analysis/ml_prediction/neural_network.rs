@@ -500,7 +500,7 @@ impl BifurcationPredictionNetwork {
         let max_idx = output
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
             .unwrap_or(0);
 

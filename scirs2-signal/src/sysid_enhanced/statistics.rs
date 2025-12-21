@@ -480,7 +480,7 @@ mod tests {
     #[test]
     fn test_polynomial_roots_linear() {
         let coeffs = Array1::from_vec(vec![1.0, -2.0]); // x - 2 = 0
-        let roots = compute_polynomial_roots(&coeffs).unwrap();
+        let roots = compute_polynomial_roots(&coeffs).expect("Operation failed");
 
         assert_eq!(roots.len(), 1);
         assert!((roots[0].re - 2.0).abs() < 1e-10);
@@ -490,7 +490,7 @@ mod tests {
     #[test]
     fn test_polynomial_roots_quadratic() {
         let coeffs = Array1::from_vec(vec![1.0, -3.0, 2.0]); // x² - 3x + 2 = 0
-        let roots = compute_polynomial_roots(&coeffs).unwrap();
+        let roots = compute_polynomial_roots(&coeffs).expect("Operation failed");
 
         assert_eq!(roots.len(), 2);
         // Roots should be 1 and 2
@@ -502,7 +502,7 @@ mod tests {
     #[test]
     fn test_information_criteria() {
         let residuals = Array1::from_vec(vec![0.1, -0.2, 0.3, -0.1, 0.0]);
-        let (aic, bic, fpe) = compute_information_criteria(&residuals, 2).unwrap();
+        let (aic, bic, fpe) = compute_information_criteria(&residuals, 2).expect("Operation failed");
 
         assert!(aic.is_finite());
         assert!(bic.is_finite());

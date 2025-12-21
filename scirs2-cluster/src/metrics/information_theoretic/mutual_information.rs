@@ -33,7 +33,7 @@ use crate::error::{ClusteringError, Result};
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 ///
-/// let mi: f64 = mutual_info_score(true_labels.view(), pred_labels.view()).unwrap();
+/// let mi: f64 = mutual_info_score(true_labels.view(), pred_labels.view()).expect("Operation failed");
 /// assert!(mi > 0.0);
 /// ```
 pub fn mutual_info_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
@@ -54,7 +54,7 @@ where
     // Create contingency table
     let contingency = build_contingency_table(labels_true, labels_pred);
     let mut mi = F::zero();
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
 
     // Calculate marginal probabilities
     let mut row_sums = HashMap::new();
@@ -69,9 +69,9 @@ where
         if n_ij > 0 {
             let n_i = row_sums[&i];
             let n_j = col_sums[&j];
-            let p_ij = F::from(n_ij).unwrap() / n_samples_f;
-            let p_i = F::from(n_i).unwrap() / n_samples_f;
-            let p_j = F::from(n_j).unwrap() / n_samples_f;
+            let p_ij = F::from(n_ij).expect("Failed to convert to float") / n_samples_f;
+            let p_i = F::from(n_i).expect("Failed to convert to float") / n_samples_f;
+            let p_j = F::from(n_j).expect("Failed to convert to float") / n_samples_f;
 
             mi = mi + p_ij * (p_ij / (p_i * p_j)).ln();
         }
@@ -155,9 +155,10 @@ where
     let expected_mi = calculate_expected_mutual_information::<F>(labels_true, labels_pred)?;
 
     // Adjusted MI formula
-    let denominator = (h_true + h_pred) / F::from(2).unwrap() - expected_mi;
+    let denominator =
+        (h_true + h_pred) / F::from(2).expect("Failed to convert constant to float") - expected_mi;
 
-    if denominator.abs() < F::from(1e-10).unwrap() {
+    if denominator.abs() < F::from(1e-10).expect("Failed to convert constant to float") {
         Ok(F::zero())
     } else {
         Ok((mi - expected_mi) / denominator)
@@ -198,7 +199,9 @@ where
     }
 
     let normalizer = match method {
-        "arithmetic" => (h_true + h_pred) / F::from(2).unwrap(),
+        "arithmetic" => {
+            (h_true + h_pred) / F::from(2).expect("Failed to convert constant to float")
+        }
         "geometric" => (h_true * h_pred).sqrt(),
         "min" => h_true.min(h_pred),
         "max" => h_true.max(h_pred),
@@ -249,7 +252,7 @@ where
         return Ok(F::zero());
     }
 
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
 
     // Build joint contingency tables
     let mut xyz_counts = HashMap::new();
@@ -277,10 +280,10 @@ where
             let n_yz = yz_counts[&(y, z)];
             let n_z = z_counts[&z];
 
-            let p_xyz = F::from(n_xyz).unwrap() / n_samples_f;
-            let p_xz = F::from(n_xz).unwrap() / n_samples_f;
-            let p_yz = F::from(n_yz).unwrap() / n_samples_f;
-            let p_z = F::from(n_z).unwrap() / n_samples_f;
+            let p_xyz = F::from(n_xyz).expect("Failed to convert to float") / n_samples_f;
+            let p_xz = F::from(n_xz).expect("Failed to convert to float") / n_samples_f;
+            let p_yz = F::from(n_yz).expect("Failed to convert to float") / n_samples_f;
+            let p_z = F::from(n_z).expect("Failed to convert to float") / n_samples_f;
 
             if p_xz > F::zero() && p_yz > F::zero() && p_z > F::zero() {
                 cmi = cmi + p_xyz * ((p_xyz * p_z) / (p_xz * p_yz)).ln();
@@ -318,12 +321,12 @@ where
         return Ok(F::zero());
     }
 
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
     let mut entropy = F::zero();
 
     for &count in counts.values() {
         if count > 0 {
-            let p = F::from(count).unwrap() / n_samples_f;
+            let p = F::from(count).expect("Failed to convert to float") / n_samples_f;
             entropy = entropy - p * p.ln();
         }
     }
@@ -367,7 +370,7 @@ where
         b.push(count);
     }
 
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
     let mut emi = F::zero();
 
     // Calculate expected mutual information using the formula
@@ -378,15 +381,18 @@ where
 
             for n_ij in start..=end {
                 if n_ij > 0 {
-                    let p_ij = F::from(n_ij).unwrap() / n_samples_f;
-                    let p_i = F::from(a_i).unwrap() / n_samples_f;
-                    let p_j = F::from(b_j).unwrap() / n_samples_f;
+                    let p_ij = F::from(n_ij).expect("Failed to convert to float") / n_samples_f;
+                    let p_i = F::from(a_i).expect("Failed to convert to float") / n_samples_f;
+                    let p_j = F::from(b_j).expect("Failed to convert to float") / n_samples_f;
 
                     // Hypergeometric probability approximation
                     let prob = hypergeometric_pmf(n_ij, n_samples, a_i, b_j);
 
                     if prob > 0.0 && p_ij > F::zero() {
-                        emi = emi + F::from(prob).unwrap() * p_ij * (p_ij / (p_i * p_j)).ln();
+                        emi = emi
+                            + F::from(prob).expect("Failed to convert to float")
+                                * p_ij
+                                * (p_ij / (p_i * p_j)).ln();
                     }
                 }
             }
@@ -441,10 +447,11 @@ mod tests {
     #[test]
     fn test_mutual_info_score_perfect_match() {
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
-        let mi: f64 = mutual_info_score::<f64>(labels.view(), labels.view()).unwrap();
+        let mi: f64 =
+            mutual_info_score::<f64>(labels.view(), labels.view()).expect("Operation failed");
 
         // MI should equal entropy for perfect match
-        let h: f64 = entropy::<f64>(labels.view()).unwrap();
+        let h: f64 = entropy::<f64>(labels.view()).expect("Operation failed");
         assert!((mi - h).abs() < 1e-10);
     }
 
@@ -453,8 +460,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
         let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 
-        let nmi: f64 =
-            normalized_mutual_info_score::<f64>(true_labels.view(), pred_labels.view()).unwrap();
+        let nmi: f64 = normalized_mutual_info_score::<f64>(true_labels.view(), pred_labels.view())
+            .expect("Operation failed");
         assert!(nmi >= 0.0 && nmi <= 1.0);
     }
 
@@ -463,15 +470,15 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
         let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 
-        let ami: f64 =
-            adjusted_mutual_info_score::<f64>(true_labels.view(), pred_labels.view()).unwrap();
+        let ami: f64 = adjusted_mutual_info_score::<f64>(true_labels.view(), pred_labels.view())
+            .expect("Operation failed");
         assert!(ami >= -1.0 && ami <= 1.0);
     }
 
     #[test]
     fn test_entropy() {
         let uniform_labels = Array1::from_vec(vec![0, 1, 2, 3]);
-        let h: f64 = entropy::<f64>(uniform_labels.view()).unwrap();
+        let h: f64 = entropy::<f64>(uniform_labels.view()).expect("Operation failed");
 
         // Entropy of uniform distribution should be log(n)
         let expected = 4.0_f64.ln();
@@ -497,7 +504,8 @@ mod tests {
         let y = Array1::from_vec(vec![0, 1, 0, 1]);
         let z = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let cmi: f64 = conditional_mutual_information::<f64>(x.view(), y.view(), z.view()).unwrap();
+        let cmi: f64 = conditional_mutual_information::<f64>(x.view(), y.view(), z.view())
+            .expect("Operation failed");
         assert!(cmi.is_finite());
     }
 }

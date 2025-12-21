@@ -30,9 +30,9 @@ impl ThreadPoolManager {
     /// ```rust
     /// use scirs2_neural::performance::threading::ThreadPoolManager;
     /// // Auto-detect thread count
-    /// let pool = ThreadPoolManager::new(None).unwrap();
+    /// let pool = ThreadPoolManager::new(None).expect("Operation failed");
     /// // Specify thread count
-    /// let pool = ThreadPoolManager::new(Some(8)).unwrap();
+    /// let pool = ThreadPoolManager::new(Some(8)).expect("Operation failed");
     /// ```
     pub fn new(_numthreads: Option<usize>) -> Result<Self> {
         let _num_threads = num_threads.unwrap_or_else(|| {

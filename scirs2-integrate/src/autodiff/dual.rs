@@ -84,7 +84,7 @@ impl<F: IntegrateFloat> Dual<F> {
         let sqrt_val = self.val.sqrt();
         Dual {
             val: sqrt_val,
-            der: self.der / (F::from(2.0).unwrap() * sqrt_val),
+            der: self.der / (F::from(2.0).expect("Failed to convert constant to float") * sqrt_val),
         }
     }
 
@@ -182,7 +182,8 @@ impl<F: IntegrateFloat> Dual<F> {
             // When values are equal, average the derivatives
             Dual {
                 val: self.val,
-                der: (self.der + other.der) / F::from(2.0).unwrap(),
+                der: (self.der + other.der)
+                    / F::from(2.0).expect("Failed to convert constant to float"),
             }
         }
     }
@@ -197,7 +198,8 @@ impl<F: IntegrateFloat> Dual<F> {
             // When values are equal, average the derivatives
             Dual {
                 val: self.val,
-                der: (self.der + other.der) / F::from(2.0).unwrap(),
+                der: (self.der + other.der)
+                    / F::from(2.0).expect("Failed to convert constant to float"),
             }
         }
     }

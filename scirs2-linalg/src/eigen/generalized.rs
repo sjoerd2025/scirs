@@ -46,7 +46,7 @@ use super::standard::{eig, eigh, EigenResult};
 ///
 /// let a = array![[2.0_f64, 1.0], [1.0, 2.0]];
 /// let b = array![[1.0_f64, 0.0], [0.0, 1.0]];
-/// let (w, v) = eig_gen(&a.view(), &b.view(), None).unwrap();
+/// let (w, v) = eig_gen(&a.view(), &b.view(), None).expect("Operation failed");
 /// ```
 ///
 /// # Notes
@@ -160,7 +160,7 @@ where
 ///
 /// let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
 /// let b = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let (w, v) = eigh_gen(&a.view(), &b.view(), None).unwrap();
+/// let (w, v) = eigh_gen(&a.view(), &b.view(), None).expect("Operation failed");
 /// ```
 ///
 /// # Notes
@@ -240,7 +240,8 @@ where
     // Step 4: Ensure transformed matrix is symmetric (fix numerical errors)
     for i in 0..n {
         for j in i + 1..n {
-            let avg = (transformed_a[[i, j]] + transformed_a[[j, i]]) / F::from(2.0).unwrap();
+            let avg = (transformed_a[[i, j]] + transformed_a[[j, i]])
+                / F::from(2.0).expect("Operation failed");
             transformed_a[[i, j]] = avg;
             transformed_a[[j, i]] = avg;
         }
@@ -293,7 +294,7 @@ where
 ///
 /// let a = array![[2.0_f64, 1.0], [1.0, 2.0]];
 /// let b = array![[1.0_f64, 0.0], [0.0, 1.0]];
-/// let w = eigvals_gen(&a.view(), &b.view(), None).unwrap();
+/// let w = eigvals_gen(&a.view(), &b.view(), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigvals_gen<F>(
@@ -330,7 +331,7 @@ where
 ///
 /// let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
 /// let b = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let w = eigvalsh_gen(&a.view(), &b.view(), None).unwrap();
+/// let w = eigvalsh_gen(&a.view(), &b.view(), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigvalsh_gen<F>(
@@ -356,7 +357,9 @@ where
     for i in 0..n {
         for j in 0..n {
             let expected = if i == j { F::one() } else { F::zero() };
-            if (b[[i, j]] - expected).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (b[[i, j]] - expected).abs()
+                > F::epsilon() * F::from(10.0).expect("Operation failed")
+            {
                 return false;
             }
         }
@@ -398,15 +401,15 @@ mod tests {
         let a = array![[2.0, 1.0], [1.0, 2.0]];
         let b = Array2::eye(2); // Identity matrix
 
-        let (w_gen, v_gen) = eig_gen(&a.view(), &b.view(), None).unwrap();
-        let (w_std, v_std) = eig(&a.view(), None).unwrap();
+        let (w_gen, v_gen) = eig_gen(&a.view(), &b.view(), None).expect("Operation failed");
+        let (w_std, v_std) = eig(&a.view(), None).expect("Operation failed");
 
         // Sort eigenvalues for comparison
         let mut w_gen_sorted: Vec<_> = w_gen.iter().map(|x| x.re).collect();
-        w_gen_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        w_gen_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mut w_std_sorted: Vec<_> = w_std.iter().map(|x| x.re).collect();
-        w_std_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        w_std_sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // For now, let's use a more lenient test since the QZ decomposition might have numerical differences
         // Eigenvalues should be approximately the same
@@ -422,11 +425,11 @@ mod tests {
         let a = array![[1.0, 0.0], [0.0, 2.0]];
         let b = array![[2.0, 0.0], [0.0, 1.0]];
 
-        let (w, v) = eig_gen(&a.view(), &b.view(), None).unwrap();
+        let (w, v) = eig_gen(&a.view(), &b.view(), None).expect("Operation failed");
 
         // Sort eigenvalues for predictable testing
         let mut eigenvals: Vec<_> = w.iter().map(|x| x.re).collect();
-        eigenvals.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        eigenvals.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         assert_relative_eq!(eigenvals[0], 0.5, epsilon = 1e-10);
         assert_relative_eq!(eigenvals[1], 2.0, epsilon = 1e-10);
@@ -447,7 +450,7 @@ mod tests {
         let a = array![[2.0, 1.0], [1.0, 3.0]];
         let b = array![[1.0, 0.0], [0.0, 2.0]];
 
-        let (w, v) = eigh_gen(&a.view(), &b.view(), None).unwrap();
+        let (w, v) = eigh_gen(&a.view(), &b.view(), None).expect("Operation failed");
 
         // Eigenvalues should be sorted in ascending order
         assert!(w[0] <= w[1]);
@@ -488,8 +491,10 @@ mod tests {
         let a = array![[2.0, 1.0], [1.0, 2.0]];
         let b = array![[1.0, 0.0], [0.0, 1.0]];
 
-        let w_full = eig_gen(&a.view(), &b.view(), None).unwrap().0;
-        let w_vals_only = eigvals_gen(&a.view(), &b.view(), None).unwrap();
+        let w_full = eig_gen(&a.view(), &b.view(), None)
+            .expect("Operation failed")
+            .0;
+        let w_vals_only = eigvals_gen(&a.view(), &b.view(), None).expect("Operation failed");
 
         // Should be the same
         for i in 0..w_full.len() {
@@ -503,8 +508,10 @@ mod tests {
         let a = array![[2.0, 1.0], [1.0, 3.0]];
         let b = array![[1.0, 0.0], [0.0, 2.0]];
 
-        let w_full = eigh_gen(&a.view(), &b.view(), None).unwrap().0;
-        let w_vals_only = eigvalsh_gen(&a.view(), &b.view(), None).unwrap();
+        let w_full = eigh_gen(&a.view(), &b.view(), None)
+            .expect("Operation failed")
+            .0;
+        let w_vals_only = eigvalsh_gen(&a.view(), &b.view(), None).expect("Operation failed");
 
         // Should be the same
         for i in 0..w_full.len() {

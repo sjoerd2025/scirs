@@ -28,7 +28,7 @@ fn test_performance_invariance() {
             1.0, 1.0, // female, old
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let group_names = vec!["gender".to_string(), "age".to_string()];
 
@@ -44,7 +44,7 @@ fn test_performance_invariance() {
             accuracy_score(&yt_array, &yp_array).unwrap_or(0.0)
         },
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Check that we get metrics for each group
     assert!(result.group_metrics.contains_key("overall"));
@@ -104,7 +104,7 @@ fn test_influence_function() {
         |yp, pg| demographic_parity_difference(yp, pg).unwrap_or(0.0),
         None,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // We should get an influence score for each sample
     assert_eq!(influence_scores.len(), y_true.len());
@@ -117,7 +117,7 @@ fn test_influence_function() {
         |yp, pg| demographic_parity_difference(yp, pg).unwrap_or(0.0),
         Some(4),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Should still have full length but only first 4 samples evaluated
     assert_eq!(limited_influence.len(), y_true.len());
@@ -163,7 +163,7 @@ fn test_perturbation_sensitivity() {
         5,   // 5 iterations
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Check the result properties
     assert_eq!(result_flip.perturbed_values.len(), 5);
@@ -182,7 +182,7 @@ fn test_perturbation_sensitivity() {
         5,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     assert_eq!(result_subsample.perturbed_values.len(), 5);
     assert_eq!(result_subsample.perturbation_type, "Subsample");
@@ -198,7 +198,7 @@ fn test_perturbation_sensitivity() {
         5,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     assert_eq!(result_noise.perturbed_values.len(), 5);
     assert_eq!(result_noise.perturbation_type, "Noise");
@@ -260,7 +260,8 @@ fn test_perturbation_types() {
     ];
 
     // The original data is perfectly fair (demographic parity = 0)
-    let original_dp = demographic_parity_difference(&y_pred, &protected_group).unwrap();
+    let original_dp =
+        demographic_parity_difference(&y_pred, &protected_group).expect("Operation failed");
     assert_abs_diff_eq!(original_dp, 0.0, epsilon = 1e-10);
 
     // Test that different perturbation types produce different results
@@ -279,7 +280,7 @@ fn test_perturbation_types() {
         n_iterations,
         Some(seed),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Noise should also create some unfairness
     let noise_result = perturbation_sensitivity(
@@ -292,7 +293,7 @@ fn test_perturbation_types() {
         n_iterations,
         Some(seed),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Subsample might preserve fairness better
     let subsample_result = perturbation_sensitivity(
@@ -305,7 +306,7 @@ fn test_perturbation_types() {
         n_iterations,
         Some(seed),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // The different perturbations should give different results
     // We don't assert specific values as they depend on random processes,
@@ -334,7 +335,7 @@ fn test_robustness_with_different_fairness_metrics() {
         5,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Test with equalized odds
     let eo_result = perturbation_sensitivity(
@@ -347,7 +348,7 @@ fn test_robustness_with_different_fairness_metrics() {
         5,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Different fairness metrics should have different sensitivity profiles
     assert!(dp_result.original_fairness >= 0.0);

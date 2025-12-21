@@ -37,7 +37,7 @@ where
     // Create a function wrapper that respects bounds
     let mut bounded_fun = |x: &ArrayView1<f64>| -> f64 {
         if let Some(bounds) = bounds {
-            if !bounds.is_feasible(x.as_slice().unwrap()) {
+            if !bounds.is_feasible(x.as_slice().expect("Operation failed")) {
                 // If the point is outside bounds, return a high value
                 // to push the optimization back into the feasible region
                 return f64::MAX;
@@ -62,7 +62,7 @@ where
 
         // Project the point onto bounds if needed
         if let Some(bounds) = bounds {
-            bounds.project(xi.as_slice_mut().unwrap());
+            bounds.project(xi.as_slice_mut().expect("Operation failed"));
         }
 
         simplex.push((xi.clone(), bounded_fun(&xi.view())));
@@ -71,7 +71,7 @@ where
     let mut nfev = n + 1;
 
     // Sort the simplex by function value
-    simplex.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    simplex.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
     // Iteration counter
     let mut iter = 0;
@@ -95,7 +95,7 @@ where
 
         // Project the reflected point onto bounds if needed
         if let Some(bounds) = bounds {
-            bounds.project(xr.as_slice_mut().unwrap());
+            bounds.project(xr.as_slice_mut().expect("Operation failed"));
         }
 
         let fxr = bounded_fun(&xr.view());
@@ -107,7 +107,7 @@ where
 
             // Project the expanded point onto bounds if needed
             if let Some(bounds) = bounds {
-                bounds.project(xe.as_slice_mut().unwrap());
+                bounds.project(xe.as_slice_mut().expect("Operation failed"));
             }
 
             let fxe = bounded_fun(&xe.view());
@@ -137,7 +137,7 @@ where
 
             // Project the contracted point onto bounds if needed
             if let Some(bounds) = bounds {
-                bounds.project(xc_contract.as_slice_mut().unwrap());
+                bounds.project(xc_contract.as_slice_mut().expect("Operation failed"));
             }
 
             let fxc_contract = bounded_fun(&xc_contract.view());
@@ -154,7 +154,7 @@ where
 
                     // Project the shrunk point onto bounds if needed
                     if let Some(bounds) = bounds {
-                        bounds.project(new_point.as_slice_mut().unwrap());
+                        bounds.project(new_point.as_slice_mut().expect("Operation failed"));
                     }
 
                     simplex[i].0 = new_point;
@@ -165,7 +165,7 @@ where
         }
 
         // Resort the simplex
-        simplex.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        simplex.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
         iter += 1;
     }
@@ -218,7 +218,7 @@ mod tests {
         let x0 = Array1::from_vec(vec![0.0, 0.0]);
         let options = Options::default();
 
-        let result = minimize_nelder_mead(rosenbrock, x0, &options).unwrap();
+        let result = minimize_nelder_mead(rosenbrock, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 1.0, epsilon = 1e-3);
@@ -237,7 +237,7 @@ mod tests {
         let bounds = Bounds::new(&[(Some(0.0), Some(1.0)), (Some(0.0), Some(1.0))]);
         options.bounds = Some(bounds);
 
-        let result = minimize_nelder_mead(quadratic, x0, &options).unwrap();
+        let result = minimize_nelder_mead(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // The optimal point (2, 3) is outside the bounds, so we should get (1, 1)

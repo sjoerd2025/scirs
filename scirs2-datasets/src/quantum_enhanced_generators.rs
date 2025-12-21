@@ -450,7 +450,8 @@ mod tests {
 
     #[test]
     fn test_quantum_classification() {
-        let dataset = make_quantum_classification(100, 4, 3, 0.5, Some(42)).unwrap();
+        let dataset =
+            make_quantum_classification(100, 4, 3, 0.5, Some(42)).expect("Operation failed");
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 4);
 
@@ -476,7 +477,8 @@ mod tests {
 
     #[test]
     fn test_quantum_regression() {
-        let dataset = make_quantum_regression(50, 3, 0.1, true, Some(42)).unwrap();
+        let dataset =
+            make_quantum_regression(50, 3, 0.1, true, Some(42)).expect("Operation failed");
         assert_eq!(dataset.n_samples(), 50);
         assert_eq!(dataset.n_features(), 3);
         assert!(dataset.has_target());
@@ -484,12 +486,12 @@ mod tests {
 
     #[test]
     fn test_quantum_blobs() {
-        let dataset = make_quantum_blobs(80, 2, 4, 1.0, 0.3, Some(42)).unwrap();
+        let dataset = make_quantum_blobs(80, 2, 4, 1.0, 0.3, Some(42)).expect("Operation failed");
         assert_eq!(dataset.n_samples(), 80);
         assert_eq!(dataset.n_features(), 2);
 
         // Verify cluster formation with quantum interference
-        let targets = dataset.target.as_ref().unwrap();
+        let targets = dataset.target.as_ref().expect("Operation failed");
         let unique_clusters: std::collections::HashSet<_> =
             targets.iter().map(|&x| x as usize).collect();
         assert!(unique_clusters.len() <= 4, "Should have at most 4 clusters");

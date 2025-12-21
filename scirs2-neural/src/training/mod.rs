@@ -109,7 +109,8 @@ impl<F: Float + Debug + ScalarOperand> TrainingSession<F> {
     pub fn new(config: TrainingConfig) -> Self {
         Self {
             history: HashMap::new(),
-            initial_learning_rate: F::from(config.learning_rate).unwrap(),
+            initial_learning_rate: F::from(config.learning_rate)
+                .expect("Failed to convert to float"),
             epochs_trained: 0,
             current_epoch: 0,
             best_validation_score: None,
@@ -156,7 +157,7 @@ impl<F: Float + Debug + ScalarOperand> Default for TrainingSession<F> {
     fn default() -> Self {
         Self {
             history: HashMap::new(),
-            initial_learning_rate: F::from(0.001).unwrap(),
+            initial_learning_rate: F::from(0.001).expect("Failed to convert constant to float"),
             epochs_trained: 0,
             current_epoch: 0,
             best_validation_score: None,

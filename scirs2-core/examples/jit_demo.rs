@@ -816,7 +816,11 @@ impl AdvancedJitDemo {
 
         // Simulate execution time based on complexity
         let execution_time = if !kernel.performance.execution_times.is_empty() {
-            *kernel.performance.execution_times.first().unwrap()
+            *kernel
+                .performance
+                .execution_times
+                .first()
+                .expect("Operation failed")
         } else {
             Duration::from_millis(10) // Default 10ms simulation
         };
@@ -844,7 +848,7 @@ mod tests {
 
     #[test]
     fn testmatrix_kernel_generation() {
-        let demo = AdvancedJitDemo::new().unwrap();
+        let demo = AdvancedJitDemo::new().expect("Operation failed");
         let kernel = demo.generatematrix_kernel(64);
         assert!(kernel.contains("matmul_64x64"));
         assert!(kernel.contains("define void"));
@@ -852,7 +856,7 @@ mod tests {
 
     #[test]
     fn test_signal_kernel_generation() {
-        let demo = AdvancedJitDemo::new().unwrap();
+        let demo = AdvancedJitDemo::new().expect("Operation failed");
         let kernel = AdvancedJitDemo::generate_signal_kernel("convolution_1d");
         assert!(kernel.contains("convolution_1d"));
         assert!(kernel.contains("define void"));

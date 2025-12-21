@@ -49,14 +49,14 @@ where
     }
 
     // Compute mean for each feature
-    let mean = data.mean_axis(Axis(0)).unwrap();
+    let mean = data.mean_axis(Axis(0)).expect("Operation failed");
 
     // Center the _data
     let centered = data.to_owned() - &mean;
 
     // Compute covariance matrix: X^T * X / (n - ddof)
     let mut cov = Array2::zeros((n_features, n_features));
-    let normalizer = F::from(n_samples - ddof).unwrap();
+    let normalizer = F::from(n_samples - ddof).expect("Operation failed");
 
     for i in 0..n_features {
         for j in 0..=i {

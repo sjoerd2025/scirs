@@ -101,7 +101,7 @@ fn basic_dashboard_example() -> Result<()> {
 fn realtime_monitoring_example() -> Result<()> {
     // Create dashboard with custom configuration
     let config = DashboardConfig {
-        address: "127.0.0.1:8081".parse().unwrap(),
+        address: "127.0.0.1:8081".parse().expect("Operation failed"),
         refresh_interval: 2,
         max_data_points: 100,
         enable_realtime: true,
@@ -320,7 +320,7 @@ fn advanced_configuration_example() -> Result<()> {
 
     // Advanced configuration
     let config = DashboardConfig {
-        address: "0.0.0.0:8082".parse().unwrap(),
+        address: "0.0.0.0:8082".parse().expect("Operation failed"),
         refresh_interval: 1,   // Fast refresh
         max_data_points: 5000, // Large buffer
         enable_realtime: true,

@@ -31,13 +31,13 @@ use crate::lti::{LtiSystem, TransferFunction};
 ///     vec![1.0],           // Numerator: 1
 ///     vec![1.0, 1.0],      // Denominator: s + 1
 ///     None,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Generate time vector
 /// let t: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
 ///
 /// // Calculate impulse response
-/// let response = impulse_response(&system, &t).unwrap();
+/// let response = impulse_response(&system, &t).expect("Operation failed");
 ///
 /// // Check that we get a response vector of the right length
 /// assert_eq!(response.len(), t.len());
@@ -73,13 +73,13 @@ pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec
 ///     vec![1.0],           // Numerator: 1
 ///     vec![1.0, 1.0],      // Denominator: s + 1
 ///     None,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Generate time vector
 /// let t: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
 ///
 /// // Calculate step response
-/// let response = step_response(&system, &t).unwrap();
+/// let response = step_response(&system, &t).expect("Operation failed");
 ///
 /// // Check that we get a response vector of the right length
 /// assert_eq!(response.len(), t.len());
@@ -116,14 +116,14 @@ pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f6
 ///     vec![1.0],           // Numerator: 1
 ///     vec![1.0, 1.0],      // Denominator: s + 1
 ///     None,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Generate time vector and input signal (e.g., a sine wave)
 /// let t: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
 /// let u: Vec<f64> = t.iter().map(|&time| (2.0 * time).sin()).collect();
 ///
 /// // Simulate system response
-/// let y = lsim(&system, &u, &t).unwrap();
+/// let y = lsim(&system, &u, &t).expect("Operation failed");
 ///
 /// // Output should be the convolution of the input with the impulse response
 /// assert_eq!(y.len(), t.len());
@@ -288,13 +288,13 @@ mod tests {
     #[test]
     fn test_first_order_impulse_response() {
         // Create a first-order system: H(s) = 1 / (s + 1)
-        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
 
         // Generate time vector
         let t: Vec<f64> = (0..20).map(|i| i as f64 * 0.1).collect();
 
         // Calculate impulse response
-        let response = impulse_response(&tf, &t).unwrap();
+        let response = impulse_response(&tf, &t).expect("Operation failed");
 
         // Check length
         assert_eq!(response.len(), t.len());
@@ -314,13 +314,13 @@ mod tests {
     #[test]
     fn test_first_order_step_response() {
         // Create a first-order system: H(s) = 1 / (s + 1)
-        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
+        let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).expect("Operation failed");
 
         // Generate time vector
         let t: Vec<f64> = (0..20).map(|i| i as f64 * 0.1).collect();
 
         // Calculate step response
-        let response = step_response(&tf, &t).unwrap();
+        let response = step_response(&tf, &t).expect("Operation failed");
 
         // Check length
         assert_eq!(response.len(), t.len());
@@ -345,14 +345,14 @@ mod tests {
             vec![1.0, 1.0], // Denominator: s + 1
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Generate time vector and sinusoidal input
         let t: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
         let u: Vec<f64> = t.iter().map(|&time| time.sin()).collect();
 
         // Simulate response
-        let y = lsim(&tf, &u, &t).unwrap();
+        let y = lsim(&tf, &u, &t).expect("Operation failed");
 
         // Check length
         assert_eq!(y.len(), t.len());

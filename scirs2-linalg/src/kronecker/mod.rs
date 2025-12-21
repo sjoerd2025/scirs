@@ -44,7 +44,7 @@ use crate::norm::matrix_norm;
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
 /// let b = array![[0.1, 0.2], [0.3, 0.4]];
 ///
-/// let c = kron(&a.view(), &b.view()).unwrap();
+/// let c = kron(&a.view(), &b.view()).expect("Operation failed");
 ///
 /// // The result should be a 4x4 matrix:
 /// // [[0.1, 0.2, 0.2, 0.4],
@@ -103,7 +103,7 @@ where
 /// let b = array![[0.1, 0.2], [0.3, 0.4]];
 /// let x = array![1.0, 2.0, 3.0, 4.0];
 ///
-/// let y = kron_matvec(&a.view(), &b.view(), &x.view()).unwrap();
+/// let y = kron_matvec(&a.view(), &b.view(), &x.view()).expect("Operation failed");
 ///
 /// // This should equal (A ⊗ B) * x
 /// ```
@@ -184,7 +184,7 @@ where
 /// let b = array![[0.1, 0.2], [0.3, 0.4]];
 /// let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
 ///
-/// let y = kron_matmul(&a.view(), &b.view(), &x.view()).unwrap();
+/// let y = kron_matmul(&a.view(), &b.view(), &x.view()).expect("Operation failed");
 ///
 /// // This should equal (A ⊗ B) * X
 /// ```
@@ -256,7 +256,7 @@ where
 /// // Create a matrix to factorize
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
 /// let b = array![[0.1, 0.2], [0.3, 0.4]];
-/// let ab = kron(&a.view(), &b.view()).unwrap();
+/// let ab = kron(&a.view(), &b.view()).expect("Operation failed");
 ///
 /// // Add some noise
 /// let mut noisy_ab = ab.clone();
@@ -267,7 +267,7 @@ where
 /// }
 ///
 /// // Factorize back to get approximations of A and B
-/// let (a_approx, b_approx) = kron_factorize(&noisy_ab.view(), 2, 2).unwrap();
+/// let (a_approx, b_approx) = kron_factorize(&noisy_ab.view(), 2, 2).expect("Operation failed");
 ///
 /// // a_approx and b_approx should be close to the original a and b
 /// ```
@@ -407,7 +407,7 @@ where
 /// ];
 ///
 /// // Compute the Kronecker factors that approximate the Fisher Information Matrix
-/// let (a_cov, s_cov) = kfac_factorization(&input_acts.view(), &output_grads.view(), None).unwrap();
+/// let (a_cov, s_cov) = kfac_factorization(&input_acts.view(), &output_grads.view(), None).expect("Operation failed");
 ///
 /// // The Kronecker product a_cov ⊗ s_cov approximates the Fisher Information Matrix
 /// ```
@@ -431,7 +431,8 @@ where
     }
 
     let batchsize = batchsize1;
-    let damping_factor = damping.unwrap_or_else(|| F::from(1e-4).unwrap());
+    let damping_factor =
+        damping.unwrap_or_else(|| F::from(1e-4).expect("Failed to convert constant to float"));
 
     // Append 1s to input activations for bias term
     let mut input_acts_with_bias = Array2::zeros((batchsize, input_dim + 1));
@@ -453,7 +454,7 @@ where
                 sum += input_acts_with_bias[[b, i]] * input_acts_with_bias[[b, j]];
             }
 
-            a_cov[[i, j]] = sum / F::from(batchsize).unwrap();
+            a_cov[[i, j]] = sum / F::from(batchsize).expect("Failed to convert to float");
         }
     }
 
@@ -473,7 +474,7 @@ where
                 sum += output_grads[[b, i]] * output_grads[[b, j]];
             }
 
-            s_cov[[i, j]] = sum / F::from(batchsize).unwrap();
+            s_cov[[i, j]] = sum / F::from(batchsize).expect("Failed to convert to float");
         }
     }
 
@@ -520,12 +521,12 @@ where
 /// let output_grads = array![[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]];
 ///
 /// // Compute KFAC factors
-/// let (a_cov, s_cov) = kfac_factorization(&input_acts.view(), &output_grads.view(), None).unwrap();
+/// let (a_cov, s_cov) = kfac_factorization(&input_acts.view(), &output_grads.view(), None).expect("Operation failed");
 ///
 /// // Note: a_cov has shape (input_dim+1, input_dim+1) due to bias term
 /// // s_cov has shape (output_dim, output_dim)
-/// let a_inv = inv(&a_cov.view(), None).unwrap();
-/// let s_inv = inv(&s_cov.view(), None).unwrap();
+/// let a_inv = inv(&a_cov.view(), None).expect("Operation failed");
+/// let s_inv = inv(&s_cov.view(), None).expect("Operation failed");
 ///
 /// // Perform natural gradient update
 /// let new_weights = kfac_update(
@@ -534,7 +535,7 @@ where
 ///     &a_inv.view(),
 ///     &s_inv.view(),
 ///     0.01
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn kfac_update<F>(
@@ -638,15 +639,17 @@ where
     ///
     /// * New K-FAC optimizer instance
     pub fn new(decay_factor: Option<F>, basedamping: Option<F>) -> Self {
-        let decay = decay_factor.unwrap_or_else(|| F::from(0.95).unwrap());
-        let damping = basedamping.unwrap_or_else(|| F::from(1e-4).unwrap());
+        let decay = decay_factor
+            .unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
+        let damping = basedamping
+            .unwrap_or_else(|| F::from(1e-4).expect("Failed to convert constant to float"));
 
         Self {
             decay_factor: decay,
             base_damping: damping,
             adaptive_damping: damping,
-            min_damping: damping / F::from(10.0).unwrap(),
-            max_damping: damping * F::from(100.0).unwrap(),
+            min_damping: damping / F::from(10.0).expect("Failed to convert constant to float"),
+            max_damping: damping * F::from(100.0).expect("Failed to convert constant to float"),
             step_count: 0,
             input_cov_avg: None,
             output_cov_avg: None,
@@ -707,8 +710,16 @@ where
         let bias_correction = F::one() - self.decay_factor.powi(self.step_count as i32 + 1);
 
         // Apply bias correction and damping
-        let mut corrected_input = self.input_cov_avg.as_ref().unwrap().clone();
-        let mut corrected_output = self.output_cov_avg.as_ref().unwrap().clone();
+        let mut corrected_input = self
+            .input_cov_avg
+            .as_ref()
+            .expect("Operation failed")
+            .clone();
+        let mut corrected_output = self
+            .output_cov_avg
+            .as_ref()
+            .expect("Operation failed")
+            .clone();
 
         // Bias correction
         for i in 0..corrected_input.nrows() {
@@ -762,24 +773,28 @@ where
         if loss_improved {
             // Loss _improved: decrease damping
             if let Some(_ratio) = improvementratio {
-                if _ratio > F::from(0.75).unwrap() {
+                if _ratio > F::from(0.75).expect("Failed to convert constant to float") {
                     // Very good step: aggressive damping reduction
-                    self.adaptive_damping =
-                        (self.adaptive_damping / F::from(3.0).unwrap()).max(self.min_damping);
-                } else if _ratio > F::from(0.25).unwrap() {
+                    self.adaptive_damping = (self.adaptive_damping
+                        / F::from(3.0).expect("Failed to convert constant to float"))
+                    .max(self.min_damping);
+                } else if _ratio > F::from(0.25).expect("Failed to convert constant to float") {
                     // Good step: moderate damping reduction
-                    self.adaptive_damping =
-                        (self.adaptive_damping / F::from(2.0).unwrap()).max(self.min_damping);
+                    self.adaptive_damping = (self.adaptive_damping
+                        / F::from(2.0).expect("Failed to convert constant to float"))
+                    .max(self.min_damping);
                 }
             } else {
                 // Default reduction
-                self.adaptive_damping =
-                    (self.adaptive_damping / F::from(1.5).unwrap()).max(self.min_damping);
+                self.adaptive_damping = (self.adaptive_damping
+                    / F::from(1.5).expect("Failed to convert constant to float"))
+                .max(self.min_damping);
             }
         } else {
             // Loss did not improve: increase damping
-            self.adaptive_damping =
-                (self.adaptive_damping * F::from(2.0).unwrap()).min(self.max_damping);
+            self.adaptive_damping = (self.adaptive_damping
+                * F::from(2.0).expect("Failed to convert constant to float"))
+            .min(self.max_damping);
         }
     }
 
@@ -943,7 +958,8 @@ where
         // Fallback: regularize more heavily and use basic inversion
         let mut regularized = matrix.to_owned();
         for i in 0..n {
-            regularized[[i, i]] += self.damping * F::from(10.0).unwrap();
+            regularized[[i, i]] +=
+                self.damping * F::from(10.0).expect("Failed to convert constant to float");
         }
 
         // Simple inversion using basic LU decomposition (placeholder)
@@ -1003,7 +1019,8 @@ where
                     for b in 0..batchsize {
                         sum += grads[[b, j]]; // Accumulate gradient for output j
                     }
-                    extended_grads[[i, j]] = sum / F::from(batchsize).unwrap();
+                    extended_grads[[i, j]] =
+                        sum / F::from(batchsize).expect("Failed to convert to float");
                 }
             }
             // Bias _gradients are typically the mean of output _gradients
@@ -1012,7 +1029,8 @@ where
                 for b in 0..batchsize {
                     sum += grads[[b, j]];
                 }
-                extended_grads[[input_dim, j]] = sum / F::from(batchsize).unwrap();
+                extended_grads[[input_dim, j]] =
+                    sum / F::from(batchsize).expect("Failed to convert to float");
             }
 
             // Apply Kronecker-factored preconditioning: P^-1 * G = A^-1 * G * S^-1
@@ -1202,7 +1220,8 @@ where
             // Fallback: use diagonal approximation with heavy regularization
             let mut inv = Array2::zeros((n, n));
             for i in 0..n {
-                let diag_val = matrix[[i, i]] + damping * F::from(100.0).unwrap();
+                let diag_val = matrix[[i, i]]
+                    + damping * F::from(100.0).expect("Failed to convert constant to float");
                 inv[[i, i]] = F::one() / diag_val;
             }
             Ok(inv)
@@ -1221,7 +1240,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[0.1, 0.2], [0.3, 0.4]];
 
-        let c = kron(&a.view(), &b.view()).unwrap();
+        let c = kron(&a.view(), &b.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(c.shape(), &[4, 4]);
@@ -1255,10 +1274,10 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0];
 
         // Compute (A ⊗ B) * x using our optimized function
-        let y = kron_matvec(&a.view(), &b.view(), &x.view()).unwrap();
+        let y = kron_matvec(&a.view(), &b.view(), &x.view()).expect("Operation failed");
 
         // Compute the same thing using explicit Kronecker product
-        let ab = kron(&a.view(), &b.view()).unwrap();
+        let ab = kron(&a.view(), &b.view()).expect("Operation failed");
         let y_direct = ab.dot(&x);
 
         // Check dimensions
@@ -1277,10 +1296,10 @@ mod tests {
         let x = array![[1.0, 5.0], [2.0, 6.0], [3.0, 7.0], [4.0, 8.0]];
 
         // Compute (A ⊗ B) * X using our optimized function
-        let y = kron_matmul(&a.view(), &b.view(), &x.view()).unwrap();
+        let y = kron_matmul(&a.view(), &b.view(), &x.view()).expect("Operation failed");
 
         // Compute the same thing using explicit Kronecker product
-        let ab = kron(&a.view(), &b.view()).unwrap();
+        let ab = kron(&a.view(), &b.view()).expect("Operation failed");
         let y_direct = ab.dot(&x);
 
         // Check dimensions
@@ -1299,13 +1318,13 @@ mod tests {
         // Create a Kronecker product
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[0.1, 0.2], [0.3, 0.4]];
-        let ab = kron(&a.view(), &b.view()).unwrap();
+        let ab = kron(&a.view(), &b.view()).expect("Operation failed");
 
         // Factorize it back
-        let (a_hat, b_hat) = kron_factorize(&ab.view(), 2, 2).unwrap();
+        let (a_hat, b_hat) = kron_factorize(&ab.view(), 2, 2).expect("Operation failed");
 
         // Recompute the Kronecker product using the factors
-        let ab_hat = kron(&a_hat.view(), &b_hat.view()).unwrap();
+        let ab_hat = kron(&a_hat.view(), &b_hat.view()).expect("Operation failed");
 
         // Check that the approximation is close to the original
         // (allowing for some scale differences)
@@ -1329,7 +1348,8 @@ mod tests {
 
         // Compute KFAC factorization
         let (a_cov, s_cov) =
-            kfac_factorization(&input_acts.view(), &output_grads.view(), Some(0.01)).unwrap();
+            kfac_factorization(&input_acts.view(), &output_grads.view(), Some(0.01))
+                .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(a_cov.shape(), &[4, 4]); // +1 for bias
@@ -1366,7 +1386,7 @@ mod tests {
             &s_inv.view(),
             learning_rate,
         )
-        .unwrap();
+        .expect("Failed to apply natural gradient");
 
         // With identity matrices, the natural gradient equals the regular gradient
         // So we can check against a simple SGD update
@@ -1392,7 +1412,7 @@ mod tests {
         // First update should initialize averages
         let (input_cov1, output_cov1) = optimizer
             .update_covariances(&input_acts.view(), &output_grads.view())
-            .unwrap();
+            .expect("Failed to update covariances");
 
         assert_eq!(optimizer.step_count, 1);
         assert!(optimizer.input_cov_avg.is_some());
@@ -1401,7 +1421,7 @@ mod tests {
         // Second update should use moving averages
         let (input_cov2, output_cov2) = optimizer
             .update_covariances(&input_acts.view(), &output_grads.view())
-            .unwrap();
+            .expect("Failed to update covariances");
 
         assert_eq!(optimizer.step_count, 2);
 
@@ -1454,14 +1474,18 @@ mod tests {
         let gradients = vec![layer1_grads.view(), layer2_grads.view()];
 
         // Update Fisher approximation
-        fisher.update_fisher(&activations, &gradients).unwrap();
+        fisher
+            .update_fisher(&activations, &gradients)
+            .expect("Operation failed");
 
         assert_eq!(fisher.layer_factors.len(), 2);
         assert_eq!(fisher.inverse_factors.len(), 2);
 
         // Test preconditioning
         let grad_matrices = vec![layer1_grads.view(), layer2_grads.view()];
-        let preconditioned = fisher.precondition_gradients(&grad_matrices).unwrap();
+        let preconditioned = fisher
+            .precondition_gradients(&grad_matrices)
+            .expect("Operation failed");
 
         assert_eq!(preconditioned.len(), 2);
         assert_eq!(preconditioned[0].shape(), layer1_grads.shape());
@@ -1496,7 +1520,7 @@ mod tests {
             None,
             Some(1.0), // gradient clipping
         )
-        .unwrap();
+        .expect("Failed to compute step");
 
         // Check that weights were updated
         assert_eq!(new_weights.shape(), weights.shape());
@@ -1523,7 +1547,7 @@ mod tests {
         // Test with a simple positive definite matrix
         let matrix = array![[2.0, 1.0], [1.0, 2.0]];
         let damping = 0.01;
-        let inv = stablematrix_inverse(&matrix.view(), damping).unwrap();
+        let inv = stablematrix_inverse(&matrix.view(), damping).expect("Operation failed");
 
         // Create the regularized matrix (what we actually inverted)
         let mut regularized = matrix.clone();
@@ -1552,7 +1576,7 @@ mod tests {
 
         optimizer
             .update_covariances(&input_acts.view(), &output_grads.view())
-            .unwrap();
+            .expect("Failed to update covariances");
         optimizer.adjust_damping(false, None);
 
         assert!(optimizer.step_count > 0);
@@ -1581,7 +1605,9 @@ mod tests {
         let activations = vec![layer1_acts.view(), layer2_acts.view()];
         let gradients = vec![layer1_grads.view(), layer2_grads.view()];
 
-        fisher.update_fisher(&activations, &gradients).unwrap();
+        fisher
+            .update_fisher(&activations, &gradients)
+            .expect("Operation failed");
 
         let memory_info = fisher.memory_info();
 

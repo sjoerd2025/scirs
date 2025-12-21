@@ -208,9 +208,9 @@ pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceCon
         {
             use scirs2_core::parallel_ops::*;
             
-            input.as_slice().unwrap()
+            input.as_slice().expect("Operation failed")
                 .par_chunks(config.chunksize)
-                .zip(output.as_slice_mut().unwrap().par_chunks_mut(config.chunksize))
+                .zip(output.as_slice_mut().expect("Operation failed").par_chunks_mut(config.chunksize))
                 .try_for_each(|(input_chunk, output_chunk)| -> SpecialResult<()> {
                     for (i, &x) in input_chunk.iter().enumerate() {
                         output_chunk[i] = gamma_advancedfast(x)?;
@@ -341,7 +341,7 @@ mod tests {
         ];
         
         for (i, &x) in test_values.iter().enumerate() {
-            let result = gamma_advancedfast(x).unwrap();
+            let result = gamma_advancedfast(x).expect("Operation failed");
             assert_relative_eq!(result, expected[i], epsilon = 1e-10);
         }
     }
@@ -358,7 +358,7 @@ mod tests {
         ];
         
         for (i, &x) in test_values.iter().enumerate() {
-            let result = j0_advancedfast(x).unwrap();
+            let result = j0_advancedfast(x).expect("Operation failed");
             assert_relative_eq!(result, expected[i], epsilon = 1e-8);
         }
     }

@@ -372,7 +372,7 @@ fn test_state_dependent_mass_with_terminal_event() -> IntegrateResult<()> {
     }
 
     // Verify that integration stopped at the terminal event time
-    let final_time = result.base_result.t.last().unwrap();
+    let final_time = result.base_result.t.last().expect("Operation failed");
     let terminal_time = result.events.get_events("small_angle")[0].time;
     assert_relative_eq!(*final_time, terminal_time, epsilon = 1e-10,);
 

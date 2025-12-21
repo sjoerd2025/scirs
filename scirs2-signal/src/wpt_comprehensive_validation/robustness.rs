@@ -160,7 +160,7 @@ mod tests {
         let result = test_robustness(&config);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.noise_robustness >= 0.0);
         assert!(metrics.noise_robustness <= 1.0);
         assert!(metrics.outlier_resistance >= 0.0);
@@ -173,7 +173,7 @@ mod tests {
         let result = test_extreme_conditions(&config);
         assert!(result.is_ok());
 
-        let score = result.unwrap();
+        let score = result.expect("Operation failed");
         assert!(score >= 0.0);
         assert!(score <= 1.0);
     }

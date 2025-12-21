@@ -54,7 +54,7 @@ fn bench_gpu_kernel_sublinear(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -79,7 +79,7 @@ fn bench_gpu_kernel_compressed_sensing(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::CompressedSensing),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -104,7 +104,7 @@ fn bench_gpu_kernel_iterative(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Iterative),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -143,7 +143,7 @@ fn bench_window_functions(c: &mut Criterion) {
                         Some(SparseFFTAlgorithm::Sublinear),
                         Some(*window),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -176,7 +176,7 @@ fn bench_signal_sizes(c: &mut Criterion) {
                         Some(SparseFFTAlgorithm::Sublinear),
                         Some(WindowFunction::Hann),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -200,7 +200,7 @@ fn bench_gpu_vs_cpu(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 None, // seed parameter
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -215,7 +215,7 @@ fn bench_gpu_vs_cpu(c: &mut Criterion) {
                     Some(SparseFFTAlgorithm::Sublinear),
                     Some(WindowFunction::Hann),
                 )
-                .unwrap()
+                .expect("Operation failed")
             })
         });
     }
@@ -260,7 +260,7 @@ fn bench_gpu_algorithms(c: &mut Criterion) {
                         Some(*algorithm),
                         Some(WindowFunction::Hann),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );

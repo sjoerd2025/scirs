@@ -55,7 +55,7 @@ mod tests {
     #[test]
     fn test_binding_module_integration() {
         // Test that all modules work together
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let config = BindingConfig::default();
         let metadata = PackageMetadata {
             name: "test_model".to_string(),
@@ -83,8 +83,8 @@ mod tests {
         // Create a simple sequential model for testing
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
-        model.add_layer(Dense::new(5, 2, None, &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
+        model.add_layer(Dense::new(5, 2, None, &mut rng).expect("Operation failed"));
         let generator =
             BindingGenerator::new(model, config, metadata, temp_dir.path().to_path_buf());
         // Test that directory structure can be created
@@ -100,9 +100,9 @@ mod tests {
     fn test_individual_generators() {
         let output_dir = temp_dir.path().to_path_buf();
         // Create necessary directories
-        std::fs::create_dir_all(output_dir.join("include")).unwrap();
-        std::fs::create_dir_all(output_dir.join("src")).unwrap();
-        std::fs::create_dir_all(output_dir.join("examples")).unwrap();
+        std::fs::create_dir_all(output_dir.join("include")).expect("Operation failed");
+        std::fs::create_dir_all(output_dir.join("src")).expect("Operation failed");
+        std::fs::create_dir_all(output_dir.join("examples")).expect("Operation failed");
         // Test header generator
         let header_gen = HeaderGenerator::new(&config, &output_dir);
         let headers = header_gen.generate();
@@ -118,7 +118,7 @@ mod tests {
         // Test examples/docs generator
         let examples_gen = ExamplesDocsGenerator::new(&config, &output_dir);
         let result = examples_gen.generate();
-        let (examples, docs) = result.unwrap();
+        let (examples, docs) = result.expect("Operation failed");
         assert!(!examples.is_empty() || examples.is_empty()); // Just checking it's valid
         assert!(!docs.is_empty() || docs.is_empty()); // Just checking it's valid
     fn test_config_variations() {
@@ -153,11 +153,11 @@ mod tests {
                     min_cores: 2,
             checksum: "integration_test_checksum".to_string(),
         // Create a simple model
-        model.add_layer(Dense::new(784, 128, Some("relu"), &mut rng).unwrap());
-        model.add_layer(Dense::new(128, 10, Some("softmax"), &mut rng).unwrap());
+        model.add_layer(Dense::new(784, 128, Some("relu"), &mut rng).expect("Operation failed"));
+        model.add_layer(Dense::new(128, 10, Some("softmax"), &mut rng).expect("Operation failed"));
         // Generate complete bindings
         let result = generator.generate();
-        let binding_result = result.unwrap();
+        let binding_result = result.expect("Operation failed");
         assert!(!binding_result.headers.is_empty());
         assert!(!binding_result.sources.is_empty());
         assert!(!binding_result.build_files.is_empty());

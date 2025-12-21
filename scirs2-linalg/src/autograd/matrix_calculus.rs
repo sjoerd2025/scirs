@@ -47,7 +47,7 @@ pub mod matrix_derivatives {
     /// Compute the derivative of the matrix inverse
     ///
     /// For a matrix X, d/dX inv(X) = -inv(X) ⊗ inv(X)^T
-    /// This returns a function that, given a direction dX, computes d/dX inv(X)[dX]
+    /// This returns a function that, given a direction dX, computes d/dX inv(X)\[dX\]
     ///
     /// # Arguments
     /// * `x` - Input matrix
@@ -253,7 +253,7 @@ pub mod matrix_derivatives {
 
     /// Compute the derivative of matrix exponential
     ///
-    /// For a matrix X, d/dX exp(X)[dX] ≈ exp(X) * dX + dX * exp(X) (first-order approximation)
+    /// For a matrix X, d/dX exp(X)\[dX\] ≈ exp(X) * dX + dX * exp(X) (first-order approximation)
     /// The exact formula involves an integral: ∫₀¹ exp(sX) * dX * exp((1-s)X) ds
     ///
     /// # Arguments
@@ -287,14 +287,14 @@ pub mod matrix_derivatives {
         // First-order approximation: (exp(X) * dX + dX * exp(X)) / 2
         let term1 = exp_x.dot(dx);
         let term2 = dx.dot(&exp_x);
-        let result = (term1 + term2) * F::from(0.5).unwrap();
+        let result = (term1 + term2) * F::from(0.5).expect("Operation failed");
 
         Ok(result)
     }
 
     /// Compute the derivative of matrix logarithm
     ///
-    /// For a matrix X, d/dX log(X)[dX] = X^{-1} * dX
+    /// For a matrix X, d/dX log(X)\[dX\] = X^{-1} * dX
     ///
     /// # Arguments
     /// * `x` - Input matrix
@@ -340,7 +340,7 @@ pub mod differential_operators {
     /// div(F) = sum_i ∂F_ii/∂x_i (trace of the spatial gradient)
     ///
     /// # Arguments
-    /// * `field` - 3D array where field[i][j] contains the (i,j) component of the matrix field
+    /// * `field` - 3D array where field\[i\]\[j\] contains the (i,j) component of the matrix field
     /// * `spacing` - Grid spacing for finite differences
     ///
     /// # Returns
@@ -357,9 +357,9 @@ pub mod differential_operators {
             for j in 1..(ny - 1) {
                 // ∂F_xx/∂x + ∂F_yy/∂y (diagonal terms)
                 let df_xx_dx = (field[[i + 1, j, 0]] - field[[i - 1, j, 0]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 let df_yy_dy = (field[[i, j + 1, 3]] - field[[i, j - 1, 3]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
 
                 result[[i, j]] = df_xx_dx + df_yy_dy;
             }
@@ -375,7 +375,7 @@ pub mod differential_operators {
     ///           [∂F11/∂x - ∂F12/∂y, ∂F21/∂x - ∂F22/∂y]]
     ///
     /// # Arguments
-    /// * `field` - 3D array where field[i][j] contains matrix components
+    /// * `field` - 3D array where field\[i\]\[j\] contains matrix components
     /// * `spacing` - Grid spacing for finite differences
     ///
     /// # Returns
@@ -399,30 +399,30 @@ pub mod differential_operators {
             for j in 1..(ny - 1) {
                 // Component (0,0): ∂F12/∂x - ∂F11/∂y
                 let df12_dx = (field[[i + 1, j, 1]] - field[[i - 1, j, 1]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 let df11_dy = (field[[i, j + 1, 0]] - field[[i, j - 1, 0]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 result[[i, j, 0]] = df12_dx - df11_dy;
 
                 // Component (0,1): ∂F22/∂x - ∂F21/∂y
                 let df22_dx = (field[[i + 1, j, 3]] - field[[i - 1, j, 3]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 let df21_dy = (field[[i, j + 1, 2]] - field[[i, j - 1, 2]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 result[[i, j, 1]] = df22_dx - df21_dy;
 
                 // Component (1,0): ∂F11/∂x - ∂F12/∂y
                 let df11_dx = (field[[i + 1, j, 0]] - field[[i - 1, j, 0]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 let df12_dy = (field[[i, j + 1, 1]] - field[[i, j - 1, 1]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 result[[i, j, 2]] = df11_dx - df12_dy;
 
                 // Component (1,1): ∂F21/∂x - ∂F22/∂y
                 let df21_dx = (field[[i + 1, j, 2]] - field[[i - 1, j, 2]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 let df22_dy = (field[[i, j + 1, 3]] - field[[i, j - 1, 3]])
-                    / (F::from(2.0).unwrap() * spacing);
+                    / (F::from(2.0).expect("Operation failed") * spacing);
                 result[[i, j, 3]] = df21_dx - df22_dy;
             }
         }
@@ -456,11 +456,11 @@ pub mod differential_operators {
                 for j in 1..(ny - 1) {
                     // ∂²F/∂x² + ∂²F/∂y² using finite differences
                     let d2f_dx2 = (field[[i + 1, j, comp]]
-                        - F::from(2.0).unwrap() * field[[i, j, comp]]
+                        - F::from(2.0).expect("Operation failed") * field[[i, j, comp]]
                         + field[[i - 1, j, comp]])
                         / spacing_sq;
                     let d2f_dy2 = (field[[i, j + 1, comp]]
-                        - F::from(2.0).unwrap() * field[[i, j, comp]]
+                        - F::from(2.0).expect("Operation failed") * field[[i, j, comp]]
                         + field[[i, j - 1, comp]])
                         / spacing_sq;
 
@@ -475,14 +475,14 @@ pub mod differential_operators {
     /// Compute the gradient of a matrix field
     ///
     /// For a matrix field F(x,y), the gradient is a 3D array where
-    /// gradient[i][j][k] contains ∂F_k/∂x_i at position (i,j)
+    /// gradient\[i\]\[j\]\[k\] contains ∂F_k/∂x_i at position (i,j)
     ///
     /// # Arguments
     /// * `field` - 3D array containing matrix field components
     /// * `spacing` - Grid spacing for finite differences
     ///
     /// # Returns
-    /// * 4D array containing the gradient (gradient[x][y][component][direction])
+    /// * 4D array containing the gradient (gradient\[x\]\[y\]\[component\]\[direction\])
     pub fn matrix_gradient<F>(
         field: &Array3<F>,
         spacing: F,
@@ -499,12 +499,12 @@ pub mod differential_operators {
                 for j in 1..(ny - 1) {
                     // ∂F/∂x
                     let df_dx = (field[[i + 1, j, comp]] - field[[i - 1, j, comp]])
-                        / (F::from(2.0).unwrap() * spacing);
+                        / (F::from(2.0).expect("Operation failed") * spacing);
                     result[[i, j, comp, 0]] = df_dx;
 
                     // ∂F/∂y
                     let df_dy = (field[[i, j + 1, comp]] - field[[i, j - 1, comp]])
-                        / (F::from(2.0).unwrap() * spacing);
+                        / (F::from(2.0).expect("Operation failed") * spacing);
                     result[[i, j, comp, 1]] = df_dy;
                 }
             }
@@ -659,7 +659,7 @@ pub mod finite_difference {
                 let f_minus = f(&x_minus.view())?;
 
                 // Compute central difference approximation
-                grad[[i, j]] = (f_plus - f_minus) / (F::from(2.0).unwrap() * eps);
+                grad[[i, j]] = (f_plus - f_minus) / (F::from(2.0).expect("Operation failed") * eps);
             }
         }
 

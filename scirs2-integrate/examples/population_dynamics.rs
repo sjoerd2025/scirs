@@ -206,7 +206,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = solve_ivp(exponential_growth, t_span, y0.clone(), None)?;
 
     println!("   Initial population: {:.1}", y0[0]);
-    println!("   Final population: {:.1}", result.y.last().unwrap()[0]);
+    println!(
+        "   Final population: {:.1}",
+        result.y.last().expect("Operation failed")[0]
+    );
     println!(
         "   Theoretical final: {:.1}",
         y0[0] * (0.5 * t_span[1]).exp()
@@ -218,11 +221,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = solve_ivp(logistic_growth, [0.0, 10.0], array![5.0], None)?;
 
     println!("   Initial population: {:.1}", 5.0);
-    println!("   Final population: {:.1}", result.y.last().unwrap()[0]);
+    println!(
+        "   Final population: {:.1}",
+        result.y.last().expect("Operation failed")[0]
+    );
     println!("   Carrying capacity: {:.1}", 100.0);
     println!(
         "   Approached carrying capacity: {:.1}%",
-        result.y.last().unwrap()[0] / 100.0 * 100.0
+        result.y.last().expect("Operation failed")[0] / 100.0 * 100.0
     );
     println!();
 
@@ -248,8 +254,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Final populations: Prey={:.1}, Predator={:.1}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
     println!("   Steps taken: {} (oscillatory dynamics)", result.t.len());
     println!();
@@ -269,12 +275,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Final populations: Species1={:.1}, Species2={:.1}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
 
     // Determine competitive outcome
-    let final_ratio = result.y.last().unwrap()[0] / result.y.last().unwrap()[1];
+    let final_ratio = result.y.last().expect("Operation failed")[0]
+        / result.y.last().expect("Operation failed")[1];
     if final_ratio > 2.0 {
         println!("   Outcome: Species 1 dominates");
     } else if final_ratio < 0.5 {
@@ -293,7 +300,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "   Initial: S={:.0}, I={:.0}, R={:.0}",
         sir_initial[0], sir_initial[1], sir_initial[2]
     );
-    let final_state = result.y.last().unwrap();
+    let final_state = result.y.last().expect("Operation failed");
     println!(
         "   Final: S={:.0}, I={:.0}, R={:.0}",
         final_state[0], final_state[1], final_state[2]
@@ -322,7 +329,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "   Initial: S={:.0}, E={:.0}, I={:.0}, R={:.0}",
         seir_initial[0], seir_initial[1], seir_initial[2], seir_initial[3]
     );
-    let final_state = result.y.last().unwrap();
+    let final_state = result.y.last().expect("Operation failed");
     println!(
         "   Final: S={:.0}, E={:.0}, I={:.0}, R={:.0}",
         final_state[0], final_state[1], final_state[2], final_state[3]
@@ -341,7 +348,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("7. SIRS Model (Immunity Loss)");
     let result = solve_ivp(sirs_model, [0.0, 100.0], array![990.0, 10.0, 0.0], None)?;
 
-    let final_state = result.y.last().unwrap();
+    let final_state = result.y.last().expect("Operation failed");
     println!("   Initial: S={:.0}, I={:.0}, R={:.0}", 990.0, 10.0, 0.0);
     println!(
         "   Final: S={:.0}, I={:.0}, R={:.0}",
@@ -354,7 +361,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("8. SIS Model (No Immunity)");
     let result = solve_ivp(sis_model, [0.0, 30.0], array![950.0, 50.0], None)?;
 
-    let final_state = result.y.last().unwrap();
+    let final_state = result.y.last().expect("Operation failed");
     println!("   Initial: S={:.0}, I={:.0}", 950.0, 50.0);
     println!("   Final: S={:.0}, I={:.0}", final_state[0], final_state[1]);
 
@@ -381,7 +388,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         meta_initial[3], meta_initial[4], meta_initial[5]
     );
 
-    let final_state = result.y.last().unwrap();
+    let final_state = result.y.last().expect("Operation failed");
     println!(
         "   City 1 Final: S={:.0}, I={:.0}, R={:.0}",
         final_state[0], final_state[1], final_state[2]
@@ -418,9 +425,9 @@ mod tests {
         let t_span = [0.0, 20.0]; // Long time
         let y0 = array![10.0];
 
-        let result = solve_ivp(logistic_growth, t_span, y0, None).unwrap();
+        let result = solve_ivp(logistic_growth, t_span, y0, None).expect("Operation failed");
 
-        let final_pop = result.y.last().unwrap()[0];
+        let final_pop = result.y.last().expect("Operation failed")[0];
         let carrying_capacity = 100.0;
 
         // Should approach carrying capacity (within 5%)
@@ -433,10 +440,10 @@ mod tests {
         let t_span = [0.0, 30.0];
         let y0 = array![1000.0, 1.0, 0.0];
 
-        let result = solve_ivp(sir_model, t_span, y0.clone(), None).unwrap();
+        let result = solve_ivp(sir_model, t_span, y0.clone(), None).expect("Operation failed");
 
         let initial_total = y0[0] + y0[1] + y0[2];
-        let final_state = result.y.last().unwrap();
+        let final_state = result.y.last().expect("Operation failed");
         let final_total = final_state[0] + final_state[1] + final_state[2];
 
         // Population should be conserved
@@ -455,10 +462,11 @@ mod tests {
             ..Default::default()
         };
 
-        let result = solve_ivp(seir_model, t_span, y0.clone(), Some(options)).unwrap();
+        let result =
+            solve_ivp(seir_model, t_span, y0.clone(), Some(options)).expect("Operation failed");
 
         let initial_total = y0.sum();
-        let final_state = result.y.last().unwrap();
+        let final_state = result.y.last().expect("Operation failed");
         let final_total = final_state[0] + final_state[1] + final_state[2] + final_state[3];
 
         assert_abs_diff_eq!(initial_total, final_total, epsilon = 1e-6);
@@ -476,7 +484,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = solve_ivp(lotka_volterra, t_span, y0.clone(), Some(options)).unwrap();
+        let result =
+            solve_ivp(lotka_volterra, t_span, y0.clone(), Some(options)).expect("Operation failed");
 
         // First integral: H = cbN - d ln(N) + aP - b ln(P)
         let _a = 1.0;
@@ -514,7 +523,7 @@ mod tests {
         let y0 = array![999.0, 1.0, 0.0]; // Small initial infection
 
         // R₀ = β/γ = 0.3/0.1 = 3 > 1, so epidemic should grow initially
-        let result = solve_ivp(sir_model, t_span, y0.clone(), None).unwrap();
+        let result = solve_ivp(sir_model, t_span, y0.clone(), None).expect("Operation failed");
 
         // Find peak infection
         let peak_infected = result
@@ -527,7 +536,7 @@ mod tests {
         assert!(peak_infected > 10.0 * y0[1]);
 
         // Final number of susceptibles should be less than initial
-        let final_susceptible = result.y.last().unwrap()[0];
+        let final_susceptible = result.y.last().expect("Operation failed")[0];
         assert!(final_susceptible < y0[0]);
     }
 }

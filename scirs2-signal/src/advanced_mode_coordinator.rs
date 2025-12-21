@@ -527,7 +527,7 @@ mod tests {
         let coordinator = AdvancedCoordinator::new();
         let signal = coordinator
             .generate_test_signal(100, 10.0, &[1.0, 2.0])
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(signal.len(), 100);
 
         // Signal should have non-zero variance (not all zeros)
@@ -539,7 +539,7 @@ mod tests {
     #[test]
     fn test_basic_functionality_validation() {
         let coordinator = AdvancedCoordinator::new();
-        let score = coordinator.validate_basic_functionality().unwrap();
+        let score = coordinator.validate_basic_functionality().expect("Operation failed");
         assert!(score >= 0.0);
         assert!(score <= 100.0);
     }

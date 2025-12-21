@@ -54,11 +54,11 @@ pub fn train_val_split<F: Float + Debug + ScalarOperand>(
         let y_valshape = y_val_2d.shape().to_vec();
         let x_train = x_train_2d
             .into_shape_with_order(IxDyn(&x_trainshape))
-            .unwrap();
+            .expect("Operation failed");
         let y_train = y_train_2d
             .into_shape_with_order(IxDyn(&y_trainshape))
-        let x_val = x_val_2d.into_shape_with_order(IxDyn(&x_valshape)).unwrap();
-        let y_val = y_val_2d.into_shape_with_order(IxDyn(&y_valshape)).unwrap();
+        let x_val = x_val_2d.into_shape_with_order(IxDyn(&x_valshape)).expect("Operation failed");
+        let y_val = y_val_2d.into_shape_with_order(IxDyn(&y_valshape)).expect("Operation failed");
         Ok((x_train, y_train, x_val, y_val))
     } else {
         // Split data without shuffling

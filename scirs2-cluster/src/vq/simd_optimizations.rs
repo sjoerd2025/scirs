@@ -149,7 +149,7 @@ where
 {
     let n_samples = obs.shape()[0];
     let n_features = obs.shape()[1];
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
 
     // Calculate means using SIMD operations
     let mut means = Array1::<F>::zeros(n_features);
@@ -165,11 +165,12 @@ where
         let mean_array = Array1::from_elem(n_samples, means[j]);
         let diff = F::simd_sub(&column, &mean_array.view());
         let squared_diff = F::simd_mul(&diff.view(), &diff.view());
-        let variance = F::simd_sum(&squared_diff.view()) / F::from(n_samples - 1).unwrap();
+        let variance = F::simd_sum(&squared_diff.view())
+            / F::from(n_samples - 1).expect("Failed to convert to float");
         stds[j] = variance.sqrt();
 
         // Avoid division by zero
-        if stds[j] < F::from(1e-10).unwrap() {
+        if stds[j] < F::from(1e-10).expect("Failed to convert constant to float") {
             stds[j] = F::one();
         }
     }
@@ -200,7 +201,7 @@ where
 {
     let n_samples = obs.shape()[0];
     let n_features = obs.shape()[1];
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
 
     // Parallel mean calculation
     let means: Array1<F> = if is_parallel_enabled() {
@@ -230,11 +231,12 @@ where
                 let mean_array = Array1::from_elem(n_samples, means[j]);
                 let diff = F::simd_sub(&column, &mean_array.view());
                 let squared_diff = F::simd_mul(&diff.view(), &diff.view());
-                let variance = F::simd_sum(&squared_diff.view()) / F::from(n_samples - 1).unwrap();
+                let variance = F::simd_sum(&squared_diff.view())
+                    / F::from(n_samples - 1).expect("Failed to convert to float");
                 let std = variance.sqrt();
 
                 // Avoid division by zero
-                if std < F::from(1e-10).unwrap() {
+                if std < F::from(1e-10).expect("Failed to convert constant to float") {
                     F::one()
                 } else {
                     std
@@ -245,7 +247,7 @@ where
     } else {
         whiten_simd_sequential(obs)?
             .into_shape((n_samples, n_features))
-            .unwrap();
+            .expect("Operation failed");
         return whiten_simd_sequential(obs);
     };
 
@@ -307,7 +309,7 @@ where
         for i in 0..n_samples {
             sum = sum + obs[[i, j]];
         }
-        means[j] = sum / F::from(n_samples).unwrap();
+        means[j] = sum / F::from(n_samples).expect("Failed to convert to float");
     }
 
     // Calculate standard deviation for each feature
@@ -318,10 +320,10 @@ where
             let diff = obs[[i, j]] - means[j];
             sum = sum + diff * diff;
         }
-        stds[j] = (sum / F::from(n_samples - 1).unwrap()).sqrt();
+        stds[j] = (sum / F::from(n_samples - 1).expect("Failed to convert to float")).sqrt();
 
         // Avoid division by zero
-        if stds[j] < F::from(1e-10).unwrap() {
+        if stds[j] < F::from(1e-10).expect("Failed to convert constant to float") {
             stds[j] = F::one();
         }
     }
@@ -596,7 +598,7 @@ where
                 }
             }
         } else {
-            let count_f = F::from(counts[i]).unwrap();
+            let count_f = F::from(counts[i]).expect("Failed to convert to float");
             if use_simd {
                 let centroid_row = centroids.slice(s![i, ..]);
                 let count_array = Array1::from_elem(n_features, count_f);
@@ -666,7 +668,7 @@ where
                     sum
                 }
             } else {
-                let count_f = F::from(count).unwrap();
+                let count_f = F::from(count).expect("Failed to convert to float");
                 if use_simd {
                     let count_array = Array1::from_elem(n_features, count_f);
                     let normalized = F::simd_div(&sum.view(), &count_array.view());
@@ -843,7 +845,7 @@ mod tests {
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let y = Array1::from_vec(vec![4.0, 5.0, 6.0]);
 
-        let distance = euclidean_distance_simd(x.view(), y.view(), None).unwrap();
+        let distance = euclidean_distance_simd(x.view(), y.view(), None).expect("Operation failed");
         let expected = ((4.0 - 1.0).powi(2) + (5.0 - 2.0).powi(2) + (6.0 - 3.0).powi(2)).sqrt();
 
         assert_abs_diff_eq!(distance, expected, epsilon = 1e-10);
@@ -851,7 +853,8 @@ mod tests {
 
     #[test]
     fn test_whiten_simd() {
-        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5])
+            .expect("Operation failed");
 
         // Use simple config to speed up test
         let config = SimdOptimizationConfig {
@@ -860,7 +863,7 @@ mod tests {
             ..Default::default()
         };
 
-        let whitened = whiten_simd(&data, Some(&config)).unwrap();
+        let whitened = whiten_simd(&data, Some(&config)).expect("Operation failed");
 
         // Check that means are approximately zero
         let col_means: Vec<f64> = (0..2).map(|j| whitened.column(j).mean()).collect();
@@ -873,9 +876,11 @@ mod tests {
     #[test]
     #[ignore = "timeout"]
     fn test_vq_simd() {
-        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).expect("Operation failed");
 
         // Use simple config to speed up test
         let config = SimdOptimizationConfig {
@@ -884,7 +889,8 @@ mod tests {
             ..Default::default()
         };
 
-        let (labels, distances) = vq_simd(data.view(), centroids.view(), Some(&config)).unwrap();
+        let (labels, distances) =
+            vq_simd(data.view(), centroids.view(), Some(&config)).expect("Operation failed");
 
         assert_eq!(labels.len(), 3);
         assert_eq!(distances.len(), 3);
@@ -898,7 +904,8 @@ mod tests {
     #[test]
     #[ignore = "timeout"]
     fn test_compute_centroids_simd() {
-        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
 
         let labels = Array1::from_vec(vec![0, 0, 1]);
 
@@ -909,7 +916,8 @@ mod tests {
             ..Default::default()
         };
 
-        let centroids = compute_centroids_simd(data.view(), &labels, 2, Some(&config)).unwrap();
+        let centroids = compute_centroids_simd(data.view(), &labels, 2, Some(&config))
+            .expect("Operation failed");
 
         assert_eq!(centroids.shape(), &[2, 2]);
 
@@ -925,9 +933,11 @@ mod tests {
     #[test]
     #[ignore = "timeout"]
     fn test_calculate_distortion_simd() {
-        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+            .expect("Operation failed");
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.0, 1.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.0, 1.0]).expect("Operation failed");
 
         let labels = Array1::from_vec(vec![0, 0, 1]);
 
@@ -940,7 +950,7 @@ mod tests {
 
         let distortion =
             calculate_distortion_simd(data.view(), centroids.view(), &labels, Some(&config))
-                .unwrap();
+                .expect("Operation failed");
 
         // Calculate expected distortion manually
         let expected = 0.5 * 0.5 + 0.5 * 0.5 + 0.0; // 0.5

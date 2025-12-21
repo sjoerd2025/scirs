@@ -602,7 +602,7 @@ impl BenchmarkSuite {
         let best_speedup = speedups.values().fold(0.0f64, |a, &b| a.max(b));
         let best_backend = speedups
             .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
             .map(|(&backend, _)| backend);
 
         if best_speedup > 2.0 {

@@ -842,8 +842,8 @@ pub mod analysis {
 
         let lengths: Vec<usize> = records.iter().map(|r| r.len()).collect();
         let totallength: usize = lengths.iter().sum();
-        let minlength = *lengths.iter().min().unwrap();
-        let maxlength = *lengths.iter().max().unwrap();
+        let minlength = *lengths.iter().min().expect("Operation failed");
+        let maxlength = *lengths.iter().max().expect("Operation failed");
         let meanlength = totallength as f64 / records.len() as f64;
 
         // Calculate N50
@@ -981,7 +981,7 @@ mod tests {
 
     #[test]
     fn test_fasta_read_write() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         // Write test data
@@ -1017,7 +1017,7 @@ mod tests {
 
     #[test]
     fn test_fastq_read_write() -> Result<()> {
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Operation failed");
         let path = temp_file.path();
 
         // Write test data
@@ -1053,8 +1053,8 @@ mod tests {
 
     #[test]
     fn testsequence_counting() -> Result<()> {
-        let fasta_file = NamedTempFile::new().unwrap();
-        let fastq_file = NamedTempFile::new().unwrap();
+        let fasta_file = NamedTempFile::new().expect("Operation failed");
+        let fastq_file = NamedTempFile::new().expect("Operation failed");
 
         // Create test FASTA
         {

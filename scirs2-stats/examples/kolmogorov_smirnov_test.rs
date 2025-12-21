@@ -16,7 +16,8 @@ fn main() {
     let sample1 = array![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
     let sample2 = array![0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1.05];
 
-    let (stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "two-sided").unwrap();
+    let (stat, p_value) =
+        ks_2samp(&sample1.view(), &sample2.view(), "two-sided").expect("Operation failed");
     println!("KS test statistic: {:.6}", stat);
     println!("p-value: {:.6}", p_value);
     println!("Null hypothesis (samples come from the same distribution):");
@@ -33,7 +34,8 @@ fn main() {
     let sample1 = array![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
     let sample2 = array![5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.0];
 
-    let (stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "two-sided").unwrap();
+    let (stat, p_value) =
+        ks_2samp(&sample1.view(), &sample2.view(), "two-sided").expect("Operation failed");
     println!("KS test statistic: {:.6}", stat);
     println!("p-value: {:.6}", p_value);
     println!("Null hypothesis (samples come from the same distribution):");
@@ -50,7 +52,8 @@ fn main() {
     let sample1 = array![1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9];
     let sample2 = array![1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4];
 
-    let (stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "less").unwrap();
+    let (stat, p_value) =
+        ks_2samp(&sample1.view(), &sample2.view(), "less").expect("Operation failed");
     println!("KS test statistic (less): {:.6}", stat);
     println!("p-value: {:.6}", p_value);
     println!("Null hypothesis (CDF of sample1 ≥ CDF of sample2):");
@@ -67,7 +70,8 @@ fn main() {
     let sample1 = array![1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4];
     let sample2 = array![1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9];
 
-    let (stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "greater").unwrap();
+    let (stat, p_value) =
+        ks_2samp(&sample1.view(), &sample2.view(), "greater").expect("Operation failed");
     println!("KS test statistic (greater): {:.6}", stat);
     println!("p-value: {:.6}", p_value);
     println!("Null hypothesis (CDF of sample1 ≤ CDF of sample2):");
@@ -83,16 +87,16 @@ fn main() {
 
     // Generate samples
     // Create a normal distribution sample
-    let normal_dist = distributions::norm(0.0f64, 1.0).unwrap();
-    let normal_sample = normal_dist.rvs(20).unwrap();
+    let normal_dist = distributions::norm(0.0f64, 1.0).expect("Operation failed");
+    let normal_sample = normal_dist.rvs(20).expect("Operation failed");
 
     // Create a uniform distribution sample
-    let uniform_dist = distributions::uniform(0.0f64, 1.0).unwrap();
-    let uniform_sample = uniform_dist.rvs(20).unwrap();
+    let uniform_dist = distributions::uniform(0.0f64, 1.0).expect("Operation failed");
+    let uniform_sample = uniform_dist.rvs(20).expect("Operation failed");
 
     // Run the test
-    let (stat, p_value) =
-        ks_2samp(&normal_sample.view(), &uniform_sample.view(), "two-sided").unwrap();
+    let (stat, p_value) = ks_2samp(&normal_sample.view(), &uniform_sample.view(), "two-sided")
+        .expect("Operation failed");
     println!("KS test statistic: {:.6}", stat);
     println!("p-value: {:.6}", p_value);
     println!("Null hypothesis (normal and uniform samples come from the same distribution):");

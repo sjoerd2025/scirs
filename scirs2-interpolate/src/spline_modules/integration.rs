@@ -37,9 +37,9 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
-    /// let integral = spline.integrate(0.5, 2.5).unwrap();
+    /// let integral = spline.integrate(0.5, 2.5).expect("Operation failed");
     /// println!("Integral from 0.5 to 2.5: {}", integral);
     /// ```
     pub fn integrate(&self, a: F, b: F) -> InterpolateResult<F> {
@@ -141,14 +141,14 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
     /// // Integrate within domain
-    /// let integral1 = spline.integrate_with_extrapolation(0.5, 2.5, None).unwrap();
+    /// let integral1 = spline.integrate_with_extrapolation(0.5, 2.5, None).expect("Operation failed");
     ///
     /// // Integrate with extrapolation beyond domain
     /// let integral2 = spline.integrate_with_extrapolation(-1.0, 4.0,
-    ///     Some(ExtrapolateMode::Extrapolate)).unwrap();
+    ///     Some(ExtrapolateMode::Extrapolate)).expect("Operation failed");
     /// ```
     pub fn integrate_with_extrapolation(
         &self,

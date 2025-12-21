@@ -65,7 +65,7 @@ where
 
     // Ensure initial point is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     let mut f = fun(&x.view()).into();
@@ -251,7 +251,7 @@ where
 
     // Final check for bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Use original function for final value
@@ -477,7 +477,7 @@ mod tests {
         let mut options = SparseOptimizationOptions::default();
         options.sparse_threshold = 10; // Force sparse operations
 
-        let result = minimize_sparse_bfgs(quadratic, x0, &options).unwrap();
+        let result = minimize_sparse_bfgs(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // Should converge to origin
@@ -494,7 +494,8 @@ mod tests {
         };
 
         let x = Array1::zeros(10);
-        let sparsity = auto_detect_sparsity(sparse_fn, &x.view(), Some(5), Some(1e-8)).unwrap();
+        let sparsity = auto_detect_sparsity(sparse_fn, &x.view(), Some(5), Some(1e-8))
+            .expect("Operation failed");
 
         // Should detect that only first two variables matter
         let dense = sparsity.to_array();

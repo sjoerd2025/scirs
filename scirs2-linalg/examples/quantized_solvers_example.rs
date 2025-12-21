@@ -57,30 +57,31 @@ fn example_conjugate_gradient() {
         .positive_definite();
 
     // Solve with standard conjugate gradient
-    let x_standard = conjugate_gradient(&standard_op, &b, 10, 1e-6).unwrap();
+    let x_standard = conjugate_gradient(&standard_op, &b, 10, 1e-6).expect("Operation failed");
     println!("Solution using standard CG: {:?}", x_standard);
 
     // Create a quantized matrix operator with 8-bit precision
     let quantized_op =
         QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-            .unwrap()
+            .expect("Operation failed")
             .symmetric()
             .positive_definite();
 
     // Solve with specialized quantized conjugate gradient
-    let x_quantized = quantized_conjugate_gradient(&quantized_op, &b, 10, 1e-6, false).unwrap();
+    let x_quantized =
+        quantized_conjugate_gradient(&quantized_op, &b, 10, 1e-6, false).expect("Operation failed");
     println!("Solution using quantized CG (8-bit): {:?}", x_quantized);
 
     // Create a quantized matrix operator with 4-bit precision
     let quantized_op_4bit =
         QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
-            .unwrap()
+            .expect("Operation failed")
             .symmetric()
             .positive_definite();
 
     // Solve with specialized quantized conjugate gradient
-    let x_quantized_4bit =
-        quantized_conjugate_gradient(&quantized_op_4bit, &b, 10, 1e-6, false).unwrap();
+    let x_quantized_4bit = quantized_conjugate_gradient(&quantized_op_4bit, &b, 10, 1e-6, false)
+        .expect("Operation failed");
     println!(
         "Solution using quantized CG (4-bit): {:?}",
         x_quantized_4bit
@@ -115,25 +116,27 @@ fn example_gmres() {
     let standard_op = LinearOperator::new(3, move |v: &ArrayView1<f32>| matrix_clone.dot(v));
 
     // Solve with standard GMRES
-    let x_standard = gmres(&standard_op, &b, 10, 1e-6, None).unwrap();
+    let x_standard = gmres(&standard_op, &b, 10, 1e-6, None).expect("Operation failed");
     println!("Solution using standard GMRES: {:?}", x_standard);
 
     // Create a quantized matrix operator with 8-bit precision
     let quantized_op =
         QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-            .unwrap();
+            .expect("Operation failed");
 
     // Solve with specialized quantized GMRES
-    let x_quantized = quantized_gmres(&quantized_op, &b, 10, 1e-6, None, false).unwrap();
+    let x_quantized =
+        quantized_gmres(&quantized_op, &b, 10, 1e-6, None, false).expect("Operation failed");
     println!("Solution using quantized GMRES (8-bit): {:?}", x_quantized);
 
     // Create a quantized matrix operator with 4-bit precision
     let quantized_op_4bit =
         QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
-            .unwrap();
+            .expect("Operation failed");
 
     // Solve with specialized quantized GMRES
-    let x_quantized_4bit = quantized_gmres(&quantized_op_4bit, &b, 10, 1e-6, None, false).unwrap();
+    let x_quantized_4bit =
+        quantized_gmres(&quantized_op_4bit, &b, 10, 1e-6, None, false).expect("Operation failed");
     println!(
         "Solution using quantized GMRES (4-bit): {:?}",
         x_quantized_4bit
@@ -166,16 +169,16 @@ fn example_preconditioned_cg() {
     // Create a quantized matrix operator with 8-bit precision
     let quantized_op =
         QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-            .unwrap()
+            .expect("Operation failed")
             .symmetric()
             .positive_definite();
 
     // Create a Jacobi preconditioner
-    let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();
+    let precond = quantized_jacobi_preconditioner(&quantized_op).expect("Operation failed");
 
     // Solve with standard quantized conjugate gradient (without preconditioner)
     let x_unpreconditioned =
-        quantized_conjugate_gradient(&quantized_op, &b, 10, 1e-6, false).unwrap();
+        quantized_conjugate_gradient(&quantized_op, &b, 10, 1e-6, false).expect("Operation failed");
     println!(
         "Solution using unpreconditioned CG: {:?}",
         x_unpreconditioned
@@ -184,7 +187,7 @@ fn example_preconditioned_cg() {
     // Solve with preconditioned conjugate gradient
     let x_preconditioned =
         quantized_preconditioned_conjugate_gradient(&quantized_op, &precond, &b, 10, 1e-6, false)
-            .unwrap();
+            .expect("Operation failed");
     println!("Solution using preconditioned CG: {:?}", x_preconditioned);
 
     // Verify the solutions
@@ -222,12 +225,13 @@ fn example_bandedmatrix() {
     ];
 
     let banded_op = QuantizedMatrixFreeOp::banded(n, bands, 8, QuantizationMethod::Symmetric)
-        .unwrap()
+        .expect("Operation failed")
         .symmetric()
         .positive_definite();
 
     // Solve with specialized quantized conjugate gradient
-    let x_banded = quantized_conjugate_gradient(&banded_op, &b, 20, 1e-6, false).unwrap();
+    let x_banded =
+        quantized_conjugate_gradient(&banded_op, &b, 20, 1e-6, false).expect("Operation failed");
     println!("Solution using banded matrix CG: {:?}", x_banded);
 
     // For verification, we'll create a dense matrix representation
@@ -260,16 +264,18 @@ fn example_adaptive_precision() {
     // This low precision will exacerbate the ill-conditioning
     let quantized_op =
         QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 4, QuantizationMethod::Symmetric)
-            .unwrap()
+            .expect("Operation failed")
             .symmetric()
             .positive_definite();
 
     // Solve with standard quantized conjugate gradient
-    let x_standard = quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, false).unwrap();
+    let x_standard =
+        quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, false).expect("Operation failed");
     println!("Solution using standard quantized CG: {:?}", x_standard);
 
     // Solve with adaptive precision
-    let x_adaptive = quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, true).unwrap();
+    let x_adaptive =
+        quantized_conjugate_gradient(&quantized_op, &b, 50, 1e-5, true).expect("Operation failed");
     println!("Solution using adaptive precision CG: {:?}", x_adaptive);
 
     // Verify the solutions

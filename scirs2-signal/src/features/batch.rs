@@ -39,12 +39,12 @@ use crate::utilities::spectral::spectral_centroid;
 /// options.sample_rate = Some(1000.0);
 ///
 /// // Extract features
-/// let features = extract_features(&signal, &options).unwrap();
+/// let features = extract_features(&signal, &options).expect("Operation failed");
 ///
 /// // Access individual features
-/// let mean = *features.get("mean").unwrap();
-/// let std_dev = *features.get("std").unwrap();
-/// let spectral_centroid = *features.get("spectral_centroid").unwrap();
+/// let mean = *features.get("mean").expect("Operation failed");
+/// let std_dev = *features.get("std").expect("Operation failed");
+/// let spectral_centroid = *features.get("spectral_centroid").expect("Operation failed");
 ///
 /// // Mean should be close to zero for a sine wave
 /// assert!(mean.abs() < 0.01);
@@ -144,7 +144,7 @@ where
 /// options.sample_rate = Some(1000.0);
 ///
 /// // Extract features for all signals
-/// let (feature_matrix, feature_names) = extract_features_batch(&signals, &options).unwrap();
+/// let (feature_matrix, feature_names) = extract_features_batch(&signals, &options).expect("Operation failed");
 ///
 /// // Check results
 /// assert_eq!(feature_matrix.shape()[0], n_signals);
@@ -177,7 +177,7 @@ pub fn extract_features_batch(
 
     // Set the first row
     for (i, name) in feature_names.iter().enumerate() {
-        feature_matrix[[0, i]] = *first_features.get(name).unwrap();
+        feature_matrix[[0, i]] = *first_features.get(name).expect("Operation failed");
     }
 
     // Process remaining signals

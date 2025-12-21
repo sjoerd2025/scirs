@@ -49,7 +49,7 @@ pub struct ChiSquareResult<F> {
 /// let expected = Some(array![15.0, 15.0, 15.0, 15.0, 15.0, 15.0]);
 ///
 /// // Perform chi-square goodness-of-fit test
-/// let result = chi2_gof(&observed.view(), expected.as_ref().map(|e| e.view())).unwrap();
+/// let result = chi2_gof(&observed.view(), expected.as_ref().map(|e| e.view())).expect("Test: operation failed");
 ///
 /// println!("Chi-square statistic: {}", result.statistic);
 /// println!("p-value: {}", result.p_value);
@@ -85,7 +85,7 @@ where
     // Convert observed integer frequencies to float
     let mut obs_float = Array1::<F>::zeros(observed.len());
     for (i, &val) in observed.iter().enumerate() {
-        obs_float[i] = F::from(val).unwrap();
+        obs_float[i] = F::from(val).expect("Failed to convert to float");
     }
 
     // Set expected frequencies
@@ -102,7 +102,7 @@ where
         None => {
             // Uniform distribution: all categories equally likely
             let total_obs = obs_float.sum();
-            let uniform_exp = total_obs / F::from(observed.len()).unwrap();
+            let uniform_exp = total_obs / F::from(observed.len()).expect("Test: operation failed");
             Array1::<F>::from_elem(observed.len(), uniform_exp)
         }
     };
@@ -126,7 +126,11 @@ where
     let df = observed.len() - 1;
 
     // Calculate p-value from chi-square distribution
-    let chi2_dist = chi2(F::from(df).unwrap(), F::zero(), F::one())?;
+    let chi2_dist = chi2(
+        F::from(df).expect("Failed to convert to float"),
+        F::zero(),
+        F::one(),
+    )?;
     let p_value = F::one() - chi2_dist.cdf(chi2_stat);
 
     // Create and return result
@@ -165,7 +169,7 @@ where
 /// ];
 ///
 /// // Perform chi-square test of independence
-/// let result = chi2_independence::<f64, i32>(&observed.view()).unwrap();
+/// let result = chi2_independence::<f64, i32>(&observed.view()).expect("Test: operation failed");
 ///
 /// println!("Chi-square statistic: {}", result.statistic);
 /// println!("p-value: {}", result.p_value);
@@ -209,7 +213,7 @@ where
     let mut obs_float = Array2::<F>::zeros((rows, cols));
     for i in 0..rows {
         for j in 0..cols {
-            obs_float[(i, j)] = F::from(observed[(i, j)]).unwrap();
+            obs_float[(i, j)] = F::from(observed[(i, j)]).expect("Test: operation failed");
         }
     }
 
@@ -249,7 +253,11 @@ where
     let df = (rows - 1) * (cols - 1);
 
     // Calculate p-value from chi-square distribution
-    let chi2_dist = chi2(F::from(df).unwrap(), F::zero(), F::one())?;
+    let chi2_dist = chi2(
+        F::from(df).expect("Failed to convert to float"),
+        F::zero(),
+        F::one(),
+    )?;
     let p_value = F::one() - chi2_dist.cdf(chi2_stat);
 
     // Create and return result
@@ -286,7 +294,7 @@ where
 /// ];
 ///
 /// // Perform chi-square test with Yates' correction
-/// let result = chi2_yates::<f64, i32>(&observed.view()).unwrap();
+/// let result = chi2_yates::<f64, i32>(&observed.view()).expect("Test: operation failed");
 ///
 /// println!("Chi-square statistic (with Yates' correction): {}", result.statistic);
 /// println!("p-value: {}", result.p_value);
@@ -319,7 +327,7 @@ where
     let mut obs_float = Array2::<F>::zeros((2, 2));
     for i in 0..2 {
         for j in 0..2 {
-            obs_float[(i, j)] = F::from(observed[(i, j)]).unwrap();
+            obs_float[(i, j)] = F::from(observed[(i, j)]).expect("Test: operation failed");
         }
     }
 
@@ -351,7 +359,8 @@ where
         for j in 0..2 {
             let obs = obs_float[(i, j)];
             let exp = expected[(i, j)];
-            let diff = (obs - exp).abs() - F::from(0.5).unwrap();
+            let diff =
+                (obs - exp).abs() - F::from(0.5).expect("Failed to convert constant to float");
             let diff_squared = if diff > F::zero() {
                 diff.powi(2)
             } else {
@@ -365,7 +374,11 @@ where
     let df = 1;
 
     // Calculate p-value from chi-square distribution
-    let chi2_dist = chi2(F::from(df).unwrap(), F::zero(), F::one())?;
+    let chi2_dist = chi2(
+        F::from(df).expect("Failed to convert to float"),
+        F::zero(),
+        F::one(),
+    )?;
     let p_value = F::one() - chi2_dist.cdf(chi2_stat);
 
     // Create and return result

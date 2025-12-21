@@ -115,8 +115,8 @@ impl SimdDistanceOps {
                         } else {
                             // Fallback for lower dimensions
                             Self::squared_euclidean_distance(
-                                point.as_slice().unwrap(),
-                                query.as_slice().unwrap(),
+                                point.as_slice().expect("Operation failed"),
+                                query.as_slice().expect("Operation failed"),
                             )
                         };
 
@@ -128,8 +128,8 @@ impl SimdDistanceOps {
                 for point_idx in 0..n_points {
                     let point = points.row(point_idx);
                     let distance = Self::squared_euclidean_distance(
-                        point.as_slice().unwrap(),
-                        query.as_slice().unwrap(),
+                        point.as_slice().expect("Operation failed"),
+                        query.as_slice().expect("Operation failed"),
                     );
                     distances.push(distance);
                 }
@@ -157,7 +157,7 @@ impl SimdDistanceOps {
         (0..n_queries)
             .map(|query_idx| {
                 let query = queries.row(query_idx);
-                Self::batch_distances_to_query(points, query.as_slice().unwrap())
+                Self::batch_distances_to_query(points, query.as_slice().expect("Operation failed"))
             })
             .collect()
     }
@@ -188,7 +188,7 @@ impl SimdDistanceOps {
         points
             .axis_iter(Axis(0))
             .map(|point| {
-                let point_slice = point.as_slice().unwrap();
+                let point_slice = point.as_slice().expect("Operation failed");
                 Self::squared_euclidean_distance(point_slice, query)
             })
             .collect()
@@ -203,7 +203,7 @@ impl SimdDistanceOps {
         points
             .axis_iter(Axis(0))
             .map(|point| {
-                let point_slice = point.as_slice().unwrap();
+                let point_slice = point.as_slice().expect("Operation failed");
                 Self::squared_euclidean_distance(point_slice, query)
             })
             .collect()
@@ -297,7 +297,7 @@ where
         queries
             .axis_iter(Axis(0))
             .map(|query| {
-                let query_slice = query.as_slice().unwrap();
+                let query_slice = query.as_slice().expect("Operation failed");
                 self.k_nearest_neighbors(query_slice, k)
             })
             .collect()
@@ -318,7 +318,7 @@ where
             queries_vec
                 .into_par_iter()
                 .map(|query| {
-                    let query_slice = query.as_slice().unwrap();
+                    let query_slice = query.as_slice().expect("Operation failed");
                     self.k_nearest_neighbors(query_slice, k)
                 })
                 .collect::<Result<Vec<_>, InterpolateError>>()
@@ -372,7 +372,7 @@ where
         queries
             .axis_iter(Axis(0))
             .map(|query| {
-                let query_slice = query.as_slice().unwrap();
+                let query_slice = query.as_slice().expect("Operation failed");
                 self.k_nearest_neighbors(query_slice, k)
             })
             .collect()
@@ -393,7 +393,7 @@ where
             queries_vec
                 .into_par_iter()
                 .map(|query| {
-                    let query_slice = query.as_slice().unwrap();
+                    let query_slice = query.as_slice().expect("Operation failed");
                     self.k_nearest_neighbors(query_slice, k)
                 })
                 .collect::<Result<Vec<_>, InterpolateError>>()

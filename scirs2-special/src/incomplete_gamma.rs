@@ -26,7 +26,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 /// ```
 /// use scirs2_special::incomplete_gamma::gammainc_lower;
 ///
-/// let result = gammainc_lower(2.0, 1.0).unwrap();
+/// let result = gammainc_lower(2.0, 1.0).expect("Operation failed");
 /// assert!((result - 0.2642411176571153f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -47,14 +47,14 @@ where
         let mut sum = T::one() / a;
         let mut term = T::one() / a;
         let mut n = T::one();
-        let tol = T::from_f64(1e-15).unwrap();
+        let tol = T::from_f64(1e-15).expect("Operation failed");
 
         while term.abs() > tol * sum.abs() {
             term *= x / (a + n);
             sum += term;
             n += T::one();
 
-            if n > T::from_f64(1000.0).unwrap() {
+            if n > T::from_f64(1000.0).expect("Operation failed") {
                 return Err(SpecialError::ConvergenceError(
                     "gammainc_lower: series did not converge".to_string(),
                 ));
@@ -97,23 +97,24 @@ where
     if x >= a + T::one() {
         // Continued fraction representation
         let mut b = x + T::one() - a;
-        let mut c = T::from_f64(1e30).unwrap();
+        let mut c = T::from_f64(1e30).expect("Operation failed");
         let mut d = T::one() / b;
         let mut h = d;
-        let tol = T::from_f64(1e-15).unwrap();
+        let tol = T::from_f64(1e-15).expect("Operation failed");
 
         for i in 1..1000 {
-            let an = -T::from_usize(i).unwrap() * (T::from_usize(i).unwrap() - a);
-            b += T::from_f64(2.0).unwrap();
+            let an = -T::from_usize(i).expect("Operation failed")
+                * (T::from_usize(i).expect("Operation failed") - a);
+            b += T::from_f64(2.0).expect("Operation failed");
             d = an * d + b;
 
-            if d.abs() < T::from_f64(1e-30).unwrap() {
-                d = T::from_f64(1e-30).unwrap();
+            if d.abs() < T::from_f64(1e-30).expect("Operation failed") {
+                d = T::from_f64(1e-30).expect("Operation failed");
             }
 
             c = b + an / c;
-            if c.abs() < T::from_f64(1e-30).unwrap() {
-                c = T::from_f64(1e-30).unwrap();
+            if c.abs() < T::from_f64(1e-30).expect("Operation failed") {
+                c = T::from_f64(1e-30).expect("Operation failed");
             }
 
             d = T::one() / d;
@@ -159,7 +160,7 @@ where
     }
 
     // For large a, use asymptotic expansion or specialized algorithms
-    if a > T::from_f64(100.0).unwrap() {
+    if a > T::from_f64(100.0).expect("Operation failed") {
         // Use log-space computation to avoid overflow
         let log_gamma_a = gammaln(a);
         let log_result = compute_log_gammainc(a, x, log_gamma_a)?;
@@ -215,7 +216,7 @@ where
 
     // Newton-Raphson iteration
     let mut x = x0;
-    let tol = T::from_f64(1e-12).unwrap();
+    let tol = T::from_f64(1e-12).expect("Operation failed");
 
     for _ in 0..100 {
         let f = gammainc(a, x)? - p;
@@ -228,7 +229,7 @@ where
 
         // Ensure x stays positive
         if x <= T::zero() {
-            x = T::from_f64(1e-10).unwrap();
+            x = T::from_f64(1e-10).expect("Operation failed");
         }
 
         if dx.abs() < tol * x.abs() {
@@ -264,18 +265,19 @@ where
     T: Float + FromPrimitive + Display,
 {
     // Wilson-Hilferty approximation
-    let g = T::from_f64(2.0).unwrap() / (T::from_f64(9.0).unwrap() * a);
+    let g = T::from_f64(2.0).expect("Operation failed")
+        / (T::from_f64(9.0).expect("Operation failed") * a);
     let z = crate::distributions::ndtri(p).unwrap_or(T::zero());
     let w = T::one() + g * z;
 
     if w > T::zero() {
-        a * w.powf(T::from_f64(3.0).unwrap())
+        a * w.powf(T::from_f64(3.0).expect("Operation failed"))
     } else {
         // Fallback for extreme cases
-        if p < T::from_f64(0.5).unwrap() {
-            a * T::from_f64(0.1).unwrap()
+        if p < T::from_f64(0.5).expect("Operation failed") {
+            a * T::from_f64(0.1).expect("Operation failed")
         } else {
-            a * T::from_f64(2.0).unwrap()
+            a * T::from_f64(2.0).expect("Operation failed")
         }
     }
 }
@@ -296,10 +298,10 @@ where
     let mut term = T::one();
 
     for n in 1..50 {
-        term *= (a - T::from_usize(n).unwrap()) / x;
+        term *= (a - T::from_usize(n).expect("Operation failed")) / x;
         sum += term;
 
-        if term.abs() < T::from_f64(1e-15).unwrap() {
+        if term.abs() < T::from_f64(1e-15).expect("Operation failed") {
             break;
         }
     }
@@ -317,7 +319,7 @@ where
 {
     check_positive(x, "x")?;
 
-    if x >= T::from_f64(10.0).unwrap() {
+    if x >= T::from_f64(10.0).expect("Operation failed") {
         // Use Stirling series
         let mut sum = T::one();
         let x2 = x * x;
@@ -325,10 +327,10 @@ where
 
         // Stirling coefficients
         let coeffs = [
-            T::from_f64(1.0 / 12.0).unwrap(),
-            T::from_f64(1.0 / 288.0).unwrap(),
-            T::from_f64(-139.0 / 51840.0).unwrap(),
-            T::from_f64(-571.0 / 2488320.0).unwrap(),
+            T::from_f64(1.0 / 12.0).expect("Operation failed"),
+            T::from_f64(1.0 / 288.0).expect("Operation failed"),
+            T::from_f64(-139.0 / 51840.0).expect("Operation failed"),
+            T::from_f64(-571.0 / 2488320.0).expect("Operation failed"),
         ];
 
         for &c in &coeffs {
@@ -339,9 +341,9 @@ where
         Ok(sum)
     } else {
         // Direct computation
-        let sqrt_2pi = T::from_f64((2.0 * std::f64::consts::PI).sqrt()).unwrap();
+        let sqrt_2pi = T::from_f64((2.0 * std::f64::consts::PI).sqrt()).expect("Operation failed");
         let gamma_x = gamma(x);
-        let x_power = x.powf(x - T::from_f64(0.5).unwrap());
+        let x_power = x.powf(x - T::from_f64(0.5).expect("Operation failed"));
         let exp_neg_x = (-x).exp();
 
         Ok(gamma_x / (sqrt_2pi * x_power * exp_neg_x))
@@ -384,41 +386,41 @@ mod tests {
     fn test_gammainc_lower() {
         // Test values verified against SciPy (non-regularized incomplete gamma)
         assert_relative_eq!(
-            gammainc_lower(1.0, 1.0).unwrap(),
+            gammainc_lower(1.0, 1.0).expect("Operation failed"),
             0.6321205588285577, // γ(1,1) = P(1,1) * Γ(1) = 0.6321205588285577 * 1
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            gammainc_lower(2.0, 1.0).unwrap(),
+            gammainc_lower(2.0, 1.0).expect("Operation failed"),
             0.264241117657115, // γ(2,1) = P(2,1) * Γ(2) = 0.2642411176571153 * 1
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            gammainc_lower(3.0, 2.0).unwrap(),
+            gammainc_lower(3.0, 2.0).expect("Operation failed"),
             0.646647167633873, // γ(3,2) = P(3,2) * Γ(3) = 0.32332358381693654 * 2
             epsilon = 1e-10
         );
 
         // Edge cases
-        assert_eq!(gammainc_lower(1.0, 0.0).unwrap(), 0.0);
+        assert_eq!(gammainc_lower(1.0, 0.0).expect("Operation failed"), 0.0);
     }
 
     #[test]
     fn test_gammainc() {
         // Regularized lower incomplete gamma
         assert_relative_eq!(
-            gammainc(1.0, 1.0).unwrap(),
+            gammainc(1.0, 1.0).expect("Operation failed"),
             0.6321205588285577,
             epsilon = 1e-10
         );
         assert_relative_eq!(
-            gammainc(2.0, 2.0).unwrap(),
+            gammainc(2.0, 2.0).expect("Operation failed"),
             0.5939941502901619,
             epsilon = 1e-10
         );
 
         // P(a,0) = 0, P(a,∞) = 1
-        assert_eq!(gammainc(1.0, 0.0).unwrap(), 0.0);
+        assert_eq!(gammainc(1.0, 0.0).expect("Operation failed"), 0.0);
     }
 
     #[test]
@@ -426,8 +428,8 @@ mod tests {
         // Q(a,x) = 1 - P(a,x)
         let a = 2.0;
         let x = 1.5;
-        let p = gammainc(a, x).unwrap();
-        let q = gammaincc(a, x).unwrap();
+        let p = gammainc(a, x).expect("Operation failed");
+        let q = gammaincc(a, x).expect("Operation failed");
         assert_relative_eq!(p + q, 1.0, epsilon = 1e-10);
     }
 
@@ -436,8 +438,8 @@ mod tests {
         // Test round trip: gammaincinv(a, gammainc(a, x)) ≈ x
         let a = 2.5;
         let x = 3.0;
-        let p = gammainc(a, x).unwrap();
-        let x_recovered = gammaincinv(a, p).unwrap();
+        let p = gammainc(a, x).expect("Operation failed");
+        let x_recovered = gammaincinv(a, p).expect("Operation failed");
         assert_relative_eq!(x_recovered, x, epsilon = 1e-8);
     }
 

@@ -317,8 +317,8 @@ impl MLSentimentAnalyzer {
     }
 
     fn predict_numeric(&self, features: &Array2<f64>) -> Result<Vec<i32>> {
-        let weights = self.weights.as_ref().unwrap();
-        let bias = self.bias.unwrap();
+        let weights = self.weights.as_ref().expect("Operation failed");
+        let bias = self.bias.expect("Operation failed");
 
         let mut predictions = Vec::new();
 
@@ -341,8 +341,8 @@ impl MLSentimentAnalyzer {
     }
 
     fn predict_proba(&self, features: &Array2<f64>) -> Result<Vec<f64>> {
-        let weights = self.weights.as_ref().unwrap();
-        let bias = self.bias.unwrap();
+        let weights = self.weights.as_ref().expect("Operation failed");
+        let bias = self.bias.expect("Operation failed");
 
         let mut probabilities = Vec::new();
 
@@ -446,7 +446,7 @@ mod tests {
             "neutral".to_string(),
         ];
 
-        TextDataset::new(texts, labels).unwrap()
+        TextDataset::new(texts, labels).expect("Operation failed")
     }
 
     #[test]
@@ -458,7 +458,7 @@ mod tests {
         });
 
         let dataset = create_test_dataset();
-        let metrics = analyzer.train(&dataset).unwrap();
+        let metrics = analyzer.train(&dataset).expect("Operation failed");
 
         assert!(metrics.accuracy > 0.0);
         assert_eq!(metrics.loss_history.len(), 10);
@@ -474,7 +474,7 @@ mod tests {
         });
         let dataset = create_test_dataset();
 
-        analyzer.train(&dataset).unwrap();
+        analyzer.train(&dataset).expect("Operation failed");
 
         // Test multiple positive examples to avoid test flakiness
         for positivetext in &[
@@ -483,7 +483,7 @@ mod tests {
             "Great product, loved it",
             "Fantastic results, highly recommend",
         ] {
-            let _result = analyzer.predict(positivetext).unwrap();
+            let _result = analyzer.predict(positivetext).expect("Operation failed");
             // Don't assert on the specific sentiment, as these simple models
             // can be unpredictable with limited training data
             // Just ensure no error is thrown
@@ -496,10 +496,12 @@ mod tests {
         let dataset = create_test_dataset();
 
         // Split into train and test
-        let (train_dataset, test_dataset) = dataset.train_test_split(0.3, Some(42)).unwrap();
+        let (train_dataset, test_dataset) = dataset
+            .train_test_split(0.3, Some(42))
+            .expect("Operation failed");
 
-        analyzer.train(&train_dataset).unwrap();
-        let eval_metrics = analyzer.evaluate(&test_dataset).unwrap();
+        analyzer.train(&train_dataset).expect("Operation failed");
+        let eval_metrics = analyzer.evaluate(&test_dataset).expect("Operation failed");
 
         assert!(eval_metrics.accuracy >= 0.0 && eval_metrics.accuracy <= 1.0);
         assert!(!eval_metrics.class_metrics.is_empty());
@@ -510,7 +512,7 @@ mod tests {
         let mut analyzer = MLSentimentAnalyzer::new();
         let dataset = create_test_dataset();
 
-        analyzer.train(&dataset).unwrap();
+        analyzer.train(&dataset).expect("Operation failed");
 
         let texts = vec![
             "Great product!",
@@ -518,7 +520,7 @@ mod tests {
             "It's okay, nothing special.",
         ];
 
-        let results = analyzer.predict_batch(&texts).unwrap();
+        let results = analyzer.predict_batch(&texts).expect("Operation failed");
         assert_eq!(results.len(), 3);
     }
 

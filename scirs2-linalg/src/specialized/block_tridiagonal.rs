@@ -41,7 +41,7 @@ use std::iter::Sum;
 /// let super_diag = vec![b1.clone(), b2.clone()];
 /// let sub_diag = vec![c1.clone(), c2.clone()];
 ///
-/// let block_tri = BlockTridiagonalMatrix::new(diag, super_diag, sub_diag).unwrap();
+/// let block_tri = BlockTridiagonalMatrix::new(diag, super_diag, sub_diag).expect("Operation failed");
 ///
 /// // Get block dimensions and total dimensions
 /// assert_eq!(block_tri.block_count(), 3);
@@ -49,11 +49,11 @@ use std::iter::Sum;
 /// assert_eq!(block_tri.ncols(), 6);
 ///
 /// // Get element at position (1,3) which is in block (0,1) at position (1,1)
-/// assert_eq!(block_tri.get(1, 3).unwrap(), 16.0);
+/// assert_eq!(block_tri.get(1, 3).expect("Operation failed"), 16.0);
 ///
 /// // Matrix-vector multiplication with a 6-element vector
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-/// let y = block_tri.matvec(&x.view()).unwrap();
+/// let y = block_tri.matvec(&x.view()).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct BlockTridiagonalMatrix<A>
@@ -613,7 +613,8 @@ mod tests {
         let c1 = array![[21.0, 22.0], [23.0, 24.0]];
         let c2 = array![[25.0, 26.0], [27.0, 28.0]];
 
-        BlockTridiagonalMatrix::new(vec![a1, a2, a3], vec![b1, b2], vec![c1, c2]).unwrap()
+        BlockTridiagonalMatrix::new(vec![a1, a2, a3], vec![b1, b2], vec![c1, c2])
+            .expect("Operation failed")
     }
 
     #[test]
@@ -631,30 +632,30 @@ mod tests {
         let matrix = create_testmatrix();
 
         // Test elements in diagonal blocks
-        assert_eq!(matrix.get(0, 0).unwrap(), 1.0);
-        assert_eq!(matrix.get(0, 1).unwrap(), 2.0);
-        assert_eq!(matrix.get(2, 2).unwrap(), 5.0);
-        assert_eq!(matrix.get(5, 5).unwrap(), 12.0);
+        assert_eq!(matrix.get(0, 0).expect("Operation failed"), 1.0);
+        assert_eq!(matrix.get(0, 1).expect("Operation failed"), 2.0);
+        assert_eq!(matrix.get(2, 2).expect("Operation failed"), 5.0);
+        assert_eq!(matrix.get(5, 5).expect("Operation failed"), 12.0);
 
         // Test elements in superdiagonal blocks
-        assert_eq!(matrix.get(0, 2).unwrap(), 13.0);
-        assert_eq!(matrix.get(1, 3).unwrap(), 16.0);
-        assert_eq!(matrix.get(2, 4).unwrap(), 17.0);
+        assert_eq!(matrix.get(0, 2).expect("Operation failed"), 13.0);
+        assert_eq!(matrix.get(1, 3).expect("Operation failed"), 16.0);
+        assert_eq!(matrix.get(2, 4).expect("Operation failed"), 17.0);
 
         // Test elements in subdiagonal blocks
-        assert_eq!(matrix.get(2, 0).unwrap(), 21.0);
-        assert_eq!(matrix.get(4, 2).unwrap(), 25.0);
+        assert_eq!(matrix.get(2, 0).expect("Operation failed"), 21.0);
+        assert_eq!(matrix.get(4, 2).expect("Operation failed"), 25.0);
 
         // Test elements that are outside of diagonal+1 spacing
-        assert_eq!(matrix.get(0, 4).unwrap(), 0.0);
+        assert_eq!(matrix.get(0, 4).expect("Operation failed"), 0.0);
         // Element (5,2) is in subdiagonal block c2
-        assert_eq!(matrix.get(5, 2).unwrap(), 27.0);
+        assert_eq!(matrix.get(5, 2).expect("Operation failed"), 27.0);
     }
 
     #[test]
     fn test_to_dense() {
         let matrix = create_testmatrix();
-        let dense = matrix.to_dense().unwrap();
+        let dense = matrix.to_dense().expect("Operation failed");
 
         // Expected dense matrix
         #[rustfmt::skip]
@@ -678,10 +679,10 @@ mod tests {
     fn test_matvec() {
         let matrix = create_testmatrix();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        let y = matrix.matvec(&x.view()).unwrap();
+        let y = matrix.matvec(&x.view()).expect("Operation failed");
 
         // Calculate expected result using the dense version
-        let dense = matrix.to_dense().unwrap();
+        let dense = matrix.to_dense().expect("Operation failed");
         let mut expected = Array1::zeros(6);
         for i in 0..6 {
             for j in 0..6 {
@@ -698,10 +699,12 @@ mod tests {
     fn test_matvec_transpose() {
         let matrix = create_testmatrix();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        let y = matrix.matvec_transpose(&x.view()).unwrap();
+        let y = matrix
+            .matvec_transpose(&x.view())
+            .expect("Operation failed");
 
         // Calculate expected result using the dense version
-        let dense = matrix.to_dense().unwrap();
+        let dense = matrix.to_dense().expect("Operation failed");
         let mut expected = Array1::zeros(6);
         for i in 0..6 {
             for j in 0..6 {

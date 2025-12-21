@@ -36,7 +36,7 @@ use std::fmt::Debug;
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// // Compute RFFT of the signal with SIMD acceleration
-/// let spectrum = rfft_simd(&signal, None, None).unwrap();
+/// let spectrum = rfft_simd(&signal, None, None).expect("Operation failed");
 ///
 /// // RFFT produces n//2 + 1 complex values
 /// assert_eq!(spectrum.len(), signal.len() / 2 + 1);
@@ -98,10 +98,10 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// // Forward transform
-/// let spectrum = rfft_simd(&signal, None, None).unwrap();
+/// let spectrum = rfft_simd(&signal, None, None).expect("Operation failed");
 ///
 /// // Inverse transform
-/// let recovered = irfft_simd(&spectrum, Some(signal.len()), None).unwrap();
+/// let recovered = irfft_simd(&spectrum, Some(signal.len()), None).expect("Operation failed");
 ///
 /// // Check recovery accuracy
 /// for (x, y) in signal.iter().zip(recovered.iter()) {
@@ -254,7 +254,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Forward transform
-        let spectrum = rfft_simd(&signal, None, None).unwrap();
+        let spectrum = rfft_simd(&signal, None, None).expect("Operation failed");
 
         // Check size
         assert_eq!(spectrum.len(), signal.len() / 2 + 1);
@@ -269,10 +269,10 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Forward transform
-        let spectrum = rfft_simd(&signal, None, None).unwrap();
+        let spectrum = rfft_simd(&signal, None, None).expect("Operation failed");
 
         // Inverse transform
-        let recovered = irfft_simd(&spectrum, Some(signal.len()), None).unwrap();
+        let recovered = irfft_simd(&spectrum, Some(signal.len()), None).expect("Operation failed");
 
         // Check recovery
         for (i, (&orig, &rec)) in signal.iter().zip(recovered.iter()).enumerate() {
@@ -287,10 +287,11 @@ mod tests {
         let signal = vec![1.0; 1000];
 
         // Test adaptive functions (should work regardless of GPU availability)
-        let spectrum = rfft_adaptive(&signal, None, None).unwrap();
+        let spectrum = rfft_adaptive(&signal, None, None).expect("Operation failed");
         assert_eq!(spectrum.len(), signal.len() / 2 + 1);
 
-        let recovered = irfft_adaptive(&spectrum, Some(signal.len()), None).unwrap();
+        let recovered =
+            irfft_adaptive(&spectrum, Some(signal.len()), None).expect("Operation failed");
         assert_eq!(recovered.len(), signal.len());
     }
 }

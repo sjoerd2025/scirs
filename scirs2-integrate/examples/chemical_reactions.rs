@@ -167,8 +167,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Final concentrations: [A]={:.3}, [B]={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
 
     // Calculate equilibrium constant
@@ -191,12 +191,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Initial: [S]={:.3}, [P]={:.3}", 10.0, 0.0);
     println!(
         "   Final: [S]={:.3}, [P]={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
     println!(
         "   Conservation check: S+P = {:.3} (should be 10.0)",
-        result.y.last().unwrap()[0] + result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0]
+            + result.y.last().expect("Operation failed")[1]
     );
     println!();
 
@@ -207,12 +208,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Initial: [A]={:.3}, [B]={:.3}", 1.0, 0.1);
     println!(
         "   Final: [A]={:.3}, [B]={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
     println!(
         "   Total conservation: A+B = {:.3} (should be 1.1)",
-        result.y.last().unwrap()[0] + result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0]
+            + result.y.last().expect("Operation failed")[1]
     );
     println!();
 
@@ -235,8 +237,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Initial: [X]={:.3}, [Y]={:.3}", 1.0, 1.0);
     println!(
         "   Final: [X]={:.3}, [Y]={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
     println!("   Steps taken: {} (oscillatory behavior)", result.t.len());
     println!();
@@ -253,8 +255,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Initial: [X]={:.3}, [Y]={:.3}", 1.0, 1.0);
     println!(
         "   Final: [X]={:.3}, [Y]={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
     println!(
         "   Steps taken: {} (limit cycle oscillator)",
@@ -282,9 +284,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Initial: [X]={:.3}, [Y]={:.3}, [Z]={:.3}", 1.0, 1.0, 1.0);
     println!(
         "   Final: [X]={:.3}, [Y]={:.3}, [Z]={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1],
-        result.y.last().unwrap()[2]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1],
+        result.y.last().expect("Operation failed")[2]
     );
     println!("   Steps taken: {} (complex oscillations)", result.t.len());
     println!();
@@ -299,9 +301,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "   Final: [G6P]={:.3}, [F6P]={:.3}, [ATP]={:.3}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1],
-        result.y.last().unwrap()[2]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1],
+        result.y.last().expect("Operation failed")[2]
     );
     println!("   Metabolic steady state reached");
     println!();
@@ -328,10 +330,12 @@ mod tests {
         let t_span = [0.0, 10.0];
         let y0 = array![3.0, 1.0];
 
-        let result = solve_ivp(reversible_reaction, t_span, y0.clone(), None).unwrap();
+        let result =
+            solve_ivp(reversible_reaction, t_span, y0.clone(), None).expect("Operation failed");
 
         let initial_total = y0[0] + y0[1];
-        let final_total = result.y.last().unwrap()[0] + result.y.last().unwrap()[1];
+        let final_total = result.y.last().expect("Operation failed")[0]
+            + result.y.last().expect("Operation failed")[1];
 
         // Mass should be conserved
         assert_abs_diff_eq!(initial_total, final_total, epsilon = 1e-6);
@@ -343,10 +347,12 @@ mod tests {
         let t_span = [0.0, 5.0];
         let y0 = array![5.0, 0.0];
 
-        let result = solve_ivp(michaelis_menten_kinetics, t_span, y0.clone(), None).unwrap();
+        let result = solve_ivp(michaelis_menten_kinetics, t_span, y0.clone(), None)
+            .expect("Operation failed");
 
         let initial_total = y0[0] + y0[1];
-        let final_total = result.y.last().unwrap()[0] + result.y.last().unwrap()[1];
+        let final_total = result.y.last().expect("Operation failed")[0]
+            + result.y.last().expect("Operation failed")[1];
 
         assert_abs_diff_eq!(initial_total, final_total, epsilon = 1e-6);
     }
@@ -357,15 +363,17 @@ mod tests {
         let t_span = [0.0, 3.0];
         let y0 = array![1.0, 0.01]; // Small amount of catalyst
 
-        let result = solve_ivp(autocatalytic_reaction, t_span, y0.clone(), None).unwrap();
+        let result =
+            solve_ivp(autocatalytic_reaction, t_span, y0.clone(), None).expect("Operation failed");
 
         // B should increase significantly
-        assert!(result.y.last().unwrap()[1] > y0[1]);
+        assert!(result.y.last().expect("Operation failed")[1] > y0[1]);
         // A should decrease
-        assert!(result.y.last().unwrap()[0] < y0[0]);
+        assert!(result.y.last().expect("Operation failed")[0] < y0[0]);
         // Total should be conserved
         let total_initial = y0[0] + y0[1];
-        let total_final = result.y.last().unwrap()[0] + result.y.last().unwrap()[1];
+        let total_final = result.y.last().expect("Operation failed")[0]
+            + result.y.last().expect("Operation failed")[1];
         assert_abs_diff_eq!(total_initial, total_final, epsilon = 1e-6);
     }
 
@@ -381,13 +389,13 @@ mod tests {
             ..Default::default()
         };
 
-        let result = solve_ivp(brusselator, t_span, y0, Some(options)).unwrap();
+        let result = solve_ivp(brusselator, t_span, y0, Some(options)).expect("Operation failed");
 
         // Should take many steps due to oscillatory behavior
         assert!(result.t.len() > 50);
 
         // Final state should be different from initial (not at equilibrium)
-        let final_state = result.y.last().unwrap();
+        let final_state = result.y.last().expect("Operation failed");
         assert!(final_state[0] > 0.0 && final_state[1] > 0.0);
     }
 }

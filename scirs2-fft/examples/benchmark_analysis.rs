@@ -119,7 +119,7 @@ fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 
         for item in items {
             sizes.push(item.size as f64);
-            memory.push(item.memory_kb.unwrap());
+            memory.push(item.memory_kb.expect("Operation failed"));
         }
 
         let trace = Scatter::new(sizes, memory)
@@ -170,7 +170,7 @@ fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 
         for item in items {
             sizes.push(item.size as f64);
-            accuracy.push(item.accuracy.unwrap());
+            accuracy.push(item.accuracy.expect("Operation failed"));
         }
 
         let trace = Scatter::new(sizes, accuracy)

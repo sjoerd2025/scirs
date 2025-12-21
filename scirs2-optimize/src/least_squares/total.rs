@@ -189,8 +189,8 @@ where
     // Apply weights if variances are provided
     let (x_scaled, y_scaled) =
         if options.use_weights && x_variance.is_some() && y_variance.is_some() {
-            let x_var = x_variance.unwrap();
-            let y_var = y_variance.unwrap();
+            let x_var = x_variance.expect("Operation failed");
+            let y_var = y_variance.expect("Operation failed");
 
             // Scale by inverse standard deviation
             let x_weights = x_var.mapv(|v| 1.0 / v.sqrt());
@@ -574,7 +574,7 @@ mod tests {
             None::<&Array1<f64>>,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check that the estimated parameters are close to true values
         assert!((result.slope - true_slope).abs() < 0.1);
@@ -598,7 +598,7 @@ mod tests {
             Some(&y_variance),
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // The point with large variance should have less influence
         assert!(result.converged);
@@ -632,7 +632,7 @@ mod tests {
             None::<&Array1<f64>>,
             Some(options_svd),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let result_iter = total_least_squares::<
             scirs2_core::ndarray::OwnedRepr<f64>,
@@ -646,7 +646,7 @@ mod tests {
             None::<&Array1<f64>>,
             Some(options_iter),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Results should be similar
         assert!((result_svd.slope - result_iter.slope).abs() < 0.01);

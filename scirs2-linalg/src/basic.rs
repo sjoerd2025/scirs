@@ -30,7 +30,7 @@ use ndarray_linalg::{Determinant, Inverse};
 /// use scirs2_linalg::det;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let d = det(&a.view(), None).unwrap();
+/// let d = det(&a.view(), None).expect("Operation failed");
 /// assert!((d - (-2.0)).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -121,7 +121,7 @@ where
         // SAFETY: We've verified the type is f64
         let a_f64: &ArrayView2<f64> = unsafe { std::mem::transmute(a) };
         let result = det_f64_lapack(a_f64)?;
-        return Ok(<F as NumCast>::from(result).unwrap());
+        return Ok(<F as NumCast>::from(result).expect("Operation failed"));
     }
 
     // Fast path for f32 using LAPACK
@@ -131,7 +131,7 @@ where
             .to_owned()
             .det()
             .map_err(|e| LinalgError::ComputationError(format!("LAPACK det failed: {:?}", e)))?;
-        return Ok(<F as NumCast>::from(result).unwrap());
+        return Ok(<F as NumCast>::from(result).expect("Operation failed"));
     }
 
     // Fallback to pure Rust for other types
@@ -206,7 +206,7 @@ where
 /// use scirs2_linalg::inv;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let a_inv = inv(&a.view(), None).unwrap();
+/// let a_inv = inv(&a.view(), None).expect("Operation failed");
 /// assert!((a_inv[[0, 0]] - 1.0).abs() < 1e-10);
 /// assert!((a_inv[[1, 1]] - 0.5).abs() < 1e-10);
 /// ```
@@ -304,7 +304,7 @@ where
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 ///
 /// // Identity matrix for n=0
-/// let a_0 = matrix_power(&a.view(), 0, None).unwrap();
+/// let a_0 = matrix_power(&a.view(), 0, None).expect("Operation failed");
 /// assert!((a_0[[0, 0]] - 1.0).abs() < 1e-10);
 /// assert!((a_0[[0, 1]] - 0.0).abs() < 1e-10);
 /// assert!((a_0[[1, 0]] - 0.0).abs() < 1e-10);
@@ -384,7 +384,7 @@ where
 /// use scirs2_linalg::basic_trace;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let tr = basic_trace(&a.view()).unwrap();
+/// let tr = basic_trace(&a.view()).expect("Operation failed");
 /// assert!((tr - 5.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -457,36 +457,36 @@ mod tests {
     #[test]
     fn test_det_2x2() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let d = det(&a.view(), None).unwrap();
+        let d = det(&a.view(), None).expect("Operation failed");
         assert!((d - (-2.0)).abs() < 1e-10);
 
         let b = array![[2.0, 0.0], [0.0, 3.0]];
-        let d = det(&b.view(), None).unwrap();
+        let d = det(&b.view(), None).expect("Operation failed");
         assert!((d - 6.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_det_3x3() {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let d = det(&a.view(), None).unwrap();
+        let d = det(&a.view(), None).expect("Operation failed");
         assert!((d - 0.0).abs() < 1e-10);
 
         let b = array![[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 4.0]];
-        let d = det(&b.view(), None).unwrap();
+        let d = det(&b.view(), None).expect("Operation failed");
         assert!((d - 24.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_inv_2x2() {
         let a = array![[1.0, 0.0], [0.0, 2.0]];
-        let a_inv = inv(&a.view(), None).unwrap();
+        let a_inv = inv(&a.view(), None).expect("Operation failed");
         assert_relative_eq!(a_inv[[0, 0]], 1.0);
         assert_relative_eq!(a_inv[[0, 1]], 0.0);
         assert_relative_eq!(a_inv[[1, 0]], 0.0);
         assert_relative_eq!(a_inv[[1, 1]], 0.5);
 
         let b = array![[1.0, 2.0], [3.0, 4.0]];
-        let b_inv = inv(&b.view(), None).unwrap();
+        let b_inv = inv(&b.view(), None).expect("Operation failed");
         assert_relative_eq!(b_inv[[0, 0]], -2.0);
         assert_relative_eq!(b_inv[[0, 1]], 1.0);
         assert_relative_eq!(b_inv[[1, 0]], 1.5);
@@ -497,7 +497,7 @@ mod tests {
     fn test_inv_large() {
         // Test 3x3 matrix
         let a = array![[1.0, 2.0, 3.0], [0.0, 1.0, 4.0], [5.0, 6.0, 0.0]];
-        let a_inv = inv(&a.view(), None).unwrap();
+        let a_inv = inv(&a.view(), None).expect("Operation failed");
 
         // Verify A * A^(-1) = I
         let product = a.dot(&a_inv);
@@ -519,7 +519,7 @@ mod tests {
             [0.0, 0.0, 4.0, 0.0],
             [0.0, 0.0, 0.0, 5.0]
         ];
-        let b_inv = inv(&b.view(), None).unwrap();
+        let b_inv = inv(&b.view(), None).expect("Operation failed");
         assert_relative_eq!(b_inv[[0, 0]], 0.5, epsilon = 1e-10);
         assert_relative_eq!(b_inv[[1, 1]], 1.0 / 3.0, epsilon = 1e-10);
         assert_relative_eq!(b_inv[[2, 2]], 0.25, epsilon = 1e-10);
@@ -535,14 +535,14 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
 
         // Power 0 should give identity matrix
-        let a_0 = matrix_power(&a.view(), 0, None).unwrap();
+        let a_0 = matrix_power(&a.view(), 0, None).expect("Operation failed");
         assert_relative_eq!(a_0[[0, 0]], 1.0);
         assert_relative_eq!(a_0[[0, 1]], 0.0);
         assert_relative_eq!(a_0[[1, 0]], 0.0);
         assert_relative_eq!(a_0[[1, 1]], 1.0);
 
         // Power 1 should return the original matrix
-        let a_1 = matrix_power(&a.view(), 1, None).unwrap();
+        let a_1 = matrix_power(&a.view(), 1, None).expect("Operation failed");
         assert_relative_eq!(a_1[[0, 0]], a[[0, 0]]);
         assert_relative_eq!(a_1[[0, 1]], a[[0, 1]]);
         assert_relative_eq!(a_1[[1, 0]], a[[1, 0]]);
@@ -558,7 +558,7 @@ mod tests {
             [0.0, 1.0, 2.0, 1.0],
             [0.0, 0.0, 1.0, 2.0]
         ];
-        let d = det(&a.view(), None).unwrap();
+        let d = det(&a.view(), None).expect("Operation failed");
         assert_relative_eq!(d, 5.0, epsilon = 1e-10);
 
         // Test 5x5 diagonal matrix
@@ -569,7 +569,7 @@ mod tests {
             [0.0, 0.0, 0.0, 4.0, 0.0],
             [0.0, 0.0, 0.0, 0.0, 5.0]
         ];
-        let d = det(&b.view(), None).unwrap();
+        let d = det(&b.view(), None).expect("Operation failed");
         assert_relative_eq!(d, 120.0, epsilon = 1e-10);
 
         // Test singular matrix
@@ -579,7 +579,7 @@ mod tests {
             [3.0, 6.0, 9.0, 12.0],
             [4.0, 8.0, 12.0, 16.0]
         ];
-        let d = det(&c.view(), None).unwrap();
+        let d = det(&c.view(), None).expect("Operation failed");
         assert_relative_eq!(d, 0.0, epsilon = 1e-10);
     }
 }

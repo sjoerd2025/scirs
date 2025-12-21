@@ -213,7 +213,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> 
         let node_map: HashMap<NodeIndex<Ix>, &N> = self
             .graph
             .node_indices()
-            .map(|idx| (idx, self.graph.node_weight(idx).unwrap()))
+            .map(|idx| (idx, self.graph.node_weight(idx).expect("Operation failed")))
             .collect();
 
         for edge in self.graph.edge_references() {

@@ -10,18 +10,18 @@ use scirs2_stats::{
 #[allow(dead_code)]
 fn test_sampling_distribution_consistency() {
     // Test that sampling API produces consistent results when using the same seed
-    let normal = norm(0.0f64, 1.0).unwrap();
+    let normal = norm(0.0f64, 1.0).expect("Test: operation failed");
 
     // Generate samples with same seed twice
-    let samples1 = sampling::sample_distribution(&normal, 100).unwrap();
-    let samples2 = normal.rvs(100).unwrap();
+    let samples1 = sampling::sample_distribution(&normal, 100).expect("Test: operation failed");
+    let samples2 = normal.rvs(100).expect("Test: operation failed");
 
     // Make sure samples are different (random)
     assert!(samples1 != samples2.clone());
 
     // Test with explicit RNG seed for consistency
-    let samples_seeded1 = random::randn(20, Some(42)).unwrap();
-    let samples_seeded2 = random::randn(20, Some(42)).unwrap();
+    let samples_seeded1 = random::randn(20, Some(42)).expect("Test: operation failed");
+    let samples_seeded2 = random::randn(20, Some(42)).expect("Test: operation failed");
 
     // Same seed should produce identical results
     for i in 0..samples_seeded1.len() {
@@ -36,7 +36,7 @@ fn test_bootstrap_sample_properties() {
     let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 
     // Generate bootstrap samples
-    let samples = sampling::bootstrap(&data.view(), 100, Some(42)).unwrap();
+    let samples = sampling::bootstrap(&data.view(), 100, Some(42)).expect("Test: operation failed");
 
     // Check shape and properties
     assert_eq!(samples.shape(), &[100, 5]);
@@ -64,7 +64,7 @@ fn test_permutation_properties() {
     let data = array![10, 20, 30, 40, 50];
 
     // Generate permutation
-    let perm = sampling::permutation(&data.view(), Some(42)).unwrap();
+    let perm = sampling::permutation(&data.view(), Some(42)).expect("Test: operation failed");
 
     // Check properties
     assert_eq!(perm.len(), data.len());
@@ -86,7 +86,8 @@ fn test_statistical_properties() {
     // Test that random samples have expected statistical properties
 
     // Uniform distribution
-    let uniform_samples = random::uniform(0.0, 1.0, 10000, Some(42)).unwrap();
+    let uniform_samples =
+        random::uniform(0.0, 1.0, 10000, Some(42)).expect("Test: operation failed");
     let mean = custom_mean(&uniform_samples);
     let std = custom_std(&uniform_samples, 0);
 
@@ -96,7 +97,7 @@ fn test_statistical_properties() {
     assert_relative_eq!(std, 0.2887, epsilon = 0.02);
 
     // Normal distribution
-    let normal_samples = random::randn(10000, Some(42)).unwrap();
+    let normal_samples = random::randn(10000, Some(42)).expect("Test: operation failed");
     let mean = custom_mean(&normal_samples);
     let std = custom_std(&normal_samples, 0);
 
@@ -106,8 +107,8 @@ fn test_statistical_properties() {
     assert_relative_eq!(std, 1.0, epsilon = 0.05);
 
     // Poisson distribution (with lambda=3)
-    let poisson_dist = poisson(3.0f64, 0.0).unwrap();
-    let samples = poisson_dist.rvs(10000).unwrap();
+    let poisson_dist = poisson(3.0f64, 0.0).expect("Test: operation failed");
+    let samples = poisson_dist.rvs(10000).expect("Test: operation failed");
     let samples_array = Array1::from(samples);
     let mean = custom_mean(&samples_array);
 

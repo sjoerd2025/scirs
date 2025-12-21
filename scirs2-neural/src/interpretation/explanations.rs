@@ -111,7 +111,7 @@ where
         for _iteration in 0..self.max_iterations {
             // Apply small random perturbations
             counterfactual = counterfactual.mapv(|x| {
-                let perturbation = F::from(scirs2_core::random::random::<f64>() * 0.01).unwrap();
+                let perturbation = F::from(scirs2_core::random::random::<f64>() * 0.01).expect("Operation failed");
                 x + perturbation
             });
             // In practice, would evaluate model and check if target is reached
@@ -176,13 +176,13 @@ impl<F> LIMEExplainer<F>
         for _i in 0..self.num_perturbations {
             // Generate perturbation
             let perturbation = input.mapv(|x| {
-                let noise = F::from(scirs2_core::random::random::<f64>() * self.neighborhood_size).unwrap();
+                let noise = F::from(scirs2_core::random::random::<f64>() * self.neighborhood_size).expect("Operation failed");
                 x + noise
             // In practice, would evaluate model on perturbation
             // and use results to train local linear model
             // For now, assign simple importance scores
-            explanation = explanation + perturbation.mapv(|x| x * F::from(0.1).unwrap());
-        Ok(explanation / F::from(self.num_perturbations).unwrap())
+            explanation = explanation + perturbation.mapv(|x| x * F::from(0.1).expect("Failed to convert constant to float"));
+        Ok(explanation / F::from(self.num_perturbations).expect("Failed to convert to float"))
     /// Generate perturbations around input
     pub fn generate_perturbations(&mut self, input: &ArrayD<F>) -> Vec<ArrayD<F>> {
         let cache_key = format!("{:?}", input.shape());
@@ -211,12 +211,12 @@ pub fn generate_adversarial_explanation<F>(
                 } else {
                     -1.0
                 };
-                F::from(epsilon * sign).unwrap()
+                F::from(epsilon * sign).expect("Failed to convert to float")
             })
         "pgd" => {
             // Projected Gradient Descent (simplified)
             original_input
-                .mapv(|_| F::from(scirs2_core::random::random::<f64>() * epsilon * 2.0 - epsilon).unwrap())
+                .mapv(|_| F::from(scirs2_core::random::random::<f64>() * epsilon * 2.0 - epsilon).expect("Operation failed"))
         _ => {
             return Err(NeuralError::NotImplementedError(format!(
                 "Attack method '{}' not implemented",
@@ -235,8 +235,8 @@ pub fn generate_adversarial_explanation<F>(
         original_input: original_input.clone(),
         adversarial_input,
         perturbation,
-        original_prediction: F::from(0.8).unwrap(), // Placeholder
-        adversarial_prediction: F::from(0.2).unwrap(), // Placeholder
+        original_prediction: F::from(0.8).expect("Failed to convert constant to float"), // Placeholder
+        adversarial_prediction: F::from(0.2).expect("Failed to convert constant to float"), // Placeholder
         attack_method: attack_method.to_string(),
         perturbation_magnitude,
     })
@@ -267,7 +267,7 @@ pub fn compute_concept_vectors<F>(
         let mut averaged_activation = first_example.clone();
         for example in examples.iter().skip(1) {
             averaged_activation = averaged_activation + *example;
-        averaged_activation = averaged_activation / F::from(examples.len()).unwrap();
+        averaged_activation = averaged_activation / F::from(examples.len()).expect("Operation failed");
         let concept_vector = ConceptActivationVector::new(
             layer_name.clone(),
             averaged_activation,
@@ -309,7 +309,7 @@ mod tests {
         assert!(explanation.is_ok());
     fn test_adversarial_explanation() {
         let explanation = generate_adversarial_explanation::<f64>(&input, "fgsm", 0.1);
-        let adv_exp = explanation.unwrap();
+        let adv_exp = explanation.expect("Operation failed");
         assert_eq!(adv_exp.attack_method, "fgsm");
         assert!(adv_exp.perturbation_magnitude > 0.0);
     fn test_concept_vectors_computation() {
@@ -320,6 +320,6 @@ mod tests {
         let labels = vec!["cat".to_string(), "cat".to_string()];
         let concepts = compute_concept_vectors(&examples, &labels, "conv1".to_string());
         assert!(concepts.is_ok());
-        let concept_vectors = concepts.unwrap();
+        let concept_vectors = concepts.expect("Operation failed");
         assert_eq!(concept_vectors.len(), 1);
         assert_eq!(concept_vectors[0].concept_name, "cat");

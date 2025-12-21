@@ -119,7 +119,7 @@ pub fn test_enhanced_statistical_significance(
 pub fn kolmogorov_smirnov_uniformity_test(p_values: &[f64]) -> f64 {
     let n = p_values.len();
     let mut sorted_p = p_values.to_vec();
-    sorted_p.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_p.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let mut max_deviation = 0.0;
 
@@ -245,9 +245,9 @@ pub fn test_enhanced_bootstrap_coverage(times: &[f64]) -> SignalResult<f64> {
                         (**f1 - f_true)
                             .abs()
                             .partial_cmp(&(**f2 - f_true).abs())
-                            .unwrap()
+                            .expect("Operation failed")
                     })
-                    .unwrap();
+                    .expect("Operation failed");
 
                 // Check if true power is within confidence interval
                 let true_power = power[peak_idx];
@@ -367,7 +367,7 @@ pub fn perform_kfold_validation(
                 let (_, detected_freq) = freqs
                     .iter()
                     .zip(power.iter())
-                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
+                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).expect("Operation failed"))
                     .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
 
@@ -410,7 +410,7 @@ pub fn perform_bootstrap_validation(
 
         // Sort by time
         let mut indices: Vec<usize> = (0..n).collect();
-        indices.sort_by(|&i, &j| boot_t[i].partial_cmp(&boot_t[j]).unwrap());
+        indices.sort_by(|&i, &j| boot_t[i].partial_cmp(&boot_t[j]).expect("Operation failed"));
 
         let sorted_t: Vec<f64> = indices.iter().map(|&i| boot_t[i]).collect();
         let sorted_signal: Vec<f64> = indices.iter().map(|&i| boot_signal[i]).collect();
@@ -420,7 +420,7 @@ pub fn perform_bootstrap_validation(
                 let (_, detected_freq) = freqs
                     .iter()
                     .zip(power.iter())
-                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
+                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).expect("Operation failed"))
                     .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
 
@@ -465,7 +465,7 @@ pub fn perform_loo_validation(
                 let (_, detected_freq) = freqs
                     .iter()
                     .zip(power.iter())
-                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
+                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).expect("Operation failed"))
                     .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
 
@@ -506,7 +506,7 @@ pub fn test_temporal_consistency(
                 let (_, detected_freq) = freqs
                     .iter()
                     .zip(power.iter())
-                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
+                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).expect("Operation failed"))
                     .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
                 detected_freqs.push(detected_freq);
@@ -555,7 +555,7 @@ pub fn test_frequency_stability(
                 let (_, detected_freq) = freqs
                     .iter()
                     .zip(power.iter())
-                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).unwrap())
+                    .max_by(|(_, p1), (_, p2)| p1.partial_cmp(p2).expect("Operation failed"))
                     .map(|(&f, _)| ((), f))
                     .unwrap_or(((), 0.0));
                 freq_estimates.push(detected_freq);

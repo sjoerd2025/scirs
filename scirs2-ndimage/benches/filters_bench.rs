@@ -51,7 +51,7 @@ fn bench_generic_filter(c: &mut Criterion) {
                         Some(BorderMode::Reflect),
                         None,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -69,7 +69,7 @@ fn bench_generic_filter(c: &mut Criterion) {
                         Some(BorderMode::Reflect),
                         None,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -87,7 +87,7 @@ fn bench_generic_filter(c: &mut Criterion) {
                         Some(BorderMode::Reflect),
                         None,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -106,23 +106,35 @@ fn bench_standard_filters(c: &mut Criterion) {
     let kernel_size = [3, 3];
 
     group.bench_function("uniform_filter", |b| {
-        b.iter(|| uniform_filter(black_box(&input), black_box(&kernel_size), None, None).unwrap())
+        b.iter(|| {
+            uniform_filter(black_box(&input), black_box(&kernel_size), None, None)
+                .expect("Operation failed")
+        })
     });
 
     group.bench_function("minimum_filter", |b| {
-        b.iter(|| minimum_filter(black_box(&input), black_box(&kernel_size), None, None).unwrap())
+        b.iter(|| {
+            minimum_filter(black_box(&input), black_box(&kernel_size), None, None)
+                .expect("Operation failed")
+        })
     });
 
     group.bench_function("maximum_filter", |b| {
-        b.iter(|| maximum_filter(black_box(&input), black_box(&kernel_size), None, None).unwrap())
+        b.iter(|| {
+            maximum_filter(black_box(&input), black_box(&kernel_size), None, None)
+                .expect("Operation failed")
+        })
     });
 
     group.bench_function("median_filter", |b| {
-        b.iter(|| median_filter(black_box(&input), black_box(&kernel_size), None).unwrap())
+        b.iter(|| {
+            median_filter(black_box(&input), black_box(&kernel_size), None)
+                .expect("Operation failed")
+        })
     });
 
     group.bench_function("gaussian_filter", |b| {
-        b.iter(|| gaussian_filter(black_box(&input), 1.0, None, None).unwrap())
+        b.iter(|| gaussian_filter(black_box(&input), 1.0, None, None).expect("Operation failed"))
     });
 
     group.finish();
@@ -137,7 +149,7 @@ fn bench_bilateral_filter(c: &mut Criterion) {
     let input = Array2::from_shape_fn((50, 50), |(i, j)| (i * j) as f64);
 
     group.bench_function("bilateral_regular", |b| {
-        b.iter(|| bilateral_filter(black_box(&input), 1.0, 1.0, None).unwrap())
+        b.iter(|| bilateral_filter(black_box(&input), 1.0, 1.0, None).expect("Operation failed"))
     });
 
     #[cfg(feature = "simd")]
@@ -146,11 +158,17 @@ fn bench_bilateral_filter(c: &mut Criterion) {
         let input_f64 = input.clone();
 
         group.bench_function("bilateral_simd_f32", |b| {
-            b.iter(|| bilateral_filter_simd_f32(black_box(&input_f32), 1.0, 1.0, None).unwrap())
+            b.iter(|| {
+                bilateral_filter_simd_f32(black_box(&input_f32), 1.0, 1.0, None)
+                    .expect("Operation failed")
+            })
         });
 
         group.bench_function("bilateral_simd_f64", |b| {
-            b.iter(|| bilateral_filter_simd_f64(black_box(&input_f64), 1.0, 1.0, None).unwrap())
+            b.iter(|| {
+                bilateral_filter_simd_f64(black_box(&input_f64), 1.0, 1.0, None)
+                    .expect("Operation failed")
+            })
         });
     }
 
@@ -186,7 +204,7 @@ fn bench_border_modes(c: &mut Criterion) {
                         Some(*mode),
                         None,
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -212,7 +230,7 @@ fn bench_dimensionalities(c: &mut Criterion) {
                 Some(BorderMode::Reflect),
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -227,7 +245,7 @@ fn bench_dimensionalities(c: &mut Criterion) {
                 Some(BorderMode::Reflect),
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -242,7 +260,7 @@ fn bench_dimensionalities(c: &mut Criterion) {
                 Some(BorderMode::Reflect),
                 None,
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -267,7 +285,11 @@ fn bench_edge_detection(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sobel_standard", format!("{}x{}", size, size)),
             &input,
-            |b, input| b.iter(|| sobel(black_box(input), 0, Some(BorderMode::Reflect)).unwrap()),
+            |b, input| {
+                b.iter(|| {
+                    sobel(black_box(input), 0, Some(BorderMode::Reflect)).expect("Operation failed")
+                })
+            },
         );
 
         // Benchmark optimized Sobel
@@ -277,7 +299,7 @@ fn bench_edge_detection(c: &mut Criterion) {
             |b, input| {
                 b.iter(|| {
                     sobel_2d_optimized(black_box(&input.view()), 0, Some(BorderMode::Reflect))
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
@@ -288,7 +310,8 @@ fn bench_edge_detection(c: &mut Criterion) {
             &input,
             |b, input| {
                 b.iter(|| {
-                    laplace(black_box(input), Some(BorderMode::Reflect), Some(false)).unwrap()
+                    laplace(black_box(input), Some(BorderMode::Reflect), Some(false))
+                        .expect("Operation failed")
                 })
             },
         );
@@ -300,14 +323,14 @@ fn bench_edge_detection(c: &mut Criterion) {
             |b, input| {
                 b.iter(|| {
                     laplace_2d_optimized(black_box(&input.view()), false, Some(BorderMode::Reflect))
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
 
         // Benchmark gradient magnitude computation
-        let grad_x = sobel(&input, 1, Some(BorderMode::Reflect)).unwrap();
-        let grad_y = sobel(&input, 0, Some(BorderMode::Reflect)).unwrap();
+        let grad_x = sobel(&input, 1, Some(BorderMode::Reflect)).expect("Operation failed");
+        let grad_y = sobel(&input, 0, Some(BorderMode::Reflect)).expect("Operation failed");
 
         group.bench_with_input(
             BenchmarkId::new("gradient_magnitude_standard", format!("{}x{}", size, size)),
@@ -326,7 +349,7 @@ fn bench_edge_detection(c: &mut Criterion) {
             |b, (gx, gy)| {
                 b.iter(|| {
                     gradient_magnitude_optimized(black_box(&gx.view()), black_box(&gy.view()))
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
@@ -354,7 +377,10 @@ fn bench_performance_characteristics(c: &mut Criterion) {
             BenchmarkId::new("uniform_scaling", format!("{}x{}", rows, cols)),
             &input,
             |b, input| {
-                b.iter(|| uniform_filter(black_box(input), black_box(&[5, 5]), None, None).unwrap())
+                b.iter(|| {
+                    uniform_filter(black_box(input), black_box(&[5, 5]), None, None)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -363,7 +389,10 @@ fn bench_performance_characteristics(c: &mut Criterion) {
             BenchmarkId::new("gaussian_scaling", format!("{}x{}", rows, cols)),
             &input,
             |b, input| {
-                b.iter(|| gaussian_filter(black_box(input), black_box(2.0), None, None).unwrap())
+                b.iter(|| {
+                    gaussian_filter(black_box(input), black_box(2.0), None, None)
+                        .expect("Operation failed")
+                })
             },
         );
     }
@@ -388,7 +417,8 @@ fn bench_memory_computation_tradeoffs(c: &mut Criterion) {
             &input,
             |b, input| {
                 b.iter(|| {
-                    uniform_filter(black_box(input), black_box(&[size, size]), None, None).unwrap()
+                    uniform_filter(black_box(input), black_box(&[size, size]), None, None)
+                        .expect("Operation failed")
                 })
             },
         );
@@ -397,7 +427,10 @@ fn bench_memory_computation_tradeoffs(c: &mut Criterion) {
             BenchmarkId::new("median_kernel_size", size),
             &input,
             |b, input| {
-                b.iter(|| median_filter(black_box(input), black_box(&[size, size]), None).unwrap())
+                b.iter(|| {
+                    median_filter(black_box(input), black_box(&[size, size]), None)
+                        .expect("Operation failed")
+                })
             },
         );
     }
@@ -419,7 +452,10 @@ fn bench_data_type_performance(c: &mut Criterion) {
         BenchmarkId::new("gaussian_f32", format!("{}x{}", size.0, size.1)),
         &input_f32,
         |b, input| {
-            b.iter(|| gaussian_filter_f32(black_box(input), black_box(1.0f32), None, None).unwrap())
+            b.iter(|| {
+                gaussian_filter_f32(black_box(input), black_box(1.0f32), None, None)
+                    .expect("Operation failed")
+            })
         },
     );
 
@@ -429,7 +465,10 @@ fn bench_data_type_performance(c: &mut Criterion) {
         BenchmarkId::new("gaussian_f64", format!("{}x{}", size.0, size.1)),
         &input_f64,
         |b, input| {
-            b.iter(|| gaussian_filter(black_box(input), black_box(1.0f64), None, None).unwrap())
+            b.iter(|| {
+                gaussian_filter(black_box(input), black_box(1.0f64), None, None)
+                    .expect("Operation failed")
+            })
         },
     );
 
@@ -458,7 +497,10 @@ fn bench_cache_efficiency(c: &mut Criterion) {
             BenchmarkId::new("uniform_cache", format!("{}x{}", rows, cols)),
             &input,
             |b, input| {
-                b.iter(|| uniform_filter(black_box(input), black_box(&[3, 3]), None, None).unwrap())
+                b.iter(|| {
+                    uniform_filter(black_box(input), black_box(&[3, 3]), None, None)
+                        .expect("Operation failed")
+                })
             },
         );
     }
@@ -482,7 +524,10 @@ fn bench_parallel_performance(c: &mut Criterion) {
             BenchmarkId::new("gaussian_parallel", format!("{}x{}", rows, cols)),
             &input,
             |b, input| {
-                b.iter(|| gaussian_filter(black_box(input), black_box(2.0), None, None).unwrap())
+                b.iter(|| {
+                    gaussian_filter(black_box(input), black_box(2.0), None, None)
+                        .expect("Operation failed")
+                })
             },
         );
     }

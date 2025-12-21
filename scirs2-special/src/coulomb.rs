@@ -45,11 +45,11 @@ use std::f64::consts::PI;
 /// use scirs2_special::coulomb_phase_shift;
 ///
 /// // Basic usage
-/// let sigma = coulomb_phase_shift(0.0, 1.0).unwrap();
+/// let sigma = coulomb_phase_shift(0.0, 1.0).expect("Operation failed");
 /// assert!(sigma.abs() < 1.0); // Phase shift is finite
 ///
 /// // Special case: no Coulomb interaction
-/// let sigma_zero = coulomb_phase_shift(0.0, 0.0).unwrap();
+/// let sigma_zero = coulomb_phase_shift(0.0, 0.0).expect("Operation failed");
 /// assert_eq!(sigma_zero, 0.0);
 /// ```
 #[allow(dead_code)]
@@ -290,7 +290,7 @@ fn coulomb_phase_shift_improved_asymptotic(eta: f64) -> SpecialResult<f64> {
 /// ```
 /// use scirs2_special::coulomb_f;
 ///
-/// let f = coulomb_f(0.0, 0.0, 1.0).unwrap();
+/// let f = coulomb_f(0.0, 0.0, 1.0).expect("Operation failed");
 /// // For η=0, F_L(0,ρ) = ρ j_L(ρ) where j_L is the spherical Bessel function
 /// assert!((f - 0.8415).abs() < 1e-4);
 /// ```
@@ -958,8 +958,14 @@ mod tests {
         assert!(coulomb_f(0.0, 0.0, -1.0).is_err());
 
         // Test NaN parameters
-        assert!(coulomb_f(0.0, 0.0, f64::NAN).unwrap().is_nan());
-        assert!(coulomb_f(0.0, f64::NAN, 1.0).unwrap().is_nan());
-        assert!(coulomb_f(f64::NAN, 0.0, 1.0).unwrap().is_nan());
+        assert!(coulomb_f(0.0, 0.0, f64::NAN)
+            .expect("Operation failed")
+            .is_nan());
+        assert!(coulomb_f(0.0, f64::NAN, 1.0)
+            .expect("Operation failed")
+            .is_nan());
+        assert!(coulomb_f(f64::NAN, 0.0, 1.0)
+            .expect("Operation failed")
+            .is_nan());
     }
 }

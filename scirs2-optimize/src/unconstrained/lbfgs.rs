@@ -34,7 +34,7 @@ where
 
     // Ensure initial point is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Function evaluation counter
@@ -587,7 +587,7 @@ fn project_direction(direction: &mut Array1<f64>, x: &Array1<f64>, bounds: Optio
         return; // No bounds, no projection needed
     }
 
-    let bounds = bounds.unwrap();
+    let bounds = bounds.expect("Operation failed");
 
     for i in 0..x.len() {
         let xi = x[i];
@@ -651,7 +651,7 @@ where
 
         // Project onto bounds
         if let Some(bounds) = bounds {
-            bounds.project(x_new.as_slice_mut().unwrap());
+            bounds.project(x_new.as_slice_mut().expect("Operation failed"));
         }
 
         *nfev += 1;
@@ -692,7 +692,7 @@ fn compute_line_bounds(
         return (f64::NEG_INFINITY, f64::INFINITY);
     }
 
-    let bounds = bounds.unwrap();
+    let bounds = bounds.expect("Operation failed");
     let mut a_min = f64::NEG_INFINITY;
     let mut a_max = f64::INFINITY;
 
@@ -745,7 +745,7 @@ mod tests {
         let mut options = Options::default();
         options.max_iter = 100; // Reasonable number of iterations
 
-        let result = minimize_lbfgs(quadratic, x0, &options).unwrap();
+        let result = minimize_lbfgs(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-2);
@@ -764,7 +764,7 @@ mod tests {
         let bounds = Bounds::new(&[(Some(0.0), Some(1.0)), (Some(0.0), Some(1.0))]);
         options.bounds = Some(bounds);
 
-        let result = minimize_lbfgsb(quadratic, x0, &options).unwrap();
+        let result = minimize_lbfgsb(quadratic, x0, &options).expect("Operation failed");
 
         // For bounded problems, check that we're within bounds and gradient is small
         assert!(result.x[0] >= 0.0 && result.x[0] <= 1.0);

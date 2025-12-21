@@ -281,14 +281,14 @@ mod tests {
         let mut protocol1 = InMemoryProtocol::new(1, 2);
         // Send message from 0 to 1
         let msg = Message::Control(ControlMessage::Heartbeat);
-        protocol0.send(1, msg.clone()).unwrap();
+        protocol0.send(1, msg.clone()).expect("Operation failed");
         // Protocol1 should receive it
-        let received = protocol1.receive().unwrap();
+        let received = protocol1.receive().expect("Operation failed");
         assert_eq!(received.len(), 1);
         assert_eq!(received[0].0, 0); // From participant 0
     fn test_weight_serialization() {
         let weights = vec![Array2::ones((2, 3))];
-        let serialized = serialize_weights(&weights).unwrap();
-        let deserialized = deserialize_weights(&serialized).unwrap();
+        let serialized = serialize_weights(&weights).expect("Operation failed");
+        let deserialized = deserialize_weights(&serialized).expect("Operation failed");
         assert_eq!(weights.len(), deserialized.len());
         assert_eq!(weights[0].shape(), deserialized[0].shape());

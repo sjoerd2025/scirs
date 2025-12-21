@@ -650,7 +650,7 @@ mod tests {
         let result = apply_few_shot_learning(&task_data, &config);
 
         assert!(result.is_ok());
-        let few_shot_result = result.unwrap();
+        let few_shot_result = result.expect("Operation failed");
         assert_eq!(few_shot_result.processedimage.dim(), (10, 10));
         assert!(few_shot_result.performance > 0.0);
         assert!(few_shot_result.efficiency > 0.0);
@@ -679,7 +679,7 @@ mod tests {
         let result = apply_transfer_learning(&task_data, &config);
 
         assert!(result.is_ok());
-        let transfer_result = result.unwrap();
+        let transfer_result = result.expect("Operation failed");
         assert_eq!(transfer_result.processedimage.dim(), (5, 5));
         assert!(transfer_result.transfer_effectiveness > 0.0);
         assert!(transfer_result.improvement > 0.0);
@@ -730,7 +730,7 @@ mod tests {
         let result = enhanced_meta_learning_processing(&task_data, &config);
 
         assert!(result.is_ok());
-        let (processedimages, insights) = result.unwrap();
+        let (processedimages, insights) = result.expect("Operation failed");
         assert_eq!(processedimages.len(), 2);
         assert!(!insights.performance_improvements.is_empty());
         assert!(!insights.efficiencymetrics.is_empty());

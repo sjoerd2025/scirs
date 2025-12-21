@@ -100,7 +100,8 @@ where
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let n = sorted.len();
     if n.is_multiple_of(2) {
-        (sorted[n / 2 - 1] + sorted[n / 2]) / F::from(2.0).unwrap()
+        (sorted[n / 2 - 1] + sorted[n / 2])
+            / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         sorted[n / 2]
     }
@@ -113,8 +114,9 @@ where
     F: Float + FromPrimitive,
 {
     let n = ts.len();
-    let mean = ts.sum() / F::from(n).unwrap();
-    let variance = ts.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(n).unwrap();
+    let mean = ts.sum() / F::from(n).expect("Failed to convert to float");
+    let variance = ts.mapv(|x| (x - mean) * (x - mean)).sum()
+        / F::from(n).expect("Failed to convert to float");
     variance.sqrt()
 }
 
@@ -136,7 +138,7 @@ where
     if lower_index == upper_index {
         sorted[lower_index]
     } else {
-        let fraction = F::from(index - lower_index as f64).unwrap();
+        let fraction = F::from(index - lower_index as f64).expect("Failed to convert to float");
         sorted[lower_index] + fraction * (sorted[upper_index] - sorted[lower_index])
     }
 }
@@ -156,7 +158,7 @@ where
         return (F::zero(), F::zero());
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let sum_x = x.iter().fold(F::zero(), |acc, &xi| acc + xi);
     let sum_y = y.iter().fold(F::zero(), |acc, &yi| acc + yi);
     let sum_xy = x
@@ -195,7 +197,7 @@ where
         ));
     }
 
-    let n_f = F::from_usize(n).unwrap();
+    let n_f = F::from_usize(n).expect("Operation failed");
 
     // Calculate means
     let mean_x = x.iter().fold(F::zero(), |acc, &val| acc + val) / n_f;
@@ -243,10 +245,10 @@ where
         counts[bin] += 1;
     }
 
-    let n_f = F::from(_ts.len()).unwrap();
+    let n_f = F::from(_ts.len()).expect("Operation failed");
     let probabilities = counts
         .into_iter()
-        .map(|count| F::from(count).unwrap() / n_f)
+        .map(|count| F::from(count).expect("Failed to convert to float") / n_f)
         .collect();
 
     Ok(probabilities)
@@ -264,7 +266,7 @@ where
     }
 
     let normalized = (_value - min_val) / range;
-    let bin = (normalized * F::from(nbins).unwrap())
+    let bin = (normalized * F::from(nbins).expect("Failed to convert to float"))
         .to_usize()
         .unwrap_or(0);
     bin.min(nbins - 1)
@@ -287,7 +289,7 @@ where
         let start = i * scale;
         let end = (start + scale).min(ts.len());
         let sum = (start..end).fold(F::zero(), |acc, j| acc + ts[j]);
-        coarse_grained.push(sum / F::from(end - start).unwrap());
+        coarse_grained.push(sum / F::from(end - start).expect("Failed to convert to float"));
     }
 
     Ok(Array1::from_vec(coarse_grained))
@@ -312,7 +314,7 @@ where
 
     while i + scale <= ts.len() {
         let sum = (i..i + scale).fold(F::zero(), |acc, j| acc + ts[j]);
-        coarse_grained.push(sum / F::from(scale).unwrap());
+        coarse_grained.push(sum / F::from(scale).expect("Failed to convert to float"));
         i += scale;
     }
 
@@ -363,7 +365,7 @@ where
     F: Float + FromPrimitive,
 {
     let mut indices: Vec<usize> = (0..window.len()).collect();
-    indices.sort_by(|&i, &j| window[i].partial_cmp(&window[j]).unwrap());
+    indices.sort_by(|&i, &j| window[i].partial_cmp(&window[j]).expect("Operation failed"));
     indices
 }
 
@@ -410,7 +412,8 @@ where
 {
     let n = ts.len();
     let window_size = config.extrema_window_size;
-    let threshold = F::from(config.min_turning_point_threshold).unwrap();
+    let threshold =
+        F::from(config.min_turning_point_threshold).expect("Failed to convert to float");
 
     let mut turning_points = Vec::new();
     let mut local_maxima = Vec::new();
@@ -509,8 +512,8 @@ where
         }
     }
 
-    let x1 = F::from(indices[left_idx]).unwrap();
-    let x2 = F::from(indices[right_idx]).unwrap();
+    let x1 = F::from(indices[left_idx]).expect("Failed to convert to float");
+    let x2 = F::from(indices[right_idx]).expect("Failed to convert to float");
     let y1 = values[left_idx];
     let y2 = values[right_idx];
 
@@ -518,7 +521,7 @@ where
         return Ok(y1);
     }
 
-    let x_f = F::from(x).unwrap();
+    let x_f = F::from(x).expect("Failed to convert to float");
     let interpolated = y1 + (y2 - y1) * (x_f - x1) / (x2 - x1);
 
     Ok(interpolated)
@@ -663,10 +666,11 @@ where
     }
 
     let mut deviations: Vec<F> = ts.iter().map(|&x| (x - median).abs()).collect();
-    deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     Ok(if n.is_multiple_of(2) {
-        (deviations[n / 2 - 1] + deviations[n / 2]) / F::from(2.0).unwrap()
+        (deviations[n / 2 - 1] + deviations[n / 2])
+            / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         deviations[n / 2]
     })
@@ -684,7 +688,7 @@ where
     }
 
     let mut sorted = _ts.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let trim_count = (n as f64 * trimfraction).floor() as usize;
     let start = trim_count;
@@ -695,7 +699,7 @@ where
     }
 
     let sum = sorted[start..end].iter().fold(F::zero(), |acc, &x| acc + x);
-    let count = F::from(end - start).unwrap();
+    let count = F::from(end - start).expect("Failed to convert to float");
 
     Ok(sum / count)
 }
@@ -712,7 +716,7 @@ where
     }
 
     let mut sorted = _ts.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let winsor_count = (n as f64 * winsorfraction).floor() as usize;
 
@@ -734,7 +738,7 @@ where
         .collect();
 
     let sum = winsorized.iter().fold(F::zero(), |acc, &x| acc + x);
-    let count = F::from(n).unwrap();
+    let count = F::from(n).expect("Failed to convert to float");
 
     Ok(sum / count)
 }

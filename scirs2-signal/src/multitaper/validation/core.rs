@@ -36,7 +36,7 @@ use crate::error::SignalResult;
 ///
 /// let signal_config = TestSignalConfig::default();
 /// let validation_config = ValidationConfig::default();
-/// let result = validate_multitaper_comprehensive(&signal_config, &validation_config).unwrap();
+/// let result = validate_multitaper_comprehensive(&signal_config, &validation_config).expect("Operation failed");
 ///
 /// println!("Overall validation score: {}", result.overall_score);
 /// ```
@@ -493,7 +493,7 @@ mod tests {
         let result = validate_multitaper_comprehensive(&signal_config, &validation_config);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.overall_score >= 0.0);
         assert!(result.overall_score <= 100.0);
     }
@@ -514,7 +514,7 @@ mod tests {
         let result = run_comprehensive_enhanced_validation(&config);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.enhanced_score >= 0.0);
         assert!(!result.recommendations.is_empty());
     }

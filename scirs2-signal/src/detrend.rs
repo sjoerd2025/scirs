@@ -40,7 +40,7 @@ use std::fmt::Debug;
 /// }
 ///
 /// // Remove the linear trend
-/// let detrended = detrend(&x, Some("linear")).unwrap();
+/// let detrended = detrend(&x, Some("linear")).expect("Operation failed");
 ///
 /// // The result should be close to the original signal without the trend
 /// for val in &detrended {
@@ -57,7 +57,7 @@ use std::fmt::Debug;
 /// let x = vec![5.0, 6.0, 7.0, 8.0, 9.0];
 ///
 /// // Remove the constant offset
-/// let detrended = detrend(&x, Some("constant")).unwrap();
+/// let detrended = detrend(&x, Some("constant")).expect("Operation failed");
 ///
 /// // The result should have zero mean
 /// let mean: f64 = detrended.iter().sum::<f64>() / detrended.len() as f64;
@@ -161,7 +161,7 @@ where
 /// ];
 ///
 /// // Detrend along axis 0 (columns)
-/// let detrended = detrend_axis(&x, Some("linear"), 0).unwrap();
+/// let detrended = detrend_axis(&x, Some("linear"), 0).expect("Operation failed");
 ///
 /// // Each column should now have zero trend
 /// for col in 0..x.shape()[1] {
@@ -286,7 +286,7 @@ pub fn detrend_axis(
 /// }
 ///
 /// // Remove a quadratic trend (polynomial of order 2)
-/// let detrended = detrend_poly(&x, 2).unwrap();
+/// let detrended = detrend_poly(&x, 2).expect("Operation failed");
 ///
 /// // The result should be close to zero (the quadratic trend removed)
 /// for val in &detrended {
@@ -294,7 +294,7 @@ pub fn detrend_axis(
 /// }
 ///
 /// // With a lower order, there will still be residual trend
-/// let detrended_linear = detrend_poly(&x, 1).unwrap();
+/// let detrended_linear = detrend_poly(&x, 1).expect("Operation failed");
 /// for i in 1..detrended_linear.len() - 1 {
 ///     // Non-zero residuals expected when removing only linear component
 ///     assert!(detrended_linear[i].abs() > 1e-10);
@@ -452,7 +452,7 @@ mod tests {
     fn test_detrend_constant() {
         // Test signal with constant offset
         let signal = vec![5.0, 6.0, 7.0, 8.0, 9.0];
-        let detrended = detrend(&signal, Some("constant")).unwrap();
+        let detrended = detrend(&signal, Some("constant")).expect("Operation failed");
 
         // Check mean is zero
         let mean = detrended.iter().sum::<f64>() / detrended.len() as f64;
@@ -470,7 +470,7 @@ mod tests {
             *val = 2.0 * i as f64 + 1.0;
         });
 
-        let detrended = detrend(&signal, Some("linear")).unwrap();
+        let detrended = detrend(&signal, Some("linear")).expect("Operation failed");
 
         // Check all values are near zero (trend removed)
         for val in &detrended {
@@ -484,7 +484,7 @@ mod tests {
         let b = vec![0.5, 0.5];
         // Test with no detrending
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let detrended = detrend(&signal, Some("none")).unwrap();
+        let detrended = detrend(&signal, Some("none")).expect("Operation failed");
 
         // Check signal is unchanged
         for (a, b) in signal.iter().zip(detrended.iter()) {
@@ -505,7 +505,7 @@ mod tests {
         }
 
         // Detrend along axis 0 (columns)
-        let detrended_cols = detrend_axis(&data, Some("linear"), 0).unwrap();
+        let detrended_cols = detrend_axis(&data, Some("linear"), 0).expect("Operation failed");
 
         // Check each column has zero trend
         for j in 0..4 {
@@ -533,7 +533,7 @@ mod tests {
         }
 
         // Detrend along axis 1 (rows)
-        let detrended_rows = detrend_axis(&data, Some("linear"), 1).unwrap();
+        let detrended_rows = detrend_axis(&data, Some("linear"), 1).expect("Operation failed");
 
         // Check each row has zero trend
         for i in 0..3 {
@@ -574,7 +574,7 @@ mod tests {
         });
 
         // Remove cubic trend (polynomial of order 3)
-        let detrended = detrend_poly(&signal, 3).unwrap();
+        let detrended = detrend_poly(&signal, 3).expect("Operation failed");
 
         // Should be nearly zero
         for val in &detrended {
@@ -582,7 +582,7 @@ mod tests {
         }
 
         // With lower order, there will still be trend
-        let detrended_quadratic = detrend_poly(&signal, 2).unwrap();
+        let detrended_quadratic = detrend_poly(&signal, 2).expect("Operation failed");
 
         // Should have significant non-zero values
         let sum_sq = detrended_quadratic.iter().map(|&x| x * x).sum::<f64>();

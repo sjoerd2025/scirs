@@ -99,7 +99,7 @@ impl Graph {
             let mut v = self.sink;
 
             while v != self.source {
-                let u = parent[v].unwrap();
+                let u = parent[v].expect("Operation failed");
                 let capacity = residual.get(&(u, v)).unwrap_or(&0.0);
                 path_flow = path_flow.min(*capacity);
                 v = u;
@@ -108,9 +108,9 @@ impl Graph {
             // Update residual capacities
             v = self.sink;
             while v != self.source {
-                let u = parent[v].unwrap();
-                *residual.get_mut(&(u, v)).unwrap() -= path_flow;
-                *residual.get_mut(&(v, u)).unwrap() += path_flow;
+                let u = parent[v].expect("Operation failed");
+                *residual.get_mut(&(u, v)).expect("Operation failed") -= path_flow;
+                *residual.get_mut(&(v, u)).expect("Operation failed") += path_flow;
                 v = u;
             }
 
@@ -434,7 +434,10 @@ impl<T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssig
         )?;
 
         self.current_segmentation = Some(result);
-        Ok(self.current_segmentation.as_ref().unwrap())
+        Ok(self
+            .current_segmentation
+            .as_ref()
+            .expect("Operation failed"))
     }
 
     /// Get current segmentation result
@@ -491,7 +494,8 @@ mod tests {
         bg_seeds[[2, 1]] = true;
 
         // Run segmentation
-        let result = graph_cuts(&image.view(), &fg_seeds.view(), &bg_seeds.view(), None).unwrap();
+        let result = graph_cuts(&image.view(), &fg_seeds.view(), &bg_seeds.view(), None)
+            .expect("Operation failed");
 
         // Check that right side is segmented as foreground
         assert!(result[[0, 2]] || result[[0, 3]]);
@@ -518,12 +522,12 @@ mod tests {
         interactive.add_background_seeds(&[(0, 0), (1, 1)]);
 
         // Segment
-        let result = interactive.segment().unwrap();
+        let result = interactive.segment().expect("Operation failed");
         assert_eq!(result.dim(), (4, 4));
 
         // Add more seeds and re-segment
         interactive.add_foreground_seeds(&[(2, 3)]);
-        let result2 = interactive.segment().unwrap();
+        let result2 = interactive.segment().expect("Operation failed");
         assert_eq!(result2.dim(), (4, 4));
     }
 }

@@ -21,7 +21,7 @@ use std::collections::HashMap;
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::Dataset;
 ///
-/// let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("Operation failed");
 /// let dataset = Dataset::new(data, None)
 ///     .with_featurenames(vec!["feature1".to_string(), "feature2".to_string()])
 ///     .with_description("Sample dataset".to_string());
@@ -326,10 +326,19 @@ mod tests {
             .with_metadata("version", "1.0")
             .with_metadata("author", "test");
 
-        assert_eq!(dataset.featurenames().unwrap().len(), 2);
-        assert_eq!(dataset.description().unwrap(), "Test dataset");
-        assert_eq!(dataset.get_metadata("version").unwrap(), "1.0");
-        assert_eq!(dataset.get_metadata("author").unwrap(), "test");
+        assert_eq!(dataset.featurenames().expect("Operation failed").len(), 2);
+        assert_eq!(
+            dataset.description().expect("Operation failed"),
+            "Test dataset"
+        );
+        assert_eq!(
+            dataset.get_metadata("version").expect("Operation failed"),
+            "1.0"
+        );
+        assert_eq!(
+            dataset.get_metadata("author").expect("Operation failed"),
+            "test"
+        );
     }
 
     #[test]
@@ -349,12 +358,21 @@ mod tests {
         dataset.set_metadata("key1", "value1");
         dataset.set_metadata("key2", "value2");
 
-        assert_eq!(dataset.get_metadata("key1").unwrap(), "value1");
-        assert_eq!(dataset.get_metadata("key2").unwrap(), "value2");
+        assert_eq!(
+            dataset.get_metadata("key1").expect("Operation failed"),
+            "value1"
+        );
+        assert_eq!(
+            dataset.get_metadata("key2").expect("Operation failed"),
+            "value2"
+        );
         assert!(dataset.get_metadata("nonexistent").is_none());
 
         // Update existing key
         dataset.set_metadata("key1", "updated_value");
-        assert_eq!(dataset.get_metadata("key1").unwrap(), "updated_value");
+        assert_eq!(
+            dataset.get_metadata("key1").expect("Operation failed"),
+            "updated_value"
+        );
     }
 }

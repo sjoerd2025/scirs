@@ -48,7 +48,7 @@ fn demonstrate_missing_data_patterns() {
             10.0, 15.0, 20.0, 6.0, 12.0, 18.0, 24.0, 7.0, 14.0, 21.0, 28.0, 8.0, 16.0, 24.0, 32.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let patterns = [
         (MissingPattern::MCAR, "Missing Completely at Random"),
@@ -59,7 +59,8 @@ fn demonstrate_missing_data_patterns() {
 
     for (pattern, description) in patterns {
         let mut testdata = originaldata.clone();
-        let missing_mask = inject_missing_data(&mut testdata, 0.3, pattern, Some(42)).unwrap();
+        let missing_mask =
+            inject_missing_data(&mut testdata, 0.3, pattern, Some(42)).expect("Operation failed");
 
         let missing_count = missing_mask.iter().filter(|&&x| x).count();
         let total_elements = testdata.len();
@@ -112,8 +113,8 @@ fn demonstrate_outlier_injection() {
         let mut testdata = cleandata.clone();
         let original_stats = calculate_basic_stats(&testdata);
 
-        let outlier_mask =
-            inject_outliers(&mut testdata, 0.2, outlier_type, 3.0, Some(42)).unwrap();
+        let outlier_mask = inject_outliers(&mut testdata, 0.2, outlier_type, 3.0, Some(42))
+            .expect("Operation failed");
         let corrupted_stats = calculate_basic_stats(&testdata);
 
         let outlier_count = outlier_mask.iter().filter(|&&x| x).count();
@@ -153,7 +154,7 @@ fn demonstrate_time_series_noise() {
     println!("Testing different time series noise types:");
 
     // Create a simple time series
-    let clean_ts = make_time_series(100, 2, true, true, 0.0, Some(42)).unwrap();
+    let clean_ts = make_time_series(100, 2, true, true, 0.0, Some(42)).expect("Operation failed");
 
     let noise_configs = [
         vec![("gaussian", 0.2)],
@@ -179,7 +180,7 @@ fn demonstrate_time_series_noise() {
         let mut noisydata = clean_ts.data.clone();
         let original_stats = calculate_basic_stats(&noisydata);
 
-        add_time_series_noise(&mut noisydata, config, Some(42)).unwrap();
+        add_time_series_noise(&mut noisydata, config, Some(42)).expect("Operation failed");
         let noisy_stats = calculate_basic_stats(&noisydata);
 
         println!("{name}:");
@@ -197,7 +198,7 @@ fn demonstrate_comprehensive_corruption() {
     println!("Testing comprehensive dataset corruption:");
 
     // Load a real dataset
-    let iris = load_iris().unwrap();
+    let iris = load_iris().expect("Operation failed");
     println!(
         "Original Iris dataset: {} samples, {} features",
         iris.n_samples(),
@@ -228,7 +229,7 @@ fn demonstrate_comprehensive_corruption() {
             2.5,
             Some(42),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Calculate how much data is usable
         let total_elements = corrupted.data.len();
@@ -256,7 +257,7 @@ fn demonstrate_real_world_applications() {
     println!("Real-world application scenarios:");
 
     println!("\n1. **Medical Data Simulation**:");
-    let medicaldata = load_iris().unwrap(); // Stand-in for medical measurements
+    let medicaldata = load_iris().expect("Operation failed"); // Stand-in for medical measurements
     let _corrupted_medical = make_corrupted_dataset(
         &medicaldata,
         0.15,                 // 15% missing - common in medical data
@@ -266,7 +267,7 @@ fn demonstrate_real_world_applications() {
         2.0,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("  Medical dataset simulation:");
     println!("    Missing data pattern: MNAR (high values more likely missing)");
@@ -274,7 +275,7 @@ fn demonstrate_real_world_applications() {
     println!("    Use case: Testing imputation algorithms for clinical data");
 
     println!("\n2. **Sensor Network Simulation**:");
-    let sensordata = make_time_series(200, 4, true, true, 0.1, Some(42)).unwrap();
+    let sensordata = make_time_series(200, 4, true, true, 0.1, Some(42)).expect("Operation failed");
     let mut sensor_ts = sensordata.data.clone();
 
     // Add realistic sensor noise
@@ -288,10 +289,11 @@ fn demonstrate_real_world_applications() {
         ],
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Add missing data (sensor failures)
-    inject_missing_data(&mut sensor_ts, 0.08, MissingPattern::Block, Some(42)).unwrap();
+    inject_missing_data(&mut sensor_ts, 0.08, MissingPattern::Block, Some(42))
+        .expect("Operation failed");
 
     println!("  Sensor network simulation:");
     println!("    Multiple noise types: gaussian + spikes + drift + heteroscedastic");
@@ -299,7 +301,7 @@ fn demonstrate_real_world_applications() {
     println!("    Use case: Testing robust time series algorithms");
 
     println!("\n3. **Survey Data Simulation**:");
-    let surveydata = load_iris().unwrap(); // Stand-in for survey responses
+    let surveydata = load_iris().expect("Operation failed"); // Stand-in for survey responses
     let _corrupted_survey = make_corrupted_dataset(
         &surveydata,
         0.25,                // 25% missing - typical for surveys
@@ -309,7 +311,7 @@ fn demonstrate_real_world_applications() {
         1.5,
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("  Survey data simulation:");
     println!("    Missing data pattern: MAR (depends on other responses)");
@@ -318,7 +320,7 @@ fn demonstrate_real_world_applications() {
 
     println!("\n4. **Financial Data Simulation**:");
     let mut financial_ts = make_time_series(500, 3, false, false, 0.02, Some(42))
-        .unwrap()
+        .expect("Operation failed")
         .data;
 
     // Add financial market-specific noise
@@ -332,7 +334,7 @@ fn demonstrate_real_world_applications() {
         ],
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("  Financial data simulation:");
     println!("    Noise types: volatility + shocks + momentum + clustering");

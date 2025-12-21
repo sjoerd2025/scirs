@@ -170,8 +170,8 @@ impl<F: Float> GradientChecker<F> {
         let num_elements = analytical_data.len();
 
         for i in 0..num_elements {
-            let analytical_val = analytical_data[i].to_f64().unwrap();
-            let numerical_val = numerical_data[i].to_f64().unwrap();
+            let analytical_val = analytical_data[i].to_f64().expect("Operation failed");
+            let numerical_val = numerical_data[i].to_f64().expect("Operation failed");
 
             let abs_error = (analytical_val - numerical_val).abs();
             let rel_error = if analytical_val.abs() > 1e-15 {
@@ -235,13 +235,13 @@ impl<F: Float> GradientChecker<F> {
         seed: usize,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Add small random perturbations to the input
-        let _perturbation_scale = F::from(1e-6).unwrap();
+        let _perturbation_scale = F::from(1e-6).expect("Failed to convert constant to float");
 
         // Simplified - would generate actual random perturbations
         let perturbed = *input;
 
         // Use seed to make perturbations deterministic but varied
-        let _scale_factor = F::from((seed as f64 * 0.1_f64).sin()).unwrap();
+        let _scale_factor = F::from((seed as f64 * 0.1_f64).sin()).expect("Operation failed");
 
         Ok(perturbed)
     }

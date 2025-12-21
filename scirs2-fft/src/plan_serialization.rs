@@ -216,7 +216,7 @@ impl PlanSerializationManager {
         }
 
         let arch_id = Self::detect_arch_id();
-        let db = self.database.lock().unwrap();
+        let db = self.database.lock().expect("Operation failed");
 
         db.plans
             .keys()
@@ -229,7 +229,7 @@ impl PlanSerializationManager {
             return Ok(());
         }
 
-        let mut db = self.database.lock().unwrap();
+        let mut db = self.database.lock().expect("Operation failed");
 
         // Update or create metrics for this plan
         let metrics = db
@@ -270,7 +270,7 @@ impl PlanSerializationManager {
             return Ok(());
         }
 
-        let db = self.database.lock().unwrap();
+        let db = self.database.lock().expect("Operation failed");
         let file = File::create(&self.db_path)
             .map_err(|e| FFTError::IOError(format!("Failed to create plan database file: {e}")))?;
 
@@ -297,7 +297,7 @@ impl PlanSerializationManager {
         }
 
         let arch_id = Self::detect_arch_id();
-        let db = self.database.lock().unwrap();
+        let db = self.database.lock().expect("Operation failed");
 
         db.plans
             .iter()
@@ -350,7 +350,7 @@ mod tests {
     #[test]
     fn test_plan_serialization_basic() {
         // Create a temporary directory for test
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let db_path = temp_dir.path().join("test_plan_db.json");
 
         // Create a manager
@@ -360,13 +360,15 @@ mod tests {
         let plan_info = manager.create_plan_info(1024, true);
 
         // Record usage
-        manager.record_plan_usage(&plan_info, 5000).unwrap();
+        manager
+            .record_plan_usage(&plan_info, 5000)
+            .expect("Operation failed");
 
         // Check if plan exists
         assert!(manager.plan_exists(1024, true));
 
         // Save database
-        manager.save_database().unwrap();
+        manager.save_database().expect("Operation failed");
 
         // Check that file exists
         assert!(db_path.exists());
@@ -381,7 +383,7 @@ mod tests {
     #[test]
     fn test_get_best_plan() {
         // Create a temporary directory for test
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let db_path = temp_dir.path().join("test_best_plan.json");
 
         // Create a manager
@@ -397,14 +399,18 @@ mod tests {
         // Record usage with different times
         let time1 = 8000u64;
         let time2 = 5000u64;
-        manager.record_plan_usage(&plan_info1, time1).unwrap();
-        manager.record_plan_usage(&plan_info2, time2).unwrap();
+        manager
+            .record_plan_usage(&plan_info1, time1)
+            .expect("Operation failed");
+        manager
+            .record_plan_usage(&plan_info2, time2)
+            .expect("Operation failed");
 
         // Get best plan (should be plan2)
         let best = manager.get_best_plan_metrics(512, true);
         assert!(best.is_some());
 
-        let (_, metrics) = best.unwrap();
+        let (_, metrics) = best.expect("Operation failed");
         // Check that it's the plan with the smaller execution time
         assert!(metrics.avg_execution_ns == time1 || metrics.avg_execution_ns == time2);
         assert!(metrics.avg_execution_ns <= std::cmp::max(time1, time2));

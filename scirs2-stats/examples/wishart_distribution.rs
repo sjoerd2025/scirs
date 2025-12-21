@@ -14,7 +14,8 @@ fn main() {
     // Create a Wishart distribution with identity scale matrix
     let scale_identity = array![[1.0, 0.0], [0.0, 1.0]];
     let df = 5.0;
-    let wishart_identity = multivariate::wishart(scale_identity.clone(), df).unwrap();
+    let wishart_identity =
+        multivariate::wishart(scale_identity.clone(), df).expect("Operation failed");
 
     // Print distribution properties
     println!("Dimension: {}", wishart_identity.dim);
@@ -42,7 +43,8 @@ fn main() {
     // Create a Wishart distribution with correlated scale matrix
     let scale_correlated = array![[2.0, 0.8], [0.8, 1.5]];
     let df_corr = 8.0;
-    let wishart_correlated = multivariate::wishart(scale_correlated.clone(), df_corr).unwrap();
+    let wishart_correlated =
+        multivariate::wishart(scale_correlated.clone(), df_corr).expect("Operation failed");
 
     println!("Scale matrix:");
     println!(
@@ -79,7 +81,7 @@ fn main() {
 
     // Generate samples
     let n_samples = 1000;
-    let samples = wishart_correlated.rvs(n_samples).unwrap();
+    let samples = wishart_correlated.rvs(n_samples).expect("Operation failed");
 
     println!("Generated {} samples from Wishart distribution", n_samples);
 
@@ -112,9 +114,10 @@ fn main() {
     println!("\nGenerating simulated data...");
     let true_cov = array![[2.0, 0.8], [0.8, 1.5]];
     let true_mean = array![0.0, 0.0];
-    let mvn = multivariate::multivariate_normal(true_mean, true_cov.clone()).unwrap();
+    let mvn =
+        multivariate::multivariate_normal(true_mean, true_cov.clone()).expect("Operation failed");
 
-    let data_samples = mvn.rvs(50).unwrap();
+    let data_samples = mvn.rvs(50).expect("Operation failed");
 
     // Compute scatter matrix from data
     let mut scatter_matrix = Array2::<f64>::zeros((2, 2));
@@ -142,8 +145,8 @@ fn main() {
     print_matrix(&posterior_scale);
 
     // Generate samples from posterior
-    let posterior = multivariate::wishart(posterior_scale, posterior_df).unwrap();
-    let posterior_samples = posterior.rvs(1000).unwrap();
+    let posterior = multivariate::wishart(posterior_scale, posterior_df).expect("Operation failed");
+    let posterior_samples = posterior.rvs(1000).expect("Operation failed");
 
     // Compute mean of posterior samples (estimator of the covariance)
     let posterior_mean = compute_mean(&posterior_samples);

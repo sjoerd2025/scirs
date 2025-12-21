@@ -254,7 +254,7 @@ fn create_sample_data() -> Array2<f64> {
     let mut data = Vec::with_capacity(60); // 12 points * 5 features
 
     // Cluster 1: Low values
-    let normal1 = Normal::new(1.0, 0.3).unwrap();
+    let normal1 = Normal::new(1.0, 0.3).expect("Operation failed");
     for _ in 0..4 {
         for _ in 0..5 {
             data.push(rng.sample(normal1));
@@ -262,7 +262,7 @@ fn create_sample_data() -> Array2<f64> {
     }
 
     // Cluster 2: Medium values
-    let normal2 = Normal::new(3.0, 0.4).unwrap();
+    let normal2 = Normal::new(3.0, 0.4).expect("Operation failed");
     for _ in 0..4 {
         for _ in 0..5 {
             data.push(rng.sample(normal2));
@@ -270,14 +270,14 @@ fn create_sample_data() -> Array2<f64> {
     }
 
     // Cluster 3: High values
-    let normal3 = Normal::new(6.0, 0.5).unwrap();
+    let normal3 = Normal::new(6.0, 0.5).expect("Operation failed");
     for _ in 0..4 {
         for _ in 0..5 {
             data.push(rng.sample(normal3));
         }
     }
 
-    Array2::from_shape_vec((12, 5), data).unwrap()
+    Array2::from_shape_vec((12, 5), data).expect("Operation failed")
 }
 
 #[cfg(test)]
@@ -293,7 +293,8 @@ mod tests {
     #[test]
     fn test_hierarchical_clustering() {
         let data = create_sample_data();
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 
         // Should have n-1 rows for n samples
         assert_eq!(linkage_matrix.nrows(), data.nrows() - 1);
@@ -320,7 +321,8 @@ mod tests {
         ];
 
         for method in methods {
-            let linkage_matrix = linkage(data.view(), method, Metric::Euclidean).unwrap();
+            let linkage_matrix =
+                linkage(data.view(), method, Metric::Euclidean).expect("Operation failed");
             assert_eq!(linkage_matrix.nrows(), data.nrows() - 1);
             assert_eq!(linkage_matrix.ncols(), 4);
         }

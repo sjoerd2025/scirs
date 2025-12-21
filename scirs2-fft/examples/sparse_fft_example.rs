@@ -25,7 +25,7 @@ fn main() {
 
     // 2. Compute regular FFT for comparison
     println!("\nComputing regular FFT for comparison...");
-    let full_fft_result = fft(&signal, None).unwrap();
+    let full_fft_result = fft(&signal, None).expect("Operation failed");
     let full_magnitudes: Vec<f64> = full_fft_result.iter().map(|c| c.norm()).collect();
 
     // 3. Compute sparse FFT with different algorithms
@@ -41,7 +41,7 @@ fn main() {
     for &alg in &algorithms {
         println!("\n* Using {:?} algorithm", alg);
         let start = std::time::Instant::now();
-        let sparse_result = sparse_fft(&signal, 6, Some(alg), None).unwrap();
+        let sparse_result = sparse_fft(&signal, 6, Some(alg), None).expect("Operation failed");
         let elapsed = start.elapsed();
 
         println!(
@@ -87,10 +87,12 @@ fn main() {
         }
 
         // Reconstruct spectrum
-        let reconstructed_spectrum = reconstruct_spectrum(&sparse_result, n).unwrap();
+        let reconstructed_spectrum =
+            reconstruct_spectrum(&sparse_result, n).expect("Operation failed");
 
         // Get time-domain signal from the reconstructed spectrum
-        let reconstructed_signal = scirs2_fft::ifft(&reconstructed_spectrum, None).unwrap();
+        let reconstructed_signal =
+            scirs2_fft::ifft(&reconstructed_spectrum, None).expect("Operation failed");
 
         // Convert original signal to complex for comparison
         let signal_complex: Vec<Complex64> =
@@ -103,7 +105,7 @@ fn main() {
 
     // 4. Try adaptive sparse FFT
     println!("\nComputing adaptive sparse FFT with automatic sparsity estimation...");
-    let adaptive_result = adaptive_sparse_fft(&signal, 0.1).unwrap();
+    let adaptive_result = adaptive_sparse_fft(&signal, 0.1).expect("Operation failed");
     println!(
         "- Found {} frequency components",
         adaptive_result.values.len()
@@ -115,7 +117,7 @@ fn main() {
 
     // 5. Try frequency pruning algorithm (new algorithm added)
     println!("\nComputing frequency pruning sparse FFT with statistical thresholding...");
-    let pruning_result = frequency_pruning_sparse_fft(&signal, 2.0).unwrap();
+    let pruning_result = frequency_pruning_sparse_fft(&signal, 2.0).expect("Operation failed");
     println!(
         "- Found {} frequency components",
         pruning_result.values.len()
@@ -158,8 +160,10 @@ fn main() {
     }
 
     // Compare error with original signal
-    let reconstructed_spectrum = reconstruct_spectrum(&pruning_result, n).unwrap();
-    let reconstructed_signal = scirs2_fft::ifft(&reconstructed_spectrum, None).unwrap();
+    let reconstructed_spectrum =
+        reconstruct_spectrum(&pruning_result, n).expect("Operation failed");
+    let reconstructed_signal =
+        scirs2_fft::ifft(&reconstructed_spectrum, None).expect("Operation failed");
     let signal_complex: Vec<Complex64> = signal.iter().map(|&x| Complex64::new(x, 0.0)).collect();
     let error = compute_relative_error(&signal_complex, &reconstructed_signal);
     println!("- Relative error with pruning algorithm: {:.6}", error);
@@ -175,7 +179,8 @@ fn main() {
     }
 
     // Using Hamming window for better frequency resolution with noise
-    let flatness_result = spectral_flatness_sparse_fft(&noisy_signal, 0.3, 32).unwrap();
+    let flatness_result =
+        spectral_flatness_sparse_fft(&noisy_signal, 0.3, 32).expect("Operation failed");
     println!(
         "- Found {} frequency components",
         flatness_result.values.len()
@@ -218,8 +223,10 @@ fn main() {
     }
 
     // Compare error with original signal
-    let reconstructed_spectrum = reconstruct_spectrum(&flatness_result, n).unwrap();
-    let reconstructed_signal = scirs2_fft::ifft(&reconstructed_spectrum, None).unwrap();
+    let reconstructed_spectrum =
+        reconstruct_spectrum(&flatness_result, n).expect("Operation failed");
+    let reconstructed_signal =
+        scirs2_fft::ifft(&reconstructed_spectrum, None).expect("Operation failed");
     let error = compute_relative_error(&signal_complex, &reconstructed_signal);
     println!(
         "- Relative error with spectral flatness algorithm: {:.6}",
@@ -249,8 +256,8 @@ fn main() {
     let signal_2d_matrix: Vec<Vec<f64>> = (0..rows)
         .map(|i| signal_2d[i * cols..(i + 1) * cols].to_vec())
         .collect();
-    let sparse_2d_result =
-        sparse_fft2(&signal_2d_matrix, 8, Some(SparseFFTAlgorithm::Sublinear)).unwrap();
+    let sparse_2d_result = sparse_fft2(&signal_2d_matrix, 8, Some(SparseFFTAlgorithm::Sublinear))
+        .expect("Operation failed");
     let elapsed = start.elapsed();
 
     println!(

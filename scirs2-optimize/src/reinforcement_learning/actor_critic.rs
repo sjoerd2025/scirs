@@ -966,8 +966,8 @@ mod tests {
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let initial = Array1::from(vec![2.0, 2.0]);
 
-        let result =
-            actor_critic_optimize(objective, &initial.view(), Some(config), Some(16)).unwrap();
+        let result = actor_critic_optimize(objective, &initial.view(), Some(config), Some(16))
+            .expect("Operation failed");
 
         // Should make some progress
         let initial_obj = objective(&initial.view());

@@ -115,7 +115,7 @@ where
     /// ```
     /// use scirs2_linalg::fft::{FFTPlan, FFTAlgorithm};
     ///
-    /// let plan = FFTPlan::<f64>::new(1024, FFTAlgorithm::CooleyTukey, false).unwrap();
+    /// let plan = FFTPlan::<f64>::new(1024, FFTAlgorithm::CooleyTukey, false).expect("Operation failed");
     /// ```
     pub fn new(size: usize, algorithm: FFTAlgorithm, realinput: bool) -> LinalgResult<Self> {
         if size == 0 {
@@ -162,10 +162,11 @@ where
     /// Compute twiddle factors for FFT
     fn compute_twiddle_factors(size: usize) -> Vec<Complex<F>> {
         let mut twiddles = Vec::with_capacity(size);
-        let two_pi = F::from(2.0).unwrap() * F::PI();
+        let two_pi = F::from(2.0).expect("Failed to convert constant to float") * F::PI();
 
         for k in 0..size {
-            let angle = -two_pi * F::from(k).unwrap() / F::from(size).unwrap();
+            let angle = -two_pi * F::from(k).expect("Failed to convert to float")
+                / F::from(size).expect("Failed to convert to float");
             twiddles.push(Complex::new(angle.cos(), angle.sin()));
         }
 
@@ -220,7 +221,7 @@ where
 ///     Complex::new(0.0, 0.0),
 /// ];
 ///
-/// let result = fft_1d(&input.view(), false).unwrap();
+/// let result = fft_1d(&input.view(), false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn fft_1d(input: &ArrayView1<Complex64>, inverse: bool) -> LinalgResult<Array1<Complex64>> {
@@ -439,7 +440,7 @@ fn ifft_power_of_2(input: &ArrayView1<Complex64>) -> LinalgResult<Array1<Complex
 /// use scirs2_linalg::fft::rfft_1d;
 ///
 /// let input = array![1.0, 0.0, 0.0, 0.0];
-/// let result = rfft_1d(&input.view()).unwrap();
+/// let result = rfft_1d(&input.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn rfft_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<Complex64>> {
@@ -550,7 +551,7 @@ pub fn irfft_1d(input: &ArrayView1<Complex64>, outputsize: usize) -> LinalgResul
 ///     Complex::new((i + j) as f64, 0.0)
 /// });
 ///
-/// let result = fft_2d(&input.view(), false).unwrap();
+/// let result = fft_2d(&input.view(), false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn fft_2d(input: &ArrayView2<Complex64>, inverse: bool) -> LinalgResult<Array2<Complex64>> {
@@ -1035,7 +1036,7 @@ pub fn welch_psd(
 /// use scirs2_linalg::fft::hadamard_transform;
 ///
 /// let input = array![1.0, 1.0, 1.0, 1.0];
-/// let result = hadamard_transform(&input.view(), false).unwrap();
+/// let result = hadamard_transform(&input.view(), false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn hadamard_transform(input: &ArrayView1<f64>, inverse: bool) -> LinalgResult<Array1<f64>> {
@@ -1223,7 +1224,8 @@ mod tests {
 
     #[test]
     fn test_fft_plan_creation() {
-        let plan = FFTPlan::<f64>::new(8, FFTAlgorithm::CooleyTukey, false).unwrap();
+        let plan =
+            FFTPlan::<f64>::new(8, FFTAlgorithm::CooleyTukey, false).expect("Operation failed");
         assert_eq!(plan.size, 8);
         assert_eq!(plan.twiddle_factors.len(), 8);
         assert_eq!(plan.bit_reversal.len(), 8);
@@ -1238,7 +1240,7 @@ mod tests {
             Complex64::new(0.0, 0.0),
         ];
 
-        let result = fft_1d(&input.view(), false).unwrap();
+        let result = fft_1d(&input.view(), false).expect("Operation failed");
         assert_eq!(result.len(), 4);
 
         // DC component should be 1
@@ -1255,8 +1257,8 @@ mod tests {
             Complex64::new(0.7, -0.2),
         ];
 
-        let fft_result = fft_1d(&input.view(), false).unwrap();
-        let ifft_result = fft_1d(&fft_result.view(), true).unwrap();
+        let fft_result = fft_1d(&input.view(), false).expect("Operation failed");
+        let ifft_result = fft_1d(&fft_result.view(), true).expect("Operation failed");
 
         for i in 0..input.len() {
             assert_relative_eq!(input[i].re, ifft_result[i].re, epsilon = 1e-12);
@@ -1267,7 +1269,7 @@ mod tests {
     #[test]
     fn test_rfft_1d() {
         let input = array![1.0, 0.0, 0.0, 0.0];
-        let result = rfft_1d(&input.view()).unwrap();
+        let result = rfft_1d(&input.view()).expect("Operation failed");
 
         assert_eq!(result.len(), 3); // N/2 + 1
         assert_relative_eq!(result[0].re, 1.0, epsilon = 1e-10);
@@ -1277,8 +1279,8 @@ mod tests {
     #[test]
     fn test_irfft_1d() {
         let input = array![1.0, 0.0, 0.0, 0.0];
-        let fft_result = rfft_1d(&input.view()).unwrap();
-        let reconstructed = irfft_1d(&fft_result.view(), 4).unwrap();
+        let fft_result = rfft_1d(&input.view()).expect("Operation failed");
+        let reconstructed = irfft_1d(&fft_result.view(), 4).expect("Operation failed");
 
         for i in 0..input.len() {
             assert_relative_eq!(input[i], reconstructed[i], epsilon = 1e-12);
@@ -1289,10 +1291,10 @@ mod tests {
     fn test_fft_2d() {
         let input = Array2::from_shape_fn((4, 4), |(i, j)| Complex64::new((i + j) as f64, 0.0));
 
-        let result = fft_2d(&input.view(), false).unwrap();
+        let result = fft_2d(&input.view(), false).expect("Operation failed");
         assert_eq!(result.shape(), &[4, 4]);
 
-        let reconstructed = fft_2d(&result.view(), true).unwrap();
+        let reconstructed = fft_2d(&result.view(), true).expect("Operation failed");
 
         for i in 0..4 {
             for j in 0..4 {
@@ -1307,13 +1309,14 @@ mod tests {
         let signal = array![1.0, 1.0, 1.0, 1.0];
 
         // Rectangular window should not change the signal
-        let rect = apply_window(&signal.view(), WindowFunction::Rectangular).unwrap();
+        let rect =
+            apply_window(&signal.view(), WindowFunction::Rectangular).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(signal[i], rect[i], epsilon = 1e-10);
         }
 
         // Hann window should taper to zero at edges
-        let hann = apply_window(&signal.view(), WindowFunction::Hann).unwrap();
+        let hann = apply_window(&signal.view(), WindowFunction::Hann).expect("Operation failed");
         assert_relative_eq!(hann[0], 0.0, epsilon = 1e-10);
         assert_relative_eq!(hann[3], 0.0, epsilon = 1e-10);
         assert!(hann[1] > 0.0);
@@ -1323,8 +1326,8 @@ mod tests {
     #[test]
     fn test_dct_1d() {
         let input = array![1.0, 0.0, 0.0, 0.0];
-        let dct_result = dct_1d(&input.view()).unwrap();
-        let idct_result = idct_1d(&dct_result.view()).unwrap();
+        let dct_result = dct_1d(&input.view()).expect("Operation failed");
+        let idct_result = idct_1d(&dct_result.view()).expect("Operation failed");
 
         for i in 0..input.len() {
             assert_relative_eq!(input[i], idct_result[i], epsilon = 1e-12);
@@ -1334,7 +1337,7 @@ mod tests {
     #[test]
     fn test_dst_1d() {
         let input = array![1.0, 2.0, 3.0, 4.0];
-        let dst_result = dst_1d(&input.view()).unwrap();
+        let dst_result = dst_1d(&input.view()).expect("Operation failed");
         assert_eq!(dst_result.len(), 4);
         assert!(!dst_result.iter().all(|&x| x == 0.0));
     }
@@ -1344,7 +1347,7 @@ mod tests {
         let signal1 = array![1.0, 2.0, 3.0];
         let signal2 = array![0.5, 1.5];
 
-        let result = fft_convolve(&signal1.view(), &signal2.view()).unwrap();
+        let result = fft_convolve(&signal1.view(), &signal2.view()).expect("Operation failed");
         assert_eq!(result.len(), 4); // n1 + n2 - 1
 
         // Manual convolution check for first element
@@ -1354,7 +1357,8 @@ mod tests {
     #[test]
     fn test_periodogram_psd() {
         let signal = Array1::from_shape_fn(16, |i| (2.0 * PI * i as f64 / 16.0).sin());
-        let psd = periodogram_psd(&signal.view(), WindowFunction::Rectangular, None).unwrap();
+        let psd = periodogram_psd(&signal.view(), WindowFunction::Rectangular, None)
+            .expect("Operation failed");
 
         assert_eq!(psd.len(), 9); // N/2 + 1 for real FFT
         assert!(psd.iter().all(|&x| x >= 0.0));
@@ -1363,7 +1367,8 @@ mod tests {
     #[test]
     fn test_welch_psd() {
         let signal = Array1::from_shape_fn(64, |i| (2.0 * PI * i as f64 / 8.0).sin());
-        let psd = welch_psd(&signal.view(), 16, 0.5, WindowFunction::Hann).unwrap();
+        let psd =
+            welch_psd(&signal.view(), 16, 0.5, WindowFunction::Hann).expect("Operation failed");
 
         assert!(!psd.is_empty());
         assert!(psd.iter().all(|&x| x >= 0.0));
@@ -1389,8 +1394,8 @@ mod tests {
             Complex64::new(0.0, 0.0),
         ]; // Size 5 (not power of 2)
 
-        let result = bluestein_fft(&input.view(), false).unwrap();
-        let reconstructed = bluestein_fft(&result.view(), true).unwrap();
+        let result = bluestein_fft(&input.view(), false).expect("Operation failed");
+        let reconstructed = bluestein_fft(&result.view(), true).expect("Operation failed");
 
         for i in 0..input.len() {
             assert_relative_eq!(input[i].re, reconstructed[i].re, epsilon = 1e-10);
@@ -1404,10 +1409,10 @@ mod tests {
             Complex64::new((i + j + k) as f64, 0.0)
         });
 
-        let result = fft_3d(&input.view(), false).unwrap();
+        let result = fft_3d(&input.view(), false).expect("Operation failed");
         assert_eq!(result.shape(), &[2, 2, 2]);
 
-        let reconstructed = fft_3d(&result.view(), true).unwrap();
+        let reconstructed = fft_3d(&result.view(), true).expect("Operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -1430,7 +1435,8 @@ mod tests {
     #[test]
     fn test_kaiser_window() {
         let signal = array![1.0, 1.0, 1.0, 1.0, 1.0];
-        let windowed = apply_window(&signal.view(), WindowFunction::Kaiser(2.0)).unwrap();
+        let windowed =
+            apply_window(&signal.view(), WindowFunction::Kaiser(2.0)).expect("Operation failed");
 
         // Kaiser window should taper towards edges
         assert!(windowed[0] < windowed[2]); // Edge less than center
@@ -1441,7 +1447,8 @@ mod tests {
     #[test]
     fn test_tukey_window() {
         let signal = Array1::ones(10);
-        let windowed = apply_window(&signal.view(), WindowFunction::Tukey(0.5)).unwrap();
+        let windowed =
+            apply_window(&signal.view(), WindowFunction::Tukey(0.5)).expect("Operation failed");
 
         // Tukey window should have flat top in middle
         assert!(windowed[0] < windowed[5]); // Edge less than center
@@ -1451,7 +1458,7 @@ mod tests {
     #[test]
     fn test_hadamard_transform() {
         let input = array![1.0, 1.0, 1.0, 1.0];
-        let result = hadamard_transform(&input.view(), false).unwrap();
+        let result = hadamard_transform(&input.view(), false).expect("Operation failed");
 
         // For input [1,1,1,1], Hadamard transform should be [4,0,0,0]
         assert_relative_eq!(result[0], 4.0, epsilon = 1e-12);
@@ -1460,7 +1467,7 @@ mod tests {
         assert_relative_eq!(result[3], 0.0, epsilon = 1e-12);
 
         // Test inverse
-        let reconstructed = hadamard_transform(&result.view(), true).unwrap();
+        let reconstructed = hadamard_transform(&result.view(), true).expect("Operation failed");
         for i in 0..4 {
             assert_relative_eq!(input[i], reconstructed[i], epsilon = 1e-12);
         }
@@ -1469,13 +1476,14 @@ mod tests {
     #[test]
     fn test_walsh_hadamard_transform() {
         let input = array![1.0, 0.0, 1.0, 0.0];
-        let result = walsh_hadamard_transform(&input.view(), false).unwrap();
+        let result = walsh_hadamard_transform(&input.view(), false).expect("Operation failed");
 
         // Test that it produces a valid transform
         assert_eq!(result.len(), 4);
 
         // Test inverse
-        let reconstructed = walsh_hadamard_transform(&result.view(), true).unwrap();
+        let reconstructed =
+            walsh_hadamard_transform(&result.view(), true).expect("Operation failed");
         for i in 0..4 {
             assert_relative_eq!(input[i], reconstructed[i], epsilon = 1e-12);
         }
@@ -1484,13 +1492,13 @@ mod tests {
     #[test]
     fn test_fast_walsh_transform() {
         let input = array![1.0, -1.0, 1.0, -1.0];
-        let result = fast_walsh_transform(&input.view(), false).unwrap();
+        let result = fast_walsh_transform(&input.view(), false).expect("Operation failed");
 
         // Test dimensions
         assert_eq!(result.len(), 4);
 
         // Test inverse
-        let reconstructed = fast_walsh_transform(&result.view(), true).unwrap();
+        let reconstructed = fast_walsh_transform(&result.view(), true).expect("Operation failed");
         for i in 0..4 {
             assert_relative_eq!(input[i], reconstructed[i], epsilon = 1e-12);
         }
@@ -1500,8 +1508,9 @@ mod tests {
     fn test_hadamard_transform_properties() {
         // Test that Hadamard transform is involutory (self-inverse up to scaling)
         let input = array![1.0, 2.0, 3.0, 4.0];
-        let transformed = hadamard_transform(&input.view(), false).unwrap();
-        let twice_transformed = hadamard_transform(&transformed.view(), false).unwrap();
+        let transformed = hadamard_transform(&input.view(), false).expect("Operation failed");
+        let twice_transformed =
+            hadamard_transform(&transformed.view(), false).expect("Operation failed");
 
         // H²x = n*x for unnormalized Hadamard transform
         let n = input.len() as f64;

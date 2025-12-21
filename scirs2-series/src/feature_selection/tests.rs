@@ -44,7 +44,7 @@ fn create_test_data() -> (Array2<f64>, Array1<f64>) {
 fn test_variance_threshold() {
     let (features, _) = create_test_data();
 
-    let result = FilterMethods::variance_threshold(&features, 0.1).unwrap();
+    let result = FilterMethods::variance_threshold(&features, 0.1).expect("Operation failed");
 
     // Feature 3 (constant) should be filtered out
     assert!(!result.selected_features.contains(&3));
@@ -56,7 +56,8 @@ fn test_variance_threshold() {
 fn test_correlation_selection() {
     let (features, target) = create_test_data();
 
-    let result = FilterMethods::correlation_selection(&features, &target, 0.3).unwrap();
+    let result =
+        FilterMethods::correlation_selection(&features, &target, 0.3).expect("Operation failed");
 
     // Should select features 0 and 1 which are correlated with target
     assert!(result.selected_features.contains(&0));
@@ -69,8 +70,8 @@ fn test_correlation_selection() {
 fn test_mutual_information_selection() {
     let (features, target) = create_test_data();
 
-    let result =
-        FilterMethods::mutual_information_selection(&features, &target, 5, Some(5)).unwrap();
+    let result = FilterMethods::mutual_information_selection(&features, &target, 5, Some(5))
+        .expect("Operation failed");
 
     assert_eq!(result.selected_features.len(), 5);
     assert!(!result.feature_scores.iter().all(|&x| x == 0.0));
@@ -81,7 +82,8 @@ fn test_mutual_information_selection() {
 fn test_f_test_selection() {
     let (features, target) = create_test_data();
 
-    let result = FilterMethods::f_test_selection(&features, &target, 0.05).unwrap();
+    let result =
+        FilterMethods::f_test_selection(&features, &target, 0.05).expect("Operation failed");
 
     // Should select some features based on F-test
     assert!(!result.selected_features.is_empty());
@@ -93,7 +95,8 @@ fn test_f_test_selection() {
 fn test_autocorrelation_filter() {
     let (features, _) = create_test_data();
 
-    let result = FilterMethods::autocorrelation_filter(&features, 5, 0.1).unwrap();
+    let result =
+        FilterMethods::autocorrelation_filter(&features, 5, 0.1).expect("Operation failed");
 
     assert!(!result.selected_features.is_empty());
     assert!(result.feature_scores.len() == features.ncols());
@@ -108,7 +111,8 @@ fn test_forward_selection() {
         ..Default::default()
     };
 
-    let result = WrapperMethods::forward_selection(&features, &target, &config).unwrap();
+    let result =
+        WrapperMethods::forward_selection(&features, &target, &config).expect("Operation failed");
 
     assert!(result.selected_features.len() <= 3);
     // Should prefer features 0 and 1
@@ -124,7 +128,8 @@ fn test_backward_elimination() {
         ..Default::default()
     };
 
-    let result = WrapperMethods::backward_elimination(&features, &target, &config).unwrap();
+    let result = WrapperMethods::backward_elimination(&features, &target, &config)
+        .expect("Operation failed");
 
     assert!(result.selected_features.len() >= 5);
 }
@@ -138,8 +143,8 @@ fn test_recursive_feature_elimination() {
         ..Default::default()
     };
 
-    let result =
-        WrapperMethods::recursive_feature_elimination(&features, &target, &config).unwrap();
+    let result = WrapperMethods::recursive_feature_elimination(&features, &target, &config)
+        .expect("Operation failed");
 
     assert_eq!(result.selected_features.len(), 4);
 }
@@ -154,7 +159,8 @@ fn test_bidirectional_selection() {
         ..Default::default()
     };
 
-    let result = WrapperMethods::bidirectional_selection(&features, &target, &config).unwrap();
+    let result = WrapperMethods::bidirectional_selection(&features, &target, &config)
+        .expect("Operation failed");
 
     assert!(result.selected_features.len() <= 5);
 }
@@ -164,7 +170,8 @@ fn test_bidirectional_selection() {
 fn test_lasso_selection() {
     let (features, target) = create_test_data();
 
-    let result = EmbeddedMethods::lasso_selection(&features, &target, 0.1, 100).unwrap();
+    let result =
+        EmbeddedMethods::lasso_selection(&features, &target, 0.1, 100).expect("Operation failed");
 
     // LASSO should select some features and zero out others
     assert!(!result.selected_features.is_empty());
@@ -176,7 +183,8 @@ fn test_lasso_selection() {
 fn test_ridge_selection() {
     let (features, target) = create_test_data();
 
-    let result = EmbeddedMethods::ridge_selection(&features, &target, 1.0, Some(5)).unwrap();
+    let result = EmbeddedMethods::ridge_selection(&features, &target, 1.0, Some(5))
+        .expect("Operation failed");
 
     assert_eq!(result.selected_features.len(), 5);
 }
@@ -186,7 +194,8 @@ fn test_ridge_selection() {
 fn test_tree_based_selection() {
     let (features, target) = create_test_data();
 
-    let result = EmbeddedMethods::tree_based_selection(&features, &target, Some(4)).unwrap();
+    let result = EmbeddedMethods::tree_based_selection(&features, &target, Some(4))
+        .expect("Operation failed");
 
     assert_eq!(result.selected_features.len(), 4);
 }
@@ -196,7 +205,8 @@ fn test_tree_based_selection() {
 fn test_lag_based_selection() {
     let (features, target) = create_test_data();
 
-    let result = TimeSeriesMethods::lag_based_selection(&features, &target, 3, Some(5)).unwrap();
+    let result = TimeSeriesMethods::lag_based_selection(&features, &target, 3, Some(5))
+        .expect("Operation failed");
 
     assert_eq!(result.selected_features.len(), 5);
 }
@@ -206,7 +216,8 @@ fn test_lag_based_selection() {
 fn test_seasonal_importance_selection() {
     let (features, _) = create_test_data();
 
-    let result = TimeSeriesMethods::seasonal_importance_selection(&features, 12, Some(4)).unwrap();
+    let result = TimeSeriesMethods::seasonal_importance_selection(&features, 12, Some(4))
+        .expect("Operation failed");
 
     assert_eq!(result.selected_features.len(), 4);
 }
@@ -216,8 +227,8 @@ fn test_seasonal_importance_selection() {
 fn test_cross_correlation_selection() {
     let (features, target) = create_test_data();
 
-    let result =
-        TimeSeriesMethods::cross_correlation_selection(&features, &target, 5, 0.1).unwrap();
+    let result = TimeSeriesMethods::cross_correlation_selection(&features, &target, 5, 0.1)
+        .expect("Operation failed");
 
     assert!(!result.selected_features.is_empty());
 }
@@ -227,8 +238,8 @@ fn test_cross_correlation_selection() {
 fn test_granger_causality_selection() {
     let (features, target) = create_test_data();
 
-    let result =
-        TimeSeriesMethods::granger_causality_selection(&features, &target, 3, 0.05).unwrap();
+    let result = TimeSeriesMethods::granger_causality_selection(&features, &target, 3, 0.05)
+        .expect("Operation failed");
 
     // May or may not select features depending on causality
     assert!(result.feature_scores.len() == features.ncols());
@@ -243,7 +254,8 @@ fn test_auto_select() {
         ..Default::default()
     };
 
-    let result = FeatureSelector::auto_select(&features, Some(&target), &config).unwrap();
+    let result =
+        FeatureSelector::auto_select(&features, Some(&target), &config).expect("Operation failed");
 
     assert!(result.selected_features.len() <= 5);
     assert_eq!(result.method, "AutoSelect");

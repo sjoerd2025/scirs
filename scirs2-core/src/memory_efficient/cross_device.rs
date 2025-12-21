@@ -375,7 +375,7 @@ impl DeviceMemoryManager {
                 };
 
                 let buffer = if self.enable_caching {
-                    let mut cache = self.cache.lock().unwrap();
+                    let mut cache = self.cache.lock().expect("Operation failed");
                     if let Some(entry) = cache.get_mut(&key) {
                         // We found a cached entry, cast it to the correct type
                         if let Some(entry) = entry.downcast_mut::<CacheEntry<T>>() {
@@ -539,7 +539,7 @@ impl DeviceMemoryManager {
             return;
         }
 
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("Operation failed");
 
         // Collect keys with their access times to avoid borrow conflicts
         let mut key_times: Vec<_> = cache
@@ -570,7 +570,7 @@ impl DeviceMemoryManager {
         let target_size = current_size - self.max_cache_size / 2; // Remove enough to get below half the limit
 
         for key_ in key_times {
-            let entry = cache.remove(&key_.0).unwrap();
+            let entry = cache.remove(&key_.0).expect("Operation failed");
 
             // Calculate the size of the entry based on its type
             let entry_size = match entry.downcast_ref::<CacheEntry<f32>>() {
@@ -601,7 +601,7 @@ impl DeviceMemoryManager {
 
     /// Clear the cache
     pub fn clear_cache(&self) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("Operation failed");
         cache.clear();
         self.current_cache_size
             .store(0, std::sync::atomic::Ordering::SeqCst);
@@ -888,7 +888,7 @@ impl DeviceMemoryPool {
         size: usize,
     ) -> CoreResult<DeviceBuffer<T>> {
         // Check if we have a free buffer of the right size
-        let mut freebuffers = self.freebuffers.lock().unwrap();
+        let mut freebuffers = self.freebuffers.lock().expect("Operation failed");
         if let Some(buffers) = freebuffers.get_mut(&size) {
             if let Some(buffer) = buffers.pop() {
                 // We found a free buffer, cast it to the correct type
@@ -937,7 +937,7 @@ impl DeviceMemoryPool {
         }
 
         // Add the buffer to the pool
-        let mut freebuffers = self.freebuffers.lock().unwrap();
+        let mut freebuffers = self.freebuffers.lock().expect("Operation failed");
         freebuffers.entry(size).or_default().push(Box::new(buffer));
 
         // Update the pool size
@@ -947,7 +947,7 @@ impl DeviceMemoryPool {
 
     /// Clear the pool
     pub fn clear(&self) {
-        let mut freebuffers = self.freebuffers.lock().unwrap();
+        let mut freebuffers = self.freebuffers.lock().expect("Operation failed");
         freebuffers.clear();
         self.current_poolsize
             .store(0, std::sync::atomic::Ordering::SeqCst);
@@ -1014,7 +1014,7 @@ impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
             ));
         }
 
-        let first = *hostarray.iter().next().unwrap();
+        let first = *hostarray.iter().next().expect("Operation failed");
         let result = hostarray.iter().skip(1).fold(first, |acc, &x| f(acc, x));
         Ok(result)
     }
@@ -1100,7 +1100,7 @@ impl CrossDeviceManager {
         }
 
         // Get the memory manager for the device
-        let manager = self.memory_managers.get(&device).unwrap();
+        let manager = self.memory_managers.get(&device).expect("Operation failed");
         manager.transfer_to_device(array, device, options)
     }
 
@@ -1201,7 +1201,7 @@ impl CrossDeviceManager {
         }
 
         // Get the memory pool for the device
-        let pool = self.memory_pools.get(&device).unwrap();
+        let pool = self.memory_pools.get(&device).expect("Operation failed");
         pool.allocate(size)
     }
 
@@ -1213,7 +1213,7 @@ impl CrossDeviceManager {
         }
 
         // Get the memory pool for the device
-        let pool = self.memory_pools.get(&device).unwrap();
+        let pool = self.memory_pools.get(&device).expect("Operation failed");
         pool.free(buffer);
     }
 
@@ -1230,13 +1230,13 @@ impl CrossDeviceManager {
         }
 
         // Clear active transfers
-        let mut active_transfers = self.active_transfers.lock().unwrap();
+        let mut active_transfers = self.active_transfers.lock().expect("Operation failed");
         active_transfers.clear();
     }
 
     /// Wait for all active transfers to complete
     pub fn synchronize(&self) {
-        let mut active_transfers = self.active_transfers.lock().unwrap();
+        let mut active_transfers = self.active_transfers.lock().expect("Operation failed");
         for event in active_transfers.drain(..) {
             event.wait();
         }

@@ -7,7 +7,7 @@ fn main() {
     // Example 1: Integrate x^2 from 0 to 1
     // Exact result: 1/3
     let f1 = |x: f64| x * x;
-    let result1 = quad(f1, 0.0, 1.0, None).unwrap();
+    let result1 = quad(f1, 0.0, 1.0, None).expect("Operation failed");
     println!("∫x² dx from 0 to 1:");
     println!("  Calculated: {}", result1.value);
     println!("  Exact:      {}", 1.0 / 3.0);
@@ -20,7 +20,7 @@ fn main() {
     // Exact result: 2
     let f2 = |x: f64| x.sin();
     let pi = std::f64::consts::PI;
-    let result2 = quad(f2, 0.0, pi, None).unwrap();
+    let result2 = quad(f2, 0.0, pi, None).expect("Operation failed");
     println!("∫sin(x) dx from 0 to π:");
     println!("  Calculated: {}", result2.value);
     println!("  Exact:      {}", 2.0);

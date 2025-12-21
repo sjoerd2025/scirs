@@ -256,21 +256,21 @@ thread_local! {
 pub fn get_config() -> Config {
     // Try to get thread-local config first
     let thread_local = THREAD_LOCAL_CONFIG.with(|config| {
-        let config_lock = config.lock().unwrap();
+        let config_lock = config.lock().expect("Operation failed");
         config_lock.clone()
     });
 
     // If thread-local config exists, use it, otherwise use global config
     match thread_local {
         Some(config) => config,
-        None => GLOBAL_CONFIG.read().unwrap().clone(),
+        None => GLOBAL_CONFIG.read().expect("Operation failed").clone(),
     }
 }
 
 /// Set the global configuration
 #[allow(dead_code)]
 pub fn set_global_config(config: Config) {
-    let mut global_config = GLOBAL_CONFIG.write().unwrap();
+    let mut global_config = GLOBAL_CONFIG.write().expect("Operation failed");
     *global_config = config;
 }
 
@@ -278,7 +278,7 @@ pub fn set_global_config(config: Config) {
 #[allow(dead_code)]
 pub fn set_thread_local_config(config: Config) {
     THREAD_LOCAL_CONFIG.with(|thread_config| {
-        let mut config_lock = thread_config.lock().unwrap();
+        let mut config_lock = thread_config.lock().expect("Operation failed");
         *config_lock = Some(config);
     });
 }
@@ -287,7 +287,7 @@ pub fn set_thread_local_config(config: Config) {
 #[allow(dead_code)]
 pub fn clear_thread_local_config() {
     THREAD_LOCAL_CONFIG.with(|thread_config| {
-        let mut config_lock = thread_config.lock().unwrap();
+        let mut config_lock = thread_config.lock().expect("Operation failed");
         *config_lock = None;
     });
 }
@@ -295,7 +295,7 @@ pub fn clear_thread_local_config() {
 /// Set a global configuration value
 #[allow(dead_code)]
 pub fn set_config_value(key: &str, value: ConfigValue) {
-    let mut global_config = GLOBAL_CONFIG.write().unwrap();
+    let mut global_config = GLOBAL_CONFIG.write().expect("Operation failed");
     global_config.set(key, value);
 }
 
@@ -311,11 +311,11 @@ pub fn get_config_value(key: &str) -> Option<ConfigValue> {
 #[allow(dead_code)]
 pub fn set_thread_local_config_value(key: &str, value: ConfigValue) {
     THREAD_LOCAL_CONFIG.with(|thread_config| {
-        let mut config_lock = thread_config.lock().unwrap();
+        let mut config_lock = thread_config.lock().expect("Operation failed");
 
         // Create a new config from global if it doesn't exist
         if config_lock.is_none() {
-            let global_config = GLOBAL_CONFIG.read().unwrap().clone();
+            let global_config = GLOBAL_CONFIG.read().expect("Operation failed").clone();
             *config_lock = Some(global_config);
         }
 
@@ -362,15 +362,24 @@ mod tests {
         config.set("test_float", ConfigValue::Float(3.5));
         config.set("test_string", ConfigValue::String("hello".to_string()));
 
-        assert!(config.get_bool("test_bool").unwrap());
-        assert_eq!(config.get_int("test_int").unwrap(), 42);
-        assert_eq!(config.get_uint("test_uint").unwrap(), 100);
-        assert_eq!(config.get_float("test_float").unwrap(), 3.5);
-        assert_eq!(config.get_string("test_string").unwrap(), "hello");
+        assert!(config.get_bool("test_bool").expect("Operation failed"));
+        assert_eq!(config.get_int("test_int").expect("Operation failed"), 42);
+        assert_eq!(config.get_uint("test_uint").expect("Operation failed"), 100);
+        assert_eq!(
+            config.get_float("test_float").expect("Operation failed"),
+            3.5
+        );
+        assert_eq!(
+            config.get_string("test_string").expect("Operation failed"),
+            "hello"
+        );
 
         // Test type conversions
-        assert_eq!(config.get_float("test_int").unwrap(), 42.0);
-        assert_eq!(config.get_int("test_uint").unwrap(), 100);
+        assert_eq!(
+            config.get_float("test_int").expect("Operation failed"),
+            42.0
+        );
+        assert_eq!(config.get_int("test_uint").expect("Operation failed"), 100);
 
         // Test error cases
         assert!(config.get_bool("nonexistent").is_err());
@@ -384,23 +393,31 @@ mod tests {
         let test_key = format!("{process_id}");
 
         // Store original value if it exists
-        let original_value = GLOBAL_CONFIG.read().unwrap().values.get(&test_key).cloned();
+        let original_value = GLOBAL_CONFIG
+            .read()
+            .expect("Operation failed")
+            .values
+            .get(&test_key)
+            .cloned();
 
         // Set test value using a scoped lock to minimize interference
         {
-            let mut global_config = GLOBAL_CONFIG.write().unwrap();
+            let mut global_config = GLOBAL_CONFIG.write().expect("Operation failed");
             global_config.set(&test_key, ConfigValue::String("test_value".to_string()));
         }
 
         // Verify the value was set correctly
         {
             let config = get_config();
-            assert_eq!(config.get_string(&test_key).unwrap(), "test_value");
+            assert_eq!(
+                config.get_string(&test_key).expect("Operation failed"),
+                "test_value"
+            );
         }
 
         // Clean up by restoring original state
         {
-            let mut global_config = GLOBAL_CONFIG.write().unwrap();
+            let mut global_config = GLOBAL_CONFIG.write().expect("Operation failed");
             if let Some(original) = original_value {
                 global_config.set(&test_key, original);
             } else {
@@ -416,7 +433,7 @@ mod tests {
 
         {
             // First set a global value
-            let mut global_config = GLOBAL_CONFIG.write().unwrap();
+            let mut global_config = GLOBAL_CONFIG.write().expect("Operation failed");
             global_config.set(test_key, ConfigValue::String("global".to_string()));
         }
 
@@ -427,14 +444,17 @@ mod tests {
 
         // Thread-local should take precedence
         let config = get_config();
-        assert_eq!(config.get_string(test_key).unwrap(), "thread-local");
+        assert_eq!(
+            config.get_string(test_key).expect("Operation failed"),
+            "thread-local"
+        );
 
         // Clear thread-local config
         clear_thread_local_config();
 
         // Need to verify thread-local is gone
         let thread_result = THREAD_LOCAL_CONFIG.with(|config| {
-            let locked = config.lock().unwrap();
+            let locked = config.lock().expect("Operation failed");
             locked.is_none()
         });
         assert!(thread_result, "Thread-local config should be cleared");
@@ -443,7 +463,7 @@ mod tests {
         set_global_config(original);
 
         // Clean up by removing the test key
-        let mut final_config = GLOBAL_CONFIG.write().unwrap();
+        let mut final_config = GLOBAL_CONFIG.write().expect("Operation failed");
         final_config.values.remove(test_key);
     }
 }

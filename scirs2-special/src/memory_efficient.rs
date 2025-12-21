@@ -402,7 +402,7 @@ mod tests {
     #[test]
     fn test_gamma_chunked() {
         let input = Array1::linspace(0.1, 5.0, 1000);
-        let result = gamma_chunked(&input, None).unwrap();
+        let result = gamma_chunked(&input, None).expect("Operation failed");
 
         // Verify against direct computation
         use crate::gamma::gamma;
@@ -421,7 +421,7 @@ mod tests {
         };
 
         let input = Array1::linspace(0.1, 5.0, 100);
-        let result = gamma_chunked(&input, Some(config)).unwrap();
+        let result = gamma_chunked(&input, Some(config)).expect("Operation failed");
 
         // Verify correctness
         use crate::gamma::gamma;

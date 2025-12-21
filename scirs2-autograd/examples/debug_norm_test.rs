@@ -9,11 +9,14 @@ fn main() {
 
         // Test with a simple 2x2 matrix
         let a = T::convert_to_tensor(array![[3.0, 4.0], [5.0, 12.0]], ctx);
-        println!("Input matrix A: {:?}", a.eval(ctx).unwrap());
+        println!(
+            "Input matrix A: {:?}",
+            a.eval(ctx).expect("Operation failed")
+        );
 
         // Test Frobenius norm computation
         let norm = T::frobenius_norm(a);
-        let norm_result = norm.eval(ctx).unwrap();
+        let norm_result = norm.eval(ctx).expect("Operation failed");
         println!("Frobenius norm: {}", norm_result[[]]);
 
         // Expected: sqrt(3^2 + 4^2 + 5^2 + 12^2) = sqrt(194) ≈ 13.928
@@ -38,11 +41,11 @@ fn main() {
 
         // Evaluate gradient
         println!("Evaluating gradient...");
-        let grad_result = grad.eval(ctx).unwrap();
+        let grad_result = grad.eval(ctx).expect("Operation failed");
         println!("Gradient result: {:?}", grad_result);
 
         // Expected gradient: input / norm
-        let input_array = a.eval(ctx).unwrap();
+        let input_array = a.eval(ctx).expect("Operation failed");
         let expected_grad = input_array.mapv(|x| x / expected_norm);
         println!("Expected gradient: {:?}", expected_grad);
     });

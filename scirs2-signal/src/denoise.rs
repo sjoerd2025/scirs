@@ -80,7 +80,7 @@ pub enum ThresholdSelect {
 ///     ThresholdMethod::Soft,
 ///     ThresholdSelect::Universal,
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // The denoised signal should be closer to the clean signal than the noisy signal
 /// let noise_mse: f64 = clean_signal.iter().zip(noisy_signal.iter())
@@ -551,7 +551,7 @@ mod tests {
             ThresholdSelect::Universal,
             Some(0.2), // Provide explicit noise level
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Due to wavelet processing, the output length might be slightly different from input
         // We'll allow for a small length difference but still check it's close to original

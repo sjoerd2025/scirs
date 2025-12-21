@@ -52,13 +52,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for Dense<F
             output_dim: self.output_dim,
             weights: self.weights.clone(),
             biases: self.biases.clone(),
-            dweights: std::sync::RwLock::new(self.dweights.read().unwrap().clone()),
-            dbiases: std::sync::RwLock::new(self.dbiases.read().unwrap().clone()),
+            dweights: std::sync::RwLock::new(self.dweights.read().expect("Operation failed").clone()),
+            dbiases: std::sync::RwLock::new(self.dbiases.read().expect("Operation failed").clone()),
             // We can't clone trait objects, so we skip the activation
             activation: None,
-            input: std::sync::RwLock::new(self.input.read().unwrap().clone()),
+            input: std::sync::RwLock::new(self.input.read().expect("Operation failed").clone()),
             output_pre_activation: std::sync::RwLock::new(
-                self.output_pre_activation.read().unwrap().clone(),
+                self.output_pre_activation.read().expect("Operation failed").clone(),
             ),
         }
     }
@@ -172,7 +172,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
     fn forward(&self, input: &Array<F, scirs2_core::ndarray::IxDyn>) -> Result<Array<F, scirs2_core::ndarray::IxDyn>> {
         // Cache input for backward pass
         {
-            let mut input_cache = self.input.write().unwrap();
+            let mut input_cache = self.input.write().expect("Operation failed");
             *input_cache = Some(input.clone());
         }
 
@@ -202,7 +202,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         // Cache pre-activation output
         {
-            let mut pre_activation_cache = self.output_pre_activation.write().unwrap();
+            let mut pre_activation_cache = self.output_pre_activation.write().expect("Operation failed");
             *pre_activation_cache = Some(output.clone());
         }
 
@@ -221,7 +221,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
     ) -> Result<Array<F, scirs2_core::ndarray::IxDyn>> {
         // Get cached data
         let cached_input = {
-            let cache = self._input.read().unwrap();
+            let cache = self._input.read().expect("Operation failed");
             cache.clone().ok_or_else(|| {
                 NeuralError::InferenceError(
                     "No cached _input for backward pass".to_string(),
@@ -230,7 +230,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
         };
 
         let pre_activation = {
-            let cache = self.output_pre_activation.read().unwrap();
+            let cache = self.output_pre_activation.read().expect("Operation failed");
             cache.clone().ok_or_else(|| {
                 NeuralError::InferenceError(
                     "No cached pre-activation _output for backward pass".to_string(),
@@ -292,11 +292,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         // Update internal gradients
         {
-            let mut dweights_guard = self.dweights.write().unwrap();
+            let mut dweights_guard = self.dweights.write().expect("Operation failed");
             *dweights_guard = dweights;
         }
         {
-            let mut dbiases_guard = self.dbiases.write().unwrap();
+            let mut dbiases_guard = self.dbiases.write().expect("Operation failed");
             *dbiases_guard = dbiases;
         }
 
@@ -317,11 +317,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
     fn update(&mut self, learningrate: F) -> Result<()> {
         let dweights = {
-            let dweights_guard = self.dweights.read().unwrap();
+            let dweights_guard = self.dweights.read().expect("Operation failed");
             dweights_guard.clone()
         };
         let dbiases = {
-            let dbiases_guard = self.dbiases.read().unwrap();
+            let dbiases_guard = self.dbiases.read().expect("Operation failed");
             dbiases_guard.clone()
         };
 

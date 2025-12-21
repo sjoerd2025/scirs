@@ -37,7 +37,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// use scirs2_linalg::lapack_accelerated::lu;
 ///
 /// let a = array![[2.0_f64, 1.0, 1.0], [4.0, 3.0, 3.0], [8.0, 7.0, 9.0]];
-/// let (p, l, u) = lu(&a.view()).unwrap();
+/// let (p, l, u) = lu(&a.view()).expect("Operation failed");
 ///
 /// // Check that P*A = L*U
 /// let pa = p.dot(&a);
@@ -167,7 +167,7 @@ where
 /// use scirs2_linalg::lapack_accelerated::qr;
 ///
 /// let a = array![[2.0_f64, 1.0], [4.0, 3.0], [8.0, 7.0]];
-/// let (q, r) = qr(&a.view()).unwrap();
+/// let (q, r) = qr(&a.view()).expect("Operation failed");
 ///
 /// // Check that A = Q*R
 /// let qr = q.dot(&r);
@@ -277,7 +277,7 @@ where
 /// use scirs2_linalg::lapack_accelerated::svd;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0], [5.0, 6.0]];
-/// let (u, s, vt) = svd(&a.view(), false).unwrap();
+/// let (u, s, vt) = svd(&a.view(), false).expect("Operation failed");
 ///
 /// // Verify singular values are positive and in descending order
 /// assert!(s[0] > 0.0, "First singular value should be positive");
@@ -435,7 +435,7 @@ where
 /// use scirs2_linalg::lapack_accelerated::eig;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let (eigenvalues, eigenvectors) = eig(&a.view()).unwrap();
+/// let (eigenvalues, eigenvectors) = eig(&a.view()).expect("Operation failed");
 ///
 /// // Check that eigenvalues are approximately correct
 /// // The eigenvalues of this matrix are approximately -0.37 and 5.37
@@ -510,9 +510,9 @@ where
             let trace = a[[0, 0]] + a[[1, 1]];
             let det = a[[0, 0]] * a[[1, 1]] - a[[0, 1]] * a[[1, 0]];
 
-            let disc = (trace * trace - F::from(4.0).unwrap() * det).sqrt();
-            let lambda1 = (trace + disc) / F::from(2.0).unwrap();
-            let lambda2 = (trace - disc) / F::from(2.0).unwrap();
+            let disc = (trace * trace - F::from(4.0).expect("Operation failed") * det).sqrt();
+            let lambda1 = (trace + disc) / F::from(2.0).expect("Operation failed");
+            let lambda2 = (trace - disc) / F::from(2.0).expect("Operation failed");
 
             eigenvalues[0] = Complex::new(lambda1, F::zero());
             eigenvalues[1] = Complex::new(lambda2, F::zero());
@@ -597,7 +597,7 @@ where
 /// use scirs2_linalg::lapack_accelerated::eigh;
 ///
 /// let a = array![[1.0_f64, 2.0], [2.0, 4.0]];
-/// let (eigenvalues, eigenvectors) = eigh(&a.view()).unwrap();
+/// let (eigenvalues, eigenvectors) = eigh(&a.view()).expect("Operation failed");
 ///
 /// // Check that A*v = lambda*v for each eigenvector
 /// for i in 0..eigenvalues.len() {
@@ -630,7 +630,9 @@ where
     // Check if matrix is symmetric
     for i in 0..a.nrows() {
         for j in (i + 1)..a.ncols() {
-            if Float::abs(a[[i, j]] - a[[j, i]]) > F::epsilon() * F::from(100.0).unwrap() {
+            if Float::abs(a[[i, j]] - a[[j, i]])
+                > F::epsilon() * F::from(100.0).expect("Operation failed")
+            {
                 return Err(LinalgError::ValueError(
                     "Matrix must be symmetric for specialized eigendecomposition".to_string(),
                 ));
@@ -694,7 +696,9 @@ where
             lambda = numerator / denominator;
 
             // Check for convergence
-            if (lambda - prev_lambda).abs() < F::epsilon() * F::from(10.0).unwrap() {
+            if (lambda - prev_lambda).abs()
+                < F::epsilon() * F::from(10.0).expect("Operation failed")
+            {
                 break;
             }
             prev_lambda = lambda;
@@ -783,7 +787,7 @@ where
 /// use scirs2_linalg::lapack_accelerated::cholesky;
 ///
 /// let a = array![[4.0_f64, 2.0], [2.0, 5.0]];
-/// let l = cholesky(&a.view()).unwrap();
+/// let l = cholesky(&a.view()).expect("Operation failed");
 ///
 /// // Check that L*L^T = A
 /// let lt = l.t();
@@ -815,7 +819,9 @@ where
     // Check symmetry
     for i in 0..a.nrows() {
         for j in (i + 1)..a.ncols() {
-            if Float::abs(a[[i, j]] - a[[j, i]]) > F::epsilon() * F::from(100.0).unwrap() {
+            if Float::abs(a[[i, j]] - a[[j, i]])
+                > F::epsilon() * F::from(100.0).expect("Operation failed")
+            {
                 return Err(LinalgError::ValueError(
                     "Matrix must be symmetric for Cholesky decomposition".to_string(),
                 ));
@@ -879,7 +885,7 @@ mod tests {
     #[test]
     fn test_lu() {
         let a = array![[2.0, 1.0], [4.0, 3.0]];
-        let (p, l, u) = lu(&a.view()).unwrap();
+        let (p, l, u) = lu(&a.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(p.shape(), &[2, 2]);
@@ -899,7 +905,7 @@ mod tests {
     #[test]
     fn test_qr() {
         let a = array![[2.0, 1.0], [4.0, 3.0], [8.0, 7.0]];
-        let (q, r) = qr(&a.view()).unwrap();
+        let (q, r) = qr(&a.view()).expect("Operation failed");
 
         // Check dimensions - our implementation returns q shape [3, 2] not [3, 3]
         assert_eq!(q.shape(), &[3, 2]);
@@ -930,7 +936,7 @@ mod tests {
     #[test]
     fn test_svd() {
         let a = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
-        let (u, s, vt) = svd(&a.view(), false).unwrap();
+        let (u, s, vt) = svd(&a.view(), false).expect("Operation failed");
 
         // Check dimensions (for economic SVD)
         assert_eq!(u.shape(), &[3, 2]);
@@ -955,7 +961,7 @@ mod tests {
     #[test]
     fn test_eig() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
-        let (eigenvalues, eigenvectors) = eig(&a.view()).unwrap();
+        let (eigenvalues, eigenvectors) = eig(&a.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(eigenvalues.len(), 2);
@@ -979,7 +985,7 @@ mod tests {
     #[test]
     fn test_eigh() {
         let a = array![[1.0, 2.0], [2.0, 4.0]];
-        let (eigenvalues, eigenvectors) = eigh(&a.view()).unwrap();
+        let (eigenvalues, eigenvectors) = eigh(&a.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(eigenvalues.len(), 2);
@@ -1004,7 +1010,7 @@ mod tests {
     #[test]
     fn test_cholesky() {
         let a = array![[4.0, 2.0], [2.0, 5.0]];
-        let l = cholesky(&a.view()).unwrap();
+        let l = cholesky(&a.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(l.shape(), &[2, 2]);

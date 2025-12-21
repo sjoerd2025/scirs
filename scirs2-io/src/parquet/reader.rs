@@ -243,8 +243,8 @@ fn concatenate_column_data(a: &ColumnData, b: &ColumnData) -> Result<ColumnData>
 /// Concatenate two Array1 instances
 fn concatenate_arrays<T: Clone>(a: &Array1<T>, b: &Array1<T>) -> Array1<T> {
     let mut result = Vec::with_capacity(a.len() + b.len());
-    result.extend_from_slice(a.as_slice().unwrap());
-    result.extend_from_slice(b.as_slice().unwrap());
+    result.extend_from_slice(a.as_slice().expect("Operation failed"));
+    result.extend_from_slice(b.as_slice().expect("Operation failed"));
     Array1::from_vec(result)
 }
 

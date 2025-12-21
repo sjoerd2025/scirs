@@ -254,7 +254,11 @@ impl BenchmarkRunner {
             // Find optimal size (highest throughput)
             let optimal_size = strategy_measurements
                 .iter()
-                .max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap())
+                .max_by(|a, b| {
+                    a.throughput
+                        .partial_cmp(&b.throughput)
+                        .expect("Operation failed")
+                })
                 .map(|m| m.input_size)
                 .unwrap_or(0);
 
@@ -439,7 +443,11 @@ impl BenchmarkRunner {
         // Find best overall strategy
         let best_strategy = strategy_summary
             .iter()
-            .max_by(|(_, a), (_, b)| a.avg_throughput.partial_cmp(&b.avg_throughput).unwrap())
+            .max_by(|(_, a), (_, b)| {
+                a.avg_throughput
+                    .partial_cmp(&b.avg_throughput)
+                    .expect("Operation failed")
+            })
             .map(|(strategy, _)| *strategy);
 
         if let Some(strategy) = best_strategy {
@@ -456,7 +464,11 @@ impl BenchmarkRunner {
         if !large_measurements.is_empty() {
             let best_large_strategy = large_measurements
                 .iter()
-                .max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap())
+                .max_by(|a, b| {
+                    a.throughput
+                        .partial_cmp(&b.throughput)
+                        .expect("Operation failed")
+                })
                 .map(|m| m.strategy);
 
             if let Some(strategy) = best_large_strategy {
@@ -469,7 +481,11 @@ impl BenchmarkRunner {
         // Memory efficiency recommendations
         let most_efficient = strategy_summary
             .iter()
-            .max_by(|(_, a), (_, b)| a.efficiency_score.partial_cmp(&b.efficiency_score).unwrap())
+            .max_by(|(_, a), (_, b)| {
+                a.efficiency_score
+                    .partial_cmp(&b.efficiency_score)
+                    .expect("Operation failed")
+            })
             .map(|(strategy, perf)| (*strategy, perf.efficiency_score));
 
         if let Some((strategy, score)) = most_efficient {
@@ -487,8 +503,14 @@ impl BenchmarkRunner {
             .collect();
 
         if parallel_measurements.len() >= 2 {
-            let throughput_growth = parallel_measurements.last().unwrap().throughput
-                / parallel_measurements.first().unwrap().throughput;
+            let throughput_growth = parallel_measurements
+                .last()
+                .expect("Operation failed")
+                .throughput
+                / parallel_measurements
+                    .first()
+                    .expect("Operation failed")
+                    .throughput;
             if throughput_growth < 2.0 {
                 recommendations.push(
                     "Parallel strategy shows poor scalability - consider algorithmic improvements"

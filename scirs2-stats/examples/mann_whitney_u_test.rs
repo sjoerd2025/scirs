@@ -14,7 +14,8 @@ fn main() {
     // Perform the Mann-Whitney U test with different parameters
 
     // Default: two-sided test with continuity correction
-    let (u, p_value) = mann_whitney(&males.view(), &females.view(), "two-sided", true).unwrap();
+    let (u, p_value) =
+        mann_whitney(&males.view(), &females.view(), "two-sided", true).expect("Operation failed");
     println!(
         "Two-sided Mann-Whitney U test (with continuity correction):\n  U = {}\n  p-value = {}",
         u, p_value
@@ -22,7 +23,8 @@ fn main() {
     println!("  Significant at α = 0.05? {}\n", p_value < 0.05);
 
     // One-sided test (testing if females are diagnosed at younger ages)
-    let (u, p_value) = mann_whitney(&females.view(), &males.view(), "less", true).unwrap();
+    let (u, p_value) =
+        mann_whitney(&females.view(), &males.view(), "less", true).expect("Operation failed");
     println!(
         "One-sided Mann-Whitney U test (females < males):\n  U = {}\n  p-value = {}",
         u, p_value
@@ -30,7 +32,8 @@ fn main() {
     println!("  Significant at α = 0.05? {}\n", p_value < 0.05);
 
     // Without continuity correction
-    let (u, p_value) = mann_whitney(&males.view(), &females.view(), "two-sided", false).unwrap();
+    let (u, p_value) =
+        mann_whitney(&males.view(), &females.view(), "two-sided", false).expect("Operation failed");
     println!(
         "Two-sided Mann-Whitney U test (no continuity correction):\n  U = {}\n  p-value = {}",
         u, p_value
@@ -38,7 +41,8 @@ fn main() {
     println!("  Significant at α = 0.05? {}", p_value < 0.05);
 
     // Another one-sided test (testing if males are diagnosed at older ages)
-    let (u, p_value) = mann_whitney(&males.view(), &females.view(), "greater", true).unwrap();
+    let (u, p_value) =
+        mann_whitney(&males.view(), &females.view(), "greater", true).expect("Operation failed");
     println!(
         "One-sided Mann-Whitney U test (males > females):\n  U = {}\n  p-value = {}",
         u, p_value

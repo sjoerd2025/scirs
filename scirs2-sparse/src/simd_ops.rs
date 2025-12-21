@@ -71,13 +71,13 @@ impl Default for SimdOptions {
 /// let rows = vec![0, 0, 1, 2, 2];
 /// let cols = vec![0, 2, 1, 0, 2];
 /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Input vector
 /// let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 ///
 /// // Compute using SIMD acceleration
-/// let y = simd_csr_matvec(&matrix, &x.view(), SimdOptions::default()).unwrap();
+/// let y = simd_csr_matvec(&matrix, &x.view(), SimdOptions::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn simd_csr_matvec<T>(
@@ -1092,10 +1092,12 @@ mod tests {
         let rows = vec![0, 0, 1, 2, 2];
         let cols = vec![0, 2, 1, 0, 2];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let y = simd_csr_matvec(&matrix, &x.view(), SimdOptions::default()).unwrap();
+        let y =
+            simd_csr_matvec(&matrix, &x.view(), SimdOptions::default()).expect("Operation failed");
 
         // Expected: [1*1 + 2*3, 3*2, 4*1 + 5*3] = [7, 6, 19]
         assert_eq!(y.len(), 3);
@@ -1111,10 +1113,13 @@ mod tests {
         let data1 = vec![1.0, 2.0, 3.0];
         let data2 = vec![4.0, 5.0, 6.0];
 
-        let a = CsrArray::from_triplets(&rows, &cols, &data1, (3, 3), false).unwrap();
-        let b = CsrArray::from_triplets(&rows, &cols, &data2, (3, 3), false).unwrap();
+        let a =
+            CsrArray::from_triplets(&rows, &cols, &data1, (3, 3), false).expect("Operation failed");
+        let b =
+            CsrArray::from_triplets(&rows, &cols, &data2, (3, 3), false).expect("Operation failed");
 
-        let result = simd_sparse_elementwise(&a, &b, ElementwiseOp::Add, None).unwrap();
+        let result =
+            simd_sparse_elementwise(&a, &b, ElementwiseOp::Add, None).expect("Operation failed");
 
         // Check diagonal elements: 1+4=5, 2+5=7, 3+6=9
         assert_relative_eq!(result.get(0, 0), 5.0);
@@ -1130,10 +1135,12 @@ mod tests {
         let data1 = vec![2.0, 3.0];
         let data2 = vec![4.0, 5.0];
 
-        let a = CsrArray::from_triplets(&rows, &cols, &data1, (2, 2), false).unwrap();
-        let b = CsrArray::from_triplets(&rows, &cols, &data2, (2, 2), false).unwrap();
+        let a =
+            CsrArray::from_triplets(&rows, &cols, &data1, (2, 2), false).expect("Operation failed");
+        let b =
+            CsrArray::from_triplets(&rows, &cols, &data2, (2, 2), false).expect("Operation failed");
 
-        let result = simd_sparse_matmul_default(&a, &b).unwrap();
+        let result = simd_sparse_matmul_default(&a, &b).expect("Operation failed");
 
         // For diagonal matrices: [2*4, 3*5] = [8, 15]
         assert_relative_eq!(result.get(0, 0), 8.0);

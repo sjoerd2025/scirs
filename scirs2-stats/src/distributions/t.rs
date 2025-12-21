@@ -37,7 +37,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// ```
     /// use scirs2_stats::distributions::t::StudentT;
     ///
-    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
+    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).expect("Operation failed");
     /// ```
     pub fn new(df: F, loc: F, scale: F) -> StatsResult<Self> {
         if df <= F::zero() {
@@ -52,7 +52,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         }
 
         // Convert to f64 for rand_distr
-        let df_f64 = <f64 as NumCast>::from(df).unwrap();
+        let df_f64 = <f64 as NumCast>::from(df).expect("Operation failed");
         
         match RandStudentT::new(df_f64) {
             Ok(rand_distr) => Ok(StudentT {
@@ -82,7 +82,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// ```
     /// use scirs2_stats::distributions::t::StudentT;
     ///
-    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
+    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).expect("Operation failed");
     /// let pdf_at_zero = t_dist.pdf(0.0);
     /// assert!((pdf_at_zero - 0.3940886).abs() < 1e-6);
     /// ```
@@ -91,9 +91,9 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         let z = (x - self.loc) / self.scale;
         
         // Calculate PDF for standard t-distribution
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         
         // Gamma function approximation
         let df_half = self.df / two;
@@ -130,7 +130,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// ```
     /// use scirs2_stats::distributions::t::StudentT;
     ///
-    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
+    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).expect("Operation failed");
     /// let cdf_at_zero = t_dist.cdf(0.0);
     /// assert!((cdf_at_zero - 0.5).abs() < 1e-10);
     /// ```
@@ -140,11 +140,11 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         
         // Special case at 0 for symmetry
         if z.is_zero() {
-            return F::from(0.5).unwrap();
+            return F::from(0.5).expect("Failed to convert constant to float");
         }
         
         // Calculate CDF for t-distribution
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
         
         if z > F::zero() {
             // For positive values
@@ -178,8 +178,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// ```
     /// use scirs2_stats::distributions::t::StudentT;
     ///
-    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
-    /// let x = t_dist.ppf(0.975).unwrap();
+    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).expect("Operation failed");
+    /// let x = t_dist.ppf(0.975).expect("Operation failed");
     /// assert!((x - 2.228).abs() < 1e-3);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -196,19 +196,19 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         if p == F::one() {
             return Ok(F::infinity());
         }
-        if p == F::from(0.5).unwrap() {
+        if p == F::from(0.5).expect("Failed to convert constant to float") {
             return Ok(self.loc); // Median is at loc for symmetric distributions
         }
         
         // Numerical approximation for quantile
         // Use bisection method for simplicity
-        let mut lower = F::from(-100.0).unwrap(); // Reasonable lower bound
-        let mut upper = F::from(100.0).unwrap();  // Reasonable upper bound
-        let tolerance = F::from(1e-10).unwrap();
+        let mut lower = F::from(-100.0).expect("Failed to convert constant to float"); // Reasonable lower bound
+        let mut upper = F::from(100.0).expect("Failed to convert constant to float");  // Reasonable upper bound
+        let tolerance = F::from(1e-10).expect("Failed to convert constant to float");
         let max_iterations = 100;
         
         for _ in 0..max_iterations {
-            let mid = (lower + upper) / F::from(2.0).unwrap();
+            let mid = (lower + upper) / F::from(2.0).expect("Failed to convert constant to float");
             let cdf_mid = self.cdf(mid);
             
             if (cdf_mid - p).abs() < tolerance {
@@ -225,7 +225,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         
         // If we reach here, we didn't converge to the desired accuracy
         // Return the midpoint as an approximation
-        Ok(self.loc + self.scale * (lower + upper) / F::from(2.0).unwrap())
+        Ok(self.loc + self.scale * (lower + upper) / F::from(2.0).expect("Failed to convert constant to float"))
     }
 
     /// Generate random samples from the distribution
@@ -243,8 +243,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// ```
     /// use scirs2_stats::distributions::t::StudentT;
     ///
-    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
-    /// let samples = t_dist.rvs(1000).unwrap();
+    /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).expect("Operation failed");
+    /// let samples = t_dist.rvs(1000).expect("Operation failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -254,7 +254,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         for _ in 0..size {
             let sample = self.rand_distr.sample(&mut rng);
             // Apply location and scale transformations
-            samples.push(F::from(sample).unwrap() * self.scale + self.loc);
+            samples.push(F::from(sample).expect("Failed to convert to float") * self.scale + self.loc);
         }
         
         Ok(samples)
@@ -278,21 +278,21 @@ fn gamma_function<F: Float>(x: F) -> F {
         return one; // Gamma(1) = 1
     }
     
-    if x == F::from(0.5).unwrap() {
-        return F::from(std::f64::consts::PI).unwrap().sqrt(); // Gamma(0.5) = sqrt(π)
+    if x == F::from(0.5).expect("Failed to convert constant to float") {
+        return F::from(std::f64::consts::PI).expect("Failed to convert to float").sqrt(); // Gamma(0.5) = sqrt(π)
     }
     
     // For x = n + 0.5 where n is a non-negative integer
-    let two = F::from(2.0).unwrap();
+    let two = F::from(2.0).expect("Failed to convert constant to float");
     if (x * two).fract() < F::epsilon() && x > F::zero() {
-        let n = (x - F::from(0.5).unwrap()).to_f64().unwrap() as i32;
+        let n = (x - F::from(0.5).expect("Failed to convert constant to float")).to_f64().expect("Operation failed") as i32;
         if n >= 0 {
-            let sqrt_pi = F::from(std::f64::consts::PI).unwrap().sqrt();
+            let sqrt_pi = F::from(std::f64::consts::PI).expect("Failed to convert to float").sqrt();
             let mut result = sqrt_pi;
             let mut factorial = one;
             
             for i in 0..n {
-                factorial = factorial * F::from(i as f64 + 0.5).unwrap();
+                factorial = factorial * F::from(i as f64 + 0.5).expect("Failed to convert to float");
             }
             
             return result * factorial;
@@ -300,8 +300,8 @@ fn gamma_function<F: Float>(x: F) -> F {
     }
     
     // Use Stirling's approximation for other values
-    let e = F::from(std::f64::consts::E).unwrap();
-    let pi = F::from(std::f64::consts::PI).unwrap();
+    let e = F::from(std::f64::consts::E).expect("Failed to convert to float");
+    let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
     
     // Stirling's formula: Gamma(x) ≈ sqrt(2π/x) * (x/e)^x
     let term1 = (two * pi / x).sqrt();
@@ -324,10 +324,10 @@ fn incomplete_beta<F: Float>(a: F, b: F, x: F) -> F {
     
     // Continued fraction approximation for incomplete beta
     let max_iterations = 100;
-    let epsilon = F::from(1e-10).unwrap();
+    let epsilon = F::from(1e-10).expect("Failed to convert constant to float");
     
     let one = F::one();
-    let two = F::from(2.0).unwrap();
+    let two = F::from(2.0).expect("Failed to convert constant to float");
     
     // Initialize variables for continued fraction
     let mut h = one;
@@ -341,8 +341,8 @@ fn incomplete_beta<F: Float>(a: F, b: F, x: F) -> F {
     
     // Iterate to convergence
     for m in 1..max_iterations {
-        let m_f = F::from(m as f64).unwrap();
-        let two_m = F::from(2 * m as f64).unwrap();
+        let m_f = F::from(m as f64).expect("Failed to convert to float");
+        let two_m = F::from(2 * m as f64).expect("Failed to convert to float");
         
         // Even m terms
         let tem = m_f * b;
@@ -387,13 +387,13 @@ mod tests {
     #[test]
     fn test_student_t_creation() {
         // Standard t-distribution
-        let t = StudentT::new(10.0, 0.0, 1.0).unwrap();
+        let t = StudentT::new(10.0, 0.0, 1.0).expect("Operation failed");
         assert_eq!(t.df, 10.0);
         assert_eq!(t.loc, 0.0);
         assert_eq!(t.scale, 1.0);
         
         // Custom t-distribution
-        let custom = StudentT::new(5.0, 2.0, 3.0).unwrap();
+        let custom = StudentT::new(5.0, 2.0, 3.0).expect("Operation failed");
         assert_eq!(custom.df, 5.0);
         assert_eq!(custom.loc, 2.0);
         assert_eq!(custom.scale, 3.0);
@@ -408,7 +408,7 @@ mod tests {
     #[test]
     fn test_student_t_pdf() {
         // PDF values for standard t-distribution
-        let t = StudentT::new(10.0, 0.0, 1.0).unwrap();
+        let t = StudentT::new(10.0, 0.0, 1.0).expect("Operation failed");
         
         // PDF at x = 0
         let pdf_at_zero = t.pdf(0.0);
@@ -423,7 +423,7 @@ mod tests {
         assert_relative_eq!(pdf_at_neg_one, 0.2484, epsilon = 1e-4);
         
         // Test with location and scale
-        let t_loc_scale = StudentT::new(10.0, 1.0, 2.0).unwrap();
+        let t_loc_scale = StudentT::new(10.0, 1.0, 2.0).expect("Operation failed");
         let pdf_at_one_loc_scale = t_loc_scale.pdf(1.0);
         // PDF at the location parameter should equal the PDF at 0 for standard t
         // divided by the scale parameter
@@ -433,7 +433,7 @@ mod tests {
     #[test]
     fn test_student_t_cdf() {
         // CDF values for standard t-distribution
-        let t = StudentT::new(10.0, 0.0, 1.0).unwrap();
+        let t = StudentT::new(10.0, 0.0, 1.0).expect("Operation failed");
         
         // CDF at x = 0
         let cdf_at_zero = t.cdf(0.0);
@@ -448,7 +448,7 @@ mod tests {
         assert_relative_eq!(cdf_at_neg_one, 0.1704, epsilon = 1e-4);
         
         // Test with location and scale
-        let t_loc_scale = StudentT::new(10.0, 1.0, 2.0).unwrap();
+        let t_loc_scale = StudentT::new(10.0, 1.0, 2.0).expect("Operation failed");
         let cdf_at_one_loc_scale = t_loc_scale.cdf(1.0);
         // CDF at the location parameter should equal 0.5
         assert_relative_eq!(cdf_at_one_loc_scale, 0.5, epsilon = 1e-10);
@@ -457,18 +457,18 @@ mod tests {
     #[test]
     fn test_student_t_ppf() {
         // Quantile values for standard t-distribution
-        let t = StudentT::new(10.0, 0.0, 1.0).unwrap();
+        let t = StudentT::new(10.0, 0.0, 1.0).expect("Operation failed");
         
         // Median (50th percentile)
-        let median = t.ppf(0.5).unwrap();
+        let median = t.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(median, 0.0, epsilon = 1e-5);
         
         // 97.5th percentile (often used for confidence intervals)
-        let p975 = t.ppf(0.975).unwrap();
+        let p975 = t.ppf(0.975).expect("Operation failed");
         assert_relative_eq!(p975, 2.228, epsilon = 1e-3);
         
         // 2.5th percentile
-        let p025 = t.ppf(0.025).unwrap();
+        let p025 = t.ppf(0.025).expect("Operation failed");
         assert_relative_eq!(p025, -2.228, epsilon = 1e-3);
         
         // Error cases
@@ -476,17 +476,17 @@ mod tests {
         assert!(t.ppf(1.1).is_err());
         
         // Test with location and scale
-        let t_loc_scale = StudentT::new(10.0, 1.0, 2.0).unwrap();
-        let median_loc_scale = t_loc_scale.ppf(0.5).unwrap();
+        let t_loc_scale = StudentT::new(10.0, 1.0, 2.0).expect("Operation failed");
+        let median_loc_scale = t_loc_scale.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(median_loc_scale, 1.0, epsilon = 1e-5);
     }
     
     #[test]
     fn test_student_t_rvs() {
-        let t = StudentT::new(10.0, 0.0, 1.0).unwrap();
+        let t = StudentT::new(10.0, 0.0, 1.0).expect("Operation failed");
         
         // Generate samples
-        let samples = t.rvs(1000).unwrap();
+        let samples = t.rvs(1000).expect("Operation failed");
         
         // Check the number of samples
         assert_eq!(samples.len(), 1000);
@@ -499,8 +499,8 @@ mod tests {
         assert!(mean.abs() < 0.1);
         
         // Test with location and scale
-        let t_loc_scale = StudentT::new(10.0, 5.0, 2.0).unwrap();
-        let samples_loc_scale = t_loc_scale.rvs(1000).unwrap();
+        let t_loc_scale = StudentT::new(10.0, 5.0, 2.0).expect("Operation failed");
+        let samples_loc_scale = t_loc_scale.rvs(1000).expect("Operation failed");
         let sum_loc_scale: f64 = samples_loc_scale.iter().sum();
         let mean_loc_scale = sum_loc_scale / 1000.0;
         

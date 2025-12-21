@@ -25,7 +25,7 @@
 //! use scirs2_interpolate::extrapolation::{create_basic_extrapolator, ExtrapolationMethod};
 //!
 //! let extrapolator = create_basic_extrapolator(0.0, 10.0, 0.0, 10.0);
-//! let result = extrapolator.extrapolate(-5.0).unwrap();
+//! let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
 //! assert_eq!(result, -5.0);
 //! ```
 //!
@@ -35,7 +35,7 @@
 //! use scirs2_interpolate::extrapolation::create_robust_extrapolator;
 //!
 //! let extrapolator = create_robust_extrapolator(0.0, 10.0, 0.0, 10.0, 1.0, 1.0);
-//! let result = extrapolator.extrapolate_advanced(-5.0).unwrap();
+//! let result = extrapolator.extrapolate_advanced(-5.0).expect("Operation failed");
 //! ```
 //!
 //! ## Physics-Informed Extrapolation
@@ -47,7 +47,7 @@
 //!     0.0, 10.0, 0.0, 10.0, 1.0, 1.0,
 //!     PhysicsLaw::MassConservation
 //! );
-//! let result = extrapolator.extrapolate_advanced(-5.0).unwrap();
+//! let result = extrapolator.extrapolate_advanced(-5.0).expect("Operation failed");
 //! ```
 
 // Re-export all functionality from the modular implementation
@@ -108,7 +108,7 @@ pub fn create_production_extrapolator<T: scirs2_core::numeric::Float + std::fmt:
         upper_value,
         lower_derivative,
         upper_derivative,
-        (upper_bound - lower_bound) * T::from(2.0).unwrap(), // Max 2x domain width
+        (upper_bound - lower_bound) * T::from(2.0).expect("Operation failed"), // Max 2x domain width
     )
 }
 
@@ -186,7 +186,7 @@ mod tests {
         let extrapolator =
             create_simple_extrapolator(0.0, 10.0, 0.0, 10.0, ExtrapolationMethod::Linear);
 
-        let result = extrapolator.extrapolate(-5.0).unwrap();
+        let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
         assert_abs_diff_eq!(result, -5.0, epsilon = 1e-10);
     }
 
@@ -202,11 +202,11 @@ mod tests {
         );
 
         // Test lower boundary (linear)
-        let result = extrapolator.extrapolate(-5.0).unwrap();
+        let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
         assert!(result != 0.0); // Should be linear, not constant
 
         // Test upper boundary (constant)
-        let result = extrapolator.extrapolate(15.0).unwrap();
+        let result = extrapolator.extrapolate(15.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 10.0, epsilon = 1e-10); // Should be constant
     }
 
@@ -214,14 +214,14 @@ mod tests {
     fn test_production_extrapolator() {
         let extrapolator = create_production_extrapolator(0.0, 10.0, 0.0, 10.0, 1.0, 1.0);
 
-        let result = extrapolator.extrapolate(-5.0).unwrap();
+        let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
         assert_abs_diff_eq!(result, -5.0, epsilon = 1e-10);
     }
 
     #[test]
     fn test_quick_extrapolation() {
-        let result =
-            extrapolate_value(-5.0, (0.0, 10.0), (0.0, 10.0), ExtrapolationMethod::Linear).unwrap();
+        let result = extrapolate_value(-5.0, (0.0, 10.0), (0.0, 10.0), ExtrapolationMethod::Linear)
+            .expect("Operation failed");
 
         assert_abs_diff_eq!(result, -5.0, epsilon = 1e-10);
     }
@@ -239,10 +239,26 @@ mod tests {
         assert_eq!(results.len(), 4);
         assert!(results.iter().all(|r| r.is_ok()));
 
-        assert_abs_diff_eq!(results[0].as_ref().unwrap(), &-5.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(results[1].as_ref().unwrap(), &-2.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(results[2].as_ref().unwrap(), &12.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(results[3].as_ref().unwrap(), &15.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(
+            results[0].as_ref().expect("Operation failed"),
+            &-5.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            results[1].as_ref().expect("Operation failed"),
+            &-2.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            results[2].as_ref().expect("Operation failed"),
+            &12.0,
+            epsilon = 1e-10
+        );
+        assert_abs_diff_eq!(
+            results[3].as_ref().expect("Operation failed"),
+            &15.0,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
@@ -260,8 +276,8 @@ mod tests {
 
     #[test]
     fn test_zeros_method() {
-        let result =
-            extrapolate_value(-5.0, (0.0, 10.0), (5.0, 15.0), ExtrapolationMethod::Zeros).unwrap();
+        let result = extrapolate_value(-5.0, (0.0, 10.0), (5.0, 15.0), ExtrapolationMethod::Zeros)
+            .expect("Operation failed");
 
         assert_abs_diff_eq!(result, 0.0, epsilon = 1e-10);
     }
@@ -272,11 +288,11 @@ mod tests {
             create_simple_extrapolator(0.0, 10.0, 5.0, 15.0, ExtrapolationMethod::Nearest);
 
         // Test lower extrapolation
-        let result = extrapolator.extrapolate(-5.0).unwrap();
+        let result = extrapolator.extrapolate(-5.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 5.0, epsilon = 1e-10);
 
         // Test upper extrapolation
-        let result = extrapolator.extrapolate(15.0).unwrap();
+        let result = extrapolator.extrapolate(15.0).expect("Operation failed");
         assert_abs_diff_eq!(result, 15.0, epsilon = 1e-10);
     }
 

@@ -35,7 +35,7 @@ fn test_arithmetic_stability() {
                 IxDyn(&[4]),
                 vec![large_val, -large_val, small_val, -small_val],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
         let b = T::convert_to_tensor(
@@ -43,13 +43,13 @@ fn test_arithmetic_stability() {
                 IxDyn(&[4]),
                 vec![large_val, large_val, small_val, small_val],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         // Addition with cancellation
         let add_result = T::simd_add(&a, &b);
-        let add_output = add_result.eval(ctx).unwrap();
+        let add_output = add_result.eval(ctx).expect("Test: operation failed");
 
         // Expected: [2e10, 0, 2e-10, 0]
         assert!((add_output[0] - 2.0 * large_val).abs() < large_val * EPSILON_RELAXED);
@@ -59,23 +59,25 @@ fn test_arithmetic_stability() {
 
         // Multiplication with extreme values
         let mul_result = T::simd_mul(&a, &b);
-        let mul_output = mul_result.eval(ctx).unwrap();
+        let mul_output = mul_result.eval(ctx).expect("Test: operation failed");
 
         // Check for overflow/underflow handling
         assert!(mul_output.iter().all(|&x| x.is_finite() || x == 0.0));
 
         // Division with small denominators
         let small_denom = T::convert_to_tensor(
-            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[3]), vec![1e-20, 1.0, 1e20]).unwrap(),
+            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[3]), vec![1e-20, 1.0, 1e20])
+                .expect("Test: operation failed"),
             ctx,
         );
         let numerator = T::convert_to_tensor(
-            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[3]), vec![1.0, 1.0, 1.0]).unwrap(),
+            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[3]), vec![1.0, 1.0, 1.0])
+                .expect("Test: operation failed"),
             ctx,
         );
 
         let div_result = T::div(numerator, small_denom);
-        let div_output = div_result.eval(ctx).unwrap();
+        let div_output = div_result.eval(ctx).expect("Test: operation failed");
 
         // Should handle extreme divisions gracefully
         assert!(div_output[0].is_finite() || div_output[0].is_infinite());
@@ -99,31 +101,31 @@ fn test_matrix_operation_stability() {
                 (3, 3),
                 vec![1.0, 1.0, 1.0, 1.0, 1.0 + 1e-7, 1.0, 1.0, 1.0, 1.0 + 1e-7],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let vector = T::convert_to_tensor(
             Array::<f32, scirs2_core::ndarray::Ix2>::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0])
-                .unwrap(),
+                .expect("Test: operation failed"),
             ctx,
         );
 
         // Matrix multiplication with ill-conditioned matrix
         let matmul_result = T::matmul(ill_conditioned, vector);
-        let matmul_output = matmul_result.eval(ctx).unwrap();
+        let matmul_output = matmul_result.eval(ctx).expect("Test: operation failed");
 
         // Result should be finite
         assert!(matmul_output.iter().all(|&x| x.is_finite()));
 
         // Test near-singular matrix determinant
         let det_result = T::linear_algebra::determinant(ill_conditioned);
-        let det_output = det_result.eval(ctx).unwrap();
+        let det_output = det_result.eval(ctx).expect("Test: operation failed");
 
         // Determinant should be very small but finite
         // Determinant returns a scalar (0D array)
         assert_eq!(det_output.ndim(), 0); // Verify it's a scalar
-        let det_scalar = *det_output.iter().next().unwrap();
+        let det_scalar = *det_output.iter().next().expect("Test: operation failed");
         assert!(det_scalar.is_finite());
         assert!(det_scalar.abs() < 1e-5); // Should be small due to near-singularity
 
@@ -135,12 +137,12 @@ fn test_matrix_operation_stability() {
                 (2, 2),
                 vec![2.0, 1.0, 1.0, 2.0],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let inv_result = T::inv(well_conditioned);
-        let inv_output = inv_result.eval(ctx).unwrap();
+        let inv_output = inv_result.eval(ctx).expect("Test: operation failed");
 
         // Just verify the inverse computation doesn't crash and produces finite values
         assert!(
@@ -165,13 +167,13 @@ fn test_activation_function_stability() {
                 IxDyn(&[8]),
                 vec![-100.0, -10.0, -1.0, -0.1, 0.1, 1.0, 10.0, 100.0],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         // Test sigmoid stability
         let sigmoid_result = T::sigmoid(extreme_inputs);
-        let sigmoid_output = sigmoid_result.eval(ctx).unwrap();
+        let sigmoid_output = sigmoid_result.eval(ctx).expect("Test: operation failed");
 
         // Sigmoid should be bounded [0, 1] and finite
         assert!(sigmoid_output
@@ -184,7 +186,7 @@ fn test_activation_function_stability() {
 
         // Test tanh stability
         let tanh_result = T::tanh(extreme_inputs);
-        let tanh_output = tanh_result.eval(ctx).unwrap();
+        let tanh_output = tanh_result.eval(ctx).expect("Test: operation failed");
 
         // Tanh should be bounded [-1, 1] and finite
         assert!(tanh_output
@@ -193,23 +195,28 @@ fn test_activation_function_stability() {
 
         // Test ReLU stability (should be exact)
         let relu_result = T::relu(extreme_inputs);
-        let relu_output = relu_result.eval(ctx).unwrap();
+        let relu_output = relu_result.eval(ctx).expect("Test: operation failed");
 
         // ReLU should be exact: max(0, x)
-        for (i, &input_val) in extreme_inputs.eval(ctx).unwrap().iter().enumerate() {
+        for (i, &input_val) in extreme_inputs
+            .eval(ctx)
+            .expect("Test: operation failed")
+            .iter()
+            .enumerate()
+        {
             let expected = if input_val > 0.0 { input_val } else { 0.0 };
             assert!((relu_output[i] - expected).abs() < EPSILON_STRICT);
         }
 
         // Test custom activations with extreme values
         let swish_result = T::custom_activation(&extreme_inputs, "swish");
-        let swish_output = swish_result.eval(ctx).unwrap();
+        let swish_output = swish_result.eval(ctx).expect("Test: operation failed");
 
         // Swish should be finite
         assert!(swish_output.iter().all(|&x| x.is_finite()));
 
         let gelu_result = T::custom_activation(&extreme_inputs, "gelu");
-        let gelu_output = gelu_result.eval(ctx).unwrap();
+        let gelu_output = gelu_result.eval(ctx).expect("Test: operation failed");
 
         // GELU should be finite and roughly monotonic
         assert!(gelu_output.iter().all(|&x| x.is_finite()));
@@ -233,17 +240,17 @@ fn test_reduction_stability() {
                     .map(|i| if i % 2 == 0 { 1e-3 } else { -1e-3 })
                     .collect(),
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let sum_result = T::reduce_sum(cancellation_prone, &[0], false);
-        let sum_output = sum_result.eval(ctx).unwrap();
+        let sum_output = sum_result.eval(ctx).expect("Test: operation failed");
 
         // Result should be close to zero (500 * 1e-3 - 500 * 1e-3 = 0)
         // When reducing all dimensions, we get a scalar (0D array)
         assert_eq!(sum_output.ndim(), 0); // Verify it's a scalar
-        let sum_scalar = sum_output.iter().next().unwrap();
+        let sum_scalar = sum_output.iter().next().expect("Test: operation failed");
         assert!(sum_scalar.abs() < 1e-6);
 
         // Test mean with extreme values
@@ -252,17 +259,17 @@ fn test_reduction_stability() {
                 6,
                 vec![1e-20, 1e-10, 1.0, 1e10, 1e20, 1e30],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let mean_result = T::reduce_mean(extreme_values, &[0], false);
-        let mean_output = mean_result.eval(ctx).unwrap();
+        let mean_output = mean_result.eval(ctx).expect("Test: operation failed");
 
         // Mean should be finite
         // When reducing all dimensions, we get a scalar (0D array)
         assert_eq!(mean_output.ndim(), 0); // Verify it's a scalar
-        let mean_scalar = mean_output.iter().next().unwrap();
+        let mean_scalar = mean_output.iter().next().expect("Test: operation failed");
         assert!(mean_scalar.is_finite());
 
         // Test max/min with NaN handling
@@ -271,24 +278,24 @@ fn test_reduction_stability() {
                 5,
                 vec![-f32::INFINITY, -1.0, 0.0, 1.0, f32::INFINITY],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let max_result = T::reduce_max(with_special_values, &[0], false);
-        let max_output = max_result.eval(ctx).unwrap();
+        let max_output = max_result.eval(ctx).expect("Test: operation failed");
 
         // When reducing all dimensions, we get a scalar (0D array)
         assert_eq!(max_output.ndim(), 0); // Verify it's a scalar
-        let max_scalar = *max_output.iter().next().unwrap();
+        let max_scalar = *max_output.iter().next().expect("Test: operation failed");
         assert_eq!(max_scalar, f32::INFINITY);
 
         let min_result = T::reduce_min(with_special_values, &[0], false);
-        let min_output = min_result.eval(ctx).unwrap();
+        let min_output = min_result.eval(ctx).expect("Test: operation failed");
 
         // When reducing all dimensions, we get a scalar (0D array)
         assert_eq!(min_output.ndim(), 0); // Verify it's a scalar
-        let min_scalar = *min_output.iter().next().unwrap();
+        let min_scalar = *min_output.iter().next().expect("Test: operation failed");
         assert_eq!(min_scalar, f32::NEG_INFINITY);
 
         // Test variance stability
@@ -297,17 +304,20 @@ fn test_reduction_stability() {
                 100,
                 (0..100).map(|i| 1.0 + (i as f32) * 1e-6).collect(),
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let variance_result = T::reduce_variance(variance_test, &[0], false);
-        let variance_output = variance_result.eval(ctx).unwrap();
+        let variance_output = variance_result.eval(ctx).expect("Test: operation failed");
 
         // Variance should be positive and finite
         // When reducing all dimensions, we get a scalar (0D array)
         assert_eq!(variance_output.ndim(), 0); // Verify it's a scalar
-        let variance_scalar = *variance_output.iter().next().unwrap();
+        let variance_scalar = *variance_output
+            .iter()
+            .next()
+            .expect("Test: operation failed");
         assert!(variance_scalar.is_finite() && variance_scalar > 0.0);
 
         println!("✅ Reduction operations maintain numerical stability");
@@ -323,7 +333,8 @@ fn test_gradient_numerical_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test gradients with extreme input values
         let x = T::convert_to_tensor(
-            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[3]), vec![1e-10, 1.0, 1e10]).unwrap(),
+            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[3]), vec![1e-10, 1.0, 1e10])
+                .expect("Test: operation failed"),
             ctx,
         );
 
@@ -331,8 +342,8 @@ fn test_gradient_numerical_stability() {
         let y = T::simd_mul(&x, &x);
         let grad_y = T::grad(&[y], &[&x]);
 
-        let grad_output = grad_y[0].eval(ctx).unwrap();
-        let x_vals = x.eval(ctx).unwrap();
+        let grad_output = grad_y[0].eval(ctx).expect("Test: operation failed");
+        let x_vals = x.eval(ctx).expect("Test: operation failed");
 
         // Gradient should be 2*x
         // Note: The current gradient computation seems to have issues with extreme values
@@ -367,7 +378,7 @@ fn test_gradient_numerical_stability() {
         let w = T::reduce_sum(z, &[0], false);
         let grad_w = T::grad(&[w], &[&x]);
 
-        let grad_w_output = grad_w[0].eval(ctx).unwrap();
+        let grad_w_output = grad_w[0].eval(ctx).expect("Test: operation failed");
 
         // All gradients should be finite
         assert!(grad_w_output.iter().all(|&g| g.is_finite()));
@@ -378,14 +389,14 @@ fn test_gradient_numerical_stability() {
                 (2, 2),
                 vec![1.0, 2.0, 3.0, 4.0],
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         let det = T::linear_algebra::determinant(matrix);
         let grad_det = T::grad(&[det], &[&matrix]);
 
-        let grad_det_output = grad_det[0].eval(ctx).unwrap();
+        let grad_det_output = grad_det[0].eval(ctx).expect("Test: operation failed");
 
         // Gradient of determinant should be finite
         assert!(
@@ -420,23 +431,26 @@ fn test_optimization_numerical_stability() {
                 IxDyn(&[10]),
                 (0..10).map(|i| i as f32 * 0.1).collect(),
             )
-            .unwrap(),
+            .expect("Test: operation failed"),
             ctx,
         );
 
         // Create expression with constant folding opportunities
         let const1 = T::convert_to_tensor(
-            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[1]), vec![0.0]).unwrap(),
+            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[1]), vec![0.0])
+                .expect("Test: operation failed"),
             ctx,
         );
         let const2 = T::convert_to_tensor(
-            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(),
+            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[1]), vec![1.0])
+                .expect("Test: operation failed"),
             ctx,
         );
 
         // Expression: x + 0 * (large_constant) + 1 * x
         let large_constant = T::convert_to_tensor(
-            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[10]), vec![1e10; 10]).unwrap(),
+            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[10]), vec![1e10; 10])
+                .expect("Test: operation failed"),
             ctx,
         );
 
@@ -445,7 +459,7 @@ fn test_optimization_numerical_stability() {
         let result = T::simd_add(&T::simd_add(&x, &zero_term), &identity_term);
 
         // Test without optimization
-        let unoptimized_output = result.eval(ctx).unwrap();
+        let unoptimized_output = result.eval(ctx).expect("Test: operation failed");
 
         // Test with optimization (simulate different optimization levels)
         let optimizers = [
@@ -460,7 +474,7 @@ fn test_optimization_numerical_stability() {
             // For now, verify the unoptimized result is stable
 
             // Expected result: x + 0 + x = 2*x
-            let x_vals = x.eval(ctx).unwrap();
+            let x_vals = x.eval(ctx).expect("Test: operation failed");
             for i in 0..10 {
                 let expected = 2.0 * x_vals[i];
                 let actual = unoptimized_output[i];
@@ -504,7 +518,7 @@ fn test_parallel_operation_stability() {
     ];
 
     for (config_idx, config) in thread_configs.iter().enumerate() {
-        init_thread_pool_with_config(config.clone()).unwrap();
+        init_thread_pool_with_config(config.clone()).expect("Test: operation failed");
 
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test parallel reduction stability
@@ -513,16 +527,16 @@ fn test_parallel_operation_stability() {
                     10000,
                     (0..10000).map(|i| (i as f32).sin() * 1e-3).collect(),
                 )
-                .unwrap(),
+                .expect("Test: operation failed"),
                 ctx,
             );
 
             let parallel_sum = T::parallel_sum(&large_array, &[0], false);
-            let parallel_output = parallel_sum.eval(ctx).unwrap();
+            let parallel_output = parallel_sum.eval(ctx).expect("Test: operation failed");
 
             // Compare with sequential sum for consistency
             let sequential_sum = T::reduce_sum(large_array, &[0], false);
-            let sequential_output = sequential_sum.eval(ctx).unwrap();
+            let sequential_output = sequential_sum.eval(ctx).expect("Test: operation failed");
 
             // Results should be very close
             // Check if outputs are scalars (0D or 1D with single element)
@@ -534,8 +548,14 @@ fn test_parallel_operation_stability() {
                 sequential_output.ndim() == 0
                     || (sequential_output.ndim() == 1 && sequential_output.len() == 1)
             );
-            let parallel_scalar = *parallel_output.iter().next().unwrap();
-            let sequential_scalar = *sequential_output.iter().next().unwrap();
+            let parallel_scalar = *parallel_output
+                .iter()
+                .next()
+                .expect("Test: operation failed");
+            let sequential_scalar = *sequential_output
+                .iter()
+                .next()
+                .expect("Test: operation failed");
             let relative_error =
                 (parallel_scalar - sequential_scalar).abs() / sequential_scalar.abs().max(1e-10);
 
@@ -554,7 +574,7 @@ fn test_parallel_operation_stability() {
                     (100, 100),
                     (0..10000).map(|i| (i as f32 % 10.0) * 0.1).collect(),
                 )
-                .unwrap(),
+                .expect("Test: operation failed"),
                 ctx,
             );
             let matrix_b = T::convert_to_tensor(
@@ -562,15 +582,16 @@ fn test_parallel_operation_stability() {
                     (100, 100),
                     (0..10000).map(|i| ((i + 1) as f32 % 10.0) * 0.1).collect(),
                 )
-                .unwrap(),
+                .expect("Test: operation failed"),
                 ctx,
             );
 
             let parallel_matmul = T::cache_friendly_matmul(&matrix_a, &matrix_b, Some(32));
-            let parallel_matmul_output = parallel_matmul.eval(ctx).unwrap();
+            let parallel_matmul_output = parallel_matmul.eval(ctx).expect("Test: operation failed");
 
             let sequential_matmul = T::matmul(matrix_a, matrix_b);
-            let sequential_matmul_output = sequential_matmul.eval(ctx).unwrap();
+            let sequential_matmul_output =
+                sequential_matmul.eval(ctx).expect("Test: operation failed");
 
             // Compare results element-wise
             let max_error = parallel_matmul_output
@@ -608,9 +629,9 @@ fn test_tracing_numerical_stability() {
         detect_bottlenecks: true,
         ..Default::default()
     };
-    configure_tracing(tracing_config).unwrap();
+    configure_tracing(tracing_config).expect("Test: operation failed");
 
-    let _session_id = start_trace_session("stability_test").unwrap();
+    let _session_id = start_trace_session("stability_test").expect("Test: operation failed");
 
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Perform computations that should be traced
@@ -619,13 +640,13 @@ fn test_tracing_numerical_stability() {
         let z = T::simd_mul(&y, &y);
         let result = T::reduce_sum(z, &[0], false);
 
-        let output = result.eval(ctx).unwrap();
+        let output = result.eval(ctx).expect("Test: operation failed");
 
         // Compute expected result analytically
         // swish(1) = 1 * sigmoid(1) ≈ 1 * 0.7311 ≈ 0.7311
         // Result is a scalar (0D array)
         assert_eq!(output.ndim(), 0);
-        let output_scalar = *output.iter().next().unwrap();
+        let output_scalar = *output.iter().next().expect("Test: operation failed");
         // swish(1)^2 ≈ 0.5345
         // sum of 1000 copies ≈ 534.5
         let expected = 1000.0 * 0.5345;
@@ -640,7 +661,7 @@ fn test_tracing_numerical_stability() {
 
         // Test gradients with tracing
         let grad_result = T::grad(&[result], &[&x]);
-        let grad_output = grad_result[0].eval(ctx).unwrap();
+        let grad_output = grad_result[0].eval(ctx).expect("Test: operation failed");
 
         // All gradients should be finite
         assert!(grad_output.iter().all(|&g| g.is_finite()));
@@ -660,7 +681,7 @@ fn test_tracing_numerical_stability() {
         );
     });
 
-    let trace_record = end_trace_session().unwrap();
+    let trace_record = end_trace_session().expect("Test: operation failed");
     assert!(trace_record.is_some());
 
     println!("✅ Tracing does not affect numerical stability");
@@ -679,21 +700,26 @@ fn test_memory_optimization_stability() {
         // Without checkpointing
         let normal_computation = T::simd_mul(&large_input, &large_input);
         let normal_result = T::reduce_sum(normal_computation, &[0], false);
-        let normal_output = normal_result.eval(ctx).unwrap();
+        let normal_output = normal_result.eval(ctx).expect("Test: operation failed");
 
         // With checkpointing
         let checkpointed_computation = T::smart_checkpoint(&large_input, 5000);
         let checkpointed_squared =
             T::simd_mul(&checkpointed_computation, &checkpointed_computation);
         let checkpointed_result = T::reduce_sum(checkpointed_squared, &[0], false);
-        let checkpointed_output = checkpointed_result.eval(ctx).unwrap();
+        let checkpointed_output = checkpointed_result
+            .eval(ctx)
+            .expect("Test: operation failed");
 
         // Results should be identical
         // Both outputs are scalars (0D arrays)
         assert_eq!(normal_output.ndim(), 0);
         assert_eq!(checkpointed_output.ndim(), 0);
-        let normal_scalar = *normal_output.iter().next().unwrap();
-        let checkpointed_scalar = *checkpointed_output.iter().next().unwrap();
+        let normal_scalar = *normal_output.iter().next().expect("Test: operation failed");
+        let checkpointed_scalar = *checkpointed_output
+            .iter()
+            .next()
+            .expect("Test: operation failed");
         assert!(
             (normal_scalar - checkpointed_scalar).abs() < EPSILON_STRICT,
             "Checkpointing changed result: normal={}, checkpointed={}",
@@ -704,12 +730,13 @@ fn test_memory_optimization_stability() {
         // Test in-place operations
         let base_tensor = T::efficient_ones(&[1000], ctx);
         let addend = T::convert_to_tensor(
-            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[1000]), vec![0.5; 1000]).unwrap(),
+            Array::<f32, IxDyn>::from_shape_vec(IxDyn(&[1000]), vec![0.5; 1000])
+                .expect("Test: operation failed"),
             ctx,
         );
 
         let inplace_result = T::inplace_add(&base_tensor, &addend);
-        let inplace_output = inplace_result.eval(ctx).unwrap();
+        let inplace_output = inplace_result.eval(ctx).expect("Test: operation failed");
 
         // Should be exactly 1.5 for all elements
         assert!(inplace_output
@@ -721,7 +748,9 @@ fn test_memory_optimization_stability() {
         T::configure_cache(1000, 60);
 
         let cached_computation = T::cached_op(&large_input, "square");
-        let cached_output = cached_computation.eval(ctx).unwrap();
+        let cached_output = cached_computation
+            .eval(ctx)
+            .expect("Test: operation failed");
 
         // Should be exactly 1.0 for all elements (1^2 = 1)
         assert!(cached_output
@@ -730,7 +759,7 @@ fn test_memory_optimization_stability() {
 
         // Second call should use cache but give same result
         let cached_again = T::cached_op(&large_input, "square");
-        let cached_again_output = cached_again.eval(ctx).unwrap();
+        let cached_again_output = cached_again.eval(ctx).expect("Test: operation failed");
 
         assert!(cached_output
             .iter()

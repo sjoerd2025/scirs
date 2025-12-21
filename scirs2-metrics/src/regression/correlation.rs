@@ -91,7 +91,7 @@ use crate::error::{MetricsError, Result};
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let r2 = r2_score(&y_true, &y_pred).unwrap();
+/// let r2 = r2_score(&y_true, &y_pred).expect("Operation failed");
 /// assert!(r2 > 0.9);
 /// ```
 #[allow(dead_code)]
@@ -160,7 +160,7 @@ where
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 /// let n_features = 2; // Assume 2 features were used to make predictions
 ///
-/// let adj_r2 = adjusted_r2_score(&y_true, &y_pred, n_features).unwrap();
+/// let adj_r2 = adjusted_r2_score(&y_true, &y_pred, n_features).expect("Operation failed");
 /// assert!(adj_r2 < 1.0);
 /// ```
 #[allow(dead_code)]
@@ -186,8 +186,8 @@ where
 
     let r2 = r2_score(y_true, y_pred)?;
 
-    let n: F = NumCast::from(n_samples).unwrap();
-    let p = NumCast::from(n_features).unwrap();
+    let n: F = NumCast::from(n_samples).expect("Operation failed");
+    let p = NumCast::from(n_features).expect("Operation failed");
     let one = F::one();
 
     // Adjusted R^2 formula: 1 - (1 - R^2) * (n - 1) / (n - p - 1)
@@ -220,7 +220,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let score = explained_variance_score(&y_true, &y_pred).unwrap();
+/// let score = explained_variance_score(&y_true, &y_pred).expect("Operation failed");
 /// assert!(score > 0.9);
 /// ```
 #[allow(dead_code)]
@@ -258,8 +258,8 @@ where
         covar = covar + true_dev * pred_dev;
     }
 
-    y_true_var = y_true_var / NumCast::from(n_samples).unwrap();
-    covar = covar / NumCast::from(n_samples).unwrap();
+    y_true_var = y_true_var / NumCast::from(n_samples).expect("Operation failed");
+    covar = covar / NumCast::from(n_samples).expect("Operation failed");
 
     if y_true_var < F::epsilon() {
         return Err(MetricsError::InvalidInput(
@@ -294,7 +294,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let corr = pearson_correlation(&y_true, &y_pred).unwrap();
+/// let corr = pearson_correlation(&y_true, &y_pred).expect("Operation failed");
 /// assert!(corr > 0.9);
 /// ```
 #[allow(dead_code)]
@@ -363,7 +363,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let corr = spearman_correlation(&y_true, &y_pred).unwrap();
+/// let corr = spearman_correlation(&y_true, &y_pred).expect("Operation failed");
 /// assert!(corr > 0.9);
 /// ```
 #[allow(dead_code)]
@@ -418,7 +418,9 @@ where
         }
 
         // Found a group of equal values from i to j-1
-        let rank_val = F::from(i + j - 1).unwrap() / NumCast::from(2).unwrap() + F::one();
+        let rank_val = F::from(i + j - 1).expect("Failed to convert to float")
+            / NumCast::from(2).expect("Operation failed")
+            + F::one();
         for k in i..j {
             ranks[pairs[k].1] = rank_val;
         }
@@ -452,7 +454,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let ccc = concordance_correlation(&y_true, &y_pred).unwrap();
+/// let ccc = concordance_correlation(&y_true, &y_pred).expect("Operation failed");
 /// assert!(ccc > 0.9);
 /// ```
 #[allow(dead_code)]
@@ -488,7 +490,7 @@ where
         covar = covar + true_dev * pred_dev;
     }
 
-    let n = NumCast::from(y_true.len()).unwrap();
+    let n = NumCast::from(y_true.len()).expect("Operation failed");
     y_true_var = y_true_var / n;
     y_pred_var = y_pred_var / n;
     covar = covar / n;
@@ -507,7 +509,7 @@ where
     let corr = covar / (sd_true * sd_pred);
 
     // Scale shift
-    let scale_shift = (F::from(2.0).unwrap() * covar)
+    let scale_shift = (F::from(2.0).expect("Failed to convert constant to float") * covar)
         / (y_true_var + y_pred_var + (y_true_mean - y_pred_mean).powi(2));
 
     Ok(corr * scale_shift)

@@ -11,7 +11,7 @@ fn test_auto_arima_basic() {
     ];
 
     // Test the basic auto_arima function
-    let params = auto_arima(&ts, 2, 1, 2, false, None).unwrap();
+    let params = auto_arima(&ts, 2, 1, 2, false, None).expect("Operation failed");
 
     // Verify that parameters are within expected ranges
     assert!(params.p <= 2);
@@ -42,7 +42,7 @@ fn test_auto_arima_with_options() {
     };
 
     // Test the advanced auto_arima_with_options function
-    let params = auto_arima_with_options(&ts, &options).unwrap();
+    let params = auto_arima_with_options(&ts, &options).expect("Operation failed");
 
     // Verify that parameters are within expected ranges
     assert!(params.p <= 3);
@@ -64,7 +64,7 @@ fn test_auto_arima_seasonal() {
     ];
 
     // Test auto_arima with seasonal components
-    let params = auto_arima(&ts, 1, 1, 1, true, Some(4)).unwrap();
+    let params = auto_arima(&ts, 1, 1, 1, true, Some(4)).expect("Operation failed");
 
     // Verify that seasonal parameters are set
     assert!(params.seasonal_p.is_some());
@@ -95,12 +95,12 @@ fn test_auto_arima_with_seasonal_options() {
     };
 
     // Test the advanced auto_arima_with_options function with seasonality
-    let params = auto_arima_with_options(&ts, &options).unwrap();
+    let params = auto_arima_with_options(&ts, &options).expect("Operation failed");
 
     // Verify that parameters are correctly set
     assert!(params.p <= 2);
     assert!(params.q <= 2);
-    assert!(params.seasonal_p.unwrap() <= 1);
-    assert!(params.seasonal_q.unwrap() <= 1);
+    assert!(params.seasonal_p.expect("Operation failed") <= 1);
+    assert!(params.seasonal_q.expect("Operation failed") <= 1);
     assert_eq!(params.seasonal_period, Some(4));
 }

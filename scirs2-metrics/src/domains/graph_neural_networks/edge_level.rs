@@ -258,7 +258,10 @@ impl EdgeClassificationMetrics {
 
         // Compute overall accuracy
         let correct = (0..n)
-            .filter(|&i| (predictions[i] - ground_truth[i]).abs() < F::from(0.5).unwrap())
+            .filter(|&i| {
+                (predictions[i] - ground_truth[i]).abs()
+                    < F::from(0.5).expect("Failed to convert constant to float")
+            })
             .count();
         self.accuracy = correct as f64 / n as f64;
 

@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_ndarray_to_arrow_f64() {
         let arr = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let batch = ndarray_to_arrow(&arr, "test").unwrap();
+        let batch = ndarray_to_arrow(&arr, "test").expect("Operation failed");
 
         assert_eq!(batch.num_rows(), 4);
         assert_eq!(batch.num_columns(), 1);
@@ -188,8 +188,8 @@ mod tests {
     #[test]
     fn test_arrow_to_ndarray_f64() {
         let arr = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let batch = ndarray_to_arrow(&arr, "test").unwrap();
-        let recovered: Array1<f64> = arrow_to_ndarray(&batch, 0).unwrap();
+        let batch = ndarray_to_arrow(&arr, "test").expect("Operation failed");
+        let recovered: Array1<f64> = arrow_to_ndarray(&batch, 0).expect("Operation failed");
 
         assert_eq!(arr, recovered);
     }
@@ -197,8 +197,8 @@ mod tests {
     #[test]
     fn test_roundtrip_i32() {
         let arr = Array1::from_vec(vec![10i32, 20, 30, 40]);
-        let batch = ndarray_to_arrow(&arr, "integers").unwrap();
-        let recovered: Array1<i32> = arrow_to_ndarray(&batch, 0).unwrap();
+        let batch = ndarray_to_arrow(&arr, "integers").expect("Operation failed");
+        let recovered: Array1<i32> = arrow_to_ndarray(&batch, 0).expect("Operation failed");
 
         assert_eq!(arr, recovered);
     }
@@ -206,8 +206,8 @@ mod tests {
     #[test]
     fn test_roundtrip_bool() {
         let arr = Array1::from_vec(vec![true, false, true, false]);
-        let batch = ndarray_to_arrow(&arr, "booleans").unwrap();
-        let recovered: Array1<bool> = arrow_to_ndarray(&batch, 0).unwrap();
+        let batch = ndarray_to_arrow(&arr, "booleans").expect("Operation failed");
+        let recovered: Array1<bool> = arrow_to_ndarray(&batch, 0).expect("Operation failed");
 
         assert_eq!(arr, recovered);
     }

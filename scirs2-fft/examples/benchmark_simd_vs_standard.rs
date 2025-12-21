@@ -164,8 +164,8 @@ fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         let signal = generate_test_signal(size);
         let iterations = if size < 10000 { 100 } else { 20 };
 
-        let standard_fn = || fft(&signal, None).unwrap();
-        let simd_fn = || fft_simd(&signal, None).unwrap();
+        let standard_fn = || fft(&signal, None).expect("Operation failed");
+        let simd_fn = || fft_simd(&signal, None).expect("Operation failed");
 
         run_benchmark(
             results,
@@ -182,8 +182,8 @@ fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         let signal = generate_complex_signal(size);
         let iterations = if size < 10000 { 100 } else { 20 };
 
-        let standard_fn = || fft(&signal, None).unwrap();
-        let simd_fn = || fft_simd(&signal, None).unwrap();
+        let standard_fn = || fft(&signal, None).expect("Operation failed");
+        let simd_fn = || fft_simd(&signal, None).expect("Operation failed");
 
         run_benchmark(
             results,
@@ -206,14 +206,14 @@ fn run_2d_benchmarks(results: &mut Vec<BenchmarkResult>) {
 
         let standard_fn = || {
             // Create a properly dimensioned Array2
-            let array =
-                scirs2_core::ndarray::Array::from_shape_vec((size, size), signal.clone()).unwrap();
-            let result = fft2(&array, None, None, None).unwrap();
+            let array = scirs2_core::ndarray::Array::from_shape_vec((size, size), signal.clone())
+                .expect("Operation failed");
+            let result = fft2(&array, None, None, None).expect("Operation failed");
             result.into_raw_vec_and_offset().0
         };
 
         let simd_fn = || {
-            let result = fft2_simd(&signal, Some((size, size)), None).unwrap();
+            let result = fft2_simd(&signal, Some((size, size)), None).expect("Operation failed");
             result.into_raw_vec_and_offset().0
         };
 
@@ -247,15 +247,15 @@ fn run_nd_benchmarks(results: &mut Vec<BenchmarkResult>) {
                 scirs2_core::ndarray::IxDyn(&shape),
                 signal.clone(),
             )
-            .unwrap();
+            .expect("Operation failed");
             let shape_vec = None;
             let axes: Option<Vec<usize>> = None;
-            let result = fftn(&array, shape_vec, axes, None, None, None).unwrap();
+            let result = fftn(&array, shape_vec, axes, None, None, None).expect("Operation failed");
             result.into_raw_vec_and_offset().0
         };
 
         let simd_fn = || {
-            let result = fftn_simd(&signal, Some(&shape), None, None).unwrap();
+            let result = fftn_simd(&signal, Some(&shape), None, None).expect("Operation failed");
             result.into_raw_vec_and_offset().0
         };
 
@@ -286,15 +286,15 @@ fn run_nd_benchmarks(results: &mut Vec<BenchmarkResult>) {
                 scirs2_core::ndarray::IxDyn(&shape),
                 signal.clone(),
             )
-            .unwrap();
+            .expect("Operation failed");
             let shape_vec = None;
             let axes: Option<Vec<usize>> = None;
-            let result = fftn(&array, shape_vec, axes, None, None, None).unwrap();
+            let result = fftn(&array, shape_vec, axes, None, None, None).expect("Operation failed");
             result.into_raw_vec_and_offset().0
         };
 
         let simd_fn = || {
-            let result = fftn_simd(&signal, Some(&shape), None, None).unwrap();
+            let result = fftn_simd(&signal, Some(&shape), None, None).expect("Operation failed");
             result.into_raw_vec_and_offset().0
         };
 

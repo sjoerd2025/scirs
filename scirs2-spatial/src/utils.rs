@@ -169,7 +169,7 @@ mod tests {
     fn test_scale_unscale_points() {
         let points = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
 
-        let (scaled, ranges) = scale_points(&points).unwrap();
+        let (scaled, ranges) = scale_points(&points).expect("Operation failed");
 
         // Check that scaled points are in [0, 1]
         for i in 0..scaled.nrows() {
@@ -184,7 +184,7 @@ mod tests {
         assert_eq!(ranges[2], (3.0, 6.0)); // z: min=3, range=6
 
         // Unscale and check
-        let unscaled = unscale_points(&scaled, &ranges).unwrap();
+        let unscaled = unscale_points(&scaled, &ranges).expect("Operation failed");
 
         for i in 0..points.nrows() {
             for j in 0..points.ncols() {

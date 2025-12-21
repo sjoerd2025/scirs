@@ -427,7 +427,7 @@ pub mod cuda_impl {
                     });
                 }
 
-                CACHED_INFO.as_ref().unwrap()
+                CACHED_INFO.as_ref().expect("Operation failed")
             }
         }
 

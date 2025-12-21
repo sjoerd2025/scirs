@@ -66,15 +66,15 @@ impl<F: Float> Op<F> for CustomActivationOp {
                 x * softplus_x.tanh()
             }),
             "gelu" => input.mapv(|x| {
-                let half = F::from(0.5).unwrap();
+                let half = F::from(0.5).expect("Failed to convert constant to float");
                 let one = F::one();
                 half * x * (one + x.tanh())
             }),
             "parametric_relu" => {
                 let negative_slope = if self.learnable_params.is_empty() {
-                    F::from(0.01).unwrap()
+                    F::from(0.01).expect("Failed to convert constant to float")
                 } else {
-                    F::from(self.learnable_params[0]).unwrap()
+                    F::from(self.learnable_params[0]).expect("Failed to convert to float")
                 };
                 input.mapv(|x| if x > F::zero() { x } else { negative_slope * x })
             }
@@ -173,11 +173,11 @@ impl<F: Float> CustomActivation<F> for BuiltCustomActivation<F> {
         if let Some(ref derivative_fn) = self.derivative_fn {
             (derivative_fn)(x)
         } else {
-            let h = F::from(1e-8).unwrap();
+            let h = F::from(1e-8).expect("Failed to convert constant to float");
             let x_plus_h = x + h;
             let x_minus_h = x - h;
             ((self.forward_fn)(x_plus_h) - (self.forward_fn)(x_minus_h))
-                / (F::from(2.0).unwrap() * h)
+                / (F::from(2.0).expect("Failed to convert constant to float") * h)
         }
     }
 
@@ -237,7 +237,7 @@ pub fn create_custom_activation<F: Float>() -> CustomActivationBuilder<F> {
 /// Get list of registered activation functions
 #[allow(dead_code)]
 pub fn list_activation_functions() -> Vec<String> {
-    let registry = ACTIVATION_REGISTRY.lock().unwrap();
+    let registry = ACTIVATION_REGISTRY.lock().expect("Operation failed");
     let mut functions: Vec<String> = registry.keys().cloned().collect();
     functions.sort();
     functions
@@ -246,7 +246,7 @@ pub fn list_activation_functions() -> Vec<String> {
 /// Check if an activation function is registered
 #[allow(dead_code)]
 pub fn is_activation_registered(name: &str) -> bool {
-    let registry = ACTIVATION_REGISTRY.lock().unwrap();
+    let registry = ACTIVATION_REGISTRY.lock().expect("Operation failed");
     registry.contains_key(name)
 }
 

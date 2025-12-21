@@ -184,7 +184,7 @@ pub struct ODEResult<F> {
 /// let b = array![[1.0], [0.0]]; // Initial vector
 /// let t = std::f64::consts::PI / 2.0; // 90 degree rotation
 ///
-/// let result = matrix_exp_action(&a.view(), &b.view(), t, &DynamicsConfig::default()).unwrap();
+/// let result = matrix_exp_action(&a.view(), &b.view(), t, &DynamicsConfig::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn matrix_exp_action<F>(
@@ -233,9 +233,9 @@ where
         let a11 = a[[1, 1]];
 
         // Check if it's a rotation matrix generator [0, -w; w, 0]
-        if a00.abs() < F::from(1e-14).unwrap()
-            && a11.abs() < F::from(1e-14).unwrap()
-            && (a01 + a10).abs() < F::from(1e-14).unwrap()
+        if a00.abs() < F::from(1e-14).expect("Failed to convert constant to float")
+            && a11.abs() < F::from(1e-14).expect("Failed to convert constant to float")
+            && (a01 + a10).abs() < F::from(1e-14).expect("Failed to convert constant to float")
         {
             let omega = a10; // rotation frequency
             let theta = omega * t; // rotation angle
@@ -277,7 +277,7 @@ where
     let n = a.nrows();
     let mut result = Array2::eye(n);
     let mut term = Array2::eye(n);
-    let tolerance = F::from(1e-15).unwrap();
+    let tolerance = F::from(1e-15).expect("Failed to convert constant to float");
 
     // Scaling: find appropriate scaling factor
     let norm = matrix_norm(a, "1", None)?;
@@ -286,13 +286,13 @@ where
 
     // Scale matrix to ensure convergence
     while norm > F::one() {
-        scaled_a = &scaled_a / F::from(2.0).unwrap();
+        scaled_a = &scaled_a / F::from(2.0).expect("Failed to convert constant to float");
         scaling_exp += 1;
     }
 
     // Taylor series with high precision
     for k in 1..50 {
-        term = term.dot(&scaled_a) / F::from(k).unwrap();
+        term = term.dot(&scaled_a) / F::from(k).expect("Failed to convert to float");
         result += &term;
 
         let term_norm = matrix_norm(&term.view(), "fro", None)?;
@@ -330,7 +330,7 @@ where
         let b_col = b.column(j);
         let beta = vector_norm(&b_col, 2)?;
 
-        if beta < F::from(config.atol).unwrap() {
+        if beta < F::from(config.atol).expect("Failed to convert to float") {
             continue; // Skip zero columns
         }
 
@@ -357,7 +357,9 @@ where
             }
 
             let norm_w = vector_norm(&w.view(), 2)?;
-            if j_krylov < m - 1 && norm_w > F::from(config.atol).unwrap() {
+            if j_krylov < m - 1
+                && norm_w > F::from(config.atol).expect("Failed to convert to float")
+            {
                 h[[j_krylov + 1, j_krylov]] = norm_w;
                 v = w / norm_w;
                 vmatrix.column_mut(j_krylov + 1).assign(&v);
@@ -415,7 +417,7 @@ where
 /// let a = array![[-1.0, 1.0], [0.0, -2.0]]; // Stable matrix
 /// let c = array![[1.0, 0.0], [0.0, 1.0]]; // Identity matrix
 ///
-/// let x = lyapunov_solve(&a.view(), &c.view(), &DynamicsConfig::default()).unwrap();
+/// let x = lyapunov_solve(&a.view(), &c.view(), &DynamicsConfig::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn lyapunov_solve<F>(
@@ -525,12 +527,13 @@ where
         let residual_sum = &ax_plus_xa + c;
         let residual_norm = matrix_norm(&residual_sum.view(), "fro", None)?;
 
-        if residual_norm < F::from(config.rtol).unwrap() {
+        if residual_norm < F::from(config.rtol).expect("Failed to convert to float") {
             break;
         }
 
         // Update step (simplified - could use more sophisticated methods)
-        let step = (&ax_plus_xa + c) * F::from(-config.dt_initial).unwrap();
+        let step =
+            (&ax_plus_xa + c) * F::from(-config.dt_initial).expect("Failed to convert to float");
         x = x + step;
     }
 
@@ -567,7 +570,7 @@ where
 /// let q = array![[1.0, 0.0], [0.0, 1.0]]; // Identity cost matrix (symmetric positive definite)
 /// let r = array![[1.0]]; // Input cost (positive definite)
 ///
-/// let x = riccati_solve(&a.view(), &b.view(), &q.view(), &r.view(), &DynamicsConfig::default()).unwrap();
+/// let x = riccati_solve(&a.view(), &b.view(), &q.view(), &r.view(), &DynamicsConfig::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn riccati_solve<F>(
@@ -712,7 +715,7 @@ where
 ///     Ok::<scirs2_core::ndarray::Array2<f64>, Box<dyn std::error::Error>>(a.dot(x))
 /// };
 ///
-/// let result = matrix_ode_solve(f, &x0.view(), [0.0, 1.0], &DynamicsConfig::default()).unwrap();
+/// let result = matrix_ode_solve(f, &x0.view(), [0.0, 1.0], &DynamicsConfig::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn matrix_ode_solve<F, E>(
@@ -728,7 +731,7 @@ where
     let [t_start, t_end] = t_span;
     let mut t = t_start;
     let mut x = x0.to_owned();
-    let mut dt = F::from(config.dt_initial).unwrap();
+    let mut dt = F::from(config.dt_initial).expect("Failed to convert to float");
 
     let mut trajectory = vec![x.clone()];
     let mut times = vec![t];
@@ -738,11 +741,11 @@ where
         None
     };
 
-    let dt_min = F::from(config.dt_min).unwrap();
-    let dt_max = F::from(config.dt_max).unwrap();
-    let safety = F::from(config.safety_factor).unwrap();
-    let rtol = F::from(config.rtol).unwrap();
-    let atol = F::from(config.atol).unwrap();
+    let dt_min = F::from(config.dt_min).expect("Failed to convert to float");
+    let dt_max = F::from(config.dt_max).expect("Failed to convert to float");
+    let safety = F::from(config.safety_factor).expect("Failed to convert to float");
+    let rtol = F::from(config.rtol).expect("Failed to convert to float");
+    let atol = F::from(config.atol).expect("Failed to convert to float");
 
     let mut steps_taken = 0;
     let mut success = true;
@@ -758,13 +761,21 @@ where
             LinalgError::SingularMatrixError("ODE function evaluation failed".to_string())
         })?;
 
-        let x_temp = &x + &k1 * (dt / F::from(2.0).unwrap());
-        let k2 = f(t + dt / F::from(2.0).unwrap(), &x_temp.view()).map_err(|_| {
+        let x_temp = &x + &k1 * (dt / F::from(2.0).expect("Failed to convert constant to float"));
+        let k2 = f(
+            t + dt / F::from(2.0).expect("Failed to convert constant to float"),
+            &x_temp.view(),
+        )
+        .map_err(|_| {
             LinalgError::SingularMatrixError("ODE function evaluation failed".to_string())
         })?;
 
-        let x_temp = &x + &k2 * (dt / F::from(2.0).unwrap());
-        let k3 = f(t + dt / F::from(2.0).unwrap(), &x_temp.view()).map_err(|_| {
+        let x_temp = &x + &k2 * (dt / F::from(2.0).expect("Failed to convert constant to float"));
+        let k3 = f(
+            t + dt / F::from(2.0).expect("Failed to convert constant to float"),
+            &x_temp.view(),
+        )
+        .map_err(|_| {
             LinalgError::SingularMatrixError("ODE function evaluation failed".to_string())
         })?;
 
@@ -774,19 +785,20 @@ where
         })?;
 
         // Fourth-order solution
-        let factor = dt / F::from(6.0).unwrap();
+        let factor = dt / F::from(6.0).expect("Failed to convert constant to float");
         let k_sum = &k1
-            + &k2.mapv(|x| x * F::from(2.0).unwrap())
-            + &k3.mapv(|x| x * F::from(2.0).unwrap())
+            + &k2.mapv(|x| x * F::from(2.0).expect("Failed to convert constant to float"))
+            + &k3.mapv(|x| x * F::from(2.0).expect("Failed to convert constant to float"))
             + &k4;
         let x_new = &x + &k_sum.mapv(|x| x * factor);
 
         if config.adaptive_error_control {
             // Estimate error using embedded formula
-            let k_embedded_sum = &k1.mapv(|x| x * F::from(2.0).unwrap())
-                + &k2.mapv(|x| x * F::from(3.0).unwrap())
-                + &k3.mapv(|x| x * F::from(3.0).unwrap());
-            let embedded_factor = dt / F::from(8.0).unwrap();
+            let k_embedded_sum = &k1
+                .mapv(|x| x * F::from(2.0).expect("Failed to convert constant to float"))
+                + &k2.mapv(|x| x * F::from(3.0).expect("Failed to convert constant to float"))
+                + &k3.mapv(|x| x * F::from(3.0).expect("Failed to convert constant to float"));
+            let embedded_factor = dt / F::from(8.0).expect("Failed to convert constant to float");
             let x_embedded = &x + &k_embedded_sum.mapv(|x| x * embedded_factor);
             let errormatrix = &x_new - &x_embedded;
             let error = matrix_norm(&errormatrix.view(), "fro", None).unwrap_or(F::zero());
@@ -798,11 +810,22 @@ where
 
             if error > tolerance && dt > dt_min {
                 // Reject step and reduce step size
-                dt = (safety * dt * (tolerance / error).powf(F::from(0.2).unwrap())).max(dt_min);
+                dt = (safety
+                    * dt
+                    * (tolerance / error)
+                        .powf(F::from(0.2).expect("Failed to convert constant to float")))
+                .max(dt_min);
                 continue;
-            } else if error < tolerance / F::from(10.0).unwrap() && dt < dt_max {
+            } else if error
+                < tolerance / F::from(10.0).expect("Failed to convert constant to float")
+                && dt < dt_max
+            {
                 // Accept step and possibly increase step size
-                dt = (safety * dt * (tolerance / error).powf(F::from(0.25).unwrap())).min(dt_max);
+                dt = (safety
+                    * dt
+                    * (tolerance / error)
+                        .powf(F::from(0.25).expect("Failed to convert constant to float")))
+                .min(dt_max);
             }
         }
 
@@ -865,7 +888,7 @@ where
 /// let psi = array![[1.0], [1.0]] / (2.0_f64).sqrt(); // Superposition state
 /// let t = std::f64::consts::PI; // Evolution time
 ///
-/// let psi_t = quantum_evolution(&h.view(), &psi.view(), t, &DynamicsConfig::quantum()).unwrap();
+/// let psi_t = quantum_evolution(&h.view(), &psi.view(), t, &DynamicsConfig::quantum()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn quantum_evolution<F>(
@@ -897,8 +920,9 @@ where
     // For simple cases like Pauli matrices, use analytical solutions
     if n == 2 {
         // Check if this is Pauli-Z (diagonal with ±1)
-        if hamiltonian[[0, 1]].abs() < F::from(1e-10).unwrap()
-            && hamiltonian[[1, 0]].abs() < F::from(1e-10).unwrap()
+        if hamiltonian[[0, 1]].abs() < F::from(1e-10).expect("Failed to convert constant to float")
+            && hamiltonian[[1, 0]].abs()
+                < F::from(1e-10).expect("Failed to convert constant to float")
         {
             let e1 = hamiltonian[[0, 0]];
             let e2 = hamiltonian[[1, 1]];
@@ -916,9 +940,11 @@ where
             result[[1, 0]] = psi[[1, 0]] * cos_e2t - psi[[1, 0]] * sin_e2t;
 
             // For the specific test case (Pauli-Z with t=π), this gives -1
-            if (e1 - F::one()).abs() < F::from(1e-10).unwrap()
-                && (e2 + F::one()).abs() < F::from(1e-10).unwrap()
-                && (t - F::from(std::f64::consts::PI).unwrap()).abs() < F::from(1e-10).unwrap()
+            if (e1 - F::one()).abs() < F::from(1e-10).expect("Failed to convert constant to float")
+                && (e2 + F::one()).abs()
+                    < F::from(1e-10).expect("Failed to convert constant to float")
+                && (t - F::from(std::f64::consts::PI).expect("Failed to convert to float")).abs()
+                    < F::from(1e-10).expect("Failed to convert constant to float")
             {
                 result[[0, 0]] = -psi[[0, 0]];
                 result[[1, 0]] = psi[[1, 0]];
@@ -956,7 +982,7 @@ where
 /// use scirs2_linalg::matrix_dynamics::stability_analysis;
 ///
 /// let a = array![[-1.0, 1.0], [0.0, -2.0]]; // Stable upper triangular
-/// let (stable, eigs, margin) = stability_analysis(&a.view()).unwrap();
+/// let (stable, eigs, margin) = stability_analysis(&a.view()).expect("Operation failed");
 /// assert!(stable);
 /// assert!(margin < 0.0);
 /// ```
@@ -1001,7 +1027,7 @@ mod tests {
         let t = PI / 2.0; // 90-degree rotation
 
         let config = DynamicsConfig::default();
-        let result = matrix_exp_action(&a.view(), &b.view(), t, &config).unwrap();
+        let result = matrix_exp_action(&a.view(), &b.view(), t, &config).expect("Operation failed");
 
         // Should rotate (1,0) to approximately (0,1)
         println!("Matrix A: {:?}", a);
@@ -1024,11 +1050,11 @@ mod tests {
         let c = array![[1.0, 0.0], [0.0, 1.0]]; // Identity
 
         let config = DynamicsConfig::default();
-        let x = lyapunov_solve(&a.view(), &c.view(), &config).unwrap();
+        let x = lyapunov_solve(&a.view(), &c.view(), &config).expect("Operation failed");
 
         // Verify the Lyapunov equation: AX + XA^T + C = 0
         let residual = a.dot(&x) + x.dot(&a.t()) + c;
-        let residual_norm = matrix_norm(&residual.view(), "fro", None).unwrap();
+        let residual_norm = matrix_norm(&residual.view(), "fro", None).expect("Operation failed");
         assert!(residual_norm < 1e-8);
     }
 
@@ -1041,7 +1067,8 @@ mod tests {
         let r = array![[1.0]]; // Unit input cost
 
         let config = DynamicsConfig::default();
-        let x = riccati_solve(&a.view(), &b.view(), &q.view(), &r.view(), &config).unwrap();
+        let x = riccati_solve(&a.view(), &b.view(), &q.view(), &r.view(), &config)
+            .expect("Operation failed");
 
         // For this simple case, analytical solution exists
         // A^T X + X A - X B R^{-1} B^T X + Q = 0
@@ -1058,7 +1085,8 @@ mod tests {
         let t = PI; // Evolution time
 
         let config = DynamicsConfig::quantum();
-        let psi_t = quantum_evolution(&h.view(), &psi.view(), t, &config).unwrap();
+        let psi_t =
+            quantum_evolution(&h.view(), &psi.view(), t, &config).expect("Operation failed");
 
         // For Pauli-Z, |0⟩ evolves to exp(iπ)|0⟩ = -|0⟩
         assert!((psi_t[[0, 0]] + 1.0).abs() < 1e-10);
@@ -1069,13 +1097,15 @@ mod tests {
     fn test_stability_analysis() {
         // Test stable system
         let a_stable = array![[-1.0, 1.0], [0.0, -2.0]]; // Upper triangular, stable
-        let (stable, eigenvalues, margin) = stability_analysis(&a_stable.view()).unwrap();
+        let (stable, eigenvalues, margin) =
+            stability_analysis(&a_stable.view()).expect("Operation failed");
         assert!(stable);
         assert!(margin < 0.0);
 
         // Test unstable system
         let a_unstable = array![[1.0, 0.0], [0.0, -1.0]]; // One positive eigenvalue
-        let (stable, eigenvalues, margin) = stability_analysis(&a_unstable.view()).unwrap();
+        let (stable, eigenvalues, margin) =
+            stability_analysis(&a_unstable.view()).expect("Operation failed");
         assert!(!stable);
         assert!(margin > 0.0);
     }
@@ -1089,14 +1119,15 @@ mod tests {
         let f = |_t: f64, x: &ArrayView2<f64>| -> Result<Array2<f64>, ()> { Ok(a.dot(x)) };
 
         let config = DynamicsConfig::default();
-        let result = matrix_ode_solve(f, &x0.view(), [0.0, 1.0], &config).unwrap();
+        let result =
+            matrix_ode_solve(f, &x0.view(), [0.0, 1.0], &config).expect("Operation failed");
 
         assert!(result.success);
         assert!(result.trajectory.len() > 1);
 
         // Check that solution decays (stable system)
         let final_state = &result.trajectory[result.trajectory.len() - 1];
-        let final_norm = matrix_norm(&final_state.view(), "fro", None).unwrap();
+        let final_norm = matrix_norm(&final_state.view(), "fro", None).expect("Operation failed");
         assert!(final_norm < 1.0); // Should decay from initial norm of sqrt(2)
     }
 

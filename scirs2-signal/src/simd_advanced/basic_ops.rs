@@ -1578,21 +1578,21 @@ mod simd_diff_tests {
     #[test]
     fn test_simd_diff_basic() {
         let signal = vec![1.0, 3.0, 6.0, 10.0, 15.0];
-        let diff = simd_diff(&signal).unwrap();
+        let diff = simd_diff(&signal).expect("Operation failed");
         assert_eq!(diff, vec![2.0, 3.0, 4.0, 5.0]);
     }
 
     #[test]
     fn test_simd_diff_f32_basic() {
         let signal = vec![1.0f32, 3.0, 6.0, 10.0, 15.0];
-        let diff = simd_diff_f32(&signal).unwrap();
+        let diff = simd_diff_f32(&signal).expect("Operation failed");
         assert_eq!(diff, vec![2.0f32, 3.0, 4.0, 5.0]);
     }
 
     #[test]
     fn test_simd_diff_constant() {
         let signal = vec![5.0; 100];
-        let diff = simd_diff(&signal).unwrap();
+        let diff = simd_diff(&signal).expect("Operation failed");
         assert_eq!(diff.len(), 99);
         for &val in &diff {
             assert_abs_diff_eq!(val, 0.0, epsilon = 1e-10);
@@ -1603,7 +1603,7 @@ mod simd_diff_tests {
     fn test_simd_diff_large() {
         // Test with large array to ensure SIMD path is used
         let signal: Vec<f64> = (0..10000).map(|i| i as f64).collect();
-        let diff = simd_diff(&signal).unwrap();
+        let diff = simd_diff(&signal).expect("Operation failed");
         assert_eq!(diff.len(), 9999);
         for &val in &diff {
             assert_abs_diff_eq!(val, 1.0, epsilon = 1e-10);
@@ -1613,7 +1613,7 @@ mod simd_diff_tests {
     #[test]
     fn test_simd_diff_f32_large() {
         let signal: Vec<f32> = (0..10000).map(|i| i as f32).collect();
-        let diff = simd_diff_f32(&signal).unwrap();
+        let diff = simd_diff_f32(&signal).expect("Operation failed");
         assert_eq!(diff.len(), 9999);
         for &val in &diff {
             assert_abs_diff_eq!(val, 1.0f32, epsilon = 1e-5);
@@ -1630,21 +1630,21 @@ mod simd_diff_tests {
     #[test]
     fn test_simd_diff_single() {
         let signal = vec![42.0];
-        let diff = simd_diff(&signal).unwrap();
+        let diff = simd_diff(&signal).expect("Operation failed");
         assert_eq!(diff.len(), 0);
     }
 
     #[test]
     fn test_simd_diff_two_elements() {
         let signal = vec![1.0, 4.0];
-        let diff = simd_diff(&signal).unwrap();
+        let diff = simd_diff(&signal).expect("Operation failed");
         assert_eq!(diff, vec![3.0]);
     }
 
     #[test]
     fn test_simd_diff_negative() {
         let signal = vec![10.0, 5.0, 2.0, -1.0, -5.0];
-        let diff = simd_diff(&signal).unwrap();
+        let diff = simd_diff(&signal).expect("Operation failed");
         assert_eq!(diff, vec![-5.0, -3.0, -3.0, -4.0]);
     }
 
@@ -1652,7 +1652,7 @@ mod simd_diff_tests {
     fn test_simd_diff_accuracy() {
         // Test with signal that has known derivatives
         let signal: Vec<f64> = (0..1000).map(|i| (i as f64 * 0.01).sin()).collect();
-        let diff = simd_diff(&signal).unwrap();
+        let diff = simd_diff(&signal).expect("Operation failed");
 
         // Numerical derivative should approximate cos(x) * 0.01
         for i in 0..diff.len() {

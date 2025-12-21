@@ -360,7 +360,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_flux_computation_dimensions() {
         use crate::specialized::fluid_dynamics::compressible::state::CompressibleState;
 
@@ -368,7 +367,7 @@ mod tests {
         let result = CompressibleFluxes::compute_fluxes_simd(&state, 10, 10, 10, 0.1, 0.1, 0.1);
 
         assert!(result.is_ok());
-        let fluxes = result.unwrap();
+        let fluxes = result.expect("Operation failed");
         assert_eq!(fluxes.density.dim(), (10, 10, 10));
         assert_eq!(fluxes.momentum.len(), 3);
         assert_eq!(fluxes.energy.dim(), (10, 10, 10));

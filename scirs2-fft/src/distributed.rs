@@ -296,7 +296,7 @@ impl DistributedFFT {
 
                 if all_match && !output.is_empty() && !exchanged_data.is_empty() {
                     // Copy _data to output
-                    let flat_output = output.as_slice_mut().unwrap();
+                    let flat_output = output.as_slice_mut().expect("Operation failed");
                     for (i, &val) in exchanged_data.iter().enumerate().take(flat_output.len()) {
                         flat_output[i] = val;
                     }
@@ -305,11 +305,12 @@ impl DistributedFFT {
                     // This is a simplified approach for testing
                     // For multidimensional arrays, this would be more complex
                     if !output.is_empty() && !exchanged_data.is_empty() {
-                        let flat_output = output.as_slice_mut().unwrap();
+                        let flat_output = output.as_slice_mut().expect("Operation failed");
                         let copy_len = flat_output.len().min(exchanged_data.len());
 
                         for i in 0..copy_len {
-                            flat_output[i] = *exchanged_data.iter().nth(i).unwrap();
+                            flat_output[i] =
+                                *exchanged_data.iter().nth(i).expect("Operation failed");
                         }
                     }
                 }
@@ -876,7 +877,7 @@ mod tests {
         // Test receive from valid source
         let result = comm.recv(1, 0, 2);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 2);
+        assert_eq!(result.expect("Operation failed").len(), 2);
 
         // Test receive from invalid source
         let result = comm.recv(4, 0, 2);
@@ -885,7 +886,7 @@ mod tests {
         // Test all_to_all
         let result = comm.all_to_all(&data);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), data);
+        assert_eq!(result.expect("Operation failed"), data);
 
         // Test barrier
         let result = comm.barrier();
@@ -910,7 +911,7 @@ mod tests {
         let result = dfft.slab_decomposition(&input, true);
         assert!(result.is_ok());
 
-        let local_data = result.unwrap();
+        let local_data = result.expect("Operation failed");
         assert_eq!(local_data.ndim(), 1);
         assert_eq!(local_data.shape()[0], 2); // First half of the array
     }
@@ -930,12 +931,12 @@ mod tests {
         let dfft = DistributedFFT::new_mock(config);
 
         let input = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         let result = dfft.slab_decomposition(&input, true);
         assert!(result.is_ok());
 
-        let local_data = result.unwrap();
+        let local_data = result.expect("Operation failed");
         assert_eq!(local_data.ndim(), 2);
         assert_eq!(local_data.shape()[0], 2); // First half of the rows
         assert_eq!(local_data.shape()[1], 2); // All columns
@@ -956,12 +957,12 @@ mod tests {
         let dfft = DistributedFFT::new_mock(config);
 
         let input = Array2::from_shape_vec((4, 4), (1..=16).map(|x| x as f64).collect())
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         let result = dfft.pencil_decomposition(&input, true);
         assert!(result.is_ok());
 
-        let local_data = result.unwrap();
+        let local_data = result.expect("Operation failed");
         assert_eq!(local_data.ndim(), 2);
         assert_eq!(local_data.shape()[0], 2); // Half of the rows
         assert_eq!(local_data.shape()[1], 2); // Half of the columns
@@ -998,7 +999,7 @@ mod tests {
 
         let dfft2 = DistributedFFT::new_mock(config2);
         let input2 = Array2::from_shape_vec((4, 4), (1..=16).map(|x| x as f64).collect())
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         let result2 = dfft2.adaptive_decomposition(&input2, true);
         assert!(result2.is_ok());

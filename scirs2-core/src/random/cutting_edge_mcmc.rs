@@ -135,7 +135,8 @@ impl HamiltonianMonteCarlo {
             let accept = if log_acceptance_prob >= 0.0 {
                 true
             } else {
-                (rng.sample(Uniform::new(0.0, 1.0).unwrap()) as f64).ln() < log_acceptance_prob
+                (rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) as f64).ln()
+                    < log_acceptance_prob
             };
 
             // Update state
@@ -167,7 +168,7 @@ impl HamiltonianMonteCarlo {
         let mut momentum = Array1::zeros(dimension);
 
         for i in 0..dimension {
-            momentum[i] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+            momentum[i] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
         }
 
         // Apply mass matrix scaling (simplified - would use Cholesky decomposition)
@@ -353,19 +354,19 @@ impl NoUTurnSampler {
         // Sample initial momentum
         let mut momentum = Array1::zeros(self.dimension);
         for i in 0..self.dimension {
-            momentum[i] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+            momentum[i] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
         }
 
         // Initialize tree building
         let mut current_state = initial_state.clone();
-        let slice_u: f64 = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+        let slice_u: f64 = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
         let log_slice_u =
             slice_u.ln() + log_density(&current_state) - self.kinetic_energy(&momentum);
 
         // Build tree recursively (simplified implementation)
         for depth in 0..self.max_tree_depth {
             // Determine direction randomly
-            let direction = if rng.sample(Uniform::new(0.0, 1.0).unwrap()) < 0.5 {
+            let direction = if rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) < 0.5 {
                 -1.0
             } else {
                 1.0
@@ -533,7 +534,8 @@ impl SteinVariationalGradientDescent {
 
         for i in 0..self.num_particles {
             for j in 0..dimension {
-                self.particles[[i, j]] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                self.particles[[i, j]] =
+                    rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             }
         }
     }
@@ -629,7 +631,7 @@ impl SteinVariationalGradientDescent {
             }
         }
 
-        distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let median_distance = if distances.is_empty() {
             1.0
         } else {
@@ -726,10 +728,11 @@ impl EllipticalSliceSampler {
 
             // Define ellipse
             let log_y = log_likelihood(&current_state)
-                + (rng.sample(Uniform::new(0.0, 1.0).unwrap()) as f64).ln();
+                + (rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) as f64).ln();
 
             // Choose initial bracket
-            let theta = rng.sample(Uniform::new(0.0, 2.0 * std::f64::consts::PI).unwrap());
+            let theta = rng
+                .sample(Uniform::new(0.0, 2.0 * std::f64::consts::PI).expect("Operation failed"));
             let mut theta_min = theta - 2.0 * std::f64::consts::PI;
             let mut theta_max = theta;
 
@@ -758,7 +761,8 @@ impl EllipticalSliceSampler {
                 }
 
                 // Sample new angle from bracket
-                let new_theta = rng.sample(Uniform::new(theta_min, theta_max).unwrap());
+                let new_theta =
+                    rng.sample(Uniform::new(theta_min, theta_max).expect("Operation failed"));
                 if (new_theta - theta).abs() < 1e-10 {
                     // Bracket too small, accept current state
                     break;
@@ -859,7 +863,7 @@ impl ParallelTempering {
         let mut proposal = current_state.clone();
         let step_size = 0.1 * temperature.sqrt();
         for i in 0..dimension {
-            proposal[i] += rng.sample(Normal::new(0.0, step_size).unwrap());
+            proposal[i] += rng.sample(Normal::new(0.0, step_size).expect("Operation failed"));
         }
 
         // Compute acceptance probability
@@ -870,7 +874,8 @@ impl ParallelTempering {
 
         // Accept or reject
         if log_acceptance_prob >= 0.0
-            || (rng.sample(Uniform::new(0.0, 1.0).unwrap()) as f64).ln() < log_acceptance_prob
+            || (rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) as f64).ln()
+                < log_acceptance_prob
         {
             self.chains[chain_idx] = proposal;
         }
@@ -899,7 +904,8 @@ impl ParallelTempering {
 
             // Accept or reject swap
             if log_swap_prob >= 0.0
-                || (rng.sample(Uniform::new(0.0, 1.0).unwrap()) as f64).ln() < log_swap_prob
+                || (rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) as f64).ln()
+                    < log_swap_prob
             {
                 self.chains.swap(i, i + 1);
             }
@@ -935,7 +941,7 @@ mod tests {
                 Array1::from_vec(vec![0.0, 0.0]),
                 100,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(samples.len(), 100);
 
@@ -958,7 +964,7 @@ mod tests {
                 Array1::from_vec(vec![0.0, 0.0]),
                 100,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(samples.len(), 100);
     }
@@ -972,7 +978,8 @@ mod tests {
         let mut rng = seeded_rng(42);
         for i in 0..50 {
             for j in 0..2 {
-                initial_particles[[i, j]] = rng.sample(Normal::new(0.0, 2.0).unwrap());
+                initial_particles[[i, j]] =
+                    rng.sample(Normal::new(0.0, 2.0).expect("Operation failed"));
             }
         }
 
@@ -983,7 +990,7 @@ mod tests {
                 initial_particles,
                 100,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(final_particles.nrows(), 50);
         assert_eq!(final_particles.ncols(), 2);
@@ -1007,7 +1014,7 @@ mod tests {
                 50,
                 42,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(samples.len(), 50);
     }
@@ -1030,7 +1037,7 @@ mod tests {
                 100,
                 42,
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(samples.len(), 100);
         assert_eq!(pt.get_temperatures().len(), 4);

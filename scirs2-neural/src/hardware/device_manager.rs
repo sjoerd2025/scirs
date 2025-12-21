@@ -44,8 +44,8 @@ impl DeviceManager {
     }
     /// Discover available devices
     fn discover_devices(&self) -> Result<()> {
-        let mut devices = self.devices.lock().unwrap();
-        let mut device_info = self.device_info.lock().unwrap();
+        let mut devices = self.devices.lock().expect("Operation failed");
+        let mut device_info = self.device_info.lock().expect("Operation failed");
         // Discover CPU devices (always available)
         let cpu_device = AcceleratorFactory::create(AcceleratorType::CPU)?;
         devices.insert((AcceleratorType::CPU, 0), cpu_device.clone());
@@ -66,7 +66,7 @@ impl DeviceManager {
         self.discover_rocm_devices(&mut devices, &mut device_info)?;
         // Set default device
         if !device_info.is_empty() {
-            let mut default = self.default_device.lock().unwrap();
+            let mut default = self.default_device.lock().expect("Operation failed");
             *default = Some((device_info[0].device_type, device_info[0].id));
         }
         Ok(())
@@ -118,13 +118,13 @@ impl DeviceManager {
         // ROCm device discovery would go here
     /// List all available devices
     pub fn list_devices(&self) -> Vec<DeviceInfo> {
-        self.device_info.lock().unwrap().clone()
+        self.device_info.lock().expect("Operation failed").clone()
     /// Get a specific device
     pub fn get_device(
         device_type: AcceleratorType,
         device_id: usize,
     ) -> Result<Arc<dyn Accelerator>> {
-        let devices = self.devices.lock().unwrap();
+        let devices = self.devices.lock().expect("Operation failed");
         devices
             .get(&(device_type, device_id))
             .cloned()
@@ -136,7 +136,7 @@ impl DeviceManager {
             })
     /// Get default device
     pub fn get_default_device(&self) -> Result<Arc<dyn Accelerator>> {
-        let default = self.default_device.lock().unwrap();
+        let default = self.default_device.lock().expect("Operation failed");
         if let Some((device_type, device_id)) = *default {
             self.get_device(device_type, device_id)
         } else {
@@ -147,12 +147,12 @@ impl DeviceManager {
     pub fn set_default_device(&self, device_type: AcceleratorType, deviceid: usize) -> Result<()> {
         // Verify device exists
         let _ = self.get_device(device_type, device_id)?;
-        let mut default = self.default_device.lock().unwrap();
+        let mut default = self.default_device.lock().expect("Operation failed");
         *default = Some((device_type, device_id));
     /// Get device by capabilities
     pub fn get_device_by_capabilities(
         selector: &DeviceSelector,
-        let device_info = self.device_info.lock().unwrap();
+        let device_info = self.device_info.lock().expect("Operation failed");
         // Find best matching device
         let best_device = device_info
             .iter()
@@ -287,7 +287,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_device_manager() {
-        let manager = DeviceManager::new().unwrap();
+        let manager = DeviceManager::new().expect("Operation failed");
         let devices = manager.list_devices();
         assert!(!devices.is_empty());
         assert!(devices
@@ -302,8 +302,8 @@ mod tests {
             available_memory: 8 * 1024 * 1024 * 1024,
         assert!(selector.matches(&device_info));
     fn test_multi_device_context() {
-        let cpu1 = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
-        let cpu2 = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
+        let cpu1 = AcceleratorFactory::create(AcceleratorType::CPU).expect("Operation failed");
+        let cpu2 = AcceleratorFactory::create(AcceleratorType::CPU).expect("Operation failed");
         let context = MultiDeviceContext::new(vec![cpu1, cpu2], DistributionStrategy::RoundRobin);
         let mut work_distribution = vec![0; 2];
         context
@@ -315,6 +315,6 @@ mod tests {
                 };
                 work_distribution[device_idx] += 1;
                 Ok(())
-            .unwrap();
+            .expect("Operation failed");
         // Round-robin should distribute evenly
         assert_eq!(work_distribution[0], 10); // All work goes to first device since both are CPU

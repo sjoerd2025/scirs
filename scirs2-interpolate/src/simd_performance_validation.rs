@@ -432,7 +432,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_flo
         let queries = self.generate_test_points(size / 10, 3)?;
         let centers = self.generate_test_points(size, 3)?;
         let coefficients = self.generate_test_coefficients(size)?;
-        let epsilon = T::from_f64(1.0).unwrap();
+        let epsilon = T::from_f64(1.0).expect("Operation failed");
 
         // Measure SIMD performance
         let simd_timing = self.benchmark_operation(|| {
@@ -640,7 +640,8 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_flo
         let mut data = Vec::with_capacity(n_points * dimensions);
         for i in 0..n_points {
             for j in 0..dimensions {
-                let value = T::from_f64((i as f64 + j as f64 * 0.1) / n_points as f64).unwrap();
+                let value = T::from_f64((i as f64 + j as f64 * 0.1) / n_points as f64)
+                    .expect("Operation failed");
                 data.push(value);
             }
         }
@@ -651,7 +652,9 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_flo
     /// Generate test coefficients
     fn generate_test_coefficients(&self, ncoefficients: usize) -> InterpolateResult<Vec<T>> {
         Ok((0..ncoefficients)
-            .map(|i| T::from_f64(1.0 + (i as f64) / (ncoefficients as f64)).unwrap())
+            .map(|i| {
+                T::from_f64(1.0 + (i as f64) / (ncoefficients as f64)).expect("Operation failed")
+            })
             .collect())
     }
 
@@ -768,8 +771,8 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_flo
 
         times.sort();
 
-        let min_time = *times.first().unwrap();
-        let max_time = *times.last().unwrap();
+        let min_time = *times.first().expect("Operation failed");
+        let max_time = *times.last().expect("Operation failed");
         let mean_time = Duration::from_nanos(
             (times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128) as u64,
         );
@@ -845,7 +848,8 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_flo
             errors.push(abs_error);
         }
 
-        let mean_abs_error = sum_abs_error / T::from_usize(scalar_result.len()).unwrap();
+        let mean_abs_error =
+            sum_abs_error / T::from_usize(scalar_result.len()).expect("Operation failed");
 
         // Calculate standard deviation of errors
         let mean_error_f64 = mean_abs_error.to_f64().unwrap_or(0.0);
@@ -860,7 +864,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_flo
             / errors.len() as f64;
         let error_std_dev = T::from_f64(variance.sqrt()).unwrap_or(T::zero());
 
-        let tolerance = T::from_f64(self.config.correctness_tolerance).unwrap();
+        let tolerance = T::from_f64(self.config.correctness_tolerance).expect("Operation failed");
         let is_correct = max_abs_error <= tolerance && max_rel_error <= T::max_relative_error();
 
         Ok(CorrectnessResult {
@@ -1124,7 +1128,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps + ordered_flo
             b.performance
                 .speedup
                 .partial_cmp(&a.performance.speedup)
-                .unwrap()
+                .expect("Operation failed")
         });
 
         for result in sorted_results.iter().take(5) {
@@ -1213,7 +1217,7 @@ mod tests {
         let result = run_simd_validation_with_config::<f64>(config);
         assert!(result.is_ok());
 
-        let summary = result.unwrap();
+        let summary = result.expect("Operation failed");
         assert!(summary.total_tests > 0);
         println!(
             "SIMD validation completed: {} tests in {:.2}s",

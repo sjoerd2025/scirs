@@ -105,7 +105,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    top_features.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    top_features.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
     println!("\nTop TF-IDF features for first document:");
     for (token, score) in top_features.iter().take(5) {
         println!("  {token}: {score:.3}");

@@ -63,7 +63,7 @@ impl CSRGraph {
         let mut row_ptr = Vec::with_capacity(n_nodes + 1);
         row_ptr.push(0);
         for &deg in &degree {
-            row_ptr.push(row_ptr.last().unwrap() + deg);
+            row_ptr.push(row_ptr.last().expect("Operation failed") + deg);
         }
 
         // Initialize working arrays for building CSR
@@ -760,7 +760,7 @@ mod tests {
     fn test_csr_graph() {
         let edges = vec![(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0), (2, 3, 4.0)];
 
-        let graph = CSRGraph::from_edges(4, edges).unwrap();
+        let graph = CSRGraph::from_edges(4, edges).expect("Operation failed");
 
         assert_eq!(graph.degree(0), 2);
         assert_eq!(graph.degree(3), 0);
@@ -773,9 +773,9 @@ mod tests {
     fn test_bit_packed_graph() {
         let mut graph = BitPackedGraph::new(4, false);
 
-        graph.add_edge(0, 1).unwrap();
-        graph.add_edge(1, 2).unwrap();
-        graph.add_edge(0, 3).unwrap();
+        graph.add_edge(0, 1).expect("Operation failed");
+        graph.add_edge(1, 2).expect("Operation failed");
+        graph.add_edge(0, 3).expect("Operation failed");
 
         assert!(graph.has_edge(0, 1));
         assert!(graph.has_edge(1, 0)); // Undirected

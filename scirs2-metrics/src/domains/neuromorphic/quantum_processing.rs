@@ -78,7 +78,8 @@ impl<F: Float> QuantumNeuromorphicProcessor<F> {
 
         // Apply quantum enhancement
         for value in &mut output {
-            *value = *value * F::from(1.1).unwrap(); // Simple enhancement
+            *value = *value * F::from(1.1).expect("Failed to convert constant to float");
+            // Simple enhancement
         }
 
         Ok(output)

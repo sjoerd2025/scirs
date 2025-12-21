@@ -54,7 +54,7 @@ use crate::error::{MetricsError, Result};
 ///     1.0, 1.0,
 ///     1.0, 0.0,
 ///     1.0, 1.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let group_names = vec!["gender".to_string(), "age".to_string()];
 ///
@@ -70,7 +70,7 @@ use crate::error::{MetricsError, Result};
 ///         let yp_array = scirs2_core::ndarray::Array::from_vec(yp.to_vec());
 ///         accuracy_score(&yt_array, &yp_array).unwrap_or(0.0)
 ///     }
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Examine results
 /// println!("Overall invariance score: {}", result.invariance_score);
@@ -158,7 +158,9 @@ where
         // Find unique values for this group attribute
         let mut unique_values = std::collections::BTreeSet::new();
         for i in 0..n_samples {
-            let value = protected_groups[[i, group_idx]].to_f64().unwrap();
+            let value = protected_groups[[i, group_idx]]
+                .to_f64()
+                .expect("Operation failed");
             let rounded_value = (value * 1000.0).round() as i64;
             unique_values.insert(rounded_value);
         }
@@ -172,7 +174,9 @@ where
             let mut group_y_pred = Vec::new();
 
             for i in 0..n_samples {
-                let group_value = protected_groups[[i, group_idx]].to_f64().unwrap();
+                let group_value = protected_groups[[i, group_idx]]
+                    .to_f64()
+                    .expect("Operation failed");
                 let rounded_value = (group_value * 1000.0).round() as i64;
 
                 if rounded_value == int_value {
@@ -247,7 +251,7 @@ where
 ///     &protected_group,
 ///     |yp, pg| demographic_parity_difference(yp, pg).unwrap_or(0.0),
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Higher absolute scores indicate samples with more influence on fairness
 /// for (i, score) in influence_scores.iter().enumerate() {
@@ -369,7 +373,7 @@ where
 ///     0.1, // 10% of labels will be flipped
 ///     10,  // Repeat 10 times for statistical significance
 ///     Some(42)
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// println!("Original fairness: {:.4}", result.original_fairness);
 /// println!("Mean perturbed fairness: {:.4}", result.mean_fairness);
@@ -617,7 +621,7 @@ where
 
             if group_count > 0 {
                 // Use _group average
-                let group_avg = group_sum / T::from(group_count).unwrap();
+                let group_avg = group_sum / T::from(group_count).expect("Operation failed");
                 perturbed.push(group_avg);
             } else {
                 // Fallback to original value
@@ -647,7 +651,7 @@ where
     let mut perturbed = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
-        let y_val = y_pred_vec[i].to_f64().unwrap();
+        let y_val = y_pred_vec[i].to_f64().expect("Operation failed");
 
         // Generate Gaussian noise manually without using the problematic Distribution trait
         // Box-Muller transform
@@ -664,7 +668,7 @@ where
             perturbed_val = perturbed_val.clamp(0.0, 1.0);
         }
 
-        perturbed.push(T::from(perturbed_val).unwrap());
+        perturbed.push(T::from(perturbed_val).expect("Operation failed"));
     }
 
     // Convert back to Array1

@@ -421,7 +421,7 @@ impl UMAP {
 
         // If transforming the same data as training, return stored embedding
         if self.is_same_data(x, training_data) {
-            return Ok(self.embedding.as_ref().unwrap().clone());
+            return Ok(self.embedding.as_ref().expect("Operation failed").clone());
         }
 
         // Implement out-of-sample extension using weighted average of nearest neighbors
@@ -477,8 +477,8 @@ impl UMAP {
         S: Data,
         S::Elem: Float + NumCast,
     {
-        let training_data = self.training_data.as_ref().unwrap();
-        let training_embedding = self.embedding.as_ref().unwrap();
+        let training_data = self.training_data.as_ref().expect("Operation failed");
+        let training_embedding = self.embedding.as_ref().expect("Operation failed");
 
         let (n_new_samples_, _) = x.dim();
         let (n_training_samples_, _) = training_data.dim();
@@ -501,7 +501,7 @@ impl UMAP {
             }
 
             // Sort and take k nearest neighbors
-            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
             let k = self.n_neighbors.min(n_training_samples_);
 
             // Compute weights based on distances (inverse distance weighting)
@@ -548,11 +548,11 @@ mod tests {
                 6.2, 7.2, 9.0, 10.0, 11.0, 9.1, 10.1, 11.1, 9.2, 10.2, 11.2, 9.3, 10.3, 11.3,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Initialize and fit UMAP
         let mut umap = UMAP::new(3, 2, 0.1, 1.0, 50);
-        let embedding = umap.fit_transform(&x).unwrap();
+        let embedding = umap.fit_transform(&x).expect("Operation failed");
 
         // Check that the shape is correct
         assert_eq!(embedding.shape(), &[10, 2]);
@@ -572,7 +572,7 @@ mod tests {
             .with_random_state(42)
             .with_metric("euclidean");
 
-        let embedding = umap.fit_transform(&x).unwrap();
+        let embedding = umap.fit_transform(&x).expect("Operation failed");
         assert_eq!(embedding.shape(), &[5, 3]);
     }
 }

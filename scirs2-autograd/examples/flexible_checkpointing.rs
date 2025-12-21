@@ -30,7 +30,7 @@ fn main() {
 
         // Compute gradients
         let grad1 = T::grad(&[h1], &[&a])[0];
-        let grad1_val = grad1.eval(ctx).unwrap();
+        let grad1_val = grad1.eval(ctx).expect("Operation failed");
 
         let normal_time = start.elapsed();
         println!("  Normal execution took: {:?}", normal_time);
@@ -52,7 +52,7 @@ fn main() {
 
         // Compute gradients
         let grad2 = T::grad(&[h2], &[&a])[0];
-        let grad2_val = grad2.eval(ctx).unwrap();
+        let grad2_val = grad2.eval(ctx).expect("Operation failed");
 
         let manual_ckpt_time = start.elapsed();
         println!("  Manual checkpointing took: {:?}", manual_ckpt_time);
@@ -75,7 +75,7 @@ fn main() {
 
         // Compute gradients
         let grad3 = T::grad(&[result3], &[&a])[0];
-        let grad3_val = grad3.eval(ctx).unwrap();
+        let grad3_val = grad3.eval(ctx).expect("Operation failed");
 
         let flex_ckpt_time = start.elapsed();
         println!("  Flexible checkpointing took: {:?}", flex_ckpt_time);
@@ -100,7 +100,7 @@ fn main() {
 
         // Compute gradients
         let grad4 = T::grad(&[result4], &[&a])[0];
-        let grad4_val = grad4.eval(ctx).unwrap();
+        let grad4_val = grad4.eval(ctx).expect("Operation failed");
 
         let group_flex_time = start.elapsed();
         println!(
@@ -138,7 +138,7 @@ fn main() {
         // Compute gradients through both outputs
         let loss_multi = result5a + result5b;
         let grad5 = T::grad(&[loss_multi], &[&a])[0];
-        let grad5_val = grad5.eval(ctx).unwrap();
+        let grad5_val = grad5.eval(ctx).expect("Operation failed");
 
         let multi_output_time = start.elapsed();
         println!(

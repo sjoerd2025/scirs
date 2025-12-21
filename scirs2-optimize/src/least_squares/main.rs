@@ -207,7 +207,10 @@ where
     // Initialize variables
     let m = x0.len();
     let mut x = x0.to_owned();
-    let mut res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+    let mut res = residuals(
+        x.as_slice().expect("Operation failed"),
+        data.as_slice().expect("Operation failed"),
+    );
     let n = res.len();
 
     // Compute sum of squares of residuals
@@ -227,7 +230,7 @@ where
         for j in 0..m {
             let mut x_h = Vec::from(x_params);
             x_h[j] += eps;
-            let res_h = residuals(&x_h, data.as_slice().unwrap());
+            let res_h = residuals(&x_h, data.as_slice().expect("Operation failed"));
             count += 1;
 
             for i in 0..n {
@@ -241,12 +244,15 @@ where
     // Compute initial Jacobian
     let (mut jac, jac_evals) = match &jacobian {
         Some(jac_fn) => {
-            let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+            let j = jac_fn(
+                x.as_slice().expect("Operation failed"),
+                data.as_slice().expect("Operation failed"),
+            );
             njev += 1;
             (j, 0)
         }
         None => {
-            let (j, count) = compute_jac(x.as_slice().unwrap(), &res);
+            let (j, count) = compute_jac(x.as_slice().expect("Operation failed"), &res);
             nfev += count;
             (j, count)
         }
@@ -295,7 +301,10 @@ where
         }
 
         // Compute new residuals and cost
-        let res_new = residuals(x_new.as_slice().unwrap(), data.as_slice().unwrap());
+        let res_new = residuals(
+            x_new.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         nfev += 1;
         let f_new = res_new.iter().map(|&r| r.powi(2)).sum::<f64>() / 2.0;
 
@@ -334,12 +343,15 @@ where
             // Compute new Jacobian for next iteration
             let (new_jac, jac_evals) = match &jacobian {
                 Some(jac_fn) => {
-                    let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+                    let j = jac_fn(
+                        x.as_slice().expect("Operation failed"),
+                        data.as_slice().expect("Operation failed"),
+                    );
                     njev += 1;
                     (j, 0)
                 }
                 None => {
-                    let (j, count) = compute_jac(x.as_slice().unwrap(), &res);
+                    let (j, count) = compute_jac(x.as_slice().expect("Operation failed"), &res);
                     nfev += count;
                     (j, count)
                 }
@@ -362,7 +374,10 @@ where
     result.x = x.clone();
     result.fun = f;
     result.jac = if let Some(jac_fn) = &jacobian {
-        let jac_array = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+        let jac_array = jac_fn(
+            x.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         njev += 1;
         let (vec, _) = jac_array.into_raw_vec_and_offset();
         Some(vec)
@@ -419,7 +434,10 @@ where
     // Initialize variables
     let m = x0.len();
     let mut x = x0.to_owned();
-    let mut res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+    let mut res = residuals(
+        x.as_slice().expect("Operation failed"),
+        data.as_slice().expect("Operation failed"),
+    );
     let n = res.len();
 
     // Compute sum of squares of residuals
@@ -439,7 +457,7 @@ where
         for j in 0..m {
             let mut x_h = Vec::from(x_params);
             x_h[j] += eps;
-            let res_h = residuals(&x_h, data.as_slice().unwrap());
+            let res_h = residuals(&x_h, data.as_slice().expect("Operation failed"));
             count += 1;
 
             for i in 0..n {
@@ -453,12 +471,15 @@ where
     // Compute initial Jacobian
     let (mut jac, jac_evals) = match &jacobian {
         Some(jac_fn) => {
-            let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+            let j = jac_fn(
+                x.as_slice().expect("Operation failed"),
+                data.as_slice().expect("Operation failed"),
+            );
             njev += 1;
             (j, 0)
         }
         None => {
-            let (j, count) = compute_jac(x.as_slice().unwrap(), &res);
+            let (j, count) = compute_jac(x.as_slice().expect("Operation failed"), &res);
             nfev += count;
             (j, count)
         }
@@ -495,7 +516,10 @@ where
         let x_new = &x + &step;
 
         // Compute new residuals and cost
-        let res_new = residuals(x_new.as_slice().unwrap(), data.as_slice().unwrap());
+        let res_new = residuals(
+            x_new.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         nfev += 1;
         let f_new = res_new.iter().map(|&r| r.powi(2)).sum::<f64>() / 2.0;
 
@@ -531,12 +555,15 @@ where
             // Compute new Jacobian for next iteration
             let (new_jac, jac_evals) = match &jacobian {
                 Some(jac_fn) => {
-                    let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+                    let j = jac_fn(
+                        x.as_slice().expect("Operation failed"),
+                        data.as_slice().expect("Operation failed"),
+                    );
                     njev += 1;
                     (j, 0)
                 }
                 None => {
-                    let (j, count) = compute_jac(x.as_slice().unwrap(), &res);
+                    let (j, count) = compute_jac(x.as_slice().expect("Operation failed"), &res);
                     nfev += count;
                     (j, count)
                 }
@@ -556,7 +583,10 @@ where
     result.x = x.clone();
     result.fun = f;
     result.jac = if let Some(jac_fn) = &jacobian {
-        let jac_array = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+        let jac_array = jac_fn(
+            x.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         njev += 1;
         let (vec, _) = jac_array.into_raw_vec_and_offset();
         Some(vec)
@@ -692,7 +722,10 @@ where
     // Initialize variables
     let m = x0.len();
     let mut x = x0.to_owned();
-    let mut res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+    let mut res = residuals(
+        x.as_slice().expect("Operation failed"),
+        data.as_slice().expect("Operation failed"),
+    );
     let n = res.len();
 
     // Compute sum of squares of residuals
@@ -741,7 +774,7 @@ where
         for j in 0..m {
             let mut x_h = Vec::from(x_params);
             x_h[j] += eps;
-            let res_h = residuals(&x_h, data.as_slice().unwrap());
+            let res_h = residuals(&x_h, data.as_slice().expect("Operation failed"));
             count += 1;
 
             for i in 0..n {
@@ -755,12 +788,15 @@ where
     // Compute initial Jacobian
     let mut jac = match &jacobian {
         Some(jac_fn) => {
-            let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+            let j = jac_fn(
+                x.as_slice().expect("Operation failed"),
+                data.as_slice().expect("Operation failed"),
+            );
             njev += 1;
             j
         }
         None => {
-            let (j, count) = compute_jac(x.as_slice().unwrap(), &res);
+            let (j, count) = compute_jac(x.as_slice().expect("Operation failed"), &res);
             nfev += count;
             j
         }
@@ -798,7 +834,10 @@ where
         project_bounds(&mut x_new);
 
         // Evaluate residuals at trial point
-        let res_new = residuals(x_new.as_slice().unwrap(), data.as_slice().unwrap());
+        let res_new = residuals(
+            x_new.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         nfev += 1;
 
         // Compute new objective value
@@ -844,12 +883,15 @@ where
             // Compute new Jacobian for next iteration
             let new_jac = match &jacobian {
                 Some(jac_fn) => {
-                    let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+                    let j = jac_fn(
+                        x.as_slice().expect("Operation failed"),
+                        data.as_slice().expect("Operation failed"),
+                    );
                     njev += 1;
                     j
                 }
                 None => {
-                    let (j, count) = compute_jac(x.as_slice().unwrap(), &res);
+                    let (j, count) = compute_jac(x.as_slice().expect("Operation failed"), &res);
                     nfev += count;
                     j
                 }
@@ -879,7 +921,10 @@ where
     result.x = x.clone();
     result.fun = f;
     result.jac = if let Some(jac_fn) = &jacobian {
-        let jac_array = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+        let jac_array = jac_fn(
+            x.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         njev += 1;
         let (vec, _) = jac_array.into_raw_vec_and_offset();
         Some(vec)
@@ -1066,7 +1111,7 @@ mod tests {
             &data.view(),
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // With limited iterations, expect not to converge
         assert!(!result.success);
@@ -1106,7 +1151,7 @@ mod tests {
             &data.view(),
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check for convergence
         assert!(result.success);
@@ -1152,7 +1197,7 @@ mod tests {
             &data.view(),
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // For this test, we'll just check that the algorithm runs
         // and either improves or reports success
@@ -1212,7 +1257,7 @@ mod tests {
             &data.view(),
             Some(options_trf),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Solve using LM
         let result_lm = least_squares(
@@ -1223,7 +1268,7 @@ mod tests {
             &data.view(),
             Some(options_lm),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Output results for comparison
         println!(

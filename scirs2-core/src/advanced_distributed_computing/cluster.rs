@@ -63,7 +63,7 @@ impl Default for ComputeNode {
     fn default() -> Self {
         Self {
             id: NodeId("default-node".to_string()),
-            address: "127.0.0.1:8080".parse().unwrap(),
+            address: "127.0.0.1:8080".parse().expect("Operation failed"),
             capabilities: NodeCapabilities::default(),
             status: NodeStatus::Initializing,
             performance: NodePerformanceMetrics::default(),

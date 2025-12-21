@@ -117,7 +117,7 @@ pub fn select_spectral_window(
     }
 
     // Sort by score (descending)
-    scored_windows.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+    scored_windows.sort_by(|a, b| b.score.partial_cmp(&a.score).expect("Operation failed"));
 
     scored_windows
         .into_iter()
@@ -505,7 +505,7 @@ mod tests {
         let result = select_spectral_window(64, &criteria, Some(1000.0));
         assert!(result.is_ok());
 
-        let window = result.unwrap();
+        let window = result.expect("Operation failed");
         assert_eq!(window.samples.len(), 64);
         assert!(window.score >= 0.0 && window.score <= 1.0);
     }
@@ -513,9 +513,9 @@ mod tests {
     #[test]
     fn test_windowed_segments() {
         let signal: Vec<f64> = (0..100).map(|i| i as f64).collect();
-        let window = rectangular::boxcar(20, true).unwrap();
+        let window = rectangular::boxcar(20, true).expect("Operation failed");
 
-        let segments = apply_windowed_segments(&signal, &window, 20, 10).unwrap();
+        let segments = apply_windowed_segments(&signal, &window, 20, 10).expect("Operation failed");
         assert!(!segments.is_empty());
         assert_eq!(segments[0].len(), 20);
 
@@ -525,7 +525,7 @@ mod tests {
 
     #[test]
     fn test_psd_corrections() {
-        let window = cosine::hann(64, true).unwrap();
+        let window = cosine::hann(64, true).expect("Operation failed");
         let (amp_corr, pow_corr) = compute_psd_corrections(&window, 1000.0);
 
         assert!(amp_corr > 1.0); // Hann window needs amplitude boost
@@ -534,7 +534,7 @@ mod tests {
 
     #[test]
     fn test_window_properties() {
-        let window = cosine::hann(64, true).unwrap();
+        let window = cosine::hann(64, true).expect("Operation failed");
         let properties = analyze_window_properties(&window, Some(1000.0));
 
         assert!(properties.coherent_gain > 0.0);

@@ -58,11 +58,13 @@ pub struct AnomalyStatistics<F: Float + std::fmt::Debug> {
 impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<F> {
     pub fn new(algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
         let threshold = match &algorithm {
-            AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
-            AnomalyDetectionAlgorithm::IsolationForest { contamination: _ } => {
-                F::from(0.5).unwrap()
+            AnomalyDetectionAlgorithm::ZScore { threshold } => {
+                F::from(*threshold).expect("Failed to convert to float")
             }
-            _ => F::from(3.0).unwrap(),
+            AnomalyDetectionAlgorithm::IsolationForest { contamination: _ } => {
+                F::from(0.5).expect("Failed to convert constant to float")
+            }
+            _ => F::from(3.0).expect("Failed to convert constant to float"),
         };
 
         Ok(Self {
@@ -158,14 +160,14 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
 
         // Calculate running statistics efficiently
         let mean = self.history_buffer.iter().cloned().sum::<F>()
-            / F::from(self.history_buffer.len()).unwrap();
+            / F::from(self.history_buffer.len()).expect("Operation failed");
 
         let variance = self
             .history_buffer
             .iter()
             .map(|&x| (x - mean) * (x - mean))
             .sum::<F>()
-            / F::from(self.history_buffer.len() - 1).unwrap();
+            / F::from(self.history_buffer.len() - 1).expect("Operation failed");
 
         let std_dev = variance.sqrt();
 
@@ -175,11 +177,11 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
             F::zero()
         };
 
-        let threshold_f = F::from(threshold).unwrap();
+        let threshold_f = F::from(threshold).expect("Failed to convert to float");
         let is_anomaly = z_score > threshold_f;
 
         let anomaly_type = if is_anomaly {
-            if z_score > threshold_f * F::from(2.0).unwrap() {
+            if z_score > threshold_f * F::from(2.0).expect("Failed to convert constant to float") {
                 AnomalyType::PointAnomaly
             } else {
                 AnomalyType::ContextualAnomaly
@@ -212,8 +214,10 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
         let relative_position = position as f64 / sorted_values.len() as f64;
 
         // Anomalies are typically at the extremes
-        let isolation_score = F::from(1.0 - (relative_position - 0.5).abs() * 2.0).unwrap();
-        let contamination_threshold = F::from(1.0 - contamination).unwrap();
+        let isolation_score =
+            F::from(1.0 - (relative_position - 0.5).abs() * 2.0).expect("Operation failed");
+        let contamination_threshold =
+            F::from(1.0 - contamination).expect("Failed to convert to float");
 
         let is_anomaly = isolation_score > contamination_threshold;
         let anomaly_type = if is_anomaly {
@@ -245,17 +249,17 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
         let k_distance = if distances.len() > n_neighbors {
             distances[n_neighbors].0
         } else {
-            distances.last().unwrap().0
+            distances.last().expect("Operation failed").0
         };
 
         // Simple LOF approximation
         let lof_score = if k_distance > F::zero() {
-            F::from(2.0).unwrap() / (F::one() + k_distance)
+            F::from(2.0).expect("Failed to convert constant to float") / (F::one() + k_distance)
         } else {
             F::one()
         };
 
-        let is_anomaly = lof_score > F::from(1.5).unwrap();
+        let is_anomaly = lof_score > F::from(1.5).expect("Failed to convert constant to float");
         let anomaly_type = if is_anomaly {
             AnomalyType::ContextualAnomaly
         } else {

@@ -272,7 +272,7 @@ impl InPlaceOperations {
         if !training {
             return Ok(());
         let keep_prob = 1.0 - dropout_rate;
-        let scale_factor = F::from(1.0 / keep_prob).unwrap();
+        let scale_factor = F::from(1.0 / keep_prob).expect("Failed to convert to float");
         for element in array.iter_mut() {
             if scirs2_core::random::random::<f64>() < dropout_rate {
                 *element = F::zero();
@@ -385,7 +385,7 @@ impl MemoryEfficientLayer {
                 false,                            // numa_aware
                 64,                               // alignment
             )
-            .unwrap(),
+            .expect("Operation failed"),
         );
         #[cfg(feature = "cache")]
         let activation_cache = CacheBuilder::new()
@@ -510,7 +510,7 @@ mod tests {
         let activation = Array2::from_elem((10, 10), 1.0).into_dyn();
         checkpointing
             .store_checkpoint("layer1", activation)
-            .unwrap();
+            .expect("Operation failed");
         assert!(checkpointing.get_checkpoint("layer1").is_some());
         checkpointing.clear_checkpoints();
         assert!(checkpointing.get_checkpoint("layer1").is_none());

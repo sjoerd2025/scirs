@@ -65,7 +65,8 @@ impl<F: Float + Debug + Clone> GpuFFT<F> {
         }
 
         let result = self.cooley_tukey_fft(&padded_data, true)?;
-        let normalized: Array1<F> = result.mapv(|x| x / F::from(padded_n).unwrap());
+        let normalized: Array1<F> =
+            result.mapv(|x| x / F::from(padded_n).expect("Failed to convert to float"));
 
         Ok(normalized.slice(s![0..n]).to_owned())
     }
@@ -84,8 +85,8 @@ impl<F: Float + Debug + Clone> GpuFFT<F> {
         }
 
         let mut result = data.clone();
-        let two = F::from(2).unwrap();
-        let pi = F::from(PI).unwrap();
+        let two = F::from(2).expect("Failed to convert constant to float");
+        let pi = F::from(PI).expect("Failed to convert to float");
 
         // Bit-reversal permutation (GPU-friendly)
         let mut j = 0;
@@ -106,9 +107,9 @@ impl<F: Float + Debug + Clone> GpuFFT<F> {
         let mut length = 2;
         while length <= n {
             let angle = if inverse {
-                two * pi / F::from(length).unwrap()
+                two * pi / F::from(length).expect("Failed to convert to float")
             } else {
-                -two * pi / F::from(length).unwrap()
+                -two * pi / F::from(length).expect("Failed to convert to float")
             };
 
             let wlen_real = angle.cos();
@@ -180,7 +181,7 @@ impl<F: Float + Debug + Clone> GpuFFT<F> {
         }
 
         // Normalize by number of windows
-        let norm_factor = F::from(num_windows).unwrap();
+        let norm_factor = F::from(num_windows).expect("Failed to convert to float");
         Ok(psd.mapv(|x: F| x / norm_factor))
     }
 
@@ -188,12 +189,15 @@ impl<F: Float + Debug + Clone> GpuFFT<F> {
     fn apply_hanning_window(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let n = data.len();
         let mut windowed = data.clone();
-        let pi = F::from(PI).unwrap();
-        let two = F::from(2).unwrap();
+        let pi = F::from(PI).expect("Failed to convert to float");
+        let two = F::from(2).expect("Failed to convert constant to float");
 
         for i in 0..n {
-            let window_val = F::from(0.5).unwrap()
-                * (F::one() - (two * pi * F::from(i).unwrap() / F::from(n - 1).unwrap()).cos());
+            let window_val = F::from(0.5).expect("Failed to convert constant to float")
+                * (F::one()
+                    - (two * pi * F::from(i).expect("Failed to convert to float")
+                        / F::from(n - 1).expect("Failed to convert to float"))
+                    .cos());
             windowed[i] = windowed[i] * window_val;
         }
 

@@ -344,7 +344,9 @@ where
                 ));
             }
 
-            let reflection_coeff = F::from(2.0).unwrap() * numerator / denominator;
+            let reflection_coeff = F::from(2.0).expect("Failed to convert constant to float")
+                * numerator
+                / denominator;
             ar_coeffs[order - 1] = reflection_coeff;
 
             // Update AR coefficients using Levinson-Durbin recursion
@@ -419,20 +421,20 @@ where
                 .mapv(|x| x * x)
                 .mean()
                 .unwrap_or(F::one());
-            let n_eff = F::from(n - p).unwrap();
+            let n_eff = F::from(n - p).expect("Failed to convert to float");
 
-            n_eff / F::from(2.0).unwrap() * sigma2.ln()
+            n_eff / F::from(2.0).expect("Failed to convert constant to float") * sigma2.ln()
                 + residuals
                     .slice(scirs2_core::ndarray::s![p..])
                     .mapv(|x| x * x)
                     .sum()
-                    / (F::from(2.0).unwrap() * sigma2)
+                    / (F::from(2.0).expect("Failed to convert constant to float") * sigma2)
         };
 
         // Gradient function (numerical approximation)
         let gradient = |params: &Array1<F>| -> Array1<F> {
             let mut grad = Array1::zeros(n_params);
-            let eps = F::from(1e-8).unwrap();
+            let eps = F::from(1e-8).expect("Failed to convert constant to float");
 
             for i in 0..n_params {
                 let mut params_plus = params.clone();
@@ -441,7 +443,7 @@ where
                 params_minus[i] = params_minus[i] - eps;
 
                 grad[i] = (objective(&params_plus) - objective(&params_minus))
-                    / (F::from(2.0).unwrap() * eps);
+                    / (F::from(2.0).expect("Failed to convert constant to float") * eps);
             }
 
             grad
@@ -507,7 +509,7 @@ where
             .slice(scirs2_core::ndarray::s![self.p..])
             .mapv(|x| x * x)
             .sum()
-            / F::from(n_eff).unwrap();
+            / F::from(n_eff).expect("Failed to convert to float");
 
         Ok(())
     }
@@ -524,7 +526,7 @@ where
         self.fit_yule_walker(data)?;
 
         let max_iterations = 50;
-        let tolerance = F::from(1e-6).unwrap();
+        let tolerance = F::from(1e-6).expect("Failed to convert constant to float");
 
         for _iter in 0..max_iterations {
             let old_coeffs = self.ar_coeffs.clone();
@@ -602,14 +604,15 @@ where
             .iter()
             .map(|&r| (r - median_residual).abs())
             .collect();
-        let mad = self.median(&abs_deviations) * F::from(1.4826).unwrap(); // Scale factor for normal distribution
+        let mad = self.median(&abs_deviations)
+            * F::from(1.4826).expect("Failed to convert constant to float"); // Scale factor for normal distribution
 
         if mad == F::zero() {
             return Ok(weights);
         }
 
         // Huber weights
-        let c = F::from(1.345).unwrap(); // Huber tuning constant
+        let c = F::from(1.345).expect("Failed to convert constant to float"); // Huber tuning constant
         for i in 0..n {
             let standardized = (residuals[i] - median_residual).abs() / mad;
             if standardized > c {
@@ -633,7 +636,7 @@ where
         if len.is_multiple_of(2) {
             let mid1 = sorted[len / 2 - 1];
             let mid2 = sorted[len / 2];
-            (mid1 + mid2) / F::from(2.0).unwrap()
+            (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
         } else {
             sorted[len / 2]
         }
@@ -667,22 +670,30 @@ where
         let residuals = self.calculate_residuals(data)?;
 
         // Log-likelihood
-        let n_eff = F::from(n - self.p).unwrap();
-        self.fit_stats.log_likelihood = -n_eff / F::from(2.0).unwrap()
-            * (F::from(2.0 * std::f64::consts::PI).unwrap() * self.sigma2).ln()
+        let n_eff = F::from(n - self.p).expect("Failed to convert to float");
+        self.fit_stats.log_likelihood = -n_eff
+            / F::from(2.0).expect("Failed to convert constant to float")
+            * (F::from(2.0 * std::f64::consts::PI).expect("Failed to convert to float")
+                * self.sigma2)
+                .ln()
             - residuals
                 .slice(scirs2_core::ndarray::s![self.p..])
                 .mapv(|x| x * x)
                 .sum()
-                / (F::from(2.0).unwrap() * self.sigma2);
+                / (F::from(2.0).expect("Failed to convert constant to float") * self.sigma2);
 
         // Information criteria
-        let k = F::from(self.p + 1).unwrap(); // Number of parameters
-        self.fit_stats.aic =
-            F::from(2.0).unwrap() * k - F::from(2.0).unwrap() * self.fit_stats.log_likelihood;
-        self.fit_stats.bic = k * n_eff.ln() - F::from(2.0).unwrap() * self.fit_stats.log_likelihood;
-        self.fit_stats.hqc = F::from(2.0).unwrap() * k * n_eff.ln().ln()
-            - F::from(2.0).unwrap() * self.fit_stats.log_likelihood;
+        let k = F::from(self.p + 1).expect("Failed to convert to float"); // Number of parameters
+        self.fit_stats.aic = F::from(2.0).expect("Failed to convert constant to float") * k
+            - F::from(2.0).expect("Failed to convert constant to float")
+                * self.fit_stats.log_likelihood;
+        self.fit_stats.bic = k * n_eff.ln()
+            - F::from(2.0).expect("Failed to convert constant to float")
+                * self.fit_stats.log_likelihood;
+        self.fit_stats.hqc =
+            F::from(2.0).expect("Failed to convert constant to float") * k * n_eff.ln().ln()
+                - F::from(2.0).expect("Failed to convert constant to float")
+                    * self.fit_stats.log_likelihood;
 
         // R-squared
         let y_slice = data.slice(scirs2_core::ndarray::s![self.p..]);
@@ -735,7 +746,7 @@ where
         self.coefficient_se[self.p] = hessian_inv[[self.p, self.p]].sqrt(); // Intercept SE
 
         // Calculate confidence intervals (95% by default)
-        let t_value = F::from(1.96).unwrap(); // Approximate for large samples
+        let t_value = F::from(1.96).expect("Failed to convert constant to float"); // Approximate for large samples
         for i in 0..self.p {
             self.confidence_intervals[[i, 0]] =
                 self.ar_coeffs[i] - t_value * self.coefficient_se[i];
@@ -937,7 +948,7 @@ where
             let z_value = F::from(Self::normal_quantile(
                 1.0 - (1.0 - options.confidence_level) / 2.0,
             ))
-            .unwrap();
+            .expect("Operation failed");
 
             let lower = forecast_se.mapv(|se| se * (-z_value));
             let upper = forecast_se.mapv(|se| se * z_value);
@@ -1005,7 +1016,7 @@ mod tests {
 
     #[test]
     fn test_enhanced_ar_creation() {
-        let model = EnhancedARModel::<f64>::new(2).unwrap();
+        let model = EnhancedARModel::<f64>::new(2).expect("Operation failed");
         assert_eq!(model.p, 2);
         assert!(!model.is_fitted);
     }
@@ -1017,7 +1028,7 @@ mod tests {
             1.5, 2.1, 3.4, 2.8, 4.2, 3.9, 5.1, 4.7, 6.3, 5.8, 7.2, 6.9, 8.1, 7.5, 9.3, 8.8, 10.2,
             9.7, 11.1, 10.5, 12.3, 11.8, 13.2, 12.7, 14.1, 13.6, 15.4, 14.9, 16.2, 15.8
         ];
-        let mut model = EnhancedARModel::new(2).unwrap();
+        let mut model = EnhancedARModel::new(2).expect("Operation failed");
 
         let result = model.fit(&data, EstimationMethod::YuleWalker);
         assert!(result.is_ok());
@@ -1031,7 +1042,7 @@ mod tests {
             1.2, 2.3, 2.9, 3.1, 4.5, 3.8, 5.2, 4.9, 6.1, 5.7, 7.3, 6.8, 8.0, 7.6, 9.2, 8.9, 10.1,
             9.8, 11.0, 10.6, 12.2, 11.9, 13.1, 12.8, 14.0, 13.7, 15.3, 14.8, 16.1, 15.9
         ];
-        let mut model = EnhancedARModel::new(2).unwrap();
+        let mut model = EnhancedARModel::new(2).expect("Operation failed");
 
         let result = model.fit(&data, EstimationMethod::Burg);
         assert!(result.is_ok());
@@ -1045,11 +1056,15 @@ mod tests {
             1.3, 2.2, 3.1, 2.9, 4.4, 3.7, 5.3, 4.8, 6.2, 5.9, 7.1, 6.7, 8.2, 7.4, 9.1, 8.8, 10.3,
             9.6, 11.2, 10.7, 12.1, 11.8, 13.3, 12.6, 14.2, 13.9, 15.1, 14.7, 16.3, 15.6
         ];
-        let mut model = EnhancedARModel::new(2).unwrap();
-        model.fit(&data, EstimationMethod::YuleWalker).unwrap();
+        let mut model = EnhancedARModel::new(2).expect("Operation failed");
+        model
+            .fit(&data, EstimationMethod::YuleWalker)
+            .expect("Operation failed");
 
         let options = ForecastOptions::default();
-        let result = model.forecast_with_intervals(&data, 5, &options).unwrap();
+        let result = model
+            .forecast_with_intervals(&data, 5, &options)
+            .expect("Operation failed");
 
         assert_eq!(result.forecasts.len(), 5);
         assert!(result.lower_bounds.is_some());
@@ -1060,7 +1075,7 @@ mod tests {
     #[test]
     fn test_matrix_inverse_2x2() {
         let matrix = array![[4.0, 2.0], [3.0, 1.0]];
-        let inv = EnhancedARModel::<f64>::matrix_inverse(&matrix).unwrap();
+        let inv = EnhancedARModel::<f64>::matrix_inverse(&matrix).expect("Operation failed");
 
         // Check that matrix * inv ≈ identity
         let product = matrix.dot(&inv);

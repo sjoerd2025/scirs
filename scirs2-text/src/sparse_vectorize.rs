@@ -359,7 +359,7 @@ mod tests {
         ];
 
         let mut vectorizer = SparseCountVectorizer::new(false);
-        let sparse_matrix = vectorizer.fit_transform(&texts).unwrap();
+        let sparse_matrix = vectorizer.fit_transform(&texts).expect("Operation failed");
 
         assert_eq!(sparse_matrix.shape().0, 5); // 5 documents
         assert!(sparse_matrix.nnz() > 0);
@@ -376,12 +376,12 @@ mod tests {
         let texts = vec!["the quick brown fox", "the lazy dog", "brown fox jumps"];
 
         let mut vectorizer = SparseTfidfVectorizer::new();
-        let sparse_matrix = vectorizer.fit_transform(&texts).unwrap();
+        let sparse_matrix = vectorizer.fit_transform(&texts).expect("Operation failed");
 
         assert_eq!(sparse_matrix.shape().0, 3);
 
         // Verify TF-IDF properties
-        let first_doc = sparse_matrix.get_row(0).unwrap();
+        let first_doc = sparse_matrix.get_row(0).expect("Operation failed");
         assert!(first_doc.norm() > 0.0);
 
         // With L2 normalization, the norm should be approximately 1
@@ -394,7 +394,7 @@ mod tests {
 
         let v2 = SparseVector::fromindices_values(vec![1, 2, 4], vec![1.0, 2.0, 1.0], 5);
 
-        let similarity = sparse_cosine_similarity(&v1, &v2).unwrap();
+        let similarity = sparse_cosine_similarity(&v1, &v2).expect("Operation failed");
 
         // Only index 2 overlaps with value 2.0 in both
         // v1 dot v2 = 2.0 * 2.0 = 4.0
@@ -418,7 +418,9 @@ mod tests {
         let text_refs: Vec<&str> = texts.iter().map(|s| s.as_ref()).collect();
 
         let mut vectorizer = SparseCountVectorizer::new(false);
-        let sparse_matrix = vectorizer.fit_transform(&text_refs).unwrap();
+        let sparse_matrix = vectorizer
+            .fit_transform(&text_refs)
+            .expect("Operation failed");
 
         let stats = MemoryStats::from_sparse_matrix(&sparse_matrix);
         stats.print_stats();

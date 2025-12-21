@@ -59,7 +59,7 @@ pub struct SeedPoint {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let seeds = vec![
 ///     SeedPoint { x: 100, y: 100, label_: Some(1) },
 ///     SeedPoint { x: 200, y: 200, label_: Some(2) },
@@ -467,7 +467,7 @@ mod tests {
         let result = region_growing(&img, &seeds, &RegionGrowingParams::default());
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Operation failed");
         assert_eq!(labels.dim(), (50, 50));
 
         // Seeds should be labeled (note: array indexing is [y, x])

@@ -58,7 +58,10 @@ impl<F: Float> ExponentialLR<F> {
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
     pub fn slow_decay(initial_lr: F) -> Self {
-        Self::new(initial_lr, F::from(0.99).unwrap())
+        Self::new(
+            initial_lr,
+            F::from(0.99).expect("Failed to convert constant to float"),
+        )
     }
 
     /// Create an ExponentialLR scheduler with moderate decay
@@ -69,7 +72,10 @@ impl<F: Float> ExponentialLR<F> {
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
     pub fn moderate_decay(initial_lr: F) -> Self {
-        Self::new(initial_lr, F::from(0.95).unwrap())
+        Self::new(
+            initial_lr,
+            F::from(0.95).expect("Failed to convert constant to float"),
+        )
     }
 
     /// Create an ExponentialLR scheduler with fast decay
@@ -80,7 +86,10 @@ impl<F: Float> ExponentialLR<F> {
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
     pub fn fast_decay(initial_lr: F) -> Self {
-        Self::new(initial_lr, F::from(0.9).unwrap())
+        Self::new(
+            initial_lr,
+            F::from(0.9).expect("Failed to convert constant to float"),
+        )
     }
 
     /// Create an ExponentialLR scheduler from half-life
@@ -99,8 +108,8 @@ impl<F: Float> ExponentialLR<F> {
 
         // gamma = 0.5^(1/half_life)
         let gamma = F::from(0.5)
-            .unwrap()
-            .powf(F::one() / F::from(half_life).unwrap());
+            .expect("Operation failed")
+            .powf(F::one() / F::from(half_life).expect("Failed to convert to float"));
 
         Self::new(initial_lr, gamma)
     }
@@ -149,7 +158,7 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// Returns the percentage by which learning rate decreases each step.
     pub fn decay_percentage(&self) -> F {
-        (F::one() - self.gamma) * F::from(100.0).unwrap()
+        (F::one() - self.gamma) * F::from(100.0).expect("Failed to convert constant to float")
     }
 }
 
@@ -159,7 +168,9 @@ impl<F: Float> LRScheduler<F> for ExponentialLR<F> {
             self.initial_lr
         } else {
             // Calculate gamma^step
-            let decay_factor = self.gamma.powf(F::from(step).unwrap());
+            let decay_factor = self
+                .gamma
+                .powf(F::from(step).expect("Failed to convert to float"));
             self.initial_lr * decay_factor
         }
     }

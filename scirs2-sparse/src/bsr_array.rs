@@ -92,7 +92,7 @@ where
     /// let indices = vec![vec![0], vec![1]];
     /// let indptr = vec![0, 1, 2];
     ///
-    /// let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).unwrap();
+    /// let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).expect("Operation failed");
     /// assert_eq!(array.shape(), (4, 4));
     /// assert_eq!(array.nnz(), 8); // All elements in the blocks are non-zero
     /// ```
@@ -1023,7 +1023,7 @@ mod tests {
         let indices = vec![vec![0], vec![1]];
         let indptr = vec![0, 1, 2];
 
-        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).unwrap();
+        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).expect("Operation failed");
 
         assert_eq!(array.shape(), (4, 4));
         assert_eq!(array.block_size, (2, 2));
@@ -1050,7 +1050,8 @@ mod tests {
         let shape = (4, 4);
         let block_size = (2, 2);
 
-        let array = BsrArray::from_triplets(&rows, &cols, &data, shape, block_size).unwrap();
+        let array = BsrArray::from_triplets(&rows, &cols, &data, shape, block_size)
+            .expect("Operation failed");
 
         assert_eq!(array.shape(), (4, 4));
         assert_eq!(array.block_size, (2, 2));
@@ -1078,15 +1079,15 @@ mod tests {
         let indices = vec![vec![0], vec![1]];
         let indptr = vec![0, 1, 2];
 
-        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).unwrap();
+        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).expect("Operation failed");
 
         // Convert to COO and check
-        let coo = array.to_coo().unwrap();
+        let coo = array.to_coo().expect("Operation failed");
         assert_eq!(coo.shape(), (4, 4));
         assert_eq!(coo.nnz(), 8);
 
         // Convert to CSR and check
-        let csr = array.to_csr().unwrap();
+        let csr = array.to_csr().expect("Operation failed");
         assert_eq!(csr.shape(), (4, 4));
         assert_eq!(csr.nnz(), 8);
 
@@ -1098,7 +1099,7 @@ mod tests {
                 1.0, 2.0, 0.0, 0.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 5.0, 6.0, 0.0, 0.0, 7.0, 8.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         assert_eq!(dense, expected);
     }
 
@@ -1109,16 +1110,18 @@ mod tests {
         let data1 = vec![block1];
         let indices1 = vec![vec![0]];
         let indptr1 = vec![0, 1];
-        let array1 = BsrArray::new(data1, indices1, indptr1, (2, 2), (2, 2)).unwrap();
+        let array1 =
+            BsrArray::new(data1, indices1, indptr1, (2, 2), (2, 2)).expect("Operation failed");
 
         let block2 = vec![vec![5.0, 6.0], vec![7.0, 8.0]];
         let data2 = vec![block2];
         let indices2 = vec![vec![0]];
         let indptr2 = vec![0, 1];
-        let array2 = BsrArray::new(data2, indices2, indptr2, (2, 2), (2, 2)).unwrap();
+        let array2 =
+            BsrArray::new(data2, indices2, indptr2, (2, 2), (2, 2)).expect("Operation failed");
 
         // Test addition
-        let sum = array1.add(&array2).unwrap();
+        let sum = array1.add(&array2).expect("Operation failed");
         assert_eq!(sum.shape(), (2, 2));
         assert_eq!(sum.get(0, 0), 6.0); // 1+5
         assert_eq!(sum.get(0, 1), 8.0); // 2+6
@@ -1126,7 +1129,7 @@ mod tests {
         assert_eq!(sum.get(1, 1), 12.0); // 4+8
 
         // Test element-wise multiplication
-        let product = array1.mul(&array2).unwrap();
+        let product = array1.mul(&array2).expect("Operation failed");
         assert_eq!(product.shape(), (2, 2));
         assert_eq!(product.get(0, 0), 5.0); // 1*5
         assert_eq!(product.get(0, 1), 12.0); // 2*6
@@ -1134,7 +1137,7 @@ mod tests {
         assert_eq!(product.get(1, 1), 32.0); // 4*8
 
         // Test dot product (matrix multiplication)
-        let dot = array1.dot(&array2).unwrap();
+        let dot = array1.dot(&array2).expect("Operation failed");
         assert_eq!(dot.shape(), (2, 2));
         assert_eq!(dot.get(0, 0), 19.0); // 1*5 + 2*7
         assert_eq!(dot.get(0, 1), 22.0); // 1*6 + 2*8
@@ -1152,13 +1155,13 @@ mod tests {
         let indices = vec![vec![0], vec![1]];
         let indptr = vec![0, 1, 2];
 
-        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).unwrap();
+        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).expect("Operation failed");
 
         // Create a vector
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
 
         // Test matrix-vector multiplication
-        let result = array.dot_vector(&vector.view()).unwrap();
+        let result = array.dot_vector(&vector.view()).expect("Operation failed");
 
         // Expected: [1*1 + 2*2 + 0*3 + 0*4, 3*1 + 4*2 + 0*3 + 0*4,
         //            0*1 + 0*2 + 5*3 + 6*4, 0*1 + 0*2 + 7*3 + 8*4]
@@ -1177,17 +1180,17 @@ mod tests {
         let indices = vec![vec![0], vec![1]];
         let indptr = vec![0, 1, 2];
 
-        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).unwrap();
+        let array = BsrArray::new(data, indices, indptr, (4, 4), (2, 2)).expect("Operation failed");
 
         // Test sum of entire array
-        if let SparseSum::Scalar(sum) = array.sum(None).unwrap() {
+        if let SparseSum::Scalar(sum) = array.sum(None).expect("Operation failed") {
             assert_eq!(sum, 36.0); // 1+2+3+4+5+6+7+8 = 36
         } else {
             panic!("Expected SparseSum::Scalar");
         }
 
         // Test sum along rows (result should be 1 x 4)
-        if let SparseSum::SparseArray(row_sum) = array.sum(Some(0)).unwrap() {
+        if let SparseSum::SparseArray(row_sum) = array.sum(Some(0)).expect("Operation failed") {
             assert_eq!(row_sum.shape(), (1, 4));
             assert_eq!(row_sum.get(0, 0), 4.0); // 1+3
             assert_eq!(row_sum.get(0, 1), 6.0); // 2+4
@@ -1198,7 +1201,7 @@ mod tests {
         }
 
         // Test sum along columns (result should be 4 x 1)
-        if let SparseSum::SparseArray(col_sum) = array.sum(Some(1)).unwrap() {
+        if let SparseSum::SparseArray(col_sum) = array.sum(Some(1)).expect("Operation failed") {
             assert_eq!(col_sum.shape(), (4, 1));
             assert_eq!(col_sum.get(0, 0), 3.0); // 1+2
             assert_eq!(col_sum.get(1, 0), 7.0); // 3+4

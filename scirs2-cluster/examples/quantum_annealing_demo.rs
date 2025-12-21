@@ -157,7 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let training_time = start_time.elapsed();
 
     let assignments = annealer.predict(data.view())?;
-    let energy = annealer.best_energy().unwrap();
+    let energy = annealer.best_energy().expect("Operation failed");
     let temp_schedule = annealer.temperature_schedule();
 
     println!("📊 Results:");

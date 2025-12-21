@@ -758,7 +758,7 @@ mod tests {
         let signal = Array1::linspace(0.0, 1.0, 100);
         let kernel = Array1::from_vec(vec![0.25, 0.5, 0.25]);
 
-        let result = simd_convolve_1d(&signal, &kernel, "same").unwrap();
+        let result = simd_convolve_1d(&signal, &kernel, "same").expect("Operation failed");
         assert_eq!(result.len(), signal.len());
     }
 
@@ -767,7 +767,7 @@ mod tests {
         let b = Array1::from_vec(vec![0.25, 0.5, 0.25]);
         let a = Array1::from_vec(vec![1.0]);
 
-        let mut filter = StreamingFilter::new(b, a, 1024).unwrap();
+        let mut filter = StreamingFilter::new(b, a, 1024).expect("Operation failed");
         let input = vec![1.0; 10];
         let output = filter.process(&input);
 

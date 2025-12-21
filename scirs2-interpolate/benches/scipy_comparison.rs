@@ -36,7 +36,7 @@ fn generate_1d_data(n: usize, noise: bool) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
     let y = if noise {
         let mut rng = thread_rng();
-        let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
+        let uniform_dist = Uniform::new(0.0, 1.0).expect("Operation failed");
         x.mapv(|xi: f64| {
             (xi * 0.5).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos() + 0.01 * rng.sample(uniform_dist)
         })
@@ -54,7 +54,7 @@ fn generate_2d_data(n: usize, noise: bool) -> (Array2<f64>, Array1<f64>) {
 
     let sqrt_n = (n as f64).sqrt() as usize;
     let mut rng = thread_rng();
-    let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
+    let uniform_dist = Uniform::new(0.0, 1.0).expect("Operation failed");
 
     for i in 0..sqrt_n {
         for j in 0..sqrt_n {
@@ -121,20 +121,30 @@ fn bench_linear_1d_comparison(c: &mut Criterion) {
         {
             group.bench_with_input(BenchmarkId::new("scipy", n_points), &n_points, |b, _| {
                 Python::with_gil(|py| {
-                    let scipy_interp = py.import("scipy.interpolate").unwrap();
-                    let numpy = py.import("numpy").unwrap();
+                    let scipy_interp = py.import("scipy.interpolate").expect("Operation failed");
+                    let numpy = py.import("numpy").expect("Operation failed");
 
                     // Convert to numpy arrays
-                    let x_py = numpy.call_method1("array", (x.to_vec(),)).unwrap();
-                    let y_py = numpy.call_method1("array", (y.to_vec(),)).unwrap();
-                    let queries_py = numpy.call_method1("array", (queries.to_vec(),)).unwrap();
+                    let x_py = numpy
+                        .call_method1("array", (x.to_vec(),))
+                        .expect("Operation failed");
+                    let y_py = numpy
+                        .call_method1("array", (y.to_vec(),))
+                        .expect("Operation failed");
+                    let queries_py = numpy
+                        .call_method1("array", (queries.to_vec(),))
+                        .expect("Operation failed");
 
                     // Create interpolator
-                    let interp1d = scipy_interp.getattr("interp1d").unwrap();
-                    let interpolator = interp1d.call1((x_py, y_py)).unwrap();
+                    let interp1d = scipy_interp.getattr("interp1d").expect("Operation failed");
+                    let interpolator = interp1d.call1((x_py, y_py)).expect("Operation failed");
 
                     b.iter(|| {
-                        black_box(interpolator.call1((queries_py.clone(),)).unwrap());
+                        black_box(
+                            interpolator
+                                .call1((queries_py.clone(),))
+                                .expect("Operation failed"),
+                        );
                     });
                 });
             });
@@ -165,7 +175,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
         );
 
         // Benchmark scirs2 evaluation
-        let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+        let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
         group.throughput(Throughput::Elements(queries.len() as u64));
         group.bench_with_input(
             BenchmarkId::new("scirs2_evaluation", n_points),
@@ -179,13 +189,19 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
         #[cfg(feature = "scipy-comparison")]
         {
             Python::with_gil(|py| {
-                let scipy_interp = py.import("scipy.interpolate").unwrap();
-                let numpy = py.import("numpy").unwrap();
+                let scipy_interp = py.import("scipy.interpolate").expect("Operation failed");
+                let numpy = py.import("numpy").expect("Operation failed");
 
                 // Convert to numpy arrays
-                let x_py = numpy.call_method1("array", (x.to_vec(),)).unwrap();
-                let y_py = numpy.call_method1("array", (y.to_vec(),)).unwrap();
-                let queries_py = numpy.call_method1("array", (queries.to_vec(),)).unwrap();
+                let x_py = numpy
+                    .call_method1("array", (x.to_vec(),))
+                    .expect("Operation failed");
+                let y_py = numpy
+                    .call_method1("array", (y.to_vec(),))
+                    .expect("Operation failed");
+                let queries_py = numpy
+                    .call_method1("array", (queries.to_vec(),))
+                    .expect("Operation failed");
 
                 // Benchmark construction
                 group.bench_with_input(
@@ -193,22 +209,34 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
                     &n_points,
                     |b, _| {
                         b.iter(|| {
-                            let cubic_spline = scipy_interp.getattr("CubicSpline").unwrap();
-                            black_box(cubic_spline.call1((x_py.clone(), y_py.clone())).unwrap());
+                            let cubic_spline = scipy_interp
+                                .getattr("CubicSpline")
+                                .expect("Operation failed");
+                            black_box(
+                                cubic_spline
+                                    .call1((x_py.clone(), y_py.clone()))
+                                    .expect("Operation failed"),
+                            );
                         });
                     },
                 );
 
                 // Benchmark evaluation
-                let cubic_spline = scipy_interp.getattr("CubicSpline").unwrap();
-                let spline_scipy = cubic_spline.call1((x_py, y_py)).unwrap();
+                let cubic_spline = scipy_interp
+                    .getattr("CubicSpline")
+                    .expect("Operation failed");
+                let spline_scipy = cubic_spline.call1((x_py, y_py)).expect("Operation failed");
 
                 group.bench_with_input(
                     BenchmarkId::new("scipy_evaluation", n_points),
                     &n_points,
                     |b, _| {
                         b.iter(|| {
-                            black_box(spline_scipy.call1((queries_py.clone(),)).unwrap());
+                            black_box(
+                                spline_scipy
+                                    .call1((queries_py.clone(),))
+                                    .expect("Operation failed"),
+                            );
                         });
                     },
                 );
@@ -244,7 +272,8 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
                 &n_points,
                 |b, _| {
                     let interpolator =
-                        RBFInterpolator::new(&points.view(), &values.view(), *kernel, 1.0).unwrap();
+                        RBFInterpolator::new(&points.view(), &values.view(), *kernel, 1.0)
+                            .expect("Operation failed");
 
                     b.iter(|| black_box(interpolator.interpolate(&queries.view())));
                 },
@@ -254,19 +283,25 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
             #[cfg(feature = "scipy-comparison")]
             {
                 Python::with_gil(|py| {
-                    let scipy_interp = py.import("scipy.interpolate").unwrap();
-                    let numpy = py.import("numpy").unwrap();
+                    let scipy_interp = py.import("scipy.interpolate").expect("Operation failed");
+                    let numpy = py.import("numpy").expect("Operation failed");
 
                     // Convert to numpy arrays
                     let points_py = numpy
                         .call_method1("array", (points.clone().into_raw_vec(),))
-                        .unwrap();
-                    let points_py = points_py.call_method1("reshape", (n_points, 2)).unwrap();
-                    let values_py = numpy.call_method1("array", (values.to_vec(),)).unwrap();
+                        .expect("Operation failed");
+                    let points_py = points_py
+                        .call_method1("reshape", (n_points, 2))
+                        .expect("Operation failed");
+                    let values_py = numpy
+                        .call_method1("array", (values.to_vec(),))
+                        .expect("Operation failed");
                     let queries_py = numpy
                         .call_method1("array", (queries.clone().into_raw_vec(),))
-                        .unwrap();
-                    let queries_py = queries_py.call_method1("reshape", (100, 2)).unwrap();
+                        .expect("Operation failed");
+                    let queries_py = queries_py
+                        .call_method1("reshape", (100, 2))
+                        .expect("Operation failed");
 
                     // Map kernel names
                     let scipy_kernel = match *kernel_name {
@@ -281,12 +316,14 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
                         &n_points,
                         |b, _| {
                             b.iter(|| {
-                                let rbf = scipy_interp.getattr("RBFInterpolator").unwrap();
+                                let rbf = scipy_interp
+                                    .getattr("RBFInterpolator")
+                                    .expect("Operation failed");
                                 let interpolator = rbf
                                     .call1((points_py.clone(), values_py.clone()))
-                                    .unwrap()
+                                    .expect("Operation failed")
                                     .call_method1("__call__", (queries_py.clone(),))
-                                    .unwrap();
+                                    .expect("Operation failed");
                                 black_box(interpolator);
                             });
                         },
@@ -320,8 +357,8 @@ fn bench_large_scale_performance(c: &mut Criterion) {
         // B-spline interpolation
         if n_points <= 100_000 {
             group.bench_with_input(BenchmarkId::new("bspline", n_points), &n_points, |b, _| {
-                let bspline =
-                    BSpline::new(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate).unwrap();
+                let bspline = BSpline::new(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate)
+                    .expect("Operation failed");
                 b.iter(|| black_box(bspline.evaluate_array(&queries.view())));
             });
         }
@@ -376,7 +413,8 @@ fn bench_parallel_effectiveness(c: &mut Criterion) {
 
         // RBF interpolation (computationally intensive, good for parallelization)
         let interpolator =
-            RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).unwrap();
+            RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0)
+                .expect("Operation failed");
 
         group.throughput(Throughput::Elements(n_queries as u64));
         group.bench_with_input(

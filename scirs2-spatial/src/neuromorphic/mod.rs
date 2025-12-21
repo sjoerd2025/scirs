@@ -39,14 +39,14 @@
 //!
 //! let points = Array2::from_shape_vec((4, 2), vec![
 //!     0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! let mut clusterer = SpikingNeuralClusterer::new(2)
 //!     .with_spike_threshold(0.8)
 //!     .with_stdp_learning(true)
 //!     .with_lateral_inhibition(true);
 //!
-//! let (assignments, spike_events) = clusterer.fit(&points.view()).unwrap();
+//! let (assignments, spike_events) = clusterer.fit(&points.view()).expect("Operation failed");
 //! println!("Cluster assignments: {:?}", assignments);
 //! println!("Recorded {} spike events", spike_events.len());
 //! ```
@@ -58,12 +58,12 @@
 //!
 //! let points = Array2::from_shape_vec((4, 2), vec![
 //!     0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! let mut clusterer = HomeostaticNeuralClusterer::new(2, 2)
 //!     .with_homeostatic_params(0.1, 1000.0);
 //!
-//! let assignments = clusterer.fit(&points.view(), 50).unwrap();
+//! let assignments = clusterer.fit(&points.view(), 50).expect("Operation failed");
 //! println!("Homeostatic clustering results: {:?}", assignments);
 //! ```
 //!
@@ -81,7 +81,7 @@
 //!     1.0, 0.0, 0.0, 1.0,
 //!     0.0, 1.0, 1.0, 0.0,
 //!     1.0, 1.0, 0.0, 0.0
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //! let targets = Array1::from_vec(vec![0.0, 1.0, 1.0, 0.0]);
 //!
 //! # tokio_test::block_on(async {
@@ -89,7 +89,7 @@
 //!     &spatial_data.view(), &targets.view(), 50
 //! ).await.unwrap();
 //! println!("Training completed with final accuracy: {:.2}",
-//!          result.training_metrics.last().unwrap().accuracy);
+//!          result.training_metrics.last().expect("Operation failed").accuracy);
 //! # });
 //! ```
 //!
@@ -100,7 +100,7 @@
 //!
 //! let points = Array2::from_shape_vec((3, 2), vec![
 //!     0.0, 0.0, 1.0, 1.0, 2.0, 2.0
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! let mut processor = NeuromorphicProcessor::new()
 //!     .with_memristive_crossbar(true)
@@ -108,10 +108,10 @@
 //!     .with_crossbar_size(64, 64);
 //!
 //! // Encode spatial data as neuromorphic events
-//! let events = processor.encode_spatial_events(&points.view()).unwrap();
+//! let events = processor.encode_spatial_events(&points.view()).expect("Operation failed");
 //!
 //! // Process events through neuromorphic pipeline
-//! let processed_events = processor.process_events(&events).unwrap();
+//! let processed_events = processor.process_events(&events).expect("Operation failed");
 //! println!("Processed {} events", processed_events.len());
 //! ```
 //!
@@ -416,7 +416,11 @@ pub mod utils {
         }
 
         // Sort events by timestamp
-        events.sort_by(|a, b| a.timestamp().partial_cmp(&b.timestamp()).unwrap());
+        events.sort_by(|a, b| {
+            a.timestamp()
+                .partial_cmp(&b.timestamp())
+                .expect("Operation failed")
+        });
         Ok(events)
     }
 
@@ -430,7 +434,8 @@ pub mod utils {
         }
 
         let total_events = events.len();
-        let time_span = events.last().unwrap().timestamp() - events.first().unwrap().timestamp();
+        let time_span = events.last().expect("Operation failed").timestamp()
+            - events.first().expect("Operation failed").timestamp();
         let avg_rate = if time_span > 0.0 {
             total_events as f64 / time_span
         } else {
@@ -543,8 +548,9 @@ mod tests {
 
     #[test]
     fn test_utils_spatial_to_spikes() {
-        let data = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, -1.0, 0.5]).unwrap();
-        let events = utils::spatial_to_spikes(&data.view(), 1.0, 10.0).unwrap();
+        let data =
+            Array2::from_shape_vec((2, 2), vec![0.0, 1.0, -1.0, 0.5]).expect("Operation failed");
+        let events = utils::spatial_to_spikes(&data.view(), 1.0, 10.0).expect("Operation failed");
 
         // Should generate events for non-zero values
         assert!(!events.is_empty());

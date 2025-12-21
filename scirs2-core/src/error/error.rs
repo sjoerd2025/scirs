@@ -880,7 +880,7 @@ macro_rules! with_retry {
                     last_error = Some(error);
 
                     if attempts >= $max_retries {
-                        break Err(last_error.unwrap());
+                        break Err(last_error.expect("Operation failed"));
                     }
 
                     // Simple linear backoff

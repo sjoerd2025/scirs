@@ -53,11 +53,11 @@ use scirs2_core::ndarray::{Array1, ArrayView1};
 ///         atol: 1e-8,
 ///         ..Default::default()
 ///     }),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Access the solution
-/// let final_time = result.t.last().unwrap();
-/// let final_value = result.y.last().unwrap()[0];
+/// let final_time = result.t.last().expect("Operation failed");
+/// let final_value = result.y.last().expect("Operation failed")[0];
 /// println!("y({}) = {}", final_time, final_value);
 /// ```
 ///
@@ -89,7 +89,7 @@ use scirs2_core::ndarray::{Array1, ArrayView1};
 ///         mass_matrix: Some(mass),
 ///         ..Default::default()
 ///     }),
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn solve_ivp<F, Func>(
@@ -114,7 +114,7 @@ where
     let [t_start, t_end] = t_span;
     let h0 = opts.h0.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(0.01).unwrap() // 1% of interval
+        _span * F::from_f64(0.01).expect("Operation failed") // 1% of interval
     });
 
     // Dispatch to the appropriate solver based on the method
@@ -133,13 +133,13 @@ where
                 // If h0 not set, use a slightly larger default than other methods
                 h0: opts.h0.or_else(|| {
                     let _span = t_span[1] - t_span[0];
-                    Some(_span * F::from_f64(0.05).unwrap()) // 5% of interval instead of default 1%
+                    Some(_span * F::from_f64(0.05).expect("Operation failed")) // 5% of interval instead of default 1%
                 }),
                 // If min_step not set, use reasonable minimum (keeping consistency)
                 min_step: opts.min_step.or_else(|| {
                     let _span = t_span[1] - t_span[0];
                     // 0.01% of _span as default - match the implementation in lsoda_method
-                    Some(_span * F::from_f64(0.0001).unwrap())
+                    Some(_span * F::from_f64(0.0001).expect("Operation failed"))
                 }),
                 // Otherwise use the original options
                 ..opts
@@ -154,12 +154,13 @@ where
                 // If h0 not set, use a slightly larger default than other methods
                 h0: opts.h0.or_else(|| {
                     let _span = t_span[1] - t_span[0];
-                    Some(_span * F::from_f64(0.05).unwrap()) // 5% of interval
+                    Some(_span * F::from_f64(0.05).expect("Operation failed")) // 5% of interval
                 }),
                 // If min_step not set, use reasonable minimum
                 min_step: opts.min_step.or_else(|| {
                     let _span = t_span[1] - t_span[0];
-                    Some(_span * F::from_f64(0.0001).unwrap()) // 0.01% of _span
+                    Some(_span * F::from_f64(0.0001).expect("Operation failed"))
+                    // 0.01% of _span
                 }),
                 // Set more generous max_steps by default for the enhanced version
                 max_steps: if opts.max_steps == 500 {
@@ -180,7 +181,7 @@ where
                 h0: opts.h0.or_else(|| {
                     let _span = t_span[1] - t_span[0];
                     // Start with 1% of the interval which is more conservative for stiff problems
-                    Some(_span * F::from_f64(0.01).unwrap())
+                    Some(_span * F::from_f64(0.01).expect("Operation failed"))
                 }),
                 // More generous max_steps allowance for better convergence
                 max_steps: if opts.max_steps == 500 {
@@ -268,7 +269,7 @@ where
                     let [t_start, t_end] = t_span;
                     let h0 = new_opts.h0.unwrap_or_else(|| {
                         let _span = t_end - t_start;
-                        _span * F::from_f64(0.01).unwrap() // 1% of interval
+                        _span * F::from_f64(0.01).expect("Operation failed") // 1% of interval
                     });
 
                     match new_opts.method {
@@ -339,7 +340,7 @@ where
                     // Calculate default initial step size if not provided
                     let h0 = new_opts.h0.unwrap_or_else(|| {
                         let _span = t_span[1] - t_span[0];
-                        _span * F::from_f64(0.01).unwrap() // 1% of interval
+                        _span * F::from_f64(0.01).expect("Operation failed") // 1% of interval
                     });
 
                     // Dispatch directly to the appropriate method
@@ -442,7 +443,7 @@ where
 ///     array![1.0, 0.0],   // initial condition
 ///     event_funcs,
 ///     options,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Access the detected events
 /// for event in result.events.events {
@@ -530,7 +531,7 @@ where
         let mut exact_match = false;
 
         for (i, &t) in base_result.t.iter().enumerate() {
-            if (t - last_event.time).abs() < F::from_f64(1e-10).unwrap() {
+            if (t - last_event.time).abs() < F::from_f64(1e-10).expect("Operation failed") {
                 event_index = i + 1;
                 exact_match = true;
                 break;
@@ -548,7 +549,7 @@ where
         if !exact_match && event_index > 0 {
             // Only add if the event time is different from the last time point
             let last_t = truncated_t.last().copied().unwrap_or(F::zero());
-            if (last_t - last_event.time).abs() > F::from_f64(1e-10).unwrap() {
+            if (last_t - last_event.time).abs() > F::from_f64(1e-10).expect("Operation failed") {
                 truncated_t.push(last_event.time);
                 truncated_y.push(last_event.state.clone());
             }
@@ -724,7 +725,7 @@ where
     event_handler.initialize(current_t, &current_y, &event_funcs)?;
 
     // Integration parameters
-    let max_step_size = (t_end - current_t) / F::from_f64(100.0).unwrap(); // Start with reasonable step size
+    let max_step_size = (t_end - current_t) / F::from_f64(100.0).expect("Operation failed"); // Start with reasonable step size
 
     while current_t < t_end {
         // Calculate next integration target

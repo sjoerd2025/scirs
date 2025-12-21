@@ -444,7 +444,7 @@ pub mod utils {
         let rmse = (values.iter().map(|x| x.powi(2)).sum::<f64>() / values.len() as f64).sqrt();
 
         let mut sorted_values = values.to_vec();
-        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let median = if sorted_values.len() % 2 == 0 {
             (sorted_values[sorted_values.len() / 2 - 1] + sorted_values[sorted_values.len() / 2]) / 2.0

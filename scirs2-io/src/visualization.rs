@@ -359,12 +359,12 @@ impl VisualizationExporter for PlotlyExporter {
                     })
                 }
                 PlotType::Heatmap => {
-                    let cols = series.x.as_ref().unwrap()[0] as usize;
+                    let cols = series.x.as_ref().expect("Operation failed")[0] as usize;
                     let _rows = series.y[0] as usize;
                     let z_data: Vec<Vec<f64>> = series
                         .z
                         .as_ref()
-                        .unwrap()
+                        .expect("Operation failed")
                         .chunks(cols)
                         .map(|chunk| chunk.to_vec())
                         .collect();
@@ -710,7 +710,7 @@ mod tests {
             .to_string(VisualizationFormat::PlotlyJson);
 
         assert!(result.is_ok());
-        let json_str = result.unwrap();
+        let json_str = result.expect("Operation failed");
         assert!(json_str.contains("Test Plot"));
         assert!(json_str.contains("y = x²"));
     }
@@ -726,7 +726,7 @@ mod tests {
             .to_string(VisualizationFormat::MatplotlibPython);
 
         assert!(result.is_ok());
-        let script = result.unwrap();
+        let script = result.expect("Operation failed");
         assert!(script.contains("import matplotlib.pyplot"));
         assert!(script.contains("ax.scatter"));
     }

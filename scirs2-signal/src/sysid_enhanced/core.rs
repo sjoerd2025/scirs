@@ -341,7 +341,7 @@ pub fn enhanced_order_selection(
 /// Compute quantile for outlier detection
 fn compute_quantile(data: &Array1<f64>, q: f64) -> f64 {
     let mut sorted_data: Vec<f64> = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let index = (q * (sorted_data.len() - 1) as f64).round() as usize;
     sorted_data[index.min(sorted_data.len() - 1)]
@@ -461,8 +461,8 @@ pub fn identify_state_space(
     // Placeholder - should be implemented with subspace identification methods
     let ss = crate::lti::StateSpace {
         a: Array2::eye(2),
-        b: Array2::from_shape_vec((2, 1), vec![1.0, 0.5]).unwrap(),
-        c: Array2::from_shape_vec((1, 2), vec![1.0, 0.0]).unwrap(),
+        b: Array2::from_shape_vec((2, 1), vec![1.0, 0.5]).expect("Operation failed"),
+        c: Array2::from_shape_vec((1, 2), vec![1.0, 0.0]).expect("Operation failed"),
         d: Array2::zeros((1, 1)),
     };
 
@@ -542,7 +542,7 @@ mod tests {
         let result = enhanced_system_identification(&input, &output, &config);
 
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.validation.fit_percentage > 0.0);
     }
 

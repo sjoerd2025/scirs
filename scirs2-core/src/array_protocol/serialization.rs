@@ -168,7 +168,7 @@ impl ModelSerializer {
             Some(
                 optimizerpath
                     .file_name()
-                    .unwrap()
+                    .expect("Operation failed")
                     .to_string_lossy()
                     .to_string(),
             )
@@ -688,7 +688,7 @@ pub fn load_checkpoint(path: impl AsRef<Path>) -> CoreResult<ModelCheckpoint> {
     let model_version = format!("epoch_{epoch}");
     let (model, optimizer) = serializer.loadmodel(model_name, &model_version)?;
 
-    Ok((model, optimizer.unwrap(), epoch, metrics))
+    Ok((model, optimizer.expect("Operation failed"), epoch, metrics))
 }
 
 #[cfg(test)]
@@ -742,7 +742,9 @@ mod tests {
         }
 
         // Load model
-        let (loadedmodel, loaded_optimizer) = serializer.loadmodel("test_model", "v1").unwrap();
+        let (loadedmodel, loaded_optimizer) = serializer
+            .loadmodel("test_model", "v1")
+            .expect("Operation failed");
 
         // Check model
         assert_eq!(loadedmodel.layers().len(), 2);
@@ -798,7 +800,8 @@ mod tests {
             return;
         }
 
-        let (loadedmodel, loaded_optimizer, loaded_epoch, loaded_metrics) = result.unwrap();
+        let (loadedmodel, loaded_optimizer, loaded_epoch, loaded_metrics) =
+            result.expect("Operation failed");
 
         // Check loaded data
         assert_eq!(loadedmodel.layers().len(), 1);

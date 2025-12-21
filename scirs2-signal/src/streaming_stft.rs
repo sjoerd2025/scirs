@@ -401,7 +401,7 @@ impl StreamingStft {
     /// Compute FFT of windowed frame
     fn compute_fft(&self, windowedframe: &Array1<f64>) -> SignalResult<Array1<Complex64>> {
         // Convert to slice for FFT function
-        let frame_slice = windowed_frame.as_slice().unwrap();
+        let frame_slice = windowed_frame.as_slice().expect("Operation failed");
 
         // Compute FFT
         let fft_result = scirs2_fft::fft(frame_slice, None)
@@ -588,7 +588,7 @@ mod tests {
     #[test]
     fn test_streaming_stft_creation() {
         let config = StreamingStftConfig::default();
-        let stft = StreamingStft::new(config).unwrap();
+        let stft = StreamingStft::new(config).expect("Operation failed");
 
         assert_eq!(stft.config.frame_length, 512);
         assert_eq!(stft.config.hop_length, 256);
@@ -603,7 +603,7 @@ mod tests {
             ..Default::default()
         };
 
-        let mut stft = StreamingStft::new(config).unwrap();
+        let mut stft = StreamingStft::new(config).expect("Operation failed");
 
         // Generate a test signal
         let fs = 1000.0;
@@ -617,10 +617,10 @@ mod tests {
         let input_frame = Array1::from(input);
 
         // Process frame
-        let result = stft.process_frame(&input_frame).unwrap();
+        let result = stft.process_frame(&input_frame).expect("Operation failed");
         assert!(result.is_some());
 
-        let spectrum = result.unwrap();
+        let spectrum = result.expect("Operation failed");
         assert_eq!(spectrum.len(), 129); // 256/2 + 1
     }
 
@@ -634,13 +634,13 @@ mod tests {
             ..Default::default()
         };
 
-        let mut stft = StreamingStft::new(config).unwrap();
+        let mut stft = StreamingStft::new(config).expect("Operation failed");
 
         let input = Array1::from_vec(vec![1.0; 128]);
-        let magnitude_result = stft.process_magnitude_frame(&input).unwrap();
+        let magnitude_result = stft.process_magnitude_frame(&input).expect("Operation failed");
 
         assert!(magnitude_result.is_some());
-        let magnitude_spectrum = magnitude_result.unwrap();
+        let magnitude_spectrum = magnitude_result.expect("Operation failed");
         assert_eq!(magnitude_spectrum.len(), 65); // 128/2 + 1
     }
 
@@ -653,10 +653,10 @@ mod tests {
             ..Default::default()
         };
 
-        let mut rt_stft = RealTimeStft::new(config, 128, 10).unwrap();
+        let mut rt_stft = RealTimeStft::new(config, 128, 10).expect("Operation failed");
 
         let input_block = Array1::from_vec(vec![0.5; 128]);
-        let new_spectra = rt_stft.process_block(&input_block).unwrap();
+        let new_spectra = rt_stft.process_block(&input_block).expect("Operation failed");
 
         // Might not generate spectrum on first block due to buffering
         assert!(new_spectra <= 1);
@@ -671,7 +671,7 @@ mod tests {
             ..Default::default()
         };
 
-        let stft = StreamingStft::new(config).unwrap();
+        let stft = StreamingStft::new(config).expect("Operation failed");
 
         let latency_samples = stft.get_latency_samples();
         assert_eq!(latency_samples, 512); // frame_length/2 + hop_length = 256 + 256
@@ -689,10 +689,10 @@ mod tests {
             ..Default::default()
         };
 
-        let mut stft = StreamingStft::new(config).unwrap();
+        let mut stft = StreamingStft::new(config).expect("Operation failed");
 
         let input_data = Array1::from_vec(vec![1.0; 512]);
-        let results = stft.process_batch(&input_data, 64).unwrap();
+        let results = stft.process_batch(&input_data, 64).expect("Operation failed");
 
         // Should generate multiple spectra
         assert!(!results.is_empty());
@@ -707,14 +707,14 @@ mod tests {
             ..Default::default()
         };
 
-        let mut stft = StreamingStft::new(config).unwrap();
+        let mut stft = StreamingStft::new(config).expect("Operation failed");
 
         // Add some data
         let input = Array1::from_vec(vec![1.0; 100]);
         let _ = stft.process_frame(&input);
 
         // Flush remaining data
-        let flushed_results = stft.flush().unwrap();
+        let flushed_results = stft.flush().expect("Operation failed");
 
         // Should process remaining data
         assert!(!flushed_results.is_empty() || stft.input_buffer.is_empty());

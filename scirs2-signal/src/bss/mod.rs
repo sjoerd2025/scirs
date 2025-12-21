@@ -163,7 +163,7 @@ pub fn sort_components(
     }
 
     // Sort components by variance
-    variances.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    variances.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     // Reorder components
     let mut sorted_sources = Array2::<f64>::zeros(sources.dim());
@@ -310,7 +310,7 @@ pub fn estimate_source_count(signals: &Array2<f64>, threshold: f64) -> SignalRes
     let (n_signals, n_samples) = signals.dim();
 
     // Center the _signals
-    let means = signals.mean_axis(Axis(1)).unwrap();
+    let means = signals.mean_axis(Axis(1)).expect("Operation failed");
     let mut centered = signals.clone();
 
     for i in 0..n_signals {

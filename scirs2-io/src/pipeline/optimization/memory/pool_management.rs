@@ -217,7 +217,7 @@ mod tests {
             ..Default::default()
         };
 
-        let strategy = manager.determine_optimal_strategy(1024, &system_metrics).unwrap();
+        let strategy = manager.determine_optimal_strategy(1024, &system_metrics).expect("Operation failed");
         matches!(strategy, MemoryStrategy::Standard);
     }
 
@@ -229,7 +229,7 @@ mod tests {
         
         let stats = manager.get_pool_stats(0);
         assert!(stats.is_some());
-        assert_eq!(stats.unwrap().pool_size, 1024 * 1024);
+        assert_eq!(stats.expect("Operation failed").pool_size, 1024 * 1024);
     }
 
     #[test]

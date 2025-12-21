@@ -12,7 +12,8 @@ fn main() {
     println!("Running OPTICS on {} data points...", data.shape()[0]);
 
     // Run OPTICS algorithm
-    let result = optics(data.view(), 5, None, Some(DistanceMetric::Euclidean)).unwrap();
+    let result =
+        optics(data.view(), 5, None, Some(DistanceMetric::Euclidean)).expect("Operation failed");
 
     println!("OPTICS ordering complete.");
     println!(
@@ -47,8 +48,8 @@ fn generate_data() -> Array2<f64> {
     // Generate three clusters with different densities
 
     // Dense cluster (30 points)
-    let x_dist1 = Uniform::new(-0.3, 0.3).unwrap();
-    let y_dist1 = Uniform::new(-0.3, 0.3).unwrap();
+    let x_dist1 = Uniform::new(-0.3, 0.3).expect("Operation failed");
+    let y_dist1 = Uniform::new(-0.3, 0.3).expect("Operation failed");
     let mut data = Vec::with_capacity(100);
 
     for _ in 0..30 {
@@ -59,8 +60,8 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Medium density cluster (20 points)
-    let x_dist2 = Uniform::new(-0.5, 0.5).unwrap();
-    let y_dist2 = Uniform::new(-0.5, 0.5).unwrap();
+    let x_dist2 = Uniform::new(-0.5, 0.5).expect("Operation failed");
+    let y_dist2 = Uniform::new(-0.5, 0.5).expect("Operation failed");
     for _ in 0..20 {
         let x = rng.sample(x_dist2) + 4.0;
         let y = rng.sample(y_dist2) + 1.0;
@@ -69,8 +70,8 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Sparse cluster (15 points)
-    let x_dist3 = Uniform::new(-1.0, 1.0).unwrap();
-    let y_dist3 = Uniform::new(-1.0, 1.0).unwrap();
+    let x_dist3 = Uniform::new(-1.0, 1.0).expect("Operation failed");
+    let y_dist3 = Uniform::new(-1.0, 1.0).expect("Operation failed");
     for _ in 0..15 {
         let x = rng.sample(x_dist3) + 2.5;
         let y = rng.sample(y_dist3) + 5.0;
@@ -79,8 +80,8 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Add some noise (10 points)
-    let x_noise = Uniform::new(-1.0, 7.0).unwrap();
-    let y_noise = Uniform::new(-1.0, 7.0).unwrap();
+    let x_noise = Uniform::new(-1.0, 7.0).expect("Operation failed");
+    let y_noise = Uniform::new(-1.0, 7.0).expect("Operation failed");
     for _ in 0..10 {
         let x = rng.sample(x_noise);
         let y = rng.sample(y_noise);
@@ -89,7 +90,7 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Convert to ndarray
-    Array2::from_shape_vec((75, 2), data).unwrap()
+    Array2::from_shape_vec((75, 2), data).expect("Operation failed")
 }
 
 #[allow(dead_code)]

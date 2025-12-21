@@ -69,10 +69,14 @@ fn test_additional_metrics_tracking() {
     optimizer.add_additional_value("recall", 0.83);
 
     // Check additional metrics
-    let precision_history = optimizer.additional_metric_history("precision").unwrap();
+    let precision_history = optimizer
+        .additional_metric_history("precision")
+        .expect("Operation failed");
     assert_eq!(precision_history, &[0.82, 0.87]);
 
-    let recall_history = optimizer.additional_metric_history("recall").unwrap();
+    let recall_history = optimizer
+        .additional_metric_history("recall")
+        .expect("Operation failed");
     assert_eq!(recall_history, &[0.78, 0.83]);
 
     assert!(optimizer.additional_metric_history("nonexistent").is_none());
@@ -140,7 +144,7 @@ fn test_real_world_workflow() {
     let mut _scheduler_updated = false;
 
     for (epoch, y_pred) in predictions.iter().enumerate() {
-        let accuracy = accuracy_score(&y_true, y_pred).unwrap();
+        let accuracy = accuracy_score(&y_true, y_pred).expect("Operation failed");
 
         // Track if this is an improvement
         let is_improvement = optimizer.is_improvement(accuracy);
@@ -157,8 +161,8 @@ fn test_real_world_workflow() {
             let recent_best = optimizer.history()[optimizer.history().len() - 3..]
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .unwrap()
+                .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
+                .expect("Operation failed")
                 .0;
 
             if recent_best == 0 {

@@ -116,7 +116,7 @@ impl NelderMeadOptimizer {
         while iterations < self.max_iterations {
             // Sort simplex by objective values
             let mut indices: Vec<usize> = (0..simplex.len()).collect();
-            indices.sort_by(|&i, &j| values[i].partial_cmp(&values[j]).unwrap());
+            indices.sort_by(|&i, &j| values[i].partial_cmp(&values[j]).expect("Operation failed"));
 
             let best_idx = indices[0];
             let worst_idx = indices[n];
@@ -195,7 +195,7 @@ impl NelderMeadOptimizer {
 
         // Max iterations reached
         let mut indices: Vec<usize> = (0..simplex.len()).collect();
-        indices.sort_by(|&i, &j| values[i].partial_cmp(&values[j]).unwrap());
+        indices.sort_by(|&i, &j| values[i].partial_cmp(&values[j]).expect("Operation failed"));
         let best_idx = indices[0];
 
         Ok(OptimizationResult {
@@ -404,7 +404,7 @@ impl ImpliedVolatilitySurface {
             .keys()
             .map(|(k, _)| k.parse::<f64>().unwrap_or(0.0))
             .collect();
-        strikes.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        strikes.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         strikes.dedup();
         strikes
     }
@@ -416,7 +416,7 @@ impl ImpliedVolatilitySurface {
             .keys()
             .map(|(_, t)| t.parse::<f64>().unwrap_or(0.0))
             .collect();
-        maturities.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        maturities.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         maturities.dedup();
         maturities
     }
@@ -744,7 +744,8 @@ mod tests {
 
     #[test]
     fn test_option_quote_creation() {
-        let quote = OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.5)).unwrap();
+        let quote = OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.5))
+            .expect("Operation failed");
         assert_eq!(quote.strike, 100.0);
         assert_eq!(quote.maturity, 1.0);
         assert_eq!(quote.market_price, 10.0);
@@ -752,8 +753,10 @@ mod tests {
 
     #[test]
     fn test_option_quote_weight() {
-        let quote1 = OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.5)).unwrap();
-        let quote2 = OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.1)).unwrap();
+        let quote1 = OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.5))
+            .expect("Operation failed");
+        let quote2 = OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.1))
+            .expect("Operation failed");
 
         // Tighter spread should have higher weight
         assert!(quote2.weight() > quote1.weight());
@@ -792,12 +795,14 @@ mod tests {
     #[test]
     fn test_loss_function_mse() {
         let quotes = vec![
-            OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, None).unwrap(),
-            OptionQuote::new(100.0, 1.0, OptionType::Call, 12.0, None).unwrap(),
+            OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, None).expect("Operation failed"),
+            OptionQuote::new(100.0, 1.0, OptionType::Call, 12.0, None).expect("Operation failed"),
         ];
         let model_prices = vec![10.5, 11.5];
 
-        let loss = LossFunction::MSE.calculate(&quotes, &model_prices).unwrap();
+        let loss = LossFunction::MSE
+            .calculate(&quotes, &model_prices)
+            .expect("Operation failed");
         let expected = ((10.0_f64 - 10.5).powi(2) + (12.0_f64 - 11.5).powi(2)) / 2.0;
 
         assert!((loss - expected).abs() < 1e-10);
@@ -806,14 +811,16 @@ mod tests {
     #[test]
     fn test_loss_function_weighted_mse() {
         let quotes = vec![
-            OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.5)).unwrap(),
-            OptionQuote::new(100.0, 1.0, OptionType::Call, 12.0, Some(0.1)).unwrap(),
+            OptionQuote::new(100.0, 1.0, OptionType::Call, 10.0, Some(0.5))
+                .expect("Operation failed"),
+            OptionQuote::new(100.0, 1.0, OptionType::Call, 12.0, Some(0.1))
+                .expect("Operation failed"),
         ];
         let model_prices = vec![10.5, 11.5];
 
         let loss = LossFunction::WeightedMSE
             .calculate(&quotes, &model_prices)
-            .unwrap();
+            .expect("Operation failed");
 
         // Second quote should contribute more due to tighter spread
         let w1 = 1.0 / 0.5;
@@ -863,7 +870,7 @@ mod tests {
         surface.add_quote(100.0, 1.0, 0.20, Some(0.5));
         surface.add_quote(110.0, 1.0, 0.22, Some(0.3));
 
-        let quotes = surface.to_option_quotes().unwrap();
+        let quotes = surface.to_option_quotes().expect("Operation failed");
         assert_eq!(quotes.len(), 2);
         assert!(quotes[0].market_price > 0.0);
     }
@@ -883,15 +890,15 @@ mod tests {
             .with_max_iterations(100)
             .with_tolerance(1e-4);
 
-        let result = calibrator.calibrate().unwrap();
+        let result = calibrator.calibrate().expect("Operation failed");
 
         // Check that parameters are in reasonable ranges
-        assert!(result.get_parameter("kappa").unwrap() > 0.0);
-        assert!(result.get_parameter("theta").unwrap() > 0.0);
-        assert!(result.get_parameter("sigma").unwrap() > 0.0);
-        assert!(result.get_parameter("rho").unwrap() > -1.0);
-        assert!(result.get_parameter("rho").unwrap() < 1.0);
-        assert!(result.get_parameter("v0").unwrap() > 0.0);
+        assert!(result.get_parameter("kappa").expect("Operation failed") > 0.0);
+        assert!(result.get_parameter("theta").expect("Operation failed") > 0.0);
+        assert!(result.get_parameter("sigma").expect("Operation failed") > 0.0);
+        assert!(result.get_parameter("rho").expect("Operation failed") > -1.0);
+        assert!(result.get_parameter("rho").expect("Operation failed") < 1.0);
+        assert!(result.get_parameter("v0").expect("Operation failed") > 0.0);
 
         // Check that loss is reasonable
         assert!(result.loss >= 0.0);
@@ -915,7 +922,7 @@ mod tests {
         let optimizer =
             NelderMeadOptimizer::new(vec![0.0, 0.0], vec![(-5.0, 5.0), (-5.0, 5.0)], 1000, 1e-6);
 
-        let result = optimizer.optimize(&rosenbrock).unwrap();
+        let result = optimizer.optimize(&rosenbrock).expect("Operation failed");
 
         // Should converge close to (1, 1)
         assert!((result.parameters[0] - 1.0).abs() < 0.1);

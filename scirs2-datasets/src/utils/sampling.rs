@@ -36,12 +36,12 @@ use std::collections::HashMap;
 /// use scirs2_datasets::utils::random_sample;
 ///
 /// // Sample 5 indices from 10 total samples without replacement
-/// let indices = random_sample(10, 5, false, Some(42)).unwrap();
+/// let indices = random_sample(10, 5, false, Some(42)).expect("Operation failed");
 /// assert_eq!(indices.len(), 5);
 /// assert!(indices.iter().all(|&i| i < 10));
 ///
 /// // Bootstrap sampling (with replacement)
-/// let bootstrap_indices = random_sample(10, 15, true, Some(42)).unwrap();
+/// let bootstrap_indices = random_sample(10, 15, true, Some(42)).expect("Operation failed");
 /// assert_eq!(bootstrap_indices.len(), 15);
 /// ```
 #[allow(dead_code)]
@@ -82,7 +82,7 @@ pub fn random_sample(
     if replace {
         // Bootstrap sampling (with replacement)
         for _ in 0..sample_size {
-            indices.push(rng.sample(Uniform::new(0, n_samples).unwrap()));
+            indices.push(rng.sample(Uniform::new(0, n_samples).expect("Operation failed")));
         }
     } else {
         // Sampling without replacement
@@ -117,7 +117,7 @@ pub fn random_sample(
 /// use scirs2_datasets::utils::stratified_sample;
 ///
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0]);
-/// let indices = stratified_sample(&targets, 6, Some(42)).unwrap();
+/// let indices = stratified_sample(&targets, 6, Some(42)).expect("Operation failed");
 /// assert_eq!(indices.len(), 6);
 ///
 /// // Check that the sample maintains class proportions
@@ -177,7 +177,7 @@ pub fn stratified_sample(
     class_list.sort();
 
     for (i, &class) in class_list.iter().enumerate() {
-        let class_samples = class_indices.get(&class).unwrap();
+        let class_samples = class_indices.get(&class).expect("Operation failed");
         let samples_for_this_class = if i < remainder {
             base_samples_per_class + 1
         } else {
@@ -235,7 +235,7 @@ pub fn stratified_sample(
 ///
 /// // Give higher weights to the last few samples
 /// let weights = Array1::from(vec![0.1, 0.1, 0.1, 0.8, 0.9, 1.0]);
-/// let indices = importance_sample(&weights, 3, false, Some(42)).unwrap();
+/// let indices = importance_sample(&weights, 3, false, Some(42)).expect("Operation failed");
 /// assert_eq!(indices.len(), 3);
 ///
 /// // Higher weighted samples should be more likely to be selected
@@ -364,7 +364,7 @@ pub fn importance_sample(
 /// ```rust
 /// use scirs2_datasets::utils::bootstrap_sample;
 ///
-/// let bootstrap_indices = bootstrap_sample(100, 100, Some(42)).unwrap();
+/// let bootstrap_indices = bootstrap_sample(100, 100, Some(42)).expect("Operation failed");
 /// assert_eq!(bootstrap_indices.len(), 100);
 ///
 /// // Some indices should appear multiple times (with high probability)
@@ -403,7 +403,7 @@ pub fn bootstrap_sample(
 /// ```rust
 /// use scirs2_datasets::utils::multiple_bootstrap_samples;
 ///
-/// let bootstrap_samples = multiple_bootstrap_samples(50, 50, 10, Some(42)).unwrap();
+/// let bootstrap_samples = multiple_bootstrap_samples(50, 50, 10, Some(42)).expect("Operation failed");
 /// assert_eq!(bootstrap_samples.len(), 10);
 /// assert!(bootstrap_samples.iter().all(|sample| sample.len() == 50));
 /// ```
@@ -447,7 +447,7 @@ mod tests {
 
     #[test]
     fn test_random_sample_without_replacement() {
-        let indices = random_sample(10, 5, false, Some(42)).unwrap();
+        let indices = random_sample(10, 5, false, Some(42)).expect("Operation failed");
 
         assert_eq!(indices.len(), 5);
         assert!(indices.iter().all(|&i| i < 10));
@@ -459,7 +459,7 @@ mod tests {
 
     #[test]
     fn test_random_sample_with_replacement() {
-        let indices = random_sample(5, 10, true, Some(42)).unwrap();
+        let indices = random_sample(5, 10, true, Some(42)).expect("Operation failed");
 
         assert_eq!(indices.len(), 10);
         assert!(indices.iter().all(|&i| i < 5));
@@ -484,7 +484,7 @@ mod tests {
     #[test]
     fn test_stratified_sample() {
         let targets = array![0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0]; // 2, 3, 3 samples per class
-        let indices = stratified_sample(&targets, 6, Some(42)).unwrap();
+        let indices = stratified_sample(&targets, 6, Some(42)).expect("Operation failed");
 
         assert_eq!(indices.len(), 6);
 
@@ -509,7 +509,7 @@ mod tests {
     #[test]
     fn test_importance_sample() {
         let weights = array![0.1, 0.1, 0.1, 0.8, 0.9, 1.0]; // Higher weights at the end
-        let indices = importance_sample(&weights, 3, false, Some(42)).unwrap();
+        let indices = importance_sample(&weights, 3, false, Some(42)).expect("Operation failed");
 
         assert_eq!(indices.len(), 3);
         assert!(indices.iter().all(|&i| i < 6));
@@ -533,7 +533,7 @@ mod tests {
 
     #[test]
     fn test_bootstrap_sample() {
-        let indices = bootstrap_sample(20, 20, Some(42)).unwrap();
+        let indices = bootstrap_sample(20, 20, Some(42)).expect("Operation failed");
 
         assert_eq!(indices.len(), 20);
         assert!(indices.iter().all(|&i| i < 20));
@@ -545,7 +545,7 @@ mod tests {
 
     #[test]
     fn test_multiple_bootstrap_samples() {
-        let samples = multiple_bootstrap_samples(10, 8, 5, Some(42)).unwrap();
+        let samples = multiple_bootstrap_samples(10, 8, 5, Some(42)).expect("Operation failed");
 
         assert_eq!(samples.len(), 5);
         assert!(samples.iter().all(|sample| sample.len() == 8));

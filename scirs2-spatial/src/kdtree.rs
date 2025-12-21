@@ -23,14 +23,14 @@
 //!
 //! // Create a KD-Tree with points in 2D space
 //! let points = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
-//! let kdtree = KDTree::new(&points).unwrap();
+//! let kdtree = KDTree::new(&points).expect("Operation failed");
 //!
 //! // Find the nearest neighbor to [4.0, 5.0]
-//! let (idx, dist) = kdtree.query(&[4.0, 5.0], 1).unwrap();
+//! let (idx, dist) = kdtree.query(&[4.0, 5.0], 1).expect("Operation failed");
 //! assert_eq!(idx.len(), 1); // Should return exactly one neighbor
 //!
 //! // Find all points within radius 3.0 of [4.0, 5.0]
-//! let (indices, distances) = kdtree.query_radius(&[4.0, 5.0], 3.0).unwrap();
+//! let (indices, distances) = kdtree.query_radius(&[4.0, 5.0], 3.0).expect("Operation failed");
 //! ```
 //!
 //! # Advanced Usage
@@ -45,10 +45,10 @@
 //! // Create a KD-Tree with Manhattan distance metric
 //! let points = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
 //! let metric = ManhattanDistance::new();
-//! let kdtree = KDTree::with_metric(&points, metric).unwrap();
+//! let kdtree = KDTree::with_metric(&points, metric).expect("Operation failed");
 //!
 //! // Find the nearest neighbor to [4.0, 5.0] using Manhattan distance
-//! let (idx, dist) = kdtree.query(&[4.0, 5.0], 1).unwrap();
+//! let (idx, dist) = kdtree.query(&[4.0, 5.0], 1).expect("Operation failed");
 //! ```
 //!
 //! Using custom leaf size for performance tuning:
@@ -61,7 +61,7 @@
 //! let points = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],
 //!                      [9.0, 10.0], [11.0, 12.0], [13.0, 14.0], [15.0, 16.0]];
 //! let leafsize = 2; // Default is 16
-//! let kdtree = KDTree::with_leaf_size(&points, leafsize).unwrap();
+//! let kdtree = KDTree::with_leaf_size(&points, leafsize).expect("Operation failed");
 //! ```
 
 use crate::distance::{Distance, EuclideanDistance};
@@ -472,10 +472,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     ///
     /// // Create points for the KDTree - use the exact same points from test_kdtree_with_custom_leaf_size
     /// let points = array![[2.0, 3.0], [5.0, 4.0], [9.0, 6.0], [4.0, 7.0], [8.0, 1.0], [7.0, 2.0]];
-    /// let kdtree = KDTree::new(&points).unwrap();
+    /// let kdtree = KDTree::new(&points).expect("Operation failed");
     ///
     /// // Find the 2 nearest neighbors to [0.5, 0.5]
-    /// let (indices, distances) = kdtree.query(&[0.5, 0.5], 2).unwrap();
+    /// let (indices, distances) = kdtree.query(&[0.5, 0.5], 2).expect("Operation failed");
     /// assert_eq!(indices.len(), 2);
     /// assert_eq!(distances.len(), 2);
     /// ```
@@ -929,7 +929,7 @@ mod tests {
             [7.0, 2.0],
         ]);
 
-        let kdtree = KDTree::new(&points).unwrap();
+        let kdtree = KDTree::new(&points).expect("Operation failed");
 
         // Check that the tree has the correct number of nodes
         assert_eq!(kdtree.nodes.len(), points.nrows());
@@ -956,10 +956,10 @@ mod tests {
             [7.0, 2.0],
         ]);
 
-        let kdtree = KDTree::new(&points).unwrap();
+        let kdtree = KDTree::new(&points).expect("Operation failed");
 
         // Query for nearest neighbor to [3.0, 5.0]
-        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
+        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).expect("Operation failed");
         assert_eq!(indices.len(), 1);
         assert_eq!(distances.len(), 1);
 
@@ -1003,10 +1003,10 @@ mod tests {
             [7.0, 2.0],
         ]);
 
-        let kdtree = KDTree::new(&points).unwrap();
+        let kdtree = KDTree::new(&points).expect("Operation failed");
 
         // Query for 3 nearest neighbors to [3.0, 5.0]
-        let (indices, distances) = kdtree.query(&[3.0, 5.0], 3).unwrap();
+        let (indices, distances) = kdtree.query(&[3.0, 5.0], 3).expect("Operation failed");
         assert_eq!(indices.len(), 3);
         assert_eq!(distances.len(), 3);
 
@@ -1050,10 +1050,12 @@ mod tests {
             [7.0, 2.0],
         ]);
 
-        let kdtree = KDTree::new(&points).unwrap();
+        let kdtree = KDTree::new(&points).expect("Operation failed");
 
         // Query for points within radius 3.0 of [3.0, 5.0]
-        let (indices, distances) = kdtree.query_radius(&[3.0, 5.0], 3.0).unwrap();
+        let (indices, distances) = kdtree
+            .query_radius(&[3.0, 5.0], 3.0)
+            .expect("Operation failed");
 
         // Calculate expected results
         let query = [3.0, 5.0];
@@ -1113,10 +1115,12 @@ mod tests {
             [7.0, 2.0],
         ]);
 
-        let kdtree = KDTree::new(&points).unwrap();
+        let kdtree = KDTree::new(&points).expect("Operation failed");
 
         // Count points within radius 3.0 of [3.0, 5.0]
-        let count = kdtree.count_neighbors(&[3.0, 5.0], 3.0).unwrap();
+        let count = kdtree
+            .count_neighbors(&[3.0, 5.0], 3.0)
+            .expect("Operation failed");
 
         // Calculate actual count
         let query = [3.0, 5.0];
@@ -1145,10 +1149,10 @@ mod tests {
         ]);
 
         let metric = ManhattanDistance::new();
-        let kdtree = KDTree::with_metric(&points, metric).unwrap();
+        let kdtree = KDTree::with_metric(&points, metric).expect("Operation failed");
 
         // Query for nearest neighbor to [3.0, 5.0] using Manhattan distance
-        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
+        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).expect("Operation failed");
 
         // Calculate actual distances using Manhattan distance
         let query = [3.0, 5.0];
@@ -1190,10 +1194,10 @@ mod tests {
         ]);
 
         let metric = ChebyshevDistance::new();
-        let kdtree = KDTree::with_metric(&points, metric).unwrap();
+        let kdtree = KDTree::with_metric(&points, metric).expect("Operation failed");
 
         // Query for nearest neighbor to [3.0, 5.0] using Chebyshev distance
-        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
+        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).expect("Operation failed");
 
         // Calculate actual distances using Chebyshev distance
         let query = [3.0, 5.0];
@@ -1235,10 +1239,10 @@ mod tests {
         ]);
 
         let metric = MinkowskiDistance::new(3.0);
-        let kdtree = KDTree::with_metric(&points, metric).unwrap();
+        let kdtree = KDTree::with_metric(&points, metric).expect("Operation failed");
 
         // Query for nearest neighbor to [3.0, 5.0] using Minkowski distance (p=3)
-        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
+        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).expect("Operation failed");
 
         // Calculate actual distances using Minkowski distance
         let query = [3.0, 5.0];
@@ -1281,12 +1285,12 @@ mod tests {
 
         // Use a very small leaf size to test that it works
         let leafsize = 1;
-        let kdtree = KDTree::with_leaf_size(&points, leafsize).unwrap();
+        let kdtree = KDTree::with_leaf_size(&points, leafsize).expect("Operation failed");
 
         assert_eq!(kdtree.leafsize(), 1);
 
         // Query for nearest neighbor to [3.0, 5.0]
-        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).unwrap();
+        let (indices, distances) = kdtree.query(&[3.0, 5.0], 1).expect("Operation failed");
 
         // Calculate actual distances
         let query = [3.0, 5.0];

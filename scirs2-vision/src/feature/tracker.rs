@@ -492,7 +492,7 @@ mod tests {
         let result = tracker.update(&frame, Some(&[(10.0, 10.0), (50.0, 50.0)]));
         assert!(result.is_ok());
 
-        let features = result.unwrap();
+        let features = result.expect("Operation failed");
         assert_eq!(features.len(), 2);
     }
 
@@ -502,11 +502,13 @@ mod tests {
 
         // First frame with features
         let frame1 = create_test_image(100, 100);
-        tracker.update(&frame1, Some(&[(25.0, 25.0)])).unwrap();
+        tracker
+            .update(&frame1, Some(&[(25.0, 25.0)]))
+            .expect("Operation failed");
 
         // Second frame - features should be tracked
         let frame2 = create_test_image(100, 100);
-        let features = tracker.update(&frame2, None).unwrap();
+        let features = tracker.update(&frame2, None).expect("Operation failed");
 
         // Should maintain at least some features
         assert!(!features.is_empty());
@@ -521,7 +523,7 @@ mod tests {
         let result = tracker.update(&frame, Some(&[(16.0, 16.0)]));
         assert!(result.is_ok());
 
-        let features = result.unwrap();
+        let features = result.expect("Operation failed");
         assert!(!features.is_empty());
     }
 
@@ -530,11 +532,13 @@ mod tests {
         let mut tracker = LKTracker::new(TrackerParams::default());
         let frame = create_test_image(100, 100);
 
-        tracker.update(&frame, Some(&[(25.0, 25.0)])).unwrap();
+        tracker
+            .update(&frame, Some(&[(25.0, 25.0)]))
+            .expect("Operation failed");
         let features1 = tracker.get_features();
         let id1 = features1[0].id;
 
-        tracker.update(&frame, None).unwrap();
+        tracker.update(&frame, None).expect("Operation failed");
         let features2 = tracker.get_features();
 
         if !features2.is_empty() {
@@ -547,8 +551,10 @@ mod tests {
         let mut tracker = LKTracker::new(TrackerParams::default());
         let frame = create_test_image(100, 100);
 
-        tracker.update(&frame, Some(&[(25.0, 25.0)])).unwrap();
-        tracker.update(&frame, None).unwrap();
+        tracker
+            .update(&frame, Some(&[(25.0, 25.0)]))
+            .expect("Operation failed");
+        tracker.update(&frame, None).expect("Operation failed");
 
         let trajectories = tracker.get_trajectories();
         assert!(!trajectories.is_empty());

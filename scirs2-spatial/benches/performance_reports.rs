@@ -680,11 +680,12 @@ mod tests {
     #[test]
     fn test_performance_report_generator() {
         let temp_dir = env::temp_dir().join("scirs2_spatial_test_reports");
-        let generator_result = PerformanceReportGenerator::new(temp_dir.to_str().unwrap());
+        let generator_result =
+            PerformanceReportGenerator::new(temp_dir.to_str().expect("Operation failed"));
 
         assert!(generator_result.is_ok());
 
-        let mut generator = generator_result.unwrap();
+        let mut generator = generator_result.expect("Operation failed");
 
         // Add sample data
         for dp in create_sample_data() {

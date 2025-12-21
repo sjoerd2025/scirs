@@ -176,7 +176,11 @@ impl DocumentInformationExtractor {
             clusters.push(cluster);
         }
 
-        clusters.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+        clusters.sort_by(|a, b| {
+            b.confidence
+                .partial_cmp(&a.confidence)
+                .expect("Operation failed")
+        });
         Ok(clusters)
     }
 
@@ -407,7 +411,11 @@ impl DocumentInformationExtractor {
         }
 
         // Limit to max topics
-        topics.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+        topics.sort_by(|a, b| {
+            b.confidence
+                .partial_cmp(&a.confidence)
+                .expect("Operation failed")
+        });
         topics.truncate(self.max_topics);
 
         Ok(topics)

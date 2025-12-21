@@ -84,11 +84,11 @@ pub struct StabilityResult<F: Float> {
 /// use scirs2_core::ndarray::{Array1, Array2};
 /// use scirs2_cluster::metrics::bootstrap_confidence_interval;
 ///
-/// let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0]).unwrap();
+/// let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0]).expect("Operation failed");
 /// let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 /// let (lower, mean, upper) = bootstrap_confidence_interval(
 ///     data.view(), labels.view(), 0.95, 100
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 pub fn bootstrap_confidence_interval<F>(
     data: ArrayView2<F>,
@@ -138,7 +138,7 @@ where
     }
 
     // Sort scores for percentile calculation
-    bootstrap_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    bootstrap_scores.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Calculate confidence interval
     let alpha = 1.0 - confidence_level;
@@ -153,7 +153,7 @@ where
 
     // Calculate mean score
     let mean_score = bootstrap_scores.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from(bootstrap_scores.len()).unwrap();
+        / F::from(bootstrap_scores.len()).expect("Operation failed");
 
     Ok((lower_bound, mean_score, upper_bound))
 }
@@ -232,8 +232,8 @@ where
         // Add Gaussian noise
         for i in 0..n_samples {
             for j in 0..n_features {
-                let noise =
-                    F::from(rng.random_range(-1.0..1.0) * config.noise_perturbation).unwrap();
+                let noise = F::from(rng.random_range(-1.0..1.0) * config.noise_perturbation)
+                    .expect("Operation failed");
                 noisy_data[[i, j]] = noisy_data[[i, j]] + noise;
             }
         }
@@ -271,11 +271,11 @@ where
     let feature_stability = calculate_stability(&feature_scores);
 
     // Simplified connectivity stability (placeholder)
-    let connectivity_stability = F::from(0.5).unwrap();
+    let connectivity_stability = F::from(0.5).expect("Failed to convert constant to float");
 
     // Calculate confidence intervals from bootstrap scores
     let mut all_scores = bootstrap_scores.clone();
-    all_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    all_scores.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let confidence_intervals = if !all_scores.is_empty() {
         let len = all_scores.len();
@@ -298,7 +298,10 @@ where
         noise_stability,
         feature_stability,
         connectivity_stability,
-        cluster_persistence: vec![F::from(0.8).unwrap(); n_clusters], // Placeholder
+        cluster_persistence: vec![
+            F::from(0.8).expect("Failed to convert constant to float");
+            n_clusters
+        ], // Placeholder
         stability_trend: bootstrap_scores,
         confidence_intervals,
     })
@@ -314,7 +317,8 @@ where
     }
 
     // Calculate coefficient of variation (inverse stability)
-    let mean = scores.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(scores.len()).unwrap();
+    let mean = scores.iter().fold(F::zero(), |acc, &x| acc + x)
+        / F::from(scores.len()).expect("Operation failed");
 
     if mean == F::zero() {
         return F::zero();
@@ -327,7 +331,7 @@ where
             diff * diff
         })
         .fold(F::zero(), |acc, x| acc + x)
-        / F::from(scores.len()).unwrap();
+        / F::from(scores.len()).expect("Operation failed");
 
     let std_dev = variance.sqrt();
     let coefficient_of_variation = std_dev / mean;
@@ -409,7 +413,7 @@ where
 
         for k in 0..n_clusters {
             if cluster_counts[k] > 0 {
-                let count = F::from(cluster_counts[k]).unwrap();
+                let count = F::from(cluster_counts[k]).expect("Failed to convert to float");
                 for j in 0..n_features {
                     centroids[[k, j]] = centroids[[k, j]] / count;
                 }
@@ -428,13 +432,13 @@ mod tests {
     #[test]
     fn test_bootstrap_confidence_interval() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
         let result = bootstrap_confidence_interval(data.view(), labels.view(), 0.95, 10);
         assert!(result.is_ok());
 
-        let (lower, mean, upper) = result.unwrap();
+        let (lower, mean, upper) = result.expect("Operation failed");
         assert!(lower <= mean && mean <= upper);
     }
 
@@ -447,7 +451,7 @@ mod tests {
                 13.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let config = StabilityConfig {
             n_bootstrap: 5,
@@ -462,12 +466,12 @@ mod tests {
     #[test]
     fn test_simple_kmeans() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0])
-            .unwrap();
+            .expect("Operation failed");
 
         let labels = simple_kmeans(data.view(), 2);
         assert!(labels.is_ok());
 
-        let labels = labels.unwrap();
+        let labels = labels.expect("Operation failed");
         assert_eq!(labels.len(), 4);
     }
 

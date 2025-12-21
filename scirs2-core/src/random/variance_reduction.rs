@@ -34,7 +34,10 @@ impl<R: Rng> AntitheticSampling<R> {
     /// Returns (original_samples, antithetic_samples) where `antithetic[i]` = 1 - `original[i]`
     pub fn generate_antithetic_pairs(&mut self, count: usize) -> (Vec<f64>, Vec<f64>) {
         let original: Vec<f64> = (0..count)
-            .map(|_| self.rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+            .map(|_| {
+                self.rng
+                    .sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
+            })
             .collect();
 
         let antithetic: Vec<f64> = original.iter().map(|&x| 1.0 - x).collect();
@@ -54,7 +57,9 @@ impl<R: Rng> AntitheticSampling<R> {
             let stratum_end = (i + 1) as f64 / strata as f64;
 
             for _ in 0..samples_per_stratum {
-                let uniform_in_stratum = self.rng.sample(Uniform::new(0.0, 1.0).unwrap());
+                let uniform_in_stratum = self
+                    .rng
+                    .sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
                 let sample = stratum_start + uniform_in_stratum * (stratum_end - stratum_start);
                 all_samples.push(sample);
             }
@@ -79,7 +84,10 @@ impl<R: Rng> AntitheticSampling<R> {
             // Create stratified samples for this dimension
             let mut strata: Vec<f64> = (0..sample_count)
                 .map(|i| {
-                    (i as f64 + self.rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+                    (i as f64
+                        + self
+                            .rng
+                            .sample(Uniform::new(0.0, 1.0).expect("Operation failed")))
                         / sample_count as f64
                 })
                 .collect();
@@ -362,8 +370,9 @@ mod tests {
         let levels = vec![0.5, 0.8, 0.95];
         let mut splitting = ImportanceSplitting::new(seeded_rng(789), levels, 2);
 
-        let prob =
-            splitting.estimate_probability(100, |rng| rng.sample(Uniform::new(0.0, 1.0).unwrap()));
+        let prob = splitting.estimate_probability(100, |rng| {
+            rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
+        });
 
         assert!((0.0..=1.0).contains(&prob));
     }

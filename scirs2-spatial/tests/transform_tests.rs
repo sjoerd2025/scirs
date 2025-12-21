@@ -13,7 +13,7 @@ fn test_rotation_basic() {
     // Apply to a test point
     let point_arr = array![1.0, 2.0, 3.0];
     let point = point_arr.view();
-    let rotated = rot_identity.apply(&point).unwrap();
+    let rotated = rot_identity.apply(&point).expect("Operation failed");
 
     // Identity rotation should return the same point
     assert_relative_eq!(rotated[0], point[0], epsilon = 1e-10);
@@ -23,10 +23,10 @@ fn test_rotation_basic() {
     // Create a 90-degree rotation around Z
     let euler_z_arr = array![0.0, 0.0, PI / 2.0];
     let euler_z = euler_z_arr.view();
-    let rot_z = Rotation::from_euler(&euler_z, "xyz").unwrap();
+    let rot_z = Rotation::from_euler(&euler_z, "xyz").expect("Operation failed");
     let p_x_arr = array![1.0, 0.0, 0.0];
     let p_x = p_x_arr.view();
-    let rotated_z = rot_z.apply(&p_x).unwrap();
+    let rotated_z = rot_z.apply(&p_x).expect("Operation failed");
 
     // Should map [1, 0, 0] to approximately [0, 1, 0]
     assert_relative_eq!(rotated_z[0], 0.0, epsilon = 1e-10);
@@ -36,7 +36,7 @@ fn test_rotation_basic() {
     // Test inverse rotation
     let rot_z_inv = rot_z.inv();
     let rotated_z_view = rotated_z.view();
-    let point_back = rot_z_inv.apply(&rotated_z_view).unwrap();
+    let point_back = rot_z_inv.apply(&rotated_z_view).expect("Operation failed");
 
     // Should get back original point [1, 0, 0]
     assert_relative_eq!(point_back[0], 1.0, epsilon = 1e-10);
@@ -61,20 +61,21 @@ fn test_rotation_euler_conventions() {
         };
         let angles = angles_arr.view();
 
-        let rotation = Rotation::from_euler(&angles, convention).unwrap();
+        let rotation = Rotation::from_euler(&angles, convention).expect("Operation failed");
 
         // Get back the Euler angles
-        let angles_back = rotation.as_euler(convention).unwrap();
+        let angles_back = rotation.as_euler(convention).expect("Operation failed");
         let angles_back_view = angles_back.view();
 
         // For simple rotations, the angles should be recoverable
         // (allowing for different but equivalent representations)
         let point_arr = array![1.0, 1.0, 1.0];
         let point = point_arr.view();
-        let rotated1 = rotation.apply(&point).unwrap();
+        let rotated1 = rotation.apply(&point).expect("Operation failed");
 
-        let rotation2 = Rotation::from_euler(&angles_back_view, convention).unwrap();
-        let rotated2 = rotation2.apply(&point).unwrap();
+        let rotation2 =
+            Rotation::from_euler(&angles_back_view, convention).expect("Operation failed");
+        let rotated2 = rotation2.apply(&point).expect("Operation failed");
 
         // Both rotations should produce the same result
         assert_relative_eq!(rotated1[0], rotated2[0], epsilon = 1e-10);
@@ -90,10 +91,10 @@ fn test_slerp_basic() {
     let rot1 = Rotation::identity();
     let euler_pi_arr = array![0.0, 0.0, PI];
     let euler_pi = euler_pi_arr.view();
-    let rot2 = Rotation::from_euler(&euler_pi, "xyz").unwrap(); // 180 degrees around Z
+    let rot2 = Rotation::from_euler(&euler_pi, "xyz").expect("Operation failed"); // 180 degrees around Z
 
     // Create a slerp interpolator
-    let slerp = Slerp::new(rot1, rot2).unwrap();
+    let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
 
     // Test interpolation at various parameters
     let test_point_arr = array![1.0, 0.0, 0.0];
@@ -103,8 +104,8 @@ fn test_slerp_basic() {
     let rot_0 = slerp.interpolate(0.0);
     let rot_1 = slerp.interpolate(1.0);
 
-    let rotated_0 = rot_0.apply(&test_point).unwrap();
-    let rotated_1 = rot_1.apply(&test_point).unwrap();
+    let rotated_0 = rot_0.apply(&test_point).expect("Operation failed");
+    let rotated_1 = rot_1.apply(&test_point).expect("Operation failed");
 
     // Should match the original rotations
     assert_relative_eq!(rotated_0[0], 1.0, epsilon = 1e-10);
@@ -117,7 +118,7 @@ fn test_slerp_basic() {
 
     // Test midpoint (should be 90 degrees around Z)
     let rot_half = slerp.interpolate(0.5);
-    let rotated_half = rot_half.apply(&test_point).unwrap();
+    let rotated_half = rot_half.apply(&test_point).expect("Operation failed");
 
     assert_relative_eq!(rotated_half[0], 0.0, epsilon = 1e-10);
     assert_relative_eq!(rotated_half[1], 1.0, epsilon = 1e-10);
@@ -133,17 +134,17 @@ fn test_rotation_spline_slerp() {
         {
             let euler_90_arr = array![0.0, 0.0, PI / 2.0];
             let euler_90 = euler_90_arr.view();
-            Rotation::from_euler(&euler_90, "xyz").unwrap()
+            Rotation::from_euler(&euler_90, "xyz").expect("Operation failed")
         },
         {
             let euler_180_arr = array![0.0, 0.0, PI];
             let euler_180 = euler_180_arr.view();
-            Rotation::from_euler(&euler_180, "xyz").unwrap()
+            Rotation::from_euler(&euler_180, "xyz").expect("Operation failed")
         },
     ];
     let times = vec![0.0, 1.0, 2.0];
 
-    let spline = RotationSpline::new(&rotations, &times).unwrap();
+    let spline = RotationSpline::new(&rotations, &times).expect("Operation failed");
 
     // Test that the default interpolation type is "slerp"
     assert_eq!(spline.interpolation_type(), "slerp");
@@ -156,9 +157,9 @@ fn test_rotation_spline_slerp() {
     let rot_1 = spline.interpolate(1.0);
     let rot_2 = spline.interpolate(2.0);
 
-    let rotated_0 = rot_0.apply(&test_point).unwrap();
-    let rotated_1 = rot_1.apply(&test_point).unwrap();
-    let rotated_2 = rot_2.apply(&test_point).unwrap();
+    let rotated_0 = rot_0.apply(&test_point).expect("Operation failed");
+    let rotated_1 = rot_1.apply(&test_point).expect("Operation failed");
+    let rotated_2 = rot_2.apply(&test_point).expect("Operation failed");
 
     // Check that they match the original rotations
     assert_relative_eq!(rotated_0[0], 1.0, epsilon = 1e-10);
@@ -177,8 +178,8 @@ fn test_rotation_spline_slerp() {
     let rot_05 = spline.interpolate(0.5);
     let rot_15 = spline.interpolate(1.5);
 
-    let rotated_05 = rot_05.apply(&test_point).unwrap();
-    let rotated_15 = rot_15.apply(&test_point).unwrap();
+    let rotated_05 = rot_05.apply(&test_point).expect("Operation failed");
+    let rotated_15 = rot_15.apply(&test_point).expect("Operation failed");
 
     // Check that they produce expected intermediate rotations
     // t=0.5 should be 45 degrees around Z
@@ -217,20 +218,22 @@ fn test_rotation_spline_cubic() {
         {
             let euler_90_arr = array![0.0, 0.0, PI / 2.0];
             let euler_90 = euler_90_arr.view();
-            Rotation::from_euler(&euler_90, "xyz").unwrap()
+            Rotation::from_euler(&euler_90, "xyz").expect("Operation failed")
         },
         {
             let euler_180_arr = array![0.0, 0.0, PI];
             let euler_180 = euler_180_arr.view();
-            Rotation::from_euler(&euler_180, "xyz").unwrap()
+            Rotation::from_euler(&euler_180, "xyz").expect("Operation failed")
         },
     ];
     let times = vec![0.0, 1.0, 2.0];
 
-    let mut spline = RotationSpline::new(&rotations, &times).unwrap();
+    let mut spline = RotationSpline::new(&rotations, &times).expect("Operation failed");
 
     // Switch to cubic interpolation
-    spline.set_interpolation_type("cubic").unwrap();
+    spline
+        .set_interpolation_type("cubic")
+        .expect("Operation failed");
     assert_eq!(spline.interpolation_type(), "cubic");
 
     // Test that the velocities have been computed
@@ -244,9 +247,9 @@ fn test_rotation_spline_cubic() {
     let rot_1 = spline.interpolate(1.0);
     let rot_2 = spline.interpolate(2.0);
 
-    let rotated_0 = rot_0.apply(&test_point).unwrap();
-    let rotated_1 = rot_1.apply(&test_point).unwrap();
-    let rotated_2 = rot_2.apply(&test_point).unwrap();
+    let rotated_0 = rot_0.apply(&test_point).expect("Operation failed");
+    let rotated_1 = rot_1.apply(&test_point).expect("Operation failed");
+    let rotated_2 = rot_2.apply(&test_point).expect("Operation failed");
 
     // Check that they match the original rotations
     assert_relative_eq!(rotated_0[0], 1.0, epsilon = 1e-10);
@@ -268,8 +271,8 @@ fn test_rotation_spline_cubic() {
     let rot_05 = spline.interpolate(0.5);
     let rot_15 = spline.interpolate(1.5);
 
-    let rotated_05 = rot_05.apply(&test_point).unwrap();
-    let rotated_15 = rot_15.apply(&test_point).unwrap();
+    let rotated_05 = rot_05.apply(&test_point).expect("Operation failed");
+    let rotated_15 = rot_15.apply(&test_point).expect("Operation failed");
 
     // Check that the results are unit vectors (valid rotations)
     let norm_05 = (rotated_05[0] * rotated_05[0]
@@ -294,15 +297,15 @@ fn test_rotation_spline_angular_velocity() {
         {
             let euler_180_arr = array![0.0, 0.0, PI];
             let euler_180 = euler_180_arr.view();
-            Rotation::from_euler(&euler_180, "xyz").unwrap()
+            Rotation::from_euler(&euler_180, "xyz").expect("Operation failed")
         }, // 180 degrees around Z in 1 second
     ];
     let times = vec![0.0, 1.0];
 
-    let spline = RotationSpline::new(&rotations, &times).unwrap();
+    let spline = RotationSpline::new(&rotations, &times).expect("Operation failed");
 
     // Test angular velocity at midpoint
-    let velocity = spline.angular_velocity(0.5).unwrap();
+    let velocity = spline.angular_velocity(0.5).expect("Operation failed");
 
     // For 180-degree rotation around Z-axis in 1 second, angular velocity should be [0, 0, PI]
     assert_relative_eq!(velocity[0], 0.0, epsilon = 1e-3);
@@ -310,8 +313,8 @@ fn test_rotation_spline_angular_velocity() {
     assert_relative_eq!(velocity[2], PI, epsilon = 1e-3);
 
     // Test at the endpoints (should be zero)
-    let velocity_start = spline.angular_velocity(0.0).unwrap();
-    let velocity_end = spline.angular_velocity(1.0).unwrap();
+    let velocity_start = spline.angular_velocity(0.0).expect("Operation failed");
+    let velocity_end = spline.angular_velocity(1.0).expect("Operation failed");
 
     assert_relative_eq!(
         (velocity_start.dot(&velocity_start)).sqrt(),
@@ -325,11 +328,15 @@ fn test_rotation_spline_angular_velocity() {
     );
 
     // Test with cubic interpolation
-    let mut cubic_spline = RotationSpline::new(&rotations, &times).unwrap();
-    cubic_spline.set_interpolation_type("cubic").unwrap();
+    let mut cubic_spline = RotationSpline::new(&rotations, &times).expect("Operation failed");
+    cubic_spline
+        .set_interpolation_type("cubic")
+        .expect("Operation failed");
 
     // Velocity with cubic interpolation
-    let cubic_velocity = cubic_spline.angular_velocity(0.5).unwrap();
+    let cubic_velocity = cubic_spline
+        .angular_velocity(0.5)
+        .expect("Operation failed");
 
     // Cubic interpolation should also produce valid angular velocities
     let cubic_magnitude = (cubic_velocity.dot(&cubic_velocity)).sqrt();
@@ -345,18 +352,18 @@ fn test_rotation_spline_angular_acceleration() {
         {
             let euler_90_arr = array![0.0, 0.0, PI / 2.0];
             let euler_90 = euler_90_arr.view();
-            Rotation::from_euler(&euler_90, "xyz").unwrap()
+            Rotation::from_euler(&euler_90, "xyz").expect("Operation failed")
         },
         {
             let euler_180_arr = array![0.0, 0.0, PI];
             let euler_180 = euler_180_arr.view();
-            Rotation::from_euler(&euler_180, "xyz").unwrap()
+            Rotation::from_euler(&euler_180, "xyz").expect("Operation failed")
         },
     ];
     let times = vec![0.0, 1.0, 2.0];
 
     // With SLERP, acceleration should be zero
-    let spline = RotationSpline::new(&rotations, &times).unwrap();
+    let spline = RotationSpline::new(&rotations, &times).expect("Operation failed");
     let accel = spline.angular_acceleration(0.5);
 
     assert_relative_eq!(accel[0], 0.0, epsilon = 1e-10);
@@ -364,8 +371,10 @@ fn test_rotation_spline_angular_acceleration() {
     assert_relative_eq!(accel[2], 0.0, epsilon = 1e-10);
 
     // With cubic interpolation, acceleration should be non-zero
-    let mut cubic_spline = RotationSpline::new(&rotations, &times).unwrap();
-    cubic_spline.set_interpolation_type("cubic").unwrap();
+    let mut cubic_spline = RotationSpline::new(&rotations, &times).expect("Operation failed");
+    cubic_spline
+        .set_interpolation_type("cubic")
+        .expect("Operation failed");
 
     // Create a more complex rotation sequence to better test acceleration
     let complex_rotations = vec![
@@ -373,23 +382,26 @@ fn test_rotation_spline_angular_acceleration() {
         {
             let euler_1_arr = array![0.0, PI / 4.0, 0.0];
             let euler_1 = euler_1_arr.view();
-            Rotation::from_euler(&euler_1, "xyz").unwrap()
+            Rotation::from_euler(&euler_1, "xyz").expect("Operation failed")
         },
         {
             let euler_2_arr = array![PI / 4.0, PI / 4.0, 0.0];
             let euler_2 = euler_2_arr.view();
-            Rotation::from_euler(&euler_2, "xyz").unwrap()
+            Rotation::from_euler(&euler_2, "xyz").expect("Operation failed")
         },
         {
             let euler_3_arr = array![0.0, 0.0, 0.0];
             let euler_3 = euler_3_arr.view();
-            Rotation::from_euler(&euler_3, "xyz").unwrap()
+            Rotation::from_euler(&euler_3, "xyz").expect("Operation failed")
         },
     ];
     let complex_times = vec![0.0, 1.0, 2.0, 3.0];
 
-    let mut complex_spline = RotationSpline::new(&complex_rotations, &complex_times).unwrap();
-    complex_spline.set_interpolation_type("cubic").unwrap();
+    let mut complex_spline =
+        RotationSpline::new(&complex_rotations, &complex_times).expect("Operation failed");
+    complex_spline
+        .set_interpolation_type("cubic")
+        .expect("Operation failed");
 
     // Test at a few points
     let accel_1 = complex_spline.angular_acceleration(0.5);

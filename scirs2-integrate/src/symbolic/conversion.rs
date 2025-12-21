@@ -214,7 +214,9 @@ pub fn example_damped_oscillator<F: IntegrateFloat>(
     let expression = Neg(Box::new(Add(
         Box::new(Mul(
             Box::new(Mul(
-                Box::new(Constant(F::from(2.0).unwrap())),
+                Box::new(Constant(
+                    F::from(2.0).expect("Failed to convert constant to float"),
+                )),
                 Box::new(Constant(damping)),
             )),
             Box::new(x_prime),
@@ -222,7 +224,9 @@ pub fn example_damped_oscillator<F: IntegrateFloat>(
         Box::new(Mul(
             Box::new(Pow(
                 Box::new(Constant(omega)),
-                Box::new(Constant(F::from(2.0).unwrap())),
+                Box::new(Constant(
+                    F::from(2.0).expect("Failed to convert constant to float"),
+                )),
             )),
             Box::new(x),
         )),
@@ -345,8 +349,8 @@ mod tests {
         let x: SymbolicExpression<f64> = Var(Variable::new("x"));
         let expr = Neg(Box::new(x));
 
-        let ode = HigherOrderODE::new(2, "x", "t", expr).unwrap();
-        let system = higher_order_to_first_order(&ode).unwrap();
+        let ode = HigherOrderODE::new(2, "x", "t", expr).expect("Operation failed");
+        let system = higher_order_to_first_order(&ode).expect("Operation failed");
 
         assert_eq!(system.state_vars.len(), 2);
         assert_eq!(system.expressions.len(), 2);

@@ -324,7 +324,7 @@ pub mod memory_mapped {
             return Err(StatsError::invalid_argument("Chunk _count mismatch"));
         }
 
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     /// Chunked variance calculation using Welford's algorithm
@@ -345,13 +345,13 @@ pub mod memory_mapped {
             for &value in chunk.iter() {
                 _count += 1;
                 let delta = value - mean;
-                mean = mean + delta / F::from(_count).unwrap();
+                mean = mean + delta / F::from(_count).expect("Failed to convert to float");
                 let delta2 = value - mean;
                 m2 = m2 + delta * delta2;
             }
         }
 
-        let variance = m2 / F::from(_count - ddof).unwrap();
+        let variance = m2 / F::from(_count - ddof).expect("Failed to convert to float");
         Ok((mean, variance))
     }
 }
@@ -394,7 +394,7 @@ impl<F: Float + NumCast + std::fmt::Display> RingBufferStats<F> {
         if self.buffer.is_empty() {
             F::zero()
         } else {
-            self.sum / F::from(self.buffer.len()).unwrap()
+            self.sum / F::from(self.buffer.len()).expect("Operation failed")
         }
     }
 
@@ -406,8 +406,11 @@ impl<F: Float + NumCast + std::fmt::Display> RingBufferStats<F> {
         }
 
         let mean = self.mean();
-        let var = self.sum_squares / F::from(n).unwrap() - mean * mean;
-        Some(var * F::from(n).unwrap() / F::from(n - ddof).unwrap())
+        let var = self.sum_squares / F::from(n).expect("Failed to convert to float") - mean * mean;
+        Some(
+            var * F::from(n).expect("Failed to convert to float")
+                / F::from(n - ddof).expect("Failed to convert to float"),
+        )
     }
 
     /// Get current standard deviation
@@ -475,14 +478,17 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
 
         // Compute shared values
         let mean = if need_mean {
-            Some(data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap())
+            Some(
+                data.iter().fold(F::zero(), |acc, &x| acc + x)
+                    / F::from(data.len()).expect("Operation failed"),
+            )
         } else {
             None
         };
 
         let sorteddata = if need_sorted {
             let mut sorted = data.clone();
-            sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             Some(sorted)
         } else {
             None
@@ -492,10 +498,10 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
         for op in &self.operations {
             match op {
                 StatOperation::Mean => {
-                    results.push(mean.unwrap());
+                    results.push(mean.expect("Operation failed"));
                 }
                 StatOperation::Variance(ddof) => {
-                    let m = mean.unwrap();
+                    let m = mean.expect("Operation failed");
                     let var = data
                         .iter()
                         .map(|&x| {
@@ -503,11 +509,11 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
                             diff * diff
                         })
                         .sum::<F>()
-                        / F::from(data.len() - ddof).unwrap();
+                        / F::from(data.len() - ddof).expect("Operation failed");
                     results.push(var);
                 }
                 StatOperation::Quantile(q) => {
-                    let sorted = sorteddata.as_ref().unwrap();
+                    let sorted = sorteddata.as_ref().expect("Operation failed");
                     let pos = *q * (sorted.len() - 1) as f64;
                     let idx = pos.floor() as usize;
                     let frac = pos - pos.floor();
@@ -517,7 +523,7 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
                     } else {
                         let lower = sorted[idx];
                         let upper = sorted[idx + 1];
-                        lower + F::from(frac).unwrap() * (upper - lower)
+                        lower + F::from(frac).expect("Failed to convert to float") * (upper - lower)
                     };
                     results.push(result);
                 }
@@ -693,7 +699,7 @@ mod tests {
             .variance(1)
             .quantile(0.5);
 
-        let results = lazy.compute().unwrap();
+        let results = lazy.compute().expect("Operation failed");
         assert_eq!(results.len(), 3);
         assert_relative_eq!(results[0], 3.0, epsilon = 1e-10); // mean
         assert_relative_eq!(results[1], 2.5, epsilon = 1e-10); // variance
@@ -703,9 +709,10 @@ mod tests {
     #[test]
     fn test_zero_copy_rolling() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let results =
-            zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| Ok(window.mean().unwrap()))
-                .unwrap();
+        let results = zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| {
+            Ok(window.mean().expect("Operation failed"))
+        })
+        .expect("Operation failed");
 
         assert_eq!(results.len(), 3);
         assert_relative_eq!(results[0], 2.0, epsilon = 1e-10);

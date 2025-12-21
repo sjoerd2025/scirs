@@ -75,17 +75,19 @@ impl<
         let mut correct = 0;
         for (i, &target) in targets.iter().enumerate() {
             // Convert prediction to class (assuming binary classification for simplicity)
-            let predicted_class = if predictions[i] > F::from(0.5).unwrap() {
-                1
-            } else {
-                0
-            };
+            let predicted_class =
+                if predictions[i] > F::from(0.5).expect("Failed to convert constant to float") {
+                    1
+                } else {
+                    0
+                };
             if predicted_class == target {
                 correct += 1;
             }
         }
 
-        Ok(F::from(correct).unwrap() / F::from(predictions.len()).unwrap())
+        Ok(F::from(correct).expect("Failed to convert to float")
+            / F::from(predictions.len()).expect("Operation failed"))
     }
 
     /// Compute few-shot learning performance
@@ -163,21 +165,22 @@ impl<
             }
         }
 
-        let overall_accuracy = F::from(correct).unwrap() / F::from(query_labels.len()).unwrap();
+        let overall_accuracy = F::from(correct).expect("Failed to convert to float")
+            / F::from(query_labels.len()).expect("Operation failed");
 
         let mut per_class_accuracies = Vec::with_capacity(n_classes);
         for class in 0..n_classes {
             if per_class_total[class] > 0 {
-                let acc = F::from(per_class_correct[class]).unwrap()
-                    / F::from(per_class_total[class]).unwrap();
+                let acc = F::from(per_class_correct[class]).expect("Failed to convert to float")
+                    / F::from(per_class_total[class]).expect("Failed to convert to float");
                 per_class_accuracies.push(acc);
             } else {
                 per_class_accuracies.push(F::zero());
             }
         }
 
-        let balanced_accuracy =
-            per_class_accuracies.iter().copied().sum::<F>() / F::from(n_classes).unwrap();
+        let balanced_accuracy = per_class_accuracies.iter().copied().sum::<F>()
+            / F::from(n_classes).expect("Failed to convert to float");
 
         Ok(FewShotResult {
             overall_accuracy,

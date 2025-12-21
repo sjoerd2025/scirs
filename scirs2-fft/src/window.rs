@@ -93,15 +93,15 @@ impl FromStr for Window {
 /// use scirs2_fft::window::{Window, get_window};
 ///
 /// // Create a Hann window
-/// let win = get_window(Window::Hann, 10, true).unwrap();
+/// let win = get_window(Window::Hann, 10, true).expect("Operation failed");
 /// assert_eq!(win.len(), 10);
 ///
 /// // Create a Kaiser window with beta=8.6
-/// let win = get_window(Window::Kaiser(8.6), 10, true).unwrap();
+/// let win = get_window(Window::Kaiser(8.6), 10, true).expect("Operation failed");
 /// assert_eq!(win.len(), 10);
 ///
 /// // Create a window by name
-/// let win = get_window("hamming", 10, true).unwrap();
+/// let win = get_window("hamming", 10, true).expect("Operation failed");
 /// assert_eq!(win.len(), 10);
 /// ```
 #[allow(dead_code)]
@@ -639,7 +639,7 @@ fn bessel_i0(x: f64) -> f64 {
 ///
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// let window = Window::Hann;
-/// let windowed = apply_window(&signal, window).unwrap();
+/// let windowed = apply_window(&signal, window).expect("Operation failed");
 /// ```
 /// # Errors
 ///
@@ -660,7 +660,7 @@ where
 
     let mut result = Array1::zeros(n);
     for i in 0..n {
-        result[i] = x[i] * F::from_f64(win[i]).unwrap();
+        result[i] = x[i] * F::from_f64(win[i]).expect("Operation failed");
     }
 
     Ok(result)
@@ -683,7 +683,7 @@ where
 /// use scirs2_fft::window::{Window, enbw};
 /// use approx::assert_relative_eq;
 ///
-/// let bandwidth = enbw(Window::Hann, 1024).unwrap();
+/// let bandwidth = enbw(Window::Hann, 1024).expect("Operation failed");
 /// assert_relative_eq!(bandwidth, 1.5, epsilon = 0.01);
 /// ```
 /// # Errors
@@ -708,7 +708,7 @@ mod tests {
 
     #[test]
     fn test_rectangular() {
-        let win = rectangular(5).unwrap();
+        let win = rectangular(5).expect("Operation failed");
         let expected = [1.0, 1.0, 1.0, 1.0, 1.0];
         for (a, &b) in win.iter().zip(expected.iter()) {
             assert_relative_eq!(a, &b, epsilon = 1e-10);
@@ -717,7 +717,7 @@ mod tests {
 
     #[test]
     fn test_hann() {
-        let win = hann(5, true).unwrap();
+        let win = hann(5, true).expect("Operation failed");
         let expected = [0.0, 0.5, 1.0, 0.5, 0.0];
         for (a, &b) in win.iter().zip(expected.iter()) {
             assert_relative_eq!(a, &b, epsilon = 1e-10);
@@ -726,7 +726,7 @@ mod tests {
 
     #[test]
     fn test_hamming() {
-        let win = hamming(5, true).unwrap();
+        let win = hamming(5, true).expect("Operation failed");
         let expected = [0.08, 0.54, 1.0, 0.54, 0.08];
         for (a, &b) in win.iter().zip(expected.iter()) {
             assert_relative_eq!(a, &b, epsilon = 1e-10);
@@ -735,7 +735,7 @@ mod tests {
 
     #[test]
     fn test_blackman() {
-        let win = blackman(5, true).unwrap();
+        let win = blackman(5, true).expect("Operation failed");
         let expected = [0.0, 0.34, 1.0, 0.34, 0.0];
         for (a, &b) in win.iter().zip(expected.iter()) {
             assert_relative_eq!(a, &b, epsilon = 0.01);
@@ -744,11 +744,20 @@ mod tests {
 
     #[test]
     fn test_from_str() {
-        assert_eq!(Window::from_str("hann").unwrap(), Window::Hann);
-        assert_eq!(Window::from_str("hamming").unwrap(), Window::Hamming);
-        assert_eq!(Window::from_str("blackman").unwrap(), Window::Blackman);
         assert_eq!(
-            Window::from_str("rectangular").unwrap(),
+            Window::from_str("hann").expect("Operation failed"),
+            Window::Hann
+        );
+        assert_eq!(
+            Window::from_str("hamming").expect("Operation failed"),
+            Window::Hamming
+        );
+        assert_eq!(
+            Window::from_str("blackman").expect("Operation failed"),
+            Window::Blackman
+        );
+        assert_eq!(
+            Window::from_str("rectangular").expect("Operation failed"),
             Window::Rectangular
         );
         assert!(Window::from_str("invalid").is_err());
@@ -756,8 +765,8 @@ mod tests {
 
     #[test]
     fn test_get_window() {
-        let win1 = get_window(Window::Hann, 5, true).unwrap();
-        let win2 = get_window("hann", 5, true).unwrap();
+        let win1 = get_window(Window::Hann, 5, true).expect("Operation failed");
+        let win2 = get_window("hann", 5, true).expect("Operation failed");
 
         for (a, b) in win1.iter().zip(win2.iter()) {
             assert_relative_eq!(a, b, epsilon = 1e-10);
@@ -767,7 +776,7 @@ mod tests {
     #[test]
     fn test_apply_window() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let win = apply_window(&signal.view(), Window::Hann).unwrap();
+        let win = apply_window(&signal.view(), Window::Hann).expect("Operation failed");
 
         let expected = Array1::from_vec(vec![0.0, 1.0, 3.0, 2.0, 0.0]);
         for (a, b) in win.iter().zip(expected.iter()) {
@@ -778,13 +787,13 @@ mod tests {
     #[test]
     fn test_enbw() {
         // Known ENBW values for common windows
-        let rect_enbw = enbw(Window::Rectangular, 1024).unwrap();
+        let rect_enbw = enbw(Window::Rectangular, 1024).expect("Operation failed");
         assert_relative_eq!(rect_enbw, 1.0, epsilon = 1e-10);
 
-        let hann_enbw = enbw(Window::Hann, 1024).unwrap();
+        let hann_enbw = enbw(Window::Hann, 1024).expect("Operation failed");
         assert_relative_eq!(hann_enbw, 1.5, epsilon = 0.01);
 
-        let hamming_enbw = enbw(Window::Hamming, 1024).unwrap();
+        let hamming_enbw = enbw(Window::Hamming, 1024).expect("Operation failed");
         assert_relative_eq!(hamming_enbw, 1.36, epsilon = 0.01);
     }
 }

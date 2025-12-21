@@ -197,14 +197,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
 
         // 1. Self-attention with residual connection
         let self_attn_output = self.self_attn.forward(input)?;
-        *self.self_attn_output_cache.write().unwrap() = Some(self_attn_output.clone());
+        *self.self_attn_output_cache.write().expect("Operation failed") = Some(self_attn_output.clone());
 
         // Add residual connection (x + Sublayer(x))
         let self_attn_output_residual = input + &self_attn_output;
 
         // 2. Layer normalization after self-attention
         let norm1_output = self.norm1.forward(&self_attn_output_residual)?;
-        *self.norm1_output_cache.write().unwrap() = Some(norm1_output.clone());
+        *self.norm1_output_cache.write().expect("Operation failed") = Some(norm1_output.clone());
 
         // 3. Cross-attention with encoder output
         // For cross-attention, query comes from decoder, key/value from encoder
@@ -212,14 +212,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         // In a full implementation, we'd use a separate method that takes encoder_output
         // For now, we'll use a simplified approach
         let cross_attn_output = self.cross_attn.forward(&norm1_output)?;
-        *self.cross_attn_output_cache.write().unwrap() = Some(cross_attn_output.clone());
+        *self.cross_attn_output_cache.write().expect("Operation failed") = Some(cross_attn_output.clone());
 
         // Add residual connection
         let cross_attn_output_residual = &norm1_output + &cross_attn_output;
 
         // 4. Layer normalization after cross-attention
         let norm2_output = self.norm2.forward(&cross_attn_output_residual)?;
-        *self.norm2_output_cache.write().unwrap() = Some(norm2_output.clone());
+        *self.norm2_output_cache.write().expect("Operation failed") = Some(norm2_output.clone());
 
         // 5. Feed-forward network with residual connection
         let ff_output = self.feed_forward.forward(&norm2_output)?;
@@ -394,14 +394,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         encoder_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Clear layer outputs cache
-        *self.layer_outputs.write().unwrap() = Vec::new();
+        *self.layer_outputs.write().expect("Operation failed") = Vec::new();
 
         // Process input through all decoder layers
         let mut output = input.clone();
         for layer in &self.layers {
             output = layer.forward_with_encoder(&output, encoder_output)?;
             // Cache layer output for backward pass
-            self.layer_outputs.write().unwrap().push(output.clone());
+            self.layer_outputs.write().expect("Operation failed").push(output.clone());
         }
 
         Ok(output)
@@ -436,14 +436,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Clear layer outputs cache
-        *self.layer_outputs.write().unwrap() = Vec::new();
+        *self.layer_outputs.write().expect("Operation failed") = Vec::new();
 
         // Process input through all decoder layers (simplified, no cross-attention)
         let mut output = input.clone();
         for layer in &self.layers {
             output = layer.forward(&output)?;
             // Cache layer output for backward pass
-            self.layer_outputs.write().unwrap().push(output.clone());
+            self.layer_outputs.write().expect("Operation failed").push(output.clone());
         }
 
         Ok(output)
@@ -487,7 +487,7 @@ mod tests {
 
         let dec_layer =
             TransformerDecoderLayer::<f64>::new(d_model, n_heads, d_ff, dropout, epsilon, &mut rng)
-                .unwrap();
+                .expect("Operation failed");
 
         // Create a batch of inputs
         let batch_size = 2;
@@ -502,7 +502,7 @@ mod tests {
         // Forward pass with encoder output
         let output = dec_layer
             .forward_with_encoder(&decoder_input, &encoder_output)
-            .unwrap();
+            .expect("Operation failed");
 
         // Check output shape
         assert_eq!(output.shape(), decoder_input.shape());
@@ -522,7 +522,7 @@ mod tests {
         let decoder = TransformerDecoder::<f64>::new(
             d_model, n_layers, n_heads, d_ff, dropout, epsilon, &mut rng,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a batch of inputs
         let batch_size = 2;
@@ -537,7 +537,7 @@ mod tests {
         // Forward pass with encoder output
         let output = decoder
             .forward_with_encoder(&decoder_input, &encoder_output)
-            .unwrap();
+            .expect("Operation failed");
 
         // Check output shape
         assert_eq!(output.shape(), decoder_input.shape());
@@ -555,7 +555,7 @@ mod tests {
 
         let dec_layer =
             TransformerDecoderLayer::<f64>::new(d_model, n_heads, d_ff, dropout, epsilon, &mut rng)
-                .unwrap();
+                .expect("Operation failed");
 
         // Create a batch with clear position signals
         let batch_size = 1;
@@ -584,7 +584,7 @@ mod tests {
         // Forward pass
         let output = dec_layer
             .forward_with_encoder(&decoder_input_dyn, &encoder_output)
-            .unwrap();
+            .expect("Operation failed");
 
         // The output should have the right shape
         assert_eq!(output.shape(), decoder_input_dyn.shape());
@@ -602,7 +602,7 @@ mod tests {
 
         let dec_layer =
             TransformerDecoderLayer::<f64>::new(d_model, n_heads, d_ff, dropout, epsilon, &mut rng)
-                .unwrap();
+                .expect("Operation failed");
 
         // Create input
         let batch_size = 2;
@@ -611,7 +611,7 @@ mod tests {
         let input = Array3::<f64>::from_elem((batch_size, seq_len, d_model), 0.1).into_dyn();
 
         // Forward pass using Layer trait
-        let output = dec_layer.forward(&input).unwrap();
+        let output = dec_layer.forward(&input).expect("Operation failed");
 
         // Check output shape
         assert_eq!(output.shape(), input.shape());
@@ -631,7 +631,7 @@ mod tests {
         let decoder = TransformerDecoder::<f64>::new(
             d_model, n_layers, n_heads, d_ff, dropout, epsilon, &mut rng,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Clone the decoder
         let decoder_clone = decoder.clone();
@@ -641,8 +641,8 @@ mod tests {
 
         // Test that both produce outputs
         let input = Array3::<f64>::from_elem((1, 4, d_model), 0.1).into_dyn();
-        let output1 = decoder.forward(&input).unwrap();
-        let output2 = decoder_clone.forward(&input).unwrap();
+        let output1 = decoder.forward(&input).expect("Operation failed");
+        let output2 = decoder_clone.forward(&input).expect("Operation failed");
 
         // Both should have the same shape
         assert_eq!(output1.shape(), output2.shape());
@@ -660,7 +660,7 @@ mod tests {
 
         let dec_layer =
             TransformerDecoderLayer::<f64>::new(d_model, n_heads, d_ff, dropout, epsilon, &mut rng)
-                .unwrap();
+                .expect("Operation failed");
 
         // Test with wrong dimensions (2D instead of 3D)
         let wrong_input = scirs2_core::ndarray::Array2::<f64>::from_elem((4, d_model), 0.1).into_dyn();

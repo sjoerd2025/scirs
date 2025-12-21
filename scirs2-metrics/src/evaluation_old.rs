@@ -32,10 +32,10 @@ pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
 /// use scirs2_core::ndarray::{Array, Ix1};
 /// use scirs2_metrics::evaluation::train_test_split;
 ///
-/// let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape(Ix1(10)).unwrap();
+/// let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape(Ix1(10)).expect("Operation failed");
 /// let y = &x * 2.;
 ///
-/// let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();
+/// let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).expect("Operation failed");
 ///
 /// // Unpack the results
 /// let x_train = &train_arrays[0];
@@ -177,7 +177,7 @@ where
 /// ```
 /// use scirs2_metrics::evaluation::k_fold_cross_validation;
 ///
-/// let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
+/// let splits = k_fold_cross_validation(10, 3, false, None).expect("Operation failed");
 /// assert_eq!(splits.len(), 3); // 3 folds
 ///
 /// // Check first fold
@@ -270,7 +270,7 @@ pub fn k_fold_cross_validation(
 /// ```
 /// use scirs2_metrics::evaluation::leave_one_out_cv;
 ///
-/// let splits = leave_one_out_cv(5).unwrap();
+/// let splits = leave_one_out_cv(5).expect("Operation failed");
 /// assert_eq!(splits.len(), 5); // 5 splits for 5 samples
 ///
 /// // Check first split
@@ -329,7 +329,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 /// use scirs2_metrics::evaluation::stratified_k_fold;
 ///
 /// let y = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
-/// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
+/// let splits = stratified_k_fold(&y, 3, true, Some(42)).expect("Operation failed");
 /// assert_eq!(splits.len(), 3); // 3 folds
 /// ```
 #[allow(dead_code)]
@@ -396,7 +396,7 @@ where
 
     // Shuffle class indices if needed
     if shuffle {
-        let rng = rng.as_mut().unwrap();
+        let rng = rng.as_mut().expect("Operation failed");
 
         for indices in class_counts.values_mut() {
             indices.shuffle(rng);
@@ -444,7 +444,7 @@ mod tests {
         let x = scirs2_core::ndarray::Array::linspace(0.0, 9.0, 10);
         let y = &x * 2.0;
 
-        let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();
+        let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).expect("Operation failed");
 
         // Check arrays dimension
         assert_eq!(train_arrays.len(), 2);
@@ -468,7 +468,7 @@ mod tests {
     #[test]
     fn test_k_fold_cross_validation() {
         // Test 10 samples with 3 folds
-        let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
+        let splits = k_fold_cross_validation(10, 3, false, None).expect("Operation failed");
 
         // Check number of folds
         assert_eq!(splits.len(), 3);
@@ -492,7 +492,7 @@ mod tests {
 
     #[test]
     fn test_leave_one_out_cv() {
-        let splits = leave_one_out_cv(5).unwrap();
+        let splits = leave_one_out_cv(5).expect("Operation failed");
 
         // Check number of splits
         assert_eq!(splits.len(), 5);
@@ -515,7 +515,7 @@ mod tests {
         // We need at least 3 samples for each class when n_folds=3
         let y = array![0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2];
 
-        let splits = stratified_k_fold(&y, 3, false, None).unwrap();
+        let splits = stratified_k_fold(&y, 3, false, None).expect("Operation failed");
 
         // Check number of folds
         assert_eq!(splits.len(), 3);

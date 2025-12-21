@@ -36,14 +36,14 @@ static DEFAULT_PRECISION: RwLock<u32> = RwLock::new(256);
 /// Get the default precision for arbitrary precision operations
 #[allow(dead_code)]
 pub fn get_defaultprecision() -> u32 {
-    *DEFAULT_PRECISION.read().unwrap()
+    *DEFAULT_PRECISION.read().expect("Operation failed")
 }
 
 /// Set the default precision for arbitrary precision operations
 #[allow(dead_code)]
 pub fn setprecision(prec: u32) -> CoreResult<()> {
     check_positive(prec as f64, "precision")?;
-    *DEFAULT_PRECISION.write().unwrap() = prec;
+    *DEFAULT_PRECISION.write().expect("Operation failed") = prec;
     Ok(())
 }
 
@@ -173,7 +173,7 @@ impl ArbitraryInt {
 
     /// Convert to BigInt
     pub fn to_bigint(&self) -> BigInt {
-        BigInt::from_str(&self.value.to_string()).unwrap()
+        BigInt::from_str(&self.value.to_string()).expect("Operation failed")
     }
 
     /// Check if the number is prime
@@ -235,7 +235,7 @@ impl ArbitraryInt {
                 .value
                 .clone()
                 .pow_mod(&exp.value, &modulus.value)
-                .unwrap(),
+                .expect("Operation failed"),
         })
     }
 
@@ -1220,8 +1220,8 @@ mod tests {
 
     #[test]
     fn test_arbitrary_float_basic() {
-        let a = ArbitraryFloat::from_f64_withprecision(1.0, 128).unwrap();
-        let b = ArbitraryFloat::from_f64_withprecision(3.0, 128).unwrap();
+        let a = ArbitraryFloat::from_f64_withprecision(1.0, 128).expect("Operation failed");
+        let b = ArbitraryFloat::from_f64_withprecision(3.0, 128).expect("Operation failed");
         let c = a / b;
 
         // Check that we get more precision than f64
@@ -1233,11 +1233,11 @@ mod tests {
 
     #[test]
     fn test_arbitrary_rational() {
-        let r = ArbitraryRational::num(22, 7).unwrap();
+        let r = ArbitraryRational::num(22, 7).expect("Operation failed");
         assert_eq!(r.to_string(), "22/7");
 
-        let a = ArbitraryRational::num(1, 3).unwrap();
-        let b = ArbitraryRational::num(1, 6).unwrap();
+        let a = ArbitraryRational::num(1, 3).expect("Operation failed");
+        let b = ArbitraryRational::num(1, 6).expect("Operation failed");
         let sum = a + b;
         assert_eq!(sum.to_string(), "1/2");
     }
@@ -1265,11 +1265,11 @@ mod tests {
 
     #[test]
     fn test_constants() {
-        let pi = utils::pi(256).unwrap();
+        let pi = utils::pi(256).expect("Operation failed");
         let pi_str = pi.to_string();
         assert!(pi_str.starts_with("3.14159265358979"));
 
-        let e = utils::e(256).unwrap();
+        let e = utils::e(256).expect("Operation failed");
         let e_str = e.to_string();
         assert!(e_str.starts_with("2.71828182845904"));
     }
@@ -1297,7 +1297,7 @@ mod tests {
 
     #[test]
     fn test_transcendental_functions() {
-        let x = ArbitraryFloat::from_f64_withprecision(0.5, 128).unwrap();
+        let x = ArbitraryFloat::from_f64_withprecision(0.5, 128).expect("Operation failed");
 
         let sin_x = x.sin();
         let cos_x = x.cos();
@@ -1306,7 +1306,7 @@ mod tests {
         // sin²(x) + cos²(x) = 1
         assert!((identity.to_f64() - 1.0).abs() < 1e-15);
 
-        let ln_x = x.ln().unwrap();
+        let ln_x = x.ln().expect("Operation failed");
         let exp_ln_x = ln_x.exp();
         assert!((exp_ln_x.to_f64() - 0.5).abs() < 1e-15);
     }

@@ -102,7 +102,9 @@ pub struct SSORPreconditioner<F> {
 impl<F: Float + NumAssign + Sum + Debug + SparseElement + 'static> SSORPreconditioner<F> {
     /// Create a new SSOR preconditioner
     pub fn new(matrix: CsrMatrix<F>, omega: F) -> SparseResult<Self> {
-        if omega <= F::sparse_zero() || omega >= F::from(2.0).unwrap() {
+        if omega <= F::sparse_zero()
+            || omega >= F::from(2.0).expect("Failed to convert constant to float")
+        {
             return Err(SparseError::ValueError(
                 "Relaxation parameter omega must be in (0, 2)".to_string(),
             ));
@@ -406,11 +408,11 @@ mod tests {
     fn test_jacobi_preconditioner() {
         // Create a diagonal matrix
         let diagonal = vec![2.0, 3.0, 4.0];
-        let precond = JacobiPreconditioner::from_diagonal(diagonal).unwrap();
+        let precond = JacobiPreconditioner::from_diagonal(diagonal).expect("Operation failed");
 
         // Test application
         let x = vec![2.0, 6.0, 12.0];
-        let result = precond.matvec(&x).unwrap();
+        let result = precond.matvec(&x).expect("Operation failed");
 
         // Should be [1.0, 2.0, 3.0]
         assert!((result[0] - 1.0).abs() < 1e-10);

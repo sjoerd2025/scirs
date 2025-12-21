@@ -459,7 +459,7 @@ impl GpuMetricsComputer {
         let squared_diff = F::simd_sub(&y_true.view(), &ypred.view());
         let squared = F::simd_mul(&squared_diff.view(), &squared_diff.view());
         let sum = F::simd_sum(&squared.view());
-        Ok(sum / F::from(y_true.len()).unwrap())
+        Ok(sum / F::from(y_true.len()).expect("Operation failed"))
     }
 
     /// SIMD-accelerated accuracy computation
@@ -675,7 +675,7 @@ impl GpuMetricsComputer {
             .map(|(&t, &p)| (t - p) * (t - p))
             .sum();
 
-        Ok(diff_squared / F::from(y_true.len()).unwrap())
+        Ok(diff_squared / F::from(y_true.len()).expect("Operation failed"))
     }
 
     /// GPU kernel for MAE computation
@@ -689,7 +689,7 @@ impl GpuMetricsComputer {
             .map(|(&t, &p)| (t - p).abs())
             .sum();
 
-        Ok(abs_diff / F::from(y_true.len()).unwrap())
+        Ok(abs_diff / F::from(y_true.len()).expect("Operation failed"))
     }
 
     /// GPU kernel for R² computation
@@ -697,7 +697,8 @@ impl GpuMetricsComputer {
     where
         F: Float + std::iter::Sum,
     {
-        let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
+        let mean_true =
+            y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).expect("Operation failed");
 
         let ss_tot: F = y_true
             .iter()
@@ -733,7 +734,7 @@ impl GpuMetricsComputer {
         let diff = F::simd_sub(&y_true.view(), &ypred.view());
         let abs_diff = F::simd_abs(&diff.view());
         let sum = F::simd_sum(&abs_diff.view());
-        Ok(sum / F::from(y_true.len()).unwrap())
+        Ok(sum / F::from(y_true.len()).expect("Operation failed"))
     }
 
     /// SIMD-accelerated R² score computation
@@ -748,7 +749,8 @@ impl GpuMetricsComputer {
         }
 
         // Compute mean of y_true using SIMD
-        let mean_true = F::simd_sum(&y_true.view()) / F::from(y_true.len()).unwrap();
+        let mean_true =
+            F::simd_sum(&y_true.view()) / F::from(y_true.len()).expect("Operation failed");
 
         // Create array filled with mean value
         let mean_array = Array1::from_elem(y_true.len(), mean_true);
@@ -803,7 +805,7 @@ impl GpuMetricsComputer {
             .zip(ypred.iter())
             .map(|(&true_val, &pred_val)| (true_val - pred_val) * (true_val - pred_val))
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
 
         Ok(mse)
     }
@@ -823,7 +825,7 @@ impl GpuMetricsComputer {
             .zip(ypred.iter())
             .map(|(&true_val, &pred_val)| (true_val - pred_val).abs())
             .sum::<F>()
-            / F::from(y_true.len()).unwrap();
+            / F::from(y_true.len()).expect("Operation failed");
 
         Ok(mae)
     }
@@ -838,7 +840,8 @@ impl GpuMetricsComputer {
             ));
         }
 
-        let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
+        let mean_true =
+            y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).expect("Operation failed");
 
         let ss_tot = y_true
             .iter()
@@ -1279,14 +1282,14 @@ impl AdvancedGpuOrchestrator {
                         let y_p = ypred.row(i);
                         let diff = &y_t - &y_p;
                         let squared_diff = diff.mapv(|x| x * x);
-                        squared_diff.sum() / F::from(y_t.len()).unwrap()
+                        squared_diff.sum() / F::from(y_t.len()).expect("Operation failed")
                     }
                     "mae" => {
                         let y_t = y_true.row(i);
                         let y_p = ypred.row(i);
                         let diff = &y_t - &y_p;
                         let abs_diff = diff.mapv(|x| x.abs());
-                        abs_diff.sum() / F::from(y_t.len()).unwrap()
+                        abs_diff.sum() / F::from(y_t.len()).expect("Operation failed")
                     }
                     _ => F::zero(),
                 };
@@ -1644,7 +1647,8 @@ mod tests {
     #[test]
     #[ignore = "GPU availability varies by environment"]
     fn test_gpu_metrics_computer_creation() {
-        let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
+        let computer =
+            GpuMetricsComputer::new(GpuAccelConfig::default()).expect("Operation failed");
         // GPU availability depends on the hardware environment
         // Just ensure the computer can be created successfully
         let _ = computer.is_gpu_available();
@@ -1659,7 +1663,7 @@ mod tests {
             .with_memory_pool(true)
             .with_optimization_level(3)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(computer.config.min_batch_size, 500);
         assert_eq!(computer.config.max_gpu_memory, 512 * 1024 * 1024);
@@ -1671,39 +1675,46 @@ mod tests {
     #[test]
     #[ignore = "GPU availability varies by environment"]
     fn test_should_use_gpu() {
-        let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
+        let computer =
+            GpuMetricsComputer::new(GpuAccelConfig::default()).expect("Operation failed");
         assert!(!computer.should_use_gpu(500));
         assert!(computer.should_use_gpu(1500));
     }
 
     #[test]
     fn test_cpu_accuracy() {
-        let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
+        let computer =
+            GpuMetricsComputer::new(GpuAccelConfig::default()).expect("Operation failed");
         let y_true = array![0, 1, 2, 0, 1, 2];
         let ypred = array![0, 2, 1, 0, 0, 2];
 
-        let accuracy = computer.gpu_accuracy(&y_true, &ypred).unwrap();
+        let accuracy = computer
+            .gpu_accuracy(&y_true, &ypred)
+            .expect("Operation failed");
         assert!((accuracy - 0.5).abs() < 1e-6);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_cpu_mse() {
-        let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
+        let computer =
+            GpuMetricsComputer::new(GpuAccelConfig::default()).expect("Operation failed");
         let y_true = array![1.0, 2.0, 3.0, 4.0];
         let ypred = array![1.1, 2.1, 2.9, 4.1];
 
-        let mse = computer.gpu_mse(&y_true, &ypred).unwrap();
+        let mse = computer.gpu_mse(&y_true, &ypred).expect("Operation failed");
         assert!(mse > 0.0 && mse < 0.1);
     }
 
     #[test]
     fn test_cpu_confusion_matrix() {
-        let computer = GpuMetricsComputer::new(GpuAccelConfig::default()).unwrap();
+        let computer =
+            GpuMetricsComputer::new(GpuAccelConfig::default()).expect("Operation failed");
         let y_true = array![0, 1, 2, 0, 1, 2];
         let ypred = array![0, 2, 1, 0, 0, 2];
 
-        let cm = computer.gpu_confusion_matrix(&y_true, &ypred, 3).unwrap();
+        let cm = computer
+            .gpu_confusion_matrix(&y_true, &ypred, 3)
+            .expect("Operation failed");
         assert_eq!(cm.shape(), &[3, 3]);
         assert_eq!(cm[[0, 0]], 2);
     }

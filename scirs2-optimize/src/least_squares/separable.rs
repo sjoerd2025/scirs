@@ -174,7 +174,10 @@ where
     // Main optimization loop
     while iter < options.max_iter {
         // Compute basis functions
-        let phi = basis_functions(x_data.as_slice().unwrap(), beta.as_slice().unwrap());
+        let phi = basis_functions(
+            x_data.as_slice().expect("Operation failed"),
+            beta.as_slice().expect("Operation failed"),
+        );
         nfev += 1;
 
         let (n_points, n_basis) = phi.dim();
@@ -213,8 +216,8 @@ where
             &phi,
             &alpha,
             &residual,
-            x_data.as_slice().unwrap(),
-            beta.as_slice().unwrap(),
+            x_data.as_slice().expect("Operation failed"),
+            beta.as_slice().expect("Operation failed"),
             &basis_jacobian,
         );
 
@@ -237,8 +240,9 @@ where
         // Update nonlinear parameters using gradient descent
         // (Could be improved with more sophisticated methods)
         let step_size = backtracking_line_search(&beta, &gradient, cost, |b| {
-            let phi_new = basis_functions(x_data.as_slice().unwrap(), b);
-            let alpha_new = solve_linear_subproblem(&phi_new, y_data, &options).unwrap();
+            let phi_new = basis_functions(x_data.as_slice().expect("Operation failed"), b);
+            let alpha_new =
+                solve_linear_subproblem(&phi_new, y_data, &options).expect("Operation failed");
             let y_pred_new = phi_new.dot(&alpha_new);
             let res_new = y_data - &y_pred_new;
             0.5 * res_new.iter().map(|&r| r * r).sum::<f64>()
@@ -258,7 +262,10 @@ where
             result.message = "Converged (parameter tolerance)".to_string();
 
             // Compute final linear parameters
-            let phi_final = basis_functions(x_data.as_slice().unwrap(), beta.as_slice().unwrap());
+            let phi_final = basis_functions(
+                x_data.as_slice().expect("Operation failed"),
+                beta.as_slice().expect("Operation failed"),
+            );
             let alpha_final = solve_linear_subproblem(&phi_final, y_data, &options)?;
 
             return Ok(SeparableResult {
@@ -272,7 +279,10 @@ where
     }
 
     // Maximum iterations reached
-    let phi_final = basis_functions(x_data.as_slice().unwrap(), beta.as_slice().unwrap());
+    let phi_final = basis_functions(
+        x_data.as_slice().expect("Operation failed"),
+        beta.as_slice().expect("Operation failed"),
+    );
     let alpha_final = solve_linear_subproblem(&phi_final, y_data, &options)?;
     let y_pred_final = phi_final.dot(&alpha_final);
     let res_final = y_data - &y_pred_final;
@@ -378,7 +388,7 @@ where
 
     for _ in 0..20 {
         let x_new = x - alpha * direction;
-        let f_new = f(x_new.as_slice().unwrap());
+        let f_new = f(x_new.as_slice().expect("Operation failed"));
 
         if f_new <= f0 - c * alpha * grad_dot_dir {
             return alpha;
@@ -508,7 +518,10 @@ mod tests {
         let true_alpha = array![2.0, 0.5];
         let true_beta = array![0.7];
 
-        let phi_true = basis_functions(t_data.as_slice().unwrap(), true_beta.as_slice().unwrap());
+        let phi_true = basis_functions(
+            t_data.as_slice().expect("Operation failed"),
+            true_beta.as_slice().expect("Operation failed"),
+        );
         let y_data =
             phi_true.dot(&true_alpha) + 0.01 * array![0.1, -0.05, 0.08, -0.03, 0.06, -0.04, 0.02];
 
@@ -523,7 +536,7 @@ mod tests {
             &beta0,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.result.success);
         assert!((result.result.x[0] - true_beta[0]).abs() < 0.1);
@@ -565,7 +578,10 @@ mod tests {
         let true_alpha = array![3.0, 1.5];
         let true_beta = array![2.0, 0.5];
 
-        let phi_true = basis_functions(t_data.as_slice().unwrap(), true_beta.as_slice().unwrap());
+        let phi_true = basis_functions(
+            t_data.as_slice().expect("Operation failed"),
+            true_beta.as_slice().expect("Operation failed"),
+        );
         let y_data = phi_true.dot(&true_alpha);
 
         // Initial guess
@@ -583,7 +599,7 @@ mod tests {
             &beta0,
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // For multi-exponential problems, convergence is harder
         // Just check that we made good progress

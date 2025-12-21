@@ -36,9 +36,9 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
-    /// let result = spline.evaluate(1.5).unwrap();
+    /// let result = spline.evaluate(1.5).expect("Operation failed");
     /// println!("f(1.5) = {}", result);
     /// ```
     pub fn evaluate(&self, xnew: F) -> InterpolateResult<F> {
@@ -99,10 +99,10 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
     /// let xnew = array![0.5, 1.5, 2.5];
-    /// let results = spline.evaluate_array(&xnew.view()).unwrap();
+    /// let results = spline.evaluate_array(&xnew.view()).expect("Operation failed");
     /// ```
     pub fn evaluate_array(&self, xnew: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
         let mut result = Array1::zeros(xnew.len());
@@ -130,9 +130,9 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
-    /// let slope = spline.derivative(1.5).unwrap();
+    /// let slope = spline.derivative(1.5).expect("Operation failed");
     /// println!("f'(1.5) = {}", slope);
     /// ```
     pub fn derivative(&self, xnew: F) -> InterpolateResult<F> {
@@ -166,11 +166,11 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
-    /// let first_deriv = spline.derivative_n(1.5, 1).unwrap();
-    /// let second_deriv = spline.derivative_n(1.5, 2).unwrap();
-    /// let third_deriv = spline.derivative_n(1.5, 3).unwrap();
+    /// let first_deriv = spline.derivative_n(1.5, 1).expect("Operation failed");
+    /// let second_deriv = spline.derivative_n(1.5, 2).expect("Operation failed");
+    /// let third_deriv = spline.derivative_n(1.5, 3).expect("Operation failed");
     /// ```
     pub fn derivative_n(&self, xnew: F, order: usize) -> InterpolateResult<F> {
         // Check order validity
@@ -276,10 +276,10 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
     /// let xnew = array![0.5, 1.5, 2.5];
-    /// let derivatives = spline.derivative_array(&xnew.view(), 1).unwrap();
+    /// let derivatives = spline.derivative_array(&xnew.view(), 1).expect("Operation failed");
     /// ```
     pub fn derivative_array(
         &self,
@@ -323,9 +323,9 @@ impl<F: InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
-    /// let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
+    /// let spline = CubicSpline::new(&x.view(), &y.view()).expect("Operation failed");
     ///
-    /// let all_derivs = spline.derivatives_all(1.5, 3).unwrap();
+    /// let all_derivs = spline.derivatives_all(1.5, 3).expect("Operation failed");
     /// // all_derivs[0] = f(1.5)
     /// // all_derivs[1] = f'(1.5)
     /// // all_derivs[2] = f''(1.5)

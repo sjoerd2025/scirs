@@ -600,8 +600,8 @@ impl PerformanceTracker {
         let time_elapsed = self
             .timestamps
             .back()
-            .unwrap()
-            .duration_since(*self.timestamps.front().unwrap())
+            .expect("Operation failed")
+            .duration_since(*self.timestamps.front().expect("Operation failed"))
             .as_secs_f64();
 
         if time_elapsed == 0.0 {
@@ -680,7 +680,7 @@ impl AdaptationEngine {
             AdaptationStrategy::ReinforcementLearning => {
                 if self.rl_agent.is_some() {
                     // Temporarily take the agent to avoid borrow conflicts
-                    let mut agent = self.rl_agent.take().unwrap();
+                    let mut agent = self.rl_agent.take().expect("Operation failed");
                     let result =
                         self.rl_based_adaptation(&mut agent, parameter_manager, metrics, config);
                     self.rl_agent = Some(agent);
@@ -1356,13 +1356,15 @@ mod tests {
         let mut manager = ParameterManager::new();
         let param = TunableParameter::new(1.0, 0.0, 10.0);
 
-        manager.register("test_param", param).unwrap();
+        manager
+            .register("test_param", param)
+            .expect("Operation failed");
         assert!(manager.current_values().contains_key("test_param"));
 
         let new_value = ParameterValue::Float(2.0);
         manager
             .update_parameter("test_param", new_value.clone())
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(manager.current_values()["test_param"], new_value);
     }
 

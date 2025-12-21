@@ -457,13 +457,21 @@ impl<
                 available_nodes
                     .iter()
                     .min_by(|a, b| {
-                        let load_a = self.nodes.get(*a as &str).unwrap().current_load;
-                        let load_b = self.nodes.get(*b as &str).unwrap().current_load;
+                        let load_a = self
+                            .nodes
+                            .get(*a as &str)
+                            .expect("Operation failed")
+                            .current_load;
+                        let load_b = self
+                            .nodes
+                            .get(*b as &str)
+                            .expect("Operation failed")
+                            .current_load;
                         load_a
                             .partial_cmp(&load_b)
                             .unwrap_or(std::cmp::Ordering::Equal)
                     })
-                    .unwrap()
+                    .expect("Operation failed")
                     .to_string()
             }
             LoadBalancingStrategy::Random => {
@@ -581,7 +589,8 @@ impl<
         let mut forecast = Array1::zeros(horizon);
 
         for i in 0..horizon {
-            forecast[i] = data[data.len() - 1] + slope * F::from(i + 1).unwrap();
+            forecast[i] =
+                data[data.len() - 1] + slope * F::from(i + 1).expect("Failed to convert to float");
         }
 
         Ok(forecast)
@@ -616,7 +625,7 @@ impl<
         let std_dev = data.var(F::zero()).sqrt();
 
         // Simple z-score based anomaly detection
-        let threshold = F::from(3.0).unwrap();
+        let threshold = F::from(3.0).expect("Failed to convert constant to float");
         let mut anomaly_scores = Array1::zeros(data.len());
 
         for (i, &value) in data.iter().enumerate() {
@@ -643,7 +652,7 @@ impl<
             let end = (i + window_size / 2 + 1).min(data.len());
 
             let window_sum = data.slice(scirs2_core::ndarray::s![start..end]).sum();
-            let window_len = F::from(end - start).unwrap();
+            let window_len = F::from(end - start).expect("Failed to convert to float");
             trend[i] = window_sum / window_len;
         }
 
@@ -693,7 +702,7 @@ impl<
         }
 
         if count > 0 {
-            final_forecast = final_forecast / F::from(count).unwrap();
+            final_forecast = final_forecast / F::from(count).expect("Failed to convert to float");
         }
 
         Ok(final_forecast)
@@ -938,8 +947,8 @@ mod tests {
             dependencies: vec![],
         };
 
-        processor.submit_task(low_task).unwrap();
-        processor.submit_task(high_task).unwrap();
+        processor.submit_task(low_task).expect("Operation failed");
+        processor.submit_task(high_task).expect("Operation failed");
 
         // High priority task should be first
         assert_eq!(processor.task_queue[0].priority, TaskPriority::High);
@@ -957,7 +966,7 @@ mod tests {
         let result = processor.distributed_forecast(&data, horizon, "linear");
         assert!(result.is_ok());
 
-        let forecast = result.unwrap();
+        let forecast = result.expect("Operation failed");
         assert_eq!(forecast.len(), horizon);
     }
 

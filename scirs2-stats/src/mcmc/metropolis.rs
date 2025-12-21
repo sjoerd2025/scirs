@@ -53,7 +53,7 @@ impl ProposalDistribution for RandomWalkProposal {
         rng: &mut R,
     ) -> Array1<f64> {
         use scirs2_core::random::Normal;
-        let normal = Normal::new(0.0, self.stepsize).unwrap();
+        let normal = Normal::new(0.0, self.stepsize).expect("Operation failed");
         current + Array1::from_shape_fn(current.len(), |_| normal.sample(rng))
     }
 }
@@ -110,7 +110,9 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
 
         // Accept or reject
         self.n_proposed += 1;
-        let u: f64 = Uniform::new(0.0, 1.0).unwrap().sample(rng);
+        let u: f64 = Uniform::new(0.0, 1.0)
+            .expect("Operation failed")
+            .sample(rng);
         if u.ln() < log_ratio {
             self.current = proposed;
             self.current_log_density = proposed_log_density;

@@ -263,17 +263,17 @@ impl TaskHandle {
 
     /// Get the task status
     pub fn status(&self) -> TaskStatus {
-        *self.status.lock().unwrap()
+        *self.status.lock().expect("Operation failed")
     }
 
     /// Wait for the task to complete
     pub fn wait(&self) -> TaskStatus {
         let (lock, cvar) = &*self.result_notify;
-        let completed = lock.lock().unwrap();
+        let completed = lock.lock().expect("Operation failed");
 
         // Wait if the task is not complete
         if !*completed {
-            let _completed = cvar.wait(completed).unwrap();
+            let _completed = cvar.wait(completed).expect("Operation failed");
         }
 
         self.status()
@@ -282,11 +282,13 @@ impl TaskHandle {
     /// Wait for the task to complete with a timeout
     pub fn wait_timeout(&self, timeout: Duration) -> Result<TaskStatus, CoreError> {
         let (lock, cvar) = &*self.result_notify;
-        let completed = lock.lock().unwrap();
+        let completed = lock.lock().expect("Operation failed");
 
         // Wait if the task is not complete
         if !*completed {
-            let result = cvar.wait_timeout(completed, timeout).unwrap();
+            let result = cvar
+                .wait_timeout(completed, timeout)
+                .expect("Operation failed");
 
             if result.1.timed_out() {
                 return Err(CoreError::TimeoutError(
@@ -301,14 +303,14 @@ impl TaskHandle {
 
     /// Cancel the task
     pub fn cancel(&self) -> bool {
-        let mut status = self.status.lock().unwrap();
+        let mut status = self.status.lock().expect("Operation failed");
 
         if *status == TaskStatus::Pending {
             *status = TaskStatus::Cancelled;
 
             // Notify waiters
             let (lock, cvar) = &*self.result_notify;
-            let mut completed = lock.lock().unwrap();
+            let mut completed = lock.lock().expect("Operation failed");
             *completed = true;
             cvar.notify_all();
 
@@ -381,7 +383,7 @@ impl TaskWrapper {
     fn execute(&mut self) -> Result<(), CoreError> {
         // Update status
         {
-            let mut status = self.status.lock().unwrap();
+            let mut status = self.status.lock().expect("Operation failed");
             *status = TaskStatus::Running;
         }
 
@@ -390,7 +392,7 @@ impl TaskWrapper {
 
         // Update status
         {
-            let mut status = self.status.lock().unwrap();
+            let mut status = self.status.lock().expect("Operation failed");
             *status = match result {
                 Ok(_) => TaskStatus::Completed,
                 Err(_) => TaskStatus::Failed(self.retry_count),
@@ -399,7 +401,7 @@ impl TaskWrapper {
 
         // Notify waiters
         let (lock, cvar) = &*self.result_notify;
-        let mut completed = lock.lock().unwrap();
+        let mut completed = lock.lock().expect("Operation failed");
         *completed = true;
         cvar.notify_all();
 
@@ -559,13 +561,13 @@ impl WorkerState {
 
     /// Update the last active time
     fn update_last_active(&self) {
-        let mut last_active = self.last_active.lock().unwrap();
+        let mut last_active = self.last_active.lock().expect("Operation failed");
         *last_active = Instant::now();
     }
 
     /// Get the time since the worker was last active
     fn time_since_last_active(&self) -> Duration {
-        let last_active = self.last_active.lock().unwrap();
+        let last_active = self.last_active.lock().expect("Operation failed");
         last_active.elapsed()
     }
 
@@ -778,7 +780,7 @@ impl WorkStealingScheduler {
         task_executions: Arc<Mutex<HashMap<usize, Duration>>>,
     ) {
         // Main worker loop
-        while let SchedulerState::Running = *state.read().unwrap() {
+        while let SchedulerState::Running = *state.read().expect("Operation failed") {
             // Try to get a task
             let task = worker_state.pop_local().or_else(|| worker_state.steal());
 
@@ -795,7 +797,7 @@ impl WorkStealingScheduler {
                 let taskid = task.id;
                 task_executions
                     .lock()
-                    .unwrap()
+                    .expect("Test: operation failed")
                     .insert(taskid, execution_time);
 
                 // Update worker statistics
@@ -814,7 +816,7 @@ impl WorkStealingScheduler {
 
                             // Reset task status
                             {
-                                let mut status = task.status.lock().unwrap();
+                                let mut status = task.status.lock().expect("Operation failed");
                                 *status = TaskStatus::Pending;
                             }
 
@@ -852,7 +854,7 @@ impl WorkStealingScheduler {
             let taskid = task.id;
             task_executions
                 .lock()
-                .unwrap()
+                .expect("Test: operation failed")
                 .insert(taskid, execution_time);
 
             // Update worker statistics
@@ -868,7 +870,7 @@ impl WorkStealingScheduler {
     /// Submit a boxed task to the scheduler
     pub fn submit_boxed(&self, task: Box<dyn Task>) -> TaskHandle {
         // Check if the scheduler is running
-        if *self.state.read().unwrap() != SchedulerState::Running {
+        if *self.state.read().expect("Operation failed") != SchedulerState::Running {
             panic!("Cannot submit tasks to a stopped scheduler");
         }
 
@@ -884,13 +886,13 @@ impl WorkStealingScheduler {
         // Store task completion info
         self.task_completion
             .lock()
-            .unwrap()
+            .expect("Test: operation failed")
             .insert(taskid, wrapper.result_notify.clone());
 
         // Store submission time
         self.task_submissions
             .lock()
-            .unwrap()
+            .expect("Test: operation failed")
             .insert(taskid, Instant::now());
 
         // Submit the task based on the scheduling policy
@@ -1004,19 +1006,24 @@ impl WorkStealingScheduler {
         let taskids: Vec<_> = self
             .task_completion
             .lock()
-            .unwrap()
+            .expect("Test: operation failed")
             .keys()
             .copied()
             .collect();
 
         // Wait for each task
         for id in taskids {
-            if let Some(notify) = self.task_completion.lock().unwrap().get(&id) {
+            if let Some(notify) = self
+                .task_completion
+                .lock()
+                .expect("Operation failed")
+                .get(&id)
+            {
                 let (lock, cvar) = &**notify;
-                let completed = lock.lock().unwrap();
+                let completed = lock.lock().expect("Operation failed");
 
                 if !*completed {
-                    let _completed = cvar.wait(completed).unwrap();
+                    let _completed = cvar.wait(completed).expect("Operation failed");
                 }
             }
         }
@@ -1030,7 +1037,7 @@ impl WorkStealingScheduler {
         let taskids: Vec<_> = self
             .task_completion
             .lock()
-            .unwrap()
+            .expect("Test: operation failed")
             .keys()
             .copied()
             .collect();
@@ -1046,12 +1053,19 @@ impl WorkStealingScheduler {
                 ));
             }
 
-            if let Some(notify) = self.task_completion.lock().unwrap().get(&id) {
+            if let Some(notify) = self
+                .task_completion
+                .lock()
+                .expect("Operation failed")
+                .get(&id)
+            {
                 let (lock, cvar) = &**notify;
-                let completed = lock.lock().unwrap();
+                let completed = lock.lock().expect("Operation failed");
 
                 if !*completed {
-                    let result = cvar.wait_timeout(completed, remaining).unwrap();
+                    let result = cvar
+                        .wait_timeout(completed, remaining)
+                        .expect("Operation failed");
 
                     if result.1.timed_out() && !*result.0 {
                         return Err(CoreError::TimeoutError(
@@ -1079,8 +1093,8 @@ impl WorkStealingScheduler {
         let mut total_execution = Duration::from_secs(0);
         let mut completed_tasks = 0;
 
-        let submissions = self.task_submissions.lock().unwrap();
-        let executions = self.task_executions.lock().unwrap();
+        let submissions = self.task_submissions.lock().expect("Operation failed");
+        let executions = self.task_executions.lock().expect("Operation failed");
 
         for (id, submission_time) in submissions.iter() {
             if let Some(execution_time) = executions.get(id) {
@@ -1143,7 +1157,7 @@ impl WorkStealingScheduler {
     pub fn shutdown(&mut self) {
         // Update state
         {
-            let mut state = self.state.write().unwrap();
+            let mut state = self.state.write().expect("Operation failed");
             *state = SchedulerState::ShuttingDown;
         }
 
@@ -1159,7 +1173,7 @@ impl WorkStealingScheduler {
 
         // Update state
         {
-            let mut state = self.state.write().unwrap();
+            let mut state = self.state.write().expect("Operation failed");
             *state = SchedulerState::ShutDown;
         }
     }
@@ -1189,7 +1203,7 @@ impl WorkStealingScheduler {
 
 impl Drop for WorkStealingScheduler {
     fn drop(&mut self) {
-        if *self.state.read().unwrap() != SchedulerState::ShutDown {
+        if *self.state.read().expect("Operation failed") != SchedulerState::ShutDown {
             self.shutdown();
         }
     }
@@ -1368,7 +1382,10 @@ where
             // Create a closure with moved ownership of item
             let task = CloneableTask::new(move || {
                 let result = func(&item)?;
-                results_clone.lock().unwrap().push((i, result));
+                results_clone
+                    .lock()
+                    .expect("Operation failed")
+                    .push((i, result));
                 Ok(())
             })
             .with_name(&task_name)
@@ -1398,7 +1415,7 @@ where
         // Get results in the original order
         let mut result_map = Vec::with_capacity(items_len);
         {
-            let results_guard = results.lock().unwrap();
+            let results_guard = results.lock().expect("Operation failed");
             for (i, result) in results_guard.iter() {
                 result_map.push((*i, result.clone()));
             }
@@ -1541,8 +1558,8 @@ where
         let flat_view = self
             .view()
             .into_shape_with_order(crate::ndarray::IxDyn(&[self.len()]))
-            .unwrap();
-        let flat = flat_view.to_slice().unwrap();
+            .expect("Test: operation failed");
+        let flat = flat_view.to_slice().expect("Operation failed");
 
         // Process in parallel
         let results = parallel::par_map(flat, f)?;

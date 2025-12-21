@@ -34,7 +34,7 @@ fn main() {
     .unwrap_or_else(|e| {
         println!("LSODA method failed unexpectedly on simple problem: {e}.");
         println!("Using DOP853 as fallback...");
-        solve_ivp(decay, [0.0, 5.0], array![1.0], None).unwrap()
+        solve_ivp(decay, [0.0, 5.0], array![1.0], None).expect("Operation failed")
     });
 
     // Print statistics
@@ -46,12 +46,12 @@ fn main() {
     );
     println!(
         "  Final value: {:.6}, Exact: {:.6}",
-        result.y.last().unwrap()[0],
+        result.y.last().expect("Operation failed")[0],
         (-5.0f64).exp()
     );
     println!(
         "  Error: {:.2e}",
-        (result.y.last().unwrap()[0] - (-5.0f64).exp()).abs()
+        (result.y.last().expect("Operation failed")[0] - (-5.0f64).exp()).abs()
     );
 
     if let Some(msg) = &result.message {
@@ -108,7 +108,7 @@ fn main() {
                     ..Default::default()
                 }),
             )
-            .unwrap()
+            .expect("Operation failed")
         });
 
         // Print statistics about the solution
@@ -119,8 +119,8 @@ fn main() {
         println!("  Rejected steps: {}", result.n_rejected);
         println!(
             "  Final state: [{:.4}, {:.4}]",
-            result.y.last().unwrap()[0],
-            result.y.last().unwrap()[1]
+            result.y.last().expect("Operation failed")[0],
+            result.y.last().expect("Operation failed")[1]
         );
         println!("  Success: {}", result.success);
 

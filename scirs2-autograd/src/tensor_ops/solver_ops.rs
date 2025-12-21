@@ -159,7 +159,8 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for LinearSolveOp {
                     println!("Error solving transpose system (1D): {e:?}");
                     // Use regularized system instead
                     let n = a_2d.shape()[0];
-                    let eps = F::epsilon() * F::from(10.0).unwrap();
+                    let eps =
+                        F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
                     let regularized = &a_2d + &(Array2::<F>::eye(n) * eps);
 
                     match solve_transpose_system(&regularized.view(), &grad_x_1d) {
@@ -191,7 +192,8 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for LinearSolveOp {
                     println!("Error solving transpose system (2D): {e:?}");
                     // Use regularized system instead
                     let n = a_2d.shape()[0];
-                    let eps = F::epsilon() * F::from(10.0).unwrap();
+                    let eps =
+                        F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
                     let regularized = &a_2d + &(Array2::<F>::eye(n) * eps);
 
                     match solve_transpose_system_2d(&regularized.view(), &grad_x_2d) {
@@ -280,15 +282,24 @@ impl<F: Float> Op<F> for LeastSquaresSolveOp {
         let at = a_2d.t();
         let ata = at.dot(&a_2d);
         let atb = if b.ndim() == 1 {
-            let b_1d = b.view().into_dimensionality::<Ix1>().unwrap();
+            let b_1d = b
+                .view()
+                .into_dimensionality::<Ix1>()
+                .expect("Operation failed");
             at.dot(&b_1d).into_dyn()
         } else {
-            let b_2d = b.view().into_dimensionality::<Ix2>().unwrap();
+            let b_2d = b
+                .view()
+                .into_dimensionality::<Ix2>()
+                .expect("Operation failed");
             at.dot(&b_2d).into_dyn()
         };
 
         // Create views for solve_symmetric_system
-        let ata_view = ata.view().into_dimensionality::<Ix2>().unwrap();
+        let ata_view = ata
+            .view()
+            .into_dimensionality::<Ix2>()
+            .expect("Operation failed");
         let atb_view = atb.view();
 
         let x = solve_symmetric_system(&ata_view, &atb_view)?;
@@ -404,7 +415,10 @@ impl<F: Float> Op<F> for LeastSquaresSolveOp {
         };
 
         // Create views for solve_symmetric_system
-        let ata_view = ata.view().into_dimensionality::<Ix2>().unwrap();
+        let ata_view = ata
+            .view()
+            .into_dimensionality::<Ix2>()
+            .expect("Operation failed");
         let at_grad_x_view = at_grad_x.view();
 
         let grad_intermediate = match solve_symmetric_system(&ata_view, &at_grad_x_view) {
@@ -555,7 +569,10 @@ fn solve_linear_system_2d<F: Float>(
     for j in 0..m {
         let b_col = b.column(j);
         let x_col = solve_linear_system_1d(a, &b_col)?;
-        let x_col_1d = x_col.view().into_dimensionality::<Ix1>().unwrap();
+        let x_col_1d = x_col
+            .view()
+            .into_dimensionality::<Ix1>()
+            .expect("Operation failed");
 
         for i in 0..n {
             x[[i, j]] = x_col_1d[i];
@@ -586,10 +603,16 @@ fn solve_symmetric_system<F: Float>(
                 if diag_val <= F::zero() {
                     // Fall back to general solver
                     return if b.ndim() == 1 {
-                        let b_1d = b.view().into_dimensionality::<Ix1>().unwrap();
+                        let b_1d = b
+                            .view()
+                            .into_dimensionality::<Ix1>()
+                            .expect("Operation failed");
                         solve_linear_system_1d(a, &b_1d)
                     } else {
-                        let b_2d = b.view().into_dimensionality::<Ix2>().unwrap();
+                        let b_2d = b
+                            .view()
+                            .into_dimensionality::<Ix2>()
+                            .expect("Operation failed");
                         solve_linear_system_2d(a, &b_2d)
                     };
                 }
@@ -606,7 +629,10 @@ fn solve_symmetric_system<F: Float>(
 
     // Solve L @ y = b, then L^T @ x = y
     if b.ndim() == 1 {
-        let b_1d = b.view().into_dimensionality::<Ix1>().unwrap();
+        let b_1d = b
+            .view()
+            .into_dimensionality::<Ix1>()
+            .expect("Operation failed");
 
         // Forward substitution
         let mut y = Array1::<F>::zeros(n);
@@ -632,7 +658,10 @@ fn solve_symmetric_system<F: Float>(
 
         Ok(x.into_dyn())
     } else {
-        let b_2d = b.view().into_dimensionality::<Ix2>().unwrap();
+        let b_2d = b
+            .view()
+            .into_dimensionality::<Ix2>()
+            .expect("Operation failed");
         let m = b_2d.shape()[1];
         let mut x = Array2::<F>::zeros((n, m));
 

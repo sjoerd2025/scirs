@@ -104,7 +104,7 @@ impl<
             let probabilities = split_features.mapv(|x| F::one() / (F::one() + (-x).exp()));
 
             // Compute marginal probability
-            let marginal = probabilities.mean_axis(Axis(0)).unwrap();
+            let marginal = probabilities.mean_axis(Axis(0)).expect("Operation failed");
 
             // Compute KL divergence for each sample
             let mut kl_sum = F::zero();
@@ -129,14 +129,15 @@ impl<
             }
 
             if valid_samples > 0 {
-                let mean_kl = kl_sum / F::from(valid_samples).unwrap();
+                let mean_kl = kl_sum / F::from(valid_samples).expect("Failed to convert to float");
                 scores.push(mean_kl.exp());
             } else {
                 scores.push(F::one());
             }
         }
 
-        let mean_score = scores.iter().copied().sum::<F>() / F::from(scores.len()).unwrap();
+        let mean_score =
+            scores.iter().copied().sum::<F>() / F::from(scores.len()).expect("Operation failed");
         let std_score = {
             let variance = scores
                 .iter()
@@ -145,7 +146,7 @@ impl<
                     diff * diff
                 })
                 .sum::<F>()
-                / F::from(scores.len()).unwrap();
+                / F::from(scores.len()).expect("Operation failed");
             variance.sqrt()
         };
 
@@ -175,8 +176,8 @@ impl<
         }
 
         // Compute means
-        let mu_real = real_features.mean_axis(Axis(0)).unwrap();
-        let mu_fake = fake_features.mean_axis(Axis(0)).unwrap();
+        let mu_real = real_features.mean_axis(Axis(0)).expect("Operation failed");
+        let mu_fake = fake_features.mean_axis(Axis(0)).expect("Operation failed");
 
         // Compute covariances
         let cov_real = self.compute_covariance_matrix(real_features)?;
@@ -203,7 +204,7 @@ impl<
 
         // FID = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2))
         let fid = mean_dist_sq + trace_cov_real + trace_cov_fake
-            - F::from(2.0).unwrap() * trace_product_sqrt;
+            - F::from(2.0).expect("Failed to convert constant to float") * trace_product_sqrt;
 
         Ok(fid)
     }
@@ -230,18 +231,21 @@ impl<
         let fake_sub = fake_features.slice(scirs2_core::ndarray::s![0..n_fake, ..]);
 
         // Compute polynomial kernel matrices
-        let gamma_val = gamma.unwrap_or_else(|| F::one() / F::from(real_features.ncols()).unwrap());
+        let gamma_val = gamma.unwrap_or_else(|| {
+            F::one() / F::from(real_features.ncols()).expect("Operation failed")
+        });
 
         let k_rr = self.compute_polynomial_kernel(&real_sub, &real_sub, degree, gamma_val)?;
         let k_ff = self.compute_polynomial_kernel(&fake_sub, &fake_sub, degree, gamma_val)?;
         let k_rf = self.compute_polynomial_kernel(&real_sub, &fake_sub, degree, gamma_val)?;
 
         // Compute KID estimate
-        let term1 = k_rr.sum() / F::from(n_real * n_real).unwrap();
-        let term2 = k_ff.sum() / F::from(n_fake * n_fake).unwrap();
-        let term3 = k_rf.sum() / F::from(n_real * n_fake).unwrap();
+        let term1 = k_rr.sum() / F::from(n_real * n_real).expect("Failed to convert to float");
+        let term2 = k_ff.sum() / F::from(n_fake * n_fake).expect("Failed to convert to float");
+        let term3 = k_rf.sum() / F::from(n_real * n_fake).expect("Failed to convert to float");
 
-        let kid_estimate = term1 + term2 - F::from(2.0).unwrap() * term3;
+        let kid_estimate =
+            term1 + term2 - F::from(2.0).expect("Failed to convert constant to float") * term3;
 
         // Compute bias correction
         let bias_correction = self.compute_kid_bias_correction(n_real, n_fake, &k_rr, &k_ff)?;
@@ -268,7 +272,7 @@ impl<
         }
 
         // Center the data
-        let mean = features.mean_axis(Axis(0)).unwrap();
+        let mean = features.mean_axis(Axis(0)).expect("Operation failed");
         let centered = features - &mean.insert_axis(Axis(0));
 
         // Compute covariance matrix: (1/(n-1)) * X^T * X
@@ -280,7 +284,7 @@ impl<
                 for k in 0..n_samples {
                     sum = sum + centered[[k, i]] * centered[[k, j]];
                 }
-                let cov_val = sum / F::from(n_samples - 1).unwrap();
+                let cov_val = sum / F::from(n_samples - 1).expect("Failed to convert to float");
                 cov[[i, j]] = cov_val;
                 if i != j {
                     cov[[j, i]] = cov_val; // Symmetric
@@ -312,7 +316,8 @@ impl<
                 }
 
                 // Polynomial kernel: (gamma * <x1, x2> + 1)^degree
-                let kernel_val = (gamma * dot_product + F::one()).powf(F::from(degree).unwrap());
+                let kernel_val = (gamma * dot_product + F::one())
+                    .powf(F::from(degree).expect("Failed to convert to float"));
                 kernel[[i, j]] = kernel_val;
             }
         }
@@ -329,10 +334,13 @@ impl<
         k_ff: &Array2<F>,
     ) -> Result<F> {
         // Simplified bias correction (diagonal terms)
-        let diag_rr = (0..n_real).map(|i| k_rr[[i, i]]).sum::<F>() / F::from(n_real).unwrap();
-        let diag_ff = (0..n_fake).map(|i| k_ff[[i, i]]).sum::<F>() / F::from(n_fake).unwrap();
+        let diag_rr = (0..n_real).map(|i| k_rr[[i, i]]).sum::<F>()
+            / F::from(n_real).expect("Failed to convert to float");
+        let diag_ff = (0..n_fake).map(|i| k_ff[[i, i]]).sum::<F>()
+            / F::from(n_fake).expect("Failed to convert to float");
 
-        let bias = (diag_rr / F::from(n_real).unwrap()) + (diag_ff / F::from(n_fake).unwrap());
+        let bias = (diag_rr / F::from(n_real).expect("Failed to convert to float"))
+            + (diag_ff / F::from(n_fake).expect("Failed to convert to float"));
         Ok(bias)
     }
 }

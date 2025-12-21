@@ -179,7 +179,10 @@ where
                     x_h = project_to_bounds(&x_h, b);
                 }
 
-                let res_h = residuals(x_h.as_slice().unwrap(), data.as_slice().unwrap());
+                let res_h = residuals(
+                    x_h.as_slice().expect("Operation failed"),
+                    data.as_slice().expect("Operation failed"),
+                );
                 count += 1;
 
                 for i in 0..n {
@@ -193,7 +196,10 @@ where
     // Main optimization loop
     while iter < options.max_iter && nfev < max_nfev {
         // Compute residuals
-        let res = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+        let res = residuals(
+            x.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         nfev += 1;
         let _n = res.len();
 
@@ -203,7 +209,10 @@ where
         // Compute Jacobian
         let (jac, jac_evals) = match &jacobian {
             Some(jac_fn) => {
-                let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
+                let j = jac_fn(
+                    x.as_slice().expect("Operation failed"),
+                    data.as_slice().expect("Operation failed"),
+                );
                 njev += 1;
                 (j, 0)
             }
@@ -259,7 +268,10 @@ where
         }
 
         // Evaluate at new point
-        let res_new = residuals(x_new.as_slice().unwrap(), data.as_slice().unwrap());
+        let res_new = residuals(
+            x_new.as_slice().expect("Operation failed"),
+            data.as_slice().expect("Operation failed"),
+        );
         nfev += 1;
         let cost_new = 0.5 * res_new.iter().map(|&r| r * r).sum::<f64>();
 
@@ -303,7 +315,10 @@ where
     }
 
     // Max iterations reached
-    let res_final = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
+    let res_final = residuals(
+        x.as_slice().expect("Operation failed"),
+        data.as_slice().expect("Operation failed"),
+    );
     let final_cost = 0.5 * res_final.iter().map(|&r| r * r).sum::<f64>();
 
     let mut result = OptimizeResults::<f64>::default();
@@ -467,7 +482,7 @@ mod tests {
             &array![],
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.success);
         // Check that solution respects bounds
@@ -498,7 +513,7 @@ mod tests {
             &array![],
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.success);
         // Solution should be at the boundary

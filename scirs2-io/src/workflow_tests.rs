@@ -19,11 +19,14 @@ fn testworkflow_builder() {
         )
         .add_dependency("task2", "task1")
         .build()
-        .unwrap();
+        .expect("Operation failed");
 
     assert_eq!(workflow.tasks.len(), 2);
     assert_eq!(
-        workflow.dependencies.get("task2").unwrap(),
+        workflow
+            .dependencies
+            .get("task2")
+            .expect("Operation failed"),
         &vec!["task1".to_string()]
     );
 }
@@ -44,7 +47,9 @@ fn test_cycle_detection() {
 
 #[test]
 fn test_etl_template() {
-    let workflow = templates::etlworkflow("My ETL Pipeline").build().unwrap();
+    let workflow = templates::etlworkflow("My ETL Pipeline")
+        .build()
+        .expect("Operation failed");
 
     assert_eq!(workflow.tasks.len(), 4);
     assert!(workflow.tasks.iter().any(|t| t.id == "extract"));

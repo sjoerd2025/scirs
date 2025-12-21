@@ -91,7 +91,7 @@ pub use adaptive::{
 /// let y = mixed_precision_matvec::<f32, f32, f32, f64>(
 ///     &a_f32.view(),
 ///     &x_f32.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(y.len(), 2);
 /// assert!((y[0] - 1.5f32).abs() < 1e-6);
@@ -144,7 +144,7 @@ where
 /// let c = mixed_precision_matmul::<f32, f32, f32, f64>(
 ///     &a_f32.view(),
 ///     &b_f32.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(c.shape(), &[2, 2]);
 /// assert!((c[[0, 0]] - 19.0f32).abs() < 1e-5);
@@ -211,7 +211,7 @@ where
 /// let dot_mp = mixed_precision_dot::<f32, f32, f32, f64>(
 ///     &a_f32.view(),
 ///     &b_f32.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // The mixed precision version may be more accurate
 /// ```
@@ -433,7 +433,8 @@ mod tests {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
         let x = array![0.5f32, 0.5f32];
 
-        let result = mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
+        let result = mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view())
+            .expect("Operation failed");
 
         assert_eq!(result.len(), 2);
         assert_relative_eq!(result[0], 1.5f32, epsilon = 1e-6);
@@ -445,7 +446,8 @@ mod tests {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
         let b = array![[5.0f32, 6.0f32], [7.0f32, 8.0f32]];
 
-        let result = mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result = mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 19.0f32, epsilon = 1e-5);
@@ -459,7 +461,8 @@ mod tests {
         let a = array![1.0f32, 2.0f32, 3.0f32];
         let b = array![4.0f32, 5.0f32, 6.0f32];
 
-        let result = mixed_precision_dot::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let result = mixed_precision_dot::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
 
         // Expected: 1*4 + 2*5 + 3*6 = 4 + 10 + 18 = 32
         assert_relative_eq!(result, 32.0f32, epsilon = 1e-6);
@@ -469,7 +472,7 @@ mod tests {
     fn test_mixed_precision_inv() {
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
 
-        let result = mixed_precision_inv::<f32, f32, f64>(&a.view()).unwrap();
+        let result = mixed_precision_inv::<f32, f32, f64>(&a.view()).expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
 
@@ -491,18 +494,20 @@ mod tests {
     fn test_mixed_precision_det() {
         // 2x2 matrix
         let a = array![[1.0f32, 2.0f32], [3.0f32, 4.0f32]];
-        let det = mixed_precision_det::<f32, f32, f64>(&a.view()).unwrap();
+        let det = mixed_precision_det::<f32, f32, f64>(&a.view()).expect("Operation failed");
         // Expected: 1*4 - 2*3 = 4 - 6 = -2
         assert_relative_eq!(det, -2.0f32, epsilon = 1e-5);
 
         // Identity matrix
         let identity = array![[1.0f32, 0.0f32], [0.0f32, 1.0f32]];
-        let det_id = mixed_precision_det::<f32, f32, f64>(&identity.view()).unwrap();
+        let det_id =
+            mixed_precision_det::<f32, f32, f64>(&identity.view()).expect("Operation failed");
         assert_relative_eq!(det_id, 1.0f32, epsilon = 1e-5);
 
         // Singular matrix
         let singular = array![[1.0f32, 2.0f32], [2.0f32, 4.0f32]];
-        let det_sing = mixed_precision_det::<f32, f32, f64>(&singular.view()).unwrap();
+        let det_sing =
+            mixed_precision_det::<f32, f32, f64>(&singular.view()).expect("Operation failed");
         assert_relative_eq!(det_sing, 0.0f32, epsilon = 1e-5);
     }
 
@@ -514,22 +519,22 @@ mod tests {
         let x = array![1.0f32, 2.0f32];
 
         // Test matrix multiplication
-        let matmul_result =
-            mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view()).unwrap();
+        let matmul_result = mixed_precision_matmul::<f32, f32, f32, f64>(&a.view(), &b.view())
+            .expect("Operation failed");
         assert_eq!(matmul_result.shape(), &[2, 2]);
 
         // Test matrix-vector multiplication
-        let matvec_result =
-            mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
+        let matvec_result = mixed_precision_matvec::<f32, f32, f32, f64>(&a.view(), &x.view())
+            .expect("Operation failed");
         assert_eq!(matvec_result.len(), 2);
 
         // Test linear solve
-        let solve_result =
-            mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &x.view()).unwrap();
+        let solve_result = mixed_precision_solve::<f32, f32, f32, f64>(&a.view(), &x.view())
+            .expect("Operation failed");
         assert_eq!(solve_result.len(), 2);
 
         // Test decompositions
-        let (q, r) = mixed_precision_qr::<f32, f32, f64>(&a.view()).unwrap();
+        let (q, r) = mixed_precision_qr::<f32, f32, f64>(&a.view()).expect("Operation failed");
         assert_eq!(q.shape(), &[2, 2]);
         assert_eq!(r.shape(), &[2, 2]);
     }

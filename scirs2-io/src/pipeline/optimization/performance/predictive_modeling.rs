@@ -326,7 +326,7 @@ mod tests {
         let result = model.predict(&features);
         assert!(result.is_ok());
         
-        let params = result.unwrap();
+        let params = result.expect("Operation failed");
         assert!(params.thread_count >= 1 && params.thread_count <= 64);
         assert!(params.chunk_size >= 1024);
     }
@@ -373,7 +373,7 @@ mod tests {
         let result = engine.predict_performance(&config, &system_features);
         
         assert!(result.is_ok());
-        let prediction = result.unwrap();
+        let prediction = result.expect("Operation failed");
         assert!(prediction.throughput > 0.0);
         assert!(prediction.memory_usage > 0);
         assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);

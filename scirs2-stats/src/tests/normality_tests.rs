@@ -11,7 +11,8 @@ mod tests {
         let x = array![0.1, 0.2, 0.3, 0.4, 0.5];
         let y = array![0.15, 0.25, 0.35, 0.45, 0.55];
 
-        let (stat, p_value) = ks_2samp(&x.view(), &y.view(), "two-sided").unwrap();
+        let (stat, p_value) =
+            ks_2samp(&x.view(), &y.view(), "two-sided").expect("Test: operation failed");
 
         // The test statistic should be reasonable for these small samples
         assert!(stat <= 0.5);
@@ -25,7 +26,8 @@ mod tests {
         let x = array![0.1, 0.2, 0.3, 0.4, 0.5];
         let y = array![5.1, 5.2, 5.3, 5.4, 5.5];
 
-        let (stat, p_value) = ks_2samp(&x.view(), &y.view(), "two-sided").unwrap();
+        let (stat, p_value) =
+            ks_2samp(&x.view(), &y.view(), "two-sided").expect("Test: operation failed");
 
         // The test statistic should be 1.0 (maximum difference)
         assert_relative_eq!(stat, 1.0, epsilon = 1e-10);
@@ -41,10 +43,12 @@ mod tests {
         let y = array![1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4];
 
         // Test if x is stochastically less than y (which is true)
-        let _stat_p_value_less = ks_2samp(&x.view(), &y.view(), "less").unwrap();
+        let _stat_p_value_less =
+            ks_2samp(&x.view(), &y.view(), "less").expect("Test: operation failed");
 
         // Test the opposite direction (which should be false)
-        let _stat_p_value_greater = ks_2samp(&x.view(), &y.view(), "greater").unwrap();
+        let _stat_p_value_greater =
+            ks_2samp(&x.view(), &y.view(), "greater").expect("Test: operation failed");
 
         // For these samples, ideally "less" should have a smaller p-value than "greater"
         // But due to the alternative hypothesis calculation, we'll temporarily disable this assertion
@@ -58,10 +62,12 @@ mod tests {
         let x = array![1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4];
 
         // Test if x is stochastically greater than y (which is true)
-        let (_stat, p_value_greater) = ks_2samp(&x.view(), &y.view(), "greater").unwrap();
+        let (_stat, p_value_greater) =
+            ks_2samp(&x.view(), &y.view(), "greater").expect("Test: operation failed");
 
         // Test the opposite direction (which should be false)
-        let (_stat, p_value_less) = ks_2samp(&x.view(), &y.view(), "less").unwrap();
+        let (_stat, p_value_less) =
+            ks_2samp(&x.view(), &y.view(), "less").expect("Test: operation failed");
 
         // For these samples, "greater" should have a smaller p-value than "less"
         // This verifies that the alternative hypothesis is working correctly

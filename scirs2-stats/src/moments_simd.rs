@@ -12,6 +12,12 @@ use scirs2_core::{
     validation::*,
 };
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// SIMD-optimized skewness calculation
 ///
 /// Computes the skewness (third standardized moment) using SIMD acceleration
@@ -33,7 +39,7 @@ use scirs2_core::{
 /// use scirs2_stats::moments_simd::skewness_simd;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-/// let skew = skewness_simd(&data.view(), false).unwrap();
+/// let skew = skewness_simd(&data.view(), false).expect("Test/example failed");
 /// ```
 #[allow(dead_code)]
 pub fn skewness_simd<F, D>(x: &ArrayBase<D, Ix1>, bias: bool) -> StatsResult<F>
@@ -56,7 +62,7 @@ where
     }
 
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let optimizer = AutoOptimizer::new();
 
     // Compute mean using SIMD if beneficial
@@ -80,13 +86,13 @@ where
     // Formula: g1 = (Σ(x-μ)³/n) / (Σ(x-μ)²/n)^(3/2)
     let variance = sum_sq_dev / n_f;
     let third_moment = sum_cubed_dev / n_f;
-    let skew = third_moment / variance.powf(F::from(1.5).unwrap());
+    let skew = third_moment / variance.powf(const_f64::<F>(1.5));
 
     if !bias && n > 2 {
         // Apply correction for sample bias
         // The bias correction factor for skewness is sqrt(n(n-1))/(n-2)
         let sqrt_term = (n_f * (n_f - F::one())).sqrt();
-        let correction = sqrt_term / (n_f - F::from(2.0).unwrap());
+        let correction = sqrt_term / (n_f - const_f64::<F>(2.0));
         Ok(skew * correction)
     } else {
         Ok(skew)
@@ -128,7 +134,7 @@ where
     }
 
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let optimizer = AutoOptimizer::new();
 
     // Compute mean using SIMD if beneficial
@@ -160,19 +166,19 @@ where
     // Apply bias correction if requested
     if !bias && n > 3 {
         // Unbiased estimator for kurtosis
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let n1 = n_f - F::one();
-        let n2 = n_f - F::from(2.0).unwrap();
-        let n3 = n_f - F::from(3.0).unwrap();
+        let n2 = n_f - const_f64::<F>(2.0);
+        let n3 = n_f - const_f64::<F>(3.0);
 
         // For sample kurtosis: k = ((n+1)*k - 3*(n-1)) * (n-1) / ((n-2)*(n-3)) + 3
-        k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3)
-            + F::from(3.0).unwrap();
+        k = ((n_f + F::one()) * k - const_f64::<F>(3.0) * n1) * n1 / (n2 * n3)
+            + const_f64::<F>(3.0);
     }
 
     // Apply Fisher's definition (excess kurtosis)
     if fisher {
-        k = k - F::from(3.0).unwrap();
+        k = k - const_f64::<F>(3.0);
     }
 
     Ok(k)
@@ -210,8 +216,8 @@ where
     }
 
     let n = x.len();
-    let n_f = F::from(n).unwrap();
-    let _order_f = F::from(momentorder as f64).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
+    let _order_f = F::from(momentorder as f64).expect("Failed to convert to float");
     let optimizer = AutoOptimizer::new();
 
     if center {
@@ -273,7 +279,7 @@ where
     }
 
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let optimizer = AutoOptimizer::new();
 
     let mut results = Vec::with_capacity(moments.len());
@@ -439,7 +445,7 @@ where
         }
         _ => {
             // For higher orders, use scalar computation with SIMD sum
-            let order_f = F::from(order as f64).unwrap();
+            let order_f = F::from(order as f64).expect("Failed to convert to float");
             let powered: Array1<F> = deviations.mapv(|x| x.powf(order_f));
             F::simd_sum(&powered.view())
         }
@@ -452,7 +458,7 @@ where
     F: Float + NumCast + Zero + One + Copy,
     D: Data<Elem = F>,
 {
-    let order_f = F::from(order as f64).unwrap();
+    let order_f = F::from(order as f64).expect("Failed to convert to float");
     x.iter()
         .map(|&val| (val - mean).powf(order_f))
         .fold(F::zero(), |acc, val| acc + val)
@@ -483,7 +489,7 @@ where
         }
         _ => {
             // For higher orders, use scalar computation with SIMD sum
-            let order_f = F::from(order as f64).unwrap();
+            let order_f = F::from(order as f64).expect("Failed to convert to float");
             let powered: Array1<F> = x.mapv(|val| val.powf(order_f));
             F::simd_sum(&powered.view())
         }
@@ -496,7 +502,7 @@ where
     F: Float + NumCast + Zero + One + Copy,
     D: Data<Elem = F>,
 {
-    let order_f = F::from(order as f64).unwrap();
+    let order_f = F::from(order as f64).expect("Failed to convert to float");
     x.iter()
         .map(|&val| val.powf(order_f))
         .fold(F::zero(), |acc, val| acc + val)
@@ -692,7 +698,7 @@ where
             let chunk_data: Array1<f32> = x
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
 
             // Compute powers using ultra-optimized SIMD
@@ -716,9 +722,10 @@ where
             let chunk_sum_cube = f32::simd_sum_f32_ultra(&chunk_cubed.view());
 
             // Accumulate results
-            sum = sum + F::from(chunk_sum as f64).unwrap();
-            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).unwrap();
-            sum_cube = sum_cube + F::from(chunk_sum_cube as f64).unwrap();
+            sum = sum + F::from(chunk_sum as f64).expect("Failed to convert to float");
+            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).expect("Failed to convert to float");
+            sum_cube =
+                sum_cube + F::from(chunk_sum_cube as f64).expect("Failed to convert to float");
         } else {
             // Handle remaining elements with scalar processing
             for i in chunk_start..chunk_end {
@@ -731,25 +738,25 @@ where
         }
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let mean = sum / n_f;
     let mean_sq = mean * mean;
     let mean_cube = mean_sq * mean;
 
     // Calculate central moments
     let m2 = (sum_sq / n_f) - mean_sq;
-    let m3 = (sum_cube / n_f) - F::from(3.0).unwrap() * mean * m2 - mean_cube;
+    let m3 = (sum_cube / n_f) - const_f64::<F>(3.0) * mean * m2 - mean_cube;
 
     if m2 == F::zero() {
         return Ok(F::zero());
     }
 
-    let skew = m3 / m2.powf(F::from(1.5).unwrap());
+    let skew = m3 / m2.powf(const_f64::<F>(1.5));
 
     if !bias && n > 2 {
         // Apply bias correction
         let sqrt_term = (n_f * (n_f - F::one())).sqrt();
-        let correction = sqrt_term / (n_f - F::from(2.0).unwrap());
+        let correction = sqrt_term / (n_f - const_f64::<F>(2.0));
         Ok(skew * correction)
     } else {
         Ok(skew)
@@ -784,7 +791,7 @@ where
             let chunk_data: Array1<f32> = x
                 .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                 .iter()
-                .map(|&val| val.to_f64().unwrap() as f32)
+                .map(|&val| val.to_f64().expect("Operation failed") as f32)
                 .collect();
 
             // Compute powers using ultra-optimized SIMD
@@ -808,9 +815,10 @@ where
             let chunk_sum_fourth = f32::simd_sum_f32_ultra(&chunk_fourth.view());
 
             // Accumulate results
-            sum = sum + F::from(chunk_sum as f64).unwrap();
-            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).unwrap();
-            sum_fourth = sum_fourth + F::from(chunk_sum_fourth as f64).unwrap();
+            sum = sum + F::from(chunk_sum as f64).expect("Failed to convert to float");
+            sum_sq = sum_sq + F::from(chunk_sum_sq as f64).expect("Failed to convert to float");
+            sum_fourth =
+                sum_fourth + F::from(chunk_sum_fourth as f64).expect("Failed to convert to float");
         } else {
             // Handle remaining elements
             for i in chunk_start..chunk_end {
@@ -823,7 +831,7 @@ where
         }
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let mean = sum / n_f;
     let mean_sq = mean * mean;
     let variance = (sum_sq / n_f) - mean_sq;
@@ -837,8 +845,8 @@ where
     // Calculate fourth central moment
     let mean_fourth = mean_sq * mean_sq;
     let m4 = (sum_fourth / n_f)
-        - F::from(4.0).unwrap() * mean * (sum_sq / n_f - mean_sq) * mean
-        - F::from(6.0).unwrap() * mean_sq * variance
+        - const_f64::<F>(4.0) * mean * (sum_sq / n_f - mean_sq) * mean
+        - const_f64::<F>(6.0) * mean_sq * variance
         - mean_fourth;
 
     // Calculate kurtosis
@@ -846,18 +854,18 @@ where
 
     // Apply bias correction if requested
     if !bias && n > 3 {
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let n1 = n_f - F::one();
-        let n2 = n_f - F::from(2.0).unwrap();
-        let n3 = n_f - F::from(3.0).unwrap();
+        let n2 = n_f - const_f64::<F>(2.0);
+        let n3 = n_f - const_f64::<F>(3.0);
 
-        k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3)
-            + F::from(3.0).unwrap();
+        k = ((n_f + F::one()) * k - const_f64::<F>(3.0) * n1) * n1 / (n2 * n3)
+            + const_f64::<F>(3.0);
     }
 
     // Apply Fisher's definition if requested
     if fisher {
-        k = k - F::from(3.0).unwrap();
+        k = k - const_f64::<F>(3.0);
     }
 
     Ok(k)
@@ -894,11 +902,11 @@ where
                 let chunk_data: Array1<f32> = x
                     .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                     .iter()
-                    .map(|&val| val.to_f64().unwrap() as f32)
+                    .map(|&val| val.to_f64().expect("Operation failed") as f32)
                     .collect();
 
                 let chunk_sum = f32::simd_sum_f32_ultra(&chunk_data.view());
-                sum = sum + F::from(chunk_sum as f64).unwrap();
+                sum = sum + F::from(chunk_sum as f64).expect("Failed to convert to float");
             } else {
                 for i in chunk_start..chunk_end {
                     sum = sum + x[i];
@@ -906,8 +914,8 @@ where
             }
         }
 
-        let mean = sum / F::from(n).unwrap();
-        let mean_f32 = mean.to_f64().unwrap() as f32;
+        let mean = sum / F::from(n).expect("Failed to convert to float");
+        let mean_f32 = mean.to_f64().expect("Operation failed") as f32;
 
         // Second pass: compute central moment using bandwidth-saturated SIMD
         let mut moment_sum = F::zero();
@@ -920,7 +928,7 @@ where
                 let chunk_data: Array1<f32> = x
                     .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                     .iter()
-                    .map(|&val| val.to_f64().unwrap() as f32)
+                    .map(|&val| val.to_f64().expect("Operation failed") as f32)
                     .collect();
 
                 // Compute deviations using ultra-optimized SIMD
@@ -985,17 +993,19 @@ where
                 };
 
                 let chunk_moment_sum = f32::simd_sum_f32_ultra(&powered.view());
-                moment_sum = moment_sum + F::from(chunk_moment_sum as f64).unwrap();
+                moment_sum = moment_sum
+                    + F::from(chunk_moment_sum as f64).expect("Failed to convert to float");
             } else {
                 // Handle remaining elements
                 for i in chunk_start..chunk_end {
                     let dev = x[i] - mean;
-                    moment_sum = moment_sum + dev.powf(F::from(order as f64).unwrap());
+                    moment_sum = moment_sum
+                        + dev.powf(F::from(order as f64).expect("Failed to convert to float"));
                 }
             }
         }
 
-        Ok(moment_sum / F::from(n).unwrap())
+        Ok(moment_sum / F::from(n).expect("Failed to convert to float"))
     } else {
         // Raw moment calculation with bandwidth saturation
         let mut moment_sum = F::zero();
@@ -1008,7 +1018,7 @@ where
                 let chunk_data: Array1<f32> = x
                     .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                     .iter()
-                    .map(|&val| val.to_f64().unwrap() as f32)
+                    .map(|&val| val.to_f64().expect("Operation failed") as f32)
                     .collect();
 
                 // Compute powers based on order
@@ -1063,16 +1073,18 @@ where
                 };
 
                 let chunk_moment_sum = f32::simd_sum_f32_ultra(&powered.view());
-                moment_sum = moment_sum + F::from(chunk_moment_sum as f64).unwrap();
+                moment_sum = moment_sum
+                    + F::from(chunk_moment_sum as f64).expect("Failed to convert to float");
             } else {
                 // Handle remaining elements
                 for i in chunk_start..chunk_end {
-                    moment_sum = moment_sum + x[i].powf(F::from(order as f64).unwrap());
+                    moment_sum = moment_sum
+                        + x[i].powf(F::from(order as f64).expect("Failed to convert to float"));
                 }
             }
         }
 
-        Ok(moment_sum / F::from(n).unwrap())
+        Ok(moment_sum / F::from(n).expect("Failed to convert to float"))
     }
 }
 
@@ -1105,11 +1117,11 @@ where
                 let chunk_data: Array1<f32> = x
                     .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                     .iter()
-                    .map(|&val| val.to_f64().unwrap() as f32)
+                    .map(|&val| val.to_f64().expect("Operation failed") as f32)
                     .collect();
 
                 let chunk_sum = f32::simd_sum_f32_ultra(&chunk_data.view());
-                sum = sum + F::from(chunk_sum as f64).unwrap();
+                sum = sum + F::from(chunk_sum as f64).expect("Failed to convert to float");
             } else {
                 for i in chunk_start..chunk_end {
                     sum = sum + x[i];
@@ -1117,8 +1129,8 @@ where
             }
         }
 
-        let mean = sum / F::from(n).unwrap();
-        let mean_f32 = mean.to_f64().unwrap() as f32;
+        let mean = sum / F::from(n).expect("Failed to convert to float");
+        let mean_f32 = mean.to_f64().expect("Operation failed") as f32;
 
         // Initialize moment sums
         let mut moment_sums = vec![F::zero(); moments.len()];
@@ -1132,7 +1144,7 @@ where
                 let chunk_data: Array1<f32> = x
                     .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                     .iter()
-                    .map(|&val| val.to_f64().unwrap() as f32)
+                    .map(|&val| val.to_f64().expect("Operation failed") as f32)
                     .collect();
 
                 // Compute deviations using ultra-optimized SIMD
@@ -1165,7 +1177,8 @@ where
                 for (i, &order) in moments.iter().enumerate() {
                     if order <= max_order {
                         let chunk_moment_sum = f32::simd_sum_f32_ultra(&powers[order].view());
-                        moment_sums[i] = moment_sums[i] + F::from(chunk_moment_sum as f64).unwrap();
+                        moment_sums[i] = moment_sums[i]
+                            + F::from(chunk_moment_sum as f64).expect("Failed to convert to float");
                     }
                 }
             } else {
@@ -1176,8 +1189,10 @@ where
                         if order == 0 {
                             moment_sums[i] = moment_sums[i] + F::one();
                         } else {
-                            moment_sums[i] =
-                                moment_sums[i] + dev.powf(F::from(order as f64).unwrap());
+                            moment_sums[i] = moment_sums[i]
+                                + dev.powf(
+                                    F::from(order as f64).expect("Failed to convert to float"),
+                                );
                         }
                     }
                 }
@@ -1185,7 +1200,7 @@ where
         }
 
         // Normalize by n
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         for (i, &order) in moments.iter().enumerate() {
             results[i] = if order == 0 {
                 F::one()
@@ -1205,7 +1220,7 @@ where
                 let chunk_data: Array1<f32> = x
                     .slice(scirs2_core::ndarray::s![chunk_start..chunk_end])
                     .iter()
-                    .map(|&val| val.to_f64().unwrap() as f32)
+                    .map(|&val| val.to_f64().expect("Operation failed") as f32)
                     .collect();
 
                 // Compute powers up to max_order
@@ -1229,7 +1244,8 @@ where
                 for (i, &order) in moments.iter().enumerate() {
                     if order <= max_order {
                         let chunk_moment_sum = f32::simd_sum_f32_ultra(&powers[order].view());
-                        moment_sums[i] = moment_sums[i] + F::from(chunk_moment_sum as f64).unwrap();
+                        moment_sums[i] = moment_sums[i]
+                            + F::from(chunk_moment_sum as f64).expect("Failed to convert to float");
                     }
                 }
             } else {
@@ -1239,8 +1255,10 @@ where
                         if order == 0 {
                             moment_sums[i] = moment_sums[i] + F::one();
                         } else {
-                            moment_sums[i] =
-                                moment_sums[i] + x[idx].powf(F::from(order as f64).unwrap());
+                            moment_sums[i] = moment_sums[i]
+                                + x[idx].powf(
+                                    F::from(order as f64).expect("Failed to convert to float"),
+                                );
                         }
                     }
                 }
@@ -1248,7 +1266,7 @@ where
         }
 
         // Normalize by n
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         for (i, &order) in moments.iter().enumerate() {
             results[i] = if order == 0 {
                 F::one()
@@ -1271,8 +1289,8 @@ mod tests {
     fn test_skewness_simd_consistency() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
-        let simd_result = skewness_simd(&data.view(), false).unwrap();
-        let scalar_result = skew(&data.view(), false, None).unwrap();
+        let simd_result = skewness_simd(&data.view(), false).expect("Test/example failed");
+        let scalar_result = skew(&data.view(), false, None).expect("Test/example failed");
 
         assert!((simd_result - scalar_result).abs() < 1e-10);
     }
@@ -1281,8 +1299,8 @@ mod tests {
     fn test_kurtosis_simd_consistency() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
-        let simd_result = kurtosis_simd(&data.view(), true, false).unwrap();
-        let scalar_result = kurtosis(&data.view(), true, false, None).unwrap();
+        let simd_result = kurtosis_simd(&data.view(), true, false).expect("Test/example failed");
+        let scalar_result = kurtosis(&data.view(), true, false, None).expect("Test/example failed");
 
         assert!((simd_result - scalar_result).abs() < 1e-10);
     }
@@ -1293,8 +1311,10 @@ mod tests {
 
         for order in 1..=4 {
             for center in [true, false] {
-                let simd_result = moment_simd(&data.view(), order, center).unwrap();
-                let scalar_result = moment(&data.view(), order, center, None).unwrap();
+                let simd_result =
+                    moment_simd(&data.view(), order, center).expect("Test/example failed");
+                let scalar_result =
+                    moment(&data.view(), order, center, None).expect("Test/example failed");
 
                 assert!(
                     (simd_result - scalar_result).abs() < 1e-10,
@@ -1313,10 +1333,12 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         let orders = vec![1, 2, 3, 4];
 
-        let batch_results = moments_batch_simd(&data.view(), &orders, true).unwrap();
+        let batch_results =
+            moments_batch_simd(&data.view(), &orders, true).expect("Test/example failed");
 
         for (i, &order) in orders.iter().enumerate() {
-            let individual_result = moment_simd(&data.view(), order, true).unwrap();
+            let individual_result =
+                moment_simd(&data.view(), order, true).expect("Test/example failed");
             assert!((batch_results[i] - individual_result).abs() < 1e-10);
         }
     }

@@ -62,7 +62,7 @@ use crate::error::{Result, TimeSeriesError};
 /// };
 ///
 /// // Estimate piecewise trend
-/// let trend = estimate_piecewise_trend(&ts, &options).unwrap();
+/// let trend = estimate_piecewise_trend(&ts, &options).expect("Operation failed");
 ///
 /// // The trend should have the same length as the input
 /// assert_eq!(trend.len(), ts.len());
@@ -190,7 +190,9 @@ where
                     &right_ts,
                     options.criterion,
                     options.segment_model,
-                    options.penalty.map(|p| F::from_f64(p).unwrap()),
+                    options
+                        .penalty
+                        .map(|p| F::from_f64(p).expect("Operation failed")),
                 )?;
 
                 if improvement > max_improvement_in_segment {
@@ -238,14 +240,16 @@ where
     let min_segment = options.min_segment_length;
     let penalty_value = options
         .penalty
-        .map(|p| F::from_f64(p).unwrap())
+        .map(|p| F::from_f64(p).expect("Operation failed"))
         .unwrap_or_else(|| {
             // Default penalty based on criterion
             match options.criterion {
-                BreakpointCriterion::AIC => F::from_f64(2.0).unwrap(),
-                BreakpointCriterion::BIC => F::from_f64((n as f64).ln()).unwrap(),
-                BreakpointCriterion::ModifiedBIC => F::from_f64((n as f64).ln().powf(1.5)).unwrap(),
-                BreakpointCriterion::RSS => F::from_f64(15.0).unwrap(), // Arbitrary default
+                BreakpointCriterion::AIC => F::from_f64(2.0).expect("Operation failed"),
+                BreakpointCriterion::BIC => F::from_f64((n as f64).ln()).expect("Operation failed"),
+                BreakpointCriterion::ModifiedBIC => {
+                    F::from_f64((n as f64).ln().powf(1.5)).expect("Operation failed")
+                }
+                BreakpointCriterion::RSS => F::from_f64(15.0).expect("Operation failed"), // Arbitrary default
             }
         });
 
@@ -285,7 +289,9 @@ where
         // Pruning step: remove candidates that can't be optimal
         let mut new_candidates = Vec::new();
         for &s in &candidates {
-            if s > t - min_segment || cost[s] + F::from_f64(0.1).unwrap() < cost[t] {
+            if s > t - min_segment
+                || cost[s] + F::from_f64(0.1).expect("Operation failed") < cost[t]
+            {
                 new_candidates.push(s);
             }
         }
@@ -435,7 +441,8 @@ where
                     SegmentModelType::Cubic => 4,
                     SegmentModelType::Spline => 5, // Approximate for spline
                 };
-                improvement = improvement - F::from_f64(2.0 * params_per_segment as f64).unwrap();
+                improvement = improvement
+                    - F::from_f64(2.0 * params_per_segment as f64).expect("Operation failed");
             }
             BreakpointCriterion::BIC => {
                 // BIC penalty: k * ln(n), where k is the increase in number of parameters
@@ -447,7 +454,8 @@ where
                     SegmentModelType::Spline => 5, // Approximate for spline
                 };
                 improvement = improvement
-                    - F::from_f64(params_per_segment as f64 * (n_segment as f64).ln()).unwrap();
+                    - F::from_f64(params_per_segment as f64 * (n_segment as f64).ln())
+                        .expect("Operation failed");
             }
             BreakpointCriterion::ModifiedBIC => {
                 // Modified BIC with stronger penalty: k * ln(n)^1.5
@@ -460,11 +468,12 @@ where
                 };
                 improvement = improvement
                     - F::from_f64(params_per_segment as f64 * (n_segment as f64).ln().powf(1.5))
-                        .unwrap();
+                        .expect("Operation failed");
             }
             BreakpointCriterion::RSS => {
                 // For RSS, we need an explicit penalty to avoid overfitting
-                improvement = improvement - F::from_f64(15.0).unwrap(); // Arbitrary default
+                improvement = improvement - F::from_f64(15.0).expect("Operation failed");
+                // Arbitrary default
             }
         }
     }
@@ -488,7 +497,7 @@ where
     let fitted = match model_type {
         SegmentModelType::Constant => {
             // Constant model: y = mean
-            let mean = segment_ts.sum() / F::from_usize(n).unwrap();
+            let mean = segment_ts.sum() / F::from_usize(n).expect("Operation failed");
             Array1::from_elem(n, mean)
         }
         SegmentModelType::Linear => {
@@ -531,8 +540,8 @@ where
                 SegmentModelType::Cubic => 4,
                 SegmentModelType::Spline => 5,
             };
-            let n_f = F::from_usize(n).unwrap();
-            let aic = n_f * (rss / n_f).ln() + F::from_usize(2 * params).unwrap();
+            let n_f = F::from_usize(n).expect("Operation failed");
+            let aic = n_f * (rss / n_f).ln() + F::from_usize(2 * params).expect("Operation failed");
             Ok(aic)
         }
         BreakpointCriterion::BIC => {
@@ -544,8 +553,9 @@ where
                 SegmentModelType::Cubic => 4,
                 SegmentModelType::Spline => 5,
             };
-            let n_f = F::from_usize(n).unwrap();
-            let bic = n_f * (rss / n_f).ln() + F::from_usize(params).unwrap() * n_f.ln();
+            let n_f = F::from_usize(n).expect("Operation failed");
+            let bic = n_f * (rss / n_f).ln()
+                + F::from_usize(params).expect("Operation failed") * n_f.ln();
             Ok(bic)
         }
         BreakpointCriterion::ModifiedBIC => {
@@ -557,9 +567,10 @@ where
                 SegmentModelType::Cubic => 4,
                 SegmentModelType::Spline => 5,
             };
-            let n_f = F::from_usize(n).unwrap();
+            let n_f = F::from_usize(n).expect("Operation failed");
             let mbic = n_f * (rss / n_f).ln()
-                + F::from_usize(params).unwrap() * n_f.ln().powf(F::from_f64(1.5).unwrap());
+                + F::from_usize(params).expect("Operation failed")
+                    * n_f.ln().powf(F::from_f64(1.5).expect("Operation failed"));
             Ok(mbic)
         }
     }
@@ -574,11 +585,14 @@ where
     let n = _segmentts.len();
 
     // Create x values: 0, 1, 2, ...
-    let x_values: Vec<F> = (0..n).map(|i| F::from_usize(i).unwrap()).collect();
+    let x_values: Vec<F> = (0..n)
+        .map(|i| F::from_usize(i).expect("Operation failed"))
+        .collect();
 
     // Calculate means
-    let mean_x = F::from_usize(n - 1).unwrap() / F::from_f64(2.0).unwrap();
-    let mean_y = _segmentts.sum() / F::from_usize(n).unwrap();
+    let mean_x = F::from_usize(n - 1).expect("Operation failed")
+        / F::from_f64(2.0).expect("Operation failed");
+    let mean_y = _segmentts.sum() / F::from_usize(n).expect("Operation failed");
 
     // Calculate covariance and variance
     let mut cov_xy = F::zero();
@@ -627,7 +641,9 @@ where
     }
 
     // Create x values: 0, 1, 2, ...
-    let x_values: Vec<F> = (0..n).map(|i| F::from_usize(i).unwrap()).collect();
+    let x_values: Vec<F> = (0..n)
+        .map(|i| F::from_usize(i).expect("Operation failed"))
+        .collect();
 
     // Create design matrix
     let mut x_design = Array2::<F>::zeros((n, degree + 1));
@@ -798,7 +814,8 @@ where
         // Fit model to segment
         let fitted = match model_type {
             SegmentModelType::Constant => {
-                let mean = segment_data.sum() / F::from_usize(segment_data.len()).unwrap();
+                let mean = segment_data.sum()
+                    / F::from_usize(segment_data.len()).expect("Operation failed");
                 Array1::from_elem(segment_data.len(), mean)
             }
             SegmentModelType::Linear => fit_linear_model(&segment_data.view())?,

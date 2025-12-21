@@ -31,7 +31,7 @@ use crate::fft::fft;
 /// use scirs2_fft::hartley::dht;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0];
-/// let h = dht(&x).unwrap();
+/// let h = dht(&x).expect("Operation failed");
 /// println!("Hartley transform: {:?}", h);
 /// ```
 #[allow(dead_code)]
@@ -86,8 +86,8 @@ where
 /// use scirs2_fft::hartley::{dht, idht};
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0];
-/// let h = dht(&x).unwrap();
-/// let x_recovered = idht(&h).unwrap();
+/// let h = dht(&x).expect("Operation failed");
+/// let x_recovered = idht(&h).expect("Operation failed");
 /// assert!((x_recovered[0] - 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -129,7 +129,7 @@ where
 /// use scirs2_fft::hartley::dht2;
 ///
 /// let x = array![[1.0, 2.0], [3.0, 4.0]];
-/// let h = dht2(&x, None).unwrap();
+/// let h = dht2(&x, None).expect("Operation failed");
 /// println!("2D Hartley transform: {:?}", h);
 /// ```
 #[allow(dead_code)]
@@ -219,10 +219,10 @@ mod tests {
     #[test]
     fn test_hartley_transform() {
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let h = dht(&x).unwrap();
+        let h = dht(&x).expect("Operation failed");
 
         // Test inverse
-        let x_recovered = idht(&h).unwrap();
+        let x_recovered = idht(&h).expect("Operation failed");
         for i in 0..x.len() {
             assert!(
                 (x[i] - x_recovered[i]).abs() < 1e-10,
@@ -238,7 +238,7 @@ mod tests {
     fn test_hartley_properties() {
         // Test that the Hartley transform of a real signal is real
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let h = dht(&x).unwrap();
+        let h = dht(&x).expect("Operation failed");
 
         // All values should be real (they already are by construction)
         for &val in h.iter() {
@@ -249,7 +249,7 @@ mod tests {
     #[test]
     fn test_2d_hartley() {
         let x = array![[1.0, 2.0], [3.0, 4.0]];
-        let h = dht2(&x, None).unwrap();
+        let h = dht2(&x, None).expect("Operation failed");
 
         // Test that the result has the same shape
         assert_eq!(h.shape(), x.shape());

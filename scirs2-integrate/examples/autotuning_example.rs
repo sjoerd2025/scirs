@@ -244,7 +244,8 @@ fn memory_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
             baseline_time = Some(elapsed);
         }
 
-        let efficiency = baseline_time.unwrap().as_nanos() as f64 / elapsed.as_nanos() as f64;
+        let efficiency =
+            baseline_time.expect("Operation failed").as_nanos() as f64 / elapsed.as_nanos() as f64;
 
         println!("{name:10}   {elapsed:8.2?}   {efficiency:6.2}x");
     }

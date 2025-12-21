@@ -14,14 +14,14 @@ fn test_bicgstab_with_preconditioner() {
     ];
     let shape = (4, 4);
 
-    let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     // Create RHS vector
     let b = vec![11.0, 15.0, 11.0, 20.0];
 
     // Create preconditioner
-    let m = JacobiPreconditioner::new(&matrix).unwrap();
+    let m = JacobiPreconditioner::new(&matrix).expect("Operation failed");
 
     // Setup BiCGSTAB with preconditioner
     let options = BiCGSTABOptions {
@@ -34,14 +34,14 @@ fn test_bicgstab_with_preconditioner() {
     };
 
     // Solve
-    let result = bicgstab(op.as_ref(), &b, options).unwrap();
+    let result = bicgstab(op.as_ref(), &b, options).expect("Operation failed");
 
     assert!(result.converged);
     assert!(result.iterations < 50); // Should converge quickly with preconditioner
 
     // Verify solution
     let residual_norm = {
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         let residual: Vec<f64> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
         residual.iter().map(|&r| r * r).sum::<f64>().sqrt()
     };
@@ -81,7 +81,7 @@ fn test_bicgstab_complex_system() {
         }
     }
 
-    let matrix = CsrMatrix::new(data, rows, cols, (n, n)).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, (n, n)).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     // Create RHS vector
@@ -97,13 +97,13 @@ fn test_bicgstab_complex_system() {
         right_preconditioner: None,
     };
 
-    let result = bicgstab(op.as_ref(), &b, options).unwrap();
+    let result = bicgstab(op.as_ref(), &b, options).expect("Operation failed");
 
     assert!(result.converged);
 
     // Verify the solution
     let residual_norm = {
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         let residual: Vec<f64> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
         residual.iter().map(|&r| r * r).sum::<f64>().sqrt()
     };
@@ -125,14 +125,14 @@ fn test_bicgstab_breakdown_detection() {
     let data = vec![1.0, 1.0, 1.0, 1.0]; // All rows are the same
     let shape = (2, 2);
 
-    let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     // Create an inconsistent RHS
     let b = vec![1.0, 2.0];
 
     let options = BiCGSTABOptions::default();
-    let result = bicgstab(op.as_ref(), &b, options).unwrap();
+    let result = bicgstab(op.as_ref(), &b, options).expect("Operation failed");
 
     // Should not converge on singular system
     assert!(!result.converged);

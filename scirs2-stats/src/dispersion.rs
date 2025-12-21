@@ -36,11 +36,11 @@ use std::cmp::Ordering;
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 ///
 /// // MAD from the mean (default)
-/// let mad = mean_abs_deviation(&data.view(), None).unwrap();
+/// let mad = mean_abs_deviation(&data.view(), None).expect("Operation failed");
 /// println!("Mean absolute deviation: {}", mad);
 ///
 /// // MAD from a specified center
-/// let mad_from_3 = mean_abs_deviation(&data.view(), Some(3.0)).unwrap();
+/// let mad_from_3 = mean_abs_deviation(&data.view(), Some(3.0)).expect("Operation failed");
 /// println!("Mean absolute deviation from 3.0: {}", mad_from_3);
 /// ```
 #[allow(dead_code)]
@@ -80,7 +80,7 @@ where
         x.iter().map(|&v| (v - center_val).abs()).sum::<F>()
     };
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     Ok(sum_abs_dev / n_f)
 }
 
@@ -108,11 +108,11 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0];  // Note the outlier
 ///
 /// // MAD from the median (default), which is robust to outliers
-/// let mad = median_abs_deviation(&data.view(), None, None).unwrap();
+/// let mad = median_abs_deviation(&data.view(), None, None).expect("Operation failed");
 /// println!("Median absolute deviation: {}", mad);
 ///
 /// // MAD scaled to be consistent with standard deviation for normal distributions
-/// let mad_scaled = median_abs_deviation(&data.view(), None, Some(1.4826)).unwrap();
+/// let mad_scaled = median_abs_deviation(&data.view(), None, Some(1.4826)).expect("Operation failed");
 /// println!("Scaled median absolute deviation: {}", mad_scaled);
 /// ```
 #[allow(dead_code)]
@@ -171,7 +171,7 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
 ///
 /// // Calculate IQR with default linear interpolation
-/// let iqr_val = iqr(&data.view(), None).unwrap();
+/// let iqr_val = iqr(&data.view(), None).expect("Operation failed");
 /// println!("Interquartile range: {}", iqr_val);  // Should be 4.0
 /// ```
 #[allow(dead_code)]
@@ -190,8 +190,16 @@ where
     let interp_method = interpolation.unwrap_or("linear");
 
     // Calculate the 25th and 75th percentiles
-    let q1 = percentile(x, F::from(25.0).unwrap(), interp_method)?;
-    let q3 = percentile(x, F::from(75.0).unwrap(), interp_method)?;
+    let q1 = percentile(
+        x,
+        F::from(25.0).expect("Failed to convert constant to float"),
+        interp_method,
+    )?;
+    let q3 = percentile(
+        x,
+        F::from(75.0).expect("Failed to convert constant to float"),
+        interp_method,
+    )?;
 
     // IQR is the difference between Q3 and Q1
     Ok(q3 - q1)
@@ -217,7 +225,7 @@ where
 ///
 /// let data = array![5.0, 2.0, 10.0, 3.0, 7.0];
 ///
-/// let range_val = data_range(&data.view()).unwrap();
+/// let range_val = data_range(&data.view()).expect("Operation failed");
 /// println!("Range: {}", range_val);  // Should be 8.0 (10.0 - 2.0)
 /// ```
 #[allow(dead_code)]
@@ -280,7 +288,7 @@ where
 /// let data = array![10.0, 12.0, 8.0, 11.0, 9.0];
 ///
 /// // Calculate coefficient of variation for a sample
-/// let cv = coef_variation(&data.view(), 1).unwrap();
+/// let cv = coef_variation(&data.view(), 1).expect("Operation failed");
 /// println!("Coefficient of variation: {}", cv);
 /// ```
 #[allow(dead_code)]
@@ -310,8 +318,8 @@ where
     }
 
     // Calculate the standard deviation
-    let n = F::from(x.len()).unwrap();
-    let df_adjust = F::from(ddof).unwrap();
+    let n = F::from(x.len()).expect("Operation failed");
+    let df_adjust = F::from(ddof).expect("Failed to convert to float");
 
     if n <= df_adjust {
         return Err(StatsError::InvalidArgument(
@@ -340,7 +348,7 @@ where
     }
 
     // Validate the percentile value
-    if q < F::zero() || q > F::from(100.0).unwrap() {
+    if q < F::zero() || q > F::from(100.0).expect("Failed to convert constant to float") {
         return Err(StatsError::InvalidArgument(
             "Percentile must be between 0 and 100".to_string(),
         ));
@@ -351,33 +359,50 @@ where
     sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate the index based on the percentile
-    let n = F::from(sorteddata.len()).unwrap();
-    let q_scaled = q / F::from(100.0).unwrap();
+    let n = F::from(sorteddata.len()).expect("Operation failed");
+    let q_scaled = q / F::from(100.0).expect("Failed to convert constant to float");
     let index = q_scaled * (n - F::one());
 
     // Calculate the percentile based on the specified interpolation method
     match interpolation {
         "lower" => {
-            let i = index.floor().to_usize().unwrap();
+            let i = index.floor().to_usize().expect("Operation failed");
             Ok(sorteddata[i])
         }
         "higher" => {
-            let i = index.ceil().to_usize().unwrap().min(sorteddata.len() - 1);
+            let i = index
+                .ceil()
+                .to_usize()
+                .expect("Operation failed")
+                .min(sorteddata.len() - 1);
             Ok(sorteddata[i])
         }
         "nearest" => {
-            let i = index.round().to_usize().unwrap().min(sorteddata.len() - 1);
+            let i = index
+                .round()
+                .to_usize()
+                .expect("Operation failed")
+                .min(sorteddata.len() - 1);
             Ok(sorteddata[i])
         }
         "midpoint" => {
-            let i_lower = index.floor().to_usize().unwrap();
-            let i_upper = index.ceil().to_usize().unwrap().min(sorteddata.len() - 1);
-            Ok((sorteddata[i_lower] + sorteddata[i_upper]) / F::from(2.0).unwrap())
+            let i_lower = index.floor().to_usize().expect("Operation failed");
+            let i_upper = index
+                .ceil()
+                .to_usize()
+                .expect("Operation failed")
+                .min(sorteddata.len() - 1);
+            Ok((sorteddata[i_lower] + sorteddata[i_upper])
+                / F::from(2.0).expect("Failed to convert constant to float"))
         }
         _ => {
             // Linear interpolation (default)
-            let i_lower = index.floor().to_usize().unwrap();
-            let i_upper = index.ceil().to_usize().unwrap().min(sorteddata.len() - 1);
+            let i_lower = index.floor().to_usize().expect("Operation failed");
+            let i_upper = index
+                .ceil()
+                .to_usize()
+                .expect("Operation failed")
+                .min(sorteddata.len() - 1);
 
             if i_lower == i_upper {
                 Ok(sorteddata[i_lower])
@@ -412,12 +437,12 @@ where
 ///
 /// // Perfect equality
 /// let equaldata = array![100.0, 100.0, 100.0, 100.0, 100.0];
-/// let gini_equal = gini_coefficient(&equaldata.view()).unwrap();
+/// let gini_equal = gini_coefficient(&equaldata.view()).expect("Operation failed");
 /// assert!(gini_equal < 1e-10); // Should be 0.0
 ///
 /// // Perfect inequality
 /// let unequaldata = array![0.0, 0.0, 0.0, 0.0, 100.0];
-/// let gini_unequal = gini_coefficient(&unequaldata.view()).unwrap();
+/// let gini_unequal = gini_coefficient(&unequaldata.view()).expect("Operation failed");
 /// println!("Gini coefficient (perfect inequality): {}", gini_unequal);
 /// // Should be close to 0.8 (1 - 1/n, where n=5)
 /// ```
@@ -455,7 +480,7 @@ where
     // G = (2*sum(i*y_i) / (n*sum(y_i))) - (n+1)/n
     // where y_i are the sorted values and i is the rank
 
-    let n = F::from(sorteddata.len()).unwrap();
+    let n = F::from(sorteddata.len()).expect("Operation failed");
     let sum_values = sorteddata.iter().cloned().sum::<F>();
 
     if sum_values <= F::epsilon() {
@@ -468,11 +493,13 @@ where
     let weighted_sum = sorteddata
         .iter()
         .enumerate()
-        .map(|(i, &value)| F::from(i + 1).unwrap() * value)
+        .map(|(i, &value)| F::from(i + 1).expect("Failed to convert to float") * value)
         .sum::<F>();
 
     // Calculate Gini coefficient
-    let gini = (F::from(2.0).unwrap() * weighted_sum / (n * sum_values)) - (n + F::one()) / n;
+    let gini = (F::from(2.0).expect("Failed to convert constant to float") * weighted_sum
+        / (n * sum_values))
+        - (n + F::one()) / n;
 
     Ok(gini)
 }
@@ -488,16 +515,16 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // MAD from the mean (which is 3.0)
-        let mad = mean_abs_deviation(&data.view(), None).unwrap();
+        let mad = mean_abs_deviation(&data.view(), None).expect("Operation failed");
         // Expected: (|1-3| + |2-3| + |3-3| + |4-3| + |5-3|) / 5 = (2 + 1 + 0 + 1 + 2) / 5 = 1.2
         assert_abs_diff_eq!(mad, 1.2, epsilon = 1e-10);
 
         // MAD from a specified center (3.0)
-        let mad_from_3 = mean_abs_deviation(&data.view(), Some(3.0)).unwrap();
+        let mad_from_3 = mean_abs_deviation(&data.view(), Some(3.0)).expect("Operation failed");
         assert_abs_diff_eq!(mad_from_3, 1.2, epsilon = 1e-10);
 
         // MAD from 0.0
-        let mad_from_0 = mean_abs_deviation(&data.view(), Some(0.0)).unwrap();
+        let mad_from_0 = mean_abs_deviation(&data.view(), Some(0.0)).expect("Operation failed");
         // Expected: (|1-0| + |2-0| + |3-0| + |4-0| + |5-0|) / 5 = 3.0
         assert_abs_diff_eq!(mad_from_0, 3.0, epsilon = 1e-10);
     }
@@ -507,17 +534,19 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // MAD from the median (which is 3.0)
-        let mad = median_abs_deviation(&data.view(), None, None).unwrap();
+        let mad = median_abs_deviation(&data.view(), None, None).expect("Operation failed");
         // Expected: median of [|1-3|, |2-3|, |3-3|, |4-3|, |5-3|] = median of [2, 1, 0, 1, 2] = 1.0
         assert_abs_diff_eq!(mad, 1.0, epsilon = 1e-10);
 
         // MAD scaled by 1.4826 (to be consistent with standard deviation for normal distributions)
-        let mad_scaled = median_abs_deviation(&data.view(), None, Some(1.4826)).unwrap();
+        let mad_scaled =
+            median_abs_deviation(&data.view(), None, Some(1.4826)).expect("Operation failed");
         assert_abs_diff_eq!(mad_scaled, 1.4826, epsilon = 1e-10);
 
         // Test with outlier
         let data_with_outlier = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0];
-        let mad_with_outlier = median_abs_deviation(&data_with_outlier.view(), None, None).unwrap();
+        let mad_with_outlier =
+            median_abs_deviation(&data_with_outlier.view(), None, None).expect("Operation failed");
         // The median is 3.5, and the MAD should be 1.5 (robust to the outlier)
         assert_abs_diff_eq!(mad_with_outlier, 1.5, epsilon = 1e-10);
     }
@@ -527,20 +556,20 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
 
         // IQR with linear interpolation
-        let iqr_val = iqr(&data.view(), None).unwrap();
+        let iqr_val = iqr(&data.view(), None).expect("Operation failed");
         // Q1 = 3.0, Q3 = 7.0, IQR = 4.0
         assert_abs_diff_eq!(iqr_val, 4.0, epsilon = 1e-10);
 
         // IQR with different interpolation methods
-        let iqr_lower = iqr(&data.view(), Some("lower")).unwrap();
+        let iqr_lower = iqr(&data.view(), Some("lower")).expect("Operation failed");
         assert_abs_diff_eq!(iqr_lower, 4.0, epsilon = 1e-10);
 
-        let iqr_higher = iqr(&data.view(), Some("higher")).unwrap();
+        let iqr_higher = iqr(&data.view(), Some("higher")).expect("Operation failed");
         assert_abs_diff_eq!(iqr_higher, 4.0, epsilon = 1e-10);
 
         // Test with even number of elements
         let evendata = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let iqr_even = iqr(&evendata.view(), None).unwrap();
+        let iqr_even = iqr(&evendata.view(), None).expect("Operation failed");
         // Q1 = 2.5, Q3 = 6.5, IQR = 4.0 (or 3.5 depending on formula used)
         // In our implementation, when using linear interpolation:
         // 25th percentile with n=8 elements -> index = 0.25 * (8-1) = 1.75
@@ -555,13 +584,13 @@ mod tests {
     fn testdata_range() {
         let data = array![5.0, 2.0, 10.0, 3.0, 7.0];
 
-        let range_val = data_range(&data.view()).unwrap();
+        let range_val = data_range(&data.view()).expect("Operation failed");
         // Range = max - min = 10.0 - 2.0 = 8.0
         assert_abs_diff_eq!(range_val, 8.0, epsilon = 1e-10);
 
         // Test with single value
         let singledata = array![5.0];
-        let range_single = data_range(&singledata.view()).unwrap();
+        let range_single = data_range(&singledata.view()).expect("Operation failed");
         assert_abs_diff_eq!(range_single, 0.0, epsilon = 1e-10);
     }
 
@@ -570,12 +599,12 @@ mod tests {
         let data = array![10.0, 12.0, 8.0, 11.0, 9.0];
 
         // Calculate coefficient of variation for a sample (ddof = 1)
-        let cv = coef_variation(&data.view(), 1).unwrap();
+        let cv = coef_variation(&data.view(), 1).expect("Operation failed");
         // Mean = 10.0, std_dev (ddof=1) ≈ 1.58, CV ≈ 0.158
         assert_abs_diff_eq!(cv, 0.158114, epsilon = 1e-5);
 
         // Calculate coefficient of variation for a population (ddof = 0)
-        let cv_pop = coef_variation(&data.view(), 0).unwrap();
+        let cv_pop = coef_variation(&data.view(), 0).expect("Operation failed");
         // Mean = 10.0, std_dev (ddof=0) ≈ 1.41, CV ≈ 0.141
         assert_abs_diff_eq!(cv_pop, 0.141421, epsilon = 1e-5);
     }
@@ -585,27 +614,27 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
 
         // Test various percentiles with linear interpolation
-        let p25 = percentile(&data.view(), 25.0, "linear").unwrap();
+        let p25 = percentile(&data.view(), 25.0, "linear").expect("Operation failed");
         assert_abs_diff_eq!(p25, 3.0, epsilon = 1e-10);
 
-        let p50 = percentile(&data.view(), 50.0, "linear").unwrap();
+        let p50 = percentile(&data.view(), 50.0, "linear").expect("Operation failed");
         assert_abs_diff_eq!(p50, 5.0, epsilon = 1e-10);
 
-        let p75 = percentile(&data.view(), 75.0, "linear").unwrap();
+        let p75 = percentile(&data.view(), 75.0, "linear").expect("Operation failed");
         assert_abs_diff_eq!(p75, 7.0, epsilon = 1e-10);
 
         // Test with even number of elements
         let evendata = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
-        let p50_even = percentile(&evendata.view(), 50.0, "linear").unwrap();
+        let p50_even = percentile(&evendata.view(), 50.0, "linear").expect("Operation failed");
         assert_abs_diff_eq!(p50_even, 4.5, epsilon = 1e-10);
 
         // Test different interpolation methods
-        let p60_linear = percentile(&data.view(), 60.0, "linear").unwrap();
-        let p60_lower = percentile(&data.view(), 60.0, "lower").unwrap();
-        let p60_higher = percentile(&data.view(), 60.0, "higher").unwrap();
-        let p60_nearest = percentile(&data.view(), 60.0, "nearest").unwrap();
-        let p60_midpoint = percentile(&data.view(), 60.0, "midpoint").unwrap();
+        let p60_linear = percentile(&data.view(), 60.0, "linear").expect("Operation failed");
+        let p60_lower = percentile(&data.view(), 60.0, "lower").expect("Operation failed");
+        let p60_higher = percentile(&data.view(), 60.0, "higher").expect("Operation failed");
+        let p60_nearest = percentile(&data.view(), 60.0, "nearest").expect("Operation failed");
+        let p60_midpoint = percentile(&data.view(), 60.0, "midpoint").expect("Operation failed");
 
         // With 9 elements, index at 60% is 4.8
         // linear: 5.0 + 0.8*(6.0 - 5.0) = 5.8
@@ -624,12 +653,12 @@ mod tests {
     fn test_gini_coefficient() {
         // Test perfect equality
         let equaldata = array![100.0, 100.0, 100.0, 100.0, 100.0];
-        let gini_equal = gini_coefficient(&equaldata.view()).unwrap();
+        let gini_equal = gini_coefficient(&equaldata.view()).expect("Operation failed");
         assert_abs_diff_eq!(gini_equal, 0.0, epsilon = 1e-10);
 
         // Test perfect inequality
         let unequaldata = array![0.0, 0.0, 0.0, 0.0, 100.0];
-        let gini_unequal = gini_coefficient(&unequaldata.view()).unwrap();
+        let gini_unequal = gini_coefficient(&unequaldata.view()).expect("Operation failed");
         // For n=5, perfect inequality gives G = 0.8 (1 - 1/n)
         assert_abs_diff_eq!(gini_unequal, 0.8, epsilon = 1e-10);
 
@@ -638,7 +667,7 @@ mod tests {
             20000.0, 25000.0, 30000.0, 35000.0, 40000.0, 45000.0, 50000.0, 60000.0, 80000.0,
             150000.0
         ];
-        let gini_income = gini_coefficient(&incomedata.view()).unwrap();
+        let gini_income = gini_coefficient(&incomedata.view()).expect("Operation failed");
         // This should give a value around 0.3-0.4 which is typical for moderate inequality
         assert!(gini_income > 0.2 && gini_income < 0.5);
 

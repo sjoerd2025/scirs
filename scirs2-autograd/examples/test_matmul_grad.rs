@@ -21,13 +21,22 @@ fn main() {
         // c = matmul(a, b), shape should be 4x3
         let c = matmul(a, b);
 
-        println!("a shape: {:?}", a.eval(g).unwrap().shape());
-        println!("b shape: {:?}", b.eval(g).unwrap().shape());
-        println!("c shape: {:?}", c.eval(g).unwrap().shape());
+        println!(
+            "a shape: {:?}",
+            a.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "b shape: {:?}",
+            b.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "c shape: {:?}",
+            c.eval(g).expect("Operation failed").shape()
+        );
 
         // Test element access
         let c_00 = c.access_elem(0);
-        println!("\nc[0,0] = {:?}", c_00.eval(g).unwrap());
+        println!("\nc[0,0] = {:?}", c_00.eval(g).expect("Operation failed"));
 
         // Test grad with single output element
         println!("\nTesting grad of c[0,0] w.r.t. a and b:");

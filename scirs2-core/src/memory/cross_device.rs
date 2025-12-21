@@ -407,11 +407,11 @@ impl CrossDeviceMemoryManager {
     /// Register a device with the manager
     pub fn register_device(&self, device: Arc<dyn Device>) -> CoreResult<()> {
         let device_type = device.device_type();
-        let mut devices = self.devices.write().unwrap();
+        let mut devices = self.devices.write().expect("Operation failed");
         devices.insert(device_type.clone(), device);
 
         // Set as default if it's the first device
-        let mut default_device = self.default_device.write().unwrap();
+        let mut default_device = self.default_device.write().expect("Operation failed");
         if default_device.is_none() {
             *default_device = Some(device_type);
         }
@@ -421,12 +421,12 @@ impl CrossDeviceMemoryManager {
 
     /// Set the default device
     pub fn set_default_device(&self, devicetype: DeviceType) -> CoreResult<()> {
-        let devices = self.devices.read().unwrap();
+        let devices = self.devices.read().expect("Operation failed");
         if !devices.contains_key(&devicetype) {
             return Err(CrossDeviceError::DeviceNotFound(format!("{devicetype:?}")).into());
         }
 
-        let mut default_device = self.default_device.write().unwrap();
+        let mut default_device = self.default_device.write().expect("Operation failed");
         *default_device = Some(devicetype);
 
         Ok(())
@@ -434,7 +434,10 @@ impl CrossDeviceMemoryManager {
 
     /// Get the default device
     pub fn get_default_device(&self) -> Option<DeviceType> {
-        self.default_device.read().unwrap().clone()
+        self.default_device
+            .read()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Allocate memory on a specific device
@@ -443,7 +446,7 @@ impl CrossDeviceMemoryManager {
         device_type: &DeviceType,
         count: usize,
     ) -> CoreResult<CrossDeviceBuffer<T>> {
-        let devices = self.devices.read().unwrap();
+        let devices = self.devices.read().expect("Operation failed");
         let device = devices
             .get(device_type)
             .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{device_type:?}")))?;
@@ -460,7 +463,7 @@ impl CrossDeviceMemoryManager {
             TypeId::of::<T>(),
         );
 
-        let mut allocations = self.allocations.write().unwrap();
+        let mut allocations = self.allocations.write().expect("Operation failed");
         allocations.insert(allocation_id.clone(), allocation);
 
         Ok(CrossDeviceBuffer::new(
@@ -490,7 +493,7 @@ impl CrossDeviceMemoryManager {
         src_buffer: &CrossDeviceBuffer<T>,
         dst_device: &DeviceType,
     ) -> CoreResult<CrossDeviceBuffer<T>> {
-        let devices = self.devices.read().unwrap();
+        let devices = self.devices.read().expect("Operation failed");
         let src_device = devices.get(&src_buffer.device_type).ok_or_else(|| {
             CrossDeviceError::DeviceNotFound(format!("{0:?}", src_buffer.device_type))
         })?;
@@ -539,7 +542,7 @@ impl CrossDeviceMemoryManager {
 
     /// Synchronize all devices
     pub fn synchronize_all(&self) -> CoreResult<()> {
-        let devices = self.devices.read().unwrap();
+        let devices = self.devices.read().expect("Operation failed");
         for device in devices.values() {
             device.synchronize()?;
         }
@@ -548,8 +551,8 @@ impl CrossDeviceMemoryManager {
 
     /// Get memory statistics
     pub fn get_memory_statistics(&self) -> MemoryStatistics {
-        let allocations = self.allocations.read().unwrap();
-        let devices = self.devices.read().unwrap();
+        let allocations = self.allocations.read().expect("Operation failed");
+        let devices = self.devices.read().expect("Operation failed");
 
         let mut stats_by_device = HashMap::new();
         let mut total_allocated = 0;
@@ -599,7 +602,7 @@ impl CrossDeviceMemoryManager {
 
     /// Clean up unused allocations
     pub fn cleanup_unused_allocations(&self, maxage: std::time::Duration) -> usize {
-        let mut allocations = self.allocations.write().unwrap();
+        let mut allocations = self.allocations.write().expect("Operation failed");
         let now = std::time::Instant::now();
         let mut cleaned = 0;
 
@@ -619,7 +622,7 @@ impl CrossDeviceMemoryManager {
     /// Generate unique allocation ID
     fn generate_allocation_id(&self) -> String {
         let counter = {
-            let mut counter = self.allocation_counter.lock().unwrap();
+            let mut counter = self.allocation_counter.lock().expect("Operation failed");
             *counter += 1;
             *counter
         };
@@ -629,7 +632,7 @@ impl CrossDeviceMemoryManager {
 
     /// Internal method to remove allocation (called by CrossDeviceBuffer on drop)
     pub(crate) fn remove_allocation(&self, allocationid: &str) {
-        let mut allocations = self.allocations.write().unwrap();
+        let mut allocations = self.allocations.write().expect("Operation failed");
         if let Some(allocation) = allocations.get_mut(allocationid) {
             if allocation.remove_ref() == 0 {
                 allocations.remove(allocationid);
@@ -639,7 +642,7 @@ impl CrossDeviceMemoryManager {
 
     /// Internal method to touch allocation (update last access time)
     pub(crate) fn touch_allocation(&self, allocationid: &str) {
-        let mut allocations = self.allocations.write().unwrap();
+        let mut allocations = self.allocations.write().expect("Operation failed");
         if let Some(allocation) = allocations.get_mut(allocationid) {
             allocation.touch();
         }
@@ -729,7 +732,7 @@ impl<T> CrossDeviceBuffer<T> {
             .into());
         }
 
-        let devices = self.manager.devices.read().unwrap();
+        let devices = self.manager.devices.read().expect("Operation failed");
         let device = devices
             .get(&self.device_type)
             .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{0:?}", self.device_type)))?;
@@ -749,7 +752,7 @@ impl<T> CrossDeviceBuffer<T> {
     {
         let mut result = vec![T::default(); self.count];
 
-        let devices = self.manager.devices.read().unwrap();
+        let devices = self.manager.devices.read().expect("Operation failed");
         let device = devices
             .get(&self.device_type)
             .ok_or_else(|| CrossDeviceError::DeviceNotFound(format!("{0:?}", self.device_type)))?;
@@ -771,7 +774,7 @@ impl<T> Clone for CrossDeviceBuffer<T> {
     fn clone(&self) -> Self {
         // Increment reference count
         {
-            let mut allocations = self.manager.allocations.write().unwrap();
+            let mut allocations = self.manager.allocations.write().expect("Operation failed");
             if let Some(allocation) = allocations.get_mut(&self.allocation_id) {
                 allocation.add_ref();
             }

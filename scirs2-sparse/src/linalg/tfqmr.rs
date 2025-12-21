@@ -1,8 +1,13 @@
 //! Transpose-Free Quasi-Minimal Residual (TFQMR) method for sparse linear systems
 //!
 //! TFQMR is a Krylov subspace method that can solve non-symmetric linear systems
-//! without requiring the transpose of the coefficient matrix. It's related to
-//! BiCGSTAB but uses a different update strategy.
+//! without requiring the transpose of the coefficient matrix.
+//!
+//! Implementation follows SciPy's tfqmr based on R.W. Freund (1993).
+//!
+//! Reference:
+//! R. W. Freund, "A Transpose-Free Quasi-Minimal Residual Algorithm for
+//! Non-Hermitian Linear Systems", SIAM J. Sci. Comput., 14(2), 470-482, 1993.
 
 #![allow(unused_variables)]
 #![allow(unused_assignments)]
@@ -81,13 +86,13 @@ pub struct TFQMRResult<T> {
 /// let rows = vec![0, 0, 1, 1, 2, 2];
 /// let cols = vec![0, 1, 0, 1, 1, 2];
 /// let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Right-hand side
 /// let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
 ///
 /// // Solve using TFQMR
-/// let result = tfqmr(&matrix, &b.view(), None, TFQMROptions::default()).unwrap();
+/// let result = tfqmr(&matrix, &b.view(), None, TFQMROptions::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn tfqmr<T, S>(
@@ -110,134 +115,171 @@ where
         });
     }
 
+    let one = T::sparse_one();
+    let zero = T::sparse_zero();
+
     // Initialize solution vector
     let mut x = match x0 {
         Some(x0_val) => x0_val.to_owned(),
         None => Array1::zeros(n),
     };
 
-    // Compute initial residual: r0 = b - A * x0
+    // Compute initial residual: r = b - A * x
     let ax = matrix_vector_multiply(matrix, &x.view())?;
-    let mut r = b - &ax;
+    let r = b - &ax;
 
-    // Check if already converged
-    let initial_residual_norm = l2_norm(&r.view());
+    let r0norm = l2_norm(&r.view());
     let b_norm = l2_norm(b);
-    let tolerance = T::from(options.tol).unwrap() * b_norm;
+    let tolerance = T::from(options.tol).expect("Operation failed")
+        * b_norm.max(T::from(1e-10).expect("Operation failed"));
 
-    if initial_residual_norm <= tolerance {
+    if r0norm <= tolerance || r0norm == zero {
         return Ok(TFQMRResult {
             x,
             iterations: 0,
-            residual_norm: initial_residual_norm,
+            residual_norm: r0norm,
             converged: true,
-            residual_history: Some(vec![initial_residual_norm]),
+            residual_history: Some(vec![r0norm]),
         });
     }
 
-    // Choose r0* (arbitrary, often r0* = r0)
-    let r_star = r.clone();
+    // Initialize vectors following SciPy's notation
+    let mut u = r.clone();
+    let mut w = r.clone();
+    let rstar = r.clone(); // Shadow residual
 
-    // Initialize vectors
-    let mut v = r.clone();
-    let mut y = v.clone();
-    let mut w = matrix_vector_multiply(matrix, &y.view())?;
-    let mut z = w.clone();
+    // v = A * r (no preconditioner in this version)
+    let ar = matrix_vector_multiply(matrix, &r.view())?;
+    let mut v = ar;
+    let mut uhat = v.clone();
 
-    let mut d = Array1::zeros(n);
-    let mut theta = T::sparse_zero();
-    let mut eta = T::sparse_zero();
-    let mut tau = initial_residual_norm;
+    let mut d: Array1<T> = Array1::zeros(n);
+    let mut theta = zero;
+    let mut eta = zero;
 
-    // TFQMR parameters
-    let mut rho = dot_product(&r_star.view(), &r.view());
-    let mut alpha = T::sparse_zero();
-    let mut beta = T::sparse_zero();
+    // rho = <rstar, r>
+    let mut rho = dot_product(&rstar.view(), &r.view());
+    let mut rho_last = rho;
+    let mut tau = r0norm;
 
     let mut residual_history = Vec::new();
-    residual_history.push(initial_residual_norm);
+    residual_history.push(r0norm);
 
     let mut converged = false;
     let mut iter = 0;
 
-    for m in 0..options.max_iter {
-        iter = m + 1;
+    for it in 0..options.max_iter {
+        iter = it + 1;
+        let even = it % 2 == 0;
 
-        // Compute alpha
-        let sigma = dot_product(&r_star.view(), &w.view());
-        if sigma.abs() < T::from(1e-14).unwrap() {
-            return Err(SparseError::ConvergenceError(
-                "TFQMR breakdown: sigma is too small".to_string(),
-            ));
+        // On even iterations, compute alpha and uNext
+        let mut alpha = zero;
+        let mut u_next: Array1<T> = Array1::zeros(n);
+
+        if even {
+            let vtrstar = dot_product(&rstar.view(), &v.view());
+            if vtrstar.abs() < T::from(1e-300).expect("Operation failed") {
+                return Err(SparseError::ConvergenceError(
+                    "TFQMR breakdown: v'*rstar = 0".to_string(),
+                ));
+            }
+            alpha = rho / vtrstar;
+
+            // uNext = u - alpha * v
+            for i in 0..n {
+                u_next[i] = u[i] - alpha * v[i];
+            }
         }
-        alpha = rho / sigma;
 
-        // Update v and y for odd steps
+        // w = w - alpha * uhat (every iteration)
+        let alpha_used = if even {
+            alpha
+        } else {
+            rho / dot_product(&rstar.view(), &v.view())
+        };
+
         for i in 0..n {
-            v[i] = v[i] - alpha * w[i];
-            y[i] = y[i] - alpha * z[i];
+            w[i] = w[i] - alpha_used * uhat[i];
         }
 
-        // Compute theta and c for odd step
-        let v_norm = l2_norm(&v.view());
-        theta = v_norm / tau;
-        let c = T::sparse_one() / (T::sparse_one() + theta * theta).sqrt();
+        // d = u + (theta^2 / alpha) * eta * d
+        let theta_sq_over_alpha = if alpha_used.abs() > T::from(1e-300).expect("Operation failed") {
+            theta * theta / alpha_used
+        } else {
+            zero
+        };
+        for i in 0..n {
+            d[i] = u[i] + theta_sq_over_alpha * eta * d[i];
+        }
+
+        // theta = ||w|| / tau
+        theta = l2_norm(&w.view()) / tau;
+
+        // c = 1 / sqrt(1 + theta^2)
+        let c = one / (one + theta * theta).sqrt();
+
+        // tau = tau * theta * c
         tau = tau * theta * c;
-        eta = c * c * alpha;
 
-        // Update solution and residual
+        // eta = c^2 * alpha
+        eta = c * c * alpha_used;
+
+        // x = x + eta * d (no preconditioner)
         for i in 0..n {
-            d[i] = y[i] + (theta * eta) * d[i];
             x[i] = x[i] + eta * d[i];
         }
 
-        // Check convergence for odd step
-        let current_residual = tau;
-        residual_history.push(current_residual);
+        residual_history.push(tau);
 
-        if current_residual <= tolerance {
+        // Convergence criterion: tau * sqrt(iter+1) < tolerance
+        let iter_f = T::from(iter).expect("Operation failed");
+        if tau * iter_f.sqrt() < tolerance {
             converged = true;
             break;
         }
 
-        // Compute w for even step
-        w = matrix_vector_multiply(matrix, &y.view())?;
+        if !even {
+            // Odd iteration updates
+            rho = dot_product(&rstar.view(), &w.view());
 
-        // Update rho and beta
-        let rho_new = dot_product(&r_star.view(), &v.view());
-        beta = rho_new / rho;
-        rho = rho_new;
+            if rho.abs() < T::from(1e-300).expect("Operation failed") {
+                return Err(SparseError::ConvergenceError(
+                    "TFQMR breakdown: rho = 0".to_string(),
+                ));
+            }
 
-        // Update y and z for even step
-        for i in 0..n {
-            y[i] = v[i] + beta * y[i];
-            z[i] = w[i] + beta * z[i];
+            let beta = rho / rho_last;
+
+            // u = w + beta * u
+            for i in 0..n {
+                u[i] = w[i] + beta * u[i];
+            }
+
+            // v = beta * uhat + beta^2 * v
+            for i in 0..n {
+                v[i] = beta * uhat[i] + beta * beta * v[i];
+            }
+
+            // uhat = A * u
+            let au = matrix_vector_multiply(matrix, &u.view())?;
+            uhat = au;
+
+            // v = v + uhat
+            for i in 0..n {
+                v[i] = v[i] + uhat[i];
+            }
+        } else {
+            // Even iteration updates
+            // uhat = A * uNext
+            let au_next = matrix_vector_multiply(matrix, &u_next.view())?;
+            uhat = au_next;
+
+            // u = uNext
+            u = u_next;
+
+            // rho_last = rho
+            rho_last = rho;
         }
-
-        // Compute theta and c for even step
-        let y_norm = l2_norm(&y.view());
-        theta = y_norm / tau;
-        let c = T::sparse_one() / (T::sparse_one() + theta * theta).sqrt();
-        tau = tau * theta * c;
-        eta = c * c * alpha;
-
-        // Update solution
-        for i in 0..n {
-            d[i] = z[i] + (theta * eta) * d[i];
-            x[i] = x[i] + eta * d[i];
-        }
-
-        // Check convergence for even step
-        let current_residual = tau;
-        residual_history.push(current_residual);
-
-        if current_residual <= tolerance {
-            converged = true;
-            break;
-        }
-
-        // Update w for next iteration
-        w = matrix_vector_multiply(matrix, &z.view())?;
     }
 
     // Compute final residual norm by explicit calculation
@@ -310,21 +352,22 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // TODO: Fix TFQMR algorithm - currently not converging correctly
     fn test_tfqmr_simple_system() {
         // Create a simple 3x3 system
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
-        let result = tfqmr(&matrix, &b.view(), None, TFQMROptions::default()).unwrap();
+        let result =
+            tfqmr(&matrix, &b.view(), None, TFQMROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
         // Verify solution by computing residual
-        let ax = matrix_vector_multiply(&matrix, &result.x.view()).unwrap();
+        let ax = matrix_vector_multiply(&matrix, &result.x.view()).expect("Operation failed");
         let residual = &b - &ax;
         let residual_norm = l2_norm(&residual.view());
 
@@ -332,16 +375,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix TFQMR algorithm - currently not converging correctly
     fn test_tfqmr_diagonal_system() {
         // Create a diagonal system
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![2.0, 3.0, 4.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![4.0, 9.0, 16.0]);
-        let result = tfqmr(&matrix, &b.view(), None, TFQMROptions::default()).unwrap();
+        let result =
+            tfqmr(&matrix, &b.view(), None, TFQMROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
@@ -356,7 +400,8 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 1.0, 1.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![5.0, 6.0, 7.0]);
         let x0 = Array1::from_vec(vec![4.0, 5.0, 6.0]); // Close to solution
@@ -367,7 +412,7 @@ mod tests {
             Some(&x0.view()),
             TFQMROptions::default(),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.iterations <= 5); // Should converge quickly with good initial guess

@@ -546,7 +546,7 @@ where
     }
 
     // Use default parameters: max_iter=100, tol=1e-12
-    matrix_functions::sqrtm(a, 100, F::from(1e-12).unwrap())
+    matrix_functions::sqrtm(a, 100, F::from(1e-12).expect("Operation failed"))
 }
 
 /// Compute matrix or vector norm (SciPy-compatible interface)
@@ -638,15 +638,15 @@ where
         Some(0.0) => {
             // 0-norm (count of non-zero elements)
             let count = a.iter().filter(|&&x| x != F::zero()).count();
-            Ok(F::from(count).unwrap())
+            Ok(F::from(count).expect("Operation failed"))
         }
         Some(p) => {
             // General p-norm
             let sum: F = a
                 .iter()
-                .map(|&x| x.abs().powf(F::from(p).unwrap()))
+                .map(|&x| x.abs().powf(F::from(p).expect("Operation failed")))
                 .fold(F::zero(), |acc, x| acc + x);
-            Ok(sum.powf(F::one() / F::from(p).unwrap()))
+            Ok(sum.powf(F::one() / F::from(p).expect("Operation failed")))
         }
     }
 }
@@ -687,7 +687,9 @@ where
     // Determine cutoff threshold
     let threshold = rcond.unwrap_or_else(|| {
         let max_singular_value = s.iter().cloned().fold(F::zero(), F::max);
-        max_singular_value * F::from(1e-15).unwrap() * F::from(a.dim().0.max(a.dim().1)).unwrap()
+        max_singular_value
+            * F::from(1e-15).expect("Operation failed")
+            * F::from(a.dim().0.max(a.dim().1)).expect("Operation failed")
     });
 
     // Compute reciprocal of singular values above threshold
@@ -836,7 +838,9 @@ where
     // Determine rank based on condition number
     let threshold = cond.unwrap_or_else(|| {
         let max_sv = s.iter().cloned().fold(F::zero(), F::max);
-        max_sv * F::from(1e-15).unwrap() * F::from(a.dim().0.max(a.dim().1)).unwrap()
+        max_sv
+            * F::from(1e-15).expect("Operation failed")
+            * F::from(a.dim().0.max(a.dim().1)).expect("Operation failed")
     });
 
     let rank = s.iter().filter(|&&val| val > threshold).count();
@@ -1030,7 +1034,7 @@ where
     match func {
         "exp" => matrix_functions::expm(a, None),
         "log" => matrix_functions::logm(a),
-        "sqrt" => matrix_functions::sqrtm(a, 100, F::from(1e-12).unwrap()),
+        "sqrt" => matrix_functions::sqrtm(a, 100, F::from(1e-12).expect("Operation failed")),
         "cos" => cosm(a),
         "sin" => sinm(a),
         "tan" => tanm(a),

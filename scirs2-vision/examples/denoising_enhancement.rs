@@ -199,7 +199,7 @@ fn add_gaussian_noise(img: &DynamicImage, noiselevel: f32) -> DynamicImage {
     use scirs2_core::random::{Distribution, Normal};
 
     let mut rng = scirs2_core::random::rng();
-    let normal = Normal::new(0.0, noiselevel).unwrap();
+    let normal = Normal::new(0.0, noiselevel).expect("Operation failed");
 
     match img {
         DynamicImage::ImageLuma8(gray) => {

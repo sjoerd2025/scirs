@@ -575,7 +575,7 @@ mod tests {
         let result = create_image_montage(&images, 2, &config);
         assert!(result.is_ok());
 
-        let montage = result.unwrap();
+        let montage = result.expect("Operation failed");
         assert!(montage.contains("Test Montage"));
         assert!(montage.contains("Grid layout: 2 rows × 2 columns"));
         assert!(montage.contains("Image 1: 5×5"));
@@ -597,7 +597,7 @@ mod tests {
         let result = plot_statistical_comparison(&datasets, &config);
         assert!(result.is_ok());
 
-        let comparison = result.unwrap();
+        let comparison = result.expect("Operation failed");
         assert!(comparison.contains("Statistical Test"));
         assert!(comparison.contains("Dataset A"));
         assert!(comparison.contains("Dataset B"));
@@ -644,7 +644,7 @@ mod tests {
         let result = plot_correlation_matrix(&datasets, &config);
         assert!(result.is_ok());
 
-        let matrix = result.unwrap();
+        let matrix = result.expect("Operation failed");
         assert!(matrix.contains("Correlation Test"));
         assert!(matrix.contains("Data A"));
         assert!(matrix.contains("Data B"));

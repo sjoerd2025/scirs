@@ -15,7 +15,7 @@ mod tensor_example {
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
         // Perform matrix multiplication using contract
-        let c = contract(&a.view(), &b.view(), &[1], &[0]).unwrap();
+        let c = contract(&a.view(), &b.view(), &[1], &[0]).expect("Operation failed");
 
         println!("Matrix A:");
         println!("{:?}", a);
@@ -35,7 +35,7 @@ mod tensor_example {
         let batch_b = array![[[9.0, 10.0], [11.0, 12.0]], [[13.0, 14.0], [15.0, 16.0]]];
 
         // Perform batch matrix multiplication
-        let batch_c = batch_matmul(&batch_a.view(), &batch_b.view(), 1).unwrap();
+        let batch_c = batch_matmul(&batch_a.view(), &batch_b.view(), 1).expect("Operation failed");
 
         println!("Batch A (shape: {:?}):", batch_a.shape());
         println!("Batch B (shape: {:?}):", batch_b.shape());
@@ -48,7 +48,8 @@ mod tensor_example {
         println!("Example 3: Einstein Summation Notation (einsum)");
 
         // Matrix multiplication using einsum
-        let d = einsum("ij,jk->ik", &[&a.view().into_dyn(), &b.view().into_dyn()]).unwrap();
+        let d = einsum("ij,jk->ik", &[&a.view().into_dyn(), &b.view().into_dyn()])
+            .expect("Operation failed");
 
         println!("Matrix multiplication using einsum:");
         println!("{:?}", d);
@@ -59,7 +60,7 @@ mod tensor_example {
             "bij,bjk->bik",
             &[&batch_a.view().into_dyn(), &batch_b.view().into_dyn()],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         println!("Batch matrix multiplication using einsum:");
         println!("{:?}", batch_d);
@@ -67,7 +68,7 @@ mod tensor_example {
 
         // Trace of a matrix using einsum
         let matrix = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let trace = einsum("ii->", &[&matrix.view().into_dyn()]).unwrap();
+        let trace = einsum("ii->", &[&matrix.view().into_dyn()]).expect("Operation failed");
 
         println!("Matrix:");
         println!("{:?}", matrix);
@@ -81,7 +82,7 @@ mod tensor_example {
             "i,j->ij",
             &[&vec1.view().into_dyn(), &vec2.view().into_dyn()],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         println!("Vector 1: {:?}", vec1);
         println!("Vector 2: {:?}", vec2);
@@ -97,7 +98,7 @@ mod tensor_example {
         println!("Original tensor (shape: {:?}):", tensor.shape());
 
         // Decompose tensor with full rank
-        let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).unwrap();
+        let (core, factors) = hosvd(&tensor.view(), &[2, 2, 2]).expect("Operation failed");
 
         println!("Core tensor (shape: {:?}):", core.shape());
         for (i, factor) in factors.iter().enumerate() {
@@ -122,7 +123,7 @@ mod tensor_example {
             "ijk,kl->ijl",
             &[&tensor3d.view().into_dyn(), &matrix2d.view().into_dyn()],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         println!("Tensor (shape: {:?}):", tensor3d.shape());
         println!("Matrix (shape: {:?}):", matrix2d.shape());

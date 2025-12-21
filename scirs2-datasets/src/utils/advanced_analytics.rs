@@ -92,7 +92,9 @@ impl AdvancedDatasetAnalyzer {
         let _n_features = data.ncols();
 
         // Calculate basic statistics
-        let _mean_values: Array1<f64> = data.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let _mean_values: Array1<f64> = data
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
         let _std_values: Array1<f64> = data
             .var_axis(scirs2_core::ndarray::Axis(0), 1.0)
             .mapv(|x| x.sqrt());
@@ -143,7 +145,7 @@ impl AdvancedDatasetAnalyzer {
         // Approximate entropy calculation
         let flattened = data.iter().cloned().collect::<Vec<f64>>();
         let mut sorted = flattened.clone();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Simple entropy approximation
         let n = sorted.len() as f64;
@@ -348,23 +350,27 @@ mod tests {
 
     #[test]
     fn test_quick_quality_assessment() {
-        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let dataset = Dataset::new(data, None);
 
-        let quality = quick_quality_assessment(&dataset).unwrap();
+        let quality = quick_quality_assessment(&dataset).expect("Operation failed");
         assert!((0.0..=1.0).contains(&quality));
     }
 
     #[test]
     fn test_advanced_dataset_analyzer() {
-        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let dataset = Dataset::new(data, None);
 
         let analyzer = AdvancedDatasetAnalyzer::new()
             .with_gpu(false)
             .with_advanced_precision(true);
 
-        let metrics = analyzer.analyze_dataset_quality(&dataset).unwrap();
+        let metrics = analyzer
+            .analyze_dataset_quality(&dataset)
+            .expect("Operation failed");
         assert!(metrics.complexity_score >= 0.0);
         assert!(metrics.entropy >= 0.0);
         assert!(metrics.outlier_score >= 0.0);
@@ -373,11 +379,14 @@ mod tests {
 
     #[test]
     fn test_normality_assessment() {
-        let data = Array2::from_shape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 2), (0..40).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let dataset = Dataset::new(data, None);
 
         let analyzer = AdvancedDatasetAnalyzer::new();
-        let metrics = analyzer.analyze_dataset_quality(&dataset).unwrap();
+        let metrics = analyzer
+            .analyze_dataset_quality(&dataset)
+            .expect("Operation failed");
 
         assert!(metrics.normality_assessment.overall_normality >= 0.0);
         assert!(metrics.normality_assessment.overall_normality <= 1.0);
@@ -386,11 +395,14 @@ mod tests {
 
     #[test]
     fn test_correlation_insights() {
-        let data = Array2::from_shape_vec((15, 3), (0..45).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((15, 3), (0..45).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let dataset = Dataset::new(data, None);
 
         let analyzer = AdvancedDatasetAnalyzer::new();
-        let metrics = analyzer.analyze_dataset_quality(&dataset).unwrap();
+        let metrics = analyzer
+            .analyze_dataset_quality(&dataset)
+            .expect("Operation failed");
 
         assert_eq!(metrics.correlation_insights.feature_importance.len(), 3);
         assert!(metrics

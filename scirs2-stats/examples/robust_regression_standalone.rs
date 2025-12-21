@@ -129,7 +129,7 @@ fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, ntrials: usize) -> Regres
     // Use a simple random number generator
     let mut rng = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .expect("Operation failed")
         .as_nanos() as u64;
 
     let mut best_inlier_count = 0;

@@ -33,7 +33,7 @@ fn bench_community_detection(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 5, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 5, &mut rng).expect("Operation failed");
 
         // Louvain algorithm
         group.bench_with_input(BenchmarkId::new("louvain", size), &graph, |b, g| {
@@ -97,7 +97,7 @@ fn bench_motif_finding(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::erdos_renyi_graph(size, 0.05, &mut rng).unwrap();
+        let graph = generators::erdos_renyi_graph(size, 0.05, &mut rng).expect("Operation failed");
 
         // Triangle counting
         group.bench_with_input(BenchmarkId::new("triangle_count", size), &graph, |b, g| {
@@ -159,7 +159,7 @@ fn bench_embeddings(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed");
 
         // Node2Vec - using random walks instead
         group.bench_with_input(BenchmarkId::new("node2vec", size), &graph, |b, g| {
@@ -285,7 +285,7 @@ fn bench_matching_algorithms(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::erdos_renyi_graph(size, 0.1, &mut rng).unwrap();
+        let graph = generators::erdos_renyi_graph(size, 0.1, &mut rng).expect("Operation failed");
 
         // Maximum matching
         group.bench_with_input(BenchmarkId::new("max_matching", size), &graph, |b, g| {
@@ -349,7 +349,7 @@ fn bench_similarity_measures(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed");
 
         // Jaccard similarity for random node pairs
         let node_pairs: Vec<(usize, usize)> = (0..100)
@@ -435,7 +435,7 @@ fn bench_random_walks(c: &mut Criterion) {
 
     for &size in &sizes {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).unwrap();
+        let graph = generators::barabasi_albert_graph(size, 3, &mut rng).expect("Operation failed");
 
         // Standard random walk
         group.bench_with_input(

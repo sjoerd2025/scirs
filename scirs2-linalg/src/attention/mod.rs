@@ -38,7 +38,7 @@
 //!     &value.view(),
 //!     None,
 //!     1.0 / (d_model as f32).sqrt()
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! assert_eq!(output.shape(), &[batchsize, seq_len, d_model]);
 //! ```
@@ -87,7 +87,7 @@
 //!     &wo.view(),
 //!     None,
 //!     &config
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! assert_eq!(output.shape(), &[batchsize, seq_len, d_model]);
 //! ```
@@ -123,18 +123,19 @@ mod tests {
         // Simple 2x2x2 test case - consistent inputs for reproducible tests
         let query = array![[[1.0, 1.0], [1.0, 1.0]]]
             .into_shape_with_order((1, 2, 2))
-            .unwrap();
+            .expect("Operation failed");
         let key = array![[[1.0, 1.0], [1.0, 1.0]]]
             .into_shape_with_order((1, 2, 2))
-            .unwrap();
+            .expect("Operation failed");
         let value = array![[[5.0, 6.0], [7.0, 8.0]]]
             .into_shape_with_order((1, 2, 2))
-            .unwrap();
+            .expect("Operation failed");
 
         // Scale factor (1/sqrt(d_k))
         let scale = 1.0 / (2.0_f64).sqrt();
 
-        let result = attention(&query.view(), &key.view(), &value.view(), None, scale).unwrap();
+        let result = attention(&query.view(), &key.view(), &value.view(), None, scale)
+            .expect("Operation failed");
 
         // The shape should be the same as the query
         assert_eq!(result.shape(), &[1, 2, 2]);
@@ -156,17 +157,18 @@ mod tests {
         // Create a simple test case
         let query = array![[[1.0, 1.0], [1.0, 1.0]]]
             .into_shape_with_order((1, 2, 2))
-            .unwrap();
+            .expect("Operation failed");
         let key = array![[[1.0, 1.0], [1.0, 1.0]]]
             .into_shape_with_order((1, 2, 2))
-            .unwrap();
+            .expect("Operation failed");
         let value = array![[[1.0, 2.0], [3.0, 4.0]]]
             .into_shape_with_order((1, 2, 2))
-            .unwrap();
+            .expect("Operation failed");
 
         let scale = 1.0 / (2.0_f64).sqrt();
 
-        let result = causal_attention(&query.view(), &key.view(), &value.view(), scale).unwrap();
+        let result = causal_attention(&query.view(), &key.view(), &value.view(), scale)
+            .expect("Operation failed");
 
         // First position can only attend to itself
         assert!((result[[0, 0, 0]] - 1.0).abs() < 1e-6);

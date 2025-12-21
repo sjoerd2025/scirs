@@ -409,7 +409,7 @@ impl MultiGpuInfo {
             .max_by(|a, b| {
                 a.performance_score()
                     .partial_cmp(&b.performance_score())
-                    .unwrap()
+                    .expect("Operation failed")
             })
     }
 

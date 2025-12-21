@@ -10,7 +10,7 @@ fn main() {
     #[cfg(feature = "profiling")]
     {
         // Start the global profiler
-        Profiler::global().lock().unwrap().start();
+        Profiler::global().lock().expect("Operation failed").start();
 
         println!("\n--- Basic Timing Example ---");
         basic_timing_example();
@@ -26,10 +26,13 @@ fn main() {
 
         // Print profiling report
         println!("\n--- Profiling Report ---");
-        Profiler::global().lock().unwrap().print_report();
+        Profiler::global()
+            .lock()
+            .expect("Operation failed")
+            .print_report();
 
         // Stop the profiler
-        Profiler::global().lock().unwrap().stop();
+        Profiler::global().lock().expect("Operation failed").stop();
     }
 
     #[cfg(not(feature = "profiling"))]

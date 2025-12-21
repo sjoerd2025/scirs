@@ -152,7 +152,7 @@ impl MemoryBenchmark {
 
             // Measure memory usage during computation
             let _start_stats = MEMORY_TRACKER.get_stats();
-            let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+            let _distances = parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
             let end_stats = MEMORY_TRACKER.get_stats();
 
             let memory_efficiency = expected_dist_size_mb / end_stats.peak_mb().max(0.001);
@@ -209,20 +209,21 @@ impl MemoryBenchmark {
 
     fn test_parallel_pdist(&self, points: &Array2<f64>) -> MemoryStats {
         MEMORY_TRACKER.reset();
-        let _distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+        let _distances = parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
         MEMORY_TRACKER.get_stats()
     }
 
     fn test_simd_batch(&self, points: &Array2<f64>) -> MemoryStats {
         MEMORY_TRACKER.reset();
         let points2 = self.generate_points(points.nrows(), points.ncols());
-        let _distances = simd_euclidean_distance_batch(&points.view(), &points2.view()).unwrap();
+        let _distances = simd_euclidean_distance_batch(&points.view(), &points2.view())
+            .expect("Operation failed");
         MEMORY_TRACKER.get_stats()
     }
 
     fn test_kdtree_memory(&self, points: &Array2<f64>) -> MemoryStats {
         MEMORY_TRACKER.reset();
-        let _kdtree = KDTree::new(points).unwrap();
+        let _kdtree = KDTree::new(points).expect("Operation failed");
         MEMORY_TRACKER.get_stats()
     }
 
@@ -303,7 +304,10 @@ impl MemoryBenchmark {
                     if i != j {
                         let p1 = points.row(i);
                         let p2 = points.row(j);
-                        let dist = euclidean(p1.as_slice().unwrap(), p2.as_slice().unwrap());
+                        let dist = euclidean(
+                            p1.as_slice().expect("Operation failed"),
+                            p2.as_slice().expect("Operation failed"),
+                        );
                         result[[i, j]] = dist;
                     }
                 }
@@ -324,7 +328,10 @@ impl MemoryBenchmark {
                 for j in (i + 1)..size {
                     let p1 = points.row(i);
                     let p2 = points.row(j);
-                    let dist = euclidean(p1.as_slice().unwrap(), p2.as_slice().unwrap());
+                    let dist = euclidean(
+                        p1.as_slice().expect("Operation failed"),
+                        p2.as_slice().expect("Operation failed"),
+                    );
                     distances.push(dist);
                 }
             }
@@ -346,7 +353,8 @@ impl MemoryBenchmark {
                 let chunk = points.slice(scirs2_core::ndarray::s![chunk_start..chunk_end, ..]);
 
                 if chunk.nrows() > 1 {
-                    let chunk_distances = parallel_pdist(&chunk, "euclidean").unwrap();
+                    let chunk_distances =
+                        parallel_pdist(&chunk, "euclidean").expect("Operation failed");
                     total_distances += chunk_distances.len();
                 }
             }
@@ -439,7 +447,8 @@ fn bench_memory_distance_calculations(c: &mut Criterion) {
             |b, _| {
                 b.iter(|| {
                     MEMORY_TRACKER.reset();
-                    let distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+                    let distances =
+                        parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
                     let stats = MEMORY_TRACKER.get_stats();
                     black_box((distances, stats))
                 })
@@ -465,7 +474,7 @@ fn bench_memory_data_structures(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("kdtree_memory", size), &size, |b_, _| {
             b_.iter(|| {
                 MEMORY_TRACKER.reset();
-                let kdtree = KDTree::new(&points).unwrap();
+                let kdtree = KDTree::new(&points).expect("Operation failed");
                 let stats = MEMORY_TRACKER.get_stats();
                 black_box((kdtree, stats))
             })

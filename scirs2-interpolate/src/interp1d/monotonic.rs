@@ -18,6 +18,12 @@ use scirs2_core::ndarray::{Array1, ArrayView1};
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Enum for the different monotonic interpolation methods
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MonotonicMethod {
@@ -569,7 +575,7 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
 
             // Set derivatives using weighted arithmetic mean at the middle point
             derivatives[0] = slope1;
-            derivatives[1] = (slope1 + slope2) / F::from_f64(2.0).unwrap();
+            derivatives[1] = (slope1 + slope2) / F::from_f64(2.0).expect("Test/example failed");
             derivatives[2] = slope2;
 
             // Apply monotonicity filter
@@ -588,21 +594,24 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
 
         // Calculate Akima weights
         // We'll use a small epsilon to avoid division by zero
-        let epsilon = F::from_f64(1e-10).unwrap();
+        let epsilon = F::from_f64(1e-10).expect("Test/example failed");
 
         // For interior points
         for i in 1..n - 1 {
             let s1 = if i > 1 {
                 slopes[i - 2]
             } else {
-                F::from_f64(2.0).unwrap() * slopes[0] - slopes[1]
+                F::from_f64(2.0).expect("Failed to convert 2.0 to target float type") * slopes[0]
+                    - slopes[1]
             };
             let s2 = slopes[i - 1];
             let s3 = slopes[i];
             let s4 = if i < n - 2 {
                 slopes[i + 1]
             } else {
-                F::from_f64(2.0).unwrap() * slopes[n - 2] - slopes[n - 3]
+                F::from_f64(2.0).expect("Failed to convert 2.0 to target float type")
+                    * slopes[n - 2]
+                    - slopes[n - 3]
             };
 
             // Calculate weights using Akima's formula
@@ -613,7 +622,7 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
             if w1.abs() < epsilon && w2.abs() < epsilon {
                 // Special case: equal slopes or very close to it
                 // Use arithmetic mean
-                derivatives[i] = (s2 + s3) / F::from_f64(2.0).unwrap();
+                derivatives[i] = (s2 + s3) / F::from_f64(2.0).expect("Test/example failed");
             } else {
                 // Regular case: use weighted mean
                 derivatives[i] = (w1 * s3 + w2 * s2) / (w1 + w2);
@@ -625,7 +634,7 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
                 derivatives[i] = F::zero();
             } else {
                 // Monotonic segment - bound derivative to prevent overshooting
-                let three = F::from_f64(3.0).unwrap();
+                let three = F::from_f64(3.0).expect("Test/example failed");
                 let max_slope = three * F::min(s2.abs(), s3.abs());
                 if derivatives[i].abs() > max_slope {
                     derivatives[i] = max_slope * derivatives[i].signum();
@@ -640,9 +649,11 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
         if s1 * s2 <= F::zero() {
             derivatives[0] = F::zero(); // Non-monotonic
         } else {
-            derivatives[0] = (F::from_f64(2.0).unwrap() * s1 * s2) / (s1 + s2);
+            derivatives[0] =
+                (F::from_f64(2.0).expect("Failed to convert 2.0 to target float type") * s1 * s2)
+                    / (s1 + s2);
             // Apply bounds
-            let three = F::from_f64(3.0).unwrap();
+            let three = F::from_f64(3.0).expect("Test/example failed");
             let max_slope = three * s1.abs();
             if derivatives[0].abs() > max_slope {
                 derivatives[0] = max_slope * derivatives[0].signum();
@@ -655,9 +666,11 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
         if s1 * s2 <= F::zero() {
             derivatives[n - 1] = F::zero(); // Non-monotonic
         } else {
-            derivatives[n - 1] = (F::from_f64(2.0).unwrap() * s1 * s2) / (s1 + s2);
+            derivatives[n - 1] =
+                (F::from_f64(2.0).expect("Failed to convert 2.0 to target float type") * s1 * s2)
+                    / (s1 + s2);
             // Apply bounds
-            let three = F::from_f64(3.0).unwrap();
+            let three = F::from_f64(3.0).expect("Test/example failed");
             let max_slope = three * s1.abs();
             if derivatives[n - 1].abs() > max_slope {
                 derivatives[n - 1] = max_slope * derivatives[n - 1].signum();
@@ -698,7 +711,7 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
 ///     &xnew.view(),
 ///     MonotonicMethod::Steffen,
 ///     true
-/// ).unwrap();
+/// ).expect("Test/example failed");
 /// ```
 #[allow(dead_code)]
 pub fn monotonic_interpolate<
@@ -737,7 +750,7 @@ pub fn monotonic_interpolate<
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
 /// let xnew = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = hyman_interpolate(&x.view(), &y.view(), &xnew.view(), true).unwrap();
+/// let y_interp = hyman_interpolate(&x.view(), &y.view(), &xnew.view(), true).expect("Test/example failed");
 /// ```
 #[allow(dead_code)]
 pub fn hyman_interpolate<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>(
@@ -772,7 +785,7 @@ pub fn hyman_interpolate<F: Float + FromPrimitive + Debug + crate::traits::Inter
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
 /// let xnew = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = steffen_interpolate(&x.view(), &y.view(), &xnew.view(), true).unwrap();
+/// let y_interp = steffen_interpolate(&x.view(), &y.view(), &xnew.view(), true).expect("Test/example failed");
 /// ```
 #[allow(dead_code)]
 pub fn steffen_interpolate<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>(
@@ -807,7 +820,7 @@ pub fn steffen_interpolate<F: Float + FromPrimitive + Debug + crate::traits::Int
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
 /// let xnew = array![0.5f64, 1.5, 2.5];
 ///
-/// let y_interp = modified_akima_interpolate(&x.view(), &y.view(), &xnew.view(), true).unwrap();
+/// let y_interp = modified_akima_interpolate(&x.view(), &y.view(), &xnew.view(), true).expect("Test/example failed");
 /// ```
 #[allow(dead_code)]
 pub fn modified_akima_interpolate<
@@ -839,13 +852,34 @@ mod tests {
             MonotonicMethod::Steffen,
             MonotonicMethod::ModifiedAkima,
         ] {
-            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).unwrap();
+            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false)
+                .expect("Test/example failed");
 
             // All methods should exactly reproduce the data points
-            assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-            assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
-            assert_relative_eq!(interp.evaluate(2.0).unwrap(), 4.0);
-            assert_relative_eq!(interp.evaluate(3.0).unwrap(), 9.0);
+            assert_relative_eq!(
+                interp
+                    .evaluate(0.0)
+                    .expect("Interpolation evaluation failed"),
+                0.0
+            );
+            assert_relative_eq!(
+                interp
+                    .evaluate(1.0)
+                    .expect("Interpolation evaluation failed"),
+                1.0
+            );
+            assert_relative_eq!(
+                interp
+                    .evaluate(2.0)
+                    .expect("Interpolation evaluation failed"),
+                4.0
+            );
+            assert_relative_eq!(
+                interp
+                    .evaluate(3.0)
+                    .expect("Interpolation evaluation failed"),
+                9.0
+            );
         }
     }
 
@@ -862,36 +896,37 @@ mod tests {
             MonotonicMethod::Steffen,
             MonotonicMethod::ModifiedAkima,
         ] {
-            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).unwrap();
+            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false)
+                .expect("Test/example failed");
 
             // Check monotonicity preservation in the first segment (increasing)
-            let y_0_25 = interp.evaluate(0.25).unwrap();
-            let y_0_50 = interp.evaluate(0.50).unwrap();
-            let y_0_75 = interp.evaluate(0.75).unwrap();
+            let y_0_25 = interp.evaluate(0.25).expect("Test/example failed");
+            let y_0_50 = interp.evaluate(0.50).expect("Test/example failed");
+            let y_0_75 = interp.evaluate(0.75).expect("Test/example failed");
             assert!(y_0_25 <= y_0_50 && y_0_50 <= y_0_75);
 
             // Check monotonicity preservation in the second segment (decreasing)
-            let y_1_25 = interp.evaluate(1.25).unwrap();
-            let y_1_50 = interp.evaluate(1.50).unwrap();
-            let y_1_75 = interp.evaluate(1.75).unwrap();
+            let y_1_25 = interp.evaluate(1.25).expect("Test/example failed");
+            let y_1_50 = interp.evaluate(1.50).expect("Test/example failed");
+            let y_1_75 = interp.evaluate(1.75).expect("Test/example failed");
             assert!(y_1_25 >= y_1_50 && y_1_50 >= y_1_75);
 
             // Check third segment (decreasing)
-            let y_2_25 = interp.evaluate(2.25).unwrap();
-            let y_2_50 = interp.evaluate(2.50).unwrap();
-            let y_2_75 = interp.evaluate(2.75).unwrap();
+            let y_2_25 = interp.evaluate(2.25).expect("Test/example failed");
+            let y_2_50 = interp.evaluate(2.50).expect("Test/example failed");
+            let y_2_75 = interp.evaluate(2.75).expect("Test/example failed");
             assert!(y_2_25 >= y_2_50 && y_2_50 >= y_2_75);
 
             // Check fourth segment (increasing)
-            let y_3_25 = interp.evaluate(3.25).unwrap();
-            let y_3_50 = interp.evaluate(3.50).unwrap();
-            let y_3_75 = interp.evaluate(3.75).unwrap();
+            let y_3_25 = interp.evaluate(3.25).expect("Test/example failed");
+            let y_3_50 = interp.evaluate(3.50).expect("Test/example failed");
+            let y_3_75 = interp.evaluate(3.75).expect("Test/example failed");
             assert!(y_3_25 <= y_3_50 && y_3_50 <= y_3_75);
 
             // Check fifth segment (increasing)
-            let y_4_25 = interp.evaluate(4.25).unwrap();
-            let y_4_50 = interp.evaluate(4.50).unwrap();
-            let y_4_75 = interp.evaluate(4.75).unwrap();
+            let y_4_25 = interp.evaluate(4.25).expect("Test/example failed");
+            let y_4_50 = interp.evaluate(4.50).expect("Test/example failed");
+            let y_4_75 = interp.evaluate(4.75).expect("Test/example failed");
             assert!(y_4_25 <= y_4_50 && y_4_50 <= y_4_75);
         }
     }
@@ -909,21 +944,22 @@ mod tests {
             MonotonicMethod::Steffen,
             MonotonicMethod::ModifiedAkima,
         ] {
-            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).unwrap();
+            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false)
+                .expect("Test/example failed");
 
             // Check values in each segment
             // First segment (flat)
-            let y_0_5 = interp.evaluate(0.5).unwrap();
+            let y_0_5 = interp.evaluate(0.5).expect("Test/example failed");
             assert_relative_eq!(y_0_5, 0.0, max_relative = 1e-8);
 
             // Second segment (flat)
-            let y_1_5 = interp.evaluate(1.5).unwrap();
+            let y_1_5 = interp.evaluate(1.5).expect("Test/example failed");
             assert_relative_eq!(y_1_5, 0.0, max_relative = 1e-8);
 
             // Third segment (increasing)
-            let y_2_25 = interp.evaluate(2.25).unwrap();
-            let y_2_50 = interp.evaluate(2.50).unwrap();
-            let y_2_75 = interp.evaluate(2.75).unwrap();
+            let y_2_25 = interp.evaluate(2.25).expect("Test/example failed");
+            let y_2_50 = interp.evaluate(2.50).expect("Test/example failed");
+            let y_2_75 = interp.evaluate(2.75).expect("Test/example failed");
 
             // Values should be monotonic
             assert!(y_2_25 <= y_2_50 && y_2_50 <= y_2_75);
@@ -939,7 +975,7 @@ mod tests {
             assert!(y_2_75 <= 1.0);
 
             // Fourth segment (flat)
-            let y_3_5 = interp.evaluate(3.5).unwrap();
+            let y_3_5 = interp.evaluate(3.5).expect("Test/example failed");
             assert_relative_eq!(y_3_5, 1.0, max_relative = 1e-8);
         }
     }
@@ -956,12 +992,28 @@ mod tests {
             MonotonicMethod::Steffen,
             MonotonicMethod::ModifiedAkima,
         ] {
-            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).unwrap();
+            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false)
+                .expect("Test/example failed");
 
             // Should exactly match linear interpolation
-            assert_relative_eq!(interp.evaluate(0.0).unwrap(), 0.0);
-            assert_relative_eq!(interp.evaluate(0.5).unwrap(), 0.5);
-            assert_relative_eq!(interp.evaluate(1.0).unwrap(), 1.0);
+            assert_relative_eq!(
+                interp
+                    .evaluate(0.0)
+                    .expect("Interpolation evaluation failed"),
+                0.0
+            );
+            assert_relative_eq!(
+                interp
+                    .evaluate(0.5)
+                    .expect("Interpolation evaluation failed"),
+                0.5
+            );
+            assert_relative_eq!(
+                interp
+                    .evaluate(1.0)
+                    .expect("Interpolation evaluation failed"),
+                1.0
+            );
         }
 
         // Test with three points
@@ -974,17 +1026,18 @@ mod tests {
             MonotonicMethod::Steffen,
             MonotonicMethod::ModifiedAkima,
         ] {
-            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).unwrap();
+            let interp = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false)
+                .expect("Test/example failed");
 
             // Should preserve monotonicity in each segment
-            let y_0_25 = interp.evaluate(0.25).unwrap();
-            let y_0_50 = interp.evaluate(0.50).unwrap();
-            let y_0_75 = interp.evaluate(0.75).unwrap();
+            let y_0_25 = interp.evaluate(0.25).expect("Test/example failed");
+            let y_0_50 = interp.evaluate(0.50).expect("Test/example failed");
+            let y_0_75 = interp.evaluate(0.75).expect("Test/example failed");
             assert!(y_0_25 <= y_0_50 && y_0_50 <= y_0_75);
 
-            let y_1_25 = interp.evaluate(1.25).unwrap();
-            let y_1_50 = interp.evaluate(1.50).unwrap();
-            let y_1_75 = interp.evaluate(1.75).unwrap();
+            let y_1_25 = interp.evaluate(1.25).expect("Test/example failed");
+            let y_1_50 = interp.evaluate(1.50).expect("Test/example failed");
+            let y_1_75 = interp.evaluate(1.75).expect("Test/example failed");
             assert!(y_1_25 >= y_1_50 && y_1_50 >= y_1_75);
         }
     }
@@ -1001,14 +1054,14 @@ mod tests {
             MonotonicMethod::Steffen,
             MonotonicMethod::ModifiedAkima,
         ] {
-            let interp_extrap =
-                MonotonicInterpolator::new(&x.view(), &y.view(), *method, true).unwrap();
-            let _y_minus_1 = interp_extrap.evaluate(-1.0).unwrap();
-            let _y_plus_4 = interp_extrap.evaluate(4.0).unwrap();
+            let interp_extrap = MonotonicInterpolator::new(&x.view(), &y.view(), *method, true)
+                .expect("Test/example failed");
+            let _y_minus_1 = interp_extrap.evaluate(-1.0).expect("Test/example failed");
+            let _y_plus_4 = interp_extrap.evaluate(4.0).expect("Test/example failed");
 
             // Test with extrapolation disabled
-            let interp_no_extrap =
-                MonotonicInterpolator::new(&x.view(), &y.view(), *method, false).unwrap();
+            let interp_no_extrap = MonotonicInterpolator::new(&x.view(), &y.view(), *method, false)
+                .expect("Test/example failed");
             assert!(interp_no_extrap.evaluate(-1.0).is_err());
             assert!(interp_no_extrap.evaluate(4.0).is_err());
         }
@@ -1021,10 +1074,12 @@ mod tests {
         let xnew = array![0.5, 1.5, 2.5];
 
         // Test each convenience function
-        let y_hyman = hyman_interpolate(&x.view(), &y.view(), &xnew.view(), false).unwrap();
-        let y_steffen = steffen_interpolate(&x.view(), &y.view(), &xnew.view(), false).unwrap();
-        let y_akima =
-            modified_akima_interpolate(&x.view(), &y.view(), &xnew.view(), false).unwrap();
+        let y_hyman = hyman_interpolate(&x.view(), &y.view(), &xnew.view(), false)
+            .expect("Test/example failed");
+        let y_steffen = steffen_interpolate(&x.view(), &y.view(), &xnew.view(), false)
+            .expect("Test/example failed");
+        let y_akima = modified_akima_interpolate(&x.view(), &y.view(), &xnew.view(), false)
+            .expect("Test/example failed");
         let y_generic = monotonic_interpolate(
             &x.view(),
             &y.view(),
@@ -1032,7 +1087,7 @@ mod tests {
             MonotonicMethod::Pchip,
             false,
         )
-        .unwrap();
+        .expect("Test/example failed");
 
         // Each method should return a result with the correct length
         assert_eq!(y_hyman.len(), 3);

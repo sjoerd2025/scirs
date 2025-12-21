@@ -33,7 +33,7 @@ use super::core::{find_nearest_valid_index, InterpolationConfig, InterpolationMe
 /// use scirs2_signal::interpolate::spectral::sinc_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
-/// let result = sinc_interpolate(&signal, 0.4).unwrap();
+/// let result = sinc_interpolate(&signal, 0.4).expect("Operation failed");
 /// // Result contains bandlimited interpolated values
 /// ```
 #[allow(dead_code)]
@@ -145,7 +145,7 @@ pub fn sinc_interpolate(_signal: &Array1<f64>, cutofffreq: f64) -> SignalResult<
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let config = InterpolationConfig::default();
-/// let result = spectral_interpolate(&signal, &config).unwrap();
+/// let result = spectral_interpolate(&signal, &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn spectral_interpolate(
@@ -265,7 +265,7 @@ pub fn spectral_interpolate(
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let config = InterpolationConfig::default();
-/// let (result, method) = auto_interpolate(&signal, &config, true).unwrap();
+/// let (result, method) = auto_interpolate(&signal, &config, true).expect("Operation failed");
 /// println!("Best method: {:?}", method);
 /// ```
 #[allow(dead_code)]
@@ -793,7 +793,7 @@ mod tests {
     #[test]
     fn test_sinc_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
-        let result = sinc_interpolate(&signal, 0.4).unwrap();
+        let result = sinc_interpolate(&signal, 0.4).expect("Operation failed");
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -816,7 +816,7 @@ mod tests {
     fn test_spectral_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
         let config = InterpolationConfig::default();
-        let result = spectral_interpolate(&signal, &config).unwrap();
+        let result = spectral_interpolate(&signal, &config).expect("Operation failed");
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -834,7 +834,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
         let config = InterpolationConfig::default();
 
-        let (result, method) = auto_interpolate(&signal, &config, false).unwrap();
+        let (result, method) = auto_interpolate(&signal, &config, false).expect("Operation failed");
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -857,7 +857,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0, f64::NAN, 8.0]);
         let config = InterpolationConfig::default();
 
-        let (result, method) = auto_interpolate(&signal, &config, true).unwrap();
+        let (result, method) = auto_interpolate(&signal, &config, true).expect("Operation failed");
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -868,9 +868,9 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let config = InterpolationConfig::default();
 
-        let result1 = sinc_interpolate(&signal, 0.4).unwrap();
-        let result2 = spectral_interpolate(&signal, &config).unwrap();
-        let (result3, _) = auto_interpolate(&signal, &config, false).unwrap();
+        let result1 = sinc_interpolate(&signal, 0.4).expect("Operation failed");
+        let result2 = spectral_interpolate(&signal, &config).expect("Operation failed");
+        let (result3, _) = auto_interpolate(&signal, &config, false).expect("Operation failed");
 
         assert_eq!(result1, signal);
         assert_eq!(result2, signal);
@@ -902,7 +902,7 @@ mod tests {
         let y_known = [1.0, 2.0, 5.0]; // y = x^2 + 1
         let x_target = [0.5, 1.5];
 
-        let result = lagrange_interpolate(&x_known, &y_known, &x_target).unwrap();
+        let result = lagrange_interpolate(&x_known, &y_known, &x_target).expect("Operation failed");
 
         // Should be close to [1.25, 3.25] for y = x^2 + 1
         assert!((result[0] - 1.25).abs() < 1e-10);
@@ -916,7 +916,7 @@ mod tests {
         let x = [0.0, 1.0, 2.0, 3.0];
         let y = [1.0, 2.0, 5.0, 10.0]; // Roughly y = x^2 + 1
 
-        let coeffs = polynomial_fit(&x, &y, 2).unwrap();
+        let coeffs = polynomial_fit(&x, &y, 2).expect("Operation failed");
         assert_eq!(coeffs.len(), 3); // degree 2 + 1
 
         let y_eval = polynomial_eval(&coeffs, &x);

@@ -437,7 +437,7 @@ impl SuperPointNet {
         }
 
         // Sort by score and take top candidates
-        candidates.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        candidates.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
         candidates.truncate(self.network.config.max_keypoints);
 
         // Create keypoints and extract descriptors
@@ -1290,7 +1290,7 @@ mod tests {
             let result = superpoint.detect_and_describe(&image.view());
             assert!(result.is_ok());
 
-            let (keypoints, descriptors) = result.unwrap();
+            let (keypoints, descriptors) = result.expect("Operation failed");
             assert!(!keypoints.is_empty());
             assert_eq!(descriptors.shape()[0], keypoints.len());
         }
@@ -1314,7 +1314,7 @@ mod tests {
 
         let matches = matcher
             .match_descriptors(&desc1.view(), &desc2.view())
-            .unwrap();
+            .expect("Operation failed");
         assert!(!matches.is_empty());
     }
 
@@ -1329,9 +1329,13 @@ mod tests {
             }
         });
 
-        let keypoints = sift.detect_keypoints(&image.view()).unwrap();
+        let keypoints = sift
+            .detect_keypoints(&image.view())
+            .expect("Operation failed");
         if !keypoints.is_empty() {
-            let descriptors = sift.compute_descriptors(&image.view(), &keypoints).unwrap();
+            let descriptors = sift
+                .compute_descriptors(&image.view(), &keypoints)
+                .expect("Operation failed");
             assert_eq!(descriptors.shape()[0], keypoints.len());
             assert_eq!(descriptors.shape()[1], 128);
         }

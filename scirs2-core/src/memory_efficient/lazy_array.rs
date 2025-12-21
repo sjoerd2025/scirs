@@ -436,7 +436,7 @@ where
     // If we don't have concrete data, try to evaluate from sources
     if !lazy.ops.is_empty() && !lazy.sources.is_empty() {
         // Handle different operation types
-        let last_op = lazy.ops.last().unwrap();
+        let last_op = lazy.ops.last().expect("Operation failed");
 
         match last_op.kind {
             LazyOpKind::Binary => {

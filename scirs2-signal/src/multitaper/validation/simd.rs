@@ -242,7 +242,7 @@ mod tests {
         let result = validate_simd_operations(&config);
         assert!(result.is_ok());
 
-        let score = result.unwrap();
+        let score = result.expect("Operation failed");
         assert!(score >= 0.0 && score <= 1.0);
     }
 
@@ -254,7 +254,7 @@ mod tests {
             ..Default::default()
         };
 
-        let score = test_simd_correctness(&config).unwrap();
+        let score = test_simd_correctness(&config).expect("Operation failed");
         assert!(score >= 0.8); // Should have high correctness
     }
 

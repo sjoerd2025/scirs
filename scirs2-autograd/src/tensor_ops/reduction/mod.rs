@@ -398,7 +398,7 @@ where
 ///    let x = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
 ///    let lse = reduce_logsumexp(x, 0, false);
 ///    // Should be approximately log(e^1 + e^2 + e^3) ≈ 3.407
-///    let result = lse.eval(g).unwrap();
+///    let result = lse.eval(g).expect("Operation failed");
 ///    assert!((result[scirs2_core::ndarray::IxDyn(&[])] - 3.407_f64).abs() < 0.01);
 /// });
 /// ```
@@ -433,7 +433,7 @@ where
 ///    let c = ag::tensor_ops::ones((&[2, 2]), g);
 ///    let d = add_n(&[a, b, c]);
 ///
-///    assert_eq!(d.eval(g).unwrap().shape(), &[2, 2]);
+///    assert_eq!(d.eval(g).expect("Operation failed").shape(), &[2, 2]);
 ///    assert_eq!(d.eval(g), Ok(array![[3., 3.], [3., 3.]].into_dyn()));
 /// });
 /// ```
@@ -591,17 +591,26 @@ mod tests {
             // Test sum reduction
             let sum_result = reduce_sum(x, &[0], false);
             let expected_sum = array![4.0_f32, 6.0];
-            assert_eq!(sum_result.eval(g).unwrap(), expected_sum.into_dyn());
+            assert_eq!(
+                sum_result.eval(g).expect("Operation failed"),
+                expected_sum.into_dyn()
+            );
 
             // Test mean reduction
             let mean_result = reduce_mean(x, &[0], false);
             let expected_mean = array![2.0_f32, 3.0];
-            assert_eq!(mean_result.eval(g).unwrap(), expected_mean.into_dyn());
+            assert_eq!(
+                mean_result.eval(g).expect("Operation failed"),
+                expected_mean.into_dyn()
+            );
 
             // Test product reduction
             let prod_result = reduce_prod(x, &[0], false);
             let expected_prod = array![3.0_f32, 8.0];
-            assert_eq!(prod_result.eval(g).unwrap(), expected_prod.into_dyn());
+            assert_eq!(
+                prod_result.eval(g).expect("Operation failed"),
+                expected_prod.into_dyn()
+            );
         });
     }
 
@@ -613,12 +622,18 @@ mod tests {
             // Test min reduction
             let min_result = reduce_min(x, &[0], false);
             let expected_min = array![1.0_f32, 3.0];
-            assert_eq!(min_result.eval(g).unwrap(), expected_min.into_dyn());
+            assert_eq!(
+                min_result.eval(g).expect("Operation failed"),
+                expected_min.into_dyn()
+            );
 
             // Test max reduction
             let max_result = reduce_max(x, &[0], false);
             let expected_max = array![2.0_f32, 4.0];
-            assert_eq!(max_result.eval(g).unwrap(), expected_max.into_dyn());
+            assert_eq!(
+                max_result.eval(g).expect("Operation failed"),
+                expected_max.into_dyn()
+            );
         });
     }
 
@@ -630,12 +645,18 @@ mod tests {
             // Test variance reduction
             let var_result = reduce_variance(x, &[0], false);
             let expected_var = array![1.0_f32, 1.0]; // Variance of [1,3] and [2,4]
-            assert_eq!(var_result.eval(g).unwrap(), expected_var.into_dyn());
+            assert_eq!(
+                var_result.eval(g).expect("Operation failed"),
+                expected_var.into_dyn()
+            );
 
             // Test standard deviation
             let std_result = reduce_std(x, &[0], false);
             let expected_std = array![1.0_f32, 1.0];
-            assert_eq!(std_result.eval(g).unwrap(), expected_std.into_dyn());
+            assert_eq!(
+                std_result.eval(g).expect("Operation failed"),
+                expected_std.into_dyn()
+            );
         });
     }
 
@@ -647,14 +668,14 @@ mod tests {
             // Test sum all
             let sum_all_result = sum_all(x);
             assert_eq!(
-                sum_all_result.eval(g).unwrap(),
+                sum_all_result.eval(g).expect("Operation failed"),
                 scirs2_core::ndarray::arr0(10.0).into_dyn()
             );
 
             // Test mean all
             let mean_all_result = mean_all(x);
             assert_eq!(
-                mean_all_result.eval(g).unwrap(),
+                mean_all_result.eval(g).expect("Operation failed"),
                 scirs2_core::ndarray::arr0(2.5).into_dyn()
             );
         });
@@ -668,19 +689,25 @@ mod tests {
             // Test Frobenius norm
             let frob_norm = frobenius_norm(x);
             assert_eq!(
-                frob_norm.eval(g).unwrap(),
+                frob_norm.eval(g).expect("Operation failed"),
                 scirs2_core::ndarray::arr0(5.0).into_dyn()
             );
 
             // Test L1 norm
             let l1_result = l1_norm(x, &[0], false);
             let expected_l1 = array![3.0_f32, 4.0];
-            assert_eq!(l1_result.eval(g).unwrap(), expected_l1.into_dyn());
+            assert_eq!(
+                l1_result.eval(g).expect("Operation failed"),
+                expected_l1.into_dyn()
+            );
 
             // Test L2 norm
             let l2_result = l2_norm(x, &[0], false);
             let expected_l2 = array![3.0_f32, 4.0];
-            assert_eq!(l2_result.eval(g).unwrap(), expected_l2.into_dyn());
+            assert_eq!(
+                l2_result.eval(g).expect("Operation failed"),
+                expected_l2.into_dyn()
+            );
         });
     }
 
@@ -693,7 +720,10 @@ mod tests {
 
             let result = add_n(&[a, b, c]);
             let expected = array![9.0_f32, 12.0];
-            assert_eq!(result.eval(g).unwrap(), expected.into_dyn());
+            assert_eq!(
+                result.eval(g).expect("Operation failed"),
+                expected.into_dyn()
+            );
         });
     }
 
@@ -704,11 +734,14 @@ mod tests {
 
             // Test with keep_dims=true
             let sum_result = reduce_sum(x, &[0], true);
-            assert_eq!(sum_result.eval(g).unwrap().shape(), &[1, 2]);
+            assert_eq!(
+                sum_result.eval(g).expect("Operation failed").shape(),
+                &[1, 2]
+            );
 
             // Test with keep_dims=false
             let sum_result = reduce_sum(x, &[0], false);
-            assert_eq!(sum_result.eval(g).unwrap().shape(), &[2]);
+            assert_eq!(sum_result.eval(g).expect("Operation failed").shape(), &[2]);
         });
     }
 }

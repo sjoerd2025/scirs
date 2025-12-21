@@ -639,14 +639,18 @@ mod tests {
         let boundary = make_zero_gradient_boundary(0.0, 10.0);
 
         // Test point below lower boundary
-        let result = boundary.map_point(-5.0, None, None).unwrap();
+        let result = boundary
+            .map_point(-5.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 0.0),
             _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
-        let result = boundary.map_point(15.0, None, None).unwrap();
+        let result = boundary
+            .map_point(15.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 10.0),
             _ => panic!("Expected MappedPoint result"),
@@ -658,14 +662,18 @@ mod tests {
         let boundary = make_zero_value_boundary(0.0, 10.0);
 
         // Test point below lower boundary
-        let result = boundary.map_point(-5.0, None, None).unwrap();
+        let result = boundary
+            .map_point(-5.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0),
             _ => panic!("Expected DirectValue result"),
         }
 
         // Test point above upper boundary
-        let result = boundary.map_point(15.0, None, None).unwrap();
+        let result = boundary
+            .map_point(15.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0),
             _ => panic!("Expected DirectValue result"),
@@ -677,21 +685,27 @@ mod tests {
         let boundary = make_periodic_boundary(0.0, 10.0);
 
         // Test point below lower boundary
-        let result = boundary.map_point(-5.0, None, None).unwrap();
+        let result = boundary
+            .map_point(-5.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
-        let result = boundary.map_point(15.0, None, None).unwrap();
+        let result = boundary
+            .map_point(15.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected MappedPoint result"),
         }
 
         // Test multiple periods
-        let result = boundary.map_point(25.0, None, None).unwrap();
+        let result = boundary
+            .map_point(25.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected MappedPoint result"),
@@ -703,21 +717,27 @@ mod tests {
         let boundary = make_symmetric_boundary(0.0, 10.0);
 
         // Test point below lower boundary
-        let result = boundary.map_point(-5.0, None, None).unwrap();
+        let result = boundary
+            .map_point(-5.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
-        let result = boundary.map_point(15.0, None, None).unwrap();
+        let result = boundary
+            .map_point(15.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected MappedPoint result"),
         }
 
         // Test multiple reflections
-        let result = boundary.map_point(-15.0, None, None).unwrap();
+        let result = boundary
+            .map_point(-15.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected MappedPoint result"),
@@ -729,7 +749,9 @@ mod tests {
         let boundary = make_antisymmetric_boundary(0.0, 10.0);
 
         // Test point below lower boundary
-        let result = boundary.map_point(-5.0, None, None).unwrap();
+        let result = boundary
+            .map_point(-5.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::MappedPointWithSignChange(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected MappedPointWithSignChange result"),
@@ -741,7 +763,7 @@ mod tests {
 
         let result = boundary
             .map_point(-5.0, Some(&values.view()), Some(&domain_points.view()))
-            .unwrap();
+            .expect("Operation failed");
         match result {
             BoundaryResult::DirectValue(v) => {
                 let expected = -(5.0 * 5.0); // Negative of f(5.0)
@@ -762,7 +784,7 @@ mod tests {
         // Test point below lower boundary
         let result = boundary
             .map_point(-5.0, Some(&values.view()), Some(&domain_points.view()))
-            .unwrap();
+            .expect("Operation failed");
 
         match result {
             BoundaryResult::DirectValue(v) => {
@@ -775,7 +797,7 @@ mod tests {
         // Test point above upper boundary
         let result = boundary
             .map_point(15.0, Some(&values.view()), Some(&domain_points.view()))
-            .unwrap();
+            .expect("Operation failed");
 
         match result {
             BoundaryResult::DirectValue(v) => {
@@ -791,7 +813,9 @@ mod tests {
         let boundary = make_zero_gradient_boundary(0.0, 10.0);
 
         // Test point inside domain
-        let result = boundary.map_point(5.0, None, None).unwrap();
+        let result = boundary
+            .map_point(5.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::InsideDomain(x) => assert_abs_diff_eq!(x, 5.0),
             _ => panic!("Expected InsideDomain result"),
@@ -808,14 +832,18 @@ mod tests {
         );
 
         // Test point below lower boundary
-        let result = boundary.map_point(-5.0, None, None).unwrap();
+        let result = boundary
+            .map_point(-5.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, -5.0),
             _ => panic!("Expected AllowExtrapolation result"),
         }
 
         // Test point above upper boundary
-        let result = boundary.map_point(15.0, None, None).unwrap();
+        let result = boundary
+            .map_point(15.0, None, None)
+            .expect("Operation failed");
         match result {
             BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, 15.0),
             _ => panic!("Expected AllowExtrapolation result"),

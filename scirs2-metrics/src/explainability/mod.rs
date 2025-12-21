@@ -88,9 +88,9 @@ impl<
     pub fn new() -> Self {
         Self {
             n_perturbations: 100,
-            perturbation_strength: F::from(0.1).unwrap(),
-            importance_threshold: F::from(0.01).unwrap(),
-            confidence_level: F::from(0.95).unwrap(),
+            perturbation_strength: F::from(0.1).expect("Failed to convert constant to float"),
+            importance_threshold: F::from(0.01).expect("Failed to convert constant to float"),
+            confidence_level: F::from(0.95).expect("Failed to convert constant to float"),
         }
     }
 
@@ -193,7 +193,7 @@ impl<
                     }
 
                     let importance = perturbed_errors.iter().cloned().sum::<F>()
-                        / F::from(perturbed_errors.len()).unwrap();
+                        / F::from(perturbed_errors.len()).expect("Operation failed");
                     importance_scores.insert(feature_name.clone(), importance);
                 }
             }
@@ -248,7 +248,7 @@ impl<
         }
 
         let average_consistency = consistency_scores.iter().cloned().sum::<F>()
-            / F::from(consistency_scores.len()).unwrap();
+            / F::from(consistency_scores.len()).expect("Operation failed");
 
         Ok(average_consistency)
     }
@@ -308,8 +308,8 @@ impl<
         let total_uncertainty = epistemic_uncertainty + aleatoric_uncertainty;
 
         // Coverage and calibration (simplified)
-        let coverage = F::from(0.9).unwrap(); // Would be computed based on actual confidence intervals
-        let calibration_error = F::from(0.05).unwrap(); // Would be computed using reliability diagrams
+        let coverage = F::from(0.9).expect("Failed to convert constant to float"); // Would be computed based on actual confidence intervals
+        let calibration_error = F::from(0.05).expect("Failed to convert constant to float"); // Would be computed using reliability diagrams
 
         Ok(UncertaintyMetrics {
             epistemic_uncertainty,
@@ -350,7 +350,7 @@ impl<
         }
 
         let average_faithfulness = faithfulness_scores.iter().cloned().sum::<F>()
-            / F::from(faithfulness_scores.len()).unwrap();
+            / F::from(faithfulness_scores.len()).expect("Operation failed");
 
         Ok(average_faithfulness)
     }
@@ -388,7 +388,7 @@ impl<
         }
 
         let average_completeness = completeness_scores.iter().cloned().sum::<F>()
-            / F::from(completeness_scores.len()).unwrap();
+            / F::from(completeness_scores.len()).expect("Operation failed");
 
         Ok(average_completeness)
     }
@@ -420,7 +420,8 @@ impl<
     fn add_noise_to_sample(&self, sample: &mut Array1<F>) -> Result<()> {
         for value in sample.iter_mut() {
             // Add small amount of noise
-            let noise = self.perturbation_strength * F::from(0.01).unwrap(); // Simplified noise
+            let noise = self.perturbation_strength
+                * F::from(0.01).expect("Failed to convert constant to float"); // Simplified noise
             *value = *value + noise;
         }
         Ok(())
@@ -471,7 +472,7 @@ impl<
             global_importance = global_importance + local_explanation;
         }
 
-        global_importance = global_importance / F::from(data.nrows()).unwrap();
+        global_importance = global_importance / F::from(data.nrows()).expect("Operation failed");
         Ok(global_importance)
     }
 
@@ -489,8 +490,8 @@ impl<
             }
         }
 
-        let average_correlation =
-            correlations.iter().cloned().sum::<F>() / F::from(correlations.len()).unwrap();
+        let average_correlation = correlations.iter().cloned().sum::<F>()
+            / F::from(correlations.len()).expect("Operation failed");
 
         Ok(average_correlation)
     }
@@ -557,26 +558,26 @@ impl<
         for i in 0..nsamples {
             let sample_predictions: Vec<F> = predictions.iter().map(|pred| pred[i]).collect();
 
-            let mean =
-                sample_predictions.iter().cloned().sum::<F>() / F::from(n_predictions).unwrap();
+            let mean = sample_predictions.iter().cloned().sum::<F>()
+                / F::from(n_predictions).expect("Failed to convert to float");
             let variance = sample_predictions
                 .iter()
                 .map(|&pred| (pred - mean) * (pred - mean))
                 .sum::<F>()
-                / F::from(n_predictions - 1).unwrap();
+                / F::from(n_predictions - 1).expect("Failed to convert to float");
 
             variances.push(variance);
         }
 
-        let average_variance =
-            variances.iter().cloned().sum::<F>() / F::from(variances.len()).unwrap();
+        let average_variance = variances.iter().cloned().sum::<F>()
+            / F::from(variances.len()).expect("Operation failed");
         Ok(average_variance.sqrt())
     }
 
     fn compute_aleatoric_uncertainty(&self, predictions: &[Array1<F>]) -> Result<F> {
         // Simplified aleatoric uncertainty computation
         // In practice, this would require model-specific uncertainty estimates
-        Ok(F::from(0.1).unwrap())
+        Ok(F::from(0.1).expect("Failed to convert constant to float"))
     }
 
     fn mask_important_features(
@@ -669,7 +670,7 @@ impl<
                     .unwrap_or(F::zero());
                 importance_scores.insert(
                     feature_name,
-                    current_score + importance / F::from(x_test.nrows()).unwrap(),
+                    current_score + importance / F::from(x_test.nrows()).expect("Operation failed"),
                 );
             }
         }
@@ -728,7 +729,7 @@ impl<
                 .iter()
                 .map(|&x| (x - feature_mean) * (x - feature_mean))
                 .sum::<F>()
-                / F::from(n_features).unwrap();
+                / F::from(n_features).expect("Failed to convert to float");
             variance.sqrt()
         };
 
@@ -740,8 +741,8 @@ impl<
             for j in 0..n_features {
                 // Use simple uniform perturbation around the original value
                 let perturbation_factor = F::from((i + j) as f64 / (nsamples * n_features) as f64)
-                    .unwrap()
-                    - F::from(0.5).unwrap();
+                    .expect("Operation failed")
+                    - F::from(0.5).expect("Failed to convert constant to float");
                 let perturbation = perturbation_factor * self.perturbation_strength * feature_std;
 
                 perturbed_instance[j] = instance[j] + perturbation;
@@ -754,8 +755,10 @@ impl<
             }
 
             // Calculate weight based on distance (closer _samples get higher weight)
-            let distance = distance_sum / F::from(n_features).unwrap();
-            weights[i] = (-distance * F::from(2.0).unwrap()).exp(); // Gaussian-like kernel
+            let distance = distance_sum / F::from(n_features).expect("Failed to convert to float");
+            weights[i] =
+                (-distance * F::from(2.0).expect("Failed to convert constant to float")).exp();
+            // Gaussian-like kernel
         }
 
         Ok((perturbed_samples, weights))
@@ -800,7 +803,7 @@ impl<
         }
 
         // Add regularization to diagonal (Ridge regression)
-        let regularization = F::from(1e-6).unwrap();
+        let regularization = F::from(1e-6).expect("Failed to convert constant to float");
         for i in 0..n_features {
             xtx[[i, i]] = xtx[[i, i]] + regularization;
         }
@@ -849,7 +852,7 @@ impl<
             }
 
             // Check for singular matrix
-            if aug[[i, i]].abs() < F::from(1e-10).unwrap() {
+            if aug[[i, i]].abs() < F::from(1e-10).expect("Failed to convert constant to float") {
                 // Use pseudoinverse approach for singular case
                 return Ok(vec![F::zero(); n]);
             }
@@ -916,7 +919,7 @@ impl<
                     .unwrap_or(F::zero());
                 importance_scores.insert(
                     feature_name,
-                    current_score + importance / F::from(x_test.nrows()).unwrap(),
+                    current_score + importance / F::from(x_test.nrows()).expect("Operation failed"),
                 );
             }
         }
@@ -975,7 +978,7 @@ impl<
 
         for j in 0..n_features {
             let column_sum: F = xdata.column(j).iter().cloned().sum();
-            background[j] = column_sum / F::from(xdata.nrows()).unwrap();
+            background[j] = column_sum / F::from(xdata.nrows()).expect("Operation failed");
         }
 
         Ok(background)
@@ -1035,7 +1038,8 @@ impl<
             // Average marginal contributions to get Shapley value
             if !marginal_contributions.is_empty() {
                 let sum: F = marginal_contributions.iter().cloned().sum();
-                shapley_values[i] = sum / F::from(marginal_contributions.len()).unwrap();
+                shapley_values[i] =
+                    sum / F::from(marginal_contributions.len()).expect("Operation failed");
             }
         }
 
@@ -1144,7 +1148,7 @@ impl<
                     .unwrap_or(F::zero());
                 importance_scores.insert(
                     feature_name,
-                    current_score + importance / F::from(x_test.nrows()).unwrap(),
+                    current_score + importance / F::from(x_test.nrows()).expect("Operation failed"),
                 );
             }
         }
@@ -1178,7 +1182,7 @@ impl<
             if i < n_features {
                 let combined_importance =
                     (saliency_map[i] + integrated_gradients[i] + gradient_times_input[i])
-                        / F::from(3.0).unwrap();
+                        / F::from(3.0).expect("Failed to convert constant to float");
                 importance.insert(name.clone(), combined_importance.abs());
             }
         }
@@ -1195,7 +1199,7 @@ impl<
         let mut gradients = vec![F::zero(); n_features];
 
         // Use adaptive step size based on feature magnitude
-        let epsilon_base = F::from(1e-5).unwrap();
+        let epsilon_base = F::from(1e-5).expect("Failed to convert constant to float");
 
         // Get baseline prediction
         let baseline_input =
@@ -1206,7 +1210,9 @@ impl<
 
         // Compute partial derivatives using central differences
         for i in 0..n_features {
-            let feature_magnitude = instance[i].abs().max(F::from(1.0).unwrap());
+            let feature_magnitude = instance[i]
+                .abs()
+                .max(F::from(1.0).expect("Failed to convert constant to float"));
             let epsilon = epsilon_base * feature_magnitude;
 
             // Forward step
@@ -1228,7 +1234,8 @@ impl<
             let backward_pred = model(&backward_input.view())[0];
 
             // Central difference approximation
-            gradients[i] = (forward_pred - backward_pred) / (F::from(2.0).unwrap() * epsilon);
+            gradients[i] = (forward_pred - backward_pred)
+                / (F::from(2.0).expect("Failed to convert constant to float") * epsilon);
         }
 
         Ok(gradients)
@@ -1254,7 +1261,8 @@ impl<
 
         // Approximate integral using Riemann sum
         for step in 0..n_steps {
-            let alpha = F::from(step as f64).unwrap() / F::from(n_steps as f64).unwrap();
+            let alpha = F::from(step as f64).expect("Failed to convert to float")
+                / F::from(n_steps as f64).expect("Failed to convert to float");
 
             // Interpolate between baseline and instance
             let mut interpolated = Array1::zeros(n_features);
@@ -1274,7 +1282,7 @@ impl<
 
         // Average over steps
         for grad in integrated_grads.iter_mut() {
-            *grad = *grad / F::from(n_steps).unwrap();
+            *grad = *grad / F::from(n_steps).expect("Failed to convert to float");
         }
 
         Ok(integrated_grads)
@@ -1325,16 +1333,16 @@ pub fn compute_interpretability_score<F: Float + std::iter::Sum>(
             .values()
             .cloned()
             .sum::<F>()
-            / F::from(explainability_metrics.feature_importance.len()).unwrap()
+            / F::from(explainability_metrics.feature_importance.len()).expect("Operation failed")
     };
 
     let weights = [
-        F::from(0.25).unwrap(), // feature importance
-        F::from(0.2).unwrap(),  // local consistency
-        F::from(0.2).unwrap(),  // global stability
-        F::from(0.15).unwrap(), // faithfulness
-        F::from(0.15).unwrap(), // completeness
-        F::from(0.05).unwrap(), // uncertainty
+        F::from(0.25).expect("Failed to convert constant to float"), // feature importance
+        F::from(0.2).expect("Failed to convert constant to float"),  // local consistency
+        F::from(0.2).expect("Failed to convert constant to float"),  // global stability
+        F::from(0.15).expect("Failed to convert constant to float"), // faithfulness
+        F::from(0.15).expect("Failed to convert constant to float"), // completeness
+        F::from(0.05).expect("Failed to convert constant to float"), // uncertainty
     ];
 
     let scores = [
@@ -1377,7 +1385,9 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0]; // Perfect correlation
 
-        let correlation = evaluator.compute_correlation(&x, &y).unwrap();
+        let correlation = evaluator
+            .compute_correlation(&x, &y)
+            .expect("Operation failed");
         assert!((correlation - 1.0).abs() < 1e-10);
     }
 
@@ -1387,7 +1397,9 @@ mod tests {
         let mut data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
         let original_data = data.clone();
 
-        evaluator.permute_feature(&mut data, 1).unwrap();
+        evaluator
+            .permute_feature(&mut data, 1)
+            .expect("Operation failed");
 
         // Feature 1 should be different, others should be the same
         assert_eq!(data.column(0), original_data.column(0));
@@ -1424,7 +1436,9 @@ mod tests {
     #[test]
     fn test_bootstrap_sampling() {
         let evaluator = ExplainabilityEvaluator::<f64>::new();
-        let indices = evaluator.bootstrap_sample_indices(10).unwrap();
+        let indices = evaluator
+            .bootstrap_sample_indices(10)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 10);
         // All indices should be valid (0-9)
@@ -1439,7 +1453,7 @@ mod tests {
 
         let masked = evaluator
             .mask_important_features(&sample.view(), &explanation, 2)
-            .unwrap();
+            .expect("Operation failed");
 
         // Features 3 and 1 (most important) should be masked to 0
         assert_eq!(masked[3], 0.0);

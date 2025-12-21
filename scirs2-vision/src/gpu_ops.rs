@@ -66,7 +66,7 @@ mod tests {
         // Should succeed with at least CPU backend
         assert!(result.is_ok());
 
-        let ctx = result.unwrap();
+        let ctx = result.expect("Operation failed");
         println!("GPU backend: {}", ctx.backend_name());
     }
 
@@ -84,7 +84,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_gpu_convolution() {
         if let Ok(ctx) = GpuVisionContext::new() {
             let image = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
@@ -102,7 +101,7 @@ mod tests {
         let cpu_ctx = GpuVisionContext::with_backend(scirs2_core::gpu::GpuBackend::Cpu);
         assert!(cpu_ctx.is_ok());
 
-        let ctx = cpu_ctx.unwrap();
+        let ctx = cpu_ctx.expect("Operation failed");
         assert_eq!(ctx.backend(), scirs2_core::gpu::GpuBackend::Cpu);
         assert!(!ctx.is_gpu_available());
     }

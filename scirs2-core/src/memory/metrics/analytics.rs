@@ -336,7 +336,7 @@ impl MemoryAnalytics {
             return (0.0, 0.0);
         }
 
-        let start_time = history.front().unwrap().0;
+        let start_time = history.front().expect("Operation failed").0;
         let points: Vec<(f64, f64)> = history
             .iter()
             .map(|(timestamp, usage)| {

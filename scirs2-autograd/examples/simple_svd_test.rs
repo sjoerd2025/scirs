@@ -12,16 +12,16 @@ fn main() {
         let matrix = variable(matrix_data.clone(), g);
         println!(
             "Original matrix shape: {:?}",
-            matrix.eval(g).unwrap().shape()
+            matrix.eval(g).expect("Operation failed").shape()
         );
 
         // Compute SVD
         let (u, s, v) = svd(matrix);
         println!(
             "SVD shapes: U={:?}, S={:?}, V={:?}",
-            u.eval(g).unwrap().shape(),
-            s.eval(g).unwrap().shape(),
-            v.eval(g).unwrap().shape()
+            u.eval(g).expect("Operation failed").shape(),
+            s.eval(g).expect("Operation failed").shape(),
+            v.eval(g).expect("Operation failed").shape()
         );
 
         // Test 1: Gradient through sum of U

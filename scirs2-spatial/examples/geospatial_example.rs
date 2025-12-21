@@ -507,7 +507,7 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     // Sort by distance
-    station_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    station_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
     for (name, distance) in &station_distances {
         // Estimate P-wave arrival time (approximately 6 km/s)

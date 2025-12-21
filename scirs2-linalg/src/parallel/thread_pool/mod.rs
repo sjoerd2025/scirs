@@ -159,14 +159,14 @@ pub fn global_pool() -> Arc<Mutex<ThreadPoolManager>> {
             GLOBAL_POOL = Some(Arc::new(Mutex::new(ThreadPoolManager::new())));
         });
         #[allow(static_mut_refs)]
-        GLOBAL_POOL.as_ref().unwrap().clone()
+        GLOBAL_POOL.as_ref().expect("Operation failed").clone()
     }
 }
 
 /// Initialize global thread pool with a specific profile
 pub fn initialize_global_pool(profile: ThreadPoolProfile) -> Result<(), String> {
     let pool = global_pool();
-    let mut manager = pool.lock().unwrap();
+    let mut manager = pool.lock().expect("Operation failed");
     manager.profile = profile;
     manager.initialize()
 }
@@ -197,8 +197,8 @@ impl AdaptiveThreadPool {
 
     /// Update thread count based on current utilization
     pub fn adapt(&self, utilization: f64) {
-        let mut current = self.current_threads.lock().unwrap();
-        let mut cpu_util = self.cpu_utilization.lock().unwrap();
+        let mut current = self.current_threads.lock().expect("Operation failed");
+        let mut cpu_util = self.cpu_utilization.lock().expect("Operation failed");
         *cpu_util = utilization;
 
         if utilization > 0.9 && *current < self.max_threads {
@@ -219,7 +219,7 @@ impl AdaptiveThreadPool {
 
     /// Get current thread count
     pub fn current_thread_count(&self) -> usize {
-        *self.current_threads.lock().unwrap()
+        *self.current_threads.lock().expect("Operation failed")
     }
 }
 
@@ -297,7 +297,11 @@ pub mod benchmark {
 
         results
             .into_iter()
-            .max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap())
+            .max_by(|a, b| {
+                a.throughput
+                    .partial_cmp(&b.throughput)
+                    .expect("Operation failed")
+            })
             .map(|r| r.profile)
             .unwrap_or(ThreadPoolProfile::Default)
     }
@@ -342,7 +346,7 @@ impl EnhancedThreadPool {
 
     /// Get current thread pool metrics
     pub fn get_metrics(&self) -> ThreadPoolMetrics {
-        let monitoring = self.monitoring.lock().unwrap();
+        let monitoring = self.monitoring.lock().expect("Operation failed");
         monitoring.get_metrics()
     }
 
@@ -356,7 +360,7 @@ impl EnhancedThreadPool {
 
         // Update monitoring before execution
         {
-            let mut monitoring = self.monitoring.lock().unwrap();
+            let mut monitoring = self.monitoring.lock().expect("Operation failed");
             monitoring.record_task_start();
         }
 
@@ -365,7 +369,7 @@ impl EnhancedThreadPool {
 
         // Update monitoring after execution
         {
-            let mut monitoring = self.monitoring.lock().unwrap();
+            let mut monitoring = self.monitoring.lock().expect("Operation failed");
             monitoring.record_task_completion(start_time.elapsed());
         }
 

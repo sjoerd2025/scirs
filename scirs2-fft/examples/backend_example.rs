@@ -31,11 +31,11 @@ fn main() {
 
     // Use default backend
     println!("\nUsing default backend ({}):", get_backend_name());
-    let spectrum = fft(&signal, None).unwrap();
+    let spectrum = fft(&signal, None).expect("Operation failed");
     println!("  FFT result (first 4 values): {:?}", &spectrum[0..4]);
 
     // Verify inverse FFT
-    let recovered = ifft(&spectrum, None).unwrap();
+    let recovered = ifft(&spectrum, None).expect("Operation failed");
     println!(
         "  IFFT recovery successful: {}",
         signal
@@ -47,9 +47,9 @@ fn main() {
     // Demonstrate backend context (for future use when we have multiple backends)
     println!("\nUsing backend context:");
     {
-        let _ctx = BackendContext::new("rustfft").unwrap();
+        let _ctx = BackendContext::new("rustfft").expect("Operation failed");
         println!("  Inside context: backend = {}", get_backend_name());
-        let _ = fft(&signal, None).unwrap();
+        let _ = fft(&signal, None).expect("Operation failed");
     }
     println!("  Outside context: backend = {}", get_backend_name());
 
@@ -82,8 +82,9 @@ fn main() {
     let ndarray_input = scirs2_core::ndarray::Array1::from(vec![1.0, 2.0, 3.0, 4.0]);
 
     // All should work with the same interface
-    let result1 = fft(&vec_input, None).unwrap();
-    let result2 = fft(ndarray_input.as_slice().unwrap(), None).unwrap();
+    let result1 = fft(&vec_input, None).expect("Operation failed");
+    let result2 =
+        fft(ndarray_input.as_slice().expect("Operation failed"), None).expect("Operation failed");
 
     println!("  Vec input FFT: success");
     println!("  ndarray input FFT: success");
@@ -104,7 +105,7 @@ fn main() {
     if backends.contains(&"cuda_fft".to_string()) {
         set_backend("cuda_fft").ok();
         println!("\nUsing GPU backend:");
-        let gpu_result = fft(&signal, None).unwrap();
+        let gpu_result = fft(&signal, None).expect("Operation failed");
         println!("  GPU FFT completed");
     }
     */

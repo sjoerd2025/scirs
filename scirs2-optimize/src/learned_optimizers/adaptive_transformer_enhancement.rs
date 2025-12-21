@@ -1565,7 +1565,9 @@ mod tests {
         let mut transformer = OptimizationTransformer::new(2, 32, 10, 1);
         let input = Array2::from_shape_fn((5, 32), |_| scirs2_core::random::rng().random::<f64>());
 
-        let output = transformer.forward(&input.view()).unwrap();
+        let output = transformer
+            .forward(&input.view())
+            .expect("Operation failed");
 
         assert_eq!(output.nrows(), 5);
         assert_eq!(output.ncols(), 32);
@@ -1588,14 +1590,14 @@ mod tests {
 
         let encoding = encoder
             .encode_current_state(&objective, &params.view(), &problem)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(encoding.len(), 64);
         assert!(encoding.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Real timeout - test runs >60 seconds"]
     fn test_transformer_optimization() {
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let initial = Array1::from(vec![2.0, 2.0]);
@@ -1607,7 +1609,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = transformer_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result = transformer_optimize(objective, &initial.view(), Some(config))
+            .expect("Operation failed");
 
         assert!(result.fun >= 0.0);
         assert_eq!(result.x.len(), 2);

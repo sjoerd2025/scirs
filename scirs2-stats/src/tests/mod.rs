@@ -57,7 +57,7 @@ pub use ttest::{
 /// let null_mean = 5.0;
 ///
 /// // Test if the sample mean is significantly different from 5.0
-/// let result = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "propagate").unwrap();
+/// let result = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "propagate").expect("Test operation failed");
 /// let t_stat = result.statistic;
 /// let p_value = result.pvalue;
 ///
@@ -112,14 +112,14 @@ where
 ///
 /// // Test if the means of two groups are significantly different
 /// // First, assume equal variances (the default behavior in most statistical software)
-/// let result = ttest_ind(&group1.view(), &group2.view(), true, Alternative::TwoSided, "propagate").unwrap();
+/// let result = ttest_ind(&group1.view(), &group2.view(), true, Alternative::TwoSided, "propagate").expect("Test operation failed");
 /// let t_stat = result.statistic;
 /// let p_value = result.pvalue;
 ///
 /// println!("Equal variances: t-statistic: {}, p-value: {}", t_stat, p_value);
 ///
 /// // Now, without assuming equal variances (Welch's t-test)
-/// let result_welch = ttest_ind(&group1.view(), &group2.view(), false, Alternative::TwoSided, "propagate").unwrap();
+/// let result_welch = ttest_ind(&group1.view(), &group2.view(), false, Alternative::TwoSided, "propagate").expect("Test operation failed");
 /// let welch_t = result_welch.statistic;
 /// let welch_p = result_welch.pvalue;
 ///
@@ -156,8 +156,8 @@ where
     let mean_y = mean(y)?;
 
     // Calculate sample sizes
-    let n_x = F::from(x.len()).unwrap();
-    let n_y = F::from(y.len()).unwrap();
+    let n_x = F::from(x.len()).expect("Test operation failed");
+    let n_y = F::from(y.len()).expect("Test operation failed");
 
     // Calculate sample standard deviations (with ddof=1 for unbiased estimator)
     let std_x = std(x, 1, None)?;
@@ -170,7 +170,7 @@ where
     if equal_var {
         // Pooled variance calculation (assuming equal variances)
         let pooled_var = ((n_x - F::one()) * std_x * std_x + (n_y - F::one()) * std_y * std_y)
-            / (n_x + n_y - F::from(2.0).unwrap());
+            / (n_x + n_y - F::from(2.0).expect("Failed to convert constant to float"));
 
         // Standard error calculation with pooled variance
         let se = (pooled_var * (F::one() / n_x + F::one() / n_y)).sqrt();
@@ -179,7 +179,7 @@ where
         t_stat = (mean_x - mean_y) / se;
 
         // Degrees of freedom (n_x + n_y - 2)
-        df = n_x + n_y - F::from(2.0).unwrap();
+        df = n_x + n_y - F::from(2.0).expect("Failed to convert constant to float");
     } else {
         // Welch's t-test (not assuming equal variances)
 
@@ -204,7 +204,8 @@ where
 
     // Calculate the p-value (two-tailed test)
     let abs_t = t_stat.abs();
-    let p_value = F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t));
+    let p_value =
+        F::from(2.0).expect("Failed to convert constant to float") * (F::one() - t_dist.cdf(abs_t));
 
     Ok(TTestResult {
         statistic: t_stat,
@@ -237,7 +238,7 @@ where
 /// let after = array![67.2, 68.5, 66.1, 70.3, 68.7];
 ///
 /// // Test if there's a significant difference between paired measurements
-/// let result = ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "propagate").unwrap();
+/// let result = ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "propagate").expect("Test operation failed");
 /// let t_stat = result.statistic;
 /// let p_value = result.pvalue;
 ///
@@ -318,10 +319,10 @@ where
 /// let data = array![0.2, 0.5, -0.3, 0.1, -0.4, 0.3, -0.2, 0.0, 0.1, -0.1];
 ///
 /// // Create a standard normal distribution
-/// let normal = distributions::norm(0.0f64, 1.0).unwrap();
+/// let normal = distributions::norm(0.0f64, 1.0).expect("Test operation failed");
 ///
 /// // Perform the K-S test
-/// let (ks_stat, p_value) = kstest(&data.view(), |x| normal.cdf(x)).unwrap();
+/// let (ks_stat, p_value) = kstest(&data.view(), |x| normal.cdf(x)).expect("Test operation failed");
 ///
 /// println!("KS test: statistic: {}, p-value: {}", ks_stat, p_value);
 ///
@@ -348,17 +349,17 @@ where
     }
 
     // Sort the data
-    data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    data.sort_by(|a, b| a.partial_cmp(b).expect("Test operation failed"));
 
     // Calculate the empirical CDF
-    let n = F::from(data.len()).unwrap();
+    let n = F::from(data.len()).expect("Test operation failed");
 
     // Find the maximum absolute difference between empirical and theoretical CDFs
     let mut d_plus = F::zero();
     let mut d_minus = F::zero();
 
     for (i, &value) in data.iter().enumerate() {
-        let i_f = F::from(i + 1).unwrap();
+        let i_f = F::from(i + 1).expect("Failed to convert to float");
 
         // Empirical CDF at the current point
         let ecdf = i_f / n;
@@ -404,7 +405,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(_ksstat: F, n: F) -> F {
 
     // Approximate p-value calculation
     // Using the formula from Marsaglia et al. (2003)
-    if z < F::from(0.27).unwrap() {
+    if z < F::from(0.27).expect("Failed to convert constant to float") {
         F::one()
     } else if z < F::one() {
         let z2 = z * z;
@@ -414,18 +415,19 @@ fn calculate_ks_p_value<F: Float + NumCast>(_ksstat: F, n: F) -> F {
         let z6 = z5 * z;
 
         let p = F::one()
-            - F::from(2.506628275).unwrap()
-                * (F::one() / z - F::from(1.0 / 3.0).unwrap() + F::from(7.0 / 90.0).unwrap() * z2
-                    - F::from(2.0 / 105.0).unwrap() * z3
-                    + F::from(2.0 / 1575.0).unwrap() * z4
-                    - F::from(2.0 / 14175.0).unwrap() * z5
-                    + F::from(2.0 / 467775.0).unwrap() * z6);
+            - F::from(2.506628275).expect("Failed to convert constant to float")
+                * (F::one() / z - F::from(1.0 / 3.0).expect("Failed to convert to float")
+                    + F::from(7.0 / 90.0).expect("Failed to convert to float") * z2
+                    - F::from(2.0 / 105.0).expect("Failed to convert to float") * z3
+                    + F::from(2.0 / 1575.0).expect("Failed to convert to float") * z4
+                    - F::from(2.0 / 14175.0).expect("Failed to convert to float") * z5
+                    + F::from(2.0 / 467775.0).expect("Failed to convert to float") * z6);
 
         p.max(F::zero())
     } else {
         // For large z, use the exponential approximation
         let z2 = z * z;
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         let mut p = two * (-z2).exp();
 
         // Ensure the p-value is in the valid range [0, 1]
@@ -455,7 +457,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(_ksstat: F, n: F) -> F {
 /// let data = array![0.2, 0.5, -0.3, 0.1, -0.4, 0.3, -0.2, 0.0, 0.1, -0.1, 0.4, -0.5];
 ///
 /// // Perform the Shapiro-Wilk test
-/// let (w_stat, p_value) = shapiro(&data.view()).unwrap();
+/// let (w_stat, p_value) = shapiro(&data.view()).expect("Test operation failed");
 ///
 /// println!("Shapiro-Wilk test: W statistic: {}, p-value: {}", w_stat, p_value);
 ///
@@ -494,10 +496,11 @@ where
     }
 
     // Sort the data
-    data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    data.sort_by(|a, b| a.partial_cmp(b).expect("Test operation failed"));
 
     // Calculate the sample mean
-    let mean = data.iter().cloned().sum::<F>() / F::from(data.len()).unwrap();
+    let mean =
+        data.iter().cloned().sum::<F>() / F::from(data.len()).expect("Test operation failed");
 
     // Calculate the sum of squared deviations from the mean
     let ssq = data.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
@@ -509,7 +512,7 @@ where
     // Calculate the numerator
     let mut numerator = F::zero();
     for i in 0..n / 2 {
-        let a_i = F::from(a[i]).unwrap();
+        let a_i = F::from(a[i]).expect("Failed to convert to float");
         numerator = numerator + a_i * (data[n - 1 - i] - data[i]);
     }
 
@@ -579,31 +582,36 @@ fn get_shapiro_coefficients(n: usize) -> StatsResult<Vec<f64>> {
 fn calculate_shapiro_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
     // Royston's approximation for p-value calculation
 
-    let n_f = F::from(n as f64).unwrap();
-    let w_f = <f64 as NumCast>::from(w).unwrap();
+    let n_f = F::from(n as f64).expect("Failed to convert to float");
+    let w_f = <f64 as NumCast>::from(w).expect("Test operation failed");
 
     let y = (1.0 - w_f).ln();
 
     // Note: gamma coefficient is included for reference but not used in this simplified approach
     // In a full implementation it would be used for more accurate calculations
-    let _gamma = F::from(0.459).unwrap() * n_f.powf(F::from(-2.0).unwrap())
-        - F::from(2.273).unwrap() * n_f.powf(F::from(-1.0).unwrap());
+    let _gamma = F::from(0.459).expect("Failed to convert constant to float")
+        * n_f.powf(F::from(-2.0).expect("Failed to convert constant to float"))
+        - F::from(2.273).expect("Failed to convert constant to float")
+            * n_f.powf(F::from(-1.0).expect("Failed to convert constant to float"));
 
-    let mu = F::from(-0.0006714).unwrap() * n_f.powf(F::from(3.0).unwrap())
-        + F::from(0.025054).unwrap() * n_f.powf(F::from(2.0).unwrap())
-        - F::from(0.39978).unwrap() * n_f
-        + F::from(0.5440).unwrap();
+    let mu = F::from(-0.0006714).expect("Failed to convert constant to float")
+        * n_f.powf(F::from(3.0).expect("Failed to convert constant to float"))
+        + F::from(0.025054).expect("Failed to convert constant to float")
+            * n_f.powf(F::from(2.0).expect("Failed to convert constant to float"))
+        - F::from(0.39978).expect("Failed to convert constant to float") * n_f
+        + F::from(0.5440).expect("Failed to convert constant to float");
 
-    let sigma = (F::from(-0.0020322).unwrap() * n_f.powf(F::from(2.0).unwrap())
-        + F::from(0.1348).unwrap() * n_f
-        + F::from(0.029184).unwrap())
+    let sigma = (F::from(-0.0020322).expect("Failed to convert constant to float")
+        * n_f.powf(F::from(2.0).expect("Failed to convert constant to float"))
+        + F::from(0.1348).expect("Failed to convert constant to float") * n_f
+        + F::from(0.029184).expect("Failed to convert constant to float"))
     .exp();
 
     // Calculate the z-score
-    let z = (F::from(y).unwrap() - mu) / sigma;
+    let z = (F::from(y).expect("Failed to convert to float") - mu) / sigma;
 
     // Convert z-score to p-value (using normal CDF approximation)
-    let z_f64 = <f64 as NumCast>::from(z).unwrap();
+    let z_f64 = <f64 as NumCast>::from(z).expect("Test operation failed");
 
     // Approximation of the standard normal CDF
     let p_value = if z_f64 < 0.0 {
@@ -613,14 +621,14 @@ fn calculate_shapiro_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
             * (0.319381530
                 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
         let cdf = 1.0 - 0.39894228 * (-0.5 * abs_z * abs_z).exp() * poly;
-        F::from(cdf).unwrap()
+        F::from(cdf).expect("Failed to convert to float")
     } else {
         let t = 1.0 / (1.0 + 0.2316419 * z_f64);
         let poly = t
             * (0.319381530
                 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
         let cdf = 0.39894228 * (-0.5 * z_f64 * z_f64).exp() * poly;
-        F::from(1.0 - cdf).unwrap()
+        F::from(1.0 - cdf).expect("Failed to convert to float")
     };
 
     // Ensure the p-value is in the valid range [0, 1]
@@ -632,20 +640,22 @@ fn calculate_shapiro_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
 fn calculate_mann_whitney_p_value<F: Float + NumCast>(u: F, n1: usize, n2: usize) -> F {
     // For large samples (n1, n2 > 20), we can approximate the distribution with a normal distribution
 
-    let n1_f = F::from(n1).unwrap();
-    let n2_f = F::from(n2).unwrap();
+    let n1_f = F::from(n1).expect("Failed to convert to float");
+    let n2_f = F::from(n2).expect("Failed to convert to float");
 
     // Mean of the sampling distribution of U under the null hypothesis
-    let mu_u = n1_f * n2_f / F::from(2.0).unwrap();
+    let mu_u = n1_f * n2_f / F::from(2.0).expect("Failed to convert constant to float");
 
     // Standard deviation of the sampling distribution of U
-    let sigma_u = (n1_f * n2_f * (n1_f + n2_f + F::one()) / F::from(12.0).unwrap()).sqrt();
+    let sigma_u = (n1_f * n2_f * (n1_f + n2_f + F::one())
+        / F::from(12.0).expect("Failed to convert constant to float"))
+    .sqrt();
 
     // Calculate z-score (with continuity correction)
     let z = (u - mu_u).abs() / sigma_u;
 
     // Convert z-score to p-value (two-tailed test)
-    let z_f64 = <f64 as NumCast>::from(z).unwrap();
+    let z_f64 = <f64 as NumCast>::from(z).expect("Test operation failed");
 
     // Approximation of the standard normal CDF
     let cdf = if z_f64 < 0.0 {
@@ -659,7 +669,7 @@ fn calculate_mann_whitney_p_value<F: Float + NumCast>(u: F, n1: usize, n2: usize
     };
 
     // Two-tailed p-value
-    let p_value = F::from(2.0 * (1.0 - cdf)).unwrap();
+    let p_value = F::from(2.0 * (1.0 - cdf)).expect("Test operation failed");
 
     // Ensure the p-value is in the valid range [0, 1]
     p_value.min(F::one()).max(F::zero())

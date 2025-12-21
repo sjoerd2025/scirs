@@ -13,7 +13,7 @@ const MEMORY_TEST_SIZES: &[usize] = &[100, 500, 1000, 2000];
 #[allow(dead_code)]
 fn generate_memory_test_data(size: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(SEED);
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
     Array2::from_shape_fn((size, size), |_| rng.sample(uniform))
 }
 

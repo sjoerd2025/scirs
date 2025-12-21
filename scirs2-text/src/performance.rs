@@ -340,7 +340,7 @@ impl AdvancedPerformanceMonitor {
 
     /// Start monitoring an operation
     pub fn start_operation(&self, operationtype: &str) -> Result<OperationMonitor> {
-        let mut aggregator = self.realtime_aggregator.lock().unwrap();
+        let mut aggregator = self.realtime_aggregator.lock().expect("Operation failed");
         aggregator.start_operation(operationtype)?;
 
         Ok(OperationMonitor {
@@ -353,7 +353,7 @@ impl AdvancedPerformanceMonitor {
     /// Record a performance data point
     pub fn record_performance(&self, datapoint: PerformanceDataPoint) -> Result<()> {
         // Add to history
-        let mut history = self.metricshistory.write().unwrap();
+        let mut history = self.metricshistory.write().expect("Operation failed");
         history.push(datapoint.clone());
 
         // Limit history size
@@ -363,7 +363,7 @@ impl AdvancedPerformanceMonitor {
         drop(history);
 
         // Update real-time aggregator
-        let mut aggregator = self.realtime_aggregator.lock().unwrap();
+        let mut aggregator = self.realtime_aggregator.lock().expect("Operation failed");
         aggregator.update_statistics(&datapoint)?;
         drop(aggregator);
 
@@ -371,7 +371,7 @@ impl AdvancedPerformanceMonitor {
         self.check_alerts(&datapoint)?;
 
         // Update optimization recommendations
-        let mut optimizer = self.optimization_engine.lock().unwrap();
+        let mut optimizer = self.optimization_engine.lock().expect("Operation failed");
         optimizer.update_recommendations(&datapoint)?;
         drop(optimizer);
 
@@ -380,8 +380,8 @@ impl AdvancedPerformanceMonitor {
 
     /// Get current performance summary
     pub fn get_performance_summary(&self) -> Result<PerformanceSummary> {
-        let history = self.metricshistory.read().unwrap();
-        let aggregator = self.realtime_aggregator.lock().unwrap();
+        let history = self.metricshistory.read().expect("Operation failed");
+        let aggregator = self.realtime_aggregator.lock().expect("Operation failed");
 
         let recent_window = std::cmp::min(100, history.len());
         let recentdata = if recent_window > 0 {
@@ -405,13 +405,13 @@ impl AdvancedPerformanceMonitor {
 
     /// Get optimization recommendations
     pub fn get_optimization_opportunities(&self) -> Result<Vec<OptimizationRecommendation>> {
-        let optimizer = self.optimization_engine.lock().unwrap();
+        let optimizer = self.optimization_engine.lock().expect("Operation failed");
         Ok(optimizer.current_recommendations.clone())
     }
 
     /// Apply an optimization
     pub fn apply_optimization(&self, optimizationid: &str) -> Result<()> {
-        let mut optimizer = self.optimization_engine.lock().unwrap();
+        let mut optimizer = self.optimization_engine.lock().expect("Operation failed");
         optimizer.apply_optimization(optimizationid)?;
         Ok(())
     }
@@ -422,9 +422,9 @@ impl AdvancedPerformanceMonitor {
         let summary = self.get_performance_summary()?;
 
         // Then acquire other locks
-        let history = self.metricshistory.read().unwrap();
-        let resource_monitor = self.resource_monitor.lock().unwrap();
-        let optimization_engine = self.optimization_engine.lock().unwrap();
+        let history = self.metricshistory.read().expect("Operation failed");
+        let resource_monitor = self.resource_monitor.lock().expect("Operation failed");
+        let optimization_engine = self.optimization_engine.lock().expect("Operation failed");
 
         let report = DetailedPerformanceReport {
             summary,
@@ -440,7 +440,7 @@ impl AdvancedPerformanceMonitor {
 
     // Helper methods
     fn check_alerts(&self, datapoint: &PerformanceDataPoint) -> Result<()> {
-        let mut aggregator = self.realtime_aggregator.lock().unwrap();
+        let mut aggregator = self.realtime_aggregator.lock().expect("Operation failed");
 
         if datapoint.processing_time.as_millis()
             > self.alert_thresholds.max_processing_time_ms as u128
@@ -959,21 +959,23 @@ mod tests {
     #[test]
     fn test_performance_monitor_creation() {
         let monitor = AdvancedPerformanceMonitor::new();
-        let summary = monitor.get_performance_summary().unwrap();
+        let summary = monitor.get_performance_summary().expect("Operation failed");
         assert_eq!(summary.total_operations, 0);
     }
 
     #[test]
     fn test_operation_monitoring() {
         let monitor = AdvancedPerformanceMonitor::new();
-        let op_monitor = monitor.start_operation("test_operation").unwrap();
+        let op_monitor = monitor
+            .start_operation("test_operation")
+            .expect("Operation failed");
 
         // Simulate some work
         std::thread::sleep(Duration::from_millis(10));
 
-        op_monitor.complete(100).unwrap();
+        op_monitor.complete(100).expect("Operation failed");
 
-        let summary = monitor.get_performance_summary().unwrap();
+        let summary = monitor.get_performance_summary().expect("Operation failed");
         assert_eq!(summary.total_operations, 1);
     }
 
@@ -1002,9 +1004,11 @@ mod tests {
             custom_metrics: HashMap::new(),
         };
 
-        monitor.record_performance(data_point).unwrap();
+        monitor
+            .record_performance(data_point)
+            .expect("Operation failed");
 
-        let summary = monitor.get_performance_summary().unwrap();
+        let summary = monitor.get_performance_summary().expect("Operation failed");
         assert!(!summary.active_alerts.is_empty());
     }
 
@@ -1025,14 +1029,20 @@ mod tests {
             custom_metrics: HashMap::new(),
         };
 
-        monitor.record_performance(data_point).unwrap();
+        monitor
+            .record_performance(data_point)
+            .expect("Operation failed");
 
-        let recommendations = monitor.get_optimization_opportunities().unwrap();
+        let recommendations = monitor
+            .get_optimization_opportunities()
+            .expect("Operation failed");
         assert!(!recommendations.is_empty());
 
         // Apply an optimization
         if let Some(first_rec) = recommendations.first() {
-            monitor.apply_optimization(&first_rec.id).unwrap();
+            monitor
+                .apply_optimization(&first_rec.id)
+                .expect("Operation failed");
         }
     }
 
@@ -1054,10 +1064,14 @@ mod tests {
                 custom_metrics: HashMap::new(),
             };
 
-            monitor.record_performance(data_point).unwrap();
+            monitor
+                .record_performance(data_point)
+                .expect("Operation failed");
         }
 
-        let report = monitor.generate_performance_report().unwrap();
+        let report = monitor
+            .generate_performance_report()
+            .expect("Operation failed");
         assert!(matches!(
             report.historical_trends.processing_time_trend,
             TrendDirection::Increasing

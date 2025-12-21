@@ -175,7 +175,8 @@ fn rand_normal(mean: f64, stddev: f64) -> f64 {
 #[allow(dead_code)]
 fn spectral_analysis(signal: &[f64], samplerate: f64) -> (Vec<f64>, Vec<f64>) {
     // Apply a window function to reduce spectral leakage
-    let window_func = window::get_window(window::Window::Hann, signal.len(), true).unwrap();
+    let window_func =
+        window::get_window(window::Window::Hann, signal.len(), true).expect("Operation failed");
 
     let windowedsignal: Vec<f64> = signal
         .iter()
@@ -184,10 +185,10 @@ fn spectral_analysis(signal: &[f64], samplerate: f64) -> (Vec<f64>, Vec<f64>) {
         .collect();
 
     // Compute FFT with adaptive SIMD acceleration
-    let spectrum = fft_adaptive(&windowedsignal, None).unwrap();
+    let spectrum = fft_adaptive(&windowedsignal, None).expect("Operation failed");
 
     // Calculate frequency axis
-    let freqs = fftfreq(signal.len(), 1.0 / samplerate).unwrap();
+    let freqs = fftfreq(signal.len(), 1.0 / samplerate).expect("Operation failed");
 
     // Create our own fftshift since we're working with Vec instead of ndarray
     let mut shifted_freqs = vec![0.0; freqs.len()];
@@ -235,7 +236,7 @@ fn find_peak_frequencies(_freqs: &[f64], power: &[f64], thresholdfactor: f64) ->
     }
 
     // Sort by frequency
-    peaks.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    peaks.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
     peaks
 }
@@ -244,7 +245,7 @@ fn find_peak_frequencies(_freqs: &[f64], power: &[f64], thresholdfactor: f64) ->
 #[allow(dead_code)]
 fn bandpass_filter(signal: &[f64], samplerate: f64, low_cutoff: f64, high_cutoff: f64) -> Vec<f64> {
     // Compute FFT with adaptive SIMD acceleration
-    let mut spectrum = fft_adaptive(signal, None).unwrap();
+    let mut spectrum = fft_adaptive(signal, None).expect("Operation failed");
 
     // Calculate frequency resolution
     let freq_resolution = samplerate / signal.len() as f64;
@@ -265,7 +266,7 @@ fn bandpass_filter(signal: &[f64], samplerate: f64, low_cutoff: f64, high_cutoff
     }
 
     // Compute inverse FFT to get filtered signal
-    let filteredsignal = ifft_adaptive(&spectrum, None).unwrap();
+    let filteredsignal = ifft_adaptive(&spectrum, None).expect("Operation failed");
 
     // Extract real part
     filteredsignal.iter().map(|c| c.re).collect()
@@ -286,7 +287,8 @@ fn compute_spectrogram(
     let num_frames = (signal.len() - overlap) / hopsize;
 
     // Create window function
-    let window_func = window::get_window(window::Window::Hann, windowsize, true).unwrap();
+    let window_func =
+        window::get_window(window::Window::Hann, windowsize, true).expect("Operation failed");
 
     // Prepare output structures
     let mut spectrogram = Vec::with_capacity(num_frames * (windowsize / 2 + 1));
@@ -307,7 +309,7 @@ fn compute_spectrogram(
         }
 
         // Compute FFT
-        let spectrum = fft_adaptive(&windowed_frame, None).unwrap();
+        let spectrum = fft_adaptive(&windowed_frame, None).expect("Operation failed");
 
         // Calculate power for each frequency bin (use only positive frequencies)
         for i in 0..=windowsize / 2 {

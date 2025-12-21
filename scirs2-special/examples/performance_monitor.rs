@@ -316,7 +316,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         {
             monitor.benchmark_array_function("gamma_simd", size, |arr| {
                 use scirs2_special::simd_ops::gamma_f64_simd;
-                gamma_f64_simd(&arr.view()).unwrap()
+                gamma_f64_simd(&arr.view()).expect("Operation failed")
             });
         }
     }
@@ -427,7 +427,8 @@ fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::e
     // Array performance scaling analysis
     for (func, times) in array_times {
         if times.len() >= 2 {
-            let scaling_factor = times.last().unwrap() / times.first().unwrap();
+            let scaling_factor =
+                times.last().expect("Operation failed") / times.first().expect("Operation failed");
             ci_metrics.insert(format!("{}_scaling_factor", func), json!(scaling_factor));
         }
     }

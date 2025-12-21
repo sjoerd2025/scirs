@@ -100,7 +100,7 @@ fn benchmark_clustering(c: &mut Criterion) {
                 b.iter(|| {
                     let mut clusterer = SpikingNeuralClusterer::new(*n_clusters);
                     // Use minimal neuromorphic settings to approximate classical behavior
-                    clusterer.fit(&data.view()).unwrap()
+                    clusterer.fit(&data.view()).expect("Test: operation failed")
                 });
             },
         );
@@ -112,7 +112,7 @@ fn benchmark_clustering(c: &mut Criterion) {
             |b, (data, n_clusters)| {
                 b.iter(|| {
                     let mut clusterer = QuantumClusterer::new(*n_clusters);
-                    clusterer.fit(&data.view()).unwrap()
+                    clusterer.fit(&data.view()).expect("Test: operation failed")
                 });
             },
         );
@@ -124,7 +124,7 @@ fn benchmark_clustering(c: &mut Criterion) {
             |b, (data, n_clusters)| {
                 b.iter(|| {
                     let mut clusterer = SpikingNeuralClusterer::new(*n_clusters);
-                    clusterer.fit(&data.view()).unwrap()
+                    clusterer.fit(&data.view()).expect("Test: operation failed")
                 });
             },
         );
@@ -141,8 +141,13 @@ fn benchmark_clustering(c: &mut Criterion) {
                                                            // For benchmarking, we'll just use the quantum part for simplicity
                                                            // since the full hybrid approach is async
                     tokio::runtime::Runtime::new()
-                        .unwrap()
-                        .block_on(async { clusterer.fit(&data.view()).await.unwrap() })
+                        .expect("Test: operation failed")
+                        .block_on(async {
+                            clusterer
+                                .fit(&data.view())
+                                .await
+                                .expect("Test: operation failed")
+                        })
                 });
             },
         );
@@ -177,8 +182,10 @@ fn benchmark_nearest_neighbor(c: &mut Criterion) {
             &(data, &query_point, k),
             |b, (data, query_point, k)| {
                 b.iter(|| {
-                    let kdtree = KDTree::new(data).unwrap();
-                    kdtree.query(query_point, *k).unwrap()
+                    let kdtree = KDTree::new(data).expect("Test: operation failed");
+                    kdtree
+                        .query(query_point, *k)
+                        .expect("Test: operation failed")
                 });
             },
         );
@@ -190,11 +197,13 @@ fn benchmark_nearest_neighbor(c: &mut Criterion) {
             |b, (data, query_point, k)| {
                 b.iter(|| {
                     let quantum_nn = QuantumNearestNeighbor::new(&data.view())
-                        .unwrap()
+                        .expect("Test: operation failed")
                         .with_quantum_encoding(true)
                         .with_amplitude_amplification(true);
                     let query_array = Array1::from_vec(query_point.to_vec());
-                    quantum_nn.query_quantum(&query_array.view(), *k).unwrap()
+                    quantum_nn
+                        .query_quantum(&query_array.view(), *k)
+                        .expect("Test: operation failed")
                 });
             },
         );
@@ -230,7 +239,7 @@ fn benchmark_distance_computation(c: &mut Criterion) {
 
         // Benchmark SIMD-accelerated distances
         group.bench_with_input(BenchmarkId::new("simd_pdist", name), data, |b, data| {
-            b.iter(|| parallel_pdist(&data.view(), "euclidean").unwrap());
+            b.iter(|| parallel_pdist(&data.view(), "euclidean").expect("Test: operation failed"));
         });
 
         // Benchmark batch SIMD distances
@@ -243,7 +252,10 @@ fn benchmark_distance_computation(c: &mut Criterion) {
                 BenchmarkId::new("simd_batch", name),
                 &(data1, data2),
                 |b, (data1, data2): &(Array2<f64>, Array2<f64>)| {
-                    b.iter(|| simd_euclidean_distance_batch(&data1.view(), &data2.view()).unwrap());
+                    b.iter(|| {
+                        simd_euclidean_distance_batch(&data1.view(), &data2.view())
+                            .expect("Test: operation failed")
+                    });
                 },
             );
         }
@@ -280,7 +292,7 @@ fn benchmark_memory_optimization(c: &mut Criterion) {
                 let _stats_before = pool.statistics();
 
                 let mut clusterer = SpikingNeuralClusterer::new(8);
-                let _result = clusterer.fit(&data.view()).unwrap();
+                let _result = clusterer.fit(&data.view()).expect("Test: operation failed");
 
                 let _stats_after = pool.statistics();
                 // Memory pool usage is tracked internally
@@ -309,8 +321,10 @@ fn benchmark_scalability(c: &mut Criterion) {
         // Classical approach
         group.bench_with_input(BenchmarkId::new("classical", size), &data, |b, data| {
             b.iter(|| {
-                let kdtree = KDTree::new(data).unwrap();
-                kdtree.query(&[0.0, 0.0], 5).unwrap()
+                let kdtree = KDTree::new(data).expect("Test: operation failed");
+                kdtree
+                    .query(&[0.0, 0.0], 5)
+                    .expect("Test: operation failed")
             });
         });
 
@@ -318,11 +332,13 @@ fn benchmark_scalability(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("quantum", size), &data, |b, data| {
             b.iter(|| {
                 let quantum_nn = QuantumNearestNeighbor::new(&data.view())
-                    .unwrap()
+                    .expect("Test: operation failed")
                     .with_quantum_encoding(true)
                     .with_amplitude_amplification(true);
                 let query = Array1::from_vec(vec![0.0, 0.0]);
-                quantum_nn.query_quantum(&query.view(), 5).unwrap()
+                quantum_nn
+                    .query_quantum(&query.view(), 5)
+                    .expect("Test: operation failed")
             });
         });
 
@@ -332,7 +348,7 @@ fn benchmark_scalability(c: &mut Criterion) {
             group.bench_with_input(BenchmarkId::new("neuromorphic", size), &data, |b, data| {
                 b.iter(|| {
                     let mut clusterer = SpikingNeuralClusterer::new(3);
-                    clusterer.fit(&data.view()).unwrap()
+                    clusterer.fit(&data.view()).expect("Test: operation failed")
                 });
             });
         }
@@ -361,7 +377,7 @@ fn benchmark_gpu_acceleration(c: &mut Criterion) {
         |b, data| {
             b.iter(|| {
                 let mut clusterer = QuantumClusterer::new(8);
-                clusterer.fit(&data.view()).unwrap()
+                clusterer.fit(&data.view()).expect("Test: operation failed")
             });
         },
     );
@@ -395,7 +411,7 @@ fn benchmark_high_dimensional(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let mut clusterer = QuantumClusterer::new(5);
-                    clusterer.fit(&data.view()).unwrap()
+                    clusterer.fit(&data.view()).expect("Test: operation failed")
                 });
             },
         );
@@ -407,7 +423,7 @@ fn benchmark_high_dimensional(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let mut clusterer = SpikingNeuralClusterer::new(5);
-                    clusterer.fit(&data.view()).unwrap()
+                    clusterer.fit(&data.view()).expect("Test: operation failed")
                 });
             },
         );

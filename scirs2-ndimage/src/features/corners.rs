@@ -55,8 +55,8 @@ pub fn harris_corners(
     }
 
     // Step 1: Calculate gradients using Sobel
-    let gradient_y = sobel(&image_d, 0, Some(BorderMode::Reflect)).unwrap();
-    let gradient_x = sobel(&image_d, 1, Some(BorderMode::Reflect)).unwrap();
+    let gradient_y = sobel(&image_d, 0, Some(BorderMode::Reflect)).expect("Operation failed");
+    let gradient_x = sobel(&image_d, 1, Some(BorderMode::Reflect)).expect("Operation failed");
 
     // Step 2: Calculate products of derivatives at each pixel
     let mut ix2: ArrayD<f32> = gradient_x.clone().mapv(|x| x * x);
@@ -70,12 +70,12 @@ pub fn harris_corners(
     // Step 3: Gaussian filtering to smooth the derivatives
     let sigma = 0.5 * (block_size as f32 - 1.0) / 3.0; // scale sigmas based on block _size
                                                        // Use specialized f32 version that doesn't require Send/Sync bounds
-    ix2 =
-        crate::filters::gaussian_filter_f32(&ix2, sigma, Some(BorderMode::Reflect), None).unwrap();
-    iy2 =
-        crate::filters::gaussian_filter_f32(&iy2, sigma, Some(BorderMode::Reflect), None).unwrap();
-    ixy =
-        crate::filters::gaussian_filter_f32(&ixy, sigma, Some(BorderMode::Reflect), None).unwrap();
+    ix2 = crate::filters::gaussian_filter_f32(&ix2, sigma, Some(BorderMode::Reflect), None)
+        .expect("Operation failed");
+    iy2 = crate::filters::gaussian_filter_f32(&iy2, sigma, Some(BorderMode::Reflect), None)
+        .expect("Operation failed");
+    ixy = crate::filters::gaussian_filter_f32(&ixy, sigma, Some(BorderMode::Reflect), None)
+        .expect("Operation failed");
 
     // Convert back to 2D arrays for the response calculation
     let shape = image.raw_dim();

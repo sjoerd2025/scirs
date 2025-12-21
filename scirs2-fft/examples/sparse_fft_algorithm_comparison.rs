@@ -19,7 +19,7 @@ use std::time::Instant;
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64) -> Vec<f64> {
     // Create deterministic RNG for reproducible results
     let mut rng = StdRng::seed_from_u64(42);
-    let normal = Normal::new(0.0, noise_level).unwrap();
+    let normal = Normal::new(0.0, noise_level).expect("Operation failed");
 
     let mut signal = vec![0.0; n];
 
@@ -133,7 +133,7 @@ fn run_algorithm_benchmarks() {
                 Some(algorithm),
                 Some(WindowFunction::Hann),
             )
-            .unwrap();
+            .expect("Operation failed");
             let elapsed = start.elapsed().as_millis();
             clean_times.push(elapsed);
         }
@@ -158,7 +158,7 @@ fn run_algorithm_benchmarks() {
                         Some(algorithm),
                         Some(WindowFunction::Hann),
                     )
-                    .unwrap();
+                    .expect("Operation failed");
                     let elapsed = start.elapsed().as_millis();
                     noisy_times.push(elapsed);
                 }
@@ -228,7 +228,7 @@ fn analyze_algorithm_accuracy() {
                 Some(algorithm),
                 Some(WindowFunction::Hann),
             )
-            .unwrap();
+            .expect("Operation failed");
             let elapsed = start.elapsed().as_millis();
 
             // Calculate error
@@ -369,7 +369,7 @@ fn analyze_scaling_behavior() {
                 Some(algorithm),
                 Some(WindowFunction::Hann),
             )
-            .unwrap();
+            .expect("Operation failed");
             let elapsed = start.elapsed().as_millis();
 
             // Store results
@@ -429,7 +429,7 @@ fn main() {
 
     // Check CUDA availability
     if is_cuda_available() {
-        let devices = get_cuda_devices().unwrap();
+        let devices = get_cuda_devices().expect("Operation failed");
         println!("\nCUDA is available with {} device(s):", devices.len());
 
         for (idx, device) in devices.iter().enumerate() {

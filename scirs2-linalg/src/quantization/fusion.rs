@@ -98,7 +98,7 @@ fn fused_quantized_matmul_chain_int8_symmetric(
     // Extract Int8 data from matrices
     let int8_matrices: Vec<&Array2<i8>> = matrices
         .iter()
-        .map(|m| get_quantizedmatrix_2d_i8(m).unwrap())
+        .map(|m| get_quantizedmatrix_2d_i8(m).expect("Operation failed"))
         .collect();
 
     // Scales from the quantization parameters
@@ -106,7 +106,7 @@ fn fused_quantized_matmul_chain_int8_symmetric(
 
     // Result dimensions
     let rows_ = matrices[0].shape.0;
-    let cols = matrices.last().unwrap().shape.1;
+    let cols = matrices.last().expect("Operation failed").shape.1;
     let mut result = Array2::zeros((rows_, cols));
 
     // Compute the fused scale factor - product of all scales
@@ -155,7 +155,7 @@ fn fused_quantized_matmul_chain_int8_symmetric(
                     }
 
                     // Final matrix
-                    let last_mat = int8_matrices.last().unwrap();
+                    let last_mat = int8_matrices.last().expect("Operation failed");
                     let mut sum = 0i32;
 
                     for k in 0..middle_dim {
@@ -217,10 +217,10 @@ where
 
     // Check dimension compatibility
     let vector_len = vector.len();
-    if matrices.last().unwrap().shape.1 != vector_len {
+    if matrices.last().expect("Operation failed").shape.1 != vector_len {
         return Err(LinalgError::ShapeError(format!(
             "Last matrix columns ({}) must match vector length ({})",
-            matrices.last().unwrap().shape.1,
+            matrices.last().expect("Operation failed").shape.1,
             vector_len
         )));
     }
@@ -262,10 +262,14 @@ where
         if output_quantize {
             // In a complete implementation, we would _quantize the result to the same bit depth
             // But for simplicity, just convert back to the original type
-            Ok(result_f32.mapv(|x| scirs2_core::numeric::FromPrimitive::from_f32(x).unwrap()))
+            Ok(result_f32.mapv(|x| {
+                scirs2_core::numeric::FromPrimitive::from_f32(x).expect("Operation failed")
+            }))
         } else {
             // Return as float directly
-            Ok(result_f32.mapv(|x| scirs2_core::numeric::FromPrimitive::from_f32(x).unwrap()))
+            Ok(result_f32.mapv(|x| {
+                scirs2_core::numeric::FromPrimitive::from_f32(x).expect("Operation failed")
+            }))
         }
     } else {
         // Fallback path: dequantize all matrices and perform regular matmul
@@ -290,8 +294,8 @@ where
         let result_1d_f32 = result_f32.remove_axis(scirs2_core::ndarray::Axis(1));
 
         // Convert back to the original type
-        let result_f =
-            result_1d_f32.mapv(|x| scirs2_core::numeric::FromPrimitive::from_f32(x).unwrap());
+        let result_f = result_1d_f32
+            .mapv(|x| scirs2_core::numeric::FromPrimitive::from_f32(x).expect("Operation failed"));
 
         Ok(result_f)
     }
@@ -307,7 +311,7 @@ fn fused_quantized_matvec_sequence_int8(
     // Extract Int8 data
     let int8_matrices: Vec<&Array2<i8>> = matrices
         .iter()
-        .map(|m| get_quantizedmatrix_2d_i8(m).unwrap())
+        .map(|m| get_quantizedmatrix_2d_i8(m).expect("Operation failed"))
         .collect();
 
     // Get scales from the parameters
@@ -419,7 +423,7 @@ mod tests {
         // Fused chain calculation
         let matrices = [&qa, &qb, &qc];
         let params = [&qa_params, &qb_params, &qc_params];
-        let result = fused_quantized_matmul_chain(&matrices, &params).unwrap();
+        let result = fused_quantized_matmul_chain(&matrices, &params).expect("Operation failed");
 
         // Verify correctness with tolerance for quantization error
         assert_eq!(result.shape(), expected.shape());
@@ -447,7 +451,8 @@ mod tests {
         // Fused calculation
         let matrices = [&qa, &qb];
         let params = [&qa_params, &qb_params];
-        let result = fused_quantized_matvec_sequence(&matrices, &params, &x.view(), false).unwrap();
+        let result = fused_quantized_matvec_sequence(&matrices, &params, &x.view(), false)
+            .expect("Operation failed");
 
         // Verify correctness with tolerance for quantization error
         assert_eq!(result.len(), expected.len());

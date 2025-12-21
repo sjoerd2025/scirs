@@ -47,7 +47,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("mode_n_product_0", size),
             &(&tensor_3d, &matrix),
             |b, (t, m)| {
-                b.iter(|| mode_n_product(black_box(&t.view()), black_box(&m.view()), 0).unwrap())
+                b.iter(|| {
+                    mode_n_product(black_box(&t.view()), black_box(&m.view()), 0)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -55,7 +58,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("mode_n_product_1", size),
             &(&tensor_3d, &matrix),
             |b, (t, m)| {
-                b.iter(|| mode_n_product(black_box(&t.view()), black_box(&m.view()), 1).unwrap())
+                b.iter(|| {
+                    mode_n_product(black_box(&t.view()), black_box(&m.view()), 1)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -63,7 +69,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("mode_n_product_2", size),
             &(&tensor_3d, &matrix),
             |b, (t, m)| {
-                b.iter(|| mode_n_product(black_box(&t.view()), black_box(&m.view()), 2).unwrap())
+                b.iter(|| {
+                    mode_n_product(black_box(&t.view()), black_box(&m.view()), 2)
+                        .expect("Operation failed")
+                })
             },
         );
 
@@ -72,7 +81,10 @@ fn bench_tensor_contraction(c: &mut Criterion) {
             BenchmarkId::new("tensor_contract", size),
             &tensor_3d,
             |b, t| {
-                b.iter(|| contract(black_box(&t.view()), black_box(&t.view()), &[0], &[1]).unwrap())
+                b.iter(|| {
+                    contract(black_box(&t.view()), black_box(&t.view()), &[0], &[1])
+                        .expect("Operation failed")
+                })
             },
         );
     }
@@ -106,7 +118,7 @@ fn bench_einsum_operations(c: &mut Criterion) {
                             black_box(&matrix_b.view().into_dyn()),
                         ],
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -124,21 +136,25 @@ fn bench_einsum_operations(c: &mut Criterion) {
                             black_box(&v.view().into_dyn()),
                         ],
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
 
         // Trace: ii->
         group.bench_with_input(BenchmarkId::new("einsum_trace", size), &matrix_a, |b, m| {
-            b.iter(|| einsum("ii->", &[black_box(&m.view().into_dyn())]).unwrap())
+            b.iter(|| einsum("ii->", &[black_box(&m.view().into_dyn())]).expect("Operation failed"))
         });
 
         // Transpose: ij->ji
         group.bench_with_input(
             BenchmarkId::new("einsum_transpose", size),
             &matrix_a,
-            |b, m| b.iter(|| einsum("ij->ji", &[black_box(&m.view().into_dyn())]).unwrap()),
+            |b, m| {
+                b.iter(|| {
+                    einsum("ij->ji", &[black_box(&m.view().into_dyn())]).expect("Operation failed")
+                })
+            },
         );
     }
 
@@ -162,7 +178,7 @@ fn bench_hosvd_operations(c: &mut Criterion) {
 
         // Higher-Order SVD (3D tensor)
         group.bench_with_input(BenchmarkId::new("hosvd_3d", size), &tensor_3d, |b, t| {
-            b.iter(|| hosvd(black_box(&t.view()), &[size, size, size]).unwrap())
+            b.iter(|| hosvd(black_box(&t.view()), &[size, size, size]).expect("Operation failed"))
         });
 
         // HOSVD with reduced rank
@@ -176,7 +192,7 @@ fn bench_hosvd_operations(c: &mut Criterion) {
                         black_box(&t.view()),
                         &[reduced_rank, reduced_rank, reduced_rank],
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -210,7 +226,8 @@ fn bench_batch_operations(c: &mut Criterion) {
                 &(&batch_a, &batch_b),
                 |b, (a, batch_b)| {
                     b.iter(|| {
-                        batch_matmul(black_box(&a.view()), black_box(&batch_b.view()), 1).unwrap()
+                        batch_matmul(black_box(&a.view()), black_box(&batch_b.view()), 1)
+                            .expect("Operation failed")
                     })
                 },
             );

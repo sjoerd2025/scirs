@@ -32,7 +32,7 @@ use std::fmt::Debug;
 /// use scirs2_signal::czt::czt_points;
 ///
 /// // Generate 10 points on the unit circle
-/// let points = czt_points(10, None, None).unwrap();
+/// let points = czt_points(10, None, None).expect("Operation failed");
 /// assert_eq!(points.len(), 10);
 /// ```
 #[allow(dead_code)]
@@ -84,7 +84,7 @@ pub fn czt_points(
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// // Compute the CZT (equivalent to the DFT in this case)
-/// let result = czt(&signal, None, None, None, None).unwrap();
+/// let result = czt(&signal, None, None, None, None).expect("Operation failed");
 /// assert_eq!(result.len(), 4);
 /// ```
 ///
@@ -99,7 +99,7 @@ pub fn czt_points(
 /// // Compute the CZT focusing on the lower half of the frequency spectrum
 /// // w = exp(-j*π/8) -> 1/8 of a full circle per step
 /// let w = Complex64::new((PI/8.0).cos(), -(PI/8.0).sin());
-/// let result = czt(&signal, Some(16), Some(w), None, None).unwrap();
+/// let result = czt(&signal, Some(16), Some(w), None, None).expect("Operation failed");
 /// assert_eq!(result.len(), 16);
 /// ```
 #[allow(dead_code)]
@@ -305,7 +305,7 @@ mod tests {
     #[test]
     fn test_czt_points() {
         // Generate 4 points on the unit circle
-        let points = czt_points(4, None, None).unwrap();
+        let points = czt_points(4, None, None).expect("Operation failed");
 
         // Check length
         assert_eq!(points.len(), 4);
@@ -332,7 +332,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Compute CZT
-        let czt_result = czt(&signal, None, None, None, None).unwrap();
+        let czt_result = czt(&signal, None, None, None, None).expect("Operation failed");
 
         // Check the relative magnitudes and phases instead of absolute values
 
@@ -351,7 +351,7 @@ mod tests {
 
         // 5. Verify increasing signal order gives increasing DC component
         let signal2 = vec![2.0, 4.0, 6.0, 8.0]; // 2× original signal
-        let czt_result2 = czt(&signal2, None, None, None, None).unwrap();
+        let czt_result2 = czt(&signal2, None, None, None, None).expect("Operation failed");
 
         // DC component should double
         assert_relative_eq!(czt_result2[0].re, 2.0 * czt_result[0].re, epsilon = 1e-10);
@@ -367,7 +367,7 @@ mod tests {
         let arg = -std::f64::consts::PI / 16.0;
         let w = Complex64::new(arg.cos(), arg.sin());
 
-        let czt_result = czt(&signal, Some(8), Some(w), None, None).unwrap();
+        let czt_result = czt(&signal, Some(8), Some(w), None, None).expect("Operation failed");
 
         // Check length
         assert_eq!(czt_result.len(), 8);

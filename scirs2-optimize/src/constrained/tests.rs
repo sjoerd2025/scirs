@@ -34,14 +34,14 @@ fn test_minimize_constrained_placeholder() {
         Method::SLSQP,
         Some(options),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // With limited iterations, we expect it not to converge
     assert!(!result.success);
 
     // Check that constraint value was computed
     assert!(result.constr.is_some());
-    let constr = result.constr.unwrap();
+    let constr = result.constr.expect("Operation failed");
     assert_eq!(constr.len(), 1);
 }
 
@@ -71,7 +71,7 @@ fn test_minimize_slsqp() {
         Method::SLSQP,
         Some(options),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // For the purpose of this test, we're just checking that the algorithm runs
     // and produces reasonable output. The convergence may vary.
@@ -120,7 +120,7 @@ fn test_minimize_trust_constr() {
         Method::TrustConstr,
         Some(options.clone()),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Check that we're moving in the right direction
     assert!(result.x[0] >= 0.0);
@@ -177,7 +177,7 @@ fn test_constrained_rosenbrock() {
         Method::SLSQP,
         Some(options_copy1),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Test TrustConstr
     let result_trust = minimize_constrained(
@@ -187,7 +187,7 @@ fn test_constrained_rosenbrock() {
         Method::TrustConstr,
         Some(options_copy2),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Check that both methods find a reasonable solution
     println!(
@@ -205,8 +205,8 @@ fn test_constrained_rosenbrock() {
     assert!(result_trust.fun < initial_value);
 
     // Check that constraint is satisfied
-    let constr_slsqp = result_slsqp.constr.unwrap();
-    let constr_trust = result_trust.constr.unwrap();
+    let constr_slsqp = result_slsqp.constr.expect("Operation failed");
+    let constr_trust = result_trust.constr.expect("Operation failed");
     assert!(constr_slsqp[0] >= -0.01); // Relaxed tolerance for the test
     assert!(constr_trust[0] >= -0.01); // Relaxed tolerance for the test
 }
@@ -222,6 +222,6 @@ fn test_cobyla_not_implemented() {
 
     // COBYLA is now implemented, so it should succeed
     assert!(result.is_ok());
-    let opt_result = result.unwrap();
+    let opt_result = result.expect("Operation failed");
     assert!(opt_result.success || opt_result.nit > 0); // Should make progress or succeed
 }

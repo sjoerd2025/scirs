@@ -132,7 +132,7 @@ mod tests {
         let manager = DistributedArrayManager::new("node1".to_string(), 3);
         let data = vec![1, 2, 3, 4, 5, 6];
 
-        let distributed = manager.distribute_array(data).unwrap();
+        let distributed = manager.distribute_array(data).expect("Operation failed");
         assert_eq!(distributed.total_size(), 6);
     }
 }

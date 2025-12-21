@@ -35,7 +35,7 @@ use ::ndarray::{Array1, ArrayView1};
 /// use scirs2_core::ndarray_ext::reduction::argmin_simd;
 ///
 /// let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-/// let idx = argmin_simd(&x.view()).unwrap();
+/// let idx = argmin_simd(&x.view()).expect("Operation failed");
 /// assert_eq!(idx, 1); // First occurrence of minimum value (1.0)
 /// ```
 #[allow(dead_code)]
@@ -95,7 +95,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::argmax_simd;
 ///
 /// let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-/// let idx = argmax_simd(&x.view()).unwrap();
+/// let idx = argmax_simd(&x.view()).expect("Operation failed");
 /// assert_eq!(idx, 5); // Index of maximum value (9.0)
 /// ```
 #[allow(dead_code)]
@@ -148,7 +148,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::argmin_k;
 ///
 /// let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-/// let indices = argmin_k(&x.view(), 3).unwrap();
+/// let indices = argmin_k(&x.view(), 3).expect("Operation failed");
 /// // Returns indices of 3 smallest values: [1, 3, 6] (values 1.0, 1.0, 2.0)
 /// assert_eq!(indices.len(), 3);
 /// ```
@@ -198,7 +198,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::argmax_k;
 ///
 /// let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-/// let indices = argmax_k(&x.view(), 3).unwrap();
+/// let indices = argmax_k(&x.view(), 3).expect("Operation failed");
 /// // Returns indices of 3 largest values: [5, 4, 2] (values 9.0, 5.0, 4.0)
 /// assert_eq!(indices.len(), 3);
 /// ```
@@ -391,7 +391,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::min_simd;
 ///
 /// let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-/// let min_val = min_simd(&x.view()).unwrap();
+/// let min_val = min_simd(&x.view()).expect("Operation failed");
 /// assert_eq!(min_val, 1.0);
 /// ```
 #[allow(dead_code)]
@@ -447,7 +447,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::max_simd;
 ///
 /// let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-/// let max_val = max_simd(&x.view()).unwrap();
+/// let max_val = max_simd(&x.view()).expect("Operation failed");
 /// assert_eq!(max_val, 9.0);
 /// ```
 #[allow(dead_code)]
@@ -507,7 +507,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::mean_simd;
 ///
 /// let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-/// let mean = mean_simd(&x.view()).unwrap();
+/// let mean = mean_simd(&x.view()).expect("Operation failed");
 /// assert!((mean - 3.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -551,7 +551,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::variance_simd;
 ///
 /// let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-/// let var = variance_simd(&x.view(), 1).unwrap(); // Sample variance (ddof=1)
+/// let var = variance_simd(&x.view(), 1).expect("Operation failed"); // Sample variance (ddof=1)
 /// assert!((var - 2.5).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -576,8 +576,8 @@ where
     // simd_variance computes: sum_sq_dev / (n - 1)
     // We want: sum_sq_dev / (n - ddof)
     let sample_var = F::simd_variance(x); // This is sum_sq_dev / (n-1)
-    let n_f = F::from(n).unwrap();
-    let ddof_f = F::from(ddof).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
+    let ddof_f = F::from(ddof).expect("Failed to convert to float");
 
     // Convert: var(ddof) = var(ddof=1) * (n-1) / (n-ddof)
     Some(sample_var * (n_f - F::one()) / (n_f - ddof_f))
@@ -611,7 +611,7 @@ where
 /// use scirs2_core::ndarray_ext::reduction::std_simd;
 ///
 /// let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-/// let std = std_simd(&x.view(), 1).unwrap(); // Sample std (ddof=1)
+/// let std = std_simd(&x.view(), 1).expect("Operation failed"); // Sample std (ddof=1)
 /// assert!((std - 1.5811388300841898).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -676,28 +676,28 @@ mod tests {
     #[test]
     fn test_argmin_simd_f64_basic() {
         let x = array![3.0f64, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let idx = argmin_simd(&x.view()).unwrap();
+        let idx = argmin_simd(&x.view()).expect("Operation failed");
         assert_eq!(idx, 1, "Should find first occurrence of minimum");
     }
 
     #[test]
     fn test_argmin_simd_f32_basic() {
         let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let idx = argmin_simd(&x.view()).unwrap();
+        let idx = argmin_simd(&x.view()).expect("Operation failed");
         assert_eq!(idx, 1, "Should find first occurrence of minimum");
     }
 
     #[test]
     fn test_argmax_simd_f64_basic() {
         let x = array![3.0f64, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let idx = argmax_simd(&x.view()).unwrap();
+        let idx = argmax_simd(&x.view()).expect("Operation failed");
         assert_eq!(idx, 5, "Should find maximum element");
     }
 
     #[test]
     fn test_argmax_simd_f32_basic() {
         let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let idx = argmax_simd(&x.view()).unwrap();
+        let idx = argmax_simd(&x.view()).expect("Operation failed");
         assert_eq!(idx, 5, "Should find maximum element");
     }
 
@@ -752,7 +752,7 @@ mod tests {
     #[test]
     fn test_argmin_k_basic() {
         let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let indices = argmin_k(&x.view(), 3).unwrap();
+        let indices = argmin_k(&x.view(), 3).expect("Operation failed");
         assert_eq!(indices.len(), 3);
         // Should be indices of the 3 smallest values (1.0, 1.0, 2.0)
         // Values at these indices should be <= 2.0
@@ -764,7 +764,7 @@ mod tests {
     #[test]
     fn test_argmax_k_basic() {
         let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let indices = argmax_k(&x.view(), 3).unwrap();
+        let indices = argmax_k(&x.view(), 3).expect("Operation failed");
         assert_eq!(indices.len(), 3);
         // Should be indices of the 3 largest values (9.0, 5.0, 4.0)
         // Values at these indices should be >= 4.0
@@ -788,7 +788,7 @@ mod tests {
     #[test]
     fn test_argmin_k_exceeds_length() {
         let x = array![1.0f64, 2.0, 3.0];
-        let indices = argmin_k(&x.view(), 10).unwrap();
+        let indices = argmin_k(&x.view(), 10).expect("Operation failed");
         assert_eq!(indices.len(), 3); // Should cap at array length
     }
 
@@ -799,28 +799,28 @@ mod tests {
     #[test]
     fn test_min_simd_f64_basic() {
         let x = array![3.0f64, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let min_val = min_simd(&x.view()).unwrap();
+        let min_val = min_simd(&x.view()).expect("Operation failed");
         assert_eq!(min_val, 1.0);
     }
 
     #[test]
     fn test_min_simd_f32_basic() {
         let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let min_val = min_simd(&x.view()).unwrap();
+        let min_val = min_simd(&x.view()).expect("Operation failed");
         assert_eq!(min_val, 1.0);
     }
 
     #[test]
     fn test_max_simd_f64_basic() {
         let x = array![3.0f64, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let max_val = max_simd(&x.view()).unwrap();
+        let max_val = max_simd(&x.view()).expect("Operation failed");
         assert_eq!(max_val, 9.0);
     }
 
     #[test]
     fn test_max_simd_f32_basic() {
         let x = array![3.0f32, 1.0, 4.0, 1.0, 5.0, 9.0, 2.0];
-        let max_val = max_simd(&x.view()).unwrap();
+        let max_val = max_simd(&x.view()).expect("Operation failed");
         assert_eq!(max_val, 9.0);
     }
 
@@ -879,14 +879,14 @@ mod tests {
     #[test]
     fn test_mean_simd_f64_basic() {
         let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let mean = mean_simd(&x.view()).unwrap();
+        let mean = mean_simd(&x.view()).expect("Operation failed");
         assert!((mean - 3.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_mean_simd_f32_basic() {
         let x = array![1.0f32, 2.0, 3.0, 4.0, 5.0];
-        let mean = mean_simd(&x.view()).unwrap();
+        let mean = mean_simd(&x.view()).expect("Operation failed");
         assert!((mean - 3.0).abs() < 1e-6);
     }
 
@@ -905,14 +905,14 @@ mod tests {
     #[test]
     fn test_mean_simd_negative() {
         let x = array![-2.0f64, -4.0, -6.0, -8.0, -10.0];
-        let mean = mean_simd(&x.view()).unwrap();
+        let mean = mean_simd(&x.view()).expect("Operation failed");
         assert!((mean - (-6.0)).abs() < 1e-10);
     }
 
     #[test]
     fn test_mean_simd_large() {
         let x: Array1<f64> = Array1::from_vec((1..=10000).map(|i| i as f64).collect());
-        let mean = mean_simd(&x.view()).unwrap();
+        let mean = mean_simd(&x.view()).expect("Operation failed");
         let expected = 5000.5; // Mean of 1..=10000
         assert!((mean - expected).abs() < 1e-6);
     }
@@ -920,21 +920,21 @@ mod tests {
     #[test]
     fn test_variance_simd_f64_population() {
         let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let var = variance_simd(&x.view(), 0).unwrap(); // Population variance
+        let var = variance_simd(&x.view(), 0).expect("Operation failed"); // Population variance
         assert!((var - 2.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_variance_simd_f64_sample() {
         let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let var = variance_simd(&x.view(), 1).unwrap(); // Sample variance
+        let var = variance_simd(&x.view(), 1).expect("Operation failed"); // Sample variance
         assert!((var - 2.5).abs() < 1e-10);
     }
 
     #[test]
     fn test_variance_simd_f32_population() {
         let x = array![1.0f32, 2.0, 3.0, 4.0, 5.0];
-        let var = variance_simd(&x.view(), 0).unwrap();
+        let var = variance_simd(&x.view(), 0).expect("Operation failed");
         assert!((var - 2.0).abs() < 1e-6);
     }
 
@@ -954,14 +954,14 @@ mod tests {
     #[test]
     fn test_variance_simd_constant() {
         let x = array![5.0f64, 5.0, 5.0, 5.0, 5.0];
-        let var = variance_simd(&x.view(), 0).unwrap();
+        let var = variance_simd(&x.view(), 0).expect("Operation failed");
         assert!(var.abs() < 1e-10); // Variance of constant array is 0
     }
 
     #[test]
     fn test_std_simd_f64_sample() {
         let x = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let std = std_simd(&x.view(), 1).unwrap();
+        let std = std_simd(&x.view(), 1).expect("Operation failed");
         let expected = 2.5_f64.sqrt(); // sqrt(2.5) ≈ 1.5811388300841898
         assert!((std - expected).abs() < 1e-10);
     }
@@ -969,7 +969,7 @@ mod tests {
     #[test]
     fn test_std_simd_f32_sample() {
         let x = array![1.0f32, 2.0, 3.0, 4.0, 5.0];
-        let std = std_simd(&x.view(), 1).unwrap();
+        let std = std_simd(&x.view(), 1).expect("Operation failed");
         let expected = 2.5_f32.sqrt();
         assert!((std - expected).abs() < 1e-6);
     }
@@ -983,7 +983,7 @@ mod tests {
     #[test]
     fn test_std_simd_constant() {
         let x = array![7.0f64, 7.0, 7.0, 7.0, 7.0];
-        let std = std_simd(&x.view(), 0).unwrap();
+        let std = std_simd(&x.view(), 0).expect("Operation failed");
         assert!(std.abs() < 1e-10); // Std of constant array is 0
     }
 

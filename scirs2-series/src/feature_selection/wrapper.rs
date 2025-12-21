@@ -30,11 +30,11 @@ impl WrapperMethods {
     /// use scirs2_core::ndarray::{Array1, Array2};
     /// use scirs2_series::feature_selection::{WrapperMethods, FeatureSelectionConfig};
     ///
-    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).expect("Operation failed");
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     /// let config = FeatureSelectionConfig::default();
     ///
-    /// let result = WrapperMethods::forward_selection(&features, &target, &config).unwrap();
+    /// let result = WrapperMethods::forward_selection(&features, &target, &config).expect("Operation failed");
     /// println!("Selected {} features", result.selected_features.len());
     /// ```
     pub fn forward_selection(

@@ -14,8 +14,9 @@ fn main() {
     let multidata = array![1, 2, 2, 3, 3, 4, 5, 5, 6];
 
     // Find modes
-    let unimodal_result = mode(&multidata.view(), ModeMethod::Unimodal).unwrap();
-    let multimodal_result = mode(&multidata.view(), ModeMethod::MultiModal).unwrap();
+    let unimodal_result = mode(&multidata.view(), ModeMethod::Unimodal).expect("Operation failed");
+    let multimodal_result =
+        mode(&multidata.view(), ModeMethod::MultiModal).expect("Operation failed");
 
     println!("\n1. Mode Analysis");
     println!("---------------");
@@ -49,9 +50,9 @@ fn main() {
     // Single value (zero entropy)
     let single_value = array![1, 1, 1, 1, 1];
 
-    let entropy_uniform = entropy(&uniform.view(), Some(2.0)).unwrap();
-    let entropy_less = entropy(&less_uniform.view(), Some(2.0)).unwrap();
-    let entropy_single = entropy(&single_value.view(), Some(2.0)).unwrap();
+    let entropy_uniform = entropy(&uniform.view(), Some(2.0)).expect("Operation failed");
+    let entropy_less = entropy(&less_uniform.view(), Some(2.0)).expect("Operation failed");
+    let entropy_single = entropy(&single_value.view(), Some(2.0)).expect("Operation failed");
 
     println!("Uniform data: {:?}", uniform);
     println!("Entropy (base 2): {:.6}", entropy_uniform);
@@ -68,9 +69,9 @@ fn main() {
     let p = array![0.5f64, 0.5];
     let q = array![0.9f64, 0.1];
 
-    let kl_div = kl_divergence(&p.view(), &q.view()).unwrap();
-    let kl_div_reverse = kl_divergence(&q.view(), &p.view()).unwrap();
-    let cross_ent = cross_entropy(&p.view(), &q.view()).unwrap();
+    let kl_div = kl_divergence(&p.view(), &q.view()).expect("Operation failed");
+    let kl_div_reverse = kl_divergence(&q.view(), &p.view()).expect("Operation failed");
+    let cross_ent = cross_entropy(&p.view(), &q.view()).expect("Operation failed");
 
     println!("Distribution P: {:?}", p);
     println!("Distribution Q: {:?}", q);
@@ -90,15 +91,17 @@ fn main() {
     let left_skewed = array![0.0f64, 7.0, 7.5, 8.0, 9.0];
 
     // Calculate direct skewness values
-    let _skew_sym = skew(&symmetric.view(), false, None).unwrap();
-    let _skew_right = skew(&right_skewed.view(), false, None).unwrap();
-    let _skew_left = skew(&left_skewed.view(), false, None).unwrap();
+    let _skew_sym = skew(&symmetric.view(), false, None).expect("Operation failed");
+    let _skew_right = skew(&right_skewed.view(), false, None).expect("Operation failed");
+    let _skew_left = skew(&left_skewed.view(), false, None).expect("Operation failed");
 
     // Calculate skewness with confidence intervals
-    let skew_ci_sym = skewness_ci(&symmetric.view(), false, None, Some(1000), Some(42)).unwrap();
-    let skew_ci_right =
-        skewness_ci(&right_skewed.view(), false, None, Some(1000), Some(42)).unwrap();
-    let skew_ci_left = skewness_ci(&left_skewed.view(), false, None, Some(1000), Some(42)).unwrap();
+    let skew_ci_sym = skewness_ci(&symmetric.view(), false, None, Some(1000), Some(42))
+        .expect("Operation failed");
+    let skew_ci_right = skewness_ci(&right_skewed.view(), false, None, Some(1000), Some(42))
+        .expect("Operation failed");
+    let skew_ci_left = skewness_ci(&left_skewed.view(), false, None, Some(1000), Some(42))
+        .expect("Operation failed");
 
     println!("Symmetric data: {:?}", symmetric);
     println!(
@@ -130,12 +133,12 @@ fn main() {
     let leptokurtic = array![3.0f64, 3.2, 3.4, 3.4, 3.5, 3.5, 3.6, 3.6, 3.8, 10.0];
 
     // Calculate kurtosis with confidence intervals
-    let kurt_ci_platy =
-        kurtosis_ci(&platykurtic.view(), true, false, None, Some(1000), Some(42)).unwrap();
-    let kurt_ci_meso =
-        kurtosis_ci(&mesokurtic.view(), true, false, None, Some(1000), Some(42)).unwrap();
-    let kurt_ci_lepto =
-        kurtosis_ci(&leptokurtic.view(), true, false, None, Some(1000), Some(42)).unwrap();
+    let kurt_ci_platy = kurtosis_ci(&platykurtic.view(), true, false, None, Some(1000), Some(42))
+        .expect("Operation failed");
+    let kurt_ci_meso = kurtosis_ci(&mesokurtic.view(), true, false, None, Some(1000), Some(42))
+        .expect("Operation failed");
+    let kurt_ci_lepto = kurtosis_ci(&leptokurtic.view(), true, false, None, Some(1000), Some(42))
+        .expect("Operation failed");
 
     println!("Platykurtic data (uniform-like, negative excess kurtosis):");
     println!(

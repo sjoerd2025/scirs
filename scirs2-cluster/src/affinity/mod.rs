@@ -39,7 +39,7 @@ pub struct AffinityPropagationOptions<F: Float> {
 impl<F: Float + FromPrimitive> Default for AffinityPropagationOptions<F> {
     fn default() -> Self {
         Self {
-            damping: F::from(0.5).unwrap(),
+            damping: F::from(0.5).expect("Failed to convert constant to float"),
             max_iter: 200,
             convergence_iter: 15,
             preference: None,
@@ -142,7 +142,7 @@ where
         // Even number of elements
         let mid1 = non_diag_similarities[n / 2 - 1];
         let mid2 = non_diag_similarities[n / 2];
-        (mid1 + mid2) / F::from(2.0).unwrap()
+        (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         // Odd number of elements
         non_diag_similarities[n / 2]
@@ -177,7 +177,9 @@ where
     let n_samples = similarity.shape()[0];
 
     // Verify damping is in the correct range
-    if options.damping < F::from(0.5).unwrap() || options.damping > F::one() {
+    if options.damping < F::from(0.5).expect("Failed to convert constant to float")
+        || options.damping > F::one()
+    {
         return Err(ClusteringError::InvalidInput(
             "Damping factor must be between 0.5 and 1.0".to_string(),
         ));
@@ -418,7 +420,7 @@ fn compare_labels(labels1: ArrayView1<i32>, labels2: ArrayView1<i32>) -> bool {
 ///     4.0, 5.0,
 ///     4.2, 4.8,
 ///     3.9, 5.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Run affinity propagation
 /// let options = AffinityPropagationOptions {
@@ -480,7 +482,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 5.0, 6.0, 5.2, 5.8, 4.8, 6.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run affinity propagation with tuned parameters
         let options = AffinityPropagationOptions {
@@ -494,7 +496,7 @@ mod tests {
         let result = affinity_propagation(data.view(), false, Some(options));
         assert!(result.is_ok());
 
-        let (centers, labels) = result.unwrap();
+        let (centers, labels) = result.expect("Operation failed");
 
         // We should have at least 1 cluster
         assert!(!centers.is_empty());
@@ -521,7 +523,7 @@ mod tests {
                 -6.0, 0.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run affinity propagation with precomputed similarity
         let options = AffinityPropagationOptions {
@@ -533,7 +535,7 @@ mod tests {
         let result = affinity_propagation(similarity.view(), true, Some(options));
         assert!(result.is_ok());
 
-        let (centers, labels) = result.unwrap();
+        let (centers, labels) = result.expect("Operation failed");
 
         // Check dimensions
         assert_eq!(labels.len(), 4);

@@ -1269,7 +1269,10 @@ mod tests {
         let wrapped_c = NdarrayWrapper::new(c.clone());
         if let Ok(result) = reshape(&wrapped_c, &[6]) {
             if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>() {
-                let expected = c.clone().into_shape_with_order(6).unwrap();
+                let expected = c
+                    .clone()
+                    .into_shape_with_order(6)
+                    .expect("Operation failed");
                 assert_eq!(result_array.as_array(), &expected);
             } else {
                 panic!("Reshape result is not the expected type");

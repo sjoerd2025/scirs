@@ -117,16 +117,14 @@ mod tests {
     use std::time::Instant;
 
     #[test]
-    #[ignore]
     fn test_neural_quantum_hybrid_processor() {
-        let processor = NeuralQuantumHybridProcessor::new();
+        let processor = NeuralQuantumHybridProcessor::new_for_testing();
         assert!(processor.fusion_params.quantum_weight > 0.0);
         assert!(processor.fusion_params.neuromorphic_weight > 0.0);
         assert!(processor.fusion_params.classical_weight > 0.0);
     }
 
     #[test]
-    #[ignore]
     fn test_advanced_processing() {
         let test_frame = Frame {
             data: Array2::zeros((240, 320)),
@@ -145,9 +143,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_emergent_behavior_detection() {
-        let mut processor = NeuralQuantumHybridProcessor::new();
+        let mut processor = NeuralQuantumHybridProcessor::new_for_testing();
         let activity_result = ActivityRecognitionResult {
             activities: Vec::new(),
             sequences: Vec::new(),
@@ -194,20 +191,18 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_cross_module_coordinator() {
-        let coordinator_result = AdvancedCrossModuleCoordinator::new();
+        let coordinator_result = AdvancedCrossModuleCoordinator::new_for_testing();
         assert!(coordinator_result.is_ok());
     }
 
     #[test]
-    #[ignore]
     fn test_advanced_mode_initialization() {
-        let coordinator = AdvancedCrossModuleCoordinator::new();
+        let coordinator = AdvancedCrossModuleCoordinator::new_for_testing();
         assert!(coordinator.is_ok());
 
         // Test initialization data structures
-        let coordinator = coordinator.unwrap();
+        let coordinator = coordinator.expect("Operation failed");
         // Verify coordinator was created successfully - this validates the structure
         assert!(format!("{:?}", coordinator).contains("AdvancedCrossModuleCoordinator"));
     }

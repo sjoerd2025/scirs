@@ -1205,7 +1205,8 @@ impl BatchOperations {
                                 match File::create(&path) {
                                     Ok(mut file) => match file.write_all(&data) {
                                         Ok(_) => {
-                                            let mut r = result_clone.lock().unwrap();
+                                            let mut r =
+                                                result_clone.lock().expect("Operation failed");
                                             r.success_count += 1;
                                             r.total_bytes += data.len() as u64;
                                             downloaded_data = data;
@@ -1231,7 +1232,7 @@ impl BatchOperations {
                     }
 
                     if !success {
-                        let mut r = result_clone.lock().unwrap();
+                        let mut r = result_clone.lock().expect("Operation failed");
                         r.failure_count += 1;
                         r.failures.push((name.clone(), last_error));
                     }
@@ -1472,12 +1473,12 @@ impl BatchOperations {
 
                     thread::spawn(move || match processor_clone(&name, &data) {
                         Ok(_) => {
-                            let mut r = result_clone.lock().unwrap();
+                            let mut r = result_clone.lock().expect("Operation failed");
                             r.success_count += 1;
                             r.total_bytes += data.len() as u64;
                         }
                         Err(e) => {
-                            let mut r = result_clone.lock().unwrap();
+                            let mut r = result_clone.lock().expect("Operation failed");
                             r.failure_count += 1;
                             r.failures.push((name, format!("Processing failed: {e}")));
                         }
@@ -1490,7 +1491,7 @@ impl BatchOperations {
             }
 
             // Merge parallel results into main result
-            let parallel_result = parallel_result.lock().unwrap();
+            let parallel_result = parallel_result.lock().expect("Operation failed");
             result.success_count += parallel_result.success_count;
             result.failure_count += parallel_result.failure_count;
             result.total_bytes += parallel_result.total_bytes;
@@ -1628,7 +1629,7 @@ mod tests {
 
     #[test]
     fn test_batch_operations_creation() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager)
             .with_parallel(false)
@@ -1640,7 +1641,7 @@ mod tests {
 
     #[test]
     fn test_selective_cleanup() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
@@ -1650,20 +1651,22 @@ mod tests {
             .cache
             .cache
             .write_cached("test1.csv", &test_data)
-            .unwrap();
+            .expect("Test: cache operation failed");
         batch_ops
             .cache
             .cache
             .write_cached("test2.csv", &test_data)
-            .unwrap();
+            .expect("Test: cache operation failed");
         batch_ops
             .cache
             .cache
             .write_cached("data.json", &test_data)
-            .unwrap();
+            .expect("Test: cache operation failed");
 
         // Clean up files matching pattern
-        let result = batch_ops.selective_cleanup(&["*.csv"], None).unwrap();
+        let result = batch_ops
+            .selective_cleanup(&["*.csv"], None)
+            .expect("Operation failed");
 
         assert_eq!(result.success_count, 2); // Should remove test1.csv and test2.csv
         assert!(!batch_ops.cache.is_cached("test1.csv"));
@@ -1673,7 +1676,7 @@ mod tests {
 
     #[test]
     fn test_batch_process() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager).with_parallel(false);
 
@@ -1684,12 +1687,12 @@ mod tests {
             .cache
             .cache
             .write_cached("file1.dat", &test_data1)
-            .unwrap();
+            .expect("Test: cache operation failed");
         batch_ops
             .cache
             .cache
             .write_cached("file2.dat", &test_data2)
-            .unwrap();
+            .expect("Test: cache operation failed");
 
         let files = vec!["file1.dat".to_string(), "file2.dat".to_string()];
 
@@ -1709,12 +1712,12 @@ mod tests {
 
     #[test]
     fn test_get_cache_statistics() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let cache_manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let batch_ops = BatchOperations::new(cache_manager);
 
         // Start with empty cache
-        let result = batch_ops.get_cache_statistics().unwrap();
+        let result = batch_ops.get_cache_statistics().expect("Operation failed");
         assert_eq!(result.success_count, 0);
 
         // Add some files
@@ -1723,14 +1726,14 @@ mod tests {
             .cache
             .cache
             .write_cached("test1.dat", &test_data)
-            .unwrap();
+            .expect("Test: cache operation failed");
         batch_ops
             .cache
             .cache
             .write_cached("test2.dat", &test_data)
-            .unwrap();
+            .expect("Test: cache operation failed");
 
-        let result = batch_ops.get_cache_statistics().unwrap();
+        let result = batch_ops.get_cache_statistics().expect("Operation failed");
         assert_eq!(result.success_count, 2);
         assert_eq!(result.total_bytes, 1000);
     }
@@ -1748,7 +1751,7 @@ mod tests {
 
     #[test]
     fn test_cache_manager_creation() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
         let stats = manager.get_stats();
         assert_eq!(stats.file_count, 0);
@@ -1756,7 +1759,7 @@ mod tests {
 
     #[test]
     fn test_cache_stats_formatting() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let stats = CacheStats {
             total_size_bytes: 1024,
             file_count: 1,
@@ -1798,7 +1801,7 @@ mod tests {
 
     #[test]
     fn test_cache_size_management() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let cache = DatasetCache::with_full_config(
             tempdir.path().to_path_buf(),
             10,
@@ -1809,20 +1812,28 @@ mod tests {
 
         // Write multiple small files to approach the limit
         let small_data1 = vec![0u8; 400];
-        cache.write_cached("small1.dat", &small_data1).unwrap();
+        cache
+            .write_cached("small1.dat", &small_data1)
+            .expect("Operation failed");
 
         let small_data2 = vec![0u8; 400];
-        cache.write_cached("small2.dat", &small_data2).unwrap();
+        cache
+            .write_cached("small2.dat", &small_data2)
+            .expect("Operation failed");
 
         let small_data3 = vec![0u8; 400];
-        cache.write_cached("small3.dat", &small_data3).unwrap();
+        cache
+            .write_cached("small3.dat", &small_data3)
+            .expect("Operation failed");
 
         // Now write a file that should trigger cleanup
         let medium_data = vec![0u8; 800];
-        cache.write_cached("medium.dat", &medium_data).unwrap();
+        cache
+            .write_cached("medium.dat", &medium_data)
+            .expect("Operation failed");
 
         // The cache should have cleaned up to stay under the limit
-        let stats = cache.get_detailed_stats().unwrap();
+        let stats = cache.get_detailed_stats().expect("Operation failed");
         assert!(stats.total_size_bytes <= cache.max_cache_size());
 
         // The most recent file should still be cached
@@ -1831,7 +1842,7 @@ mod tests {
 
     #[test]
     fn test_offline_mode() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let mut cache = DatasetCache::new(tempdir.path().to_path_buf());
 
         assert!(!cache.is_offline());
@@ -1841,13 +1852,15 @@ mod tests {
 
     #[test]
     fn test_detailed_stats() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let cache = DatasetCache::new(tempdir.path().to_path_buf());
 
         let test_data = vec![1, 2, 3, 4, 5];
-        cache.write_cached("test.dat", &test_data).unwrap();
+        cache
+            .write_cached("test.dat", &test_data)
+            .expect("Operation failed");
 
-        let stats = cache.get_detailed_stats().unwrap();
+        let stats = cache.get_detailed_stats().expect("Operation failed");
         assert_eq!(stats.file_count, 1);
         assert_eq!(stats.total_size_bytes, test_data.len() as u64);
         assert_eq!(stats.files.len(), 1);
@@ -1857,7 +1870,7 @@ mod tests {
 
     #[test]
     fn test_cache_manager() {
-        let tempdir = TempDir::new().unwrap();
+        let tempdir = TempDir::new().expect("Operation failed");
         let manager = CacheManager::with_config(tempdir.path().to_path_buf(), 10, 3600);
 
         let stats = manager.get_stats();

@@ -416,7 +416,7 @@ mod tests {
     #[test]
     fn test_create_temp_mmap() {
         let shape = vec![100, 100];
-        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
+        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).expect("Operation failed");
 
         // Test that mmap was created successfully
         // Note: MemoryMappedArray might not have shape() and size() methods
@@ -426,24 +426,25 @@ mod tests {
 
     #[test]
     fn test_save_and_load_mmap() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("testimage.bin");
 
         // Create test data
         let data = Array2::<f64>::from_elem((50, 50), std::f64::consts::PI);
 
         // Save as memory-mapped
-        let _saved_mmap = saveimage_mmap(&data.view(), &file_path, 0).unwrap();
+        let _saved_mmap = saveimage_mmap(&data.view(), &file_path, 0).expect("Operation failed");
         // Note: MemoryMappedArray might not have shape() method
         // The test success indicates proper save functionality
 
         // Load back
         let loaded_mmap =
-            loadimage_mmap::<f64, Ix2, _>(&file_path, &[50, 50], 0, AccessMode::ReadOnly).unwrap();
+            loadimage_mmap::<f64, Ix2, _>(&file_path, &[50, 50], 0, AccessMode::ReadOnly)
+                .expect("Operation failed");
 
         // Verify data (if as_array method exists)
         // Note: MemoryMappedArray functionality may be limited in current implementation
-        // let loaded_view = loaded_mmap.as_array::<Ix2>().unwrap();
+        // let loaded_view = loaded_mmap.as_array::<Ix2>().expect("Operation failed");
         // assert_eq!(loaded_view[[25, 25]], 3.14);
 
         // Test passes if loading completes without error
@@ -453,7 +454,7 @@ mod tests {
     #[test]
     fn test_mmap_chunk_iterator() {
         let shape = vec![1000];
-        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).unwrap();
+        let (mmap, _temp_path) = create_temp_mmap::<f64>(&shape).expect("Operation failed");
 
         let iterator = MmapChunkIterator::new(&mmap, ChunkingStrategy::Fixed(100));
         let chunks: Vec<_> = iterator.iter().collect();

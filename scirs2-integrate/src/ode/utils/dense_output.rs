@@ -95,7 +95,7 @@ impl<F: IntegrateFloat> DenseSolution<F> {
 
         // If at an existing time point, just return that value
         for (i, &ti) in self.t.iter().enumerate() {
-            if (t - ti).abs() < F::from_f64(1e-14).unwrap() {
+            if (t - ti).abs() < F::from_f64(1e-14).expect("Operation failed") {
                 return Ok(self.y[i].clone());
             }
         }
@@ -150,15 +150,15 @@ impl<F: IntegrateFloat> DenseSolution<F> {
             ));
         }
 
-        let t_min = *self.t.first().unwrap();
-        let t_max = *self.t.last().unwrap();
-        let dt = (t_max - t_min) / F::from_usize(npoints - 1).unwrap();
+        let t_min = *self.t.first().expect("Operation failed");
+        let t_max = *self.t.last().expect("Operation failed");
+        let dt = (t_max - t_min) / F::from_usize(npoints - 1).expect("Operation failed");
 
         let mut times = Vec::with_capacity(npoints);
         let mut values = Vec::with_capacity(npoints);
 
         for i in 0..npoints {
-            let t = t_min + dt * F::from_usize(i).unwrap();
+            let t = t_min + dt * F::from_usize(i).expect("Operation failed");
             times.push(t);
             values.push(self.evaluate(t)?);
         }
@@ -232,13 +232,15 @@ impl<F: IntegrateFloat> DOP853Interpolant<F> {
         // In a real implementation, the full set of coefficients for the
         // DOP853 dense output would be used
         let b1 = theta;
-        let b2 = theta * theta / F::from_f64(2.0).unwrap();
-        let b3 = theta * theta * theta / F::from_f64(6.0).unwrap();
-        let b4 = theta * theta * theta * theta / F::from_f64(24.0).unwrap();
-        let b5 = theta * theta * theta * theta * theta / F::from_f64(120.0).unwrap();
-        let b6 = theta * theta * theta * theta * theta * theta / F::from_f64(720.0).unwrap();
-        let b7 =
-            theta * theta * theta * theta * theta * theta * theta / F::from_f64(5040.0).unwrap();
+        let b2 = theta * theta / F::from_f64(2.0).expect("Operation failed");
+        let b3 = theta * theta * theta / F::from_f64(6.0).expect("Operation failed");
+        let b4 = theta * theta * theta * theta / F::from_f64(24.0).expect("Operation failed");
+        let b5 =
+            theta * theta * theta * theta * theta / F::from_f64(120.0).expect("Operation failed");
+        let b6 = theta * theta * theta * theta * theta * theta
+            / F::from_f64(720.0).expect("Operation failed");
+        let b7 = theta * theta * theta * theta * theta * theta * theta
+            / F::from_f64(5040.0).expect("Operation failed");
 
         // Compute the interpolant using the stage values
         let mut result = self.y0.clone();
@@ -294,12 +296,13 @@ impl<F: IntegrateFloat> RadauInterpolant<F> {
         // matching function values at both ends and using the stage
         // values to approximate derivatives
 
-        let h00 = F::from_f64(2.0).unwrap() * theta.powi(3)
-            - F::from_f64(3.0).unwrap() * theta.powi(2)
+        let h00 = F::from_f64(2.0).expect("Operation failed") * theta.powi(3)
+            - F::from_f64(3.0).expect("Operation failed") * theta.powi(2)
             + F::one();
-        let h10 = theta.powi(3) - F::from_f64(2.0).unwrap() * theta.powi(2) + theta;
-        let h01 =
-            F::from_f64(-2.0).unwrap() * theta.powi(3) + F::from_f64(3.0).unwrap() * theta.powi(2);
+        let h10 =
+            theta.powi(3) - F::from_f64(2.0).expect("Operation failed") * theta.powi(2) + theta;
+        let h01 = F::from_f64(-2.0).expect("Operation failed") * theta.powi(3)
+            + F::from_f64(3.0).expect("Operation failed") * theta.powi(2);
         let h11 = theta.powi(3) - theta.powi(2);
 
         // Use the first stage value as derivative at the beginning

@@ -140,8 +140,8 @@ pub fn create_pos_aware_lemmatizer_with_config(
 
 lazy_static! {
     // Porter stemmer regex patterns
-    static ref VOWEL_SEQUENCE: Regex = Regex::new(r"[aeiouy]").unwrap();
-    static ref DOUBLE_CONSONANT: Regex = Regex::new(r"(bb|dd|ff|gg|mm|nn|pp|rr|tt)$").unwrap();
+    static ref VOWEL_SEQUENCE: Regex = Regex::new(r"[aeiouy]").expect("Operation failed");
+    static ref DOUBLE_CONSONANT: Regex = Regex::new(r"(bb|dd|ff|gg|mm|nn|pp|rr|tt)$").expect("Operation failed");
 }
 
 /// Trait for text stemming algorithms
@@ -595,14 +595,14 @@ mod tests {
         ];
 
         for (word, expected) in test_cases {
-            let stemmed = stemmer.stem(word).unwrap();
+            let stemmed = stemmer.stem(word).expect("Operation failed");
             assert_eq!(stemmed, expected, "Failed for word: {word}");
         }
     }
 
     #[test]
     fn test_snowball_stemmer() {
-        let stemmer = SnowballStemmer::new("english").unwrap();
+        let stemmer = SnowballStemmer::new("english").expect("Operation failed");
 
         let test_cases = vec![
             ("cats", "cat"),
@@ -612,7 +612,7 @@ mod tests {
         ];
 
         for (word, expected) in test_cases {
-            let stemmed = stemmer.stem(word).unwrap();
+            let stemmed = stemmer.stem(word).expect("Operation failed");
             assert_eq!(stemmed, expected, "Failed for word: {word}");
         }
     }
@@ -631,7 +631,7 @@ mod tests {
         ];
 
         for (word, expected) in test_cases {
-            let lemma = lemmatizer.stem(word).unwrap();
+            let lemma = lemmatizer.stem(word).expect("Operation failed");
             assert_eq!(lemma, expected, "Failed for word: {word}");
         }
     }
@@ -680,8 +680,8 @@ mod tests {
         ];
 
         for word in test_cases {
-            let pos_aware_result = pos_aware.stem(word).unwrap();
-            let rule_only_result = rule_only.stem(word).unwrap();
+            let pos_aware_result = pos_aware.stem(word).expect("Operation failed");
+            let rule_only_result = rule_only.stem(word).expect("Operation failed");
 
             println!(
                 "Word: '{word}' -> POS-aware: '{pos_aware_result}', Rule-only: '{rule_only_result}'"
@@ -698,16 +698,22 @@ mod tests {
         let pos_aware = create_pos_aware_lemmatizer();
 
         // Test cases where POS awareness provides clear benefit
-        assert_eq!(pos_aware.stem("running").unwrap(), "run");
-        assert_eq!(pos_aware.stem("walked").unwrap(), "walk");
-        assert_eq!(pos_aware.stem("plays").unwrap(), "play");
-        assert_eq!(pos_aware.stem("played").unwrap(), "play");
-        assert_eq!(pos_aware.stem("swimming").unwrap(), "swim");
+        assert_eq!(pos_aware.stem("running").expect("Operation failed"), "run");
+        assert_eq!(pos_aware.stem("walked").expect("Operation failed"), "walk");
+        assert_eq!(pos_aware.stem("plays").expect("Operation failed"), "play");
+        assert_eq!(pos_aware.stem("played").expect("Operation failed"), "play");
+        assert_eq!(
+            pos_aware.stem("swimming").expect("Operation failed"),
+            "swim"
+        );
 
         // Test regular patterns that should work consistently
-        assert_eq!(pos_aware.stem("cats").unwrap(), "cat");
-        assert_eq!(pos_aware.stem("dogs").unwrap(), "dog");
-        assert_eq!(pos_aware.stem("happiness").unwrap(), "happiness"); // May not be in exceptions
+        assert_eq!(pos_aware.stem("cats").expect("Operation failed"), "cat");
+        assert_eq!(pos_aware.stem("dogs").expect("Operation failed"), "dog");
+        assert_eq!(
+            pos_aware.stem("happiness").expect("Operation failed"),
+            "happiness"
+        ); // May not be in exceptions
     }
 
     #[test]
@@ -729,14 +735,14 @@ mod tests {
         let pos_aware = create_pos_aware_lemmatizer_with_config(pos_config, lemma_config);
 
         // Test with custom configuration
-        let result = pos_aware.stem("Running").unwrap();
+        let result = pos_aware.stem("Running").expect("Operation failed");
         assert_eq!(result, "run"); // Simple rule-based transformation
     }
 
     #[test]
     fn test_stemmers_and_lemmatizers_comparison() {
         let porter = PorterStemmer::new();
-        let snowball = SnowballStemmer::new("english").unwrap();
+        let snowball = SnowballStemmer::new("english").expect("Operation failed");
         let lancaster = LancasterStemmer::new();
         let simple_lemmatizer = SimpleLemmatizer::new();
         let rule_lemmatizer = RuleLemmatizer::new();
@@ -755,24 +761,33 @@ mod tests {
             println!(
                 "Word: '{}'\nPorter: '{}'\nSnowball: '{}'\nLancaster: '{}'\nSimple: '{}'\nRule: '{}'",
                 word,
-                porter.stem(word).unwrap(),
-                snowball.stem(word).unwrap(),
-                lancaster.stem(word).unwrap(),
-                simple_lemmatizer.stem(word).unwrap(),
-                rule_lemmatizer.stem(word).unwrap()
+                porter.stem(word).expect("Operation failed"),
+                snowball.stem(word).expect("Operation failed"),
+                lancaster.stem(word).expect("Operation failed"),
+                simple_lemmatizer.stem(word).expect("Operation failed"),
+                rule_lemmatizer.stem(word).expect("Operation failed")
             );
         }
 
         // Test basic cases
-        assert_eq!(porter.stem("running").unwrap(), "run");
-        assert_eq!(rule_lemmatizer.stem("running").unwrap(), "run");
+        assert_eq!(porter.stem("running").expect("Operation failed"), "run");
+        assert_eq!(
+            rule_lemmatizer.stem("running").expect("Operation failed"),
+            "run"
+        );
 
         // Test that lemmatizer works better for irregular forms
-        assert_eq!(porter.stem("went").unwrap(), "went"); // Stemmer doesn't handle irregular verbs
-        assert_eq!(rule_lemmatizer.stem("went").unwrap(), "go"); // Lemmatizer does
+        assert_eq!(porter.stem("went").expect("Operation failed"), "went"); // Stemmer doesn't handle irregular verbs
+        assert_eq!(
+            rule_lemmatizer.stem("went").expect("Operation failed"),
+            "go"
+        ); // Lemmatizer does
 
         // Lemmatizer should handle irregular plurals
-        assert_eq!(porter.stem("feet").unwrap(), "feet"); // Stemmer doesn't normalize irregular plurals
-        assert_eq!(rule_lemmatizer.stem("feet").unwrap(), "foot"); // Lemmatizer does
+        assert_eq!(porter.stem("feet").expect("Operation failed"), "feet"); // Stemmer doesn't normalize irregular plurals
+        assert_eq!(
+            rule_lemmatizer.stem("feet").expect("Operation failed"),
+            "foot"
+        ); // Lemmatizer does
     }
 }

@@ -218,7 +218,7 @@ fn generate_classification_chunk_gpu(
                 for j in 0..n_informative {
                     let centroid_val = centroids[centroid_idx * n_informative + j];
                     let noise = scirs2_core::random::Normal::new(0.0, 0.3)
-                        .unwrap()
+                        .expect("Operation failed")
                         .sample(&mut rng);
                     data[sample_idx * n_features + j] = centroid_val + noise;
                 }
@@ -226,7 +226,7 @@ fn generate_classification_chunk_gpu(
                 // Add noise _features
                 for j in n_informative..n_features {
                     data[sample_idx * n_features + j] = scirs2_core::random::Normal::new(0.0, 1.0)
-                        .unwrap()
+                        .expect("Operation failed")
                         .sample(&mut rng);
                 }
 
@@ -257,7 +257,7 @@ fn generate_classification_gpu_optimized(
 
     // CPU fallback implementation since GPU _features are not available
     use scirs2_core::random::Distribution;
-    let normal = scirs2_core::random::Normal::new(0.0, 1.0).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed");
 
     let mut data = vec![0.0; n_samples * n_features];
     let mut targets = vec![0.0; n_samples];
@@ -447,7 +447,7 @@ fn generate_regression_chunk_gpu(
 
     // Generate random data matrix
     let mut data = vec![0.0; n_samples * n_features];
-    let normal = scirs2_core::random::Normal::new(0.0, 1.0).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed");
 
     // Use GPU for matrix multiplication if available
     for i in 0..n_samples {
@@ -458,7 +458,7 @@ fn generate_regression_chunk_gpu(
 
     // Calculate targets using GPU matrix operations
     let mut targets = vec![0.0; n_samples];
-    let noise_dist = scirs2_core::random::Normal::new(0.0, noise).unwrap();
+    let noise_dist = scirs2_core::random::Normal::new(0.0, noise).expect("Operation failed");
 
     // Create GPU buffers for accelerated matrix operations
     if *gpu_context.backend() != LocalGpuBackend::Cpu {
@@ -507,7 +507,7 @@ fn generate_regression_gpu_optimized(
 
     // CPU fallback implementation since GPU _features are not available
     use scirs2_core::random::Distribution;
-    let normal = scirs2_core::random::Normal::new(0.0, noise).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, noise).expect("Operation failed");
 
     let mut targets = vec![0.0; n_samples];
 
@@ -593,7 +593,7 @@ fn make_blobs_gpu_impl(
 
     // Generate cluster _centers
     let mut centers = Array2::zeros((n_centers, n_features));
-    let center_dist = scirs2_core::random::Normal::new(0.0, 10.0).unwrap();
+    let center_dist = scirs2_core::random::Normal::new(0.0, 10.0).expect("Operation failed");
 
     for i in 0..n_centers {
         for j in 0..n_features {
@@ -609,7 +609,7 @@ fn make_blobs_gpu_impl(
     let mut target = Array1::zeros(n_samples);
 
     let mut sample_idx = 0;
-    let noise_dist = scirs2_core::random::Normal::new(0.0, cluster_std).unwrap();
+    let noise_dist = scirs2_core::random::Normal::new(0.0, cluster_std).expect("Operation failed");
 
     for center_idx in 0..n_centers {
         let n_samples_center = if center_idx < remainder {
@@ -687,7 +687,7 @@ fn generate_blobs_center_gpu(
 
     // CPU fallback implementation since GPU _features are not available
     use scirs2_core::random::Distribution;
-    let normal = scirs2_core::random::Normal::new(0.0, cluster_std).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, cluster_std).expect("Operation failed");
 
     let mut result = Vec::with_capacity(n_samples_center);
 

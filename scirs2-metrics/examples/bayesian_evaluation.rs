@@ -154,7 +154,7 @@ fn bayesian_information_criteria_example() -> Result<()> {
     }
 
     // Rank models by WAIC (lower is better)
-    model_results.sort_by(|a, b| a.1.waic.partial_cmp(&b.1.waic).unwrap());
+    model_results.sort_by(|a, b| a.1.waic.partial_cmp(&b.1.waic).expect("Operation failed"));
 
     println!("Model Ranking by WAIC:");
     for (rank, (params, result)) in model_results.iter().enumerate() {
@@ -271,7 +271,7 @@ fn bayesian_model_averaging_example() -> Result<()> {
             1.0, 2.5, 3.3, 3.9, 5.2, 5.9, 7.3, 7.9, 9.2, 10.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Model comparison scores (e.g., WAIC values - lower is better)
     let waic_scores = Array1::from_vec(vec![152.3, 148.7, 151.1, 149.9]);

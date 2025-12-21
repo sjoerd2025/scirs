@@ -53,13 +53,13 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// use scirs2_stats::traits::Distribution;
     ///
     /// // Create exponential with rate=0.5 (equivalent to scale=2.0)
-    /// let exp = Exponential::new(0.5f64, 0.0).unwrap();
+    /// let exp = Exponential::new(0.5f64, 0.0).expect("Operation failed");
     /// assert!((exp.rate - 0.5).abs() < 1e-10);
     /// assert!((exp.scale - 2.0).abs() < 1e-10);
     /// assert!((exp.mean() - 2.0).abs() < 1e-10);  // mean = 1/rate = 2.0
     ///
     /// // If you want to specify scale directly, use from_scale() instead:
-    /// // let exp = Exponential::from_scale(2.0f64, 0.0).unwrap();
+    /// // let exp = Exponential::from_scale(2.0f64, 0.0).expect("Operation failed");
     /// ```
     pub fn new(rate: F, loc: F) -> StatsResult<Self> {
         validation::ensure_positive(rate, "Rate parameter")?;
@@ -68,7 +68,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
         let scale = F::one() / rate;
 
         // Convert to f64 for rand_distr
-        let rate_f64 = <f64 as NumCast>::from(rate).unwrap();
+        let rate_f64 = <f64 as NumCast>::from(rate).expect("Operation failed");
 
         match RandExp::new(rate_f64) {
             Ok(rand_distr) => Ok(Exponential {
@@ -113,13 +113,13 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// use scirs2_stats::traits::Distribution;
     ///
     /// // Create exponential with scale=2.0 (equivalent to rate=0.5)
-    /// let exp = Exponential::from_scale(2.0f64, 0.0).unwrap();
+    /// let exp = Exponential::from_scale(2.0f64, 0.0).expect("Operation failed");
     /// assert!((exp.scale - 2.0).abs() < 1e-10);
     /// assert!((exp.rate - 0.5).abs() < 1e-10);
     /// assert!((exp.mean() - 2.0).abs() < 1e-10);  // mean = scale = 2.0
     ///
     /// // This is equivalent to:
-    /// // let exp = Exponential::new(0.5f64, 0.0).unwrap();
+    /// // let exp = Exponential::new(0.5f64, 0.0).expect("Operation failed");
     /// ```
     pub fn from_scale(scale: F, loc: F) -> StatsResult<Self> {
         validation::ensure_positive(scale, "scale")?;
@@ -128,7 +128,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
         let rate = F::one() / scale;
 
         // Convert to f64 for rand_distr
-        let rate_f64 = <f64 as NumCast>::from(rate).unwrap();
+        let rate_f64 = <f64 as NumCast>::from(rate).expect("Operation failed");
 
         match RandExp::new(rate_f64) {
             Ok(rand_distr) => Ok(Exponential {
@@ -158,7 +158,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
     ///
-    /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
+    /// let exp = Exponential::new(1.0f64, 0.0).expect("Operation failed");
     /// let pdf_at_one = exp.pdf(1.0);
     /// assert!((pdf_at_one - 0.36787944).abs() < 1e-7);
     /// ```
@@ -191,7 +191,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
     ///
-    /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
+    /// let exp = Exponential::new(1.0f64, 0.0).expect("Operation failed");
     /// let cdf_at_one = exp.cdf(1.0);
     /// assert!((cdf_at_one - 0.63212056).abs() < 1e-7);
     /// ```
@@ -224,8 +224,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
     ///
-    /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
-    /// let x = exp.ppf(0.5).unwrap();
+    /// let exp = Exponential::new(1.0f64, 0.0).expect("Operation failed");
+    /// let x = exp.ppf(0.5).expect("Operation failed");
     /// assert!((x - 0.69314718).abs() < 1e-7);
     /// ```
     #[inline]
@@ -261,7 +261,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
     ///
-    /// let exp = Exponential::new(2.0f64, 1.0).unwrap();
+    /// let exp = Exponential::new(2.0f64, 1.0).expect("Operation failed");
     /// assert_eq!(exp.mean(), 1.5); // loc + 1/rate = 1 + 1/2 = 1.5
     /// ```
     pub fn mean(&self) -> F {
@@ -279,7 +279,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
     ///
-    /// let exp = Exponential::new(2.0f64, 0.0).unwrap();
+    /// let exp = Exponential::new(2.0f64, 0.0).expect("Operation failed");
     /// assert_eq!(exp.variance(), 0.25); // (1/rate)^2 = (1/2)^2 = 0.25
     /// ```
     pub fn variance(&self) -> F {
@@ -301,8 +301,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
     ///
-    /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
-    /// let samples = exp.rvs(1000).unwrap();
+    /// let exp = Exponential::new(1.0f64, 0.0).expect("Operation failed");
+    /// let samples = exp.rvs(1000).expect("Operation failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     #[inline]
@@ -326,8 +326,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     /// use scirs2_stats::distributions::exponential::Exponential;
     ///
-    /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
-    /// let samples = exp.rvs_vec(1000).unwrap();
+    /// let exp = Exponential::new(1.0f64, 0.0).expect("Operation failed");
+    /// let samples = exp.rvs_vec(1000).expect("Operation failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -336,7 +336,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
 
         for _ in 0..size {
             let sample = self.rand_distr.sample(&mut rng);
-            samples.push(F::from(sample).unwrap() + self.loc);
+            samples.push(F::from(sample).expect("Failed to convert to float") + self.loc);
         }
 
         Ok(samples)
@@ -402,19 +402,19 @@ mod tests {
     #[test]
     fn test_exponential_creation() {
         // Basic exponential distribution with rate=1
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
         assert_eq!(exp.rate, 1.0);
         assert_eq!(exp.scale, 1.0);
         assert_eq!(exp.loc, 0.0);
 
         // From scale parameter
-        let exp_scale = Exponential::from_scale(2.0, 0.0).unwrap();
+        let exp_scale = Exponential::from_scale(2.0, 0.0).expect("Operation failed");
         assert_eq!(exp_scale.rate, 0.5);
         assert_eq!(exp_scale.scale, 2.0);
         assert_eq!(exp_scale.loc, 0.0);
 
         // Custom exponential with location
-        let custom = Exponential::new(2.0, 1.0).unwrap();
+        let custom = Exponential::new(2.0, 1.0).expect("Operation failed");
         assert_eq!(custom.rate, 2.0);
         assert_eq!(custom.scale, 0.5);
         assert_eq!(custom.loc, 1.0);
@@ -429,7 +429,7 @@ mod tests {
     #[test]
     fn test_exponential_pdf() {
         // Standard exponential PDF values (rate=1)
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
 
         // PDF at x = 0
         let pdf_at_zero = exp.pdf(0.0);
@@ -447,12 +447,12 @@ mod tests {
         assert_relative_eq!(exp.pdf(-1.0), 0.0, epsilon = 1e-10);
 
         // Custom rate
-        let exp2 = Exponential::new(2.0, 0.0).unwrap();
+        let exp2 = Exponential::new(2.0, 0.0).expect("Operation failed");
         assert_relative_eq!(exp2.pdf(0.0), 2.0, epsilon = 1e-10);
         assert_relative_eq!(exp2.pdf(0.5), 0.73575888, epsilon = 1e-7);
 
         // With location parameter
-        let shifted = Exponential::new(1.0, 1.0).unwrap();
+        let shifted = Exponential::new(1.0, 1.0).expect("Operation failed");
         assert_relative_eq!(shifted.pdf(0.5), 0.0, epsilon = 1e-10);
         assert_relative_eq!(shifted.pdf(1.0), 1.0, epsilon = 1e-10);
         assert_relative_eq!(shifted.pdf(2.0), 0.36787944, epsilon = 1e-7);
@@ -461,7 +461,7 @@ mod tests {
     #[test]
     fn test_exponential_cdf() {
         // Standard exponential CDF values (rate=1)
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
 
         // CDF at x = 0
         let cdf_at_zero = exp.cdf(0.0);
@@ -479,12 +479,12 @@ mod tests {
         assert_relative_eq!(exp.cdf(-1.0), 0.0, epsilon = 1e-10);
 
         // Custom rate
-        let exp2 = Exponential::new(2.0, 0.0).unwrap();
+        let exp2 = Exponential::new(2.0, 0.0).expect("Operation failed");
         assert_relative_eq!(exp2.cdf(0.5), 0.63212056, epsilon = 1e-7);
         assert_relative_eq!(exp2.cdf(1.0), 0.86466472, epsilon = 1e-7);
 
         // With location parameter
-        let shifted = Exponential::new(1.0, 1.0).unwrap();
+        let shifted = Exponential::new(1.0, 1.0).expect("Operation failed");
         assert_relative_eq!(shifted.cdf(0.5), 0.0, epsilon = 1e-10);
         assert_relative_eq!(shifted.cdf(1.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(shifted.cdf(2.0), 0.63212056, epsilon = 1e-7);
@@ -493,19 +493,23 @@ mod tests {
     #[test]
     fn test_exponential_ppf() {
         // Standard exponential (rate=1)
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
 
         // Median
-        let median = exp.ppf(0.5).unwrap();
+        let median = exp.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(median, 0.69314718, epsilon = 1e-7);
 
         // 95th percentile
-        let p95 = exp.ppf(0.95).unwrap();
+        let p95 = exp.ppf(0.95).expect("Operation failed");
         assert_relative_eq!(p95, 2.9957323, epsilon = 1e-7);
 
         // With location parameter
-        let shifted = Exponential::new(1.0, 1.0).unwrap();
-        assert_relative_eq!(shifted.ppf(0.5).unwrap(), 1.69314718, epsilon = 1e-7);
+        let shifted = Exponential::new(1.0, 1.0).expect("Operation failed");
+        assert_relative_eq!(
+            shifted.ppf(0.5).expect("Operation failed"),
+            1.69314718,
+            epsilon = 1e-7
+        );
 
         // Error cases
         assert!(exp.ppf(-0.1).is_err());
@@ -515,31 +519,31 @@ mod tests {
     #[test]
     fn test_exponential_mean_variance() {
         // Standard exponential (rate=1)
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
         assert_relative_eq!(exp.mean(), 1.0, epsilon = 1e-10);
         assert_relative_eq!(exp.variance(), 1.0, epsilon = 1e-10);
 
         // Custom rate (rate=2)
-        let exp2 = Exponential::new(2.0, 0.0).unwrap();
+        let exp2 = Exponential::new(2.0, 0.0).expect("Operation failed");
         assert_relative_eq!(exp2.mean(), 0.5, epsilon = 1e-10);
         assert_relative_eq!(exp2.variance(), 0.25, epsilon = 1e-10);
 
         // With location (rate=1, loc=1)
-        let shifted = Exponential::new(1.0, 1.0).unwrap();
+        let shifted = Exponential::new(1.0, 1.0).expect("Operation failed");
         assert_relative_eq!(shifted.mean(), 2.0, epsilon = 1e-10); // loc + 1/rate
         assert_relative_eq!(shifted.variance(), 1.0, epsilon = 1e-10); // location doesn't affect variance
     }
 
     #[test]
     fn test_exponential_rvs() {
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
 
         // Generate samples using Vec method
-        let samples_vec = exp.rvs_vec(1000).unwrap();
+        let samples_vec = exp.rvs_vec(1000).expect("Operation failed");
         assert_eq!(samples_vec.len(), 1000);
 
         // Generate samples using Array1 method
-        let samples_array = exp.rvs(1000).unwrap();
+        let samples_array = exp.rvs(1000).expect("Operation failed");
         assert_eq!(samples_array.len(), 1000);
 
         // Basic statistical checks
@@ -568,7 +572,7 @@ mod tests {
 
     #[test]
     fn test_exponential_distribution_trait() {
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
 
         // Test Distribution trait methods
         assert_relative_eq!(exp.mean(), 1.0, epsilon = 1e-10);
@@ -576,21 +580,21 @@ mod tests {
         assert_relative_eq!(exp.std(), 1.0, epsilon = 1e-10);
 
         // Check that rvs returns correct size and type
-        let samples = exp.rvs(100).unwrap();
+        let samples = exp.rvs(100).expect("Operation failed");
         assert_eq!(samples.len(), 100);
 
         // Entropy should be 1.0 for standard exponential
         assert_relative_eq!(exp.entropy(), 1.0, epsilon = 1e-10);
 
         // Entropy for different rate
-        let exp2 = Exponential::new(2.0, 0.0).unwrap();
+        let exp2 = Exponential::new(2.0, 0.0).expect("Operation failed");
         // Entropy = 1 - ln(rate) = 1 - ln(2) ≈ 0.3069
         assert_relative_eq!(exp2.entropy(), 1.0 - 2.0f64.ln(), epsilon = 1e-10);
     }
 
     #[test]
     fn test_exponential_continuous_distribution_trait() {
-        let exp = Exponential::new(1.0, 0.0).unwrap();
+        let exp = Exponential::new(1.0, 0.0).expect("Operation failed");
 
         // Test as a ContinuousDistribution
         let dist: &dyn ContinuousDistribution<f64> = &exp;
@@ -602,7 +606,11 @@ mod tests {
         assert_relative_eq!(dist.cdf(1.0), 0.63212056, epsilon = 1e-7);
 
         // Check PPF
-        assert_relative_eq!(dist.ppf(0.5).unwrap(), 0.69314718, epsilon = 1e-7);
+        assert_relative_eq!(
+            dist.ppf(0.5).expect("Operation failed"),
+            0.69314718,
+            epsilon = 1e-7
+        );
 
         // Check derived methods using concrete type
         assert_relative_eq!(exp.sf(1.0), 1.0 - 0.63212056, epsilon = 1e-7);
@@ -615,8 +623,8 @@ mod tests {
 
         // Inverse survival function should work
         assert_relative_eq!(
-            exp.isf(0.5).unwrap(),
-            dist.ppf(0.5).unwrap(),
+            exp.isf(0.5).expect("Operation failed"),
+            dist.ppf(0.5).expect("Operation failed"),
             epsilon = 1e-7
         );
     }

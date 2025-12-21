@@ -43,7 +43,7 @@ where
 
     // We transform the interpolation problem into a least squares problem
     // with a large weight to enforce a close fit to the data
-    let weight = T::from_f64(1e6).unwrap();
+    let weight = T::from_f64(1e6).expect("Operation failed");
     let weighted_design = design_matrix.map(|&x| x * weight);
     let weighted_y = y.map(|&x| x * weight);
 
@@ -256,7 +256,7 @@ where
     }
     all_satisfied = true;
     for &val in constraint_values.iter() {
-        if val < -T::from_f64(1e-6).unwrap() {
+        if val < -T::from_f64(1e-6).expect("Operation failed") {
             all_satisfied = false;
             break;
         }
@@ -317,10 +317,12 @@ where
         #[cfg(feature = "linalg")]
         {
             use scirs2_linalg::solve;
-            let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
-            let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
+            let ata_f64 = ata.mapv(|x| x.to_f64().expect("Operation failed"));
+            let aty_f64 = aty.mapv(|x| x.to_f64().expect("Operation failed"));
             match solve(&ata_f64.view(), &aty_f64.view(), None) {
-                Ok(solution) => return Ok(solution.mapv(|x| T::from_f64(x).unwrap())),
+                Ok(solution) => {
+                    return Ok(solution.mapv(|x| T::from_f64(x).expect("Operation failed")))
+                }
                 Err(_) => {
                     return Err(InterpolateError::ComputationError(
                         "Failed to solve the unconstrained penalized problem".to_string(),
@@ -339,10 +341,10 @@ where
     #[cfg(feature = "linalg")]
     let mut c = {
         use scirs2_linalg::solve;
-        let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
-        let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
+        let ata_f64 = ata.mapv(|x| x.to_f64().expect("Operation failed"));
+        let aty_f64 = aty.mapv(|x| x.to_f64().expect("Operation failed"));
         match solve(&ata_f64.view(), &aty_f64.view(), None) {
-            Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),
+            Ok(solution) => solution.mapv(|x| T::from_f64(x).expect("Operation failed")),
             Err(_) => {
                 // If direct solve fails, try a simpler approach
                 let n = design_matrix.shape()[1];
@@ -523,7 +525,7 @@ where
 
     // Second derivative penalty: D₂ᵀD₂ where D₂ is the second difference matrix
     let one = T::one();
-    let two = T::from_f64(2.0).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
 
     for i in 0..n - 2 {
         // Diagonal elements
@@ -614,8 +616,8 @@ where
         let mut eval_points = Vec::new();
         for i in 0..n_eval {
             let t = i as f64 / (n_eval - 1) as f64;
-            let x_val =
-                constraint_x_min + T::from_f64(t).unwrap() * (constraint_x_max - constraint_x_min);
+            let x_val = constraint_x_min
+                + T::from_f64(t).expect("Operation failed") * (constraint_x_max - constraint_x_min);
             eval_points.push(x_val);
         }
 
@@ -624,7 +626,8 @@ where
             ConstraintType::MonotoneIncreasing => {
                 // For each adjacent pair of evaluation points, ensure derivative is non-negative
                 for i in 0..eval_points.len() - 1 {
-                    let x_val = (eval_points[i] + eval_points[i + 1]) / T::from_f64(2.0).unwrap();
+                    let x_val = (eval_points[i] + eval_points[i + 1])
+                        / T::from_f64(2.0).expect("Operation failed");
 
                     // Create a row for the first derivative constraint at this point
                     for j in 0..n_coeffs {
@@ -638,7 +641,8 @@ where
             ConstraintType::MonotoneDecreasing => {
                 // For decreasing, the negative of the derivative should be non-negative
                 for i in 0..eval_points.len() - 1 {
-                    let x_val = (eval_points[i] + eval_points[i + 1]) / T::from_f64(2.0).unwrap();
+                    let x_val = (eval_points[i] + eval_points[i + 1])
+                        / T::from_f64(2.0).expect("Operation failed");
 
                     for j in 0..n_coeffs {
                         let basis = BSpline::basis_element(degree, j, knots, extrapolate)?;

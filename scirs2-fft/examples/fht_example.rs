@@ -53,7 +53,7 @@ fn example_basic_fht() {
         .collect();
 
     // Compute FHT
-    let f_transform = fht(&f, dln, mu, None, None).unwrap();
+    let f_transform = fht(&f, dln, mu, None, None).expect("Operation failed");
 
     // The Hankel transform of a Gaussian is also a Gaussian
     // with reciprocal width
@@ -64,11 +64,11 @@ fn example_basic_fht() {
     let max_idx = f_transform
         .iter()
         .position(|&x| x == f_transform.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)))
-        .unwrap();
+        .expect("Operation failed");
     println!("Peak at index: {max_idx}");
 
     // Test inverse transform
-    let f_recovered = ifht(&f_transform, dln, mu, None, None).unwrap();
+    let f_recovered = ifht(&f_transform, dln, mu, None, None).expect("Operation failed");
 
     // Check recovery error
     let error: f64 = f
@@ -101,7 +101,7 @@ fn example_different_orders() {
         let f: Vec<f64> = r.iter().map(|&ri| (-ri).exp()).collect();
 
         // Compute FHT
-        let f_transform = fht(&f, dln, mu, None, None).unwrap();
+        let f_transform = fht(&f, dln, mu, None, None).expect("Operation failed");
 
         // Check that transform succeeded
         let has_nan = f_transform.iter().any(|x| x.is_nan());
@@ -129,10 +129,10 @@ fn example_biased_transform() {
     let f: Vec<f64> = r.iter().map(|&ri| ri.powf(-alpha)).collect();
 
     // Transform without bias
-    let f_unbiased = fht(&f, dln, mu, None, None).unwrap();
+    let f_unbiased = fht(&f, dln, mu, None, None).expect("Operation failed");
 
     // Transform with bias matching the power law
-    let f_biased = fht(&f, dln, mu, None, Some(alpha)).unwrap();
+    let f_biased = fht(&f, dln, mu, None, Some(alpha)).expect("Operation failed");
 
     // The biased transform should handle the power law better
     let norm_unbiased: f64 = f_unbiased.iter().map(|x| x * x).sum::<f64>().sqrt();
@@ -160,7 +160,7 @@ fn example_optimal_offset() {
     let bias_values = vec![0.0, 0.5, 1.0, 2.0];
 
     for bias in bias_values {
-        let offset = fhtoffset(dln, mu, None, Some(bias)).unwrap();
+        let offset = fhtoffset(dln, mu, None, Some(bias)).expect("Operation failed");
         println!("Bias = {bias}, Optimal offset = {offset}");
     }
 
@@ -176,7 +176,7 @@ fn example_optimal_offset() {
 
     println!("Effect of offset on transform:");
     for offset in offsets {
-        let f_transform = fht(&f, dln, mu, Some(offset), None).unwrap();
+        let f_transform = fht(&f, dln, mu, Some(offset), None).expect("Operation failed");
         let norm: f64 = f_transform.iter().map(|x| x * x).sum::<f64>().sqrt();
         println!("  Offset = {offset}, Transform norm = {norm:.3e}");
     }
@@ -207,7 +207,7 @@ fn example_radial_transform() {
         .collect();
 
     // Compute the Hankel transform
-    let f_transform = fht(&f, dln, mu, None, None).unwrap();
+    let f_transform = fht(&f, dln, mu, None, None).expect("Operation failed");
 
     // The transform represents the radial profile of the 2D Fourier transform
     println!("Mexican hat wavelet in real space");
@@ -218,9 +218,9 @@ fn example_radial_transform() {
     let max_idx = f_transform
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(idx, _)| idx)
-        .unwrap();
+        .expect("Operation failed");
 
     println!("Peak frequency at k ≈ {:.3}", k[max_idx]);
     println!();

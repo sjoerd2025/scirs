@@ -148,7 +148,7 @@ impl<F: IntegrateFloat> LUDecomposition<F> {
             }
 
             // Check for singularity
-            if max_val < F::from_f64(1e-14).unwrap() {
+            if max_val < F::from_f64(1e-14).expect("Operation failed") {
                 return Err(IntegrateError::ComputationError(
                     "Matrix is singular or nearly singular".to_string(),
                 ));
@@ -274,7 +274,7 @@ where
     F: IntegrateFloat,
 {
     // Default condition number threshold
-    let thresh = threshold.unwrap_or_else(|| F::from_f64(1e14).unwrap());
+    let thresh = threshold.unwrap_or_else(|| F::from_f64(1e14).expect("Operation failed"));
 
     let (n, m) = matrix.dim();
     if n != m {
@@ -288,7 +288,7 @@ where
     if n <= 3 {
         // For small matrices, compute determinant directly
         let det = compute_determinant(&matrix);
-        return det.abs() < F::from_f64(1e-14).unwrap();
+        return det.abs() < F::from_f64(1e-14).expect("Operation failed");
     }
 
     // For larger matrices, estimate condition number
@@ -329,8 +329,8 @@ fn estimate_condition_number<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
     let min_singular_val_sq = estimate_smallest_eigenvalue_ata(matrix);
     let min_singular_val = min_singular_val_sq.sqrt();
 
-    if min_singular_val < F::from_f64(1e-14).unwrap() {
-        F::from_f64(1e16).unwrap() // Very large condition number
+    if min_singular_val < F::from_f64(1e-14).expect("Operation failed") {
+        F::from_f64(1e16).expect("Operation failed") // Very large condition number
     } else {
         max_singular_val / min_singular_val
     }
@@ -347,7 +347,7 @@ fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) ->
 
     // Normalize
     let mut norm = (v.dot(&v)).sqrt();
-    if norm > F::from_f64(1e-14).unwrap() {
+    if norm > F::from_f64(1e-14).expect("Operation failed") {
         v = &v / norm;
     }
 
@@ -375,7 +375,7 @@ fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) ->
 
         // Normalize atav for next iteration
         norm = (atav.dot(&atav)).sqrt();
-        if norm > F::from_f64(1e-14).unwrap() {
+        if norm > F::from_f64(1e-14).expect("Operation failed") {
             v = &atav / norm;
         }
 
@@ -392,7 +392,7 @@ fn estimate_smallest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) -
 
     // For simplicity, we'll use the minimum diagonal element of A^T * A as a lower bound
     // This is not exact but gives a reasonable estimate for condition number purposes
-    let mut min_diag = F::from_f64(f64::INFINITY).unwrap();
+    let mut min_diag = F::from_f64(f64::INFINITY).expect("Operation failed");
 
     for i in 0..n {
         let mut diag_elem = F::zero();
@@ -404,5 +404,5 @@ fn estimate_smallest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) -
         }
     }
 
-    min_diag.max(F::from_f64(1e-16).unwrap())
+    min_diag.max(F::from_f64(1e-16).expect("Operation failed"))
 }

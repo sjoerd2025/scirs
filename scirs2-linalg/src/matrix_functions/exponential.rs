@@ -34,7 +34,7 @@ use crate::validation::validate_decomposition;
 /// use scirs2_linalg::matrix_functions::expm;
 ///
 /// let a = array![[0.0_f64, 1.0], [-1.0, 0.0]]; // Rotation matrix
-/// let exp_a = expm(&a.view(), None).unwrap();
+/// let exp_a = expm(&a.view(), None).expect("Operation failed");
 ///
 /// // Expected values are approximately cos(1) and sin(1)
 /// // Exact values would be:
@@ -100,12 +100,12 @@ where
 
     // Compute Padé approximation (here using order 6)
     let c = [
-        F::from(1.0).unwrap(),
-        F::from(1.0 / 2.0).unwrap(),
-        F::from(1.0 / 6.0).unwrap(),
-        F::from(1.0 / 24.0).unwrap(),
-        F::from(1.0 / 120.0).unwrap(),
-        F::from(1.0 / 720.0).unwrap(),
+        F::from(1.0).expect("Operation failed"),
+        F::from(1.0 / 2.0).expect("Operation failed"),
+        F::from(1.0 / 6.0).expect("Operation failed"),
+        F::from(1.0 / 24.0).expect("Operation failed"),
+        F::from(1.0 / 120.0).expect("Operation failed"),
+        F::from(1.0 / 720.0).expect("Operation failed"),
     ];
 
     // Compute powers of A
@@ -271,7 +271,7 @@ where
 /// use scirs2_linalg::matrix_functions::logm;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let log_a = logm(&a.view()).unwrap();
+/// let log_a = logm(&a.view()).expect("Operation failed");
 /// // log_a should be approximately [[0.0, 0.0], [0.0, ln(2)]]
 /// assert!((log_a[[0, 0]]).abs() < 1e-10);
 /// assert!((log_a[[0, 1]]).abs() < 1e-10);
@@ -401,7 +401,7 @@ where
     }
 
     // If the matrix is too far from identity, try an inverse scaling and squaring approach
-    if max_diff > F::from(0.5).unwrap() {
+    if max_diff > F::from(0.5).expect("Operation failed") {
         // For matrices not close to identity, we use inverse scaling and squaring
         // This approach works by finding a scaling factor k such that A^(1/2^k) is close to I
         // then computing log(A) = 2^k * log(A^(1/2^k))
@@ -425,12 +425,16 @@ where
                 }
             }
 
-            if max_scaled_diff <= F::from(0.2).unwrap() {
+            if max_scaled_diff <= F::from(0.2).expect("Operation failed") {
                 break;
             }
 
             // Compute matrix square root using our sqrtm function
-            match sqrtm(&a_scaled.view(), 20, F::from(1e-12).unwrap()) {
+            match sqrtm(
+                &a_scaled.view(),
+                20,
+                F::from(1e-12).expect("Operation failed"),
+            ) {
                 Ok(sqrt_result) => {
                     a_scaled = sqrt_result;
                     scaling_k += 1;
@@ -508,11 +512,11 @@ where
         // Compute log(A^(1/2^k)) using the series with more terms
         // log(1 + X) = X - X²/2 + X³/3 - X⁴/4 + X⁵/5 - X⁶/6 + ...
         let mut log_scaled = Array2::<F>::zeros((n, n));
-        let half = F::from(0.5).unwrap();
-        let third = F::from(1.0 / 3.0).unwrap();
-        let fourth = F::from(0.25).unwrap();
-        let fifth = F::from(0.2).unwrap();
-        let sixth = F::from(1.0 / 6.0).unwrap();
+        let half = F::from(0.5).expect("Operation failed");
+        let third = F::from(1.0 / 3.0).expect("Operation failed");
+        let fourth = F::from(0.25).expect("Operation failed");
+        let fifth = F::from(0.2).expect("Operation failed");
+        let sixth = F::from(1.0 / 6.0).expect("Operation failed");
 
         for i in 0..n {
             for j in 0..n {
@@ -524,7 +528,7 @@ where
         }
 
         // Scale back: log(A) = 2^k * log(A^(1/2^k))
-        let scale_factor = F::from(2.0_f64.powi(scaling_k)).unwrap();
+        let scale_factor = F::from(2.0_f64.powi(scaling_k)).expect("Operation failed");
         for i in 0..n {
             for j in 0..n {
                 log_scaled[[i, j]] *= scale_factor;
@@ -591,11 +595,11 @@ where
 
     // Compute log(A) using the series log(I + X) = X - X²/2 + X³/3 - X⁴/4 + X⁵/5 - X⁶/6 + ...
     let mut result = Array2::<F>::zeros((n, n));
-    let half = F::from(0.5).unwrap();
-    let third = F::from(1.0 / 3.0).unwrap();
-    let fourth = F::from(0.25).unwrap();
-    let fifth = F::from(0.2).unwrap();
-    let sixth = F::from(1.0 / 6.0).unwrap();
+    let half = F::from(0.5).expect("Operation failed");
+    let third = F::from(1.0 / 3.0).expect("Operation failed");
+    let fourth = F::from(0.25).expect("Operation failed");
+    let fifth = F::from(0.2).expect("Operation failed");
+    let sixth = F::from(1.0 / 6.0).expect("Operation failed");
 
     for i in 0..n {
         for j in 0..n {
@@ -631,7 +635,7 @@ where
 /// use scirs2_linalg::matrix_functions::logm_parallel;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
-/// let log_a = logm_parallel(&a.view(), Some(4)).unwrap();
+/// let log_a = logm_parallel(&a.view(), Some(4)).expect("Operation failed");
 /// assert!((log_a[[0, 0]]).abs() < 1e-10);
 /// assert!((log_a[[1, 1]] - 2.0_f64.ln()).abs() < 1e-10);
 /// ```
@@ -691,7 +695,7 @@ where
 /// use scirs2_linalg::matrix_functions::sqrtm;
 ///
 /// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
-/// let sqrt_a = sqrtm(&a.view(), 20, 1e-10).unwrap();
+/// let sqrt_a = sqrtm(&a.view(), 20, 1e-10).expect("Operation failed");
 /// // sqrt_a should be approximately [[2.0, 0.0], [0.0, 3.0]]
 /// assert!((sqrt_a[[0, 0]] - 2.0).abs() < 1e-10);
 /// assert!((sqrt_a[[0, 1]] - 0.0).abs() < 1e-10);
@@ -779,8 +783,10 @@ where
 
         for i in 0..n {
             for j in 0..n {
-                x_new[[i, j]] = (x[[i, j]] + y_inv[[i, j]]) * F::from(0.5).unwrap();
-                y_new[[i, j]] = (y[[i, j]] + x_inv[[i, j]]) * F::from(0.5).unwrap();
+                x_new[[i, j]] =
+                    (x[[i, j]] + y_inv[[i, j]]) * F::from(0.5).expect("Operation failed");
+                y_new[[i, j]] =
+                    (y[[i, j]] + x_inv[[i, j]]) * F::from(0.5).expect("Operation failed");
             }
         }
 
@@ -862,7 +868,7 @@ where
 /// use scirs2_linalg::matrix_functions::matrix_power;
 ///
 /// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
-/// let a_half = matrix_power(&a.view(), 0.5).unwrap();
+/// let a_half = matrix_power(&a.view(), 0.5).expect("Operation failed");
 /// // a_half should be approximately [[2.0, 0.0], [0.0, 3.0]]
 /// ```
 #[allow(dead_code)]

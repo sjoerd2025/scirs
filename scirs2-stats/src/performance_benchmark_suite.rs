@@ -640,38 +640,38 @@ impl AdvancedBenchmarkSuite {
 
         match distribution {
             DataDistribution::Uniform => {
-                let uniform = Uniform::new(0.0, 1.0).unwrap();
+                let uniform = Uniform::new(0.0, 1.0).expect("Operation failed");
                 for val in data.iter_mut() {
                     *val = uniform.sample(&mut rng);
                 }
             }
             DataDistribution::Normal => {
-                let normal = Normal::new(0.0, 1.0).unwrap();
+                let normal = Normal::new(0.0, 1.0).expect("Operation failed");
                 for val in data.iter_mut() {
                     *val = normal.sample(&mut rng);
                 }
             }
             DataDistribution::LogNormal => {
-                let lognormal = LogNormal::new(0.0, 1.0).unwrap();
+                let lognormal = LogNormal::new(0.0, 1.0).expect("Operation failed");
                 for val in data.iter_mut() {
                     *val = lognormal.sample(&mut rng);
                 }
             }
             DataDistribution::Exponential => {
-                let exp = Exponential::new(1.0).unwrap();
+                let exp = Exponential::new(1.0).expect("Operation failed");
                 for val in data.iter_mut() {
                     *val = exp.sample(&mut rng);
                 }
             }
             DataDistribution::Pareto => {
-                let pareto = Pareto::new(1.0, 1.0).unwrap();
+                let pareto = Pareto::new(1.0, 1.0).expect("Operation failed");
                 for val in data.iter_mut() {
                     *val = pareto.sample(&mut rng);
                 }
             }
             DataDistribution::Sparse(sparsity) => {
-                let normal = Normal::new(0.0, 1.0).unwrap();
-                let uniform = Uniform::new(0.0, 1.0).unwrap();
+                let normal = Normal::new(0.0, 1.0).expect("Operation failed");
+                let uniform = Uniform::new(0.0, 1.0).expect("Operation failed");
                 for val in data.iter_mut() {
                     if uniform.sample(&mut rng) < *sparsity {
                         *val = 0.0;
@@ -682,7 +682,7 @@ impl AdvancedBenchmarkSuite {
             }
             _ => {
                 // Default to normal distribution for unimplemented types
-                let normal = Normal::new(0.0, 1.0).unwrap();
+                let normal = Normal::new(0.0, 1.0).expect("Operation failed");
                 for val in data.iter_mut() {
                     *val = normal.sample(&mut rng);
                 }
@@ -987,7 +987,7 @@ impl AdvancedBenchmarkSuite {
         timings: &[f64],
     ) -> crate::benchmark_suite::BenchmarkMetrics {
         let mut sorted_timings = timings.to_vec();
-        sorted_timings.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_timings.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let mean = timings.iter().sum::<f64>() / timings.len() as f64;
         let variance =
@@ -1594,18 +1594,17 @@ mod tests {
 
         let data = suite
             .generate_testdata(100, &DataDistribution::Normal)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(data.len(), 100);
 
         let sparsedata = suite
             .generate_testdata(100, &DataDistribution::Sparse(0.9))
-            .unwrap();
+            .expect("Operation failed");
         let zero_count = sparsedata.iter().filter(|&&x| x == 0.0).count();
         assert!(zero_count > 50); // Should have many zeros
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_model_building() {
         let config = AdvancedBenchmarkConfig::default();
         let suite = AdvancedBenchmarkSuite::new(config);
@@ -1669,7 +1668,7 @@ mod tests {
 
         let model = suite
             .build_performance_model(&mock_metrics.iter().collect::<Vec<_>>())
-            .unwrap();
+            .expect("Operation failed");
         assert!(matches!(model.model_type, ModelType::Linear));
         assert_eq!(model.coefficients.len(), 2); // intercept and slope
     }

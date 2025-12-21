@@ -9,6 +9,12 @@ use crate::ode::types::{ODEMethod, ODEOptions, ODEResult};
 use crate::IntegrateFloat;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: IntegrateFloat>(value: f64) -> F {
+    F::from_f64(value).expect("Failed to convert constant to target float type")
+}
+
 /// Solve ODE using the Backward Differentiation Formula (BDF) method
 ///
 /// BDF is an implicit multistep method particularly suited for stiff problems.
@@ -53,13 +59,14 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap() * F::from_f64(0.1).unwrap() // 0.1% of interval
+        _span / F::from_usize(100).expect("Operation failed") * const_f64::<F>(0.1)
+        // 0.1% of interval
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-10).unwrap() // Minimal step size
+        _span * const_f64::<F>(1e-10) // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -84,7 +91,7 @@ where
 
     // Generate initial points using RK4 (more accurate than Euler)
     if order > 1 {
-        let two = F::from_f64(2.0).unwrap();
+        let two = const_f64::<F>(2.0);
         let mut t = t_start;
         let mut y = y0.clone();
 
@@ -104,7 +111,7 @@ where
             func_evals += 4;
 
             // Combine slopes with appropriate weights
-            let slope = (k1 + k2.clone() * two + k3.clone() * two + k4) / F::from_f64(6.0).unwrap();
+            let slope = (k1 + k2.clone() * two + k3.clone() * two + k4) / const_f64::<F>(6.0);
             y = y + slope * h;
 
             // Update time
@@ -125,8 +132,8 @@ where
     }
 
     // Now we have enough points to start BDF
-    let mut t = *t_values.last().unwrap();
-    let mut y = y_values.last().unwrap().clone();
+    let mut t = *t_values.last().expect("Test/example failed");
+    let mut y = y_values.last().expect("Operation failed").clone();
 
     // BDF coefficients for different orders
     // These are the coefficients for the BDF formula
@@ -135,36 +142,36 @@ where
     // Coefficients for BDF1 (Implicit Euler) through BDF5
     let bdf_coefs: [Vec<F>; 5] = [
         // BDF1 (Implicit Euler): y_{n+1} - y_n = h * f(t_{n+1}, y_{n+1})
-        vec![F::one(), F::from_f64(-1.0).unwrap()],
+        vec![F::one(), const_f64::<F>(-1.0)],
         // BDF2: 3/2 * y_{n+1} - 2 * y_n + 1/2 * y_{n-1} = h * f(t_{n+1}, y_{n+1})
         vec![
-            F::from_f64(3.0 / 2.0).unwrap(),
-            F::from_f64(-2.0).unwrap(),
-            F::from_f64(1.0 / 2.0).unwrap(),
+            F::from_f64(3.0 / 2.0).expect("Failed to convert to float"),
+            const_f64::<F>(-2.0),
+            F::from_f64(1.0 / 2.0).expect("Failed to convert to float"),
         ],
         // BDF3
         vec![
-            F::from_f64(11.0 / 6.0).unwrap(),
-            F::from_f64(-3.0).unwrap(),
-            F::from_f64(3.0 / 2.0).unwrap(),
-            F::from_f64(-1.0 / 3.0).unwrap(),
+            F::from_f64(11.0 / 6.0).expect("Failed to convert to float"),
+            const_f64::<F>(-3.0),
+            F::from_f64(3.0 / 2.0).expect("Failed to convert to float"),
+            F::from_f64(-1.0 / 3.0).expect("Failed to convert to float"),
         ],
         // BDF4
         vec![
-            F::from_f64(25.0 / 12.0).unwrap(),
-            F::from_f64(-4.0).unwrap(),
-            F::from_f64(3.0).unwrap(),
-            F::from_f64(-4.0 / 3.0).unwrap(),
-            F::from_f64(1.0 / 4.0).unwrap(),
+            F::from_f64(25.0 / 12.0).expect("Failed to convert to float"),
+            const_f64::<F>(-4.0),
+            const_f64::<F>(3.0),
+            F::from_f64(-4.0 / 3.0).expect("Failed to convert to float"),
+            F::from_f64(1.0 / 4.0).expect("Failed to convert to float"),
         ],
         // BDF5
         vec![
-            F::from_f64(137.0 / 60.0).unwrap(),
-            F::from_f64(-5.0).unwrap(),
-            F::from_f64(5.0).unwrap(),
-            F::from_f64(-10.0 / 3.0).unwrap(),
-            F::from_f64(5.0 / 4.0).unwrap(),
-            F::from_f64(-1.0 / 5.0).unwrap(),
+            F::from_f64(137.0 / 60.0).expect("Failed to convert to float"),
+            const_f64::<F>(-5.0),
+            const_f64::<F>(5.0),
+            F::from_f64(-10.0 / 3.0).expect("Failed to convert to float"),
+            F::from_f64(5.0 / 4.0).expect("Failed to convert to float"),
+            F::from_f64(-1.0 / 5.0).expect("Failed to convert to float"),
         ],
     ];
 
@@ -197,7 +204,7 @@ where
             // Simple linear extrapolation for BDF2
             if order == 2 {
                 let y_nm1 = &y_values[y_values.len() - 2];
-                y_pred = y.clone() * F::from_f64(2.0).unwrap() - y_nm1 * F::one();
+                y_pred = y.clone() * const_f64::<F>(2.0) - y_nm1 * F::one();
             } else {
                 // For higher orders, use a quadratic or higher extrapolation
                 // This is approximate but sufficient for an initial guess
@@ -206,7 +213,7 @@ where
                 let y_prev2 = &y_values[y_values.len() - 3];
 
                 let a = F::one();
-                let b = F::from_f64(2.0).unwrap();
+                let b = const_f64::<F>(2.0);
 
                 y_pred = y_curr * (a + b) - y_prev * b + y_prev2 * (F::one() - a);
             }
@@ -244,7 +251,7 @@ where
             // For simplicity, we'll use a finite difference approximation
 
             // Create approximate Jacobian using finite differences
-            let eps = F::from_f64(1e-8).unwrap();
+            let eps = const_f64::<F>(1e-8);
             let mut jacobian = Array2::<F>::zeros((n_dim, n_dim));
             n_jac += 1;
 
@@ -274,9 +281,9 @@ where
             // For a 1D system, we can directly solve without any matrix inversion
             if n_dim == 1 {
                 // For scalar case, J is just a number, and delta_y = -residual / J
-                if jacobian[[0, 0]].abs() < F::from_f64(1e-10).unwrap() {
+                if jacobian[[0, 0]].abs() < const_f64::<F>(1e-10) {
                     // Nearly singular, reduce step size and try again
-                    h *= F::from_f64(0.5).unwrap();
+                    h *= const_f64::<F>(0.5);
                     if h < min_step {
                         return Err(IntegrateError::ConvergenceError(
                             "Newton iteration failed to converge with minimum step size"
@@ -318,9 +325,9 @@ where
                     }
 
                     // Check if the matrix is singular
-                    if max_val < F::from_f64(1e-10).unwrap() {
+                    if max_val < const_f64::<F>(1e-10) {
                         // Nearly singular matrix, reduce step size and try again
-                        h *= F::from_f64(0.5).unwrap();
+                        h *= const_f64::<F>(0.5);
                         if h < min_step {
                             return Err(IntegrateError::ConvergenceError(
                                 "Newton iteration failed to converge with minimum step size"
@@ -366,7 +373,7 @@ where
             }
 
             // Check convergence
-            let newton_tol = F::from_f64(1e-8).unwrap();
+            let newton_tol = const_f64::<F>(1e-8);
             let mut err = F::zero();
             for i in 0..n_dim {
                 let sc = opts.atol + opts.rtol * y_next[i].abs();
@@ -382,7 +389,7 @@ where
             iter_count += 1;
         }
 
-        newton_iters += F::from(iter_count).unwrap();
+        newton_iters += F::from(iter_count).expect("Failed to convert to float");
 
         if converged {
             // Step accepted
@@ -399,15 +406,15 @@ where
             // Adjust step size based on Newton convergence
             // If we converged quickly, increase step size
             if iter_count <= 2 {
-                h *= F::from_f64(1.2).unwrap().min(F::from_f64(5.0).unwrap());
+                h *= const_f64::<F>(1.2).min(const_f64::<F>(5.0));
             }
             // If we needed many iterations, decrease step size
             else if iter_count >= max_newton_iters - 1 {
-                h *= F::from_f64(0.8).unwrap().max(F::from_f64(0.2).unwrap());
+                h *= const_f64::<F>(0.8).max(const_f64::<F>(0.2));
             }
         } else {
             // Newton iteration failed to converge, reduce step size
-            h *= F::from_f64(0.5).unwrap();
+            h *= const_f64::<F>(0.5);
             if h < min_step {
                 return Err(IntegrateError::ConvergenceError(
                     "Newton iteration failed to converge with minimum step size".to_string(),
@@ -478,13 +485,14 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap() * F::from_f64(0.1).unwrap() // 0.1% of interval
+        _span / F::from_usize(100).expect("Operation failed") * const_f64::<F>(0.1)
+        // 0.1% of interval
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-10).unwrap() // Minimal step size
+        _span * const_f64::<F>(1e-10) // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -500,23 +508,23 @@ where
     // c = [4-sqrt(6))/10, (4+sqrt(6))/10, 1]
     // Exact values would be irrational, so we use high precision approximations
 
-    let c1 = F::from_f64(0.1550510257).unwrap();
-    let c2 = F::from_f64(0.6449489743).unwrap();
+    let c1 = const_f64::<F>(0.1550510257);
+    let c2 = const_f64::<F>(0.6449489743);
     let c3 = F::one();
 
     // Runge-Kutta matrix A (coefficients a_ij)
     // We're using a 3-stage Radau IIA method
-    let a11 = F::from_f64(0.1968154772).unwrap();
-    let a12 = F::from_f64(-0.0678338608).unwrap();
-    let a13 = F::from_f64(-0.0207959730).unwrap();
+    let a11 = const_f64::<F>(0.1968154772);
+    let a12 = const_f64::<F>(-0.0678338608);
+    let a13 = const_f64::<F>(-0.0207959730);
 
-    let a21 = F::from_f64(0.3944243147).unwrap();
-    let a22 = F::from_f64(0.2921005631).unwrap();
-    let a23 = F::from_f64(0.0416635118).unwrap();
+    let a21 = const_f64::<F>(0.3944243147);
+    let a22 = const_f64::<F>(0.2921005631);
+    let a23 = const_f64::<F>(0.0416635118);
 
-    let a31 = F::from_f64(0.3764030627).unwrap();
-    let a32 = F::from_f64(0.5124858261).unwrap();
-    let a33 = F::from_f64(0.1111111111).unwrap();
+    let a31 = const_f64::<F>(0.3764030627);
+    let a32 = const_f64::<F>(0.5124858261);
+    let a33 = const_f64::<F>(0.1111111111);
 
     // Weight coefficients b_j (same as last row of A for Radau IIA)
     let b1 = a31;
@@ -541,7 +549,7 @@ where
     let mut n_jac = 0;
 
     // Newton iteration parameters
-    let newton_tol = F::from_f64(1e-8).unwrap();
+    let newton_tol = const_f64::<F>(1e-8);
     let max_newton_iters = 10;
 
     // Main integration loop
@@ -622,7 +630,7 @@ where
                 ri[2] = r3[i];
 
                 // Approximate Jacobian for this component using finite differences
-                let eps = F::from_f64(1e-8).unwrap();
+                let eps = const_f64::<F>(1e-8);
                 let mut jac = Array2::<F>::zeros((3, 3));
 
                 // Disturb each stage value for this component
@@ -699,9 +707,9 @@ where
                     }
 
                     // Check for singularity
-                    if max_val < F::from_f64(1e-10).unwrap() {
+                    if max_val < const_f64::<F>(1e-10) {
                         // Nearly singular matrix, reduce step size and try again
-                        h *= F::from_f64(0.5).unwrap();
+                        h *= const_f64::<F>(0.5);
                         if h < min_step {
                             return Err(IntegrateError::ConvergenceError(
                                 "Newton iteration failed to converge with minimum step size"
@@ -773,14 +781,14 @@ where
             // Adjust step size based on convergence
             if iter_count <= 2 {
                 // Fast convergence, increase step size
-                h *= F::from_f64(1.2).unwrap().min(F::from_f64(5.0).unwrap());
+                h *= const_f64::<F>(1.2).min(const_f64::<F>(5.0));
             } else if iter_count >= max_newton_iters - 1 {
                 // Slow convergence, decrease step size
-                h *= F::from_f64(0.8).unwrap().max(F::from_f64(0.2).unwrap());
+                h *= const_f64::<F>(0.8).max(const_f64::<F>(0.2));
             }
         } else {
             // Step rejected, reduce step size
-            h *= F::from_f64(0.5).unwrap();
+            h *= const_f64::<F>(0.5);
             if h < min_step {
                 return Err(IntegrateError::ConvergenceError(
                     "Newton iteration failed to converge with minimum step size".to_string(),

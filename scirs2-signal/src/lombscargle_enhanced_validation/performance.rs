@@ -189,8 +189,8 @@ pub fn analyze_memory_usage(
 
     // Memory efficiency based on deviation from theoretical optimum
     let theoretical_linear_growth =
-        memory_measurements.last().unwrap().1 / memory_measurements[0].1;
-    let actual_growth_ratio = memory_measurements.last().unwrap().1 / memory_measurements[0].1;
+        memory_measurements.last().expect("Operation failed").1 / memory_measurements[0].1;
+    let actual_growth_ratio = memory_measurements.last().expect("Operation failed").1 / memory_measurements[0].1;
     let memory_efficiency = (theoretical_linear_growth / actual_growth_ratio.max(1.0)).min(1.0);
 
     // Fragmentation score based on memory pattern consistency
@@ -370,7 +370,7 @@ pub fn calculate_scaling_efficiency(timing_results: &[(usize, f64)]) -> f64 {
 
     let baseline_efficiency = timing_results[0].1 / timing_results[0].0 as f64;
     let final_efficiency =
-        timing_results.last().unwrap().1 / timing_results.last().unwrap().0 as f64;
+        timing_results.last().expect("Operation failed").1 / timing_results.last().expect("Operation failed").0 as f64;
 
     baseline_efficiency / final_efficiency
 }

@@ -101,7 +101,7 @@ pub enum FastKrigingMethod {
 ///
 /// // Predict at new points
 /// let query_points = Array2::<f64>::zeros((10, 2));
-/// let predictions = local_kriging.predict(&query_points.view()).unwrap();
+/// let predictions = local_kriging.predict(&query_points.view()).expect("Operation failed");
 ///
 /// // Create a model using fixed rank approximation
 /// let low_rank_kriging = FastKrigingBuilder::<f64>::new()
@@ -325,12 +325,12 @@ where
             values: None,
             cov_fn: CovarianceFunction::Matern52,
             length_scales: None,
-            sigma_sq: F::from_f64(1.0).unwrap(),
-            nugget: F::from_f64(1e-6).unwrap(),
+            sigma_sq: F::from_f64(1.0).expect("Operation failed"),
+            nugget: F::from_f64(1e-6).expect("Operation failed"),
             trend_fn: TrendFunction::Constant,
             approx_method: FastKrigingMethod::Local,
             max_neighbors: DEFAULT_MAX_NEIGHBORS,
-            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(),
+            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).expect("Operation failed"),
             _phantom: PhantomData,
         }
     }
@@ -482,11 +482,11 @@ where
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     50    // max_neighbors
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]
@@ -555,11 +555,11 @@ pub fn make_local_kriging<
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     10    // rank
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]
@@ -628,11 +628,11 @@ pub fn make_fixed_rank_kriging<
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     3.0   // taper_range
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]
@@ -701,11 +701,11 @@ pub fn make_tapered_kriging<
 ///     CovarianceFunction::Matern52,
 ///     1.0,  // length_scale
 ///     32    // leaf_size
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Make a prediction
 /// let query_point = Array2::<f64>::zeros((1, 2));
-/// let pred = kriging.predict(&query_point.view()).unwrap();
+/// let pred = kriging.predict(&query_point.view()).expect("Operation failed");
 /// # }
 /// ```
 #[allow(dead_code)]

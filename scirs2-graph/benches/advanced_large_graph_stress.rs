@@ -92,8 +92,8 @@ fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<us
             graph
                 .add_edge(i, j, weight)
                 .expect("Failed to add initial edge");
-            *node_degrees.get_mut(&i).unwrap() += 1;
-            *node_degrees.get_mut(&j).unwrap() += 1;
+            *node_degrees.get_mut(&i).expect("Operation failed") += 1;
+            *node_degrees.get_mut(&j).expect("Operation failed") += 1;
             degree_sum += 2;
         }
     }
@@ -124,8 +124,8 @@ fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<us
 
             let weight = rng.random::<f64>();
             if graph.add_edge(i, target, weight).is_ok() {
-                *node_degrees.get_mut(&i).unwrap() += 1;
-                *node_degrees.get_mut(&target).unwrap() += 1;
+                *node_degrees.get_mut(&i).expect("Operation failed") += 1;
+                *node_degrees.get_mut(&target).expect("Operation failed") += 1;
                 degree_sum += 2;
             }
         }
@@ -576,7 +576,7 @@ fn get_memory_usage() -> usize {
     use std::time::SystemTime;
     let now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
+        .expect("Operation failed");
     (now.as_millis() % 1000) as usize * 1_000_000 // Simulated memory in bytes
 }
 
@@ -721,7 +721,7 @@ fn concurrent_processor_stress_test(
             let thread_elapsed = thread_start.elapsed();
             let stats = processor.get_optimization_stats();
 
-            let mut results_guard = results_clone.lock().unwrap();
+            let mut results_guard = results_clone.lock().expect("Operation failed");
             results_guard.push((
                 thread_id,
                 thread_elapsed,
@@ -737,11 +737,11 @@ fn concurrent_processor_stress_test(
 
     // Wait for all threads to complete
     for handle in handles {
-        handle.join().unwrap();
+        handle.join().expect("Operation failed");
     }
 
     let total_elapsed = start.elapsed();
-    let results_guard = results_arc.lock().unwrap();
+    let results_guard = results_arc.lock().expect("Operation failed");
 
     // Analyze concurrent results
     let successful_threads = results_guard

@@ -63,8 +63,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             dw2: self.dw2.clone(),
             db2: self.db2.clone(),
             dropout: self.dropout,
-            input_cache: Arc::new(RwLock::new(self.input_cache.read().unwrap().clone())),
-            hidden_cache: Arc::new(RwLock::new(self.hidden_cache.read().unwrap().clone())),
+            input_cache: Arc::new(RwLock::new(self.input_cache.read().expect("Operation failed").clone())),
+            hidden_cache: Arc::new(RwLock::new(self.hidden_cache.read().expect("Operation failed").clone())),
         }
     }
 }
@@ -153,7 +153,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Cache input for backward pass
-        *self.input_cache.write().unwrap() = Some(input.clone());
+        *self.input_cache.write().expect("Operation failed") = Some(input.clone());
 
         // Check input shape
         if input.ndim() < 2 {
@@ -208,7 +208,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
         // Cache hidden state for backward pass
         let hidden_dyn = hidden.clone().into_dyn();
-        *self.hidden_cache.write().unwrap() = Some(hidden_dyn);
+        *self.hidden_cache.write().expect("Operation failed") = Some(hidden_dyn);
 
         // Apply dropout if needed (simplified version)
         if self.dropout > F::zero() {
@@ -248,8 +248,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
-        let input_ref = self.input_cache.read().unwrap();
-        let hidden_ref = self.hidden_cache.read().unwrap();
+        let input_ref = self.input_cache.read().expect("Operation failed");
+        let hidden_ref = self.hidden_cache.read().expect("Operation failed");
 
         if input_ref.is_none() || hidden_ref.is_none() {
             return Err(NeuralError::InferenceError(
@@ -257,8 +257,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             ));
         }
 
-        let cached_input = input_ref.as_ref().unwrap();
-        let cached_hidden = hidden_ref.as_ref().unwrap();
+        let cached_input = input_ref.as_ref().expect("Operation failed");
+        let cached_hidden = hidden_ref.as_ref().expect("Operation failed");
 
         // Get input dimensions
         let input_shape = input.shape();
@@ -333,7 +333,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
     fn update(&mut self, learning_rate: F) -> Result<()> {
         // Apply a small update
-        let small_change = F::from(0.001).unwrap();
+        let small_change = F::from(0.001).expect("Failed to convert constant to float");
         let lr = small_change * learning_rate;
 
         // Update all parameters
@@ -427,10 +427,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             dropout: self.dropout,
             d_model: self.d_model,
             attn_output_cache: Arc::new(RwLock::new(
-                self.attn_output_cache.read().unwrap().clone(),
+                self.attn_output_cache.read().expect("Operation failed").clone(),
             )),
             norm1_output_cache: Arc::new(RwLock::new(
-                self.norm1_output_cache.read().unwrap().clone(),
+                self.norm1_output_cache.read().expect("Operation failed").clone(),
             )),
         }
     }
@@ -534,14 +534,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
         // 1. Self-attention with residual connection
         let attn_output = self.self_attn.forward(input)?;
-        *self.attn_output_cache.write().unwrap() = Some(attn_output.clone());
+        *self.attn_output_cache.write().expect("Operation failed") = Some(attn_output.clone());
 
         // Add residual connection (x + Sublayer(x))
         let attn_output_residual = input + &attn_output;
 
         // 2. Layer normalization after attention
         let norm1_output = self.norm1.forward(&attn_output_residual)?;
-        *self.norm1_output_cache.write().unwrap() = Some(norm1_output.clone());
+        *self.norm1_output_cache.write().expect("Operation failed") = Some(norm1_output.clone());
 
         // 3. Feed-forward network with residual connection
         let ff_output = self.feed_forward.forward(&norm1_output)?;
@@ -592,7 +592,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     fn clone(&self) -> Self {
         Self {
             layers: self.layers.clone(),
-            layer_outputs: Arc::new(RwLock::new(self.layer_outputs.read().unwrap().clone())),
+            layer_outputs: Arc::new(RwLock::new(self.layer_outputs.read().expect("Operation failed").clone())),
         }
     }
 }
@@ -655,14 +655,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Clear layer outputs cache
-        *self.layer_outputs.write().unwrap() = Vec::new();
+        *self.layer_outputs.write().expect("Operation failed") = Vec::new();
 
         // Process input through all encoder layers
         let mut output = input.clone();
         for layer in &self.layers {
             output = layer.forward(&output)?;
             // Cache layer output for backward pass
-            self.layer_outputs.write().unwrap().push(output.clone());
+            self.layer_outputs.write().expect("Operation failed").push(output.clone());
         }
 
         Ok(output)
@@ -697,13 +697,13 @@ mod tests {
         let mut rng = scirs2_core::random::rng();
         let d_model = 64;
         let d_ff = 256;
-        let ff = FeedForward::<f64>::new(d_model, d_ff, 0.1, &mut rng).unwrap();
+        let ff = FeedForward::<f64>::new(d_model, d_ff, 0.1, &mut rng).expect("Operation failed");
 
         let batch_size = 2;
         let seq_len = 10;
         let input = Array3::<f64>::from_elem((batch_size, seq_len, d_model), 0.1).into_dyn();
 
-        let output = ff.forward(&input).unwrap();
+        let output = ff.forward(&input).expect("Operation failed");
         assert_eq!(output.shape(), input.shape());
     }
 
@@ -718,13 +718,13 @@ mod tests {
 
         let enc_layer =
             TransformerEncoderLayer::<f64>::new(d_model, n_heads, d_ff, dropout, epsilon, &mut rng)
-                .unwrap();
+                .expect("Operation failed");
 
         let batch_size = 2;
         let seq_len = 10;
         let input = Array3::<f64>::from_elem((batch_size, seq_len, d_model), 0.1).into_dyn();
 
-        let output = enc_layer.forward(&input).unwrap();
+        let output = enc_layer.forward(&input).expect("Operation failed");
         assert_eq!(output.shape(), input.shape());
     }
 
@@ -741,13 +741,13 @@ mod tests {
         let encoder = TransformerEncoder::<f64>::new(
             d_model, n_layers, n_heads, d_ff, dropout, epsilon, &mut rng,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let batch_size = 2;
         let seq_len = 10;
         let input = Array3::<f64>::from_elem((batch_size, seq_len, d_model), 0.1).into_dyn();
 
-        let output = encoder.forward(&input).unwrap();
+        let output = encoder.forward(&input).expect("Operation failed");
         assert_eq!(output.shape(), input.shape());
         assert_eq!(encoder.num_layers(), n_layers);
     }
@@ -757,18 +757,18 @@ mod tests {
         let mut rng = scirs2_core::random::rng();
         let d_model = 32;
         let d_ff = 64;
-        let ff = FeedForward::<f64>::new(d_model, d_ff, 0.0, &mut rng).unwrap();
+        let ff = FeedForward::<f64>::new(d_model, d_ff, 0.0, &mut rng).expect("Operation failed");
 
         let batch_size = 2;
         let seq_len = 4;
         let input = Array3::<f64>::from_elem((batch_size, seq_len, d_model), 0.1).into_dyn();
 
         // Forward pass to cache values
-        let output = ff.forward(&input).unwrap();
+        let output = ff.forward(&input).expect("Operation failed");
 
         // Backward pass
         let grad_output = Array3::<f64>::from_elem((batch_size, seq_len, d_model), 0.01).into_dyn();
-        let grad_input = ff.backward(&input, &grad_output).unwrap();
+        let grad_input = ff.backward(&input, &grad_output).expect("Operation failed");
 
         assert_eq!(grad_input.shape(), input.shape());
         assert_eq!(output.shape(), input.shape());

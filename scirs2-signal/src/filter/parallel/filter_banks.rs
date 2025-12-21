@@ -333,7 +333,8 @@ mod tests {
             vec![1.0, -1.0], // Simple differencing filter
         ];
 
-        let results = parallel_fir_filter_bank(&signal, &filter_bank, None).unwrap();
+        let results =
+            parallel_fir_filter_bank(&signal, &filter_bank, None).expect("Operation failed");
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].len(), signal.len());
         assert_eq!(results[1].len(), signal.len());
@@ -348,7 +349,8 @@ mod tests {
         let numerators = vec![vec![0.5, 0.5], vec![1.0, -1.0]];
         let denominators = vec![vec![1.0], vec![1.0]];
 
-        let results = parallel_iir_filter_bank(&signal, &numerators, &denominators, None).unwrap();
+        let results = parallel_iir_filter_bank(&signal, &numerators, &denominators, None)
+            .expect("Operation failed");
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].len(), signal.len());
         assert_eq!(results[1].len(), signal.len());
@@ -371,7 +373,8 @@ mod tests {
         ];
         let wavelet_filters = (lowpass, highpass);
 
-        let results = parallel_wavelet_filter_bank(&signal, &wavelet_filters, 3, None).unwrap();
+        let results = parallel_wavelet_filter_bank(&signal, &wavelet_filters, 3, None)
+            .expect("Operation failed");
         assert_eq!(results.len(), 3); // 3 levels of decomposition
 
         // Check that each level has approximation and detail coefficients
@@ -390,7 +393,8 @@ mod tests {
         // Create simple polyphase filters
         let polyphase_filters = vec![vec![0.5, 0.3], vec![0.3, 0.5]];
 
-        let result = parallel_polyphase_filter(&signal, &polyphase_filters, 2, None).unwrap();
+        let result = parallel_polyphase_filter(&signal, &polyphase_filters, 2, None)
+            .expect("Operation failed");
         assert_eq!(result.len(), signal.len() / 2);
     }
 }

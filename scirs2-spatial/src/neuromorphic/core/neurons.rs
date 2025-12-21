@@ -481,7 +481,7 @@ mod tests {
         let neuron1 = SpikingNeuron::new(vec![0.0, 0.0]);
         let neuron2 = SpikingNeuron::new(vec![3.0, 4.0]);
 
-        let distance = neuron1.distance_to(&neuron2).unwrap();
+        let distance = neuron1.distance_to(&neuron2).expect("Operation failed");
         assert!((distance - 5.0).abs() < 1e-10);
 
         // Test mismatched dimensions
@@ -490,7 +490,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - assertion failed: neuron.threshold() < initial_threshold at line 503"]
     fn test_threshold_adaptation() {
         let mut neuron = SpikingNeuron::new(vec![0.0, 0.0]);
         let initial_threshold = neuron.threshold();

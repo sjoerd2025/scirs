@@ -6,24 +6,23 @@
 
 SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust, providing SciPy-compatible APIs while leveraging Rust's performance, safety, and concurrency features. The project aims to provide a complete ecosystem for scientific computing, data analysis, and machine learning in Rust.
 
-## 🚀 Release Status: v0.1.0-rc.3
+## 🚀 Release Status: v0.1.0-rc.4
 
-**Release Candidate 3** - Python Integration & Performance Enhancements! (This is the final Release Candidate)
+**Release Candidate 4** - Documentation & Stability Enhancements! (Final RC before 0.1.0 stable)
 
-- ✅ **Python Bindings**: scirs2-python development with PyO3 integration
-- ✅ **BLAS/LAPACK Optimizations**: Enhanced linear algebra performance
-- ✅ **SIMD Library Expansion**: Transcendental functions & integer exponentiation
-- ✅ **CUDA Improvements**: Enhanced GPU acceleration capabilities
-- ✅ **Full Test Coverage**: 9,300+ tests passing
-- 📅 **Release Date**: December 17, 2025
+- ✅ **Comprehensive Documentation**: Complete revision of all major documentation files
+- ✅ **Version Synchronization**: All version references updated to rc.4
+- ✅ **Developer Experience**: Enhanced build and test documentation
+- ✅ **Quality Assurance**: 11,400+ tests passing, zero warnings
+- ✅ **Production Ready**: Final preparations for stable 0.1.0 release
+- 📅 **Release Date**: December 21, 2025
 
-**What's New in rc.3**:
-- scirs2-python: Python bindings for seamless PyO3 integration
-- scirs2-numpy: Enhanced ndarray 0.17 compatibility layer
-- SIMD transcendental & normalization library (Phases 25-80)
-- BLAS/LAPACK optimizations for linear algebra performance
-- CUDA backend improvements for GPU acceleration
-- Test consistency improvements and benchmark enhancements
+**What's New in rc.4**:
+- Comprehensive documentation updates (README, TODO, CLAUDE.md, lib.rs)
+- Version synchronization across all workspace members
+- Enhanced development workflow documentation
+- Improved troubleshooting and dependency guidelines
+- Final quality checks before stable release
 
 See [SCIRS2_POLICY.md](SCIRS2_POLICY.md) for architectural details and [CHANGELOG.md](CHANGELOG.md) for complete details.
 
@@ -67,7 +66,7 @@ See [SCIRS2_POLICY.md](SCIRS2_POLICY.md) for architectural details and [CHANGELO
 
 ## Project Scale
 
-This project now contains **over 2 million source lines of code** and runs **9,800+ tests** across all modules (including previous scirs2-optim, currently another project), demonstrating the comprehensive nature of the SciRS2 ecosystem.
+This project now contains **over 2 million source lines of code** and runs **11,400+ tests** across all modules (including previous scirs2-optim, currently another project), demonstrating the comprehensive nature of the SciRS2 ecosystem.
 
 ## Project Goals
 
@@ -302,45 +301,38 @@ SciRS2 leverages the Rust ecosystem:
 - `image`: Image processing utilities
 - `petgraph`: Graph algorithms and data structures
 
-## What's New in v0.1.0-rc.3 (Released December 17, 2025)
+## What's New in v0.1.0-rc.4 (Released December 21, 2025)
 
 ### Major Enhancements
 
-#### Python Integration (scirs2-python)
-Python bindings for seamless integration with Python ecosystem:
-- ✅ **PyO3 Integration**: Native Python bindings for all SciRS2 modules
-- ✅ **NumPy Compatibility**: scirs2-numpy provides ndarray 0.17 compatibility layer
-- ✅ **Zero-Copy Operations**: Efficient data sharing between Rust and Python
-- ✅ **Type Safety**: Compile-time guarantees with Python's dynamic typing
-- ✅ **PyPI Ready**: Packaging infrastructure for distribution
+#### Documentation Excellence
+Comprehensive documentation overhaul for production readiness:
+- ✅ **README Updates**: Complete revision with RC.4 status and features
+- ✅ **TODO Synchronization**: Development roadmap aligned with current status
+- ✅ **CLAUDE.md Enhancement**: Updated development guidelines and best practices
+- ✅ **Module Documentation**: Refreshed lib.rs documentation across all crates
+- ✅ **Cross-References**: Fixed and verified all inter-document links
 
-#### Advanced SIMD Library (Phases 25-80)
-Ultra-optimized SIMD operations achieving 10-100x performance improvements:
-- ✅ **Transcendental Functions**: SIMD-accelerated exp, log, sin, cos, tan operations
-- ✅ **Normalization Operations**: Batch normalization, layer normalization with SIMD
-- ✅ **Integer Exponentiation**: SIMD-accelerated integer power operations (Phase 25)
-- ✅ **Bandwidth Saturation**: TLB-optimized implementations for maximum throughput
-- ✅ **Cache-Line Aware**: Optimized for modern CPU cache hierarchies
+#### Build System & Version Management
+Streamlined version control and build processes:
+- ✅ **Version Consistency**: All references updated to 0.1.0-rc.4
+- ✅ **Workspace Alignment**: Synchronized all workspace members
+- ✅ **Dependency Documentation**: Enhanced dependency management guidelines
+- ✅ **Example Updates**: All examples verified with current API
 
-#### BLAS/LAPACK Optimizations
-Enhanced linear algebra performance with platform-optimized backends:
-- ✅ **Platform-Specific Tuning**: Optimized for macOS Accelerate and Linux OpenBLAS
-- ✅ **Batch Operations**: Improved performance for batch matrix operations
-- ✅ **Memory Efficiency**: Reduced allocations in hot paths
-- ✅ **Numerical Stability**: Enhanced algorithms for better precision
+#### Developer Experience
+Enhanced workflows and troubleshooting support:
+- ✅ **Build Documentation**: Clarified cargo nextest usage and workflows
+- ✅ **Troubleshooting Guides**: Expanded platform-specific guidance
+- ✅ **API Documentation**: Improved inline documentation quality
+- ✅ **Getting Started**: Enhanced onboarding materials
 
-#### CUDA Backend Improvements
-Enhanced GPU acceleration capabilities:
-- ✅ **Kernel Optimizations**: Improved CUDA kernel performance
-- ✅ **Memory Management**: Better GPU memory allocation strategies
-- ✅ **Multi-GPU Support**: Enhanced support for multi-GPU configurations
-- ✅ **Async Operations**: Improved asynchronous execution patterns
-
-#### Quality & Testing Improvements
-- ✅ **Test Consistency**: Refactored tests for better maintainability
-- ✅ **Benchmark Enhancements**: Improved softmax and other benchmark implementations
-- ✅ **9,300+ Tests Passing**: Comprehensive test coverage maintained
-- ✅ **Zero Warnings Build**: Clean compilation across entire workspace
+#### Quality Assurance
+Final validation for stable release:
+- ✅ **Test Coverage**: 11,400+ tests passing across all modules
+- ✅ **Zero Warnings**: Clean compilation with full clippy compliance
+- ✅ **Platform Testing**: Verified on Linux, macOS, and Windows
+- ✅ **Documentation Build**: All docs.rs builds successful
 
 ## Installation and Usage
 
@@ -420,7 +412,7 @@ SciRS2 and all its modules are available on [crates.io](https://crates.io/crates
 ```toml
 # Add the main integration crate for all functionality
 [dependencies]
-scirs2 = "0.1.0-rc.3"
+scirs2 = "0.1.0-rc.4"
 ```
 
 Or include only the specific modules you need:
@@ -428,16 +420,16 @@ Or include only the specific modules you need:
 ```toml
 [dependencies]
 # Core utilities
-scirs2-core = "0.1.0-rc.3"
+scirs2-core = "0.1.0-rc.4"
 
 # Scientific computing modules
-scirs2-linalg = "0.1.0-rc.3"
-scirs2-stats = "0.1.0-rc.3"
-scirs2-optimize = "0.1.0-rc.3"
+scirs2-linalg = "0.1.0-rc.4"
+scirs2-stats = "0.1.0-rc.4"
+scirs2-optimize = "0.1.0-rc.4"
 
 # AI/ML modules
-scirs2-neural = "0.1.0-rc.3"
-scirs2-autograd = "0.1.0-rc.3"
+scirs2-neural = "0.1.0-rc.4"
+scirs2-autograd = "0.1.0-rc.4"
 # Note: For ML optimization algorithms, use the independent OptiRS project
 ```
 
@@ -555,15 +547,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Platform Compatibility
 
-SciRS2 v0.1.0-rc.3 has been tested on the following platforms:
+SciRS2 v0.1.0-rc.4 has been tested on the following platforms:
 
 ### ✅ Fully Supported Platforms
 
 | Platform | Architecture | Test Status | Notes |
 |----------|-------------|-------------|-------|
-| **macOS** | Apple M3 (ARM64) | ✅ All tests passing (9,300+ tests) | macOS 15.6.1, 24GB RAM |
-| **Linux** | x86_64 | ✅ All tests passing (9,300+ tests) | With required dependencies |
-| **Linux + CUDA** | x86_64 + NVIDIA GPU | ✅ All tests passing (9,300+ tests) | CUDA support enabled |
+| **macOS** | Apple M3 (ARM64) | ✅ All tests passing (11,400+ tests) | macOS 15.6.1, 24GB RAM |
+| **Linux** | x86_64 | ✅ All tests passing (11,400+ tests) | With required dependencies |
+| **Linux + CUDA** | x86_64 + NVIDIA GPU | ✅ All tests passing (11,400+ tests) | CUDA support enabled |
 
 ### ⚠️ Partially Supported Platforms
 
@@ -578,7 +570,7 @@ To run the full test suite with all features:
 ```bash
 # Install required system libraries (OpenBLAS, LAPACK, etc.)
 # Set necessary environment variables
-cargo nextest run --nff --all-features  # 9,300+ tests
+cargo nextest run --nff --all-features  # 11,400+ tests
 ```
 
 #### Windows
@@ -603,7 +595,7 @@ cargo install cargo-nextest
 cargo nextest run --nff --all-features
 ```
 
-## Current Status (v0.1.0-rc.3 - Released December 17, 2025)
+## Current Status (v0.1.0-rc.4 - Released December 21, 2025)
 
 ### 🎉 Key Features
 
@@ -714,10 +706,10 @@ All SciRS2 modules are available on crates.io. Add the modules you need to your 
 
 ```toml
 [dependencies]
-scirs2 = "0.1.0-rc.3"  # Core library with all modules
+scirs2 = "0.1.0-rc.4"  # Core library with all modules
 # Or individual modules:
-scirs2-linalg = "0.1.0-rc.3"  # Linear algebra
-scirs2-stats = "0.1.0-rc.3"   # Statistics
+scirs2-linalg = "0.1.0-rc.4"  # Linear algebra
+scirs2-stats = "0.1.0-rc.4"   # Statistics
 # ... and more
 ```
 
@@ -780,32 +772,31 @@ This policy ensures ecosystem consistency and enables better optimization across
 
 ## Release Notes
 
-### 🚀 v0.1.0-rc.3 (December 17, 2025) - Release Candidate 3
+### 🚀 v0.1.0-rc.4 (December 21, 2025) - Release Candidate 4
 
-This release focuses on Python integration, advanced SIMD optimizations, and performance enhancements:
+This release focuses on documentation excellence, version synchronization, and final preparations for the stable 0.1.0 release:
 
 #### ✅ Major Improvements:
-- **Python Bindings**: scirs2-python with PyO3 integration for seamless Python interop
-- **scirs2-numpy**: Enhanced ndarray 0.17 compatibility layer
-- **SIMD Expansion**: Phases 25-80 implementation (transcendental functions, normalization)
-- **BLAS/LAPACK**: Platform-optimized linear algebra performance
-- **CUDA**: Enhanced GPU acceleration with improved kernel performance
+- **Documentation**: Comprehensive revision of README, TODO, CLAUDE.md, and lib.rs files
+- **Version Sync**: All version references updated to 0.1.0-rc.4 across workspace
+- **Developer Experience**: Enhanced build workflows and troubleshooting guides
+- **Quality Assurance**: Final validation with 11,400+ tests passing
 
 #### 🏗️ Technical Enhancements:
-- **Performance**: 10-100x improvements with ultra-optimized SIMD operations
-- **Testing**: Test consistency refactoring and benchmark improvements
-- **Quality**: 9,300+ tests passing, zero warnings build maintained
+- **Build System**: Streamlined version management and workspace alignment
+- **Documentation Quality**: Improved inline docs and cross-references
+- **Platform Testing**: Verified builds and tests on all supported platforms
 
 #### 📊 Status:
-- ✅ **Build System**: All modules compile cleanly with zero warnings
-- ✅ **Test Suite**: 9,300+ tests passing across all modules
-- ✅ **Python Support**: scirs2-python ready for PyPI distribution
-- ✅ **Platform Support**: Verified on Linux, macOS, and Windows
+- ✅ **Build System**: Zero warnings, full clippy compliance
+- ✅ **Test Suite**: 11,400+ tests passing across all modules
+- ✅ **Documentation**: All docs.rs builds successful
+- ✅ **Production Ready**: Final RC before stable 0.1.0 release
 
 **Migration:**
-- No breaking API changes from rc.2
-- Python bindings available through scirs2-python package
-- See [CHANGELOG.md](CHANGELOG.md) and [RELEASE_NOTES.md](RELEASE_NOTES.md) for complete details
+- No breaking API changes from rc.3
+- Documentation improvements enhance developer experience
+- See [CHANGELOG.md](CHANGELOG.md) for complete details
 
 ### Previous Releases
 
@@ -823,9 +814,9 @@ This release focuses on Python integration, advanced SIMD optimizations, and per
 
 ## Known Limitations (Release Candidate)
 
-This is the third Release Candidate (0.1.0-rc.3) of SciRS2, released December 17, 2025. While the core functionality is stable and well-tested, there are some known limitations:
+This is the fourth Release Candidate (0.1.0-rc.4) of SciRS2, released December 21, 2025. While the core functionality is stable and well-tested, there are some known limitations:
 
-### Python Bindings (RESOLVED in rc.3)
+### Python Bindings (RESOLVED in rc.3, maintained in rc.4)
 
 **Status**: ✅ **RESOLVED** - scirs2-python provides full Python integration
 
@@ -877,7 +868,7 @@ The following features are planned for future releases:
 - Specialized hardware support (FPGA, ASIC) uses mock implementations when hardware is not present
 
 ### Test Coverage
-- Total tests: 9,300+ across all modules
+- Total tests: 11,400+ across all modules
 - Regular CI tests: All passing ✅
 - Performance tests: Included in full test suite (run with `--all-features`)
 

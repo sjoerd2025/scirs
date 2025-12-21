@@ -34,7 +34,7 @@ use scirs2_core::numeric::Complex64;
 ///
 /// // Remove 60 Hz interference from signal sampled at 1000 Hz
 /// // Normalized frequency = 60 / (1000/2) = 0.12
-/// let (b, a) = notch_filter(0.12, 35.0).unwrap();
+/// let (b, a) = notch_filter(0.12, 35.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn notch_filter(notch_freq: f64, qualityfactor: f64) -> SignalResult<FilterCoefficients> {
@@ -92,10 +92,10 @@ pub fn notch_filter(notch_freq: f64, qualityfactor: f64) -> SignalResult<FilterC
 /// use scirs2_signal::filter::specialized::comb_filter;
 ///
 /// // Create echo effect with 100-sample delay
-/// let (b, a) = comb_filter(100, 0.5, 1.0).unwrap();
+/// let (b, a) = comb_filter(100, 0.5, 1.0).expect("Operation failed");
 ///
 /// // Create notch comb for periodic noise removal
-/// let (b, a) = comb_filter(50, -0.8, 1.0).unwrap();
+/// let (b, a) = comb_filter(50, -0.8, 1.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn comb_filter(
@@ -158,7 +158,7 @@ pub fn comb_filter(
 /// use scirs2_signal::filter::specialized::allpass_filter;
 ///
 /// // Create allpass filter with 90-degree phase shift around 0.2 normalized frequency
-/// let (b, a) = allpass_filter(0.2, 0.9).unwrap();
+/// let (b, a) = allpass_filter(0.2, 0.9).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn allpass_filter(pole_frequency: f64, poleradius: f64) -> SignalResult<FilterCoefficients> {
@@ -251,7 +251,7 @@ pub fn allpass_second_order(
 /// use scirs2_signal::filter::specialized::hilbert_filter;
 ///
 /// // Design 65-tap Hilbert transformer
-/// let h = hilbert_filter(65).unwrap();
+/// let h = hilbert_filter(65).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn hilbert_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
@@ -315,7 +315,7 @@ pub fn hilbert_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
 /// use scirs2_signal::filter::specialized::differentiator_filter;
 ///
 /// // Design 21-tap differentiator
-/// let h = differentiator_filter(21).unwrap();
+/// let h = differentiator_filter(21).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn differentiator_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
@@ -373,7 +373,7 @@ pub fn differentiator_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
 /// use scirs2_signal::filter::specialized::integrator_filter;
 ///
 /// // Design 21-tap integrator
-/// let h = integrator_filter(21).unwrap();
+/// let h = integrator_filter(21).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn integrator_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
@@ -412,7 +412,7 @@ pub fn integrator_filter(numtaps: usize) -> SignalResult<Vec<f64>> {
 /// use scirs2_signal::filter::specialized::fractional_delay_filter;
 ///
 /// // Design filter with 2.5 sample delay
-/// let h = fractional_delay_filter(2.5, 21).unwrap();
+/// let h = fractional_delay_filter(2.5, 21).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn fractional_delay_filter(_delay: f64, numtaps: usize) -> SignalResult<Vec<f64>> {
@@ -473,7 +473,7 @@ pub fn fractional_delay_filter(_delay: f64, numtaps: usize) -> SignalResult<Vec<
 /// use scirs2_signal::filter::specialized::dc_blocker;
 ///
 /// // Design DC blocker with very low cutoff
-/// let (b, a) = dc_blocker(0.995).unwrap();
+/// let (b, a) = dc_blocker(0.995).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn dc_blocker(polelocation: f64) -> SignalResult<FilterCoefficients> {
@@ -511,7 +511,7 @@ pub fn dc_blocker(polelocation: f64) -> SignalResult<FilterCoefficients> {
 /// use scirs2_signal::filter::specialized::peak_filter;
 ///
 /// // Boost 6 dB at 0.3 normalized frequency with 1 octave bandwidth
-/// let (b, a) = peak_filter(0.3, 6.0, 1.0).unwrap();
+/// let (b, a) = peak_filter(0.3, 6.0, 1.0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn peak_filter(
@@ -551,5 +551,5 @@ pub fn peak_filter(
 
 #[allow(dead_code)]
 fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(num, den, None).unwrap()
+    TransferFunction::new(num, den, None).expect("Operation failed")
 }

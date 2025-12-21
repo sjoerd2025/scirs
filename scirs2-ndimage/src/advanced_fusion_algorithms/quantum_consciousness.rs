@@ -448,7 +448,10 @@ fn analyze_consciousnessstate(
 
     // Calculate attention strength from network topology
     let attention_strength = {
-        let topology = advancedstate.network_topology.read().unwrap();
+        let topology = advancedstate
+            .network_topology
+            .read()
+            .expect("Operation failed");
         topology.global_properties.coherence
     };
 

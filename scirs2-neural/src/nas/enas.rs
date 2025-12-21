@@ -214,7 +214,7 @@ impl SuperNetwork {
             let layer_input = if i == 0 {
                 input.to_owned()
                 // Check for skip connections
-                let mut sum = activations.get(&(i - 1)).unwrap().clone();
+                let mut sum = activations.get(&(i - 1)).expect("Operation failed").clone();
                 for (j, k) in &architecture.connections {
                     if *k == i {
                         if let Some(skip_input) = activations.get(j) {
@@ -240,7 +240,7 @@ impl SuperNetwork {
             .find(|c| &c.layer_type == layer_type)
             .ok_or_else(|| NeuralError::InvalidArgument("Layer config not found".to_string()))?;
         // Get shared weights
-        let weights = self.sharedweights.read().unwrap();
+        let weights = self.sharedweights.read().expect("Operation failed");
         let weight = weights
             .get(&config.weight_key)
             .ok_or_else(|| NeuralError::InvalidArgument("Shared weights not found".to_string()))?;
@@ -257,7 +257,7 @@ impl SuperNetwork {
             _ => Ok(output),
     /// Update shared weights
     pub fn update_weights(&mut self, gradients: &HashMap<String, Array2<f32>>) -> Result<()> {
-        let mut weights = self.sharedweights.write().unwrap();
+        let mut weights = self.sharedweights.write().expect("Operation failed");
         for (key, grad) in gradients {
             if let Some(weight) = weights.get_mut(key) {
                 // Simple SGD update
@@ -388,8 +388,8 @@ fn softmax(logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
     let scaled_logits = logits / temperature;
     let max_logit = scaled_logits
         .iter()
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let exp_logits = (scaled_logits - max_logit).mapv(f32::exp);
     let sum = exp_logits.sum();
     exp_logits / sum
@@ -428,16 +428,16 @@ mod tests {
     #[test]
     fn test_enas_controller() {
         let config = SearchSpaceConfig::default();
-        let search_space = SearchSpace::new(config).unwrap();
-        let controller = ENASController::new(100, 10, search_space, 32, 1.0).unwrap();
-        let architectures = controller.sample_architecture(5).unwrap();
+        let search_space = SearchSpace::new(config).expect("Operation failed");
+        let controller = ENASController::new(100, 10, search_space, 32, 1.0).expect("Operation failed");
+        let architectures = controller.sample_architecture(5).expect("Operation failed");
         assert_eq!(architectures.len(), 5);
         for arch in &architectures {
             assert!(!arch.layers.is_empty());
     fn test_super_network() {
-        let super_net = SuperNetwork::new(&search_space).unwrap();
+        let super_net = SuperNetwork::new(&search_space).expect("Operation failed");
         // Test with dummy architecture
-        let arch = search_space.sample().unwrap();
+        let arch = search_space.sample().expect("Operation failed");
         let input = Array2::ones((32, 512)); // Batch size 32, feature dim 512
         // Would test execution but needs proper weight initialization
     fn test_softmax() {

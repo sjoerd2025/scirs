@@ -6,7 +6,7 @@ use ::ndarray::Array1;
 #[test]
 fn test_validator_creation() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Test basic properties
     assert!(!validator.config.strict_mode);
@@ -16,7 +16,7 @@ fn test_validator_creation() {
 #[test]
 fn test_array_validation() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config.clone()).unwrap();
+    let validator = Validator::new(config.clone()).expect("Test: operation failed");
     let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
     let constraints = ArrayValidationConstraints::new()
@@ -26,19 +26,19 @@ fn test_array_validation() {
 
     let result = validator
         .validate_ndarray(&array, &constraints, &config)
-        .unwrap();
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 }
 
 #[test]
 fn test_quality_report_generation() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
     let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
     let report = validator
         .generate_quality_report(&array, "test_field")
-        .unwrap();
+        .expect("Test: operation failed");
 
     assert!(report.quality_score > 0.9); // Should be high quality
     assert_eq!(report.metrics.completeness, 1.0); // No missing values
@@ -47,13 +47,13 @@ fn test_quality_report_generation() {
 #[test]
 fn test_cache_management() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Test cache clearing
     assert!(validator.clear_cache().is_ok());
 
     // Test cache stats
-    let (size, hit_rate) = validator.get_cache_stats().unwrap();
+    let (size, hit_rate) = validator.get_cache_stats().expect("Test: operation failed");
     assert_eq!(size, 0); // Should be empty after clearing
     assert_eq!(hit_rate, 0.0); // No hits yet
 }
@@ -61,7 +61,7 @@ fn test_cache_management() {
 #[test]
 fn test_json_validation() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     let schema = ValidationSchema::new()
         .name("test_schema")
@@ -73,7 +73,9 @@ fn test_json_validation() {
         "age": 30
     });
 
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
@@ -81,7 +83,9 @@ fn test_json_validation() {
         // Missing required "age" field
     });
 
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
     assert_eq!(result.errors().len(), 1);
 }
@@ -89,7 +93,7 @@ fn test_json_validation() {
 #[test]
 fn test_allowed_values_constraint() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     let schema = ValidationSchema::new()
         .name("test_schema")
@@ -106,20 +110,24 @@ fn test_allowed_values_constraint() {
     let valid_data = serde_json::json!({
         "status": "active"
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
         "status": "deleted"
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 }
 
 #[test]
 fn test_precision_constraint() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     let schema = ValidationSchema::new()
         .name("test_schema")
@@ -129,20 +137,24 @@ fn test_precision_constraint() {
     let valid_data = serde_json::json!({
         "price": 19.99
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
         "price": 19.999
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 }
 
 #[test]
 fn test_array_size_constraint() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     let schema = ValidationSchema::new()
         .name("test_schema")
@@ -152,20 +164,24 @@ fn test_array_size_constraint() {
     let valid_data = serde_json::json!({
         "tags": ["rust", "programming", "science"]
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
         "tags": ["too", "many", "tags", "here", "six", "seven"]
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 }
 
 #[test]
 fn test_array_elements_constraint() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     let schema = ValidationSchema::new()
         .name("test_schema")
@@ -181,20 +197,24 @@ fn test_array_elements_constraint() {
     let valid_data = serde_json::json!({
         "scores": [85.5, 92.0, 78.3, 95.0]
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
         "scores": [85.5, 92.0, 105.0, 95.0]
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 }
 
 #[test]
 
 fn test_composite_constraint_validation() {
-    let validator = Validator::new(ValidationConfig::default()).unwrap();
+    let validator = Validator::new(ValidationConfig::default()).expect("Test: operation failed");
 
     // Test AND constraint
     let schema = ValidationSchema::new()
@@ -213,13 +233,17 @@ fn test_composite_constraint_validation() {
     let valid_data = serde_json::json!({
         "age": 25.0
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
         "age": -5.0
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     // Test OR constraint
@@ -236,13 +260,17 @@ fn test_composite_constraint_validation() {
     let valid_data = serde_json::json!({
         "status": "active"
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
         "status": "pending"
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     // Test NOT constraint
@@ -256,13 +284,17 @@ fn test_composite_constraint_validation() {
     let valid_data = serde_json::json!({
         "password": "s3cr3t"
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({
         "password": "password123"
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     // Test IF-THEN constraint
@@ -285,14 +317,16 @@ fn test_composite_constraint_validation() {
         "premium": true,
         "limit": 50000.0
     });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 }
 
 #[test]
 
 fn test_edge_case_validations() {
-    let validator = Validator::new(ValidationConfig::default()).unwrap();
+    let validator = Validator::new(ValidationConfig::default()).expect("Test: operation failed");
 
     // Test empty AND constraint
     let schema = ValidationSchema::new()
@@ -300,7 +334,9 @@ fn test_edge_case_validations() {
         .add_constraint("value", Constraint::And(vec![]));
 
     let data = serde_json::json!({ "value": 42.0 });
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid()); // Empty AND should pass
 
     // Test empty OR constraint
@@ -308,7 +344,9 @@ fn test_edge_case_validations() {
         .require_field("value", DataType::Float64)
         .add_constraint("value", Constraint::Or(vec![]));
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid()); // Empty OR currently passes, but could be considered invalid
 
     // Test nested AND/OR combinations
@@ -335,12 +373,16 @@ fn test_edge_case_validations() {
 
     // Value 20 should pass: in range 0-50 AND not in range 25-30
     let valid_data = serde_json::json!({ "score": 20.0 });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     // Value 27 should fail: in range 0-50 BUT also in range 25-30
     let invalid_data = serde_json::json!({ "score": 27.0 });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     // Test IF-THEN-ELSE with field dependencies
@@ -370,28 +412,36 @@ fn test_edge_case_validations() {
     let valid_high = serde_json::json!({
         "value": 5000.0
     });
-    let result = validator.validate(&valid_high, &schema).unwrap();
+    let result = validator
+        .validate(&valid_high, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     // Low value (< 1000) must be in range 0-100
     let valid_low = serde_json::json!({
         "value": 50.0
     });
-    let result = validator.validate(&valid_low, &schema).unwrap();
+    let result = validator
+        .validate(&valid_low, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     // High value out of allowed range (should fail)
     let invalid_high = serde_json::json!({
         "value": 15000.0
     });
-    let result = validator.validate(&invalid_high, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_high, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     // Low value out of allowed range (should fail)
     let invalid_low = serde_json::json!({
         "value": 150.0
     });
-    let result = validator.validate(&invalid_low, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_low, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     // Test multiple NOT constraints
@@ -407,18 +457,22 @@ fn test_edge_case_validations() {
         );
 
     let valid_data = serde_json::json!({ "code": "prod123" });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({ "code": "test123" });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 }
 
 #[test]
 
 fn test_constrainterror_messages() {
-    let validator = Validator::new(ValidationConfig::default()).unwrap();
+    let validator = Validator::new(ValidationConfig::default()).expect("Test: operation failed");
 
     // Test that OR constraint provides meaningful error
     let schema = ValidationSchema::new()
@@ -432,7 +486,9 @@ fn test_constrainterror_messages() {
         );
 
     let invalid_data = serde_json::json!({ "format": "abc123" });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     let errors = result.errors();
@@ -458,7 +514,9 @@ fn test_constrainterror_messages() {
     let invalid_data = serde_json::json!({
         "data": [10.0, 20.0, 150.0] // 150 is out of range
     });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 
     let errors = result.errors();
@@ -468,7 +526,7 @@ fn test_constrainterror_messages() {
 #[test]
 
 fn test_performance_edge_cases() {
-    let validator = Validator::new(ValidationConfig::default()).unwrap();
+    let validator = Validator::new(ValidationConfig::default()).expect("Test: operation failed");
 
     // Test deeply nested constraints
     let mut constraint = Constraint::Range {
@@ -484,7 +542,9 @@ fn test_performance_edge_cases() {
         .add_constraint("value", constraint);
 
     let data = serde_json::json!({ "value": 50.0 });
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     // Test large OR constraint
@@ -497,10 +557,14 @@ fn test_performance_edge_cases() {
         .add_constraint("text", Constraint::Or(many_patterns));
 
     let valid_data = serde_json::json!({ "text": "pattern42" });
-    let result = validator.validate(&valid_data, &schema).unwrap();
+    let result = validator
+        .validate(&valid_data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid());
 
     let invalid_data = serde_json::json!({ "text": "no-match" });
-    let result = validator.validate(&invalid_data, &schema).unwrap();
+    let result = validator
+        .validate(&invalid_data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid());
 }

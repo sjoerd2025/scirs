@@ -185,7 +185,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
         let mut times: Vec<f64> = (0..n_samples)
             .map(|_| rng.gen_range(0.0..total_duration))
             .collect();
-        times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Generate signal with true frequency
         let signal: Vec<f64> = times
@@ -200,7 +200,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
         match lombscargle(
             &times,
             &signal,
-            Some(frequencies.as_slice().unwrap()),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -214,9 +214,9 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
                 let peak_idx = power_vals
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(i, _)| i)
-                    .unwrap();
+                    .expect("Operation failed");
 
                 let detected_freq = frequencies[peak_idx];
                 let freq_error = ((detected_freq - true_freq) / true_freq).abs();
@@ -266,7 +266,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
             times.push(cluster_center + rng.gen_range(-2.0..2.0));
         }
     }
-    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let signal: Vec<f64> = times
         .iter()
@@ -277,7 +277,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     let (_freqs, power) = lombscargle(
         &times,
         &signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -291,9 +291,9 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     let peak_idx = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let detected_freq = frequencies[peak_idx];
     let clustering_tolerance = 1.0 - ((detected_freq - true_freq) / true_freq).abs();
@@ -319,7 +319,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     let (_freqs, power_gapped) = lombscargle(
         &gapped_times,
         &gapped_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -332,9 +332,9 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     let peak_idx_gapped = power_gapped
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let detected_freq_gapped = frequencies[peak_idx_gapped];
     let gap_handling_quality = 1.0 - ((detected_freq_gapped - true_freq) / true_freq).abs();
@@ -348,7 +348,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
             regular_time + rng.gen_range(-jitter_magnitude..jitter_magnitude)
         })
         .collect();
-    irregular_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    irregular_times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let irregular_signal: Vec<f64> = irregular_times
         .iter()
@@ -358,7 +358,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     let (_freqs, power_irregular) = lombscargle(
         &irregular_times,
         &irregular_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -371,9 +371,9 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     let peak_idx_irregular = power_irregular
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let detected_freq_irregular = frequencies[peak_idx_irregular];
     let irregular_spacing_accuracy =
@@ -439,7 +439,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
             match lombscargle(
                 &times.to_vec(),
                 &noisy_signal,
-                Some(frequencies.as_slice().unwrap()),
+                Some(frequencies.as_slice().expect("Operation failed")),
                 None,
                 None,
                 None,
@@ -452,9 +452,9 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
                     let peak_idx = power_vals
                         .iter()
                         .enumerate()
-                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                         .map(|(i, _)| i)
-                        .unwrap();
+                        .expect("Operation failed");
 
                     let detected_freq = frequencies[peak_idx];
                     let freq_error = ((detected_freq - true_freq) / true_freq).abs();
@@ -494,7 +494,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
         if let Ok(power) = lombscargle(
             &times.to_vec(),
             &pure_noise,
-            Some(frequencies.as_slice().unwrap()),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -555,7 +555,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
     let power_nyquist = lombscargle(
         &times.to_vec(),
         &nyquist_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -574,10 +574,10 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
             (a - nyquist_freq)
                 .abs()
                 .partial_cmp(&(b - nyquist_freq).abs())
-                .unwrap()
+                .expect("Operation failed")
         })
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let (_freqs, power_vals) = power_nyquist;
     let nyquist_power = power_vals[nyquist_idx];
@@ -594,7 +594,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
     let power_aliased = lombscargle(
         &times.to_vec(),
         &aliased_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -614,10 +614,10 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
             (a - expected_alias_freq)
                 .abs()
                 .partial_cmp(&(b - expected_alias_freq).abs())
-                .unwrap()
+                .expect("Operation failed")
         })
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let (_freqs, power_vals) = power_aliased;
     let alias_power = power_vals[alias_idx];
@@ -639,7 +639,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
         if let Ok(power_folding) = lombscargle(
             &times.to_vec(),
             &folding_signal,
-            Some(frequencies.as_slice().unwrap()),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -651,9 +651,9 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
             let peak_idx = power_vals
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(i, _)| i)
-                .unwrap();
+                .expect("Operation failed");
 
             let detected_freq = frequencies[peak_idx];
 
@@ -709,7 +709,7 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
         match lombscargle(
             &times.to_vec(),
             &tiny_signal,
-            Some(frequencies.as_slice().unwrap()),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -722,9 +722,9 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
                 let peak_idx = power_vals
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(i, _)| i)
-                    .unwrap();
+                    .expect("Operation failed");
 
                 let detected_freq = frequencies[peak_idx];
                 let freq_error = ((detected_freq - true_freq) / true_freq).abs();
@@ -753,7 +753,7 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
         match lombscargle(
             &times.to_vec(),
             &extreme_signal,
-            Some(frequencies.as_slice().unwrap()),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -797,7 +797,7 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
         match lombscargle(
             &rounded_times,
             &rounded_signal,
-            Some(frequencies.as_slice().unwrap()),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -810,9 +810,9 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
                 let peak_idx = power_vals
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(i, _)| i)
-                    .unwrap();
+                    .expect("Operation failed");
 
                 let detected_freq = frequencies[peak_idx];
                 let freq_error = ((detected_freq - true_freq) / true_freq).abs();
@@ -865,7 +865,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
     let (_freqs, power) = lombscargle(
         &times.to_vec(),
         &multi_scale_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -918,7 +918,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
     let power_interfering = lombscargle(
         &times.to_vec(),
         &interfering_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -978,7 +978,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
     let power_bandwidth = lombscargle(
         &times.to_vec(),
         &bandwidth_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -997,10 +997,10 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
             (a - narrow_freq)
                 .abs()
                 .partial_cmp(&(b - narrow_freq).abs())
-                .unwrap()
+                .expect("Operation failed")
         })
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let broad_start_idx = frequencies
         .iter()
@@ -1009,10 +1009,10 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
             (a - (broad_center - broad_width))
                 .abs()
                 .partial_cmp(&(b - (broad_center - broad_width)).abs())
-                .unwrap()
+                .expect("Operation failed")
         })
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let broad_end_idx = frequencies
         .iter()
@@ -1021,10 +1021,10 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
             (a - (broad_center + broad_width))
                 .abs()
                 .partial_cmp(&(b - (broad_center + broad_width)).abs())
-                .unwrap()
+                .expect("Operation failed")
         })
         .map(|(i, _)| i)
-        .unwrap();
+        .expect("Operation failed");
 
     let (_freqs, power_vals) = power_bandwidth;
     let narrow_power = power_vals[narrow_idx];
@@ -1067,7 +1067,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
         let _power = lombscargle(
             &times,
             &signal,
-            Some(frequencies.as_slice().unwrap()),
+            Some(frequencies.as_slice().expect("Operation failed")),
             None,
             None,
             None,
@@ -1119,7 +1119,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
     if lombscargle(
         &large_times,
         &large_signal,
-        Some(frequencies.as_slice().unwrap()),
+        Some(frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -1143,7 +1143,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
     if lombscargle(
         &times,
         &signal,
-        Some(dense_frequencies.as_slice().unwrap()),
+        Some(dense_frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,
@@ -1164,7 +1164,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
     if lombscargle(
         &constant_times,
         &constant_signal,
-        Some(test_frequencies.as_slice().unwrap()),
+        Some(test_frequencies.as_slice().expect("Operation failed")),
         None,
         None,
         None,

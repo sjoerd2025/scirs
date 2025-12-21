@@ -36,7 +36,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// ```
     /// use scirs2_stats::distributions::uniform::Uniform;
     ///
-    /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
+    /// let unif = Uniform::new(0.0f64, 1.0).expect("Operation failed");
     /// ```
     pub fn new(low: F, high: F) -> StatsResult<Self> {
         if low >= high {
@@ -46,8 +46,8 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
         }
 
         // Convert to f64 for rand_distr
-        let low_f64 = <f64 as NumCast>::from(low).unwrap();
-        let high_f64 = <f64 as NumCast>::from(high).unwrap();
+        let low_f64 = <f64 as NumCast>::from(low).expect("Operation failed");
+        let high_f64 = <f64 as NumCast>::from(high).expect("Operation failed");
 
         match RandUniform::new_inclusive(low_f64, high_f64) {
             Ok(rand_distr) => Ok(Uniform {
@@ -76,7 +76,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// ```
     /// use scirs2_stats::distributions::uniform::Uniform;
     ///
-    /// let unif = Uniform::new(0.0f64, 2.0).unwrap();
+    /// let unif = Uniform::new(0.0f64, 2.0).expect("Operation failed");
     /// let pdf_at_one = unif.pdf(1.0);
     /// assert!((pdf_at_one - 0.5).abs() < 1e-10);
     /// ```
@@ -104,7 +104,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// ```
     /// use scirs2_stats::distributions::uniform::Uniform;
     ///
-    /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
+    /// let unif = Uniform::new(0.0f64, 1.0).expect("Operation failed");
     /// let cdf_at_half = unif.cdf(0.5);
     /// assert!((cdf_at_half - 0.5).abs() < 1e-10);
     /// ```
@@ -133,8 +133,8 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// ```
     /// use scirs2_stats::distributions::uniform::Uniform;
     ///
-    /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
-    /// let x = unif.ppf(0.75).unwrap();
+    /// let unif = Uniform::new(0.0f64, 1.0).expect("Operation failed");
+    /// let x = unif.ppf(0.75).expect("Operation failed");
     /// assert!((x - 0.75).abs() < 1e-10);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -163,8 +163,8 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// ```
     /// use scirs2_stats::distributions::uniform::Uniform;
     ///
-    /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
-    /// let samples = unif.rvs(1000).unwrap();
+    /// let unif = Uniform::new(0.0f64, 1.0).expect("Operation failed");
+    /// let samples = unif.rvs(1000).expect("Operation failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
@@ -173,7 +173,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
 
         for _ in 0..size {
             let sample = self.rand_distr.sample(&mut rng);
-            samples.push(F::from(sample).unwrap());
+            samples.push(F::from(sample).expect("Failed to convert to float"));
         }
 
         Ok(Array1::from(samples))
@@ -183,12 +183,12 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
 // Implement the Distribution trait for Uniform
 impl<F: Float + NumCast + std::fmt::Display> Distribution<F> for Uniform<F> {
     fn mean(&self) -> F {
-        (self.low + self.high) / F::from(2.0).unwrap()
+        (self.low + self.high) / F::from(2.0).expect("Failed to convert constant to float")
     }
 
     fn var(&self) -> F {
         let range = self.high - self.low;
-        range * range / F::from(12.0).unwrap()
+        range * range / F::from(12.0).expect("Failed to convert constant to float")
     }
 
     fn std(&self) -> F {
@@ -235,12 +235,12 @@ mod tests {
     #[test]
     fn test_uniform_creation() {
         // Standard uniform
-        let unif = Uniform::new(0.0, 1.0).unwrap();
+        let unif = Uniform::new(0.0, 1.0).expect("Operation failed");
         assert_eq!(unif.low, 0.0);
         assert_eq!(unif.high, 1.0);
 
         // Custom uniform
-        let custom = Uniform::new(-1.0, 1.0).unwrap();
+        let custom = Uniform::new(-1.0, 1.0).expect("Operation failed");
         assert_eq!(custom.low, -1.0);
         assert_eq!(custom.high, 1.0);
 
@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn test_uniform_pdf() {
         // Standard uniform PDF values
-        let unif = Uniform::new(0.0, 1.0).unwrap();
+        let unif = Uniform::new(0.0, 1.0).expect("Operation failed");
 
         // PDF at x in range
         let pdf_in_range = unif.pdf(0.5);
@@ -271,7 +271,7 @@ mod tests {
         assert_relative_eq!(pdf_outside, 0.0, epsilon = 1e-10);
 
         // Non-unit range
-        let unif2 = Uniform::new(0.0, 2.0).unwrap();
+        let unif2 = Uniform::new(0.0, 2.0).expect("Operation failed");
         let pdf2 = unif2.pdf(1.0);
         assert_relative_eq!(pdf2, 0.5, epsilon = 1e-10);
     }
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn test_uniform_cdf() {
         // Standard uniform CDF values
-        let unif = Uniform::new(0.0, 1.0).unwrap();
+        let unif = Uniform::new(0.0, 1.0).expect("Operation failed");
 
         // CDF at midpoint
         let cdf_mid = unif.cdf(0.5);
@@ -301,7 +301,7 @@ mod tests {
         assert_relative_eq!(cdf_above, 1.0, epsilon = 1e-10);
 
         // Non-unit range
-        let unif2 = Uniform::new(-1.0, 1.0).unwrap();
+        let unif2 = Uniform::new(-1.0, 1.0).expect("Operation failed");
         let cdf2 = unif2.cdf(0.0);
         assert_relative_eq!(cdf2, 0.5, epsilon = 1e-10);
     }
@@ -309,18 +309,18 @@ mod tests {
     #[test]
     fn test_uniform_ppf() {
         // Standard uniform quantiles
-        let unif = Uniform::new(0.0, 1.0).unwrap();
+        let unif = Uniform::new(0.0, 1.0).expect("Operation failed");
 
         // Median (50th percentile)
-        let median = unif.ppf(0.5).unwrap();
+        let median = unif.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(median, 0.5, epsilon = 1e-10);
 
         // 75th percentile
-        let p75 = unif.ppf(0.75).unwrap();
+        let p75 = unif.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(p75, 0.75, epsilon = 1e-10);
 
         // 25th percentile
-        let p25 = unif.ppf(0.25).unwrap();
+        let p25 = unif.ppf(0.25).expect("Operation failed");
         assert_relative_eq!(p25, 0.25, epsilon = 1e-10);
 
         // Error cases
@@ -328,17 +328,17 @@ mod tests {
         assert!(unif.ppf(1.1).is_err());
 
         // Non-unit range
-        let unif2 = Uniform::new(-1.0, 1.0).unwrap();
-        let median2 = unif2.ppf(0.5).unwrap();
+        let unif2 = Uniform::new(-1.0, 1.0).expect("Operation failed");
+        let median2 = unif2.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(median2, 0.0, epsilon = 1e-10);
     }
 
     #[test]
     fn test_uniform_rvs() {
-        let unif = Uniform::new(0.0, 1.0).unwrap();
+        let unif = Uniform::new(0.0, 1.0).expect("Operation failed");
 
         // Generate samples
-        let samples = unif.rvs(1000).unwrap();
+        let samples = unif.rvs(1000).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 1000);

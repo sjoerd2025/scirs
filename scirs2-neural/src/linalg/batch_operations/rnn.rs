@@ -63,7 +63,7 @@ type AdamUpdateReturn<F, D> = (Array<F, D>, Array<F, D>, Array<F, D>);
 /// let (h_next, c_next, _) = lstm_cell(
 ///     &x.view(), &h_prev.view(), &c_prev.view(),
 ///     &w_ih.view(), &w_hh.view(), &b_ih.view(), &b_hh.view()
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(h_next.shape(), &[batch_size, hidden_size]);
 /// assert_eq!(c_next.shape(), &[batch_size, hidden_size]);
@@ -243,10 +243,10 @@ fn sigmoid<F: Float>(x: F) -> F {
 ///
 /// // Apply dropout in training mode
 /// let mut rng = StdRng::seed_from_u64(42);
-/// let (y_train, mask) = dropout(&x.view(), 0.5, &mut rng, true).unwrap();
+/// let (y_train, mask) = dropout(&x.view(), 0.5, &mut rng, true).expect("Operation failed");
 ///
 /// // Apply dropout in inference mode
-/// let (y_test, _) = dropout(&x.view(), 0.5, &mut rng, false).unwrap();
+/// let (y_test, _) = dropout(&x.view(), 0.5, &mut rng, false).expect("Operation failed");
 ///
 /// // In inference mode, no elements should be dropped
 /// assert_eq!(y_test, x);
@@ -276,14 +276,14 @@ where
 
     // Apply dropout only in training mode
     if training {
-        let keep_prob = F::from(1.0).unwrap() - dropout_rate;
-        let scale = F::from(1.0).unwrap() / keep_prob;
+        let keep_prob = F::from(1.0).expect("Failed to convert constant to float") - dropout_rate;
+        let scale = F::from(1.0).expect("Failed to convert constant to float") / keep_prob;
 
         // Generate random mask
         for val in mask.iter_mut() {
-            let rand_val = F::from(rng.random::<f64>()).unwrap();
+            let rand_val = F::from(rng.random::<f64>()).expect("Operation failed");
             if rand_val < dropout_rate {
-                *val = F::from(0.0).unwrap();
+                *val = F::from(0.0).expect("Failed to convert constant to float");
             } else {
                 *val = scale;
             }
@@ -323,13 +323,13 @@ where
 /// let dropout_rate = 0.5;
 ///
 /// // Forward pass
-/// let (y, mask) = dropout(&x.view(), dropout_rate, &mut rng, true).unwrap();
+/// let (y, mask) = dropout(&x.view(), dropout_rate, &mut rng, true).expect("Operation failed");
 ///
 /// // Gradient of loss with respect to dropout output
 /// let dout = Array::from_shape_fn(x.raw_dim(), |_| 0.1);
 ///
 /// // Backward pass
-/// let dx = dropout_backward(&dout.view(), &mask.view(), dropout_rate).unwrap();
+/// let dx = dropout_backward(&dout.view(), &mask.view(), dropout_rate).expect("Operation failed");
 ///
 /// assert_eq!(dx.shape(), x.shape());
 /// ```
@@ -384,10 +384,10 @@ where
 /// let x = Array::from_shape_vec(
 ///     (2, 3),
 ///     vec![1.0f64, 2.0, 3.0, 4.0, 5.0, 6.0]
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Compute log-softmax along the last dimension (axis 1)
-/// let log_sm = log_softmax(&x.view(), 1).unwrap();
+/// let log_sm = log_softmax(&x.view(), 1).expect("Operation failed");
 ///
 /// assert_eq!(log_sm.shape(), x.shape());
 ///
@@ -421,8 +421,8 @@ where
         // Find max value for numerical stability
         let max_val = *slice
             .iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
 
         // Subtract max and compute exp
         let mut sum_exp = F::zero();
@@ -487,7 +487,7 @@ where
 /// let (w_new, m_new, v_new) = adam_update(
 ///     &w.view(), &dw.view(), &m.view(), &v.view(),
 ///     learning_rate, beta1, beta2, epsilon, t
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(w_new.shape(), w.shape());
 /// assert_eq!(m_new.shape(), m.shape());
@@ -562,7 +562,7 @@ where
     }
 
     // Bias correction
-    let t_f = F::from(t).unwrap();
+    let t_f = F::from(t).expect("Failed to convert to float");
     let m_hat_factor = F::one() / (F::one() - beta1.powf(t_f));
     let v_hat_factor = F::one() / (F::one() - beta2.powf(t_f));
 

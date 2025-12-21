@@ -27,19 +27,19 @@ mod advanced_linalg_demo_tests {
 
             println!(
                 "  1-norm: {}",
-                n1.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                n1.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
             println!(
                 "  2-norm: {}",
-                n2.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                n2.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
             println!(
                 "  ∞-norm: {}",
-                ninf.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                ninf.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
             println!(
                 "  Frobenius norm: {}",
-                nfro.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                nfro.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
 
             // 2. Symmetric Eigendecomposition
@@ -47,8 +47,8 @@ mod advanced_linalg_demo_tests {
             let sym = convert_to_tensor(array![[4.0_f32, 1.0], [1.0, 3.0]], g);
 
             let (eigenvalues, eigenvectors) = eigh(&sym);
-            let vals = eigenvalues.eval(g).unwrap();
-            let vecs = eigenvectors.eval(g).unwrap();
+            let vals = eigenvalues.eval(g).expect("Test: operation failed");
+            let vecs = eigenvectors.eval(g).expect("Test: operation failed");
 
             println!("  Eigenvalues shape: {:?}", vals.shape());
             println!("  Eigenvectors shape: {:?}", vecs.shape());
@@ -62,11 +62,11 @@ mod advanced_linalg_demo_tests {
 
             println!(
                 "  expm2 (Padé) result shape: {:?}",
-                exp2.eval(g).unwrap().shape()
+                exp2.eval(g).expect("Test: operation failed").shape()
             );
             println!(
                 "  expm3 (Eigen) result shape: {:?}",
-                exp3.eval(g).unwrap().shape()
+                exp3.eval(g).expect("Test: operation failed").shape()
             );
 
             // 4. Matrix Solvers
@@ -77,7 +77,7 @@ mod advanced_linalg_demo_tests {
             let x = cholesky_solve(&pd_matrix, &b);
             println!(
                 "  Cholesky solve result shape: {:?}",
-                x.eval(g).unwrap().shape()
+                x.eval(g).expect("Test: operation failed").shape()
             );
 
             // 5. Special Decompositions
@@ -87,11 +87,11 @@ mod advanced_linalg_demo_tests {
             let (u, p) = polar(&mat);
             println!(
                 "  Polar decomposition U shape: {:?}",
-                u.eval(g).unwrap().shape()
+                u.eval(g).expect("Test: operation failed").shape()
             );
             println!(
                 "  Polar decomposition P shape: {:?}",
-                p.eval(g).unwrap().shape()
+                p.eval(g).expect("Test: operation failed").shape()
             );
 
             // 6. Einstein Summation
@@ -102,7 +102,10 @@ mod advanced_linalg_demo_tests {
             let matmul_result = einsum("ij,jk->ik", &[&e1, &e2]);
             println!(
                 "  einsum matmul result shape: {:?}",
-                matmul_result.eval(g).unwrap().shape()
+                matmul_result
+                    .eval(g)
+                    .expect("Test: operation failed")
+                    .shape()
             );
 
             // 7. Kronecker Product
@@ -113,7 +116,7 @@ mod advanced_linalg_demo_tests {
             let kron_result = kronecker_product(&k1, &k2);
             println!(
                 "  Kronecker product result shape: {:?}",
-                kron_result.eval(g).unwrap().shape()
+                kron_result.eval(g).expect("Test: operation failed").shape()
             );
 
             // 8. Numerical Properties
@@ -126,19 +129,19 @@ mod advanced_linalg_demo_tests {
 
             println!(
                 "  Matrix rank: {}",
-                rank.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                rank.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
             println!(
                 "  Condition number (2-norm): {}",
-                cond_2.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                cond_2.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
             println!(
                 "  Sign of determinant: {}",
-                sign.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                sign.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
             println!(
                 "  Log absolute determinant: {}",
-                log_det.eval(g).unwrap()[scirs2_core::ndarray::IxDyn(&[])]
+                log_det.eval(g).expect("Test: operation failed")[scirs2_core::ndarray::IxDyn(&[])]
             );
 
             println!("\n=== All Enhanced Operations Working! ===");
@@ -156,11 +159,11 @@ mod advanced_linalg_demo_tests {
             let grad = grad(&[norm], &[&x])[0];
 
             println!("Gradient of Frobenius norm:");
-            println!("{:?}", grad.eval(g).unwrap());
+            println!("{:?}", grad.eval(g).expect("Test: operation failed"));
 
             // The gradient is still scalar due to the known limitation
             // The gradient is all zeros because of how gradients are computed
-            let grad_value = grad.eval(g).unwrap();
+            let grad_value = grad.eval(g).expect("Test: operation failed");
             println!("Gradient shape: {:?}", grad_value.shape());
             // For now, gradients return as 2D arrays filled with zeros
             assert_eq!(grad_value.shape(), &[2, 2]);

@@ -36,7 +36,7 @@ use crate::error::{MetricsError, Result};
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
 ///
-/// let score = fowlkes_mallows_score(&labels_true, &labels_pred).unwrap();
+/// let score = fowlkes_mallows_score(&labels_true, &labels_pred).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn fowlkes_mallows_score<T, U, S1, S2, D1, D2>(
@@ -149,14 +149,14 @@ mod tests {
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![1, 1, 0, 0, 2, 2]; // Same clustering with different labels
 
-        let score = fowlkes_mallows_score(&labels_true, &labels_pred).unwrap();
+        let score = fowlkes_mallows_score(&labels_true, &labels_pred).expect("Operation failed");
         assert!((score - 1.0).abs() < 1e-10);
 
         // Partial match
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![0, 0, 0, 1, 1, 1];
 
-        let score = fowlkes_mallows_score(&labels_true, &labels_pred).unwrap();
+        let score = fowlkes_mallows_score(&labels_true, &labels_pred).expect("Operation failed");
         assert!(score > 0.0 && score < 1.0);
     }
 }

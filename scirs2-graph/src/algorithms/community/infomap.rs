@@ -314,7 +314,7 @@ where
     for (node, &comm) in communities {
         if let Some(&i) = node_to_idx.get(node) {
             let pi_i = stationary_probs[i];
-            *community_flow.get_mut(&comm).unwrap() += pi_i;
+            *community_flow.get_mut(&comm).expect("Operation failed") += pi_i;
 
             // Add transitions to other communities
             if let Ok(neighbors) = graph.neighbors(node) {
@@ -322,8 +322,9 @@ where
                     if let Some(&neighbor_comm) = communities.get(&neighbor) {
                         if neighbor_comm != comm {
                             if let Some(&j) = node_to_idx.get(&neighbor) {
-                                *community_exit_prob.get_mut(&comm).unwrap() +=
-                                    pi_i * transition_matrix[i][j];
+                                *community_exit_prob
+                                    .get_mut(&comm)
+                                    .expect("Operation failed") += pi_i * transition_matrix[i][j];
                             }
                         }
                     }

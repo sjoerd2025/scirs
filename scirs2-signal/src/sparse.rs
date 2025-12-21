@@ -538,7 +538,7 @@ pub fn cosamp(
             .collect();
 
         // Sort by magnitude in descending order
-        proxy_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        proxy_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Get the indices of the 2K largest entries
         let selected_indices: Vec<usize> =
@@ -594,7 +594,7 @@ pub fn cosamp(
             .collect();
 
         // Sort by magnitude in descending order
-        temp_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        temp_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Create new solution with K largest entries
         let mut x_new = Array1::<f64>::zeros(n);
@@ -709,7 +709,7 @@ pub fn iht(
             .collect();
 
         // Sort by magnitude in descending order
-        values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Create new solution with K largest entries
         let mut x_new = Array1::<f64>::zeros(n);
@@ -790,7 +790,7 @@ pub fn subspace_pursuit(
         .collect();
 
     // Sort by magnitude in descending order
-    initial_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    initial_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     // Initialize support with K largest correlations
     let mut support: Vec<usize> = initial_values.iter().take(k).map(|&(i, _)| i).collect();
@@ -830,7 +830,7 @@ pub fn subspace_pursuit(
             .collect();
 
         // Sort by magnitude in descending order
-        corr_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        corr_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Get the indices of the K largest correlations
         let new_candidates: Vec<usize> = corr_values.iter().take(k).map(|&(i, _)| i).collect();
@@ -873,7 +873,7 @@ pub fn subspace_pursuit(
             .collect();
 
         // Sort by magnitude in descending order
-        merged_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        merged_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
         // Update support with K largest coefficients
         let new_support: Vec<usize> = merged_values.iter().take(k).map(|&(i, _)| i).collect();
@@ -1367,7 +1367,7 @@ pub fn random_sensing_matrix(m: usize, n: usize, seed: Option<u64>) -> Array2<f6
         None => StdRng::seed_from_u64([0u8; 32]), // Use deterministic seed for consistency
     };
 
-    let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
+    let normal = rand_distr::Normal::new(0.0, 1.0).expect("Operation failed");
 
     let mut phi = Array2::<f64>::zeros((m, n));
 

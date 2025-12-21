@@ -33,18 +33,18 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// use std::f64::consts::PI;
 ///
 /// // Create two rotations to interpolate between
-/// let rot1 = Rotation::from_euler(&array![0.0, 0.0, 0.0].view(), "xyz").unwrap();
-/// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
+/// let rot1 = Rotation::from_euler(&array![0.0, 0.0, 0.0].view(), "xyz").expect("Operation failed");
+/// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed");
 ///
 /// // Create a Slerp interpolator
-/// let slerp = Slerp::new(rot1, rot2).unwrap();
+/// let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
 ///
 /// // Get the interpolated rotation at t=0.5 (halfway between rot1 and rot2)
 /// let rot_half = slerp.interpolate(0.5);
 ///
 /// // Apply the rotation to a point
 /// let point = array![1.0, 0.0, 0.0];
-/// let rotated = rot_half.apply(&point.view()).unwrap();
+/// let rotated = rot_half.apply(&point.view()).expect("Operation failed");
 /// // Should be approximately [std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2, 0.0]
 /// ```
 #[derive(Clone, Debug)]
@@ -81,8 +81,8 @@ impl Slerp {
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
-    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
-    /// let slerp = Slerp::new(rot1, rot2).unwrap();
+    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed");
+    /// let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
     /// ```
     pub fn new(start: Rotation, end: Rotation) -> SpatialResult<Self> {
         let q1 = start.as_quat();
@@ -139,8 +139,8 @@ impl Slerp {
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
-    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap();
-    /// let slerp = Slerp::new(rot1, rot2).unwrap();
+    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed");
+    /// let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
     ///
     /// // Get rotation at t=0.25 (25% from rot1 to rot2)
     /// let rot_25 = slerp.interpolate(0.25);
@@ -180,7 +180,7 @@ impl Slerp {
         result /= norm;
 
         // Create a rotation from the interpolated quaternion
-        Rotation::from_quat(&result.view()).unwrap()
+        Rotation::from_quat(&result.view()).expect("Operation failed")
     }
 
     /// Get times at which the interpolated rotations would have a constant
@@ -202,8 +202,8 @@ impl Slerp {
     /// use std::f64::consts::PI;
     ///
     /// let rot1 = Rotation::identity();
-    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap();
-    /// let slerp = Slerp::new(rot1, rot2).unwrap();
+    /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed");
+    /// let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
     ///
     /// // Get 5 times for constant angular velocity
     /// let times = Slerp::times(5);
@@ -232,9 +232,9 @@ mod tests {
     #[test]
     fn test_slerp_identity() {
         let rot1 = Rotation::identity();
-        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap();
+        let rot2 = rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed");
 
-        let slerp = Slerp::new(rot1.clone(), rot2.clone()).unwrap();
+        let slerp = Slerp::new(rot1.clone(), rot2.clone()).expect("Operation failed");
 
         // At t=0, should equal rot1
         let interp_0 = slerp.interpolate(0.0);
@@ -249,9 +249,9 @@ mod tests {
     fn test_slerp_halfway() {
         let rot1 = Rotation::identity();
         let angles = array![0.0, 0.0, PI];
-        let rot2 = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+        let rot2 = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
 
-        let slerp = Slerp::new(rot1, rot2).unwrap();
+        let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
 
         // At t=0.5, should be a 90-degree rotation around Z
         let interp_half = slerp.interpolate(0.5);
@@ -262,7 +262,7 @@ mod tests {
 
         // Apply the rotation to a point
         let point = array![1.0, 0.0, 0.0];
-        let rotated = interp_half.apply(&point.view()).unwrap();
+        let rotated = interp_half.apply(&point.view()).expect("Operation failed");
 
         // Make sure the result is a point on the unit circle
         let magnitude =
@@ -274,9 +274,9 @@ mod tests {
     fn test_slerp_at_values() {
         let rot1 = Rotation::identity();
         let angles = array![0.0, 0.0, PI];
-        let rot2 = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+        let rot2 = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
 
-        let slerp = Slerp::new(rot1, rot2).unwrap();
+        let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
 
         // Test a few interpolation values
         let values = [0.25, 0.5, 0.75];
@@ -286,7 +286,7 @@ mod tests {
 
             // Apply the interpolated rotation to a point
             let point = array![1.0, 0.0, 0.0];
-            let rotated = interp.apply(&point.view()).unwrap();
+            let rotated = interp.apply(&point.view()).expect("Operation failed");
 
             // Make sure the result is a point on the unit circle
             let magnitude =
@@ -303,7 +303,8 @@ mod tests {
     #[test]
     fn test_slerp_negative_dot() {
         // Create two rotations with negative dot product
-        let rot1 = Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view()).unwrap();
+        let rot1 =
+            Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view()).expect("Operation failed");
         let rot2 = Rotation::from_quat(
             &array![
                 -std::f64::consts::FRAC_1_SQRT_2,
@@ -313,17 +314,17 @@ mod tests {
             ]
             .view(),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // This should not fail due to our internal handling
-        let slerp = Slerp::new(rot1, rot2).unwrap();
+        let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
 
         // Test interpolation at midpoint
         let interp = slerp.interpolate(0.5);
 
         // The negative dot product should be handled correctly
         let point = array![1.0, 0.0, 0.0];
-        let rotated = interp.apply(&point.view()).unwrap();
+        let rotated = interp.apply(&point.view()).expect("Operation failed");
 
         // Make sure the result is a point on the unit circle
         let magnitude =
@@ -335,9 +336,9 @@ mod tests {
     fn test_slerp_times() {
         let rot1 = Rotation::identity();
         let angles = array![0.0, 0.0, PI];
-        let rot2 = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+        let rot2 = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
 
-        let slerp = Slerp::new(rot1, rot2).unwrap();
+        let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
 
         // Get 5 equally spaced times
         let times = Slerp::times(5);
@@ -354,9 +355,9 @@ mod tests {
     fn test_slerp_boundary_values() {
         let rot1 = Rotation::identity();
         let angles = array![0.0, 0.0, PI];
-        let rot2 = Rotation::from_euler(&angles.view(), "xyz").unwrap();
+        let rot2 = Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed");
 
-        let slerp = Slerp::new(rot1, rot2).unwrap();
+        let slerp = Slerp::new(rot1, rot2).expect("Operation failed");
 
         // Test boundary and out-of-range values
         let tests = [
@@ -372,8 +373,8 @@ mod tests {
 
             // Apply both rotations to a point
             let point = array![1.0, 0.0, 0.0];
-            let rotated = interp.apply(&point.view()).unwrap();
-            let expected_rotated = expected.apply(&point.view()).unwrap();
+            let rotated = interp.apply(&point.view()).expect("Operation failed");
+            let expected_rotated = expected.apply(&point.view()).expect("Operation failed");
 
             assert_relative_eq!(rotated[0], expected_rotated[0], epsilon = 1e-10);
             assert_relative_eq!(rotated[1], expected_rotated[1], epsilon = 1e-10);

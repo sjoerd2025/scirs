@@ -488,7 +488,8 @@ mod tests {
         let frequencies = vec![10.0, 20.0];
         let amplitudes = vec![1.0, 0.5];
 
-        let signal = generate_test_signal(100, &frequencies, &amplitudes, 0.0, 1000.0).unwrap();
+        let signal = generate_test_signal(100, &frequencies, &amplitudes, 0.0, 1000.0)
+            .expect("Operation failed");
         assert_eq!(signal.len(), 100);
     }
 
@@ -497,7 +498,7 @@ mod tests {
         let clean = vec![1.0, 2.0, 3.0, 2.0, 1.0];
         let noisy = vec![1.1, 2.1, 3.1, 2.1, 1.1]; // Small amount of noise
 
-        let snr = compute_snr_db(&clean, &noisy).unwrap();
+        let snr = compute_snr_db(&clean, &noisy).expect("Operation failed");
         assert!(snr > 0.0); // Should have positive SNR
     }
 
@@ -506,18 +507,18 @@ mod tests {
         let signal1 = vec![1.0, 2.0, 3.0];
         let signal2 = vec![1.0, 2.0, 3.0];
 
-        let mse = compute_mse(&signal1, &signal2).unwrap();
+        let mse = compute_mse(&signal1, &signal2).expect("Operation failed");
         assert!((mse - 0.0).abs() < 1e-10); // Should be zero for identical signals
 
         let signal3 = vec![1.0, 2.0, 4.0];
-        let mse = compute_mse(&signal1, &signal3).unwrap();
+        let mse = compute_mse(&signal1, &signal3).expect("Operation failed");
         assert!(mse > 0.0); // Should be positive for different signals
     }
 
     #[test]
     fn test_normalize_signal_energy() {
         let signal = vec![3.0, 4.0]; // Energy = 9 + 16 = 25, norm = 5
-        let normalized = normalize_signal_energy(&signal).unwrap();
+        let normalized = normalize_signal_energy(&signal).expect("Operation failed");
 
         let energy: f64 = normalized.iter().map(|&x| x * x).sum();
         assert!((energy - 1.0).abs() < 1e-10); // Should have unit energy
@@ -526,7 +527,7 @@ mod tests {
     #[test]
     fn test_normalize_signal_amplitude() {
         let signal = vec![-2.0, 1.0, 4.0, -3.0]; // Max abs = 4
-        let normalized = normalize_signal_amplitude(&signal).unwrap();
+        let normalized = normalize_signal_amplitude(&signal).expect("Operation failed");
 
         let max_abs = normalized.iter().map(|&x| x.abs()).fold(0.0f64, f64::max);
         assert!((max_abs - 1.0).abs() < 1e-10); // Should have unit amplitude
@@ -537,12 +538,12 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0];
 
         // Test center padding
-        let padded = zero_pad_signal(&signal, 7, "center").unwrap();
+        let padded = zero_pad_signal(&signal, 7, "center").expect("Operation failed");
         assert_eq!(padded.len(), 7);
         assert_eq!(padded[2], 1.0); // Original signal should be centered
 
         // Test end padding
-        let padded = zero_pad_signal(&signal, 6, "end").unwrap();
+        let padded = zero_pad_signal(&signal, 6, "end").expect("Operation failed");
         assert_eq!(padded.len(), 6);
         assert_eq!(padded[0], 1.0); // Original signal should be at start
     }
@@ -552,13 +553,13 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![0.5, 1.0];
 
-        let corr = cross_correlation(&x, &y, "full").unwrap();
+        let corr = cross_correlation(&x, &y, "full").expect("Operation failed");
         assert_eq!(corr.len(), x.len() + y.len() - 1);
 
-        let corr = cross_correlation(&x, &y, "valid").unwrap();
+        let corr = cross_correlation(&x, &y, "valid").expect("Operation failed");
         assert_eq!(corr.len(), x.len() - y.len() + 1);
 
-        let corr = cross_correlation(&x, &y, "same").unwrap();
+        let corr = cross_correlation(&x, &y, "same").expect("Operation failed");
         assert_eq!(corr.len(), x.len());
     }
 
@@ -578,7 +579,7 @@ mod tests {
             .map(|i| (2.0 * PI * 10.0 * i as f64 / 256.0).sin())
             .collect();
 
-        let psd = welch_psd_estimate(&signal, 64, 0.5).unwrap();
+        let psd = welch_psd_estimate(&signal, 64, 0.5).expect("Operation failed");
         assert!(!psd.is_empty());
         assert_eq!(psd.len(), 33); // 64/2 + 1
     }

@@ -377,7 +377,7 @@ mod tests {
             .find(|f| f.name == "gaussian_filter");
         assert!(gaussian.is_some());
 
-        let gaussian = gaussian.unwrap();
+        let gaussian = gaussian.expect("Operation failed");
         assert_eq!(gaussian.parameters.len(), 2);
         assert!(!gaussian.examples.is_empty());
         assert!(!gaussian.notes.is_empty());
@@ -396,7 +396,7 @@ mod tests {
             .find(|f| f.name == "binary_erosion");
         assert!(erosion.is_some());
 
-        let erosion = erosion.unwrap();
+        let erosion = erosion.expect("Operation failed");
         assert_eq!(erosion.parameters.len(), 2);
     }
 

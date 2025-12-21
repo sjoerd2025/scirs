@@ -24,7 +24,7 @@ use ::ndarray::{Array, ArrayView, Axis, Dimension, ShapeError};
 /// use scirs2_core::ndarray_ext::reshape;
 ///
 /// let a = array![[1, 2], [3, 4]];
-/// let b = reshape(a.view(), (4, 1)).unwrap();
+/// let b = reshape(a.view(), (4, 1)).expect("Operation failed");
 /// assert_eq!(b.shape(), &[4, 1]);
 /// assert_eq!(b[[0, 0]], 1);
 /// assert_eq!(b[[3, 0]], 4);
@@ -69,7 +69,7 @@ where
 ///
 /// let a = array![[1, 2], [3, 4]];
 /// let b = array![[5, 6], [7, 8]];
-/// let c = stack(&[a.view(), b.view()], Axis(0)).unwrap();
+/// let c = stack(&[a.view(), b.view()], Axis(0)).expect("Operation failed");
 /// assert_eq!(c.shape(), &[4, 2]);
 /// ```
 #[allow(dead_code)]
@@ -154,7 +154,7 @@ where
 /// use scirs2_core::ndarray_ext::swapaxes;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
-/// let b = swapaxes(a.view(), 0, 1).unwrap();
+/// let b = swapaxes(a.view(), 0, 1).expect("Operation failed");
 /// assert_eq!(b.shape(), &[3, 2]);
 /// assert_eq!(b[[0, 0]], 1);
 /// assert_eq!(b[[0, 1]], 4);
@@ -200,7 +200,7 @@ where
 /// use scirs2_core::ndarray_ext::split;
 ///
 /// let a = array![[1, 2, 3, 4], [5, 6, 7, 8]];
-/// let result = split(a.view(), &[2], Axis(1)).unwrap();
+/// let result = split(a.view(), &[2], Axis(1)).expect("Operation failed");
 /// assert_eq!(result.len(), 2);
 /// assert_eq!(result[0].shape(), &[2, 2]);
 /// assert_eq!(result[1].shape(), &[2, 2]);
@@ -266,7 +266,7 @@ mod tests {
     #[test]
     fn test_reshape() {
         let a = array![[1, 2], [3, 4]];
-        let b = reshape(a.view(), (4, 1)).unwrap();
+        let b = reshape(a.view(), (4, 1)).expect("Operation failed");
         assert_eq!(b.shape(), &[4, 1]);
         assert_eq!(b[[0, 0]], 1);
         assert_eq!(b[[1, 0]], 2);
@@ -284,13 +284,13 @@ mod tests {
         let b = array![[5, 6], [7, 8]];
 
         // Stack along axis 0
-        let c = stack(&[a.view(), b.view()], Axis(0)).unwrap();
+        let c = stack(&[a.view(), b.view()], Axis(0)).expect("Operation failed");
         assert_eq!(c.shape(), &[4, 2]);
         assert_eq!(c[[0, 0]], 1);
         assert_eq!(c[[2, 1]], 6);
 
         // Stack along axis 1
-        let d = stack(&[a.view(), b.view()], Axis(1)).unwrap();
+        let d = stack(&[a.view(), b.view()], Axis(1)).expect("Operation failed");
         assert_eq!(d.shape(), &[2, 4]);
         assert_eq!(d[[0, 0]], 1);
         assert_eq!(d[[0, 3]], 6);
@@ -299,7 +299,7 @@ mod tests {
     #[test]
     fn test_swapaxes() {
         let a = array![[1, 2, 3], [4, 5, 6]];
-        let b = swapaxes(a.view(), 0, 1).unwrap();
+        let b = swapaxes(a.view(), 0, 1).expect("Operation failed");
         assert_eq!(b.shape(), &[3, 2]);
         assert_eq!(b[[0, 0]], 1);
         assert_eq!(b[[0, 1]], 4);
@@ -312,7 +312,7 @@ mod tests {
         let a = array![[1, 2, 3, 4], [5, 6, 7, 8]];
 
         // Split along axis 1 at index 2
-        let result = split(a.view(), &[2], Axis(1)).unwrap();
+        let result = split(a.view(), &[2], Axis(1)).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].shape(), &[2, 2]);
         assert_eq!(result[0][[0, 0]], 1);
@@ -322,7 +322,7 @@ mod tests {
         assert_eq!(result[1][[1, 1]], 8);
 
         // Split along axis 0 at index 1
-        let result = split(a.view(), &[1], Axis(0)).unwrap();
+        let result = split(a.view(), &[1], Axis(0)).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].shape(), &[1, 4]);
         assert_eq!(result[1].shape(), &[1, 4]);

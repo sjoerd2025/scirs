@@ -110,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rmsprop_optimizer = RMSprop::new_with_config(learning_rate, 0.9, 1e-8, 0.0);
     // Helper function to compute accuracy
     let compute_accuracy = |model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>| -> f32 {
-        let predictions = model.forward(&x.clone().into_dyn()).unwrap();
+        let predictions = model.forward(&x.clone().into_dyn()).expect("Operation failed");
         let mut correct = 0;
         for i in 0..x.shape()[0] {
             let mut max_idx = 0;
@@ -161,7 +161,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     // Perform a training step
                     let batch_loss = model
                         .train_batch(&x_batch_dyn, &y_batch_dyn, &loss_fn, optimizer)
-                        .unwrap();
+                        .expect("Operation failed");
                     epoch_loss += batch_loss;
                 }
                 epoch_loss /= num_batches as f32;
@@ -206,67 +206,67 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Epochs: {}", epochs);
     println!();
     println!("Final Loss Values:");
-    let sgd_final = sgd_losses.last().unwrap();
+    let sgd_final = sgd_losses.last().expect("Operation failed");
     println!("  SGD:     {sgd_final:.6}");
-    let adam_final = adam_losses.last().unwrap();
+    let adam_final = adam_losses.last().expect("Operation failed");
     println!("  Adam:    {adam_final:.6}");
-    let adamw_final = adamw_losses.last().unwrap();
+    let adamw_final = adamw_losses.last().expect("Operation failed");
     println!("  AdamW:   {adamw_final:.6}");
-    let radam_final = radam_losses.last().unwrap();
+    let radam_final = radam_losses.last().expect("Operation failed");
     println!("  RAdam:   {radam_final:.6}");
-    let rmsprop_final = rmsprop_losses.last().unwrap();
+    let rmsprop_final = rmsprop_losses.last().expect("Operation failed");
     println!("  RMSprop: {rmsprop_final:.6}");
     println!("\nLoss progression (first value, middle value, last value):");
     println!(
         "  SGD:     {:.6}, {:.6}, {:.6}",
-        sgd_losses.first().unwrap(),
+        sgd_losses.first().expect("Operation failed"),
         sgd_losses[epochs / 2],
-        sgd_losses.last().unwrap()
+        sgd_losses.last().expect("Operation failed")
     );
     println!(
         "  Adam:    {:.6}, {:.6}, {:.6}",
-        adam_losses.first().unwrap(),
+        adam_losses.first().expect("Operation failed"),
         adam_losses[epochs / 2],
-        adam_losses.last().unwrap()
+        adam_losses.last().expect("Operation failed")
     );
     println!(
         "  AdamW:   {:.6}, {:.6}, {:.6}",
-        adamw_losses.first().unwrap(),
+        adamw_losses.first().expect("Operation failed"),
         adamw_losses[epochs / 2],
-        adamw_losses.last().unwrap()
+        adamw_losses.last().expect("Operation failed")
     );
     println!(
         "  RAdam:   {:.6}, {:.6}, {:.6}",
-        radam_losses.first().unwrap(),
+        radam_losses.first().expect("Operation failed"),
         radam_losses[epochs / 2],
-        radam_losses.last().unwrap()
+        radam_losses.last().expect("Operation failed")
     );
     println!(
         "  RMSprop: {:.6}, {:.6}, {:.6}",
-        rmsprop_losses.first().unwrap(),
+        rmsprop_losses.first().expect("Operation failed"),
         rmsprop_losses[epochs / 2],
-        rmsprop_losses.last().unwrap()
+        rmsprop_losses.last().expect("Operation failed")
     );
     println!("\nLoss improvement ratio (first loss / last loss):");
     println!(
         "  SGD:     {:.2}x",
-        sgd_losses.first().unwrap() / sgd_losses.last().unwrap()
+        sgd_losses.first().expect("Operation failed") / sgd_losses.last().expect("Operation failed")
     );
     println!(
         "  Adam:    {:.2}x",
-        adam_losses.first().unwrap() / adam_losses.last().unwrap()
+        adam_losses.first().expect("Operation failed") / adam_losses.last().expect("Operation failed")
     );
     println!(
         "  AdamW:   {:.2}x",
-        adamw_losses.first().unwrap() / adamw_losses.last().unwrap()
+        adamw_losses.first().expect("Operation failed") / adamw_losses.last().expect("Operation failed")
     );
     println!(
         "  RAdam:   {:.2}x",
-        radam_losses.first().unwrap() / radam_losses.last().unwrap()
+        radam_losses.first().expect("Operation failed") / radam_losses.last().expect("Operation failed")
     );
     println!(
         "  RMSprop: {:.2}x",
-        rmsprop_losses.first().unwrap() / rmsprop_losses.last().unwrap()
+        rmsprop_losses.first().expect("Operation failed") / rmsprop_losses.last().expect("Operation failed")
     );
     println!("\nAdvanced optimizers demo completed successfully!");
     */

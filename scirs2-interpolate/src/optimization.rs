@@ -99,7 +99,7 @@ impl<T: Float + FromPrimitive> Default for OptimizationConfig<T> {
     fn default() -> Self {
         Self {
             max_iterations: 100,
-            tolerance: T::from(1e-6).unwrap(),
+            tolerance: T::from(1e-6).expect("Operation failed"),
             random_seed: 42,
             parallel: true,
             verbosity: 1,
@@ -305,7 +305,7 @@ where
                 .zip(y_train.iter())
                 .map(|(x, y)| (*x, *y))
                 .collect();
-            training_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            training_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
             let x_train_sorted: Array1<T> = training_pairs.iter().map(|(x, _)| *x).collect();
             let y_train_sorted: Array1<T> = training_pairs.iter().map(|(_, y)| *y).collect();
@@ -323,12 +323,12 @@ where
 
         let n_folds = fold_scores.len();
         let mean_score = fold_scores.iter().fold(T::zero(), |acc, &x| acc + x)
-            / T::from(fold_scores.len()).unwrap();
+            / T::from(fold_scores.len()).expect("Operation failed");
         let variance = fold_scores
             .iter()
             .map(|&score| (score - mean_score) * (score - mean_score))
             .fold(T::zero(), |acc, x| acc + x)
-            / T::from(fold_scores.len()).unwrap();
+            / T::from(fold_scores.len()).expect("Operation failed");
         let std_score = variance.sqrt();
 
         Ok(CrossValidationResult {
@@ -447,7 +447,10 @@ where
             let score = cv_result.mean_score;
 
             let mut params = HashMap::new();
-            params.insert("degree".to_string(), T::from(degree).unwrap());
+            params.insert(
+                "degree".to_string(),
+                T::from(degree).expect("Operation failed"),
+            );
             parameter_scores.push((params.clone(), score));
 
             if score < best_score {
@@ -599,7 +602,7 @@ where
             ));
         }
 
-        let n = T::from(y_true.len()).unwrap();
+        let n = T::from(y_true.len()).expect("Operation failed");
 
         match self.metric {
             ValidationMetric::MeanSquaredError => {
@@ -665,7 +668,8 @@ where
                     }
                 }
                 if count > 0 {
-                    Ok(mape / T::from(count).unwrap() * T::from(100.0).unwrap())
+                    Ok(mape / T::from(count).expect("Operation failed")
+                        * T::from(100.0).expect("Operation failed"))
                 } else {
                     Ok(T::zero())
                 }
@@ -912,7 +916,11 @@ where
         }
 
         // Sort by validation score (lower is better for error metrics)
-        results.sort_by(|a, b| a.1.mean_score.partial_cmp(&b.1.mean_score).unwrap());
+        results.sort_by(|a, b| {
+            a.1.mean_score
+                .partial_cmp(&b.1.mean_score)
+                .expect("Operation failed")
+        });
 
         Ok(results)
     }
@@ -1070,7 +1078,7 @@ mod tests {
     #[test]
     fn test_fold_generation() {
         let cv = CrossValidator::<f64>::new().with_k_folds(3);
-        let folds = cv.generate_folds(9).unwrap();
+        let folds = cv.generate_folds(9).expect("Operation failed");
 
         assert_eq!(folds.len(), 3);
 
@@ -1090,7 +1098,7 @@ mod tests {
     #[test]
     fn test_leave_one_out_folds() {
         let cv = CrossValidator::<f64>::new().with_strategy(CrossValidationStrategy::LeaveOneOut);
-        let folds = cv.generate_folds(5).unwrap();
+        let folds = cv.generate_folds(5).expect("Operation failed");
 
         assert_eq!(folds.len(), 5);
         for (train, test) in &folds {
@@ -1106,7 +1114,9 @@ mod tests {
         let y_true = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let y_pred = Array1::from_vec(vec![1.1, 1.9, 3.1, 3.9]);
 
-        let mse = cv.compute_metric(&y_true.view(), &y_pred.view()).unwrap();
+        let mse = cv
+            .compute_metric(&y_true.view(), &y_pred.view())
+            .expect("Operation failed");
         let expected_mse = (0.1 * 0.1 + 0.1 * 0.1 + 0.1 * 0.1 + 0.1 * 0.1) / 4.0;
         assert!((mse - expected_mse).abs() < 1e-10);
     }
@@ -1118,7 +1128,9 @@ mod tests {
         let y_true = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
         let y_pred = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]); // Perfect prediction
 
-        let r2 = cv.compute_metric(&y_true.view(), &y_pred.view()).unwrap();
+        let r2 = cv
+            .compute_metric(&y_true.view(), &y_pred.view())
+            .expect("Operation failed");
         assert!((r2 - 1.0).abs() < 1e-10);
     }
 
@@ -1133,7 +1145,7 @@ mod tests {
         let result = cv.optimize_rbf_parameters(&x.view(), &y.view(), &kernel_widths);
         assert!(result.is_ok());
 
-        let opt_result = result.unwrap();
+        let opt_result = result.expect("Operation failed");
         assert!(opt_result.best_parameters.contains_key("kernel_width"));
         assert_eq!(opt_result.parameter_scores.len(), 3);
         assert!(opt_result.best_score.is_finite());
@@ -1209,13 +1221,13 @@ mod tests {
 
         let mse = cv_mse
             .compute_metric(&y_true.view(), &y_pred.view())
-            .unwrap();
+            .expect("Operation failed");
         let mae = cv_mae
             .compute_metric(&y_true.view(), &y_pred.view())
-            .unwrap();
+            .expect("Operation failed");
         let rmse = cv_rmse
             .compute_metric(&y_true.view(), &y_pred.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(mse > 0.0);
         assert!(mae > 0.0);

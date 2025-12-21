@@ -37,13 +37,13 @@
 //!     .with_missing_data_strategy("interpolate");
 //!
 //! // Fit the interpolator
-//! interpolator.fit(&timestamps.view(), &values.view()).unwrap();
+//! interpolator.fit(&timestamps.view(), &values.view()).expect("Operation failed");
 //!
 //! // Generate missing timestamps to interpolate
 //! let missing_timestamps = Array1::linspace(0.5_f64, 29.5_f64, 15);
 //!
 //! // Interpolate missing values
-//! let interpolated = interpolator.interpolate(&missing_timestamps.view()).unwrap();
+//! let interpolated = interpolator.interpolate(&missing_timestamps.view()).expect("Operation failed");
 //! ```
 
 use crate::advanced::rbf::{RBFInterpolator, RBFKernel};
@@ -130,10 +130,10 @@ impl<T: Float + FromPrimitive> Default for TimeSeriesConfig<T> {
             pattern: TemporalPattern::TrendWithSeasonality,
             seasonality: Some(SeasonalityType::Daily),
             missing_strategy: MissingDataStrategy::Spline,
-            temporal_smoothing: T::from_f64(0.1).unwrap(),
+            temporal_smoothing: T::from_f64(0.1).expect("Operation failed"),
             seasonal_periods: 3,
             estimate_uncertainty: false,
-            outlier_threshold: Some(T::from_f64(3.0).unwrap()),
+            outlier_threshold: Some(T::from_f64(3.0).expect("Operation failed")),
         }
     }
 }
@@ -451,10 +451,10 @@ where
             let window = self
                 .train_values
                 .slice(scirs2_core::ndarray::s![start..end]);
-            let mean = window.sum() / T::from_usize(window.len()).unwrap();
+            let mean = window.sum() / T::from_usize(window.len()).expect("Operation failed");
 
             let variance = window.iter().map(|&x| (x - mean) * (x - mean)).sum::<T>()
-                / T::from_usize(window.len() - 1).unwrap();
+                / T::from_usize(window.len() - 1).expect("Operation failed");
             let std_dev = variance.sqrt();
 
             if (self.train_values[i] - mean).abs() > threshold * std_dev {
@@ -516,7 +516,7 @@ where
                 &times_2d.view(),
                 &residuals.view(),
                 RBFKernel::Gaussian,
-                T::from_f64(1.0).unwrap(),
+                T::from_f64(1.0).expect("Operation failed"),
             )?;
 
             self.seasonal_interpolator = Some(seasonal_rbf);
@@ -539,7 +539,7 @@ where
                 &times_2d.view(),
                 &self.train_values.view(),
                 RBFKernel::Gaussian,
-                T::from_f64(0.5).unwrap(),
+                T::from_f64(0.5).expect("Operation failed"),
             )?;
 
             self.seasonal_interpolator = Some(seasonal_rbf);
@@ -775,10 +775,12 @@ mod tests {
 
         interpolator
             .fit(&timestamps.view(), &values.view())
-            .unwrap();
+            .expect("Operation failed");
 
         let query_times = Array1::from_vec(vec![2.5, 5.0, 7.5]);
-        let result = interpolator.interpolate(&query_times.view()).unwrap();
+        let result = interpolator
+            .interpolate(&query_times.view())
+            .expect("Operation failed");
 
         assert_eq!(result.values.len(), 3);
         assert!(result.values.iter().all(|&v| v.is_finite()));
@@ -790,7 +792,8 @@ mod tests {
         let values = Array1::from_vec(vec![10.0, 20.0, 30.0, 40.0]);
         let query_times = Array1::from_vec(vec![0.0, 2.0, 4.0, 6.0, 8.0]);
 
-        let result = forward_fill(&timestamps.view(), &values.view(), &query_times.view()).unwrap();
+        let result = forward_fill(&timestamps.view(), &values.view(), &query_times.view())
+            .expect("Operation failed");
 
         assert_eq!(result, Array1::from_vec(vec![10.0, 10.0, 20.0, 30.0, 40.0]));
     }
@@ -801,8 +804,8 @@ mod tests {
         let values = Array1::from_vec(vec![10.0, 20.0, 30.0, 40.0]);
         let query_times = Array1::from_vec(vec![0.0, 2.0, 4.0, 6.0, 8.0]);
 
-        let result =
-            backward_fill(&timestamps.view(), &values.view(), &query_times.view()).unwrap();
+        let result = backward_fill(&timestamps.view(), &values.view(), &query_times.view())
+            .expect("Operation failed");
 
         assert_eq!(result, Array1::from_vec(vec![10.0, 20.0, 30.0, 40.0, 40.0]));
     }
@@ -844,10 +847,12 @@ mod tests {
 
         interpolator
             .fit(&timestamps.view(), &values.view())
-            .unwrap();
+            .expect("Operation failed");
 
         let query_times = Array1::from_vec(vec![2.5, 5.0]);
-        let result = interpolator.interpolate(&query_times.view()).unwrap();
+        let result = interpolator
+            .interpolate(&query_times.view())
+            .expect("Operation failed");
 
         assert_eq!(result.values.len(), 2);
         assert!(result.lower_bounds.is_some());

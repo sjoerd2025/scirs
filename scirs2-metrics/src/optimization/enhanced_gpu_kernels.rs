@@ -752,7 +752,7 @@ impl EnhancedGpuEngine {
         self.profiler
             .record_kernel_execution("correlation", execution_time);
 
-        Ok(F::from(result as f64).unwrap())
+        Ok(F::from(result as f64).expect("Failed to convert to float"))
     }
 
     /// Get or create optimized correlation kernel
@@ -802,7 +802,7 @@ impl EnhancedGpuEngine {
     /// Generate optimized correlation kernel source
     fn generate_correlation_kernel_source(&self, n: usize) -> Result<String> {
         // Generate backend-specific optimized kernel
-        let backend = &self.backends[self.active_backend.unwrap()];
+        let backend = &self.backends[self.active_backend.expect("Operation failed")];
 
         match backend.get_name() {
             "CUDA" => self.generate_cuda_correlation_kernel(n),
@@ -1849,17 +1849,17 @@ mod tests {
 
     #[test]
     fn test_backend_info() {
-        let cuda_backend = CudaBackend::new().unwrap();
+        let cuda_backend = CudaBackend::new().expect("Operation failed");
         if cuda_backend.is_available() {
             println!("CUDA is available");
         }
 
-        let opencl_backend = OpenClBackend::new().unwrap();
+        let opencl_backend = OpenClBackend::new().expect("Operation failed");
         if opencl_backend.is_available() {
             println!("OpenCL is available");
         }
 
-        let webgpu_backend = WebGpuBackend::new().unwrap();
+        let webgpu_backend = WebGpuBackend::new().expect("Operation failed");
         if webgpu_backend.is_available() {
             println!("WebGPU is available");
         }

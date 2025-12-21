@@ -96,7 +96,7 @@ impl AffinityManager {
                 // Use existing assignments
                 self.thread_assignments
                     .lock()
-                    .unwrap()
+                    .expect("Operation failed")
                     .iter()
                     .filter_map(|opt| opt.clone())
                     .collect()
@@ -188,7 +188,7 @@ impl AffinityManager {
 
     /// Set custom affinity for a specific thread
     pub fn set_thread_affinity(&self, threadid: usize, affinity: CoreAffinity) {
-        let mut assignments = self.thread_assignments.lock().unwrap();
+        let mut assignments = self.thread_assignments.lock().expect("Operation failed");
 
         // Expand vector if needed
         while assignments.len() <= threadid {
@@ -200,7 +200,7 @@ impl AffinityManager {
 
     /// Get affinity for a specific thread
     pub fn get_thread_affinity(&self, threadid: usize) -> Option<CoreAffinity> {
-        let assignments = self.thread_assignments.lock().unwrap();
+        let assignments = self.thread_assignments.lock().expect("Operation failed");
         assignments.get(threadid).and_then(|opt| opt.clone())
     }
 

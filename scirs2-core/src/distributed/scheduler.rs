@@ -38,7 +38,7 @@ impl DistributedScheduler {
     /// Get global scheduler instance
     pub fn global() -> CoreResult<Arc<Self>> {
         Ok(GLOBAL_SCHEDULER
-            .get_or_init(|| Arc::new(Self::new().unwrap()))
+            .get_or_init(|| Arc::new(Self::new().expect("Operation failed")))
             .clone())
     }
 
@@ -710,7 +710,7 @@ mod tests {
 
     #[test]
     fn test_scheduler_creation() {
-        let _scheduler = DistributedScheduler::new().unwrap();
+        let _scheduler = DistributedScheduler::new().expect("Operation failed");
         // Basic functionality test
     }
 
@@ -720,7 +720,7 @@ mod tests {
         assert_eq!(queue.size(), 0);
 
         let task = create_test_task(ClusterTaskPriority::Normal);
-        queue.enqueue(task).unwrap();
+        queue.enqueue(task).expect("Operation failed");
         assert_eq!(queue.size(), 1);
 
         let dequeued = queue.dequeue_next();
@@ -736,14 +736,14 @@ mod tests {
         let low_task = create_test_task(ClusterTaskPriority::Low);
         let high_task = create_test_task(ClusterTaskPriority::High);
 
-        queue.enqueue(low_task).unwrap();
-        queue.enqueue(high_task).unwrap();
+        queue.enqueue(low_task).expect("Operation failed");
+        queue.enqueue(high_task).expect("Operation failed");
 
         // High priority task should come first
-        let first = queue.dequeue_next().unwrap();
+        let first = queue.dequeue_next().expect("Operation failed");
         assert_eq!(first.priority, ClusterTaskPriority::High);
 
-        let second = queue.dequeue_next().unwrap();
+        let second = queue.dequeue_next().expect("Operation failed");
         assert_eq!(second.priority, ClusterTaskPriority::Low);
     }
 
@@ -753,7 +753,9 @@ mod tests {
         let nodes = vec![create_test_node("node1"), create_test_node("node2")];
         let task = create_test_task(ClusterTaskPriority::Normal);
 
-        let selected = balancer.select_node_for_task(&task, &nodes).unwrap();
+        let selected = balancer
+            .select_node_for_task(&task, &nodes)
+            .expect("Operation failed");
         assert!(selected.is_some());
     }
 

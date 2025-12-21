@@ -46,7 +46,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// }
 ///
 /// // Extract 3x3 patches with stride 1 and no padding
-/// let cols = im2col(&input.view(), (3, 3), (1, 1), (0, 0), (1, 1)).unwrap();
+/// let cols = im2col(&input.view(), (3, 3), (1, 1), (0, 0), (1, 1)).expect("Operation failed");
 ///
 /// // Resulting matrix has shape (3*3*3, 2*2*1) = (27, 4)
 /// // Each column represents a 3x3 patch across all 3 channels
@@ -172,7 +172,7 @@ where
 /// }
 ///
 /// // Convert to columns with im2col
-/// let cols = im2col(&input.view(), (3, 3), (1, 1), (0, 0), (1, 1)).unwrap();
+/// let cols = im2col(&input.view(), (3, 3), (1, 1), (0, 0), (1, 1)).expect("Operation failed");
 ///
 /// // Convert back to image with col2im
 /// let output = col2im(
@@ -182,7 +182,7 @@ where
 ///     (1, 1),
 ///     (0, 0),
 ///     (1, 1),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Verify output shape
 /// assert_eq!(output.shape(), &[1, 3, 4, 4]);
@@ -283,7 +283,8 @@ where
                 for w in 0..width {
                     let count = counts[[batch_idx, channel_idx, h, w]];
                     if count > 0 {
-                        output[[batch_idx, channel_idx, h, w]] /= F::from(count).unwrap();
+                        output[[batch_idx, channel_idx, h, w]] /=
+                            F::from(count).expect("Operation failed");
                     }
                 }
             }
@@ -325,7 +326,7 @@ where
 /// }
 ///
 /// // Apply 2x2 max pooling with stride 2
-/// let (output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).unwrap();
+/// let (output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).expect("Operation failed");
 ///
 /// // Resulting tensor has shape (1, 1, 2, 2)
 /// assert_eq!(output.shape(), &[1, 1, 2, 2]);
@@ -437,7 +438,7 @@ where
 /// }
 ///
 /// // Apply max pooling (forward pass)
-/// let (output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).unwrap();
+/// let (output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).expect("Operation failed");
 ///
 /// // Create gradient of the output
 /// let mut grad_output = Array4::<f32>::ones((1, 1, 2, 2));
@@ -447,7 +448,7 @@ where
 ///     &grad_output.view(),
 ///     &indices.view(),
 ///     (1, 1, 4, 4),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Verify shape
 /// assert_eq!(grad_input.shape(), &[1, 1, 4, 4]);
@@ -528,7 +529,7 @@ where
 ///     (1, 1, 2, 2),    // Kernel shape: out_channels_=1, in_channels=1, kernel_h=2, kernel_w=2
 ///     (1, 1),          // Stride: height=1, width=1
 ///     (0, 0),          // Padding: height=0, width=0
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// // For a 4x4 input with 2x2 kernel and no padding, we get a 3x3 output
 /// // Each output element is computed from 4 input elements (2x2 kernel)
 /// // So we should have 3*3*4*5 = 180 values in the indices array
@@ -668,7 +669,7 @@ pub fn compute_conv_indices(
 ///     (1, 1),  // stride
 ///     (1, 1),  // padding
 ///     (1, 1),  // dilation
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Output shape is (2, 16, 32, 32)
 /// assert_eq!(output.shape(), &[2, 16, 32, 32]);
@@ -791,7 +792,7 @@ where
 ///     (1, 1),
 ///     (1, 1),
 ///     (1, 1),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Backward pass
 /// let grad_output = Array4::<f32>::ones((2, 16, 32, 32));
@@ -802,7 +803,7 @@ where
 ///     (1, 1),
 ///     (1, 1),
 ///     (1, 1),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Gradient shape matches input shape
 /// assert_eq!(grad_input.shape(), &[2, 3, 32, 32]);
@@ -915,7 +916,7 @@ where
 ///     (1, 1),  // stride
 ///     (0, 0),  // padding
 ///     (1, 1),  // dilation
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Backward pass - grad_output must match forward output shape
 /// let grad_output = Array4::<f32>::ones(output.dim());
@@ -926,7 +927,7 @@ where
 ///     (1, 1),
 ///     (0, 0),
 ///     (1, 1),
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Gradient shape matches kernel shape
 /// assert_eq!(grad_kernel.shape(), &[1, 1, 2, 2]);
@@ -1006,7 +1007,7 @@ where
 ///
 /// // Backward pass for bias
 /// let grad_output = Array4::<f32>::ones((2, 16, 32, 32));
-/// let grad_bias = conv2d_backward_bias(&grad_output.view()).unwrap();
+/// let grad_bias = conv2d_backward_bias(&grad_output.view()).expect("Operation failed");
 ///
 /// // Gradient shape matches bias shape
 /// assert_eq!(grad_bias.shape(), &[16]);
@@ -1078,7 +1079,7 @@ where
 ///     (0, 0),      // padding
 ///     (0, 0),      // output_padding
 ///     (1, 1),      // dilation
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Calculate expected output shape:
 /// // output_h = (3 - 1) * 1 - 2 * 0 + 1 * (2 - 1) + 0 + 1 = 2 + 1 + 1 = 4
@@ -1211,7 +1212,7 @@ mod tests {
         }
 
         // Extract 2x2 patches with stride 1 and no padding
-        let cols = im2col(&input.view(), (2, 2), (1, 1), (0, 0), (1, 1)).unwrap();
+        let cols = im2col(&input.view(), (2, 2), (1, 1), (0, 0), (1, 1)).expect("Operation failed");
 
         // Resulting matrix should be (1*2*2, 2*2*1) = (4, 4)
         assert_eq!(cols.shape(), &[4, 4]);
@@ -1239,7 +1240,7 @@ mod tests {
         input[[0, 0, 1, 1]] = 3.0;
 
         // Extract 3x3 patches with stride 1 and padding 1
-        let cols = im2col(&input.view(), (3, 3), (1, 1), (1, 1), (1, 1)).unwrap();
+        let cols = im2col(&input.view(), (3, 3), (1, 1), (1, 1), (1, 1)).expect("Operation failed");
 
         // Resulting matrix should be (1*3*3, 2*2*1) = (9, 4)
         assert_eq!(cols.shape(), &[9, 4]);
@@ -1265,10 +1266,11 @@ mod tests {
         }
 
         // Convert to columns
-        let cols = im2col(&input.view(), (2, 2), (1, 1), (0, 0), (1, 1)).unwrap();
+        let cols = im2col(&input.view(), (2, 2), (1, 1), (0, 0), (1, 1)).expect("Operation failed");
 
         // Convert back to image
-        let output = col2im(&cols.view(), (1, 1, 3, 3), (2, 2), (1, 1), (0, 0), (1, 1)).unwrap();
+        let output = col2im(&cols.view(), (1, 1, 3, 3), (2, 2), (1, 1), (0, 0), (1, 1))
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(output.shape(), input.shape());
@@ -1296,7 +1298,8 @@ mod tests {
         }
 
         // Apply 2x2 max pooling with stride 2
-        let (output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).unwrap();
+        let (output, indices) =
+            max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(output.shape(), &[1, 1, 2, 2]);
@@ -1325,14 +1328,15 @@ mod tests {
         }
 
         // Forward pass
-        let (_output, indices) = max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).unwrap();
+        let (_output, indices) =
+            max_pool2d(&input.view(), (2, 2), (2, 2), (0, 0)).expect("Operation failed");
 
         // Create gradient of output
         let grad_output = Array4::<f32>::ones((1, 1, 2, 2));
 
         // Backward pass
-        let grad_input =
-            max_pool2d_backward(&grad_output.view(), &indices.view(), (1, 1, 4, 4)).unwrap();
+        let grad_input = max_pool2d_backward(&grad_output.view(), &indices.view(), (1, 1, 4, 4))
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(grad_input.shape(), input.shape());
@@ -1369,8 +1373,8 @@ mod tests {
         kernel[[0, 0, 1, 1]] = 0.0;
 
         // Apply convolution
-        let output =
-            conv2d_im2col(&input.view(), &kernel.view(), None, (1, 1), (0, 0), (1, 1)).unwrap();
+        let output = conv2d_im2col(&input.view(), &kernel.view(), None, (1, 1), (0, 0), (1, 1))
+            .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(output.shape(), &[1, 1, 2, 2]);
@@ -1411,7 +1415,7 @@ mod tests {
             (0, 0),
             (1, 1),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(output.shape(), &[1, 1, 2, 2]);
@@ -1436,8 +1440,8 @@ mod tests {
         kernel[[0, 0, 1, 1]] = 4.0;
 
         // Apply forward pass
-        let _output =
-            conv2d_im2col(&input.view(), &kernel.view(), None, (1, 1), (0, 0), (1, 1)).unwrap();
+        let _output = conv2d_im2col(&input.view(), &kernel.view(), None, (1, 1), (0, 0), (1, 1))
+            .expect("Operation failed");
 
         // Create gradient of output
         let grad_output = Array4::<f32>::ones((1, 1, 2, 2));
@@ -1451,7 +1455,7 @@ mod tests {
             (0, 0),
             (1, 1),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(grad_input.shape(), input.shape());
@@ -1484,7 +1488,7 @@ mod tests {
             (0, 0),
             (1, 1),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         assert_eq!(grad_kernel.shape(), &[1, 1, 2, 2]);
@@ -1512,7 +1516,7 @@ mod tests {
         }
 
         // Apply backward pass for bias
-        let grad_bias = conv2d_backward_bias(&grad_output.view()).unwrap();
+        let grad_bias = conv2d_backward_bias(&grad_output.view()).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(grad_bias.shape(), &[3]);
@@ -1543,7 +1547,7 @@ mod tests {
             (0, 0), // output_padding
             (1, 1), // dilation
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check dimensions
         // outputsize = (inputsize - 1) * stride - 2 * padding + kernelsize

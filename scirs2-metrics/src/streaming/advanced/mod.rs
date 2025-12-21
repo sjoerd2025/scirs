@@ -164,7 +164,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + std::ops::AddAs
         confidence: Option<F>,
     ) -> Result<UpdateResult<F>> {
         let start_time = Instant::now();
-        let prediction_correct = (true_value - predicted_value).abs() < F::from(0.001).unwrap();
+        let prediction_correct = (true_value - predicted_value).abs()
+            < F::from(0.001).expect("Failed to convert constant to float");
         let error = (true_value - predicted_value).abs();
 
         // Update basic statistics
@@ -174,8 +175,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + std::ops::AddAs
         }
 
         self.current_stats.current_accuracy = if self.current_stats.total_samples > 0 {
-            F::from(self.current_stats.correct_predictions).unwrap()
-                / F::from(self.current_stats.total_samples).unwrap()
+            F::from(self.current_stats.correct_predictions).expect("Failed to convert to float")
+                / F::from(self.current_stats.total_samples).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -183,7 +184,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + std::ops::AddAs
         self.current_stats.error_rate = F::one() - self.current_stats.current_accuracy;
 
         // Update moving average
-        let alpha = F::from(0.1).unwrap();
+        let alpha = F::from(0.1).expect("Failed to convert constant to float");
         self.current_stats.moving_average_accuracy = alpha * self.current_stats.current_accuracy
             + (F::one() - alpha) * self.current_stats.moving_average_accuracy;
 
@@ -282,7 +283,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + std::ops::AddAs
         );
         performance.insert(
             "total_samples".to_string(),
-            F::from(self.current_stats.total_samples).unwrap(),
+            F::from(self.current_stats.total_samples).expect("Failed to convert to float"),
         );
         performance
     }
@@ -300,8 +301,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + std::ops::AddAs
                 .cloned()
                 .collect(),
             anomaly_rate: if self.current_stats.total_samples > 0 {
-                F::from(self.anomaly_detector.detected_anomalies.len()).unwrap()
-                    / F::from(self.current_stats.total_samples).unwrap()
+                F::from(self.anomaly_detector.detected_anomalies.len()).expect("Operation failed")
+                    / F::from(self.current_stats.total_samples).expect("Failed to convert to float")
             } else {
                 F::zero()
             },

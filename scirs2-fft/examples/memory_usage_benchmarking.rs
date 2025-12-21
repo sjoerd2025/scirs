@@ -45,17 +45,17 @@ fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
         // Warmup - convert to complex for FFT functions
         let complex_signal: Vec<Complex64> =
             signal.iter().map(|&x| Complex64::new(x, 0.0)).collect();
-        let _ = fft(&complex_signal, None).unwrap();
-        let _ = optimized_fft(&complex_signal).unwrap();
+        let _ = fft(&complex_signal, None).expect("Operation failed");
+        let _ = optimized_fft(&complex_signal).expect("Operation failed");
 
         // Third warmup - using standard FFT since we can't use plan_cache API directly anymore
-        let _ = fft(&complex_signal, None).unwrap();
+        let _ = fft(&complex_signal, None).expect("Operation failed");
 
         // Benchmark standard FFT
         let mut total_standard = Duration::from_nanos(0);
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = fft(&complex_signal, None).unwrap();
+            let _ = fft(&complex_signal, None).expect("Operation failed");
             total_standard += start.elapsed();
         }
 
@@ -63,7 +63,7 @@ fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
         let mut total_efficient = Duration::from_nanos(0);
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = optimized_fft(&complex_signal).unwrap();
+            let _ = optimized_fft(&complex_signal).expect("Operation failed");
             total_efficient += start.elapsed();
         }
 
@@ -72,14 +72,14 @@ fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
 
         // First run with plan (using standard FFT as proxy)
         let start_first = Instant::now();
-        let _ = fft(&complex_signal, None).unwrap();
+        let _ = fft(&complex_signal, None).expect("Operation failed");
         let first_plan_time = start_first.elapsed();
 
         // Benchmark plan-cached FFT (subsequent runs)
         let mut total_planned = Duration::from_nanos(0);
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = fft(&complex_signal, None).unwrap();
+            let _ = fft(&complex_signal, None).expect("Operation failed");
             total_planned += start.elapsed();
         }
 
@@ -137,16 +137,16 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
         let signal = create_test_array(rows, cols);
 
         // Warmup
-        let _ = fft2(&signal, None, None, None).unwrap();
-        let _ = optimized_fft2(&signal, None).unwrap();
+        let _ = fft2(&signal, None, None, None).expect("Operation failed");
+        let _ = optimized_fft2(&signal, None).expect("Operation failed");
         // Third warmup using standard FFT2
-        let _ = fft2(&signal, None, None, None).unwrap();
+        let _ = fft2(&signal, None, None, None).expect("Operation failed");
 
         // Benchmark standard FFT2
         let mut total_standard = Duration::from_nanos(0);
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = fft2(&signal, None, None, None).unwrap();
+            let _ = fft2(&signal, None, None, None).expect("Operation failed");
             total_standard += start.elapsed();
         }
 
@@ -154,7 +154,7 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
         let mut total_efficient = Duration::from_nanos(0);
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = optimized_fft2(&signal, None).unwrap();
+            let _ = optimized_fft2(&signal, None).expect("Operation failed");
             total_efficient += start.elapsed();
         }
 
@@ -163,14 +163,14 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
 
         // First run with plan creation (using standard FFT2 as proxy)
         let start_first = Instant::now();
-        let _ = fft2(&signal, None, None, None).unwrap();
+        let _ = fft2(&signal, None, None, None).expect("Operation failed");
         let first_plan_time = start_first.elapsed();
 
         // Benchmark plan-cached FFT2 (subsequent runs)
         let mut total_planned = Duration::from_nanos(0);
         for _ in 0..iterations {
             let start = Instant::now();
-            let _ = fft2(&signal, None, None, None).unwrap();
+            let _ = fft2(&signal, None, None, None).expect("Operation failed");
             total_planned += start.elapsed();
         }
 

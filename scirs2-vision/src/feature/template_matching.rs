@@ -57,7 +57,7 @@ pub struct MatchResult {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let template = img.crop_imm(50, 50, 30, 30);
 /// let scores = template_match(&img, &template, MatchMethod::NormalizedCrossCorrelation)?;
 /// # Ok(())
@@ -497,7 +497,7 @@ mod tests {
         let result = template_match(&img, &template, MatchMethod::CrossCorrelation);
         assert!(result.is_ok());
 
-        let scores = result.unwrap();
+        let scores = result.expect("Operation failed");
         assert_eq!(scores.dim(), (41, 41));
     }
 

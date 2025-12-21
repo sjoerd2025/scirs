@@ -185,12 +185,12 @@ fn robust_scale_estimation(residuals: &Array1<f64>, method: RobustScaleMethod) -
     match method {
         RobustScaleMethod::MAD => {
             let mut sorted = residuals.to_vec();
-            sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             let median = sorted[sorted.len() / 2];
 
             let mut abs_deviations: Vec<f64> =
                 residuals.iter().map(|&x| (x - median).abs()).collect();
-            abs_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            abs_deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             1.4826 * abs_deviations[abs_deviations.len() / 2] // MAD * consistency factor
         }

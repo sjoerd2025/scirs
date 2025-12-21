@@ -116,7 +116,7 @@ impl NMF {
         let (n_samples, n_features) = (v.shape()[0], v.shape()[1]);
         let mut rng = scirs2_core::random::rng();
 
-        let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
+        let scale = (v.mean().expect("Operation failed") / self.n_components as f64).sqrt();
 
         let mut w = Array2::zeros((n_samples, self.n_components));
         let mut h = Array2::zeros((self.n_components, n_features));
@@ -488,13 +488,13 @@ impl NMF {
         // Convert to f64
         let v = x.mapv(|x| NumCast::from(x).unwrap_or(0.0));
 
-        let h = self.components.as_ref().unwrap();
+        let h = self.components.as_ref().expect("Operation failed");
         let n_samples = v.shape()[0];
 
         // Initialize W randomly
         let mut rng = scirs2_core::random::rng();
 
-        let scale = (v.mean().unwrap() / self.n_components as f64).sqrt();
+        let scale = (v.mean().expect("Operation failed") / self.n_components as f64).sqrt();
         let mut w = Array2::zeros((n_samples, self.n_components));
 
         for i in 0..n_samples {
@@ -524,7 +524,11 @@ impl NMF {
         S::Elem: Float + NumCast,
     {
         self.fit(x)?;
-        Ok(self.coefficients.as_ref().unwrap().clone())
+        Ok(self
+            .coefficients
+            .as_ref()
+            .expect("Operation failed")
+            .clone())
     }
 
     /// Get the components (H matrix)
@@ -555,7 +559,7 @@ impl NMF {
             ));
         }
 
-        let h = self.components.as_ref().unwrap();
+        let h = self.components.as_ref().expect("Operation failed");
         Ok(w.dot(h))
     }
 }
@@ -575,11 +579,11 @@ mod tests {
                 5.0, 10.0, 15.0, 20.0, 6.0, 12.0, 18.0, 24.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut nmf = NMF::new(2).with_max_iter(100).with_random_state(42);
 
-        let w = nmf.fit_transform(&x).unwrap();
+        let w = nmf.fit_transform(&x).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(w.shape(), &[6, 2]);
@@ -590,7 +594,7 @@ mod tests {
         }
 
         // Check components
-        let h = nmf.components().unwrap();
+        let h = nmf.components().expect("Operation failed");
         assert_eq!(h.shape(), &[2, 4]);
 
         for val in h.iter() {
@@ -598,7 +602,7 @@ mod tests {
         }
 
         // Check reconstruction
-        let x_reconstructed = nmf.inverse_transform(&w).unwrap();
+        let x_reconstructed = nmf.inverse_transform(&w).expect("Operation failed");
         assert_eq!(x_reconstructed.shape(), x.shape());
     }
 
@@ -611,14 +615,14 @@ mod tests {
         let result = nmf.fit_transform(&x);
         assert!(result.is_ok());
 
-        let w = result.unwrap();
+        let w = result.expect("Operation failed");
         assert_eq!(w.shape(), &[10, 3]);
     }
 
     #[test]
     fn test_nmf_negative_input() {
         let x = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-            .unwrap();
+            .expect("Operation failed");
 
         let mut nmf = NMF::new(2);
         let result = nmf.fit(&x);
@@ -641,14 +645,14 @@ mod tests {
                 5.0, 10.0, 15.0, 20.0, 6.0, 12.0, 18.0, 24.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut nmf_cd = NMF::new(2)
             .with_solver("cd")
             .with_max_iter(100)
             .with_random_state(42);
 
-        let w_cd = nmf_cd.fit_transform(&x).unwrap();
+        let w_cd = nmf_cd.fit_transform(&x).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(w_cd.shape(), &[6, 2]);
@@ -659,7 +663,7 @@ mod tests {
         }
 
         // Check components
-        let h_cd = nmf_cd.components().unwrap();
+        let h_cd = nmf_cd.components().expect("Operation failed");
         assert_eq!(h_cd.shape(), &[2, 4]);
 
         for val in h_cd.iter() {
@@ -667,7 +671,7 @@ mod tests {
         }
 
         // Check reconstruction
-        let x_reconstructed = nmf_cd.inverse_transform(&w_cd).unwrap();
+        let x_reconstructed = nmf_cd.inverse_transform(&w_cd).expect("Operation failed");
         assert_eq!(x_reconstructed.shape(), x.shape());
 
         // Compare with multiplicative update solver
@@ -676,11 +680,11 @@ mod tests {
             .with_max_iter(100)
             .with_random_state(42);
 
-        let _w_mu = nmf_mu.fit_transform(&x).unwrap();
+        let _w_mu = nmf_mu.fit_transform(&x).expect("Operation failed");
 
         // Both should converge and produce valid decompositions
-        assert!(nmf_cd.reconstruction_error().unwrap() >= 0.0);
-        assert!(nmf_mu.reconstruction_error().unwrap() >= 0.0);
+        assert!(nmf_cd.reconstruction_error().expect("Operation failed") >= 0.0);
+        assert!(nmf_mu.reconstruction_error().expect("Operation failed") >= 0.0);
     }
 
     #[test]

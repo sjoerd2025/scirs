@@ -721,20 +721,20 @@ impl AdvancedTextCoordinator {
 
         // Step 1: Memory optimization and pre-allocation
         if self.config.enable_simd_optimizations {
-            let memory_optimizer = self.memory_optimizer.lock().unwrap();
+            let memory_optimizer = self.memory_optimizer.lock().expect("Operation failed");
             memory_optimizer.optimize_for_batch(texts.len())?;
             optimizations_applied.push("Memory pre-allocation optimization".to_string());
         }
 
         // Step 2: Apply performance optimizations
-        let performance_optimizer = self.performance_optimizer.lock().unwrap();
+        let performance_optimizer = self.performance_optimizer.lock().expect("Operation failed");
         let optimal_strategy = performance_optimizer.determine_optimal_strategy(texts)?;
         optimizations_applied.push(format!("Performance strategy: {optimal_strategy:?}"));
         drop(performance_optimizer);
 
         // Step 3: Neural ensemble processing
         let primary_result = if self.config.enable_neural_ensemble {
-            let neural_ensemble = self.neural_ensemble.read().unwrap();
+            let neural_ensemble = self.neural_ensemble.read().expect("Operation failed");
             let result = neural_ensemble.processtexts_ensemble(texts)?;
             optimizations_applied.push("Neural ensemble processing".to_string());
             result
@@ -744,7 +744,7 @@ impl AdvancedTextCoordinator {
 
         // Step 4: Advanced analytics
         let analytics = if self.config.enable_advanced_analytics {
-            let analytics_engine = self.analytics_engine.read().unwrap();
+            let analytics_engine = self.analytics_engine.read().expect("Operation failed");
             let result = analytics_engine.analyze_comprehensive(texts, &primary_result)?;
             optimizations_applied.push("Advanced analytics processing".to_string());
             result
@@ -754,7 +754,7 @@ impl AdvancedTextCoordinator {
 
         // Step 5: Real-time adaptation
         if self.config.enable_real_time_adaptation {
-            let adaptive_engine = self.adaptive_engine.lock().unwrap();
+            let adaptive_engine = self.adaptive_engine.lock().expect("Operation failed");
             AdaptiveTextEngine::adapt_based_on_performance(&start_time.elapsed())?;
             optimizations_applied.push("Real-time performance adaptation".to_string());
         }
@@ -786,7 +786,7 @@ impl AdvancedTextCoordinator {
         let start_time = Instant::now();
 
         // Use neural ensemble for deep semantic understanding
-        let neural_ensemble = self.neural_ensemble.read().unwrap();
+        let neural_ensemble = self.neural_ensemble.read().expect("Operation failed");
         let embeddings1 = neural_ensemble.get_advanced_embeddings(text1)?;
         let embeddings2 = neural_ensemble.get_advanced_embeddings(text2)?;
         drop(neural_ensemble);
@@ -803,7 +803,7 @@ impl AdvancedTextCoordinator {
 
         // Advanced analytics
         let analytics = if self.config.enable_advanced_analytics {
-            let analytics_engine = self.analytics_engine.read().unwrap();
+            let analytics_engine = self.analytics_engine.read().expect("Operation failed");
             analytics_engine.analyze_similarity_context(text1, text2, cosine_similarity)?
         } else {
             SimilarityAnalytics::empty()
@@ -828,12 +828,12 @@ impl AdvancedTextCoordinator {
         let start_time = Instant::now();
 
         // Memory optimization for batch processing
-        let memory_optimizer = self.memory_optimizer.lock().unwrap();
+        let memory_optimizer = self.memory_optimizer.lock().expect("Operation failed");
         memory_optimizer.optimize_for_classification_batch(texts.len(), categories.len())?;
         drop(memory_optimizer);
 
         // Neural ensemble classification
-        let neural_ensemble = self.neural_ensemble.read().unwrap();
+        let neural_ensemble = self.neural_ensemble.read().expect("Operation failed");
         let classifications = neural_ensemble.classify_batch_ensemble(texts, categories)?;
         drop(neural_ensemble);
 
@@ -870,19 +870,19 @@ impl AdvancedTextCoordinator {
         let start_time = Instant::now();
 
         // Adaptive parameter optimization
-        let adaptive_engine = self.adaptive_engine.lock().unwrap();
+        let adaptive_engine = self.adaptive_engine.lock().expect("Operation failed");
         let optimal_params =
             AdaptiveTextEngine::optimize_topic_modeling_params(documents, num_topics)?;
         drop(adaptive_engine);
 
         // Neural-enhanced topic modeling
-        let neural_ensemble = self.neural_ensemble.read().unwrap();
+        let neural_ensemble = self.neural_ensemble.read().expect("Operation failed");
         let enhanced_topics =
             neural_ensemble.enhanced_topic_modeling(documents, &optimal_params)?;
         drop(neural_ensemble);
 
         // Advanced topic analytics
-        let analytics_engine = self.analytics_engine.read().unwrap();
+        let analytics_engine = self.analytics_engine.read().expect("Operation failed");
         let topic_analytics =
             TextAnalyticsEngine::analyze_topic_quality(&enhanced_topics, documents)?;
         drop(analytics_engine);
@@ -901,7 +901,7 @@ impl AdvancedTextCoordinator {
 
     /// Get comprehensive performance report
     pub fn get_performance_report(&self) -> Result<AdvancedTextPerformanceReport> {
-        let performance_tracker = self.performance_tracker.read().unwrap();
+        let performance_tracker = self.performance_tracker.read().expect("Operation failed");
         let current_metrics = performance_tracker.get_current_metrics();
         let historical_analysis = performance_tracker.analyze_historical_performance();
         let optimization_recommendations = self.generate_optimization_recommendations()?;
@@ -1631,7 +1631,7 @@ mod tests {
     #[test]
     fn test_advanced_processtext() {
         let config = AdvancedTextConfig::default();
-        let coordinator = AdvancedTextCoordinator::new(config).unwrap();
+        let coordinator = AdvancedTextCoordinator::new(config).expect("Operation failed");
 
         let texts = vec![
             "This is a test document for Advanced processing.".to_string(),
@@ -1641,7 +1641,7 @@ mod tests {
         let result = coordinator.advanced_processtext(&texts);
         assert!(result.is_ok());
 
-        let advanced_result = result.unwrap();
+        let advanced_result = result.expect("Operation failed");
         assert!(!advanced_result.optimizations_applied.is_empty());
         assert!(advanced_result.performance_metrics.throughput > 0.0);
     }
@@ -1649,13 +1649,13 @@ mod tests {
     #[test]
     fn test_advanced_semantic_similarity() {
         let config = AdvancedTextConfig::default();
-        let coordinator = AdvancedTextCoordinator::new(config).unwrap();
+        let coordinator = AdvancedTextCoordinator::new(config).expect("Operation failed");
 
         let result = coordinator
             .advanced_semantic_similarity("The cat sat on the mat", "A feline rested on the rug");
 
         assert!(result.is_ok());
-        let similarity_result = result.unwrap();
+        let similarity_result = result.expect("Operation failed");
         assert!(similarity_result.cosine_similarity >= 0.0);
         assert!(similarity_result.cosine_similarity <= 1.0);
         assert!(similarity_result.confidence_score > 0.0);

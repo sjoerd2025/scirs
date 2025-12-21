@@ -582,7 +582,7 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert_eq!(result.coefficients.shape()[1], 64);
         assert_eq!(result.coefficients.shape()[2], 64);
     }

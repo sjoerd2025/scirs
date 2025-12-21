@@ -108,8 +108,8 @@ pub fn procrustes(
     }
 
     // Center the data by subtracting the mean
-    let mean1 = data1.mean_axis(Axis(0)).unwrap();
-    let mean2 = data2.mean_axis(Axis(0)).unwrap();
+    let mean1 = data1.mean_axis(Axis(0)).expect("Operation failed");
+    let mean2 = data2.mean_axis(Axis(0)).expect("Operation failed");
 
     let mut centered1 = data1.to_owned();
     let mut centered2 = data2.to_owned();
@@ -240,8 +240,8 @@ pub fn procrustes_extended(
 
     // Center the data if translation is enabled
     let (centered1, centered2, mean1, mean2) = if translation {
-        let mean1 = data1.mean_axis(Axis(0)).unwrap();
-        let mean2 = data2.mean_axis(Axis(0)).unwrap();
+        let mean1 = data1.mean_axis(Axis(0)).expect("Operation failed");
+        let mean2 = data2.mean_axis(Axis(0)).expect("Operation failed");
 
         let mut centered1 = data1.to_owned();
         let mut centered2 = data2.to_owned();

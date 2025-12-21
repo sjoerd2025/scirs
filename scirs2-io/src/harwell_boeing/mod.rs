@@ -309,7 +309,7 @@ impl HBHeader {
 /// ```no_run
 /// use scirs2_io::harwell_boeing::read_harwell_boeing;
 ///
-/// let matrix = read_harwell_boeing("matrix.hb").unwrap();
+/// let matrix = read_harwell_boeing("matrix.hb").expect("Operation failed");
 /// println!("Matrix: {}x{} with {} non-zeros", matrix.header.nrow, matrix.header.ncol, matrix.header.nnzero);
 /// ```
 #[allow(dead_code)]
@@ -445,7 +445,7 @@ pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64
 /// #     header, colptr: vec![0, 1, 2], rowind: vec![0, 1],
 /// #     values: Some(vec![1.0, 2.0]), rhs: None,
 /// # };
-/// write_harwell_boeing("output.hb", &matrix).unwrap();
+/// write_harwell_boeing("output.hb", &matrix).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64>) -> Result<()> {
@@ -715,19 +715,19 @@ mod tests {
     #[test]
     fn testmatrix_type_parsing() {
         assert_eq!(
-            HBMatrixType::from_str("RUA").unwrap(),
+            HBMatrixType::from_str("RUA").expect("Operation failed"),
             HBMatrixType::RealUnsymmetric
         );
         assert_eq!(
-            HBMatrixType::from_str("RSA").unwrap(),
+            HBMatrixType::from_str("RSA").expect("Operation failed"),
             HBMatrixType::RealSymmetric
         );
         assert_eq!(
-            HBMatrixType::from_str("CUA").unwrap(),
+            HBMatrixType::from_str("CUA").expect("Operation failed"),
             HBMatrixType::ComplexUnsymmetric
         );
         assert_eq!(
-            HBMatrixType::from_str("PUA").unwrap(),
+            HBMatrixType::from_str("PUA").expect("Operation failed"),
             HBMatrixType::Pattern
         );
     }
@@ -763,7 +763,10 @@ mod tests {
         assert_eq!(hbmatrix.header.nnzero, 4);
         assert_eq!(hbmatrix.colptr, vec![0, 2, 4]);
         assert_eq!(hbmatrix.rowind, vec![0, 1, 0, 1]);
-        assert_eq!(hbmatrix.values.as_ref().unwrap(), &vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(
+            hbmatrix.values.as_ref().expect("Operation failed"),
+            &vec![1.0, 2.0, 3.0, 4.0]
+        );
 
         // Convert back to CCS
         let (new_colptr, new_rowind, new_values) = hb_to_ccs(&hbmatrix);

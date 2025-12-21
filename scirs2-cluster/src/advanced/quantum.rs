@@ -111,7 +111,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
                 let idx = quantum_state * self.n_clusters + cluster;
 
                 // Add quantum noise to classical centroids
-                let noise_scale = F::from(0.1).unwrap();
+                let noise_scale = F::from(0.1).expect("Failed to convert constant to float");
                 for feature in 0..n_features {
                     let noise = self.quantum_noise() * noise_scale;
                     quantum_centroids[[idx, feature]] =
@@ -120,18 +120,19 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
 
                 // Initialize quantum amplitudes with equal superposition
                 quantum_amplitudes[[quantum_state, cluster]] =
-                    F::from(1.0 / (self.config.n_quantum_states as f64).sqrt()).unwrap();
+                    F::from(1.0 / (self.config.n_quantum_states as f64).sqrt())
+                        .expect("Operation failed");
             }
         }
 
         // Initialize quantum states for each data point
         self.quantum_states = Vec::with_capacity(n_samples);
         for _ in 0..n_samples {
-            let amplitude = F::from(1.0 / (n_samples as f64).sqrt()).unwrap();
+            let amplitude = F::from(1.0 / (n_samples as f64).sqrt()).expect("Operation failed");
             let phase = F::zero();
             let cluster_probabilities = Array1::from_elem(
                 self.n_clusters,
-                F::from(1.0 / self.n_clusters as f64).unwrap(),
+                F::from(1.0 / self.n_clusters as f64).expect("Failed to convert to float"),
             );
 
             self.quantum_states.push(QuantumState {
@@ -181,7 +182,8 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
             }
 
             // Select next centroid probabilistically
-            let target = total_distance * F::from(0.5).unwrap();
+            let target =
+                total_distance * F::from(0.5).expect("Failed to convert constant to float");
             let mut cumsum = F::zero();
             for j in 0..n_samples {
                 cumsum = cumsum + distances[j];
@@ -199,13 +201,13 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     fn quantum_noise(&self) -> F {
         // Simplified quantum noise generation
         let mut rng = scirs2_core::random::thread_rng();
-        F::from(rng.gen_range(-1.0..1.0)).unwrap()
+        F::from(rng.gen_range(-1.0..1.0)).expect("Operation failed")
     }
 
     /// Perform quantum optimization iterations
     fn quantum_optimization(&mut self, data: ArrayView2<F>) -> Result<()> {
-        let mut temperature = F::from(self.config.temperature).unwrap();
-        let cooling_rate = F::from(self.config.cooling_rate).unwrap();
+        let mut temperature = F::from(self.config.temperature).expect("Failed to convert to float");
+        let cooling_rate = F::from(self.config.cooling_rate).expect("Failed to convert to float");
 
         for iteration in 0..self.config.quantum_iterations {
             // Quantum evolution step
@@ -231,8 +233,8 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
 
     /// Quantum evolution step - evolve quantum states
     fn quantum_evolution_step(&mut self, data: ArrayView2<F>) -> Result<()> {
-        let quantum_centroids = self.quantum_centroids.as_ref().unwrap();
-        let quantum_amplitudes = self.quantum_amplitudes.as_ref().unwrap();
+        let quantum_centroids = self.quantum_centroids.as_ref().expect("Operation failed");
+        let quantum_amplitudes = self.quantum_amplitudes.as_ref().expect("Operation failed");
 
         for (point_idx, point) in data.rows().into_iter().enumerate() {
             let quantum_state = &mut self.quantum_states[point_idx];
@@ -248,8 +250,9 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
 
                     // Quantum amplitude contribution
                     let amplitude = quantum_amplitudes[[quantum_idx, cluster]];
-                    let quantum_weight =
-                        amplitude * F::from((-distance.to_f64().unwrap()).exp()).unwrap();
+                    let quantum_weight = amplitude
+                        * F::from((-distance.to_f64().expect("Failed to convert to float")).exp())
+                            .expect("Operation failed");
                     total_amplitude = total_amplitude + quantum_weight;
                 }
 
@@ -270,7 +273,8 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
 
     /// Apply quantum entanglement between states
     fn apply_entanglement(&mut self) -> Result<()> {
-        let entanglement = F::from(self.config.entanglement_strength).unwrap();
+        let entanglement =
+            F::from(self.config.entanglement_strength).expect("Failed to convert to float");
 
         // Simple entanglement: correlate neighboring quantum states
         for i in 0..(self.quantum_states.len() - 1) {
@@ -307,8 +311,10 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
 
     /// Measure quantum states and apply decoherence
     fn measure_and_decohere(&mut self, temperature: F) -> Result<()> {
-        let decoherence = F::from(self.config.decoherence_factor).unwrap();
-        let threshold = F::from(self.config.measurement_threshold).unwrap();
+        let decoherence =
+            F::from(self.config.decoherence_factor).expect("Failed to convert to float");
+        let threshold =
+            F::from(self.config.measurement_threshold).expect("Failed to convert to float");
         let quantum_noise = self.quantum_noise();
 
         for quantum_state in &mut self.quantum_states {
@@ -316,15 +322,18 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
             quantum_state.amplitude = quantum_state.amplitude * decoherence;
 
             // Thermal noise based on temperature
-            let thermal_noise = temperature * quantum_noise * F::from(0.01).unwrap();
+            let thermal_noise = temperature
+                * quantum_noise
+                * F::from(0.01).expect("Failed to convert constant to float");
             quantum_state.phase = quantum_state.phase + thermal_noise;
 
             // Measurement collapse - if probability is high enough, collapse to classical state
             for cluster in 0..self.n_clusters {
                 if quantum_state.cluster_probabilities[cluster] > threshold {
                     // Partial collapse - increase probability of measured state
-                    quantum_state.cluster_probabilities[cluster] =
-                        quantum_state.cluster_probabilities[cluster] * F::from(1.1).unwrap();
+                    quantum_state.cluster_probabilities[cluster] = quantum_state
+                        .cluster_probabilities[cluster]
+                        * F::from(1.1).expect("Failed to convert constant to float");
                 }
             }
 
@@ -342,7 +351,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
 
     /// Update classical centroids based on quantum measurements
     fn update_classical_centroids(&mut self, data: ArrayView2<F>) -> Result<()> {
-        let classical_centroids = self.classical_centroids.as_mut().unwrap();
+        let classical_centroids = self.classical_centroids.as_mut().expect("Operation failed");
         classical_centroids.fill(F::zero());
 
         let mut cluster_weights = Array1::zeros(self.n_clusters);
@@ -383,7 +392,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
             ));
         }
 
-        let classical_centroids = self.classical_centroids.as_ref().unwrap();
+        let classical_centroids = self.classical_centroids.as_ref().expect("Operation failed");
         let n_samples = data.nrows();
         let mut labels = Array1::zeros(n_samples);
 
@@ -426,7 +435,10 @@ pub fn quantum_kmeans<F: Float + FromPrimitive + Debug>(
     let mut clusterer = QuantumKMeans::new(n_clusters, config);
     clusterer.fit(data)?;
 
-    let centroids = clusterer.cluster_centers().unwrap().clone();
+    let centroids = clusterer
+        .cluster_centers()
+        .expect("Operation failed")
+        .clone();
     let labels = clusterer.predict(data)?;
 
     Ok((centroids, labels))
@@ -459,7 +471,7 @@ mod tests {
             (6, 2),
             vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 5.0, 5.0, 6.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let config = QuantumConfig {
             quantum_iterations: 10,
             ..Default::default()
@@ -468,7 +480,7 @@ mod tests {
         let result = quantum_kmeans(data.view(), 2, Some(config));
         assert!(result.is_ok());
 
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Operation failed");
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(centroids.ncols(), 2);
         assert_eq!(labels.len(), 6);

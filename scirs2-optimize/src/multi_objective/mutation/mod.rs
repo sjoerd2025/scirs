@@ -73,7 +73,7 @@ impl GaussianMutation {
 impl MutationOperator for GaussianMutation {
     fn mutate(&self, solution: &mut [f64], bounds: &[(f64, f64)]) {
         let mut rng = scirs2_core::random::rng();
-        let normal = Normal::new(0.0, self.std_dev).unwrap();
+        let normal = Normal::new(0.0, self.std_dev).expect("Operation failed");
 
         for i in 0..solution.len() {
             if rng.random::<f64>() <= self.mutation_probability {

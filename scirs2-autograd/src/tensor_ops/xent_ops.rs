@@ -105,7 +105,7 @@ impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropy {
                     .expect("Wrong label value")
             })
             .into_shape_with_order(scirs2_core::ndarray::IxDyn(&[log_x.shape()[0], 1]))
-            .unwrap();
+            .expect("Operation failed");
 
         ctx.append_output(ret);
         ctx.append_output(log_x);
@@ -142,7 +142,7 @@ impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropyGrad {
         let mut x = log_x.map(|a| a.exp());
         let t = &ctx.input(1);
         for (mut row, &t_) in x.axis_iter_mut(scirs2_core::ndarray::Axis(0)).zip(t) {
-            row[t_.to_usize().unwrap()] -= T::one();
+            row[t_.to_usize().expect("Operation failed")] -= T::one();
         }
 
         let gy = &ctx.input(2);

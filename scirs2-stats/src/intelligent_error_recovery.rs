@@ -143,7 +143,7 @@ impl IntelligentErrorRecovery {
         strategies.sort_by(|a, b| {
             b.success_probability
                 .partial_cmp(&a.success_probability)
-                .unwrap()
+                .expect("Operation failed")
         });
         strategies.truncate(self.config.max_suggestions);
 
@@ -257,7 +257,7 @@ impl IntelligentErrorRecovery {
             })
             .collect();
 
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
         similarities.into_iter()
             .take(5) // Top 5 similar patterns
             .filter(|(_, sim)| *sim > 0.7) // Similarity threshold
@@ -804,7 +804,7 @@ impl NeuralErrorClassifier {
         let (best_class, confidence) = output
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(i, &conf)| (i, conf))
             .unwrap_or((0, 0.0));
 
@@ -978,7 +978,7 @@ impl StrategyGenerator for SimilarityBasedGenerator {
             })
             .collect();
 
-        similarities.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        similarities.sort_by(|a, b| b.0.partial_cmp(&a.0).expect("Operation failed"));
 
         // Return top 3 most similar strategies
         for (similarity, strategy) in similarities.into_iter().take(3) {
@@ -1189,7 +1189,7 @@ impl RecoveryStrategyEnsemble {
         merged.sort_by(|a, b| {
             b.success_probability
                 .partial_cmp(&a.success_probability)
-                .unwrap()
+                .expect("Operation failed")
         });
 
         merged
@@ -1295,7 +1295,7 @@ impl MLEnhancedErrorRecovery {
         features.push(
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_secs() as f64
                 % 86400.0,
         ); // Time of day
@@ -1527,7 +1527,7 @@ impl MLEnhancedErrorRecovery {
         combined.sort_by(|a, b| {
             b.success_probability
                 .partial_cmp(&a.success_probability)
-                .unwrap()
+                .expect("Operation failed")
         });
 
         // Remove duplicates and limit results

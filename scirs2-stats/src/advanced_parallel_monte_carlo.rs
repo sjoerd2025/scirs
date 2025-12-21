@@ -244,7 +244,7 @@ where
 
         // Initialize adaptive state
         {
-            let mut state = self.adaptive_state.lock().unwrap();
+            let mut state = self.adaptive_state.lock().expect("Operation failed");
             state.regions = vec![IntegrationRegion {
                 lower_bounds: lower_bounds.clone(),
                 upper_bounds: upper_bounds.clone(),
@@ -286,10 +286,14 @@ where
             current_error = self.estimate_error(total_samples)?;
 
             // Check convergence
-            let relative_error = if current_estimate.abs() > F::from(1e-10).unwrap() {
-                (current_error / current_estimate.abs()).to_f64().unwrap()
+            let relative_error = if current_estimate.abs()
+                > F::from(1e-10).expect("Failed to convert constant to float")
+            {
+                (current_error / current_estimate.abs())
+                    .to_f64()
+                    .expect("Operation failed")
             } else {
-                current_error.to_f64().unwrap()
+                current_error.to_f64().expect("Operation failed")
             };
 
             if relative_error < self.config.target_relative_error {
@@ -305,13 +309,13 @@ where
 
         // Compute confidence interval
         let z_score = self.get_z_score(self.config.confidence_level);
-        let margin = F::from(z_score).unwrap() * current_error;
+        let margin = F::from(z_score).expect("Failed to convert to float") * current_error;
         let confidence_interval = (current_estimate - margin, current_estimate + margin);
 
         // Update metrics
         let elapsed_time = start_time.elapsed().as_secs_f64();
         {
-            let mut metrics = self.metrics.lock().unwrap();
+            let mut metrics = self.metrics.lock().expect("Operation failed");
             metrics.total_samples = total_samples;
             metrics.total_time_seconds = elapsed_time;
             metrics.samples_per_second = total_samples as f64 / elapsed_time;
@@ -323,13 +327,15 @@ where
             standard_error: current_error,
             confidence_interval,
             relative_error: F::from(if current_estimate.abs() > F::zero() {
-                (current_error / current_estimate.abs()).to_f64().unwrap()
+                (current_error / current_estimate.abs())
+                    .to_f64()
+                    .expect("Operation failed")
             } else {
-                current_error.to_f64().unwrap()
+                current_error.to_f64().expect("Operation failed")
             })
-            .unwrap(),
+            .expect("Operation failed"),
             n_samples_: total_samples,
-            metrics: self.metrics.lock().unwrap().clone(),
+            metrics: self.metrics.lock().expect("Operation failed").clone(),
             converged,
         })
     }
@@ -412,7 +418,8 @@ where
             for j in 0..dimension {
                 let u: f64 = rng.random();
                 let range = upper_bounds[j] - lower_bounds[j];
-                point[j] = lower_bounds[j] + F::from(u).unwrap() * range;
+                point[j] =
+                    lower_bounds[j] + F::from(u).expect("Failed to convert to float") * range;
             }
 
             // Apply variance reduction techniques
@@ -423,7 +430,7 @@ where
                         self.generate_antithetic_point(&point, &lower_bounds, &upper_bounds);
                     let value1 = function.evaluate(&point.view());
                     let value2 = function.evaluate(&antithetic_point.view());
-                    (value1 + value2) / F::from(2.0).unwrap()
+                    (value1 + value2) / F::from(2.0).expect("Failed to convert constant to float")
                 } else {
                     function.evaluate(&point.view())
                 };
@@ -443,7 +450,8 @@ where
             let final_value = if self.variance_reduction.control_variates {
                 if let Some(control_value) = function.control_variate(&point.view()) {
                     // Simplified control variate (would need proper coefficient estimation)
-                    weighted_value - F::from(0.5).unwrap() * control_value
+                    weighted_value
+                        - F::from(0.5).expect("Failed to convert constant to float") * control_value
                 } else {
                     weighted_value
                 }
@@ -506,8 +514,9 @@ where
                 for j in 0..dimension {
                     let u: f64 = rng.random();
                     let range = upper_bounds[j] - lower_bounds[j];
-                    let sample_coord = lower_bounds[j] + F::from(u).unwrap() * range;
-                    sample_points.push(sample_coord.to_f64().unwrap() as f32);
+                    let sample_coord =
+                        lower_bounds[j] + F::from(u).expect("Failed to convert to float") * range;
+                    sample_points.push(sample_coord.to_f64().expect("Operation failed") as f32);
                 }
             }
 
@@ -520,11 +529,11 @@ where
                 // Convert back to F type for function evaluation
                 let mut point = Array1::zeros(dimension);
                 for (j, &val) in point_slice.iter().enumerate() {
-                    point[j] = F::from(val as f64).unwrap();
+                    point[j] = F::from(val as f64).expect("Failed to convert to float");
                 }
 
                 let sample_value = function.evaluate(&point.view());
-                sample_values.push(sample_value.to_f64().unwrap() as f32);
+                sample_values.push(sample_value.to_f64().expect("Operation failed") as f32);
             }
 
             // Apply variance reduction with bandwidth-saturated SIMD
@@ -546,7 +555,7 @@ where
 
             // Ultra-optimized SIMD scaling by integration volume
             let volume = self.compute_integration_volume(&lower_bounds, &upper_bounds);
-            let volume_f32 = volume.to_f64().unwrap() as f32;
+            let volume_f32 = volume.to_f64().expect("Operation failed") as f32;
 
             // Bandwidth-saturated SIMD volume scaling
             if capabilities.has_avx2() && variance_reduction_buffer.len() >= 8 {
@@ -562,12 +571,12 @@ where
                 );
 
                 for &val in scaled_chunk.iter() {
-                    values.push(F::from(val as f64).unwrap());
+                    values.push(F::from(val as f64).expect("Failed to convert to float"));
                 }
             } else {
                 // Scalar fallback for small chunks
                 for &val in &variance_reduction_buffer {
-                    values.push(F::from((val * volume_f32) as f64).unwrap());
+                    values.push(F::from((val * volume_f32) as f64).expect("Operation failed"));
                 }
             }
         }
@@ -605,9 +614,9 @@ where
 
     /// Update running estimate
     fn update_estimate(&self, new_values: Array1<F>, total_samples: usize) -> StatsResult<F> {
-        let mut state = self.adaptive_state.lock().unwrap();
+        let mut state = self.adaptive_state.lock().expect("Operation failed");
 
-        let batch_mean = new_values.mean().unwrap();
+        let batch_mean = new_values.mean().expect("Operation failed");
         let batchsize = new_values.len();
 
         if state.n_samples_ == 0 {
@@ -624,9 +633,9 @@ where
             let old_mean = state.running_mean;
 
             // Update mean
-            state.running_mean = (old_mean * F::from(old_n).unwrap()
-                + batch_mean * F::from(batchsize).unwrap())
-                / F::from(new_n).unwrap();
+            state.running_mean = (old_mean * F::from(old_n).expect("Failed to convert to float")
+                + batch_mean * F::from(batchsize).expect("Failed to convert to float"))
+                / F::from(new_n).expect("Failed to convert to float");
 
             // Update variance using Welford's algorithm
             let batch_var = if batchsize > 1 {
@@ -635,10 +644,14 @@ where
                 F::zero()
             };
             let mean_diff = batch_mean - old_mean;
-            state.running_variance = (state.running_variance * F::from(old_n - 1.0).unwrap()
-                + batch_var * F::from(batchsize - 1).unwrap()
-                + mean_diff * mean_diff * F::from(old_n * batchsize as f64 / new_n).unwrap())
-                / F::from(new_n - 1.0).unwrap();
+            state.running_variance = (state.running_variance
+                * F::from(old_n - 1.0).expect("Failed to convert to float")
+                + batch_var * F::from(batchsize - 1).expect("Failed to convert to float")
+                + mean_diff
+                    * mean_diff
+                    * F::from(old_n * batchsize as f64 / new_n)
+                        .expect("Failed to convert to float"))
+                / F::from(new_n - 1.0).expect("Failed to convert to float");
         }
 
         state.n_samples_ = total_samples;
@@ -647,12 +660,14 @@ where
 
     /// Estimate current error
     fn estimate_error(&self, n_samples_: usize) -> StatsResult<F> {
-        let state = self.adaptive_state.lock().unwrap();
+        let state = self.adaptive_state.lock().expect("Operation failed");
         if n_samples_ <= 1 {
             return Ok(F::infinity());
         }
 
-        let standard_error = (state.running_variance / F::from(n_samples_).unwrap()).sqrt();
+        let standard_error = (state.running_variance
+            / F::from(n_samples_).expect("Failed to convert to float"))
+        .sqrt();
         Ok(standard_error)
     }
 
@@ -663,7 +678,7 @@ where
     {
         // Simplified adaptive refinement
         // In a full implementation, this would subdivide regions with high error
-        let mut state = self.adaptive_state.lock().unwrap();
+        let mut state = self.adaptive_state.lock().expect("Operation failed");
 
         // Find region with highest error-to-samples ratio
         if let Some(worst_region_idx) = state
@@ -671,8 +686,10 @@ where
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| {
-                let ratio_a = a.estimated_error.to_f64().unwrap() / (a.n_samples_ + 1) as f64;
-                let ratio_b = b.estimated_error.to_f64().unwrap() / (b.n_samples_ + 1) as f64;
+                let ratio_a = a.estimated_error.to_f64().expect("Operation failed")
+                    / (a.n_samples_ + 1) as f64;
+                let ratio_b = b.estimated_error.to_f64().expect("Operation failed")
+                    / (b.n_samples_ + 1) as f64;
                 ratio_a
                     .partial_cmp(&ratio_b)
                     .unwrap_or(std::cmp::Ordering::Equal)
@@ -682,7 +699,8 @@ where
             // Simple subdivision along the first dimension
             let region = state.regions[worst_region_idx].clone();
             if !region.lower_bounds.is_empty() {
-                let mid = (region.lower_bounds[0] + region.upper_bounds[0]) / F::from(2.0).unwrap();
+                let mid = (region.lower_bounds[0] + region.upper_bounds[0])
+                    / F::from(2.0).expect("Failed to convert constant to float");
 
                 let mut left_upper = region.upper_bounds.clone();
                 left_upper[0] = mid;
@@ -693,8 +711,10 @@ where
                 let left_region = IntegrationRegion {
                     lower_bounds: region.lower_bounds.clone(),
                     upper_bounds: left_upper,
-                    estimated_value: region.estimated_value / F::from(2.0).unwrap(),
-                    estimated_error: region.estimated_error / F::from(2.0).unwrap(),
+                    estimated_value: region.estimated_value
+                        / F::from(2.0).expect("Failed to convert constant to float"),
+                    estimated_error: region.estimated_error
+                        / F::from(2.0).expect("Failed to convert constant to float"),
                     n_samples_: 0,
                     priority: 1.0,
                 };
@@ -702,8 +722,10 @@ where
                 let right_region = IntegrationRegion {
                     lower_bounds: right_lower,
                     upper_bounds: region.upper_bounds.clone(),
-                    estimated_value: region.estimated_value / F::from(2.0).unwrap(),
-                    estimated_error: region.estimated_error / F::from(2.0).unwrap(),
+                    estimated_value: region.estimated_value
+                        / F::from(2.0).expect("Failed to convert constant to float"),
+                    estimated_error: region.estimated_error
+                        / F::from(2.0).expect("Failed to convert constant to float"),
                     n_samples_: 0,
                     priority: 1.0,
                 };
@@ -729,7 +751,7 @@ where
 
     /// Estimate convergence rate
     fn estimate_convergence_rate(&self) -> StatsResult<f64> {
-        let state = self.adaptive_state.lock().unwrap();
+        let state = self.adaptive_state.lock().expect("Operation failed");
         if state.error_history.len() < 3 {
             return Ok(1.0); // Default convergence rate
         }
@@ -740,7 +762,7 @@ where
             .iter()
             .rev()
             .take(5)
-            .map(|&e| e.to_f64().unwrap())
+            .map(|&e| e.to_f64().expect("Operation failed"))
             .collect();
 
         if recent_errors.len() >= 2 {
@@ -836,9 +858,9 @@ impl GaussianFunction {
 impl IntegrableFunction<f64> for GaussianFunction {
     fn evaluate(&self, x: &ArrayView1<f64>) -> f64 {
         let diff = x - &self.mean;
-        let cov_inv = scirs2_linalg::inv(&self.covariance.view(), None).unwrap();
+        let cov_inv = scirs2_linalg::inv(&self.covariance.view(), None).expect("Operation failed");
         let quad_form = diff.dot(&cov_inv.dot(&diff));
-        let det = scirs2_linalg::det(&self.covariance.view(), None).unwrap();
+        let det = scirs2_linalg::det(&self.covariance.view(), None).expect("Operation failed");
 
         let normalization =
             1.0 / ((2.0 * std::f64::consts::PI).powf(self.mean.len() as f64 / 2.0) * det.sqrt());

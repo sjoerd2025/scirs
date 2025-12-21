@@ -175,11 +175,11 @@ mod tests {
         let mut matrix = DokMatrix::<f64>::new((3, 3));
 
         // Set some values
-        matrix.set(0, 0, 1.0).unwrap();
-        matrix.set(0, 2, 2.0).unwrap();
-        matrix.set(1, 2, 3.0).unwrap();
-        matrix.set(2, 0, 4.0).unwrap();
-        matrix.set(2, 1, 5.0).unwrap();
+        matrix.set(0, 0, 1.0).expect("Operation failed");
+        matrix.set(0, 2, 2.0).expect("Operation failed");
+        matrix.set(1, 2, 3.0).expect("Operation failed");
+        matrix.set(2, 0, 4.0).expect("Operation failed");
+        matrix.set(2, 1, 5.0).expect("Operation failed");
 
         assert_eq!(matrix.nnz(), 5);
 
@@ -192,7 +192,7 @@ mod tests {
         assert_eq!(matrix.get(2, 1), 5.0);
 
         // Set a value to zero should remove it
-        matrix.set(0, 0, 0.0).unwrap();
+        matrix.set(0, 0, 0.0).expect("Operation failed");
         assert_eq!(matrix.nnz(), 4);
         assert_eq!(matrix.get(0, 0), 0.0);
 
@@ -207,11 +207,11 @@ mod tests {
         let mut matrix = DokMatrix::<f64>::new((3, 3));
 
         // Set some values
-        matrix.set(0, 0, 1.0).unwrap();
-        matrix.set(0, 2, 2.0).unwrap();
-        matrix.set(1, 2, 3.0).unwrap();
-        matrix.set(2, 0, 4.0).unwrap();
-        matrix.set(2, 1, 5.0).unwrap();
+        matrix.set(0, 0, 1.0).expect("Operation failed");
+        matrix.set(0, 2, 2.0).expect("Operation failed");
+        matrix.set(1, 2, 3.0).expect("Operation failed");
+        matrix.set(2, 0, 4.0).expect("Operation failed");
+        matrix.set(2, 1, 5.0).expect("Operation failed");
 
         let dense = matrix.to_dense();
 
@@ -230,11 +230,11 @@ mod tests {
         let mut matrix = DokMatrix::<f64>::new((3, 3));
 
         // Set some values
-        matrix.set(0, 0, 1.0).unwrap();
-        matrix.set(0, 2, 2.0).unwrap();
-        matrix.set(1, 2, 3.0).unwrap();
-        matrix.set(2, 0, 4.0).unwrap();
-        matrix.set(2, 1, 5.0).unwrap();
+        matrix.set(0, 0, 1.0).expect("Operation failed");
+        matrix.set(0, 2, 2.0).expect("Operation failed");
+        matrix.set(1, 2, 3.0).expect("Operation failed");
+        matrix.set(2, 0, 4.0).expect("Operation failed");
+        matrix.set(2, 1, 5.0).expect("Operation failed");
 
         let (data, row_indices, col_indices) = matrix.to_coo();
 

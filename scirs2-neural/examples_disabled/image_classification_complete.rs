@@ -162,7 +162,7 @@ fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
         let pred_class = pred_row
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(i_)| i)
             .unwrap_or(0);
         let target_class = target_row
@@ -207,7 +207,7 @@ fn train_image_classifier() -> Result<()> {
     println!("   - Epochs: {}", config.epochs);
     println!(
         "   - Validation split: {:.1}%",
-        config.validation.as_ref().unwrap().validation_split * 100.0
+        config.validation.as_ref().expect("Operation failed").validation_split * 100.0
     );
     // Set up training components
     let loss_fn = CrossEntropyLoss::new(1e-7);
@@ -346,7 +346,7 @@ mod tests {
                 0.7, 0.2, 0.1, // Class 0
             ],
         )
-        .unwrap()
+        .expect("Operation failed")
         .into_dyn();
         let targets = Array::from_shape_vec(
                 0.0, 1.0, 0.0, // Class 1

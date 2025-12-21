@@ -74,18 +74,18 @@ pub fn execute_r2c(input: &mut [f64], output: &mut [c64]) -> FFTResult<()> {
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
     // Create plan if not cached
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan = R2CPlan64::aligned(&[n], Flag::ESTIMATE).map_err(|e| {
             FFTError::ComputationError(format!("Failed to create R2C plan: {:?}", e))
         })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
     // Execute with cached plan
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.r2c(input, output)
         .map_err(|e| FFTError::ComputationError(format!("R2C execution failed: {:?}", e)))
 }
@@ -102,16 +102,16 @@ pub fn execute_c2c_forward(input: &mut [c64], output: &mut [c64]) -> FFTResult<(
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan = C2CPlan64::aligned(&[n], Sign::Forward, Flag::ESTIMATE).map_err(|e| {
             FFTError::ComputationError(format!("Failed to create C2C forward plan: {:?}", e))
         })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.c2c(input, output)
         .map_err(|e| FFTError::ComputationError(format!("C2C forward execution failed: {:?}", e)))
 }
@@ -128,16 +128,16 @@ pub fn execute_c2c_backward(input: &mut [c64], output: &mut [c64]) -> FFTResult<
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan = C2CPlan64::aligned(&[n], Sign::Backward, Flag::ESTIMATE).map_err(|e| {
             FFTError::ComputationError(format!("Failed to create C2C backward plan: {:?}", e))
         })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.c2c(input, output)
         .map_err(|e| FFTError::ComputationError(format!("C2C backward execution failed: {:?}", e)))
 }
@@ -152,16 +152,16 @@ pub fn execute_c2r(input: &mut [c64], output: &mut [f64], n: usize) -> FFTResult
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan = C2RPlan64::aligned(&[n], Flag::ESTIMATE).map_err(|e| {
             FFTError::ComputationError(format!("Failed to create C2R plan: {:?}", e))
         })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.c2r(input, output)
         .map_err(|e| FFTError::ComputationError(format!("C2R execution failed: {:?}", e)))
 }
@@ -178,17 +178,17 @@ pub fn execute_dct2(input: &mut [f64], output: &mut [f64]) -> FFTResult<()> {
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan =
             R2RPlan64::aligned(&[n], R2RKind::FFTW_REDFT10, Flag::ESTIMATE).map_err(|e| {
                 FFTError::ComputationError(format!("Failed to create DCT2 plan: {:?}", e))
             })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.r2r(input, output)
         .map_err(|e| FFTError::ComputationError(format!("DCT2 execution failed: {:?}", e)))
 }
@@ -205,17 +205,17 @@ pub fn execute_idct2(input: &mut [f64], output: &mut [f64]) -> FFTResult<()> {
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan =
             R2RPlan64::aligned(&[n], R2RKind::FFTW_REDFT01, Flag::ESTIMATE).map_err(|e| {
                 FFTError::ComputationError(format!("Failed to create IDCT2 plan: {:?}", e))
             })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.r2r(input, output)
         .map_err(|e| FFTError::ComputationError(format!("IDCT2 execution failed: {:?}", e)))
 }
@@ -232,17 +232,17 @@ pub fn execute_dst2(input: &mut [f64], output: &mut [f64]) -> FFTResult<()> {
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan =
             R2RPlan64::aligned(&[n], R2RKind::FFTW_RODFT10, Flag::ESTIMATE).map_err(|e| {
                 FFTError::ComputationError(format!("Failed to create DST2 plan: {:?}", e))
             })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.r2r(input, output)
         .map_err(|e| FFTError::ComputationError(format!("DST2 execution failed: {:?}", e)))
 }
@@ -259,17 +259,17 @@ pub fn execute_idst2(input: &mut [f64], output: &mut [f64]) -> FFTResult<()> {
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&n) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(n) {
         let plan =
             R2RPlan64::aligned(&[n], R2RKind::FFTW_RODFT01, Flag::ESTIMATE).map_err(|e| {
                 FFTError::ComputationError(format!("Failed to create IDST2 plan: {:?}", e))
             })?;
-        cache_map.insert(n, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&n).unwrap();
+    let plan = cache_map.get_mut(&n).expect("Operation failed");
     plan.r2r(input, output)
         .map_err(|e| FFTError::ComputationError(format!("IDST2 execution failed: {:?}", e)))
 }
@@ -295,16 +295,16 @@ pub fn execute_r2c_2d(
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&key) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(key) {
         let plan = R2CPlan64::aligned(&[rows, cols], Flag::ESTIMATE).map_err(|e| {
             FFTError::ComputationError(format!("Failed to create 2D R2C plan: {:?}", e))
         })?;
-        cache_map.insert(key, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&key).unwrap();
+    let plan = cache_map.get_mut(&key).expect("Operation failed");
     plan.r2c(input, output)
         .map_err(|e| FFTError::ComputationError(format!("2D R2C execution failed: {:?}", e)))
 }
@@ -326,17 +326,17 @@ pub fn execute_c2c_2d_forward(
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&key) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(key) {
         let plan =
             C2CPlan64::aligned(&[rows, cols], Sign::Forward, Flag::ESTIMATE).map_err(|e| {
                 FFTError::ComputationError(format!("Failed to create 2D C2C forward plan: {:?}", e))
             })?;
-        cache_map.insert(key, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&key).unwrap();
+    let plan = cache_map.get_mut(&key).expect("Operation failed");
     plan.c2c(input, output).map_err(|e| {
         FFTError::ComputationError(format!("2D C2C forward execution failed: {:?}", e))
     })
@@ -359,9 +359,9 @@ pub fn execute_c2c_2d_backward(
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&key) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(key) {
         let plan =
             C2CPlan64::aligned(&[rows, cols], Sign::Backward, Flag::ESTIMATE).map_err(|e| {
                 FFTError::ComputationError(format!(
@@ -369,10 +369,10 @@ pub fn execute_c2c_2d_backward(
                     e
                 ))
             })?;
-        cache_map.insert(key, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&key).unwrap();
+    let plan = cache_map.get_mut(&key).expect("Operation failed");
     plan.c2c(input, output).map_err(|e| {
         FFTError::ComputationError(format!("2D C2C backward execution failed: {:?}", e))
     })
@@ -395,16 +395,16 @@ pub fn execute_c2r_2d(
         *cache = Some(HashMap::new());
     }
 
-    let cache_map = cache.as_mut().unwrap();
+    let cache_map = cache.as_mut().expect("Operation failed");
 
-    if !cache_map.contains_key(&key) {
+    if let std::collections::hash_map::Entry::Vacant(e) = cache_map.entry(key) {
         let plan = C2RPlan64::aligned(&[rows, cols], Flag::ESTIMATE).map_err(|e| {
             FFTError::ComputationError(format!("Failed to create 2D C2R plan: {:?}", e))
         })?;
-        cache_map.insert(key, plan);
+        e.insert(plan);
     }
 
-    let plan = cache_map.get_mut(&key).unwrap();
+    let plan = cache_map.get_mut(&key).expect("Operation failed");
     plan.c2r(input, output)
         .map_err(|e| FFTError::ComputationError(format!("2D C2R execution failed: {:?}", e)))
 }

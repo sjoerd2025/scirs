@@ -11,7 +11,7 @@ fn main() {
     println!("=== Sampling and Bootstrapping Demonstration ===\n");
 
     // Load the Iris dataset for demonstration
-    let iris = load_iris().unwrap();
+    let iris = load_iris().expect("Operation failed");
     let n_samples = iris.n_samples();
 
     println!("Original Iris dataset:");
@@ -26,7 +26,8 @@ fn main() {
     // Demonstrate random sampling without replacement
     println!("=== Random Sampling (without replacement) ===");
     let samplesize = 30;
-    let random_indices = random_sample(n_samples, samplesize, false, Some(42)).unwrap();
+    let random_indices =
+        random_sample(n_samples, samplesize, false, Some(42)).expect("Operation failed");
 
     println!("Sampled {samplesize} indices from {n_samples} total samples");
     println!(
@@ -59,7 +60,8 @@ fn main() {
     // Demonstrate bootstrap sampling (with replacement)
     println!("=== Bootstrap Sampling (with replacement) ===");
     let bootstrapsize = 200; // More than original dataset size
-    let bootstrap_indices = random_sample(n_samples, bootstrapsize, true, Some(42)).unwrap();
+    let bootstrap_indices =
+        random_sample(n_samples, bootstrapsize, true, Some(42)).expect("Operation failed");
 
     println!("Bootstrap sampled {bootstrapsize} indices from {n_samples} total samples");
     println!(
@@ -72,7 +74,7 @@ fn main() {
     for &idx in &bootstrap_indices {
         index_counts[idx] += 1;
     }
-    let max_count = *index_counts.iter().max().unwrap();
+    let max_count = *index_counts.iter().max().expect("Operation failed");
     let zero_count = index_counts.iter().filter(|&&count| count == 0).count();
 
     println!("Bootstrap statistics:");
@@ -83,7 +85,8 @@ fn main() {
     println!("=== Stratified Sampling ===");
     if let Some(target) = &iris.target {
         let stratifiedsize = 30;
-        let stratified_indices = stratified_sample(target, stratifiedsize, Some(42)).unwrap();
+        let stratified_indices =
+            stratified_sample(target, stratifiedsize, Some(42)).expect("Operation failed");
 
         println!("Stratified sampled {stratifiedsize} indices maintaining class proportions");
 
@@ -101,7 +104,8 @@ fn main() {
             stratifieddataset.n_features()
         );
 
-        let stratified_class_counts = count_classes(&stratifieddataset.target.unwrap());
+        let stratified_class_counts =
+            count_classes(&stratifieddataset.target.expect("Operation failed"));
         println!("Stratified sample class distribution: {stratified_class_counts:?}");
 
         // Verify proportions are maintained
@@ -123,7 +127,8 @@ fn main() {
     // Demonstrate practical use case: creating training/validation splits
     println!("\n=== Practical Example: Multiple Train/Validation Splits ===");
     for i in 1..=3 {
-        let split_indices = random_sample(n_samples, 100, false, Some(42 + i)).unwrap();
+        let split_indices =
+            random_sample(n_samples, 100, false, Some(42 + i)).expect("Operation failed");
         let (train_indices, val_indices) = split_indices.split_at(80);
 
         println!(

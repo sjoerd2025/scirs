@@ -567,7 +567,7 @@ impl FEMPoissonSolver {
             (2, 2),
             vec![p2.x - p1.x, p3.x - p1.x, p2.y - p1.y, p3.y - p1.y],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let det_j = jacobian[[0, 0]] * jacobian[[1, 1]] - jacobian[[0, 1]] * jacobian[[1, 0]];
         if det_j.abs() < 1e-12 {
@@ -586,7 +586,7 @@ impl FEMPoissonSolver {
                 jacobian[[0, 0]] / det_j,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Get quadrature rule
         let (xi_coords, eta_coords, weights) =
@@ -831,7 +831,10 @@ impl From<FEMResult> for PDESolution<f64> {
 
         // Create solution values as a 2D array with one column
         let mut values = Vec::new();
-        let u_reshaped = result.u.into_shape_with_order((n, 1)).unwrap();
+        let u_reshaped = result
+            .u
+            .into_shape_with_order((n, 1))
+            .expect("Operation failed");
         values.push(u_reshaped);
 
         // Create solver info

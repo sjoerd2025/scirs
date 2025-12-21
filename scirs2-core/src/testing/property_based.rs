@@ -768,7 +768,7 @@ mod tests {
         let property = AssociativityProperty::new(|a, b| Ok(a + b), 1e-10);
         let inputs = vec![1.0, 2.0, 3.0];
 
-        let result = property.test(&inputs).unwrap();
+        let result = property.test(&inputs).expect("Operation failed");
         assert!(result); // Addition is associative
     }
 
@@ -777,7 +777,7 @@ mod tests {
         let property = CommutativityProperty::new(|a, b| Ok(a + b), 1e-10);
         let inputs = vec![1.0, 2.0];
 
-        let result = property.test(&inputs).unwrap();
+        let result = property.test(&inputs).expect("Operation failed");
         assert!(result); // Addition is commutative
     }
 
@@ -786,7 +786,7 @@ mod tests {
         let property = IdentityProperty::new(|a, b| Ok(a + b), 0.0, 1e-10);
         let inputs = vec![5.0];
 
-        let result = property.test(&inputs).unwrap();
+        let result = property.test(&inputs).expect("Operation failed");
         assert!(result); // 0 is the additive identity
     }
 
@@ -795,7 +795,7 @@ mod tests {
         let property = IdempotencyProperty::new(|x| Ok(x.abs()), 1e-10);
         let inputs = vec![5.0];
 
-        let result = property.test(&inputs).unwrap();
+        let result = property.test(&inputs).expect("Operation failed");
         assert!(result); // abs(abs(x)) = abs(x)
     }
 
@@ -804,7 +804,7 @@ mod tests {
         let property = MonotonicityProperty::increasing(|x| Ok(x * x));
         let inputs = vec![2.0, 3.0]; // Both positive, so x^2 is increasing
 
-        let result = property.test(&inputs).unwrap();
+        let result = property.test(&inputs).expect("Operation failed");
         assert!(result);
     }
 

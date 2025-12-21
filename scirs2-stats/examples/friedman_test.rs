@@ -20,7 +20,7 @@ fn main() {
     ];
 
     // Perform the Friedman test
-    let (chi2, p_value) = friedman(&data.view()).unwrap();
+    let (chi2, p_value) = friedman(&data.view()).expect("Operation failed");
 
     println!("Data matrix (rows = subjects, columns = treatments):");
     for row in data.rows() {
@@ -50,7 +50,7 @@ fn main() {
     ];
 
     // Perform the Friedman test
-    let (chi2, p_value) = friedman(&data2.view()).unwrap();
+    let (chi2, p_value) = friedman(&data2.view()).expect("Operation failed");
 
     println!("Data matrix (rows = subjects, columns = treatments):");
     for row in data2.rows() {
@@ -80,7 +80,7 @@ fn main() {
     ];
 
     // Perform the Friedman test
-    let (chi2, p_value) = friedman(&data3.view()).unwrap();
+    let (chi2, p_value) = friedman(&data3.view()).expect("Operation failed");
 
     println!("Data matrix (rows = subjects, columns = treatments):");
     for row in data3.rows() {

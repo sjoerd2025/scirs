@@ -11,6 +11,12 @@ use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: IntegrateFloat>(value: f64) -> F {
+    F::from_f64(value).expect("Failed to convert constant to target float type")
+}
+
 /// Gauss-Legendre quadrature nodes and weights
 #[derive(Debug, Clone)]
 pub struct GaussLegendreQuadrature<F: IntegrateFloat> {
@@ -45,7 +51,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     /// ```
     /// use scirs2_integrate::gaussian::GaussLegendreQuadrature;
     ///
-    /// let quad = GaussLegendreQuadrature::<f64>::new(5).unwrap();
+    /// let quad = GaussLegendreQuadrature::<f64>::new(5).expect("Operation failed");
     /// assert_eq!(quad.nodes.len(), 5);
     /// assert_eq!(quad.weights.len(), 5);
     /// ```
@@ -73,7 +79,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     fn gauss_legendre_1() -> Self {
         GaussLegendreQuadrature {
             nodes: Array1::from_vec(vec![F::zero()]),
-            weights: Array1::from_vec(vec![F::from_f64(2.0).unwrap()]),
+            weights: Array1::from_vec(vec![const_f64::<F>(2.0)]),
         }
     }
 
@@ -81,11 +87,11 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     fn gauss_legendre_2() -> Self {
         // Correct values for 2-point Gauss-Legendre quadrature
         let nodes = vec![
-            F::from_f64(-0.5773502691896257).unwrap(), // -1/sqrt(3)
-            F::from_f64(0.5773502691896257).unwrap(),  // 1/sqrt(3)
+            const_f64::<F>(-0.5773502691896257), // -1/sqrt(3)
+            const_f64::<F>(0.5773502691896257),  // 1/sqrt(3)
         ];
 
-        let weights = vec![F::from_f64(1.0).unwrap(), F::from_f64(1.0).unwrap()];
+        let weights = vec![const_f64::<F>(1.0), const_f64::<F>(1.0)];
 
         GaussLegendreQuadrature {
             nodes: Array1::from_vec(nodes),
@@ -97,15 +103,15 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     fn gauss_legendre_3() -> Self {
         // Correct values for 3-point Gauss-Legendre quadrature
         let nodes = vec![
-            F::from_f64(-0.7745966692414834).unwrap(), // -sqrt(3/5)
+            const_f64::<F>(-0.7745966692414834), // -sqrt(3/5)
             F::zero(),
-            F::from_f64(0.7745966692414834).unwrap(), // sqrt(3/5)
+            const_f64::<F>(0.7745966692414834), // sqrt(3/5)
         ];
 
         let weights = vec![
-            F::from_f64(5.0 / 9.0).unwrap(),
-            F::from_f64(8.0 / 9.0).unwrap(),
-            F::from_f64(5.0 / 9.0).unwrap(),
+            F::from_f64(5.0 / 9.0).expect("Operation failed"),
+            F::from_f64(8.0 / 9.0).expect("Operation failed"),
+            F::from_f64(5.0 / 9.0).expect("Operation failed"),
         ];
 
         GaussLegendreQuadrature {
@@ -118,17 +124,17 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     fn gauss_legendre_4() -> Self {
         // Correct values for 4-point Gauss-Legendre quadrature
         let nodes = vec![
-            F::from_f64(-0.8611363115940526).unwrap(),
-            F::from_f64(-0.3399810435848563).unwrap(),
-            F::from_f64(0.3399810435848563).unwrap(),
-            F::from_f64(0.8611363115940526).unwrap(),
+            const_f64::<F>(-0.8611363115940526),
+            const_f64::<F>(-0.3399810435848563),
+            const_f64::<F>(0.3399810435848563),
+            const_f64::<F>(0.8611363115940526),
         ];
 
         let weights = vec![
-            F::from_f64(0.3478548451374538).unwrap(),
-            F::from_f64(0.6521451548625461).unwrap(),
-            F::from_f64(0.6521451548625461).unwrap(),
-            F::from_f64(0.3478548451374538).unwrap(),
+            const_f64::<F>(0.3478548451374538),
+            const_f64::<F>(0.6521451548625461),
+            const_f64::<F>(0.6521451548625461),
+            const_f64::<F>(0.3478548451374538),
         ];
 
         GaussLegendreQuadrature {
@@ -141,19 +147,19 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     fn gauss_legendre_5() -> Self {
         // Correct values for 5-point Gauss-Legendre quadrature
         let nodes = vec![
-            F::from_f64(-0.906_179_845_938_664).unwrap(),
-            F::from_f64(-0.538_469_310_105_683).unwrap(),
+            F::from_f64(-0.906_179_845_938_664).expect("Operation failed"),
+            F::from_f64(-0.538_469_310_105_683).expect("Operation failed"),
             F::zero(),
-            F::from_f64(0.538_469_310_105_683).unwrap(),
-            F::from_f64(0.906_179_845_938_664).unwrap(),
+            F::from_f64(0.538_469_310_105_683).expect("Operation failed"),
+            F::from_f64(0.906_179_845_938_664).expect("Operation failed"),
         ];
 
         let weights = vec![
-            F::from_f64(0.2369268850561891).unwrap(),
-            F::from_f64(0.4786286704993665).unwrap(),
-            F::from_f64(0.5688888888888889).unwrap(),
-            F::from_f64(0.4786286704993665).unwrap(),
-            F::from_f64(0.2369268850561891).unwrap(),
+            const_f64::<F>(0.2369268850561891),
+            const_f64::<F>(0.4786286704993665),
+            const_f64::<F>(0.5688888888888889),
+            const_f64::<F>(0.4786286704993665),
+            const_f64::<F>(0.2369268850561891),
         ];
 
         GaussLegendreQuadrature {
@@ -166,29 +172,29 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     fn gauss_legendre_10() -> Self {
         // These values are pre-computed high-precision values for n=10
         let nodes = vec![
-            F::from_f64(-0.9739065285171717).unwrap(),
-            F::from_f64(-0.8650633666889845).unwrap(),
-            F::from_f64(-0.6794095682990244).unwrap(),
-            F::from_f64(-0.4333953941292472).unwrap(),
-            F::from_f64(-0.1488743389816312).unwrap(),
-            F::from_f64(0.1488743389816312).unwrap(),
-            F::from_f64(0.4333953941292472).unwrap(),
-            F::from_f64(0.6794095682990244).unwrap(),
-            F::from_f64(0.8650633666889845).unwrap(),
-            F::from_f64(0.9739065285171717).unwrap(),
+            const_f64::<F>(-0.9739065285171717),
+            const_f64::<F>(-0.8650633666889845),
+            const_f64::<F>(-0.6794095682990244),
+            const_f64::<F>(-0.4333953941292472),
+            const_f64::<F>(-0.1488743389816312),
+            const_f64::<F>(0.1488743389816312),
+            const_f64::<F>(0.4333953941292472),
+            const_f64::<F>(0.6794095682990244),
+            const_f64::<F>(0.8650633666889845),
+            const_f64::<F>(0.9739065285171717),
         ];
 
         let weights = vec![
-            F::from_f64(0.0666713443086881).unwrap(),
-            F::from_f64(0.1494513491505806).unwrap(),
-            F::from_f64(0.219_086_362_515_982).unwrap(),
-            F::from_f64(0.2692667193099963).unwrap(),
-            F::from_f64(0.2955242247147529).unwrap(),
-            F::from_f64(0.2955242247147529).unwrap(),
-            F::from_f64(0.2692667193099963).unwrap(),
-            F::from_f64(0.219_086_362_515_982).unwrap(),
-            F::from_f64(0.1494513491505806).unwrap(),
-            F::from_f64(0.0666713443086881).unwrap(),
+            const_f64::<F>(0.0666713443086881),
+            const_f64::<F>(0.1494513491505806),
+            F::from_f64(0.219_086_362_515_982).expect("Operation failed"),
+            const_f64::<F>(0.2692667193099963),
+            const_f64::<F>(0.2955242247147529),
+            const_f64::<F>(0.2955242247147529),
+            const_f64::<F>(0.2692667193099963),
+            F::from_f64(0.219_086_362_515_982).expect("Operation failed"),
+            const_f64::<F>(0.1494513491505806),
+            const_f64::<F>(0.0666713443086881),
         ];
 
         GaussLegendreQuadrature {
@@ -271,7 +277,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 
         // QL algorithm with implicit shifts
         let max_iterations = 100;
-        let eps = F::from_f64(1e-15).unwrap_or_else(|| F::from_f64(1e-10).unwrap());
+        let eps = F::from_f64(1e-15).unwrap_or_else(|| const_f64::<F>(1e-10));
 
         for _ in 0..max_iterations {
             let mut converged = true;
@@ -299,7 +305,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
         let n = d.len();
 
         for i in 0..n - 1 {
-            if e[i + 1].abs() > F::from_f64(1e-15).unwrap_or_else(|| F::from_f64(1e-10).unwrap()) {
+            if e[i + 1].abs() > F::from_f64(1e-15).unwrap_or_else(|| const_f64::<F>(1e-10)) {
                 // Compute shift
                 let shift = d[n - 1];
 
@@ -314,7 +320,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 
                 for j in 0..n - 1 {
                     let r = (p * p + q * q).sqrt();
-                    if r.abs() < F::from_f64(1e-15).unwrap_or_else(|| F::from_f64(1e-10).unwrap()) {
+                    if r.abs() < F::from_f64(1e-15).unwrap_or_else(|| const_f64::<F>(1e-10)) {
                         continue;
                     }
 
@@ -374,7 +380,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     /// use scirs2_integrate::gaussian::GaussLegendreQuadrature;
     ///
     /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
-    /// let quad = GaussLegendreQuadrature::<f64>::new(5).unwrap();
+    /// let quad = GaussLegendreQuadrature::<f64>::new(5).expect("Operation failed");
     /// let result = quad.integrate(|x| x * x, 0.0, 1.0);
     /// assert!((result - 1.0/3.0).abs() < 1e-10);
     /// ```
@@ -383,8 +389,8 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
         Func: Fn(F) -> F,
     {
         // Change of variables from [-1, 1] to [a, b]
-        let mid = (a + b) / F::from_f64(2.0).unwrap();
-        let half_length = (b - a) / F::from_f64(2.0).unwrap();
+        let mid = (a + b) / const_f64::<F>(2.0);
+        let half_length = (b - a) / const_f64::<F>(2.0);
 
         // Apply quadrature rule
         let mut result = F::zero();
@@ -417,7 +423,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 /// use scirs2_integrate::gaussian::gauss_legendre;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
-/// let result = gauss_legendre(|x: f64| x * x, 0.0, 1.0, 5).unwrap();
+/// let result = gauss_legendre(|x: f64| x * x, 0.0, 1.0, 5).expect("Operation failed");
 /// assert!((result - 1.0/3.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -453,7 +459,7 @@ where
 ///     |x: ArrayView1<f64>| x.iter().map(|&xi| xi*xi).sum::<f64>(),
 ///     &[(0.0, 1.0), (0.0, 1.0)],
 ///     5
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// assert!((result - 2.0/3.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -495,8 +501,8 @@ where
 
         // Change of variables from [-1, 1] to [a, b]
         let (a, b) = ranges[dim];
-        let mid = (a + b) / F::from_f64(2.0).unwrap();
-        let half_length = (b - a) / F::from_f64(2.0).unwrap();
+        let mid = (a + b) / const_f64::<F>(2.0);
+        let half_length = (b - a) / const_f64::<F>(2.0);
 
         // Apply quadrature rule for the current dimension
         let mut result = F::zero();
@@ -589,8 +595,8 @@ where
     ];
 
     // Apply the rule
-    let half_length = (b - a) / F::from_f64(2.0).unwrap();
-    let center = (a + b) / F::from_f64(2.0).unwrap();
+    let half_length = (b - a) / const_f64::<F>(2.0);
+    let center = (a + b) / const_f64::<F>(2.0);
 
     let mut result_kronrod = F::zero();
     let mut result_gauss = F::zero();
@@ -599,32 +605,32 @@ where
     let fc = f(center);
 
     // Accumulate for Kronrod rule
-    result_kronrod += F::from_f64(wgk[7]).unwrap() * fc;
+    result_kronrod += F::from_f64(wgk[7]).expect("Operation failed") * fc;
 
     // Evaluate at other points
     for i in 0..7 {
-        let x = F::from_f64(xgk[i]).unwrap();
+        let x = F::from_f64(xgk[i]).expect("Operation failed");
         let abscissa = center - half_length * x;
         let fval = f(abscissa);
-        result_kronrod += F::from_f64(wgk[i]).unwrap() * fval;
-        result_gauss += F::from_f64(wg[i]).unwrap() * fval;
+        result_kronrod += F::from_f64(wgk[i]).expect("Operation failed") * fval;
+        result_gauss += F::from_f64(wg[i]).expect("Operation failed") * fval;
 
         let abscissa = center + half_length * x;
         let fval = f(abscissa);
-        result_kronrod += F::from_f64(wgk[14 - i]).unwrap() * fval;
-        result_gauss += F::from_f64(wg[6 - i]).unwrap() * fval;
+        result_kronrod += F::from_f64(wgk[14 - i]).expect("Operation failed") * fval;
+        result_gauss += F::from_f64(wg[6 - i]).expect("Operation failed") * fval;
     }
 
     // Evaluate remaining Kronrod points
     for i in [1, 3, 5, 9, 11, 13] {
-        let x = F::from_f64(xgk[i]).unwrap();
+        let x = F::from_f64(xgk[i]).expect("Operation failed");
         let abscissa = center - half_length * x;
         let fval = f(abscissa);
-        result_kronrod += F::from_f64(wgk[i]).unwrap() * fval;
+        result_kronrod += F::from_f64(wgk[i]).expect("Operation failed") * fval;
 
         let abscissa = center + half_length * x;
         let fval = f(abscissa);
-        result_kronrod += F::from_f64(wgk[i]).unwrap() * fval;
+        result_kronrod += F::from_f64(wgk[i]).expect("Operation failed") * fval;
     }
 
     // Scale results
@@ -714,32 +720,32 @@ where
     ];
 
     // Apply the rule
-    let half_length = (b - a) / F::from_f64(2.0).unwrap();
-    let center = (a + b) / F::from_f64(2.0).unwrap();
+    let half_length = (b - a) / const_f64::<F>(2.0);
+    let center = (a + b) / const_f64::<F>(2.0);
 
     let mut result_kronrod = F::zero();
     let mut result_gauss = F::zero();
 
     // Evaluate function at center point
     let fc = f(center);
-    result_kronrod += F::from_f64(wgk[10]).unwrap() * fc;
+    result_kronrod += F::from_f64(wgk[10]).expect("Operation failed") * fc;
 
     // Evaluate at other points
     for i in 0..10 {
-        let x = F::from_f64(xgk[i]).unwrap();
+        let x = F::from_f64(xgk[i]).expect("Operation failed");
         let abscissa = center - half_length * x;
         let fval = f(abscissa);
-        result_kronrod += F::from_f64(wgk[i]).unwrap() * fval;
+        result_kronrod += F::from_f64(wgk[i]).expect("Operation failed") * fval;
 
         let abscissa = center + half_length * x;
         let fval = f(abscissa);
-        result_kronrod += F::from_f64(wgk[20 - i]).unwrap() * fval;
+        result_kronrod += F::from_f64(wgk[20 - i]).expect("Operation failed") * fval;
 
         // Add to Gauss result for every other point
         if i % 2 == 0 {
             let idx = i / 2;
-            result_gauss += F::from_f64(wg[idx]).unwrap() * fval;
-            result_gauss += F::from_f64(wg[9 - idx]).unwrap() * fval;
+            result_gauss += F::from_f64(wg[idx]).expect("Operation failed") * fval;
+            result_gauss += F::from_f64(wg[9 - idx]).expect("Operation failed") * fval;
         }
     }
 
@@ -761,20 +767,20 @@ mod tests {
     #[test]
     fn test_gauss_legendre_quadrature() {
         // Test integrating x² from 0 to 1 (exact result: 1/3)
-        let quad5 = GaussLegendreQuadrature::<f64>::new(5).unwrap();
+        let quad5 = GaussLegendreQuadrature::<f64>::new(5).expect("Operation failed");
         let result = quad5.integrate(|x| x * x, 0.0, 1.0);
 
         // With the corrected nodes and weights, the result should be accurate
         assert_relative_eq!(result, 1.0 / 3.0, epsilon = 1e-10);
 
         // Test integrating sin(x) from 0 to π (exact result: 2)
-        let quad10 = GaussLegendreQuadrature::<f64>::new(10).unwrap();
+        let quad10 = GaussLegendreQuadrature::<f64>::new(10).expect("Operation failed");
         let result = quad10.integrate(|x| x.sin(), 0.0, PI);
         assert_relative_eq!(result, 2.0, epsilon = 1e-10);
 
         // Test integrating exp(-x²) from -1 to 1
         // This is related to the error function, with exact result: sqrt(π)·erf(1)
-        let quad10 = GaussLegendreQuadrature::<f64>::new(10).unwrap();
+        let quad10 = GaussLegendreQuadrature::<f64>::new(10).expect("Operation failed");
         let result = quad10.integrate(|x| (-x * x).exp(), -1.0, 1.0);
         let exact = PI.sqrt() * libm::erf(1.0);
         assert_relative_eq!(result, exact, epsilon = 1e-10);
@@ -783,7 +789,7 @@ mod tests {
     #[test]
     fn test_gauss_legendre_helper() {
         // Test the high-level helper function
-        let result = gauss_legendre(|x| x * x, 0.0, 1.0, 5).unwrap();
+        let result = gauss_legendre(|x| x * x, 0.0, 1.0, 5).expect("Operation failed");
 
         // With the corrected nodes and weights, the result should be accurate
         assert_relative_eq!(result, 1.0 / 3.0, epsilon = 1e-10);
@@ -795,7 +801,7 @@ mod tests {
         // Exact result: 2/3 (1/3 for x² + 1/3 for y²)
         let result =
             multi_gauss_legendre(|x| x[0] * x[0] + x[1] * x[1], &[(0.0, 1.0), (0.0, 1.0)], 5)
-                .unwrap();
+                .expect("Operation failed");
 
         // With the corrected nodes and weights, the result should be accurate
         assert_relative_eq!(result, 2.0 / 3.0, epsilon = 1e-10);
@@ -807,7 +813,7 @@ mod tests {
             &[(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
             5,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // With the corrected nodes and weights, the result should be accurate
         assert_relative_eq!(result, 1.0 / 27.0, epsilon = 1e-10);

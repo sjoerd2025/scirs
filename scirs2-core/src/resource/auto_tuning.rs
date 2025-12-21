@@ -42,7 +42,7 @@ impl ResourceManager {
     /// Get global resource manager instance
     pub fn global() -> CoreResult<Arc<Self>> {
         Ok(GLOBAL_RESOURCE_MANAGER
-            .get_or_init(|| Arc::new(Self::new().unwrap()))
+            .get_or_init(|| Arc::new(Self::new().expect("Operation failed")))
             .clone())
     }
 
@@ -79,23 +79,23 @@ impl ResourceManager {
         policies: &Arc<RwLock<ResourcePolicies>>,
         tuner: &Arc<RwLock<AutoTuner>>,
     ) -> CoreResult<()> {
-        let mut monitor = monitor.lock().unwrap();
+        let mut monitor = monitor.lock().expect("Operation failed");
         let metrics = monitor.collect_metrics()?;
 
         // Check for policy violations
-        let policies = policies.read().unwrap();
+        let policies = policies.read().expect("Operation failed");
         if let Some(action) = policies.check_violations(&metrics)? {
             match action {
                 PolicyAction::ScaleUp => {
-                    let mut tuner = tuner.write().unwrap();
+                    let mut tuner = tuner.write().expect("Operation failed");
                     (*tuner).increase_resources(&metrics)?;
                 }
                 PolicyAction::ScaleDown => {
-                    let mut tuner = tuner.write().unwrap();
+                    let mut tuner = tuner.write().expect("Operation failed");
                     (*tuner).decrease_resources(&metrics)?;
                 }
                 PolicyAction::Optimize => {
-                    let mut tuner = tuner.write().unwrap();
+                    let mut tuner = tuner.write().expect("Operation failed");
                     tuner.optimize_configuration(&metrics)?;
                 }
                 PolicyAction::Alert => {
@@ -112,11 +112,11 @@ impl ResourceManager {
         monitor: &Arc<Mutex<ResourceMonitor>>,
     ) -> CoreResult<()> {
         let metrics = {
-            let monitor = monitor.lock().unwrap();
+            let monitor = monitor.lock().expect("Operation failed");
             monitor.get_current_metrics()?
         };
 
-        let mut tuner = tuner.write().unwrap();
+        let mut tuner = tuner.write().expect("Operation failed");
         tuner.adaptive_optimization(&metrics)?;
 
         Ok(())
@@ -128,26 +128,26 @@ impl ResourceManager {
         size: usize,
         workload_type: WorkloadType,
     ) -> CoreResult<OptimizedAllocation<T>> {
-        let mut allocator = self.allocator.lock().unwrap();
+        let mut allocator = self.allocator.lock().expect("Operation failed");
         allocator.allocate_optimized(size, workload_type)
     }
 
     /// Get current resource utilization
     pub fn get_utilization(&self) -> CoreResult<ResourceUtilization> {
-        let monitor = self.monitor.lock().unwrap();
+        let monitor = self.monitor.lock().expect("Operation failed");
         monitor.get_current_utilization()
     }
 
     /// Update resource policies
     pub fn updatepolicies(&self, newpolicies: ResourcePolicies) -> CoreResult<()> {
-        let mut policies = self.policies.write().unwrap();
+        let mut policies = self.policies.write().expect("Operation failed");
         *policies = newpolicies;
         Ok(())
     }
 
     /// Get performance recommendations
     pub fn get_recommendations(&self) -> CoreResult<Vec<TuningRecommendation>> {
-        let tuner = self.tuner.read().unwrap();
+        let tuner = self.tuner.read().expect("Operation failed");
         tuner.get_recommendations()
     }
 }
@@ -304,7 +304,10 @@ impl AdaptiveAllocator {
             self.memory_pools.insert(pool_name.to_string(), pool);
         }
 
-        let pool = self.memory_pools.get_mut(pool_name).unwrap();
+        let pool = self
+            .memory_pools
+            .get_mut(pool_name)
+            .expect("Operation failed");
         let ptr = pool.allocate(size * std::mem::size_of::<T>())?;
 
         Ok(OptimizedAllocation {
@@ -470,7 +473,7 @@ impl MemoryPool {
             self.add_block()?;
         }
 
-        Ok(self.blocks.pop_front().unwrap())
+        Ok(self.blocks.pop_front().expect("Operation failed"))
     }
 
     #[allow(dead_code)]
@@ -483,7 +486,8 @@ impl Drop for MemoryPool {
     fn drop(&mut self) {
         for &ptr in &self.allocated_blocks {
             unsafe {
-                let layout = std::alloc::Layout::from_size_align(self.block_size, 64).unwrap();
+                let layout = std::alloc::Layout::from_size_align(self.block_size, 64)
+                    .expect("Operation failed");
                 std::alloc::dealloc(ptr, layout);
             }
         }
@@ -1634,11 +1638,11 @@ mod tests {
 
     #[test]
     fn test_resource_manager_creation() {
-        let manager = ResourceManager::new().unwrap();
+        let manager = ResourceManager::new().expect("Operation failed");
         // Collect initial metrics before checking utilization
         {
-            let mut monitor = manager.monitor.lock().unwrap();
-            monitor.collect_metrics().unwrap();
+            let mut monitor = manager.monitor.lock().expect("Operation failed");
+            monitor.collect_metrics().expect("Operation failed");
         }
         assert!(manager.get_utilization().is_ok());
     }
@@ -1646,11 +1650,11 @@ mod tests {
     #[test]
     fn test_adaptive_allocator() {
         let profile = PerformanceProfile::detect();
-        let mut allocator = AdaptiveAllocator::new(profile).unwrap();
+        let mut allocator = AdaptiveAllocator::new(profile).expect("Operation failed");
 
         let allocation = allocator
             .allocate_optimized::<f64>(1000, WorkloadType::LinearAlgebra)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(allocation.size(), 1000);
         assert!(allocation.is_cache_aligned());
     }
@@ -1658,7 +1662,7 @@ mod tests {
     #[test]
     fn test_auto_tuner() {
         let profile = PerformanceProfile::detect();
-        let mut tuner = AutoTuner::new(profile).unwrap();
+        let mut tuner = AutoTuner::new(profile).expect("Operation failed");
 
         // Need to build up optimization history (at least 5 events)
         for i in 0..6 {
@@ -1671,10 +1675,12 @@ mod tests {
                 memorybandwidth_usage: 0.5f64,
                 thread_contention: 0.2f64,
             };
-            tuner.adaptive_optimization(&metrics).unwrap();
+            tuner
+                .adaptive_optimization(&metrics)
+                .expect("Operation failed");
         }
 
-        let recommendations = tuner.get_recommendations().unwrap();
+        let recommendations = tuner.get_recommendations().expect("Operation failed");
         // The recommendations might still be empty due to the performance_delta issue,
         // but at least we've built up enough history. For now, just check that the method works.
         // Recommendations might be empty due to the performance_delta calculation issue,
@@ -1684,8 +1690,8 @@ mod tests {
 
     #[test]
     fn test_resourcemonitor() {
-        let mut monitor = ResourceMonitor::new().unwrap();
-        let metrics = monitor.collect_metrics().unwrap();
+        let mut monitor = ResourceMonitor::new().expect("Operation failed");
+        let metrics = monitor.collect_metrics().expect("Operation failed");
 
         assert!(metrics.cpu_utilization >= 0.0 && metrics.cpu_utilization <= 1.0f64);
         assert!(metrics.memory_utilization >= 0.0 && metrics.memory_utilization <= 1.0f64);
@@ -1704,7 +1710,9 @@ mod tests {
             thread_contention: 0.1f64,
         };
 
-        let action = policies.check_violations(&metrics).unwrap();
+        let action = policies
+            .check_violations(&metrics)
+            .expect("Operation failed");
         assert_eq!(action, Some(PolicyAction::ScaleUp));
     }
 }

@@ -90,9 +90,9 @@ where
 
         // Internal knots uniformly distributed for better conditioning
         if n > 2 {
-            let step = (x_max - x_min) / T::from_usize(n - 1).unwrap();
+            let step = (x_max - x_min) / T::from_usize(n - 1).expect("Operation failed");
             for i in 1..(n - k) {
-                t[k + i] = x_min + T::from_usize(i).unwrap() * step;
+                t[k + i] = x_min + T::from_usize(i).expect("Operation failed") * step;
             }
         }
 
@@ -116,7 +116,7 @@ where
                         sum += x[i + j - 1];
                     }
                 }
-                t[k + i] = sum / T::from_usize(k).unwrap();
+                t[k + i] = sum / T::from_usize(k).expect("Operation failed");
             }
         }
 
@@ -220,14 +220,14 @@ where
             // Create a uniform knot vector in the range [x_min, x_max]
             let x_min = x[0];
             let x_max = x[n - 1];
-            let step = (x_max - x_min) / T::from_usize(n - k).unwrap();
+            let step = (x_max - x_min) / T::from_usize(n - k).expect("Operation failed");
 
             for i in 0..=k {
                 t[i] = x_min;
             }
 
             for i in k + 1..n {
-                t[i] = x_min + T::from_usize(i - k).unwrap() * step;
+                t[i] = x_min + T::from_usize(i - k).expect("Operation failed") * step;
             }
 
             for i in n..n + k + 1 {
@@ -248,7 +248,7 @@ where
                         avg += x[i + j];
                     }
                 }
-                t[i + k] = avg / T::from_usize(k).unwrap();
+                t[i + k] = avg / T::from_usize(k).expect("Operation failed");
             }
 
             for i in 0..=k {
@@ -434,7 +434,7 @@ where
 
     // Determine number of knots based on data size and smoothing factor
     let base_knots = std::cmp::max(k + 1, x.len() / 4);
-    let smoothing_adjustment = (smoothing_factor * T::from_f64(10.0).unwrap())
+    let smoothing_adjustment = (smoothing_factor * T::from_f64(10.0).expect("Operation failed"))
         .to_usize()
         .unwrap_or(0);
     let num_internal_knots = if smoothing_adjustment > base_knots / 2 {
@@ -534,13 +534,13 @@ where
         // Penalize second derivatives (common choice)
         for i in 0..n - 2 {
             reg_matrix[(i, i)] += lambda;
-            reg_matrix[(i, i + 1)] += -T::from_f64(2.0).unwrap() * lambda;
+            reg_matrix[(i, i + 1)] += -T::from_f64(2.0).expect("Operation failed") * lambda;
             reg_matrix[(i, i + 2)] += lambda;
-            reg_matrix[(i + 1, i)] += -T::from_f64(2.0).unwrap() * lambda;
-            reg_matrix[(i + 1, i + 1)] += T::from_f64(4.0).unwrap() * lambda;
-            reg_matrix[(i + 1, i + 2)] += -T::from_f64(2.0).unwrap() * lambda;
+            reg_matrix[(i + 1, i)] += -T::from_f64(2.0).expect("Operation failed") * lambda;
+            reg_matrix[(i + 1, i + 1)] += T::from_f64(4.0).expect("Operation failed") * lambda;
+            reg_matrix[(i + 1, i + 2)] += -T::from_f64(2.0).expect("Operation failed") * lambda;
             reg_matrix[(i + 2, i)] += lambda;
-            reg_matrix[(i + 2, i + 1)] += -T::from_f64(2.0).unwrap() * lambda;
+            reg_matrix[(i + 2, i + 1)] += -T::from_f64(2.0).expect("Operation failed") * lambda;
             reg_matrix[(i + 2, i + 2)] += lambda;
         }
     }
@@ -660,10 +660,10 @@ mod tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let k = 3;
 
-        let uniform_knots = generate_knots(&x.view(), k, "uniform").unwrap();
+        let uniform_knots = generate_knots(&x.view(), k, "uniform").expect("Operation failed");
         assert_eq!(uniform_knots.len(), x.len() + k + 1);
 
-        let clamped_knots = generate_knots(&x.view(), k, "clamped").unwrap();
+        let clamped_knots = generate_knots(&x.view(), k, "clamped").expect("Operation failed");
         assert_eq!(clamped_knots.len(), x.len() + k + 1);
 
         // Check clamped knot properties
@@ -689,7 +689,7 @@ mod tests {
         );
         assert!(spline.is_ok());
 
-        let spline = spline.unwrap();
+        let spline = spline.expect("Operation failed");
         // Test that the spline can be evaluated
         let val = spline.evaluate(2.5);
         assert!(val.is_ok());

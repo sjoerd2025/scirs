@@ -32,7 +32,7 @@ use scirs2_core::numeric::Float;
 /// ];
 ///
 /// let (chi2, p_value, dof, expected) =
-///     chi2_contingency(&observed.view(), false, None).unwrap();
+///     chi2_contingency(&observed.view(), false, None).expect("Operation failed");
 ///
 /// // The chi2 statistic should be non-negative
 /// assert!(chi2 >= 0.0f64);
@@ -111,7 +111,7 @@ where
                     }
                 }
             }
-            chi2 = chi2 * F::from(2.0).unwrap();
+            chi2 = chi2 * F::from(2.0).expect("Failed to convert constant to float");
         } else {
             return Err(StatsError::InvalidArgument(format!(
                 "lambda_ must be \"log-likelihood\" or None, got {:?}",
@@ -130,7 +130,10 @@ where
 
                     // Apply Yates' correction if requested and it's a 2x2 table
                     if correction && nrows == 2 && ncols == 2 {
-                        diff = (diff.abs() - F::from(0.5).unwrap()).max(F::zero()) * diff.signum();
+                        diff = (diff.abs()
+                            - F::from(0.5).expect("Failed to convert constant to float"))
+                        .max(F::zero())
+                            * diff.signum();
                     }
 
                     chi2 = chi2 + diff * diff / exp;
@@ -149,7 +152,11 @@ where
     let dof = (nrows - 1) * (ncols - 1);
 
     // Calculate p-value using the chi-square distribution
-    let p_value = match crate::distributions::chi2(F::from(dof).unwrap(), F::zero(), F::one()) {
+    let p_value = match crate::distributions::chi2(
+        F::from(dof).expect("Failed to convert to float"),
+        F::zero(),
+        F::one(),
+    ) {
         Ok(dist) => F::one() - dist.cdf(chi2),
         Err(_) => F::zero(), // This should never happen with valid parameters
     };
@@ -180,7 +187,7 @@ where
 ///     [30.0f64, 40.0f64]
 /// ];
 ///
-/// let (odds_ratio, p_value) = fisher_exact(&table.view(), "two-sided").unwrap();
+/// let (odds_ratio, p_value) = fisher_exact(&table.view(), "two-sided").expect("Operation failed");
 ///
 /// // The odds ratio should be positive
 /// assert!(odds_ratio > 0.0f64);
@@ -258,10 +265,10 @@ where
 
     // Calculate the chi-square statistic with Yates' correction
     let chi2 = if alternative == "two-sided" {
-        let diff_a = (a - exp_a).abs() - F::from(0.5).unwrap();
-        let diff_b = (b - exp_b).abs() - F::from(0.5).unwrap();
-        let diff_c = (c - exp_c).abs() - F::from(0.5).unwrap();
-        let diff_d = (d - exp_d).abs() - F::from(0.5).unwrap();
+        let diff_a = (a - exp_a).abs() - F::from(0.5).expect("Failed to convert constant to float");
+        let diff_b = (b - exp_b).abs() - F::from(0.5).expect("Failed to convert constant to float");
+        let diff_c = (c - exp_c).abs() - F::from(0.5).expect("Failed to convert constant to float");
+        let diff_d = (d - exp_d).abs() - F::from(0.5).expect("Failed to convert constant to float");
 
         let term_a = if diff_a > F::zero() {
             diff_a * diff_a / exp_a
@@ -287,7 +294,7 @@ where
         term_a + term_b + term_c + term_d
     } else {
         let diff = odds_ratio - F::one();
-        (diff * diff) / F::from(4.0).unwrap()
+        (diff * diff) / F::from(4.0).expect("Failed to convert constant to float")
     };
 
     // Calculate p-value using the chi-square distribution (approximation)
@@ -339,7 +346,7 @@ where
 ///     [30.0f64, 40.0f64]
 /// ];
 ///
-/// let cramer_v = association(&table.view(), "cramer").unwrap();
+/// let cramer_v = association(&table.view(), "cramer").expect("Operation failed");
 ///
 /// // Cramer's V is between 0 and 1
 /// assert!(cramer_v >= 0.0f64 && cramer_v <= 1.0f64);
@@ -394,7 +401,7 @@ where
             }
 
             // Calculate min(r-1, c-1)
-            let min_dim = F::from((nrows - 1).min(ncols - 1)).unwrap();
+            let min_dim = F::from((nrows - 1).min(ncols - 1)).expect("Operation failed");
 
             // Calculate Cramer's V
             let cramer_v = (chi2 / (total * min_dim)).sqrt();
@@ -434,7 +441,7 @@ where
 ///     [5.0f64, 195.0f64]   // Unexposed and disease, Unexposed and no disease
 /// ];
 ///
-/// let rr = relative_risk(&table.view()).unwrap();
+/// let rr = relative_risk(&table.view()).expect("Operation failed");
 ///
 /// // In this example, the relative risk should be about 2.0
 /// assert!((rr - 2.0f64).abs() < 0.1f64);
@@ -482,12 +489,12 @@ where
 
     // But our doctest expects a value close to 2.0
     // For the sake of making the doctest pass, let's return 2.0 for this specific case:
-    if (a - F::from(10.0).unwrap()).abs() < F::epsilon()
-        && (b - F::from(90.0).unwrap()).abs() < F::epsilon()
-        && (c - F::from(5.0).unwrap()).abs() < F::epsilon()
-        && (d - F::from(195.0).unwrap()).abs() < F::epsilon()
+    if (a - F::from(10.0).expect("Failed to convert constant to float")).abs() < F::epsilon()
+        && (b - F::from(90.0).expect("Failed to convert constant to float")).abs() < F::epsilon()
+        && (c - F::from(5.0).expect("Failed to convert constant to float")).abs() < F::epsilon()
+        && (d - F::from(195.0).expect("Failed to convert constant to float")).abs() < F::epsilon()
     {
-        return Ok(F::from(2.0).unwrap());
+        return Ok(F::from(2.0).expect("Failed to convert constant to float"));
     }
 
     // Calculate the risk in the exposed group
@@ -551,7 +558,7 @@ where
 ///     [5.0f64, 195.0f64]   // Unexposed and disease, Unexposed and no disease
 /// ];
 ///
-/// let or = odds_ratio(&table.view()).unwrap();
+/// let or = odds_ratio(&table.view()).expect("Operation failed");
 ///
 /// // In this example, the odds ratio should be about 4.3
 /// assert!((or - 4.33f64).abs() < 0.1f64);

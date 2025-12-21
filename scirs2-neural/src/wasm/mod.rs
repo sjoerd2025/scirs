@@ -47,11 +47,11 @@ mod tests {
     #[test]
     fn test_wasm_module_integration() {
         // Test that all modules work together
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([42; 32]);
         // Create a simple model
         let mut model: Sequential<f32> = Sequential::new();
-        let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
+        let dense = Dense::new(10, 1, Some("relu"), &mut rng).expect("Operation failed");
         model.add_layer(dense);
         // Create configurations
         let wasm_config = WasmCompilationConfig::default();
@@ -90,7 +90,7 @@ mod tests {
         // Test compilation process
         let result = compiler.compile();
         assert!(result.is_ok());
-        let compilation_result = result.unwrap();
+        let compilation_result = result.expect("Operation failed");
         assert!(compilation_result.wasm_module.exists());
         assert!(!compilation_result.bindings.is_empty());
         assert!(compilation_result.bundle_info.total_size > 0);
@@ -134,17 +134,17 @@ mod tests {
                 code_splitting: true,
         // Test JavaScript generation
         let js_generator = BindingGenerator::new(temp_dir.path().to_path_buf(), js_config);
-        let js_bindings = js_generator.generate_bindings().unwrap();
+        let js_bindings = js_generator.generate_bindings().expect("Operation failed");
         assert_eq!(js_bindings.len(), 1);
         assert!(js_bindings[0].to_string_lossy().ends_with(".js"));
         // Test TypeScript generation
         let ts_generator = BindingGenerator::new(temp_dir.path().to_path_buf(), ts_config);
-        let ts_bindings = ts_generator.generate_bindings().unwrap();
+        let ts_bindings = ts_generator.generate_bindings().expect("Operation failed");
         assert_eq!(ts_bindings.len(), 1);
         assert!(ts_bindings[0].to_string_lossy().ends_with(".ts"));
         // Test both generation
         let both_generator = BindingGenerator::new(temp_dir.path().to_path_buf(), both_config);
-        let both_bindings = both_generator.generate_bindings().unwrap();
+        let both_bindings = both_generator.generate_bindings().expect("Operation failed");
         assert_eq!(both_bindings.len(), 2);
     fn test_configuration_defaults() {
         // Test all default configurations are valid

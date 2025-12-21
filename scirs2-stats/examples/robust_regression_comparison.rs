@@ -22,7 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Perform Theil-Sen regression
-    let theilsen_result = theilslopes(&x_values.view(), &y.view(), None, None).unwrap();
+    let theilsen_result =
+        theilslopes(&x_values.view(), &y.view(), None, None).expect("Operation failed");
     let theilsen_intercept = theilsen_result.intercept;
     let theilsen_slope = theilsen_result.slope;
 
@@ -36,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,      // stop_probability
         Some(42),  // random_seed
     )
-    .unwrap();
+    .expect("Operation failed");
     let ransac_intercept = ransac_result.coefficients[0];
     let ransac_slope = ransac_result.coefficients[1];
 
@@ -51,12 +52,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None,       // tol
         None,       // conf_level
     )
-    .unwrap();
+    .expect("Operation failed");
     let huber_intercept = huber_result.coefficients[0];
     let huber_slope = huber_result.coefficients[1];
 
     // Compute ordinary least squares regression for comparison
-    let ols_result = scirs2_stats::linregress(&x_values.view(), &y.view()).unwrap();
+    let ols_result =
+        scirs2_stats::linregress(&x_values.view(), &y.view()).expect("Operation failed");
     let (ols_slope, ols_intercept___, _, _, _) = ols_result;
 
     // Print results
@@ -95,19 +97,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let min_x = *x_values
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let max_x = *x_values
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let min_y = *y
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let max_y = *y
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
 
     // Add some padding to the plot ranges
     let x_range_original = min_x - 0.5..max_x + 0.5;

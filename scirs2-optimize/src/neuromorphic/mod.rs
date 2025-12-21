@@ -312,7 +312,7 @@ impl NeuromorphicNetwork {
     fn process_spike_events(&mut self) -> Result<()> {
         // Sort spike events by time
         self.spike_queue
-            .sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
+            .sort_by(|a, b| a.time.partial_cmp(&b.time).expect("Operation failed"));
 
         // Process events that should have occurred by now
         while let Some(event) = self.spike_queue.first() {
@@ -601,7 +601,9 @@ mod tests {
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let initial = Array1::from(vec![1.0, 1.0]);
 
-        let result = optimizer.optimize(objective, &initial.view()).unwrap();
+        let result = optimizer
+            .optimize(objective, &initial.view())
+            .expect("Operation failed");
 
         assert!(result.nit > 0);
         assert!(result.fun < 2.0); // Should improve from initial value of 2.0
@@ -618,7 +620,8 @@ mod tests {
         let objective = |x: &ArrayView1<f64>| (x[0] - 1.0).powi(2);
         let initial = Array1::from(vec![0.0]);
 
-        let result = neuromorphic_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result = neuromorphic_optimize(objective, &initial.view(), Some(config))
+            .expect("Operation failed");
 
         assert!(result.nit > 0);
         assert!(result.x.len() == 1);
@@ -637,7 +640,7 @@ mod tests {
         });
 
         network.current_time = 0.002;
-        network.process_spike_events().unwrap();
+        network.process_spike_events().expect("Operation failed");
 
         // Spike queue should be processed
         assert!(network.spike_queue.is_empty());

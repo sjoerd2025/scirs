@@ -565,23 +565,23 @@ mod tests {
     fn test_compatibility_checker() {
         let mut checker = CompatibilityChecker::new();
 
-        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").unwrap())
+        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").expect("Operation failed"))
             .feature("feature1")
             .build()
-            .unwrap();
-        let v2 = ApiVersionBuilder::new(Version::parse("1.1.0").unwrap())
+            .expect("Test: operation failed");
+        let v2 = ApiVersionBuilder::new(Version::parse("1.1.0").expect("Operation failed"))
             .feature("feature1")
             .feature("feature2")
             .new_feature("Added feature2")
             .build()
-            .unwrap();
+            .expect("Test: operation failed");
 
-        checker.register_version(&v1).unwrap();
-        checker.register_version(&v2).unwrap();
+        checker.register_version(&v1).expect("Operation failed");
+        checker.register_version(&v2).expect("Operation failed");
 
         let compatibility = checker
             .check_compatibility(&v1.version, &v2.version)
-            .unwrap();
+            .expect("Test: operation failed");
         assert_eq!(compatibility, CompatibilityLevel::BackwardCompatible);
     }
 
@@ -589,21 +589,21 @@ mod tests {
     fn test_breakingchanges() {
         let mut checker = CompatibilityChecker::new();
 
-        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").unwrap())
+        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").expect("Operation failed"))
             .feature("feature1")
             .build()
-            .unwrap();
-        let v2 = ApiVersionBuilder::new(Version::parse("2.0.0").unwrap())
+            .expect("Test: operation failed");
+        let v2 = ApiVersionBuilder::new(Version::parse("2.0.0").expect("Operation failed"))
             .breaking_change("Removed feature1")
             .build()
-            .unwrap();
+            .expect("Test: operation failed");
 
-        checker.register_version(&v1).unwrap();
-        checker.register_version(&v2).unwrap();
+        checker.register_version(&v1).expect("Operation failed");
+        checker.register_version(&v2).expect("Operation failed");
 
         let report = checker
             .get_compatibility_report(&v1.version, &v2.version)
-            .unwrap();
+            .expect("Test: operation failed");
         assert!(!report.breakingchanges.is_empty());
         assert!(report.compatibility_level.requires_migration());
     }
@@ -612,44 +612,49 @@ mod tests {
     fn test_migration_effort_estimation() {
         let mut checker = CompatibilityChecker::new();
 
-        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").unwrap())
+        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").expect("Operation failed"))
             .build()
-            .unwrap();
-        let v2 = ApiVersionBuilder::new(Version::parse("2.0.0").unwrap())
+            .expect("Test: operation failed");
+        let v2 = ApiVersionBuilder::new(Version::parse("2.0.0").expect("Operation failed"))
             .breaking_change("Major API overhaul")
             .build()
-            .unwrap();
+            .expect("Test: operation failed");
 
-        checker.register_version(&v1).unwrap();
-        checker.register_version(&v2).unwrap();
+        checker.register_version(&v1).expect("Operation failed");
+        checker.register_version(&v2).expect("Operation failed");
 
         let report = checker
             .get_compatibility_report(&v1.version, &v2.version)
-            .unwrap();
+            .expect("Test: operation failed");
         assert!(report.estimated_migration_effort.is_some());
-        assert!(report.estimated_migration_effort.unwrap() > 0);
+        assert!(
+            report
+                .estimated_migration_effort
+                .expect("Test: operation failed")
+                > 0
+        );
     }
 
     #[test]
     fn test_feature_removal_detection() {
         let mut checker = CompatibilityChecker::new();
 
-        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").unwrap())
+        let v1 = ApiVersionBuilder::new(Version::parse("1.0.0").expect("Operation failed"))
             .feature("feature1")
             .feature("feature2")
             .build()
-            .unwrap();
-        let v2 = ApiVersionBuilder::new(Version::parse("1.1.0").unwrap())
+            .expect("Test: operation failed");
+        let v2 = ApiVersionBuilder::new(Version::parse("1.1.0").expect("Operation failed"))
             .feature("feature1")
             // feature2 removed
-            .build().unwrap();
+            .build().expect("Operation failed");
 
-        checker.register_version(&v1).unwrap();
-        checker.register_version(&v2).unwrap();
+        checker.register_version(&v1).expect("Operation failed");
+        checker.register_version(&v2).expect("Operation failed");
 
         let report = checker
             .get_compatibility_report(&v1.version, &v2.version)
-            .unwrap();
+            .expect("Test: operation failed");
         assert!(!report.breakingchanges.is_empty());
 
         let feature_removal = report

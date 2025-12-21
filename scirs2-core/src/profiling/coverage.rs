@@ -806,7 +806,7 @@ impl CoverageAnalyzer {
             generated_at: SystemTime::now(),
             config: self.config.clone(),
             overall_stats,
-            file_coverage: self.file_coverage.read().unwrap().clone(),
+            file_coverage: self.file_coverage.read().expect("Operation failed").clone(),
             trends,
             quality_gates,
             performance_impact,
@@ -965,7 +965,7 @@ impl CoverageAnalyzer {
 
     /// Calculate overall coverage statistics
     fn calculate_overall_statistics(&self) -> CoreResult<CoverageStatistics> {
-        let coverage = self.file_coverage.read().unwrap();
+        let coverage = self.file_coverage.read().expect("Operation failed");
 
         let mut stats = CoverageStatistics {
             total_lines: 0,
@@ -1118,7 +1118,7 @@ impl CoverageAnalyzer {
         stats: &CoverageStatistics,
     ) -> CoreResult<Vec<CoverageRecommendation>> {
         let mut recommendations = Vec::new();
-        let coverage = self.file_coverage.read().unwrap();
+        let coverage = self.file_coverage.read().expect("Operation failed");
 
         // Recommend unit tests for low coverage files
         for (path, file_cov) in coverage.iter() {
@@ -1180,7 +1180,7 @@ impl CoverageAnalyzer {
 
     /// Calculate coverage trends
     fn calculate_trends(&self) -> CoreResult<Option<CoverageTrends>> {
-        let history = self.history.lock().unwrap();
+        let history = self.history.lock().expect("Operation failed");
 
         if history.len() < 2 {
             return Ok(None);
@@ -1189,8 +1189,14 @@ impl CoverageAnalyzer {
         // Calculate trend direction
         let recent_points: Vec<_> = history.iter().rev().take(5).collect();
         let trend_direction = if recent_points.len() >= 2 {
-            let first = recent_points.last().unwrap().coverage_percentage;
-            let last = recent_points.first().unwrap().coverage_percentage;
+            let first = recent_points
+                .last()
+                .expect("Operation failed")
+                .coverage_percentage;
+            let last = recent_points
+                .first()
+                .expect("Operation failed")
+                .coverage_percentage;
             let change = last - first;
 
             if change > 1.0 {
@@ -1206,8 +1212,8 @@ impl CoverageAnalyzer {
 
         // Calculate change rate (percentage points per day)
         let change_rate = if recent_points.len() >= 2 {
-            let first = recent_points.last().unwrap();
-            let last = recent_points.first().unwrap();
+            let first = recent_points.last().expect("Operation failed");
+            let last = recent_points.first().expect("Operation failed");
 
             let time_diff = last
                 .timestamp
@@ -1229,7 +1235,10 @@ impl CoverageAnalyzer {
 
         // Simple prediction based on trend
         let predicted_coverage = if change_rate.abs() > 0.1 {
-            let last_coverage = recent_points.first().unwrap().coverage_percentage;
+            let last_coverage = recent_points
+                .first()
+                .expect("Operation failed")
+                .coverage_percentage;
             Some((last_coverage + change_rate * 7.0).clamp(0.0, 100.0)) // 7 days prediction
         } else {
             None
@@ -1776,7 +1785,7 @@ impl CoverageAnalyzer {
 
     /// Find complex uncovered functions
     fn find_complex_uncovered_functions(&self) -> Vec<FunctionCoverage> {
-        let coverage = self.file_coverage.read().unwrap();
+        let coverage = self.file_coverage.read().expect("Operation failed");
 
         let mut complex_functions: Vec<_> = coverage
             .values()

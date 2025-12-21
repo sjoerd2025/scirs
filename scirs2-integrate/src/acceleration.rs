@@ -56,7 +56,8 @@ impl<F: IntegrateFloat> Default for AcceleratorOptions<F> {
     fn default() -> Self {
         Self {
             memory_depth: 5,
-            regularization: F::from_f64(1e-12).unwrap_or_else(|| F::from(1e-12).unwrap()),
+            regularization: F::from_f64(1e-12)
+                .unwrap_or_else(|| F::from(1e-12).expect("Failed to convert constant to float")),
             min_iterates: 2,
             use_qr: true,
             damping: F::one(),
@@ -336,7 +337,11 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
             // Elimination
             for i in (k + 1)..n {
                 // Check for zero diagonal element to prevent division by zero
-                if a[[k, k]].abs() < F::from_f64(1e-14).unwrap_or_else(|| F::from(1e-14).unwrap()) {
+                if a[[k, k]].abs()
+                    < F::from_f64(1e-14).unwrap_or_else(|| {
+                        F::from(1e-14).expect("Failed to convert constant to float")
+                    })
+                {
                     return Err(IntegrateError::ComputationError(
                         "Zero diagonal element in Gaussian elimination".to_string(),
                     ));
@@ -357,7 +362,10 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
                 sum += a[[i, j]] * x[j];
             }
             // Check for zero diagonal element
-            if a[[i, i]].abs() < F::from_f64(1e-14).unwrap_or_else(|| F::from(1e-14).unwrap()) {
+            if a[[i, i]].abs()
+                < F::from_f64(1e-14)
+                    .unwrap_or_else(|| F::from(1e-14).expect("Failed to convert constant to float"))
+            {
                 return Err(IntegrateError::ComputationError(
                     "Zero diagonal element in back substitution".to_string(),
                 ));
@@ -421,9 +429,11 @@ impl<F: IntegrateFloat> AitkenAccelerator<F> {
 
             // Aitken formula: x_acc = x2 - (x2 - x1)² / (x2 - 2x1 + x0)
             let numerator = (x2 - x1) * (x2 - x1);
-            let two = F::from_f64(2.0).unwrap_or_else(|| F::from(2).unwrap());
+            let two = F::from_f64(2.0)
+                .unwrap_or_else(|| F::from(2).expect("Failed to convert constant to float"));
             let denominator = x2 - two * x1 + x0;
-            let epsilon = F::from_f64(1e-12).unwrap_or_else(|| F::from(1e-12).unwrap());
+            let epsilon = F::from_f64(1e-12)
+                .unwrap_or_else(|| F::from(1e-12).expect("Failed to convert constant to float"));
 
             if denominator.abs() > epsilon {
                 Some(x2 - numerator / denominator)

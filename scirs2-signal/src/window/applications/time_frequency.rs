@@ -516,6 +516,19 @@ pub fn generate_multitaper_windows(
 
 /// Orthogonalize taper sequences using Gram-Schmidt process
 fn orthogonalize_tapers(tapers: &mut [Vec<f64>]) {
+    if tapers.is_empty() {
+        return;
+    }
+
+    // Normalize the first taper
+    let norm0: f64 = tapers[0].iter().map(|&x| x * x).sum::<f64>().sqrt();
+    if norm0 > 1e-12 {
+        for x in &mut tapers[0] {
+            *x /= norm0;
+        }
+    }
+
+    // Orthogonalize and normalize remaining tapers
     for i in 1..tapers.len() {
         for j in 0..i {
             // Compute projection coefficient
@@ -566,14 +579,14 @@ mod tests {
             recommend_timefreq_window(&params, TimeFrequencyOptimization::BalancedResolution);
         assert!(result.is_ok());
 
-        let window = result.unwrap();
+        let window = result.expect("Operation failed");
         assert_eq!(window.coefficients.len(), 256);
         assert!(window.uncertainty_product > 0.0);
     }
 
     #[test]
     fn test_morlet_like_window() {
-        let window = generate_morlet_like_window(64, 1.0).unwrap();
+        let window = generate_morlet_like_window(64, 1.0).expect("Operation failed");
         assert_eq!(window.len(), 64);
 
         // Should be approximately normalized
@@ -590,7 +603,7 @@ mod tests {
             5.0,           // 5 Hz frequency resolution
             1000.0,        // 1000 Hz sample rate
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(params.window_length >= 32);
         assert!(params.overlap > 0.0 && params.overlap < 1.0);
@@ -598,9 +611,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // FIXME: Multitaper windows not achieving expected energy normalization
     fn test_multitaper_generation() {
-        let tapers = generate_multitaper_windows(64, 2.5, 3).unwrap();
+        let tapers = generate_multitaper_windows(64, 2.5, 3).expect("Operation failed");
         assert_eq!(tapers.len(), 3);
 
         for taper in &tapers {
@@ -622,7 +634,7 @@ mod tests {
 
     #[test]
     fn test_resolution_analysis() {
-        let window = cosine::hann(128, true).unwrap();
+        let window = cosine::hann(128, true).expect("Operation failed");
         let properties = analyze_timefreq_resolution(&window, 1000.0);
 
         assert!(properties.time_resolution > 0.0);

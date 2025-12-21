@@ -6,7 +6,7 @@ mod dwt_haar_tests {
     #[test]
     fn test_haar_filters() {
         let wavelet = Wavelet::Haar;
-        let filters = wavelet.filters().unwrap();
+        let filters = wavelet.filters().expect("Test: operation failed");
 
         // Check filter lengths
         assert_eq!(filters.dec_lo.len(), 2);
@@ -29,7 +29,8 @@ mod dwt_haar_tests {
         let signal = vec![2.0, 2.0, 6.0, 6.0, 8.0, 8.0, 4.0, 4.0];
 
         // Decompose using Haar wavelet
-        let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).unwrap();
+        let (approx, detail) =
+            dwt_decompose(&signal, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Check dimensions
         assert_eq!(approx.len(), 4);
@@ -48,10 +49,12 @@ mod dwt_haar_tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         // Decompose
-        let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).unwrap();
+        let (approx, detail) =
+            dwt_decompose(&signal, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Reconstruct
-        let reconstructed = dwt_reconstruct(&approx, &detail, Wavelet::Haar).unwrap();
+        let reconstructed =
+            dwt_reconstruct(&approx, &detail, Wavelet::Haar).expect("Test: operation failed");
 
         // Check that the function ran without crashing and returned something
         assert!(!reconstructed.is_empty());
@@ -66,13 +69,14 @@ mod dwt_haar_tests {
         ];
 
         // Perform 2-level decomposition
-        let coeffs = wavedec(&signal, Wavelet::Haar, Some(2), None).unwrap();
+        let coeffs =
+            wavedec(&signal, Wavelet::Haar, Some(2), None).expect("Test: operation failed");
 
         // Should have some coefficients
         assert!(!coeffs.is_empty());
 
         // Reconstruct
-        let reconstructed = waverec(&coeffs, Wavelet::Haar).unwrap();
+        let reconstructed = waverec(&coeffs, Wavelet::Haar).expect("Test: operation failed");
 
         // Check that the function ran without crashing and returned something
         assert!(!reconstructed.is_empty());
@@ -86,12 +90,12 @@ mod dwt_haar_tests {
         let signal = vec![1.0, 3.0, 5.0, 7.0, 9.0, 11.0];
 
         // Decompose with different boundary extension modes
-        let (approx_sym, detail_sym) =
-            dwt_decompose(&signal, Wavelet::Haar, Some("symmetric")).unwrap();
-        let (approx_per, detail_per) =
-            dwt_decompose(&signal, Wavelet::Haar, Some("periodic")).unwrap();
+        let (approx_sym, detail_sym) = dwt_decompose(&signal, Wavelet::Haar, Some("symmetric"))
+            .expect("Test: operation failed");
+        let (approx_per, detail_per) = dwt_decompose(&signal, Wavelet::Haar, Some("periodic"))
+            .expect("Test: operation failed");
         let (approx_zero, detail_zero) =
-            dwt_decompose(&signal, Wavelet::Haar, Some("zero")).unwrap();
+            dwt_decompose(&signal, Wavelet::Haar, Some("zero")).expect("Test: operation failed");
 
         // Each should have the same length (approximately half the original)
         assert_eq!(approx_sym.len(), 3);
@@ -102,9 +106,12 @@ mod dwt_haar_tests {
         assert_eq!(detail_zero.len(), 3);
 
         // Reconstruct from each
-        let recon_sym = dwt_reconstruct(&approx_sym, &detail_sym, Wavelet::Haar).unwrap();
-        let recon_per = dwt_reconstruct(&approx_per, &detail_per, Wavelet::Haar).unwrap();
-        let recon_zero = dwt_reconstruct(&approx_zero, &detail_zero, Wavelet::Haar).unwrap();
+        let recon_sym = dwt_reconstruct(&approx_sym, &detail_sym, Wavelet::Haar)
+            .expect("Test: operation failed");
+        let recon_per = dwt_reconstruct(&approx_per, &detail_per, Wavelet::Haar)
+            .expect("Test: operation failed");
+        let recon_zero = dwt_reconstruct(&approx_zero, &detail_zero, Wavelet::Haar)
+            .expect("Test: operation failed");
 
         // Just verify that we got some output without crashing
         assert!(!recon_sym.is_empty());

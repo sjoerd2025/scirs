@@ -272,7 +272,8 @@ impl P2State {
 
             if self.count == 5 {
                 // Sort initial observations
-                self.q.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                self.q
+                    .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             }
             return;
         }
@@ -352,7 +353,7 @@ impl P2State {
         if self.count < 5 {
             // Not enough data, return median of available values
             let mut sorted = self.q[..self.count].to_vec();
-            sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             sorted[sorted.len() / 2]
         } else {
             self.q[2] // Middle marker estimates the quantile

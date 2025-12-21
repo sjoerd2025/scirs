@@ -8,6 +8,12 @@ use scirs2_core::numeric::{Float, FloatConst, FromPrimitive};
 
 use crate::error::{SciRS2Error, SciRS2Result, check_domain};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<T: Float + FromPrimitive>(value: f64) -> T {
+    T::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Gamma function
 ///
 /// # Arguments
@@ -44,18 +50,18 @@ pub fn gamma<T: Float + FromPrimitive + FloatConst>(x: T) -> T {
         }
         let mut result = T::one();
         for i in 1..n_int {
-            result = result * T::from(i).unwrap();
+            result = result * T::from(i).expect("Failed to convert to float");
         }
         return result;
     }
     
     // TODO: Implement a more general approximation
     // For now, we'll just handle a few half-integer cases
-    if (x - T::from(1.5).unwrap()).abs() < T::epsilon() {
-        return T::from_f64(0.5 * PI.sqrt()).unwrap();
+    if (x - const_f64::<T>(1.5)).abs() < T::epsilon() {
+        return T::from_f64(0.5 * PI.sqrt()).expect("Test/example failed");
     }
-    if (x - T::from(2.5).unwrap()).abs() < T::epsilon() {
-        return T::from_f64(0.75 * PI.sqrt()).unwrap();
+    if (x - const_f64::<T>(2.5)).abs() < T::epsilon() {
+        return T::from_f64(0.75 * PI.sqrt()).expect("Test/example failed");
     }
     
     // For other values, return NaN for now
@@ -87,7 +93,7 @@ pub fn lgamma<T: Float + FromPrimitive + FloatConst>(x: T) -> T {
         }
         let mut result = T::zero();
         for i in 1..n_int {
-            result = result + T::from(i).unwrap().ln();
+            result = result + T::from(i).expect("Failed to convert to float").ln();
         }
         return result;
     }
@@ -111,7 +117,7 @@ pub fn lgamma<T: Float + FromPrimitive + FloatConst>(x: T) -> T {
 ///
 /// ```
 /// use scirs2::special::beta;
-/// let result = beta(2.0, 3.0).unwrap();
+/// let result = beta(2.0, 3.0).expect("Test/example failed");
 /// assert!((result - 1.0/12.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -128,8 +134,8 @@ pub fn beta<T: Float + FromPrimitive + FloatConst>(a: T, b: T) -> SciRS2Result<T
     let a_int = a.round().to_usize().unwrap_or(0);
     let b_int = b.round().to_usize().unwrap_or(0);
     
-    if (a - T::from(a_int).unwrap()).abs() < T::epsilon() && 
-       (b - T::from(b_int).unwrap()).abs() < T::epsilon() {
+    if (a - T::from(a_int).expect("Failed to convert to float")).abs() < T::epsilon() && 
+       (b - T::from(b_int).expect("Failed to convert to float")).abs() < T::epsilon() {
         // For integer arguments
         let num1 = gamma(a);
         let num2 = gamma(b);
@@ -174,10 +180,10 @@ pub fn erf<T: Float + FromPrimitive>(x: T) -> T {
     
     // Simple polynomial approximation (not very accurate)
     // A more comprehensive implementation would use a series expansion or numerical approximation
-    let t = T::one() / (T::one() + T::from(0.47047).unwrap() * x_abs);
-    let polynomial = t * (T::from(0.3480242).unwrap() - 
-                         t * (T::from(0.0958798).unwrap() - 
-                             t * T::from(0.7478556).unwrap()));
+    let t = T::one() / (T::one() + const_f64::<T>(0.47047) * x_abs);
+    let polynomial = t * (const_f64::<T>(0.3480242) - 
+                         t * (const_f64::<T>(0.0958798) - 
+                             t * const_f64::<T>(0.7478556)));
     
     sign * (T::one() - polynomial * (-x_abs * x_abs).exp())
 }
@@ -223,33 +229,33 @@ pub fn i0<T: Float + FromPrimitive>(x: T) -> T {
     let abs_x = x.abs();
     
     // For small x, use series expansion: I_0(x) = sum_{k=0}^∞ (x²/4)^k / (k!)²
-    if abs_x < T::from_f64(3.75).unwrap() {
-        let y = abs_x / T::from_f64(3.75).unwrap();
+    if abs_x < T::from_f64(3.75).expect("Operation failed") {
+        let y = abs_x / T::from_f64(3.75).expect("Test/example failed");
         let y2 = y * y;
         
         // Coefficients for the polynomial approximation
         let mut result = T::one();
-        result += T::from_f64(3.5156229).unwrap() * y2;
-        result += T::from_f64(3.0899424).unwrap() * y2 * y2;
-        result += T::from_f64(1.2067492).unwrap() * y2 * y2 * y2;
-        result += T::from_f64(0.2659732).unwrap() * y2 * y2 * y2 * y2;
-        result += T::from_f64(0.0360768).unwrap() * y2 * y2 * y2 * y2 * y2;
-        result += T::from_f64(0.0045813).unwrap() * y2 * y2 * y2 * y2 * y2 * y2;
+        result += T::from_f64(3.5156229).expect("Operation failed") * y2;
+        result += T::from_f64(3.0899424).expect("Operation failed") * y2 * y2;
+        result += T::from_f64(1.2067492).expect("Operation failed") * y2 * y2 * y2;
+        result += T::from_f64(0.2659732).expect("Operation failed") * y2 * y2 * y2 * y2;
+        result += T::from_f64(0.0360768).expect("Operation failed") * y2 * y2 * y2 * y2 * y2;
+        result += T::from_f64(0.0045813).expect("Operation failed") * y2 * y2 * y2 * y2 * y2 * y2;
         
         result
     } else {
         // For large x, use asymptotic expansion: I_0(x) ≈ e^x / sqrt(2πx) * P(1/x)
-        let z = T::from_f64(3.75).unwrap() / abs_x;
+        let z = T::from_f64(3.75).expect("Operation failed") / abs_x;
         
-        let mut p = T::from_f64(0.39894228).unwrap();
-        p += T::from_f64(0.01328592).unwrap() * z;
-        p += T::from_f64(0.00225319).unwrap() * z * z;
-        p -= T::from_f64(0.00157565).unwrap() * z * z * z;
-        p += T::from_f64(0.00916281).unwrap() * z * z * z * z;
-        p -= T::from_f64(0.02057706).unwrap() * z * z * z * z * z;
-        p += T::from_f64(0.02635537).unwrap() * z * z * z * z * z * z;
-        p -= T::from_f64(0.01647633).unwrap() * z * z * z * z * z * z * z;
-        p += T::from_f64(0.00392377).unwrap() * z * z * z * z * z * z * z * z;
+        let mut p = T::from_f64(0.39894228).expect("Test/example failed");
+        p += T::from_f64(0.01328592).expect("Operation failed") * z;
+        p += T::from_f64(0.00225319).expect("Operation failed") * z * z;
+        p -= T::from_f64(0.00157565).expect("Operation failed") * z * z * z;
+        p += T::from_f64(0.00916281).expect("Operation failed") * z * z * z * z;
+        p -= T::from_f64(0.02057706).expect("Operation failed") * z * z * z * z * z;
+        p += T::from_f64(0.02635537).expect("Operation failed") * z * z * z * z * z * z;
+        p -= T::from_f64(0.01647633).expect("Operation failed") * z * z * z * z * z * z * z;
+        p += T::from_f64(0.00392377).expect("Operation failed") * z * z * z * z * z * z * z * z;
         
         let exp_term = abs_x.exp();
         let sqrt_term = abs_x.sqrt();
@@ -349,33 +355,33 @@ pub fn jn<T: Float + FromPrimitive>(n: i32, x: T) -> T {
 fn bessel_j0<T: Float + FromPrimitive>(x: T) -> T {
     let abs_x = x.abs();
     
-    if abs_x < T::from_f64(8.0).unwrap() {
+    if abs_x < T::from_f64(8.0).expect("Operation failed") {
         // Series expansion for small x
         let y = x * x;
         let mut result = T::one();
-        result -= y / T::from_f64(4.0).unwrap();
-        result += y * y / T::from_f64(64.0).unwrap();
-        result -= y * y * y / T::from_f64(2304.0).unwrap();
-        result += y * y * y * y / T::from_f64(147456.0).unwrap();
-        result -= y * y * y * y * y / T::from_f64(14745600.0).unwrap();
+        result -= y / T::from_f64(4.0).expect("Test/example failed");
+        result += y * y / T::from_f64(64.0).expect("Test/example failed");
+        result -= y * y * y / T::from_f64(2304.0).expect("Test/example failed");
+        result += y * y * y * y / T::from_f64(147456.0).expect("Test/example failed");
+        result -= y * y * y * y * y / T::from_f64(14745600.0).expect("Test/example failed");
         
         result
     } else {
         // Asymptotic expansion for large x
-        let z = T::from_f64(8.0).unwrap() / abs_x;
+        let z = T::from_f64(8.0).expect("Operation failed") / abs_x;
         let z2 = z * z;
         
         let mut p = T::one();
-        p -= T::from_f64(0.1098628627).unwrap() * z2;
-        p += T::from_f64(0.0143125463).unwrap() * z2 * z2;
-        p -= T::from_f64(0.0045681716).unwrap() * z2 * z2 * z2;
+        p -= T::from_f64(0.1098628627).expect("Operation failed") * z2;
+        p += T::from_f64(0.0143125463).expect("Operation failed") * z2 * z2;
+        p -= T::from_f64(0.0045681716).expect("Operation failed") * z2 * z2 * z2;
         
-        let mut q = z * T::from_f64(0.125).unwrap();
-        q -= z * z2 * T::from_f64(0.0732421875).unwrap();
-        q += z * z2 * z2 * T::from_f64(0.0227108002).unwrap();
+        let mut q = z * T::from_f64(0.125).expect("Test/example failed");
+        q -= z * z2 * T::from_f64(0.0732421875).expect("Test/example failed");
+        q += z * z2 * z2 * T::from_f64(0.0227108002).expect("Test/example failed");
         
-        let sqrt_term = (T::from_f64(2.0).unwrap() / (T::from_f64(std::f64::consts::PI).unwrap() * abs_x)).sqrt();
-        sqrt_term * (p * (abs_x - T::from_f64(std::f64::consts::PI / 4.0).unwrap()).cos() - q * (abs_x - T::from_f64(std::f64::consts::PI / 4.0).unwrap()).sin())
+        let sqrt_term = (T::from_f64(2.0).expect("Operation failed") / (T::from_f64(std::f64::consts::PI).expect("Operation failed") * abs_x)).sqrt();
+        sqrt_term * (p * (abs_x - T::from_f64(std::f64::consts::PI / 4.0).expect("Operation failed")).cos() - q * (abs_x - T::from_f64(std::f64::consts::PI / 4.0).expect("Operation failed")).sin())
     }
 }
 
@@ -384,32 +390,32 @@ fn bessel_j0<T: Float + FromPrimitive>(x: T) -> T {
 fn bessel_j1<T: Float + FromPrimitive>(x: T) -> T {
     let abs_x = x.abs();
     
-    if abs_x < T::from_f64(8.0).unwrap() {
+    if abs_x < T::from_f64(8.0).expect("Operation failed") {
         // Series expansion for small x
         let y = x * x;
-        let mut result = x / T::from_f64(2.0).unwrap();
-        result -= x * y / T::from_f64(16.0).unwrap();
-        result += x * y * y / T::from_f64(384.0).unwrap();
-        result -= x * y * y * y / T::from_f64(18432.0).unwrap();
-        result += x * y * y * y * y / T::from_f64(1474560.0).unwrap();
+        let mut result = x / T::from_f64(2.0).expect("Test/example failed");
+        result -= x * y / T::from_f64(16.0).expect("Test/example failed");
+        result += x * y * y / T::from_f64(384.0).expect("Test/example failed");
+        result -= x * y * y * y / T::from_f64(18432.0).expect("Test/example failed");
+        result += x * y * y * y * y / T::from_f64(1474560.0).expect("Test/example failed");
         
         result
     } else {
         // Asymptotic expansion for large x
-        let z = T::from_f64(8.0).unwrap() / abs_x;
+        let z = T::from_f64(8.0).expect("Operation failed") / abs_x;
         let z2 = z * z;
         
         let mut p = T::one();
-        p += T::from_f64(0.183105e-2).unwrap() * z2;
-        p -= T::from_f64(0.3516396496).unwrap() * z2 * z2;
-        p += T::from_f64(0.2457520174e-1).unwrap() * z2 * z2 * z2;
+        p += T::from_f64(0.183105e-2).expect("Operation failed") * z2;
+        p -= T::from_f64(0.3516396496).expect("Operation failed") * z2 * z2;
+        p += T::from_f64(0.2457520174e-1).expect("Operation failed") * z2 * z2 * z2;
         
-        let mut q = -z * T::from_f64(0.375).unwrap();
-        q += z * z2 * T::from_f64(0.2109375).unwrap();
-        q -= z * z2 * z2 * T::from_f64(0.1025390625).unwrap();
+        let mut q = -z * T::from_f64(0.375).expect("Test/example failed");
+        q += z * z2 * T::from_f64(0.2109375).expect("Test/example failed");
+        q -= z * z2 * z2 * T::from_f64(0.1025390625).expect("Test/example failed");
         
-        let sqrt_term = (T::from_f64(2.0).unwrap() / (T::from_f64(std::f64::consts::PI).unwrap() * abs_x)).sqrt();
-        let result = sqrt_term * (p * (abs_x - T::from_f64(3.0 * std::f64::consts::PI / 4.0).unwrap()).cos() - q * (abs_x - T::from_f64(3.0 * std::f64::consts::PI / 4.0).unwrap()).sin());
+        let sqrt_term = (T::from_f64(2.0).expect("Operation failed") / (T::from_f64(std::f64::consts::PI).expect("Operation failed") * abs_x)).sqrt();
+        let result = sqrt_term * (p * (abs_x - T::from_f64(3.0 * std::f64::consts::PI / 4.0).expect("Operation failed")).cos() - q * (abs_x - T::from_f64(3.0 * std::f64::consts::PI / 4.0).expect("Operation failed")).sin());
         
         if x < T::zero() {
             -result
@@ -435,7 +441,7 @@ fn bessel_jn_recurrence<T: Float + FromPrimitive>(n: i32, x: T) -> T {
     let mut j_n = T::zero();
     
     for i in 2..=n {
-        let two_i_minus_1 = T::from_i32(2 * i - 1).unwrap();
+        let two_i_minus_1 = T::from_i32(2 * i - 1).expect("Test/example failed");
         j_n = (two_i_minus_1 / x) * j_n_minus_1 - j_n_minus_2;
         j_n_minus_2 = j_n_minus_1;
         j_n_minus_1 = j_n;
@@ -512,9 +518,9 @@ mod tests {
     
     #[test]
     fn test_beta() {
-        assert!((beta(1.0, 1.0).unwrap() - 1.0).abs() < 1e-10);
-        assert!((beta(2.0, 3.0).unwrap() - 1.0/12.0).abs() < 1e-10);
-        assert!((beta(3.0, 2.0).unwrap() - 1.0/12.0).abs() < 1e-10);
+        assert!((beta(1.0, 1.0).expect("Operation failed") - 1.0).abs() < 1e-10);
+        assert!((beta(2.0, 3.0).expect("Operation failed") - 1.0/12.0).abs() < 1e-10);
+        assert!((beta(3.0, 2.0).expect("Operation failed") - 1.0/12.0).abs() < 1e-10);
     }
     
     #[test]

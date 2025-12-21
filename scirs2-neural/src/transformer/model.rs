@@ -186,7 +186,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
         // Encode source
         let encoder_output = self.encoder.forward(&src_pos)?;
-        *self.encoder_output_cache.write().unwrap() = Some(encoder_output.clone());
+        *self.encoder_output_cache.write().expect("Operation failed") = Some(encoder_output.clone());
 
         // Decode target with encoder output
         let decoder_output = self
@@ -249,7 +249,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
         // Encode source (for inference, we might cache this for efficiency)
         let encoder_output = self.encoder.forward(&src_pos)?;
-        *self.encoder_output_cache.write().unwrap() = Some(encoder_output.clone());
+        *self.encoder_output_cache.write().expect("Operation failed") = Some(encoder_output.clone());
 
         // Decode target with encoder output
         let decoder_output = self
@@ -401,7 +401,7 @@ mod tests {
             epsilon: 1e-5,
         };
 
-        let transformer = Transformer::<f64>::new(config, &mut rng).unwrap();
+        let transformer = Transformer::<f64>::new(config, &mut rng).expect("Operation failed");
 
         // Create sample inputs
         let batch_size = 2;
@@ -413,7 +413,7 @@ mod tests {
         let tgt = Array3::<f64>::from_elem((batch_size, tgt_len, d_model), 0.1).into_dyn();
 
         // Forward pass for training
-        let output = transformer.forward_train(&src, &tgt).unwrap();
+        let output = transformer.forward_train(&src, &tgt).expect("Operation failed");
 
         // Check output shape
         assert_eq!(output.shape(), tgt.shape());
@@ -434,7 +434,7 @@ mod tests {
             epsilon: 1e-5,
         };
 
-        let transformer = Transformer::<f64>::new(config, &mut rng).unwrap();
+        let transformer = Transformer::<f64>::new(config, &mut rng).expect("Operation failed");
 
         let batch_size = 2;
         let src_len = 8;
@@ -445,7 +445,7 @@ mod tests {
         let tgt = Array3::<f64>::from_elem((batch_size, tgt_len, d_model), 0.1).into_dyn();
 
         // Forward pass for inference
-        let output = transformer.forward_inference(&src, &tgt).unwrap();
+        let output = transformer.forward_inference(&src, &tgt).expect("Operation failed");
 
         // Check output shape
         assert_eq!(output.shape(), tgt.shape());
@@ -466,7 +466,7 @@ mod tests {
             epsilon: 1e-5,
         };
 
-        let transformer = Transformer::<f64>::new(config, &mut rng).unwrap();
+        let transformer = Transformer::<f64>::new(config, &mut rng).expect("Operation failed");
 
         let batch_size = 2;
         let src_len = 8;
@@ -475,7 +475,7 @@ mod tests {
         let src = Array3::<f64>::from_elem((batch_size, src_len, d_model), 0.1).into_dyn();
 
         // Forward pass for encoder only
-        let output = transformer.forward(&src).unwrap();
+        let output = transformer.forward(&src).expect("Operation failed");
 
         // Check output shape
         assert_eq!(output.shape(), src.shape());
@@ -496,13 +496,13 @@ mod tests {
             epsilon: 1e-5,
         };
 
-        let transformer = Transformer::<f64>::new(config, &mut rng).unwrap();
+        let transformer = Transformer::<f64>::new(config, &mut rng).expect("Operation failed");
         let transformer_clone = transformer.clone();
 
         // Both should produce outputs
         let src = Array3::<f64>::from_elem((1, 4, 32), 0.1).into_dyn();
-        let output1 = transformer.forward(&src).unwrap();
-        let output2 = transformer_clone.forward(&src).unwrap();
+        let output1 = transformer.forward(&src).expect("Operation failed");
+        let output2 = transformer_clone.forward(&src).expect("Operation failed");
 
         assert_eq!(output1.shape(), output2.shape());
     }
@@ -522,7 +522,7 @@ mod tests {
             epsilon: 1e-5,
         };
 
-        let transformer = Transformer::<f64>::new(config, &mut rng).unwrap();
+        let transformer = Transformer::<f64>::new(config, &mut rng).expect("Operation failed");
 
         // Test with wrong dimensions (2D instead of 3D)
         let wrong_input =
@@ -551,7 +551,7 @@ mod tests {
             epsilon: 1e-5,
         };
 
-        let transformer = Transformer::<f64>::new(config.clone(), &mut rng).unwrap();
+        let transformer = Transformer::<f64>::new(config.clone(), &mut rng).expect("Operation failed");
 
         // Test config accessor
         assert_eq!(transformer.config().d_model, 64);

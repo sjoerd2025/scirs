@@ -23,7 +23,7 @@ fn get_simd_caps() -> &'static PlatformCapabilities {
         INIT.call_once(|| {
             SIMD_CAPS = Some(PlatformCapabilities::detect());
         });
-        SIMD_CAPS.as_ref().unwrap()
+        SIMD_CAPS.as_ref().expect("Operation failed")
     }
 }
 
@@ -1488,7 +1488,7 @@ mod tests {
         let frequencies: Vec<f64> = (0..100).map(|i| i as f64).collect();
         let spectrum: Vec<f64> = frequencies.iter().map(|&f| (-0.01 * f).exp()).collect();
 
-        let centroid = simd_spectral_centroid_f64(&spectrum, &frequencies).unwrap();
+        let centroid = simd_spectral_centroid_f64(&spectrum, &frequencies).expect("Operation failed");
         assert!(centroid > 0.0);
         assert!(centroid < 100.0);
     }
@@ -1507,13 +1507,13 @@ mod tests {
     fn test_simd_spectral_flatness() {
         // Flat spectrum should have high flatness
         let flat_spectrum = vec![1.0; 100];
-        let flatness = simd_spectral_flatness_f64(&flat_spectrum).unwrap();
+        let flatness = simd_spectral_flatness_f64(&flat_spectrum).expect("Operation failed");
         assert!(flatness > 0.9);
 
         // Spiky spectrum should have low flatness
         let mut spiky_spectrum = vec![0.1; 100];
         spiky_spectrum[50] = 10.0;
-        let flatness = simd_spectral_flatness_f64(&spiky_spectrum).unwrap();
+        let flatness = simd_spectral_flatness_f64(&spiky_spectrum).expect("Operation failed");
         assert!(flatness < 0.5);
     }
 
@@ -1523,7 +1523,7 @@ mod tests {
         let coeffs = vec![0.067455, 0.134911, 0.067455, -0.942809, 0.333333];
         let mut delays = vec![0.0, 0.0];
 
-        let output = simd_realtime_iir_f64(1.0, &coeffs, &mut delays).unwrap();
+        let output = simd_realtime_iir_f64(1.0, &coeffs, &mut delays).expect("Operation failed");
         assert!(output.is_finite());
         assert!(output > 0.0);
     }
@@ -1534,7 +1534,7 @@ mod tests {
         let ir = vec![1.0, 0.5, 0.25];
         let mut overlap = Vec::new();
 
-        let output = simd_overlap_add_f64(&input, &ir, &mut overlap).unwrap();
+        let output = simd_overlap_add_f64(&input, &ir, &mut overlap).expect("Operation failed");
         assert_eq!(output.len(), input.len());
         assert_eq!(output[0], 1.0); // Direct path
     }

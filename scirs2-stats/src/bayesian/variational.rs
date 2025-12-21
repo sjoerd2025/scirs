@@ -115,7 +115,7 @@ impl VariationalBayesianRegression {
 
         // Center data if fitting intercept
         let (x_centered, y_centered, x_mean, y_mean) = if self.fit_intercept {
-            let x_mean = x.mean_axis(Axis(0)).unwrap();
+            let x_mean = x.mean_axis(Axis(0)).expect("Operation failed");
             let y_mean = y.mean();
 
             let mut x_centered = x.to_owned();
@@ -510,7 +510,7 @@ impl VariationalARD {
 
         // Center data if fitting intercept
         let (x_centered, y_centered, x_mean, y_mean) = if self.fit_intercept {
-            let x_mean = x.mean_axis(Axis(0)).unwrap();
+            let x_mean = x.mean_axis(Axis(0)).expect("Operation failed");
             let y_mean = y.mean();
 
             let mut x_centered = x.to_owned();

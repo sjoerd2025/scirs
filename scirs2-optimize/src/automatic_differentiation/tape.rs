@@ -793,7 +793,7 @@ mod tests {
         // Initialize gradients: ∂L/∂z = 1 (z is the output)
         let mut gradients = vec![0.0, 0.0, 1.0];
 
-        tape.backward(&mut gradients).unwrap();
+        tape.backward(&mut gradients).expect("Operation failed");
 
         // Check gradients
         assert_eq!(gradients[0], 1.0); // ∂L/∂x = ∂L/∂z * ∂z/∂x = 1 * 1 = 1
@@ -831,10 +831,10 @@ mod tests {
         // Add nodes - should trigger batch processing
         streaming_tape
             .add_node(TapeNode::Input { var_id: 0 })
-            .unwrap();
+            .expect("Operation failed");
         streaming_tape
             .add_node(TapeNode::Input { var_id: 1 })
-            .unwrap();
+            .expect("Operation failed");
 
         // This should have triggered one batch
         streaming_tape
@@ -844,9 +844,9 @@ mod tests {
                 result: 2,
                 partial: 1.0,
             })
-            .unwrap();
+            .expect("Operation failed");
 
-        streaming_tape.finalize().unwrap();
+        streaming_tape.finalize().expect("Operation failed");
     }
 
     #[test]

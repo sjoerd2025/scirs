@@ -189,7 +189,7 @@ mod tests {
     fn test_matrix_multiply() {
         let a: Array2<f64> = Array2::eye(3);
         let b: Array2<f64> = Array2::eye(3);
-        let result = matrix_multiply(&a, &b).unwrap();
+        let result = matrix_multiply(&a, &b).expect("Operation failed");
         let expected: Array2<f64> = Array2::eye(3);
         assert_eq!(result, expected);
     }

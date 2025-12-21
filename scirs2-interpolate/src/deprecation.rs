@@ -112,7 +112,7 @@ pub fn init_deprecation_system() {
 #[allow(dead_code)]
 pub fn configure_deprecation(config: DeprecationConfig) {
     init_deprecation_system();
-    if let Ok(mut global_config) = DEPRECATION_CONFIG.get().unwrap().lock() {
+    if let Ok(mut global_config) = DEPRECATION_CONFIG.get().expect("Operation failed").lock() {
         *global_config = config;
     }
 }
@@ -122,7 +122,7 @@ pub fn configure_deprecation(config: DeprecationConfig) {
 pub fn issue_deprecation_warning(info: &DeprecationInfo) {
     init_deprecation_system();
 
-    if let Ok(mut config) = DEPRECATION_CONFIG.get().unwrap().lock() {
+    if let Ok(mut config) = DEPRECATION_CONFIG.get().expect("Operation failed").lock() {
         if !config.show_warnings {
             return;
         }

@@ -5,7 +5,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_friedman_samedata() {
         // When all observations are the same, the chi-square statistic should be 0
         // and the p-value should be 1.0
@@ -16,7 +15,7 @@ mod tests {
             [8.0, 8.0, 8.0]
         ];
 
-        let (chi2, p_value) = friedman(&data.view()).unwrap();
+        let (chi2, p_value) = friedman(&data.view()).expect("Test: operation failed");
         assert_abs_diff_eq!(chi2, 0.0, epsilon = 1e-10);
         assert_abs_diff_eq!(p_value, 1.0, epsilon = 1e-10);
     }
@@ -32,7 +31,7 @@ mod tests {
             [8.0, 5.0, 6.0]
         ];
 
-        let (chi2, p_value) = friedman(&data.view()).unwrap();
+        let (chi2, p_value) = friedman(&data.view()).expect("Test: operation failed");
 
         // Expected chi2 value from SciPy's implementation for this data
         // Original chi-square value: 0.5
@@ -57,7 +56,7 @@ mod tests {
             [4.0, 8.0, 12.0]
         ];
 
-        let (chi2, p_value) = friedman(&data.view()).unwrap();
+        let (chi2, p_value) = friedman(&data.view()).expect("Test: operation failed");
 
         // With such clear differences, chi2 should be high
         assert!(chi2 > 5.0, "Expected high chi2 value, got {chi2}");
@@ -76,7 +75,7 @@ mod tests {
             [9.0, 9.0, 12.0]
         ];
 
-        let (chi2, p_value) = friedman(&data.view()).unwrap();
+        let (chi2, p_value) = friedman(&data.view()).expect("Test: operation failed");
 
         // For this data, we expect a significantly higher treatment in the third column
         assert!(chi2 > 0.0, "Expected positive chi2 value, got {chi2}");

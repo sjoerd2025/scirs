@@ -137,10 +137,12 @@ where
         estimate_initial_step(&f, t_start, &y0, &dy0, tol, t_end)
     });
 
-    let min_step = opts.min_step.unwrap_or(F::from_f64(1e-12).unwrap());
+    let min_step = opts
+        .min_step
+        .unwrap_or(F::from_f64(1e-12).expect("Operation failed"));
     let max_step = opts
         .max_step
-        .unwrap_or((t_end - t_start) / F::from_f64(10.0).unwrap());
+        .unwrap_or((t_end - t_start) / F::from_f64(10.0).expect("Operation failed"));
     let abs_tol = opts.atol;
     let rel_tol = opts.rtol;
 
@@ -176,12 +178,12 @@ where
         }
 
         // Step size control (matching non-SIMD version)
-        let order = F::from_f64(5.0).unwrap();
+        let order = F::from_f64(5.0).expect("Operation failed");
         let exponent = F::one() / (order + F::one());
-        let safety = F::from_f64(0.9).unwrap();
+        let safety = F::from_f64(0.9).expect("Operation failed");
         let factor = safety * (F::one() / err_norm).powf(exponent);
-        let factor_min = F::from_f64(0.2).unwrap();
-        let factor_max = F::from_f64(5.0).unwrap();
+        let factor_min = F::from_f64(0.2).expect("Operation failed");
+        let factor_max = F::from_f64(5.0).expect("Operation failed");
         let factor = factor.min(factor_max).max(factor_min);
 
         if err_norm <= F::one() {
@@ -195,8 +197,8 @@ where
             y_values.push(y.clone());
 
             // Adjust step size for next step
-            if err_norm <= F::from_f64(0.1).unwrap() {
-                h *= factor.max(F::from_f64(2.0).unwrap());
+            if err_norm <= F::from_f64(0.1).expect("Operation failed") {
+                h *= factor.max(F::from_f64(2.0).expect("Operation failed"));
             } else {
                 h *= factor;
             }
@@ -249,7 +251,7 @@ where
     F: IntegrateFloat + SimdUnifiedOps,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
-    let h_half = h * F::from_f64(0.5).unwrap();
+    let h_half = h * F::from_f64(0.5).expect("Operation failed");
 
     // k1 = f(t, y)
     let k1 = f(t, y.to_owned().view());
@@ -267,8 +269,9 @@ where
     let k4 = f(t + h, y_temp3.view());
 
     // y_new = y + h/6 * (k1 + 2*k2 + 2*k3 + k4)
-    let c1 = F::one() / F::from_f64(6.0).unwrap();
-    let c2 = F::from_f64(2.0).unwrap() / F::from_f64(6.0).unwrap();
+    let c1 = F::one() / F::from_f64(6.0).expect("Operation failed");
+    let c2 =
+        F::from_f64(2.0).expect("Operation failed") / F::from_f64(6.0).expect("Operation failed");
 
     // Compute weighted sum: k1/6 + k2/3 + k3/3 + k4/6
     let term1 = F::simd_scalar_mul(&k1.view(), c1 * h);
@@ -299,21 +302,21 @@ where
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     // Dormand-Prince coefficients
-    let a21 = F::from_f64(1.0 / 5.0).unwrap();
-    let a31 = F::from_f64(3.0 / 40.0).unwrap();
-    let a32 = F::from_f64(9.0 / 40.0).unwrap();
-    let a41 = F::from_f64(44.0 / 45.0).unwrap();
-    let a42 = F::from_f64(-56.0 / 15.0).unwrap();
-    let a43 = F::from_f64(32.0 / 9.0).unwrap();
-    let a51 = F::from_f64(19372.0 / 6561.0).unwrap();
-    let a52 = F::from_f64(-25360.0 / 2187.0).unwrap();
-    let a53 = F::from_f64(64448.0 / 6561.0).unwrap();
-    let a54 = F::from_f64(-212.0 / 729.0).unwrap();
-    let a61 = F::from_f64(9017.0 / 3168.0).unwrap();
-    let a62 = F::from_f64(-355.0 / 33.0).unwrap();
-    let a63 = F::from_f64(46732.0 / 5247.0).unwrap();
-    let a64 = F::from_f64(49.0 / 176.0).unwrap();
-    let a65 = F::from_f64(-5103.0 / 18656.0).unwrap();
+    let a21 = F::from_f64(1.0 / 5.0).expect("Operation failed");
+    let a31 = F::from_f64(3.0 / 40.0).expect("Operation failed");
+    let a32 = F::from_f64(9.0 / 40.0).expect("Operation failed");
+    let a41 = F::from_f64(44.0 / 45.0).expect("Operation failed");
+    let a42 = F::from_f64(-56.0 / 15.0).expect("Operation failed");
+    let a43 = F::from_f64(32.0 / 9.0).expect("Operation failed");
+    let a51 = F::from_f64(19372.0 / 6561.0).expect("Operation failed");
+    let a52 = F::from_f64(-25360.0 / 2187.0).expect("Operation failed");
+    let a53 = F::from_f64(64448.0 / 6561.0).expect("Operation failed");
+    let a54 = F::from_f64(-212.0 / 729.0).expect("Operation failed");
+    let a61 = F::from_f64(9017.0 / 3168.0).expect("Operation failed");
+    let a62 = F::from_f64(-355.0 / 33.0).expect("Operation failed");
+    let a63 = F::from_f64(46732.0 / 5247.0).expect("Operation failed");
+    let a64 = F::from_f64(49.0 / 176.0).expect("Operation failed");
+    let a65 = F::from_f64(-5103.0 / 18656.0).expect("Operation failed");
 
     // k1 = f(t, y)
     let k1 = f(t, y.to_owned().view());
@@ -326,7 +329,10 @@ where
     let term1 = F::simd_scalar_mul(&k1.view(), a31 * h);
     let term2 = F::simd_scalar_mul(&k2.view(), a32 * h);
     let y3 = F::simd_add(y, &F::simd_add(&term1.view(), &term2.view()).view());
-    let k3 = f(t + h * F::from_f64(3.0 / 10.0).unwrap(), y3.view());
+    let k3 = f(
+        t + h * F::from_f64(3.0 / 10.0).expect("Operation failed"),
+        y3.view(),
+    );
 
     // k4 = f(t + 4h/5, y + h * (44/45 * k1 - 56/15 * k2 + 32/9 * k3))
     let t1 = F::simd_scalar_mul(&k1.view(), a41 * h);
@@ -336,7 +342,10 @@ where
         y,
         &F::simd_add(&F::simd_add(&t1.view(), &t2.view()).view(), &t3.view()).view(),
     );
-    let k4 = f(t + h * F::from_f64(4.0 / 5.0).unwrap(), y4.view());
+    let k4 = f(
+        t + h * F::from_f64(4.0 / 5.0).expect("Operation failed"),
+        y4.view(),
+    );
 
     // k5
     let r1 = F::simd_scalar_mul(&k1.view(), a51 * h);
@@ -346,7 +355,10 @@ where
     let sum1 = F::simd_add(&r1.view(), &r2.view());
     let sum2 = F::simd_add(&r3.view(), &r4.view());
     let y5 = F::simd_add(y, &F::simd_add(&sum1.view(), &sum2.view()).view());
-    let k5 = f(t + h * F::from_f64(8.0 / 9.0).unwrap(), y5.view());
+    let k5 = f(
+        t + h * F::from_f64(8.0 / 9.0).expect("Operation failed"),
+        y5.view(),
+    );
 
     // k6
     let s1 = F::simd_scalar_mul(&k1.view(), a61 * h);
@@ -361,11 +373,11 @@ where
     let k6 = f(t + h, y6.view());
 
     // 5th order solution (y_stage is same as y_new for FSAL property)
-    let b1 = F::from_f64(35.0 / 384.0).unwrap();
-    let b3 = F::from_f64(500.0 / 1113.0).unwrap();
-    let b4 = F::from_f64(125.0 / 192.0).unwrap();
-    let b5 = F::from_f64(-2187.0 / 6784.0).unwrap();
-    let b6 = F::from_f64(11.0 / 84.0).unwrap();
+    let b1 = F::from_f64(35.0 / 384.0).expect("Operation failed");
+    let b3 = F::from_f64(500.0 / 1113.0).expect("Operation failed");
+    let b4 = F::from_f64(125.0 / 192.0).expect("Operation failed");
+    let b5 = F::from_f64(-2187.0 / 6784.0).expect("Operation failed");
+    let b6 = F::from_f64(11.0 / 84.0).expect("Operation failed");
 
     let w1 = F::simd_scalar_mul(&k1.view(), b1 * h);
     let w3 = F::simd_scalar_mul(&k3.view(), b3 * h);
@@ -381,12 +393,12 @@ where
     let k7 = f(t + h, y_new.view());
 
     // 4th order solution for error estimation (includes k7)
-    let b1_star = F::from_f64(5179.0 / 57600.0).unwrap();
-    let b3_star = F::from_f64(7571.0 / 16695.0).unwrap();
-    let b4_star = F::from_f64(393.0 / 640.0).unwrap();
-    let b5_star = F::from_f64(-92097.0 / 339200.0).unwrap();
-    let b6_star = F::from_f64(187.0 / 2100.0).unwrap();
-    let b7_star = F::from_f64(1.0 / 40.0).unwrap();
+    let b1_star = F::from_f64(5179.0 / 57600.0).expect("Operation failed");
+    let b3_star = F::from_f64(7571.0 / 16695.0).expect("Operation failed");
+    let b4_star = F::from_f64(393.0 / 640.0).expect("Operation failed");
+    let b5_star = F::from_f64(-92097.0 / 339200.0).expect("Operation failed");
+    let b6_star = F::from_f64(187.0 / 2100.0).expect("Operation failed");
+    let b7_star = F::from_f64(1.0 / 40.0).expect("Operation failed");
 
     let v1 = F::simd_scalar_mul(&k1.view(), b1_star * h);
     let v3 = F::simd_scalar_mul(&k3.view(), b3_star * h);
@@ -461,10 +473,10 @@ mod tests {
             ..Default::default()
         };
 
-        let result = simd_rk4_method(f, t_span, y0, opts).unwrap();
+        let result = simd_rk4_method(f, t_span, y0, opts).expect("Operation failed");
 
         // Exact solution at t=1 is exp(-1) ≈ 0.36788
-        let final_value = result.y.last().unwrap()[0];
+        let final_value = result.y.last().expect("Operation failed")[0];
         let exact = (-1.0_f64).exp();
 
         assert_relative_eq!(final_value, exact, epsilon = 1e-3);
@@ -488,10 +500,10 @@ mod tests {
             ..Default::default()
         };
 
-        let result = simd_rk45_method(f, t_span, y0, opts).unwrap();
+        let result = simd_rk45_method(f, t_span, y0, opts).expect("Operation failed");
 
         // At t = π, exact solution is y₁ = -1, y₂ = 0
-        let final_y = result.y.last().unwrap();
+        let final_y = result.y.last().expect("Operation failed");
         assert_relative_eq!(final_y[0], -1.0, epsilon = 1e-6);
         assert_relative_eq!(final_y[1], 0.0, epsilon = 1e-6);
         assert!(result.success);

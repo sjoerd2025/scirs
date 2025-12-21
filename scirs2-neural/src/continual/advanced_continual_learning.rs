@@ -373,7 +373,7 @@ impl TaskMask {
                 if mask_val {
                     available_params.push((param[[i, j]].abs(), (i, j)));
             // Sort by magnitude (ascending)
-            available_params.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            available_params.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
             // Prune smallest magnitude parameters
             for (_, (i, j)) in available_params.iter().take(elements_to_prune) {
                 mask[[*i, *j]] = false;
@@ -563,23 +563,23 @@ mod tests {
         let config = ProgressiveConfig::default();
         let mut pnn = ProgressiveNeuralNetwork::new(10, config);
         // Add first task
-        pnn.add_task(5).unwrap();
+        pnn.add_task(5).expect("Operation failed");
         assert_eq!(pnn.columns.len(), 1);
         // Add second task
-        pnn.add_task(3).unwrap();
+        pnn.add_task(3).expect("Operation failed");
         assert_eq!(pnn.columns.len(), 2);
         // Test forward pass
         let input = Array2::from_elem((2, 10), 1.0);
-        let output = pnn.forward_task(&input.view(), 0).unwrap();
+        let output = pnn.forward_task(&input.view(), 0).expect("Operation failed");
         assert_eq!(output.shape()[0], 2);
     fn test_pack_net() {
         let config = PackNetConfig::default();
-        let packnet = PackNet::new(10, &[64, 32], config).unwrap();
+        let packnet = PackNet::new(10, &[64, 32], config).expect("Operation failed");
         assert_eq!(packnet.current_task, 0);
         assert!(packnet.task_masks.is_empty());
     fn test_learning_without_forgetting() {
         let config = LwFConfig::default();
-        let lwf = LearningWithoutForgetting::new(10, &[64, 32], config).unwrap();
+        let lwf = LearningWithoutForgetting::new(10, &[64, 32], config).expect("Operation failed");
         assert_eq!(lwf.current_task, 0);
         assert!(lwf.teacher_models.is_empty());
     fn test_task_mask() {
@@ -594,7 +594,7 @@ mod tests {
             Array2::from_elem((10, 5), 1.0),
             Array2::from_elem((5, 3), 1.0),
         ];
-        mask.apply_mask(&mut params).unwrap();
+        mask.apply_mask(&mut params).expect("Operation failed");
         // Should not change anything initially
         assert!(params[0].iter().all(|&x| x == 1.0));
         assert!(params[1].iter().all(|&x| x == 1.0));

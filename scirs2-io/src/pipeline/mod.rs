@@ -116,7 +116,7 @@ impl PipelineContext {
 
     /// Store a value in the context
     pub fn set<T: Any + Send + Sync + 'static>(&self, key: &str, value: T) {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
         state.insert(key.to_string(), Box::new(value));
     }
 
@@ -125,7 +125,7 @@ impl PipelineContext {
     where
         T: Any + Send + Sync + Clone + 'static,
     {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock().expect("Operation failed");
         state.get(key).and_then(|v| v.downcast_ref::<T>()).cloned()
     }
 }
@@ -285,7 +285,7 @@ impl<I, O> Pipeline<I, O> {
             data = stage.execute(data)?;
 
             // Update statistics
-            let mut stats = data.context.stats.lock().unwrap();
+            let mut stats = data.context.stats.lock().expect("Operation failed");
             stats
                 .stage_times
                 .insert(stage.name(), stage_start.elapsed());
@@ -294,7 +294,7 @@ impl<I, O> Pipeline<I, O> {
 
         // Update total execution time
         {
-            let mut stats = data.context.stats.lock().unwrap();
+            let mut stats = data.context.stats.lock().expect("Operation failed");
             stats.total_time = start_time.elapsed();
         }
 
@@ -334,7 +334,7 @@ impl<I, O> Pipeline<I, O> {
             data = stage.execute(data)?;
 
             // Update statistics
-            let mut stats = data.context.stats.lock().unwrap();
+            let mut stats = data.context.stats.lock().expect("Operation failed");
             stats
                 .stage_times
                 .insert(stage.name(), stage_start.elapsed());
@@ -343,7 +343,7 @@ impl<I, O> Pipeline<I, O> {
 
         // Update total execution time
         {
-            let mut stats = data.context.stats.lock().unwrap();
+            let mut stats = data.context.stats.lock().expect("Operation failed");
             stats.total_time = start_time.elapsed();
         }
 
@@ -356,7 +356,7 @@ impl<I, O> Pipeline<I, O> {
 
     /// Get pipeline statistics after execution
     pub fn get_stats(&self, context: &PipelineContext) -> PipelineStats {
-        context.stats.lock().unwrap().clone()
+        context.stats.lock().expect("Operation failed").clone()
     }
 }
 

@@ -36,7 +36,7 @@ pub fn simd_argmin_f32(input: &ArrayView1<f32>) -> Option<usize> {
 
                 // Process 8 f32s at a time
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let vec = _mm256_loadu_ps(slice.as_ptr());
 
                     // Extract and compare
@@ -76,7 +76,7 @@ pub fn simd_argmin_f32(input: &ArrayView1<f32>) -> Option<usize> {
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = vld1q_f32(slice.as_ptr());
 
                     let mut temp = [0.0f32; 4];
@@ -134,7 +134,7 @@ pub fn simd_argmin_f64(input: &ArrayView1<f64>) -> Option<usize> {
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = _mm256_loadu_pd(slice.as_ptr());
 
                     let mut temp = [0.0f64; 4];
@@ -172,7 +172,7 @@ pub fn simd_argmin_f64(input: &ArrayView1<f64>) -> Option<usize> {
                 let mut i = 0;
 
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let vec = vld1q_f64(slice.as_ptr());
 
                     let mut temp = [0.0f64; 2];
@@ -230,7 +230,7 @@ pub fn simd_argmax_f32(input: &ArrayView1<f32>) -> Option<usize> {
                 let mut i = 0;
 
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let vec = _mm256_loadu_ps(slice.as_ptr());
 
                     let mut temp = [0.0f32; 8];
@@ -268,7 +268,7 @@ pub fn simd_argmax_f32(input: &ArrayView1<f32>) -> Option<usize> {
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = vld1q_f32(slice.as_ptr());
 
                     let mut temp = [0.0f32; 4];
@@ -326,7 +326,7 @@ pub fn simd_argmax_f64(input: &ArrayView1<f64>) -> Option<usize> {
                 let mut i = 0;
 
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let vec = _mm256_loadu_pd(slice.as_ptr());
 
                     let mut temp = [0.0f64; 4];
@@ -364,7 +364,7 @@ pub fn simd_argmax_f64(input: &ArrayView1<f64>) -> Option<usize> {
                 let mut i = 0;
 
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let vec = vld1q_f64(slice.as_ptr());
 
                     let mut temp = [0.0f64; 2];
@@ -412,8 +412,8 @@ pub fn simd_argmax_f64(input: &ArrayView1<f64>) -> Option<usize> {
 pub fn simd_clip_f32(input: &ArrayView1<f32>, min_val: f32, max_val: f32) -> Array1<f32> {
     let len = input.len();
     let mut result = Array1::zeros(len);
-    let input_slice = input.as_slice().unwrap();
-    let result_slice: &mut [f32] = result.as_slice_mut().unwrap();
+    let input_slice = input.as_slice().expect("Operation failed");
+    let result_slice: &mut [f32] = result.as_slice_mut().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {
@@ -483,8 +483,8 @@ pub fn simd_clip_f32(input: &ArrayView1<f32>, min_val: f32, max_val: f32) -> Arr
 pub fn simd_clip_f64(input: &ArrayView1<f64>, min_val: f64, max_val: f64) -> Array1<f64> {
     let len = input.len();
     let mut result = Array1::zeros(len);
-    let input_slice = input.as_slice().unwrap();
-    let result_slice: &mut [f64] = result.as_slice_mut().unwrap();
+    let input_slice = input.as_slice().expect("Operation failed");
+    let result_slice: &mut [f64] = result.as_slice_mut().expect("Operation failed");
 
     #[cfg(target_arch = "x86_64")]
     {

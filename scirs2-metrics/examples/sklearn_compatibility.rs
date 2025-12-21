@@ -224,7 +224,7 @@ fn multilabel_confusion_matrix_example() -> Result<()> {
             1, 0, 0, // Sample 4: label 0 is positive
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let y_pred = Array2::from_shape_vec(
         (5, 3),
@@ -236,7 +236,7 @@ fn multilabel_confusion_matrix_example() -> Result<()> {
             1, 1, 0, // Sample 4: labels 0 and 1 predicted
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Multilabel data shape: {:?}", y_true.shape());
     println!("  True labels:\n{y_true:?}");
@@ -327,7 +327,7 @@ fn loss_functions_example() -> Result<()> {
             0.1, 0.8, 0.1, // Sample 4: class 1 (correct)
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let hinge_loss = hinge_loss_sklearn(&y_true_multiclass, &y_pred_scores, None, None)?;
     println!("  Hinge loss: {hinge_loss:.4}");
@@ -462,7 +462,8 @@ fn weighted_metrics_example() -> Result<()> {
 
     // Demonstrate effect of weights on multilabel metrics
     println!("\n  Multilabel weighting example:");
-    let y_true_ml = Array2::from_shape_vec((4, 2), vec![1, 0, 0, 1, 1, 1, 0, 0]).unwrap();
+    let y_true_ml =
+        Array2::from_shape_vec((4, 2), vec![1, 0, 0, 1, 1, 1, 0, 0]).expect("Operation failed");
 
     let y_pred_ml = Array2::from_shape_vec(
         (4, 2),
@@ -473,7 +474,7 @@ fn weighted_metrics_example() -> Result<()> {
             0, 0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Equal weights
     let equal_weights = Array1::from_vec(vec![1.0, 1.0, 1.0, 1.0]);

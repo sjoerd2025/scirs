@@ -22,8 +22,8 @@ fn main() {
     }
 
     // Create the bivariate spline interpolator
-    let rect_spline =
-        RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 1, 1, None).unwrap();
+    let rect_spline = RectBivariateSpline::new(&x.view(), &y.view(), &z.view(), None, 1, 1, None)
+        .expect("Test: operation failed");
 
     // Evaluate at a single point
     let xi = array![0.5f64];
@@ -64,7 +64,7 @@ fn main() {
     )
     .with_degrees(1, 1)
     .build()
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Evaluate at a single point
     let xi = array![0.5f64];

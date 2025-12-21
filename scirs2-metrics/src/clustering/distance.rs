@@ -41,11 +41,11 @@ use crate::error::{MetricsError, Result};
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let distances: std::collections::HashMap<(usize, usize), f64> = inter_cluster_distances(&x, &labels, "euclidean").unwrap();
+/// let distances: std::collections::HashMap<(usize, usize), f64> = inter_cluster_distances(&x, &labels, "euclidean").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn inter_cluster_distances<F, S1, S2, D>(
@@ -106,7 +106,7 @@ where
         }
 
         if count > 0 {
-            centroid /= F::from(count).unwrap();
+            centroid /= F::from(count).expect("Failed to convert to float");
             centroids.insert(label, centroid);
         }
     }
@@ -116,8 +116,8 @@ where
 
     for (i, &label_i) in unique_labels.iter().enumerate() {
         for &label_j in unique_labels.iter().skip(i + 1) {
-            let centroid_i = centroids.get(&label_i).unwrap();
-            let centroid_j = centroids.get(&label_j).unwrap();
+            let centroid_i = centroids.get(&label_i).expect("Operation failed");
+            let centroid_j = centroids.get(&label_j).expect("Operation failed");
 
             let distance = match metric {
                 "euclidean" => euclidean_distance(centroid_i, centroid_j),
@@ -167,11 +167,11 @@ where
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let distances: std::collections::HashMap<usize, f64> = intra_cluster_distances(&x, &labels, "euclidean").unwrap();
+/// let distances: std::collections::HashMap<usize, f64> = intra_cluster_distances(&x, &labels, "euclidean").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn intra_cluster_distances<F, S1, S2, D>(
@@ -232,7 +232,7 @@ where
         }
 
         if count > 0 {
-            centroid /= F::from(count).unwrap();
+            centroid /= F::from(count).expect("Failed to convert to float");
             centroids.insert(label, centroid);
         }
     }
@@ -241,7 +241,7 @@ where
     let mut distances = HashMap::new();
 
     for &label in &unique_labels {
-        let centroid = centroids.get(&label).unwrap();
+        let centroid = centroids.get(&label).expect("Operation failed");
         let mut total_distance = F::zero();
         let mut count = 0;
 
@@ -266,7 +266,7 @@ where
         }
 
         if count > 0 {
-            let avg_distance = total_distance / F::from(count).unwrap();
+            let avg_distance = total_distance / F::from(count).expect("Failed to convert to float");
             distances.insert(label, avg_distance);
         }
     }
@@ -304,11 +304,11 @@ where
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let index: f64 = distance_ratio_index(&x, &labels, "euclidean").unwrap();
+/// let index: f64 = distance_ratio_index(&x, &labels, "euclidean").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn distance_ratio_index<F, S1, S2, D>(
@@ -375,7 +375,7 @@ where
 
     // Calculate the average ratio across all clusters
     let sum_ratios = cluster_ratios.iter().fold(F::zero(), |acc, &x| acc + x);
-    let avg_ratio = sum_ratios / F::from(cluster_ratios.len()).unwrap();
+    let avg_ratio = sum_ratios / F::from(cluster_ratios.len()).expect("Operation failed");
 
     Ok(avg_ratio)
 }
@@ -410,11 +410,11 @@ where
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let index: f64 = isolation_index(&x, &labels, "euclidean").unwrap();
+/// let index: f64 = isolation_index(&x, &labels, "euclidean").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn isolation_index<F, S1, S2, D>(
@@ -583,45 +583,45 @@ mod tests {
     use scirs2_core::ndarray::{array, Array2};
 
     #[test]
-    #[ignore = "timeout"]
     fn test_inter_cluster_distances_euclidean() {
         // Create a simple dataset with 2 clearly separated clusters
         let x = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
-        let distances = inter_cluster_distances(&x, &labels, "euclidean").unwrap();
+        let distances =
+            inter_cluster_distances(&x, &labels, "euclidean").expect("Operation failed");
 
         // Check that the distance between clusters 0 and 1 is reasonable
-        let dist_0_1 = distances.get(&(0, 1)).unwrap();
+        let dist_0_1 = distances.get(&(0, 1)).expect("Operation failed");
         assert!(*dist_0_1 > 4.0); // Clusters should be well-separated
 
         // Distance should be symmetric
-        let dist_1_0 = distances.get(&(1, 0)).unwrap();
+        let dist_1_0 = distances.get(&(1, 0)).expect("Operation failed");
         assert_abs_diff_eq!(*dist_0_1, *dist_1_0, epsilon = 1e-10);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_intra_cluster_distances_euclidean() {
         // Create a simple dataset with 2 compact clusters
         let x = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
-        let distances = intra_cluster_distances(&x, &labels, "euclidean").unwrap();
+        let distances =
+            intra_cluster_distances(&x, &labels, "euclidean").expect("Operation failed");
 
         // Check that the intra-cluster distances are reasonable
-        let dist_0 = distances.get(&0).unwrap();
-        let dist_1 = distances.get(&1).unwrap();
+        let dist_0 = distances.get(&0).expect("Operation failed");
+        let dist_1 = distances.get(&1).expect("Operation failed");
 
         // Each cluster should be compact (small intra-cluster distance)
         assert!(*dist_0 < 1.0);
@@ -629,36 +629,34 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_distance_ratio_index() {
         // Create a dataset with well-separated clusters
         let x = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
-        let index = distance_ratio_index(&x, &labels, "euclidean").unwrap();
+        let index = distance_ratio_index(&x, &labels, "euclidean").expect("Operation failed");
 
         // Well-separated clusters should have a low ratio index
         assert!(index < 0.5);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_isolation_index() {
         // Create a dataset with well-separated clusters
         let x = Array2::from_shape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
-        let index = isolation_index(&x, &labels, "euclidean").unwrap();
+        let index = isolation_index(&x, &labels, "euclidean").expect("Operation failed");
 
         // Well-separated clusters should have a high isolation index
         assert!(index > 2.0);

@@ -66,20 +66,20 @@ impl GpuMemoryPool {
 
     /// Allocate a memory block of the specified size
     fn allocate_block(&mut self, size: usize) -> ScirsResult<GpuMemoryBlock> {
-        let mut stats = self.allocation_stats.lock().unwrap();
+        let mut stats = self.allocation_stats.lock().expect("Operation failed");
         stats.total_allocations += 1;
 
         // Check memory limit
         if let Some(limit) = self.memory_limit {
-            let current = *self.current_usage.lock().unwrap();
+            let current = *self.current_usage.lock().expect("Operation failed");
             if current + size > limit {
                 // Drop the stats lock before garbage collection
                 drop(stats);
                 // Try to free some memory
                 self.garbage_collect()?;
                 // Reacquire the lock
-                stats = self.allocation_stats.lock().unwrap();
-                let current = *self.current_usage.lock().unwrap();
+                stats = self.allocation_stats.lock().expect("Operation failed");
+                let current = *self.current_usage.lock().expect("Operation failed");
                 if current + size > limit {
                     return Err(ScirsError::MemoryError(
                         scirs2_core::error::ErrorContext::new(format!(
@@ -93,7 +93,7 @@ impl GpuMemoryPool {
         }
 
         // Try to reuse existing block from pool
-        let mut pools = self.pools.lock().unwrap();
+        let mut pools = self.pools.lock().expect("Operation failed");
         if let Some(pool) = pools.get_mut(&size) {
             if let Some(block) = pool.pop_front() {
                 stats.pool_hits += 1;
@@ -112,20 +112,20 @@ impl GpuMemoryPool {
         };
 
         // Update current usage
-        *self.current_usage.lock().unwrap() += size;
+        *self.current_usage.lock().expect("Operation failed") += size;
 
         Ok(block)
     }
 
     /// Return a block to the pool for reuse
     fn return_block(&self, block: GpuMemoryBlock) {
-        let mut pools = self.pools.lock().unwrap();
+        let mut pools = self.pools.lock().expect("Operation failed");
         pools.entry(block.size).or_default().push_back(block);
     }
 
     /// Perform garbage collection to free unused memory
     fn garbage_collect(&mut self) -> ScirsResult<()> {
-        let mut pools = self.pools.lock().unwrap();
+        let mut pools = self.pools.lock().expect("Operation failed");
         let mut freed_memory = 0;
 
         // Clear all pools
@@ -136,14 +136,14 @@ impl GpuMemoryPool {
         }
 
         // Update current usage
-        *self.current_usage.lock().unwrap() = self
+        *self.current_usage.lock().expect("Operation failed") = self
             .current_usage
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .saturating_sub(freed_memory);
 
         // Update stats
-        let mut stats = self.allocation_stats.lock().unwrap();
+        let mut stats = self.allocation_stats.lock().expect("Operation failed");
         stats.garbage_collections += 1;
         stats.total_freed_memory += freed_memory;
 
@@ -152,12 +152,16 @@ impl GpuMemoryPool {
 
     /// Get current memory usage statistics
     pub fn memory_stats(&self) -> MemoryStats {
-        let current_usage = *self.current_usage.lock().unwrap();
-        let allocation_stats = self.allocation_stats.lock().unwrap().clone();
+        let current_usage = *self.current_usage.lock().expect("Operation failed");
+        let allocation_stats = self
+            .allocation_stats
+            .lock()
+            .expect("Operation failed")
+            .clone();
         let pool_sizes: HashMap<usize, usize> = self
             .pools
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .map(|(&size, pool)| (size, pool.len()))
             .collect();
@@ -286,7 +290,7 @@ impl GpuWorkspace {
 impl Drop for GpuWorkspace {
     fn drop(&mut self) {
         // Return all blocks to the pool
-        let mut pool = self.pool.lock().unwrap();
+        let mut pool = self.pool.lock().expect("Operation failed");
         for block in self.blocks.drain(..) {
             pool.entry(block.size).or_default().push_back(block);
         }

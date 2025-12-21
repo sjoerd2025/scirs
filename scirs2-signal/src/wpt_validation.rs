@@ -126,7 +126,7 @@ where
     T: Float + NumCast,
 {
     // Convert to f64
-    let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).unwrap()).collect();
+    let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).expect("Operation failed")).collect();
 
     // Enhanced input validation
     // Note: check_finite is for scalars, Vec<f64> validation done elsewhere
@@ -341,7 +341,7 @@ where
     let mut result = validate_wpt(signal, wavelet, max_level, tolerance)?;
 
     // Convert to f64 for _advanced analysis
-    let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).unwrap()).collect();
+    let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).expect("Operation failed")).collect();
 
     // Perform decomposition for _advanced analysis
     let tree = wp_decompose(&signal_f64, wavelet, max_level, None)?;
@@ -414,7 +414,7 @@ fn validate_reconstruction(
     // Compute errors using SIMD
     let orig_view = ArrayView1::from(original);
     let recon_view = ArrayView1::from(reconstructed);
-    let error_view = ArrayView1::from_shape(n, &mut errors).unwrap();
+    let error_view = ArrayView1::from_shape(n, &mut errors).expect("Operation failed");
 
     let _error_result = f64::simd_sub(&orig_view, &recon_view);
 
@@ -852,7 +852,7 @@ fn analyze_compression_efficiency(
 
     // Compute energy compaction efficiency
     let mut sorted_coeffs = all_coeffs.clone();
-    sorted_coeffs.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).unwrap());
+    sorted_coeffs.sort_by(|a, b| b.abs().partial_cmp(&a.abs()).expect("Operation failed"));
 
     let k_percent = (all_coeffs.len() as f64 * 0.1) as usize; // Top 10% coefficients
     let top_energy: f64 = sorted_coeffs.iter().take(k_percent).map(|&x| x * x).sum();
@@ -1141,7 +1141,7 @@ where
     let mut result = validate_wpt_comprehensive(signal, wavelet, max_level, tolerance, true)?;
 
     // Add signal-_type-specific analysis
-    let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).unwrap()).collect();
+    let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).expect("Operation failed")).collect();
 
     // Analyze signal characteristics
     let _signal_analysis = analyze_signal_characteristics(&signal_f64)?;
@@ -1650,7 +1650,7 @@ mod tests {
         let result = validate_wpt(&signal, Wavelet::DB(4), 4, 1e-10);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert!(validation.energy_ratio > 0.9);
         assert!(validation.energy_ratio < 1.1);
     }
@@ -1662,7 +1662,7 @@ mod tests {
         assert!(warnings.is_ok());
 
         // Should warn about signal being too short for DB8 with 3 levels
-        let warning_list = warnings.unwrap();
+        let warning_list = warnings.expect("Operation failed");
         assert!(!warning_list.is_empty());
     }
 
@@ -1674,7 +1674,7 @@ mod tests {
         let info = analyze_signal_spectrum(&smooth_signal);
         assert!(info.is_ok());
 
-        let spectral_info = info.unwrap();
+        let spectral_info = info.expect("Operation failed");
         assert!(spectral_info.smoothness > 0.5); // Should be detected as smooth
     }
 

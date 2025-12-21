@@ -310,7 +310,8 @@ mod tests {
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.5).collect(); // Attenuated version
 
         let (output, coeffs, _error_signal) =
-            parallel_adaptive_lms_filter(&signal, &desired, 10, 0.01, None).unwrap();
+            parallel_adaptive_lms_filter(&signal, &desired, 10, 0.01, None)
+                .expect("Operation failed");
 
         assert_eq!(output.len(), n);
         assert_eq!(coeffs.len(), 10);
@@ -327,7 +328,8 @@ mod tests {
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.8).collect();
 
         let (output, coeffs, _error) =
-            parallel_adaptive_nlms_filter(&signal, &desired, 8, 0.1, 0.001, None).unwrap();
+            parallel_adaptive_nlms_filter(&signal, &desired, 8, 0.1, 0.001, None)
+                .expect("Operation failed");
 
         assert_eq!(output.len(), n);
         assert_eq!(coeffs.len(), 8);
@@ -344,7 +346,7 @@ mod tests {
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.7).collect();
 
         let (output, coeffs, _error) =
-            parallel_block_lms_filter(&signal, &desired, 6, 0.05, 10).unwrap();
+            parallel_block_lms_filter(&signal, &desired, 6, 0.05, 10).expect("Operation failed");
 
         assert_eq!(output.len(), n);
         assert_eq!(coeffs.len(), 6);
@@ -361,7 +363,7 @@ mod tests {
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.6).collect();
 
         let (output, coeffs, _error) =
-            parallel_fda_lms_filter(&signal, &desired, 8, 0.02, 16).unwrap();
+            parallel_fda_lms_filter(&signal, &desired, 8, 0.02, 16).expect("Operation failed");
 
         assert_eq!(output.len(), n);
         assert_eq!(coeffs.len(), 8);

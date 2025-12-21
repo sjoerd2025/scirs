@@ -20,11 +20,11 @@
 //! use scirs2_core::ndarray::Array2;
 //! use scirs2_cluster::visualization::{create_scatter_plot_2d, VisualizationConfig};
 //!
-//! let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+//! let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).expect("Operation failed");
 //! let labels = scirs2_core::ndarray::Array1::from_vec(vec![0, 0, 1, 1]);
 //! let config = VisualizationConfig::default();
 //!
-//! let plot = create_scatter_plot_2d(data.view(), &labels, None, &config).unwrap();
+//! let plot = create_scatter_plot_2d(data.view(), &labels, None, &config).expect("Operation failed");
 //! ```
 //!
 //! ## 3D Interactive Visualization
@@ -516,7 +516,7 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     }
 
     // Center the data
-    let mean = data.mean_axis(Axis(0)).unwrap();
+    let mean = data.mean_axis(Axis(0)).expect("Operation failed");
     let centered = data - &mean;
 
     // Compute covariance matrix
@@ -548,7 +548,7 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
     }
 
     // Center the data
-    let mean = data.mean_axis(Axis(0)).unwrap();
+    let mean = data.mean_axis(Axis(0)).expect("Operation failed");
     let centered = data - &mean;
 
     // Compute covariance matrix
@@ -775,12 +775,13 @@ mod tests {
 
     #[test]
     fn test_create_scatter_plot_2d() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let config = VisualizationConfig::default();
 
-        let plot = create_scatter_plot_2d(data.view(), &labels, None, &config).unwrap();
+        let plot =
+            create_scatter_plot_2d(data.view(), &labels, None, &config).expect("Operation failed");
 
         assert_eq!(plot.points.nrows(), 4);
         assert_eq!(plot.points.ncols(), 2);
@@ -797,11 +798,12 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let config = VisualizationConfig::default();
 
-        let plot = create_scatter_plot_3d(data.view(), &labels, None, &config).unwrap();
+        let plot =
+            create_scatter_plot_3d(data.view(), &labels, None, &config).expect("Operation failed");
 
         assert_eq!(plot.points.nrows(), 4);
         assert_eq!(plot.points.ncols(), 3);
@@ -810,14 +812,17 @@ mod tests {
 
     #[test]
     fn test_dimensionality_reduction() {
-        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect())
+            .expect("Operation failed");
 
         let result_2d =
-            apply_dimensionality_reduction_2d(data.view(), DimensionalityReduction::PCA).unwrap();
+            apply_dimensionality_reduction_2d(data.view(), DimensionalityReduction::PCA)
+                .expect("Operation failed");
         assert_eq!(result_2d.ncols(), 2);
 
         let result_3d =
-            apply_dimensionality_reduction_3d(data.view(), DimensionalityReduction::PCA).unwrap();
+            apply_dimensionality_reduction_3d(data.view(), DimensionalityReduction::PCA)
+                .expect("Operation failed");
         assert_eq!(result_3d.ncols(), 3);
     }
 

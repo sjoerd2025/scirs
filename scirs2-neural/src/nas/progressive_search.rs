@@ -243,7 +243,7 @@ impl ProgressiveSearch {
         self.stage_results.get(stage)?.iter().max_by(|a, b| {
             let a_score = a.metrics.values().sum::<f64>() / a.metrics.len() as f64;
             let b_score = b.metrics.values().sum::<f64>() / b.metrics.len() as f64;
-            a_score.partial_cmp(&b_score).unwrap()
+            a_score.partial_cmp(&b_score).expect("Operation failed")
     /// Estimate architecture complexity
     fn estimate_architecture_complexity(
         &self,
@@ -271,7 +271,7 @@ impl ProgressiveSearch {
             if let Some(best_in_stage) = stage_results.iter().max_by(|a, b| {
                 let a_score = a.metrics.values().sum::<f64>() / a.metrics.len() as f64;
                 let b_score = b.metrics.values().sum::<f64>() / b.metrics.len() as f64;
-                a_score.partial_cmp(&b_score).unwrap()
+                a_score.partial_cmp(&b_score).expect("Operation failed")
             }) {
                 let performance = best_in_stage.metrics.values().sum::<f64>()
                     / best_in_stage.metrics.len() as f64;
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(config.num_stages, 5);
         assert_eq!(config.architectures_per_stage, 50);
     fn test_progressive_search_creation() {
-        let search = ProgressiveSearch::new(config).unwrap();
+        let search = ProgressiveSearch::new(config).expect("Operation failed");
         assert_eq!(search.current_stage(), 0);
         assert_eq!(search.total_stages(), 5);
     fn test_builder_pattern() {
@@ -365,5 +365,5 @@ mod tests {
             .architectures_per_stage(25)
             .advancement_threshold(0.05)
             .build()
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(search.total_stages(), 3);

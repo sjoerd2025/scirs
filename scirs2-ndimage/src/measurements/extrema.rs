@@ -47,7 +47,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 /// use scirs2_ndimage::extrema;
 ///
 /// let data = array![1.0, 3.0, 2.0, 5.0, 1.5];
-/// let (min, max, min_loc, max_loc) = extrema(&data).unwrap();
+/// let (min, max, min_loc, max_loc) = extrema(&data).expect("Operation failed");
 ///
 /// assert_eq!(min, 1.0);
 /// assert_eq!(max, 5.0);
@@ -63,7 +63,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 /// let data = array![[1.0, 8.0, 3.0],
 ///                   [4.0, 0.5, 6.0],
 ///                   [7.0, 2.0, 9.0]];
-/// let (min, max, min_loc, max_loc) = extrema(&data).unwrap();
+/// let (min, max, min_loc, max_loc) = extrema(&data).expect("Operation failed");
 ///
 /// assert_eq!(min, 0.5);
 /// assert_eq!(max, 9.0);
@@ -80,7 +80,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 /// data[[0, 0, 0]] = -5.0;  // Minimum
 /// data[[1, 1, 1]] = 10.0;  // Maximum
 ///
-/// let (min, max, min_loc, max_loc) = extrema(&data).unwrap();
+/// let (min, max, min_loc, max_loc) = extrema(&data).expect("Operation failed");
 ///
 /// assert_eq!(min, -5.0);
 /// assert_eq!(max, 10.0);
@@ -191,7 +191,7 @@ where
 ///
 /// // Signal with peaks and valleys
 /// let signal = array![1.0, 3.0, 2.0, 5.0, 1.0, 4.0, 0.5].into_dyn();
-/// let (minima, maxima) = local_extrema(&signal, Some(&[3]), Some("both")).unwrap();
+/// let (minima, maxima) = local_extrema(&signal, Some(&[3]), Some("both")).expect("Operation failed");
 ///
 /// // Verify arrays have same shape as input
 /// assert_eq!(minima.shape(), signal.shape());
@@ -207,7 +207,7 @@ where
 ///                    [2.0, 5.0, 2.0],  // Peak at center
 ///                    [1.0, 2.0, 1.0]].into_dyn();
 ///
-/// let (minima, maxima) = local_extrema(&image, Some(&[3, 3]), Some("max")).unwrap();
+/// let (minima, maxima) = local_extrema(&image, Some(&[3, 3]), Some("max")).expect("Operation failed");
 ///
 /// // Verify arrays have same shape as input
 /// assert_eq!(minima.shape(), image.shape());
@@ -219,10 +219,10 @@ where
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_ndimage::local_extrema;
 ///
-/// let data = Array2::<f64>::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap().into_dyn();
+/// let data = Array2::<f64>::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect()).expect("Operation failed").into_dyn();
 ///
 /// // Use 5x5 neighborhood
-/// let (minima, maxima) = local_extrema(&data, Some(&[5, 5]), Some("both")).unwrap();
+/// let (minima, maxima) = local_extrema(&data, Some(&[5, 5]), Some("both")).expect("Operation failed");
 /// // Results should match input dimensions
 /// assert_eq!(minima.shape(), data.shape());
 /// assert_eq!(maxima.shape(), data.shape());
@@ -438,7 +438,7 @@ where
 /// let signal = array![0.0, 1.0, 0.5, 3.0, 0.2, 2.0, 0.1];
 /// let peaks = vec![1, 3, 5]; // Peaks at indices 1, 3, 5
 ///
-/// let prominences = peak_prominences(&signal, &peaks, None).unwrap();
+/// let prominences = peak_prominences(&signal, &peaks, None).expect("Operation failed");
 /// // prominences[1] (peak at index 3, value 3.0) should have highest prominence
 /// ```
 ///
@@ -454,7 +454,7 @@ where
 /// signal[80] = 1.5;  // Small peak
 ///
 /// let peaks = vec![20, 50, 80];
-/// let prominences = peak_prominences(&signal, &peaks, None).unwrap();
+/// let prominences = peak_prominences(&signal, &peaks, None).expect("Operation failed");
 ///
 /// // Filter peaks by prominence threshold
 /// let significant_peaks: Vec<usize> = peaks.iter()
@@ -475,7 +475,7 @@ where
 /// let peaks = vec![1, 3, 5]; // Known peaks in the signal
 ///
 /// // Calculate prominences using the signal directly
-/// let prominences = peak_prominences(&signal, &peaks, None).unwrap();
+/// let prominences = peak_prominences(&signal, &peaks, None).expect("Operation failed");
 /// assert_eq!(prominences.len(), peaks.len());
 /// ```
 ///
@@ -583,7 +583,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// let signal = Array1::from_vec(vec![0.0, 0.5, 1.0, 0.5, 0.0]);
 /// let peaks = vec![2]; // Peak at index 2
 ///
-/// let (widths, heights, left_ips, right_ips) = peak_widths(&signal, &peaks, Some(0.5)).unwrap();
+/// let (widths, heights, left_ips, right_ips) = peak_widths(&signal, &peaks, Some(0.5)).expect("Operation failed");
 ///
 /// // Width at half maximum
 /// println!("FWHM: {}", widths[0]);
@@ -599,7 +599,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// let signal = array![0.0, 0.2, 1.0, 0.2, 0.0, 0.1, 0.3, 0.8, 0.3, 0.1, 0.0];
 /// let peaks = vec![2, 7]; // Peaks at indices 2 and 7
 ///
-/// let (widths, heights, left_ips, right_ips) = peak_widths(&signal, &peaks, Some(0.5)).unwrap();
+/// let (widths, heights, left_ips, right_ips) = peak_widths(&signal, &peaks, Some(0.5)).expect("Operation failed");
 ///
 /// // Compare peak widths
 /// println!("Peak 1 width: {}", widths[0]); // Narrow peak
@@ -615,10 +615,10 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// let peaks = vec![3];
 ///
 /// // Measure width at 25% of peak height
-/// let (widths_25, _, _, _) = peak_widths(&signal, &peaks, Some(0.25)).unwrap();
+/// let (widths_25, _, _, _) = peak_widths(&signal, &peaks, Some(0.25)).expect("Operation failed");
 ///
 /// // Measure width at 75% of peak height
-/// let (widths_75, _, _, _) = peak_widths(&signal, &peaks, Some(0.75)).unwrap();
+/// let (widths_75, _, _, _) = peak_widths(&signal, &peaks, Some(0.75)).expect("Operation failed");
 ///
 /// // Note: with placeholder implementation, widths are all 1.0
 /// // In real implementation, widths_25[0] should be > widths_75[0]
@@ -640,8 +640,8 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// let peaks = vec![25]; // Known peak at center
 ///
 /// // Characterize peaks
-/// let prominences = peak_prominences(&signal, &peaks, None).unwrap();
-/// let (widths, _, _, _) = peak_widths(&signal, &peaks, Some(0.5)).unwrap();
+/// let prominences = peak_prominences(&signal, &peaks, None).expect("Operation failed");
+/// let (widths, _, _, _) = peak_widths(&signal, &peaks, Some(0.5)).expect("Operation failed");
 ///
 /// // Analyze peak properties
 /// for (i, &peak) in peaks.iter().enumerate() {
@@ -713,7 +713,7 @@ where
         }
     }
 
-    let _height = rel_height.unwrap_or_else(|| T::from_f64(0.5).unwrap());
+    let _height = rel_height.unwrap_or_else(|| T::from_f64(0.5).expect("Operation failed"));
     if _height <= T::zero() || _height >= T::one() {
         return Err(NdimageError::InvalidInput(format!(
             "rel_height must be between 0 and 1, got {:?}",
@@ -725,7 +725,7 @@ where
     let widths = vec![T::one(); peaks.len()];
     let heights = vec![T::zero(); peaks.len()];
     let left_ips = vec![T::zero(); peaks.len()];
-    let right_ips = vec![T::from_usize(input.len() - 1).unwrap(); peaks.len()];
+    let right_ips = vec![T::from_usize(input.len() - 1).expect("Operation failed"); peaks.len()];
 
     Ok((widths, heights, left_ips, right_ips))
 }
@@ -738,7 +738,7 @@ mod tests {
     #[test]
     fn test_extrema() {
         let input: Array2<f64> = Array2::eye(3);
-        let (min, max, min_loc, max_loc) = extrema(&input).unwrap();
+        let (min, max, min_loc, max_loc) = extrema(&input).expect("Operation failed");
         assert!(max >= min);
         assert_eq!(min_loc.len(), input.ndim());
         assert_eq!(max_loc.len(), input.ndim());
@@ -750,7 +750,7 @@ mod tests {
         let input_2d: Array2<f64> = Array2::eye(3);
         let input = input_2d.into_dyn();
         assert_eq!(input.ndim(), 2);
-        let (minima, maxima) = local_extrema(&input, None, None).unwrap();
+        let (minima, maxima) = local_extrema(&input, None, None).expect("Operation failed");
         assert_eq!(minima.shape(), input.shape());
         assert_eq!(maxima.shape(), input.shape());
 
@@ -758,7 +758,7 @@ mod tests {
         let mut data_2d = Array2::<f64>::zeros((5, 5));
         data_2d[[2, 2]] = 10.0; // Peak in center
         let data = data_2d.into_dyn();
-        let (minima, maxima) = local_extrema(&data, None, None).unwrap();
+        let (minima, maxima) = local_extrema(&data, None, None).expect("Operation failed");
         assert!(maxima[vec![2, 2].as_slice()]); // Center should be a maximum
     }
 }

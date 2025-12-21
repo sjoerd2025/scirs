@@ -164,20 +164,23 @@ mod simple_nn {
         /// Create a new dense layer with random initialization
         pub fn new(_input_size: usize, outputsize: usize) -> Self {
             // Initialize with small random values (simplified Xavier initialization)
-            let scale = F::from(0.1).unwrap();
+            let scale = F::from(0.1).expect("Failed to convert constant to float");
             let mut weights = Array2::zeros((_input_size, outputsize));
             let mut biases = Array1::zeros(outputsize);
 
             // Simple pseudo-random initialization
             for i in 0.._input_size {
                 for j in 0..outputsize {
-                    let val = F::from((i * j + 1) as f64 * 0.001).unwrap() % scale;
-                    weights[[i, j]] = val - scale / F::from(2).unwrap();
+                    let val = F::from((i * j + 1) as f64 * 0.001)
+                        .expect("Failed to convert to float")
+                        % scale;
+                    weights[[i, j]] =
+                        val - scale / F::from(2).expect("Failed to convert constant to float");
                 }
             }
 
             for i in 0..outputsize {
-                biases[i] = F::from(i as f64 * 0.001).unwrap() % scale;
+                biases[i] = F::from(i as f64 * 0.001).expect("Failed to convert to float") % scale;
             }
 
             Self { weights, biases }
@@ -303,7 +306,8 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
         }
 
         let epochs = self.config.base.epochs.min(50); // Limit epochs for simple implementation
-        let learning_rate = F::from(self.config.base.learning_rate).unwrap();
+        let learning_rate =
+            F::from(self.config.base.learning_rate).expect("Failed to convert to float");
 
         for epoch in 0..epochs {
             let mut epoch_loss = F::zero();
@@ -318,13 +322,25 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
                     let target = ytrain.row(i).to_owned();
 
                     // Forward pass (simplified LSTM as feedforward)
-                    let h1 = self.input_layer.as_ref().unwrap().forward(&input);
+                    let h1 = self
+                        .input_layer
+                        .as_ref()
+                        .expect("Layer should be initialized")
+                        .forward(&input);
                     let h1_activated = simple_nn::apply_activation(&h1, "tanh");
 
-                    let h2 = self.hidden_layer.as_ref().unwrap().forward(&h1_activated);
+                    let h2 = self
+                        .hidden_layer
+                        .as_ref()
+                        .expect("Layer should be initialized")
+                        .forward(&h1_activated);
                     let h2_activated = simple_nn::apply_activation(&h2, "tanh");
 
-                    let output = self.output_layer.as_ref().unwrap().forward(&h2_activated);
+                    let output = self
+                        .output_layer
+                        .as_ref()
+                        .expect("Layer should be initialized")
+                        .forward(&h2_activated);
 
                     // Calculate loss (MSE)
                     let mut loss = F::zero();
@@ -332,19 +348,25 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
                         let diff = output[j] - target[j];
                         loss = loss + diff * diff;
                     }
-                    loss = loss / F::from(target.len()).unwrap();
+                    loss = loss / F::from(target.len()).expect("Failed to convert to float");
                     batch_loss = batch_loss + loss;
                 }
 
-                epoch_loss = epoch_loss + batch_loss / F::from(batch_end - batch_start).unwrap();
+                epoch_loss = epoch_loss
+                    + batch_loss
+                        / F::from(batch_end - batch_start).expect("Failed to convert to float");
             }
 
-            epoch_loss = epoch_loss / F::from(x_train.nrows().div_ceil(batch_size)).unwrap();
+            epoch_loss = epoch_loss
+                / F::from(x_train.nrows().div_ceil(batch_size))
+                    .expect("Failed to convert to float");
             self.loss_history.push(epoch_loss);
 
             // Simple weight update (very basic SGD approximation)
             if epoch % 10 == 0 {
-                let decay_factor = F::from(0.95).unwrap().powf(F::from(epoch / 10).unwrap());
+                let decay_factor = F::from(0.95)
+                    .expect("Failed to convert constant to float")
+                    .powf(F::from(epoch / 10).expect("Failed to convert to float"));
                 self.update_weights_simple(learning_rate * decay_factor);
             }
         }
@@ -354,14 +376,16 @@ impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
 
     /// Simplified weight update
     fn update_weights_simple(&mut self, learningrate: F) {
-        let adjustment = learningrate * F::from(0.001).unwrap();
+        let adjustment =
+            learningrate * F::from(0.001).expect("Failed to convert constant to float");
 
         // Simple weight perturbation for demonstration
         if let Some(ref mut layer) = self.input_layer {
             for i in 0..layer.weights.nrows() {
                 for j in 0..layer.weights.ncols() {
-                    let perturbation =
-                        F::from((i + j) as f64 * 0.0001).unwrap() - F::from(0.00005).unwrap();
+                    let perturbation = F::from((i + j) as f64 * 0.0001)
+                        .expect("Failed to convert to float")
+                        - F::from(0.00005).expect("Failed to convert constant to float");
                     layer.weights[[i, j]] = layer.weights[[i, j]] + adjustment * perturbation;
                 }
             }
@@ -412,17 +436,33 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
         }
 
         let mut predictions = Array1::zeros(steps);
-        let mut current_window = self.last_window.as_ref().unwrap().clone();
+        let mut current_window = self
+            .last_window
+            .as_ref()
+            .expect("Layer should be initialized")
+            .clone();
 
         for step in 0..steps {
             // Forward pass through the network
-            let h1 = self.input_layer.as_ref().unwrap().forward(&current_window);
+            let h1 = self
+                .input_layer
+                .as_ref()
+                .expect("Layer should be initialized")
+                .forward(&current_window);
             let h1_activated = simple_nn::apply_activation(&h1, "tanh");
 
-            let h2 = self.hidden_layer.as_ref().unwrap().forward(&h1_activated);
+            let h2 = self
+                .hidden_layer
+                .as_ref()
+                .expect("Layer should be initialized")
+                .forward(&h1_activated);
             let h2_activated = simple_nn::apply_activation(&h2, "tanh");
 
-            let output = self.output_layer.as_ref().unwrap().forward(&h2_activated);
+            let output = self
+                .output_layer
+                .as_ref()
+                .expect("Layer should be initialized")
+                .forward(&h2_activated);
 
             // Take the first prediction
             let next_pred = output[0];
@@ -455,16 +495,17 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
 
         // Simple uncertainty estimation based on training loss
         let uncertainty = if let Some(last_loss) = self.loss_history.last() {
-            last_loss.sqrt() * F::from(2.0).unwrap() // Simple heuristic
+            last_loss.sqrt() * F::from(2.0).expect("Failed to convert constant to float")
+        // Simple heuristic
         } else {
-            F::from(0.1).unwrap()
+            F::from(0.1).expect("Failed to convert constant to float")
         };
 
         let z_score = match confidence_level {
-            c if c >= 0.99 => F::from(2.576).unwrap(),
-            c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(),
-            _ => F::from(1.0).unwrap(),
+            c if c >= 0.99 => F::from(2.576).expect("Failed to convert constant to float"),
+            c if c >= 0.95 => F::from(1.96).expect("Failed to convert constant to float"),
+            c if c >= 0.90 => F::from(1.645).expect("Failed to convert constant to float"),
+            _ => F::from(1.0).expect("Failed to convert constant to float"),
         };
 
         let margin = uncertainty * z_score;
@@ -557,17 +598,25 @@ impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
                 let target = ytrain.row(i).to_owned();
 
                 // Simplified transformer forward pass
-                let attention_out = self.attention_layer.as_ref().unwrap().forward(&input);
+                let attention_out = self
+                    .attention_layer
+                    .as_ref()
+                    .expect("Layer should be initialized")
+                    .forward(&input);
                 let attention_activated = simple_nn::apply_activation(&attention_out, "relu");
 
                 let ff_out = self
                     .feedforward_layer
                     .as_ref()
-                    .unwrap()
+                    .expect("Layer should be initialized")
                     .forward(&attention_activated);
                 let ff_activated = simple_nn::apply_activation(&ff_out, "relu");
 
-                let output = self.output_layer.as_ref().unwrap().forward(&ff_activated);
+                let output = self
+                    .output_layer
+                    .as_ref()
+                    .expect("Layer should be initialized")
+                    .forward(&ff_activated);
 
                 // Calculate loss
                 let mut loss = F::zero();
@@ -575,11 +624,11 @@ impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
                     let diff = output[j] - target[j];
                     loss = loss + diff * diff;
                 }
-                loss = loss / F::from(target.len()).unwrap();
+                loss = loss / F::from(target.len()).expect("Failed to convert to float");
                 epoch_loss = epoch_loss + loss;
             }
 
-            epoch_loss = epoch_loss / F::from(x_train.nrows()).unwrap();
+            epoch_loss = epoch_loss / F::from(x_train.nrows()).expect("Failed to convert to float");
             self.loss_history.push(epoch_loss);
         }
 
@@ -630,25 +679,33 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
         }
 
         let mut predictions = Array1::zeros(steps);
-        let mut current_window = self.last_window.as_ref().unwrap().clone();
+        let mut current_window = self
+            .last_window
+            .as_ref()
+            .expect("Layer should be initialized")
+            .clone();
 
         for step in 0..steps {
             // Forward pass through simplified transformer
             let attention_out = self
                 .attention_layer
                 .as_ref()
-                .unwrap()
+                .expect("Layer should be initialized")
                 .forward(&current_window);
             let attention_activated = simple_nn::apply_activation(&attention_out, "relu");
 
             let ff_out = self
                 .feedforward_layer
                 .as_ref()
-                .unwrap()
+                .expect("Layer should be initialized")
                 .forward(&attention_activated);
             let ff_activated = simple_nn::apply_activation(&ff_out, "relu");
 
-            let output = self.output_layer.as_ref().unwrap().forward(&ff_activated);
+            let output = self
+                .output_layer
+                .as_ref()
+                .expect("Layer should be initialized")
+                .forward(&ff_activated);
 
             // Take the first prediction
             let next_pred = output[0];
@@ -679,16 +736,16 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
 
         // Simple uncertainty estimation
         let uncertainty = if let Some(last_loss) = self.loss_history.last() {
-            last_loss.sqrt() * F::from(1.5).unwrap()
+            last_loss.sqrt() * F::from(1.5).expect("Failed to convert constant to float")
         } else {
-            F::from(0.1).unwrap()
+            F::from(0.1).expect("Failed to convert constant to float")
         };
 
         let z_score = match confidence_level {
-            c if c >= 0.99 => F::from(2.576).unwrap(),
-            c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(),
-            _ => F::from(1.0).unwrap(),
+            c if c >= 0.99 => F::from(2.576).expect("Failed to convert constant to float"),
+            c if c >= 0.95 => F::from(1.96).expect("Failed to convert constant to float"),
+            c if c >= 0.90 => F::from(1.645).expect("Failed to convert constant to float"),
+            _ => F::from(1.0).expect("Failed to convert constant to float"),
         };
 
         let margin = uncertainty * z_score;
@@ -804,19 +861,23 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
                     // Residual connection (simplified)
                     if current_input.len() == activated.len() {
                         for j in 0..current_input.len() {
-                            current_input[j] =
-                                current_input[j] + activated[j] * F::from(0.1).unwrap();
+                            current_input[j] = current_input[j]
+                                + activated[j]
+                                    * F::from(0.1).expect("Failed to convert constant to float");
                         }
                     }
                 }
 
                 // Final prediction from last stack
                 let final_output = if let Some(last_stack) = stack_outputs.last() {
-                    self.residual_layer.as_ref().unwrap().forward(last_stack)
+                    self.residual_layer
+                        .as_ref()
+                        .expect("Layer should be initialized")
+                        .forward(last_stack)
                 } else {
                     self.residual_layer
                         .as_ref()
-                        .unwrap()
+                        .expect("Layer should be initialized")
                         .forward(&current_input)
                 };
 
@@ -825,8 +886,10 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
                     if let (Some(trend_layer), Some(season_layer)) =
                         (&self.trend_layer, &self.seasonality_layer)
                     {
-                        let trend = trend_layer.forward(stack_outputs.last().unwrap());
-                        let seasonal = season_layer.forward(stack_outputs.last().unwrap());
+                        let trend = trend_layer
+                            .forward(stack_outputs.last().expect("Array should not be empty"));
+                        let seasonal = season_layer
+                            .forward(stack_outputs.last().expect("Array should not be empty"));
 
                         let mut combined = final_output;
                         for j in 0..combined.len() {
@@ -846,11 +909,11 @@ impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
                     let diff = output[j] - target[j];
                     loss = loss + diff * diff;
                 }
-                loss = loss / F::from(target.len()).unwrap();
+                loss = loss / F::from(target.len()).expect("Failed to convert to float");
                 epoch_loss = epoch_loss + loss;
             }
 
-            epoch_loss = epoch_loss / F::from(x_train.nrows()).unwrap();
+            epoch_loss = epoch_loss / F::from(x_train.nrows()).expect("Failed to convert to float");
             self.loss_history.push(epoch_loss);
         }
 
@@ -901,7 +964,11 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
         }
 
         let mut predictions = Array1::zeros(steps);
-        let mut current_window = self.last_window.as_ref().unwrap().clone();
+        let mut current_window = self
+            .last_window
+            .as_ref()
+            .expect("Layer should be initialized")
+            .clone();
 
         for step in 0..steps {
             // Forward pass through N-BEATS stacks
@@ -916,18 +983,23 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
                 // Residual connection (simplified)
                 if current_input.len() == activated.len() {
                     for j in 0..current_input.len() {
-                        current_input[j] = current_input[j] + activated[j] * F::from(0.1).unwrap();
+                        current_input[j] = current_input[j]
+                            + activated[j]
+                                * F::from(0.1).expect("Failed to convert constant to float");
                     }
                 }
             }
 
             // Final prediction from last stack
             let final_output = if let Some(last_stack) = stack_outputs.last() {
-                self.residual_layer.as_ref().unwrap().forward(last_stack)
+                self.residual_layer
+                    .as_ref()
+                    .expect("Layer should be initialized")
+                    .forward(last_stack)
             } else {
                 self.residual_layer
                     .as_ref()
-                    .unwrap()
+                    .expect("Layer should be initialized")
                     .forward(&current_window)
             };
 
@@ -936,8 +1008,10 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
                 if let (Some(trend_layer), Some(season_layer)) =
                     (&self.trend_layer, &self.seasonality_layer)
                 {
-                    let trend = trend_layer.forward(stack_outputs.last().unwrap());
-                    let seasonal = season_layer.forward(stack_outputs.last().unwrap());
+                    let trend = trend_layer
+                        .forward(stack_outputs.last().expect("Array should not be empty"));
+                    let seasonal = season_layer
+                        .forward(stack_outputs.last().expect("Array should not be empty"));
 
                     let mut combined = final_output;
                     for j in 0..combined.len() {
@@ -980,16 +1054,16 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
 
         // Simple uncertainty estimation for N-BEATS
         let uncertainty = if let Some(last_loss) = self.loss_history.last() {
-            last_loss.sqrt() * F::from(1.2).unwrap()
+            last_loss.sqrt() * F::from(1.2).expect("Failed to convert constant to float")
         } else {
-            F::from(0.08).unwrap()
+            F::from(0.08).expect("Failed to convert constant to float")
         };
 
         let z_score = match confidence_level {
-            c if c >= 0.99 => F::from(2.576).unwrap(),
-            c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(),
-            _ => F::from(1.0).unwrap(),
+            c if c >= 0.99 => F::from(2.576).expect("Failed to convert constant to float"),
+            c if c >= 0.95 => F::from(1.96).expect("Failed to convert constant to float"),
+            c if c >= 0.90 => F::from(1.645).expect("Failed to convert constant to float"),
+            _ => F::from(1.0).expect("Failed to convert constant to float"),
         };
 
         let margin = uncertainty * z_score;

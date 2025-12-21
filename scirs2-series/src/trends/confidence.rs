@@ -53,7 +53,7 @@ use crate::error::{Result, TimeSeriesError};
 ///     &trend,
 ///     &options,
 ///     |data| Ok(data.clone())  // Identity function as a simple trend estimator
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Check the shape of the confidence bounds
 /// assert_eq!(lower.len(), ts.len());
@@ -108,14 +108,15 @@ where
 {
     let n = ts.len();
     let num_bootstrap = options.num_bootstrap;
-    let alpha = F::one() - F::from_f64(options.level).unwrap();
-    let lower_percentile = (alpha / F::from_f64(2.0).unwrap() * F::from_usize(100).unwrap())
-        .to_f64()
-        .unwrap();
-    let upper_percentile = ((F::one() - alpha / F::from_f64(2.0).unwrap())
-        * F::from_usize(100).unwrap())
+    let alpha = F::one() - F::from_f64(options.level).expect("Operation failed");
+    let lower_percentile = (alpha / F::from_f64(2.0).expect("Operation failed")
+        * F::from_usize(100).expect("Operation failed"))
     .to_f64()
-    .unwrap();
+    .expect("Operation failed");
+    let upper_percentile = ((F::one() - alpha / F::from_f64(2.0).expect("Operation failed"))
+        * F::from_usize(100).expect("Operation failed"))
+    .to_f64()
+    .expect("Operation failed");
 
     // Calculate residuals
     let residuals = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
@@ -200,17 +201,17 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let _alpha = F::one() - F::from_f64(options.level).unwrap();
+    let _alpha = F::one() - F::from_f64(options.level).expect("Operation failed");
 
     // Calculate residuals and estimate noise variance
     let residuals = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
 
     let noise_variance = if options.estimate_noise_variance {
         let sum_squared = residuals.iter().fold(F::zero(), |acc, &r| acc + r * r);
-        let degrees_freedom = F::from_usize(n - 2).unwrap(); // Assuming at least linear model
+        let degrees_freedom = F::from_usize(n - 2).expect("Operation failed"); // Assuming at least linear model
         sum_squared / degrees_freedom
     } else if let Some(var) = options.noise_variance {
-        F::from_f64(var).unwrap()
+        F::from_f64(var).expect("Operation failed")
     } else {
         return Err(TimeSeriesError::InvalidInput(
             "No noise variance provided and estimate_noise_variance is false".to_string(),
@@ -225,12 +226,13 @@ where
         0.99 => 2.576,
         _ => {
             // Approximate normal quantile for arbitrary confidence level
-            let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
-            normal_quantile(p.to_f64().unwrap())?
+            let p = (F::one() + F::from_f64(options.level).expect("Operation failed"))
+                / F::from_f64(2.0).expect("Operation failed");
+            normal_quantile(p.to_f64().expect("Operation failed"))?
         }
     };
 
-    let critical_value_f = F::from_f64(critical_value).unwrap();
+    let critical_value_f = F::from_f64(critical_value).expect("Operation failed");
     let std_error = noise_variance.sqrt();
 
     // Calculate confidence intervals
@@ -256,17 +258,17 @@ where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let _alpha = F::one() - F::from_f64(options.level).unwrap();
+    let _alpha = F::one() - F::from_f64(options.level).expect("Operation failed");
 
     // Calculate residuals and estimate noise variance
     let residuals = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
 
     let noise_variance = if options.estimate_noise_variance {
         let sum_squared = residuals.iter().fold(F::zero(), |acc, &r| acc + r * r);
-        let degrees_freedom = F::from_usize(n - 2).unwrap(); // Assuming at least linear model
+        let degrees_freedom = F::from_usize(n - 2).expect("Operation failed"); // Assuming at least linear model
         sum_squared / degrees_freedom
     } else if let Some(var) = options.noise_variance {
-        F::from_f64(var).unwrap()
+        F::from_f64(var).expect("Operation failed")
     } else {
         return Err(TimeSeriesError::InvalidInput(
             "No noise variance provided and estimate_noise_variance is false".to_string(),
@@ -281,15 +283,16 @@ where
         0.99 => 2.576,
         _ => {
             // Approximate normal quantile for arbitrary confidence level
-            let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
-            normal_quantile(p.to_f64().unwrap())?
+            let p = (F::one() + F::from_f64(options.level).expect("Operation failed"))
+                / F::from_f64(2.0).expect("Operation failed");
+            normal_quantile(p.to_f64().expect("Operation failed"))?
         }
     };
 
-    let critical_value_f = F::from_f64(critical_value).unwrap();
+    let critical_value_f = F::from_f64(critical_value).expect("Operation failed");
 
     // Additional variance components for prediction interval
-    let model_uncertainty = F::from_f64(0.1).unwrap() * noise_variance; // Approximate model uncertainty
+    let model_uncertainty = F::from_f64(0.1).expect("Operation failed") * noise_variance; // Approximate model uncertainty
 
     let prediction_error = if options.include_observation_noise {
         (noise_variance + model_uncertainty).sqrt()
@@ -416,7 +419,7 @@ fn normal_quantile(p: f64) -> Result<f64> {
 ///     &ts,
 ///     |data| estimate_spline_trend(data, &trend_options),
 ///     &ci_options
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// assert_eq!(result.trend.len(), ts.len());
 /// assert_eq!(result.lower.len(), ts.len());

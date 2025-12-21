@@ -548,7 +548,7 @@ mod tests {
         let result = image_to_temporal_representation(&image.view());
         assert!(result.is_ok());
 
-        let temporal_features = result.unwrap();
+        let temporal_features = result.expect("Operation failed");
         assert_eq!(temporal_features.dim(), (10, 10, 4));
     }
 
@@ -564,7 +564,7 @@ mod tests {
         let result = extract_pixel_temporal_sequence(&temporal_memory, (2, 2));
         assert!(result.is_ok());
 
-        let sequence = result.unwrap();
+        let sequence = result.expect("Operation failed");
         assert!(!sequence.is_empty());
     }
 }

@@ -450,7 +450,9 @@ impl ProofExplorer {
         println!("• Available Proofs: {}", self.available_proofs.len());
 
         if let Some(current) = &self.current_proof {
-            let proof = self.get_proof_by_id(&current.proof_id).unwrap();
+            let proof = self
+                .get_proof_by_id(&current.proof_id)
+                .expect("Operation failed");
             println!(
                 "• Current Proof: {} (Step {}/{})",
                 proof.title,
@@ -514,7 +516,7 @@ impl ProofExplorer {
     }
 
     fn start_proof_exploration(&self, proofid: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let proof = self.get_proof_by_id(proofid).unwrap();
+        let proof = self.get_proof_by_id(proofid).expect("Operation failed");
 
         println!("\n🎯 Starting Proof: {}", proof.title);
         println!("=================={}", "=".repeat(proof.title.len()));

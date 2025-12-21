@@ -177,7 +177,7 @@ pub mod lazy {
 
         /// Force evaluation of the lazy array
         pub fn compute(&self) -> SpecialResult<Array<T, D>> {
-            let mut computed = self.computed.lock().unwrap();
+            let mut computed = self.computed.lock().expect("Operation failed");
 
             if let Some(ref cached) = *computed {
                 return Ok(cached.clone());
@@ -190,7 +190,7 @@ pub mod lazy {
 
         /// Check if the array has been computed
         pub fn is_computed(&self) -> bool {
-            self.computed.lock().unwrap().is_some()
+            self.computed.lock().expect("Operation failed").is_some()
         }
 
         /// Get operation description
@@ -1270,14 +1270,16 @@ mod tests {
         assert!(broadcasting::can_broadcast(&[2, 3, 4], &[3, 4]));
         assert!(!broadcasting::can_broadcast(&[3, 2], &[4, 5]));
 
-        let shape = broadcasting::broadcastshape(&[3, 1], &[1, 4]).unwrap();
+        let shape = broadcasting::broadcastshape(&[3, 1], &[1, 4]).expect("Operation failed");
         assert_eq!(shape, vec![3, 4]);
     }
 
     #[tokio::test]
     async fn test_vectorized_gamma() {
         let input = arr1(&[1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = convenience::gamma_1d(&input).await.unwrap();
+        let result = convenience::gamma_1d(&input)
+            .await
+            .expect("Operation failed");
 
         // Γ(1)=1, Γ(2)=1, Γ(3)=2, Γ(4)=6, Γ(5)=24
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-10);
@@ -1290,7 +1292,9 @@ mod tests {
     #[tokio::test]
     async fn test_vectorized_gamma_2d() {
         let input = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
-        let result = convenience::gamma_2d(&input).await.unwrap();
+        let result = convenience::gamma_2d(&input)
+            .await
+            .expect("Operation failed");
 
         assert_relative_eq!(result[[0, 0]], 1.0, epsilon = 1e-10);
         assert_relative_eq!(result[[0, 1]], 1.0, epsilon = 1e-10);
@@ -1301,7 +1305,7 @@ mod tests {
     #[test]
     fn test_vectorized_bessel() {
         let input = arr1(&[0.0, 1.0, 2.0]);
-        let result = convenience::j0_1d(&input).unwrap();
+        let result = convenience::j0_1d(&input).expect("Operation failed");
 
         assert_relative_eq!(result[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(result[1], crate::bessel::j0(1.0), epsilon = 1e-10);
@@ -1311,7 +1315,7 @@ mod tests {
     #[test]
     fn test_softmax_1d() {
         let input = arr1(&[1.0, 2.0, 3.0]);
-        let result = convenience::softmax_1d(&input).unwrap();
+        let result = convenience::softmax_1d(&input).expect("Operation failed");
 
         // Check that result sums to 1
         assert_relative_eq!(result.sum(), 1.0, epsilon = 1e-10);
@@ -1366,14 +1370,14 @@ mod tests {
     #[test]
     fn test_lazy_evaluation() {
         let input = Array::linspace(1.0, 5.0, 1000);
-        let lazy_array = convenience::gamma_lazy(&input, None).unwrap();
+        let lazy_array = convenience::gamma_lazy(&input, None).expect("Operation failed");
 
         // Check that computation is deferred
         assert!(!lazy_array.is_computed());
         assert_eq!(lazy_array.shape(), input.shape());
 
         // Force computation
-        let result = lazy_array.compute().unwrap();
+        let result = lazy_array.compute().expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
 
         // Verify some values
@@ -1385,11 +1389,11 @@ mod tests {
     fn test_lazy_bessel() {
         let input = Array::linspace(0.0, 5.0, 1500); // Size above lazy threshold
         let config = convenience::lazy_config();
-        let result = vectorized::j0_array(&input, &config).unwrap();
+        let result = vectorized::j0_array(&input, &config).expect("Operation failed");
 
         if let vectorized::BesselResult::Lazy(lazy_array) = result {
             assert!(!lazy_array.is_computed());
-            let computed = lazy_array.compute().unwrap();
+            let computed = lazy_array.compute().expect("Operation failed");
             assert_eq!(computed.shape(), input.shape());
         } else {
             panic!("Expected lazy result");
@@ -1405,7 +1409,9 @@ mod tests {
         ];
 
         let config = ArrayConfig::default();
-        let results = convenience::batch_gamma(&arrays, &config).await.unwrap();
+        let results = convenience::batch_gamma(&arrays, &config)
+            .await
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 3);
         for (i, result) in results.iter().enumerate() {
@@ -1425,7 +1431,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = vectorized::process_chunks(&input, &config, |x: f64| x * 2.0).unwrap();
+        let result = vectorized::process_chunks(&input, &config, |x: f64| x * 2.0)
+            .expect("Operation failed");
 
         assert_eq!(result.len(), input.len());
         for &val in result.iter() {
@@ -1441,7 +1448,7 @@ mod tests {
         };
 
         let input = arr1(&[1.0, 2.0, 3.0]);
-        let result = vectorized::gamma_array(&input, &config).unwrap();
+        let result = vectorized::gamma_array(&input, &config).expect("Operation failed");
 
         // Should get immediate result for CPU backend
         assert!(result.is_ready());
@@ -1451,7 +1458,7 @@ mod tests {
     #[test]
     fn test_parallel_processing() {
         let input = Array::linspace(1.0, 10.0, 1000);
-        let result = convenience::erf_parallel(&input).unwrap();
+        let result = convenience::erf_parallel(&input).expect("Operation failed");
 
         assert_eq!(result.len(), input.len());
         for (i, &val) in result.iter().enumerate() {
@@ -1464,7 +1471,7 @@ mod tests {
     fn test_gamma_result_types() {
         let input = arr1(&[1.0, 2.0, 3.0]);
         let config = ArrayConfig::default();
-        let result = vectorized::gamma_array(&input, &config).unwrap();
+        let result = vectorized::gamma_array(&input, &config).expect("Operation failed");
 
         // Test immediate result
         match result {
@@ -1498,7 +1505,7 @@ mod tests {
         assert!(lazy_gamma.description().contains("LazyGamma"));
 
         // Test computation
-        let result = lazy_gamma.compute().unwrap();
+        let result = lazy_gamma.compute().expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1532,7 +1539,7 @@ mod tests {
         ]);
 
         let config = ArrayConfig::default();
-        let result = complex::lambert_w_array(&input, 0, 1e-8, &config).unwrap();
+        let result = complex::lambert_w_array(&input, 0, 1e-8, &config).expect("Operation failed");
 
         assert_eq!(result.len(), 3);
         // Check that results are finite (not NaN)

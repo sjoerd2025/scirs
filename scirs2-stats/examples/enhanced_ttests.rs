@@ -24,17 +24,18 @@ fn main() {
     println!("Sample data: {:?}", data);
 
     // Two-sided test
-    let two_sided =
-        enhanced_ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit").unwrap();
+    let two_sided = enhanced_ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit")
+        .expect("Operation failed");
     print_ttest_result(&two_sided, "Two-sided test");
 
     // One-sided test (greater)
-    let greater =
-        enhanced_ttest_1samp(&data.view(), null_mean, Alternative::Greater, "omit").unwrap();
+    let greater = enhanced_ttest_1samp(&data.view(), null_mean, Alternative::Greater, "omit")
+        .expect("Operation failed");
     print_ttest_result(&greater, "One-sided test (greater)");
 
     // One-sided test (less)
-    let less = enhanced_ttest_1samp(&data.view(), null_mean, Alternative::Less, "omit").unwrap();
+    let less = enhanced_ttest_1samp(&data.view(), null_mean, Alternative::Less, "omit")
+        .expect("Operation failed");
     print_ttest_result(&less, "One-sided test (less)");
 
     // Example 2: Independent two-sample t-test
@@ -56,7 +57,7 @@ fn main() {
         Alternative::TwoSided,
         "omit",
     )
-    .unwrap();
+    .expect("Operation failed");
     print_ttest_result(&equal_var, "Equal variances (Student's t-test)");
 
     // Unequal variances (Welch's t-test)
@@ -67,7 +68,7 @@ fn main() {
         Alternative::TwoSided,
         "omit",
     )
-    .unwrap();
+    .expect("Operation failed");
     print_ttest_result(&welch, "Unequal variances (Welch's t-test)");
 
     // Example 3: Paired t-test
@@ -82,8 +83,8 @@ fn main() {
     println!("After: {:?}", after);
 
     // Paired t-test (two-sided)
-    let paired =
-        enhanced_ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "omit").unwrap();
+    let paired = enhanced_ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "omit")
+        .expect("Operation failed");
     print_ttest_result(&paired, "Paired t-test");
 
     // Example 4: T-test from statistics
@@ -111,7 +112,7 @@ fn main() {
         true,
         Alternative::TwoSided,
     )
-    .unwrap();
+    .expect("Operation failed");
     print_ttest_result(&from_stats, "T-test from statistics");
 
     // Example 5: Handling NaN values
@@ -126,7 +127,8 @@ fn main() {
 
     // Omit NaN values
     let omit_result =
-        enhanced_ttest_1samp(&data_with_nan.view(), 5.0, Alternative::TwoSided, "omit").unwrap();
+        enhanced_ttest_1samp(&data_with_nan.view(), 5.0, Alternative::TwoSided, "omit")
+            .expect("Operation failed");
     print_ttest_result(&omit_result, "Omit NaN values");
 
     // Try to report NaN handling error (this will fail, but we'll catch it)
@@ -160,7 +162,7 @@ fn print_ttest_result<F: std::fmt::Display + scirs2_core::numeric::Float>(
     }
 
     // Interpret the result
-    let threshold = F::from(0.05).unwrap();
+    let threshold = F::from(0.05).expect("Failed to convert constant to float");
     if result.pvalue < threshold {
         println!("Conclusion: Reject the null hypothesis (p < 0.05)");
     } else {

@@ -154,7 +154,8 @@ mod tests {
         };
 
         let config = ParallelFilterConfig::default();
-        let result = parallel_filter_advanced(&signal, &filter_type, &config).unwrap();
+        let result =
+            parallel_filter_advanced(&signal, &filter_type, &config).expect("Operation failed");
 
         assert_eq!(result.len(), signal.len());
     }
@@ -167,16 +168,17 @@ mod tests {
         // Test core filtering
         let b = vec![0.25, 0.5, 0.25];
         let a = vec![1.0];
-        let filtered = parallel_filtfilt(&b, &a, &signal, None).unwrap();
+        let filtered = parallel_filtfilt(&b, &a, &signal, None).expect("Operation failed");
         assert_eq!(filtered.len(), signal.len());
 
         // Test convolution
         let kernel = vec![0.5, 0.5];
-        let convolved = parallel_convolve(&signal, &kernel, "same", None).unwrap();
+        let convolved =
+            parallel_convolve(&signal, &kernel, "same", None).expect("Operation failed");
         assert_eq!(convolved.len(), signal.len());
 
         // Test statistical filtering
-        let median_filtered = parallel_median_filter(&signal, 3, None).unwrap();
+        let median_filtered = parallel_median_filter(&signal, 3, None).expect("Operation failed");
         assert_eq!(median_filtered.len(), signal.len());
 
         // Test configuration
@@ -195,7 +197,8 @@ mod tests {
         // Test FIR filter bank
         let filter_bank = vec![vec![0.5, 0.5], vec![1.0, -1.0]];
 
-        let results = parallel_fir_filter_bank(&signal, &filter_bank, None).unwrap();
+        let results =
+            parallel_fir_filter_bank(&signal, &filter_bank, None).expect("Operation failed");
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].len(), signal.len());
         assert_eq!(results[1].len(), signal.len());
@@ -208,7 +211,8 @@ mod tests {
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.7).collect();
 
         let (output, coeffs, _error) =
-            parallel_adaptive_lms_filter(&signal, &desired, 8, 0.05, None).unwrap();
+            parallel_adaptive_lms_filter(&signal, &desired, 8, 0.05, None)
+                .expect("Operation failed");
 
         assert_eq!(output.len(), n);
         assert_eq!(coeffs.len(), 8);
@@ -229,7 +233,7 @@ mod tests {
             MorphologicalOperation::Erosion,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(eroded.len(), signal.len());
 
@@ -239,7 +243,7 @@ mod tests {
             MorphologicalOperation::Dilation,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(dilated.len(), signal.len());
     }
@@ -249,20 +253,20 @@ mod tests {
         // Test signal generation
         let frequencies = vec![10.0, 20.0];
         let amplitudes = vec![1.0, 0.5];
-        let test_signal =
-            generate_test_signal(100, &frequencies, &amplitudes, 0.1, 1000.0).unwrap();
+        let test_signal = generate_test_signal(100, &frequencies, &amplitudes, 0.1, 1000.0)
+            .expect("Operation failed");
         assert_eq!(test_signal.len(), 100);
 
         // Test normalization
         let signal = vec![2.0, 4.0, 6.0];
-        let normalized = normalize_signal_amplitude(&signal).unwrap();
+        let normalized = normalize_signal_amplitude(&signal).expect("Operation failed");
         let max_val = normalized.iter().map(|&x| x.abs()).fold(0.0f64, f64::max);
         assert!((max_val - 1.0).abs() < 1e-10);
 
         // Test SNR computation
         let clean = vec![1.0, 2.0, 3.0];
         let noisy = vec![1.1, 2.1, 3.1];
-        let snr = compute_snr_db(&clean, &noisy).unwrap();
+        let snr = compute_snr_db(&clean, &noisy).expect("Operation failed");
         assert!(snr > 0.0);
     }
 }

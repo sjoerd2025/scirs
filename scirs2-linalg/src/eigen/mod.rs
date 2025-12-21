@@ -20,14 +20,14 @@
 //!
 //! // General eigenvalue decomposition
 //! let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-//! let (eigenvalues, eigenvectors) = eig(&a.view(), None).unwrap();
+//! let (eigenvalues, eigenvectors) = eig(&a.view(), None).expect("Operation failed");
 //!
 //! // Symmetric matrices (more efficient)
 //! let symmetric = array![[2.0_f64, 1.0], [1.0, 3.0]];
-//! let (w, v) = eigh(&symmetric.view(), None).unwrap();
+//! let (w, v) = eigh(&symmetric.view(), None).expect("Operation failed");
 //!
 //! // Only eigenvalues (faster when eigenvectors not needed)
-//! let eigenvals = eigvals(&a.view(), None).unwrap();
+//! let eigenvals = eigvals(&a.view(), None).expect("Operation failed");
 //! ```
 //!
 //! ## Specialized Applications
@@ -41,7 +41,7 @@
 //! // Generalized eigenvalue problem Ax = λBx
 //! let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
 //! let b = array![[1.0_f64, 0.0], [0.0, 2.0]];
-//! let (w, v) = eig_gen(&a.view(), &b.view(), None).unwrap();
+//! let (w, v) = eig_gen(&a.view(), &b.view(), None).expect("Operation failed");
 //! ```
 
 // Re-export submodules
@@ -86,7 +86,7 @@ pub use sparse::{arnoldi, eigs_gen, lanczos, svds};
 /// use scirs2_linalg::eigen::eigvalsh;
 ///
 /// let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
-/// let w = eigvalsh(&a.view(), None).unwrap();
+/// let w = eigvalsh(&a.view(), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn eigvalsh<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array1<F>>
@@ -123,7 +123,7 @@ where
 /// use scirs2_linalg::eigen::advanced_precision_eig;
 ///
 /// let a = array![[1.0000000001_f64, 0.9999999999], [0.9999999999, 1.0000000001]];
-/// let (w, v) = advanced_precision_eig(&a.view(), 1e-12).unwrap();
+/// let (w, v) = advanced_precision_eig(&a.view(), 1e-12).expect("Operation failed");
 /// ```
 ///
 /// # Notes
@@ -256,8 +256,8 @@ where
 
     // Adaptive tolerance based on matrix condition
     let condition_estimate = estimate_condition_number(a);
-    let adaptive_tolerance = if condition_estimate > F::from(1e12).unwrap() {
-        tolerance * F::from(0.1).unwrap() // Tighter tolerance for ill-conditioned matrices
+    let adaptive_tolerance = if condition_estimate > F::from(1e12).expect("Operation failed") {
+        tolerance * F::from(0.1).expect("Operation failed") // Tighter tolerance for ill-conditioned matrices
     } else {
         tolerance
     };
@@ -367,7 +367,7 @@ where
     // Check if matrix is nearly symmetric within tolerance
     let n = a.nrows();
     let mut nearly_symmetric = true;
-    let symmetry_tolerance = tolerance * F::from(10.0).unwrap();
+    let symmetry_tolerance = tolerance * F::from(10.0).expect("Operation failed");
 
     for i in 0..n {
         for j in i + 1..n {
@@ -473,7 +473,7 @@ where
         let residual = &av - &lambda_v;
         let f_lambda = v.dot(&residual);
 
-        if f_lambda.abs() < tolerance * F::from(0.01).unwrap() {
+        if f_lambda.abs() < tolerance * F::from(0.01).expect("Operation failed") {
             break;
         }
 
@@ -484,7 +484,7 @@ where
             let delta = f_lambda / f_prime;
             correction += delta;
 
-            if delta.abs() < tolerance * F::from(0.1).unwrap() {
+            if delta.abs() < tolerance * F::from(0.1).expect("Operation failed") {
                 break;
             }
         }
@@ -514,7 +514,7 @@ where
     }
 
     // Add regularization for numerical stability
-    let regularization = tolerance * F::from(1e-6).unwrap();
+    let regularization = tolerance * F::from(1e-6).expect("Operation failed");
     for i in 0..n {
         shiftedmatrix[[i, i]] += regularization;
     }
@@ -613,7 +613,7 @@ where
         eigenvalues[j]
             .abs()
             .partial_cmp(&eigenvalues[i].abs())
-            .unwrap()
+            .expect("Operation failed")
     });
 
     // Reorder eigenvalues and eigenvectors
@@ -836,29 +836,29 @@ mod tests {
         let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
 
         // Test eig
-        let (w1, v1) = eig(&a.view(), None).unwrap();
-        let (w2, v2) = standard::eig(&a.view(), None).unwrap();
+        let (w1, v1) = eig(&a.view(), None).expect("Operation failed");
+        let (w2, v2) = standard::eig(&a.view(), None).expect("Operation failed");
 
         // Should be the same (allowing for different ordering)
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
 
         // Test eigh
-        let (w1, v1) = eigh(&a.view(), None).unwrap();
-        let (w2, v2) = standard::eigh(&a.view(), None).unwrap();
+        let (w1, v1) = eigh(&a.view(), None).expect("Operation failed");
+        let (w2, v2) = standard::eigh(&a.view(), None).expect("Operation failed");
 
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
 
         // Test eigvals
-        let w1 = eigvals(&a.view(), None).unwrap();
-        let w2 = standard::eigvals(&a.view(), None).unwrap();
+        let w1 = eigvals(&a.view(), None).expect("Operation failed");
+        let w2 = standard::eigvals(&a.view(), None).expect("Operation failed");
 
         assert_eq!(w1.len(), w2.len());
 
         // Test eigvalsh
-        let w1 = eigvalsh(&a.view(), None).unwrap();
-        let (w2_, _) = eigh(&a.view(), None).unwrap();
+        let w1 = eigvalsh(&a.view(), None).expect("Operation failed");
+        let (w2_, _) = eigh(&a.view(), None).expect("Operation failed");
 
         for i in 0..w1.len() {
             assert_relative_eq!(w1[i], w2_[i], epsilon = 1e-10);
@@ -871,14 +871,14 @@ mod tests {
         let b = array![[1.0_f64, 0.0], [0.0, 2.0]];
 
         // Test re-exported generalized functions
-        let (w1, v1) = eig_gen(&a.view(), &b.view(), None).unwrap();
-        let (w2, v2) = generalized::eig_gen(&a.view(), &b.view(), None).unwrap();
+        let (w1, v1) = eig_gen(&a.view(), &b.view(), None).expect("Operation failed");
+        let (w2, v2) = generalized::eig_gen(&a.view(), &b.view(), None).expect("Operation failed");
 
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
 
-        let (w1, v1) = eigh_gen(&a.view(), &b.view(), None).unwrap();
-        let (w2, v2) = generalized::eigh_gen(&a.view(), &b.view(), None).unwrap();
+        let (w1, v1) = eigh_gen(&a.view(), &b.view(), None).expect("Operation failed");
+        let (w2, v2) = generalized::eigh_gen(&a.view(), &b.view(), None).expect("Operation failed");
 
         assert_eq!(w1.len(), w2.len());
         assert_eq!(v1.dim(), v2.dim());
@@ -892,7 +892,7 @@ mod tests {
         let result = advanced_precision_eig(&a.view(), 1e-12);
         assert!(result.is_ok());
 
-        let (w, v) = result.unwrap();
+        let (w, v) = result.expect("Operation failed");
         assert_eq!(w.len(), 2);
         assert_eq!(v.dim(), (2, 2));
     }
@@ -941,11 +941,11 @@ mod tests {
         let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
 
         // Standard module
-        let _ = standard::eig(&a.view(), None).unwrap();
+        let _ = standard::eig(&a.view(), None).expect("Operation failed");
 
         // Generalized module
         let b = Array2::eye(2);
-        let _ = generalized::eig_gen(&a.view(), &b.view(), None).unwrap();
+        let _ = generalized::eig_gen(&a.view(), &b.view(), None).expect("Operation failed");
 
         // Sparse module (should return not implemented error)
         let csr = sparse::CsrMatrix::new(2, 2, vec![], vec![], vec![]);

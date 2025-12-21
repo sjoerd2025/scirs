@@ -581,8 +581,14 @@ fn calculate_domain_statistics(data: &scirs2_core::ndarray::Array2<f64>) -> (f64
 fn analyze_domain_shifts(domaindataset: &DomainAdaptationDataset) {
     if domaindataset.domains.len() >= 2 {
         let source_stats = calculate_domain_statistics(&domaindataset.domains[0].1.data);
-        let target_stats =
-            calculate_domain_statistics(&domaindataset.domains.last().unwrap().1.data);
+        let target_stats = calculate_domain_statistics(
+            &domaindataset
+                .domains
+                .last()
+                .expect("Operation failed")
+                .1
+                .data,
+        );
 
         let mean_shift = (target_stats.0 - source_stats.0).abs();
         let std_shift = (target_stats.1 - source_stats.1).abs();

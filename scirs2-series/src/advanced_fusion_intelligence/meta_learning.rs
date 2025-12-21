@@ -173,9 +173,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     /// Create new meta-optimization model
     pub fn new(strategy: OptimizationStrategy) -> Self {
         MetaOptimizationModel {
-            model_parameters: vec![F::from_f64(0.1).unwrap(); 10],
+            model_parameters: vec![F::from_f64(0.1).expect("Operation failed"); 10],
             optimization_strategy: strategy,
-            adaptation_rate: F::from_f64(0.01).unwrap(),
+            adaptation_rate: F::from_f64(0.01).expect("Operation failed"),
         }
     }
 
@@ -205,11 +205,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
         }
 
         let performance_mean = performance_data.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(performance_data.len()).unwrap();
+            / F::from_usize(performance_data.len()).expect("Operation failed");
 
         // Simple gradient approximation
         for param in &mut self.model_parameters {
-            let gradient = performance_mean - F::from_f64(0.5).unwrap();
+            let gradient = performance_mean - F::from_f64(0.5).expect("Operation failed");
             *param = *param + self.adaptation_rate * gradient;
         }
         Ok(())
@@ -219,9 +219,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
     fn evolutionary_optimization(&mut self, _performance_data: &Array1<F>) -> Result<()> {
         // Simple mutation-based evolution
         for param in &mut self.model_parameters {
-            let mutation = F::from_f64(0.01).unwrap()
-                * (F::from_f64(scirs2_core::random::random::<f64>()).unwrap()
-                    - F::from_f64(0.5).unwrap());
+            let mutation = F::from_f64(0.01).expect("Operation failed")
+                * (F::from_f64(scirs2_core::random::random::<f64>()).expect("Operation failed")
+                    - F::from_f64(0.5).expect("Operation failed"));
             *param = *param + mutation;
         }
         Ok(())
@@ -236,15 +236,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
 
         let performance_variance = {
             let mean = performance_data.iter().fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(performance_data.len()).unwrap();
+                / F::from_usize(performance_data.len()).expect("Operation failed");
             performance_data
                 .iter()
                 .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-                / F::from_usize(performance_data.len()).unwrap()
+                / F::from_usize(performance_data.len()).expect("Operation failed")
         };
 
-        let uncertainty_factor =
-            F::from_f64(1.0).unwrap() / (F::from_f64(1.0).unwrap() + performance_variance);
+        let uncertainty_factor = F::from_f64(1.0).expect("Operation failed")
+            / (F::from_f64(1.0).expect("Operation failed") + performance_variance);
 
         for param in &mut self.model_parameters {
             *param = *param * uncertainty_factor;
@@ -260,10 +260,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaOptimizationModel<F> {
 
         // Simple Q-learning inspired update
         let reward = performance_data.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(performance_data.len()).unwrap();
+            / F::from_usize(performance_data.len()).expect("Operation failed");
 
-        let learning_rate = F::from_f64(0.1).unwrap();
-        let discount_factor = F::from_f64(0.9).unwrap();
+        let learning_rate = F::from_f64(0.1).expect("Operation failed");
+        let discount_factor = F::from_f64(0.9).expect("Operation failed");
 
         for param in &mut self.model_parameters {
             *param = *param + learning_rate * reward * discount_factor;
@@ -305,7 +305,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningStrategyLibrary<F> {
         self.strategies.iter().max_by(|a, b| {
             a.applicability_score
                 .partial_cmp(&b.applicability_score)
-                .unwrap()
+                .expect("Test: operation failed")
         })
     }
 
@@ -319,7 +319,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningStrategyLibrary<F> {
     pub fn recommend_adaptation(&self, current_performance: F) -> Vec<String> {
         let mut recommendations = Vec::new();
 
-        let performance_threshold = F::from_f64(0.7).unwrap();
+        let performance_threshold = F::from_f64(0.7).expect("Operation failed");
         if current_performance < performance_threshold {
             recommendations.push("Consider increasing learning rate".to_string());
             recommendations.push("Try different optimization strategy".to_string());
@@ -357,13 +357,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
                 EvaluationMetric::Accuracy => self.calculate_accuracy(predictions, ground_truth)?,
                 EvaluationMetric::Speed => {
                     // Placeholder for speed measurement
-                    F::from_f64(0.8).unwrap()
+                    F::from_f64(0.8).expect("Operation failed")
                 }
                 EvaluationMetric::Efficiency => self.calculate_efficiency(predictions)?,
                 EvaluationMetric::Robustness => self.calculate_robustness(predictions)?,
                 EvaluationMetric::Interpretability => {
                     // Placeholder for interpretability measurement
-                    F::from_f64(0.6).unwrap()
+                    F::from_f64(0.6).expect("Operation failed")
                 }
             };
 
@@ -380,26 +380,27 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
         }
 
         let mut correct = 0;
-        let threshold = F::from_f64(0.5).unwrap();
+        let threshold = F::from_f64(0.5).expect("Operation failed");
 
         for (pred, truth) in predictions.iter().zip(ground_truth.iter()) {
             let pred_binary = if *pred > threshold {
-                F::from_f64(1.0).unwrap()
+                F::from_f64(1.0).expect("Operation failed")
             } else {
                 F::zero()
             };
             let truth_binary = if *truth > threshold {
-                F::from_f64(1.0).unwrap()
+                F::from_f64(1.0).expect("Operation failed")
             } else {
                 F::zero()
             };
 
-            if (pred_binary - truth_binary).abs() < F::from_f64(0.1).unwrap() {
+            if (pred_binary - truth_binary).abs() < F::from_f64(0.1).expect("Operation failed") {
                 correct += 1;
             }
         }
 
-        let accuracy = F::from_usize(correct).unwrap() / F::from_usize(predictions.len()).unwrap();
+        let accuracy = F::from_usize(correct).expect("Operation failed")
+            / F::from_usize(predictions.len()).expect("Operation failed");
         Ok(accuracy)
     }
 
@@ -411,7 +412,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
 
         // Simple efficiency based on prediction confidence
         let confidence_sum = predictions.iter().fold(F::zero(), |acc, &x| acc + x.abs());
-        let efficiency = confidence_sum / F::from_usize(predictions.len()).unwrap();
+        let efficiency =
+            confidence_sum / F::from_usize(predictions.len()).expect("Operation failed");
 
         Ok(efficiency)
     }
@@ -424,14 +426,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> LearningEvaluationSystem<F> {
 
         // Robustness based on prediction stability
         let mean = predictions.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(predictions.len()).unwrap();
+            / F::from_usize(predictions.len()).expect("Operation failed");
         let variance = predictions
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-            / F::from_usize(predictions.len()).unwrap();
+            / F::from_usize(predictions.len()).expect("Operation failed");
 
         // Lower variance indicates higher robustness
-        let robustness = F::from_f64(1.0).unwrap() / (F::from_f64(1.0).unwrap() + variance);
+        let robustness = F::from_f64(1.0).expect("Operation failed")
+            / (F::from_f64(1.0).expect("Operation failed") + variance);
         Ok(robustness)
     }
 }
@@ -470,10 +473,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaAdaptationMechanism<F> {
                     ComparisonDirection::GreaterThan => metric_value > condition.threshold,
                     ComparisonDirection::LessThan => metric_value < condition.threshold,
                     ComparisonDirection::EqualTo => {
-                        (metric_value - condition.threshold).abs() < F::from_f64(0.01).unwrap()
+                        (metric_value - condition.threshold).abs()
+                            < F::from_f64(0.01).expect("Operation failed")
                     }
                     ComparisonDirection::WithinRange => {
-                        let range = F::from_f64(0.1).unwrap();
+                        let range = F::from_f64(0.1).expect("Operation failed");
                         (metric_value - condition.threshold).abs() <= range
                     }
                 };
@@ -522,7 +526,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> KnowledgeTransferSystem<F> {
                 TransferMechanism::FeatureTransfer,
             ],
             similarity_metrics: HashMap::new(),
-            transfer_efficiency: F::from_f64(0.8).unwrap(),
+            transfer_efficiency: F::from_f64(0.8).expect("Operation failed"),
         }
     }
 
@@ -562,8 +566,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> KnowledgeTransferSystem<F> {
                         }
                         TransferMechanism::FeatureTransfer => {
                             // Feature-based adaptation
-                            adapted_item.applicability_score =
-                                adapted_item.applicability_score * F::from_f64(0.9).unwrap();
+                            adapted_item.applicability_score = adapted_item.applicability_score
+                                * F::from_f64(0.9).expect("Operation failed");
                         }
                         _ => {
                             // Other transfer mechanisms

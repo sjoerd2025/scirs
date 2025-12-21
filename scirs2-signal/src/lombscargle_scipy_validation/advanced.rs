@@ -83,7 +83,7 @@ pub fn test_numerical_conditioning(
 
     // Create time series with irregular sampling
     let mut times: Vec<f64> = (0..n).map(|_| rng.random::<f64>() * 100.0).collect();
-    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Test signal with multiple frequencies
     let values: Vec<f64> = times
@@ -257,7 +257,7 @@ pub fn quantify_uncertainty(
             .1
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(i, _)| i)
             .unwrap_or(0);
 
@@ -265,7 +265,7 @@ pub fn quantify_uncertainty(
     }
 
     // Compute statistics
-    bootstrap_results.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    bootstrap_results.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let mean = bootstrap_results.iter().sum::<f64>() / n_bootstrap as f64;
     let bias_estimate = mean - true_freq;
 

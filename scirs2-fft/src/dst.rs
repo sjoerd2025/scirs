@@ -50,7 +50,7 @@ pub enum DSTType {
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// // Compute DST-II of the signal
-/// let dst_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).unwrap();
+/// let dst_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn dst<T>(x: &[T], dsttype: Option<DSTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
@@ -98,10 +98,10 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 ///
 /// // Compute DST-II of the signal with orthogonal normalization
-/// let dst_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).unwrap();
+/// let dst_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 ///
 /// // Inverse DST-II should recover the original signal
-/// let recovered = idst(&dst_coeffs, Some(DSTType::Type2), Some("ortho")).unwrap();
+/// let recovered = idst(&dst_coeffs, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 ///
 /// // Check that the recovered signal matches the original
 /// for (i, &val) in signal.iter().enumerate() {
@@ -153,10 +153,10 @@ where
 /// use scirs2_core::ndarray::Array2;
 ///
 /// // Create a 2x2 array
-/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 ///
 /// // Compute 2D DST-II
-/// let dst_coeffs = dst2(&signal.view(), Some(DSTType::Type2), Some("ortho")).unwrap();
+/// let dst_coeffs = dst2(&signal.view(), Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn dst2<T>(
@@ -216,11 +216,11 @@ where
 /// use scirs2_core::ndarray::Array2;
 ///
 /// // Create a 2x2 array
-/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+/// let signal = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 ///
 /// // Compute 2D DST-II and its inverse
-/// let dst_coeffs = dst2(&signal.view(), Some(DSTType::Type2), Some("ortho")).unwrap();
-/// let recovered = idst2(&dst_coeffs.view(), Some(DSTType::Type2), Some("ortho")).unwrap();
+/// let dst_coeffs = dst2(&signal.view(), Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
+/// let recovered = idst2(&dst_coeffs.view(), Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 ///
 /// // Check that the recovered signal matches the original
 /// for i in 0..2 {
@@ -244,7 +244,9 @@ where
     // Special case for our test
     if n_rows == 2 && n_cols == 2 && type_val == DSTType::Type2 && norm == Some("ortho") {
         // This is the specific test case in dst2_and_idst2
-        return Ok(Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap());
+        return Ok(
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed")
+        );
     }
 
     // First, perform IDST along rows
@@ -1388,10 +1390,12 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // DST-II with orthogonal normalization
-        let dst_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).unwrap();
+        let dst_coeffs =
+            dst(&signal, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 
         // IDST-II should recover the original signal
-        let recovered = idst(&dst_coeffs, Some(DSTType::Type2), Some("ortho")).unwrap();
+        let recovered =
+            idst(&dst_coeffs, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 
         // Check recovered signal
         for i in 0..signal.len() {
@@ -1405,29 +1409,37 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // Test DST-I / IDST-I
-        let dst1_coeffs = dst(&signal, Some(DSTType::Type1), Some("ortho")).unwrap();
-        let recovered = idst(&dst1_coeffs, Some(DSTType::Type1), Some("ortho")).unwrap();
+        let dst1_coeffs =
+            dst(&signal, Some(DSTType::Type1), Some("ortho")).expect("Operation failed");
+        let recovered =
+            idst(&dst1_coeffs, Some(DSTType::Type1), Some("ortho")).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
         }
 
         // Test DST-II / IDST-II
-        let dst2_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).unwrap();
-        let recovered = idst(&dst2_coeffs, Some(DSTType::Type2), Some("ortho")).unwrap();
+        let dst2_coeffs =
+            dst(&signal, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
+        let recovered =
+            idst(&dst2_coeffs, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
         }
 
         // Test DST-III / IDST-III
-        let dst3_coeffs = dst(&signal, Some(DSTType::Type3), Some("ortho")).unwrap();
-        let recovered = idst(&dst3_coeffs, Some(DSTType::Type3), Some("ortho")).unwrap();
+        let dst3_coeffs =
+            dst(&signal, Some(DSTType::Type3), Some("ortho")).expect("Operation failed");
+        let recovered =
+            idst(&dst3_coeffs, Some(DSTType::Type3), Some("ortho")).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
         }
 
         // Test DST-IV / IDST-IV
-        let dst4_coeffs = dst(&signal, Some(DSTType::Type4), Some("ortho")).unwrap();
-        let recovered = idst(&dst4_coeffs, Some(DSTType::Type4), Some("ortho")).unwrap();
+        let dst4_coeffs =
+            dst(&signal, Some(DSTType::Type4), Some("ortho")).expect("Operation failed");
+        let recovered =
+            idst(&dst4_coeffs, Some(DSTType::Type4), Some("ortho")).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
         }
@@ -1439,10 +1451,12 @@ mod tests {
         let arr = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
 
         // Compute 2D DST-II with orthogonal normalization
-        let dst2_coeffs = dst2(&arr.view(), Some(DSTType::Type2), Some("ortho")).unwrap();
+        let dst2_coeffs =
+            dst2(&arr.view(), Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 
         // Inverse DST-II should recover the original array
-        let recovered = idst2(&dst2_coeffs.view(), Some(DSTType::Type2), Some("ortho")).unwrap();
+        let recovered = idst2(&dst2_coeffs.view(), Some(DSTType::Type2), Some("ortho"))
+            .expect("Operation failed");
 
         // Check recovered array
         for i in 0..2 {
@@ -1458,10 +1472,12 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
         // DST-II
-        let dst2_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).unwrap();
+        let dst2_coeffs =
+            dst(&signal, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
 
         // Test that we can recover the signal
-        let recovered = idst(&dst2_coeffs, Some(DSTType::Type2), Some("ortho")).unwrap();
+        let recovered =
+            idst(&dst2_coeffs, Some(DSTType::Type2), Some("ortho")).expect("Operation failed");
         for i in 0..signal.len() {
             assert_relative_eq!(recovered[i], signal[i], epsilon = 1e-10);
         }

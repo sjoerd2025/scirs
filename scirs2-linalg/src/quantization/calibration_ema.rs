@@ -14,7 +14,7 @@ fn to_f<F>(val: f32) -> F
 where
     F: scirs2_core::numeric::Float + scirs2_core::numeric::FromPrimitive,
 {
-    F::from_f32(val).unwrap()
+    F::from_f32(val).expect("Operation failed")
 }
 
 // Helper to convert from generic float to f32
@@ -705,8 +705,11 @@ fn simulate_quantization(
                     } else {
                         // Affine quantization (with zero point)
                         let clamp_max = ((1 << bits) - 1) as f32;
-                        let zero_point =
-                            params.channel_zero_points.as_ref().unwrap()[col_idx] as f32;
+                        let zero_point = params
+                            .channel_zero_points
+                            .as_ref()
+                            .expect("Operation failed")[col_idx]
+                            as f32;
 
                         for (row_idx, &val) in col_view.iter().enumerate() {
                             let quantized =

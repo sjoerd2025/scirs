@@ -27,7 +27,7 @@ use super::*;
 
         let edge_cases = generator
             .generate_comprehensive_edge_cases(&testdata)
-            .unwrap();
+            .expect("Test: operation failed");
         assert!(edge_cases.len() > 0);
     }
 

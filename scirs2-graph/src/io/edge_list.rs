@@ -17,13 +17,13 @@
 //! use tempfile::NamedTempFile;
 //!
 //! // Create a test file
-//! let mut temp_file = NamedTempFile::new().unwrap();
-//! writeln!(temp_file, "1 2").unwrap();
-//! writeln!(temp_file, "2 3").unwrap();
-//! temp_file.flush().unwrap();
+//! let mut temp_file = NamedTempFile::new().expect("Operation failed");
+//! writeln!(temp_file, "1 2").expect("Operation failed");
+//! writeln!(temp_file, "2 3").expect("Operation failed");
+//! temp_file.flush().expect("Operation failed");
 //!
 //! // Read an unweighted graph from edge list format
-//! let graph: Graph<i32, f64> = read_edge_list_format(temp_file.path(), false).unwrap();
+//! let graph: Graph<i32, f64> = read_edge_list_format(temp_file.path(), false).expect("Operation failed");
 //! assert_eq!(graph.node_count(), 3);
 //! assert_eq!(graph.edge_count(), 2);
 //! ```
@@ -303,15 +303,16 @@ mod tests {
     #[test]
     fn test_edge_list_format_unweighted() {
         // Create a temporary file with edge list data
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "# This is a comment").unwrap();
-        writeln!(temp_file, "1 2").unwrap();
-        writeln!(temp_file, "2 3").unwrap();
-        writeln!(temp_file, "3 1").unwrap();
-        writeln!(temp_file).unwrap(); // Empty line
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "# This is a comment").expect("Operation failed");
+        writeln!(temp_file, "1 2").expect("Operation failed");
+        writeln!(temp_file, "2 3").expect("Operation failed");
+        writeln!(temp_file, "3 1").expect("Operation failed");
+        writeln!(temp_file).expect("Operation failed"); // Empty line
+        temp_file.flush().expect("Operation failed");
 
-        let graph: Graph<i32, f64> = read_edge_list_format(temp_file.path(), false).unwrap();
+        let graph: Graph<i32, f64> =
+            read_edge_list_format(temp_file.path(), false).expect("Operation failed");
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
     }
@@ -319,13 +320,14 @@ mod tests {
     #[test]
     fn test_edge_list_format_weighted() {
         // Create a temporary file with weighted edge list data
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1 2 1.5").unwrap();
-        writeln!(temp_file, "2 3 2.0").unwrap();
-        writeln!(temp_file, "3 1 0.5").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "1 2 1.5").expect("Operation failed");
+        writeln!(temp_file, "2 3 2.0").expect("Operation failed");
+        writeln!(temp_file, "3 1 0.5").expect("Operation failed");
+        temp_file.flush().expect("Operation failed");
 
-        let graph: Graph<i32, f64> = read_edge_list_format(temp_file.path(), true).unwrap();
+        let graph: Graph<i32, f64> =
+            read_edge_list_format(temp_file.path(), true).expect("Operation failed");
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 3);
     }
@@ -333,13 +335,13 @@ mod tests {
     #[test]
     fn test_digraph_edge_list_format() {
         // Create a temporary file with edge list data for directed graph
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "1 2 1.0").unwrap();
-        writeln!(temp_file, "2 3 2.0").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Operation failed");
+        writeln!(temp_file, "1 2 1.0").expect("Operation failed");
+        writeln!(temp_file, "2 3 2.0").expect("Operation failed");
+        temp_file.flush().expect("Operation failed");
 
         let graph: DiGraph<i32, f64> =
-            read_edge_list_format_digraph(temp_file.path(), true).unwrap();
+            read_edge_list_format_digraph(temp_file.path(), true).expect("Operation failed");
         assert_eq!(graph.node_count(), 3);
         assert_eq!(graph.edge_count(), 2);
     }

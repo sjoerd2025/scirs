@@ -173,7 +173,7 @@ impl<
     pub fn new() -> Self {
         Self {
             n_mc_samples: 100,
-            confidence_level: F::from(0.95).unwrap(),
+            confidence_level: F::from(0.95).expect("Failed to convert constant to float"),
             n_bootstrap: 1000,
             random_seed: None,
             rng_type: RandomNumberGenerator::Xorshift,
@@ -227,7 +227,7 @@ impl<
         // Compute mean prediction
         let mean_prediction = predictions
             .mean_axis(scirs2_core::ndarray::Axis(1))
-            .unwrap();
+            .expect("Operation failed");
 
         // Compute prediction variance
         let prediction_variance = self.compute_prediction_variance(predictions)?;
@@ -270,7 +270,10 @@ impl<
 
     /// Compute prediction variance
     fn compute_prediction_variance(&self, predictions: &ArrayView2<F>) -> Result<Array1<F>> {
-        let variance = predictions.var_axis(scirs2_core::ndarray::Axis(1), F::from(1.0).unwrap());
+        let variance = predictions.var_axis(
+            scirs2_core::ndarray::Axis(1),
+            F::from(1.0).expect("Failed to convert constant to float"),
+        );
         Ok(variance)
     }
 
@@ -306,9 +309,11 @@ impl<
         let n_samples = predictions.nrows();
 
         // Simplified aleatoric uncertainty computation
-        let data_variance =
-            predictions.var_axis(scirs2_core::ndarray::Axis(1), F::from(1.0).unwrap());
-        let observation_noise = F::from(0.1).unwrap(); // Default noise level
+        let data_variance = predictions.var_axis(
+            scirs2_core::ndarray::Axis(1),
+            F::from(1.0).expect("Failed to convert constant to float"),
+        );
+        let observation_noise = F::from(0.1).expect("Failed to convert constant to float"); // Default noise level
         let heteroscedastic_variance = Array1::zeros(n_samples);
 
         Ok(AleatoricUncertainty {
@@ -325,7 +330,7 @@ impl<
         prediction_variance: &ArrayView1<F>,
     ) -> Result<PredictionIntervals<F>> {
         let alpha = F::one() - self.confidence_level;
-        let z_score = F::from(1.96).unwrap(); // 95% confidence interval
+        let z_score = F::from(1.96).expect("Failed to convert constant to float"); // 95% confidence interval
 
         let std_dev = prediction_variance.mapv(|v| v.sqrt());
 
@@ -348,18 +353,19 @@ impl<
         ground_truth: &ArrayView1<F>,
     ) -> Result<CalibrationMetrics<F>> {
         // Simplified calibration computation
-        let expected_calibration_error = F::from(0.05).unwrap(); // Placeholder
-        let maximum_calibration_error = F::from(0.1).unwrap(); // Placeholder
+        let expected_calibration_error =
+            F::from(0.05).expect("Failed to convert constant to float"); // Placeholder
+        let maximum_calibration_error = F::from(0.1).expect("Failed to convert constant to float"); // Placeholder
 
         let brier_decomposition = BrierDecomposition {
-            reliability: F::from(0.02).unwrap(),
-            resolution: F::from(0.1).unwrap(),
-            uncertainty: F::from(0.25).unwrap(),
-            brier_score: F::from(0.15).unwrap(),
+            reliability: F::from(0.02).expect("Failed to convert constant to float"),
+            resolution: F::from(0.1).expect("Failed to convert constant to float"),
+            uncertainty: F::from(0.25).expect("Failed to convert constant to float"),
+            brier_score: F::from(0.15).expect("Failed to convert constant to float"),
         };
 
         let reliability_curve = Array2::zeros((10, 2)); // Placeholder
-        let sharpness = F::from(0.8).unwrap();
+        let sharpness = F::from(0.8).expect("Failed to convert constant to float");
 
         Ok(CalibrationMetrics {
             expected_calibration_error,
@@ -423,7 +429,7 @@ impl<
 
     /// Compute entropy of predictions
     fn compute_entropy(&self, predictions: &ArrayView2<F>) -> Result<Array1<F>> {
-        let epsilon = F::from(1e-8).unwrap();
+        let epsilon = F::from(1e-8).expect("Failed to convert constant to float");
         let entropy = predictions.map_axis(scirs2_core::ndarray::Axis(1), |row| {
             row.iter()
                 .map(|&p| {

@@ -210,7 +210,7 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
 
     // For white noise with standard normalization, max power should follow exponential distribution
     // Use Kolmogorov-Smirnov test approximation
-    max_powers.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    max_powers.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let n = max_powers.len() as f64;
 
     let mut ks_statistic = 0.0;
@@ -311,12 +311,12 @@ fn test_bootstrap_confidence_intervals() -> SignalResult<f64> {
         let (peak_idx, _) = power
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
 
         // Check if confidence intervals exist and are reasonable
         if bootstrap.confidence_intervals.is_some() {
-            let ci = bootstrap.confidence_intervals.unwrap();
+            let ci = bootstrap.confidence_intervals.expect("Operation failed");
             let lower = ci.0[peak_idx];
             let upper = ci.1[peak_idx];
             let peak_power = power[peak_idx];

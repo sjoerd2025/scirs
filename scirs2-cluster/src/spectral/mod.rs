@@ -276,11 +276,11 @@ impl<F: Float + FromPrimitive> Default for SpectralClusteringOptions<F> {
         Self {
             affinity: AffinityMode::RBF,
             n_neighbors: 10,
-            gamma: F::from(1.0).unwrap(),
+            gamma: F::from(1.0).expect("Failed to convert constant to float"),
             normalized_laplacian: true,
             max_iter: 300,
             n_init: 10,
-            tol: F::from(1e-4).unwrap(),
+            tol: F::from(1e-4).expect("Failed to convert constant to float"),
             random_seed: None,
             eigen_solver: "arpack".to_string(),
             auto_n_clusters: false,
@@ -319,7 +319,7 @@ impl<F: Float + FromPrimitive> Default for SpectralClusteringOptions<F> {
 ///     // Second ring (larger radius)
 ///     4.0, 0.0,  3.46, 2.0,  2.0, 3.46,  0.0, 4.0,  -2.0, 3.46,
 ///     -3.46, 2.0,  -4.0, 0.0,  -3.46, -2.0,  -2.0, -3.46,  0.0, -4.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Run spectral clustering with RBF affinity
 /// let options = SpectralClusteringOptions {
@@ -328,7 +328,7 @@ impl<F: Float + FromPrimitive> Default for SpectralClusteringOptions<F> {
 ///     ..Default::default()
 /// };
 ///
-/// let (embeddings, labels) = spectral_clustering(data.view(), 2, Some(options)).unwrap();
+/// let (embeddings, labels) = spectral_clustering(data.view(), 2, Some(options)).expect("Operation failed");
 ///
 /// // Print the results
 /// println!("Cluster assignments: {:?}", labels);
@@ -445,7 +445,8 @@ where
     let n = laplacian.nrows();
     let mut stabilized_laplacian = laplacian.clone();
     for i in 0..n {
-        stabilized_laplacian[[i, i]] += F::from(1e-10).unwrap();
+        stabilized_laplacian[[i, i]] +=
+            F::from(1e-10).expect("Failed to convert constant to float");
     }
 
     // Use the stabilized matrix for eigenvalue decomposition
@@ -458,7 +459,7 @@ where
         // We need at least n_clusters eigenvalues, but request a few more for robustness
         let k = (n_clusters + 2).min(n); // Request at least n_clusters eigenvalues
         let max_iter = 1000;
-        let tolerance = F::from(1e-10).unwrap();
+        let tolerance = F::from(1e-10).expect("Failed to convert constant to float");
 
         smallest_k_eigh(&stabilized_laplacian.view(), k, max_iter, tolerance)?
     };
@@ -580,7 +581,7 @@ mod tests {
                 5.0, 5.0, 5.1, 5.1, 4.9, 4.9,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run spectral clustering with adjusted parameters
         let options = SpectralClusteringOptions {
@@ -599,7 +600,7 @@ mod tests {
             result.err()
         );
 
-        let (embeddings, labels) = result.unwrap();
+        let (embeddings, labels) = result.expect("Operation failed");
 
         // Check dimensions
         assert_eq!(embeddings.shape()[0], 6);
@@ -635,7 +636,7 @@ mod tests {
                 -2.1,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // K-means would fail on this dataset because the clusters are not linearly separable
         // but spectral clustering can work with appropriate parameters
@@ -656,7 +657,7 @@ mod tests {
             result.err()
         );
 
-        let (_, labels) = result.unwrap();
+        let (_, labels) = result.expect("Operation failed");
 
         // Check that we have at most 2 clusters
         let unique_labels: std::collections::HashSet<_> = labels.iter().cloned().collect();

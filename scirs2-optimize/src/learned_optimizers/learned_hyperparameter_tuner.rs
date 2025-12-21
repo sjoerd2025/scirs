@@ -1464,10 +1464,10 @@ mod tests {
 
         let sim1 = tuner
             .compute_problem_similarity(&features1, &features2)
-            .unwrap();
+            .expect("Operation failed");
         let sim2 = tuner
             .compute_problem_similarity(&features1, &features3)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(sim2 > sim1); // features3 should be more similar to features1
     }
@@ -1479,10 +1479,11 @@ mod tests {
         let inputs = Array2::from_shape_fn((3, 2), |_| scirs2_core::random::rng().random::<f64>());
         let outputs = Array1::from(vec![1.0, 2.0, 3.0]);
 
-        gp.update_training_data(inputs, outputs).unwrap();
+        gp.update_training_data(inputs, outputs)
+            .expect("Operation failed");
 
         let test_input = Array1::from(vec![0.5, 0.5]);
-        let (mean, variance) = gp.predict(&test_input).unwrap();
+        let (mean, variance) = gp.predict(&test_input).expect("Operation failed");
 
         assert!(mean.is_finite());
         assert!(variance >= 0.0);
@@ -1498,8 +1499,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result =
-            hyperparameter_tuning_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result = hyperparameter_tuning_optimize(objective, &initial.view(), Some(config))
+            .expect("Operation failed");
 
         assert!(result.fun >= 0.0);
         assert_eq!(result.x.len(), 2);

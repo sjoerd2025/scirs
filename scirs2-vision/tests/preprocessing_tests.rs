@@ -24,7 +24,7 @@ fn test_gaussian_blur() {
     let dynamic_img = DynamicImage::ImageRgb8(img);
 
     // Apply Gaussian blur
-    let blurred = gaussian_blur(&dynamic_img, 1.0).unwrap();
+    let blurred = gaussian_blur(&dynamic_img, 1.0).expect("Operation failed");
 
     // Center pixel should be lightened by blur
     let center_value = blurred.to_luma8().get_pixel(2, 2)[0];
@@ -58,7 +58,7 @@ fn test_bilateral_filter_grayscale() {
     let dynamic_img = DynamicImage::ImageLuma8(img);
 
     // Apply bilateral filter
-    let filtered = bilateral_filter(&dynamic_img, 3, 10.0, 100.0).unwrap();
+    let filtered = bilateral_filter(&dynamic_img, 3, 10.0, 100.0).expect("Operation failed");
 
     // Edge should be preserved - check pixels just on either side of edge
     let left_edge = filtered.to_luma8().get_pixel(4, 5)[0];
@@ -98,7 +98,7 @@ fn test_bilateral_filter_color() {
     let dynamic_img = DynamicImage::ImageRgb8(img);
 
     // Apply bilateral filter
-    let filtered = bilateral_filter(&dynamic_img, 3, 10.0, 100.0).unwrap();
+    let filtered = bilateral_filter(&dynamic_img, 3, 10.0, 100.0).expect("Operation failed");
 
     // Convert to RGB for checking
     let filtered_rgb = filtered.to_rgb8();
@@ -145,7 +145,7 @@ fn test_median_filter() {
     let dynamic_img = DynamicImage::ImageLuma8(img);
 
     // Apply median filter
-    let filtered = median_filter(&dynamic_img, 3).unwrap();
+    let filtered = median_filter(&dynamic_img, 3).expect("Operation failed");
 
     // Noise should be removed, check the noise coordinates
     for (x, y) in noise_coords.iter() {
@@ -181,7 +181,7 @@ fn test_unsharp_mask() {
     let dynamic_img = DynamicImage::ImageLuma8(img);
 
     // Apply unsharp mask
-    let sharpened = unsharp_mask(&dynamic_img, 1.0, 1.0).unwrap();
+    let sharpened = unsharp_mask(&dynamic_img, 1.0, 1.0).expect("Operation failed");
 
     // Edge should be enhanced
     // The gradient in the middle should have more contrast now
@@ -217,7 +217,7 @@ fn test_normalize_brightness() {
     let dynamic_img = DynamicImage::ImageLuma8(img);
 
     // Apply brightness normalization to 0.2-0.8 range
-    let normalized = normalize_brightness(&dynamic_img, 0.2, 0.8).unwrap();
+    let normalized = normalize_brightness(&dynamic_img, 0.2, 0.8).expect("Operation failed");
 
     // Check darkest and brightest pixels
     let darkest_original = dynamic_img.to_luma8().get_pixel(0, 0)[0];
@@ -269,7 +269,7 @@ fn test_clahe() {
     let dynamic_img = DynamicImage::ImageLuma8(img);
 
     // Apply CLAHE with different parameters
-    let enhanced = clahe(&dynamic_img, 8, 2.0).unwrap();
+    let enhanced = clahe(&dynamic_img, 8, 2.0).expect("Operation failed");
 
     // Test that low contrast region now has more contrast
     let left_original_min = dynamic_img.to_luma8().get_pixel(0, 0)[0];

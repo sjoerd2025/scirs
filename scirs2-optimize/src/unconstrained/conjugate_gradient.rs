@@ -30,7 +30,7 @@ where
 
     // Ensure initial point is within bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     let mut f = fun(&x.view()).into();
@@ -70,7 +70,7 @@ where
 
         // Ensure we're within bounds (should be a no-op if line_search_cg respected bounds)
         if let Some(bounds) = bounds {
-            bounds.project(x_new.as_slice_mut().unwrap());
+            bounds.project(x_new.as_slice_mut().expect("Operation failed"));
         }
 
         // Check if the step actually moved the point
@@ -146,7 +146,7 @@ where
 
     // Final check for bounds
     if let Some(bounds) = bounds {
-        bounds.project(x.as_slice_mut().unwrap());
+        bounds.project(x.as_slice_mut().expect("Operation failed"));
     }
 
     // Use original function for final value
@@ -231,7 +231,7 @@ where
 
         // Project onto bounds (if needed, should be a no-op if we calculated bounds correctly)
         if let Some(bounds) = bounds {
-            bounds.project(x_new.as_slice_mut().unwrap());
+            bounds.project(x_new.as_slice_mut().expect("Operation failed"));
         }
 
         *nfev += 1;
@@ -273,7 +273,7 @@ pub fn compute_line_bounds(
         return (f64::NEG_INFINITY, f64::INFINITY);
     }
 
-    let bounds = bounds.unwrap();
+    let bounds = bounds.expect("Operation failed");
     let mut a_min = f64::NEG_INFINITY;
     let mut a_max = f64::INFINITY;
 
@@ -325,7 +325,8 @@ mod tests {
         let x0 = Array1::from_vec(vec![2.0, 1.0]);
         let options = Options::default();
 
-        let result = minimize_conjugate_gradient(quadratic, x0, &options).unwrap();
+        let result =
+            minimize_conjugate_gradient(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-4);
@@ -344,7 +345,8 @@ mod tests {
         let mut options = Options::default();
         options.max_iter = 2000; // Increase iterations for difficult Rosenbrock function
 
-        let result = minimize_conjugate_gradient(rosenbrock, x0, &options).unwrap();
+        let result =
+            minimize_conjugate_gradient(rosenbrock, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // Rosenbrock is difficult for CG, accept if we get reasonably close
@@ -373,7 +375,8 @@ mod tests {
         let bounds = Bounds::new(&[(Some(0.0), Some(1.0)), (Some(0.0), Some(1.0))]);
         options.bounds = Some(bounds);
 
-        let result = minimize_conjugate_gradient(quadratic, x0, &options).unwrap();
+        let result =
+            minimize_conjugate_gradient(quadratic, x0, &options).expect("Operation failed");
 
         assert!(result.success);
         // The optimal point (2, 3) is outside the bounds, so we should get (1, 1)

@@ -226,7 +226,7 @@ pub fn hausdorff_distance<T: Float + Send + Sync>(
 /// let points2 = array![[0.0, 0.5], [1.0, 0.5], [0.5, 1.0]];
 ///
 /// // Compute the approximate Wasserstein distance
-/// let dist = wasserstein_distance(&points1.view(), &points2.view()).unwrap();
+/// let dist = wasserstein_distance(&points1.view(), &points2.view()).expect("Operation failed");
 /// println!("Approximate Wasserstein distance: {}", dist);
 /// ```
 #[allow(dead_code)]
@@ -277,7 +277,7 @@ pub fn wasserstein_distance<T: Float + Send + Sync>(
             total_distance = total_distance + min_dist;
         }
 
-        return Ok(total_distance / T::from(n1).unwrap());
+        return Ok(total_distance / T::from(n1).expect("Operation failed"));
     }
 
     // For unequal-sized sets, average the distances to nearest neighbors
@@ -316,7 +316,7 @@ pub fn wasserstein_distance<T: Float + Send + Sync>(
     }
 
     // Average of both directional distances
-    let avg_n = T::from(n1 + n2).unwrap();
+    let avg_n = T::from(n1 + n2).expect("Operation failed");
     Ok(total_distance / avg_n)
 }
 
@@ -362,7 +362,7 @@ pub fn gromov_hausdorff_distance<T: Float + Send + Sync>(
     let diam2 = dist_matrix2.fold(T::neg_infinity(), |max, &val| max.max(val));
 
     // Upper bound on Gromov-Hausdorff distance
-    (diam1 - diam2).abs() / T::from(2).unwrap()
+    (diam1 - diam2).abs() / T::from(2).expect("Operation failed")
 }
 
 #[cfg(test)]
@@ -408,7 +408,7 @@ mod tests {
         let set1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
         let set2 = array![[0.0, 0.5], [1.0, 0.5], [0.5, 1.0]];
 
-        let dist = wasserstein_distance(&set1.view(), &set2.view()).unwrap();
+        let dist = wasserstein_distance(&set1.view(), &set2.view()).expect("Operation failed");
 
         // The approximate Earth Mover's distance for these sets
         // should be approximately 0.5

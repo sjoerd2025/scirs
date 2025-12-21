@@ -32,7 +32,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 ///
-/// let corr = pearson_r_simd(&x.view(), &y.view()).unwrap();
+/// let corr = pearson_r_simd(&x.view(), &y.view()).expect("Operation failed");
 /// assert!((corr - (-1.0_f64)).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -231,5 +231,5 @@ where
         sum
     };
 
-    Ok(sum_xy / F::from(n - ddof).unwrap())
+    Ok(sum_xy / F::from(n - ddof).expect("Operation failed"))
 }

@@ -74,7 +74,7 @@ use crate::error::{MetricsError, Result};
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let mse: f64 = mean_squared_error(&y_true, &y_pred).unwrap();
+/// let mse: f64 = mean_squared_error(&y_true, &y_pred).expect("Operation failed");
 /// // Expecting: ((3.0-2.5)² + (-0.5-0.0)² + (2.0-2.0)² + (7.0-8.0)²) / 4
 /// assert!(mse < 0.38 && mse > 0.37);
 /// ```
@@ -100,8 +100,12 @@ where
         // SIMD-optimized computation - convert to 1D views for SIMD _ops
         let y_true_view = y_true.view();
         let y_pred_view = y_pred.view();
-        let y_true_reshaped = y_true_view.to_shape(y_true.len()).unwrap();
-        let y_pred_reshaped = y_pred_view.to_shape(y_pred.len()).unwrap();
+        let y_true_reshaped = y_true_view
+            .to_shape(y_true.len())
+            .expect("Operation failed");
+        let y_pred_reshaped = y_pred_view
+            .to_shape(y_pred.len())
+            .expect("Operation failed");
         let y_true_1d = y_true_reshaped.view();
         let y_pred_1d = y_pred_reshaped.view();
         let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
@@ -117,7 +121,7 @@ where
         sum
     };
 
-    Ok(squared_error_sum / NumCast::from(n_samples).unwrap())
+    Ok(squared_error_sum / NumCast::from(n_samples).expect("Operation failed"))
 }
 
 /// Calculates the root mean squared error (RMSE)
@@ -142,7 +146,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let rmse: f64 = root_mean_squared_error(&y_true, &y_pred).unwrap();
+/// let rmse: f64 = root_mean_squared_error(&y_true, &y_pred).expect("Operation failed");
 /// // RMSE is the square root of MSE
 /// assert!(rmse < 0.62 && rmse > 0.61);
 /// ```
@@ -185,7 +189,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let mae: f64 = mean_absolute_error(&y_true, &y_pred).unwrap();
+/// let mae: f64 = mean_absolute_error(&y_true, &y_pred).expect("Operation failed");
 /// // Expecting: (|3.0-2.5| + |-0.5-0.0| + |2.0-2.0| + |7.0-8.0|) / 4 = 0.5
 /// assert!(mae > 0.499 && mae < 0.501);
 /// ```
@@ -211,8 +215,12 @@ where
         // SIMD-optimized computation for 1D arrays
         let y_true_view = y_true.view();
         let y_pred_view = y_pred.view();
-        let y_true_reshaped = y_true_view.to_shape(y_true.len()).unwrap();
-        let y_pred_reshaped = y_pred_view.to_shape(y_pred.len()).unwrap();
+        let y_true_reshaped = y_true_view
+            .to_shape(y_true.len())
+            .expect("Operation failed");
+        let y_pred_reshaped = y_pred_view
+            .to_shape(y_pred.len())
+            .expect("Operation failed");
         let y_true_1d = y_true_reshaped.view();
         let y_pred_1d = y_pred_reshaped.view();
         let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
@@ -228,7 +236,7 @@ where
         sum
     };
 
-    Ok(abs_error_sum / NumCast::from(n_samples).unwrap())
+    Ok(abs_error_sum / NumCast::from(n_samples).expect("Operation failed"))
 }
 
 /// Calculates the mean absolute percentage error (MAPE)
@@ -259,7 +267,7 @@ where
 /// let y_true = array![3.0, 0.5, 2.0, 7.0];
 /// let y_pred = array![2.7, 0.4, 1.8, 7.7];
 ///
-/// let mape = mean_absolute_percentage_error(&y_true, &y_pred).unwrap();
+/// let mape = mean_absolute_percentage_error(&y_true, &y_pred).expect("Operation failed");
 /// // Example calculation: (|3.0-2.7|/3.0 + |0.5-0.4|/0.5 + |2.0-1.8|/2.0 + |7.0-7.7|/7.0) / 4 * 100
 /// assert!(mape < 13.0 && mape > 9.0);
 /// ```
@@ -296,7 +304,10 @@ where
     }
 
     // Multiply by 100 to get percentage
-    Ok(percentage_error_sum / NumCast::from(valid_samples).unwrap() * NumCast::from(100).unwrap())
+    Ok(
+        percentage_error_sum / NumCast::from(valid_samples).expect("Operation failed")
+            * NumCast::from(100).expect("Operation failed"),
+    )
 }
 
 /// Calculates the symmetric mean absolute percentage error (SMAPE)
@@ -321,7 +332,7 @@ where
 /// let y_true = array![3.0, 0.01, 2.0, 7.0];
 /// let y_pred = array![2.7, 0.0, 1.8, 7.7];
 ///
-/// let smape = symmetric_mean_absolute_percentage_error(&y_true, &y_pred).unwrap();
+/// let smape = symmetric_mean_absolute_percentage_error(&y_true, &y_pred).expect("Operation failed");
 /// assert!(smape > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -358,7 +369,10 @@ where
     }
 
     // Multiply by 200 to get percentage (SMAPE is typically defined with factor of 2)
-    Ok(percentage_error_sum / NumCast::from(valid_samples).unwrap() * NumCast::from(200).unwrap())
+    Ok(
+        percentage_error_sum / NumCast::from(valid_samples).expect("Operation failed")
+            * NumCast::from(200).expect("Operation failed"),
+    )
 }
 
 /// Calculates the maximum error
@@ -383,7 +397,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let me = max_error(&y_true, &y_pred).unwrap();
+/// let me = max_error(&y_true, &y_pred).expect("Operation failed");
 /// // Maximum of [|3.0-2.5|, |-0.5-0.0|, |2.0-2.0|, |7.0-8.0|]
 /// assert_eq!(me, 1.0);
 /// ```
@@ -436,7 +450,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let medae = median_absolute_error(&y_true, &y_pred).unwrap();
+/// let medae = median_absolute_error(&y_true, &y_pred).expect("Operation failed");
 /// // Median of [|3.0-2.5|, |-0.5-0.0|, |2.0-2.0|, |7.0-8.0|] = Median of [0.5, 0.5, 0.0, 1.0]
 /// assert_eq!(medae, 0.5);
 /// ```
@@ -472,7 +486,7 @@ where
     } else {
         // Even number of samples
         let mid = n_samples / 2;
-        Ok((abs_errors[mid - 1] + abs_errors[mid]) / NumCast::from(2).unwrap())
+        Ok((abs_errors[mid - 1] + abs_errors[mid]) / NumCast::from(2).expect("Operation failed"))
     }
 }
 
@@ -504,7 +518,7 @@ where
 /// let y_true = array![3.0, 5.0, 2.5, 7.0];
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
 ///
-/// let msle = mean_squared_log_error(&y_true, &y_pred).unwrap();
+/// let msle = mean_squared_log_error(&y_true, &y_pred).expect("Operation failed");
 /// assert!(msle > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -550,7 +564,7 @@ where
         squared_log_diff_sum = squared_log_diff_sum + log_diff * log_diff;
     }
 
-    Ok(squared_log_diff_sum / NumCast::from(n_samples).unwrap())
+    Ok(squared_log_diff_sum / NumCast::from(n_samples).expect("Operation failed"))
 }
 
 /// Calculates the Huber loss
@@ -579,7 +593,7 @@ where
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 /// let delta = 0.5;
 ///
-/// let loss = huber_loss(&y_true, &y_pred, delta).unwrap();
+/// let loss = huber_loss(&y_true, &y_pred, delta).expect("Operation failed");
 /// assert!(loss > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -611,14 +625,17 @@ where
         let error = (*yt - *yp).abs();
         if error <= delta {
             // Quadratic part
-            loss_sum = loss_sum + F::from(0.5).unwrap() * error * error;
+            loss_sum = loss_sum
+                + F::from(0.5).expect("Failed to convert constant to float") * error * error;
         } else {
             // Linear part
-            loss_sum = loss_sum + delta * (error - F::from(0.5).unwrap() * delta);
+            loss_sum = loss_sum
+                + delta
+                    * (error - F::from(0.5).expect("Failed to convert constant to float") * delta);
         }
     }
 
-    Ok(loss_sum / NumCast::from(n_samples).unwrap())
+    Ok(loss_sum / NumCast::from(n_samples).expect("Operation failed"))
 }
 
 /// Calculates the normalized root mean squared error (NRMSE)
@@ -645,8 +662,8 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let nrmse_mean: f64 = normalized_root_mean_squared_error(&y_true, &y_pred, "mean").unwrap();
-/// let nrmse_range: f64 = normalized_root_mean_squared_error(&y_true, &y_pred, "range").unwrap();
+/// let nrmse_mean: f64 = normalized_root_mean_squared_error(&y_true, &y_pred, "mean").expect("Operation failed");
+/// let nrmse_range: f64 = normalized_root_mean_squared_error(&y_true, &y_pred, "range").expect("Operation failed");
 /// assert!(nrmse_mean > 0.0);
 /// assert!(nrmse_range > 0.0);
 /// ```
@@ -669,7 +686,7 @@ where
         "mean" => {
             // RMSE / mean(y_true)
             let mean = y_true.iter().fold(F::zero(), |acc, &y| acc + y)
-                / NumCast::from(y_true.len()).unwrap();
+                / NumCast::from(y_true.len()).expect("Operation failed");
             if mean.abs() < F::epsilon() {
                 return Err(MetricsError::InvalidInput(
                     "Mean of y_true is zero, cannot normalize by mean".to_string(),
@@ -703,13 +720,13 @@ where
             let q3_idx = 3 * n / 4;
 
             let q1 = if n.is_multiple_of(4) {
-                (values[q1_idx - 1] + values[q1_idx]) / NumCast::from(2).unwrap()
+                (values[q1_idx - 1] + values[q1_idx]) / NumCast::from(2).expect("Operation failed")
             } else {
                 values[q1_idx]
             };
 
             let q3 = if n.is_multiple_of(4) {
-                (values[q3_idx - 1] + values[q3_idx]) / NumCast::from(2).unwrap()
+                (values[q3_idx - 1] + values[q3_idx]) / NumCast::from(2).expect("Operation failed")
             } else {
                 values[q3_idx]
             };
@@ -752,7 +769,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let rae = relative_absolute_error(&y_true, &y_pred).unwrap();
+/// let rae = relative_absolute_error(&y_true, &y_pred).expect("Operation failed");
 /// assert!(rae > 0.0 && rae < 1.0);
 /// ```
 #[allow(dead_code)]
@@ -771,8 +788,8 @@ where
     check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     // Calculate mean of y_true
-    let y_true_mean =
-        y_true.iter().fold(F::zero(), |acc, &y| acc + y) / NumCast::from(y_true.len()).unwrap();
+    let y_true_mean = y_true.iter().fold(F::zero(), |acc, &y| acc + y)
+        / NumCast::from(y_true.len()).expect("Operation failed");
 
     let mut abs_error_sum = F::zero();
     let mut abs_mean_diff_sum = F::zero();
@@ -814,7 +831,7 @@ where
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
-/// let rse = relative_squared_error(&y_true, &y_pred).unwrap();
+/// let rse = relative_squared_error(&y_true, &y_pred).expect("Operation failed");
 /// assert!(rse > 0.0 && rse < 1.0);
 /// ```
 #[allow(dead_code)]
@@ -833,8 +850,8 @@ where
     check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     // Calculate mean of y_true
-    let y_true_mean =
-        y_true.iter().fold(F::zero(), |acc, &y| acc + y) / NumCast::from(y_true.len()).unwrap();
+    let y_true_mean = y_true.iter().fold(F::zero(), |acc, &y| acc + y)
+        / NumCast::from(y_true.len()).expect("Operation failed");
 
     let mut squared_error_sum = F::zero();
     let mut squared_mean_diff_sum = F::zero();

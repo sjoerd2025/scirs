@@ -299,7 +299,7 @@ where
         nfev += 1;
 
         let g = if has_grad {
-            grad.as_ref().unwrap()(&x.view())
+            grad.as_ref().expect("Operation failed")(&x.view())
         } else {
             let eps = (f64::EPSILON).sqrt();
             finite_diff_gradient(&mut fun, &x.view(), eps)
@@ -332,14 +332,14 @@ where
                 x_minus[i] -= h;
 
                 let g_plus = if has_grad {
-                    grad.as_ref().unwrap()(&x_plus.view())
+                    grad.as_ref().expect("Operation failed")(&x_plus.view())
                 } else {
                     let eps = (f64::EPSILON).sqrt();
                     finite_diff_gradient(&mut fun, &x_plus.view(), eps)
                 };
 
                 let g_minus = if has_grad {
-                    grad.as_ref().unwrap()(&x_minus.view())
+                    grad.as_ref().expect("Operation failed")(&x_minus.view())
                 } else {
                     let eps = (f64::EPSILON).sqrt();
                     finite_diff_gradient(&mut fun, &x_minus.view(), eps)
@@ -380,7 +380,7 @@ where
         if let Preconditioner::LBFGS { memory } = &options.preconditioner {
             let s = &x_new - &x;
             let g_new = if has_grad {
-                grad.as_ref().unwrap()(&x_new.view())
+                grad.as_ref().expect("Operation failed")(&x_new.view())
             } else {
                 let eps = (f64::EPSILON).sqrt();
                 finite_diff_gradient(&mut fun, &x_new.view(), eps)
@@ -394,7 +394,7 @@ where
 
     let final_f = fun(&x.view());
     let final_g = if has_grad {
-        grad.as_ref().unwrap()(&x.view())
+        grad.as_ref().expect("Operation failed")(&x.view())
     } else {
         let eps = (f64::EPSILON).sqrt();
         finite_diff_gradient(&mut fun, &x.view(), eps)
@@ -457,7 +457,7 @@ where
 
     let mut x = x0.clone();
     let _state = TruncatedNewtonState::new();
-    let mut trust_radius = options.trust_radius.unwrap();
+    let mut trust_radius = options.trust_radius.expect("Operation failed");
     let mut nfev = 0;
     let _njev = 0;
 
@@ -467,7 +467,7 @@ where
     for iter in 0..options.max_iter {
         let f = fun(&x.view());
         let g = if has_grad {
-            grad.as_ref().unwrap()(&x.view())
+            grad.as_ref().expect("Operation failed")(&x.view())
         } else {
             let eps = (f64::EPSILON).sqrt();
             finite_diff_gradient(&mut fun, &x.view(), eps)
@@ -530,7 +530,7 @@ where
 
     let final_f = fun(&x.view());
     let final_g = if has_grad {
-        grad.as_ref().unwrap()(&x.view())
+        grad.as_ref().expect("Operation failed")(&x.view())
     } else {
         let eps = (f64::EPSILON).sqrt();
         finite_diff_gradient(&mut fun, &x.view(), eps)
@@ -708,7 +708,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_truncated_newton(fun, Some(grad), x0, Some(options)).unwrap();
+        let result = minimize_truncated_newton(fun, Some(grad), x0, Some(options))
+            .expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-6);
@@ -744,7 +745,7 @@ mod tests {
 
         let result =
             minimize_truncated_newton(rosenbrock, Some(rosenbrock_grad), x0, Some(options))
-                .unwrap();
+                .expect("Operation failed");
 
         // For Rosenbrock function, just check that we made some progress
         assert!(result.fun < 1.0); // Should reduce function value significantly
@@ -763,7 +764,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_truncated_newton(fun, Some(grad), x0, Some(options)).unwrap();
+        let result = minimize_truncated_newton(fun, Some(grad), x0, Some(options))
+            .expect("Operation failed");
 
         // Just check that we made progress toward the minimum
         assert!(result.fun < 50.0); // Should reduce function value from 101.0
@@ -782,7 +784,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_truncated_newton(fun, Some(grad), x0, Some(options)).unwrap();
+        let result = minimize_truncated_newton(fun, Some(grad), x0, Some(options))
+            .expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-6);
@@ -802,7 +805,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_trust_region_newton(fun, Some(grad), x0, Some(options)).unwrap();
+        let result = minimize_trust_region_newton(fun, Some(grad), x0, Some(options))
+            .expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-6);

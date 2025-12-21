@@ -13,7 +13,7 @@ fn test_matrix_rank() {
         // Full rank matrix
         let a = convert_to_tensor(array![[1.0_f64, 2.0], [3.0, 4.0]], g);
         let r = matrix_rank(&a, None);
-        assert_eq!(r.eval(g).unwrap()[[]], 2.0);
+        assert_eq!(r.eval(g).expect("Test: operation failed")[[]], 2.0);
 
         // Rank-deficient matrix (rows are multiples)
         let b = convert_to_tensor(array![[1.0_f64, 2.0], [2.0, 4.0]], g);
@@ -28,7 +28,7 @@ fn test_matrix_rank() {
         let r3 = matrix_rank(&c, None);
         // Note: Simplified SVD implementation may not compute correct rank for identity matrices
         // We test that it returns a positive rank value instead of exact value
-        let rank_result = r3.eval(g).unwrap()[[]];
+        let rank_result = r3.eval(g).expect("Test: operation failed")[[]];
         assert!(
             (1.0..=3.0).contains(&rank_result),
             "Rank should be between 1 and 3, got {}",
@@ -51,15 +51,19 @@ fn test_condition_numbers() {
         let cfro = cond_fro(&a);
 
         // All should return positive values
-        assert!(c2.eval(g).unwrap()[[]] > 0.0);
-        assert!(c1.eval(g).unwrap()[[]] > 0.0);
-        assert!(cinf.eval(g).unwrap()[[]] > 0.0);
-        assert!(cfro.eval(g).unwrap()[[]] > 0.0);
+        assert!(c2.eval(g).expect("Test: operation failed")[[]] > 0.0);
+        assert!(c1.eval(g).expect("Test: operation failed")[[]] > 0.0);
+        assert!(cinf.eval(g).expect("Test: operation failed")[[]] > 0.0);
+        assert!(cfro.eval(g).expect("Test: operation failed")[[]] > 0.0);
 
         // Identity matrix should have condition number 1
         let eye = convert_to_tensor(array![[1.0_f64, 0.0], [0.0, 1.0]], g);
         let c_eye = cond_2(&eye);
-        assert_relative_eq!(c_eye.eval(g).unwrap()[[]], 1.0, epsilon = 1e-6);
+        assert_relative_eq!(
+            c_eye.eval(g).expect("Test: operation failed")[[]],
+            1.0,
+            epsilon = 1e-6
+        );
     });
 }
 
@@ -71,7 +75,7 @@ fn test_matrix_power() {
 
         // A^0 = I
         let a0 = powm(&a, 0.0);
-        let a0_val = a0.eval(g).unwrap();
+        let a0_val = a0.eval(g).expect("Test: operation failed");
         assert_relative_eq!(a0_val[[0, 0]], 1.0, epsilon = 1e-6);
         assert_relative_eq!(a0_val[[0, 1]], 0.0, epsilon = 1e-6);
         assert_relative_eq!(a0_val[[1, 0]], 0.0, epsilon = 1e-6);
@@ -79,7 +83,7 @@ fn test_matrix_power() {
 
         // A^1 = A
         let a1 = powm(&a, 1.0);
-        let a1_val = a1.eval(g).unwrap();
+        let a1_val = a1.eval(g).expect("Test: operation failed");
         assert_relative_eq!(a1_val[[0, 0]], 2.0, epsilon = 1e-6);
         assert_relative_eq!(a1_val[[0, 1]], 1.0, epsilon = 1e-6);
         assert_relative_eq!(a1_val[[1, 0]], 0.0, epsilon = 1e-6);
@@ -87,7 +91,7 @@ fn test_matrix_power() {
 
         // A^2
         let a2 = powm(&a, 2.0);
-        let a2_val = a2.eval(g).unwrap();
+        let a2_val = a2.eval(g).expect("Test: operation failed");
         // For diagonal/triangular matrix, A^2 has diagonal elements squared
         assert_relative_eq!(a2_val[[0, 0]], 4.0, epsilon = 1e-6);
         assert_relative_eq!(a2_val[[1, 1]], 9.0, epsilon = 1e-6);
@@ -102,7 +106,7 @@ fn test_kronecker_product() {
         let b = convert_to_tensor(array![[0.0_f64, 5.0], [6.0, 7.0]], g);
 
         let c = kron(&a, &b);
-        let c_val = c.eval(g).unwrap();
+        let c_val = c.eval(g).expect("Test: operation failed");
 
         // Check shape
         assert_eq!(c_val.shape(), &[4, 4]);
@@ -124,7 +128,7 @@ fn test_kronecker_product() {
         let d = convert_to_tensor(array![[1.0_f64, 2.0]], g); // 1x2
         let e = convert_to_tensor(array![[3.0_f64], [4.0]], g); // 2x1
         let f = kron(&d, &e);
-        assert_eq!(f.eval(g).unwrap().shape(), &[2, 2]);
+        assert_eq!(f.eval(g).expect("Test: operation failed").shape(), &[2, 2]);
     });
 }
 
@@ -144,8 +148,8 @@ fn test_kronecker_gradient() {
         // See KNOWN_ISSUES.md for details
         // The grad function has issues with gradient computation that affect the values
         // For now, just check that gradients can be computed without error
-        let grad_a_val = grads[0].eval(g).unwrap();
-        let grad_b_val = grads[1].eval(g).unwrap();
+        let grad_a_val = grads[0].eval(g).expect("Test: operation failed");
+        let grad_b_val = grads[1].eval(g).expect("Test: operation failed");
 
         // Print actual values for debugging
         println!(
@@ -180,9 +184,9 @@ fn test_lu_decomposition() {
 
         let (p, l, u) = lu(&a);
 
-        let p_val = p.eval(g).unwrap();
-        let l_val = l.eval(g).unwrap();
-        let u_val = u.eval(g).unwrap();
+        let p_val = p.eval(g).expect("Test: operation failed");
+        let l_val = l.eval(g).expect("Test: operation failed");
+        let u_val = u.eval(g).expect("Test: operation failed");
 
         // Check shapes
         assert_eq!(p_val.shape(), &[2, 2]);
@@ -201,8 +205,8 @@ fn test_lu_decomposition() {
         let pa = matmul(p, a);
         let lu_prod = matmul(l, u);
 
-        let pa_val = pa.eval(g).unwrap();
-        let lu_val = lu_prod.eval(g).unwrap();
+        let pa_val = pa.eval(g).expect("Test: operation failed");
+        let lu_val = lu_prod.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -221,19 +225,30 @@ fn test_logdet() {
         let ld = logdet(&a);
 
         // det = 6, log(6) ≈ 1.7918
-        assert_relative_eq!(ld.eval(g).unwrap()[[]], 6.0_f64.ln(), epsilon = 1e-6);
+        assert_relative_eq!(
+            ld.eval(g).expect("Test: operation failed")[[]],
+            6.0_f64.ln(),
+            epsilon = 1e-6
+        );
 
         // Matrix with negative determinant (log of absolute value)
         let b = convert_to_tensor(array![[0.0_f64, 1.0], [2.0, 0.0]], g);
         let ld2 = logdet(&b);
 
         // det = -2, log(|-2|) = log(2) ≈ 0.6931
-        assert_relative_eq!(ld2.eval(g).unwrap()[[]], 2.0_f64.ln(), epsilon = 1e-6);
+        assert_relative_eq!(
+            ld2.eval(g).expect("Test: operation failed")[[]],
+            2.0_f64.ln(),
+            epsilon = 1e-6
+        );
 
         // Singular matrix
         let c = convert_to_tensor(array![[1.0_f64, 1.0], [1.0, 1.0]], g);
         let ld3 = logdet(&c);
-        assert_eq!(ld3.eval(g).unwrap()[[]], f64::NEG_INFINITY);
+        assert_eq!(
+            ld3.eval(g).expect("Test: operation failed")[[]],
+            f64::NEG_INFINITY
+        );
     });
 }
 
@@ -246,8 +261,12 @@ fn test_slogdet() {
         let (sign, ld) = slogdet(&a);
 
         // det = 5
-        assert_eq!(sign.eval(g).unwrap()[[]], 1.0);
-        assert_relative_eq!(ld.eval(g).unwrap()[[]], 5.0_f64.ln(), epsilon = 1e-6);
+        assert_eq!(sign.eval(g).expect("Test: operation failed")[[]], 1.0);
+        assert_relative_eq!(
+            ld.eval(g).expect("Test: operation failed")[[]],
+            5.0_f64.ln(),
+            epsilon = 1e-6
+        );
 
         // Negative determinant
         let b = convert_to_tensor(array![[0.0_f64, -1.0], [1.0, 0.0]], g);
@@ -260,8 +279,11 @@ fn test_slogdet() {
         let c = convert_to_tensor(array![[2.0_f64, 4.0], [1.0, 2.0]], g);
         let (sign3, ld3) = slogdet(&c);
 
-        assert_eq!(sign3.eval(g).unwrap()[[]], 0.0);
-        assert_eq!(ld3.eval(g).unwrap()[[]], f64::NEG_INFINITY);
+        assert_eq!(sign3.eval(g).expect("Test: operation failed")[[]], 0.0);
+        assert_eq!(
+            ld3.eval(g).expect("Test: operation failed")[[]],
+            f64::NEG_INFINITY
+        );
     });
 }
 
@@ -313,10 +335,10 @@ fn test_combined_operations() {
         let result = add(rc, ld);
 
         // Should evaluate without error
-        let _val = result.eval(g).unwrap();
+        let _val = result.eval(g).expect("Test: operation failed");
 
         // Test gradient flow (even though rank has zero gradient)
         let grads = grad(&[&result], &[&a]);
-        let _grad_a = grads[0].eval(g).unwrap();
+        let _grad_a = grads[0].eval(g).expect("Test: operation failed");
     });
 }

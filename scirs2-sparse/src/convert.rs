@@ -29,9 +29,9 @@ use scirs2_core::ndarray::Array2;
 ///     1.0, 0.0, 2.0,
 ///     0.0, 0.0, 3.0,
 ///     4.0, 5.0, 0.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let sparse = dense_to_csr(&dense).unwrap();
+/// let sparse = dense_to_csr(&dense).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn dense_to_csr(dense: &Array2<f64>) -> SparseResult<CsrMatrix<f64>> {
@@ -220,7 +220,7 @@ pub fn csr_to_coo(csr: &CsrMatrix<f64>) -> CooMatrix<f64> {
         }
     }
 
-    CooMatrix::new(data, row_indices, col_indices, (rows, cols)).unwrap()
+    CooMatrix::new(data, row_indices, col_indices, (rows, cols)).expect("Operation failed")
 }
 
 /// Convert a CSC matrix to COO format
@@ -251,7 +251,7 @@ pub fn csc_to_coo(csc: &CscMatrix<f64>) -> CooMatrix<f64> {
         }
     }
 
-    CooMatrix::new(data, row_indices, col_indices, (rows, cols)).unwrap()
+    CooMatrix::new(data, row_indices, col_indices, (rows, cols)).expect("Operation failed")
 }
 
 /// Convert a COO matrix to CSR format
@@ -282,7 +282,7 @@ pub fn coo_to_csr(coo: &CooMatrix<f64>) -> CsrMatrix<f64> {
         }
     }
 
-    CsrMatrix::new(data, row_indices, col_indices, (rows, cols)).unwrap()
+    CsrMatrix::new(data, row_indices, col_indices, (rows, cols)).expect("Operation failed")
 }
 
 /// Convert a COO matrix to CSC format
@@ -313,7 +313,7 @@ pub fn coo_to_csc(coo: &CooMatrix<f64>) -> CscMatrix<f64> {
         }
     }
 
-    CscMatrix::new(data, row_indices, col_indices, (rows, cols)).unwrap()
+    CscMatrix::new(data, row_indices, col_indices, (rows, cols)).expect("Operation failed")
 }
 
 /// Convert a CSR matrix to CSC format
@@ -373,10 +373,10 @@ mod tests {
         // Create a dense matrix
         let dense =
             Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         // Convert to CSR
-        let csr = dense_to_csr(&dense).unwrap();
+        let csr = dense_to_csr(&dense).expect("Operation failed");
 
         // Convert back to dense
         let dense2 = csr_to_dense(&csr);
@@ -394,10 +394,10 @@ mod tests {
         // Create a dense matrix
         let dense =
             Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         // Convert to CSC
-        let csc = dense_to_csc(&dense).unwrap();
+        let csc = dense_to_csc(&dense).expect("Operation failed");
 
         // Convert back to dense
         let dense2 = csc_to_dense(&csc);
@@ -415,10 +415,10 @@ mod tests {
         // Create a dense matrix
         let dense =
             Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         // Convert to COO
-        let coo = dense_to_coo(&dense).unwrap();
+        let coo = dense_to_coo(&dense).expect("Operation failed");
 
         // Convert back to dense
         let dense2 = coo_to_dense(&coo);
@@ -439,7 +439,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let coo = CooMatrix::new(data, rows, cols, shape).unwrap();
+        let coo = CooMatrix::new(data, rows, cols, shape).expect("Operation failed");
 
         // Convert to CSR
         let csr = coo_to_csr(&coo);

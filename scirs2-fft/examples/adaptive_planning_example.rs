@@ -39,7 +39,9 @@ fn main() {
         let start = Instant::now();
 
         // Execute FFT with adaptive planning
-        adaptive_executor.execute(&input, &mut output).unwrap();
+        adaptive_executor
+            .execute(&input, &mut output)
+            .expect("Operation failed");
 
         let elapsed = start.elapsed();
         total_time += elapsed;

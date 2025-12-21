@@ -226,8 +226,8 @@ impl LSTMCell {
             self.c_t = Some(Array2::zeros((batch_size, hidden_size)));
         }
         // Get previous states
-        let h_prev = self.h_t.as_ref().unwrap();
-        let c_prev = self.c_t.as_ref().unwrap();
+        let h_prev = self.h_t.as_ref().expect("Operation failed");
+        let c_prev = self.c_t.as_ref().expect("Operation failed");
         // Input gate: i_t = sigmoid(W_ii * x_t + W_hi * h_prev + b_i)
         let i_t = Self::sigmoid(&(x.dot(&self.w_ii.t()) + h_prev.dot(&self.w_hi.t()) + &self.b_i));
         // Forget gate: f_t = sigmoid(W_if * x_t + W_hf * h_prev + b_f)
@@ -376,8 +376,8 @@ impl BiLSTMClassifier {
         // Apply attention or get last hidden state
         let features = if self.use_attention {
             // Attention mechanism
-            let w_attention = self.w_attention.as_ref().unwrap();
-            let v_attention = self.v_attention.as_ref().unwrap();
+            let w_attention = self.w_attention.as_ref().expect("Operation failed");
+            let v_attention = self.v_attention.as_ref().expect("Operation failed");
             // Calculate attention weights
             let mut attention_scores = Array2::<f32>::zeros((batch_size, seq_len));
             let mut transformed = Array3::<f32>::zeros(bilstm_output.raw_dim());

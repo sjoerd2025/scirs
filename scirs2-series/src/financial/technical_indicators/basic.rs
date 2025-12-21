@@ -27,10 +27,10 @@
 //! let prices = array![10.0, 12.0, 13.0, 11.0, 14.0, 15.0];
 //!
 //! // Simple Moving Average with window of 3
-//! let sma_values = sma(&prices, 3).unwrap();
+//! let sma_values = sma(&prices, 3).expect("Operation failed");
 //!
 //! // Exponential Moving Average with alpha of 0.3
-//! let ema_values = ema(&prices, 0.3).unwrap();
+//! let ema_values = ema(&prices, 0.3).expect("Operation failed");
 //! ```
 //!
 //! ## Momentum Oscillators
@@ -39,7 +39,7 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let prices = array![44.0, 44.25, 44.5, 43.75, 44.5, 45.0, 45.25, 45.5];
-//! let rsi_values = rsi(&prices, 6).unwrap();
+//! let rsi_values = rsi(&prices, 6).expect("Operation failed");
 //! ```
 //!
 //! ## Bollinger Bands
@@ -48,7 +48,7 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let prices = array![20.0, 21.0, 19.5, 22.0, 21.5, 20.0, 19.0];
-//! let (upper, middle, lower) = bollinger_bands(&prices, 5, 2.0).unwrap();
+//! let (upper, middle, lower) = bollinger_bands(&prices, 5, 2.0).expect("Operation failed");
 //! ```
 
 use scirs2_core::ndarray::{s, Array1};
@@ -82,7 +82,7 @@ use crate::error::{Result, TimeSeriesError};
 /// use scirs2_core::ndarray::array;
 ///
 /// let prices = array![10.0, 11.0, 12.0, 13.0, 14.0];
-/// let sma_3 = sma(&prices, 3).unwrap();
+/// let sma_3 = sma(&prices, 3).expect("Operation failed");
 /// // Returns: [11.0, 12.0, 13.0] (3-period averages)
 /// ```
 pub fn sma<F: Float + Clone>(data: &Array1<F>, window: usize) -> Result<Array1<F>> {
@@ -104,7 +104,7 @@ pub fn sma<F: Float + Clone>(data: &Array1<F>, window: usize) -> Result<Array1<F
 
     for i in 0..result.len() {
         let sum = data.slice(s![i..i + window]).sum();
-        let window_f = F::from(window).unwrap();
+        let window_f = F::from(window).expect("Failed to convert to float");
         result[i] = sum / window_f;
     }
 
@@ -137,7 +137,7 @@ pub fn sma<F: Float + Clone>(data: &Array1<F>, window: usize) -> Result<Array1<F
 /// use scirs2_core::ndarray::array;
 ///
 /// let prices = array![10.0, 11.0, 12.0, 13.0, 14.0];
-/// let ema_values = ema(&prices, 0.3).unwrap();
+/// let ema_values = ema(&prices, 0.3).expect("Operation failed");
 /// ```
 pub fn ema<F: Float + Clone>(data: &Array1<F>, alpha: F) -> Result<Array1<F>> {
     if data.is_empty() {
@@ -191,7 +191,7 @@ pub fn ema<F: Float + Clone>(data: &Array1<F>, alpha: F) -> Result<Array1<F>> {
 /// use scirs2_core::ndarray::array;
 ///
 /// let prices = array![20.0, 21.0, 19.5, 22.0, 21.5, 20.0, 19.0];
-/// let (upper, middle, lower) = bollinger_bands(&prices, 5, 2.0).unwrap();
+/// let (upper, middle, lower) = bollinger_bands(&prices, 5, 2.0).expect("Operation failed");
 /// ```
 pub fn bollinger_bands<F: Float + Clone>(
     data: &Array1<F>,
@@ -213,7 +213,7 @@ pub fn bollinger_bands<F: Float + Clone>(
                 diff * diff
             })
             .sum()
-            / F::from(window).unwrap();
+            / F::from(window).expect("Failed to convert to float");
 
         let std_dev = variance.sqrt();
 
@@ -247,7 +247,7 @@ pub fn bollinger_bands<F: Float + Clone>(
 /// use scirs2_core::ndarray::array;
 ///
 /// let prices = array![44.0, 44.25, 44.5, 43.75, 44.5, 45.0, 45.25, 45.5];
-/// let rsi_values = rsi(&prices, 6).unwrap();
+/// let rsi_values = rsi(&prices, 6).expect("Operation failed");
 /// ```
 pub fn rsi<F: Float + Clone>(data: &Array1<F>, period: usize) -> Result<Array1<F>> {
     if period == 0 {
@@ -280,7 +280,7 @@ pub fn rsi<F: Float + Clone>(data: &Array1<F>, period: usize) -> Result<Array1<F
 
     // Calculate RSI
     let mut rsi = Array1::zeros(avg_gain.len());
-    let hundred = F::from(100).unwrap();
+    let hundred = F::from(100).expect("Failed to convert constant to float");
 
     for i in 0..rsi.len() {
         if avg_loss[i] == F::zero() {
@@ -318,7 +318,7 @@ pub fn rsi<F: Float + Clone>(data: &Array1<F>, period: usize) -> Result<Array1<F
 /// use scirs2_core::ndarray::array;
 ///
 /// let prices = array![12.0, 13.0, 14.0, 13.5, 15.0, 16.0, 15.5, 17.0];
-/// let (macd_line, signal_line, histogram) = macd(&prices, 3, 6, 2).unwrap();
+/// let (macd_line, signal_line, histogram) = macd(&prices, 3, 6, 2).expect("Operation failed");
 /// ```
 pub fn macd<F: Float + Clone>(
     data: &Array1<F>,
@@ -332,9 +332,12 @@ pub fn macd<F: Float + Clone>(
         ));
     }
 
-    let fast_alpha = F::from(2.0).unwrap() / F::from(fast_period + 1).unwrap();
-    let slow_alpha = F::from(2.0).unwrap() / F::from(slow_period + 1).unwrap();
-    let signal_alpha = F::from(2.0).unwrap() / F::from(signal_period + 1).unwrap();
+    let fast_alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(fast_period + 1).expect("Failed to convert to float");
+    let slow_alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(slow_period + 1).expect("Failed to convert to float");
+    let signal_alpha = F::from(2.0).expect("Failed to convert constant to float")
+        / F::from(signal_period + 1).expect("Failed to convert to float");
 
     let fast_ema = ema(data, fast_alpha)?;
     let slow_ema = ema(data, slow_alpha)?;
@@ -378,7 +381,7 @@ pub fn macd<F: Float + Clone>(
 /// let high = array![15.0, 16.0, 14.5, 17.0, 16.5];
 /// let low = array![13.0, 14.0, 13.5, 15.0, 15.5];
 /// let close = array![14.5, 15.5, 14.0, 16.0, 16.0];
-/// let (k_percent, d_percent) = stochastic(&high, &low, &close, 3, 2).unwrap();
+/// let (k_percent, d_percent) = stochastic(&high, &low, &close, 3, 2).expect("Operation failed");
 /// ```
 pub fn stochastic<F: Float + Clone>(
     high: &Array1<F>,
@@ -403,7 +406,7 @@ pub fn stochastic<F: Float + Clone>(
     }
 
     let mut k_percent = Array1::zeros(high.len() - k_period + 1);
-    let hundred = F::from(100).unwrap();
+    let hundred = F::from(100).expect("Failed to convert constant to float");
 
     for i in 0..k_percent.len() {
         let period_high = high
@@ -457,7 +460,7 @@ pub fn stochastic<F: Float + Clone>(
 /// let high = array![15.0, 16.0, 14.5, 17.0, 16.5];
 /// let low = array![13.0, 14.0, 13.5, 15.0, 15.5];
 /// let close = array![14.5, 15.5, 14.0, 16.0, 16.0];
-/// let atr_values = atr(&high, &low, &close, 3).unwrap();
+/// let atr_values = atr(&high, &low, &close, 3).expect("Operation failed");
 /// ```
 pub fn atr<F: Float + Clone>(
     high: &Array1<F>,
@@ -519,7 +522,7 @@ pub fn atr<F: Float + Clone>(
 /// let high = array![15.0, 16.0, 14.5, 17.0, 16.5];
 /// let low = array![13.0, 14.0, 13.5, 15.0, 15.5];
 /// let close = array![14.5, 15.5, 14.0, 16.0, 16.0];
-/// let williams_r_values = williams_r(&high, &low, &close, 3).unwrap();
+/// let williams_r_values = williams_r(&high, &low, &close, 3).expect("Operation failed");
 /// ```
 pub fn williams_r<F: Float + Clone>(
     high: &Array1<F>,
@@ -543,7 +546,7 @@ pub fn williams_r<F: Float + Clone>(
     }
 
     let mut williams_r = Array1::zeros(high.len() - period + 1);
-    let hundred = F::from(100).unwrap();
+    let hundred = F::from(100).expect("Failed to convert constant to float");
 
     for i in 0..williams_r.len() {
         let period_high = high
@@ -596,7 +599,7 @@ pub fn williams_r<F: Float + Clone>(
 /// let high = array![15.0, 16.0, 14.5, 17.0, 16.5];
 /// let low = array![13.0, 14.0, 13.5, 15.0, 15.5];
 /// let close = array![14.5, 15.5, 14.0, 16.0, 16.0];
-/// let cci_values = cci(&high, &low, &close, 3).unwrap();
+/// let cci_values = cci(&high, &low, &close, 3).expect("Operation failed");
 /// ```
 pub fn cci<F: Float + Clone>(
     high: &Array1<F>,
@@ -621,7 +624,7 @@ pub fn cci<F: Float + Clone>(
 
     // Calculate Typical Price
     let mut typical_price = Array1::zeros(high.len());
-    let three = F::from(3).unwrap();
+    let three = F::from(3).expect("Failed to convert constant to float");
 
     for i in 0..high.len() {
         typical_price[i] = (high[i] + low[i] + close[i]) / three;
@@ -632,13 +635,14 @@ pub fn cci<F: Float + Clone>(
 
     // Calculate mean deviation
     let mut cci = Array1::zeros(sma_tp.len());
-    let constant = F::from(0.015).unwrap();
+    let constant = F::from(0.015).expect("Failed to convert constant to float");
 
     for i in 0..cci.len() {
         let slice = typical_price.slice(s![i..i + period]);
         let mean = sma_tp[i];
 
-        let mean_deviation = slice.mapv(|x| (x - mean).abs()).sum() / F::from(period).unwrap();
+        let mean_deviation = slice.mapv(|x| (x - mean).abs()).sum()
+            / F::from(period).expect("Failed to convert to float");
 
         if mean_deviation != F::zero() {
             cci[i] = (typical_price[i + period - 1] - mean) / (constant * mean_deviation);
@@ -671,7 +675,7 @@ pub fn cci<F: Float + Clone>(
 ///
 /// let close = array![10.0, 10.5, 10.2, 10.8, 11.0];
 /// let volume = array![1000.0, 1200.0, 800.0, 1500.0, 2000.0];
-/// let obv_values = obv(&close, &volume).unwrap();
+/// let obv_values = obv(&close, &volume).expect("Operation failed");
 /// ```
 pub fn obv<F: Float + Clone>(close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
     if close.len() != volume.len() {
@@ -713,7 +717,7 @@ mod tests {
     #[test]
     fn test_sma() {
         let data = arr1(&[1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = sma(&data, 3).unwrap();
+        let result = sma(&data, 3).expect("Operation failed");
         let expected = arr1(&[2.0, 3.0, 4.0]);
 
         for (actual, expected) in result.iter().zip(expected.iter()) {
@@ -724,7 +728,7 @@ mod tests {
     #[test]
     fn test_ema() {
         let data = arr1(&[1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = ema(&data, 0.5).unwrap();
+        let result = ema(&data, 0.5).expect("Operation failed");
 
         assert_eq!(result[0], 1.0);
         assert!((result[1] - 1.5).abs() < 1e-10); // 0.5*2 + 0.5*1
@@ -737,7 +741,7 @@ mod tests {
         let result = rsi(&data, 3);
         assert!(result.is_ok());
 
-        let rsi_values = result.unwrap();
+        let rsi_values = result.expect("Operation failed");
         // All values should be between 0 and 100
         for &value in rsi_values.iter() {
             assert!(value >= 0.0 && value <= 100.0);
@@ -747,7 +751,7 @@ mod tests {
     #[test]
     fn test_bollinger_bands() {
         let data = arr1(&[20.0, 21.0, 19.5, 22.0, 21.5]);
-        let (upper, middle, lower) = bollinger_bands(&data, 3, 2.0).unwrap();
+        let (upper, middle, lower) = bollinger_bands(&data, 3, 2.0).expect("Operation failed");
 
         // Upper band should be above middle, middle above lower
         for i in 0..upper.len() {
@@ -762,7 +766,7 @@ mod tests {
         let result = macd(&data, 3, 6, 2);
         assert!(result.is_ok());
 
-        let (macd_line, signal_line, histogram) = result.unwrap();
+        let (macd_line, signal_line, histogram) = result.expect("Operation failed");
         assert_eq!(macd_line.len(), data.len());
         assert_eq!(signal_line.len(), data.len());
         assert_eq!(histogram.len(), data.len());
@@ -777,7 +781,7 @@ mod tests {
         let result = atr(&high, &low, &close, 3);
         assert!(result.is_ok());
 
-        let atr_values = result.unwrap();
+        let atr_values = result.expect("Operation failed");
         // All ATR values should be positive
         for &value in atr_values.iter() {
             assert!(value >= 0.0);

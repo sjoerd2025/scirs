@@ -45,7 +45,7 @@ fn main() -> Result<()> {
     // Demo 3: Distributed Processing (if available)
     #[cfg(feature = "distributed")]
     tokio::runtime::Runtime::new()
-        .unwrap()
+        .expect("Operation failed")
         .block_on(demo_distributed_processing(&data))?;
 
     // Demo 4: Production Monitoring (if available)
@@ -209,7 +209,7 @@ fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
         data_quality_score: 0.95,
         timestamp: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("Operation failed")
             .as_secs(),
     };
 
@@ -223,7 +223,7 @@ fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
 fn generate_sample_data(_n_samples: usize, nfeatures: usize) -> Result<Array2<f64>> {
     use scirs2_core::random::{thread_rng, Distribution, Normal};
 
-    let dist = Normal::new(0.0, 1.0).unwrap();
+    let dist = Normal::new(0.0, 1.0).expect("Operation failed");
     let mut rng = thread_rng();
     let data = Array2::from_shape_fn((_n_samples, nfeatures), |_| dist.sample(&mut rng));
     Ok(data)
@@ -235,20 +235,20 @@ mod tests {
 
     #[test]
     fn test_sample_data_generation() {
-        let data = generate_sample_data(100, 10).unwrap();
+        let data = generate_sample_data(100, 10).expect("Operation failed");
         assert_eq!(data.dim(), (100, 10));
     }
 
     #[test]
     fn test_automated_feature_engineering() {
-        let data = generate_sample_data(50, 5).unwrap();
-        demo_automated_feature_engineering(&data).unwrap();
+        let data = generate_sample_data(50, 5).expect("Operation failed");
+        demo_automated_feature_engineering(&data).expect("Operation failed");
     }
 
     #[cfg(feature = "monitoring")]
     #[test]
     fn test_monitoring_demo() {
-        let data = generate_sample_data(100, 5).unwrap();
-        demo_production_monitoring(&data).unwrap();
+        let data = generate_sample_data(100, 5).expect("Operation failed");
+        demo_production_monitoring(&data).expect("Operation failed");
     }
 }

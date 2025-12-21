@@ -358,8 +358,8 @@ impl QmfBank {
     ) -> SignalResult<Array1<f64>> {
         // Convolve with filter
         let filtered_vec = crate::convolve::convolve(
-            input.as_slice().unwrap(),
-            filter.as_slice().unwrap(),
+            input.as_slice().expect("Operation failed"),
+            filter.as_slice().expect("Operation failed"),
             "full",
         )?;
         let filtered = Array1::from(filtered_vec);
@@ -394,8 +394,8 @@ impl QmfBank {
 
         // Filter the upsampled signal
         let filtered_vec = crate::convolve::convolve(
-            upsampled.as_slice().unwrap(),
-            filter.as_slice().unwrap(),
+            upsampled.as_slice().expect("Operation failed"),
+            filter.as_slice().expect("Operation failed"),
             "full",
         )?;
         Ok(Array1::from(filtered_vec))
@@ -724,8 +724,8 @@ impl WaveletFilterBank {
     ) -> SignalResult<Array1<f64>> {
         // Convolve with filter
         let filtered_vec = crate::convolve::convolve(
-            input.as_slice().unwrap(),
-            filter.as_slice().unwrap(),
+            input.as_slice().expect("Operation failed"),
+            filter.as_slice().expect("Operation failed"),
             "same",
         )?;
         let filtered = Array1::from(filtered_vec);
@@ -760,8 +760,8 @@ impl WaveletFilterBank {
 
         // Filter the upsampled signal
         let filtered_vec = crate::convolve::convolve(
-            upsampled.as_slice().unwrap(),
-            filter.as_slice().unwrap(),
+            upsampled.as_slice().expect("Operation failed"),
+            filter.as_slice().expect("Operation failed"),
             "same",
         )?;
         Ok(Array1::from(filtered_vec))
@@ -1074,7 +1074,7 @@ mod tests {
 
     #[test]
     fn test_qmf_bank_creation() {
-        let qmf = QmfBank::new(4, FilterBankType::Orthogonal).unwrap();
+        let qmf = QmfBank::new(4, FilterBankType::Orthogonal).expect("Operation failed");
         assert_eq!(qmf.num_channels, 4);
         assert_eq!(qmf.analysis_filters.nrows(), 4);
         assert_eq!(qmf.synthesis_filters.nrows(), 4);
@@ -1082,15 +1082,15 @@ mod tests {
 
     #[test]
     fn test_qmf_bank_analysis_synthesis() {
-        let qmf = QmfBank::new(2, FilterBankType::PerfectReconstruction).unwrap();
+        let qmf = QmfBank::new(2, FilterBankType::PerfectReconstruction).expect("Operation failed");
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
         // Analysis
-        let subbands = qmf.analysis(&input).unwrap();
+        let subbands = qmf.analysis(&input).expect("Operation failed");
         assert_eq!(subbands.len(), 2);
 
         // Synthesis
-        let reconstructed = qmf.synthesis(&subbands).unwrap();
+        let reconstructed = qmf.synthesis(&subbands).expect("Operation failed");
 
         // Check that we get some reasonable reconstruction
         assert!(!reconstructed.is_empty());
@@ -1099,15 +1099,15 @@ mod tests {
 
     #[test]
     fn test_wavelet_filter_bank() {
-        let wavelet_bank = WaveletFilterBank::new("db4", 2).unwrap();
+        let wavelet_bank = WaveletFilterBank::new("db4", 2).expect("Operation failed");
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
         // Decomposition
-        let coeffs = wavelet_bank.decompose(&input).unwrap();
+        let coeffs = wavelet_bank.decompose(&input).expect("Operation failed");
         assert_eq!(coeffs.len(), 3); // 2 levels + approximation
 
         // Reconstruction
-        let reconstructed = wavelet_bank.reconstruct(&coeffs).unwrap();
+        let reconstructed = wavelet_bank.reconstruct(&coeffs).expect("Operation failed");
 
         // Check reconstruction quality (should be close to original)
         assert!(!reconstructed.is_empty());
@@ -1115,20 +1115,20 @@ mod tests {
 
     #[test]
     fn test_cosine_modulated_filter_bank() {
-        let cmfb = CosineModulatedFilterBank::new(4, 2, FilterBankWindow::Hann).unwrap();
+        let cmfb = CosineModulatedFilterBank::new(4, 2, FilterBankWindow::Hann).expect("Operation failed");
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
-        let subbands = cmfb.analysis(&input).unwrap();
+        let subbands = cmfb.analysis(&input).expect("Operation failed");
         assert_eq!(subbands.len(), 4);
 
-        let reconstructed = cmfb.synthesis(&subbands).unwrap();
+        let reconstructed = cmfb.synthesis(&subbands).expect("Operation failed");
         assert!(!reconstructed.is_empty());
     }
 
     #[test]
     fn test_filter_bank_analysis() {
-        let qmf = QmfBank::new(2, FilterBankType::Orthogonal).unwrap();
-        let analysis = qmf.analyze_properties().unwrap();
+        let qmf = QmfBank::new(2, FilterBankType::Orthogonal).expect("Operation failed");
+        let analysis = qmf.analyze_properties().expect("Operation failed");
 
         // Check that analysis provides reasonable values
         assert!(analysis.aliasing_distortion >= 0.0);
@@ -1141,7 +1141,7 @@ mod tests {
         let a = Array1::from_vec(vec![1.0, -1.5, 0.7]); // Potentially unstable
 
         let (b_stab, a_stab) =
-            IirStabilizer::stabilize_filter(&b, &a, StabilizationMethod::RadialProjection).unwrap();
+            IirStabilizer::stabilize_filter(&b, &a, StabilizationMethod::RadialProjection).expect("Operation failed");
 
         assert_eq!(b_stab.len(), b.len());
         assert_eq!(a_stab.len(), a.len());

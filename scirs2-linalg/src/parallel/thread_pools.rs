@@ -267,7 +267,7 @@ impl ThreadPoolManager {
         &self,
         profile: ThreadPoolProfile,
     ) -> LinalgResult<Arc<AdvancedPerformanceThreadPool>> {
-        let pools = self.active_pools.read().unwrap();
+        let pools = self.active_pools.read().expect("Operation failed");
         if let Some(pool) = pools.get(&profile) {
             return Ok(pool.clone());
         }
@@ -275,7 +275,7 @@ impl ThreadPoolManager {
 
         // Create new pool
         let config = {
-            let configs = self.pool_configs.read().unwrap();
+            let configs = self.pool_configs.read().expect("Operation failed");
             configs.get(&profile).cloned().unwrap_or_else(|| {
                 let base_config = ThreadPoolConfig {
                     profile: profile.clone(),
@@ -303,7 +303,7 @@ impl ThreadPoolManager {
 
         let pool = Arc::new(AdvancedPerformanceThreadPool::new(config)?);
 
-        let mut pools = self.active_pools.write().unwrap();
+        let mut pools = self.active_pools.write().expect("Operation failed");
         pools.insert(profile, pool.clone());
 
         Ok(pool)
@@ -311,13 +311,13 @@ impl ThreadPoolManager {
 
     /// Configure a thread pool profile
     pub fn configure_profile(&self, profile: ThreadPoolProfile, config: AdvancedThreadPoolConfig) {
-        let mut configs = self.pool_configs.write().unwrap();
+        let mut configs = self.pool_configs.write().expect("Operation failed");
         configs.insert(profile, config);
     }
 
     /// Get performance statistics for all pools
     pub fn get_all_stats(&self) -> HashMap<ThreadPoolProfile, AdvancedPerformanceStats> {
-        let pools = self.active_pools.read().unwrap();
+        let pools = self.active_pools.read().expect("Operation failed");
         let mut stats = HashMap::new();
 
         for (profile, pool) in pools.iter() {
@@ -331,7 +331,7 @@ impl ThreadPoolManager {
     pub fn auto_optimize_pools(
         &self,
     ) -> LinalgResult<Vec<(ThreadPoolProfile, AdvancedThreadPoolConfig)>> {
-        let pools = self.active_pools.read().unwrap();
+        let pools = self.active_pools.read().expect("Operation failed");
         let mut optimizations = Vec::new();
 
         for (profile, pool) in pools.iter() {
@@ -339,7 +339,7 @@ impl ThreadPoolManager {
 
             // Analyze performance metrics to suggest optimizations
             let current_config = {
-                let configs = self.pool_configs.read().unwrap();
+                let configs = self.pool_configs.read().expect("Operation failed");
                 configs
                     .get(profile)
                     .cloned()
@@ -444,7 +444,7 @@ impl ThreadPoolManager {
         &self,
         optimizations: Vec<(ThreadPoolProfile, AdvancedThreadPoolConfig)>,
     ) {
-        let mut configs = self.pool_configs.write().unwrap();
+        let mut configs = self.pool_configs.write().expect("Operation failed");
 
         for (profile, config) in optimizations {
             configs.insert(profile, config);
@@ -488,7 +488,7 @@ impl AdvancedPerformanceThreadPool {
 
     /// Get performance statistics
     pub fn get_stats(&self) -> AdvancedPerformanceStats {
-        self.stats.lock().unwrap().clone()
+        self.stats.lock().expect("Operation failed").clone()
     }
 
     /// Execute a closure with optimal thread configuration
@@ -500,13 +500,13 @@ impl AdvancedPerformanceThreadPool {
         let start_time = Instant::now();
 
         // Predict optimal configuration
-        let predictor = self.workload_predictor.lock().unwrap();
+        let predictor = self.workload_predictor.lock().expect("Operation failed");
         let predicted_characteristics = predictor.predict_workload(&operationtype);
         drop(predictor);
 
         // Adapt thread pool based on prediction
         {
-            let mut manager = self.thread_manager.lock().unwrap();
+            let mut manager = self.thread_manager.lock().expect("Operation failed");
             manager.adapt_to_workload(&predicted_characteristics)?;
         }
 
@@ -516,13 +516,13 @@ impl AdvancedPerformanceThreadPool {
         // Record performance metrics
         let execution_time = start_time.elapsed();
         {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("Operation failed");
             stats.record_execution(operationtype, execution_time);
         }
 
         // Update workload predictor with actual performance
         {
-            let mut predictor = self.workload_predictor.lock().unwrap();
+            let mut predictor = self.workload_predictor.lock().expect("Operation failed");
             predictor.update_performance(operationtype, execution_time);
         }
 

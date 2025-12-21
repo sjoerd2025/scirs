@@ -12,7 +12,7 @@ fn main() {
     println!("Exact results: [0.5, 0.333...]");
 
     let f = |x: f64| arr1(&[x, x * x]);
-    let result = quad_vec(f, 0.0, 1.0, None).unwrap();
+    let result = quad_vec(f, 0.0, 1.0, None).expect("Operation failed");
 
     println!("quad_vec results:");
     println!(
@@ -32,7 +32,7 @@ fn main() {
     println!("Exact results: [2.0, 0.0]");
 
     let f = |x: f64| arr1(&[x.sin(), x.cos()]);
-    let result = quad_vec(f, 0.0, PI, None).unwrap();
+    let result = quad_vec(f, 0.0, PI, None).expect("Operation failed");
 
     println!("quad_vec results:");
     println!(
@@ -52,7 +52,7 @@ fn main() {
     println!("Exact results: [1.4161..., -0.9093..., 2.0, 2.6667..., 0.8647...]");
 
     let f = |x: f64| arr1(&[x.sin(), x.cos(), x, x * x, (-x).exp()]);
-    let result = quad_vec(f, 0.0, 2.0, None).unwrap();
+    let result = quad_vec(f, 0.0, 2.0, None).expect("Operation failed");
 
     println!("quad_vec results:");
     println!("  Integral:");
@@ -80,7 +80,7 @@ fn main() {
             ..Default::default()
         };
 
-        let result = quad_vec(f, 0.0, PI, Some(options)).unwrap();
+        let result = quad_vec(f, 0.0, PI, Some(options)).expect("Operation failed");
 
         println!("  Rule: {}", rule_names[i]);
         println!("    Integral: {:.10}", result.integral[0]);
@@ -106,7 +106,7 @@ fn main() {
             ..Default::default()
         };
 
-        let result = quad_vec(f, 0.0, 1.0, Some(options)).unwrap();
+        let result = quad_vec(f, 0.0, 1.0, Some(options)).expect("Operation failed");
 
         println!("  Norm: {}", norm_names[i]);
         println!(
@@ -136,7 +136,7 @@ fn main() {
     };
 
     // First try without specifying the breakpoint
-    let result_no_breakpoint = quad_vec(f, 0.0, 2.0, None).unwrap();
+    let result_no_breakpoint = quad_vec(f, 0.0, 2.0, None).expect("Operation failed");
 
     println!("  Without breakpoint:");
     println!(
@@ -157,7 +157,7 @@ fn main() {
         ..Default::default()
     };
 
-    let result_with_breakpoint = quad_vec(f, 0.0, 2.0, Some(options)).unwrap();
+    let result_with_breakpoint = quad_vec(f, 0.0, 2.0, Some(options)).expect("Operation failed");
 
     println!("  With breakpoint at x=1:");
     println!(

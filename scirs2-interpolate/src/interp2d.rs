@@ -312,8 +312,8 @@ fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
 #[allow(dead_code)]
 fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
     // Convert to slice to use binary_search_by
-    let slice: &[F] = arr.as_slice().unwrap();
-    match slice.binary_search_by(|x| x.partial_cmp(&value).unwrap()) {
+    let slice: &[F] = arr.as_slice().expect("Operation failed");
+    match slice.binary_search_by(|x| x.partial_cmp(&value).expect("Operation failed")) {
         Ok(idx) => idx,
         Err(idx) => {
             if idx == 0 {

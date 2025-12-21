@@ -242,9 +242,9 @@ impl ClinicalTrialMetrics {
         F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum,
     {
         let treatment_mean = treatment_outcomes.iter().cloned().sum::<F>()
-            / F::from(treatment_outcomes.len()).unwrap();
-        let control_mean =
-            control_outcomes.iter().cloned().sum::<F>() / F::from(control_outcomes.len()).unwrap();
+            / F::from(treatment_outcomes.len()).expect("Operation failed");
+        let control_mean = control_outcomes.iter().cloned().sum::<F>()
+            / F::from(control_outcomes.len()).expect("Operation failed");
 
         let effect_size = match outcome_type {
             EfficacyOutcome::Continuous => {
@@ -268,7 +268,8 @@ impl ClinicalTrialMetrics {
 
         // Calculate confidence interval (simplified)
         let standard_error = self.compute_standard_error(treatment_outcomes, control_outcomes)?;
-        let margin_of_error = F::from(1.96).unwrap() * standard_error;
+        let margin_of_error =
+            F::from(1.96).expect("Failed to convert constant to float") * standard_error;
 
         Ok(ClinicalEfficacyResult {
             effect_size,
@@ -324,8 +325,8 @@ impl ClinicalTrialMetrics {
     where
         F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum,
     {
-        let n1 = F::from(group1.len()).unwrap();
-        let n2 = F::from(group2.len()).unwrap();
+        let n1 = F::from(group1.len()).expect("Operation failed");
+        let n2 = F::from(group2.len()).expect("Operation failed");
 
         let mean1 = group1.iter().cloned().sum::<F>() / n1;
         let mean2 = group2.iter().cloned().sum::<F>() / n2;
@@ -333,8 +334,8 @@ impl ClinicalTrialMetrics {
         let var1 = group1.iter().map(|&x| (x - mean1) * (x - mean1)).sum::<F>() / (n1 - F::one());
         let var2 = group2.iter().map(|&x| (x - mean2) * (x - mean2)).sum::<F>() / (n2 - F::one());
 
-        let pooled_var =
-            ((n1 - F::one()) * var1 + (n2 - F::one()) * var2) / (n1 + n2 - F::from(2).unwrap());
+        let pooled_var = ((n1 - F::one()) * var1 + (n2 - F::one()) * var2)
+            / (n1 + n2 - F::from(2).expect("Failed to convert constant to float"));
         Ok(pooled_var.sqrt())
     }
 
@@ -343,8 +344,8 @@ impl ClinicalTrialMetrics {
     where
         F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum,
     {
-        let n1 = F::from(group1.len()).unwrap();
-        let n2 = F::from(group2.len()).unwrap();
+        let n1 = F::from(group1.len()).expect("Operation failed");
+        let n2 = F::from(group2.len()).expect("Operation failed");
         let pooled_std = self.compute_pooled_std(group1, group2)?;
 
         Ok(pooled_std * (F::one() / n1 + F::one() / n2).sqrt())
@@ -358,12 +359,12 @@ impl ClinicalTrialMetrics {
         // Simplified p-value calculation
         // In a real implementation, would use proper statistical test
         let effect_size = self.compute_pooled_std(group1, group2)?;
-        if effect_size > F::from(2.0).unwrap() {
-            Ok(F::from(0.05).unwrap())
+        if effect_size > F::from(2.0).expect("Failed to convert constant to float") {
+            Ok(F::from(0.05).expect("Failed to convert constant to float"))
         } else if effect_size > F::one() {
-            Ok(F::from(0.1).unwrap())
+            Ok(F::from(0.1).expect("Failed to convert constant to float"))
         } else {
-            Ok(F::from(0.5).unwrap())
+            Ok(F::from(0.5).expect("Failed to convert constant to float"))
         }
     }
 }
@@ -420,7 +421,7 @@ impl DrugDiscoveryMetrics {
                 .zip(experimental_affinities.iter())
                 .map(|(&p, &e)| (p - e) * (p - e))
                 .sum::<F>()
-                / F::from(predicted_affinities.len()).unwrap();
+                / F::from(predicted_affinities.len()).expect("Operation failed");
             mse.sqrt()
         };
 
@@ -430,11 +431,11 @@ impl DrugDiscoveryMetrics {
             .zip(experimental_affinities.iter())
             .map(|(&p, &e)| (p - e).abs())
             .sum::<F>()
-            / F::from(predicted_affinities.len()).unwrap();
+            / F::from(predicted_affinities.len()).expect("Operation failed");
 
         // R-squared
         let mean_exp = experimental_affinities.iter().cloned().sum::<F>()
-            / F::from(experimental_affinities.len()).unwrap();
+            / F::from(experimental_affinities.len()).expect("Operation failed");
         let ss_tot = experimental_affinities
             .iter()
             .map(|&e| (e - mean_exp) * (e - mean_exp))
@@ -496,7 +497,7 @@ impl DrugDiscoveryMetrics {
     where
         F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum,
     {
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
         let mean_x = x.iter().cloned().sum::<F>() / n;
         let mean_y = y.iter().cloned().sum::<F>() / n;
 
@@ -541,9 +542,10 @@ impl DrugDiscoveryMetrics {
         }
 
         if total > 0 {
-            Ok(F::from(concordant).unwrap() / F::from(total).unwrap())
+            Ok(F::from(concordant).expect("Failed to convert to float")
+                / F::from(total).expect("Failed to convert to float"))
         } else {
-            Ok(F::from(0.5).unwrap())
+            Ok(F::from(0.5).expect("Failed to convert constant to float"))
         }
     }
 }
@@ -614,7 +616,10 @@ impl MedicalImagingMetrics {
         let denominator = predicted_sum + ground_truth_sum;
 
         if denominator > F::zero() {
-            Ok(F::from(2.0).unwrap() * intersection / denominator)
+            Ok(
+                F::from(2.0).expect("Failed to convert constant to float") * intersection
+                    / denominator,
+            )
         } else {
             Ok(F::one()) // Perfect match when both masks are empty
         }
@@ -751,8 +756,8 @@ impl MedicalImagingMetrics {
         for &(x1, y1) in points1 {
             let mut min_dist = F::infinity();
             for &(x2, y2) in points2 {
-                let dx = F::from(x1 as i32 - x2 as i32).unwrap();
-                let dy = F::from(y1 as i32 - y2 as i32).unwrap();
+                let dx = F::from(x1 as i32 - x2 as i32).expect("Failed to convert to float");
+                let dy = F::from(y1 as i32 - y2 as i32).expect("Failed to convert to float");
                 let dist = (dx * dx + dy * dy).sqrt();
                 if dist < min_dist {
                     min_dist = dist;
@@ -978,9 +983,10 @@ impl SurvivalAnalysisMetrics {
         }
 
         if total > 0 {
-            Ok(F::from(concordant).unwrap() / F::from(total).unwrap())
+            Ok(F::from(concordant).expect("Failed to convert to float")
+                / F::from(total).expect("Failed to convert to float"))
         } else {
-            Ok(F::from(0.5).unwrap())
+            Ok(F::from(0.5).expect("Failed to convert constant to float"))
         }
     }
 }
@@ -1054,8 +1060,10 @@ impl BiomarkerMetrics {
         let mut tp = F::zero();
         let mut fp = F::zero();
 
-        let total_positives = F::from(labels.iter().filter(|&&x| x).count()).unwrap();
-        let total_negatives = F::from(labels.iter().filter(|&&x| !x).count()).unwrap();
+        let total_positives =
+            F::from(labels.iter().filter(|&&x| x).count()).expect("Operation failed");
+        let total_negatives =
+            F::from(labels.iter().filter(|&&x| !x).count()).expect("Operation failed");
 
         for (_, label) in pairs {
             if label {
@@ -1069,7 +1077,7 @@ impl BiomarkerMetrics {
         if total_positives > F::zero() && total_negatives > F::zero() {
             Ok(auc / (total_positives * total_negatives))
         } else {
-            Ok(F::from(0.5).unwrap())
+            Ok(F::from(0.5).expect("Failed to convert constant to float"))
         }
     }
 
@@ -1126,13 +1134,15 @@ impl BiomarkerMetrics {
         }
 
         let sensitivity = if tp + fn_count > 0 {
-            F::from(tp).unwrap() / F::from(tp + fn_count).unwrap()
+            F::from(tp).expect("Failed to convert to float")
+                / F::from(tp + fn_count).expect("Failed to convert to float")
         } else {
             F::zero()
         };
 
         let specificity = if tn + fp > 0 {
-            F::from(tn).unwrap() / F::from(tn + fp).unwrap()
+            F::from(tn).expect("Failed to convert to float")
+                / F::from(tn + fp).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -1222,21 +1232,27 @@ mod tests {
         let predicted = array![[1.0, 1.0, 0.0], [1.0, 0.0, 0.0]];
         let ground_truth = array![[1.0, 0.0, 0.0], [1.0, 1.0, 0.0]];
 
-        let dice = imaging.dice_coefficient(&predicted, &ground_truth).unwrap();
+        let dice = imaging
+            .dice_coefficient(&predicted, &ground_truth)
+            .expect("Operation failed");
         assert!(dice > 0.0 && dice <= 1.0);
     }
 
     #[test]
     fn test_relative_risk() {
         let epi = EpidemiologyMetrics::new();
-        let rr = epi.relative_risk(10.0, 100.0, 5.0, 100.0).unwrap();
+        let rr = epi
+            .relative_risk(10.0, 100.0, 5.0, 100.0)
+            .expect("Operation failed");
         assert_eq!(rr, 2.0);
     }
 
     #[test]
     fn test_number_needed_to_treat() {
         let clinical = ClinicalTrialMetrics::new();
-        let nnt = clinical.number_needed_to_treat(0.8, 0.6).unwrap();
+        let nnt = clinical
+            .number_needed_to_treat(0.8, 0.6)
+            .expect("Operation failed");
         assert!((nnt - 5.0).abs() < 1e-10, "Expected NNT ~5.0, got {}", nnt);
     }
 
@@ -1246,7 +1262,9 @@ mod tests {
         let fp1 = array![1, 1, 0, 1, 0];
         let fp2 = array![1, 0, 0, 1, 1];
 
-        let similarity = drug_discovery.tanimoto_similarity(&fp1, &fp2).unwrap();
+        let similarity = drug_discovery
+            .tanimoto_similarity(&fp1, &fp2)
+            .expect("Operation failed");
         assert!((0.0..=1.0).contains(&similarity));
     }
 }

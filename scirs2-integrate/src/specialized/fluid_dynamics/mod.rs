@@ -263,14 +263,14 @@ mod tests {
         // Test that FFT operations can be used directly
         let field = scirs2_core::ndarray::Array2::ones((8, 8));
 
-        let field_hat = FFTOperations::fft_2d_forward(&field).unwrap();
+        let field_hat = FFTOperations::fft_2d_forward(&field).expect("Operation failed");
         assert_eq!(field_hat.dim(), (8, 8));
 
-        let recovered = FFTOperations::fft_2d_backward(&field_hat).unwrap();
+        let recovered = FFTOperations::fft_2d_backward(&field_hat).expect("Operation failed");
         assert_eq!(recovered.dim(), (8, 8));
 
         // Test energy spectrum computation
-        let spectrum = FFTOperations::compute_energy_spectrum_2d(&field).unwrap();
+        let spectrum = FFTOperations::compute_energy_spectrum_2d(&field).expect("Operation failed");
         assert!(!spectrum.is_empty());
     }
 
@@ -281,7 +281,7 @@ mod tests {
 
         let dealiased =
             DealiasingOperations::apply_dealiasing_2d(&field, DealiasingStrategy::TwoThirds)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(dealiased.dim(), field.dim());
 
         // Test strategy recommendation

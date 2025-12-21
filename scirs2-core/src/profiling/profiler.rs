@@ -189,19 +189,19 @@ impl Profiler {
         let mut report = String::new();
 
         if self.timings.is_empty() && self.memory.is_empty() {
-            writeln!(report, "No profiling data collected.").unwrap();
+            writeln!(report, "No profiling data collected.").expect("Operation failed");
             return report;
         }
 
         if !self.timings.is_empty() {
-            writeln!(report, "\n=== Timing Report ===").unwrap();
+            writeln!(report, "\n=== Timing Report ===").expect("Operation failed");
             writeln!(
                 report,
                 "{:<30} {:<10} {:<15} {:<15} {:<15}",
                 "Operation", "Calls", "Total (ms)", "Average (ms)", "Max (ms)"
             )
-            .unwrap();
-            writeln!(report, "{}", "-".repeat(90)).unwrap();
+            .expect("Operation failed");
+            writeln!(report, "{}", "-".repeat(90)).expect("Operation failed");
 
             // Sort by total duration
             let mut entries: Vec<(&String, &TimingEntry)> = self.timings.iter().collect();
@@ -217,19 +217,19 @@ impl Profiler {
                     entry.average_duration().as_secs_f64() * 1000.0,
                     entry.max_duration().as_secs_f64() * 1000.0
                 )
-                .unwrap();
+                .expect("Operation failed");
             }
         }
 
         if !self.memory.is_empty() {
-            writeln!(report, "\n=== Memory Report ===").unwrap();
+            writeln!(report, "\n=== Memory Report ===").expect("Operation failed");
             writeln!(
                 report,
                 "{:<30} {:<10} {:<15} {:<15}",
                 "Operation", "Counts", "Total (KB)", "Max (KB)"
             )
-            .unwrap();
-            writeln!(report, "{}", "-".repeat(75)).unwrap();
+            .expect("Operation failed");
+            writeln!(report, "{}", "-".repeat(75)).expect("Operation failed");
 
             // Sort by total memory delta
             let mut entries: Vec<(&String, &MemoryEntry)> = self.memory.iter().collect();
@@ -244,7 +244,7 @@ impl Profiler {
                     entry.total_delta() as f64 / 1024.0,
                     entry.max_delta() as f64 / 1024.0
                 )
-                .unwrap();
+                .expect("Operation failed");
             }
         }
 

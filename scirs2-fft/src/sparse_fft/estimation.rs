@@ -236,7 +236,7 @@ mod tests {
         let frequencies = vec![(3, 1.0), (7, 0.5)];
         let signal = create_sparse_signal(n, &frequencies);
 
-        let result = estimate_sparsity_threshold(&signal, 0.1).unwrap();
+        let result = estimate_sparsity_threshold(&signal, 0.1).expect("Operation failed");
         // Should find approximately 4 components (positive and negative frequencies)
         assert!(result >= 2 && result <= 8);
     }
@@ -247,7 +247,7 @@ mod tests {
         let frequencies = vec![(3, 1.0), (7, 0.5), (15, 0.25)];
         let signal = create_sparse_signal(n, &frequencies);
 
-        let result = estimate_sparsity_adaptive(&signal, 0.25, 10).unwrap();
+        let result = estimate_sparsity_adaptive(&signal, 0.25, 10).expect("Operation failed");
         // Should find some components (adaptive method can vary)
         assert!(result >= 2 && result <= 15);
     }
@@ -258,7 +258,7 @@ mod tests {
         let frequencies = vec![(3, 1.0), (7, 0.5)];
         let signal = create_sparse_signal(n, &frequencies);
 
-        let result = estimate_sparsity_frequency_pruning(&signal, 2.0).unwrap();
+        let result = estimate_sparsity_frequency_pruning(&signal, 2.0).expect("Operation failed");
         assert!(result >= 1);
     }
 
@@ -268,7 +268,8 @@ mod tests {
         let frequencies = vec![(3, 1.0), (7, 0.5)];
         let signal = create_sparse_signal(n, &frequencies);
 
-        let result = estimate_sparsity_spectral_flatness(&signal, 0.3, 8).unwrap();
+        let result =
+            estimate_sparsity_spectral_flatness(&signal, 0.3, 8).expect("Operation failed");
         assert!(result >= 1);
     }
 }

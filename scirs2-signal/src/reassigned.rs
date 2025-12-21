@@ -112,13 +112,13 @@ pub struct ReassignedResult {
 ///
 /// // Configure the reassigned spectrogram
 /// let mut config = ReassignedConfig::default();
-/// config.window = Array1::from(window::hann(256, true).unwrap());
+/// config.window = Array1::from(window::hann(256, true).expect("Operation failed"));
 /// config.hop_size = 64;
 /// config.fs = fs;
 /// config.return_spectrogram = true;
 ///
 /// // Compute the reassigned spectrogram
-/// let result = reassigned_spectrogram(&signal, config).unwrap();
+/// let result = reassigned_spectrogram(&signal, config).expect("Operation failed");
 ///
 /// // result.reassigned contains the reassigned spectrogram
 /// // result.spectrogram contains the original spectrogram (if requested)
@@ -215,7 +215,7 @@ fn compute_stft(
     n_fft: usize,
 ) -> SignalResult<Array2<Complex64>> {
     let stft_result = spectral::stft(
-        signal.as_slice().unwrap(),
+        signal.as_slice().expect("Operation failed"),
         None,               // fs
         None,               // window
         Some(window.len()), // nperseg
@@ -529,7 +529,7 @@ mod tests {
 
         // Configure the reassigned spectrogram
         let config = ReassignedConfig {
-            window: Array1::from(window::hann(128, true).unwrap()),
+            window: Array1::from(window::hann(128, true).expect("Operation failed")),
             hop_size: 32,
             fs,
             return_spectrogram: true,
@@ -537,7 +537,7 @@ mod tests {
         };
 
         // Compute the reassigned spectrogram
-        let result = reassigned_spectrogram(&signal, config).unwrap();
+        let result = reassigned_spectrogram(&signal, config).expect("Operation failed");
 
         // Basic size checks
         assert_eq!(result.reassigned.shape()[1], result.times.len());
@@ -574,15 +574,15 @@ mod tests {
 
         // Configure the reassigned spectrogram
         let config = ReassignedConfig {
-            window: Array1::from(window::hann(64, true).unwrap()),
+            window: Array1::from(window::hann(64, true).expect("Operation failed")),
             hop_size: 16,
             fs,
             ..Default::default()
         };
 
         // Compute both standard and smoothed reassigned spectrograms
-        let standard = reassigned_spectrogram(&signal, config.clone()).unwrap();
-        let smoothed = smoothed_reassigned_spectrogram(&signal, config, 3).unwrap();
+        let standard = reassigned_spectrogram(&signal, config.clone()).expect("Operation failed");
+        let smoothed = smoothed_reassigned_spectrogram(&signal, config, 3).expect("Operation failed");
 
         // Both should have the same dimensions
         assert_eq!(standard.reassigned.shape(), smoothed.reassigned.shape());

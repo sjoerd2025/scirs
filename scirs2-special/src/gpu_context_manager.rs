@@ -116,12 +116,15 @@ impl GpuContextPool {
 
     /// Update production configuration
     pub fn update_config(&self, config: GpuProductionConfig) {
-        *self.production_config.write().unwrap() = config;
+        *self.production_config.write().expect("Operation failed") = config;
     }
 
     /// Get current production configuration
     pub fn get_config(&self) -> GpuProductionConfig {
-        self.production_config.read().unwrap().clone()
+        self.production_config
+            .read()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Initialize GPU context pool with device discovery
@@ -133,7 +136,7 @@ impl GpuContextPool {
 
     /// Discover available GPU devices
     fn discover_devices(&self) -> SpecialResult<()> {
-        let mut device_info = self.device_info.write().unwrap();
+        let mut device_info = self.device_info.write().expect("Operation failed");
 
         // Try to discover WebGPU devices
         if let Ok(info) = self.probe_webgpu_device() {
@@ -286,9 +289,9 @@ impl GpuContextPool {
 
     /// Create GPU contexts for discovered devices
     fn create_contexts(&self) -> SpecialResult<()> {
-        let device_info = self.device_info.read().unwrap();
-        let mut contexts = self.contexts.write().unwrap();
-        let mut stats = self.performance_stats.write().unwrap();
+        let device_info = self.device_info.read().expect("Operation failed");
+        let mut contexts = self.contexts.write().expect("Operation failed");
+        let mut stats = self.performance_stats.write().expect("Operation failed");
 
         for (&backend_type, info) in device_info.iter() {
             if info.is_available {
@@ -313,8 +316,8 @@ impl GpuContextPool {
 
     /// Get the best available GPU context
     pub fn get_best_context(&self) -> SpecialResult<Arc<GpuContext>> {
-        let contexts = self.contexts.read().unwrap();
-        let stats = self.performance_stats.read().unwrap();
+        let contexts = self.contexts.read().expect("Operation failed");
+        let stats = self.performance_stats.read().expect("Operation failed");
 
         // Prioritize based on performance stats and backend type
         let preferred_order = [GpuBackend::Cuda, GpuBackend::Wgpu, GpuBackend::OpenCL];
@@ -355,7 +358,7 @@ impl GpuContextPool {
         success: bool,
         datasize: usize,
     ) {
-        let mut stats = self.performance_stats.write().unwrap();
+        let mut stats = self.performance_stats.write().expect("Operation failed");
         if let Some(stat) = stats.get_mut(&backend_type) {
             stat.total_operations += 1;
 
@@ -375,13 +378,13 @@ impl GpuContextPool {
 
     /// Get performance statistics for a backend
     pub fn get_performance_stats(&self, backendtype: GpuBackend) -> Option<GpuPerformanceStats> {
-        let stats = self.performance_stats.read().unwrap();
+        let stats = self.performance_stats.read().expect("Operation failed");
         stats.get(&backendtype).cloned()
     }
 
     /// Get all available device information
     pub fn get_device_info(&self) -> HashMap<GpuBackend, GpuDeviceInfo> {
-        self.device_info.read().unwrap().clone()
+        self.device_info.read().expect("Operation failed").clone()
     }
 
     /// Check if GPU acceleration should be used for given array size
@@ -398,24 +401,24 @@ impl GpuContextPool {
         }
 
         // Check if auto fallback is enabled and we have healthy contexts
-        let auto_fallback = *self.auto_fallback_enabled.lock().unwrap();
+        let auto_fallback = *self.auto_fallback_enabled.lock().expect("Operation failed");
         if !auto_fallback {
             return false;
         }
 
         // Check if we have any available contexts
-        let contexts = self.contexts.read().unwrap();
+        let contexts = self.contexts.read().expect("Operation failed");
         !contexts.is_empty()
     }
 
     /// Enable or disable automatic fallback to CPU
     pub fn set_auto_fallback(&self, enabled: bool) {
-        *self.auto_fallback_enabled.lock().unwrap() = enabled;
+        *self.auto_fallback_enabled.lock().expect("Operation failed") = enabled;
     }
 
     /// Set the threshold for fallback after consecutive failures
     pub fn set_fallback_threshold(&self, threshold: usize) {
-        *self.fallback_threshold.lock().unwrap() = threshold;
+        *self.fallback_threshold.lock().expect("Operation failed") = threshold;
     }
 
     /// Query OpenCL device information with detailed properties
@@ -484,7 +487,7 @@ impl GpuContextPool {
 
     /// Advanced performance monitoring with trend analysis
     pub fn get_performance_trends(&self) -> HashMap<GpuBackend, String> {
-        let stats = self.performance_stats.read().unwrap();
+        let stats = self.performance_stats.read().expect("Operation failed");
         let mut trends = HashMap::new();
 
         for (&backend_type, stat) in stats.iter() {
@@ -512,7 +515,7 @@ impl GpuContextPool {
 
     /// Clear performance statistics
     pub fn reset_performance_stats(&self) {
-        let mut stats = self.performance_stats.write().unwrap();
+        let mut stats = self.performance_stats.write().expect("Operation failed");
         for stat in stats.values_mut() {
             *stat = GpuPerformanceStats::default();
         }
@@ -522,13 +525,16 @@ impl GpuContextPool {
 
     /// Get all performance statistics
     pub fn get_performance_stats_all(&self) -> HashMap<GpuBackend, GpuPerformanceStats> {
-        self.performance_stats.read().unwrap().clone()
+        self.performance_stats
+            .read()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Get comprehensive system report"
     pub fn get_system_report(&self) -> String {
-        let device_info = self.device_info.read().unwrap();
-        let stats = self.performance_stats.read().unwrap();
+        let device_info = self.device_info.read().expect("Operation failed");
+        let stats = self.performance_stats.read().expect("Operation failed");
 
         let mut report = String::new();
         report.push_str("=== GPU System Report ===\n\n");

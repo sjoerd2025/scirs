@@ -161,7 +161,7 @@ fn demonstrate_selective_cleanup(batch_ops: &BatchOperations) {
     println!("Demonstrating selective cache cleanup...");
 
     // Show current cache state
-    let initial_stats = batch_ops.get_cache_statistics().unwrap();
+    let initial_stats = batch_ops.get_cache_statistics().expect("Operation failed");
     println!(
         "Before cleanup: {} files, {}",
         initial_stats.success_count,

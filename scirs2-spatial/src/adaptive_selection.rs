@@ -1084,7 +1084,7 @@ impl AdaptiveAlgorithmSelector {
                 }
             }
 
-            distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             if distances.len() >= k {
                 let k_distance = distances[k - 1];
@@ -1411,7 +1411,11 @@ impl AdaptiveAlgorithmSelector {
     ) -> SpatialResult<AlgorithmSelection> {
         let best_evaluation = evaluations
             .into_iter()
-            .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap())
+            .max_by(|a, b| {
+                a.fitness_score
+                    .partial_cmp(&b.fitness_score)
+                    .expect("Operation failed")
+            })
             .ok_or_else(|| SpatialError::InvalidInput("No candidate algorithms".to_string()))?;
 
         Ok(AlgorithmSelection {
@@ -1650,7 +1654,7 @@ mod tests {
         let characteristics = selector_mut.analyzedata_characteristics(&data.view());
         assert!(characteristics.is_ok());
 
-        let chars = characteristics.unwrap();
+        let chars = characteristics.expect("Operation failed");
         assert_eq!(chars.size_category, SizeCategory::Tiny);
         assert_eq!(chars.dimensionality_category, DimensionalityCategory::Low);
     }
@@ -1666,7 +1670,7 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        let selection = result.unwrap();
+        let selection = result.expect("Operation failed");
         assert!(matches!(
             selection.algorithm,
             SelectedAlgorithm::KMeans | SelectedAlgorithm::DBScan | SelectedAlgorithm::KDTreeNN
@@ -1684,13 +1688,13 @@ mod tests {
         let selection = selector
             .select_optimal_algorithm(&data.view(), &context)
             .await
-            .unwrap();
+            .expect("Operation failed");
         let execution_result = selector
             .execute_with_feedback(&selection, &data.view())
             .await;
 
         assert!(execution_result.is_ok());
-        let result = execution_result.unwrap();
+        let result = execution_result.expect("Operation failed");
         assert!(result.selection_accuracy >= 0.0 && result.selection_accuracy <= 1.0);
     }
 }

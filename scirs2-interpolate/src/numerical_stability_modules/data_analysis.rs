@@ -17,13 +17,14 @@ where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
 {
     let base_reg = super::types::machine_epsilon::<F>()
-        * F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap());
+        * F::from(1000.0)
+            .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"));
 
     // Adjust based on point spacing
     let spacing_factor = if min_distance > F::zero() {
         F::one() / min_distance.sqrt()
     } else {
-        F::from(1e6).unwrap_or_else(|| F::from(1e6).unwrap())
+        F::from(1e6).unwrap_or_else(|| F::from(1e6).expect("Failed to convert constant to float"))
     };
 
     // Adjust based on distance ratio (how uniform the spacing is)
@@ -219,10 +220,17 @@ where
     let coord_scale_factor = max_coord_range;
     let value_scale_factor = value_range;
     let scaling_recommended = coord_scale_factor
-        >= F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap())
-        || coord_scale_factor <= F::from(0.001).unwrap_or_else(|| F::from(0.001).unwrap())
-        || value_scale_factor >= F::from(1000.0).unwrap_or_else(|| F::from(1000.0).unwrap())
-        || value_scale_factor <= F::from(0.001).unwrap_or_else(|| F::from(0.001).unwrap());
+        >= F::from(1000.0)
+            .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"))
+        || coord_scale_factor
+            <= F::from(0.001)
+                .unwrap_or_else(|| F::from(0.001).expect("Failed to convert constant to float"))
+        || value_scale_factor
+            >= F::from(1000.0)
+                .unwrap_or_else(|| F::from(1000.0).expect("Failed to convert constant to float"))
+        || value_scale_factor
+            <= F::from(0.001)
+                .unwrap_or_else(|| F::from(0.001).expect("Failed to convert constant to float"));
 
     // Estimate condition number improvement
     let condition_improvement_factor = if scaling_recommended {
@@ -267,7 +275,9 @@ where
     // Second differences to separate noise from signal
     let mut second_differences = Vec::new();
     for i in 1..(n - 1) {
-        let second_diff = values[i + 1] - F::from(2.0).unwrap() * values[i] + values[i - 1];
+        let second_diff = values[i + 1]
+            - F::from(2.0).expect("Failed to convert constant to float") * values[i]
+            + values[i - 1];
         second_differences.push(second_diff.abs());
     }
 
@@ -278,7 +288,9 @@ where
     let estimated_noise_level = if !sorted_second_diffs.is_empty() {
         let median_idx = sorted_second_diffs.len() / 2;
         sorted_second_diffs[median_idx]
-            / F::from(1.4826).unwrap_or_else(|| F::from(1.4826).unwrap()) // MAD to std conversion
+            / F::from(1.4826)
+                .unwrap_or_else(|| F::from(1.4826).expect("Failed to convert constant to float"))
+    // MAD to std conversion
     } else {
         F::zero()
     };
@@ -294,15 +306,20 @@ where
     };
 
     // Determine if data is noisy
-    let noise_threshold = F::from(10.0).unwrap_or_else(|| F::from(10.0).unwrap());
+    let noise_threshold = F::from(10.0)
+        .unwrap_or_else(|| F::from(10.0).expect("Failed to convert constant to float"));
     let is_noisy = signal_noise_ratio < noise_threshold;
 
     // Recommend denoising strategy
     let denoising_strategy = if !is_noisy {
         DenoisingStrategy::None
-    } else if signal_noise_ratio > F::from(5.0).unwrap_or_else(|| F::from(5.0).unwrap()) {
+    } else if signal_noise_ratio
+        > F::from(5.0).unwrap_or_else(|| F::from(5.0).expect("Failed to convert constant to float"))
+    {
         DenoisingStrategy::SmoothingSplines
-    } else if signal_noise_ratio > F::from(2.0).unwrap_or_else(|| F::from(2.0).unwrap()) {
+    } else if signal_noise_ratio
+        > F::from(2.0).unwrap_or_else(|| F::from(2.0).expect("Failed to convert constant to float"))
+    {
         DenoisingStrategy::RobustInterpolation
     } else {
         DenoisingStrategy::WaveletDenoising
@@ -363,7 +380,9 @@ where
         primary_method = InterpolationMethod::Linear;
         alternative_methods.push(InterpolationMethod::CubicSpline);
         reasons.push("Collinear points suggest 1D interpolation".to_string());
-    } else if data_points.clustering_score > F::from(0.7).unwrap_or_else(|| F::from(0.7).unwrap()) {
+    } else if data_points.clustering_score
+        > F::from(0.7).unwrap_or_else(|| F::from(0.7).expect("Failed to convert constant to float"))
+    {
         primary_method = InterpolationMethod::Kriging;
         alternative_methods.push(InterpolationMethod::RadialBasisFunction);
         reasons.push("Clustered data benefits from spatial interpolation methods".to_string());
@@ -435,7 +454,9 @@ where
 
     // Check if current density is adequate
     let density_adequate = current_density
-        >= recommended_density * F::from(0.5).unwrap_or_else(|| F::from(0.5).unwrap());
+        >= recommended_density
+            * F::from(0.5)
+                .unwrap_or_else(|| F::from(0.5).expect("Failed to convert constant to float"));
 
     // Suggest additional points if needed
     let suggested_additional_points = if density_adequate {
@@ -452,14 +473,16 @@ where
         F::infinity()
     };
 
-    let sampling_strategy =
-        if distance_ratio > F::from(100.0).unwrap_or_else(|| F::from(100.0).unwrap()) {
-            SamplingStrategy::Adaptive
-        } else if dimension > 2 {
-            SamplingStrategy::QuasiRandom
-        } else {
-            SamplingStrategy::Uniform
-        };
+    let sampling_strategy = if distance_ratio
+        > F::from(100.0)
+            .unwrap_or_else(|| F::from(100.0).expect("Failed to convert constant to float"))
+    {
+        SamplingStrategy::Adaptive
+    } else if dimension > 2 {
+        SamplingStrategy::QuasiRandom
+    } else {
+        SamplingStrategy::Uniform
+    };
 
     Ok(SamplingDensityAnalysis {
         current_density,
@@ -509,10 +532,11 @@ mod tests {
             (4, 2),
             vec![0.0, 0.0, 1000.0, 0.0, 0.0, 1000.0, 1000.0, 1000.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let values = Array1::from_vec(vec![0.0, 0.001, 0.001, 0.002]);
 
-        let scaling = analyze_data_scaling(&points.view(), &values.view()).unwrap();
+        let scaling =
+            analyze_data_scaling(&points.view(), &values.view()).expect("Operation failed");
         assert!(scaling.scaling_recommended);
         assert!(scaling.coordinate_scale < 1.0);
         assert!(scaling.value_scale > 1.0);
@@ -522,13 +546,15 @@ mod tests {
     fn test_noise_analysis() {
         // Create smooth data
         let smooth_values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
-        let smooth_analysis = analyze_noise_characteristics(&smooth_values.view()).unwrap();
+        let smooth_analysis =
+            analyze_noise_characteristics(&smooth_values.view()).expect("Operation failed");
         assert!(!smooth_analysis.is_noisy);
         assert_eq!(smooth_analysis.denoising_strategy, DenoisingStrategy::None);
 
         // Create noisy data
         let noisy_values = Array1::from_vec(vec![0.0, 1.1, 1.9, 3.05, 3.95]);
-        let noisy_analysis = analyze_noise_characteristics(&noisy_values.view()).unwrap();
+        let noisy_analysis =
+            analyze_noise_characteristics(&noisy_values.view()).expect("Operation failed");
         assert!(noisy_analysis.estimated_noise_level > 0.0);
     }
 
@@ -554,16 +580,17 @@ mod tests {
             recommended_smoothing: None,
         };
 
-        let recommendation = recommend_interpolation_method(&small_data, &smooth_function).unwrap();
+        let recommendation = recommend_interpolation_method(&small_data, &smooth_function)
+            .expect("Operation failed");
         assert_eq!(recommendation.primary_method, InterpolationMethod::Linear);
     }
 
     #[test]
     fn test_sampling_density_analysis() {
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
-        let analysis = analyze_sampling_density(&points.view(), 0.01).unwrap();
+        let analysis = analyze_sampling_density(&points.view(), 0.01).expect("Operation failed");
         assert!(analysis.current_density > 0.0);
         assert!(analysis.recommended_density > 0.0);
     }
@@ -574,10 +601,11 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let values = Array1::from_vec(vec![0.0, 1.0, 4.0, 9.0, 16.0]);
 
-        let report = analyze_interpolation_data(&points.view(), &values.view()).unwrap();
+        let report =
+            analyze_interpolation_data(&points.view(), &values.view()).expect("Operation failed");
 
         assert!(report.data_points.is_collinear);
         assert!(report.function_values.is_smooth);

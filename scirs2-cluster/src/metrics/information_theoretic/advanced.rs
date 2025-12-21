@@ -32,7 +32,7 @@ use crate::error::{ClusteringError, Result};
 /// let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 /// let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 ///
-/// let js: f64 = jensen_shannon_divergence(true_labels.view(), pred_labels.view()).unwrap();
+/// let js: f64 = jensen_shannon_divergence(true_labels.view(), pred_labels.view()).expect("Operation failed");
 /// assert!(js >= 0.0 && js <= 1.0);
 /// ```
 pub fn jensen_shannon_divergence<F>(
@@ -100,7 +100,9 @@ where
     let vi = h_true_given_pred + h_pred_given_true;
 
     // Normalize by the maximum possible VI (log(n))
-    let max_vi = F::from(n_samples as f64).unwrap().ln();
+    let max_vi = F::from(n_samples as f64)
+        .expect("Failed to convert to float")
+        .ln();
 
     if max_vi == F::zero() {
         Ok(F::zero())
@@ -243,11 +245,14 @@ where
         return Ok(BTreeMap::new());
     }
 
-    let total_f = F::from(total).unwrap();
+    let total_f = F::from(total).expect("Failed to convert to float");
     let mut distribution = BTreeMap::new();
 
     for (label, count) in counts {
-        distribution.insert(label, F::from(count).unwrap() / total_f);
+        distribution.insert(
+            label,
+            F::from(count).expect("Failed to convert to float") / total_f,
+        );
     }
 
     Ok(distribution)
@@ -292,7 +297,7 @@ where
         ));
     }
 
-    let two = F::from(2).unwrap();
+    let two = F::from(2).expect("Failed to convert constant to float");
 
     // Calculate the average distribution M
     let m: Vec<F> = p
@@ -339,12 +344,12 @@ where
         return Ok(F::zero());
     }
 
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
     let mut entropy = F::zero();
 
     for &count in counts.values() {
         if count > 0 {
-            let p = F::from(count).unwrap() / n_samples_f;
+            let p = F::from(count).expect("Failed to convert to float") / n_samples_f;
             entropy = entropy - p * p.ln();
         }
     }
@@ -374,14 +379,15 @@ where
         *y_counts.entry(y).or_insert(0) += 1;
     }
 
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
     let mut conditional_entropy = F::zero();
 
     for (&(x, y), &n_xy) in &joint_counts {
         let n_y = y_counts[&y];
 
-        let p_xy = F::from(n_xy).unwrap() / n_samples_f;
-        let p_x_given_y = F::from(n_xy).unwrap() / F::from(n_y).unwrap();
+        let p_xy = F::from(n_xy).expect("Failed to convert to float") / n_samples_f;
+        let p_x_given_y = F::from(n_xy).expect("Failed to convert to float")
+            / F::from(n_y).expect("Failed to convert to float");
 
         if p_xy > F::zero() && p_x_given_y > F::zero() {
             conditional_entropy = conditional_entropy - p_xy * p_x_given_y.ln();
@@ -414,7 +420,7 @@ where
     }
 
     let mut mi = F::zero();
-    let n_samples_f = F::from(n_samples).unwrap();
+    let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
 
     // Calculate marginal probabilities
     let mut row_sums = HashMap::new();
@@ -429,9 +435,9 @@ where
         if n_ij > 0 {
             let n_i = row_sums[&i];
             let n_j = col_sums[&j];
-            let p_ij = F::from(n_ij).unwrap() / n_samples_f;
-            let p_i = F::from(n_i).unwrap() / n_samples_f;
-            let p_j = F::from(n_j).unwrap() / n_samples_f;
+            let p_ij = F::from(n_ij).expect("Failed to convert to float") / n_samples_f;
+            let p_i = F::from(n_i).expect("Failed to convert to float") / n_samples_f;
+            let p_j = F::from(n_j).expect("Failed to convert to float") / n_samples_f;
 
             mi = mi + p_ij * (p_ij / (p_i * p_j)).ln();
         }
@@ -448,7 +454,8 @@ mod tests {
     #[test]
     fn test_jensen_shannon_divergence_identical() {
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
-        let js: f64 = jensen_shannon_divergence(labels.view(), labels.view()).unwrap();
+        let js: f64 =
+            jensen_shannon_divergence(labels.view(), labels.view()).expect("Operation failed");
         assert!(js.abs() < 1e-10); // Should be zero for identical distributions
     }
 
@@ -457,8 +464,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
         let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 
-        let nvi: f64 =
-            normalized_variation_of_information(true_labels.view(), pred_labels.view()).unwrap();
+        let nvi: f64 = normalized_variation_of_information(true_labels.view(), pred_labels.view())
+            .expect("Operation failed");
         assert!(nvi >= 0.0 && nvi <= 1.0);
     }
 
@@ -467,8 +474,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let pred_labels = Array1::from_vec(vec![0, 1, 0, 1]);
 
-        let sic: f64 =
-            symmetric_information_coefficient(true_labels.view(), pred_labels.view()).unwrap();
+        let sic: f64 = symmetric_information_coefficient(true_labels.view(), pred_labels.view())
+            .expect("Operation failed");
         assert!(sic >= -1.0 && sic <= 1.0);
     }
 
@@ -477,7 +484,8 @@ mod tests {
         let true_labels = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
         let pred_labels = Array1::from_vec(vec![0, 0, 1, 1, 1, 2]);
 
-        let igr: f64 = information_gain_ratio(true_labels.view(), pred_labels.view()).unwrap();
+        let igr: f64 = information_gain_ratio(true_labels.view(), pred_labels.view())
+            .expect("Operation failed");
         assert!(igr >= 0.0 && igr <= 1.0);
     }
 
@@ -486,7 +494,7 @@ mod tests {
         let x = Array1::from_vec(vec![0, 0, 1, 1]);
         let y = Array1::from_vec(vec![0, 1, 0, 1]);
 
-        let uc: f64 = uncertainty_coefficient::<f64>(x.view(), y.view()).unwrap();
+        let uc: f64 = uncertainty_coefficient::<f64>(x.view(), y.view()).expect("Operation failed");
         assert!(uc >= 0.0 && uc <= 1.0);
     }
 
@@ -497,14 +505,14 @@ mod tests {
 
         let suc: f64 =
             symmetric_uncertainty_coefficient::<f64>(true_labels.view(), pred_labels.view())
-                .unwrap();
+                .expect("Operation failed");
         assert!(suc >= 0.0 && suc <= 1.0);
     }
 
     #[test]
     fn test_cluster_distribution() {
         let labels = Array1::from_vec(vec![0, 0, 1, 1, 2]);
-        let dist = cluster_distribution::<f64>(labels.view()).unwrap();
+        let dist = cluster_distribution::<f64>(labels.view()).expect("Operation failed");
 
         assert_eq!(dist.len(), 3);
         assert!((dist[&0] - 0.4).abs() < 1e-10);

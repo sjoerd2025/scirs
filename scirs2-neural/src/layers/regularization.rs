@@ -23,13 +23,13 @@ use std::sync::{Arc, RwLock};
 /// use scirs2_core::ndarray::Array2;
 ///
 /// // Create an activity regularization layer with L1=0.01 and L2=0.01
-/// let regularizer = ActivityRegularization::<f64>::new(Some(0.01), Some(0.01), Some("activity_reg")).unwrap();
+/// let regularizer = ActivityRegularization::<f64>::new(Some(0.01), Some(0.01), Some("activity_reg")).expect("Operation failed");
 ///
 /// // Forward pass with a batch of 2 samples, 10 features
 /// let input = Array2::<f64>::from_elem((2, 10), 1.0).into_dyn();
 ///
 /// // Forward pass
-/// let output = regularizer.forward(&input).unwrap();
+/// let output = regularizer.forward(&input).expect("Operation failed");
 ///
 /// // Output shape should match input shape
 /// assert_eq!(output.shape(), input.shape());
@@ -86,8 +86,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ActivityRegulariz
         }
 
         Ok(Self {
-            l1_factor: l1_factor.map(|x| F::from(x).unwrap()),
-            l2_factor: l2_factor.map(|x| F::from(x).unwrap()),
+            l1_factor: l1_factor.map(|x| F::from(x).expect("Failed to convert to float")),
+            l2_factor: l2_factor.map(|x| F::from(x).expect("Failed to convert to float")),
             name: name.map(String::from),
             input_cache: Arc::new(RwLock::new(None)),
             activity_loss: Arc::new(RwLock::new(F::zero())),
@@ -149,7 +149,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ActivityRegulariz
 
         // L2 regularization gradient (2 * activations)
         if let Some(l2_factor) = self.l2_factor {
-            let two = F::from(2.0).unwrap();
+            let two = F::from(2.0).expect("Failed to convert constant to float");
             let l2_grad = input.mapv(|x| two * l2_factor * x);
             grad = grad + l2_grad;
         }
@@ -215,7 +215,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
             ));
         }
 
-        let cached_input = input_ref.as_ref().unwrap();
+        let cached_input = input_ref.as_ref().expect("Operation failed");
 
         // Check shapes match
         if cached_input.shape() != grad_output.shape() {
@@ -272,9 +272,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
 /// use scirs2_core::ndarray::Array2;
 ///
 /// // Create an L1 activity regularization layer with factor 0.01
-/// let regularizer = L1ActivityRegularization::<f64>::new(0.01, Some("l1_reg")).unwrap();
+/// let regularizer = L1ActivityRegularization::<f64>::new(0.01, Some("l1_reg")).expect("Operation failed");
 /// let input = Array2::<f64>::from_elem((2, 3), 2.0).into_dyn();
-/// let output = regularizer.forward(&input).unwrap();
+/// let output = regularizer.forward(&input).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct L1ActivityRegularization<F: Float + Debug + Send + Sync> {
@@ -360,9 +360,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
 /// use scirs2_core::ndarray::Array2;
 ///
 /// // Create an L2 activity regularization layer with factor 0.01
-/// let regularizer = L2ActivityRegularization::<f64>::new(0.01, Some("l2_reg")).unwrap();
+/// let regularizer = L2ActivityRegularization::<f64>::new(0.01, Some("l2_reg")).expect("Operation failed");
 /// let input = Array2::<f64>::from_elem((2, 3), 2.0).into_dyn();
-/// let output = regularizer.forward(&input).unwrap();
+/// let output = regularizer.forward(&input).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct L2ActivityRegularization<F: Float + Debug + Send + Sync> {
@@ -445,18 +445,20 @@ mod tests {
     #[test]
     fn test_activity_regularization_creation() {
         // Test L1 only
-        let l1_reg = ActivityRegularization::<f64>::new(Some(0.01), None, Some("l1")).unwrap();
+        let l1_reg = ActivityRegularization::<f64>::new(Some(0.01), None, Some("l1"))
+            .expect("Operation failed");
         assert!(l1_reg.l1_factor.is_some());
         assert!(l1_reg.l2_factor.is_none());
 
         // Test L2 only
-        let l2_reg = ActivityRegularization::<f64>::new(None, Some(0.02), Some("l2")).unwrap();
+        let l2_reg = ActivityRegularization::<f64>::new(None, Some(0.02), Some("l2"))
+            .expect("Operation failed");
         assert!(l2_reg.l1_factor.is_none());
         assert!(l2_reg.l2_factor.is_some());
 
         // Test both L1 and L2
-        let both_reg =
-            ActivityRegularization::<f64>::new(Some(0.01), Some(0.02), Some("both")).unwrap();
+        let both_reg = ActivityRegularization::<f64>::new(Some(0.01), Some(0.02), Some("both"))
+            .expect("Operation failed");
         assert!(both_reg.l1_factor.is_some());
         assert!(both_reg.l2_factor.is_some());
 
@@ -466,11 +468,12 @@ mod tests {
 
     #[test]
     fn test_activity_regularization_forward() {
-        let reg = ActivityRegularization::<f64>::new(Some(0.01), Some(0.02), Some("test")).unwrap();
+        let reg = ActivityRegularization::<f64>::new(Some(0.01), Some(0.02), Some("test"))
+            .expect("Operation failed");
         let input = Array2::<f64>::from_elem((2, 3), 1.0);
         let input_dyn = input.clone().into_dyn();
 
-        let output = reg.forward(&input_dyn).unwrap();
+        let output = reg.forward(&input_dyn).expect("Operation failed");
 
         // Forward pass should not modify the input
         assert_eq!(input.into_dyn().shape(), output.shape());
@@ -481,15 +484,18 @@ mod tests {
 
     #[test]
     fn test_activity_regularization_backward() {
-        let reg = ActivityRegularization::<f64>::new(Some(0.1), Some(0.1), Some("test")).unwrap();
+        let reg = ActivityRegularization::<f64>::new(Some(0.1), Some(0.1), Some("test"))
+            .expect("Operation failed");
         let input = array![[1.0, -2.0, 0.5], [0.0, 3.0, -1.0]].into_dyn();
         let grad_output = array![[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]].into_dyn();
 
         // First do forward pass to cache input
-        let _output = reg.forward(&input).unwrap();
+        let _output = reg.forward(&input).expect("Operation failed");
 
         // Then do backward pass
-        let grad_input = reg.backward(&input, &grad_output).unwrap();
+        let grad_input = reg
+            .backward(&input, &grad_output)
+            .expect("Operation failed");
 
         // Gradient should include regularization terms
         assert_eq!(grad_input.shape(), input.shape());
@@ -499,36 +505,39 @@ mod tests {
 
     #[test]
     fn test_l1_activity_regularization() {
-        let reg = L1ActivityRegularization::<f64>::new(0.01, Some("l1_test")).unwrap();
+        let reg =
+            L1ActivityRegularization::<f64>::new(0.01, Some("l1_test")).expect("Operation failed");
         let input = Array2::<f64>::from_elem((2, 3), 2.0).into_dyn();
 
-        let _output = reg.forward(&input).unwrap();
+        let _output = reg.forward(&input).expect("Operation failed");
 
         // Check that activity loss is calculated
-        let loss = reg.get_activity_loss().unwrap();
+        let loss = reg.get_activity_loss().expect("Operation failed");
         assert!(loss > 0.0); // Should have positive loss for positive activations
     }
 
     #[test]
     fn test_l2_activity_regularization() {
-        let reg = L2ActivityRegularization::<f64>::new(0.01, Some("l2_test")).unwrap();
+        let reg =
+            L2ActivityRegularization::<f64>::new(0.01, Some("l2_test")).expect("Operation failed");
         let input = Array2::<f64>::from_elem((2, 3), 2.0).into_dyn();
 
-        let _output = reg.forward(&input).unwrap();
+        let _output = reg.forward(&input).expect("Operation failed");
 
         // Check that activity loss is calculated
-        let loss = reg.get_activity_loss().unwrap();
+        let loss = reg.get_activity_loss().expect("Operation failed");
         assert!(loss > 0.0); // Should have positive loss for non-zero activations
     }
 
     #[test]
     fn test_activity_loss_calculation() {
-        let reg = ActivityRegularization::<f64>::new(Some(0.1), Some(0.1), Some("test")).unwrap();
+        let reg = ActivityRegularization::<f64>::new(Some(0.1), Some(0.1), Some("test"))
+            .expect("Operation failed");
         // Test with known values
         let input = array![[1.0, -1.0], [2.0, 0.0]].into_dyn();
 
-        let _output = reg.forward(&input).unwrap();
-        let loss = reg.get_activity_loss().unwrap();
+        let _output = reg.forward(&input).expect("Operation failed");
+        let loss = reg.get_activity_loss().expect("Operation failed");
 
         // L1 loss: |1| + |-1| + |2| + |0| = 4
         // L2 loss: 1^2 + (-1)^2 + 2^2 + 0^2 = 6

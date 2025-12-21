@@ -279,7 +279,7 @@ impl AdvancedBenchmarkValidator {
         let optimized_duration =
             optimized_start.elapsed() / self.config.benchmark_iterations as u32;
 
-        let optimized_result = optimized_result.unwrap();
+        let optimized_result = optimized_result.expect("Operation failed");
 
         // Calculate metrics
         let speedup_ratio =
@@ -347,7 +347,7 @@ impl AdvancedBenchmarkValidator {
         }
         let reference_duration =
             reference_start.elapsed() / self.config.benchmark_iterations.min(10) as u32;
-        let reference_result = reference_result.unwrap();
+        let reference_result = reference_result.expect("Operation failed");
 
         // Benchmark optimized implementation
         let optimized_start = Instant::now();
@@ -369,7 +369,7 @@ impl AdvancedBenchmarkValidator {
         }
         let optimized_duration =
             optimized_start.elapsed() / self.config.benchmark_iterations.min(10) as u32;
-        let optimized_result = optimized_result.unwrap();
+        let optimized_result = optimized_result.expect("Operation failed");
 
         // Calculate accuracy (Frobenius norm of difference)
         let diff_norm = (&reference_result - &optimized_result)
@@ -418,7 +418,7 @@ impl AdvancedBenchmarkValidator {
         use scirs2_core::random::{Distribution, Normal};
 
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42); // Fixed seed for reproducibility
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
         Array1::from_vec((0..size).map(|_| normal.sample(&mut rng)).collect())
     }
@@ -429,13 +429,13 @@ impl AdvancedBenchmarkValidator {
         use scirs2_core::random::{Distribution, Normal};
 
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42); // Fixed seed for reproducibility
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 
         Array2::from_shape_vec(
             (rows, cols),
             (0..rows * cols).map(|_| normal.sample(&mut rng)).collect(),
         )
-        .unwrap()
+        .expect("Operation failed")
     }
 
     /// Generate comprehensive validation report
@@ -501,7 +501,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_validation_config_default() {
         let config = ValidationConfig::default();
         assert_eq!(config.numerical_tolerance, 1e-12);
@@ -515,7 +514,7 @@ mod tests {
     fn test_reference_mean_implementation() {
         let reference = ReferenceMean;
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = reference.compute_f64(data.view()).unwrap();
+        let result = reference.compute_f64(data.view()).expect("Operation failed");
         assert!((result - 3.0).abs() < 1e-15);
     }
 
@@ -523,7 +522,7 @@ mod tests {
     fn test_reference_variance_implementation() {
         let reference = ReferenceVariance;
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = reference.compute_f64(data.view()).unwrap();
+        let result = reference.compute_f64(data.view()).expect("Operation failed");
         // Sample variance of [1,2,3,4,5] is 2.5
         assert!((result - 2.5).abs() < 1e-15);
     }

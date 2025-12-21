@@ -117,18 +117,18 @@ where
     ///     1.0, 1.0,  // 3 observations with 2 variables (intercept and x1)
     ///     1.0, 2.0,
     ///     1.0, 3.0,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     /// let y = array![3.0, 5.0, 7.0];  // y = 1 + 2*x1
     ///
-    /// let model = linear_regression(&x.view(), &y.view(), None).unwrap();
+    /// let model = linear_regression(&x.view(), &y.view(), None).expect("Operation failed");
     ///
     /// // Predict for new data
     /// let x_new = Array2::from_shape_vec((2, 2), vec![
     ///     1.0, 4.0,  // 2 new observations
     ///     1.0, 5.0,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
-    /// let predictions = model.predict(&x_new.view()).unwrap();
+    /// let predictions = model.predict(&x_new.view()).expect("Operation failed");
     ///
     /// // Check predictions: y = 1 + 2*x1
     /// assert!((predictions[0] - 9.0f64).abs() < 1e-8f64);  // 1 + 2*4 = 9

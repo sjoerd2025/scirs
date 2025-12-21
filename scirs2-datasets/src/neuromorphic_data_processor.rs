@@ -353,7 +353,9 @@ impl NeuromorphicProcessor {
                 if rng.random::<f64>() < self.network_config.connection_probability {
                     let weight =
                         (rng.random::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
-                    let delay = Duration::from_millis(rng.sample(Uniform::new(1, 5).unwrap()));
+                    let delay = Duration::from_millis(
+                        rng.sample(Uniform::new(1, 5).expect("Operation failed")),
+                    );
 
                     network[pre_idx].push(Synapse {
                         weight,
@@ -669,7 +671,9 @@ impl NeuromorphicProcessor {
                 {
                     let weight =
                         (rng.random::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
-                    let delay = Duration::from_millis(rng.sample(Uniform::new(2, 10).unwrap()));
+                    let delay = Duration::from_millis(
+                        rng.sample(Uniform::new(2, 10).expect("Operation failed")),
+                    );
 
                     network[pre_idx].push(Synapse {
                         weight,
@@ -718,14 +722,15 @@ mod tests {
 
     #[test]
     fn test_neuromorphic_dataset_transformation() {
-        let data = Array2::from_shape_vec((10, 4), (0..40).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 4), (0..40).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let targets = Array1::from((0..10).map(|x| (x % 2) as f64).collect::<Vec<_>>());
         let dataset = Dataset::new(data, Some(targets));
 
         let processor = NeuromorphicProcessor::default();
         let transform = processor
             .transform_dataset(&dataset, Duration::from_millis(100), Some(42))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(transform.spike_patterns.dim().0, 10); // 100ms / 10ms = 10 time steps
         assert_eq!(transform.spike_patterns.dim().1, 256); // Default hidden neurons
@@ -740,7 +745,7 @@ mod tests {
         let processor = NeuromorphicProcessor::default();
         let dataset = processor
             .generate_bioinspired_dataset(50, 5, 10, Some(42))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 50);
         assert_eq!(dataset.n_features(), 5);
@@ -756,7 +761,7 @@ mod tests {
 
         let result = processor
             .process_temporal_sequence(&sequence, true, Some(42))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.spike_patterns.dim(), (5, 256, 10)); // time, neurons, samples
         assert_eq!(result.learning_trajectory.len(), 5);

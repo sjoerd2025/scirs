@@ -100,7 +100,10 @@ fn benchmark_distance_calculations() -> Result<(), Box<dyn std::error::Error>> {
         // Scalar benchmark
         let start = Instant::now();
         for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
-            let _dist = euclidean(row1.as_slice().unwrap(), row2.as_slice().unwrap());
+            let _dist = euclidean(
+                row1.as_slice().expect("Operation failed"),
+                row2.as_slice().expect("Operation failed"),
+            );
         }
         let scalar_time = start.elapsed().as_micros();
 
@@ -168,7 +171,7 @@ fn benchmark_spatial_structures() -> Result<(), Box<dyn std::error::Error>> {
         // Query performance
         let start = Instant::now();
         for query in query_points.outer_iter() {
-            let _result = kdtree.query(query.as_slice().unwrap(), 5)?;
+            let _result = kdtree.query(query.as_slice().expect("Operation failed"), 5)?;
         }
         let query_time = start.elapsed().as_millis();
 

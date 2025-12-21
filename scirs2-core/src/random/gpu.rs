@@ -429,7 +429,7 @@ impl GpuRandomGenerator {
             })?;
 
         // Create GPU buffers
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock().expect("Operation failed");
         let num_threads = state.seeds.len();
 
         let seeds_buffer = self.device.create_buffer_from_slice(&state.seeds);
@@ -455,7 +455,7 @@ impl GpuRandomGenerator {
         let updated_counters = counters_buffer.to_vec();
 
         {
-            let mut state = self.state.lock().unwrap();
+            let mut state = self.state.lock().expect("Operation failed");
             state.seeds[..num_threads.min(updated_seeds.len())]
                 .copy_from_slice(&updated_seeds[..num_threads.min(updated_seeds.len())]);
             state.counters[..num_threads.min(updated_counters.len())]
@@ -478,7 +478,7 @@ impl GpuRandomGenerator {
     ) -> CoreResult<Array<f32, IxDyn>> {
         if let Some(kernel) = self.kernels.get("normal") {
             // Use direct normal generation if available
-            let state = self.state.lock().unwrap();
+            let state = self.state.lock().expect("Operation failed");
             let num_threads = state.seeds.len();
 
             let seeds_buffer = self.device.create_buffer_from_slice(&state.seeds);
@@ -504,7 +504,7 @@ impl GpuRandomGenerator {
             let updated_counters = counters_buffer.to_vec();
 
             {
-                let mut state = self.state.lock().unwrap();
+                let mut state = self.state.lock().expect("Operation failed");
                 state.seeds[..num_threads.min(updated_seeds.len())]
                     .copy_from_slice(&updated_seeds[..num_threads.min(updated_seeds.len())]);
                 state.counters[..num_threads.min(updated_counters.len())]
@@ -592,7 +592,7 @@ impl GpuRandomGenerator {
 
     /// Get generator statistics
     pub fn get_statistics(&self) -> GpuRngStatistics {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock().expect("Operation failed");
         let total_generated: u64 = state.counters.iter().sum();
 
         GpuRngStatistics {
@@ -605,7 +605,7 @@ impl GpuRandomGenerator {
 
     /// Estimate memory usage
     fn estimate_memory_usage(&self) -> usize {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock().expect("Operation failed");
         let state_size = state.seeds.len() * std::mem::size_of::<u64>() * 2; // seeds + counters
         let kernel_size = self.kernels.len() * 1024; // Rough estimate for kernel storage
         state_size + kernel_size
@@ -613,7 +613,7 @@ impl GpuRandomGenerator {
 
     /// Reset generator state
     pub fn reset(&self) -> CoreResult<()> {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
 
         // Generate new seeds
         state.seeds = Self::generate_seeds(state.seeds.len())?;
@@ -624,7 +624,7 @@ impl GpuRandomGenerator {
 
     /// Seed the generator with a specific value
     pub fn seed(&mut self, seed: u64) -> CoreResult<()> {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
 
         for (i, s) in state.seeds.iter_mut().enumerate() {
             *s = seed.wrapping_add(i as u64);
@@ -791,7 +791,7 @@ pub mod utils {
         let start = Instant::now();
         let mut cpu_rng = crate::random::Random::default();
         let cpu_result: Vec<f64> = (0..count)
-            .map(|_| cpu_rng.sample(rand_distr::Uniform::new(0.0, 1.0).unwrap()))
+            .map(|_| cpu_rng.sample(rand_distr::Uniform::new(0.0, 1.0).expect("Operation failed")))
             .collect();
         let cpu_duration = start.elapsed();
 

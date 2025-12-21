@@ -907,8 +907,8 @@ println!("   - Found {} strong corner features", strong_corners);
 
 // Step 6: Quality metrics
 println!("\n6. QUALITY ASSESSMENT");
-let image_mean = image.mean().unwrap();
-let image_std = image.var(scirs2_core::ndarray::Axis(0)).unwrap().mean().unwrap().sqrt();
+let image_mean = image.mean().expect("Operation failed");
+let image_std = image.var(scirs2_core::ndarray::Axis(0)).expect("Operation failed").mean().expect("Operation failed").sqrt();
 let signal_to_noise = image_mean / image_std;
 
 println!("   - Image mean intensity: {:.3}", image_mean);

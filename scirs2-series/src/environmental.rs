@@ -299,7 +299,7 @@ impl PrecipitationAnalysis {
                 _ => "Extreme",
             };
 
-            *classification.get_mut(category).unwrap() += 1;
+            *classification.get_mut(category).expect("Operation failed") += 1;
         }
 
         Ok(classification)
@@ -671,7 +671,11 @@ impl EnvironmentalAnalysis {
         }
 
         // Combine stress factors
-        let min_len = stress_factors.iter().map(|s| s.len()).min().unwrap();
+        let min_len = stress_factors
+            .iter()
+            .map(|s| s.len())
+            .min()
+            .expect("Operation failed");
         let mut combined_stress = Array1::zeros(min_len);
 
         for i in 0..min_len {
@@ -702,8 +706,11 @@ mod tests {
         let temps = arr1(&[20.0, 25.0, 30.0, 35.0, 40.0, 38.0, 32.0, 28.0]);
         let times = arr1(&[1, 2, 3, 4, 5, 6, 7, 8]);
 
-        let analysis = TemperatureAnalysis::new(temps, times, (1990, 2020)).unwrap();
-        let heat_waves = analysis.detect_heat_waves(35.0, 2).unwrap();
+        let analysis =
+            TemperatureAnalysis::new(temps, times, (1990, 2020)).expect("Operation failed");
+        let heat_waves = analysis
+            .detect_heat_waves(35.0, 2)
+            .expect("Operation failed");
 
         assert_eq!(heat_waves.len(), 1);
         // Check that we detected a heat wave somewhere in the expected range
@@ -716,8 +723,10 @@ mod tests {
         let precip = arr1(&[0.0, 2.0, 0.0, 0.0, 15.0, 25.0, 0.0, 1.0]);
         let times = arr1(&[1, 2, 3, 4, 5, 6, 7, 8]);
 
-        let analysis = PrecipitationAnalysis::new(precip, times).unwrap();
-        let dry_days = analysis.consecutive_dry_days(1.0).unwrap();
+        let analysis = PrecipitationAnalysis::new(precip, times).expect("Operation failed");
+        let dry_days = analysis
+            .consecutive_dry_days(1.0)
+            .expect("Operation failed");
 
         assert_eq!(dry_days[2], 1); // Third day (index 2) has 1 consecutive dry day
         assert_eq!(dry_days[3], 2); // Fourth day (index 3) has 2 consecutive dry days
@@ -728,7 +737,8 @@ mod tests {
         let tahiti = arr1(&[1013.0, 1015.0, 1010.0, 1018.0]);
         let darwin = arr1(&[1008.0, 1012.0, 1005.0, 1020.0]);
 
-        let soi = ClimateIndices::southern_oscillation_index(&tahiti, &darwin).unwrap();
+        let soi =
+            ClimateIndices::southern_oscillation_index(&tahiti, &darwin).expect("Operation failed");
         assert_eq!(soi.len(), 4);
     }
 
@@ -738,8 +748,11 @@ mod tests {
         let wind_speed = arr1(&[5.0, 10.0, 15.0, 8.0]);
         let times = arr1(&[1, 2, 3, 4]);
 
-        let analysis = AtmosphericAnalysis::new(pressure, wind_speed, None, times).unwrap();
-        let power_density = analysis.wind_power_density(1.225).unwrap();
+        let analysis =
+            AtmosphericAnalysis::new(pressure, wind_speed, None, times).expect("Operation failed");
+        let power_density = analysis
+            .wind_power_density(1.225)
+            .expect("Operation failed");
 
         // Check that power density increases with wind speed cubed
         assert!(power_density[2] > power_density[1]); // 15 m/s > 10 m/s

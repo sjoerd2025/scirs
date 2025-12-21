@@ -34,8 +34,8 @@ use crate::error::SpatialResult;
 ///
 /// // 2D square with area 1
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let area = compute_volume(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let area = compute_volume(&hull).expect("Operation failed");
 /// assert!((area - 1.0).abs() < 1e-10);
 /// ```
 pub fn compute_volume(hull: &ConvexHull) -> SpatialResult<f64> {
@@ -61,8 +61,8 @@ fn compute_1d_volume(hull: &ConvexHull) -> SpatialResult<f64> {
         return Ok(0.0);
     }
 
-    let min_idx = *hull.vertex_indices.iter().min().unwrap();
-    let max_idx = *hull.vertex_indices.iter().max().unwrap();
+    let min_idx = *hull.vertex_indices.iter().min().expect("Operation failed");
+    let max_idx = *hull.vertex_indices.iter().max().expect("Operation failed");
 
     Ok((hull.points[[max_idx, 0]] - hull.points[[min_idx, 0]]).abs())
 }
@@ -143,8 +143,8 @@ fn compute_nd_volume(hull: &ConvexHull) -> SpatialResult<f64> {
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let estimated_area = compute_volume_monte_carlo(&hull, 10000).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let estimated_area = compute_volume_monte_carlo(&hull, 10000).expect("Operation failed");
 /// assert!((estimated_area - 1.0).abs() < 0.1); // Monte Carlo approximation
 /// ```
 pub fn compute_volume_monte_carlo(hull: &ConvexHull, num_samples: usize) -> SpatialResult<f64> {
@@ -215,8 +215,8 @@ pub fn compute_volume_monte_carlo(hull: &ConvexHull, num_samples: usize) -> Spat
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let (lower, upper, exact) = compute_volume_bounds(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let (lower, upper, exact) = compute_volume_bounds(&hull).expect("Operation failed");
 /// assert!(exact.is_some());
 /// assert!((exact.unwrap() - 1.0).abs() < 1e-10);
 /// ```
@@ -269,7 +269,7 @@ pub fn compute_volume_bounds(hull: &ConvexHull) -> SpatialResult<(f64, f64, Opti
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 /// assert!(is_volume_computation_reliable(&hull));
 /// ```
 pub fn is_volume_computation_reliable(hull: &ConvexHull) -> bool {
@@ -304,14 +304,14 @@ mod tests {
     fn test_compute_2d_volume() {
         // Unit square
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let area = compute_volume(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let area = compute_volume(&hull).expect("Operation failed");
         assert!((area - 1.0).abs() < 1e-10);
 
         // Triangle
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let area = compute_volume(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let area = compute_volume(&hull).expect("Operation failed");
         assert!((area - 0.5).abs() < 1e-10);
     }
 
@@ -319,19 +319,19 @@ mod tests {
     fn test_compute_1d_volume() {
         // Line segment
         let points = arr2(&[[0.0], [3.0], [1.0], [2.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let length = compute_volume(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let length = compute_volume(&hull).expect("Operation failed");
         assert!((length - 3.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_compute_volume_bounds() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let (lower, upper, exact) = compute_volume_bounds(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let (lower, upper, exact) = compute_volume_bounds(&hull).expect("Operation failed");
 
         assert!(exact.is_some());
-        assert!((exact.unwrap() - 1.0).abs() < 1e-10);
+        assert!((exact.expect("Operation failed") - 1.0).abs() < 1e-10);
         assert_eq!(lower, upper); // Should be exact for 2D
     }
 
@@ -339,7 +339,7 @@ mod tests {
     fn test_is_volume_computation_reliable() {
         // 2D case - should be reliable
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
         assert!(is_volume_computation_reliable(&hull));
 
         // 3D case - should be reliable
@@ -349,17 +349,17 @@ mod tests {
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0],
         ]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
         assert!(is_volume_computation_reliable(&hull));
     }
 
     #[test]
     fn test_compute_volume_monte_carlo() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         // Monte Carlo should give approximately correct result
-        let estimated_area = compute_volume_monte_carlo(&hull, 10000).unwrap();
+        let estimated_area = compute_volume_monte_carlo(&hull, 10000).expect("Operation failed");
         assert!((estimated_area - 1.0).abs() < 0.1); // Allow for Monte Carlo error
     }
 
@@ -377,8 +377,8 @@ mod tests {
 
         // Valid 1D case: many points on a line
         let points = arr2(&[[0.0], [1.0], [2.0], [3.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let length = compute_volume(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let length = compute_volume(&hull).expect("Operation failed");
         assert!((length - 3.0).abs() < 1e-10); // Length should be 3.0 - 0.0 = 3.0
     }
 }

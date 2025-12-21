@@ -165,7 +165,9 @@ mod tests {
         let predictions = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
         let targets = Array::from_vec(vec![1.2, 1.8, 3.1]).into_dyn();
 
-        let loss = huber.forward(&predictions, &targets).unwrap();
+        let loss = huber
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
 
         // All diffs are <= 1.0, so use quadratic: 0.5 * diff^2
         // diffs: -0.2, 0.2, -0.1
@@ -181,7 +183,9 @@ mod tests {
         let predictions = Array::from_vec(vec![0.0, 5.0]).into_dyn();
         let targets = Array::from_vec(vec![3.0, 0.0]).into_dyn();
 
-        let loss = huber.forward(&predictions, &targets).unwrap();
+        let loss = huber
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
 
         // diffs: -3.0 (|diff|=3 > 1), 5.0 (|diff|=5 > 1)
         // Linear: delta * (|diff| - 0.5*delta) = 1.0 * (3.0 - 0.5) = 2.5, 1.0 * (5.0 - 0.5) = 4.5
@@ -196,7 +200,9 @@ mod tests {
         let predictions = Array::from_vec(vec![0.0, 0.5]).into_dyn();
         let targets = Array::from_vec(vec![3.0, 0.3]).into_dyn();
 
-        let loss = huber.forward(&predictions, &targets).unwrap();
+        let loss = huber
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
 
         // diff1 = -3.0, |diff| = 3 > 1, linear: 1.0 * (3.0 - 0.5) = 2.5
         // diff2 = 0.2, |diff| = 0.2 <= 1, quadratic: 0.5 * 0.04 = 0.02
@@ -211,7 +217,9 @@ mod tests {
         let predictions = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
         let targets = Array::from_vec(vec![1.0, 2.0, 3.0]).into_dyn();
 
-        let loss = huber.forward(&predictions, &targets).unwrap();
+        let loss = huber
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
         assert!(loss.abs() < 1e-10);
     }
 
@@ -221,7 +229,9 @@ mod tests {
         let predictions = Array::from_vec(vec![1.0, 2.0]).into_dyn();
         let targets = Array::from_vec(vec![1.5, 1.5]).into_dyn();
 
-        let gradients = huber.backward(&predictions, &targets).unwrap();
+        let gradients = huber
+            .backward(&predictions, &targets)
+            .expect("Operation failed");
 
         // diffs: -0.5, 0.5 (both in quadratic region)
         // gradients: diff / n = -0.5/2, 0.5/2 = -0.25, 0.25
@@ -235,7 +245,9 @@ mod tests {
         let predictions = Array::from_vec(vec![0.0, 5.0]).into_dyn();
         let targets = Array::from_vec(vec![3.0, 0.0]).into_dyn();
 
-        let gradients = huber.backward(&predictions, &targets).unwrap();
+        let gradients = huber
+            .backward(&predictions, &targets)
+            .expect("Operation failed");
 
         // diffs: -3.0 (linear, negative), 5.0 (linear, positive)
         // gradients: -delta/n, delta/n = -0.5, 0.5
@@ -249,7 +261,9 @@ mod tests {
         let predictions = Array::from_vec(vec![0.0]).into_dyn();
         let targets = Array::from_vec(vec![1.0]).into_dyn();
 
-        let loss = huber.forward(&predictions, &targets).unwrap();
+        let loss = huber
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
 
         // diff = -1.0, |diff| = 1.0 > 0.5 (delta), so linear
         // loss = 0.5 * (1.0 - 0.25) = 0.5 * 0.75 = 0.375
@@ -260,13 +274,15 @@ mod tests {
     fn test_huber_2d() {
         let huber = HuberLoss::new(1.0);
         let predictions = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
         let targets = Array::from_shape_vec((2, 2), vec![1.0, 2.5, 6.0, 4.0])
-            .unwrap()
+            .expect("Operation failed")
             .into_dyn();
 
-        let loss = huber.forward(&predictions, &targets).unwrap();
+        let loss = huber
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
 
         // diffs: 0, -0.5, -3, 0
         // losses: 0, 0.125 (quadratic), 2.5 (linear), 0
@@ -281,7 +297,9 @@ mod tests {
         let predictions = Array::from_vec(vec![1.0, 2.0]).into_dyn();
         let targets = Array::from_vec(vec![1.5, 5.0]).into_dyn();
 
-        let loss = smooth_l1.forward(&predictions, &targets).unwrap();
+        let loss = smooth_l1
+            .forward(&predictions, &targets)
+            .expect("Operation failed");
         assert!(loss > 0.0);
     }
 }

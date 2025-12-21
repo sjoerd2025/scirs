@@ -361,7 +361,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
             for i in 0..nstrata {
                 if counts[i] > 0 {
                     for j in 0..n_features {
-                        centroids[[i, j]] = centroids[[i, j]] / F::from(counts[i]).unwrap();
+                        centroids[[i, j]] = centroids[[i, j]]
+                            / F::from(counts[i]).expect("Failed to convert to float");
                     }
                 }
             }
@@ -696,12 +697,15 @@ mod tests {
         };
         let partitioner = DataPartitioner::<f64>::new(config);
 
-        let sizes = partitioner.calculate_partition_sizes(100).unwrap();
+        let sizes = partitioner
+            .calculate_partition_sizes(100)
+            .expect("Operation failed");
         assert_eq!(sizes.len(), 3);
         assert_eq!(sizes.iter().sum::<usize>(), 100);
 
         // Should be approximately balanced
-        let max_diff = sizes.iter().max().unwrap() - sizes.iter().min().unwrap();
+        let max_diff = sizes.iter().max().expect("Operation failed")
+            - sizes.iter().min().expect("Operation failed");
         assert!(max_diff <= 1);
     }
 
@@ -715,8 +719,11 @@ mod tests {
         };
         let mut partitioner = DataPartitioner::new(config);
 
-        let data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
-        let partitions = partitioner.partition_data(data.view()).unwrap();
+        let data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect())
+            .expect("Operation failed");
+        let partitions = partitioner
+            .partition_data(data.view())
+            .expect("Operation failed");
 
         assert_eq!(partitions.len(), 2);
         assert!(partitions.iter().all(|p| p.data.nrows() > 0));
@@ -734,8 +741,11 @@ mod tests {
         };
         let mut partitioner = DataPartitioner::new(config);
 
-        let data = Array2::from_shape_vec((99, 2), (0..198).map(|x| x as f64).collect()).unwrap();
-        let partitions = partitioner.partition_data(data.view()).unwrap();
+        let data = Array2::from_shape_vec((99, 2), (0..198).map(|x| x as f64).collect())
+            .expect("Operation failed");
+        let partitions = partitioner
+            .partition_data(data.view())
+            .expect("Operation failed");
 
         assert_eq!(partitions.len(), 3);
         assert_eq!(partitions[0].data.nrows(), 33);
@@ -774,7 +784,9 @@ mod tests {
         };
         let partitioner = DataPartitioner::<f64>::new(config);
 
-        let sizes = partitioner.calculate_partition_sizes(120).unwrap();
+        let sizes = partitioner
+            .calculate_partition_sizes(120)
+            .expect("Operation failed");
         assert!(sizes.iter().all(|&size| size >= 10 && size <= 50));
     }
 }

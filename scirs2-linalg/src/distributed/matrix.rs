@@ -609,7 +609,7 @@ mod tests {
             .with_node_rank(0)
             .with_distribution(DistributionStrategy::RowWise);
         
-        let distmatrix = DistributedMatrix::from_local(matrix.clone(), config).unwrap();
+        let distmatrix = DistributedMatrix::from_local(matrix.clone(), config).expect("Operation failed");
         
         assert_eq!(distmatrix.globalshape(), (6, 4));
         assert_eq!(distmatrix.localshape().0, 3); // Half the rows
@@ -623,7 +623,7 @@ mod tests {
             .with_num_nodes(2)
             .with_node_rank(0);
         
-        let dist_vector = DistributedVector::from_local(vector, config).unwrap();
+        let dist_vector = DistributedVector::from_local(vector, config).expect("Operation failed");
         
         assert_eq!(dist_vector.global_length(), 10);
         assert_eq!(dist_vector.local_length(), 5); // Half the elements
@@ -646,11 +646,11 @@ mod tests {
         
         let config = DistributedConfig::default();
         
-        let dist1 = DistributedMatrix::from_local(matrix1, config.clone()).unwrap();
-        let dist2 = DistributedMatrix::from_local(matrix2, config).unwrap();
+        let dist1 = DistributedMatrix::from_local(matrix1, config.clone()).expect("Operation failed");
+        let dist2 = DistributedMatrix::from_local(matrix2, config).expect("Operation failed");
         
         // Test addition (local operation)
-        let result = dist1.add(&dist2).unwrap();
+        let result = dist1.add(&dist2).expect("Operation failed");
         assert_eq!(result.globalshape(), (4, 4));
     }
 }

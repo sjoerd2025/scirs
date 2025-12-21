@@ -596,7 +596,7 @@ mod tests {
             memory_bandwidth: 77.0,
             power_budget: 225.0,
             bitstream_path: None,
-        let device = FPGADevice::new(config).unwrap();
+        let device = FPGADevice::new(config).expect("Operation failed");
         assert!(!device.bitstream_loaded);
     fn test_fpga_kernel_resources() {
         let kernel = FPGAKernel::new(
@@ -622,8 +622,8 @@ mod tests {
         params.insert("m".to_string(), 64.0);
         params.insert("n".to_string(), 64.0);
         params.insert("k".to_string(), 64.0);
-        let kernel = compiler.compile_operation("matmul", &params).unwrap();
+        let kernel = compiler.compile_operation("matmul", &params).expect("Operation failed");
         assert_eq!(kernel.name, "matmul_kernel");
-        let hls_code = compiler.generate_hls(&kernel).unwrap();
+        let hls_code = compiler.generate_hls(&kernel).expect("Operation failed");
         assert!(hls_code.contains("matmul_kernel"));
         assert!(hls_code.contains("#pragma HLS"));

@@ -193,7 +193,7 @@ impl RuleCache {
 /// use scirs2_integrate::tanhsinh::{tanhsinh, TanhSinhOptions};
 ///
 /// // Integrate x^2 from 0 to 1 (exact result: 1/3)
-/// let result = tanhsinh(|x| x * x, 0.0, 1.0, None).unwrap();
+/// let result = tanhsinh(|x| x * x, 0.0, 1.0, None).expect("Operation failed");
 /// assert!((result.integral - 1.0/3.0).abs() < 1e-6);
 /// ```
 #[allow(dead_code)]
@@ -700,7 +700,7 @@ where
 /// use scirs2_integrate::tanhsinh::{nsum, TanhSinhOptions};
 ///
 /// // Compute sum of 1/n² from n=1 to infinity (equals π²/6)
-/// let result = nsum(|n| 1.0/(n*n), 1.0, f64::INFINITY, 1.0, None, None).unwrap();
+/// let result = nsum(|n| 1.0/(n*n), 1.0, f64::INFINITY, 1.0, None, None).expect("Operation failed");
 /// let pi_squared_over_six = std::f64::consts::PI * std::f64::consts::PI / 6.0;
 /// assert!((result.integral - pi_squared_over_six).abs() < 1e-6);
 /// ```
@@ -818,7 +818,7 @@ mod tests {
     #[test]
     fn test_basic_integral() {
         // Integrate x^2 from 0 to 1 (= 1/3)
-        let result = tanhsinh(|x| x * x, 0.0, 1.0, None).unwrap();
+        let result = tanhsinh(|x| x * x, 0.0, 1.0, None).expect("Operation failed");
         assert_abs_diff_eq!(result.integral, 1.0 / 3.0, epsilon = 1e-10);
         assert!(result.success);
     }
@@ -826,7 +826,7 @@ mod tests {
     #[test]
     fn test_trig_integral() {
         // Integrate sin(x) from 0 to pi (= 2)
-        let result = tanhsinh(|x| x.sin(), 0.0, PI, None).unwrap();
+        let result = tanhsinh(|x| x.sin(), 0.0, PI, None).expect("Operation failed");
         assert_abs_diff_eq!(result.integral, 2.0, epsilon = 1e-10);
         assert!(result.success);
     }
@@ -839,7 +839,8 @@ mod tests {
             rtol: 1e-5,
             ..Default::default()
         };
-        let result = tanhsinh(|x| 1.0 / x.sqrt(), 0.0, 1.0, Some(options)).unwrap();
+        let result =
+            tanhsinh(|x| 1.0 / x.sqrt(), 0.0, 1.0, Some(options)).expect("Operation failed");
         assert_abs_diff_eq!(result.integral, 2.0, epsilon = 2e-5);
         assert!(result.success);
     }
@@ -847,7 +848,7 @@ mod tests {
     #[test]
     fn test_semi_infinite_integral() {
         // Integrate e^(-x) from 0 to infinity (= 1)
-        let result = tanhsinh(|x| (-x).exp(), 0.0, f64::INFINITY, None).unwrap();
+        let result = tanhsinh(|x| (-x).exp(), 0.0, f64::INFINITY, None).expect("Operation failed");
         assert_abs_diff_eq!(result.integral, 1.0, epsilon = 1e-8);
         assert!(result.success);
     }
@@ -857,8 +858,8 @@ mod tests {
         // Integrate e^(-x^2) from -infinity to infinity (= sqrt(pi))
 
         // Special case detection should handle this automatically
-        let result =
-            infinite_range_integral(|x| (-x * x).exp(), TanhSinhOptions::default()).unwrap();
+        let result = infinite_range_integral(|x| (-x * x).exp(), TanhSinhOptions::default())
+            .expect("Operation failed");
 
         assert_abs_diff_eq!(result.integral, PI.sqrt(), epsilon = 1e-8);
         assert!(result.success);
@@ -872,7 +873,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = tanhsinh(|x| -1000.0 * x * x, -1.0, 1.0, Some(options)).unwrap();
+        let result =
+            tanhsinh(|x| -1000.0 * x * x, -1.0, 1.0, Some(options)).expect("Operation failed");
 
         let expected = (PI / 1000.0).sqrt();
         assert_abs_diff_eq!(result.integral.exp(), expected, epsilon = 1e-8);
@@ -882,7 +884,7 @@ mod tests {
     #[test]
     fn test_nsum_finite() {
         // Sum of first 10 integers (= 55)
-        let result = nsum(|n| n, 1.0, 10.0, 1.0, None, None).unwrap();
+        let result = nsum(|n| n, 1.0, 10.0, 1.0, None, None).expect("Operation failed");
         assert_abs_diff_eq!(result.integral, 55.0, epsilon = 1e-10);
         assert!(result.success);
     }
@@ -890,7 +892,8 @@ mod tests {
     #[test]
     fn test_nsum_infinite() {
         // Sum of 1/n^2 from 1 to infinity (= pi^2/6)
-        let result = nsum(|n| 1.0 / (n * n), 1.0, f64::INFINITY, 1.0, None, None).unwrap();
+        let result =
+            nsum(|n| 1.0 / (n * n), 1.0, f64::INFINITY, 1.0, None, None).expect("Operation failed");
 
         let expected = PI * PI / 6.0;
         assert_abs_diff_eq!(result.integral, expected, epsilon = 1e-6);

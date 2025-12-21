@@ -215,8 +215,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             load_balancer: None,
             max_levels,
             min_cell_size: min_cellsize,
-            coarsening_tolerance: F::from(0.1).unwrap(),
-            refinement_tolerance: F::from(1.0).unwrap(),
+            coarsening_tolerance: F::from(0.1).expect("Failed to convert constant to float"),
+            refinement_tolerance: F::from(1.0).expect("Failed to convert constant to float"),
             adaptation_frequency: 1,
             current_step: 0,
         }
@@ -298,12 +298,12 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             for cell in level.cells.values_mut() {
                 if cell.is_active {
                     // Simple mapping - in practice would use proper interpolation
-                    let i = (cell.center[0] * F::from(solution.nrows()).unwrap())
+                    let i = (cell.center[0] * F::from(solution.nrows()).expect("Operation failed"))
                         .to_usize()
                         .unwrap_or(0)
                         .min(solution.nrows() - 1);
                     let j = if solution.ncols() > 1 && cell.center.len() > 1 {
-                        (cell.center[1] * F::from(solution.ncols()).unwrap())
+                        (cell.center[1] * F::from(solution.ncols()).expect("Operation failed"))
                             .to_usize()
                             .unwrap_or(0)
                             .min(solution.ncols() - 1)
@@ -475,7 +475,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                 level: self.mesh_hierarchy.levels.len(),
                 cells: HashMap::new(),
                 grid_spacing: if let Some(last_level) = self.mesh_hierarchy.levels.last() {
-                    last_level.grid_spacing / F::from(2.0).unwrap()
+                    last_level.grid_spacing
+                        / F::from(2.0).expect("Failed to convert constant to float")
                 } else {
                     F::one()
                 },
@@ -487,7 +488,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         // Create child cells (2D refinement = 4 children, 3D = 8 children)
         let num_children = 2_usize.pow(parent_cell.center.len() as u32);
         let mut child_ids = Vec::new();
-        let child_size = parent_cell.size / F::from(2.0).unwrap();
+        let child_size =
+            parent_cell.size / F::from(2.0).expect("Failed to convert constant to float");
 
         for child_idx in 0..num_children {
             let child_id = CellId {
@@ -497,7 +499,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
 
             // Compute child center
             let mut child_center = parent_cell.center.clone();
-            let offset = child_size / F::from(2.0).unwrap();
+            let offset = child_size / F::from(2.0).expect("Failed to convert constant to float");
 
             // Binary representation determines position
             for dim in 0..parent_cell.center.len() {
@@ -605,7 +607,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
                             }
                         }
                     }
-                    avg_solution /= F::from(child_ids.len()).unwrap();
+                    avg_solution /= F::from(child_ids.len()).expect("Operation failed");
                 }
             }
         }
@@ -748,7 +750,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         let max_size = cell1.size.max(cell2.size);
-        let tolerance = max_size * F::from(1.1).unwrap(); // 10% tolerance
+        let tolerance = max_size * F::from(1.1).expect("Failed to convert constant to float"); // 10% tolerance
 
         // Calculate distance between cell centers
         let mut distance_squared = F::zero();
@@ -760,9 +762,12 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         let distance = distance_squared.sqrt();
 
         // Cells are neighbors if distance is approximately equal to sum of half-sizes
-        let expected_distance = (cell1.size + cell2.size) / F::from(2.0).unwrap();
+        let expected_distance =
+            (cell1.size + cell2.size) / F::from(2.0).expect("Failed to convert constant to float");
 
-        distance <= tolerance && distance >= expected_distance * F::from(0.7).unwrap()
+        distance <= tolerance
+            && distance
+                >= expected_distance * F::from(0.7).expect("Failed to convert constant to float")
     }
 
     /// Update neighbor relationships across different mesh levels
@@ -969,7 +974,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     /// Check if a cell exists at the given position and level
     fn cell_exists_at_position(&self, position: &Array1<F>, level: usize) -> bool {
         if let Some(mesh_level) = self.mesh_hierarchy.levels.get(level) {
-            let tolerance = mesh_level.grid_spacing * F::from(0.1).unwrap();
+            let tolerance = mesh_level.grid_spacing
+                * F::from(0.1).expect("Failed to convert constant to float");
 
             for cell in mesh_level.cells.values() {
                 if position.len() == cell.center.len() {
@@ -1011,10 +1017,10 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         let memory_distribution_balance = self.calculate_memory_balance();
 
         // Weighted combination of different balance metrics
-        let weight_cell = F::from(0.3).unwrap();
-        let weight_compute = F::from(0.4).unwrap();
-        let weight_comm = F::from(0.2).unwrap();
-        let weight_memory = F::from(0.1).unwrap();
+        let weight_cell = F::from(0.3).expect("Failed to convert constant to float");
+        let weight_compute = F::from(0.4).expect("Failed to convert constant to float");
+        let weight_comm = F::from(0.2).expect("Failed to convert constant to float");
+        let weight_memory = F::from(0.1).expect("Failed to convert constant to float");
 
         let overall_balance = weight_cell * cell_distribution_balance
             + weight_compute * computational_load_balance
@@ -1093,7 +1099,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         // Calculate coefficient of variation for computational loads
-        let mean_load = total_load / F::from(level_computational_loads.len()).unwrap();
+        let mean_load =
+            total_load / F::from(level_computational_loads.len()).expect("Operation failed");
         let mut variance = F::zero();
 
         for &load in &level_computational_loads {
@@ -1101,7 +1108,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             variance += diff * diff;
         }
 
-        variance /= F::from(level_computational_loads.len()).unwrap();
+        variance /= F::from(level_computational_loads.len()).expect("Operation failed");
         let std_dev = variance.sqrt();
 
         let coeff_var = if mean_load > F::zero() {
@@ -1145,7 +1152,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         // Calculate variance in communication costs
-        let mean_comm = total_comm_cost / F::from(level_comm_costs.len()).unwrap();
+        let mean_comm =
+            total_comm_cost / F::from(level_comm_costs.len()).expect("Operation failed");
         let mut variance = F::zero();
 
         for &cost in &level_comm_costs {
@@ -1153,7 +1161,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             variance += diff * diff;
         }
 
-        variance /= F::from(level_comm_costs.len()).unwrap();
+        variance /= F::from(level_comm_costs.len()).expect("Operation failed");
         let std_dev = variance.sqrt();
 
         let coeff_var = if mean_comm > F::zero() {
@@ -1180,7 +1188,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             let solution_size: usize = level.cells.values().map(|c| c.solution.len()).sum();
 
             // Memory estimate (simplified)
-            let memory_estimate = F::from(cell_count + total_neighbors + solution_size).unwrap();
+            let memory_estimate = F::from(cell_count + total_neighbors + solution_size)
+                .expect("Failed to convert to float");
             level_memory_usage.push(memory_estimate);
             total_memory += memory_estimate;
         }
@@ -1190,7 +1199,8 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         }
 
         // Calculate memory distribution balance
-        let mean_memory = total_memory / F::from(level_memory_usage.len()).unwrap();
+        let mean_memory =
+            total_memory / F::from(level_memory_usage.len()).expect("Operation failed");
         let mut variance = F::zero();
 
         for &memory in &level_memory_usage {
@@ -1198,7 +1208,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             variance += diff * diff;
         }
 
-        variance /= F::from(level_memory_usage.len()).unwrap();
+        variance /= F::from(level_memory_usage.len()).expect("Operation failed");
         let std_dev = variance.sqrt();
 
         let coeff_var = if mean_memory > F::zero() {
@@ -1276,7 +1286,7 @@ impl<F: IntegrateFloat + Send + Sync> RefinementCriterion<F> for FeatureDetectio
 
                         let max_grad = gradients.iter().fold(F::zero(), |acc, &x| acc.max(x));
                         let avg_grad = gradients.iter().fold(F::zero(), |acc, &x| acc + x)
-                            / F::from(gradients.len()).unwrap();
+                            / F::from(gradients.len()).expect("Operation failed");
 
                         if avg_grad > F::zero() {
                             feature_score += max_grad / avg_grad;
@@ -1333,7 +1343,7 @@ impl<F: IntegrateFloat + Send + Sync> RefinementCriterion<F> for CurvatureRefine
             if neighbor_values.len() >= 2 {
                 // Simple second difference approximation
                 let avg_neighbor = neighbor_values.iter().fold(F::zero(), |acc, &x| acc + x)
-                    / F::from(neighbor_values.len()).unwrap();
+                    / F::from(neighbor_values.len()).expect("Operation failed");
 
                 let second_diff = (avg_neighbor - center_value).abs() / (cell.size * cell.size);
                 curvature += second_diff;

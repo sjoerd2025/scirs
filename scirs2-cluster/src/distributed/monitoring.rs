@@ -817,8 +817,8 @@ impl PerformanceMonitor {
         let mut report = MonitoringReport::default();
 
         // Calculate averages from recent history
-        let metrics_history = self.metrics_history.lock().unwrap();
-        let resource_usage = self.resource_usage.lock().unwrap();
+        let metrics_history = self.metrics_history.lock().expect("Operation failed");
+        let resource_usage = self.resource_usage.lock().expect("Operation failed");
 
         if !metrics_history.is_empty() {
             let recent_metrics: Vec<_> = metrics_history.iter().rev().take(10).collect();
@@ -870,8 +870,8 @@ impl PerformanceMonitor {
 
     /// Calculate overall system efficiency score
     fn calculate_efficiency_score(&self) -> f64 {
-        let metrics_history = self.metrics_history.lock().unwrap();
-        let resource_usage = self.resource_usage.lock().unwrap();
+        let metrics_history = self.metrics_history.lock().expect("Operation failed");
+        let resource_usage = self.resource_usage.lock().expect("Operation failed");
 
         if metrics_history.is_empty() || resource_usage.is_empty() {
             return 0.0;
@@ -904,8 +904,8 @@ impl PerformanceMonitor {
     /// Generate optimization recommendations
     fn generate_optimization_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
-        let metrics_history = self.metrics_history.lock().unwrap();
-        let resource_usage = self.resource_usage.lock().unwrap();
+        let metrics_history = self.metrics_history.lock().expect("Operation failed");
+        let resource_usage = self.resource_usage.lock().expect("Operation failed");
 
         if let Some(latest_metrics) = metrics_history.back() {
             if latest_metrics.worker_efficiency < 0.7 {
@@ -968,7 +968,7 @@ impl PerformanceMonitor {
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write header: {}", e)))?;
 
         // Write metrics data
-        let metrics_history = self.metrics_history.lock().unwrap();
+        let metrics_history = self.metrics_history.lock().expect("Operation failed");
         for metrics in metrics_history.iter() {
             writeln!(
                 file,
@@ -1027,7 +1027,11 @@ mod tests {
         let monitor = PerformanceMonitor::new(config);
 
         assert!(monitor.worker_metrics.is_empty());
-        assert!(monitor.metrics_history.lock().unwrap().is_empty());
+        assert!(monitor
+            .metrics_history
+            .lock()
+            .expect("Operation failed")
+            .is_empty());
     }
 
     #[test]
@@ -1061,7 +1065,14 @@ mod tests {
 
         let result = monitor.record_performance_metrics(metrics);
         assert!(result.is_ok());
-        assert_eq!(monitor.metrics_history.lock().unwrap().len(), 1);
+        assert_eq!(
+            monitor
+                .metrics_history
+                .lock()
+                .expect("Operation failed")
+                .len(),
+            1
+        );
     }
 
     #[test]
@@ -1111,9 +1122,11 @@ mod tests {
             network_utilization: 0.5,
         };
 
-        monitor.record_performance_metrics(metrics).unwrap();
+        monitor
+            .record_performance_metrics(metrics)
+            .expect("Operation failed");
 
-        let alerts = monitor.check_alerts().unwrap();
+        let alerts = monitor.check_alerts().expect("Operation failed");
         assert!(!alerts.is_empty());
 
         // Check if we got expected alert types

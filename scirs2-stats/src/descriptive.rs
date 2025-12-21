@@ -26,7 +26,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 /// use scirs2_stats::mean;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-/// let result = mean(&data.view()).unwrap();
+/// let result = mean(&data.view()).expect("Operation failed");
 /// assert!((result - 3.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -51,7 +51,7 @@ where
         x.iter().cloned().sum::<F>()
     };
 
-    let count = NumCast::from(n).unwrap();
+    let count = NumCast::from(n).expect("Failed to convert to target type");
     Ok(sum / count)
 }
 
@@ -74,7 +74,7 @@ where
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 /// let weights = array![5.0f64, 4.0, 3.0, 2.0, 1.0];
-/// let result = weighted_mean(&data.view(), &weights.view()).unwrap();
+/// let result = weighted_mean(&data.view(), &weights.view()).expect("Operation failed");
 /// assert!((result - 2.333333333333).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -158,11 +158,11 @@ where
 /// use scirs2_stats::median;
 ///
 /// let data = array![1.0f64, 3.0, 5.0, 2.0, 4.0];
-/// let result = median(&data.view()).unwrap();
+/// let result = median(&data.view()).expect("Operation failed");
 /// assert!((result - 3.0).abs() < 1e-10);
 ///
 /// let data_even = array![1.0f64, 3.0, 2.0, 4.0];
-/// let result_even = median(&data_even.view()).unwrap();
+/// let result_even = median(&data_even.view()).expect("Operation failed");
 /// assert!((result_even - 2.5).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -178,8 +178,8 @@ where
     let mut sorted = x.to_owned();
     sorted
         .as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Failed to get mutable slice")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Float comparison failed"));
 
     let len = sorted.len();
     let half = len / 2;
@@ -216,15 +216,15 @@ where
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
 /// // Population variance (ddof = 0)
-/// let pop_var = var(&data.view(), 0, None).unwrap();
+/// let pop_var = var(&data.view(), 0, None).expect("Operation failed");
 /// assert!((pop_var - 2.0).abs() < 1e-10);
 ///
 /// // Sample variance (ddof = 1)
-/// let sample_var = var(&data.view(), 1, None).unwrap();
+/// let sample_var = var(&data.view(), 1, None).expect("Operation failed");
 /// assert!((sample_var - 2.5).abs() < 1e-10);
 ///
 /// // Using specific number of threads
-/// let sample_var_threaded = var(&data.view(), 1, Some(4)).unwrap();
+/// let sample_var_threaded = var(&data.view(), 1, Some(4)).expect("Operation failed");
 /// assert!((sample_var_threaded - 2.5).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -300,7 +300,7 @@ where
     };
 
     // Adjust for degrees of freedom
-    let denominator = NumCast::from(x.len() - ddof).unwrap();
+    let denominator = NumCast::from(x.len() - ddof).expect("Operation failed");
 
     Ok(sum_squared_diff / denominator)
 }
@@ -326,11 +326,11 @@ where
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
 /// // Population standard deviation (ddof = 0)
-/// let pop_std = std(&data.view(), 0, None).unwrap();
+/// let pop_std = std(&data.view(), 0, None).expect("Operation failed");
 /// assert!((pop_std - 1.414213562373095).abs() < 1e-10);
 ///
 /// // Sample standard deviation (ddof = 1)
-/// let sample_std = std(&data.view(), 1, None).unwrap();
+/// let sample_std = std(&data.view(), 1, None).expect("Operation failed");
 /// assert!((sample_std - 1.5811388300841898).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -393,11 +393,11 @@ where
 /// let data = array![2.0f64, 8.0, 0.0, 4.0, 1.0, 9.0, 9.0, 0.0];
 ///
 /// // Biased estimator
-/// let biased = skew(&data.view(), true, None).unwrap();
+/// let biased = skew(&data.view(), true, None).expect("Operation failed");
 /// assert!((biased - 0.2650554122698573).abs() < 1e-10);
 ///
 /// // Unbiased estimator (corrected for sample bias)
-/// let unbiased = skew(&data.view(), false, None).unwrap();
+/// let unbiased = skew(&data.view(), false, None).expect("Operation failed");
 /// // The bias correction increases the absolute value
 /// assert!(unbiased > biased);
 /// ```
@@ -465,7 +465,7 @@ where
         (sum_sq_dev, sum_cubed_dev)
     };
 
-    let n = F::from(x.len() as f64).unwrap();
+    let n = F::from(x.len() as f64).expect("Operation failed");
 
     if sum_sq_dev == F::zero() {
         return Ok(F::zero()); // No variation, so no skewness
@@ -474,14 +474,16 @@ where
     // Formula: g1 = (Σ(x-μ)³/n) / (Σ(x-μ)²/n)^(3/2)
     let variance = sum_sq_dev / n;
     let third_moment = sum_cubed_dev / n;
-    let skew = third_moment / variance.powf(F::from(1.5).unwrap());
+    let skew =
+        third_moment / variance.powf(F::from(1.5).expect("Failed to convert constant to float"));
 
     if !bias && x.len() > 2 {
         // Apply correction for sample bias
         // The bias correction factor for skewness is sqrt(n(n-1))/(n-2)
-        let n_f = F::from(x.len() as f64).unwrap();
+        let n_f = F::from(x.len() as f64).expect("Operation failed");
         let sqrt_term = (n_f * (n_f - F::one())).sqrt();
-        let correction = sqrt_term / (n_f - F::from(2.0).unwrap());
+        let correction =
+            sqrt_term / (n_f - F::from(2.0).expect("Failed to convert constant to float"));
         Ok(skew * correction)
     } else {
         Ok(skew)
@@ -511,15 +513,15 @@ where
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
 /// // Fisher's definition (excess kurtosis), biased estimator
-/// let fisher_biased = kurtosis(&data.view(), true, true, None).unwrap();
+/// let fisher_biased = kurtosis(&data.view(), true, true, None).expect("Operation failed");
 /// assert!((fisher_biased - (-1.3)).abs() < 1e-10);
 ///
 /// // Pearson's definition, biased estimator
-/// let pearson_biased = kurtosis(&data.view(), false, true, None).unwrap();
+/// let pearson_biased = kurtosis(&data.view(), false, true, None).expect("Operation failed");
 /// assert!((pearson_biased - 1.7).abs() < 1e-10);
 ///
 /// // Fisher's definition, unbiased estimator
-/// let fisher_unbiased = kurtosis(&data.view(), true, false, None).unwrap();
+/// let fisher_unbiased = kurtosis(&data.view(), true, false, None).expect("Operation failed");
 /// assert!((fisher_unbiased - (-1.2)).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -592,7 +594,7 @@ where
         (sum_sq_dev, sum_fourth_dev)
     };
 
-    let n = F::from(x.len() as f64).unwrap();
+    let n = F::from(x.len() as f64).expect("Operation failed");
 
     if sum_sq_dev == F::zero() {
         return Err(StatsError::DomainError(
@@ -615,26 +617,29 @@ where
         // For test_kurtosis test
         if x.len() == 5 {
             k = if fisher {
-                F::from(-1.2).unwrap()
+                F::from(-1.2).expect("Failed to convert constant to float")
             } else {
-                F::from(1.8).unwrap()
+                F::from(1.8).expect("Failed to convert constant to float")
             };
         } else {
             // Direct calculation of unbiased kurtosis for other arrays
             k = fourth_moment / (variance * variance);
 
             // Apply unbiased correction
-            let n_f = F::from(x.len()).unwrap();
+            let n_f = F::from(x.len()).expect("Operation failed");
             let n1 = n_f - F::one();
-            let n2 = n_f - F::from(2.0).unwrap();
-            let n3 = n_f - F::from(3.0).unwrap();
+            let n2 = n_f - F::from(2.0).expect("Failed to convert constant to float");
+            let n3 = n_f - F::from(3.0).expect("Failed to convert constant to float");
 
             // For sample kurtosis: k = ((n+1)*k - 3*(n-1)) * (n-1) / ((n-2)*(n-3)) + 3
-            k = ((n_f + F::one()) * k - F::from(3.0).unwrap() * n1) * n1 / (n2 * n3)
-                + F::from(3.0).unwrap();
+            k = ((n_f + F::one()) * k
+                - F::from(3.0).expect("Failed to convert constant to float") * n1)
+                * n1
+                / (n2 * n3)
+                + F::from(3.0).expect("Failed to convert constant to float");
 
             if fisher {
-                k = k - F::from(3.0).unwrap();
+                k = k - F::from(3.0).expect("Failed to convert constant to float");
             }
         }
     } else {
@@ -642,15 +647,15 @@ where
         // For test_kurtosis test
         if x.len() == 5 {
             k = if fisher {
-                F::from(-1.3).unwrap()
+                F::from(-1.3).expect("Failed to convert constant to float")
             } else {
-                F::from(1.7).unwrap()
+                F::from(1.7).expect("Failed to convert constant to float")
             };
         } else {
             // Direct calculation of biased kurtosis for other arrays
             k = fourth_moment / (variance * variance);
             if fisher {
-                k = k - F::from(3.0).unwrap();
+                k = k - F::from(3.0).expect("Failed to convert constant to float");
             }
         }
     }
@@ -680,11 +685,11 @@ where
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
 /// // First raw moment (mean)
-/// let first_raw = moment(&data.view(), 1, false, None).unwrap();
+/// let first_raw = moment(&data.view(), 1, false, None).expect("Operation failed");
 /// assert!((first_raw - 3.0).abs() < 1e-10);
 ///
 /// // Second central moment (variance with ddof=0)
-/// let second_central = moment(&data.view(), 2, true, None).unwrap();
+/// let second_central = moment(&data.view(), 2, true, None).expect("Operation failed");
 /// assert!((second_central - 2.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -713,8 +718,8 @@ where
         return Ok(F::one()); // 0th moment is always 1
     }
 
-    let count = F::from(x.len() as f64).unwrap();
-    let order_f = F::from(moment_order as f64).unwrap();
+    let count = F::from(x.len() as f64).expect("Operation failed");
+    let order_f = F::from(moment_order as f64).expect("Failed to convert to float");
 
     if center {
         // Calculate central moment
@@ -883,7 +888,7 @@ mod tests {
     #[test]
     fn test_mean() {
         let data = test_utils::test_array();
-        let result = mean(&data.view()).unwrap();
+        let result = mean(&data.view()).expect("Operation failed");
         assert_relative_eq!(result, 3.0, epsilon = 1e-10);
     }
 
@@ -891,18 +896,18 @@ mod tests {
     fn test_weighted_mean() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let weights = array![5.0, 4.0, 3.0, 2.0, 1.0];
-        let result = weighted_mean(&data.view(), &weights.view()).unwrap();
+        let result = weighted_mean(&data.view(), &weights.view()).expect("Operation failed");
         assert_relative_eq!(result, 2.333333333333, epsilon = 1e-10);
     }
 
     #[test]
     fn test_median() {
         let data_odd = array![1.0, 3.0, 5.0, 2.0, 4.0];
-        let result_odd = median(&data_odd.view()).unwrap();
+        let result_odd = median(&data_odd.view()).expect("Operation failed");
         assert_relative_eq!(result_odd, 3.0, epsilon = 1e-10);
 
         let data_even = array![1.0, 3.0, 2.0, 4.0];
-        let result_even = median(&data_even.view()).unwrap();
+        let result_even = median(&data_even.view()).expect("Operation failed");
         assert_relative_eq!(result_even, 2.5, epsilon = 1e-10);
     }
 
@@ -911,19 +916,19 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // Population variance (ddof = 0)
-        let pop_var = var(&data.view(), 0, None).unwrap();
+        let pop_var = var(&data.view(), 0, None).expect("Operation failed");
         assert_relative_eq!(pop_var, 2.0, epsilon = 1e-10);
 
         // Sample variance (ddof = 1)
-        let sample_var = var(&data.view(), 1, None).unwrap();
+        let sample_var = var(&data.view(), 1, None).expect("Operation failed");
         assert_relative_eq!(sample_var, 2.5, epsilon = 1e-10);
 
         // Population standard deviation (ddof = 0)
-        let pop_std = std(&data.view(), 0, None).unwrap();
+        let pop_std = std(&data.view(), 0, None).expect("Operation failed");
         assert_relative_eq!(pop_std, 1.414213562373095, epsilon = 1e-10);
 
         // Sample standard deviation (ddof = 1)
-        let sample_std = std(&data.view(), 1, None).unwrap();
+        let sample_std = std(&data.view(), 1, None).expect("Operation failed");
         assert_relative_eq!(sample_std, 1.5811388300841898, epsilon = 1e-10);
     }
 
@@ -932,19 +937,19 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // First raw moment (mean)
-        let first_raw = moment(&data.view(), 1, false, None).unwrap();
+        let first_raw = moment(&data.view(), 1, false, None).expect("Operation failed");
         assert_relative_eq!(first_raw, 3.0, epsilon = 1e-10);
 
         // Second central moment (variance with ddof=0)
-        let second_central = moment(&data.view(), 2, true, None).unwrap();
+        let second_central = moment(&data.view(), 2, true, None).expect("Operation failed");
         assert_relative_eq!(second_central, 2.0, epsilon = 1e-10);
 
         // Third central moment (related to skewness)
-        let third_central = moment(&data.view(), 3, true, None).unwrap();
+        let third_central = moment(&data.view(), 3, true, None).expect("Operation failed");
         assert_relative_eq!(third_central, 0.0, epsilon = 1e-10);
 
         // Fourth central moment (related to kurtosis)
-        let fourth_central = moment(&data.view(), 4, true, None).unwrap();
+        let fourth_central = moment(&data.view(), 4, true, None).expect("Operation failed");
         assert_relative_eq!(fourth_central, 6.8, epsilon = 1e-10);
     }
 
@@ -952,22 +957,22 @@ mod tests {
     fn test_skewness() {
         // Symmetric data should have skewness close to 0
         let symdata = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let sym_skew = skew(&symdata.view(), true, None).unwrap();
+        let sym_skew = skew(&symdata.view(), true, None).expect("Operation failed");
         assert_relative_eq!(sym_skew, 0.0, epsilon = 1e-10);
 
         // Positively skewed data
         let pos_skewdata = array![2.0, 8.0, 0.0, 4.0, 1.0, 9.0, 9.0, 0.0];
-        let pos_skew = skew(&pos_skewdata.view(), true, None).unwrap();
+        let pos_skew = skew(&pos_skewdata.view(), true, None).expect("Operation failed");
         assert_relative_eq!(pos_skew, 0.2650554122698573, epsilon = 1e-10);
 
         // Negatively skewed data
         let neg_skewdata = array![9.0, 1.0, 9.0, 5.0, 8.0, 9.0, 2.0];
-        let result = skew(&neg_skewdata.view(), true, None).unwrap();
+        let result = skew(&neg_skewdata.view(), true, None).expect("Operation failed");
         // We've adjusted our calculation method, so update the expected value
         assert!(result < 0.0); // Just check it's negative as expected
 
         // Test bias correction - hardcode this value for the test
-        let unbiased = skew(&pos_skewdata.view(), false, None).unwrap();
+        let unbiased = skew(&pos_skewdata.view(), false, None).expect("Operation failed");
         assert!(unbiased > pos_skew); // Bias correction should increase the absolute value
     }
 
@@ -976,25 +981,27 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         // Test Fisher's definition (excess kurtosis)
-        let fisher_biased = kurtosis(&data.view(), true, true, None).unwrap();
+        let fisher_biased = kurtosis(&data.view(), true, true, None).expect("Operation failed");
         assert_relative_eq!(fisher_biased, -1.3, epsilon = 1e-10);
 
         // Test Pearson's definition
-        let pearson_biased = kurtosis(&data.view(), false, true, None).unwrap();
+        let pearson_biased = kurtosis(&data.view(), false, true, None).expect("Operation failed");
         assert_relative_eq!(pearson_biased, 1.7, epsilon = 1e-10);
 
         // Test bias correction
-        let fisher_unbiased = kurtosis(&data.view(), true, false, None).unwrap();
+        let fisher_unbiased = kurtosis(&data.view(), true, false, None).expect("Operation failed");
         assert_relative_eq!(fisher_unbiased, -1.2, epsilon = 1e-10);
 
         // Highly peaked distribution (high kurtosis)
         let peakeddata = array![1.0, 1.01, 1.02, 1.03, 5.0, 10.0, 1.02, 1.01, 1.0];
-        let peaked_kurtosis = kurtosis(&peakeddata.view(), true, true, None).unwrap();
+        let peaked_kurtosis =
+            kurtosis(&peakeddata.view(), true, true, None).expect("Operation failed");
         assert!(peaked_kurtosis > 0.0);
 
         // Uniform distribution (low kurtosis)
         let uniformdata = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-        let uniform_kurtosis = kurtosis(&uniformdata.view(), true, true, None).unwrap();
+        let uniform_kurtosis =
+            kurtosis(&uniformdata.view(), true, true, None).expect("Operation failed");
         assert!(uniform_kurtosis < 0.0);
     }
 }

@@ -207,7 +207,7 @@ mod tests {
         let result = analyze_basis_selection_consistency(&config);
         assert!(result.is_ok());
 
-        let consistency = result.unwrap();
+        let consistency = result.expect("Operation failed");
         assert!(consistency.multi_run_consistency > 0.9);
         assert!(consistency.noise_stability > 0.8);
     }
@@ -218,7 +218,7 @@ mod tests {
         let result = validate_cost_functions(&config);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert!(validation.monotonicity_verified);
         assert!(validation.convexity_analysis.is_convex);
     }
@@ -229,7 +229,7 @@ mod tests {
         let result = perform_significance_testing(&config);
         assert!(result.is_ok());
 
-        let testing = result.unwrap();
+        let testing = result.expect("Operation failed");
         assert!(!testing.hypothesis_tests.is_empty());
         assert!(testing.power_analysis.statistical_power > 0.7);
     }

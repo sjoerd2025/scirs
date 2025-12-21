@@ -237,7 +237,7 @@ where
     // Initialize variables
     let n = x0.len();
     let mut x = x0.to_owned();
-    let mut f = func(x.as_slice().unwrap());
+    let mut f = func(x.as_slice().expect("Operation failed"));
     let mut nfev = 1;
     let mut njev = 0;
 
@@ -279,7 +279,8 @@ where
     };
 
     // Compute initial Jacobian
-    let (mut jac, nfev_inc, njev_inc) = get_jacobian(x.as_slice().unwrap(), &f, &jacobian_fn);
+    let (mut jac, nfev_inc, njev_inc) =
+        get_jacobian(x.as_slice().expect("Operation failed"), &f, &jacobian_fn);
     nfev += nfev_inc;
     njev += njev_inc;
 
@@ -327,7 +328,7 @@ where
 
         // Line search with backtracking if needed
         let mut alpha = 1.0;
-        let mut f_new = func(x_new.as_slice().unwrap());
+        let mut f_new = func(x_new.as_slice().expect("Operation failed"));
         nfev += 1;
 
         let mut f_new_norm = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>().sqrt();
@@ -347,7 +348,7 @@ where
             }
 
             // Evaluate new function value
-            f_new = func(x_new.as_slice().unwrap());
+            f_new = func(x_new.as_slice().expect("Operation failed"));
             nfev += 1;
             f_new_norm = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>().sqrt();
         }
@@ -372,7 +373,7 @@ where
 
         // Update Jacobian for next iteration
         let (new_jac, nfev_delta, njev_delta) =
-            get_jacobian(x.as_slice().unwrap(), &f, &jacobian_fn);
+            get_jacobian(x.as_slice().expect("Operation failed"), &f, &jacobian_fn);
         jac = new_jac;
         nfev += nfev_delta;
         njev += njev_delta;
@@ -433,7 +434,7 @@ where
     // Initialize variables
     let n = x0.len();
     let mut x = x0.to_owned();
-    let mut f = func(x.as_slice().unwrap());
+    let mut f = func(x.as_slice().expect("Operation failed"));
     let mut nfev = 1;
     let mut njev = 0;
 
@@ -460,11 +461,11 @@ where
     // Get initial Jacobian (either analytical or numerical)
     let (mut jac, nfev_inc, njev_inc) = match &jacobian_fn {
         Some(jac_fn) => {
-            let j = jac_fn(x.as_slice().unwrap());
+            let j = jac_fn(x.as_slice().expect("Operation failed"));
             (j, 0, 1)
         }
         None => {
-            let (j, count) = compute_numerical_jac(x.as_slice().unwrap(), &f);
+            let (j, count) = compute_numerical_jac(x.as_slice().expect("Operation failed"), &f);
             (j, count, 0)
         }
     };
@@ -518,7 +519,7 @@ where
 
         // Line search with backtracking if needed
         let mut alpha = 1.0;
-        let mut f_new = func(x_new.as_slice().unwrap());
+        let mut f_new = func(x_new.as_slice().expect("Operation failed"));
         nfev += 1;
 
         let mut f_new_norm = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>().sqrt();
@@ -538,7 +539,7 @@ where
             }
 
             // Evaluate new function value
-            f_new = func(x_new.as_slice().unwrap());
+            f_new = func(x_new.as_slice().expect("Operation failed"));
             nfev += 1;
             f_new_norm = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>().sqrt();
         }
@@ -651,7 +652,7 @@ where
     // Initialize variables
     let n = x0.len();
     let mut x = x0.to_owned();
-    let mut f = func(x.as_slice().unwrap());
+    let mut f = func(x.as_slice().expect("Operation failed"));
     let mut nfev = 1;
     let mut njev = 0;
 
@@ -678,11 +679,11 @@ where
     // Get initial Jacobian (either analytical or numerical)
     let (mut jac, nfev_inc, njev_inc) = match &jacobian_fn {
         Some(jac_fn) => {
-            let j = jac_fn(x.as_slice().unwrap());
+            let j = jac_fn(x.as_slice().expect("Operation failed"));
             (j, 0, 1)
         }
         None => {
-            let (j, count) = compute_numerical_jac(x.as_slice().unwrap(), &f);
+            let (j, count) = compute_numerical_jac(x.as_slice().expect("Operation failed"), &f);
             (j, count, 0)
         }
     };
@@ -734,7 +735,7 @@ where
 
         // Line search with backtracking if needed
         let mut alpha = 1.0;
-        let mut f_new = func(x_new.as_slice().unwrap());
+        let mut f_new = func(x_new.as_slice().expect("Operation failed"));
         nfev += 1;
 
         let mut f_new_norm = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>().sqrt();
@@ -754,7 +755,7 @@ where
             }
 
             // Evaluate new function value
-            f_new = func(x_new.as_slice().unwrap());
+            f_new = func(x_new.as_slice().expect("Operation failed"));
             nfev += 1;
             f_new_norm = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>().sqrt();
         }
@@ -899,7 +900,7 @@ where
     // Initialize variables
     let n = x0.len();
     let mut x = x0.to_owned();
-    let mut f = func(x.as_slice().unwrap());
+    let mut f = func(x.as_slice().expect("Operation failed"));
     let mut nfev = 1;
     let mut njev = 0;
 
@@ -930,11 +931,11 @@ where
     // Get initial Jacobian (either analytical or numerical)
     let (mut jac, nfev_inc, njev_inc) = match &jacobian_fn {
         Some(jac_fn) => {
-            let j = jac_fn(x.as_slice().unwrap());
+            let j = jac_fn(x.as_slice().expect("Operation failed"));
             (j, 0, 1)
         }
         None => {
-            let (j, count) = compute_numerical_jac(x.as_slice().unwrap(), &f);
+            let (j, count) = compute_numerical_jac(x.as_slice().expect("Operation failed"), &f);
             (j, count, 0)
         }
     };
@@ -1005,7 +1006,7 @@ where
         }
 
         // Evaluate function at new point
-        let f_new = func(x_new.as_slice().unwrap());
+        let f_new = func(x_new.as_slice().expect("Operation failed"));
         nfev += 1;
         let new_cost = f_new.iter().map(|&fi| fi.powi(2)).sum::<f64>();
 
@@ -1040,11 +1041,12 @@ where
             // Update Jacobian
             let (new_jac, nfev_delta, njev_delta) = match &jacobian_fn {
                 Some(jac_fn) => {
-                    let j = jac_fn(x.as_slice().unwrap());
+                    let j = jac_fn(x.as_slice().expect("Operation failed"));
                     (j, 0, 1)
                 }
                 None => {
-                    let (j, count) = compute_numerical_jac(x.as_slice().unwrap(), &f);
+                    let (j, count) =
+                        compute_numerical_jac(x.as_slice().expect("Operation failed"), &f);
                     (j, count, 0)
                 }
             };
@@ -1266,7 +1268,8 @@ mod tests {
     fn test_root_hybr() {
         let x0 = array![2.0, 2.0];
 
-        let result = root(f, &x0.view(), Method::Hybr, Some(jacobian), None).unwrap();
+        let result =
+            root(f, &x0.view(), Method::Hybr, Some(jacobian), None).expect("Operation failed");
 
         // Since the implementation is working now, we'll test for convergence
         // For this example, the roots should be at (sqrt(0.5), sqrt(0.5)) and (-sqrt(0.5), -sqrt(0.5))
@@ -1307,7 +1310,8 @@ mod tests {
     fn test_root_broyden1() {
         let x0 = array![2.0, 2.0];
 
-        let result = root(f, &x0.view(), Method::Broyden1, Some(jacobian), None).unwrap();
+        let result =
+            root(f, &x0.view(), Method::Broyden1, Some(jacobian), None).expect("Operation failed");
 
         assert!(result.success);
 
@@ -1384,7 +1388,7 @@ mod tests {
             Some(system_jac),
             Some(options.clone()),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Should converge to a point where:
         // - x = y (from the plane constraint)
@@ -1455,7 +1459,7 @@ mod tests {
             Some(complex_system_jac),
             Some(options.clone()),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let broyden1_result = root(
             complex_system,
@@ -1464,7 +1468,7 @@ mod tests {
             Some(complex_system_jac),
             Some(options.clone()),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let broyden2_result = root(
             complex_system,
@@ -1473,7 +1477,7 @@ mod tests {
             Some(complex_system_jac),
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // All methods should converge
         assert!(hybr_result.success);
@@ -1548,7 +1552,7 @@ mod tests {
             Some(jacobian),
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(broyden2_test.success);
         assert!(broyden2_test.fun < 1e-10);
@@ -1583,7 +1587,7 @@ mod tests {
             None::<fn(&[f64]) -> Array2<f64>>,
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         println!("Anderson method for simple problem:");
         println!(
@@ -1618,7 +1622,7 @@ mod tests {
             None::<fn(&[f64]) -> Array2<f64>>,
             Some(options),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Should converge to one of the two solutions: (±sqrt(0.5), ±sqrt(0.5))
         println!(

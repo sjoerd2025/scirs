@@ -220,18 +220,19 @@ mod tests {
 
     #[test]
     fn test_calculate_kernel_size() {
-        let size = calculate_kernel_size(1.0_f64, None).unwrap();
+        let size = calculate_kernel_size(1.0_f64, None).expect("Operation failed");
         assert!(size % 2 == 1); // Should be odd
         assert!(size > 0);
 
-        let size_with_truncate = calculate_kernel_size(1.0_f64, Some(2.0)).unwrap();
+        let size_with_truncate =
+            calculate_kernel_size(1.0_f64, Some(2.0)).expect("Operation failed");
         assert!(size_with_truncate % 2 == 1);
         assert!(size_with_truncate < size); // Smaller truncate should give smaller size
     }
 
     #[test]
     fn test_generate_gaussian_kernel() {
-        let kernel = generate_gaussian_kernel(1.0_f64, Some(5)).unwrap();
+        let kernel = generate_gaussian_kernel(1.0_f64, Some(5)).expect("Operation failed");
         assert_eq!(kernel.len(), 5);
 
         // Check normalization (sum should be 1)
@@ -250,7 +251,7 @@ mod tests {
     #[test]
     fn test_separable_gaussian_blur() {
         let input = Array::from_shape_fn((4, 4), |(i, j)| (i + j) as f64);
-        let result = separable_gaussian_blur(input.view(), 0.5, 0.5).unwrap();
+        let result = separable_gaussian_blur(input.view(), 0.5, 0.5).expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
 

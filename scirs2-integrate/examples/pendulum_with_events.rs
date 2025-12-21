@@ -98,12 +98,12 @@ fn main() -> IntegrateResult<()> {
     println!("\nSimulation results:");
     println!(
         "  Integration terminated at t = {:.6}",
-        result.base_result.t.last().unwrap()
+        result.base_result.t.last().expect("Operation failed")
     );
     println!(
         "  Final state: theta = {:.6} rad, omega = {:.6} rad/s",
-        result.base_result.y.last().unwrap()[0],
-        result.base_result.y.last().unwrap()[1]
+        result.base_result.y.last().expect("Operation failed")[0],
+        result.base_result.y.last().expect("Operation failed")[1]
     );
 
     // Print number of events detected

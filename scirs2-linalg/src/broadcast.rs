@@ -452,7 +452,7 @@ mod tests {
         let a = array![[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]];
         let b = array![[[1.0, 2.0], [3.0, 4.0]]];
 
-        let shape = a.broadcastshape(&b).unwrap();
+        let shape = a.broadcastshape(&b).expect("Operation failed");
         assert_eq!(shape, vec![2, 2, 2]);
     }
 
@@ -462,7 +462,7 @@ mod tests {
         let a = array![[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]];
         let b = array![[[1.0, 0.0], [0.0, 1.0]], [[2.0, 0.0], [0.0, 2.0]]];
 
-        let c = broadcast_matmul_3d(&a, &b).unwrap();
+        let c = broadcast_matmul_3d(&a, &b).expect("Operation failed");
 
         // First batch: identity matrix multiplication
         assert_eq!(c[[0, 0, 0]], 1.0);
@@ -483,7 +483,7 @@ mod tests {
         let a = array![[[1.0_f64, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]].into_dyn();
         let b = array![[[1.0, 0.0], [0.0, 1.0]], [[2.0, 0.0], [0.0, 2.0]]].into_dyn();
 
-        let c = broadcast_matmul(&a, &b).unwrap();
+        let c = broadcast_matmul(&a, &b).expect("Operation failed");
 
         // First batch: identity matrix multiplication
         assert_eq!(c[[0, 0, 0]], 1.0);
@@ -504,7 +504,7 @@ mod tests {
         let a = array![[[1.0_f64, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]].into_dyn();
         let x = array![[1.0, 1.0], [2.0, 1.0]].into_dyn();
 
-        let y = broadcast_matvec(&a, &x).unwrap();
+        let y = broadcast_matvec(&a, &x).expect("Operation failed");
 
         // First batch: [1,2;3,4] * [1,1] = [3,7]
         assert_eq!(y[[0, 0]], 3.0);
@@ -531,7 +531,7 @@ mod tests {
         let a = array![[[1.0_f64, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]];
         let b = array![[[1.0, 0.0], [0.0, 1.0]]];
 
-        let c = broadcast_matmul_3d(&a, &b).unwrap();
+        let c = broadcast_matmul_3d(&a, &b).expect("Operation failed");
 
         // Both batches use the same B matrix (identity)
         assert_eq!(c[[0, 0, 0]], 1.0);

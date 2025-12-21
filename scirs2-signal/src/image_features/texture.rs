@@ -84,11 +84,11 @@ pub fn extracttexture_features(
     let min_val = *flat_gradient
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let max_val = *flat_gradient
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .unwrap();
+        .expect("Operation failed");
     let contrast = (max_val - min_val) / (max_val + min_val + 1e-10);
     features.insert("texture_contrast".to_string(), contrast);
 

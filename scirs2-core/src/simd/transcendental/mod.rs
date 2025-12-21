@@ -97,7 +97,7 @@ pub fn simd_exp_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let mut x = _mm256_loadu_ps(slice.as_ptr());
 
                     // Clamp to avoid overflow/underflow
@@ -175,7 +175,7 @@ pub fn simd_exp_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let mut x = vld1q_f32(slice.as_ptr());
 
                     // Clamp
@@ -279,7 +279,7 @@ pub fn simd_exp_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let mut x = _mm256_loadu_pd(slice.as_ptr());
 
                     // Clamp
@@ -380,7 +380,7 @@ pub fn simd_exp_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let mut x = vld1q_f64(slice.as_ptr());
 
                     // Clamp
@@ -476,7 +476,7 @@ pub fn simd_exp_fast_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let mut x = _mm256_loadu_ps(slice.as_ptr());
 
                     // Clamp
@@ -516,7 +516,7 @@ pub fn simd_exp_fast_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let mut x = vld1q_f32(slice.as_ptr());
 
                     x = vmaxq_f32(x, min_val);
@@ -605,7 +605,7 @@ pub fn simd_sigmoid_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let x = _mm256_loadu_ps(slice.as_ptr());
 
                     // For x >= 0: compute exp(-x)
@@ -703,7 +703,7 @@ pub fn simd_sigmoid_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = vld1q_f32(slice.as_ptr());
 
                     let mask_positive = vcgeq_f32(x, zero);
@@ -813,7 +813,7 @@ pub fn simd_sigmoid_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = _mm256_loadu_pd(slice.as_ptr());
 
                     let mask_positive = _mm256_cmp_pd(x, zero, _CMP_GE_OQ);
@@ -914,7 +914,7 @@ pub fn simd_sigmoid_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let x = vld1q_f64(slice.as_ptr());
 
                     let mask_positive = vcgeq_f64(x, zero);
@@ -1042,7 +1042,7 @@ pub fn simd_gelu_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let x = _mm256_loadu_ps(slice.as_ptr());
 
                     // Compute x³
@@ -1103,7 +1103,7 @@ pub fn simd_gelu_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = vld1q_f32(slice.as_ptr());
 
                     let x2 = vmulq_f32(x, x);
@@ -1176,7 +1176,7 @@ pub fn simd_gelu_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = _mm256_loadu_pd(slice.as_ptr());
 
                     let x2 = _mm256_mul_pd(x, x);
@@ -1229,7 +1229,7 @@ pub fn simd_gelu_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let x = vld1q_f64(slice.as_ptr());
 
                     let x2 = vmulq_f64(x, x);
@@ -1326,7 +1326,7 @@ pub fn simd_swish_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let x = _mm256_loadu_ps(slice.as_ptr());
 
                     // Compute sigmoid(x) using same approach as simd_sigmoid_f32
@@ -1420,7 +1420,7 @@ pub fn simd_swish_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = vld1q_f32(slice.as_ptr());
 
                     let mask_positive = vcgeq_f32(x, zero);
@@ -1569,7 +1569,7 @@ pub fn simd_softplus_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let x = _mm256_loadu_ps(slice.as_ptr());
 
                     // For large positive x: softplus ≈ x
@@ -1766,7 +1766,7 @@ pub fn simd_tanh_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let x = _mm256_loadu_ps(slice.as_ptr());
 
                     // For numerical stability:
@@ -1855,7 +1855,7 @@ pub fn simd_tanh_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = vld1q_f32(slice.as_ptr());
 
                     let mask_positive = vcgeq_f32(x, zero);
@@ -1952,7 +1952,7 @@ pub fn simd_tanh_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = _mm256_loadu_pd(slice.as_ptr());
 
                     let mask_positive = _mm256_cmp_pd(x, zero, _CMP_GE_OQ);
@@ -2045,7 +2045,7 @@ pub fn simd_tanh_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let x = vld1q_f64(slice.as_ptr());
 
                     let mask_positive = vcgeq_f64(x, zero);
@@ -2219,7 +2219,7 @@ pub fn simd_ln_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let x = _mm256_loadu_ps(slice.as_ptr());
 
                     // Extract exponent: k = floor(log2(x))
@@ -2291,7 +2291,7 @@ pub fn simd_ln_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = vld1q_f32(slice.as_ptr());
 
                     let x_bits = vreinterpretq_s32_f32(x);
@@ -2373,7 +2373,7 @@ pub fn simd_ln_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let x = _mm256_loadu_pd(slice.as_ptr());
 
                     // For f64, manually extract exponent and mantissa
@@ -2505,7 +2505,7 @@ pub fn simd_sin_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 8 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 8];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 8];
                     let mut x = _mm256_loadu_ps(slice.as_ptr());
 
                     // Range reduction: reduce x to [-π, π]
@@ -2585,7 +2585,7 @@ pub fn simd_sin_f32(input: &ArrayView1<f32>) -> Array1<f32> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let mut x = vld1q_f32(slice.as_ptr());
 
                     // Range reduction to [-π, π]
@@ -2677,7 +2677,7 @@ pub fn simd_sin_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 4 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 4];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 4];
                     let mut x = _mm256_loadu_pd(slice.as_ptr());
 
                     // Range reduction
@@ -2754,7 +2754,7 @@ pub fn simd_sin_f64(input: &ArrayView1<f64>) -> Array1<f64> {
 
                 let mut i = 0;
                 while i + 2 <= len {
-                    let slice = &input.as_slice().unwrap()[i..i + 2];
+                    let slice = &input.as_slice().expect("Operation failed")[i..i + 2];
                     let mut x = vld1q_f64(slice.as_ptr());
 
                     let k = vrndnq_f64(vmulq_f64(x, vdupq_n_f64(FRAC_1_PI / 2.0)));

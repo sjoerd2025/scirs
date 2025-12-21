@@ -43,8 +43,8 @@ const DOK_FORMAT: &str = "dok_array";
 /// use scirs2_sparse::construct::eye_array;
 /// use scirs2_sparse::io::save_npz;
 ///
-/// let array = eye_array::<f64>(10, "csr").unwrap();
-/// save_npz(&*array, "identity.npz").unwrap();
+/// let array = eye_array::<f64>(10, "csr").expect("Operation failed");
+/// save_npz(&*array, "identity.npz").expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn save_npz<T, P>(array: &dyn SparseArray<T>, path: P) -> SparseResult<()>
@@ -183,7 +183,7 @@ where
 /// ```no_run
 /// use scirs2_sparse::io::load_npz;
 ///
-/// let array = load_npz::<f64>("identity.npz").unwrap();
+/// let array = load_npz::<f64>("identity.npz").expect("Operation failed");
 /// assert_eq!(array.shape(), (10, 10));
 /// ```
 #[allow(dead_code)]
@@ -358,17 +358,17 @@ mod tests {
     #[test]
     fn test_save_load_csr_array() {
         // Create a temporary directory for test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_csr.npz");
 
         // Create a CSR array
-        let array = eye_array::<f64>(5, "csr").unwrap();
+        let array = eye_array::<f64>(5, "csr").expect("Operation failed");
 
         // Save the array
-        save_npz(&*array, &file_path).unwrap();
+        save_npz(&*array, &file_path).expect("Operation failed");
 
         // Load the array
-        let loaded = load_npz::<f64>(&file_path).unwrap();
+        let loaded = load_npz::<f64>(&file_path).expect("Operation failed");
 
         // Check that it loaded correctly
         assert_eq!(loaded.shape(), (5, 5));
@@ -384,17 +384,17 @@ mod tests {
     #[test]
     fn test_save_load_coo_array() {
         // Create a temporary directory for test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_coo.npz");
 
         // Create a COO array
-        let array = eye_array::<f64>(5, "coo").unwrap();
+        let array = eye_array::<f64>(5, "coo").expect("Operation failed");
 
         // Save the array
-        save_npz(&*array, &file_path).unwrap();
+        save_npz(&*array, &file_path).expect("Operation failed");
 
         // Load the array
-        let loaded = load_npz::<f64>(&file_path).unwrap();
+        let loaded = load_npz::<f64>(&file_path).expect("Operation failed");
 
         // Check that it loaded correctly
         assert_eq!(loaded.shape(), (5, 5));
@@ -410,25 +410,25 @@ mod tests {
     #[test]
     fn test_save_load_random_array() {
         // Create a temporary directory for test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_random.npz");
 
         // Create a random array
-        let array = random_array::<f64>((10, 10), 0.3, Some(42), "csr").unwrap();
+        let array = random_array::<f64>((10, 10), 0.3, Some(42), "csr").expect("Operation failed");
         let original_nnz = array.nnz();
-        let original_sum = array.sum(None).unwrap();
+        let original_sum = array.sum(None).expect("Operation failed");
 
         // Save the array
-        save_npz(&*array, &file_path).unwrap();
+        save_npz(&*array, &file_path).expect("Operation failed");
 
         // Load the array
-        let loaded = load_npz::<f64>(&file_path).unwrap();
+        let loaded = load_npz::<f64>(&file_path).expect("Operation failed");
 
         // Check that it loaded correctly
         assert_eq!(loaded.shape(), (10, 10));
         assert_eq!(loaded.nnz(), original_nnz);
 
-        let loaded_sum = loaded.sum(None).unwrap();
+        let loaded_sum = loaded.sum(None).expect("Operation failed");
         if let (crate::sparray::SparseSum::Scalar(orig), crate::sparray::SparseSum::Scalar(load)) =
             (original_sum, loaded_sum)
         {

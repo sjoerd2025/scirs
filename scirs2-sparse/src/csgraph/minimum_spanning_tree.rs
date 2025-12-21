@@ -151,9 +151,9 @@ impl MSTAlgorithm {
 /// let rows = vec![0, 0, 1, 1, 2, 2];
 /// let cols = vec![1, 2, 0, 2, 0, 1];
 /// let data = vec![2.0, 3.0, 2.0, 1.0, 3.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let (total_weight, mst, parents) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
+/// let (total_weight, mst, parents) = minimum_spanning_tree(&graph, "kruskal", true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn minimum_spanning_tree<T, S>(
@@ -485,7 +485,7 @@ where
     S: SparseArray<T>,
 {
     let (total_weight, mst_, _) = minimum_spanning_tree(graph, algorithm, true)?;
-    let mst = mst_.unwrap();
+    let mst = mst_.expect("Operation failed");
 
     // Simple heuristic: if there are edges with equal weights, multiple MSTs might exist
     let (_, _, values) = graph.find();
@@ -494,7 +494,7 @@ where
 
     let has_duplicates = weights
         .windows(2)
-        .any(|w| (w[0] - w[1]).abs() < T::from(1e-10).unwrap());
+        .any(|w| (w[0] - w[1]).abs() < T::from(1e-10).expect("Operation failed"));
 
     Ok((mst, has_duplicates, total_weight))
 }
@@ -518,7 +518,7 @@ mod tests {
         let cols = vec![1, 2, 0, 2, 3, 0, 1, 3, 1, 2];
         let data = vec![1.0, 2.0, 1.0, 1.0, 3.0, 2.0, 1.0, 4.0, 3.0, 4.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed")
     }
 
     #[test]
@@ -544,37 +544,38 @@ mod tests {
     #[test]
     fn test_kruskal_mst() {
         let graph = create_test_graph();
-        let (total_weight, mst_, _) = kruskal_mst(&graph, true).unwrap();
+        let (total_weight, mst_, _) = kruskal_mst(&graph, true).expect("Operation failed");
 
         // MST should have weight 5 (edges: 0-1 weight 1, 1-2 weight 1, 1-3 weight 3)
         assert_relative_eq!(total_weight, 5.0);
 
-        let mst = mst_.unwrap();
+        let mst = mst_.expect("Operation failed");
 
         // MST should have 3 edges (4 vertices - 1)
         assert_eq!(mst.nnz(), 6); // 3 edges * 2 (undirected)
 
         // Check that MST weight calculation is correct
-        let calculated_weight = spanning_tree_weight(&mst).unwrap();
+        let calculated_weight = spanning_tree_weight(&mst).expect("Operation failed");
         assert_relative_eq!(calculated_weight, total_weight);
 
         // Check that it's a valid spanning tree
-        assert!(is_spanning_tree(&graph, &mst, 1e-10).unwrap());
+        assert!(is_spanning_tree(&graph, &mst, 1e-10).expect("Operation failed"));
     }
 
     #[test]
     fn test_prim_mst() {
         let graph = create_test_graph();
-        let (total_weight, mst_, _mst_parents) = prim_mst(&graph, 0, true).unwrap();
+        let (total_weight, mst_, _mst_parents) =
+            prim_mst(&graph, 0, true).expect("Operation failed");
 
         // Should produce the same weight as Kruskal
         assert_relative_eq!(total_weight, 5.0);
 
-        let mst = mst_.unwrap();
+        let mst = mst_.expect("Operation failed");
         assert_eq!(mst.nnz(), 6); // 3 edges * 2 (undirected)
 
         // Check that it's a valid spanning tree
-        assert!(is_spanning_tree(&graph, &mst, 1e-10).unwrap());
+        assert!(is_spanning_tree(&graph, &mst, 1e-10).expect("Operation failed"));
     }
 
     #[test]
@@ -582,15 +583,18 @@ mod tests {
         let graph = create_test_graph();
 
         // Test Kruskal
-        let (weight_k_, _, _) = minimum_spanning_tree(&graph, "kruskal", false).unwrap();
+        let (weight_k_, _, _) =
+            minimum_spanning_tree(&graph, "kruskal", false).expect("Operation failed");
         assert_relative_eq!(weight_k_, 5.0);
 
         // Test Prim
-        let (weight_p_, _, _) = minimum_spanning_tree(&graph, "prim", false).unwrap();
+        let (weight_p_, _, _) =
+            minimum_spanning_tree(&graph, "prim", false).expect("Operation failed");
         assert_relative_eq!(weight_p_, 5.0);
 
         // Test auto selection
-        let (weight_a_, _, _) = minimum_spanning_tree(&graph, "auto", false).unwrap();
+        let (weight_a_, _, _) =
+            minimum_spanning_tree(&graph, "auto", false).expect("Operation failed");
         assert_relative_eq!(weight_a_, 5.0);
     }
 
@@ -600,7 +604,8 @@ mod tests {
         let rows = vec![0, 1, 2, 3];
         let cols = vec![1, 0, 3, 2];
         let data = vec![1.0, 1.0, 1.0, 1.0];
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed");
 
         // MST should fail for disconnected graph
         assert!(minimum_spanning_tree(&graph, "kruskal", false).is_err());
@@ -610,12 +615,14 @@ mod tests {
     #[test]
     fn test_single_vertex() {
         // Single vertex graph
-        let graph: CsrArray<f64> = CsrArray::from_triplets(&[], &[], &[], (1, 1), false).unwrap();
+        let graph: CsrArray<f64> =
+            CsrArray::from_triplets(&[], &[], &[], (1, 1), false).expect("Operation failed");
 
-        let (total_weight, mst_, _) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
+        let (total_weight, mst_, _) =
+            minimum_spanning_tree(&graph, "kruskal", true).expect("Operation failed");
         assert_relative_eq!(total_weight, 0.0);
 
-        let mst = mst_.unwrap();
+        let mst = mst_.expect("Operation failed");
         assert_eq!(mst.nnz(), 0); // No edges in single vertex tree
     }
 
@@ -625,13 +632,14 @@ mod tests {
         let rows = vec![0, 1];
         let cols = vec![1, 0];
         let data = vec![5.0, 5.0];
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).expect("Operation failed");
 
         let (total_weight, mst_, _mst_parents) =
-            minimum_spanning_tree(&graph, "prim", true).unwrap();
+            minimum_spanning_tree(&graph, "prim", true).expect("Operation failed");
         assert_relative_eq!(total_weight, 5.0);
 
-        let mst = mst_.unwrap();
+        let mst = mst_.expect("Operation failed");
         assert_eq!(mst.nnz(), 2); // One edge * 2 (undirected)
     }
 
@@ -653,10 +661,11 @@ mod tests {
             all_data.push(data[i]);
         }
 
-        let graph =
-            CsrArray::from_triplets(&all_rows, &all_cols, &all_data, (4, 4), false).unwrap();
+        let graph = CsrArray::from_triplets(&all_rows, &all_cols, &all_data, (4, 4), false)
+            .expect("Operation failed");
 
-        let (total_weight_, _, _) = minimum_spanning_tree(&graph, "kruskal", false).unwrap();
+        let (total_weight_, _, _) =
+            minimum_spanning_tree(&graph, "kruskal", false).expect("Operation failed");
 
         // MST should use edges: 0-1 (1), 1-2 (2), 0-3 (3) for total weight 6
         assert_relative_eq!(total_weight_, 6.0);
@@ -665,19 +674,21 @@ mod tests {
     #[test]
     fn test_spanning_tree_validation() {
         let graph = create_test_graph();
-        let (_, mst_, _) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
-        let mst = mst_.unwrap();
+        let (_, mst_, _) =
+            minimum_spanning_tree(&graph, "kruskal", true).expect("Operation failed");
+        let mst = mst_.expect("Operation failed");
 
         // Valid spanning tree
-        assert!(is_spanning_tree(&graph, &mst, 1e-10).unwrap());
+        assert!(is_spanning_tree(&graph, &mst, 1e-10).expect("Operation failed"));
 
         // Create an invalid tree (wrong number of edges)
         let rows = vec![0, 1];
         let cols = vec![1, 0];
         let data = vec![1.0, 1.0];
-        let invalid_tree = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
+        let invalid_tree =
+            CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).expect("Operation failed");
 
-        assert!(!is_spanning_tree(&graph, &invalid_tree, 1e-10).unwrap());
+        assert!(!is_spanning_tree(&graph, &invalid_tree, 1e-10).expect("Operation failed"));
     }
 
     #[test]

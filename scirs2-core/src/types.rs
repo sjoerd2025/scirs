@@ -17,7 +17,7 @@
 //!
 //! // Convert between numeric types with error handling
 //! let x: f64 = 100.5;
-//! let y: i32 = x.to_numeric().unwrap();
+//! let y: i32 = x.to_numeric().expect("Operation failed");
 //! assert_eq!(y, 100);
 //!
 //! // Convert with boundary checking
@@ -35,7 +35,7 @@
 //! let distance = z1.distance(z2);
 //!
 //! // Convert between complex types
-//! let z_f32: num_complex::Complex32 = z1.convert_complex().unwrap();
+//! let z_f32: num_complex::Complex32 = z1.convert_complex().expect("Operation failed");
 //! ```
 
 use num_complex::{Complex, Complex32, Complex64};
@@ -529,8 +529,11 @@ mod tests {
     #[test]
     fn test_numeric_conversion() {
         // Valid conversions (no fractional part)
-        assert_eq!(42.0f64.to_numeric::<i32>().unwrap(), 42);
-        assert_eq!((-42.0f64).to_numeric::<i32>().unwrap(), -42);
+        assert_eq!(42.0f64.to_numeric::<i32>().expect("Operation failed"), 42);
+        assert_eq!(
+            (-42.0f64).to_numeric::<i32>().expect("Operation failed"),
+            -42
+        );
 
         // Precision loss (fractional part)
         assert!(42.5f64.to_numeric::<i32>().is_err());
@@ -583,7 +586,7 @@ mod tests {
         let z1 = Complex64::new(3.0, 4.0);
 
         // Valid conversion
-        let z2 = z1.convert_complex::<f32>().unwrap();
+        let z2 = z1.convert_complex::<f32>().expect("Operation failed");
         assert_eq!(z2.re, 3.0f32);
         assert_eq!(z2.im, 4.0f32);
 
@@ -1280,7 +1283,7 @@ pub mod scientific {
         /// Create from integer
         pub fn from_int(value: i64) -> Self {
             // We know denominator is 1, so this will never fail
-            Self::new(value, 1).unwrap()
+            Self::new(value, 1).expect("Operation failed")
         }
 
         /// Create approximation from float
@@ -1526,7 +1529,7 @@ mod enhanced_tests {
         assert_eq!(x.value(), 42.0);
         assert!(x.is_precise(1e-10));
 
-        let y = x.convert_tracked::<f32>().unwrap();
+        let y = x.convert_tracked::<f32>().expect("Operation failed");
         assert!(y.precision() > x.precision()); // f32 has lower precision
 
         let z = x.apply_operation(|v| v * 2.0, "mul");
@@ -1538,9 +1541,9 @@ mod enhanced_tests {
     fn test_unit_conversion() {
         let registry = units::UnitRegistry::new();
 
-        let distance = registry.quantity(1000.0, "m").unwrap();
-        let km_unit = registry.get_unit("km").unwrap();
-        let converted = distance.convert_to(km_unit).unwrap();
+        let distance = registry.quantity(1000.0, "m").expect("Operation failed");
+        let km_unit = registry.get_unit("km").expect("Operation failed");
+        let converted = distance.convert_to(km_unit).expect("Operation failed");
 
         assert_eq!(converted.value(), 1.0);
         assert_eq!(converted.unit().symbol(), "km");
@@ -1568,9 +1571,9 @@ mod enhanced_tests {
 
     #[test]
     fn test_rational_arithmetic() {
-        let a = scientific::Rational::new(1, 3).unwrap();
-        let b = scientific::Rational::new(1, 6).unwrap();
-        let sum = a.add(&b).unwrap();
+        let a = scientific::Rational::new(1, 3).expect("Operation failed");
+        let b = scientific::Rational::new(1, 6).expect("Operation failed");
+        let sum = a.add(&b).expect("Operation failed");
 
         assert_eq!(sum.numerator(), 1);
         assert_eq!(sum.denominator(), 2);

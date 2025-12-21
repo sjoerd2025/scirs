@@ -22,7 +22,7 @@ fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
             1.0, 1.0, // 1 XOR 1 = 0
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
     // XOR truth table outputs
     let y = Array2::from_shape_vec(
         (4, 1),
@@ -129,7 +129,7 @@ fn train_with_step_decay(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -
         // Record current learning rate
         let current_lr = optimizer.get_learning_rate();
         // Track learning rate changes
-        if epoch == 0 || lr_history.is_empty() || lr_history.last().unwrap().1 != current_lr {
+        if epoch == 0 || lr_history.is_empty() || lr_history.last().expect("Operation failed").1 != current_lr {
             lr_history.push((epoch, current_lr));
         // Print progress
         if epoch % 50 == 0 || epoch == epochs - 1 {

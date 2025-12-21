@@ -353,7 +353,7 @@ where
             }
             std::cmp::Ordering::Equal => {
                 parent.insert(root_y, root_x.clone());
-                *rank.get_mut(&root_x).unwrap() += 1;
+                *rank.get_mut(&root_x).expect("Operation failed") += 1;
             }
         }
         true
@@ -1118,7 +1118,7 @@ mod tests {
     #[test]
     fn test_erdos_renyi_graph() {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = erdos_renyi_graph(10, 0.3, &mut rng).unwrap();
+        let graph = erdos_renyi_graph(10, 0.3, &mut rng).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 10);
         // With p=0.3 and 45 possible edges, we expect around 13-14 edges
@@ -1128,7 +1128,7 @@ mod tests {
 
     #[test]
     fn test_complete_graph() {
-        let graph = complete_graph(5).unwrap();
+        let graph = complete_graph(5).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 5);
         assert_eq!(graph.edge_count(), 10); // n*(n-1)/2 = 5*4/2 = 10
@@ -1136,7 +1136,7 @@ mod tests {
 
     #[test]
     fn test_star_graph() {
-        let graph = star_graph(6).unwrap();
+        let graph = star_graph(6).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 6);
         assert_eq!(graph.edge_count(), 5); // n-1 edges
@@ -1144,7 +1144,7 @@ mod tests {
 
     #[test]
     fn test_path_graph() {
-        let graph = path_graph(5).unwrap();
+        let graph = path_graph(5).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 5);
         assert_eq!(graph.edge_count(), 4); // n-1 edges
@@ -1152,7 +1152,7 @@ mod tests {
 
     #[test]
     fn test_cycle_graph() {
-        let graph = cycle_graph(5).unwrap();
+        let graph = cycle_graph(5).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 5);
         assert_eq!(graph.edge_count(), 5); // n edges
@@ -1163,7 +1163,7 @@ mod tests {
 
     #[test]
     fn test_grid_2d_graph() {
-        let graph = grid_2d_graph(3, 4).unwrap();
+        let graph = grid_2d_graph(3, 4).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 12); // 3*4 = 12 nodes
         assert_eq!(graph.edge_count(), 17); // (3-1)*4 + 3*(4-1) = 8 + 9 = 17 edges
@@ -1171,7 +1171,7 @@ mod tests {
 
     #[test]
     fn test_grid_3d_graph() {
-        let graph = grid_3d_graph(2, 2, 2).unwrap();
+        let graph = grid_3d_graph(2, 2, 2).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 8); // 2*2*2 = 8 nodes
                                            // Each internal node connects to 3 neighbors in 3D grid
@@ -1181,7 +1181,7 @@ mod tests {
 
     #[test]
     fn test_triangular_lattice_graph() {
-        let graph = triangular_lattice_graph(3, 3).unwrap();
+        let graph = triangular_lattice_graph(3, 3).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 9); // 3*3 = 9 nodes
                                            // Triangular lattice has more edges than regular grid due to diagonal connections
@@ -1190,7 +1190,7 @@ mod tests {
 
     #[test]
     fn test_hexagonal_lattice_graph() {
-        let graph = hexagonal_lattice_graph(3, 3).unwrap();
+        let graph = hexagonal_lattice_graph(3, 3).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 9); // 3*3 = 9 nodes
                                            // Hexagonal lattice should have fewer edges than triangular due to honeycomb structure
@@ -1200,7 +1200,7 @@ mod tests {
     #[test]
     fn test_barabasi_albert_graph() {
         let mut rng = StdRng::seed_from_u64(42);
-        let graph = barabasi_albert_graph(10, 2, &mut rng).unwrap();
+        let graph = barabasi_albert_graph(10, 2, &mut rng).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 10);
         // Should have 3 + 2*7 = 17 edges (3 initial edges + 2 for each of the 7 new nodes)
@@ -1216,7 +1216,8 @@ mod tests {
         // High intra-block probability, low inter-block probability
         let block_matrix = vec![vec![0.8, 0.1], vec![0.1, 0.8]];
 
-        let graph = stochastic_block_model(&block_sizes, &block_matrix, &mut rng).unwrap();
+        let graph = stochastic_block_model(&block_sizes, &block_matrix, &mut rng)
+            .expect("Operation failed");
 
         assert_eq!(graph.node_count(), 7); // 3 + 4 = 7 nodes
 
@@ -1230,7 +1231,7 @@ mod tests {
     fn test_two_community_sbm() {
         let mut rng = StdRng::seed_from_u64(42);
 
-        let graph = two_community_sbm(5, 5, 0.8, 0.1, &mut rng).unwrap();
+        let graph = two_community_sbm(5, 5, 0.8, 0.1, &mut rng).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 10);
 
@@ -1243,7 +1244,7 @@ mod tests {
     fn test_planted_partition_model() {
         let mut rng = StdRng::seed_from_u64(42);
 
-        let graph = planted_partition_model(12, 3, 0.7, 0.1, &mut rng).unwrap();
+        let graph = planted_partition_model(12, 3, 0.7, 0.1, &mut rng).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 12); // 12 nodes total
 
@@ -1278,7 +1279,7 @@ mod tests {
 
         // Test valid degree sequence (even sum)
         let degree_sequence = vec![2, 2, 2, 2]; // Sum = 8 (even)
-        let graph = configuration_model(&degree_sequence, &mut rng).unwrap();
+        let graph = configuration_model(&degree_sequence, &mut rng).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 4);
         // Should have 4 edges (sum of degrees / 2)
@@ -1301,7 +1302,7 @@ mod tests {
 
         // Test empty sequence
         let empty_sequence = vec![];
-        let graph = configuration_model(&empty_sequence, &mut rng).unwrap();
+        let graph = configuration_model(&empty_sequence, &mut rng).expect("Operation failed");
         assert_eq!(graph.node_count(), 0);
     }
 
@@ -1311,7 +1312,8 @@ mod tests {
 
         // Test valid degree sequence for simple graph
         let degree_sequence = vec![2, 2, 2, 2]; // Sum = 8 (even)
-        let graph = simple_configuration_model(&degree_sequence, &mut rng, 100).unwrap();
+        let graph =
+            simple_configuration_model(&degree_sequence, &mut rng, 100).expect("Operation failed");
 
         assert_eq!(graph.node_count(), 4);
         assert_eq!(graph.edge_count(), 4);
@@ -1346,17 +1348,17 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(42);
 
         // Test empty tree
-        let empty_tree = tree_graph(0, &mut rng).unwrap();
+        let empty_tree = tree_graph(0, &mut rng).expect("Operation failed");
         assert_eq!(empty_tree.node_count(), 0);
         assert_eq!(empty_tree.edge_count(), 0);
 
         // Test single node tree
-        let single_tree = tree_graph(1, &mut rng).unwrap();
+        let single_tree = tree_graph(1, &mut rng).expect("Operation failed");
         assert_eq!(single_tree.node_count(), 1);
         assert_eq!(single_tree.edge_count(), 0);
 
         // Test tree with multiple nodes
-        let tree = tree_graph(5, &mut rng).unwrap();
+        let tree = tree_graph(5, &mut rng).expect("Operation failed");
         assert_eq!(tree.node_count(), 5);
         assert_eq!(tree.edge_count(), 4); // n-1 edges for a tree
 
@@ -1371,10 +1373,10 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(42);
 
         // Create a complete graph
-        let complete = complete_graph(4).unwrap();
+        let complete = complete_graph(4).expect("Operation failed");
 
         // Generate spanning tree
-        let spanning_tree = random_spanning_tree(&complete, &mut rng).unwrap();
+        let spanning_tree = random_spanning_tree(&complete, &mut rng).expect("Operation failed");
 
         assert_eq!(spanning_tree.node_count(), 4);
         assert_eq!(spanning_tree.edge_count(), 3); // n-1 edges for spanning tree
@@ -1391,7 +1393,7 @@ mod tests {
 
         // Create forest with trees of sizes [3, 2, 4]
         let tree_sizes = vec![3, 2, 4];
-        let forest = forest_graph(&tree_sizes, &tree_sizes, &mut rng).unwrap();
+        let forest = forest_graph(&tree_sizes, &tree_sizes, &mut rng).expect("Operation failed");
 
         assert_eq!(forest.node_count(), 9); // 3 + 2 + 4 = 9 nodes
         assert_eq!(forest.edge_count(), 6); // (3-1) + (2-1) + (4-1) = 6 edges
@@ -1402,12 +1404,13 @@ mod tests {
         }
 
         // Test empty forest
-        let empty_forest = forest_graph(&[], &[], &mut rng).unwrap();
+        let empty_forest = forest_graph(&[], &[], &mut rng).expect("Operation failed");
         assert_eq!(empty_forest.node_count(), 0);
         assert_eq!(empty_forest.edge_count(), 0);
 
         // Test forest with empty trees
-        let forest_with_zeros = forest_graph(&[0, 3, 0, 2], &[0, 3, 0, 2], &mut rng).unwrap();
+        let forest_with_zeros =
+            forest_graph(&[0, 3, 0, 2], &[0, 3, 0, 2], &mut rng).expect("Operation failed");
         assert_eq!(forest_with_zeros.node_count(), 5); // 3 + 2 = 5 nodes
         assert_eq!(forest_with_zeros.edge_count(), 3); // (3-1) + (2-1) = 3 edges
     }

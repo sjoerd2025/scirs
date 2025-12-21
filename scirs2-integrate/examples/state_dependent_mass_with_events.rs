@@ -183,15 +183,15 @@ fn main() -> IntegrateResult<()> {
     println!("\nIntegration results:");
     println!(
         "  Final time: {:.4} s",
-        result.base_result.t.last().unwrap()
+        result.base_result.t.last().expect("Operation failed")
     );
     println!(
         "  Final position: r = {:.4} m",
-        result.base_result.y.last().unwrap()[0]
+        result.base_result.y.last().expect("Operation failed")[0]
     );
     println!(
         "  Final velocity: v = {:.4} m/s",
-        result.base_result.y.last().unwrap()[1]
+        result.base_result.y.last().expect("Operation failed")[1]
     );
     println!("  Steps taken: {}", result.base_result.n_steps);
     println!("  Function evaluations: {}", result.base_result.n_eval);

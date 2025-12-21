@@ -30,17 +30,17 @@ use std::iter::Sum;
 ///     [3.0, 5.0, 6.0]
 /// ];
 ///
-/// let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
+/// let sym = SymmetricMatrix::frommatrix(&a.view()).expect("Operation failed");
 ///
 /// // Get elements
-/// assert_eq!(sym.get(0, 0).unwrap(), 1.0);
-/// assert_eq!(sym.get(0, 1).unwrap(), 2.0);
-/// assert_eq!(sym.get(1, 0).unwrap(), 2.0); // Equal to (0, 1)
-/// assert_eq!(sym.get(2, 1).unwrap(), 5.0);
+/// assert_eq!(sym.get(0, 0).expect("Operation failed"), 1.0);
+/// assert_eq!(sym.get(0, 1).expect("Operation failed"), 2.0);
+/// assert_eq!(sym.get(1, 0).expect("Operation failed"), 2.0); // Equal to (0, 1)
+/// assert_eq!(sym.get(2, 1).expect("Operation failed"), 5.0);
 ///
 /// // Matrix-vector multiplication
 /// let x = array![1.0, 2.0, 3.0];
-/// let y = sym.matvec(&x.view()).unwrap();
+/// let y = sym.matvec(&x.view()).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct SymmetricMatrix<A>
@@ -322,19 +322,47 @@ mod tests {
         // Create a symmetric matrix
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).expect("Operation failed");
 
         assert_eq!(sym.nrows(), 3);
         assert_eq!(sym.ncols(), 3);
 
         // Check elements
-        assert_relative_eq!(sym.get(0, 0).unwrap(), 1.0, epsilon = 1e-10);
-        assert_relative_eq!(sym.get(0, 1).unwrap(), 2.0, epsilon = 1e-10);
-        assert_relative_eq!(sym.get(1, 0).unwrap(), 2.0, epsilon = 1e-10);
-        assert_relative_eq!(sym.get(1, 1).unwrap(), 4.0, epsilon = 1e-10);
-        assert_relative_eq!(sym.get(1, 2).unwrap(), 5.0, epsilon = 1e-10);
-        assert_relative_eq!(sym.get(2, 1).unwrap(), 5.0, epsilon = 1e-10);
-        assert_relative_eq!(sym.get(2, 2).unwrap(), 6.0, epsilon = 1e-10);
+        assert_relative_eq!(
+            sym.get(0, 0).expect("Operation failed"),
+            1.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            sym.get(0, 1).expect("Operation failed"),
+            2.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            sym.get(1, 0).expect("Operation failed"),
+            2.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            sym.get(1, 1).expect("Operation failed"),
+            4.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            sym.get(1, 2).expect("Operation failed"),
+            5.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            sym.get(2, 1).expect("Operation failed"),
+            5.0,
+            epsilon = 1e-10
+        );
+        assert_relative_eq!(
+            sym.get(2, 2).expect("Operation failed"),
+            6.0,
+            epsilon = 1e-10
+        );
     }
 
     #[test]
@@ -351,10 +379,10 @@ mod tests {
         // Create a symmetric matrix
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0];
-        let y = sym.matvec(&x.view()).unwrap();
+        let y = sym.matvec(&x.view()).expect("Operation failed");
 
         // Expected: y = A * x
         let expected = array![
@@ -374,11 +402,11 @@ mod tests {
         // For symmetric matrices, matvec and matvec_transpose should give the same result
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0];
-        let y1 = sym.matvec(&x.view()).unwrap();
-        let y2 = sym.matvec_transpose(&x.view()).unwrap();
+        let y1 = sym.matvec(&x.view()).expect("Operation failed");
+        let y2 = sym.matvec_transpose(&x.view()).expect("Operation failed");
 
         assert_eq!(y1.len(), 3);
         assert_eq!(y2.len(), 3);
@@ -392,9 +420,9 @@ mod tests {
         // Create a symmetric matrix
         let a = array![[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
 
-        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).expect("Operation failed");
 
-        let dense = sym.to_dense().unwrap();
+        let dense = sym.to_dense().expect("Operation failed");
 
         assert_eq!(dense.shape(), &[3, 3]);
 
@@ -410,9 +438,9 @@ mod tests {
         // Create a symmetric positive definite matrix
         let a = array![[4.0, 2.0, 1.0], [2.0, 3.0, 0.5], [1.0, 0.5, 6.0]];
 
-        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).expect("Operation failed");
 
-        let l = sym.cholesky().unwrap();
+        let l = sym.cholesky().expect("Operation failed");
 
         // Verify the Cholesky decomposition by computing L * L^T
         let mut result = Array2::<f64>::zeros((3, 3));
@@ -440,16 +468,16 @@ mod tests {
         // Create a symmetric positive definite matrix
         let a = array![[4.0, 2.0, 1.0], [2.0, 3.0, 0.5], [1.0, 0.5, 6.0]];
 
-        let sym = SymmetricMatrix::frommatrix(&a.view()).unwrap();
+        let sym = SymmetricMatrix::frommatrix(&a.view()).expect("Operation failed");
 
         // Right-hand side b = [1, 2, 3]
         let b = array![1.0, 2.0, 3.0];
 
         // Solve the system Ax = b
-        let x = sym.solve(&b.view()).unwrap();
+        let x = sym.solve(&b.view()).expect("Operation failed");
 
         // Verify the solution by calculating Ax
-        let ax = sym.matvec(&x.view()).unwrap();
+        let ax = sym.matvec(&x.view()).expect("Operation failed");
 
         // Check that Ax ≈ b
         assert_eq!(ax.len(), 3);

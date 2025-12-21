@@ -64,7 +64,11 @@ pub struct PyFixedString<const N: usize>(pub [Py_UCS1; N]);
 
 impl<const N: usize> fmt::Display for PyFixedString<N> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.write_str(str::from_utf8(&self.0).unwrap().trim_end_matches('\0'))
+        fmt.write_str(
+            str::from_utf8(&self.0)
+                .expect("Operation failed")
+                .trim_end_matches('\0'),
+        )
     }
 }
 
@@ -134,7 +138,11 @@ impl<const N: usize> fmt::Display for PyFixedUnicode<N> {
                 break;
             }
 
-            write!(fmt, "{}", char::from_u32(character).unwrap())?;
+            write!(
+                fmt,
+                "{}",
+                char::from_u32(character).expect("Operation failed")
+            )?;
         }
 
         Ok(())
@@ -190,7 +198,7 @@ impl TypeDescriptors {
                 let dtype = PyArrayDescr::new_from_npy_type(py, npy_type);
 
                 let descr = &mut *dtype.as_dtype_ptr();
-                PyDataType_SET_ELSIZE(py, descr, size.try_into().unwrap());
+                PyDataType_SET_ELSIZE(py, descr, size.try_into().expect("Operation failed"));
                 descr.byteorder = byteorder;
 
                 entry.insert(dtype.into())

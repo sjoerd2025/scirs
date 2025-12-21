@@ -59,9 +59,9 @@ impl ParallelElementWise {
                 });
         } else {
             // Simplified sequential approach to avoid borrowing issues
-            let result_slice = result.as_slice_mut().unwrap();
-            let left_slice = left.as_slice().unwrap();
-            let right_slice = right.as_slice().unwrap();
+            let result_slice = result.as_slice_mut().expect("Operation failed");
+            let left_slice = left.as_slice().expect("Operation failed");
+            let right_slice = right.as_slice().expect("Operation failed");
 
             for i in 0..left.len() {
                 result_slice[i] = left_slice[i] + right_slice[i];
@@ -237,7 +237,7 @@ impl ParallelReduction {
         }
 
         let sum = Self::sum(array, config)?;
-        let count = F::from(array.len()).unwrap();
+        let count = F::from(array.len()).expect("Operation failed");
         Ok(sum / count)
     }
 
@@ -270,7 +270,7 @@ impl ParallelReduction {
                 .reduce(|| F::zero(), |a, b| a + b)
         };
 
-        let count = F::from(array.len()).unwrap();
+        let count = F::from(array.len()).expect("Operation failed");
         Ok(variance / count)
     }
 }
@@ -592,7 +592,7 @@ impl ParallelDispatcher {
             for (i, result_elem) in result.iter_mut().enumerate() {
                 let values: Vec<F> = arrays
                     .iter()
-                    .map(|arr| arr.as_slice().unwrap()[i])
+                    .map(|arr| arr.as_slice().expect("Operation failed")[i])
                     .collect();
                 *result_elem = operation(&values);
             }
@@ -601,7 +601,7 @@ impl ParallelDispatcher {
             result.iter_mut().enumerate().for_each(|(i, result_elem)| {
                 let values: Vec<F> = arrays
                     .iter()
-                    .map(|arr| arr.as_slice().unwrap()[i])
+                    .map(|arr| arr.as_slice().expect("Operation failed")[i])
                     .collect();
                 *result_elem = operation(&values);
             });
@@ -637,21 +637,24 @@ mod tests {
     fn test_parallel_element_wise_add() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let b = Array::from_shape_vec(IxDyn(&[4]), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
+        let a =
+            Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let b =
+            Array::from_shape_vec(IxDyn(&[4]), vec![5.0, 6.0, 7.0, 8.0]).expect("Operation failed");
 
-        let result = ParallelElementWise::add(&a, &b, &config).unwrap();
+        let result = ParallelElementWise::add(&a, &b, &config).expect("Operation failed");
         let expected = vec![6.0, 8.0, 10.0, 12.0];
 
-        assert_eq!(result.as_slice().unwrap(), &expected);
+        assert_eq!(result.as_slice().expect("Operation failed"), &expected);
     }
 
     #[test]
     fn test_parallel_reduction_sum() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let result = ParallelReduction::sum(&a, &config).unwrap();
+        let a =
+            Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let result = ParallelReduction::sum(&a, &config).expect("Operation failed");
 
         assert_eq!(result, 10.0);
     }
@@ -660,10 +663,12 @@ mod tests {
     fn test_parallel_matrix_multiplication() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let b = Array::from_shape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
+        let a = Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0])
+            .expect("Operation failed");
+        let b = Array::from_shape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0])
+            .expect("Operation failed");
 
-        let result = ParallelMatrix::matmul(&a, &b, &config).unwrap();
+        let result = ParallelMatrix::matmul(&a, &b, &config).expect("Operation failed");
 
         // Expected: [[1*5+2*7, 1*6+2*8], [3*5+4*7, 3*6+4*8]] = [[19, 22], [43, 50]]
         assert_eq!(result[[0, 0]], 19.0);
@@ -676,8 +681,9 @@ mod tests {
     fn test_parallel_transpose() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let result = ParallelMatrix::transpose(&a, &config).unwrap();
+        let a = Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
+        let result = ParallelMatrix::transpose(&a, &config).expect("Operation failed");
 
         assert_eq!(result.shape(), &[3, 2]);
         assert_eq!(result[[0, 0]], 1.0);
@@ -693,11 +699,14 @@ mod tests {
         let config = ParallelConfig::default();
 
         let a = Array::from_shape_vec((4,), vec![4.0, 1.0, 3.0, 2.0])
-            .unwrap()
+            .expect("Test: failed to create array")
             .into_dyn();
-        let result = ParallelSort::sort(&a, &config).unwrap();
+        let result = ParallelSort::sort(&a, &config).expect("Operation failed");
 
-        assert_eq!(result.as_slice().unwrap(), &[1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(
+            result.as_slice().expect("Operation failed"),
+            &[1.0, 2.0, 3.0, 4.0]
+        );
     }
 
     #[test]
@@ -705,11 +714,11 @@ mod tests {
         let config = ParallelConfig::default();
 
         let a = Array::from_shape_vec((4,), vec![4.0, 1.0, 3.0, 2.0])
-            .unwrap()
+            .expect("Test: failed to create array")
             .into_dyn();
-        let result = ParallelSort::argsort(&a, &config).unwrap();
+        let result = ParallelSort::argsort(&a, &config).expect("Operation failed");
 
-        assert_eq!(result.as_slice().unwrap(), &[1, 3, 2, 0]);
+        assert_eq!(result.as_slice().expect("Operation failed"), &[1, 3, 2, 0]);
     }
 
     #[test]
@@ -717,17 +726,20 @@ mod tests {
         let dispatcher = ParallelDispatcher::new();
 
         let a = Array::from_shape_vec((3,), vec![1.0, 2.0, 3.0])
-            .unwrap()
+            .expect("Test: failed to create array")
             .into_dyn();
         let b = Array::from_shape_vec((3,), vec![4.0, 5.0, 6.0])
-            .unwrap()
+            .expect("Test: failed to create array")
             .into_dyn();
 
         let result = dispatcher
             .dispatch_elementwise(&[&a, &b], |values| values[0] + values[1])
-            .unwrap();
+            .expect("Test: operation failed");
 
-        assert_eq!(result.as_slice().unwrap(), &[5.0, 7.0, 9.0]);
+        assert_eq!(
+            result.as_slice().expect("Operation failed"),
+            &[5.0, 7.0, 9.0]
+        );
     }
 
     #[test]

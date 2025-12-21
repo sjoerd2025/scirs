@@ -37,7 +37,7 @@
 //! use scirs2_interpolate::production_stress_testing::{run_production_stress_tests, ProductionReadiness};
 //!
 //! // Run comprehensive production stress tests
-//! let report = run_production_stress_tests::<f64>().unwrap();
+//! let report = run_production_stress_tests::<f64>().expect("Operation failed");
 //!
 //! match report.production_readiness {
 //!     ProductionReadiness::Ready => {
@@ -70,7 +70,7 @@
 //! use scirs2_interpolate::production_stress_testing::run_quick_stress_tests;
 //!
 //! // Run quick stress tests with reduced scope for CI/CD
-//! let report = run_quick_stress_tests::<f64>().unwrap();
+//! let report = run_quick_stress_tests::<f64>().expect("Operation failed");
 //! println!("Quick test results: {:?}", report.production_readiness);
 //! ```
 //!
@@ -90,7 +90,7 @@
 //!     max_performance_degradation: 5.0,
 //! };
 //!
-//! let report = run_stress_tests_with_config::<f64>(config).unwrap();
+//! let report = run_stress_tests_with_config::<f64>(config).expect("Operation failed");
 //! println!("Custom stress test completed: {}", report);
 //! ```
 
@@ -237,12 +237,12 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore]
+    #[ignore = "Long-running stress test - tests large data sizes up to 500k points"]
     fn test_quick_production_readiness_check() {
         let result = quick_production_readiness_check();
         assert!(result.is_ok());
 
-        let readiness = result.unwrap();
+        let readiness = result.expect("Operation failed");
         // Should be one of the valid readiness states
         assert!(matches!(
             readiness,
@@ -255,28 +255,28 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Long-running stress test - f32 version of production readiness check"]
     fn test_quick_production_readiness_check_f32() {
         let result = quick_production_readiness_check_f32();
         assert!(result.is_ok());
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Long-running stress test - comprehensive production validation"]
     fn test_validate_for_production() {
         let result = validate_for_production::<f64>();
         assert!(result.is_ok());
         // Result should be boolean
-        let _is_ready = result.unwrap();
+        let _is_ready = result.expect("Operation failed");
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Long-running stress test - generates deployment checklist after full testing"]
     fn test_generate_deployment_checklist() {
         let result = generate_deployment_checklist::<f64>();
         assert!(result.is_ok());
 
-        let checklist = result.unwrap();
+        let checklist = result.expect("Operation failed");
         assert!(!checklist.is_empty());
 
         // Should contain basic checks
@@ -284,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Long-running stress test - runs targeted stress test categories"]
     fn test_targeted_stress_tests() {
         let categories = vec![
             StressTestCategory::ExtremeDataSize,
@@ -364,13 +364,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Long-running stress test - validates deployment checklist content"]
     fn test_deployment_checklist_content() {
         // Test that deployment checklist contains expected items
         let result = generate_deployment_checklist::<f64>();
         assert!(result.is_ok());
 
-        let checklist = result.unwrap();
+        let checklist = result.expect("Operation failed");
 
         // Should contain monitoring recommendations
         assert!(checklist.iter().any(|item| item.contains("monitoring")));

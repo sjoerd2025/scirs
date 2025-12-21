@@ -64,7 +64,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Use simple distance computation instead of batch operation to avoid stack overflow
     let point1 = points.row(0).to_owned();
     let point2 = points.row(1).to_owned();
-    let _distance = euclidean(point1.as_slice().unwrap(), point2.as_slice().unwrap());
+    let _distance = euclidean(
+        point1.as_slice().expect("Operation failed"),
+        point2.as_slice().expect("Operation failed"),
+    );
 
     let simd_time = start.elapsed();
 
@@ -84,7 +87,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for j in (i + 1)..std::cmp::min(5, n_points) {
             let row_i = points.row(i).to_owned();
             let row_j = points.row(j).to_owned();
-            let _distance = euclidean(row_i.as_slice().unwrap(), row_j.as_slice().unwrap());
+            let _distance = euclidean(
+                row_i.as_slice().expect("Operation failed"),
+                row_j.as_slice().expect("Operation failed"),
+            );
         }
     }
 
@@ -125,8 +131,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let row_i = points.row(i).to_owned();
             let row_j = points.row(j).to_owned();
             distances.push(euclidean(
-                row_i.as_slice().unwrap(),
-                row_j.as_slice().unwrap(),
+                row_i.as_slice().expect("Operation failed"),
+                row_j.as_slice().expect("Operation failed"),
             ));
         }
     }
@@ -136,7 +142,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = std::time::Instant::now();
     let point_0 = points.row(0).to_owned();
     let point_1 = points.row(1).to_owned();
-    let _optimized_distance = euclidean(point_0.as_slice().unwrap(), point_1.as_slice().unwrap());
+    let _optimized_distance = euclidean(
+        point_0.as_slice().expect("Operation failed"),
+        point_1.as_slice().expect("Operation failed"),
+    );
     let simd_optimized_time = start.elapsed();
 
     let speedup_actual = classical_time.as_nanos() as f64 / simd_optimized_time.as_nanos() as f64;

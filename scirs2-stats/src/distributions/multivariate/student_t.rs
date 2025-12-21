@@ -118,7 +118,7 @@ impl MultivariateT {
     /// // Create a 2D multivariate Student's t-distribution with 5 degrees of freedom
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
-    /// let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+    /// let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
     /// ```
     pub fn new<D1, D2>(
         mean: ArrayBase<D1, Ix1>,
@@ -198,7 +198,7 @@ impl MultivariateT {
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
-    /// let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+    /// let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
     ///
     /// // PDF at origin
     /// let pdf_at_origin = mvt.pdf(&array![0.0, 0.0]);
@@ -255,15 +255,15 @@ impl MultivariateT {
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
-    /// let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+    /// let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
     ///
-    /// let samples = mvt.rvs(100).unwrap();
+    /// let samples = mvt.rvs(100).expect("Operation failed");
     /// assert_eq!(samples.shape(), &[100, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array2<f64>> {
         let mut rng = thread_rng();
-        let normal_dist = RandNormal::new(0.0, 1.0).unwrap();
-        let chi2_dist = ChiSquared::new(self.df).unwrap();
+        let normal_dist = RandNormal::new(0.0, 1.0).expect("Operation failed");
+        let chi2_dist = ChiSquared::new(self.df).expect("Operation failed");
 
         // Create a matrix for the samples
         let mut samples = Array2::<f64>::zeros((size, self.dim));
@@ -311,9 +311,9 @@ impl MultivariateT {
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
-    /// let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+    /// let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
     ///
-    /// let sample = mvt.rvs_single().unwrap();
+    /// let sample = mvt.rvs_single().expect("Operation failed");
     /// assert_eq!(sample.len(), 2);
     /// ```
     pub fn rvs_single(&self) -> StatsResult<Array1<f64>> {
@@ -339,7 +339,7 @@ impl MultivariateT {
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
-    /// let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+    /// let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
     ///
     /// let log_pdf = mvt.logpdf(&array![0.0, 0.0]);
     /// ```
@@ -415,7 +415,7 @@ impl MultivariateT {
 ///
 /// let mean = array![0.0, 0.0];
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
-/// let mvt = multivariate::multivariate_t(mean, scale, 5.0).unwrap();
+/// let mvt = multivariate::multivariate_t(mean, scale, 5.0).expect("Operation failed");
 /// let pdf_at_origin = mvt.pdf(&array![0.0, 0.0]);
 /// ```
 #[allow(dead_code)]
@@ -457,7 +457,7 @@ mod tests {
         // 2D standard multivariate t
         let mean = array![0.0, 0.0];
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
-        let mvt = MultivariateT::new(mean.clone(), scale.clone(), 5.0).unwrap();
+        let mvt = MultivariateT::new(mean.clone(), scale.clone(), 5.0).expect("Operation failed");
 
         assert_eq!(mvt.dim, 2);
         assert_eq!(mvt.mean, mean);
@@ -467,7 +467,8 @@ mod tests {
         // Custom 3D multivariate t
         let mean3 = array![1.0, 2.0, 3.0];
         let scale3 = array![[1.0, 0.5, 0.3], [0.5, 2.0, 0.2], [0.3, 0.2, 1.5]];
-        let mvt3 = MultivariateT::new(mean3.clone(), scale3.clone(), 10.0).unwrap();
+        let mvt3 =
+            MultivariateT::new(mean3.clone(), scale3.clone(), 10.0).expect("Operation failed");
 
         assert_eq!(mvt3.dim, 3);
         assert_eq!(mvt3.mean, mean3);
@@ -499,7 +500,7 @@ mod tests {
         // 2D standard multivariate t with 5 degrees of freedom
         let mean = array![0.0, 0.0];
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
-        let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+        let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
 
         // PDF at origin should be calculable
         let pdf_at_origin = mvt.pdf(&array![0.0, 0.0]);
@@ -520,7 +521,7 @@ mod tests {
         // 2D standard multivariate t with 5 degrees of freedom
         let mean = array![0.0, 0.0];
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
-        let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+        let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
 
         // Check that exp(logPDF) = PDF
         let x = array![1.0, 1.0];
@@ -534,15 +535,15 @@ mod tests {
         // 2D multivariate t with correlation and 10 degrees of freedom
         let mean = array![1.0, 2.0];
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
-        let mvt = MultivariateT::new(mean, scale, 10.0).unwrap();
+        let mvt = MultivariateT::new(mean, scale, 10.0).expect("Operation failed");
 
         // Generate samples and check dimensions
         let n_samples_ = 1000;
-        let samples = mvt.rvs(n_samples_).unwrap();
+        let samples = mvt.rvs(n_samples_).expect("Operation failed");
         assert_eq!(samples.shape(), &[n_samples_, 2]);
 
         // Check statistics (rough check as it's random and t-distribution has heavier tails)
-        let sample_mean = samples.mean_axis(Axis(0)).unwrap();
+        let sample_mean = samples.mean_axis(Axis(0)).expect("Operation failed");
         assert_relative_eq!(sample_mean[0], 1.0, epsilon = 0.3);
         assert_relative_eq!(sample_mean[1], 2.0, epsilon = 0.3);
     }
@@ -551,9 +552,9 @@ mod tests {
     fn test_mvt_rvs_single() {
         let mean = array![1.0, 2.0];
         let scale = array![[1.0, 0.5], [0.5, 2.0]];
-        let mvt = MultivariateT::new(mean, scale, 5.0).unwrap();
+        let mvt = MultivariateT::new(mean, scale, 5.0).expect("Operation failed");
 
-        let sample = mvt.rvs_single().unwrap();
+        let sample = mvt.rvs_single().expect("Operation failed");
         assert_eq!(sample.len(), 2);
     }
 }

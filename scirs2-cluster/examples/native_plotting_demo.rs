@@ -165,23 +165,23 @@ fn generate_sample_data() -> Vec<f64> {
     let mut data = Vec::with_capacity(600); // 300 points * 2 features
 
     // Cluster 1: centered at (0, 0)
-    let normal1 = Normal::new(0.0, 0.5).unwrap();
+    let normal1 = Normal::new(0.0, 0.5).expect("Operation failed");
     for _ in 0..100 {
         data.push(rng.sample(normal1)); // x
         data.push(rng.sample(normal1)); // y
     }
 
     // Cluster 2: centered at (4, 0)
-    let normal2_x = Normal::new(4.0, 0.5).unwrap();
-    let normal2_y = Normal::new(0.0, 0.5).unwrap();
+    let normal2_x = Normal::new(4.0, 0.5).expect("Operation failed");
+    let normal2_y = Normal::new(0.0, 0.5).expect("Operation failed");
     for _ in 0..100 {
         data.push(rng.sample(normal2_x)); // x
         data.push(rng.sample(normal2_y)); // y
     }
 
     // Cluster 3: centered at (2, 3)
-    let normal3_x = Normal::new(2.0, 0.5).unwrap();
-    let normal3_y = Normal::new(3.0, 0.5).unwrap();
+    let normal3_x = Normal::new(2.0, 0.5).expect("Operation failed");
+    let normal3_y = Normal::new(3.0, 0.5).expect("Operation failed");
     for _ in 0..100 {
         data.push(rng.sample(normal3_x)); // x
         data.push(rng.sample(normal3_y)); // y
@@ -202,8 +202,9 @@ mod tests {
 
     #[test]
     fn test_clustering_pipeline() {
-        let data = Array2::from_shape_vec((300, 2), generate_sample_data()).unwrap();
-        let standardized = standardize(data.view(), true).unwrap();
+        let data =
+            Array2::from_shape_vec((300, 2), generate_sample_data()).expect("Operation failed");
+        let standardized = standardize(data.view(), true).expect("Operation failed");
         let (centroids, labels) = kmeans2(
             standardized.view(),
             3,
@@ -214,7 +215,7 @@ mod tests {
             None,     // check_finite
             Some(42), // random seed
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(centroids.nrows(), 3);
         assert_eq!(centroids.ncols(), 2);

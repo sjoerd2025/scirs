@@ -223,7 +223,7 @@ pub fn legendre_points(n: usize) -> (Array1<f64>, Array1<f64>) {
     // and add the endpoints
     if n <= 12 {
         // Get the inner Gauss-Legendre points (n-2 points)
-        let quadrature = GaussLegendreQuadrature::<f64>::new(n - 2).unwrap();
+        let quadrature = GaussLegendreQuadrature::<f64>::new(n - 2).expect("Operation failed");
 
         // Create arrays for Gauss-Lobatto points (including endpoints)
         let mut points = Array1::zeros(n);
@@ -1304,7 +1304,9 @@ impl From<SpectralResult> for PDESolution<f64> {
         // Clone the result.u to avoid the move issue
         let u_clone = result.u.clone();
         let u_len = u_clone.len();
-        let u_reshaped = u_clone.into_shape_with_order((u_len, 1)).unwrap();
+        let u_reshaped = u_clone
+            .into_shape_with_order((u_len, 1))
+            .expect("Operation failed");
         values.push(u_reshaped);
 
         // Create solver info

@@ -836,10 +836,10 @@ mod tests {
         assert_eq!(metadata.input_specs.len(), 1);
         assert_eq!(metadata.output_specs.len(), 1);
     fn test_model_packager_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let mut rng = scirs2_core::random::rngs::SmallRng::from_seed([42; 32]);
         let mut model: Sequential<f32> = Sequential::new();
-        let dense = Dense::new(10, 1, Some("relu"), &mut rng).unwrap();
+        let dense = Dense::new(10, 1, Some("relu"), &mut rng).expect("Operation failed");
         model.add_layer(dense);
         let packager = ModelPackager::new(model, temp_dir.path().to_path_buf());
         assert_eq!(packager.metadata.name, "scirs2_model");

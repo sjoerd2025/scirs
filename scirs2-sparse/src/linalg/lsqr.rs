@@ -94,13 +94,13 @@ pub struct LSQRResult<T> {
 /// let rows = vec![0, 0, 1, 1, 2, 2];
 /// let cols = vec![0, 1, 0, 1, 0, 1];
 /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).unwrap();
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).expect("Operation failed");
 ///
 /// // Right-hand side
 /// let b = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 ///
 /// // Solve using LSQR
-/// let result = lsqr(&matrix, &b.view(), None, LSQROptions::default()).unwrap();
+/// let result = lsqr(&matrix, &b.view(), None, LSQROptions::default()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn lsqr<T, S>(
@@ -167,9 +167,9 @@ where
     let mut phi_bar = beta;
 
     // Tolerances
-    let atol = T::from(options.atol).unwrap();
-    let btol = T::from(options.btol).unwrap();
-    let conlim = T::from(options.conlim).unwrap();
+    let atol = T::from(options.atol).expect("Operation failed");
+    let btol = T::from(options.btol).expect("Operation failed");
+    let conlim = T::from(options.conlim).expect("Operation failed");
 
     let mut residual_history = if options.store_residual_history {
         Some(vec![beta])
@@ -392,7 +392,7 @@ where
     // Simplified standard error computation
     // In practice, this should use the diagonal of (A^T A)^(-1)
     let variance = if m > n {
-        residualnorm * residualnorm / T::from(m - n).unwrap()
+        residualnorm * residualnorm / T::from(m - n).expect("Operation failed")
     } else {
         residualnorm * residualnorm
     };
@@ -413,15 +413,17 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 1, 2];
         let data = vec![2.0, -1.0, -1.0, 2.0, -1.0, 2.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
-        let result = lsqr(&matrix, &b.view(), None, LSQROptions::default()).unwrap();
+        let result =
+            lsqr(&matrix, &b.view(), None, LSQROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
         // Verify solution by computing residual
-        let ax = matrix_vector_multiply(&matrix, &result.x.view()).unwrap();
+        let ax = matrix_vector_multiply(&matrix, &result.x.view()).expect("Operation failed");
         let residual = &b - &ax;
         let residualnorm = l2_norm(&residual.view());
 
@@ -434,10 +436,12 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 0, 1];
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 2), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let result = lsqr(&matrix, &b.view(), None, LSQROptions::default()).unwrap();
+        let result =
+            lsqr(&matrix, &b.view(), None, LSQROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
         assert_eq!(result.x.len(), 2);
@@ -452,10 +456,12 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![2.0, 3.0, 4.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![4.0, 9.0, 16.0]);
-        let result = lsqr(&matrix, &b.view(), None, LSQROptions::default()).unwrap();
+        let result =
+            lsqr(&matrix, &b.view(), None, LSQROptions::default()).expect("Operation failed");
 
         assert!(result.converged);
 
@@ -470,12 +476,14 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 1.0, 1.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![5.0, 6.0, 7.0]);
         let x0 = Array1::from_vec(vec![4.0, 5.0, 6.0]); // Close to solution
 
-        let result = lsqr(&matrix, &b.view(), Some(&x0.view()), LSQROptions::default()).unwrap();
+        let result = lsqr(&matrix, &b.view(), Some(&x0.view()), LSQROptions::default())
+            .expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.iterations <= 5); // Should converge quickly with good initial guess
@@ -486,7 +494,8 @@ mod tests {
         let rows = vec![0, 1, 2];
         let cols = vec![0, 1, 2];
         let data = vec![1.0, 1.0, 1.0];
-        let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let matrix =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let b = Array1::from_vec(vec![1.0, 1.0, 1.0]);
 
@@ -495,12 +504,12 @@ mod tests {
             ..Default::default()
         };
 
-        let result = lsqr(&matrix, &b.view(), None, options).unwrap();
+        let result = lsqr(&matrix, &b.view(), None, options).expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.standard_errors.is_some());
 
-        let std_errs = result.standard_errors.unwrap();
+        let std_errs = result.standard_errors.expect("Operation failed");
         assert_eq!(std_errs.len(), 3);
     }
 }

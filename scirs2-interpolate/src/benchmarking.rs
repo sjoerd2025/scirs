@@ -25,6 +25,12 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::time::{Duration, Instant};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Comprehensive benchmark suite for interpolation methods
 pub struct InterpolationBenchmarkSuite<T: Float> {
     /// Benchmark configuration
@@ -290,7 +296,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
             self.benchmark_method("rbf_gaussian", size, || {
                 let mut rbf = crate::advanced::rbf::RBFInterpolator::new_unfitted(
                     crate::advanced::rbf::RBFKernel::Gaussian,
-                    T::from_f64(1.0).unwrap(),
+                    T::from_f64(1.0).expect("Operation failed"),
                 );
                 rbf.fit(&x.view(), &y.view())?;
                 rbf.predict(&x_new.view())
@@ -302,10 +308,10 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
                     &x.view(),
                     &y.view(),
                     crate::advanced::kriging::CovarianceFunction::SquaredExponential,
-                    T::from_f64(1.0).unwrap(), // sigma_sq
-                    T::from_f64(1.0).unwrap(), // length_scale
-                    T::from_f64(0.1).unwrap(), // nugget
-                    T::from_f64(1.0).unwrap(), // alpha
+                    T::from_f64(1.0).expect("Operation failed"), // sigma_sq
+                    T::from_f64(1.0).expect("Operation failed"), // length_scale
+                    T::from_f64(0.1).expect("Operation failed"), // nugget
+                    T::from_f64(1.0).expect("Operation failed"), // alpha
                 )?;
                 Ok(kriging.predict(&x_new.view())?.value)
             })?;
@@ -397,7 +403,8 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
 
                 // Add points incrementally
                 for i in 0..size {
-                    let x = T::from_usize(i).unwrap() / T::from_usize(size).unwrap();
+                    let x = T::from_usize(i).expect("Operation failed")
+                        / T::from_usize(size).expect("Test/example failed");
                     let y = x * x; // Simple quadratic function
 
                     let point = crate::streaming::StreamingPoint {
@@ -411,7 +418,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
                 }
 
                 // Make predictions
-                let query_x = T::from_f64(0.5).unwrap();
+                let query_x = T::from_f64(0.5).expect("Test/example failed");
                 interpolator.predict(query_x)
             })?;
         }
@@ -453,8 +460,8 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
 
         // Calculate statistics
         times.sort();
-        let min_time = *times.first().unwrap();
-        let max_time = *times.last().unwrap();
+        let min_time = *times.first().expect("Test/example failed");
+        let max_time = *times.last().expect("Test/example failed");
         let mean_time = Duration::from_nanos(
             (times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128) as u64,
         );
@@ -513,7 +520,8 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
     fn generate_test_data_1d(&self, size: usize) -> InterpolateResult<Array1<T>> {
         let mut data = Array1::zeros(size);
         for i in 0..size {
-            data[i] = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap();
+            data[i] = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Test/example failed");
         }
         Ok(data)
     }
@@ -522,9 +530,10 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
     fn generate_test_data_2d(&self, size: usize) -> InterpolateResult<Array2<T>> {
         let mut data = Array2::zeros((size, 2));
         for i in 0..size {
-            let t = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap();
+            let t = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Test/example failed");
             data[[i, 0]] = t;
-            data[[i, 1]] = t * T::from_f64(2.0).unwrap();
+            data[[i, 1]] = t * T::from_f64(2.0).expect("Test/example failed");
         }
         Ok(data)
     }
@@ -532,9 +541,15 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
     /// Generate query points for 1D interpolation
     fn generate_query_points_1d(&self, size: usize) -> InterpolateResult<Array1<T>> {
         let mut data = Array1::zeros(size);
+        // Generate query points within [0, 1], offset slightly from data points
+        // but ensuring we stay within bounds
+        let offset = T::from_f64(0.5).expect("Operation failed")
+            / T::from_usize(size).expect("Test/example failed");
         for i in 0..size {
-            data[i] = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap()
-                + T::from_f64(0.5).unwrap() / T::from_usize(size).unwrap();
+            let base = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Test/example failed");
+            // Clamp to ensure we stay within [0, 1]
+            data[i] = (base + offset).min(T::one());
         }
         Ok(data)
     }
@@ -543,10 +558,12 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
     fn generate_query_points_2d(&self, size: usize) -> InterpolateResult<Array2<T>> {
         let mut data = Array2::zeros((size, 2));
         for i in 0..size {
-            let t = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap()
-                + T::from_f64(0.3).unwrap() / T::from_usize(size).unwrap();
+            let t = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Operation failed")
+                + T::from_f64(0.3).expect("Operation failed")
+                    / T::from_usize(size).expect("Test/example failed");
             data[[i, 0]] = t;
-            data[[i, 1]] = t * T::from_f64(1.5).unwrap();
+            data[[i, 1]] = t * T::from_f64(1.5).expect("Test/example failed");
         }
         Ok(data)
     }
@@ -648,7 +665,9 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
             let key = result.data_size;
             let current_best = size_to_best_method.get(&key);
 
-            if current_best.is_none() || result.timing.throughput > current_best.unwrap().1 {
+            if current_best.is_none()
+                || result.timing.throughput > current_best.expect("Operation failed").1
+            {
                 size_to_best_method.insert(key, (result.method.clone(), result.timing.throughput));
             }
         }
@@ -710,7 +729,7 @@ impl<T: Float + Display> BenchmarkReport<T> {
 
         println!("\n=== PERFORMANCE SUMMARY ===");
         let mut sorted_methods: Vec<_> = self.performance_summary.iter().collect();
-        sorted_methods.sort_by(|a, b| b.1 .0.partial_cmp(&a.1 .0).unwrap());
+        sorted_methods.sort_by(|a, b| b.1 .0.partial_cmp(&a.1 .0).expect("Operation failed"));
 
         for (method, (throughput, avg_time)) in sorted_methods {
             println!(
@@ -932,13 +951,18 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
             crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
         let scipy_linear = self.get_scipy_reference("linear_1d", &x, &y, &x_new)?;
 
-        let accuracy =
-            self.calculate_accuracy_metrics(linear_result.as_slice().unwrap(), &scipy_linear);
+        let accuracy = self.calculate_accuracy_metrics(
+            linear_result.as_slice().expect("Operation failed"),
+            &scipy_linear,
+        );
         accuracy_validations.push(AccuracyValidation {
             method: "linear_1d".to_string(),
             data_size: size,
             passed: accuracy.max_absolute_error
-                < *self.accuracy_tolerances.get("linear_1d").unwrap(),
+                < *self
+                    .accuracy_tolerances
+                    .get("linear_1d")
+                    .expect("Operation failed"),
             accuracy_metrics: accuracy,
         });
 
@@ -968,13 +992,18 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
         let spline_result = spline.evaluate_array(&x_new.view())?;
         let scipy_cubic = self.get_scipy_reference("cubic_spline", &x, &y, &x_new)?;
 
-        let accuracy =
-            self.calculate_accuracy_metrics(spline_result.as_slice().unwrap(), &scipy_cubic);
+        let accuracy = self.calculate_accuracy_metrics(
+            spline_result.as_slice().expect("Operation failed"),
+            &scipy_cubic,
+        );
         accuracy_validations.push(AccuracyValidation {
             method: "cubic_spline".to_string(),
             data_size: size,
             passed: accuracy.max_absolute_error
-                < *self.accuracy_tolerances.get("cubic_spline").unwrap(),
+                < *self
+                    .accuracy_tolerances
+                    .get("cubic_spline")
+                    .expect("Operation failed"),
             accuracy_metrics: accuracy,
         });
 
@@ -1008,17 +1037,23 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
             &x.view(),
             &y.view(),
             crate::advanced::rbf::RBFKernel::Gaussian,
-            T::from_f64(1.0).unwrap(),
+            T::from_f64(1.0).expect("Operation failed"),
         )?;
         let rbf_result = rbf.interpolate(&x_new.view())?;
         let scipy_rbf = self.get_scipy_reference_2d("rbf_gaussian", &x, &y, &x_new)?;
 
-        let accuracy = self.calculate_accuracy_metrics(rbf_result.as_slice().unwrap(), &scipy_rbf);
+        let accuracy = self.calculate_accuracy_metrics(
+            rbf_result.as_slice().expect("Operation failed"),
+            &scipy_rbf,
+        );
         accuracy_validations.push(AccuracyValidation {
             method: "rbf_gaussian".to_string(),
             data_size: size,
             passed: accuracy.max_absolute_error
-                < *self.accuracy_tolerances.get("rbf_gaussian").unwrap(),
+                < *self
+                    .accuracy_tolerances
+                    .get("rbf_gaussian")
+                    .expect("Operation failed"),
             accuracy_metrics: accuracy,
         });
 
@@ -1035,19 +1070,38 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
 
     fn default_accuracy_tolerances() -> HashMap<String, T> {
         let mut tolerances = HashMap::new();
-        tolerances.insert("linear_1d".to_string(), T::from_f64(1e-12).unwrap());
-        tolerances.insert("cubic_1d".to_string(), T::from_f64(1e-10).unwrap());
-        tolerances.insert("pchip_1d".to_string(), T::from_f64(1e-10).unwrap());
-        tolerances.insert("cubic_spline".to_string(), T::from_f64(1e-10).unwrap());
-        tolerances.insert("rbf_gaussian".to_string(), T::from_f64(1e-8).unwrap());
-        tolerances.insert("kriging".to_string(), T::from_f64(1e-6).unwrap());
+        tolerances.insert(
+            "linear_1d".to_string(),
+            T::from_f64(1e-12).expect("Operation failed"),
+        );
+        tolerances.insert(
+            "cubic_1d".to_string(),
+            T::from_f64(1e-10).expect("Operation failed"),
+        );
+        tolerances.insert(
+            "pchip_1d".to_string(),
+            T::from_f64(1e-10).expect("Operation failed"),
+        );
+        tolerances.insert(
+            "cubic_spline".to_string(),
+            T::from_f64(1e-10).expect("Operation failed"),
+        );
+        tolerances.insert(
+            "rbf_gaussian".to_string(),
+            T::from_f64(1e-8).expect("Operation failed"),
+        );
+        tolerances.insert(
+            "kriging".to_string(),
+            T::from_f64(1e-6).expect("Operation failed"),
+        );
         tolerances
     }
 
     fn generate_scipy_test_data_1d(&self, size: usize) -> InterpolateResult<Array1<T>> {
         let mut data = Array1::zeros(size);
         for i in 0..size {
-            data[i] = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap();
+            data[i] = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Test/example failed");
         }
         Ok(data)
     }
@@ -1055,9 +1109,10 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
     fn generate_scipy_test_data_2d(&self, size: usize) -> InterpolateResult<Array2<T>> {
         let mut data = Array2::zeros((size, 2));
         for i in 0..size {
-            let t = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap();
+            let t = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Test/example failed");
             data[[i, 0]] = t;
-            data[[i, 1]] = t * T::from_f64(2.0).unwrap();
+            data[[i, 1]] = t * T::from_f64(2.0).expect("Test/example failed");
         }
         Ok(data)
     }
@@ -1065,8 +1120,10 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
     fn generate_scipy_query_points_1d(&self, size: usize) -> InterpolateResult<Array1<T>> {
         let mut data = Array1::zeros(size);
         for i in 0..size {
-            data[i] = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap()
-                + T::from_f64(0.5).unwrap() / T::from_usize(size).unwrap();
+            data[i] = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Operation failed")
+                + T::from_f64(0.5).expect("Operation failed")
+                    / T::from_usize(size).expect("Test/example failed");
         }
         Ok(data)
     }
@@ -1074,10 +1131,12 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
     fn generate_scipy_query_points_2d(&self, size: usize) -> InterpolateResult<Array2<T>> {
         let mut data = Array2::zeros((size, 2));
         for i in 0..size {
-            let t = T::from_usize(i).unwrap() / T::from_usize(size - 1).unwrap()
-                + T::from_f64(0.3).unwrap() / T::from_usize(size).unwrap();
+            let t = T::from_usize(i).expect("Operation failed")
+                / T::from_usize(size - 1).expect("Operation failed")
+                + T::from_f64(0.3).expect("Operation failed")
+                    / T::from_usize(size).expect("Test/example failed");
             data[[i, 0]] = t;
-            data[[i, 1]] = t * T::from_f64(1.5).unwrap();
+            data[[i, 1]] = t * T::from_f64(1.5).expect("Test/example failed");
         }
         Ok(data)
     }
@@ -1133,7 +1192,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
                     &x.view(),
                     &y.view(),
                     crate::advanced::rbf::RBFKernel::Gaussian,
-                    T::from_f64(1.0).unwrap(),
+                    T::from_f64(1.0).expect("Operation failed"),
                 )?;
                 rbf.interpolate(&x_new.view())
             }
@@ -1160,15 +1219,19 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
             sum_abs_error += error;
             sum_sq_error += error * error;
 
-            if error < T::from_f64(self.config.correctness_tolerance).unwrap() {
+            if error < T::from_f64(self.config.correctness_tolerance).expect("Operation failed") {
                 points_within_tolerance += 1;
             }
         }
 
-        let mean_abs_error = sum_abs_error / T::from_usize(n).unwrap();
-        let rmse = (sum_sq_error / T::from_usize(n).unwrap()).sqrt();
-        let relative_error_percent = (mean_abs_error / reference.mapv(|x| x.abs()).mean().unwrap())
-            * T::from_f64(100.0).unwrap();
+        let mean_abs_error = sum_abs_error / T::from_usize(n).expect("Test/example failed");
+        let rmse = (sum_sq_error / T::from_usize(n).expect("Operation failed")).sqrt();
+        let relative_error_percent = (mean_abs_error
+            / reference
+                .mapv(|x| x.abs())
+                .mean()
+                .expect("Operation failed"))
+            * T::from_f64(100.0).expect("Test/example failed");
 
         AccuracyMetrics {
             max_absolute_error: max_abs_error,
@@ -1339,7 +1402,8 @@ impl<
         println!("Testing extreme values...");
 
         // Test with very large values
-        let large_vals = Array1::from_vec(vec![T::from_f64(1e15).unwrap(); 1000]);
+        let large_vals =
+            Array1::from_vec(vec![T::from_f64(1e15).expect("Test/example failed"); 1000]);
         let x = Array1::linspace(T::zero(), T::one(), 1000);
 
         let result = std::panic::catch_unwind(|| {
@@ -1360,7 +1424,8 @@ impl<
         });
 
         // Test with very small values
-        let small_vals = Array1::from_vec(vec![T::from_f64(1e-15).unwrap(); 1000]);
+        let small_vals =
+            Array1::from_vec(vec![T::from_f64(1e-15).expect("Test/example failed"); 1000]);
 
         let result = std::panic::catch_unwind(|| {
             crate::interp1d::linear_interpolate(&x.view(), &small_vals.view(), &x.view())
@@ -1412,7 +1477,11 @@ impl<
 
         // Test with duplicate points
         let x_dup = Array1::from_vec(vec![T::zero(), T::zero(), T::one()]);
-        let y_dup = Array1::from_vec(vec![T::one(), T::one(), T::from_f64(2.0).unwrap()]);
+        let y_dup = Array1::from_vec(vec![
+            T::one(),
+            T::one(),
+            T::from_f64(2.0).expect("Operation failed"),
+        ]);
 
         let result = std::panic::catch_unwind(|| {
             crate::interp1d::linear_interpolate(&x_dup.view(), &y_dup.view(), &x_dup.view())
@@ -1529,10 +1598,10 @@ impl<
         // Test with ill-conditioned data
         let x = Array1::from_vec(
             (0..1000)
-                .map(|i| T::from_f64(i as f64 * 1e-15).unwrap())
+                .map(|i| T::from_f64(i as f64 * 1e-15).expect("Operation failed"))
                 .collect(),
         );
-        let y = x.mapv(|val| val + T::from_f64(1e-10).unwrap());
+        let y = x.mapv(|val| val + T::from_f64(1e-10).expect("Operation failed"));
         let x_new = x.clone();
 
         let result = std::panic::catch_unwind(|| {
@@ -1581,7 +1650,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let config = BenchmarkConfig::default();
         let suite = InterpolationBenchmarkSuite::<f64>::new(config);
@@ -1591,7 +1659,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Dependency issue: num-complex rand feature incompatibility
+    #[ignore = "Long-running benchmark test - runs comprehensive benchmarks that take >2 minutes"]
     fn test_quick_validation() {
         // This would run actual benchmarks in a real test
         let result = run_quick_validation::<f64>();

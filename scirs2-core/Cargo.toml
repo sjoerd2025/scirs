@@ -12,6 +12,13 @@ categories = ["science", "mathematics", "algorithms"]
 [lints]
 workspace = true
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[build-dependencies]
+cc = { workspace = true }
+
 [dependencies]
 # Core dependencies
 ndarray = { workspace = true }  # ndarray 0.17.1 - REQUIRED (not optional)
@@ -225,6 +232,11 @@ all = [
 name = "gpu_example"
 path = "examples/gpu_example.rs"
 required-features = ["gpu"]
+
+[[example]]
+name = "mpsgraph_operations_example"
+path = "examples/mpsgraph_operations_example.rs"
+required-features = ["mpsgraph"]
 
 [[example]]
 name = "gpu_kernel_library"
@@ -524,6 +536,11 @@ harness = false
 name = "random_performance_bench"
 harness = false
 required-features = ["random"]
+
+[[bench]]
+name = "mpsgraph_operations"
+harness = false
+required-features = ["mpsgraph"]
 
 [[example]]
 name = "parallel_ops_example"

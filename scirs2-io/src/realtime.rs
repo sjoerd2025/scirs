@@ -39,7 +39,7 @@
 //!     // Process streaming data
 //!     client.stream()
 //!         .window(100)
-//!         .filter(|data: &Array1<f64>| data.mean().unwrap() > 0.5)
+//!         .filter(|data: &Array1<f64>| data.mean().expect("Operation failed") > 0.5)
 //!         .map(|data| data * 2.0)
 //!         .sink("output.dat")
 //!         .await?;
@@ -505,7 +505,7 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
         let mut result = Vec::with_capacity(total_len);
 
         for array in &self.buffer {
-            result.extend_from_slice(array.as_slice().unwrap());
+            result.extend_from_slice(array.as_slice().expect("Operation failed"));
         }
 
         Array1::from_vec(result)
@@ -880,7 +880,7 @@ impl StreamConnection for SSEConnection {
                 "data: {{\"timestamp\": {}, \"value\": 42.0}}\n\n",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_secs()
             );
             Ok(event_data.into_bytes())
@@ -956,7 +956,10 @@ impl StreamConnection for GrpcStreamConnection {
 
             // Set up default metadata
             let mut metadata = MetadataMap::new();
-            metadata.insert("content-type", "application/grpc".parse().unwrap());
+            metadata.insert(
+                "content-type",
+                "application/grpc".parse().expect("Operation failed"),
+            );
 
             self.channel = Some(channel);
             self.metadata = Some(metadata);
@@ -988,7 +991,7 @@ impl StreamConnection for GrpcStreamConnection {
                 "sequence_id": self.sequence_id,
                 "timestamp": std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_millis() as u64,
                 "data": {
                     "values": [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -1086,7 +1089,7 @@ impl MqttConnection {
             "scirs2-io-{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_millis()
         );
 
@@ -1212,7 +1215,7 @@ impl StreamConnection for MqttConnection {
             "topic": self.topic,
             "timestamp": std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_millis() as u64,
             "qos": self.qos,
             "payload": {
@@ -1533,7 +1536,9 @@ impl StreamSynchronizer {
                     let mut min_timestamp = None;
                     for stream_info in &self.streams {
                         if let Some(front) = stream_info.buffer.front() {
-                            if min_timestamp.is_none() || front.timestamp < min_timestamp.unwrap() {
+                            if min_timestamp.is_none()
+                                || front.timestamp < min_timestamp.expect("Operation failed")
+                            {
                                 min_timestamp = Some(front.timestamp);
                             }
                         }
@@ -1846,11 +1851,14 @@ mod tests {
 
         // Process some values
         for i in 0..10 {
-            aggregator.process(i as f64).await.unwrap();
+            aggregator
+                .process(i as f64)
+                .await
+                .expect("Operation failed");
         }
 
         // Force flush
-        aggregator.flush_window().await.unwrap();
+        aggregator.flush_window().await.expect("Operation failed");
 
         // Check result
         if let Some(result) = rx.recv().await {

@@ -33,14 +33,14 @@ use super::super::core::{SpikeEvent, SpikingNeuron, Synapse};
 ///
 /// let points = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let mut clusterer = SpikingNeuralClusterer::new(2)
 ///     .with_spike_threshold(0.8)
 ///     .with_stdp_learning(true)
 ///     .with_lateral_inhibition(true);
 ///
-/// let (assignments, spike_events) = clusterer.fit(&points.view()).unwrap();
+/// let (assignments, spike_events) = clusterer.fit(&points.view()).expect("Operation failed");
 /// println!("Cluster assignments: {:?}", assignments);
 /// ```
 #[derive(Debug, Clone)]
@@ -274,7 +274,11 @@ impl SpikingNeuralClusterer {
         }
 
         // Sort spikes by timestamp
-        spike_train.sort_by(|a, b| a.timestamp().partial_cmp(&b.timestamp()).unwrap());
+        spike_train.sort_by(|a, b| {
+            a.timestamp()
+                .partial_cmp(&b.timestamp())
+                .expect("Operation failed")
+        });
 
         Ok(spike_train)
     }
@@ -531,15 +535,15 @@ mod tests {
 
     #[test]
     fn test_simple_clustering() {
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         let mut clusterer = SpikingNeuralClusterer::new(2).with_training_params(5, 1.0); // Reduced for test speed
 
         let result = clusterer.fit(&points.view());
         assert!(result.is_ok());
 
-        let (assignments, spike_events) = result.unwrap();
+        let (assignments, spike_events) = result.expect("Operation failed");
         assert_eq!(assignments.len(), 4);
 
         // Should have recorded some spike events
@@ -558,7 +562,7 @@ mod tests {
     #[test]
     fn test_network_initialization() {
         let mut clusterer = SpikingNeuralClusterer::new(2);
-        clusterer.initialize_network(3).unwrap();
+        clusterer.initialize_network(3).expect("Operation failed");
 
         let stats = clusterer.network_stats();
         assert_eq!(stats.num_neurons, 5); // 3 input + 2 output
@@ -578,7 +582,9 @@ mod tests {
         let clusterer = SpikingNeuralClusterer::new(2);
         let point = Array1::from_vec(vec![1.0, -1.0]);
 
-        let spike_train = clusterer.encode_point_as_spikes(&point).unwrap();
+        let spike_train = clusterer
+            .encode_point_as_spikes(&point)
+            .expect("Operation failed");
 
         // Should generate spikes for each dimension
         assert!(!spike_train.is_empty());
@@ -592,7 +598,7 @@ mod tests {
     #[test]
     fn test_network_reset() {
         let mut clusterer = SpikingNeuralClusterer::new(2);
-        clusterer.initialize_network(2).unwrap();
+        clusterer.initialize_network(2).expect("Operation failed");
 
         // Add some activity
         clusterer
@@ -609,7 +615,7 @@ mod tests {
     #[test]
     fn test_network_stats() {
         let mut clusterer = SpikingNeuralClusterer::new(2);
-        clusterer.initialize_network(3).unwrap();
+        clusterer.initialize_network(3).expect("Operation failed");
 
         let stats = clusterer.network_stats();
         assert_eq!(stats.num_neurons, 5);

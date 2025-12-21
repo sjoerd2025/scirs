@@ -371,7 +371,7 @@ impl LoadBalancer {
             .push(performance_metric);
         
         // Keep only recent measurements
-        let history = self.performance_history.get_mut(&node_rank).unwrap();
+        let history = self.performance_history.get_mut(&node_rank).expect("Operation failed");
         if history.len() > 10 {
             history.drain(0..history.len() - 10);
         }
@@ -566,7 +566,7 @@ mod tests {
     
     #[test]
     fn test_row_wise_distribution() {
-        let distribution = DataDistribution::row_wise((100, 50), 4, 1).unwrap();
+        let distribution = DataDistribution::row_wise((100, 50), 4, 1).expect("Operation failed");
         
         assert_eq!(distribution.strategy, DistributionStrategy::RowWise);
         assert_eq!(distribution.globalshape, (100, 50));
@@ -579,7 +579,7 @@ mod tests {
     
     #[test]
     fn test_column_wise_distribution() {
-        let distribution = DataDistribution::column_wise((100, 50), 4, 2).unwrap();
+        let distribution = DataDistribution::column_wise((100, 50), 4, 2).expect("Operation failed");
         
         assert_eq!(distribution.strategy, DistributionStrategy::ColumnWise);
         assert_eq!(distribution.globalshape, (100, 50));
@@ -594,7 +594,7 @@ mod tests {
         use super::super::DistributedConfig;
         
         let config = DistributedConfig::default().with_num_nodes(3);
-        let mut balancer = LoadBalancer::new(&config).unwrap();
+        let mut balancer = LoadBalancer::new(&config).expect("Operation failed");
         
         // Update capabilities
         balancer.update_capability(0, 1.0);
@@ -612,9 +612,9 @@ mod tests {
     #[test]
     fn testmatrix_partitioner() {
         let matrix = Array2::from_shape_fn((10, 8), |(i, j)| (i * 8 + j) as f64);
-        let distribution = DataDistribution::row_wise((10, 8), 2, 0).unwrap();
+        let distribution = DataDistribution::row_wise((10, 8), 2, 0).expect("Operation failed");
         
-        let partition = MatrixPartitioner::partition(&matrix.view(), &distribution).unwrap();
+        let partition = MatrixPartitioner::partition(&matrix.view(), &distribution).expect("Operation failed");
         
         assert_eq!(partition.nrows(), 5); // First half of rows
         assert_eq!(partition.ncols(), 8); // All columns

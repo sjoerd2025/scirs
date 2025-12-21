@@ -36,7 +36,7 @@ fn create_noisy_sparse_signal(
 ) -> Vec<f64> {
     // Use a fixed seed for reproducible benchmarks
     let mut rng = thread_rng();
-    let normal = Normal::new(0.0, noise_level).unwrap();
+    let normal = Normal::new(0.0, noise_level).expect("Operation failed");
 
     let mut signal = create_sparse_signal(n, frequencies);
 
@@ -56,7 +56,7 @@ fn setup_memory_manager() {
         AllocationStrategy::CacheBySize, // Use cache by size strategy
         1_073_741_824,           // 1GB of memory
     )
-    .unwrap();
+    .expect("Operation failed");
 }
 
 /// CPU Benchmarks
@@ -74,7 +74,7 @@ fn bench_cpu_sparse_fft_8192(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             None, // seed parameter
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -92,7 +92,7 @@ fn bench_cpu_sparse_fft_16384(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             None, // seed parameter
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -112,7 +112,7 @@ fn bench_cuda_sparse_fft_8192_sublinear(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -131,7 +131,7 @@ fn bench_cuda_sparse_fft_16384_sublinear(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -150,7 +150,7 @@ fn bench_cuda_sparse_fft_8192_iterative(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Iterative),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -169,7 +169,7 @@ fn bench_cuda_sparse_fft_16384_iterative(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Iterative),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -188,7 +188,7 @@ fn bench_cuda_sparse_fft_with_noise(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 
@@ -207,7 +207,7 @@ fn bench_cuda_sparse_fft_large(b: &mut Bencher) {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
     });
 }
 

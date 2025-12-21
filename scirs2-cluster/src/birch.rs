@@ -63,7 +63,7 @@ impl<F: Float + FromPrimitive + ScalarOperand> ClusteringFeature<F> {
         if self.n == 0 {
             Array1::zeros(self.linear_sum.len())
         } else {
-            &self.linear_sum / F::from(self.n).unwrap()
+            &self.linear_sum / F::from(self.n).expect("Failed to convert to float")
         }
     }
 
@@ -74,8 +74,9 @@ impl<F: Float + FromPrimitive + ScalarOperand> ClusteringFeature<F> {
         } else {
             let centroid = self.centroid();
             let centroid_ss = centroid.dot(&centroid);
-            let variance = (self.squared_sum - F::from(self.n).unwrap() * centroid_ss)
-                / F::from(self.n).unwrap();
+            let variance = (self.squared_sum
+                - F::from(self.n).expect("Failed to convert to float") * centroid_ss)
+                / F::from(self.n).expect("Failed to convert to float");
             variance.max(F::zero()).sqrt()
         }
     }
@@ -85,10 +86,10 @@ impl<F: Float + FromPrimitive + ScalarOperand> ClusteringFeature<F> {
         if self.n <= 1 {
             F::zero()
         } else {
-            let n_f = F::from(self.n).unwrap();
+            let n_f = F::from(self.n).expect("Failed to convert to float");
             let term = (n_f * self.squared_sum - self.linear_sum.dot(&self.linear_sum))
                 / (n_f * (n_f - F::one()));
-            term.max(F::zero()).sqrt() * F::from(2.0).unwrap()
+            term.max(F::zero()).sqrt() * F::from(2.0).expect("Failed to convert constant to float")
         }
     }
 }
@@ -160,7 +161,7 @@ impl<F: Float + FromPrimitive> Default for BirchOptions<F> {
     fn default() -> Self {
         Self {
             branching_factor: 50,
-            threshold: F::from(0.5).unwrap(),
+            threshold: F::from(0.5).expect("Failed to convert constant to float"),
             n_clusters: None,
         }
     }
@@ -378,7 +379,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
             ));
         }
 
-        let n_features = self.n_features.unwrap();
+        let n_features = self.n_features.expect("Operation failed");
         let n_cf_entries = self.leaf_entries.len();
         let n_clusters = self.options.n_clusters.unwrap_or(n_cf_entries);
 
@@ -423,7 +424,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
         for (cf_idx, &cluster_id) in cluster_assignments.iter().enumerate() {
             let cf = &self.leaf_entries[cf_idx];
             let cf_centroid = cf.centroid();
-            let cf_weight = F::from_usize(cf.n).unwrap();
+            let cf_weight = F::from_usize(cf.n).expect("Operation failed");
 
             cluster_weights[cluster_id as usize] = cluster_weights[cluster_id as usize] + cf_weight;
 
@@ -506,7 +507,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
                 .iter()
                 .map(|cf| cf.radius())
                 .fold(F::zero(), |acc, x| acc + x);
-            total_radius / F::from_usize(self.leaf_entries.len()).unwrap()
+            total_radius / F::from_usize(self.leaf_entries.len()).expect("Operation failed")
         } else {
             F::zero()
         };
@@ -563,14 +564,14 @@ pub struct BirchStatistics<F: Float> {
 ///     4.0, 5.0,
 ///     4.2, 4.8,
 ///     3.9, 5.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let options = BirchOptions {
 ///     n_clusters: Some(2),
 ///     ..Default::default()
 /// };
 ///
-/// let (centroids, labels) = birch(data.view(), options).unwrap();
+/// let (centroids, labels) = birch(data.view(), options).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn birch<F>(data: ArrayView2<F>, options: BirchOptions<F>) -> Result<(Array2<F>, Array1<i32>)>
@@ -626,7 +627,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let options = BirchOptions {
             n_clusters: Some(2),
@@ -637,7 +638,7 @@ mod tests {
         let result = birch(data.view(), options);
         assert!(result.is_ok());
 
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Operation failed");
         assert_eq!(centroids.shape()[0], 2);
         assert_eq!(labels.len(), 6);
     }

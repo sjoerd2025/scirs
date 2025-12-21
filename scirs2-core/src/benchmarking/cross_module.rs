@@ -379,7 +379,7 @@ impl CrossModuleBenchmarkRunner {
             })?;
 
             // Update measurement with largest data size results
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.min_duration = timing_data.min_duration;
@@ -427,7 +427,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_signal_fft_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -471,7 +471,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_io_processing_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -526,7 +526,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_ml_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -583,7 +583,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_zero_copy_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -639,7 +639,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_mmap_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -690,7 +690,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_out_of_core_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -761,7 +761,7 @@ impl CrossModuleBenchmarkRunner {
                     self.simulate_scalable_operation(n * 1024) // Use n as a scaling factor
                 })?;
 
-                if n == *self.config.ns.last().unwrap() {
+                if n == *self.config.ns.last().expect("Operation failed") {
                     measurement.n = n;
                     measurement.avg_duration = timing_data.avg_duration;
                     measurement.throughput = timing_data.throughput;
@@ -835,7 +835,7 @@ impl CrossModuleBenchmarkRunner {
             let ops_per_byte = timing_data.throughput / datasize as f64;
             scalability_scores.push(ops_per_byte);
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -875,7 +875,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_scalable_operation(memory_limit)
             })?;
 
-            if memory_limit == *self.config.memory_limits.last().unwrap() {
+            if memory_limit == *self.config.memory_limits.last().expect("Operation failed") {
                 measurement.memory_usage = memory_limit;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -936,7 +936,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_scientific_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -1003,7 +1003,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_data_analysis_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -1075,7 +1075,7 @@ impl CrossModuleBenchmarkRunner {
                 self.simulate_ml_training_workflow(datasize)
             })?;
 
-            if datasize == *self.config.datasizes.last().unwrap() {
+            if datasize == *self.config.datasizes.last().expect("Operation failed") {
                 measurement.datasize = datasize;
                 measurement.avg_duration = timing_data.avg_duration;
                 measurement.throughput = timing_data.throughput;
@@ -1156,8 +1156,8 @@ impl CrossModuleBenchmarkRunner {
         // Calculate statistics
         let total_duration: Duration = durations.iter().sum();
         let avg_duration = total_duration / durations.len() as u32;
-        let min_duration = *durations.iter().min().unwrap();
-        let max_duration = *durations.iter().max().unwrap();
+        let min_duration = *durations.iter().min().expect("Operation failed");
+        let max_duration = *durations.iter().max().expect("Operation failed");
 
         // Calculate standard deviation
         let variance = durations

@@ -205,7 +205,7 @@ fn demo_coverage_analysis() -> Result<(), Box<dyn std::error::Error>> {
     files.sort_by(|a, b| {
         b.1.line_coverage_percentage()
             .partial_cmp(&a.1.line_coverage_percentage())
-            .unwrap()
+            .expect("Operation failed")
     });
 
     for (path, coverage) in files.iter().take(5) {

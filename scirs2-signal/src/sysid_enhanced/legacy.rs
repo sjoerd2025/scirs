@@ -543,8 +543,8 @@ fn preprocess_data(
     let mut proc_output = output.clone();
 
     // Remove mean
-    let input_mean = proc_input.mean().unwrap();
-    let output_mean = proc_output.mean().unwrap();
+    let input_mean = proc_input.mean().expect("Operation failed");
+    let output_mean = proc_output.mean().expect("Operation failed");
     proc_input -= input_mean;
     proc_output -= output_mean;
 
@@ -589,7 +589,7 @@ fn remove_outliers(
 #[allow(dead_code)]
 fn median(data: &[f64]) -> f64 {
     let mut sorted = data.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     sorted[sorted.len() / 2]
 }
 
@@ -634,7 +634,7 @@ fn identify_arx(
     // Compute parameter statistics
     let residuals = &y - &phi.dot(&params);
     let sigma2 = residuals.dot(&residuals) / (n - na - nb) as f64;
-    let covariance = phi_t_phi.inv().unwrap() * sigma2;
+    let covariance = phi_t_phi.inv().expect("Operation failed") * sigma2;
     let std_errors = covariance.diag().map(|x| x.sqrt());
 
     let confidence_intervals = params
@@ -771,8 +771,8 @@ fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>
         .svd(true, true)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
-    let u = u.unwrap();
-    let vt = vt.unwrap();
+    let u = u.expect("Operation failed");
+    let vt = vt.expect("Operation failed");
 
     // Compute pseudoinverse with regularization
     let tolerance = 1e-10;
@@ -903,7 +903,7 @@ fn validate_model(
     let y_sim = simulate_model(model, input)?;
 
     // Compute fit percentage
-    let y_mean = output.mean().unwrap();
+    let y_mean = output.mean().expect("Operation failed");
     let ss_tot = output.iter().map(|&y| (y - y_mean).powi(2)).sum::<f64>();
     let ss_res = output
         .iter()
@@ -1000,7 +1000,7 @@ fn cross_validate_model(
         let y_pred = simulate_model(&cv_model, &test_input)?;
 
         // Compute test score
-        let y_mean = test_output.mean().unwrap();
+        let y_mean = test_output.mean().expect("Operation failed");
         let ss_tot = test_output
             .iter()
             .map(|&y| (y - y_mean).powi(2))
@@ -1029,7 +1029,7 @@ fn enhanced_residual_analysis(
     let max_lag = 20.min(residuals.len() / 4);
     let mut autocorrelation = Array1::zeros(max_lag);
 
-    let r_mean = residuals.mean().unwrap();
+    let r_mean = residuals.mean().expect("Operation failed");
     let r_var =
         residuals.iter().map(|&r| (r - r_mean).powi(2)).sum::<f64>() / residuals.len() as f64;
 
@@ -1051,7 +1051,7 @@ fn enhanced_residual_analysis(
 
     // Compute cross-correlation with input
     let mut cross_correlation = Array1::zeros(max_lag);
-    let i_mean = input.mean().unwrap();
+    let i_mean = input.mean().expect("Operation failed");
     let i_var = input.iter().map(|&i| (i - i_mean).powi(2)).sum::<f64>() / input.len() as f64;
 
     for lag in 0..max_lag {
@@ -1123,7 +1123,7 @@ fn cross_correlation_test(_crosscorr: &Array1<f64>) -> f64 {
 #[allow(dead_code)]
 pub fn jarque_bera_test(data: &Array1<f64>) -> f64 {
     let n = data.len() as f64;
-    let mean = data.mean().unwrap();
+    let mean = data.mean().expect("Operation failed");
 
     // Compute moments
     let mut m2 = 0.0;
@@ -1803,7 +1803,7 @@ fn detect_outliers_mad(data: &Array1<f64>, threshold: f64) -> Vec<bool> {
 #[allow(dead_code)]
 fn compute_median(data: &[f64]) -> f64 {
     let mut sorted = data.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let len = sorted.len();
     if len % 2 == 0 {
@@ -1994,7 +1994,7 @@ mod tests {
         for i in 0..10 {
             let input = (i as f64).sin();
             let output = 0.5 * input;
-            let error = sysid.update(input, output).unwrap();
+            let error = sysid.update(input, output).expect("Operation failed");
             assert!(error.is_finite());
         }
 
@@ -2020,7 +2020,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = enhanced_system_identification(&input, &output, &config).unwrap();
+        let result = enhanced_system_identification(&input, &output, &config).expect("Operation failed");
 
         assert!(matches!(result.model, SystemModel::ARX { .. }));
         assert!(result.validation.fit_percentage > 90.0);
@@ -2044,10 +2044,10 @@ mod tests {
             ..Default::default()
         };
 
-        let result = enhanced_system_identification(&input, &output, &config).unwrap();
+        let result = enhanced_system_identification(&input, &output, &config).expect("Operation failed");
 
         assert!(result.validation.cv_fit.is_some());
-        assert!(result.validation.cv_fit.unwrap() > 80.0);
+        assert!(result.validation.cv_fit.expect("Operation failed") > 80.0);
     }
 
     #[test]
@@ -2073,7 +2073,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = robust_system_identification(&input, &output, &config).unwrap();
+        let result = robust_system_identification(&input, &output, &config).expect("Operation failed");
 
         assert!(matches!(result.model, SystemModel::ARX { .. }));
         assert!(result.validation.fit_percentage > 85.0);
@@ -2097,7 +2097,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = simd_optimized_identification(&input, &output, &config).unwrap();
+        let result = simd_optimized_identification(&input, &output, &config).expect("Operation failed");
 
         assert!(matches!(result.model, SystemModel::ARX { .. }));
         assert!(result.validation.fit_percentage > 85.0);
@@ -2136,7 +2136,7 @@ mod tests {
             ..Default::default()
         };
 
-        let results = mimo_system_identification(&inputs, &outputs, &config).unwrap();
+        let results = mimo_system_identification(&inputs, &outputs, &config).expect("Operation failed");
 
         assert_eq!(results.len(), 2); // Two outputs
         for result in results {
@@ -2161,13 +2161,13 @@ mod tests {
         // Update with first half
         let input1 = input.slice(scirs2_core::ndarray::s![..50]).to_owned();
         let output1 = output.slice(scirs2_core::ndarray::s![..50]).to_owned();
-        let adapted1 = identifier.update_model(&input1, &output1).unwrap();
+        let adapted1 = identifier.update_model(&input1, &output1).expect("Operation failed");
         assert!(adapted1); // Should adapt (first model)
 
         // Update with second half
         let input2 = input.slice(scirs2_core::ndarray::s![50..]).to_owned();
         let output2 = output.slice(scirs2_core::ndarray::s![50..]).to_owned();
-        let _adapted2 = identifier.update_model(&input2, &output2).unwrap();
+        let _adapted2 = identifier.update_model(&input2, &output2).expect("Operation failed");
 
         assert!(identifier.get_current_model().is_some());
     }
@@ -2190,7 +2190,7 @@ mod tests {
         ];
 
         let (best_structure, best_result) =
-            advanced_model_selection(&input, &output, &candidates).unwrap();
+            advanced_model_selection(&input, &output, &candidates).expect("Operation failed");
 
         assert!(matches!(
             best_structure,
@@ -2631,7 +2631,7 @@ fn enhanced_order_selection(
 #[allow(dead_code)]
 fn median_helper(data: &[f64]) -> f64 {
     let mut sorted = data.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let n = sorted.len();
 
     if n % 2 == 0 {

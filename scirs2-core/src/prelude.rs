@@ -11,7 +11,7 @@
 //!
 //! // Now you have access to all common functionality:
 //! let data = array![[1.0, 2.0], [3.0, 4.0]];  // Array creation
-//! let mean = data.mean().unwrap();             // Array operations
+//! let mean = data.mean().expect("Operation failed");             // Array operations
 //! let counter = Counter::new("requests".into()); // Metrics
 //! ```
 //!
@@ -66,7 +66,7 @@
 //!
 //! // Array operations
 //! let sum = a.sum();
-//! let mean = a.mean().unwrap();
+//! let mean = a.mean().expect("Operation failed");
 //! ```
 //!
 //! ### Random Number Generation
@@ -83,7 +83,7 @@
 //! let sample = rng.gen::<f64>();
 //!
 //! // Sample from distributions
-//! let normal = Normal::new(0.0, 1.0).unwrap();
+//! let normal = Normal::new(0.0, 1.0).expect("Operation failed");
 //! let value = normal.sample(&mut rng);
 //! ```
 //!

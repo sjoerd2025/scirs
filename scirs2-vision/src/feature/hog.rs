@@ -370,7 +370,7 @@ pub fn visualize_hog(
             let max_idx = histogram
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 

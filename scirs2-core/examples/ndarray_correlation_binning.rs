@@ -15,7 +15,7 @@ fn main() {
     println!("Sample data: {data:?}");
 
     // Basic counting
-    let counts = bincount(data.view(), None, None).unwrap();
+    let counts = bincount(data.view(), None, None).expect("Operation failed");
     println!("\nValue counts:");
     for (i, &count) in counts.iter().enumerate() {
         println!("  {i}: {count}");
@@ -28,7 +28,7 @@ fn main() {
     let bins = array![0.0, 2.0, 4.0, 6.0, 8.0, 10.0];
     println!("Bin edges: {bins:?}");
 
-    let indices = digitize(values.view(), bins.view(), true, "indices").unwrap();
+    let indices = digitize(values.view(), bins.view(), true, "indices").expect("Operation failed");
     println!("Bin indices: {indices:?}");
 
     // Create a frequency table
@@ -36,7 +36,8 @@ fn main() {
     println!("  Bin Range    | Count");
     println!("  -------------|------");
 
-    let hist_result = histogram(values.view(), 5, Some((0.0, 10.0)), None).unwrap();
+    let hist_result =
+        histogram(values.view(), 5, Some((0.0, 10.0)), None).expect("Operation failed");
     let (hist, bin_edges) = hist_result;
 
     for i in 0..hist.len() {
@@ -67,9 +68,9 @@ fn main() {
     println!("yneg: {y_neg:?}");
     println!("ynone: {y_none:?}");
 
-    let corr_pos = corrcoef(x.view(), y_pos.view()).unwrap();
-    let corr_neg = corrcoef(x.view(), y_neg.view()).unwrap();
-    let corr_none = corrcoef(x.view(), y_none.view()).unwrap();
+    let corr_pos = corrcoef(x.view(), y_pos.view()).expect("Operation failed");
+    let corr_neg = corrcoef(x.view(), y_neg.view()).expect("Operation failed");
+    let corr_none = corrcoef(x.view(), y_none.view()).expect("Operation failed");
 
     println!("\nCorrelation coefficients:");
     println!("  Positive correlation: {corr_pos:.4}");
@@ -85,10 +86,10 @@ fn main() {
             y_neg[6], x[7], y_pos[7], y_neg[7], x[8], y_pos[8], y_neg[8], x[9], y_pos[9], y_neg[9],
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nCovariance matrix:");
-    let covmatrix = cov(data.view(), 1).unwrap();
+    let covmatrix = cov(data.view(), 1).expect("Operation failed");
 
     println!("  Variances:");
     println!("    Var(x): {:.2}", covmatrix[[0, 0]]);
@@ -112,7 +113,8 @@ fn main() {
     println!("Data with outliers: {data:?}");
 
     // Calculate quartiles
-    let quartiles = quantile(data.view(), array![0.25, 0.5, 0.75].view(), None).unwrap();
+    let quartiles =
+        quantile(data.view(), array![0.25, 0.5, 0.75].view(), None).expect("Operation failed");
     println!("\nQuartiles:");
     println!("  Q1 (25%): {:.2}", quartiles[0]);
     println!("  Q2 (50%, median): {:.2}", quartiles[1]);
@@ -159,7 +161,7 @@ fn main() {
         Some(((1.0, 6.0), (0.0, 6.0))),
         None,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\n2D Histogram:");
 

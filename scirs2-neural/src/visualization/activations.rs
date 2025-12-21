@@ -343,7 +343,7 @@ impl<
                     let mean_axis = processed.ndim() - 1; // Usually channel is last dimension
                     processed
                         .mean_axis(scirs2_core::ndarray::Axis(mean_axis))
-                        .unwrap()
+                        .expect("Operation failed")
                         .insert_axis(scirs2_core::ndarray::Axis(mean_axis))
                 } else {
             ChannelAggregation::Max => {
@@ -361,7 +361,7 @@ impl<
                         });
                     min_values.insert_axis(scirs2_core::ndarray::Axis(min_axis)), ChannelAggregation::Std => {
                     let std_axis = processed.ndim() - 1;
-                    let mean = processed.mean_axis(scirs2_core::ndarray::Axis(std_axis)).unwrap();
+                    let mean = processed.mean_axis(scirs2_core::ndarray::Axis(std_axis)).expect("Operation failed");
                     let variance = processed.map_axis(scirs2_core::ndarray::Axis(std_axis), |channel| {
                         let mean_val = mean.iter().next().copied().unwrap_or(F::zero());
                         let variance_sum = channel
@@ -587,7 +587,7 @@ impl<
                 "Spatial attention requires at least 3D tensors".to_string(),
         // Assume format is [batch, height, width, channels] or [height, width, channels]
         let channel_axis = activations.ndim() - 1;
-        let attention_map = activations.mean_axis(scirs2_core::ndarray::Axis(channel_axis)).unwrap();
+        let attention_map = activations.mean_axis(scirs2_core::ndarray::Axis(channel_axis)).expect("Operation failed");
         // Normalize attention map
         let min_val = attention_map.iter().copied().fold(F::infinity(), F::min);
         let max_val = attention_map
@@ -767,7 +767,7 @@ mod tests {
     fn test_activation_visualizer_creation() {
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
         let config = VisualizationConfig::default();
         let visualizer = ActivationVisualizer::new(model, config);
         assert!(visualizer.activation_cache.is_empty());

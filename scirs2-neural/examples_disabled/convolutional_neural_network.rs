@@ -434,7 +434,7 @@ impl Layer for Flatten {
         let flattened = x
             .clone()
             .into_shape_with_order((batch_size, flat_size, 1, 1))
-            .unwrap();
+            .expect("Operation failed");
         // Store original shape for backward pass
         self.inputshape = Some(inputshape);
         flattened
@@ -443,7 +443,7 @@ impl Layer for Flatten {
         // Reshape back to original shape
         let reshaped = grad_output
             .into_shape_with_order(inputshape.clone())
-        let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().unwrap();
+        let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().expect("Operation failed");
         reshaped_4d
         // Flatten has no parameters to update
         "Flatten".to_string()
@@ -497,7 +497,7 @@ impl Layer for Dense {
         // Compute gradient for input
         let dinput_2d = delta.dot(&self.weights.t());
         // Reshape to 4D
-        let dinput = dinput_2d.into_shape_with_order(input.dim()).unwrap();
+        let dinput = dinput_2d.into_shape_with_order(input.dim()).expect("Operation failed");
             "Dense: {} -> {}, activation {}",
             self.input_size,
             self.output_size,
@@ -536,7 +536,7 @@ impl Sequential {
         // Compute gradient of loss with respect to predictions
         let dloss = self._loss_fn.derivative(&predictions_2d, y);
         // Reshape back to 4D for backward pass
-        let dloss_4d = dloss.into_shape_with_order(predictions.dim()).unwrap();
+        let dloss_4d = dloss.into_shape_with_order(predictions.dim()).expect("Operation failed");
         // Backward pass through all layers
         let mut grad = dloss_4d;
         for layer in self.layers.iter_mut().rev() {
@@ -596,7 +596,7 @@ impl Sequential {
     fn predict(&mut self, x: &Array4<f32>) -> Array2<f32> {
         // Reshape to 2D for easier handling
         predictions
-            .unwrap()
+            .expect("Operation failed")
     /// Print a summary of the model
     fn summary(&self) {
         println!("Model Summary:");

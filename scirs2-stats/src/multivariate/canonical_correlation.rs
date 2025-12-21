@@ -111,8 +111,8 @@ impl CanonicalCorrelationAnalysis {
     /// Fit the CCA model
     pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView2<f64>) -> Result<CCAResult> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "CCA fit");
-        validate_or_error!(finite: y.as_slice().unwrap(), "y", "CCA fit");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "CCA fit");
+        validate_or_error!(finite: y.as_slice().expect("Operation failed"), "y", "CCA fit");
 
         let (n_samples_x, n_features_x) = x.dim();
         let (n_samples_y, n_features_y) = y.dim();
@@ -222,7 +222,7 @@ impl CanonicalCorrelationAnalysis {
         &self,
         data: ArrayView2<f64>,
     ) -> Result<(Array2<f64>, Array1<f64>, Option<Array1<f64>>)> {
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let mut centered = data.to_owned();
 
         // Center data
@@ -296,8 +296,8 @@ impl CanonicalCorrelationAnalysis {
             .svd(true, true)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed in CCA: {}", e)))?;
 
-        let u = u.unwrap();
-        let vt = vt.unwrap();
+        let u = u.expect("Operation failed");
+        let vt = vt.expect("Operation failed");
 
         // Extract the desired number of _components
         let n_comp = n_components.min(s.len());
@@ -436,8 +436,8 @@ impl CanonicalCorrelationAnalysis {
         result: &CCAResult,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "CCA transform");
-        validate_or_error!(finite: y.as_slice().unwrap(), "y", "CCA transform");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "CCA transform");
+        validate_or_error!(finite: y.as_slice().expect("Operation failed"), "y", "CCA transform");
 
         if x.ncols() != result.x_mean.len() {
             return Err(handler
@@ -592,8 +592,8 @@ impl PLSCanonical {
     /// Fit PLS model using NIPALS algorithm
     pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView2<f64>) -> Result<PLSResult> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "PLS fit");
-        validate_or_error!(finite: y.as_slice().unwrap(), "y", "PLS fit");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "PLS fit");
+        validate_or_error!(finite: y.as_slice().expect("Operation failed"), "y", "PLS fit");
 
         let (n_samples_, n_x_features) = x.dim();
         let (n_samples_y, n_y_features) = y.dim();
@@ -793,7 +793,7 @@ impl PLSCanonical {
     /// Transform new data
     pub fn transform(&self, x: ArrayView2<f64>, result: &PLSResult) -> Result<Array2<f64>> {
         let handler = global_error_handler();
-        validate_or_error!(finite: x.as_slice().unwrap(), "x", "PLS transform");
+        validate_or_error!(finite: x.as_slice().expect("Operation failed"), "x", "PLS transform");
 
         if x.ncols() != result.x_mean.len() {
             return Err(handler
@@ -849,7 +849,7 @@ mod tests {
         ];
 
         let cca = CanonicalCorrelationAnalysis::new().with_n_components(2);
-        let result = cca.fit(x.view(), y.view()).unwrap();
+        let result = cca.fit(x.view(), y.view()).expect("Operation failed");
 
         assert_eq!(result.n_components, 2);
         assert_eq!(result.x_weights.ncols(), 2);
@@ -857,7 +857,9 @@ mod tests {
         assert_eq!(result.correlations.len(), 2);
 
         // Test transformation
-        let (x_canonical, y_canonical) = cca.transform(x.view(), y.view(), &result).unwrap();
+        let (x_canonical, y_canonical) = cca
+            .transform(x.view(), y.view(), &result)
+            .expect("Operation failed");
         assert_eq!(x_canonical.nrows(), 5);
         assert_eq!(y_canonical.nrows(), 5);
         assert_eq!(x_canonical.ncols(), 2);
@@ -872,7 +874,7 @@ mod tests {
         let y = array![[2.0, 6.0], [4.0, 2.0], [6.0, 8.0], [8.0, 4.0], [10.0, 10.0],];
 
         let pls = PLSCanonical::new(2);
-        let result = pls.fit(x.view(), y.view()).unwrap();
+        let result = pls.fit(x.view(), y.view()).expect("Operation failed");
 
         assert_eq!(result.x_weights.ncols(), 2);
         assert_eq!(result.y_weights.ncols(), 2);
@@ -880,7 +882,7 @@ mod tests {
         assert_eq!(result.y_scores.nrows(), 5);
 
         // Test transformation
-        let transformed = pls.transform(x.view(), &result).unwrap();
+        let transformed = pls.transform(x.view(), &result).expect("Operation failed");
         assert_eq!(transformed.nrows(), 5);
         assert_eq!(transformed.ncols(), 2);
     }

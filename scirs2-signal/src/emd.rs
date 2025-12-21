@@ -92,7 +92,7 @@ pub struct EmdResult {
 /// let mut config = EmdConfig::default();
 /// config.max_imfs = 3;
 ///
-/// let result = emd(&signal, &config).unwrap();
+/// let result = emd(&signal, &config).expect("Operation failed");
 ///
 /// // The number of IMFs should be at most max_imfs
 /// assert!(result.imfs.shape()[0] <= config.max_imfs);
@@ -311,7 +311,7 @@ fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
         let max_idx = signal
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
             .unwrap_or(0);
 
@@ -363,7 +363,7 @@ fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
         let min_idx = signal
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx, _)| idx)
             .unwrap_or(0);
 
@@ -711,7 +711,7 @@ fn interpolate_envelope(
 /// let ensemble_size = 4; // Small value for testing (use 50-100 in practice)
 /// let noise_std = 0.1;
 ///
-/// let result = eemd(&signal, &config, ensemble_size, noise_std).unwrap();
+/// let result = eemd(&signal, &config, ensemble_size, noise_std).expect("Operation failed");
 ///
 /// // The number of IMFs should be at most max_imfs
 /// assert!(result.imfs.shape()[0] <= config.max_imfs);
@@ -1067,7 +1067,8 @@ mod tests {
         let n = 21;
 
         // Test linear interpolation
-        let linear_env = interpolate_envelope(&indices, &values, n, "linear").unwrap();
+        let linear_env =
+            interpolate_envelope(&indices, &values, n, "linear").expect("Operation failed");
 
         // Check interpolated values at extrema points
         for (i, idx) in indices.iter().enumerate() {
@@ -1078,7 +1079,8 @@ mod tests {
         assert_relative_eq!(linear_env[2], 0.4, epsilon = 1e-10); // Linear interpolation between 0.0 and 1.0
 
         // Test cubic interpolation
-        let cubic_env = interpolate_envelope(&indices, &values, n, "cubic").unwrap();
+        let cubic_env =
+            interpolate_envelope(&indices, &values, n, "cubic").expect("Operation failed");
 
         // Check interpolated values at extrema points
         for (i, idx) in indices.iter().enumerate() {
@@ -1099,7 +1101,7 @@ mod tests {
         let config = EmdConfig::default();
 
         // Apply EMD
-        let result = emd(&signal, &config).unwrap();
+        let result = emd(&signal, &config).expect("Operation failed");
 
         // Check basic properties
         assert!(result.imfs.shape()[0] > 0); // At least one IMF
@@ -1125,7 +1127,7 @@ mod tests {
         let ensemble_size = 2;
         let noise_std = 0.1;
 
-        let result = eemd(&signal, &config, ensemble_size, noise_std).unwrap();
+        let result = eemd(&signal, &config, ensemble_size, noise_std).expect("Operation failed");
 
         // Check basic properties
         assert!(result.imfs.shape()[0] > 0); // At least one IMF

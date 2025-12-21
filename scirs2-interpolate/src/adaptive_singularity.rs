@@ -31,7 +31,7 @@
 //!     .with_derivative_threshold(5.0)
 //!     .with_curvature_threshold(10.0);
 //!
-//! let singularities = detector.detect(&x.view(), &y.view()).unwrap();
+//! let singularities = detector.detect(&x.view(), &y.view()).expect("Operation failed");
 //!
 //! // Handle the detected singularities during interpolation
 //! for singularity in &singularities {
@@ -119,12 +119,12 @@ pub struct SingularityDetectorConfig<T> {
 impl<T: Float + FromPrimitive> Default for SingularityDetectorConfig<T> {
     fn default() -> Self {
         Self {
-            derivative_threshold: T::from(10.0).unwrap(),
-            curvature_threshold: T::from(20.0).unwrap(),
-            discontinuity_threshold: T::from(5.0).unwrap(),
-            outlier_threshold: T::from(3.0).unwrap(),
-            analysis_window: T::from(0.1).unwrap(), // 10% of data
-            min_separation: T::from(0.01).unwrap(), // 1% of domain
+            derivative_threshold: T::from(10.0).expect("Operation failed"),
+            curvature_threshold: T::from(20.0).expect("Operation failed"),
+            discontinuity_threshold: T::from(5.0).expect("Operation failed"),
+            outlier_threshold: T::from(3.0).expect("Operation failed"),
+            analysis_window: T::from(0.1).expect("Operation failed"), // 10% of data
+            min_separation: T::from(0.01).expect("Operation failed"), // 1% of domain
             detect_oscillations: true,
             detect_boundary_artifacts: true,
         }
@@ -290,13 +290,14 @@ where
             // 1. Opposite signs with large magnitudes (traditional discontinuity)
             // 2. Large magnitude difference even with same sign (step function)
             let opposite_signs = left_diff * right_diff < T::zero();
-            let jump_size = (left_diff.abs() + right_diff.abs()) / T::from(2.0).unwrap();
+            let jump_size =
+                (left_diff.abs() + right_diff.abs()) / T::from(2.0).expect("Operation failed");
 
             // Also check for large difference in magnitude even if same sign
             let magnitude_diff = (left_diff.abs() - right_diff.abs()).abs();
             let is_potential_discontinuity = opposite_signs
-                || (jump_size > T::from(0.1).unwrap()
-                    && magnitude_diff > jump_size * T::from(0.5).unwrap());
+                || (jump_size > T::from(0.1).expect("Operation failed")
+                    && magnitude_diff > jump_size * T::from(0.5).expect("Operation failed"));
 
             if is_potential_discontinuity {
                 // Calculate local variation for normalization
@@ -352,7 +353,7 @@ where
             // Second derivative
             second_derivs[i] = (y[i + 1] / h2 - y[i] * (T::one() / h1 + T::one() / h2)
                 + y[i - 1] / h1)
-                * T::from(2.0).unwrap()
+                * T::from(2.0).expect("Operation failed")
                 / (h1 + h2);
         }
 
@@ -397,8 +398,9 @@ where
         }
 
         // Calculate mean and standard deviation
-        let mean = y.sum() / T::from(n).unwrap();
-        let variance = y.mapv(|val| (val - mean) * (val - mean)).sum() / T::from(n - 1).unwrap();
+        let mean = y.sum() / T::from(n).expect("Operation failed");
+        let variance = y.mapv(|val| (val - mean) * (val - mean)).sum()
+            / T::from(n - 1).expect("Operation failed");
         let std_dev = variance.sqrt();
 
         if std_dev <= T::zero() {
@@ -461,9 +463,9 @@ where
             }
 
             // If there are many zero crossings, it's likely oscillatory
-            let oscillation_rate =
-                T::from(zero_crossings).unwrap() / T::from(window_size - 1).unwrap();
-            if oscillation_rate > T::from(0.3).unwrap() {
+            let oscillation_rate = T::from(zero_crossings).expect("Operation failed")
+                / T::from(window_size - 1).expect("Operation failed");
+            if oscillation_rate > T::from(0.3).expect("Operation failed") {
                 // More than 30% zero crossings
                 oscillations.push(SingularityInfo {
                     singularity_type: SingularityType::Oscillatory,
@@ -549,7 +551,7 @@ where
         }
 
         if count > 0 {
-            sum_diff / T::from(count).unwrap()
+            sum_diff / T::from(count).expect("Operation failed")
         } else {
             T::zero()
         }
@@ -566,7 +568,11 @@ where
         }
 
         // Sort by location
-        singularities.sort_by(|a, b| a.location.partial_cmp(&b.location).unwrap());
+        singularities.sort_by(|a, b| {
+            a.location
+                .partial_cmp(&b.location)
+                .expect("Operation failed")
+        });
 
         let domain_range = x[x.len() - 1] - x[0];
         let min_separation = self.config.min_separation * domain_range;
@@ -576,7 +582,7 @@ where
         consolidated.push(singularities[0].clone());
 
         for singularity in singularities.into_iter().skip(1) {
-            let last = consolidated.last().unwrap();
+            let last = consolidated.last().expect("Operation failed");
             if (singularity.location - last.location).abs() > min_separation {
                 consolidated.push(singularity);
             } else {
@@ -591,7 +597,7 @@ where
                 };
 
                 if should_replace {
-                    *consolidated.last_mut().unwrap() = singularity;
+                    *consolidated.last_mut().expect("Operation failed") = singularity;
                 }
             }
         }
@@ -698,7 +704,9 @@ mod tests {
 
         let detector = SingularityDetector::new().with_discontinuity_threshold(1.0);
 
-        let singularities = detector.detect(&x.view(), &y.view()).unwrap();
+        let singularities = detector
+            .detect(&x.view(), &y.view())
+            .expect("Operation failed");
 
         // Should detect the discontinuity around x = 1.0
         assert!(!singularities.is_empty());
@@ -715,7 +723,9 @@ mod tests {
 
         let detector = SingularityDetector::new().with_derivative_threshold(50.0);
 
-        let singularities = detector.detect(&x.view(), &y.view()).unwrap();
+        let singularities = detector
+            .detect(&x.view(), &y.view())
+            .expect("Operation failed");
 
         // Should detect sharp peaks
         assert!(!singularities.is_empty());
@@ -734,7 +744,9 @@ mod tests {
 
         let detector = SingularityDetector::new().with_outlier_threshold(2.0);
 
-        let singularities = detector.detect(&x.view(), &y.view()).unwrap();
+        let singularities = detector
+            .detect(&x.view(), &y.view())
+            .expect("Operation failed");
 
         // Should detect the outlier
         assert!(!singularities.is_empty());

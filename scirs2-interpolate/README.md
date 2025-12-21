@@ -7,9 +7,9 @@
 
 The `scirs2-interpolate` crate provides a **production-ready**, comprehensive set of interpolation methods for scientific computing in Rust. As part of the SciRS2 project, it delivers functionality equivalent to SciPy's interpolation module while leveraging Rust's performance, safety, and parallelization capabilities.
 
-## 🚀 Version 0.1.0-rc.3 - Production rc.2 Release
+## 🚀 Version 0.1.0-rc.4 - Production rc.4 Release
 
-This **Release Candidate 2** (rc.2) represents a **production-ready** implementation with comprehensive feature coverage, extensive testing, performance optimization, and zero-warning code quality. The API is stable and ready for production use cases.
+This **Release Candidate 4** (rc.4) represents a **production-ready** implementation with comprehensive feature coverage, extensive testing, performance optimization, and zero-warning code quality. The API is stable and ready for production use cases.
 
 ## 🚀 Installation
 
@@ -17,10 +17,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-interpolate = "0.1.0-rc.3"
+scirs2-interpolate = "0.1.0-rc.4"
 
 # Optional: Enable high-performance features
-scirs2-interpolate = { version = "0.1.0-rc.3", features = ["simd", "linalg"] }
+scirs2-interpolate = { version = "0.1.0-rc.4", features = ["simd", "linalg"] }
 ```
 
 ### Feature Flags
@@ -436,7 +436,7 @@ SIMD B-spline (10K)     |       0.4   |       2.1  |   5.2x
 
 *Benchmarks run on Intel i7-12700K, averaged over 100 runs*
 
-## 📊 Production Status - Ready for 0.1.0-rc.3
+## 📊 Production Status - Ready for 0.1.0-rc.4
 
 ### **✅ Complete Implementation**
 
@@ -469,7 +469,7 @@ SIMD B-spline (10K)     |       0.4   |       2.1  |   5.2x
 - ✅ Feature-gated dependencies for minimal binary size
 
 ### **🎯 Release Readiness**
-This crate is **production-ready** for the 0.1.0-rc.3 release with stable APIs, comprehensive testing, and performance that meets or exceeds SciPy in most use cases.
+This crate is **production-ready** for the 0.1.0-rc.4 release with stable APIs, comprehensive testing, and performance that meets or exceeds SciPy in most use cases.
 
 ## 📋 API Stability
 

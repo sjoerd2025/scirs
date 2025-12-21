@@ -49,7 +49,7 @@ impl<F: Float + Debug + Display> FeatureImportance<F> {
     /// let importance = Array1::from_vec(vec![0.35, 0.25, 0.20, 0.10]);
     ///
     /// // Create feature importance visualization
-    /// let feature_importance = FeatureImportance::<f64>::new(feature_names, importance).unwrap();
+    /// let feature_importance = FeatureImportance::<f64>::new(feature_names, importance).expect("Operation failed");
     /// ```
     pub fn new(_featurenames: Vec<String>, importance: Array1<F>) -> Result<Self> {
         if _featurenames.len() != importance.len() {

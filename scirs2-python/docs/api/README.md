@@ -1,7 +1,7 @@
 # SciRS2-Python API Documentation
 
 **Version**: 0.2.0
-**Last Updated**: 2025-12-17
+**Last Updated**: 2025-12-21
 
 ---
 
@@ -370,5 +370,5 @@ To add or improve API documentation:
 
 ---
 
-**Last Updated**: 2025-12-17
+**Last Updated**: 2025-12-21
 **Version**: 0.2.0

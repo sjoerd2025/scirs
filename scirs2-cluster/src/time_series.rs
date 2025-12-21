@@ -37,7 +37,7 @@ use crate::error::{ClusteringError, Result};
 /// let series1 = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
 /// let series2 = Array1::from_vec(vec![1.0, 2.0, 2.0, 3.0, 2.0, 1.0]);
 ///
-/// let distance = dtw_distance(series1.view(), series2.view(), None).unwrap();
+/// let distance = dtw_distance(series1.view(), series2.view(), None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn dtw_distance<F>(
@@ -408,15 +408,15 @@ where
             } else {
                 n_series + merge_i
             })
-            .unwrap(),
+            .expect("Operation failed"),
             F::from(if merge_j < n_series {
                 merge_j
             } else {
                 n_series + merge_j
             })
-            .unwrap(),
+            .expect("Operation failed"),
             min_distance,
-            F::from(cluster_i_size + cluster_j_size).unwrap(),
+            F::from(cluster_i_size + cluster_j_size).expect("Failed to convert to float"),
         ]);
 
         // Merge clusters
@@ -592,7 +592,7 @@ where
     }
 
     // Initialize barycenter as the mean of all _series
-    let mut barycenter = time_series.mean_axis(Axis(0)).unwrap();
+    let mut barycenter = time_series.mean_axis(Axis(0)).expect("Operation failed");
 
     for _iteration in 0..max_iterations {
         let mut new_barycenter = Array1::zeros(series_length);
@@ -673,8 +673,8 @@ where
 
         let (_, (next_i, next_j)) = candidates
             .iter()
-            .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-            .unwrap();
+            .min_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"))
+            .expect("Operation failed");
 
         i = *next_i;
         j = *next_j;
@@ -753,7 +753,7 @@ where
             Ok(assignments)
         }
         TimeSeriesAlgorithm::DTWKMeans => {
-            let tolerance = F::from(config.tolerance).unwrap();
+            let tolerance = F::from(config.tolerance).expect("Failed to convert to float");
             let (_, assignments) = dtw_k_means(
                 time_series,
                 config.n_clusters,
@@ -793,14 +793,15 @@ mod tests {
         let series1 = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
         let series2 = Array1::from_vec(vec![1.0, 2.0, 2.0, 3.0, 2.0, 1.0]);
 
-        let distance = dtw_distance(series1.view(), series2.view(), None).unwrap();
+        let distance =
+            dtw_distance(series1.view(), series2.view(), None).expect("Operation failed");
         assert!(distance >= 0.0);
     }
 
     #[test]
     fn test_dtw_identical_series() {
         let series = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
-        let distance = dtw_distance(series.view(), series.view(), None).unwrap();
+        let distance = dtw_distance(series.view(), series.view(), None).expect("Operation failed");
         assert_eq!(distance, 0.0);
     }
 
@@ -813,9 +814,10 @@ mod tests {
                 6.1, 7.1, 6.1, 5.1,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let (medoids, assignments) = dtw_k_medoids(time_series.view(), 2, 10, None).unwrap();
+        let (medoids, assignments) =
+            dtw_k_medoids(time_series.view(), 2, 10, None).expect("Operation failed");
 
         assert_eq!(medoids.len(), 2);
         assert_eq!(assignments.len(), 4);
@@ -831,7 +833,8 @@ mod tests {
         let series1 = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let series2 = Array1::from_vec(vec![1.0, 2.5, 3.0]);
 
-        let distance = soft_dtw_distance(series1.view(), series2.view(), 0.1).unwrap();
+        let distance =
+            soft_dtw_distance(series1.view(), series2.view(), 0.1).expect("Operation failed");
         assert!(distance >= 0.0);
     }
 
@@ -841,13 +844,14 @@ mod tests {
             (3, 4),
             vec![1.0, 2.0, 3.0, 2.0, 1.1, 2.1, 3.1, 2.1, 0.9, 1.9, 2.9, 1.9],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let barycenter = dtw_barycenter_averaging(&time_series, 10, 1e-3).unwrap();
+        let barycenter =
+            dtw_barycenter_averaging(&time_series, 10, 1e-3).expect("Operation failed");
         assert_eq!(barycenter.len(), 4);
 
         // Barycenter should be close to the mean
-        let mean_series = time_series.mean_axis(Axis(0)).unwrap();
+        let mean_series = time_series.mean_axis(Axis(0)).expect("Operation failed");
         for i in 0..4 {
             assert!((barycenter[i] - mean_series[i]).abs() < 0.5);
         }
@@ -866,9 +870,10 @@ mod tests {
                 6.1, 7.1, 6.1, 5.1,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let assignments = time_series_clustering(time_series.view(), &config).unwrap();
+        let assignments =
+            time_series_clustering(time_series.view(), &config).expect("Operation failed");
         assert_eq!(assignments.len(), 4);
     }
 }

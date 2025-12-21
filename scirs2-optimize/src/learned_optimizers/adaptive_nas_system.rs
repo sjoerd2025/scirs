@@ -1117,7 +1117,9 @@ mod tests {
         let config = LearnedOptimizationConfig::default();
         let nas_system = AdaptiveNASSystem::new(config);
 
-        let architecture = nas_system.generate_random_architecture().unwrap();
+        let architecture = nas_system
+            .generate_random_architecture()
+            .expect("Operation failed");
 
         assert!(!architecture.layers.is_empty());
         assert!(!architecture.activations.is_empty());
@@ -1139,8 +1141,12 @@ mod tests {
         let config = LearnedOptimizationConfig::default();
         let nas_system = AdaptiveNASSystem::new(config);
 
-        let base_arch = nas_system.generate_random_architecture().unwrap();
-        let mutated = nas_system.mutate_architecture(&base_arch).unwrap();
+        let base_arch = nas_system
+            .generate_random_architecture()
+            .expect("Operation failed");
+        let mutated = nas_system
+            .mutate_architecture(&base_arch)
+            .expect("Operation failed");
 
         assert_ne!(base_arch.id, mutated.id);
     }
@@ -1156,7 +1162,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = nas_optimize(objective, &initial.view(), Some(config)).unwrap();
+        let result =
+            nas_optimize(objective, &initial.view(), Some(config)).expect("Operation failed");
 
         assert!(result.fun >= 0.0);
         assert_eq!(result.x.len(), 2);

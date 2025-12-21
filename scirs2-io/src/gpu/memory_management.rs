@@ -558,7 +558,7 @@ impl GpuMemoryPoolManager {
         let pool = AdvancedGpuMemoryPool::new(self.device.clone(), config);
         self.pools.insert(memory_type, pool);
 
-        Ok(self.pools.get_mut(&memory_type).unwrap())
+        Ok(self.pools.get_mut(&memory_type).expect("Operation failed"))
     }
 
     /// Allocate from specific memory type
@@ -703,7 +703,7 @@ mod tests {
         let manager = GpuMemoryPoolManager::new(device);
         assert!(manager.is_ok());
 
-        let manager = manager.unwrap();
+        let manager = manager.expect("Operation failed");
         assert_eq!(manager.pools.len(), 3); // Device, Unified, Pinned
     }
 

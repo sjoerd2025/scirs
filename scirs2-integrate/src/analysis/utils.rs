@@ -252,7 +252,7 @@ mod tests {
         // Simple 2x2 system
         let a = array![[2.0, 1.0], [1.0, 1.0]];
         let b = array![3.0, 2.0];
-        let result = solve_linear_system(&a, &b).unwrap();
+        let result = solve_linear_system(&a, &b).expect("Operation failed");
         let expected = array![1.0, 1.0];
 
         for i in 0..result.len() {

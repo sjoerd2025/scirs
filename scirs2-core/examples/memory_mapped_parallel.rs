@@ -28,12 +28,13 @@ fn main() {
     println!("Created array with {} elements", size);
 
     // Create a temporary file for the memory-mapped array
-    let temp_file = tempfile::NamedTempFile::new().unwrap();
+    let temp_file = tempfile::NamedTempFile::new().expect("Operation failed");
     let temp_path = temp_file.path();
     println!("Created temporary file at: {}", temp_path.display());
 
     // Create a memory-mapped array
-    let mut mmap = create_mmap(&data, temp_path, AccessMode::ReadWrite, 0).unwrap();
+    let mut mmap =
+        create_mmap(&data, temp_path, AccessMode::ReadWrite, 0).expect("Operation failed");
     println!("Created memory-mapped array");
 
     // First, let's measure the time it takes to process the chunks sequentially

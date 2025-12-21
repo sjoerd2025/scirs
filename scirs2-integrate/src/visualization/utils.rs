@@ -84,7 +84,7 @@ pub fn plot_statistics(data: &[f64]) -> PlotStatistics {
     let std_dev = variance.sqrt();
 
     let mut sorted_data = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let min = sorted_data[0];
     let max = sorted_data[sorted_data.len() - 1];

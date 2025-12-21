@@ -32,7 +32,7 @@ use crate::solve::solve_multiple;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 /// let b = array![[5.0_f64, 6.0], [7.0, 8.0]];
-/// let c = block_diag(&[&a.view(), &b.view()]).unwrap();
+/// let c = block_diag(&[&a.view(), &b.view()]).expect("Operation failed");
 /// // c is a 4x4 matrix with a in the top-left and b in the bottom-right
 /// ```
 #[allow(dead_code)]
@@ -164,7 +164,7 @@ where
     F: Float + NumAssign + Sum + One + Send + Sync + scirs2_core::ndarray::ScalarOperand + 'static,
 {
     // Redirect to the implementation in matrix_functions module with default parameters
-    matrix_functions::sqrtm(a, 20, F::from(1e-10).unwrap())
+    matrix_functions::sqrtm(a, 20, F::from(1e-10).expect("Operation failed"))
 }
 
 /// Compute the matrix sign function using Newton's method.
@@ -244,7 +244,7 @@ where
 
         // Newton iteration: X_{k+1} = 0.5 * (X_k + X_k^{-1})
         let mut x_next = Array2::zeros((n, n));
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Operation failed");
 
         for i in 0..n {
             for j in 0..n {
@@ -285,7 +285,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let result = block_diag(&[&a.view(), &b.view()]).unwrap();
+        let result = block_diag(&[&a.view(), &b.view()]).expect("Operation failed");
 
         assert_eq!(result.shape(), &[4, 4]);
 
@@ -324,19 +324,19 @@ mod tests {
         let a = array![[4.0, 0.0], [0.0, 9.0]];
 
         // Test sqrtm
-        let sqrt_a = sqrtm(&a.view()).unwrap();
+        let sqrt_a = sqrtm(&a.view()).expect("Operation failed");
         assert_relative_eq!(sqrt_a[[0, 0]], 2.0, epsilon = 1e-10);
         assert_relative_eq!(sqrt_a[[1, 1]], 3.0, epsilon = 1e-10);
 
         // Test logm with identity matrix
         let id = array![[1.0, 0.0], [0.0, 1.0]];
-        let log_id = logm(&id.view()).unwrap();
+        let log_id = logm(&id.view()).expect("Operation failed");
         assert!(log_id[[0, 0]].abs() < 1e-10);
         assert!(log_id[[1, 1]].abs() < 1e-10);
 
         // Test expm with zero matrix
         let zero = array![[0.0, 0.0], [0.0, 0.0]];
-        let exp_zero = expm(&zero.view(), None).unwrap();
+        let exp_zero = expm(&zero.view(), None).expect("Operation failed");
         assert_relative_eq!(exp_zero[[0, 0]], 1.0, epsilon = 1e-10);
         assert_relative_eq!(exp_zero[[1, 1]], 1.0, epsilon = 1e-10);
     }
@@ -347,7 +347,7 @@ mod tests {
 
         // Case 1: Positive definite matrix - sign(A) = I
         let a = array![[2.0, 0.0], [0.0, 3.0]];
-        let sign_a = signm(&a.view(), 20, 1e-10).unwrap();
+        let sign_a = signm(&a.view(), 20, 1e-10).expect("Operation failed");
         assert_relative_eq!(sign_a[[0, 0]], 1.0, epsilon = 1e-8);
         assert_relative_eq!(sign_a[[1, 1]], 1.0, epsilon = 1e-8);
         assert_relative_eq!(sign_a[[0, 1]], 0.0, epsilon = 1e-8);
@@ -355,7 +355,7 @@ mod tests {
 
         // Case 2: Negative definite matrix - sign(A) = -I
         let b = array![[-2.0, 0.0], [0.0, -3.0]];
-        let sign_b = signm(&b.view(), 20, 1e-10).unwrap();
+        let sign_b = signm(&b.view(), 20, 1e-10).expect("Operation failed");
         assert_relative_eq!(sign_b[[0, 0]], -1.0, epsilon = 1e-8);
         assert_relative_eq!(sign_b[[1, 1]], -1.0, epsilon = 1e-8);
         assert_relative_eq!(sign_b[[0, 1]], 0.0, epsilon = 1e-8);
@@ -363,7 +363,7 @@ mod tests {
 
         // Case 3: Mixed eigenvalues - diagonal case
         let c = array![[2.0, 0.0], [0.0, -3.0]];
-        let sign_c = signm(&c.view(), 20, 1e-10).unwrap();
+        let sign_c = signm(&c.view(), 20, 1e-10).expect("Operation failed");
         assert_relative_eq!(sign_c[[0, 0]], 1.0, epsilon = 1e-8);
         assert_relative_eq!(sign_c[[1, 1]], -1.0, epsilon = 1e-8);
         assert_relative_eq!(sign_c[[0, 1]], 0.0, epsilon = 1e-8);

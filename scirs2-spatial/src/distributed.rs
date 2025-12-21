@@ -1271,7 +1271,7 @@ impl DistributedSpatialCluster {
                     // Check if query _point is within local bounds
                     if local_index.local_index.bounds.contains(query_point) {
                         let (indices, distances) =
-                            kdtree.query(query_point.as_slice().unwrap(), k)?;
+                            kdtree.query(query_point.as_slice().expect("Operation failed"), k)?;
 
                         for (idx, dist) in indices.iter().zip(distances.iter()) {
                             all_neighbors.push((*idx, *dist));
@@ -1282,7 +1282,7 @@ impl DistributedSpatialCluster {
         }
 
         // Sort and return top k neighbors
-        all_neighbors.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        all_neighbors.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
         all_neighbors.truncate(k);
 
         Ok(all_neighbors)
@@ -1388,7 +1388,7 @@ mod tests {
         let cluster = DistributedSpatialCluster::new(config);
         assert!(cluster.is_ok());
 
-        let cluster = cluster.unwrap();
+        let cluster = cluster.expect("Operation failed");
         assert_eq!(cluster.nodes.len(), 2);
         assert_eq!(cluster.master_node_id, 0);
     }
@@ -1399,13 +1399,16 @@ mod tests {
             .with_node_count(2)
             .with_fault_tolerance(false);
 
-        let mut cluster = DistributedSpatialCluster::new(config).unwrap();
+        let mut cluster = DistributedSpatialCluster::new(config).expect("Operation failed");
         let data = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 
         let result = cluster.distribute_data(&data.view()).await;
         assert!(result.is_ok());
 
-        let stats = cluster.get_cluster_statistics().await.unwrap();
+        let stats = cluster
+            .get_cluster_statistics()
+            .await
+            .expect("Operation failed");
         assert_eq!(stats.total_data_points, 4);
         assert!(stats.total_partitions > 0);
     }
@@ -1413,7 +1416,7 @@ mod tests {
     #[tokio::test]
     async fn test_distributed_kmeans() {
         let config = NodeConfig::new().with_node_count(2);
-        let mut cluster = DistributedSpatialCluster::new(config).unwrap();
+        let mut cluster = DistributedSpatialCluster::new(config).expect("Operation failed");
 
         let data = array![
             [0.0, 0.0],
@@ -1423,12 +1426,15 @@ mod tests {
             [10.0, 10.0],
             [11.0, 10.0]
         ];
-        cluster.distribute_data(&data.view()).await.unwrap();
+        cluster
+            .distribute_data(&data.view())
+            .await
+            .expect("Operation failed");
 
         let result = cluster.distributed_kmeans(2, 10).await;
         assert!(result.is_ok());
 
-        let (centroids, assignments) = result.unwrap();
+        let (centroids, assignments) = result.expect("Operation failed");
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(assignments.len(), 6);
     }

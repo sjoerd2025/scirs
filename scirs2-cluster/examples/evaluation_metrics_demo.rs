@@ -33,7 +33,7 @@ fn main() {
             Some(true),
             Some(42),
         )
-        .unwrap();
+        .expect("Operation failed");
         let pred_labels_i32 = pred_labels.mapv(|x| x as i32);
 
         // Compute all evaluation metrics
@@ -101,7 +101,7 @@ fn main() {
         Some(true),
         Some(42),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let (_, clustering2) = kmeans2(
         data.view(),
@@ -113,7 +113,7 @@ fn main() {
         Some(true),
         Some(123),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let clustering1_i32 = clustering1.mapv(|x| x as i32);
     let clustering2_i32 = clustering2.mapv(|x| x as i32);
@@ -180,7 +180,7 @@ fn generate_data_with_ground_truth() -> (Array2<f64>, Array1<i32>) {
         labels.push(2);
     }
 
-    let data_array = Array2::from_shape_vec((75, 2), data).unwrap();
+    let data_array = Array2::from_shape_vec((75, 2), data).expect("Operation failed");
     let labels_array = Array1::from_vec(labels);
 
     (data_array, labels_array)

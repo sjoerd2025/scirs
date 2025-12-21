@@ -10,14 +10,14 @@ use regex::Regex;
 
 lazy_static! {
     // Common word patterns for POS disambiguation
-    pub static ref VERB_PATTERNS: Regex = Regex::new(r"(?i)(ing|ed|s)$").unwrap();
-    pub static ref NOUN_PATTERNS: Regex = Regex::new(r"(?i)(tion|sion|ness|ment|ship|hood|ity|cy|th|ing|er|or|ar|ist|ism|age|al|ance|ence|dom|tude|ure|ery|ary|ory|ly)$").unwrap();
-    pub static ref ADJ_PATTERNS: Regex = Regex::new(r"(?i)(ful|less|ous|ious|eous|ary|ory|ic|ical|al|able|ible|ive|ative|itive|ent|ant|ed|ing|er|est|ward)$").unwrap();
-    pub static ref ADV_PATTERNS: Regex = Regex::new(r"(?i)(ly|ward|wise|like)$").unwrap();
+    pub static ref VERB_PATTERNS: Regex = Regex::new(r"(?i)(ing|ed|s)$").expect("Operation failed");
+    pub static ref NOUN_PATTERNS: Regex = Regex::new(r"(?i)(tion|sion|ness|ment|ship|hood|ity|cy|th|ing|er|or|ar|ist|ism|age|al|ance|ence|dom|tude|ure|ery|ary|ory|ly)$").expect("Operation failed");
+    pub static ref ADJ_PATTERNS: Regex = Regex::new(r"(?i)(ful|less|ous|ious|eous|ary|ory|ic|ical|al|able|ible|ive|ative|itive|ent|ant|ed|ing|er|est|ward)$").expect("Operation failed");
+    pub static ref ADV_PATTERNS: Regex = Regex::new(r"(?i)(ly|ward|wise|like)$").expect("Operation failed");
 
     // Capitalization patterns
-    pub static ref PROPER_NOUN_PATTERN: Regex = Regex::new(r"^[A-Z][a-z]+$").unwrap();
-    pub static ref ALL_CAPS_PATTERN: Regex = Regex::new(r"^[A-Z]{2,}$").unwrap();
+    pub static ref PROPER_NOUN_PATTERN: Regex = Regex::new(r"^[A-Z][a-z]+$").expect("Operation failed");
+    pub static ref ALL_CAPS_PATTERN: Regex = Regex::new(r"^[A-Z]{2,}$").expect("Operation failed");
 }
 
 /// Pattern-based POS tag predictor

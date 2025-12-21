@@ -406,7 +406,7 @@ mod tests {
             FinanceMethod::FiniteDifference,
         );
 
-        let price = price_finite_difference(&solver, &option).unwrap();
+        let price = price_finite_difference(&solver, &option).expect("Operation failed");
 
         // Black-Scholes reference: ~10.45
         assert!(price > 9.0 && price < 12.0, "Price: {}", price);
@@ -431,7 +431,7 @@ mod tests {
             FinanceMethod::FiniteDifference,
         );
 
-        let price = price_finite_difference(&solver, &option).unwrap();
+        let price = price_finite_difference(&solver, &option).expect("Operation failed");
 
         // Black-Scholes reference: ~5.57
         assert!(price > 4.5 && price < 7.0, "Price: {}", price);
@@ -463,7 +463,7 @@ mod tests {
             FinanceMethod::FiniteDifference,
         );
 
-        let price = price_finite_difference(&solver, &option).unwrap();
+        let price = price_finite_difference(&solver, &option).expect("Operation failed");
 
         // Should be reasonable (close to Black-Scholes for these params)
         assert!(price > 8.0 && price < 13.0, "Price: {}", price);

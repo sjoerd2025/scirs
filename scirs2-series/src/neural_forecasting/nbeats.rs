@@ -69,7 +69,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         // Initialize network layers
         let mut prev_width = input_size;
         for &width in &layer_widths {
-            let scale = F::from(2.0).unwrap() / F::from(prev_width).unwrap();
+            let scale = F::from(2.0).expect("Failed to convert constant to float")
+                / F::from(prev_width).expect("Failed to convert to float");
             let std_dev = scale.sqrt();
             weights.push(LSTMCell::random_matrix(width, prev_width, std_dev));
             biases.push(Array1::zeros(width));
@@ -83,7 +84,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
             NBeatsBlockType::Seasonality => output_size / 2, // Fourier coefficients
         };
 
-        let theta_scale = F::from(2.0).unwrap() / F::from(prev_width).unwrap();
+        let theta_scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(prev_width).expect("Failed to convert to float");
         let theta_std = theta_scale.sqrt();
 
         Self {

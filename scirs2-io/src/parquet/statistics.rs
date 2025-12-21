@@ -244,7 +244,8 @@ fn extract_statistics(metadata: &ParquetMetaData) -> Result<ParquetFileStatistic
                     if let Some(min_bytes) = stats.min_bytes_opt() {
                         // Update global min
                         if min_value.is_none()
-                            || (min_bytes < min_value.as_ref().unwrap().as_slice())
+                            || (min_bytes
+                                < min_value.as_ref().expect("Operation failed").as_slice())
                         {
                             min_value = Some(min_bytes.to_vec());
                         }
@@ -253,7 +254,8 @@ fn extract_statistics(metadata: &ParquetMetaData) -> Result<ParquetFileStatistic
                     if let Some(max_bytes) = stats.max_bytes_opt() {
                         // Update global max
                         if max_value.is_none()
-                            || (max_bytes > max_value.as_ref().unwrap().as_slice())
+                            || (max_bytes
+                                > max_value.as_ref().expect("Operation failed").as_slice())
                         {
                             max_value = Some(max_bytes.to_vec());
                         }
@@ -296,15 +298,15 @@ mod tests {
 
     #[test]
     fn test_read_statistics() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("stats_test.parquet");
 
         // Write some data
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Operation failed");
 
         // Read statistics
-        let stats = read_parquet_statistics(&path).unwrap();
+        let stats = read_parquet_statistics(&path).expect("Operation failed");
 
         assert_eq!(stats.num_rows, 5);
         assert!(stats.num_row_groups > 0);
@@ -313,14 +315,14 @@ mod tests {
 
     #[test]
     fn test_column_statistics() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("col_stats.parquet");
 
         let data = Array1::from_vec(vec![10.0, 20.0, 30.0, 40.0, 50.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Operation failed");
 
-        let stats = read_parquet_statistics(&path).unwrap();
-        let col_stats = stats.column_stats("value").unwrap();
+        let stats = read_parquet_statistics(&path).expect("Operation failed");
+        let col_stats = stats.column_stats("value").expect("Operation failed");
 
         assert_eq!(col_stats.num_values, 5);
         assert!(!col_stats.has_nulls());
@@ -329,14 +331,14 @@ mod tests {
 
     #[test]
     fn test_statistics_min_max_f64() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("minmax.parquet");
 
         let data = Array1::from_vec(vec![5.5, 1.2, 9.8, 3.3, 7.1]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Operation failed");
 
-        let stats = read_parquet_statistics(&path).unwrap();
-        let col_stats = stats.column_stats("value").unwrap();
+        let stats = read_parquet_statistics(&path).expect("Operation failed");
+        let col_stats = stats.column_stats("value").expect("Operation failed");
 
         // Note: Actual min/max values depend on how Parquet stores them
         // This test verifies the API works
@@ -345,13 +347,13 @@ mod tests {
 
     #[test]
     fn test_file_statistics_metadata() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("metadata.parquet");
 
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        write_parquet(&path, &data, Default::default()).unwrap();
+        write_parquet(&path, &data, Default::default()).expect("Operation failed");
 
-        let stats = read_parquet_statistics(&path).unwrap();
+        let stats = read_parquet_statistics(&path).expect("Operation failed");
 
         assert_eq!(stats.num_rows, 3);
         assert!(stats.version > 0);
@@ -361,17 +363,17 @@ mod tests {
 
     #[test]
     fn test_statistics_large_file() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let path = dir.path().join("large_stats.parquet");
 
         let data: Vec<f64> = (0..1000).map(|x| x as f64).collect();
         let array = Array1::from_vec(data);
-        write_parquet(&path, &array, Default::default()).unwrap();
+        write_parquet(&path, &array, Default::default()).expect("Operation failed");
 
-        let stats = read_parquet_statistics(&path).unwrap();
+        let stats = read_parquet_statistics(&path).expect("Operation failed");
 
         assert_eq!(stats.num_rows, 1000);
-        let col_stats = stats.column_stats("value").unwrap();
+        let col_stats = stats.column_stats("value").expect("Operation failed");
         assert_eq!(col_stats.num_values, 1000);
     }
 }

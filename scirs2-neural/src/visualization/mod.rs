@@ -273,7 +273,7 @@ mod tests {
     fn test_visualization_suite_creation() {
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = crate::models::sequential::Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
         let config = VisualizationConfig::default();
         let _suite = VisualizationSuite::new(model, config);
         // Test passes if no panic occurs during creation
@@ -320,7 +320,7 @@ mod tests {
         // Test that type aliases compile correctly
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = crate::models::sequential::Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
         let config = VisualizationConfig::default();
         let _network_viz: NetworkViz<f32> = NetworkVisualizer::new(model.clone(), config.clone());
         let _training_viz: TrainingViz<f32> = TrainingVisualizer::new(config.clone());
@@ -333,7 +333,7 @@ mod tests {
     fn test_suite_operations() {
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let mut model = crate::models::sequential::Sequential::<f32>::new();
-        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).unwrap());
+        model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng).expect("Operation failed"));
         let config = VisualizationConfig::default();
         let mut suite = VisualizationSuite::new(model, config.clone());
         assert_eq!(

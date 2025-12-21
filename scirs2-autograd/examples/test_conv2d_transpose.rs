@@ -20,11 +20,17 @@ fn main() {
     ctx.run(|graph| {
         // Create weight tensor: [out_channels, in_channels, kernel_h, kernel_w]
         let w = ones(&[ych, xch, kh, kw], graph);
-        println!("\nWeight shape: {:?}", shape(w).eval(graph).unwrap());
+        println!(
+            "\nWeight shape: {:?}",
+            shape(w).eval(graph).expect("Operation failed")
+        );
 
         // Create input tensor: [batch, channels, height, width]
         let g = ones(&[batch_size, ych, yh, yw], graph);
-        println!("Input shape: {:?}", shape(g).eval(graph).unwrap());
+        println!(
+            "Input shape: {:?}",
+            shape(g).eval(graph).expect("Operation failed")
+        );
 
         // Perform conv2d_transpose
         println!("\nPerforming conv2d_transpose with pad=0, stride=1");
@@ -44,7 +50,7 @@ fn main() {
                 println!("Expected shape: [2, 3, 3, 3]");
                 println!(
                     "First few values: {:?}",
-                    &out_val.as_slice().unwrap()[..10.min(out_val.len())]
+                    &out_val.as_slice().expect("Operation failed")[..10.min(out_val.len())]
                 );
             }
             Err(e) => {

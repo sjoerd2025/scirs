@@ -448,8 +448,16 @@ impl AudioEvaluationReport {
             domain_scores
                 .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            self.summary.best_domain = domain_scores.first().unwrap().0.to_string();
-            self.summary.worst_domain = domain_scores.last().unwrap().0.to_string();
+            self.summary.best_domain = domain_scores
+                .first()
+                .expect("Operation failed")
+                .0
+                .to_string();
+            self.summary.worst_domain = domain_scores
+                .last()
+                .expect("Operation failed")
+                .0
+                .to_string();
 
             // Calculate overall score
             self.summary.overall_score = domain_scores.iter().map(|(_, score)| score).sum::<f64>()
@@ -585,7 +593,7 @@ mod tests {
 
         let results = metrics
             .evaluate_speech_recognition(&reference, &hypothesis, None, None, None)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.wer >= 0.0 && results.wer <= 1.0);
         assert!(results.cer >= 0.0 && results.cer <= 1.0);
@@ -603,7 +611,7 @@ mod tests {
 
         let results = metrics
             .evaluate_audio_quality(reference.view(), degraded.view(), 16000.0)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.snr.is_finite());
         assert!(results.sdr.is_finite());

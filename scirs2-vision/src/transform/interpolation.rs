@@ -930,7 +930,7 @@ mod tests {
         // Apply guided filter
         let radius = 1;
         let epsilon = 0.1;
-        let result = guided_filter(&guide, &src, radius, epsilon).unwrap();
+        let result = guided_filter(&guide, &src, radius, epsilon).expect("Operation failed");
 
         // The filter should denoise but preserve the edge
         // Check that the edge is preserved
@@ -960,7 +960,7 @@ mod tests {
         let src = DynamicImage::ImageRgba8(img);
 
         // Resize to smaller dimensions
-        let result = resize_edge_preserving(&src, 10, 10).unwrap();
+        let result = resize_edge_preserving(&src, 10, 10).expect("Operation failed");
 
         // The edge should be preserved after resizing
         let edge_before = result.get_pixel(4, 5)[0];
@@ -968,7 +968,7 @@ mod tests {
         assert!(edge_after - edge_before > 50);
 
         // Also test upscaling
-        let result_up = resize_edge_preserving(&src, 30, 30).unwrap();
+        let result_up = resize_edge_preserving(&src, 30, 30).expect("Operation failed");
 
         // Dimensions should be correct
         assert_eq!(result_up.width(), 30);

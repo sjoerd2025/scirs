@@ -113,7 +113,8 @@ impl<
         match method {
             ForecastMethod::ExponentialSmoothing { alpha } => self.gpu_batch_exponential_smoothing(
                 batch,
-                F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()),
+                F::from(*alpha)
+                    .unwrap_or_else(|| F::from(0.3).expect("Failed to convert constant to float")),
                 forecast_steps,
             ),
             ForecastMethod::LinearTrend => self.gpu_batch_linear_trend(batch, forecast_steps),
@@ -194,8 +195,8 @@ impl<
             }
 
             // GPU-optimized trend calculation using vectorized operations
-            let n = F::from(series.len()).unwrap();
-            let x_mean = (n - F::one()) / F::from(2).unwrap();
+            let n = F::from(series.len()).expect("Operation failed");
+            let x_mean = (n - F::one()) / F::from(2).expect("Failed to convert constant to float");
 
             // Vectorized sum computation
             let y_sum = series.sum();
@@ -215,7 +216,7 @@ impl<
 
                 for i in 0..chunk_size {
                     let idx = chunk_idx * chunk_size + i;
-                    let x = F::from(idx).unwrap();
+                    let x = F::from(idx).expect("Failed to convert to float");
                     let y = series[idx];
                     let x_diff = x - x_mean;
 
@@ -229,7 +230,7 @@ impl<
 
             // Process remainder
             for idx in (chunks * chunk_size)..series.len() {
-                let x = F::from(idx).unwrap();
+                let x = F::from(idx).expect("Failed to convert to float");
                 let y = series[idx];
                 let x_diff = x - x_mean;
 
@@ -244,12 +245,12 @@ impl<
             };
 
             let intercept = y_mean - slope * x_mean;
-            let last_x = F::from(series.len() - 1).unwrap();
+            let last_x = F::from(series.len() - 1).expect("Operation failed");
 
             // Vectorized forecast generation
             let mut forecasts = Array1::zeros(steps);
             for i in 0..steps {
-                let future_x = last_x + F::from(i + 1).unwrap();
+                let future_x = last_x + F::from(i + 1).expect("Failed to convert to float");
                 forecasts[i] = slope * future_x + intercept;
             }
 
@@ -286,7 +287,7 @@ impl<
                 sum = sum + series[last_window_start + i];
             }
 
-            let avg = sum / F::from(window).unwrap();
+            let avg = sum / F::from(window).expect("Failed to convert to float");
             let forecast = Array1::from_elem(steps, avg);
             results.push(forecast);
         }
@@ -363,7 +364,7 @@ impl<
                 sum = sum + series[i] * series[i + lag];
             }
 
-            autocorrelations[lag] = sum / F::from(count).unwrap();
+            autocorrelations[lag] = sum / F::from(count).expect("Failed to convert to float");
         }
 
         // Solve Yule-Walker equations using Levinson-Durbin recursion
@@ -444,7 +445,9 @@ impl<
             ForecastMethod::ExponentialSmoothing { alpha } => self
                 .gpu_exponential_smoothing_forecast(
                     series,
-                    F::from(*alpha).unwrap_or_else(|| F::from(0.3).unwrap()),
+                    F::from(*alpha).unwrap_or_else(|| {
+                        F::from(0.3).expect("Failed to convert constant to float")
+                    }),
                     forecast_steps,
                 ),
             ForecastMethod::LinearTrend => self.gpu_linear_trend_forecast(series, forecast_steps),
@@ -488,8 +491,8 @@ impl<
             });
         }
 
-        let n = F::from(series.len()).unwrap();
-        let x_mean = (n - F::one()) / F::from(2).unwrap();
+        let n = F::from(series.len()).expect("Operation failed");
+        let x_mean = (n - F::one()) / F::from(2).expect("Failed to convert constant to float");
         let y_mean = series.sum() / n;
 
         // Calculate slope using vectorized operations
@@ -497,7 +500,7 @@ impl<
         let mut denominator = F::zero();
 
         for (i, &y) in series.iter().enumerate() {
-            let x = F::from(i).unwrap();
+            let x = F::from(i).expect("Failed to convert to float");
             let x_diff = x - x_mean;
             numerator = numerator + x_diff * (y - y_mean);
             denominator = denominator + x_diff * x_diff;
@@ -510,12 +513,12 @@ impl<
         };
 
         let intercept = y_mean - slope * x_mean;
-        let last_x = F::from(series.len() - 1).unwrap();
+        let last_x = F::from(series.len() - 1).expect("Operation failed");
 
         // Generate forecasts
         let mut forecasts = Array1::zeros(steps);
         for i in 0..steps {
-            let future_x = last_x + F::from(i + 1).unwrap();
+            let future_x = last_x + F::from(i + 1).expect("Failed to convert to float");
             forecasts[i] = slope * future_x + intercept;
         }
 
@@ -539,7 +542,7 @@ impl<
 
         // Calculate last moving average
         let last_window = series.slice(s![series.len() - window..]);
-        let avg = last_window.sum() / F::from(window).unwrap();
+        let avg = last_window.sum() / F::from(window).expect("Failed to convert to float");
 
         // Simple moving average forecast (constant)
         Ok(Array1::from_elem(steps, avg))
@@ -659,7 +662,7 @@ impl<
             });
         }
 
-        let n = F::from(series1.len()).unwrap();
+        let n = F::from(series1.len()).expect("Operation failed");
         let mean1 = series1.sum() / n;
         let mean2 = series2.sum() / n;
 
@@ -707,14 +710,17 @@ impl<
             for i in 0..num_windows {
                 let window = series.slice(s![i..i + window_size]);
                 stat_values[i] = match stat {
-                    WindowStatistic::Mean => window.sum() / F::from(window_size).unwrap(),
+                    WindowStatistic::Mean => {
+                        window.sum() / F::from(window_size).expect("Failed to convert to float")
+                    }
                     WindowStatistic::Variance => {
-                        let mean = window.sum() / F::from(window_size).unwrap();
+                        let mean = window.sum()
+                            / F::from(window_size).expect("Failed to convert to float");
                         window
                             .iter()
                             .map(|&x| (x - mean) * (x - mean))
                             .fold(F::zero(), |acc, x| acc + x)
-                            / F::from(window_size).unwrap()
+                            / F::from(window_size).expect("Failed to convert to float")
                     }
                     WindowStatistic::Min => window.iter().fold(F::infinity(), |acc, &x| acc.min(x)),
                     WindowStatistic::Max => {
@@ -866,7 +872,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
             return Ok(vec![F::zero(); 8]); // Return zeros for all features
         }
 
-        let n = F::from(series.len()).unwrap();
+        let n = F::from(series.len()).expect("Operation failed");
         let mean = series.sum() / n;
 
         // Variance
@@ -915,12 +921,13 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
 
         // Trend (slope of linear regression)
         let trend = if series.len() > 1 {
-            let x_mean = F::from(series.len() - 1).unwrap() / F::from(2).unwrap();
+            let x_mean = F::from(series.len() - 1).expect("Operation failed")
+                / F::from(2).expect("Failed to convert constant to float");
             let mut num = F::zero();
             let mut den = F::zero();
 
             for (i, &y) in series.iter().enumerate() {
-                let x = F::from(i).unwrap();
+                let x = F::from(i).expect("Failed to convert to float");
                 num = num + (x - x_mean) * (y - mean);
                 den = den + (x - x_mean) * (x - x_mean);
             }
@@ -968,7 +975,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
             }
 
             if count > 0 {
-                autocorr = autocorr / F::from(count).unwrap();
+                autocorr = autocorr / F::from(count).expect("Failed to convert to float");
                 if autocorr > max_autocorr {
                     max_autocorr = autocorr;
                     dominant_period = lag;
@@ -976,14 +983,15 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
             }
         }
 
-        let dominant_frequency = F::one() / F::from(dominant_period).unwrap();
+        let dominant_frequency =
+            F::one() / F::from(dominant_period).expect("Failed to convert to float");
 
         // Spectral energy (simplified)
         let spectral_energy = series
             .iter()
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x)
-            / F::from(n).unwrap();
+            / F::from(n).expect("Failed to convert to float");
 
         Ok(vec![dominant_frequency, max_autocorr, spectral_energy])
     }
@@ -1001,7 +1009,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
                 changes += 1;
             }
         }
-        let entropy = F::from(changes).unwrap() / F::from(series.len() - 1).unwrap();
+        let entropy = F::from(changes).expect("Failed to convert to float")
+            / F::from(series.len() - 1).expect("Operation failed");
 
         // Sample entropy (very simplified)
         let mut matches = 0;
@@ -1010,8 +1019,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x)
             .sqrt()
-            / F::from(series.len()).unwrap()
-            * F::from(0.1).unwrap();
+            / F::from(series.len()).expect("Operation failed")
+            * F::from(0.1).expect("Failed to convert constant to float");
 
         for i in 0..series.len() - 2 {
             for j in i + 1..series.len() - 1 {
@@ -1024,9 +1033,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
         }
 
         let sample_entropy = if matches > 0 {
-            -F::from(matches).unwrap().ln()
+            -F::from(matches).expect("Failed to convert to float").ln()
         } else {
-            F::from(10).unwrap() // Large value for high entropy
+            F::from(10).expect("Failed to convert constant to float") // Large value for high entropy
         };
 
         Ok(vec![entropy, sample_entropy])
@@ -1047,7 +1056,7 @@ mod tests {
     #[test]
     fn test_batch_exponential_smoothing() {
         let config = GpuConfig::default();
-        let processor = GpuTimeSeriesProcessor::<f64>::new(config).unwrap();
+        let processor = GpuTimeSeriesProcessor::<f64>::new(config).expect("Operation failed");
 
         let series1 = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let series2 = Array1::from_vec(vec![2.0, 4.0, 6.0, 8.0, 10.0]);
@@ -1057,7 +1066,7 @@ mod tests {
         let results = processor.batch_forecast(&batch, 3, method);
 
         assert!(results.is_ok());
-        let forecasts = results.unwrap();
+        let forecasts = results.expect("Operation failed");
         assert_eq!(forecasts.len(), 2);
         assert_eq!(forecasts[0].len(), 3);
         assert_eq!(forecasts[1].len(), 3);
@@ -1066,13 +1075,15 @@ mod tests {
     #[test]
     fn test_correlation_matrix() {
         let config = GpuConfig::default();
-        let processor = GpuTimeSeriesProcessor::<f64>::new(config).unwrap();
+        let processor = GpuTimeSeriesProcessor::<f64>::new(config).expect("Operation failed");
 
         let series1 = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let series2 = Array1::from_vec(vec![2.0, 4.0, 6.0, 8.0, 10.0]);
         let batch = vec![series1, series2];
 
-        let correlation_matrix = processor.batch_correlation_matrix(&batch).unwrap();
+        let correlation_matrix = processor
+            .batch_correlation_matrix(&batch)
+            .expect("Operation failed");
 
         assert_eq!(correlation_matrix.dim(), (2, 2));
         assert!((correlation_matrix[[0, 0]] - 1.0).abs() < 1e-10);
@@ -1084,12 +1095,14 @@ mod tests {
     fn test_feature_extraction() {
         let config = GpuConfig::default();
         let feature_config = FeatureConfig::default();
-        let extractor = GpuFeatureExtractor::new(config, feature_config).unwrap();
+        let extractor = GpuFeatureExtractor::new(config, feature_config).expect("Operation failed");
 
         let series = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0]);
         let batch = vec![series];
 
-        let features = extractor.batch_extract_features(&batch).unwrap();
+        let features = extractor
+            .batch_extract_features(&batch)
+            .expect("Operation failed");
         assert_eq!(features.nrows(), 1);
         assert!(features.ncols() > 0); // Should have extracted features
     }
@@ -1097,14 +1110,14 @@ mod tests {
     #[test]
     fn test_sliding_window_statistics() {
         let config = GpuConfig::default();
-        let processor = GpuTimeSeriesProcessor::<f64>::new(config).unwrap();
+        let processor = GpuTimeSeriesProcessor::<f64>::new(config).expect("Operation failed");
 
         let series = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
         let statistics = vec![WindowStatistic::Mean, WindowStatistic::Variance];
 
         let results = processor
             .sliding_window_statistics(&series, 3, &statistics)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2); // Two statistics
         assert_eq!(results[0].len(), 6); // 8 - 3 + 1 = 6 windows

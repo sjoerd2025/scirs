@@ -7,6 +7,12 @@ use crate::error::{StatsError, StatsResult};
 use scirs2_core::ndarray::{Array1, ArrayView1};
 use scirs2_core::numeric::{Float, NumCast};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Methods for interpolating quantiles
 ///
 /// These methods correspond to the methods in scipy.stats.quantile.
@@ -88,15 +94,15 @@ pub enum QuantileInterpolation {
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
 /// // Compute the median (0.5 quantile)
-/// let median = quantile(&data.view(), 0.5, QuantileInterpolation::Linear).unwrap();
+/// let median = quantile(&data.view(), 0.5, QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(median, 5.0);
 ///
 /// // Compute the first quartile (0.25 quantile)
-/// let q1 = quantile(&data.view(), 0.25, QuantileInterpolation::Linear).unwrap();
+/// let q1 = quantile(&data.view(), 0.25, QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(q1, 3.0);
 ///
 /// // Compute the third quartile (0.75 quantile)
-/// let q3 = quantile(&data.view(), 0.75, QuantileInterpolation::Linear).unwrap();
+/// let q3 = quantile(&data.view(), 0.75, QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(q3, 7.0);
 /// ```
 #[allow(dead_code)]
@@ -123,18 +129,21 @@ where
     sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate index and interpolation value based on method
-    let n = F::from(sorteddata.len()).unwrap();
+    let n = F::from(sorteddata.len()).expect("Test/example failed");
 
     match method {
         QuantileInterpolation::Lower => {
-            let index = (q * (n - F::one())).floor().to_usize().unwrap();
+            let index = (q * (n - F::one()))
+                .floor()
+                .to_usize()
+                .expect("Failed to convert to usize");
             Ok(sorteddata[index])
         }
         QuantileInterpolation::Higher => {
             let index = (q * (n - F::one()))
                 .ceil()
                 .to_usize()
-                .unwrap()
+                .expect("Failed to convert to usize")
                 .min(sorteddata.len() - 1);
             Ok(sorteddata[index])
         }
@@ -142,22 +151,25 @@ where
             let index = (q * (n - F::one()))
                 .round()
                 .to_usize()
-                .unwrap()
+                .expect("Failed to convert to usize")
                 .min(sorteddata.len() - 1);
             Ok(sorteddata[index])
         }
         QuantileInterpolation::Midpoint => {
-            let i_lower = (q * (n - F::one())).floor().to_usize().unwrap();
+            let i_lower = (q * (n - F::one()))
+                .floor()
+                .to_usize()
+                .expect("Failed to convert to usize");
             let i_upper = (q * (n - F::one()))
                 .ceil()
                 .to_usize()
-                .unwrap()
+                .expect("Failed to convert to usize")
                 .min(sorteddata.len() - 1);
-            Ok((sorteddata[i_lower] + sorteddata[i_upper]) / F::from(2.0).unwrap())
+            Ok((sorteddata[i_lower] + sorteddata[i_upper]) / const_f64::<F>(2.0))
         }
         QuantileInterpolation::InvertedCdf => {
             let jg = q * n;
-            let j = jg.floor().to_usize().unwrap();
+            let j = jg.floor().to_usize().expect("Failed to convert to usize");
             let g = if jg % F::one() > F::zero() {
                 F::one()
             } else {
@@ -175,9 +187,9 @@ where
         }
         QuantileInterpolation::AveragedInvertedCdf => {
             let jg = q * n;
-            let j = jg.floor().to_usize().unwrap();
+            let j = jg.floor().to_usize().expect("Failed to convert to usize");
             let g = if jg % F::one() > F::zero() {
-                F::from(0.5).unwrap()
+                const_f64::<F>(0.5)
             } else {
                 F::zero()
             };
@@ -192,8 +204,8 @@ where
             }
         }
         QuantileInterpolation::ClosestObservation => {
-            let jg = q * n - F::from(0.5).unwrap();
-            let j = jg.floor().to_usize().unwrap();
+            let jg = q * n - const_f64::<F>(0.5);
+            let j = jg.floor().to_usize().expect("Failed to convert to usize");
 
             // Determine g value for closest observation
             let g = if jg % F::one() == F::zero() && j % 2 == 1 {
@@ -216,20 +228,20 @@ where
             // Get the m value based on method
             let m = match method {
                 QuantileInterpolation::InterpolatedInvertedCdf => F::zero(),
-                QuantileInterpolation::Hazen => F::from(0.5).unwrap(),
+                QuantileInterpolation::Hazen => const_f64::<F>(0.5),
                 QuantileInterpolation::Weibull => q,
                 QuantileInterpolation::Linear => F::one() - q,
                 QuantileInterpolation::MedianUnbiased => {
-                    q / F::from(3.0).unwrap() + F::from(1.0 / 3.0).unwrap()
+                    q / const_f64::<F>(3.0) + const_f64::<F>(1.0 / 3.0)
                 }
                 QuantileInterpolation::NormalUnbiased => {
-                    q / F::from(4.0).unwrap() + F::from(3.0 / 8.0).unwrap()
+                    q / const_f64::<F>(4.0) + const_f64::<F>(3.0 / 8.0)
                 }
                 _ => unreachable!(),
             };
 
             let jg = q * n + m - F::one();
-            let j = jg.floor().to_usize().unwrap();
+            let j = jg.floor().to_usize().expect("Failed to convert to usize");
             let g = jg % F::one();
 
             // Boundary handling
@@ -273,15 +285,15 @@ where
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
 /// // Compute the median (50th percentile)
-/// let median = percentile(&data.view(), 50.0, QuantileInterpolation::Linear).unwrap();
+/// let median = percentile(&data.view(), 50.0, QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(median, 5.0);
 ///
 /// // Compute the first quartile (25th percentile)
-/// let q1 = percentile(&data.view(), 25.0, QuantileInterpolation::Linear).unwrap();
+/// let q1 = percentile(&data.view(), 25.0, QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(q1, 3.0);
 ///
 /// // Compute the third quartile (75th percentile)
-/// let q3 = percentile(&data.view(), 75.0, QuantileInterpolation::Linear).unwrap();
+/// let q3 = percentile(&data.view(), 75.0, QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(q3, 7.0);
 /// ```
 #[allow(dead_code)]
@@ -297,14 +309,14 @@ where
     }
 
     // Validate the percentile value
-    if p < F::zero() || p > F::from(100.0).unwrap() {
+    if p < F::zero() || p > const_f64::<F>(100.0) {
         return Err(StatsError::InvalidArgument(
             "Percentile must be between 0 and 100".to_string(),
         ));
     }
 
     // Convert percentile to quantile and calculate
-    let q = p / F::from(100.0).unwrap();
+    let q = p / const_f64::<F>(100.0);
     quantile(x, q, method)
 }
 
@@ -333,7 +345,7 @@ where
 ///
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
-/// let q = quartiles(&data.view(), QuantileInterpolation::Linear).unwrap();
+/// let q = quartiles(&data.view(), QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(q[0], 3.0);  // Q1 (25th percentile)
 /// assert_eq!(q[1], 5.0);  // Q2 (median)
 /// assert_eq!(q[2], 7.0);  // Q3 (75th percentile)
@@ -351,9 +363,9 @@ where
     }
 
     // Calculate the quartiles
-    let q1 = quantile(x, F::from(0.25).unwrap(), method)?;
-    let q2 = quantile(x, F::from(0.5).unwrap(), method)?;
-    let q3 = quantile(x, F::from(0.75).unwrap(), method)?;
+    let q1 = quantile(x, const_f64::<F>(0.25), method)?;
+    let q2 = quantile(x, const_f64::<F>(0.5), method)?;
+    let q3 = quantile(x, const_f64::<F>(0.75), method)?;
 
     // Return as array
     Ok(Array1::from(vec![q1, q2, q3]))
@@ -382,7 +394,7 @@ where
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 ///
-/// let q = quintiles(&data.view(), QuantileInterpolation::Linear).unwrap();
+/// let q = quintiles(&data.view(), QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(q[0], 2.8);  // 20th percentile
 /// assert_eq!(q[1], 4.6);  // 40th percentile
 /// assert_eq!(q[2], 6.4);  // 60th percentile
@@ -401,10 +413,10 @@ where
     }
 
     // Calculate the quintiles
-    let q1 = quantile(x, F::from(0.2).unwrap(), method)?;
-    let q2 = quantile(x, F::from(0.4).unwrap(), method)?;
-    let q3 = quantile(x, F::from(0.6).unwrap(), method)?;
-    let q4 = quantile(x, F::from(0.8).unwrap(), method)?;
+    let q1 = quantile(x, const_f64::<F>(0.2), method)?;
+    let q2 = quantile(x, const_f64::<F>(0.4), method)?;
+    let q3 = quantile(x, const_f64::<F>(0.6), method)?;
+    let q4 = quantile(x, const_f64::<F>(0.8), method)?;
 
     // Return as array
     Ok(Array1::from(vec![q1, q2, q3, q4]))
@@ -433,7 +445,7 @@ where
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 ///
-/// let d = deciles(&data.view(), QuantileInterpolation::Linear).unwrap();
+/// let d = deciles(&data.view(), QuantileInterpolation::Linear).expect("Test/example failed");
 /// assert_eq!(d[0], 1.9);  // 10th percentile
 /// assert_eq!(d[4], 5.5);  // 50th percentile (median)
 /// assert_eq!(d[8], 9.1);  // 90th percentile
@@ -453,7 +465,7 @@ where
     // Calculate the deciles
     let mut result = Vec::with_capacity(9);
     for i in 1..=9 {
-        let p = F::from(i * 10).unwrap();
+        let p = F::from(i * 10).expect("Test/example failed");
         let decile = percentile(x, p, method)?;
         result.push(decile);
     }
@@ -494,7 +506,7 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 20.0];  // Note the outlier
 ///
 /// let (q1, q2, q3, whislo, whishi, outliers) =
-///     boxplot_stats(&data.view(), Some(1.5), QuantileInterpolation::Linear).unwrap();
+///     boxplot_stats(&data.view(), Some(1.5), QuantileInterpolation::Linear).expect("Test/example failed");
 ///
 /// assert_eq!(q1, 3.25);  // 25th percentile
 /// assert_eq!(q2, 5.5);   // median
@@ -520,7 +532,7 @@ where
     }
 
     // Set the whisker range (defaults to 1.5)
-    let whis_factor = whis.unwrap_or(F::from(1.5).unwrap());
+    let whis_factor = whis.unwrap_or(const_f64::<F>(1.5));
     if whis_factor < F::zero() {
         return Err(StatsError::InvalidArgument(
             "Whisker range must be non-negative".to_string(),
@@ -528,9 +540,9 @@ where
     }
 
     // Calculate quartiles
-    let q1 = quantile(x, F::from(0.25).unwrap(), method)?;
-    let q2 = quantile(x, F::from(0.5).unwrap(), method)?;
-    let q3 = quantile(x, F::from(0.75).unwrap(), method)?;
+    let q1 = quantile(x, const_f64::<F>(0.25), method)?;
+    let q2 = quantile(x, const_f64::<F>(0.5), method)?;
+    let q3 = quantile(x, const_f64::<F>(0.75), method)?;
 
     // Calculate interquartile range (IQR)
     let iqr = q3 - q1;
@@ -589,13 +601,13 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 100.0];  // Note the outlier
 ///
 /// // 10% winsorization (replace lowest and highest values)
-/// let mean_10 = winsorized_mean(&data.view(), 0.1).unwrap();
+/// let mean_10 = winsorized_mean(&data.view(), 0.1).expect("Test/example failed");
 /// // This will replace the lowest 10% (1.0) with 2.0 and highest 10% (100.0) with 9.0
 /// // Then calculate the mean of [2.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 9.0]
 /// assert!((mean_10 - 5.5f64).abs() < 1e-10f64);
 ///
 /// // 20% winsorization
-/// let mean_20 = winsorized_mean(&data.view(), 0.2).unwrap();
+/// let mean_20 = winsorized_mean(&data.view(), 0.2).expect("Test/example failed");
 /// // This will replace the lowest 20% (1.0, 2.0) with 3.0 and highest 20% (9.0, 100.0) with 8.0
 /// // Then calculate the mean of [3.0, 3.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 8.0]
 /// assert!((mean_20 - 5.5f64).abs() < 1e-10f64);
@@ -613,7 +625,7 @@ where
     }
 
     // Validate limits (must be between 0 and 0.5)
-    if limits < F::zero() || limits > F::from(0.5).unwrap() {
+    if limits < F::zero() || limits > const_f64::<F>(0.5) {
         return Err(StatsError::InvalidArgument(
             "Limits must be between 0 and 0.5".to_string(),
         ));
@@ -621,7 +633,8 @@ where
 
     // If limits is 0, return the regular mean
     if limits == F::zero() {
-        return Ok(x.iter().cloned().sum::<F>() / F::from(x.len()).unwrap());
+        return Ok(x.iter().cloned().sum::<F>()
+            / F::from(x.len()).expect("Failed to convert length to float"));
     }
 
     // Make a copy of the data for winsorization
@@ -632,7 +645,10 @@ where
 
     // Determine the number of values to replace on each end
     let n = data.len();
-    let n_replace = (F::from(n).unwrap() * limits).to_usize().unwrap().max(1);
+    let n_replace = (F::from(n).expect("Failed to convert to float") * limits)
+        .to_usize()
+        .expect("Failed to convert to usize")
+        .max(1);
 
     // Get the replacement values
     let low_val = data[n_replace];
@@ -645,7 +661,7 @@ where
     }
 
     // Calculate the mean of the winsorized data
-    let mean = data.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean = data.iter().cloned().sum::<F>() / F::from(n).expect("Test/example failed");
 
     Ok(mean)
 }
@@ -675,7 +691,7 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 100.0];  // Note the outlier
 ///
 /// // 10% winsorization with ddof=1 (sample variance)
-/// let var_10 = winsorized_variance(&data.view(), 0.1, 1).unwrap();
+/// let var_10 = winsorized_variance(&data.view(), 0.1, 1).expect("Test/example failed");
 /// // Variance of the winsorized data [2.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 9.0]
 /// assert!((var_10 - 7.3888888888889f64).abs() < 1e-10f64);
 /// ```
@@ -692,7 +708,7 @@ where
     }
 
     // Validate limits (must be between 0 and 0.5)
-    if limits < F::zero() || limits > F::from(0.5).unwrap() {
+    if limits < F::zero() || limits > const_f64::<F>(0.5) {
         return Err(StatsError::InvalidArgument(
             "Limits must be between 0 and 0.5".to_string(),
         ));
@@ -713,7 +729,10 @@ where
 
     // Determine the number of values to replace on each end
     let n = data.len();
-    let n_replace = (F::from(n).unwrap() * limits).to_usize().unwrap().max(1);
+    let n_replace = (F::from(n).expect("Failed to convert to float") * limits)
+        .to_usize()
+        .expect("Failed to convert to usize")
+        .max(1);
 
     // Get the replacement values
     let low_val = data[n_replace];
@@ -726,11 +745,11 @@ where
     }
 
     // Calculate the mean of the winsorized data
-    let mean = data.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean = data.iter().cloned().sum::<F>() / F::from(n).expect("Test/example failed");
 
     // Calculate the variance
     let sum_sq_dev = data.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
-    let denom = F::from(n - ddof).unwrap();
+    let denom = F::from(n - ddof).expect("Test/example failed");
 
     Ok(sum_sq_dev / denom)
 }
@@ -746,23 +765,29 @@ mod tests {
         let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 
         // Test linear interpolation (default)
-        let median = quantile(&data.view(), 0.5, QuantileInterpolation::Linear).unwrap();
+        let median = quantile(&data.view(), 0.5, QuantileInterpolation::Linear)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(median, 5.0, epsilon = 1e-10);
 
-        let q1 = quantile(&data.view(), 0.25, QuantileInterpolation::Linear).unwrap();
+        let q1 = quantile(&data.view(), 0.25, QuantileInterpolation::Linear)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q1, 3.0, epsilon = 1e-10);
 
-        let q3 = quantile(&data.view(), 0.75, QuantileInterpolation::Linear).unwrap();
+        let q3 = quantile(&data.view(), 0.75, QuantileInterpolation::Linear)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q3, 7.0, epsilon = 1e-10);
 
         // Test with interpolation methods
-        let q_lower = quantile(&data.view(), 0.4, QuantileInterpolation::Lower).unwrap();
+        let q_lower =
+            quantile(&data.view(), 0.4, QuantileInterpolation::Lower).expect("Test/example failed");
         assert_abs_diff_eq!(q_lower, 3.0, epsilon = 1e-10);
 
-        let q_higher = quantile(&data.view(), 0.4, QuantileInterpolation::Higher).unwrap();
+        let q_higher = quantile(&data.view(), 0.4, QuantileInterpolation::Higher)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_higher, 5.0, epsilon = 1e-10);
 
-        let q_midpoint = quantile(&data.view(), 0.4, QuantileInterpolation::Midpoint).unwrap();
+        let q_midpoint = quantile(&data.view(), 0.4, QuantileInterpolation::Midpoint)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_midpoint, 4.0, epsilon = 1e-10);
     }
 
@@ -771,7 +796,8 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
 
         // Test methods equivalent to R's quantile types 1-9
-        let q_type1 = quantile(&data.view(), 0.4, QuantileInterpolation::InvertedCdf).unwrap();
+        let q_type1 = quantile(&data.view(), 0.4, QuantileInterpolation::InvertedCdf)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_type1, 5.0, epsilon = 1e-10);
 
         let q_type2 = quantile(
@@ -779,11 +805,11 @@ mod tests {
             0.4,
             QuantileInterpolation::AveragedInvertedCdf,
         )
-        .unwrap();
+        .expect("Test/example failed");
         assert_abs_diff_eq!(q_type2, 4.5, epsilon = 1e-10);
 
-        let q_type3 =
-            quantile(&data.view(), 0.4, QuantileInterpolation::ClosestObservation).unwrap();
+        let q_type3 = quantile(&data.view(), 0.4, QuantileInterpolation::ClosestObservation)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_type3, 5.0, epsilon = 1e-10);
 
         let q_type4 = quantile(
@@ -791,22 +817,27 @@ mod tests {
             0.4,
             QuantileInterpolation::InterpolatedInvertedCdf,
         )
-        .unwrap();
+        .expect("Test/example failed");
         assert_abs_diff_eq!(q_type4, 3.6, epsilon = 1e-10);
 
-        let q_type5 = quantile(&data.view(), 0.4, QuantileInterpolation::Hazen).unwrap();
+        let q_type5 =
+            quantile(&data.view(), 0.4, QuantileInterpolation::Hazen).expect("Test/example failed");
         assert_abs_diff_eq!(q_type5, 4.1, epsilon = 1e-10);
 
-        let q_type6 = quantile(&data.view(), 0.4, QuantileInterpolation::Weibull).unwrap();
+        let q_type6 = quantile(&data.view(), 0.4, QuantileInterpolation::Weibull)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_type6, 4.0, epsilon = 1e-10);
 
-        let q_type7 = quantile(&data.view(), 0.4, QuantileInterpolation::Linear).unwrap();
+        let q_type7 = quantile(&data.view(), 0.4, QuantileInterpolation::Linear)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_type7, 4.2, epsilon = 1e-10);
 
-        let q_type8 = quantile(&data.view(), 0.4, QuantileInterpolation::MedianUnbiased).unwrap();
+        let q_type8 = quantile(&data.view(), 0.4, QuantileInterpolation::MedianUnbiased)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_type8, 4.066666666666666, epsilon = 1e-10);
 
-        let q_type9 = quantile(&data.view(), 0.4, QuantileInterpolation::NormalUnbiased).unwrap();
+        let q_type9 = quantile(&data.view(), 0.4, QuantileInterpolation::NormalUnbiased)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(q_type9, 4.075, epsilon = 1e-10);
     }
 
@@ -815,13 +846,16 @@ mod tests {
         let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 
         // Test percentiles
-        let p50 = percentile(&data.view(), 50.0, QuantileInterpolation::Linear).unwrap();
+        let p50 = percentile(&data.view(), 50.0, QuantileInterpolation::Linear)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(p50, 5.0, epsilon = 1e-10);
 
-        let p25 = percentile(&data.view(), 25.0, QuantileInterpolation::Linear).unwrap();
+        let p25 = percentile(&data.view(), 25.0, QuantileInterpolation::Linear)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(p25, 3.0, epsilon = 1e-10);
 
-        let p75 = percentile(&data.view(), 75.0, QuantileInterpolation::Linear).unwrap();
+        let p75 = percentile(&data.view(), 75.0, QuantileInterpolation::Linear)
+            .expect("Test/example failed");
         assert_abs_diff_eq!(p75, 7.0, epsilon = 1e-10);
 
         // Test out-of-range values
@@ -834,7 +868,8 @@ mod tests {
         let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 
         // Test quartiles
-        let q = quartiles(&data.view(), QuantileInterpolation::Linear).unwrap();
+        let q =
+            quartiles(&data.view(), QuantileInterpolation::Linear).expect("Test/example failed");
         assert_abs_diff_eq!(q[0], 3.0, epsilon = 1e-10); // Q1
         assert_abs_diff_eq!(q[1], 5.0, epsilon = 1e-10); // Q2 (median)
         assert_abs_diff_eq!(q[2], 7.0, epsilon = 1e-10); // Q3
@@ -845,7 +880,8 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
         // Test quintiles
-        let q = quintiles(&data.view(), QuantileInterpolation::Linear).unwrap();
+        let q =
+            quintiles(&data.view(), QuantileInterpolation::Linear).expect("Test/example failed");
         assert_abs_diff_eq!(q[0], 2.8, epsilon = 1e-10); // 20th percentile
         assert_abs_diff_eq!(q[1], 4.6, epsilon = 1e-10); // 40th percentile
         assert_abs_diff_eq!(q[2], 6.4, epsilon = 1e-10); // 60th percentile
@@ -857,7 +893,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
         // Test deciles
-        let d = deciles(&data.view(), QuantileInterpolation::Linear).unwrap();
+        let d = deciles(&data.view(), QuantileInterpolation::Linear).expect("Test/example failed");
         assert_abs_diff_eq!(d[0], 1.9, epsilon = 1e-10); // 10th percentile
         assert_abs_diff_eq!(d[4], 5.5, epsilon = 1e-10); // 50th percentile (median)
         assert_abs_diff_eq!(d[8], 9.1, epsilon = 1e-10); // 90th percentile
@@ -869,7 +905,8 @@ mod tests {
 
         // Test boxplot statistics
         let (q1, q2, q3, whislo, whishi, outliers) =
-            boxplot_stats(&data.view(), Some(1.5), QuantileInterpolation::Linear).unwrap();
+            boxplot_stats(&data.view(), Some(1.5), QuantileInterpolation::Linear)
+                .expect("Test/example failed");
 
         assert_abs_diff_eq!(q1, 3.25, epsilon = 1e-10); // 25th percentile
         assert_abs_diff_eq!(q2, 5.5, epsilon = 1e-10); // median
@@ -892,21 +929,21 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 100.0]; // Note the outlier
 
         // 10% winsorization (replace 1 lowest and 1 highest values)
-        let mean_10 = winsorized_mean(&data.view(), 0.1).unwrap();
+        let mean_10 = winsorized_mean(&data.view(), 0.1).expect("Test/example failed");
         // This will replace 1.0 with 2.0 and 100.0 with 9.0
         // New data: [2.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 9.0]
         // Mean = 55/10 = 5.5
         assert_abs_diff_eq!(mean_10, 5.5, epsilon = 1e-10);
 
         // 20% winsorization (replace 2 lowest and 2 highest values)
-        let mean_20 = winsorized_mean(&data.view(), 0.2).unwrap();
+        let mean_20 = winsorized_mean(&data.view(), 0.2).expect("Test/example failed");
         // This will replace 1.0, 2.0 with 3.0 and 9.0, 100.0 with 8.0
         // New data: [3.0, 3.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 8.0]
         // Mean = 55/10 = 5.5
         assert_abs_diff_eq!(mean_20, 5.5, epsilon = 1e-10);
 
         // With 0 winsorization, should be the regular mean
-        let mean_0 = winsorized_mean(&data.view(), 0.0).unwrap();
+        let mean_0 = winsorized_mean(&data.view(), 0.0).expect("Test/example failed");
         let expected_mean = data.iter().sum::<f64>() / data.len() as f64;
         assert_abs_diff_eq!(mean_0, expected_mean, epsilon = 1e-10);
     }
@@ -916,7 +953,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 100.0]; // Note the outlier
 
         // 10% winsorization with ddof=1 (sample variance)
-        let var_10 = winsorized_variance(&data.view(), 0.1, 1).unwrap();
+        let var_10 = winsorized_variance(&data.view(), 0.1, 1).expect("Test/example failed");
         // Winsorized data: [2.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 9.0]
         // Mean = 5.5
         // Sum of squared deviations = (2-5.5)^2 + (2-5.5)^2 + ... + (9-5.5)^2 + (9-5.5)^2
@@ -926,7 +963,7 @@ mod tests {
         assert_abs_diff_eq!(var_10, 7.388888888888889, epsilon = 1e-10);
 
         // 20% winsorization with ddof=0 (population variance)
-        let var_20 = winsorized_variance(&data.view(), 0.2, 0).unwrap();
+        let var_20 = winsorized_variance(&data.view(), 0.2, 0).expect("Test/example failed");
         // Winsorized data: [3.0, 3.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 8.0]
         // Mean = 5.5
         // Sum of squared deviations = (3-5.5)^2 * 3 + (4-5.5)^2 + ... + (8-5.5)^2 * 3

@@ -774,7 +774,7 @@ fn upsample_bilinear(
 fn estimate_noise_variance(_detailcoeffs: &Array2<f64>) -> f64 {
     // Robust noise estimation using median absolute deviation
     let mut _coeffs: Vec<f64> = detail_coeffs.iter().cloned().collect();
-    coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let median = coeffs[_coeffs.len() / 2];
     let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len() as f64;
@@ -923,7 +923,7 @@ fn estimate_reconstruction_quality(
 mod tests {
     #[test]
     fn testtexture_analysis() {
-        let image = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect()).expect("Operation failed");
         let config = Dwt2dConfig {
             boundary_mode: BoundaryMode::Symmetric,
             use_simd: false,
@@ -938,7 +938,7 @@ mod tests {
         let result = wavelettexture_analysis(&image, Wavelet::Haar, 2, &config);
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert!(analysis.texture_descriptor.len() == 16);
         assert!(analysis.directionality >= 0.0 && analysis.directionality <= 1.0);
         assert!(analysis.regularity >= 0.0 && analysis.regularity <= 1.0);
@@ -970,7 +970,7 @@ mod tests {
         let result = wavelet_edge_detection(&image, Wavelet::Haar, 1, &config);
         assert!(result.is_ok());
 
-        let edges = result.unwrap();
+        let edges = result.expect("Operation failed");
         assert!(edges.magnitude.dim() == (4, 4)); // Expected size after DWT
         assert!(edges.direction.dim() == (4, 4));
     }

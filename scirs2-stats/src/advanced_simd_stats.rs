@@ -885,11 +885,13 @@ impl AdvancedSimdOptimizer {
                     (min_abs.min(abs_val), max_abs.max(abs_val))
                 });
 
-        let numerical_range = if max_abs < F::from(1e-6).unwrap() {
+        let numerical_range = if max_abs
+            < F::from(1e-6).expect("Failed to convert constant to float")
+        {
             NumericalRange::SmallNumbers
-        } else if min_abs > F::from(1e6).unwrap() {
+        } else if min_abs > F::from(1e6).expect("Failed to convert constant to float") {
             NumericalRange::LargeNumbers
-        } else if max_abs / min_abs > F::from(1e12).unwrap() {
+        } else if max_abs / min_abs > F::from(1e12).expect("Failed to convert constant to float") {
             NumericalRange::Mixed
         } else {
             NumericalRange::Normal
@@ -1216,7 +1218,7 @@ impl AdvancedSimdOptimizer {
             AlgorithmChoice::Scalar { algorithm } => self.execute_scalar_mean(x, algorithm),
             AlgorithmChoice::Simd { .. } => {
                 // Use scirs2-core SIMD operations
-                Ok(F::simd_sum(&x.view()) / F::from(x.len()).unwrap())
+                Ok(F::simd_sum(&x.view()) / F::from(x.len()).expect("Operation failed"))
             }
             AlgorithmChoice::ParallelSimd {
                 simd_choice,
@@ -1225,7 +1227,7 @@ impl AdvancedSimdOptimizer {
             } => self.execute_parallel_mean(x, simd_choice, *thread_count),
             AlgorithmChoice::Hybrid { .. } => {
                 // Execute hybrid algorithm (simplified)
-                Ok(F::simd_sum(&x.view()) / F::from(x.len()).unwrap())
+                Ok(F::simd_sum(&x.view()) / F::from(x.len()).expect("Operation failed"))
             }
         }
     }
@@ -1251,7 +1253,7 @@ impl AdvancedSimdOptimizer {
             }
         };
 
-        Ok(result / F::from(x.len()).unwrap())
+        Ok(result / F::from(x.len()).expect("Operation failed"))
     }
 
     /// Kahan summation algorithm
@@ -1333,7 +1335,7 @@ impl AdvancedSimdOptimizer {
             .map(|chunk| F::simd_sum(&chunk))
             .sum();
 
-        Ok(sum / F::from(x.len()).unwrap())
+        Ok(sum / F::from(x.len()).expect("Operation failed"))
     }
 
     // Additional methods for variance, correlation, matrix operations...
@@ -1367,7 +1369,7 @@ impl AdvancedSimdOptimizer {
             })
             .fold(F::zero(), |acc, val| acc + val);
 
-        Ok(sum_sq_dev / F::from(x.len() - ddof).unwrap())
+        Ok(sum_sq_dev / F::from(x.len() - ddof).expect("Operation failed"))
     }
 
     /// Execute variance with monitoring
@@ -1653,7 +1655,9 @@ mod tests {
         let optimizer = AdvancedSimdOptimizer::new(config);
 
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let result = optimizer.advanced_mean(&data.view()).unwrap();
+        let result = optimizer
+            .advanced_mean(&data.view())
+            .expect("Operation failed");
 
         assert!((result - 3.0).abs() < 1e-10);
     }
@@ -1664,7 +1668,9 @@ mod tests {
         let optimizer = AdvancedSimdOptimizer::new(config);
 
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let result = optimizer.advanced_variance(&data.view(), 1).unwrap();
+        let result = optimizer
+            .advanced_variance(&data.view(), 1)
+            .expect("Operation failed");
 
         // Expected variance for sample: 2.5
         assert!((result - 2.5).abs() < 1e-10);
@@ -1679,7 +1685,7 @@ mod tests {
         let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
         let result = optimizer
             .advanced_correlation(&x.view(), &y.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Perfect negative correlation
         assert!((result - (-1.0)).abs() < 1e-10);
@@ -1750,7 +1756,7 @@ mod tests {
         let operations = vec![BatchOperation::Mean, BatchOperation::Variance];
         let results = optimizer
             .advanced_batch_statistics(&data_arrays, &operations)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.means.len(), 2);
         assert_eq!(results.variances.len(), 2);

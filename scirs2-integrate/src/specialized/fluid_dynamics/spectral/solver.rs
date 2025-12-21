@@ -332,7 +332,7 @@ impl SpectralNavierStokesSolver {
         ky: &Array1<f64>,
         kz: &Array1<f64>,
     ) -> IntegrateResult<Array3<Complex<f64>>> {
-        let nz = self.nz.unwrap();
+        let nz = self.nz.expect("Operation failed");
         let mut pressure_hat = Array3::zeros((self.nx, self.ny, nz));
 
         // Compute divergence in spectral space: ∇·u
@@ -404,7 +404,7 @@ impl SpectralNavierStokesSolver {
         dy: usize,
         dz: usize,
     ) -> IntegrateResult<Array3<Complex<f64>>> {
-        let nz = self.nz.unwrap();
+        let nz = self.nz.expect("Operation failed");
         let mut df_hat = Array3::zeros(f_hat.dim());
 
         for i in 0..self.nx {
@@ -457,7 +457,7 @@ impl SpectralNavierStokesSolver {
         ky: &Array1<f64>,
         kz: &Array1<f64>,
     ) -> IntegrateResult<Array3<Complex<f64>>> {
-        let nz = self.nz.unwrap();
+        let nz = self.nz.expect("Operation failed");
         let mut laplacian_hat = Array3::zeros(f_hat.dim());
 
         for i in 0..self.nx {
@@ -511,7 +511,7 @@ impl SpectralNavierStokesSolver {
             DealiasingStrategy::TwoThirds => {
                 let field_hat = FFTOperations::fft_3d_forward(field)?;
                 let mut dealiased_hat = field_hat.clone();
-                let nz = self.nz.unwrap();
+                let nz = self.nz.expect("Operation failed");
 
                 let cutoff_x = (2 * self.nx) / 3;
                 let cutoff_y = (2 * self.ny) / 3;
@@ -568,8 +568,8 @@ impl SpectralNavierStokesSolver {
 
     /// Initialize Taylor-Green vortex in 3D
     pub fn initialize_taylor_green_vortex_3d(&self) -> [Array3<f64>; 3] {
-        let nz = self.nz.unwrap();
-        let lz = self.lz.unwrap();
+        let nz = self.nz.expect("Operation failed");
+        let lz = self.lz.expect("Operation failed");
 
         let mut u = Array3::zeros((self.nx, self.ny, nz));
         let mut v = Array3::zeros((self.nx, self.ny, nz));

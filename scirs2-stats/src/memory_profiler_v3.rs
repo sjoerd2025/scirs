@@ -50,7 +50,7 @@ impl MemoryProfiler {
             return;
         }
 
-        let mut allocations = self.allocations.lock().unwrap();
+        let mut allocations = self.allocations.lock().expect("Operation failed");
         let stats = allocations.entry(category.to_string()).or_default();
 
         stats.total_allocations += 1;
@@ -60,10 +60,10 @@ impl MemoryProfiler {
         stats.allocation_times.push(duration);
 
         // Update global memory tracking
-        let mut current = self.current_memory.lock().unwrap();
+        let mut current = self.current_memory.lock().expect("Operation failed");
         *current += size;
 
-        let mut peak = self.peak_memory.lock().unwrap();
+        let mut peak = self.peak_memory.lock().expect("Operation failed");
         *peak = (*peak).max(*current);
     }
 
@@ -73,15 +73,15 @@ impl MemoryProfiler {
             return;
         }
 
-        let mut current = self.current_memory.lock().unwrap();
+        let mut current = self.current_memory.lock().expect("Operation failed");
         *current = current.saturating_sub(size);
     }
 
     /// Get memory usage report
     pub fn get_report(&self) -> MemoryReport {
-        let allocations = self.allocations.lock().unwrap().clone();
-        let peak_memory = *self.peak_memory.lock().unwrap();
-        let current_memory = *self.current_memory.lock().unwrap();
+        let allocations = self.allocations.lock().expect("Operation failed").clone();
+        let peak_memory = *self.peak_memory.lock().expect("Operation failed");
+        let current_memory = *self.current_memory.lock().expect("Operation failed");
 
         let recommendations = self.generate_recommendations(&allocations);
         MemoryReport {
@@ -139,9 +139,9 @@ impl MemoryProfiler {
 
     /// Reset all profiling data
     pub fn reset(&self) {
-        self.allocations.lock().unwrap().clear();
-        *self.peak_memory.lock().unwrap() = 0;
-        *self.current_memory.lock().unwrap() = 0;
+        self.allocations.lock().expect("Operation failed").clear();
+        *self.peak_memory.lock().expect("Operation failed") = 0;
+        *self.current_memory.lock().expect("Operation failed") = 0;
     }
 }
 
@@ -353,7 +353,11 @@ impl AdaptiveMemoryManager {
 
     /// Choose optimal algorithm based on current memory usage
     pub fn choose_algorithm(&self, datasize: usize) -> AlgorithmChoice {
-        let current_memory = *self.profiler.current_memory.lock().unwrap();
+        let current_memory = *self
+            .profiler
+            .current_memory
+            .lock()
+            .expect("Operation failed");
 
         if current_memory > self.memory_threshold_high {
             // High memory usage - use most memory-efficient algorithms
@@ -381,7 +385,11 @@ impl AdaptiveMemoryManager {
 
     /// Suggest chunk size based on available memory
     pub fn suggest_chunksize(&self, datasize: usize, elementsize: usize) -> usize {
-        let current_memory = *self.profiler.current_memory.lock().unwrap();
+        let current_memory = *self
+            .profiler
+            .current_memory
+            .lock()
+            .expect("Operation failed");
         let available_memory = self.memory_threshold_high.saturating_sub(current_memory);
 
         // Use at most 10% of available memory for chunking
@@ -482,7 +490,7 @@ where
             ));
         }
 
-        Ok(sum / F::from(count).unwrap())
+        Ok(sum / F::from(count).expect("Failed to convert to float"))
     }
 
     fn compute_mean_chunked<D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<F>
@@ -511,7 +519,7 @@ where
             ));
         }
 
-        Ok(total_sum / F::from(total_count).unwrap())
+        Ok(total_sum / F::from(total_count).expect("Failed to convert to float"))
     }
 
     fn compute_mean_standard<D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<F>
@@ -528,7 +536,7 @@ where
             ));
         }
 
-        Ok(sum / F::from(count).unwrap())
+        Ok(sum / F::from(count).expect("Failed to convert to float"))
     }
 
     /// Get memory report
@@ -584,12 +592,12 @@ mod tests {
         let mut stats = ProfiledStatistics::new(profiler.clone());
 
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let mean = stats.mean_profiled(&data.view()).unwrap();
+        let mean = stats.mean_profiled(&data.view()).expect("Operation failed");
 
         assert_relative_eq!(mean, 3.0, epsilon = 1e-10);
 
         // Test caching
-        let mean2 = stats.mean_profiled(&data.view()).unwrap();
+        let mean2 = stats.mean_profiled(&data.view()).expect("Operation failed");
         assert_relative_eq!(mean2, 3.0, epsilon = 1e-10);
 
         let report = stats.get_memory_report();

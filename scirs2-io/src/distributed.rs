@@ -287,7 +287,7 @@ impl DistributedReader {
                 thread::spawn(move || {
                     // Update status
                     {
-                        let mut infos = worker_infos.lock().unwrap();
+                        let mut infos = worker_infos.lock().expect("Operation failed");
                         infos[idx].status = WorkerStatus::Processing;
                     }
 
@@ -311,29 +311,29 @@ impl DistributedReader {
                     // Update status and store result
                     match partition_result {
                         Ok(result) => {
-                            let mut infos = worker_infos.lock().unwrap();
+                            let mut infos = worker_infos.lock().expect("Operation failed");
                             infos[idx].status = WorkerStatus::Completed;
                             infos[idx].progress = 1.0;
                             infos[idx].items_processed = 1;
                             drop(infos);
 
-                            let mut results_guard = results.lock().unwrap();
+                            let mut results_guard = results.lock().expect("Operation failed");
                             results_guard.push((idx, Ok(result)));
                         }
                         Err(e) => {
-                            let mut infos = worker_infos.lock().unwrap();
+                            let mut infos = worker_infos.lock().expect("Operation failed");
                             infos[idx].status = WorkerStatus::Failed;
                             infos[idx].error = Some(e.to_string());
                             drop(infos);
 
-                            let mut results_guard = results.lock().unwrap();
+                            let mut results_guard = results.lock().expect("Operation failed");
                             results_guard.push((idx, Err(e)));
                         }
                     }
 
                     // Call progress callback
                     if let Some(callback) = &progress_callback {
-                        let infos = worker_infos.lock().unwrap();
+                        let infos = worker_infos.lock().expect("Operation failed");
                         callback(&infos);
                     }
                 })
@@ -348,7 +348,7 @@ impl DistributedReader {
         }
 
         // Sort results by partition index and extract values
-        let mut results_guard = results.lock().unwrap();
+        let mut results_guard = results.lock().expect("Operation failed");
         results_guard.sort_by_key(|(idx_, _)| *idx_);
 
         // Drain the results to own them, avoiding cloning issues
@@ -733,16 +733,16 @@ mod tests {
 
     #[test]
     fn test_partition_strategies() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let temp_file = temp_dir.path().join("test.dat");
-        std::fs::write(&temp_file, vec![0u8; 10000]).unwrap();
+        std::fs::write(&temp_file, vec![0u8; 10000]).expect("Operation failed");
 
         let reader =
             DistributedReader::new(&temp_file).partition_strategy(PartitionStrategy::SizeBased {
                 chunk_size_bytes: 1000,
             });
 
-        let partitions = reader.create_partitions().unwrap();
+        let partitions = reader.create_partitions().expect("Operation failed");
         assert_eq!(partitions.len(), 10);
 
         for (_offset, size) in &partitions {
@@ -761,17 +761,17 @@ mod tests {
             },
             4,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(distributed.partitions.len(), 4);
 
-        let gathered = distributed.gather().unwrap();
+        let gathered = distributed.gather().expect("Operation failed");
         assert_eq!(array, gathered);
     }
 
     #[test]
     fn test_distributed_writer() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
 
         let data: Vec<i32> = (0..100).collect();
         let writer = DistributedWriter::new(temp_dir.path()).num_partitions(4);
@@ -781,7 +781,7 @@ mod tests {
                 writeln!(file, "{value}")
                     .map_err(|e| IoError::FileError(format!("Failed to write: {e}")))
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(files.len(), 4);
 

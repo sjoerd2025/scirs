@@ -108,13 +108,13 @@ impl QuantizationAwareTraining {
     fn compute_quantization_params(&self, tensor: &ArrayView2<f32>, bits: u8) -> Result<(f32, f32)> {
         let (min_val, max_val) = match self.config.calibration {
             CalibrationMethod::MinMax => {
-                let min = tensor.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-                let max = tensor.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+                let min = tensor.iter().min_by(|a, b| a.partial_cmp(b).expect("Operation failed")).expect("Operation failed");
+                let max = tensor.iter().max_by(|a, b| a.partial_cmp(b).expect("Operation failed")).expect("Operation failed");
                 (*min, *max)
             }
             CalibrationMethod::Percentile(p) => {
                 let mut values: Vec<f32> = tensor.iter().cloned().collect();
-                values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let low_idx = ((1.0 - p) * values.len() as f32) as usize;
                 let high_idx = (p * values.len() as f32) as usize;
                 (values[low_idx], values[high_idx.min(values.len() - 1)])
@@ -163,7 +163,7 @@ impl Quantizer for SymmetricQuantizer {
     fn quantize(&self, tensor: &ArrayView2<f32>) -> Result<QuantizedTensor> {
         let abs_max = tensor.iter()
             .map(|x| x.abs())
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .unwrap_or(1.0);
         let n_levels = (1 << self.bits) as f32;
         let scale = (2.0 * abs_max) / (n_levels - 1.0);
@@ -176,8 +176,8 @@ impl Quantizer for SymmetricQuantizer {
 struct AsymmetricQuantizer {
 impl AsymmetricQuantizer {
 impl Quantizer for AsymmetricQuantizer {
-        let min_val = tensor.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-        let max_val = tensor.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+        let min_val = tensor.iter().min_by(|a, b| a.partial_cmp(b).expect("Operation failed")).expect("Operation failed");
+        let max_val = tensor.iter().max_by(|a, b| a.partial_cmp(b).expect("Operation failed")).expect("Operation failed");
         let scale = (max_val - min_val) / (n_levels - 1.0);
         let zero_point = -min_val / scale;
 /// Per-channel quantizer
@@ -213,9 +213,9 @@ impl TensorStats {
             mean: 0.0,
             count: 0,
     fn update(&mut self, tensor: &ArrayView2<f32>) {
-        let current_min = tensor.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-        let current_max = tensor.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-        let current_mean = tensor.mean().unwrap();
+        let current_min = tensor.iter().min_by(|a, b| a.partial_cmp(b).expect("Operation failed")).expect("Operation failed");
+        let current_max = tensor.iter().max_by(|a, b| a.partial_cmp(b).expect("Operation failed")).expect("Operation failed");
+        let current_mean = tensor.mean().expect("Operation failed");
         self.min = self.min.min(*current_min);
         self.max = self.max.max(*current_max);
         // Running average
@@ -227,20 +227,20 @@ mod tests {
     #[test]
     fn test_symmetric_quantization() {
         let quantizer = SymmetricQuantizer::new(8);
-        let tensor = Array2::from_shape_vec((2, 3), vec![-1.0, 0.0, 1.0, -0.5, 0.5, 0.8]).unwrap();
-        let quantized = quantizer.quantize(&tensor.view()).unwrap();
+        let tensor = Array2::from_shape_vec((2, 3), vec![-1.0, 0.0, 1.0, -0.5, 0.5, 0.8]).expect("Operation failed");
+        let quantized = quantizer.quantize(&tensor.view()).expect("Operation failed");
         assert_eq!(quantized.bits, 8);
         assert!(quantized.scale > 0.0);
     fn test_fake_quantize() {
         let qat = QuantizationAwareTraining::new(QATConfig::default());
-        let fake_quantized = qat.fake_quantize(&tensor.view(), true).unwrap();
+        let fake_quantized = qat.fake_quantize(&tensor.view(), true).expect("Operation failed");
         assert_eq!(fake_quantized.shape(), tensor.shape());
         // Values should be slightly different due to quantization
         for (orig, quant) in tensor.iter().zip(fake_quantized.iter()) {
             assert!((orig - quant).abs() < 0.1); // Quantization error
     fn test_quantize_dequantize() {
-        let quantized = qat.quantize_tensor(&tensor.view(), 8).unwrap();
-        let dequantized = qat.dequantize(&quantized).unwrap();
+        let quantized = qat.quantize_tensor(&tensor.view(), 8).expect("Operation failed");
+        let dequantized = qat.dequantize(&quantized).expect("Operation failed");
         // Check round-trip error
         for (orig, dequant) in tensor.iter().zip(dequantized.iter()) {
             assert!((orig - dequant).abs() < 0.01); // Small quantization error expected

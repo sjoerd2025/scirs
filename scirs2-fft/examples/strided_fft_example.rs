@@ -33,7 +33,7 @@ fn main() {
 
     // Strided FFT
     let start = Instant::now();
-    let result_strided = fft_strided(&arr, 0).unwrap();
+    let result_strided = fft_strided(&arr, 0).expect("Operation failed");
     let strided_time = start.elapsed();
     println!("Strided FFT time: {strided_time:?}");
 
@@ -52,7 +52,7 @@ fn main() {
 
     // Strided FFT
     let start = Instant::now();
-    let result_strided = fft_strided(&arr, 1).unwrap();
+    let result_strided = fft_strided(&arr, 1).expect("Operation failed");
     let strided_time = start.elapsed();
     println!("Strided FFT time: {strided_time:?}");
 
@@ -72,10 +72,10 @@ fn main() {
     }
 
     // Forward FFT using strided implementation
-    let fwd = fft_strided_complex(&complex_arr, 0).unwrap();
+    let fwd = fft_strided_complex(&complex_arr, 0).expect("Operation failed");
 
     // Inverse FFT using strided implementation
-    let inv = ifft_strided(&fwd, 0).unwrap();
+    let inv = ifft_strided(&fwd, 0).expect("Operation failed");
 
     // Calculate maximum difference
     let mut max_error: f64 = 0.0;
@@ -98,7 +98,7 @@ fn perform_standard_fft_axis0(arr: &Array2<f64>) -> Array2<Complex64> {
     // Process each column
     for j in 0..cols {
         let column: Vec<f64> = arr.slice(s![.., j]).to_vec();
-        let fft_result = fft(&column, None).unwrap();
+        let fft_result = fft(&column, None).expect("Operation failed");
 
         // Copy back to result
         for i in 0..rows {
@@ -118,7 +118,7 @@ fn perform_standard_fft_axis1(arr: &Array2<f64>) -> Array2<Complex64> {
     // Process each row
     for i in 0..rows {
         let row: Vec<f64> = arr.slice(s![i, ..]).to_vec();
-        let fft_result = fft(&row, None).unwrap();
+        let fft_result = fft(&row, None).expect("Operation failed");
 
         // Copy back to result
         for j in 0..cols {

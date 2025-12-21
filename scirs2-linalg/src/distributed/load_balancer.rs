@@ -135,11 +135,11 @@ impl AdaptiveLoadBalancer {
         }
 
         let mae = recent_samples.iter()
-            .map(|s| s.error.unwrap().abs())
+            .map(|s| s.error.expect("Operation failed").abs())
             .sum::<f64>() / recent_samples.len() as f64;
 
         let rmse = (recent_samples.iter()
-            .map(|s| s.error.unwrap().powi(2))
+            .map(|s| s.error.expect("Operation failed").powi(2))
             .sum::<f64>() / recent_samples.len() as f64).sqrt();
 
         self.prediction_model.accuracy_metrics.mean_absolute_error = mae;

@@ -120,7 +120,7 @@ impl FactorAnalysis {
         }
 
         // Center the data
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let mut centereddata = data.to_owned();
         for mut row in centereddata.rows_mut() {
             row -= &mean;
@@ -205,7 +205,7 @@ impl FactorAnalysis {
             StatsError::ComputationError(format!("SVD initialization failed: {}", e))
         })?;
 
-        let v = vt.unwrap().t().to_owned();
+        let v = vt.expect("Operation failed").t().to_owned();
 
         // Initial loadings from first k components
         let mut loadings = Array2::zeros((n_features, self.n_factors));
@@ -594,7 +594,7 @@ pub mod efa {
         let mut thresholds = Array1::zeros(n_features);
         for i in 0..n_features {
             let mut values: Vec<f64> = simulated_eigenvalues.iter().map(|ev| ev[i]).collect();
-            values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             let index = ((percentile / 100.0) * (n_simulations - 1) as f64).round() as usize;
             thresholds[i] = values[index.min(n_simulations - 1)];
@@ -616,7 +616,7 @@ pub mod efa {
     /// Compute eigenvalues of correlation matrix
     fn compute_correlation_eigenvalues(data: ArrayView2<f64>) -> Result<Array1<f64>> {
         // Center data
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= &mean;
@@ -648,7 +648,7 @@ pub mod efa {
 
         // Sort in descending order
         let mut sorted_eigenvalues = eigenvalues.to_vec();
-        sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed"));
 
         Ok(Array1::from_vec(sorted_eigenvalues))
     }
@@ -658,7 +658,7 @@ pub mod efa {
         checkarray_finite(&data, "data")?;
 
         // Compute correlation matrix
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= &mean;
@@ -718,7 +718,7 @@ pub mod efa {
         }
 
         // Compute correlation matrix
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let mut centered = data.to_owned();
         for mut row in centered.rows_mut() {
             row -= &mean;

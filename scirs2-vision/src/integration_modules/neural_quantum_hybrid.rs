@@ -556,6 +556,120 @@ impl NeuralQuantumHybridProcessor {
         }
     }
 
+    /// Create a lightweight processor for testing (avoids expensive initialization)
+    ///
+    /// This constructor uses much smaller network sizes to avoid the O(n²) initialization
+    /// bottleneck in SpikingNeuralNetwork. Production code should use `new()`.
+    #[cfg(test)]
+    pub fn new_for_testing() -> Self {
+        let quantum_stages = vec!["preprocessing".to_string(), "processing".to_string()];
+
+        let fusion_params = HybridFusionParameters {
+            quantum_weight: 0.4,
+            neuromorphic_weight: 0.4,
+            classical_weight: 0.2,
+            fusion_strategy: FusionStrategy::AttentionFusion,
+            adaptive_fusion: true,
+            adaptation_rate: 0.01,
+        };
+
+        let meta_learner = MetaLearningSystem {
+            learning_algorithms: vec![MetaLearningAlgorithm::MAML {
+                inner_lr: 0.01,
+                outer_lr: 0.001,
+                num_inner_steps: 5,
+            }],
+            task_adaptation: TaskAdaptationParams {
+                adaptation_speed: 0.1,
+                forgetting_rate: 0.01,
+                similarity_threshold: 0.8,
+                max_adaptation_steps: 100,
+            },
+            transfer_learning: TransferLearningConfig {
+                source_domains: vec!["test".to_string()],
+                target_domain: "test".to_string(),
+                adaptation_method: DomainAdaptationMethod::DANN,
+                feature_alignment: FeatureAlignmentConfig {
+                    alignment_weight: 0.1,
+                    num_layers: 1,
+                    strategy: AlignmentStrategy::Global,
+                },
+            },
+            emergent_behavior: EmergentBehaviorDetector {
+                patterns: Vec::new(),
+                complexity_metrics: ComplexityMetrics {
+                    kolmogorov_complexity: 0.0,
+                    logical_depth: 0.0,
+                    thermodynamic_depth: 0.0,
+                    effective_complexity: 0.0,
+                    information_integration: 0.0,
+                },
+                novelty_threshold: 0.7,
+                emergence_indicators: Vec::new(),
+            },
+            self_modification: SelfModificationEngine {
+                modification_rules: Vec::new(),
+                safety_constraints: SafetyConstraints {
+                    max_performance_degradation: 0.05,
+                    require_rollback: true,
+                    require_human_oversight: false,
+                    max_modification_frequency: 1.0,
+                },
+                modification_history: Vec::new(),
+                impact_tracker: ImpactTracker {
+                    short_term_impacts: Vec::new(),
+                    long_term_impacts: Vec::new(),
+                    cumulative_change: 0.0,
+                    risk_level: 0.0,
+                },
+            },
+        };
+
+        Self {
+            quantum_core: QuantumStreamProcessor::new(quantum_stages),
+            // Use MUCH smaller network: 16 instead of 2048 (16*2 = 32 neurons vs 4096)
+            // This reduces initialization from O(4096²) to O(32²) - a ~16,000x reduction!
+            neuromorphic_core: AdaptiveNeuromorphicPipeline::new(16),
+            ai_optimizer: RLParameterOptimizer::new(),
+            nas_system: NeuralArchitectureSearch::new(
+                ArchitectureSearchSpace {
+                    layer_types: vec![LayerType::Convolution {
+                        kernel_size: 3,
+                        stride: 1,
+                    }],
+                    depth_range: (2, 5),
+                    width_range: (32, 64),
+                    activations: vec![ActivationType::Swish],
+                    connections: vec![ConnectionType::Skip],
+                },
+                SearchStrategy::Random,
+            ),
+            fusion_params,
+            performance_tracker: PerformanceTracker {
+                latency_history: Vec::with_capacity(10),
+                accuracy_history: Vec::with_capacity(10),
+                energy_history: Vec::with_capacity(10),
+                quality_scores: Vec::with_capacity(10),
+                efficiency_metrics: EfficiencyMetrics {
+                    sparsity: 0.0,
+                    energy_consumption: 0.0,
+                    speedup_factor: 1.0,
+                    compression_ratio: 1.0,
+                },
+                realtime_indicators: RealtimeIndicators {
+                    throughput: 0.0,
+                    cpu_utilization: 0.0,
+                    memory_usage: 0.0,
+                    gpu_utilization: 0.0,
+                    energy_efficiency: 0.0,
+                    quality_index: 0.0,
+                },
+                performance_history: Vec::with_capacity(10),
+            },
+            meta_learner,
+        }
+    }
+
     /// Initialize neural-quantum fusion capabilities
     pub async fn initialize_neural_quantum_fusion(&mut self) -> Result<()> {
         // Initialize quantum processing core

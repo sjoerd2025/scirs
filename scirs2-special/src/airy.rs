@@ -240,13 +240,13 @@ const AIRY_TABLE: [(f64, f64, f64, f64, f64); 13] = [
 /// ```
 #[allow(dead_code)]
 pub fn ai<F: Float + FromPrimitive + Debug>(x: F) -> F {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // For very large positive x, use asymptotic form
     if x_f64 > 10.0 {
         let z = (2.0 / 3.0) * x_f64.powf(1.5);
         let prefactor = 1.0 / (2.0 * std::f64::consts::PI.sqrt() * x_f64.powf(0.25));
-        return F::from(prefactor * (-z).exp()).unwrap();
+        return F::from(prefactor * (-z).exp()).expect("Operation failed");
     }
 
     // For very large negative x, use asymptotic form
@@ -255,7 +255,7 @@ pub fn ai<F: Float + FromPrimitive + Debug>(x: F) -> F {
         let pi_quarter = std::f64::consts::FRAC_PI_4;
         let prefactor = 1.0 / (std::f64::consts::PI.sqrt() * (-x_f64).powf(0.25));
 
-        return F::from(prefactor * (z - pi_quarter).sin()).unwrap();
+        return F::from(prefactor * (z - pi_quarter).sin()).expect("Operation failed");
     }
 
     // Use table lookup with linear interpolation for moderate values
@@ -277,7 +277,7 @@ pub fn ai<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Linear interpolation formula: y = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
     let result = y0 + (x_f64 - x0) * (y1 - y0) / (x1 - x0);
 
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Derivative of the Airy function of the first kind, Ai'(x).
@@ -300,13 +300,13 @@ pub fn ai<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// ```
 #[allow(dead_code)]
 pub fn aip<F: Float + FromPrimitive + Debug>(x: F) -> F {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // For very large positive x, use asymptotic form
     if x_f64 > 10.0 {
         let z = (2.0 / 3.0) * x_f64.powf(1.5);
         let prefactor = -x_f64.sqrt() / (2.0 * std::f64::consts::PI.sqrt() * x_f64.powf(0.25));
-        return F::from(prefactor * (-z).exp()).unwrap();
+        return F::from(prefactor * (-z).exp()).expect("Operation failed");
     }
 
     // For very large negative x, use asymptotic form
@@ -315,7 +315,7 @@ pub fn aip<F: Float + FromPrimitive + Debug>(x: F) -> F {
         let pi_quarter = std::f64::consts::FRAC_PI_4;
         let prefactor = (-x_f64).sqrt() / (std::f64::consts::PI.sqrt() * (-x_f64).powf(0.25));
 
-        return F::from(prefactor * (z - pi_quarter).cos()).unwrap();
+        return F::from(prefactor * (z - pi_quarter).cos()).expect("Operation failed");
     }
 
     // Use table lookup with linear interpolation for moderate values
@@ -337,7 +337,7 @@ pub fn aip<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Linear interpolation formula: y = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
     let result = y0 + (x_f64 - x0) * (y1 - y0) / (x1 - x0);
 
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Airy function of the second kind, Bi(x).
@@ -363,13 +363,13 @@ pub fn aip<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// ```
 #[allow(dead_code)]
 pub fn bi<F: Float + FromPrimitive + Debug>(x: F) -> F {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // For very large positive x, use asymptotic form
     if x_f64 > 10.0 {
         let z = (2.0 / 3.0) * x_f64.powf(1.5);
         let prefactor = 1.0 / (std::f64::consts::PI.sqrt() * x_f64.powf(0.25));
-        return F::from(prefactor * z.exp()).unwrap();
+        return F::from(prefactor * z.exp()).expect("Operation failed");
     }
 
     // For very large negative x, use asymptotic form
@@ -378,7 +378,7 @@ pub fn bi<F: Float + FromPrimitive + Debug>(x: F) -> F {
         let pi_quarter = std::f64::consts::FRAC_PI_4;
         let prefactor = 1.0 / (std::f64::consts::PI.sqrt() * (-x_f64).powf(0.25));
 
-        return F::from(prefactor * (z - pi_quarter).cos()).unwrap();
+        return F::from(prefactor * (z - pi_quarter).cos()).expect("Operation failed");
     }
 
     // Use table lookup with linear interpolation for moderate values
@@ -400,7 +400,7 @@ pub fn bi<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Linear interpolation formula: y = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
     let result = y0 + (x_f64 - x0) * (y1 - y0) / (x1 - x0);
 
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Derivative of the Airy function of the second kind, Bi'(x).
@@ -423,13 +423,13 @@ pub fn bi<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// ```
 #[allow(dead_code)]
 pub fn bip<F: Float + FromPrimitive + Debug>(x: F) -> F {
-    let x_f64 = x.to_f64().unwrap();
+    let x_f64 = x.to_f64().expect("Operation failed");
 
     // For very large positive x, use asymptotic form
     if x_f64 > 10.0 {
         let z = (2.0 / 3.0) * x_f64.powf(1.5);
         let prefactor = x_f64.sqrt() / (std::f64::consts::PI.sqrt() * x_f64.powf(0.25));
-        return F::from(prefactor * z.exp()).unwrap();
+        return F::from(prefactor * z.exp()).expect("Operation failed");
     }
 
     // For very large negative x, use asymptotic form
@@ -438,7 +438,7 @@ pub fn bip<F: Float + FromPrimitive + Debug>(x: F) -> F {
         let pi_quarter = std::f64::consts::FRAC_PI_4;
         let prefactor = (-x_f64).sqrt() / (std::f64::consts::PI.sqrt() * (-x_f64).powf(0.25));
 
-        return F::from(-prefactor * (z - pi_quarter).sin()).unwrap();
+        return F::from(-prefactor * (z - pi_quarter).sin()).expect("Operation failed");
     }
 
     // Use table lookup with linear interpolation for moderate values
@@ -460,7 +460,7 @@ pub fn bip<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Linear interpolation formula: y = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
     let result = y0 + (x_f64 - x0) * (y1 - y0) / (x1 - x0);
 
-    F::from(result).unwrap()
+    F::from(result).expect("Failed to convert to float")
 }
 
 /// Complex number support for Airy functions
@@ -1005,8 +1005,8 @@ pub mod complex {
 #[allow(dead_code)]
 pub fn aie<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x >= F::zero() {
-        let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
-        let exp_factor = (two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp();
+        let two_thirds = F::from_f64(2.0 / 3.0).expect("Operation failed");
+        let exp_factor = (two_thirds * x.powf(F::from_f64(1.5).expect("Operation failed"))).exp();
         ai(x) * exp_factor
     } else {
         ai(x)
@@ -1019,8 +1019,8 @@ pub fn aie<F: Float + FromPrimitive + Debug>(x: F) -> F {
 #[allow(dead_code)]
 pub fn bie<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x >= F::zero() {
-        let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
-        let exp_factor = (-two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp();
+        let two_thirds = F::from_f64(2.0 / 3.0).expect("Operation failed");
+        let exp_factor = (-two_thirds * x.powf(F::from_f64(1.5).expect("Operation failed"))).exp();
         bi(x) * exp_factor
     } else {
         bi(x)
@@ -1034,13 +1034,13 @@ pub fn bie<F: Float + FromPrimitive + Debug>(x: F) -> F {
 #[allow(dead_code)]
 pub fn airye<F: Float + FromPrimitive + Debug>(x: F) -> (F, F, F, F) {
     if x >= F::zero() {
-        let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
-        let exp_factor = (two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp();
+        let two_thirds = F::from_f64(2.0 / 3.0).expect("Operation failed");
+        let exp_factor = (two_thirds * x.powf(F::from_f64(1.5).expect("Operation failed"))).exp();
         (
             ai(x) * exp_factor,
             aip(x) * exp_factor,
-            bi(x) * (-two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp(),
-            bip(x) * (-two_thirds * x.powf(F::from_f64(1.5).unwrap())).exp(),
+            bi(x) * (-two_thirds * x.powf(F::from_f64(1.5).expect("Operation failed"))).exp(),
+            bip(x) * (-two_thirds * x.powf(F::from_f64(1.5).expect("Operation failed"))).exp(),
         )
     } else {
         (ai(x), aip(x), bi(x), bip(x))
@@ -1069,17 +1069,17 @@ pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         5 => Some(-7.944_133_587_120_853),
         _ => None,
     } {
-        return Ok(F::from_f64(known_zero).unwrap());
+        return Ok(F::from_f64(known_zero).expect("Operation failed"));
     }
 
     // For k > 5, use asymptotic approximation
-    let k_f = F::from_usize(k).unwrap();
-    let pi = F::from_f64(std::f64::consts::PI).unwrap();
-    let three_fourths = F::from_f64(0.75).unwrap();
+    let k_f = F::from_usize(k).expect("Operation failed");
+    let pi = F::from_f64(std::f64::consts::PI).expect("Operation failed");
+    let three_fourths = F::from_f64(0.75).expect("Operation failed");
 
     // McMahon's asymptotic formula for Airy zeros
-    let s = (three_fourths * (k_f - F::from_f64(0.25).unwrap()) * pi)
-        .powf(F::from_f64(2.0 / 3.0).unwrap());
+    let s = (three_fourths * (k_f - F::from_f64(0.25).expect("Operation failed")) * pi)
+        .powf(F::from_f64(2.0 / 3.0).expect("Operation failed"));
     let initial_guess = -s;
 
     // Refine with Newton's method
@@ -1095,7 +1095,7 @@ pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         let correction = f_val / fp_val;
         zero = zero - correction;
 
-        if correction.abs() < F::from_f64(1e-12).unwrap() {
+        if correction.abs() < F::from_f64(1e-12).expect("Operation failed") {
             break;
         }
     }
@@ -1132,17 +1132,17 @@ pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         5 => Some(-7.376_762_079_367_763),
         _ => None,
     } {
-        return Ok(F::from_f64(known_zero).unwrap());
+        return Ok(F::from_f64(known_zero).expect("Operation failed"));
     }
 
     // For k > 5, use asymptotic approximation
-    let k_f = F::from_usize(k).unwrap();
-    let pi = F::from_f64(std::f64::consts::PI).unwrap();
-    let three_fourths = F::from_f64(0.75).unwrap();
+    let k_f = F::from_usize(k).expect("Operation failed");
+    let pi = F::from_f64(std::f64::consts::PI).expect("Operation failed");
+    let three_fourths = F::from_f64(0.75).expect("Operation failed");
 
     // McMahon's asymptotic formula for Airy zeros (adjusted for Bi)
-    let s = (three_fourths * (k_f + F::from_f64(0.25).unwrap()) * pi)
-        .powf(F::from_f64(2.0 / 3.0).unwrap());
+    let s = (three_fourths * (k_f + F::from_f64(0.25).expect("Operation failed")) * pi)
+        .powf(F::from_f64(2.0 / 3.0).expect("Operation failed"));
     let initial_guess = -s;
 
     // Refine with Newton's method
@@ -1158,7 +1158,7 @@ pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
         let correction = f_val / fp_val;
         zero = zero - correction;
 
-        if correction.abs() < F::from_f64(1e-12).unwrap() {
+        if correction.abs() < F::from_f64(1e-12).expect("Operation failed") {
             break;
         }
     }
@@ -1180,27 +1180,27 @@ pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
 pub fn itairy<F: Float + FromPrimitive + Debug>(x: F) -> (F, F) {
     // Use adaptive integration with Simpson's rule
     let n_points = 100;
-    let h = x / F::from_usize(n_points).unwrap();
+    let h = x / F::from_usize(n_points).expect("Operation failed");
 
     let mut integral_ai = F::zero();
     let mut integral_bi = F::zero();
 
     for i in 0..=n_points {
-        let t = F::from_usize(i).unwrap() * h;
+        let t = F::from_usize(i).expect("Operation failed") * h;
         let weight = if i == 0 || i == n_points {
             F::one()
         } else if i % 2 == 1 {
-            F::from_f64(4.0).unwrap()
+            F::from_f64(4.0).expect("Operation failed")
         } else {
-            F::from_f64(2.0).unwrap()
+            F::from_f64(2.0).expect("Operation failed")
         };
 
         integral_ai = integral_ai + weight * ai(t);
         integral_bi = integral_bi + weight * bi(t);
     }
 
-    integral_ai = integral_ai * h / F::from_f64(3.0).unwrap();
-    integral_bi = integral_bi * h / F::from_f64(3.0).unwrap();
+    integral_ai = integral_ai * h / F::from_f64(3.0).expect("Operation failed");
+    integral_bi = integral_bi * h / F::from_f64(3.0).expect("Operation failed");
 
     (integral_ai, integral_bi)
 }

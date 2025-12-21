@@ -408,7 +408,7 @@ mod tests {
         let capabilities = processor.get_capabilities();
         assert!(capabilities.is_ok());
 
-        let caps = capabilities.unwrap();
+        let caps = capabilities.expect("Operation failed");
         assert!(caps.memory_gb > 0.0);
         assert!(caps.compute_units > 0);
     }
@@ -421,7 +421,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_benchmarking() {
         let processor = UnifiedGpuProcessor::default();
         let benchmark = utils::benchmark_gpu_performance(&processor);

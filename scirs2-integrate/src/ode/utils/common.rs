@@ -73,10 +73,11 @@ where
     }
 
     // Initial step size
-    let dt = (F::from_f64(0.01).unwrap() / d0).min(F::from_f64(0.1).unwrap() * (tend - t).abs());
+    let dt = (F::from_f64(0.01).expect("Operation failed") / d0)
+        .min(F::from_f64(0.1).expect("Operation failed") * (tend - t).abs());
 
     // Evaluate f at t + small step to estimate second derivative
-    let t_new = t + dt * F::from_f64(0.001).unwrap();
+    let t_new = t + dt * F::from_f64(0.001).expect("Operation failed");
     let y_new = y + &(dy * (t_new - t));
     let dy_new = f(t_new, y_new.view());
 
@@ -93,13 +94,13 @@ where
     }
 
     // Calculate step size based on error tolerance
-    let h1 = (F::from_f64(0.01).unwrap() / d1).sqrt();
+    let h1 = (F::from_f64(0.01).expect("Operation failed") / d1).sqrt();
 
     // Choose the smaller of the two estimates
-    let mut h = h1.min(dt * F::from_f64(100.0).unwrap());
+    let mut h = h1.min(dt * F::from_f64(100.0).expect("Operation failed"));
 
     // Make sure step size is not too large
-    h = h.min((tend - t).abs() * F::from_f64(0.1).unwrap());
+    h = h.min((tend - t).abs() * F::from_f64(0.1).expect("Operation failed"));
 
     // Ensure the step is in the correct direction
     if tend < t {
@@ -126,7 +127,7 @@ where
     let mut jacobian = Array2::<F>::zeros((n_dim, n_dim));
 
     // Calculate appropriate perturbation size
-    let eps_base = F::from_f64(1e-8).unwrap();
+    let eps_base = F::from_f64(1e-8).expect("Operation failed");
 
     for i in 0..n_dim {
         // Scale perturbation by variable magnitude
@@ -205,7 +206,7 @@ pub fn solve_linear_system<F: IntegrateFloat>(
         }
 
         // Check if matrix is singular
-        if max_val < F::from_f64(1e-10).unwrap() {
+        if max_val < F::from_f64(1e-10).expect("Operation failed") {
             return Err(IntegrateError::LinearSolveError(
                 "Matrix is singular".to_string(),
             ));
@@ -269,7 +270,7 @@ pub fn extrapolate<F: IntegrateFloat>(
     // Linear extrapolation if we have 2 points
     if n == 2 {
         let dt = times[1] - times[0];
-        if dt.abs() < F::from_f64(1e-10).unwrap() {
+        if dt.abs() < F::from_f64(1e-10).expect("Operation failed") {
             return Ok(values[1].clone());
         }
 

@@ -58,7 +58,7 @@ impl PartialOrd for PixelPriority {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let segmented = watershed(&img, None, 8)?;
 /// # Ok(())
 /// # }
@@ -454,7 +454,7 @@ mod tests {
         let result = watershed(&img, None, 8);
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Operation failed");
         assert_eq!(labels.dim(), (10, 10));
     }
 
@@ -470,7 +470,7 @@ mod tests {
         let result = watershed(&img, Some(&markers), 8);
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Operation failed");
         assert_eq!(labels[[2, 2]], 1);
         assert_eq!(labels[[7, 7]], 2);
     }
@@ -503,7 +503,7 @@ mod tests {
         }
         let dynamic_img = DynamicImage::ImageLuma8(img);
 
-        let gradient = compute_gradient_magnitude(&dynamic_img).unwrap();
+        let gradient = compute_gradient_magnitude(&dynamic_img).expect("Operation failed");
 
         // Should have high gradient at x=5
         assert!(gradient[[5, 4]] > 0.0 || gradient[[5, 5]] > 0.0);
@@ -518,7 +518,7 @@ mod tests {
         let mut mask = Array2::from_elem((10, 10), true);
         mask.slice_mut(s![0..3, ..]).fill(false);
 
-        let result = watershed_markers(&img, &markers, Some(&mask)).unwrap();
+        let result = watershed_markers(&img, &markers, Some(&mask)).expect("Operation failed");
 
         // Masked area should be 0
         for y in 0..3 {

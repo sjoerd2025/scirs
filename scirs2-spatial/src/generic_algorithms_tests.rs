@@ -8,29 +8,29 @@ use crate::{
 use approx::assert_relative_eq;
 
 #[test]
-#[ignore = "timeout"]
 fn test_generic_kdtree() {
     // Use minimal dataset for faster testing
     let points = vec![Point::new_2d(0.0f64, 0.0), Point::new_2d(1.0, 1.0)];
 
-    let kdtree = GenericKDTree::new(&points).unwrap();
+    let kdtree = GenericKDTree::new(&points).expect("Operation failed");
     let euclidean = EuclideanMetric;
 
     let query = Point::new_2d(0.1, 0.1);
-    let neighbors = kdtree.k_nearest_neighbors(&query, 1, &euclidean).unwrap();
+    let neighbors = kdtree
+        .k_nearest_neighbors(&query, 1, &euclidean)
+        .expect("Operation failed");
 
     assert_eq!(neighbors.len(), 1);
     assert_eq!(neighbors[0].0, 0);
 }
 
 #[test]
-#[ignore = "timeout"]
 fn test_generic_distance_matrix() {
     // Use minimal dataset for faster testing
     let points = vec![Point::new_2d(0.0f32, 0.0f32), Point::new_2d(1.0, 0.0)];
 
     let euclidean = EuclideanMetric;
-    let matrix = GenericDistanceMatrix::compute(&points, &euclidean).unwrap();
+    let matrix = GenericDistanceMatrix::compute(&points, &euclidean).expect("Operation failed");
 
     assert_eq!(matrix.len(), 2);
     assert_eq!(matrix[0].len(), 2);
@@ -39,7 +39,6 @@ fn test_generic_distance_matrix() {
 }
 
 #[test]
-#[ignore = "timeout"]
 fn test_generic_kmeans() {
     let points = vec![
         Point::new_2d(0.0f64, 0.0),
@@ -52,7 +51,7 @@ fn test_generic_kmeans() {
         .with_max_iterations(2)
         .with_tolerance(0.5)
         .with_parallel(false);
-    let result = kmeans.fit(&points).unwrap();
+    let result = kmeans.fit(&points).expect("Operation failed");
 
     assert_eq!(result.centroids.len(), 2);
     assert_eq!(result.assignments.len(), 4);
@@ -73,35 +72,34 @@ fn test_generic_convex_hull() {
         Point::new_2d(0.5, 0.5), // Interior point
     ];
 
-    let hull = GenericConvexHull::graham_scan_2d(&points).unwrap();
+    let hull = GenericConvexHull::graham_scan_2d(&points).expect("Operation failed");
 
     // Should have 4 points (the square corners), interior point excluded
     assert_eq!(hull.len(), 4);
 }
 
 #[test]
-#[ignore = "timeout"]
 fn test_different_numeric_types() {
     // Test with f32 - using minimal dataset and single point
     let points_f32 = vec![Point::new_2d(0.0f32, 0.0f32)];
 
-    let kdtree_f32 = GenericKDTree::new(&points_f32).unwrap();
+    let kdtree_f32 = GenericKDTree::new(&points_f32).expect("Operation failed");
     let euclidean = EuclideanMetric;
     let query_f32 = Point::new_2d(0.0f32, 0.0f32);
     let neighbors_f32 = kdtree_f32
         .k_nearest_neighbors(&query_f32, 1, &euclidean)
-        .unwrap();
+        .expect("Operation failed");
 
     assert_eq!(neighbors_f32.len(), 1);
 
     // Test with f64 - using minimal dataset and single point
     let points_f64 = vec![Point::new_2d(0.0f64, 0.0f64)];
 
-    let kdtree_f64 = GenericKDTree::new(&points_f64).unwrap();
+    let kdtree_f64 = GenericKDTree::new(&points_f64).expect("Operation failed");
     let query_f64 = Point::new_2d(0.0f64, 0.0f64);
     let neighbors_f64 = kdtree_f64
         .k_nearest_neighbors(&query_f64, 1, &euclidean)
-        .unwrap();
+        .expect("Operation failed");
 
     assert_eq!(neighbors_f64.len(), 1);
 }
@@ -112,8 +110,9 @@ fn test_parallel_distance_matrix() {
     let points = vec![Point::new_2d(0.0f64, 0.0), Point::new_2d(1.0, 0.0)];
 
     let euclidean = EuclideanMetric;
-    let matrix_seq = GenericDistanceMatrix::compute(&points, &euclidean).unwrap();
-    let matrix_par = GenericDistanceMatrix::compute_parallel(&points, &euclidean).unwrap();
+    let matrix_seq = GenericDistanceMatrix::compute(&points, &euclidean).expect("Operation failed");
+    let matrix_par =
+        GenericDistanceMatrix::compute_parallel(&points, &euclidean).expect("Operation failed");
 
     // Results should be the same
     assert_eq!(matrix_seq.len(), matrix_par.len());
@@ -138,8 +137,8 @@ fn test_parallel_kmeans() {
         .with_tolerance(1.0)
         .with_parallel(false);
 
-    let result_seq = kmeans_seq.fit(&points).unwrap();
-    let result_par = kmeans_par.fit(&points).unwrap();
+    let result_seq = kmeans_seq.fit(&points).expect("Operation failed");
+    let result_par = kmeans_par.fit(&points).expect("Operation failed");
 
     assert_eq!(result_seq.centroids.len(), result_par.centroids.len());
     assert_eq!(result_seq.assignments.len(), result_par.assignments.len());

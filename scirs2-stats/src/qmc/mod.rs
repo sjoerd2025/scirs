@@ -529,7 +529,8 @@ impl HaltonSequence {
                             let value = Self::scrambled_radical_inverse_simd_ultra(
                                 index,
                                 base,
-                                self.permutations.as_ref().unwrap()[dim].as_slice(),
+                                self.permutations.as_ref().expect("Operation failed")[dim]
+                                    .as_slice(),
                             )?;
                             radical_inverse_buffer.push(value as f32);
                         }
@@ -566,7 +567,8 @@ impl HaltonSequence {
                             Self::scrambled_radical_inverse(
                                 index,
                                 base,
-                                self.permutations.as_ref().unwrap()[dim].as_slice(),
+                                self.permutations.as_ref().expect("Operation failed")[dim]
+                                    .as_slice(),
                             )?
                         } else {
                             Self::radical_inverse(index, base)?
@@ -636,7 +638,7 @@ impl HaltonSequence {
                 Self::scrambled_radical_inverse(
                     self.current_index,
                     base,
-                    self.permutations.as_ref().unwrap()[dim].as_slice(),
+                    self.permutations.as_ref().expect("Operation failed")[dim].as_slice(),
                 )?
             } else {
                 Self::radical_inverse(self.current_index, base)?

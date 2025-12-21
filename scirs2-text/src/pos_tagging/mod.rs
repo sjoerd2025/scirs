@@ -375,7 +375,9 @@ mod tests {
         let tokenizer = WhitespaceTokenizer::new();
         let texts = vec!["Hello world", "The quick brown fox"];
 
-        let results = tagger.tagtexts_parallel(&texts, &tokenizer).unwrap();
+        let results = tagger
+            .tagtexts_parallel(&texts, &tokenizer)
+            .expect("Operation failed");
         assert_eq!(results.len(), 2);
         assert!(!results[0].tokens.is_empty());
         assert!(!results[1].tokens.is_empty());

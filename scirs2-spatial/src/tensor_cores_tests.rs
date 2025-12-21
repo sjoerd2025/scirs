@@ -14,7 +14,7 @@ fn test_tensor_core_capabilities() {
     let capabilities = detect_tensor_core_capabilities();
     assert!(capabilities.is_ok());
 
-    let caps = capabilities.unwrap();
+    let caps = capabilities.expect("Operation failed");
     assert!(!caps.tensor_core_types.is_empty());
     assert!(!caps.supported_precisions.is_empty());
 }
@@ -24,7 +24,7 @@ fn test_tensor_core_distance_matrix_creation() {
     let result = TensorCoreDistanceMatrix::new();
     assert!(result.is_ok());
 
-    let matrix_computer = result.unwrap();
+    let matrix_computer = result.expect("Operation failed");
     assert_eq!(matrix_computer.precision_mode, PrecisionMode::Mixed16);
 }
 
@@ -33,19 +33,19 @@ fn test_tensor_core_clustering_creation() {
     let result = TensorCoreClustering::new(3);
     assert!(result.is_ok());
 
-    let clustering = result.unwrap();
+    let clustering = result.expect("Operation failed");
     assert_eq!(clustering._numclusters, 3);
 }
 
 #[tokio::test]
 async fn test_tensor_core_distance_computation() {
     let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
-    let mut matrix_computer = TensorCoreDistanceMatrix::new().unwrap();
+    let mut matrix_computer = TensorCoreDistanceMatrix::new().expect("Operation failed");
 
     let result = matrix_computer.compute_parallel(&points.view()).await;
     assert!(result.is_ok());
 
-    let distances = result.unwrap();
+    let distances = result.expect("Operation failed");
     assert_eq!(distances.shape(), &[3, 3]);
 
     // Check diagonal is zero
@@ -57,12 +57,12 @@ async fn test_tensor_core_distance_computation() {
 #[tokio::test]
 async fn test_tensor_core_clustering() {
     let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-    let mut clustering = TensorCoreClustering::new(2).unwrap();
+    let mut clustering = TensorCoreClustering::new(2).expect("Operation failed");
 
     let result = clustering.fit(&points.view()).await;
     assert!(result.is_ok());
 
-    let (centroids, assignments) = result.unwrap();
+    let (centroids, assignments) = result.expect("Operation failed");
     assert_eq!(centroids.shape(), &[2, 2]);
     assert_eq!(assignments.len(), 4);
 }
@@ -200,7 +200,7 @@ async fn test_recovery_action_selection() {
         .await;
     assert!(action.is_ok());
 
-    let recovery_action = action.unwrap();
+    let recovery_action = action.expect("Operation failed");
     assert!(matches!(
         recovery_action,
         RecoveryAction::IncreasePrecision
@@ -219,7 +219,7 @@ fn test_success_rate_update() {
         .success_rates
         .get(&RecoveryAction::IncreasePrecision);
     assert!(rate.is_some());
-    assert!(*rate.unwrap() > 0.5);
+    assert!(*rate.expect("Operation failed") > 0.5);
 
     // Test failed recovery
     recovery_system.update_success_rate(RecoveryAction::ReduceTileSize, false);
@@ -227,7 +227,7 @@ fn test_success_rate_update() {
         .success_rates
         .get(&RecoveryAction::ReduceTileSize);
     assert!(rate.is_some());
-    assert!(*rate.unwrap() < 0.5);
+    assert!(*rate.expect("Operation failed") < 0.5);
 }
 
 #[test]
@@ -313,15 +313,15 @@ fn test_advanced_tensor_core_distance_matrix_creation() {
     let result = AdvancedTensorCoreDistanceMatrix::new();
     assert!(result.is_ok());
 
-    let advanced_computer = result.unwrap();
+    let advanced_computer = result.expect("Operation failed");
     assert!(advanced_computer.dynamic_precision_enabled);
     assert!(advanced_computer.auto_recovery_enabled);
 }
 
 #[tokio::test]
-#[ignore]
+#[ignore = "Test failure - assertion failed: result.is_ok() at line 329"]
 async fn test_stability_monitoring_computation() {
-    let mut advanced_computer = AdvancedTensorCoreDistanceMatrix::new().unwrap();
+    let mut advanced_computer = AdvancedTensorCoreDistanceMatrix::new().expect("Operation failed");
     let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 
     let result = advanced_computer
@@ -329,17 +329,20 @@ async fn test_stability_monitoring_computation() {
         .await;
     assert!(result.is_ok());
 
-    let distances = result.unwrap();
+    let distances = result.expect("Operation failed");
     assert_eq!(distances.shape(), &[3, 3]);
 
     // Check that stability monitoring was performed
-    let monitor = advanced_computer.stability_monitor.lock().unwrap();
+    let monitor = advanced_computer
+        .stability_monitor
+        .lock()
+        .expect("Operation failed");
     assert!(!monitor.stability_history.is_empty());
 }
 
 #[tokio::test]
 async fn test_recovery_action_application() {
-    let mut advanced_computer = AdvancedTensorCoreDistanceMatrix::new().unwrap();
+    let mut advanced_computer = AdvancedTensorCoreDistanceMatrix::new().expect("Operation failed");
     let original_precision = advanced_computer.base_computer.precision_mode;
 
     // Test precision increase recovery
@@ -370,7 +373,7 @@ async fn test_recovery_action_application() {
 
 #[test]
 fn test_result_accuracy_estimation() {
-    let advanced_computer = AdvancedTensorCoreDistanceMatrix::new().unwrap();
+    let advanced_computer = AdvancedTensorCoreDistanceMatrix::new().expect("Operation failed");
 
     // Test with valid data
     let valid_result = array![[0.0, 1.0], [1.0, 0.0]];

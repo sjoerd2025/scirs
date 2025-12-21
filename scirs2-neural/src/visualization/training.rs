@@ -313,7 +313,7 @@ impl<F: Float + Debug + 'static + scirs2_core::numeric::FromPrimitive + Send + S
             // Find point in current bucket that maximizes triangle area
             let mut max_area = 0.0f64;
             let mut selected_idx = bucket_start;
-            let prev_epoch = downsampled.last().unwrap().epoch as f64;
+            let prev_epoch = downsampled.last().expect("Operation failed").epoch as f64;
             for i in bucket_start..bucket_end {
                 let curr_epoch = self.metrics_history[i].epoch as f64;
                 // Calculate triangle area (simplified - using epoch as primary metric)

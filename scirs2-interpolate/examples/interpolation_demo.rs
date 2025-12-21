@@ -56,7 +56,7 @@ fn demo_1d_interpolation() {
         Interp1DMethod::Nearest,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let interp_linear = Interp1d::new(
         &x.view(),
@@ -64,7 +64,7 @@ fn demo_1d_interpolation() {
         Interp1DMethod::Linear,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let interp_cubic = Interp1d::new(
         &x.view(),
@@ -72,7 +72,7 @@ fn demo_1d_interpolation() {
         Interp1DMethod::Cubic,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Points to evaluate
     let x_new = array![0.5, 1.5, 2.2, 3.7];
@@ -85,9 +85,9 @@ fn demo_1d_interpolation() {
     let mut y_cubic = Vec::with_capacity(x_new.len());
 
     for &x in x_new.iter() {
-        y_nearest.push(interp_nearest.evaluate(x).unwrap());
-        y_linear.push(interp_linear.evaluate(x).unwrap());
-        y_cubic.push(interp_cubic.evaluate(x).unwrap());
+        y_nearest.push(interp_nearest.evaluate(x).expect("Operation failed"));
+        y_linear.push(interp_linear.evaluate(x).expect("Operation failed"));
+        y_cubic.push(interp_cubic.evaluate(x).expect("Operation failed"));
     }
 
     println!("  x   | Nearest |  Linear  |   Cubic  | Actual (x²)");
@@ -106,9 +106,12 @@ fn demo_1d_interpolation() {
     // Direct function demonstration
     println!("\nDirect function calls:");
     let x_direct = array![2.5];
-    let y_direct_nearest = nearest_interpolate(&x.view(), &y.view(), &x_direct.view()).unwrap();
-    let y_direct_linear = linear_interpolate(&x.view(), &y.view(), &x_direct.view()).unwrap();
-    let y_direct_cubic = cubic_interpolate(&x.view(), &y.view(), &x_direct.view()).unwrap();
+    let y_direct_nearest =
+        nearest_interpolate(&x.view(), &y.view(), &x_direct.view()).expect("Operation failed");
+    let y_direct_linear =
+        linear_interpolate(&x.view(), &y.view(), &x_direct.view()).expect("Operation failed");
+    let y_direct_cubic =
+        cubic_interpolate(&x.view(), &y.view(), &x_direct.view()).expect("Operation failed");
 
     println!(
         "  x = 2.5  | Nearest: {:.2} | Linear: {:.2} | Cubic: {:.2} | Actual: {:.2}",
@@ -135,7 +138,7 @@ fn demo_spline_interpolation() {
     println!();
 
     // Create a cubic spline (with natural boundary conditions)
-    let cs = make_interp_spline(&x.view(), &y.view(), "natural", None).unwrap();
+    let cs = make_interp_spline(&x.view(), &y.view(), "natural", None).expect("Operation failed");
 
     // Evaluate the spline at new points
     let x_new = array![1.0, 2.5, 4.5, 5.0];
@@ -143,7 +146,7 @@ fn demo_spline_interpolation() {
     // For CubicSpline, evaluate each point individually
     let mut y_spline = Vec::with_capacity(x_new.len());
     for &x in x_new.iter() {
-        y_spline.push(cs.evaluate(x).unwrap());
+        y_spline.push(cs.evaluate(x).expect("Operation failed"));
     }
 
     // For demonstration purposes, we'll calculate derivatives at each point
@@ -151,7 +154,7 @@ fn demo_spline_interpolation() {
     let mut y_second_derivatives = Vec::with_capacity(x_new.len());
 
     for &x in x_new.iter() {
-        y_derivatives.push(cs.derivative(x).unwrap());
+        y_derivatives.push(cs.derivative(x).expect("Operation failed"));
 
         // For second derivative, we'd need another method or to calculate it numerically
         // This is just a placeholder
@@ -207,7 +210,7 @@ fn demo_nd_interpolation() {
         InterpNDMethod::Linear,
         ExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Test points for interpolation
     let test_points = Array2::from_shape_vec(
@@ -218,10 +221,12 @@ fn demo_nd_interpolation() {
             1.0, 1.0, // On grid point
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Perform interpolation
-    let results = interp.__call__(&test_points.view()).unwrap();
+    let results = interp
+        .__call__(&test_points.view())
+        .expect("Operation failed");
 
     println!("\nInterpolation results:");
     for i in 0..test_points.shape()[0] {
@@ -241,7 +246,7 @@ fn demo_nd_interpolation() {
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Create values at those points (z = x^2 + y^2)
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 0.5]);
@@ -264,13 +269,16 @@ fn demo_nd_interpolation() {
         ExtrapolateMode::Extrapolate,
         Some(ScatteredInterpolatorParams::IDW { power: 2.0 }),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Test points
-    let test_points = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
+    let test_points =
+        Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).expect("Operation failed");
 
     // Perform interpolation
-    let results = interp_idw.__call__(&test_points.view()).unwrap();
+    let results = interp_idw
+        .__call__(&test_points.view())
+        .expect("Operation failed");
 
     println!("\nIDW Interpolation results:");
     for i in 0..test_points.shape()[0] {

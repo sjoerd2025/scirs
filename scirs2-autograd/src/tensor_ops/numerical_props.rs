@@ -66,14 +66,14 @@ impl<F: Float> Op<F> for RankOp<F> {
             // Default tolerance: max(m, n) * eps * max(singular_values)
             let max_sv = singular_values.first().copied().unwrap_or(F::zero());
             let eps = F::epsilon();
-            let max_dim = F::from(m.max(n)).unwrap();
+            let max_dim = F::from(m.max(n)).expect("Operation failed");
             max_dim * eps * max_sv
         };
 
         // Count non-zero singular values above tolerance
         let rank = singular_values.iter().filter(|&&sv| sv > tol).count();
 
-        let rank_value = F::from(rank).unwrap();
+        let rank_value = F::from(rank).expect("Failed to convert to float");
         let result = scirs2_core::ndarray::arr0(rank_value);
 
         ctx.append_output(result.into_dyn());
@@ -326,14 +326,14 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for CondOp {
 
         // For now, use a scaled identity matrix as a rough approximation
         // This is not mathematically accurate but provides a reasonable gradient direction
-        let x_val = x.eval(g).unwrap();
+        let x_val = x.eval(g).expect("Operation failed");
         let shape = x_val.shape();
 
         if shape.len() == 2 && shape[0] == shape[1] {
             // Square matrix - use scaled identity
             let n = shape[0];
             let eye = scirs2_core::ndarray::Array2::<F>::eye(n);
-            let scaled_eye = eye * F::from(0.01).unwrap(); // Small scaling factor
+            let scaled_eye = eye * F::from(0.01).expect("Failed to convert constant to float"); // Small scaling factor
             let grad_tensor = crate::tensor_ops::convert_to_tensor(scaled_eye, g);
             ctx.append_input_grad(0, Some(grad_tensor));
         } else {
@@ -481,7 +481,10 @@ impl<F: Float> Op<F> for LogDetOp {
         // Gradient of log|det(X)| w.r.t. X is (X^-T)
         match (gy.eval(g), x.eval(g)) {
             (Ok(gy_val), Ok(x_val)) => {
-                let x_2d = x_val.view().into_dimensionality::<Ix2>().unwrap();
+                let x_2d = x_val
+                    .view()
+                    .into_dimensionality::<Ix2>()
+                    .expect("Operation failed");
 
                 // Compute inverse transpose using Gauss-Jordan elimination
                 let inv_t = match Self::matrix_inverse_transpose(&x_2d.to_owned()) {
@@ -694,7 +697,10 @@ impl<F: Float> Op<F> for SLogDetExtractOp {
         }
 
         let n = shape[0];
-        let matrix = input.view().into_dimensionality::<Ix2>().unwrap();
+        let matrix = input
+            .view()
+            .into_dimensionality::<Ix2>()
+            .expect("Operation failed");
 
         let mut u = matrix.to_owned();
         let mut sign = F::one();
@@ -769,7 +775,7 @@ mod tests {
             // Test with a rank-2 matrix
             let a = convert_to_tensor(array![[1.0_f32, 2.0], [3.0, 4.0]], g);
             let r = matrix_rank(&a, None);
-            let r_val = r.eval(g).unwrap();
+            let r_val = r.eval(g).expect("Operation failed");
             assert_eq!(r_val[[]], 2.0);
 
             // Test with a rank-deficient matrix
@@ -785,7 +791,7 @@ mod tests {
             // Well-conditioned matrix
             let a = convert_to_tensor(array![[2.0_f32, 1.0], [1.0, 2.0]], g);
             let c = cond_2(&a);
-            let c_val = c.eval(g).unwrap();
+            let c_val = c.eval(g).expect("Operation failed");
             // Condition number should be finite and reasonable
             assert!(c_val[[]] > 0.0 && c_val[[]] < 100.0);
 
@@ -795,9 +801,9 @@ mod tests {
             let c_fro = cond_fro(&a);
 
             // All should evaluate without error
-            c1.eval(g).unwrap();
-            c_inf.eval(g).unwrap();
-            c_fro.eval(g).unwrap();
+            c1.eval(g).expect("Operation failed");
+            c_inf.eval(g).expect("Operation failed");
+            c_fro.eval(g).expect("Operation failed");
         });
     }
 
@@ -807,7 +813,7 @@ mod tests {
             // Matrix with known determinant
             let a = convert_to_tensor(array![[2.0_f64, 0.0], [0.0, 3.0]], g);
             let ld = logdet(&a);
-            let ld_val = ld.eval(g).unwrap();
+            let ld_val = ld.eval(g).expect("Operation failed");
 
             // det(A) = 6, so log(det(A)) = log(6) ≈ 1.79
             assert!((ld_val[[]] - 6.0_f64.ln()).abs() < 1e-6);
@@ -815,7 +821,7 @@ mod tests {
             // Test singular matrix
             let b = convert_to_tensor(array![[1.0_f64, 2.0], [2.0, 4.0]], g);
             let ld2 = logdet(&b);
-            let ld2_val = ld2.eval(g).unwrap();
+            let ld2_val = ld2.eval(g).expect("Operation failed");
             assert!(ld2_val[[]] == f64::NEG_INFINITY);
         });
     }
@@ -826,8 +832,8 @@ mod tests {
             // Positive determinant
             let a = convert_to_tensor(array![[2.0_f64, 1.0], [1.0, 3.0]], g);
             let (sign, ld) = slogdet(&a);
-            let sign_val = sign.eval(g).unwrap();
-            let ld_val = ld.eval(g).unwrap();
+            let sign_val = sign.eval(g).expect("Operation failed");
+            let ld_val = ld.eval(g).expect("Operation failed");
 
             // det(A) = 5, positive
             assert_eq!(sign_val[[]], 1.0);
@@ -836,7 +842,7 @@ mod tests {
             // Negative determinant
             let b = convert_to_tensor(array![[0.0_f64, 1.0], [1.0, 0.0]], g);
             let (sign2, _ld2) = slogdet(&b);
-            let sign2_val = sign2.eval(g).unwrap();
+            let sign2_val = sign2.eval(g).expect("Operation failed");
 
             // det(B) = -1 (but our simplified implementation may not handle all cases)
             // For now, just check it computed without error

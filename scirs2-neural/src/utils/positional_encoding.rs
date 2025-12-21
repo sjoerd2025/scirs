@@ -645,7 +645,7 @@ mod tests {
         let pe = SinusoidalPositionalEncoding::<f32>::new(8, 20);
 
         let input = Array3::zeros((2, 10, 8)); // batch=2, seq=10, d_model=8
-        let output = pe.apply(&input).unwrap();
+        let output = pe.apply(&input).expect("Operation failed");
 
         assert_eq!(output.shape(), input.shape());
 
@@ -695,7 +695,7 @@ mod tests {
         let pe = RotaryPositionalEncoding::<f64>::default_base(8, 20);
 
         let input = Array3::ones((1, 5, 8));
-        let rotated = pe.rotate(&input, 0).unwrap();
+        let rotated = pe.rotate(&input, 0).expect("Operation failed");
 
         assert_eq!(rotated.shape(), input.shape());
 
@@ -725,8 +725,8 @@ mod tests {
 
         let input = Array3::ones((1, 10, 8));
 
-        let rotated_0 = pe.rotate(&input, 0).unwrap();
-        let rotated_5 = pe.rotate(&input, 5).unwrap();
+        let rotated_0 = pe.rotate(&input, 0).expect("Operation failed");
+        let rotated_5 = pe.rotate(&input, 5).expect("Operation failed");
 
         // Different offsets should give different results
         let mut different = false;
@@ -766,11 +766,11 @@ mod tests {
         let mut rng = scirs2_core::random::rngs::StdRng::seed_from_u64(42);
         let pe = RelativePositionalEncoding::<f32>::new(8, 20, &mut rng);
 
-        let bias = pe.get_attention_bias(10, 10).unwrap();
+        let bias = pe.get_attention_bias(10, 10).expect("Operation failed");
         assert_eq!(bias.shape(), &[10, 10, 8]);
 
         // Diagonal should have same values (relative position 0)
-        let rel_0 = pe.get_relative_embedding(0).unwrap();
+        let rel_0 = pe.get_relative_embedding(0).expect("Operation failed");
         for i in 0..10 {
             for d in 0..8 {
                 assert!((bias[[i, i, d]] - rel_0[[d]]).abs() < 1e-6);

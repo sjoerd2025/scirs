@@ -252,7 +252,7 @@ impl ExternalClient {
             }
         }
 
-        Err(last_error.unwrap())
+        Err(last_error.expect("Operation failed"))
     }
 
     fn parse_cached_data(&self, data: &[u8]) -> Result<Dataset> {
@@ -688,7 +688,7 @@ mod tests {
 
     #[test]
     fn test_uci_repository_list_datasets() {
-        let datasets = list_uci_datasets().unwrap();
+        let datasets = list_uci_datasets().expect("Operation failed");
         assert!(!datasets.is_empty());
         assert!(datasets.contains(&"wine"));
         assert!(datasets.contains(&"adult"));
@@ -707,8 +707,10 @@ mod tests {
 5.0,6.0,0
 "#;
 
-        let client = ExternalClient::new().unwrap();
-        let dataset = client.parse_arff_data(arff_content.as_bytes()).unwrap();
+        let client = ExternalClient::new().expect("Operation failed");
+        let dataset = client
+            .parse_arff_data(arff_content.as_bytes())
+            .expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 3);
         assert_eq!(dataset.n_features(), 2);

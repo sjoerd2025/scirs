@@ -29,7 +29,7 @@ use scirs2_core::ndarray::Array1;
 /// use scirs2_signal::interpolate::basic::linear_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
-/// let result = linear_interpolate(&signal).unwrap();
+/// let result = linear_interpolate(&signal).expect("Operation failed");
 /// // Result will be approximately [1.0, 2.0, 3.0, 4.0, 5.0]
 /// ```
 #[allow(dead_code)]
@@ -140,7 +140,7 @@ pub fn linear_interpolate(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 /// use scirs2_signal::interpolate::basic::nearest_neighbor_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
-/// let result = nearest_neighbor_interpolate(&signal).unwrap();
+/// let result = nearest_neighbor_interpolate(&signal).expect("Operation failed");
 /// // Result will be [1.0, 1.0, 3.0, 3.0, 5.0] or [1.0, 3.0, 3.0, 5.0, 5.0]
 /// // depending on which valid point is closer
 /// ```
@@ -192,14 +192,14 @@ mod tests {
     #[test]
     fn test_linear_interpolate_no_missing() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = linear_interpolate(&signal).unwrap();
+        let result = linear_interpolate(&signal).expect("Operation failed");
         assert_eq!(result, signal);
     }
 
     #[test]
     fn test_linear_interpolate_simple() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
-        let result = linear_interpolate(&signal).unwrap();
+        let result = linear_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 1.0);
         assert_eq!(result[1], 2.0);
         assert_eq!(result[2], 3.0);
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn test_linear_interpolate_multiple_missing() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
-        let result = linear_interpolate(&signal).unwrap();
+        let result = linear_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 1.0);
         assert!(((result[1] - 2.0) as f64).abs() < 1e-10);
         assert!(((result[2] - 3.0) as f64).abs() < 1e-10);
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn test_linear_interpolate_boundary_missing() {
         let signal = Array1::from_vec(vec![f64::NAN, 2.0, 3.0, f64::NAN]);
-        let result = linear_interpolate(&signal).unwrap();
+        let result = linear_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 2.0); // Extrapolated from first valid point
         assert_eq!(result[1], 2.0);
         assert_eq!(result[2], 3.0);
@@ -228,7 +228,7 @@ mod tests {
     #[test]
     fn test_linear_interpolate_single_valid() {
         let signal = Array1::from_vec(vec![f64::NAN, 2.0, f64::NAN]);
-        let result = linear_interpolate(&signal).unwrap();
+        let result = linear_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 2.0);
         assert_eq!(result[1], 2.0);
         assert_eq!(result[2], 2.0);
@@ -244,14 +244,14 @@ mod tests {
     #[test]
     fn test_nearest_neighbor_interpolate_no_missing() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let result = nearest_neighbor_interpolate(&signal).unwrap();
+        let result = nearest_neighbor_interpolate(&signal).expect("Operation failed");
         assert_eq!(result, signal);
     }
 
     #[test]
     fn test_nearest_neighbor_interpolate_simple() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 5.0]);
-        let result = nearest_neighbor_interpolate(&signal).unwrap();
+        let result = nearest_neighbor_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 1.0);
         // Middle point should be filled with nearest neighbor (either 1.0 or 5.0)
         assert!(result[1] == 1.0 || result[1] == 5.0);
@@ -261,7 +261,7 @@ mod tests {
     #[test]
     fn test_nearest_neighbor_interpolate_multiple_missing() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, f64::NAN, 10.0]);
-        let result = nearest_neighbor_interpolate(&signal).unwrap();
+        let result = nearest_neighbor_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 1.0);
         // Missing values should be filled with nearest neighbors
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn test_nearest_neighbor_interpolate_boundary_missing() {
         let signal = Array1::from_vec(vec![f64::NAN, 2.0, 3.0, f64::NAN]);
-        let result = nearest_neighbor_interpolate(&signal).unwrap();
+        let result = nearest_neighbor_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[1], 2.0);
         assert_eq!(result[2], 3.0);
         // Boundary missing values should be filled with nearest valid values
@@ -289,20 +289,20 @@ mod tests {
     #[test]
     fn test_empty_signal() {
         let signal = Array1::from_vec(vec![]);
-        let result = linear_interpolate(&signal).unwrap();
+        let result = linear_interpolate(&signal).expect("Operation failed");
         assert_eq!(result.len(), 0);
 
-        let result = nearest_neighbor_interpolate(&signal).unwrap();
+        let result = nearest_neighbor_interpolate(&signal).expect("Operation failed");
         assert_eq!(result.len(), 0);
     }
 
     #[test]
     fn test_single_element_signal() {
         let signal = Array1::from_vec(vec![5.0]);
-        let result = linear_interpolate(&signal).unwrap();
+        let result = linear_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 5.0);
 
-        let result = nearest_neighbor_interpolate(&signal).unwrap();
+        let result = nearest_neighbor_interpolate(&signal).expect("Operation failed");
         assert_eq!(result[0], 5.0);
     }
 

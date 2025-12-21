@@ -954,11 +954,11 @@ mod tests {
         // Create a quantized matrix-free operator
         let op =
             QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap();
+                .expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0f32, 2.0, 3.0];
-        let y = op.apply(&x.view()).unwrap();
+        let y = op.apply(&x.view()).expect("Operation failed");
 
         // Compute expected result with regular matrix multiplication
         let expected = matrix.dot(&x);
@@ -983,11 +983,11 @@ mod tests {
             8,
             QuantizationMethod::Symmetric,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0f32, 2.0, 3.0];
-        let y = op.apply(&x.view()).unwrap();
+        let y = op.apply(&x.view()).expect("Operation failed");
 
         // Expected result would be:
         // [ block1[0,0]*x[0] + block1[0,1]*x[1], block1[1,0]*x[0] + block1[1,1]*x[1], block2[0,0]*x[2] ]
@@ -1018,11 +1018,11 @@ mod tests {
             8,
             QuantizationMethod::Symmetric,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0f32, 2.0, 3.0];
-        let y = op.apply(&x.view()).unwrap();
+        let y = op.apply(&x.view()).expect("Operation failed");
 
         // Expected result:
         // [ 1.0*1.0 + 0.0*2.0 + 2.0*3.0, 0.0*1.0 + 3.0*2.0 + 0.0*3.0, 4.0*1.0 + 0.0*2.0 + 5.0*3.0 ]
@@ -1053,11 +1053,12 @@ mod tests {
             (-1, sub_diag.view()),
         ];
 
-        let op = QuantizedMatrixFreeOp::banded(3, bands, 8, QuantizationMethod::Symmetric).unwrap();
+        let op = QuantizedMatrixFreeOp::banded(3, bands, 8, QuantizationMethod::Symmetric)
+            .expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0f32, 2.0, 3.0];
-        let y = op.apply(&x.view()).unwrap();
+        let y = op.apply(&x.view()).expect("Operation failed");
 
         // Expected result:
         // [ 2.0*1.0 + 1.0*2.0, 1.0*1.0 + 3.0*2.0 + 1.0*3.0, 1.0*2.0 + 4.0*3.0 ]
@@ -1079,7 +1080,7 @@ mod tests {
         // Create a symmetric quantized matrix-free operator
         let quantized_op =
             QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap()
+                .expect("Operation failed")
                 .symmetric()
                 .positive_definite();
 
@@ -1097,8 +1098,8 @@ mod tests {
 
         // Apply to a vector and check results
         let x = array![1.0f32, 2.0];
-        let y_quantized = quantized_op.apply(&x.view()).unwrap();
-        let y_linear = linear_op.apply(&x.view()).unwrap();
+        let y_quantized = quantized_op.apply(&x.view()).expect("Operation failed");
+        let y_linear = linear_op.apply(&x.view()).expect("Operation failed");
 
         assert_eq!(y_quantized.len(), y_linear.len());
         for i in 0..y_quantized.len() {

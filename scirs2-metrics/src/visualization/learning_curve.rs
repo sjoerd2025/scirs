@@ -474,7 +474,7 @@ where
         ));
     }
 
-    let max_size = train_sizes.iter().max().unwrap();
+    let max_size = train_sizes.iter().max().expect("Operation failed");
     if *max_size > x.nrows() {
         return Err(MetricsError::InvalidInput(format!(
             "Maximum training size ({}) exceeds available samples ({})",
@@ -611,7 +611,7 @@ where
             let correct = y_true
                 .iter()
                 .zip(ypred.iter())
-                .filter(|(t, p)| (*t - *p).abs() < T::from(0.5).unwrap())
+                .filter(|(t, p)| (*t - *p).abs() < T::from(0.5).expect("Operation failed"))
                 .count();
             Ok(correct as f64 / y_true.len() as f64)
         }
@@ -622,7 +622,7 @@ where
                 .zip(ypred.iter())
                 .map(|(t, p)| (*t - *p) * (*t - *p))
                 .fold(T::zero(), |acc, x| acc + x)
-                / T::from(y_true.len()).unwrap();
+                / T::from(y_true.len()).expect("Operation failed");
             Ok(mse.to_f64().unwrap_or(0.0))
         }
         "mae" | "mean_absolute_error" => {
@@ -632,13 +632,13 @@ where
                 .zip(ypred.iter())
                 .map(|(t, p)| (*t - *p).abs())
                 .fold(T::zero(), |acc, x| acc + x)
-                / T::from(y_true.len()).unwrap();
+                / T::from(y_true.len()).expect("Operation failed");
             Ok(mae.to_f64().unwrap_or(0.0))
         }
         "r2" | "r2_score" => {
             // R² score
             let mean_true = y_true.iter().cloned().fold(T::zero(), |acc, x| acc + x)
-                / T::from(y_true.len()).unwrap();
+                / T::from(y_true.len()).expect("Operation failed");
 
             let ss_tot = y_true
                 .iter()
@@ -665,7 +665,7 @@ where
                 .zip(ypred.iter())
                 .map(|(t, p)| (*t - *p) * (*t - *p))
                 .fold(T::zero(), |acc, x| acc + x)
-                / T::from(y_true.len()).unwrap();
+                / T::from(y_true.len()).expect("Operation failed");
             Ok(mse.to_f64().unwrap_or(0.0))
         }
     }

@@ -511,7 +511,7 @@ mod tests {
         // Analyze with 8-bit symmetric quantization
         let report =
             analyze_quantization_stability(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap();
+                .expect("Operation failed");
 
         // Basic checks
         assert!(report.is_stable);
@@ -535,7 +535,7 @@ mod tests {
         // Analyze with symmetric quantization (should suggest asymmetric)
         let report =
             analyze_quantization_stability(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap();
+                .expect("Operation failed");
 
         // Ensure there's at least one suggestion
         assert!(!report.suggestions.is_empty());
@@ -547,7 +547,8 @@ mod tests {
 
         // Analyze with asymmetric quantization (should be better)
         let report_asymm =
-            analyze_quantization_stability(&matrix.view(), 8, QuantizationMethod::Affine).unwrap();
+            analyze_quantization_stability(&matrix.view(), 8, QuantizationMethod::Affine)
+                .expect("Operation failed");
 
         // Should have better SQNR
         assert!(report_asymm.sqnr_db > report.sqnr_db);
@@ -564,7 +565,7 @@ mod tests {
             &symmetricmatrix.view(),
             Some(25.0), // Lower target SQNR for the test
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // For symmetric data, should recommend symmetric quantization
         assert!(
@@ -580,7 +581,7 @@ mod tests {
             &asymmetricmatrix.view(),
             Some(25.0), // Lower target SQNR for the test
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // For asymmetric data, should recommend asymmetric quantization or float16
         assert!(
@@ -596,7 +597,7 @@ mod tests {
             &variable_columnsmatrix.view(),
             Some(25.0), // Lower target SQNR for the test
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Should recommend per-channel quantization or float16
         assert!(

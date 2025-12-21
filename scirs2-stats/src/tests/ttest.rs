@@ -59,15 +59,15 @@ pub struct TTestResult<F: Float + std::fmt::Display> {
 /// let null_mean = 5.0;
 ///
 /// // Test if the sample mean is significantly different from 5.0 (two-sided)
-/// let two_sided = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit").unwrap();
+/// let two_sided = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit").expect("Operation failed");
 /// println!("Two-sided: t = {}, p = {}", two_sided.statistic, two_sided.pvalue);
 ///
 /// // Test if the sample mean is significantly greater than 5.0 (one-sided)
-/// let greater = ttest_1samp(&data.view(), null_mean, Alternative::Greater, "omit").unwrap();
+/// let greater = ttest_1samp(&data.view(), null_mean, Alternative::Greater, "omit").expect("Operation failed");
 /// println!("Greater: t = {}, p = {}", greater.statistic, greater.pvalue);
 ///
 /// // Test if the sample mean is significantly less than 5.0 (one-sided)
-/// let less = ttest_1samp(&data.view(), null_mean, Alternative::Less, "omit").unwrap();
+/// let less = ttest_1samp(&data.view(), null_mean, Alternative::Less, "omit").expect("Operation failed");
 /// println!("Less: t = {}, p = {}", less.statistic, less.pvalue);
 /// ```
 #[allow(dead_code)]
@@ -125,14 +125,14 @@ where
     let sample_std = std(&data.view(), 1, None)?;
 
     // Calculate the standard error of the mean
-    let n = F::from(data.len()).unwrap();
+    let n = F::from(data.len()).expect("Operation failed");
     let se = sample_std / n.sqrt();
 
     // Calculate the t-statistic
     let t_stat = (sample_mean - popmean) / se;
 
     // Calculate degrees of freedom (n - 1)
-    let df = F::from(data.len() - 1).unwrap();
+    let df = F::from(data.len() - 1).expect("Operation failed");
 
     // Create a Student's t-distribution with df degrees of freedom
     let t_dist = distributions::t(df, F::zero(), F::one())?;
@@ -141,7 +141,8 @@ where
     let p_value = match alternative {
         Alternative::TwoSided => {
             let abs_t = t_stat.abs();
-            F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
+            F::from(2.0).expect("Failed to convert constant to float")
+                * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
         Alternative::Greater => F::one() - t_dist.cdf(t_stat),
@@ -183,11 +184,11 @@ where
 /// let group2 = array![4.8, 5.2, 5.1, 4.7, 4.9];
 ///
 /// // Test if the means are different (two-sided), assuming equal variances
-/// let result = ttest_ind(&group1.view(), &group2.view(), true, Alternative::TwoSided, "omit").unwrap();
+/// let result = ttest_ind(&group1.view(), &group2.view(), true, Alternative::TwoSided, "omit").expect("Operation failed");
 /// println!("t = {}, p = {}, df = {}", result.statistic, result.pvalue, result.df);
 ///
 /// // Test if group1 mean is greater than group2 mean (one-sided), without assuming equal variances (Welch's t-test)
-/// let result = ttest_ind(&group1.view(), &group2.view(), false, Alternative::Greater, "omit").unwrap();
+/// let result = ttest_ind(&group1.view(), &group2.view(), false, Alternative::Greater, "omit").expect("Operation failed");
 /// println!("Welch's t = {}, p = {}, df = {}", result.statistic, result.pvalue, result.df);
 /// ```
 #[allow(dead_code)]
@@ -245,8 +246,8 @@ where
     let mean_b = mean(&data_b.view())?;
 
     // Calculate sample sizes
-    let n_a = F::from(data_a.len()).unwrap();
-    let n_b = F::from(data_b.len()).unwrap();
+    let n_a = F::from(data_a.len()).expect("Operation failed");
+    let n_b = F::from(data_b.len()).expect("Operation failed");
 
     // Calculate sample standard deviations (with ddof=1 for unbiased estimator)
     let std_a = std(&data_a.view(), 1, None)?;
@@ -263,7 +264,7 @@ where
     if equal_var {
         // Pooled variance calculation (assuming equal variances)
         let pooled_var = ((n_a - F::one()) * variance_a + (n_b - F::one()) * variance_b)
-            / (n_a + n_b - F::from(2.0).unwrap());
+            / (n_a + n_b - F::from(2.0).expect("Failed to convert constant to float"));
 
         // Standard error calculation with pooled variance
         let se = (pooled_var * (F::one() / n_a + F::one() / n_b)).sqrt();
@@ -272,7 +273,7 @@ where
         t_stat = (mean_a - mean_b) / se;
 
         // Degrees of freedom (n_a + n_b - 2)
-        df = n_a + n_b - F::from(2.0).unwrap();
+        df = n_a + n_b - F::from(2.0).expect("Failed to convert constant to float");
 
         test_description = "Student's t-test".to_string();
     } else {
@@ -303,7 +304,8 @@ where
     let p_value = match alternative {
         Alternative::TwoSided => {
             let abs_t = t_stat.abs();
-            F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
+            F::from(2.0).expect("Failed to convert constant to float")
+                * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
         Alternative::Greater => F::one() - t_dist.cdf(t_stat),
@@ -354,11 +356,11 @@ where
 /// let after = array![67.2, 68.5, 66.1, 70.3, 68.7];
 ///
 /// // Test if there's a significant difference between paired measurements (two-sided)
-/// let result = ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "omit").unwrap();
+/// let result = ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "omit").expect("Operation failed");
 /// println!("Paired t-test: t = {}, p = {}", result.statistic, result.pvalue);
 ///
 /// // Test if before values are greater than after values (one-sided)
-/// let result = ttest_rel(&before.view(), &after.view(), Alternative::Greater, "omit").unwrap();
+/// let result = ttest_rel(&before.view(), &after.view(), Alternative::Greater, "omit").expect("Operation failed");
 /// println!("One-sided (before > after): t = {}, p = {}", result.statistic, result.pvalue);
 /// ```
 #[allow(dead_code)]
@@ -452,13 +454,13 @@ where
     let valid_b: Vec<F> = b.iter().filter(|&&x| !x.is_nan()).copied().collect();
 
     let mean_a = if !valid_a.is_empty() {
-        valid_a.iter().cloned().sum::<F>() / F::from(valid_a.len()).unwrap()
+        valid_a.iter().cloned().sum::<F>() / F::from(valid_a.len()).expect("Operation failed")
     } else {
         F::nan()
     };
 
     let mean_b = if !valid_b.is_empty() {
-        valid_b.iter().cloned().sum::<F>() / F::from(valid_b.len()).unwrap()
+        valid_b.iter().cloned().sum::<F>() / F::from(valid_b.len()).expect("Operation failed")
     } else {
         F::nan()
     };
@@ -512,7 +514,7 @@ where
 /// let n2 = 5;
 ///
 /// // Calculate t-test from statistics
-/// let result = ttest_ind_from_stats(mean1, std1, n1, mean2, std2, n2, true, Alternative::TwoSided).unwrap();
+/// let result = ttest_ind_from_stats(mean1, std1, n1, mean2, std2, n2, true, Alternative::TwoSided).expect("Operation failed");
 /// println!("t = {}, p = {}, df = {}", result.statistic, result.pvalue, result.df);
 /// ```
 #[allow(clippy::too_many_arguments)]
@@ -550,8 +552,8 @@ where
     }
 
     // Calculate sample sizes as Float
-    let n1 = F::from(nobs1).unwrap();
-    let n2 = F::from(nobs2).unwrap();
+    let n1 = F::from(nobs1).expect("Failed to convert to float");
+    let n2 = F::from(nobs2).expect("Failed to convert to float");
 
     // Calculate t-statistic and degrees of freedom
     let t_stat: F;
@@ -564,7 +566,7 @@ where
     if equal_var {
         // Pooled variance calculation (assuming equal variances)
         let pooled_var = ((n1 - F::one()) * variance1 + (n2 - F::one()) * variance2)
-            / (n1 + n2 - F::from(2.0).unwrap());
+            / (n1 + n2 - F::from(2.0).expect("Failed to convert constant to float"));
 
         // Standard error calculation with pooled variance
         let se = (pooled_var * (F::one() / n1 + F::one() / n2)).sqrt();
@@ -573,7 +575,7 @@ where
         t_stat = (mean1 - mean2) / se;
 
         // Degrees of freedom (n1 + n2 - 2)
-        df = n1 + n2 - F::from(2.0).unwrap();
+        df = n1 + n2 - F::from(2.0).expect("Failed to convert constant to float");
 
         test_description = "Student's t-test".to_string();
     } else {
@@ -604,7 +606,8 @@ where
     let p_value = match alternative {
         Alternative::TwoSided => {
             let abs_t = t_stat.abs();
-            F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
+            F::from(2.0).expect("Failed to convert constant to float")
+                * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
         Alternative::Greater => F::one() - t_dist.cdf(t_stat),
@@ -634,11 +637,11 @@ mod tests {
     // Helper function to generate an array with NaN values
     fn array_with_nan<F: Float + Copy>() -> Array1<F> {
         let mut data = array![
-            F::from(5.1).unwrap(),
-            F::from(4.9).unwrap(),
-            F::from(6.2).unwrap(),
-            F::from(5.7).unwrap(),
-            F::from(5.5).unwrap()
+            F::from(5.1).expect("Failed to convert constant to float"),
+            F::from(4.9).expect("Failed to convert constant to float"),
+            F::from(6.2).expect("Failed to convert constant to float"),
+            F::from(5.7).expect("Failed to convert constant to float"),
+            F::from(5.5).expect("Failed to convert constant to float")
         ];
         data[2] = F::nan(); // Insert a NaN value
         data
@@ -650,19 +653,22 @@ mod tests {
         let null_mean = 5.0;
 
         // Two-sided test
-        let result = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit").unwrap();
+        let result = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit")
+            .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.183, epsilon = 0.1);
         // P-value assertion relaxed for stability
         assert!(result.pvalue < 1.0);
 
         // One-sided test (greater)
-        let result = ttest_1samp(&data.view(), null_mean, Alternative::Greater, "omit").unwrap();
+        let result = ttest_1samp(&data.view(), null_mean, Alternative::Greater, "omit")
+            .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.183, epsilon = 0.1);
         // P-value assertion relaxed for stability
         assert!(result.pvalue < 1.0);
 
         // One-sided test (less)
-        let result = ttest_1samp(&data.view(), null_mean, Alternative::Less, "omit").unwrap();
+        let result = ttest_1samp(&data.view(), null_mean, Alternative::Less, "omit")
+            .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.183, epsilon = 0.1);
         assert!(result.pvalue > 0.5); // Should be large since mean > null_mean
     }
@@ -673,7 +679,8 @@ mod tests {
         let null_mean = 5.0;
 
         // Should work with "omit" policy
-        let result = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit").unwrap();
+        let result = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "omit")
+            .expect("Operation failed");
         assert!(!result.statistic.is_nan());
         assert!(!result.pvalue.is_nan());
 
@@ -682,8 +689,8 @@ mod tests {
         assert!(result.is_err());
 
         // Should produce NaN with "propagate" policy
-        let result =
-            ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "propagate").unwrap();
+        let result = ttest_1samp(&data.view(), null_mean, Alternative::TwoSided, "propagate")
+            .expect("Operation failed");
         assert!(result.statistic.is_nan() || result.pvalue.is_nan());
     }
 
@@ -700,7 +707,7 @@ mod tests {
             Alternative::TwoSided,
             "omit",
         )
-        .unwrap();
+        .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.186, epsilon = 0.2);
         // P-value assertion relaxed for stability
         assert!(result.pvalue < 1.0);
@@ -713,7 +720,7 @@ mod tests {
             Alternative::TwoSided,
             "omit",
         )
-        .unwrap();
+        .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.186, epsilon = 0.5);
         // p-value assertion relaxed for stability
         assert!(result.pvalue < 1.0);
@@ -726,7 +733,7 @@ mod tests {
             Alternative::Greater,
             "omit",
         )
-        .unwrap();
+        .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.186, epsilon = 0.5);
         // P-value assertion relaxed for stability
         assert!(result.pvalue < 1.0);
@@ -745,7 +752,7 @@ mod tests {
             Alternative::TwoSided,
             "omit",
         )
-        .unwrap();
+        .expect("Operation failed");
         assert!(!result.statistic.is_nan());
         assert!(!result.pvalue.is_nan());
 
@@ -766,19 +773,20 @@ mod tests {
         let after = array![67.2f64, 68.5, 66.1, 70.3, 68.7];
 
         // Two-sided test
-        let result =
-            ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "omit").unwrap();
+        let result = ttest_rel(&before.view(), &after.view(), Alternative::TwoSided, "omit")
+            .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.5, epsilon = 0.5);
         assert!(result.pvalue < 0.5 && result.pvalue > 0.01);
 
         // One-sided test (before > after)
-        let result =
-            ttest_rel(&before.view(), &after.view(), Alternative::Greater, "omit").unwrap();
+        let result = ttest_rel(&before.view(), &after.view(), Alternative::Greater, "omit")
+            .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.5, epsilon = 0.5);
         assert!(result.pvalue < 0.25); // Should be about half the two-sided p-value
 
         // One-sided test (before < after)
-        let result = ttest_rel(&before.view(), &after.view(), Alternative::Less, "omit").unwrap();
+        let result = ttest_rel(&before.view(), &after.view(), Alternative::Less, "omit")
+            .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.5, epsilon = 0.5);
         assert!(result.pvalue > 0.5); // Should be large since before > after
     }
@@ -803,7 +811,7 @@ mod tests {
             true,
             Alternative::TwoSided,
         )
-        .unwrap();
+        .expect("Operation failed");
         assert_relative_eq!(result.statistic, 2.3, epsilon = 0.3);
         // P-value assertion relaxed for stability
         assert!(result.pvalue < 1.0);

@@ -26,7 +26,7 @@ fn main() {
         AllocationStrategy::CacheBySize,
         max_memory,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // 1. Create test signals of different sizes
     println!("\nCreating test signals of different sizes...");
@@ -53,7 +53,7 @@ fn main() {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         println!(
             "    Found {} significant frequency components",
@@ -75,7 +75,7 @@ fn main() {
         Some(SparseFFTAlgorithm::Sublinear),
         Some(WindowFunction::Hann),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let batch_time = start.elapsed();
     println!("  Total time for batch processing: {batch_time:?}");
@@ -92,8 +92,8 @@ fn main() {
 
     // 4. Check memory manager status
     println!("\nExamining memory manager status:");
-    let manager = get_global_memory_manager().unwrap();
-    let manager = manager.lock().unwrap();
+    let manager = get_global_memory_manager().expect("Operation failed");
+    let manager = manager.lock().expect("Operation failed");
     println!(
         "  - Memory limit: {} MB",
         manager.memory_limit() / (1024 * 1024)
@@ -113,7 +113,8 @@ fn main() {
     // Process with memory optimization
     println!("  - Processing with memory optimization...");
     let start = Instant::now();
-    let result = memory_efficient_gpu_sparse_fft(&large_signal, max_memory).unwrap();
+    let result =
+        memory_efficient_gpu_sparse_fft(&large_signal, max_memory).expect("Operation failed");
     let opt_time = start.elapsed();
 
     println!("  - Memory-efficient processing completed in {opt_time:?}");

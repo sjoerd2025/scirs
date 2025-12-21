@@ -800,7 +800,7 @@ impl NeuralSpatialOptimizer {
         }
 
         // Calculate overall centroid
-        let overall_centroid: Array1<f64> = points.mean_axis(Axis(0)).unwrap();
+        let overall_centroid: Array1<f64> = points.mean_axis(Axis(0)).expect("Operation failed");
 
         // Calculate between-cluster sum of squares
         let mut between_ss = 0.0;
@@ -1470,7 +1470,7 @@ mod tests {
         let state = selector.analyze_data_state(&points.view());
         assert!(state.is_ok());
 
-        let data_state = state.unwrap();
+        let data_state = state.expect("Operation failed");
         assert_eq!(data_state.size_category, SizeCategory::Small);
         assert_eq!(
             data_state.dimensionality_category,
@@ -1486,7 +1486,7 @@ mod tests {
         let features = optimizer.extract_spatial_features(&points.view());
         assert!(features.is_ok());
 
-        let feature_vector = features.unwrap();
+        let feature_vector = features.expect("Operation failed");
         assert!(!feature_vector.is_empty());
     }
 }

@@ -957,13 +957,13 @@ mod tests {
         let mut cpu = CPUAccelerator::default();
         assert_eq!(cpu.accelerator_type(), AcceleratorType::CPU);
         assert!(cpu.is_available());
-        cpu.initialize().unwrap();
-        let buffer = cpu.allocate(1024).unwrap();
+        cpu.initialize().expect("Operation failed");
+        let buffer = cpu.allocate(1024).expect("Operation failed");
         assert_eq!(buffer.size, 1024);
     fn test_accelerator_factory() {
         let available = AcceleratorFactory::list_available();
         assert!(available.contains(&AcceleratorType::CPU));
-        let cpu = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
+        let cpu = AcceleratorFactory::create(AcceleratorType::CPU).expect("Operation failed");
     fn test_device_buffer() {
         let ptr = Box::into_raw(Box::new([0u8; 1024])) as *mut u8;
         let buffer = DeviceBuffer::new(ptr, 1024, 0);

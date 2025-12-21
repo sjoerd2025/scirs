@@ -164,7 +164,7 @@ mod tests {
         let result = analyze_performance_regression_comprehensive(&config);
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert!(analysis.historical_comparison.relative_performance > 0.5);
         assert!(!analysis.benchmarks.benchmark_results.is_empty());
     }
@@ -174,7 +174,7 @@ mod tests {
         let result = analyze_scalability();
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert!(analysis.parallel_efficiency > 0.5);
         assert_eq!(analysis.scaling_behavior.scaling_quality, ScalingQuality::Good);
     }
@@ -184,7 +184,7 @@ mod tests {
         let result = analyze_resource_utilization();
         assert!(result.is_ok());
 
-        let utilization = result.unwrap();
+        let utilization = result.expect("Operation failed");
         assert!(utilization.cpu_utilization.average_utilization > 0.5);
         assert!(utilization.memory_utilization.allocation_efficiency > 0.8);
     }

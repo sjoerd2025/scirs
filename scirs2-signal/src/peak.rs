@@ -34,11 +34,11 @@ use std::fmt::Debug;
 /// let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 2.0, 0.0, 1.0];
 ///
 /// // Find all peaks
-/// let peaks = find_peaks(&signal, None, None, None, None, None).unwrap();
+/// let peaks = find_peaks(&signal, None, None, None, None, None).expect("Operation failed");
 /// assert_eq!(peaks, vec![1, 3, 5, 7, 9]);
 ///
 /// // Find peaks with minimum height
-/// let peaks = find_peaks(&signal, Some(1.5), None, None, None, None).unwrap();
+/// let peaks = find_peaks(&signal, Some(1.5), None, None, None, None).expect("Operation failed");
 /// assert_eq!(peaks, vec![3, 5, 7]);
 /// ```
 #[allow(dead_code)]
@@ -204,10 +204,10 @@ where
 /// let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 2.0, 0.0, 1.0];
 ///
 /// // Find peaks
-/// let peaks = find_peaks(&signal, None, None, None, None, None).unwrap();
+/// let peaks = find_peaks(&signal, None, None, None, None, None).expect("Operation failed");
 ///
 /// // Calculate prominences
-/// let prominences = peak_prominences(&signal, &peaks).unwrap();
+/// let prominences = peak_prominences(&signal, &peaks).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn peak_prominences<T>(x: &[T], peaks: &[usize]) -> SignalResult<Vec<f64>>
@@ -317,10 +317,10 @@ where
 /// let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 2.0, 0.0, 1.0];
 ///
 /// // Find peaks
-/// let peaks = find_peaks(&signal, None, None, None, None, None).unwrap();
+/// let peaks = find_peaks(&signal, None, None, None, None, None).expect("Operation failed");
 ///
 /// // Calculate peak widths at half height
-/// let (widths, left_ips, right_ips) = peak_widths(&signal, &peaks, Some(0.5)).unwrap();
+/// let (widths, left_ips, right_ips) = peak_widths(&signal, &peaks, Some(0.5)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn peak_widths<T>(
@@ -452,11 +452,11 @@ mod tests {
         let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 2.0, 0.0, 1.0];
 
         // Find all peaks
-        let peaks = find_peaks(&signal, None, None, None, None, None).unwrap();
+        let peaks = find_peaks(&signal, None, None, None, None, None).expect("Operation failed");
         assert_eq!(peaks, vec![1, 3, 5, 7, 9]);
 
         // Find peaks with minimum height
-        let peaks = find_peaks(&signal, Some(1.5), None, None, None, None).unwrap();
+        let peaks = find_peaks(&signal, Some(1.5), None, None, None, None).expect("Operation failed");
         assert_eq!(peaks, vec![3, 5, 7]);
     }
 
@@ -466,7 +466,7 @@ mod tests {
         let signal = vec![0.0, 1.0, 0.5, 2.0, 1.8, 3.0, 2.8, 2.0, 1.0, 1.5];
 
         // Find peaks with threshold
-        let peaks = find_peaks(&signal, None, Some(0.8), None, None, None).unwrap();
+        let peaks = find_peaks(&signal, None, Some(0.8), None, None, None).expect("Operation failed");
 
         // Instead of checking the exact peak indices, we should check that
         // the peaks we found are actual peaks and have the threshold property
@@ -486,7 +486,7 @@ mod tests {
         let signal = vec![0.0, 1.0, 0.0, 2.0, 1.0, 3.0, 0.0, 2.0, 0.0, 1.0];
 
         // Find peaks with minimum distance
-        let peaks = find_peaks(&signal, None, None, Some(2), None, None).unwrap();
+        let peaks = find_peaks(&signal, None, None, Some(2), None, None).expect("Operation failed");
 
         // Test that peaks are properly separated
         for i in 0..peaks.len() {
@@ -511,13 +511,13 @@ mod tests {
         let signal = vec![0.0, 3.0, 0.0, 2.0, 0.0, 5.0, 0.0, 4.0, 0.0, 1.0];
 
         // Find peaks (should be at indices 1, 3, 5, 7, 9)
-        let peaks = find_peaks(&signal, None, None, None, None, None).unwrap();
+        let peaks = find_peaks(&signal, None, None, None, None, None).expect("Operation failed");
 
         // Verify the peaks are where we expect
         assert_eq!(peaks, vec![1, 3, 5, 7, 9]);
 
         // Calculate prominences for all peaks
-        let prominences = peak_prominences(&signal, &peaks).unwrap();
+        let prominences = peak_prominences(&signal, &peaks).expect("Operation failed");
 
         // Verify the result has the correct length
         assert_eq!(prominences.len(), peaks.len());
@@ -535,7 +535,7 @@ mod tests {
 
         // Calculate widths at half height
         let peaks = vec![2, 7];
-        let (widths_left_ips_right_ips) = peak_widths(&signal, &peaks, Some(0.5)).unwrap();
+        let (widths_left_ips_right_ips) = peak_widths(&signal, &peaks, Some(0.5)).expect("Operation failed");
 
         // Expected widths at half height:
         // Peak at 2: narrow peak, width ≈ 1.0

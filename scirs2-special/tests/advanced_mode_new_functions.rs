@@ -5,7 +5,7 @@ use scirs2_special::{erfcx, erfi, shichi, sici, spence, wofz};
 #[allow(dead_code)]
 fn test_sici_function() {
     // Test sici function - should return tuple of (Si(x), Ci(x))
-    let (si_val, ci_val) = sici(1.0).unwrap();
+    let (si_val, ci_val) = sici(1.0).expect("Operation failed");
 
     // Print actual values for debugging
     println!("Actual sici(1.0) = ({:.6}, {:.6})", si_val, ci_val);
@@ -28,7 +28,7 @@ fn test_sici_function() {
 #[allow(dead_code)]
 fn test_shichi_function() {
     // Test shichi function - should return tuple of (Shi(x), Chi(x))
-    let (shi_val, chi_val) = shichi(1.0).unwrap();
+    let (shi_val, chi_val) = shichi(1.0).expect("Operation failed");
 
     // Print actual values for debugging
     println!("Actual shichi(1.0) = ({:.6}, {:.6})", shi_val, chi_val);
@@ -53,7 +53,7 @@ fn test_spence_function() {
     // Test special values of Spence function
 
     // spence(0) = π²/6
-    let spence_0 = spence(0.0).unwrap();
+    let spence_0 = spence(0.0).expect("Operation failed");
     let pi_sq_6 = std::f64::consts::PI.powi(2) / 6.0;
     assert!(
         (spence_0 - pi_sq_6).abs() < 1e-10,
@@ -61,11 +61,11 @@ fn test_spence_function() {
     );
 
     // spence(1) = 0
-    let spence_1 = spence(1.0).unwrap();
+    let spence_1 = spence(1.0).expect("Operation failed");
     assert!(spence_1.abs() < 1e-10, "spence(1) should be 0");
 
     // spence(-1) = -π²/12
-    let spence_neg1 = spence(-1.0).unwrap();
+    let spence_neg1 = spence(-1.0).expect("Operation failed");
     let neg_pi_sq_12 = -std::f64::consts::PI.powi(2) / 12.0;
     assert!(
         (spence_neg1 - neg_pi_sq_12).abs() < 1e-10,
@@ -128,9 +128,9 @@ fn test_function_consistency() {
     use scirs2_special::{ci, si};
 
     let x = 2.0;
-    let (si_from_sici, ci_from_sici) = sici(x).unwrap();
-    let si_individual = si(x).unwrap();
-    let ci_individual = ci(x).unwrap();
+    let (si_from_sici, ci_from_sici) = sici(x).expect("Operation failed");
+    let si_individual = si(x).expect("Operation failed");
+    let ci_individual = ci(x).expect("Operation failed");
 
     assert!(
         (si_from_sici - si_individual).abs() < 1e-10,
@@ -144,9 +144,9 @@ fn test_function_consistency() {
     // Test that shichi returns the same values as individual shi and chi functions
     use scirs2_special::{chi, shi};
 
-    let (shi_from_shichi, chi_from_shichi) = shichi(x).unwrap();
-    let shi_individual = shi(x).unwrap();
-    let chi_individual = chi(x).unwrap();
+    let (shi_from_shichi, chi_from_shichi) = shichi(x).expect("Operation failed");
+    let shi_individual = shi(x).expect("Operation failed");
+    let chi_individual = chi(x).expect("Operation failed");
 
     assert!(
         (shi_from_shichi - shi_individual).abs() < 1e-10,

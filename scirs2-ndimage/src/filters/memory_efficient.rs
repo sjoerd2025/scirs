@@ -352,8 +352,8 @@ mod tests {
             parallel: false,
         };
 
-        let result =
-            uniform_filter_chunked(&input, &size, BorderMode::Constant, Some(config)).unwrap();
+        let result = uniform_filter_chunked(&input, &size, BorderMode::Constant, Some(config))
+            .expect("Operation failed");
 
         // Check that the result is correct (all ones should remain ones with uniform filter)
         assert_eq!(result.shape(), input.shape());
@@ -381,8 +381,8 @@ mod tests {
             parallel: false,
         };
 
-        let result =
-            median_filter_chunked(&input, &size, BorderMode::Constant, Some(config)).unwrap();
+        let result = median_filter_chunked(&input, &size, BorderMode::Constant, Some(config))
+            .expect("Operation failed");
 
         // The spike should be removed by the median filter
         assert!(result[[25, 25]] < 1.0);
@@ -397,8 +397,8 @@ mod tests {
         let size = vec![5, 5];
 
         // Regular filter
-        let regular_result =
-            uniform_filter(&input, &size, Some(BorderMode::Reflect), None).unwrap();
+        let regular_result = uniform_filter(&input, &size, Some(BorderMode::Reflect), None)
+            .expect("Operation failed");
 
         // Chunked filter
         let config = ChunkConfig {
@@ -408,7 +408,8 @@ mod tests {
             parallel: false,
         };
         let chunked_result =
-            uniform_filter_chunked(&input, &size, BorderMode::Reflect, Some(config)).unwrap();
+            uniform_filter_chunked(&input, &size, BorderMode::Reflect, Some(config))
+                .expect("Operation failed");
 
         // Results should be very close (some differences at chunk boundaries are acceptable)
         let diff = (&regular_result - &chunked_result).mapv(f64::abs);

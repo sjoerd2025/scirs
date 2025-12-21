@@ -223,11 +223,11 @@ pub fn kalman_filter(
                     let centered_col = centered
                         .clone()
                         .into_shape_with_order((centered.len(), 1))
-                        .unwrap();
+                        .expect("Operation failed");
                     let centered_row = centered
                         .clone()
                         .into_shape_with_order((1, centered.len()))
-                        .unwrap();
+                        .expect("Operation failed");
                     r_estimate += &centered_col.dot(&centered_row);
                 }
                 r_estimate /= innovation_history.len() as f64;
@@ -243,11 +243,11 @@ pub fn kalman_filter(
                 let pred_err_col = pred_err
                     .clone()
                     .into_shape_with_order((pred_err.len(), 1))
-                    .unwrap();
+                    .expect("Operation failed");
                 let pred_err_row = pred_err
                     .clone()
                     .into_shape_with_order((1, pred_err.len()))
-                    .unwrap();
+                    .expect("Operation failed");
                 let q_update = pred_err_col.dot(&pred_err_row);
                 adaptive_q = &adaptive_q * (1.0 - config.forgetting_factor)
                     + &q_update * config.forgetting_factor;
@@ -493,8 +493,8 @@ where
         let mut p_pred = Array2::<f64>::zeros((n_states, n_states));
         for j in 0..predicted_sigmas.len() {
             let diff = &predicted_sigmas[j] - &x_pred;
-            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();
-            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();
+            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).expect("Operation failed");
+            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).expect("Operation failed");
             p_pred = &p_pred + &(weights_cov[j] * diff_col.dot(&diff_row));
         }
         p_pred = &p_pred + &q;
@@ -515,8 +515,8 @@ where
         let mut s = Array2::<f64>::zeros((n_measurements, n_measurements));
         for j in 0..measurement_sigmas.len() {
             let diff = &measurement_sigmas[j] - &z_pred;
-            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();
-            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();
+            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).expect("Operation failed");
+            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).expect("Operation failed");
             s = &s + &(weights_cov[j] * diff_col.dot(&diff_row));
         }
         s = &s + &r;
@@ -529,11 +529,11 @@ where
             let diff_x_col = diff_x
                 .clone()
                 .into_shape_with_order((diff_x.len(), 1))
-                .unwrap();
+                .expect("Operation failed");
             let diff_z_row = diff_z
                 .clone()
                 .into_shape_with_order((1, diff_z.len()))
-                .unwrap();
+                .expect("Operation failed");
             c = &c + &(weights_cov[j] * diff_x_col.dot(&diff_z_row));
         }
 
@@ -733,20 +733,20 @@ where
             let x_diff_col = x_diff
                 .clone()
                 .into_shape_with_order((x_diff.len(), 1))
-                .unwrap();
+                .expect("Operation failed");
             let z_diff_row = z_diff
                 .clone()
                 .into_shape_with_order((1, z_diff.len()))
-                .unwrap();
+                .expect("Operation failed");
             pxz = &pxz + &x_diff_col.dot(&z_diff_row);
             let z_diff_col = z_diff
                 .clone()
                 .into_shape_with_order((z_diff.len(), 1))
-                .unwrap();
+                .expect("Operation failed");
             let z_diff_row = z_diff
                 .clone()
                 .into_shape_with_order((1, z_diff.len()))
-                .unwrap();
+                .expect("Operation failed");
             pzz = &pzz + &z_diff_col.dot(&z_diff_row);
         }
 
@@ -772,7 +772,7 @@ where
                     let std_dev = config.measurement_noise_scale.sqrt();
                     let mut noise = Array1::<f64>::zeros(n_measurements);
                     for k in 0..n_measurements {
-                        noise[k] = rng.sample(rand_distr::Normal::new(0.0, std_dev).unwrap());
+                        noise[k] = rng.sample(rand_distr::Normal::new(0.0, std_dev).expect("Operation failed"));
                     }
                     noise
                 };
@@ -1157,7 +1157,7 @@ pub fn estimate_noise_parameters(
 
     for i in 0..n - window_size {
         let window = signal.slice(s![i..i + window_size]);
-        let window_mean = window.mean().unwrap();
+        let window_mean = window.mean().expect("Operation failed");
         let window_var = window
             .iter()
             .fold(0.0, |acc, &x| acc + (x - window_mean).powi(2))

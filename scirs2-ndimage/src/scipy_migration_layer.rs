@@ -299,7 +299,7 @@ impl SciPyCompatLayer {
             (3, 3),
             vec![false, true, false, true, true, true, false, true, false],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let structure_elem = match structure {
             Some(s) => s.to_owned(),
@@ -381,7 +381,7 @@ impl SciPyCompatLayer {
             (3, 3),
             vec![false, true, false, true, true, true, false, true, false],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let structure_elem = match structure {
             Some(s) => s.to_owned(),
@@ -735,7 +735,7 @@ pub fn init_scipy_compat() {
 #[allow(static_mut_refs)]
 fn get_scipy_compat() -> &'static mut SciPyCompatLayer {
     init_scipy_compat();
-    unsafe { SCIPY_COMPAT.as_mut().unwrap() }
+    unsafe { SCIPY_COMPAT.as_mut().expect("Operation failed") }
 }
 
 // Global convenience functions that match SciPy API exactly
@@ -965,21 +965,25 @@ mod tests {
         let compat = SciPyCompatLayer::default();
 
         // Test sigma parameter conversion
-        let sigma1 = compat.convert_sigma_param(SigmaParam::Single(2.0)).unwrap();
+        let sigma1 = compat
+            .convert_sigma_param(SigmaParam::Single(2.0))
+            .expect("Operation failed");
         assert_eq!(sigma1, (2.0, 2.0));
 
         let sigma2 = compat
             .convert_sigma_param(SigmaParam::Tuple(1.0, 2.0))
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(sigma2, (1.0, 2.0));
 
         // Test size parameter conversion
         let size1 = compat
             .convert_size_param(Some(SizeParam::Single(5)), (3, 3))
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(size1, (5, 5));
 
-        let size2 = compat.convert_size_param(None, (3, 3)).unwrap();
+        let size2 = compat
+            .convert_size_param(None, (3, 3))
+            .expect("Operation failed");
         assert_eq!(size2, (3, 3));
     }
 

@@ -144,9 +144,9 @@ where
     let num_chunks = total_elements / simd_width;
 
     // Flatten views for efficient SIMD processing
-    let grad_x_flat = grad_x.as_slice().unwrap();
-    let grad_y_flat = grad_y.as_slice().unwrap();
-    let mut output_flat = output.as_slice_mut().unwrap();
+    let grad_x_flat = grad_x.as_slice().expect("Operation failed");
+    let grad_y_flat = grad_y.as_slice().expect("Operation failed");
+    let mut output_flat = output.as_slice_mut().expect("Operation failed");
 
     // Process full SIMD chunks
     for chunk_idx in 0..num_chunks {
@@ -164,7 +164,7 @@ where
         let magnitudes = T::simd_sqrt(&sum_squares.view());
 
         output_flat[start_idx..start_idx + simd_width]
-            .copy_from_slice(magnitudes.as_slice().unwrap());
+            .copy_from_slice(magnitudes.as_slice().expect("Operation failed"));
     }
 
     // Handle remaining elements
@@ -196,17 +196,17 @@ where
     let (min_val, max_val) = match range {
         Some((min, max)) => (min, max),
         None => {
-            let flat_view = input.as_slice().unwrap();
+            let flat_view = input.as_slice().expect("Operation failed");
             let (min, max) = find_min_max_simd(flat_view)?;
             (min, max)
         }
     };
 
-    let bin_width = (max_val - min_val) / T::from_usize(bins).unwrap();
+    let bin_width = (max_val - min_val) / T::from_usize(bins).expect("Operation failed");
     let inv_bin_width = T::one() / bin_width;
 
     // Process elements in SIMD chunks
-    let flat_view = input.as_slice().unwrap();
+    let flat_view = input.as_slice().expect("Operation failed");
     let simd_width = 8; // Default SIMD width
     let num_chunks = flat_view.len() / simd_width;
 
@@ -224,7 +224,7 @@ where
         let bin_indices_f = T::simd_mul(&normalized.view(), &inv_widths_array.view());
 
         // Convert to integer indices and update histogram
-        for &bin_f in bin_indices_f.as_slice().unwrap() {
+        for &bin_f in bin_indices_f.as_slice().expect("Operation failed") {
             let bin_idx = bin_f.to_usize().unwrap_or(0).min(bins - 1);
             histogram[bin_idx] += 1;
         }
@@ -265,14 +265,14 @@ where
     // Compute x coordinate powers
     for p in 0..=maxorder {
         for x in 0..width {
-            x_powers[(p, x)] = T::from_usize(x).unwrap().powi(p as i32);
+            x_powers[(p, x)] = T::from_usize(x).expect("Operation failed").powi(p as i32);
         }
     }
 
     // Compute y coordinate powers
     for p in 0..=maxorder {
         for y in 0..height {
-            y_powers[(p, y)] = T::from_usize(y).unwrap().powi(p as i32);
+            y_powers[(p, y)] = T::from_usize(y).expect("Operation failed").powi(p as i32);
         }
     }
 
@@ -514,37 +514,37 @@ where
 {
     let kernel_x = match operator {
         GradientOperator::Sobel => vec![
-            T::from_f64(-1.0).unwrap(),
-            T::from_f64(0.0).unwrap(),
-            T::from_f64(1.0).unwrap(),
+            T::from_f64(-1.0).expect("Operation failed"),
+            T::from_f64(0.0).expect("Operation failed"),
+            T::from_f64(1.0).expect("Operation failed"),
         ],
         GradientOperator::Scharr => vec![
-            T::from_f64(-3.0).unwrap(),
-            T::from_f64(0.0).unwrap(),
-            T::from_f64(3.0).unwrap(),
+            T::from_f64(-3.0).expect("Operation failed"),
+            T::from_f64(0.0).expect("Operation failed"),
+            T::from_f64(3.0).expect("Operation failed"),
         ],
         GradientOperator::Prewitt => vec![
-            T::from_f64(-1.0).unwrap(),
-            T::from_f64(0.0).unwrap(),
-            T::from_f64(1.0).unwrap(),
+            T::from_f64(-1.0).expect("Operation failed"),
+            T::from_f64(0.0).expect("Operation failed"),
+            T::from_f64(1.0).expect("Operation failed"),
         ],
     };
 
     let kernel_y = match operator {
         GradientOperator::Sobel => vec![
-            T::from_f64(1.0).unwrap(),
-            T::from_f64(2.0).unwrap(),
-            T::from_f64(1.0).unwrap(),
+            T::from_f64(1.0).expect("Operation failed"),
+            T::from_f64(2.0).expect("Operation failed"),
+            T::from_f64(1.0).expect("Operation failed"),
         ],
         GradientOperator::Scharr => vec![
-            T::from_f64(3.0).unwrap(),
-            T::from_f64(10.0).unwrap(),
-            T::from_f64(3.0).unwrap(),
+            T::from_f64(3.0).expect("Operation failed"),
+            T::from_f64(10.0).expect("Operation failed"),
+            T::from_f64(3.0).expect("Operation failed"),
         ],
         GradientOperator::Prewitt => vec![
-            T::from_f64(1.0).unwrap(),
-            T::from_f64(1.0).unwrap(),
-            T::from_f64(1.0).unwrap(),
+            T::from_f64(1.0).expect("Operation failed"),
+            T::from_f64(1.0).expect("Operation failed"),
+            T::from_f64(1.0).expect("Operation failed"),
         ],
     };
 
@@ -687,7 +687,7 @@ mod tests {
         let result = simd_gradient_magnitude(input.view(), GradientOperator::Sobel);
         assert!(result.is_ok());
 
-        let gradient = result.unwrap();
+        let gradient = result.expect("Test: gradient calculation failed");
         assert_eq!(gradient.dim(), input.dim());
     }
 
@@ -698,7 +698,7 @@ mod tests {
         let result = simd_histogram(input.view(), 5, Some((1.0, 5.0)));
         assert!(result.is_ok());
 
-        let histogram = result.unwrap();
+        let histogram = result.expect("Test: histogram calculation failed");
         assert_eq!(histogram.len(), 5);
     }
 
@@ -709,7 +709,7 @@ mod tests {
         let result = simdimage_moments(input.view(), 2);
         assert!(result.is_ok());
 
-        let moments = result.unwrap();
+        let moments = result.expect("Test: moments calculation failed");
         assert_eq!(moments.dim(), (3, 3));
     }
 }

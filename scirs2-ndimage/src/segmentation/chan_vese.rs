@@ -577,7 +577,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = chan_vese(&image.view(), None, Some(params)).unwrap();
+        let result = chan_vese(&image.view(), None, Some(params)).expect("Operation failed");
 
         // Check that center region is segmented
         assert!(result[[25, 25]]);
@@ -597,7 +597,7 @@ mod tests {
             }
         }
 
-        let phi = mask_to_level_set(&mask.view(), None).unwrap();
+        let phi = mask_to_level_set(&mask.view(), None).expect("Operation failed");
 
         // Check signs
         assert!(phi[[5, 5]] > 0.0); // Inside

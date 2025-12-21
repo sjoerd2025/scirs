@@ -223,7 +223,7 @@ mod tests {
         let result = benchmark_performance(&config);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.standard_time_ms > 0.0);
         assert!(metrics.enhanced_time_ms > 0.0);
         assert!(metrics.simd_speedup >= 1.0);

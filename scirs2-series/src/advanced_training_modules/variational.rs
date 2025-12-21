@@ -63,17 +63,21 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         let mut decoder_params = Array2::zeros((1, decoder_param_count));
 
         // Xavier initialization
-        let encoder_scale = F::from(2.0).unwrap() / F::from(input_size + latent_dim).unwrap();
-        let decoder_scale = F::from(2.0).unwrap() / F::from(latent_dim + input_size).unwrap();
+        let encoder_scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_size + latent_dim).expect("Failed to convert to float");
+        let decoder_scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(latent_dim + input_size).expect("Failed to convert to float");
 
         for i in 0..encoder_param_count {
             let val = ((i * 19) % 1000) as f64 / 1000.0 - 0.5;
-            encoder_params[[0, i]] = F::from(val).unwrap() * encoder_scale.sqrt();
+            encoder_params[[0, i]] =
+                F::from(val).expect("Failed to convert to float") * encoder_scale.sqrt();
         }
 
         for i in 0..decoder_param_count {
             let val = ((i * 31) % 1000) as f64 / 1000.0 - 0.5;
-            decoder_params[[0, i]] = F::from(val).unwrap() * decoder_scale.sqrt();
+            decoder_params[[0, i]] =
+                F::from(val).expect("Failed to convert to float") * decoder_scale.sqrt();
         }
 
         Self {
@@ -131,8 +135,9 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
         for i in 0..self.latent_dim {
             // Sample from standard normal (simplified)
-            let eps = F::from(((i * 47) % 1000) as f64 / 1000.0 - 0.5).unwrap();
-            let std = (logvar[i] / F::from(2.0).unwrap()).exp();
+            let eps = F::from(((i * 47) % 1000) as f64 / 1000.0 - 0.5).expect("Operation failed");
+            let std =
+                (logvar[i] / F::from(2.0).expect("Failed to convert constant to float")).exp();
             sample[i] = mean[i] + std * eps;
         }
 
@@ -183,7 +188,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             let var = latent_logvar[i].exp();
             kl_div = kl_div + mean_sq + var - latent_logvar[i] - F::one();
         }
-        kl_div = kl_div / F::from(2.0).unwrap();
+        kl_div = kl_div / F::from(2.0).expect("Failed to convert constant to float");
 
         // Compute reconstruction loss
         let mut recon_loss = F::zero();
@@ -195,7 +200,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
                 recon_loss = recon_loss + diff * diff;
             }
         }
-        recon_loss = recon_loss / F::from(seq_len * feature_dim).unwrap();
+        recon_loss =
+            recon_loss / F::from(seq_len * feature_dim).expect("Failed to convert to float");
 
         Ok(VAEOutput {
             reconstruction,
@@ -216,7 +222,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             let mut latent = Array1::zeros(self.latent_dim);
             for j in 0..self.latent_dim {
                 let val = ((i * 53 + j * 29) % 1000) as f64 / 1000.0 - 0.5;
-                latent[j] = F::from(val).unwrap();
+                latent[j] = F::from(val).expect("Failed to convert to float");
             }
 
             let generated = self.decode(&latent)?;
@@ -256,7 +262,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             }
         }
 
-        let num_samples_f = F::from(num_samples).unwrap();
+        let num_samples_f = F::from(num_samples).expect("Failed to convert to float");
         for i in 0..seq_len {
             for j in 0..feature_dim {
                 mean_recon[[i, j]] = mean_recon[[i, j]] / num_samples_f;
@@ -448,27 +454,27 @@ mod tests {
     #[test]
     fn test_vae_encode_decode() {
         let vae = TimeSeriesVAE::<f64>::new(5, 2, 3, 8, 8);
-        let input =
-            Array2::from_shape_vec((5, 2), (0..10).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let input = Array2::from_shape_vec((5, 2), (0..10).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
-        let (mean, logvar) = vae.encode(&input).unwrap();
+        let (mean, logvar) = vae.encode(&input).expect("Operation failed");
         assert_eq!(mean.len(), 3);
         assert_eq!(logvar.len(), 3);
 
         let sample = vae.reparameterize(&mean, &logvar);
         assert_eq!(sample.len(), 3);
 
-        let decoded = vae.decode(&sample).unwrap();
+        let decoded = vae.decode(&sample).expect("Operation failed");
         assert_eq!(decoded.dim(), (5, 2));
     }
 
     #[test]
     fn test_vae_forward() {
         let vae = TimeSeriesVAE::<f64>::new(4, 2, 3, 8, 8);
-        let input =
-            Array2::from_shape_vec((4, 2), (0..8).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let input = Array2::from_shape_vec((4, 2), (0..8).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
-        let output = vae.forward(&input).unwrap();
+        let output = vae.forward(&input).expect("Operation failed");
         assert_eq!(output.reconstruction.dim(), (4, 2));
         assert_eq!(output.latent_mean.len(), 3);
         assert_eq!(output.latent_logvar.len(), 3);
@@ -480,10 +486,12 @@ mod tests {
     #[test]
     fn test_vae_uncertainty_estimation() {
         let vae = TimeSeriesVAE::<f64>::new(3, 2, 2, 6, 6);
-        let input =
-            Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2).collect()).unwrap();
+        let input = Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2).collect())
+            .expect("Operation failed");
 
-        let (mean_recon, std_recon) = vae.estimate_uncertainty(&input, 5).unwrap();
+        let (mean_recon, std_recon) = vae
+            .estimate_uncertainty(&input, 5)
+            .expect("Operation failed");
         assert_eq!(mean_recon.dim(), (3, 2));
         assert_eq!(std_recon.dim(), (3, 2));
 
@@ -496,7 +504,7 @@ mod tests {
     #[test]
     fn test_vae_generation() {
         let vae = TimeSeriesVAE::<f64>::new(4, 2, 3, 8, 8);
-        let samples = vae.generate(3).unwrap();
+        let samples = vae.generate(3).expect("Operation failed");
 
         assert_eq!(samples.len(), 3);
         for sample in samples {

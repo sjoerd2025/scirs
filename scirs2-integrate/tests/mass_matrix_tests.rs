@@ -51,10 +51,10 @@ fn test_constant_mass_matrix() -> IntegrateResult<()> {
 
     // Verify solution against analytical solution
     let omega = 1.0 / f64::sqrt(2.0); // Natural frequency
-    let t_final = result.t.last().unwrap();
+    let t_final = result.t.last().expect("Operation failed");
 
-    let x_numerical = result.y.last().unwrap()[0];
-    let v_numerical = result.y.last().unwrap()[1];
+    let x_numerical = result.y.last().expect("Operation failed")[0];
+    let v_numerical = result.y.last().expect("Operation failed")[1];
 
     let x_analytical = (omega * t_final).cos();
     let v_analytical = -f64::sqrt(2.0) * (omega * t_final).sin();
@@ -126,7 +126,7 @@ fn test_time_dependent_mass_matrix() -> IntegrateResult<()> {
 
     // Energy shouldn't change too much for small time-dependence
     let initial_energy = energies[0];
-    let final_energy = energies.last().unwrap();
+    let final_energy = energies.last().expect("Operation failed");
 
     // Allow for some energy change due to time-dependence
     // and numerical errors. Since mass varies by 10%, energy can change significantly.
@@ -185,8 +185,8 @@ fn test_identity_mass_matrix() -> IntegrateResult<()> {
     let result_standard = solve_ivp(f, t_span, y0, Some(options_standard))?;
 
     // Verify that solutions are the same at the final time point
-    let x_with_mass = result_with_mass.y.last().unwrap()[0];
-    let x_standard = result_standard.y.last().unwrap()[0];
+    let x_with_mass = result_with_mass.y.last().expect("Operation failed")[0];
+    let x_standard = result_standard.y.last().expect("Operation failed")[0];
 
     assert_relative_eq!(x_with_mass, x_standard, epsilon = 1e-8);
 
@@ -210,7 +210,10 @@ fn test_mass_matrix_creation() {
     let constant = MassMatrix::constant(m.clone());
     assert_eq!(constant.matrix_type, MassMatrixType::Constant);
     assert!(constant.constant_matrix.is_some());
-    assert_eq!(constant.constant_matrix.unwrap().dim(), (3, 3));
+    assert_eq!(
+        constant.constant_matrix.expect("Operation failed").dim(),
+        (3, 3)
+    );
 
     // Time-dependent matrix
     let time_func = |_t: f64| Array2::<f64>::eye(2);
@@ -244,7 +247,9 @@ fn test_mass_matrix_evaluation() {
     m[[0, 1]] = 1.0;
 
     let constant = MassMatrix::constant(m);
-    let evaluated = constant.evaluate(0.0, array![0.0, 0.0].view()).unwrap();
+    let evaluated = constant
+        .evaluate(0.0, array![0.0, 0.0].view())
+        .expect("Operation failed");
     assert_eq!(evaluated[[0, 0]], 1.0);
     assert_eq!(evaluated[[0, 1]], 1.0);
     assert_eq!(evaluated[[1, 0]], 0.0);
@@ -260,7 +265,7 @@ fn test_mass_matrix_evaluation() {
     let time_dependent = MassMatrix::time_dependent(time_func);
     let evaluated = time_dependent
         .evaluate(2.0, array![0.0, 0.0].view())
-        .unwrap();
+        .expect("Operation failed");
     assert_eq!(evaluated[[0, 0]], 3.0); // t + 1 = 2 + 1 = 3
     assert_eq!(evaluated[[1, 1]], 1.0);
 
@@ -274,7 +279,7 @@ fn test_mass_matrix_evaluation() {
     let state_dependent = MassMatrix::state_dependent(state_func);
     let evaluated = state_dependent
         .evaluate(0.0, array![2.0, 0.0].view())
-        .unwrap();
+        .expect("Operation failed");
     assert_eq!(evaluated[[0, 0]], 3.0); // y[0] + 1 = 2 + 1 = 3
     assert_eq!(evaluated[[1, 1]], 1.0);
 }

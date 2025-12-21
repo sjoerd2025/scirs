@@ -37,7 +37,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]; // 3x2
 ///
 /// // Perform block-based matrix multiplication
-/// let result = block_matmul(&a.view(), &b.view(), None).unwrap();
+/// let result = block_matmul(&a.view(), &b.view(), None).expect("Operation failed");
 ///
 /// // Verify the result
 /// assert_eq!(result.shape(), &[2, 2]);
@@ -142,7 +142,7 @@ where
 /// let b = array![[5.0, 6.0], [7.0, 8.0]];
 ///
 /// // Perform Strassen matrix multiplication
-/// let result = strassen_matmul(&a.view(), &b.view(), None).unwrap();
+/// let result = strassen_matmul(&a.view(), &b.view(), None).expect("Operation failed");
 ///
 /// // Verify the result
 /// assert_eq!(result.shape(), &[2, 2]);
@@ -223,7 +223,7 @@ where
 
     // Base case: use standard algorithm for small matrices
     if n <= cutoff {
-        return standard_matmul(a, b).unwrap();
+        return standard_matmul(a, b).expect("Operation failed");
     }
 
     let half_n = n / 2;
@@ -325,7 +325,7 @@ where
 /// let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]; // 3x2
 ///
 /// // Perform tiled matrix multiplication
-/// let result = tiled_matmul(&a.view(), &b.view(), None).unwrap();
+/// let result = tiled_matmul(&a.view(), &b.view(), None).expect("Operation failed");
 ///
 /// // Verify the result
 /// assert_eq!(result.shape(), &[2, 2]);
@@ -405,7 +405,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let result = block_matmul(&a.view(), &b.view(), Some(1)).unwrap();
+        let result = block_matmul(&a.view(), &b.view(), Some(1)).expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 19.0);
@@ -419,7 +419,7 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];
 
-        let result = block_matmul(&a.view(), &b.view(), Some(2)).unwrap();
+        let result = block_matmul(&a.view(), &b.view(), Some(2)).expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 58.0);
@@ -433,7 +433,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let result = strassen_matmul(&a.view(), &b.view(), Some(1)).unwrap();
+        let result = strassen_matmul(&a.view(), &b.view(), Some(1)).expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 19.0);
@@ -447,7 +447,7 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
         let b = array![[9.0, 8.0, 7.0], [6.0, 5.0, 4.0], [3.0, 2.0, 1.0]];
 
-        let result = strassen_matmul(&a.view(), &b.view(), Some(2)).unwrap();
+        let result = strassen_matmul(&a.view(), &b.view(), Some(2)).expect("Operation failed");
 
         // Compute expected result manually
         let expected = array![[30.0, 24.0, 18.0], [84.0, 69.0, 54.0], [138.0, 114.0, 90.0]];
@@ -465,7 +465,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let result = tiled_matmul(&a.view(), &b.view(), Some(1)).unwrap();
+        let result = tiled_matmul(&a.view(), &b.view(), Some(1)).expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 19.0);
@@ -479,7 +479,7 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];
 
-        let result = tiled_matmul(&a.view(), &b.view(), Some(2)).unwrap();
+        let result = tiled_matmul(&a.view(), &b.view(), Some(2)).expect("Operation failed");
 
         assert_eq!(result.shape(), &[2, 2]);
         assert_relative_eq!(result[[0, 0]], 58.0);
@@ -504,10 +504,11 @@ mod tests {
         }
 
         // Compute results using different algorithms
-        let result_standard = standard_matmul(&a.view(), &b.view()).unwrap();
-        let result_block = block_matmul(&a.view(), &b.view(), Some(4)).unwrap();
-        let result_strassen = strassen_matmul(&a.view(), &b.view(), Some(8)).unwrap();
-        let result_tiled = tiled_matmul(&a.view(), &b.view(), Some(4)).unwrap();
+        let result_standard = standard_matmul(&a.view(), &b.view()).expect("Operation failed");
+        let result_block = block_matmul(&a.view(), &b.view(), Some(4)).expect("Operation failed");
+        let result_strassen =
+            strassen_matmul(&a.view(), &b.view(), Some(8)).expect("Operation failed");
+        let result_tiled = tiled_matmul(&a.view(), &b.view(), Some(4)).expect("Operation failed");
 
         // Compare results
         for i in 0..size {

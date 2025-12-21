@@ -111,7 +111,7 @@ mod tests {
         let lower = vec![4.0, 5.0];
         let upper = vec![6.0, 7.0];
 
-        let matrix = BandedMatrix::tridiagonal(&diag, &lower, &upper).unwrap();
+        let matrix = BandedMatrix::tridiagonal(&diag, &lower, &upper).expect("Operation failed");
 
         assert_eq!(matrix.shape(), (3, 3));
         assert_eq!(matrix.get(0, 0), 1.0);
@@ -145,11 +145,13 @@ mod tests {
 
     #[test]
     fn test_banded_matrix_matmul() {
-        let a = BandedMatrix::tridiagonal(&[2.0, 2.0, 2.0], &[1.0, 1.0], &[1.0, 1.0]).unwrap();
+        let a = BandedMatrix::tridiagonal(&[2.0, 2.0, 2.0], &[1.0, 1.0], &[1.0, 1.0])
+            .expect("Operation failed");
 
-        let b = BandedMatrix::tridiagonal(&[1.0, 1.0, 1.0], &[0.5, 0.5], &[0.5, 0.5]).unwrap();
+        let b = BandedMatrix::tridiagonal(&[1.0, 1.0, 1.0], &[0.5, 0.5], &[0.5, 0.5])
+            .expect("Operation failed");
 
-        let c = a.matmul(&b).unwrap();
+        let c = a.matmul(&b).expect("Operation failed");
 
         // Verify some elements of the result
         assert!(c.shape() == (3, 3));
@@ -162,9 +164,9 @@ mod tests {
     fn test_from_dense() {
         let dense =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 0.0, 3.0, 4.0, 5.0, 0.0, 6.0, 7.0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let banded = BandedMatrix::from_dense(&dense, 1, 1).unwrap();
+        let banded = BandedMatrix::from_dense(&dense, 1, 1).expect("Operation failed");
 
         assert_eq!(banded.get(0, 0), 1.0);
         assert_eq!(banded.get(0, 1), 2.0);

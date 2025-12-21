@@ -713,7 +713,7 @@ fn print_comprehensive_analysis(summary: &ComprehensiveSummary) {
         println!("\n🏆 Feature Performance Rankings:");
         let mut sorted_benchmarks: Vec<_> = summary.benchmarks.iter().collect();
         sorted_benchmarks
-            .sort_by(|a, b| b.1.quality_score.partial_cmp(&a.1.quality_score).unwrap());
+            .sort_by(|a, b| b.1.quality_score.partial_cmp(&a.1.quality_score).expect("Operation failed"));
 
         for (rank, (name, benchmark)) in sorted_benchmarks.iter().enumerate().take(5) {
             println!(

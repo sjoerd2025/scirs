@@ -302,7 +302,7 @@ where
                 indices.push(col);
                 data.push(self.data[row][idx]);
             }
-            indptr.push(indptr.last().unwrap() + self.indices[row].len());
+            indptr.push(indptr.last().expect("Operation failed") + self.indices[row].len());
         }
 
         CsrArray::new(
@@ -687,7 +687,7 @@ mod tests {
         let data = vec![vec![1.0, 2.0], vec![3.0], vec![4.0, 5.0]];
         let indices = vec![vec![0, 2], vec![1], vec![0, 1]];
 
-        let lil = LilArray::from_lists(data, indices, shape).unwrap();
+        let lil = LilArray::from_lists(data, indices, shape).expect("Operation failed");
 
         assert_eq!(lil.shape(), (3, 3));
         assert_eq!(lil.nnz(), 5);
@@ -706,7 +706,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
 
         assert_eq!(lil.shape(), (3, 3));
         assert_eq!(lil.nnz(), 5);
@@ -725,7 +725,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
         let dense = lil.to_array();
 
         assert_eq!(dense.shape(), &[3, 3]);
@@ -745,11 +745,11 @@ mod tests {
         let mut lil = LilArray::<f64>::new((3, 3));
 
         // Set some values
-        lil.set(0, 0, 1.0).unwrap();
-        lil.set(0, 2, 2.0).unwrap();
-        lil.set(1, 1, 3.0).unwrap();
-        lil.set(2, 0, 4.0).unwrap();
-        lil.set(2, 1, 5.0).unwrap();
+        lil.set(0, 0, 1.0).expect("Operation failed");
+        lil.set(0, 2, 2.0).expect("Operation failed");
+        lil.set(1, 1, 3.0).expect("Operation failed");
+        lil.set(2, 0, 4.0).expect("Operation failed");
+        lil.set(2, 1, 5.0).expect("Operation failed");
 
         // Check values
         assert_eq!(lil.get(0, 0), 1.0);
@@ -760,11 +760,11 @@ mod tests {
         assert_eq!(lil.get(0, 1), 0.0);
 
         // Update a value
-        lil.set(0, 0, 6.0).unwrap();
+        lil.set(0, 0, 6.0).expect("Operation failed");
         assert_eq!(lil.get(0, 0), 6.0);
 
         // Set to zero (should remove the entry)
-        lil.set(0, 0, 0.0).unwrap();
+        lil.set(0, 0, 0.0).expect("Operation failed");
         assert_eq!(lil.get(0, 0), 0.0);
         assert_eq!(lil.nnz(), 4);
     }
@@ -776,10 +776,10 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
 
         // Convert to CSR
-        let csr = lil.to_csr().unwrap();
+        let csr = lil.to_csr().expect("Operation failed");
 
         // Check values
         let dense = csr.to_array();
@@ -801,10 +801,10 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
 
         // Convert to COO
-        let coo = lil.to_coo().unwrap();
+        let coo = lil.to_coo().expect("Operation failed");
 
         // Check values
         let dense = coo.to_array();
@@ -826,13 +826,13 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
 
         // Create a vector
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
         // Compute dot product
-        let result = lil.dot_vector(&vector.view()).unwrap();
+        let result = lil.dot_vector(&vector.view()).expect("Operation failed");
 
         // Check result: row[0]: 1.0*1.0 + 0.0*2.0 + 2.0*3.0 = 7.0
         //               row[1]: 0.0*1.0 + 3.0*2.0 + 0.0*3.0 = 6.0
@@ -847,14 +847,14 @@ mod tests {
     fn test_lil_eliminate_zeros() {
         let mut lil = LilArray::<f64>::new((2, 2));
 
-        lil.set(0, 0, 1.0).unwrap();
-        lil.set(0, 1, 0.0).unwrap(); // This won't actually add an entry
-        lil.set(1, 0, 2.0).unwrap();
-        lil.set(1, 1, 3.0).unwrap();
+        lil.set(0, 0, 1.0).expect("Operation failed");
+        lil.set(0, 1, 0.0).expect("Operation failed"); // This won't actually add an entry
+        lil.set(1, 0, 2.0).expect("Operation failed");
+        lil.set(1, 1, 3.0).expect("Operation failed");
 
         // Set a value then zero it (this can leave an explicit zero in some implementations)
-        lil.set(0, 1, 4.0).unwrap();
-        lil.set(0, 1, 0.0).unwrap();
+        lil.set(0, 1, 4.0).expect("Operation failed");
+        lil.set(0, 1, 0.0).expect("Operation failed");
 
         // Manually insert a zero (normally this shouldn't happen)
         lil.data[1][0] = 0.0;
@@ -875,10 +875,10 @@ mod tests {
         let mut lil = LilArray::<f64>::new((2, 4));
 
         // Insert in non-sorted order
-        lil.set(0, 3, 1.0).unwrap();
-        lil.set(0, 1, 2.0).unwrap();
-        lil.set(1, 2, 3.0).unwrap();
-        lil.set(1, 0, 4.0).unwrap();
+        lil.set(0, 3, 1.0).expect("Operation failed");
+        lil.set(0, 1, 2.0).expect("Operation failed");
+        lil.set(1, 2, 3.0).expect("Operation failed");
+        lil.set(1, 0, 4.0).expect("Operation failed");
 
         // Manually mess up the sorting by directly swapping elements in the arrays
         // This is needed because LilArray.set() keeps indices sorted
@@ -921,10 +921,10 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let lil = LilArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
 
         // Get a slice
-        let slice = lil.slice((1, 3), (0, 2)).unwrap();
+        let slice = lil.slice((1, 3), (0, 2)).expect("Operation failed");
 
         // Check slice shape
         assert_eq!(slice.shape(), (2, 2));

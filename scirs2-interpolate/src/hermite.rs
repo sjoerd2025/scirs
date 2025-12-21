@@ -131,7 +131,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
 
                 // Check if the y values are close to periodic
                 let last_y_idx = y.len() - 1;
-                if (y[0] - y[last_y_idx]).abs() > T::from(1e-6).unwrap() {
+                if (y[0] - y[last_y_idx]).abs() > T::from(1e-6).expect("Operation failed") {
                     return Err(InterpolateError::InvalidValue(
                         "For periodic derivatives, y values at endpoints should be approximately equal".to_string(),
                     ));
@@ -301,12 +301,15 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
             coeffs[[i, 1]] = m_i;
 
             // c = (3*(y_ip1 - y_i)/h - 2*m_i - m_ip1)/h
-            coeffs[[i, 2]] =
-                (T::from(3.0).unwrap() * (y_ip1 - y_i) / h - T::from(2.0).unwrap() * m_i - m_ip1)
-                    / h;
+            coeffs[[i, 2]] = (T::from(3.0).expect("Operation failed") * (y_ip1 - y_i) / h
+                - T::from(2.0).expect("Operation failed") * m_i
+                - m_ip1)
+                / h;
 
             // d = (2*(y_i - y_ip1)/h + m_i + m_ip1)/(h*h)
-            coeffs[[i, 3]] = (T::from(2.0).unwrap() * (y_i - y_ip1) / h + m_i + m_ip1) / (h * h);
+            coeffs[[i, 3]] =
+                (T::from(2.0).expect("Operation failed") * (y_i - y_ip1) / h + m_i + m_ip1)
+                    / (h * h);
         }
 
         Ok(coeffs)
@@ -476,9 +479,12 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
         // Calculate the requested derivative
         match deriv_order {
             0 => Ok(a + dx * (b + dx * (c + dx * d))),
-            1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),
-            2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),
-            3 => Ok(T::from(6.0).unwrap() * d),
+            1 => Ok(b + dx
+                * (T::from(2.0).expect("Operation failed") * c
+                    + T::from(3.0).expect("Operation failed") * dx * d)),
+            2 => Ok(T::from(2.0).expect("Operation failed") * c
+                + T::from(6.0).expect("Operation failed") * dx * d),
+            3 => Ok(T::from(6.0).expect("Operation failed") * d),
             _ => Ok(T::zero()), // Higher derivatives are zero for cubic splines
         }
     }
@@ -586,9 +592,9 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
         // = c0*x + c1*x^2/2 + c2*x^3/3 + c3*x^4/4
         let antiderivative = |x: T| -> T {
             c0 * x
-                + c1 * x * x / T::from(2.0).unwrap()
-                + c2 * x * x * x / T::from(3.0).unwrap()
-                + c3 * x * x * x * x / T::from(4.0).unwrap()
+                + c1 * x * x / T::from(2.0).expect("Operation failed")
+                + c2 * x * x * x / T::from(3.0).expect("Operation failed")
+                + c3 * x * x * x * x / T::from(4.0).expect("Operation failed")
         };
 
         // Evaluate the definite integral
@@ -717,7 +723,8 @@ mod tests {
         let y = x.mapv(|v| v.powi(2));
 
         // Create with estimated derivatives
-        let spline = make_hermite_spline(&x.view(), &y.view(), ExtrapolateMode::Error).unwrap();
+        let spline = make_hermite_spline(&x.view(), &y.view(), ExtrapolateMode::Error)
+            .expect("Operation failed");
 
         // Check that derivatives were computed
         assert_eq!(spline.get_derivatives().len(), x.len());
@@ -739,11 +746,11 @@ mod tests {
             &derivatives.view(),
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation at data points
         for i in 0..x.len() {
-            let eval = spline.evaluate_single(x[i]).unwrap();
+            let eval = spline.evaluate_single(x[i]).expect("Operation failed");
             assert_abs_diff_eq!(eval, y[i], epsilon = 1e-6);
         }
 
@@ -751,7 +758,7 @@ mod tests {
         let xnew = Array::linspace(0.5, 9.5, 10);
         let y_exact = xnew.mapv(|v| v.powi(2));
 
-        let y_interp = spline.evaluate(&xnew.view()).unwrap();
+        let y_interp = spline.evaluate(&xnew.view()).expect("Operation failed");
 
         // Since we provided exact derivatives, the interpolation should be very accurate
         for i in 0..y_interp.len() {
@@ -765,8 +772,8 @@ mod tests {
         let y = x.mapv(|v| v.powi(2));
 
         // Create with zero endpoint derivatives
-        let spline =
-            make_natural_hermite_spline(&x.view(), &y.view(), ExtrapolateMode::Error).unwrap();
+        let spline = make_natural_hermite_spline(&x.view(), &y.view(), ExtrapolateMode::Error)
+            .expect("Operation failed");
 
         // Check that the derivatives at endpoints are zero
         let derivs = spline.get_derivatives();
@@ -788,11 +795,13 @@ mod tests {
             &derivatives.view(),
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test first derivatives
         let x_test = Array::from_vec(vec![2.5, 5.0, 7.5]);
-        let deriv1 = spline.derivative(1, &x_test.view()).unwrap();
+        let deriv1 = spline
+            .derivative(1, &x_test.view())
+            .expect("Operation failed");
 
         // Expected derivatives: 2*x
         let expected_deriv1 = x_test.mapv(|v| 2.0 * v);
@@ -802,7 +811,9 @@ mod tests {
         }
 
         // Test second derivatives (should be 2 for y = x^2)
-        let deriv2 = spline.derivative(2, &x_test.view()).unwrap();
+        let deriv2 = spline
+            .derivative(2, &x_test.view())
+            .expect("Operation failed");
 
         for i in 0..deriv2.len() {
             assert_abs_diff_eq!(deriv2[i], 2.0, epsilon = 1e-6);
@@ -818,7 +829,7 @@ mod tests {
         // Create periodic Hermite spline
         let spline =
             make_periodic_hermite_spline(&x.view(), &y.view(), ExtrapolateMode::Extrapolate)
-                .unwrap();
+                .expect("Operation failed");
 
         // Check that derivatives at endpoints match (since it's periodic)
         let derivs = spline.get_derivatives();
@@ -827,13 +838,13 @@ mod tests {
 
         // Test interpolation at data points - should match exactly
         for i in 0..x.len() {
-            let eval = spline.evaluate_single(x[i]).unwrap();
+            let eval = spline.evaluate_single(x[i]).expect("Operation failed");
             assert_abs_diff_eq!(eval, y[i], epsilon = 1e-6);
         }
 
         // Test interpolation inside the domain
         let x_test = Array::from_vec(vec![std::f64::consts::PI / 2.0, std::f64::consts::PI]);
-        let y_test = spline.evaluate(&x_test.view()).unwrap();
+        let y_test = spline.evaluate(&x_test.view()).expect("Operation failed");
 
         // sin(π/2) = 1.0, sin(π) = 0.0
         // Hermite splines with 11 points give good but not perfect accuracy
@@ -858,13 +869,13 @@ mod tests {
             &second_derivs.view(),
             ExtrapolateMode::Error,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(spline.get_order(), 5); // Should be quintic
 
         // Test interpolation at data points
         for i in 0..x.len() {
-            let eval = spline.evaluate_single(x[i]).unwrap();
+            let eval = spline.evaluate_single(x[i]).expect("Operation failed");
             assert_abs_diff_eq!(eval, y[i], epsilon = 1e-6);
         }
 
@@ -872,7 +883,7 @@ mod tests {
         let xnew = Array::linspace(0.5, 9.5, 10);
         let y_exact = xnew.mapv(|v| v.powi(2));
 
-        let y_interp = spline.evaluate(&xnew.view()).unwrap();
+        let y_interp = spline.evaluate(&xnew.view()).expect("Operation failed");
 
         // Since we provided exact derivatives, the interpolation should be very accurate
         for i in 0..y_interp.len() {

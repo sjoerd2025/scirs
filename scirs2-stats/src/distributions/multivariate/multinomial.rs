@@ -73,7 +73,7 @@ impl Multinomial {
     /// // Create a multinomial distribution for a 3-sided die rolled 10 times
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5]; // Probabilities for each outcome
-    /// let multinomial = Multinomial::new(n, p).unwrap();
+    /// let multinomial = Multinomial::new(n, p).expect("Operation failed");
     /// ```
     pub fn new<D>(n: u64, p: ArrayBase<D, Ix1>) -> StatsResult<Self>
     where
@@ -121,7 +121,7 @@ impl Multinomial {
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
-    /// let multinomial = Multinomial::new(n, p).unwrap();
+    /// let multinomial = Multinomial::new(n, p).expect("Operation failed");
     ///
     /// // Calculate PMF at x = [2, 3, 5]
     /// let x = array![2.0, 3.0, 5.0];
@@ -191,7 +191,7 @@ impl Multinomial {
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
-    /// let multinomial = Multinomial::new(n, p).unwrap();
+    /// let multinomial = Multinomial::new(n, p).expect("Operation failed");
     ///
     /// // Calculate log PMF at x = [2, 3, 5]
     /// let x = array![2.0, 3.0, 5.0];
@@ -267,10 +267,10 @@ impl Multinomial {
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
-    /// let multinomial = Multinomial::new(n, p).unwrap();
+    /// let multinomial = Multinomial::new(n, p).expect("Operation failed");
     ///
     /// // Generate 5 random samples
-    /// let samples = multinomial.rvs(5).unwrap();
+    /// let samples = multinomial.rvs(5).expect("Operation failed");
     /// assert_eq!(samples.len(), 5);
     /// assert_eq!(samples[0].len(), 3);
     /// ```
@@ -321,10 +321,10 @@ impl Multinomial {
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
-    /// let multinomial = Multinomial::new(n, p).unwrap();
+    /// let multinomial = Multinomial::new(n, p).expect("Operation failed");
     ///
     /// // Generate a single random sample
-    /// let sample = multinomial.rvs_single().unwrap();
+    /// let sample = multinomial.rvs_single().expect("Operation failed");
     /// assert_eq!(sample.len(), 3);
     /// ```
     pub fn rvs_single(&self) -> StatsResult<Array1<f64>> {
@@ -346,7 +346,7 @@ impl Multinomial {
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
-    /// let multinomial = Multinomial::new(n, p).unwrap();
+    /// let multinomial = Multinomial::new(n, p).expect("Operation failed");
     ///
     /// let mean = multinomial.mean();
     /// // Mean should be [2.0, 3.0, 5.0]
@@ -370,7 +370,7 @@ impl Multinomial {
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
-    /// let multinomial = Multinomial::new(n, p).unwrap();
+    /// let multinomial = Multinomial::new(n, p).expect("Operation failed");
     ///
     /// let cov = multinomial.cov();
     /// ```
@@ -418,7 +418,7 @@ impl Multinomial {
 ///
 /// let n = 10;
 /// let p = array![0.2, 0.3, 0.5]; // Probabilities for each outcome
-/// let multinomial = multivariate::multinomial(n, p).unwrap();
+/// let multinomial = multivariate::multinomial(n, p).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn multinomial<D>(n: u64, p: ArrayBase<D, Ix1>) -> StatsResult<Multinomial>
@@ -446,7 +446,7 @@ mod tests {
         // Valid multinomial
         let n = 10;
         let p = array![0.2, 0.3, 0.5];
-        let multinomial = Multinomial::new(n, p.clone()).unwrap();
+        let multinomial = Multinomial::new(n, p.clone()).expect("Operation failed");
         assert_eq!(multinomial.n, n);
         assert_eq!(multinomial.p, p);
 
@@ -463,7 +463,7 @@ mod tests {
     fn test_multinomial_pmf() {
         let n = 5;
         let p = array![0.5, 0.5];
-        let multinomial = Multinomial::new(n, p).unwrap();
+        let multinomial = Multinomial::new(n, p).expect("Operation failed");
 
         // PMF at x = [2, 3]
         let x1 = array![2.0, 3.0];
@@ -501,7 +501,7 @@ mod tests {
     fn test_multinomial_logpmf() {
         let n = 5;
         let p = array![0.5, 0.5];
-        let multinomial = Multinomial::new(n, p).unwrap();
+        let multinomial = Multinomial::new(n, p).expect("Operation failed");
 
         // LogPMF at x = [2, 3]
         let x1 = array![2.0, 3.0];
@@ -521,7 +521,7 @@ mod tests {
     fn test_multinomial_mean() {
         let n = 10;
         let p = array![0.2, 0.3, 0.5];
-        let multinomial = Multinomial::new(n, p).unwrap();
+        let multinomial = Multinomial::new(n, p).expect("Operation failed");
 
         let mean = multinomial.mean();
         let expected_mean = array![2.0, 3.0, 5.0];
@@ -535,7 +535,7 @@ mod tests {
     fn test_multinomial_cov() {
         let n = 10;
         let p = array![0.2, 0.3, 0.5];
-        let multinomial = Multinomial::new(n, p).unwrap();
+        let multinomial = Multinomial::new(n, p).expect("Operation failed");
 
         let cov = multinomial.cov();
 
@@ -564,11 +564,11 @@ mod tests {
     fn test_multinomial_rvs() {
         let n = 100;
         let p = array![0.2, 0.3, 0.5];
-        let multinomial = Multinomial::new(n, p.clone()).unwrap();
+        let multinomial = Multinomial::new(n, p.clone()).expect("Operation failed");
 
         // Generate samples
         let num_samples = 100;
-        let samples = multinomial.rvs(num_samples).unwrap();
+        let samples = multinomial.rvs(num_samples).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), num_samples);
@@ -603,9 +603,9 @@ mod tests {
     fn test_multinomial_rvs_single() {
         let n = 10;
         let p = array![0.2, 0.3, 0.5];
-        let multinomial = Multinomial::new(n, p).unwrap();
+        let multinomial = Multinomial::new(n, p).expect("Operation failed");
 
-        let sample = multinomial.rvs_single().unwrap();
+        let sample = multinomial.rvs_single().expect("Operation failed");
 
         // Check the dimension of the sample
         assert_eq!(sample.len(), 3);

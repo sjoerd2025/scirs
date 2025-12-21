@@ -64,7 +64,7 @@ where
             }
 
             // Find most frequent label(s)
-            let max_count = *label_counts.values().max().unwrap();
+            let max_count = *label_counts.values().max().expect("Operation failed");
             let best_labels: Vec<usize> = label_counts
                 .into_iter()
                 .filter(|(_, count)| *count == max_count)

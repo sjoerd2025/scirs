@@ -45,11 +45,11 @@
 //! let portfolio_values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0];
 //!
 //! // Maximum drawdown
-//! let mdd = max_drawdown(&portfolio_values).unwrap();
+//! let mdd = max_drawdown(&portfolio_values).expect("Operation failed");
 //! println!("Maximum Drawdown: {:.2}%", mdd * 100.0);
 //!
 //! // Full drawdown series
-//! let drawdowns = calculate_drawdown_series(&portfolio_values).unwrap();
+//! let drawdowns = calculate_drawdown_series(&portfolio_values).expect("Operation failed");
 //! println!("Drawdown series: {:?}", drawdowns);
 //! ```
 //!
@@ -62,13 +62,13 @@
 //! let returns = array![0.10, -0.05, -0.10, 0.26, -0.04, 0.13]; // Corresponding returns
 //!
 //! // Pain Index - average drawdown
-//! let pain = pain_index(&portfolio_values).unwrap();
+//! let pain = pain_index(&portfolio_values).expect("Operation failed");
 //!
 //! // Ulcer Index - RMS drawdown
-//! let ulcer = ulcer_index(&portfolio_values).unwrap();
+//! let ulcer = ulcer_index(&portfolio_values).expect("Operation failed");
 //!
 //! // Calmar Ratio - return/max drawdown trade-off
-//! let calmar = calmar_ratio(&returns, &portfolio_values, 252).unwrap();
+//! let calmar = calmar_ratio(&returns, &portfolio_values, 252).expect("Operation failed");
 //! ```
 //!
 //! ## Drawdown Recovery Analysis
@@ -78,7 +78,7 @@
 //!
 //! let portfolio_values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0];
 //!
-//! let recovery_analysis = drawdown_recovery_analysis(&portfolio_values).unwrap();
+//! let recovery_analysis = drawdown_recovery_analysis(&portfolio_values).expect("Operation failed");
 //! for period in recovery_analysis {
 //!     println!("Drawdown: {:.2}%, Duration: {} periods, Recovery: {} periods",
 //!              period.max_drawdown * 100.0, period.duration,
@@ -133,7 +133,7 @@ pub struct DrawdownPeriod<F: Float> {
 /// use scirs2_core::ndarray::array;
 ///
 /// let portfolio_values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0];
-/// let mdd = max_drawdown(&portfolio_values).unwrap();
+/// let mdd = max_drawdown(&portfolio_values).expect("Operation failed");
 /// println!("Max drawdown: {:.2}%", mdd * 100.0);
 /// ```
 pub fn max_drawdown<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
@@ -180,7 +180,7 @@ pub fn max_drawdown<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
 /// use scirs2_core::ndarray::array;
 ///
 /// let values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0];
-/// let drawdowns = calculate_drawdown_series(&values).unwrap();
+/// let drawdowns = calculate_drawdown_series(&values).expect("Operation failed");
 /// ```
 pub fn calculate_drawdown_series<F: Float + Clone>(values: &Array1<F>) -> Result<Array1<F>> {
     if values.is_empty() {
@@ -223,14 +223,14 @@ pub fn calculate_drawdown_series<F: Float + Clone>(values: &Array1<F>) -> Result
 /// use scirs2_core::ndarray::array;
 ///
 /// let values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0];
-/// let pain = pain_index(&values).unwrap();
+/// let pain = pain_index(&values).expect("Operation failed");
 /// ```
 pub fn pain_index<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
     let drawdowns = calculate_drawdown_series(values)?;
 
     // Convert to positive values and average
     let total_drawdown = drawdowns.mapv(|x| -x).sum();
-    Ok(total_drawdown / F::from(values.len()).unwrap())
+    Ok(total_drawdown / F::from(values.len()).expect("Operation failed"))
 }
 
 /// Calculate Ulcer Index (RMS of drawdowns)
@@ -254,14 +254,14 @@ pub fn pain_index<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
 /// use scirs2_core::ndarray::array;
 ///
 /// let values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0];
-/// let ulcer = ulcer_index(&values).unwrap();
+/// let ulcer = ulcer_index(&values).expect("Operation failed");
 /// ```
 pub fn ulcer_index<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
     let drawdowns = calculate_drawdown_series(values)?;
 
     // Calculate RMS of drawdowns (as positive values)
     let sum_squared_dd = drawdowns.mapv(|x| x.powi(2)).sum();
-    Ok((sum_squared_dd / F::from(values.len()).unwrap()).sqrt())
+    Ok((sum_squared_dd / F::from(values.len()).expect("Operation failed")).sqrt())
 }
 
 /// Calculate Calmar Ratio (annual return / maximum drawdown)
@@ -288,7 +288,7 @@ pub fn ulcer_index<F: Float + Clone>(values: &Array1<F>) -> Result<F> {
 ///
 /// let returns = array![0.10, -0.05, -0.10, 0.26, -0.04, 0.13];
 /// let values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0];
-/// let calmar = calmar_ratio(&returns, &values, 252).unwrap();
+/// let calmar = calmar_ratio(&returns, &values, 252).expect("Operation failed");
 /// ```
 pub fn calmar_ratio<F: Float + Clone>(
     returns: &Array1<F>,
@@ -303,7 +303,8 @@ pub fn calmar_ratio<F: Float + Clone>(
 
     // Calculate annualized return
     let total_return = (values[values.len() - 1] / values[0]) - F::one();
-    let years = F::from(returns.len()).unwrap() / F::from(periods_per_year).unwrap();
+    let years = F::from(returns.len()).expect("Operation failed")
+        / F::from(periods_per_year).expect("Failed to convert to float");
     let annualized_return = (F::one() + total_return).powf(F::one() / years) - F::one();
 
     // Calculate maximum drawdown
@@ -336,7 +337,7 @@ pub fn calmar_ratio<F: Float + Clone>(
 /// use scirs2_core::ndarray::array;
 ///
 /// let values = array![1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0];
-/// let analysis = drawdown_recovery_analysis(&values).unwrap();
+/// let analysis = drawdown_recovery_analysis(&values).expect("Operation failed");
 /// ```
 pub fn drawdown_recovery_analysis<F: Float + Clone>(
     values: &Array1<F>,
@@ -462,7 +463,8 @@ pub fn average_drawdown_duration<F: Float + Clone>(values: &Array1<F>) -> Result
     }
 
     let total_duration: usize = periods.iter().map(|p| p.duration).sum();
-    Ok(F::from(total_duration).unwrap() / F::from(periods.len()).unwrap())
+    Ok(F::from(total_duration).expect("Failed to convert to float")
+        / F::from(periods.len()).expect("Operation failed"))
 }
 
 /// Calculate average recovery time
@@ -491,10 +493,11 @@ pub fn average_recovery_time<F: Float + Clone>(values: &Array1<F>) -> Result<F> 
 
     let total_recovery: usize = recovered_periods
         .iter()
-        .map(|p| p.recovery_periods.unwrap())
+        .map(|p| p.recovery_periods.expect("Operation failed"))
         .sum();
 
-    Ok(F::from(total_recovery).unwrap() / F::from(recovered_periods.len()).unwrap())
+    Ok(F::from(total_recovery).expect("Failed to convert to float")
+        / F::from(recovered_periods.len()).expect("Operation failed"))
 }
 
 /// Helper function to find recovery index
@@ -514,7 +517,7 @@ mod tests {
     #[test]
     fn test_max_drawdown() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0]);
-        let mdd = max_drawdown(&values).unwrap();
+        let mdd = max_drawdown(&values).expect("Operation failed");
 
         // Maximum drawdown should be from peak of 1100 to trough of 950
         let expected = (1100.0 - 950.0) / 1100.0;
@@ -524,7 +527,7 @@ mod tests {
     #[test]
     fn test_drawdown_series() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0]);
-        let drawdowns = calculate_drawdown_series(&values).unwrap();
+        let drawdowns = calculate_drawdown_series(&values).expect("Operation failed");
 
         assert_eq!(drawdowns.len(), values.len());
 
@@ -540,7 +543,7 @@ mod tests {
     #[test]
     fn test_pain_index() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0]);
-        let pain = pain_index(&values).unwrap();
+        let pain = pain_index(&values).expect("Operation failed");
 
         // Pain index should be positive (we convert drawdowns to positive)
         assert!(pain >= 0.0);
@@ -549,7 +552,7 @@ mod tests {
     #[test]
     fn test_ulcer_index() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0]);
-        let ulcer = ulcer_index(&values).unwrap();
+        let ulcer = ulcer_index(&values).expect("Operation failed");
 
         // Ulcer index should be positive
         assert!(ulcer >= 0.0);
@@ -563,7 +566,7 @@ mod tests {
         let result = calmar_ratio(&returns, &values, 252);
         assert!(result.is_ok());
 
-        let calmar = result.unwrap();
+        let calmar = result.expect("Operation failed");
         // Calmar ratio should be finite or infinity (if no drawdown)
         assert!(calmar.is_finite() || calmar.is_infinite());
     }
@@ -571,7 +574,7 @@ mod tests {
     #[test]
     fn test_drawdown_recovery_analysis() {
         let values = arr1(&[1000.0, 1100.0, 1050.0, 950.0, 1200.0, 1150.0, 1300.0]);
-        let periods = drawdown_recovery_analysis(&values).unwrap();
+        let periods = drawdown_recovery_analysis(&values).expect("Operation failed");
 
         // Should have at least one drawdown period
         assert!(!periods.is_empty());
@@ -597,7 +600,7 @@ mod tests {
     #[test]
     fn test_no_drawdown() {
         let values = arr1(&[1000.0, 1100.0, 1200.0, 1300.0, 1400.0]);
-        let mdd = max_drawdown(&values).unwrap();
+        let mdd = max_drawdown(&values).expect("Operation failed");
 
         // Should be zero drawdown for monotonically increasing series
         assert!(mdd == 0.0);
@@ -613,7 +616,7 @@ mod tests {
     #[test]
     fn test_single_value() {
         let values = arr1(&[1000.0]);
-        let mdd = max_drawdown(&values).unwrap();
+        let mdd = max_drawdown(&values).expect("Operation failed");
 
         // Single value should have zero drawdown
         assert!(mdd == 0.0);

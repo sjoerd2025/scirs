@@ -442,8 +442,8 @@ mod tests {
 
     #[test]
     fn test_pairwise_euclidean_simd() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         let distances = pairwise_euclidean_simd(data.view());
 
@@ -459,12 +459,14 @@ mod tests {
 
     #[test]
     fn test_distance_to_centroids_simd() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).expect("Operation failed");
 
-        let distances = distance_to_centroids_simd(data.view(), centroids.view()).unwrap();
+        let distances =
+            distance_to_centroids_simd(data.view(), centroids.view()).expect("Operation failed");
 
         assert_eq!(distances.shape(), &[4, 2]);
 
@@ -482,7 +484,7 @@ mod tests {
                 9.0, 10.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let distances_simd = pairwise_euclidean_simd(data.view());
         let distances_parallel = pairwise_euclidean_parallel(data.view());

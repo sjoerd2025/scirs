@@ -33,7 +33,7 @@ pub fn error_norm<F: IntegrateFloat>(error: &Array1<F>, y: &Array1<F>, rtol: F, 
         sum_sq += (*e / *s).powi(2);
     }
 
-    let n = F::from_usize(error.len()).unwrap();
+    let n = F::from_usize(error.len()).expect("Operation failed");
     (sum_sq / n).sqrt()
 }
 
@@ -58,19 +58,19 @@ pub fn calculate_new_step_size<F: IntegrateFloat>(
 ) -> F {
     // If error is zero, increase step size significantly but safely
     if error_norm == F::zero() {
-        return h_current * F::from_f64(10.0).unwrap();
+        return h_current * F::from_f64(10.0).expect("Operation failed");
     }
 
     // Standard step size calculation based on error estimate
-    let _order = F::from_usize(error_order).unwrap();
+    let _order = F::from_usize(error_order).expect("Operation failed");
     let error_ratio = F::one() / error_norm;
 
     // Calculate factor using the formula: safety * error_ratio^(1/_order)
     let factor = safety * error_ratio.powf(F::one() / _order);
 
     // Limit factor to reasonable bounds to prevent too large or small step sizes
-    let factor_max = F::from_f64(10.0).unwrap();
-    let factor_min = F::from_f64(0.1).unwrap();
+    let factor_max = F::from_f64(10.0).expect("Operation failed");
+    let factor_min = F::from_f64(0.1).expect("Operation failed");
 
     let factor = if factor > factor_max {
         factor_max
@@ -127,14 +127,17 @@ where
         .map(|(f, s)| *f / *s)
         .fold(F::zero(), |acc, x| acc + x * x);
 
-    let d0 = d0.sqrt() / F::from_f64(y.len() as f64).unwrap().sqrt();
+    let d0 = d0.sqrt()
+        / F::from_f64(y.len() as f64)
+            .expect("Operation failed")
+            .sqrt();
 
-    let step_size = if d0 < F::from_f64(1.0e-5).unwrap() {
+    let step_size = if d0 < F::from_f64(1.0e-5).expect("Operation failed") {
         // If derivatives are very small, use a default small step
-        F::from_f64(1.0e-6).unwrap()
+        F::from_f64(1.0e-6).expect("Operation failed")
     } else {
         // Otherwise, use a step size based on the derivatives
-        F::from_f64(0.01).unwrap() / d0
+        F::from_f64(0.01).expect("Operation failed") / d0
     };
 
     // Return step size with the correct sign

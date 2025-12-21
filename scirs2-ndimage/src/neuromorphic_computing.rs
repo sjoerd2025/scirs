@@ -978,15 +978,15 @@ mod tests {
     fn test_event_driven_processing() {
         let current =
             Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.5, 1.0, 0.0, 1.0, 0.0])
-                .unwrap();
+                .expect("Test: operation failed");
 
         let previous =
             Array2::from_shape_vec((3, 3), vec![0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0])
-                .unwrap();
+                .expect("Test: operation failed");
 
         let config = NeuromorphicConfig::default();
-        let result =
-            event_driven_processing(current.view(), Some(previous.view()), &config).unwrap();
+        let result = event_driven_processing(current.view(), Some(previous.view()), &config)
+            .expect("Operation failed");
 
         assert_eq!(result.0.dim(), (3, 3));
         assert!(!result.1.is_empty()); // Should generate events
@@ -994,11 +994,12 @@ mod tests {
 
     #[test]
     fn test_homeostatic_adaptive_filter() {
-        let image =
-            Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect())
+            .expect("Operation failed");
 
         let config = NeuromorphicConfig::default();
-        let result = homeostatic_adaptive_filter(image.view(), &config, 5).unwrap();
+        let result =
+            homeostatic_adaptive_filter(image.view(), &config, 5).expect("Operation failed");
 
         assert_eq!(result.dim(), (5, 5));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1006,20 +1007,20 @@ mod tests {
 
     #[test]
     fn test_temporal_coding_feature_extraction() {
-        let image =
-            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect())
+            .expect("Operation failed");
 
         let edge_detector = Array2::from_shape_vec(
             (3, 3),
             vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let detectors = vec![edge_detector];
         let config = NeuromorphicConfig::default();
 
-        let result =
-            temporal_coding_feature_extraction(image.view(), &detectors, &config, 10).unwrap();
+        let result = temporal_coding_feature_extraction(image.view(), &detectors, &config, 10)
+            .expect("Operation failed");
 
         assert_eq!(result.dim(), (1, 4, 4));
         assert!(result.iter().all(|&x| x.is_finite()));
@@ -1028,12 +1029,13 @@ mod tests {
     #[test]
     fn test_stdp_unsupervised_learning() {
         let trainingimage =
-            Array2::from_shape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect()).unwrap();
+            Array2::from_shape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect())
+                .expect("Operation failed");
         let trainingimages = vec![trainingimage.view()];
 
         let config = NeuromorphicConfig::default();
-        let learned_filter =
-            stdp_unsupervised_learning(&trainingimages, (3, 3), &config, 2).unwrap();
+        let learned_filter = stdp_unsupervised_learning(&trainingimages, (3, 3), &config, 2)
+            .expect("Operation failed");
 
         assert_eq!(learned_filter.dim(), (3, 3));
         assert!(learned_filter.iter().all(|&x| x.is_finite()));

@@ -86,7 +86,8 @@ where
         let rho_new = dot(&r_tilde, &r);
 
         // Check for breakdown
-        if rho_new.abs() < F::epsilon() * F::from(10).unwrap() {
+        if rho_new.abs() < F::epsilon() * F::from(10).expect("Failed to convert constant to float")
+        {
             return Ok(CGSResult {
                 x,
                 iterations,
@@ -123,7 +124,7 @@ where
         let sigma = dot(&r_tilde, &v);
 
         // Check for breakdown
-        if sigma.abs() < F::epsilon() * F::from(10).unwrap() {
+        if sigma.abs() < F::epsilon() * F::from(10).expect("Failed to convert constant to float") {
             return Ok(CGSResult {
                 x,
                 iterations,

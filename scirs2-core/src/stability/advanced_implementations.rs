@@ -39,7 +39,7 @@ impl FormalVerificationEngine {
         };
 
         {
-            let mut tasks = self.verification_tasks.lock().unwrap();
+            let mut tasks = self.verification_tasks.lock().expect("Operation failed");
             tasks.insert(taskid.clone(), task);
         }
 
@@ -52,13 +52,13 @@ impl FormalVerificationEngine {
 
             // Store result
             {
-                let mut results = results_clone.write().unwrap();
+                let mut results = results_clone.write().expect("Operation failed");
                 results.insert(taskid.clone(), result);
             }
 
             // Update task status
             {
-                let mut tasks = tasks_clone.lock().unwrap();
+                let mut tasks = tasks_clone.lock().expect("Operation failed");
                 if let Some(task) = tasks.get_mut(&taskid) {
                     task.status = VerificationStatus::Verified;
                 }
@@ -120,7 +120,7 @@ impl FormalVerificationEngine {
         thread::sleep(Duration::from_millis(100));
 
         let task = {
-            let tasks_guard = tasks.lock().unwrap();
+            let tasks_guard = tasks.lock().expect("Operation failed");
             tasks_guard.get(taskid).cloned()
         };
 
@@ -1059,7 +1059,7 @@ mod tests {
             deprecation: None,
         };
 
-        engine.verify_contract(&contract).unwrap();
+        engine.verify_contract(&contract).expect("Operation failed");
 
         // Verification should have started (not NotVerified anymore)
         let status = engine.get_verification_status("test_api", "test_module");
@@ -1070,7 +1070,7 @@ mod tests {
     fn test_runtime_contract_validator() {
         let (validator, receiver) = RuntimeContractValidator::new();
 
-        let stats = validator.get_statistics().unwrap();
+        let stats = validator.get_statistics().expect("Operation failed");
         assert_eq!(stats.total_validations, 0);
         assert_eq!(stats.violations_detected, 0);
         assert_eq!(stats.success_rate, 1.0);
@@ -1111,7 +1111,7 @@ mod tests {
         assert!(trail.verify_integrity());
 
         let data = AuditData::ContractRegistration("test::api".to_string());
-        trail.add_record(data).unwrap();
+        trail.add_record(data).expect("Operation failed");
 
         assert_eq!(trail.len(), 1);
         assert!(trail.verify_integrity());

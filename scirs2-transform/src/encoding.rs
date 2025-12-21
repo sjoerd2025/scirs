@@ -139,7 +139,7 @@ impl OneHotEncoder {
 
     /// Creates a OneHotEncoder with default settings
     pub fn with_defaults() -> Self {
-        Self::new(None, "error", false).unwrap()
+        Self::new(None, "error", false).expect("Operation failed")
     }
 
     /// Fits the OneHotEncoder to the input data
@@ -207,7 +207,7 @@ impl OneHotEncoder {
             ));
         }
 
-        let categories = self.categories_.as_ref().unwrap();
+        let categories = self.categories_.as_ref().expect("Operation failed");
 
         if n_features != categories.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -407,7 +407,7 @@ impl OneHotEncoder {
             ));
         }
 
-        let categories = self.categories_.as_ref().unwrap();
+        let categories = self.categories_.as_ref().expect("Operation failed");
         let mut feature_names = Vec::new();
 
         for (j, feature_categories) in categories.iter().enumerate() {
@@ -487,7 +487,7 @@ impl OrdinalEncoder {
 
     /// Creates an OrdinalEncoder with default settings
     pub fn with_defaults() -> Self {
-        Self::new("error", None).unwrap()
+        Self::new("error", None).expect("Operation failed")
     }
 
     /// Fits the OrdinalEncoder to the input data
@@ -555,7 +555,7 @@ impl OrdinalEncoder {
             ));
         }
 
-        let categories = self.categories_.as_ref().unwrap();
+        let categories = self.categories_.as_ref().expect("Operation failed");
 
         if n_features != categories.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -590,7 +590,7 @@ impl OrdinalEncoder {
                     )));
                 } else {
                     // handleunknown == "use_encoded_value"
-                    transformed[[i, j]] = self.unknownvalue.unwrap();
+                    transformed[[i, j]] = self.unknownvalue.expect("Operation failed");
                 }
             }
         }
@@ -634,11 +634,11 @@ impl OrdinalEncoder {
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_transform::encoding::TargetEncoder;
 ///
-/// let x = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).unwrap();
+/// let x = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).expect("Operation failed");
 /// let y = vec![1.0, 2.0, 3.0, 1.5, 2.5, 3.5];
 ///
-/// let mut encoder = TargetEncoder::new("mean", 1.0, 0.0).unwrap();
-/// let encoded = encoder.fit_transform(&x, &y).unwrap();
+/// let mut encoder = TargetEncoder::new("mean", 1.0, 0.0).expect("Operation failed");
+/// let encoded = encoder.fit_transform(&x, &y).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct TargetEncoder {
@@ -777,7 +777,7 @@ impl TargetEncoder {
                     }
                     "median" => {
                         let mut sorted_targets = targets.clone();
-                        sorted_targets.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                        sorted_targets.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                         let median = if sorted_targets.len() % 2 == 0 {
                             let mid = sorted_targets.len() / 2;
@@ -837,7 +837,7 @@ impl TargetEncoder {
         let n_samples = x_u64.shape()[0];
         let n_features = x_u64.shape()[1];
 
-        let encodings = self.encodings_.as_ref().unwrap();
+        let encodings = self.encodings_.as_ref().expect("Operation failed");
 
         if n_features != encodings.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -1011,7 +1011,8 @@ impl TargetEncoder {
                         }
                         "median" => {
                             let mut sorted_targets = targets.clone();
-                            sorted_targets.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                            sorted_targets
+                                .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
                             let median = if sorted_targets.len() % 2 == 0 {
                                 let mid = sorted_targets.len() / 2;
@@ -1103,7 +1104,7 @@ impl BinaryEncoder {
 
     /// Creates a BinaryEncoder with default settings (handleunknown='error')
     pub fn with_defaults() -> Self {
-        Self::new("error").unwrap()
+        Self::new("error").expect("Operation failed")
     }
 
     /// Fits the BinaryEncoder to the input data
@@ -1189,8 +1190,8 @@ impl BinaryEncoder {
             ));
         }
 
-        let categories = self.categories_.as_ref().unwrap();
-        let n_binary_features = self.n_binary_features_.as_ref().unwrap();
+        let categories = self.categories_.as_ref().expect("Operation failed");
+        let n_binary_features = self.n_binary_features_.as_ref().expect("Operation failed");
 
         let x_u64 = x.mapv(|x| {
             let val_f64 = NumCast::from(x).unwrap_or(0.0);
@@ -1345,12 +1346,12 @@ impl FrequencyEncoder {
 
     /// Creates a FrequencyEncoder with default settings
     pub fn with_defaults() -> Self {
-        Self::new(false, "error", 0.0).unwrap()
+        Self::new(false, "error", 0.0).expect("Operation failed")
     }
 
     /// Creates a FrequencyEncoder with normalized frequencies
     pub fn with_normalization() -> Self {
-        Self::new(true, "error", 0.0).unwrap()
+        Self::new(true, "error", 0.0).expect("Operation failed")
     }
 
     /// Fits the FrequencyEncoder to the input data
@@ -1424,7 +1425,7 @@ impl FrequencyEncoder {
             ));
         }
 
-        let frequency_maps = self.frequency_maps_.as_ref().unwrap();
+        let frequency_maps = self.frequency_maps_.as_ref().expect("Operation failed");
 
         let x_u64 = x.mapv(|x| {
             let val_f64 = NumCast::from(x).unwrap_or(0.0);
@@ -1561,7 +1562,7 @@ impl WOEEncoder {
 
     /// Creates a WOEEncoder with default settings
     pub fn with_defaults() -> Self {
-        Self::new(0.5, "global_woe", 0.0).unwrap()
+        Self::new(0.5, "global_woe", 0.0).expect("Operation failed")
     }
 
     /// Creates a WOEEncoder with custom regularization
@@ -1695,7 +1696,7 @@ impl WOEEncoder {
             ));
         }
 
-        let woe_maps = self.woe_maps_.as_ref().unwrap();
+        let woe_maps = self.woe_maps_.as_ref().expect("Operation failed");
 
         let x_u64 = x.mapv(|x| {
             let val_f64 = NumCast::from(x).unwrap_or(0.0);

@@ -312,7 +312,7 @@ where
 ///                     [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]];
 ///
 /// // Decompose with target rank 3, maximum 50 iterations, and tolerance 1e-4
-/// let cp = cp_als(&tensor.view(), 3, 50, 1e-4, true).unwrap();
+/// let cp = cp_als(&tensor.view(), 3, 50, 1e-4, true).expect("Operation failed");
 ///
 /// // The factors should preserve the original dimensions
 /// assert_eq!(cp.factors[0].shape(), &[2, 3]); // mode 0: 2 rows, rank 3
@@ -358,7 +358,8 @@ where
         for i in 0..dim {
             for j in 0..rank {
                 // Simple deterministic initialization - replace with random in production
-                factor[[i, j]] = A::from(((i + 1) * (j + 1)) % 10).unwrap() / A::from(10).unwrap();
+                factor[[i, j]] = A::from(((i + 1) * (j + 1)) % 10).expect("Operation failed")
+                    / A::from(10).expect("Operation failed");
             }
         }
         factors.push(factor);
@@ -539,7 +540,7 @@ where
                 }
 
                 result = Some(new_result);
-                result_rows = result.as_ref().unwrap().shape()[0];
+                result_rows = result.as_ref().expect("Operation failed").shape()[0];
             }
         }
     }
@@ -599,7 +600,7 @@ where
     // Compute the pseudoinverse of the singular values
     let mut s_inv = Array2::zeros((s.len(), s.len()));
     for i in 0..s.len() {
-        if s[i] > A::epsilon() * A::from(10.0).unwrap() {
+        if s[i] > A::epsilon() * A::from(10.0).expect("Operation failed") {
             s_inv[[i, i]] = A::one() / s[i];
         }
     }
@@ -666,7 +667,7 @@ mod tests {
         ];
 
         // Decompose with rank 2 (avoiding 3x3 matrices that fail in eigen)
-        let cp = cp_als(&tensor.view(), 2, 50, 1e-4, true).unwrap();
+        let cp = cp_als(&tensor.view(), 2, 50, 1e-4, true).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(cp.factors.len(), 3);
@@ -676,13 +677,15 @@ mod tests {
 
         // Weights should be present
         assert!(cp.weights.is_some());
-        assert_eq!(cp.weights.as_ref().unwrap().len(), 2);
+        assert_eq!(cp.weights.as_ref().expect("Operation failed").len(), 2);
 
         // Reconstruct the tensor
-        let _reconstructed = cp.to_full().unwrap();
+        let _reconstructed = cp.to_full().expect("Operation failed");
 
         // Check reconstruction error
-        let error = cp.reconstruction_error(&tensor.view()).unwrap();
+        let error = cp
+            .reconstruction_error(&tensor.view())
+            .expect("Operation failed");
         assert!(error < 0.1); // Error should be small for this simple tensor
     }
 
@@ -695,7 +698,7 @@ mod tests {
         ];
 
         // Decompose with rank 2
-        let cp = cp_als(&tensor.view(), 2, 50, 1e-4, true).unwrap();
+        let cp = cp_als(&tensor.view(), 2, 50, 1e-4, true).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(cp.factors.len(), 3);
@@ -704,10 +707,12 @@ mod tests {
         assert_eq!(cp.factors[2].shape(), &[2, 2]);
 
         // Reconstruct the tensor
-        let _reconstructed = cp.to_full().unwrap();
+        let _reconstructed = cp.to_full().expect("Operation failed");
 
         // Check reconstruction error (should be non-zero for truncated rank)
-        let error = cp.reconstruction_error(&tensor.view()).unwrap();
+        let error = cp
+            .reconstruction_error(&tensor.view())
+            .expect("Operation failed");
         assert!(error > 0.0);
         assert!(error < 0.5); // Error should still be reasonable for rank-2 approximation
     }
@@ -722,10 +727,10 @@ mod tests {
         ];
 
         // Decompose with rank 4 (avoiding 3x3 matrices that fail in eigen)
-        let cp = cp_als(&tensor.view(), 4, 50, 1e-4, true).unwrap();
+        let cp = cp_als(&tensor.view(), 4, 50, 1e-4, true).expect("Operation failed");
 
         // Compress to rank 2
-        let compressed = cp.compress(2).unwrap();
+        let compressed = cp.compress(2).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(compressed.factors.len(), 3);
@@ -735,11 +740,18 @@ mod tests {
 
         // Weights should be truncated
         assert!(compressed.weights.is_some());
-        assert_eq!(compressed.weights.as_ref().unwrap().len(), 2);
+        assert_eq!(
+            compressed.weights.as_ref().expect("Operation failed").len(),
+            2
+        );
 
         // Error of compressed decomposition should be higher than original
-        let error_orig = cp.reconstruction_error(&tensor.view()).unwrap();
-        let error_comp = compressed.reconstruction_error(&tensor.view()).unwrap();
+        let error_orig = cp
+            .reconstruction_error(&tensor.view())
+            .expect("Operation failed");
+        let error_comp = compressed
+            .reconstruction_error(&tensor.view())
+            .expect("Operation failed");
         assert!(error_comp >= error_orig * 0.99); // Allow for numerical imprecision
     }
 
@@ -768,10 +780,11 @@ mod tests {
         ];
 
         // Create CP decomposition
-        let cp = CanonicalPolyadic::new(factors, None, Some(vec![2, 3, 2])).unwrap();
+        let cp =
+            CanonicalPolyadic::new(factors, None, Some(vec![2, 3, 2])).expect("Operation failed");
 
         // Reconstruct the tensor
-        let reconstructed = cp.to_full().unwrap();
+        let reconstructed = cp.to_full().expect("Operation failed");
 
         // Check reconstruction (should be exact for this simple case)
         for i in 0..2 {
@@ -797,7 +810,7 @@ mod tests {
         let factors = vec![a.clone(), b.clone()];
 
         // Compute Khatri-Rao product, skipping the first matrix
-        let kr = khatri_rao_product(&factors, 0).unwrap();
+        let kr = khatri_rao_product(&factors, 0).expect("Operation failed");
 
         // Result should be the same as b (when skipping a)
         assert_eq!(kr.shape(), &[3, 2]);
@@ -808,7 +821,7 @@ mod tests {
         }
 
         // Compute Khatri-Rao product, skipping the second matrix
-        let kr = khatri_rao_product(&factors, 1).unwrap();
+        let kr = khatri_rao_product(&factors, 1).expect("Operation failed");
 
         // Result should be the same as a (when skipping b)
         assert_eq!(kr.shape(), &[2, 2]);

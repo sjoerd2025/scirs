@@ -128,7 +128,7 @@ impl SystemMonitor {
 
     /// Start monitoring system resources
     pub fn start(&mut self) -> Result<(), SystemMonitorError> {
-        let mut running = self.running.lock().unwrap();
+        let mut running = self.running.lock().expect("Operation failed");
         if *running {
             return Ok(()); // Already running
         }
@@ -165,7 +165,7 @@ impl SystemMonitor {
     pub fn get_metrics_history(&self) -> Vec<SystemMetrics> {
         self.metrics_history
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .cloned()
             .collect()
@@ -173,7 +173,7 @@ impl SystemMonitor {
 
     /// Get latest N metrics
     pub fn get_latest_metrics(&self, n: usize) -> Vec<SystemMetrics> {
-        let history = self.metrics_history.lock().unwrap();
+        let history = self.metrics_history.lock().expect("Operation failed");
         history.iter().rev().take(n).cloned().collect()
     }
 
@@ -181,7 +181,7 @@ impl SystemMonitor {
     pub fn get_metrics_in_range(&self, start: Instant, end: Instant) -> Vec<SystemMetrics> {
         self.metrics_history
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .filter(|m| m.timestamp >= start && m.timestamp <= end)
             .cloned()
@@ -235,9 +235,9 @@ impl SystemMonitor {
         metrics_history: Arc<Mutex<VecDeque<SystemMetrics>>>,
         running: Arc<Mutex<bool>>,
     ) {
-        while *running.lock().unwrap() {
+        while *running.lock().expect("Operation failed") {
             if let Ok(metrics) = Self::collect_system_metrics(&config) {
-                let mut history = metrics_history.lock().unwrap();
+                let mut history = metrics_history.lock().expect("Operation failed");
                 history.push_back(metrics);
 
                 // Keep only the last max_samples
@@ -720,7 +720,7 @@ mod tests {
     fn test_systemmonitor_creation() {
         let config = SystemMonitorConfig::default();
         let monitor = SystemMonitor::new(config);
-        assert!(!*monitor.running.lock().unwrap());
+        assert!(!*monitor.running.lock().expect("Operation failed"));
     }
 
     #[test]
@@ -745,7 +745,7 @@ mod tests {
 
         // Simulate some metrics
         {
-            let mut history = monitor.metrics_history.lock().unwrap();
+            let mut history = monitor.metrics_history.lock().expect("Operation failed");
             for i in 0..10 {
                 let metrics = SystemMetrics {
                     cpu_usage: i as f64 * 10.0,

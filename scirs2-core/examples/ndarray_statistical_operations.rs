@@ -23,9 +23,9 @@ fn main() {
     println!("=== Basic Statistics ===");
 
     // Mean
-    let global_mean = mean_2d(&data.view(), None).unwrap();
-    let col_means = mean_2d(&data.view(), Some(Axis(0))).unwrap();
-    let row_means = mean_2d(&data.view(), Some(Axis(1))).unwrap();
+    let global_mean = mean_2d(&data.view(), None).expect("Operation failed");
+    let col_means = mean_2d(&data.view(), Some(Axis(0))).expect("Operation failed");
+    let row_means = mean_2d(&data.view(), Some(Axis(1))).expect("Operation failed");
 
     println!("Global mean: {}", global_mean[0]);
     println!("Column means: {col_means:?}");
@@ -33,9 +33,9 @@ fn main() {
     println!();
 
     // Median
-    let global_median = median_2d(&data.view(), None).unwrap();
-    let col_medians = median_2d(&data.view(), Some(Axis(0))).unwrap();
-    let row_medians = median_2d(&data.view(), Some(Axis(1))).unwrap();
+    let global_median = median_2d(&data.view(), None).expect("Operation failed");
+    let col_medians = median_2d(&data.view(), Some(Axis(0))).expect("Operation failed");
+    let row_medians = median_2d(&data.view(), Some(Axis(1))).expect("Operation failed");
 
     println!("Global median: {}", global_median[0]);
     println!("Column medians: {col_medians:?}");
@@ -43,24 +43,24 @@ fn main() {
     println!();
 
     // Variance and Standard Deviation
-    let global_var = variance_2d(&data.view(), None, 1).unwrap();
-    let global_std = std_dev_2d(&data.view(), None, 1).unwrap();
+    let global_var = variance_2d(&data.view(), None, 1).expect("Operation failed");
+    let global_std = std_dev_2d(&data.view(), None, 1).expect("Operation failed");
 
     println!("Global variance (sample): {}", global_var[0]);
     println!("Global standard deviation (sample): {}", global_std[0]);
     println!();
 
     // Min and Max
-    let global_min = min_2d(&data.view(), None).unwrap();
-    let global_max = max_2d(&data.view(), None).unwrap();
+    let global_min = min_2d(&data.view(), None).expect("Operation failed");
+    let global_max = max_2d(&data.view(), None).expect("Operation failed");
 
     println!("Global minimum: {}", global_min[0]);
     println!("Global maximum: {}", global_max[0]);
     println!();
 
     // Sum
-    let global_sum = sum_2d(&data.view(), None).unwrap();
-    let col_sums = sum_2d(&data.view(), Some(Axis(0))).unwrap();
+    let global_sum = sum_2d(&data.view(), None).expect("Operation failed");
+    let col_sums = sum_2d(&data.view(), Some(Axis(0))).expect("Operation failed");
 
     println!("Global sum: {}", global_sum[0]);
     println!("Column sums: {col_sums:?}");
@@ -69,7 +69,7 @@ fn main() {
     // Percentile
     let percentiles = [0.0, 25.0, 50.0, 75.0, 100.0];
     for p in percentiles.iter() {
-        let global_p = percentile_2d(&data.view(), *p, None).unwrap();
+        let global_p = percentile_2d(&data.view(), *p, None).expect("Operation failed");
         println!("Global {}th percentile: {}", p, global_p[0]);
     }
     println!();
@@ -83,7 +83,7 @@ fn main() {
     println!("1D array: {data_1d:?}");
 
     // Calculate histogram
-    let (hist, bin_edges) = histogram(data_1d.view(), 5, None, None).unwrap();
+    let (hist, bin_edges) = histogram(data_1d.view(), 5, None, None).expect("Operation failed");
 
     println!("Histogram with 5 bins:");
     println!("Bin edges: {bin_edges:?}");
@@ -106,7 +106,7 @@ fn main() {
     // Quantile example
     println!("=== Quantile Example ===");
     let quantiles = array![0.0, 0.25, 0.5, 0.75, 1.0];
-    let results = quantile(data_1d.view(), quantiles.view(), None).unwrap();
+    let results = quantile(data_1d.view(), quantiles.view(), None).expect("Operation failed");
 
     println!("Quantiles using 'linear' interpolation:");
     for (&q, &val) in quantiles.iter().zip(results.iter()) {
@@ -131,11 +131,11 @@ fn main() {
     }
 
     let x_arr = Array2::from_shape_vec((n, 1), x)
-        .unwrap()
+        .expect("Operation failed")
         .column(0)
         .to_owned();
     let y_arr = Array2::from_shape_vec((n, 1), y)
-        .unwrap()
+        .expect("Operation failed")
         .column(0)
         .to_owned();
 
@@ -143,7 +143,8 @@ fn main() {
 
     // Calculate 2D histogram
     let (hist_2d, x_edges, y_edges) =
-        histogram2d(x_arr.view(), y_arr.view(), Some((6, 6)), None, None).unwrap();
+        histogram2d(x_arr.view(), y_arr.view(), Some((6, 6)), None, None)
+            .expect("Operation failed");
 
     println!("2D Histogram (6×6 bins):");
     println!("X edges: {x_edges:?}");

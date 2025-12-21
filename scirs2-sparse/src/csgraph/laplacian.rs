@@ -62,10 +62,10 @@ impl LaplacianType {
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
 /// // Compute standard Laplacian
-/// let (laplacian, _) = laplacian(&graph, false, false, true).unwrap();
+/// let (laplacian, _) = laplacian(&graph, false, false, true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn laplacian<T, S>(
@@ -126,23 +126,23 @@ where
 
     match laplaciantype {
         LaplacianType::Standard => compute_standard_laplacian(
-            row_indices.as_slice().unwrap(),
-            col_indices.as_slice().unwrap(),
-            values.as_slice().unwrap(),
+            row_indices.as_slice().expect("Operation failed"),
+            col_indices.as_slice().expect("Operation failed"),
+            values.as_slice().expect("Operation failed"),
             &degrees,
             n,
         ),
         LaplacianType::Normalized => compute_normalized_laplacian(
-            row_indices.as_slice().unwrap(),
-            col_indices.as_slice().unwrap(),
-            values.as_slice().unwrap(),
+            row_indices.as_slice().expect("Operation failed"),
+            col_indices.as_slice().expect("Operation failed"),
+            values.as_slice().expect("Operation failed"),
             &degrees,
             n,
         ),
         LaplacianType::RandomWalk => compute_random_walk_laplacian(
-            row_indices.as_slice().unwrap(),
-            col_indices.as_slice().unwrap(),
-            values.as_slice().unwrap(),
+            row_indices.as_slice().expect("Operation failed"),
+            col_indices.as_slice().expect("Operation failed"),
+            values.as_slice().expect("Operation failed"),
             &degrees,
             n,
         ),
@@ -359,9 +359,9 @@ where
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
 /// let data = vec![1.0, 1.0, 1.0, 1.0];
-/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+/// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 ///
-/// let degrees = degree_matrix(&graph, true).unwrap();
+/// let degrees = degree_matrix(&graph, true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn degree_matrix<T, S>(graph: &S, use_outdegree: bool) -> SparseResult<Array1<T>>
@@ -496,7 +496,7 @@ where
 
     // Verify that the smallest eigenvalue is close to zero (sanity check)
     let smallest_eigenval = sorted_eigenvals[0];
-    let zero_threshold = T::from(1e-10).unwrap();
+    let zero_threshold = T::from(1e-10).expect("Operation failed");
 
     if smallest_eigenval.abs() > zero_threshold {
         return Err(SparseError::ValueError(format!(
@@ -580,15 +580,15 @@ mod tests {
         let cols = vec![1, 2, 0, 2, 0, 1];
         let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
 
-        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap()
+        CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed")
     }
 
     #[test]
     fn test_compute_degrees() {
         let graph = create_simple_graph();
 
-        let out_degrees = compute_out_degrees(&graph).unwrap();
-        let in_degrees = compute_in_degrees(&graph).unwrap();
+        let out_degrees = compute_out_degrees(&graph).expect("Operation failed");
+        let in_degrees = compute_in_degrees(&graph).expect("Operation failed");
 
         // For undirected graphs, out-degrees and in-degrees should be the same
         assert_relative_eq!(out_degrees[0], 2.0); // Connected to 1 and 2
@@ -604,9 +604,10 @@ mod tests {
     fn test_standard_laplacian() {
         let graph = create_simple_graph();
         let (laplacian, degrees) =
-            compute_laplacianmatrix(&graph, LaplacianType::Standard, true, true).unwrap();
+            compute_laplacianmatrix(&graph, LaplacianType::Standard, true, true)
+                .expect("Operation failed");
 
-        let degrees = degrees.unwrap();
+        let degrees = degrees.expect("Operation failed");
 
         // Check degrees
         assert_relative_eq!(degrees[0], 2.0);
@@ -632,7 +633,8 @@ mod tests {
     fn test_normalized_laplacian() {
         let graph = create_simple_graph();
         let (laplacian, _) =
-            compute_laplacianmatrix(&graph, LaplacianType::Normalized, false, true).unwrap();
+            compute_laplacianmatrix(&graph, LaplacianType::Normalized, false, true)
+                .expect("Operation failed");
 
         // Check diagonal elements are 1
         assert_relative_eq!(laplacian.get(0, 0), 1.0);
@@ -650,7 +652,8 @@ mod tests {
     fn test_random_walk_laplacian() {
         let graph = create_simple_graph();
         let (laplacian, _) =
-            compute_laplacianmatrix(&graph, LaplacianType::RandomWalk, false, true).unwrap();
+            compute_laplacianmatrix(&graph, LaplacianType::RandomWalk, false, true)
+                .expect("Operation failed");
 
         // Check diagonal elements are 1
         assert_relative_eq!(laplacian.get(0, 0), 1.0);
@@ -669,14 +672,14 @@ mod tests {
         let graph = create_simple_graph();
 
         // Test standard Laplacian
-        let (lap_std_, _) = laplacian(&graph, false, false, true).unwrap();
+        let (lap_std_, _) = laplacian(&graph, false, false, true).expect("Operation failed");
         assert_relative_eq!(lap_std_.get(0, 0), 2.0);
 
         // Test normalized Laplacian
-        let (lap_norm, degrees) = laplacian(&graph, true, true, true).unwrap();
+        let (lap_norm, degrees) = laplacian(&graph, true, true, true).expect("Operation failed");
         assert_relative_eq!(lap_norm.get(0, 0), 1.0);
 
-        let degrees = degrees.unwrap();
+        let degrees = degrees.expect("Operation failed");
         assert_relative_eq!(degrees[0], 2.0);
     }
 
@@ -684,7 +687,7 @@ mod tests {
     fn test_degree_matrix() {
         let graph = create_simple_graph();
 
-        let degrees = degree_matrix(&graph, true).unwrap();
+        let degrees = degree_matrix(&graph, true).expect("Operation failed");
         assert_relative_eq!(degrees[0], 2.0);
         assert_relative_eq!(degrees[1], 2.0);
         assert_relative_eq!(degrees[2], 2.0);
@@ -693,8 +696,8 @@ mod tests {
     #[test]
     fn test_laplacianrow_sums() {
         let graph = create_simple_graph();
-        let (laplacian, _) =
-            compute_laplacianmatrix(&graph, LaplacianType::Standard, false, true).unwrap();
+        let (laplacian, _) = compute_laplacianmatrix(&graph, LaplacianType::Standard, false, true)
+            .expect("Operation failed");
 
         // Row sums of Laplacian should be zero
         for i in 0..3 {
@@ -709,11 +712,11 @@ mod tests {
     #[test]
     fn test_is_laplacian() {
         let graph = create_simple_graph();
-        let (laplacian, _) =
-            compute_laplacianmatrix(&graph, LaplacianType::Standard, false, true).unwrap();
+        let (laplacian, _) = compute_laplacianmatrix(&graph, LaplacianType::Standard, false, true)
+            .expect("Operation failed");
 
         // Our computed Laplacian should pass the validation
-        assert!(is_laplacian(&laplacian, 1e-10).unwrap());
+        assert!(is_laplacian(&laplacian, 1e-10).expect("Operation failed"));
     }
 
     #[test]
@@ -722,12 +725,14 @@ mod tests {
         let rows = vec![0, 1];
         let cols = vec![1, 0];
         let data = vec![1.0, 1.0];
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         let (laplacian, degrees) =
-            compute_laplacianmatrix(&graph, LaplacianType::Standard, true, true).unwrap();
+            compute_laplacianmatrix(&graph, LaplacianType::Standard, true, true)
+                .expect("Operation failed");
 
-        let degrees = degrees.unwrap();
+        let degrees = degrees.expect("Operation failed");
 
         // Vertex 2 is isolated, so degree should be 0
         assert_relative_eq!(degrees[2], 0.0);
@@ -744,16 +749,17 @@ mod tests {
         let rows = vec![0, 1];
         let cols = vec![1, 2];
         let data = vec![1.0, 1.0];
-        let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let graph =
+            CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 
         // Test out-degrees
-        let out_degrees = compute_out_degrees(&graph).unwrap();
+        let out_degrees = compute_out_degrees(&graph).expect("Operation failed");
         assert_relative_eq!(out_degrees[0], 1.0);
         assert_relative_eq!(out_degrees[1], 1.0);
         assert_relative_eq!(out_degrees[2], 0.0);
 
         // Test in-degrees
-        let in_degrees = compute_in_degrees(&graph).unwrap();
+        let in_degrees = compute_in_degrees(&graph).expect("Operation failed");
         assert_relative_eq!(in_degrees[0], 0.0);
         assert_relative_eq!(in_degrees[1], 1.0);
         assert_relative_eq!(in_degrees[2], 1.0);

@@ -167,12 +167,11 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simdmatrix_add_f32() {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let b = array![[5.0f32, 6.0], [7.0, 8.0]];
 
-        let result = simdmatrix_add_f32(&a.view(), &b.view()).unwrap();
+        let result = simdmatrix_add_f32(&a.view(), &b.view()).expect("Operation failed");
 
         assert_relative_eq!(result[[0, 0]], 6.0);
         assert_relative_eq!(result[[0, 1]], 8.0);
@@ -182,12 +181,11 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simdmatrix_scale_f32() {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let scalar = 2.5f32;
 
-        let result = simdmatrix_scale_f32(&a.view(), scalar).unwrap();
+        let result = simdmatrix_scale_f32(&a.view(), scalar).expect("Operation failed");
 
         assert_relative_eq!(result[[0, 0]], 2.5);
         assert_relative_eq!(result[[0, 1]], 5.0);
@@ -197,12 +195,12 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simdmatrix_mul_elementwise_f32() {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let b = array![[2.0f32, 3.0], [4.0, 5.0]];
 
-        let result = simdmatrix_mul_elementwise_f32(&a.view(), &b.view()).unwrap();
+        let result =
+            simdmatrix_mul_elementwise_f32(&a.view(), &b.view()).expect("Operation failed");
 
         assert_relative_eq!(result[[0, 0]], 2.0);
         assert_relative_eq!(result[[0, 1]], 6.0);

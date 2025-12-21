@@ -184,7 +184,7 @@ impl WordCloud {
 
         // Sort words by frequency
         let mut sorted_words: Vec<_> = self.word_frequencies.iter().collect();
-        sorted_words.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+        sorted_words.sort_by(|a, b| b.1.partial_cmp(a.1).expect("Operation failed"));
 
         // Take top words
         let max_words = 50;
@@ -587,7 +587,7 @@ impl EmbeddingVisualizer {
         }
 
         // Center the data
-        let mean = data_matrix.mean_axis(Axis(0)).unwrap();
+        let mean = data_matrix.mean_axis(Axis(0)).expect("Operation failed");
         for mut row in data_matrix.rows_mut() {
             row -= &mean;
         }
@@ -937,7 +937,7 @@ impl TopicVisualizer {
 
             // Get top words for this topic
             let mut topic_words: Vec<_> = topic.top_words.iter().collect();
-            topic_words.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+            topic_words.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
             let top_words: Vec<_> = topic_words.into_iter().take(topn).collect();
 
             if !top_words.is_empty() {
@@ -1194,7 +1194,7 @@ mod tests {
         let config = VisualizationConfig::default();
         let word_cloud = WordCloud::from_frequencies(frequencies, config);
 
-        let svg = word_cloud.to_svg().unwrap();
+        let svg = word_cloud.to_svg().expect("Operation failed");
         assert!(svg.contains("<svg"));
         assert!(svg.contains("hello"));
         assert!(svg.contains("world"));
@@ -1230,7 +1230,7 @@ mod tests {
 
         let svg = viz
             .sentiment_distribution(&sentiment_results, &labels)
-            .unwrap();
+            .expect("Operation failed");
         assert!(svg.contains("<svg"));
         assert!(svg.contains("Positive"));
         assert!(svg.contains("Negative"));

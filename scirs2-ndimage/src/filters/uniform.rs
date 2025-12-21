@@ -48,8 +48,15 @@ use scirs2_core::parallel_ops;
 ///                     [7.0, 8.0, 9.0]];
 ///
 /// // Apply 3x3 uniform filter
-/// let filtered = uniform_filter(&input, &[3, 3], None, None).unwrap();
+/// let filtered = uniform_filter(&input, &[3, 3], None, None).expect("Operation failed");
 /// ```
+///
+/// # ⚠️ Known Issues
+///
+/// **WARNING**: Border normalization in this filter has known discrepancies with SciPy's
+/// implementation. For constant arrays, values near boundaries may not preserve the constant
+/// value exactly as scipy.ndimage.uniform_filter does. This is being tracked for v0.2.0.
+/// For strict SciPy compatibility, validate results when boundary accuracy is critical.
 #[allow(dead_code)]
 pub fn uniform_filter<T, D>(
     input: &Array<T, D>,
@@ -197,7 +204,7 @@ where
     let padded_input = pad_array(input, &pad_width, mode, None)?;
 
     // Calculate normalization factor (1/size)
-    let norm_factor = T::one() / T::from_usize(size).unwrap();
+    let norm_factor = T::one() / T::from_usize(size).expect("Operation failed");
 
     // Apply filter to each position
     for i in 0..input.len() {
@@ -363,7 +370,7 @@ where
 
     // Calculate normalization factor (1/total_size)
     let total_size = size[0] * size[1];
-    let norm_factor = T::one() / T::from_usize(total_size).unwrap();
+    let norm_factor = T::one() / T::from_usize(total_size).expect("Operation failed");
 
     // Apply filter to each position
     for i in 0..rows {
@@ -432,7 +439,8 @@ where
 
                 // Get the row slice for SIMD processing
                 let padded_row = padded_input.row(i + ki);
-                let window_slice = &padded_row.as_slice().unwrap()[row_start..row_end];
+                let window_slice =
+                    &padded_row.as_slice().expect("Operation failed")[row_start..row_end];
 
                 // Use SIMD sum for the row segment
                 let window_array = Array1::from_vec(window_slice.to_vec());
@@ -534,7 +542,7 @@ where
 
     // Calculate normalization factor (1/total_size)
     let total_size: usize = size.iter().product();
-    let norm_factor = T::one() / T::from_usize(total_size).unwrap();
+    let norm_factor = T::one() / T::from_usize(total_size).expect("Operation failed");
 
     // Create output array
     let output = Array::<T, D>::zeros(input.raw_dim());
@@ -937,7 +945,7 @@ where
     let padded_input = pad_array(input, &pad_width, mode, None)?;
 
     // Calculate normalization factor (1/size)
-    let norm_factor = T::one() / T::from_usize(size).unwrap();
+    let norm_factor = T::one() / T::from_usize(size).expect("Operation failed");
 
     // Handle each dimensionality case separately for best performance
     match input.ndim() {
@@ -1266,7 +1274,7 @@ mod tests {
         let input = array![[1.0, 2.0], [4.0, 5.0]];
 
         // Apply uniform filter
-        let result = uniform_filter(&input, &[2, 2], None, None).unwrap();
+        let result = uniform_filter(&input, &[2, 2], None, None).expect("Operation failed");
 
         // Check shape
         assert_eq!(result.shape(), input.shape());
@@ -1299,7 +1307,7 @@ mod tests {
         input[[2, 2, 2]] = 6.0;
 
         // Apply 3D uniform filter
-        let result = uniform_filter(&input, &[2, 2, 2], None, None).unwrap();
+        let result = uniform_filter(&input, &[2, 2, 2], None, None).expect("Operation failed");
 
         // Check shape is preserved
         assert_eq!(result.shape(), input.shape());
@@ -1312,7 +1320,8 @@ mod tests {
         }
 
         // Test separable filter still works
-        let result_sep = uniform_filter_separable(&input, &[2, 2, 2], None, None).unwrap();
+        let result_sep =
+            uniform_filter_separable(&input, &[2, 2, 2], None, None).expect("Operation failed");
         assert_eq!(result_sep.shape(), input.shape());
     }
 
@@ -1321,7 +1330,7 @@ mod tests {
         // Test 4D arrays to ensure general n-dimensional support
         let input = scirs2_core::ndarray::Array4::<f64>::from_elem((2, 2, 2, 2), 5.0);
 
-        let result = uniform_filter(&input, &[2, 2, 2, 2], None, None).unwrap();
+        let result = uniform_filter(&input, &[2, 2, 2, 2], None, None).expect("Operation failed");
 
         // All values should be 5.0 since input is uniform
         for elem in result.iter() {

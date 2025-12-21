@@ -61,12 +61,12 @@ impl PlanCache {
 
     /// Enable or disable the cache
     pub fn set_enabled(&self, enabled: bool) {
-        *self.enabled.lock().unwrap() = enabled;
+        *self.enabled.lock().expect("Operation failed") = enabled;
     }
 
     /// Check if the cache is enabled
     pub fn is_enabled(&self) -> bool {
-        *self.enabled.lock().unwrap()
+        *self.enabled.lock().expect("Operation failed")
     }
 
     /// Clear all cached plans
@@ -78,8 +78,8 @@ impl PlanCache {
 
     /// Get statistics about cache usage
     pub fn get_stats(&self) -> CacheStats {
-        let hit_count = *self.hit_count.lock().unwrap();
-        let miss_count = *self.miss_count.lock().unwrap();
+        let hit_count = *self.hit_count.lock().expect("Operation failed");
+        let miss_count = *self.miss_count.lock().expect("Operation failed");
         let total_requests = hit_count + miss_count;
         let hit_rate = if total_requests > 0 {
             hit_count as f64 / total_requests as f64
@@ -105,7 +105,7 @@ impl PlanCache {
         forward: bool,
         planner: &mut FftPlanner<f64>,
     ) -> Arc<dyn rustfft::Fft<f64>> {
-        if !*self.enabled.lock().unwrap() {
+        if !*self.enabled.lock().expect("Operation failed") {
             return if forward {
                 planner.plan_fft_forward(size)
             } else {
@@ -122,7 +122,7 @@ impl PlanCache {
                 if cached.last_used.elapsed() <= self.max_age {
                     cached.last_used = Instant::now();
                     cached.usage_count += 1;
-                    *self.hit_count.lock().unwrap() += 1;
+                    *self.hit_count.lock().expect("Operation failed") += 1;
                     return cached.plan.clone();
                 } else {
                     // Remove stale entry
@@ -132,7 +132,7 @@ impl PlanCache {
         }
 
         // Cache miss - create new plan
-        *self.miss_count.lock().unwrap() += 1;
+        *self.miss_count.lock().expect("Operation failed") += 1;
 
         let plan: Arc<dyn rustfft::Fft<f64>> = if forward {
             planner.plan_fft_forward(size)

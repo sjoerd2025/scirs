@@ -39,8 +39,8 @@ pub enum BinningStrategy {
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::polynomial_features;
 ///
-/// let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-/// let poly_features = polynomial_features(&data, 2, true).unwrap();
+/// let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+/// let poly_features = polynomial_features(&data, 2, true).expect("Operation failed");
 /// // Result includes: [1, x1, x2, x1², x1*x2, x2²]
 /// ```
 #[allow(dead_code)]
@@ -168,8 +168,8 @@ fn generate_polynomial_combinations(
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::statistical_features;
 ///
-/// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
-/// let stats_features = statistical_features(&data).unwrap();
+/// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).expect("Operation failed");
+/// let stats_features = statistical_features(&data).expect("Operation failed");
 /// // Result includes 9 statistical measures for each of the 2 original features
 /// ```
 #[allow(dead_code)]
@@ -208,7 +208,7 @@ pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
 
             // Calculate quantiles
             let mut sorted_values: Vec<f64> = feature_values.to_vec();
-            sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             let median = calculate_quantile(&sorted_values, 0.5);
             let q25 = calculate_quantile(&sorted_values, 0.25);
@@ -303,8 +303,8 @@ fn calculate_kurtosis(data: &scirs2_core::ndarray::ArrayView1<f64>, mean: f64, s
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::{create_binned_features, BinningStrategy};
 ///
-/// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
-/// let binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
+/// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).expect("Operation failed");
+/// let binned = create_binned_features(&data, 3, BinningStrategy::Uniform).expect("Operation failed");
 /// // Each feature is now discretized into 3 bins (values 0, 1, 2)
 /// ```
 #[allow(dead_code)]
@@ -364,7 +364,7 @@ fn calculate_bin_edges(
         }
         BinningStrategy::Quantile => {
             let mut sorted_data: Vec<f64> = data.to_vec();
-            sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
             let mut edges = Vec::with_capacity(n_bins + 1);
             edges.push(sorted_data[0]);
@@ -400,8 +400,9 @@ mod tests {
 
     #[test]
     fn test_polynomial_features_degree_2() {
-        let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let poly = polynomial_features(&data, 2, true).unwrap();
+        let data =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let poly = polynomial_features(&data, 2, true).expect("Operation failed");
 
         // Should have: [bias, x1, x2, x1², x1*x2, x2²] = 6 features
         assert_eq!(poly.ncols(), 6);
@@ -418,8 +419,8 @@ mod tests {
 
     #[test]
     fn test_polynomial_features_no_bias() {
-        let data = Array2::from_shape_vec((1, 2), vec![2.0, 3.0]).unwrap();
-        let poly = polynomial_features(&data, 2, false).unwrap();
+        let data = Array2::from_shape_vec((1, 2), vec![2.0, 3.0]).expect("Operation failed");
+        let poly = polynomial_features(&data, 2, false).expect("Operation failed");
 
         // Should have: [x1, x2, x1², x1*x2, x2²] = 5 features (no bias)
         assert_eq!(poly.ncols(), 5);
@@ -434,14 +435,15 @@ mod tests {
 
     #[test]
     fn test_polynomial_features_invalid_degree() {
-        let data = Array2::from_shape_vec((1, 1), vec![1.0]).unwrap();
+        let data = Array2::from_shape_vec((1, 1), vec![1.0]).expect("Operation failed");
         assert!(polynomial_features(&data, 0, true).is_err());
     }
 
     #[test]
     fn test_statistical_features() {
-        let data = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
-        let stats = statistical_features(&data).unwrap();
+        let data = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0])
+            .expect("Operation failed");
+        let stats = statistical_features(&data).expect("Operation failed");
 
         // Should have 9 statistical features for 1 original feature
         assert_eq!(stats.ncols(), 9);
@@ -464,8 +466,10 @@ mod tests {
 
     #[test]
     fn test_create_binned_features_uniform() {
-        let data = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
-        let binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
+        let data = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0])
+            .expect("Operation failed");
+        let binned =
+            create_binned_features(&data, 3, BinningStrategy::Uniform).expect("Operation failed");
 
         assert_eq!(binned.nrows(), 5);
         assert_eq!(binned.ncols(), 1);
@@ -479,8 +483,10 @@ mod tests {
 
     #[test]
     fn test_create_binned_features_quantile() {
-        let data = Array2::from_shape_vec((6, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let binned = create_binned_features(&data, 3, BinningStrategy::Quantile).unwrap();
+        let data = Array2::from_shape_vec((6, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
+        let binned =
+            create_binned_features(&data, 3, BinningStrategy::Quantile).expect("Operation failed");
 
         assert_eq!(binned.nrows(), 6);
         assert_eq!(binned.ncols(), 1);
@@ -500,7 +506,7 @@ mod tests {
 
     #[test]
     fn test_create_binned_features_invalid_bins() {
-        let data = Array2::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).expect("Operation failed");
         assert!(create_binned_features(&data, 1, BinningStrategy::Uniform).is_err());
         assert!(create_binned_features(&data, 0, BinningStrategy::Uniform).is_err());
     }
@@ -544,16 +550,17 @@ mod tests {
     fn test_feature_extraction_pipeline() {
         // Test a complete feature extraction pipeline
         let data = Array2::from_shape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0])
-            .unwrap();
+            .expect("Failed to create features");
 
         // Step 1: Generate polynomial features
-        let poly_data = polynomial_features(&data, 2, false).unwrap();
+        let poly_data = polynomial_features(&data, 2, false).expect("Operation failed");
 
         // Step 2: Create binned features
-        let binned_data = create_binned_features(&poly_data, 2, BinningStrategy::Uniform).unwrap();
+        let binned_data = create_binned_features(&poly_data, 2, BinningStrategy::Uniform)
+            .expect("Operation failed");
 
         // Step 3: Generate statistical features
-        let stats_data = statistical_features(&data).unwrap();
+        let stats_data = statistical_features(&data).expect("Operation failed");
 
         // Verify pipeline produces expected shapes
         assert_eq!(poly_data.ncols(), 5); // [x1, x2, x1², x1*x2, x2²]
@@ -566,11 +573,13 @@ mod tests {
     #[test]
     fn test_binning_strategies_comparison() {
         // Create data with outliers
-        let data =
-            Array2::from_shape_vec((7, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 100.0]).unwrap();
+        let data = Array2::from_shape_vec((7, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 100.0])
+            .expect("Operation failed");
 
-        let uniform_binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
-        let quantile_binned = create_binned_features(&data, 3, BinningStrategy::Quantile).unwrap();
+        let uniform_binned =
+            create_binned_features(&data, 3, BinningStrategy::Uniform).expect("Operation failed");
+        let quantile_binned =
+            create_binned_features(&data, 3, BinningStrategy::Quantile).expect("Operation failed");
 
         // With uniform binning, the outlier will dominate the range
         // With quantile binning, each bin should have roughly equal frequency
@@ -585,10 +594,10 @@ mod tests {
         }
 
         // Quantile binning should have more balanced distribution
-        let uniform_max = *uniform_counts.iter().max().unwrap();
-        let uniform_min = *uniform_counts.iter().min().unwrap();
-        let quantile_max = *quantile_counts.iter().max().unwrap();
-        let quantile_min = *quantile_counts.iter().min().unwrap();
+        let uniform_max = *uniform_counts.iter().max().expect("Operation failed");
+        let uniform_min = *uniform_counts.iter().min().expect("Operation failed");
+        let quantile_max = *quantile_counts.iter().max().expect("Operation failed");
+        let quantile_min = *quantile_counts.iter().min().expect("Operation failed");
 
         // Quantile binning should be more balanced (smaller difference between max and min)
         assert!((quantile_max - quantile_min) <= (uniform_max - uniform_min));

@@ -295,11 +295,14 @@ impl ParallelOptimizer {
         let results = self
             .thread_pool
             .as_ref()
-            .unwrap()
+            .expect("Failed to create parallel plan")
             .execute_tasks(optimized_tasks)?;
 
         // Collect statistics
-        let stats = self.collect_execution_stats(start_time, self.thread_pool.as_ref().unwrap())?;
+        let stats = self.collect_execution_stats(
+            start_time,
+            self.thread_pool.as_ref().expect("Operation failed"),
+        )?;
 
         Ok((results, stats))
     }
@@ -319,7 +322,11 @@ impl ParallelOptimizer {
             }
             LoadBalancingStrategy::Dynamic => {
                 // Sort by estimated cost and distribute
-                tasks.sort_by(|a, b| b.estimated_cost().partial_cmp(&a.estimated_cost()).unwrap());
+                tasks.sort_by(|a, b| {
+                    b.estimated_cost()
+                        .partial_cmp(&a.estimated_cost())
+                        .expect("Operation failed")
+                });
                 Ok(tasks
                     .into_iter()
                     .map(|t| t as Box<dyn ParallelTask + Send>)
@@ -474,9 +481,11 @@ impl ParallelOptimizer {
         use ArithmeticOp::*;
 
         let result = match op {
-            Add(value) => input.mapv(|x| x + F::from(value).unwrap()),
-            Multiply(value) => input.mapv(|x| x * F::from(value).unwrap()),
-            Power(exp) => input.mapv(|x| x.powf(F::from(exp).unwrap())),
+            Add(value) => input.mapv(|x| x + F::from(value).expect("Failed to convert to float")),
+            Multiply(value) => {
+                input.mapv(|x| x * F::from(value).expect("Failed to convert to float"))
+            }
+            Power(exp) => input.mapv(|x| x.powf(F::from(exp).expect("Failed to convert to float"))),
             Exp => input.mapv(|x| x.exp()),
             Log => input.mapv(|x| x.ln()),
             Sin => input.mapv(|x| x.sin()),
@@ -521,11 +530,12 @@ impl ParallelOptimizer {
             ReductionOp::Product => input.fold(F::one(), |acc, &x| acc * x),
             ReductionOp::Max => input.fold(F::neg_infinity(), |acc, &x| acc.max(x)),
             ReductionOp::Min => input.fold(F::infinity(), |acc, &x| acc.min(x)),
-            ReductionOp::Mean => input.sum() / F::from(input.len()).unwrap(),
+            ReductionOp::Mean => input.sum() / F::from(input.len()).expect("Operation failed"),
             ReductionOp::Variance => {
-                let mean = input.sum() / F::from(input.len()).unwrap();
+                let mean = input.sum() / F::from(input.len()).expect("Operation failed");
 
-                input.mapv(|x| (x - mean).powi(2)).sum() / F::from(input.len()).unwrap()
+                input.mapv(|x| (x - mean).powi(2)).sum()
+                    / F::from(input.len()).expect("Operation failed")
             }
         };
 
@@ -628,7 +638,7 @@ impl ThreadPool {
 
         // Distribute tasks to worker queues with intelligent load balancing
         {
-            let mut global_queue = self.task_queue.lock().unwrap();
+            let mut global_queue = self.task_queue.lock().expect("Operation failed");
 
             // Subdivide large tasks first for better load distribution
             let mut all_tasks = Vec::new();
@@ -681,7 +691,7 @@ impl ThreadPool {
         loop {
             thread::sleep(Duration::from_millis(10));
 
-            let global_queue = self.task_queue.lock().unwrap();
+            let global_queue = self.task_queue.lock().expect("Operation failed");
             let all_workers_idle = self.workers.iter().all(|w| {
                 if let Ok(local_q) = w.local_queue.lock() {
                     local_q.tasks.is_empty()
@@ -823,9 +833,15 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
         // Perform actual vectorized computation based on operation type
         let result: Array2<F> = match &self.operation {
             VectorOperation::ElementWise(op) => match op {
-                ArithmeticOp::Add(value) => self.input.mapv(|x| x + F::from(*value).unwrap()),
-                ArithmeticOp::Multiply(value) => self.input.mapv(|x| x * F::from(*value).unwrap()),
-                ArithmeticOp::Power(exp) => self.input.mapv(|x| x.powf(F::from(*exp).unwrap())),
+                ArithmeticOp::Add(value) => self
+                    .input
+                    .mapv(|x| x + F::from(*value).expect("Failed to convert to float")),
+                ArithmeticOp::Multiply(value) => self
+                    .input
+                    .mapv(|x| x * F::from(*value).expect("Failed to convert to float")),
+                ArithmeticOp::Power(exp) => self
+                    .input
+                    .mapv(|x| x.powf(F::from(*exp).expect("Failed to convert to float"))),
                 ArithmeticOp::Exp => self.input.mapv(|x| x.exp()),
                 ArithmeticOp::Log => self.input.mapv(|x| x.ln()),
                 ArithmeticOp::Sin => self.input.mapv(|x| x.sin()),
@@ -852,11 +868,14 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
                     ReductionOp::Product => self.input.fold(F::one(), |acc, &x| acc * x),
                     ReductionOp::Max => self.input.fold(F::neg_infinity(), |acc, &x| acc.max(x)),
                     ReductionOp::Min => self.input.fold(F::infinity(), |acc, &x| acc.min(x)),
-                    ReductionOp::Mean => self.input.sum() / F::from(self.input.len()).unwrap(),
+                    ReductionOp::Mean => {
+                        self.input.sum() / F::from(self.input.len()).expect("Operation failed")
+                    }
                     ReductionOp::Variance => {
-                        let mean = self.input.sum() / F::from(self.input.len()).unwrap();
+                        let mean =
+                            self.input.sum() / F::from(self.input.len()).expect("Operation failed");
                         self.input.mapv(|x| (x - mean).powi(2)).sum()
-                            / F::from(self.input.len()).unwrap()
+                            / F::from(self.input.len()).expect("Operation failed")
                     }
                 };
                 Array2::from_elem((1, 1), result_value)
@@ -940,7 +959,7 @@ mod tests {
         let result = optimizer.execute_vectorized(task);
         assert!(result.is_ok());
 
-        let output = result.unwrap();
+        let output = result.expect("Test: parallel integration failed");
         assert_eq!(output.dim(), (4, 4));
         assert!((output[[0, 0]] - 3.0_f64).abs() < 1e-10);
     }

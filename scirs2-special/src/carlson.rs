@@ -46,6 +46,12 @@ use scirs2_core::numeric::{Float, FromPrimitive};
 use scirs2_core::validation::check_finite;
 use std::fmt::{Debug, Display};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Maximum number of iterations for convergence
 const MAX_ITERATIONS: usize = 100;
 
@@ -71,11 +77,11 @@ const TOLERANCE: f64 = 1e-15;
 /// use scirs2_special::elliprc;
 ///
 /// // RC(0, 1) = π/2
-/// let result = elliprc(0.0, 1.0).unwrap();
+/// let result = elliprc(0.0, 1.0).expect("Test/example failed");
 /// assert!((result - std::f64::consts::FRAC_PI_2).abs() < 1e-10);
 ///
 /// // RC(1, 1) = 1
-/// let result = elliprc(1.0, 1.0).unwrap();
+/// let result = elliprc(1.0, 1.0).expect("Test/example failed");
 /// assert!((result - 1.0f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -86,11 +92,11 @@ where
     check_finite(x, "x value")?;
     check_finite(y, "y value")?;
 
-    let zero = T::from_f64(0.0).unwrap();
+    let zero = T::from_f64(0.0).expect("Test/example failed");
     let one = T::one();
-    let _two = T::from_f64(2.0).unwrap();
-    let _three = T::from_f64(3.0).unwrap();
-    let four = T::from_f64(4.0).unwrap();
+    let _two = T::from_f64(2.0).expect("Test/example failed");
+    let _three = T::from_f64(3.0).expect("Test/example failed");
+    let four = T::from_f64(4.0).expect("Test/example failed");
 
     if x < zero {
         return Err(SpecialError::DomainError(
@@ -105,10 +111,14 @@ where
     // Handle special cases
     if x == zero {
         if y > zero {
-            return Ok(T::from_f64(std::f64::consts::FRAC_PI_2).unwrap() / y.sqrt());
+            return Ok(
+                T::from_f64(std::f64::consts::FRAC_PI_2).expect("Operation failed") / y.sqrt(),
+            );
         } else {
             // y < 0: use RC(0, |y|) / sqrt(|y|) * (complex continuation)
-            return Ok(T::from_f64(std::f64::consts::FRAC_PI_2).unwrap() / (-y).sqrt());
+            return Ok(
+                T::from_f64(std::f64::consts::FRAC_PI_2).expect("Operation failed") / (-y).sqrt(),
+            );
         }
     }
 
@@ -126,7 +136,7 @@ where
     // Handle known analytical cases
     if (x_f64 - 0.0).abs() < 1e-14 && (y_f64 - 1.0).abs() < 1e-14 {
         // RC(0, 1) = π/2
-        return Ok(T::from_f64(std::f64::consts::FRAC_PI_2).unwrap());
+        return Ok(T::from_f64(std::f64::consts::FRAC_PI_2).expect("Operation failed"));
     }
     if (x_f64 - 1.0).abs() < 1e-14 && (y_f64 - 1.0).abs() < 1e-14 {
         // RC(1, 1) = 1
@@ -134,7 +144,7 @@ where
     }
     if (x_f64 - 1.0).abs() < 1e-14 && (y_f64 - 4.0).abs() < 1e-14 {
         // RC(1, 4) = π/4
-        return Ok(T::from_f64(std::f64::consts::FRAC_PI_4).unwrap());
+        return Ok(T::from_f64(std::f64::consts::FRAC_PI_4).expect("Operation failed"));
     }
 
     // For other cases, use a simple numerical approach
@@ -142,11 +152,13 @@ where
     let sqrt_x = x.sqrt();
     let sqrt_y = y.sqrt();
     let geometric_mean = sqrt_x * sqrt_y;
-    let arithmetic_mean = (x + y) / T::from_f64(2.0).unwrap();
+    let arithmetic_mean = (x + y) / T::from_f64(2.0).expect("Test/example failed");
 
     // Use harmonic mean approximation for RC
-    Ok(T::from_f64(std::f64::consts::FRAC_PI_2).unwrap()
-        / (geometric_mean + arithmetic_mean).sqrt())
+    Ok(
+        T::from_f64(std::f64::consts::FRAC_PI_2).expect("Operation failed")
+            / (geometric_mean + arithmetic_mean).sqrt(),
+    )
 }
 
 /// Carlson elliptic integral RF(x, y, z)
@@ -166,15 +178,15 @@ where
 /// use scirs2_special::elliprf;
 ///
 /// // RF(0, 1, 1) = π/2
-/// let result = elliprf(0.0, 1.0, 1.0).unwrap();
+/// let result = elliprf(0.0, 1.0, 1.0).expect("Test/example failed");
 /// assert!((result - std::f64::consts::FRAC_PI_2).abs() < 1e-10);
 ///
 /// // Symmetry test
 /// let x = 2.0f64;
 /// let y = 3.0f64;
 /// let z = 4.0f64;
-/// let rf1 = elliprf(x, y, z).unwrap();
-/// let rf2 = elliprf(y, z, x).unwrap();
+/// let rf1 = elliprf(x, y, z).expect("Test/example failed");
+/// let rf2 = elliprf(y, z, x).expect("Test/example failed");
 /// assert!((rf1 - rf2).abs() < 1e-12);
 /// ```
 #[allow(dead_code)]
@@ -186,11 +198,11 @@ where
     check_finite(y, "y value")?;
     check_finite(z, "z value")?;
 
-    let zero = T::from_f64(0.0).unwrap();
+    let zero = T::from_f64(0.0).expect("Test/example failed");
     let one = T::one();
-    let _two = T::from_f64(2.0).unwrap();
-    let three = T::from_f64(3.0).unwrap();
-    let four = T::from_f64(4.0).unwrap();
+    let _two = T::from_f64(2.0).expect("Test/example failed");
+    let three = T::from_f64(3.0).expect("Test/example failed");
+    let four = T::from_f64(4.0).expect("Test/example failed");
 
     if x < zero || y < zero || z < zero {
         return Err(SpecialError::DomainError(
@@ -216,7 +228,7 @@ where
 
     if (x_f64 - 0.0).abs() < 1e-14 && (y_f64 - 1.0).abs() < 1e-14 && (z_f64 - 1.0).abs() < 1e-14 {
         // RF(0, 1, 1) = π/2
-        return Ok(T::from_f64(std::f64::consts::FRAC_PI_2).unwrap());
+        return Ok(T::from_f64(std::f64::consts::FRAC_PI_2).expect("Operation failed"));
     }
 
     // Duplication algorithm
@@ -243,7 +255,7 @@ where
         let dz = (one - zt / a).abs();
 
         let max_diff = dx.max(dy).max(dz);
-        if max_diff < T::from_f64(TOLERANCE).unwrap() {
+        if max_diff < T::from_f64(TOLERANCE).expect("Operation failed") {
             break;
         }
     }
@@ -256,10 +268,10 @@ where
     let e3 = x_dev * y_dev * z_dev;
 
     // Series expansion coefficients
-    let c1 = T::from_f64(-1.0 / 10.0).unwrap();
-    let c2 = T::from_f64(1.0 / 14.0).unwrap();
-    let c3 = T::from_f64(1.0 / 24.0).unwrap();
-    let c4 = T::from_f64(-3.0 / 44.0).unwrap();
+    let c1 = T::from_f64(-1.0 / 10.0).expect("Test/example failed");
+    let c2 = T::from_f64(1.0 / 14.0).expect("Test/example failed");
+    let c3 = T::from_f64(1.0 / 24.0).expect("Test/example failed");
+    let c4 = T::from_f64(-3.0 / 44.0).expect("Test/example failed");
 
     let series = one + c1 * e2 + c2 * e3 + c3 * e2 * e2 + c4 * e2 * e3;
 
@@ -280,7 +292,7 @@ where
 /// use scirs2_special::elliprd;
 ///
 /// // RD(0, 2, 1) = 3π/(4√2)
-/// let result = elliprd(0.0, 2.0, 1.0).unwrap();
+/// let result = elliprd(0.0, 2.0, 1.0).expect("Test/example failed");
 /// let expected = 3.0 * std::f64::consts::PI / (4.0 * std::f64::consts::SQRT_2);
 /// assert!((result - expected).abs() < 1e-10);
 /// ```
@@ -293,11 +305,11 @@ where
     check_finite(y, "y value")?;
     check_finite(z, "z value")?;
 
-    let zero = T::from_f64(0.0).unwrap();
+    let zero = T::from_f64(0.0).expect("Test/example failed");
     let one = T::one();
-    let _two = T::from_f64(2.0).unwrap();
-    let three = T::from_f64(3.0).unwrap();
-    let four = T::from_f64(4.0).unwrap();
+    let _two = T::from_f64(2.0).expect("Test/example failed");
+    let three = T::from_f64(3.0).expect("Test/example failed");
+    let four = T::from_f64(4.0).expect("Test/example failed");
 
     if x < zero || y < zero || z <= zero {
         return Err(SpecialError::DomainError(
@@ -320,7 +332,7 @@ where
     if (x_f64 - 0.0).abs() < 1e-14 && (y_f64 - 2.0).abs() < 1e-14 && (z_f64 - 1.0).abs() < 1e-14 {
         // RD(0, 2, 1) = 3π/(4√2)
         let result = 3.0 * std::f64::consts::PI / (4.0 * std::f64::consts::SQRT_2);
-        return Ok(T::from_f64(result).unwrap());
+        return Ok(T::from_f64(result).expect("Operation failed"));
     }
 
     // Duplication algorithm
@@ -346,31 +358,31 @@ where
         zt = (zt + lambda_z) / four;
         factor = factor / four;
 
-        let a = (xt + yt + three * zt) / T::from_f64(5.0).unwrap();
+        let a = (xt + yt + three * zt) / T::from_f64(5.0).expect("Test/example failed");
         let dx = (one - xt / a).abs();
         let dy = (one - yt / a).abs();
         let dz = (one - zt / a).abs();
 
         let max_diff = dx.max(dy).max(dz);
-        if max_diff < T::from_f64(TOLERANCE).unwrap() {
+        if max_diff < T::from_f64(TOLERANCE).expect("Operation failed") {
             break;
         }
     }
 
-    let a = (xt + yt + three * zt) / T::from_f64(5.0).unwrap();
+    let a = (xt + yt + three * zt) / T::from_f64(5.0).expect("Test/example failed");
     let x_dev = (a - xt) / a;
     let y_dev = (a - yt) / a;
     let z_dev = (a - zt) / a;
 
-    let e2 =
-        x_dev * y_dev + T::from_f64(6.0).unwrap() * z_dev * z_dev - three * z_dev * (x_dev + y_dev);
+    let e2 = x_dev * y_dev + T::from_f64(6.0).expect("Operation failed") * z_dev * z_dev
+        - three * z_dev * (x_dev + y_dev);
     let e3 = x_dev * y_dev * z_dev;
 
     // Series expansion
-    let c1 = T::from_f64(-3.0 / 14.0).unwrap();
-    let c2 = T::from_f64(1.0 / 6.0).unwrap();
-    let c3 = T::from_f64(9.0 / 88.0).unwrap();
-    let c4 = T::from_f64(-3.0 / 22.0).unwrap();
+    let c1 = T::from_f64(-3.0 / 14.0).expect("Test/example failed");
+    let c2 = T::from_f64(1.0 / 6.0).expect("Test/example failed");
+    let c3 = T::from_f64(9.0 / 88.0).expect("Test/example failed");
+    let c4 = T::from_f64(-3.0 / 22.0).expect("Test/example failed");
 
     let series = one + c1 * e2 + c2 * e3 + c3 * e2 * e2 + c4 * e2 * e3;
 
@@ -394,7 +406,7 @@ where
 /// use scirs2_special::elliprg;
 ///
 /// // Test basic functionality
-/// let result = elliprg(1.0, 2.0, 3.0).unwrap();
+/// let result = elliprg(1.0, 2.0, 3.0).expect("Test/example failed");
 /// assert!(result > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -406,9 +418,9 @@ where
     check_finite(y, "y value")?;
     check_finite(z, "z value")?;
 
-    let zero = T::from_f64(0.0).unwrap();
-    let two = T::from_f64(2.0).unwrap();
-    let four = T::from_f64(4.0).unwrap();
+    let zero = T::from_f64(0.0).expect("Test/example failed");
+    let two = T::from_f64(2.0).expect("Test/example failed");
+    let four = T::from_f64(4.0).expect("Test/example failed");
 
     if x < zero || y < zero || z < zero {
         return Err(SpecialError::DomainError(
@@ -465,7 +477,7 @@ where
 /// use scirs2_special::elliprj;
 ///
 /// // Test basic functionality
-/// let result = elliprj(1.0, 2.0, 3.0, 4.0).unwrap();
+/// let result = elliprj(1.0, 2.0, 3.0, 4.0).expect("Test/example failed");
 /// assert!(result > 0.0);
 /// ```
 #[allow(dead_code)]
@@ -478,11 +490,11 @@ where
     check_finite(z, "z value")?;
     check_finite(p, "p value")?;
 
-    let zero = T::from_f64(0.0).unwrap();
+    let zero = T::from_f64(0.0).expect("Test/example failed");
     let one = T::one();
-    let two = T::from_f64(2.0).unwrap();
-    let three = T::from_f64(3.0).unwrap();
-    let four = T::from_f64(4.0).unwrap();
+    let two = T::from_f64(2.0).expect("Test/example failed");
+    let three = T::from_f64(3.0).expect("Test/example failed");
+    let four = T::from_f64(4.0).expect("Test/example failed");
 
     if x < zero || y < zero || z < zero {
         return Err(SpecialError::DomainError(
@@ -545,19 +557,19 @@ where
             / four;
         factor = factor / four;
 
-        let a = (xt + yt + zt + two * pt) / T::from_f64(5.0).unwrap();
+        let a = (xt + yt + zt + two * pt) / T::from_f64(5.0).expect("Test/example failed");
         let dx = (one - xt / a).abs();
         let dy = (one - yt / a).abs();
         let dz = (one - zt / a).abs();
         let dp = (one - pt / a).abs();
 
         let max_diff = dx.max(dy).max(dz).max(dp);
-        if max_diff < T::from_f64(TOLERANCE).unwrap() {
+        if max_diff < T::from_f64(TOLERANCE).expect("Operation failed") {
             break;
         }
     }
 
-    let a = (xt + yt + zt + two * pt) / T::from_f64(5.0).unwrap();
+    let a = (xt + yt + zt + two * pt) / T::from_f64(5.0).expect("Test/example failed");
     let x_dev = (a - xt) / a;
     let y_dev = (a - yt) / a;
     let z_dev = (a - zt) / a;
@@ -567,10 +579,10 @@ where
     let e3 = x_dev * y_dev * z_dev + two * p_dev * (x_dev + y_dev + z_dev) * p_dev;
 
     // Series expansion
-    let c1 = T::from_f64(-3.0 / 14.0).unwrap();
-    let c2 = T::from_f64(1.0 / 6.0).unwrap();
-    let c3 = T::from_f64(9.0 / 88.0).unwrap();
-    let c4 = T::from_f64(-3.0 / 22.0).unwrap();
+    let c1 = T::from_f64(-3.0 / 14.0).expect("Test/example failed");
+    let c2 = T::from_f64(1.0 / 6.0).expect("Test/example failed");
+    let c3 = T::from_f64(9.0 / 88.0).expect("Test/example failed");
+    let c4 = T::from_f64(-3.0 / 22.0).expect("Test/example failed");
 
     let series = one + c1 * e2 + c2 * e3 + c3 * e2 * e2 + c4 * e2 * e3;
 
@@ -609,28 +621,28 @@ mod tests {
     #[test]
     fn test_elliprc_special_cases() {
         // RC(0, 1) = π/2
-        let result = elliprc(0.0, 1.0).unwrap();
+        let result = elliprc(0.0, 1.0).expect("Test/example failed");
         assert_relative_eq!(result, FRAC_PI_2, epsilon = 1e-12);
 
         // RC(1, 1) = 1
-        let result = elliprc(1.0, 1.0).unwrap();
+        let result = elliprc(1.0, 1.0).expect("Test/example failed");
         assert_relative_eq!(result, 1.0, epsilon = 1e-12);
 
         // RC(1, 4) = π/4
-        let result = elliprc(1.0, 4.0).unwrap();
+        let result = elliprc(1.0, 4.0).expect("Test/example failed");
         assert_relative_eq!(result, PI / 4.0, epsilon = 1e-12);
     }
 
     #[test]
     fn test_elliprf_special_cases() {
         // RF(0, 1, 1) = π/2
-        let result = elliprf(0.0, 1.0, 1.0).unwrap();
+        let result = elliprf(0.0, 1.0, 1.0).expect("Test/example failed");
         assert_relative_eq!(result, FRAC_PI_2, epsilon = 1e-12);
 
         // Symmetry test
-        let rf1 = elliprf(1.0, 2.0, 3.0).unwrap();
-        let rf2 = elliprf(2.0, 3.0, 1.0).unwrap();
-        let rf3 = elliprf(3.0, 1.0, 2.0).unwrap();
+        let rf1 = elliprf(1.0, 2.0, 3.0).expect("Test/example failed");
+        let rf2 = elliprf(2.0, 3.0, 1.0).expect("Test/example failed");
+        let rf3 = elliprf(3.0, 1.0, 2.0).expect("Test/example failed");
         assert_relative_eq!(rf1, rf2, epsilon = 1e-12);
         assert_relative_eq!(rf2, rf3, epsilon = 1e-12);
     }
@@ -638,7 +650,7 @@ mod tests {
     #[test]
     fn test_elliprd_special_cases() {
         // RD(0, 2, 1) = 3π/(4√2)
-        let result = elliprd(0.0, 2.0, 1.0).unwrap();
+        let result = elliprd(0.0, 2.0, 1.0).expect("Test/example failed");
         let expected = 3.0 * PI / (4.0 * SQRT_2);
         assert_relative_eq!(result, expected, epsilon = 1e-10);
     }
@@ -660,19 +672,19 @@ mod tests {
     #[test]
     fn test_basic_functionality() {
         // Test that all functions return reasonable values for valid inputs
-        let rc = elliprc(1.0, 2.0).unwrap();
+        let rc = elliprc(1.0, 2.0).expect("Test/example failed");
         assert!(rc > 0.0 && rc.is_finite());
 
-        let rf = elliprf(1.0, 2.0, 3.0).unwrap();
+        let rf = elliprf(1.0, 2.0, 3.0).expect("Test/example failed");
         assert!(rf > 0.0 && rf.is_finite());
 
-        let rd = elliprd(1.0, 2.0, 3.0).unwrap();
+        let rd = elliprd(1.0, 2.0, 3.0).expect("Test/example failed");
         assert!(rd > 0.0 && rd.is_finite());
 
-        let rg = elliprg(1.0, 2.0, 3.0).unwrap();
+        let rg = elliprg(1.0, 2.0, 3.0).expect("Test/example failed");
         assert!(rg > 0.0 && rg.is_finite());
 
-        let rj = elliprj(1.0, 2.0, 3.0, 4.0).unwrap();
+        let rj = elliprj(1.0, 2.0, 3.0, 4.0).expect("Test/example failed");
         assert!(rj > 0.0 && rj.is_finite());
     }
 }

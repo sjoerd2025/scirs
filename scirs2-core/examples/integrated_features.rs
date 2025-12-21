@@ -60,7 +60,7 @@ fn run_integrated_example() {
     logger.info("Starting integrated example");
 
     // Initialize profiling
-    Profiler::global().lock().unwrap().start();
+    Profiler::global().lock().expect("Operation failed").start();
     logger.debug("Profiling started");
 
     // Main processing pipeline with progress tracking
@@ -71,7 +71,7 @@ fn run_integrated_example() {
     logger.debug("Generating random data");
 
     let mut rng = CoreRandom::default();
-    let normal_distribution = Normal::new(0.0, 1.0).unwrap();
+    let normal_distribution = Normal::new(0.0, 1.0).expect("Operation failed");
 
     // Use memory management for efficient buffer usage
     let mut buffer_pool = BufferPool::<f64>::new();
@@ -156,12 +156,15 @@ fn run_integrated_example() {
 
     // Print the profiling report
     println!("\n--- Performance Profile ---");
-    Profiler::global().lock().unwrap().print_report();
+    Profiler::global()
+        .lock()
+        .expect("Operation failed")
+        .print_report();
 
     // Get specific timing information for the most intensive operation
     if let Some((calls, total, avg, max)) = Profiler::global()
         .lock()
-        .unwrap()
+        .expect("Operation failed")
         .get_timing_stats("transform_data")
     {
         logger.info(&format!(
@@ -177,5 +180,5 @@ fn run_integrated_example() {
     logger.info("Integrated example completed successfully");
 
     // Stop the profiler
-    Profiler::global().lock().unwrap().stop();
+    Profiler::global().lock().expect("Operation failed").stop();
 }

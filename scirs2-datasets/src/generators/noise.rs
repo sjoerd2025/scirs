@@ -83,9 +83,11 @@ pub fn inject_missing_data(
             let n_blocks = (missing_rate * n_samples as f64).ceil() as usize;
 
             for _ in 0..n_blocks {
-                let start_row = rng.sample(Uniform::new(0, n_samples).unwrap());
-                let start_col =
-                    rng.sample(Uniform::new(0, n_features.saturating_sub(block_size)).unwrap());
+                let start_row = rng.sample(Uniform::new(0, n_samples).expect("Operation failed"));
+                let start_col = rng.sample(
+                    Uniform::new(0, n_features.saturating_sub(block_size))
+                        .expect("Operation failed"),
+                );
 
                 for i in start_row..n_samples.min(start_row + block_size) {
                     for j in start_col..n_features.min(start_col + block_size) {
@@ -157,7 +159,7 @@ pub fn inject_outliers(
         OutlierType::Point => {
             // Point outliers - individual anomalous points
             for _ in 0..n_outliers {
-                let outlier_idx = rng.sample(Uniform::new(0, n_samples).unwrap());
+                let outlier_idx = rng.sample(Uniform::new(0, n_samples).expect("Operation failed"));
                 outlier_mask[outlier_idx] = true;
 
                 // Modify each feature to be an outlier
@@ -175,12 +177,13 @@ pub fn inject_outliers(
         OutlierType::Contextual => {
             // Contextual outliers - anomalous in specific feature combinations
             for _ in 0..n_outliers {
-                let outlier_idx = rng.sample(Uniform::new(0, n_samples).unwrap());
+                let outlier_idx = rng.sample(Uniform::new(0, n_samples).expect("Operation failed"));
                 outlier_mask[outlier_idx] = true;
 
                 // Only modify a subset of features to create contextual anomaly
-                let n_features_to_modify =
-                    rng.sample(Uniform::new(1, (n_features / 2).max(1) + 1).unwrap());
+                let n_features_to_modify = rng.sample(
+                    Uniform::new(1, (n_features / 2).max(1) + 1).expect("Operation failed"),
+                );
                 let mut features_to_modify: Vec<usize> = (0..n_features).collect();
                 features_to_modify.shuffle(&mut rng);
                 features_to_modify.truncate(n_features_to_modify);
@@ -216,7 +219,8 @@ pub fn inject_outliers(
 
                 // Generate points around this center
                 for _ in 0..outliers_per_group {
-                    let outlier_idx = rng.sample(Uniform::new(0, n_samples).unwrap());
+                    let outlier_idx =
+                        rng.sample(Uniform::new(0, n_samples).expect("Operation failed"));
                     outlier_mask[outlier_idx] = true;
 
                     for j in 0..n_features {
@@ -247,7 +251,7 @@ pub fn add_time_series_noise(
     };
 
     let (n_samples, n_features) = data.dim();
-    let normal = scirs2_core::random::Normal::new(0.0, 1.0).unwrap();
+    let normal = scirs2_core::random::Normal::new(0.0, 1.0).expect("Operation failed");
 
     for &(noise_type, strength) in noise_types {
         match noise_type {
@@ -263,8 +267,10 @@ pub fn add_time_series_noise(
                 // Add random spikes (impulse noise)
                 let n_spikes = (n_samples as f64 * strength * 0.1).ceil() as usize;
                 for _ in 0..n_spikes {
-                    let spike_idx = rng.sample(Uniform::new(0, n_samples).unwrap());
-                    let feature_idx = rng.sample(Uniform::new(0, n_features).unwrap());
+                    let spike_idx =
+                        rng.sample(Uniform::new(0, n_samples).expect("Operation failed"));
+                    let feature_idx =
+                        rng.sample(Uniform::new(0, n_features).expect("Operation failed"));
                     let spike_magnitude = rng.gen_range(5.0..=15.0) * strength;
                     let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
                         -1.0

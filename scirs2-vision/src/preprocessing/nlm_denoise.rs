@@ -286,10 +286,10 @@ pub fn nlm_denoise_parallel(
         };
 
         // Thread-safe write to output
-        output.lock().unwrap()[[y, x]] = value;
+        output.lock().expect("Operation failed")[[y, x]] = value;
     });
 
-    Ok(output.into_inner().unwrap())
+    Ok(output.into_inner().expect("Operation failed"))
 }
 
 /// Pad an array with reflected boundary conditions
@@ -352,7 +352,7 @@ mod tests {
     fn test_pad_reflect() {
         let array =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-                .unwrap();
+                .expect("Operation failed");
 
         let padded = pad_reflect(&array, 1);
 
@@ -376,7 +376,7 @@ mod tests {
     fn test_nlm_denoise_constant() {
         // Test on constant image (should remain unchanged)
         let input = Array2::ones((10, 10));
-        let result = nlm_denoise(&input, 0.1, 3, 5).unwrap();
+        let result = nlm_denoise(&input, 0.1, 3, 5).expect("Operation failed");
 
         // Check that constant regions remain constant
         for val in result.iter() {
@@ -387,7 +387,7 @@ mod tests {
     #[test]
     fn test_nlm_denoise_dimensions() {
         let input = Array2::zeros((20, 30));
-        let result = nlm_denoise(&input, 0.1, 7, 21).unwrap();
+        let result = nlm_denoise(&input, 0.1, 7, 21).expect("Operation failed");
 
         assert_eq!(result.dim(), (20, 30));
     }
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn test_nlm_denoise_color() {
         let input = Array3::ones((10, 10, 3));
-        let result = nlm_denoise_color(&input, 0.1, 3, 5).unwrap();
+        let result = nlm_denoise_color(&input, 0.1, 3, 5).expect("Operation failed");
 
         assert_eq!(result.dim(), (10, 10, 3));
     }
@@ -404,8 +404,8 @@ mod tests {
     fn test_nlm_denoise_parallel() {
         let input = Array2::from_shape_fn((20, 20), |(i, j)| ((i + j) % 2) as f32);
 
-        let serial = nlm_denoise(&input, 0.1, 3, 7).unwrap();
-        let parallel = nlm_denoise_parallel(&input, 0.1, 3, 7).unwrap();
+        let serial = nlm_denoise(&input, 0.1, 3, 7).expect("Operation failed");
+        let parallel = nlm_denoise_parallel(&input, 0.1, 3, 7).expect("Operation failed");
 
         // Results should be very similar
         for (s, p) in serial.iter().zip(parallel.iter()) {

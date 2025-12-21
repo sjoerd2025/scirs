@@ -203,7 +203,7 @@ let config = OptimizationConfig {
                     example: Some(
                         r#"
 // Standardize data
-let mean = data.mean().unwrap();
+let mean = data.mean().expect("Operation failed");
 let std = data.std(1);
 let standardized = (data - mean) / std;
                     "#
@@ -278,8 +278,8 @@ for i in 0..n_features {
                     example: Some(
                         r#"
 // Min-max scaling
-let min = data.min().unwrap();
-let max = data.max().unwrap();
+let min = data.min().expect("Operation failed");
+let max = data.max().expect("Operation failed");
 let scaled = (data - min) / (max - min);
 
 // Log transformation

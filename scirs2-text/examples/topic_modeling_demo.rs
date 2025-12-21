@@ -68,9 +68,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let max_topic = topic_dist
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             .map(|(idx_, _)| idx_)
-            .unwrap();
+            .expect("Operation failed");
 
         println!(
             "Document {}: Topic {} (probabilities: {:.3}, {:.3}, {:.3})",

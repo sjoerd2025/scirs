@@ -50,7 +50,7 @@ pub enum NormalizationMethod {
 ///                   [7.0, 8.0, 9.0]];
 ///                   
 /// // Normalize columns (axis 0) using min-max normalization
-/// let normalized = normalize_array(&data, NormalizationMethod::MinMax, 0).unwrap();
+/// let normalized = normalize_array(&data, NormalizationMethod::MinMax, 0).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn normalize_array<S>(
@@ -293,7 +293,7 @@ where
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 ///                   
 /// // Normalize vector using min-max normalization
-/// let normalized = normalize_vector(&data, NormalizationMethod::MinMax).unwrap();
+/// let normalized = normalize_vector(&data, NormalizationMethod::MinMax).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn normalize_vector<S>(
@@ -822,7 +822,8 @@ mod tests {
     #[test]
     fn test_normalize_vector_minmax() {
         let data = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let normalized = normalize_vector(&data, NormalizationMethod::MinMax).unwrap();
+        let normalized =
+            normalize_vector(&data, NormalizationMethod::MinMax).expect("Operation failed");
 
         let expected = Array::from_vec(vec![0.0, 0.25, 0.5, 0.75, 1.0]);
 
@@ -834,7 +835,8 @@ mod tests {
     #[test]
     fn test_normalize_vector_zscore() {
         let data = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
-        let normalized = normalize_vector(&data, NormalizationMethod::ZScore).unwrap();
+        let normalized =
+            normalize_vector(&data, NormalizationMethod::ZScore).expect("Operation failed");
 
         let mean = 3.0;
         let std_dev = (10.0 / 5.0_f64).sqrt();
@@ -848,14 +850,15 @@ mod tests {
     #[test]
     fn test_normalize_array_minmax() {
         let data = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-            .unwrap();
+            .expect("Operation failed");
 
         // Normalize columns (axis 0)
-        let normalized = normalize_array(&data, NormalizationMethod::MinMax, 0).unwrap();
+        let normalized =
+            normalize_array(&data, NormalizationMethod::MinMax, 0).expect("Operation failed");
 
         let expected =
             Array::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0])
-                .unwrap();
+                .expect("Operation failed");
 
         for i in 0..3 {
             for j in 0..3 {
@@ -864,11 +867,12 @@ mod tests {
         }
 
         // Normalize rows (axis 1)
-        let normalized = normalize_array(&data, NormalizationMethod::MinMax, 1).unwrap();
+        let normalized =
+            normalize_array(&data, NormalizationMethod::MinMax, 1).expect("Operation failed");
 
         let expected =
             Array::from_shape_vec((3, 3), vec![0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0])
-                .unwrap();
+                .expect("Operation failed");
 
         for i in 0..3 {
             for j in 0..3 {
@@ -880,15 +884,15 @@ mod tests {
     #[test]
     fn test_normalizer_fit_transform() {
         let data = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
-            .unwrap();
+            .expect("Operation failed");
 
         // Test MinMax normalization
         let mut normalizer = Normalizer::new(NormalizationMethod::MinMax, 0);
-        let transformed = normalizer.fit_transform(&data).unwrap();
+        let transformed = normalizer.fit_transform(&data).expect("Operation failed");
 
         let expected =
             Array::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0])
-                .unwrap();
+                .expect("Operation failed");
 
         for i in 0..3 {
             for j in 0..3 {
@@ -897,9 +901,10 @@ mod tests {
         }
 
         // Test with separate fit and transform
-        let data2 = Array::from_shape_vec((2, 3), vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]).unwrap();
+        let data2 = Array::from_shape_vec((2, 3), vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+            .expect("Operation failed");
 
-        let transformed2 = normalizer.transform(&data2).unwrap();
+        let transformed2 = normalizer.transform(&data2).expect("Operation failed");
 
         let expected2 = Array::from_shape_vec(
             (2, 3),
@@ -912,7 +917,7 @@ mod tests {
                 2.0 / 3.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         for i in 0..2 {
             for j in 0..3 {
@@ -925,7 +930,8 @@ mod tests {
     fn test_normalize_vector_robust() {
         // Test with data containing outliers
         let data = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0, 100.0]); // 100 is an outlier
-        let normalized = normalize_vector(&data, NormalizationMethod::Robust).unwrap();
+        let normalized =
+            normalize_vector(&data, NormalizationMethod::Robust).expect("Operation failed");
 
         // For this data: sorted = [1, 2, 3, 4, 100]
         // median = 3.0 (middle value)
@@ -946,10 +952,12 @@ mod tests {
 
     #[test]
     fn test_normalize_array_robust() {
-        let data = Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap();
+        let data = Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0])
+            .expect("Operation failed");
 
         // Normalize columns (axis 0)
-        let normalized = normalize_array(&data, NormalizationMethod::Robust, 0).unwrap();
+        let normalized =
+            normalize_array(&data, NormalizationMethod::Robust, 0).expect("Operation failed");
 
         // For column 0: [1, 2, 3] -> median=2, Q1=1.5, Q3=2.5, IQR=1.0
         // For column 1: [10, 20, 30] -> median=20, Q1=15, Q3=25, IQR=10
@@ -964,7 +972,7 @@ mod tests {
                 (30.0 - 20.0) / 10.0, // 1.0
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         for i in 0..3 {
             for j in 0..2 {
@@ -977,10 +985,10 @@ mod tests {
     fn test_robust_normalizer() {
         let data =
             Array::from_shape_vec((4, 2), vec![1.0, 100.0, 2.0, 200.0, 3.0, 300.0, 4.0, 400.0])
-                .unwrap();
+                .expect("Operation failed");
 
         let mut normalizer = Normalizer::new(NormalizationMethod::Robust, 0);
-        let transformed = normalizer.fit_transform(&data).unwrap();
+        let transformed = normalizer.fit_transform(&data).expect("Operation failed");
 
         // For column 0: [1, 2, 3, 4] -> median=2.5, Q1=1.75, Q3=3.25, IQR=1.5
         // For column 1: [100, 200, 300, 400] -> median=250, Q1=175, Q3=325, IQR=150
@@ -997,7 +1005,7 @@ mod tests {
                 (400.0 - 250.0) / 150.0, // 1.0
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         for i in 0..4 {
             for j in 0..2 {

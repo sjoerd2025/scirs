@@ -12,12 +12,12 @@ fn test_cgs_identity() {
     let data = vec![1.0, 1.0, 1.0];
     let shape = (3, 3);
 
-    let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     let b = vec![1.0, 2.0, 3.0];
     let options = CGSOptions::default();
-    let result = cgs(op.as_ref(), &b, options).unwrap();
+    let result = cgs(op.as_ref(), &b, options).expect("Operation failed");
 
     assert!(result.converged);
     assert_eq!(result.iterations, 1);
@@ -37,7 +37,7 @@ fn test_cgs_well_conditioned() {
     let data = vec![4.0, 0.5, 0.5, 0.5, 4.0, 0.5, 0.0, 0.5, 4.0];
     let shape = (3, 3);
 
-    let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     let b = vec![5.0, 5.0, 4.5];
@@ -47,13 +47,13 @@ fn test_cgs_well_conditioned() {
         ..Default::default()
     };
 
-    let result = cgs(op.as_ref(), &b, options).unwrap();
+    let result = cgs(op.as_ref(), &b, options).expect("Operation failed");
 
     // CGS may not always converge based on internal residual measure,
     // but what matters is the actual residual of the system
 
     // Verify solution
-    let ax = op.matvec(&result.x).unwrap();
+    let ax = op.matvec(&result.x).expect("Operation failed");
     let residual: Vec<f64> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
     let residual_norm: f64 = residual.iter().map(|&r| r * r).sum::<f64>().sqrt();
 
@@ -78,7 +78,7 @@ fn test_cgs_with_preconditioner() {
     ];
     let shape = (4, 4);
 
-    let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     // Create RHS vector
@@ -91,10 +91,10 @@ fn test_cgs_with_preconditioner() {
         ..Default::default()
     };
 
-    let result_no_precond = cgs(op.as_ref(), &b, options_no_precond).unwrap();
+    let result_no_precond = cgs(op.as_ref(), &b, options_no_precond).expect("Operation failed");
 
     // With Jacobi preconditioner
-    let precond = JacobiPreconditioner::new(&matrix).unwrap();
+    let precond = JacobiPreconditioner::new(&matrix).expect("Operation failed");
     let options_precond = CGSOptions::<f64> {
         max_iter: 100,
         rtol: 1e-6,
@@ -102,7 +102,7 @@ fn test_cgs_with_preconditioner() {
         ..Default::default()
     };
 
-    let result_precond = cgs(op.as_ref(), &b, options_precond).unwrap();
+    let result_precond = cgs(op.as_ref(), &b, options_precond).expect("Operation failed");
 
     // With preconditioner should converge faster (if it converges)
     if result_precond.converged && result_no_precond.converged {
@@ -154,7 +154,7 @@ fn test_cgs_real_world_pattern() {
         }
     }
 
-    let matrix = CsrMatrix::new(data, rows, cols, (n * n, n * n)).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, (n * n, n * n)).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     // Create a simple RHS
@@ -167,11 +167,11 @@ fn test_cgs_real_world_pattern() {
         ..Default::default()
     };
 
-    let result = cgs(op.as_ref(), &b, options).unwrap();
+    let result = cgs(op.as_ref(), &b, options).expect("Operation failed");
 
     // We just check that it produces a valid solution (residual is small)
     if result.converged {
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         let residual: Vec<f64> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
         let residual_norm: f64 = residual.iter().map(|&r| r * r).sum::<f64>().sqrt();
         let b_norm: f64 = b.iter().map(|&r| r * r).sum::<f64>().sqrt();
@@ -190,7 +190,7 @@ fn test_cgs_symmetric_vs_cg() {
     let data = vec![4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0];
     let shape = (3, 3);
 
-    let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+    let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
     let op = matrix.as_linear_operator();
 
     let b = vec![2.0, 2.0, 2.0];
@@ -199,7 +199,7 @@ fn test_cgs_symmetric_vs_cg() {
         ..Default::default()
     };
 
-    let result = cgs(op.as_ref(), &b, options).unwrap();
+    let result = cgs(op.as_ref(), &b, options).expect("Operation failed");
 
     assert!(result.converged);
 

@@ -914,8 +914,8 @@ impl From<SpectralElementResult> for PDESolution<f64> {
         }
 
         // Create unique sorted x and y coordinates for grid
-        x_coords.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        y_coords.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        x_coords.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
+        y_coords.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         x_coords.dedup_by(|a, b| (*a - *b).abs() < 1e-10);
         y_coords.dedup_by(|a, b| (*a - *b).abs() < 1e-10);
@@ -925,7 +925,10 @@ impl From<SpectralElementResult> for PDESolution<f64> {
         // Create solution values as a 2D array for each grid point
         let mut values = Vec::new();
         let n_points = result.u.len();
-        let u_reshaped = result.u.into_shape_with_order((n_points, 1)).unwrap();
+        let u_reshaped = result
+            .u
+            .into_shape_with_order((n_points, 1))
+            .expect("Operation failed");
         values.push(u_reshaped);
 
         // Create solver info

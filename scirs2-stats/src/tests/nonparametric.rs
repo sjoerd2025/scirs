@@ -37,7 +37,7 @@ use std::cmp::Ordering;
 /// let after = array![110.0, 122.0, 125.0, 120.0, 140.0, 124.0, 123.0, 137.0, 135.0, 145.0];
 ///
 /// // Perform the Wilcoxon signed-rank test
-/// let (stat, p_value) = wilcoxon(&before.view(), &after.view(), "wilcox", true).unwrap();
+/// let (stat, p_value) = wilcoxon(&before.view(), &after.view(), "wilcox", true).expect("Operation failed");
 ///
 /// println!("Wilcoxon signed-rank test: W = {}, p-value = {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -125,7 +125,9 @@ where
         }
 
         // Calculate average rank for this tie group
-        let avg_rank = F::from(i + j).unwrap() / F::from(2.0).unwrap() + F::one();
+        let avg_rank = F::from(i + j).expect("Failed to convert to float")
+            / F::from(2.0).expect("Failed to convert constant to float")
+            + F::one();
 
         // Assign ranks to all tied values
         for (idx, rank) in ranks.iter_mut().enumerate().take(j + 1).skip(i) {
@@ -152,17 +154,19 @@ where
     let w = if w_plus < w_minus { w_plus } else { w_minus };
 
     // Calculate the p-value
-    let n = F::from(ranked_diffs.len()).unwrap();
+    let n = F::from(ranked_diffs.len()).expect("Operation failed");
 
     // Expected value and standard deviation under the null hypothesis
-    let w_mean = n * (n + F::one()) / F::from(4.0).unwrap();
-    let w_sd = (n * (n + F::one()) * (F::from(2.0).unwrap() * n + F::one())
-        / F::from(24.0).unwrap())
+    let w_mean = n * (n + F::one()) / F::from(4.0).expect("Failed to convert constant to float");
+    let w_sd = (n
+        * (n + F::one())
+        * (F::from(2.0).expect("Failed to convert constant to float") * n + F::one())
+        / F::from(24.0).expect("Failed to convert constant to float"))
     .sqrt();
 
     // Apply continuity correction if requested
     let correction_factor = if correction {
-        F::from(0.5).unwrap()
+        F::from(0.5).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -171,7 +175,7 @@ where
     let z = (w - w_mean + correction_factor) / w_sd;
 
     // Convert to p-value (two-tailed test)
-    let p_value = F::from(2.0).unwrap() * normal_cdf(-z.abs());
+    let p_value = F::from(2.0).expect("Failed to convert constant to float") * normal_cdf(-z.abs());
 
     Ok((w, p_value))
 }
@@ -205,7 +209,7 @@ where
 /// let group2 = array![3.8, 3.7, 3.9, 4.0, 4.2];
 ///
 /// // Perform the Mann-Whitney U test
-/// let (stat, p_value) = mann_whitney(&group1.view(), &group2.view(), "two-sided", true).unwrap();
+/// let (stat, p_value) = mann_whitney(&group1.view(), &group2.view(), "two-sided", true).expect("Operation failed");
 ///
 /// println!("Mann-Whitney U test: U = {}, p-value = {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -277,7 +281,9 @@ where
         }
 
         // Calculate average rank for this tie group
-        let avg_rank = F::from(i + j).unwrap() / F::from(2.0).unwrap() + F::one();
+        let avg_rank = F::from(i + j).expect("Failed to convert to float")
+            / F::from(2.0).expect("Failed to convert constant to float")
+            + F::one();
 
         // Assign ranks to all tied values
         for rank in ranks.iter_mut().take(j + 1).skip(i) {
@@ -296,17 +302,18 @@ where
     }
 
     // Calculate the U statistics
-    let n1_f = F::from(n1).unwrap();
-    let n2_f = F::from(n2).unwrap();
+    let n1_f = F::from(n1).expect("Failed to convert to float");
+    let n2_f = F::from(n2).expect("Failed to convert to float");
 
-    let u1 = rank_sum_x - (n1_f * (n1_f + F::one())) / F::from(2.0).unwrap();
+    let u1 = rank_sum_x
+        - (n1_f * (n1_f + F::one())) / F::from(2.0).expect("Failed to convert constant to float");
     let u2 = n1_f * n2_f - u1;
 
     // The Mann-Whitney U statistic is the minimum of U1 and U2
     let u = u1.min(u2);
 
     // Calculate the mean and standard deviation of U under the null hypothesis
-    let mean_u = n1_f * n2_f / F::from(2.0).unwrap();
+    let mean_u = n1_f * n2_f / F::from(2.0).expect("Failed to convert constant to float");
 
     // Calculate tie correction factor
     let mut tie_correction = F::zero();
@@ -323,7 +330,7 @@ where
 
             // If there are ties, calculate the correction factor
             if j > i {
-                let t = F::from(j - i + 1).unwrap();
+                let t = F::from(j - i + 1).expect("Failed to convert to float");
                 tie_correction = tie_correction + (t.powi(3) - t);
             }
 
@@ -331,16 +338,17 @@ where
         }
     }
 
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let tie_correction = tie_correction / (n_f.powi(3) - n_f);
 
-    let var_u =
-        (n1_f * n2_f * (n_f + F::one()) / F::from(12.0).unwrap()) * (F::one() - tie_correction);
+    let var_u = (n1_f * n2_f * (n_f + F::one())
+        / F::from(12.0).expect("Failed to convert constant to float"))
+        * (F::one() - tie_correction);
     let std_dev_u = var_u.sqrt();
 
     // Apply _continuity correction if requested
     let correction = if use_continuity {
-        F::from(0.5).unwrap()
+        F::from(0.5).expect("Failed to convert constant to float")
     } else {
         F::zero()
     };
@@ -371,7 +379,7 @@ where
     let p_value = match alternative {
         "less" => normal_cdf(z),
         "greater" => F::one() - normal_cdf(z),
-        _ => F::from(2.0).unwrap() * normal_cdf(-z.abs()),
+        _ => F::from(2.0).expect("Failed to convert constant to float") * normal_cdf(-z.abs()),
     };
 
     Ok((u, p_value))
@@ -404,7 +412,7 @@ where
 ///
 /// // Perform the Kruskal-Wallis test
 /// let samples = vec![group1.view(), group2.view(), group3.view()];
-/// let (h, p_value) = kruskal_wallis(&samples).unwrap();
+/// let (h, p_value) = kruskal_wallis(&samples).expect("Operation failed");
 ///
 /// println!("Kruskal-Wallis H-test: H = {}, p-value = {}", h, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -460,7 +468,9 @@ where
         }
 
         // Calculate average rank for this tie group
-        let avg_rank = F::from(i + j).unwrap() / F::from(2.0).unwrap() + F::one();
+        let avg_rank = F::from(i + j).expect("Failed to convert to float")
+            / F::from(2.0).expect("Failed to convert constant to float")
+            + F::one();
 
         // Assign ranks to all tied values
         for rank in ranks.iter_mut().take(j + 1).skip(i) {
@@ -478,16 +488,17 @@ where
     }
 
     // Calculate the H statistic
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let mut h = F::zero();
 
     for (i, &rank_sum) in rank_sums.iter().enumerate() {
-        let n_i = F::from(groupsizes[i]).unwrap();
+        let n_i = F::from(groupsizes[i]).expect("Failed to convert to float");
         h = h + (rank_sum * rank_sum) / n_i;
     }
 
-    h = (F::from(12.0).unwrap() / (n_f * (n_f + F::one()))) * h
-        - F::from(3.0).unwrap() * (n_f + F::one());
+    h = (F::from(12.0).expect("Failed to convert constant to float") / (n_f * (n_f + F::one())))
+        * h
+        - F::from(3.0).expect("Failed to convert constant to float") * (n_f + F::one());
 
     // Check for ties
     let mut tie_correction = F::one();
@@ -503,7 +514,7 @@ where
 
         // If there are ties, calculate the correction factor
         if j > i {
-            let t = F::from(j - i + 1).unwrap();
+            let t = F::from(j - i + 1).expect("Failed to convert to float");
             tie_correction = tie_correction - (t.powi(3) - t) / (n_f.powi(3) - n_f);
         }
 
@@ -516,7 +527,7 @@ where
     }
 
     // Calculate p-value (chi-square distribution with k-1 degrees of freedom)
-    let df = F::from(samples.len() - 1).unwrap();
+    let df = F::from(samples.len() - 1).expect("Operation failed");
     let p_value = chi_square_sf(h, df);
 
     Ok((h, p_value))
@@ -551,7 +562,7 @@ where
 /// ];
 ///
 /// // Perform the Friedman test
-/// let (chi2, p_value) = friedman(&data.view()).unwrap();
+/// let (chi2, p_value) = friedman(&data.view()).expect("Operation failed");
 ///
 /// println!("Friedman test: Chi² = {}, p-value = {}", chi2, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -607,7 +618,9 @@ where
 
             // Calculate average rank for this tie group
             let _tie_count = tied_idx - rank_idx + 1;
-            let avg_rank = F::from(rank_idx + tied_idx).unwrap() / F::from(2.0).unwrap() + F::one();
+            let avg_rank = F::from(rank_idx + tied_idx).expect("Failed to convert to float")
+                / F::from(2.0).expect("Failed to convert constant to float")
+                + F::one();
 
             // Assign average rank to all tied values
             for data_item in rowdata.iter().take(tied_idx + 1).skip(rank_idx) {
@@ -631,16 +644,18 @@ where
     }
 
     // Calculate the test statistic
-    let n_f = F::from(n).unwrap();
-    let k_f = F::from(k).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
+    let k_f = F::from(k).expect("Failed to convert to float");
 
     let mut sum_ranks_squared = F::zero();
     for &rank_sum in &rank_sums {
         sum_ranks_squared += rank_sum.powi(2);
     }
 
-    let chi2 = (F::from(12.0).unwrap() / (n_f * k_f * (k_f + F::one()))) * sum_ranks_squared
-        - F::from(3.0).unwrap() * n_f * (k_f + F::one());
+    let chi2 = (F::from(12.0).expect("Failed to convert constant to float")
+        / (n_f * k_f * (k_f + F::one())))
+        * sum_ranks_squared
+        - F::from(3.0).expect("Failed to convert constant to float") * n_f * (k_f + F::one());
 
     // Calculate p-value (chi-square distribution with k-1 degrees of freedom)
     let df = k_f - F::one();
@@ -652,7 +667,7 @@ where
 // Helper function: Standard normal CDF approximation
 #[allow(dead_code)]
 fn normal_cdf<F: Float + NumCast>(x: F) -> F {
-    let x_f64 = <f64 as NumCast>::from(x).unwrap();
+    let x_f64 = <f64 as NumCast>::from(x).expect("Operation failed");
 
     // Approximation of the standard normal CDF
     let cdf = if x_f64 < -8.0 {
@@ -675,14 +690,14 @@ fn normal_cdf<F: Float + NumCast>(x: F) -> F {
         }
     };
 
-    F::from(cdf).unwrap()
+    F::from(cdf).expect("Failed to convert to float")
 }
 
 // Helper function: Chi-square survival function (1 - CDF)
 #[allow(dead_code)]
 fn chi_square_sf<F: Float + NumCast>(x: F, df: F) -> F {
-    let x_f64 = <f64 as NumCast>::from(x).unwrap();
-    let df_f64 = <f64 as NumCast>::from(df).unwrap();
+    let x_f64 = <f64 as NumCast>::from(x).expect("Operation failed");
+    let df_f64 = <f64 as NumCast>::from(df).expect("Operation failed");
 
     if x_f64 <= 0.0 {
         return F::one();
@@ -712,5 +727,5 @@ fn chi_square_sf<F: Float + NumCast>(x: F, df: F) -> F {
     // Convert to p-value using standard normal survival function
     let p = 1.0 - normal_cdf::<f64>(z);
 
-    F::from(p).unwrap()
+    F::from(p).expect("Failed to convert to float")
 }

@@ -531,7 +531,7 @@ impl DeprecationManager {
                     for version in versions {
                         if let Some(status) = self.deprecations.get(version) {
                             if status.phase == DeprecationPhase::Active {
-                                let latest_major = major_keys.last().unwrap();
+                                let latest_major = major_keys.last().expect("Operation failed");
                                 let replacement = Version::new(*latest_major, 0, 0);
 
                                 let _announcement = DeprecationAnnouncement {
@@ -738,8 +738,10 @@ mod tests {
         // Register version first
         let apiversion = super::super::ApiVersionBuilder::new(version.clone())
             .build()
-            .unwrap();
-        manager.register_version(&apiversion).unwrap();
+            .expect("Operation failed");
+        manager
+            .register_version(&apiversion)
+            .expect("Operation failed");
 
         // Announce deprecation
         let replacement = Version::new(2, 0, 0);
@@ -749,14 +751,16 @@ mod tests {
                 DeprecationReason::SupersededBy(replacement.clone()),
                 Some(replacement),
             )
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(announcement.version, version);
         assert!(!announcement.message.is_empty());
         assert!(announcement.migration_instructions.is_some());
 
         // Check status was updated
-        let status = manager.get_deprecation_status(&version).unwrap();
+        let status = manager
+            .get_deprecation_status(&version)
+            .expect("Operation failed");
         assert_eq!(status.phase, DeprecationPhase::Announced);
     }
 
@@ -778,8 +782,10 @@ mod tests {
             let version = Version::new(major, 0, 0);
             let apiversion = super::super::ApiVersionBuilder::new(version)
                 .build()
-                .unwrap();
-            manager.register_version(&apiversion).unwrap();
+                .expect("Operation failed");
+            manager
+                .register_version(&apiversion)
+                .expect("Operation failed");
         }
 
         // Apply major version rule
@@ -788,7 +794,7 @@ mod tests {
         };
         let actions = manager
             .apply_auto_deprecation_rule(&rule, chrono::Utc::now())
-            .unwrap();
+            .expect("Operation failed");
 
         // Should have deprecated older versions
         assert!(!actions.is_empty());

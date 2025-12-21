@@ -674,10 +674,10 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[2, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices = vec!["i".to_string(), "j".to_string()];
 
-        let node = TensorNode::new(data, indices).unwrap();
+        let node = TensorNode::new(data, indices).expect("Operation failed");
 
         assert_eq!(node.shape(), vec![2, 3]);
         assert_eq!(node.ndim(), 2);
@@ -691,13 +691,15 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[2, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices = vec!["i".to_string(), "j".to_string()];
 
-        let node = TensorNode::new(data, indices).unwrap();
+        let node = TensorNode::new(data, indices).expect("Operation failed");
 
         // Transpose the tensor
-        let transposed = node.transpose(&["j".to_string(), "i".to_string()]).unwrap();
+        let transposed = node
+            .transpose(&["j".to_string(), "i".to_string()])
+            .expect("Operation failed");
 
         assert_eq!(transposed.shape(), vec![3, 2]);
         assert_eq!(transposed.indices, vec!["j".to_string(), "i".to_string()]);
@@ -718,20 +720,20 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[2, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices1 = vec!["i".to_string(), "j".to_string()];
-        let node1 = TensorNode::new(data1, indices1).unwrap();
+        let node1 = TensorNode::new(data1, indices1).expect("Operation failed");
 
         let data2 = ArrayD::from_shape_vec(
             scirs2_core::ndarray::IxDyn(&[3, 2]),
             vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices2 = vec!["j".to_string(), "k".to_string()];
-        let node2 = TensorNode::new(data2, indices2).unwrap();
+        let node2 = TensorNode::new(data2, indices2).expect("Operation failed");
 
         // Contract the nodes
-        let result = node1.contract(&node2).unwrap();
+        let result = node1.contract(&node2).expect("Operation failed");
 
         // Check result shape and indices
         assert_eq!(result.shape(), vec![2, 2]);
@@ -747,18 +749,18 @@ mod tests {
     #[test]
     fn test_tensor_node_outer_product() {
         // Create two tensors
-        let data1 =
-            ArrayD::from_shape_vec(scirs2_core::ndarray::IxDyn(&[2]), vec![1.0, 2.0]).unwrap();
+        let data1 = ArrayD::from_shape_vec(scirs2_core::ndarray::IxDyn(&[2]), vec![1.0, 2.0])
+            .expect("Operation failed");
         let indices1 = vec!["i".to_string()];
-        let node1 = TensorNode::new(data1, indices1).unwrap();
+        let node1 = TensorNode::new(data1, indices1).expect("Operation failed");
 
-        let data2 =
-            ArrayD::from_shape_vec(scirs2_core::ndarray::IxDyn(&[3]), vec![3.0, 4.0, 5.0]).unwrap();
+        let data2 = ArrayD::from_shape_vec(scirs2_core::ndarray::IxDyn(&[3]), vec![3.0, 4.0, 5.0])
+            .expect("Operation failed");
         let indices2 = vec!["j".to_string()];
-        let node2 = TensorNode::new(data2, indices2).unwrap();
+        let node2 = TensorNode::new(data2, indices2).expect("Operation failed");
 
         // Compute outer product
-        let result = node1.outer_product(&node2).unwrap();
+        let result = node1.outer_product(&node2).expect("Operation failed");
 
         // Check result shape and indices
         assert_eq!(result.shape(), vec![2, 3]);
@@ -780,12 +782,12 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[2, 2]),
             vec![1.0, 2.0, 3.0, 4.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices = vec!["i".to_string(), "j".to_string()];
-        let node = TensorNode::new(data, indices).unwrap();
+        let node = TensorNode::new(data, indices).expect("Operation failed");
 
         // Compute trace
-        let result = node.trace("i", "j").unwrap();
+        let result = node.trace("i", "j").expect("Operation failed");
 
         // Check result shape and indices
         assert_eq!(result.shape(), vec![] as Vec<usize>);
@@ -802,12 +804,12 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[2, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices = vec!["i".to_string(), "j".to_string()];
-        let node = TensorNode::new(data, indices).unwrap();
+        let node = TensorNode::new(data, indices).expect("Operation failed");
 
         // Add a dummy index
-        let result = node.add_dummy_index("k", 1).unwrap();
+        let result = node.add_dummy_index("k", 1).expect("Operation failed");
 
         // Check result shape and indices
         assert_eq!(result.shape(), vec![2, 1, 3]);
@@ -832,12 +834,12 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[2, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices = vec!["i".to_string(), "j".to_string()];
-        let node = TensorNode::new(data, indices).unwrap();
+        let node = TensorNode::new(data, indices).expect("Operation failed");
 
         // Remove an index by summing over it
-        let result = node.remove_index("j").unwrap();
+        let result = node.remove_index("j").expect("Operation failed");
 
         // Check result shape and indices
         assert_eq!(result.shape(), vec![2]);
@@ -855,9 +857,9 @@ mod tests {
             scirs2_core::ndarray::IxDyn(&[2, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices1 = vec!["a".to_string(), "b".to_string()];
-        let node1 = TensorNode::new(data1, indices1).unwrap();
+        let node1 = TensorNode::new(data1, indices1).expect("Operation failed");
 
         let data2 = ArrayD::from_shape_vec(
             scirs2_core::ndarray::IxDyn(&[3, 4]),
@@ -865,23 +867,23 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices2 = vec!["b".to_string(), "c".to_string()];
-        let node2 = TensorNode::new(data2, indices2).unwrap();
+        let node2 = TensorNode::new(data2, indices2).expect("Operation failed");
 
         let data3 = ArrayD::from_shape_vec(
             scirs2_core::ndarray::IxDyn(&[4, 2]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices3 = vec!["c".to_string(), "d".to_string()];
-        let node3 = TensorNode::new(data3, indices3).unwrap();
+        let node3 = TensorNode::new(data3, indices3).expect("Operation failed");
 
         // Create tensor network
         let network = TensorNetwork::new(vec![node1, node2, node3]);
 
         // Contract the entire network
-        let result = network.contract_all().unwrap();
+        let result = network.contract_all().expect("Operation failed");
 
         // Check result shape and indices
         assert_eq!(result.shape(), vec![2, 2]);

@@ -321,7 +321,10 @@ where
     }
 
     // Convert to dynamic dimension for easier manipulation
-    let input_dyn = input.to_owned().into_dimensionality::<IxDyn>().unwrap();
+    let input_dyn = input
+        .to_owned()
+        .into_dimensionality::<IxDyn>()
+        .expect("Operation failed");
 
     // Create padding for this axis only
     let mut pad_width = vec![(0, 0); input.ndim()];
@@ -707,7 +710,7 @@ mod tests {
         let image: Array2<f64> = Array2::eye(5);
 
         // Apply filter
-        let result = uniform_filter(&image, &[3, 3], None).unwrap();
+        let result = uniform_filter(&image, &[3, 3], None).expect("Operation failed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), image.shape());
@@ -720,7 +723,7 @@ mod tests {
         let kernel: Array2<f64> = Array2::from_elem((3, 3), 1.0 / 9.0);
 
         // Apply convolution
-        let result = convolve(&image, &kernel, None).unwrap();
+        let result = convolve(&image, &kernel, None).expect("Operation failed");
 
         // Check that result has the same shape
         assert_eq!(result.shape(), image.shape());

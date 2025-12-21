@@ -290,15 +290,15 @@ mod tests {
     #[test]
     fn test_correlation_method_from_str() {
         assert_eq!(
-            CorrelationMethod::from_str("pearson").unwrap(),
+            CorrelationMethod::from_str("pearson").expect("Operation failed"),
             CorrelationMethod::Pearson
         );
         assert_eq!(
-            CorrelationMethod::from_str("spearman").unwrap(),
+            CorrelationMethod::from_str("spearman").expect("Operation failed"),
             CorrelationMethod::Spearman
         );
         assert_eq!(
-            CorrelationMethod::from_str("kendall").unwrap(),
+            CorrelationMethod::from_str("kendall").expect("Operation failed"),
             CorrelationMethod::KendallTau
         );
         assert!(CorrelationMethod::from_str("invalid").is_err());

@@ -103,7 +103,7 @@ impl<F: Float> Op<F> for ConditionalOp {
             PredicateType::Threshold(threshold) => condition
                 .iter()
                 .next()
-                .map(|&x| x.to_f64().unwrap() > threshold)
+                .map(|&x| x.to_f64().expect("Operation failed") > threshold)
                 .unwrap_or(false),
         };
 
@@ -171,7 +171,7 @@ impl<F: Float> Op<F> for CachedOp {
         let input = ctx.input(0);
 
         // Simple caching - just record that we performed the operation
-        let mut cache = COMPUTATION_CACHE.lock().unwrap();
+        let mut cache = COMPUTATION_CACHE.lock().expect("Operation failed");
         let counter = cache.entry(self.operation_name.clone()).or_insert(0);
         *counter += 1;
 
@@ -195,12 +195,18 @@ impl<F: Float> Op<F> for CachedOp {
             "identity" => *gy,
             "square" => {
                 let input = ctx.input(0);
-                let two = crate::tensor_ops::scalar(F::from(2.0).unwrap(), ctx.graph());
+                let two = crate::tensor_ops::scalar(
+                    F::from(2.0).expect("Failed to convert constant to float"),
+                    ctx.graph(),
+                );
                 (*gy) * two * input
             }
             "sqrt" => {
                 let input = ctx.input(0);
-                let half = crate::tensor_ops::scalar(F::from(0.5).unwrap(), ctx.graph());
+                let half = crate::tensor_ops::scalar(
+                    F::from(0.5).expect("Failed to convert constant to float"),
+                    ctx.graph(),
+                );
                 let sqrt_input = crate::tensor_ops::sqrt(input);
                 (*gy) * half / sqrt_input
             }
@@ -216,14 +222,14 @@ impl<F: Float> Op<F> for CachedOp {
 /// Clear the computation cache
 #[allow(dead_code)]
 pub fn clear_computation_cache() {
-    COMPUTATION_CACHE.lock().unwrap().clear();
+    COMPUTATION_CACHE.lock().expect("Operation failed").clear();
 }
 
 /// Get cache statistics
 #[allow(dead_code)]
 pub fn get_cache_stats() -> CacheStats {
-    let cache = COMPUTATION_CACHE.lock().unwrap();
-    let config = CACHE_CONFIG.lock().unwrap();
+    let cache = COMPUTATION_CACHE.lock().expect("Operation failed");
+    let config = CACHE_CONFIG.lock().expect("Operation failed");
     CacheStats {
         entries: cache.len(),
         max_entries: config.max_entries,
@@ -236,7 +242,7 @@ pub fn get_cache_stats() -> CacheStats {
 /// Configure cache settings
 #[allow(dead_code)]
 pub fn configure_cache(_max_entries: usize, ttlseconds: u64) {
-    let mut config = CACHE_CONFIG.lock().unwrap();
+    let mut config = CACHE_CONFIG.lock().expect("Operation failed");
     config.max_entries = _max_entries;
     config.ttl_seconds = ttlseconds;
 }
@@ -244,7 +250,7 @@ pub fn configure_cache(_max_entries: usize, ttlseconds: u64) {
 /// Run garbage collection
 #[allow(dead_code)]
 pub fn run_garbage_collection() -> usize {
-    let mut gc_state = GC_STATE.lock().unwrap();
+    let mut gc_state = GC_STATE.lock().expect("Operation failed");
     gc_state.total_collections += 1;
     // Simulate freeing some memory
     let freed_items = 10usize;
@@ -255,7 +261,7 @@ pub fn run_garbage_collection() -> usize {
 /// Get garbage collection statistics
 #[allow(dead_code)]
 pub fn get_gc_stats() -> GcStats {
-    let gc_state = GC_STATE.lock().unwrap();
+    let gc_state = GC_STATE.lock().expect("Operation failed");
     GcStats {
         active_references: 0,
         pending_collection: 0,
@@ -308,7 +314,7 @@ pub fn cached_op<'g, F: Float>(tensor: &Tensor<'g, F>, operationname: &str) -> T
                 operationname,
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Failed to get slice")
                     .as_nanos()
             ),
         })

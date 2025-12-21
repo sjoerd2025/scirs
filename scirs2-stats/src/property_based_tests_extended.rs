@@ -1088,8 +1088,8 @@ impl PerformanceRegressionTester {
         }
 
         // Performance should be similar across patterns (within 2x factor)
-        let min_time = times.iter().min().unwrap();
-        let max_time = times.iter().max().unwrap();
+        let min_time = times.iter().min().expect("Operation failed");
+        let max_time = times.iter().max().expect("Operation failed");
 
         max_time.as_nanos() <= min_time.as_nanos() * 2
     }
@@ -1278,7 +1278,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_parallel_consistency() {
         let matrixdata = MatrixTestData::generate_sample();
         assert!(ParallelConsistencyTester::test_correlation_matrix_consistency(&matrixdata));

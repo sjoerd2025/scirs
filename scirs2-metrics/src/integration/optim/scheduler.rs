@@ -58,7 +58,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricLRScheduler<F> 
             min_lr,
             stagnation_count: 0,
             best_metric: None,
-            threshold: F::from(1e-4).unwrap(),
+            threshold: F::from(1e-4).expect("Failed to convert constant to float"),
             mode: if maximize {
                 OptimizationMode::Maximize
             } else {

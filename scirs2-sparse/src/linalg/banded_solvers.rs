@@ -83,10 +83,10 @@ where
     /// // Create a symmetric positive definite tridiagonal matrix
     /// let diag = vec![4.0, 4.0, 4.0];
     /// let off_diag = vec![-1.0, -1.0];
-    /// let matrix = BandedArray::tridiagonal(&diag, &off_diag, &off_diag).unwrap();
+    /// let matrix = BandedArray::tridiagonal(&diag, &off_diag, &off_diag).expect("Operation failed");
     ///
     /// let mut solver = BandedSolver::new(matrix);
-    /// let chol_result = solver.cholesky_decomposition(Some(true)).unwrap();
+    /// let chol_result = solver.cholesky_decomposition(Some(true)).expect("Operation failed");
     /// ```
     pub fn cholesky_decomposition(&mut self, checksymmetry: Option<bool>) -> SparseResult<BandedCholeskyResult<T>> {
         let check_sym = check_symmetry.unwrap_or(true);
@@ -211,7 +211,7 @@ where
             self.cholesky_decomposition(Some(false))?;
         }
 
-        let l = self.cholesky_factor.as_ref().unwrap();
+        let l = self.cholesky_factor.as_ref().expect("Operation failed");
         
         // Solve L * y = b
         let y = l.forward_substitution(b)?;
@@ -232,7 +232,7 @@ where
             self.ldlt_decomposition()?;
         }
 
-        let (l, d) = self.ldlt_factors.as_ref().unwrap();
+        let (l, d) = self.ldlt_factors.as_ref().expect("Operation failed");
         
         // Solve L * y = b
         let y = l.forward_substitution(b)?;
@@ -359,7 +359,7 @@ where
         tol: Option<T>,
     ) -> SparseResult<Array1<T>> {
         let max_iterations = max_iter.unwrap_or(3);
-        let tolerance = tol.unwrap_or(T::from(1e-12).unwrap());
+        let tolerance = tol.unwrap_or(T::from(1e-12).expect("Operation failed"));
         
         let mut x = x0.to_owned();
         
@@ -403,7 +403,7 @@ where
             return false;
         }
 
-        let tolerance = T::from(1e-14).unwrap();
+        let tolerance = T::from(1e-14).expect("Operation failed");
         
         for i in 0..rows {
             for j in 0..cols {
@@ -532,16 +532,16 @@ mod tests {
         // Create a symmetric positive definite tridiagonal matrix
         let diag = vec![4.0, 4.0, 4.0];
         let off_diag = vec![-1.0, -1.0];
-        let matrix = BandedArray::tridiagonal(&diag, &off_diag, &off_diag).unwrap();
+        let matrix = BandedArray::tridiagonal(&diag, &off_diag, &off_diag).expect("Operation failed");
 
         let mut solver = BandedSolver::new(matrix);
-        let chol_result = solver.cholesky_decomposition(Some(true)).unwrap();
+        let chol_result = solver.cholesky_decomposition(Some(true)).expect("Operation failed");
         
         assert!(chol_result.success);
         
         // Test solving a system
         let b = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let x = solver.solve_cholesky(&b.view()).unwrap();
+        let x = solver.solve_cholesky(&b.view()).expect("Operation failed");
         
         assert_eq!(x.len(), 3);
     }
@@ -551,16 +551,16 @@ mod tests {
         // Create a symmetric indefinite matrix
         let diag = vec![1.0, -2.0, 1.0];
         let off_diag = vec![1.0, 1.0];
-        let matrix = BandedArray::tridiagonal(&diag, &off_diag, &off_diag).unwrap();
+        let matrix = BandedArray::tridiagonal(&diag, &off_diag, &off_diag).expect("Operation failed");
 
         let mut solver = BandedSolver::new(matrix);
-        let ldlt_result = solver.ldlt_decomposition().unwrap();
+        let ldlt_result = solver.ldlt_decomposition().expect("Operation failed");
         
         assert!(ldlt_result.success);
         
         // Test solving a system
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
-        let x = solver.solve_ldlt(&b.view()).unwrap();
+        let x = solver.solve_ldlt(&b.view()).expect("Operation failed");
         
         assert_eq!(x.len(), 3);
     }
@@ -576,7 +576,7 @@ mod tests {
         
         // For now, just test that the function can be called
         // (would need proper matrix setup for meaningful test)
-        // let x = solver.solve_pentadiagonal(&b.view()).unwrap();
+        // let x = solver.solve_pentadiagonal(&b.view()).expect("Operation failed");
     }
 
     #[test]
@@ -591,7 +591,7 @@ mod tests {
             &lower.view(), 
             &upper.view(),
             &b.view()
-        ).unwrap();
+        ).expect("Operation failed");
 
         assert_eq!(x.len(), 3);
         

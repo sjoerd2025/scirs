@@ -104,7 +104,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> InMemoryDat
         let x = x_slice
             .to_owned()
             .into_shape_with_order(IxDyn(&xshape))
-            .unwrap();
+            .expect("Operation failed");
         let y = y_slice
             .into_shape_with_order(IxDyn(&yshape))
         Ok((x, y))

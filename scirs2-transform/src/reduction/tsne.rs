@@ -980,14 +980,15 @@ impl TSNE {
             // Random initialization from standard normal distribution
             // Ignoring random_state as it's not needed for basic random functionality
             use scirs2_core::random::{thread_rng, Distribution};
-            let normal = Normal::new(0.0, 1e-4).unwrap();
+            let normal = Normal::new(0.0, 1e-4).expect("Operation failed");
             let mut rng = thread_rng();
 
             // Use simple random initialization
             let data: Vec<f64> = (0..(n_samples * self.n_components))
                 .map(|_| normal.sample(&mut rng))
                 .collect();
-            Ok(Array2::from_shape_vec((n_samples, self.n_components), data).unwrap())
+            Ok(Array2::from_shape_vec((n_samples, self.n_components), data)
+                .expect("Operation failed"))
         } else {
             Err(TransformError::InvalidInput(format!(
                 "Initialization method '{}' not recognized",

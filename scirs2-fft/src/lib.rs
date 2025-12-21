@@ -42,7 +42,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-fft = "0.1.0-rc.3"
+//! scirs2-fft = "0.1.0-rc.4"
 //! ```
 //!
 //!
@@ -55,10 +55,10 @@
 //! let signal = vec![1.0, 2.0, 3.0, 4.0];
 //!
 //! // Forward FFT: time → frequency
-//! let spectrum = fft(&signal, None).unwrap();
+//! let spectrum = fft(&signal, None).expect("Operation failed");
 //!
 //! // Inverse FFT: frequency → time
-//! let recovered = ifft(&spectrum, None).unwrap();
+//! let recovered = ifft(&spectrum, None).expect("Operation failed");
 //! ```
 //!
 //! ### Real-valued FFT (RFFT)
@@ -70,10 +70,10 @@
 //! let signal = vec![1.0, 0.5, -0.5, -1.0];
 //!
 //! // RFFT: optimized for real inputs, returns only positive frequencies
-//! let spectrum = rfft(&signal, None).unwrap();  // Length: n/2 + 1
+//! let spectrum = rfft(&signal, None).expect("Operation failed");  // Length: n/2 + 1
 //!
 //! // Inverse RFFT
-//! let recovered = irfft(&spectrum, Some(signal.len())).unwrap();
+//! let recovered = irfft(&spectrum, Some(signal.len())).expect("Operation failed");
 //! ```
 //!
 //! ### 2D FFT (Image Processing)
@@ -86,13 +86,13 @@
 //! let image = Array2::<f64>::zeros((256, 256));
 //!
 //! // 2D FFT
-//! let spectrum = fft2(&image, None, None, None).unwrap();
+//! let spectrum = fft2(&image, None, None, None).expect("Operation failed");
 //!
 //! // Apply frequency-domain filter...
 //! // let filtered_spectrum = apply_filter(spectrum);
 //!
 //! // Inverse 2D FFT
-//! // let filtered_image = ifft2(&filtered_spectrum, None, None).unwrap();
+//! // let filtered_image = ifft2(&filtered_spectrum, None, None).expect("Operation failed");
 //! ```
 //!
 //! ### Short-Time Fourier Transform (STFT)
@@ -104,7 +104,7 @@
 //! let signal: Vec<f64> = vec![0.0; 10000];
 //!
 //! // Compute STFT with Hann window
-//! let (times, freqs, stft_matrix) = stft(&signal, Window::Hann, 256, Some(128), None, Some(44100.0), None, None).unwrap();
+//! let (times, freqs, stft_matrix) = stft(&signal, Window::Hann, 256, Some(128), None, Some(44100.0), None, None).expect("Operation failed");
 //! // Result: time-frequency representation (spectrogram)
 //! ```
 //!
@@ -158,8 +158,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.3
-//! - **Release Date**: October 03, 2025
+//! - **Version**: 0.1.0-rc.4
+//! - **Release Date**: December 21, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-fft](https://docs.rs/scirs2-fft)
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)
@@ -469,7 +469,7 @@ pub use padding::{
 ///     Some(fs),
 ///     None,
 ///     None,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Check dimensions
 /// assert_eq!(frequencies.len(), result.shape()[0]);
@@ -539,7 +539,7 @@ where
 /// let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * freq * i as f64 * dt).cos()).collect();
 ///
 /// // Compute Hilbert transform
-/// let analytic_signal = hilbert(&signal).unwrap();
+/// let analytic_signal = hilbert(&signal).expect("Operation failed");
 ///
 /// // For a cosine wave, the analytical signal should have a magnitude of approximately 1
 /// let mid_point = n / 2;
@@ -725,7 +725,7 @@ mod tests {
         let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * freq * ti).cos()).collect();
 
         // Compute Hilbert transform
-        let analytic = hilbert(&signal).unwrap();
+        let analytic = hilbert(&signal).expect("Operation failed");
 
         // The Hilbert transform of cos(x) is sin(x)
         // So the analytic signal should be cos(x) + i*sin(x) = e^(ix)

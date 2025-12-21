@@ -364,7 +364,7 @@ fn nonmaximum_suppression(
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let edges = canny(&img, 1.0, None, None, None, false, PreprocessMode::Constant(0.0))?;
 /// # Ok(())
 /// # }
@@ -418,7 +418,7 @@ pub fn canny(
     // Convert quantile thresholds to absolute if needed
     if use_quantiles {
         let mut mag_values: Vec<f32> = magnitude.iter().cloned().collect();
-        mag_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        mag_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let low_idx = (mag_values.len() as f32 * low_thresh) as usize;
         let high_idx = (mag_values.len() as f32 * high_thresh) as usize;
@@ -506,7 +506,7 @@ mod tests {
         let result = canny_simple(&dynamic_img, 1.0);
 
         assert!(result.is_ok());
-        let edges = result.unwrap();
+        let edges = result.expect("Operation failed");
 
         // Should detect edge around x=5
         let mut has_edge = false;

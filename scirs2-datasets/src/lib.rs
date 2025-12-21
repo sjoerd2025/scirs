@@ -28,21 +28,21 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-datasets = "0.1.0-rc.3"
+//! scirs2-datasets = "0.1.0-rc.4"
 //! ```
 //!
 //! ```rust
 //! use scirs2_datasets::{load_iris, make_classification};
 //!
 //! // Load classic Iris dataset
-//! let iris = load_iris().unwrap();
+//! let iris = load_iris().expect("Operation failed");
 //! println!("{} samples, {} features", iris.n_samples(), iris.n_features());
 //!
 //! // Generate synthetic classification data
-//! let data = make_classification(100, 5, 3, 2, 4, Some(42)).unwrap();
+//! let data = make_classification(100, 5, 3, 2, 4, Some(42)).expect("Operation failed");
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
 //!
 //! # Examples
 //!
@@ -52,11 +52,11 @@
 //! use scirs2_datasets::{load_iris, load_boston};
 //!
 //! // Load the classic Iris dataset
-//! let iris = load_iris().unwrap();
+//! let iris = load_iris().expect("Operation failed");
 //! println!("Iris dataset: {} samples, {} features", iris.n_samples(), iris.n_features());
 //!
 //! // Load the Boston housing dataset
-//! let boston = load_boston().unwrap();
+//! let boston = load_boston().expect("Operation failed");
 //! println!("Boston dataset: {} samples, {} features", boston.n_samples(), boston.n_features());
 //! ```
 //!
@@ -66,23 +66,23 @@
 //! use scirs2_datasets::{make_classification, make_regression, make_blobs, make_spirals, make_moons};
 //!
 //! // Generate a classification dataset
-//! let classification = make_classification(100, 5, 3, 2, 4, Some(42)).unwrap();
+//! let classification = make_classification(100, 5, 3, 2, 4, Some(42)).expect("Operation failed");
 //! println!("Classification dataset: {} samples, {} features, {} classes",
 //!          classification.n_samples(), classification.n_features(), 3);
 //!
 //! // Generate a regression dataset
-//! let regression = make_regression(50, 4, 3, 0.1, Some(42)).unwrap();
+//! let regression = make_regression(50, 4, 3, 0.1, Some(42)).expect("Operation failed");
 //! println!("Regression dataset: {} samples, {} features",
 //!          regression.n_samples(), regression.n_features());
 //!
 //! // Generate a clustering dataset
-//! let blobs = make_blobs(80, 3, 4, 1.0, Some(42)).unwrap();
+//! let blobs = make_blobs(80, 3, 4, 1.0, Some(42)).expect("Operation failed");
 //! println!("Blobs dataset: {} samples, {} features, {} clusters",
 //!          blobs.n_samples(), blobs.n_features(), 4);
 //!
 //! // Generate non-linear patterns
-//! let spirals = make_spirals(200, 2, 0.1, Some(42)).unwrap();
-//! let moons = make_moons(150, 0.05, Some(42)).unwrap();
+//! let spirals = make_spirals(200, 2, 0.1, Some(42)).expect("Operation failed");
+//! let moons = make_moons(150, 0.05, Some(42)).expect("Operation failed");
 //! ```
 //!
 //! ## Cross-validation
@@ -90,15 +90,15 @@
 //! ```rust
 //! use scirs2_datasets::{load_iris, k_fold_split, stratified_k_fold_split};
 //!
-//! let iris = load_iris().unwrap();
+//! let iris = load_iris().expect("Operation failed");
 //!
 //! // K-fold cross-validation
-//! let k_folds = k_fold_split(iris.n_samples(), 5, true, Some(42)).unwrap();
+//! let k_folds = k_fold_split(iris.n_samples(), 5, true, Some(42)).expect("Operation failed");
 //! println!("Created {} folds for K-fold CV", k_folds.len());
 //!
 //! // Stratified K-fold cross-validation
 //! if let Some(target) = &iris.target {
-//!     let stratified_folds = stratified_k_fold_split(target, 5, true, Some(42)).unwrap();
+//!     let stratified_folds = stratified_k_fold_split(target, 5, true, Some(42)).expect("Operation failed");
 //!     println!("Created {} stratified folds", stratified_folds.len());
 //! }
 //! ```
@@ -108,7 +108,7 @@
 //! ```rust
 //! use scirs2_datasets::{load_iris, Dataset};
 //!
-//! let iris = load_iris().unwrap();
+//! let iris = load_iris().expect("Operation failed");
 //!
 //! // Access dataset properties
 //! println!("Dataset: {} samples, {} features", iris.n_samples(), iris.n_features());

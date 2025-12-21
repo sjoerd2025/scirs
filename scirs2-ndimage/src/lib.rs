@@ -90,7 +90,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-ndimage = "0.1.0-rc.3"
+//! scirs2-ndimage = "0.1.0-rc.4"
 //! ```
 //!
 //! ```rust,no_run
@@ -102,7 +102,7 @@
 //! let filtered = filters::gaussian_filter(&image, 2.0, None, None).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
 
 // Public modules
 pub mod adaptive_image_optimizer;

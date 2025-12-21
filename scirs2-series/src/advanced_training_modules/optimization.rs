@@ -34,10 +34,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         let param_count = 4 * hidden_size * (input_dim + hidden_size) + 4 * hidden_size; // 4 gates
         let mut lstm_params = Array2::zeros((1, param_count));
 
-        let scale = F::from(1.0).unwrap() / F::from(hidden_size).unwrap().sqrt();
+        let scale = F::from(1.0).expect("Failed to convert constant to float")
+            / F::from(hidden_size)
+                .expect("Failed to convert to float")
+                .sqrt();
         for i in 0..param_count {
             let val = ((i * 79) % 1000) as f64 / 1000.0 - 0.5;
-            lstm_params[[0, i]] = F::from(val).unwrap() * scale;
+            lstm_params[[0, i]] = F::from(val).expect("Failed to convert to float") * scale;
         }
 
         let hidden_state = Array1::zeros(hidden_size);
@@ -68,7 +71,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         }
 
         if self.input_dim > 2 {
-            input[2] = F::from(step_count).unwrap();
+            input[2] = F::from(step_count).expect("Failed to convert to float");
         }
 
         // LSTM forward pass
@@ -160,7 +163,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             }
         }
 
-        Ok(total_loss / F::from(optimization_problems.len()).unwrap())
+        Ok(total_loss / F::from(optimization_problems.len()).expect("Operation failed"))
     }
 
     /// Compute simple gradient (placeholder)
@@ -311,7 +314,10 @@ impl<F: Float + Debug> OptimizationProblem<F> {
     {
         let initial_params = Array1::from_vec(
             (0..dim)
-                .map(|i| F::from((i * 13) % 100).unwrap() / F::from(100.0).unwrap())
+                .map(|i| {
+                    F::from((i * 13) % 100).expect("Operation failed")
+                        / F::from(100.0).expect("Failed to convert constant to float")
+                })
                 .collect(),
         );
         let target = Array1::zeros(dim);
@@ -330,12 +336,19 @@ impl<F: Float + Debug> OptimizationProblem<F> {
     {
         let initial_params = Array1::from_vec(
             (0..dim)
-                .map(|i| F::from((i * 17 + 23) % 200).unwrap() / F::from(100.0).unwrap() - F::one())
+                .map(|i| {
+                    F::from((i * 17 + 23) % 200).expect("Operation failed")
+                        / F::from(100.0).expect("Failed to convert constant to float")
+                        - F::one()
+                })
                 .collect(),
         );
         let target = Array1::from_vec(
             (0..dim)
-                .map(|i| F::from((i * 19 + 37) % 100).unwrap() / F::from(200.0).unwrap())
+                .map(|i| {
+                    F::from((i * 19 + 37) % 100).expect("Operation failed")
+                        / F::from(200.0).expect("Failed to convert constant to float")
+                })
                 .collect(),
         );
 
@@ -365,7 +378,8 @@ impl<F: Float + Debug> OptimizationProblem<F> {
     pub fn gradient(&self, params: &Array1<F>) -> Array1<F> {
         let mut grad = Array1::zeros(params.len());
         for i in 0..params.len().min(self.target.len()) {
-            grad[i] = F::from(2.0).unwrap() * (params[i] - self.target[i]);
+            grad[i] = F::from(2.0).expect("Failed to convert constant to float")
+                * (params[i] - self.target[i]);
         }
         grad
     }
@@ -402,7 +416,7 @@ mod tests {
 
         let update = meta_opt
             .generate_update(gradient, &loss_history, step_count)
-            .unwrap();
+            .expect("Operation failed");
         assert!(update.is_finite());
     }
 
@@ -411,7 +425,9 @@ mod tests {
         let mut meta_opt = MetaOptimizer::<f64>::new(2, 3);
 
         // Generate some updates to change state
-        let _ = meta_opt.generate_update(0.5, &[1.0], 1).unwrap();
+        let _ = meta_opt
+            .generate_update(0.5, &[1.0], 1)
+            .expect("Operation failed");
 
         // Reset should zero out the states
         meta_opt.reset();
@@ -503,8 +519,12 @@ mod tests {
         let new_hidden = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let new_cell = Array1::from_vec(vec![0.5, 1.5, 2.5]);
 
-        meta_opt.set_hidden_state(new_hidden.clone()).unwrap();
-        meta_opt.set_cell_state(new_cell.clone()).unwrap();
+        meta_opt
+            .set_hidden_state(new_hidden.clone())
+            .expect("Operation failed");
+        meta_opt
+            .set_cell_state(new_cell.clone())
+            .expect("Operation failed");
 
         for (i, &val) in meta_opt.hidden_state().iter().enumerate() {
             assert_abs_diff_eq!(val, new_hidden[i], epsilon = 1e-10);
@@ -535,8 +555,9 @@ mod tests {
         let initial = Array1::from_vec(vec![2.0, 3.0]);
         let target = Array1::from_vec(vec![0.0, 0.0]);
 
-        let (final_params, loss_history) =
-            meta_opt.optimize_parameters(&initial, &target, 10).unwrap();
+        let (final_params, loss_history) = meta_opt
+            .optimize_parameters(&initial, &target, 10)
+            .expect("Operation failed");
 
         assert_eq!(final_params.len(), 2);
         assert_eq!(loss_history.len(), 10);
@@ -554,7 +575,7 @@ mod tests {
 
         let updates = meta_opt
             .generate_vectorized_update(&gradients, &loss_history, 5)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(updates.len(), 3);
         for &update in updates.iter() {
@@ -567,7 +588,7 @@ mod tests {
         let meta_opt = MetaOptimizer::<f64>::new(2, 3);
         let input = Array1::from_vec(vec![0.5, -0.3]);
 
-        let (hidden, cell) = meta_opt.lstm_forward(&input).unwrap();
+        let (hidden, cell) = meta_opt.lstm_forward(&input).expect("Operation failed");
 
         assert_eq!(hidden.len(), 3);
         assert_eq!(cell.len(), 3);

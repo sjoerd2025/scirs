@@ -863,7 +863,7 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.dim(), input.dim());
     }
 
@@ -882,7 +882,7 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.dim(), input.dim());
     }
 
@@ -892,7 +892,7 @@ mod tests {
         let mapping = mapper.get_mapping("mode");
 
         assert!(mapping.is_some());
-        let mode_mapping = mapping.unwrap();
+        let mode_mapping = mapping.expect("Operation failed");
         assert_eq!(mode_mapping.scipy_param, "mode");
         assert_eq!(mode_mapping.scirs2_param, "mode");
     }

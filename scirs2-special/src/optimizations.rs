@@ -60,7 +60,7 @@ lazy_static::lazy_static! {
 /// * `f64` - Value of the constant
 #[allow(dead_code)]
 pub fn get_constant(name: &'static str) -> f64 {
-    if let Some(value) = SPECIAL_VALUES.lock().unwrap().get(name) {
+    if let Some(value) = SPECIAL_VALUES.lock().expect("Operation failed").get(name) {
         return *value;
     }
 
@@ -74,7 +74,10 @@ pub fn get_constant(name: &'static str) -> f64 {
     };
 
     // Cache the computed value
-    SPECIAL_VALUES.lock().unwrap().insert(name, value);
+    SPECIAL_VALUES
+        .lock()
+        .expect("Operation failed")
+        .insert(name, value);
     value
 }
 
@@ -96,7 +99,11 @@ pub fn get_cached_polylog(s: f64, x: f64) -> Option<f64> {
 
     // Only use cache for exact integer s values
     if (s - s_int as f64).abs() < f64::EPSILON && s_int > 0 && s_int <= 10 {
-        if let Some(value) = POLYLOG_CACHE.lock().unwrap().get(&(s_int, x_int)) {
+        if let Some(value) = POLYLOG_CACHE
+            .lock()
+            .expect("Operation failed")
+            .get(&(s_int, x_int))
+        {
             return Some(*value);
         }
     }
@@ -120,7 +127,7 @@ pub fn cache_polylog(s: f64, x: f64, value: f64) {
     // Only cache for exact integer s values
     if (s - s_int as f64).abs() < f64::EPSILON && s_int > 0 && s_int <= 10 {
         // Limit cache size
-        let mut cache = POLYLOG_CACHE.lock().unwrap();
+        let mut cache = POLYLOG_CACHE.lock().expect("Operation failed");
         if cache.len() < 10000 {
             // Prevent unbounded growth
             cache.insert((s_int, x_int), value);
@@ -912,7 +919,7 @@ mod tests {
 
         // Test gamma lookup
         assert_relative_eq!(
-            lookup_tables::gamma_lookup(0.5).unwrap(),
+            lookup_tables::gamma_lookup(0.5).expect("Operation failed"),
             (PI).sqrt(),
             epsilon = 1e-10
         );
@@ -950,8 +957,8 @@ mod tests {
         assert_eq!(result1, result2);
 
         // Test binomial caching
-        let binom1 = enhanced_caching::binomial_cached(10, 3).unwrap();
-        let binom2 = enhanced_caching::binomial_cached(10, 3).unwrap(); // Should use cache
+        let binom1 = enhanced_caching::binomial_cached(10, 3).expect("Operation failed");
+        let binom2 = enhanced_caching::binomial_cached(10, 3).expect("Operation failed"); // Should use cache
         assert_eq!(binom1, binom2);
         assert_eq!(binom1, 120.0);
     }
@@ -981,14 +988,14 @@ mod tests {
         let mut output = vec![0.0; 3];
 
         // Test vectorized exp
-        vectorized::exp_vectorized(&input, &mut output).unwrap();
+        vectorized::exp_vectorized(&input, &mut output).expect("Operation failed");
         assert_relative_eq!(output[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(output[1], std::f64::consts::E, epsilon = 1e-10);
 
         // Test vectorized sin
         let sin_input = vec![0.0, PI / 2.0, PI];
         let mut sin_output = vec![0.0; 3];
-        vectorized::sin_vectorized(&sin_input, &mut sin_output).unwrap();
+        vectorized::sin_vectorized(&sin_input, &mut sin_output).expect("Operation failed");
         assert_relative_eq!(sin_output[0], 0.0, epsilon = 1e-10);
         assert_relative_eq!(sin_output[1], 1.0, epsilon = 1e-10);
         assert_relative_eq!(sin_output[2], 0.0, epsilon = 1e-10);
@@ -999,7 +1006,7 @@ mod tests {
         let input = vec![1.0, 2.0, 3.0, 4.0];
         let mut output = vec![0.0; 4];
 
-        vectorized::batch_compute(&input, &mut output, |x| x * x).unwrap();
+        vectorized::batch_compute(&input, &mut output, |x| x * x).expect("Operation failed");
 
         for (i, &expected) in [1.0, 4.0, 9.0, 16.0].iter().enumerate() {
             assert_relative_eq!(output[i], expected, epsilon = 1e-10);

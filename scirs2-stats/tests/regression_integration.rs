@@ -13,13 +13,13 @@ fn test_linear_regression() {
             1.0, 1.0, 2.0, 1.0, 2.0, 3.0, 1.0, 3.0, 4.0, 1.0, 4.0, 5.0,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Target values: y = 1 + 2*x1 + 3*x2
     let y = array![4.0, 9.0, 14.0, 19.0, 24.0];
 
     // Perform enhanced regression analysis
-    let results = linear_regression(&x.view(), &y.view(), None).unwrap();
+    let results = linear_regression(&x.view(), &y.view(), None).expect("Test: operation failed");
 
     // Check coefficients (intercept, x1, x2)
     assert!((results.coefficients[0] - 1.0f64).abs() < 1e-8f64);
@@ -36,7 +36,7 @@ fn test_polynomial_regression() {
     let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     let y = array![1.0, 3.0, 9.0, 19.0, 33.0]; // y = 1 + 2x + x^2
 
-    let result = polyfit(&x.view(), &y.view(), 2).unwrap();
+    let result = polyfit(&x.view(), &y.view(), 2).expect("Test: operation failed");
 
     // Just check that we get a result with 3 coefficients (degree 2 polynomial + intercept)
     assert_eq!(result.coefficients.len(), 3);
@@ -54,7 +54,7 @@ fn test_theil_slopes() {
     let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = array![1.0, 3.0, 4.0, 5.0, 20.0]; // The last point is an outlier
 
-    let result = theilslopes(&x.view(), &y.view(), None, None).unwrap();
+    let result = theilslopes(&x.view(), &y.view(), None, None).expect("Test: operation failed");
 
     // The Theil-Sen estimator should be less affected by the outlier
     assert!((result.slope - 1.0f64).abs() < 1.0); // Close to the true slope of 1.0
@@ -73,7 +73,8 @@ fn test_ransac() {
         x[[i, 0]] = x_values[i];
     }
 
-    let result = ransac(&x.view(), &y.view(), None, None, None, None, Some(42)).unwrap();
+    let result = ransac(&x.view(), &y.view(), None, None, None, None, Some(42))
+        .expect("Test: operation failed");
 
     // The model should be close to y = 2x
     assert!((result.coefficients[0] - 0.0f64).abs() < 1.0); // Intercept close to 0
@@ -124,7 +125,7 @@ fn test_ransac_advanced() {
         Some(0.7),    // Stop probability
         Some(42),     // Random seed
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // The model should be close to y = 3x + 2
     assert!((result.coefficients[0] - 2.0f64).abs() < 1.0); // Intercept close to 2
@@ -136,8 +137,11 @@ fn test_ransac_advanced() {
 
     // Test prediction with the model
     // Need to reshape to match model dimensions (with proper polynomial features)
-    let x_new = Array2::from_shape_vec((3, 2), vec![1.0, 5.0, 1.0, 10.0, 1.0, 15.0]).unwrap();
-    let predictions = result.predict(&x_new.view()).unwrap();
+    let x_new = Array2::from_shape_vec((3, 2), vec![1.0, 5.0, 1.0, 10.0, 1.0, 15.0])
+        .expect("Test: operation failed");
+    let predictions = result
+        .predict(&x_new.view())
+        .expect("Test: operation failed");
 
     // Expected values: y = 3x + 2
     assert!((predictions[0] - 17.0f64).abs() < 1.0); // 3*5 + 2 = 17
@@ -157,7 +161,7 @@ fn test_ransac_multivariate() {
             2.0, 10.0, 3.0,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Target values with two outliers (last two)
     let y = array![
@@ -183,7 +187,8 @@ fn test_ransac_multivariate() {
     }
 
     // Run RANSAC with 2D input
-    let result = ransac(&x_col1.view(), &y.view(), None, None, None, None, Some(42)).unwrap();
+    let result = ransac(&x_col1.view(), &y.view(), None, None, None, None, Some(42))
+        .expect("Test: operation failed");
 
     // The model should identify the outliers and recover coefficients close to [1, 2, 3]
     // Check that inlier mask correctly identifies the outliers
@@ -206,12 +211,12 @@ fn test_huber_regression() {
         (10, 1),
         vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let y = array![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 30.0]; // Last point is an outlier
 
-    let result =
-        huber_regression(&x.view(), &y.view(), None, None, None, None, None, None).unwrap();
+    let result = huber_regression(&x.view(), &y.view(), None, None, None, None, None, None)
+        .expect("Test: operation failed");
 
     // The model should be close to y = 2x
     assert!((result.coefficients[0] - 0.0f64).abs() < 2.0); // Intercept close to 0
@@ -231,7 +236,7 @@ fn test_huber_regression_advanced() {
             1.0, 4.3, 2.1, 1.0, 1.3, 3.1, 1.0, 0.2, 3.9,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // True coefficient values: β₀ = 1.0, β₁ = 2.0, β₂ = 3.0
     // y = 1 + 2*x₁ + 3*x₂ + noise + some outliers
@@ -273,7 +278,7 @@ fn test_huber_regression_advanced() {
         None,
         None,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Just check that we get the right number of coefficients - should be 3 (one for each column)
     assert_eq!(result.coefficients.len(), 3);
@@ -289,7 +294,7 @@ fn test_huber_regression_advanced() {
         None,        // Tol (convergence tolerance)
         None,        // Use scale
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Just check that custom epsilon produces valid results
     assert_eq!(result_custom_epsilon.coefficients.len(), 3);
@@ -357,7 +362,7 @@ fn test_huber_regression_with_regularization() {
         None,
         None,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Test Huber regression with different epsilon value
     let result_robust = huber_regression(
@@ -370,7 +375,7 @@ fn test_huber_regression_with_regularization() {
         None,
         None,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Check that both models produce reasonable results
     assert_eq!(result_default.coefficients.len(), 6); // 5 features + intercept
@@ -401,11 +406,11 @@ fn test_regression_summary() {
             1.0, 2.0, 1.0, 3.0, 1.0, 4.0, 1.0, 5.0,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let y = array![3.0, 5.0, 7.0, 9.0, 11.0]; // y = 1 + 2*x1
 
-    let model = linear_regression(&x.view(), &y.view(), None).unwrap();
+    let model = linear_regression(&x.view(), &y.view(), None).expect("Test: operation failed");
 
     // Get the summary
     let summary = model.summary();
@@ -428,11 +433,11 @@ fn test_predict() {
             1.0, 2.0, 1.0, 3.0,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     let y = array![3.0, 5.0, 7.0]; // y = 1 + 2*x1
 
-    let model = linear_regression(&x.view(), &y.view(), None).unwrap();
+    let model = linear_regression(&x.view(), &y.view(), None).expect("Test: operation failed");
 
     // Predict for new data
     let x_new = Array2::from_shape_vec(
@@ -442,9 +447,11 @@ fn test_predict() {
             1.0, 5.0,
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
-    let predictions = model.predict(&x_new.view()).unwrap();
+    let predictions = model
+        .predict(&x_new.view())
+        .expect("Test: operation failed");
 
     // Check predictions: y = 1 + 2*x1
     assert!((predictions[0] - 9.0f64).abs() < 1e-8f64); // 1 + 2*4 = 9
@@ -465,10 +472,10 @@ fn test_compare_robust_methods() {
     let x_design = Array2::from_shape_fn((x.len(), 2), |(i, j)| if j == 0 { 1.0 } else { x[i] });
 
     // Run standard OLS regression
-    let ols = linear_regression(&x_design.view(), &y.view(), None).unwrap();
+    let ols = linear_regression(&x_design.view(), &y.view(), None).expect("Test: operation failed");
 
     // Run Theil-Sen regression
-    let theil = theilslopes(&x.view(), &y.view(), None, None).unwrap();
+    let theil = theilslopes(&x.view(), &y.view(), None, None).expect("Test: operation failed");
 
     // Compare results - true relationship is y = 2x + 1
     let true_slope = 2.0;

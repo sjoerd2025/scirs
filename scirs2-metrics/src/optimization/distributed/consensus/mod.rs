@@ -508,7 +508,7 @@ impl SimpleMajorityConsensus {
             "proposal_{}_{}",
             SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_millis(),
             scirs2_core::random::rng().random::<u64>()
         );
@@ -630,7 +630,7 @@ mod tests {
         let peers = vec!["node1".to_string(), "node2".to_string()];
         let mut raft = RaftConsensus::new("node0".to_string(), peers, config);
 
-        raft.start_election().unwrap();
+        raft.start_election().expect("Operation failed");
         assert_eq!(*raft.current_state(), NodeState::Candidate);
         assert_eq!(raft.current_term(), 1);
     }
@@ -656,7 +656,7 @@ mod tests {
 
         let proposal_id = consensus
             .submit_proposal(b"test proposal".to_vec())
-            .unwrap();
+            .expect("Operation failed");
         assert!(!consensus.has_majority(&proposal_id)); // Need more votes
     }
 

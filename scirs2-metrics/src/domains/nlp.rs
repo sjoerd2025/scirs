@@ -769,7 +769,7 @@ mod tests {
 
         let results = metrics
             .evaluate_generation(&references, &candidates)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.bleu_1 >= 0.0 && results.bleu_1 <= 1.0);
         assert!(results.bleu_4 >= 0.0 && results.bleu_4 <= 1.0);
@@ -783,7 +783,9 @@ mod tests {
         let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2]);
         let y_pred = Array1::from_vec(vec![0, 2, 1, 0, 0, 2]);
 
-        let results = metrics.evaluate_classification(&y_true, &y_pred).unwrap();
+        let results = metrics
+            .evaluate_classification(&y_true, &y_pred)
+            .expect("Operation failed");
 
         assert!(results.accuracy >= 0.0 && results.accuracy <= 1.0);
         assert!(results.macro_f1 >= 0.0 && results.macro_f1 <= 1.0);
@@ -806,7 +808,7 @@ mod tests {
 
         let results = metrics
             .evaluate_ner(&true_entities, &pred_entities, 15)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(results.entity_precision >= 0.0 && results.entity_precision <= 1.0);
         assert!(results.entity_recall >= 0.0 && results.entity_recall <= 1.0);
@@ -821,7 +823,9 @@ mod tests {
         let y_true = Array1::from_vec(vec![0, 1, 1, 0, 1, 0]); // 0=negative, 1=positive
         let y_pred = Array1::from_vec(vec![0, 1, 0, 0, 1, 1]);
 
-        let results = metrics.evaluate_sentiment(&y_true, &y_pred).unwrap();
+        let results = metrics
+            .evaluate_sentiment(&y_true, &y_pred)
+            .expect("Operation failed");
 
         assert!(results.accuracy >= 0.0 && results.accuracy <= 1.0);
         assert!(results.macro_f1 >= 0.0 && results.macro_f1 <= 1.0);

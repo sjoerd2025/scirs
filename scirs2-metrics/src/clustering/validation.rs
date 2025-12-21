@@ -37,7 +37,7 @@ use crate::error::{MetricsError, Result};
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![1, 1, 0, 0, 2, 2];
 ///
-/// let similarity = jaccard_similarity(&labels_true, &labels_pred).unwrap();
+/// let similarity = jaccard_similarity(&labels_true, &labels_pred).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn jaccard_similarity<S1, S2, D1, D2>(
@@ -73,10 +73,10 @@ where
 
     for i in 0..n_samples {
         for j in (i + 1)..n_samples {
-            let true_i = labels_true.iter().nth(i).unwrap();
-            let true_j = labels_true.iter().nth(j).unwrap();
-            let pred_i = labels_pred.iter().nth(i).unwrap();
-            let pred_j = labels_pred.iter().nth(j).unwrap();
+            let true_i = labels_true.iter().nth(i).expect("Operation failed");
+            let true_j = labels_true.iter().nth(j).expect("Operation failed");
+            let pred_i = labels_pred.iter().nth(i).expect("Operation failed");
+            let pred_j = labels_pred.iter().nth(j).expect("Operation failed");
 
             let same_in_true = true_i == true_j;
             let same_in_pred = pred_i == pred_j;
@@ -136,11 +136,11 @@ where
 /// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let stability = cluster_stability(&x, &labels, None, None, None).unwrap();
+/// let stability = cluster_stability(&x, &labels, None, None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cluster_stability<F, S1, S2, D>(
@@ -173,7 +173,8 @@ where
 
     // Default parameters
     let n_runs = n_runs.unwrap_or(10);
-    let perturbation_scale = perturbation_scale.unwrap_or_else(|| F::from(0.1).unwrap());
+    let perturbation_scale = perturbation_scale
+        .unwrap_or_else(|| F::from(0.1).expect("Failed to convert constant to float"));
 
     if n_runs < 2 {
         return Err(MetricsError::InvalidInput(
@@ -202,7 +203,7 @@ where
     // Create a matrix to store remapped original labels
     let mut original_labels = Array1::zeros(n_samples);
     for (i, &label) in labels.iter().enumerate() {
-        original_labels[i] = *label_indices.get(&label).unwrap();
+        original_labels[i] = *label_indices.get(&label).expect("Operation failed");
     }
 
     // Generate perturbed datasets and calculate stability
@@ -216,7 +217,8 @@ where
         for i in 0..n_samples {
             for j in 0..x.ncols() {
                 let noise: f64 = rng.random_range(-1.0..1.0);
-                let noise_value = F::from(noise).unwrap() * perturbation_scale;
+                let noise_value =
+                    F::from(noise).expect("Failed to convert to float") * perturbation_scale;
                 perturbed_data[[i, j]] = x[[i, j]] + noise_value;
             }
         }
@@ -240,7 +242,7 @@ where
         for i in 0..unique_labels.len() {
             if counts[i] > 0 {
                 for j in 0..x.ncols() {
-                    centroids[[i, j]] /= F::from(counts[i]).unwrap();
+                    centroids[[i, j]] /= F::from(counts[i]).expect("Failed to convert to float");
                 }
             }
         }
@@ -280,13 +282,13 @@ where
         let ari_true = scirs2_core::ndarray::Array1::from_vec(ari_input_true);
         let ari_pred = scirs2_core::ndarray::Array1::from_vec(ari_input_pred);
 
-        let ari = adjusted_rand_index(&ari_true, &ari_pred).unwrap();
-        stability_scores.push(F::from(ari).unwrap());
+        let ari = adjusted_rand_index(&ari_true, &ari_pred).expect("Operation failed");
+        stability_scores.push(F::from(ari).expect("Failed to convert to float"));
     }
 
     // Calculate mean stability score
     let sum = stability_scores.iter().fold(F::zero(), |acc, &x| acc + x);
-    let mean = sum / F::from(stability_scores.len()).unwrap();
+    let mean = sum / F::from(stability_scores.len()).expect("Operation failed");
 
     Ok(mean)
 }
@@ -315,7 +317,7 @@ where
 /// let clustering3 = array![0, 0, 1, 1, 2, 2];  // Different clustering
 ///
 /// let all_clusterings = vec![&clustering1, &clustering2, &clustering3];
-/// let score = consensus_score(&all_clusterings).unwrap();
+/// let score = consensus_score(&all_clusterings).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn consensus_score<S, D>(alllabels: &[&ArrayBase<S, D>]) -> Result<f64>
@@ -359,8 +361,8 @@ where
     for labels in alllabels {
         for i in 0..n_samples {
             for j in i..n_samples {
-                let label_i = labels.iter().nth(i).unwrap();
-                let label_j = labels.iter().nth(j).unwrap();
+                let label_i = labels.iter().nth(i).expect("Operation failed");
+                let label_j = labels.iter().nth(j).expect("Operation failed");
 
                 if label_i == label_j {
                     consensus_values[i][j] += 1.0;
@@ -425,11 +427,11 @@ where
 /// let x = Array2::from_shape_vec((10, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 1.3, 2.1, 1.4, 1.9,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2, 5.3, 6.1, 5.4, 5.9,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 0, 0, 1, 1, 1, 1, 1];
 ///
-/// let stability = fold_stability(&x, &labels, None, None, None).unwrap();
+/// let stability = fold_stability(&x, &labels, None, None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn fold_stability<F, S1, S2, D>(
@@ -523,21 +525,21 @@ where
         }
 
         // Add this point to the centroid
-        let centroid = centroids.get_mut(&label).unwrap();
+        let centroid = centroids.get_mut(&label).expect("Operation failed");
         for j in 0..x.ncols() {
             centroid[j] += x[[i, j]];
         }
 
         // Increment count
-        *counts.get_mut(&label).unwrap() += 1;
+        *counts.get_mut(&label).expect("Operation failed") += 1;
     }
 
     // Normalize centroids
     for (&label, centroid) in centroids.iter_mut() {
-        let count = *counts.get(&label).unwrap();
+        let count = *counts.get(&label).expect("Operation failed");
         if count > 0 {
             for j in 0..centroid.len() {
-                centroid[j] /= F::from(count).unwrap();
+                centroid[j] /= F::from(count).expect("Failed to convert to float");
             }
         }
     }
@@ -555,7 +557,7 @@ where
             for j in 0..x.ncols() {
                 fold_data[[i, j]] = x[[idx, j]];
             }
-            fold_labels.push(*labels.iter().nth(idx).unwrap());
+            fold_labels.push(*labels.iter().nth(idx).expect("Operation failed"));
         }
 
         // Assign points to nearest centroid
@@ -566,7 +568,7 @@ where
             let mut best_label = 0;
 
             for &label in &unique_labels {
-                let centroid = centroids.get(&label).unwrap();
+                let centroid = centroids.get(&label).expect("Operation failed");
 
                 let mut dist = F::zero();
                 for j in 0..x.ncols() {
@@ -587,13 +589,13 @@ where
         let true_labels = scirs2_core::ndarray::Array1::from_vec(fold_labels);
         let pred_labels = scirs2_core::ndarray::Array1::from_vec(predicted_labels);
 
-        let jaccard = jaccard_similarity(&true_labels, &pred_labels).unwrap();
-        stability_scores.push(F::from(jaccard).unwrap());
+        let jaccard = jaccard_similarity(&true_labels, &pred_labels).expect("Operation failed");
+        stability_scores.push(F::from(jaccard).expect("Failed to convert to float"));
     }
 
     // Calculate mean stability score
     let sum = stability_scores.iter().fold(F::zero(), |acc, &x| acc + x);
-    let mean = sum / F::from(stability_scores.len()).unwrap();
+    let mean = sum / F::from(stability_scores.len()).expect("Operation failed");
 
     Ok(mean)
 }
@@ -610,28 +612,28 @@ mod tests {
         let labels1 = array![0, 0, 1, 1, 2, 2];
         let labels2 = array![0, 0, 1, 1, 2, 2];
 
-        let similarity = jaccard_similarity(&labels1, &labels2).unwrap();
+        let similarity = jaccard_similarity(&labels1, &labels2).expect("Operation failed");
         assert_abs_diff_eq!(similarity, 1.0, epsilon = 1e-10);
 
         // Same clustering but with different label values
         let labels3 = array![0, 0, 1, 1, 2, 2];
         let labels4 = array![1, 1, 0, 0, 2, 2];
 
-        let similarity = jaccard_similarity(&labels3, &labels4).unwrap();
+        let similarity = jaccard_similarity(&labels3, &labels4).expect("Operation failed");
         assert!(similarity > 0.5); // Should be high but not necessarily 1.0
 
         // Different clusterings
         let labels5 = array![0, 0, 0, 1, 1, 1];
         let labels6 = array![0, 0, 1, 1, 2, 2];
 
-        let similarity = jaccard_similarity(&labels5, &labels6).unwrap();
+        let similarity = jaccard_similarity(&labels5, &labels6).expect("Operation failed");
         assert!(similarity < 1.0); // Should be less than 1.0
 
         // Completely different clusterings
         let labels7 = array![0, 0, 0, 0, 0, 0];
         let labels8 = array![0, 1, 2, 3, 4, 5];
 
-        let similarity = jaccard_similarity(&labels7, &labels8).unwrap();
+        let similarity = jaccard_similarity(&labels7, &labels8).expect("Operation failed");
         assert!(similarity < 0.5); // Should be low
     }
 
@@ -642,7 +644,7 @@ mod tests {
         let clustering2 = array![0, 0, 0, 1, 1, 1];
 
         let all_clusterings = vec![&clustering1, &clustering2];
-        let score = consensus_score(&all_clusterings).unwrap();
+        let score = consensus_score(&all_clusterings).expect("Operation failed");
         assert!(score > 0.0); // Just check it's positive for identical clusterings
 
         // Two similar clusterings (same structure, different labels)
@@ -650,7 +652,7 @@ mod tests {
         let clustering4 = array![1, 1, 1, 0, 0, 0];
 
         let all_clusterings = vec![&clustering3, &clustering4];
-        let score = consensus_score(&all_clusterings).unwrap();
+        let score = consensus_score(&all_clusterings).expect("Operation failed");
         assert!(score > 0.0); // Just check it's positive for identical clusterings
 
         // Three clusterings, two similar and one different
@@ -659,7 +661,7 @@ mod tests {
         let clustering7 = array![0, 0, 1, 1, 2, 2]; // Different
 
         let all_clusterings = vec![&clustering5, &clustering6, &clustering7];
-        let score = consensus_score(&all_clusterings).unwrap();
+        let score = consensus_score(&all_clusterings).expect("Operation failed");
 
         // Score should be positive but less than 1.0
         assert!(score > 0.0);
@@ -673,12 +675,13 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
         // Test stability with default parameters
-        let stability = cluster_stability(&x, &labels, Some(3), None, Some(42)).unwrap();
+        let stability =
+            cluster_stability(&x, &labels, Some(3), None, Some(42)).expect("Operation failed");
 
         // Well-separated clusters should have high stability
         assert!(stability > 0.5);
@@ -688,11 +691,11 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 2.8, 3.0, 3.2, 3.5, 4.0, 4.2, 4.5, 5.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test stability with less separated clusters
-        let stability_less =
-            cluster_stability(&less_separated, &labels, Some(3), None, Some(42)).unwrap();
+        let stability_less = cluster_stability(&less_separated, &labels, Some(3), None, Some(42))
+            .expect("Operation failed");
 
         // Less separated clusters should have lower stability
         // But with small datasets and few runs, this might not always be true
@@ -720,11 +723,12 @@ mod tests {
             labels_data.push(1);
         }
 
-        let x = Array2::from_shape_vec((40, 2), x_data).unwrap();
+        let x = Array2::from_shape_vec((40, 2), x_data).expect("Operation failed");
         let labels = Array1::from_vec(labels_data);
 
         // Test fold stability
-        let stability = fold_stability(&x, &labels, Some(3), Some(0.7), Some(42)).unwrap();
+        let stability =
+            fold_stability(&x, &labels, Some(3), Some(0.7), Some(42)).expect("Operation failed");
 
         // Well-separated clusters should have high fold stability
         assert!(stability > 0.7);

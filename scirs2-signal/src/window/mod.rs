@@ -112,7 +112,7 @@ pub(crate) fn _truncate(w: Vec<f64>, needed: bool) -> Vec<f64> {
 /// use scirs2_signal::window::get_window;
 ///
 /// // Create a Hamming window of length 10
-/// let window = get_window("hamming", 10, false).unwrap();
+/// let window = get_window("hamming", 10, false).expect("Operation failed");
 ///
 /// assert_eq!(window.len(), 10);
 /// assert!(window[0] > 0.0 && window[0] < 1.0);
@@ -213,11 +213,11 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
 /// use scirs2_signal::window::get_window_with_params;
 ///
 /// // Create a Kaiser window with specific beta
-/// let window = get_window_with_params("kaiser", 64, &[5.0], true).unwrap();
+/// let window = get_window_with_params("kaiser", 64, &[5.0], true).expect("Operation failed");
 /// assert_eq!(window.len(), 64);
 ///
 /// // Create a Gaussian window with specific standard deviation
-/// let window = get_window_with_params("gaussian", 64, &[2.0], true).unwrap();
+/// let window = get_window_with_params("gaussian", 64, &[2.0], true).expect("Operation failed");
 /// assert_eq!(window.len(), 64);
 /// ```
 pub fn get_window_with_params(
@@ -564,32 +564,33 @@ mod tests {
 
     #[test]
     fn test_get_window_basic() {
-        let window = get_window("hamming", 64, false).unwrap();
+        let window = get_window("hamming", 64, false).expect("Operation failed");
         assert_eq!(window.len(), 64);
 
-        let window = get_window("hann", 32, true).unwrap();
+        let window = get_window("hann", 32, true).expect("Operation failed");
         assert_eq!(window.len(), 32);
     }
 
     #[test]
     fn test_get_window_with_params() {
-        let kaiser = get_window_with_params("kaiser", 64, &[5.0], true).unwrap();
+        let kaiser = get_window_with_params("kaiser", 64, &[5.0], true).expect("Operation failed");
         assert_eq!(kaiser.len(), 64);
 
-        let gaussian = get_window_with_params("gaussian", 64, &[2.0], true).unwrap();
+        let gaussian =
+            get_window_with_params("gaussian", 64, &[2.0], true).expect("Operation failed");
         assert_eq!(gaussian.len(), 64);
     }
 
     #[test]
     fn test_cached_windows() {
-        let window1 = get_window_cached("hann", 64, &[], true).unwrap();
-        let window2 = get_window_cached("hann", 64, &[], true).unwrap();
+        let window1 = get_window_cached("hann", 64, &[], true).expect("Operation failed");
+        let window2 = get_window_cached("hann", 64, &[], true).expect("Operation failed");
         assert_eq!(window1, window2);
     }
 
     #[test]
     fn test_window_analysis() {
-        let window = get_window("blackman", 64, false).unwrap();
+        let window = get_window("blackman", 64, false).expect("Operation failed");
         let props = analysis::analyze_window_properties(&window, Some("blackman"));
 
         assert_eq!(props.length, 64);
@@ -648,12 +649,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_functionality() {
         let result = benchmark::benchmark_window_generation("hann", &[32, 64], 10, false);
         assert!(result.is_ok());
 
-        let bench = result.unwrap();
+        let bench = result.expect("Operation failed");
         assert!(bench.total_duration.as_nanos() > 0);
         assert!(bench.windows_per_second > 0.0);
     }

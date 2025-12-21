@@ -200,7 +200,7 @@ impl PrioritizedReplayBuffer {
         let n = self.buffer.len() as f32;
         let min_prob = probs
             .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
             .unwrap_or(&1.0);
         let max_weight = (min_prob * n).powf(-self.beta);
         let mut weights = Array1::zeros(batch_size);
@@ -239,7 +239,7 @@ impl NStepReplayBuffer {
     fn add_n_step_experience(&mut self) -> Result<()> {
         if self.n_step_buffer.is_empty() {
             return Ok(());
-        let first_exp = self.n_step_buffer.front().unwrap().clone();
+        let first_exp = self.n_step_buffer.front().expect("Operation failed").clone();
         let mut n_step_reward = 0.0;
         let mut gamma_power = 1.0;
         let mut final_next_state = first_exp.next_state.clone();
@@ -279,25 +279,25 @@ mod tests {
             let next_state = Array1::from_vec(vec![(i + 1) as f32; 4]);
             buffer
                 .add(state, action, i as f32, next_state, false)
-                .unwrap();
+                .expect("Operation failed");
         assert_eq!(buffer.len(), 10);
         // Sample batch
-        let batch = buffer.sample(5).unwrap();
+        let batch = buffer.sample(5).expect("Operation failed");
         assert_eq!(batch.states.shape(), &[5, 4]);
         assert_eq!(batch.actions.shape(), &[5, 1]);
         assert_eq!(batch.rewards.len(), 5);
     fn test_prioritized_replay_buffer() {
         let mut buffer = PrioritizedReplayBuffer::new(100, 0.6, 0.4);
         // Sample with importance weights
-        let (batch, weights, indices) = buffer.sample(5).unwrap();
+        let (batch, weights, indices) = buffer.sample(5).expect("Operation failed");
         assert_eq!(weights.len(), 5);
         assert_eq!(indices.len(), 5);
         // Update priorities
         let td_errors = vec![0.1, 0.5, 0.2, 0.8, 0.3];
-        buffer.update_priorities(&indices, &td_errors).unwrap();
+        buffer.update_priorities(&indices, &td_errors).expect("Operation failed");
     fn test_n_step_replay_buffer() {
         let mut buffer = NStepReplayBuffer::new(100, 3, 0.99);
-            buffer.add(state, action, 1.0, next_state, i == 9).unwrap();
+            buffer.add(state, action, 1.0, next_state, i == 9).expect("Operation failed");
         // Should have computed n-step returns
         assert!(buffer.len() > 0);
         assert!(buffer.len() <= 8); // Some experiences are still in n-step buffer

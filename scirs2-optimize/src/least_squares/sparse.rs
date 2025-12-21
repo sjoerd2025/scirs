@@ -247,7 +247,7 @@ where
         solve_sparse_gauss_newton(
             &fun,
             &jac,
-            &sparse_jac.unwrap(),
+            &sparse_jac.expect("Operation failed"),
             &x,
             &options,
             &mut nfev,
@@ -813,7 +813,7 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         // Expected solution is approximately x = [1, 2] but with some error due to overdetermined system
         // The exact least squares solution is x = [1.5, 2.5]
         assert!(result.cost < 10000.0); // Should have reasonable cost (very lenient for demo)
@@ -842,7 +842,7 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         // With L1 regularization, should prefer sparse solutions
         // The algorithm should complete successfully
         assert!(result.success);

@@ -398,7 +398,11 @@ where
             state.current_subspace = Some(state.generate_random_subspace(n, options.subspace_dim));
         }
 
-        let subspace = state.current_subspace.as_ref().unwrap().clone();
+        let subspace = state
+            .current_subspace
+            .as_ref()
+            .expect("Operation failed")
+            .clone();
         if subspace.is_empty() {
             break;
         }
@@ -877,7 +881,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_random_coordinate_descent(fun, x0, Some(options)).unwrap();
+        let result =
+            minimize_random_coordinate_descent(fun, x0, Some(options)).expect("Operation failed");
 
         assert!(result.success);
         // Should converge to origin
@@ -906,7 +911,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_block_coordinate_descent(fun, x0, Some(options)).unwrap();
+        let result =
+            minimize_block_coordinate_descent(fun, x0, Some(options)).expect("Operation failed");
 
         assert!(result.success);
         // Should converge to origin
@@ -928,7 +934,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_cyclical_coordinate_descent(fun, x0, Some(options)).unwrap();
+        let result =
+            minimize_cyclical_coordinate_descent(fun, x0, Some(options)).expect("Operation failed");
 
         assert!(result.success);
         assert_abs_diff_eq!(result.x[0], 0.0, epsilon = 1e-2);
@@ -950,7 +957,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_random_subspace(fun, x0, Some(options)).unwrap();
+        let result = minimize_random_subspace(fun, x0, Some(options)).expect("Operation failed");
 
         // Should make some progress toward minimum (very lenient for demo algorithm)
         assert!(result.fun <= 50.0); // Started at 50, shouldn't get worse

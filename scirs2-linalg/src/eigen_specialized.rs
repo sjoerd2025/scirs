@@ -153,7 +153,7 @@ where
 ///
 /// let diagonal = array![4.0, 4.0, 4.0];
 /// let sub_diagonal = array![1.0, 1.0];
-/// let (eigenvals, eigenvecs) = tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), true).unwrap();
+/// let (eigenvals, eigenvecs) = tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), true).expect("Operation failed");
 /// assert_eq!(eigenvals.len(), 3);
 /// ```
 #[allow(dead_code)]
@@ -229,7 +229,7 @@ where
         }
 
         // Choose shift (Wilkinson's shift)
-        let mut g = (d[l + 1] - d[l]) / (F::from(2.0).unwrap() * e[l]);
+        let mut g = (d[l + 1] - d[l]) / (F::from(2.0).expect("Operation failed") * e[l]);
         let mut r = (g * g + F::one()).sqrt();
         if g < F::zero() {
             r = -r;
@@ -257,7 +257,7 @@ where
             s = f / r;
             c = g / r;
             g = d[i + 1] - p;
-            r = (d[i] - g) * s + F::from(2.0).unwrap() * c * b;
+            r = (d[i] - g) * s + F::from(2.0).expect("Operation failed") * c * b;
             p = s * r;
             d[i + 1] = g + p;
             g = c * r - b;
@@ -398,10 +398,10 @@ where
     for k in 0..n {
         let mut sum = scirs2_core::numeric::Complex::new(F::zero(), F::zero());
         for j in 0..n {
-            let theta = F::from(-2.0 * std::f64::consts::PI).unwrap()
-                * F::from(k).unwrap()
-                * F::from(j).unwrap()
-                / F::from(n).unwrap();
+            let theta = F::from(-2.0 * std::f64::consts::PI).expect("Operation failed")
+                * F::from(k).expect("Operation failed")
+                * F::from(j).expect("Operation failed")
+                / F::from(n).expect("Operation failed");
             let complex_exp = scirs2_core::numeric::Complex::new(theta.cos(), theta.sin());
             sum += scirs2_core::numeric::Complex::new(first_column[j], F::zero()) * complex_exp;
         }
@@ -447,7 +447,9 @@ where
     // Check if matrix is symmetric
     for i in 0..n {
         for j in (i + 1)..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(1000.0).unwrap() {
+            if (matrix[[i, j]] - matrix[[j, i]]).abs()
+                > F::epsilon() * F::from(1000.0).expect("Operation failed")
+            {
                 return Err(LinalgError::ShapeError(
                     "Matrix must be symmetric for partial eigenvalue computation".to_string(),
                 ));
@@ -498,7 +500,7 @@ where
     }
 
     let max_iter = max_iter.unwrap_or(std::cmp::min(n, 3 * k + 50));
-    let tol = tol.unwrap_or(F::epsilon() * F::from(1000.0).unwrap());
+    let tol = tol.unwrap_or(F::epsilon() * F::from(1000.0).expect("Operation failed"));
 
     // Simplified Lanczos algorithm
     let m = std::cmp::min(max_iter, n);
@@ -509,7 +511,7 @@ where
     // Initialize with random vector
     let mut rng = scirs2_core::random::rng();
     for i in 0..n {
-        qmatrix[[i, 0]] = F::from(rng.random_range(-1.0..=1.0)).unwrap();
+        qmatrix[[i, 0]] = F::from(rng.random_range(-1.0..=1.0)).expect("Operation failed");
     }
 
     // Normalize
@@ -721,7 +723,8 @@ mod tests {
         let sub_diagonal = array![1.0, 1.0];
 
         let (eigenvals, eigenvecs) =
-            tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), true).unwrap();
+            tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), true)
+                .expect("Operation failed");
 
         assert_eq!(eigenvals.len(), 3);
         assert!(eigenvals.iter().all(|&x| x.is_finite()));
@@ -737,8 +740,8 @@ mod tests {
         let diagonal = array![1.0, 2.0, 3.0];
         let sub_diagonal = array![0.0, 0.0];
 
-        let (eigenvals, _) =
-            tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), false).unwrap();
+        let (eigenvals, _) = tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), false)
+            .expect("Operation failed");
 
         assert_abs_diff_eq!(eigenvals[0], 1.0, epsilon = 1e-10);
         assert_abs_diff_eq!(eigenvals[1], 2.0, epsilon = 1e-10);
@@ -748,7 +751,7 @@ mod tests {
     #[test]
     fn test_circulant_eigenvalues() {
         let first_col = array![1.0, 2.0, 3.0];
-        let eigenvals = circulant_eigenvalues(&first_col.view()).unwrap();
+        let eigenvals = circulant_eigenvalues(&first_col.view()).expect("Operation failed");
 
         assert_eq!(eigenvals.len(), 3);
         assert!(eigenvals.iter().all(|x| x.norm().is_finite()));
@@ -763,7 +766,7 @@ mod tests {
         let matrix = array![[4.0, 1.0, 0.0], [1.0, 4.0, 1.0], [0.0, 1.0, 4.0]];
 
         let (eigenvals, eigenvecs) =
-            partial_eigen(&matrix.view(), 2, "largest", None, None).unwrap();
+            partial_eigen(&matrix.view(), 2, "largest", None, None).expect("Operation failed");
 
         assert_eq!(eigenvals.len(), 2);
         assert_eq!(eigenvecs.dim(), (3, 2));

@@ -5,6 +5,66 @@ All notable changes to the SciRS2 project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-RC.4] - 2025-12-21
+
+### 🚀 Release Candidate 4 - Documentation & Stability Enhancements
+
+This release focuses on comprehensive documentation updates, build system improvements, and final preparations for the stable 0.1.0 release.
+
+### Added
+
+#### Documentation
+- **Comprehensive Documentation Updates**: Complete revision of all major documentation files
+  - Updated README.md with RC.4 status and feature highlights
+  - Revised TODO.md with current development roadmap
+  - Enhanced CLAUDE.md with latest development guidelines
+  - Refreshed all module lib.rs documentation for docs.rs
+
+#### Developer Experience
+- **Improved Development Workflows**: Enhanced build and test documentation
+  - Clarified cargo nextest usage patterns
+  - Updated dependency management guidelines
+  - Enhanced troubleshooting documentation
+
+### Changed
+
+#### Build System
+- **Version Synchronization**: Updated all version references to 0.1.0-rc.4
+  - Workspace Cargo.toml version bump
+  - Documentation version consistency
+  - Example and test version alignment
+
+#### Documentation Improvements
+- **README.md**: Updated release status and feature descriptions
+- **TODO.md**: Synchronized development roadmap with RC.4 status
+- **CLAUDE.md**: Updated version info and development guidelines
+- **Module Documentation**: Refreshed inline documentation across all crates
+
+### Fixed
+
+#### Documentation Consistency
+- Resolved version mismatches across documentation files
+- Corrected outdated feature descriptions
+- Fixed cross-references between documentation files
+- Updated dependency version information
+
+### Technical Details
+
+#### Quality Metrics
+- All 11,407 tests passing (174 skipped)
+- Zero compilation warnings maintained
+- Full clippy compliance across workspace
+- Documentation builds successfully on docs.rs
+
+#### Platform Support
+- ✅ Linux (x86_64): Full support with all features
+- ✅ macOS (ARM64/x86_64): Full support with Metal acceleration
+- ✅ Windows (x86_64): Build support, ongoing test improvements
+
+### Notes
+
+This release represents the final Release Candidate before the 0.1.0 stable release. The focus is on documentation quality, developer experience, and ensuring all materials are ready for the stable release.
+
 ## [0.1.0-RC.3] - 2025-12-17
 
 ### 🚀 Release Candidate 3 - Python Integration & Performance Enhancements
@@ -85,7 +145,7 @@ This release introduces Python bindings, expands SIMD optimizations, and enhance
 - CUDA kernels: 2-5x improvement in specific workloads
 
 #### Test Coverage
-- All 9,300+ tests passing
+- All 11,407 tests passing (174 skipped)
 - Zero compilation warnings
 - Full clippy compliance maintained
 

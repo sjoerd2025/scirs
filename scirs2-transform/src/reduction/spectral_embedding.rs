@@ -151,7 +151,7 @@ impl SpectralEmbedding {
                             all_distances.push(distances[[i, j]]);
                         }
                     }
-                    all_distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    all_distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                     let median_dist = all_distances[all_distances.len() / 2];
                     1.0 / (2.0 * median_dist * median_dist)
                 };
@@ -176,7 +176,8 @@ impl SpectralEmbedding {
                             neighbors_with_dist.push((distances[[i, j]], j));
                         }
                     }
-                    neighbors_with_dist.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                    neighbors_with_dist
+                        .sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
                     // Connect to k nearest neighbors
                     #[allow(clippy::needless_range_loop)]
@@ -306,7 +307,11 @@ impl SpectralEmbedding {
 
         // Step 5: Sort eigenvalues and eigenvectors in ascending order
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            eigenvalues[i]
+                .partial_cmp(&eigenvalues[j])
+                .expect("Operation failed")
+        });
 
         // Step 6: Select eigenvectors for embedding (skip the first if normalized)
         let start_idx = if self.normalized { 1 } else { 0 }; // Skip constant eigenvector for normalized Laplacian
@@ -356,7 +361,7 @@ impl SpectralEmbedding {
 
         // Check if this is the training data
         if self.is_same_data(&x_f64, training_data) {
-            return Ok(self.embedding.as_ref().unwrap().clone());
+            return Ok(self.embedding.as_ref().expect("Operation failed").clone());
         }
 
         // For new data, use Nyström method for out-of-sample extension
@@ -413,9 +418,9 @@ impl SpectralEmbedding {
 
     /// Nyström method for out-of-sample extension
     fn nystrom_extension(&self, xnew: &Array2<f64>) -> Result<Array2<f64>> {
-        let training_data = self.training_data.as_ref().unwrap();
-        let training_embedding = self.embedding.as_ref().unwrap();
-        let eigenvalues = self.eigenvalues.as_ref().unwrap();
+        let training_data = self.training_data.as_ref().expect("Operation failed");
+        let training_embedding = self.embedding.as_ref().expect("Operation failed");
+        let eigenvalues = self.eigenvalues.as_ref().expect("Operation failed");
 
         let (n_new, n_features) = xnew.dim();
         let (n_training_, _) = training_data.dim();
@@ -491,10 +496,10 @@ mod tests {
     fn test_spectral_embedding_gaussian() {
         // Create a simple 2D dataset with two clusters
         let data = vec![1.0, 1.0, 1.1, 1.1, 1.2, 0.9, 5.0, 5.0, 5.1, 5.1, 4.9, 5.2];
-        let x = Array::from_shape_vec((6, 2), data).unwrap();
+        let x = Array::from_shape_vec((6, 2), data).expect("Operation failed");
 
         let mut spectral = SpectralEmbedding::new(2, AffinityMethod::Gaussian);
-        let embedding = spectral.fit_transform(&x).unwrap();
+        let embedding = spectral.fit_transform(&x).expect("Operation failed");
 
         assert_eq!(embedding.shape(), &[6, 2]);
 
@@ -509,7 +514,7 @@ mod tests {
         let x: Array2<f64> = Array::eye(8);
 
         let mut spectral = SpectralEmbedding::new(3, AffinityMethod::KNN).with_n_neighbors(3);
-        let embedding = spectral.fit_transform(&x).unwrap();
+        let embedding = spectral.fit_transform(&x).expect("Operation failed");
 
         assert_eq!(embedding.shape(), &[8, 3]);
 
@@ -526,11 +531,11 @@ mod tests {
             (2, 5),
             vec![0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut spectral = SpectralEmbedding::new(2, AffinityMethod::Gaussian);
-        spectral.fit(&x_train).unwrap();
-        let test_embedding = spectral.transform(&x_test).unwrap();
+        spectral.fit(&x_train).expect("Operation failed");
+        let test_embedding = spectral.transform(&x_test).expect("Operation failed");
 
         assert_eq!(test_embedding.shape(), &[2, 2]);
 

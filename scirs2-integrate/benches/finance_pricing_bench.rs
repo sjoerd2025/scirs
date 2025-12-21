@@ -43,7 +43,7 @@ fn bench_black_scholes_methods(c: &mut Criterion) {
             FinanceMethod::FiniteDifference,
         );
         group.bench_with_input(BenchmarkId::new("crank_nicolson", n), &n, |b, _| {
-            b.iter(|| price_finite_difference(&solver, &option).unwrap())
+            b.iter(|| price_finite_difference(&solver, &option).expect("Operation failed"))
         });
     }
 
@@ -58,7 +58,7 @@ fn bench_black_scholes_methods(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("binomial_tree", n_steps),
             &n_steps,
-            |b, _| b.iter(|| price_tree(&solver, &option, n_steps).unwrap()),
+            |b, _| b.iter(|| price_tree(&solver, &option, n_steps).expect("Operation failed")),
         );
     }
 
@@ -76,7 +76,11 @@ fn bench_black_scholes_methods(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("monte_carlo", n_paths),
             &n_paths,
-            |b, _| b.iter(|| price_monte_carlo(&solver, &option, n_paths, true).unwrap()),
+            |b, _| {
+                b.iter(|| {
+                    price_monte_carlo(&solver, &option, n_paths, true).expect("Operation failed")
+                })
+            },
         );
     }
 
@@ -100,10 +104,14 @@ fn bench_exotic_options(c: &mut Criterion) {
         OptionType::Call,
         BarrierType::UpAndOut,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     group.bench_function("barrier_option_monte_carlo", |b| {
-        b.iter(|| barrier.price_monte_carlo(50000, 252).unwrap())
+        b.iter(|| {
+            barrier
+                .price_monte_carlo(50000, 252)
+                .expect("Operation failed")
+        })
     });
 
     // Asian option pricing
@@ -118,14 +126,18 @@ fn bench_exotic_options(c: &mut Criterion) {
         AveragingMethod::Geometric,
         252,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     group.bench_function("asian_geometric_closed_form", |b| {
-        b.iter(|| asian.price_geometric_closed_form().unwrap())
+        b.iter(|| {
+            asian
+                .price_geometric_closed_form()
+                .expect("Operation failed")
+        })
     });
 
     group.bench_function("asian_monte_carlo", |b| {
-        b.iter(|| asian.price_monte_carlo(50000).unwrap())
+        b.iter(|| asian.price_monte_carlo(50000).expect("Operation failed"))
     });
 
     group.finish();
@@ -143,7 +155,7 @@ fn bench_variance_swaps(c: &mut Criterion) {
         252,   // observations_per_year
         0.05,  // risk_free_rate
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Benchmark payoff calculation
     group.bench_function("variance_swap_payoff", |b| b.iter(|| var_swap.payoff(0.05)));
@@ -179,7 +191,11 @@ fn bench_implied_volatility(c: &mut Criterion) {
     let market_price = option.price();
 
     group.bench_function("newton_raphson", |b| {
-        b.iter(|| option.implied_volatility(market_price).unwrap())
+        b.iter(|| {
+            option
+                .implied_volatility(market_price)
+                .expect("Operation failed")
+        })
     });
 
     group.finish();

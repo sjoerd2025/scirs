@@ -127,7 +127,7 @@ impl Default for SeasonalDecompositionOptions {
 /// };
 ///
 /// // Perform decomposition
-/// let decomp = seasonal_decomposition(&ts, &options).unwrap();
+/// let decomp = seasonal_decomposition(&ts, &options).expect("Operation failed");
 ///
 /// // Check that components have the same length as input
 /// assert_eq!(decomp.trend.len(), n);
@@ -347,7 +347,10 @@ where
         if robust && iter < num_iterations - 1 {
             // Compute robust weights for next iteration
             let abs_residuals: Vec<F> = residual.iter().map(|&r| r.abs()).collect();
-            let weights = calculate_robust_weights(&abs_residuals, F::from_f64(6.0).unwrap())?;
+            let weights = calculate_robust_weights(
+                &abs_residuals,
+                F::from_f64(6.0).expect("Operation failed"),
+            )?;
 
             // Apply weights to the trend estimation for next iteration
             // This implements weighted loess smoothing for full robustness
@@ -514,11 +517,11 @@ where
             let middle_values = &values[trim_count..(values.len() - trim_count)];
 
             let sum = middle_values.iter().fold(F::zero(), |acc, &v| acc + v);
-            trend[i] = sum / F::from_usize(middle_values.len()).unwrap();
+            trend[i] = sum / F::from_usize(middle_values.len()).expect("Operation failed");
         } else {
             // Regular moving average
             let sum = (start..=end).fold(F::zero(), |acc, j| acc + ts[j]);
-            trend[i] = sum / F::from_usize(end - start + 1).unwrap();
+            trend[i] = sum / F::from_usize(end - start + 1).expect("Operation failed");
         }
     }
 
@@ -553,7 +556,7 @@ where
     for season in 0..period {
         if count[season] > 0 {
             seasonal_factors[season] =
-                seasonal_factors[season] / F::from_usize(count[season]).unwrap();
+                seasonal_factors[season] / F::from_usize(count[season]).expect("Operation failed");
         }
     }
 
@@ -587,7 +590,7 @@ where
 
     if isadditive {
         // Ensure _seasonal component sums to zero
-        let mean = _seasonal.sum() / F::from_usize(n).unwrap();
+        let mean = _seasonal.sum() / F::from_usize(n).expect("Operation failed");
 
         for i in 0..n {
             normalized[i] = _seasonal[i] - mean;
@@ -605,7 +608,8 @@ where
         }
 
         if count > 0 {
-            let geometric_mean = product.powf(F::one() / F::from_usize(count).unwrap());
+            let geometric_mean =
+                product.powf(F::one() / F::from_usize(count).expect("Operation failed"));
 
             for i in 0..n {
                 if !_seasonal[i].is_nan() && _seasonal[i] != F::zero() {
@@ -640,7 +644,7 @@ where
         };
 
         let sum = (start..=end).fold(F::zero(), |acc, j| acc + _ts[j]);
-        filtered[i] = sum / F::from_usize(end - start + 1).unwrap();
+        filtered[i] = sum / F::from_usize(end - start + 1).expect("Operation failed");
     }
 
     Ok(filtered)
@@ -708,22 +712,25 @@ where
     let mut weights = vec![F::zero(); _windowsize];
 
     // Calculate terms for the Henderson weights
-    let m_f = F::from_usize(m).unwrap();
+    let m_f = F::from_usize(m).expect("Operation failed");
 
     for i in 0..=m {
-        let i_f = F::from_usize(i).unwrap();
-        let term1 = (F::from_usize(315).unwrap() * (m_f + F::one()) * (m_f + F::one())
-            - F::from_usize(105).unwrap() * i_f * i_f)
-            * (F::from_usize(231).unwrap() * (m_f + F::one()) * (m_f + F::one())
-                - F::from_usize(42).unwrap() * i_f * i_f
-                - F::from_usize(3).unwrap()
+        let i_f = F::from_usize(i).expect("Operation failed");
+        let term1 = (F::from_usize(315).expect("Operation failed")
+            * (m_f + F::one())
+            * (m_f + F::one())
+            - F::from_usize(105).expect("Operation failed") * i_f * i_f)
+            * (F::from_usize(231).expect("Operation failed") * (m_f + F::one()) * (m_f + F::one())
+                - F::from_usize(42).expect("Operation failed") * i_f * i_f
+                - F::from_usize(3).expect("Operation failed")
                     * (m_f + F::one())
                     * (m_f + F::one())
                     * (m_f + F::one())
                     * (m_f + F::one()));
 
-        let term2 = F::from_usize(105).unwrap() * (m_f + F::one()) * (m_f + F::one())
-            - F::from_usize(45).unwrap() * i_f * i_f;
+        let term2 =
+            F::from_usize(105).expect("Operation failed") * (m_f + F::one()) * (m_f + F::one())
+                - F::from_usize(45).expect("Operation failed") * i_f * i_f;
 
         weights[m - i] = term1 / term2;
         weights[m + i] = weights[m - i];
@@ -777,12 +784,14 @@ where
         let mut weights = vec![F::one(); window_length];
 
         for (j, idx) in (start..=end).enumerate() {
-            x.push(F::from_usize(idx).unwrap());
+            x.push(F::from_usize(idx).expect("Operation failed"));
             y.push(_ts[idx]);
 
             // Tricube weight function based on distance
-            let d = (F::from_usize(idx).unwrap() - F::from_usize(i).unwrap()).abs()
-                / F::from_usize(half_window).unwrap();
+            let d = (F::from_usize(idx).expect("Operation failed")
+                - F::from_usize(i).expect("Operation failed"))
+            .abs()
+                / F::from_usize(half_window).expect("Operation failed");
 
             if d < F::one() {
                 let t = F::one() - d * d * d;
@@ -802,19 +811,21 @@ where
                 let fit = weighted_polynomial_fit(&x, &y, &iter_weights, 1)?;
 
                 // Predict at the current point
-                smoothed[i] = fit[0] + fit[1] * F::from_usize(i).unwrap();
+                smoothed[i] = fit[0] + fit[1] * F::from_usize(i).expect("Operation failed");
 
                 // Calculate residuals
                 let mut residuals = Vec::with_capacity(window_length);
 
                 for (j, idx) in (start..=end).enumerate() {
-                    let pred = fit[0] + fit[1] * F::from_usize(idx).unwrap();
+                    let pred = fit[0] + fit[1] * F::from_usize(idx).expect("Operation failed");
                     residuals.push(y[j] - pred);
                 }
 
                 // Update robust weights
-                let robustness_weights =
-                    calculate_robust_weights(&residuals, F::from_f64(6.0).unwrap())?;
+                let robustness_weights = calculate_robust_weights(
+                    &residuals,
+                    F::from_f64(6.0).expect("Operation failed"),
+                )?;
 
                 for j in 0..window_length {
                     iter_weights[j] = weights[j] * robustness_weights[j];
@@ -825,7 +836,7 @@ where
             let fit = weighted_polynomial_fit(&x, &y, &weights, 1)?;
 
             // Predict at the current point
-            smoothed[i] = fit[0] + fit[1] * F::from_usize(i).unwrap();
+            smoothed[i] = fit[0] + fit[1] * F::from_usize(i).expect("Operation failed");
         }
     }
 
@@ -880,12 +891,14 @@ where
         let mut _weights = Vec::with_capacity(window_length);
 
         for idx in start..=end {
-            x.push(F::from_usize(idx).unwrap());
+            x.push(F::from_usize(idx).expect("Operation failed"));
             y.push(ts[idx]);
 
             // Combine tricube weight with external weight
-            let d = (F::from_usize(idx).unwrap() - F::from_usize(i).unwrap()).abs()
-                / F::from_usize(half_window).unwrap();
+            let d = (F::from_usize(idx).expect("Operation failed")
+                - F::from_usize(i).expect("Operation failed"))
+            .abs()
+                / F::from_usize(half_window).expect("Operation failed");
 
             let tricube_weight = if d < F::one() {
                 let t = F::one() - d * d * d;
@@ -901,7 +914,7 @@ where
         let fit = weighted_polynomial_fit(&x, &y, &_weights, 1)?;
 
         // Predict at the current point
-        smoothed[i] = fit[0] + fit[1] * F::from_usize(i).unwrap();
+        smoothed[i] = fit[0] + fit[1] * F::from_usize(i).expect("Operation failed");
     }
 
     Ok(smoothed)
@@ -951,7 +964,7 @@ where
 
         let denom = sum_w * sum_wxx - sum_wx * sum_wx;
 
-        if denom.abs() < F::from_f64(1e-10).unwrap() {
+        if denom.abs() < F::from_f64(1e-10).expect("Operation failed") {
             // Nearly singular matrix, revert to simple average
             let intercept = sum_wy / sum_w;
             let slope = F::zero();
@@ -1000,19 +1013,20 @@ where
 
     let median_idx = n / 2;
     let mad = if n.is_multiple_of(2) {
-        (abs_residuals[median_idx - 1] + abs_residuals[median_idx]) / F::from_f64(2.0).unwrap()
+        (abs_residuals[median_idx - 1] + abs_residuals[median_idx])
+            / F::from_f64(2.0).expect("Operation failed")
     } else {
         abs_residuals[median_idx]
     };
 
     // Scale MAD for consistency with normal distribution
-    let s = mad / F::from_f64(0.6745).unwrap();
+    let s = mad / F::from_f64(0.6745).expect("Operation failed");
 
     // Use a small positive value if MAD is zero
-    let scale = if s > F::from_f64(1e-10).unwrap() {
+    let scale = if s > F::from_f64(1e-10).expect("Operation failed") {
         s
     } else {
-        F::from_f64(1e-10).unwrap()
+        F::from_f64(1e-10).expect("Operation failed")
     };
 
     // Calculate bisquare weights

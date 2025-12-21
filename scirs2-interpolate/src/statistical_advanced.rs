@@ -248,25 +248,37 @@ where
     fn kernel_function(&self, distsq: F) -> F {
         match self.kernel_params.kernel_type {
             KernelType::RBF => {
-                self.kernel_params.signal_variance * (-F::from_f64(0.5).unwrap() * distsq).exp()
+                self.kernel_params.signal_variance
+                    * (-F::from_f64(0.5).expect("Failed to convert f64 to target float type")
+                        * distsq)
+                        .exp()
             }
             KernelType::Matern32 => {
                 let dist = distsq.sqrt();
-                let sqrt3 = F::from_f64(3.0_f64.sqrt()).unwrap();
+                let sqrt3 = F::from_f64(3.0_f64.sqrt())
+                    .expect("Failed to convert f64 to target float type");
                 let term = sqrt3 * dist;
                 self.kernel_params.signal_variance * (F::one() + term) * (-term).exp()
             }
             KernelType::Matern52 => {
                 let dist = distsq.sqrt();
-                let sqrt5 = F::from_f64(5.0_f64.sqrt()).unwrap();
+                let sqrt5 = F::from_f64(5.0_f64.sqrt())
+                    .expect("Failed to convert f64 to target float type");
                 let term = sqrt5 * dist;
-                let term2 = F::from_f64(5.0).unwrap() * distsq / F::from_f64(3.0).unwrap();
+                let term2 = F::from_f64(5.0).expect("Failed to convert f64 to target float type")
+                    * distsq
+                    / F::from_f64(3.0).expect("Failed to convert f64 to target float type");
                 self.kernel_params.signal_variance * (F::one() + term + term2) * (-term).exp()
             }
             KernelType::RationalQuadratic => {
-                let alpha = F::from_f64(1.0).unwrap(); // Scale mixture parameter
+                let alpha = F::from_f64(1.0).expect("Failed to convert f64 to target float type"); // Scale mixture parameter
                 self.kernel_params.signal_variance
-                    * (F::one() + distsq / (F::from_f64(2.0).unwrap() * alpha)).powf(-alpha)
+                    * (F::one()
+                        + distsq
+                            / (F::from_f64(2.0)
+                                .expect("Failed to convert f64 to target float type")
+                                * alpha))
+                        .powf(-alpha)
             }
         }
     }
@@ -390,7 +402,8 @@ where
     /// Compute trace correction term for predictive variance
     fn compute_trace_correction(&self, alpha: &ArrayView1<F>) -> InterpolateResult<F> {
         // Simplified trace computation - in practice would be more sophisticated
-        let trace_term = alpha.dot(alpha) * F::from_f64(0.1).unwrap();
+        let trace_term = alpha.dot(alpha)
+            * F::from_f64(0.1).expect("Failed to convert f64 to target float type");
         Ok(trace_term)
     }
 
@@ -409,17 +422,23 @@ where
         // Data fit term
         let y_pred = k_fu.dot(&self.variational_mean);
         let residuals = y_train - &y_pred;
-        let data_fit = -F::from_f64(0.5).unwrap() * residuals.dot(&residuals) / self.noise_variance;
+        let data_fit = -F::from_f64(0.5).expect("Failed to convert f64 to target float type")
+            * residuals.dot(&residuals)
+            / self.noise_variance;
 
         // Complexity penalty (KL divergence)
-        let log_det_term =
-            F::from_f64(n_inducing as f64 * (2.0 * std::f64::consts::PI).ln()).unwrap();
+        let log_det_term = F::from_f64(n_inducing as f64 * (2.0 * std::f64::consts::PI).ln())
+            .expect("Operation failed");
         let trace_term = self.variational_cov_chol.diag().mapv(|x| x.ln()).sum();
-        let kl_penalty =
-            -F::from_f64(0.5).unwrap() * (log_det_term + F::from_f64(2.0).unwrap() * trace_term);
+        let kl_penalty = -F::from_f64(0.5).expect("Failed to convert f64 to target float type")
+            * (log_det_term
+                + F::from_f64(2.0).expect("Failed to convert f64 to target float type")
+                    * trace_term);
 
         // Noise term
-        let noise_term = -F::from_f64(0.5 * n_data as f64).unwrap() * self.noise_variance.ln();
+        let noise_term = -F::from_f64(0.5 * n_data as f64)
+            .expect("Failed to convert f64 to target float type")
+            * self.noise_variance.ln();
 
         Ok(data_fit + kl_penalty + noise_term)
     }
@@ -474,7 +493,8 @@ where
         let x_max = x.fold(F::neg_infinity(), |a, &b| a.max(b));
         let mut knots = Array1::zeros(n_knots);
         for i in 0..n_knots {
-            let t = F::from_usize(i).unwrap() / F::from_usize(n_knots - 1).unwrap();
+            let t = F::from_usize(i).expect("Failed to convert usize to float")
+                / F::from_usize(n_knots - 1).expect("Failed to convert usize to float");
             knots[i] = x_min + t * (x_max - x_min);
         }
 
@@ -495,7 +515,8 @@ where
         let residuals = y - &fitted_values;
         let rss = residuals.dot(&residuals);
         let dof = n - Self::effective_degrees_of_freedom(&design_matrix, smoothing_parameter)?;
-        let residual_std_error = (rss / F::from_usize(dof).unwrap()).sqrt();
+        let residual_std_error =
+            (rss / F::from_usize(dof).expect("Failed to convert usize to float")).sqrt();
 
         // Compute coefficient covariance matrix
         let coef_covariance = Self::compute_coefficient_covariance(
@@ -539,7 +560,7 @@ where
 
         // Critical value for confidence _level
         let _alpha = F::one() - confidence_level;
-        let t_crit = F::from_f64(1.96).unwrap(); // Simplified - should use proper t-distribution
+        let t_crit = F::from_f64(1.96).expect("Failed to convert f64 to target float type"); // Simplified - should use proper t-distribution
 
         // Confidence bands (for the mean function)
         let conf_lower = &predictions - &(std_errors.clone() * t_crit);
@@ -564,7 +585,8 @@ where
                 if j == 0 {
                     matrix[[i, j]] = F::one();
                 } else {
-                    matrix[[i, j]] = x[i].powf(F::from_usize(j).unwrap());
+                    matrix[[i, j]] =
+                        x[i].powf(F::from_usize(j).expect("Failed to convert usize to float"));
                 }
             }
         }
@@ -579,13 +601,18 @@ where
         // Second-order difference penalty (simplified)
         for i in 2.._nknots {
             penalty[[i - 2, i - 2]] += F::one();
-            penalty[[i - 2, i - 1]] -= F::from_f64(2.0).unwrap();
+            penalty[[i - 2, i - 1]] -=
+                F::from_f64(2.0).expect("Failed to convert f64 to target float type");
             penalty[[i - 2, i]] += F::one();
-            penalty[[i - 1, i - 2]] -= F::from_f64(2.0).unwrap();
-            penalty[[i - 1, i - 1]] += F::from_f64(4.0).unwrap();
-            penalty[[i - 1, i]] -= F::from_f64(2.0).unwrap();
+            penalty[[i - 1, i - 2]] -=
+                F::from_f64(2.0).expect("Failed to convert f64 to target float type");
+            penalty[[i - 1, i - 1]] +=
+                F::from_f64(4.0).expect("Failed to convert f64 to target float type");
+            penalty[[i - 1, i]] -=
+                F::from_f64(2.0).expect("Failed to convert f64 to target float type");
             penalty[[i, i - 2]] += F::one();
-            penalty[[i, i - 1]] -= F::from_f64(2.0).unwrap();
+            penalty[[i, i - 1]] -=
+                F::from_f64(2.0).expect("Failed to convert f64 to target float type");
             penalty[[i, i]] += F::one();
         }
 
@@ -616,7 +643,7 @@ where
                 x[i] = new_val;
             }
 
-            if max_change < F::from_f64(1e-8).unwrap() {
+            if max_change < F::from_f64(1e-8).expect("Failed to convert f64 to target float type") {
                 break;
             }
         }
@@ -631,8 +658,11 @@ where
     ) -> InterpolateResult<usize> {
         // Simplified computation
         let base_dof = design.ncols();
-        let penalty_reduction = (smoothing_parameter.ln() * F::from_f64(0.1).unwrap()).exp();
-        let effective_dof = F::from_usize(base_dof).unwrap() * (F::one() - penalty_reduction);
+        let penalty_reduction = (smoothing_parameter.ln()
+            * F::from_f64(0.1).expect("Failed to convert f64 to target float type"))
+        .exp();
+        let effective_dof = F::from_usize(base_dof).expect("Failed to convert usize to float")
+            * (F::one() - penalty_reduction);
         Ok(effective_dof.to_usize().unwrap_or(base_dof))
     }
 
@@ -739,7 +769,9 @@ where
         }
 
         // Compute statistics
-        let mean = bootstrap_results.mean_axis(Axis(0)).unwrap();
+        let mean = bootstrap_results
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
         let _std_dev = bootstrap_results.std_axis(Axis(0), F::zero());
 
         // Compute percentiles for confidence intervals
@@ -748,17 +780,19 @@ where
 
         for i in 0..m {
             let mut column: Vec<F> = bootstrap_results.column(i).to_vec();
-            column.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            column.sort_by(|a, b| a.partial_cmp(b).expect("Float comparison failed"));
 
-            let lower_idx = ((F::from_f64(0.025).unwrap()
-                * F::from_usize(self.n_samples).unwrap())
+            let lower_idx = ((F::from_f64(0.025)
+                .expect("Failed to convert f64 to target float type")
+                * F::from_usize(self.n_samples).expect("Failed to convert usize to float"))
             .to_usize()
-            .unwrap())
+            .expect("Failed to convert to usize"))
             .min(self.n_samples - 1);
-            let upper_idx = ((F::from_f64(0.975).unwrap()
-                * F::from_usize(self.n_samples).unwrap())
+            let upper_idx = ((F::from_f64(0.975)
+                .expect("Failed to convert f64 to target float type")
+                * F::from_usize(self.n_samples).expect("Failed to convert usize to float"))
             .to_usize()
-            .unwrap())
+            .expect("Failed to convert to usize"))
             .min(self.n_samples - 1);
 
             conf_lower[i] = column[lower_idx];
@@ -876,7 +910,7 @@ where
         let mut multipliers = Array1::zeros(n);
         for i in 0..n {
             multipliers[i] = if rng.random::<f64>() < 0.5 {
-                F::from_f64(-1.0).unwrap()
+                F::from_f64(-1.0).expect("Failed to convert f64 to target float type")
             } else {
                 F::one()
             };
@@ -897,7 +931,8 @@ mod tests {
     #[test]
     fn test_variational_sparse_gp() {
         // Generate simple test data
-        let x_train = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let x_train = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0])
+            .expect("Operation failed");
         let y_train = Array1::from(vec![0.0, 1.0, 4.0, 9.0, 16.0]); // y = x^2
 
         // Create kernel parameters
@@ -908,7 +943,8 @@ mod tests {
         };
 
         // Create sparse GP with 3 inducing points
-        let inducing_points = Array2::from_shape_vec((3, 1), vec![0.0, 2.0, 4.0]).unwrap();
+        let inducing_points =
+            Array2::from_shape_vec((3, 1), vec![0.0, 2.0, 4.0]).expect("Operation failed");
         let mut sparse_gp = VariationalSparseGP::new(
             inducing_points,
             kernel_params,
@@ -920,8 +956,8 @@ mod tests {
         assert!(result.is_ok());
 
         // Make predictions
-        let xtest = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 2.5]).unwrap();
-        let (mean, variance) = sparse_gp.predict(&xtest.view()).unwrap();
+        let xtest = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 2.5]).expect("Operation failed");
+        let (mean, variance) = sparse_gp.predict(&xtest.view()).expect("Operation failed");
 
         // Check that predictions are reasonable
         assert_eq!(mean.len(), 3);
@@ -936,12 +972,14 @@ mod tests {
         let y = Array1::from(vec![0.0, 1.0, 4.0, 9.0, 16.0]);
 
         // Fit statistical spline
-        let spline = StatisticalSpline::fit(&x.view(), &y.view(), 5, 0.1).unwrap();
+        let spline =
+            StatisticalSpline::fit(&x.view(), &y.view(), 5, 0.1).expect("Operation failed");
 
         // Test prediction with confidence bands
         let x_new = Array1::from(vec![0.5, 1.5, 2.5, 3.5]);
-        let (pred, conf_lower, conf_upper, pred_lower, pred_upper) =
-            spline.predict_with_bands(&x_new.view(), 0.95).unwrap();
+        let (pred, conf_lower, conf_upper, pred_lower, pred_upper) = spline
+            .predict_with_bands(&x_new.view(), 0.95)
+            .expect("Operation failed");
 
         // Check that predictions are reasonable
         assert_eq!(pred.len(), 4);
@@ -998,7 +1036,7 @@ mod tests {
 
         let (mean, lower, upper) = bootstrap
             .bootstrap_interpolate(&x.view(), &y.view(), &x_new.view(), interpolator)
-            .unwrap();
+            .expect("Bootstrap interpolation failed");
 
         assert_eq!(mean.len(), 3);
         assert!(lower.iter().zip(upper.iter()).all(|(&l, &u)| l <= u));
@@ -1107,7 +1145,8 @@ where
         // Create design matrix (Vandermonde matrix)
         let mut design = Array2::<F>::zeros((m, n));
         for i in 0..m {
-            let x = F::from_isize(i as isize - half_window as isize).unwrap();
+            let x = F::from_isize(i as isize - half_window as isize)
+                .expect("Failed to convert isize to float");
             for j in 0..n {
                 design[[i, j]] = x.powi(j as i32);
             }
@@ -1121,7 +1160,7 @@ where
         // Factorial for derivative scaling
         let mut factorial = F::one();
         for i in 1..=self.derivative_order {
-            factorial = factorial * F::from_usize(i).unwrap();
+            factorial = factorial * F::from_usize(i).expect("Failed to convert usize to float");
         }
         rhs[self.derivative_order] = factorial;
 
@@ -1141,7 +1180,9 @@ where
 
         // Very simplified diagonal solver (would use proper LU decomposition in practice)
         for i in 0..n {
-            if a[[i, i]].abs() < F::from_f64(1e-12).unwrap() {
+            if a[[i, i]].abs()
+                < F::from_f64(1e-12).expect("Failed to convert f64 to target float type")
+            {
                 return Err(InterpolateError::ComputationError(
                     "Singular matrix in Savitzky-Golay computation".to_string(),
                 ));
@@ -1230,7 +1271,8 @@ where
         let acceleration = self.compute_acceleration(x, y, x_new, &interpolator)?;
 
         // Compute BCa intervals
-        let alpha = (F::one() - self.confidence_level) / F::from_f64(2.0).unwrap();
+        let alpha = (F::one() - self.confidence_level)
+            / F::from_f64(2.0).expect("Failed to convert f64 to target float type");
         let z_alpha = self.inverse_normal_cdf(alpha)?;
         let z_1_alpha = self.inverse_normal_cdf(F::one() - alpha)?;
 
@@ -1249,17 +1291,19 @@ where
 
             // Extract percentiles from bootstrap distribution
             let mut column: Vec<F> = bootstrap_results.column(i).to_vec();
-            column.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            column.sort_by(|a, b| a.partial_cmp(b).expect("Float comparison failed"));
 
-            let idx1 = ((alpha1 * F::from_usize(self.n_bootstrap).unwrap())
-                .floor()
-                .to_usize()
-                .unwrap())
+            let idx1 = ((alpha1
+                * F::from_usize(self.n_bootstrap).expect("Failed to convert usize to float"))
+            .floor()
+            .to_usize()
+            .expect("Failed to convert to usize"))
             .min(self.n_bootstrap - 1);
-            let idx2 = ((alpha2 * F::from_usize(self.n_bootstrap).unwrap())
-                .floor()
-                .to_usize()
-                .unwrap())
+            let idx2 = ((alpha2
+                * F::from_usize(self.n_bootstrap).expect("Failed to convert usize to float"))
+            .floor()
+            .to_usize()
+            .expect("Failed to convert to usize"))
             .min(self.n_bootstrap - 1);
 
             lower[i] = column[idx1];
@@ -1282,8 +1326,8 @@ where
             let column = bootstrap_results.column(i);
             let count_less = column.iter().filter(|&&val| val < original_pred[i]).count();
 
-            let proportion =
-                F::from_usize(count_less).unwrap() / F::from_usize(self.n_bootstrap).unwrap();
+            let proportion = F::from_usize(count_less).expect("Failed to convert usize to float")
+                / F::from_usize(self.n_bootstrap).expect("Failed to convert usize to float");
             bias_correction[i] = self.inverse_normal_cdf(proportion)?;
         }
 
@@ -1326,7 +1370,9 @@ where
         }
 
         // Compute jackknife mean
-        let jack_mean = jackknife_results.mean_axis(Axis(0)).unwrap();
+        let jack_mean = jackknife_results
+            .mean_axis(Axis(0))
+            .expect("Failed to compute mean along axis");
 
         // Compute acceleration
         let mut acceleration = Array1::<F>::zeros(n_pred);
@@ -1342,7 +1388,10 @@ where
 
             if sum_squared > F::zero() {
                 acceleration[i] = sum_cubed
-                    / (F::from_f64(6.0).unwrap() * sum_squared.powf(F::from_f64(1.5).unwrap()));
+                    / (F::from_f64(6.0).expect("Failed to convert f64 to target float type")
+                        * sum_squared.powf(
+                            F::from_f64(1.5).expect("Failed to convert f64 to target float type"),
+                        ));
             }
         }
 
@@ -1352,8 +1401,9 @@ where
     /// Simplified normal CDF approximation
     fn normal_cdf(&self, x: F) -> InterpolateResult<F> {
         // Simplified approximation - would use proper implementation in practice
-        let result =
-            (F::one() + (x / F::from_f64(1.414).unwrap()).tanh()) / F::from_f64(2.0).unwrap();
+        let result = (F::one()
+            + (x / F::from_f64(1.414).expect("Failed to convert f64 to target float type")).tanh())
+            / F::from_f64(2.0).expect("Failed to convert f64 to target float type");
         Ok(result)
     }
 
@@ -1365,7 +1415,8 @@ where
         }
 
         // Rough approximation using atanh
-        let x = F::from_f64(2.0).unwrap() * p - F::one();
-        Ok(F::from_f64(1.414).unwrap() * x.atanh())
+        let x =
+            F::from_f64(2.0).expect("Failed to convert f64 to target float type") * p - F::one();
+        Ok(F::from_f64(1.414).expect("Failed to convert f64 to target float type") * x.atanh())
     }
 }

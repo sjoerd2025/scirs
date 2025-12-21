@@ -342,7 +342,7 @@ mod tests {
     #[test]
     fn test_rtree_delete() {
         // Create a new R-tree
-        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).unwrap();
+        let mut rtree: RTree<i32> = RTree::new(2, 2, 4).expect("Operation failed");
 
         // Insert some points
         let points = vec![
@@ -354,13 +354,13 @@ mod tests {
         ];
 
         for (point, value) in points {
-            rtree.insert(point, value).unwrap();
+            rtree.insert(point, value).expect("Operation failed");
         }
 
         // Delete a point
         let result = rtree
             .delete::<fn(&i32) -> bool>(&array![0.5, 0.5].view(), None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result);
 
         // Check the size
@@ -369,7 +369,7 @@ mod tests {
         // Try to delete a point that doesn't exist
         let result = rtree
             .delete::<fn(&i32) -> bool>(&array![2.0, 2.0].view(), None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!result);
 
         // Check the size
@@ -378,19 +378,19 @@ mod tests {
         // Delete all remaining points
         let result = rtree
             .delete::<fn(&i32) -> bool>(&array![0.0, 0.0].view(), None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result);
         let result = rtree
             .delete::<fn(&i32) -> bool>(&array![1.0, 0.0].view(), None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result);
         let result = rtree
             .delete::<fn(&i32) -> bool>(&array![0.0, 1.0].view(), None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result);
         let result = rtree
             .delete::<fn(&i32) -> bool>(&array![1.0, 1.0].view(), None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result);
 
         // Check the size

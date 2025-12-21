@@ -111,8 +111,8 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
                 Some(
                     Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                         // dA[i,j] = sum_k dC[i,k] * B[j,k]
-                        let grad_2d = grad.clone().intoshape((m, p)).unwrap();
-                        let b_2d = b_data.clone().intoshape((n, p)).unwrap();
+                        let grad_2d = grad.clone().intoshape((m, p)).expect("Operation failed");
+                        let b_2d = b_data.clone().intoshape((n, p)).expect("Operation failed");
 
                         let mut grad_a = Array2::<F>::zeros((m, n));
 
@@ -139,8 +139,8 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
                 Some(
                     Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                         // dB[j,k] = sum_i dC[i,k] * A[i,j]
-                        let grad_2d = grad.clone().intoshape((m, p)).unwrap();
-                        let a_2d = a_data.clone().intoshape((m, n)).unwrap();
+                        let grad_2d = grad.clone().intoshape((m, p)).expect("Operation failed");
+                        let a_2d = a_data.clone().intoshape((m, n)).expect("Operation failed");
 
                         let mut grad_b = Array2::<F>::zeros((n, p));
 
@@ -307,7 +307,7 @@ pub fn outer<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                     // Convert gradient to 2D shape
-                    let grad_2d = grad.clone().intoshape((m, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((m, n)).expect("Operation failed");
 
                     // dA[i] = sum_j dC[i,j] * B[j]
                     let mut grad_a = Array1::<F>::zeros(m);
@@ -333,7 +333,7 @@ pub fn outer<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                     // Convert gradient to 2D shape
-                    let grad_2d = grad.clone().intoshape((m, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((m, n)).expect("Operation failed");
 
                     // dB[j] = sum_i dC[i,j] * A[i]
                     let mut grad_b = Array1::<F>::zeros(n);
@@ -450,7 +450,7 @@ pub fn tensor_vector_product<F: Float + Debug + Send + Sync + 'static>(
                 Some(
                     Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                         // dA[i,j] = dw[i] * v[j]
-                        let grad_1d = grad.clone().intoshape(m).unwrap();
+                        let grad_1d = grad.clone().intoshape(m).expect("Operation failed");
                         let mut grad_a = Array2::<F>::zeros((m, n));
 
                         for i in 0..m {
@@ -472,7 +472,7 @@ pub fn tensor_vector_product<F: Float + Debug + Send + Sync + 'static>(
                 Some(
                     Box::new(move |grad: scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>| -> AutogradResult<scirs2_core::ndarray::Array<F, scirs2_core::ndarray::IxDyn>> {
                         // dv[j] = sum_i dw[i] * A[i,j]
-                        let grad_1d = grad.clone().intoshape(m).unwrap();
+                        let grad_1d = grad.clone().intoshape(m).expect("Operation failed");
                         let mut grad_v = Array1::<F>::zeros(n);
 
                         for j in 0..n {

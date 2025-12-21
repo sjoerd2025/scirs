@@ -76,8 +76,10 @@ impl<F: Float + std::iter::Sum> SpikePatternRecognizer<F> {
 
     /// Add pattern template
     pub fn add_pattern(&mut self, pattern: SpikePattern<F>) {
-        self.thresholds
-            .insert(pattern.name.clone(), F::from(0.8).unwrap());
+        self.thresholds.insert(
+            pattern.name.clone(),
+            F::from(0.8).expect("Failed to convert constant to float"),
+        );
         self.pattern_templates.push(pattern);
     }
 
@@ -113,7 +115,7 @@ impl<F: Float + std::iter::Sum> SpikePatternRecognizer<F> {
             .thresholds
             .get(&pattern.name)
             .copied()
-            .unwrap_or(F::from(0.8).unwrap());
+            .unwrap_or(F::from(0.8).expect("Failed to convert constant to float"));
 
         for algorithm in &self.matching_algorithms {
             let confidence = match algorithm {
@@ -123,7 +125,7 @@ impl<F: Float + std::iter::Sum> SpikePatternRecognizer<F> {
                 PatternMatchingAlgorithm::TemplateMatching => {
                     self.template_match(pattern, spike_data)?
                 }
-                _ => F::from(0.5).unwrap(), // Default confidence
+                _ => F::from(0.5).expect("Failed to convert constant to float"), // Default confidence
             };
 
             if confidence >= threshold {
@@ -159,7 +161,7 @@ impl<F: Float + std::iter::Sum> SpikePatternRecognizer<F> {
         }
 
         if count > 0 {
-            Ok(correlation_sum / F::from(count).unwrap())
+            Ok(correlation_sum / F::from(count).expect("Failed to convert to float"))
         } else {
             Ok(F::zero())
         }
@@ -183,7 +185,10 @@ impl<F: Float + std::iter::Sum> SpikePatternRecognizer<F> {
         }
 
         if total_neurons > 0 {
-            Ok(F::from(matched_neurons).unwrap() / F::from(total_neurons).unwrap())
+            Ok(
+                F::from(matched_neurons).expect("Failed to convert to float")
+                    / F::from(total_neurons).expect("Failed to convert to float"),
+            )
         } else {
             Ok(F::zero())
         }
@@ -199,7 +204,7 @@ impl<F: Float + std::iter::Sum> SpikePatternRecognizer<F> {
                 .iter()
                 .map(|r| r.confidence)
                 .sum::<F>()
-                / F::from(self.recognition_history.len()).unwrap()
+                / F::from(self.recognition_history.len()).expect("Operation failed")
         } else {
             F::zero()
         };

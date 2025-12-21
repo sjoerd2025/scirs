@@ -155,12 +155,16 @@ fn analyze_generation_type(
     println!("    Average throughput: {avg_throughput:.1} samples/s");
 
     // Find best and worst performance
-    let best = results
-        .iter()
-        .max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap());
-    let worst = results
-        .iter()
-        .min_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap());
+    let best = results.iter().max_by(|a, b| {
+        a.throughput
+            .partial_cmp(&b.throughput)
+            .expect("Operation failed")
+    });
+    let worst = results.iter().min_by(|a, b| {
+        a.throughput
+            .partial_cmp(&b.throughput)
+            .expect("Operation failed")
+    });
 
     if let (Some(best), Some(worst)) = (best, worst) {
         println!(

@@ -667,7 +667,7 @@ fn generate_lombscargle_test_signal(
             rng.gen_range(-1.0..1.0) * config.irregularity * config.time_span / config.n as f64;
         times.push(regular_time + noise);
     }
-    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Generate signal values
     let signal = match config.signal_type {
@@ -780,7 +780,7 @@ fn analyze_single_frequency_detection(_freqs: &[f64], power: &[f64], truefreq: &
     let max_idx = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(i, _)| i)
         .unwrap_or(0);
 
@@ -795,7 +795,7 @@ fn analyze_multiple_frequency_detection(_freqs: &[f64], power: &[f64], truefreqs
     let mut total_error = 0.0;
     let mut peaks = find_peaks(power, 0.1); // Simple peak detection
 
-    peaks.sort_by(|&a, &b| power[b].partial_cmp(&power[a]).unwrap());
+    peaks.sort_by(|&a, &b| power[b].partial_cmp(&power[a]).expect("Operation failed"));
     peaks.truncate(true_freqs.len());
 
     for (i, &true_freq) in true_freqs.iter().enumerate() {
@@ -888,7 +888,7 @@ fn generate_highly_irregular_data(n: usize, timespan: f64) -> SignalResult<(Vec<
         signal.push(rng.gen_range(-1.0..1.0));
     }
 
-    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    times.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     Ok((times, signal))
 }
 
@@ -1031,7 +1031,7 @@ fn enhance_with_advanced_sampling_tests(
             let peak_idx = power
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
                 .map(|(i, _)| i)
                 .unwrap_or(0);
 
@@ -1093,8 +1093,8 @@ fn enhance_with_advanced_sampling_tests(
     // Test 3: Exponentially varying intervals
     let mut exp_times = vec![0.0];
     let mut dt = 0.1;
-    while exp_times.len() < 100 && exp_times.last().unwrap() < &20.0 {
-        let next_time = exp_times.last().unwrap() + dt;
+    while exp_times.len() < 100 && exp_times.last().expect("Operation failed") < &20.0 {
+        let next_time = exp_times.last().expect("Operation failed") + dt;
         exp_times.push(next_time);
         dt *= 1.05; // Exponentially increasing intervals
     }
@@ -1494,7 +1494,7 @@ fn enhance_with_statistical_robustness_tests(
                 let peak_idx = power
                     .iter()
                     .enumerate()
-                    .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                    .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
                     .map(|(i, _)| i)
                     .unwrap_or(0);
                 bootstrap_results.push(freqs[peak_idx]);
@@ -1553,7 +1553,7 @@ fn enhance_with_statistical_robustness_tests(
             let peak_idx = power
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
                 .map(|(i, _)| i)
                 .unwrap_or(0);
 

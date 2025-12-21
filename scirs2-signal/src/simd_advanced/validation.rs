@@ -165,7 +165,7 @@ mod tests {
         let result = comprehensive_simd_validation(1024, &config);
 
         assert!(result.is_ok());
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
 
         // Basic checks
         assert!(validation.fir_filter_time_ns > 0);
@@ -186,7 +186,7 @@ mod tests {
         let result = comprehensive_simd_validation(512, &config);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert!(validation.validation_passed);
     }
 
@@ -196,7 +196,7 @@ mod tests {
         let result = comprehensive_simd_validation(64, &config);
 
         assert!(result.is_ok());
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
 
         // Should work with small signals too
         assert!(validation.fir_filter_time_ns > 0);

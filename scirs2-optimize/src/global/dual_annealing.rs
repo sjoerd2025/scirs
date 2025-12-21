@@ -163,12 +163,12 @@ where
                             .map(|&(_, ub)| Some(ub))
                             .collect(),
                     )
-                    .unwrap(),
+                    .expect("Operation failed"),
                 ),
                 ..Default::default()
             }),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         (result.x, result.fun, result.nfev)
     }

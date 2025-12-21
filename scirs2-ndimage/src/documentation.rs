@@ -360,7 +360,7 @@ mod tests {
         let result = create_documentation_site();
         assert!(result.is_ok());
 
-        let site = result.unwrap();
+        let site = result.expect("Operation failed");
         assert_eq!(site.title, "SciRS2 NDImage Documentation");
         assert!(!site.modules.is_empty());
         assert!(!site.tutorials.is_empty());
@@ -376,7 +376,7 @@ mod tests {
             .with_tutorials(true)
             .with_examples(false)
             .build()
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(site.title, "Custom Documentation");
         assert_eq!(site.description, "Custom description");

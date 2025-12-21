@@ -237,12 +237,12 @@ where
     ///     0.0, 1.0,
     ///     1.0, 1.0,
     ///     0.5, 0.5,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
     /// let config = SearchConfig::default();
     /// let searcher = EnhancedNearestNeighborSearcher::new(
     ///     points, IndexType::Adaptive, config
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         points: Array2<F>,
@@ -342,14 +342,14 @@ where
     ///     1.0, 0.0,
     ///     0.0, 1.0,
     ///     1.0, 1.0,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
     /// let mut searcher = EnhancedNearestNeighborSearcher::new(
     ///     points, IndexType::BruteForce, SearchConfig::default()
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// let query = Array1::from_vec(vec![0.5, 0.5]);
-    /// let neighbors = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();
+    /// let neighbors = searcher.k_nearest_neighbors(&query.view(), 2).expect("Operation failed");
     ///
     /// assert_eq!(neighbors.len(), 2);
     /// ```
@@ -363,7 +363,8 @@ where
 
         // Check cache first
         if self.config.cache_results {
-            let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), k, None);
+            let cache_key =
+                QueryKey::from_coords(query.as_slice().expect("Operation failed"), k, None);
             if let Some(cached_result) = self.query_cache.get(&cache_key) {
                 self.stats.cache_hits += 1;
                 return Ok(cached_result.clone());
@@ -399,7 +400,8 @@ where
         // Cache the result
         if self.config.cache_results {
             if let Ok(ref neighbors) = result {
-                let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), k, None);
+                let cache_key =
+                    QueryKey::from_coords(query.as_slice().expect("Operation failed"), k, None);
                 self.query_cache.insert(cache_key, neighbors.clone());
             }
         }
@@ -431,7 +433,8 @@ where
 
         // Check cache first
         if self.config.cache_results {
-            let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), 0, Some(radius));
+            let cache_key =
+                QueryKey::from_coords(query.as_slice().expect("Operation failed"), 0, Some(radius));
             if let Some(cached_result) = self.query_cache.get(&cache_key) {
                 self.stats.cache_hits += 1;
                 return Ok(cached_result.clone());
@@ -467,7 +470,11 @@ where
         // Cache the result
         if self.config.cache_results {
             if let Ok(ref neighbors) = result {
-                let cache_key = QueryKey::from_coords(query.as_slice().unwrap(), 0, Some(radius));
+                let cache_key = QueryKey::from_coords(
+                    query.as_slice().expect("Operation failed"),
+                    0,
+                    Some(radius),
+                );
                 self.query_cache.insert(cache_key, neighbors.clone());
             }
         }
@@ -842,7 +849,7 @@ impl<F: Float + FromPrimitive> KdTreeIndex<F> {
 
             if best.len() < k {
                 best.push(neighbor);
-            } else if neighbor.distance < best.peek().unwrap().distance {
+            } else if neighbor.distance < best.peek().expect("Operation failed").distance {
                 best.pop();
                 best.push(neighbor);
             }
@@ -1150,7 +1157,7 @@ impl<F: Float + FromPrimitive> BallTreeIndex<F> {
 
                 if best.len() < k {
                     best.push(neighbor);
-                } else if neighbor.distance < best.peek().unwrap().distance {
+                } else if neighbor.distance < best.peek().expect("Operation failed").distance {
                     best.pop();
                     best.push(neighbor);
                 }
@@ -1488,8 +1495,8 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
 ///     make_enhanced_searcher, SearchConfig
 /// };
 ///
-/// let points = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
-/// let searcher = make_enhanced_searcher(points, None).unwrap();
+/// let points = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).expect("Operation failed");
+/// let searcher = make_enhanced_searcher(points, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn make_enhanced_searcher<F>(
@@ -1565,10 +1572,13 @@ mod tests {
         let config = SearchConfig::default();
 
         let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwrap();
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config)
+                .expect("Operation failed");
 
         let query = array![0.5, 0.5];
-        let neighbors = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();
+        let neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 2)
+            .expect("Operation failed");
 
         assert_eq!(neighbors.len(), 2);
         // All corners should be equidistant from center
@@ -1581,10 +1591,13 @@ mod tests {
         let config = SearchConfig::default();
 
         let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwrap();
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config)
+                .expect("Operation failed");
 
         let query = array![0.5, 0.5];
-        let neighbors = searcher.radius_neighbors(&query.view(), 1.0).unwrap();
+        let neighbors = searcher
+            .radius_neighbors(&query.view(), 1.0)
+            .expect("Operation failed");
 
         // Should find all points except (2,2) which is too far
         assert_eq!(neighbors.len(), 4);
@@ -1596,12 +1609,13 @@ mod tests {
         let config = SearchConfig::default();
 
         let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwrap();
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config)
+                .expect("Operation failed");
 
         let queries = array![[0.1, 0.1], [0.9, 0.9]];
         let results = searcher
             .batch_k_nearest_neighbors(&queries.view(), 2)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].len(), 2);
@@ -1617,16 +1631,21 @@ mod tests {
         };
 
         let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config).unwrap();
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BruteForce, config)
+                .expect("Operation failed");
 
         let query = array![0.5, 0.5];
 
         // First query
-        let _neighbors1 = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();
+        let _neighbors1 = searcher
+            .k_nearest_neighbors(&query.view(), 2)
+            .expect("Operation failed");
         assert_eq!(searcher.stats().cache_hits, 0);
 
         // Second query (should hit cache)
-        let _neighbors2 = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();
+        let _neighbors2 = searcher
+            .k_nearest_neighbors(&query.view(), 2)
+            .expect("Operation failed");
         assert_eq!(searcher.stats().cache_hits, 1);
 
         assert!(searcher.cache_hit_ratio() > 0.0);
@@ -1655,11 +1674,13 @@ mod tests {
         let config = SearchConfig::default();
         let mut searcher =
             EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config)
-                .unwrap();
+                .expect("Operation failed");
 
         // Test k-nearest neighbors search
         let query = array![0.6, 0.6];
-        let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+        let neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 3)
+            .expect("Operation failed");
 
         // Verify distances are sorted
         for i in 1..neighbors.len() {
@@ -1692,11 +1713,13 @@ mod tests {
         let config = SearchConfig::default();
         let mut searcher =
             EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config)
-                .unwrap();
+                .expect("Operation failed");
 
         // Search within radius of 1.5 from origin
         let query = array![0.0, 0.0];
-        let neighbors = searcher.radius_neighbors(&query.view(), 1.5).unwrap();
+        let neighbors = searcher
+            .radius_neighbors(&query.view(), 1.5)
+            .expect("Operation failed");
 
         // Should find: [0,0], [1,0], [0,1], [1,1], [0.1,0.1] but not [3,3]
         assert_eq!(neighbors.len(), 5);
@@ -1716,11 +1739,13 @@ mod tests {
     fn test_kdtree_single_point() {
         let points = array![[1.0, 2.0]];
         let config = SearchConfig::default();
-        let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config).unwrap();
+        let mut searcher = EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config)
+            .expect("Operation failed");
 
         let query = array![0.0, 0.0];
-        let neighbors = searcher.k_nearest_neighbors(&query.view(), 1).unwrap();
+        let neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 1)
+            .expect("Operation failed");
 
         assert_eq!(neighbors.len(), 1);
         assert_eq!(neighbors[0].0, 0);
@@ -1743,10 +1768,12 @@ mod tests {
         let config = SearchConfig::default();
         let mut searcher =
             EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config)
-                .unwrap();
+                .expect("Operation failed");
 
         let query = array![0.1, 0.1, 0.1, 0.1, 0.1];
-        let neighbors = searcher.k_nearest_neighbors(&query.view(), 2).unwrap();
+        let neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 2)
+            .expect("Operation failed");
 
         assert_eq!(neighbors.len(), 2);
 
@@ -1776,11 +1803,13 @@ mod tests {
         let config = SearchConfig::default();
         let mut searcher =
             EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::BallTree, config)
-                .unwrap();
+                .expect("Operation failed");
 
         // Test k-nearest neighbors search
         let query = array![0.6, 0.6];
-        let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+        let neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 3)
+            .expect("Operation failed");
 
         assert_eq!(neighbors.len(), 3);
 
@@ -1807,11 +1836,13 @@ mod tests {
         let config = SearchConfig::default();
         let mut searcher =
             EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::BallTree, config)
-                .unwrap();
+                .expect("Operation failed");
 
         // Search within radius of 2.0 from origin
         let query = array![0.0, 0.0];
-        let neighbors = searcher.radius_neighbors(&query.view(), 2.0).unwrap();
+        let neighbors = searcher
+            .radius_neighbors(&query.view(), 2.0)
+            .expect("Operation failed");
 
         // Should find: [0,0], [1,0], [0,1], [1,1], [0.2,0.2] but not [5,5]
         assert_eq!(neighbors.len(), 5);
@@ -1833,11 +1864,14 @@ mod tests {
 
         let config = SearchConfig::default();
         let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap();
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config)
+                .expect("Operation failed");
 
         // Search for neighbors very far away with small radius
         let query = array![0.0, 0.0];
-        let neighbors = searcher.radius_neighbors(&query.view(), 1.0).unwrap();
+        let neighbors = searcher
+            .radius_neighbors(&query.view(), 1.0)
+            .expect("Operation failed");
 
         // Should find no points within radius
         assert_eq!(neighbors.len(), 0);
@@ -1860,10 +1894,13 @@ mod tests {
 
         let config = SearchConfig::default();
         let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap();
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config)
+                .expect("Operation failed");
 
         let query = array![0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05];
-        let neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+        let neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 3)
+            .expect("Operation failed");
 
         assert_eq!(neighbors.len(), 3);
         // The closest point should be [0.1, 0.1, ..., 0.1]
@@ -1875,10 +1912,13 @@ mod tests {
         let points = array![[3.0, 4.0]];
         let config = SearchConfig::default();
         let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config).unwrap();
+            EnhancedNearestNeighborSearcher::new(points, IndexType::BallTree, config)
+                .expect("Operation failed");
 
         let query = array![0.0, 0.0];
-        let neighbors = searcher.k_nearest_neighbors(&query.view(), 1).unwrap();
+        let neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 1)
+            .expect("Operation failed");
 
         assert_eq!(neighbors.len(), 1);
         assert_eq!(neighbors[0].0, 0);
@@ -1905,21 +1945,21 @@ mod tests {
 
         let mut kdtree_searcher =
             EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::KdTree, config.clone())
-                .unwrap();
+                .expect("Operation failed");
 
         let mut balltree_searcher =
             EnhancedNearestNeighborSearcher::new(points.clone(), IndexType::BallTree, config)
-                .unwrap();
+                .expect("Operation failed");
 
         let query = array![0.3, 0.7];
         let k = 4;
 
         let kdtree_neighbors = kdtree_searcher
             .k_nearest_neighbors(&query.view(), k)
-            .unwrap();
+            .expect("Operation failed");
         let balltree_neighbors = balltree_searcher
             .k_nearest_neighbors(&query.view(), k)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(kdtree_neighbors.len(), balltree_neighbors.len());
 
@@ -1952,11 +1992,13 @@ mod tests {
         ];
 
         let config = SearchConfig::default();
-        let mut searcher =
-            EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config).unwrap();
+        let mut searcher = EnhancedNearestNeighborSearcher::new(points, IndexType::KdTree, config)
+            .expect("Operation failed");
 
         let query = array![0.5, 0.5];
-        let _neighbors = searcher.k_nearest_neighbors(&query.view(), 3).unwrap();
+        let _neighbors = searcher
+            .k_nearest_neighbors(&query.view(), 3)
+            .expect("Operation failed");
 
         let stats = searcher.stats();
         assert!(stats.total_queries > 0);

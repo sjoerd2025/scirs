@@ -90,7 +90,7 @@ fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, ntrials: usize) -> (f64, 
     // Use a simple random number generator
     let mut rng = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
+        .expect("Operation failed")
         .as_millis() as u64;
 
     let mut best_inlier_count = 0;

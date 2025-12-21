@@ -146,8 +146,10 @@ where
         if self.fraction_of_positives.is_some() && self.mean_predicted_value.is_some() {
             // Return pre-computed values
             return Ok((
-                self.fraction_of_positives.clone().unwrap(),
-                self.mean_predicted_value.clone().unwrap(),
+                self.fraction_of_positives
+                    .clone()
+                    .expect("Operation failed"),
+                self.mean_predicted_value.clone().expect("Operation failed"),
             ));
         }
 
@@ -157,8 +159,8 @@ where
             ));
         }
 
-        let y_true = self.y_true.unwrap();
-        let y_prob = self.y_prob.unwrap();
+        let y_true = self.y_true.expect("Operation failed");
+        let y_prob = self.y_prob.expect("Operation failed");
 
         // Compute calibration curve
         let calib_result = calibration_curve(y_true, y_prob, Some(self.n_bins))?;

@@ -101,7 +101,7 @@ fn show_menu() {
     println!("8. 🧠 Knowledge Quiz");
     println!("9. 🚪 Exit");
     print!("\nEnter your choice (1-9): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 }
 
 #[allow(dead_code)]
@@ -177,7 +177,7 @@ fn explore_bessel_j() {
         println!("4. Compare different orders");
         println!("5. Return to main menu");
         print!("Choice: ");
-        io::stdout().flush().unwrap();
+        io::stdout().flush().expect("Operation failed");
 
         match get_user_choice() {
             1 => calculate_bessel_j_values(),
@@ -196,11 +196,11 @@ fn calculate_bessel_j_values() {
     println!("────────────────────────────────────────");
 
     print!("Enter the order n (0, 1, 2, ...): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let n: usize = get_user_input().parse().unwrap_or(0);
 
     print!("Enter the value x: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let x: f64 = get_user_input().parse().unwrap_or(1.0);
 
     let result = match n {
@@ -242,11 +242,11 @@ fn explore_bessel_zeros() {
     println!("They appear in vibration problems, heat conduction, etc.");
 
     print!("Enter order n (0 or 1): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let n: usize = get_user_input().parse().unwrap_or(0);
 
     print!("How many zeros to display? ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let num_zeros: usize = get_user_input().parse().unwrap_or(5).min(10);
 
     println!("\nFirst {} zeros of J{}(x):", num_zeros, n);
@@ -313,7 +313,7 @@ fn explore_recurrence_relations() {
     println!("3. (d/dx)[xⁿJₙ(x)] = xⁿJₙ₋₁(x)");
 
     print!("Enter x value to test relations: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let x: f64 = get_user_input().parse().unwrap_or(5.0);
 
     if x == 0.0 {
@@ -347,7 +347,7 @@ fn compare_bessel_orders() {
     println!("─────────────────────────────");
 
     print!("Enter x value: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let x: f64 = get_user_input().parse().unwrap_or(3.0);
 
     println!("\nBessel functions of different orders at x = {}:", x);
@@ -387,7 +387,7 @@ fn explore_bessel_y() {
     println!("to Bessel's differential equation. They have a singularity at x = 0.");
 
     print!("Enter x value (must be > 0): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let x: f64 = get_user_input().parse().unwrap_or(1.0);
 
     if x <= 0.0 {
@@ -425,7 +425,7 @@ fn explore_modified_bessel() {
     println!("Iₙ(x) = i⁻ⁿJₙ(ix) and Kₙ(x) = (π/2)i^(n+1)[Jₙ(ix) + iYₙ(ix)]");
 
     print!("Enter x value: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let x: f64 = get_user_input().parse().unwrap_or(1.0);
 
     println!("\nModified Bessel functions at x = {}:", x);
@@ -451,11 +451,11 @@ fn explore_spherical_bessel() {
     println!("yₙ(x) = √(π/2x) Y_{{n+1/2}}(x)");
 
     print!("Enter x value: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let x: f64 = get_user_input().parse().unwrap_or(1.0);
 
     print!("Enter maximum order n: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let max_n: i32 = get_user_input().parse().unwrap_or(3).min(5);
 
     println!("\nSpherical Bessel functions at x = {}:", x);
@@ -511,7 +511,7 @@ fn practical_applications() {
     println!("5. Return to main menu");
 
     print!("Choice: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     match get_user_choice() {
         1 => drum_vibration_demo(),
@@ -533,15 +533,15 @@ fn drum_vibration_demo() {
     println!("where k_mn is the nth zero of J_m divided by the drum radius.");
 
     print!("Enter drum radius (cm): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let radius: f64 = get_user_input().parse().unwrap_or(10.0);
 
     print!("Enter tension (N/m): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let tension: f64 = get_user_input().parse().unwrap_or(1000.0);
 
     print!("Enter surface density (kg/m²): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let density: f64 = get_user_input().parse().unwrap_or(0.01);
 
     println!("\nVibrational modes for circular drum:");
@@ -600,15 +600,15 @@ fn heat_conduction_demo() {
     println!("where α_n are zeros of J₀ and κ is thermal diffusivity.");
 
     print!("Enter cylinder radius R (cm): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let radius: f64 = get_user_input().parse().unwrap_or(5.0);
 
     print!("Enter thermal diffusivity κ (cm²/s): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let kappa: f64 = get_user_input().parse().unwrap_or(0.1);
 
     print!("Enter time t (seconds): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let time: f64 = get_user_input().parse().unwrap_or(10.0);
 
     let zeros = match generate_j0_zeros(5) {
@@ -649,7 +649,7 @@ fn waveguide_demo() {
     println!("Bessel functions. The cutoff frequency depends on Bessel function zeros.");
 
     print!("Enter waveguide radius (cm): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let radius: f64 = get_user_input().parse().unwrap_or(1.0);
 
     let c = 2.998e10; // Speed of light in cm/s
@@ -705,11 +705,11 @@ fn quantum_mechanics_demo() {
     println!("ψ(r,φ,z) = A * J_m(k_r*r) * e^(imφ) * sin(nπz/L)");
 
     print!("Enter cylinder radius (Angstroms): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let radius: f64 = get_user_input().parse().unwrap_or(10.0);
 
     print!("Enter cylinder height (Angstroms): ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let height: f64 = get_user_input().parse().unwrap_or(20.0);
 
     // Constants (in atomic units, approximately)
@@ -764,7 +764,7 @@ fn quantum_mechanics_demo() {
     }
 
     // Sort by energy and show first few
-    energies.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    energies.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
     for (i, (state, energy, desc)) in energies.iter().take(8).enumerate() {
         println!("{:13} | {:6.4} | {}", state, energy, desc);
@@ -786,7 +786,7 @@ fn interactive_plotting() {
     println!("4. Custom function comparison");
 
     print!("Choice: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     match get_user_choice() {
         1 => plot_regular_bessel(),
@@ -983,7 +983,7 @@ fn plot_custom_comparison() {
     println!("3. Different orders of same type");
 
     print!("Choice: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     match get_user_choice() {
         1 => {
@@ -1043,7 +1043,7 @@ fn quiz_section() {
     println!("c) ∞");
     println!("d) undefined");
     print!("Your answer: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     let answer1 = get_user_input().trim().to_lowercase();
     if answer1 == "b" {
@@ -1060,7 +1060,7 @@ fn quiz_section() {
     println!("c) Approaches -∞");
     println!("d) Oscillates");
     print!("Your answer: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     let answer2 = get_user_input().trim().to_lowercase();
     if answer2 == "c" {
@@ -1077,7 +1077,7 @@ fn quiz_section() {
     println!("c) x²y'' + xy' + x²y = 0");
     println!("d) xy'' + y' + xy = 0");
     print!("Your answer: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     let answer3 = get_user_input().trim().to_lowercase();
     if answer3 == "b" {
@@ -1096,7 +1096,7 @@ fn quiz_section() {
     println!("c) cos(x)/x");
     println!("d) x*J₁(x)");
     print!("Your answer: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     let answer4 = get_user_input().trim().to_lowercase();
     if answer4 == "b" {
@@ -1113,7 +1113,7 @@ fn quiz_section() {
     println!("c) Simple harmonic oscillator");
     println!("d) Radioactive decay");
     print!("Your answer: ");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
 
     let answer5 = get_user_input().trim().to_lowercase();
     if answer5 == "b" {
@@ -1150,7 +1150,7 @@ fn get_user_input() -> String {
 #[allow(dead_code)]
 fn pause() {
     print!("\nPress Enter to continue...");
-    io::stdout().flush().unwrap();
+    io::stdout().flush().expect("Operation failed");
     let mut input = String::new();
     io::stdin()
         .read_line(&mut input)

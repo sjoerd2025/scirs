@@ -74,7 +74,7 @@ use super::*;
         let tagger = PosTagger::new();
         let tokenizer = WordTokenizer::default();
 
-        let result = tagger.tagtext("The cat runs quickly", &tokenizer).unwrap();
+        let result = tagger.tagtext("The cat runs quickly", &tokenizer).expect("Operation failed");
 
         assert_eq!(result.tokens.len(), 4);
         assert_eq!(result.tags[0], PosTag::Other); // "The"
@@ -139,7 +139,7 @@ use super::*;
 
         let result = lemmatizer
             .lemmatizetext("The cats are running quickly", &tokenizer)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result, vec!["the", "cat", "be", "run", "quick"]);
     }
@@ -149,13 +149,13 @@ use super::*;
         let lemmatizer = PosAwareLemmatizer::new();
 
         // Test Stemmer trait implementation
-        assert_eq!(lemmatizer.stem("running").unwrap(), "run");
-        assert_eq!(lemmatizer.stem("children").unwrap(), "child");
+        assert_eq!(lemmatizer.stem("running").expect("Operation failed"), "run");
+        assert_eq!(lemmatizer.stem("children").expect("Operation failed"), "child");
 
         // Test batch processing
         let words = vec!["running", "cats", "better", "quickly"];
         let expected = vec!["run", "cat", "good", "quick"];
-        assert_eq!(lemmatizer.stem_batch(&words).unwrap(), expected);
+        assert_eq!(lemmatizer.stem_batch(&words).expect("Operation failed"), expected);
     }
 
     #[test]
@@ -274,7 +274,7 @@ use super::*;
         // Test prediction method
         let prediction = analyzer.predict_pos("running");
         assert!(prediction.is_some());
-        let (tag, score) = prediction.unwrap();
+        let (tag, score) = prediction.expect("Operation failed");
         assert_eq!(tag, PosTag::Verb); // -ing suffix
         assert!(score > 0.0);
     }

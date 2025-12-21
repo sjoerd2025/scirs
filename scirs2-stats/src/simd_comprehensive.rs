@@ -191,7 +191,7 @@ where
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStatsResult<F>> {
         let n = data.len();
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         // Single-pass SIMD computation of basic moments
         let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) =
@@ -203,7 +203,7 @@ where
         let std_dev = variance.sqrt();
         let skewness = self.simd_compute_skewness(sum_cube, mean, std_dev, n_f)?;
         let kurtosis = self.simd_compute_kurtosis(sum_quad, mean, std_dev, n_f)?;
-        let excess_kurtosis = kurtosis - F::from(3.0).unwrap();
+        let excess_kurtosis = kurtosis - F::from(3.0).expect("Failed to convert constant to float");
 
         // Compute quantiles using SIMD-optimized quickselect
         let sorteddata = self.simd_sort_array(data)?;
@@ -224,9 +224,18 @@ where
         let harmonic_mean = self.simd_harmonic_mean(data)?;
 
         // Compute trimmed means
-        let trimmed_mean_5 = self.simd_trimmed_mean(data, F::from(0.05).unwrap())?;
-        let trimmed_mean_10 = self.simd_trimmed_mean(data, F::from(0.10).unwrap())?;
-        let winsorized_mean = self.simd_winsorized_mean(data, F::from(0.05).unwrap())?;
+        let trimmed_mean_5 = self.simd_trimmed_mean(
+            data,
+            F::from(0.05).expect("Failed to convert constant to float"),
+        )?;
+        let trimmed_mean_10 = self.simd_trimmed_mean(
+            data,
+            F::from(0.10).expect("Failed to convert constant to float"),
+        )?;
+        let winsorized_mean = self.simd_winsorized_mean(
+            data,
+            F::from(0.05).expect("Failed to convert constant to float"),
+        )?;
 
         // Find mode (simplified - would use histogram-based approach)
         let mode = self.simd_find_mode(data)?;
@@ -400,7 +409,8 @@ where
             return Ok(F::zero());
         }
 
-        let third_moment = sum_cube / n - F::from(3.0).unwrap() * mean * mean * mean;
+        let third_moment = sum_cube / n
+            - F::from(3.0).expect("Failed to convert constant to float") * mean * mean * mean;
         let skewness = third_moment / (stddev * stddev * stddev);
         Ok(skewness)
     }
@@ -408,10 +418,15 @@ where
     /// SIMD-optimized kurtosis computation
     fn simd_compute_kurtosis(&self, sum_quad: F, mean: F, stddev: F, n: F) -> StatsResult<F> {
         if stddev == F::zero() {
-            return Ok(F::from(3.0).unwrap());
+            return Ok(F::from(3.0).expect("Failed to convert constant to float"));
         }
 
-        let fourth_moment = sum_quad / n - F::from(4.0).unwrap() * mean * mean * mean * mean;
+        let fourth_moment = sum_quad / n
+            - F::from(4.0).expect("Failed to convert constant to float")
+                * mean
+                * mean
+                * mean
+                * mean;
         let kurtosis = fourth_moment / (stddev * stddev * stddev * stddev);
         Ok(kurtosis)
     }
@@ -421,7 +436,7 @@ where
         let mut sorted = data.to_owned();
         sorted
             .as_slice_mut()
-            .unwrap()
+            .expect("Operation failed")
             .sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         Ok(sorted)
     }
@@ -439,7 +454,8 @@ where
 
         let q1 = sorteddata[q1_idx];
         let median = if n.is_multiple_of(2) && median_idx > 0 {
-            (sorteddata[median_idx - 1] + sorteddata[median_idx]) / F::from(2.0).unwrap()
+            (sorteddata[median_idx - 1] + sorteddata[median_idx])
+                / F::from(2.0).expect("Failed to convert constant to float")
         } else {
             sorteddata[median_idx]
         };
@@ -478,7 +494,7 @@ where
         // Compute log sum using SIMD
         let logdata = data.mapv(|x| x.ln());
         let log_sum = F::simd_sum(&logdata.view());
-        let n = F::from(data.len()).unwrap();
+        let n = F::from(data.len()).expect("Operation failed");
         Ok((log_sum / n).exp())
     }
 
@@ -496,7 +512,7 @@ where
         // Compute reciprocal sum using SIMD
         let reciprocaldata = data.mapv(|x| F::one() / x);
         let reciprocal_sum = F::simd_sum(&reciprocaldata.view());
-        let n = F::from(data.len()).unwrap();
+        let n = F::from(data.len()).expect("Operation failed");
         Ok(n / reciprocal_sum)
     }
 
@@ -504,7 +520,10 @@ where
     fn simd_trimmed_mean(&self, data: &ArrayView1<F>, trimfraction: F) -> StatsResult<F> {
         let sorteddata = self.simd_sort_array(data)?;
         let n = sorteddata.len();
-        let trim_count = ((F::from(n).unwrap() * trimfraction).to_usize().unwrap()).min(n / 2);
+        let trim_count = ((F::from(n).expect("Failed to convert to float") * trimfraction)
+            .to_usize()
+            .expect("Operation failed"))
+        .min(n / 2);
 
         if trim_count * 2 >= n {
             return Err(StatsError::InvalidArgument(
@@ -520,7 +539,10 @@ where
     fn simd_winsorized_mean(&self, data: &ArrayView1<F>, winsorfraction: F) -> StatsResult<F> {
         let sorteddata = self.simd_sort_array(data)?;
         let n = sorteddata.len();
-        let winsor_count = ((F::from(n).unwrap() * winsorfraction).to_usize().unwrap()).min(n / 2);
+        let winsor_count = ((F::from(n).expect("Failed to convert to float") * winsorfraction)
+            .to_usize()
+            .expect("Operation failed"))
+        .min(n / 2);
 
         let mut winsorized = sorteddata.clone();
 
@@ -549,7 +571,9 @@ where
         let mut current_val = sorteddata[0];
 
         for i in 1..sorteddata.len() {
-            if (sorteddata[i] - current_val).abs() < F::from(1e-10).unwrap() {
+            if (sorteddata[i] - current_val).abs()
+                < F::from(1e-10).expect("Failed to convert constant to float")
+            {
                 current_count += 1;
             } else {
                 if current_count > max_count {
@@ -806,8 +830,8 @@ where
                 let diff_i = F::simd_sub(&col_i, &mean_i_array.view());
                 let diff_j = F::simd_sub(&col_j, &mean_j_array.view());
 
-                let covariance =
-                    F::simd_dot(&diff_i.view(), &diff_j.view()) / F::from(n_samples_ - 1).unwrap();
+                let covariance = F::simd_dot(&diff_i.view(), &diff_j.view())
+                    / F::from(n_samples_ - 1).expect("Failed to convert to float");
                 covariance_matrix[[i, j]] = covariance;
                 if i != j {
                     covariance_matrix[[j, i]] = covariance;
@@ -845,7 +869,8 @@ where
         // For symmetric matrices, distribute remaining eigenvalues
         if n > 1 {
             let remaining_trace = trace - max_eigenval;
-            let avg_remaining = remaining_trace / F::from(n - 1).unwrap();
+            let avg_remaining =
+                remaining_trace / F::from(n - 1).expect("Failed to convert to float");
 
             for i in 1..n {
                 eigenvalues[i] = avg_remaining;
@@ -859,10 +884,13 @@ where
     fn simd_power_iteration_largest_eigenval(&self, matrix: &Array2<F>) -> StatsResult<F> {
         let n = matrix.nrows();
         let max_iterations = 100;
-        let tolerance = F::from(1e-8).unwrap();
+        let tolerance = F::from(1e-8).expect("Failed to convert constant to float");
 
         // Initialize random vector
-        let mut v = Array1::ones(n) / F::from(n as f64).unwrap().sqrt();
+        let mut v = Array1::ones(n)
+            / F::from(n as f64)
+                .expect("Failed to convert to float")
+                .sqrt();
         let mut eigenval = F::zero();
 
         for _ in 0..max_iterations {
@@ -1099,12 +1127,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_comprehensive_stats_computation() {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
-        let result = processor.compute_comprehensive_stats(&data.view()).unwrap();
+        let result = processor
+            .compute_comprehensive_stats(&data.view())
+            .expect("Operation failed");
 
         assert!((result.mean - 5.5).abs() < 1e-10);
         assert!(result.min == 1.0);
@@ -1117,8 +1146,9 @@ mod tests {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) =
-            processor.simd_single_pass_moments(&data.view()).unwrap();
+        let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) = processor
+            .simd_single_pass_moments(&data.view())
+            .expect("Operation failed");
 
         assert!((sum - 15.0).abs() < 1e-10);
         assert!((sum_sq - 55.0).abs() < 1e-10);
@@ -1127,12 +1157,14 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Test failure - needs investigation"]
     fn test_matrix_stats_computation() {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
-        let result = processor.compute_matrix_stats(&data.view()).unwrap();
+        let result = processor
+            .compute_matrix_stats(&data.view())
+            .expect("Operation failed");
 
         assert_eq!(result.row_means.len(), 3);
         assert_eq!(result.col_means.len(), 2);

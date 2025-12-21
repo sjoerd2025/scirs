@@ -1339,12 +1339,12 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         let dimensions = shape.to_vec();
 
         // Calculate sparsity
-        let zero_threshold = F::from(1e-12).unwrap();
+        let zero_threshold = F::from(1e-12).expect("Failed to convert constant to float");
         let zero_count = signal.iter().filter(|&x| x.norm() < zero_threshold).count();
-        let sparsity = F::from(zero_count as f64 / length as f64).unwrap();
+        let sparsity = F::from(zero_count as f64 / length as f64).expect("Failed to convert to float");
 
         // Determine signal type based on characteristics
-        let signal_type = if sparsity > F::from(0.9).unwrap() {
+        let signal_type = if sparsity > F::from(0.9).expect("Failed to convert constant to float") {
             SignalType::Sparse
         } else if self.is_real_valued(signal) {
             SignalType::Real
@@ -1384,7 +1384,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         let algorithm = if signal_profile.length < 1024 {
             // Small signals - use simple radix-2
             FftAlgorithmType::CooleyTukeyRadix2
-        } else if signal_profile.sparsity > F::from(0.8).unwrap() {
+        } else if signal_profile.sparsity > F::from(0.8).expect("Failed to convert constant to float") {
             // Sparse signals - use specialized algorithm
             FftAlgorithmType::BluesteinAlgorithm
         } else if signal_profile.length > 1_000_000 {
@@ -1431,7 +1431,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         }
 
         // Add windowing for non-periodic signals
-        if signal_profile.periodicity < F::from(0.5).unwrap() {
+        if signal_profile.periodicity < F::from(0.5).expect("Failed to convert constant to float") {
             preprocessing_steps.push(PreprocessingStep::Windowing {
                 window_type: WindowType::Hamming.to_string(),
             });
@@ -1545,10 +1545,10 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         // Apply Hamming window (simplified)
         let len = signal.len();
         for (i, val) in signal.iter_mut().enumerate() {
-            let window_val = F::from(0.54).unwrap()
-                - F::from(0.46).unwrap()
+            let window_val = F::from(0.54).expect("Failed to convert constant to float")
+                - F::from(0.46).expect("Failed to convert constant to float")
                     * F::from((2.0 * std::f64::consts::PI * i as f64 / (len - 1) as f64).cos())
-                        .unwrap();
+                        .expect("Operation failed");
             *val = *val * window_val;
         }
         Ok(signal)
@@ -1629,7 +1629,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
     ) -> FFTResult<ArrayD<Complex<F>>> {
         // Basic postprocessing - normalization
         let mut processed = result.clone();
-        let norm_factor = F::from(1.0 / (result.len() as f64).sqrt()).unwrap();
+        let norm_factor = F::from(1.0 / (result.len() as f64).sqrt()).expect("Operation failed");
 
         for val in processed.iter_mut() {
             *val = *val * norm_factor;
@@ -1756,7 +1756,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         // Update optimization engine configuration
         if let Ok(mut engine) = self.optimization_engine.lock() {
             engine.adaptive_params.learning_rate =
-                F::from(self.config.adaptation_threshold).unwrap();
+                F::from(self.config.adaptation_threshold).expect("Failed to convert to float");
         }
 
         // Update memory manager configuration
@@ -1772,7 +1772,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
     ) -> bool {
-        let threshold = F::from(1e-12).unwrap();
+        let threshold = F::from(1e-12).expect("Failed to convert constant to float");
         signal.iter().all(|x| x.im.abs() < threshold)
     }
 
@@ -1810,9 +1810,9 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         let mut frequencies = Vec::new();
 
         // For now, return some default frequencies based on signal characteristics
-        let signal_len = F::from(signal.len() as f64).unwrap();
-        frequencies.push(F::from(0.1).unwrap() * signal_len);
-        frequencies.push(F::from(0.25).unwrap() * signal_len);
+        let signal_len = F::from(signal.len() as f64).expect("Operation failed");
+        frequencies.push(F::from(0.1).expect("Failed to convert constant to float") * signal_len);
+        frequencies.push(F::from(0.25).expect("Failed to convert constant to float") * signal_len);
 
         Ok(frequencies)
     }
@@ -1842,7 +1842,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
             }
 
             if count > 0 {
-                correlation = correlation / F::from(count as f64).unwrap();
+                correlation = correlation / F::from(count as f64).expect("Failed to convert to float");
                 max_correlation = max_correlation.max(correlation.abs());
             }
         }
@@ -1864,14 +1864,14 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
                     product = product * mag;
                 }
             }
-            product.powf(F::one() / F::from(magnitudes.len() as f64).unwrap())
+            product.powf(F::one() / F::from(magnitudes.len() as f64).expect("Operation failed"))
         };
 
         let mut sum = F::zero();
         for &mag in &magnitudes {
             sum += mag;
         }
-        let arithmetic_mean: F = sum / F::from(magnitudes.len() as f64).unwrap();
+        let arithmetic_mean: F = sum / F::from(magnitudes.len() as f64).expect("Operation failed");
 
         if arithmetic_mean > F::zero() {
             Ok(geometric_mean / arithmetic_mean)
@@ -1909,7 +1909,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
                 }
             }
             FftAlgorithmType::BluesteinAlgorithm => {
-                if signal_profile.sparsity > F::from(0.7).unwrap() {
+                if signal_profile.sparsity > F::from(0.7).expect("Failed to convert constant to float") {
                     confidence += 0.4;
                 }
             }
@@ -1989,10 +1989,10 @@ impl<F: Float + Debug> PerformanceOptimizationEngine<F> {
 impl<F: Float> Default for AdaptiveParameters<F> {
     fn default() -> Self {
         Self {
-            learning_rate: F::from(0.01).unwrap(),
-            momentum: F::from(0.9).unwrap(),
-            decay_rate: F::from(0.99).unwrap(),
-            exploration_rate: F::from(0.1).unwrap(),
+            learning_rate: F::from(0.01).expect("Failed to convert constant to float"),
+            momentum: F::from(0.9).expect("Failed to convert constant to float"),
+            decay_rate: F::from(0.99).expect("Failed to convert constant to float"),
+            exploration_rate: F::from(0.1).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -2141,8 +2141,8 @@ impl Default for EntanglementInfo {
 impl<F: Float> Default for AnnealingParameters<F> {
     fn default() -> Self {
         Self {
-            initial_temperature: F::from(1.0).unwrap(),
-            final_temperature: F::from(0.01).unwrap(),
+            initial_temperature: F::from(1.0).expect("Failed to convert constant to float"),
+            final_temperature: F::from(0.01).expect("Failed to convert constant to float"),
             annealing_schedule: AnnealingSchedule::Linear,
             num_steps: 1000,
         }
@@ -2191,9 +2191,9 @@ impl<F: Float> TransferLearningModel<F> {
 impl<F: Float> Default for AdaptationParameters<F> {
     fn default() -> Self {
         Self {
-            learning_rate: F::from(0.01).unwrap(),
-            regularization: F::from(0.1).unwrap(),
-            confidence_threshold: F::from(0.8).unwrap(),
+            learning_rate: F::from(0.01).expect("Failed to convert constant to float"),
+            regularization: F::from(0.1).expect("Failed to convert constant to float"),
+            confidence_threshold: F::from(0.8).expect("Failed to convert constant to float"),
         }
     }
 }

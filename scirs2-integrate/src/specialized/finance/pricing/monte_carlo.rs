@@ -240,7 +240,7 @@ mod tests {
             },
         );
 
-        let price = price_monte_carlo(&solver, &option, 10000, true).unwrap();
+        let price = price_monte_carlo(&solver, &option, 10000, true).expect("Operation failed");
 
         // Black-Scholes reference: ~10.45
         assert!(price > 8.0 && price < 13.0, "Price: {}", price);
@@ -268,7 +268,7 @@ mod tests {
             },
         );
 
-        let price = price_monte_carlo(&solver, &option, 10000, true).unwrap();
+        let price = price_monte_carlo(&solver, &option, 10000, true).expect("Operation failed");
 
         // Black-Scholes reference: ~5.57
         assert!(price > 4.0 && price < 7.5, "Price: {}", price);
@@ -296,7 +296,7 @@ mod tests {
             },
         );
 
-        let price = price_monte_carlo(&solver, &option, 10000, true).unwrap();
+        let price = price_monte_carlo(&solver, &option, 10000, true).expect("Operation failed");
 
         // Asian options are cheaper than European
         assert!(price > 3.0 && price < 8.0, "Price: {}", price);

@@ -25,7 +25,7 @@
 //! let matrix: Array2<f64> = Array2::random(Ix2(10, 10), StandardNormal, &mut rng);
 //!
 //! // Scientific distributions
-//! let beta_samples = Array2::random(Ix2(100, 5), BetaDist::new(2.0, 5.0).unwrap(), &mut rng);
+//! let beta_samples = Array2::random(Ix2(100, 5), BetaDist::new(2.0, 5.0).expect("Operation failed"), &mut rng);
 //!
 //! // Multivariate normal example
 //! let mean = vec![0.0, 1.0];
@@ -49,13 +49,15 @@ pub struct StandardNormal;
 
 impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        Normal::new(0.0, 1.0).unwrap().sample(rng)
+        Normal::new(0.0, 1.0).expect("Operation failed").sample(rng)
     }
 }
 
 impl Distribution<f32> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
-        Normal::new(0.0f32, 1.0f32).unwrap().sample(rng)
+        Normal::new(0.0f32, 1.0f32)
+            .expect("Operation failed")
+            .sample(rng)
     }
 }
 
@@ -65,13 +67,17 @@ pub struct StandardUniform;
 
 impl Distribution<f64> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        Uniform::new(0.0, 1.0).unwrap().sample(rng)
+        Uniform::new(0.0, 1.0)
+            .expect("Operation failed")
+            .sample(rng)
     }
 }
 
 impl Distribution<f32> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
-        Uniform::new(0.0f32, 1.0f32).unwrap().sample(rng)
+        Uniform::new(0.0f32, 1.0f32)
+            .expect("Operation failed")
+            .sample(rng)
     }
 }
 
@@ -153,7 +159,7 @@ where
             .map(|_| distribution.sample(&mut rng.rng))
             .collect();
 
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn random_using<F, R>(shape: D, rng: &mut Random<R>, mut f: F) -> Self
@@ -165,7 +171,7 @@ where
 
         let values: Vec<A> = (0..size).map(|_| f()).collect();
 
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn standard_normal<R>(shape: D, rng: &mut Random<R>) -> Self
@@ -173,12 +179,12 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let normal_dist = Normal::new(0.0, 1.0).unwrap();
+        let normal_dist = Normal::new(0.0, 1.0).expect("Operation failed");
         let size = shape.size();
         let values: Vec<A> = (0..size)
             .map(|_| A::from(normal_dist.sample(&mut rng.rng)))
             .collect();
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn standard_uniform<R>(shape: D, rng: &mut Random<R>) -> Self
@@ -186,12 +192,12 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
+        let uniform_dist = Uniform::new(0.0, 1.0).expect("Operation failed");
         let size = shape.size();
         let values: Vec<A> = (0..size)
             .map(|_| A::from(uniform_dist.sample(&mut rng.rng)))
             .collect();
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn normal<R>(shape: D, mean: f64, std: f64, rng: &mut Random<R>) -> Self
@@ -199,12 +205,12 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let normal_dist = Normal::new(mean, std).unwrap();
+        let normal_dist = Normal::new(mean, std).expect("Operation failed");
         let size = shape.size();
         let values: Vec<A> = (0..size)
             .map(|_| A::from(normal_dist.sample(&mut rng.rng)))
             .collect();
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn uniform<R>(shape: D, low: f64, high: f64, rng: &mut Random<R>) -> Self
@@ -212,12 +218,12 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let uniform_dist = Uniform::new(low, high).unwrap();
+        let uniform_dist = Uniform::new(low, high).expect("Operation failed");
         let size = shape.size();
         let values: Vec<A> = (0..size)
             .map(|_| A::from(uniform_dist.sample(&mut rng.rng)))
             .collect();
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn beta<R>(shape: D, alpha: f64, beta: f64, rng: &mut Random<R>) -> Self
@@ -225,14 +231,14 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let beta_dist = Beta::new(alpha, beta).unwrap();
+        let beta_dist = Beta::new(alpha, beta).expect("Operation failed");
         let size = shape.size();
         let mut values = Vec::with_capacity(size);
         for _ in 0..size {
             let sample_val = beta_dist.sample(rng);
             values.push(A::from(sample_val));
         }
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn exponential<R>(shape: D, lambda: f64, rng: &mut Random<R>) -> Self
@@ -240,12 +246,12 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let exp_dist = rand_distr::Exp::new(lambda).unwrap();
+        let exp_dist = rand_distr::Exp::new(lambda).expect("Operation failed");
         let size = shape.size();
         let values: Vec<A> = (0..size)
             .map(|_| A::from(exp_dist.sample(&mut rng.rng)))
             .collect();
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn randint<R>(shape: D, low: i64, high: i64, rng: &mut Random<R>) -> Self
@@ -253,12 +259,12 @@ where
         A: From<i64>,
         R: Rng,
     {
-        let int_dist = Uniform::new(low, high).unwrap();
+        let int_dist = Uniform::new(low, high).expect("Operation failed");
         let size = shape.size();
         let values: Vec<A> = (0..size)
             .map(|_| A::from(int_dist.sample(&mut rng.rng)))
             .collect();
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 }
 
@@ -327,7 +333,7 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let dirichlet = Dirichlet::new(alpha.to_vec()).unwrap();
+        let dirichlet = Dirichlet::new(alpha.to_vec()).expect("Operation failed");
         let size = shape.size();
         let mut values = Vec::with_capacity(size);
         for _ in 0..size {
@@ -336,7 +342,7 @@ where
             let sample_val = sample_vec.get(0).copied().unwrap_or(0.0);
             values.push(A::from(sample_val));
         }
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn von_mises<R>(shape: D, mu: f64, kappa: f64, rng: &mut Random<R>) -> Self
@@ -344,14 +350,14 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let von_mises = VonMises::mu(mu, kappa).unwrap();
+        let von_mises = VonMises::mu(mu, kappa).expect("Operation failed");
         let size = shape.size();
         let mut values = Vec::with_capacity(size);
         for _ in 0..size {
             let sample_val = von_mises.sample(rng);
             values.push(A::from(sample_val));
         }
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     fn multivariate_normal<R>(
@@ -364,7 +370,7 @@ where
         A: From<f64>,
         R: Rng,
     {
-        let mvn = MultivariateNormal::new(mean.clone(), covariance).unwrap();
+        let mvn = MultivariateNormal::new(mean.clone(), covariance).expect("Operation failed");
         let dim = mean.len();
 
         Array::from_shape_fn((n_samples, dim), |_| {
@@ -383,7 +389,8 @@ where
         T: Clone,
         R: Rng,
     {
-        let weighted = WeightedChoice::new(choices.to_vec(), probabilities.to_vec()).unwrap();
+        let weighted = WeightedChoice::new(choices.to_vec(), probabilities.to_vec())
+            .expect("Operation failed");
         Array::from_shape_fn(shape, |_| weighted.sample(rng).clone())
     }
 
@@ -418,7 +425,7 @@ where
             })
             .collect();
 
-        Self::from_shape_vec(shape, values).unwrap()
+        Self::from_shape_vec(shape, values).expect("Operation failed")
     }
 }
 
@@ -467,7 +474,7 @@ pub mod convenience {
     /// Generate random choice from array
     pub fn choice<T: Clone>(choices: &[T], size: usize) -> Array1<T> {
         let mut rng = thread_rng();
-        let uniform_dist = Uniform::new(0, choices.len()).unwrap();
+        let uniform_dist = Uniform::new(0, choices.len()).expect("Operation failed");
         Array1::from_shape_fn(Ix1(size), |_| {
             let idx = uniform_dist.sample(&mut rng.rng);
             choices[idx].clone()

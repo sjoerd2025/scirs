@@ -10,7 +10,6 @@ mod tests {
     const C: [f64; 10] = [8.95, 9.12, 8.95, 8.85, 9.03, 8.84, 9.07, 8.98, 8.86, 8.98];
 
     #[test]
-    #[ignore = "timeout"]
     fn test_brown_forsythe_equal_to_levene_median() {
         // Brown-Forsythe test is equivalent to Levene's test with center="median"
         let a = array![A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[8], A[9]];
@@ -19,8 +18,9 @@ mod tests {
 
         let samples = vec![a.view(), b.view(), c.view()];
 
-        let (bf_stat, bf_pval) = brown_forsythe(&samples).unwrap();
-        let (lev_stat, lev_pval) = levene(&samples, "median", 0.05).unwrap();
+        let (bf_stat, bf_pval) = brown_forsythe(&samples).expect("Test: operation failed");
+        let (lev_stat, lev_pval) =
+            levene(&samples, "median", 0.05).expect("Test: operation failed");
 
         // Results should be exactly the same
         assert_abs_diff_eq!(bf_stat, lev_stat, epsilon = 1e-10);
@@ -35,7 +35,7 @@ mod tests {
 
         let samples = vec![a.view(), b.view(), c.view()];
 
-        let (_statistic, p_value) = brown_forsythe(&samples).unwrap();
+        let (_statistic, p_value) = brown_forsythe(&samples).expect("Test: operation failed");
 
         // With these data, the test should reject the null hypothesis of equal variances
         assert!(p_value < 0.05, "Expected p_value < 0.05, got {}", p_value);
@@ -50,7 +50,7 @@ mod tests {
 
         let samples = vec![a.view(), b.view(), c.view()];
 
-        let (_, p_value) = brown_forsythe(&samples).unwrap();
+        let (_, p_value) = brown_forsythe(&samples).expect("Test: operation failed");
 
         // With equal variances, p-value should be high (non-significant)
         assert!(p_value > 0.05, "Expected p_value > 0.05, got {}", p_value);
@@ -64,8 +64,8 @@ mod tests {
 
         let samples = vec![a.view(), b.view()];
 
-        let (_bf_stat, bf_pval) = brown_forsythe(&samples).unwrap();
-        let (_lev_stat, lev_pval) = levene(&samples, "mean", 0.05).unwrap();
+        let (_bf_stat, bf_pval) = brown_forsythe(&samples).expect("Test: operation failed");
+        let (_lev_stat, lev_pval) = levene(&samples, "mean", 0.05).expect("Test: operation failed");
 
         // The Brown-Forsythe test should be less affected by the outlier
         // This is just a relative comparison, not an absolute requirement

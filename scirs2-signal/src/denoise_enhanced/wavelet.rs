@@ -73,7 +73,7 @@ fn standard_denoise_1d(
 
     // Perform wavelet decomposition
     let wavedec_result = wavedec(
-        signal.as_slice().unwrap(),
+        signal.as_slice().expect("Operation failed"),
         config.wavelet,
         Some(levels),
         None,
@@ -203,7 +203,7 @@ fn translation_invariant_denoise_1d(
 /// Estimate noise using median absolute deviation
 pub fn estimate_noise_mad(coeffs: &Array1<f64>) -> f64 {
     let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x: &f64| x.abs()).collect();
-    abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    abs_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let median = if abs_coeffs.len().is_multiple_of(2) {
         (abs_coeffs[abs_coeffs.len() / 2 - 1] + abs_coeffs[abs_coeffs.len() / 2]) / 2.0
@@ -471,7 +471,7 @@ mod tests {
         let config = DenoiseConfig::default();
         let result = denoise_wavelet_1d(&signal, &config);
         assert!(result.is_ok());
-        let denoised_result = result.unwrap();
+        let denoised_result = result.expect("Operation failed");
         // Allow some flexibility in output length due to wavelet padding
         assert!(
             denoised_result.signal.len() >= signal.len()
@@ -491,7 +491,7 @@ mod tests {
         config.n_shifts = 4;
         let result = denoise_wavelet_1d(&signal, &config);
         assert!(result.is_ok());
-        let denoised_result = result.unwrap();
+        let denoised_result = result.expect("Operation failed");
         // Allow some flexibility in output length due to wavelet padding
         assert!(
             denoised_result.signal.len() >= signal.len()
@@ -509,12 +509,13 @@ mod tests {
 
     #[test]
     fn test_wavelet_denoising_2d() {
-        let image = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let config = DenoiseConfig::default();
         let result = denoise_wavelet_2d(&image, &config);
         // Currently 2D denoising is not implemented, so we expect an error
         assert!(result.is_err());
-        match result.err().unwrap() {
+        match result.err().expect("Operation failed") {
             crate::error::SignalError::NotImplemented(_) => {
                 // Expected error type
             }

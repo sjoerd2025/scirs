@@ -1116,8 +1116,8 @@ impl AlertSystem {
                     .collect();
 
                 if relevant_data.len() >= 2 {
-                    let first = relevant_data.first().unwrap();
-                    let last = relevant_data.last().unwrap();
+                    let first = relevant_data.first().expect("Operation failed");
+                    let last = relevant_data.last().expect("Operation failed");
                     let rate = (last.value - first.value).abs() / time_window.as_secs_f64();
 
                     if rate > *rate_threshold {
@@ -1353,8 +1353,8 @@ impl PerformanceMonitor {
         // Simplified trend analysis
         if self.historical_data.len() > 5 {
             let recent = &self.historical_data[self.historical_data.len() - 5..];
-            let first_throughput = recent.first().unwrap().metrics.throughput;
-            let last_throughput = recent.last().unwrap().metrics.throughput;
+            let first_throughput = recent.first().expect("Operation failed").metrics.throughput;
+            let last_throughput = recent.last().expect("Operation failed").metrics.throughput;
 
             self.trends.throughput_trend = if last_throughput > first_throughput * 1.05 {
                 TrendDirection::Increasing

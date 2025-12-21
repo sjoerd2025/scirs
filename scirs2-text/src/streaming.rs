@@ -961,26 +961,35 @@ mod tests {
     #[test]
     fn test_memory_mapped_corpus() {
         // Create a temporary file with test data
-        let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "First document").unwrap();
-        writeln!(file, "Second document").unwrap();
-        writeln!(file, "Third document").unwrap();
-        file.flush().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file, "First document").expect("Test I/O operation failed");
+        writeln!(file, "Second document").expect("Test I/O operation failed");
+        writeln!(file, "Third document").expect("Test I/O operation failed");
+        file.flush().expect("Test I/O operation failed");
 
-        let corpus = MemoryMappedCorpus::from_file(file.path()).unwrap();
+        let corpus = MemoryMappedCorpus::from_file(file.path()).expect("Test I/O operation failed");
 
         assert_eq!(corpus.num_documents(), 3);
-        assert_eq!(corpus.get_document(0).unwrap(), "First document");
-        assert_eq!(corpus.get_document(1).unwrap(), "Second document");
-        assert_eq!(corpus.get_document(2).unwrap(), "Third document");
+        assert_eq!(
+            corpus.get_document(0).expect("Test operation failed"),
+            "First document"
+        );
+        assert_eq!(
+            corpus.get_document(1).expect("Test operation failed"),
+            "Second document"
+        );
+        assert_eq!(
+            corpus.get_document(2).expect("Test operation failed"),
+            "Third document"
+        );
     }
 
     #[test]
     fn test_streaming_processor() {
-        let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "hello world").unwrap();
-        writeln!(file, "foo bar baz").unwrap();
-        file.flush().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file, "hello world").expect("Test I/O operation failed");
+        writeln!(file, "foo bar baz").expect("Test I/O operation failed");
+        file.flush().expect("Test I/O operation failed");
 
         let processor = StreamingTextProcessor::with_default_tokenizer();
         let mut line_count = 0;
@@ -990,23 +999,27 @@ mod tests {
                 line_count += 1;
                 Ok(None::<()>)
             })
-            .unwrap();
+            .expect("Test I/O operation failed");
 
         assert_eq!(line_count, 2);
     }
 
     #[test]
     fn test_chunked_reader() {
-        let mut file = NamedTempFile::new().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
         for i in 0..100 {
-            writeln!(file, "Line {i}").unwrap();
+            writeln!(file, "Line {i}").expect("Test I/O operation failed");
         }
-        file.flush().unwrap();
+        file.flush().expect("Test I/O operation failed");
 
-        let mut reader = ChunkedCorpusReader::new(file.path(), 256).unwrap();
+        let mut reader =
+            ChunkedCorpusReader::new(file.path(), 256).expect("Test I/O operation failed");
         let mut total_lines = 0;
 
-        while let Some(lines) = reader.next_chunk().unwrap() {
+        while let Some(lines) = reader
+            .next_chunk()
+            .expect("Test: failed to read next chunk")
+        {
             total_lines += lines.len();
         }
 
@@ -1015,16 +1028,16 @@ mod tests {
 
     #[test]
     fn test_streaming_vocabulary_building() {
-        let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "the quick brown fox").unwrap();
-        writeln!(file, "the lazy dog").unwrap();
-        writeln!(file, "the brown dog").unwrap();
-        file.flush().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file, "the quick brown fox").expect("Test I/O operation failed");
+        writeln!(file, "the lazy dog").expect("Test I/O operation failed");
+        writeln!(file, "the brown dog").expect("Test I/O operation failed");
+        file.flush().expect("Test I/O operation failed");
 
         let processor = StreamingTextProcessor::with_default_tokenizer();
         let vocab = processor
             .build_vocabulary_streaming(file.path(), 2)
-            .unwrap();
+            .expect("Test I/O operation failed");
 
         // "the" appears 3 times, "brown" and "dog" appear 2 times each
         assert!(vocab.get_index("the").is_some());
@@ -1040,73 +1053,95 @@ mod tests {
     #[test]
     fn test_multi_file_corpus() {
         // Create multiple test files
-        let mut file1 = NamedTempFile::new().unwrap();
-        writeln!(file1, "Document 1 line 1").unwrap();
-        writeln!(file1, "Document 1 line 2").unwrap();
-        file1.flush().unwrap();
+        let mut file1 = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file1, "Document 1 line 1").expect("Test I/O operation failed");
+        writeln!(file1, "Document 1 line 2").expect("Test I/O operation failed");
+        file1.flush().expect("Test I/O operation failed");
 
-        let mut file2 = NamedTempFile::new().unwrap();
-        writeln!(file2, "Document 2 line 1").unwrap();
-        writeln!(file2, "Document 2 line 2").unwrap();
-        writeln!(file2, "Document 2 line 3").unwrap();
-        file2.flush().unwrap();
+        let mut file2 = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file2, "Document 2 line 1").expect("Test I/O operation failed");
+        writeln!(file2, "Document 2 line 2").expect("Test I/O operation failed");
+        writeln!(file2, "Document 2 line 3").expect("Test I/O operation failed");
+        file2.flush().expect("Test I/O operation failed");
 
         let paths = vec![file1.path(), file2.path()];
-        let multi_corpus = MultiFileCorpus::from_files(&paths).unwrap();
+        let multi_corpus = MultiFileCorpus::from_files(&paths).expect("Test I/O operation failed");
 
         assert_eq!(multi_corpus.num_documents(), 5); // 2 + 3 documents
-        assert_eq!(multi_corpus.get_document(0).unwrap(), "Document 1 line 1");
-        assert_eq!(multi_corpus.get_document(2).unwrap(), "Document 2 line 1");
-        assert_eq!(multi_corpus.get_document(4).unwrap(), "Document 2 line 3");
+        assert_eq!(
+            multi_corpus.get_document(0).expect("Test operation failed"),
+            "Document 1 line 1"
+        );
+        assert_eq!(
+            multi_corpus.get_document(2).expect("Test operation failed"),
+            "Document 2 line 1"
+        );
+        assert_eq!(
+            multi_corpus.get_document(4).expect("Test operation failed"),
+            "Document 2 line 3"
+        );
     }
 
     #[test]
     fn test_multi_file_random_sampling() {
-        let mut file1 = NamedTempFile::new().unwrap();
+        let mut file1 = NamedTempFile::new().expect("Test I/O operation failed");
         for i in 0..10 {
-            writeln!(file1, "File1 Doc {i}").unwrap();
+            writeln!(file1, "File1 Doc {i}").expect("Test I/O operation failed");
         }
-        file1.flush().unwrap();
+        file1.flush().expect("Test I/O operation failed");
 
-        let mut file2 = NamedTempFile::new().unwrap();
+        let mut file2 = NamedTempFile::new().expect("Test I/O operation failed");
         for i in 0..10 {
-            writeln!(file2, "File2 Doc {i}").unwrap();
+            writeln!(file2, "File2 Doc {i}").expect("Test I/O operation failed");
         }
-        file2.flush().unwrap();
+        file2.flush().expect("Test I/O operation failed");
 
         let paths = vec![file1.path(), file2.path()];
-        let multi_corpus = MultiFileCorpus::from_files(&paths).unwrap();
+        let multi_corpus = MultiFileCorpus::from_files(&paths).expect("Test I/O operation failed");
 
-        let sample = multi_corpus.random_sample(5, 12345).unwrap();
+        let sample = multi_corpus
+            .random_sample(5, 12345)
+            .expect("Test I/O operation failed");
         assert_eq!(sample.len(), 5);
 
         // Should be deterministic with same seed
-        let sample2 = multi_corpus.random_sample(5, 12345).unwrap();
+        let sample2 = multi_corpus
+            .random_sample(5, 12345)
+            .expect("Test I/O operation failed");
         assert_eq!(sample, sample2);
     }
 
     #[test]
     fn test_cached_corpus() {
-        let mut file = NamedTempFile::new().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
         for i in 0..10 {
-            writeln!(file, "Document {i}").unwrap();
+            writeln!(file, "Document {i}").expect("Test I/O operation failed");
         }
-        file.flush().unwrap();
+        file.flush().expect("Test I/O operation failed");
 
-        let base_corpus = MemoryMappedCorpus::from_file(file.path()).unwrap();
+        let base_corpus =
+            MemoryMappedCorpus::from_file(file.path()).expect("Test I/O operation failed");
         let mut cached_corpus = CachedCorpus::new(base_corpus, 3);
 
         // Access documents
-        let doc0 = cached_corpus.get_document(0).unwrap();
-        let doc1 = cached_corpus.get_document(1).unwrap();
-        let doc2 = cached_corpus.get_document(2).unwrap();
+        let doc0 = cached_corpus
+            .get_document(0)
+            .expect("Test I/O operation failed");
+        let doc1 = cached_corpus
+            .get_document(1)
+            .expect("Test I/O operation failed");
+        let doc2 = cached_corpus
+            .get_document(2)
+            .expect("Test I/O operation failed");
 
         assert_eq!(doc0, "Document 0");
         assert_eq!(doc1, "Document 1");
         assert_eq!(doc2, "Document 2");
 
         // Access doc0 again - should be cached
-        let doc0_again = cached_corpus.get_document(0).unwrap();
+        let doc0_again = cached_corpus
+            .get_document(0)
+            .expect("Test I/O operation failed");
         assert_eq!(doc0_again, "Document 0");
 
         // Cache should have good hit rate for repeated access
@@ -1116,18 +1151,20 @@ mod tests {
 
     #[test]
     fn test_corpus_index() {
-        let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "the quick brown fox").unwrap();
-        writeln!(file, "the lazy dog").unwrap();
-        writeln!(file, "quick brown animal").unwrap();
-        file.flush().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file, "the quick brown fox").expect("Test I/O operation failed");
+        writeln!(file, "the lazy dog").expect("Test I/O operation failed");
+        writeln!(file, "quick brown animal").expect("Test I/O operation failed");
+        file.flush().expect("Test I/O operation failed");
 
-        let corpus = MemoryMappedCorpus::from_file(file.path()).unwrap();
+        let corpus = MemoryMappedCorpus::from_file(file.path()).expect("Test I/O operation failed");
         let tokenizer = WordTokenizer::default();
-        let index = CorpusIndex::build(&corpus, &tokenizer).unwrap();
+        let index = CorpusIndex::build(&corpus, &tokenizer).expect("Test I/O operation failed");
 
         // Test single word search
-        let docs_with_quick = index.find_documents_with_word("quick").unwrap();
+        let docs_with_quick = index
+            .find_documents_with_word("quick")
+            .expect("Test I/O operation failed");
         assert_eq!(docs_with_quick.len(), 2); // Documents 0 and 2
 
         // Test multi-word search
@@ -1164,13 +1201,13 @@ mod tests {
 
     #[test]
     fn test_advanced_streaming_processor() {
-        let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "hello world").unwrap();
-        writeln!(file, "foo bar baz").unwrap();
-        writeln!(file, "test document").unwrap();
-        file.flush().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file, "hello world").expect("Test I/O operation failed");
+        writeln!(file, "foo bar baz").expect("Test I/O operation failed");
+        writeln!(file, "test document").expect("Test I/O operation failed");
+        file.flush().expect("Test I/O operation failed");
 
-        let corpus = MemoryMappedCorpus::from_file(file.path()).unwrap();
+        let corpus = MemoryMappedCorpus::from_file(file.path()).expect("Test I/O operation failed");
         let tokenizer = WordTokenizer::default();
         let mut processor = AdvancedStreamingProcessor::new(tokenizer);
 
@@ -1179,7 +1216,7 @@ mod tests {
                 let doc_len = doc.len();
                 Ok(format!("Processed doc {idx}: {doc_len}"))
             })
-            .unwrap();
+            .expect("Test I/O operation failed");
 
         assert_eq!(results.len(), 3);
         assert!(results[0].contains("Processed doc 0"));
@@ -1193,17 +1230,19 @@ mod tests {
 
     #[test]
     fn test_corpus_statistics() {
-        let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "hello world test").unwrap();
-        writeln!(file, "foo bar").unwrap();
-        writeln!(file, "single").unwrap();
-        file.flush().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file, "hello world test").expect("Test I/O operation failed");
+        writeln!(file, "foo bar").expect("Test I/O operation failed");
+        writeln!(file, "single").expect("Test I/O operation failed");
+        file.flush().expect("Test I/O operation failed");
 
-        let corpus = MemoryMappedCorpus::from_file(file.path()).unwrap();
+        let corpus = MemoryMappedCorpus::from_file(file.path()).expect("Test I/O operation failed");
         let tokenizer = WordTokenizer::default();
         let mut processor = AdvancedStreamingProcessor::new(tokenizer);
 
-        let stats = processor.build_corpus_statistics(&corpus).unwrap();
+        let stats = processor
+            .build_corpus_statistics(&corpus)
+            .expect("Test I/O operation failed");
 
         assert_eq!(stats.total_documents, 3);
         assert_eq!(stats.total_words, 6); // 3 + 2 + 1
@@ -1241,14 +1280,14 @@ mod tests {
 
     #[test]
     fn test_corpus_index_edge_cases() {
-        let mut file = NamedTempFile::new().unwrap();
-        writeln!(file).unwrap(); // Empty document
-        writeln!(file, "single").unwrap();
-        file.flush().unwrap();
+        let mut file = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file).expect("Test I/O operation failed"); // Empty document
+        writeln!(file, "single").expect("Test I/O operation failed");
+        file.flush().expect("Test I/O operation failed");
 
-        let corpus = MemoryMappedCorpus::from_file(file.path()).unwrap();
+        let corpus = MemoryMappedCorpus::from_file(file.path()).expect("Test I/O operation failed");
         let tokenizer = WordTokenizer::default();
-        let index = CorpusIndex::build(&corpus, &tokenizer).unwrap();
+        let index = CorpusIndex::build(&corpus, &tokenizer).expect("Test I/O operation failed");
 
         // Search for non-existent word
         assert!(index.find_documents_with_word("nonexistent").is_none());
@@ -1264,20 +1303,20 @@ mod tests {
 
     #[test]
     fn test_multi_file_iterator() {
-        let mut file1 = NamedTempFile::new().unwrap();
-        writeln!(file1, "doc1").unwrap();
-        writeln!(file1, "doc2").unwrap();
-        file1.flush().unwrap();
+        let mut file1 = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file1, "doc1").expect("Test I/O operation failed");
+        writeln!(file1, "doc2").expect("Test I/O operation failed");
+        file1.flush().expect("Test I/O operation failed");
 
-        let mut file2 = NamedTempFile::new().unwrap();
-        writeln!(file2, "doc3").unwrap();
-        file2.flush().unwrap();
+        let mut file2 = NamedTempFile::new().expect("Test I/O operation failed");
+        writeln!(file2, "doc3").expect("Test I/O operation failed");
+        file2.flush().expect("Test I/O operation failed");
 
         let paths = vec![file1.path(), file2.path()];
-        let multi_corpus = MultiFileCorpus::from_files(&paths).unwrap();
+        let multi_corpus = MultiFileCorpus::from_files(&paths).expect("Test I/O operation failed");
 
         let docs: Result<Vec<_>> = multi_corpus.iter().collect();
-        let docs = docs.unwrap();
+        let docs = docs.expect("Test I/O operation failed");
 
         assert_eq!(docs.len(), 3);
         assert_eq!(docs[0], "doc1");

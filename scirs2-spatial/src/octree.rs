@@ -536,8 +536,8 @@ impl Octree {
         let mut worst_dist = f64::INFINITY;
 
         // Add the root node to the queue
-        let root_ref = self.root.as_ref().unwrap() as *const OctreeNode;
-        let root_dist = match self.root.as_ref().unwrap() {
+        let root_ref = self.root.as_ref().expect("Operation failed") as *const OctreeNode;
+        let root_dist = match self.root.as_ref().expect("Operation failed") {
             OctreeNode::Internal { bounds, .. } => bounds.squared_distance_to_point(query)?,
             OctreeNode::Leaf { bounds, .. } => bounds.squared_distance_to_point(query)?,
         };
@@ -672,7 +672,7 @@ impl Octree {
 
         // Use a queue for breadth-first search
         let mut node_queue = VecDeque::new();
-        node_queue.push_back(self.root.as_ref().unwrap());
+        node_queue.push_back(self.root.as_ref().expect("Operation failed"));
 
         while let Some(node) = node_queue.pop_front() {
             match node {
@@ -842,14 +842,14 @@ mod tests {
         // Test creating from min/max
         let min = array![0.0, 0.0, 0.0];
         let max = array![1.0, 1.0, 1.0];
-        let bbox = BoundingBox::new(&min.view(), &max.view()).unwrap();
+        let bbox = BoundingBox::new(&min.view(), &max.view()).expect("Operation failed");
 
         assert_eq!(bbox.min, min);
         assert_eq!(bbox.max, max);
 
         // Test creating from points
         let points = array![[0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [0.5, 0.5, 0.5],];
-        let bbox = BoundingBox::from_points(&points.view()).unwrap();
+        let bbox = BoundingBox::from_points(&points.view()).expect("Operation failed");
 
         assert_eq!(bbox.min, min);
         assert_eq!(bbox.max, max);
@@ -868,7 +868,7 @@ mod tests {
     fn test_bounding_box_operations() {
         let min = array![0.0, 0.0, 0.0];
         let max = array![2.0, 4.0, 6.0];
-        let bbox = BoundingBox::new(&min.view(), &max.view()).unwrap();
+        let bbox = BoundingBox::new(&min.view(), &max.view()).expect("Operation failed");
 
         // Test center
         let center = bbox.center();
@@ -880,32 +880,38 @@ mod tests {
 
         // Test contains
         let inside_point = array![1.0, 1.0, 1.0];
-        assert!(bbox.contains(&inside_point.view()).unwrap());
+        assert!(bbox
+            .contains(&inside_point.view())
+            .expect("Operation failed"));
 
         let outside_point = array![3.0, 3.0, 3.0];
-        assert!(!bbox.contains(&outside_point.view()).unwrap());
+        assert!(!bbox
+            .contains(&outside_point.view())
+            .expect("Operation failed"));
 
         let edge_point = array![0.0, 4.0, 6.0];
-        assert!(bbox.contains(&edge_point.view()).unwrap());
+        assert!(bbox.contains(&edge_point.view()).expect("Operation failed"));
 
         // Test overlaps
         let overlapping_box =
-            BoundingBox::new(&array![1.0, 1.0, 1.0].view(), &array![3.0, 3.0, 3.0].view()).unwrap();
+            BoundingBox::new(&array![1.0, 1.0, 1.0].view(), &array![3.0, 3.0, 3.0].view())
+                .expect("Operation failed");
         assert!(bbox.overlaps(&overlapping_box));
 
         let non_overlapping_box =
-            BoundingBox::new(&array![3.0, 5.0, 7.0].view(), &array![4.0, 6.0, 8.0].view()).unwrap();
+            BoundingBox::new(&array![3.0, 5.0, 7.0].view(), &array![4.0, 6.0, 8.0].view())
+                .expect("Operation failed");
         assert!(!bbox.overlaps(&non_overlapping_box));
 
         // Test distance to point
         let inside_dist = bbox
             .squared_distance_to_point(&inside_point.view())
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(inside_dist, 0.0);
 
         let outside_dist = bbox
             .squared_distance_to_point(&array![3.0, 5.0, 7.0].view())
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(outside_dist, 1.0 + 1.0 + 1.0); // (3-2)² + (5-4)² + (7-6)²
     }
 
@@ -920,12 +926,12 @@ mod tests {
             [1.0, 1.0, 1.0],
         ];
 
-        let octree = Octree::new(&points.view()).unwrap();
+        let octree = Octree::new(&points.view()).expect("Operation failed");
 
         // Check basic properties
         assert_eq!(octree.size(), 5);
 
-        let bounds = octree.bounds().unwrap();
+        let bounds = octree.bounds().expect("Operation failed");
         assert_eq!(bounds.min, array![0.0, 0.0, 0.0]);
         assert_eq!(bounds.max, array![1.0, 1.0, 1.0]);
 
@@ -945,11 +951,13 @@ mod tests {
             [2.0, 2.0, 2.0], // 5
         ];
 
-        let octree = Octree::new(&points.view()).unwrap();
+        let octree = Octree::new(&points.view()).expect("Operation failed");
 
         // Test single nearest neighbor
         let query = array![0.1, 0.1, 0.1];
-        let (indices, distances) = octree.query_nearest(&query.view(), 1).unwrap();
+        let (indices, distances) = octree
+            .query_nearest(&query.view(), 1)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 1);
         // The nearest point might not always be exactly as expected due to
@@ -960,7 +968,9 @@ mod tests {
         assert!(distances[0].is_finite() && distances[0] > 0.0);
 
         // Test multiple nearest neighbors
-        let (indices, distances) = octree.query_nearest(&query.view(), 3).unwrap();
+        let (indices, distances) = octree
+            .query_nearest(&query.view(), 3)
+            .expect("Operation failed");
 
         // The implementation may not return exactly 3 neighbors depending on details
         // Just check that we got at least one result
@@ -972,7 +982,9 @@ mod tests {
         }
 
         // Test with k > number of points
-        let (indices, distances) = octree.query_nearest(&query.view(), 10).unwrap();
+        let (indices, distances) = octree
+            .query_nearest(&query.view(), 10)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 6); // Should return all 6 points
         assert_eq!(distances.len(), 6);
@@ -990,19 +1002,23 @@ mod tests {
             [2.0, 2.0, 2.0], // 5
         ];
 
-        let octree = Octree::new(&points.view()).unwrap();
+        let octree = Octree::new(&points.view()).expect("Operation failed");
 
         // Test radius search with small radius
         let query = array![0.0, 0.0, 0.0];
         let radius = 0.5;
-        let (indices, distances) = octree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = octree
+            .query_radius(&query.view(), radius)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 1);
         assert_eq!(indices[0], 0); // Only origin is within 0.5 units
 
         // Test with larger radius
         let radius = 1.5;
-        let (indices, distances) = octree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = octree
+            .query_radius(&query.view(), radius)
+            .expect("Operation failed");
 
         assert!(indices.len() >= 4); // Should find at least origin, (1,0,0), (0,1,0), (0,0,1)
 
@@ -1013,7 +1029,9 @@ mod tests {
 
         // Test with radius covering all points
         let radius = 4.0;
-        let (indices, distances) = octree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = octree
+            .query_radius(&query.view(), radius)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 6); // Should find all points
     }
@@ -1029,19 +1047,23 @@ mod tests {
             [1.0, 1.0, 1.0],
         ];
 
-        let octree = Octree::new(&points.view()).unwrap();
+        let octree = Octree::new(&points.view()).expect("Operation failed");
 
         // Create another set of points that's close but not colliding
         let other_points = array![[2.0, 2.0, 2.0], [3.0, 3.0, 3.0],];
 
         // No collision with small threshold
-        let collision = octree.check_collision(&other_points.view(), 0.5).unwrap();
+        let collision = octree
+            .check_collision(&other_points.view(), 0.5)
+            .expect("Operation failed");
         assert!(!collision);
 
         // Collision with larger threshold - this may or may not detect
         // a collision depending on the implementation details
         // For now, we skip this assertion
-        let _collision = octree.check_collision(&other_points.view(), 1.5).unwrap();
+        let _collision = octree
+            .check_collision(&other_points.view(), 1.5)
+            .expect("Operation failed");
 
         // Create another set of points that's definitely colliding
         let colliding_points = array![
@@ -1052,7 +1074,7 @@ mod tests {
         // We'll just check that the function runs without panicking
         let _collision = octree
             .check_collision(&colliding_points.view(), 0.2)
-            .unwrap();
+            .expect("Operation failed");
     }
 
     #[test]
@@ -1072,7 +1094,7 @@ mod tests {
 
             // Measure time to create the octree
             let start = std::time::Instant::now();
-            let octree = Octree::new(&points.view()).unwrap();
+            let octree = Octree::new(&points.view()).expect("Operation failed");
             let build_time = start.elapsed();
 
             println!("Built octree with {n_points} points in {build_time:?}");
@@ -1080,7 +1102,9 @@ mod tests {
             // Measure query time
             let query = array![0.0, 0.0, 0.0];
             let start = std::time::Instant::now();
-            let (indices, _distances) = octree.query_nearest(&query.view(), 10).unwrap();
+            let (indices, _distances) = octree
+                .query_nearest(&query.view(), 10)
+                .expect("Operation failed");
             let query_time = start.elapsed();
 
             println!("Found 10 nearest neighbors in {query_time:?}");
@@ -1088,7 +1112,9 @@ mod tests {
 
             // Measure radius search time
             let start = std::time::Instant::now();
-            let (indices, _distances) = octree.query_radius(&query.view(), 10.0).unwrap();
+            let (indices, _distances) = octree
+                .query_radius(&query.view(), 10.0)
+                .expect("Operation failed");
             let radius_time = start.elapsed();
 
             println!(

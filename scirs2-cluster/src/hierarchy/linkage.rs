@@ -102,10 +102,11 @@ pub(crate) fn hierarchical_clustering<F: Float + FromPrimitive + Debug + Partial
 
         // Update the linkage matrix
         // [cluster1, cluster2, distance, size]
-        linkage_matrix[[i, 0]] = F::from_usize(cluster1).unwrap();
-        linkage_matrix[[i, 1]] = F::from_usize(cluster2).unwrap();
+        linkage_matrix[[i, 0]] = F::from_usize(cluster1).expect("Operation failed");
+        linkage_matrix[[i, 1]] = F::from_usize(cluster2).expect("Operation failed");
         linkage_matrix[[i, 2]] = min_dist;
-        linkage_matrix[[i, 3]] = F::from_usize(clusters[new_cluster_id].size).unwrap();
+        linkage_matrix[[i, 3]] =
+            F::from_usize(clusters[new_cluster_id].size).expect("Operation failed");
     }
 
     Ok(linkage_matrix)
@@ -159,9 +160,11 @@ fn find_closestclusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                     n_samples,
                 )?,
                 LinkageMethod::Centroid => {
-                    centroid_linkage(cluster_i, cluster_j, centroids.unwrap())
+                    centroid_linkage(cluster_i, cluster_j, centroids.expect("Operation failed"))
                 }
-                LinkageMethod::Median => median_linkage(cluster_i, cluster_j, centroids.unwrap()),
+                LinkageMethod::Median => {
+                    median_linkage(cluster_i, cluster_j, centroids.expect("Operation failed"))
+                }
                 LinkageMethod::Weighted => weighted_linkage(
                     &clusters[cluster_i],
                     &clusters[cluster_j],
@@ -258,7 +261,7 @@ pub(crate) fn average_linkage<F: Float + FromPrimitive>(
         }
     }
 
-    Ok(sum_dist / F::from_usize(count).unwrap())
+    Ok(sum_dist / F::from_usize(count).expect("Operation failed"))
 }
 
 /// Ward's linkage: minimizes the increase in variance when merging clusters
@@ -271,8 +274,8 @@ pub(crate) fn ward_linkage<F: Float + FromPrimitive>(
     // For Ward's method, we need to calculate the increase in variance
     // This is proportional to the distance between centroids weighted by the size of clusters
 
-    let size1 = F::from_usize(cluster1.size).unwrap();
-    let size2 = F::from_usize(cluster2.size).unwrap();
+    let size1 = F::from_usize(cluster1.size).expect("Operation failed");
+    let size2 = F::from_usize(cluster2.size).expect("Operation failed");
 
     // Find the squared distance between the centroids
     // For simplicity, we'll calculate it based on the original distances

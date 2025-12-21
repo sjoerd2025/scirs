@@ -12,7 +12,7 @@ fn main() {
 
     // Create a uniform Dirichlet distribution (flat distribution on the simplex)
     let alpha_uniform = array![1.0, 1.0, 1.0];
-    let uniform_dirichlet = multivariate::dirichlet(&alpha_uniform).unwrap();
+    let uniform_dirichlet = multivariate::dirichlet(&alpha_uniform).expect("Operation failed");
 
     println!("For uniform Dirichlet, PDF is constant across the simplex.");
 
@@ -38,7 +38,8 @@ fn main() {
 
     // Create a concentrated Dirichlet (favors the center of the simplex)
     let alpha_concentrated = array![10.0, 10.0, 10.0];
-    let concentrated_dirichlet = multivariate::dirichlet(&alpha_concentrated).unwrap();
+    let concentrated_dirichlet =
+        multivariate::dirichlet(&alpha_concentrated).expect("Operation failed");
 
     println!("For concentrated Dirichlet, PDF is highest at the center.");
 
@@ -57,7 +58,8 @@ fn main() {
 
     // Create an asymmetric Dirichlet (favors the first component)
     let alpha_asymmetric = array![5.0, 2.0, 1.0];
-    let asymmetric_dirichlet = multivariate::dirichlet(&alpha_asymmetric).unwrap();
+    let asymmetric_dirichlet =
+        multivariate::dirichlet(&alpha_asymmetric).expect("Operation failed");
 
     println!("For asymmetric Dirichlet, PDF is highest where x₁ is large.");
 
@@ -81,7 +83,9 @@ fn main() {
     println!("------------------------------");
 
     let n_samples = 10;
-    let samples = asymmetric_dirichlet.rvs(n_samples).unwrap();
+    let samples = asymmetric_dirichlet
+        .rvs(n_samples)
+        .expect("Operation failed");
 
     println!(
         "Generated {} samples from asymmetric Dirichlet(α = [5, 2, 1]):",
@@ -103,7 +107,9 @@ fn main() {
 
     // Generate more samples to estimate mean
     let n_samples = 10000;
-    let samples = asymmetric_dirichlet.rvs(n_samples).unwrap();
+    let samples = asymmetric_dirichlet
+        .rvs(n_samples)
+        .expect("Operation failed");
 
     // Calculate empirical mean
     let mut empirical_mean = Array1::zeros(3);

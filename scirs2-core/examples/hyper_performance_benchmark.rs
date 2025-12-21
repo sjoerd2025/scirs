@@ -123,7 +123,7 @@ fn run_benchmark_suite(size: usize, iterations: usize) {
         ("TLB-optimized", tlb_time),
         ("HYPER-OPTIMIZED", hyper_time),
     ];
-    times.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    times.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
     println!("{}", "-".repeat(75));
     println!(

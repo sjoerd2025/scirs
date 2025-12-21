@@ -32,7 +32,7 @@ pub struct Softmax {
 fn fast_sigmoid_impl<F: Float>(x: &NdArrayView<F>) -> NdArray<F> {
     use crate::same_type;
 
-    let half = F::from(0.5).unwrap();
+    let half = F::from(0.5).expect("Failed to convert constant to float");
 
     // Use standard tanh implementation since MKL vectorized functions are no longer available
     // This provides a fast sigmoid approximation: sigmoid(x) ≈ 0.5 * (tanh(0.5 * x) + 1)
@@ -64,7 +64,7 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
             move |&a, &b| max_fn(a, b),
         )
         .into_shape_with_order(scirs2_core::ndarray::IxDyn(reducedshape))
-        .unwrap();
+        .expect("Failed to create array");
     // subtract `max` to prevent overflow
     let mut tmp = x - max;
     tmp.mapv_inplace(move |a| a.exp());
@@ -72,7 +72,7 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
     let sum = tmp
         .sum_axis(scirs2_core::ndarray::Axis(axis))
         .into_shape_with_order(scirs2_core::ndarray::IxDyn(reducedshape))
-        .unwrap();
+        .expect("Failed to create array");
     tmp /= &sum;
     tmp
 }
@@ -110,7 +110,7 @@ impl<T: Float> op::Op<T> for Softplus {
 
 impl<T: Float> op::Op<T> for Sigmoid {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
-        let half = T::from(0.5).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
         let ret = ctx
             .input(0)
             .mapv(move |a| ((a * half).tanh() * half) + half);
@@ -206,7 +206,7 @@ impl<T: Float> op::Op<T> for Swish {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         // Compute sigmoid(x) first
-        let half = T::from(0.5).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
         let sigmoid_x = x.mapv(move |a| ((a * half).tanh() * half) + half);
         // Swish = x * sigmoid(x)
         let ret = x * &sigmoid_x;
@@ -239,9 +239,9 @@ impl<T: Float> op::Op<T> for Gelu {
         let x = &ctx.input(0);
 
         // Constants
-        let half = T::from(0.5).unwrap();
-        let sqrt_2_pi = T::from(0.7978845608028654).unwrap(); // sqrt(2/π)
-        let c = T::from(0.044715).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
+        let sqrt_2_pi = T::from(0.7978845608028654).expect("Operation failed"); // sqrt(2/π)
+        let c = T::from(0.044715).expect("Operation failed");
         let one = T::one();
 
         // Inner expression: sqrt(2/π) * (x + 0.044715 * x³)
@@ -263,9 +263,12 @@ impl<T: Float> op::Op<T> for Gelu {
 
         // For gradient computation, we use the derivative formula
         // This is a simplified approximation
-        let half = scalar(T::from(0.5).unwrap(), ctx.graph());
-        let sqrt_2_pi = scalar(T::from(0.7978845608028654).unwrap(), ctx.graph());
-        let c = scalar(T::from(0.044715).unwrap(), ctx.graph());
+        let half = scalar(T::from(0.5).expect("Operation failed"), ctx.graph());
+        let sqrt_2_pi = scalar(
+            T::from(0.7978845608028654).expect("Operation failed"),
+            ctx.graph(),
+        );
+        let c = scalar(T::from(0.044715).expect("Operation failed"), ctx.graph());
         let one = scalar(T::one(), ctx.graph());
 
         // Approximation: use tanh derivative for gradient
@@ -281,7 +284,10 @@ impl<T: Float> op::Op<T> for Gelu {
                 + tanh_inner
                 + x * sqrt_2_pi
                     * sech_squared
-                    * (one + scalar(T::from(3.0).unwrap(), ctx.graph()) * c * x_squared));
+                    * (one
+                        + scalar(T::from(3.0).expect("Operation failed"), ctx.graph())
+                            * c
+                            * x_squared));
 
         ctx.append_input_grad(0, Some(gy * grad));
     }
@@ -298,7 +304,7 @@ impl<T: Float> op::Op<T> for Mish {
         // Compute softplus(x) = ln(1 + exp(x))
         let softplus_x = x.mapv(move |a| {
             // Use log1p for numerical stability when possible
-            if a > T::from(20.0).unwrap() {
+            if a > T::from(20.0).expect("Operation failed") {
                 // For large x, softplus(x) ≈ x
                 a
             } else {
@@ -475,7 +481,7 @@ pub struct LearnableSwish<T> {
 impl<T: Float> op::Op<T> for LearnableSwish<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
-        let half = T::from(0.5).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
 
         // Compute sigmoid(beta * x)
         let beta_x = x.mapv(|val| self.beta * val);
@@ -512,7 +518,7 @@ impl<T: Float> op::Op<T> for LearnableSwishGrad<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let gy = ctx.input(1);
-        let half = T::from(0.5).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
 
         // Compute sigmoid(beta * x)
         let beta_x = x.mapv(|val| self.beta * val);
@@ -548,7 +554,7 @@ pub struct AdaptiveActivation<T> {
 impl<T: Float> op::Op<T> for AdaptiveActivation<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
-        let half = T::from(0.5).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
 
         // Compute each component
         let linear_part = x.mapv(|val| self.a * val);
@@ -599,7 +605,7 @@ impl<T: Float> op::Op<T> for AdaptiveActivationGrad<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let gy = ctx.input(1);
-        let half = T::from(0.5).unwrap();
+        let half = T::from(0.5).expect("Operation failed");
         let one = T::one();
 
         // Compute derivatives of each component

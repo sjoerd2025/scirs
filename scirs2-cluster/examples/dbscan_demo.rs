@@ -19,7 +19,7 @@ fn main() {
             3.0, 7.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Print the dataset
     println!("\nDataset:");
@@ -44,7 +44,7 @@ fn main() {
                 min_samples,
                 Some(DistanceMetric::Euclidean),
             )
-            .unwrap();
+            .expect("Operation failed");
 
             // Count number of clusters (excluding noise)
             let mut unique_labels = std::collections::HashSet::new();
@@ -109,7 +109,8 @@ fn main() {
     println!("\nRecommended parameters for this dataset:");
     println!("  eps=0.8, min_samples=3");
 
-    let best_labels = dbscan(data.view(), 0.8, 3, Some(DistanceMetric::Euclidean)).unwrap();
+    let best_labels =
+        dbscan(data.view(), 0.8, 3, Some(DistanceMetric::Euclidean)).expect("Operation failed");
 
     // Print final clustering
     println!("\nFinal clustering result:");

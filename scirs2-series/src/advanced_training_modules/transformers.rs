@@ -55,23 +55,25 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             + output_params;
 
         // Initialize parameters
-        let scale = F::from(2.0).unwrap() / F::from(d_model).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(d_model).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         let mut parameters = Array2::zeros((1, total_params));
         for i in 0..total_params {
             let val = ((i * 13) % 1000) as f64 / 1000.0 - 0.5;
-            parameters[[0, i]] = F::from(val).unwrap() * std_dev;
+            parameters[[0, i]] = F::from(val).expect("Failed to convert to float") * std_dev;
         }
 
         // Create positional encoding
         let mut positional_encoding = Array2::zeros((seq_len, d_model));
         for pos in 0..seq_len {
             for i in 0..d_model {
-                let angle = F::from(pos).unwrap()
-                    / F::from(10000.0)
-                        .unwrap()
-                        .powf(F::from(2 * (i / 2)).unwrap() / F::from(d_model).unwrap());
+                let angle = F::from(pos).expect("Failed to convert to float")
+                    / F::from(10000.0).expect("Operation failed").powf(
+                        F::from(2 * (i / 2)).expect("Operation failed")
+                            / F::from(d_model).expect("Failed to convert to float"),
+                    );
                 if i % 2 == 0 {
                     positional_encoding[[pos, i]] = angle.sin();
                 } else {
@@ -236,7 +238,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
     fn compute_attention_scores(&self, q: &Array2<F>, k: &Array2<F>) -> Result<Array2<F>> {
         let seq_len = q.nrows();
         let head_dim = q.ncols();
-        let scale = F::one() / F::from(head_dim).unwrap().sqrt();
+        let scale = F::one()
+            / F::from(head_dim)
+                .expect("Failed to convert to float")
+                .sqrt();
 
         let mut scores = Array2::zeros((seq_len, seq_len));
 
@@ -326,15 +331,16 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
             for j in 0..self.d_model {
                 sum = sum + input[[i, j]];
             }
-            let mean = sum / F::from(self.d_model).unwrap();
+            let mean = sum / F::from(self.d_model).expect("Failed to convert to float");
 
             let mut var_sum = F::zero();
             for j in 0..self.d_model {
                 let diff = input[[i, j]] - mean;
                 var_sum = var_sum + diff * diff;
             }
-            let variance = var_sum / F::from(self.d_model).unwrap();
-            let std_dev = (variance + F::from(1e-5).unwrap()).sqrt();
+            let variance = var_sum / F::from(self.d_model).expect("Failed to convert to float");
+            let std_dev =
+                (variance + F::from(1e-5).expect("Failed to convert constant to float")).sqrt();
 
             // Normalize
             for j in 0..self.d_model {
@@ -457,10 +463,10 @@ mod tests {
     #[test]
     fn test_transformer_forward() {
         let transformer = TimeSeriesTransformer::<f64>::new(6, 3, 32, 4, 2, 128);
-        let input =
-            Array2::from_shape_vec((2, 6), (0..12).map(|i| i as f64 * 0.1).collect()).unwrap();
+        let input = Array2::from_shape_vec((2, 6), (0..12).map(|i| i as f64 * 0.1).collect())
+            .expect("Operation failed");
 
-        let output = transformer.forward(&input).unwrap();
+        let output = transformer.forward(&input).expect("Operation failed");
         assert_eq!(output.dim(), (2, 3)); // batch_size x pred_len
 
         // Check that output is finite
@@ -474,9 +480,9 @@ mod tests {
         let transformer = TimeSeriesTransformer::<f64>::new(4, 2, 8, 2, 1, 32);
         let input =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 0.5, 1.5, 2.5, 2.0, 1.0, 0.5])
-                .unwrap();
+                .expect("Operation failed");
 
-        let output = transformer.softmax_2d(&input).unwrap();
+        let output = transformer.softmax_2d(&input).expect("Operation failed");
 
         // Check that each row sums to approximately 1.0
         for i in 0..output.nrows() {
@@ -493,10 +499,12 @@ mod tests {
     #[test]
     fn test_input_embedding() {
         let transformer = TimeSeriesTransformer::<f64>::new(5, 3, 16, 4, 2, 64);
-        let input =
-            Array2::from_shape_vec((2, 5), (0..10).map(|i| i as f64 * 0.2).collect()).unwrap();
+        let input = Array2::from_shape_vec((2, 5), (0..10).map(|i| i as f64 * 0.2).collect())
+            .expect("Operation failed");
 
-        let embedded = transformer.input_embedding(&input).unwrap();
+        let embedded = transformer
+            .input_embedding(&input)
+            .expect("Operation failed");
         assert_eq!(embedded.dim(), (10, 16)); // (batch_size * seq_len, d_model)
 
         // Check that embedding is finite
@@ -510,7 +518,9 @@ mod tests {
         let transformer = TimeSeriesTransformer::<f64>::new(4, 2, 16, 4, 1, 64);
         let input = Array2::zeros((4, 16)); // seq_len x d_model
 
-        let output = transformer.multi_head_attention(&input, 0).unwrap();
+        let output = transformer
+            .multi_head_attention(&input, 0)
+            .expect("Operation failed");
         assert_eq!(output.dim(), (4, 16));
 
         // Check that output is finite

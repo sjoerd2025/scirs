@@ -232,17 +232,17 @@ mod tests {
     #[test]
     fn test_header_generator_creation() {
         let config = BindingConfig::default();
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let output_dir = temp_dir.path().to_path_buf();
         let generator = HeaderGenerator::new(&config, &output_dir);
         assert_eq!(generator.config.library_name, "scirs2_model");
     fn test_type_definitions_generation() {
-        let type_defs = generator.generate_type_definitions().unwrap();
+        let type_defs = generator.generate_type_definitions().expect("Operation failed");
         assert!(type_defs.contains("scirs2_tensor_t"));
         assert!(type_defs.contains("scirs2_model_t"));
         assert!(type_defs.contains("scirs2_error_t"));
     fn test_procedural_api_generation() {
-        let api = generator.generate_procedural_api().unwrap();
+        let api = generator.generate_procedural_api().expect("Operation failed");
         assert!(api.contains("scirs2_model_load"));
         assert!(api.contains("scirs2_model_predict"));
         assert!(api.contains("scirs2_tensor_create"));
@@ -252,7 +252,7 @@ mod tests {
             api_style: ApiStyle::ObjectOriented,
             ..Default::default()
         };
-        let api = generator.generate_oo_api().unwrap();
+        let api = generator.generate_oo_api().expect("Operation failed");
         assert!(api.contains("class Tensor"));
         assert!(api.contains("class Model"));
         assert!(api.contains("namespace scirs2"));

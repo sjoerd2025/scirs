@@ -66,8 +66,8 @@ impl AdvancedPropertyTester {
             Ok(simd_result) => {
                 // Compare with scalar implementations
                 if let Ok(scalar_mean) = mean(data) {
-                    let mean_diff = (simd_result.means[0].to_f64().unwrap()
-                        - scalar_mean.to_f64().unwrap())
+                    let mean_diff = (simd_result.means[0].to_f64().expect("Operation failed")
+                        - scalar_mean.to_f64().expect("Operation failed"))
                     .abs();
                     if mean_diff > self.numerical_tolerance {
                         errors.push(format!("SIMD mean differs from scalar: {}", mean_diff));
@@ -75,8 +75,8 @@ impl AdvancedPropertyTester {
                 }
 
                 if let Ok(scalar_var) = var(data, 0) {
-                    let var_diff = (simd_result.variances[0].to_f64().unwrap()
-                        - scalar_var.to_f64().unwrap())
+                    let var_diff = (simd_result.variances[0].to_f64().expect("Operation failed")
+                        - scalar_var.to_f64().expect("Operation failed"))
                     .abs();
                     if var_diff > self.numerical_tolerance {
                         errors.push(format!("SIMD variance differs from scalar: {}", var_diff));
@@ -112,7 +112,7 @@ impl AdvancedPropertyTester {
         if let (Ok(mean_val), Ok(var_val), Ok(std_val)) = (mean(data), var(data, 0), std(data, 0)) {
             // 1. Variance-Standard Deviation Relationship: Var(X) = Std(X)²
             let var_std_diff =
-                (var_val.to_f64().unwrap() - (std_val.to_f64().unwrap()).powi(2)).abs();
+                (var_val.to_f64().expect("Operation failed") - (std_val.to_f64().expect("Operation failed")).powi(2)).abs();
             if var_std_diff > self.numerical_tolerance {
                 errors.push(format!(
                     "Variance-std relationship violated: {}",
@@ -134,13 +134,13 @@ impl AdvancedPropertyTester {
             }
 
             // 4. Standardization property: If Y = (X - μ)/σ, then E[Y] = 0, Var(Y) = 1
-            if std_val > F::from(1e-10).unwrap() {
+            if std_val > F::from(1e-10).expect("Failed to convert constant to float") {
                 let standardized: Array1<F> = data.map(|&x| (x - mean_val) / std_val);
                 if let (Ok(std_mean), Ok(std_var)) =
                     (mean(&standardized.view()), var(&standardized.view(), 0, None))
                 {
-                    let mean_error = std_mean.to_f64().unwrap().abs();
-                    let var_error = (std_var.to_f64().unwrap() - 1.0).abs();
+                    let mean_error = std_mean.to_f64().expect("Operation failed").abs();
+                    let var_error = (std_var.to_f64().expect("Operation failed") - 1.0).abs();
 
                     if mean_error > self.numerical_tolerance {
                         errors.push(format!("Standardized mean not zero: {}", mean_error));
@@ -156,14 +156,14 @@ impl AdvancedPropertyTester {
         if n >= 4 {
             if let (Ok(skew_val), Ok(kurt_val)) = (skew(data, false), kurtosis(data, true, false)) {
                 // 5. Skewness bounds for most distributions
-                let skew_f64 = skew_val.to_f64().unwrap();
+                let skew_f64 = skew_val.to_f64().expect("Operation failed");
                 if skew_f64.abs() > 100.0 {
                     // Extreme skewness check
                     errors.push(format!("Extreme skewness detected: {}", skew_f64));
                 }
 
                 // 6. Kurtosis minimum bound (Fisher's definition)
-                let kurt_f64 = kurt_val.to_f64().unwrap();
+                let kurt_f64 = kurt_val.to_f64().expect("Operation failed");
                 if kurt_f64 < -2.0 - self.numerical_tolerance {
                     errors.push(format!("Kurtosis below theoretical minimum: {}", kurt_f64));
                 }
@@ -191,11 +191,11 @@ impl AdvancedPropertyTester {
         }
 
         let mut errors = Vec::new();
-        let tolerance = F::from(self.numerical_tolerance).unwrap();
+        let tolerance = F::from(self.numerical_tolerance).expect("Failed to convert to float");
 
         // Test 1: Translation invariance for variance
         // Var(X + c) = Var(X)
-        let offset = F::from(1e6).unwrap();
+        let offset = F::from(1e6).expect("Failed to convert constant to float");
         let translated: Array1<F> = data.map(|&x| x + offset);
 
         if let (Ok(orig_var), Ok(trans_var)) = (var(data, 0, None), var(&translated.view(), 0, None)) {
@@ -203,14 +203,14 @@ impl AdvancedPropertyTester {
             if var_diff > tolerance {
                 errors.push(format!(
                     "Translation invariance violated for variance: {}",
-                    var_diff.to_f64().unwrap()
+                    var_diff.to_f64().expect("Operation failed")
                 ));
             }
         }
 
         // Test 2: Scaling properties
         // Var(aX) = a²Var(X)
-        let scale = F::from(2.0).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float");
         let scaled: Array1<F> = data.map(|&x| x * scale);
 
         if let (Ok(orig_var), Ok(scaled_var)) = (var(data, 0, None), var(&scaled.view(), 0, None)) {
@@ -219,7 +219,7 @@ impl AdvancedPropertyTester {
             if scaling_error > tolerance * expected_var.abs() {
                 errors.push(format!(
                     "Scaling property violated for variance: {}",
-                    scaling_error.to_f64().unwrap()
+                    scaling_error.to_f64().expect("Operation failed")
                 ));
             }
         }
@@ -229,7 +229,7 @@ impl AdvancedPropertyTester {
         let min_val = data.iter().fold(F::infinity(), |a, &b| a.min(b));
         let range = max_val - min_val;
 
-        if range > F::from(1e10).unwrap() {
+        if range > F::from(1e10).expect("Failed to convert constant to float") {
             errors.push("Extreme value range detected - potential precision loss".to_string());
         }
 
@@ -243,16 +243,16 @@ impl AdvancedPropertyTester {
                     diff * diff
                 })
                 .fold(F::zero(), |acc, x| acc + x)
-                / F::from(n).unwrap();
+                / F::from(n).expect("Failed to convert to float");
 
             if let Ok(one_pass_var) = var(data, 0) {
                 let algorithm_diff = (two_pass_var - one_pass_var).abs();
                 let relative_error = algorithm_diff / one_pass_var.abs().max(tolerance);
 
-                if relative_error > F::from(1e-6).unwrap() {
+                if relative_error > F::from(1e-6).expect("Failed to convert constant to float") {
                     errors.push(format!(
                         "Significant algorithmic variance difference: {}",
-                        relative_error.to_f64().unwrap()
+                        relative_error.to_f64().expect("Operation failed")
                     ));
                 }
             }
@@ -282,7 +282,7 @@ impl AdvancedPropertyTester {
         let mut errors = Vec::new();
 
         if let Ok(corr) = pearson_r(x, y) {
-            let corr_f64 = corr.to_f64().unwrap();
+            let corr_f64 = corr.to_f64().expect("Operation failed");
 
             // 1. Correlation bounds: -1 ≤ r ≤ 1
             if corr_f64 < -1.0 - self.numerical_tolerance
@@ -295,7 +295,7 @@ impl AdvancedPropertyTester {
             if corr_f64.abs() > 0.99999 {
                 // Check if data is actually linearly related
                 if let (Ok(x_var), Ok(y_var)) = (var(x, 0), var(y, 0)) {
-                    if x_var.to_f64().unwrap() > 1e-10 && y_var.to_f64().unwrap() > 1e-10 {
+                    if x_var.to_f64().expect("Operation failed") > 1e-10 && y_var.to_f64().expect("Operation failed") > 1e-10 {
                         // For near-perfect correlation, should be approximately linear
                         let linear_check = self.check_linearity(x, y);
                         if !linear_check && corr_f64.abs() > 0.9999 {
@@ -309,7 +309,7 @@ impl AdvancedPropertyTester {
 
             // 3. Symmetry: corr(X,Y) = corr(Y,X)
             if let Ok(corr_yx) = pearson_r(y, x) {
-                let symmetry_error = (corr_f64 - corr_yx.to_f64().unwrap()).abs();
+                let symmetry_error = (corr_f64 - corr_yx.to_f64().expect("Operation failed")).abs();
                 if symmetry_error > self.numerical_tolerance {
                     errors.push(format!("Correlation asymmetry: {}", symmetry_error));
                 }
@@ -317,9 +317,9 @@ impl AdvancedPropertyTester {
 
             // 4. Self-correlation: corr(X,X) = 1 (if var > 0)
             if let Ok(x_var) = var(x, 0) {
-                if x_var.to_f64().unwrap() > 1e-10 {
+                if x_var.to_f64().expect("Operation failed") > 1e-10 {
                     if let Ok(self_corr) = pearson_r(x, x) {
-                        let self_corr_error = (self_corr.to_f64().unwrap() - 1.0).abs();
+                        let self_corr_error = (self_corr.to_f64().expect("Operation failed") - 1.0).abs();
                         if self_corr_error > self.numerical_tolerance {
                             errors.push(format!("Self-correlation not 1: {}", self_corr_error));
                         }
@@ -434,23 +434,23 @@ impl AdvancedPropertyTester {
             .iter()
             .fold(F::zero(), |acc, &val| acc + val)
             .to_f64()
-            .unwrap();
+            .expect("Operation failed");
         let sum_y = y
             .iter()
             .fold(F::zero(), |acc, &val| acc + val)
             .to_f64()
-            .unwrap();
+            .expect("Operation failed");
         let sum_xy = x
             .iter()
             .zip(y.iter())
             .fold(F::zero(), |acc, (&xi, &yi)| acc + xi * yi)
             .to_f64()
-            .unwrap();
+            .expect("Operation failed");
         let sum_x2 = x
             .iter()
             .fold(F::zero(), |acc, &val| acc + val * val)
             .to_f64()
-            .unwrap();
+            .expect("Operation failed");
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
         let intercept = (sum_y - slope * sum_x) / n;
@@ -460,8 +460,8 @@ impl AdvancedPropertyTester {
             .iter()
             .zip(y.iter())
             .map(|(&xi, &yi)| {
-                let predicted = slope * xi.to_f64().unwrap() + intercept;
-                let residual = yi.to_f64().unwrap() - predicted;
+                let predicted = slope * xi.to_f64().expect("Operation failed") + intercept;
+                let residual = yi.to_f64().expect("Operation failed") - predicted;
                 residual * residual
             })
             .sum();
@@ -556,7 +556,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_property_tester_creation() {
         let tester = create_advanced_property_tester();
         assert!(tester.numerical_tolerance > 0.0);
@@ -564,7 +563,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_mathematical_invariants() {
         let tester = create_advanced_property_tester();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -579,7 +577,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_correlation_properties() {
         let tester = create_advanced_property_tester();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -595,7 +592,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_comprehensive_report() {
         let tester = create_advanced_property_tester();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];

@@ -38,7 +38,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveLinearRegression<F> {
         }
 
         let mut covariance = Array2::zeros((_num_features, _num_features));
-        let identity_scale = F::from(1000.0).unwrap(); // Large initial uncertainty
+        let identity_scale = F::from(1000.0).expect("Failed to convert constant to float"); // Large initial uncertainty
         for i in 0.._num_features {
             covariance[[i, i]] = identity_scale;
         }
@@ -147,7 +147,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveLinearRegression<F> {
         }
 
         let std_dev = variance.sqrt();
-        let z_score = F::from(1.96).unwrap(); // 95% confidence interval
+        let z_score = F::from(1.96).expect("Failed to convert constant to float"); // 95% confidence interval
 
         let lower_bound = prediction - z_score * std_dev;
         let upper_bound = prediction + z_score * std_dev;
@@ -166,7 +166,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveLinearRegression<F> {
         for i in 0..self.num_features {
             trace = trace + self.covariance[[i, i]];
         }
-        trace / F::from(self.num_features).unwrap()
+        trace / F::from(self.num_features).expect("Failed to convert to float")
     }
 }
 
@@ -314,7 +314,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveARIMA<F> {
             }
 
             if count > 0 {
-                autocorrs[lag] = sum / F::from(count).unwrap();
+                autocorrs[lag] = sum / F::from(count).expect("Failed to convert to float");
             }
         }
 
@@ -325,8 +325,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveARIMA<F> {
                 coeff = autocorrs[i + 1] / autocorrs[0];
             }
             self.ar_coeffs[i] = coeff
-                .max(F::from(-0.99).unwrap())
-                .min(F::from(0.99).unwrap());
+                .max(F::from(-0.99).expect("Failed to convert constant to float"))
+                .min(F::from(0.99).expect("Failed to convert constant to float"));
         }
 
         Ok(())
@@ -336,7 +336,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveARIMA<F> {
     fn initialize_ma_parameters(&mut self, data: &[F]) -> Result<()> {
         // Simple initialization: small random values
         for i in 0..self.q {
-            self.ma_coeffs[i] = F::from(0.1).unwrap() * F::from((i + 1) as f64 * 0.1).unwrap();
+            self.ma_coeffs[i] = F::from(0.1).expect("Failed to convert constant to float")
+                * F::from((i + 1) as f64 * 0.1).expect("Operation failed");
         }
         Ok(())
     }
@@ -391,8 +392,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveARIMA<F> {
 
                 // Keep coefficients stable
                 self.ar_coeffs[i] = self.ar_coeffs[i]
-                    .max(F::from(-0.99).unwrap())
-                    .min(F::from(0.99).unwrap());
+                    .max(F::from(-0.99).expect("Failed to convert constant to float"))
+                    .min(F::from(0.99).expect("Failed to convert constant to float"));
             }
         }
 
@@ -405,8 +406,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> AdaptiveARIMA<F> {
 
                 // Keep coefficients stable
                 self.ma_coeffs[i] = self.ma_coeffs[i]
-                    .max(F::from(-0.99).unwrap())
-                    .min(F::from(0.99).unwrap());
+                    .max(F::from(-0.99).expect("Failed to convert constant to float"))
+                    .min(F::from(0.99).expect("Failed to convert constant to float"));
             }
         }
 

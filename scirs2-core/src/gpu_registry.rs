@@ -334,7 +334,7 @@ impl KernelRegistry {
 #[allow(dead_code)]
 pub fn register_module_kernel(id: KernelId, source: KernelSource) {
     let registry = KernelRegistry::global();
-    let mut registry = registry.lock().unwrap();
+    let mut registry = registry.lock().expect("Operation failed");
     registry.register_kernel(id, source);
 }
 
@@ -343,7 +343,7 @@ pub fn register_module_kernel(id: KernelId, source: KernelSource) {
 #[allow(dead_code)]
 pub fn get_kernel(id: &KernelId, device: &GpuDevice) -> Result<Arc<GpuKernel>, GpuError> {
     let registry = KernelRegistry::global();
-    let mut registry = registry.lock().unwrap();
+    let mut registry = registry.lock().expect("Operation failed");
     registry.get_kernel(id, device)
 }
 
@@ -351,7 +351,7 @@ pub fn get_kernel(id: &KernelId, device: &GpuDevice) -> Result<Arc<GpuKernel>, G
 #[allow(dead_code)]
 pub fn has_kernel(id: &KernelId) -> bool {
     let registry = KernelRegistry::global();
-    let registry = registry.lock().unwrap();
+    let registry = registry.lock().expect("Operation failed");
     registry.has_kernel(id)
 }
 
@@ -359,7 +359,7 @@ pub fn has_kernel(id: &KernelId) -> bool {
 #[allow(dead_code)]
 pub fn list_kernels() -> Vec<KernelId> {
     let registry = KernelRegistry::global();
-    let registry = registry.lock().unwrap();
+    let registry = registry.lock().expect("Operation failed");
     registry.list_kernels()
 }
 

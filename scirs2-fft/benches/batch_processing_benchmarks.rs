@@ -59,7 +59,7 @@ fn sequential_processing_small(c: &mut Criterion) {
                     Some(SparseFFTAlgorithm::Sublinear),
                     None, // seed parameter
                 )
-                .unwrap();
+                .expect("Operation failed");
                 results.push(result);
             }
             results
@@ -83,7 +83,7 @@ fn sequential_processing_medium(c: &mut Criterion) {
                     Some(SparseFFTAlgorithm::Sublinear),
                     None, // seed parameter
                 )
-                .unwrap();
+                .expect("Operation failed");
                 results.push(result);
             }
             results
@@ -107,7 +107,7 @@ fn sequential_processing_large(c: &mut Criterion) {
                     Some(SparseFFTAlgorithm::Sublinear),
                     None, // seed parameter
                 )
-                .unwrap();
+                .expect("Operation failed");
                 results.push(result);
             }
             results
@@ -139,7 +139,7 @@ fn batch_processing_cpu_small(c: &mut Criterion) {
                 Some(WindowFunction::Hann),
                 Some(config.clone()),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -168,7 +168,7 @@ fn batch_processing_cpu_medium(c: &mut Criterion) {
                 Some(WindowFunction::Hann),
                 Some(config.clone()),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -193,7 +193,7 @@ fn batch_processing_gpu_small(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -218,7 +218,7 @@ fn batch_processing_gpu_medium(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -244,7 +244,7 @@ fn gpu_vs_cpu_single_signal(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -256,7 +256,7 @@ fn gpu_vs_cpu_single_signal(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 None, // seed parameter
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }
@@ -287,7 +287,7 @@ fn batch_size_comparison(c: &mut Criterion) {
                         Some(SparseFFTAlgorithm::Sublinear),
                         Some(WindowFunction::Hann),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -320,7 +320,7 @@ fn memory_optimization_comparison(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 
@@ -333,7 +333,7 @@ fn memory_optimization_comparison(c: &mut Criterion) {
                 Some(SparseFFTAlgorithm::Sublinear),
                 Some(WindowFunction::Hann),
             )
-            .unwrap()
+            .expect("Operation failed")
         })
     });
 }

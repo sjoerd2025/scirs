@@ -168,25 +168,25 @@ mod tests {
     #[test]
     fn test_build_system_generator() {
         let config = BindingConfig::default();
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Operation failed");
         let output_dir = temp_dir.path().to_path_buf();
         let generator = BuildSystemGenerator::new(&config, &output_dir);
-        let build_files = generator.generate().unwrap();
+        let build_files = generator.generate().expect("Operation failed");
         assert!(!build_files.is_empty());
         assert!(build_files[0]
             .file_name()
-            .unwrap()
+            .expect("Operation failed")
             .to_str()
             .contains("CMakeLists.txt"));
     fn test_cmake_generation() {
-        let cmake_path = generator.generate_cmake().unwrap();
+        let cmake_path = generator.generate_cmake().expect("Operation failed");
         assert!(cmake_path.exists());
-        let content = std::fs::read_to_string(&cmake_path).unwrap();
+        let content = std::fs::read_to_string(&cmake_path).expect("Operation failed");
         assert!(content.contains("cmake_minimum_required"));
         assert!(content.contains("project(scirs2_model"));
     fn test_pkgconfig_generation() {
-        let pc_path = generator.generate_pkgconfig().unwrap();
+        let pc_path = generator.generate_pkgconfig().expect("Operation failed");
         assert!(pc_path.exists());
-        let content = std::fs::read_to_string(&pc_path).unwrap();
+        let content = std::fs::read_to_string(&pc_path).expect("Operation failed");
         assert!(content.contains("Name: scirs2_model"));
         assert!(content.contains("Libs: -L"));

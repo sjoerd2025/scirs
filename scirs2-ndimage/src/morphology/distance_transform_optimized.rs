@@ -549,7 +549,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "Test failure - index out of bounds: [0, 3] for shape [3, 3] at line 456"]
     fn test_chessboard_distance_transform() {
         let input = array![[true, true, true], [true, false, true], [true, true, true]];
 

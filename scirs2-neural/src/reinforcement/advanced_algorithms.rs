@@ -197,8 +197,8 @@ impl TD3 {
         let q1_current = self.critic_1.predict_batch(&batch.states, &batch.actions)?;
         let q2_current = self.critic_2.predict_batch(&batch.states, &batch.actions)?;
         // Compute critic losses (MSE)
-        let q1_loss = (&q1_current - &targets).mapv(|x| x * x).mean().unwrap();
-        let q2_loss = (&q2_current - &targets).mapv(|x| x * x).mean().unwrap();
+        let q1_loss = (&q1_current - &targets).mapv(|x| x * x).mean().expect("Operation failed");
+        let q2_loss = (&q2_current - &targets).mapv(|x| x * x).mean().expect("Operation failed");
         // Total critic loss
         let critic_loss = q1_loss + q2_loss;
         // In a complete implementation, gradients would be computed and applied here
@@ -218,7 +218,7 @@ impl TD3 {
     fn sample_noise(&self, size: usize, std: f32) -> Array1<f32> {
         use scirs2_core::random::{Distribution, Normal};
         let mut rng = rng();
-        let normal = Normal::new(0.0, std).unwrap();
+        let normal = Normal::new(0.0, std).expect("Operation failed");
         Array1::from_shape_fn(size, |_| normal.sample(&mut rng))
     /// Clip actions to valid range
     fn clip_action(&self, action: &Array1<f32>) -> Array1<f32> {
@@ -254,7 +254,7 @@ impl RLAgent for TD3 {
         self.update()
     fn save(&self, path: &str) -> Result<()> {
         // Save all networks
-        std::fs::create_dir_all(std::path::Path::new(path).parent().unwrap())?;
+        std::fs::create_dir_all(std::path::Path::new(path).parent().expect("Operation failed"))?;
         // In a complete implementation, would save network parameters
     fn load(&mut self, path: &str) -> Result<()> {
         // Load all networks
@@ -681,7 +681,7 @@ use statrs::statistics::Statistics;
                     // Greedy action
                     Ok(q_values.iter()
                         .enumerate()
-                        .max_by(|(_..a), (_, b)| a.partial_cmp(b).unwrap())
+                        .max_by(|(_..a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                         .map(|(i_)| i)
                         .unwrap_or(0))
                 }
@@ -696,21 +696,21 @@ use statrs::statistics::Statistics;
                     ucb_values[i] = q_values[i] + confidence;
                 Ok(ucb_values.iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(i_)| i)
                     .unwrap_or(0))
             ExplorationStrategyType::ThompsonSampling => {
                 // Thompson Sampling (simplified)
                 use scirs2_core::random::{Distribution, Normal};
                 let mut rng = rng();
-                let normal = Normal::new(0.0, 1.0).unwrap();
+                let normal = Normal::new(0.0, 1.0).expect("Operation failed");
                 let mut sampled_values = Array1::zeros(q_values.len());
                     let noise = normal.sample(&mut rng);
                     sampled_values[i] = q_values[i] + noise * 0.1;
                 Ok(sampled_values.iter()
             ExplorationStrategyType::NoiseInjection => {
                 // Add noise to Q-values
-                let normal = Normal::new(0.0, self.config.noise_std).unwrap();
+                let normal = Normal::new(0.0, self.config.noise_std).expect("Operation failed");
                 let mut noisy_values = q_values.clone();
                 for value in noisy_values.iter_mut() {
                     *value += normal.sample(&mut rng);
@@ -783,7 +783,7 @@ impl MADDPG {
             let mut action = self.agents[i].actor.sample_action(obs)?;
             if training {
                 // Add exploration noise
-                let normal = Normal::new(0.0, self.config.exploration_noise).unwrap();
+                let normal = Normal::new(0.0, self.config.exploration_noise).expect("Operation failed");
                 for a in action.iter_mut() {
                     *a += normal.sample(&mut rng);
             actions.push(action);
@@ -822,19 +822,19 @@ mod tests {
     #[test]
     fn test_td3_creation() {
         let config = TD3Config::default();
-        let td3 = TD3::new(4, 2, vec![64, 64], config).unwrap();
+        let td3 = TD3::new(4, 2, vec![64, 64], config).expect("Operation failed");
         assert_eq!(td3.step_count, 0);
     fn test_rainbow_creation() {
         let config = RainbowConfig::default();
-        let rainbow = RainbowDQN::new(4, 3, vec![128, 128], config).unwrap();
+        let rainbow = RainbowDQN::new(4, 3, vec![128, 128], config).expect("Operation failed");
         assert_eq!(rainbow.step_count, 0);
     fn test_impala_creation() {
         let config = IMPALAConfig::default();
-        let impala = IMPALA::new(4, 2, vec![64, 64], true, config).unwrap();
+        let impala = IMPALA::new(4, 2, vec![64, 64], true, config).expect("Operation failed");
         assert_eq!(impala.trajectory_buffer.len(), 0);
     fn test_sac_creation() {
         let config = SACConfig::default();
-        let sac = SAC::new(4, 2, vec![64, 64], config).unwrap();
+        let sac = SAC::new(4, 2, vec![64, 64], config).expect("Operation failed");
         assert_eq!(sac.step_count, 0);
         assert_eq!(sac.target_entropy, -2.0);
     fn test_exploration_strategy() {
@@ -842,7 +842,7 @@ mod tests {
         let mut exploration = ExplorationStrategy::new(ExplorationStrategyType::EpsilonGreedy, config);
         let q_values = Array1::from_vec(vec![0.1, 0.5, 0.3]);
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let action = exploration.select_action(&q_values, &state.view()).unwrap();
+        let action = exploration.select_action(&q_values, &state.view()).expect("Operation failed");
         assert!(action < 3);
     fn test_maddpg_creation() {
         let config = MADDPGConfig::default();
@@ -851,5 +851,5 @@ mod tests {
             vec![4, 4],
             vec![2, 2],
             vec![64, 64],
-        ).unwrap();
+        ).expect("Operation failed");
         assert_eq!(maddpg.num_agents, 2);

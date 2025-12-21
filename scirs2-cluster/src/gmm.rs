@@ -68,12 +68,12 @@ impl<F: Float + FromPrimitive> Default for GMMOptions<F> {
         Self {
             n_components: 1,
             covariance_type: CovarianceType::Full,
-            tol: F::from(1e-3).unwrap(),
+            tol: F::from(1e-3).expect("Failed to convert constant to float"),
             max_iter: 100,
             n_init: 1,
             init_method: GMMInit::KMeans,
             random_seed: None,
-            reg_covar: F::from(1e-6).unwrap(),
+            reg_covar: F::from(1e-6).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -201,7 +201,10 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
         let n_components = self.options.n_components;
 
         // Initialize weights uniformly
-        let weights = Array1::from_elem(n_components, F::one() / F::from(n_components).unwrap());
+        let weights = Array1::from_elem(
+            n_components,
+            F::one() / F::from(n_components).expect("Failed to convert to float"),
+        );
 
         // Initialize means
         let means = match self.options.init_method {
@@ -231,18 +234,19 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
         let mut covariances = Vec::with_capacity(n_components);
 
         // Compute data variance for initialization
-        let data_mean = data.mean_axis(Axis(0)).unwrap();
+        let data_mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let mut variance = Array1::<F>::zeros(n_features);
 
         for i in 0..n_samples {
             let diff = &data.slice(s![i, ..]) - &data_mean;
             variance = variance + &diff.mapv(|x| x * x);
         }
-        variance = variance / F::from(n_samples - 1).unwrap();
+        variance = variance / F::from(n_samples - 1).expect("Failed to convert to float");
 
         match self.options.covariance_type {
             CovarianceType::Spherical => {
-                let avg_variance = variance.sum() / F::from(variance.len()).unwrap();
+                let avg_variance =
+                    variance.sum() / F::from(variance.len()).expect("Operation failed");
                 for _ in 0..n_components {
                     let mut cov = Array2::<F>::zeros((n_features, n_features));
                     for i in 0..n_features {
@@ -318,7 +322,8 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
         }
 
         // Compute lower bound
-        let lower_bound = log_prob_norm.sum() / F::from(log_prob_norm.len()).unwrap();
+        let lower_bound =
+            log_prob_norm.sum() / F::from(log_prob_norm.len()).expect("Operation failed");
 
         Ok((resp_, lower_bound))
     }
@@ -331,7 +336,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
 
         // Compute weights
         let nk = resp_.sum_axis(Axis(0));
-        let weights = &nk / F::from(n_samples).unwrap();
+        let weights = &nk / F::from(n_samples).expect("Failed to convert to float");
 
         // Compute means
         let mut means = Array2::zeros((n_components, n_features));
@@ -411,7 +416,8 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
             log_det = log_det + covariance[[i, i]].ln();
         }
 
-        let norm_const = F::from(n_features as f64 * (2.0 * PI).ln()).unwrap() + log_det;
+        let norm_const =
+            F::from(n_features as f64 * (2.0 * PI).ln()).expect("Operation failed") + log_det;
 
         for i in 0..n_samples {
             let diff = &data.slice(s![i, ..]) - &mean;
@@ -422,7 +428,8 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
                 mahalanobis = mahalanobis + diff[j] * diff[j] / covariance[[j, j]];
             }
 
-            log_prob[i] = F::from(-0.5).unwrap() * (norm_const + mahalanobis);
+            log_prob[i] = F::from(-0.5).expect("Failed to convert constant to float")
+                * (norm_const + mahalanobis);
         }
 
         Ok(log_prob)
@@ -476,9 +483,9 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
             ));
         }
 
-        let weights = self.weights.as_ref().unwrap();
-        let means = self.means.as_ref().unwrap();
-        let covariances = self.covariances.as_ref().unwrap();
+        let weights = self.weights.as_ref().expect("Operation failed");
+        let means = self.means.as_ref().expect("Operation failed");
+        let covariances = self.covariances.as_ref().expect("Operation failed");
 
         let (resp__, _) = self.e_step(data, weights, means, covariances)?;
 
@@ -526,14 +533,14 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum + std::borrow::Borro
 ///     4.0, 5.0,
 ///     4.2, 4.8,
 ///     3.9, 5.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let options = GMMOptions {
 ///     n_components: 2,
 ///     ..Default::default()
 /// };
 ///
-/// let labels = gaussian_mixture(data.view(), options).unwrap();
+/// let labels = gaussian_mixture(data.view(), options).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn gaussian_mixture<F>(data: ArrayView2<F>, options: GMMOptions<F>) -> Result<Array1<i32>>
@@ -556,7 +563,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let options = GMMOptions {
             n_components: 2,
@@ -567,7 +574,7 @@ mod tests {
         let result = gaussian_mixture(data.view(), options);
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Test: operation failed");
         assert_eq!(labels.len(), 6);
 
         // Check that we have 2 clusters
@@ -583,7 +590,7 @@ mod tests {
                 1.0, 1.0, 1.1, 1.1, 0.9, 0.9, 1.2, 0.8, 5.0, 5.0, 5.1, 5.1, 4.9, 4.9, 5.2, 4.8,
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let covariance_types = vec![
             CovarianceType::Full,
@@ -607,7 +614,7 @@ mod tests {
                 cov_type
             );
 
-            let labels = result.unwrap();
+            let labels = result.expect("Test: operation failed");
             assert_eq!(labels.len(), 8);
         }
     }
@@ -618,7 +625,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let init_methods = vec![GMMInit::KMeans, GMMInit::Random];
 
@@ -634,15 +641,15 @@ mod tests {
             let result = gaussian_mixture(data.view(), options);
             assert!(result.is_ok(), "Failed with init method: {:?}", init_method);
 
-            let labels = result.unwrap();
+            let labels = result.expect("Test: operation failed");
             assert_eq!(labels.len(), 6);
         }
     }
 
     #[test]
     fn test_gmm_parameter_validation() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0])
+            .expect("Operation failed");
 
         // Test with n_components = 0 (invalid)
         let options = GMMOptions {
@@ -670,7 +677,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Test with different tolerance values
         let tolerances = vec![1e-3, 1e-6, 1e-9];
@@ -690,8 +697,8 @@ mod tests {
 
     #[test]
     fn test_gmm_single_component() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 1.1, 2.1]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 1.1, 2.1])
+            .expect("Operation failed");
 
         let options = GMMOptions {
             n_components: 1,
@@ -702,7 +709,7 @@ mod tests {
         let result = gaussian_mixture(data.view(), options);
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Test: operation failed");
         assert_eq!(labels.len(), 4);
 
         // All labels should be 0 for single component
@@ -715,7 +722,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let options1 = GMMOptions {
             n_components: 2,
@@ -731,8 +738,8 @@ mod tests {
             ..Default::default()
         };
 
-        let labels1 = gaussian_mixture(data.view(), options1).unwrap();
-        let labels2 = gaussian_mixture(data.view(), options2).unwrap();
+        let labels1 = gaussian_mixture(data.view(), options1).expect("Operation failed");
+        let labels2 = gaussian_mixture(data.view(), options2).expect("Operation failed");
 
         // With same seed, results should be consistent in clustering structure
         // Note: cluster labels might be swapped (0->1, 1->0) but the clustering should be the same
@@ -753,7 +760,7 @@ mod tests {
                 5.2, 5.2, 7.0, 7.0,
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let options = GMMOptions {
             n_components: 3,
@@ -764,7 +771,7 @@ mod tests {
         let result = gaussian_mixture(data.view(), options);
         assert!(result.is_ok());
 
-        let labels = result.unwrap();
+        let labels = result.expect("Test: operation failed");
         assert_eq!(labels.len(), 10);
 
         // Should find up to 3 clusters
@@ -779,7 +786,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Test with different regularization values
         let reg_values = vec![1e-6, 1e-3, 1e-1];
@@ -805,7 +812,7 @@ mod tests {
                 1.0, 1.0, 1.1, 1.1, 0.9, 0.9, 1.2, 0.8, 5.0, 5.0, 5.1, 5.1, 4.9, 4.9, 5.2, 4.8,
             ],
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         let options = GMMOptions {
             n_components: 2,
@@ -825,14 +832,15 @@ mod tests {
         let predict_result = gmm.predict(data.view());
         assert!(predict_result.is_ok());
 
-        let labels = predict_result.unwrap();
+        let labels = predict_result.expect("Test: operation failed");
         assert_eq!(labels.len(), 8);
 
         // Predict on new data (should work after fitting)
-        let new_data = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 5.0, 5.0]).unwrap();
+        let new_data =
+            Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 5.0, 5.0]).expect("Operation failed");
 
         let new_labels = gmm.predict(new_data.view());
         assert!(new_labels.is_ok());
-        assert_eq!(new_labels.unwrap().len(), 2);
+        assert_eq!(new_labels.expect("Test: operation failed").len(), 2);
     }
 }

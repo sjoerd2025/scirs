@@ -199,11 +199,11 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let corner_template =
         Array2::from_shape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
-            .unwrap();
+            .expect("Operation failed");
 
     let blob_template = Array2::from_shape_vec(
         (5, 5),
@@ -212,7 +212,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
             1.0, 0.8, 0.2, 0.0, 0.2, 0.5, 0.2, 0.0,
         ],
     )
-    .unwrap()
+    .expect("Operation failed")
         / 5.0;
 
     let feature_templates = vec![edge_template, corner_template, blob_template];
@@ -698,7 +698,7 @@ fn create_edge_kernel() -> Array2<f64> {
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
-    .unwrap()
+    .expect("Operation failed")
 }
 
 #[allow(dead_code)]
@@ -707,7 +707,7 @@ fn create_enhancement_kernel() -> Array2<f64> {
         (3, 3),
         vec![0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0],
     )
-    .unwrap()
+    .expect("Operation failed")
 }
 
 #[allow(dead_code)]

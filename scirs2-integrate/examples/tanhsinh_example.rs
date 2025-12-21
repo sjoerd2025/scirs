@@ -10,7 +10,7 @@ fn main() {
     println!("Example 1: Integrate x^2 from 0 to 1");
     println!("Exact result: 1/3 = 0.3333...");
 
-    let result = tanhsinh(|x| x * x, 0.0, 1.0, None).unwrap();
+    let result = tanhsinh(|x| x * x, 0.0, 1.0, None).expect("Operation failed");
 
     println!("Tanh-sinh result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -23,7 +23,7 @@ fn main() {
     println!("Example 2: Integrate sin(x) from 0 to pi");
     println!("Exact result: 2.0");
 
-    let result = tanhsinh(|x| x.sin(), 0.0, PI, None).unwrap();
+    let result = tanhsinh(|x| x.sin(), 0.0, PI, None).expect("Operation failed");
 
     println!("Tanh-sinh result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -36,7 +36,7 @@ fn main() {
     println!("Example 3: Integrate 1/sqrt(x) from 0 to 1");
     println!("Exact result: 2.0");
 
-    let result = tanhsinh(|x| 1.0 / x.sqrt(), 0.0, 1.0, None).unwrap();
+    let result = tanhsinh(|x| 1.0 / x.sqrt(), 0.0, 1.0, None).expect("Operation failed");
 
     println!("Tanh-sinh result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -49,7 +49,7 @@ fn main() {
     println!("Example 4: Integrate e^(-x) from 0 to infinity");
     println!("Exact result: 1.0");
 
-    let result = tanhsinh(|x| (-x).exp(), 0.0, f64::INFINITY, None).unwrap();
+    let result = tanhsinh(|x| (-x).exp(), 0.0, f64::INFINITY, None).expect("Operation failed");
 
     println!("Tanh-sinh result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -62,7 +62,8 @@ fn main() {
     println!("Example 5: Integrate e^(-x^2) from -infinity to infinity");
     println!("Exact result: sqrt(pi) = {:.10}", PI.sqrt());
 
-    let result = tanhsinh(|x| (-x * x).exp(), f64::NEG_INFINITY, f64::INFINITY, None).unwrap();
+    let result = tanhsinh(|x| (-x * x).exp(), f64::NEG_INFINITY, f64::INFINITY, None)
+        .expect("Operation failed");
 
     println!("Tanh-sinh result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -82,7 +83,7 @@ fn main() {
         ..Default::default()
     };
 
-    let result = tanhsinh(|x| x.sin(), 0.0, PI, Some(options)).unwrap();
+    let result = tanhsinh(|x| x.sin(), 0.0, PI, Some(options)).expect("Operation failed");
 
     println!("Tanh-sinh result: {:.16}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -101,7 +102,7 @@ fn main() {
         ..Default::default()
     };
 
-    let result = tanhsinh(|x| -1000.0 * x * x, -1.0, 1.0, Some(options)).unwrap();
+    let result = tanhsinh(|x| -1000.0 * x * x, -1.0, 1.0, Some(options)).expect("Operation failed");
 
     println!("Tanh-sinh result (log): {:.10}", result.integral);
     println!("Tanh-sinh result (exp): {:.10}", result.integral.exp());
@@ -118,7 +119,7 @@ fn main() {
     println!("Example 8: Sum of first 100 integers");
     println!("Exact result: 5050");
 
-    let result = nsum(|n| n, 1.0, 100.0, 1.0, None, None).unwrap();
+    let result = nsum(|n| n, 1.0, 100.0, 1.0, None, None).expect("Operation failed");
 
     println!("nsum result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -130,7 +131,8 @@ fn main() {
     println!("Example 9: Sum of 1/n^2 from n=1 to infinity");
     println!("Exact result: pi^2/6 = {:.10}", PI * PI / 6.0);
 
-    let result = nsum(|n| 1.0 / (n * n), 1.0, f64::INFINITY, 1.0, None, None).unwrap();
+    let result =
+        nsum(|n| 1.0 / (n * n), 1.0, f64::INFINITY, 1.0, None, None).expect("Operation failed");
 
     println!("nsum result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);
@@ -154,7 +156,7 @@ fn main() {
         None,
         None,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("nsum result: {:.10}", result.integral);
     println!("Error estimate: {:.10e}", result.error);

@@ -645,11 +645,12 @@ impl NeuromorphicJitCompiler {
                     // End current burst if it has enough spikes
                     if current_burst_spikes.len() >= 3 {
                         bursts.push(BurstPattern {
-                            start_time: burst_start.unwrap(),
-                            end_time: *current_burst_spikes.last().unwrap(),
+                            start_time: burst_start.expect("Operation failed"),
+                            end_time: *current_burst_spikes.last().expect("Operation failed"),
                             spike_count: current_burst_spikes.len(),
                             avg_frequency: current_burst_spikes.len() as f64
-                                / (current_burst_spikes.last().unwrap() - burst_start.unwrap()),
+                                / (current_burst_spikes.last().expect("Operation failed")
+                                    - burst_start.expect("Operation failed")),
                         });
                     }
                     // Start new potential burst

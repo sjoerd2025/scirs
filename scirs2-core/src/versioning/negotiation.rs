@@ -241,7 +241,7 @@ impl VersionNegotiator {
                 let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
-                Ok(versions.into_iter().next().unwrap())
+                Ok(versions.into_iter().next().expect("Operation failed"))
             }
             NegotiationStrategy::PreferClientPreference => {
                 if let Some(ref preferred) = client_capabilities.preferred_version {
@@ -257,7 +257,7 @@ impl VersionNegotiator {
                 let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
-                Ok(versions.into_iter().next().unwrap())
+                Ok(versions.into_iter().next().expect("Operation failed"))
             }
             NegotiationStrategy::PreferStable => {
                 // Prefer non-pre-release versions
@@ -271,13 +271,13 @@ impl VersionNegotiator {
                     let mut versions = stableversions;
                     versions.sort();
                     versions.reverse();
-                    Ok(versions.into_iter().next().unwrap())
+                    Ok(versions.into_iter().next().expect("Operation failed"))
                 } else {
                     // No stable versions, pick latest
                     let mut versions = compatibleversions.to_vec();
                     versions.sort();
                     versions.reverse();
-                    Ok(versions.into_iter().next().unwrap())
+                    Ok(versions.into_iter().next().expect("Operation failed"))
                 }
             }
             NegotiationStrategy::PreferFeatureRich => {
@@ -286,14 +286,14 @@ impl VersionNegotiator {
                 let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
-                Ok(versions.into_iter().next().unwrap())
+                Ok(versions.into_iter().next().expect("Operation failed"))
             }
             NegotiationStrategy::Custom => {
                 // Custom logic would be implemented here
                 let mut versions = compatibleversions.to_vec();
                 versions.sort();
                 versions.reverse();
-                Ok(versions.into_iter().next().unwrap())
+                Ok(versions.into_iter().next().expect("Operation failed"))
             }
         }
     }
@@ -440,7 +440,7 @@ mod tests {
 
         let result = negotiator
             .negotiate(&client_capabilities, &serverversions)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.negotiated_version, Version::new(2, 0, 0));
         assert_eq!(result.status, NegotiationStatus::Success);
     }
@@ -467,7 +467,7 @@ mod tests {
 
         let result = negotiator
             .negotiate(&client_capabilities, &serverversions)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.negotiated_version, Version::new(1, 1, 0));
     }
 
@@ -479,19 +479,19 @@ mod tests {
             ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
                 .supportversions(vec![
                     Version::new(1, 0, 0),
-                    Version::parse("2.0.0-alpha").unwrap(),
+                    Version::parse("2.0.0-alpha").expect("Operation failed"),
                     Version::new(1, 1, 0),
                 ])
                 .build();
 
         let v1 = Version::new(1, 0, 0);
-        let v2 = Version::parse("2.0.0-alpha").unwrap();
+        let v2 = Version::parse("2.0.0-alpha").expect("Operation failed");
         let v3 = Version::new(1, 1, 0);
         let serverversions = vec![&v1, &v2, &v3];
 
         let result = negotiator
             .negotiate(&client_capabilities, &serverversions)
-            .unwrap();
+            .expect("Operation failed");
         // Should prefer stable 1.1.0 over pre-release 2.0.0-alpha
         assert_eq!(result.negotiated_version, Version::new(1, 1, 0));
     }
@@ -511,7 +511,7 @@ mod tests {
 
         let result = negotiator
             .negotiate(&client_capabilities, &serverversions)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(result.status, NegotiationStatus::Failed);
     }
 
@@ -529,7 +529,7 @@ mod tests {
 
         let result = negotiator
             .negotiate(&client_capabilities, &serverversions)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!result.metadata.selection_reason.is_empty());
         assert_eq!(result.metadata.consideredversions.len(), 1);
     }

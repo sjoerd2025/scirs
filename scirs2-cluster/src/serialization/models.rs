@@ -1019,11 +1019,13 @@ mod tests {
 
     #[test]
     fn test_kmeans_model_predict() {
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let centroids =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let model = KMeansModel::new(centroids, 2, 10, 0.5, None);
 
-        let data = Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 0.9, 0.9]).unwrap();
-        let labels = model.predict(data.view()).unwrap();
+        let data =
+            Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 0.9, 0.9]).expect("Operation failed");
+        let labels = model.predict(data.view()).expect("Operation failed");
 
         assert_eq!(labels[0], 0); // Closer to first centroid
         assert_eq!(labels[1], 1); // Closer to second centroid
@@ -1041,10 +1043,11 @@ mod tests {
 
     #[test]
     fn test_hierarchical_model_newick() {
-        let linkage = Array2::from_shape_vec((1, 3), vec![0.0, 1.0, 0.5]).unwrap();
+        let linkage =
+            Array2::from_shape_vec((1, 3), vec![0.0, 1.0, 0.5]).expect("Operation failed");
         let model = HierarchicalModel::new(linkage, 2, "ward".to_string(), None);
 
-        let newick = model.to_newick().unwrap();
+        let newick = model.to_newick().expect("Operation failed");
         assert!(newick.contains("("));
         assert!(newick.contains(")"));
         assert!(newick.ends_with(";"));

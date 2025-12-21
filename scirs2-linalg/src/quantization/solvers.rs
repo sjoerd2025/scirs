@@ -145,7 +145,7 @@ where
             let ratio = rsnew / previous_residual;
 
             // If progress is slow for multiple iterations, we might need to reset
-            if ratio > F::from(0.9).unwrap() {
+            if ratio > F::from(0.9).expect("Operation failed") {
                 successive_slow_progress += 1;
             } else {
                 successive_slow_progress = 0;
@@ -353,11 +353,13 @@ where
                 let progress_ratio = residual / g[i].abs();
 
                 // If progress is slowing, decrease reorthogonalization step
-                if progress_ratio > F::from(0.8).unwrap() && reorth_step > 1 {
+                if progress_ratio > F::from(0.8).expect("Operation failed") && reorth_step > 1 {
                     reorth_step = reorth_step.max(1) / 2;
                 }
                 // If progress is good, can relax reorthogonalization
-                else if progress_ratio < F::from(0.5).unwrap() && reorth_step < restart_iter {
+                else if progress_ratio < F::from(0.5).expect("Operation failed")
+                    && reorth_step < restart_iter
+                {
                     reorth_step = (reorth_step * 2).min(restart_iter);
                 }
             }
@@ -648,7 +650,7 @@ where
             let ratio = r_squared / previous_residual;
 
             // If progress is slow for multiple iterations, we might need to reset
-            if ratio > F::from(0.9).unwrap() {
+            if ratio > F::from(0.9).expect("Operation failed") {
                 successive_slow_progress += 1;
             } else {
                 successive_slow_progress = 0;
@@ -709,7 +711,7 @@ mod tests {
         // Create a quantized matrix-free operator
         let op =
             QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap()
+                .expect("Operation failed")
                 .symmetric()
                 .positive_definite();
 
@@ -717,7 +719,7 @@ mod tests {
         let b = array![1.0f32, 2.0];
 
         // Solve using quantized conjugate gradient
-        let x = quantized_conjugate_gradient(&op, &b, 10, 1e-6, false).unwrap();
+        let x = quantized_conjugate_gradient(&op, &b, 10, 1e-6, false).expect("Operation failed");
 
         // Expected solution (computed analytically): [0.181818, 0.636364]
         let expected = array![0.181818f32, 0.636364];
@@ -737,13 +739,13 @@ mod tests {
         // Create a quantized matrix-free operator
         let op =
             QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap();
+                .expect("Operation failed");
 
         // Define the right-hand side
         let b = array![4.0f32, 3.0];
 
         // Solve using quantized GMRES
-        let x = quantized_gmres(&op, &b, 10, 1e-6, None, false).unwrap();
+        let x = quantized_gmres(&op, &b, 10, 1e-6, None, false).expect("Operation failed");
 
         // Expected solution (computed analytically): [1.0, 1.0]
         let expected = array![1.0f32, 1.0];
@@ -763,19 +765,19 @@ mod tests {
         // Create a quantized matrix-free operator
         let op =
             QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap()
+                .expect("Operation failed")
                 .symmetric()
                 .positive_definite();
 
         // Create a preconditioner (here, we'll use the Jacobi preconditioner)
-        let precond = quantized_jacobi_preconditioner(&op).unwrap();
+        let precond = quantized_jacobi_preconditioner(&op).expect("Operation failed");
 
         // Define the right-hand side
         let b = array![1.0f32, 2.0];
 
         // Solve using preconditioned conjugate gradient
         let x = quantized_preconditioned_conjugate_gradient(&op, &precond, &b, 10, 1e-6, false)
-            .unwrap();
+            .expect("Operation failed");
 
         // Expected solution (computed analytically): [0.181818, 0.636364]
         let expected = array![0.181818f32, 0.636364];
@@ -795,14 +797,14 @@ mod tests {
         // Create a quantized matrix-free operator
         let op =
             QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap();
+                .expect("Operation failed");
 
         // Create a Jacobi preconditioner
-        let precond = quantized_jacobi_preconditioner(&op).unwrap();
+        let precond = quantized_jacobi_preconditioner(&op).expect("Operation failed");
 
         // Apply to a vector
         let x = array![1.0f32, 2.0];
-        let y = precond.apply(&x.view()).unwrap();
+        let y = precond.apply(&x.view()).expect("Operation failed");
 
         // The preconditioner should be the inverse of the diagonal of the matrix
         // Diagonal of the matrix: [4.0, 3.0]
@@ -824,7 +826,7 @@ mod tests {
         // Create a quantized matrix-free operator
         let op =
             QuantizedMatrixFreeOp::frommatrix(&matrix.view(), 8, QuantizationMethod::Symmetric)
-                .unwrap()
+                .expect("Operation failed")
                 .symmetric()
                 .positive_definite();
 
@@ -832,10 +834,12 @@ mod tests {
         let b = array![1.0f32, 2.0];
 
         // Solve using adaptive precision conjugate gradient
-        let x_adaptive = quantized_conjugate_gradient(&op, &b, 10, 1e-6, true).unwrap();
+        let x_adaptive =
+            quantized_conjugate_gradient(&op, &b, 10, 1e-6, true).expect("Operation failed");
 
         // Solve using standard conjugate gradient
-        let x_standard = quantized_conjugate_gradient(&op, &b, 10, 1e-6, false).unwrap();
+        let x_standard =
+            quantized_conjugate_gradient(&op, &b, 10, 1e-6, false).expect("Operation failed");
 
         // Both should give accurate solutions
         let expected = array![0.181818f32, 0.636364];

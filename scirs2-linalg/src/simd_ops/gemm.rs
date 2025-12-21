@@ -326,14 +326,13 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_gemm_f32_basic() {
         // Test C = A * B
         let a = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0f32, 8.0], [9.0, 10.0], [11.0, 12.0]];
         let mut c = Array2::zeros((2, 2));
 
-        simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, None).unwrap();
+        simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, None).expect("Operation failed");
 
         // Expected: [[58, 64], [139, 154]]
         // A*B = [[1*7+2*9+3*11, 1*8+2*10+3*12], [4*7+5*9+6*11, 4*8+5*10+6*12]]
@@ -347,14 +346,14 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
+    #[ignore = "Panics in simd/dot.rs:1167 - Option::unwrap() on None value"]
     fn test_simd_gemm_f64_basic() {
         // Test C = A * B
         let a = array![[1.0f64, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0f64, 8.0], [9.0, 10.0], [11.0, 12.0]];
         let mut c = Array2::zeros((2, 2));
 
-        simd_gemm_f64(1.0, &a.view(), &b.view(), 0.0, &mut c, None).unwrap();
+        simd_gemm_f64(1.0, &a.view(), &b.view(), 0.0, &mut c, None).expect("Operation failed");
 
         // Expected: [[58, 64], [139, 154]]
         assert_relative_eq!(c[[0, 0]], 58.0, epsilon = 1e-12);
@@ -365,7 +364,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_gemm_alpha_beta() {
         // Test C = alpha * A * B + beta * C
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
@@ -375,7 +373,7 @@ mod tests {
         let alpha = 2.0;
         let beta = 3.0;
 
-        simd_gemm_f32(alpha, &a.view(), &b.view(), beta, &mut c, None).unwrap();
+        simd_gemm_f32(alpha, &a.view(), &b.view(), beta, &mut c, None).expect("Operation failed");
 
         // A*B = [[1*5+2*7, 1*6+2*8], [3*5+4*7, 3*6+4*8]] = [[19, 22], [43, 50]]
         // Expected: 2.0 * [[19, 22], [43, 50]] + 3.0 * [[1, 2], [3, 4]]
@@ -389,12 +387,11 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_matmul_optimized() {
         let a = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0f32, 8.0], [9.0, 10.0], [11.0, 12.0]];
 
-        let c = simd_matmul_optimized_f32(&a.view(), &b.view()).unwrap();
+        let c = simd_matmul_optimized_f32(&a.view(), &b.view()).expect("Operation failed");
 
         assert_relative_eq!(c[[0, 0]], 58.0, epsilon = 1e-6);
         assert_relative_eq!(c[[0, 1]], 64.0, epsilon = 1e-6);
@@ -404,7 +401,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_gemv() {
         // Test y = alpha * A * x + beta * y
         let a = array![[1.0f32, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -414,7 +410,7 @@ mod tests {
         let alpha = 2.0;
         let beta = 3.0;
 
-        simd_gemv_f32(alpha, &a.view(), &x.view(), beta, &mut y).unwrap();
+        simd_gemv_f32(alpha, &a.view(), &x.view(), beta, &mut y).expect("Operation failed");
 
         // A*x = [1*7+2*8+3*9, 4*7+5*8+6*9] = [7+16+27, 28+40+54] = [50, 122]
         // Expected: 2.0 * [50, 122] + 3.0 * [1, 2] = [100, 244] + [3, 6] = [103, 250]
@@ -424,7 +420,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_simd_gemm_largematrix() {
         // Test with larger matrices to exercise blocking
         let m = 100;
@@ -444,7 +439,8 @@ mod tests {
             nr: 8,
         };
 
-        simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, Some(blocksizes)).unwrap();
+        simd_gemm_f32(1.0, &a.view(), &b.view(), 0.0, &mut c, Some(blocksizes))
+            .expect("Operation failed");
 
         // Verify with reference implementation (naive multiplication)
         let c_ref = a.dot(&b);
@@ -456,7 +452,6 @@ mod tests {
 
     #[test]
     #[cfg(feature = "simd")]
-    #[ignore = "timeout"]
     fn test_gemm_error_handling() {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let b = array![[5.0f32, 6.0, 7.0], [8.0, 9.0, 10.0], [11.0, 12.0, 13.0]]; // Wrong dimensions

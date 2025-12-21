@@ -101,19 +101,22 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenOp {
         let eigen_vals = y_array.slice(scirs2_core::ndarray::s![0..values_size]);
         let eigen_vecs = y_array.slice(scirs2_core::ndarray::s![vectors_start..]);
 
-        let eigen_vals_1d = eigen_vals.to_shape(n).unwrap().to_owned();
-        let eigen_vecs_2d = eigen_vecs.to_shape((n, n)).unwrap().to_owned();
+        let eigen_vals_1d = eigen_vals.to_shape(n).expect("Operation failed").to_owned();
+        let eigen_vecs_2d = eigen_vecs
+            .to_shape((n, n))
+            .expect("Operation failed")
+            .to_owned();
 
         // Get gradients
         let grad_vals = gy_array
             .slice(scirs2_core::ndarray::s![0..values_size])
             .to_shape(n)
-            .unwrap()
+            .expect("Failed to reshape")
             .to_owned();
         let grad_vecs = gy_array
             .slice(scirs2_core::ndarray::s![vectors_start..])
             .to_shape((n, n))
-            .unwrap()
+            .expect("Failed to reshape")
             .to_owned();
 
         // Compute gradient using eigendecomposition gradient formula
@@ -282,15 +285,16 @@ fn compute_symmetric_eigen<F: Float + ScalarOperand + FromPrimitive>(
         let apq = a[[p, q]];
 
         let theta: F = if app == aqq {
-            scirs2_core::numeric::FromPrimitive::from_f64(0.25 * std::f64::consts::PI).unwrap()
+            scirs2_core::numeric::FromPrimitive::from_f64(0.25 * std::f64::consts::PI)
+                .expect("Operation failed")
         } else {
             scirs2_core::numeric::FromPrimitive::from_f64(
                 0.5 * (aqq - app)
                     .to_f64()
-                    .unwrap()
-                    .atan2(2.0 * apq.to_f64().unwrap()),
+                    .expect("Failed to create slice")
+                    .atan2(2.0 * apq.to_f64().expect("Operation failed")),
             )
-            .unwrap()
+            .expect("Failed to reshape")
         };
 
         let c = theta.cos();
@@ -347,8 +351,10 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
     println!("Computing eigendecomposition for general matrix of size: {n}");
 
     // Check if the matrix is close to symmetric within a tolerance
-    let is_nearly_symmetric =
-        is_nearly_symmetric_matrix(matrix, F::epsilon() * F::from(100.0).unwrap());
+    let is_nearly_symmetric = is_nearly_symmetric_matrix(
+        matrix,
+        F::epsilon() * F::from(100.0).expect("Failed to convert constant to float"),
+    );
 
     if is_nearly_symmetric {
         println!("Matrix is nearly symmetric, using symmetric algorithm");
@@ -357,7 +363,7 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
         for i in 0..n {
             for j in 0..n {
                 sym_matrix[[i, j]] = (matrix[[i, j]] + matrix[[j, i]])
-                    * scirs2_core::numeric::FromPrimitive::from_f64(0.5).unwrap();
+                    * scirs2_core::numeric::FromPrimitive::from_f64(0.5).expect("Operation failed");
             }
         }
         return compute_symmetric_eigen(&sym_matrix.view());
@@ -378,7 +384,7 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
     let max_iter = 100;
 
     // Threshold for convergence
-    let tol = F::epsilon() * F::from(1000.0).unwrap();
+    let tol = F::epsilon() * F::from(1000.0).expect("Failed to convert constant to float");
 
     // Store previous iteration matrix to check convergence
     let mut prev_a = a.clone();
@@ -409,7 +415,8 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
         v = v.dot(&q);
 
         // Check for convergence
-        let diff = (&a - &prev_a).mapv(|x| x.abs()).sum() / F::from(n as f64).unwrap();
+        let diff = (&a - &prev_a).mapv(|x| x.abs()).sum()
+            / F::from(n as f64).expect("Failed to convert to float");
         if iter > 0 && diff < tol {
             println!("QR algorithm converged after {} iterations", iter + 1);
             break;
@@ -613,13 +620,17 @@ fn eigendecomposition_gradient<F: Float + ScalarOperand + FromPrimitive>(
         for j in 0..n {
             // Check if eigenvalues are distinct - if they are close, use regularization
             let eigenvalue_diff = (eigenvalues[i] - eigenvalues[j]).abs();
-            let is_degenerate = eigenvalue_diff <= F::epsilon() * F::from(10.0).unwrap();
+            let is_degenerate = eigenvalue_diff
+                <= F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
 
             if i != j {
                 // Compute the factor with safeguards against division by zero
                 let factor = if is_degenerate {
                     // For nearly degenerate eigenvalues, use a regularized factor
-                    let reg_diff = F::max(eigenvalue_diff, F::epsilon() * F::from(10.0).unwrap());
+                    let reg_diff = F::max(
+                        eigenvalue_diff,
+                        F::epsilon() * F::from(10.0).expect("Failed to convert constant to float"),
+                    );
                     F::one() / reg_diff
                 } else {
                     F::one() / (eigenvalues[j] - eigenvalues[i])
@@ -643,7 +654,8 @@ fn eigendecomposition_gradient<F: Float + ScalarOperand + FromPrimitive>(
                     for p in 0..n {
                         for q in 0..n {
                             let term = vj[p] * (grad_vecs[[p, j]] - dot_product * vi[p]) * vj[q];
-                            grad[[q, p]] += term * F::from(0.5).unwrap();
+                            grad[[q, p]] +=
+                                term * F::from(0.5).expect("Failed to convert constant to float");
                         }
                     }
                 } else {
@@ -689,7 +701,7 @@ fn eigendecomposition_gradient<F: Float + ScalarOperand + FromPrimitive>(
     }
 
     // Add regularization for numerical stability
-    let eps = F::epsilon() * F::from(10.0).unwrap();
+    let eps = F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
     for i in 0..n {
         grad[[i, i]] += eps;
     }

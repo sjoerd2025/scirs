@@ -597,7 +597,7 @@ impl TileCache {
             self.tiles.insert(tile_id, tile);
         }
 
-        Ok(self.tiles.get_mut(&tile_id).unwrap())
+        Ok(self.tiles.get_mut(&tile_id).expect("Operation failed"))
     }
 
     /// Get a tile (read-only)

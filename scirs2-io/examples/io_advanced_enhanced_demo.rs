@@ -384,7 +384,7 @@ fn demonstrate_optimization_recommendations(
             sorted_recommendations.sort_by(|a, b| {
                 (b.expected_improvement * b.confidence)
                     .partial_cmp(&(a.expected_improvement * a.confidence))
-                    .unwrap()
+                    .expect("Operation failed")
             });
 
             println!("   🏆 Priority Ranking:");
@@ -453,7 +453,7 @@ fn demonstrate_algorithmic_self_improvement(
 
         // Show learning progression
         if performance_progression.len() > 1 {
-            let improvement = performance_progression.last().unwrap()
+            let improvement = performance_progression.last().expect("Operation failed")
                 - performance_progression[performance_progression.len() - 2];
             let trend = if improvement > 0.01 {
                 "📈 Improving"
@@ -483,7 +483,7 @@ fn demonstrate_algorithmic_self_improvement(
     println!("📊 Self-Improvement Analysis:");
     if performance_progression.len() >= 2 {
         let initial_performance = performance_progression[0];
-        let final_performance = performance_progression.last().unwrap();
+        let final_performance = performance_progression.last().expect("Operation failed");
         let learning_effectiveness = ((final_performance / initial_performance) - 1.0) * 100.0;
 
         println!("   Initial Performance: {:.3}", initial_performance);
@@ -549,7 +549,7 @@ fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -
         let primary_pattern = analysis
             .pattern_scores
             .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
             .map(|(k, v)| (k.clone(), *v));
 
         let complexity_category = match analysis.complexity_index {
@@ -643,7 +643,7 @@ fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -
         .iter()
         .map(|(domain, analysis)| (domain, analysis.complexity_index))
         .collect();
-    complexity_ranking.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    complexity_ranking.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     println!("   Domain Complexity Ranking:");
     for (i, (domain, complexity)) in complexity_ranking.iter().enumerate() {

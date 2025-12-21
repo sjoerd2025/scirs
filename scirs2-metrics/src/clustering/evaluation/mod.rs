@@ -41,11 +41,11 @@ use crate::error::{MetricsError, Result};
 ///     5.0, 6.0,
 ///     5.2, 5.8,
 ///     5.5, 6.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let labels = array![0, 0, 0, 1, 1, 1];
 ///
-/// let score = dunn_index_enhanced(&x, &labels).unwrap();
+/// let score = dunn_index_enhanced(&x, &labels).expect("Operation failed");
 /// assert!(score > 0.5); // High score for well-separated clusters
 /// ```
 #[allow(dead_code)]
@@ -151,7 +151,7 @@ where
 /// };
 ///
 /// // Run elbow method for k from 1 to 10
-/// let inertias = elbow_method(&x, 1..=10, kmeans_fn).unwrap();
+/// let inertias = elbow_method(&x, 1..=10, kmeans_fn).expect("Operation failed");
 ///
 /// // Now you can plot inertias against k to find the "elbow"
 /// ```
@@ -212,11 +212,11 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = array![0, 0, 0, 1, 1, 1];
 
-        let dunn = dunn_index(&x, &labels).unwrap();
+        let dunn = dunn_index(&x, &labels).expect("Operation failed");
         // The clusters are well separated, so we expect a high Dunn index
         assert!(dunn > 0.5);
 
@@ -229,11 +229,11 @@ mod tests {
                 5.2, 5.8, 5.5, 6.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels_overlap = array![0, 0, 0, 1, 1, 1];
 
-        let dunn_overlap = dunn_index(&x_overlap, &labels_overlap).unwrap();
+        let dunn_overlap = dunn_index(&x_overlap, &labels_overlap).expect("Operation failed");
         // Clusters are less separated, so we expect a lower Dunn index
         assert!(dunn_overlap < dunn);
     }
@@ -258,7 +258,7 @@ mod tests {
             }
         };
 
-        let inertias = elbow_method(&x, 1..=6, kmeans_mock).unwrap();
+        let inertias = elbow_method(&x, 1..=6, kmeans_mock).expect("Operation failed");
 
         // Check expected properties
         assert_eq!(inertias.len(), 6);

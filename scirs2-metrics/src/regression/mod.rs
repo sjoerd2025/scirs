@@ -118,5 +118,5 @@ where
     D: scirs2_core::ndarray::Dimension,
 {
     let sum = arr.iter().fold(F::zero(), |acc, &x| acc + x);
-    sum / scirs2_core::numeric::NumCast::from(arr.len()).unwrap()
+    sum / scirs2_core::numeric::NumCast::from(arr.len()).expect("Operation failed")
 }

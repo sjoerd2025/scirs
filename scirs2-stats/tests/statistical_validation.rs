@@ -31,8 +31,8 @@ fn compute_std(samples: &[f64], mean: f64) -> f64 {
 fn test_gamma_statistical_properties_shape2_scale2() {
     // This is the exact test case from NumRS2's bug report
     // Gamma(shape=2, scale=2) should have: mean=4, variance=8
-    let dist = Gamma::new(2.0, 2.0, 0.0).unwrap();
-    let samples = dist.rvs(10_000).unwrap();
+    let dist = Gamma::new(2.0, 2.0, 0.0).expect("Test: operation failed");
+    let samples = dist.rvs(10_000).expect("Test: operation failed");
     let samples_vec: Vec<f64> = samples.to_vec();
 
     let mean = compute_mean(&samples_vec);
@@ -58,8 +58,8 @@ fn test_gamma_statistical_properties_shape2_scale2() {
 #[test]
 fn test_gamma_statistical_properties_shape2_scale3() {
     // Gamma(shape=2, scale=3) should have: mean=6, variance=18
-    let dist = Gamma::new(2.0, 3.0, 0.0).unwrap();
-    let samples = dist.rvs(10_000).unwrap();
+    let dist = Gamma::new(2.0, 3.0, 0.0).expect("Test: operation failed");
+    let samples = dist.rvs(10_000).expect("Test: operation failed");
     let samples_vec: Vec<f64> = samples.to_vec();
 
     let mean = compute_mean(&samples_vec);
@@ -85,8 +85,8 @@ fn test_gamma_statistical_properties_shape2_scale3() {
 #[test]
 fn test_gamma_statistical_properties_shape5_scale1() {
     // Gamma(shape=5, scale=1) should have: mean=5, variance=5
-    let dist = Gamma::new(5.0, 1.0, 0.0).unwrap();
-    let samples = dist.rvs(10_000).unwrap();
+    let dist = Gamma::new(5.0, 1.0, 0.0).expect("Test: operation failed");
+    let samples = dist.rvs(10_000).expect("Test: operation failed");
     let samples_vec: Vec<f64> = samples.to_vec();
 
     let mean = compute_mean(&samples_vec);
@@ -113,8 +113,8 @@ fn test_gamma_statistical_properties_shape5_scale1() {
 fn test_gamma_statistical_properties_shape1_scale2_exponential() {
     // Gamma(shape=1, scale=2) is an Exponential distribution
     // should have: mean=2, variance=4
-    let dist = Gamma::new(1.0, 2.0, 0.0).unwrap();
-    let samples = dist.rvs(10_000).unwrap();
+    let dist = Gamma::new(1.0, 2.0, 0.0).expect("Test: operation failed");
+    let samples = dist.rvs(10_000).expect("Test: operation failed");
     let samples_vec: Vec<f64> = samples.to_vec();
 
     let mean = compute_mean(&samples_vec);
@@ -145,8 +145,8 @@ fn test_exponential_statistical_properties_scale2() {
     // Exponential with scale=2 should have: mean=2, variance=4
     // Note: Exponential::new takes rate, not scale, so rate = 1/scale = 0.5
     let rate = 0.5; // rate = 1/scale, so scale = 2.0
-    let dist = Exponential::new(rate, 0.0).unwrap();
-    let samples = dist.rvs(10_000).unwrap();
+    let dist = Exponential::new(rate, 0.0).expect("Test: operation failed");
+    let samples = dist.rvs(10_000).expect("Test: operation failed");
     let samples_vec: Vec<f64> = samples.to_vec();
 
     let mean = compute_mean(&samples_vec);
@@ -175,8 +175,8 @@ fn test_exponential_statistical_properties_scale2() {
 #[test]
 fn test_normal_statistical_properties() {
     // Normal(mean=5, std=2) should have: mean=5, variance=4
-    let dist = Normal::new(5.0, 2.0).unwrap();
-    let samples = dist.rvs(10_000).unwrap();
+    let dist = Normal::new(5.0, 2.0).expect("Test: operation failed");
+    let samples = dist.rvs(10_000).expect("Test: operation failed");
     let samples_vec: Vec<f64> = samples.to_vec();
 
     let mean = compute_mean(&samples_vec);
@@ -202,7 +202,7 @@ fn test_normal_statistical_properties() {
 #[test]
 fn test_gamma_trait_consistency() {
     // Verify that the Distribution trait methods return correct theoretical values
-    let dist = Gamma::new(2.0, 3.0, 0.0).unwrap();
+    let dist = Gamma::new(2.0, 3.0, 0.0).expect("Test: operation failed");
 
     // Check theoretical mean and variance
     let theoretical_mean = dist.mean();
@@ -223,7 +223,7 @@ fn test_gamma_trait_consistency() {
     );
 
     // Verify sampling matches theoretical values
-    let samples = dist.rvs(10_000).unwrap();
+    let samples = dist.rvs(10_000).expect("Test: operation failed");
     let samples_vec: Vec<f64> = samples.to_vec();
     let empirical_mean = compute_mean(&samples_vec);
     let empirical_std = compute_std(&samples_vec, empirical_mean);
@@ -257,8 +257,8 @@ fn test_gamma_regression_prevention() {
     ];
 
     for (shape, scale, expected_mean, expected_var) in test_cases {
-        let dist = Gamma::new(shape, scale, 0.0).unwrap();
-        let samples = dist.rvs(10_000).unwrap();
+        let dist = Gamma::new(shape, scale, 0.0).expect("Test: operation failed");
+        let samples = dist.rvs(10_000).expect("Test: operation failed");
         let samples_vec: Vec<f64> = samples.to_vec();
 
         let mean = compute_mean(&samples_vec);

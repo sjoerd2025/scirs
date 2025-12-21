@@ -67,7 +67,7 @@ impl KaplanMeierEstimator {
             .zip(event_observed.iter())
             .map(|(&t, &e)| (t, e))
             .collect();
-        time_event_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        time_event_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         // Calculate survival function using Kaplan-Meier product-limit estimator
         let mut unique_times = Vec::new();
@@ -275,7 +275,7 @@ impl LogRankTest {
         }
 
         // Sort by time
-        combineddata.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        combineddata.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         // Calculate log-rank statistic
         let mut observed_group1 = 0.0;
@@ -489,7 +489,11 @@ impl CoxPHModel {
 
         // Sort by event time
         let mut indices: Vec<usize> = (0..n_samples_).collect();
-        indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            durations[i]
+                .partial_cmp(&durations[j])
+                .expect("Operation failed")
+        });
 
         let mut log_likelihood = 0.0;
         let mut gradient = Array1::zeros(n_features);
@@ -574,7 +578,11 @@ impl CoxPHModel {
 
         // Sort by event time
         let mut indices: Vec<usize> = (0..n_samples_).collect();
-        indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            durations[i]
+                .partial_cmp(&durations[j])
+                .expect("Operation failed")
+        });
 
         let mut times = Vec::new();
         let mut cumulative_hazard = Vec::new();
@@ -911,7 +919,11 @@ impl ExtendedCoxModel {
 
             // Sort by event time within stratum
             let mut sorted_indices = stratum_indices.clone();
-            sorted_indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
+            sorted_indices.sort_by(|&i, &j| {
+                durations[i]
+                    .partial_cmp(&durations[j])
+                    .expect("Operation failed")
+            });
 
             // Calculate partial likelihood for this stratum
             let (stratum_ll, stratum_grad, stratum_hess) = Self::stratum_partial_likelihood(
@@ -1034,7 +1046,11 @@ impl ExtendedCoxModel {
 
             // Sort by event time
             let mut sorted_indices = stratum_indices.clone();
-            sorted_indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
+            sorted_indices.sort_by(|&i, &j| {
+                durations[i]
+                    .partial_cmp(&durations[j])
+                    .expect("Operation failed")
+            });
 
             let mut times = Vec::new();
             let mut cumulative_hazard = Vec::new();
@@ -1302,7 +1318,7 @@ impl CompetingRisksModel {
             .zip(censoring_events.iter())
             .map(|(&t, &e)| (t, e))
             .collect();
-        time_event_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        time_event_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
 
         let mut times = Vec::new();
         let mut survival_probs = Vec::new();
@@ -1370,7 +1386,11 @@ impl CompetingRisksModel {
 
         // Sort by event time
         let mut indices: Vec<usize> = (0..n_samples_).collect();
-        indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            durations[i]
+                .partial_cmp(&durations[j])
+                .expect("Operation failed")
+        });
 
         let mut log_likelihood = 0.0;
         let mut gradient = Array1::zeros(n_features);
@@ -1439,7 +1459,11 @@ impl CompetingRisksModel {
 
         // Sort by event time
         let mut indices: Vec<usize> = (0..n_samples_).collect();
-        indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
+        indices.sort_by(|&i, &j| {
+            durations[i]
+                .partial_cmp(&durations[j])
+                .expect("Operation failed")
+        });
 
         let mut times = Vec::new();
         let mut cumulative_incidence = Vec::new();

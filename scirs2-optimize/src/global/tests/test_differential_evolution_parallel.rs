@@ -38,7 +38,7 @@ fn test_parallel_vs_sequential() {
         bounds.clone(),
         Some(sequential_opts),
         None,
-    ).unwrap();
+    ).expect("Operation failed");
     
     let sequential_evals = sequential_counter.load(Ordering::Relaxed);
     
@@ -63,7 +63,7 @@ fn test_parallel_vs_sequential() {
         bounds,
         Some(parallel_opts),
         None,
-    ).unwrap();
+    ).expect("Operation failed");
     
     let parallel_evals = parallel_counter.load(Ordering::Relaxed);
     
@@ -106,7 +106,7 @@ fn test_parallel_correctness() {
         bounds,
         Some(options),
         None,
-    ).unwrap();
+    ).expect("Operation failed");
     
     // Check that we found the minimum
     assert!(result.fun < 0.01); // Should be very close to 0
@@ -139,7 +139,7 @@ fn test_parallel_options_disabled() {
         bounds,
         Some(options),
         None,
-    ).unwrap();
+    ).expect("Operation failed");
     
     // Should still find minimum at (0, 0)
     assert!(result.fun < 0.01);

@@ -696,8 +696,8 @@ impl PerformanceDashboard {
 
     /// Get dashboard statistics
     pub fn get_statistics(&self) -> DashboardStatistics {
-        let metrics = self.metrics.read().unwrap();
-        let alerts = self.alerts.lock().unwrap();
+        let metrics = self.metrics.read().expect("Operation failed");
+        let alerts = self.alerts.lock().expect("Operation failed");
 
         DashboardStatistics {
             total_widgets: self.widgets.len(),
@@ -953,7 +953,7 @@ mod tests {
         let dashboard = PerformanceDashboard::new(config);
         assert!(dashboard.is_ok());
 
-        let dashboard = dashboard.unwrap();
+        let dashboard = dashboard.expect("Operation failed");
         assert_eq!(dashboard.config.title, "Test Dashboard");
         assert_eq!(dashboard.config.refresh_interval, Duration::from_secs(10));
     }
@@ -961,7 +961,7 @@ mod tests {
     #[test]
     fn test_widget_creation_and_addition() {
         let config = DashboardConfig::default();
-        let mut dashboard = PerformanceDashboard::new(config).unwrap();
+        let mut dashboard = PerformanceDashboard::new(config).expect("Operation failed");
 
         let widget = Widget::new()
             .with_title("CPU Usage")
@@ -969,7 +969,7 @@ mod tests {
             .with_metric_source(MetricSource::SystemCpu)
             .with_alert_threshold(80.0);
 
-        let widget_id = dashboard.add_widget(widget).unwrap();
+        let widget_id = dashboard.add_widget(widget).expect("Operation failed");
         assert!(!widget_id.is_empty());
         assert_eq!(dashboard.widgets.len(), 1);
     }
@@ -977,23 +977,23 @@ mod tests {
     #[test]
     fn test_metric_updates() {
         let config = DashboardConfig::default();
-        let mut dashboard = PerformanceDashboard::new(config).unwrap();
+        let mut dashboard = PerformanceDashboard::new(config).expect("Operation failed");
 
         // Add a widget
         let widget = Widget::new().with_metric_source(MetricSource::SystemCpu);
 
-        dashboard.add_widget(widget).unwrap();
+        dashboard.add_widget(widget).expect("Operation failed");
 
         // Update metric
         let result = dashboard.update_metric(&MetricSource::SystemCpu, 75.5);
         assert!(result.is_ok());
 
         // Check that metric was recorded
-        let metrics = dashboard.get_metrics().unwrap();
+        let metrics = dashboard.get_metrics().expect("Operation failed");
         let cpu_metric = metrics.get("system.cpu");
         assert!(cpu_metric.is_some());
 
-        let cpu_metric = cpu_metric.unwrap();
+        let cpu_metric = cpu_metric.expect("Operation failed");
         assert_eq!(cpu_metric.latest_value(), Some(75.5));
     }
 
@@ -1021,7 +1021,7 @@ mod tests {
 
         assert!(widget.alert_config.is_some());
 
-        let alert_config = widget.alert_config.unwrap();
+        let alert_config = widget.alert_config.expect("Operation failed");
         assert_eq!(alert_config.threshold, 90.0);
         assert_eq!(alert_config.condition, AlertCondition::GreaterThan);
         assert_eq!(alert_config.severity, AlertSeverity::Warning);
@@ -1030,12 +1030,12 @@ mod tests {
     #[test]
     fn test_dashboard_statistics() {
         let config = DashboardConfig::default();
-        let mut dashboard = PerformanceDashboard::new(config).unwrap();
+        let mut dashboard = PerformanceDashboard::new(config).expect("Operation failed");
 
         // Add some widgets
         for i in 0..3 {
             let widget = Widget::new().with_title(&format!("Widget {i}"));
-            dashboard.add_widget(widget).unwrap();
+            dashboard.add_widget(widget).expect("Operation failed");
         }
 
         let stats = dashboard.get_statistics();

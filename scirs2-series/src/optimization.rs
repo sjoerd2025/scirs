@@ -29,11 +29,11 @@ impl<F: Float + FromPrimitive> Default for OptimizationOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            tolerance: F::from(1e-8).unwrap(),
-            initial_step: F::from(0.1).unwrap(),
-            line_search_alpha: F::from(0.3).unwrap(),
-            line_search_beta: F::from(0.8).unwrap(),
-            grad_tolerance: F::from(1e-6).unwrap(),
+            tolerance: F::from(1e-8).expect("Failed to convert constant to float"),
+            initial_step: F::from(0.1).expect("Failed to convert constant to float"),
+            line_search_alpha: F::from(0.3).expect("Failed to convert constant to float"),
+            line_search_beta: F::from(0.8).expect("Failed to convert constant to float"),
+            grad_tolerance: F::from(1e-6).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -179,13 +179,13 @@ where
         let gamma = self
             .s_history
             .last()
-            .unwrap()
-            .dot(self.y_history.last().unwrap())
+            .expect("Operation failed")
+            .dot(self.y_history.last().expect("Operation failed"))
             / self
                 .y_history
                 .last()
-                .unwrap()
-                .dot(self.y_history.last().unwrap());
+                .expect("Operation failed")
+                .dot(self.y_history.last().expect("Operation failed"));
         let mut r = &q * gamma;
 
         // Second loop
@@ -238,7 +238,7 @@ where
         if self.h_inv.is_none() {
             self.h_inv = Some(Array2::eye(n));
         }
-        let h_inv = self.h_inv.as_mut().unwrap();
+        let h_inv = self.h_inv.as_mut().expect("Operation failed");
 
         for iter in 0..self.options.max_iter {
             // Check gradient convergence
@@ -269,7 +269,7 @@ where
             let y = &g_new - &g;
             let sy = s.dot(&y);
 
-            if sy > F::from(1e-8).unwrap() {
+            if sy > F::from(1e-8).expect("Failed to convert constant to float") {
                 let rho = F::one() / sy;
                 let sy_outer = s
                     .clone()
@@ -341,7 +341,7 @@ where
         ));
     }
 
-    while alpha > F::from(1e-10).unwrap() {
+    while alpha > F::from(1e-10).expect("Failed to convert constant to float") {
         let x_new = x + &(d * alpha);
         let f_new = f(&x_new);
 
@@ -352,7 +352,7 @@ where
         alpha = alpha * options.line_search_beta;
     }
 
-    Ok(F::from(1e-10).unwrap())
+    Ok(F::from(1e-10).expect("Failed to convert constant to float"))
 }
 
 #[cfg(test)]
@@ -368,7 +368,7 @@ mod tests {
 
         let mut optimizer = LBFGSOptimizer::new(OptimizationOptions::default());
         let x0 = array![1.0, 2.0, 3.0];
-        let result = optimizer.optimize(f, grad, &x0).unwrap();
+        let result = optimizer.optimize(f, grad, &x0).expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.fval < 1e-6);
@@ -398,7 +398,7 @@ mod tests {
         });
 
         let x0 = array![-1.0, 1.0];
-        let result = optimizer.optimize(f, grad, &x0).unwrap();
+        let result = optimizer.optimize(f, grad, &x0).expect("Operation failed");
 
         assert!(result.converged);
         assert!((result.x[0] - 1.0).abs() < 0.01);

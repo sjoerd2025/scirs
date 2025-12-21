@@ -59,7 +59,7 @@ where
     let mut jacobian = Array2::<F>::zeros((n_dim, n_dim));
 
     // Calculate base perturbation size
-    let eps_base = F::from_f64(1e-8).unwrap() * perturbation_scale;
+    let eps_base = F::from_f64(1e-8).expect("Operation failed") * perturbation_scale;
 
     #[cfg(feature = "parallel_jacobian")]
     {
@@ -174,7 +174,7 @@ where
     let max_color = colors.iter().max().cloned().unwrap_or(0);
 
     // Base perturbation size
-    let eps_base = F::from_f64(1e-8).unwrap() * perturbation_scale;
+    let eps_base = F::from_f64(1e-8).expect("Operation failed") * perturbation_scale;
 
     #[cfg(feature = "parallel_jacobian")]
     {
@@ -535,8 +535,8 @@ mod tests {
         let f_current = test_func(t, y.view());
 
         // Compute parallel Jacobian
-        let numerical_jac =
-            parallel_finite_difference_jacobian(&test_func, t, &y, &f_current, 1.0).unwrap();
+        let numerical_jac = parallel_finite_difference_jacobian(&test_func, t, &y, &f_current, 1.0)
+            .expect("Operation failed");
 
         // Compute analytic Jacobian
         let analytic_jac = analytic_jacobian(&[1.0, 2.0, 3.0]);
@@ -561,7 +561,7 @@ mod tests {
         // Compute sparse Jacobian
         let numerical_jac =
             parallel_sparse_jacobian(&test_func, t, &y, &f_current, Some(&sparsity_pattern), 1.0)
-                .unwrap();
+                .expect("Operation failed");
 
         // Compute analytic Jacobian
         let analytic_jac = analytic_jacobian(&[1.0, 2.0, 3.0]);

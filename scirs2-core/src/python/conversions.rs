@@ -47,21 +47,21 @@ pub fn py_int_to_i64(obj: &Bound<'_, PyAny>) -> PyResult<i64> {
 // LIST/TUPLE CONVERSIONS
 // ========================================
 
-/// Convert Python list to Rust Vec<f32>
+/// Convert Python list to Rust `Vec<f32>`
 #[cfg(feature = "python")]
 pub fn py_list_to_vec_f32(obj: &Bound<'_, PyAny>) -> PyResult<Vec<f32>> {
     obj.extract::<Vec<f64>>()
         .map(|v| v.into_iter().map(|x| x as f32).collect())
 }
 
-/// Convert Python list to Rust Vec<i32>
+/// Convert Python list to Rust `Vec<i32>`
 #[cfg(feature = "python")]
 pub fn py_list_to_vec_i32(obj: &Bound<'_, PyAny>) -> PyResult<Vec<i32>> {
     obj.extract::<Vec<i64>>()
         .map(|v| v.into_iter().map(|x| x as i32).collect())
 }
 
-/// Convert Python list to Rust Vec<usize>
+/// Convert Python list to Rust `Vec<usize>`
 #[cfg(feature = "python")]
 pub fn py_list_to_vec_usize(obj: &Bound<'_, PyAny>) -> PyResult<Vec<usize>> {
     obj.extract::<Vec<i64>>()
@@ -72,7 +72,7 @@ pub fn py_list_to_vec_usize(obj: &Bound<'_, PyAny>) -> PyResult<Vec<usize>> {
 // SHAPE CONVERSIONS
 // ========================================
 
-/// Convert Python shape tuple to Rust Vec<usize>
+/// Convert Python shape tuple to Rust `Vec<usize>`
 #[cfg(feature = "python")]
 pub fn py_shape_to_vec(obj: &Bound<'_, PyAny>) -> PyResult<Vec<usize>> {
     py_list_to_vec_usize(obj)
@@ -219,20 +219,32 @@ mod tests {
     fn test_shape_conversion() {
         Python::with_gil(|py| {
             let shape = vec![2, 3, 4];
-            let py_tuple = shape_to_py_tuple(&shape, py).unwrap();
+            let py_tuple = shape_to_py_tuple(&shape, py).expect("Operation failed");
             let bound_tuple = py_tuple.bind(py);
 
             assert_eq!(bound_tuple.len(), 3);
             assert_eq!(
-                bound_tuple.get_item(0).unwrap().extract::<usize>().unwrap(),
+                bound_tuple
+                    .get_item(0)
+                    .expect("Operation failed")
+                    .extract::<usize>()
+                    .expect("Operation failed"),
                 2
             );
             assert_eq!(
-                bound_tuple.get_item(1).unwrap().extract::<usize>().unwrap(),
+                bound_tuple
+                    .get_item(1)
+                    .expect("Operation failed")
+                    .extract::<usize>()
+                    .expect("Operation failed"),
                 3
             );
             assert_eq!(
-                bound_tuple.get_item(2).unwrap().extract::<usize>().unwrap(),
+                bound_tuple
+                    .get_item(2)
+                    .expect("Operation failed")
+                    .extract::<usize>()
+                    .expect("Operation failed"),
                 4
             );
         });

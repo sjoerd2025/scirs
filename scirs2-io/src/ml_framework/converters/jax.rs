@@ -22,7 +22,7 @@ impl MLFrameworkConverter for JAXConverter {
                     (name.clone(), serde_json::json!({
                         "shape": tensor.metadata.shape,
                         "dtype": format!("{:?}", tensor.metadata.dtype),
-                        "data": tensor.data.as_slice().unwrap().to_vec()
+                        "data": tensor.data.as_slice().expect("Operation failed").to_vec()
                     }))
                 }).collect::<serde_json::Map<String, serde_json::Value>>(),
                 "config": model.config
@@ -79,7 +79,7 @@ impl MLFrameworkConverter for JAXConverter {
             "jax_array": {
                 "shape": tensor.metadata.shape,
                 "dtype": format!("{:?}", tensor.metadata.dtype),
-                "data": tensor.data.as_slice().unwrap().to_vec(),
+                "data": tensor.data.as_slice().expect("Operation failed").to_vec(),
                 "weak_type": false
             }
         });

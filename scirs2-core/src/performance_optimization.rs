@@ -993,7 +993,8 @@ pub mod fast_paths {
 
                     // Use SIMD addition
                     let simd_result = f64::simd_add(&a_view, &b_view);
-                    result[start..end].copy_from_slice(simd_result.as_slice().unwrap());
+                    result[start..end]
+                        .copy_from_slice(simd_result.as_slice().expect("Operation failed"));
                 }
             }
 
@@ -1241,7 +1242,7 @@ mod tests {
         let b = vec![2.0; 32];
         let mut result = vec![0.0; 32];
 
-        fast_paths::add_f64_arrays(&a, &b, &mut result).unwrap();
+        fast_paths::add_f64_arrays(&a, &b, &mut result).expect("Operation failed");
 
         for val in result {
             assert_eq!(val, 3.0);
@@ -1736,11 +1737,11 @@ mod tests {
         let modern_weight = selector
             .strategy_weights
             .get(&OptimizationStrategy::ModernArchOptimized)
-            .unwrap();
+            .expect("Operation failed");
         let scalar_weight = selector
             .strategy_weights
             .get(&OptimizationStrategy::Scalar)
-            .unwrap();
+            .expect("Operation failed");
         assert!(modern_weight > scalar_weight);
     }
 
@@ -1845,14 +1846,14 @@ mod tests {
         let initial_weight = *selector
             .strategy_weights
             .get(&OptimizationStrategy::ModernArchOptimized)
-            .unwrap();
+            .expect("Operation failed");
 
         // Update with good performance score
         selector.update_weights(OptimizationStrategy::ModernArchOptimized, 0.9);
         let updated_weight = *selector
             .strategy_weights
             .get(&OptimizationStrategy::ModernArchOptimized)
-            .unwrap();
+            .expect("Operation failed");
 
         // Weight should have been adjusted based on learning
         assert_ne!(initial_weight, updated_weight);

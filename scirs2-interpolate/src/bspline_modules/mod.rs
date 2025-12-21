@@ -100,7 +100,7 @@ mod integration_tests {
         );
         assert!(spline.is_ok());
 
-        let spline = spline.unwrap();
+        let spline = spline.expect("Operation failed");
 
         // Test evaluation
         let test_point = 2.5;
@@ -122,8 +122,8 @@ mod integration_tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
         let y = array![1.0, 2.0, 3.0, 2.0, 1.0];
 
-        let spline =
-            make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate).unwrap();
+        let spline = make_interp_bspline(&x.view(), &y.view(), 2, ExtrapolateMode::Extrapolate)
+            .expect("Operation failed");
 
         let workspace = BSplineWorkspace::new();
 
@@ -144,8 +144,8 @@ mod integration_tests {
         let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![0.0, 1.0, 8.0, 27.0, 64.0, 125.0]; // y = x^3
 
-        let spline =
-            make_interp_bspline(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate).unwrap();
+        let spline = make_interp_bspline(&x.view(), &y.view(), 3, ExtrapolateMode::Extrapolate)
+            .expect("Operation failed");
 
         // Test fast recursive evaluation
         let fast_value = spline.evaluate_fast_recursive(2.5);
@@ -155,7 +155,7 @@ mod integration_tests {
         let test_points = array![1.5, 2.5, 3.5];
         let batch_values = spline.evaluate_array(&test_points.view());
         assert!(batch_values.is_ok());
-        assert_eq!(batch_values.unwrap().len(), 3);
+        assert_eq!(batch_values.expect("Operation failed").len(), 3);
     }
 
     #[test]
@@ -168,7 +168,7 @@ mod integration_tests {
         assert!(knots.is_ok());
 
         // Test least-squares fitting
-        let knots = knots.unwrap();
+        let knots = knots.expect("Operation failed");
         let lsq_spline = make_lsq_bspline(
             &x.view(),
             &y.view(),

@@ -232,14 +232,18 @@ impl<F: Float> op::Op<F> for Dropout<F> {
         let mut arr_rng = self.arr_rng.clone();
 
         if self.train {
-            let mask =
-                arr_rng.bernoulli(x.shape(), (F::one() - self.dropout_ratio).to_f64().unwrap());
+            let mask = arr_rng.bernoulli(
+                x.shape(),
+                (F::one() - self.dropout_ratio)
+                    .to_f64()
+                    .expect("Operation failed"),
+            );
 
             // Calculate sum of mask elements
             let sum = mask.fold(F::zero(), |acc, &val| acc + val);
 
             // Create a new array with element-wise multiplication
-            let result = x.mapv(|v| v * sum / (F::from(mask.len()).unwrap()));
+            let result = x.mapv(|v| v * sum / (F::from(mask.len()).expect("Operation failed")));
             ctx.append_output(result);
             ctx.append_output(mask);
         } else {

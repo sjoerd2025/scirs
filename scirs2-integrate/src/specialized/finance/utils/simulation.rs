@@ -341,7 +341,7 @@ mod tests {
         let config = PathConfig::new(100.0, 0.05, 0.0, 0.2, 1.0).with_steps(100);
         let generator = PathGenerator::new(config);
 
-        let paths = generator.generate_paths(10).unwrap();
+        let paths = generator.generate_paths(10).expect("Operation failed");
         assert_eq!(paths.len(), 10);
 
         for path in &paths {
@@ -358,7 +358,7 @@ mod tests {
             .with_variance_reduction(VarianceReduction::Antithetic);
 
         let generator = PathGenerator::new(config);
-        let paths = generator.generate_paths(100).unwrap();
+        let paths = generator.generate_paths(100).expect("Operation failed");
 
         assert_eq!(paths.len(), 100);
 
@@ -373,7 +373,9 @@ mod tests {
         let config = PathConfig::new(100.0, 0.05, 0.0, 0.2, 1.0).with_steps(252);
         let generator = PathGenerator::new(config);
 
-        let terminal_values = generator.generate_terminal_values(1000).unwrap();
+        let terminal_values = generator
+            .generate_terminal_values(1000)
+            .expect("Operation failed");
         assert_eq!(terminal_values.len(), 1000);
 
         // All values should be positive
@@ -389,7 +391,7 @@ mod tests {
 
     #[test]
     fn test_standard_rng() {
-        let mut rng = StandardRng::new().unwrap();
+        let mut rng = StandardRng::new().expect("Operation failed");
 
         let samples = rng.generate_normal_vec(10000);
         assert_eq!(samples.len(), 10000);
@@ -409,7 +411,7 @@ mod tests {
         let config = PathConfig::new(100.0, 0.05, 0.0, 0.2, 1.0).with_steps(10);
         let generator = PathGenerator::new(config);
 
-        let paths = generator.generate_paths(5).unwrap();
+        let paths = generator.generate_paths(5).expect("Operation failed");
         for path in paths {
             assert_eq!(path.len(), 11); // n_steps + 1
         }
@@ -424,7 +426,7 @@ mod tests {
         let generator = PathGenerator::new(config);
 
         // Test odd number of paths
-        let paths = generator.generate_paths(101).unwrap();
+        let paths = generator.generate_paths(101).expect("Operation failed");
         assert_eq!(paths.len(), 101);
     }
 }

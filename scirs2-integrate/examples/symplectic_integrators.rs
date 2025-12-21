@@ -51,7 +51,7 @@ fn simple_harmonic_oscillator() {
     // Integrate
     let result = integrator
         .integrate(&system, t0, tf, dt, q0.clone(), p0.clone())
-        .unwrap();
+        .expect("Operation failed");
 
     // Print results
     println!("  Periods: 2.0");
@@ -63,8 +63,8 @@ fn simple_harmonic_oscillator() {
     }
 
     // Check final state
-    let final_q = result.q.last().unwrap()[0];
-    let final_p = result.p.last().unwrap()[0];
+    let final_q = result.q.last().expect("Operation failed")[0];
+    let final_p = result.p.last().expect("Operation failed")[0];
 
     // Exact solution at t = 2*period should be the initial state
     println!("  Final state: q = {final_q:.6}, p = {final_p:.6}");
@@ -97,7 +97,7 @@ fn pendulum() {
     let start = Instant::now();
     let result = integrator
         .integrate(&system, t0, tf, dt, q0.clone(), p0.clone())
-        .unwrap();
+        .expect("Operation failed");
     let duration = start.elapsed();
 
     // Print results
@@ -111,13 +111,13 @@ fn pendulum() {
 
     // Calculate the initial and final energy explicitly
     if let Some(h_fn) = system.hamiltonian() {
-        let initial_energy = h_fn(t0, &q0, &p0).unwrap();
+        let initial_energy = h_fn(t0, &q0, &p0).expect("Operation failed");
         let final_energy = h_fn(
-            result.t.last().unwrap().to_owned(),
-            result.q.last().unwrap(),
-            result.p.last().unwrap(),
+            result.t.last().expect("Operation failed").to_owned(),
+            result.q.last().expect("Operation failed"),
+            result.p.last().expect("Operation failed"),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         println!("  Initial energy: {initial_energy:.6}");
         println!("  Final energy: {final_energy:.6}");
@@ -154,7 +154,7 @@ fn kepler_orbit() {
     // Integrate
     let result = integrator
         .integrate(&system, t0, tf, dt, q0.clone(), p0.clone())
-        .unwrap();
+        .expect("Operation failed");
 
     // Print results
     println!("  Steps: {}", result.steps);
@@ -183,7 +183,7 @@ fn kepler_orbit() {
     println!("  Orbital eccentricity: {eccentricity:.6}");
 
     // Check if orbit is closed
-    let final_q = result.q.last().unwrap();
+    let final_q = result.q.last().expect("Operation failed");
     let final_radius = f64::sqrt(final_q[0] * final_q[0] + final_q[1] * final_q[1]);
 
     println!("  Final radius: {final_radius:.6}");
@@ -283,7 +283,7 @@ fn integrate_with_method<S: SymplecticIntegrator<f64>>(
     let start = Instant::now();
     let result = method
         .integrate(system, t0, tf, dt, q0.clone(), p0.clone())
-        .unwrap();
+        .expect("Operation failed");
     let elapsed = start.elapsed();
     let time_ms = elapsed.as_secs_f64() * 1000.0;
 
@@ -326,7 +326,7 @@ fn integrate_with_velocity_verlet(
 
     for _ in 0..n_steps {
         let (next_q, next_p) =
-            velocity_verlet(system, curr_t, &curr_q, &curr_p, actual_dt).unwrap();
+            velocity_verlet(system, curr_t, &curr_q, &curr_p, actual_dt).expect("Operation failed");
         n_evals += 2;
 
         curr_t += actual_dt;
@@ -341,8 +341,9 @@ fn integrate_with_velocity_verlet(
 
     // Calculate energy error
     let energy_error = if let Some(hamiltonian) = system.hamiltonian() {
-        let initial_energy = hamiltonian(t[0], &q[0], &p[0]).unwrap();
-        let final_energy = hamiltonian(t[t.len() - 1], &q[q.len() - 1], &p[p.len() - 1]).unwrap();
+        let initial_energy = hamiltonian(t[0], &q[0], &p[0]).expect("Operation failed");
+        let final_energy = hamiltonian(t[t.len() - 1], &q[q.len() - 1], &p[p.len() - 1])
+            .expect("Operation failed");
 
         if initial_energy.abs() > 1e-10 {
             Some((final_energy - initial_energy).abs() / initial_energy.abs())
@@ -395,7 +396,7 @@ fn integrate_with_position_verlet(
 
     for _ in 0..n_steps {
         let (next_q, next_p) =
-            position_verlet(system, curr_t, &curr_q, &curr_p, actual_dt).unwrap();
+            position_verlet(system, curr_t, &curr_q, &curr_p, actual_dt).expect("Operation failed");
         n_evals += 2;
 
         curr_t += actual_dt;
@@ -410,8 +411,9 @@ fn integrate_with_position_verlet(
 
     // Calculate energy error
     let energy_error = if let Some(hamiltonian) = system.hamiltonian() {
-        let initial_energy = hamiltonian(t[0], &q[0], &p[0]).unwrap();
-        let final_energy = hamiltonian(t[t.len() - 1], &q[q.len() - 1], &p[p.len() - 1]).unwrap();
+        let initial_energy = hamiltonian(t[0], &q[0], &p[0]).expect("Operation failed");
+        let final_energy = hamiltonian(t[t.len() - 1], &q[q.len() - 1], &p[p.len() - 1])
+            .expect("Operation failed");
 
         if initial_energy.abs() > 1e-10 {
             Some((final_energy - initial_energy).abs() / initial_energy.abs())

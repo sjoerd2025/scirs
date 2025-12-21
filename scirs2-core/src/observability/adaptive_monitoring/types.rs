@@ -460,7 +460,7 @@ impl TimeSeriesModel {
             return vec![0.0; steps];
         }
 
-        let last_value = *self.data.back().unwrap();
+        let last_value = *self.data.back().expect("Operation failed");
         let mut predictions = Vec::with_capacity(steps);
 
         for i in 0..steps {

@@ -710,7 +710,7 @@ mod tests {
 
         let result = calculator
             .calculate_equilibrium(initial_conc, None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.converged);
 
         // Check that some dissociation occurred
@@ -731,7 +731,7 @@ mod tests {
 
         let result = calculator
             .calculate_equilibrium(initial_conc, None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.converged);
 
         // pH should be close to pKa for equal concentrations
@@ -748,7 +748,7 @@ mod tests {
 
         let result = calculator
             .calculate_equilibrium(initial_conc, None)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.converged);
 
         // Check Ksp relationship
@@ -774,13 +774,13 @@ mod tests {
         ideal_calc.set_activity_model(ActivityModel::Ideal);
         let ideal_result = ideal_calc
             .calculate_equilibrium(concentrations.clone(), None)
-            .unwrap();
+            .expect("Operation failed");
 
         let mut real_calc = calculator.clone();
         real_calc.set_activity_model(ActivityModel::ExtendedDebyeHuckel);
         let real_result = real_calc
             .calculate_equilibrium(concentrations.clone(), None)
-            .unwrap();
+            .expect("Operation failed");
 
         // Ideal coefficients should be 1
         for &coeff in ideal_result.activity_coefficients.iter() {

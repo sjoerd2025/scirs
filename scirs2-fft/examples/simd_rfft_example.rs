@@ -115,7 +115,7 @@ fn generate_testsignal(n: usize) -> Vec<f64> {
 #[allow(dead_code)]
 fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
-    let spectrum = rfft(signal, None).unwrap();
+    let spectrum = rfft(signal, None).expect("Operation failed");
     let duration = start.elapsed();
 
     (spectrum, duration)
@@ -125,7 +125,7 @@ fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
 #[allow(dead_code)]
 fn benchmark_simd_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
-    let spectrum = rfft_adaptive(signal, None, None).unwrap();
+    let spectrum = rfft_adaptive(signal, None, None).expect("Operation failed");
     let duration = start.elapsed();
 
     (spectrum, duration)
@@ -155,15 +155,15 @@ fn analyze_frequencies(spectrum: &[Complex64], n: usize) {
                 > 0.1
                     * magnitudes
                         .iter()
-                        .max_by(|a, b| a.partial_cmp(b).unwrap())
-                        .unwrap()
+                        .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+                        .expect("Operation failed")
         {
             peaks.push((i, magnitudes[i]));
         }
     }
 
     // Sort peaks by magnitude (descending)
-    peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     // Print top 5 peaks
     println!("Top frequency components:");

@@ -493,7 +493,7 @@ impl CircuitBreaker {
     }
 
     fn should_allow_execution(&self) -> bool {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
 
         match state.state {
             CircuitState::Closed => true,
@@ -514,13 +514,13 @@ impl CircuitBreaker {
     }
 
     fn on_success(&self) {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
         state.failure_count = 0;
         state.state = CircuitState::Closed;
     }
 
     fn on_failure(&self) {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().expect("Operation failed");
         state.failure_count += 1;
         state.last_failure_time = Some(Instant::now());
 
@@ -531,7 +531,7 @@ impl CircuitBreaker {
 
     /// Get current circuit breaker status
     pub fn status(&self) -> CircuitBreakerStatus {
-        let state = self.state.lock().unwrap();
+        let state = self.state.lock().expect("Operation failed");
         CircuitBreakerStatus {
             state: state.state,
             failure_count: state.failure_count,
@@ -613,7 +613,7 @@ impl RetryExecutor {
                     }
                 }
 
-                Err(lasterror.unwrap())
+                Err(lasterror.expect("Operation failed"))
             }
 
             RecoveryStrategy::LinearBackoff {
@@ -635,7 +635,7 @@ impl RetryExecutor {
                     }
                 }
 
-                Err(lasterror.unwrap())
+                Err(lasterror.expect("Operation failed"))
             }
 
             RecoveryStrategy::CustomBackoff {
@@ -659,7 +659,7 @@ impl RetryExecutor {
                     }
                 }
 
-                Err(lasterror.unwrap())
+                Err(lasterror.expect("Operation failed"))
             }
 
             _ => f(), // Other strategies not applicable for retry
@@ -898,7 +898,7 @@ mod tests {
             }
         });
 
-        assert_eq!(result.unwrap(), 42);
+        assert_eq!(result.expect("Operation failed"), 42);
         assert_eq!(attempt_count, 3);
     }
 

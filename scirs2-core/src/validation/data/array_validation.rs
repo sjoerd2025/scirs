@@ -260,7 +260,7 @@ impl ArrayValidator {
 
         // Calculate basic statistics
         let mean = array.mean_or(S::Elem::zero());
-        let std_dev = array.std(num_traits::cast(1.0).unwrap());
+        let std_dev = array.std(num_traits::cast(1.0).expect("Operation failed"));
 
         // Validate mean constraints
         if let Some(min_mean) = constraints.min_mean {
@@ -473,7 +473,7 @@ mod tests {
 
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.is_valid());
     }
 
@@ -487,14 +487,14 @@ mod tests {
         let constraints = ArrayValidationConstraints::new().withshape(vec![3]);
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.is_valid());
 
         // Test incorrect shape
         let constraints = ArrayValidationConstraints::new().withshape(vec![5]);
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!result.is_valid());
         assert_eq!(result.errors().len(), 1);
         assert_eq!(
@@ -514,7 +514,7 @@ mod tests {
 
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.is_valid()); // NaN is a warning, not an error
         assert!(result.has_warnings());
         assert_eq!(result.warnings().len(), 1);
@@ -537,7 +537,7 @@ mod tests {
 
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.is_valid());
 
         // Test with constraints that should fail
@@ -547,7 +547,7 @@ mod tests {
 
         let result = validator
             .validate_ndarray(&array, &failing_constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!result.is_valid());
     }
 
@@ -562,7 +562,7 @@ mod tests {
 
         let result = validator
             .validate_ndarray(&small_array, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(result.is_valid());
         assert!(result.warnings().is_empty());
     }
@@ -579,7 +579,7 @@ mod tests {
 
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
-            .unwrap();
+            .expect("Operation failed");
         assert!(!result.is_valid()); // Should fail because 4.0 and 5.0 > 3.0
         assert!(!result.errors().is_empty());
     }

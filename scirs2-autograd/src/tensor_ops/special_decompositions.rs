@@ -205,7 +205,11 @@ fn compute_polar_decomposition<F: Float + scirs2_core::ndarray::ScalarOperand>(
     // A = UΣV^T => polar decomposition: A = (UV^T)(VΣV^T)
 
     // For simplicity, use power iteration to get dominant singular vectors
-    let _u_vec_sigma = power_iteration_svd(matrix, 20, F::epsilon() * F::from(100.0).unwrap());
+    let _u_vec_sigma = power_iteration_svd(
+        matrix,
+        20,
+        F::epsilon() * F::from(100.0).expect("Failed to convert constant to float"),
+    );
 
     if m == n && n <= 3 {
         // For small square matrices, use simplified approach
@@ -261,7 +265,7 @@ fn compute_schur_decomposition<F: Float + scirs2_core::ndarray::ScalarOperand>(
     let mut q = Array2::<F>::eye(n);
 
     let max_iter = 50;
-    let tol = F::epsilon() * F::from(100.0).unwrap();
+    let tol = F::epsilon() * F::from(100.0).expect("Failed to convert constant to float");
 
     for _iter in 0..max_iter {
         // QR decomposition of T
@@ -385,11 +389,11 @@ fn matrix_sqrt<F: Float + scirs2_core::ndarray::ScalarOperand>(
             // X_{k+1} = 0.5 * (X_k + A * X_k^{-1})
             if let Ok(x_inv) = matrix_inverse_simple(&x.view()) {
                 let ax_inv = matrix.dot(&x_inv);
-                x = (&x + &ax_inv) * F::from(0.5).unwrap();
+                x = (&x + &ax_inv) * F::from(0.5).expect("Failed to convert constant to float");
 
                 // Check convergence
                 let diff = (&x - &x_prev).mapv(|v| v.abs()).sum();
-                if diff < F::epsilon() * F::from(n as f64).unwrap() {
+                if diff < F::epsilon() * F::from(n as f64).expect("Failed to convert to float") {
                     break;
                 }
             } else {
@@ -533,7 +537,8 @@ fn power_iteration_svd<F: Float + scirs2_core::ndarray::ScalarOperand>(
 
     // Add perturbation
     for i in 1..m {
-        u[i] = F::from(0.01).unwrap() * F::from(i as f64).unwrap();
+        u[i] = F::from(0.01).expect("Failed to convert constant to float")
+            * F::from(i as f64).expect("Failed to convert to float");
     }
 
     // Normalize

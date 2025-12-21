@@ -38,7 +38,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-signal = "0.1.0-rc.3"
+//! scirs2-signal = "0.1.0-rc.4"
 //! ```
 //!
 //! ```rust
@@ -50,7 +50,7 @@
 //! let filtered = convolve(&signal, &kernel, "same").unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
 
 // Core error handling - ESSENTIAL
 pub mod error;

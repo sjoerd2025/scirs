@@ -131,7 +131,7 @@ impl RLAgent {
                 let best_action_idx = q_values
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
                 self.idx_to_strategy(best_action_idx)
@@ -145,7 +145,7 @@ impl RLAgent {
                     let best_action_idx = action_probs
                         .iter()
                         .enumerate()
-                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                         .map(|(idx, _)| idx)
                         .unwrap_or(0);
                     self.idx_to_strategy(best_action_idx)

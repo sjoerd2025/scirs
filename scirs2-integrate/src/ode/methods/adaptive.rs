@@ -43,13 +43,13 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap()
+        _span / F::from_usize(100).expect("Operation failed")
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-8).unwrap() // Minimal step size
+        _span * F::from_f64(1e-8).expect("Operation failed") // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -73,10 +73,10 @@ where
 
     // Dormand-Prince coefficients
     // Time steps
-    let c2 = F::from_f64(1.0 / 5.0).unwrap();
-    let c3 = F::from_f64(3.0 / 10.0).unwrap();
-    let c4 = F::from_f64(4.0 / 5.0).unwrap();
-    let c5 = F::from_f64(8.0 / 9.0).unwrap();
+    let c2 = F::from_f64(1.0 / 5.0).expect("Operation failed");
+    let c3 = F::from_f64(3.0 / 10.0).expect("Operation failed");
+    let c4 = F::from_f64(4.0 / 5.0).expect("Operation failed");
+    let c5 = F::from_f64(8.0 / 9.0).expect("Operation failed");
     let c6 = F::one();
 
     // Main integration loop
@@ -95,57 +95,57 @@ where
         // Manually compute the stages to avoid type mismatches
         let mut y_stage = y.clone();
         for i in 0..n_dim {
-            y_stage[i] = y[i] + h * F::from_f64(1.0 / 5.0).unwrap() * k1[i];
+            y_stage[i] = y[i] + h * F::from_f64(1.0 / 5.0).expect("Operation failed") * k1[i];
         }
         let k2 = f(t + c2 * h, y_stage.view());
 
         let mut y_stage = y.clone();
         for i in 0..n_dim {
             y_stage[i] = y[i]
-                + h * (F::from_f64(3.0 / 40.0).unwrap() * k1[i]
-                    + F::from_f64(9.0 / 40.0).unwrap() * k2[i]);
+                + h * (F::from_f64(3.0 / 40.0).expect("Operation failed") * k1[i]
+                    + F::from_f64(9.0 / 40.0).expect("Operation failed") * k2[i]);
         }
         let k3 = f(t + c3 * h, y_stage.view());
 
         let mut y_stage = y.clone();
         for i in 0..n_dim {
             y_stage[i] = y[i]
-                + h * (F::from_f64(44.0 / 45.0).unwrap() * k1[i]
-                    + F::from_f64(-56.0 / 15.0).unwrap() * k2[i]
-                    + F::from_f64(32.0 / 9.0).unwrap() * k3[i]);
+                + h * (F::from_f64(44.0 / 45.0).expect("Operation failed") * k1[i]
+                    + F::from_f64(-56.0 / 15.0).expect("Operation failed") * k2[i]
+                    + F::from_f64(32.0 / 9.0).expect("Operation failed") * k3[i]);
         }
         let k4 = f(t + c4 * h, y_stage.view());
 
         let mut y_stage = y.clone();
         for i in 0..n_dim {
             y_stage[i] = y[i]
-                + h * (F::from_f64(19372.0 / 6561.0).unwrap() * k1[i]
-                    + F::from_f64(-25360.0 / 2187.0).unwrap() * k2[i]
-                    + F::from_f64(64448.0 / 6561.0).unwrap() * k3[i]
-                    + F::from_f64(-212.0 / 729.0).unwrap() * k4[i]);
+                + h * (F::from_f64(19372.0 / 6561.0).expect("Operation failed") * k1[i]
+                    + F::from_f64(-25360.0 / 2187.0).expect("Operation failed") * k2[i]
+                    + F::from_f64(64448.0 / 6561.0).expect("Operation failed") * k3[i]
+                    + F::from_f64(-212.0 / 729.0).expect("Operation failed") * k4[i]);
         }
         let k5 = f(t + c5 * h, y_stage.view());
 
         let mut y_stage = y.clone();
         for i in 0..n_dim {
             y_stage[i] = y[i]
-                + h * (F::from_f64(9017.0 / 3168.0).unwrap() * k1[i]
-                    + F::from_f64(-355.0 / 33.0).unwrap() * k2[i]
-                    + F::from_f64(46732.0 / 5247.0).unwrap() * k3[i]
-                    + F::from_f64(49.0 / 176.0).unwrap() * k4[i]
-                    + F::from_f64(-5103.0 / 18656.0).unwrap() * k5[i]);
+                + h * (F::from_f64(9017.0 / 3168.0).expect("Operation failed") * k1[i]
+                    + F::from_f64(-355.0 / 33.0).expect("Operation failed") * k2[i]
+                    + F::from_f64(46732.0 / 5247.0).expect("Operation failed") * k3[i]
+                    + F::from_f64(49.0 / 176.0).expect("Operation failed") * k4[i]
+                    + F::from_f64(-5103.0 / 18656.0).expect("Operation failed") * k5[i]);
         }
         let k6 = f(t + c6 * h, y_stage.view());
 
         let mut y_stage = y.clone();
         for i in 0..n_dim {
             y_stage[i] = y[i]
-                + h * (F::from_f64(35.0 / 384.0).unwrap() * k1[i]
+                + h * (F::from_f64(35.0 / 384.0).expect("Operation failed") * k1[i]
                     + F::zero() * k2[i]
-                    + F::from_f64(500.0 / 1113.0).unwrap() * k3[i]
-                    + F::from_f64(125.0 / 192.0).unwrap() * k4[i]
-                    + F::from_f64(-2187.0 / 6784.0).unwrap() * k5[i]
-                    + F::from_f64(11.0 / 84.0).unwrap() * k6[i]);
+                    + F::from_f64(500.0 / 1113.0).expect("Operation failed") * k3[i]
+                    + F::from_f64(125.0 / 192.0).expect("Operation failed") * k4[i]
+                    + F::from_f64(-2187.0 / 6784.0).expect("Operation failed") * k5[i]
+                    + F::from_f64(11.0 / 84.0).expect("Operation failed") * k6[i]);
         }
         let k7 = f(t + h, y_stage.view());
 
@@ -155,12 +155,12 @@ where
         let mut y5 = y.clone();
         for i in 0..n_dim {
             y5[i] = y[i]
-                + h * (F::from_f64(35.0 / 384.0).unwrap() * k1[i]
+                + h * (F::from_f64(35.0 / 384.0).expect("Operation failed") * k1[i]
                     + F::zero() * k2[i]
-                    + F::from_f64(500.0 / 1113.0).unwrap() * k3[i]
-                    + F::from_f64(125.0 / 192.0).unwrap() * k4[i]
-                    + F::from_f64(-2187.0 / 6784.0).unwrap() * k5[i]
-                    + F::from_f64(11.0 / 84.0).unwrap() * k6[i]
+                    + F::from_f64(500.0 / 1113.0).expect("Operation failed") * k3[i]
+                    + F::from_f64(125.0 / 192.0).expect("Operation failed") * k4[i]
+                    + F::from_f64(-2187.0 / 6784.0).expect("Operation failed") * k5[i]
+                    + F::from_f64(11.0 / 84.0).expect("Operation failed") * k6[i]
                     + F::zero() * k7[i]);
         }
 
@@ -168,13 +168,13 @@ where
         let mut y4 = y.clone();
         for i in 0..n_dim {
             y4[i] = y[i]
-                + h * (F::from_f64(5179.0 / 57600.0).unwrap() * k1[i]
+                + h * (F::from_f64(5179.0 / 57600.0).expect("Operation failed") * k1[i]
                     + F::zero() * k2[i]
-                    + F::from_f64(7571.0 / 16695.0).unwrap() * k3[i]
-                    + F::from_f64(393.0 / 640.0).unwrap() * k4[i]
-                    + F::from_f64(-92097.0 / 339200.0).unwrap() * k5[i]
-                    + F::from_f64(187.0 / 2100.0).unwrap() * k6[i]
-                    + F::from_f64(1.0 / 40.0).unwrap() * k7[i]);
+                    + F::from_f64(7571.0 / 16695.0).expect("Operation failed") * k3[i]
+                    + F::from_f64(393.0 / 640.0).expect("Operation failed") * k4[i]
+                    + F::from_f64(-92097.0 / 339200.0).expect("Operation failed") * k5[i]
+                    + F::from_f64(187.0 / 2100.0).expect("Operation failed") * k6[i]
+                    + F::from_f64(1.0 / 40.0).expect("Operation failed") * k7[i]);
         }
 
         // Error estimation
@@ -186,12 +186,12 @@ where
         }
 
         // Step size control
-        let order = F::from_f64(5.0).unwrap(); // 5th order method
+        let order = F::from_f64(5.0).expect("Operation failed"); // 5th order method
         let exponent = F::one() / (order + F::one());
-        let safety = F::from_f64(0.9).unwrap();
+        let safety = F::from_f64(0.9).expect("Operation failed");
         let factor = safety * (F::one() / err_norm).powf(exponent);
-        let factor_min = F::from_f64(0.2).unwrap();
-        let factor_max = F::from_f64(5.0).unwrap();
+        let factor_min = F::from_f64(0.2).expect("Operation failed");
+        let factor_max = F::from_f64(5.0).expect("Operation failed");
         let factor = factor.min(factor_max).max(factor_min);
 
         if err_norm <= F::one() {
@@ -204,9 +204,9 @@ where
             y_values.push(y.clone());
 
             // Increase step size for next step
-            if err_norm <= F::from_f64(0.1).unwrap() {
+            if err_norm <= F::from_f64(0.1).expect("Operation failed") {
                 // For very accurate steps, try a larger increase
-                h *= factor.max(F::from_f64(2.0).unwrap());
+                h *= factor.max(F::from_f64(2.0).expect("Operation failed"));
             } else {
                 h *= factor;
             }
@@ -287,13 +287,13 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap()
+        _span / F::from_usize(100).expect("Operation failed")
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-8).unwrap() // Minimal step size
+        _span * F::from_f64(1e-8).expect("Operation failed") // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -405,13 +405,13 @@ where
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
         let _span = t_end - t_start;
-        _span / F::from_usize(100).unwrap()
+        _span / F::from_usize(100).expect("Operation failed")
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-8).unwrap() // Minimal step size
+        _span * F::from_f64(1e-8).expect("Operation failed") // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {

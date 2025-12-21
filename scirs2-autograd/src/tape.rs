@@ -52,13 +52,13 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
 
     /// Start recording operations on the tape.
     pub fn record(&self) {
-        let mut is_recording = self.is_recording.lock().unwrap();
+        let mut is_recording = self.is_recording.lock().expect("Operation failed");
         *is_recording = true;
     }
 
     /// Stop recording operations on the tape.
     pub fn stop_recording(&self) {
-        let mut is_recording = self.is_recording.lock().unwrap();
+        let mut is_recording = self.is_recording.lock().expect("Operation failed");
         *is_recording = false;
     }
 
@@ -68,7 +68,7 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
     ///
     /// True if the tape is recording, false otherwise
     pub fn is_recording(&self) -> bool {
-        *self.is_recording.lock().unwrap()
+        *self.is_recording.lock().expect("Operation failed")
     }
 
     /// Add a tensor to the list of watched tensors.
@@ -77,7 +77,7 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
     ///
     /// * `tensor` - The tensor to watch
     pub fn watch(&self, tensor: &Tensor<F>) {
-        let mut watched_tensors = self.watched_tensors.lock().unwrap();
+        let mut watched_tensors = self.watched_tensors.lock().expect("Operation failed");
         watched_tensors.insert(tensor.id);
     }
 
@@ -87,7 +87,7 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
     ///
     /// * `tensor` - The tensor to stop watching
     pub fn unwatch(&self, tensor: &Tensor<F>) {
-        let mut watched_tensors = self.watched_tensors.lock().unwrap();
+        let mut watched_tensors = self.watched_tensors.lock().expect("Operation failed");
         watched_tensors.remove(&tensor.id);
     }
 
@@ -101,7 +101,7 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
     ///
     /// True if the tensor is being watched, false otherwise
     pub fn is_watched(&self, tensor: &Tensor<F>) -> bool {
-        let watched_tensors = self.watched_tensors.lock().unwrap();
+        let watched_tensors = self.watched_tensors.lock().expect("Operation failed");
         watched_tensors.contains(&tensor.id)
     }
 
@@ -116,7 +116,7 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
             return;
         }
 
-        let mut graph = self.graph.lock().unwrap();
+        let mut graph = self.graph.lock().expect("Operation failed");
         graph.add_node(node, result_tensor.id);
     }
 
@@ -179,8 +179,8 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
 
     /// Reset the tape, clearing all recorded operations and watched tensors.
     pub fn reset(&self) {
-        let mut graph = self.graph.lock().unwrap();
-        let mut watched_tensors = self.watched_tensors.lock().unwrap();
+        let mut graph = self.graph.lock().expect("Operation failed");
+        let mut watched_tensors = self.watched_tensors.lock().expect("Operation failed");
 
         *graph = Graph::new();
         watched_tensors.clear();

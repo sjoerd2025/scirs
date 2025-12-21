@@ -35,7 +35,7 @@
 //! ];
 //!
 //! // Compute alpha shape with α = 0.8
-//! let alphashape = AlphaShape::new(&points, 0.8).unwrap();
+//! let alphashape = AlphaShape::new(&points, 0.8).expect("Operation failed");
 //!
 //! // Get the boundary edges (in 2D) or faces (in 3D)
 //! let boundary = alphashape.boundary();
@@ -101,7 +101,7 @@ impl AlphaShape {
     ///     [0.0, 1.0]
     /// ];
     ///
-    /// let alphashape = AlphaShape::new(&points, 1.0).unwrap();
+    /// let alphashape = AlphaShape::new(&points, 1.0).expect("Operation failed");
     /// let boundary = alphashape.boundary();
     /// println!("Boundary: {:?}", boundary);
     /// ```
@@ -179,7 +179,7 @@ impl AlphaShape {
     /// ];
     ///
     /// let alphas = vec![0.5, 1.0, 2.0];
-    /// let shapes = AlphaShape::multi_alpha(&points, &alphas).unwrap();
+    /// let shapes = AlphaShape::multi_alpha(&points, &alphas).expect("Operation failed");
     ///
     /// for (i, shape) in shapes.iter().enumerate() {
     ///     println!("Alpha {}: {} boundary elements", alphas[i], shape.boundary().len());
@@ -776,7 +776,7 @@ impl AlphaShape {
     ///     [0.5, 0.5]
     /// ];
     ///
-    /// let (optimal_alpha, shape) = AlphaShape::find_optimal_alpha(&points, "area").unwrap();
+    /// let (optimal_alpha, shape) = AlphaShape::find_optimal_alpha(&points, "area").expect("Operation failed");
     /// println!("Optimal alpha: {}", optimal_alpha);
     /// ```
     pub fn find_optimal_alpha(points: &Array2<f64>, criterion: &str) -> SpatialResult<(f64, Self)> {
@@ -786,7 +786,7 @@ impl AlphaShape {
 
         // Create candidate alpha values based on circumradii
         let mut alpha_candidates: Vec<f64> = circumradii.clone();
-        alpha_candidates.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        alpha_candidates.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         alpha_candidates.dedup_by(|a, b| (*a - *b).abs() < 1e-10);
 
         // Add some additional values
@@ -863,7 +863,7 @@ mod tests {
     fn test_alphashape_2d_basic() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alphashape = AlphaShape::new(&points, 1.0).unwrap();
+        let alphashape = AlphaShape::new(&points, 1.0).expect("Operation failed");
 
         assert_eq!(alphashape.ndim(), 2);
         assert_eq!(alphashape.npoints(), 4);
@@ -882,10 +882,10 @@ mod tests {
         ]);
 
         // Small alpha - should give fine detail
-        let alpha_small = AlphaShape::new(&points, 0.3).unwrap();
+        let alpha_small = AlphaShape::new(&points, 0.3).expect("Operation failed");
 
         // Large alpha - should approach convex hull
-        let alpha_large = AlphaShape::new(&points, 2.0).unwrap();
+        let alpha_large = AlphaShape::new(&points, 2.0).expect("Operation failed");
 
         // Large alpha should include more simplices
         assert!(alpha_large.complex().len() >= alpha_small.complex().len());
@@ -902,7 +902,7 @@ mod tests {
         ]);
 
         // Try with a large alpha to ensure we get some complex
-        let alphashape = AlphaShape::new(&points, 10.0).unwrap();
+        let alphashape = AlphaShape::new(&points, 10.0).expect("Operation failed");
 
         assert_eq!(alphashape.ndim(), 3);
         assert_eq!(alphashape.npoints(), 5);
@@ -929,7 +929,7 @@ mod tests {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
 
         let simplex = vec![0, 1, 2];
-        let radius = AlphaShape::circumradius_2d(&points, &simplex).unwrap();
+        let radius = AlphaShape::circumradius_2d(&points, &simplex).expect("Operation failed");
 
         // Right triangle with legs of length 1 should have circumradius sqrt(2)/2
         let expected = (2.0_f64).sqrt() / 2.0;
@@ -969,7 +969,7 @@ mod tests {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.5, 0.5]]);
 
         let alphas = vec![0.5, 1.0, 2.0];
-        let shapes = AlphaShape::multi_alpha(&points, &alphas).unwrap();
+        let shapes = AlphaShape::multi_alpha(&points, &alphas).expect("Operation failed");
 
         assert_eq!(shapes.len(), 3);
 
@@ -983,8 +983,8 @@ mod tests {
     fn test_alphashape_measure() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alphashape = AlphaShape::new(&points, 2.0).unwrap();
-        let area = alphashape.measure().unwrap();
+        let alphashape = AlphaShape::new(&points, 2.0).expect("Operation failed");
+        let area = alphashape.measure().expect("Operation failed");
 
         // Square should have area close to 1.0
         assert!(area > 0.5);
@@ -995,7 +995,7 @@ mod tests {
     fn test_find_optimal_alpha() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.5, 0.5]]);
 
-        let (optimal_alpha, shape) = AlphaShape::find_optimal_alpha(&points, "area").unwrap();
+        let (optimal_alpha, shape) = AlphaShape::find_optimal_alpha(&points, "area").expect("Operation failed");
 
         assert!(optimal_alpha > 0.0);
         assert!(optimal_alpha.is_finite());
@@ -1031,7 +1031,7 @@ mod tests {
     fn test_alpha_zero() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alphashape = AlphaShape::new(&points, 0.0).unwrap();
+        let alphashape = AlphaShape::new(&points, 0.0).expect("Operation failed");
 
         // Alpha = 0 should give empty complex
         assert_eq!(alphashape.complex().len(), 0);
@@ -1042,7 +1042,7 @@ mod tests {
     fn test_alpha_infinity() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alphashape = AlphaShape::new(&points, f64::INFINITY).unwrap();
+        let alphashape = AlphaShape::new(&points, f64::INFINITY).expect("Operation failed");
 
         // Alpha = ∞ should include all simplices (convex hull)
         assert_eq!(

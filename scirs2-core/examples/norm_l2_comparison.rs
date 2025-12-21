@@ -42,7 +42,7 @@ fn main() {
         println!("----------   --------------   --------------   -------   -----");
 
         for &size in &sizes {
-            let dist = Uniform::new(-100.0f32, 100.0).unwrap();
+            let dist = Uniform::new(-100.0f32, 100.0).expect("Operation failed");
             let data = Array1::from_shape_fn(size, |_| dist.sample(&mut rng));
 
             // Approach 1: Current dot product-based
@@ -86,7 +86,7 @@ fn main() {
         println!("----------   --------------   --------------   -------   -----");
 
         for &size in &sizes {
-            let dist = Uniform::new(-100.0f64, 100.0).unwrap();
+            let dist = Uniform::new(-100.0f64, 100.0).expect("Operation failed");
             let data = Array1::from_shape_fn(size, |_| dist.sample(&mut rng));
 
             // Approach 1: Current dot product-based
@@ -144,7 +144,7 @@ fn main() {
 
         for _ in 0..iterations {
             // f32
-            let dist_f32 = Uniform::new(-100.0f32, 100.0).unwrap();
+            let dist_f32 = Uniform::new(-100.0f32, 100.0).expect("Operation failed");
             let data_f32 = Array1::from_shape_fn(size, |_| dist_f32.sample(&mut rng));
 
             let start = Instant::now();
@@ -156,7 +156,7 @@ fn main() {
             total_dedicated_f32 += start.elapsed().as_secs_f64();
 
             // f64
-            let dist_f64 = Uniform::new(-100.0f64, 100.0).unwrap();
+            let dist_f64 = Uniform::new(-100.0f64, 100.0).expect("Operation failed");
             let data_f64 = Array1::from_shape_fn(size, |_| dist_f64.sample(&mut rng));
 
             let start = Instant::now();

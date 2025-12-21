@@ -975,7 +975,7 @@ impl AdvancedParallelStatsProcessor {
             }
         });
 
-        let results = results.lock().unwrap().clone();
+        let results = results.lock().expect("Operation failed").clone();
         Ok(results)
     }
 
@@ -1016,7 +1016,7 @@ impl AdvancedParallelStatsProcessor {
             }
         });
 
-        let results = results.lock().unwrap().clone();
+        let results = results.lock().expect("Operation failed").clone();
         Ok(results)
     }
 
@@ -1029,7 +1029,7 @@ impl AdvancedParallelStatsProcessor {
             return Ok(F::zero());
         }
 
-        let n = F::from(x.len()).unwrap();
+        let n = F::from(x.len()).expect("Operation failed");
         let sum_x: F = x.iter().cloned().sum();
         let sum_y: F = y.iter().cloned().sum();
         let sum_xx: F = x.iter().map(|&xi| xi * xi).sum();
@@ -1306,19 +1306,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_processor_creation() {
-        let processor = AdvancedParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().expect("Operation failed");
         assert!(!processor.execution_contexts.is_empty());
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_optimization_strategy_selection() {
-        let processor = AdvancedParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().expect("Operation failed");
         let strategy = processor
             .select_optimization_strategy("mean", 10000)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(!strategy.name.is_empty());
         assert!(strategy.thread_count > 0);
@@ -1326,9 +1324,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_work_unit_creation() {
-        let processor = AdvancedParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().expect("Operation failed");
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let strategy = OptimizationStrategy {
             name: "test".to_string(),
@@ -1340,27 +1337,25 @@ mod tests {
 
         let work_units = processor
             .create_work_units(&data.view(), &strategy)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(work_units.len(), 2);
         assert!(!work_units[0].data.is_empty());
         assert!(!work_units[1].data.is_empty());
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_correlation_computation() {
-        let processor = AdvancedParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().expect("Operation failed");
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
 
-        let correlation = processor.compute_correlation(&x, &y).unwrap();
+        let correlation = processor.compute_correlation(&x, &y).expect("Operation failed");
         assert!((correlation - 1.0).abs() < 1e-10); // Perfect positive correlation
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_metrics_calculation() {
-        let processor = AdvancedParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().expect("Operation failed");
         let work_units = vec![
             WorkUnit {
                 id: 0,
@@ -1382,7 +1377,7 @@ mod tests {
 
         let metrics = processor
             .calculate_execution_metrics(Duration::from_millis(100), &work_units)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(metrics.threads_used, 2);
         assert!(metrics.load_balance_efficiency > 0.0);

@@ -46,8 +46,12 @@ pub fn extract_clusters_multi_criteria<F: Float + FromPrimitive + Debug + Partia
 
     // Process merges in order
     for merge_idx in 0..linkage_matrix.shape()[0] {
-        let cluster1 = linkage_matrix[[merge_idx, 0]].to_usize().unwrap();
-        let cluster2 = linkage_matrix[[merge_idx, 1]].to_usize().unwrap();
+        let cluster1 = linkage_matrix[[merge_idx, 0]]
+            .to_usize()
+            .expect("Operation failed");
+        let cluster2 = linkage_matrix[[merge_idx, 1]]
+            .to_usize()
+            .expect("Operation failed");
         let distance = linkage_matrix[[merge_idx, 2]];
 
         // Check distance _threshold
@@ -132,17 +136,17 @@ fn calculate_merge_inconsistency<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Calculate mean
     let mean = distances.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from_usize(distances.len()).unwrap();
+        / F::from_usize(distances.len()).expect("Operation failed");
 
     // Calculate standard deviation
     let variance = distances
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-        / F::from_usize(distances.len()).unwrap();
+        / F::from_usize(distances.len()).expect("Operation failed");
 
     let std_dev = variance.sqrt();
 
-    if std_dev < F::from_f64(1e-10).unwrap() {
+    if std_dev < F::from_f64(1e-10).expect("Operation failed") {
         return Ok(F::zero()); // No variation, so inconsistency is zero
     }
 
@@ -332,8 +336,12 @@ fn extract_clusters_by_count<F: Float + FromPrimitive + Debug + PartialOrd>(
             break;
         }
 
-        let cluster1 = linkage_matrix[[merge_idx, 0]].to_usize().unwrap();
-        let cluster2 = linkage_matrix[[merge_idx, 1]].to_usize().unwrap();
+        let cluster1 = linkage_matrix[[merge_idx, 0]]
+            .to_usize()
+            .expect("Operation failed");
+        let cluster2 = linkage_matrix[[merge_idx, 1]]
+            .to_usize()
+            .expect("Operation failed");
 
         // Map cluster indices to original observations
         let obs1 = if cluster1 < n_observations {
@@ -405,7 +413,8 @@ fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F])
     // Calculate second derivatives
     let mut second_derivatives = Vec::new();
     for i in 1..(values.len() - 1) {
-        let second_deriv = values[i + 1] - F::from_f64(2.0).unwrap() * values[i] + values[i - 1];
+        let second_deriv =
+            values[i + 1] - F::from_f64(2.0).expect("Operation failed") * values[i] + values[i - 1];
         second_derivatives.push(second_deriv.abs());
     }
 
@@ -455,7 +464,7 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
             intra_cluster_distances
                 .iter()
                 .fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(intra_cluster_distances.len()).unwrap()
+                / F::from_usize(intra_cluster_distances.len()).expect("Operation failed")
         };
 
         // Calculate minimum average inter-cluster distance (b)
@@ -475,7 +484,7 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
                     let avg_distance = inter_cluster_distances
                         .iter()
                         .fold(F::zero(), |acc, &x| acc + x)
-                        / F::from_usize(inter_cluster_distances.len()).unwrap();
+                        / F::from_usize(inter_cluster_distances.len()).expect("Operation failed");
 
                     if avg_distance < min_inter_cluster_distance {
                         min_inter_cluster_distance = avg_distance;
@@ -496,7 +505,7 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
         total_silhouette = total_silhouette + silhouette;
     }
 
-    total_silhouette / F::from_usize(n_observations).unwrap()
+    total_silhouette / F::from_usize(n_observations).expect("Operation failed")
 }
 
 /// Calculate Euclidean distance between two points
@@ -639,10 +648,10 @@ mod tests {
                 4.0, 5.0, 1.2, 4.0, // Merge the two clusters
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Extract 2 clusters
-        let clusters = extract_clusters_by_count(linkage.view(), 2).unwrap();
+        let clusters = extract_clusters_by_count(linkage.view(), 2).expect("Operation failed");
         assert_eq!(clusters.len(), 4);
 
         // Points 0 and 1 should be in one cluster, 2 and 3 in another
@@ -661,7 +670,7 @@ mod tests {
                 10.0, 10.0, 11.0, 10.0, 10.5, 10.5, // Cluster 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create a simple linkage matrix
         let linkage = Array2::from_shape_vec(
@@ -671,10 +680,10 @@ mod tests {
                 6.0, 7.0, 8.0, 6.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let optimal_k =
-            estimate_optimal_clusters(linkage.view(), Some(data.view()), Some(4)).unwrap();
+        let optimal_k = estimate_optimal_clusters(linkage.view(), Some(data.view()), Some(4))
+            .expect("Operation failed");
 
         // Should suggest 2 clusters for this clearly separated data
         assert!(optimal_k >= 1);
@@ -690,9 +699,9 @@ mod tests {
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 10.0, 10.0, 10.1, 10.1,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let pruned = prune_clusters(&clusters, data.view(), 2, 1.0).unwrap();
+        let pruned = prune_clusters(&clusters, data.view(), 2, 1.0).expect("Operation failed");
 
         // Cluster 1 (with only 1 point) should be merged with a nearby cluster
         assert_eq!(pruned.len(), 6);
@@ -704,7 +713,7 @@ mod tests {
     #[test]
     fn test_calculate_silhouette_score() {
         let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 10.0, 10.0, 11.0, 10.0])
-            .unwrap();
+            .expect("Operation failed");
         let clusters = Array1::from_vec(vec![0, 0, 1, 1]);
 
         let score = calculate_silhouette_score(data.view(), &clusters);

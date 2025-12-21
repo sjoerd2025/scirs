@@ -36,7 +36,7 @@ pub fn analyze_latency(_config: &AdvancedWptValidationConfig) -> SignalResult<La
 
     // Calculate percentiles
     let mut sorted_latencies = latencies.clone();
-    sorted_latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_latencies.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let percentiles = vec![
         sorted_latencies[(latencies.len() * 50 / 100).min(latencies.len() - 1)], // 50th percentile
         sorted_latencies[(latencies.len() * 90 / 100).min(latencies.len() - 1)], // 90th percentile
@@ -166,7 +166,7 @@ mod tests {
         let result = validate_realtime_processing_comprehensive(&config);
         assert!(result.is_ok());
 
-        let validation = result.unwrap();
+        let validation = result.expect("Operation failed");
         assert!(validation.latency_analysis.average_latency_ms > 0.0);
         assert!(validation.jitter_analysis.jitter_stability > 0.0);
         assert!(validation.throughput_analysis.average_throughput > 0.0);
@@ -178,7 +178,7 @@ mod tests {
         let result = analyze_latency(&config);
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert!(analysis.average_latency_ms > 0.0);
         assert!(analysis.maximum_latency_ms >= analysis.average_latency_ms);
         assert_eq!(analysis.latency_percentiles.len(), 4);
@@ -190,7 +190,7 @@ mod tests {
         let result = analyze_jitter(&config);
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert!(analysis.average_jitter_ms > 0.0);
         assert!(analysis.jitter_stability > 0.0);
         assert!(analysis.jitter_stability <= 1.0);
@@ -202,7 +202,7 @@ mod tests {
         let result = analyze_throughput(&config);
         assert!(result.is_ok());
 
-        let analysis = result.unwrap();
+        let analysis = result.expect("Operation failed");
         assert!(analysis.average_throughput > 0.0);
         assert!(analysis.peak_throughput >= analysis.average_throughput);
         assert!(!analysis.bottleneck_analysis.is_empty());

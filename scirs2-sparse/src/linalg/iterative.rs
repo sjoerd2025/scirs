@@ -30,8 +30,8 @@ impl<F: Float> Default for CGOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             preconditioner: None,
         }
@@ -180,8 +180,8 @@ impl<F: Float> Default for BiCGOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             left_preconditioner: None,
             right_preconditioner: None,
@@ -273,7 +273,9 @@ where
 
         // Compute alpha = rho_old / (p_star, q)
         let alpha_den = dot(&p_star, &q);
-        if alpha_den.abs() < F::epsilon() * F::from(10).unwrap() {
+        if alpha_den.abs()
+            < F::epsilon() * F::from(10).expect("Failed to convert constant to float")
+        {
             return Ok(IterationResult {
                 x,
                 iterations,
@@ -318,7 +320,7 @@ where
 
         // Compute new rho
         let rho = dot(&r_star, &z);
-        if rho.abs() < F::epsilon() * F::from(10).unwrap() {
+        if rho.abs() < F::epsilon() * F::from(10).expect("Failed to convert constant to float") {
             return Ok(IterationResult {
                 x,
                 iterations: iterations + 1,
@@ -364,8 +366,8 @@ impl<F: Float> Default for BiCGSTABOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             left_preconditioner: None,
             right_preconditioner: None,
@@ -457,7 +459,7 @@ where
         let rho = dot(&r_hat, &r);
 
         // Check for breakdown
-        if rho.abs() < F::epsilon() * F::from(10).unwrap() {
+        if rho.abs() < F::epsilon() * F::from(10).expect("Failed to convert constant to float") {
             return Ok(BiCGSTABResult {
                 x,
                 iterations,
@@ -491,7 +493,7 @@ where
 
         // Compute alpha = rho / (r_hat, v)
         let den = dot(&r_hat, &v);
-        if den.abs() < F::epsilon() * F::from(10).unwrap() {
+        if den.abs() < F::epsilon() * F::from(10).expect("Failed to convert constant to float") {
             return Ok(BiCGSTABResult {
                 x,
                 iterations,
@@ -557,7 +559,7 @@ where
         let ts = dot(&t, &s);
         let tt = dot(&t, &t);
 
-        if tt < F::epsilon() * F::from(10).unwrap() {
+        if tt < F::epsilon() * F::from(10).expect("Failed to convert constant to float") {
             return Ok(BiCGSTABResult {
                 x,
                 iterations,
@@ -570,7 +572,10 @@ where
         omega = ts / tt;
 
         // Check if omega is reasonable
-        if !omega.is_finite() || omega.abs() < F::epsilon() * F::from(10).unwrap() {
+        if !omega.is_finite()
+            || omega.abs()
+                < F::epsilon() * F::from(10).expect("Failed to convert constant to float")
+        {
             return Ok(BiCGSTABResult {
                 x,
                 iterations,
@@ -632,8 +637,8 @@ impl<F: Float> Default for GMRESOptions<F> {
         Self {
             max_iter: 1000,
             restart: 30,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             preconditioner: None,
         }
@@ -734,7 +739,9 @@ where
             h[inner_iter + 1][inner_iter] = norm2(&w);
 
             // Check for breakdown
-            if h[inner_iter + 1][inner_iter] < F::epsilon() * F::from(10).unwrap() {
+            if h[inner_iter + 1][inner_iter]
+                < F::epsilon() * F::from(10).expect("Failed to convert constant to float")
+            {
                 break;
             }
 
@@ -860,9 +867,9 @@ impl<F: Float> Default for LSQROptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
-            btol: F::from(1e-8).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
+            btol: F::from(1e-8).expect("Failed to convert constant to float"),
             x0: None,
         }
     }
@@ -883,9 +890,9 @@ impl<F: Float + SparseElement> Default for LSMROptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
-            btol: F::from(1e-8).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
+            btol: F::from(1e-8).expect("Failed to convert constant to float"),
             x0: None,
             damp: F::sparse_zero(),
         }
@@ -910,8 +917,8 @@ impl<F: Float> Default for GCROTOptions<F> {
             max_iter: 1000,
             restart: 30,
             truncate: 2,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             preconditioner: None,
         }
@@ -932,11 +939,42 @@ impl<F: Float> Default for TFQMROptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             preconditioner: None,
         }
+    }
+}
+
+/// Stable implementation of Givens rotation
+///
+/// Computes (c, s, r) such that [ c  s] [a] = [r]
+///                                [-s  c] [b]   [0]
+fn sym_ortho<F: Float + SparseElement>(a: F, b: F) -> (F, F, F) {
+    use scirs2_core::numeric::One;
+
+    let zero = F::sparse_zero();
+    let one = <F as One>::one();
+
+    if b == zero {
+        return (if a >= zero { one } else { -one }, zero, a.abs());
+    } else if a == zero {
+        return (zero, if b >= zero { one } else { -one }, b.abs());
+    } else if b.abs() > a.abs() {
+        let tau = a / b;
+        let s_sign = if b >= zero { one } else { -one };
+        let s = s_sign / (one + tau * tau).sqrt();
+        let c = s * tau;
+        let r = b / s;
+        (c, s, r)
+    } else {
+        let tau = b / a;
+        let c_sign = if a >= zero { one } else { -one };
+        let c = c_sign / (one + tau * tau).sqrt();
+        let s = c * tau;
+        let r = a / c;
+        (c, s, r)
     }
 }
 
@@ -944,6 +982,12 @@ impl<F: Float> Default for TFQMROptions<F> {
 ///
 /// Solves the least squares problem min ||Ax - b||_2 or the system Ax = b
 /// using the LSQR algorithm. Suitable for large sparse least squares problems.
+///
+/// Implementation follows the SciPy reference based on:
+/// C. C. Paige and M. A. Saunders (1982), "LSQR: An algorithm for sparse linear
+/// equations and sparse least squares", ACM TOMS 8(1), 43-71.
+///
+/// Uses stable Givens rotations for numerical stability.
 #[allow(dead_code)]
 pub fn lsqr<F>(
     a: &dyn LinearOperator<F>,
@@ -975,13 +1019,21 @@ where
         None => vec![F::sparse_zero(); n],
     };
 
-    // Compute initial residual r = b - A*x
-    let ax = a.matvec(&x)?;
-    let mut u: Vec<F> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
+    // Set up the first vectors u and v for the bidiagonalization.
+    // These satisfy  beta*u = b - A@x,  alfa*v = A'@u.
+    let mut u: Vec<F> = b.to_vec();
+    let bnorm = norm2(b);
 
-    // Initialize variables
-    let mut alpha = norm2(&u);
-    if alpha == F::sparse_zero() {
+    // Initialize from x0 if provided
+    if x.iter().any(|&xi| xi != F::sparse_zero()) {
+        let ax = a.matvec(&x)?;
+        for i in 0..u.len() {
+            u[i] -= ax[i];
+        }
+    }
+
+    let mut beta = norm2(&u);
+    if beta == F::sparse_zero() {
         return Ok(IterationResult {
             x,
             iterations: 0,
@@ -991,68 +1043,86 @@ where
         });
     }
 
-    for element in &mut u {
-        *element /= alpha;
+    // Normalize u: u = u/beta
+    for elem in &mut u {
+        *elem /= beta;
     }
 
+    // v = A'*u
     let mut v = a.rmatvec(&u)?;
-    let mut beta = norm2(&v);
+    let mut alfa = norm2(&v);
+
+    // Normalize v: v = v/alfa
+    if alfa > F::sparse_zero() {
+        for elem in &mut v {
+            *elem /= alfa;
+        }
+    }
 
     let mut w = v.clone();
-    if beta != F::sparse_zero() {
-        for element in &mut w {
-            *element /= beta;
-        }
-    }
 
-    let mut phi = alpha;
-    let mut rho = beta;
+    // Initialize variables (matching SciPy naming)
+    let mut rhobar = alfa;
+    let mut phibar = beta;
 
-    let tolerance = F::max(options.atol, options.rtol * norm2(b));
+    let tolerance = F::max(options.atol, options.rtol * bnorm);
 
     for iterations in 0..options.max_iter {
-        // Continue bidiagonalization
-        let au = a.matvec(&w)?;
+        // Perform the next step of the bidiagonalization to obtain the
+        // next  beta, u, alfa, v. These satisfy the relations
+        //     beta*u  =  A@v   -  alfa*u,
+        //     alfa*v  =  A'@u  -  beta*v.
+
+        // u = A.matvec(v) - alfa * u
+        let av = a.matvec(&v)?;
         for i in 0..u.len() {
-            u[i] = au[i] - beta * u[i];
+            u[i] = av[i] - alfa * u[i];
         }
-        alpha = norm2(&u);
+        beta = norm2(&u);
 
-        if alpha != F::sparse_zero() {
+        if beta > F::sparse_zero() {
+            // u = (1/beta) * u
             for elem in &mut u {
-                *elem /= alpha;
-            }
-        }
-
-        let atv = a.rmatvec(&u)?;
-        for i in 0..w.len() {
-            w[i] = atv[i] - alpha * w[i];
-        }
-        beta = norm2(&w);
-
-        if beta != F::sparse_zero() {
-            for elem in &mut w {
                 *elem /= beta;
             }
+
+            // v = A.rmatvec(u) - beta * v
+            let atu = a.rmatvec(&u)?;
+            for i in 0..v.len() {
+                v[i] = atu[i] - beta * v[i];
+            }
+            alfa = norm2(&v);
+
+            if alfa > F::sparse_zero() {
+                // v = (1/alfa) * v
+                for elem in &mut v {
+                    *elem /= alfa;
+                }
+            }
         }
 
-        // Update QR factorization
-        let rho_old = rho;
-        let c = rho_old / (rho_old * rho_old + alpha * alpha).sqrt();
-        let s = alpha / (rho_old * rho_old + alpha * alpha).sqrt();
+        // Use a plane rotation to eliminate the subdiagonal element (beta)
+        // of the lower-bidiagonal matrix, giving an upper-bidiagonal matrix.
+        let (cs, sn, rho) = sym_ortho(rhobar, beta);
 
-        let theta = s * beta;
-        rho = -c * beta;
-        phi = c * phi;
+        let theta = sn * alfa;
+        rhobar = -cs * alfa;
+        let phi = cs * phibar;
+        phibar = sn * phibar;
 
-        // Update solution
-        let t = phi / rho_old;
+        // Update x and w.
+        let t1 = phi / rho;
+        let t2 = -theta / rho;
+
         for i in 0..x.len() {
-            x[i] += t * w[i];
+            x[i] += t1 * w[i];
+        }
+        for i in 0..w.len() {
+            w[i] = v[i] + t2 * w[i];
         }
 
         // Check convergence
-        let residual_norm = theta.abs();
+        let residual_norm = phibar.abs();
         if residual_norm <= tolerance {
             return Ok(IterationResult {
                 x,
@@ -1062,14 +1132,12 @@ where
                 message: "Converged".to_string(),
             });
         }
-
-        phi = -s * phi;
     }
 
     Ok(IterationResult {
         x,
         iterations: options.max_iter,
-        residual_norm: phi.abs(),
+        residual_norm: phibar.abs(),
         converged: false,
         message: "Maximum iterations reached".to_string(),
     })
@@ -1077,7 +1145,10 @@ where
 
 /// Least Squares Minimal Residual (LSMR) solver
 ///
-/// An enhanced version of LSQR with better numerical properties
+/// An enhanced version of LSQR with better numerical properties.
+/// Implementation follows SciPy reference based on:
+/// D. C.-L. Fong and M. A. Saunders (2011), "LSMR: An iterative algorithm
+/// for sparse least-squares problems", SIAM J. Sci. Comput., 33(5), 2950-2971.
 #[allow(dead_code)]
 pub fn lsmr<F>(
     a: &dyn LinearOperator<F>,
@@ -1087,6 +1158,8 @@ pub fn lsmr<F>(
 where
     F: Float + NumAssign + Sum + SparseElement + 'static,
 {
+    use scirs2_core::numeric::One;
+
     let (m, n) = a.shape();
     if b.len() != m {
         return Err(SparseError::DimensionMismatch {
@@ -1094,6 +1167,9 @@ where
             found: b.len(),
         });
     }
+
+    let zero = F::sparse_zero();
+    let one = <F as One>::one();
 
     // Initialize solution
     let mut x: Vec<F> = match &options.x0 {
@@ -1106,111 +1182,140 @@ where
             }
             x0.clone()
         }
-        None => vec![F::sparse_zero(); n],
+        None => vec![zero; n],
     };
 
-    // Compute initial residual r = b - A*x
-    let ax = a.matvec(&x)?;
-    let mut u: Vec<F> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
+    // Set up the first vectors u and v for the bidiagonalization.
+    let mut u: Vec<F> = b.to_vec();
+    let normb = norm2(b);
 
-    let beta_1 = norm2(&u);
-    if beta_1 == F::sparse_zero() {
+    // Initialize from x0 if provided
+    if x.iter().any(|&xi| xi != zero) {
+        let ax = a.matvec(&x)?;
+        for i in 0..u.len() {
+            u[i] -= ax[i];
+        }
+    }
+
+    let mut beta = norm2(&u);
+    if beta == zero {
         return Ok(IterationResult {
             x,
             iterations: 0,
-            residual_norm: F::sparse_zero(),
+            residual_norm: zero,
             converged: true,
             message: "Zero initial residual".to_string(),
         });
     }
 
+    // u = u / beta
     for elem in &mut u {
-        *elem /= beta_1;
+        *elem /= beta;
     }
 
+    // v = A' * u
     let mut v = a.rmatvec(&u)?;
-    let mut alpha_1 = norm2(&v);
+    let mut alpha = norm2(&v);
 
-    if alpha_1 != F::sparse_zero() {
-        for item in &mut v {
-            *item /= alpha_1;
+    // v = v / alpha
+    if alpha > zero {
+        for elem in &mut v {
+            *elem /= alpha;
         }
     }
 
-    let mut h = vec![F::sparse_zero(); n];
-    let mut h_bar = v.clone();
+    // Initialize variables for 1st iteration.
+    let mut alphabar = alpha;
+    let mut zetabar = alpha * beta;
+    let mut rho = one;
+    let mut rhobar = one;
+    let mut cbar = one;
+    let mut sbar = zero;
 
-    let mut rho_bar = alpha_1;
-    let mut phi_bar = beta_1;
+    let mut h = v.clone();
+    let mut hbar: Vec<F> = vec![zero; n];
 
-    let tolerance = F::max(options.atol, options.rtol * norm2(b));
+    let tolerance = F::max(options.atol, options.rtol * normb);
 
-    for iterations in 0..options.max_iter {
-        // Lanczos bidiagonalization
-        let au = a.matvec(&h_bar)?;
+    for itn in 0..options.max_iter {
+        // Perform the next step of the bidiagonalization.
+        // u = A * v - alpha * u
+        let av = a.matvec(&v)?;
         for i in 0..u.len() {
-            u[i] = au[i] - alpha_1 * u[i];
+            u[i] = av[i] - alpha * u[i];
         }
-        let beta = norm2(&u);
+        beta = norm2(&u);
 
-        if beta != F::sparse_zero() {
-            for item in &mut u {
-                *item /= beta;
+        if beta > zero {
+            // u = u / beta
+            for elem in &mut u {
+                *elem /= beta;
+            }
+
+            // v = A' * u - beta * v
+            let atu = a.rmatvec(&u)?;
+            for i in 0..v.len() {
+                v[i] = atu[i] - beta * v[i];
+            }
+            alpha = norm2(&v);
+
+            if alpha > zero {
+                for elem in &mut v {
+                    *elem /= alpha;
+                }
             }
         }
 
-        let atv = a.rmatvec(&u)?;
-        for i in 0..h_bar.len() {
-            h_bar[i] = atv[i] - beta * h_bar[i];
+        // Use a plane rotation (Q_i) to turn B_i to R_i.
+        let rhoold = rho;
+        let (c, s, rho_new) = sym_ortho(alphabar, beta);
+        rho = rho_new;
+        let thetanew = s * alpha;
+        alphabar = c * alpha;
+
+        // Use a plane rotation (Qbar_i) to turn R_i^T to R_i^bar.
+        let rhobarold = rhobar;
+        let zetaold = zetabar / (rhoold * rhobarold);
+        let thetabar = sbar * rho;
+        let rhotemp = cbar * rho;
+        let (cbar_new, sbar_new, rhobar_new) = sym_ortho(rhotemp, thetanew);
+        cbar = cbar_new;
+        sbar = sbar_new;
+        rhobar = rhobar_new;
+        let zeta = cbar * zetabar;
+        zetabar = -sbar * zetabar;
+
+        // Update h, hbar, x.
+        let factor = thetabar * rho / (rhoold * rhobarold);
+        for i in 0..n {
+            hbar[i] = h[i] - factor * hbar[i];
         }
-        let alpha = norm2(&h_bar);
-
-        if alpha != F::sparse_zero() {
-            for item in &mut h_bar {
-                *item /= alpha;
-            }
+        let update_factor = zeta / (rho * rhobar);
+        for i in 0..n {
+            x[i] += update_factor * hbar[i];
+        }
+        let h_factor = thetanew / rho;
+        for i in 0..n {
+            h[i] = v[i] - h_factor * h[i];
         }
 
-        // Apply previous rotation
-        let rho = (rho_bar * rho_bar + beta * beta).sqrt();
-        let c = rho_bar / rho;
-        let s = beta / rho;
-
-        let theta = s * alpha;
-        rho_bar = -c * alpha;
-
-        let phi = c * phi_bar;
-        phi_bar = s * phi_bar;
-
-        // Update solution
-        let t1 = phi / rho;
-        let t2 = -theta / rho;
-
-        for i in 0..x.len() {
-            x[i] += t1 * h[i];
-            h[i] = h_bar[i] + t2 * h[i];
-        }
-
-        // Check convergence
-        let residual_norm = phi_bar.abs();
-        if residual_norm <= tolerance {
+        // Check convergence based on zetabar (estimates ||A'r||)
+        let normar = zetabar.abs();
+        if normar <= tolerance {
             return Ok(IterationResult {
                 x,
-                iterations: iterations + 1,
-                residual_norm,
+                iterations: itn + 1,
+                residual_norm: normar,
                 converged: true,
                 message: "Converged".to_string(),
             });
         }
-
-        // Update for next iteration
-        alpha_1 = alpha;
     }
 
     Ok(IterationResult {
         x,
         iterations: options.max_iter,
-        residual_norm: phi_bar.abs(),
+        residual_norm: zetabar.abs(),
         converged: false,
         message: "Maximum iterations reached".to_string(),
     })
@@ -1218,7 +1323,12 @@ where
 
 /// Transpose-Free Quasi-Minimal Residual (TFQMR) solver
 ///
-/// A transpose-free variant of QMR that avoids the need for A^T
+/// A transpose-free variant of QMR that avoids the need for A^T.
+/// Implementation follows SciPy's tfqmr based on R.W. Freund (1993).
+///
+/// Reference:
+/// R. W. Freund, "A Transpose-Free Quasi-Minimal Residual Algorithm for
+/// Non-Hermitian Linear Systems", SIAM J. Sci. Comput., 14(2), 470-482, 1993.
 #[allow(dead_code)]
 pub fn tfqmr<F>(
     a: &dyn LinearOperator<F>,
@@ -1242,6 +1352,8 @@ where
     }
 
     let n = rows;
+    let one = F::sparse_one();
+    let zero = F::sparse_zero();
 
     // Initialize solution
     let mut x: Vec<F> = match &options.x0 {
@@ -1254,137 +1366,193 @@ where
             }
             x0.clone()
         }
-        None => vec![F::sparse_zero(); n],
+        None => vec![zero; n],
     };
 
-    // Compute initial residual
+    // Compute initial residual r = b - A*x
     let ax = a.matvec(&x)?;
-    let mut r: Vec<F> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
+    let r: Vec<F> = b.iter().zip(&ax).map(|(&bi, &axi)| bi - axi).collect();
 
-    let mut rnorm = norm2(&r);
+    let r0norm = norm2(&r);
     let bnorm = norm2(b);
     let tolerance = F::max(options.atol, options.rtol * bnorm);
 
-    if rnorm <= tolerance {
+    if r0norm <= tolerance || r0norm == zero {
         return Ok(IterationResult {
             x,
             iterations: 0,
-            residual_norm: rnorm,
+            residual_norm: r0norm,
             converged: true,
             message: "Converged with initial guess".to_string(),
         });
     }
 
-    // Initialize vectors
-    let r_tilde = r.clone(); // Shadow residual
-    let mut w = r.clone();
+    // Initialize vectors following SciPy's notation
     let mut u = r.clone();
-    let mut v = vec![F::sparse_zero(); n];
-    let mut d = vec![F::sparse_zero(); n];
+    let mut w = r.clone();
+    let rstar = r.clone(); // Shadow residual (r_tilde in some notations)
 
-    let mut tau = rnorm;
-    let mut theta = F::sparse_zero();
-    let mut eta = F::sparse_zero();
-    let mut rho = dot(&r_tilde, &r);
+    // v = M^{-1} * A * r (with preconditioner)
+    let ar = a.matvec(&r)?;
+    let mut v = match &options.preconditioner {
+        Some(m) => m.matvec(&ar)?,
+        None => ar,
+    };
+    let mut uhat = v.clone();
 
-    if rho == F::sparse_zero() {
-        return Ok(IterationResult {
-            x,
-            iterations: 0,
-            residual_norm: rnorm,
-            converged: false,
-            message: "TFQMR breakdown: rho = 0".to_string(),
-        });
-    }
+    let mut d: Vec<F> = vec![zero; n];
+    let mut theta = zero;
+    let mut eta = zero;
 
-    for iterations in 0..options.max_iter {
-        // Apply preconditioner if provided
-        let y = match &options.preconditioner {
-            Some(m) => m.matvec(&w)?,
-            None => w.clone(),
+    // rho = <rstar, r> (always real since rstar == r initially)
+    let mut rho = dot(&rstar, &r);
+    let mut rho_last = rho;
+    let mut tau = r0norm;
+
+    for iter in 0..options.max_iter {
+        let even = iter % 2 == 0;
+
+        // On even iterations, compute alpha and uNext
+        let mut alpha = zero;
+        let mut u_next: Vec<F> = vec![zero; n];
+
+        if even {
+            let vtrstar = dot(&rstar, &v);
+            if vtrstar == zero {
+                return Ok(IterationResult {
+                    x,
+                    iterations: iter,
+                    residual_norm: tau,
+                    converged: false,
+                    message: "TFQMR breakdown: v'*rstar = 0".to_string(),
+                });
+            }
+            alpha = rho / vtrstar;
+
+            // uNext = u - alpha * v
+            for i in 0..n {
+                u_next[i] = u[i] - alpha * v[i];
+            }
+        }
+
+        // w = w - alpha * uhat (every iteration)
+        // Need alpha from either current even step or previous even step
+        let alpha_used = if even {
+            alpha
+        } else {
+            // On odd iterations, alpha comes from the previous even iteration
+            // We need to save alpha across iterations
+            rho / dot(&rstar, &v)
         };
 
-        v = a.matvec(&y)?;
-        let alpha = rho / dot(&r_tilde, &v);
-
-        // Update w
         for i in 0..n {
-            w[i] -= alpha * v[i];
+            w[i] -= alpha_used * uhat[i];
         }
 
-        // First half-step update
-        let theta_old = theta;
+        // d = u + (theta^2 / alpha) * eta * d
+        let theta_sq_over_alpha =
+            if alpha_used.abs() > F::from(1e-300).expect("Failed to convert constant to float") {
+                theta * theta / alpha_used
+            } else {
+                zero
+            };
+        for i in 0..n {
+            d[i] = u[i] + theta_sq_over_alpha * eta * d[i];
+        }
+
+        // theta = ||w|| / tau
         theta = norm2(&w) / tau;
-        let c = F::sparse_one() / (F::sparse_one() + theta * theta).sqrt();
-        tau = tau * theta * c;
-        eta = c * c * alpha;
 
+        // c = 1 / sqrt(1 + theta^2)
+        let c = one / (one + theta * theta).sqrt();
+
+        // tau = tau * theta * c
+        tau = tau * theta * c;
+
+        // eta = c^2 * alpha
+        eta = c * c * alpha_used;
+
+        // z = M^{-1} * d (apply preconditioner to d)
+        let z = match &options.preconditioner {
+            Some(m) => m.matvec(&d)?,
+            None => d.clone(),
+        };
+
+        // x = x + eta * z
         for i in 0..n {
-            d[i] = u[i] + (theta_old * theta_old * eta / alpha) * d[i];
-            x[i] += eta * d[i];
+            x[i] += eta * z[i];
         }
 
-        // Check convergence after first half-step
-        if tau * (F::sparse_one() + theta * theta).sqrt() <= tolerance {
+        // Convergence criterion: tau * sqrt(iter+1) < tolerance
+        let iter_f = F::from(iter + 1).expect("Failed to convert to float");
+        if tau * iter_f.sqrt() < tolerance {
             return Ok(IterationResult {
                 x,
-                iterations: iterations * 2 + 1,
+                iterations: iter + 1,
                 residual_norm: tau,
                 converged: true,
                 message: "Converged".to_string(),
             });
         }
 
-        // Second half-step update
-        for i in 0..n {
-            u[i] = w[i] - alpha * v[i];
-        }
+        if !even {
+            // Odd iteration updates
+            // rho = <rstar, w>
+            rho = dot(&rstar, &w);
 
-        let theta_old = theta;
-        theta = norm2(&u) / tau;
-        let c = F::sparse_one() / (F::sparse_one() + theta * theta).sqrt();
-        tau = tau * theta * c;
-        eta = c * c * alpha;
+            if rho == zero {
+                return Ok(IterationResult {
+                    x,
+                    iterations: iter + 1,
+                    residual_norm: tau,
+                    converged: false,
+                    message: "TFQMR breakdown: rho = 0".to_string(),
+                });
+            }
 
-        for i in 0..n {
-            d[i] = w[i] + (theta_old * theta_old * eta / alpha) * d[i];
-            x[i] += eta * d[i];
-        }
+            let beta = rho / rho_last;
 
-        // Check convergence after second half-step
-        if tau <= tolerance {
-            return Ok(IterationResult {
-                x,
-                iterations: iterations * 2 + 2,
-                residual_norm: tau,
-                converged: true,
-                message: "Converged".to_string(),
-            });
-        }
+            // u = w + beta * u
+            for i in 0..n {
+                u[i] = w[i] + beta * u[i];
+            }
 
-        // Update for next iteration
-        let rho_old = rho;
-        rho = dot(&r_tilde, &u);
+            // v = beta * uhat + beta^2 * v
+            for i in 0..n {
+                v[i] = beta * uhat[i] + beta * beta * v[i];
+            }
 
-        if rho == F::sparse_zero() {
-            return Ok(IterationResult {
-                x,
-                iterations: iterations * 2 + 2,
-                residual_norm: tau,
-                converged: false,
-                message: "TFQMR breakdown: rho = 0".to_string(),
-            });
-        }
+            // uhat = M^{-1} * A * u
+            let au = a.matvec(&u)?;
+            uhat = match &options.preconditioner {
+                Some(m) => m.matvec(&au)?,
+                None => au,
+            };
 
-        let beta = rho / rho_old;
-        for i in 0..n {
-            w[i] = u[i] + beta * w[i];
+            // v = v + uhat
+            for i in 0..n {
+                v[i] += uhat[i];
+            }
+        } else {
+            // Even iteration updates
+            // uhat = M^{-1} * A * uNext
+            let au_next = a.matvec(&u_next)?;
+            uhat = match &options.preconditioner {
+                Some(m) => m.matvec(&au_next)?,
+                None => au_next,
+            };
+
+            // u = uNext
+            u = u_next;
+
+            // rho_last = rho
+            rho_last = rho;
         }
     }
 
     Ok(IterationResult {
         x,
-        iterations: options.max_iter * 2,
+        iterations: options.max_iter,
         residual_norm: tau,
         converged: false,
         message: "Maximum iterations reached".to_string(),
@@ -1403,7 +1571,7 @@ mod tests {
         let identity = crate::linalg::interface::IdentityOperator::<f64>::new(3);
         let b = vec![1.0, 2.0, 3.0];
         let options = CGOptions::default();
-        let result = cg(&identity, &b, options).unwrap();
+        let result = cg(&identity, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         for (xi, bi) in result.x.iter().zip(&b) {
@@ -1417,7 +1585,7 @@ mod tests {
         let diag = crate::linalg::interface::DiagonalOperator::new(vec![2.0, 3.0, 4.0]);
         let b = vec![2.0, 6.0, 12.0];
         let options = CGOptions::default();
-        let result = cg(&diag, &b, options).unwrap();
+        let result = cg(&diag, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         let expected = vec![1.0, 2.0, 3.0];
@@ -1434,16 +1602,16 @@ mod tests {
         let data = vec![4.0, -1.0, -1.0, -1.0, 4.0, -1.0, -1.0, -1.0, 4.0];
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let op = matrix.as_linear_operator();
 
         let b = vec![1.0, 2.0, 3.0];
         let options = CGOptions::default();
-        let result = cg(op.as_ref(), &b, options).unwrap();
+        let result = cg(op.as_ref(), &b, options).expect("Operation failed");
 
         assert!(result.converged);
         // Verify solution by checking Ax = b
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         for (axi, bi) in ax.iter().zip(&b) {
             assert!((axi - bi).abs() < 1e-9);
         }
@@ -1455,7 +1623,7 @@ mod tests {
         let identity = crate::linalg::interface::IdentityOperator::<f64>::new(3);
         let b = vec![1.0, 2.0, 3.0];
         let options = BiCGSTABOptions::default();
-        let result = bicgstab(&identity, &b, options).unwrap();
+        let result = bicgstab(&identity, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         for (xi, bi) in result.x.iter().zip(&b) {
@@ -1469,7 +1637,7 @@ mod tests {
         let diag = crate::linalg::interface::DiagonalOperator::new(vec![2.0, 3.0, 4.0]);
         let b = vec![2.0, 6.0, 12.0];
         let options = BiCGSTABOptions::default();
-        let result = bicgstab(&diag, &b, options).unwrap();
+        let result = bicgstab(&diag, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         let expected = vec![1.0, 2.0, 3.0];
@@ -1486,29 +1654,28 @@ mod tests {
         let data = vec![4.0, -1.0, -2.0, -1.0, 4.0, -1.0, 0.0, -1.0, 3.0];
         let shape = (3, 3);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let op = matrix.as_linear_operator();
 
         let b = vec![1.0, 2.0, 1.0];
         let options = BiCGSTABOptions::default();
-        let result = bicgstab(op.as_ref(), &b, options).unwrap();
+        let result = bicgstab(op.as_ref(), &b, options).expect("Operation failed");
 
         assert!(result.converged);
         // Verify solution by checking Ax = b
-        let ax = op.matvec(&result.x).unwrap();
+        let ax = op.matvec(&result.x).expect("Operation failed");
         for (axi, bi) in ax.iter().zip(&b) {
             assert!((axi - bi).abs() < 1e-9);
         }
     }
 
     #[test]
-    #[ignore] // TODO: Fix iterative LSQR implementation - different algorithm issues
     fn test_lsqr_identity() {
         // Test LSQR on identity matrix
         let identity = crate::linalg::interface::IdentityOperator::<f64>::new(3);
         let b = vec![1.0, 2.0, 3.0];
         let options = LSQROptions::default();
-        let result = lsqr(&identity, &b, options).unwrap();
+        let result = lsqr(&identity, &b, options).expect("Operation failed");
 
         println!("Identity test - Expected: {:?}, Got: {:?}", b, result.x);
         println!(
@@ -1523,13 +1690,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix iterative LSQR implementation - different algorithm issues
     fn test_lsqr_diagonal() {
         // Test LSQR on diagonal matrix
         let diag = crate::linalg::interface::DiagonalOperator::new(vec![2.0, 3.0, 4.0]);
         let b = vec![2.0, 6.0, 12.0];
         let options = LSQROptions::default();
-        let result = lsqr(&diag, &b, options).unwrap();
+        let result = lsqr(&diag, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         let expected = vec![1.0, 2.0, 3.0];
@@ -1539,13 +1705,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSMR algorithm - currently not converging correctly
     fn test_lsmr_identity() {
         // Test LSMR on identity matrix
         let identity = crate::linalg::interface::IdentityOperator::<f64>::new(3);
         let b = vec![1.0, 2.0, 3.0];
         let options = LSMROptions::default();
-        let result = lsmr(&identity, &b, options).unwrap();
+        let result = lsmr(&identity, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         for (xi, bi) in result.x.iter().zip(&b) {
@@ -1554,13 +1719,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix LSMR algorithm - currently not converging correctly
     fn test_lsmr_diagonal() {
         // Test LSMR on diagonal matrix
         let diag = crate::linalg::interface::DiagonalOperator::new(vec![2.0, 3.0, 4.0]);
         let b = vec![2.0, 6.0, 12.0];
         let options = LSMROptions::default();
-        let result = lsmr(&diag, &b, options).unwrap();
+        let result = lsmr(&diag, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         let expected = vec![1.0, 2.0, 3.0];
@@ -1575,7 +1739,7 @@ mod tests {
         let identity = crate::linalg::interface::IdentityOperator::<f64>::new(3);
         let b = vec![1.0, 2.0, 3.0];
         let options = TFQMROptions::default();
-        let result = tfqmr(&identity, &b, options).unwrap();
+        let result = tfqmr(&identity, &b, options).expect("Operation failed");
 
         assert!(result.converged);
         for (xi, bi) in result.x.iter().zip(&b) {
@@ -1584,15 +1748,14 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: Fix TFQMR algorithm - currently not converging correctly
     fn test_tfqmr_diagonal() {
         // Test TFQMR on diagonal matrix
         let diag = crate::linalg::interface::DiagonalOperator::new(vec![2.0, 3.0, 4.0]);
         let b = vec![2.0, 6.0, 12.0];
         let options = TFQMROptions::default();
-        let result = tfqmr(&diag, &b, options).unwrap();
+        let result = tfqmr(&diag, &b, options).expect("Operation failed");
 
-        assert!(result.converged);
+        assert!(result.converged, "TFQMR did not converge");
         let expected = vec![1.0, 2.0, 3.0];
         for (xi, ei) in result.x.iter().zip(&expected) {
             assert!((xi - ei).abs() < 1e-3);
@@ -1607,12 +1770,12 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let shape = (4, 2);
 
-        let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+        let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
         let op = matrix.as_linear_operator();
 
         let b = vec![1.0, 2.0, 3.0, 4.0];
         let options = LSQROptions::default();
-        let result = lsqr(op.as_ref(), &b, options).unwrap();
+        let result = lsqr(op.as_ref(), &b, options).expect("Operation failed");
 
         // LSQR should converge for overdetermined systems
         assert!(result.converged || result.residual_norm < 1e-6);

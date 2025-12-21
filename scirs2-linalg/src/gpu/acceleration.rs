@@ -138,7 +138,7 @@ where
 
     /// Initialize GPU contexts for all available devices
     pub fn initialize_contexts(&mut self) -> LinalgResult<()> {
-        let manager = self.backend_manager.lock().unwrap();
+        let manager = self.backend_manager.lock().expect("Operation failed");
         let devices = manager.list_all_devices()?;
 
         for (backend_name, device_list) in devices {
@@ -1248,7 +1248,7 @@ mod tests {
 
     #[test]
     fn test_execution_strategy_selection() {
-        let framework = GpuAccelerationFramework::<f64>::new().unwrap();
+        let framework = GpuAccelerationFramework::<f64>::new().expect("Operation failed");
 
         // Small problem should prefer CPU
         let strategy = framework.select_execution_strategy("matmul", 1000);

@@ -66,7 +66,11 @@ impl BatchSizeOptimizer {
                 .performance_history
                 .iter()
                 .filter(|r| r.operation == record.operation)
-                .max_by(|a, b| a.throughput.partial_cmp(&b.throughput).unwrap());
+                .max_by(|a, b| {
+                    a.throughput
+                        .partial_cmp(&b.throughput)
+                        .expect("Operation failed")
+                });
 
             if let Some(best) = best_record {
                 self.optimalsizes

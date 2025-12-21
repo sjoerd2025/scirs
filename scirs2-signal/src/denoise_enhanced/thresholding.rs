@@ -189,7 +189,7 @@ pub fn compute_sure_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalR
 
     // Sort coefficients by absolute value
     let mut sorted_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
-    sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let mut best_threshold = noise_sigma * (2.0 * (n as f64).ln()).sqrt();
     let mut best_risk = f64::INFINITY;
@@ -240,7 +240,7 @@ pub fn compute_fdr_threshold(coeffs: &Array1<f64>, noise_sigma: f64, q: f64) -> 
 
     let n = coeffs.len();
     let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
-    abs_coeffs.sort_by(|a, b| b.partial_cmp(a).unwrap()); // Sort in descending order
+    abs_coeffs.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed")); // Sort in descending order
 
     // Convert to normalized z-scores
     let z_scores: Vec<f64> = abs_coeffs.iter().map(|&x| x / noise_sigma).collect();
@@ -268,7 +268,7 @@ pub fn compute_cv_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalRes
 
     let fold_size = n / 5; // 5-fold cross-validation
     let mut candidate_thresholds: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
-    candidate_thresholds.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    candidate_thresholds.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     candidate_thresholds.dedup_by(|a, b| (*a - *b).abs() < 1e-12);
 
     let mut best_threshold = candidate_thresholds[candidate_thresholds.len() / 2];
@@ -369,7 +369,7 @@ mod tests {
         let block_size = 2;
         let result = block_threshold(&coeffs, threshold, block_size);
         assert!(result.is_ok());
-        let (thresholded, retention_rate) = result.unwrap();
+        let (thresholded, retention_rate) = result.expect("Operation failed");
         assert_eq!(thresholded.len(), coeffs.len());
         assert!(retention_rate >= 0.0 && retention_rate <= 1.0);
     }
@@ -382,7 +382,7 @@ mod tests {
         // Test SURE threshold
         let sure_thresh = compute_sure_threshold(&coeffs, noise_sigma);
         assert!(sure_thresh.is_ok());
-        assert!(sure_thresh.unwrap() > 0.0);
+        assert!(sure_thresh.expect("Operation failed") > 0.0);
 
         // Test Bayes threshold
         let bayes_thresh = compute_bayes_threshold(&coeffs, noise_sigma);
@@ -395,12 +395,12 @@ mod tests {
         // Test FDR threshold
         let fdr_thresh = compute_fdr_threshold(&coeffs, noise_sigma, 0.1);
         assert!(fdr_thresh.is_ok());
-        assert!(fdr_thresh.unwrap() > 0.0);
+        assert!(fdr_thresh.expect("Operation failed") > 0.0);
 
         // Test CV threshold
         let cv_thresh = compute_cv_threshold(&coeffs, noise_sigma);
         assert!(cv_thresh.is_ok());
-        assert!(cv_thresh.unwrap() > 0.0);
+        assert!(cv_thresh.expect("Operation failed") > 0.0);
     }
 
     #[test]

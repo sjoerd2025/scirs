@@ -184,8 +184,9 @@ where
                     NoiseType::Gaussian => {
                         for i in 0..n_samples {
                             for j in 0..n_features {
-                                let noise = F::from(rng.gen::<f64>() * 2.0 - 1.0).unwrap()
-                                    * F::from(*noise_level).unwrap();
+                                let noise = F::from(rng.gen::<f64>() * 2.0 - 1.0)
+                                    .expect("Operation failed")
+                                    * F::from(*noise_level).expect("Failed to convert to float");
                                 noisy_data[[i, j]] = noisy_data[[i, j]] + noise;
                             }
                         }
@@ -193,8 +194,8 @@ where
                     NoiseType::Uniform => {
                         for i in 0..n_samples {
                             for j in 0..n_features {
-                                let noise =
-                                    F::from((rng.gen::<f64>() * 2.0 - 1.0) * noise_level).unwrap();
+                                let noise = F::from((rng.gen::<f64>() * 2.0 - 1.0) * noise_level)
+                                    .expect("Operation failed");
                                 noisy_data[[i, j]] = noisy_data[[i, j]] + noise;
                             }
                         }
@@ -204,7 +205,8 @@ where
                         for _ in 0..n_outliers {
                             let outlier_idx = rng.gen_range(0..n_samples);
                             for j in 0..n_features {
-                                let outlier_value = F::from(rng.gen::<f64>() * 10.0 - 5.0).unwrap();
+                                let outlier_value = F::from(rng.gen::<f64>() * 10.0 - 5.0)
+                                    .expect("Operation failed");
                                 noisy_data[[outlier_idx, j]] = outlier_value;
                             }
                         }
@@ -238,9 +240,9 @@ where
                 for i in 0..n_features {
                     for j in 0..*target_dimensions {
                         // Use Gaussian random values for projection matrix
-                        let random_val = F::from(rng.gen::<f64>()).unwrap();
-                        let two = F::from(2.0).unwrap();
-                        let one = F::from(1.0).unwrap();
+                        let random_val = F::from(rng.gen::<f64>()).expect("Operation failed");
+                        let two = F::from(2.0).expect("Failed to convert constant to float");
+                        let one = F::from(1.0).expect("Failed to convert constant to float");
                         projection_matrix[[i, j]] = random_val * two - one;
                     }
                 }
@@ -890,7 +892,7 @@ where
                 // Create affinity propagation options
                 use crate::affinity::{affinity_propagation, AffinityPropagationOptions};
                 let options = AffinityPropagationOptions {
-                    damping: F::from(damping).unwrap(),
+                    damping: F::from(damping).expect("Failed to convert to float"),
                     max_iter,
                     convergence_iter,
                     preference: None, // Use default (median of similarities)

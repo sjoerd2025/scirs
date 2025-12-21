@@ -76,7 +76,7 @@ fn basic_streaming_demo() {
             // Check for change points
             let change_points = analyzer.get_change_points();
             if !change_points.is_empty() {
-                let latest = change_points.last().unwrap();
+                let latest = change_points.last().expect("Operation failed");
                 println!(
                     "    Change detected at step {}: type={:?}, confidence={:.2}",
                     i, latest.change_type, latest.confidence
@@ -167,7 +167,7 @@ fn rand_noise() -> f64 {
     // Simple pseudo-random noise generator
     let time_ns = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
+        .expect("Operation failed")
         .subsec_nanos();
 
     let normalized = (time_ns % 10000) as f64 / 10000.0;

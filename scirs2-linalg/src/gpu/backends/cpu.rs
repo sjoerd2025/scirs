@@ -148,7 +148,7 @@ mod tests {
         assert_eq!(backend.name(), "CPU Fallback");
         assert!(backend.is_available());
 
-        let devices = backend.list_devices().unwrap();
+        let devices = backend.list_devices().expect("Operation failed");
         assert_eq!(devices.len(), 1);
         assert_eq!(devices[0].name, "CPU Fallback");
     }
@@ -156,10 +156,10 @@ mod tests {
     #[test]
     fn test_cpu_fallback_context() {
         let backend = CpuFallbackBackend::new();
-        let context = backend.create_context(0).unwrap();
+        let context = backend.create_context(0).expect("Operation failed");
 
         assert_eq!(context.device_info().name, "CPU Fallback");
-        assert!(context.available_memory().unwrap() > 0);
+        assert!(context.available_memory().expect("Operation failed") > 0);
         assert!(context.synchronize().is_ok());
     }
 
@@ -170,15 +170,17 @@ mod tests {
 
         // Create context directly to access allocate_buffer method
         let cpu_context = CpuFallbackContext { device_info };
-        let mut buffer = cpu_context.allocate_buffer::<f32>(10).unwrap();
+        let mut buffer = cpu_context
+            .allocate_buffer::<f32>(10)
+            .expect("Operation failed");
         assert_eq!(buffer.len(), 0); // Initially empty
 
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        buffer.copy_from_host(&data).unwrap();
+        buffer.copy_from_host(&data).expect("Operation failed");
         assert_eq!(buffer.len(), 5);
 
         let mut output = vec![0.0; 5];
-        buffer.copy_to_host(&mut output).unwrap();
+        buffer.copy_to_host(&mut output).expect("Operation failed");
         assert_eq!(output, data);
     }
 }

@@ -167,7 +167,7 @@ pub fn evaluate_homography_quality(
 
     // Compute median error
     let mut sorted_errors = sqrt_errors.clone();
-    sorted_errors.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_errors.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let median_error = if sorted_errors.len().is_multiple_of(2) {
         let mid = sorted_errors.len() / 2;
         (sorted_errors[mid - 1] + sorted_errors[mid]) / 2.0

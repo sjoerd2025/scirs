@@ -114,7 +114,8 @@ impl NormalizingFlow {
             cov_matrix[i][i] = 1.0;
         }
 
-        let base_distribution = MultivariateNormal::new(vec![0.0; dimension], cov_matrix).unwrap();
+        let base_distribution =
+            MultivariateNormal::new(vec![0.0; dimension], cov_matrix).expect("Operation failed");
 
         Self {
             dimension,
@@ -473,7 +474,8 @@ impl ScoreBasedDiffusion {
             for _ in 0..training_data.nrows().div_ceil(batch_size) {
                 // Sample random timesteps
                 let mut rng = seeded_rng(42 + epoch as u64);
-                let t = rng.sample(Uniform::new(0, self.config.num_timesteps).unwrap());
+                let t = rng
+                    .sample(Uniform::new(0, self.config.num_timesteps).expect("Operation failed"));
 
                 // Sample noise and create noisy data
                 let noise = self.sample_noise(training_data.nrows(), &mut rng)?;
@@ -509,7 +511,7 @@ impl ScoreBasedDiffusion {
         // Start from pure noise
         for i in 0..num_samples {
             for j in 0..self.config.dimension {
-                samples[[i, j]] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                samples[[i, j]] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             }
         }
 
@@ -538,7 +540,7 @@ impl ScoreBasedDiffusion {
         let mut noise = Array2::zeros((batch_size, self.config.dimension));
         for i in 0..batch_size {
             for j in 0..self.config.dimension {
-                noise[[i, j]] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                noise[[i, j]] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             }
         }
         Ok(noise)
@@ -587,7 +589,7 @@ impl ScoreBasedDiffusion {
 
                 // Add noise (except for final step)
                 let noise = if t > 0 {
-                    rng.sample(Normal::new(0.0, beta.sqrt()).unwrap())
+                    rng.sample(Normal::new(0.0, beta.sqrt()).expect("Operation failed"))
                 } else {
                     0.0
                 };
@@ -747,7 +749,7 @@ impl EnergyBasedModel {
             // Initialize with random noise
             let mut x = Array1::zeros(self.dimension);
             for j in 0..self.dimension {
-                x[j] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                x[j] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
             }
 
             // Langevin dynamics
@@ -773,7 +775,9 @@ impl EnergyBasedModel {
 
             // Langevin dynamics update
             for i in 0..self.dimension {
-                let noise = rng.sample(Normal::new(0.0, (2.0_f64 * step_size).sqrt()).unwrap());
+                let noise = rng.sample(
+                    Normal::new(0.0, (2.0_f64 * step_size).sqrt()).expect("Operation failed"),
+                );
                 x[i] -= step_size * grad[i] + noise;
             }
         }
@@ -863,7 +867,7 @@ impl NeuralPosteriorEstimation {
                 // Sample from prior
                 let mut theta = Array1::zeros(self.parameter_dim);
                 for i in 0..self.parameter_dim {
-                    theta[i] = rng.sample(Normal::new(0.0, 1.0).unwrap());
+                    theta[i] = rng.sample(Normal::new(0.0, 1.0).expect("Operation failed"));
                 }
 
                 // Simulate observation
@@ -907,7 +911,8 @@ impl NeuralPosteriorEstimation {
                 let mean = posterior_params[mean_start + j];
                 let var = posterior_params[var_start + j].exp(); // Ensure positive variance
 
-                samples[[i, j]] = rng.sample(Normal::new(mean, var.sqrt()).unwrap());
+                samples[[i, j]] =
+                    rng.sample(Normal::new(mean, var.sqrt()).expect("Operation failed"));
             }
         }
 
@@ -999,7 +1004,7 @@ mod tests {
     fn test_mlp_forward() {
         let mlp = MLP::new(&[3, 5, 2]);
         let input = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let output = mlp.forward(&input).unwrap();
+        let output = mlp.forward(&input).expect("Operation failed");
         assert_eq!(output.len(), 2);
     }
 

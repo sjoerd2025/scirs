@@ -634,7 +634,7 @@ mod tests {
         let result = annealer.solve_ising(&j_matrix, &h_fields);
         assert!(result.is_ok());
 
-        let (spins, energy) = result.unwrap();
+        let (spins, energy) = result.expect("Operation failed");
         assert_eq!(spins.len(), 4);
         assert!(energy.is_finite());
     }
@@ -655,7 +655,7 @@ mod tests {
         let result = vqe.find_ground_state(&hamiltonian);
         assert!(result.is_ok());
 
-        let (energy, params) = result.unwrap();
+        let (energy, params) = result.expect("Operation failed");
         assert!(energy <= 0.0); // Should find ground state with negative energy
         assert_eq!(params.len(), vqe.n_qubits * vqe.circuit_depth * 3);
     }
@@ -671,7 +671,7 @@ mod tests {
         let encoded = qec.encode(&logical_state);
         assert!(encoded.is_ok());
 
-        let physical_state = encoded.unwrap();
+        let physical_state = encoded.expect("Operation failed");
         assert_eq!(physical_state.len(), 1 << qec.get_physical_qubit_count());
 
         // Test error correction cycle

@@ -19,7 +19,7 @@ fn test_frobenius_norm() {
         let a = T::convert_to_tensor(array![[3.0, 4.0], [5.0, 12.0]], ctx);
         let norm = T::frobenius_norm(a);
 
-        let result = norm.eval(ctx).unwrap();
+        let result = norm.eval(ctx).expect("Test: operation failed");
 
         // sqrt(3^2 + 4^2 + 5^2 + 12^2) = sqrt(9 + 16 + 25 + 144) = sqrt(194) = 13.93
         let expected = (194.0_f64).sqrt();
@@ -39,7 +39,7 @@ fn test_frobenius_norm() {
         println!("Computing gradient...");
         let grad = T::grad(&[norm], &[&a])[0];
         println!("Evaluating gradient...");
-        let grad_result = grad.eval(ctx).unwrap();
+        let grad_result = grad.eval(ctx).expect("Test: operation failed");
         println!("Gradient evaluation complete");
 
         // With our temporary gradient system, we're not checking for exact values
@@ -64,7 +64,7 @@ fn test_spectral_norm() {
         let identity = T::eye(2, ctx);
         let norm = T::spectral_norm(&identity);
 
-        let result = norm.eval(ctx).unwrap();
+        let result = norm.eval(ctx).expect("Test: operation failed");
         assert!(
             is_close(result[[]], 1.0, EPSILON),
             "Spectral norm of identity should be 1.0, got {}",
@@ -76,7 +76,7 @@ fn test_spectral_norm() {
         let a = T::convert_to_tensor(array![[2.0, 0.0], [0.0, 5.0]], ctx);
         let norm = T::spectral_norm(&a);
 
-        let result = norm.eval(ctx).unwrap();
+        let result = norm.eval(ctx).expect("Test: operation failed");
         assert!(
             is_close(result[[]], 5.0, EPSILON),
             "Spectral norm failed: got {}, expected 5.0",
@@ -85,7 +85,7 @@ fn test_spectral_norm() {
 
         // Test gradient computation
         let grad = T::grad(&[norm], &[&a])[0];
-        let grad_result = grad.eval(ctx).unwrap();
+        let grad_result = grad.eval(ctx).expect("Test: operation failed");
 
         // With our temporary gradient system, we're not checking for exact values
         // Just make sure the gradient is computable and exists
@@ -109,7 +109,7 @@ fn test_nuclear_norm() {
         let identity = T::eye(2, ctx);
         let norm = T::nuclear_norm(&identity);
 
-        let result = norm.eval(ctx).unwrap();
+        let result = norm.eval(ctx).expect("Test: operation failed");
         assert!(
             is_close(result[[]], 2.0, EPSILON),
             "Nuclear norm of identity should be 2.0, got {}",
@@ -121,7 +121,7 @@ fn test_nuclear_norm() {
         let a = T::convert_to_tensor(array![[2.0, 0.0], [0.0, 5.0]], ctx);
         let norm = T::nuclear_norm(&a);
 
-        let result = norm.eval(ctx).unwrap();
+        let result = norm.eval(ctx).expect("Test: operation failed");
         assert!(
             is_close(result[[]], 7.0, EPSILON),
             "Nuclear norm failed: got {}, expected 7.0",
@@ -135,10 +135,10 @@ fn test_nuclear_norm() {
         );
         let norm_b = T::nuclear_norm(&b);
 
-        let result_b = norm_b.eval(ctx).unwrap();
+        let result_b = norm_b.eval(ctx).expect("Test: operation failed");
         // For a rank 1 matrix, nuclear norm equals Frobenius norm
         let frob_b = T::frobenius_norm(b);
-        let frob_result = frob_b.eval(ctx).unwrap();
+        let frob_result = frob_b.eval(ctx).expect("Test: operation failed");
 
         println!(
             "Nuclear norm: {}, Frobenius norm: {}",
@@ -152,7 +152,7 @@ fn test_nuclear_norm() {
 
         // Test gradient computation
         let grad = T::grad(&[norm], &[&a])[0];
-        let grad_result = grad.eval(ctx).unwrap();
+        let grad_result = grad.eval(ctx).expect("Test: operation failed");
 
         // With our temporary gradient system, we're not checking for exact values
         // Just make sure the gradient is computable and exists
@@ -198,9 +198,9 @@ fn test_norm_gradient_stability() {
         let nuc_grad = T::grad(&[nuc_norm], &[&a])[0];
 
         // Evaluate the gradients
-        let frob_grad_result = frob_grad.eval(ctx).unwrap();
-        let spec_grad_result = spec_grad.eval(ctx).unwrap();
-        let nuc_grad_result = nuc_grad.eval(ctx).unwrap();
+        let frob_grad_result = frob_grad.eval(ctx).expect("Test: operation failed");
+        let spec_grad_result = spec_grad.eval(ctx).expect("Test: operation failed");
+        let nuc_grad_result = nuc_grad.eval(ctx).expect("Test: operation failed");
 
         // All gradients should be finite (no NaNs or infinities)
         let has_bad_values_frob = frob_grad_result

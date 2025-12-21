@@ -26,32 +26,32 @@ fn demo_f64() {
     let b = array![[5.0, 6.0], [7.0, 8.0]];
 
     // Matrix multiplication
-    let c = gemm(&a.view(), &b.view()).unwrap();
+    let c = gemm(&a.view(), &b.view()).expect("Operation failed");
     println!("A * B = \n{}", c);
 
     // Determinant
-    let det = gdet(&a.view()).unwrap();
+    let det = gdet(&a.view()).expect("Operation failed");
     println!("\ndet(A) = {}", det);
 
     // Inverse
-    let a_inv = ginv(&a.view()).unwrap();
+    let a_inv = ginv(&a.view()).expect("Operation failed");
     println!("\nA^(-1) = \n{}", a_inv);
 
     // SVD
-    let svd = gsvd(&a.view(), false).unwrap();
+    let svd = gsvd(&a.view(), false).expect("Operation failed");
     println!("\nSVD singular values: {}", svd.s);
 
     // QR decomposition
-    let qr = gqr(&a.view()).unwrap();
+    let qr = gqr(&a.view()).expect("Operation failed");
     println!("\nQR decomposition Q = \n{}", qr.q);
 
     // Eigendecomposition
-    let eigen = geig(&a.view()).unwrap();
+    let eigen = geig(&a.view()).expect("Operation failed");
     println!("\nEigenvalues: {:?}", eigen.eigenvalues);
 
     // Linear solve
     let b_vec = array![[5.0], [11.0]];
-    let x = gsolve(&a.view(), &b_vec.view()).unwrap();
+    let x = gsolve(&a.view(), &b_vec.view()).expect("Operation failed");
     println!("\nSolution to Ax = b: \n{}", x);
 }
 
@@ -63,11 +63,11 @@ fn demo_f32() {
     let b = array![[5.0, 6.0], [7.0, 8.0]];
 
     // Matrix multiplication
-    let c = gemm(&a.view(), &b.view()).unwrap();
+    let c = gemm(&a.view(), &b.view()).expect("Operation failed");
     println!("A * B = \n{}", c);
 
     // Determinant
-    let det = gdet(&a.view()).unwrap();
+    let det = gdet(&a.view()).expect("Operation failed");
     println!("\ndet(A) = {}", det);
 }
 

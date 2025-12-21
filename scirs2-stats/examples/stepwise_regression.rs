@@ -14,7 +14,7 @@ fn main() {
             3.0, 8.0, 7.0, 6.0, 5.0, 4.0, 9.0, 8.0, 7.0, 6.0, 5.0, 10.0, 9.0, 8.0, 7.0, 6.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Let's create a synthetic response variable
     // y ≈ 2 + 3*x1 - 0*x2 + 0*x3 - 2*x4 + 0*x5 + noise
@@ -42,7 +42,7 @@ fn main() {
         None,       // max_steps (use default)
         true,       // include_intercept
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Print the results
     println!(
@@ -75,7 +75,7 @@ fn main() {
         None,       // max_steps (use default)
         true,       // include_intercept
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Print the results
     println!(
@@ -108,7 +108,7 @@ fn main() {
         None,       // max_steps (use default)
         true,       // include_intercept
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Print the results
     println!(

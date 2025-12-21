@@ -23,12 +23,12 @@
 //! // Find a path from start to goal
 //! let start = [0.0, 0.0];
 //! let goal = [5.0, 5.0];
-//! let path = planner.find_path(start, goal).unwrap().unwrap();
+//! let path = planner.find_path(start, goal).expect("Operation failed").unwrap();
 //!
 //! // The path contains waypoints around the obstacles
 //! assert!(path.len() > 2); // More than just start and goal
 //! assert_eq!(path.nodes[0], start);
-//! assert_eq!(*path.nodes.last().unwrap(), goal);
+//! assert_eq!(*path.nodes.last().expect("Operation failed"), goal);
 //! // Note: This test is currently ignored due to implementation issues with visibility checking
 //! ```
 
@@ -188,7 +188,7 @@ impl VisibilityGraph {
         // Add the edge
         self.adjacency_list
             .get_mut(&from)
-            .unwrap()
+            .expect("Operation failed")
             .push((to, weight));
     }
 
@@ -561,7 +561,10 @@ impl VisibilityGraphPlanner {
             Some(g) => g.clone(),
             None => {
                 self.build_graph()?;
-                self.visibility_graph.as_ref().unwrap().clone()
+                self.visibility_graph
+                    .as_ref()
+                    .expect("Operation failed")
+                    .clone()
             }
         };
 
@@ -780,12 +783,15 @@ mod tests {
         let start = [0.0, 0.0];
         let goal = [3.0, 3.0];
 
-        let path = planner.find_path(start, goal).unwrap().unwrap();
+        let path = planner
+            .find_path(start, goal)
+            .expect("Operation failed")
+            .expect("Operation failed");
 
         // Path should exist and go from start to goal
         assert!(path.len() > 2);
         assert_eq!(path.nodes[0], start);
-        assert_eq!(*path.nodes.last().unwrap(), goal);
+        assert_eq!(*path.nodes.last().expect("Operation failed"), goal);
 
         // Path should not intersect the obstacle
         for i in 0..path.nodes.len() - 1 {
@@ -818,7 +824,10 @@ mod tests {
         let start = [0.0, 0.0];
         let goal = [5.0, 0.0];
 
-        let path = planner.find_path(start, goal).unwrap().unwrap();
+        let path = planner
+            .find_path(start, goal)
+            .expect("Operation failed")
+            .expect("Operation failed");
 
         // Direct path should have exactly 2 points
         assert_eq!(path.len(), 2);
@@ -850,7 +859,7 @@ mod tests {
         let goal = [5.0, 0.0];
 
         // This path should be impossible because of the wall obstacle
-        let path = planner.find_path(start, goal).unwrap();
+        let path = planner.find_path(start, goal).expect("Operation failed");
 
         // Verify that no path was found
         assert!(

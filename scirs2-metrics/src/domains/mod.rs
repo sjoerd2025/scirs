@@ -40,7 +40,7 @@
 //! ];
 //!
 //! // Compute comprehensive object detection metrics
-//! let results = cv_metrics.evaluate_object_detection(&predictions, &ground_truth, 0.5).unwrap();
+//! let results = cv_metrics.evaluate_object_detection(&predictions, &ground_truth, 0.5).expect("Operation failed");
 //! println!("mAP@0.5: {:.4}", results.map);
 //! println!("Precision: {:.4}", results.precision);
 //! println!("Recall: {:.4}", results.recall);
@@ -63,7 +63,7 @@
 //!     "A quick brown fox jumped".to_string(),
 //! ];
 //!
-//! let results = nlp_metrics.evaluate_generation(&references, &candidates).unwrap();
+//! let results = nlp_metrics.evaluate_generation(&references, &candidates).expect("Operation failed");
 //! println!("BLEU-4: {:.4}", results.bleu_4);
 //! println!("ROUGE-L: {:.4}", results.rouge_l);
 //! ```
@@ -151,7 +151,7 @@ impl DomainEvaluationResult {
         }
         self.detailed_metrics
             .as_mut()
-            .unwrap()
+            .expect("Operation failed")
             .insert(category, metrics);
     }
 

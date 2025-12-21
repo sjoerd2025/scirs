@@ -1462,8 +1462,8 @@ mod tests {
 
     #[test]
     fn test_testdata_generation() {
-        let comparison = ScipyBenchmarkComparison::default().unwrap();
-        let testdata = comparison.generate_testdata(100).unwrap();
+        let comparison = ScipyBenchmarkComparison::default().expect("Operation failed");
+        let testdata = comparison.generate_testdata(100).expect("Operation failed");
 
         assert_eq!(testdata.primary.len(), 100);
         assert_eq!(testdata.secondary.len(), 100);
@@ -1472,7 +1472,7 @@ mod tests {
 
     #[test]
     fn test_accuracy_comparison() {
-        let comparison = ScipyBenchmarkComparison::default().unwrap();
+        let comparison = ScipyBenchmarkComparison::default().expect("Operation failed");
 
         // Use very small differences well within tolerance (< 1e-12)
         let scirs2_result = vec![1.0, 2.0, 3.0];
@@ -1480,7 +1480,7 @@ mod tests {
 
         let accuracy = comparison
             .compare_accuracy(&scirs2_result, &scipy_result)
-            .unwrap();
+            .expect("Operation failed");
         assert!(matches!(
             accuracy.assessment,
             AccuracyAssessment::Excellent | AccuracyAssessment::Good

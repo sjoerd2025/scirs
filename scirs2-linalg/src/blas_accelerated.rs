@@ -27,7 +27,7 @@ use crate::error::{LinalgError, LinalgResult};
 ///
 /// let x = array![1.0_f64, 2.0, 3.0];
 /// let y = array![4.0_f64, 5.0, 6.0];
-/// let result = dot(&x.view(), &y.view()).unwrap();
+/// let result = dot(&x.view(), &y.view()).expect("Operation failed");
 /// assert!((result - 32.0).abs() < 1e-10); // 1*4 + 2*5 + 3*6 = 32
 /// ```
 #[allow(dead_code)]
@@ -64,7 +64,7 @@ where
 /// use scirs2_linalg::blas_accelerated::norm;
 ///
 /// let x = array![3.0_f64, 4.0];
-/// let result = norm(&x.view()).unwrap();
+/// let result = norm(&x.view()).expect("Operation failed");
 /// assert!((result - 5.0).abs() < 1e-10); // sqrt(3^2 + 4^2) = 5
 /// ```
 #[allow(dead_code)]
@@ -111,7 +111,7 @@ where
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 /// let x = array![2.0_f64, 3.0];
 /// let y = Array1::<f64>::zeros(2);
-/// let result = gemv(1.0, &a.view(), &x.view(), 0.0, &y.view()).unwrap();
+/// let result = gemv(1.0, &a.view(), &x.view(), 0.0, &y.view()).expect("Operation failed");
 /// assert!((result[0] - 8.0).abs() < 1e-10); // 1*2 + 2*3 = 8
 /// assert!((result[1] - 18.0).abs() < 1e-10); // 3*2 + 4*3 = 18
 /// ```
@@ -183,7 +183,7 @@ where
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 /// let b = array![[5.0_f64, 6.0], [7.0, 8.0]];
 /// let c = Array2::<f64>::zeros((2, 2));
-/// let result = gemm(1.0, &a.view(), &b.view(), 0.0, &c.view()).unwrap();
+/// let result = gemm(1.0, &a.view(), &b.view(), 0.0, &c.view()).expect("Operation failed");
 /// assert!((result[[0, 0]] - 19.0).abs() < 1e-10); // 1*5 + 2*7 = 19
 /// assert!((result[[0, 1]] - 22.0).abs() < 1e-10); // 1*6 + 2*8 = 22
 /// assert!((result[[1, 0]] - 43.0).abs() < 1e-10); // 3*5 + 4*7 = 43
@@ -255,7 +255,7 @@ where
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 /// let b = array![[5.0_f64, 6.0], [7.0, 8.0]];
-/// let c = matmul(&a.view(), &b.view()).unwrap();
+/// let c = matmul(&a.view(), &b.view()).expect("Operation failed");
 /// assert!((c[[0, 0]] - 19.0).abs() < 1e-10); // 1*5 + 2*7 = 19
 /// assert!((c[[0, 1]] - 22.0).abs() < 1e-10); // 1*6 + 2*8 = 22
 /// assert!((c[[1, 0]] - 43.0).abs() < 1e-10); // 3*5 + 4*7 = 43
@@ -297,7 +297,7 @@ where
 ///
 /// let a = array![[3.0_f64, 1.0], [1.0, 2.0]];
 /// let b = array![9.0_f64, 8.0];
-/// let x = solve(&a.view(), &b.view()).unwrap();
+/// let x = solve(&a.view(), &b.view()).expect("Operation failed");
 /// assert!((x[0] - 2.0).abs() < 1e-10);
 /// assert!((x[1] - 3.0).abs() < 1e-10);
 /// ```
@@ -405,7 +405,7 @@ where
 /// use scirs2_linalg::blas_accelerated::inv;
 ///
 /// let a = array![[4.0_f64, 7.0], [2.0, 6.0]];
-/// let a_inv = inv(&a.view()).unwrap();
+/// let a_inv = inv(&a.view()).expect("Operation failed");
 /// // Check that A * A^-1 is approximately identity
 /// let identity = a.dot(&a_inv);
 /// assert!((identity[[0, 0]] - 1.0).abs() < 1e-10);
@@ -505,14 +505,14 @@ mod tests {
     fn test_dot() {
         let x = array![1.0, 2.0, 3.0];
         let y = array![4.0, 5.0, 6.0];
-        let result = dot(&x.view(), &y.view()).unwrap();
+        let result = dot(&x.view(), &y.view()).expect("Operation failed");
         assert_relative_eq!(result, 32.0, epsilon = 1e-10); // 1*4 + 2*5 + 3*6 = 32
     }
 
     #[test]
     fn test_norm() {
         let x = array![3.0, 4.0];
-        let result = norm(&x.view()).unwrap();
+        let result = norm(&x.view()).expect("Operation failed");
         assert_relative_eq!(result, 5.0, epsilon = 1e-10); // sqrt(3^2 + 4^2) = 5
     }
 
@@ -521,7 +521,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let x = array![2.0, 3.0];
         let y = Array1::<f64>::zeros(2);
-        let result = gemv(1.0, &a.view(), &x.view(), 0.0, &y.view()).unwrap();
+        let result = gemv(1.0, &a.view(), &x.view(), 0.0, &y.view()).expect("Operation failed");
         assert_relative_eq!(result[0], 8.0, epsilon = 1e-10); // 1*2 + 2*3 = 8
         assert_relative_eq!(result[1], 18.0, epsilon = 1e-10); // 3*2 + 4*3 = 18
     }
@@ -531,7 +531,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
         let c = Array2::<f64>::zeros((2, 2));
-        let result = gemm(1.0, &a.view(), &b.view(), 0.0, &c.view()).unwrap();
+        let result = gemm(1.0, &a.view(), &b.view(), 0.0, &c.view()).expect("Operation failed");
         assert_relative_eq!(result[[0, 0]], 19.0, epsilon = 1e-10); // 1*5 + 2*7 = 19
         assert_relative_eq!(result[[0, 1]], 22.0, epsilon = 1e-10); // 1*6 + 2*8 = 22
         assert_relative_eq!(result[[1, 0]], 43.0, epsilon = 1e-10); // 3*5 + 4*7 = 43
@@ -542,7 +542,7 @@ mod tests {
     fn test_matmul() {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
-        let result = matmul(&a.view(), &b.view()).unwrap();
+        let result = matmul(&a.view(), &b.view()).expect("Operation failed");
         assert_relative_eq!(result[[0, 0]], 19.0, epsilon = 1e-10); // 1*5 + 2*7 = 19
         assert_relative_eq!(result[[0, 1]], 22.0, epsilon = 1e-10); // 1*6 + 2*8 = 22
         assert_relative_eq!(result[[1, 0]], 43.0, epsilon = 1e-10); // 3*5 + 4*7 = 43
@@ -553,7 +553,7 @@ mod tests {
     fn test_solve() {
         let a = array![[3.0, 1.0], [1.0, 2.0]];
         let b = array![9.0, 8.0];
-        let x = solve(&a.view(), &b.view()).unwrap();
+        let x = solve(&a.view(), &b.view()).expect("Operation failed");
         assert_relative_eq!(x[0], 2.0, epsilon = 1e-10);
         assert_relative_eq!(x[1], 3.0, epsilon = 1e-10);
 
@@ -566,7 +566,7 @@ mod tests {
     #[test]
     fn test_inv() {
         let a = array![[4.0, 7.0], [2.0, 6.0]];
-        let a_inv = inv(&a.view()).unwrap();
+        let a_inv = inv(&a.view()).expect("Operation failed");
 
         // Check a few values
         assert_relative_eq!(a_inv[[0, 0]], 0.6, epsilon = 1e-10);

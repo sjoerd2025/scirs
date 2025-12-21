@@ -183,8 +183,8 @@ fn validate_pure_sinusoid(implementation: &str, tolerance: f64) -> SignalResult<
     let (peak_idx, &peak_power) = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let peak_freq = freqs[peak_idx];
 
     // Check peak frequency accuracy
@@ -309,8 +309,8 @@ fn validate_multiple_sinusoids(
         // Find the highest peak in the candidate range
         let (peak_idx, peak_power) = peak_candidates
             .iter()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+            .expect("Operation failed");
 
         let peak_freq = freqs[*peak_idx];
         let freq_error = (peak_freq - expected_freq).abs() / expected_freq;
@@ -401,8 +401,8 @@ fn validate_uneven_sampling(
     let (peak_idx, &peak_power) = power
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let peak_freq = freqs[peak_idx];
 
     let freq_error = (peak_freq - f_signal).abs() / f_signal;
@@ -515,8 +515,8 @@ fn validate_sparse_sampling(
             let (peak_idx, &peak_power) = power
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .unwrap();
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+                .expect("Operation failed");
 
             let peak_freq = freqs[peak_idx];
             let freq_error = (peak_freq - f_signal).abs() / f_signal;

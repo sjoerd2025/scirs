@@ -211,7 +211,7 @@ where
         }
 
         // Find all subsequences similar to this motif pair
-        let threshold = min_dist * F::from(1.5).unwrap();
+        let threshold = min_dist * F::from(1.5).expect("Failed to convert constant to float");
         let mut positions = vec![best_pair.0, best_pair.1];
 
         for k in 0..num_subsequences {
@@ -247,7 +247,7 @@ where
         }
 
         let avg_distance = if count > 0 {
-            total_dist / F::from(count).unwrap()
+            total_dist / F::from(count).expect("Failed to convert to float")
         } else {
             F::zero()
         };
@@ -368,8 +368,9 @@ where
     }
 
     // Z-normalize the time series
-    let mean = ts.sum() / F::from(n).unwrap();
-    let variance = ts.mapv(|x| (x - mean) * (x - mean)).sum() / F::from(n).unwrap();
+    let mean = ts.sum() / F::from(n).expect("Failed to convert to float");
+    let variance = ts.mapv(|x| (x - mean) * (x - mean)).sum()
+        / F::from(n).expect("Failed to convert to float");
     let std_dev = variance.sqrt();
 
     let normalized = if std_dev > F::zero() {
@@ -392,7 +393,7 @@ where
 
         let segment_sum = normalized.slice(s![start..end]).sum();
         let segment_len = end - start;
-        paa[i] = segment_sum / F::from(segment_len).unwrap();
+        paa[i] = segment_sum / F::from(segment_len).expect("Failed to convert to float");
     }
 
     // Convert to symbols using Gaussian breakpoints
@@ -560,8 +561,8 @@ where
 
         let info_gain = original_entropy - weighted_entropy;
 
-        if F::from(info_gain).unwrap() > best_info_gain {
-            best_info_gain = F::from(info_gain).unwrap();
+        if F::from(info_gain).expect("Failed to convert to float") > best_info_gain {
+            best_info_gain = F::from(info_gain).expect("Failed to convert to float");
         }
     }
 
@@ -689,7 +690,7 @@ where
             }
         }
 
-        let lid = F::from(k).unwrap() / sum;
+        let lid = F::from(k).expect("Failed to convert to float") / sum;
         lid_values.push(lid);
     }
 

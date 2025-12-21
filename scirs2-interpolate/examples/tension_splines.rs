@@ -16,20 +16,26 @@ fn main() {
     println!("-------------------------------------------");
 
     // Create splines with different tension parameters
-    let spline_low =
-        make_tension_spline(&x.view(), &y.view(), 0.01, ExtrapolateMode::Error).unwrap();
-    let spline_med =
-        make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error).unwrap();
-    let spline_high =
-        make_tension_spline(&x.view(), &y.view(), 10.0, ExtrapolateMode::Error).unwrap();
+    let spline_low = make_tension_spline(&x.view(), &y.view(), 0.01, ExtrapolateMode::Error)
+        .expect("Operation failed");
+    let spline_med = make_tension_spline(&x.view(), &y.view(), 1.0, ExtrapolateMode::Error)
+        .expect("Operation failed");
+    let spline_high = make_tension_spline(&x.view(), &y.view(), 10.0, ExtrapolateMode::Error)
+        .expect("Operation failed");
 
     // Create a fine grid for evaluation
     let x_fine = Array1::linspace(0.0, 10.0, 101);
 
     // Evaluate all splines on the fine grid
-    let y_low = spline_low.evaluate(&x_fine.view()).unwrap();
-    let y_med = spline_med.evaluate(&x_fine.view()).unwrap();
-    let y_high = spline_high.evaluate(&x_fine.view()).unwrap();
+    let y_low = spline_low
+        .evaluate(&x_fine.view())
+        .expect("Operation failed");
+    let y_med = spline_med
+        .evaluate(&x_fine.view())
+        .expect("Operation failed");
+    let y_high = spline_high
+        .evaluate(&x_fine.view())
+        .expect("Operation failed");
 
     // Print values at some sample points to observe the effect of tension
     println!("Comparing interpolated values at some sample points:");
@@ -75,16 +81,21 @@ fn main() {
 
     // Create a tension spline for this quadratic data
     let quad_spline =
-        make_tension_spline(&x_quad.view(), &y_quad.view(), 0.5, ExtrapolateMode::Error).unwrap();
+        make_tension_spline(&x_quad.view(), &y_quad.view(), 0.5, ExtrapolateMode::Error)
+            .expect("Operation failed");
 
     // Sample points for derivative evaluation
     let x_sample = Array1::linspace(0.5, 4.5, 9);
 
     // Evaluate first derivative (should be approximately 2*x)
-    let deriv1 = quad_spline.derivative(1, &x_sample.view()).unwrap();
+    let deriv1 = quad_spline
+        .derivative(1, &x_sample.view())
+        .expect("Operation failed");
 
     // Evaluate second derivative (should be approximately 2)
-    let deriv2 = quad_spline.derivative(2, &x_sample.view()).unwrap();
+    let deriv2 = quad_spline
+        .derivative(2, &x_sample.view())
+        .expect("Operation failed");
 
     println!("For y = x²:");
     println!("   x   | First Derivative | Second Derivative | Exact First | Exact Second");
@@ -114,27 +125,33 @@ fn main() {
         0.1,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
     let sharp_med = make_tension_spline(
         &x_sharp.view(),
         &y_sharp.view(),
         2.0,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
     let sharp_high = make_tension_spline(
         &x_sharp.view(),
         &y_sharp.view(),
         20.0,
         ExtrapolateMode::Error,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Evaluate at points around the transition
     let x_trans = Array1::linspace(4.0, 6.0, 21);
-    let y_trans_low = sharp_low.evaluate(&x_trans.view()).unwrap();
-    let y_trans_med = sharp_med.evaluate(&x_trans.view()).unwrap();
-    let y_trans_high = sharp_high.evaluate(&x_trans.view()).unwrap();
+    let y_trans_low = sharp_low
+        .evaluate(&x_trans.view())
+        .expect("Operation failed");
+    let y_trans_med = sharp_med
+        .evaluate(&x_trans.view())
+        .expect("Operation failed");
+    let y_trans_high = sharp_high
+        .evaluate(&x_trans.view())
+        .expect("Operation failed");
 
     println!("Values around the transition point (x=5.0):");
     println!("   x   | Tension=0.1 | Tension=2.0 | Tension=20.0");
@@ -169,14 +186,14 @@ fn main() {
         1.0,
         ExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
     let extrap_nearest = make_tension_spline(
         &x_simple.view(),
         &y_simple.view(),
         1.0,
         ExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Test points outside the domain
     let x_outside = Array1::from_vec(vec![-2.0, -1.0, 6.0, 7.0]);
@@ -188,13 +205,13 @@ fn main() {
     for &x_val in x_outside.iter() {
         let result_allow = extrap_allow
             .evaluate(&Array1::from_vec(vec![x_val]).view())
-            .unwrap()[0];
+            .expect("Operation failed")[0];
         let result_nearest = extrap_nearest
             .evaluate(&Array1::from_vec(vec![x_val]).view())
-            .unwrap()[0];
+            .expect("Operation failed")[0];
         let result_error = match extrap_error
             .as_ref()
-            .unwrap()
+            .expect("Operation failed")
             .evaluate(&Array1::from_vec(vec![x_val]).view())
         {
             Ok(v) => format!("{:.4}", v[0]),
@@ -215,12 +232,12 @@ fn main() {
     let y_osc = x_osc.mapv(f64::sin);
 
     // Create tension splines with different tension values
-    let tens_0 =
-        make_tension_spline(&x_osc.view(), &y_osc.view(), 0.0, ExtrapolateMode::Error).unwrap();
-    let tens_1 =
-        make_tension_spline(&x_osc.view(), &y_osc.view(), 1.0, ExtrapolateMode::Error).unwrap();
-    let tens_5 =
-        make_tension_spline(&x_osc.view(), &y_osc.view(), 5.0, ExtrapolateMode::Error).unwrap();
+    let tens_0 = make_tension_spline(&x_osc.view(), &y_osc.view(), 0.0, ExtrapolateMode::Error)
+        .expect("Operation failed");
+    let tens_1 = make_tension_spline(&x_osc.view(), &y_osc.view(), 1.0, ExtrapolateMode::Error)
+        .expect("Operation failed");
+    let tens_5 = make_tension_spline(&x_osc.view(), &y_osc.view(), 5.0, ExtrapolateMode::Error)
+        .expect("Operation failed");
 
     // Evaluate at fine points
     let x_fine_osc = Array1::linspace(0.0, 4.0 * std::f64::consts::PI, 101);

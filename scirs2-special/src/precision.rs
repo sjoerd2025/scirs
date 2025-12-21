@@ -444,7 +444,7 @@ mod tests {
         assert!(safe_ops::safe_ln(-1.0).is_err());
         assert!(safe_ops::safe_ln(0.0).is_err());
         assert_relative_eq!(
-            safe_ops::safe_ln(std::f64::consts::E).unwrap(),
+            safe_ops::safe_ln(std::f64::consts::E).expect("Operation failed"),
             1.0,
             epsilon = 1e-10
         );
@@ -479,16 +479,20 @@ mod tests {
 
     #[test]
     fn test_extended_logarithm() {
-        assert_relative_eq!(extended::ln_extended(1.0).unwrap(), 0.0, epsilon = 1e-15);
         assert_relative_eq!(
-            extended::ln_extended(constants::E_EXTENDED).unwrap(),
+            extended::ln_extended(1.0).expect("Operation failed"),
+            0.0,
+            epsilon = 1e-15
+        );
+        assert_relative_eq!(
+            extended::ln_extended(constants::E_EXTENDED).expect("Operation failed"),
             1.0,
             epsilon = 1e-14
         );
 
         // Test near 1
         assert_relative_eq!(
-            extended::ln_extended(1.001).unwrap(),
+            extended::ln_extended(1.001).expect("Operation failed"),
             1.001_f64.ln(),
             epsilon = 1e-15
         );
@@ -501,8 +505,8 @@ mod tests {
         let denominator_coeffs = [1.0, -0.5];
 
         let x = 0.1;
-        let pade_result =
-            extreme::pade_approximant(x, &numerator_coeffs, &denominator_coeffs).unwrap();
+        let pade_result = extreme::pade_approximant(x, &numerator_coeffs, &denominator_coeffs)
+            .expect("Operation failed");
         let exact = x.exp();
 
         // Pade approximation may have limited accuracy - allow reasonable tolerance

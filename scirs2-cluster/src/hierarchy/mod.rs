@@ -17,14 +17,14 @@
 //!     3.7, 4.2,
 //!     3.9, 3.9,
 //!     4.2, 4.1,
-//! ]).unwrap();
+//! ]).expect("Operation failed");
 //!
 //! // Calculate linkage matrix using Ward's method
-//! let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+//! let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 //!
 //! // Form flat clusters by cutting the dendrogram at a height that gives 2 clusters
 //! let num_clusters = 2;
-//! let labels = fcluster(&linkage_matrix, num_clusters, None).unwrap();
+//! let labels = fcluster(&linkage_matrix, num_clusters, None).expect("Operation failed");
 //!
 //! // Print the results
 //! println!("Cluster assignments: {:?}", labels);
@@ -193,7 +193,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
 
                     let norm_product = (norm_i * norm_j).sqrt();
 
-                    if norm_product < F::from_f64(1e-10).unwrap() {
+                    if norm_product < F::from_f64(1e-10).expect("Operation failed") {
                         // If either vector is zero, distance is 1
                         F::one()
                     } else {
@@ -213,8 +213,8 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                         mean_j = mean_j + data[[j, k]];
                     }
 
-                    mean_i = mean_i / F::from_usize(n_features).unwrap();
-                    mean_j = mean_j / F::from_usize(n_features).unwrap();
+                    mean_i = mean_i / F::from_usize(n_features).expect("Operation failed");
+                    mean_j = mean_j / F::from_usize(n_features).expect("Operation failed");
 
                     // Compute correlation coefficient
                     let mut numerator = F::zero();
@@ -232,7 +232,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
 
                     let denom = (denom_i * denom_j).sqrt();
 
-                    if denom < F::from_f64(1e-10).unwrap() {
+                    if denom < F::from_f64(1e-10).expect("Operation failed") {
                         // If vectors are constant, distance is 0
                         F::zero()
                     } else {
@@ -376,10 +376,10 @@ pub fn linkage<
 ///     3.7, 4.2,
 ///     3.9, 3.9,
 ///     4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Calculate linkage matrix using parallel Ward's method
-/// let linkage_matrix = parallel_linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+/// let linkage_matrix = parallel_linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 ///
 /// println!("Linkage matrix shape: {:?}", linkage_matrix.shape());
 /// ```
@@ -464,12 +464,12 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
         }
         ClusterCriterion::Distance => {
             // t represents a distance threshold
-            let t_float = F::from_usize(t).unwrap();
+            let t_float = F::from_usize(t).expect("Operation failed");
             agglomerative::cut_tree_by_distance(z, t_float)
         }
         ClusterCriterion::Inconsistent => {
             // t represents an inconsistency threshold
-            let t_float = F::from_usize(t).unwrap();
+            let t_float = F::from_usize(t).expect("Operation failed");
 
             // Calculate inconsistency values with default depth of 2
             let inconsistency_matrix = dendrogram::inconsistent(z, None)?;
@@ -504,15 +504,15 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.2, 1.8, 0.8, 1.9,
 ///     3.7, 4.2, 3.9, 3.9, 4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+/// let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 ///
 /// // Cut at distance threshold 2.5
-/// let labels = fcluster_generic(&linkage_matrix, 2.5, ClusterCriterion::Distance).unwrap();
+/// let labels = fcluster_generic(&linkage_matrix, 2.5, ClusterCriterion::Distance).expect("Operation failed");
 ///
 /// // Cut at inconsistency threshold 0.8
-/// let labels2 = fcluster_generic(&linkage_matrix, 0.8, ClusterCriterion::Inconsistent).unwrap();
+/// let labels2 = fcluster_generic(&linkage_matrix, 0.8, ClusterCriterion::Inconsistent).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn fcluster_generic<F: Float + FromPrimitive + PartialOrd + Debug>(
@@ -565,10 +565,11 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run with Ward's method
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(linkage_matrix.shape(), &[5, 4]);
@@ -586,12 +587,13 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 
         // Get 2 clusters
-        let labels = fcluster(&linkage_matrix, 2, None).unwrap();
+        let labels = fcluster(&linkage_matrix, 2, None).expect("Operation failed");
 
         // Should have 6 labels
         assert_eq!(labels.len(), 6);
@@ -607,8 +609,8 @@ mod tests {
     #[test]
     fn test_distance_metrics() {
         // Test data
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         // Calculate distances with different metrics
         let euclidean_distances = compute_distances(data.view(), Metric::Euclidean);
@@ -646,7 +648,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test different linkage methods
         let methods = vec![
@@ -657,13 +659,14 @@ mod tests {
         ];
 
         for method in methods {
-            let linkage_matrix = linkage(data.view(), method, Metric::Euclidean).unwrap();
+            let linkage_matrix =
+                linkage(data.view(), method, Metric::Euclidean).expect("Operation failed");
 
             // Check dimensions
             assert_eq!(linkage_matrix.shape(), &[5, 4]);
 
             // Get 2 clusters
-            let labels = fcluster(&linkage_matrix, 2, None).unwrap();
+            let labels = fcluster(&linkage_matrix, 2, None).expect("Operation failed");
 
             // Should have 6 labels
             assert_eq!(labels.len(), 6);
@@ -677,13 +680,14 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 
         // Test with Inconsistent criterion using fcluster_generic
-        let labels =
-            fcluster_generic(&linkage_matrix, 1.0, ClusterCriterion::Inconsistent).unwrap();
+        let labels = fcluster_generic(&linkage_matrix, 1.0, ClusterCriterion::Inconsistent)
+            .expect("Operation failed");
 
         // Should have 6 labels
         assert_eq!(labels.len(), 6);
@@ -698,26 +702,28 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).expect("Operation failed");
 
         // Test MaxClust
-        let labels_maxclust =
-            fcluster_generic(&linkage_matrix, 2.0, ClusterCriterion::MaxClust).unwrap();
+        let labels_maxclust = fcluster_generic(&linkage_matrix, 2.0, ClusterCriterion::MaxClust)
+            .expect("Operation failed");
         assert_eq!(labels_maxclust.len(), 6);
         let unique_maxclust: std::collections::HashSet<_> =
             labels_maxclust.iter().cloned().collect();
         assert_eq!(unique_maxclust.len(), 2);
 
         // Test Distance
-        let labels_distance =
-            fcluster_generic(&linkage_matrix, 2.5, ClusterCriterion::Distance).unwrap();
+        let labels_distance = fcluster_generic(&linkage_matrix, 2.5, ClusterCriterion::Distance)
+            .expect("Operation failed");
         assert_eq!(labels_distance.len(), 6);
 
         // Test Inconsistent
         let labels_inconsistent =
-            fcluster_generic(&linkage_matrix, 0.5, ClusterCriterion::Inconsistent).unwrap();
+            fcluster_generic(&linkage_matrix, 0.5, ClusterCriterion::Inconsistent)
+                .expect("Operation failed");
         assert_eq!(labels_inconsistent.len(), 6);
     }
 }

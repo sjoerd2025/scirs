@@ -584,7 +584,7 @@ mod tests {
         let layer = AutogradLayer::<f32>::new(LayerType::Linear, config);
 
         assert_eq!(layer.layer_type, LayerType::Linear);
-        assert_eq!(layer.config.units.unwrap(), 64);
+        assert_eq!(layer.config.units.expect("Operation failed"), 64);
         assert!(layer.config.use_bias);
     }
 
@@ -593,15 +593,15 @@ mod tests {
         let network = AutogradNetworkBuilder::<f32>::new()
             .inputshape(vec![10])
             .linear(64)
-            .unwrap()
+            .expect("Operation failed")
             .relu()
-            .unwrap()
+            .expect("Operation failed")
             .linear(32)
-            .unwrap()
+            .expect("Operation failed")
             .dropout(0.5)
-            .unwrap()
+            .expect("Operation failed")
             .linear(1)
-            .unwrap()
+            .expect("Operation failed")
             .build();
 
         assert_eq!(network.layers.len(), 5);
@@ -617,7 +617,7 @@ mod tests {
             },
         );
 
-        layer.initialize_parameters(&[5]).unwrap();
+        layer.initialize_parameters(&[5]).expect("Operation failed");
 
         // Skip tensor-based assertions due to autograd's lazy evaluation
         assert_eq!(layer.layer_type, LayerType::Linear);
@@ -625,19 +625,23 @@ mod tests {
 
     #[test]
     fn test_simple_network_creation() {
-        let network = create_simple_network::<f32>(vec![784], &[128, 64], 10).unwrap();
+        let network =
+            create_simple_network::<f32>(vec![784], &[128, 64], 10).expect("Operation failed");
 
         assert_eq!(network.layers.len(), 5); // 2 linear + 2 relu + 1 output linear
     }
 
     #[test]
     fn test_scirs2_integration() {
-        let network = create_simple_network::<f32>(vec![10], &[5], 1).unwrap();
+        let network = create_simple_network::<f32>(vec![10], &[5], 1).expect("Operation failed");
 
         // Test conversion to SciRS2Data
         let data = network.to_scirs2_data();
         assert!(data.get_metadata("module_name").is_some());
-        assert_eq!(data.get_metadata("module_name").unwrap(), "scirs2-neural");
+        assert_eq!(
+            data.get_metadata("module_name").expect("Operation failed"),
+            "scirs2-neural"
+        );
 
         // Skip tensor conversion tests due to autograd's lazy evaluation
         assert_eq!(network.layers.len(), 3);

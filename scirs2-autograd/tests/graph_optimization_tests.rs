@@ -414,7 +414,8 @@ mod advanced_feature_integration_tests {
         // Test that custom activations work with the optimization system
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -423,8 +424,8 @@ mod advanced_feature_integration_tests {
             let gelu_result = T::custom_activation(&x, "gelu");
 
             // Test that these can be evaluated
-            let _swish_output = swish_result.eval(ctx).unwrap();
-            let _gelu_output = gelu_result.eval(ctx).unwrap();
+            let _swish_output = swish_result.eval(ctx).expect("Test: operation failed");
+            let _gelu_output = gelu_result.eval(ctx).expect("Test: operation failed");
         });
     }
 
@@ -433,11 +434,13 @@ mod advanced_feature_integration_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test SIMD operations
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -449,9 +452,9 @@ mod advanced_feature_integration_tests {
             let inplace_result = T::inplace_add(&a, &b);
 
             // Test evaluation
-            let _add_result = simd_add.eval(ctx).unwrap();
-            let _mul_result = simd_mul.eval(ctx).unwrap();
-            let _inplace_result = inplace_result.eval(ctx).unwrap();
+            let _add_result = simd_add.eval(ctx).expect("Test: operation failed");
+            let _mul_result = simd_mul.eval(ctx).expect("Test: operation failed");
+            let _inplace_result = inplace_result.eval(ctx).expect("Test: operation failed");
         });
     }
 
@@ -459,7 +462,7 @@ mod advanced_feature_integration_tests {
     fn test_graph_enhancements_with_visualization() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).expect("Test: operation failed"),
                 ctx,
             );
 
@@ -468,14 +471,18 @@ mod advanced_feature_integration_tests {
             let checkpointed = T::checkpoint(&cached_result);
 
             // Test conditional operations
-            let condition =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+            let condition = T::convert_to_tensor(
+                Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).expect("Test: operation failed"),
+                ctx,
+            );
             let true_branch = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
             let false_branch = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
+                Array::from_shape_vec(IxDyn(&[2]), vec![30.0, 40.0])
+                    .expect("Test: operation failed"),
                 ctx,
             );
 
@@ -487,9 +494,11 @@ mod advanced_feature_integration_tests {
             );
 
             // Test evaluation
-            let _cached_output = cached_result.eval(ctx).unwrap();
-            let _checkpointed_output = checkpointed.eval(ctx).unwrap();
-            let _conditional_output = conditional_result.eval(ctx).unwrap();
+            let _cached_output = cached_result.eval(ctx).expect("Test: operation failed");
+            let _checkpointed_output = checkpointed.eval(ctx).expect("Test: operation failed");
+            let _conditional_output = conditional_result
+                .eval(ctx)
+                .expect("Test: operation failed");
         });
     }
 
@@ -511,11 +520,11 @@ mod advanced_feature_integration_tests {
             let concat_result = T::efficient_concat(&[&efficient_ones, &efficient_ones], 0);
 
             // Test evaluation
-            let _zeros_output = efficient_zeros.eval(ctx).unwrap();
-            let _ones_output = efficient_ones.eval(ctx).unwrap();
-            let _reshaped_output = reshaped.eval(ctx).unwrap();
-            let _sliced_output = sliced.eval(ctx).unwrap();
-            let _concat_output = concat_result.eval(ctx).unwrap();
+            let _zeros_output = efficient_zeros.eval(ctx).expect("Test: operation failed");
+            let _ones_output = efficient_ones.eval(ctx).expect("Test: operation failed");
+            let _reshaped_output = reshaped.eval(ctx).expect("Test: operation failed");
+            let _sliced_output = sliced.eval(ctx).expect("Test: operation failed");
+            let _concat_output = concat_result.eval(ctx).expect("Test: operation failed");
         });
     }
 
@@ -555,7 +564,7 @@ mod advanced_feature_integration_tests {
             );
 
             // Test that the entire pipeline evaluates successfully
-            let output = final_result.eval(ctx).unwrap();
+            let output = final_result.eval(ctx).expect("Test: operation failed");
             assert_eq!(output.len(), 2048);
             assert!(output.iter().all(|&x| x.is_finite()));
         });

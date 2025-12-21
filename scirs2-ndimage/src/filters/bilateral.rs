@@ -970,7 +970,7 @@ impl Default for MultiScaleBilateralConfig {
 ///
 /// let image = Array2::from_elem((64, 64), 1.0);
 /// let config = MultiScaleBilateralConfig::default();
-/// let result = multi_scale_bilateral_filter(&image, &config).unwrap();
+/// let result = multi_scale_bilateral_filter(&image, &config).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn multi_scale_bilateral_filter<T, D>(
@@ -1034,7 +1034,7 @@ where
     }
 
     // Reconstruct from pyramid
-    let mut result = filtered_pyramid.pop().unwrap();
+    let mut result = filtered_pyramid.pop().expect("Operation failed");
     for level in (0..config.levels - 1).rev() {
         result = upsampleimage(&result, &filtered_pyramid[level])?;
 
@@ -1070,7 +1070,7 @@ where
 /// use scirs2_ndimage::filters::{adaptive_bilateral_filter, BorderMode};
 ///
 /// let image = Array2::from_elem((32, 32), 1.0);
-/// let result = adaptive_bilateral_filter(&image, 1.0, 1.0, 0.5, Some(BorderMode::Reflect)).unwrap();
+/// let result = adaptive_bilateral_filter(&image, 1.0, 1.0, 0.5, Some(BorderMode::Reflect)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn adaptive_bilateral_filter<T, D>(

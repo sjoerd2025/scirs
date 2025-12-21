@@ -244,13 +244,14 @@ mod tests {
         let data = vec![4.0, -1.0, -1.0, 4.0, -1.0, -1.0, 4.0];
         let indptr = vec![0, 2, 5, 7];
         let indices = vec![0, 1, 0, 1, 2, 1, 2];
-        let matrix = CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).unwrap();
+        let matrix =
+            CsrMatrix::from_raw_csr(data, indptr, indices, (3, 3)).expect("Operation failed");
 
-        let preconditioner = IC0Preconditioner::new(&matrix).unwrap();
+        let preconditioner = IC0Preconditioner::new(&matrix).expect("Operation failed");
 
         // Test by applying preconditioner to a vector
         let b = vec![1.0, 2.0, 3.0];
-        let x = preconditioner.matvec(&b).unwrap();
+        let x = preconditioner.matvec(&b).expect("Operation failed");
 
         // The result should be approximately the solution to Ax = b
         // For this simple case, we can verify the result is reasonable
@@ -265,7 +266,8 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let indptr = vec![0, 2, 4];
         let indices = vec![0, 1, 0, 1];
-        let matrix = CsrMatrix::from_raw_csr(data, indptr, indices, (2, 2)).unwrap();
+        let matrix =
+            CsrMatrix::from_raw_csr(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let result = IC0Preconditioner::new(&matrix);
         assert!(result.is_err());

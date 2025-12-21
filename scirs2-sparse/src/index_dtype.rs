@@ -222,7 +222,7 @@ mod tests {
         let result = safely_cast_index_arrays::<i32>(&[indices.view()]);
         assert!(result.is_ok());
 
-        let arrays = result.unwrap();
+        let arrays = result.expect("Operation failed");
         assert_eq!(arrays.len(), 1);
         assert_eq!(arrays[0].len(), 4);
         assert_eq!(arrays[0][2], 10);
@@ -236,7 +236,7 @@ mod tests {
         let result = safely_cast_index_arrays::<i32>(&[indices1.view(), indices2.view()]);
         assert!(result.is_ok());
 
-        let arrays = result.unwrap();
+        let arrays = result.expect("Operation failed");
         assert_eq!(arrays.len(), 2);
         assert_eq!(arrays[0].len(), 3);
         assert_eq!(arrays[1].len(), 4);

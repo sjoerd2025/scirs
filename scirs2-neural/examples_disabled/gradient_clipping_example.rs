@@ -80,17 +80,17 @@ fn create_sample_gradients() -> Vec<Array<f32, IxDyn>> {
     let mut gradients = Vec::new();
     // First layer gradients (weight)
     let grad1 =
-        Array::from_shape_vec(IxDyn(&[3, 2]), vec![0.1, 0.2, 1.5, -0.8, 0.7, -1.2]).unwrap();
+        Array::from_shape_vec(IxDyn(&[3, 2]), vec![0.1, 0.2, 1.5, -0.8, 0.7, -1.2]).expect("Operation failed");
     gradients.push(grad1);
     // First layer gradients (bias)
-    let grad2 = Array::from_shape_vec(IxDyn(&[3]), vec![0.5, -1.8, 0.9]).unwrap();
+    let grad2 = Array::from_shape_vec(IxDyn(&[3]), vec![0.5, -1.8, 0.9]).expect("Operation failed");
     gradients.push(grad2);
     // Second layer gradients (weight)
     let grad3 =
-        Array::from_shape_vec(IxDyn(&[2, 3]), vec![0.3, -0.4, 1.2, -1.5, 0.8, 0.6]).unwrap();
+        Array::from_shape_vec(IxDyn(&[2, 3]), vec![0.3, -0.4, 1.2, -1.5, 0.8, 0.6]).expect("Operation failed");
     gradients.push(grad3);
     // Second layer gradients (bias)
-    let grad4 = Array::from_shape_vec(IxDyn(&[2]), vec![0.2, -0.9]).unwrap();
+    let grad4 = Array::from_shape_vec(IxDyn(&[2]), vec![0.2, -0.9]).expect("Operation failed");
     gradients.push(grad4);
     gradients
 // Compute global norm of gradients

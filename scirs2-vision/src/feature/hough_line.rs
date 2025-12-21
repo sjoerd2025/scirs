@@ -65,7 +65,7 @@ impl Default for HoughParams {
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
-/// let img = image::open("examples/input/input.jpg").unwrap();
+/// let img = image::open("examples/input/input.jpg").expect("Operation failed");
 /// let edges = canny(&img, 1.0, Some(50.0), Some(100.0), None, false, PreprocessMode::Constant(0.0))?;
 /// let lines = hough_lines(&edges, &HoughParams::default())?;
 /// # Ok(())
@@ -287,7 +287,7 @@ fn extract_line_segment(
     points.sort_by(|a, b| {
         let dist_a = a.0 * a.0 + a.1 * a.1;
         let dist_b = b.0 * b.0 + b.1 * b.1;
-        dist_a.partial_cmp(&dist_b).unwrap()
+        dist_a.partial_cmp(&dist_b).expect("Operation failed")
     });
 
     let mut segments = Vec::new();
@@ -329,9 +329,11 @@ fn extract_line_segment(
     }
 
     // Return the longest segment
-    segments
-        .into_iter()
-        .max_by(|a, b| a.strength.partial_cmp(&b.strength).unwrap())
+    segments.into_iter().max_by(|a, b| {
+        a.strength
+            .partial_cmp(&b.strength)
+            .expect("Operation failed")
+    })
 }
 
 /// Calculate segment length
@@ -471,7 +473,7 @@ mod tests {
             ..Default::default()
         };
 
-        let lines = hough_lines(&edges, &params).unwrap();
+        let lines = hough_lines(&edges, &params).expect("Operation failed");
         assert!(!lines.is_empty());
 
         // Should detect a line at approximately 45 degrees

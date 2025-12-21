@@ -26,15 +26,16 @@ fn compare_boundary_conditions(x: &ArrayView1<f64>, y: &ArrayView1<f64>) {
     println!("----------------------------------------");
 
     // Create cubic splines with different boundary conditions
-    let natural_spline = make_interp_spline(x, y, "natural", None).unwrap();
-    let not_a_knot_spline = make_interp_spline(x, y, "not-a-knot", None).unwrap();
+    let natural_spline = make_interp_spline(x, y, "natural", None).expect("Operation failed");
+    let not_a_knot_spline = make_interp_spline(x, y, "not-a-knot", None).expect("Operation failed");
 
     // For clamped boundary conditions, we need to provide first derivatives at endpoints
     // For a parabola y = x^2, the first derivative is y' = 2x
     let first_deriv_start = 0.0; // y'(0) = 0
     let first_deriv_end = 8.0; // y'(4) = 8
     let bc_params = array![first_deriv_start, first_deriv_end];
-    let clamped_spline = make_interp_spline(x, y, "clamped", Some(&bc_params.view())).unwrap();
+    let clamped_spline =
+        make_interp_spline(x, y, "clamped", Some(&bc_params.view())).expect("Operation failed");
 
     println!("\nSample data (y = x²):");
     for i in 0..x.len() {
@@ -49,9 +50,15 @@ fn compare_boundary_conditions(x: &ArrayView1<f64>, y: &ArrayView1<f64>) {
     println!("-------|---------|------------|---------|--------");
 
     for &test_point in test_points.iter() {
-        let natural_value = natural_spline.evaluate(test_point).unwrap();
-        let not_a_knot_value = not_a_knot_spline.evaluate(test_point).unwrap();
-        let clamped_value = clamped_spline.evaluate(test_point).unwrap();
+        let natural_value = natural_spline
+            .evaluate(test_point)
+            .expect("Operation failed");
+        let not_a_knot_value = not_a_knot_spline
+            .evaluate(test_point)
+            .expect("Operation failed");
+        let clamped_value = clamped_spline
+            .evaluate(test_point)
+            .expect("Operation failed");
         let true_value = test_point * test_point;
 
         println!(
@@ -63,11 +70,15 @@ fn compare_boundary_conditions(x: &ArrayView1<f64>, y: &ArrayView1<f64>) {
     // Check which method best approximates the true function
     let test_points = array![0.25, 0.75, 1.25, 1.75, 2.25, 2.75, 3.25, 3.75];
 
-    let natural_values = natural_spline.evaluate_array(&test_points.view()).unwrap();
+    let natural_values = natural_spline
+        .evaluate_array(&test_points.view())
+        .expect("Operation failed");
     let not_a_knot_values = not_a_knot_spline
         .evaluate_array(&test_points.view())
-        .unwrap();
-    let clamped_values = clamped_spline.evaluate_array(&test_points.view()).unwrap();
+        .expect("Operation failed");
+    let clamped_values = clamped_spline
+        .evaluate_array(&test_points.view())
+        .expect("Operation failed");
 
     let mut natural_mse = 0.0;
     let mut not_a_knot_mse = 0.0;
@@ -112,7 +123,8 @@ fn demonstrate_derivatives_and_integration(x: &ArrayView1<f64>, y: &ArrayView1<f
     let first_deriv_start = 0.0; // y'(0) = 0
     let first_deriv_end = 8.0; // y'(4) = 8
     let bc_params = array![first_deriv_start, first_deriv_end];
-    let spline = make_interp_spline(x, y, "clamped", Some(&bc_params.view())).unwrap();
+    let spline =
+        make_interp_spline(x, y, "clamped", Some(&bc_params.view())).expect("Operation failed");
 
     // Test derivatives
     let test_points = [0.0, 1.0, 2.0, 3.0, 4.0];
@@ -122,7 +134,7 @@ fn demonstrate_derivatives_and_integration(x: &ArrayView1<f64>, y: &ArrayView1<f
     println!("-------|------------------|-------------------|----------------");
 
     for &test_point in test_points.iter() {
-        let first_deriv = spline.derivative(test_point).unwrap();
+        let first_deriv = spline.derivative(test_point).expect("Operation failed");
         // Note: second_derivative method is not available, using derivative again
         let second_deriv = 0.0; // placeholder for second derivative
         let true_first_deriv = 2.0 * test_point; // For y = x^2, y' = 2x
@@ -141,7 +153,7 @@ fn demonstrate_derivatives_and_integration(x: &ArrayView1<f64>, y: &ArrayView1<f
     println!("---------|----------------|------------------------------");
 
     for &(a, b) in integration_intervals.iter() {
-        let spline_integral = spline.integrate(a, b).unwrap();
+        let spline_integral = spline.integrate(a, b).expect("Operation failed");
 
         // For y = x^2, the indefinite integral is x^3/3
         let true_integral = (f64::powi(b, 3) - f64::powi(a, 3)) / 3.0;
@@ -180,10 +192,12 @@ fn demonstrate_periodic_splines() {
     // For sin(x), sin(0) = sin(2π) = 0, so we're good
 
     // Create a periodic spline
-    let periodic_spline = make_interp_spline(&x.view(), &y.view(), "periodic", None).unwrap();
+    let periodic_spline =
+        make_interp_spline(&x.view(), &y.view(), "periodic", None).expect("Operation failed");
 
     // Create a natural spline for comparison
-    let natural_spline = make_interp_spline(&x.view(), &y.view(), "natural", None).unwrap();
+    let natural_spline =
+        make_interp_spline(&x.view(), &y.view(), "natural", None).expect("Operation failed");
 
     // Generate test points
     let test_points = array![0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.0];
@@ -194,8 +208,12 @@ fn demonstrate_periodic_splines() {
 
     for i in 0..test_points.len() {
         let test_point = test_points[i];
-        let periodic_value = periodic_spline.evaluate(test_point).unwrap();
-        let natural_value = natural_spline.evaluate(test_point).unwrap();
+        let periodic_value = periodic_spline
+            .evaluate(test_point)
+            .expect("Operation failed");
+        let natural_value = natural_spline
+            .evaluate(test_point)
+            .expect("Operation failed");
         let true_value = f64::sin(test_point);
 
         println!(

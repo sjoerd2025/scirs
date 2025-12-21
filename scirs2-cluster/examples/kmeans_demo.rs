@@ -18,7 +18,7 @@ fn main() {
             5.0, 1.0, 4.5, 1.5, 5.5, 2.0, 6.0, 1.0, 4.8, 0.5,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nRunning standard K-means with k=3...");
     let (centroids, labels) = kmeans2(
@@ -31,7 +31,7 @@ fn main() {
         Some(true), // check_finite
         Some(42),   // random_seed
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("\nCentroids:");
     for (i, centroid) in centroids.outer_iter().enumerate() {
@@ -61,10 +61,11 @@ fn main() {
 
     // Run K-means++
     println!("\nRunning K-means++ with k=3...");
-    let _initial_centroids = kmeans_plus_plus(data.view(), 3, None).unwrap();
+    let _initial_centroids = kmeans_plus_plus(data.view(), 3, None).expect("Operation failed");
     // Using the default options but with k-means++ initialization
     let options = KMeansOptions::<f64>::default();
-    let (centroids_pp, labels_pp) = kmeans_with_options(data.view(), 3, Some(options)).unwrap();
+    let (centroids_pp, labels_pp) =
+        kmeans_with_options(data.view(), 3, Some(options)).expect("Operation failed");
 
     println!("\nK-means++ Centroids:");
     for (i, centroid) in centroids_pp.outer_iter().enumerate() {

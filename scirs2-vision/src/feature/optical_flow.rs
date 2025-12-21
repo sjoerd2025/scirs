@@ -531,7 +531,8 @@ mod tests {
         let img1 = DynamicImage::new_luma8(50, 50);
         let img2 = img1.clone();
 
-        let flow = lucas_kanade_flow(&img1, &img2, None, &LucasKanadeParams::default()).unwrap();
+        let flow = lucas_kanade_flow(&img1, &img2, None, &LucasKanadeParams::default())
+            .expect("Operation failed");
         assert_eq!(flow.dim(), (50, 50));
 
         // Flow should be zero for identical images

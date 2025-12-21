@@ -107,7 +107,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
     ///     values,
     ///     InterpolationMethod::Linear,
     ///     ExtrapolateMode::Extrapolate,
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         points: Vec<Array1<F>>,
@@ -200,16 +200,16 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
     ///
     /// let interpolator = RegularGridInterpolator::new(
     ///     points, values, InterpolationMethod::Linear, ExtrapolateMode::Extrapolate
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     ///
     /// // Interpolate at multiple points
     /// let xi = Array2::from_shape_vec((3, 2), vec![
     ///     0.5, 0.5,
     ///     1.0, 0.0,
     ///     1.5, 0.5,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
-    /// let results = interpolator.__call__(&xi.view()).unwrap();
+    /// let results = interpolator.__call__(&xi.view()).expect("Operation failed");
     /// assert_eq!(results.len(), 3);
     /// ```
     pub fn __call__(&self, xi: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
@@ -287,7 +287,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
 
                     // Return just the index of the nearest point
                     indices.push(closest_idx);
-                    weights.push(F::from_f64(1.0).unwrap());
+                    weights.push(F::from_f64(1.0).expect("Operation failed"));
                     continue;
                 }
                 _ => {
@@ -341,15 +341,15 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
                 // Calculate the normalized distance for linear interpolation
                 // t is the fraction of the distance between x0 and x1
                 let t = if x1 == x0 {
-                    F::from_f64(0.0).unwrap()
+                    F::from_f64(0.0).expect("Operation failed")
                 } else {
                     (x - x0) / (x1 - x0)
                 };
 
                 // Ensure t is between 0 and 1 (this handles any numerical precision issues)
                 let t = t
-                    .max(F::from_f64(0.0).unwrap())
-                    .min(F::from_f64(1.0).unwrap());
+                    .max(F::from_f64(0.0).expect("Operation failed"))
+                    .min(F::from_f64(1.0).expect("Operation failed"));
 
                 indices.push(idx);
                 weights.push(t);
@@ -416,7 +416,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
 
             // Bilinear interpolation formula
             // (1-t0)(1-t1)v00 + (1-t0)t1v01 + t0(1-t1)v10 + t0t1v11
-            let one = F::from_f64(1.0).unwrap();
+            let one = F::from_f64(1.0).expect("Operation failed");
             let result = (one - t0) * (one - t1) * v00
                 + (one - t0) * t1 * v01
                 + t0 * (one - t1) * v10
@@ -427,7 +427,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
 
         // General case for N dimensions
         let n_dims = indices.len();
-        let mut result = F::from_f64(0.0).unwrap();
+        let mut result = F::from_f64(0.0).expect("Operation failed");
 
         // We need to iterate through all 2^n_dims vertices of the hypercube
         // Each vertex is identified by a binary pattern of lower/upper indices
@@ -436,7 +436,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
         for vertex in 0..n_vertices {
             // Build the index for this vertex and calculate its weight
             let mut vertex_index = Vec::with_capacity(n_dims);
-            let mut vertex_weight = F::from_f64(1.0).unwrap();
+            let mut vertex_weight = F::from_f64(1.0).expect("Operation failed");
 
             for dim in 0..n_dims {
                 let use_upper = (vertex >> dim) & 1 == 1;
@@ -449,7 +449,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
                 let dim_weight = if use_upper {
                     weights[dim]
                 } else {
-                    F::from_f64(1.0).unwrap() - weights[dim]
+                    F::from_f64(1.0).expect("Operation failed") - weights[dim]
                 };
 
                 vertex_weight *= dim_weight;
@@ -625,7 +625,7 @@ impl<
     ///     0.0, 1.0, 0.0,
     ///     0.0, 0.0, 1.0,
     ///     0.5, 0.5, 0.5,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 1.5]);
     ///
     /// // Create IDW interpolator with custom power
@@ -635,7 +635,7 @@ impl<
     ///     ScatteredInterpolationMethod::IDW,
     ///     ExtrapolateMode::Extrapolate,
     ///     Some(ScatteredInterpolatorParams::IDW { power: 3.0 }),
-    /// ).unwrap();
+    /// ).expect("Operation failed");
     /// ```
     pub fn new(
         points: Array2<F>,
@@ -659,10 +659,10 @@ impl<
             None => match method {
                 ScatteredInterpolationMethod::Nearest => ScatteredInterpolatorParams::None,
                 ScatteredInterpolationMethod::IDW => ScatteredInterpolatorParams::IDW {
-                    power: F::from_f64(2.0).unwrap(),
+                    power: F::from_f64(2.0).expect("Operation failed"),
                 },
                 ScatteredInterpolationMethod::RBF => ScatteredInterpolatorParams::RBF {
-                    epsilon: F::from_f64(1.0).unwrap(),
+                    epsilon: F::from_f64(1.0).expect("Operation failed"),
                     rbf_type: RBFType::Multiquadric,
                 },
             },
@@ -768,11 +768,11 @@ impl<
         // Get the power parameter
         let power = match self.params {
             ScatteredInterpolatorParams::IDW { power } => power,
-            _ => F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params
+            _ => F::from_f64(2.0).expect("Operation failed"), // Default to 2.0 if wrong params
         };
 
-        let mut sum_weights = F::from_f64(0.0).unwrap();
-        let mut sum_weighted_values = F::from_f64(0.0).unwrap();
+        let mut sum_weights = F::from_f64(0.0).expect("Operation failed");
+        let mut sum_weighted_values = F::from_f64(0.0).expect("Operation failed");
 
         // Check for exact match with any input point
         for i in 0..self.points.shape()[0] {
@@ -785,7 +785,7 @@ impl<
             }
 
             // Calculate weight as 1/distance^power
-            let weight = F::from_f64(1.0).unwrap() / dist.powf(power);
+            let weight = F::from_f64(1.0).expect("Operation failed") / dist.powf(power);
             sum_weights += weight;
             sum_weighted_values += weight * self.values[i];
         }
@@ -812,7 +812,7 @@ impl<
     ///
     /// Euclidean distance between the points
     fn compute_distance(&self, p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
-        let mut sum_sq = F::from_f64(0.0).unwrap();
+        let mut sum_sq = F::from_f64(0.0).expect("Operation failed");
         for i in 0..p1.len() {
             let diff = p1[i] - p2[i];
             sum_sq += diff * diff;
@@ -845,7 +845,7 @@ impl<
             + 'static,
     {
         // Create RBF interpolator
-        let epsilon = F::from_f64(1.0).unwrap(); // Default shape parameter
+        let epsilon = F::from_f64(1.0).expect("Operation failed"); // Default shape parameter
         let rbf = RBFInterpolator::new(
             &self.points.view(),
             &self.values.view(),
@@ -855,7 +855,9 @@ impl<
 
         // Evaluate at the query point (reshape 1D point to 2D for RBF interface)
         let binding = point.to_owned();
-        let point_2d = binding.to_shape((1, point.len())).unwrap();
+        let point_2d = binding
+            .to_shape((1, point.len()))
+            .expect("Operation failed");
         let result = rbf.evaluate(&point_2d.view())?;
         Ok(result[0])
     }
@@ -908,12 +910,12 @@ impl<
 ///     values,
 ///     InterpolationMethod::Linear,
 ///     ExtrapolateMode::Extrapolate,
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Interpolate at a point
 /// use scirs2_core::ndarray::Array2;
-/// let points_to_interp = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).unwrap();
-/// let result = interp.__call__(&points_to_interp.view()).unwrap();
+/// let points_to_interp = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).expect("Operation failed");
+/// let result = interp.__call__(&points_to_interp.view()).expect("Operation failed");
 /// assert!((result[0] - 9.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -991,7 +993,7 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     let mut shape = vec![1; n_dims];
 
     for (i, grid) in new_grid.iter().enumerate() {
-        let mut idx = vec![F::from_f64(0.0).unwrap(); grid.len()];
+        let mut idx = vec![F::from_f64(0.0).expect("Operation failed"); grid.len()];
         for (j, val) in grid.iter().enumerate() {
             idx[j] = *val;
         }
@@ -1043,7 +1045,9 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
         out_idx_vec.extend_from_slice(&multi_index[..n_dims]);
 
         // Set the value in the output array
-        *out_values.get_mut(out_idx_vec.as_slice()).unwrap() = values[flat_idx];
+        *out_values
+            .get_mut(out_idx_vec.as_slice())
+            .expect("Operation failed") = values[flat_idx];
     }
 
     Ok(out_values)
@@ -1078,16 +1082,21 @@ mod tests {
             InterpolationMethod::Linear,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation at grid points
-        let grid_point = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
-        let result = interp.__call__(&grid_point.view()).unwrap();
+        let grid_point = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).expect("Operation failed");
+        let result = interp
+            .__call__(&grid_point.view())
+            .expect("Operation failed");
         assert_abs_diff_eq!(result[0], 5.0, epsilon = 1e-10);
 
         // Test interpolation at non-grid points
-        let non_grid_point = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).unwrap();
-        let result = interp.__call__(&non_grid_point.view()).unwrap();
+        let non_grid_point =
+            Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).expect("Operation failed");
+        let result = interp
+            .__call__(&non_grid_point.view())
+            .expect("Operation failed");
 
         // For point (1.5, 2.5):
         // We're interpolating between grid points:
@@ -1102,8 +1111,11 @@ mod tests {
         assert_abs_diff_eq!(result[0], 9.0, epsilon = 1e-10);
 
         // Test multiple points at once
-        let multiple_points = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 2.0, 2.0]).unwrap();
-        let result = interp.__call__(&multiple_points.view()).unwrap();
+        let multiple_points =
+            Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 2.0, 2.0]).expect("Operation failed");
+        let result = interp
+            .__call__(&multiple_points.view())
+            .expect("Operation failed");
         assert_abs_diff_eq!(result[0], 2.0, epsilon = 1e-10);
         assert_abs_diff_eq!(result[1], 8.0, epsilon = 1e-10);
 
@@ -1114,10 +1126,12 @@ mod tests {
             InterpolationMethod::Nearest,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let point = Array2::from_shape_vec((1, 2), vec![1.6, 1.7]).unwrap();
-        let result = interp_nearest.__call__(&point.view()).unwrap();
+        let point = Array2::from_shape_vec((1, 2), vec![1.6, 1.7]).expect("Operation failed");
+        let result = interp_nearest
+            .__call__(&point.view())
+            .expect("Operation failed");
         // Point (1.6, 1.7) is closest to grid point (2,2) which has value 8.0
         assert_abs_diff_eq!(result[0], 8.0, epsilon = 1e-10);
     }
@@ -1129,7 +1143,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Create values at those points (z = x^2 + y^2)
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0, 0.5]);
@@ -1142,11 +1156,13 @@ mod tests {
             ExtrapolateMode::Extrapolate,
             Some(ScatteredInterpolatorParams::IDW { power: 2.0 }),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test interpolation at a point
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.0]).unwrap();
-        let result = interp.__call__(&test_point.view()).unwrap();
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.0]).expect("Operation failed");
+        let result = interp
+            .__call__(&test_point.view())
+            .expect("Operation failed");
         // Value should be between 0.0 and 1.0, closer to 0.5
         assert!(result[0] > 0.0 && result[0] < 1.0);
 
@@ -1158,10 +1174,12 @@ mod tests {
             ExtrapolateMode::Extrapolate,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();
-        let result = interp_nearest.__call__(&test_point.view()).unwrap();
+        let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).expect("Operation failed");
+        let result = interp_nearest
+            .__call__(&test_point.view())
+            .expect("Operation failed");
         assert_abs_diff_eq!(result[0], 0.5, epsilon = 1e-10); // Should pick the center point
     }
 }

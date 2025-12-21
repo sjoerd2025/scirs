@@ -35,7 +35,7 @@ use crate::error::{MetricsError, Result};
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
 ///
-/// let ari = adjusted_rand_index(&labels_true, &labels_pred).unwrap();
+/// let ari = adjusted_rand_index(&labels_true, &labels_pred).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn adjusted_rand_index<T, U, S1, S2, D1, D2>(
@@ -144,7 +144,7 @@ mod tests {
         // Perfect match
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![1, 1, 0, 0, 2, 2]; // Same clustering with different labels
-        let ari = adjusted_rand_index(&labels_true, &labels_pred).unwrap();
+        let ari = adjusted_rand_index(&labels_true, &labels_pred).expect("Operation failed");
         assert!(
             (ari - 1.0).abs() < 1e-10,
             "ARI should be 1.0 for perfect match"
@@ -153,7 +153,7 @@ mod tests {
         // Imperfect match (different cluster arrangement)
         let labels_true = array![0, 0, 0, 1, 1, 1];
         let labels_pred = array![0, 1, 2, 0, 1, 2];
-        let ari = adjusted_rand_index(&labels_true, &labels_pred).unwrap();
+        let ari = adjusted_rand_index(&labels_true, &labels_pred).expect("Operation failed");
         assert!(
             (-1.0..=1.0).contains(&ari),
             "ARI should be between -1 and 1, got: {}",
@@ -163,7 +163,7 @@ mod tests {
         // Partial match
         let labels_true = array![0, 0, 1, 1, 2, 2];
         let labels_pred = array![0, 0, 0, 1, 1, 1];
-        let ari = adjusted_rand_index(&labels_true, &labels_pred).unwrap();
+        let ari = adjusted_rand_index(&labels_true, &labels_pred).expect("Operation failed");
         assert!(
             ari > 0.0 && ari < 1.0,
             "ARI should be between 0 and 1 for partial match"

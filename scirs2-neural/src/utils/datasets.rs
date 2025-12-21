@@ -276,7 +276,7 @@ impl<'a, F: Float + Debug> Iterator for BatchIterator<'a, F> {
 ///
 /// let features = Array2::<f64>::zeros((100, 10));
 /// let labels = Array2::<f64>::zeros((100, 3));
-/// let dataset = Dataset::new(features, labels).unwrap();
+/// let dataset = Dataset::new(features, labels).expect("Operation failed");
 ///
 /// let mut loader = DataLoader::new(dataset, 16, true, true);
 ///
@@ -469,7 +469,7 @@ mod tests {
         let features = Array2::<f64>::zeros((100, 10));
         let labels = Array2::<f64>::zeros((100, 3));
 
-        let dataset = Dataset::new(features, labels).unwrap();
+        let dataset = Dataset::new(features, labels).expect("Operation failed");
         assert_eq!(dataset.len(), 100);
         assert_eq!(dataset.num_features(), 10);
         assert_eq!(dataset.num_labels(), 3);
@@ -492,7 +492,7 @@ mod tests {
         }
         let labels = Array2::<f64>::zeros((10, 1));
 
-        let mut dataset = Dataset::new(features.clone(), labels).unwrap();
+        let mut dataset = Dataset::new(features.clone(), labels).expect("Operation failed");
         let original_indices = dataset.indices.clone();
 
         let mut rng = rng();
@@ -511,8 +511,8 @@ mod tests {
             labels[[i, 0]] = i as f64;
         }
 
-        let dataset = Dataset::new(features, labels).unwrap();
-        let (batch_x, batch_y) = dataset.get_batch(0, 5).unwrap();
+        let dataset = Dataset::new(features, labels).expect("Operation failed");
+        let (batch_x, batch_y) = dataset.get_batch(0, 5).expect("Operation failed");
 
         assert_eq!(batch_x.nrows(), 5);
         assert_eq!(batch_y.nrows(), 5);
@@ -523,9 +523,11 @@ mod tests {
         let features = Array2::<f64>::ones((100, 10));
         let labels = Array2::<f64>::zeros((100, 3));
 
-        let dataset = Dataset::new(features, labels).unwrap();
+        let dataset = Dataset::new(features, labels).expect("Operation failed");
         let mut rng = rng();
-        let (train, val) = dataset.train_val_split(0.8, &mut rng).unwrap();
+        let (train, val) = dataset
+            .train_val_split(0.8, &mut rng)
+            .expect("Operation failed");
 
         assert_eq!(train.len(), 80);
         assert_eq!(val.len(), 20);
@@ -536,7 +538,7 @@ mod tests {
         let features = Array2::<f64>::zeros((25, 5));
         let labels = Array2::<f64>::zeros((25, 2));
 
-        let dataset = Dataset::new(features, labels).unwrap();
+        let dataset = Dataset::new(features, labels).expect("Operation failed");
         let iter = BatchIterator::new(&dataset, 10, false);
 
         assert_eq!(iter.num_batches(), 3); // 25 / 10 = 2.5, rounded up to 3
@@ -550,7 +552,7 @@ mod tests {
         let features = Array2::<f64>::zeros((25, 5));
         let labels = Array2::<f64>::zeros((25, 2));
 
-        let dataset = Dataset::new(features, labels).unwrap();
+        let dataset = Dataset::new(features, labels).expect("Operation failed");
         let iter = BatchIterator::new(&dataset, 10, true);
 
         assert_eq!(iter.num_batches(), 2); // 25 / 10 = 2 (drop remainder)
@@ -564,7 +566,7 @@ mod tests {
         let features = Array2::<f64>::zeros((50, 10));
         let labels = Array2::<f64>::zeros((50, 3));
 
-        let dataset = Dataset::new(features, labels).unwrap();
+        let dataset = Dataset::new(features, labels).expect("Operation failed");
         let loader = DataLoader::new(dataset, 16, true, false);
 
         assert_eq!(loader.len(), 50);

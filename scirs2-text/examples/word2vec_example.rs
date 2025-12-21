@@ -134,9 +134,15 @@ fn main() {
     println!("\nVector arithmetic: fox - dog + cat = ?");
 
     // Manual vector arithmetic
-    let fox_vec = skipgram_model.get_word_vector("fox").unwrap();
-    let dog_vec = skipgram_model.get_word_vector("dog").unwrap();
-    let cat_vec = skipgram_model.get_word_vector("cat").unwrap();
+    let fox_vec = skipgram_model
+        .get_word_vector("fox")
+        .expect("Operation failed");
+    let dog_vec = skipgram_model
+        .get_word_vector("dog")
+        .expect("Operation failed");
+    let cat_vec = skipgram_model
+        .get_word_vector("cat")
+        .expect("Operation failed");
 
     // Compute the result vector
     let mut result_vec = Array1::zeros(fox_vec.dim());

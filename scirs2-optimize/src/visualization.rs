@@ -701,10 +701,12 @@ impl OptimizationVisualizer {
                 - ((y_coords[0] - min_y) / (max_y - min_y)) * plot_height as f64;
 
             let end_x = margin as f64
-                + ((x_coords.last().unwrap() - min_x) / (max_x - min_x)) * plot_width as f64;
+                + ((x_coords.last().expect("Operation failed") - min_x) / (max_x - min_x))
+                    * plot_width as f64;
             let end_y = height as f64
                 - margin as f64
-                - ((y_coords.last().unwrap() - min_y) / (max_y - min_y)) * plot_height as f64;
+                - ((y_coords.last().expect("Operation failed") - min_y) / (max_y - min_y))
+                    * plot_height as f64;
 
             svg_content.push_str(&format!(
                 r#"    <circle cx="{}" cy="{}" r="5" class="start" />
@@ -995,7 +997,7 @@ mod tests {
         let rate = trajectory.convergence_rate();
         assert!(rate.is_some());
         // Should be approximately 0.5 for this geometric sequence
-        assert!((rate.unwrap() - 0.5).abs() < 0.1);
+        assert!((rate.expect("Operation failed") - 0.5).abs() < 0.1);
     }
 
     #[test]

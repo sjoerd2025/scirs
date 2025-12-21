@@ -1588,14 +1588,14 @@ mod tests {
         let result = clusterer.cluster(&points.view()).await;
         assert!(result.is_ok());
 
-        let (centroids, spike_patterns, metrics) = result.unwrap();
+        let (centroids, spike_patterns, metrics) = result.expect("Operation failed");
         assert_eq!(centroids.nrows(), 2);
         assert!(!spike_patterns.is_empty());
         assert!(metrics.quantum_neural_speedup > 0.0);
     }
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "Test failure - assertion failed: opt_result.quantum_contribution >= 0.0 at line 1613"]
     async fn test_neural_quantum_optimizer() {
         let mut optimizer = NeuralQuantumOptimizer::new()
             .with_neural_adaptation_rate(0.1)
@@ -1607,7 +1607,7 @@ mod tests {
         let result = optimizer.optimize_spatial_function(objective).await;
         assert!(result.is_ok());
 
-        let opt_result = result.unwrap();
+        let opt_result = result.expect("Operation failed");
         assert!(opt_result.optimal_value < 10.0); // Should find near-zero minimum
         assert!(!opt_result.optimization_history.is_empty());
         assert!(opt_result.neural_contribution >= 0.0);
@@ -1655,7 +1655,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "Test failure - assertion `left == right` failed: left: 6, right: 9 at line 1684"]
     async fn test_comprehensive_fusion_workflow() {
         // Demonstrate a complete neuromorphic-quantum fusion workflow
 
@@ -1682,7 +1682,8 @@ mod tests {
         let clustering_result = quantum_clusterer.cluster(&sensor_positions.view()).await;
         assert!(clustering_result.is_ok());
 
-        let (clusters, quantum_spikes, fusion_metrics) = clustering_result.unwrap();
+        let (clusters, quantum_spikes, fusion_metrics) =
+            clustering_result.expect("Operation failed");
         assert_eq!(clusters.len(), sensor_positions.nrows());
         assert!(fusion_metrics.quantum_neural_speedup >= 1.0);
         assert!(!quantum_spikes.is_empty());
@@ -1695,7 +1696,7 @@ mod tests {
 
         // Objective: minimize total distance between sensors
         let sensor_objective = Box::new(|params: &Array1<f64>| -> f64 {
-            let params = params.as_slice().unwrap();
+            let params = params.as_slice().expect("Operation failed");
             let mut total_distance = 0.0;
             let n_sensors = params.len() / 2;
 
@@ -1724,7 +1725,7 @@ mod tests {
             .await;
         assert!(optimization_result.is_ok());
 
-        let opt_result = optimization_result.unwrap();
+        let opt_result = optimization_result.expect("Operation failed");
         assert!(opt_result.optimal_value.is_finite()); // Check convergence by ensuring we got a valid result
         assert!(opt_result.neural_contribution > 0.0);
         assert!(opt_result.quantum_contribution > 0.0);

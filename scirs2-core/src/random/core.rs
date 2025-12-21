@@ -133,7 +133,7 @@ impl<R: Rng> Random<R> {
     {
         let size = shape.size();
         let values: Vec<T> = (0..size).map(|_| self.sample(distribution)).collect();
-        Array::from_shape_vec(shape, values).unwrap()
+        Array::from_shape_vec(shape, values).expect("Operation failed")
     }
 
     /// Access the underlying RNG (for advanced use cases)
@@ -265,7 +265,7 @@ mod tests {
     #[test]
     fn test_random_creation() {
         let mut rng = Random::default();
-        let _val = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+        let _val = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
     }
 
     #[test]
@@ -273,8 +273,8 @@ mod tests {
         let mut rng1 = seeded_rng(42);
         let mut rng2 = seeded_rng(42);
 
-        let val1 = rng1.sample(Uniform::new(0.0, 1.0).unwrap());
-        let val2 = rng2.sample(Uniform::new(0.0, 1.0).unwrap());
+        let val1 = rng1.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
+        let val2 = rng2.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
 
         assert_eq!(val1, val2);
     }
@@ -282,7 +282,7 @@ mod tests {
     #[test]
     fn test_thread_rng() {
         let mut rng = thread_rng();
-        let val = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+        let val = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
         assert!((0.0..1.0).contains(&val));
     }
 
@@ -297,11 +297,11 @@ mod tests {
         let mut rng2_1 = seq2.next_rng();
         let mut rng2_2 = seq2.next_rng();
 
-        let val1_1 = rng1_1.sample(Uniform::new(0.0, 1.0).unwrap());
-        let val1_2 = rng1_2.sample(Uniform::new(0.0, 1.0).unwrap());
+        let val1_1 = rng1_1.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
+        let val1_2 = rng1_2.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
 
-        let val2_1 = rng2_1.sample(Uniform::new(0.0, 1.0).unwrap());
-        let val2_2 = rng2_2.sample(Uniform::new(0.0, 1.0).unwrap());
+        let val2_1 = rng2_1.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
+        let val2_2 = rng2_2.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
 
         assert_eq!(val1_1, val2_1);
         assert_eq!(val1_2, val2_2);
@@ -316,8 +316,8 @@ mod tests {
         let mut rng1 = state1.next_rng();
         let mut rng2 = state2.next_rng();
 
-        let val1 = rng1.sample(Uniform::new(0.0, 1.0).unwrap());
-        let val2 = rng2.sample(Uniform::new(0.0, 1.0).unwrap());
+        let val1 = rng1.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
+        let val2 = rng2.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
 
         assert_eq!(val1, val2);
         assert_eq!(state1.position(), state2.position());
@@ -326,7 +326,7 @@ mod tests {
     #[test]
     fn test_sample_array() {
         let mut rng = seeded_rng(789);
-        let array = rng.sample_array(Ix2(3, 3), Uniform::new(0.0, 1.0).unwrap());
+        let array = rng.sample_array(Ix2(3, 3), Uniform::new(0.0, 1.0).expect("Operation failed"));
 
         assert_eq!(array.shape(), &[3, 3]);
         assert!(array.iter().all(|&x| (0.0..1.0).contains(&x)));
@@ -335,7 +335,7 @@ mod tests {
     #[test]
     fn test_distribution_ext() {
         let mut rng = seeded_rng(101112);
-        let distribution = Uniform::new(-1.0, 1.0).unwrap();
+        let distribution = Uniform::new(-1.0, 1.0).expect("Operation failed");
 
         let vec = distribution.sample_vec(&mut rng, 10);
         assert_eq!(vec.len(), 10);

@@ -22,7 +22,7 @@
 //! let signal_config = TestSignalConfig::default();
 //! let validation_config = ValidationConfig::default();
 //!
-//! let result = validate_multitaper_comprehensive(&signal_config, &validation_config).unwrap();
+//! let result = validate_multitaper_comprehensive(&signal_config, &validation_config).expect("Operation failed");
 //! println!("Overall validation score: {}", result.overall_score);
 //! ```
 //!
@@ -34,7 +34,7 @@
 //! };
 //!
 //! let config = ComprehensiveTestConfig::default();
-//! let result = run_comprehensive_enhanced_validation(&config).unwrap();
+//! let result = run_comprehensive_enhanced_validation(&config).expect("Operation failed");
 //!
 //! println!("Enhanced score: {}", result.enhanced_score);
 //! for recommendation in &result.recommendations {
@@ -50,7 +50,7 @@
 //! };
 //!
 //! let config = TestSignalConfig::default();
-//! let signal = generate_test_signal(&TestSignalType::Sinusoid(100.0), &config).unwrap();
+//! let signal = generate_test_signal(&TestSignalType::Sinusoid(100.0), &config).expect("Operation failed");
 //! println!("Generated signal with {} samples", signal.len());
 //! ```
 
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn test_quick_validation() {
-        let score = quick_validation().unwrap();
+        let score = quick_validation().expect("Operation failed");
         assert!(score >= 0.0 && score <= 100.0);
     }
 
@@ -295,13 +295,13 @@ mod tests {
             1000.0,
             4.0,
             7,
-        ).unwrap();
+        ).expect("Operation failed");
         assert!(score >= 0.0 && score <= 100.0);
     }
 
     #[test]
     fn test_simd_validation() {
-        let metrics = validate_simd_performance(256).unwrap();
+        let metrics = validate_simd_performance(256).expect("Operation failed");
         assert!(metrics.correctness_score >= 0.0 && metrics.correctness_score <= 1.0);
         assert!(metrics.performance_improvement >= 1.0);
     }
@@ -309,7 +309,7 @@ mod tests {
     #[test]
     fn test_scaling_benchmark() {
         let lengths = vec![128, 256, 512];
-        let results = benchmark_scaling_performance(&lengths).unwrap();
+        let results = benchmark_scaling_performance(&lengths).expect("Operation failed");
         assert_eq!(results.len(), 3);
 
         // Performance should generally decrease with larger signals
@@ -330,7 +330,7 @@ mod tests {
             ..Default::default()
         };
 
-        let report = generate_validation_report(&config).unwrap();
+        let report = generate_validation_report(&config).expect("Operation failed");
         assert!(report.contains("Multitaper Validation Report"));
         assert!(report.contains("Overall Score"));
         assert!(report.contains("Recommendations"));
@@ -349,11 +349,11 @@ mod tests {
         };
 
         // Test signal generation
-        let signal = generate_test_signal(&TestSignalType::WhiteNoise, &signal_config).unwrap();
+        let signal = generate_test_signal(&TestSignalType::WhiteNoise, &signal_config).expect("Operation failed");
         assert_eq!(signal.len(), 128);
 
         // Test quality assessment
-        let quality = assess_signal_quality(&signal, signal_config.fs).unwrap();
+        let quality = assess_signal_quality(&signal, signal_config.fs).expect("Operation failed");
         assert!(quality.snr_db.is_finite());
 
         // Test validation
@@ -363,7 +363,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = validate_multitaper_comprehensive(&signal_config, &validation_config).unwrap();
+        let result = validate_multitaper_comprehensive(&signal_config, &validation_config).expect("Operation failed");
         assert!(result.overall_score >= 0.0);
     }
 }

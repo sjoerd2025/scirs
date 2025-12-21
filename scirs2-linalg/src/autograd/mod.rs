@@ -92,7 +92,7 @@ pub mod helpers {
             eye_data[i * n + i] = F::one();
         }
         let eye = ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).expect("Operation failed"),
             ctx,
         );
 
@@ -111,7 +111,7 @@ pub mod helpers {
             eye_data[i * n + i] = F::one();
         }
         ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).expect("Operation failed"),
             ctx,
         )
     }
@@ -122,7 +122,8 @@ pub mod helpers {
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // Extract diagonal values from tensor
-        let diagarray = ag::integration::tensor_conversion::to_ndarray(diagonal).unwrap();
+        let diagarray =
+            ag::integration::tensor_conversion::to_ndarray(diagonal).expect("Operation failed");
         let n = diagarray.len();
 
         let mut matrix_data = vec![F::zero(); n * n];
@@ -131,7 +132,7 @@ pub mod helpers {
         }
 
         ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, n), matrix_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, n), matrix_data).expect("Operation failed"),
             ctx,
         )
     }
@@ -160,7 +161,8 @@ pub mod helpers {
 
         if n == 2 {
             // 2x2 determinant: ad - bc
-            let matarray = ag::integration::tensor_conversion::to_ndarray(matrix).unwrap();
+            let matarray =
+                ag::integration::tensor_conversion::to_ndarray(matrix).expect("Operation failed");
             let a = ag::tensor_ops::convert_to_tensor(
                 ag::ndarray::Array2::from_elem((1, 1), matarray[[0, 0]]),
                 ctx,
@@ -197,7 +199,7 @@ pub mod helpers {
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // Initialize x as zeros
-        let barray = ag::integration::tensor_conversion::to_ndarray(b).unwrap();
+        let barray = ag::integration::tensor_conversion::to_ndarray(b).expect("Operation failed");
         let n = barray.len();
         let mut x = ag::tensor_ops::convert_to_tensor(ag::ndarray::Array2::zeros((n, 1)), ctx);
 
@@ -233,11 +235,12 @@ pub mod helpers {
         let mut v_data = vec![F::one(); n];
         v_data[0] = F::one();
         for (i, item) in v_data.iter_mut().enumerate().take(n).skip(1) {
-            *item = F::from(0.1).unwrap() * F::from(i as f64).unwrap();
+            *item = F::from(0.1).expect("Operation failed")
+                * F::from(i as f64).expect("Operation failed");
         }
 
         let mut v = ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, 1), v_data).unwrap(),
+            ag::ndarray::Array2::from_shape_vec((n, 1), v_data).expect("Operation failed"),
             ctx,
         );
 
@@ -283,7 +286,7 @@ pub mod helpers {
         // For now, return a constant estimate
         // A proper implementation would need SVD with gradient tracking
         ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_elem((1, 1), F::from(3.0).unwrap()),
+            ag::ndarray::Array2::from_elem((1, 1), F::from(3.0).expect("Operation failed")),
             ctx,
         )
     }

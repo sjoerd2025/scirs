@@ -681,9 +681,9 @@ fn solve_interpolation_problem(
             .min_by(|(_, a), (_, b)| {
                 ((**a - freq).abs())
                     .partial_cmp(&((**b - freq).abs()))
-                    .unwrap()
+                    .expect("Operation failed")
             })
-            .unwrap()
+            .expect("Operation failed")
             .0;
 
         extremal_desired[i] = desired_response[closest_idx];
@@ -771,7 +771,7 @@ fn find_extremal_frequencies(
         error_function[b]
             .abs()
             .partial_cmp(&error_function[a].abs())
-            .unwrap()
+            .expect("Operation failed")
     });
 
     // Take the required number of _extremal points
@@ -865,7 +865,7 @@ mod tests {
             order: None,
         };
 
-        let estimated_order = estimate_filter_order(&spec).unwrap();
+        let estimated_order = estimate_filter_order(&spec).expect("Operation failed");
         assert!(estimated_order > 0);
         assert!(estimated_order < 1000); // Reasonable bounds
     }
@@ -883,7 +883,7 @@ mod tests {
         };
 
         let config = ParksMcClellanConfig::default();
-        let (frequencies, desired, weights) = create_design_grid(&spec, &config).unwrap();
+        let (frequencies, desired, weights) = create_design_grid(&spec, &config).expect("Operation failed");
 
         assert_eq!(frequencies.len(), desired.len());
         assert_eq!(frequencies.len(), weights.len());
@@ -909,7 +909,7 @@ mod tests {
         };
 
         let config = ParksMcClellanConfig::default();
-        let result = arbitrary_magnitude_design(&response, 16, &config).unwrap();
+        let result = arbitrary_magnitude_design(&response, 16, &config).expect("Operation failed");
 
         assert_eq!(result.numerator.len(), 17); // order + 1
         assert_eq!(result.order, 16);
@@ -929,7 +929,7 @@ mod tests {
             phase: None,
         };
 
-        let result = least_squares_design(&response, 8).unwrap();
+        let result = least_squares_design(&response, 8).expect("Operation failed");
 
         assert_eq!(result.numerator.len(), 9);
         assert_eq!(result.order, 8);
@@ -955,7 +955,7 @@ mod tests {
     #[test]
     fn test_frequency_response_computation() {
         let coefficients = Array1::from_vec(vec![0.5, 0.5]); // Simple averaging filter
-        let (frequencies, response) = compute_frequency_response(&coefficients, 64).unwrap();
+        let (frequencies, response) = compute_frequency_response(&coefficients, 64).expect("Operation failed");
 
         assert_eq!(frequencies.len(), 64);
         assert_eq!(response.len(), 64);
@@ -975,7 +975,7 @@ mod tests {
         let new_freq_points = Array1::from_vec(vec![0.25, 0.75]);
 
         let interpolated =
-            interpolate_response(&freq_points, &response_values, &new_freq_points).unwrap();
+            interpolate_response(&freq_points, &response_values, &new_freq_points).expect("Operation failed");
 
         assert_eq!(interpolated.len(), 2);
         assert_relative_eq!(interpolated[0], 0.5, epsilon = 1e-10); // Linear interpolation

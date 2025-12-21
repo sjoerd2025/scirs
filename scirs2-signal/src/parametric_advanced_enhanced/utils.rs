@@ -35,7 +35,7 @@ pub fn compute_ar_psd(
     let mut psd = Vec::with_capacity(n_freqs);
 
     let fs = if frequencies.len() > 1 {
-        2.0 * frequencies.last().unwrap()
+        2.0 * frequencies.last().expect("Operation failed")
     } else {
         1.0
     };
@@ -89,7 +89,7 @@ pub fn compute_arma_psd(
     let mut psd = Vec::with_capacity(n_freqs);
 
     let fs = if frequencies.len() > 1 {
-        2.0 * frequencies.last().unwrap()
+        2.0 * frequencies.last().expect("Operation failed")
     } else {
         1.0
     };
@@ -482,7 +482,7 @@ mod tests {
         let result = compute_ar_psd(&ar_coeffs, noise_variance, &frequencies);
         assert!(result.is_ok());
 
-        let psd = result.unwrap();
+        let psd = result.expect("Operation failed");
         assert_eq!(psd.len(), frequencies.len());
         assert!(psd.iter().all(|&x| x > 0.0 && x.is_finite()));
     }
@@ -497,7 +497,7 @@ mod tests {
         let result = compute_arma_psd(&ar_coeffs, &ma_coeffs, noise_variance, &frequencies);
         assert!(result.is_ok());
 
-        let psd = result.unwrap();
+        let psd = result.expect("Operation failed");
         assert_eq!(psd.len(), frequencies.len());
         assert!(psd.iter().all(|&x| x > 0.0 && x.is_finite()));
     }
@@ -521,7 +521,7 @@ mod tests {
         let result = compute_ar_residuals(&signal, &ar_coeffs);
         assert!(result.is_ok());
 
-        let residuals = result.unwrap();
+        let residuals = result.expect("Operation failed");
         assert_eq!(residuals.len(), signal.len());
     }
 
@@ -533,7 +533,7 @@ mod tests {
         let result = compute_autocorrelation(&signal, maxlag);
         assert!(result.is_ok());
 
-        let autocorr = result.unwrap();
+        let autocorr = result.expect("Operation failed");
         assert_eq!(autocorr.len(), maxlag + 1);
         assert!((autocorr[0] - 1.0).abs() < 1e-10); // R[0] should be 1 (normalized)
     }

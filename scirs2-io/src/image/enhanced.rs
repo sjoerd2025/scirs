@@ -708,7 +708,9 @@ mod tests {
         };
 
         let processor = EnhancedImageProcessor::new();
-        let pyramid = processor.create_pyramid(&image, config).unwrap();
+        let pyramid = processor
+            .create_pyramid(&image, config)
+            .expect("Operation failed");
 
         assert_eq!(pyramid.original.metadata.width, 100);
         assert_eq!(pyramid.original.metadata.height, 100);
@@ -721,11 +723,18 @@ mod tests {
         let processor = EnhancedImageProcessor::new();
         let pyramid = processor
             .create_pyramid(&image, PyramidConfig::default())
-            .unwrap();
+            .expect("Operation failed");
 
         // Level 0 should be the original
         assert!(pyramid.get_level(0).is_some());
-        assert_eq!(pyramid.get_level(0).unwrap().metadata.width, 100);
+        assert_eq!(
+            pyramid
+                .get_level(0)
+                .expect("Operation failed")
+                .metadata
+                .width,
+            100
+        );
 
         // Check number of levels
         assert!(pyramid.num_levels() >= 1);
@@ -737,7 +746,7 @@ mod tests {
         let processor = EnhancedImageProcessor::new();
         let pyramid = processor
             .create_pyramid(&image, PyramidConfig::default())
-            .unwrap();
+            .expect("Operation failed");
 
         // Target size close to original should return level 0
         let best_level = pyramid.find_best_level(100, 100);

@@ -3,15 +3,18 @@ use scirs2_core::ndarray::Array2;
 
 #[test]
 fn test_enhanced_standard_scaler() {
-    let data = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
+    let data = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect())
+        .expect("Operation failed");
 
     let mut scaler = EnhancedStandardScaler::new(false, 100);
-    let transformed = scaler.fit_transform(&data.view()).unwrap();
+    let transformed = scaler
+        .fit_transform(&data.view())
+        .expect("Operation failed");
 
     assert_eq!(transformed.shape(), data.shape());
 
     // Check that transformed data has approximately zero mean and unit variance
-    let transformed_mean = transformed.mean_axis(Axis(0)).unwrap();
+    let transformed_mean = transformed.mean_axis(Axis(0)).expect("Operation failed");
     for &mean in transformed_mean.iter() {
         assert!((mean.abs()) < 1e-10);
     }
@@ -19,18 +22,21 @@ fn test_enhanced_standard_scaler() {
 
 #[test]
 fn test_enhanced_standard_scaler_robust() {
-    let mut data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
+    let mut data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect())
+        .expect("Operation failed");
     // Add some outliers
     data[[0, 0]] = 1000.0;
     data[[1, 1]] = -1000.0;
 
     let mut robust_scaler = EnhancedStandardScaler::new(true, 100);
-    let transformed = robust_scaler.fit_transform(&data.view()).unwrap();
+    let transformed = robust_scaler
+        .fit_transform(&data.view())
+        .expect("Operation failed");
 
     assert_eq!(transformed.shape(), data.shape());
 
     // Robust scaler should be less affected by outliers
-    let transformed_median = transformed.mean_axis(Axis(0)).unwrap(); // Approximation
+    let transformed_median = transformed.mean_axis(Axis(0)).expect("Operation failed"); // Approximation
     for &median in transformed_median.iter() {
         assert!(median.abs() < 5.0); // Should be reasonable even with outliers
     }
@@ -38,10 +44,11 @@ fn test_enhanced_standard_scaler_robust() {
 
 #[test]
 fn test_enhanced_pca() {
-    let data = Array2::from_shape_vec((50, 10), (0..500).map(|x| x as f64).collect()).unwrap();
+    let data = Array2::from_shape_vec((50, 10), (0..500).map(|x| x as f64).collect())
+        .expect("Operation failed");
 
-    let mut pca = EnhancedPCA::new(5, true, 100).unwrap();
-    let transformed = pca.fit_transform(&data.view()).unwrap();
+    let mut pca = EnhancedPCA::new(5, true, 100).expect("Operation failed");
+    let transformed = pca.fit_transform(&data.view()).expect("Operation failed");
 
     assert_eq!(transformed.shape(), &[50, 5]);
     assert!(pca.components().is_some());
@@ -50,10 +57,11 @@ fn test_enhanced_pca() {
 
 #[test]
 fn test_enhanced_pca_no_centering() {
-    let data = Array2::from_shape_vec((30, 8), (0..240).map(|x| x as f64).collect()).unwrap();
+    let data = Array2::from_shape_vec((30, 8), (0..240).map(|x| x as f64).collect())
+        .expect("Operation failed");
 
-    let mut pca = EnhancedPCA::new(3, false, 100).unwrap();
-    let transformed = pca.fit_transform(&data.view()).unwrap();
+    let mut pca = EnhancedPCA::new(3, false, 100).expect("Operation failed");
+    let transformed = pca.fit_transform(&data.view()).expect("Operation failed");
 
     assert_eq!(transformed.shape(), &[30, 3]);
 }
@@ -63,7 +71,7 @@ fn test_processing_strategy_selection() {
     // Test that processing strategy is selected appropriately
     let small_data = Array2::ones((10, 5));
     let mut scaler = EnhancedStandardScaler::new(false, 100);
-    scaler.fit(&small_data.view()).unwrap();
+    scaler.fit(&small_data.view()).expect("Operation failed");
 
     // For small data, should use standard processing
     matches!(scaler.processing_strategy(), ProcessingStrategy::Standard);
@@ -104,10 +112,10 @@ fn test_optimized_pca_small_data() {
             .map(|x| x as f64 + scirs2_core::random::random::<f64>() * 0.1)
             .collect(),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let mut pca = AdvancedPCA::new(3, 100, 50);
-    let transformed = pca.fit_transform(&data.view()).unwrap();
+    let transformed = pca.fit_transform(&data.view()).expect("Operation failed");
 
     assert_eq!(transformed.shape(), &[20, 3]);
     assert!(pca.components().is_some());
@@ -115,7 +123,7 @@ fn test_optimized_pca_small_data() {
     assert!(pca.mean().is_some());
 
     // Test that explained variance ratios sum to less than or equal to 1
-    let var_ratios = pca.explained_variance_ratio().unwrap();
+    let var_ratios = pca.explained_variance_ratio().expect("Operation failed");
     let sum_ratios: f64 = var_ratios.iter().sum();
     assert!(sum_ratios <= 1.0 + 1e-10);
     assert!(sum_ratios > 0.0);
@@ -131,7 +139,7 @@ fn test_optimized_pca_large_data() {
             .map(|x| (x as f64).sin() * 0.01 + (x as f64 / 1000.0).cos())
             .collect(),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let mut pca = AdvancedPCA::new(50, 20000, 1000);
     let result = pca.fit(&data.view());
@@ -139,7 +147,7 @@ fn test_optimized_pca_large_data() {
 
     let transformed = pca.transform(&data.view());
     assert!(transformed.is_ok());
-    assert_eq!(transformed.unwrap().shape(), &[15000, 50]);
+    assert_eq!(transformed.expect("Operation failed").shape(), &[15000, 50]);
 
     // Verify performance statistics
     let stats = pca.performance_stats();
@@ -159,7 +167,7 @@ fn test_optimized_pca_very_large_data() {
             })
             .collect(),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let mut pca = AdvancedPCA::new(20, 100000, 2000);
     let result = pca.fit(&data.view());
@@ -169,7 +177,7 @@ fn test_optimized_pca_very_large_data() {
     let small_test_data = data.slice(scirs2_core::ndarray::s![..100, ..]).to_owned();
     let transformed = pca.transform(&small_test_data.view());
     assert!(transformed.is_ok());
-    assert_eq!(transformed.unwrap().shape(), &[100, 20]);
+    assert_eq!(transformed.expect("Operation failed").shape(), &[100, 20]);
 }
 
 #[test]
@@ -184,12 +192,12 @@ fn test_qr_decomposition_optimized() {
             1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let result = pca.qr_decomposition_optimized(&matrix);
     assert!(result.is_ok());
 
-    let (q, r) = result.unwrap();
+    let (q, r) = result.expect("Operation failed");
     assert_eq!(q.shape(), &[6, 6]);
     assert_eq!(r.shape(), &[6, 4]);
 
@@ -215,12 +223,12 @@ fn test_svd_small_matrix() {
         (4, 3),
         vec![3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 0.0, 1.0, 2.0],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let result = pca.svd_small_matrix(&matrix);
     assert!(result.is_ok());
 
-    let (u, s, vt) = result.unwrap();
+    let (u, s, vt) = result.expect("Operation failed");
     assert_eq!(u.shape(), &[4, 3]);
     assert_eq!(s.len(), 3);
     assert_eq!(vt.shape(), &[3, 3]);
@@ -310,7 +318,7 @@ fn test_optimized_pca_numerical_stability() {
     let result = pca.fit_transform(&data.view());
 
     assert!(result.is_ok());
-    let transformed = result.unwrap();
+    let transformed = result.expect("Operation failed");
     assert_eq!(transformed.shape(), &[100, 5]);
 
     // Check that all values are finite
@@ -328,20 +336,24 @@ fn test_enhanced_standard_scaler_vs_optimized_pca() {
             .map(|x| x as f64 + scirs2_core::random::random::<f64>() * 10.0)
             .collect(),
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Test enhanced scaler
     let mut scaler = EnhancedStandardScaler::new(false, 100);
-    let scaled_data = scaler.fit_transform(&data.view()).unwrap();
+    let scaled_data = scaler
+        .fit_transform(&data.view())
+        .expect("Operation failed");
 
     // Apply PCA to scaled data
     let mut pca = AdvancedPCA::new(10, 300, 20);
-    let pca_result = pca.fit_transform(&scaled_data.view()).unwrap();
+    let pca_result = pca
+        .fit_transform(&scaled_data.view())
+        .expect("Operation failed");
 
     assert_eq!(pca_result.shape(), &[200, 10]);
 
     // Verify that the combination works correctly
-    let explained_var = pca.explained_variance_ratio().unwrap();
+    let explained_var = pca.explained_variance_ratio().expect("Operation failed");
     let total_explained: f64 = explained_var.iter().sum();
     assert!(total_explained > 0.5); // Should explain at least 50% of variance
     assert!(total_explained <= 1.0 + 1e-10);

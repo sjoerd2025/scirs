@@ -176,7 +176,7 @@ pub enum MethodInfo {
 ///     ..Default::default()
 /// };
 ///
-/// let result = detect_anomalies(&ts, &options).unwrap();
+/// let result = detect_anomalies(&ts, &options).expect("Operation failed");
 /// println!("Anomalies detected: {}", result.is_anomaly.iter().filter(|&&x| x).count());
 /// ```
 #[allow(dead_code)]
@@ -732,7 +732,7 @@ where
 
         if seasonal_values.len() > 1 {
             let seasonal_mean = seasonal_values.iter().cloned().sum::<F>()
-                / F::from_usize(seasonal_values.len()).unwrap();
+                / F::from_usize(seasonal_values.len()).expect("Operation failed");
 
             for &idx in &indices {
                 adjusted[idx] = adjusted[idx] - seasonal_mean;
@@ -865,8 +865,8 @@ where
     }
 
     let mean = data.mean_or(F::zero());
-    let variance =
-        data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / F::from_usize(n - 1).unwrap();
+    let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
+        / F::from_usize(n - 1).expect("Operation failed");
 
     variance.sqrt()
 }
@@ -889,7 +889,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_anomalies(&ts, &options).unwrap();
+        let result = detect_anomalies(&ts, &options).expect("Operation failed");
 
         // Should detect the two anomalies
         let anomaly_count = result.is_anomaly.iter().filter(|&&x| x).count();
@@ -913,7 +913,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_anomalies(&ts, &options).unwrap();
+        let result = detect_anomalies(&ts, &options).expect("Operation failed");
 
         // Should detect the outlier at index 5
         assert!(result.is_anomaly[5], "Should detect anomaly at index 5");
@@ -931,7 +931,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_anomalies(&ts, &options).unwrap();
+        let result = detect_anomalies(&ts, &options).expect("Operation failed");
 
         // Should detect the outlier
         assert!(result.is_anomaly[50], "Should detect anomaly at index 50");
@@ -954,7 +954,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_anomalies(&ts, &options).unwrap();
+        let result = detect_anomalies(&ts, &options).expect("Operation failed");
 
         // Should detect anomalies in the second half
         let anomalies_second_half = result
@@ -982,7 +982,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_anomalies(&ts, &options).unwrap();
+        let result = detect_anomalies(&ts, &options).expect("Operation failed");
 
         // Should detect some anomalies
         let anomaly_count = result.is_anomaly.iter().filter(|&&x| x).count();
@@ -1006,7 +1006,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = detect_anomalies(&ts, &options).unwrap();
+        let result = detect_anomalies(&ts, &options).expect("Operation failed");
         // Should detect no anomalies in constant series
         let anomaly_count = result.is_anomaly.iter().filter(|&&x| x).count();
         assert_eq!(

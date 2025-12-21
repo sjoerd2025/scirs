@@ -591,7 +591,7 @@ impl GraphNeuralNetworkProcessor {
             }
 
             // Sort by distance and connect to k nearest neighbors
-            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            distances.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
             for &(dist, neighbor) in distances.iter().take(k) {
                 // Use Gaussian similarity as edge weight
                 let weight = (-dist / 2.0).exp();

@@ -614,7 +614,7 @@ where
         ));
     }
 
-    let chunk_count = u64::from_le_bytes(data[0..8].try_into().unwrap()) as usize;
+    let chunk_count = u64::from_le_bytes(data[0..8].try_into().expect("Operation failed")) as usize;
 
     // Read chunk sizes
     let header_size = 8 + chunk_count * 8;
@@ -627,7 +627,8 @@ where
     let mut chunk_sizes = Vec::with_capacity(chunk_count);
     for i in 0..chunk_count {
         let start = 8 + i * 8;
-        let size = u64::from_le_bytes(data[start..start + 8].try_into().unwrap()) as usize;
+        let size = u64::from_le_bytes(data[start..start + 8].try_into().expect("Operation failed"))
+            as usize;
         chunk_sizes.push(size);
     }
 

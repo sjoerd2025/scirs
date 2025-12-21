@@ -494,8 +494,8 @@ mod tests {
         let input = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
         let kernel = arr2(&[[1.0, 0.0], [0.0, 1.0]]);
 
-        let result =
-            convolve2d_optimized(&input, &kernel, BorderMode::Constant, Some(0.0)).unwrap();
+        let result = convolve2d_optimized(&input, &kernel, BorderMode::Constant, Some(0.0))
+            .expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
         assert_eq!(result[[0, 0]], 1.0);

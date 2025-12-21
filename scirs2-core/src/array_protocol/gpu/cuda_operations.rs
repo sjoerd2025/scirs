@@ -64,11 +64,11 @@ where
     }
 
     // Transfer to CPU, perform operation, and transfer back to GPU
-    let a_cpu = a.to_cpu().unwrap();
-    let b_cpu = b.to_cpu().unwrap();
+    let a_cpu = a.to_cpu().expect("Operation failed");
+    let b_cpu = b.to_cpu().expect("Operation failed");
 
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
-    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
+    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
 
     let result = a_array.dot(b_array);
 
@@ -103,11 +103,11 @@ where
     let bshape = b.shape();
 
     // Transfer to CPU, perform operation, and transfer back to GPU
-    let a_cpu = a.to_cpu().unwrap();
-    let b_cpu = b.to_cpu().unwrap();
+    let a_cpu = a.to_cpu().expect("Operation failed");
+    let b_cpu = b.to_cpu().expect("Operation failed");
 
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
-    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
+    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
 
     let result = a_array + b_array;
 
@@ -135,11 +135,11 @@ where
     }
 
     // Transfer to CPU, perform operation, and transfer back to GPU
-    let a_cpu = a.to_cpu().unwrap();
-    let b_cpu = b.to_cpu().unwrap();
+    let a_cpu = a.to_cpu().expect("Operation failed");
+    let b_cpu = b.to_cpu().expect("Operation failed");
 
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
-    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
+    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
 
     let result = a_array * b_array;
 
@@ -164,8 +164,8 @@ where
     }
 
     // Transfer to CPU, perform operation, and transfer back to GPU
-    let a_cpu = a.to_cpu().unwrap();
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let a_cpu = a.to_cpu().expect("Operation failed");
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
 
     let result = a_array.t().to_owned();
 
@@ -185,8 +185,8 @@ where
     D: Dimension,
 {
     // Transfer to CPU, perform operation
-    let a_cpu = a.to_cpu().unwrap();
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let a_cpu = a.to_cpu().expect("Operation failed");
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
 
     match axis {
         Some(ax) => {
@@ -211,8 +211,8 @@ where
     D: Dimension,
 {
     // Transfer to CPU, perform operation, and transfer back to GPU
-    let a_cpu = a.to_cpu().unwrap();
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let a_cpu = a.to_cpu().expect("Operation failed");
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().expect("Operation failed").as_array();
 
     match a_array.clone().intoshape(shape) {
         Ok(result) => {

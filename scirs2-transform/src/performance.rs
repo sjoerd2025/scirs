@@ -152,7 +152,7 @@ impl EnhancedStandardScaler {
     /// Fit using SIMD operations
     fn fit_simd(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         // Use SIMD operations where possible
-        let means = x.mean_axis(Axis(0)).unwrap();
+        let means = x.mean_axis(Axis(0)).expect("Operation failed");
 
         // SIMD-optimized variance computation
         let (_n_samples, n_features) = x.dim();
@@ -189,7 +189,7 @@ impl EnhancedStandardScaler {
             self.means = Some(medians);
             self.stds = Some(stds);
         } else {
-            let means = x.mean_axis(Axis(0)).unwrap();
+            let means = x.mean_axis(Axis(0)).expect("Operation failed");
             let stds = x.std_axis(Axis(0), 0.0);
             let stds = stds.mapv(|s| if s > 1e-15 { s } else { 1.0 });
 
@@ -473,7 +473,7 @@ impl EnhancedPCA {
         // First pass: compute mean
         for (start_idx, end_idx) in chunker.chunk_indices(n_samples, n_features) {
             let chunk = x.slice(scirs2_core::ndarray::s![start_idx..end_idx, ..]);
-            let chunk_mean = chunk.mean_axis(Axis(0)).unwrap();
+            let chunk_mean = chunk.mean_axis(Axis(0)).expect("Operation failed");
             let chunksize = end_idx - start_idx;
 
             // Update running mean
@@ -888,7 +888,7 @@ impl EnhancedPCA {
 
         // Center the data if requested
         let mean = if self.center {
-            Some(x.mean_axis(Axis(0)).unwrap())
+            Some(x.mean_axis(Axis(0)).expect("Operation failed"))
         } else {
             None
         };
@@ -1007,7 +1007,7 @@ impl EnhancedPCA {
     fn fit_standard_pca(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         // Center the data if requested
         let mean = if self.center {
-            Some(x.mean_axis(Axis(0)).unwrap())
+            Some(x.mean_axis(Axis(0)).expect("Operation failed"))
         } else {
             None
         };
@@ -1686,7 +1686,7 @@ struct CachedPCAResult {
 impl AdvancedPCA {
     /// Create a new optimized PCA with memory pooling
     pub fn new(_n_components: usize, _n_samples_hint: usize, hint: usize) -> Self {
-        let enhanced_pca = EnhancedPCA::new(_n_components, true, 1024).unwrap();
+        let enhanced_pca = EnhancedPCA::new(_n_components, true, 1024).expect("Operation failed");
         let memory_pool = AdvancedMemoryPool::new(
             100, // max matrices per size
             200, // max vectors per size

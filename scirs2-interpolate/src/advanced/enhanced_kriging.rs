@@ -9,6 +9,11 @@ use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Sub};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 /// Type alias for basis function closure to reduce type complexity
 type BasisFunctionClosure<F> = Box<dyn Fn(&ArrayView1<F>) -> Vec<F>>;
 
@@ -323,10 +328,10 @@ where
             values: None,
             cov_fn: CovarianceFunction::SquaredExponential,
             length_scales: None,
-            sigma_sq: F::from_f64(1.0).unwrap(),
+            sigma_sq: const_f64::<F>(1.0),
             angles: None,
-            nugget: F::from_f64(1e-10).unwrap(),
-            extra_params: F::from_f64(1.0).unwrap(),
+            nugget: const_f64::<F>(1e-10),
+            extra_params: const_f64::<F>(1.0),
             _trend_fn: TrendFunction::Constant,
             anisotropic_cov: None,
             priors: None,
@@ -694,7 +699,7 @@ where
         let mut augmented = matrix.clone();
 
         // Add regularization to diagonal for numerical stability
-        let regularization = F::from_f64(1e-8).unwrap();
+        let regularization = const_f64::<F>(1e-8);
         for i in 0..n {
             augmented[[i, i]] += regularization;
         }
@@ -804,18 +809,16 @@ where
             CovarianceFunction::SquaredExponential => cov.sigma_sq * (-r * r).exp(),
             CovarianceFunction::Exponential => cov.sigma_sq * (-r).exp(),
             CovarianceFunction::Matern32 => {
-                let sqrt3_r = F::from_f64(3.0).unwrap().sqrt() * r;
+                let sqrt3_r = const_f64::<F>(3.0).sqrt() * r;
                 cov.sigma_sq * (F::one() + sqrt3_r) * (-sqrt3_r).exp()
             }
             CovarianceFunction::Matern52 => {
-                let sqrt5_r = F::from_f64(5.0).unwrap().sqrt() * r;
-                let factor = F::one()
-                    + sqrt5_r
-                    + F::from_f64(5.0).unwrap() * r * r / F::from_f64(3.0).unwrap();
+                let sqrt5_r = const_f64::<F>(5.0).sqrt() * r;
+                let factor = F::one() + sqrt5_r + const_f64::<F>(5.0) * r * r / const_f64::<F>(3.0);
                 cov.sigma_sq * factor * (-sqrt5_r).exp()
             }
             CovarianceFunction::RationalQuadratic => {
-                let r_sq_div_2a = r * r / (F::from_f64(2.0).unwrap() * cov.extra_params);
+                let r_sq_div_2a = r * r / (const_f64::<F>(2.0) * cov.extra_params);
                 cov.sigma_sq * (F::one() + r_sq_div_2a).powf(-cov.extra_params)
             }
         }
@@ -957,8 +960,9 @@ where
             let n_grid = 5;
             for i in 0..n_grid {
                 let ls_factor = min_ls
-                    + (max_ls - min_ls) * F::from_usize(i).unwrap()
-                        / F::from_usize(n_grid - 1).unwrap();
+                    + (max_ls - min_ls)
+                        * F::from_usize(i).expect("Failed to convert usize to float")
+                        / F::from_usize(n_grid - 1).expect("Failed to convert usize to float");
                 let length_scales = Array1::from_elem(n_dims, ls_factor);
 
                 // Compute log marginal likelihood
@@ -1040,13 +1044,14 @@ where
         for i in 0..n_points {
             log_det += cholesky[[i, i]].ln();
         }
-        log_det *= F::from_f64(2.0).unwrap();
+        log_det *= const_f64::<F>(2.0);
 
         // Compute log marginal likelihood
-        let n_f64 = F::from_usize(n_points).unwrap();
-        let log_2pi = F::from_f64(2.0 * std::f64::consts::PI).unwrap().ln();
-        let log_likelihood =
-            -F::from_f64(0.5).unwrap() * (quadratic_form + log_det + n_f64 * log_2pi);
+        let n_f64 = F::from_usize(n_points).expect("Failed to convert usize to float");
+        let log_2pi = F::from_f64(2.0 * std::f64::consts::PI)
+            .expect("Failed to convert 2*PI to float")
+            .ln();
+        let log_likelihood = -const_f64::<F>(0.5) * (quadratic_form + log_det + n_f64 * log_2pi);
 
         Ok(log_likelihood)
     }
@@ -1296,7 +1301,8 @@ where
 
             for s in 0..n_samples {
                 // Simple approximation - in practice would use proper random sampling
-                let offset = F::from_f64((s as f64 / n_samples as f64 - 0.5) * 4.0).unwrap();
+                let offset =
+                    F::from_f64((s as f64 / n_samples as f64 - 0.5) * 4.0).expect("Example failed");
                 posterior_samples[[s, i]] = mean + std_dev * offset;
             }
         }
@@ -1308,9 +1314,10 @@ where
 
             for i in 0..n_query {
                 // Simple quantile approximation
-                let sample_idx = ((level * F::from_usize(n_samples).unwrap())
-                    .to_usize()
-                    .unwrap_or(0))
+                let sample_idx = ((level
+                    * F::from_usize(n_samples).expect("Failed to convert usize to float"))
+                .to_usize()
+                .unwrap_or(0))
                 .min(n_samples - 1);
                 quantile_values[i] = posterior_samples[[sample_idx, i]];
             }
@@ -1319,9 +1326,12 @@ where
         }
 
         // Compute log marginal likelihood (simplified)
-        let log_marginal_likelihood = F::from_f64(-0.5).unwrap()
-            * F::from_usize(self.points.shape()[0]).unwrap()
-            * F::from_f64(2.0 * std::f64::consts::PI).unwrap().ln();
+        let log_marginal_likelihood = const_f64::<F>(-0.5)
+            * F::from_usize(self.points.shape()[0])
+                .expect("Failed to convert points count to float")
+            * F::from_f64(2.0 * std::f64::consts::PI)
+                .expect("Failed to convert 2*PI to float")
+                .ln();
 
         Ok(BayesianPredictionResult {
             mean: basic_result.value,
@@ -1423,7 +1433,7 @@ where
 ///     1.0, 0.0,
 ///     0.0, 1.0,
 ///     1.0, 1.0,
-/// ]).unwrap();
+/// ]).expect("Example failed");
 /// let values = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
 ///
 /// // Create enhanced kriging model
@@ -1433,7 +1443,7 @@ where
 ///     CovarianceFunction::SquaredExponential,
 ///     1.0,  // length scale
 ///     1.0   // signal variance
-/// ).unwrap();
+/// ).expect("Example failed");
 ///
 /// // The model is ready for making predictions
 /// println!("Enhanced kriging model created successfully");
@@ -1501,7 +1511,7 @@ where
 ///     1.0, 1.0,  // z ≈ 2
 ///     2.0, 0.0,  // z ≈ 2
 ///     0.0, 2.0,  // z ≈ 2
-/// ]).unwrap();
+/// ]).expect("Example failed");
 /// let values = Array1::from_vec(vec![0.1, 1.05, 0.95, 2.1, 1.9, 2.05]);
 ///
 /// // Create universal kriging with linear trend
@@ -1512,7 +1522,7 @@ where
 ///     0.5,  // length scale
 ///     0.1,  // signal variance
 ///     TrendFunction::Linear
-/// ).unwrap();
+/// ).expect("Example failed");
 ///
 /// println!("Universal kriging model with linear trend created");
 /// ```
@@ -1574,7 +1584,7 @@ where
 /// // Create noisy observational data
 /// let points = Array2::from_shape_vec((8, 1), vec![
 ///     0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5
-/// ]).unwrap();
+/// ]).expect("Example failed");
 /// let values = Array1::from_vec(vec![
 ///     0.1, 0.6, 0.9, 1.4, 1.8, 2.3, 2.9, 3.6  // f(x) ≈ x with noise
 /// ]);
@@ -1594,7 +1604,7 @@ where
 ///     CovarianceFunction::Matern52,
 ///     priors,
 ///     1000  // number of posterior samples
-/// ).unwrap();
+/// ).expect("Example failed");
 ///
 /// println!("Bayesian kriging model created with 1000 posterior samples");
 /// ```

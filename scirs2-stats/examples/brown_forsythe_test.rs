@@ -20,7 +20,7 @@ fn main() {
 
     // Test using Brown-Forsythe test (Levene's with median)
     let samples = vec![a.view(), b.view(), c.view()];
-    let (stat, p_value) = brown_forsythe(&samples).unwrap();
+    let (stat, p_value) = brown_forsythe(&samples).expect("Operation failed");
 
     println!("Brown-Forsythe test results:");
     println!("Test statistic: {:.6}", stat);
@@ -39,13 +39,13 @@ fn main() {
     println!("Comparison with Levene's test using different centers:");
 
     // 1. Brown-Forsythe (Levene with median)
-    let (stat_bf, p_bf) = brown_forsythe(&samples).unwrap();
+    let (stat_bf, p_bf) = brown_forsythe(&samples).expect("Operation failed");
 
     // 2. Levene with mean (original Levene's test)
-    let (stat_mean, p_mean) = levene(&samples, "mean", 0.05).unwrap();
+    let (stat_mean, p_mean) = levene(&samples, "mean", 0.05).expect("Operation failed");
 
     // 3. Levene with trimmed mean
-    let (stat_trim, p_trim) = levene(&samples, "trimmed", 0.1).unwrap();
+    let (stat_trim, p_trim) = levene(&samples, "trimmed", 0.1).expect("Operation failed");
 
     println!(
         "Brown-Forsythe (median): stat = {:.6}, p = {:.6}",
@@ -70,8 +70,8 @@ fn main() {
     let samples2 = vec![d.view(), e.view()];
 
     // Compare Brown-Forsythe (median-based) with original Levene's test (mean-based)
-    let (stat_bf, p_bf) = brown_forsythe(&samples2).unwrap();
-    let (stat_mean, p_mean) = levene(&samples2, "mean", 0.05).unwrap();
+    let (stat_bf, p_bf) = brown_forsythe(&samples2).expect("Operation failed");
+    let (stat_mean, p_mean) = levene(&samples2, "mean", 0.05).expect("Operation failed");
 
     println!(
         "Brown-Forsythe (less affected by outliers): stat = {:.6}, p = {:.6}",

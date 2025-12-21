@@ -130,7 +130,8 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     pub fn gradient_based(threshold: F) -> Self {
         Self::GradientBased {
             threshold,
-            coarsen_threshold: threshold / F::from(4.0).unwrap(),
+            coarsen_threshold: threshold
+                / F::from(4.0).expect("Failed to convert constant to float"),
         }
     }
 
@@ -138,7 +139,8 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     pub fn curvature_based(threshold: F) -> Self {
         Self::CurvatureBased {
             threshold,
-            coarsen_threshold: threshold / F::from(4.0).unwrap(),
+            coarsen_threshold: threshold
+                / F::from(4.0).expect("Failed to convert constant to float"),
         }
     }
 
@@ -146,7 +148,8 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     pub fn error_based(threshold: F) -> Self {
         Self::ErrorBased {
             threshold,
-            coarsen_threshold: threshold / F::from(16.0).unwrap(),
+            coarsen_threshold: threshold
+                / F::from(16.0).expect("Failed to convert constant to float"),
         }
     }
 
@@ -191,7 +194,8 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
         } else if i == nx - 1 {
             solution[[nx - 1, j]] - solution[[nx - 2, j]]
         } else {
-            (solution[[i + 1, j]] - solution[[i - 1, j]]) / F::from(2.0).unwrap()
+            (solution[[i + 1, j]] - solution[[i - 1, j]])
+                / F::from(2.0).expect("Failed to convert constant to float")
         };
 
         let grad_y = if j == 0 {
@@ -199,7 +203,8 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
         } else if j == ny - 1 {
             solution[[i, ny - 1]] - solution[[i, ny - 2]]
         } else {
-            (solution[[i, j + 1]] - solution[[i, j - 1]]) / F::from(2.0).unwrap()
+            (solution[[i, j + 1]] - solution[[i, j - 1]])
+                / F::from(2.0).expect("Failed to convert constant to float")
         };
 
         (grad_x * grad_x + grad_y * grad_y).sqrt()
@@ -214,32 +219,38 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
         }
 
         // Second derivatives using centered differences
-        let d2_dx2 =
-            solution[[i + 1, j]] - F::from(2.0).unwrap() * solution[[i, j]] + solution[[i - 1, j]];
-        let d2_dy2 =
-            solution[[i, j + 1]] - F::from(2.0).unwrap() * solution[[i, j]] + solution[[i, j - 1]];
+        let d2_dx2 = solution[[i + 1, j]]
+            - F::from(2.0).expect("Failed to convert constant to float") * solution[[i, j]]
+            + solution[[i - 1, j]];
+        let d2_dy2 = solution[[i, j + 1]]
+            - F::from(2.0).expect("Failed to convert constant to float") * solution[[i, j]]
+            + solution[[i, j - 1]];
         let d2_dxdy =
             (solution[[i + 1, j + 1]] - solution[[i + 1, j - 1]] - solution[[i - 1, j + 1]]
                 + solution[[i - 1, j - 1]])
-                / F::from(4.0).unwrap();
+                / F::from(4.0).expect("Failed to convert constant to float");
 
         // Frobenius norm of Hessian matrix
-        (d2_dx2 * d2_dx2 + d2_dy2 * d2_dy2 + F::from(2.0).unwrap() * d2_dxdy * d2_dxdy).sqrt()
+        (d2_dx2 * d2_dx2
+            + d2_dy2 * d2_dy2
+            + F::from(2.0).expect("Failed to convert constant to float") * d2_dxdy * d2_dxdy)
+            .sqrt()
     }
 
     /// Estimate local truncation error
     fn estimate_truncation_error(&self, solution: ArrayView2<F>, i: usize, j: usize) -> F {
         // Simple Richardson extrapolation-based error estimate
         // Compare solution at current resolution vs estimated higher-order solution
-        Self::compute_curvature(solution, i, j) / F::from(12.0).unwrap() // h² error estimate
+        Self::compute_curvature(solution, i, j)
+            / F::from(12.0).expect("Failed to convert constant to float") // h² error estimate
     }
 }
 
 impl<F: IntegrateFloat> AMRGrid<F> {
     /// Create new AMR grid with initial coarse level
     pub fn new(_nx: usize, ny: usize, domain_x: [F; 2], domainy: [F; 2]) -> Self {
-        let dx = (domain_x[1] - domain_x[0]) / F::from(_nx).unwrap();
-        let dy = (domainy[1] - domainy[0]) / F::from(ny).unwrap();
+        let dx = (domain_x[1] - domain_x[0]) / F::from(_nx).expect("Failed to convert to float");
+        let dy = (domainy[1] - domainy[0]) / F::from(ny).expect("Failed to convert to float");
 
         let coarse_level = GridLevel {
             level: 0,
@@ -342,8 +353,10 @@ impl<F: IntegrateFloat> AMRGrid<F> {
             let parent_level = &self.levels[level];
             let child_nx = parent_level.nx * 2;
             let child_ny = parent_level.ny * 2;
-            let child_dx = parent_level.dx / F::from(2.0).unwrap();
-            let child_dy = parent_level.dy / F::from(2.0).unwrap();
+            let child_dx =
+                parent_level.dx / F::from(2.0).expect("Failed to convert constant to float");
+            let child_dy =
+                parent_level.dy / F::from(2.0).expect("Failed to convert constant to float");
 
             let child_level = GridLevel {
                 level: level + 1,
@@ -430,7 +443,8 @@ impl<F: IntegrateFloat> AMRGrid<F> {
                     }
 
                     if valid_children > 0 {
-                        averaged_value /= F::from(valid_children).unwrap();
+                        averaged_value /=
+                            F::from(valid_children).expect("Failed to convert to float");
 
                         // Store averaged value in parent cell
                         self.solution
@@ -754,7 +768,9 @@ mod tests {
 
         // Test coarsening - create cells to coarsen (all 4 children)
         let cells_to_coarsen = vec![(2, 2), (2, 3), (3, 2), (3, 3)];
-        let coarsened = grid.coarsen_cells(1, cells_to_coarsen).unwrap();
+        let coarsened = grid
+            .coarsen_cells(1, cells_to_coarsen)
+            .expect("Operation failed");
 
         // Should have coarsened 1 parent cell (containing 4 children)
         assert_eq!(coarsened, 1);

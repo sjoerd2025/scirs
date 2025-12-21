@@ -32,10 +32,10 @@ impl EmbeddedMethods {
     /// use scirs2_core::ndarray::{Array1, Array2};
     /// use scirs2_series::feature_selection::EmbeddedMethods;
     ///
-    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).expect("Operation failed");
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     ///
-    /// let result = EmbeddedMethods::lasso_selection(&features, &target, 1.0, 1000).unwrap();
+    /// let result = EmbeddedMethods::lasso_selection(&features, &target, 1.0, 1000).expect("Operation failed");
     /// println!("Selected {} features", result.selected_features.len());
     /// ```
     pub fn lasso_selection(

@@ -628,7 +628,7 @@ mod tests {
         // Check that gamma(1) test exists and passes
         let gamma_1_test = results.iter().find(|r| r.input == 1.0);
         assert!(gamma_1_test.is_some());
-        assert!(gamma_1_test.unwrap().passed);
+        assert!(gamma_1_test.expect("Operation failed").passed);
     }
 
     #[test]
@@ -655,7 +655,7 @@ mod tests {
         // Check that erf(0) test exists and passes
         let erf_zero_test = results.iter().find(|r| r.input == 0.0);
         assert!(erf_zero_test.is_some());
-        assert!(erf_zero_test.unwrap().passed);
+        assert!(erf_zero_test.expect("Operation failed").passed);
     }
 
     #[test]

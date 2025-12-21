@@ -42,7 +42,7 @@ where
     let a_norm = matrix_inf_norm(a)?;
 
     // Constants for order 13 Padé approximation
-    let theta_13 = F::from(5.371920351148152).unwrap();
+    let theta_13 = F::from(5.371920351148152).expect("Failed to convert constant to float");
 
     // If the norm is small enough, use direct Padé approximation
     if a_norm <= theta_13 {
@@ -53,7 +53,7 @@ where
     // Find s such that ||A/2^s|| <= theta_13
     let mut s = 0;
     let mut scaled_norm = a_norm;
-    let two = F::from(2.0).unwrap();
+    let two = F::from(2.0).expect("Failed to convert constant to float");
 
     while scaled_norm > theta_13 {
         s += 1;
@@ -99,13 +99,13 @@ where
     // Compute Padé coefficients
     let pade_coeffs = match p {
         6 => vec![
-            F::from(1.0).unwrap(),
-            F::from(1.0 / 2.0).unwrap(),
-            F::from(3.0 / 26.0).unwrap(),
-            F::from(1.0 / 312.0).unwrap(),
-            F::from(1.0 / 10608.0).unwrap(),
-            F::from(1.0 / 358800.0).unwrap(),
-            F::from(1.0 / 17297280.0).unwrap(),
+            F::from(1.0).expect("Failed to convert constant to float"),
+            F::from(1.0 / 2.0).expect("Failed to convert to float"),
+            F::from(3.0 / 26.0).expect("Failed to convert to float"),
+            F::from(1.0 / 312.0).expect("Failed to convert to float"),
+            F::from(1.0 / 10608.0).expect("Failed to convert to float"),
+            F::from(1.0 / 358800.0).expect("Failed to convert to float"),
+            F::from(1.0 / 17297280.0).expect("Failed to convert to float"),
         ],
         13 => {
             // Compute coefficients for Padé (13,13) approximant
@@ -134,7 +134,7 @@ where
                     k_fact *= i as f64;
                 }
 
-                coeffs.push(F::from(num / (den * k_fact)).unwrap());
+                coeffs.push(F::from(num / (den * k_fact)).expect("Operation failed"));
             }
 
             coeffs
@@ -145,15 +145,15 @@ where
             let mut factorial: F = F::sparse_one();
             for (i, coeff) in coeffs.iter_mut().enumerate().take(p + 1) {
                 if i > 0 {
-                    factorial *= F::from(i).unwrap();
+                    factorial *= F::from(i).expect("Failed to convert to float");
                 }
                 let numerator = factorial;
                 let mut denominator = F::sparse_one();
                 for j in 1..=i {
-                    denominator *= F::from(p + 1 - j).unwrap();
+                    denominator *= F::from(p + 1 - j).expect("Failed to convert to float");
                 }
                 for j in 1..=(p - i) {
-                    denominator *= F::from(j).unwrap();
+                    denominator *= F::from(j).expect("Failed to convert to float");
                 }
                 *coeff = numerator / denominator;
             }
@@ -176,7 +176,10 @@ where
     }
 
     // Compute (V - U)^(-1) * (V + U)
-    let neg_u = scale_matrix(&u, F::from(-1.0).unwrap())?;
+    let neg_u = scale_matrix(
+        &u,
+        F::from(-1.0).expect("Failed to convert constant to float"),
+    )?;
     let v_minus_u = sparse_add(&v, &neg_u)?;
     let v_plus_u = sparse_add(&v, &u)?;
 
@@ -305,8 +308,8 @@ where
 
         // Create options for BiCGSTAB
         let options = BiCGSTABOptions {
-            rtol: F::from(1e-10).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-10).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             max_iter: 1000,
             x0: None,
             left_preconditioner: None,
@@ -346,8 +349,8 @@ mod tests {
     fn test_expm_identity() {
         // exp(0) = I
         let n = 3;
-        let zero_matrix = sparse_zero::<f64>(n).unwrap();
-        let exp_zero = expm(&zero_matrix).unwrap();
+        let zero_matrix = sparse_zero::<f64>(n).expect("Operation failed");
+        let exp_zero = expm(&zero_matrix).expect("Operation failed");
 
         // Check that exp(0) is identity
         for i in 0..n {
@@ -374,8 +377,8 @@ mod tests {
             values.push(val);
         }
 
-        let diag_matrix = CsrMatrix::new(values, rows, cols, (n, n)).unwrap();
-        let exp_diag = expm(&diag_matrix).unwrap();
+        let diag_matrix = CsrMatrix::new(values, rows, cols, (n, n)).expect("Operation failed");
+        let exp_diag = expm(&diag_matrix).expect("Operation failed");
 
         // Check diagonal values with high precision
         for (i, &val) in diag_values.iter().enumerate() {
@@ -404,8 +407,8 @@ mod tests {
         let cols = vec![1, 0];
         let values = vec![1.0, 0.0];
 
-        let a = CsrMatrix::new(values, rows, cols, (2, 2)).unwrap();
-        let exp_a = expm(&a).unwrap();
+        let a = CsrMatrix::new(values, rows, cols, (2, 2)).expect("Operation failed");
+        let exp_a = expm(&a).expect("Operation failed");
 
         // Check the result
         assert_relative_eq!(exp_a.get(0, 0), 1.0, epsilon = 1e-10);

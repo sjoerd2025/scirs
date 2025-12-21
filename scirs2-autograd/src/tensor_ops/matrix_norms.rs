@@ -311,7 +311,11 @@ fn compute_matrix_2_norm<F: Float + scirs2_core::ndarray::ScalarOperand>(
     matrix: &ArrayView2<F>,
 ) -> F {
     // Use power iteration to find the largest singular value
-    let (_, sigma_max) = power_iteration_2norm(matrix, 50, F::from(1e-8).unwrap());
+    let (_, sigma_max) = power_iteration_2norm(
+        matrix,
+        50,
+        F::from(1e-8).expect("Failed to convert constant to float"),
+    );
     sigma_max
 }
 
@@ -330,7 +334,8 @@ fn power_iteration_2norm<F: Float + scirs2_core::ndarray::ScalarOperand>(
 
     // Add some perturbation to avoid getting stuck
     for i in 1..m {
-        u[i] = F::from(0.01).unwrap() * F::from(i as f64).unwrap();
+        u[i] = F::from(0.01).expect("Failed to convert constant to float")
+            * F::from(i as f64).expect("Failed to convert to float");
     }
 
     // Normalize
@@ -386,7 +391,11 @@ fn compute_matrix_2_norm_gradient<F: Float + scirs2_core::ndarray::ScalarOperand
     let (m, n) = matrix.dim();
 
     // Recompute the singular vectors
-    let (u, sigma) = power_iteration_2norm(matrix, 20, F::from(1e-6).unwrap());
+    let (u, sigma) = power_iteration_2norm(
+        matrix,
+        20,
+        F::from(1e-6).expect("Failed to convert constant to float"),
+    );
 
     // Compute v = A^T * u / sigma
     let v = if sigma > F::epsilon() {

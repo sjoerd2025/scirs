@@ -154,7 +154,8 @@ mod tests {
 
     #[test]
     fn test_rl_clustering_placeholder() {
-        let data = Array2::from_shape_vec((6, 2), (0..12).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((6, 2), (0..12).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = rl_clustering(data.view(), None);
         assert!(result.is_ok());
     }

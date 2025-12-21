@@ -29,7 +29,7 @@ fn broadcast_3d_example() {
     ];
 
     // Batch matrix multiplication
-    let c = broadcast_matmul_3d(&a, &b).unwrap();
+    let c = broadcast_matmul_3d(&a, &b).expect("Operation failed");
 
     println!("First batch (A * I):");
     println!("{:?}", c.index_axis(scirs2_core::ndarray::Axis(0), 0));
@@ -40,11 +40,17 @@ fn broadcast_3d_example() {
     // Batch matrix-vector multiplication (using dynamic arrays)
     let x = array![[1.0, 1.0], [2.0, 1.0]].into_dyn();
     let a_dyn = a.into_dyn();
-    let y = broadcast_matvec(&a_dyn, &x).unwrap();
+    let y = broadcast_matvec(&a_dyn, &x).expect("Operation failed");
 
     println!("\nBatch matrix-vector multiplication:");
-    println!("First batch result: {:?}", &y.as_slice().unwrap()[0..2]);
-    println!("Second batch result: {:?}", &y.as_slice().unwrap()[2..4]);
+    println!(
+        "First batch result: {:?}",
+        &y.as_slice().expect("Operation failed")[0..2]
+    );
+    println!(
+        "Second batch result: {:?}",
+        &y.as_slice().expect("Operation failed")[2..4]
+    );
 }
 
 #[allow(dead_code)]
@@ -56,7 +62,7 @@ fn broadcast_dynamic_example() {
     let b = scirs2_core::ndarray::Array4::<f64>::from_elem((2, 3, 2, 2), 2.0).into_dyn();
 
     // Multiply all matrices by 2
-    let c = broadcast_matmul(&a, &b).unwrap();
+    let c = broadcast_matmul(&a, &b).expect("Operation failed");
 
     println!("Shape of result: {:?}", c.shape());
     println!("Sample value: {}", c[[0, 0, 0, 0]]);
@@ -73,7 +79,7 @@ fn broadcast_different_batch_example() {
     let b = array![[[2.0, 0.0], [0.0, 2.0]]]; // 2 * Identity
 
     // Broadcasting multiplication
-    let c = broadcast_matmul_3d(&a, &b).unwrap();
+    let c = broadcast_matmul_3d(&a, &b).expect("Operation failed");
 
     println!("First batch (multiplied by 2*I):");
     println!("{:?}", c.index_axis(scirs2_core::ndarray::Axis(0), 0));

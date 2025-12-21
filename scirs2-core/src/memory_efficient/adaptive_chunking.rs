@@ -731,19 +731,21 @@ mod tests {
     #[test]
     fn test_adaptive_chunking_1d() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_adaptive_1d.bin");
 
         // Create a test array and save it to a file
         let data: Vec<f64> = (0..100_000).map(|i| i as f64).collect();
-        let mut file = File::create(&file_path).unwrap();
+        let mut file = File::create(&file_path).expect("Operation failed");
         for val in &data {
-            file.write_all(&val.to_ne_bytes()).unwrap();
+            file.write_all(&val.to_ne_bytes())
+                .expect("Operation failed");
         }
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[100_000]).unwrap();
+        let mmap =
+            MemoryMappedArray::<f64>::path(&file_path, &[100_000]).expect("Operation failed");
 
         // Create adaptive chunking parameters
         let params = AdaptiveChunkingBuilder::new()
@@ -754,7 +756,7 @@ mod tests {
             .build();
 
         // Calculate adaptive chunking
-        let result = mmap.adaptive_chunking(params).unwrap();
+        let result = mmap.adaptive_chunking(params).expect("Operation failed");
 
         // Verify results
         match result.strategy {
@@ -779,7 +781,7 @@ mod tests {
     #[test]
     fn test_adaptive_chunking_2d() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_adaptive_2d.bin");
 
         // Create dimensions that will test row alignment
@@ -788,14 +790,16 @@ mod tests {
 
         // Create a test 2D array and save it to a file
         let data = Array2::<f64>::from_shape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
-        let mut file = File::create(&file_path).unwrap();
+        let mut file = File::create(&file_path).expect("Operation failed");
         for val in data.iter() {
-            file.write_all(&val.to_ne_bytes()).unwrap();
+            file.write_all(&val.to_ne_bytes())
+                .expect("Operation failed");
         }
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[rows, cols]).unwrap();
+        let mmap =
+            MemoryMappedArray::<f64>::path(&file_path, &[rows, cols]).expect("Operation failed");
 
         // Create adaptive chunking parameters
         let params = AdaptiveChunkingBuilder::new()
@@ -805,7 +809,7 @@ mod tests {
             .build();
 
         // Calculate adaptive chunking
-        let result = mmap.adaptive_chunking(params).unwrap();
+        let result = mmap.adaptive_chunking(params).expect("Operation failed");
 
         // Verify results
         match result.strategy {
@@ -830,19 +834,21 @@ mod tests {
     #[test]
     fn test_adaptive_chunking_parallel() {
         // Create a temporary directory for our test files
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test_adaptive_parallel.bin");
 
         // Create a large test array
         let data: Vec<f64> = (0..1_000_000).map(|i| i as f64).collect();
-        let mut file = File::create(&file_path).unwrap();
+        let mut file = File::create(&file_path).expect("Operation failed");
         for val in &data {
-            file.write_all(&val.to_ne_bytes()).unwrap();
+            file.write_all(&val.to_ne_bytes())
+                .expect("Operation failed");
         }
         drop(file);
 
         // Create a memory-mapped array
-        let mmap = MemoryMappedArray::<f64>::path(&file_path, &[1_000_000]).unwrap();
+        let mmap =
+            MemoryMappedArray::<f64>::path(&file_path, &[1_000_000]).expect("Operation failed");
 
         // Create adaptive chunking parameters optimized for parallel processing
         let params = AdaptiveChunkingBuilder::new()
@@ -852,7 +858,7 @@ mod tests {
             .build();
 
         // Calculate adaptive chunking
-        let result = mmap.adaptive_chunking(params).unwrap();
+        let result = mmap.adaptive_chunking(params).expect("Operation failed");
 
         // Verify results
         match result.strategy {

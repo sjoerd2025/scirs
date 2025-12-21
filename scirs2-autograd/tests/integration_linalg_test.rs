@@ -18,7 +18,10 @@ fn test_complete_linear_algebra_pipeline() {
         let a = variable(a_data.clone(), g);
 
         // Debug the tensor creation
-        println!("Matrix a shape: {:?}", a.eval(g).unwrap().shape());
+        println!(
+            "Matrix a shape: {:?}",
+            a.eval(g).expect("Test: operation failed").shape()
+        );
 
         // Test all basic operations
         let _identity = eye(3, g);
@@ -53,7 +56,7 @@ fn test_complete_linear_algebra_pipeline() {
         let grad_a = &grads[0];
 
         // Verify results
-        let tr_val = tr.eval(g).unwrap();
+        let tr_val = tr.eval(g).expect("Test: operation failed");
 
         // Print actual tr_val for debugging
         println!("Trace value: {:?}", tr_val);
@@ -82,13 +85,13 @@ fn test_complete_linear_algebra_pipeline() {
 
         assert!((actual_trace - expected_trace).abs() < EPSILON);
 
-        let det_val = det.eval(g).unwrap();
+        let det_val = det.eval(g).expect("Test: operation failed");
         println!("Determinant value: {:?}", det_val);
 
         // Basic positive definite check - all diagonal elements should be positive
         // and determinant should be positive
         let is_positive_definite = det_val[[]] > 0.0 && {
-            let matrix_val = a.eval(g).unwrap();
+            let matrix_val = a.eval(g).expect("Test: operation failed");
             matrix_val.diag().iter().all(|&x| x > 0.0)
         };
 
@@ -116,7 +119,7 @@ fn test_complete_linear_algebra_pipeline() {
         // where x is the solution to the linear system
 
         // Verify gradients exist and are reasonable
-        let grad_val = grad_a.eval(g).unwrap();
+        let grad_val = grad_a.eval(g).expect("Test: operation failed");
         assert!(grad_val.iter().all(|&x| x.abs() < 1000.0)); // Reasonable gradient values
     });
 }
@@ -129,7 +132,7 @@ fn test_element_wise_vs_matrix_operations() {
 
         // Element-wise inverse (original autograd style)
         let elem_inv = inv(a);
-        let elem_inv_val = elem_inv.eval(g).unwrap();
+        let elem_inv_val = elem_inv.eval(g).expect("Test: operation failed");
         println!(
             "Element-wise inverse result: {:?}, shape: {:?}",
             elem_inv_val,
@@ -146,7 +149,7 @@ fn test_element_wise_vs_matrix_operations() {
 
         // Matrix inverse (new functionality)
         let mat_inv = matrix_inverse(a);
-        let mat_inv_val = mat_inv.eval(g).unwrap();
+        let mat_inv_val = mat_inv.eval(g).expect("Test: operation failed");
         println!(
             "Matrix inverse result: {:?}, shape: {:?}",
             mat_inv_val,
@@ -221,9 +224,9 @@ fn test_special_matrices_operations() {
         let upper = triu(&a, 0);
         let band = band_matrix(&a, 1, 1);
 
-        let lower_val = lower.eval(g).unwrap();
-        let upper_val = upper.eval(g).unwrap();
-        let band_val = band.eval(g).unwrap();
+        let lower_val = lower.eval(g).expect("Test: operation failed");
+        let upper_val = upper.eval(g).expect("Test: operation failed");
+        let band_val = band.eval(g).expect("Test: operation failed");
 
         println!("Lower triangular shape: {:?}", lower_val.shape());
         println!("Upper triangular shape: {:?}", upper_val.shape());
@@ -247,8 +250,8 @@ fn test_matrix_functions_accuracy() {
         // Test exp and log are inverses
         let exp_a = matrix_exp(&a);
         let log_exp_a = matrix_log(&exp_a);
-        let result = log_exp_a.eval(g).unwrap();
-        let original = a.eval(g).unwrap();
+        let result = log_exp_a.eval(g).expect("Test: operation failed");
+        let original = a.eval(g).expect("Test: operation failed");
 
         println!("Matrix exp->log result shape: {:?}", result.shape());
         println!("Original matrix shape: {:?}", original.shape());
@@ -259,7 +262,7 @@ fn test_matrix_functions_accuracy() {
         // Test sqrt squared equals original
         // let sqrt_a = matrix_sqrt(a); // Not yet implemented
         // let sqrt_squared = matmul(sqrt_a, &sqrt_a);
-        // let result = sqrt_squared.eval(g).unwrap();
+        // let result = sqrt_squared.eval(g).expect("Test: operation failed");
 
         // println!("Matrix sqrt squared result shape: {:?}", result.shape());
 

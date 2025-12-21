@@ -26,7 +26,7 @@ fn bench_adaptive_simd_normalization(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-100.0, 100.0).unwrap(),
+                Uniform::new(-100.0, 100.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -93,7 +93,7 @@ fn bench_enhanced_standard_scaler(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-100.0, 100.0).unwrap(),
+                Uniform::new(-100.0, 100.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -138,7 +138,7 @@ fn bench_enhanced_pca(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-10.0, 10.0).unwrap(),
+                Uniform::new(-10.0, 10.0).expect("Operation failed"),
                 &mut rng,
             );
             let n_components = (n_features / 2).min(10);
@@ -188,7 +188,7 @@ fn bench_simd_polynomial_features(c: &mut Criterion) {
             let mut rng = thread_rng();
             let data = Array2::random_bulk(
                 Ix2(n_samples, n_features),
-                Uniform::new(-2.0, 2.0).unwrap(),
+                Uniform::new(-2.0, 2.0).expect("Operation failed"),
                 &mut rng,
             );
 
@@ -212,7 +212,8 @@ fn bench_simd_polynomial_features(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let poly = SimdPolynomialFeatures::<f64>::new(2, false, false).unwrap();
+                        let poly = SimdPolynomialFeatures::<f64>::new(2, false, false)
+                            .expect("Operation failed");
                         let _result = poly.transform(black_box(data));
                     });
                 },
@@ -263,8 +264,11 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("Comprehensive Performance");
 
     let mut rng = thread_rng();
-    let large_data =
-        Array2::random_bulk(Ix2(5000, 50), Uniform::new(-10.0, 10.0).unwrap(), &mut rng);
+    let large_data = Array2::random_bulk(
+        Ix2(5000, 50),
+        Uniform::new(-10.0, 10.0).expect("Operation failed"),
+        &mut rng,
+    );
 
     group.throughput(Throughput::Elements((5000 * 50) as u64));
 

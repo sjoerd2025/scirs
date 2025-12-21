@@ -27,14 +27,14 @@ fn main() {
 
         // Check actual arrays
         println!("\nVariable arrays:");
-        let a_val = a.eval(g).unwrap();
-        let b_val = b.eval(g).unwrap();
+        let a_val = a.eval(g).expect("Operation failed");
+        let b_val = b.eval(g).expect("Operation failed");
         println!("a shape: {:?}", a_val.shape());
         println!("b shape: {:?}", b_val.shape());
 
         // c = a * b, shape should be 4x3
         let c = matmul(a, b);
-        let c_val = c.eval(g).unwrap();
+        let c_val = c.eval(g).expect("Operation failed");
         println!("c shape: {:?}", c_val.shape());
         println!("c:\n{:?}", c_val);
 

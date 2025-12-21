@@ -284,7 +284,7 @@ where
         // Initialize parameters
         let mut weights = Array1::from_elem(
             self.n_components,
-            F::one() / F::from(self.n_components).unwrap(),
+            F::one() / F::from(self.n_components).expect("Failed to convert to float"),
         );
         let mut means = self.initialize_means(data)?;
         let mut covariances = self.initialize_covariances(data, &means)?;
@@ -311,7 +311,9 @@ where
             let improvement = new_log_likelihood - log_likelihood;
             self.convergence_history.push(new_log_likelihood);
 
-            if improvement.abs() < F::from(self.config.tolerance).unwrap() {
+            if improvement.abs()
+                < F::from(self.config.tolerance).expect("Failed to convert to float")
+            {
                 converged = true;
             }
 
@@ -362,7 +364,7 @@ where
         };
 
         self.parameters = Some(parameters);
-        Ok(self.parameters.as_ref().unwrap())
+        Ok(self.parameters.as_ref().expect("Operation failed"))
     }
 
     /// Initialize means using chosen method
@@ -462,7 +464,7 @@ where
             // Choose next center with probability proportional to squared distance
             let total_dist: F = distances.sum();
             let mut cumsum = F::zero();
-            let threshold: F = F::from(rng.random_f64()).unwrap() * total_dist;
+            let threshold: F = F::from(rng.random_f64()).expect("Operation failed") * total_dist;
 
             for j in 0..n_samples_ {
                 cumsum = cumsum + distances[j];
@@ -489,27 +491,33 @@ where
             let cov = match self.config.covariance_type {
                 CovarianceType::Full => {
                     // Initialize as identity with regularization
-                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                    Array2::eye(n_features)
+                        * F::from(self.config.reg_covar).expect("Failed to convert to float")
                 }
                 CovarianceType::Diagonal => {
                     // Diagonal covariance
-                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                    Array2::eye(n_features)
+                        * F::from(self.config.reg_covar).expect("Failed to convert to float")
                 }
                 CovarianceType::Tied => {
                     // All components share the same covariance
-                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                    Array2::eye(n_features)
+                        * F::from(self.config.reg_covar).expect("Failed to convert to float")
                 }
                 CovarianceType::Spherical => {
                     // Isotropic covariance
-                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                    Array2::eye(n_features)
+                        * F::from(self.config.reg_covar).expect("Failed to convert to float")
                 }
                 CovarianceType::Factor { .. } => {
                     // Factor analysis covariance - simplified to identity for now
-                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                    Array2::eye(n_features)
+                        * F::from(self.config.reg_covar).expect("Failed to convert to float")
                 }
                 CovarianceType::Constrained { .. } => {
                     // Constrained covariance - simplified to identity for now
-                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                    Array2::eye(n_features)
+                        * F::from(self.config.reg_covar).expect("Failed to convert to float")
                 }
             };
             covariances.push(cov);
@@ -559,7 +567,8 @@ where
         let mut weights = Array1::zeros(self.n_components);
 
         for k in 0..self.n_components {
-            weights[k] = responsibilities.column(k).sum() / F::from(n_samples_).unwrap();
+            weights[k] = responsibilities.column(k).sum()
+                / F::from(n_samples_).expect("Failed to convert to float");
         }
 
         Ok(weights)
@@ -577,7 +586,7 @@ where
         for k in 0..self.n_components {
             let resp_sum = responsibilities.column(k).sum();
 
-            if resp_sum > F::from(1e-10).unwrap() {
+            if resp_sum > F::from(1e-10).expect("Failed to convert constant to float") {
                 for j in 0..n_features {
                     let weighted_sum = data
                         .column(j)
@@ -609,7 +618,7 @@ where
 
             let mut cov = Array2::zeros((n_features, n_features));
 
-            if resp_sum > F::from(1e-10).unwrap() {
+            if resp_sum > F::from(1e-10).expect("Failed to convert constant to float") {
                 for i in 0..n_samples_ {
                     let diff = &data.row(i) - &mean_k;
                     let resp = responsibilities[[i, k]];
@@ -626,7 +635,8 @@ where
 
             // Add regularization
             for i in 0..n_features {
-                cov[[i, i]] = cov[[i, i]] + F::from(self.config.reg_covar).unwrap();
+                cov[[i, i]] = cov[[i, i]]
+                    + F::from(self.config.reg_covar).expect("Failed to convert to float");
             }
 
             // Apply covariance type constraints
@@ -643,7 +653,8 @@ where
                 }
                 CovarianceType::Spherical => {
                     // Make isotropic
-                    let trace = cov.diag().sum() / F::from(n_features).unwrap();
+                    let trace =
+                        cov.diag().sum() / F::from(n_features).expect("Failed to convert to float");
                     cov = Array2::eye(n_features) * trace;
                 }
                 _ => {} // Full and Tied types keep the full covariance
@@ -666,7 +677,7 @@ where
         let diff = x - mean;
 
         // Compute log determinant and inverse of covariance
-        let cov_f64 = cov.mapv(|x| x.to_f64().unwrap());
+        let cov_f64 = cov.mapv(|x| x.to_f64().expect("Operation failed"));
         let det = scirs2_linalg::det(&cov_f64.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Determinant computation failed: {}", e))
         })?;
@@ -680,11 +691,11 @@ where
             .map_err(|e| StatsError::ComputationError(format!("Matrix inversion failed: {}", e)))?;
 
         // Compute quadratic form
-        let diff_f64 = diff.mapv(|x| x.to_f64().unwrap());
+        let diff_f64 = diff.mapv(|x| x.to_f64().expect("Operation failed"));
         let quad_form = diff_f64.dot(&cov_inv.dot(&diff_f64));
 
         let log_pdf = -0.5 * (d as f64 * (2.0 * std::f64::consts::PI).ln() + log_det + quad_form);
-        Ok(F::from(log_pdf).unwrap())
+        Ok(F::from(log_pdf).expect("Failed to convert to float"))
     }
 
     /// Compute log-likelihood
@@ -899,18 +910,18 @@ where
             BandwidthMethod::Scott => {
                 // Scott's rule: h = n^(-1/(d+4))
                 let h = F::from(n as f64)
-                    .unwrap()
-                    .powf(F::from(-1.0 / (d as f64 + 4.0)).unwrap());
+                    .expect("Operation failed")
+                    .powf(F::from(-1.0 / (d as f64 + 4.0)).expect("Operation failed"));
                 Ok(h)
             }
             BandwidthMethod::Silverman => {
                 // Silverman's rule: h = (4/(d+2))^(1/(d+4)) * n^(-1/(d+4))
                 let factor = F::from(4.0 / (d as f64 + 2.0))
-                    .unwrap()
-                    .powf(F::from(1.0 / (d as f64 + 4.0)).unwrap());
+                    .expect("Operation failed")
+                    .powf(F::from(1.0 / (d as f64 + 4.0)).expect("Operation failed"));
                 let n_factor = F::from(n as f64)
-                    .unwrap()
-                    .powf(F::from(-1.0 / (d as f64 + 4.0)).unwrap());
+                    .expect("Operation failed")
+                    .powf(F::from(-1.0 / (d as f64 + 4.0)).expect("Operation failed"));
                 Ok(factor * n_factor)
             }
             BandwidthMethod::CrossValidation => {
@@ -926,8 +937,8 @@ where
         // Simplified implementation - full CV would try multiple bandwidths
         let (n, d) = data.dim();
         let h = F::from(n as f64)
-            .unwrap()
-            .powf(F::from(-1.0 / (d as f64 + 4.0)).unwrap());
+            .expect("Operation failed")
+            .powf(F::from(-1.0 / (d as f64 + 4.0)).expect("Operation failed"));
         Ok(h)
     }
 
@@ -965,8 +976,8 @@ where
 
             // Normalize
             let bandwidth_val = self.bandwidth;
-            let normalization = F::from(n_train as f64).unwrap()
-                * bandwidth_val.powf(F::from(trainingdata.ncols()).unwrap());
+            let normalization = F::from(n_train as f64).expect("Failed to convert to float")
+                * bandwidth_val.powf(F::from(trainingdata.ncols()).expect("Operation failed"));
             densities[i] = density / normalization;
         }
 
@@ -988,13 +999,14 @@ where
         match self.kernel {
             KernelType::Gaussian => {
                 // (2π)^(-1/2) * exp(-u²/2)
-                let coeff = F::from(1.0 / (2.0 * std::f64::consts::PI).sqrt()).unwrap();
-                coeff * (-u * u / F::from(2.0).unwrap()).exp()
+                let coeff =
+                    F::from(1.0 / (2.0 * std::f64::consts::PI).sqrt()).expect("Operation failed");
+                coeff * (-u * u / F::from(2.0).expect("Failed to convert constant to float")).exp()
             }
             KernelType::Epanechnikov => {
                 // (3/4) * (1 - u²) for |u| ≤ 1
                 if u.abs() <= F::one() {
-                    F::from(0.75).unwrap() * (F::one() - u * u)
+                    F::from(0.75).expect("Failed to convert constant to float") * (F::one() - u * u)
                 } else {
                     F::zero()
                 }
@@ -1002,7 +1014,7 @@ where
             KernelType::Uniform => {
                 // 1/2 for |u| ≤ 1
                 if u.abs() <= F::one() {
-                    F::from(0.5).unwrap()
+                    F::from(0.5).expect("Failed to convert constant to float")
                 } else {
                     F::zero()
                 }
@@ -1018,8 +1030,11 @@ where
             KernelType::Cosine => {
                 // (π/4) * cos(πu/2) for |u| ≤ 1
                 if u.abs() <= F::one() {
-                    let coeff = F::from(std::f64::consts::PI / 4.0).unwrap();
-                    let arg = F::from(std::f64::consts::PI).unwrap() * u / F::from(2.0).unwrap();
+                    let coeff =
+                        F::from(std::f64::consts::PI / 4.0).expect("Failed to convert to float");
+                    let arg = F::from(std::f64::consts::PI).expect("Failed to convert to float")
+                        * u
+                        / F::from(2.0).expect("Failed to convert constant to float");
                     coeff * arg.cos()
                 } else {
                     F::zero()
@@ -1080,8 +1095,8 @@ where
         let n = data.nrows();
         let d = data.ncols();
         F::from(n as f64)
-            .unwrap()
-            .powf(F::from(-1.0 / (d as f64 + 4.0)).unwrap())
+            .expect("Operation failed")
+            .powf(F::from(-1.0 / (d as f64 + 4.0)).expect("Operation failed"))
     });
 
     let mut kde = KernelDensityEstimator::new(kernel, bandwidth, KDEConfig::default());
@@ -1126,7 +1141,7 @@ where
         }
     }
 
-    Ok((best_n_components, best_params.unwrap()))
+    Ok((best_n_components, best_params.expect("Operation failed")))
 }
 
 /// Robust Gaussian Mixture Model with outlier detection
@@ -1163,7 +1178,7 @@ where
     ) -> StatsResult<Self> {
         // Enable robust EM
         config.robust_em = true;
-        config.outlier_threshold = outlier_threshold.to_f64().unwrap();
+        config.outlier_threshold = outlier_threshold.to_f64().expect("Operation failed");
 
         let gmm = GaussianMixtureModel::new(n_components, config)?;
 
@@ -1188,7 +1203,7 @@ where
             params.outlier_scores = Some(outlier_scores);
         }
 
-        Ok(self.gmm.parameters.as_ref().unwrap())
+        Ok(self.gmm.parameters.as_ref().expect("Operation failed"))
     }
 
     /// Compute outlier scores based on negative log-likelihood
@@ -1238,11 +1253,11 @@ where
         cov: &Array2<F>,
     ) -> StatsResult<F> {
         let diff = x - mean;
-        let k = F::from(x.len()).unwrap();
+        let k = F::from(x.len()).expect("Operation failed");
 
         // Simple case: assume diagonal covariance for numerical stability
         let mut log_prob = F::zero();
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
 
         for i in 0..x.len() {
             let variance = cov[[i, i]];
@@ -1254,9 +1269,10 @@ where
 
             let term = diff[i] * diff[i] / variance;
             log_prob = log_prob
-                - (F::from(0.5).unwrap() * term)
-                - (F::from(0.5).unwrap() * variance.ln())
-                - (F::from(0.5).unwrap() * (F::from(2.0).unwrap() * pi).ln());
+                - (F::from(0.5).expect("Failed to convert constant to float") * term)
+                - (F::from(0.5).expect("Failed to convert constant to float") * variance.ln())
+                - (F::from(0.5).expect("Failed to convert constant to float")
+                    * (F::from(2.0).expect("Failed to convert constant to float") * pi).ln());
         }
 
         Ok(log_prob)
@@ -1278,13 +1294,13 @@ where
         let mut sorted_scores = outlier_scores.to_owned();
         sorted_scores
             .as_slice_mut()
-            .unwrap()
-            .sort_by(|a, b| a.partial_cmp(b).unwrap());
+            .expect("Operation failed")
+            .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let threshold_idx = ((F::one() - self.contamination)
-            * F::from(sorted_scores.len()).unwrap())
+            * F::from(sorted_scores.len()).expect("Operation failed"))
         .to_usize()
-        .unwrap()
+        .expect("Operation failed")
         .min(sorted_scores.len() - 1);
         let adaptive_threshold = sorted_scores[threshold_idx];
 
@@ -1352,7 +1368,7 @@ where
         if self.n_samples_seen == 0 {
             // Initialize with first batch
             self.gmm.fit(batch)?;
-            let params = self.gmm.parameters.as_ref().unwrap();
+            let params = self.gmm.parameters.as_ref().expect("Operation failed");
             self.running_means = Some(params.means.clone());
             self.running_covariances = Some(params.covariances.clone());
             self.running_weights = Some(params.weights.clone());
@@ -1367,7 +1383,7 @@ where
 
     /// Perform online parameter update
     fn online_update(&mut self, batch: &ArrayView2<F>) -> StatsResult<()> {
-        let params = self.gmm.parameters.as_ref().unwrap();
+        let params = self.gmm.parameters.as_ref().expect("Operation failed");
 
         // E-step on new batch
         let responsibilities =
@@ -1400,8 +1416,16 @@ where
 
         // Update model parameters
         if let Some(params_mut) = &mut self.gmm.parameters {
-            params_mut.weights = self.running_weights.as_ref().unwrap().clone();
-            params_mut.means = self.running_means.as_ref().unwrap().clone();
+            params_mut.weights = self
+                .running_weights
+                .as_ref()
+                .expect("Operation failed")
+                .clone();
+            params_mut.means = self
+                .running_means
+                .as_ref()
+                .expect("Operation failed")
+                .clone();
         }
 
         Ok(())
@@ -1505,7 +1529,8 @@ where
     }
 
     // Return average CV score
-    let avg_score = cv_scores.iter().copied().sum::<F>() / F::from(cv_scores.len()).unwrap();
+    let avg_score =
+        cv_scores.iter().copied().sum::<F>() / F::from(cv_scores.len()).expect("Operation failed");
     Ok(avg_score)
 }
 

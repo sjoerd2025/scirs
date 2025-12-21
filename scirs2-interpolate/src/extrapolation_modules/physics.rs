@@ -43,7 +43,8 @@ pub fn make_physics_informed_extrapolator<
             // Ensure non-negative extrapolation for mass quantities
             extrapolator.base_extrapolator.lower_method = ExtrapolationMethod::Exponential;
             extrapolator.base_extrapolator.upper_method = ExtrapolationMethod::Linear;
-            extrapolator.base_extrapolator.parameters.exponential_rate = T::from(-0.1).unwrap();
+            extrapolator.base_extrapolator.parameters.exponential_rate =
+                T::from(-0.1).expect("Operation failed");
             // Decay rate
         }
         PhysicsLaw::EnergyConservation => {
@@ -106,7 +107,8 @@ pub fn make_boundary_preserving_extrapolator<
             // Absorbing boundaries - exponential decay
             extrapolator.base_extrapolator.lower_method = ExtrapolationMethod::Exponential;
             extrapolator.base_extrapolator.upper_method = ExtrapolationMethod::Exponential;
-            extrapolator.base_extrapolator.parameters.exponential_rate = T::from(-1.0).unwrap();
+            extrapolator.base_extrapolator.parameters.exponential_rate =
+                T::from(-1.0).expect("Operation failed");
         }
     }
 
@@ -144,7 +146,7 @@ pub fn make_smart_adaptive_extrapolator<
         extrapolator.base_extrapolator.upper_method = ExtrapolationMethod::Periodic;
         extrapolator.base_extrapolator.parameters.period = data_characteristics
             .estimated_period
-            .unwrap_or_else(|| T::from(2.0 * std::f64::consts::PI).unwrap());
+            .unwrap_or_else(|| T::from(2.0 * std::f64::consts::PI).expect("Operation failed"));
     } else if data_characteristics.is_monotonic {
         if data_characteristics.is_exponential_like {
             extrapolator.base_extrapolator.lower_method = ExtrapolationMethod::Exponential;
@@ -194,7 +196,8 @@ pub fn make_conservation_law_extrapolator<
             // Mass must remain non-negative and tend to zero at infinity
             extrapolator.base_extrapolator.lower_method = ExtrapolationMethod::Exponential;
             extrapolator.base_extrapolator.upper_method = ExtrapolationMethod::Exponential;
-            extrapolator.base_extrapolator.parameters.exponential_rate = T::from(-0.5).unwrap();
+            extrapolator.base_extrapolator.parameters.exponential_rate =
+                T::from(-0.5).expect("Operation failed");
         }
         (PhysicsLaw::EnergyConservation, true) => {
             // Total energy should be conserved (polynomial behavior)
@@ -426,9 +429,10 @@ pub fn analyze_physics_characteristics<T: Float + FromPrimitive>(
         }
 
         if !ratios.is_empty() {
-            let avg_ratio_variation: T =
-                ratios.iter().fold(T::zero(), |acc, &x| acc + x) / T::from(ratios.len()).unwrap();
-            characteristics.is_exponential_like = avg_ratio_variation < T::from(0.1).unwrap();
+            let avg_ratio_variation: T = ratios.iter().fold(T::zero(), |acc, &x| acc + x)
+                / T::from(ratios.len()).expect("Operation failed");
+            characteristics.is_exponential_like =
+                avg_ratio_variation < T::from(0.1).expect("Operation failed");
         }
     }
 

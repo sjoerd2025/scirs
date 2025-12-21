@@ -16,7 +16,7 @@ mod tests {
         let b = array![[9.0_f32, 8.0, 7.0], [6.0, 5.0, 4.0], [3.0, 2.0, 1.0]];
 
         // Compute with extended precision
-        let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();
+        let c = extended_matmul::<_, f64>(&a.view(), &b.view()).expect("Test: operation failed");
 
         // Compute with standard precision for comparison
         let c_standard = a.dot(&b);
@@ -34,7 +34,7 @@ mod tests {
         let a = array![[2.0_f32, 1.0, 1.0], [4.0, 3.0, 3.0], [8.0, 7.0, 9.0]];
 
         // Compute LU decomposition with extended precision
-        let (p, l, u) = extended_lu::<_, f64>(&a.view()).unwrap();
+        let (p, l, u) = extended_lu::<_, f64>(&a.view()).expect("Test: operation failed");
 
         // Verify P*A = L*U
         let pa = p.dot(&a);
@@ -56,7 +56,7 @@ mod tests {
         ];
 
         // Compute QR decomposition with extended precision
-        let (q, r) = extended_qr::<_, f64>(&a.view()).unwrap();
+        let (q, r) = extended_qr::<_, f64>(&a.view()).expect("Test: operation failed");
 
         // Verify Q is orthogonal: Q^T * Q = I
         let qt = q.t();
@@ -87,7 +87,7 @@ mod tests {
         let a = array![[4.0_f32, 1.0, 1.0], [1.0, 5.0, 2.0], [1.0, 2.0, 6.0]];
 
         // Compute Cholesky decomposition with extended precision
-        let l = extended_cholesky::<_, f64>(&a.view()).unwrap();
+        let l = extended_cholesky::<_, f64>(&a.view()).expect("Test: operation failed");
 
         // Verify A = L*L^T
         let lt = l.t();
@@ -106,7 +106,7 @@ mod tests {
     //     let a = array![[1.0_f32, 2.0], [2.0, 1.0]];
 
     //     // Compute eigenvalues with extended precision
-    //     let eigvals = extended_eigvalsh::<_, f64>(&a.view(), None, None).unwrap();
+    //     let eigvals = extended_eigvalsh::<_, f64>(&a.view(), None, None).expect("Test: operation failed");
 
     //     // The eigenvalues of this matrix are 3 and -1
     //     assert!((eigvals[0] - 3.0).abs() < 1e-5 || (eigvals[0] + 1.0).abs() < 1e-5);
@@ -121,7 +121,7 @@ mod tests {
         let b = array![6.0_f32, 6.0, 8.0];
 
         // Solve the system with extended precision
-        let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();
+        let x = extended_solve::<_, f64>(&a.view(), &b.view()).expect("Test: operation failed");
 
         // Verify A*x ≈ b
         let ax = a.dot(&x);
@@ -136,7 +136,8 @@ mod tests {
         let a = array![[1.0_f32, 0.0, 0.0], [0.0, 0.5, 0.0], [0.0, 0.0, 0.2]];
 
         // Compute SVD with extended precision
-        let (u, s, vh) = extended_svd::<_, f64>(&a.view(), true, None, None).unwrap();
+        let (u, s, vh) =
+            extended_svd::<_, f64>(&a.view(), true, None, None).expect("Test: operation failed");
 
         // Check that the singular values are correct
         assert_relative_eq!(s[0], 1.0, epsilon = 1e-5);

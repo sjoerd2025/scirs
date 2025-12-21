@@ -54,7 +54,7 @@ where
         _count += CHUNK_SIZE.min(totalcount - _count);
     }
 
-    Ok(sum / F::from(totalcount).unwrap())
+    Ok(sum / F::from(totalcount).expect("Failed to convert to float"))
 }
 
 /// Welford's online algorithm for variance computation
@@ -90,12 +90,12 @@ where
     for &value in x.iter() {
         count += 1;
         let delta = value - mean;
-        mean = mean + delta / F::from(count).unwrap();
+        mean = mean + delta / F::from(count).expect("Failed to convert to float");
         let delta2 = value - mean;
         m2 = m2 + delta * delta2;
     }
 
-    let variance = m2 / F::from(n - ddof).unwrap();
+    let variance = m2 / F::from(n - ddof).expect("Failed to convert to float");
     Ok((mean, variance))
 }
 
@@ -160,8 +160,8 @@ where
     }
 
     let n = data.len();
-    let pos = q * F::from(n - 1).unwrap();
-    let k = NumCast::from(pos.floor()).unwrap();
+    let pos = q * F::from(n - 1).expect("Failed to convert to float");
+    let k = NumCast::from(pos.floor()).expect("Operation failed");
 
     // Use quickselect to find k-th element
     quickselect(data, k);
@@ -256,7 +256,8 @@ where
     let mut means = scirs2_core::ndarray::Array1::zeros(n_vars);
     for j in 0..n_vars {
         let col = data.slice(s![.., j]);
-        means[j] = col.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(n_obs).unwrap();
+        means[j] = col.iter().fold(F::zero(), |acc, &val| acc + val)
+            / F::from(n_obs).expect("Failed to convert to float");
     }
 
     // Initialize covariance matrix
@@ -283,7 +284,7 @@ where
     }
 
     // Normalize and fill symmetric entries
-    let factor = F::from(n_obs - ddof).unwrap();
+    let factor = F::from(n_obs - ddof).expect("Failed to convert to float");
     for i in 0..n_vars {
         for j in i..n_vars {
             cov_matrix[(i, j)] = cov_matrix[(i, j)] / factor;
@@ -351,7 +352,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingCorrelation<F> {
             ));
         }
 
-        let n = F::from(self.n).unwrap();
+        let n = F::from(self.n).expect("Failed to convert to float");
         let mean_x = self.sum_x / n;
         let mean_y = self.sum_y / n;
 
@@ -414,7 +415,7 @@ impl<F: Float + NumCast + scirs2_core::ndarray::ScalarOperand + std::fmt::Displa
         }
 
         self.n += 1;
-        let n = F::from(self.n).unwrap();
+        let n = F::from(self.n).expect("Failed to convert to float");
 
         // Update means and covariance using Welford's algorithm
         let mut delta = scirs2_core::ndarray::Array1::zeros(self.n_vars);
@@ -448,7 +449,7 @@ impl<F: Float + NumCast + scirs2_core::ndarray::ScalarOperand + std::fmt::Displa
             ));
         }
 
-        let factor = F::from(self.n - ddof).unwrap();
+        let factor = F::from(self.n - ddof).expect("Failed to convert to float");
         Ok(&self.cov_matrix / factor)
     }
 
@@ -523,7 +524,7 @@ impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
         if n == 0 {
             F::zero()
         } else {
-            self.sum / F::from(n).unwrap()
+            self.sum / F::from(n).expect("Failed to convert to float")
         }
     }
 
@@ -537,9 +538,9 @@ impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
         }
 
         let mean = self.mean();
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let variance = (self.sum_squares / n_f) - mean * mean;
-        Ok(variance * n_f / F::from(n - ddof).unwrap())
+        Ok(variance * n_f / F::from(n - ddof).expect("Failed to convert to float"))
     }
 
     /// Get current buffer as array
@@ -566,9 +567,9 @@ pub struct StreamingHistogram<F: Float> {
 impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
     /// Create a new streaming histogram
     pub fn new(_n_bins: usize, min_val: F, maxval: F) -> Self {
-        let bin_width = (maxval - min_val) / F::from(_n_bins).unwrap();
+        let bin_width = (maxval - min_val) / F::from(_n_bins).expect("Failed to convert to float");
         let bins: Vec<F> = (0..=_n_bins)
-            .map(|i| min_val + F::from(i).unwrap() * bin_width)
+            .map(|i| min_val + F::from(i).expect("Failed to convert to float") * bin_width)
             .collect();
 
         Self {
@@ -584,7 +585,8 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
     pub fn add_value(&mut self, value: F) {
         if value >= self.min_val && value <= self.max_val {
             let n_bins = self.counts.len();
-            let bin_width = (self.max_val - self.min_val) / F::from(n_bins).unwrap();
+            let bin_width = (self.max_val - self.min_val)
+                / F::from(n_bins).expect("Failed to convert to float");
             let bin_idx = ((value - self.min_val) / bin_width).floor();
             let bin_idx: usize = NumCast::from(bin_idx).unwrap_or(n_bins - 1).min(n_bins - 1);
             self.counts[bin_idx] += 1;
@@ -610,13 +612,14 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
     /// Get normalized histogram (density)
     pub fn get_density(&self) -> (Vec<F>, Vec<F>) {
         let n_bins = self.counts.len();
-        let bin_width = (self.max_val - self.min_val) / F::from(n_bins).unwrap();
-        let total = F::from(self.total_count).unwrap() * bin_width;
+        let bin_width =
+            (self.max_val - self.min_val) / F::from(n_bins).expect("Failed to convert to float");
+        let total = F::from(self.total_count).expect("Failed to convert to float") * bin_width;
 
         let density: Vec<F> = self
             .counts
             .iter()
-            .map(|&count| F::from(count).unwrap() / total)
+            .map(|&count| F::from(count).expect("Failed to convert to float") / total)
             .collect();
 
         (self.bins.clone(), density)
@@ -697,7 +700,7 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
             ));
         }
 
-        Ok(sum / F::from(count).unwrap())
+        Ok(sum / F::from(count).expect("Failed to convert to float"))
     }
 
     /// Compute variance from a CSV file using two-pass algorithm

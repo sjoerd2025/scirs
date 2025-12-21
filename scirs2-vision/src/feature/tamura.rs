@@ -441,7 +441,7 @@ mod tests {
         let result = compute_tamura_features(&img, false);
         assert!(result.is_ok());
 
-        let features = result.unwrap();
+        let features = result.expect("Operation failed");
         assert!(features.coarseness >= 0.0);
         assert!(features.contrast >= 0.0);
         assert!(features.directionality >= 0.0);
@@ -454,7 +454,7 @@ mod tests {
         let result = compute_tamura_features(&img, true);
         assert!(result.is_ok());
 
-        let features = result.unwrap();
+        let features = result.expect("Operation failed");
         assert!(features.line_likeness.is_some());
         assert!(features.regularity.is_some());
     }
@@ -477,7 +477,7 @@ mod tests {
             }
         }
 
-        let contrast = compute_contrast(&img).unwrap();
+        let contrast = compute_contrast(&img).expect("Operation failed");
         assert!(contrast > 0.0);
     }
 }

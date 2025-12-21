@@ -153,7 +153,7 @@ impl ZeroCopyReader {
             };
             self.mmap = Some(mmap);
         }
-        Ok(self.mmap.as_ref().unwrap())
+        Ok(self.mmap.as_ref().expect("Operation failed"))
     }
 
     /// Read a zero-copy array view
@@ -211,7 +211,7 @@ impl ZeroCopyWriter {
             };
             self.mmap = Some(mmap);
         }
-        Ok(self.mmap.as_mut().unwrap())
+        Ok(self.mmap.as_mut().expect("Operation failed"))
     }
 
     /// Write an array without copying
@@ -421,8 +421,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f32, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, count) };
 
-            let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
-            let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
+            let a_view = ArrayView1::from_shape(count, a_slice).expect("Operation failed");
+            let b_view = ArrayView1::from_shape(count, b_slice).expect("Operation failed");
 
             // Simple addition implementation for testing to avoid hangs
             let result: Array1<f32> = a_view
@@ -444,7 +444,7 @@ pub mod simd_zero_copy {
 
             let slice = unsafe { slice::from_raw_parts(mmap.as_ptr() as *const f32, count) };
 
-            let view = ArrayView1::from_shape(count, slice).unwrap();
+            let view = ArrayView1::from_shape(count, slice).expect("Operation failed");
 
             // Simple scalar multiplication for testing to avoid hangs
             let result: Array1<f32> = view.iter().map(|&x| x * scalar).collect();
@@ -462,8 +462,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f32, len) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, len) };
 
-            let a_view = ArrayView1::from_shape(len, a_slice).unwrap();
-            let b_view = ArrayView1::from_shape(len, b_slice).unwrap();
+            let a_view = ArrayView1::from_shape(len, a_slice).expect("Operation failed");
+            let b_view = ArrayView1::from_shape(len, b_slice).expect("Operation failed");
 
             // Simple dot product for testing to avoid hangs
             let result: f32 = a_view.iter().zip(b_view.iter()).map(|(&a, &b)| a * b).sum();
@@ -494,8 +494,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f64, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, count) };
 
-            let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
-            let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
+            let a_view = ArrayView1::from_shape(count, a_slice).expect("Operation failed");
+            let b_view = ArrayView1::from_shape(count, b_slice).expect("Operation failed");
 
             // Simple addition implementation for testing to avoid hangs
             let result: Array1<f64> = a_view
@@ -537,8 +537,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f64, m * k1) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, k2 * n) };
 
-            let a_view = ArrayView2::from_shape((m, k1), a_slice).unwrap();
-            let b_view = ArrayView2::from_shape((k2, n), b_slice).unwrap();
+            let a_view = ArrayView2::from_shape((m, k1), a_slice).expect("Operation failed");
+            let b_view = ArrayView2::from_shape((k2, n), b_slice).expect("Operation failed");
 
             let mut c = Array2::<f64>::zeros((m, n));
 
@@ -747,7 +747,7 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
                 #[cfg(feature = "async")]
                 {
                     tokio::spawn(async move {
-                        let _permit = permit.acquire().await.unwrap();
+                        let _permit = permit.acquire().await.expect("Operation failed");
 
                         // Prefetch next chunk if enabled
                         if idx + 1 < _num_chunks_local && _enable_readahead_local {
@@ -786,7 +786,10 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
             }
         }
 
-        Ok(results.into_iter().map(|r| r.unwrap()).collect())
+        Ok(results
+            .into_iter()
+            .map(|r| r.expect("Operation failed"))
+            .collect())
     }
 
     /// Configure NUMA memory policy

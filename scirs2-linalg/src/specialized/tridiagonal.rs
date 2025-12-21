@@ -28,7 +28,7 @@ use std::iter::Sum;
 /// let b = array![5.0, 6.0, 7.0];      // Superdiagonal
 /// let c = array![8.0, 9.0, 10.0];     // Subdiagonal
 ///
-/// let tri = TridiagonalMatrix::new(a.view(), b.view(), c.view()).unwrap();
+/// let tri = TridiagonalMatrix::new(a.view(), b.view(), c.view()).expect("Operation failed");
 ///
 /// // The matrix is equivalent to:
 /// // [[ 1.0, 5.0, 0.0, 0.0 ],
@@ -37,15 +37,15 @@ use std::iter::Sum;
 /// //  [ 0.0, 0.0, 10.0, 4.0 ]]
 ///
 /// // Get elements
-/// assert_eq!(tri.get(0, 0).unwrap(), 1.0);
-/// assert_eq!(tri.get(0, 1).unwrap(), 5.0);
-/// assert_eq!(tri.get(1, 0).unwrap(), 8.0);
-/// assert_eq!(tri.get(2, 3).unwrap(), 7.0);
-/// assert_eq!(tri.get(0, 2).unwrap(), 0.0); // Off-tridiagonal element
+/// assert_eq!(tri.get(0, 0).expect("Operation failed"), 1.0);
+/// assert_eq!(tri.get(0, 1).expect("Operation failed"), 5.0);
+/// assert_eq!(tri.get(1, 0).expect("Operation failed"), 8.0);
+/// assert_eq!(tri.get(2, 3).expect("Operation failed"), 7.0);
+/// assert_eq!(tri.get(0, 2).expect("Operation failed"), 0.0); // Off-tridiagonal element
 ///
 /// // Matrix-vector multiplication
 /// let x = array![1.0, 2.0, 3.0, 4.0];
-/// let y = tri.matvec(&x.view()).unwrap();
+/// let y = tri.matvec(&x.view()).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct TridiagonalMatrix<A>
@@ -360,23 +360,24 @@ mod tests {
         let superdiag = array![5.0, 6.0, 7.0];
         let subdiag = array![8.0, 9.0, 10.0];
 
-        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view()).unwrap();
+        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())
+            .expect("Operation failed");
 
         assert_eq!(tri.nrows(), 4);
         assert_eq!(tri.ncols(), 4);
 
         // Check elements
-        assert_relative_eq!(tri.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(tri.get(0, 1).unwrap(), 5.0);
-        assert_relative_eq!(tri.get(1, 0).unwrap(), 8.0);
-        assert_relative_eq!(tri.get(1, 1).unwrap(), 2.0);
-        assert_relative_eq!(tri.get(1, 2).unwrap(), 6.0);
-        assert_relative_eq!(tri.get(2, 1).unwrap(), 9.0);
+        assert_relative_eq!(tri.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(tri.get(0, 1).expect("Operation failed"), 5.0);
+        assert_relative_eq!(tri.get(1, 0).expect("Operation failed"), 8.0);
+        assert_relative_eq!(tri.get(1, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(tri.get(1, 2).expect("Operation failed"), 6.0);
+        assert_relative_eq!(tri.get(2, 1).expect("Operation failed"), 9.0);
 
         // Check zero elements
-        assert_relative_eq!(tri.get(0, 2).unwrap(), 0.0);
-        assert_relative_eq!(tri.get(0, 3).unwrap(), 0.0);
-        assert_relative_eq!(tri.get(2, 0).unwrap(), 0.0);
+        assert_relative_eq!(tri.get(0, 2).expect("Operation failed"), 0.0);
+        assert_relative_eq!(tri.get(0, 3).expect("Operation failed"), 0.0);
+        assert_relative_eq!(tri.get(2, 0).expect("Operation failed"), 0.0);
     }
 
     #[test]
@@ -388,7 +389,7 @@ mod tests {
             [0.0, 0.0, 10.0, 4.0]
         ];
 
-        let tri = TridiagonalMatrix::frommatrix(&a.view()).unwrap();
+        let tri = TridiagonalMatrix::frommatrix(&a.view()).expect("Operation failed");
 
         assert_eq!(tri.nrows(), 4);
         assert_eq!(tri.ncols(), 4);
@@ -414,10 +415,11 @@ mod tests {
         let superdiag = array![5.0, 6.0, 7.0];
         let subdiag = array![8.0, 9.0, 10.0];
 
-        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view()).unwrap();
+        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())
+            .expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let y = tri.matvec(&x.view()).unwrap();
+        let y = tri.matvec(&x.view()).expect("Operation failed");
 
         // Expected result: y = A * x
         let expected = array![
@@ -440,10 +442,11 @@ mod tests {
         let superdiag = array![5.0, 6.0, 7.0];
         let subdiag = array![8.0, 9.0, 10.0];
 
-        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view()).unwrap();
+        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())
+            .expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let y = tri.matvec_transpose(&x.view()).unwrap();
+        let y = tri.matvec_transpose(&x.view()).expect("Operation failed");
 
         // Expected result: y = A^T * x
         let expected = array![
@@ -466,9 +469,10 @@ mod tests {
         let superdiag = array![4.0, 5.0];
         let subdiag = array![6.0, 7.0];
 
-        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view()).unwrap();
+        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())
+            .expect("Operation failed");
 
-        let dense = tri.to_dense().unwrap();
+        let dense = tri.to_dense().expect("Operation failed");
 
         let expected = array![[1.0, 4.0, 0.0], [6.0, 2.0, 5.0], [0.0, 7.0, 3.0]];
 
@@ -488,16 +492,17 @@ mod tests {
         let superdiag = array![-1.0, -1.0, -1.0];
         let subdiag = array![-1.0, -1.0, -1.0];
 
-        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view()).unwrap();
+        let tri = TridiagonalMatrix::new(diag.view(), superdiag.view(), subdiag.view())
+            .expect("Operation failed");
 
         // Right-hand side b = [1, 2, 3, 4]
         let b = array![1.0, 2.0, 3.0, 4.0];
 
         // Solve the system Ax = b
-        let x = tri.solve(&b.view()).unwrap();
+        let x = tri.solve(&b.view()).expect("Operation failed");
 
         // Verify the solution by calculating Ax
-        let ax = tri.matvec(&x.view()).unwrap();
+        let ax = tri.matvec(&x.view()).expect("Operation failed");
 
         // Check that Ax ≈ b
         assert_eq!(ax.len(), 4);

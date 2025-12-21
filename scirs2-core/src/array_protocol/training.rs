@@ -324,7 +324,7 @@ impl Loss for MSELoss {
                     .as_any()
                     .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
                 {
-                    let mean = array.as_array().mean().unwrap();
+                    let mean = array.as_array().mean().expect("Operation failed");
                     let result = Array0::<f64>::from_elem((), mean);
                     Ok(Box::new(NdarrayWrapper::new(result)))
                 } else {
@@ -449,7 +449,7 @@ impl Loss for CrossEntropyLoss {
             match self.reduction.as_str() {
                 "none" => Ok(Box::new(NdarrayWrapper::new(losses))),
                 "mean" => {
-                    let mean = losses.mean().unwrap();
+                    let mean = losses.mean().expect("Operation failed");
                     let result = Array0::<f64>::from_elem((), mean);
                     Ok(Box::new(NdarrayWrapper::new(result)))
                 }
@@ -819,7 +819,7 @@ impl Trainer {
 
         // Train on batches
         for batch_idx in 0..numbatches {
-            let (inputs, targets) = dataloader.next_batch().unwrap();
+            let (inputs, targets) = dataloader.next_batch().expect("Operation failed");
             // Notify callbacks that batch is starting
             for callback in &mut self.callbacks {
                 callback.on_batch_start(batch_idx, numbatches);
@@ -968,7 +968,7 @@ impl Trainer {
 
         // Validate on batches
         for _ in 0..numbatches {
-            let (inputs, targets) = dataloader.next_batch().unwrap();
+            let (inputs, targets) = dataloader.next_batch().expect("Operation failed");
             // Forward pass without gradient tracking
             let mut batch_loss = 0.0;
             let mut batch_correct = 0;
@@ -1084,7 +1084,7 @@ mod tests {
         assert_eq!(dataset.outputshape(), vec![2]);
 
         // Get a sample
-        let (input, target) = dataset.get(0).unwrap();
+        let (input, target) = dataset.get(0).expect("Operation failed");
         assert!(input
             .as_any()
             .downcast_ref::<NdarrayWrapper<f64, crate::ndarray::IxDyn>>()
@@ -1109,21 +1109,21 @@ mod tests {
         assert_eq!(loader.numbatches(), 3);
 
         // Get batches
-        let (batch1_inputs, batch1_targets) = loader.next_batch().unwrap();
+        let (batch1_inputs, batch1_targets) = loader.next_batch().expect("Operation failed");
         assert_eq!(batch1_inputs.len(), 4);
         assert_eq!(batch1_targets.len(), 4);
 
-        let (batch2_inputs, batch2_targets) = loader.next_batch().unwrap();
+        let (batch2_inputs, batch2_targets) = loader.next_batch().expect("Operation failed");
         assert_eq!(batch2_inputs.len(), 4);
         assert_eq!(batch2_targets.len(), 4);
 
-        let (batch3_inputs, batch3_targets) = loader.next_batch().unwrap();
+        let (batch3_inputs, batch3_targets) = loader.next_batch().expect("Operation failed");
         assert_eq!(batch3_inputs.len(), 2);
         assert_eq!(batch3_targets.len(), 2);
 
         // Reset and get another batch
         loader.reset();
-        let (batch1_inputs, batch1_targets) = loader.next_batch().unwrap();
+        let (batch1_inputs, batch1_targets) = loader.next_batch().expect("Operation failed");
         assert_eq!(batch1_inputs.len(), 4);
         assert_eq!(batch1_targets.len(), 4);
     }
@@ -1178,8 +1178,8 @@ mod tests {
         metrics.add_accuracy(0.7);
 
         // Check mean values
-        assert_eq!(metrics.mean_loss().unwrap(), 2.0);
-        assert_eq!(metrics.mean_accuracy().unwrap(), 0.6);
+        assert_eq!(metrics.mean_loss().expect("Operation failed"), 2.0);
+        assert_eq!(metrics.mean_accuracy().expect("Operation failed"), 0.6);
 
         // Reset metrics
         metrics.reset();

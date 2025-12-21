@@ -32,10 +32,10 @@ use std::fmt::Debug;
 /// use scirs2_signal::filter::fir::firwin;
 ///
 /// // Design a 65-tap lowpass filter with Hamming window
-/// let h = firwin(65, 0.3, "hamming", true).unwrap();
+/// let h = firwin(65, 0.3, "hamming", true).expect("Operation failed");
 ///
 /// // Design a highpass filter
-/// let h = firwin(65, 0.3, "hamming", false).unwrap();
+/// let h = firwin(65, 0.3, "hamming", false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn firwin<T>(
@@ -142,7 +142,7 @@ where
 /// // Passband: 0-0.4, Stopband: 0.45-1.0
 /// let bands = vec![0.0, 0.4, 0.45, 1.0];
 /// let desired = vec![1.0, 1.0, 0.0, 0.0];
-/// let h = remez(65, &bands, &desired, None, None, None).unwrap();
+/// let h = remez(65, &bands, &desired, None, None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn remez(
@@ -303,7 +303,8 @@ pub fn remez(
         // Select r extremal points with alternating signs
         if new_extremal.len() >= r {
             // Sort by error magnitude
-            new_extremal.sort_by(|&a, &b| errors[b].partial_cmp(&errors[a]).unwrap());
+            new_extremal
+                .sort_by(|&a, &b| errors[b].partial_cmp(&errors[a]).expect("Operation failed"));
 
             // Keep the r largest errors
             new_extremal.truncate(r);

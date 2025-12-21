@@ -122,7 +122,7 @@ impl ChunkedMetrics {
     ///
     /// // Compute MAE using chunked processing
     /// let chunked = ChunkedMetrics::new().with_chunk_size(2);
-    /// let mae = chunked.compute_streaming(&y_true, &y_pred, &StreamingMAE).unwrap();
+    /// let mae = chunked.compute_streaming(&y_true, &y_pred, &StreamingMAE).expect("Operation failed");
     ///
     /// // The actual calculations in the streaming implementation may have
     /// // different numeric precision due to chunking, so we just verify
@@ -773,7 +773,7 @@ impl ZeroCopyMemoryManager {
     /// Create zero-copy view from existing data
     pub fn create_view<'a, T>(&'a self, data: &'a [T]) -> ZeroCopyArrayView<'a, T> {
         ZeroCopyArrayView {
-            data: NonNull::new(data.as_ptr() as *mut T).unwrap(),
+            data: NonNull::new(data.as_ptr() as *mut T).expect("Operation failed"),
             len: data.len(),
             _lifetime: std::marker::PhantomData,
             memory_manager: self,
@@ -783,7 +783,7 @@ impl ZeroCopyMemoryManager {
     /// Create zero-copy mutable view from existing data
     pub fn create_view_mut<'a, T>(&'a self, data: &'a mut [T]) -> ZeroCopyArrayViewMut<'a, T> {
         ZeroCopyArrayViewMut {
-            data: NonNull::new(data.as_mut_ptr()).unwrap(),
+            data: NonNull::new(data.as_mut_ptr()).expect("Operation failed"),
             len: data.len(),
             _lifetime: std::marker::PhantomData,
             memory_manager: self,
@@ -803,7 +803,7 @@ impl ZeroCopyMemoryManager {
             data: ptr.cast::<T>(),
             capacity: count,
             length: 0,
-            layout: Layout::from_size_align(size, alignment).unwrap(),
+            layout: Layout::from_size_align(size, alignment).expect("Operation failed"),
             allocator: Arc::new(SystemAllocator),
         })
     }
@@ -884,7 +884,7 @@ impl MemoryPool {
     pub fn allocate(&self) -> Result<NonNull<u8>> {
         let start_time = std::time::Instant::now();
 
-        let mut free_blocks = self.free_blocks.lock().unwrap();
+        let mut free_blocks = self.free_blocks.lock().expect("Operation failed");
         if let Some(ptr) = free_blocks.pop() {
             self.pool_stats.hits.fetch_add(1, Ordering::Relaxed);
             drop(free_blocks);
@@ -910,19 +910,19 @@ impl MemoryPool {
             self.capacity.fetch_add(1, Ordering::Relaxed);
             self.allocated_count.fetch_add(1, Ordering::Relaxed);
 
-            Ok(NonNull::new(ptr).unwrap())
+            Ok(NonNull::new(ptr).expect("Operation failed"))
         }
     }
 
     /// Deallocate a block back to the pool
     pub fn deallocate(&self, ptr: NonNull<u8>) {
-        self.free_blocks.lock().unwrap().push(ptr);
+        self.free_blocks.lock().expect("Operation failed").push(ptr);
         self.allocated_count.fetch_sub(1, Ordering::Relaxed);
     }
 
     /// Compact the pool by releasing unused blocks
     pub fn compact(&self) -> Result<usize> {
-        let mut free_blocks = self.free_blocks.lock().unwrap();
+        let mut free_blocks = self.free_blocks.lock().expect("Operation failed");
         let mut reclaimed = 0;
 
         // Keep only half of the free blocks, deallocate the rest
@@ -931,7 +931,8 @@ impl MemoryPool {
 
         for ptr in to_deallocate {
             unsafe {
-                let layout = Layout::from_size_align(self.block_size, self.alignment).unwrap();
+                let layout = Layout::from_size_align(self.block_size, self.alignment)
+                    .expect("Operation failed");
                 dealloc(ptr.as_ptr(), layout);
             }
             reclaimed += self.block_size;
@@ -989,7 +990,7 @@ impl SimdAlignedAllocator {
             .or_insert_with(|| AtomicUsize::new(0))
             .fetch_add(1, Ordering::Relaxed);
 
-        Ok(NonNull::new(ptr).unwrap())
+        Ok(NonNull::new(ptr).expect("Operation failed"))
     }
 }
 
@@ -1008,7 +1009,7 @@ impl ArenaAllocator {
 
     /// Allocate from the arena
     pub fn allocate(&mut self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
-        let mut arena = self.current_arena.lock().unwrap();
+        let mut arena = self.current_arena.lock().expect("Operation failed");
 
         if let Ok(ptr) = arena.allocate(size, alignment) {
             Ok(ptr)
@@ -1020,7 +1021,7 @@ impl ArenaAllocator {
             let new_arena = Arc::new(Mutex::new(Arena::new(new_arena_size)?));
             self.arenas.push(new_arena.clone());
 
-            let mut arena = new_arena.lock().unwrap();
+            let mut arena = new_arena.lock().expect("Operation failed");
             arena.allocate(size, alignment)
         }
     }
@@ -1028,7 +1029,7 @@ impl ArenaAllocator {
     /// Reset all arenas
     pub fn reset(&self) {
         for arena in &self.arenas {
-            arena.lock().unwrap().reset();
+            arena.lock().expect("Operation failed").reset();
         }
     }
 
@@ -1056,7 +1057,7 @@ impl Arena {
         }
 
         Ok(Self {
-            memory: NonNull::new(ptr).unwrap(),
+            memory: NonNull::new(ptr).expect("Operation failed"),
             size,
             offset: 0,
             alignment: 64,
@@ -1075,7 +1076,7 @@ impl Arena {
         let ptr = unsafe { self.memory.as_ptr().add(aligned_offset) };
         self.offset = aligned_offset + size;
 
-        Ok(NonNull::new(ptr).unwrap())
+        Ok(NonNull::new(ptr).expect("Operation failed"))
     }
 
     /// Reset the arena
@@ -1123,7 +1124,7 @@ impl LockFreeRecycler {
     /// Reclaim memory from the recycler
     pub fn reclaim_memory(&self) -> Result<usize> {
         let mut reclaimed = 0;
-        let mut retired = self.retired_nodes.lock().unwrap();
+        let mut retired = self.retired_nodes.lock().expect("Operation failed");
 
         // Simple reclamation - in practice you'd implement hazard pointer protocol
         for node_ptr in retired.drain(..) {
@@ -1157,11 +1158,11 @@ impl CustomAllocator for SystemAllocator {
             ));
         }
 
-        Ok(NonNull::new(ptr).unwrap())
+        Ok(NonNull::new(ptr).expect("Operation failed"))
     }
 
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
-        let layout = Layout::from_size_align(size, alignment).unwrap();
+        let layout = Layout::from_size_align(size, alignment).expect("Operation failed");
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
 
@@ -1220,11 +1221,11 @@ impl CustomAllocator for PoolAllocator {
             ));
         }
 
-        Ok(NonNull::new(ptr).unwrap())
+        Ok(NonNull::new(ptr).expect("Operation failed"))
     }
 
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
-        let layout = Layout::from_size_align(self.block_size, alignment).unwrap();
+        let layout = Layout::from_size_align(self.block_size, alignment).expect("Operation failed");
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
 
@@ -1283,12 +1284,12 @@ impl CustomAllocator for SimdAllocatorWrapper {
             ));
         }
 
-        Ok(NonNull::new(ptr).unwrap())
+        Ok(NonNull::new(ptr).expect("Operation failed"))
     }
 
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
         let simd_alignment = alignment.max(32).next_power_of_two();
-        let layout = Layout::from_size_align(size, simd_alignment).unwrap();
+        let layout = Layout::from_size_align(size, simd_alignment).expect("Operation failed");
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
 
@@ -1338,11 +1339,11 @@ impl CustomAllocator for ArenaAllocatorWrapper {
             ));
         }
 
-        Ok(NonNull::new(ptr).unwrap())
+        Ok(NonNull::new(ptr).expect("Operation failed"))
     }
 
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
-        let layout = Layout::from_size_align(size, alignment).unwrap();
+        let layout = Layout::from_size_align(size, alignment).expect("Operation failed");
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
 
@@ -1685,7 +1686,7 @@ mod tests {
         let chunked = ChunkedMetrics::new().with_chunk_size(2);
         let mae = chunked
             .compute_streaming(&y_true, &y_pred, &StreamingMAE)
-            .unwrap();
+            .expect("Operation failed");
 
         // Compute expected MAE directly
         let expected_mae = y_true
@@ -1711,7 +1712,9 @@ mod tests {
 
         // Compute using chunked processing with chunk_size=10
         let chunked = ChunkedMetrics::new().with_chunk_size(10);
-        let result = chunked.compute_rowwise(&data, row_op, combine).unwrap();
+        let result = chunked
+            .compute_rowwise(&data, row_op, combine)
+            .expect("Operation failed");
 
         // Compute expected result directly
         let expected: f64 = data.iter().map(|x| x * x).sum();
@@ -1746,10 +1749,14 @@ mod tests {
         let mut incremental = IncrementalMetrics::<f64, f64>::new();
 
         for &(y_true, y_pred) in &data {
-            incremental.update(y_true, y_pred, mse_update).unwrap();
+            incremental
+                .update(y_true, y_pred, mse_update)
+                .expect("Operation failed");
         }
 
-        let mse = incremental.finalize(mse_finalize).unwrap();
+        let mse = incremental
+            .finalize(mse_finalize)
+            .expect("Operation failed");
         assert!((mse - expected_mse).abs() < 1e-10);
 
         // Test batch update
@@ -1765,9 +1772,11 @@ mod tests {
         let mut incremental_batch = IncrementalMetrics::<f64, f64>::new();
         incremental_batch
             .update_batch(&y_true, &y_pred, batch_update)
-            .unwrap();
+            .expect("Operation failed");
 
-        let mse_batch = incremental_batch.finalize(mse_finalize).unwrap();
+        let mse_batch = incremental_batch
+            .finalize(mse_finalize)
+            .expect("Operation failed");
         assert!((mse_batch - expected_mse).abs() < 1e-10);
     }
 }

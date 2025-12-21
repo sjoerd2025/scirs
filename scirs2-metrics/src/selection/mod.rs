@@ -31,7 +31,7 @@
 //!         .add_metric("precision", 0.4, true); // 40% weight, higher is better
 //!
 //! // Select best model
-//! let best_model = selector.select_best(&modelscores).unwrap();
+//! let best_model = selector.select_best(&modelscores).expect("Operation failed");
 //! println!("Best model: {}", best_model);
 //! ```
 //!
@@ -472,7 +472,7 @@ mod tests {
             .add_metric("accuracy", 0.6, true)
             .add_metric("precision", 0.4, true);
 
-        let best = selector.select_best(&scores).unwrap();
+        let best = selector.select_best(&scores).expect("Operation failed");
         assert!(!best.is_empty());
     }
 
@@ -485,7 +485,7 @@ mod tests {
             .add_metric("accuracy", 0.5, true)
             .add_metric("precision", 0.5, true);
 
-        let rankings = selector.rank_models(&scores).unwrap();
+        let rankings = selector.rank_models(&scores).expect("Operation failed");
         assert_eq!(rankings.len(), 3);
 
         // Rankings should be sorted by score (descending)
@@ -516,7 +516,7 @@ mod tests {
             .add_metric("accuracy", 1.0, true)
             .add_threshold("accuracy", 0.87); // Only model_c meets this
 
-        let rankings = selector.rank_models(&scores).unwrap();
+        let rankings = selector.rank_models(&scores).expect("Operation failed");
         assert_eq!(rankings.len(), 1);
         assert_eq!(rankings[0].0, "model_c");
     }
@@ -539,7 +539,7 @@ mod tests {
                 .add_metric("precision", 0.5, true)
                 .with_aggregation(*strategy);
 
-            let best = selector.select_best(&scores).unwrap();
+            let best = selector.select_best(&scores).expect("Operation failed");
             assert!(!best.is_empty());
         }
     }
@@ -554,7 +554,7 @@ mod tests {
             .threshold("accuracy", 0.8)
             .aggregation(AggregationStrategy::WeightedSum)
             .select(&scores)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(!result.selected_model.is_empty());
         assert!(!result.rankings.is_empty());
@@ -580,7 +580,7 @@ mod tests {
             .add_metric("error", 0.7, false)    // lower is better
             .add_metric("time", 0.3, false); // lower is better
 
-        let best = selector.select_best(&scores).unwrap();
+        let best = selector.select_best(&scores).expect("Operation failed");
         assert!(!best.is_empty());
     }
 }

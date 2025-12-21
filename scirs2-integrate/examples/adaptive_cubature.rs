@@ -103,7 +103,7 @@ where
     // Process regions until convergence or resource limits
     while !region_queue.is_empty() && n_evals < max_evals {
         // Get the region with the largest estimated error
-        let current_region = region_queue.pop_front().unwrap();
+        let current_region = region_queue.pop_front().expect("Operation failed");
 
         // Update max _depth reached
         max_depth_reached = max_depth_reached.max(current_region.depth);
@@ -245,11 +245,11 @@ where
     let high_quad = GaussLegendreQuadrature::<f64>::new(high_degree)?;
 
     // Convert nodes and weights to slices
-    let low_points_slice = low_quad.nodes.as_slice().unwrap();
-    let low_weights_slice = low_quad.weights.as_slice().unwrap();
+    let low_points_slice = low_quad.nodes.as_slice().expect("Operation failed");
+    let low_weights_slice = low_quad.weights.as_slice().expect("Operation failed");
 
-    let high_points_slice = high_quad.nodes.as_slice().unwrap();
-    let high_weights_slice = high_quad.weights.as_slice().unwrap();
+    let high_points_slice = high_quad.nodes.as_slice().expect("Operation failed");
+    let high_weights_slice = high_quad.weights.as_slice().expect("Operation failed");
 
     // Compute volume of the region
     let mut volume = 1.0;
@@ -421,7 +421,7 @@ fn run_test<F>(
     println!("Dimension: {}", a.len());
     println!("Tolerance: {tol:.2e}");
 
-    let result = adaptive_cubature(f, a, b, tol, max_evals, max_depth).unwrap();
+    let result = adaptive_cubature(f, a, b, tol, max_evals, max_depth).expect("Operation failed");
 
     println!("Integral estimate: {:.10}", result.value);
     println!("Error estimate: {:.10}", result.error);

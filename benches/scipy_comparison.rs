@@ -42,7 +42,7 @@ struct ComparisonSummary {
 #[allow(dead_code)]
 fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
     let mut rng = StdRng::seed_from_u64(SEED);
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
     let matrix = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
     let vector = Array1::from_shape_fn(size, |_| rng.sample(uniform));
     (matrix, vector)
@@ -52,7 +52,7 @@ fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
 #[allow(dead_code)]
 fn generate_spd_matrix(size: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(SEED);
-    let uniform = Uniform::new(-1.0, 1.0).unwrap();
+    let uniform = Uniform::new(-1.0, 1.0).expect("Operation failed");
     let a = Array2::from_shape_fn((size, size), |_| rng.sample(uniform));
     let at = a.t();
     at.dot(&a) + Array2::<f64>::eye(size) * 0.1
@@ -330,7 +330,7 @@ fn bench_cross_platform_performance(c: &mut Criterion) {
 /// Save Rust benchmark results to file for Python comparison
 #[allow(dead_code)]
 fn save_rust_results(results: &[BenchmarkResult]) {
-    let json = serde_json::to_string_pretty(results).unwrap();
+    let json = serde_json::to_string_pretty(results).expect("Operation failed");
     fs::write("target/rust_benchmark_results.json", json).unwrap_or_else(|e| {
         eprintln!("Failed to save Rust benchmark results: {}", e);
     });
@@ -403,7 +403,7 @@ fn bench_performance_characteristics(c: &mut Criterion) {
     }
 
     // Save complexity analysis
-    let json = serde_json::to_string_pretty(&complexity_data).unwrap();
+    let json = serde_json::to_string_pretty(&complexity_data).expect("Operation failed");
     fs::write("target/complexity_analysis.json", json).unwrap_or_else(|e| {
         eprintln!("Failed to save complexity analysis: {}", e);
     });

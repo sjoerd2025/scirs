@@ -10,6 +10,12 @@ use crate::decomposition::{common::DecompositionModel, exponential::exponential_
 use crate::error::{Result, TimeSeriesError};
 use crate::utils::{is_stationary, transform_to_stationary};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Result of time series forecasting
 #[derive(Debug, Clone)]
 pub struct ForecastResult<F> {
@@ -116,7 +122,7 @@ impl Default for ExpSmoothingParams {
 /// use scirs2_series::forecasting::moving_average_forecast;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let result = moving_average_forecast(&ts, 3, 5, 0.95).unwrap();
+/// let result = moving_average_forecast(&ts, 3, 5, 0.95).expect("Example/test failed");
 /// println!("Forecast: {:?}", result.forecast);
 /// println!("Lower CI: {:?}", result.lower_ci);
 /// println!("Upper CI: {:?}", result.upper_ci);
@@ -150,7 +156,7 @@ where
     for i in ts.len() - window_size..ts.len() {
         sum = sum + ts[i];
     }
-    let avg = sum / F::from_usize(window_size).unwrap();
+    let avg = sum / F::from_usize(window_size).expect("Failed to convert usize to float");
 
     // Create forecast arrays
     let mut forecast = Array1::zeros(horizon);
@@ -166,7 +172,8 @@ where
         for j in i - window_size..i {
             window_sum = window_sum + ts[j];
         }
-        let window_avg = window_sum / F::from_usize(window_size).unwrap();
+        let window_avg =
+            window_sum / F::from_usize(window_size).expect("Failed to convert usize to float");
 
         // Calculate squared error
         sq_errors[i - window_size] = (ts[i] - window_avg).powi(2);
@@ -174,18 +181,18 @@ where
 
     // Calculate standard error
     let mse = sq_errors.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from_usize(sq_errors.len()).unwrap();
+        / F::from_usize(sq_errors.len()).expect("Example/test failed");
     let std_err = mse.sqrt();
 
     // Z-score for the given confidence _level (approximation)
     let z_score = match conf_level {
-        c if c >= 0.99 => F::from_f64(2.576).unwrap(),
-        c if c >= 0.98 => F::from_f64(2.326).unwrap(),
-        c if c >= 0.95 => F::from_f64(1.96).unwrap(),
-        c if c >= 0.90 => F::from_f64(1.645).unwrap(),
-        c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(),
-        _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.99 => const_f64::<F>(2.576),
+        c if c >= 0.98 => const_f64::<F>(2.326),
+        c if c >= 0.95 => const_f64::<F>(1.96),
+        c if c >= 0.90 => const_f64::<F>(1.645),
+        c if c >= 0.85 => const_f64::<F>(1.44),
+        c if c >= 0.80 => const_f64::<F>(1.282),
+        _ => const_f64::<F>(1.0),
     };
 
     // Compute forecast and confidence intervals
@@ -194,7 +201,8 @@ where
 
         // Increase uncertainty with horizon (more uncertainty further into the future)
         // This is a simplified model; in practice, more complex time-dependent error models are used
-        let adjustment = F::one() + F::from_f64(0.1).unwrap() * F::from_usize(i).unwrap();
+        let adjustment = F::one()
+            + const_f64::<F>(0.1) * F::from_usize(i).expect("Failed to convert usize to float");
         let ci_width = z_score * std_err * adjustment;
 
         lower_ci[i] = avg - ci_width;
@@ -228,7 +236,7 @@ where
 /// use scirs2_series::forecasting::exponential_smoothing_forecast;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let result = exponential_smoothing_forecast(&ts, 0.3, 5, 0.95).unwrap();
+/// let result = exponential_smoothing_forecast(&ts, 0.3, 5, 0.95).expect("Example/test failed");
 /// println!("Forecast: {:?}", result.forecast);
 /// println!("Lower CI: {:?}", result.lower_ci);
 /// println!("Upper CI: {:?}", result.upper_ci);
@@ -270,8 +278,9 @@ where
     // Apply simple exponential smoothing
     for i in 0..ts.len() {
         // Update _level
-        _level[i + 1] =
-            F::from_f64(alpha).unwrap() * ts[i] + F::from_f64(1.0 - alpha).unwrap() * _level[i];
+        _level[i + 1] = F::from_f64(alpha).expect("Failed to convert alpha to float") * ts[i]
+            + F::from_f64(1.0 - alpha).expect("Failed to convert (1.0 - alpha) to float")
+                * _level[i];
 
         // Calculate forecast error for one-step ahead forecast
         if i > 0 {
@@ -281,18 +290,18 @@ where
 
     // Calculate mean squared error
     let mse = sq_errors.iter().fold(F::zero(), |acc, &x| acc + x)
-        / F::from_usize(sq_errors.len()).unwrap();
+        / F::from_usize(sq_errors.len()).expect("Example/test failed");
     let std_err = mse.sqrt();
 
     // Z-score for the given confidence _level
     let z_score = match conf_level {
-        c if c >= 0.99 => F::from_f64(2.576).unwrap(),
-        c if c >= 0.98 => F::from_f64(2.326).unwrap(),
-        c if c >= 0.95 => F::from_f64(1.96).unwrap(),
-        c if c >= 0.90 => F::from_f64(1.645).unwrap(),
-        c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(),
-        _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.99 => const_f64::<F>(2.576),
+        c if c >= 0.98 => const_f64::<F>(2.326),
+        c if c >= 0.95 => const_f64::<F>(1.96),
+        c if c >= 0.90 => const_f64::<F>(1.645),
+        c if c >= 0.85 => const_f64::<F>(1.44),
+        c if c >= 0.80 => const_f64::<F>(1.282),
+        _ => const_f64::<F>(1.0),
     };
 
     // Create forecast arrays
@@ -306,7 +315,7 @@ where
 
         // Increase uncertainty with horizon
         // For SES, theoretical standard error increases with square root of horizon
-        let h_adjustment = (F::from_usize(i + 1).unwrap()).sqrt();
+        let h_adjustment = (F::from_usize(i + 1).expect("Failed to convert usize to float")).sqrt();
         let ci_width = z_score * std_err * h_adjustment;
 
         lower_ci[i] = forecast[i] - ci_width;
@@ -347,7 +356,7 @@ where
 /// params.gamma = Some(0.2);
 /// params.seasonal_period = Some(4);
 ///
-/// let result = holt_winters_forecast(&ts, &params, 8, 0.95).unwrap();
+/// let result = holt_winters_forecast(&ts, &params, 8, 0.95).expect("Example/test failed");
 /// println!("Forecast: {:?}", result.forecast);
 /// ```
 #[allow(dead_code)]
@@ -454,13 +463,13 @@ where
     // Initialize components
     if has_seasonal {
         // We use exponential decomposition which is already implemented
-        let period = params.seasonal_period.unwrap();
+        let period = params.seasonal_period.expect("Seasonal period required");
         let decomp = exponential_decomposition(
             ts,
             period,
             params.alpha,
             params.beta.unwrap_or(0.1),
-            params.gamma.unwrap(),
+            params.gamma.expect("Gamma parameter required"),
             if params.multiplicative_seasonality {
                 DecompositionModel::Multiplicative
             } else {
@@ -495,9 +504,10 @@ where
         }
 
         // Apply Holt's method
-        let alpha = F::from_f64(params.alpha).unwrap();
-        let beta = F::from_f64(params.beta.unwrap()).unwrap();
-        let phi = F::from_f64(params.phi.unwrap_or(1.0)).unwrap();
+        let alpha = F::from_f64(params.alpha).expect("Failed to convert alpha to float");
+        let beta = F::from_f64(params.beta.expect("Beta parameter required"))
+            .expect("Failed to convert beta to float");
+        let phi = F::from_f64(params.phi.unwrap_or(1.0)).expect("Failed to convert phi to float");
 
         for i in 1..=n {
             // Calculate expected value
@@ -532,28 +542,28 @@ where
     let mse = forecast_errors
         .iter()
         .skip(if has_seasonal {
-            params.seasonal_period.unwrap()
+            params.seasonal_period.expect("Seasonal period required")
         } else {
             1
         })
         .fold(F::zero(), |acc, &x| acc + x.powi(2))
         / F::from_usize(if has_seasonal {
-            n - params.seasonal_period.unwrap()
+            n - params.seasonal_period.expect("Seasonal period required")
         } else {
             n - 1
         })
-        .unwrap();
+        .expect("Example/test failed");
     let std_err = mse.sqrt();
 
     // Z-score for confidence _level
     let z_score = match conf_level {
-        c if c >= 0.99 => F::from_f64(2.576).unwrap(),
-        c if c >= 0.98 => F::from_f64(2.326).unwrap(),
-        c if c >= 0.95 => F::from_f64(1.96).unwrap(),
-        c if c >= 0.90 => F::from_f64(1.645).unwrap(),
-        c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(),
-        _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.99 => const_f64::<F>(2.576),
+        c if c >= 0.98 => const_f64::<F>(2.326),
+        c if c >= 0.95 => const_f64::<F>(1.96),
+        c if c >= 0.90 => const_f64::<F>(1.645),
+        c if c >= 0.85 => const_f64::<F>(1.44),
+        c if c >= 0.80 => const_f64::<F>(1.282),
+        _ => const_f64::<F>(1.0),
     };
 
     // Create forecast arrays
@@ -567,7 +577,8 @@ where
 
         // Add trend component
         if has_trend {
-            let phi = F::from_f64(params.phi.unwrap_or(1.0)).unwrap();
+            let phi =
+                F::from_f64(params.phi.unwrap_or(1.0)).expect("Failed to convert phi to float");
             if params.damped_trend {
                 // Sum of damped trend: b * (1 + phi + phi^2 + ... + phi^(h-1))
                 let mut sum = F::one();
@@ -579,13 +590,14 @@ where
                 pred = pred + trend[n] * sum;
             } else {
                 // Linear trend: l + h*b
-                pred = pred + F::from_usize(h + 1).unwrap() * trend[n];
+                pred = pred
+                    + F::from_usize(h + 1).expect("Failed to convert usize to float") * trend[n];
             }
         }
 
         // Add seasonal component
         if has_seasonal {
-            let period = params.seasonal_period.unwrap();
+            let period = params.seasonal_period.expect("Seasonal period required");
             let season_idx = (h + n) % period;
             if params.multiplicative_seasonality {
                 pred = pred * seasonal[season_idx];
@@ -598,7 +610,7 @@ where
 
         // Confidence intervals (simplified)
         // A full implementation would account for increased uncertainty with horizon
-        let h_adjustment = (F::from_usize(h + 1).unwrap()).sqrt();
+        let h_adjustment = (F::from_usize(h + 1).expect("Failed to convert usize to float")).sqrt();
         let ci_width = z_score * std_err * h_adjustment;
 
         lower_ci[h] = pred - ci_width;
@@ -638,7 +650,7 @@ where
 /// params.d = 1;
 /// params.q = 1;
 ///
-/// let result = arima_forecast(&ts, &params, 5, 0.95).unwrap();
+/// let result = arima_forecast(&ts, &params, 5, 0.95).expect("Example/test failed");
 /// println!("Forecast: {:?}", result.forecast);
 /// ```
 #[allow(dead_code)]
@@ -718,7 +730,9 @@ where
         let mut coeffs = Vec::with_capacity(params.p);
         for i in 0..params.p {
             // Decreasing coefficients for higher lags (simplified)
-            coeffs.push(F::from_f64(0.8 / (i + 1) as f64).unwrap());
+            coeffs.push(
+                F::from_f64(0.8 / (i + 1) as f64).expect("Failed to convert coefficient to float"),
+            );
         }
         coeffs
     } else {
@@ -770,16 +784,18 @@ where
     }
 
     // Simplified confidence intervals (would need proper error variance estimation)
-    let std_err = F::from_f64(0.5).unwrap(); // Placeholder
+    let std_err = const_f64::<F>(0.5); // Placeholder
     let z_score = match conf_level {
-        c if c >= 0.99 => F::from_f64(2.576).unwrap(),
-        c if c >= 0.95 => F::from_f64(1.96).unwrap(),
-        c if c >= 0.90 => F::from_f64(1.645).unwrap(),
-        _ => F::from_f64(1.0).unwrap(),
+        c if c >= 0.99 => const_f64::<F>(2.576),
+        c if c >= 0.95 => const_f64::<F>(1.96),
+        c if c >= 0.90 => const_f64::<F>(1.645),
+        _ => const_f64::<F>(1.0),
     };
 
     for h in 0..horizon {
-        let ci_width = z_score * std_err * (F::from_usize(h + 1).unwrap()).sqrt();
+        let ci_width = z_score
+            * std_err
+            * (F::from_usize(h + 1).expect("Failed to convert usize to float")).sqrt();
         lower_ci[h] = forecast[h] - ci_width;
         upper_ci[h] = forecast[h] + ci_width;
     }
@@ -882,7 +898,7 @@ struct ModelFitMetrics<F> {
 /// use scirs2_series::forecasting::auto_arima;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let params = auto_arima(&ts, 2, 1, 2, false, None).unwrap();
+/// let params = auto_arima(&ts, 2, 1, 2, false, None).expect("Example/test failed");
 /// println!("Optimal p: {}, d: {}, q: {}", params.p, params.d, params.q);
 /// ```
 #[allow(dead_code)]
@@ -938,7 +954,7 @@ where
 /// options.max_q = 3;
 /// options.information_criterion = "bic".to_string();
 ///
-/// let params = auto_arima_with_options(&ts, &options).unwrap();
+/// let params = auto_arima_with_options(&ts, &options).expect("Example/test failed");
 /// println!("Optimal ARIMA({},{},{}) model", params.p, params.d, params.q);
 /// ```
 #[allow(dead_code)]
@@ -958,10 +974,12 @@ where
         ));
     }
 
-    if options.seasonal && options.seasonal_period.unwrap() >= ts.len() / 2 {
+    if options.seasonal
+        && options.seasonal_period.expect("Seasonal period required") >= ts.len() / 2
+    {
         return Err(TimeSeriesError::InvalidInput(format!(
             "Seasonal period ({}) must be less than half the time series length ({})",
-            options.seasonal_period.unwrap(),
+            options.seasonal_period.expect("Seasonal period required"),
             ts.len()
         )));
     }
@@ -977,7 +995,7 @@ where
     let best_seasonal_d = if options.seasonal && options.auto_diff {
         determine_seasonal_differencing_order(
             ts,
-            options.seasonal_period.unwrap(),
+            options.seasonal_period.expect("Seasonal period required"),
             options.max_seasonal_d,
         )?
     } else {
@@ -1161,7 +1179,7 @@ where
 
     // Check stationarity of the original series
     let (_, p_value) = is_stationary(_ts, None)?;
-    if p_value < F::from_f64(0.05).unwrap() {
+    if p_value < const_f64::<F>(0.05) {
         series_is_stationary = true;
     }
 
@@ -1175,7 +1193,7 @@ where
 
             // Check stationarity of differenced series
             let (_, p_value) = is_stationary(&diff_ts, None)?;
-            if p_value < F::from_f64(0.05).unwrap() {
+            if p_value < const_f64::<F>(0.05) {
                 best_d = _d;
                 break;
             }
@@ -1253,7 +1271,7 @@ where
 
     // Apply seasonal differencing if requested
     if seasonal && seasonal_d > 0 {
-        let _period = seasonal_period.unwrap();
+        let _period = seasonal_period.expect("Seasonal period required");
         for _ in 0..seasonal_d {
             if result.len() <= _period {
                 return Err(TimeSeriesError::ForecastingError(
@@ -1296,22 +1314,21 @@ where
     let mse = penalty * 1.0; // Dummy value, would be real MSE in actual implementation
 
     // Convert to generic float
-    let n_f = F::from_f64(n).unwrap();
-    let k_f = F::from_f64(k).unwrap();
-    let mse_f = F::from_f64(mse).unwrap();
+    let n_f = F::from_f64(n).expect("Failed to convert n to float");
+    let k_f = F::from_f64(k).expect("Failed to convert k to float");
+    let mse_f = F::from_f64(mse).expect("Failed to convert mse to float");
 
     // Log-likelihood (simplified approximation)
-    let log_likelihood = -n_f * mse_f.ln() / F::from_f64(2.0).unwrap();
+    let log_likelihood = -n_f * mse_f.ln() / const_f64::<F>(2.0);
 
     // AIC: -2*log_likelihood + 2*k
-    let aic = -F::from_f64(2.0).unwrap() * log_likelihood + F::from_f64(2.0).unwrap() * k_f;
+    let aic = -const_f64::<F>(2.0) * log_likelihood + const_f64::<F>(2.0) * k_f;
 
     // BIC: -2*log_likelihood + k*log(n)
-    let bic = -F::from_f64(2.0).unwrap() * log_likelihood + k_f * n_f.ln();
+    let bic = -const_f64::<F>(2.0) * log_likelihood + k_f * n_f.ln();
 
     // HQIC: -2*log_likelihood + 2*k*log(log(n))
-    let hqic = -F::from_f64(2.0).unwrap() * log_likelihood
-        + F::from_f64(2.0).unwrap() * k_f * n_f.ln().ln();
+    let hqic = -const_f64::<F>(2.0) * log_likelihood + const_f64::<F>(2.0) * k_f * n_f.ln().ln();
 
     Ok(ModelFitMetrics {
         aic,
@@ -1340,7 +1357,7 @@ where
 /// use scirs2_series::forecasting::auto_ets;
 ///
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let params = auto_ets(&ts, None).unwrap();
+/// let params = auto_ets(&ts, None).expect("Example/test failed");
 /// println!("Alpha: {}", params.alpha);
 /// ```
 #[allow(dead_code)]
@@ -1385,7 +1402,7 @@ where
         let mut sum_xx = F::zero();
 
         for i in 0..n {
-            let x = F::from_usize(i).unwrap();
+            let x = F::from_usize(i).expect("Failed to convert usize to float");
             let y = _ts[i];
             sum_x = sum_x + x;
             sum_y = sum_y + y;
@@ -1393,11 +1410,13 @@ where
             sum_xx = sum_xx + x * x;
         }
 
-        let slope = (F::from_usize(n).unwrap() * sum_xy - sum_x * sum_y)
-            / (F::from_usize(n).unwrap() * sum_xx - sum_x * sum_x);
+        let slope = (F::from_usize(n).expect("Failed to convert usize to float") * sum_xy
+            - sum_x * sum_y)
+            / (F::from_usize(n).expect("Failed to convert usize to float") * sum_xx
+                - sum_x * sum_x);
 
         // If slope is significantly different from zero, assume there's a trend
-        slope.abs() > F::from_f64(0.01).unwrap()
+        slope.abs() > const_f64::<F>(0.01)
     };
 
     // Check for seasonality
@@ -1429,7 +1448,7 @@ where
                     }
 
                     if n > 0 {
-                        let n_f = F::from_usize(n).unwrap();
+                        let n_f = F::from_usize(n).expect("Failed to convert usize to float");
                         let denom = ((n_f * sum_xx - sum_x * sum_x)
                             * (n_f * sum_yy - sum_y * sum_y))
                             .sqrt();
@@ -1444,7 +1463,9 @@ where
             }
 
             // If average correlation is high, assume there's seasonality
-            count > 0 && (sum_corr / F::from_usize(count).unwrap()) > F::from_f64(0.3).unwrap()
+            count > 0
+                && (sum_corr / F::from_usize(count).expect("Failed to convert usize to float"))
+                    > const_f64::<F>(0.3)
         } else {
             false
         }
@@ -1468,11 +1489,11 @@ where
             // Calculate first and second half averages
             let half = _ts.len() / 2;
             let first_half_avg = _ts.iter().take(half).fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(half).unwrap();
+                / F::from_usize(half).expect("Failed to convert usize to float");
             let second_half_avg = _ts.iter().skip(half).fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(_ts.len() - half).unwrap();
+                / F::from_usize(_ts.len() - half).expect("Example/test failed");
 
-            if second_half_avg / first_half_avg > F::from_f64(2.0).unwrap() {
+            if second_half_avg / first_half_avg > const_f64::<F>(2.0) {
                 params.multiplicative_trend = true;
             }
         }
@@ -1482,11 +1503,13 @@ where
             let first_third = _ts.len() / 3;
             let second_third = 2 * _ts.len() / 3;
 
-            let first_slope = (_ts[first_third] - _ts[0]) / F::from_usize(first_third).unwrap();
+            let first_slope = (_ts[first_third] - _ts[0])
+                / F::from_usize(first_third).expect("Failed to convert usize to float");
             let second_slope = (_ts[second_third] - _ts[first_third])
-                / F::from_usize(second_third - first_third).unwrap();
+                / F::from_usize(second_third - first_third)
+                    .expect("Failed to convert usize to float");
             let third_slope = (_ts[_ts.len() - 1] - _ts[second_third])
-                / F::from_usize(_ts.len() - 1 - second_third).unwrap();
+                / F::from_usize(_ts.len() - 1 - second_third).expect("Example/test failed");
 
             if (first_slope > second_slope && second_slope > third_slope)
                 || (first_slope < second_slope && second_slope < third_slope)
@@ -1504,7 +1527,7 @@ where
 
         // Consider multiplicative seasonality for data with changing seasonal amplitude
         if all_positive {
-            let _period = seasonalperiod.unwrap();
+            let _period = seasonalperiod.expect("Seasonal period required");
             let num_seasons = _ts.len() / _period;
 
             if num_seasons >= 2 {
@@ -1534,8 +1557,8 @@ where
                     let first_range = seasonal_ranges[0];
                     let last_range = seasonal_ranges[num_seasons - 1];
 
-                    if (last_range / first_range > F::from_f64(1.5).unwrap())
-                        || (first_range / last_range > F::from_f64(1.5).unwrap())
+                    if (last_range / first_range > const_f64::<F>(1.5))
+                        || (first_range / last_range > const_f64::<F>(1.5))
                     {
                         params.multiplicative_seasonality = true;
                     }
@@ -1699,7 +1722,7 @@ pub mod ensemble {
         // Combine forecasts using weighted average
         let mut ensemble_forecast = Array1::zeros(config.horizon);
         for (i, weight) in weights.iter().enumerate() {
-            let w = F::from_f64(*weight).unwrap();
+            let w = F::from_f64(*weight).expect("Failed to convert weight to float");
             for j in 0..config.horizon {
                 if j < individual_forecasts[i].len() {
                     ensemble_forecast[j] = ensemble_forecast[j] + w * individual_forecasts[i][j];
@@ -1726,9 +1749,10 @@ pub mod ensemble {
             }
 
             if count > 1 {
-                variance = variance / F::from_usize(count).unwrap();
+                variance =
+                    variance / F::from_usize(count).expect("Failed to convert usize to float");
                 let std_dev = variance.sqrt();
-                let margin = std_dev * F::from_f64(1.96).unwrap(); // 95% CI
+                let margin = std_dev * const_f64::<F>(1.96); // 95% CI
 
                 lower_ci[j] = mean - margin;
                 upper_ci[j] = mean + margin;
@@ -1905,7 +1929,7 @@ pub mod ensemble {
         let mut ensemble_forecast = Array1::zeros(config.horizon);
         for (i, weight) in weights.iter().enumerate() {
             if i < final_forecasts.len() {
-                let w = F::from_f64(*weight).unwrap();
+                let w = F::from_f64(*weight).expect("Failed to convert weight to float");
                 for j in 0..config.horizon {
                     if j < final_forecasts[i].len() {
                         ensemble_forecast[j] = ensemble_forecast[j] + w * final_forecasts[i][j];
@@ -1932,9 +1956,10 @@ pub mod ensemble {
             }
 
             if count > 1 {
-                variance = variance / F::from_usize(count).unwrap();
+                variance =
+                    variance / F::from_usize(count).expect("Failed to convert usize to float");
                 let std_dev = variance.sqrt();
-                let margin = std_dev * F::from_f64(1.96).unwrap();
+                let margin = std_dev * const_f64::<F>(1.96);
 
                 lower_ci[j] = mean - margin;
                 upper_ci[j] = mean + margin;
@@ -2191,7 +2216,7 @@ pub mod ensemble {
         let mut ensemble_forecast = Array1::zeros(config.horizon);
         for (i, weight) in weights.iter().enumerate() {
             if i < final_forecasts.len() {
-                let w = F::from_f64(*weight).unwrap();
+                let w = F::from_f64(*weight).expect("Failed to convert weight to float");
                 for j in 0..config.horizon {
                     if j < final_forecasts[i].len() {
                         ensemble_forecast[j] = ensemble_forecast[j] + w * final_forecasts[i][j];
@@ -2218,9 +2243,10 @@ pub mod ensemble {
             }
 
             if count > 1 {
-                variance = variance / F::from_usize(count).unwrap();
+                variance =
+                    variance / F::from_usize(count).expect("Failed to convert usize to float");
                 let std_dev = variance.sqrt();
-                let margin = std_dev * F::from_f64(1.96).unwrap();
+                let margin = std_dev * const_f64::<F>(1.96);
 
                 lower_ci[j] = mean - margin;
                 upper_ci[j] = mean + margin;

@@ -220,10 +220,11 @@ mod tests {
             let scirs_arrayd = scirs_array.into_dyn();
 
             // Convert to NumPy
-            let numpy_array = scirs_to_numpy_arrayd(scirs_arrayd.clone(), py).unwrap();
+            let numpy_array =
+                scirs_to_numpy_arrayd(scirs_arrayd.clone(), py).expect("Operation failed");
 
             // Convert back to scirs2
-            let result = numpy_to_scirs_arrayd(&numpy_array.bind(py)).unwrap();
+            let result = numpy_to_scirs_arrayd(&numpy_array.bind(py)).expect("Operation failed");
 
             // Verify equality
             assert_eq!(result.shape(), scirs_arrayd.shape());
@@ -235,7 +236,8 @@ mod tests {
     fn test_zero_copy_view() {
         Python::with_gil(|py| {
             let scirs_array = array![[1.0f32, 2.0], [3.0, 4.0]].into_dyn();
-            let numpy_array = scirs_to_numpy_arrayd(scirs_array.clone(), py).unwrap();
+            let numpy_array =
+                scirs_to_numpy_arrayd(scirs_array.clone(), py).expect("Operation failed");
 
             // Get zero-copy view
             let readonly = numpy_array.bind(py).readonly();

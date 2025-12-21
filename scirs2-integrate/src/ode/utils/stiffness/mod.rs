@@ -61,8 +61,8 @@ impl<F: IntegrateFloat> Default for StiffnessDetectionConfig<F> {
             stiffness_threshold: 3,
             non_stiffness_threshold: 5,
             analysis_window: 10,
-            step_size_ratio_threshold: F::from_f64(0.1).unwrap(),
-            error_ratio_threshold: F::from_f64(10.0).unwrap(),
+            step_size_ratio_threshold: F::from_f64(0.1).expect("Operation failed"),
+            error_ratio_threshold: F::from_f64(10.0).expect("Operation failed"),
             use_eigenvalue_estimation: false,
             eigenvalue_est_period: 25,
             indicator_weights: IndicatorWeights::default(),
@@ -87,10 +87,10 @@ pub struct IndicatorWeights<F: IntegrateFloat> {
 impl<F: IntegrateFloat> Default for IndicatorWeights<F> {
     fn default() -> Self {
         IndicatorWeights {
-            error_pattern_weight: F::from_f64(1.0).unwrap(),
-            step_pattern_weight: F::from_f64(1.0).unwrap(),
-            newton_convergence_weight: F::from_f64(1.5).unwrap(),
-            eigenvalue_weight: F::from_f64(2.0).unwrap(),
+            error_pattern_weight: F::from_f64(1.0).expect("Operation failed"),
+            step_pattern_weight: F::from_f64(1.0).expect("Operation failed"),
+            newton_convergence_weight: F::from_f64(1.5).expect("Operation failed"),
+            eigenvalue_weight: F::from_f64(2.0).expect("Operation failed"),
         }
     }
 }
@@ -212,7 +212,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         let last_idx = self.step_size_history.len() - 1;
 
         // Check for very small errors (indicating non-stiffness)
-        if self.error_history[last_idx] < F::from_f64(0.01).unwrap() {
+        if self.error_history[last_idx] < F::from_f64(0.01).expect("Operation failed") {
             self.non_stiffness_indicators += 1;
         }
 
@@ -289,10 +289,10 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         }
 
         // High proportion of decreases might indicate stiffness
-        let decrease_ratio = F::from_usize(decreases).unwrap()
-            / F::from_usize(self.step_size_history.len() - 1).unwrap();
+        let decrease_ratio = F::from_usize(decreases).expect("Operation failed")
+            / F::from_usize(self.step_size_history.len() - 1).expect("Operation failed");
 
-        if decrease_ratio > F::from_f64(0.7).unwrap() {
+        if decrease_ratio > F::from_f64(0.7).expect("Operation failed") {
             self.stiffness_indicators += 1;
         }
 
@@ -315,12 +315,13 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         let weights = &self.config.indicator_weights;
 
         // Calculate weighted stiffness score
-        let stiff_score = F::from_usize(self.stiffness_indicators).unwrap()
+        let stiff_score = F::from_usize(self.stiffness_indicators).expect("Operation failed")
             * (weights.error_pattern_weight
                 + weights.step_pattern_weight
                 + weights.newton_convergence_weight);
 
-        let non_stiff_score = F::from_usize(self.non_stiffness_indicators).unwrap()
+        let non_stiff_score = F::from_usize(self.non_stiffness_indicators)
+            .expect("Operation failed")
             * (weights.error_pattern_weight
                 + weights.step_pattern_weight
                 + weights.newton_convergence_weight);
@@ -346,11 +347,11 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
             if _current_method_is_stiff {
                 // We're using BDF (_stiff), consider switching to Adams (non-_stiff)
                 // Higher threshold to _switch away from _stiff method
-                return self.stiffness_score > F::from_f64(-0.3).unwrap();
+                return self.stiffness_score > F::from_f64(-0.3).expect("Operation failed");
             } else {
                 // We're using Adams (non-_stiff), consider switching to BDF (_stiff)
                 // Lower threshold to _switch to _stiff method
-                return self.stiffness_score > F::from_f64(0.2).unwrap();
+                return self.stiffness_score > F::from_f64(0.2).expect("Operation failed");
             }
         }
 
@@ -394,19 +395,20 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         let min_eigenval_magnitude = self.estimate_smallest_eigenvalue_magnitude(jacobian);
 
         // Compute stiffness ratio: ratio of largest to smallest eigenvalue magnitudes
-        let stiffness_ratio = if min_eigenval_magnitude > F::from_f64(1e-14).unwrap() {
-            max_eigenval_magnitude / min_eigenval_magnitude
-        } else {
-            // If minimum eigenvalue is too small, treat as very stiff
-            F::from_f64(1e6).unwrap()
-        };
+        let stiffness_ratio =
+            if min_eigenval_magnitude > F::from_f64(1e-14).expect("Operation failed") {
+                max_eigenval_magnitude / min_eigenval_magnitude
+            } else {
+                // If minimum eigenvalue is too small, treat as very stiff
+                F::from_f64(1e6).expect("Operation failed")
+            };
 
         self.stiffness_ratio = stiffness_ratio;
 
         // Update stiffness indicators based on the computed ratio
-        if stiffness_ratio > F::from_f64(100.0).unwrap() {
+        if stiffness_ratio > F::from_f64(100.0).expect("Operation failed") {
             self.stiffness_indicators += 1;
-        } else if stiffness_ratio < F::from_f64(10.0).unwrap() {
+        } else if stiffness_ratio < F::from_f64(10.0).expect("Operation failed") {
             self.non_stiffness_indicators += 1;
         }
 
@@ -417,14 +419,14 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     fn estimate_largest_eigenvalue_magnitude(&self, jacobian: &Array2<F>) -> F {
         let n = jacobian.nrows();
         let max_iterations = 20;
-        let tolerance = F::from_f64(1e-6).unwrap();
+        let tolerance = F::from_f64(1e-6).expect("Operation failed");
 
         // Initialize with random vector
         let mut v = Array1::<F>::from_elem(n, F::one());
 
         // Normalize
         let mut norm = (v.dot(&v)).sqrt();
-        if norm > F::from_f64(1e-14).unwrap() {
+        if norm > F::from_f64(1e-14).expect("Operation failed") {
             v = &v / norm;
         }
 
@@ -444,7 +446,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
 
             // Normalize v_new
             norm = (v_new.dot(&v_new)).sqrt();
-            if norm > F::from_f64(1e-14).unwrap() {
+            if norm > F::from_f64(1e-14).expect("Operation failed") {
                 v_new = &v_new / norm;
             }
 
@@ -465,7 +467,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     fn estimate_smallest_eigenvalue_magnitude(&self, jacobian: &Array2<F>) -> F {
         let n = jacobian.nrows();
         let max_iterations = 20;
-        let tolerance = F::from_f64(1e-6).unwrap();
+        let tolerance = F::from_f64(1e-6).expect("Operation failed");
 
         // For smallest eigenvalue, we use inverse iteration
         // We need to solve (A - sigma*I) * v_new = v where sigma is a shift
@@ -475,7 +477,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         let mut a_copy = jacobian.clone();
 
         // Add small diagonal regularization to avoid singularity
-        let regularization = F::from_f64(1e-12).unwrap();
+        let regularization = F::from_f64(1e-12).expect("Operation failed");
         for i in 0..n {
             a_copy[[i, i]] += regularization;
         }
@@ -485,7 +487,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
 
         // Normalize
         let mut norm = (v.dot(&v)).sqrt();
-        if norm > F::from_f64(1e-14).unwrap() {
+        if norm > F::from_f64(1e-14).expect("Operation failed") {
             v = &v / norm;
         }
 
@@ -495,7 +497,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
             // Solve A * v_new = v (inverse iteration step)
             // For simplicity, we approximate this with a few Richardson iterations
             let mut v_new = v.clone();
-            let damping = F::from_f64(0.1).unwrap();
+            let damping = F::from_f64(0.1).expect("Operation failed");
 
             // Richardson iteration: v_new = v_new - damping * (A * v_new - v)
             for _ in 0..5 {
@@ -523,7 +525,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
 
             // Normalize v_new
             norm = (v_new.dot(&v_new)).sqrt();
-            if norm > F::from_f64(1e-14).unwrap() {
+            if norm > F::from_f64(1e-14).expect("Operation failed") {
                 v_new = &v_new / norm;
             }
 

@@ -147,7 +147,7 @@ fn calculate_coverage(parameter_distributions: &HashMap<String, Vec<f64>>) -> f6
         if range > 0.0 {
             // Simple coverage metric based on unique values
             let mut sorted_values = values.clone();
-            sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             sorted_values.dedup_by(|a, b| (*a - *b).abs() < 1e-10);
 
             let coverage = sorted_values.len() as f64 / values.len() as f64;
@@ -344,7 +344,7 @@ pub fn median(data: &[f64]) -> f64 {
     }
 
     let mut sorted_data = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     percentile(&sorted_data, 50.0)
 }
@@ -356,7 +356,7 @@ pub fn iqr(data: &[f64]) -> f64 {
     }
 
     let mut sorted_data = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let q75 = percentile(&sorted_data, 75.0);
     let q25 = percentile(&sorted_data, 25.0);
@@ -371,7 +371,7 @@ pub fn is_outlier(value: f64, data: &[f64], multiplier: f64) -> bool {
     }
 
     let mut sorted_data = data.to_vec();
-    sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let q25 = percentile(&sorted_data, 25.0);
     let q75 = percentile(&sorted_data, 75.0);

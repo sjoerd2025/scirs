@@ -33,7 +33,7 @@ impl<F: Float> Op<F> for FrobeniusNormOp {
         let g = ctx.graph();
         
         // Use tensor operations to maintain gradient flow
-        let epsilon = tensor_ops::scalar(F::epsilon() * F::from(10.0).unwrap(), g);
+        let epsilon = tensor_ops::scalar(F::epsilon() * F::from(10.0).expect("Failed to convert constant to float"), g);
         let safe_norm = tensor_ops::maximum(&output, &epsilon);
         
         // Compute gradient: (input / norm) * grad_output
@@ -71,7 +71,7 @@ impl<F: Float + scirs2_core::ndarray::ScalarOperand> Op<F> for SpectralNormOp {
             .map_err(|_| OpError::IncompatibleShape("Failed to convert to 2D array".into()))?;
 
         // Use power iteration to find the largest singular value
-        let (_, sigma_max) = power_iteration_spectral(&matrix, 50, F::from(1e-8).unwrap());
+        let (_, sigma_max) = power_iteration_spectral(&matrix, 50, F::from(1e-8).expect("Failed to convert constant to float"));
 
         ctx.append_output(scirs2_core::ndarray::arr0(sigma_max).into_dyn());
         Ok(())
@@ -253,7 +253,7 @@ fn power_iteration_spectral<F: Float + scirs2_core::ndarray::ScalarOperand>(
 
     // Add some perturbation to avoid getting stuck
     for i in 1..m {
-        u[i] = F::from(0.01).unwrap() * F::from(i as f64).unwrap();
+        u[i] = F::from(0.01).expect("Failed to convert constant to float") * F::from(i as f64).expect("Failed to convert to float");
     }
 
     // Normalize
@@ -331,7 +331,7 @@ fn compute_spectral_norm_gradient<F: Float + scirs2_core::ndarray::ScalarOperand
     }
 
     // For general matrices, recompute the singular vectors
-    let (u, sigma) = power_iteration_spectral(matrix, 50, F::from(1e-8).unwrap());
+    let (u, sigma) = power_iteration_spectral(matrix, 50, F::from(1e-8).expect("Failed to convert constant to float"));
 
     // Compute v = A^T * u / sigma
     let v = if sigma > F::epsilon() {
@@ -375,9 +375,9 @@ fn compute_nuclear_norm_improved<F: Float + scirs2_core::ndarray::ScalarOperand>
     let max_rank = (min_dim.min(5)) as usize; // Limit iterations for performance
 
     for _ in 0..max_rank {
-        let (u, sigma) = power_iteration_spectral(&working_matrix.view(), 20, F::from(1e-6).unwrap());
+        let (u, sigma) = power_iteration_spectral(&working_matrix.view(), 20, F::from(1e-6).expect("Failed to convert constant to float"));
 
-        if sigma < F::epsilon() * F::from(10.0).unwrap() {
+        if sigma < F::epsilon() * F::from(10.0).expect("Failed to convert constant to float") {
             break;
         }
 
@@ -434,9 +434,9 @@ fn compute_nuclear_norm_gradient_improved<F: Float + scirs2_core::ndarray::Scala
     let max_rank = (min_dim.min(3)) as usize; // Limit for performance
 
     for _ in 0..max_rank {
-        let (u, sigma) = power_iteration_spectral(&working_matrix.view(), 10, F::from(1e-6).unwrap());
+        let (u, sigma) = power_iteration_spectral(&working_matrix.view(), 10, F::from(1e-6).expect("Failed to convert constant to float"));
 
-        if sigma < F::epsilon() * F::from(10.0).unwrap() {
+        if sigma < F::epsilon() * F::from(10.0).expect("Failed to convert constant to float") {
             break;
         }
 
@@ -513,7 +513,7 @@ mod tests {
         let norm = frobenius_norm(&matrix);
         
         // Expected norm: sqrt(3^2 + 4^2) = 5.0
-        let result = norm.eval(&g).unwrap();
+        let result = norm.eval(&g).expect("Operation failed");
         assert!((result[[]] - 5.0).abs() < 1e-6);
         
         // Test gradient
@@ -521,7 +521,7 @@ mod tests {
         let grads = g.grad(&norm, &[matrix.clone()]);
         
         // Expected gradient: [3/5, 4/5; 0, 0]
-        let grad_result = grads[0].as_ref().unwrap().eval(&g).unwrap();
+        let grad_result = grads[0].as_ref().expect("Operation failed").eval(&g).expect("Operation failed");
         let expected = array![[0.6, 0.8], [0.0, 0.0]];
         
         for i in 0..2 {
@@ -542,14 +542,14 @@ mod tests {
         let norm = nuclear_norm(&matrix);
         
         // Expected norm: |2| + |-3| = 5.0
-        let result = norm.eval(&g).unwrap();
+        let result = norm.eval(&g).expect("Operation failed");
         assert!((result[[]] - 5.0).abs() < 1e-6);
         
         // Test gradient
         let grads = g.grad(&norm, &[matrix.clone()]);
         
         // Expected gradient: sign(diag) = [1, 0; 0, -1]
-        let grad_result = grads[0].as_ref().unwrap().eval(&g).unwrap();
+        let grad_result = grads[0].as_ref().expect("Operation failed").eval(&g).expect("Operation failed");
         let expected = array![[1.0, 0.0], [0.0, -1.0]];
         
         for i in 0..2 {

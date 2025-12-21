@@ -24,14 +24,15 @@ fn main() {
     println!("Example 1: Basic Scaled Dot-Product Attention");
     let output =
         scaled_dot_product_attention(&query.view(), &key.view(), &value.view(), None, scale)
-            .unwrap();
+            .expect("Operation failed");
     println!("Output shape: {:?}", output.shape());
     println!("First value: {:.6}", output[[0, 0, 0]]);
     println!();
 
     // Example 2: Causal Attention (for autoregressive models)
     println!("Example 2: Causal Attention");
-    let causal_output = causal_attention(&query.view(), &key.view(), &value.view(), scale).unwrap();
+    let causal_output = causal_attention(&query.view(), &key.view(), &value.view(), scale)
+        .expect("Operation failed");
     println!("Output shape: {:?}", causal_output.shape());
     println!("First value: {:.6}", causal_output[[0, 0, 0]]);
     println!();
@@ -47,7 +48,7 @@ fn main() {
         scale,
         blocksize,
     )
-    .unwrap();
+    .expect("Operation failed");
     println!("Output shape: {:?}", flash_output.shape());
     println!("First value: {:.6}", flash_output[[0, 0, 0]]);
     println!();
@@ -70,14 +71,15 @@ fn main() {
         &pattern.view(),
         scale,
     )
-    .unwrap();
+    .expect("Operation failed");
     println!("Output shape: {:?}", sparse_output.shape());
     println!("First value: {:.6}", sparse_output[[0, 0, 0]]);
     println!();
 
     // Example 5: Linear Attention (O(n) complexity)
     println!("Example 5: Linear Attention (O(n) complexity)");
-    let linear_output = linear_attention(&query.view(), &key.view(), &value.view(), scale).unwrap();
+    let linear_output = linear_attention(&query.view(), &key.view(), &value.view(), scale)
+        .expect("Operation failed");
     println!("Output shape: {:?}", linear_output.shape());
     println!("First value: {:.6}", linear_output[[0, 0, 0]]);
     println!();
@@ -114,7 +116,7 @@ fn main() {
         None,
         &config,
     )
-    .unwrap();
+    .expect("Operation failed");
     println!("Output shape: {:?}", mha_output.shape());
     println!("First value: {:.6}", mha_output[[0, 0, 0]]);
     println!();
@@ -122,7 +124,7 @@ fn main() {
     // Example 7: Rotary Position Embeddings (RoPE)
     println!("Example 7: Rotary Position Embeddings (RoPE)");
     let freq_base = 10000.0_f32;
-    let rope_output = rotary_embedding(&query.view(), freq_base).unwrap();
+    let rope_output = rotary_embedding(&query.view(), freq_base).expect("Operation failed");
     println!("Output shape: {:?}", rope_output.shape());
     println!("First value: {:.6}", rope_output[[0, 0, 0]]);
 

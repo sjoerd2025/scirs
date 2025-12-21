@@ -25,7 +25,7 @@ pub fn extract_statistical_features(
 
     // Calculate median
     let mut sorted = signal.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let median = if n % 2 == 0 {
         (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0
     } else {
@@ -36,12 +36,12 @@ pub fn extract_statistical_features(
     // Calculate min, max, range
     let min = *signal
         .iter()
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .min_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     let max = *signal
         .iter()
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.partial_cmp(b).expect("Operation failed"))
+        .expect("Operation failed");
     features.insert("min".to_string(), min);
     features.insert("max".to_string(), max);
     features.insert("range".to_string(), max - min);
@@ -154,17 +154,17 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
         let mut features = HashMap::new();
-        extract_statistical_features(&signal, &mut features).unwrap();
+        extract_statistical_features(&signal, &mut features).expect("Operation failed");
 
         // Check that basic statistics are calculated correctly
-        assert_eq!(*features.get("mean").unwrap(), 3.0);
-        assert_eq!(*features.get("median").unwrap(), 3.0);
-        assert_eq!(*features.get("min").unwrap(), 1.0);
-        assert_eq!(*features.get("max").unwrap(), 5.0);
-        assert_eq!(*features.get("range").unwrap(), 4.0);
+        assert_eq!(*features.get("mean").expect("Operation failed"), 3.0);
+        assert_eq!(*features.get("median").expect("Operation failed"), 3.0);
+        assert_eq!(*features.get("min").expect("Operation failed"), 1.0);
+        assert_eq!(*features.get("max").expect("Operation failed"), 5.0);
+        assert_eq!(*features.get("range").expect("Operation failed"), 4.0);
 
         // Variance should be (1-3)² + (2-3)² + (3-3)² + (4-3)² + (5-3)²) / 5 = 2
-        assert!((features.get("variance").unwrap() - 2.0).abs() < 1e-10);
-        assert!((features.get("std").unwrap() - 2.0_f64.sqrt()).abs() < 1e-10);
+        assert!((features.get("variance").expect("Operation failed") - 2.0).abs() < 1e-10);
+        assert!((features.get("std").expect("Operation failed") - 2.0_f64.sqrt()).abs() < 1e-10);
     }
 }

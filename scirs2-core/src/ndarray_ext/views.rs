@@ -32,7 +32,7 @@ pub enum Order {
 /// use scirs2_core::ndarray_ext::strided_view;
 ///
 /// let a = array![[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
-/// let view = strided_view(a.view(), &[2, 2]).unwrap();
+/// let view = strided_view(a.view(), &[2, 2]).expect("Operation failed");
 /// assert_eq!(view.shape(), &[2, 2]);
 /// assert_eq!(view[[0, 0]], 1);
 /// assert_eq!(view[[0, 1]], 3);
@@ -149,7 +149,7 @@ where
 /// use scirs2_core::ndarray_ext::broadcast_to;
 ///
 /// let a = array![1, 2, 3];
-/// let b = broadcast_to(a.view(), (3, 3)).unwrap();
+/// let b = broadcast_to(a.view(), (3, 3)).expect("Operation failed");
 /// assert_eq!(b.shape(), &[3, 3]);
 /// assert_eq!(b[[0, 0]], 1);
 /// assert_eq!(b[[0, 1]], 2);
@@ -217,7 +217,7 @@ mod tests {
     #[test]
     fn test_strided_view() {
         let a = array![[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
-        let view = strided_view(a.view(), &[2, 2]).unwrap();
+        let view = strided_view(a.view(), &[2, 2]).expect("Operation failed");
         assert_eq!(view.shape(), &[2, 2]);
         assert_eq!(view[[0, 0]], 1);
         assert_eq!(view[[0, 1]], 3);
@@ -248,7 +248,7 @@ mod tests {
     fn test_broadcast_to() {
         let a = array![1, 2, 3];
         let shape: Ix2 = crate::ndarray::Ix2::from((3, 3));
-        let b = broadcast_to(a.view(), shape).unwrap();
+        let b = broadcast_to(a.view(), shape).expect("Operation failed");
         assert_eq!(b.shape(), &[3, 3]);
         assert_eq!(b[[0, 0]], 1);
         assert_eq!(b[[0, 1]], 2);

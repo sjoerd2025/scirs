@@ -33,7 +33,7 @@
 //!
 //! // Vectorize documents
 //! let mut vectorizer = CountVectorizer::new(false);
-//! let doc_term_matrix = vectorizer.fit_transform(&documents).unwrap();
+//! let doc_term_matrix = vectorizer.fit_transform(&documents).expect("Operation failed");
 //!
 //! // Configure LDA
 //! let config = LdaConfig {
@@ -49,7 +49,7 @@
 //!
 //! // Train the model
 //! let mut lda = LatentDirichletAllocation::new(config);
-//! lda.fit(&doc_term_matrix).unwrap();
+//! lda.fit(&doc_term_matrix).expect("Operation failed");
 //!
 //! // Create vocabulary mapping for topic display
 //! let vocab_map: HashMap<usize, String> = (0..1000).map(|i| (i, format!("word_{}", i))).collect();
@@ -61,7 +61,7 @@
 //! }
 //!
 //! // Transform documents to topic space
-//! let doc_topics = lda.transform(&doc_term_matrix).unwrap();
+//! let doc_topics = lda.transform(&doc_term_matrix).expect("Operation failed");
 //! println!("Document-topic distribution: {:?}", doc_topics);
 //! ```
 //!
@@ -110,16 +110,16 @@
 //!
 //! # let documents = vec!["the quick brown fox", "jumped over the lazy dog"];
 //! # let mut vectorizer = CountVectorizer::new(false);
-//! # let doc_term_matrix = vectorizer.fit_transform(&documents).unwrap();
+//! # let doc_term_matrix = vectorizer.fit_transform(&documents).expect("Operation failed");
 //! # let mut lda = LatentDirichletAllocation::new(LdaConfig::default());
-//! # lda.fit(&doc_term_matrix).unwrap();
+//! # lda.fit(&doc_term_matrix).expect("Operation failed");
 //! # let vocab_map: HashMap<usize, String> = (0..100).map(|i| (i, format!("word_{}", i))).collect();
 //! // Get model information
 //! let topics = lda.get_topics(5, &vocab_map); // Top 5 words per topic
 //! println!("Number of topics: {}", topics.unwrap().len());
 //!
 //! // Get document-topic probabilities
-//! let doc_topic_probs = lda.transform(&doc_term_matrix).unwrap();
+//! let doc_topic_probs = lda.transform(&doc_term_matrix).expect("Operation failed");
 //! println!("Document-topic shape: {:?}", doc_topic_probs.shape());
 //! ```
 //!
@@ -375,7 +375,7 @@ impl LatentDirichletAllocation {
             ));
         }
 
-        let components = self.components.as_ref().unwrap();
+        let components = self.components.as_ref().expect("Operation failed");
         let mut topics = Vec::new();
 
         for (topic_idx, topic_dist) in components.axis_iter(Axis(0)).enumerate() {
@@ -386,7 +386,7 @@ impl LatentDirichletAllocation {
                 .map(|(idx, &score)| (idx, score))
                 .collect();
 
-            word_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+            word_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
             // Get top _words with their scores
             let top_words: Vec<(String, f64)> = word_scores
@@ -451,7 +451,10 @@ impl LatentDirichletAllocation {
                 "Components not initialized".to_string(),
             ));
         }
-        Ok(self.exp_dirichlet_component.as_ref().unwrap())
+        Ok(self
+            .exp_dirichlet_component
+            .as_ref()
+            .expect("Operation failed"))
     }
 
     fn fit_batch(
@@ -565,7 +568,7 @@ impl LatentDirichletAllocation {
                     let mut gamma = Array1::<f64>::from_elem(self.config.ntopics, doc_topic_prior);
 
                     // Update document distribution
-                    let components = self.components.as_ref().unwrap();
+                    let components = self.components.as_ref().expect("Operation failed");
                     let exp_topic_word_distr = components.map(|x| x.exp());
                     self.update_doc_distribution(
                         &doc.to_owned(),
@@ -847,10 +850,12 @@ mod tests {
                 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, // Doc 4
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut lda = LatentDirichletAllocation::with_ntopics(2);
-        let doc_topics = lda.fit_transform(&doc_term_matrix).unwrap();
+        let doc_topics = lda
+            .fit_transform(&doc_term_matrix)
+            .expect("Operation failed");
 
         assert_eq!(doc_topics.nrows(), 4);
         assert_eq!(doc_topics.ncols(), 2);
@@ -868,7 +873,7 @@ mod tests {
             (4, 3),
             vec![2.0, 1.0, 0.0, 0.0, 2.0, 1.0, 1.0, 0.0, 2.0, 2.0, 1.0, 1.0],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut vocabulary = HashMap::new();
         vocabulary.insert(0, "word1".to_string());
@@ -876,9 +881,9 @@ mod tests {
         vocabulary.insert(2, "word3".to_string());
 
         let mut lda = LatentDirichletAllocation::with_ntopics(2);
-        lda.fit(&doc_term_matrix).unwrap();
+        lda.fit(&doc_term_matrix).expect("Operation failed");
 
-        let topics = lda.get_topics(3, &vocabulary).unwrap();
+        let topics = lda.get_topics(3, &vocabulary).expect("Operation failed");
         assert_eq!(topics.len(), 2);
 
         for topic in &topics {

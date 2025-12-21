@@ -26,16 +26,16 @@ use std::fmt::Debug;
 ///     [0.1, 0.3, 0.3],  // First pair, second embedding (similar)
 ///     [0.5, 0.5, 0.5],  // Second pair, first embedding
 ///     [0.9, 0.8, 0.7],  // Second pair, second embedding (dissimilar)
-/// ]).into_shape((2, 2, 3)).unwrap().into_dyn();
+/// ]).into_shape((2, 2, 3)).expect("Operation failed").into_dyn();
 /// // Labels: 1 for similar pairs, 0 for dissimilar
 /// let labels = arr2(&[
 ///     [1.0],  // First pair is similar
 ///     [0.0],  // Second pair is dissimilar
 /// ]).into_dyn();
 /// // Forward pass to calculate loss
-/// let loss = contrastive.forward(&embeddings, &labels).unwrap();
+/// let loss = contrastive.forward(&embeddings, &labels).expect("Operation failed");
 /// // Backward pass to calculate gradients
-/// let gradients = contrastive.backward(&embeddings, &labels).unwrap();
+/// let gradients = contrastive.backward(&embeddings, &labels).expect("Operation failed");
 #[derive(Debug, Clone, Copy)]
 pub struct ContrastiveLoss {
     /// Margin for dissimilar pairs
@@ -156,22 +156,32 @@ impl<F: Float + Debug> Loss<F> for ContrastiveLoss {
             let distance = distance_sq.sqrt();
 
             // To avoid division by zero
-            let distance_safe = distance.max(F::from(1e-10).unwrap());
+            let distance_safe =
+                distance.max(F::from(1e-10).expect("Failed to convert constant to float"));
 
             // Calculate gradients for this pair
             if y > F::zero() {
                 // Similar pair: d(loss)/d(x1) = 2 * (x1 - x2) / n
                 // Similar pair: d(loss)/d(x2) = 2 * (x2 - x1) / n
                 for j in 0..embedding_dim {
-                    gradients[[i, 0, j]] = F::from(2.0).unwrap() * (x1[j] - x2[j]) / n;
-                    gradients[[i, 1, j]] = F::from(2.0).unwrap() * (x2[j] - x1[j]) / n;
+                    gradients[[i, 0, j]] = F::from(2.0)
+                        .expect("Failed to convert constant to float")
+                        * (x1[j] - x2[j])
+                        / n;
+                    gradients[[i, 1, j]] = F::from(2.0)
+                        .expect("Failed to convert constant to float")
+                        * (x2[j] - x1[j])
+                        / n;
                 }
             } else {
                 // Dissimilar pair: only contribute to gradient if within margin
                 if distance < margin {
                     // d(loss)/d(x1) = -2 * (margin - d) * (x1 - x2) / d / n
                     // d(loss)/d(x2) = -2 * (margin - d) * (x2 - x1) / d / n
-                    let factor = F::from(-2.0).unwrap() * (margin - distance) / distance_safe / n;
+                    let factor = F::from(-2.0).expect("Failed to convert constant to float")
+                        * (margin - distance)
+                        / distance_safe
+                        / n;
                     for j in 0..embedding_dim {
                         gradients[[i, 0, j]] = factor * (x1[j] - x2[j]);
                         gradients[[i, 1, j]] = factor * (x2[j] - x1[j]);

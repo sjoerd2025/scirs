@@ -26,12 +26,13 @@ fn main() {
 
         // Time standard FFT
         let start = Instant::now();
-        let _result_std = fftn(&array.to_owned().into_dyn(), None, None, None, None, None).unwrap();
+        let _result_std = fftn(&array.to_owned().into_dyn(), None, None, None, None, None)
+            .expect("Operation failed");
         let time_standard = start.elapsed();
 
         // Time optimized FFT
         let start = Instant::now();
-        let _result_opt = fftn_optimized(&array.view(), None, None).unwrap();
+        let _result_opt = fftn_optimized(&array.view(), None, None).expect("Operation failed");
         let time_optimized = start.elapsed();
 
         // Calculate speedup
@@ -85,7 +86,8 @@ fn main() {
         println!("\nAxis order: {axes:?}");
 
         let start = Instant::now();
-        let _result = fftn_optimized(&asymmetric.view(), None, Some(axes)).unwrap();
+        let _result =
+            fftn_optimized(&asymmetric.view(), None, Some(axes)).expect("Operation failed");
         let duration = start.elapsed();
 
         println!("  Time: {duration:?}");
@@ -99,7 +101,7 @@ fn main() {
 
     // This will use optimized chunking internally
     let start = Instant::now();
-    let _result = fftn_optimized(&chunk_test.view(), None, None).unwrap();
+    let _result = fftn_optimized(&chunk_test.view(), None, None).expect("Operation failed");
     let duration = start.elapsed();
 
     println!("FFT with optimized chunking: {duration:?}");
@@ -126,8 +128,9 @@ fn main() {
         None,
         None,
     )
-    .unwrap();
-    let result_optimized = fftn_optimized(&test_array.view(), None, None).unwrap();
+    .expect("Operation failed");
+    let result_optimized =
+        fftn_optimized(&test_array.view(), None, None).expect("Operation failed");
 
     // Compare results
     let max_diff = result_standard

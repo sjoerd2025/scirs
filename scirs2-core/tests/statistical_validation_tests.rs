@@ -13,7 +13,7 @@ use serde_json::json;
 #[allow(dead_code)]
 fn test_statistical_constraint_mean() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints for mean
     let stats_constraints = StatisticalConstraints::new().with_mean_range(45.0, 55.0);
@@ -27,7 +27,9 @@ fn test_statistical_constraint_mean() {
         "measurements": [45.0, 50.0, 55.0, 48.0, 52.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(result.is_valid(), "Valid mean should pass validation");
 }
 
@@ -36,7 +38,7 @@ fn test_statistical_constraint_mean() {
 #[allow(dead_code)]
 fn test_statistical_constraint_mean_too_low() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints for mean
     let stats_constraints = StatisticalConstraints::new().with_mean_range(45.0, 55.0);
@@ -50,7 +52,9 @@ fn test_statistical_constraint_mean_too_low() {
         "measurements": [10.0, 20.0, 30.0, 15.0, 25.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid(), "Low mean should fail validation");
 
     let errors = result.errors();
@@ -64,7 +68,7 @@ fn test_statistical_constraint_mean_too_low() {
 #[allow(dead_code)]
 fn test_statistical_constraint_mean_too_high() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints for mean
     let stats_constraints = StatisticalConstraints::new().with_mean_range(45.0, 55.0);
@@ -78,7 +82,9 @@ fn test_statistical_constraint_mean_too_high() {
         "measurements": [70.0, 80.0, 90.0, 75.0, 85.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(!result.is_valid(), "High mean should fail validation");
 
     let errors = result.errors();
@@ -92,7 +98,7 @@ fn test_statistical_constraint_mean_too_high() {
 #[allow(dead_code)]
 fn test_statistical_constraint_std_dev() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints for standard deviation
     let stats_constraints = StatisticalConstraints::new().with_std_range(5.0, 15.0);
@@ -106,7 +112,9 @@ fn test_statistical_constraint_std_dev() {
         "measurements": [45.0, 50.0, 55.0, 40.0, 60.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         result.is_valid(),
         "Valid standard deviation should pass validation"
@@ -118,7 +126,7 @@ fn test_statistical_constraint_std_dev() {
 #[allow(dead_code)]
 fn test_statistical_constraint_std_too_low() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints for standard deviation
     let stats_constraints = StatisticalConstraints::new().with_std_range(5.0, 15.0);
@@ -132,7 +140,9 @@ fn test_statistical_constraint_std_too_low() {
         "measurements": [50.0, 50.1, 49.9, 50.0, 50.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "Low standard deviation should fail validation"
@@ -149,7 +159,7 @@ fn test_statistical_constraint_std_too_low() {
 #[allow(dead_code)]
 fn test_statistical_constraint_std_too_high() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints for standard deviation
     let stats_constraints = StatisticalConstraints::new().with_std_range(5.0, 15.0);
@@ -163,7 +173,9 @@ fn test_statistical_constraint_std_too_high() {
         "measurements": [10.0, 90.0, 5.0, 95.0, 50.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "High standard deviation should fail validation"
@@ -180,7 +192,7 @@ fn test_statistical_constraint_std_too_high() {
 #[allow(dead_code)]
 fn test_statistical_constraint_non_numeric() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints
     let stats_constraints = StatisticalConstraints::new().with_mean_range(45.0, 55.0);
@@ -194,7 +206,9 @@ fn test_statistical_constraint_non_numeric() {
         "measurements": [45.0, "not a number", 55.0, true, null]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "Non-numeric values should fail validation"
@@ -212,7 +226,7 @@ fn test_statistical_constraint_non_numeric() {
 #[allow(dead_code)]
 fn test_statistical_constraint_empty_array() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints
     let stats_constraints = StatisticalConstraints::new().with_mean_range(45.0, 55.0);
@@ -226,7 +240,9 @@ fn test_statistical_constraint_empty_array() {
         "measurements": []
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         !result.is_valid(),
         "Empty array should fail statistical validation"
@@ -243,7 +259,7 @@ fn test_statistical_constraint_empty_array() {
 #[allow(dead_code)]
 fn test_statistical_constraint_integer_values() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create statistical constraints
     let stats_constraints = StatisticalConstraints::new().with_mean_range(45.0, 55.0);
@@ -257,7 +273,9 @@ fn test_statistical_constraint_integer_values() {
         "measurements": [45, 50, 55, 48, 52]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
     assert!(
         result.is_valid(),
         "Integer values should be accepted and converted"
@@ -269,7 +287,7 @@ fn test_statistical_constraint_integer_values() {
 #[allow(dead_code)]
 fn test_statistical_constraint_complex() {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Test: operation failed");
 
     // Create complex statistical constraints
     let stats_constraints = StatisticalConstraints::new()
@@ -287,7 +305,9 @@ fn test_statistical_constraint_complex() {
         "measurements": [35.0, 45.0, 50.0, 55.0, 65.0]
     });
 
-    let result = validator.validate(&data, &schema).unwrap();
+    let result = validator
+        .validate(&data, &schema)
+        .expect("Test: operation failed");
 
     // Should be valid for mean and std, but get warning about distribution
     if !result.is_valid() {

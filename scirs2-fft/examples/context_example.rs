@@ -33,11 +33,11 @@ fn main() {
         );
 
         let start = Instant::now();
-        let spectrum = fft(&signal, None).unwrap();
+        let spectrum = fft(&signal, None).expect("Operation failed");
         let duration1 = start.elapsed();
 
         let start = Instant::now();
-        let _ = fft(&signal, None).unwrap();
+        let _ = fft(&signal, None).expect("Operation failed");
         let duration2 = start.elapsed();
 
         println!("  First FFT: {duration1:?}");
@@ -45,7 +45,7 @@ fn main() {
 
         spectrum
     })
-    .unwrap();
+    .expect("Operation failed");
 
     println!(
         "  Cache enabled after context: {}",
@@ -57,9 +57,9 @@ fn main() {
     println!("Test 2: With specific backend");
     let _result2 = with_backend("rustfft", || {
         println!("  Backend inside context: {}", get_backend_name());
-        fft(&signal, None).unwrap()
+        fft(&signal, None).expect("Operation failed")
     })
-    .unwrap();
+    .expect("Operation failed");
     println!("  Backend after context: {}", get_backend_name());
     println!();
 
@@ -71,7 +71,7 @@ fn main() {
         println!("  Would use 2 workers if fully implemented");
         fft(&signal, None)
     })
-    .unwrap();
+    .expect("Operation failed");
     println!();
 
     // Test 4: Combined settings using builder
@@ -86,7 +86,7 @@ fn main() {
             println!("  Cache enabled: {}", get_global_cache().is_enabled());
 
             let start = Instant::now();
-            let spectrum = fft(&signal, None).unwrap();
+            let spectrum = fft(&signal, None).expect("Operation failed");
             let duration = start.elapsed();
 
             println!("  FFT duration: {duration:?}");
@@ -94,7 +94,7 @@ fn main() {
             spectrum
         },
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("  Settings restored after context");
     println!("  Backend: {}", get_backend_name());
@@ -113,22 +113,23 @@ fn main() {
                 get_global_cache().is_enabled()
             );
         })
-        .unwrap();
+        .expect("Operation failed");
 
         println!(
             "  Back to outer context - Cache: {}",
             get_global_cache().is_enabled()
         );
     })
-    .unwrap();
+    .expect("Operation failed");
 
     println!();
 
     // Test 6: Verify FFT functionality within contexts
     println!("Test 6: FFT functionality check");
-    let original_spectrum = fft(&signal, None).unwrap();
+    let original_spectrum = fft(&signal, None).expect("Operation failed");
 
-    let context_spectrum = without_cache(|| fft(&signal, None).unwrap()).unwrap();
+    let context_spectrum =
+        without_cache(|| fft(&signal, None).expect("Operation failed")).expect("Operation failed");
 
     // Check if results are the same
     let results_match = original_spectrum

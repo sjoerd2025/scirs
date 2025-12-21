@@ -40,7 +40,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-sparse = "0.1.0-rc.3"
+//! scirs2-sparse = "0.1.0-rc.4"
 //! ```
 //!
 //! ```rust
@@ -50,10 +50,10 @@
 //! let rows = vec![0, 0, 1, 2, 2];
 //! let cols = vec![0, 2, 2, 0, 1];
 //! let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-//! let sparse = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+//! let sparse = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.3 (October 03, 2025)
+//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
 //!
 //! ## Matrix vs. Array API
 //!
@@ -83,7 +83,7 @@
 //! let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! let shape = (3, 3);
 //!
-//! let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
+//! let matrix = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
 //! ```
 //!
 //! ### Array API (Recommended)
@@ -98,7 +98,7 @@
 //! let shape = (3, 3);
 //!
 //! // From triplets (COO-like construction)
-//! let array = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+//! let array = CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 //!
 //! // Or directly from CSR components
 //! // let array = CsrArray::new(...);
@@ -480,7 +480,8 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let array = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let array =
+            CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         assert_eq!(array.shape(), (3, 3));
         assert_eq!(array.nnz(), 5);
@@ -494,7 +495,8 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let array = CooArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let array =
+            CooArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         assert_eq!(array.shape(), (3, 3));
         assert_eq!(array.nnz(), 5);
@@ -508,7 +510,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let array = DokArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let array = DokArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
 
         assert_eq!(array.shape(), (3, 3));
         assert_eq!(array.nnz(), 5);
@@ -516,15 +518,15 @@ mod tests {
 
         // Test setting and getting values
         let mut array = DokArray::<f64>::new((2, 2));
-        array.set(0, 0, 1.0).unwrap();
-        array.set(1, 1, 2.0).unwrap();
+        array.set(0, 0, 1.0).expect("Operation failed");
+        array.set(1, 1, 2.0).expect("Operation failed");
 
         assert_eq!(array.get(0, 0), 1.0);
         assert_eq!(array.get(0, 1), 0.0);
         assert_eq!(array.get(1, 1), 2.0);
 
         // Test removing zeros
-        array.set(0, 0, 0.0).unwrap();
+        array.set(0, 0, 0.0).expect("Operation failed");
         assert_eq!(array.nnz(), 1);
     }
 
@@ -535,7 +537,7 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let shape = (3, 3);
 
-        let array = LilArray::from_triplets(&rows, &cols, &data, shape).unwrap();
+        let array = LilArray::from_triplets(&rows, &cols, &data, shape).expect("Operation failed");
 
         assert_eq!(array.shape(), (3, 3));
         assert_eq!(array.nnz(), 5);
@@ -543,8 +545,8 @@ mod tests {
 
         // Test setting and getting values
         let mut array = LilArray::<f64>::new((2, 2));
-        array.set(0, 0, 1.0).unwrap();
-        array.set(1, 1, 2.0).unwrap();
+        array.set(0, 0, 1.0).expect("Operation failed");
+        array.set(1, 1, 2.0).expect("Operation failed");
 
         assert_eq!(array.get(0, 0), 1.0);
         assert_eq!(array.get(0, 1), 0.0);
@@ -554,7 +556,7 @@ mod tests {
         assert!(array.has_sorted_indices());
 
         // Test removing zeros
-        array.set(0, 0, 0.0).unwrap();
+        array.set(0, 0, 0.0).expect("Operation failed");
         assert_eq!(array.nnz(), 1);
     }
 
@@ -570,7 +572,7 @@ mod tests {
         let offsets = vec![0, 1]; // Main diagonal and k=1
         let shape = (3, 3);
 
-        let array = DiaArray::new(data, offsets, shape).unwrap();
+        let array = DiaArray::new(data, offsets, shape).expect("Operation failed");
 
         assert_eq!(array.shape(), (3, 3));
         assert_eq!(array.nnz(), 5); // 3 on main diagonal, 2 on upper diagonal
@@ -589,7 +591,8 @@ mod tests {
         let cols = vec![0, 1, 1, 2, 2];
         let data_vec = vec![1.0, 4.0, 2.0, 5.0, 3.0];
 
-        let array2 = DiaArray::from_triplets(&rows, &cols, &data_vec, shape).unwrap();
+        let array2 =
+            DiaArray::from_triplets(&rows, &cols, &data_vec, shape).expect("Operation failed");
 
         // Should have same values
         assert_eq!(array2.get(0, 0), 1.0);
@@ -599,7 +602,7 @@ mod tests {
         assert_eq!(array2.get(1, 2), 5.0);
 
         // Test conversion to other formats
-        let csr = array.to_csr().unwrap();
+        let csr = array.to_csr().expect("Operation failed");
         assert_eq!(csr.nnz(), 5);
         assert_eq!(csr.get(0, 0), 1.0);
         assert_eq!(csr.get(0, 1), 4.0);
@@ -613,10 +616,11 @@ mod tests {
         let shape = (3, 3);
 
         // Create a COO array
-        let coo = CooArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let coo =
+            CooArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         // Convert to CSR
-        let csr = coo.to_csr().unwrap();
+        let csr = coo.to_csr().expect("Operation failed");
 
         // Check values are preserved
         let coo_dense = coo.to_array();
@@ -637,12 +641,14 @@ mod tests {
         let shape = (3, 3);
 
         // Create arrays in different formats
-        let coo = CooArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
-        let csr = CsrArray::from_triplets(&rows, &cols, &data, shape, false).unwrap();
+        let coo =
+            CooArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
+        let csr =
+            CsrArray::from_triplets(&rows, &cols, &data, shape, false).expect("Operation failed");
 
         // Compute dot product (matrix multiplication)
-        let coo_result = coo.dot(&coo).unwrap();
-        let csr_result = csr.dot(&csr).unwrap();
+        let coo_result = coo.dot(&coo).expect("Operation failed");
+        let csr_result = csr.dot(&csr).expect("Operation failed");
 
         // Check results match
         let coo_dense = coo_result.to_array();
@@ -662,7 +668,8 @@ mod tests {
         let indices = vec![0, 0, 1, 2, 0, 1, 2];
         let indptr = vec![0, 1, 3, 7];
 
-        let sym_matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+        let sym_matrix =
+            SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
         let sym_array = SymCsrArray::new(sym_matrix);
 
         assert_eq!(sym_array.shape(), (3, 3));
@@ -676,7 +683,7 @@ mod tests {
         assert_eq!(SparseArray::get(&sym_array, 2, 1), 3.0); // Symmetric element
 
         // Convert to standard CSR
-        let csr = SymSparseArray::to_csr(&sym_array).unwrap();
+        let csr = SymSparseArray::to_csr(&sym_array).expect("Operation failed");
         assert_eq!(csr.nnz(), 10); // Full matrix with symmetric elements
     }
 
@@ -687,7 +694,7 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 2];
         let cols = vec![0, 0, 1, 1, 2];
 
-        let sym_matrix = SymCooMatrix::new(data, rows, cols, (3, 3)).unwrap();
+        let sym_matrix = SymCooMatrix::new(data, rows, cols, (3, 3)).expect("Operation failed");
         let sym_array = SymCooArray::new(sym_matrix);
 
         assert_eq!(sym_array.shape(), (3, 3));
@@ -706,7 +713,8 @@ mod tests {
         let cols2 = vec![0, 1, 1, 2, 2, 0, 2];
         let data2 = vec![2.0, 1.5, 2.0, 3.5, 1.0, 0.5, 0.0];
 
-        let sym_array2 = SymCooArray::from_triplets(&rows2, &cols2, &data2, (3, 3), true).unwrap();
+        let sym_array2 = SymCooArray::from_triplets(&rows2, &cols2, &data2, (3, 3), true)
+            .expect("Operation failed");
 
         // Should average the asymmetric values
         assert_eq!(SparseArray::get(&sym_array2, 0, 1), 1.0); // Average of 1.5 and 0.5
@@ -717,7 +725,7 @@ mod tests {
     #[test]
     fn test_construct_sym_utils() {
         // Test creating an identity matrix
-        let eye = construct_sym::eye_sym_array::<f64>(3, "csr").unwrap();
+        let eye = construct_sym::eye_sym_array::<f64>(3, "csr").expect("Operation failed");
 
         assert_eq!(eye.shape(), (3, 3));
         assert_eq!(SparseArray::get(&*eye, 0, 0), 1.0);
@@ -729,7 +737,8 @@ mod tests {
         let diag = vec![2.0, 2.0, 2.0];
         let offdiag = vec![1.0, 1.0];
 
-        let tri = construct_sym::tridiagonal_sym_array(&diag, &offdiag, "coo").unwrap();
+        let tri =
+            construct_sym::tridiagonal_sym_array(&diag, &offdiag, "coo").expect("Operation failed");
 
         assert_eq!(tri.shape(), (3, 3));
         assert_eq!(SparseArray::get(&*tri, 0, 0), 2.0); // Main diagonal
@@ -747,7 +756,7 @@ mod tests {
             vec![0.5, 0.5, 0.5],           // Second off-diagonal
         ];
 
-        let band = construct_sym::banded_sym_array(&diagonals, 5, "csr").unwrap();
+        let band = construct_sym::banded_sym_array(&diagonals, 5, "csr").expect("Operation failed");
 
         assert_eq!(band.shape(), (5, 5));
         assert_eq!(SparseArray::get(&*band, 0, 0), 2.0);
@@ -764,10 +773,11 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 2];
         let cols = vec![0, 0, 1, 1, 2];
 
-        let sym_coo = SymCooArray::from_triplets(&rows, &cols, &data, (3, 3), true).unwrap();
+        let sym_coo = SymCooArray::from_triplets(&rows, &cols, &data, (3, 3), true)
+            .expect("Operation failed");
 
         // Convert to symmetric CSR
-        let sym_csr = sym_coo.to_sym_csr().unwrap();
+        let sym_csr = sym_coo.to_sym_csr().expect("Operation failed");
 
         // Check values are preserved
         for i in 0..3 {
@@ -780,8 +790,8 @@ mod tests {
         }
 
         // Convert to standard formats
-        let csr = SymSparseArray::to_csr(&sym_coo).unwrap();
-        let coo = SymSparseArray::to_coo(&sym_csr).unwrap();
+        let csr = SymSparseArray::to_csr(&sym_coo).expect("Operation failed");
+        let coo = SymSparseArray::to_coo(&sym_csr).expect("Operation failed");
 
         // Check full symmetric matrix in standard formats
         assert_eq!(csr.nnz(), 7); // Accounts for symmetric pairs

@@ -28,7 +28,7 @@ use crate::validation::validate_decomposition;
 /// use scirs2_linalg::matrix_functions::softmax;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let soft_a = softmax(&a.view(), Some(1)).unwrap();
+/// let soft_a = softmax(&a.view(), Some(1)).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn softmax<F>(a: &ArrayView2<F>, axis: Option<usize>) -> LinalgResult<Array2<F>>
@@ -155,7 +155,7 @@ where
 /// use scirs2_linalg::matrix_functions::sigmoid;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
-/// let sig_a = sigmoid(&a.view()).unwrap();
+/// let sig_a = sigmoid(&a.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn sigmoid<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
@@ -209,7 +209,7 @@ where
 /// use scirs2_linalg::matrix_functions::signm;
 ///
 /// let a = array![[2.0_f64, 0.0], [0.0, -3.0]];
-/// let sign_a = signm(&a.view()).unwrap();
+/// let sign_a = signm(&a.view()).expect("Operation failed");
 /// // Should be approximately [[1.0, 0.0], [0.0, -1.0]]
 /// ```
 #[allow(dead_code)]

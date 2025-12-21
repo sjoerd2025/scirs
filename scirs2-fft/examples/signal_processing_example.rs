@@ -53,7 +53,7 @@ fn main() {
     println!("\n1. Convolution Example");
     let kernel = vec![0.25, 0.5, 0.25]; // Simple smoothing kernel
     let start = Instant::now();
-    let smoothed = convolve(&signal, &kernel).unwrap();
+    let smoothed = convolve(&signal, &kernel).expect("Operation failed");
     let duration = start.elapsed();
     println!("  Convolution completed in: {:?}", duration);
     println!("  Input length: {}, Kernel length: {}, Output length: {}",
@@ -63,7 +63,7 @@ fn main() {
     println!("\n2. Cross-correlation Example");
     let pattern = &signal[100..150]; // Extract a pattern from the signal
     let start = Instant::now();
-    let correlation = cross_correlate(&signal, pattern).unwrap();
+    let correlation = cross_correlate(&signal, pattern).expect("Operation failed");
     let duration = start.elapsed();
     println!("  Cross-correlation completed in: {:?}", duration);
 
@@ -71,9 +71,9 @@ fn main() {
     let best_match_index = correlation
         .iter()
         .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+        .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
         .map(|(index_)| index)
-        .unwrap();
+        .expect("Operation failed");
 
     println!("  Best match found at position: {}", best_match_index);
 
@@ -92,7 +92,7 @@ fn main() {
     };
 
     let start = Instant::now();
-    let filter_coeffs = design_fir_filter(&spec).unwrap();
+    let filter_coeffs = design_fir_filter(&spec).expect("Operation failed");
     let duration = start.elapsed();
     println!("  Filter designed in: {:?}", duration);
     println!("  Number of coefficients: {}", filter_coeffs.len());
@@ -100,7 +100,7 @@ fn main() {
     // Apply FIR Filter
     println!("\n4. FIR Filtering Example");
     let start = Instant::now();
-    let filtered_signal = fir_filter(&signal, &filter_coeffs).unwrap();
+    let filtered_signal = fir_filter(&signal, &filter_coeffs).expect("Operation failed");
     let duration = start.elapsed();
     println!("  FIR filtering completed in: {:?}", duration);
     println!("  Filtered signal length: {}", filtered_signal.len());
@@ -122,7 +122,7 @@ fn main() {
     }
 
     let start = Instant::now();
-    let freq_filtered = frequency_filter(&signal, &filter_response).unwrap();
+    let freq_filtered = frequency_filter(&signal, &filter_response).expect("Operation failed");
     let duration = start.elapsed();
     println!("  Frequency filtering completed in: {:?}", duration);
     println!("  Bandpass filter: {} Hz to {} Hz", lower_freq, upper_freq);
@@ -131,10 +131,10 @@ fn main() {
     println!("\n6. Spectrum Analysis");
 
     // Compute FFT of original signal
-    let original_fft = fft(&signal, None).unwrap();
+    let original_fft = fft(&signal, None).expect("Operation failed");
 
     // Compute FFT of filtered signal
-    let filtered_fft = fft(&filtered_signal, None).unwrap();
+    let filtered_fft = fft(&filtered_signal, None).expect("Operation failed");
 
     // Find peak frequencies
     let mut freq_magnitude: Vec<(f64, f64)> = Vec::new();
@@ -145,7 +145,7 @@ fn main() {
     }
 
     // Find the top 3 peaks
-    freq_magnitude.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    freq_magnitude.sort_by(|a, b| b.1.partial_cmp(&a.1).expect("Operation failed"));
 
     println!("\n  Top frequency components in original signal:");
     for i in 0..3.min(freq_magnitude.len()) {

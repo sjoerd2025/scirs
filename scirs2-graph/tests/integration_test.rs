@@ -11,10 +11,10 @@ fn test_basic_graph_operations() {
     let mut graph = create_graph::<i32, f64>();
 
     // Add nodes and edges
-    graph.add_edge(1, 2, 1.0).unwrap();
-    graph.add_edge(2, 3, 2.0).unwrap();
-    graph.add_edge(3, 4, 1.5).unwrap();
-    graph.add_edge(1, 4, 3.0).unwrap();
+    graph.add_edge(1, 2, 1.0).expect("Operation failed");
+    graph.add_edge(2, 3, 2.0).expect("Operation failed");
+    graph.add_edge(3, 4, 1.5).expect("Operation failed");
+    graph.add_edge(1, 4, 3.0).expect("Operation failed");
 
     assert_eq!(graph.node_count(), 4);
     assert_eq!(graph.edge_count(), 4);
@@ -25,9 +25,9 @@ fn test_basic_graph_operations() {
 fn test_shortest_path_algorithm() {
     let mut graph = create_graph::<i32, f64>();
 
-    graph.add_edge(1, 2, 1.0).unwrap();
-    graph.add_edge(2, 3, 2.0).unwrap();
-    graph.add_edge(1, 3, 5.0).unwrap();
+    graph.add_edge(1, 2, 1.0).expect("Operation failed");
+    graph.add_edge(2, 3, 2.0).expect("Operation failed");
+    graph.add_edge(1, 3, 5.0).expect("Operation failed");
 
     if let Ok(Some(path)) = dijkstra_path(&graph, &1, &3) {
         // Should find path 1->2->3 with total weight 3.0, not direct path 1->3 with weight 5.0
@@ -44,9 +44,9 @@ fn test_connectivity_algorithms() {
     let mut graph = create_graph::<i32, f64>();
 
     // Create two disconnected components
-    graph.add_edge(1, 2, 1.0).unwrap();
-    graph.add_edge(2, 3, 1.0).unwrap();
-    graph.add_edge(4, 5, 1.0).unwrap();
+    graph.add_edge(1, 2, 1.0).expect("Operation failed");
+    graph.add_edge(2, 3, 1.0).expect("Operation failed");
+    graph.add_edge(4, 5, 1.0).expect("Operation failed");
 
     let components = connected_components(&graph);
     assert_eq!(components.len(), 2);
@@ -57,12 +57,12 @@ fn test_connectivity_algorithms() {
 fn test_minimum_spanning_tree() {
     let mut graph = create_graph::<i32, f64>();
 
-    graph.add_edge(1, 2, 1.0).unwrap();
-    graph.add_edge(2, 3, 2.0).unwrap();
-    graph.add_edge(1, 3, 3.0).unwrap();
-    graph.add_edge(3, 4, 1.0).unwrap();
+    graph.add_edge(1, 2, 1.0).expect("Operation failed");
+    graph.add_edge(2, 3, 2.0).expect("Operation failed");
+    graph.add_edge(1, 3, 3.0).expect("Operation failed");
+    graph.add_edge(3, 4, 1.0).expect("Operation failed");
 
-    let mst = minimum_spanning_tree(&graph).unwrap();
+    let mst = minimum_spanning_tree(&graph).expect("Operation failed");
 
     // MST should have n-1 edges
     assert_eq!(mst.len(), 3);
@@ -79,9 +79,9 @@ fn test_pagerank() {
     use scirs2_graph::generators::create_digraph;
     let mut digraph = create_digraph::<i32, f64>();
 
-    digraph.add_edge(1, 2, 1.0).unwrap();
-    digraph.add_edge(2, 3, 1.0).unwrap();
-    digraph.add_edge(3, 1, 1.0).unwrap();
+    digraph.add_edge(1, 2, 1.0).expect("Operation failed");
+    digraph.add_edge(2, 3, 1.0).expect("Operation failed");
+    digraph.add_edge(3, 1, 1.0).expect("Operation failed");
 
     let pagerank_scores = pagerank(&digraph, 0.85, 1e-6, 100);
 

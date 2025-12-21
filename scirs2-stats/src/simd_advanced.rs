@@ -370,15 +370,17 @@ where
         let final_max = remainder_max;
 
         // Compute final statistics
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let mean = final_sum / n_f;
 
         // Use numerically stable formulas
         let m2 = final_sum_sq / n_f - mean * mean;
-        let m3 = final_sum_cube / n_f - F::from(3).unwrap() * mean * m2 - mean * mean * mean;
+        let m3 = final_sum_cube / n_f
+            - F::from(3).expect("Failed to convert constant to float") * mean * m2
+            - mean * mean * mean;
         let m4 = final_sum_quad / n_f
-            - F::from(4).unwrap() * mean * m3
-            - F::from(6).unwrap() * mean * mean * m2
+            - F::from(4).expect("Failed to convert constant to float") * mean * m3
+            - F::from(6).expect("Failed to convert constant to float") * mean * mean * m2
             - mean * mean * mean * mean;
 
         let variance = m2;
@@ -389,7 +391,7 @@ where
             F::zero()
         };
         let kurtosis = if m2 > F::zero() {
-            m4 / (m2 * m2) - F::from(3).unwrap()
+            m4 / (m2 * m2) - F::from(3).expect("Failed to convert constant to float")
         } else {
             F::zero()
         };
@@ -499,13 +501,15 @@ where
         }
 
         // Compute final statistics (same as multi-vector)
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let mean = sum_acc / n_f;
         let m2 = sum_sq_acc / n_f - mean * mean;
-        let m3 = sum_cube_acc / n_f - F::from(3).unwrap() * mean * m2 - mean * mean * mean;
+        let m3 = sum_cube_acc / n_f
+            - F::from(3).expect("Failed to convert constant to float") * mean * m2
+            - mean * mean * mean;
         let m4 = sum_quad_acc / n_f
-            - F::from(4).unwrap() * mean * m3
-            - F::from(6).unwrap() * mean * mean * m2
+            - F::from(4).expect("Failed to convert constant to float") * mean * m3
+            - F::from(6).expect("Failed to convert constant to float") * mean * mean * m2
             - mean * mean * mean * mean;
 
         let variance = m2;
@@ -516,7 +520,7 @@ where
             F::zero()
         };
         let kurtosis = if m2 > F::zero() {
-            m4 / (m2 * m2) - F::from(3).unwrap()
+            m4 / (m2 * m2) - F::from(3).expect("Failed to convert constant to float")
         } else {
             F::zero()
         };
@@ -599,13 +603,15 @@ where
         }
 
         // Compute final statistics
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let mean = sum_acc / n_f;
         let m2 = sum_sq_acc / n_f - mean * mean;
-        let m3 = sum_cube_acc / n_f - F::from(3).unwrap() * mean * m2 - mean * mean * mean;
+        let m3 = sum_cube_acc / n_f
+            - F::from(3).expect("Failed to convert constant to float") * mean * m2
+            - mean * mean * mean;
         let m4 = sum_quad_acc / n_f
-            - F::from(4).unwrap() * mean * m3
-            - F::from(6).unwrap() * mean * mean * m2
+            - F::from(4).expect("Failed to convert constant to float") * mean * m3
+            - F::from(6).expect("Failed to convert constant to float") * mean * mean * m2
             - mean * mean * mean * mean;
 
         let variance = m2;
@@ -616,7 +622,7 @@ where
             F::zero()
         };
         let kurtosis = if m2 > F::zero() {
-            m4 / (m2 * m2) - F::from(3).unwrap()
+            m4 / (m2 * m2) - F::from(3).expect("Failed to convert constant to float")
         } else {
             F::zero()
         };
@@ -689,7 +695,7 @@ where
             }
         }
 
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
         let mean = sum_acc / n_f;
         let variance = sum_sq_acc / n_f - mean * mean;
         let std_dev = variance.sqrt();
@@ -811,7 +817,7 @@ where
     /// Scalar fallback for small datasets
     fn compute_scalar_fallback(&self, data: &ArrayView1<F>) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
-        let n_f = F::from(n).unwrap();
+        let n_f = F::from(n).expect("Failed to convert to float");
 
         let sum: F = data.iter().copied().sum();
         let mean = sum / n_f;
@@ -898,7 +904,7 @@ pub fn advanced_mean_f64(data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsRes
 /// use scirs2_stats::advanced_mean_f32;
 ///
 /// let data = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
-/// let result = advanced_mean_f32(&data.view()).unwrap();
+/// let result = advanced_mean_f32(&data.view()).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn advanced_mean_f32(data: &ArrayView1<f32>) -> StatsResult<AdvancedStatsResult<f32>> {
@@ -912,11 +918,12 @@ mod tests {
     use scirs2_core::ndarray::{array, Array1};
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_simd_basic() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let processor = AdvancedSimdProcessor::<f64>::new();
-        let result = processor.compute_advanced_statistics(&data.view()).unwrap();
+        let result = processor
+            .compute_advanced_statistics(&data.view())
+            .expect("Operation failed");
 
         assert!((result.mean - 4.5).abs() < 1e-10);
         assert!(result.simd_utilization >= 0.0);
@@ -924,18 +931,18 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_largedataset_performance() {
         let data: Array1<f64> = Array1::from_shape_fn(10000, |i| i as f64);
         let processor = AdvancedSimdProcessor::<f64>::new();
-        let result = processor.compute_advanced_statistics(&data.view()).unwrap();
+        let result = processor
+            .compute_advanced_statistics(&data.view())
+            .expect("Operation failed");
 
         assert!(result.simd_utilization > 0.5); // Should have good SIMD utilization
         assert!(result.vector_operations_count > 0);
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_different_vector_strategies() {
         let data: Array1<f64> = Array1::from_shape_fn(1000, |i| (i as f64).sin());
 
@@ -948,7 +955,7 @@ mod tests {
         let processor_multi = AdvancedSimdProcessor::with_config(config_multi);
         let result_multi = processor_multi
             .compute_advanced_statistics(&data.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Test cache-blocked strategy
         let config_blocked = AdvancedSimdConfig {
@@ -959,7 +966,7 @@ mod tests {
         let processor_blocked = AdvancedSimdProcessor::with_config(config_blocked);
         let result_blocked = processor_blocked
             .compute_advanced_statistics(&data.view())
-            .unwrap();
+            .expect("Operation failed");
 
         // Results should be numerically equivalent
         assert!((result_multi.mean - result_blocked.mean).abs() < 1e-10);

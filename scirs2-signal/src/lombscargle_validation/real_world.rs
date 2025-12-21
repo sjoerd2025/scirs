@@ -344,7 +344,7 @@ pub fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
 
     // Simple KS test approximation
     if power_maxima.len() > 10 {
-        power_maxima.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        power_maxima.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         // Check if distribution roughly follows expected pattern
         let median = power_maxima[power_maxima.len() / 2];
@@ -405,8 +405,8 @@ pub fn test_bayesian_validation(tolerance: f64) -> SignalResult<f64> {
             let (peak_idx, &peak_power) = power
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .unwrap();
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
+                .expect("Operation failed");
 
             let peak_freq = freqs[peak_idx];
             let freq_error = (peak_freq - true_freq).abs() / true_freq;

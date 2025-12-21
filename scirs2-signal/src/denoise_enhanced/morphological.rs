@@ -87,7 +87,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 3.0, 2.0, 4.0, 1.0]);
         let result = denoise_morphological_opening(&signal, 1);
         assert!(result.is_ok());
-        let opened = result.unwrap();
+        let opened = result.expect("Operation failed");
         assert_eq!(opened.len(), signal.len());
     }
 
@@ -96,7 +96,7 @@ mod tests {
         let signal = Array1::from_vec(vec![4.0, 2.0, 3.0, 1.0, 4.0]);
         let result = denoise_morphological_closing(&signal, 1);
         assert!(result.is_ok());
-        let closed = result.unwrap();
+        let closed = result.expect("Operation failed");
         assert_eq!(closed.len(), signal.len());
     }
 

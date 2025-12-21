@@ -125,13 +125,14 @@ pub mod astronomy {
             let mut spectral_classes = Vec::with_capacity(nstars);
 
             // Distributions for stellar parameters
-            let ra_dist = scirs2_core::random::Uniform::new(0.0, 360.0).unwrap();
-            let dec_dist = scirs2_core::random::Uniform::new(-90.0, 90.0).unwrap();
-            let magnitude_dist = Normal::new(8.0, 3.0).unwrap();
-            let color_dist = Normal::new(0.5, 0.3).unwrap();
-            let parallax_dist = Normal::new(10.0, 5.0).unwrap();
-            let proper_motion_dist = Normal::new(0.0, 50.0).unwrap();
-            let radial_velocity_dist = Normal::new(0.0, 30.0).unwrap();
+            let ra_dist = scirs2_core::random::Uniform::new(0.0, 360.0).expect("Operation failed");
+            let dec_dist =
+                scirs2_core::random::Uniform::new(-90.0, 90.0).expect("Operation failed");
+            let magnitude_dist = Normal::new(8.0, 3.0).expect("Operation failed");
+            let color_dist = Normal::new(0.5, 0.3).expect("Operation failed");
+            let parallax_dist = Normal::new(10.0, 5.0).expect("Operation failed");
+            let proper_motion_dist = Normal::new(0.0, 50.0).expect("Operation failed");
+            let radial_velocity_dist = Normal::new(0.0, 30.0).expect("Operation failed");
 
             for _ in 0..nstars {
                 // Right ascension (degrees)
@@ -219,12 +220,12 @@ pub mod astronomy {
             let mut planet_types = Vec::with_capacity(nplanets);
 
             // Distributions for planetary parameters
-            let period_dist = LogNormal::new(1.0, 1.5).unwrap();
-            let radius_dist = LogNormal::new(0.0, 0.8).unwrap();
-            let mass_dist = LogNormal::new(1.0, 1.2).unwrap();
-            let stellar_mass_dist = Normal::new(1.0, 0.3).unwrap();
-            let stellar_temp_dist = Normal::new(5800.0, 1000.0).unwrap();
-            let metallicity_dist = Normal::new(0.0, 0.3).unwrap();
+            let period_dist = LogNormal::new(1.0, 1.5).expect("Operation failed");
+            let radius_dist = LogNormal::new(0.0, 0.8).expect("Operation failed");
+            let mass_dist = LogNormal::new(1.0, 1.2).expect("Operation failed");
+            let stellar_mass_dist = Normal::new(1.0, 0.3).expect("Operation failed");
+            let stellar_temp_dist = Normal::new(5800.0, 1000.0).expect("Operation failed");
+            let metallicity_dist = Normal::new(0.0, 0.3).expect("Operation failed");
 
             for _ in 0..nplanets {
                 // Orbital period (days)
@@ -303,7 +304,7 @@ pub mod astronomy {
             let _type_probs = [0.7, 0.15, 0.10, 0.05]; // Ia, Ib/c, II-P, II-L
 
             for _ in 0..nsupernovae {
-                let sn_type = rng.sample(Uniform::new(0, 4).unwrap());
+                let sn_type = rng.sample(Uniform::new(0, 4).expect("Operation failed"));
 
                 let (peak_mag, decline_rate, color_evolution, host_mass) = match sn_type {
                     0 => (-19.3, 1.1, 0.2, 10.5), // Type Ia
@@ -313,10 +314,10 @@ pub mod astronomy {
                 };
 
                 // Add noise to base parameters
-                let peak_noise = Normal::new(0.0, 0.3).unwrap();
-                let decline_noise = Normal::new(0.0, 0.2).unwrap();
-                let color_noise = Normal::new(0.0, 0.1).unwrap();
-                let host_noise = Normal::new(0.0, 0.5).unwrap();
+                let peak_noise = Normal::new(0.0, 0.3).expect("Operation failed");
+                let decline_noise = Normal::new(0.0, 0.2).expect("Operation failed");
+                let color_noise = Normal::new(0.0, 0.1).expect("Operation failed");
+                let host_noise = Normal::new(0.0, 0.5).expect("Operation failed");
 
                 // Peak absolute magnitude
                 data.push(peak_mag + peak_noise.sample(&mut rng));
@@ -434,7 +435,9 @@ pub mod genomics {
 
                 for gene_idx in 0..ngenes {
                     // Base expression level
-                    let base_expr = LogNormal::new(5.0, 2.0).unwrap().sample(&mut rng);
+                    let base_expr = LogNormal::new(5.0, 2.0)
+                        .expect("Operation failed")
+                        .sample(&mut rng);
 
                     // Condition-specific modulation
                     let gene_effect = if gene_idx < ngenes / 10 {
@@ -445,7 +448,9 @@ pub mod genomics {
                     };
 
                     // Add noise
-                    let noise = Normal::new(1.0, 0.2).unwrap().sample(&mut rng);
+                    let noise = Normal::new(1.0, 0.2)
+                        .expect("Operation failed")
+                        .sample(&mut rng);
 
                     let expression: f64 = base_expr * gene_effect * noise;
                     data.push(expression.ln()); // Log-transform
@@ -536,7 +541,7 @@ pub mod genomics {
                         }
                         _ => {
                             // Random sequences
-                            nucleotides[rng.sample(Uniform::new(0, 4).unwrap())]
+                            nucleotides[rng.sample(Uniform::new(0, 4).expect("Operation failed"))]
                         }
                     };
 
@@ -704,7 +709,7 @@ pub mod climate {
                         + temp_amplitude * (year_progress * 2.0 * std::f64::consts::PI).cos();
 
                     // Add daily noise
-                    let temp_noise = Normal::new(0.0, 2.0).unwrap();
+                    let temp_noise = Normal::new(0.0, 2.0).expect("Operation failed");
                     let temp = seasonal_temp + temp_noise.sample(&mut rng);
                     temperatures.push(temp);
 
@@ -741,7 +746,10 @@ pub mod climate {
                 let precip_days = precipitation.iter().filter(|&&p| p > 0.0).count() as f64;
 
                 // Generate additional climate variables
-                let avg_humidity = humidity + Normal::new(0.0, 5.0).unwrap().sample(&mut rng);
+                let avg_humidity = humidity
+                    + Normal::new(0.0, 5.0)
+                        .expect("Operation failed")
+                        .sample(&mut rng);
                 let wind_speed = rng.gen_range(2.0..15.0);
 
                 data.extend(vec![
@@ -813,27 +821,31 @@ pub mod climate {
 
                 // Major pollutants (concentrations in µg/m³)
                 let pm25: f64 = LogNormal::new(2.0 + base_pollution, 0.5)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .sample(&mut rng);
                 let pm10 = pm25 * rng.gen_range(1.5..2.5);
                 let no2 = LogNormal::new(3.0 + base_pollution * 0.5, 0.3)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .sample(&mut rng);
                 let so2 = LogNormal::new(1.0 + base_pollution * 0.3, 0.4)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .sample(&mut rng);
                 let o3 = LogNormal::new(4.0 - base_pollution * 0.2, 0.2)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .sample(&mut rng);
                 let co = LogNormal::new(0.5 + base_pollution * 0.4, 0.3)
-                    .unwrap()
+                    .expect("Failed to create array")
                     .sample(&mut rng);
 
                 // Meteorological factors
-                let temperature = Normal::new(20.0, 10.0).unwrap().sample(&mut rng);
+                let temperature = Normal::new(20.0, 10.0)
+                    .expect("Operation failed")
+                    .sample(&mut rng);
                 let humidity = rng.gen_range(30.0..90.0);
                 let wind_speed = rng.gen_range(0.5..12.0);
-                let pressure = Normal::new(1013.0, 15.0).unwrap().sample(&mut rng);
+                let pressure = Normal::new(1013.0, 15.0)
+                    .expect("Operation failed")
+                    .sample(&mut rng);
 
                 // Derived _measurements
                 let visibility = (50.0 - pm25.ln() * 5.0).max(1.0);
@@ -986,7 +998,7 @@ mod tests {
 
     #[test]
     fn test_load_stellar_classification() {
-        let dataset = load_stellar_classification().unwrap();
+        let dataset = load_stellar_classification().expect("Operation failed");
         assert!(dataset.n_samples() > 1000);
         assert_eq!(dataset.n_features(), 8);
         assert!(dataset.target.is_some());
@@ -994,7 +1006,7 @@ mod tests {
 
     #[test]
     fn test_load_exoplanets() {
-        let dataset = load_exoplanets().unwrap();
+        let dataset = load_exoplanets().expect("Operation failed");
         assert!(dataset.n_samples() > 100);
         assert_eq!(dataset.n_features(), 6);
         assert!(dataset.target.is_some());
@@ -1002,7 +1014,7 @@ mod tests {
 
     #[test]
     fn test_load_gene_expression() {
-        let dataset = load_gene_expression(Some(50), Some(100)).unwrap();
+        let dataset = load_gene_expression(Some(50), Some(100)).expect("Operation failed");
         assert_eq!(dataset.n_samples(), 50);
         assert_eq!(dataset.n_features(), 100);
         assert!(dataset.target.is_some());
@@ -1010,7 +1022,7 @@ mod tests {
 
     #[test]
     fn test_load_climate_data() {
-        let dataset = load_climate_data(Some(20), Some(5)).unwrap();
+        let dataset = load_climate_data(Some(20), Some(5)).expect("Operation failed");
         assert_eq!(dataset.n_samples(), 20);
         assert_eq!(dataset.n_features(), 8);
         assert!(dataset.target.is_some());
@@ -1018,7 +1030,7 @@ mod tests {
 
     #[test]
     fn test_load_atmospheric_chemistry() {
-        let dataset = load_atmospheric_chemistry(Some(100)).unwrap();
+        let dataset = load_atmospheric_chemistry(Some(100)).expect("Operation failed");
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 12);
         assert!(dataset.target.is_some());

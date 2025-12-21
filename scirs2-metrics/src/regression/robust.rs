@@ -35,7 +35,7 @@ use crate::error::{MetricsError, Result};
 /// let y_true = array![3.0, 5.0, 2.0, 7.0];
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
 ///
-/// let mpd = mean_poisson_deviance(&y_true, &y_pred).unwrap();
+/// let mpd = mean_poisson_deviance(&y_true, &y_pred).expect("Operation failed");
 /// assert!(mpd >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -75,7 +75,10 @@ where
         }
     }
 
-    Ok(F::from(2.0).unwrap() * deviance_sum / NumCast::from(n_samples).unwrap())
+    Ok(
+        F::from(2.0).expect("Failed to convert constant to float") * deviance_sum
+            / NumCast::from(n_samples).expect("Operation failed"),
+    )
 }
 
 /// Calculates the mean gamma deviance
@@ -104,7 +107,7 @@ where
 /// let y_true = array![3.0, 5.0, 2.0, 7.0];
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
 ///
-/// let mgd = mean_gamma_deviance(&y_true, &y_pred).unwrap();
+/// let mgd = mean_gamma_deviance(&y_true, &y_pred).expect("Operation failed");
 /// assert!(mgd >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -133,7 +136,10 @@ where
         deviance_sum = deviance_sum - (*yt / *yp).ln() + (*yt - *yp) / *yp;
     }
 
-    Ok(F::from(2.0).unwrap() * deviance_sum / NumCast::from(n_samples).unwrap())
+    Ok(
+        F::from(2.0).expect("Failed to convert constant to float") * deviance_sum
+            / NumCast::from(n_samples).expect("Operation failed"),
+    )
 }
 
 /// Calculates the Tweedie deviance score
@@ -166,7 +172,7 @@ where
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
 ///
 /// // Gamma deviance (power=2)
-/// let tds = tweedie_deviance_score(&y_true, &y_pred, 2.0).unwrap();
+/// let tds = tweedie_deviance_score(&y_true, &y_pred, 2.0).expect("Operation failed");
 /// assert!(tds >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -192,11 +198,13 @@ where
             let error = *yt - *yp;
             sum_squared_error = sum_squared_error + error * error;
         }
-        return Ok(sum_squared_error / NumCast::from(y_true.len()).unwrap());
+        return Ok(sum_squared_error / NumCast::from(y_true.len()).expect("Operation failed"));
     } else if (power - F::one()).abs() < F::epsilon() {
         // Poisson case (power = 1)
         return mean_poisson_deviance(y_true, y_pred);
-    } else if (power - F::from(2.0).unwrap()).abs() < F::epsilon() {
+    } else if (power - F::from(2.0).expect("Failed to convert constant to float")).abs()
+        < F::epsilon()
+    {
         // Gamma case (power = 2)
         return mean_gamma_deviance(y_true, y_pred);
     }
@@ -205,7 +213,7 @@ where
     let n_samples = y_true.len();
     let mut deviance_sum = F::zero();
 
-    let two = F::from(2.0).unwrap();
+    let two = F::from(2.0).expect("Failed to convert constant to float");
 
     // Check values based on power
     if power < F::one() {
@@ -244,7 +252,7 @@ where
         deviance_sum = deviance_sum + two * (term1 - term2);
     }
 
-    Ok(deviance_sum / NumCast::from(n_samples).unwrap())
+    Ok(deviance_sum / NumCast::from(n_samples).expect("Operation failed"))
 }
 
 /// Calculates the quantile loss (pinball loss)
@@ -272,11 +280,11 @@ where
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 ///
 /// // Median (q=0.5)
-/// let median_loss = quantile_loss(&y_true, &y_pred, 0.5).unwrap();
+/// let median_loss = quantile_loss(&y_true, &y_pred, 0.5).expect("Operation failed");
 /// assert!(median_loss >= 0.0);
 ///
 /// // 90th percentile (q=0.9)
-/// let p90_loss = quantile_loss(&y_true, &y_pred, 0.9).unwrap();
+/// let p90_loss = quantile_loss(&y_true, &y_pred, 0.9).expect("Operation failed");
 /// assert!(p90_loss >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -317,7 +325,7 @@ where
         }
     }
 
-    Ok(loss_sum / NumCast::from(n_samples).unwrap())
+    Ok(loss_sum / NumCast::from(n_samples).expect("Operation failed"))
 }
 
 /// Computes robust weights for regression metrics based on residuals
@@ -345,7 +353,7 @@ where
 /// let residuals = array![0.1, 0.2, -0.3, 5.0, 0.2, -0.1, -4.0];
 ///
 /// // Compute weights using Huber method
-/// let weights = compute_robust_weights(&residuals, "huber", None).unwrap();
+/// let weights = compute_robust_weights(&residuals, "huber", None).expect("Operation failed");
 ///
 /// // Outliers should have smaller weights
 /// assert!(weights[3] < weights[0]);
@@ -379,29 +387,30 @@ where
 
     let median_idx = n / 2;
     let mad = if n.is_multiple_of(2) {
-        (sorted_abs[median_idx - 1] + sorted_abs[median_idx]) / F::from(2.0).unwrap()
+        (sorted_abs[median_idx - 1] + sorted_abs[median_idx])
+            / F::from(2.0).expect("Failed to convert constant to float")
     } else {
         sorted_abs[median_idx]
     };
 
     // Scale MAD for consistency with normal distribution
-    let scale = mad / F::from(0.6745).unwrap();
+    let scale = mad / F::from(0.6745).expect("Failed to convert constant to float");
 
     // Use a small positive value if MAD is zero
     let s = if scale > F::epsilon() {
         scale
     } else {
-        F::from(1e-8).unwrap()
+        F::from(1e-8).expect("Failed to convert constant to float")
     };
 
     // Get tuning parameter (default values depend on method)
     let c = match tuning {
         Some(t) => t,
         None => match method {
-            "huber" => F::from(1.345).unwrap(),
-            "bisquare" => F::from(4.685).unwrap(),
-            "cauchy" => F::from(2.385).unwrap(),
-            _ => F::from(1.345).unwrap(), // Default to huber
+            "huber" => F::from(1.345).expect("Failed to convert constant to float"),
+            "bisquare" => F::from(4.685).expect("Failed to convert constant to float"),
+            "cauchy" => F::from(2.385).expect("Failed to convert constant to float"),
+            _ => F::from(1.345).expect("Failed to convert constant to float"), // Default to huber
         },
     };
 
@@ -465,7 +474,7 @@ where
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 /// let weights = array![1.0, 0.5, 1.0, 0.2]; // Less weight on outliers
 ///
-/// let wmse = weighted_mean_squared_error(&y_true, &y_pred, &weights).unwrap();
+/// let wmse = weighted_mean_squared_error(&y_true, &y_pred, &weights).expect("Operation failed");
 /// assert!(wmse >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -545,7 +554,7 @@ where
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
 /// let weights = array![1.0, 0.5, 1.0, 0.2]; // Less weight on outliers
 ///
-/// let wmedae = weighted_median_absolute_error(&y_true, &y_pred, &weights).unwrap();
+/// let wmedae = weighted_median_absolute_error(&y_true, &y_pred, &weights).expect("Operation failed");
 /// assert!(wmedae >= 0.0);
 /// ```
 #[allow(dead_code)]
@@ -605,7 +614,7 @@ where
     error_weight_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate weighted median
-    let half_weight = weight_sum / F::from(2.0).unwrap();
+    let half_weight = weight_sum / F::from(2.0).expect("Failed to convert constant to float");
     let mut cumulative_weight = F::zero();
 
     for (error, weight) in &error_weight_pairs {
@@ -616,7 +625,7 @@ where
     }
 
     // Fallback (shouldn't reach here if weights sum to positive value)
-    Ok(error_weight_pairs.last().unwrap().0)
+    Ok(error_weight_pairs.last().expect("Operation failed").0)
 }
 
 /// Calculates the M-estimator for regression
@@ -648,7 +657,7 @@ where
 ///
 /// // Standard MSE is heavily influenced by the outlier
 /// // Let's use a robust M-estimator instead
-/// let m_est = m_estimator(&y_true, &y_pred, "huber", None).unwrap();
+/// let m_est = m_estimator(&y_true, &y_pred, "huber", None).expect("Operation failed");
 /// assert!(m_est >= 0.0);
 /// ```
 #[allow(dead_code)]

@@ -27,7 +27,7 @@ fn main() {
     // Plan ahead of time for common sizes
     println!("Planning ahead for common FFT sizes...");
     let commonsizes = [128, 256, 512, 1024, 2048];
-    plan_ahead_of_time(&commonsizes, Some("./fft_plans.json")).unwrap();
+    plan_ahead_of_time(&commonsizes, Some("./fft_plans.json")).expect("Operation failed");
 
     // Create test data
     println!("Creating test arrays...");
@@ -40,7 +40,7 @@ fn main() {
     // First, use the standard FFT function
     println!("Performing standard FFT (will create plans on demand)...");
     let start = Instant::now();
-    let result1 = fft2(&test_array, None, None, None).unwrap();
+    let result1 = fft2(&test_array, None, None, None).expect("Operation failed");
     let std_time = start.elapsed();
     println!("Standard FFT completed in {std_time:?}");
 
@@ -54,7 +54,7 @@ fn main() {
         .strategy(PlanningStrategy::AlwaysNew);
 
     let start = Instant::now();
-    let plan = builder.build().unwrap();
+    let plan = builder.build().expect("Operation failed");
     let plan_time = start.elapsed();
 
     println!("1. PlanningStrategy::AlwaysNew");
@@ -68,7 +68,9 @@ fn main() {
     let input_flat: Vec<Complex64> = test_array.iter().cloned().collect();
 
     let start = Instant::now();
-    executor.execute(&input_flat, &mut result2_data).unwrap();
+    executor
+        .execute(&input_flat, &mut result2_data)
+        .expect("Operation failed");
     let exec_time = start.elapsed();
     println!("   Plan execution took: {exec_time:?}");
     println!("   Total time: {:?}", plan_time + exec_time);
@@ -80,7 +82,7 @@ fn main() {
         .strategy(PlanningStrategy::CacheFirst);
 
     let start = Instant::now();
-    let plan = builder.build().unwrap();
+    let plan = builder.build().expect("Operation failed");
     let plan_time = start.elapsed();
 
     println!("\n2. PlanningStrategy::CacheFirst");
@@ -91,7 +93,9 @@ fn main() {
     let mut result3_data = vec![Complex64::default(); n * n];
 
     let start = Instant::now();
-    executor.execute(&input_flat, &mut result3_data).unwrap();
+    executor
+        .execute(&input_flat, &mut result3_data)
+        .expect("Operation failed");
     let exec_time = start.elapsed();
     println!("   Plan execution took: {exec_time:?}");
     println!("   Total time: {:?}", plan_time + exec_time);
@@ -102,10 +106,10 @@ fn main() {
 
     let start = Instant::now();
     let plan = {
-        let mut planner_guard = planner.lock().unwrap();
+        let mut planner_guard = planner.lock().expect("Operation failed");
         planner_guard
             .plan_fft(&[n, n], true, Default::default())
-            .unwrap()
+            .expect("Operation failed")
     };
     let plan_time = start.elapsed();
     println!("   Plan lookup took: {plan_time:?}");
@@ -115,7 +119,9 @@ fn main() {
     let mut result4_data = vec![Complex64::default(); n * n];
 
     let start = Instant::now();
-    executor.execute(&input_flat, &mut result4_data).unwrap();
+    executor
+        .execute(&input_flat, &mut result4_data)
+        .expect("Operation failed");
     let exec_time = start.elapsed();
     println!("   Plan execution took: {exec_time:?}");
     println!("   Total time: {:?}", plan_time + exec_time);

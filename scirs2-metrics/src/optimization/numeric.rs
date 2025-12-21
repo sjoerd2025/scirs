@@ -34,8 +34,8 @@ pub struct StableMetrics<T> {
 impl<T: Float + NumCast> Default for StableMetrics<T> {
     fn default() -> Self {
         StableMetrics {
-            epsilon: T::from(1e-10).unwrap(),
-            max_value: T::from(1e10).unwrap(),
+            epsilon: T::from(1e-10).expect("Operation failed"),
+            max_value: T::from(1e10).expect("Operation failed"),
             clip_values: true,
             use_logsumexp: true,
         }
@@ -145,8 +145,8 @@ impl<T: Float + NumCast> StableMetrics<T> {
         }
 
         // Convert to f64 for calculation, then back to T
-        let n = T::from(values.len()).unwrap();
-        let ddof_t = T::from(ddof).unwrap();
+        let n = T::from(values.len()).expect("Operation failed");
+        let ddof_t = T::from(ddof).expect("Operation failed");
 
         Ok(m2 / (n - ddof_t))
     }
@@ -286,7 +286,11 @@ impl<T: Float + NumCast> StableMetrics<T> {
         // If max is -infinity, all values are -infinity
         if max_val == T::neg_infinity() {
             let n = x.len();
-            return vec![T::from(1.0).unwrap() / T::from(n).unwrap(); n];
+            return vec![
+                T::from(1.0).expect("Operation failed")
+                    / T::from(n).expect("Operation failed");
+                n
+            ];
         }
 
         // Compute exp(x - max)
@@ -393,7 +397,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
         // Compute midpoint distribution m = (p + q) / 2
         let mut m = Vec::with_capacity(p.len());
         for (p_i, q_i) in p.iter().zip(q.iter()) {
-            m.push((*p_i + *q_i) / T::from(2.0).unwrap());
+            m.push((*p_i + *q_i) / T::from(2.0).expect("Operation failed"));
         }
 
         // Compute KL(p || m) and KL(q || m)
@@ -401,7 +405,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
         let kl_q_m = self.kl_divergence(q, &m)?;
 
         // JS = (KL(p || m) + KL(q || m)) / 2
-        Ok((kl_p_m + kl_q_m) / T::from(2.0).unwrap())
+        Ok((kl_p_m + kl_q_m) / T::from(2.0).expect("Operation failed"))
     }
 
     /// Compute Wasserstein distance between 1D probability distributions
@@ -415,15 +419,15 @@ impl<T: Float + NumCast> StableMetrics<T> {
     ///
     /// * The Wasserstein distance
     pub fn wasserstein_distance(&self, u_values: &[T], vvalues: &[T]) -> Result<T> {
-        if u_values.is_empty() || u_values.is_empty() {
+        if u_values.is_empty() || vvalues.is_empty() {
             return Err(MetricsError::InvalidInput(
                 "Input arrays must not be empty".to_string(),
             ));
         }
 
-        // Sort the _values
+        // Sort the values
         let mut u_sorted = u_values.to_vec();
-        let mut v_sorted = u_values.to_vec();
+        let mut v_sorted = vvalues.to_vec();
 
         u_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         v_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -450,7 +454,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
         }
 
         // Normalize by the number of points
-        Ok(distance / T::from(n_u.max(n_v)).unwrap())
+        Ok(distance / T::from(n_u.max(n_v)).expect("Operation failed"))
     }
 
     /// Compute maximum mean discrepancy (MMD) between samples
@@ -480,7 +484,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
         let xy = self.rbf_kernel_mean(x, y, gamma);
 
         // Compute MMD
-        Ok(xx + yy - T::from(2.0).unwrap() * xy)
+        Ok(xx + yy - T::from(2.0).expect("Operation failed") * xy)
     }
 
     // Helper function to compute mean of RBF kernel evaluations
@@ -496,7 +500,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
             }
         }
 
-        sum / (T::from(n_x).unwrap() * T::from(n_y).unwrap())
+        sum / (T::from(n_x).expect("Operation failed") * T::from(n_y).expect("Operation failed"))
     }
 
     /// Safely compute matrix exponential trace
@@ -579,12 +583,13 @@ impl<T: Float + NumCast> StableMetrics<T> {
     /// * log(1+x) computed in a numerically stable way
     pub fn log1p(&self, x: T) -> T {
         // For very small x, use Taylor series approximation
-        if x.abs() < T::from(1e-4).unwrap() {
+        if x.abs() < T::from(1e-4).expect("Operation failed") {
             let x2 = x * x;
             let x3 = x2 * x;
             let x4 = x2 * x2;
-            return x - x2 / T::from(2).unwrap() + x3 / T::from(3).unwrap()
-                - x4 / T::from(4).unwrap();
+            return x - x2 / T::from(2).expect("Operation failed")
+                + x3 / T::from(3).expect("Operation failed")
+                - x4 / T::from(4).expect("Operation failed");
         }
 
         // Otherwise use log(1+x) directly
@@ -604,14 +609,14 @@ impl<T: Float + NumCast> StableMetrics<T> {
     /// * exp(x)-1 computed in a numerically stable way
     pub fn expm1(&self, x: T) -> T {
         // For very small x, use Taylor series approximation
-        if x.abs() < T::from(1e-4).unwrap() {
+        if x.abs() < T::from(1e-4).expect("Operation failed") {
             let x2 = x * x;
             let x3 = x2 * x;
             let x4 = x3 * x;
             return x
-                + x2 / T::from(2).unwrap()
-                + x3 / T::from(6).unwrap()
-                + x4 / T::from(24).unwrap();
+                + x2 / T::from(2).expect("Operation failed")
+                + x3 / T::from(6).expect("Operation failed")
+                + x4 / T::from(24).expect("Operation failed");
         }
 
         // Otherwise use exp(x)-1 directly
@@ -729,12 +734,16 @@ mod tests {
 
         // Expected: -sum(y_true * log(ypred)) = -1.0 * log(0.8) = -log(0.8)
         let expected = -0.8f64.ln();
-        let ce = stable.cross_entropy(&y_true, &ypred).unwrap();
+        let ce = stable
+            .cross_entropy(&y_true, &ypred)
+            .expect("Operation failed");
         assert_abs_diff_eq!(ce, expected, epsilon = 1e-10);
 
         // Test with zero in prediction
         let y_pred_zero = vec![0.0, 0.8, 0.2];
-        let ce_zero = stable.cross_entropy(&y_true, &y_pred_zero).unwrap();
+        let ce_zero = stable
+            .cross_entropy(&y_true, &y_pred_zero)
+            .expect("Operation failed");
         // Should use epsilon instead of zero
         assert!(ce_zero.is_finite());
 
@@ -754,18 +763,20 @@ mod tests {
         // Calculate expected KL divergence
         // KL(p||q) = sum(p_i * log(p_i/q_i))
         let expected = 0.5 * (0.5 / 0.25).ln() + 0.5 * (0.5 / 0.25).ln();
-        let kl = stable.kl_divergence(&p, &q).unwrap();
+        let kl = stable.kl_divergence(&p, &q).expect("Operation failed");
         assert_abs_diff_eq!(kl, expected, epsilon = 1e-10);
 
         // Test with zero in q where p is zero (should be fine)
         let q_zero = vec![0.5, 0.5, 0.0];
-        let kl_zero = stable.kl_divergence(&p, &q_zero).unwrap();
+        let kl_zero = stable.kl_divergence(&p, &q_zero).expect("Operation failed");
         assert_abs_diff_eq!(kl_zero, 0.0, epsilon = 1e-10);
 
         // Test with zero in q where p is non-zero (should use epsilon)
         let p_nonzero = vec![0.4, 0.3, 0.3];
         let q_more_zeros = vec![0.6, 0.4, 0.0];
-        let kl_safe = stable.kl_divergence(&p_nonzero, &q_more_zeros).unwrap();
+        let kl_safe = stable
+            .kl_divergence(&p_nonzero, &q_more_zeros)
+            .expect("Operation failed");
         assert!(kl_safe.is_finite());
     }
 
@@ -785,20 +796,19 @@ mod tests {
             q[0] * (q[0] / m[0]).ln() + q[1] * (q[1] / m[1]).ln() + q[2] * (q[2] / m[2]).ln();
         let expected = 0.5 * (kl_p_m_expected + kl_q_m_expected);
 
-        let js = stable.js_divergence(&p, &q).unwrap();
+        let js = stable.js_divergence(&p, &q).expect("Operation failed");
         assert_abs_diff_eq!(js, expected, epsilon = 1e-10);
 
         // JS divergence should be symmetric
-        let js_reverse = stable.js_divergence(&q, &p).unwrap();
+        let js_reverse = stable.js_divergence(&q, &p).expect("Operation failed");
         assert_abs_diff_eq!(js, js_reverse, epsilon = 1e-10);
 
         // JS divergence should be 0 for identical distributions
-        let js_identical = stable.js_divergence(&p, &p).unwrap();
+        let js_identical = stable.js_divergence(&p, &p).expect("Operation failed");
         assert_abs_diff_eq!(js_identical, 0.0, epsilon = 1e-10);
     }
 
     #[test]
-    #[ignore] // FIXME: Test expectations don't match implementation - distance calculation needs review
     fn test_wasserstein_distance() {
         let stable = StableMetrics::<f64>::default();
 
@@ -806,20 +816,26 @@ mod tests {
         let u = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let v = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let distance = stable.wasserstein_distance(&u, &v).unwrap();
+        let distance = stable
+            .wasserstein_distance(&u, &v)
+            .expect("Operation failed");
         assert_abs_diff_eq!(distance, 0.0, epsilon = 1e-10);
 
         // Test with shifted distributions
         let w = vec![2.0, 3.0, 4.0, 5.0, 6.0];
 
-        let distance = stable.wasserstein_distance(&u, &w).unwrap();
+        let distance = stable
+            .wasserstein_distance(&u, &w)
+            .expect("Operation failed");
         assert_abs_diff_eq!(distance, 1.0, epsilon = 1e-10);
 
         // Test with different distribution sizes
         let x = vec![1.0, 3.0, 5.0];
         let y = vec![2.0, 4.0, 6.0, 8.0];
 
-        let distance = stable.wasserstein_distance(&x, &y).unwrap();
+        let distance = stable
+            .wasserstein_distance(&x, &y)
+            .expect("Operation failed");
         assert!(distance > 0.0);
     }
 
@@ -831,13 +847,17 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let mmd = stable.maximum_mean_discrepancy(&x, &y, Some(0.1)).unwrap();
+        let mmd = stable
+            .maximum_mean_discrepancy(&x, &y, Some(0.1))
+            .expect("Operation failed");
         assert!(mmd < 1e-10); // Should be close to 0
 
         // Test with different distributions
         let z = vec![6.0, 7.0, 8.0, 9.0, 10.0];
 
-        let mmd = stable.maximum_mean_discrepancy(&x, &z, Some(0.1)).unwrap();
+        let mmd = stable
+            .maximum_mean_discrepancy(&x, &z, Some(0.1))
+            .expect("Operation failed");
         assert!(mmd > 0.1); // Should be significantly positive
     }
 
@@ -847,12 +867,12 @@ mod tests {
 
         // Test standard case
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let mean = stable.stable_mean(&values).unwrap();
+        let mean = stable.stable_mean(&values).expect("Operation failed");
         assert_abs_diff_eq!(mean, 3.0, epsilon = 1e-10);
 
         // Test with single value
         let single = vec![42.0];
-        let mean_single = stable.stable_mean(&single).unwrap();
+        let mean_single = stable.stable_mean(&single).expect("Operation failed");
         assert_abs_diff_eq!(mean_single, 42.0, epsilon = 1e-10);
 
         // Test with empty array
@@ -865,12 +885,16 @@ mod tests {
 
         // Test standard case with population variance (ddof=0)
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let var = stable.stable_variance(&values, 0).unwrap();
+        let var = stable
+            .stable_variance(&values, 0)
+            .expect("Operation failed");
         let expected_var = 2.0; // Variance of [1,2,3,4,5] is 2
         assert_abs_diff_eq!(var, expected_var, epsilon = 1e-10);
 
         // Test standard case with sample variance (ddof=1)
-        let sample_var = stable.stable_variance(&values, 1).unwrap();
+        let sample_var = stable
+            .stable_variance(&values, 1)
+            .expect("Operation failed");
         let expected_sample_var = 2.5; // Sample variance of [1,2,3,4,5] is 2.5
         assert_abs_diff_eq!(sample_var, expected_sample_var, epsilon = 1e-10);
 
@@ -887,12 +911,12 @@ mod tests {
 
         // Test standard case with population std (ddof=0)
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let std_dev = stable.stable_std(&values, 0).unwrap();
+        let std_dev = stable.stable_std(&values, 0).expect("Operation failed");
         let expected_std = 2.0f64.sqrt(); // STD of [1,2,3,4,5] is sqrt(2)
         assert_abs_diff_eq!(std_dev, expected_std, epsilon = 1e-10);
 
         // Test standard case with sample std (ddof=1)
-        let sample_std = stable.stable_std(&values, 1).unwrap();
+        let sample_std = stable.stable_std(&values, 1).expect("Operation failed");
         let expected_sample_std = 2.5f64.sqrt(); // Sample STD of [1,2,3,4,5] is sqrt(2.5)
         assert_abs_diff_eq!(sample_std, expected_sample_std, epsilon = 1e-10);
     }
@@ -924,13 +948,17 @@ mod tests {
 
         // Test matrix_exp_trace
         let eigenvalues = vec![1.0, 2.0, 3.0];
-        let exp_trace = stable.matrix_exp_trace(&eigenvalues).unwrap();
+        let exp_trace = stable
+            .matrix_exp_trace(&eigenvalues)
+            .expect("Operation failed");
         let expected = 1.0f64.exp() + 2.0f64.exp() + 3.0f64.exp();
         assert_abs_diff_eq!(exp_trace, expected, epsilon = 1e-10);
 
         // Test matrix_logdet
         let positive_eigenvalues = vec![1.0, 2.0, 5.0];
-        let logdet = stable.matrix_logdet(&positive_eigenvalues).unwrap();
+        let logdet = stable
+            .matrix_logdet(&positive_eigenvalues)
+            .expect("Operation failed");
         let expected = 1.0f64.ln() + 2.0f64.ln() + 5.0f64.ln();
         assert_abs_diff_eq!(logdet, expected, epsilon = 1e-10);
 

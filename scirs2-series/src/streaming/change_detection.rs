@@ -39,7 +39,8 @@ impl<F: Float + Debug> CusumDetector<F> {
 
         // Update mean estimate
         let delta = value - self.mean_estimate;
-        self.mean_estimate = self.mean_estimate + delta / F::from(self.count).unwrap();
+        self.mean_estimate =
+            self.mean_estimate + delta / F::from(self.count).expect("Failed to convert to float");
 
         // Update CUSUM statistics
         let diff = value - self.mean_estimate;

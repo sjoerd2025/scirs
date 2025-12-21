@@ -17,7 +17,7 @@ mod enhanced_linalg_tests {
 
             // Test 1-norm (maximum column sum)
             let n1 = norm1(&a);
-            let n1_val = n1.eval(g).unwrap();
+            let n1_val = n1.eval(g).expect("Test: operation failed");
             assert_eq!(n1_val.shape(), &[] as &[usize]);
             // Column sums: |1|+|-4|+|7| = 12, |-2|+|5|+|-8| = 15, |3|+|-6|+|9| = 18
             // Maximum is 18
@@ -29,7 +29,7 @@ mod enhanced_linalg_tests {
 
             // Test infinity-norm (maximum row sum)
             let ninf = norminf(&a);
-            let ninf_val = ninf.eval(g).unwrap();
+            let ninf_val = ninf.eval(g).expect("Test: operation failed");
             assert_eq!(ninf_val.shape(), &[] as &[usize]);
             // Row sums: |1|+|-2|+|3| = 6, |-4|+|5|+|-6| = 15, |7|+|-8|+|9| = 24
             // Maximum is 24
@@ -41,7 +41,7 @@ mod enhanced_linalg_tests {
 
             // Test Frobenius norm
             let nfro = normfro(&a);
-            let nfro_val = nfro.eval(g).unwrap();
+            let nfro_val = nfro.eval(g).expect("Test: operation failed");
             assert_eq!(nfro_val.shape(), &[] as &[usize]);
             // sqrt(1^2 + 2^2 + 3^2 + 4^2 + 5^2 + 6^2 + 7^2 + 8^2 + 9^2)
             // = sqrt(1 + 4 + 9 + 16 + 25 + 36 + 49 + 64 + 81) = sqrt(285)
@@ -53,7 +53,7 @@ mod enhanced_linalg_tests {
 
             // Test 2-norm (spectral norm) - just verify it runs
             let n2 = norm2(&a);
-            let n2_val = n2.eval(g).unwrap();
+            let n2_val = n2.eval(g).expect("Test: operation failed");
             assert_eq!(n2_val.shape(), &[] as &[usize]);
             assert!(n2_val[scirs2_core::ndarray::IxDyn(&[])] > 0.0);
         });
@@ -68,8 +68,8 @@ mod enhanced_linalg_tests {
             // Test eigh (eigendecomposition for symmetric matrices)
             let (eigenvalues, eigenvectors) = eigh(&a);
 
-            let vals = eigenvalues.eval(g).unwrap();
-            let vecs = eigenvectors.eval(g).unwrap();
+            let vals = eigenvalues.eval(g).expect("Test: operation failed");
+            let vecs = eigenvectors.eval(g).expect("Test: operation failed");
 
             assert_eq!(vals.shape(), &[2]);
             assert_eq!(vecs.shape(), &[2, 2]);
@@ -79,7 +79,7 @@ mod enhanced_linalg_tests {
 
             // Test eigvalsh (eigenvalues only)
             let eigenvals_only = eigvalsh(&a);
-            let vals_only = eigenvals_only.eval(g).unwrap();
+            let vals_only = eigenvals_only.eval(g).expect("Test: operation failed");
             assert_eq!(vals_only.shape(), &[2]);
         });
     }
@@ -91,12 +91,12 @@ mod enhanced_linalg_tests {
 
             // Test expm2 (Padé approximation)
             let exp_a2 = expm2(&a);
-            let exp_a2_val = exp_a2.eval(g).unwrap();
+            let exp_a2_val = exp_a2.eval(g).expect("Test: operation failed");
             assert_eq!(exp_a2_val.shape(), &[2, 2]);
 
             // Test expm3 (eigendecomposition method)
             let exp_a3 = expm3(&a);
-            let exp_a3_val = exp_a3.eval(g).unwrap();
+            let exp_a3_val = exp_a3.eval(g).expect("Test: operation failed");
             assert_eq!(exp_a3_val.shape(), &[2, 2]);
 
             // For this rotation matrix, exp(A) should give another rotation
@@ -132,13 +132,13 @@ mod enhanced_linalg_tests {
 
             // Solve Ax = b using Cholesky decomposition
             let x = cholesky_solve(&a, &b);
-            let x_val = x.eval(g).unwrap();
+            let x_val = x.eval(g).expect("Test: operation failed");
             assert_eq!(x_val.shape(), &[2]);
 
             // Verify solution: multiply A * x should give b
             let ax = matmul(a, x.reshape(&[2, 1]));
-            let ax_val = ax.eval(g).unwrap();
-            let b_val = b.eval(g).unwrap();
+            let ax_val = ax.eval(g).expect("Test: operation failed");
+            let b_val = b.eval(g).expect("Test: operation failed");
 
             assert_relative_eq!(ax_val[[0, 0]], b_val[0], epsilon = 1e-4);
             assert_relative_eq!(ax_val[[1, 0]], b_val[1], epsilon = 1e-4);
@@ -154,15 +154,15 @@ mod enhanced_linalg_tests {
 
             // Solve AX + XB = C
             let x = solve_sylvester(&a, &b, &c);
-            let x_val = x.eval(g).unwrap();
+            let x_val = x.eval(g).expect("Test: operation failed");
             assert_eq!(x_val.shape(), &[2, 2]);
 
             // Verify solution: AX + XB should equal C
             let ax = matmul(a, x);
             let xb = matmul(x, b);
             let ax_plus_xb = add(ax, xb);
-            let result = ax_plus_xb.eval(g).unwrap();
-            let c_val = c.eval(g).unwrap();
+            let result = ax_plus_xb.eval(g).expect("Test: operation failed");
+            let c_val = c.eval(g).expect("Test: operation failed");
 
             for i in 0..2 {
                 for j in 0..2 {
@@ -180,7 +180,7 @@ mod enhanced_linalg_tests {
 
             // Solve AX + XA^T = Q
             let x = solve_lyapunov(&a, &q);
-            let x_val = x.eval(g).unwrap();
+            let x_val = x.eval(g).expect("Test: operation failed");
             assert_eq!(x_val.shape(), &[2, 2]);
 
             // Verify solution
@@ -188,8 +188,8 @@ mod enhanced_linalg_tests {
             let at = transpose(a, &[1, 0]);
             let xat = matmul(x, at);
             let ax_plus_xat = add(ax, xat);
-            let result = ax_plus_xat.eval(g).unwrap();
-            let q_val = q.eval(g).unwrap();
+            let result = ax_plus_xat.eval(g).expect("Test: operation failed");
+            let q_val = q.eval(g).expect("Test: operation failed");
 
             for i in 0..2 {
                 for j in 0..2 {
@@ -207,8 +207,8 @@ mod enhanced_linalg_tests {
             // Compute polar decomposition A = UP
             let (u, p) = polar(&a);
 
-            let u_val = u.eval(g).unwrap();
-            let p_val = p.eval(g).unwrap();
+            let u_val = u.eval(g).expect("Test: operation failed");
+            let p_val = p.eval(g).expect("Test: operation failed");
 
             assert_eq!(u_val.shape(), &[2, 2]);
             assert_eq!(p_val.shape(), &[2, 2]);
@@ -228,8 +228,8 @@ mod enhanced_linalg_tests {
             // Compute Schur decomposition A = QTQ^T
             let (q, t) = schur(&a);
 
-            let q_val = q.eval(g).unwrap();
-            let t_val = t.eval(g).unwrap();
+            let q_val = q.eval(g).expect("Test: operation failed");
+            let t_val = t.eval(g).expect("Test: operation failed");
 
             assert_eq!(q_val.shape(), &[2, 2]);
             assert_eq!(t_val.shape(), &[2, 2]);
@@ -247,7 +247,7 @@ mod enhanced_linalg_tests {
             let b = convert_to_tensor(array![1.0_f32, 2.0], g);
 
             let x = tensor_solve(&a, &b, None);
-            let x_val = x.eval(g).unwrap();
+            let x_val = x.eval(g).expect("Test: operation failed");
 
             // Verify shape
             assert_eq!(x_val.ndim(), 1);
@@ -263,12 +263,12 @@ mod enhanced_linalg_tests {
 
             // Matrix multiplication: "ij,jk->ik"
             let c = einsum("ij,jk->ik", &[&a, &b]);
-            let c_val = c.eval(g).unwrap();
+            let c_val = c.eval(g).expect("Test: operation failed");
             assert_eq!(c_val.shape(), &[2, 2]);
 
             // Compare with regular matmul
             let c_matmul = matmul(a, b);
-            let c_matmul_val = c_matmul.eval(g).unwrap();
+            let c_matmul_val = c_matmul.eval(g).expect("Test: operation failed");
 
             for i in 0..2 {
                 for j in 0..2 {
@@ -280,7 +280,7 @@ mod enhanced_linalg_tests {
             let v1 = convert_to_tensor(array![1.0_f32, 2.0, 3.0], g);
             let v2 = convert_to_tensor(array![4.0_f32, 5.0, 6.0], g);
             let dot = einsum("i,i->", &[&v1, &v2]);
-            let dot_val = dot.eval(g).unwrap();
+            let dot_val = dot.eval(g).expect("Test: operation failed");
             assert_eq!(dot_val.shape(), &[] as &[usize]);
             assert_relative_eq!(
                 dot_val[scirs2_core::ndarray::IxDyn(&[])],
@@ -299,7 +299,7 @@ mod enhanced_linalg_tests {
 
             // Test using kron_tensor alias
             let c = kronecker_product(&a, &b);
-            let c_val = c.eval(g).unwrap();
+            let c_val = c.eval(g).expect("Test: operation failed");
 
             // Kronecker product of 2x2 with 2x2 should be 4x4
             assert_eq!(c_val.shape(), &[4, 4]);

@@ -118,9 +118,9 @@ fn build_tree_from_linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Process merges in order
     for i in 0..n_merges {
-        let cluster1 = linkage_matrix[[i, 0]].to_usize().unwrap();
-        let cluster2 = linkage_matrix[[i, 1]].to_usize().unwrap();
-        let height = linkage_matrix[[i, 2]].to_f64().unwrap();
+        let cluster1 = linkage_matrix[[i, 0]].to_usize().expect("Operation failed");
+        let cluster2 = linkage_matrix[[i, 1]].to_usize().expect("Operation failed");
+        let height = linkage_matrix[[i, 2]].to_f64().expect("Operation failed");
 
         // Get the nodes to merge
         let left_node = nodes.remove(&cluster1).ok_or_else(|| {
@@ -145,7 +145,7 @@ fn build_tree_from_linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
         ));
     }
 
-    Ok(nodes.into_values().next().unwrap())
+    Ok(nodes.into_values().next().expect("Operation failed"))
 }
 
 /// Calculates the cost of a given leaf ordering
@@ -381,19 +381,19 @@ pub fn apply_leaf_ordering<F: Float + FromPrimitive + Debug + PartialOrd + Clone
 
     // Update cluster indices in the linkage _matrix
     for i in 0..linkage_matrix.shape()[0] {
-        let cluster1 = linkage_matrix[[i, 0]].to_usize().unwrap();
-        let cluster2 = linkage_matrix[[i, 1]].to_usize().unwrap();
+        let cluster1 = linkage_matrix[[i, 0]].to_usize().expect("Operation failed");
+        let cluster2 = linkage_matrix[[i, 1]].to_usize().expect("Operation failed");
 
         // Map original leaf indices, leave internal node indices unchanged
         if cluster1 < n_observations {
             if let Some(&new_idx) = index_map.get(&cluster1) {
-                reordered_linkage[[i, 0]] = F::from_usize(new_idx).unwrap();
+                reordered_linkage[[i, 0]] = F::from_usize(new_idx).expect("Operation failed");
             }
         }
 
         if cluster2 < n_observations {
             if let Some(&new_idx) = index_map.get(&cluster2) {
-                reordered_linkage[[i, 1]] = F::from_usize(new_idx).unwrap();
+                reordered_linkage[[i, 1]] = F::from_usize(new_idx).expect("Operation failed");
             }
         }
     }
@@ -419,11 +419,11 @@ mod tests {
                 11.0, 0.0, // Point 3 (close to 2)
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Compute linkage matrix
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Compute original distances (condensed form)
         let mut original_distances = Array1::zeros(6); // C(4,2) = 6 pairwise distances
@@ -442,7 +442,7 @@ mod tests {
         let result = optimal_leaf_ordering_exact(linkage_matrix.view(), original_distances.view());
         assert!(result.is_ok(), "Exact leaf ordering should succeed");
 
-        let ordering = result.unwrap();
+        let ordering = result.expect("Operation failed");
         assert_eq!(ordering.len(), 4, "Should have 4 leaf positions");
 
         // Verify all indices are present
@@ -458,10 +458,11 @@ mod tests {
     #[test]
     fn test_optimal_leaf_ordering_heuristic() {
         // Create test data with more points to test heuristic
-        let data = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 10.0, 11.0, 12.0]).unwrap();
+        let data = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 10.0, 11.0, 12.0])
+            .expect("Operation failed");
 
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Average, Metric::Euclidean).unwrap();
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Average, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Compute distances
         let mut original_distances = Array1::zeros(15); // C(6,2) = 15
@@ -478,7 +479,7 @@ mod tests {
             optimal_leaf_ordering_heuristic(linkage_matrix.view(), original_distances.view());
         assert!(result.is_ok(), "Heuristic leaf ordering should succeed");
 
-        let ordering = result.unwrap();
+        let ordering = result.expect("Operation failed");
         assert_eq!(ordering.len(), 6, "Should have 6 leaf positions");
 
         // Verify all indices are present
@@ -494,9 +495,10 @@ mod tests {
     #[test]
     fn test_automatic_algorithm_selection() {
         // Small dataset should use exact algorithm
-        let small_data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
-        let small_linkage =
-            linkage(small_data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let small_data =
+            Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
+        let small_linkage = linkage(small_data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
         let small_distances = Array1::from_vec(vec![1.0, 2.0, 1.0]);
 
         let small_result = optimal_leaf_ordering(small_linkage.view(), small_distances.view());
@@ -506,10 +508,10 @@ mod tests {
         );
 
         // Larger dataset should use heuristic
-        let large_data =
-            Array2::from_shape_vec((15, 1), (0..15).map(|i| i as f64).collect()).unwrap();
-        let large_linkage =
-            linkage(large_data.view(), LinkageMethod::Average, Metric::Euclidean).unwrap();
+        let large_data = Array2::from_shape_vec((15, 1), (0..15).map(|i| i as f64).collect())
+            .expect("Operation failed");
+        let large_linkage = linkage(large_data.view(), LinkageMethod::Average, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Create distance matrix
         let n_distances = 15 * 14 / 2;
@@ -531,16 +533,16 @@ mod tests {
 
     #[test]
     fn test_apply_leaf_ordering() {
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
-        let linkage_matrix =
-            linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
+        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).expect("Operation failed");
+        let linkage_matrix = linkage(data.view(), LinkageMethod::Single, Metric::Euclidean)
+            .expect("Operation failed");
 
         // Test with reversed ordering
         let new_ordering = Array1::from_vec(vec![2, 1, 0]);
         let result = apply_leaf_ordering(linkage_matrix.view(), new_ordering.view());
 
         assert!(result.is_ok(), "Apply leaf ordering should succeed");
-        let reordered_linkage = result.unwrap();
+        let reordered_linkage = result.expect("Operation failed");
         assert_eq!(
             reordered_linkage.shape(),
             linkage_matrix.shape(),
@@ -558,12 +560,12 @@ mod tests {
                 2.0, 3.0, 2.0, 3.0, // Merge result with 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let tree = build_tree_from_linkage(linkage.view());
         assert!(tree.is_ok(), "Tree construction should succeed");
 
-        let root = tree.unwrap();
+        let root = tree.expect("Operation failed");
         assert!(!root.is_leaf(), "Root should not be a leaf");
         assert_eq!(root.leaves.len(), 3, "Root should contain all 3 leaves");
     }

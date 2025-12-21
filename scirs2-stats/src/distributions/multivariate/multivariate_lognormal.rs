@@ -48,7 +48,7 @@ impl MultivariateLognormal {
     /// // Create a 2D multivariate lognormal distribution
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     /// ```
     pub fn new<D1, D2>(mu: ArrayBase<D1, Ix1>, sigma: ArrayBase<D2, Ix2>) -> StatsResult<Self>
     where
@@ -87,7 +87,7 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
     /// let x = array![1.0, 1.0];
     /// let pdf_value = mvln.pdf(&x);
@@ -137,7 +137,7 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
     /// let x = array![1.0, 1.0];
     /// let logpdf_value = mvln.logpdf(&x);
@@ -187,9 +187,9 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
-    /// let samples = mvln.rvs(100).unwrap();
+    /// let samples = mvln.rvs(100).expect("Operation failed");
     /// assert_eq!(samples.shape(), &[100, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array2<f64>> {
@@ -216,9 +216,9 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
-    /// let sample = mvln.rvs_single().unwrap();
+    /// let sample = mvln.rvs_single().expect("Operation failed");
     /// assert_eq!(sample.len(), 2);
     /// ```
     pub fn rvs_single(&self) -> StatsResult<Array1<f64>> {
@@ -248,7 +248,7 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
     /// let mean = mvln.mean();
     /// ```
@@ -279,7 +279,7 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
     /// let median = mvln.median();
     /// ```
@@ -305,7 +305,7 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
     /// let mode = mvln.mode();
     /// ```
@@ -337,7 +337,7 @@ impl MultivariateLognormal {
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
-    /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+    /// let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
     ///
     /// let cov = mvln.cov();
     /// ```
@@ -400,7 +400,7 @@ impl MultivariateLognormal {
 ///
 /// let mu = array![0.0, 0.0];
 /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
-/// let mvln = multivariate::multivariate_lognormal(mu, sigma).unwrap();
+/// let mvln = multivariate::multivariate_lognormal(mu, sigma).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn multivariate_lognormal<D1, D2>(
@@ -440,7 +440,7 @@ mod tests {
         // 2D multivariate lognormal
         let mu = array![0.0, 0.0];
         let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-        let mvln = MultivariateLognormal::new(mu.clone(), sigma.clone()).unwrap();
+        let mvln = MultivariateLognormal::new(mu.clone(), sigma.clone()).expect("Operation failed");
 
         assert_eq!(mvln.dim, 2);
         assert_eq!(mvln.mu, mu);
@@ -449,7 +449,8 @@ mod tests {
         // 3D multivariate lognormal
         let mu3 = array![1.0, 2.0, 3.0];
         let sigma3 = array![[0.5, 0.1, 0.1], [0.1, 0.5, 0.1], [0.1, 0.1, 0.5]];
-        let mvln3 = MultivariateLognormal::new(mu3.clone(), sigma3.clone()).unwrap();
+        let mvln3 =
+            MultivariateLognormal::new(mu3.clone(), sigma3.clone()).expect("Operation failed");
 
         assert_eq!(mvln3.dim, 3);
         assert_eq!(mvln3.mu, mu3);
@@ -474,7 +475,7 @@ mod tests {
         // 2D independent lognormal
         let mu = array![0.0, 0.0];
         let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-        let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+        let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
 
         // PDF at various points
         let x1 = array![1.0, 1.0];
@@ -502,7 +503,7 @@ mod tests {
         // 2D independent lognormal
         let mu = array![0.0, 0.0];
         let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-        let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+        let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
 
         // LogPDF at various points
         let x1 = array![1.0, 1.0];
@@ -521,7 +522,7 @@ mod tests {
         // Create a 2D lognormal with known parameters
         let mu = array![0.0, 0.0];
         let sigma = array![[0.5, 0.0], [0.0, 0.5]];
-        let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+        let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
 
         // Mean
         let mean = mvln.mean();
@@ -562,11 +563,11 @@ mod tests {
         // Create a 2D lognormal
         let mu = array![0.0, 0.0];
         let sigma = array![[0.5, 0.2], [0.2, 0.5]];
-        let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
+        let mvln = MultivariateLognormal::new(mu, sigma).expect("Operation failed");
 
         // Generate samples
         let n_samples_ = 1000;
-        let samples = mvln.rvs(n_samples_).unwrap();
+        let samples = mvln.rvs(n_samples_).expect("Operation failed");
         assert_eq!(samples.shape(), &[n_samples_, 2]);
 
         // Check all samples are positive
@@ -578,13 +579,13 @@ mod tests {
 
         // Verify sample statistics (rough check due to randomness)
         // Calculate sample means
-        let sample_mean = samples.mean_axis(Axis(0)).unwrap();
+        let sample_mean = samples.mean_axis(Axis(0)).expect("Operation failed");
         let expected_mean = mvln.mean();
         assert_relative_eq!(sample_mean[0], expected_mean[0], epsilon = 0.2);
         assert_relative_eq!(sample_mean[1], expected_mean[1], epsilon = 0.2);
 
         // Single sample
-        let single_sample = mvln.rvs_single().unwrap();
+        let single_sample = mvln.rvs_single().expect("Operation failed");
         assert_eq!(single_sample.len(), 2);
         assert!(single_sample[0] > 0.0);
         assert!(single_sample[1] > 0.0);

@@ -314,17 +314,17 @@ mod tests {
         // Valid input
         let result = gamma.evaluate(5.0);
         assert!(result.is_ok());
-        assert!((result.unwrap() - 24.0).abs() < 1e-10);
+        assert!((result.expect("Operation failed") - 24.0).abs() < 1e-10);
 
         // Invalid input (NaN)
         let result = gamma.evaluate(f64::NAN);
         assert!(result.is_ok()); // NaN input returns NaN output
-        assert!(result.unwrap().is_nan());
+        assert!(result.expect("Operation failed").is_nan());
 
         // Invalid input (infinity)
         let result = gamma.evaluate(f64::INFINITY);
         assert!(result.is_ok());
-        assert!(result.unwrap().is_infinite());
+        assert!(result.expect("Operation failed").is_infinite());
     }
 
     #[test]

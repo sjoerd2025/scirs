@@ -27,7 +27,7 @@ use scirs2_core::ndarray::Array2;
 /// use image::DynamicImage;
 ///
 /// let img = DynamicImage::new_luma8(10, 10);
-/// let integral = compute_integral_image(&img).unwrap();
+/// let integral = compute_integral_image(&img).expect("Operation failed");
 /// assert_eq!(integral.dim(), (10, 10));
 /// ```
 #[allow(dead_code)]
@@ -318,7 +318,7 @@ mod tests {
         let result = compute_integral_image(&img);
         assert!(result.is_ok());
 
-        let integral = result.unwrap();
+        let integral = result.expect("Operation failed");
         assert_eq!(integral.dim(), (3, 3));
     }
 
@@ -332,7 +332,8 @@ mod tests {
             }
         }
 
-        let integral = compute_integral_image(&DynamicImage::ImageLuma8(img)).unwrap();
+        let integral =
+            compute_integral_image(&DynamicImage::ImageLuma8(img)).expect("Operation failed");
 
         // Test various rectangles
         assert_eq!(compute_rect_sum(&integral, 0, 0, 1, 1), 4); // 2x2 square
@@ -350,8 +351,10 @@ mod tests {
             }
         }
 
-        let integral = compute_integral_image(&DynamicImage::ImageLuma8(img.clone())).unwrap();
-        let squared = compute_squared_integral_image(&DynamicImage::ImageLuma8(img)).unwrap();
+        let integral = compute_integral_image(&DynamicImage::ImageLuma8(img.clone()))
+            .expect("Operation failed");
+        let squared = compute_squared_integral_image(&DynamicImage::ImageLuma8(img))
+            .expect("Operation failed");
 
         let (mean, variance) = compute_rect_mean_variance(&integral, &squared, 0, 0, 3, 3);
         assert!(mean > 0.0);
@@ -364,7 +367,7 @@ mod tests {
         let result = compute_color_integral_image(&img);
         assert!(result.is_ok());
 
-        let (r, g, b) = result.unwrap();
+        let (r, g, b) = result.expect("Operation failed");
         assert_eq!(r.dim(), (10, 10));
         assert_eq!(g.dim(), (10, 10));
         assert_eq!(b.dim(), (10, 10));

@@ -36,7 +36,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-interpolate = "0.1.0-rc.3"
+//! scirs2-interpolate = "0.1.0-rc.4"
 //! ```
 //!
 //! ### 1D Interpolation
@@ -185,8 +185,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.3
-//! - **Release Date**: October 03, 2025
+//! - **Version**: 0.1.0-rc.4
+//! - **Release Date**: December 21, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-interpolate](https://docs.rs/scirs2-interpolate)
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)

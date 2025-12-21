@@ -36,7 +36,7 @@ where
                     .ok_or_else(|| {
                         FFTError::ValueError("Failed to convert input to complex".to_string())
                     })
-                    .unwrap(),
+                    .expect("Operation failed"),
                 0.0,
             );
         });
@@ -190,7 +190,7 @@ where
                     .ok_or_else(|| {
                         FFTError::ValueError("Failed to convert input to complex".to_string())
                     })
-                    .unwrap(),
+                    .expect("Operation failed"),
                 0.0,
             );
         });
@@ -284,7 +284,7 @@ where
         .for_each(|dst, &src| {
             *dst = NumCast::from(src)
                 .ok_or_else(|| FFTError::ValueError("Failed to convert input to float".to_string()))
-                .unwrap();
+                .expect("Operation failed");
         });
 
     // Apply real FFT on the last axis

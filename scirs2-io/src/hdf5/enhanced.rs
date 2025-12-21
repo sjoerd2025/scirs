@@ -157,7 +157,7 @@ impl EnhancedHDF5File {
         A::Elem: Clone + Into<f64> + std::fmt::Debug,
         D: scirs2_core::ndarray::Dimension,
     {
-        let _lock = self.file_lock.write().unwrap();
+        let _lock = self.file_lock.write().expect("Operation failed");
         let _start_time = Instant::now();
 
         #[cfg(feature = "hdf5")]
@@ -314,7 +314,7 @@ impl EnhancedHDF5File {
         let original_size = total_elements * std::mem::size_of::<f64>(); // Estimate
 
         {
-            let mut stats = self.compression_stats.lock().unwrap();
+            let mut stats = self.compression_stats.lock().expect("Operation failed");
             stats.original_size += original_size;
             stats.compression_time_ms += compression_time;
             // Compressed size would need to be queried from HDF5
@@ -449,7 +449,7 @@ impl EnhancedHDF5File {
             return Err(IoError::FormatError("Invalid dataset path".to_string()));
         }
 
-        let dataset_name = parts.last().unwrap().to_string();
+        let dataset_name = parts.last().expect("Operation failed").to_string();
         let grouppath = if parts.len() > 1 {
             parts[..parts.len() - 1].join("/")
         } else {
@@ -479,7 +479,7 @@ impl EnhancedHDF5File {
 
     /// Read dataset with parallel I/O if configured
     pub fn read_dataset_parallel(&self, path: &str) -> Result<ArrayD<f64>> {
-        let _lock = self.file_lock.read().unwrap();
+        let _lock = self.file_lock.read().expect("Operation failed");
 
         if let Some(ref parallel_config) = self.parallel_config {
             self.read_dataset_parallel_impl(path, parallel_config)
@@ -605,7 +605,10 @@ impl EnhancedHDF5File {
 
     /// Get compression statistics
     pub fn get_compression_stats(&self) -> CompressionStats {
-        self.compression_stats.lock().unwrap().clone()
+        self.compression_stats
+            .lock()
+            .expect("Operation failed")
+            .clone()
     }
 
     /// Write multiple datasets in parallel
@@ -613,7 +616,7 @@ impl EnhancedHDF5File {
         &mut self,
         datasets: HashMap<String, (ArrayD<f64>, ExtendedDataType, DatasetOptions)>,
     ) -> Result<()> {
-        let _lock = self.file_lock.write().unwrap();
+        let _lock = self.file_lock.write().expect("Operation failed");
         let parallel_config_clone = self.parallel_config.clone();
         drop(_lock); // Release lock before calling methods that need &mut self
 
@@ -722,7 +725,10 @@ mod tests {
 
     #[test]
     fn test_optimal_chunks_calculation() {
-        let file = EnhancedHDF5File::create("test.h5", None).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_optimal_chunks_{}.h5", std::process::id()));
+        let file =
+            EnhancedHDF5File::create(test_file.to_str().unwrap(), None).expect("Operation failed");
         let shape = vec![1000, 1000];
         let total_elements = 1_000_000;
 
@@ -732,20 +738,30 @@ mod tests {
 
         let chunk_elements: usize = chunks.iter().product();
         assert!(chunk_elements <= 1024 * 1024 / 8); // Should fit in reasonable memory
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
-    #[ignore]
     fn test_path_splitting() {
-        let file = EnhancedHDF5File::create("test.h5", None).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_path_splitting_{}.h5", std::process::id()));
+        let file =
+            EnhancedHDF5File::create(test_file.to_str().unwrap(), None).expect("Operation failed");
 
-        let (grouppath, dataset_name) = file.split_path("/group1/group2/dataset").unwrap();
+        let (grouppath, dataset_name) = file
+            .split_path("/group1/group2/dataset")
+            .expect("Operation failed");
         assert_eq!(grouppath, "group1/group2");
         assert_eq!(dataset_name, "dataset");
 
-        let (grouppath, dataset_name) = file.split_path("dataset").unwrap();
+        let (grouppath, dataset_name) = file.split_path("dataset").expect("Operation failed");
         assert_eq!(grouppath, "");
         assert_eq!(dataset_name, "dataset");
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
@@ -1246,7 +1262,7 @@ impl OptimizedHDF5File {
     ) -> Result<()> {
         // Cache the metadata
         {
-            let mut cache = self.metadata_cache.write().unwrap();
+            let mut cache = self.metadata_cache.write().expect("Operation failed");
             cache.insert(dataset_path.to_string(), metadata.clone());
         }
 
@@ -1257,31 +1273,31 @@ impl OptimizedHDF5File {
 
     /// Get scientific metadata for a dataset
     pub fn get_scientific_metadata(&self, datasetpath: &str) -> Option<ScientificMetadata> {
-        let cache = self.metadata_cache.read().unwrap();
+        let cache = self.metadata_cache.read().expect("Operation failed");
         cache.get(datasetpath).cloned()
     }
 
     /// Get performance report
     pub fn get_performance_report(&self) -> PerformanceSummary {
-        let monitor = self.performance_monitor.lock().unwrap();
+        let monitor = self.performance_monitor.lock().expect("Operation failed");
         monitor.get_summary()
     }
 
     /// Get layout optimization recommendations
     pub fn get_layout_recommendations(&self) -> Vec<LayoutOptimization> {
-        let mut analyzer = self.access_analyzer.lock().unwrap();
+        let mut analyzer = self.access_analyzer.lock().expect("Operation failed");
         analyzer.analyze().clone()
     }
 
     /// Record a data access for optimization analysis
     pub fn record_access(&self, operation: &str, region: Vec<(usize, usize)>) {
-        let mut analyzer = self.access_analyzer.lock().unwrap();
+        let mut analyzer = self.access_analyzer.lock().expect("Operation failed");
         analyzer.record_access(operation.to_string(), region);
     }
 
     /// Get access pattern statistics
     pub fn get_access_statistics(&self) -> AccessPatternStats {
-        let analyzer = self.access_analyzer.lock().unwrap();
+        let analyzer = self.access_analyzer.lock().expect("Operation failed");
         analyzer.get_statistics()
     }
 
@@ -1295,7 +1311,7 @@ impl OptimizedHDF5File {
         let duration = start_time.elapsed().as_secs_f64() * 1000.0;
 
         {
-            let mut monitor = self.performance_monitor.lock().unwrap();
+            let mut monitor = self.performance_monitor.lock().expect("Operation failed");
             monitor.record_timing(operationname, duration);
         }
 

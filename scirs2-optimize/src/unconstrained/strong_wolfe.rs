@@ -468,7 +468,7 @@ mod tests {
             &options,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.success);
         assert!(result.alpha > 0.0);
@@ -509,7 +509,7 @@ mod tests {
             &options,
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.success);
         assert!(result.alpha > 0.0);

@@ -324,7 +324,7 @@ impl AllocationId {
             "alloc_{}",
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_millis()
         ))
     }
@@ -360,7 +360,7 @@ impl TaskId {
             "task_{}",
             SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
+                .expect("Operation failed")
                 .as_millis()
         ))
     }

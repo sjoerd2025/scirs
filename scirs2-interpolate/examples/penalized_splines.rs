@@ -294,8 +294,14 @@ fn generate_uniform_knots(
     }
 
     // Calculate min and max x values
-    let x_min = *x.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    let x_max = *x.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+    let x_min = *x
+        .iter()
+        .min_by(|a, b| a.partial_cmp(b).expect("Test: operation failed"))
+        .expect("Test: operation failed");
+    let x_max = *x
+        .iter()
+        .max_by(|a, b| a.partial_cmp(b).expect("Test: operation failed"))
+        .expect("Test: operation failed");
 
     // Create knot vector
     let mut knots = Array1::zeros(n_knots + degree + 1);

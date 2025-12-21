@@ -36,11 +36,11 @@
 //!     .with_uncertainty_quantification(true);
 //!
 //! // Fit the model (automatically selects best kernel and optimizes hyperparameters)
-//! gp.fit(&x.view(), &y.view()).unwrap();
+//! gp.fit(&x.view(), &y.view()).expect("Operation failed");
 //!
 //! // Make predictions with uncertainty
 //! let x_new = Array1::linspace(0.0_f64, 10.0_f64, 100);
-//! let (mean, variance) = gp.predict_with_uncertainty(&x_new.view()).unwrap();
+//! let (mean, variance) = gp.predict_with_uncertainty(&x_new.view()).expect("Operation failed");
 //!
 //! println!("Selected kernel: {:?}", gp.get_selected_kernel());
 //! println!("Predictive uncertainty: {:?}", variance.mapv(|v: f64| v.sqrt()));
@@ -96,7 +96,7 @@ impl<T: Float + FromPrimitive> Default for KernelHyperparameters<T> {
         Self {
             output_variance: T::one(),
             length_scales: vec![T::one()],
-            noise_variance: T::from(0.01).unwrap(),
+            noise_variance: T::from(0.01).expect("Operation failed"),
             additional_params: HashMap::new(),
         }
     }
@@ -157,12 +157,12 @@ impl<T: Float + FromPrimitive> Default for AdaptiveGPConfig<T> {
             enable_optimization: true,
             enable_uncertainty: true,
             max_optimization_iterations: 100,
-            optimization_tolerance: T::from(1e-6).unwrap(),
+            optimization_tolerance: T::from(1e-6).expect("Operation failed"),
             enable_kernel_composition: false,
             max_composite_components: 3,
             enable_sparse_gp: false,
             num_inducing_points: 50,
-            jitter: T::from(1e-6).unwrap(),
+            jitter: T::from(1e-6).expect("Operation failed"),
         }
     }
 }
@@ -420,8 +420,8 @@ where
             ));
         }
 
-        let selected_model = self.selected_model.as_ref().unwrap();
-        let alpha = self.alpha.as_ref().unwrap();
+        let selected_model = self.selected_model.as_ref().expect("Operation failed");
+        let alpha = self.alpha.as_ref().expect("Operation failed");
 
         // Compute kernel matrix between training and test points
         let k_star = self.compute_kernel_matrix_cross(
@@ -502,9 +502,11 @@ where
 
         // Compute BIC for model comparison
         let num_params = self.count_hyperparameters(kerneltype);
-        let n = T::from(self.x_train.len()).unwrap();
-        let bic = T::from(2.0).unwrap() * T::from(num_params).unwrap() * n.ln()
-            - T::from(2.0).unwrap() * log_marginal_likelihood;
+        let n = T::from(self.x_train.len()).expect("Operation failed");
+        let bic = T::from(2.0).expect("Operation failed")
+            * T::from(num_params).expect("Operation failed")
+            * n.ln()
+            - T::from(2.0).expect("Operation failed") * log_marginal_likelihood;
 
         Ok(KernelModel {
             kerneltype,
@@ -525,28 +527,30 @@ where
 
         // Estimate initial length scale from data
         let x_range = self.x_train[self.x_train.len() - 1] - self.x_train[0];
-        let initial_length_scale = x_range / T::from(10.0).unwrap();
+        let initial_length_scale = x_range / T::from(10.0).expect("Operation failed");
         hyperparams.length_scales = vec![initial_length_scale];
 
         // Estimate initial output variance from data variance
-        let y_mean = self.y_train.sum() / T::from(self.y_train.len()).unwrap();
+        let y_mean = self.y_train.sum() / T::from(self.y_train.len()).expect("Operation failed");
         let y_var = self.y_train.mapv(|y| (y - y_mean) * (y - y_mean)).sum()
-            / T::from(self.y_train.len() - 1).unwrap();
-        hyperparams.output_variance = y_var.max(T::from(0.01).unwrap());
+            / T::from(self.y_train.len() - 1).expect("Operation failed");
+        hyperparams.output_variance = y_var.max(T::from(0.01).expect("Operation failed"));
 
         // Kernel-specific parameter initialization
         match kerneltype {
             KernelType::Periodic => {
                 // Add period parameter
-                hyperparams
-                    .additional_params
-                    .insert("period".to_string(), x_range / T::from(2.0).unwrap());
+                hyperparams.additional_params.insert(
+                    "period".to_string(),
+                    x_range / T::from(2.0).expect("Operation failed"),
+                );
             }
             KernelType::Polynomial => {
                 // Add degree parameter
-                hyperparams
-                    .additional_params
-                    .insert("degree".to_string(), T::from(2.0).unwrap());
+                hyperparams.additional_params.insert(
+                    "degree".to_string(),
+                    T::from(2.0).expect("Operation failed"),
+                );
             }
             KernelType::RationalQuadratic => {
                 // Add alpha parameter
@@ -588,7 +592,7 @@ where
         for i in 0..cholesky.nrows() {
             log_det += cholesky[(i, i)].ln();
         }
-        log_det = T::from(2.0).unwrap() * log_det;
+        log_det = T::from(2.0).expect("Operation failed") * log_det;
 
         // Solve K * alpha = y
         let alpha = self.cholesky_solve(&cholesky, &self.y_train.view())?;
@@ -597,10 +601,13 @@ where
         let data_fit = self.y_train.dot(&alpha);
 
         // Log marginal likelihood: -0.5 * (y^T * K^{-1} * y + log|K| + n * log(2π))
-        let n = T::from(self.x_train.len()).unwrap();
-        let log_2pi = T::from(2.0 * std::f64::consts::PI).unwrap().ln();
+        let n = T::from(self.x_train.len()).expect("Operation failed");
+        let log_2pi = T::from(2.0 * std::f64::consts::PI)
+            .expect("Operation failed")
+            .ln();
 
-        let log_marginal_likelihood = -T::from(0.5).unwrap() * (data_fit + log_det + n * log_2pi);
+        let log_marginal_likelihood =
+            -T::from(0.5).expect("Operation failed") * (data_fit + log_det + n * log_2pi);
 
         Ok(log_marginal_likelihood)
     }
@@ -613,7 +620,7 @@ where
         current_likelihood: &mut T,
     ) -> InterpolateResult<bool> {
         let mut improved = false;
-        let _step_size = T::from(0.1).unwrap();
+        let _step_size = T::from(0.1).expect("Operation failed");
 
         // Try perturbing each hyperparameter
         let original_hyperparams = hyperparams.clone();
@@ -621,7 +628,8 @@ where
         // Optimize output variance
         let original_output_var = hyperparams.output_variance;
         for &multiplier in &[1.1, 0.9] {
-            hyperparams.output_variance = original_output_var * T::from(multiplier).unwrap();
+            hyperparams.output_variance =
+                original_output_var * T::from(multiplier).expect("Operation failed");
             if let Ok(likelihood) = self.compute_log_marginal_likelihood(kerneltype, hyperparams) {
                 if likelihood > *current_likelihood {
                     *current_likelihood = likelihood;
@@ -635,7 +643,8 @@ where
         // Optimize length scales
         for (i, &original_length_scale) in original_hyperparams.length_scales.iter().enumerate() {
             for &multiplier in &[1.2, 0.8] {
-                hyperparams.length_scales[i] = original_length_scale * T::from(multiplier).unwrap();
+                hyperparams.length_scales[i] =
+                    original_length_scale * T::from(multiplier).expect("Operation failed");
                 if let Ok(likelihood) =
                     self.compute_log_marginal_likelihood(kerneltype, hyperparams)
                 {
@@ -652,7 +661,8 @@ where
         // Optimize noise variance
         let original_noise_var = hyperparams.noise_variance;
         for &multiplier in &[1.1, 0.9] {
-            hyperparams.noise_variance = original_noise_var * T::from(multiplier).unwrap();
+            hyperparams.noise_variance =
+                original_noise_var * T::from(multiplier).expect("Operation failed");
             if let Ok(likelihood) = self.compute_log_marginal_likelihood(kerneltype, hyperparams) {
                 if likelihood > *current_likelihood {
                     *current_likelihood = likelihood;
@@ -700,13 +710,15 @@ where
             .max_by(|a, b| {
                 a.log_marginal_likelihood
                     .partial_cmp(&b.log_marginal_likelihood)
-                    .unwrap()
+                    .expect("Operation failed")
             })
-            .unwrap()
+            .expect("Operation failed")
             .clone();
 
-        self.stats.best_log_marginal_likelihood =
-            best_model.log_marginal_likelihood.to_f64().unwrap();
+        self.stats.best_log_marginal_likelihood = best_model
+            .log_marginal_likelihood
+            .to_f64()
+            .expect("Operation failed");
         self.selected_model = Some(best_model);
 
         Ok(())
@@ -789,25 +801,30 @@ where
         let value = match kerneltype {
             KernelType::RBF => {
                 let scaled_dist = distance / length_scale;
-                output_var * (-T::from(0.5).unwrap() * scaled_dist * scaled_dist).exp()
+                output_var
+                    * (-T::from(0.5).expect("Operation failed") * scaled_dist * scaled_dist).exp()
             }
             KernelType::Matern12 => {
                 let scaled_dist = distance / length_scale;
                 output_var * (-scaled_dist).exp()
             }
             KernelType::Matern32 => {
-                let scaled_dist = (T::from(3.0).unwrap().sqrt()) * distance / length_scale;
+                let scaled_dist =
+                    (T::from(3.0).expect("Operation failed").sqrt()) * distance / length_scale;
                 output_var * (T::one() + scaled_dist) * (-scaled_dist).exp()
             }
             KernelType::Matern52 => {
-                let scaled_dist = (T::from(5.0).unwrap().sqrt()) * distance / length_scale;
+                let scaled_dist =
+                    (T::from(5.0).expect("Operation failed").sqrt()) * distance / length_scale;
                 output_var
-                    * (T::one() + scaled_dist + scaled_dist * scaled_dist / T::from(3.0).unwrap())
+                    * (T::one()
+                        + scaled_dist
+                        + scaled_dist * scaled_dist / T::from(3.0).expect("Operation failed"))
                     * (-scaled_dist).exp()
             }
             KernelType::Linear => output_var * x1 * x2,
             KernelType::Polynomial => {
-                let default_degree = T::from(2.0).unwrap();
+                let default_degree = T::from(2.0).expect("Operation failed");
                 let degree = hyperparams
                     .additional_params
                     .get("degree")
@@ -820,10 +837,12 @@ where
                     .additional_params
                     .get("period")
                     .unwrap_or(&default_period);
-                let pi = T::from(std::f64::consts::PI).unwrap();
+                let pi = T::from(std::f64::consts::PI).expect("Operation failed");
                 let sin_arg = pi * distance / *period;
-                let scaled_sin = T::from(2.0).unwrap() * sin_arg.sin() / length_scale;
-                output_var * (-T::from(0.5).unwrap() * scaled_sin * scaled_sin).exp()
+                let scaled_sin =
+                    T::from(2.0).expect("Operation failed") * sin_arg.sin() / length_scale;
+                output_var
+                    * (-T::from(0.5).expect("Operation failed") * scaled_sin * scaled_sin).exp()
             }
             KernelType::RationalQuadratic => {
                 let default_alpha = T::one();
@@ -832,7 +851,10 @@ where
                     .get("alpha")
                     .unwrap_or(&default_alpha);
                 let scaled_dist_sq = distance * distance
-                    / (T::from(2.0).unwrap() * *alpha * length_scale * length_scale);
+                    / (T::from(2.0).expect("Operation failed")
+                        * *alpha
+                        * length_scale
+                        * length_scale);
                 output_var * (T::one() + scaled_dist_sq).powf(-*alpha)
             }
             KernelType::WhiteNoise => {
@@ -1045,10 +1067,10 @@ mod tests {
         let mut gp = AdaptiveGaussianProcess::new()
             .with_kernel_candidates(vec![KernelType::RBF, KernelType::Matern52]);
 
-        gp.fit(&x.view(), &y.view()).unwrap();
+        gp.fit(&x.view(), &y.view()).expect("Operation failed");
 
         let x_new = Array1::from_vec(vec![2.5, 7.5]);
-        let predictions = gp.predict(&x_new.view()).unwrap();
+        let predictions = gp.predict(&x_new.view()).expect("Operation failed");
 
         assert_eq!(predictions.len(), 2);
         // Check that predictions are reasonable for sine function
@@ -1065,10 +1087,12 @@ mod tests {
             .with_kernel_candidates(vec![KernelType::RBF])
             .with_uncertainty_quantification(true);
 
-        gp.fit(&x.view(), &y.view()).unwrap();
+        gp.fit(&x.view(), &y.view()).expect("Operation failed");
 
         let x_new = Array1::from_vec(vec![1.0, 3.0]);
-        let (mean, variance) = gp.predict_with_uncertainty(&x_new.view()).unwrap();
+        let (mean, variance) = gp
+            .predict_with_uncertainty(&x_new.view())
+            .expect("Operation failed");
 
         assert_eq!(mean.len(), 2);
         assert_eq!(variance.len(), 2);
@@ -1085,19 +1109,19 @@ mod tests {
         // Test RBF kernel
         let k_val = gp
             .kernel_function(0.0, 1.0, KernelType::RBF, &hyperparams)
-            .unwrap();
+            .expect("Operation failed");
         assert!(k_val > 0.0 && k_val < 1.0);
 
         // Test that kernel is symmetric
         let k_val2 = gp
             .kernel_function(1.0, 0.0, KernelType::RBF, &hyperparams)
-            .unwrap();
+            .expect("Operation failed");
         assert!((k_val - k_val2).abs() < 1e-10);
 
         // Test that kernel value at zero distance is maximal
         let k_zero = gp
             .kernel_function(0.0, 0.0, KernelType::RBF, &hyperparams)
-            .unwrap();
+            .expect("Operation failed");
         assert!(k_zero >= k_val);
     }
 
@@ -1112,11 +1136,11 @@ mod tests {
             KernelType::Linear,
         ]);
 
-        gp.fit(&x.view(), &y.view()).unwrap();
+        gp.fit(&x.view(), &y.view()).expect("Operation failed");
 
         // For periodic data, periodic kernel should be preferred
         // (though this may not always happen due to optimization challenges)
-        let selected = gp.get_selected_kernel().unwrap();
+        let selected = gp.get_selected_kernel().expect("Operation failed");
         assert!(matches!(selected, KernelType::RBF | KernelType::Periodic));
 
         // Check that multiple models were evaluated

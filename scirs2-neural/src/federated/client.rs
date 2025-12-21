@@ -164,7 +164,7 @@ use scirs2_core::random::seq::SliceRandom;
             let predicted_class = pred_slice
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(idx_)| idx)
                 .unwrap_or(0);
             if predicted_class == labels[i] {
@@ -202,7 +202,7 @@ use scirs2_core::random::seq::SliceRandom;
             use scirs2_core::random::{Distribution, Normal};
             let noise_scale = clip_threshold * (2.0 * (1.0 / accountant.delta).ln()).sqrt()
                 / accountant.max_epsilon;
-            let noise_dist = Normal::new(0.0, noise_scale).unwrap();
+            let noise_dist = Normal::new(0.0, noise_scale).expect("Operation failed");
             let mut rng = rng();
                 for elem in update.iter_mut() {
                     *elem += noise_dist.sample(&mut rng);
@@ -242,7 +242,7 @@ mod tests {
             learning_rate: 0.01,
             enable_privacy: false,
             privacy_budget: None,
-        let client = FederatedClient::new(config).unwrap();
+        let client = FederatedClient::new(config).expect("Operation failed");
         assert_eq!(client.config.client_id, 0);
     fn test_batch_extraction() {
             local_epochs: 1,
@@ -253,7 +253,7 @@ mod tests {
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
         let indices = vec![1, 3];
         let batch = client.get_batch_data(&data.view(), &indices);
         assert_eq!(batch.shape(), &[2, 3]);

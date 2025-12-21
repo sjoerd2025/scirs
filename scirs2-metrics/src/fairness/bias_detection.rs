@@ -56,7 +56,7 @@ pub struct DataSlice {
 ///     45.0, 0.0, 0.0,
 ///     28.0, 1.0, 2.0,
 ///     50.0, 1.0, 0.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0];
 /// let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
@@ -73,7 +73,7 @@ pub struct DataSlice {
 ///         let y_p_array = scirs2_core::ndarray::Array::from_vec(y_p.to_vec());
 ///         accuracy_score(&y_t_array, &y_p_array).unwrap_or(0.0)
 ///     }
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Examine performance across different slices
 /// for (slice_name, metric_value) in results {
@@ -135,7 +135,9 @@ where
         // Find unique values for this feature
         let mut unique_values = BTreeSet::new();
         for i in 0..n_samples {
-            let value = features[[i, feature_idx]].to_f64().unwrap();
+            let value = features[[i, feature_idx]]
+                .to_f64()
+                .expect("Operation failed");
             // Convert to integer by rounding to handle precision issues
             let rounded_value = (value * 1000.0).round() as i64;
             unique_values.insert(rounded_value);
@@ -153,7 +155,9 @@ where
             let mut slice_y_pred = Vec::new();
 
             for i in 0..n_samples {
-                let feature_value = features[[i, feature_idx]].to_f64().unwrap();
+                let feature_value = features[[i, feature_idx]]
+                    .to_f64()
+                    .expect("Operation failed");
                 let rounded_value = (feature_value * 1000.0).round() as i64;
 
                 if rounded_value == int_value {
@@ -212,7 +216,7 @@ where
 ///     0.0, 1.0, // male, old
 ///     1.0, 1.0, // female, old
 ///     1.0, 1.0, // female, old
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let group_names = vec!["gender".to_string(), "age_group".to_string()];
 ///
@@ -228,7 +232,7 @@ where
 ///         let y_p_array = scirs2_core::ndarray::Array::from_vec(y_p.to_vec());
 ///         accuracy_score(&y_t_array, &y_p_array).unwrap_or(0.0)
 ///     }
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Examine performance across different subgroups
 /// for (subgroup, metric_value) in results {
@@ -287,7 +291,7 @@ where
     let mut unique_values = vec![BTreeSet::new(); n_groups];
     for i in 0..n_samples {
         for j in 0..n_groups {
-            let value = groups[[i, j]].to_f64().unwrap();
+            let value = groups[[i, j]].to_f64().expect("Operation failed");
             let rounded_value = (value * 1000.0).round() as i64;
             unique_values[j].insert(rounded_value);
         }
@@ -304,7 +308,7 @@ where
             let mut subgroup_y_pred = Vec::new();
 
             for i in 0..n_samples {
-                let group_value = groups[[i, group_idx]].to_f64().unwrap();
+                let group_value = groups[[i, group_idx]].to_f64().expect("Operation failed");
                 let rounded_value = (group_value * 1000.0).round() as i64;
 
                 if rounded_value == int_value {
@@ -377,10 +381,10 @@ where
                     let mut subgroup_y_pred = Vec::new();
 
                     for k in 0..n_samples {
-                        let group_value_i = groups[[k, i]].to_f64().unwrap();
+                        let group_value_i = groups[[k, i]].to_f64().expect("Operation failed");
                         let rounded_value_i = (group_value_i * 1000.0).round() as i64;
 
-                        let group_value_j = groups[[k, j]].to_f64().unwrap();
+                        let group_value_j = groups[[k, j]].to_f64().expect("Operation failed");
                         let rounded_value_j = (group_value_j * 1000.0).round() as i64;
 
                         if rounded_value_i == int_value_i && rounded_value_j == int_value_j {
@@ -445,7 +449,7 @@ where
 ///     0.0, 0.0,
 ///     1.0, 1.0,
 ///     1.0, 1.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let feature_names = vec!["gender".to_string(), "race".to_string()];
 ///
@@ -455,7 +459,7 @@ where
 ///     &y_pred,
 ///     &protected_features,
 ///     &feature_names
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Examine fairness metrics across intersectional groups
 /// for (group, metrics) in results {
@@ -542,7 +546,9 @@ where
     let mut unique_values = vec![BTreeSet::new(); n_protected];
     for i in 0..n_samples {
         for j in 0..n_protected {
-            let value = protected_features[[i, j]].to_f64().unwrap();
+            let value = protected_features[[i, j]]
+                .to_f64()
+                .expect("Operation failed");
             let rounded_value = (value * 1000.0).round() as i64;
             unique_values[j].insert(rounded_value);
         }
@@ -557,7 +563,9 @@ where
             let mut protected_group = vec![T::zero(); n_samples];
 
             for i in 0..n_samples {
-                let feat_value = protected_features[[i, feat_idx]].to_f64().unwrap();
+                let feat_value = protected_features[[i, feat_idx]]
+                    .to_f64()
+                    .expect("Operation failed");
                 let rounded_value = (feat_value * 1000.0).round() as i64;
 
                 if rounded_value == int_value {
@@ -594,10 +602,14 @@ where
                         let mut protected_group = vec![T::zero(); n_samples];
 
                         for k in 0..n_samples {
-                            let feat_i_value = protected_features[[k, i]].to_f64().unwrap();
+                            let feat_i_value = protected_features[[k, i]]
+                                .to_f64()
+                                .expect("Operation failed");
                             let rounded_i = (feat_i_value * 1000.0).round() as i64;
 
-                            let feat_j_value = protected_features[[k, j]].to_f64().unwrap();
+                            let feat_j_value = protected_features[[k, j]]
+                                .to_f64()
+                                .expect("Operation failed");
                             let rounded_j = (feat_j_value * 1000.0).round() as i64;
 
                             if rounded_i == int_value_i && rounded_j == int_value_j {

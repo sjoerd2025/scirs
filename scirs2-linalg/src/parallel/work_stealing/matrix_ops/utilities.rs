@@ -97,11 +97,13 @@ where
 
     // Compute matrix norm for scaling
     let norm_a = crate::norm::matrix_norm(a, "1", Some(workers))?;
-    let log2_norm = norm_a.ln() / F::from(2.0).unwrap().ln();
+    let log2_norm = norm_a.ln() / F::from(2.0).expect("Operation failed").ln();
     let scaling_factor = log2_norm.ceil().max(F::zero()).to_usize().unwrap_or(0);
 
     // Scale matrix
-    let scaled_factor = F::from(2.0).unwrap().powi(-(scaling_factor as i32));
+    let scaled_factor = F::from(2.0)
+        .expect("Operation failed")
+        .powi(-(scaling_factor as i32));
     let mut scaled_matrix = a.to_owned();
     scaled_matrix *= scaled_factor;
 
@@ -153,7 +155,7 @@ where
 
     // Initialize with scaled identity matrix
     let trace = (0..n).map(|i| a[[i, i]]).fold(F::zero(), |acc, x| acc + x);
-    let initial_scaling = (trace / F::from(n).unwrap()).sqrt();
+    let initial_scaling = (trace / F::from(n).expect("Operation failed")).sqrt();
     let mut x = Array2::eye(n) * initial_scaling;
     let mut z = Array2::eye(n);
 
@@ -174,8 +176,8 @@ where
         }
 
         // Update x and z using Newton-Schulz iteration
-        let three = F::from(3.0).unwrap();
-        let two = F::from(2.0).unwrap();
+        let three = F::from(3.0).expect("Operation failed");
+        let two = F::from(2.0).expect("Operation failed");
 
         // Create 3*I - Z² where I is identity matrix
         let three_i = Array2::eye(n) * three;
@@ -244,7 +246,7 @@ where
 
         let mut results = Vec::new();
         for handle in handles {
-            let chunk_results = handle.join().unwrap()?;
+            let chunk_results = handle.join().expect("Operation failed")?;
             results.extend(chunk_results);
         }
         Ok::<Vec<R>, LinalgError>(results)
@@ -406,7 +408,8 @@ where
         power = parallel_gemm_work_stealing(&power.view(), a, workers)?;
 
         // Padé coefficient (simplified)
-        let coeff = F::from(1.0).unwrap() / F::from(factorial(k)).unwrap();
+        let coeff = F::from(1.0).expect("Operation failed")
+            / F::from(factorial(k)).expect("Operation failed");
         result = result + power.mapv(|x| x * coeff);
     }
 

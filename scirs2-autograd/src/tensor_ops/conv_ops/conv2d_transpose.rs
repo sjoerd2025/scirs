@@ -499,14 +499,14 @@ fn test_deconv() {
             2.0, 4.0, 2.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     let ctx = crate::VariableEnvironment::<f32>::new();
     let out_val = ctx.run(|graph| {
         let w = T::ones(&[ych, xch, kh, kw], graph);
         let g = T::ones(&[batch_size, ych, yh, yw], graph);
         let out = T::conv2d_transpose(g, w, 0, 1);
-        out.eval(graph).unwrap()
+        out.eval(graph).expect("Operation failed")
     });
     // Use an alternate method to check equality since abs_diff_eq isn't available
     // Print shape info for debugging purposes

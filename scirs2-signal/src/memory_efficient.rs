@@ -672,9 +672,9 @@ mod tests {
         let chunk2 = [3.0, 4.0];
         let chunk3 = [5.0, 6.0];
 
-        processor.process_chunk(&chunk1, &process_fn).unwrap();
-        processor.process_chunk(&chunk2, &process_fn).unwrap();
-        let result = processor.process_chunk(&chunk3, &process_fn).unwrap();
+        processor.process_chunk(&chunk1, &process_fn).expect("Operation failed");
+        processor.process_chunk(&chunk2, &process_fn).expect("Operation failed");
+        let result = processor.process_chunk(&chunk3, &process_fn).expect("Operation failed");
 
         assert_eq!(result, vec![2.0, 4.0, 6.0, 8.0]); // First chunk processed
     }
@@ -689,7 +689,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = memory_efficient_filter(signal.into_iter(), &b, &a, &config).unwrap();
+        let result = memory_efficient_filter(signal.into_iter(), &b, &a, &config).expect("Operation failed");
 
         assert!(!result.chunks.is_empty());
         assert!(result.chunks.iter().all(|chunk| !chunk.is_empty()));
@@ -702,7 +702,7 @@ mod tests {
             .collect();
 
         let config = MemoryConfig::default();
-        let result = memory_efficient_spectrogram(signal.into_iter(), 16, 8, &config).unwrap();
+        let result = memory_efficient_spectrogram(signal.into_iter(), 16, 8, &config).expect("Operation failed");
 
         assert!(!result.frames.is_empty());
         assert_eq!(result.window_size, 16);
@@ -746,7 +746,7 @@ mod tests {
 
         let result =
             memory_efficient_correlation(signal1.into_iter(), signal2.into_iter(), 2, &config)
-                .unwrap();
+                .expect("Operation failed");
 
         assert_eq!(result.correlation.len(), 5); // 2*max_lag + 1
         assert_eq!(result.lags.len(), 5);

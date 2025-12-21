@@ -480,7 +480,7 @@ mod tests {
             .collect::<Vec<_>>();
 
         let config = ParallelFilterConfig::default();
-        let result = enhanced_parallel_filtfilt(&b, &a, &x, &config).unwrap();
+        let result = enhanced_parallel_filtfilt(&b, &a, &x, &config).expect("Operation failed");
 
         assert_eq!(result.len(), x.len());
         assert!(result.iter().all(|&val: &f64| val.is_finite()));
@@ -500,7 +500,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = enhanced_parallel_filtfilt(&b, &a, &x, &config).unwrap();
+        let result = enhanced_parallel_filtfilt(&b, &a, &x, &config).expect("Operation failed");
         assert_eq!(result.len(), x.len());
     }
 

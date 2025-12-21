@@ -127,8 +127,8 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// ds.make_set(2);
     /// ds.union(1, 2);
     ///
-    /// let root1 = ds.find(&1).unwrap();
-    /// let root2 = ds.find(&2).unwrap();
+    /// let root1 = ds.find(&1).expect("Operation failed");
+    /// let root2 = ds.find(&2).expect("Operation failed");
     /// assert_eq!(root1, root2); // Same representative
     /// ```
     pub fn find(&mut self, x: &T) -> Option<T> {
@@ -327,7 +327,7 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// ds.make_set(3);
     /// ds.union(1, 2);
     ///
-    /// let set_members = ds.get_set_members(&1).unwrap();
+    /// let set_members = ds.get_set_members(&1).expect("Operation failed");
     /// assert_eq!(set_members.len(), 2);
     /// assert!(set_members.contains(&1));
     /// assert!(set_members.contains(&2));
@@ -488,10 +488,10 @@ mod tests {
         ds.union(3, 4);
 
         // After find operations, path should be compressed
-        let root1 = ds.find(&1).unwrap();
-        let root2 = ds.find(&2).unwrap();
-        let root3 = ds.find(&3).unwrap();
-        let root4 = ds.find(&4).unwrap();
+        let root1 = ds.find(&1).expect("Operation failed");
+        let root2 = ds.find(&2).expect("Operation failed");
+        let root3 = ds.find(&3).expect("Operation failed");
+        let root4 = ds.find(&4).expect("Operation failed");
 
         assert_eq!(root1, root2);
         assert_eq!(root2, root3);
@@ -509,12 +509,12 @@ mod tests {
         ds.union(1, 2);
         ds.union(3, 4);
 
-        let members1 = ds.get_set_members(&1).unwrap();
+        let members1 = ds.get_set_members(&1).expect("Operation failed");
         assert_eq!(members1.len(), 2);
         assert!(members1.contains(&1));
         assert!(members1.contains(&2));
 
-        let members3 = ds.get_set_members(&3).unwrap();
+        let members3 = ds.get_set_members(&3).expect("Operation failed");
         assert_eq!(members3.len(), 2);
         assert!(members3.contains(&3));
         assert!(members3.contains(&4));

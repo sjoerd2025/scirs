@@ -12,7 +12,7 @@
 //! use scirs2_core::ndarray::Array2;
 //!
 //! // Create sample data
-//! let data = Array2::from_shape_vec((100, 2), (0..200).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::from_shape_vec((100, 2), (0..200).map(|x| x as f64).collect()).expect("Operation failed");
 //!
 //! // Configure ensemble
 //! let config = EnsembleConfig {
@@ -23,7 +23,7 @@
 //!
 //! // Create and fit ensemble
 //! let ensemble = EnsembleClusterer::new(config);
-//! let result = ensemble.fit(data.view()).unwrap();
+//! let result = ensemble.fit(data.view()).expect("Operation failed");
 //! println!("Ensemble quality: {}", result.ensemble_quality);
 //! ```
 //!
@@ -33,8 +33,8 @@
 //! use scirs2_cluster::ensemble::convenience::ensemble_clustering;
 //! use scirs2_core::ndarray::Array2;
 //!
-//! let data = Array2::from_shape_vec((50, 3), (0..150).map(|x| x as f64).collect()).unwrap();
-//! let result = ensemble_clustering(data.view()).unwrap();
+//! let data = Array2::from_shape_vec((50, 3), (0..150).map(|x| x as f64).collect()).expect("Operation failed");
+//! let result = ensemble_clustering(data.view()).expect("Operation failed");
 //! ```
 //!
 //! ## Advanced Ensemble Methods
@@ -52,7 +52,7 @@
 //! use scirs2_core::ndarray::Array2;
 //!
 //! // Advanced ensemble with meta-learning
-//! let data = Array2::from_shape_vec((100, 4), (0..400).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::from_shape_vec((100, 4), (0..400).map(|x| x as f64).collect()).expect("Operation failed");
 //! let base_config = EnsembleConfig::default();
 //! let advanced_config = AdvancedEnsembleConfig {
 //!     meta_learning: MetaLearningConfig {
@@ -96,7 +96,7 @@
 //!     uncertainty_quantification: false,
 //! };
 //! let mut advanced_ensemble = AdvancedEnsembleClusterer::new(advanced_config, base_config);
-//! let result = advanced_ensemble.fit_with_meta_learning(data.view()).unwrap();
+//! let result = advanced_ensemble.fit_with_meta_learning(data.view()).expect("Operation failed");
 //! ```
 
 pub mod advanced;
@@ -295,32 +295,35 @@ mod tests {
 
     #[test]
     fn test_quick_ensemble_clustering() {
-        let data = Array2::from_shape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((20, 2), (0..40).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_ensemble_clustering(data.view(), Some(5));
         assert!(result.is_ok());
 
-        let ensemble_result = result.unwrap();
+        let ensemble_result = result.expect("Operation failed");
         assert_eq!(ensemble_result.consensus_labels.len(), 20);
         assert_eq!(ensemble_result.individual_results.len(), 5);
     }
 
     #[test]
     fn test_quick_multi_algorithm_ensemble() {
-        let data = Array2::from_shape_vec((30, 3), (0..90).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((30, 3), (0..90).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_multi_algorithm_ensemble(data.view());
         assert!(result.is_ok());
 
-        let ensemble_result = result.unwrap();
+        let ensemble_result = result.expect("Operation failed");
         assert_eq!(ensemble_result.consensus_labels.len(), 30);
     }
 
     #[test]
     fn test_ensemble_result_metrics() {
-        let data = Array2::from_shape_vec((15, 2), (0..30).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((15, 2), (0..30).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_ensemble_clustering(data.view(), Some(3));
         assert!(result.is_ok());
 
-        let ensemble_result = result.unwrap();
+        let ensemble_result = result.expect("Operation failed");
         assert!(ensemble_result.ensemble_quality >= -1.0);
         assert!(ensemble_result.ensemble_quality <= 1.0);
         assert!(ensemble_result.stability_score >= 0.0);
@@ -329,11 +332,12 @@ mod tests {
 
     #[test]
     fn test_consensus_statistics() {
-        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_ensemble_clustering(data.view(), Some(3));
         assert!(result.is_ok());
 
-        let ensemble_result = result.unwrap();
+        let ensemble_result = result.expect("Operation failed");
         let consensus_stats = &ensemble_result.consensus_stats;
 
         assert_eq!(consensus_stats.consensus_strength.len(), 10);
@@ -344,11 +348,12 @@ mod tests {
 
     #[test]
     fn test_diversity_metrics() {
-        let data = Array2::from_shape_vec((12, 2), (0..24).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((12, 2), (0..24).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_ensemble_clustering(data.view(), Some(4));
         assert!(result.is_ok());
 
-        let ensemble_result = result.unwrap();
+        let ensemble_result = result.expect("Operation failed");
         let diversity_metrics = &ensemble_result.diversity_metrics;
 
         assert!(diversity_metrics.average_diversity >= 0.0);

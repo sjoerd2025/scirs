@@ -59,7 +59,7 @@ use super::utils::{
 /// });
 ///
 /// let config = AdvancedEnhancedConfig::default();
-/// let result = advanced_enhanced_arma(&signal, 4, 2, &config).unwrap();
+/// let result = advanced_enhanced_arma(&signal, 4, 2, &config).expect("Operation failed");
 ///
 /// assert!(result.convergence_info.converged);
 /// assert!(result.diagnostics.is_stable);
@@ -564,7 +564,7 @@ mod tests {
         }
         assert!(result.is_ok());
 
-        let arma_result = result.unwrap();
+        let arma_result = result.expect("Operation failed");
         assert_eq!(arma_result.ar_coeffs.len(), 3);
         assert_eq!(arma_result.ma_coeffs.len(), 2);
         assert!(arma_result.noise_variance > 0.0);
@@ -578,7 +578,7 @@ mod tests {
         let result = enhanced_burg_method_standard(&signal, 2, &config);
         assert!(result.is_ok());
 
-        let (ar_coeffs, variance) = result.unwrap();
+        let (ar_coeffs, variance) = result.expect("Operation failed");
         assert_eq!(ar_coeffs.len(), 3);
         assert!(variance > 0.0);
     }

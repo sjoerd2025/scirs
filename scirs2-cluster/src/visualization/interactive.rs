@@ -818,11 +818,13 @@ mod tests {
             (4, 3),
             vec![1.0, 2.0, 3.0, 1.1, 2.1, 3.1, 5.0, 6.0, 7.0, 5.1, 6.1, 7.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        visualizer.update_data(data.view(), &labels, None).unwrap();
+        visualizer
+            .update_data(data.view(), &labels, None)
+            .expect("Operation failed");
 
         let stats = visualizer.get_cluster_stats();
         assert_eq!(stats.len(), 2);

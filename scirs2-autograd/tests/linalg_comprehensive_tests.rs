@@ -13,7 +13,7 @@ fn test_matrix_operations() {
         let a = convert_to_tensor(array![[2.0, 1.0], [1.0, 3.0]], g);
         let inv = matrix_inverse(a);
         let identity = matmul(a, inv);
-        let result = identity.eval(g).unwrap();
+        let result = identity.eval(g).expect("Test: operation failed");
 
         assert!((result[[0, 0]] - 1.0_f64).abs() < EPSILON);
         assert!((result[[1, 1]] - 1.0_f64).abs() < EPSILON);
@@ -22,7 +22,7 @@ fn test_matrix_operations() {
 
         // Test determinant
         let det = determinant(a);
-        let det_val = det.eval(g).unwrap();
+        let det_val = det.eval(g).expect("Test: operation failed");
         assert!((det_val[[]] - 5.0_f64).abs() < EPSILON); // det([[2,1],[1,3]]) = 6-1 = 5
     });
 }
@@ -35,8 +35,8 @@ fn test_matrix_functions() {
         let a = convert_to_tensor(array![[0.5, 0.1], [0.1, 0.3]], g);
         let exp_a = matrix_exp(&a);
         let log_exp_a = matrix_log(&exp_a);
-        let result = log_exp_a.eval(g).unwrap();
-        let original = a.eval(g).unwrap();
+        let result = log_exp_a.eval(g).expect("Test: operation failed");
+        let original = a.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -62,14 +62,14 @@ fn test_matrix_functions() {
         // Test matrix square root
         let b = convert_to_tensor(array![[4.0, 0.0], [0.0, 9.0]], g);
         let sqrt_b = matrix_sqrt(&b);
-        let result = sqrt_b.eval(g).unwrap();
+        let result = sqrt_b.eval(g).expect("Test: operation failed");
         assert!(((result[[0, 0]] - 2.0) as f64).abs() < EPSILON);
         assert!(((result[[1, 1]] - 3.0) as f64).abs() < EPSILON);
 
         // Test matrix power
         let c = convert_to_tensor(array![[2.0, 0.0], [0.0, 3.0]], g);
         let c_squared = powm(&c, 2.0);
-        let result = c_squared.eval(g).unwrap();
+        let result = c_squared.eval(g).expect("Test: operation failed");
         assert!(((result[[0, 0]] - 4.0) as f64).abs() < EPSILON);
         assert!(((result[[1, 1]] - 9.0) as f64).abs() < EPSILON);
     });
@@ -85,8 +85,8 @@ fn test_special_matrices() {
         let a = convert_to_tensor(array![[4.0, 2.0], [2.0, 5.0]], g); // Positive definite matrix
         let l = cholesky(&a);
         let reconstructed = matmul(l, transpose(l, &[1, 0]));
-        let result = reconstructed.eval(g).unwrap();
-        let original = a.eval(g).unwrap();
+        let result = reconstructed.eval(g).expect("Test: operation failed");
+        let original = a.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -98,7 +98,7 @@ fn test_special_matrices() {
         // Test symmetrize
         let b = convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], g);
         let sym = symmetrize(&b);
-        let result = sym.eval(g).unwrap();
+        let result = sym.eval(g).expect("Test: operation failed");
         assert!(((result[[0, 1]] - result[[1, 0]]) as f64).abs() < EPSILON);
         assert!(((result[[0, 1]] - 2.5) as f64).abs() < EPSILON); // (2+3)/2 = 2.5
 
@@ -107,8 +107,8 @@ fn test_special_matrices() {
         let lower = tril(&c, 0);
         let upper = triu(&c, 0);
 
-        let lower_result = lower.eval(g).unwrap();
-        let upper_result = upper.eval(g).unwrap();
+        let lower_result = lower.eval(g).expect("Test: operation failed");
+        let upper_result = upper.eval(g).expect("Test: operation failed");
 
         // Check lower triangular
         assert!((lower_result[[0, 1]] as f64).abs() < EPSILON);
@@ -131,21 +131,21 @@ fn test_eigenvalue_decomposition() {
         let (eigenvalues, eigenvectors) = eigen(a);
 
         // Debug shapes by evaluating
-        let eigenvals_eval = eigenvalues.eval(g).unwrap();
-        let eigenvecs_eval = eigenvectors.eval(g).unwrap();
+        let eigenvals_eval = eigenvalues.eval(g).expect("Test: operation failed");
+        let eigenvecs_eval = eigenvectors.eval(g).expect("Test: operation failed");
         println!("Debug: eigenvalues shape: {:?}", eigenvals_eval.shape());
         println!("Debug: eigenvectors shape: {:?}", eigenvecs_eval.shape());
 
         // Reconstruct matrix: A = V * Λ * V^T
         let lambda = diag(eigenvalues);
-        let lambda_eval = lambda.eval(g).unwrap();
+        let lambda_eval = lambda.eval(g).expect("Test: operation failed");
         println!("Debug: lambda shape: {:?}", lambda_eval.shape());
 
         let v_lambda = matmul(eigenvectors, lambda);
         let reconstructed = matmul(v_lambda, transpose(eigenvectors, &[1, 0]));
 
-        let result = reconstructed.eval(g).unwrap();
-        let original = a.eval(g).unwrap();
+        let result = reconstructed.eval(g).expect("Test: operation failed");
+        let original = a.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             for j in 0..2 {
@@ -155,7 +155,7 @@ fn test_eigenvalue_decomposition() {
 
         // Test eigenvalues separately
         // Extract eigenvalues from the previous decomposition
-        let eigenvals_result = eigenvalues.eval(g).unwrap();
+        let eigenvals_result = eigenvalues.eval(g).expect("Test: operation failed");
 
         // Since we're just testing that we can evaluate the eigenvalues
         assert!(eigenvals_result.shape() == [2]);
@@ -173,8 +173,8 @@ fn test_linear_solvers() {
 
         // Verify Ax = b
         let ax = matmul(a, x);
-        let result = ax.eval(g).unwrap();
-        let b_val = b.eval(g).unwrap();
+        let result = ax.eval(g).expect("Test: operation failed");
+        let b_val = b.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             assert!(((result[[i, 0]] - b_val[[i, 0]]) as f64).abs() < EPSILON);
@@ -186,7 +186,7 @@ fn test_linear_solvers() {
         let x_ls = lstsq(a_overdetermined, b_overdetermined);
 
         // The solution should minimize ||Ax - b||^2
-        let x_result = x_ls.eval(g).unwrap();
+        let x_result = x_ls.eval(g).expect("Test: operation failed");
         assert!(x_result.shape() == [2, 1]);
     });
 }
@@ -241,21 +241,21 @@ fn test_complex_linear_algebra_pipeline() {
 
         // Test results
         let x_direct = solve(a, b);
-        let x_result = x.eval(g).unwrap();
-        let x_direct_result = x_direct.eval(g).unwrap();
+        let x_result = x.eval(g).expect("Test: operation failed");
+        let x_direct_result = x_direct.eval(g).expect("Test: operation failed");
 
         for i in 0..2 {
             assert!(((x_result[[i, 0]] - x_direct_result[[i, 0]]) as f64).abs() < EPSILON);
         }
 
-        let det_a_result = det_a.eval(g).unwrap();
-        let det_direct = determinant(a).eval(g).unwrap();
+        let det_a_result = det_a.eval(g).expect("Test: operation failed");
+        let det_direct = determinant(a).eval(g).expect("Test: operation failed");
         assert!(((det_a_result[[]] - det_direct[[]]) as f64).abs() < EPSILON);
         */
 
         // Test direct solve without Cholesky
         let b = convert_to_tensor(array![[1.0], [2.0]], g);
         let x_direct = solve(a, b);
-        let _x_direct_result = x_direct.eval(g).unwrap();
+        let _x_direct_result = x_direct.eval(g).expect("Test: operation failed");
     });
 }

@@ -101,6 +101,13 @@ use crate::error::{NdimageError, NdimageResult};
 /// - Automatically enables parallel processing for large arrays (> 10,000 elements)
 /// - For very large windows, consider using percentile_filter with 50th percentile
 ///   which may offer better cache locality
+///
+/// # ⚠️ Known Issues
+///
+/// **WARNING**: Border handling for this filter has known discrepancies with SciPy's
+/// implementation. Results near array boundaries may differ from scipy.ndimage.median_filter.
+/// This is being tracked for v0.2.0. For strict SciPy compatibility, validate results
+/// carefully when boundary values are critical.
 #[allow(dead_code)]
 pub fn median_filter<T, D>(
     input: &Array<T, D>,

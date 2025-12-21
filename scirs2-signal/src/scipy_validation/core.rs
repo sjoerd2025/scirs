@@ -34,7 +34,7 @@ use crate::error::SignalResult;
 /// use scirs2_signal::scipy_validation::{validate_all, ValidationConfig};
 ///
 /// let config = ValidationConfig::default();
-/// let results = validate_all(&config).unwrap();
+/// let results = validate_all(&config).expect("Operation failed");
 ///
 /// if results.all_passed() {
 ///     println!("All validations passed!");
@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_validate_quick() {
-        let results = validate_quick().unwrap();
+        let results = validate_quick().expect("Operation failed");
         assert!(results.summary.total_tests > 0);
     }
 
@@ -399,7 +399,7 @@ mod tests {
         // Test unknown component
         let results = validate_component("unknown", &config);
         assert!(results.is_ok());
-        let results = results.unwrap();
+        let results = results.expect("Operation failed");
         assert_eq!(results.summary.failed_tests, 1);
     }
 }

@@ -283,7 +283,7 @@ impl MMHeader {
 /// ```no_run
 /// use scirs2_io::matrix_market::read_sparse_matrix;
 ///
-/// let matrix = read_sparse_matrix("matrix.mtx").unwrap();
+/// let matrix = read_sparse_matrix("matrix.mtx").expect("Operation failed");
 /// println!("Matrix: {}x{} with {} non-zeros", matrix.rows, matrix.cols, matrix.nnz);
 /// ```
 #[allow(dead_code)]
@@ -305,9 +305,12 @@ pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>
     for line in &mut lines {
         let line = line.map_err(|e| IoError::FileError(e.to_string()))?;
         if line.starts_with('%') {
-            header
-                .comments
-                .push(line.strip_prefix('%').unwrap().trim().to_string());
+            header.comments.push(
+                line.strip_prefix('%')
+                    .expect("Operation failed")
+                    .trim()
+                    .to_string(),
+            );
         } else {
             // This is the size line, put it back
             let size_parts: Vec<&str> = line.split_whitespace().collect();
@@ -425,7 +428,7 @@ pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>
 ///     entries,
 /// };
 ///
-/// write_sparse_matrix("output.mtx", &matrix).unwrap();
+/// write_sparse_matrix("output.mtx", &matrix).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn write_sparse_matrix<P: AsRef<Path>>(path: P, matrix: &MMSparseMatrix<f64>) -> Result<()> {
@@ -505,9 +508,12 @@ pub fn read_dense_matrix<P: AsRef<Path>>(path: P) -> Result<MMDenseMatrix<f64>> 
     for line in &mut lines {
         let line = line.map_err(|e| IoError::FileError(e.to_string()))?;
         if line.starts_with('%') {
-            header
-                .comments
-                .push(line.strip_prefix('%').unwrap().trim().to_string());
+            header.comments.push(
+                line.strip_prefix('%')
+                    .expect("Operation failed")
+                    .trim()
+                    .to_string(),
+            );
         } else {
             // This is the size line
             let size_parts: Vec<&str> = line.split_whitespace().collect();
@@ -681,7 +687,7 @@ pub fn coo_to_sparse(
 /// use scirs2_io::matrix_market::{read_sparse_matrix_parallel, ParallelConfig};
 ///
 /// let config = ParallelConfig::default();
-/// let (matrix, stats) = read_sparse_matrix_parallel("large_matrix.mtx", config).unwrap();
+/// let (matrix, stats) = read_sparse_matrix_parallel("large_matrix.mtx", config).expect("Operation failed");
 /// println!("Read {} entries in {:.2}ms", stats.entries_processed, stats.io_time_ms);
 /// ```
 #[allow(dead_code)]
@@ -717,9 +723,12 @@ pub fn read_sparse_matrix_parallel<P: AsRef<Path>>(
         }
 
         if line.starts_with('%') {
-            header
-                .comments
-                .push(line.strip_prefix('%').unwrap().trim().to_string());
+            header.comments.push(
+                line.strip_prefix('%')
+                    .expect("Operation failed")
+                    .trim()
+                    .to_string(),
+            );
         } else {
             size_line = line.clone();
             break;
@@ -823,7 +832,7 @@ pub fn read_sparse_matrix_parallel<P: AsRef<Path>>(
             }
 
             // Lock and append to shared vector
-            let mut shared_entries = entries_clone.lock().unwrap();
+            let mut shared_entries = entries_clone.lock().expect("Operation failed");
             shared_entries.extend(local_entries);
 
             Ok(())
@@ -842,7 +851,7 @@ pub fn read_sparse_matrix_parallel<P: AsRef<Path>>(
     let final_entries = Arc::try_unwrap(entries)
         .map_err(|_| IoError::FormatError("Failed to unwrap entries".to_string()))?
         .into_inner()
-        .unwrap();
+        .expect("Operation failed");
 
     stats.entries_processed = final_entries.len();
     stats.io_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
@@ -933,7 +942,7 @@ fn parse_matrix_entry(line: &str, header: &MMHeader) -> Result<SparseEntry<f64>>
 /// #     ],
 /// # };
 /// let config = ParallelConfig::default();
-/// let stats = write_sparse_matrix_parallel("output.mtx", &matrix, config).unwrap();
+/// let stats = write_sparse_matrix_parallel("output.mtx", &matrix, config).expect("Operation failed");
 /// println!("Wrote {} entries in {:.2}ms", stats.entries_processed, stats.io_time_ms);
 /// ```
 #[allow(dead_code)]
@@ -987,7 +996,7 @@ pub fn write_sparse_matrix_parallel<P: AsRef<Path>>(
                     local_lines.push(line);
                 }
 
-                let mut shared_chunks = formatted_chunks_clone.lock().unwrap();
+                let mut shared_chunks = formatted_chunks_clone.lock().expect("Operation failed");
                 shared_chunks.push((chunk_idx, local_lines));
 
                 Ok(())
@@ -1007,7 +1016,7 @@ pub fn write_sparse_matrix_parallel<P: AsRef<Path>>(
         let mut all_formatted = Arc::try_unwrap(formatted_chunks)
             .map_err(|_| IoError::FormatError("Failed to unwrap formatted chunks".to_string()))?
             .into_inner()
-            .unwrap();
+            .expect("Operation failed");
 
         all_formatted.sort_by_key(|&(idx_, _)| idx_);
 
@@ -1121,7 +1130,7 @@ mod tests {
     #[test]
     fn test_header_parsing() {
         let header_line = "%%MatrixMarket matrix coordinate real general";
-        let header = MMHeader::parse_header(header_line).unwrap();
+        let header = MMHeader::parse_header(header_line).expect("Operation failed");
 
         assert_eq!(header.object, "matrix");
         assert_eq!(header.format, MMFormat::Coordinate);
@@ -1271,7 +1280,8 @@ mod tests {
         };
 
         // Test normal entry
-        let entry = parse_matrix_entry(&format!("1 2 {}", std::f64::consts::PI), &header).unwrap();
+        let entry = parse_matrix_entry(&format!("1 2 {}", std::f64::consts::PI), &header)
+            .expect("Operation failed");
         assert_eq!(entry.row, 0); // 0-based
         assert_eq!(entry.col, 1); // 0-based
         assert!((entry.value - std::f64::consts::PI).abs() < 1e-10);
@@ -1279,7 +1289,7 @@ mod tests {
         // Test pattern entry
         let mut pattern_header = header.clone();
         pattern_header.data_type = MMDataType::Pattern;
-        let entry = parse_matrix_entry("5 10", &pattern_header).unwrap();
+        let entry = parse_matrix_entry("5 10", &pattern_header).expect("Operation failed");
         assert_eq!(entry.row, 4);
         assert_eq!(entry.col, 9);
         assert_eq!(entry.value, 1.0);

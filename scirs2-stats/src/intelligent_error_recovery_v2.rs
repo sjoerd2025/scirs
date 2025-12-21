@@ -508,7 +508,7 @@ where
                 lessons_learned: self.extract_lessons_learned(&final_result),
             };
 
-            let mut history = self.recovery_history.lock().unwrap();
+            let mut history = self.recovery_history.lock().expect("Operation failed");
             history.push_back(session);
             
             // Maintain history size
@@ -753,7 +753,7 @@ where
     /// Update success rate for a strategy
     fn update_strategy_success_rate(&self, strategy: &RecoveryStrategy, success: bool) {
         let strategy_name = format!("{:?}", strategy);
-        let mut rates = self.strategy_success_rates.lock().unwrap();
+        let mut rates = self.strategy_success_rates.lock().expect("Operation failed");
         
         let current_rate = rates.get(&strategy_name).unwrap_or(&0.5);
         let new_rate = if success {
@@ -796,7 +796,7 @@ where
 
     /// Get recovery statistics
     pub fn get_recovery_statistics(&self) -> RecoveryStatistics {
-        let history = self.recovery_history.lock().unwrap();
+        let history = self.recovery_history.lock().expect("Operation failed");
         let total_sessions = history.len();
         let successful_sessions = history.iter()
             .filter(|s| matches!(s.final_result, RecoveryResult::FullRecovery { .. }))
@@ -831,7 +831,7 @@ where
     }
 
     fn get_best_strategies(&self) -> Vec<(String, f64)> {
-        let rates = self.strategy_success_rates.lock().unwrap();
+        let rates = self.strategy_success_rates.lock().expect("Operation failed");
         let mut strategies: Vec<_> = rates.iter().map(|(k, v)| (k.clone(), *v)).collect();
         strategies.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         strategies.into().iter().take(5).collect()
@@ -915,7 +915,6 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_error_classification() {
         let recovery_system = create_advanced_error_recovery::<f64>();
         let error = StatsError::ComputationError("Matrix is singular".to_string());
@@ -967,9 +966,9 @@ mod tests {
         context.data_dimensions = Some((100, 50));
         context.estimated_condition_number = Some(1e8);
         
-        assert_eq!(context.algorithm_name.unwrap(), "QR_decomposition");
-        assert_eq!(context.data_dimensions.unwrap(), (100, 50));
-        assert!((context.estimated_condition_number.unwrap() - 1e8).abs() < 1e-10);
+        assert_eq!(context.algorithm_name.expect("Operation failed"), "QR_decomposition");
+        assert_eq!(context.data_dimensions.expect("Operation failed"), (100, 50));
+        assert!((context.estimated_condition_number.expect("Operation failed") - 1e8).abs() < 1e-10);
     }
 
     #[test]

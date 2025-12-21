@@ -47,7 +47,7 @@ use statrs::statistics::Statistics;
 /// let table = array![[50.0, 10.0], [5.0, 35.0]];
 ///
 /// // Calculate McNemar's test p-value
-/// let p_value = mcnemars_test(&table, true).unwrap();
+/// let p_value = mcnemars_test(&table, true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn mcnemars_test<T>(
@@ -139,7 +139,7 @@ where
 /// ];
 ///
 /// // Run Cochran's Q test
-/// let (q_statistic, p_value) = cochrans_q_test(&binary_predictions).unwrap();
+/// let (q_statistic, p_value) = cochrans_q_test(&binary_predictions).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn cochrans_q_test<T>(
@@ -260,7 +260,7 @@ where
 /// ];
 ///
 /// // Run Friedman test
-/// let (test_statistic, p_value) = friedman_test(&performance_metrics).unwrap();
+/// let (test_statistic, p_value) = friedman_test(&performance_metrics).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn friedman_test<T>(
@@ -398,7 +398,7 @@ where
 ///     &model2_performance,
 ///     "wilcox",
 ///     true
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
@@ -596,7 +596,7 @@ where
 ///     0.95,
 ///     1000,
 ///     Some(42)
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
@@ -1035,7 +1035,7 @@ mod tests {
         );
 
         // Full function test with zero correction
-        let p_value = mcnemars_test(&table, false).unwrap();
+        let p_value = mcnemars_test(&table, false).expect("Operation failed");
         assert!(
             (0.0..=1.0).contains(&p_value),
             "p-value should be between 0 and 1, got {}",
@@ -1056,7 +1056,7 @@ mod tests {
         );
 
         // Full function test with correction
-        let p_value = mcnemars_test(&table, true).unwrap();
+        let p_value = mcnemars_test(&table, true).expect("Operation failed");
         assert!(
             (0.0..=1.0).contains(&p_value),
             "p-value should be between 0 and 1, got {}",
@@ -1065,7 +1065,7 @@ mod tests {
 
         // Test 3: Zero discordant pairs
         let table = array![[40.0, 0.0], [0.0, 60.0]];
-        let p_value = mcnemars_test(&table, true).unwrap();
+        let p_value = mcnemars_test(&table, true).expect("Operation failed");
         assert_eq!(
             p_value, 1.0,
             "Expected p-value of 1.0 for zero discordant pairs"
@@ -1081,7 +1081,8 @@ mod tests {
             [0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0]  // Model 3 predictions
         ];
 
-        let (q_statistic, p_value) = cochrans_q_test(&binary_predictions).unwrap();
+        let (q_statistic, p_value) =
+            cochrans_q_test(&binary_predictions).expect("Operation failed");
 
         // Check Q statistic is non-negative
         assert!(q_statistic >= 0.0);
@@ -1101,7 +1102,8 @@ mod tests {
             [0.88, 0.84, 0.87]  // Dataset 5 results
         ];
 
-        let (test_statistic, p_value) = friedman_test(&performance_metrics).unwrap();
+        let (test_statistic, p_value) =
+            friedman_test(&performance_metrics).expect("Operation failed");
 
         // Check test statistic is non-negative
         assert!(test_statistic >= 0.0);
@@ -1124,7 +1126,7 @@ mod tests {
         // Model 1 consistently outperforms model 2
         let (statistic, p_value) =
             wilcoxon_signed_rank_test(&model1_performance, &model2_performance, "wilcox", true)
-                .unwrap();
+                .expect("Operation failed");
 
         // Check statistic is non-negative
         assert!(statistic >= 0.0);
@@ -1140,8 +1142,8 @@ mod tests {
 
         // Test with identical samples
         let identical = array![0.5, 0.6, 0.7, 0.8];
-        let (_, p_value) =
-            wilcoxon_signed_rank_test(&identical, &identical, "wilcox", true).unwrap();
+        let (_, p_value) = wilcoxon_signed_rank_test(&identical, &identical, "wilcox", true)
+            .expect("Operation failed");
 
         // Identical samples should give p-value of 1.0
         assert_eq!(
@@ -1157,7 +1159,8 @@ mod tests {
 
         // Calculate confidence interval for the mean
         let (lower, point_estimate, upper) =
-            bootstrap_confidence_interval(&data, |x| x.mean_or(0.0), 0.95, 1000, Some(42)).unwrap();
+            bootstrap_confidence_interval(&data, |x| x.mean_or(0.0), 0.95, 1000, Some(42))
+                .expect("Operation failed");
 
         // Check that point estimate is between bounds
         assert!(lower <= point_estimate && point_estimate <= upper);
@@ -1170,14 +1173,14 @@ mod tests {
             &data,
             |x| {
                 let mut vals: Vec<f64> = x.iter().copied().collect();
-                vals.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                vals.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 vals[vals.len() / 2]
             },
             0.95,
             1000,
             Some(42),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Check that point estimate is between bounds
         assert!(lower <= point_estimate && point_estimate <= upper);

@@ -51,10 +51,10 @@ fn test_radau_constant_mass_matrix() -> IntegrateResult<()> {
 
     // Verify solution against analytical solution
     let omega = 1.0 / f64::sqrt(2.0); // Natural frequency
-    let t_final = result.t.last().unwrap();
+    let t_final = result.t.last().expect("Operation failed");
 
-    let x_numerical = result.y.last().unwrap()[0];
-    let v_numerical = result.y.last().unwrap()[1];
+    let x_numerical = result.y.last().expect("Operation failed")[0];
+    let v_numerical = result.y.last().expect("Operation failed")[1];
 
     let x_analytical = (omega * t_final).cos();
     let v_analytical = -f64::sqrt(2.0) * (omega * t_final).sin();
@@ -142,11 +142,14 @@ fn test_radau_time_dependent_mass_matrix() -> IntegrateResult<()> {
     // But we can check that the solution is oscillatory and reasonably bounded
 
     println!("Time-dependent mass matrix solution with Radau:");
-    println!("  Final time: {}", result.t.last().unwrap());
+    println!(
+        "  Final time: {}",
+        result.t.last().expect("Operation failed")
+    );
     println!(
         "  Final state: x = {}, v = {}",
-        result.y.last().unwrap()[0],
-        result.y.last().unwrap()[1]
+        result.y.last().expect("Operation failed")[0],
+        result.y.last().expect("Operation failed")[1]
     );
 
     // Check a few points throughout the solution to verify oscillatory behavior
@@ -161,9 +164,9 @@ fn test_radau_time_dependent_mass_matrix() -> IntegrateResult<()> {
                 (a - check_time)
                     .abs()
                     .partial_cmp(&(b - check_time).abs())
-                    .unwrap()
+                    .expect("Operation failed")
             })
-            .unwrap();
+            .expect("Operation failed");
 
         println!(
             "  At t ≈ {}: x = {}, v = {}",
@@ -199,8 +202,8 @@ fn test_radau_time_dependent_mass_matrix() -> IntegrateResult<()> {
     let standard_result = solve_ivp(f, t_span, y0.clone(), Some(standard_opts))?;
 
     // Compare final states
-    let time_dep_final = result.y.last().unwrap();
-    let standard_final = standard_result.y.last().unwrap();
+    let time_dep_final = result.y.last().expect("Operation failed");
+    let standard_final = standard_result.y.last().expect("Operation failed");
 
     // The solutions should be different due to the time-dependent mass
     let diff_x = (time_dep_final[0] - standard_final[0]).abs();
@@ -254,7 +257,10 @@ fn test_radau_debug() -> IntegrateResult<()> {
 
     match solve_ivp(f, t_span, y0.clone(), Some(opts_no_mass)) {
         Ok(result) => {
-            println!("  Success! Final state: {:?}", result.y.last().unwrap());
+            println!(
+                "  Success! Final state: {:?}",
+                result.y.last().expect("Operation failed")
+            );
             println!(
                 "  Steps: {}, Function evals: {}",
                 result.n_steps, result.n_eval
@@ -276,7 +282,10 @@ fn test_radau_debug() -> IntegrateResult<()> {
 
     match solve_ivp(f, t_span, y0.clone(), Some(opts_identity)) {
         Ok(result) => {
-            println!("  Success! Final state: {:?}", result.y.last().unwrap());
+            println!(
+                "  Success! Final state: {:?}",
+                result.y.last().expect("Operation failed")
+            );
             println!(
                 "  Steps: {}, Function evals: {}",
                 result.n_steps, result.n_eval
@@ -301,7 +310,10 @@ fn test_radau_debug() -> IntegrateResult<()> {
 
     match solve_ivp(f, t_span, y0.clone(), Some(opts_mass)) {
         Ok(result) => {
-            println!("  Success! Final state: {:?}", result.y.last().unwrap());
+            println!(
+                "  Success! Final state: {:?}",
+                result.y.last().expect("Operation failed")
+            );
             println!(
                 "  Steps: {}, Function evals: {}",
                 result.n_steps, result.n_eval
@@ -363,10 +375,10 @@ fn test_radau_vs_explicit_mass_matrix() -> IntegrateResult<()> {
 
     // Compare results
     let t_final = t_span[1];
-    let radau_final = radau_result.y.last().unwrap();
+    let radau_final = radau_result.y.last().expect("Operation failed");
 
     // Find the state at t_final in RK45 result
-    let rk45_final = rk45_result.y.last().unwrap();
+    let rk45_final = rk45_result.y.last().expect("Operation failed");
 
     println!("Comparison at t = {t_final}:");
     println!("  Radau: x = {}, v = {}", radau_final[0], radau_final[1]);

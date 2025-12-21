@@ -120,7 +120,7 @@ impl NetCDFFile {
     /// use scirs2_io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
-    /// let nc = NetCDFFile::open("data.nc", None).unwrap();
+    /// let nc = NetCDFFile::open("data.nc", None).expect("Operation failed");
     ///
     /// // List the dimensions
     /// println!("Dimensions: {:?}", nc.dimensions());
@@ -176,7 +176,7 @@ impl NetCDFFile {
         self.file.dimensions()
             .map(|(name, len)| {
                 let size = if len.is_some() {
-                    Some(len.unwrap() as usize)
+                    Some(len.expect("Operation failed") as usize)
                 } else {
                     None
                 };
@@ -239,10 +239,10 @@ impl NetCDFFile {
     /// use scirs2_io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
-    /// let nc = NetCDFFile::open("data.nc", None).unwrap();
+    /// let nc = NetCDFFile::open("data.nc", None).expect("Operation failed");
     ///
     /// // Read a variable
-    /// let temp: scirs2_core::ndarray::ArrayD<f32> = nc.read_variable("temperature").unwrap();
+    /// let temp: scirs2_core::ndarray::ArrayD<f32> = nc.read_variable("temperature").expect("Operation failed");
     /// println!("Temperature data shape: {:?}", temp.shape());
     /// ```
     pub fn read_variable<T: netcdf3::FromNetcdf3 + Clone>(&self, name: &str) -> Result<ArrayD<T>> {
@@ -256,7 +256,7 @@ impl NetCDFFile {
         // Get dimensions
         let shape: Vec<usize> = var.dimensions()
             .map(|dim| {
-                let dim_info = self.file.dimension(dim).unwrap();
+                let dim_info = self.file.dimension(dim).expect("Operation failed");
                 dim_info.len().unwrap_or(0) as usize
             })
             .collect();
@@ -338,23 +338,23 @@ impl NetCDFFile {
     ///     mode: "w".to_string(),
     ///     ..Default::default()
     /// };
-    /// let nc = NetCDFFile::open("new_data.nc", Some(opts)).unwrap();
+    /// let nc = NetCDFFile::open("new_data.nc", Some(opts)).expect("Operation failed");
     ///
     /// // Create dimensions
-    /// nc.create_dimension("x", Some(10)).unwrap();
-    /// nc.create_dimension("y", Some(5)).unwrap();
+    /// nc.create_dimension("x", Some(10)).expect("Operation failed");
+    /// nc.create_dimension("y", Some(5)).expect("Operation failed");
     ///
     /// // Create a variable
-    /// nc.create_variable("temperature", NetCDFDataType::Float, &["x", "y"]).unwrap();
+    /// nc.create_variable("temperature", NetCDFDataType::Float, &["x", "y"]).expect("Operation failed");
     ///
     /// // Create some data
     /// let data = Array::from_elem((10, 5), 25.0f32);
     ///
     /// // Write the data
-    /// nc.write_variable("temperature", &data).unwrap();
+    /// nc.write_variable("temperature", &data).expect("Operation failed");
     ///
     /// // Close the file
-    /// nc.close().unwrap();
+    /// nc.close().expect("Operation failed");
     /// ```
     pub fn write_variable<T: netcdf3::IntoNetcdf3 + Clone, D: Dimension>(&self, name: &str, data: &Array<T, D>) -> Result<()> {
         if self.mode == "r" {
@@ -498,7 +498,7 @@ mod tests {
     
     #[test]
     fn test_create_read_netcdf() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("Operation failed");
         let file_path = dir.path().join("test.nc");
         
         // Create a new NetCDF file
@@ -506,28 +506,28 @@ mod tests {
             mode: "w".to_string(),
             ..Default::default()
         };
-        let nc = NetCDFFile::open(&file_path, Some(opts)).unwrap();
+        let nc = NetCDFFile::open(&file_path, Some(opts)).expect("Operation failed");
         
         // Create dimensions
-        nc.create_dimension("x", Some(3)).unwrap();
-        nc.create_dimension("y", Some(2)).unwrap();
+        nc.create_dimension("x", Some(3)).expect("Operation failed");
+        nc.create_dimension("y", Some(2)).expect("Operation failed");
         
         // Create variables
-        nc.create_variable("temperature", NetCDFDataType::Float, &["x", "y"]).unwrap();
+        nc.create_variable("temperature", NetCDFDataType::Float, &["x", "y"]).expect("Operation failed");
         
         // Write data
-        let data = Array2::from_shape_vec((3, 2), vec![20.0f32, 21.0, 22.0, 23.0, 24.0, 25.0]).unwrap();
-        nc.write_variable("temperature", &data).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![20.0f32, 21.0, 22.0, 23.0, 24.0, 25.0]).expect("Operation failed");
+        nc.write_variable("temperature", &data).expect("Operation failed");
         
         // Add attributes
-        nc.add_variable_attribute("temperature", "units", "Celsius").unwrap();
-        nc.add_global_attribute("title", "Test Data").unwrap();
+        nc.add_variable_attribute("temperature", "units", "Celsius").expect("Operation failed");
+        nc.add_global_attribute("title", "Test Data").expect("Operation failed");
         
         // Close file
-        nc.close().unwrap();
+        nc.close().expect("Operation failed");
         
         // Reopen for reading
-        let nc_read = NetCDFFile::open(&file_path, None).unwrap();
+        let nc_read = NetCDFFile::open(&file_path, None).expect("Operation failed");
         
         // Check dimensions
         let dims = nc_read.dimensions();
@@ -541,13 +541,13 @@ mod tests {
         assert_eq!(vars[0], "temperature");
         
         // Check variable info
-        let (dtype, var_dims, attrs) = nc_read.variable_info("temperature").unwrap();
+        let (dtype, var_dims, attrs) = nc_read.variable_info("temperature").expect("Operation failed");
         assert_eq!(dtype, NetCDFDataType::Float);
         assert_eq!(var_dims, vec!["x", "y"]);
         assert!(attrs.contains_key("units"));
         
         // Read data
-        let read_data: ArrayD<f32> = nc_read.read_variable("temperature").unwrap();
+        let read_data: ArrayD<f32> = nc_read.read_variable("temperature").expect("Operation failed");
         
         assert_eq!(read_data.shape(), &[3, 2]);
         assert_eq!(read_data[[0, 0]], 20.0);

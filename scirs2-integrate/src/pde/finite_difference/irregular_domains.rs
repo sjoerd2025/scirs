@@ -658,7 +658,8 @@ impl IrregularStencils {
                 if neighbor_points.len() >= 2 {
                     // Find the two closest neighbors in the primary direction
                     let mut sorted_neighbors: Vec<_> = neighbor_points.iter().collect();
-                    sorted_neighbors.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                    sorted_neighbors
+                        .sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
                     if sorted_neighbors.len() >= 2 {
                         let h1 = sorted_neighbors[0].1;
@@ -957,7 +958,7 @@ impl ImmersedBoundary {
         }
 
         // Sort by distance and select closest points
-        interpolation_points.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        interpolation_points.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
         let num_points = std::cmp::min(interpolation_points.len(), 6); // Use up to 6 points
         interpolation_points.truncate(num_points);
 
@@ -1044,7 +1045,8 @@ mod tests {
             x * x + y * y <= 1.0 // Unit circle
         });
 
-        let grid = IrregularGrid::new((-1.5, 1.5), (-1.5, 1.5), 21, 21, domain_func).unwrap();
+        let grid = IrregularGrid::new((-1.5, 1.5), (-1.5, 1.5), 21, 21, domain_func)
+            .expect("Operation failed");
 
         // Check that center point is interior
         let center = &grid.points[[10, 10]]; // Should be near (0, 0)
@@ -1061,7 +1063,8 @@ mod tests {
             (0.0..=1.0).contains(&x) && (0.0..=1.0).contains(&y) // Unit square
         });
 
-        let mut grid = IrregularGrid::new((-0.1, 1.1), (-0.1, 1.1), 13, 13, domain_func).unwrap();
+        let mut grid = IrregularGrid::new((-0.1, 1.1), (-0.1, 1.1), 13, 13, domain_func)
+            .expect("Operation failed");
 
         // Set Dirichlet boundary condition
         let bc = BoundaryCondition::Dirichlet(1.0);
@@ -1070,7 +1073,8 @@ mod tests {
         for j in 0..grid.ny {
             for i in 0..grid.nx {
                 if grid.points[[j, i]].point_type == PointType::Boundary {
-                    grid.set_boundary_condition(i, j, bc.clone()).unwrap();
+                    grid.set_boundary_condition(i, j, bc.clone())
+                        .expect("Operation failed");
                     break;
                 }
             }
@@ -1085,9 +1089,10 @@ mod tests {
             (0.0..=1.0).contains(&x) && (0.0..=1.0).contains(&y)
         });
 
-        let grid = IrregularGrid::new((0.0, 1.0), (0.0, 1.0), 5, 5, domain_func).unwrap();
+        let grid = IrregularGrid::new((0.0, 1.0), (0.0, 1.0), 5, 5, domain_func)
+            .expect("Operation failed");
 
-        let laplacian = grid.create_laplacian_matrix().unwrap();
+        let laplacian = grid.create_laplacian_matrix().expect("Operation failed");
 
         // Matrix should be square
         assert_eq!(laplacian.shape()[0], laplacian.shape()[1]);
@@ -1103,14 +1108,16 @@ mod tests {
             (0.2..=0.8).contains(&x) && (0.2..=0.8).contains(&y) // Smaller square inside grid
         });
 
-        let mut grid = IrregularGrid::new((0.0, 1.0), (0.0, 1.0), 11, 11, domain_func).unwrap();
+        let mut grid = IrregularGrid::new((0.0, 1.0), (0.0, 1.0), 11, 11, domain_func)
+            .expect("Operation failed");
 
         // Add Dirichlet boundary conditions
         let bc = BoundaryCondition::Dirichlet(1.0);
         for j in 0..grid.ny {
             for i in 0..grid.nx {
                 if grid.points[[j, i]].point_type == PointType::Boundary {
-                    grid.set_boundary_condition(i, j, bc.clone()).unwrap();
+                    grid.set_boundary_condition(i, j, bc.clone())
+                        .expect("Operation failed");
                 }
             }
         }
@@ -1121,7 +1128,8 @@ mod tests {
 
         // Update ghost points and verify they are stored
         let initial_ghost_count = grid.ghost_values.len();
-        grid.update_ghost_points(&solution).unwrap();
+        grid.update_ghost_points(&solution)
+            .expect("Operation failed");
         let final_ghost_count = grid.ghost_values.len();
 
         // Should have stored some ghost values
@@ -1131,7 +1139,7 @@ mod tests {
         for j in 0..grid.ny {
             for i in 0..grid.nx {
                 if grid.points[[j, i]].point_type == PointType::Ghost {
-                    grid.set_ghost_value(i, j, 2.5).unwrap();
+                    grid.set_ghost_value(i, j, 2.5).expect("Operation failed");
                     assert_eq!(grid.get_ghost_value(i, j), Some(2.5));
                     break;
                 }
@@ -1149,14 +1157,16 @@ mod tests {
             x * x + y * y <= 0.8 * 0.8 // Circle with radius 0.8
         });
 
-        let mut grid = IrregularGrid::new((-1.0, 1.0), (-1.0, 1.0), 21, 21, domain_func).unwrap();
+        let mut grid = IrregularGrid::new((-1.0, 1.0), (-1.0, 1.0), 21, 21, domain_func)
+            .expect("Operation failed");
 
         // Set Dirichlet boundary conditions: u = 0 on boundary
         let bc = BoundaryCondition::Dirichlet(0.0);
         for j in 0..grid.ny {
             for i in 0..grid.nx {
                 if grid.points[[j, i]].point_type == PointType::Boundary {
-                    grid.set_boundary_condition(i, j, bc.clone()).unwrap();
+                    grid.set_boundary_condition(i, j, bc.clone())
+                        .expect("Operation failed");
                 }
             }
         }
@@ -1165,7 +1175,9 @@ mod tests {
         let source_fn = |_x: f64, _y: f64| 1.0;
 
         // Solve the PDE: ∇²u = 1 with u = 0 on boundary
-        let solution = grid.solve_pde(Some(&source_fn), None).unwrap();
+        let solution = grid
+            .solve_pde(Some(&source_fn), None)
+            .expect("Operation failed");
 
         // Verify solution properties
         assert_eq!(solution.len(), grid.count_interior_points());

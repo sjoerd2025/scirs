@@ -768,7 +768,7 @@ impl AdvancedMemoryManager {
             .samples
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.importance_score.partial_cmp(&b.importance_score).unwrap())
+            .min_by(|(_, a), (_, b)| a.importance_score.partial_cmp(&b.importance_score).expect("Operation failed"))
             .map(|(idx_)| idx)
     /// Update prototypes in semantic memory
     fn update_prototypes(&mut self, sample: &MemorySample) -> Result<()> {
@@ -893,6 +893,6 @@ mod tests {
         let mut bank = MemoryBank::new(1000);
         let data = Array2::from_elem((100, 10), 1.0);
         let labels = Array1::from_elem(100, 0);
-        bank.add_task_data(0, &data.view(), &labels.view()).unwrap();
-        let samples = bank.sample(50).unwrap();
+        bank.add_task_data(0, &data.view(), &labels.view()).expect("Operation failed");
+        let samples = bank.sample(50).expect("Operation failed");
         assert!(samples.data.shape()[0] <= 50);

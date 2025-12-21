@@ -505,12 +505,18 @@ mod tests {
         corrector.add_word("tomorrow", 100);
 
         // Test basic word correction
-        assert_eq!(corrector.correct("recieved").unwrap(), "received");
-        assert_eq!(corrector.correct("mesage").unwrap(), "message");
+        assert_eq!(
+            corrector.correct("recieved").expect("Operation failed"),
+            "received"
+        );
+        assert_eq!(
+            corrector.correct("mesage").expect("Operation failed"),
+            "message"
+        );
 
         // Test text correction
         let text = "I recieved your mesage about the meating tommorow.";
-        let corrected = corrector.correcttext(text).unwrap();
+        let corrected = corrector.correcttext(text).expect("Operation failed");
 
         // Check each word individually
         assert!(corrected.contains("received"));
@@ -541,8 +547,8 @@ mod tests {
         let text1 = "I went to the bnk to deposit money.";
         let text2 = "The river bnk was muddy after the rain.";
 
-        let corrected1 = corrector.correcttext(text1).unwrap();
-        let corrected2 = corrector.correcttext(text2).unwrap();
+        let corrected1 = corrector.correcttext(text1).expect("Operation failed");
+        let corrected2 = corrector.correcttext(text2).expect("Operation failed");
 
         // Both should correct "bnk" to "bank" regardless of context
         assert!(corrected1.contains("bank"));

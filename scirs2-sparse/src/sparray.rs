@@ -530,7 +530,7 @@ mod tests {
     #[test]
     fn test_sparse_array_base() {
         let data = Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0])
-            .unwrap();
+            .expect("Operation failed");
         let sparse = SparseArrayBase::new(data);
 
         assert_eq!(sparse.shape(), (3, 3));
@@ -543,14 +543,16 @@ mod tests {
 
     #[test]
     fn test_sparse_array_operations() {
-        let data1 = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let data2 = Array::from_shape_vec((2, 2), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data1 =
+            Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
+        let data2 =
+            Array::from_shape_vec((2, 2), vec![5.0, 6.0, 7.0, 8.0]).expect("Operation failed");
 
         let sparse1 = SparseArrayBase::new(data1);
         let sparse2 = SparseArrayBase::new(data2);
 
         // Test add
-        let result = sparse1.add(&sparse2).unwrap();
+        let result = sparse1.add(&sparse2).expect("Operation failed");
         let result_array = result.to_array();
         assert_eq!(result_array[[0, 0]], 6.0);
         assert_eq!(result_array[[0, 1]], 8.0);
@@ -558,7 +560,7 @@ mod tests {
         assert_eq!(result_array[[1, 1]], 12.0);
 
         // Test dot
-        let result = sparse1.dot(&sparse2).unwrap();
+        let result = sparse1.dot(&sparse2).expect("Operation failed");
         let result_array = result.to_array();
         assert_eq!(result_array[[0, 0]], 19.0);
         assert_eq!(result_array[[0, 1]], 22.0);

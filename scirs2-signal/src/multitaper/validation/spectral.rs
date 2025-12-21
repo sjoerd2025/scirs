@@ -150,7 +150,7 @@ mod tests {
         let result = validate_spectral_accuracy(&config, 1e-6);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         assert!(metrics.bias >= 0.0);
         assert!(metrics.variance >= 0.0);
         assert!(metrics.mse >= 0.0);
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn test_sinusoidal_metrics() {
         let config = TestSignalConfig::default();
-        let metrics = calculate_sinusoidal_metrics(100.0, &config).unwrap();
+        let metrics = calculate_sinusoidal_metrics(100.0, &config).expect("Operation failed");
         assert!(metrics.bias < 0.01);
         assert!(metrics.variance < 0.01);
     }

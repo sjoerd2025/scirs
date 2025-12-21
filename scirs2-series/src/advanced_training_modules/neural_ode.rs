@@ -57,13 +57,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
     ) -> Self {
         // Initialize network parameters
         let total_params = input_dim * hidden_dim + hidden_dim * input_dim + 2 * hidden_dim;
-        let scale = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(input_dim).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         let mut parameters = Array2::zeros((1, total_params));
         for i in 0..total_params {
             let val = ((i * 23) % 1000) as f64 / 1000.0 - 0.5;
-            parameters[[0, i]] = F::from(val).unwrap() * std_dev;
+            parameters[[0, i]] = F::from(val).expect("Failed to convert to float") * std_dev;
         }
 
         Self {
@@ -189,12 +190,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
 
         let mut temp_state = Array1::zeros(self.input_dim);
         for i in 0..self.input_dim {
-            temp_state[i] = state[i] + dt * k1[i] / F::from(2.0).unwrap();
+            temp_state[i] =
+                state[i] + dt * k1[i] / F::from(2.0).expect("Failed to convert constant to float");
         }
         let k2 = self.neural_network(&temp_state)?;
 
         for i in 0..self.input_dim {
-            temp_state[i] = state[i] + dt * k2[i] / F::from(2.0).unwrap();
+            temp_state[i] =
+                state[i] + dt * k2[i] / F::from(2.0).expect("Failed to convert constant to float");
         }
         let k3 = self.neural_network(&temp_state)?;
 
@@ -207,10 +210,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + scirs2_core::ndarray::ScalarOper
         for i in 0..self.input_dim {
             next_state[i] = state[i]
                 + dt * (k1[i]
-                    + F::from(2.0).unwrap() * k2[i]
-                    + F::from(2.0).unwrap() * k3[i]
+                    + F::from(2.0).expect("Failed to convert constant to float") * k2[i]
+                    + F::from(2.0).expect("Failed to convert constant to float") * k3[i]
                     + k4[i])
-                    / F::from(6.0).unwrap();
+                    / F::from(6.0).expect("Failed to convert constant to float");
         }
 
         Ok(next_state)
@@ -240,7 +243,11 @@ impl<F: Float + Debug> ODESolverConfig<F> {
 
     /// Create default Euler configuration
     pub fn euler(step_size: F) -> Self {
-        Self::new(IntegrationMethod::Euler, step_size, F::from(1e-6).unwrap())
+        Self::new(
+            IntegrationMethod::Euler,
+            step_size,
+            F::from(1e-6).expect("Failed to convert constant to float"),
+        )
     }
 
     /// Create default RK4 configuration
@@ -248,7 +255,7 @@ impl<F: Float + Debug> ODESolverConfig<F> {
         Self::new(
             IntegrationMethod::RungeKutta4,
             step_size,
-            F::from(1e-6).unwrap(),
+            F::from(1e-6).expect("Failed to convert constant to float"),
         )
     }
 

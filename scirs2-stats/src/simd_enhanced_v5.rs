@@ -140,7 +140,7 @@ fn compute_window_statistics<F>(
         + std::iter::Sum<F>,
 {
     let windowsize = window.len();
-    let windowsize_f = F::from(windowsize).unwrap();
+    let windowsize_f = F::from(windowsize).expect("Failed to convert to float");
 
     // Compute basic statistics that might be needed for derived ones
     let (sum, sum_sq, min_val, max_val) = if windowsize > 16 {
@@ -166,7 +166,7 @@ fn compute_window_statistics<F>(
 
     let mean = sum / windowsize_f;
     let variance = if windowsize > 1 {
-        let n_minus_1 = F::from(windowsize - 1).unwrap();
+        let n_minus_1 = F::from(windowsize - 1).expect("Failed to convert to float");
         (sum_sq - sum * sum / windowsize_f) / n_minus_1
     } else {
         F::zero()
@@ -210,14 +210,14 @@ fn compute_window_statistics<F>(
                     let mut sorted_window = window.to_owned();
                     sorted_window
                         .as_slice_mut()
-                        .unwrap()
-                        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                        .expect("Operation failed")
+                        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                     medians[window_idx] = if windowsize % 2 == 1 {
                         sorted_window[windowsize / 2]
                     } else {
                         let mid1 = sorted_window[windowsize / 2 - 1];
                         let mid2 = sorted_window[windowsize / 2];
-                        (mid1 + mid2) / F::from(2.0).unwrap()
+                        (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
                     };
                 }
             }
@@ -268,7 +268,7 @@ fn compute_window_statistics<F>(
                                 .fold(F::zero(), |acc, x| acc + x)
                         };
                         kurtosis[window_idx] = (kurt_sum / (windowsize_f * variance * variance))
-                            - F::from(3.0).unwrap();
+                            - F::from(3.0).expect("Failed to convert constant to float");
                     } else {
                         kurtosis[window_idx] = F::zero();
                     }
@@ -546,7 +546,7 @@ fn compute_vector_operation<F>(
         + std::iter::Sum<F>,
 {
     let n = data.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let use_simd = n > 16;
 
     match operation {
@@ -596,7 +596,7 @@ fn compute_vector_operation<F>(
                     let squared = F::simd_mul(&centered.view(), &centered.view());
                     let sum_sq = F::simd_sum(&squared.view());
                     variances[idx] = if n > 1 {
-                        sum_sq / F::from(n - 1).unwrap()
+                        sum_sq / F::from(n - 1).expect("Failed to convert to float")
                     } else {
                         F::zero()
                     };
@@ -604,7 +604,7 @@ fn compute_vector_operation<F>(
                     let mean = data.iter().copied().sum::<F>() / n_f;
                     let sum_sq = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
                     variances[idx] = if n > 1 {
-                        sum_sq / F::from(n - 1).unwrap()
+                        sum_sq / F::from(n - 1).expect("Failed to convert to float")
                     } else {
                         F::zero()
                     };
@@ -622,7 +622,7 @@ fn compute_vector_operation<F>(
                     let squared = F::simd_mul(&centered.view(), &centered.view());
                     let sum_sq = F::simd_sum(&squared.view());
                     if n > 1 {
-                        sum_sq / F::from(n - 1).unwrap()
+                        sum_sq / F::from(n - 1).expect("Failed to convert to float")
                     } else {
                         F::zero()
                     }
@@ -630,7 +630,7 @@ fn compute_vector_operation<F>(
                     let mean = data.iter().copied().sum::<F>() / n_f;
                     let sum_sq = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
                     if n > 1 {
-                        sum_sq / F::from(n - 1).unwrap()
+                        sum_sq / F::from(n - 1).expect("Failed to convert to float")
                     } else {
                         F::zero()
                     }
@@ -668,14 +668,14 @@ fn compute_vector_operation<F>(
                 let mut sorteddata = data.to_owned();
                 sorteddata
                     .as_slice_mut()
-                    .unwrap()
-                    .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    .expect("Operation failed")
+                    .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 medians[idx] = if n % 2 == 1 {
                     sorteddata[n / 2]
                 } else {
                     let mid1 = sorteddata[n / 2 - 1];
                     let mid2 = sorteddata[n / 2];
-                    (mid1 + mid2) / F::from(2.0).unwrap()
+                    (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
                 };
             }
         }
@@ -684,12 +684,12 @@ fn compute_vector_operation<F>(
                 let mut sorteddata = data.to_owned();
                 sorteddata
                     .as_slice_mut()
-                    .unwrap()
-                    .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    .expect("Operation failed")
+                    .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                 let pos = q * (n - 1) as f64;
                 let lower_idx = pos.floor() as usize;
                 let upper_idx = (lower_idx + 1).min(n - 1);
-                let weight = F::from(pos - lower_idx as f64).unwrap();
+                let weight = F::from(pos - lower_idx as f64).expect("Failed to convert to float");
                 let lower_val = sorteddata[lower_idx];
                 let upper_val = sorteddata[upper_idx];
                 quantiles[idx] = lower_val + weight * (upper_val - lower_val);
@@ -844,8 +844,8 @@ where
     // Sort _bootstrap statistics for confidence interval computation
     bootstrap_stats
         .as_slice_mut()
-        .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .expect("Operation failed")
+        .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Compute confidence interval
     let alpha = 1.0 - confidence_level;
@@ -859,8 +859,10 @@ where
     let original_stat = compute_bootstrap_statistic(data, &statistic_fn);
 
     // Compute _bootstrap statistics
-    let bootstrap_mean = bootstrap_stats.mean().unwrap();
-    let bootstrap_std = bootstrap_stats.var(F::from(1.0).unwrap()).sqrt(); // ddof=1
+    let bootstrap_mean = bootstrap_stats.mean().expect("Operation failed");
+    let bootstrap_std = bootstrap_stats
+        .var(F::from(1.0).expect("Failed to convert constant to float"))
+        .sqrt(); // ddof=1
 
     Ok(BootstrapResult {
         original_statistic: original_stat,
@@ -932,7 +934,7 @@ where
         + std::iter::Sum<F>,
 {
     let n = data.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
     let use_simd = n > 16;
 
     match statistic {
@@ -952,7 +954,7 @@ where
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let sum_sq = F::simd_sum(&squared.view());
                 if n > 1 {
-                    sum_sq / F::from(n - 1).unwrap()
+                    sum_sq / F::from(n - 1).expect("Failed to convert to float")
                 } else {
                     F::zero()
                 }
@@ -960,7 +962,7 @@ where
                 let mean = data.iter().copied().sum::<F>() / n_f;
                 let sum_sq = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
                 if n > 1 {
-                    sum_sq / F::from(n - 1).unwrap()
+                    sum_sq / F::from(n - 1).expect("Failed to convert to float")
                 } else {
                     F::zero()
                 }
@@ -976,7 +978,7 @@ where
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let sum_sq = F::simd_sum(&squared.view());
                 if n > 1 {
-                    sum_sq / F::from(n - 1).unwrap()
+                    sum_sq / F::from(n - 1).expect("Failed to convert to float")
                 } else {
                     F::zero()
                 }
@@ -984,7 +986,7 @@ where
                 let mean = data.iter().copied().sum::<F>() / n_f;
                 let sum_sq = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>();
                 if n > 1 {
-                    sum_sq / F::from(n - 1).unwrap()
+                    sum_sq / F::from(n - 1).expect("Failed to convert to float")
                 } else {
                     F::zero()
                 }
@@ -1021,26 +1023,26 @@ where
             let mut sorteddata = data.to_owned();
             sorteddata
                 .as_slice_mut()
-                .unwrap()
-                .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                .expect("Operation failed")
+                .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             if n % 2 == 1 {
                 sorteddata[n / 2]
             } else {
                 let mid1 = sorteddata[n / 2 - 1];
                 let mid2 = sorteddata[n / 2];
-                (mid1 + mid2) / F::from(2.0).unwrap()
+                (mid1 + mid2) / F::from(2.0).expect("Failed to convert constant to float")
             }
         }
         BootstrapStatistic::Quantile(q) => {
             let mut sorteddata = data.to_owned();
             sorteddata
                 .as_slice_mut()
-                .unwrap()
-                .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                .expect("Operation failed")
+                .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             let pos = q * (n - 1) as f64;
             let lower_idx = pos.floor() as usize;
             let upper_idx = (lower_idx + 1).min(n - 1);
-            let weight = F::from(pos - lower_idx as f64).unwrap();
+            let weight = F::from(pos - lower_idx as f64).expect("Failed to convert to float");
             let lower_val = sorteddata[lower_idx];
             let upper_val = sorteddata[upper_idx];
             lower_val + weight * (upper_val - lower_val)
@@ -1049,20 +1051,20 @@ where
             let mut sorteddata = data.to_owned();
             sorteddata
                 .as_slice_mut()
-                .unwrap()
-                .sort_by(|a, b| a.partial_cmp(b).unwrap());
+                .expect("Operation failed")
+                .sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
             let q1_pos = 0.25 * (n - 1) as f64;
             let q3_pos = 0.75 * (n - 1) as f64;
 
             let q1_lower = q1_pos.floor() as usize;
             let q1_upper = (q1_lower + 1).min(n - 1);
-            let q1_weight = F::from(q1_pos - q1_lower as f64).unwrap();
+            let q1_weight = F::from(q1_pos - q1_lower as f64).expect("Failed to convert to float");
             let q1 =
                 sorteddata[q1_lower] + q1_weight * (sorteddata[q1_upper] - sorteddata[q1_lower]);
 
             let q3_lower = q3_pos.floor() as usize;
             let q3_upper = (q3_lower + 1).min(n - 1);
-            let q3_weight = F::from(q3_pos - q3_lower as f64).unwrap();
+            let q3_weight = F::from(q3_pos - q3_lower as f64).expect("Failed to convert to float");
             let q3 =
                 sorteddata[q3_lower] + q3_weight * (sorteddata[q3_upper] - sorteddata[q3_lower]);
 
@@ -1081,7 +1083,8 @@ where
                 let centered = F::simd_sub(data, &mean_vec.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let cubed = F::simd_mul(&squared.view(), &centered.view());
-                let variance = F::simd_sum(&squared.view()) / F::from(n - 1).unwrap();
+                let variance = F::simd_sum(&squared.view())
+                    / F::from(n - 1).expect("Failed to convert to float");
                 let skew_sum = F::simd_sum(&cubed.view());
                 (variance, skew_sum)
             } else {
@@ -1093,7 +1096,7 @@ where
                     variance_sum = variance_sum + dev_sq;
                     skew_sum = skew_sum + dev_sq * dev;
                 }
-                let variance = variance_sum / F::from(n - 1).unwrap();
+                let variance = variance_sum / F::from(n - 1).expect("Failed to convert to float");
                 (variance, skew_sum)
             };
 
@@ -1117,7 +1120,8 @@ where
                 let centered = F::simd_sub(data, &mean_vec.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let fourth = F::simd_mul(&squared.view(), &squared.view());
-                let variance = F::simd_sum(&squared.view()) / F::from(n - 1).unwrap();
+                let variance = F::simd_sum(&squared.view())
+                    / F::from(n - 1).expect("Failed to convert to float");
                 let kurt_sum = F::simd_sum(&fourth.view());
                 (variance, kurt_sum)
             } else {
@@ -1129,12 +1133,13 @@ where
                     variance_sum = variance_sum + dev_sq;
                     kurt_sum = kurt_sum + dev_sq * dev_sq;
                 }
-                let variance = variance_sum / F::from(n - 1).unwrap();
+                let variance = variance_sum / F::from(n - 1).expect("Failed to convert to float");
                 (variance, kurt_sum)
             };
 
             if variance > F::zero() {
-                (kurt_sum / (n_f * variance * variance)) - F::from(3.0).unwrap()
+                (kurt_sum / (n_f * variance * variance))
+                    - F::from(3.0).expect("Failed to convert constant to float")
             } else {
                 F::zero()
             }
@@ -1181,33 +1186,37 @@ where
     // Compute bandwidth using Scott's rule if not provided
     let h = match bandwidth {
         Some(bw) => {
-            check_positive(bw.to_f64().unwrap(), "bandwidth")?;
+            check_positive(bw.to_f64().expect("Operation failed"), "bandwidth")?;
             bw
         }
         None => {
             // Scott's rule: h = n^(-1/5) * std(data)
             let std_dev = if ndata > 16 {
                 let sum = F::simd_sum(data);
-                let mean = sum / F::from(ndata).unwrap();
+                let mean = sum / F::from(ndata).expect("Failed to convert to float");
                 let mean_vec = Array1::from_elem(ndata, mean);
                 let centered = F::simd_sub(data, &mean_vec.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
-                let variance = F::simd_sum(&squared.view()) / F::from(ndata - 1).unwrap();
+                let variance = F::simd_sum(&squared.view())
+                    / F::from(ndata - 1).expect("Failed to convert to float");
                 variance.sqrt()
             } else {
-                let mean = data.iter().copied().sum::<F>() / F::from(ndata).unwrap();
+                let mean = data.iter().copied().sum::<F>()
+                    / F::from(ndata).expect("Failed to convert to float");
                 let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-                    / F::from(ndata - 1).unwrap();
+                    / F::from(ndata - 1).expect("Failed to convert to float");
                 variance.sqrt()
             };
 
-            let scott_factor = F::from(ndata as f64).unwrap().powf(F::from(-0.2).unwrap());
+            let scott_factor = F::from(ndata as f64)
+                .expect("Failed to convert to float")
+                .powf(F::from(-0.2).expect("Failed to convert constant to float"));
             std_dev * scott_factor
         }
     };
 
     let mut density = Array1::zeros(n_eval);
-    let ndata_f = F::from(ndata).unwrap();
+    let ndata_f = F::from(ndata).expect("Failed to convert to float");
     let normalization = F::one() / (ndata_f * h);
 
     // Sequential processing for all datasets (parallel version has data race issues)
@@ -1260,9 +1269,11 @@ where
     match kernel {
         KernelType::Gaussian => {
             // (1/√(2π)) * exp(-z²/2)
-            let sqrt_2pi = F::from(2.5066282746310005).unwrap(); // √(2π)
+            let sqrt_2pi =
+                F::from(2.5066282746310005).expect("Failed to convert constant to float"); // √(2π)
             let z_squared = z * z;
-            let exp_term = (-z_squared / F::from(2.0).unwrap()).exp();
+            let exp_term =
+                (-z_squared / F::from(2.0).expect("Failed to convert constant to float")).exp();
             exp_term / sqrt_2pi
         }
         KernelType::Epanechnikov => {
@@ -1270,7 +1281,7 @@ where
             let abs_z = z.abs();
             if abs_z <= F::one() {
                 let z_squared = z * z;
-                F::from(0.75).unwrap() * (F::one() - z_squared)
+                F::from(0.75).expect("Failed to convert constant to float") * (F::one() - z_squared)
             } else {
                 F::zero()
             }
@@ -1279,7 +1290,7 @@ where
             // 1/2 for |z| ≤ 1, 0 otherwise
             let abs_z = z.abs();
             if abs_z <= F::one() {
-                F::from(0.5).unwrap()
+                F::from(0.5).expect("Failed to convert constant to float")
             } else {
                 F::zero()
             }
@@ -1299,7 +1310,7 @@ where
             if abs_z <= F::one() {
                 let z_squared = z * z;
                 let term = F::one() - z_squared;
-                F::from(15.0 / 16.0).unwrap() * term * term
+                F::from(15.0 / 16.0).expect("Failed to convert to float") * term * term
             } else {
                 F::zero()
             }
@@ -1310,7 +1321,7 @@ where
             if abs_z <= F::one() {
                 let z_squared = z * z;
                 let term = F::one() - z_squared;
-                F::from(35.0 / 32.0).unwrap() * term * term * term
+                F::from(35.0 / 32.0).expect("Failed to convert to float") * term * term * term
             } else {
                 F::zero()
             }
@@ -1319,9 +1330,9 @@ where
             // (π/4) * cos(πz/2) for |z| ≤ 1, 0 otherwise
             let abs_z = z.abs();
             if abs_z <= F::one() {
-                let pi = F::from(std::f64::consts::PI).unwrap();
-                let pi_4 = pi / F::from(4.0).unwrap();
-                let pi_z_2 = pi * z / F::from(2.0).unwrap();
+                let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+                let pi_4 = pi / F::from(4.0).expect("Failed to convert constant to float");
+                let pi_z_2 = pi * z / F::from(2.0).expect("Failed to convert constant to float");
                 pi_4 * pi_z_2.cos()
             } else {
                 F::zero()

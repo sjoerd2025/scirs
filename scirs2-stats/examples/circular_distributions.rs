@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate some samples
     println!("   Random samples:");
     for i in 0..5 {
-        let sample = vm.rvs_single().unwrap();
+        let sample = vm.rvs_single().expect("Operation failed");
         println!("     Sample {}: {:.3}", i + 1, sample);
     }
 
@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate some samples
     println!("   Random samples:");
     for i in 0..5 {
-        let sample = wc.rvs_single().unwrap();
+        let sample = wc.rvs_single().expect("Operation failed");
         println!("     Sample {}: {:.3}", i + 1, sample);
     }
 

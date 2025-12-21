@@ -42,7 +42,7 @@ use scirs2_core::ndarray::ArrayView2;
 ///     [-1.0, 0.0, 0.0, 0.0, 1.0]
 /// ];
 ///
-/// let volume = compute_high_dim_volume(&points.view(), &vertices, &equations.view()).unwrap();
+/// let volume = compute_high_dim_volume(&points.view(), &vertices, &equations.view()).expect("Operation failed");
 /// assert!(volume >= 0.0);
 /// ```
 pub fn compute_high_dim_volume(
@@ -207,7 +207,7 @@ pub fn estimate_facet_area(
 ///     [-1.0, -1.0, -1.0, -1.0, 1.0]
 /// ];
 ///
-/// let surface_area = compute_high_dim_surface_area(&points.view(), &vertices, &equations.view()).unwrap();
+/// let surface_area = compute_high_dim_surface_area(&points.view(), &vertices, &equations.view()).expect("Operation failed");
 /// assert!(surface_area >= 0.0);
 /// ```
 pub fn compute_high_dim_surface_area(
@@ -433,7 +433,7 @@ mod tests {
         ]);
         let vertices = vec![0, 1, 2, 3, 4];
 
-        let area = estimate_facet_area(&points.view(), &vertices, 0, 4).unwrap();
+        let area = estimate_facet_area(&points.view(), &vertices, 0, 4).expect("Operation failed");
         assert!(area > 0.0);
     }
 
@@ -456,7 +456,8 @@ mod tests {
         ]);
 
         let surface_area =
-            compute_high_dim_surface_area(&points.view(), &vertices, &equations.view()).unwrap();
+            compute_high_dim_surface_area(&points.view(), &vertices, &equations.view())
+                .expect("Operation failed");
         assert!(surface_area >= 0.0);
     }
 
@@ -472,7 +473,8 @@ mod tests {
         let vertices = vec![0, 1, 2, 3, 4];
         let equations = arr2(&[[1.0, 0.0, 0.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0, 1.0]]);
 
-        let volume = compute_high_dim_volume(&points.view(), &vertices, &equations.view()).unwrap();
+        let volume = compute_high_dim_volume(&points.view(), &vertices, &equations.view())
+            .expect("Operation failed");
         assert!(volume >= 0.0);
     }
 }

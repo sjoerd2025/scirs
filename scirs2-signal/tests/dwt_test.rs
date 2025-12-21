@@ -7,7 +7,8 @@ mod dwt_tests {
         let signal = vec![2.0, 2.0, 6.0, 2.0, 4.0, 4.0, 6.0, 6.0];
 
         // Decompose using Haar wavelet
-        let (approx, detail) = dwt_decompose(&signal, Wavelet::Haar, None).unwrap();
+        let (approx, detail) =
+            dwt_decompose(&signal, Wavelet::Haar, None).expect("Test: operation failed");
 
         // Check dimensions
         assert_eq!(approx.len(), 4);
@@ -18,7 +19,8 @@ mod dwt_tests {
         assert!(detail.iter().any(|&x| x != 0.0));
 
         // Test reconstruction
-        let reconstructed = dwt_reconstruct(&approx, &detail, Wavelet::Haar).unwrap();
+        let reconstructed =
+            dwt_reconstruct(&approx, &detail, Wavelet::Haar).expect("Test: operation failed");
 
         // Check that we got some output
         assert!(!reconstructed.is_empty());
@@ -32,7 +34,8 @@ mod dwt_tests {
 
         // Perform multi-level decomposition with Haar wavelet
         // (more reliable for testing than DB4)
-        let coeffs = wavedec(&signal, Wavelet::Haar, Some(2), None).unwrap();
+        let coeffs =
+            wavedec(&signal, Wavelet::Haar, Some(2), None).expect("Test: operation failed");
 
         // Check that we have some coefficients
         assert!(!coeffs.is_empty());
@@ -43,7 +46,7 @@ mod dwt_tests {
         );
 
         // Reconstruct the signal
-        let reconstructed = waverec(&coeffs, Wavelet::Haar).unwrap();
+        let reconstructed = waverec(&coeffs, Wavelet::Haar).expect("Test: operation failed");
 
         // Check that we got some output
         assert!(!reconstructed.is_empty());

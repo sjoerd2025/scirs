@@ -208,7 +208,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let mut sorted_results = results.clone();
-    sorted_results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    sorted_results.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
     for (i, (strategy, objective)) in sorted_results.iter().enumerate() {
         let improvement = ((initial_objective - objective) / initial_objective * 100.0).max(0.0);

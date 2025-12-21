@@ -54,10 +54,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let x_test = Array1::from_vec(vec![1.0, 1.0, 1.0, 1.0]);
     let preconditioned_result = diagonal_preconditioner.apply(&x_test.view())?;
 
-    println!("   Test vector: {:?}", x_test.as_slice().unwrap());
+    println!(
+        "   Test vector: {:?}",
+        x_test.as_slice().expect("Operation failed")
+    );
     println!(
         "   Preconditioned: {:?}",
-        preconditioned_result.as_slice().unwrap()
+        preconditioned_result.as_slice().expect("Operation failed")
     );
 
     // Solve with and without preconditioning
@@ -141,7 +144,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let residual_ilu = &rhs_ilu - &matrix_ilu.dot(&solution_ilu);
     let residual_norm_ilu = (residual_ilu.iter().map(|&x| x * x).sum::<f64>()).sqrt();
     println!("   Residual norm: {:.2e}", residual_norm_ilu);
-    println!("   Solution: {:?}", solution_ilu.as_slice().unwrap());
+    println!(
+        "   Solution: {:?}",
+        solution_ilu.as_slice().expect("Operation failed")
+    );
     println!("   ✅ ILU provides robust preconditioning for general sparse matrices");
 
     // Test 3: Incomplete Cholesky for Symmetric Positive Definite Systems

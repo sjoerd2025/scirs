@@ -386,7 +386,7 @@ mod tests {
 
         let step = optimizer
             .solve_trust_region_subproblem(&gradient.view())
-            .unwrap();
+            .expect("Operation failed");
         let step_norm = step.mapv(|x| x * x).sum().sqrt();
 
         // Step should be within trust region
@@ -455,7 +455,7 @@ mod tests {
 
         // Should converge quickly with zero gradient
         for _ in 0..10 {
-            optimizer.update(&point).unwrap();
+            optimizer.update(&point).expect("Operation failed");
             if optimizer.converged() {
                 break;
             }

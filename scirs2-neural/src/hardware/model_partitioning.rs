@@ -204,7 +204,7 @@ impl ModelPartitioner {
                     perf1
                         .execution_time_us
                         .partial_cmp(&perf2.execution_time_us)
-                        .unwrap()
+                        .expect("Operation failed")
                 })
                 .map(|((device_type, device_id)_)| (*device_type, *device_id));
             if let Some((device_type, device_id)) = best_device {
@@ -218,7 +218,7 @@ impl ModelPartitioner {
                         let partition = self.create_partition(
                             partitions.len(),
                             current_partition_layers.clone(),
-                            current_device.unwrap(),
+                            current_device.expect("Operation failed"),
                             profiles,
                         )?;
                         partitions.push(partition);
@@ -231,7 +231,7 @@ impl ModelPartitioner {
             let partition = self.create_partition(
                 partitions.len(),
                 current_partition_layers,
-                current_device.unwrap(),
+                current_device.expect("Operation failed"),
                 profiles,
             )?;
             partitions.push(partition);
@@ -272,7 +272,7 @@ impl ModelPartitioner {
                         + energy_weight * perf1.energy_consumption_mj as f32;
                     let score2 = latency_weight * perf2.execution_time_us as f32
                         + energy_weight * perf2.energy_consumption_mj as f32;
-                    score1.partial_cmp(&score2).unwrap()
+                    score1.partial_cmp(&score2).expect("Operation failed")
     /// Create a partition from layer indices and device assignment
     fn create_partition(
         partition_id: usize,
@@ -386,7 +386,7 @@ impl ModelPartitioner {
                     let score = self.evaluate_partitioning_fitness(partitions);
                     (score, idx)
             // Sort by fitness (lower is better)
-            fitness_scores.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            fitness_scores.sort_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"));
             // Keep best half
             let mut new_population = Vec::new();
             for i in 0..population_size / 2 {
@@ -409,7 +409,7 @@ impl ModelPartitioner {
             })
             .collect();
         let best_idx = fitness_scores
-            .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+            .min_by(|a, b| a.0.partial_cmp(&b.0).expect("Operation failed"))
             .map(|(_, idx)| *idx)
             .unwrap_or(0);
         Ok(population[best_idx].clone())
@@ -504,19 +504,19 @@ mod tests {
     use crate::hardware::accelerator::{AcceleratorFactory, CPUAccelerator};
     #[test]
     fn test_model_partitioner_creation() {
-        let cpu1 = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
-        let cpu2 = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
+        let cpu1 = AcceleratorFactory::create(AcceleratorType::CPU).expect("Operation failed");
+        let cpu2 = AcceleratorFactory::create(AcceleratorType::CPU).expect("Operation failed");
         let partitioner = ModelPartitioner::new(vec![cpu1, cpu2], PartitioningStrategy::MinLatency);
         assert_eq!(partitioner.devices.len(), 2);
     fn test_layer_profiling() {
-        let cpu = AcceleratorFactory::create(AcceleratorType::CPU).unwrap();
+        let cpu = AcceleratorFactory::create(AcceleratorType::CPU).expect("Operation failed");
         let partitioner = ModelPartitioner::new(vec![cpu], PartitioningStrategy::MinLatency);
         let model = Sequential::new(); // Mock model
-        let profiles = partitioner.profile_model(&model).unwrap();
+        let profiles = partitioner.profile_model(&model).expect("Operation failed");
         assert!(!profiles.is_empty());
         assert!(profiles[0].device_performance.len() > 0);
     fn test_partitioning_strategies() {
         let model = Sequential::new();
-        let partitions = partitioner.partition_model(&profiles).unwrap();
+        let partitions = partitioner.partition_model(&profiles).expect("Operation failed");
         assert!(!partitions.is_empty());
         assert!(partitions.iter().all(|p| !p.layer_indices.is_empty()));

@@ -107,7 +107,7 @@ impl Mode {
 /// use scirs2_ndimage::scipy_compat::gaussian_filter;
 ///
 /// let input = array![[1.0, 2.0], [3.0, 4.0]];
-/// let filtered = gaussian_filter(&input, vec![1.0, 1.0], None, None, None, None).unwrap();
+/// let filtered = gaussian_filter(&input, vec![1.0, 1.0], None, None, None, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn gaussian_filter<T, D>(
@@ -130,17 +130,17 @@ where
     let boundary_mode = mode.to_filter_boundary_mode();
 
     // gaussian_filter only supports f64, need to convert
-    let input_f64 = input.map(|x| x.to_f64().unwrap());
+    let input_f64 = input.map(|x| x.to_f64().expect("Operation failed"));
     let sigma_f64 = if sigma.len() == 1 {
-        sigma[0].to_f64().unwrap()
+        sigma[0].to_f64().expect("Operation failed")
     } else {
         // Take the first sigma value for now, multi-dimensional sigma not supported
-        sigma[0].to_f64().unwrap()
+        sigma[0].to_f64().expect("Operation failed")
     };
-    let truncate_f64 = truncate.map(|t| t.to_f64().unwrap());
+    let truncate_f64 = truncate.map(|t| t.to_f64().expect("Operation failed"));
 
     crate::filters::gaussian_filter(&input_f64, sigma_f64, Some(boundary_mode), truncate_f64)
-        .map(|arr| arr.map(|x| T::from_f64(*x).unwrap()))
+        .map(|arr| arr.map(|x| T::from_f64(*x).expect("Operation failed")))
 }
 
 /// Uniform filter with SciPy-compatible interface
@@ -304,11 +304,14 @@ where
 
     // Use grey_erosion_2d for 2D arrays from simple_morph module
     if input.ndim() == 2 {
-        let input_2d = input.to_owned().into_dimensionality::<Ix2>().unwrap();
+        let input_2d = input
+            .to_owned()
+            .into_dimensionality::<Ix2>()
+            .expect("Operation failed");
         let structure_2d = structure_array
             .to_owned()
             .into_dimensionality::<Ix2>()
-            .unwrap();
+            .expect("Failed to create array");
         crate::morphology::simple_morph::grey_erosion_2d(
             &input_2d,
             Some(&structure_2d),
@@ -316,7 +319,7 @@ where
             Some(cval.unwrap_or(T::zero())), // border_value
             None,                            // origin
         )
-        .map(|arr| arr.into_dimensionality::<D>().unwrap())
+        .map(|arr| arr.into_dimensionality::<D>().expect("Operation failed"))
     } else {
         Err(NdimageError::DimensionError(
             "grayscale_erosion only supports 2D arrays".to_string(),
@@ -394,11 +397,11 @@ where
 
     // Convert types to match affine_transform expectations
     let input_array = input.to_owned();
-    let matrix_t = matrix.map(|x| T::from_f64(*x).unwrap());
+    let matrix_t = matrix.map(|x| T::from_f64(*x).expect("Operation failed"));
     let offset_t = {
         let arr: Vec<T> = offset_vec
             .iter()
-            .map(|x| T::from_f64(*x).unwrap())
+            .map(|x| T::from_f64(*x).expect("Operation failed"))
             .collect();
         Array1::from_vec(arr)
     };
@@ -503,7 +506,7 @@ where
     let zoom_factor = if zoom_factors.is_empty() {
         T::one()
     } else {
-        T::from_f64(zoom_factors[0]).unwrap()
+        T::from_f64(zoom_factors[0]).expect("Operation failed")
     };
 
     let input_array = input.to_owned();
@@ -547,7 +550,7 @@ where
     let boundary_mode = mode.to_interpolation_boundary_mode();
 
     let input_array = input.to_owned();
-    let angle_t = T::from_f64(angle).unwrap();
+    let angle_t = T::from_f64(angle).expect("Operation failed");
 
     crate::interpolation::rotate(
         &input_array,
@@ -583,7 +586,10 @@ where
     let boundary_mode = mode.to_interpolation_boundary_mode();
 
     let input_array = input.to_owned();
-    let shift_t: Vec<T> = shift.iter().map(|&x| T::from_f64(x).unwrap()).collect();
+    let shift_t: Vec<T> = shift
+        .iter()
+        .map(|&x| T::from_f64(x).expect("Operation failed"))
+        .collect();
 
     crate::interpolation::shift(
         &input_array,
@@ -1113,7 +1119,8 @@ mod tests {
     #[test]
     fn test_scipy_compat_gaussian() {
         let input = array![[1.0, 2.0], [3.0, 4.0]];
-        let result = gaussian_filter(&input, vec![1.0], None, None, None, None).unwrap();
+        let result =
+            gaussian_filter(&input, vec![1.0], None, None, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1136,35 +1143,38 @@ mod tests {
             None::<&scirs2_core::ndarray::Array2<bool>>,
             None::<bool>,
         )
-        .unwrap();
+        .expect("Test: operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
     #[test]
     fn test_scipy_compat_zoom() {
         let input = array![[1.0, 2.0], [3.0, 4.0]];
-        let result = zoom(&input, vec![2.0, 2.0], None, None, None, None).unwrap();
+        let result =
+            zoom(&input, vec![2.0, 2.0], None, None, None, None).expect("Operation failed");
         assert_eq!(result.shape(), &[4, 4]);
     }
 
     #[test]
     fn test_scipy_compat_rotate() {
         let input = array![[1.0, 2.0], [3.0, 4.0]];
-        let result = rotate(&input.view(), 45.0, None, None, None, None, None).unwrap();
+        let result =
+            rotate(&input.view(), 45.0, None, None, None, None, None).expect("Operation failed");
         assert_eq!(result.ndim(), 2);
     }
 
     #[test]
     fn test_scipy_compat_shift() {
         let input = array![[1.0, 2.0], [3.0, 4.0]];
-        let result = shift(&input, vec![0.5, 0.5], None, None, None, None).unwrap();
+        let result =
+            shift(&input, vec![0.5, 0.5], None, None, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
     #[test]
     fn test_scipy_compat_laplace() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-        let result = laplace(&input, None, None).unwrap();
+        let result = laplace(&input, None, None).expect("Operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1179,7 +1189,7 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Test: operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 
@@ -1197,7 +1207,7 @@ mod tests {
             None,
             None,
         )
-        .unwrap();
+        .expect("Test: operation failed");
         assert_eq!(result.shape(), input.shape());
     }
 }

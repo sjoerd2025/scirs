@@ -952,7 +952,8 @@ mod tests {
     #[test]
     fn test_scatter_2d_csv_export() {
         let plot = ScatterPlot2D {
-            points: Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+            points: Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
+                .expect("Operation failed"),
             labels: Array1::from_vec(vec![0, 1]),
             centroids: None,
             colors: vec!["#FF0000".to_string(), "#00FF00".to_string()],
@@ -967,10 +968,10 @@ mod tests {
             ..Default::default()
         };
 
-        let temp_file = tempfile::NamedTempFile::new().unwrap();
-        export_scatter_2d_to_csv(&plot, temp_file.path(), &config).unwrap();
+        let temp_file = tempfile::NamedTempFile::new().expect("Operation failed");
+        export_scatter_2d_to_csv(&plot, temp_file.path(), &config).expect("Operation failed");
 
-        let content = std::fs::read_to_string(temp_file.path()).unwrap();
+        let content = std::fs::read_to_string(temp_file.path()).expect("Operation failed");
         assert!(content.contains("x,y,cluster,color"));
         assert!(content.contains("1,2,0,#FF0000"));
     }

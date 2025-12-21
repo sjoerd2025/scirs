@@ -12,7 +12,7 @@
 //! use scirs2_core::ndarray::Array2;
 //!
 //! // Create sample data
-//! let data = Array2::from_shape_vec((100, 2), (0..200).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::from_shape_vec((100, 2), (0..200).map(|x| x as f64).collect()).expect("Operation failed");
 //!
 //! // Configure tuning
 //! let config = TuningConfig {
@@ -25,7 +25,7 @@
 //! let search_space = StandardSearchSpaces::kmeans();
 //!
 //! // Tune hyperparameters
-//! let result = tuner.tune_kmeans(data.view(), search_space).unwrap();
+//! let result = tuner.tune_kmeans(data.view(), search_space).expect("Operation failed");
 //! println!("Best score: {}", result.best_score);
 //! ```
 
@@ -174,7 +174,8 @@ mod tests {
     #[test]
     fn test_quick_tune_kmeans() {
         // Use more samples (50) to support the default search space (up to 20 clusters)
-        let data = Array2::from_shape_vec((50, 2), (0..100).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((50, 2), (0..100).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = quick_tune_kmeans(data.view(), Some(5));
         match result {
             Ok(_) => (),

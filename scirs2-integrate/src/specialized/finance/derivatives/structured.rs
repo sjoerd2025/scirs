@@ -140,7 +140,7 @@ impl AutocallableNote {
 
             // If not autocalled, calculate maturity payoff
             if !autocalled {
-                let final_time = self.observation_dates.last().unwrap();
+                let final_time = self.observation_dates.last().expect("Operation failed");
 
                 if knock_in_hit {
                     // Worst-of performance
@@ -561,7 +561,7 @@ mod tests {
             vec![0.2, 0.25],
             corr,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(note.spots.len(), 2);
         assert_eq!(note.observation_dates.len(), 3);
@@ -582,9 +582,9 @@ mod tests {
             vec![0.2, 0.2],
             corr,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let price = note.price_monte_carlo(10000).unwrap();
+        let price = note.price_monte_carlo(10000).expect("Operation failed");
 
         // Should be close to principal plus some coupon value
         assert!(price > 95.0 && price < 110.0, "Price: {}", price);
@@ -592,8 +592,8 @@ mod tests {
 
     #[test]
     fn test_principal_protected_note() {
-        let ppn =
-            PrincipalProtectedNote::new(100.0, 100.0, 100.0, 1.0, 0.05, 0.2, 0.8, None).unwrap();
+        let ppn = PrincipalProtectedNote::new(100.0, 100.0, 100.0, 1.0, 0.05, 0.2, 0.8, None)
+            .expect("Operation failed");
 
         let price = ppn.price();
 
@@ -610,11 +610,13 @@ mod tests {
 
     #[test]
     fn test_ppn_fair_participation() {
-        let ppn =
-            PrincipalProtectedNote::new(100.0, 100.0, 100.0, 1.0, 0.05, 0.2, 0.0, None).unwrap();
+        let ppn = PrincipalProtectedNote::new(100.0, 100.0, 100.0, 1.0, 0.05, 0.2, 0.0, None)
+            .expect("Operation failed");
 
         let target_price = 100.0;
-        let fair_part = ppn.fair_participation_rate(target_price).unwrap();
+        let fair_part = ppn
+            .fair_participation_rate(target_price)
+            .expect("Operation failed");
 
         assert!(
             fair_part > 0.0 && fair_part < 2.0,
@@ -637,7 +639,7 @@ mod tests {
             corr,
             OptionType::Call,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(basket.spots.len(), 2);
         assert!((basket.weights.iter().sum::<f64>() - 1.0).abs() < 1e-10);
@@ -657,19 +659,19 @@ mod tests {
             corr,
             OptionType::Call,
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let price = basket.price_monte_carlo(10000).unwrap();
+        let price = basket.price_monte_carlo(10000).expect("Operation failed");
 
         assert!(price > 5.0 && price < 15.0, "Price: {}", price);
     }
 
     #[test]
     fn test_range_accrual_note() {
-        let note =
-            RangeAccrualNote::new(100.0, 100.0, 90.0, 110.0, 0.05, 1.0, 0.03, 0.15, 252).unwrap();
+        let note = RangeAccrualNote::new(100.0, 100.0, 90.0, 110.0, 0.05, 1.0, 0.03, 0.15, 252)
+            .expect("Operation failed");
 
-        let price = note.price_monte_carlo(5000).unwrap();
+        let price = note.price_monte_carlo(5000).expect("Operation failed");
 
         // With low volatility and reasonable range, should get most of interest
         let min_price = 100.0 * (-0.03_f64).exp(); // Just principal discounted
@@ -682,7 +684,7 @@ mod tests {
     fn test_cholesky_decomposition() {
         let corr = arr2(&[[1.0, 0.5], [0.5, 1.0]]);
 
-        let chol = cholesky_decomposition(&corr).unwrap();
+        let chol = cholesky_decomposition(&corr).expect("Operation failed");
 
         // Verify L * L^T = corr
         let mut reconstructed = Array2::<f64>::zeros((2, 2));
@@ -716,12 +718,13 @@ mod tests {
     fn test_ppn_with_cap() {
         let ppn =
             PrincipalProtectedNote::new(100.0, 100.0, 100.0, 1.0, 0.05, 0.2, 0.8, Some(120.0))
-                .unwrap();
+                .expect("Operation failed");
 
         let price_capped = ppn.price();
 
         let ppn_uncapped =
-            PrincipalProtectedNote::new(100.0, 100.0, 100.0, 1.0, 0.05, 0.2, 0.8, None).unwrap();
+            PrincipalProtectedNote::new(100.0, 100.0, 100.0, 1.0, 0.05, 0.2, 0.8, None)
+                .expect("Operation failed");
 
         let price_uncapped = ppn_uncapped.price();
 

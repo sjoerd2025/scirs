@@ -126,14 +126,16 @@ where
     let det = a * d - b * c;
 
     // If determinant is effectively zero, matrix is singular
-    let eps = super::types::machine_epsilon::<F>() * F::from(1000.0).unwrap();
+    let eps = super::types::machine_epsilon::<F>()
+        * F::from(1000.0).expect("Failed to convert constant to float");
     if det.abs() < eps {
         return Ok(F::infinity());
     }
 
     // Calculate trace and determinant for eigenvalue computation
     let trace = a + d;
-    let discriminant = trace * trace - F::from(4.0).unwrap() * det;
+    let discriminant =
+        trace * trace - F::from(4.0).expect("Failed to convert constant to float") * det;
 
     if discriminant < F::zero() {
         // Complex eigenvalues, use Frobenius norm approach
@@ -144,8 +146,10 @@ where
 
     // Real eigenvalues
     let sqrt_discriminant = discriminant.sqrt();
-    let lambda1 = (trace + sqrt_discriminant) / F::from(2.0).unwrap();
-    let lambda2 = (trace - sqrt_discriminant) / F::from(2.0).unwrap();
+    let lambda1 =
+        (trace + sqrt_discriminant) / F::from(2.0).expect("Failed to convert constant to float");
+    let lambda2 =
+        (trace - sqrt_discriminant) / F::from(2.0).expect("Failed to convert constant to float");
 
     // For condition number, we need singular values, not eigenvalues
     // For symmetric matrices, they're the same; for general matrices, we need different approach
@@ -186,7 +190,9 @@ where
     diagnostics.min_singular_value = Some(min_singular);
 
     // Estimate rank by counting significant singular values
-    let rank_threshold = super::types::machine_epsilon::<F>() * max_singular * F::from(n).unwrap();
+    let rank_threshold = super::types::machine_epsilon::<F>()
+        * max_singular
+        * F::from(n).expect("Failed to convert to float");
     diagnostics.estimated_rank = Some(if min_singular > rank_threshold {
         n
     } else {
@@ -230,7 +236,10 @@ where
     let tolerance = F::from(1e-6).unwrap_or_else(|| super::types::machine_epsilon::<F>());
 
     // Initialize random vector
-    let mut v = Array1::from_elem(n, F::one() / F::from(n).unwrap());
+    let mut v = Array1::from_elem(
+        n,
+        F::one() / F::from(n).expect("Failed to convert to float"),
+    );
     let mut eigenvalue = F::zero();
 
     for _ in 0..max_iterations {
@@ -356,7 +365,9 @@ where
 
     // Base regularization on condition number
     let base_regularization = if condition_number.is_infinite() {
-        machine_eps * F::from(1e6).unwrap_or_else(|| F::from(1e6).unwrap())
+        machine_eps
+            * F::from(1e6)
+                .unwrap_or_else(|| F::from(1e6).expect("Failed to convert constant to float"))
     } else {
         machine_eps * condition_number.sqrt()
     };
@@ -425,7 +436,7 @@ mod tests {
     #[test]
     fn test_assess_identity_matrix() {
         let matrix = Array2::<f64>::eye(3);
-        let report = assess_matrix_condition(&matrix.view()).unwrap();
+        let report = assess_matrix_condition(&matrix.view()).expect("Operation failed");
 
         assert!(report.is_well_conditioned);
         assert_eq!(report.stability_level, StabilityLevel::Excellent);
@@ -435,8 +446,10 @@ mod tests {
 
     #[test]
     fn test_symmetry_check() {
-        let symmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0]).unwrap();
-        let asymmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let symmetric =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0]).expect("Operation failed");
+        let asymmetric =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed");
 
         assert!(check_symmetry(&symmetric.view()));
         assert!(!check_symmetry(&asymmetric.view()));
@@ -444,8 +457,10 @@ mod tests {
 
     #[test]
     fn test_diagonal_dominance() {
-        let dominant = Array2::from_shape_vec((2, 2), vec![3.0, 1.0, 1.0, 3.0]).unwrap();
-        let non_dominant = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 1.0]).unwrap();
+        let dominant =
+            Array2::from_shape_vec((2, 2), vec![3.0, 1.0, 1.0, 3.0]).expect("Operation failed");
+        let non_dominant =
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 1.0]).expect("Operation failed");
 
         assert!(check_diagonal_dominance(&dominant.view()));
         assert!(!check_diagonal_dominance(&non_dominant.view()));
@@ -455,14 +470,15 @@ mod tests {
     fn test_zero_diagonal_count() {
         let matrix =
             Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 0.0, 6.0, 7.0, 8.0, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         assert_eq!(count_zero_diagonal_elements(&matrix.view()), 2);
     }
 
     #[test]
     fn test_matrix_1_norm() {
-        let matrix = Array2::from_shape_vec((2, 2), vec![1.0, -2.0, 3.0, -4.0]).unwrap();
+        let matrix =
+            Array2::from_shape_vec((2, 2), vec![1.0, -2.0, 3.0, -4.0]).expect("Operation failed");
         let norm = matrix_1_norm(&matrix.view());
 
         // Column sums: |1| + |3| = 4, |-2| + |-4| = 6
@@ -473,7 +489,7 @@ mod tests {
     #[test]
     fn test_power_iteration() {
         let matrix = Array2::<f64>::eye(3) * 2.0; // Eigenvalue should be 2.0
-        let eigenvalue = power_iteration_max_eigenvalue(&matrix.view()).unwrap();
+        let eigenvalue = power_iteration_max_eigenvalue(&matrix.view()).expect("Operation failed");
 
         assert!((eigenvalue - 2.0).abs() < 1e-6);
     }

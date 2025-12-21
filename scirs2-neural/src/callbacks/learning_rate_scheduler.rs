@@ -177,10 +177,10 @@ impl<F: Float + Debug + ScalarOperand> CosineAnnealingLR<F> {
     /// Calculate learning rate for the given step
     pub fn calculate_lr(&self, step: usize) -> F {
         let cycle = step % self.cycle_epochs;
-        let percent = F::from(cycle).unwrap() / F::from(self.cycle_epochs).unwrap();
+        let percent = F::from(cycle).expect("Failed to convert to float") / F::from(self.cycle_epochs).expect("Failed to convert to float");
         // Use cosine function
-        let cosine = (F::one() + (percent * F::from(std::f64::consts::PI).unwrap()).cos())
-            / F::from(2.0).unwrap();
+        let cosine = (F::one() + (percent * F::from(std::f64::consts::PI).expect("Failed to convert to float")).cos())
+            / F::from(2.0).expect("Failed to convert constant to float");
         self.min_lr + (self.max_lr - self.min_lr) * cosine
 impl<F: Float + Debug + ScalarOperand> Callback<F> for CosineAnnealingLR<F> {
                 let step = context.epoch;

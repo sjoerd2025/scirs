@@ -546,7 +546,7 @@ impl IoTDataQualityAnalysis {
             .filter(|&&x| !x.is_nan())
             .cloned()
             .collect();
-        sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_data.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         if sorted_data.len() < 4 {
             return Ok(0.0);
@@ -795,17 +795,19 @@ mod tests {
         let humidity = arr1(&[45.0, 46.0, 47.0, 48.0, 49.0]);
 
         let analysis = EnvironmentalSensorAnalysis::new(timestamps, 1.0)
-            .unwrap()
+            .expect("Operation failed")
             .with_temperature(temperatures)
-            .unwrap()
+            .expect("Operation failed")
             .with_humidity(humidity)
-            .unwrap();
+            .expect("Operation failed");
 
-        let comfort = analysis.comfort_index().unwrap();
+        let comfort = analysis.comfort_index().expect("Operation failed");
         assert_eq!(comfort.len(), 5);
         assert!(comfort.iter().all(|&x| (0.0..=100.0).contains(&x)));
 
-        let malfunctions = analysis.detect_sensor_malfunctions().unwrap();
+        let malfunctions = analysis
+            .detect_sensor_malfunctions()
+            .expect("Operation failed");
         assert!(malfunctions.contains_key("Temperature"));
         assert!(malfunctions.contains_key("Humidity"));
     }
@@ -823,14 +825,14 @@ mod tests {
 
         // Use a lower sampling frequency so the window size fits our data
         let analysis = MotionSensorAnalysis::new(timestamps, 2.0)
-            .unwrap()
+            .expect("Operation failed")
             .with_accelerometer(accel_data)
-            .unwrap();
+            .expect("Operation failed");
 
-        let activities = analysis.activity_recognition().unwrap();
+        let activities = analysis.activity_recognition().expect("Operation failed");
         assert!(!activities.is_empty());
 
-        let _steps = analysis.step_count().unwrap();
+        let _steps = analysis.step_count().expect("Operation failed");
     }
 
     #[test]
@@ -839,8 +841,9 @@ mod tests {
         let timestamps = arr1(&[1, 2, 3, 4, 5]);
 
         let quality_analysis =
-            IoTDataQualityAnalysis::new(data, SensorType::Temperature, timestamps).unwrap();
-        let quality = quality_analysis.assess_quality().unwrap();
+            IoTDataQualityAnalysis::new(data, SensorType::Temperature, timestamps)
+                .expect("Operation failed");
+        let quality = quality_analysis.assess_quality().expect("Operation failed");
 
         assert!(quality.outlier_percentage > 0.0);
         assert!(quality.consistency_score >= 0.0 && quality.consistency_score <= 100.0);
@@ -859,11 +862,11 @@ mod tests {
         ]);
 
         let analysis = MotionSensorAnalysis::new(timestamps, 100.0)
-            .unwrap()
+            .expect("Operation failed")
             .with_accelerometer(accel_data)
-            .unwrap();
+            .expect("Operation failed");
 
-        let falls = analysis.fall_detection(25.0).unwrap();
+        let falls = analysis.fall_detection(25.0).expect("Operation failed");
         assert!(!falls.is_empty());
         assert_eq!(falls[0], 2); // Fall detected at index 2
     }

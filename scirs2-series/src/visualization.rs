@@ -868,7 +868,7 @@ impl SpecializedPlots {
         // Add mean seasonal pattern
         let mean_seasonal: Array1<f64> = seasonal_data
             .mean_axis(scirs2_core::ndarray::Axis(1))
-            .unwrap();
+            .expect("Operation failed");
         let mean_style = PlotStyle {
             color: "#d62728".to_string(), // Red
             line_width: 3.0,
@@ -1179,7 +1179,7 @@ mod tests {
         let values = time.mapv(|x: f64| x.sin());
 
         plot.add_series("sine", &time, &values, PlotStyle::default())
-            .unwrap();
+            .expect("Operation failed");
         let html = plot.to_html();
 
         assert!(html.contains("Test Plot"));
@@ -1195,7 +1195,7 @@ mod tests {
         let values = time.mapv(|x: f64| x.sin());
 
         plot.add_series("sine", &time, &values, PlotStyle::default())
-            .unwrap();
+            .expect("Operation failed");
         dashboard.add_plot("Section 1", plot);
 
         assert_eq!(dashboard.plots.len(), 1);

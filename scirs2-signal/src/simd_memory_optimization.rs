@@ -651,7 +651,7 @@ mod tests {
         let kernel = Array1::from_vec(vec![1.0, 0.5]);
         let config = SimdMemoryConfig::default();
 
-        let result = simd_optimized_convolution(&signal.view(), &kernel.view(), &config).unwrap();
+        let result = simd_optimized_convolution(&signal.view(), &kernel.view(), &config).expect("Operation failed");
 
         // Check basic properties
         assert_eq!(result.data.len(), signal.len() + kernel.len() - 1);
@@ -666,7 +666,7 @@ mod tests {
         let config = SimdMemoryConfig::default();
 
         let result =
-            simd_optimized_fir_filter(&signal.view(), &coefficients.view(), &config).unwrap();
+            simd_optimized_fir_filter(&signal.view(), &coefficients.view(), &config).expect("Operation failed");
 
         assert_eq!(result.data.len(), signal.len());
         assert!(result.simd_acceleration >= 1.0);

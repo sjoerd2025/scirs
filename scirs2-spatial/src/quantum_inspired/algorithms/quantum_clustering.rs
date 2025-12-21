@@ -34,14 +34,14 @@ use std::f64::consts::PI;
 /// let points = Array2::from_shape_vec((6, 2), vec![
 ///     0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
 ///     5.0, 5.0, 6.0, 5.0, 5.0, 6.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let mut clusterer = QuantumClusterer::new(2)
 ///     .with_quantum_depth(4)
 ///     .with_superposition_states(16)
 ///     .with_max_iterations(50);
 ///
-/// let (centroids, assignments) = clusterer.fit(&points.view()).unwrap();
+/// let (centroids, assignments) = clusterer.fit(&points.view()).expect("Operation failed");
 /// ```
 #[derive(Debug, Clone)]
 pub struct QuantumClusterer {
@@ -524,13 +524,13 @@ mod tests {
                 5.0, 5.0, 6.0, 5.0, 5.0, 6.0, // Cluster 2
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let mut clusterer = QuantumClusterer::new(2);
         let result = clusterer.fit(&points.view());
 
         assert!(result.is_ok());
-        let (centroids, assignments) = result.unwrap();
+        let (centroids, assignments) = result.expect("Operation failed");
 
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(centroids.ncols(), 2);
@@ -540,7 +540,8 @@ mod tests {
 
     #[test]
     fn test_insufficient_points() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let mut clusterer = QuantumClusterer::new(3); // More clusters than points
 
         let result = clusterer.fit(&points.view());
@@ -549,14 +550,14 @@ mod tests {
 
     #[test]
     fn test_single_cluster() {
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, -0.1, 0.1, 0.1, -0.1])
+            .expect("Operation failed");
 
         let mut clusterer = QuantumClusterer::new(1);
         let result = clusterer.fit(&points.view());
 
         assert!(result.is_ok());
-        let (centroids, assignments) = result.unwrap();
+        let (centroids, assignments) = result.expect("Operation failed");
 
         assert_eq!(centroids.nrows(), 1);
         // All points should be assigned to cluster 0
@@ -567,7 +568,8 @@ mod tests {
 
     #[test]
     fn test_prediction_without_fitting() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let points =
+            Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).expect("Operation failed");
         let clusterer = QuantumClusterer::new(2);
 
         let result = clusterer.predict(&points.view());

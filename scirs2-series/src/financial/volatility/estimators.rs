@@ -62,7 +62,7 @@
 //! let close = array![100.0, 103.0, 101.0];
 //! let open = array![99.0, 102.0, 102.5];
 //!
-//! let gk_vol = garman_klass_volatility(&high, &low, &close, &open).unwrap();
+//! let gk_vol = garman_klass_volatility(&high, &low, &close, &open).expect("Operation failed");
 //! ```
 //!
 //! ## EWMA Volatility
@@ -72,7 +72,7 @@
 //!
 //! let returns = array![0.01, -0.02, 0.015, -0.008, 0.012];
 //! let lambda = 0.94; // RiskMetrics standard
-//! let ewma_vol = ewma_volatility(&returns, lambda).unwrap();
+//! let ewma_vol = ewma_volatility(&returns, lambda).expect("Operation failed");
 //! ```
 
 use scirs2_core::ndarray::{s, Array1};
@@ -141,7 +141,7 @@ pub fn realized_volatility<F: Float>(returns: &Array1<F>) -> F {
 /// let close = array![100.0, 103.0, 101.0];
 /// let open = array![99.0, 102.0, 102.5];
 ///
-/// let gk_vol = garman_klass_volatility(&high, &low, &close, &open).unwrap();
+/// let gk_vol = garman_klass_volatility(&high, &low, &close, &open).expect("Operation failed");
 /// ```
 pub fn garman_klass_volatility<F: Float + Clone>(
     high: &Array1<F>,
@@ -157,8 +157,8 @@ pub fn garman_klass_volatility<F: Float + Clone>(
     }
 
     let mut gk_vol = Array1::zeros(high.len());
-    let half = F::from(0.5).unwrap();
-    let ln_2_minus_1 = F::from(2.0 * (2.0_f64).ln() - 1.0).unwrap();
+    let half = F::from(0.5).expect("Failed to convert constant to float");
+    let ln_2_minus_1 = F::from(2.0 * (2.0_f64).ln() - 1.0).expect("Operation failed");
 
     for i in 0..gk_vol.len() {
         let log_hl = (high[i] / low[i]).ln();
@@ -196,7 +196,7 @@ pub fn garman_klass_volatility<F: Float + Clone>(
 /// let high = array![102.0, 105.0, 103.5];
 /// let low = array![98.0, 101.0, 99.5];
 ///
-/// let park_vol = parkinson_volatility(&high, &low).unwrap();
+/// let park_vol = parkinson_volatility(&high, &low).expect("Operation failed");
 /// ```
 pub fn parkinson_volatility<F: Float + Clone>(
     high: &Array1<F>,
@@ -210,7 +210,7 @@ pub fn parkinson_volatility<F: Float + Clone>(
     }
 
     let mut park_vol = Array1::zeros(high.len());
-    let four_ln_2 = F::from(4.0 * (2.0_f64).ln()).unwrap();
+    let four_ln_2 = F::from(4.0 * (2.0_f64).ln()).expect("Operation failed");
 
     for i in 0..park_vol.len() {
         let log_hl = (high[i] / low[i]).ln();
@@ -250,7 +250,7 @@ pub fn parkinson_volatility<F: Float + Clone>(
 /// let close = array![100.0, 103.0, 101.0];
 /// let open = array![99.0, 102.0, 102.5];
 ///
-/// let rs_vol = rogers_satchell_volatility(&high, &low, &close, &open).unwrap();
+/// let rs_vol = rogers_satchell_volatility(&high, &low, &close, &open).expect("Operation failed");
 /// ```
 pub fn rogers_satchell_volatility<F: Float + Clone>(
     high: &Array1<F>,
@@ -311,7 +311,7 @@ pub fn rogers_satchell_volatility<F: Float + Clone>(
 /// let open = array![99.0, 102.0, 102.5, 100.5];
 /// let k = 0.34;
 ///
-/// let yz_vol = yang_zhang_volatility(&high, &low, &close, &open, k).unwrap();
+/// let yz_vol = yang_zhang_volatility(&high, &low, &close, &open, k).expect("Operation failed");
 /// ```
 pub fn yang_zhang_volatility<F: Float + Clone>(
     high: &Array1<F>,
@@ -380,7 +380,7 @@ pub fn yang_zhang_volatility<F: Float + Clone>(
 /// use scirs2_core::ndarray::array;
 ///
 /// let returns = array![0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007];
-/// let garch_vol = garch_volatility_estimate(&returns, 5).unwrap();
+/// let garch_vol = garch_volatility_estimate(&returns, 5).expect("Operation failed");
 /// ```
 pub fn garch_volatility_estimate<F: Float + Clone>(
     returns: &Array1<F>,
@@ -397,17 +397,17 @@ pub fn garch_volatility_estimate<F: Float + Clone>(
     let mut volatilities = Array1::zeros(returns.len() - window + 1);
 
     // Simple GARCH(1,1) parameters (typical values)
-    let omega = F::from(0.000001).unwrap();
-    let alpha = F::from(0.1).unwrap();
-    let beta = F::from(0.85).unwrap();
+    let omega = F::from(0.000001).expect("Failed to convert constant to float");
+    let alpha = F::from(0.1).expect("Failed to convert constant to float");
+    let beta = F::from(0.85).expect("Failed to convert constant to float");
 
     for i in 0..volatilities.len() {
         let window_returns = returns.slice(s![i..i + window]);
 
         // Initialize with sample variance
-        let mean = window_returns.sum() / F::from(window).unwrap();
-        let mut variance =
-            window_returns.mapv(|x| (x - mean).powi(2)).sum() / F::from(window - 1).unwrap();
+        let mean = window_returns.sum() / F::from(window).expect("Failed to convert to float");
+        let mut variance = window_returns.mapv(|x| (x - mean).powi(2)).sum()
+            / F::from(window - 1).expect("Failed to convert to float");
 
         // Apply GARCH updating for last few observations
         for j in 1..std::cmp::min(window, 10) {
@@ -446,7 +446,7 @@ pub fn garch_volatility_estimate<F: Float + Clone>(
 ///
 /// let returns = array![0.01, -0.02, 0.015, -0.008, 0.012];
 /// let lambda = 0.94; // RiskMetrics standard
-/// let ewma_vol = ewma_volatility(&returns, lambda).unwrap();
+/// let ewma_vol = ewma_volatility(&returns, lambda).expect("Operation failed");
 /// ```
 pub fn ewma_volatility<F: Float + Clone>(returns: &Array1<F>, lambda: F) -> Result<Array1<F>> {
     if returns.is_empty() {
@@ -503,7 +503,7 @@ pub fn ewma_volatility<F: Float + Clone>(returns: &Array1<F>, lambda: F) -> Resu
 ///
 /// let high = array![102.0, 105.0, 103.5, 106.0, 104.5];
 /// let low = array![98.0, 101.0, 99.5, 102.0, 101.0];
-/// let range_vol = range_volatility(&high, &low, 3).unwrap();
+/// let range_vol = range_volatility(&high, &low, 3).expect("Operation failed");
 /// ```
 pub fn range_volatility<F: Float + Clone>(
     high: &Array1<F>,
@@ -526,7 +526,7 @@ pub fn range_volatility<F: Float + Clone>(
     }
 
     let mut range_vol = Array1::zeros(high.len() - period + 1);
-    let scaling_factor = F::from(1.0 / (4.0 * (2.0_f64).ln())).unwrap();
+    let scaling_factor = F::from(1.0 / (4.0 * (2.0_f64).ln())).expect("Operation failed");
 
     for i in 0..range_vol.len() {
         let mut sum_log_range_sq = F::zero();
@@ -536,7 +536,9 @@ pub fn range_volatility<F: Float + Clone>(
             sum_log_range_sq = sum_log_range_sq + log_range.powi(2);
         }
 
-        range_vol[i] = (scaling_factor * sum_log_range_sq / F::from(period).unwrap()).sqrt();
+        range_vol[i] = (scaling_factor * sum_log_range_sq
+            / F::from(period).expect("Failed to convert to float"))
+        .sqrt();
     }
 
     Ok(range_vol)
@@ -564,7 +566,7 @@ pub fn range_volatility<F: Float + Clone>(
 ///
 /// let prices = array![100.0, 100.1, 99.9, 100.05, 99.95, 100.2];
 /// let sampling_freq = 2; // Every 2 observations
-/// let intraday_vol = intraday_volatility(&prices, sampling_freq).unwrap();
+/// let intraday_vol = intraday_volatility(&prices, sampling_freq).expect("Operation failed");
 /// ```
 pub fn intraday_volatility<F: Float + Clone>(
     prices: &Array1<F>,
@@ -593,7 +595,7 @@ pub fn intraday_volatility<F: Float + Clone>(
         ));
     }
 
-    Ok((squared_returns / F::from(count).unwrap()).sqrt())
+    Ok((squared_returns / F::from(count).expect("Failed to convert to float")).sqrt())
 }
 
 #[cfg(test)]
@@ -625,7 +627,7 @@ mod tests {
         let result = garman_klass_volatility(&high, &low, &close, &open);
         assert!(result.is_ok());
 
-        let gk_vol = result.unwrap();
+        let gk_vol = result.expect("Operation failed");
         assert_eq!(gk_vol.len(), 3);
 
         // All values should be non-negative
@@ -642,7 +644,7 @@ mod tests {
         let result = parkinson_volatility(&high, &low);
         assert!(result.is_ok());
 
-        let park_vol = result.unwrap();
+        let park_vol = result.expect("Operation failed");
         assert_eq!(park_vol.len(), 3);
 
         // All values should be non-negative
@@ -661,7 +663,7 @@ mod tests {
         let result = rogers_satchell_volatility(&high, &low, &close, &open);
         assert!(result.is_ok());
 
-        let rs_vol = result.unwrap();
+        let rs_vol = result.expect("Operation failed");
         assert_eq!(rs_vol.len(), 3);
     }
 
@@ -676,7 +678,7 @@ mod tests {
         let result = yang_zhang_volatility(&high, &low, &close, &open, k);
         assert!(result.is_ok());
 
-        let yz_vol = result.unwrap();
+        let yz_vol = result.expect("Operation failed");
         assert_eq!(yz_vol.len(), 3); // n-1 for n observations
     }
 
@@ -688,7 +690,7 @@ mod tests {
         let result = ewma_volatility(&returns, lambda);
         assert!(result.is_ok());
 
-        let ewma_vol = result.unwrap();
+        let ewma_vol = result.expect("Operation failed");
         assert_eq!(ewma_vol.len(), returns.len());
 
         // First value should be sqrt of first squared return
@@ -708,7 +710,7 @@ mod tests {
         let result = garch_volatility_estimate(&returns, window);
         assert!(result.is_ok());
 
-        let garch_vol = result.unwrap();
+        let garch_vol = result.expect("Operation failed");
         assert_eq!(garch_vol.len(), returns.len() - window + 1);
 
         // All values should be positive
@@ -726,7 +728,7 @@ mod tests {
         let result = range_volatility(&high, &low, period);
         assert!(result.is_ok());
 
-        let range_vol = result.unwrap();
+        let range_vol = result.expect("Operation failed");
         assert_eq!(range_vol.len(), high.len() - period + 1);
 
         // All values should be non-negative
@@ -743,7 +745,7 @@ mod tests {
         let result = intraday_volatility(&prices, sampling_freq);
         assert!(result.is_ok());
 
-        let vol = result.unwrap();
+        let vol = result.expect("Operation failed");
         assert!(vol >= 0.0);
     }
 

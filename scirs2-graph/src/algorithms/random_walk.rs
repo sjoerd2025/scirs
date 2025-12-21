@@ -137,7 +137,10 @@ where
     }
 
     // Find source index
-    let source_idx = nodes.iter().position(|n| n == source).unwrap();
+    let source_idx = nodes
+        .iter()
+        .position(|n| n == source)
+        .expect("Operation failed");
 
     // Get transition matrix
     let (_, trans_matrix) = transition_matrix(graph)?;

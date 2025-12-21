@@ -194,7 +194,7 @@ impl<T: Float + std::fmt::Display + Default + AddAssign> AdvancedExtrapolator<T>
             match config.combination_strategy {
                 EnsembleCombinationStrategy::Mean => {
                     let sum: T = results.iter().copied().fold(T::zero(), |acc, x| acc + x);
-                    Ok(sum / T::from(results.len()).unwrap())
+                    Ok(sum / T::from(results.len()).expect("Operation failed"))
                 }
                 EnsembleCombinationStrategy::WeightedMean => {
                     let weighted_sum: T = results
@@ -214,11 +214,11 @@ impl<T: Float + std::fmt::Display + Default + AddAssign> AdvancedExtrapolator<T>
                 }
                 EnsembleCombinationStrategy::Median => {
                     let mut sorted_results = results;
-                    sorted_results.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    sorted_results.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                     let mid = sorted_results.len() / 2;
 
                     if sorted_results.len() % 2 == 0 {
-                        let two = T::from(2.0).unwrap();
+                        let two = T::from(2.0).expect("Operation failed");
                         Ok((sorted_results[mid - 1] + sorted_results[mid]) / two)
                     } else {
                         Ok(sorted_results[mid])
@@ -231,24 +231,24 @@ impl<T: Float + std::fmt::Display + Default + AddAssign> AdvancedExtrapolator<T>
                 EnsembleCombinationStrategy::MinimumVariance => {
                     // Simplified implementation using equal weights
                     let sum: T = results.iter().copied().fold(T::zero(), |acc, x| acc + x);
-                    Ok(sum / T::from(results.len()).unwrap())
+                    Ok(sum / T::from(results.len()).expect("Operation failed"))
                 }
                 EnsembleCombinationStrategy::BayesianAveraging => {
                     // Simplified implementation using uniform priors
                     let sum: T = results.iter().copied().fold(T::zero(), |acc, x| acc + x);
-                    Ok(sum / T::from(results.len()).unwrap())
+                    Ok(sum / T::from(results.len()).expect("Operation failed"))
                 }
                 EnsembleCombinationStrategy::Voting => {
                     // For regression, use median as "majority vote"
                     let mut sorted_results = results;
-                    sorted_results.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    sorted_results.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
                     let mid = sorted_results.len() / 2;
                     Ok(sorted_results[mid])
                 }
                 EnsembleCombinationStrategy::Stacking => {
                     // Simplified stacking using equal weights
                     let sum: T = results.iter().copied().fold(T::zero(), |acc, x| acc + x);
-                    Ok(sum / T::from(results.len()).unwrap())
+                    Ok(sum / T::from(results.len()).expect("Operation failed"))
                 }
             }
         } else {

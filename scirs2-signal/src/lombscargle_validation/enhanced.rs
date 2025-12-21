@@ -274,7 +274,7 @@ fn validate_noise_robustness(config: &EnhancedValidationConfig) -> SignalResult<
                 let peak_idx = power
                     .iter()
                     .enumerate()
-                    .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                    .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
                     .map(|(i, _)| i)
                     .unwrap_or(0);
 

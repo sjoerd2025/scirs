@@ -473,8 +473,8 @@ impl<F: Float> Default for AccuracyTargets<F> {
         Self {
             target_absolute_error: None,
             target_relative_error: None,
-            max_acceptable_error: F::from(1e-6).unwrap(),
-            confidence_level: F::from(0.95).unwrap(),
+            max_acceptable_error: F::from(1e-6).expect("Failed to convert constant to float"),
+            confidence_level: F::from(0.95).expect("Failed to convert constant to float"),
         }
     }
 }
@@ -485,7 +485,7 @@ impl<F: Float + std::ops::AddAssign> ErrorPredictionModel<F> {
         Ok(Self {
             prediction_params: HashMap::new(),
             error_history: VecDeque::new(),
-            model_accuracy: F::from(0.8).unwrap(),
+            model_accuracy: F::from(0.8).expect("Failed to convert constant to float"),
         })
     }
 
@@ -501,27 +501,29 @@ impl<F: Float + std::ops::AddAssign> ErrorPredictionModel<F> {
         let noise_penalty = data_profile.noise_level.to_f64().unwrap_or(0.1) * 0.5;
         let size_bonus = if data_profile.size > 1000 { 0.05 } else { 0.0 };
 
-        let predicted_error = F::from(1.0 - base_accuracy + noise_penalty - size_bonus).unwrap();
+        let predicted_error = F::from(1.0 - base_accuracy + noise_penalty - size_bonus)
+            .expect("Failed to convert to float");
         let confidence = self.model_accuracy;
 
         Ok(AccuracyPrediction {
-            predicted_accuracy: predicted_error.max(F::from(1e-12).unwrap()),
+            predicted_accuracy: predicted_error
+                .max(F::from(1e-12).expect("Failed to convert constant to float")),
             confidence_interval: (
-                predicted_error * F::from(0.8).unwrap(),
-                predicted_error * F::from(1.2).unwrap(),
+                predicted_error * F::from(0.8).expect("Failed to convert constant to float"),
+                predicted_error * F::from(1.2).expect("Failed to convert constant to float"),
             ),
             prediction_confidence: confidence,
             accuracy_factors: vec![
                 AccuracyFactor {
                     name: "Method capability".to_string(),
-                    impact: F::from(base_accuracy - 0.5).unwrap(),
-                    confidence: F::from(0.9).unwrap(),
+                    impact: F::from(base_accuracy - 0.5).expect("Failed to convert to float"),
+                    confidence: F::from(0.9).expect("Failed to convert constant to float"),
                     mitigations: vec!["Consider higher-order methods".to_string()],
                 },
                 AccuracyFactor {
                     name: "Data noise level".to_string(),
-                    impact: F::from(-noise_penalty).unwrap(),
-                    confidence: F::from(0.8).unwrap(),
+                    impact: F::from(-noise_penalty).expect("Failed to convert to float"),
+                    confidence: F::from(0.8).expect("Failed to convert constant to float"),
                     mitigations: vec![
                         "Apply data smoothing".to_string(),
                         "Use robust methods".to_string(),
@@ -562,8 +564,10 @@ impl<F: Float + std::ops::AddAssign> ErrorPredictionModel<F> {
         }
 
         if count > 0 {
-            let avg_relative_error = total_error / F::from(count).unwrap();
-            self.model_accuracy = (F::one() - avg_relative_error).max(F::from(0.1).unwrap());
+            let avg_relative_error =
+                total_error / F::from(count).expect("Failed to convert to float");
+            self.model_accuracy = (F::one() - avg_relative_error)
+                .max(F::from(0.1).expect("Failed to convert constant to float"));
         }
 
         Ok(())
@@ -611,13 +615,13 @@ impl<F: Float + std::ops::AddAssign> ErrorPredictionModel<F> {
 
             stats.insert(
                 "mean_absolute_error".to_string(),
-                (total_abs_error / F::from(count).unwrap())
+                (total_abs_error / F::from(count).expect("Failed to convert to float"))
                     .to_f64()
                     .unwrap_or(0.0),
             );
             stats.insert(
                 "mean_relative_error".to_string(),
-                (total_rel_error / F::from(count).unwrap())
+                (total_rel_error / F::from(count).expect("Failed to convert to float"))
                     .to_f64()
                     .unwrap_or(0.0),
             );
@@ -646,14 +650,16 @@ mod tests {
 
     #[test]
     fn test_error_prediction_model_creation() {
-        let model: ErrorPredictionModel<f64> = ErrorPredictionModel::new().unwrap();
+        let model: ErrorPredictionModel<f64> =
+            ErrorPredictionModel::new().expect("Operation failed");
         assert_eq!(model.model_accuracy, 0.8);
         assert!(model.error_history.is_empty());
     }
 
     #[test]
     fn test_accuracy_optimization_engine_creation() {
-        let engine: AccuracyOptimizationEngine<f64> = AccuracyOptimizationEngine::new().unwrap();
+        let engine: AccuracyOptimizationEngine<f64> =
+            AccuracyOptimizationEngine::new().expect("Operation failed");
         assert!(matches!(
             engine.strategy,
             AccuracyOptimizationStrategy::BalancedAccuracy

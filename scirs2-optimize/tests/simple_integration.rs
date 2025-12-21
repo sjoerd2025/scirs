@@ -36,7 +36,8 @@ fn test_basic_sgd_integration() {
         ..Default::default()
     };
 
-    let result = minimize_sgd(grad_func, x0.clone(), data_provider, options).unwrap();
+    let result =
+        minimize_sgd(grad_func, x0.clone(), data_provider, options).expect("Operation failed");
 
     // Should converge toward zero
     assert!(
@@ -64,7 +65,7 @@ fn test_basic_adam_integration() {
         ..Default::default()
     };
 
-    let result = minimize_adam(grad_func, x0, data_provider, options).unwrap();
+    let result = minimize_adam(grad_func, x0, data_provider, options).expect("Operation failed");
 
     // Adam should converge efficiently
     assert!(
@@ -137,7 +138,7 @@ fn test_stochastic_algorithms_variety() {
         data_provider1,
         rmsprop_options,
     )
-    .unwrap();
+    .expect("Operation failed");
     assert!(result_rmsprop.fun < 1e-2, "RMSProp should converge");
 
     // Test AdamW
@@ -149,8 +150,8 @@ fn test_stochastic_algorithms_variety() {
         ..Default::default()
     };
     let data_provider2 = Box::new(InMemoryDataProvider::new(vec![1.0; 50]));
-    let result_adamw =
-        minimize_adamw(QuadraticFunction, x0, data_provider2, adamw_options).unwrap();
+    let result_adamw = minimize_adamw(QuadraticFunction, x0, data_provider2, adamw_options)
+        .expect("Operation failed");
     assert!(result_adamw.fun < 1e-2, "AdamW should converge");
 
     println!("✅ Multiple stochastic optimization algorithms working");

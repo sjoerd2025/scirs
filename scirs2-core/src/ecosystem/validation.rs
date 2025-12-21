@@ -37,7 +37,7 @@ impl EcosystemValidator {
     /// Get global validator instance
     pub fn global() -> CoreResult<Arc<Self>> {
         Ok(GLOBAL_VALIDATOR
-            .get_or_init(|| Arc::new(Self::new().unwrap()))
+            .get_or_init(|| Arc::new(Self::new().expect("Operation failed")))
             .clone())
     }
 
@@ -1533,29 +1533,31 @@ mod tests {
 
     #[test]
     fn test_validator_creation() {
-        let validator = EcosystemValidator::new().unwrap();
+        let validator = EcosystemValidator::new().expect("Operation failed");
         // Basic functionality test
     }
 
     #[test]
     fn test_module_registration() {
-        let validator = EcosystemValidator::new().unwrap();
+        let validator = EcosystemValidator::new().expect("Operation failed");
         let module = create_core_module_info();
 
-        validator.register_module(module).unwrap();
+        validator.register_module(module).expect("Operation failed");
 
-        let result = validator.validate_module("scirs2-core").unwrap();
+        let result = validator
+            .validate_module("scirs2-core")
+            .expect("Operation failed");
         assert!(result.is_valid());
     }
 
     #[test]
     fn test_ecosystem_validation() {
-        let validator = EcosystemValidator::new().unwrap();
+        let validator = EcosystemValidator::new().expect("Operation failed");
         validator
             .register_module(create_core_module_info())
-            .unwrap();
+            .expect("Operation failed");
 
-        let result = validator.validate_ecosystem().unwrap();
+        let result = validator.validate_ecosystem().expect("Operation failed");
         assert!(result.is_valid());
     }
 

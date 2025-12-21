@@ -1621,7 +1621,7 @@ mod tests {
 
         let (h_new, c_new) = lstm
             .forward(input.view(), h_prev.view(), c_prev.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(h_new.len(), 20);
         assert_eq!(c_new.len(), 20);
@@ -1632,7 +1632,7 @@ mod tests {
         let conv = Conv1D::new(5, 10, 3, ActivationFunction::ReLU);
         let input = Array2::ones((8, 5)); // Sequence length 8, 5 channels
 
-        let output = conv.forward(input.view()).unwrap();
+        let output = conv.forward(input.view()).expect("Operation failed");
         assert_eq!(output.shape(), &[6, 10]); // (8-3+1, 10)
     }
 
@@ -1641,7 +1641,7 @@ mod tests {
         let bilstm = BiLSTM::new(10, 20, 2);
         let input = Array2::ones((5, 10)); // 5 timesteps, 10 features
 
-        let output = bilstm.forward(input.view()).unwrap();
+        let output = bilstm.forward(input.view()).expect("Operation failed");
         assert_eq!(output.shape(), &[5, 40]); // Bidirectional doubles output size
     }
 
@@ -1651,7 +1651,9 @@ mod tests {
         let input = Array1::ones(10);
         let h_prev = Array1::zeros(20);
 
-        let h_new = gru.forward(input.view(), h_prev.view()).unwrap();
+        let h_new = gru
+            .forward(input.view(), h_prev.view())
+            .expect("Operation failed");
 
         assert_eq!(h_new.len(), 20);
         // Check that output is not all zeros (some processing happened)
@@ -1663,7 +1665,9 @@ mod tests {
         let attention = SelfAttention::new(8, 0.1);
         let input = Array2::ones((4, 8)); // 4 tokens, 8 dimensions
 
-        let output = attention.forward(input.view(), None).unwrap();
+        let output = attention
+            .forward(input.view(), None)
+            .expect("Operation failed");
         assert_eq!(output.shape(), &[4, 8]);
     }
 
@@ -1676,7 +1680,7 @@ mod tests {
 
         let output = attention
             .forward(query.view(), key.view(), value.view(), None)
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(output.shape(), &[3, 8]);
     }
 
@@ -1685,7 +1689,7 @@ mod tests {
         let block = ResidualBlock1D::new(4, 8, 3);
         let input = Array2::ones((10, 4)); // 10 sequence length, 4 channels
 
-        let output = block.forward(input.view()).unwrap();
+        let output = block.forward(input.view()).expect("Operation failed");
         // Two conv layers with kernel_size=3 reduce sequence: 10 -> 8 -> 6
         assert_eq!(output.shape(), &[6, 8]); // Correct convolution output shape
     }
@@ -1700,7 +1704,7 @@ mod tests {
         );
         let input = Array2::ones((8, 5)); // 8 sequence length, 5 channels
 
-        let output = cnn.forward(input.view()).unwrap();
+        let output = cnn.forward(input.view()).expect("Operation failed");
         assert_eq!(output.len(), 30);
     }
 

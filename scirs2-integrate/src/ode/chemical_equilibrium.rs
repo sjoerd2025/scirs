@@ -1297,7 +1297,7 @@ mod tests {
 
         let activity_coeffs = calculator
             .calculate_activity_coefficients(&concentrations)
-            .unwrap();
+            .expect("Operation failed");
 
         // Ionic species should have activity coefficients different from 1
         assert!(activity_coeffs[1] < 1.0); // H+

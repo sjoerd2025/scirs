@@ -40,7 +40,7 @@ use crate::error::LinalgResult;
 /// use scirs2_linalg::extended_precision::eigen::advanced_precision_eigh;
 ///
 /// let a = array![[2.0f32, 1.0], [1.0, 2.0]];
-/// let (eigvals, eigvecs) = advanced_precision_eigh::<_, f64>(&a.view(), None, None, true).unwrap();
+/// let (eigvals, eigvecs) = advanced_precision_eigh::<_, f64>(&a.view(), None, None, true).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn advanced_precision_eigh<A, I>(
@@ -78,18 +78,18 @@ where
 
     let _n = a.nrows();
     let max_iter = max_iter.unwrap_or(500);
-    let target_precision = target_precision.unwrap_or(A::from(1e-12).unwrap());
+    let target_precision = target_precision.unwrap_or(A::from(1e-12).expect("Operation failed"));
 
     // Compute matrix condition number for adaptive tolerance selection
     let condition_number = estimate_condition_number(a)?;
 
     // Advanced-aggressive adaptive tolerance selection for 1e-12+ accuracy
-    let adaptive_tolerance = if condition_number > A::from(1e12).unwrap() {
-        target_precision * A::from(100.0).unwrap() // Relax tolerance for ill-conditioned matrices
-    } else if condition_number < A::from(1e3).unwrap() {
-        target_precision * A::from(0.01).unwrap() // Advanced-tight tolerance for extremely well-conditioned matrices
-    } else if condition_number < A::from(1e6).unwrap() {
-        target_precision * A::from(0.1).unwrap() // Tighter tolerance for well-conditioned matrices
+    let adaptive_tolerance = if condition_number > A::from(1e12).expect("Operation failed") {
+        target_precision * A::from(100.0).expect("Operation failed") // Relax tolerance for ill-conditioned matrices
+    } else if condition_number < A::from(1e3).expect("Operation failed") {
+        target_precision * A::from(0.01).expect("Operation failed") // Advanced-tight tolerance for extremely well-conditioned matrices
+    } else if condition_number < A::from(1e6).expect("Operation failed") {
+        target_precision * A::from(0.1).expect("Operation failed") // Tighter tolerance for well-conditioned matrices
     } else {
         target_precision
     };
@@ -97,7 +97,8 @@ where
     // Auto-detect if advanced-precision mode should be activated (more aggressive in advanced mode)
     let use_advanced_precision = auto_detect
         && (
-            condition_number > A::from(1e12).unwrap() || target_precision <= A::from(1e-11).unwrap()
+            condition_number > A::from(1e12).expect("Operation failed")
+                || target_precision <= A::from(1e-11).expect("Operation failed")
             // Activate for high precision targets
         );
 
@@ -129,7 +130,7 @@ where
 
     // Step 2: Multiple-stage Rayleigh quotient iteration
     for stage in 0..3 {
-        let stage_tolerance = tolerance * A::from(10.0).unwrap().powi(-stage);
+        let stage_tolerance = tolerance * A::from(10.0).expect("Operation failed").powi(-stage);
         rayleigh_quotient_iteration(&mut d, &mut e, &mut q, max_iter / 3, stage_tolerance)?;
     }
 
@@ -230,7 +231,7 @@ where
     A: Float + Zero + One + Copy + std::ops::AddAssign,
 {
     let n = a.nrows();
-    let beta = A::from(2.0).unwrap();
+    let beta = A::from(2.0).expect("Operation failed");
 
     // Apply transformation: A = (I - beta*v*v^T) * A * (I - beta*v*v^T)
     for j in k + 1..n {
@@ -265,7 +266,7 @@ where
     A: Float + Zero + One + Copy + std::ops::AddAssign,
 {
     let n = q.nrows();
-    let beta = A::from(2.0).unwrap();
+    let beta = A::from(2.0).expect("Operation failed");
 
     for i in 0..n {
         let mut sum = A::zero();
@@ -329,12 +330,12 @@ where
 {
     let trace = d1 + d2;
     let det = d1 * d2 - e * e;
-    let discriminant = trace * trace * A::from(0.25).unwrap() - det;
+    let discriminant = trace * trace * A::from(0.25).expect("Operation failed") - det;
 
     if discriminant >= A::zero() {
         let sqrt_disc = discriminant.sqrt();
-        let lambda1 = trace * A::from(0.5).unwrap() + sqrt_disc;
-        let lambda2 = trace * A::from(0.5).unwrap() - sqrt_disc;
+        let lambda1 = trace * A::from(0.5).expect("Operation failed") + sqrt_disc;
+        let lambda2 = trace * A::from(0.5).expect("Operation failed") - sqrt_disc;
 
         // Choose the eigenvalue closer to d2
         if (lambda1 - d2).abs() < (lambda2 - d2).abs() {
@@ -343,7 +344,7 @@ where
             lambda2
         }
     } else {
-        trace * A::from(0.5).unwrap()
+        trace * A::from(0.5).expect("Operation failed")
     }
 }
 
@@ -361,8 +362,8 @@ where
 {
     // Simplified QR step implementation
     // In a full implementation, this would be the Francis QR step
-    d[start] = d[start] - shift * A::from(0.1).unwrap();
-    d[start + 1] = d[start + 1] - shift * A::from(0.1).unwrap();
+    d[start] = d[start] - shift * A::from(0.1).expect("Operation failed");
+    d[start + 1] = d[start + 1] - shift * A::from(0.1).expect("Operation failed");
 
     Ok(())
 }
@@ -431,11 +432,11 @@ where
     A: Float + Zero + One + Copy,
 {
     // Numerical derivative approximation
-    let h = A::from(1e-8).unwrap();
+    let h = A::from(1e-8).expect("Operation failed");
     let f_plus = compute_characteristic_polynomial_value(matrix, lambda + h)?;
     let f_minus = compute_characteristic_polynomial_value(matrix, lambda - h)?;
 
-    Ok((f_plus - f_minus) / (A::from(2.0).unwrap() * h))
+    Ok((f_plus - f_minus) / (A::from(2.0).expect("Operation failed") * h))
 }
 
 /// Simple determinant computation for small matrices
@@ -562,7 +563,8 @@ where
     // Simplified inverse iteration - would implement full solver in practice
     let n = matrix.nrows();
     for i in 0..n {
-        eigenvectors[[i, col_index]] = eigenvectors[[i, col_index]] * A::from(1.001).unwrap();
+        eigenvectors[[i, col_index]] =
+            eigenvectors[[i, col_index]] * A::from(1.001).expect("Operation failed");
     }
 
     Ok(())
@@ -602,7 +604,7 @@ where
     if min_diagonal > A::epsilon() {
         Ok(max_row_sum / min_diagonal)
     } else {
-        Ok(A::from(1e15).unwrap()) // Large condition number for near-singular matrices
+        Ok(A::from(1e15).expect("Operation failed")) // Large condition number for near-singular matrices
     }
 }
 
@@ -752,11 +754,16 @@ mod tests {
         let a = array![[4.0f32, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 1.0]];
 
         let (eigenvalues, eigenvectors) =
-            advanced_precision_eigh::<_, f64>(&a.view(), None, None, true).unwrap();
+            advanced_precision_eigh::<_, f64>(&a.view(), None, None, true)
+                .expect("Operation failed");
 
         // For a diagonal matrix, sort the eigenvalues
         let mut sorted_indices = (0..eigenvalues.len()).collect::<Vec<_>>();
-        sorted_indices.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+        sorted_indices.sort_by(|&i, &j| {
+            eigenvalues[i]
+                .partial_cmp(&eigenvalues[j])
+                .expect("Operation failed")
+        });
 
         // Verify the eigenvalues are close to the expected values
         assert!(
@@ -794,7 +801,7 @@ mod tests {
     fn test_estimate_condition_number() {
         // Identity matrix should have condition number 1
         let identity = array![[1.0f32, 0.0], [0.0, 1.0]];
-        let cond = estimate_condition_number(&identity.view()).unwrap();
+        let cond = estimate_condition_number(&identity.view()).expect("Operation failed");
         assert!(
             (0.5..=2.0).contains(&cond),
             "Expected condition number ~1, got {}",
@@ -803,7 +810,7 @@ mod tests {
 
         // Well-conditioned matrix
         let well_cond = array![[2.0f32, 1.0], [1.0, 2.0]];
-        let cond = estimate_condition_number(&well_cond.view()).unwrap();
+        let cond = estimate_condition_number(&well_cond.view()).expect("Operation failed");
         assert!(
             cond > 0.0 && cond < 100.0,
             "Expected reasonable condition number, got {}",

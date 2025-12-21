@@ -40,7 +40,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
     /// ```
     pub fn new(mu: F, sigma: F, loc: F) -> StatsResult<Self> {
         if sigma <= F::zero() {
@@ -76,7 +76,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
     /// let pdf_at_one = lognorm.pdf(1.0);
     /// assert!((pdf_at_one - 0.3989423).abs() < 1e-7);
     /// ```
@@ -91,14 +91,16 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
 
         // For lognormal PDF:
         // f(x) = 1/(x*sigma*sqrt(2*pi)) * exp(-(ln(x) - mu)^2/(2*sigma^2))
-        let pi = F::from(std::f64::consts::PI).unwrap();
-        let two = F::from(2.0).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
+        let two = F::from(2.0).expect("Failed to convert constant to float");
 
         let ln_x = x_shifted.ln();
         let z = (ln_x - self.mu) / self.sigma;
         let exponent = -z * z / two;
 
-        F::from(1.0).unwrap() / (x_shifted * self.sigma * (two * pi).sqrt()) * exponent.exp()
+        F::from(1.0).expect("Failed to convert constant to float")
+            / (x_shifted * self.sigma * (two * pi).sqrt())
+            * exponent.exp()
     }
 
     /// Calculate the cumulative distribution function (CDF) at a given point
@@ -116,7 +118,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
     /// let cdf_at_one = lognorm.cdf(1.0);
     /// assert!((cdf_at_one - 0.5).abs() < 1e-10);
     /// ```
@@ -149,8 +151,8 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
-    /// let x = lognorm.ppf(0.5).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
+    /// let x = lognorm.ppf(0.5).expect("Operation failed");
     /// assert!((x - 1.0000001010066806) < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -190,8 +192,8 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
-    /// let samples = lognorm.rvs(1000).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
+    /// let samples = lognorm.rvs(1000).expect("Operation failed");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -218,12 +220,12 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
     /// let mean = lognorm.mean();
     /// assert!((mean - 1.6487212707).abs() < 1e-7);
     /// ```
     pub fn mean(&self) -> F {
-        let half = F::from(0.5).unwrap();
+        let half = F::from(0.5).expect("Failed to convert constant to float");
         let variance = self.sigma * self.sigma;
 
         (self.mu + variance * half).exp() + self.loc
@@ -240,13 +242,13 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
     /// let var = lognorm.var();
     /// assert!((var - 4.670774270471604) < 1e-7);
     /// ```
     pub fn var(&self) -> F {
         let one = F::one();
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         let variance = self.sigma * self.sigma;
 
         ((two * self.mu + variance).exp()) * (variance.exp() - one)
@@ -263,7 +265,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
     /// let median = lognorm.median();
     /// assert!((median - 1.0).abs() < 1e-7);
     /// ```
@@ -282,7 +284,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// ```
     /// use scirs2_stats::distributions::lognormal::Lognormal;
     ///
-    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
+    /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).expect("Operation failed");
     /// let mode = lognorm.mode();
     /// assert!((mode - 0.36787944).abs() < 1e-7);
     /// ```
@@ -311,7 +313,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
 /// ```
 /// use scirs2_stats::distributions::lognormal;
 ///
-/// let lognorm = lognormal::lognormal(0.0f64, 1.0, 0.0).unwrap();
+/// let lognorm = lognormal::lognormal(0.0f64, 1.0, 0.0).expect("Operation failed");
 /// let pdf_at_one = lognorm.pdf(1.0);
 /// ```
 #[allow(dead_code)]
@@ -337,13 +339,13 @@ mod tests {
     #[test]
     fn test_lognormal_creation() {
         // Standard lognormal
-        let lognorm = Lognormal::new(0.0, 1.0, 0.0).unwrap();
+        let lognorm = Lognormal::new(0.0, 1.0, 0.0).expect("Operation failed");
         assert_eq!(lognorm.mu, 0.0);
         assert_eq!(lognorm.sigma, 1.0);
         assert_eq!(lognorm.loc, 0.0);
 
         // Custom lognormal
-        let custom = Lognormal::new(1.0, 0.5, 1.0).unwrap();
+        let custom = Lognormal::new(1.0, 0.5, 1.0).expect("Operation failed");
         assert_eq!(custom.mu, 1.0);
         assert_eq!(custom.sigma, 0.5);
         assert_eq!(custom.loc, 1.0);
@@ -356,7 +358,7 @@ mod tests {
     #[test]
     fn test_lognormal_pdf() {
         // Standard lognormal PDF values
-        let lognorm = Lognormal::new(0.0, 1.0, 0.0).unwrap();
+        let lognorm = Lognormal::new(0.0, 1.0, 0.0).expect("Operation failed");
 
         // PDF at x = 1
         let pdf_at_one = lognorm.pdf(1.0);
@@ -375,7 +377,7 @@ mod tests {
         assert_eq!(lognorm.pdf(-1.0), 0.0);
 
         // Custom lognormal
-        let custom = Lognormal::new(1.0, 0.5, 1.0).unwrap();
+        let custom = Lognormal::new(1.0, 0.5, 1.0).expect("Operation failed");
 
         // PDF at x = 1 (at loc) should be 0
         assert_eq!(custom.pdf(1.0), 0.0);
@@ -389,7 +391,7 @@ mod tests {
     #[test]
     fn test_lognormal_cdf() {
         // Standard lognormal CDF values
-        let lognorm = Lognormal::new(0.0, 1.0, 0.0).unwrap();
+        let lognorm = Lognormal::new(0.0, 1.0, 0.0).expect("Operation failed");
 
         // CDF at x = 1
         let cdf_at_one = lognorm.cdf(1.0);
@@ -411,18 +413,18 @@ mod tests {
     #[test]
     fn test_lognormal_ppf() {
         // Standard lognormal quantiles
-        let lognorm = Lognormal::new(0.0, 1.0, 0.0).unwrap();
+        let lognorm = Lognormal::new(0.0, 1.0, 0.0).expect("Operation failed");
 
         // Median (50th percentile)
-        let median = lognorm.ppf(0.5).unwrap();
+        let median = lognorm.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(median, 1.0000001010066806, epsilon = 1e-7);
 
         // 75th percentile
-        let p75 = lognorm.ppf(0.75).unwrap();
+        let p75 = lognorm.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(p75, 1.9624410657713667, epsilon = 1e-4);
 
         // 25th percentile
-        let p25 = lognorm.ppf(0.25).unwrap();
+        let p25 = lognorm.ppf(0.25).expect("Operation failed");
         assert_relative_eq!(p25, 0.5095694425895716, epsilon = 1e-4);
 
         // Error cases
@@ -433,7 +435,7 @@ mod tests {
     #[test]
     fn test_lognormal_statistics() {
         // Standard lognormal statistics
-        let lognorm = Lognormal::new(0.0, 1.0, 0.0).unwrap();
+        let lognorm = Lognormal::new(0.0, 1.0, 0.0).expect("Operation failed");
 
         // Mean = exp(μ + σ²/2)
         let mean = lognorm.mean();
@@ -452,7 +454,7 @@ mod tests {
         assert_relative_eq!(mode, 0.36787944, epsilon = 1e-7);
 
         // Custom lognormal
-        let custom = Lognormal::new(1.0, 0.5, 2.0).unwrap();
+        let custom = Lognormal::new(1.0, 0.5, 2.0).expect("Operation failed");
 
         // Mean with location parameter
         let custom_mean = custom.mean();
@@ -466,10 +468,10 @@ mod tests {
 
     #[test]
     fn test_lognormal_rvs() {
-        let lognorm = Lognormal::new(0.0, 1.0, 0.0).unwrap();
+        let lognorm = Lognormal::new(0.0, 1.0, 0.0).expect("Operation failed");
 
         // Generate samples
-        let samples = lognorm.rvs(1000).unwrap();
+        let samples = lognorm.rvs(1000).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 1000);
@@ -489,7 +491,7 @@ mod tests {
 
         // Calculate sample median as a sanity check
         let mut sorted_samples = samples.clone();
-        sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_samples.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         let median = if samples.len() % 2 == 0 {
             (sorted_samples[499] + sorted_samples[500]) / 2.0
         } else {

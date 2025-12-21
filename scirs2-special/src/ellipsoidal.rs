@@ -603,7 +603,7 @@ mod tests {
         let p = 1;
         let s = 1.5;
 
-        let result = ellip_harm(h2, k2, n, p, s).unwrap();
+        let result = ellip_harm(h2, k2, n, p, s).expect("Operation failed");
         assert!(result.is_finite());
 
         // Test that result is reasonable
@@ -627,7 +627,7 @@ mod tests {
         let p = 2;
         let s = 2.0;
 
-        let result = ellip_harm_2(h2, k2, n, p, s).unwrap();
+        let result = ellip_harm_2(h2, k2, n, p, s).expect("Operation failed");
         assert!(result.is_finite());
     }
 
@@ -638,7 +638,7 @@ mod tests {
         let n = 4;
         let p = 3;
 
-        let norm = ellip_normal(h2, k2, n, p).unwrap();
+        let norm = ellip_normal(h2, k2, n, p).expect("Operation failed");
         assert!(norm > 0.0);
         assert!(norm.is_finite());
     }
@@ -651,7 +651,7 @@ mod tests {
         let p = 1;
         let s_values = Array1::linspace(1.0, 3.0, 10);
 
-        let result = ellip_harm_array(h2, k2, n, p, &s_values.view()).unwrap();
+        let result = ellip_harm_array(h2, k2, n, p, &s_values.view()).expect("Operation failed");
         assert_eq!(result.len(), 10);
         assert!(result.iter().all(|&x| x.is_finite()));
     }
@@ -663,7 +663,7 @@ mod tests {
         let max_n = 5;
         let max_p = 3;
 
-        let coeffs = ellip_harm_coefficients(h2, k2, max_n, max_p).unwrap();
+        let coeffs = ellip_harm_coefficients(h2, k2, max_n, max_p).expect("Operation failed");
         assert_eq!(coeffs.dim(), (6, 4)); // (max_n+1, max_p+1)
 
         // Check that coefficients are finite
@@ -682,7 +682,7 @@ mod tests {
         let p = 1;
         let z = Complex64::new(1.5, 0.5);
 
-        let result = ellip_harm_complex(h2, k2, n, p, z).unwrap();
+        let result = ellip_harm_complex(h2, k2, n, p, z).expect("Operation failed");
         assert!(result.norm().is_finite());
     }
 
@@ -696,7 +696,7 @@ mod tests {
         let p = 0;
         let s = 1.0; // cos(θ) = 1, θ = 0
 
-        let ellip_result = ellip_harm(h2, k2, n, p, s).unwrap();
+        let ellip_result = ellip_harm(h2, k2, n, p, s).expect("Operation failed");
         let legendre_result = orthogonal::legendre(n, 1.0);
 
         // Should be approximately equal in the spherical limit

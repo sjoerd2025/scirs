@@ -479,7 +479,7 @@ mod tests {
     #[test]
     fn test_single_point() {
         let points = arr2(&[[1.0, 2.0]]);
-        let hull = handle_single_point(&points.view()).unwrap();
+        let hull = handle_single_point(&points.view()).expect("Operation failed");
 
         assert_eq!(hull.vertex_indices().len(), 1);
         assert_eq!(hull.simplices().len(), 0);
@@ -489,7 +489,7 @@ mod tests {
     #[test]
     fn test_two_points() {
         let points = arr2(&[[0.0, 0.0], [1.0, 1.0]]);
-        let hull = handle_two_points(&points.view()).unwrap();
+        let hull = handle_two_points(&points.view()).expect("Operation failed");
 
         assert_eq!(hull.vertex_indices().len(), 2);
         assert_eq!(hull.simplices().len(), 1);
@@ -529,7 +529,8 @@ mod tests {
     #[test]
     fn test_find_extreme_points_on_line() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [1.5, 0.0]]);
-        let (min_idx, max_idx) = find_extreme_points_on_line(&points.view()).unwrap();
+        let (min_idx, max_idx) =
+            find_extreme_points_on_line(&points.view()).expect("Operation failed");
 
         // Should find points [0.0, 0.0] and [2.0, 0.0] as extremes
         assert_eq!(min_idx, 0);
@@ -542,19 +543,19 @@ mod tests {
         let single = arr2(&[[1.0, 2.0]]);
         let result = handle_degenerate_case(&single.view());
         assert!(result.is_some());
-        assert!(result.unwrap().is_ok());
+        assert!(result.expect("Operation failed").is_ok());
 
         // Two points case
         let two = arr2(&[[0.0, 0.0], [1.0, 1.0]]);
         let result = handle_degenerate_case(&two.view());
         assert!(result.is_some());
-        assert!(result.unwrap().is_ok());
+        assert!(result.expect("Operation failed").is_ok());
 
         // Collinear case
         let collinear = arr2(&[[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]]);
         let result = handle_degenerate_case(&collinear.view());
         assert!(result.is_some());
-        assert!(result.unwrap().is_ok());
+        assert!(result.expect("Operation failed").is_ok());
 
         // Normal case (not degenerate)
         let normal = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);

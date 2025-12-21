@@ -143,7 +143,7 @@ mod example {
 fn main() {
     #[cfg(feature = "autograd")]
     {
-        example::run().unwrap();
+        example::run().expect("Operation failed");
     }
 
     #[cfg(not(feature = "autograd"))]

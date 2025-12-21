@@ -30,21 +30,21 @@ mod tests {
 
     #[test]
     fn test_conv2d_basic() {
-        let conv = Conv2D::<f64>::new(3, 8, (3, 3), (1, 1), None).unwrap();
+        let conv = Conv2D::<f64>::new(3, 8, (3, 3), (1, 1), None).expect("Operation failed");
         assert_eq!(conv.layer_type(), "Conv2D");
         assert!(conv.parameter_count() > 0);
     }
 
     #[test]
     fn test_maxpool2d_basic() {
-        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), None).unwrap();
+        let pool = MaxPool2D::<f64>::new((2, 2), (2, 2), None).expect("Operation failed");
         assert_eq!(pool.layer_type(), "MaxPool2D");
         assert_eq!(pool.parameter_count(), 0);
     }
 
     #[test]
     fn test_avgpool2d_basic() {
-        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), None).unwrap();
+        let pool = AvgPool2D::<f64>::new((2, 2), (2, 2), None).expect("Operation failed");
         assert_eq!(pool.layer_type(), "AvgPool2D");
         assert_eq!(pool.parameter_count(), 0);
     }
@@ -59,10 +59,10 @@ mod tests {
     /*
     #[test]
     fn test_adaptive_pools() {
-        let adaptive_avg = AdaptiveAvgPool2D::<f64>::new((7, 7), None).unwrap();
+        let adaptive_avg = AdaptiveAvgPool2D::<f64>::new((7, 7), None).expect("Operation failed");
         assert_eq!(adaptive_avg.layer_type(), "AdaptiveAvgPool2D");
 
-        let adaptive_max = AdaptiveMaxPool2D::<f64>::new((7, 7), None).unwrap();
+        let adaptive_max = AdaptiveMaxPool2D::<f64>::new((7, 7), None).expect("Operation failed");
         assert_eq!(adaptive_max.layer_type(), "AdaptiveMaxPool2D");
     }
     */

@@ -22,18 +22,18 @@ use std::sync::{Arc, RwLock};
 ///
 /// // Create RNN layers for forward and backward directions
 /// let mut rng = scirs2_core::random::rng();
-/// let forward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
-/// let backward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
+/// let forward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).expect("Operation failed");
+/// let backward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).expect("Operation failed");
 ///
 /// // Wrap them in a bidirectional layer
-/// let birnn = Bidirectional::new(Box::new(forward_rnn), Some(Box::new(backward_rnn)), None).unwrap();
+/// let birnn = Bidirectional::new(Box::new(forward_rnn), Some(Box::new(backward_rnn)), None).expect("Operation failed");
 ///
 /// // Forward pass with a batch of 2 samples, sequence length 5, and 10 features
 /// let batch_size = 2;
 /// let seq_len = 5;
 /// let input_size = 10;
 /// let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
-/// let output = birnn.forward(&input).unwrap();
+/// let output = birnn.forward(&input).expect("Operation failed");
 ///
 /// // Output should have dimensions [batch_size, seq_len, hidden_size*2]
 /// assert_eq!(output.shape(), &[batch_size, seq_len, 40]);
@@ -90,7 +90,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Bidirectional<F> 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidirectional<F> {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Cache input for backward pass
-        *self.input_cache.write().unwrap() = Some(input.clone());
+        *self.input_cache.write().expect("Operation failed") = Some(input.clone());
 
         // Check input dimensions
         let inputshape = input.shape();
@@ -140,7 +140,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         }
 
         // Process backward direction
-        let backward_layer = self.backward_layer.as_ref().unwrap();
+        let backward_layer = self.backward_layer.as_ref().expect("Operation failed");
 
         // Reverse the sequence dimension of input
         // Create views for each time step and reverse their order
@@ -179,13 +179,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached _input
-        let input_ref = self.input_cache.read().unwrap();
+        let input_ref = self.input_cache.read().expect("Operation failed");
         if input_ref.is_none() {
             return Err(NeuralError::InferenceError(
                 "No cached _input for backward pass. Call forward() first.".to_string(),
             ));
         }
-        let cached_input = input_ref.as_ref().unwrap();
+        let cached_input = input_ref.as_ref().expect("Operation failed");
 
         // Check gradient dimensions
         let gradshape = grad_output.shape();
@@ -256,7 +256,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         }
 
         // Get the backward layer
-        let backward_layer = self.backward_layer.as_ref().unwrap();
+        let backward_layer = self.backward_layer.as_ref().expect("Operation failed");
 
         // Split gradient into forward and backward components
         let hidden_size = total_hidden / 2;

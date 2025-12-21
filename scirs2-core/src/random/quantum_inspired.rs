@@ -182,11 +182,12 @@ impl QuantumInspiredEvolutionary {
                 let prob_zero = alpha * alpha;
 
                 // Quantum measurement
-                let measurement = if rng.sample(Uniform::new(0.0, 1.0).unwrap()) < prob_zero {
-                    0.0
-                } else {
-                    1.0
-                };
+                let measurement =
+                    if rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) < prob_zero {
+                        0.0
+                    } else {
+                        1.0
+                    };
 
                 self.classical_population[[i, j]] = measurement;
             }
@@ -326,10 +327,11 @@ impl QuantumInspiredEvolutionary {
 
         for i in 0..self.population_size {
             for j in 0..self.dimension {
-                if rng.sample(Uniform::new(0.0, 1.0).unwrap()) < mutation_rate {
+                if rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) < mutation_rate {
                     // Apply random rotation
                     let random_angle = rng.sample(
-                        Uniform::new(-mutation_strength * PI, mutation_strength * PI).unwrap(),
+                        Uniform::new(-mutation_strength * PI, mutation_strength * PI)
+                            .expect("Operation failed"),
                     );
 
                     let current_alpha = self.quantum_population[[i, j, 0]];
@@ -515,7 +517,7 @@ impl QuantumAmplitudeAmplification {
         }
 
         // Sample according to probabilities
-        let random_val = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+        let random_val = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
         let mut cumulative = 0.0;
 
         for (i, &prob) in probabilities.iter().enumerate() {
@@ -557,7 +559,7 @@ impl QuantumAmplitudeAmplification {
         // Convert discrete state to continuous sample with noise
         for i in 0..dimension {
             let base_value = ((*state_index as f64) * (i as f64 + 1.0) * 0.1).sin();
-            let noise = rng.sample(Normal::new(0.0, 0.1).unwrap());
+            let noise = rng.sample(Normal::new(0.0, 0.1).expect("Operation failed"));
             sample[i] = base_value + noise;
         }
 
@@ -724,7 +726,7 @@ impl QuantumWalk {
         }
 
         // Sample position according to probabilities
-        let random_val = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+        let random_val = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
         let mut cumulative = 0.0;
 
         for (i, &prob) in probabilities.iter().enumerate() {
@@ -743,8 +745,10 @@ impl QuantumWalk {
 
         for i in 0..self.position_amplitudes.nrows() {
             // Add random phase noise
-            let phase_noise = rng.sample(Normal::new(0.0, decoherence_strength).unwrap());
-            let amplitude_noise = rng.sample(Normal::new(0.0, decoherence_strength * 0.1).unwrap());
+            let phase_noise =
+                rng.sample(Normal::new(0.0, decoherence_strength).expect("Operation failed"));
+            let amplitude_noise =
+                rng.sample(Normal::new(0.0, decoherence_strength * 0.1).expect("Operation failed"));
 
             let real = self.position_amplitudes[[i, 0]];
             let imag = self.position_amplitudes[[i, 1]];
@@ -864,14 +868,15 @@ impl QuantumInspiredAnnealing {
             let tunneling_probability = self.quantum_tunneling_strength * temperature;
 
             // Generate proposal state
-            let proposal_state =
-                if rng.sample(Uniform::new(0.0, 1.0).unwrap()) < tunneling_probability {
-                    // Quantum tunneling move (can cross energy barriers)
-                    self.quantum_tunneling_move(&mut rng)?
-                } else {
-                    // Classical thermal move
-                    self.thermal_move(temperature, &mut rng)?
-                };
+            let proposal_state = if rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"))
+                < tunneling_probability
+            {
+                // Quantum tunneling move (can cross energy barriers)
+                self.quantum_tunneling_move(&mut rng)?
+            } else {
+                // Classical thermal move
+                self.thermal_move(temperature, &mut rng)?
+            };
 
             // Evaluate energies
             let current_energy = energy_function(&self.current_state);
@@ -886,7 +891,7 @@ impl QuantumInspiredAnnealing {
             );
 
             // Accept or reject proposal
-            if rng.sample(Uniform::new(0.0, 1.0).unwrap()) < quantum_acceptance {
+            if rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) < quantum_acceptance {
                 self.current_state = proposal_state;
 
                 // Update best solution
@@ -915,7 +920,8 @@ impl QuantumInspiredAnnealing {
         let tunneling_scale = 2.0 * self.quantum_tunneling_strength;
 
         for i in 0..self.dimension {
-            let tunneling_distance = rng.sample(Normal::new(0.0, tunneling_scale).unwrap());
+            let tunneling_distance =
+                rng.sample(Normal::new(0.0, tunneling_scale).expect("Operation failed"));
             new_state[i] = self.current_state[i] + tunneling_distance;
         }
 
@@ -932,7 +938,7 @@ impl QuantumInspiredAnnealing {
         let step_size = temperature.sqrt();
 
         for i in 0..self.dimension {
-            let thermal_noise = rng.sample(Normal::new(0.0, step_size).unwrap());
+            let thermal_noise = rng.sample(Normal::new(0.0, step_size).expect("Operation failed"));
             new_state[i] += thermal_noise;
         }
 
@@ -982,7 +988,7 @@ mod tests {
         // Simple sphere function
         let solution = qiea
             .optimize(|x| -x.iter().map(|xi| xi * xi).sum::<f64>(), 100)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(solution.len(), 5);
         // Should converge towards zero (maximum of negative sphere function)
@@ -998,7 +1004,7 @@ mod tests {
         // Oracle that marks states where first component > 0.5
         let oracle = |x: &Array1<f64>| x[0] > 0.5;
 
-        let samples = qaa.sample(oracle, 10, 42).unwrap();
+        let samples = qaa.sample(oracle, 10, 42).expect("Operation failed");
 
         // Should find samples satisfying the oracle condition
         for sample in &samples {
@@ -1013,7 +1019,7 @@ mod tests {
     fn test_quantum_walk() {
         let mut qwalk = QuantumWalk::new(5, CoinParameters::Hadamard);
 
-        let trajectory = qwalk.evolve(50, Some(16)).unwrap(); // Start at position 16
+        let trajectory = qwalk.evolve(50, Some(16)).expect("Operation failed"); // Start at position 16
 
         assert!(!trajectory.is_empty());
 
@@ -1030,7 +1036,9 @@ mod tests {
         let energy_function = |x: &Array1<f64>| (x[0] - 1.0).powi(2) + (x[1] - 1.0).powi(2);
 
         let initial_state = Array1::from_vec(vec![0.0, 0.0]);
-        let solution = qa.optimize(energy_function, initial_state, 42).unwrap();
+        let solution = qa
+            .optimize(energy_function, initial_state, 42)
+            .expect("Operation failed");
 
         // Should converge towards (1, 1)
         assert_relative_eq!(solution[0], 1.0, epsilon = 0.5);
@@ -1043,7 +1051,8 @@ mod tests {
         let _hadamard_walk = QuantumWalk::new(3, CoinParameters::Hadamard);
         let _rotation_walk = QuantumWalk::new(3, CoinParameters::Rotation(PI / 4.0));
 
-        let custom_coin = Array2::from_shape_vec((2, 2), vec![0.8, 0.6, 0.6, -0.8]).unwrap();
+        let custom_coin =
+            Array2::from_shape_vec((2, 2), vec![0.8, 0.6, 0.6, -0.8]).expect("Operation failed");
         let _custom_walk = QuantumWalk::new(3, CoinParameters::Custom(custom_coin));
     }
 }

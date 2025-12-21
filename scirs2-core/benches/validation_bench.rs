@@ -18,7 +18,7 @@ use scirs2_core::validation::data::{
 #[allow(dead_code)]
 fn bench_simple_validation(c: &mut Criterion) {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Operation failed");
 
     let schema = ValidationSchema::new()
         .require_field("name", DataType::String)
@@ -46,7 +46,7 @@ fn bench_simple_validation(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_complex_constraints(c: &mut Criterion) {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Operation failed");
 
     // Create complex nested constraints
     let complex_constraint = Constraint::And(vec![
@@ -84,7 +84,7 @@ fn bench_complex_constraints(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_array_validation(c: &mut Criterion) {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config.clone()).unwrap();
+    let validator = Validator::new(config.clone()).expect("Operation failed");
 
     let mut group = c.benchmark_group("array_validation");
 
@@ -108,7 +108,7 @@ fn bench_array_validation(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_pattern_matching(c: &mut Criterion) {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Operation failed");
 
     let schema = ValidationSchema::new()
         .require_field("email", DataType::String)
@@ -159,7 +159,7 @@ fn bench_constraint_builder(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_large_or_constraint(c: &mut Criterion) {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Operation failed");
 
     let mut group = c.benchmark_group("large_or_constraint");
 
@@ -190,7 +190,7 @@ fn bench_large_or_constraint(c: &mut Criterion) {
 fn bench_cache_performance(c: &mut Criterion) {
     // Note: Cache configuration would be done through default config
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Operation failed");
 
     let schema = ValidationSchema::new()
         .require_field("value", DataType::Float64)
@@ -241,7 +241,7 @@ fn bench_cache_performance(c: &mut Criterion) {
 #[allow(dead_code)]
 fn bench_quality_report_generation(c: &mut Criterion) {
     let config = ValidationConfig::default();
-    let validator = Validator::new(config).unwrap();
+    let validator = Validator::new(config).expect("Operation failed");
 
     let mut group = c.benchmark_group("quality_report");
 

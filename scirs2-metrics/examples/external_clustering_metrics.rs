@@ -20,7 +20,7 @@ fn main() -> CoreResult<()> {
             3.0, 8.0, 2.8, 8.2, 3.2, 7.8, 2.5, 8.5, 3.5, 7.5,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     // Ground truth labels (4 clusters)
     let true_labels = array![0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3];

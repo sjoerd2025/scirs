@@ -368,7 +368,7 @@ fn main() {
     println!("----------------------------------------");
 
     // Create a temporary directory for saving models
-    let temp_dir = tempdir().unwrap();
+    let temp_dir = tempdir().expect("Operation failed");
     let modeldir = temp_dir.path().join("models");
 
     println!("Created model directory at: {}", modeldir.display());

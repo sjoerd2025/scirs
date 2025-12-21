@@ -33,7 +33,7 @@ use scirs2_core::numeric::{Float, NumCast};
 /// let normaldata = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
 ///
 /// // Test for normality
-/// let (stat, p_value) = shapiro_wilk(&normaldata.view()).unwrap();
+/// let (stat, p_value) = shapiro_wilk(&normaldata.view()).expect("Operation failed");
 ///
 /// println!("W statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
@@ -76,10 +76,12 @@ where
     sorteddata.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate the sample mean
-    let mean = sorteddata.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean =
+        sorteddata.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
 
     // Calculate the sample variance
-    let var = sorteddata.iter().map(|&x| (x - mean).powi(2)).sum::<F>() / F::from(n).unwrap();
+    let var = sorteddata.iter().map(|&x| (x - mean).powi(2)).sum::<F>()
+        / F::from(n).expect("Failed to convert to float");
 
     if var <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
@@ -103,7 +105,8 @@ where
     let a = calculate_shapiro_wilk_coefficients(n)?;
 
     // Calculate the mean
-    let mean = sorteddata.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean =
+        sorteddata.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
 
     // Calculate S^2 (sum of squared deviations from the mean)
     let s_squared = sorteddata.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
@@ -111,7 +114,7 @@ where
     // Calculate the numerator of the W statistic
     let mut numerator = F::zero();
     for i in 0..n / 2 {
-        let coef = F::from(a[i]).unwrap();
+        let coef = F::from(a[i]).expect("Failed to convert to float");
         numerator = numerator + coef * (sorteddata[n - 1 - i] - sorteddata[i]);
     }
 
@@ -241,7 +244,7 @@ fn calculate_shapiro_wilk_coefficients(n: usize) -> StatsResult<Vec<f64>> {
 #[allow(dead_code)]
 fn calculate_shapiro_wilk_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
     // Royston's algorithm for p-value calculation
-    let w_f64 = <f64 as NumCast>::from(w).unwrap();
+    let w_f64 = <f64 as NumCast>::from(w).expect("Operation failed");
     let n_f64 = n as f64;
 
     // Use Royston's (1995) approximation
@@ -286,7 +289,7 @@ fn calculate_shapiro_wilk_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
         approx_normal_cdf(z)
     };
 
-    F::from(p).unwrap()
+    F::from(p).expect("Failed to convert to float")
 }
 
 // Approximate the standard normal CDF
@@ -343,7 +346,7 @@ fn approx_normal_cdf(z: f64) -> f64 {
 /// let normaldata = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
 ///
 /// // Test for normality
-/// let (stat, p_value) = anderson_darling(&normaldata.view()).unwrap();
+/// let (stat, p_value) = anderson_darling(&normaldata.view()).expect("Operation failed");
 ///
 /// println!("A² statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
@@ -376,8 +379,9 @@ where
     }
 
     // Calculate the mean and standard deviation
-    let mean = data.sum() / F::from(n).unwrap();
-    let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<F>() / F::from(n).unwrap();
+    let mean = data.sum() / F::from(n).expect("Failed to convert to float");
+    let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<F>()
+        / F::from(n).expect("Failed to convert to float");
 
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
@@ -406,22 +410,29 @@ fn compute_anderson_darling_statistic<F>(zdata: &[F], n: usize) -> StatsResult<(
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Calculate the cumulative distribution function for each sorted data point
     let mut s = F::zero();
 
     for (i, &z) in zdata.iter().enumerate() {
         // Calculate standard normal CDF at z
-        let cdf = F::from(approx_normal_cdf(<f64 as NumCast>::from(z).unwrap())).unwrap();
+        let cdf = F::from(approx_normal_cdf(
+            <f64 as NumCast>::from(z).expect("Failed to convert to float"),
+        ))
+        .expect("Operation failed");
 
         // Get 1-based index as float
-        let i_f = F::from(i + 1).unwrap();
+        let i_f = F::from(i + 1).expect("Failed to convert to float");
 
         // Calculate the i-th term of the sum
-        let term1 = ((F::from(2.0).unwrap() * i_f - F::one()) / n_f) * cdf.ln();
-        let term2 =
-            ((F::from(2.0).unwrap() * (n_f - i_f) + F::one()) / n_f) * (F::one() - cdf).ln();
+        let term1 = ((F::from(2.0).expect("Failed to convert constant to float") * i_f - F::one())
+            / n_f)
+            * cdf.ln();
+        let term2 = ((F::from(2.0).expect("Failed to convert constant to float") * (n_f - i_f)
+            + F::one())
+            / n_f)
+            * (F::one() - cdf).ln();
 
         s = s + term1 + term2;
     }
@@ -431,7 +442,9 @@ where
 
     // Apply the small sample size correction
     let a_squared_corrected = a_squared
-        * (F::one() + F::from(0.75).unwrap() / n_f + F::from(2.25).unwrap() / (n_f * n_f));
+        * (F::one()
+            + F::from(0.75).expect("Failed to convert constant to float") / n_f
+            + F::from(2.25).expect("Failed to convert constant to float") / (n_f * n_f));
 
     // Calculate the p-value
     let p_value = calculate_anderson_darling_p_value(a_squared_corrected);
@@ -442,7 +455,7 @@ where
 // Calculate the p-value for the Anderson-Darling test
 #[allow(dead_code)]
 fn calculate_anderson_darling_p_value<F: Float + NumCast>(_asquared: F) -> F {
-    let a2 = <f64 as NumCast>::from(_asquared).unwrap();
+    let a2 = <f64 as NumCast>::from(_asquared).expect("Operation failed");
 
     // Use the approximation from D'Agostino and Stephens (1986)
     let p = if a2 <= 0.2 {
@@ -458,7 +471,7 @@ fn calculate_anderson_darling_p_value<F: Float + NumCast>(_asquared: F) -> F {
     };
 
     // Ensure the p-value is in the valid range [0, 1]
-    F::from(p.clamp(0.0, 1.0)).unwrap()
+    F::from(p.clamp(0.0, 1.0)).expect("Operation failed")
 }
 
 /// Performs D'Agostino's K-squared test for normality.
@@ -486,7 +499,7 @@ fn calculate_anderson_darling_p_value<F: Float + NumCast>(_asquared: F) -> F {
 /// ];
 ///
 /// // Test for normality
-/// let (k2, p_value) = dagostino_k2(&data.view()).unwrap();
+/// let (k2, p_value) = dagostino_k2(&data.view()).expect("Operation failed");
 ///
 /// println!("K² statistic: {}, p-value: {}", k2, p_value);
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
@@ -513,7 +526,7 @@ where
 
     // Calculate the sample size
     let n = x.len();
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Calculate the mean
     let mean = x.iter().cloned().sum::<F>() / n_f;
@@ -535,7 +548,7 @@ where
 
     // Calculate skewness (g1) and kurtosis (g2)
     let g1 = m3 / std_dev.powi(3);
-    let g2 = m4 / std_dev.powi(4) - F::from(3.0).unwrap(); // Excess kurtosis
+    let g2 = m4 / std_dev.powi(4) - F::from(3.0).expect("Failed to convert constant to float"); // Excess kurtosis
 
     // Calculate the test statistics for skewness and kurtosis
     let (z1, z2) = calculate_dagostino_test_statistics(g1, g2, n)?;
@@ -544,7 +557,13 @@ where
     let k2 = z1 * z1 + z2 * z2;
 
     // Calculate the p-value (chi-square with 2 df)
-    let p_value = F::from(1.0 - chi2_cdf(<f64 as NumCast>::from(k2).unwrap(), 2.0)).unwrap();
+    let p_value = F::from(
+        1.0 - chi2_cdf(
+            <f64 as NumCast>::from(k2).expect("Failed to convert to float"),
+            2.0,
+        ),
+    )
+    .expect("Operation failed");
 
     Ok((k2, p_value))
 }
@@ -555,10 +574,10 @@ fn calculate_dagostino_test_statistics<F>(g1: F, g2: F, n: usize) -> StatsResult
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    let _n_f = F::from(n).unwrap();
+    let _n_f = F::from(n).expect("Failed to convert to float");
 
     // Calculations for skewness (g1)
-    let g1_f64 = <f64 as NumCast>::from(g1).unwrap();
+    let g1_f64 = <f64 as NumCast>::from(g1).expect("Operation failed");
     let n_f64 = n as f64;
 
     // D'Agostino's calculations for skewness
@@ -571,7 +590,7 @@ where
     let z1 = delta * (y / alpha).asinh();
 
     // Calculations for kurtosis (g2)
-    let g2_f64 = <f64 as NumCast>::from(g2).unwrap();
+    let g2_f64 = <f64 as NumCast>::from(g2).expect("Operation failed");
 
     // Anscombe & Glynn calculations for kurtosis
     let mean_g2 = 6.0 / (n_f64 + 1.0);
@@ -584,7 +603,10 @@ where
         .powf(1.0 / 3.0);
     let z2 = (a - 2.0) / 2.0 * (z2 - 1.0 / z2);
 
-    Ok((F::from(z1).unwrap(), F::from(z2).unwrap()))
+    Ok((
+        F::from(z1).expect("Failed to convert to float"),
+        F::from(z2).expect("Failed to convert to float"),
+    ))
 }
 
 // Chi-square cumulative distribution function
@@ -713,7 +735,7 @@ fn gamma_function(x: f64) -> f64 {
 /// let sample2 = array![0.6, 0.7, 0.8, 0.9, 1.0];
 ///
 /// // Test if they come from the same distribution
-/// let (stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "two-sided").unwrap();
+/// let (stat, p_value) = ks_2samp(&sample1.view(), &sample2.view(), "two-sided").expect("Operation failed");
 ///
 /// println!("KS test statistic: {}, p-value: {}", stat, p_value);
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
@@ -749,8 +771,8 @@ where
 
     let n1 = x.len();
     let n2 = y.len();
-    let n1_f = F::from(n1).unwrap();
-    let n2_f = F::from(n2).unwrap();
+    let n1_f = F::from(n1).expect("Failed to convert to float");
+    let n2_f = F::from(n2).expect("Failed to convert to float");
 
     // Sort the data
     let mut x_sorted = Vec::with_capacity(n1);
@@ -771,10 +793,16 @@ where
     let mut ecdf_y = Vec::with_capacity(n2);
 
     for (i, &val) in x_sorted.iter().enumerate() {
-        ecdf_x.push((val, F::from(i + 1).unwrap() / n1_f));
+        ecdf_x.push((
+            val,
+            F::from(i + 1).expect("Failed to convert to float") / n1_f,
+        ));
     }
     for (i, &val) in y_sorted.iter().enumerate() {
-        ecdf_y.push((val, F::from(i + 1).unwrap() / n2_f));
+        ecdf_y.push((
+            val,
+            F::from(i + 1).expect("Failed to convert to float") / n2_f,
+        ));
     }
 
     // Combine samples to get all points where the ECDFs are evaluated
@@ -801,13 +829,13 @@ where
     for &point in &all_points {
         // Update Fx (ECDF of x)
         while ix < n1 && x_sorted[ix] <= point {
-            fx = F::from(ix + 1).unwrap() / n1_f;
+            fx = F::from(ix + 1).expect("Failed to convert to float") / n1_f;
             ix += 1;
         }
 
         // Update Fy (ECDF of y)
         while iy < n2 && y_sorted[iy] <= point {
-            fy = F::from(iy + 1).unwrap() / n2_f;
+            fy = F::from(iy + 1).expect("Failed to convert to float") / n2_f;
             iy += 1;
         }
 
@@ -858,7 +886,7 @@ fn calculate_ks_2samp_p_value<F: Float + NumCast>(
     n2: usize,
     alternative: &str,
 ) -> F {
-    let d_f64 = <f64 as NumCast>::from(d).unwrap();
+    let d_f64 = <f64 as NumCast>::from(d).expect("Operation failed");
     let n1_f64 = n1 as f64;
     let n2_f64 = n2 as f64;
 
@@ -893,5 +921,5 @@ fn calculate_ks_2samp_p_value<F: Float + NumCast>(
     };
 
     // Ensure p-value is in [0, 1]
-    F::from(p.clamp(0.0, 1.0)).unwrap()
+    F::from(p.clamp(0.0, 1.0)).expect("Operation failed")
 }

@@ -541,7 +541,7 @@ mod tests {
             // Skip test gracefully if no GPU
             eprintln!("GPU not available, using mock initialization test");
             // Test mock initialization
-            let devices = get_cuda_devices().unwrap();
+            let devices = get_cuda_devices().expect("Operation failed");
             assert!(devices.is_empty() || !devices.is_empty()); // Either case is acceptable
             return;
         }
@@ -594,7 +594,7 @@ mod tests {
                 ..SparseFFTConfig::default()
             };
             let mut processor = crate::sparse_fft::algorithms::SparseFFT::new(config);
-            let result = processor.sparse_fft(&signal).unwrap();
+            let result = processor.sparse_fft(&signal).expect("Operation failed");
             assert!(!result.values.is_empty());
             assert_eq!(result.algorithm, SparseFFTAlgorithm::Sublinear);
             return;
@@ -645,7 +645,7 @@ mod tests {
             let mut processor = crate::sparse_fft::algorithms::SparseFFT::new(config);
             let mut results = Vec::new();
             for signal in &signals {
-                results.push(processor.sparse_fft(signal).unwrap());
+                results.push(processor.sparse_fft(signal).expect("Operation failed"));
             }
             assert_eq!(results.len(), signals.len());
             return;

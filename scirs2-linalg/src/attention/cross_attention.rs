@@ -796,20 +796,20 @@ where
         // Apply rotary-style position encoding with xPos modifications
         for b in 0..batchsize {
             for i in 0..seq_len_q {
-                let pos_i = F::from(i as f64 + 1.0).unwrap(); // 1-indexed position
+                let pos_i = F::from(i as f64 + 1.0).expect("Operation failed"); // 1-indexed position
                 for j in 0..d_model {
                     // Apply position-dependent scaling
-                    let dim_factor = F::from(j as f64 / d_model as f64).unwrap();
+                    let dim_factor = F::from(j as f64 / d_model as f64).expect("Operation failed");
                     let scale_factor = F::one() / pos_i.powf(dim_factor);
                     q_scaled[[b, i, j]] = query[[b, i, j]] * scale_factor;
                 }
             }
 
             for i in 0..seq_len_k {
-                let pos_i = F::from(i as f64 + 1.0).unwrap(); // 1-indexed position
+                let pos_i = F::from(i as f64 + 1.0).expect("Operation failed"); // 1-indexed position
                 for j in 0..d_model {
                     // Apply position-dependent scaling
-                    let dim_factor = F::from(j as f64 / d_model as f64).unwrap();
+                    let dim_factor = F::from(j as f64 / d_model as f64).expect("Operation failed");
                     let scale_factor = F::one() / pos_i.powf(dim_factor);
                     k_scaled[[b, i, j]] = key[[b, i, j]] * scale_factor;
                 }

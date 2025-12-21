@@ -128,7 +128,7 @@ where
 ///     2.0, 0.0, 0.0,
 ///     0.0, 2.0, 0.0,
 ///     0.0, 0.0, 2.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Target values: y = 2.0*x0 + 3.0*x1 + small noise (clearly depends on first two variables)
 /// let y = array![
@@ -145,7 +145,7 @@ where
 ///     Some(0.6), // More relaxed removal threshold
 ///     None,
 ///     true
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Check that the algorithm selected at least one variable
 /// assert!(!results.selected_indices.is_empty());
@@ -195,8 +195,10 @@ where
     }
 
     // Default thresholds for entry/removal
-    let p_enter = p_enter.unwrap_or_else(|| F::from(0.05).unwrap());
-    let p_remove = p_remove.unwrap_or_else(|| F::from(0.1).unwrap());
+    let p_enter =
+        p_enter.unwrap_or_else(|| F::from(0.05).expect("Failed to convert constant to float"));
+    let p_remove =
+        p_remove.unwrap_or_else(|| F::from(0.1).expect("Failed to convert constant to float"));
 
     // Default maximum _steps
     let max_steps = max_steps.unwrap_or(p * 2);
@@ -445,9 +447,10 @@ where
                 .iter()
                 .map(|&r| scirs2_core::numeric::Float::powi(r, 2))
                 .sum();
-            let n_f = F::from(n).unwrap();
-            let k_f = F::from(p).unwrap();
-            n_f * scirs2_core::numeric::Float::ln(rss / n_f) + F::from(2.0).unwrap() * k_f
+            let n_f = F::from(n).expect("Failed to convert to float");
+            let k_f = F::from(p).expect("Failed to convert to float");
+            n_f * scirs2_core::numeric::Float::ln(rss / n_f)
+                + F::from(2.0).expect("Failed to convert constant to float") * k_f
         }
         StepwiseCriterion::BIC => {
             let rss: F = model
@@ -455,8 +458,8 @@ where
                 .iter()
                 .map(|&r| scirs2_core::numeric::Float::powi(r, 2))
                 .sum();
-            let n_f = F::from(n).unwrap();
-            let k_f = F::from(p).unwrap();
+            let n_f = F::from(n).expect("Failed to convert to float");
+            let k_f = F::from(p).expect("Failed to convert to float");
             n_f * scirs2_core::numeric::Float::ln(rss / n_f)
                 + k_f * scirs2_core::numeric::Float::ln(n_f)
         }
@@ -547,10 +550,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients
@@ -566,22 +570,23 @@ where
     // In a real implementation, we would use a proper t-distribution function
     let p_values = t_values.mapv(|t| {
         let t_abs = scirs2_core::numeric::Float::abs(t);
-        let df_f = F::from(df_residuals).unwrap();
-        F::from(2.0).unwrap()
+        let df_f = F::from(df_residuals).expect("Failed to convert to float");
+        F::from(2.0).expect("Failed to convert constant to float")
             * (F::one() - t_abs / scirs2_core::numeric::Float::sqrt(df_f + t_abs * t_abs))
     });
 
     // Calculate confidence intervals
     let mut conf_intervals = Array2::<F>::zeros((p, 2));
     for i in 0..p {
-        let margin = std_errors[i] * F::from(1.96).unwrap(); // Approximate 95% CI
+        let margin = std_errors[i] * F::from(1.96).expect("Failed to convert constant to float"); // Approximate 95% CI
         conf_intervals[[i, 0]] = coefficients[i] - margin;
         conf_intervals[[i, 1]] = coefficients[i] + margin;
     }
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity()
     };

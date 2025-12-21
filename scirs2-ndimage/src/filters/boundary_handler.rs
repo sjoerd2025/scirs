@@ -371,7 +371,8 @@ mod tests {
         let kernel = arr2(&[[1.0, 0.0], [0.0, 1.0]]); // Simple diagonal kernel
 
         // Test with constant boundary
-        let result = convolve_optimized(&input, &kernel, BorderMode::Constant, Some(0.0)).unwrap();
+        let result = convolve_optimized(&input, &kernel, BorderMode::Constant, Some(0.0))
+            .expect("Operation failed");
 
         // The result should preserve the input shape
         assert_eq!(result.shape(), input.shape());

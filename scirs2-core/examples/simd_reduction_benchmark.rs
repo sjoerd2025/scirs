@@ -147,13 +147,17 @@ where
 {
     println!(
         "\n  SIMD vs Scalar comparison ({})",
-        std::any::type_name::<F>().split("::").last().unwrap()
+        std::any::type_name::<F>()
+            .split("::")
+            .last()
+            .expect("Operation failed")
     );
 
     let iterations = if size < 10_000 { 10_000 } else { 1_000 };
 
-    let data =
-        Array1::<F>::from_shape_fn(size, |i| F::from((i as f64 * 0.1).sin() * 10.0).unwrap());
+    let data = Array1::<F>::from_shape_fn(size, |i| {
+        F::from((i as f64 * 0.1).sin() * 10.0).expect("Operation failed")
+    });
 
     // SIMD mean
     let time_simd = benchmark_operation(|| mean_simd(&data.view()), iterations, 10);
@@ -162,7 +166,7 @@ where
     let time_scalar = benchmark_operation(
         || {
             let sum = data.iter().fold(F::zero(), |acc, &val| acc + val);
-            sum / F::from(data.len()).unwrap()
+            sum / F::from(data.len()).expect("Operation failed")
         },
         iterations,
         10,
@@ -181,12 +185,13 @@ where
     let time_scalar = benchmark_operation(
         || {
             let n = data.len();
-            let mean = data.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(n).unwrap();
+            let mean = data.iter().fold(F::zero(), |acc, &val| acc + val)
+                / F::from(n).expect("Failed to convert to float");
             let sum_sq_dev = data
                 .iter()
                 .map(|&x| (x - mean) * (x - mean))
                 .fold(F::zero(), |acc, val| acc + val);
-            sum_sq_dev / F::from(n - 1).unwrap()
+            sum_sq_dev / F::from(n - 1).expect("Failed to convert to float")
         },
         iterations,
         10,

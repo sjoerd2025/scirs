@@ -22,7 +22,7 @@ impl TemporalExtractor {
             // Relative dates
             (
                 "relative_date".to_string(),
-                Regex::new(r"(?i)\b(?:yesterday|today|tomorrow|last|next|this)\s+(?:week|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b").unwrap()
+                Regex::new(r"(?i)\b(?:yesterday|today|tomorrow|last|next|this)\s+(?:week|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b").expect("Operation failed")
             ),
 
             // Time ranges
@@ -31,7 +31,7 @@ impl TemporalExtractor {
                 Regex::new(
                     r"(?i)\b(?:[01]?[0-9]|2[0-3]):[0-5][0-9]\s*-\s*(?:[01]?[0-9]|2[0-3]):[0-5][0-9]\b",
                 )
-                .unwrap(),
+                .expect("Operation failed"),
             ),
 
             // Durations
@@ -40,13 +40,13 @@ impl TemporalExtractor {
                 Regex::new(
                     r"(?i)\b(?:\d+)\s+(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?)\b",
                 )
-                .unwrap(),
+                .expect("Operation failed"),
             ),
 
             // Seasons and holidays
             (
                 "seasonal".to_string(),
-                Regex::new(r"(?i)\b(?:spring|summer|fall|autumn|winter|christmas|thanksgiving|easter|halloween|new year)\b").unwrap()
+                Regex::new(r"(?i)\b(?:spring|summer|fall|autumn|winter|christmas|thanksgiving|easter|halloween|new year)\b").expect("Operation failed")
             ),
         ];
 

@@ -621,11 +621,11 @@ mod tests {
     #[test]
     fn test_key_generation() {
         let mut manager = CloudSecurityManager::new();
-        let key_id = manager.generate_key(EncryptionAlgorithm::AES256).unwrap();
+        let key_id = manager.generate_key(EncryptionAlgorithm::AES256).expect("Operation failed");
         assert!(!key_id.is_empty());
 
         // Verify key was stored
-        let key = manager.key_management.get_key(&key_id).unwrap();
+        let key = manager.key_management.get_key(&key_id).expect("Operation failed");
         assert_eq!(key.algorithm, EncryptionAlgorithm::AES256);
         assert_eq!(key.data.len(), 32); // AES256 key size
     }
@@ -633,11 +633,11 @@ mod tests {
     #[test]
     fn test_encryption_decryption() {
         let mut manager = CloudSecurityManager::new();
-        let key_id = manager.generate_key(EncryptionAlgorithm::AES256).unwrap();
+        let key_id = manager.generate_key(EncryptionAlgorithm::AES256).expect("Operation failed");
 
         let original_data = b"Hello, World!";
-        let encrypted = manager.encrypt_data(original_data, &EncryptionAlgorithm::AES256, &key_id).unwrap();
-        let decrypted = manager.decrypt_data(&encrypted, &EncryptionAlgorithm::AES256, &key_id).unwrap();
+        let encrypted = manager.encrypt_data(original_data, &EncryptionAlgorithm::AES256, &key_id).expect("Operation failed");
+        let decrypted = manager.decrypt_data(&encrypted, &EncryptionAlgorithm::AES256, &key_id).expect("Operation failed");
 
         assert_eq!(original_data, decrypted.as_slice());
         assert_ne!(original_data, encrypted.as_slice());
@@ -648,7 +648,7 @@ mod tests {
         let manager = CloudSecurityManager::new();
 
         // Test with default policy (should allow most operations)
-        let allowed = manager.check_access("read", "file.txt").unwrap();
+        let allowed = manager.check_access("read", "file.txt").expect("Operation failed");
         assert!(allowed);
     }
 
@@ -663,7 +663,7 @@ mod tests {
             "file.txt".to_string(),
             "read".to_string(),
             AuditResult::Success,
-        ).unwrap();
+        ).expect("Operation failed");
 
         let logs = manager.get_audit_logs(start_time, Instant::now());
         assert_eq!(logs.len(), 1);

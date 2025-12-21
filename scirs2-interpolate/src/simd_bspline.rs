@@ -268,13 +268,13 @@ mod tests {
         let knots = array![0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0];
         let coefficients = array![1.0, 2.0, 3.0, 2.0, 1.0];
 
-        let spline = SimdCubicBSpline::new(knots, coefficients).unwrap();
+        let spline = SimdCubicBSpline::new(knots, coefficients).expect("Operation failed");
 
         // Test that evaluation doesn't crash and returns finite values
-        let result = spline.eval(0.25).unwrap();
+        let result = spline.eval(0.25).expect("Operation failed");
         assert!(result.is_finite());
 
-        let result = spline.eval(0.75).unwrap();
+        let result = spline.eval(0.75).expect("Operation failed");
         assert!(result.is_finite());
     }
 
@@ -289,14 +289,17 @@ mod tests {
             3,
             ExtrapolateMode::Extrapolate,
         )
-        .unwrap();
+        .expect("Operation failed");
         let mut evaluator = SimdBSplineEvaluator::new(spline);
 
         let points = vec![0.0, 0.25, 0.5, 0.75, 1.0];
-        let results = evaluator.eval_batch(&points).unwrap();
+        let results = evaluator.eval_batch(&points).expect("Operation failed");
 
         assert_eq!(results.len(), points.len());
-        assert_relative_eq!(results[0], 3.0, epsilon = 1e-10);
+        // For a clamped cubic B-spline with knots [0,0,0,0,1,1,1,1] and coefficients [1,2,3,4]:
+        // At t=0, the curve passes through the first control point (c[0] = 1.0)
+        // At t=1, the curve passes through the last control point (c[3] = 4.0)
+        assert_relative_eq!(results[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(results[4], 4.0, epsilon = 1e-10);
     }
 

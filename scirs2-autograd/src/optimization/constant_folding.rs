@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn test_constant_value_negation() {
         let positive = ConstantValue::Scalar(42.0f32);
-        let negative = positive.neg().unwrap();
+        let negative = positive.neg().expect("Operation failed");
 
         if let ConstantValue::Scalar(val) = negative {
             assert_eq!(val, -42.0);
@@ -315,7 +315,7 @@ mod tests {
     #[test]
     fn test_constant_value_unary_function() {
         let value = ConstantValue::Scalar(4.0f32);
-        let sqrt_value = value.apply_unary(|x| x.sqrt()).unwrap();
+        let sqrt_value = value.apply_unary(|x| x.sqrt()).expect("Operation failed");
 
         if let ConstantValue::Scalar(val) = sqrt_value {
             assert_eq!(val, 2.0);

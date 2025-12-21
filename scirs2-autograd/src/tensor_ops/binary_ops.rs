@@ -72,7 +72,7 @@ impl<T: Float> op::Op<T> for MaybeReduceSum {
             // The case where forward path didn't cause broadcast.
             ctx.append_output(
                 gy.into_shape_with_order(scirs2_core::ndarray::IxDyn(origshape_))
-                    .unwrap()
+                    .expect("Failed to get slice")
                     .to_owned(),
             );
             return Ok(());
@@ -97,7 +97,7 @@ impl<T: Float> op::Op<T> for MaybeReduceSum {
             }
             // case of x_axis == gy_axis -> nothing to do
         }
-        let ret = folded.unwrap();
+        let ret = folded.expect("Failed to fold");
         ctx.append_output(
             ret.into_shape_with_order(origshape_)
                 .expect("bug of MaybeReduceSum probably"),
@@ -134,7 +134,7 @@ impl<T: Float> op::Op<T> for MaybeBroadcast {
         let input = if input_is_scalar {
             raw_input
                 .into_shape_with_order(vec![1; targetshape.len()])
-                .unwrap()
+                .expect("Failed to get slice")
         } else {
             raw_input
         };
@@ -281,7 +281,7 @@ impl<T: Float> op::Op<T> for DivOp {
         let gy = ctx.output_grad();
 
         let gx0 = gy / x1;
-        let gx1 = neg(x0) * pow(x1, T::from(-2.).unwrap()) * gy;
+        let gx1 = neg(x0) * pow(x1, T::from(-2.).expect("Operation failed")) * gy;
 
         let gx0 = maybe_reduce(shape0, &gx0, g);
         let gx1 = maybe_reduce(shape1, &gx1, g);
@@ -403,9 +403,9 @@ fn simd_add_f64_ultra(
 ) -> scirs2_core::ndarray::Array1<f64> {
     // For f64, use element-wise operation with SIMD-friendly loop unrolling
     let mut result = scirs2_core::ndarray::Array1::zeros(x0.len());
-    let result_slice = result.as_slice_mut().unwrap();
-    let x0_slice = x0.as_slice().unwrap();
-    let x1_slice = x1.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().expect("Operation failed");
+    let x0_slice = x0.as_slice().expect("Operation failed");
+    let x1_slice = x1.as_slice().expect("Operation failed");
 
     // Process in chunks of 4 for better SIMD utilization
     let chunks = x0.len() / 4;
@@ -448,9 +448,9 @@ fn simd_mul_f64_ultra(
 ) -> scirs2_core::ndarray::Array1<f64> {
     // For f64, use cache-optimized loop unrolling similar to hyperoptimized approach
     let mut result = scirs2_core::ndarray::Array1::zeros(x0.len());
-    let result_slice = result.as_slice_mut().unwrap();
-    let x0_slice = x0.as_slice().unwrap();
-    let x1_slice = x1.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().expect("Operation failed");
+    let x0_slice = x0.as_slice().expect("Operation failed");
+    let x1_slice = x1.as_slice().expect("Operation failed");
 
     // Process in chunks of 8 for better cache utilization
     let chunks = x0.len() / 8;
@@ -539,9 +539,9 @@ fn simd_div_f32_ultra(
 ) -> scirs2_core::ndarray::Array1<f32> {
     let caps = PlatformCapabilities::detect();
     let mut result = scirs2_core::ndarray::Array1::zeros(x0.len());
-    let result_slice = result.as_slice_mut().unwrap();
-    let x0_slice = x0.as_slice().unwrap();
-    let x1_slice = x1.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().expect("Operation failed");
+    let x0_slice = x0.as_slice().expect("Operation failed");
+    let x1_slice = x1.as_slice().expect("Operation failed");
 
     if x0.len() >= 64 && caps.has_avx2() {
         // Use SIMD-optimized division with vectorized reciprocal + multiply
@@ -580,9 +580,9 @@ fn simd_sub_f32_ultra(
 ) -> scirs2_core::ndarray::Array1<f32> {
     let caps = PlatformCapabilities::detect();
     let mut result = scirs2_core::ndarray::Array1::zeros(x0.len());
-    let result_slice = result.as_slice_mut().unwrap();
-    let x0_slice = x0.as_slice().unwrap();
-    let x1_slice = x1.as_slice().unwrap();
+    let result_slice = result.as_slice_mut().expect("Operation failed");
+    let x0_slice = x0.as_slice().expect("Operation failed");
+    let x1_slice = x1.as_slice().expect("Operation failed");
 
     if x0.len() >= 64 && caps.has_avx2() {
         // Use SIMD-optimized subtraction with cache-friendly processing

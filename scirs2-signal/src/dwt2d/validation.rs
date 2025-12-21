@@ -536,7 +536,7 @@ mod tests {
     fn test_calculate_energy() {
         // Create a simple test decomposition
         let decomp = Dwt2dResult {
-            approx: Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+            approx: Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("Operation failed"),
             detail_h: Array2::zeros((2, 2)),
             detail_v: Array2::zeros((2, 2)),
             detail_d: Array2::zeros((2, 2)),
@@ -555,8 +555,8 @@ mod tests {
     #[test]
     fn test_count_nonzeros() {
         let decomp = Dwt2dResult {
-            approx: Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 3.0, 0.0]).unwrap(),
-            detail_h: Array2::from_shape_vec((2, 2), vec![0.0, 2.0, 0.0, 4.0]).unwrap(),
+            approx: Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 3.0, 0.0]).expect("Operation failed"),
+            detail_h: Array2::from_shape_vec((2, 2), vec![0.0, 2.0, 0.0, 4.0]).expect("Operation failed"),
             detail_v: Array2::zeros((2, 2)),
             detail_d: Array2::ones((2, 2)),
         };

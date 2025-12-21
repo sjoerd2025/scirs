@@ -118,7 +118,7 @@ fn main() -> CoreResult<()> {
     // Register version for deprecation tracking
     let old_version = version_manager
         .getversion(&Version::parse("1.0.0")?)
-        .unwrap();
+        .expect("Operation failed");
     deprecation_manager.register_version(old_version)?;
 
     // Announce deprecation

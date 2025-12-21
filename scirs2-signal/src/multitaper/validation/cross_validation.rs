@@ -203,7 +203,7 @@ mod tests {
         let result = cross_validate_with_reference(&config, 1e-6);
         assert!(result.is_ok());
 
-        let metrics = result.unwrap();
+        let metrics = result.expect("Operation failed");
         if metrics.reference_available {
             assert!(metrics.reference_correlation > 0.9);
             assert!(metrics.max_relative_error < 0.1);
@@ -245,7 +245,7 @@ mod tests {
         let result = cross_validate_with_multiple_references(&config);
         assert!(result.is_ok());
 
-        let results = result.unwrap();
+        let results = result.expect("Operation failed");
         assert_eq!(results.len(), 3); // Three reference implementations
         assert!(results.iter().all(|r| r.reference_available));
     }

@@ -351,7 +351,7 @@ fn compute_svd_jacobi<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimi
 
     // Apply Jacobi rotations to diagonalize
     let max_iter = 100;
-    let tol = F::epsilon() * F::from(10.0).unwrap();
+    let tol = F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
 
     for _ in 0..max_iter {
         let mut converged = true;
@@ -368,8 +368,11 @@ fn compute_svd_jacobi<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimi
                 let (cos, sin) = compute_givens_rotation(a, b, c);
 
                 // Update _matrices
-                diag[i] = cos * cos * a + sin * sin * c + F::from(2.0).unwrap() * cos * sin * b;
-                diag[i + 1] = sin * sin * a + cos * cos * c - F::from(2.0).unwrap() * cos * sin * b;
+                diag[i] = cos * cos * a
+                    + sin * sin * c
+                    + F::from(2.0).expect("Failed to convert constant to float") * cos * sin * b;
+                diag[i + 1] = sin * sin * a + cos * cos * c
+                    - F::from(2.0).expect("Failed to convert constant to float") * cos * sin * b;
                 superdiag[i] = F::zero();
 
                 // Update U and V
@@ -393,7 +396,12 @@ fn compute_svd_jacobi<F: Float + scirs2_core::ndarray::ScalarOperand + FromPrimi
 
     // Sort singular values in descending order
     let mut indices: Vec<usize> = (0..k).collect();
-    indices.sort_by(|&i, &j| diag[j].abs().partial_cmp(&diag[i].abs()).unwrap());
+    indices.sort_by(|&i, &j| {
+        diag[j]
+            .abs()
+            .partial_cmp(&diag[i].abs())
+            .expect("Operation failed")
+    });
 
     let s = Array1::from_iter(indices.iter().map(|&i| diag[i]));
 
@@ -452,8 +460,9 @@ fn compute_randomized_svd<F: Float + scirs2_core::ndarray::ScalarOperand + FromP
     for i in 0..n {
         for j in 0..l {
             // Simple pseudo-random number (not cryptographically secure)
-            let val =
-                F::from((i * l + j) % 7).unwrap() / F::from(7.0).unwrap() - F::from(0.5).unwrap();
+            let val = F::from((i * l + j) % 7).expect("Operation failed")
+                / F::from(7.0).expect("Failed to convert constant to float")
+                - F::from(0.5).expect("Failed to convert constant to float");
             omega[[i, j]] = val;
         }
     }
@@ -537,8 +546,8 @@ fn compute_qr_pivot<F: Float + scirs2_core::ndarray::ScalarOperand>(
         let (pivot_idx, _) = col_norms
             .slice(s![i..])
             .indexed_iter()
-            .max_by(|(_, &a), (_, &b)| a.abs().partial_cmp(&b.abs()).unwrap())
-            .unwrap();
+            .max_by(|(_, &a), (_, &b)| a.abs().partial_cmp(&b.abs()).expect("Operation failed"))
+            .expect("Failed to perform decomposition");
         let pivot_col = i + pivot_idx;
 
         // Swap columns
@@ -589,7 +598,11 @@ fn compute_qr_pivot<F: Float + scirs2_core::ndarray::ScalarOperand>(
     let r = a.slice(s![..k, ..]).to_owned();
 
     // Convert permutation to array
-    let p = Array1::from_vec(perm.iter().map(|&i| F::from(i).unwrap()).collect());
+    let p = Array1::from_vec(
+        perm.iter()
+            .map(|&i| F::from(i).expect("Failed to convert to float"))
+            .collect(),
+    );
 
     Ok((q, r, p))
 }
@@ -621,14 +634,14 @@ fn householder_vector<F: Float>(
     v[0] += sign * norm_x;
 
     let norm_v_sq = v.dot(&v);
-    let beta = F::from(2.0).unwrap() / norm_v_sq;
+    let beta = F::from(2.0).expect("Failed to convert constant to float") / norm_v_sq;
 
     Ok((v, beta))
 }
 
 #[allow(dead_code)]
 fn householder_matrix<F: Float>(v: &Array1<F>, size: usize) -> Array2<F> {
-    let beta = F::from(2.0).unwrap() / v.dot(v);
+    let beta = F::from(2.0).expect("Failed to convert constant to float") / v.dot(v);
     let mut h = Array2::<F>::eye(size);
 
     for i in 0..size {
@@ -646,7 +659,7 @@ fn compute_givens_rotation<F: Float>(a: F, b: F, c: F) -> (F, F) {
         return (F::one(), F::zero());
     }
 
-    let tau = (c - a) / (F::from(2.0).unwrap() * b);
+    let tau = (c - a) / (F::from(2.0).expect("Failed to convert constant to float") * b);
     let t = if tau >= F::zero() {
         F::one() / (tau + (F::one() + tau * tau).sqrt())
     } else {
@@ -771,7 +784,7 @@ fn compute_eigen_iterative<F: Float + scirs2_core::ndarray::ScalarOperand + From
 ) -> Result<(Array1<F>, Array2<F>), OpError> {
     let n = matrix.shape()[0];
     let max_iter = 100;
-    let tol = F::epsilon() * F::from(10.0).unwrap();
+    let tol = F::epsilon() * F::from(10.0).expect("Failed to convert constant to float");
 
     // QR algorithm with shifts
     let mut a = matrix.to_owned();
@@ -783,7 +796,7 @@ fn compute_eigen_iterative<F: Float + scirs2_core::ndarray::ScalarOperand + From
         let a_nm1 = if n > 1 { a[[n - 2, n - 1]] } else { F::zero() };
         let a_nm1nm1 = if n > 1 { a[[n - 2, n - 2]] } else { F::zero() };
 
-        let delta = (a_nm1nm1 - a_nn) / F::from(2.0).unwrap();
+        let delta = (a_nm1nm1 - a_nn) / F::from(2.0).expect("Failed to convert constant to float");
         let sign = if delta >= F::zero() {
             F::one()
         } else {

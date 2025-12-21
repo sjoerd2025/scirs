@@ -52,15 +52,15 @@ use std::fmt::{Debug, Display};
 /// use std::f64::consts::E;
 ///
 /// // λ = 0 case (logarithmic)
-/// let result = boxcox(E, 0.0).unwrap();
+/// let result = boxcox(E, 0.0).expect("Operation failed");
 /// assert!((result - 1.0f64).abs() < 1e-10);
 ///
 /// // λ = 1 case (identity minus 1)
-/// let result = boxcox(5.0, 1.0).unwrap();
+/// let result = boxcox(5.0, 1.0).expect("Operation failed");
 /// assert!((result - 4.0f64).abs() < 1e-10);
 ///
 /// // λ = 0.5 case (square root transformation)
-/// let result = boxcox(4.0, 0.5).unwrap();
+/// let result = boxcox(4.0, 0.5).expect("Operation failed");
 /// assert!((result - 2.0f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -72,10 +72,10 @@ where
     check_finite(x, "x value")?;
     check_finite(lmbda, "lmbda value")?;
 
-    let _zero = T::from_f64(0.0).unwrap();
+    let _zero = T::from_f64(0.0).expect("Operation failed");
     let one = T::one();
 
-    if lmbda.abs() < T::from_f64(1e-10).unwrap() {
+    if lmbda.abs() < T::from_f64(1e-10).expect("Operation failed") {
         // λ ≈ 0: use logarithmic transformation
         Ok(x.ln())
     } else {
@@ -101,11 +101,11 @@ where
 /// use scirs2_special::boxcox1p;
 ///
 /// // λ = 0 case
-/// let result = boxcox1p(1.718, 0.0).unwrap();
+/// let result = boxcox1p(1.718, 0.0).expect("Operation failed");
 /// assert!((result - (1.0 + 1.718_f64).ln()).abs() < 1e-10);
 ///
 /// // Small x values
-/// let result: f64 = boxcox1p(0.01, 0.5).unwrap();
+/// let result: f64 = boxcox1p(0.01, 0.5).expect("Operation failed");
 /// assert!(result.is_finite());
 /// ```
 #[allow(dead_code)]
@@ -116,18 +116,18 @@ where
     check_finite(x, "x value")?;
     check_finite(lmbda, "lmbda value")?;
 
-    let neg_one = T::from_f64(-1.0).unwrap();
+    let neg_one = T::from_f64(-1.0).expect("Operation failed");
     if x <= neg_one {
         return Err(SpecialError::DomainError(
             "x must be greater than -1".to_string(),
         ));
     }
 
-    let _zero = T::from_f64(0.0).unwrap();
+    let _zero = T::from_f64(0.0).expect("Operation failed");
     let one = T::one();
     let one_plus_x = one + x;
 
-    if lmbda.abs() < T::from_f64(1e-10).unwrap() {
+    if lmbda.abs() < T::from_f64(1e-10).expect("Operation failed") {
         // λ ≈ 0: use log(1+x)
         Ok(one_plus_x.ln())
     } else {
@@ -152,8 +152,8 @@ where
 ///
 /// let x = 5.0f64;
 /// let lmbda = 0.3f64;
-/// let y = boxcox(x, lmbda).unwrap();
-/// let x_recovered = inv_boxcox(y, lmbda).unwrap();
+/// let y = boxcox(x, lmbda).expect("Operation failed");
+/// let x_recovered = inv_boxcox(y, lmbda).expect("Operation failed");
 /// assert!((x - x_recovered).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -164,10 +164,10 @@ where
     check_finite(y, "y value")?;
     check_finite(lmbda, "lmbda value")?;
 
-    let zero = T::from_f64(0.0).unwrap();
+    let zero = T::from_f64(0.0).expect("Operation failed");
     let one = T::one();
 
-    if lmbda.abs() < T::from_f64(1e-10).unwrap() {
+    if lmbda.abs() < T::from_f64(1e-10).expect("Operation failed") {
         // λ ≈ 0: inverse of log is exp
         Ok(y.exp())
     } else {
@@ -200,8 +200,8 @@ where
 ///
 /// let x = 0.5f64;
 /// let lmbda = -0.2f64;
-/// let y = boxcox1p(x, lmbda).unwrap();
-/// let x_recovered = inv_boxcox1p(y, lmbda).unwrap();
+/// let y = boxcox1p(x, lmbda).expect("Operation failed");
+/// let x_recovered = inv_boxcox1p(y, lmbda).expect("Operation failed");
 /// assert!((x - x_recovered).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -212,10 +212,10 @@ where
     check_finite(y, "y value")?;
     check_finite(lmbda, "lmbda value")?;
 
-    let zero = T::from_f64(0.0).unwrap();
+    let zero = T::from_f64(0.0).expect("Operation failed");
     let one = T::one();
 
-    if lmbda.abs() < T::from_f64(1e-10).unwrap() {
+    if lmbda.abs() < T::from_f64(1e-10).expect("Operation failed") {
         // λ ≈ 0: inverse of log(1+x) is exp(y) - 1
         Ok(y.exp() - one)
     } else {
@@ -246,7 +246,7 @@ where
 /// use scirs2_special::boxcox_array;
 ///
 /// let x = array![1.0, 2.0, 4.0, 8.0];
-/// let result = boxcox_array(&x.view(), 0.0).unwrap();
+/// let result = boxcox_array(&x.view(), 0.0).expect("Operation failed");
 /// // Should be approximately [0, ln(2), ln(4), ln(8)]
 /// ```
 #[allow(dead_code)]
@@ -317,27 +317,27 @@ mod tests {
     #[test]
     fn test_boxcox_basic() {
         // Test λ = 0 (logarithmic case)
-        let result = boxcox(std::f64::consts::E, 0.0).unwrap();
+        let result = boxcox(std::f64::consts::E, 0.0).expect("Operation failed");
         assert_relative_eq!(result, 1.0, epsilon = 1e-10);
 
         // Test λ = 1 (linear case minus 1)
-        let result = boxcox(5.0, 1.0).unwrap();
+        let result = boxcox(5.0, 1.0).expect("Operation failed");
         assert_relative_eq!(result, 4.0, epsilon = 1e-10);
 
         // Test λ = 0.5 (square root case)
-        let result = boxcox(4.0, 0.5).unwrap();
+        let result = boxcox(4.0, 0.5).expect("Operation failed");
         assert_relative_eq!(result, 2.0, epsilon = 1e-10);
     }
 
     #[test]
     fn test_boxcox1p_basic() {
         // Test λ = 0
-        let result = boxcox1p(1.718, 0.0).unwrap();
+        let result = boxcox1p(1.718, 0.0).expect("Operation failed");
         let expected = (1.0 + 1.718_f64).ln();
         assert_relative_eq!(result, expected, epsilon = 1e-10);
 
         // Test small values
-        let result = boxcox1p(0.01, 0.5).unwrap();
+        let result = boxcox1p(0.01, 0.5).expect("Operation failed");
         assert!(result.is_finite());
     }
 
@@ -349,13 +349,13 @@ mod tests {
         for &x in &test_values {
             for &lmbda in &lambdas {
                 // Test boxcox and inv_boxcox
-                let y = boxcox(x, lmbda).unwrap();
-                let x_recovered = inv_boxcox(y, lmbda).unwrap();
+                let y = boxcox(x, lmbda).expect("Operation failed");
+                let x_recovered = inv_boxcox(y, lmbda).expect("Operation failed");
                 assert_relative_eq!(x, x_recovered, epsilon = 1e-10);
 
                 // Test boxcox1p and inv_boxcox1p
-                let y1p = boxcox1p(x, lmbda).unwrap();
-                let x1p_recovered = inv_boxcox1p(y1p, lmbda).unwrap();
+                let y1p = boxcox1p(x, lmbda).expect("Operation failed");
+                let x1p_recovered = inv_boxcox1p(y1p, lmbda).expect("Operation failed");
                 assert_relative_eq!(x, x1p_recovered, epsilon = 1e-10);
             }
         }
@@ -366,11 +366,11 @@ mod tests {
         let x = array![1.0, 2.0, 4.0, 8.0];
         let lmbda = 0.5;
 
-        let result = boxcox_array(&x.view(), lmbda).unwrap();
+        let result = boxcox_array(&x.view(), lmbda).expect("Operation failed");
         assert_eq!(result.len(), 4);
 
         // Test round-trip
-        let recovered = inv_boxcox_array(&result.view(), lmbda).unwrap();
+        let recovered = inv_boxcox_array(&result.view(), lmbda).expect("Operation failed");
         for i in 0..4 {
             assert_relative_eq!(x[i], recovered[i], epsilon = 1e-10);
         }
@@ -391,8 +391,8 @@ mod tests {
         let x = 2.0;
         let small_lambda = 1e-12;
 
-        let result_zero = boxcox(x, 0.0).unwrap();
-        let result_small = boxcox(x, small_lambda).unwrap();
+        let result_zero = boxcox(x, 0.0).expect("Operation failed");
+        let result_small = boxcox(x, small_lambda).expect("Operation failed");
 
         // Should be very close
         assert!((result_zero - result_small).abs() < 1e-6);

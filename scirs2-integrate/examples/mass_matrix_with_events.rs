@@ -135,11 +135,14 @@ fn main() -> IntegrateResult<()> {
 
     // Print basic solution info
     println!("\nIntegration results:");
-    println!("  Final time: {:.4}", result.base_result.t.last().unwrap());
+    println!(
+        "  Final time: {:.4}",
+        result.base_result.t.last().expect("Operation failed")
+    );
     println!(
         "  Final state: θ = {:.4}°, ω = {:.4} rad/s",
-        result.base_result.y.last().unwrap()[0] * 180.0 / PI,
-        result.base_result.y.last().unwrap()[1]
+        result.base_result.y.last().expect("Operation failed")[0] * 180.0 / PI,
+        result.base_result.y.last().expect("Operation failed")[1]
     );
     println!("  Steps taken: {}", result.base_result.n_steps);
     println!("  Function evaluations: {}", result.base_result.n_eval);

@@ -312,7 +312,7 @@ mod tests {
             Some(SparseFFTAlgorithm::Sublinear),
             Some(WindowFunction::Hann),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Should find the frequency components
         assert!(!result.values.is_empty());
@@ -337,7 +337,7 @@ mod tests {
             Some(SparseFFTAlgorithm::Sublinear),
             None,
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Should return the same number of results as input signals
         assert_eq!(results.len(), signals.len());

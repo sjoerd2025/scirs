@@ -23,7 +23,7 @@
 //! ];
 //!
 //! // Compute Voronoi diagram
-//! let vor = Voronoi::new(&points.view(), false).unwrap();
+//! let vor = Voronoi::new(&points.view(), false).expect("Operation failed");
 //!
 //! // Get the Voronoi vertices
 //! let vertices = vor.vertices();
@@ -101,7 +101,7 @@ impl Voronoi {
     ///     [1.0, 1.0]
     /// ];
     ///
-    /// let vor = Voronoi::new(&points.view(), false).unwrap();
+    /// let vor = Voronoi::new(&points.view(), false).expect("Operation failed");
     /// ```
     pub fn new(points: &ArrayView2<'_, f64>, furthestsite: bool) -> SpatialResult<Self> {
         let npoints = points.nrows();
@@ -640,7 +640,7 @@ impl Voronoi {
 ///     [1.0, 1.0]
 /// ];
 ///
-/// let vor = voronoi(&points.view(), false).unwrap();
+/// let vor = voronoi(&points.view(), false).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn voronoi(points: &ArrayView2<'_, f64>, furthestsite: bool) -> SpatialResult<Voronoi> {
@@ -657,7 +657,7 @@ mod tests {
     fn test_voronoi_square() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]);
 
-        let vor = Voronoi::new(&points.view(), false).unwrap();
+        let vor = Voronoi::new(&points.view(), false).expect("Operation failed");
 
         // The Voronoi diagram of a square should have a single vertex at the center
         assert_eq!(vor.vertices().nrows(), 1);
@@ -675,7 +675,7 @@ mod tests {
     fn test_voronoi_triangle() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
 
-        let vor = Voronoi::new(&points.view(), false).unwrap();
+        let vor = Voronoi::new(&points.view(), false).expect("Operation failed");
 
         // The Voronoi diagram of a triangle should have a single vertex at the circumcenter
         assert_eq!(vor.vertices().nrows(), 1);
@@ -689,7 +689,7 @@ mod tests {
     fn test_voronoi_furthest_site() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]);
 
-        let vor = Voronoi::new(&points.view(), true).unwrap();
+        let vor = Voronoi::new(&points.view(), true).expect("Operation failed");
 
         // Check if furthestsite flag is set
         assert!(vor.is_furthest_site());
@@ -699,7 +699,7 @@ mod tests {
     fn test_voronoi_function() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]);
 
-        let vor = voronoi(&points.view(), false).unwrap();
+        let vor = voronoi(&points.view(), false).expect("Operation failed");
 
         // Basic check
         assert_eq!(vor.points().nrows(), 4);

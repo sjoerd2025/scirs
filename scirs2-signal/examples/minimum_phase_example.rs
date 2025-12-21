@@ -23,7 +23,7 @@ fn main() {
     println!("Zeros at z = 2.0 (outside unit circle) and z = 0.5 (inside unit circle)");
 
     // Convert to minimum phase
-    let min_phase_b = minimum_phase(&original_b, true).unwrap();
+    let min_phase_b = minimum_phase(&original_b, true).expect("Test: operation failed");
     println!("Minimum phase coefficients: {:?}", min_phase_b);
 
     // Verify the conversion by checking magnitude responses
@@ -54,7 +54,7 @@ fn main() {
     println!("Original coefficients: {:?}", already_min_b);
     println!("Zeros at z = -0.5 and z = -0.3 (both inside unit circle)");
 
-    let still_min_b = minimum_phase(&already_min_b, true).unwrap();
+    let still_min_b = minimum_phase(&already_min_b, true).expect("Test: operation failed");
     println!("After conversion: {:?}", still_min_b);
 
     // Should be nearly identical
@@ -75,7 +75,7 @@ fn main() {
     println!("Continuous-time filter: {:?}", ct_b);
     println!("Zeros at s = 1 (unstable) and s = -2 (stable)");
 
-    let ct_min_b = minimum_phase(&ct_b, false).unwrap();
+    let ct_min_b = minimum_phase(&ct_b, false).expect("Test: operation failed");
     println!("Minimum phase version: {:?}", ct_min_b);
 
     // Example 4: Group delay comparison
@@ -83,15 +83,15 @@ fn main() {
     println!("------------------------");
 
     let b_non_min = vec![1.0, -2.0, 1.0]; // (z-1)^2
-    let b_min = minimum_phase(&b_non_min, true).unwrap();
+    let b_min = minimum_phase(&b_non_min, true).expect("Test: operation failed");
     let a = vec![1.0]; // No denominator (FIR filter)
 
     let freqs = vec![0.1, 0.5, 1.0, 2.0, 3.0];
 
     println!("Computing group delay (may take a moment for numerical differentiation)...");
 
-    let gd_orig = group_delay(&b_non_min, &a, &freqs).unwrap();
-    let gd_min = group_delay(&b_min, &a, &freqs).unwrap();
+    let gd_orig = group_delay(&b_non_min, &a, &freqs).expect("Test: operation failed");
+    let gd_min = group_delay(&b_min, &a, &freqs).expect("Test: operation failed");
 
     println!("Frequency (rad/s) | Original GD | Min Phase GD");
     println!("------------------|-------------|-------------");

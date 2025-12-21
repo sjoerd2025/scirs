@@ -276,7 +276,7 @@ impl AdaptiveExecutor {
 
         // Get the current plan
         let plan = {
-            let mut planner = self.planner.lock().unwrap();
+            let mut planner = self.planner.lock().expect("Operation failed");
             planner.get_plan()?
         };
 
@@ -290,7 +290,7 @@ impl AdaptiveExecutor {
         let execution_time = start.elapsed();
 
         {
-            let mut planner = self.planner.lock().unwrap();
+            let mut planner = self.planner.lock().expect("Operation failed");
             planner.record_execution(execution_time)?;
         }
 
@@ -299,13 +299,13 @@ impl AdaptiveExecutor {
 
     /// Get current strategy
     pub fn current_strategy(&self) -> PlanningStrategy {
-        let planner = self.planner.lock().unwrap();
+        let planner = self.planner.lock().expect("Operation failed");
         planner.current_strategy()
     }
 
     /// Get performance statistics
     pub fn get_statistics(&self) -> HashMap<PlanningStrategy, (Duration, usize)> {
-        let planner = self.planner.lock().unwrap();
+        let planner = self.planner.lock().expect("Operation failed");
         planner.get_statistics()
     }
 }
@@ -326,7 +326,7 @@ mod tests {
         for _ in 0..10 {
             planner
                 .record_execution(Duration::from_micros(100))
-                .unwrap();
+                .expect("Operation failed");
         }
 
         // Check that metrics were recorded
@@ -344,7 +344,9 @@ mod tests {
 
         // Execute several times
         for _ in 0..5 {
-            executor.execute(&input, &mut output).unwrap();
+            executor
+                .execute(&input, &mut output)
+                .expect("Operation failed");
         }
 
         // Check statistics

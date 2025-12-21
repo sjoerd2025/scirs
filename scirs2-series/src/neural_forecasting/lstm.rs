@@ -51,7 +51,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
         let total_input_size = _input_size + hiddensize;
 
         // Initialize weights with Xavier/Glorot initialization
-        let scale = F::from(2.0).unwrap() / F::from(total_input_size).unwrap();
+        let scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(total_input_size).expect("Failed to convert to float");
         let std_dev = scale.sqrt();
 
         Self {
@@ -75,8 +76,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
             for j in 0..cols {
                 // Linear congruential generator
                 seed = (seed.wrapping_mul(1103515245).wrapping_add(12345)) & 0x7fffffff;
-                let rand_val = F::from(seed as f64 / 2147483647.0).unwrap();
-                let normalized = (rand_val - F::from(0.5).unwrap()) * F::from(2.0).unwrap();
+                let rand_val =
+                    F::from(seed as f64 / 2147483647.0).expect("Failed to convert to float");
+                let normalized = (rand_val
+                    - F::from(0.5).expect("Failed to convert constant to float"))
+                    * F::from(2.0).expect("Failed to convert constant to float");
                 matrix[[i, j]] = normalized * stddev;
             }
         }
@@ -211,7 +215,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
         let final_hidden_size = hidden_sizes.last().copied().unwrap_or(input_size);
 
         // Output layer initialization
-        let output_scale = F::from(2.0).unwrap() / F::from(final_hidden_size).unwrap();
+        let output_scale = F::from(2.0).expect("Failed to convert constant to float")
+            / F::from(final_hidden_size).expect("Failed to convert to float");
         let output_std = output_scale.sqrt();
         let output_layer = LSTMCell::random_matrix(output_size, final_hidden_size, output_std);
 

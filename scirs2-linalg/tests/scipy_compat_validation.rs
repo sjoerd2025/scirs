@@ -35,17 +35,17 @@ mod reference_value_tests {
 
         // 2x2 matrix with det = 1
         let a1 = array![[2.0, 3.0], [1.0, 2.0]];
-        let det1 = compat::det(&a1.view(), false, true).unwrap();
+        let det1 = compat::det(&a1.view(), false, true).expect("Test: operation failed");
         assert!(close_f64(det1, 1.0, VALIDATION_TOL));
 
         // 3x3 matrix: [[1,2,3],[0,1,4],[5,6,0]] has det = 1
         let a2 = array![[1.0, 2.0, 3.0], [0.0, 1.0, 4.0], [5.0, 6.0, 0.0]];
-        let det2 = compat::det(&a2.view(), false, true).unwrap();
+        let det2 = compat::det(&a2.view(), false, true).expect("Test: operation failed");
         assert!(close_f64(det2, 1.0, VALIDATION_TOL));
 
         // Vandermonde-type matrix
         let a3 = array![[1.0, 1.0, 1.0], [1.0, 2.0, 4.0], [1.0, 3.0, 9.0]];
-        let det3 = compat::det(&a3.view(), false, true).unwrap();
+        let det3 = compat::det(&a3.view(), false, true).expect("Test: operation failed");
         // det = 2 (from Vandermonde formula: (2-1)*(3-1)*(3-2) = 1*2*1 = 2)
         assert!(close_f64(det3, 2.0, VALIDATION_TOL));
     }
@@ -54,13 +54,13 @@ mod reference_value_tests {
     fn test_inverse_reference_values() {
         // 2x2 matrix [[a,b],[c,d]] has inverse [[d,-b],[-c,a]]/(ad-bc)
         let a = array![[3.0, 1.0], [2.0, 1.0]];
-        let inv_a = compat::inv(&a.view(), false, true).unwrap();
+        let inv_a = compat::inv(&a.view(), false, true).expect("Test: operation failed");
         let expected = array![[1.0, -1.0], [-2.0, 3.0]]; // det = 3-2 = 1
         assert!(arrays_close_f64(&inv_a, &expected, VALIDATION_TOL));
 
         // 3x3 inverse of magic square variant
         let magic = array![[2.0, 7.0, 6.0], [9.0, 5.0, 1.0], [4.0, 3.0, 8.0]];
-        let inv_magic = compat::inv(&magic.view(), false, true).unwrap();
+        let inv_magic = compat::inv(&magic.view(), false, true).expect("Test: operation failed");
 
         // Verify A * A^(-1) = I
         let product = magic.dot(&inv_magic);
@@ -78,26 +78,31 @@ mod reference_value_tests {
         // - inf-norm = 3 + 4 = 7
         let testmatrix = array![[3.0, 4.0], [0.0, 0.0]];
 
-        let fro_norm = compat::norm(&testmatrix.view(), Some("fro"), None, false, true).unwrap();
+        let fro_norm = compat::norm(&testmatrix.view(), Some("fro"), None, false, true)
+            .expect("Test: operation failed");
         assert!(close_f64(fro_norm, 5.0, VALIDATION_TOL));
 
-        let norm_1 = compat::norm(&testmatrix.view(), Some("1"), None, false, true).unwrap();
+        let norm_1 = compat::norm(&testmatrix.view(), Some("1"), None, false, true)
+            .expect("Test: operation failed");
         assert!(close_f64(norm_1, 4.0, VALIDATION_TOL));
 
-        let norm_inf = compat::norm(&testmatrix.view(), Some("inf"), None, false, true).unwrap();
+        let norm_inf = compat::norm(&testmatrix.view(), Some("inf"), None, false, true)
+            .expect("Test: operation failed");
         assert!(close_f64(norm_inf, 7.0, VALIDATION_TOL));
 
         // Vector [3,4] has 2-norm = 5, 1-norm = 7, inf-norm = 4
         let test_vector = array![3.0, 4.0];
 
-        let vec_norm_2 = compat::vector_norm(&test_vector.view(), Some(2.0), true).unwrap();
+        let vec_norm_2 = compat::vector_norm(&test_vector.view(), Some(2.0), true)
+            .expect("Test: operation failed");
         assert!(close_f64(vec_norm_2, 5.0, VALIDATION_TOL));
 
-        let vec_norm_1 = compat::vector_norm(&test_vector.view(), Some(1.0), true).unwrap();
+        let vec_norm_1 = compat::vector_norm(&test_vector.view(), Some(1.0), true)
+            .expect("Test: operation failed");
         assert!(close_f64(vec_norm_1, 7.0, VALIDATION_TOL));
 
-        let vec_norm_inf =
-            compat::vector_norm(&test_vector.view(), Some(f64::INFINITY), true).unwrap();
+        let vec_norm_inf = compat::vector_norm(&test_vector.view(), Some(f64::INFINITY), true)
+            .expect("Test: operation failed");
         assert!(close_f64(vec_norm_inf, 4.0, VALIDATION_TOL));
     }
 
@@ -118,7 +123,7 @@ mod reference_value_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Should be sorted: [1.0, 3.0, 4.0]
         assert!(close_f64(eigenvals[0], 1.0, VALIDATION_TOL));
@@ -140,7 +145,7 @@ mod reference_value_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert!(close_f64(evals[0], 0.0, VALIDATION_TOL));
         assert!(close_f64(evals[1], 2.0, VALIDATION_TOL));
@@ -160,7 +165,7 @@ mod reference_value_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         assert!(close_f64(pauli_evals[0], -1.0, VALIDATION_TOL));
         assert!(close_f64(pauli_evals[1], 1.0, VALIDATION_TOL));
@@ -170,23 +175,23 @@ mod reference_value_tests {
     fn testmatrix_function_reference_values() {
         // Matrix exponential of zero matrix should be identity
         let zero_2x2 = Array2::zeros((2, 2));
-        let exp_zero = compat::expm(&zero_2x2.view(), None).unwrap();
+        let exp_zero = compat::expm(&zero_2x2.view(), None).expect("Test: operation failed");
         let identity = Array2::eye(2);
         assert!(arrays_close_f64(&exp_zero, &identity, VALIDATION_TOL));
 
         // exp(diag(a,b)) = diag(exp(a), exp(b))
         let diagmatrix = array![[0.0, 0.0], [0.0, 1.0]];
-        let exp_diag = compat::expm(&diagmatrix.view(), None).unwrap();
+        let exp_diag = compat::expm(&diagmatrix.view(), None).expect("Test: operation failed");
         let expected_exp = array![[1.0, 0.0], [0.0, 1.0_f64.exp()]];
         assert!(arrays_close_f64(&exp_diag, &expected_exp, 1e-10));
 
         // Matrix square root of identity should be identity
-        let sqrt_identity = compat::sqrtm(&identity.view(), None).unwrap();
+        let sqrt_identity = compat::sqrtm(&identity.view(), None).expect("Test: operation failed");
         assert!(arrays_close_f64(&sqrt_identity, &identity, VALIDATION_TOL));
 
         // sqrt(diag(4,9)) = diag(2,3)
         let diag_squares = array![[4.0, 0.0], [0.0, 9.0]];
-        let sqrt_diag = compat::sqrtm(&diag_squares.view(), None).unwrap();
+        let sqrt_diag = compat::sqrtm(&diag_squares.view(), None).expect("Test: operation failed");
         let expected_sqrt = array![[2.0, 0.0], [0.0, 3.0]];
         assert!(arrays_close_f64(&sqrt_diag, &expected_sqrt, 1e-10));
     }
@@ -195,8 +200,8 @@ mod reference_value_tests {
     fn test_decomposition_reference_values() {
         // QR decomposition of simple matrix
         let simplematrix = array![[1.0, 1.0], [0.0, 1.0]];
-        let (q_opt, r) =
-            compat::qr(&simplematrix.view(), false, None, "full", false, true).unwrap();
+        let (q_opt, r) = compat::qr(&simplematrix.view(), false, None, "full", false, true)
+            .expect("Test: operation failed");
 
         if let Some(q) = q_opt {
             // Verify orthogonality: Q^T * Q = I
@@ -211,7 +216,8 @@ mod reference_value_tests {
 
         // SVD of rank-1 matrix should have one non-zero singular value
         let rank1 = array![[1.0, 2.0], [2.0, 4.0]];
-        let (_, s, _) = compat::svd(&rank1.view(), true, true, false, true, "gesdd").unwrap();
+        let (_, s, _) = compat::svd(&rank1.view(), true, true, false, true, "gesdd")
+            .expect("Test: operation failed");
 
         // First singular value should be sqrt(1^2 + 2^2 + 2^2 + 4^2) = sqrt(25) = 5
         assert!(close_f64(s[0], 5.0, 1e-10));
@@ -229,40 +235,40 @@ mod mathematical_property_tests {
         let a = array![[2.0, 1.0], [1.0, 1.0]];
         let b = array![[1.0, 2.0], [0.0, 1.0]];
 
-        let det_a = compat::det(&a.view(), false, true).unwrap();
-        let det_b = compat::det(&b.view(), false, true).unwrap();
-        let det_ab = compat::det(&a.dot(&b).view(), false, true).unwrap();
+        let det_a = compat::det(&a.view(), false, true).expect("Test: operation failed");
+        let det_b = compat::det(&b.view(), false, true).expect("Test: operation failed");
+        let det_ab = compat::det(&a.dot(&b).view(), false, true).expect("Test: operation failed");
 
         assert!(close_f64(det_ab, det_a * det_b, VALIDATION_TOL));
 
         // det(A^T) = det(A)
-        let det_at = compat::det(&a.t().view(), false, true).unwrap();
+        let det_at = compat::det(&a.t().view(), false, true).expect("Test: operation failed");
         assert!(close_f64(det_a, det_at, VALIDATION_TOL));
 
         // det(kA) = k^n * det(A) for n×n matrix
         let k = 3.0;
         let ka = &a * k;
-        let det_ka = compat::det(&ka.view(), false, true).unwrap();
+        let det_ka = compat::det(&ka.view(), false, true).expect("Test: operation failed");
         assert!(close_f64(det_ka, k.powi(2) * det_a, VALIDATION_TOL));
     }
 
     #[test]
     fn test_inverse_properties() {
         let a = array![[3.0, 1.0], [2.0, 1.0]];
-        let inv_a = compat::inv(&a.view(), false, true).unwrap();
+        let inv_a = compat::inv(&a.view(), false, true).expect("Test: operation failed");
 
         // (A^(-1))^(-1) = A
-        let inv_inv_a = compat::inv(&inv_a.view(), false, true).unwrap();
+        let inv_inv_a = compat::inv(&inv_a.view(), false, true).expect("Test: operation failed");
         assert!(arrays_close_f64(&inv_inv_a, &a, 1e-10));
 
         // (A^T)^(-1) = (A^(-1))^T
-        let inv_at = compat::inv(&a.t().view(), false, true).unwrap();
+        let inv_at = compat::inv(&a.t().view(), false, true).expect("Test: operation failed");
         let inv_a_t = inv_a.t().to_owned();
         assert!(arrays_close_f64(&inv_at, &inv_a_t, 1e-10));
 
         // det(A^(-1)) = 1/det(A)
-        let det_a = compat::det(&a.view(), false, true).unwrap();
-        let det_inv_a = compat::det(&inv_a.view(), false, true).unwrap();
+        let det_a = compat::det(&a.view(), false, true).expect("Test: operation failed");
+        let det_inv_a = compat::det(&inv_a.view(), false, true).expect("Test: operation failed");
         assert!(close_f64(det_inv_a, 1.0 / det_a, VALIDATION_TOL));
     }
 
@@ -272,21 +278,26 @@ mod mathematical_property_tests {
         let b = array![[2.0, 1.0], [1.0, 2.0]];
 
         // Triangle inequality: ||A + B|| <= ||A|| + ||B||
-        let norm_a = compat::norm(&a.view(), Some("fro"), None, false, true).unwrap();
-        let norm_b = compat::norm(&b.view(), Some("fro"), None, false, true).unwrap();
-        let norm_sum = compat::norm(&(&a + &b).view(), Some("fro"), None, false, true).unwrap();
+        let norm_a = compat::norm(&a.view(), Some("fro"), None, false, true)
+            .expect("Test: operation failed");
+        let norm_b = compat::norm(&b.view(), Some("fro"), None, false, true)
+            .expect("Test: operation failed");
+        let norm_sum = compat::norm(&(&a + &b).view(), Some("fro"), None, false, true)
+            .expect("Test: operation failed");
 
         assert!(norm_sum <= norm_a + norm_b + 1e-10); // Small epsilon for numerical errors
 
         // Homogeneity: ||kA|| = |k| * ||A||
         let k = -2.5;
         let ka = &a * k;
-        let norm_ka = compat::norm(&ka.view(), Some("fro"), None, false, true).unwrap();
+        let norm_ka = compat::norm(&ka.view(), Some("fro"), None, false, true)
+            .expect("Test: operation failed");
         assert!(close_f64(norm_ka, k.abs() * norm_a, VALIDATION_TOL));
 
         // Positive definiteness: ||A|| = 0 iff A = 0
         let zeromatrix = Array2::zeros((2, 2));
-        let norm_zero = compat::norm(&zeromatrix.view(), Some("fro"), None, false, true).unwrap();
+        let norm_zero = compat::norm(&zeromatrix.view(), Some("fro"), None, false, true)
+            .expect("Test: operation failed");
         assert!(close_f64(norm_zero, 0.0, VALIDATION_TOL));
         assert!(norm_a > 0.0);
     }
@@ -307,7 +318,7 @@ mod mathematical_property_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
 
         // Trace equals sum of eigenvalues
         let trace = a[[0, 0]] + a[[1, 1]];
@@ -315,7 +326,7 @@ mod mathematical_property_tests {
         assert!(close_f64(trace, eigenval_sum, VALIDATION_TOL));
 
         // Determinant equals product of eigenvalues
-        let det = compat::det(&a.view(), false, true).unwrap();
+        let det = compat::det(&a.view(), false, true).expect("Test: operation failed");
         let eigenval_product: f64 = eigenvals.iter().product();
         assert!(close_f64(det, eigenval_product, VALIDATION_TOL));
 
@@ -338,18 +349,18 @@ mod mathematical_property_tests {
         let a = array![[1.0, 0.5], [0.5, 1.0]];
 
         // exp(log(A)) = A for positive definite matrices
-        let log_a = compat::logm(&a.view()).unwrap();
-        let exp_log_a = compat::expm(&log_a.view(), None).unwrap();
+        let log_a = compat::logm(&a.view()).expect("Test: operation failed");
+        let exp_log_a = compat::expm(&log_a.view(), None).expect("Test: operation failed");
         assert!(arrays_close_f64(&exp_log_a, &a, 1e-1));
 
         // log(exp(A)) = A for matrices where exp is invertible
         let small_a = &a * 0.1; // Small matrix to ensure convergence
-        let exp_small_a = compat::expm(&small_a.view(), None).unwrap();
-        let log_exp_small_a = compat::logm(&exp_small_a.view()).unwrap();
+        let exp_small_a = compat::expm(&small_a.view(), None).expect("Test: operation failed");
+        let log_exp_small_a = compat::logm(&exp_small_a.view()).expect("Test: operation failed");
         assert!(arrays_close_f64(&log_exp_small_a, &small_a, 1e-3));
 
         // sqrt(A) * sqrt(A) = A
-        let sqrt_a = compat::sqrtm(&a.view(), None).unwrap();
+        let sqrt_a = compat::sqrtm(&a.view(), None).expect("Test: operation failed");
         let sqrt_squared = sqrt_a.dot(&sqrt_a);
         assert!(arrays_close_f64(&sqrt_squared, &a, 1e-8));
 
@@ -357,9 +368,10 @@ mod mathematical_property_tests {
         let diag_a = array![[1.0, 0.0], [0.0, 2.0]];
         let diag_b = array![[0.5, 0.0], [0.0, 1.5]];
 
-        let exp_sum = compat::expm(&(&diag_a + &diag_b).view(), None).unwrap();
-        let exp_a = compat::expm(&diag_a.view(), None).unwrap();
-        let exp_b = compat::expm(&diag_b.view(), None).unwrap();
+        let exp_sum =
+            compat::expm(&(&diag_a + &diag_b).view(), None).expect("Test: operation failed");
+        let exp_a = compat::expm(&diag_a.view(), None).expect("Test: operation failed");
+        let exp_b = compat::expm(&diag_b.view(), None).expect("Test: operation failed");
         let product = exp_a.dot(&exp_b);
 
         assert!(arrays_close_f64(&exp_sum, &product, 1e-10));
@@ -370,13 +382,15 @@ mod mathematical_property_tests {
         let a = array![[4.0, 2.0, 1.0], [2.0, 5.0, 3.0], [1.0, 3.0, 6.0]];
 
         // LU decomposition: P*A = L*U
-        let (p, l, u) = compat::lu(&a.view(), false, false, true, false).unwrap();
+        let (p, l, u) =
+            compat::lu(&a.view(), false, false, true, false).expect("Test: operation failed");
         let pa = p.dot(&a);
         let lu = l.dot(&u);
         assert!(arrays_close_f64(&pa, &lu, 1e-10));
 
         // QR decomposition: A = Q*R
-        let (q_opt, r) = compat::qr(&a.view(), false, None, "full", false, true).unwrap();
+        let (q_opt, r) = compat::qr(&a.view(), false, None, "full", false, true)
+            .expect("Test: operation failed");
         if let Some(q) = q_opt {
             let qr = q.dot(&r);
             assert!(arrays_close_f64(&qr, &a, 1e-10));
@@ -388,7 +402,8 @@ mod mathematical_property_tests {
         }
 
         // SVD: A = U * Σ * V^T
-        let (u_opt, s, vt_opt) = compat::svd(&a.view(), true, true, false, true, "gesdd").unwrap();
+        let (u_opt, s, vt_opt) = compat::svd(&a.view(), true, true, false, true, "gesdd")
+            .expect("Test: operation failed");
         if let (Some(u), Some(vt)) = (u_opt, vt_opt) {
             let sigma = Array2::from_diag(&s);
             let reconstruction = u.dot(&sigma).dot(&vt);
@@ -407,18 +422,21 @@ mod mathematical_property_tests {
     fn test_condition_number_properties() {
         // Condition number of identity matrix should be 1
         let identity = Array2::eye(3);
-        let cond_identity = compat::cond(&identity.view(), Some("2")).unwrap();
+        let cond_identity =
+            compat::cond(&identity.view(), Some("2")).expect("Test: operation failed");
         assert!(close_f64(cond_identity, 1.0, VALIDATION_TOL));
 
         // Condition number should be >= 1
         let randommatrix = array![[2.0, 1.0], [1.0, 1.5]];
-        let cond_random = compat::cond(&randommatrix.view(), Some("2")).unwrap();
+        let cond_random =
+            compat::cond(&randommatrix.view(), Some("2")).expect("Test: operation failed");
         assert!(cond_random >= 1.0 - VALIDATION_TOL);
 
         // Scaling matrix by positive constant doesn't change condition number
         let k = 5.0;
         let scaledmatrix = &randommatrix * k;
-        let cond_scaled = compat::cond(&scaledmatrix.view(), Some("2")).unwrap();
+        let cond_scaled =
+            compat::cond(&scaledmatrix.view(), Some("2")).expect("Test: operation failed");
         assert!(close_f64(cond_random, cond_scaled, 1e-10));
     }
 
@@ -426,16 +444,19 @@ mod mathematical_property_tests {
     fn test_rank_properties() {
         // Rank of identity matrix equals its size
         let identity_3 = Array2::<f64>::eye(3);
-        let rank_identity = compat::matrix_rank(&identity_3.view(), None, false, true).unwrap();
+        let rank_identity = compat::matrix_rank(&identity_3.view(), None, false, true)
+            .expect("Test: operation failed");
         assert_eq!(rank_identity, 3);
 
         // Rank is preserved under multiplication by invertible matrices
         let invertible = array![[2.0, 1.0], [1.0, 1.0]];
         let testmatrix = array![[1.0, 2.0], [0.0, 0.0]]; // rank 1
 
-        let rank_original = compat::matrix_rank(&testmatrix.view(), None, false, true).unwrap();
+        let rank_original = compat::matrix_rank(&testmatrix.view(), None, false, true)
+            .expect("Test: operation failed");
         let transformed = invertible.dot(&testmatrix);
-        let rank_transformed = compat::matrix_rank(&transformed.view(), None, false, true).unwrap();
+        let rank_transformed = compat::matrix_rank(&transformed.view(), None, false, true)
+            .expect("Test: operation failed");
 
         assert_eq!(rank_original, rank_transformed);
 
@@ -443,7 +464,8 @@ mod mathematical_property_tests {
         let u = array![[1.0], [2.0], [3.0]];
         let v = array![[2.0], [1.0]];
         let outer_product = u.dot(&v.t());
-        let rank_outer = compat::matrix_rank(&outer_product.view(), None, false, true).unwrap();
+        let rank_outer = compat::matrix_rank(&outer_product.view(), None, false, true)
+            .expect("Test: operation failed");
         assert_eq!(rank_outer, 1);
     }
 }
@@ -470,14 +492,15 @@ mod numerical_stability_tests {
             None,
             false,
         )
-        .unwrap();
+        .expect("Test: operation failed");
         let residual = &well_conditioned.dot(&x) - &b;
         let residual_norm = residual.iter().map(|&r| r * r).sum::<f64>().sqrt();
 
         assert!(residual_norm < 1e-12);
 
         // Condition number should be reasonable
-        let cond_num = compat::cond(&well_conditioned.view(), Some("2")).unwrap();
+        let cond_num =
+            compat::cond(&well_conditioned.view(), Some("2")).expect("Test: operation failed");
         assert!(cond_num < 100.0); // Should be well-conditioned
     }
 
@@ -488,11 +511,11 @@ mod numerical_stability_tests {
         let rotation = array![[angle.cos(), -angle.sin()], [angle.sin(), angle.cos()]];
 
         // Determinant should be ±1
-        let det = compat::det(&rotation.view(), false, true).unwrap();
+        let det = compat::det(&rotation.view(), false, true).expect("Test: operation failed");
         assert!(close_f64(det.abs(), 1.0, VALIDATION_TOL));
 
         // Condition number should be 1
-        let cond_num = compat::cond(&rotation.view(), Some("2")).unwrap();
+        let cond_num = compat::cond(&rotation.view(), Some("2")).expect("Test: operation failed");
         assert!(close_f64(cond_num, 1.0, 1e-10));
 
         // For rotation matrices, eigenvalues have magnitude 1 but are generally complex
@@ -525,7 +548,7 @@ mod numerical_stability_tests {
             None,
             1,
         )
-        .unwrap();
+        .expect("Test: operation failed");
         assert!(eigenvals.iter().all(|&lambda| lambda > 0.0));
 
         // Cholesky decomposition should exist
@@ -553,7 +576,8 @@ mod numerical_stability_tests {
         ];
 
         for matrix in test_matrices.iter() {
-            let (_, s, _) = compat::svd(&matrix.view(), true, true, false, true, "gesdd").unwrap();
+            let (_, s, _) = compat::svd(&matrix.view(), true, true, false, true, "gesdd")
+                .expect("Test: operation failed");
 
             // Singular values should be non-negative
             assert!(s.iter().all(|&sigma| sigma >= 0.0));
@@ -564,11 +588,13 @@ mod numerical_stability_tests {
             }
 
             // Largest singular value should equal the 2-norm
-            let norm_2 = compat::norm(&matrix.view(), Some("2"), None, false, true).unwrap();
+            let norm_2 = compat::norm(&matrix.view(), Some("2"), None, false, true)
+                .expect("Test: operation failed");
             assert!(close_f64(s[0], norm_2, 1e-10));
 
             // Frobenius norm should equal sqrt(sum of squares of singular values)
-            let fro_norm = compat::norm(&matrix.view(), Some("fro"), None, false, true).unwrap();
+            let fro_norm = compat::norm(&matrix.view(), Some("fro"), None, false, true)
+                .expect("Test: operation failed");
             let s_fro: f64 = s.iter().map(|&sigma| sigma * sigma).sum::<f64>().sqrt();
             assert!(close_f64(fro_norm, s_fro, 1e-10));
         }
@@ -580,22 +606,25 @@ mod numerical_stability_tests {
 
         // Very small but non-zero matrix
         let smallmatrix = Array2::eye(2) * 1e-14;
-        let det_small = compat::det(&smallmatrix.view(), false, true).unwrap();
+        let det_small =
+            compat::det(&smallmatrix.view(), false, true).expect("Test: operation failed");
         assert!(close_f64(det_small, 1e-28, 1e-30));
 
         // Matrix that should be ill-conditioned
         let wide_range = array![[1000.0, 999.0], [999.0, 998.0]];
-        let cond_wide = compat::cond(&wide_range.view(), Some("2")).unwrap();
+        let cond_wide =
+            compat::cond(&wide_range.view(), Some("2")).expect("Test: operation failed");
         println!("Actual condition number: {}", cond_wide);
         assert!(cond_wide > 100.0); // Should be ill-conditioned (using more reasonable matrix)
 
         // Nearly singular matrix (clearly rank-deficient)
         let nearly_singular = array![[1.0, 2.0], [1.0, 2.0 + 1e-15]];
-        let det_nearly: f64 = compat::det(&nearly_singular.view(), false, true).unwrap();
+        let det_nearly: f64 =
+            compat::det(&nearly_singular.view(), false, true).expect("Test: operation failed");
         assert!(det_nearly.abs() < 1e-13);
 
-        let rank_nearly =
-            compat::matrix_rank(&nearly_singular.view(), Some(1e-12), false, true).unwrap();
+        let rank_nearly = compat::matrix_rank(&nearly_singular.view(), Some(1e-12), false, true)
+            .expect("Test: operation failed");
         // Check that the rank is reduced (should be 1 for a nearly singular matrix)
         assert!(
             rank_nearly <= 1,
@@ -632,8 +661,9 @@ mod performance_validation_tests {
             let start = Instant::now();
 
             // Perform a set of typical operations
-            let _det = compat::det(&matrix.view(), false, true).unwrap();
-            let _norm = compat::norm(&matrix.view(), Some("fro"), None, false, true).unwrap();
+            let _det = compat::det(&matrix.view(), false, true).expect("Test: operation failed");
+            let _norm = compat::norm(&matrix.view(), Some("fro"), None, false, true)
+                .expect("Test: operation failed");
             let _cond = compat::cond(&matrix.view(), Some("2")).unwrap_or_else(|_| {
                 println!("Warning: Condition number computation failed, using fallback");
                 1.0 // Fallback value for test purposes
@@ -673,13 +703,15 @@ mod performance_validation_tests {
 
         // Test LU decomposition
         let start = Instant::now();
-        let _lu = compat::lu(&matrix.view(), false, false, true, false).unwrap();
+        let _lu =
+            compat::lu(&matrix.view(), false, false, true, false).expect("Test: operation failed");
         let lu_time = start.elapsed();
         assert!(lu_time.as_millis() < max_time_ms);
 
         // Test QR decomposition
         let start = Instant::now();
-        let _qr = compat::qr(&matrix.view(), false, None, "full", false, true).unwrap();
+        let _qr = compat::qr(&matrix.view(), false, None, "full", false, true)
+            .expect("Test: operation failed");
         let qr_time = start.elapsed();
         assert!(qr_time.as_millis() < max_time_ms);
 

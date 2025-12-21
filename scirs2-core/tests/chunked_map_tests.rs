@@ -48,7 +48,7 @@ mod tests {
         let chunked = ChunkedArray::new(data, ChunkingStrategy::Fixed(25));
 
         // Compute mean of each chunk
-        let results = chunked.map(|chunk| chunk.mean().unwrap());
+        let results = chunked.map(|chunk| chunk.mean().expect("Test: operation failed"));
 
         // We should have 4 chunks
         assert_eq!(results.len(), 4);

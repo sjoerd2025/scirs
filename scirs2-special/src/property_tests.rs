@@ -137,8 +137,9 @@ pub mod properties {
         // Test binomial coefficient properties
         for n in 0..=20 {
             for k in 0..=n {
-                let binom_nk = crate::combinatorial::binomial(n, k).unwrap();
-                let binom_n_nminus_k = crate::combinatorial::binomial(n, n - k).unwrap();
+                let binom_nk = crate::combinatorial::binomial(n, k).expect("Operation failed");
+                let binom_n_nminus_k =
+                    crate::combinatorial::binomial(n, n - k).expect("Operation failed");
 
                 // Test symmetry: C(n,k) = C(n,n-k)
                 if (binom_nk - binom_n_nminus_k).abs() > 1e-10 {
@@ -150,8 +151,10 @@ pub mod properties {
 
                 // Test Pascal's triangle: C(n,k) = C(n-1,k-1) + C(n-1,k)
                 if n > 0 && k > 0 && k < n {
-                    let pascal_left = crate::combinatorial::binomial(n - 1, k - 1).unwrap();
-                    let pascal_right = crate::combinatorial::binomial(n - 1, k).unwrap();
+                    let pascal_left =
+                        crate::combinatorial::binomial(n - 1, k - 1).expect("Operation failed");
+                    let pascal_right =
+                        crate::combinatorial::binomial(n - 1, k).expect("Operation failed");
                     let pascal_sum = pascal_left + pascal_right;
 
                     if (binom_nk - pascal_sum).abs() > 1e-10 {

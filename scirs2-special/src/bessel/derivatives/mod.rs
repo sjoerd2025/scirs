@@ -66,7 +66,7 @@ pub fn j0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 #[allow(dead_code)]
 pub fn j1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x == F::zero() {
-        return F::from(0.5).unwrap(); // Limit as x approaches 0
+        return F::from(0.5).expect("Failed to convert constant to float"); // Limit as x approaches 0
     }
     j0(x) - j1(x) / x
 }
@@ -113,7 +113,7 @@ pub fn jn_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(n: i32, 
     // Special case for x = 0
     if x == F::zero() {
         if n == 1 {
-            return F::from(0.5).unwrap();
+            return F::from(0.5).expect("Failed to convert constant to float");
         } else if n % 2 == 0 {
             return F::zero();
         } else {
@@ -123,7 +123,7 @@ pub fn jn_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(n: i32, 
     }
 
     // Use the recurrence relation
-    (jn(n - 1, x) - jn(n + 1, x)) / F::from(2.0).unwrap()
+    (jn(n - 1, x) - jn(n + 1, x)) / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 /// Compute the derivative of the Bessel function of the first kind of arbitrary order v.
@@ -163,7 +163,7 @@ pub fn jv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
     // Special case for x = 0
     if x == F::zero() {
         if v == F::one() {
-            return F::from(0.5).unwrap();
+            return F::from(0.5).expect("Failed to convert constant to float");
         } else if v > F::one() {
             return F::zero();
         } else if v < F::zero() {
@@ -176,7 +176,8 @@ pub fn jv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
     }
 
     // Use the recurrence relation
-    (jv(v - F::one(), x) - jv(v + F::one(), x)) / F::from(2.0).unwrap()
+    (jv(v - F::one(), x) - jv(v + F::one(), x))
+        / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 /// Compute the derivative of the Bessel function of the second kind of order 0.
@@ -281,7 +282,7 @@ pub fn yn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     }
 
     // Use the recurrence relation
-    (yn(n - 1, x) - yn(n + 1, x)) / F::from(2.0).unwrap()
+    (yn(n - 1, x) - yn(n + 1, x)) / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 /// Compute the derivative of the modified Bessel function of the first kind of order 0.
@@ -337,7 +338,7 @@ pub fn i0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 #[allow(dead_code)]
 pub fn i1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x == F::zero() {
-        return F::from(0.5).unwrap(); // Limit as x approaches 0
+        return F::from(0.5).expect("Failed to convert constant to float"); // Limit as x approaches 0
     }
     i0(x) - i1(x) / x
 }
@@ -379,7 +380,7 @@ pub fn iv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
     // Special case for x = 0
     if x == F::zero() {
         if v == F::one() {
-            return F::from(0.5).unwrap();
+            return F::from(0.5).expect("Failed to convert constant to float");
         } else if v > F::one() {
             return F::zero();
         } else if v < F::zero() {
@@ -391,7 +392,8 @@ pub fn iv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
     }
 
     // Use the recurrence relation for modified Bessel functions
-    (iv(v - F::one(), x) + iv(v + F::one(), x)) / F::from(2.0).unwrap()
+    (iv(v - F::one(), x) + iv(v + F::one(), x))
+        / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 /// Compute the derivative of the modified Bessel function of the second kind of order 0.
@@ -496,7 +498,8 @@ pub fn kv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
     }
 
     // Use the recurrence relation for modified Bessel functions
-    -(kv(v - F::one(), x) + kv(v + F::one(), x)) / F::from(2.0).unwrap()
+    -(kv(v - F::one(), x) + kv(v + F::one(), x))
+        / F::from(2.0).expect("Failed to convert constant to float")
 }
 
 // SciPy-compatible derivative function interfaces

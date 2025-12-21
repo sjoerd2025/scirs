@@ -52,7 +52,7 @@ where
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
-    let _border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+    let _border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).expect("Operation failed"));
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -254,7 +254,7 @@ where
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
-    let _border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+    let _border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).expect("Operation failed"));
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -748,7 +748,8 @@ mod tests {
     fn test_grey_erosion_optimized() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = grey_erosion_2d_optimized(&input, None, None, None, None).unwrap();
+        let result =
+            grey_erosion_2d_optimized(&input, None, None, None, None).expect("Operation failed");
 
         // The center pixel should be the minimum of its 3x3 neighborhood
         assert_eq!(result[[1, 1]], 1.0);
@@ -758,7 +759,8 @@ mod tests {
     fn test_grey_dilation_optimized() {
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let result = grey_dilation_2d_optimized(&input, None, None, None, None).unwrap();
+        let result =
+            grey_dilation_2d_optimized(&input, None, None, None, None).expect("Operation failed");
 
         // The center pixel should be the maximum of its 3x3 neighborhood
         assert_eq!(result[[1, 1]], 9.0);
@@ -772,7 +774,8 @@ mod tests {
             [false, false, false]
         ];
 
-        let result = binary_erosion_2d_optimized(&input, None, None, None, None).unwrap();
+        let result =
+            binary_erosion_2d_optimized(&input, None, None, None, None).expect("Operation failed");
 
         // Erosion should shrink the true region
         assert!(!result[[1, 1]]);
@@ -786,7 +789,8 @@ mod tests {
             [false, false, false]
         ];
 
-        let result = binary_dilation_2d_optimized(&input, None, None, None, None).unwrap();
+        let result =
+            binary_dilation_2d_optimized(&input, None, None, None, None).expect("Operation failed");
 
         // Dilation should expand the true region
         assert!(result[[0, 0]]);

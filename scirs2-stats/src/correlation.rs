@@ -13,6 +13,12 @@ use scirs2_core::ndarray::{s, Array1, Array2, ArrayBase, Data, Dimension, Ix1, I
 use scirs2_core::numeric::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Compute the Pearson correlation coefficient between two arrays.
 ///
 /// The Pearson correlation coefficient measures the linear correlation between two
@@ -37,7 +43,7 @@ use scirs2_core::parallel_ops::*;
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 ///
-/// let corr = pearson_r(&x.view(), &y.view()).unwrap();
+/// let corr = pearson_r(&x.view(), &y.view()).expect("Test/example failed");
 /// println!("Pearson correlation: {}", corr);
 /// // This should be a perfect negative correlation, approximately -1.0
 /// assert!((corr - (-1.0f64)).abs() < 1e-10f64);
@@ -133,7 +139,7 @@ where
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![1.0, 4.0, 9.0, 16.0, 25.0];  // Squared values - non-linear relationship
 ///
-/// let corr = spearman_r(&x.view(), &y.view()).unwrap();
+/// let corr = spearman_r(&x.view(), &y.view()).expect("Test/example failed");
 /// println!("Spearman correlation: {}", corr);
 /// // This should be a perfect monotonic relationship, approximately 1.0
 /// assert!((corr - 1.0f64).abs() < 1e-10f64);
@@ -207,7 +213,7 @@ fn assign_ranks<F: Float>(sorteddata: &[(F, usize)], ranks: &mut [F]) -> StatsRe
         }
 
         // Calculate average rank for this tie group
-        let avg_rank = F::from((i + j) as f64 / 2.0 + 1.0).unwrap();
+        let avg_rank = F::from((i + j) as f64 / 2.0 + 1.0).expect("Test/example failed");
 
         // Assign average rank to all tied values
         for item in sorteddata.iter().take(j + 1).skip(i) {
@@ -246,7 +252,7 @@ fn assign_ranks<F: Float>(sorteddata: &[(F, usize)], ranks: &mut [F]) -> StatsRe
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 ///
-/// let corr = kendall_tau(&x.view(), &y.view(), "b").unwrap();
+/// let corr = kendall_tau(&x.view(), &y.view(), "b").expect("Test/example failed");
 /// println!("Kendall tau correlation: {}", corr);
 /// // This should be a perfect negative rank correlation, approximately -1.0
 /// assert!((corr - (-1.0f64)).abs() < 1e-10f64);
@@ -313,13 +319,13 @@ where
 
     // Calculate denominator based on method
     let n = x.len();
-    let _n0 = F::from(n * (n - 1) / 2).unwrap();
+    let _n0 = F::from(n * (n - 1) / 2).expect("Test/example failed");
 
     let tau = match method {
         "b" => {
             // Kendall's tau-b (accounts for ties)
-            let n1 = F::from(concordant + discordant + ties_x).unwrap();
-            let n2 = F::from(concordant + discordant + ties_y).unwrap();
+            let n1 = F::from(concordant + discordant + ties_x).expect("Failed to convert to float");
+            let n2 = F::from(concordant + discordant + ties_y).expect("Failed to convert to float");
 
             if n1 == F::zero() || n2 == F::zero() {
                 return Err(crate::error::StatsError::InvalidArgument(
@@ -327,13 +333,15 @@ where
                 ));
             }
 
-            F::from(concordant - discordant).unwrap() / (n1 * n2).sqrt()
+            F::from(concordant - discordant).expect("Failed to convert to float") / (n1 * n2).sqrt()
         }
         "c" => {
             // Kendall's tau-c (more suitable for rectangular tables)
-            let m = F::from(n.min(2)).unwrap();
-            (F::from(2.0).unwrap() * m * F::from(concordant - discordant).unwrap())
-                / (F::from(n).unwrap().powi(2) * (m - F::one()))
+            let m = F::from(n.min(2)).expect("Test/example failed");
+            (const_f64::<F>(2.0)
+                * m
+                * F::from(concordant - discordant).expect("Failed to convert to float"))
+                / (F::from(n).expect("Failed to convert to float").powi(2) * (m - F::one()))
         }
         _ => unreachable!(), // We validated the method parameter earlier
     };
@@ -369,9 +377,9 @@ where
 ///
 /// // Control variable
 /// let z1 = array![7.0, 5.0, 8.0, 7.0, 8.0, 7.0, 5.0, 3.0, 9.0, 4.0, 6.0];
-/// let z = Array2::from_shape_vec((11, 1), z1.to_vec()).unwrap();
+/// let z = Array2::from_shape_vec((11, 1), z1.to_vec()).expect("Test/example failed");
 ///
-/// let partial_r = partial_corr(&x.view(), &y.view(), &z.view()).unwrap();
+/// let partial_r = partial_corr(&x.view(), &y.view(), &z.view()).expect("Test/example failed");
 /// println!("Partial correlation: {}", partial_r);
 /// ```
 #[allow(dead_code)]
@@ -455,10 +463,10 @@ where
 ///
 /// // Control variable
 /// let z1 = array![7.0, 5.0, 8.0, 7.0, 8.0, 7.0, 5.0, 3.0, 9.0, 4.0, 6.0];
-/// let z = Array2::from_shape_vec((11, 1), z1.to_vec()).unwrap();
+/// let z = Array2::from_shape_vec((11, 1), z1.to_vec()).expect("Test/example failed");
 ///
 /// // Calculate partial correlation coefficient and p-value
-/// let (pr, p_value) = partial_corrr(&x.view(), &y.view(), &z.view(), "two-sided").unwrap();
+/// let (pr, p_value) = partial_corrr(&x.view(), &y.view(), &z.view(), "two-sided").expect("Test/example failed");
 ///
 /// println!("Partial correlation coefficient: {}", pr);
 /// println!("Two-sided p-value: {}", p_value);
@@ -490,10 +498,10 @@ where
 
     // Calculate degrees of freedom (adjusted for control variables)
     // df = n - 2 - p (where p is the number of control variables)
-    let df = F::from(n - 2 - p).unwrap();
+    let df = F::from(n - 2 - p).expect("Failed to convert to float");
 
     // For very small sample sizes or limited degrees of freedom, p-value calculation becomes unreliable
-    if df <= F::from(2.0).unwrap() {
+    if df <= const_f64::<F>(2.0) {
         return Ok((pr, F::one()));
     }
 
@@ -513,9 +521,9 @@ where
     // Calculate t-statistic (handle perfect correlations to avoid numerical issues)
     let t_stat = if pr.abs() >= F::one() {
         if pr > F::zero() {
-            F::from(1e6).unwrap() // Very large positive value
+            const_f64::<F>(1e6) // Very large positive value
         } else {
-            F::from(-1e6).unwrap() // Very large negative value
+            const_f64::<F>(-1e6) // Very large negative value
         }
     } else {
         pr * (df / (F::one() - pr * pr)).sqrt()
@@ -541,7 +549,7 @@ where
         }
         _ => {
             // Two-sided test: correlation is nonzero
-            F::from(2.0).unwrap() * (F::one() - student_t_cdf(t_stat.abs(), df))
+            const_f64::<F>(2.0) * (F::one() - student_t_cdf(t_stat.abs(), df))
         }
     };
 
@@ -715,7 +723,7 @@ where
 /// let binary = array![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
 /// let continuous = array![2.5, 4.5, 3.2, 5.1, 2.0, 4.8, 2.8, 5.5];
 ///
-/// let corr = point_biserial(&binary.view(), &continuous.view()).unwrap();
+/// let corr = point_biserial(&binary.view(), &continuous.view()).expect("Test/example failed");
 /// println!("Point-biserial correlation: {}", corr);
 /// ```
 #[allow(dead_code)]
@@ -792,16 +800,16 @@ where
         }
     }
 
-    mean1 = mean1 / F::from(n1).unwrap();
-    mean0 = mean0 / F::from(n0).unwrap();
+    mean1 = mean1 / F::from(n1).expect("Failed to convert to float");
+    mean0 = mean0 / F::from(n0).expect("Failed to convert to float");
 
     // Calculate standard deviation of continuous variable
     let std_y = std(&continuous.view(), 0, None)?;
 
     // Calculate point-biserial correlation
-    let n = F::from(binary.len()).unwrap();
-    let n1_f = F::from(n1).unwrap();
-    let n0_f = F::from(n0).unwrap();
+    let n = F::from(binary.len()).expect("Test/example failed");
+    let n1_f = F::from(n1).expect("Failed to convert to float");
+    let n0_f = F::from(n0).expect("Failed to convert to float");
 
     let corr = ((mean1 - mean0) / std_y) * (n1_f * n0_f / (n * n)).sqrt();
 
@@ -837,7 +845,7 @@ where
 /// let continuous = array![2.5, 4.5, 3.2, 5.1, 2.0, 4.8, 2.8, 5.5];
 ///
 /// // Calculate point-biserial correlation coefficient and p-value
-/// let (rpb, p_value) = point_biserialr(&binary.view(), &continuous.view(), "two-sided").unwrap();
+/// let (rpb, p_value) = point_biserialr(&binary.view(), &continuous.view(), "two-sided").expect("Test/example failed");
 ///
 /// println!("Point-biserial correlation coefficient: {}", rpb);
 /// println!("Two-sided p-value: {}", p_value);
@@ -887,14 +895,14 @@ where
     // Convert to t-statistic
     // The t-statistic for point-biserial correlation is calculated using the formula:
     // t = r * sqrt((n-2)/(1-r^2))
-    let df = F::from(n - 2).unwrap();
+    let df = F::from(n - 2).expect("Failed to convert to float");
 
     // Calculate t-statistic (handle perfect correlations to avoid numerical issues)
     let t_stat = if rpb.abs() >= F::one() {
         if rpb > F::zero() {
-            F::from(1e6).unwrap() // Very large positive value
+            const_f64::<F>(1e6) // Very large positive value
         } else {
-            F::from(-1e6).unwrap() // Very large negative value
+            const_f64::<F>(-1e6) // Very large negative value
         }
     } else {
         rpb * (df / (F::one() - rpb * rpb)).sqrt()
@@ -920,7 +928,7 @@ where
         }
         _ => {
             // Two-sided test: correlation is nonzero
-            F::from(2.0).unwrap() * (F::one() - student_t_cdf(t_stat.abs(), df))
+            const_f64::<F>(2.0) * (F::one() - student_t_cdf(t_stat.abs(), df))
         }
     };
 
@@ -952,7 +960,7 @@ where
 ///     [5.0, 1.0, 6.0]
 /// ];
 ///
-/// let corr_matrix = corrcoef(&data.view(), "pearson").unwrap();
+/// let corr_matrix = corrcoef(&data.view(), "pearson").expect("Test/example failed");
 /// println!("Correlation matrix:\n{:?}", corr_matrix);
 /// ```
 #[allow(dead_code)]
@@ -1067,19 +1075,19 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0];
 
-        let corr = pearson_r(&x.view(), &y.view()).unwrap();
+        let corr = pearson_r(&x.view(), &y.view()).expect("Test/example failed");
         assert_abs_diff_eq!(corr, 1.0, epsilon = 1e-10);
 
         // Perfect negative correlation
         let y = array![10.0, 8.0, 6.0, 4.0, 2.0];
 
-        let corr = pearson_r(&x.view(), &y.view()).unwrap();
+        let corr = pearson_r(&x.view(), &y.view()).expect("Test/example failed");
         assert_abs_diff_eq!(corr, -1.0, epsilon = 1e-10);
 
         // No correlation
         let y = array![5.0, 2.0, 8.0, 1.0, 9.0];
 
-        let corr = pearson_r(&x.view(), &y.view()).unwrap();
+        let corr = pearson_r(&x.view(), &y.view()).expect("Test/example failed");
         assert!(corr.abs() < 0.5); // Weak correlation
     }
 
@@ -1089,13 +1097,13 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![1.0, 4.0, 9.0, 16.0, 25.0]; // Squared values
 
-        let corr = spearman_r(&x.view(), &y.view()).unwrap();
+        let corr = spearman_r(&x.view(), &y.view()).expect("Test/example failed");
         assert_abs_diff_eq!(corr, 1.0, epsilon = 1e-10);
 
         // Perfect negative monotonic relationship
         let y = array![25.0, 16.0, 9.0, 4.0, 1.0];
 
-        let corr = spearman_r(&x.view(), &y.view()).unwrap();
+        let corr = spearman_r(&x.view(), &y.view()).expect("Test/example failed");
         assert_abs_diff_eq!(corr, -1.0, epsilon = 1e-10);
     }
 
@@ -1105,20 +1113,20 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![10.0, 11.0, 12.0, 13.0, 14.0];
 
-        let corr = kendall_tau(&x.view(), &y.view(), "b").unwrap();
+        let corr = kendall_tau(&x.view(), &y.view(), "b").expect("Test/example failed");
         assert_abs_diff_eq!(corr, 1.0, epsilon = 1e-10);
 
         // Perfect discordant ordering
         let y = array![14.0, 13.0, 12.0, 11.0, 10.0];
 
-        let corr = kendall_tau(&x.view(), &y.view(), "b").unwrap();
+        let corr = kendall_tau(&x.view(), &y.view(), "b").expect("Test/example failed");
         assert_abs_diff_eq!(corr, -1.0, epsilon = 1e-10);
 
         // With ties
         let x = array![1.0, 2.0, 3.0, 3.0, 5.0];
         let y = array![10.0, 11.0, 12.0, 12.0, 14.0];
 
-        let corr = kendall_tau(&x.view(), &y.view(), "b").unwrap();
+        let corr = kendall_tau(&x.view(), &y.view(), "b").expect("Test/example failed");
         assert!(corr > 0.9); // Strong positive correlation but not exactly 1.0 due to ties
     }
 
@@ -1134,7 +1142,7 @@ mod tests {
         ];
 
         // Calculate correlation matrix using Pearson correlation
-        let corr_mat = corrcoef(&data.view(), "pearson").unwrap();
+        let corr_mat = corrcoef(&data.view(), "pearson").expect("Test/example failed");
 
         // Diagonal elements should be 1.0
         assert_abs_diff_eq!(corr_mat[[0, 0]], 1.0, epsilon = 1e-10);
@@ -1157,7 +1165,7 @@ mod tests {
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![2.0, 4.0, 6.0, 8.0, 10.0];
 
-        let (r, p) = pearsonr(&x.view(), &y.view(), "two-sided").unwrap();
+        let (r, p) = pearsonr(&x.view(), &y.view(), "two-sided").expect("Test/example failed");
         assert_abs_diff_eq!(r, 1.0, epsilon = 1e-10);
         assert!(p < 0.05); // Statistically significant
 
@@ -1165,7 +1173,8 @@ mod tests {
         let x_small = array![1.0, 2.0];
         let y_small = array![2.0, 4.0];
 
-        let (_, p) = pearsonr(&x_small.view(), &y_small.view(), "two-sided").unwrap();
+        let (_, p) =
+            pearsonr(&x_small.view(), &y_small.view(), "two-sided").expect("Test/example failed");
         assert_abs_diff_eq!(p, 1.0, epsilon = 1e-10);
     }
 }
@@ -1202,7 +1211,7 @@ mod tests {
 /// let y = array![1.1, 2.2, 2.9, 4.1, 5.0];
 ///
 /// // Calculate Pearson correlation coefficient and p-value
-/// let (r, p_value) = pearsonr(&x.view(), &y.view(), "two-sided").unwrap();
+/// let (r, p_value) = pearsonr(&x.view(), &y.view(), "two-sided").expect("Test/example failed");
 ///
 /// println!("Pearson correlation coefficient: {}", r);
 /// println!("Two-sided p-value: {}", p_value);
@@ -1273,7 +1282,7 @@ where
     // Under the null hypothesis of no correlation, the test statistic
     // follows a t-distribution with n-2 degrees of freedom
     let r_abs = r.abs();
-    let df = F::from(n - 2).unwrap();
+    let df = F::from(n - 2).expect("Failed to convert to float");
 
     // Convert r to t-statistic
     let t_stat = r_abs * (df / (F::one() - r_abs * r_abs)).sqrt();
@@ -1298,7 +1307,7 @@ where
         }
         _ => {
             // Two-sided test: correlation is nonzero
-            F::from(2.0).unwrap() * (F::one() - student_t_cdf(t_stat, df))
+            const_f64::<F>(2.0) * (F::one() - student_t_cdf(t_stat, df))
         }
     };
 
@@ -1308,8 +1317,8 @@ where
 // Implementation of Student's t-distribution CDF
 #[allow(dead_code)]
 fn student_t_cdf<F: Float + NumCast>(t: F, df: F) -> F {
-    let t_f64 = <f64 as NumCast>::from(t).unwrap();
-    let df_f64 = <f64 as NumCast>::from(df).unwrap();
+    let t_f64 = <f64 as NumCast>::from(t).expect("Test/example failed");
+    let df_f64 = <f64 as NumCast>::from(df).expect("Test/example failed");
 
     // Use the regularized incomplete beta function for the CDF
     let x = df_f64 / (df_f64 + t_f64 * t_f64);
@@ -1322,7 +1331,7 @@ fn student_t_cdf<F: Float + NumCast>(t: F, df: F) -> F {
         1.0 - 0.5 * beta_cdf(x, df_f64 / 2.0, 0.5)
     };
 
-    F::from(p).unwrap()
+    F::from(p).expect("Failed to convert to float")
 }
 
 // Beta cumulative distribution function
@@ -1499,7 +1508,7 @@ fn gamma_function(x: f64) -> f64 {
 /// let y = array![1.0, 4.0, 9.0, 16.0, 25.0]; // y = x²
 ///
 /// // Calculate Spearman correlation coefficient and p-value
-/// let (rho, p_value) = spearmanr(&x.view(), &y.view(), "two-sided").unwrap();
+/// let (rho, p_value) = spearmanr(&x.view(), &y.view(), "two-sided").expect("Test/example failed");
 ///
 /// println!("Spearman correlation coefficient: {}", rho);
 /// println!("Two-sided p-value: {}", p_value);
@@ -1550,11 +1559,11 @@ where
     // t = rho * sqrt((n-2)/(1-rho²))
 
     let rho_abs = rho.abs();
-    let df = F::from(n - 2).unwrap();
+    let df = F::from(n - 2).expect("Failed to convert to float");
 
     // Calculate t-statistic (handles rho near ±1.0 to avoid numerical issues)
     let t_stat = if rho_abs >= F::one() {
-        df.sqrt() * F::from(1e6).unwrap() // Large value simulating infinity
+        df.sqrt() * const_f64::<F>(1e6) // Large value simulating infinity
     } else {
         rho * (df / (F::one() - rho * rho)).sqrt()
     };
@@ -1579,7 +1588,7 @@ where
         }
         _ => {
             // Two-sided test: correlation is nonzero
-            F::from(2.0).unwrap() * (F::one() - student_t_cdf(t_stat.abs(), df))
+            const_f64::<F>(2.0) * (F::one() - student_t_cdf(t_stat.abs(), df))
         }
     };
 
@@ -1616,7 +1625,7 @@ where
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
 ///
 /// // Calculate Kendall tau correlation coefficient and p-value
-/// let (tau, p_value) = kendalltau(&x.view(), &y.view(), "b", "two-sided").unwrap();
+/// let (tau, p_value) = kendalltau(&x.view(), &y.view(), "b", "two-sided").expect("Test/example failed");
 ///
 /// println!("Kendall tau correlation coefficient: {}", tau);
 /// println!("Two-sided p-value: {}", p_value);
@@ -1659,7 +1668,7 @@ where
 
     // Calculate p-value
     // For Kendall's tau, we can use a normal approximation for n ≥ 10
-    let n_f = F::from(n).unwrap();
+    let n_f = F::from(n).expect("Failed to convert to float");
 
     // Set up for ties handling
     let mut concordant = 0;
@@ -1697,9 +1706,9 @@ where
 
     // Standard variance formula for Kendall's tau
     let var_tau = if method == "b" {
-        let n1_f = F::from(n1).unwrap();
-        let n2_f = F::from(n2).unwrap();
-        let n0_f = F::from(n0).unwrap();
+        let n1_f = F::from(n1).expect("Failed to convert to float");
+        let n2_f = F::from(n2).expect("Failed to convert to float");
+        let n0_f = F::from(n0).expect("Failed to convert to float");
 
         // Variance for tau-b (accounting for ties)
         if n1 == 0 || n2 == 0 {
@@ -1708,19 +1717,22 @@ where
         }
 
         // Calculate variance under H0 for tau-b
-        let v0 = F::from(n * (n - 1) * (2 * n + 5)).unwrap() / F::from(18).unwrap();
-        let v1 = F::from(ties_x * (ties_x - 1) * (2 * ties_x + 5)).unwrap() / F::from(18).unwrap();
-        let v2 = F::from(ties_y * (ties_y - 1) * (2 * ties_y + 5)).unwrap() / F::from(18).unwrap();
+        let v0 =
+            F::from(n * (n - 1) * (2 * n + 5)).expect("Operation failed") / const_f64::<F>(18.0);
+        let v1 = F::from(ties_x * (ties_x - 1) * (2 * ties_x + 5)).expect("Operation failed")
+            / const_f64::<F>(18.0);
+        let v2 = F::from(ties_y * (ties_y - 1) * (2 * ties_y + 5)).expect("Operation failed")
+            / const_f64::<F>(18.0);
 
         let v = (v0 - v1 - v2) / (n1_f * n2_f).sqrt();
         v / n0_f
     } else {
         // Variance for tau-c
         let m = n.min(2);
-        let m_f = F::from(m).unwrap();
+        let m_f = F::from(m).expect("Failed to convert to float");
 
-        (F::from(2).unwrap() * (F::from(2).unwrap() * m_f + F::from(1).unwrap()))
-            / (F::from(9).unwrap() * m_f * n_f * (n_f - F::one()))
+        (const_f64::<F>(2.0) * (const_f64::<F>(2.0) * m_f + const_f64::<F>(1.0)))
+            / (const_f64::<F>(9.0) * m_f * n_f * (n_f - F::one()))
     };
 
     // Calculate z-score
@@ -1746,7 +1758,7 @@ where
         }
         _ => {
             // Two-sided test: correlation is nonzero
-            F::from(2.0).unwrap() * F::min(normal_cdf(z.abs()), F::one() - normal_cdf(z.abs()))
+            const_f64::<F>(2.0) * F::min(normal_cdf(z.abs()), F::one() - normal_cdf(z.abs()))
         }
     };
 
@@ -1756,7 +1768,7 @@ where
 // Standard normal cumulative distribution function
 #[allow(dead_code)]
 fn normal_cdf<F: Float + NumCast>(z: F) -> F {
-    let z_f64 = <f64 as NumCast>::from(z).unwrap();
+    let z_f64 = <f64 as NumCast>::from(z).expect("Test/example failed");
 
     // Approximation of the standard normal CDF
     // Based on Abramowitz and Stegun formula 26.2.17
@@ -1773,5 +1785,5 @@ fn normal_cdf<F: Float + NumCast>(z: F) -> F {
         (1.0 / (2.0 * std::f64::consts::PI).sqrt()) * (-0.5 * z_f64 * z_f64).exp() * poly
     };
 
-    F::from(p).unwrap()
+    F::from(p).expect("Failed to convert to float")
 }

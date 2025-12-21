@@ -654,14 +654,15 @@ impl AdvancedGenerator {
                 let mut anomalies: Array2<f64> = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     // Pick a random normal sample and permute some _features
-                    let base_idx = rng.sample(Uniform::new(0, normal_data.nrows()).unwrap());
+                    let base_idx =
+                        rng.sample(Uniform::new(0, normal_data.nrows()).expect("Operation failed"));
                     let mut anomaly = normal_data.row(base_idx).to_owned();
 
                     // Permute random _features
                     let n_permute = (n_features as f64 * 0.3) as usize;
                     for _ in 0..n_permute {
-                        let j = rng.sample(Uniform::new(0, n_features).unwrap());
-                        let k = rng.sample(Uniform::new(0, n_features).unwrap());
+                        let j = rng.sample(Uniform::new(0, n_features).expect("Operation failed"));
+                        let k = rng.sample(Uniform::new(0, n_features).expect("Operation failed"));
                         let temp = anomaly[j];
                         anomaly[j] = anomaly[k];
                         anomaly[k] = temp;
@@ -700,7 +701,7 @@ impl AdvancedGenerator {
 
         // Simple shuffle using Fisher-Yates
         for i in (1..n_samples).rev() {
-            let j = rng.sample(Uniform::new(0, i).unwrap());
+            let j = rng.sample(Uniform::new(0, i).expect("Operation failed"));
             indices.swap(i, j);
         }
 
@@ -1060,14 +1061,14 @@ mod tests {
             ..Default::default()
         };
 
-        let dataset = make_anomaly_dataset(100, 10, config).unwrap();
+        let dataset = make_anomaly_dataset(100, 10, config).expect("Operation failed");
 
         assert_eq!(dataset.n_samples(), 100);
         assert_eq!(dataset.n_features(), 10);
         assert!(dataset.target.is_some());
 
         // Check that we have both normal and anomalous samples
-        let target = dataset.target.unwrap();
+        let target = dataset.target.expect("Test: target required");
         let anomalies = target.iter().filter(|&&x| x == 1.0).count();
         assert!(anomalies > 0);
         assert!(anomalies < 100);
@@ -1083,7 +1084,7 @@ mod tests {
             ..Default::default()
         };
 
-        let dataset = make_multitask_dataset(50, config).unwrap();
+        let dataset = make_multitask_dataset(50, config).expect("Operation failed");
 
         assert_eq!(dataset.tasks.len(), 2);
         assert_eq!(dataset.shared_features, 5);
@@ -1096,14 +1097,16 @@ mod tests {
 
     #[test]
     fn test_adversarial_examples_generation() {
-        let base_dataset = make_classification(100, 10, 3, 2, 8, Some(42)).unwrap();
+        let base_dataset =
+            make_classification(100, 10, 3, 2, 8, Some(42)).expect("Operation failed");
         let config = AdversarialConfig {
             epsilon: 0.1,
             attack_method: AttackMethod::FGSM,
             ..Default::default()
         };
 
-        let adversarial_dataset = make_adversarial_examples(&base_dataset, config).unwrap();
+        let adversarial_dataset =
+            make_adversarial_examples(&base_dataset, config).expect("Operation failed");
 
         assert_eq!(adversarial_dataset.n_samples(), base_dataset.n_samples());
         assert_eq!(adversarial_dataset.n_features(), base_dataset.n_features());
@@ -1125,7 +1128,7 @@ mod tests {
 
     #[test]
     fn test_few_shot_dataset() {
-        let dataset = make_few_shot_dataset(5, 3, 10, 2, 20).unwrap();
+        let dataset = make_few_shot_dataset(5, 3, 10, 2, 20).expect("Operation failed");
 
         assert_eq!(dataset.n_way, 5);
         assert_eq!(dataset.k_shot, 3);
@@ -1142,7 +1145,8 @@ mod tests {
 
     #[test]
     fn test_continual_learning_dataset() {
-        let dataset = make_continual_learning_dataset(3, 100, 10, 5, 0.5).unwrap();
+        let dataset =
+            make_continual_learning_dataset(3, 100, 10, 5, 0.5).expect("Operation failed");
 
         assert_eq!(dataset.tasks.len(), 3);
         assert_eq!(dataset.concept_drift_strength, 0.5);

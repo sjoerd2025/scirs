@@ -25,7 +25,7 @@ fn main() {
     }
 
     // Perform IHFFT2 to get complex spectrum with "backward" normalization
-    let spectrum = ihfft2(&signal.view(), None, None, Some("backward")).unwrap();
+    let spectrum = ihfft2(&signal.view(), None, None, Some("backward")).expect("Operation failed");
 
     println!("\nComplex spectrum (Hermitian-symmetric):");
     println!("Shape: {:?}", spectrum.shape());

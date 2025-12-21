@@ -94,11 +94,11 @@ fn compute_mean<F: num_traits: Float>(arr: &Array<F, ndarray::IxDyn>) -> F {
     let mut sum = F::zero();
     for &val in arr.iter() {
         sum = sum + val;
-    sum / F::from(n).unwrap()
+    sum / F::from(n).expect("Failed to convert to float")
 // Helper function to compute standard deviation
 #[allow(dead_code)]
 fn compute_std<F: num_traits: Float>(arr: &Array<F, ndarray::IxDyn>, mean: F) -> F {
     let mut sum_sq = F::zero();
         let diff = val - mean;
         sum_sq = sum_sq + diff * diff;
-    (sum_sq / F::from(n).unwrap()).sqrt()
+    (sum_sq / F::from(n).expect("Failed to convert to float")).sqrt()

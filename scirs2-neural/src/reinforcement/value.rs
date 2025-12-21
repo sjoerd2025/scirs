@@ -92,11 +92,11 @@ impl QNetwork {
             let advantage_layer = Dense::new(hidden_dim, self.action_dim, None)?;
             let advantages = advantage_layer.forward(&x.view())?;
             // Combine: Q(s,a) = V(s) + A(s,a) - mean(A(s,a))
-            let mean_advantages = advantages.mean_axis(Axis(1)).unwrap().insert_axis(Axis(1));
+            let mean_advantages = advantages.mean_axis(Axis(1)).expect("Operation failed").insert_axis(Axis(1));
             let q_values = &values + &advantages - &mean_advantages;
             Ok(q_values)
             // Standard architecture
-            let last_layer = self.layers.last().unwrap();
+            let last_layer = self.layers.last().expect("Operation failed");
             last_layer.forward(&x.view())
     /// Get Q-values for a single state
     pub fn get_q_values(&self, state: &ArrayView1<f32>) -> Result<Array1<f32>> {
@@ -104,7 +104,7 @@ impl QNetwork {
     /// Get best action for a state
     pub fn get_best_action(&self, state: &ArrayView1<f32>) -> Result<usize> {
         let q_values = self.get_q_values(state)?;
-        Ok(q_values.argmax().unwrap())
+        Ok(q_values.argmax().expect("Operation failed"))
 /// Deep Q-Network (DQN) algorithm
 pub struct DQN {
     q_network: QNetwork,
@@ -151,7 +151,7 @@ impl DQN {
         let current_q_values = self.q_network.forward(states)?;
         // Get next Q-values from target network
         let next_q_values = self.target_network.forward(next_states)?;
-        let max_next_q = next_q_values.map_axis(Axis(1), |row| row.max().unwrap());
+        let max_next_q = next_q_values.map_axis(Axis(1), |row| row.max().expect("Operation failed"));
         // Calculate target Q-values
         let mut target_q_values = current_q_values.clone();
         for i in 0..batch.size() {
@@ -166,7 +166,7 @@ impl DQN {
         let loss = (&current_q_values - &target_q_values)
             .mapv(|x| x * x)
             .mean()
-            .unwrap();
+            .expect("Operation failed");
         // Update target network periodically
         self.update_counter += 1;
         if self.update_counter % self.target_update_freq == 0 {
@@ -204,7 +204,7 @@ impl DoubleDQN {
         let next_q_current = self.dqn.q_network.forward(next_states)?;
         let next_q_target = self.dqn.target_network.forward(next_states)?;
         // Select best actions using current network
-        let best_actions = next_q_current.map_axis(Axis(1), |row| row.argmax().unwrap() as f32);
+        let best_actions = next_q_current.map_axis(Axis(1), |row| row.argmax().expect("Operation failed") as f32);
             let best_next_action = best_actions[i] as usize;
                 rewards[i] + self.dqn.discount_factor * next_q_target[[i, best_next_action]]
         // Calculate loss
@@ -230,20 +230,20 @@ mod tests {
     use super::*;
     #[test]
     fn test_value_network() {
-        let vnet = ValueNetwork::new(4, 1, vec![32, 32]).unwrap();
+        let vnet = ValueNetwork::new(4, 1, vec![32, 32]).expect("Operation failed");
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let value = vnet.predict(&state.view()).unwrap();
+        let value = vnet.predict(&state.view()).expect("Operation failed");
         assert!(value.is_finite());
     fn test_q_network() {
-        let qnet = QNetwork::new(4, 2, vec![32, 32], false).unwrap();
-        let q_values = qnet.get_q_values(&state.view()).unwrap();
+        let qnet = QNetwork::new(4, 2, vec![32, 32], false).expect("Operation failed");
+        let q_values = qnet.get_q_values(&state.view()).expect("Operation failed");
         assert_eq!(q_values.len(), 2);
-        let best_action = qnet.get_best_action(&state.view()).unwrap();
+        let best_action = qnet.get_best_action(&state.view()).expect("Operation failed");
         assert!(best_action < 2);
     fn test_dqn_action_selection() {
-        let dqn = DQN::new(4, 2, vec![32], 0.001, 0.99, 1.0, 100).unwrap();
+        let dqn = DQN::new(4, 2, vec![32], 0.001, 0.99, 1.0, 100).expect("Operation failed");
         // With epsilon=1.0, should always select random actions during training
-        let action = dqn.select_action(&state.view(), true).unwrap();
+        let action = dqn.select_action(&state.view(), true).expect("Operation failed");
         assert!(action < 2);
         // Without training, should select greedy action
-        let action = dqn.select_action(&state.view(), false).unwrap();
+        let action = dqn.select_action(&state.view(), false).expect("Operation failed");

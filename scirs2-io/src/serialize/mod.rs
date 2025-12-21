@@ -53,14 +53,14 @@ pub enum SerializationFormat {
 /// use scirs2_core::ndarray::{Array2, IxDyn};
 /// use scirs2_io::serialize::{serialize_array, SerializationFormat};
 ///
-/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("Operation failed");
 /// let array_dyn = array.into_dyn();
 ///
 /// // Binary serialization (compact)
-/// serialize_array("data.bin", &array_dyn, SerializationFormat::Binary).unwrap();
+/// serialize_array("data.bin", &array_dyn, SerializationFormat::Binary).expect("Operation failed");
 ///
 /// // JSON serialization (human-readable)
-/// serialize_array("data.json", &array_dyn, SerializationFormat::JSON).unwrap();
+/// serialize_array("data.json", &array_dyn, SerializationFormat::JSON).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn serialize_array<P, A, S>(
@@ -141,11 +141,11 @@ where
 /// use scirs2_io::serialize::{deserialize_array, SerializationFormat};
 ///
 /// // Binary deserialization
-/// let array = deserialize_array::<_, f64>("data.bin", SerializationFormat::Binary).unwrap();
+/// let array = deserialize_array::<_, f64>("data.bin", SerializationFormat::Binary).expect("Operation failed");
 /// println!("Deserialized array shape: {:?}", array.shape());
 ///
 /// // JSON deserialization
-/// let array = deserialize_array::<_, f64>("data.json", SerializationFormat::JSON).unwrap();
+/// let array = deserialize_array::<_, f64>("data.json", SerializationFormat::JSON).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn deserialize_array<P, A>(path: P, format: SerializationFormat) -> Result<Array<A, IxDyn>>
@@ -256,7 +256,7 @@ pub struct SerializedArray<A> {
 /// use scirs2_io::serialize::{serialize_array_with_metadata, SerializationFormat};
 /// use std::collections::HashMap;
 ///
-/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("Operation failed");
 /// let array_dyn = array.into_dyn();
 ///
 /// // Create custom metadata
@@ -269,7 +269,7 @@ pub struct SerializedArray<A> {
 ///     &array_dyn,
 ///     metadata,
 ///     SerializationFormat::JSON
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn serialize_array_with_metadata<P, A, S>(
@@ -347,7 +347,7 @@ where
 /// let (array, metadata) = deserialize_array_with_metadata::<_, f64>(
 ///     "data_with_metadata.json",
 ///     SerializationFormat::JSON
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// println!("Deserialized array shape: {:?}", array.shape());
 /// println!("Metadata: {:?}", metadata);
@@ -421,7 +421,7 @@ where
 /// };
 ///
 /// // JSON serialization
-/// serialize_struct("person.json", &person, SerializationFormat::JSON).unwrap();
+/// serialize_struct("person.json", &person, SerializationFormat::JSON).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn serialize_struct<P, T>(path: P, data: &T, format: SerializationFormat) -> Result<()>
@@ -479,7 +479,7 @@ where
 /// }
 ///
 /// // JSON deserialization
-/// let person: Person = deserialize_struct("person.json", SerializationFormat::JSON).unwrap();
+/// let person: Person = deserialize_struct("person.json", SerializationFormat::JSON).expect("Operation failed");
 /// println!("Name: {}, Age: {}, Height: {}", person.name, person.age, person.height);
 /// ```
 #[allow(dead_code)]
@@ -583,7 +583,7 @@ impl<A> SparseMatrixCOO<A> {
 /// sparse.metadata.insert("description".to_string(), "Sparse test matrix".to_string());
 ///
 /// // Serialize to file
-/// serialize_sparse_matrix("sparse.json", &sparse, SerializationFormat::JSON).unwrap();
+/// serialize_sparse_matrix("sparse.json", &sparse, SerializationFormat::JSON).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn serialize_sparse_matrix<P, A>(
@@ -615,7 +615,7 @@ where
 /// use scirs2_io::serialize::{deserialize_sparse_matrix, SerializationFormat};
 ///
 /// // Deserialize sparse matrix
-/// let sparse = deserialize_sparse_matrix::<_, f64>("sparse.json", SerializationFormat::JSON).unwrap();
+/// let sparse = deserialize_sparse_matrix::<_, f64>("sparse.json", SerializationFormat::JSON).expect("Operation failed");
 /// println!("Sparse matrix: {}x{} with {} non-zero elements", sparse.rows, sparse.cols, sparse.nnz());
 /// ```
 #[allow(dead_code)]
@@ -746,7 +746,7 @@ impl<A: Clone> SparseMatrix<A> {
         if self.csr_data.is_none() {
             self.csr_data = Some(self.convert_to_csr()?);
         }
-        Ok(self.csr_data.as_ref().unwrap())
+        Ok(self.csr_data.as_ref().expect("Operation failed"))
     }
 
     /// Convert to CSC format (cached)
@@ -757,7 +757,7 @@ impl<A: Clone> SparseMatrix<A> {
         if self.csc_data.is_none() {
             self.csc_data = Some(self.convert_to_csc()?);
         }
-        Ok(self.csc_data.as_ref().unwrap())
+        Ok(self.csc_data.as_ref().expect("Operation failed"))
     }
 
     /// Convert COO to CSR format

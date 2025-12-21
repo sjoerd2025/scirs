@@ -11,7 +11,7 @@ fn test_csr_to_sym_csr_dimensions() {
     let shape = (3, 3);
     
     // Create a CSR matrix
-    let csr = CsrMatrix::new(data, rows, cols, shape).unwrap();
+    let csr = CsrMatrix::new(data, rows, cols, shape).expect("Operation failed");
     
     // Print raw content for debugging
     println!("CSR data: {:?}", csr.data);

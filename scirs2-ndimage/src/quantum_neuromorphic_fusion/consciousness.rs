@@ -307,7 +307,10 @@ where
     }
 
     // Generate final prediction through top-down processing
-    let mut final_prediction = hierarchical_levels.last().unwrap().clone();
+    let mut final_prediction = hierarchical_levels
+        .last()
+        .expect("Operation failed")
+        .clone();
 
     // Top-down prediction refinement
     for level in (0..hierarchical_levels.len()).rev() {

@@ -522,7 +522,7 @@ impl QuantumNeuromorphicFusion {
                 quantum_amplitudes: (amplitude_real, amplitude_imag),
                 quantum_phase,
                 entangled_partner: if rng.random::<f64>() < 0.3 {
-                    Some(rng.sample(Uniform::new(0, n_synapses).unwrap()))
+                    Some(rng.sample(Uniform::new(0, n_synapses).expect("Operation failed")))
                 } else {
                     None
                 },
@@ -929,7 +929,7 @@ mod tests {
         let fusion = QuantumNeuromorphicFusion::default();
         let result = fusion
             .generate_fusion_dataset(20, 5, 0.5, Some(42))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.classical_dataset.n_samples(), 20);
         assert_eq!(result.classical_dataset.n_features(), 5);
@@ -941,15 +941,15 @@ mod tests {
 
     #[test]
     fn test_dataset_transformation_with_fusion() {
-        let data =
-            Array2::from_shape_vec((10, 4), (0..40).map(|x| x as f64 * 0.1).collect()).unwrap();
+        let data = Array2::from_shape_vec((10, 4), (0..40).map(|x| x as f64 * 0.1).collect())
+            .expect("Operation failed");
         let targets = Array1::from((0..10).map(|x| (x % 3) as f64).collect::<Vec<_>>());
         let dataset = Dataset::new(data, Some(targets));
 
         let fusion = QuantumNeuromorphicFusion::default();
         let result = fusion
             .transform_with_fusion(&dataset, 5, true, Some(42))
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result.classical_dataset.n_samples(), 10);
         assert_eq!(result.classical_dataset.n_features(), 4);
@@ -960,9 +960,13 @@ mod tests {
     #[test]
     fn test_interference_pattern_analysis() {
         let fusion = QuantumNeuromorphicFusion::default();
-        let result = fusion.generate_fusion_dataset(5, 3, 0.3, Some(42)).unwrap();
+        let result = fusion
+            .generate_fusion_dataset(5, 3, 0.3, Some(42))
+            .expect("Operation failed");
 
-        let interference = fusion.analyze_interference_patterns(&result).unwrap();
+        let interference = fusion
+            .analyze_interference_patterns(&result)
+            .expect("Operation failed");
 
         assert!(interference.constructive_strength.is_finite());
         assert!(interference.destructive_strength.is_finite());

@@ -11,6 +11,10 @@ categories = ["science", "data-structures", "algorithms"]
 
 [lints]
 workspace = true
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 
 [dependencies]
 # Core dependencies - ALL numeric/array/random functionality from scirs2-core (SciRS2 POLICY)

@@ -72,7 +72,7 @@ pub struct VariogramBin<F: Float> {
 ///     0.0, 1.0,
 ///     1.0, 1.0,
 ///     0.5, 0.5,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let values = Array1::from_vec(vec![1.0, 2.0, 2.0, 4.0, 2.5]);
 ///
@@ -82,7 +82,7 @@ pub struct VariogramBin<F: Float> {
 ///     &values.view(),
 ///     10,
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Each bin contains distance, semivariance, and count
 /// for bin in &variogram_bins {
@@ -140,7 +140,7 @@ where
     };
 
     // Calculate bin width
-    let bin_width = max_dist / F::from_usize(n_bins).unwrap();
+    let bin_width = max_dist / F::from_usize(n_bins).expect("Operation failed");
 
     // Initialize _bins
     let mut _bins = vec![
@@ -154,7 +154,7 @@ where
 
     // For each bin, set the center _distance
     for i in 0..n_bins {
-        bins[i]._distance = F::from_usize(i).unwrap() * bin_width + bin_width / F::from(2).unwrap();
+        bins[i]._distance = F::from_usize(i).expect("Operation failed") * bin_width + bin_width / F::from(2).expect("Failed to convert constant to float");
     }
 
     // Compute empirical variogram by comparing all pairs of points
@@ -170,7 +170,7 @@ where
 
             // Calculate squared difference in values
             let value_diff = values[i] - values[j];
-            let semivariogram_value = value_diff * value_diff / F::from(2).unwrap();
+            let semivariogram_value = value_diff * value_diff / F::from(2).expect("Failed to convert constant to float");
 
             // Find appropriate bin
             let bin_idx = (dist / bin_width).to_usize().unwrap_or(n_bins - 1);
@@ -184,7 +184,7 @@ where
     // Normalize _bins by count
     for bin in &mut _bins {
         if bin.count > 0 {
-            bin.semivariance = bin.semivariance / F::from_usize(bin.count).unwrap();
+            bin.semivariance = bin.semivariance / F::from_usize(bin.count).expect("Operation failed");
         }
     }
 
@@ -227,7 +227,7 @@ where
 /// let points = Array2::from_shape_vec((10, 2), vec![
 ///     0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0,
 ///     0.0, 1.0, 1.0, 1.0, 2.0, 1.0, 3.0, 1.0, 4.0, 1.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let values = Array1::from_vec(vec![
 ///     1.0, 1.2, 1.8, 2.1, 2.5,
@@ -240,13 +240,13 @@ where
 ///     &values.view(),
 ///     8,
 ///     None
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// // Fit spherical variogram model
 /// let (nugget, sill, range) = fit_variogram_model(
 ///     &bins,
 ///     VariogramModel::Spherical
-/// ).unwrap();
+/// ).expect("Operation failed");
 ///
 /// println!("Fitted parameters: nugget={:.3}, sill={:.3}, range={:.3}",
 ///          nugget, sill, range);
@@ -281,9 +281,9 @@ where
                 .fold(F::zero(), |a, b| if a > b { a } else { b });
 
         // Initial guess for parameters
-        let mut nugget = F::from_f64(0.001).unwrap() * max_semivariance;
+        let mut nugget = F::from_f64(0.001).expect("Operation failed") * max_semivariance;
         let mut sill = max_semivariance - nugget;
-        let mut range = max_distance / F::from_f64(3.0).unwrap();
+        let mut range = max_distance / F::from_f64(3.0).expect("Operation failed");
 
         // Create design matrix and right-hand side for least squares
         let n_bins = bins.len();
@@ -291,15 +291,15 @@ where
         let mut b = Array1::<f64>::zeros(n_bins);
 
         for i in 0..n_bins {
-            let h = bins[i].distance.to_f64().unwrap();
-            let gamma = bins[i].semivariance.to_f64().unwrap();
+            let h = bins[i].distance.to_f64().expect("Operation failed");
+            let gamma = bins[i].semivariance.to_f64().expect("Operation failed");
 
             a[[i, 0]] = 1.0; // Nugget effect
 
             // Compute the variogram model value
             let model_val = match model {
                 VariogramModel::Spherical => {
-                    let range_val = range.to_f64().unwrap();
+                    let range_val = range.to_f64().expect("Operation failed");
                     if h <= range_val {
                         1.5 * (h / range_val) - 0.5 * (h / range_val).powi(3)
                     } else {
@@ -307,15 +307,15 @@ where
                     }
                 }
                 VariogramModel::Exponential => {
-                    let range_val = range.to_f64().unwrap();
+                    let range_val = range.to_f64().expect("Operation failed");
                     1.0 - (-3.0 * h / range_val).exp()
                 }
                 VariogramModel::Gaussian => {
-                    let range_val = range.to_f64().unwrap();
+                    let range_val = range.to_f64().expect("Operation failed");
                     1.0 - (-3.0 * (h / range_val).powi(2)).exp()
                 }
                 VariogramModel::Matern(nu) => {
-                    let range_val = range.to_f64().unwrap();
+                    let range_val = range.to_f64().expect("Operation failed");
                     if h <= 1e-6 {
                         0.0
                     } else {
@@ -325,7 +325,7 @@ where
                     }
                 }
                 VariogramModel::Power(exponent) => {
-                    let range_val = range.to_f64().unwrap();
+                    let range_val = range.to_f64().expect("Operation failed");
                     (h / range_val).powf(exponent)
                 }
             };
@@ -339,13 +339,13 @@ where
         match a.least_squares(&b) {
             Ok(solution) => {
                 // Update parameters
-                nugget = F::from_f64(solution[0]).unwrap();
-                sill = F::from_f64(solution[1]).unwrap();
-                range = F::from_f64(solution[2]).unwrap();
+                nugget = F::from_f64(solution[0]).expect("Operation failed");
+                sill = F::from_f64(solution[1]).expect("Operation failed");
+                range = F::from_f64(solution[2]).expect("Operation failed");
 
                 // Ensure parameters are sensible
                 if nugget < F::zero() {
-                    nugget = F::from_f64(0.001).unwrap() * max_semivariance;
+                    nugget = F::from_f64(0.001).expect("Operation failed") * max_semivariance;
                 }
 
                 if sill < F::zero() {
@@ -353,7 +353,7 @@ where
                 }
 
                 if range < F::zero() {
-                    range = max_distance / F::from_f64(3.0).unwrap();
+                    range = max_distance / F::from_f64(3.0).expect("Operation failed");
                 }
 
                 Ok((nugget, sill, range))
@@ -383,24 +383,24 @@ where
             // Find bin with smallest distance
             let min_dist_bin = bins
                 .iter()
-                .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap())
-                .unwrap();
+                .min_by(|a, b| a.distance.partial_cmp(&b.distance).expect("Operation failed"))
+                .expect("Operation failed");
 
             min_dist_bin.semivariance
         } else {
-            F::from_f64(0.05).unwrap() * max_semivariance
+            F::from_f64(0.05).expect("Operation failed") * max_semivariance
         };
 
         // Ensure nugget is positive but not too large
         if nugget <= F::zero() || nugget >= max_semivariance {
-            nugget = F::from_f64(0.05).unwrap() * max_semivariance;
+            nugget = F::from_f64(0.05).expect("Operation failed") * max_semivariance;
         }
 
         // Estimate sill as maximum semivariance minus nugget
         let sill = max_semivariance - nugget;
 
         // Estimate range as 1/3 of maximum distance
-        let range = max_distance / F::from_f64(3.0).unwrap();
+        let range = max_distance / F::from_f64(3.0).expect("Operation failed");
 
         Ok((nugget, sill, range))
     }
@@ -435,7 +435,7 @@ where
         }
         VariogramModel::Power(_) => (
             CovarianceFunction::RationalQuadratic,
-            F::from_f64(0.5).unwrap(),
+            F::from_f64(0.5).expect("Operation failed"),
         ),
     };
 

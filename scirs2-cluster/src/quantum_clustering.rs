@@ -230,7 +230,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
                 if i != j {
                     let distance = euclidean_distance(data.row(i), data.row(j))
                         .to_f64()
-                        .unwrap();
+                        .expect("Operation failed");
 
                     // Add terms for points in the same cluster
                     for k in 0..self.n_clusters {
@@ -272,7 +272,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
             for j in i + 1..n_samples {
                 let distance = euclidean_distance(data.row(i), data.row(j))
                     .to_f64()
-                    .unwrap();
+                    .expect("Operation failed");
                 let similarity = (-distance).exp(); // Gaussian similarity
 
                 adjacency[[i, j]] = similarity;
@@ -311,7 +311,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
             for j in i + 1..n_samples {
                 let distance = euclidean_distance(data.row(i), data.row(j))
                     .to_f64()
-                    .unwrap();
+                    .expect("Operation failed");
                 let weight = (-distance / 2.0).exp(); // Edge weight
 
                 // Max-cut: maximize edges between different clusters
@@ -473,7 +473,9 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
 
         // Normalize
         let norm = new_state.mapv(|x: f64| x * x).sum().sqrt();
-        if F::from(norm).unwrap() > F::from(1e-10).unwrap() {
+        if F::from(norm).expect("Failed to convert to float")
+            > F::from(1e-10).expect("Failed to convert constant to float")
+        {
             self.quantum_state = new_state / norm;
         }
 
@@ -602,7 +604,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
 
         // For new data, use nearest cluster assignment based on learned parameters
         // This is a simplified implementation
-        let assignments = self.final_assignments.as_ref().unwrap();
+        let assignments = self.final_assignments.as_ref().expect("Operation failed");
         Ok(assignments.clone())
     }
 
@@ -717,7 +719,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
             for j in i + 1..n_samples {
                 let distance = euclidean_distance(data.row(i), data.row(j))
                     .to_f64()
-                    .unwrap();
+                    .expect("Operation failed");
                 let weight = (-distance).exp(); // Similarity weight
 
                 // Add Hamiltonian terms for this pair
@@ -1211,14 +1213,14 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
         let total_qubits = n_samples * qubits_per_sample;
 
         self.ising_matrix = Some(Array2::zeros((total_qubits, total_qubits)));
-        let ising_matrix = self.ising_matrix.as_mut().unwrap();
+        let ising_matrix = self.ising_matrix.as_mut().expect("Operation failed");
 
         // Build interaction matrix based on data similarities
         for i in 0..n_samples {
             for j in i + 1..n_samples {
                 let distance = euclidean_distance(data.row(i), data.row(j))
                     .to_f64()
-                    .unwrap();
+                    .expect("Operation failed");
                 let similarity = (-distance / 2.0).exp(); // Gaussian similarity
 
                 // Add interactions between qubits representing these samples
@@ -1268,7 +1270,9 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
         self.spin_configuration = Some(i8_spins.clone());
         self.best_configuration = Some(i8_spins);
         self.best_energy =
-            Some(self.calculate_ising_energy(self.spin_configuration.as_ref().unwrap()));
+            Some(self.calculate_ising_energy(
+                self.spin_configuration.as_ref().expect("Operation failed"),
+            ));
 
         Ok(())
     }
@@ -1317,7 +1321,11 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             )
         };
 
-        let n_qubits = self.spin_configuration.as_ref().unwrap().len();
+        let n_qubits = self
+            .spin_configuration
+            .as_ref()
+            .expect("Operation failed")
+            .len();
 
         for temperature in &self.temperature_schedule {
             for _ in 0..self.config.mc_sweeps {
@@ -1325,27 +1333,28 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
                 for qubit in 0..n_qubits {
                     // Calculate energy change for flipping this qubit
                     let delta_e = {
-                        let spins = self.spin_configuration.as_ref().unwrap();
+                        let spins = self.spin_configuration.as_ref().expect("Operation failed");
                         self.calculate_flip_energy_change(spins, qubit)
                     };
 
                     // Quantum tunneling probability (includes classical thermal + quantum effects)
                     let tunnel_probability = self.quantum_tunnel_probability(delta_e, *temperature);
-                    let tunnel_prob_f = F::from(tunnel_probability).unwrap();
+                    let tunnel_prob_f =
+                        F::from(tunnel_probability).expect("Failed to convert to float");
 
-                    if F::from(rng.random::<f64>()).unwrap() < tunnel_prob_f {
+                    if F::from(rng.random::<f64>()).expect("Operation failed") < tunnel_prob_f {
                         // Flip spin
                         {
-                            let spins = self.spin_configuration.as_mut().unwrap();
+                            let spins = self.spin_configuration.as_mut().expect("Operation failed");
                             spins[qubit] = -spins[qubit];
                         }
 
                         // Update best configuration if we found a better one
                         let current_energy = {
-                            let spins = self.spin_configuration.as_ref().unwrap();
+                            let spins = self.spin_configuration.as_ref().expect("Operation failed");
                             self.calculate_ising_energy(spins)
                         };
-                        if current_energy < self.best_energy.unwrap() {
+                        if current_energy < self.best_energy.expect("Operation failed") {
                             self.best_energy = Some(current_energy);
                             self.best_configuration = self.spin_configuration.clone();
                         }
@@ -1359,7 +1368,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
 
     /// Calculate energy change for flipping a single qubit
     fn calculate_flip_energy_change(&self, spins: &Array1<i8>, qubit: usize) -> f64 {
-        let ising_matrix = self.ising_matrix.as_ref().unwrap();
+        let ising_matrix = self.ising_matrix.as_ref().expect("Operation failed");
         let current_spin = spins[qubit];
 
         let mut delta_e = 0.0;
@@ -1389,7 +1398,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
 
     /// Calculate total Ising energy
     fn calculate_ising_energy(&self, spins: &Array1<i8>) -> f64 {
-        let ising_matrix = self.ising_matrix.as_ref().unwrap();
+        let ising_matrix = self.ising_matrix.as_ref().expect("Operation failed");
         let mut energy = 0.0;
 
         for i in 0..spins.len() {
@@ -1429,7 +1438,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             ));
         }
 
-        let best_spins = self.best_configuration.as_ref().unwrap();
+        let best_spins = self.best_configuration.as_ref().expect("Operation failed");
         Ok(self.spins_to_clusters(best_spins))
     }
 
@@ -1499,13 +1508,13 @@ mod tests {
 
     #[test]
     fn test_small_qaoa_clustering() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1])
+            .expect("Operation failed");
 
         let result = qaoa_clustering(data.view(), 2);
         assert!(result.is_ok());
 
-        let (assignments, energy) = result.unwrap();
+        let (assignments, energy) = result.expect("Operation failed");
         assert_eq!(assignments.len(), 4);
         assert!(energy.is_finite());
     }
@@ -1542,13 +1551,13 @@ mod tests {
 
     #[test]
     fn test_small_quantum_annealing_clustering() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1])
+            .expect("Operation failed");
 
         let result = quantum_annealing_clustering(data.view(), 2);
         assert!(result.is_ok());
 
-        let (assignments, energy) = result.unwrap();
+        let (assignments, energy) = result.expect("Operation failed");
         assert_eq!(assignments.len(), 4);
         assert!(energy.is_finite());
     }
@@ -1559,7 +1568,7 @@ mod tests {
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let config = QuantumAnnealingConfig {
             initial_temperature: 5.0,
@@ -1576,7 +1585,7 @@ mod tests {
 
         let assignments = annealer.predict(data.view());
         assert!(assignments.is_ok());
-        assert_eq!(assignments.unwrap().len(), 6);
+        assert_eq!(assignments.expect("Operation failed").len(), 6);
 
         assert!(annealer.best_energy().is_some());
         assert_eq!(annealer.temperature_schedule().len(), 100);

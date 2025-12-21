@@ -411,11 +411,11 @@ fn compute_matmul<F: Float>(
     let a_2d = a
         .view()
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
     let b_2d = b
         .view()
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
+        .expect("Operation failed");
 
     Ok(a_2d.dot(&b_2d).into_dyn())
 }

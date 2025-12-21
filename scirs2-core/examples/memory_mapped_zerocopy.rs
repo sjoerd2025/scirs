@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let loaded_array = array.readonlyarray::<scirs2_core::ndarray::Ix1>()?;
     let squared_loaded: Array<f64, _> = loaded_array.map(|&x| x * x);
-    let squared_loaded_mean = squared_loaded.mean().unwrap();
+    let squared_loaded_mean = squared_loaded.mean().expect("Operation failed");
     let elapsed = start.elapsed();
     println!(
         "Mean of squared values (loaded): {:.2} (calculated in {:.2?})",

@@ -27,11 +27,11 @@
 //! let x = array![0.1_f32, 0.2_f32];
 //!
 //! // Compute matrix-vector product with higher precision
-//! let y = extended_matvec::<_, f64>(&a.view(), &x.view()).unwrap();
+//! let y = extended_matvec::<_, f64>(&a.view(), &x.view()).expect("Operation failed");
 //!
 //! // Compute matrix-matrix product with higher precision
 //! let b = array![[5.0_f32, 6.0_f32], [7.0_f32, 8.0_f32]];
-//! let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();
+//! let c = extended_matmul::<_, f64>(&a.view(), &b.view()).expect("Operation failed");
 //! ```
 //!
 //! Matrix factorizations with extended precision:
@@ -47,10 +47,10 @@
 //! ];
 //!
 //! // LU decomposition with extended precision
-//! let (p, l, u) = extended_lu::<_, f64>(&a.view()).unwrap();
+//! let (p, l, u) = extended_lu::<_, f64>(&a.view()).expect("Operation failed");
 //!
 //! // QR decomposition with extended precision
-//! let (q, r) = extended_qr::<_, f64>(&a.view()).unwrap();
+//! let (q, r) = extended_qr::<_, f64>(&a.view()).expect("Operation failed");
 //!
 //! // Cholesky decomposition with extended precision
 //! let spdmatrix = array![
@@ -58,7 +58,7 @@
 //!     [1.0_f32, 5.0_f32, 2.0_f32],
 //!     [1.0_f32, 2.0_f32, 6.0_f32]
 //! ];
-//! let l = extended_cholesky::<_, f64>(&spdmatrix.view()).unwrap();
+//! let l = extended_cholesky::<_, f64>(&spdmatrix.view()).expect("Operation failed");
 //! ```
 
 pub mod eigen;
@@ -221,7 +221,7 @@ where
 /// ];
 ///
 /// // Compute determinant with extended precision (f32 -> f64 -> f32)
-/// let det = extended_det::<_, f64>(&a.view()).unwrap();
+/// let det = extended_det::<_, f64>(&a.view()).expect("Operation failed");
 ///
 /// // The determinant of this matrix should be 0
 /// assert!(det.abs() < 1e-5);
@@ -410,7 +410,7 @@ mod tests {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let x = array![0.1f32, 0.2];
 
-        let y = extended_matvec::<_, f64>(&a.view(), &x.view()).unwrap();
+        let y = extended_matvec::<_, f64>(&a.view(), &x.view()).expect("Operation failed");
 
         // Expected result: [0.5, 1.1]
         assert!((y[0] - 0.5).abs() < 1e-6);
@@ -422,7 +422,7 @@ mod tests {
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let b = array![[5.0f32, 6.0], [7.0, 8.0]];
 
-        let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();
+        let c = extended_matmul::<_, f64>(&a.view(), &b.view()).expect("Operation failed");
 
         // Expected result: [[19.0, 22.0], [43.0, 50.0]]
         assert!((c[[0, 0]] - 19.0).abs() < 1e-6);
@@ -439,17 +439,17 @@ mod tests {
         // Manually calculate determinant: 1*4 - 2*3 = -2
         let det_manual = 1.0 * 4.0 - 2.0 * 3.0;
 
-        let det = extended_det::<_, f64>(&a.view()).unwrap();
+        let det = extended_det::<_, f64>(&a.view()).expect("Operation failed");
         assert!((det - det_manual).abs() < 1e-6);
 
         // Test diagonal matrix
         let c = array![[2.0f32, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 4.0]];
-        let det = extended_det::<_, f64>(&c.view()).unwrap();
+        let det = extended_det::<_, f64>(&c.view()).expect("Operation failed");
         assert!((det - 24.0).abs() < 1e-6);
 
         // Test a non-singular 3x3 matrix
         let d = array![[1.0f32, 3.0, 5.0], [2.0, 4.0, 7.0], [1.0, 1.0, 0.0]];
-        let det = extended_det::<_, f64>(&d.view()).unwrap();
+        let det = extended_det::<_, f64>(&d.view()).expect("Operation failed");
         // The correct determinant is 4.0
         assert!((det - 4.0).abs() < 1e-6);
     }
@@ -465,10 +465,10 @@ mod tests {
         }
 
         // Compute determinant with standard precision
-        let std_det = crate::basic::det(&hilbert.view(), None).unwrap();
+        let std_det = crate::basic::det(&hilbert.view(), None).expect("Operation failed");
 
         // Compute determinant with extended precision
-        let ext_det = extended_det::<_, f64>(&hilbert.view()).unwrap();
+        let ext_det = extended_det::<_, f64>(&hilbert.view()).expect("Operation failed");
 
         // The determinant is known to be very small for 4x4 Hilbert matrix
         // Extended precision should be more accurate
@@ -488,7 +488,7 @@ mod tests {
         let a = array![[4.0f32, 1.0], [1.0, 3.0]];
         let b = array![1.0f32, 2.0];
 
-        let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();
+        let x = extended_solve::<_, f64>(&a.view(), &b.view()).expect("Operation failed");
 
         // Expected result approximately [0.09091, 0.63636]
         assert!((x[0] - 0.09091).abs() < 1e-4);

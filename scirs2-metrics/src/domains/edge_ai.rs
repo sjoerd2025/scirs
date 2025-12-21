@@ -30,7 +30,7 @@
 //!     &power_consumption,
 //!     &memory_usage,
 //!     1000, // target throughput (inferences/sec)
-//! ).unwrap();
+//! ).expect("Operation failed");
 //!
 //! println!("Average Latency: {:.2} ms", edge_metrics.avg_latency);
 //! println!("Energy Efficiency: {:.2} inferences/joule", edge_metrics.energy_efficiency);
@@ -268,7 +268,7 @@ impl EdgeAISuite {
         // Calculate latency statistics
         let avg_latency = latencies.iter().sum::<f64>() / latencies.len() as f64;
         let mut sorted_latencies = latencies.to_vec();
-        sorted_latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_latencies.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let latency_percentiles = [
             self.percentile(&sorted_latencies, 50.0),
@@ -837,7 +837,7 @@ mod tests {
 
         let metrics = suite
             .evaluate_edge_performance(&latencies, &power, &memory, 100)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(metrics.avg_latency > 0.0);
         assert!(metrics.throughput > 0.0);
@@ -859,7 +859,7 @@ mod tests {
 
         let metrics = suite
             .evaluate_federated_learning(&accuracy, &comm_costs, &participation, &distributions)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(metrics.communication_efficiency > 0.0);
         assert!(metrics.convergence_rounds > 0);
@@ -876,7 +876,7 @@ mod tests {
 
         let metrics = suite
             .evaluate_privacy_preservation(1.0, 0.9, 0.85, &attack_rates)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(metrics.epsilon, 1.0);
         assert!(metrics.privacy_utility_score > 0.0);
@@ -889,7 +889,7 @@ mod tests {
 
         let metrics = suite
             .evaluate_model_compression(100.0, 25.0, 0.92, 0.89, "quantization")
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(metrics.compression_ratio, 4.0);
         assert!((metrics.accuracy_retention - 0.9673913).abs() < 1e-6);
@@ -904,7 +904,7 @@ mod tests {
 
         let metrics = suite
             .evaluate_network_efficiency(&bandwidth, &locality, 2, 100)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(metrics.bandwidth_efficiency > 0.0);
         assert!(metrics.data_locality > 0.0);

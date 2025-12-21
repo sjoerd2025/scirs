@@ -172,7 +172,7 @@ mod tests {
         let points = vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)];
         let params = RegistrationParams::default();
 
-        let result = register_rigid_points(&points, &points, &params).unwrap();
+        let result = register_rigid_points(&points, &points, &params).expect("Operation failed");
 
         // Should be identity transformation with zero error
         assert!(result.final_cost < 1e-10);
@@ -185,7 +185,7 @@ mod tests {
         let target = vec![(2.0, 3.0), (3.0, 3.0), (2.0, 4.0)];
         let params = RegistrationParams::default();
 
-        let result = register_rigid_points(&source, &target, &params).unwrap();
+        let result = register_rigid_points(&source, &target, &params).expect("Operation failed");
 
         // Should find translation (2, 3)
         assert!(result.final_cost < 1e-10);
@@ -200,7 +200,7 @@ mod tests {
         let target = vec![(0.0, 1.0), (-1.0, 0.0)];
         let params = RegistrationParams::default();
 
-        let result = register_rigid_points(&source, &target, &params).unwrap();
+        let result = register_rigid_points(&source, &target, &params).expect("Operation failed");
 
         // Should find 90-degree rotation
         assert!(result.final_cost < 1e-10);
@@ -216,7 +216,7 @@ mod tests {
         let target = vec![(1.0, 1.0), (2.0, 1.0), (1.0, 2.0), (2.0, 2.0)];
         let params = RegistrationParams::default();
 
-        let result = register_rigid_icp(&source, &target, &params).unwrap();
+        let result = register_rigid_icp(&source, &target, &params).expect("Operation failed");
 
         // Should converge to a reasonable transformation
         assert!(result.final_cost < 1.0);

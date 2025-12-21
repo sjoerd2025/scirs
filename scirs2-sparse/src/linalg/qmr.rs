@@ -28,8 +28,8 @@ impl<F: Float> Default for QMROptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 1000,
-            rtol: F::from(1e-8).unwrap(),
-            atol: F::from(1e-12).unwrap(),
+            rtol: F::from(1e-8).expect("Failed to convert constant to float"),
+            atol: F::from(1e-12).expect("Failed to convert constant to float"),
             x0: None,
             left_preconditioner: None,
             right_preconditioner: None,
@@ -116,7 +116,7 @@ where
         rho = dot(&r_tilde, &r);
 
         // Check for breakdown
-        if rho.abs() < F::epsilon() * F::from(10).unwrap() {
+        if rho.abs() < F::epsilon() * F::from(10).expect("Failed to convert constant to float") {
             return Ok(QMRResult {
                 x,
                 iterations: iter,
@@ -176,7 +176,7 @@ where
 
         // Compute alpha
         let dot_pq = dot(&p_tilde, &q);
-        if dot_pq.abs() < F::epsilon() * F::from(10).unwrap() {
+        if dot_pq.abs() < F::epsilon() * F::from(10).expect("Failed to convert constant to float") {
             return Ok(QMRResult {
                 x,
                 iterations: iter,
@@ -309,7 +309,7 @@ mod tests {
         let b = vec![1.0, 2.0, 3.0];
         let options = QMROptions::default();
 
-        let result = qmr(&identity, &b, options).unwrap();
+        let result = qmr(&identity, &b, options).expect("Operation failed");
         assert!(result.converged);
         assert_eq!(result.iterations, 1); // Should converge in 1 iteration
         for (i, &b_val) in b.iter().enumerate() {
@@ -331,7 +331,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = qmr(&diagonal, &b, options).unwrap();
+        let result = qmr(&diagonal, &b, options).expect("Operation failed");
         assert!(result.converged);
         assert!(result.iterations <= 10); // May take a few more iterations
         for (i, &exp_val) in expected.iter().enumerate() {
@@ -359,7 +359,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = qmr(&identity, &b, options).unwrap();
+        let result = qmr(&identity, &b, options).expect("Operation failed");
         assert!(result.converged);
         assert!(result.iterations <= 1); // Should converge very quickly
         for (i, &b_val) in b.iter().enumerate() {
@@ -381,7 +381,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = qmr(&diagonal, &b, options).unwrap();
+        let result = qmr(&diagonal, &b, options).expect("Operation failed");
         if !result.converged {
             assert_eq!(result.iterations, 5);
             assert!(result.message.contains("Did not converge"));

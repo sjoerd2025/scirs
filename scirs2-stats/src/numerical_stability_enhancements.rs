@@ -274,17 +274,16 @@ impl AdvancedNumericalStabilityTester {
 
         self.stability_history
             .write()
-            .unwrap()
+            .expect("Operation failed")
             .push_back(stability_result);
-        if self.stability_history.read().unwrap().len() > 1000 {
-            self.stability_history.write().unwrap().pop_front();
+        if self.stability_history.read().expect("Operation failed").len() > 1000 {
+            self.stability_history.write().expect("Operation failed").pop_front();
         }
 
         Ok(results)
     }
 
     /// Test edge case stability
-    #[ignore = "timeout"]
     fn test_edge_case_stability<F, D, R>(
         &self,
         _function_name: &str,
@@ -296,7 +295,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let generator = self.edge_case_generator.read().unwrap();
+        let generator = self.edge_case_generator.read().expect("Operation failed");
         let edge_cases = generator.generate_comprehensive_edge_cases(testdata)?;
 
         let mut results = EdgeCaseStabilityResult::new();
@@ -322,7 +321,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let analyzer = self.precision_analyzer.read().unwrap();
+        let analyzer = self.precision_analyzer.read().expect("Operation failed");
         analyzer.analyze_multi_precision_stability(&test_function, testdata)
     }
 
@@ -338,7 +337,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let validator = self.invariant_validator.read().unwrap();
+        let validator = self.invariant_validator.read().expect("Operation failed");
         validator.validate_statistical_invariants(function_name, &test_function, testdata)
     }
 
@@ -354,7 +353,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let detector = self.cancellation_detector.read().unwrap();
+        let detector = self.cancellation_detector.read().expect("Operation failed");
         detector.detect_cancellation_patterns(&test_function, testdata)
     }
 
@@ -370,7 +369,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let monitor = self.overflow_monitor.read().unwrap();
+        let monitor = self.overflow_monitor.read().expect("Operation failed");
         monitor.monitor_numerical_limits(&test_function, testdata)
     }
 
@@ -386,7 +385,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let analyzer = self.condition_analyzer.read().unwrap();
+        let analyzer = self.condition_analyzer.read().expect("Operation failed");
         analyzer.analyze_numerical_conditioning(&test_function, testdata)
     }
 
@@ -402,7 +401,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let tester = self.convergence_tester.read().unwrap();
+        let tester = self.convergence_tester.read().expect("Operation failed");
         tester.test_iterative_stability(&test_function, testdata)
     }
 
@@ -418,7 +417,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let tester = self.monte_carlo_tester.read().unwrap();
+        let tester = self.monte_carlo_tester.read().expect("Operation failed");
         tester.test_statistical_stability(&test_function, testdata)
     }
 
@@ -434,7 +433,7 @@ impl AdvancedNumericalStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let tester = self.regression_tester.read().unwrap();
+        let tester = self.regression_tester.read().expect("Operation failed");
         tester.test_against_historical_results(function_name, &test_function, testdata)
     }
 
@@ -639,7 +638,7 @@ impl AdvancedNumericalStabilityTester {
     pub fn get_stability_history(&self) -> Vec<StabilityTestResult> {
         self.stability_history
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .cloned()
             .collect()
@@ -647,7 +646,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Get stability trend analysis
     pub fn analyze_stability_trends(&self) -> StabilityTrendAnalysis {
-        let history = self.stability_history.read().unwrap();
+        let history = self.stability_history.read().expect("Operation failed");
 
         if history.is_empty() {
             return StabilityTrendAnalysis::default();
@@ -1462,7 +1461,7 @@ impl RegressionTester {
             let current_f64: f64 = NumCast::from(current_value).unwrap_or(0.0);
 
             // Check against historical results
-            let historical_lock = self.historical_results.read().unwrap();
+            let historical_lock = self.historical_results.read().expect("Operation failed");
             if let Some(historical_values) = historical_lock.get(function_name) {
                 // Compare with historical values
                 let mean_historical =
@@ -1486,7 +1485,7 @@ impl RegressionTester {
 
             // Store current result
             drop(historical_lock);
-            let mut historical_lock = self.historical_results.write().unwrap();
+            let mut historical_lock = self.historical_results.write().expect("Operation failed");
             historical_lock
                 .entry(function_name.to_string())
                 .or_insert_with(Vec::new)

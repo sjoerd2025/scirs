@@ -639,7 +639,9 @@ mod tests {
             .with_parameter("mean", 0.0)
             .with_parameter("std", 1.0);
 
-        metadata.add_processing_history(entry).unwrap();
+        metadata
+            .add_processing_history(entry)
+            .expect("Operation failed");
 
         let history = metadata.get(standard_keys::PROCESSING_HISTORY);
         assert!(matches!(history, Some(MetadataValue::Array(_))));
@@ -805,7 +807,7 @@ impl MetadataVersionControl {
 
     /// Commit a new version
     pub fn commit(&self, metadata: Metadata, message: impl Into<String>) -> Result<String> {
-        let mut history = self.history.write().unwrap();
+        let mut history = self.history.write().expect("Operation failed");
         let parent_id = history.last().map(|v| v.id.clone());
 
         let version = MetadataVersion {
@@ -828,7 +830,7 @@ impl MetadataVersionControl {
             history.drain(0..remove_count);
         }
 
-        *self.current.write().unwrap() = metadata;
+        *self.current.write().expect("Operation failed") = metadata;
 
         Ok(versionid)
     }
@@ -837,7 +839,7 @@ impl MetadataVersionControl {
     pub fn get_version(&self, versionid: &str) -> Option<MetadataVersion> {
         self.history
             .read()
-            .unwrap()
+            .expect("Operation failed")
             .iter()
             .find(|v| v.id == versionid)
             .cloned()
@@ -845,12 +847,12 @@ impl MetadataVersionControl {
 
     /// Get version history
     pub fn get_history(&self) -> Vec<MetadataVersion> {
-        self.history.read().unwrap().clone()
+        self.history.read().expect("Operation failed").clone()
     }
 
     /// Compute diff between two versions
     pub fn diff(&self, version1: &str, version2: &str) -> Option<MetadataDiff> {
-        let history = self.history.read().unwrap();
+        let history = self.history.read().expect("Operation failed");
         let v1 = history.iter().find(|v| v.id == version1)?;
         let v2 = history.iter().find(|v| v.id == version2)?;
 
@@ -1027,8 +1029,14 @@ impl MetadataReferenceResolver {
         let id = id.into();
         let refs = self.extract_references(&metadata);
 
-        self.registry.write().unwrap().insert(id.clone(), metadata);
-        self.references.write().unwrap().insert(id, refs);
+        self.registry
+            .write()
+            .expect("Operation failed")
+            .insert(id.clone(), metadata);
+        self.references
+            .write()
+            .expect("Operation failed")
+            .insert(id, refs);
 
         Ok(())
     }
@@ -1043,8 +1051,8 @@ impl MetadataReferenceResolver {
         for value in data.values_mut() {
             match value {
                 MetadataValue::String(s) if s.starts_with("ref:") => {
-                    let ref_id = s.strip_prefix("ref:").unwrap();
-                    let registry = self.registry.read().unwrap();
+                    let ref_id = s.strip_prefix("ref:").expect("Operation failed");
+                    let registry = self.registry.read().expect("Operation failed");
                     if let Some(referenced) = registry.get(ref_id) {
                         *value = MetadataValue::Object(referenced.data.clone());
                     } else {
@@ -1106,7 +1114,7 @@ impl MetadataReferenceResolver {
 
     /// Get all objects that reference a given ID
     pub fn get_referencing(&self, id: &str) -> Vec<String> {
-        let references = self.references.read().unwrap();
+        let references = self.references.read().expect("Operation failed");
         references
             .iter()
             .filter(|(_, refs)| refs.contains(id))
@@ -1240,7 +1248,7 @@ impl MetadataRepository {
     /// Fetch metadata from repository
     pub fn fetch(&self, id: &str) -> Result<Metadata> {
         // Check cache first
-        if let Some(metadata) = self.cache.read().unwrap().get(id) {
+        if let Some(metadata) = self.cache.read().expect("Operation failed").get(id) {
             return Ok(metadata.clone());
         }
 
@@ -1266,7 +1274,7 @@ impl MetadataRepository {
         // Update cache
         self.cache
             .write()
-            .unwrap()
+            .expect("Operation failed")
             .insert(id.to_string(), metadata.clone());
 
         Ok(metadata)
@@ -1292,7 +1300,7 @@ impl MetadataRepository {
         // Update cache
         self.cache
             .write()
-            .unwrap()
+            .expect("Operation failed")
             .insert(id.to_string(), metadata.clone());
 
         Ok(())

@@ -21,14 +21,14 @@ use std::fmt::Debug;
 #[allow(dead_code)]
 pub fn relu6<F: Float>(x: F) -> F {
     let zero = F::zero();
-    let six = F::from(6.0).unwrap();
+    let six = F::from(6.0).expect("Failed to convert constant to float");
     x.max(zero).min(six)
 }
 /// Hard Sigmoid activation function used in MobileNetV3
 #[allow(dead_code)]
 pub fn hard_sigmoid<F: Float>(x: F) -> F {
     let _one = F::one(); // Not used but kept for consistency
-    let three = F::from(3.0).unwrap();
+    let three = F::from(3.0).expect("Failed to convert constant to float");
     (x + three).max(zero).min(six) / six
 /// Hard Swish activation function used in MobileNetV3
 #[allow(dead_code)]
@@ -249,7 +249,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for SqueezeExcitat
                         sum = sum + input[[b, c, h, w]];
                     }
                 }
-                x[[b, c, 0, 0]] = sum / F::from(height * width).unwrap();
+                x[[b, c, 0, 0]] = sum / F::from(height * width).expect("Failed to convert to float");
             }
         // Apply squeeze
         let x = self.fc1.forward(&x)?;
@@ -492,7 +492,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> MobileNet<F> {
         let last_channels = if config.version == MobileNetVersion::V1 {
             // For MobileNetV1, the last block is a depthwise separable conv
             let scaled =
-                (_config.blocks.last().unwrap().output_channels as f64 * width_multiplier).round();
+                (_config.blocks.last().expect("Operation failed").output_channels as f64 * width_multiplier).round();
             scaled as usize
             // For MobileNetV2/V3, we use 1280 as the number of output channels
             // except for MobileNetV2 which uses 1001 for compatibility with original paper
@@ -537,7 +537,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for MobileNet<F> {
         let width = x.shape()[3];
         let mut pooled = Array::zeros(IxDyn(&[batch_size, channels]));
                         sum = sum + x[[b, c, h, w]];
-                pooled[[b, c]] = sum / F::from(height * width).unwrap();
+                pooled[[b, c]] = sum / F::from(height * width).expect("Failed to convert to float");
         let pooled = self.dropout.forward(&pooled)?;
         let logits = self.classifier.forward(&pooled)?;
         Ok(logits)

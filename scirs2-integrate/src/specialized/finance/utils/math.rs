@@ -647,8 +647,8 @@ mod tests {
         let true_vol = 0.25;
 
         let market_price = black_scholes_call(spot, strike, time, rate, true_vol);
-        let implied_vol =
-            implied_volatility_newton(market_price, spot, strike, time, rate, true).unwrap();
+        let implied_vol = implied_volatility_newton(market_price, spot, strike, time, rate, true)
+            .expect("Operation failed");
 
         assert!((implied_vol - true_vol).abs() < 1e-6);
     }
@@ -662,8 +662,8 @@ mod tests {
         let true_vol = 0.25;
 
         let market_price = black_scholes_call(spot, strike, time, rate, true_vol);
-        let implied_vol =
-            implied_volatility_brent(market_price, spot, strike, time, rate, true).unwrap();
+        let implied_vol = implied_volatility_brent(market_price, spot, strike, time, rate, true)
+            .expect("Operation failed");
 
         assert!((implied_vol - true_vol).abs() < 1e-6);
     }
@@ -787,7 +787,7 @@ mod tests {
 
     #[test]
     fn test_sabr_parameters_creation() {
-        let sabr = SABRParameters::new(0.2, 0.5, -0.3, 0.4).unwrap();
+        let sabr = SABRParameters::new(0.2, 0.5, -0.3, 0.4).expect("Operation failed");
         assert_eq!(sabr.alpha, 0.2);
         assert_eq!(sabr.beta, 0.5);
         assert_eq!(sabr.rho, -0.3);
@@ -804,25 +804,33 @@ mod tests {
 
     #[test]
     fn test_sabr_atm_volatility() {
-        let sabr = SABRParameters::new(0.2, 0.5, -0.3, 0.4).unwrap();
+        let sabr = SABRParameters::new(0.2, 0.5, -0.3, 0.4).expect("Operation failed");
         let forward = 100.0;
         let strike = 100.0;
         let time = 1.0;
 
-        let vol = sabr.implied_volatility(forward, strike, time).unwrap();
+        let vol = sabr
+            .implied_volatility(forward, strike, time)
+            .expect("Operation failed");
         assert!(vol > 0.0);
         assert!(vol < 1.0); // Reasonable volatility range
     }
 
     #[test]
     fn test_sabr_smile_shape() {
-        let sabr = SABRParameters::new(0.2, 0.5, -0.3, 0.4).unwrap();
+        let sabr = SABRParameters::new(0.2, 0.5, -0.3, 0.4).expect("Operation failed");
         let forward = 100.0;
         let time = 1.0;
 
-        let vol_otm = sabr.implied_volatility(forward, 110.0, time).unwrap();
-        let vol_atm = sabr.implied_volatility(forward, 100.0, time).unwrap();
-        let vol_itm = sabr.implied_volatility(forward, 90.0, time).unwrap();
+        let vol_otm = sabr
+            .implied_volatility(forward, 110.0, time)
+            .expect("Operation failed");
+        let vol_atm = sabr
+            .implied_volatility(forward, 100.0, time)
+            .expect("Operation failed");
+        let vol_itm = sabr
+            .implied_volatility(forward, 90.0, time)
+            .expect("Operation failed");
 
         // All vols should be reasonable and positive
         assert!(vol_otm > 0.0 && vol_otm < 1.0);
@@ -837,8 +845,10 @@ mod tests {
     #[test]
     fn test_sabr_beta_zero() {
         // Beta = 0 corresponds to normal model
-        let sabr = SABRParameters::new(20.0, 0.0, 0.0, 0.0).unwrap();
-        let vol = sabr.implied_volatility(100.0, 100.0, 1.0).unwrap();
+        let sabr = SABRParameters::new(20.0, 0.0, 0.0, 0.0).expect("Operation failed");
+        let vol = sabr
+            .implied_volatility(100.0, 100.0, 1.0)
+            .expect("Operation failed");
         // For beta=0, vol should be positive and reasonable
         assert!(vol > 0.0 && vol < 100.0);
     }
@@ -846,20 +856,26 @@ mod tests {
     #[test]
     fn test_sabr_beta_one() {
         // Beta = 1 corresponds to lognormal model
-        let sabr = SABRParameters::new(0.2, 1.0, 0.0, 0.0).unwrap();
-        let vol = sabr.implied_volatility(100.0, 100.0, 1.0).unwrap();
+        let sabr = SABRParameters::new(0.2, 1.0, 0.0, 0.0).expect("Operation failed");
+        let vol = sabr
+            .implied_volatility(100.0, 100.0, 1.0)
+            .expect("Operation failed");
         assert!((vol - 0.2).abs() < 0.01); // Should be close to alpha
     }
 
     #[test]
     fn test_sabr_symmetry() {
-        let sabr = SABRParameters::new(0.2, 0.5, 0.0, 0.2).unwrap();
+        let sabr = SABRParameters::new(0.2, 0.5, 0.0, 0.2).expect("Operation failed");
         let forward = 100.0;
         let time = 1.0;
 
         // With rho = 0, smile should be roughly symmetric
-        let vol_up = sabr.implied_volatility(forward, 105.0, time).unwrap();
-        let vol_down = sabr.implied_volatility(forward, 95.0, time).unwrap();
+        let vol_up = sabr
+            .implied_volatility(forward, 105.0, time)
+            .expect("Operation failed");
+        let vol_down = sabr
+            .implied_volatility(forward, 95.0, time)
+            .expect("Operation failed");
 
         // Should be similar (within 10%)
         assert!((vol_up - vol_down).abs() / vol_up < 0.1);

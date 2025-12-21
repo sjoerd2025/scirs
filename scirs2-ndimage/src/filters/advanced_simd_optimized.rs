@@ -529,16 +529,21 @@ where
     T: Float + FromPrimitive + Debug,
 {
     // Determine kernel size (6*_sigma + 1, ensuring odd size)
-    let size = ((sigma * T::from_f64(6.0).unwrap()).to_usize().unwrap_or(3) | 1).max(3);
+    let size = ((sigma * T::from_f64(6.0).expect("Operation failed"))
+        .to_usize()
+        .unwrap_or(3)
+        | 1)
+    .max(3);
     let half_size = size / 2;
     let mut kernel = vec![T::zero(); size];
 
-    let two_sigma_sq = T::from_f64(2.0).unwrap() * sigma * sigma;
-    let normalization_factor = T::from_f64(1.0 / (2.0 * std::f64::consts::PI)).unwrap() * sigma;
+    let two_sigma_sq = T::from_f64(2.0).expect("Operation failed") * sigma * sigma;
+    let normalization_factor =
+        T::from_f64(1.0 / (2.0 * std::f64::consts::PI)).expect("Operation failed") * sigma;
 
     // Generate Gaussian weights
     for i in 0..size {
-        let x = T::from_isize(i as isize - half_size as isize).unwrap();
+        let x = T::from_isize(i as isize - half_size as isize).expect("Operation failed");
         let exponent = -(x * x) / two_sigma_sq;
         kernel[i] = normalization_factor * exponent.exp();
     }

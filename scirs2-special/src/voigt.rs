@@ -61,7 +61,7 @@ use std::fmt::{Debug, Display};
 /// use scirs2_special::voigt_profile;
 ///
 /// // Pure Gaussian limit (γ → 0)
-/// let result = voigt_profile(0.0, 1.0, 1e-10).unwrap();
+/// let result = voigt_profile(0.0, 1.0, 1e-10).expect("Operation failed");
 /// let gaussianmax = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
 /// assert!((result - gaussianmax).abs() < 1e-6);
 ///
@@ -69,8 +69,8 @@ use std::fmt::{Debug, Display};
 /// let x = 1.5f64;
 /// let sigma = 0.8f64;
 /// let gamma = 0.3f64;
-/// let v_pos = voigt_profile(x, sigma, gamma).unwrap();
-/// let v_neg = voigt_profile(-x, sigma, gamma).unwrap();
+/// let v_pos = voigt_profile(x, sigma, gamma).expect("Operation failed");
+/// let v_neg = voigt_profile(-x, sigma, gamma).expect("Operation failed");
 /// assert!((v_pos - v_neg).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
@@ -82,8 +82,8 @@ where
     check_positive(sigma, "sigma")?;
     check_positive(gamma, "gamma")?;
 
-    let _sqrt2 = T::from_f64(std::f64::consts::SQRT_2).unwrap();
-    let _sqrt2pi = T::from_f64((2.0 * std::f64::consts::PI).sqrt()).unwrap();
+    let _sqrt2 = T::from_f64(std::f64::consts::SQRT_2).expect("Operation failed");
+    let _sqrt2pi = T::from_f64((2.0 * std::f64::consts::PI).sqrt()).expect("Operation failed");
 
     // Convert to f64 for complex arithmetic (using wofz)
     let x_f64 = x
@@ -172,8 +172,8 @@ where
     check_positive(fwhmlorentzian, "fwhmlorentzian")?;
 
     // Convert FWHM to standard parameters
-    let two = T::from_f64(2.0).unwrap();
-    let ln2 = T::from_f64(std::f64::consts::LN_2).unwrap();
+    let two = T::from_f64(2.0).expect("Operation failed");
+    let ln2 = T::from_f64(std::f64::consts::LN_2).expect("Operation failed");
     let sqrt2ln2 = (two * ln2).sqrt();
 
     let sigma = fwhm_gaussian / (two * sqrt2ln2);
@@ -197,7 +197,7 @@ where
 /// use scirs2_special::voigt_profile_array;
 ///
 /// let x = array![-2.0f64, -1.0, 0.0, 1.0, 2.0];
-/// let result = voigt_profile_array(&x.view(), 1.0f64, 0.5f64).unwrap();
+/// let result = voigt_profile_array(&x.view(), 1.0f64, 0.5f64).expect("Operation failed");
 ///
 /// // Check symmetry
 /// assert!((result[0] - result[4]).abs() < 1e-10);
@@ -259,12 +259,12 @@ where
 /// use scirs2_special::pseudo_voigt;
 ///
 /// // Pure Gaussian (η = 0)
-/// let result = pseudo_voigt(0.0, 1.0, 0.5, 0.0).unwrap();
+/// let result = pseudo_voigt(0.0, 1.0, 0.5, 0.0).expect("Operation failed");
 /// let gaussianmax = 1.0 / (2.0 * std::f64::consts::PI).sqrt();
 /// assert!((result - gaussianmax).abs() < 1e-10);
 ///
 /// // Pure Lorentzian (η = 1)
-/// let result = pseudo_voigt(0.0, 1.0, 0.5, 1.0).unwrap();
+/// let result = pseudo_voigt(0.0, 1.0, 0.5, 1.0).expect("Operation failed");
 /// let lorentzianmax = 1.0 / (std::f64::consts::PI * 0.5);
 /// assert!((result - lorentzianmax).abs() < 1e-10);
 /// ```
@@ -287,8 +287,8 @@ where
         ));
     }
 
-    let pi = T::from_f64(std::f64::consts::PI).unwrap();
-    let two = T::from_f64(2.0).unwrap();
+    let pi = T::from_f64(std::f64::consts::PI).expect("Operation failed");
+    let two = T::from_f64(2.0).expect("Operation failed");
 
     // Gaussian component: G(x; σ) = (1/(σ√(2π))) exp(-x²/(2σ²))
     let gaussian_norm = one / (sigma * (two * pi).sqrt());
@@ -315,13 +315,13 @@ mod tests {
         let gamma = 0.5;
 
         // Test at center (should be maximum)
-        let center = voigt_profile(0.0, sigma, gamma).unwrap();
+        let center = voigt_profile(0.0, sigma, gamma).expect("Operation failed");
         assert!(center > 0.0);
 
         // Test symmetry
         let x = 1.5;
-        let v_pos = voigt_profile(x, sigma, gamma).unwrap();
-        let v_neg = voigt_profile(-x, sigma, gamma).unwrap();
+        let v_pos = voigt_profile(x, sigma, gamma).expect("Operation failed");
+        let v_neg = voigt_profile(-x, sigma, gamma).expect("Operation failed");
         assert_relative_eq!(v_pos, v_neg, epsilon = 1e-12);
     }
 
@@ -333,14 +333,14 @@ mod tests {
         let _large_gamma = 1e10;
 
         // Test pure Gaussian limit (γ → 0)
-        let gaussian_limit = voigt_profile(x, sigma, small_gamma).unwrap();
+        let gaussian_limit = voigt_profile(x, sigma, small_gamma).expect("Operation failed");
         let expected_gaussian = 1.0 / (sigma * (2.0 * PI).sqrt());
         assert_relative_eq!(gaussian_limit, expected_gaussian, epsilon = 1e-6);
 
         // For Lorentzian limit, we need σ → 0, not γ → ∞
         let small_sigma = 1e-10;
         let gamma = 1.0;
-        let lorentzian_limit = voigt_profile(x, small_sigma, gamma).unwrap();
+        let lorentzian_limit = voigt_profile(x, small_sigma, gamma).expect("Operation failed");
         let expected_lorentzian = gamma / (PI * (x * x + gamma * gamma));
         assert_relative_eq!(lorentzian_limit, expected_lorentzian, epsilon = 1e-6);
     }
@@ -351,13 +351,13 @@ mod tests {
         let fwhm_l = 1.0;
 
         // Test FWHM parameterization
-        let result = voigt_profile_fwhm(0.0, fwhm_g, fwhm_l).unwrap();
+        let result = voigt_profile_fwhm(0.0, fwhm_g, fwhm_l).expect("Operation failed");
         assert!(result > 0.0);
 
         // Test symmetry with FWHM parameterization
         let x = 1.0;
-        let v_pos = voigt_profile_fwhm(x, fwhm_g, fwhm_l).unwrap();
-        let v_neg = voigt_profile_fwhm(-x, fwhm_g, fwhm_l).unwrap();
+        let v_pos = voigt_profile_fwhm(x, fwhm_g, fwhm_l).expect("Operation failed");
+        let v_neg = voigt_profile_fwhm(-x, fwhm_g, fwhm_l).expect("Operation failed");
         assert_relative_eq!(v_pos, v_neg, epsilon = 1e-12);
     }
 
@@ -368,17 +368,17 @@ mod tests {
         let x = 0.0;
 
         // Test pure Gaussian (η = 0)
-        let pure_gaussian = pseudo_voigt(x, sigma, gamma, 0.0).unwrap();
+        let pure_gaussian = pseudo_voigt(x, sigma, gamma, 0.0).expect("Operation failed");
         let expected_gaussian = 1.0 / (sigma * (2.0 * PI).sqrt());
         assert_relative_eq!(pure_gaussian, expected_gaussian, epsilon = 1e-12);
 
         // Test pure Lorentzian (η = 1)
-        let pure_lorentzian = pseudo_voigt(x, sigma, gamma, 1.0).unwrap();
+        let pure_lorentzian = pseudo_voigt(x, sigma, gamma, 1.0).expect("Operation failed");
         let expected_lorentzian = gamma / (PI * (x * x + gamma * gamma));
         assert_relative_eq!(pure_lorentzian, expected_lorentzian, epsilon = 1e-12);
 
         // Test intermediate case
-        let mixed = pseudo_voigt(x, sigma, gamma, 0.5).unwrap();
+        let mixed = pseudo_voigt(x, sigma, gamma, 0.5).expect("Operation failed");
         assert!(mixed > 0.0);
         assert!(mixed < pure_gaussian.max(pure_lorentzian));
     }
@@ -389,7 +389,7 @@ mod tests {
         let sigma = 1.0;
         let gamma = 0.3;
 
-        let result = voigt_profile_array(&x.view(), sigma, gamma).unwrap();
+        let result = voigt_profile_array(&x.view(), sigma, gamma).expect("Operation failed");
         assert_eq!(result.len(), 5);
 
         // Test symmetry in array
@@ -427,7 +427,7 @@ mod tests {
 
         let mut integral = 0.0;
         for &x in &x_vals {
-            integral += voigt_profile(x, sigma, gamma).unwrap() * dx;
+            integral += voigt_profile(x, sigma, gamma).expect("Operation failed") * dx;
         }
 
         // Should be approximately 1 (within numerical integration error)

@@ -887,19 +887,19 @@ mod tests {
         let n_samples = 1000;
 
         // Create test signal file
-        let mut file = File::create(test_file).unwrap();
+        let mut file = File::create(test_file).expect("Operation failed");
         for i in 0..n_samples {
             let sample = (i as f64 * 0.1).sin();
-            file.write_all(&sample.to_le_bytes()).unwrap();
+            file.write_all(&sample.to_le_bytes()).expect("Operation failed");
         }
-        file.flush().unwrap();
+        file.flush().expect("Operation failed");
 
         // Verify file was created
-        let metadata = fs::metadata(test_file).unwrap();
+        let metadata = fs::metadata(test_file).expect("Operation failed");
         assert_eq!(metadata.len(), (n_samples * 8) as u64);
 
         // Clean up
-        fs::remove_file(test_file).unwrap();
+        fs::remove_file(test_file).expect("Operation failed");
 
         Ok(())
     }

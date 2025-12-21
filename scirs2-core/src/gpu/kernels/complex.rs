@@ -494,7 +494,9 @@ mod tests {
     #[test]
     fn test_metal_source_generation() {
         let kernel = ComplexMultiplyKernel::new();
-        let source = kernel.source_for_backend(GpuBackend::Metal).unwrap();
+        let source = kernel
+            .source_for_backend(GpuBackend::Metal)
+            .expect("Operation failed");
         assert!(source.contains("complex_f32"));
         assert!(source.contains("complex_mul"));
     }

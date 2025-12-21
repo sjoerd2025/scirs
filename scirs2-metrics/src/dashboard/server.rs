@@ -300,8 +300,8 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
         sorted_points.sort_by_key(|p| p.timestamp);
 
         // Calculate trend
-        let first_val = sorted_points.first().unwrap().value;
-        let last_val = sorted_points.last().unwrap().value;
+        let first_val = sorted_points.first().expect("Operation failed").value;
+        let last_val = sorted_points.last().expect("Operation failed").value;
         let change_percent = ((last_val - first_val) / first_val.abs().max(0.001)) * 100.0;
 
         if change_percent.abs() > 20.0 {
@@ -324,7 +324,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
                 ),
                 confidence: 0.85,
                 severity: severity.to_string(),
-                timestamp: sorted_points.last().unwrap().timestamp,
+                timestamp: sorted_points.last().expect("Operation failed").timestamp,
             });
         }
 
@@ -343,7 +343,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
                     message: format!("{} shows high volatility (CV: {:.2})", metric_name, cv),
                     confidence: 0.75,
                     severity: "medium".to_string(),
-                    timestamp: sorted_points.last().unwrap().timestamp,
+                    timestamp: sorted_points.last().expect("Operation failed").timestamp,
                 });
             }
         }
@@ -362,7 +362,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
                 severity: "info".to_string(),
                 timestamp: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_secs(),
             });
         } else if overall_avg < 0.5 {
@@ -374,7 +374,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
                 severity: "high".to_string(),
                 timestamp: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .expect("Operation failed")
                     .as_secs(),
             });
         }

@@ -20,6 +20,11 @@ use std::f64;
 use std::fmt::Debug;
 use std::ops::AddAssign;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 /// Riemann zeta function.
 ///
 /// Computes the Riemann zeta function ζ(s) for real s != 1.
@@ -41,12 +46,12 @@ use std::ops::AddAssign;
 /// use scirs2_special::zeta;
 ///
 /// // ζ(2) = π²/6 ≈ 1.645
-/// let z2 = zeta(2.0f64).unwrap();
+/// let z2 = zeta(2.0f64).expect("Test/example failed");
 /// // Using actual value from the implementation
 /// assert!((z2 - 1.6450337335148921).abs() < 1e-10);
 ///
 /// // ζ(4) = π⁴/90 ≈ 1.082
-/// let z4 = zeta(4.0f64).unwrap();
+/// let z4 = zeta(4.0f64).expect("Test/example failed");
 /// // Using actual value from the implementation
 /// assert!((z4 - 1.082323243644471).abs() < 1e-10);
 /// ```
@@ -71,7 +76,7 @@ where
     }
 
     // For s > 1, use direct methods
-    if s <= F::from(50.0).unwrap() {
+    if s <= const_f64::<F>(50.0) {
         // Use Euler-Maclaurin formula for moderate values of s
         zeta_euler_maclaurin(s)
     } else {
@@ -103,7 +108,7 @@ where
 ///
 /// // The Riemann zeta function is a special case of the Hurwitz zeta function
 /// // ζ(s) = ζ(s, 1)
-/// let z2 = hurwitz_zeta(2.0f64, 1.0f64).unwrap();
+/// let z2 = hurwitz_zeta(2.0f64, 1.0f64).expect("Test/example failed");
 /// // Using actual value from the implementation
 /// assert!((z2 - 1.6450337335148921).abs() < 1e-10);
 /// ```
@@ -160,7 +165,7 @@ where
 /// use scirs2_special::{zeta, zetac};
 ///
 /// // ζ(2) - 1 = π²/6 - 1 ≈ 0.645
-/// let z2c = zetac(2.0f64).unwrap();
+/// let z2c = zetac(2.0f64).expect("Test/example failed");
 /// // Using actual value from the implementation
 /// assert!((z2c - 0.6450337335148921).abs() < 1e-10);
 ///
@@ -180,7 +185,7 @@ where
     }
 
     // For s > 50, we can directly compute the sum
-    if s > F::from(50.0).unwrap() {
+    if s > const_f64::<F>(50.0) {
         return zetac_direct_sum(s);
     }
 
@@ -197,9 +202,9 @@ where
 {
     // The accuracy of the Euler-Maclaurin formula depends on the number of terms
     // For higher precision, we use more terms in the direct sum
-    let n_terms = if s > F::from(20.0).unwrap() {
+    let n_terms = if s > const_f64::<F>(20.0) {
         10 // For large s, we need fewer terms
-    } else if s > F::from(4.0).unwrap() {
+    } else if s > const_f64::<F>(4.0) {
         50 // For moderate s, use medium number of terms
     } else {
         100 // For small s near 1, use more terms
@@ -208,45 +213,45 @@ where
     // Direct summation for the first n_terms (this is the most accurate part)
     let mut sum = F::zero();
     for k in 1..=n_terms {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         sum = sum + k_f.powf(-s);
     }
 
     // Correction terms using the Euler-Maclaurin formula
-    let n_f = F::from(n_terms).unwrap();
+    let n_f = F::from(n_terms).expect("Failed to convert to float");
 
     // Term 1: 1/2 * n^(-s)
-    let term1 = F::from(0.5).unwrap() * n_f.powf(-s);
+    let term1 = const_f64::<F>(0.5) * n_f.powf(-s);
 
     // Term 2: n^(1-s)/(s-1)
     let term2 = n_f.powf(F::one() - s) / (s - F::one());
 
     // Bernoulli numbers
-    let b2 = F::from(1.0 / 6.0).unwrap();
-    let b4 = F::from(-1.0 / 30.0).unwrap();
-    let b6 = F::from(1.0 / 42.0).unwrap();
-    let b8 = F::from(-1.0 / 30.0).unwrap();
+    let b2 = F::from(1.0 / 6.0).expect("Failed to convert to float");
+    let b4 = F::from(-1.0 / 30.0).expect("Failed to convert to float");
+    let b6 = F::from(1.0 / 42.0).expect("Failed to convert to float");
+    let b8 = F::from(-1.0 / 30.0).expect("Failed to convert to float");
 
     // Calculate s(s+1)(s+2)...(s+2k-1) coefficients
     let s1 = s;
     let s2 = s * (s + F::one());
-    let s3 = s2 * (s + F::from(2.0).unwrap());
-    let s4 = s3 * (s + F::from(3.0).unwrap());
-    let s5 = s4 * (s + F::from(4.0).unwrap());
-    let s6 = s5 * (s + F::from(5.0).unwrap());
-    let s7 = s6 * (s + F::from(6.0).unwrap());
+    let s3 = s2 * (s + const_f64::<F>(2.0));
+    let s4 = s3 * (s + const_f64::<F>(3.0));
+    let s5 = s4 * (s + const_f64::<F>(4.0));
+    let s6 = s5 * (s + const_f64::<F>(5.0));
+    let s7 = s6 * (s + const_f64::<F>(6.0));
 
     // Term 3: B_2 * s * n^(-s-1) / 2
-    let term3 = b2 * s1 * n_f.powf(-s - F::one()) / F::from(2.0).unwrap();
+    let term3 = b2 * s1 * n_f.powf(-s - F::one()) / const_f64::<F>(2.0);
 
     // Term 4: B_4 * s(s+1)(s+2)(s+3) * n^(-s-3) / 24
-    let term4 = b4 * s3 * n_f.powf(-s - F::from(3.0).unwrap()) / F::from(24.0).unwrap();
+    let term4 = b4 * s3 * n_f.powf(-s - const_f64::<F>(3.0)) / const_f64::<F>(24.0);
 
     // Term 5: B_6 * s(s+1)...(s+5) * n^(-s-5) / 720
-    let term5 = b6 * s5 * n_f.powf(-s - F::from(5.0).unwrap()) / F::from(720.0).unwrap();
+    let term5 = b6 * s5 * n_f.powf(-s - const_f64::<F>(5.0)) / const_f64::<F>(720.0);
 
     // Term 6: B_8 * s(s+1)...(s+7) * n^(-s-7) / 40320
-    let term6 = b8 * s7 * n_f.powf(-s - F::from(7.0).unwrap()) / F::from(40320.0).unwrap();
+    let term6 = b8 * s7 * n_f.powf(-s - const_f64::<F>(7.0)) / const_f64::<F>(40320.0);
 
     // Sum all terms for the Euler-Maclaurin approximation
     let result = sum + term1 + term2 - term3 + term4 - term5 + term6;
@@ -266,11 +271,11 @@ where
 
     // For large s, we only need a few terms for high precision
     let max_terms = 20;
-    let tolerance = F::from(1e-16).unwrap();
+    let tolerance = const_f64::<F>(1e-16);
 
     // Add terms k=2, k=3, ...
     for k in 2..=max_terms {
-        let k_f = F::from(k).unwrap();
+        let k_f = F::from(k).expect("Failed to convert to float");
         let term = k_f.powf(-s);
         sum = sum + term;
 
@@ -298,7 +303,7 @@ where
     // ζ(s) = 2^s * π^(s-1) * sin(πs/2) * Γ(1-s) * ζ(1-s)
 
     // If s is a negative even integer, then ζ(s) = 0 (except for s = 0)
-    let s_f64 = s.to_f64().unwrap();
+    let s_f64 = s.to_f64().expect("Test/example failed");
     if s_f64.fract() == 0.0 && s_f64.abs() as i32 % 2 == 0 && s_f64 != 0.0 {
         return Ok(F::zero());
     }
@@ -310,11 +315,14 @@ where
     let zeta_1minus_s = zeta(oneminus_s)?;
 
     // Calculate 2^s * π^(s-1)
-    let two_s = F::from(2.0).unwrap().powf(s);
-    let pi_sminus_1 = F::from(f64::consts::PI).unwrap().powf(s - F::one());
+    let two_s = const_f64::<F>(2.0).powf(s);
+    let pi_sminus_1 = F::from(f64::consts::PI)
+        .expect("Failed to convert to float")
+        .powf(s - F::one());
 
     // Calculate sin(πs/2)
-    let pi_s_half = F::from(f64::consts::PI).unwrap() * s / F::from(2.0).unwrap();
+    let pi_s_half =
+        F::from(f64::consts::PI).expect("Failed to convert to float") * s / const_f64::<F>(2.0);
     let sin_pi_s_half = pi_s_half.sin();
 
     // Calculate Γ(1-s)
@@ -340,11 +348,14 @@ where
     let zeta_1minus_s = zeta_euler_maclaurin(oneminus_s)?;
 
     // Calculate 2^s * π^(s-1)
-    let two_s = F::from(2.0).unwrap().powf(s);
-    let pi_sminus_1 = F::from(f64::consts::PI).unwrap().powf(s - F::one());
+    let two_s = const_f64::<F>(2.0).powf(s);
+    let pi_sminus_1 = F::from(f64::consts::PI)
+        .expect("Failed to convert to float")
+        .powf(s - F::one());
 
     // Calculate sin(πs/2)
-    let pi_s_half = F::from(f64::consts::PI).unwrap() * s / F::from(2.0).unwrap();
+    let pi_s_half =
+        F::from(f64::consts::PI).expect("Failed to convert to float") * s / const_f64::<F>(2.0);
     let sin_pi_s_half = pi_s_half.sin();
 
     // Calculate Γ(1-s)
@@ -365,10 +376,10 @@ where
     // For zetac, we start from n=2 since we're computing ζ(s) - 1
     let max_terms = 100;
     let mut sum = F::zero();
-    let tolerance = F::from(1e-16).unwrap();
+    let tolerance = const_f64::<F>(1e-16);
 
     for k in 2..=max_terms {
-        let term = F::from(k).unwrap().powf(-s);
+        let term = F::from(k).expect("Failed to convert to float").powf(-s);
         sum = sum + term;
 
         // Stop if the term is small enough
@@ -392,14 +403,15 @@ where
     }
 
     // For other special cases, we can use identities
-    if q == F::from(0.5).unwrap() && s == F::from(2.0).unwrap() {
+    if q == const_f64::<F>(0.5) && s == const_f64::<F>(2.0) {
         // ζ(2, 1/2) = (2²-1)ζ(2) = 4ζ(2) - 1 = 4π²/6 - 1 = 2π²/3
-        let pi_squared = F::from(f64::consts::PI * f64::consts::PI).unwrap();
-        return Ok(F::from(2.0).unwrap() * pi_squared / F::from(3.0).unwrap());
+        let pi_squared =
+            F::from(f64::consts::PI * f64::consts::PI).expect("Failed to convert to float");
+        return Ok(const_f64::<F>(2.0) * pi_squared / const_f64::<F>(3.0));
     }
 
     // Number of terms in the direct sum
-    let n_terms = if s > F::from(10.0).unwrap() {
+    let n_terms = if s > const_f64::<F>(10.0) {
         20 // For large s, we need fewer terms
     } else {
         100 // For smaller s, use more terms
@@ -408,45 +420,45 @@ where
     // Direct summation for the first n_terms
     let mut sum = F::zero();
     for k in 0..n_terms {
-        let term = (F::from(k).unwrap() + q).powf(-s);
+        let term = (F::from(k).expect("Failed to convert to float") + q).powf(-s);
         sum += term;
     }
 
     // Correction terms using the Euler-Maclaurin formula
-    let n_plus_q = F::from(n_terms).unwrap() + q;
+    let n_plus_q = F::from(n_terms).expect("Failed to convert to float") + q;
 
     // Term 1: 1/2 * (n+q)^(-s)
-    let term1 = F::from(0.5).unwrap() * n_plus_q.powf(-s);
+    let term1 = const_f64::<F>(0.5) * n_plus_q.powf(-s);
 
     // Term 2: (n+q)^(1-s)/(s-1)
     let term2 = n_plus_q.powf(F::one() - s) / (s - F::one());
 
     // Bernoulli numbers
-    let b2 = F::from(1.0 / 6.0).unwrap();
-    let b4 = F::from(-1.0 / 30.0).unwrap();
-    let b6 = F::from(1.0 / 42.0).unwrap();
-    let b8 = F::from(-1.0 / 30.0).unwrap();
+    let b2 = F::from(1.0 / 6.0).expect("Failed to convert to float");
+    let b4 = F::from(-1.0 / 30.0).expect("Failed to convert to float");
+    let b6 = F::from(1.0 / 42.0).expect("Failed to convert to float");
+    let b8 = F::from(-1.0 / 30.0).expect("Failed to convert to float");
 
     // Calculate s(s+1)(s+2)...(s+2k-1) coefficients
     let s1 = s;
     let s2 = s * (s + F::one());
-    let s3 = s2 * (s + F::from(2.0).unwrap());
-    let s4 = s3 * (s + F::from(3.0).unwrap());
-    let s5 = s4 * (s + F::from(4.0).unwrap());
-    let s6 = s5 * (s + F::from(5.0).unwrap());
-    let s7 = s6 * (s + F::from(6.0).unwrap());
+    let s3 = s2 * (s + const_f64::<F>(2.0));
+    let s4 = s3 * (s + const_f64::<F>(3.0));
+    let s5 = s4 * (s + const_f64::<F>(4.0));
+    let s6 = s5 * (s + const_f64::<F>(5.0));
+    let s7 = s6 * (s + const_f64::<F>(6.0));
 
     // Term 3: B_2 * s * (n+q)^(-s-1) / 2
-    let term3 = b2 * s1 * n_plus_q.powf(-s - F::one()) / F::from(2.0).unwrap();
+    let term3 = b2 * s1 * n_plus_q.powf(-s - F::one()) / const_f64::<F>(2.0);
 
     // Term 4: B_4 * s(s+1)(s+2)(s+3) * (n+q)^(-s-3) / 24
-    let term4 = b4 * s3 * n_plus_q.powf(-s - F::from(3.0).unwrap()) / F::from(24.0).unwrap();
+    let term4 = b4 * s3 * n_plus_q.powf(-s - const_f64::<F>(3.0)) / const_f64::<F>(24.0);
 
     // Term 5: B_6 * s(s+1)...(s+5) * (n+q)^(-s-5) / 720
-    let term5 = b6 * s5 * n_plus_q.powf(-s - F::from(5.0).unwrap()) / F::from(720.0).unwrap();
+    let term5 = b6 * s5 * n_plus_q.powf(-s - const_f64::<F>(5.0)) / const_f64::<F>(720.0);
 
     // Term 6: B_8 * s(s+1)...(s+7) * (n+q)^(-s-7) / 40320
-    let term6 = b8 * s7 * n_plus_q.powf(-s - F::from(7.0).unwrap()) / F::from(40320.0).unwrap();
+    let term6 = b8 * s7 * n_plus_q.powf(-s - const_f64::<F>(7.0)) / const_f64::<F>(40320.0);
 
     // Sum all terms for the Euler-Maclaurin approximation
     let result = sum + term1 + term2 - term3 + term4 - term5 + term6;
@@ -567,10 +579,10 @@ where
 
     let max_terms = 10000;
     let mut sum = F::zero();
-    let tolerance = F::from(1e-12).unwrap();
+    let tolerance = const_f64::<F>(1e-12);
 
     for k in 0..max_terms {
-        let term = (F::from(k).unwrap() + q).powf(-s);
+        let term = (F::from(k).expect("Failed to convert to float") + q).powf(-s);
         sum = sum + term;
 
         // Stop if the term is small enough
@@ -591,70 +603,70 @@ mod tests {
     #[test]
     fn test_zeta_special_values() {
         // ζ(2) = π²/6
-        let z2 = zeta::<f64>(2.0).unwrap();
+        let z2 = zeta::<f64>(2.0).expect("Test/example failed");
         assert_relative_eq!(z2, PI * PI / 6.0, epsilon = 1e-4);
 
         // ζ(4) = π⁴/90
-        let z4 = zeta::<f64>(4.0).unwrap();
+        let z4 = zeta::<f64>(4.0).expect("Test/example failed");
         assert_relative_eq!(z4, PI.powi(4) / 90.0, epsilon = 1e-4);
 
         // ζ(0) = -1/2, but our implementation might be returning NaN for this special case
         // This is a known limitation
 
         // ζ(-1) = -1/12
-        let z_neg1 = zeta::<f64>(-1.0).unwrap();
+        let z_neg1 = zeta::<f64>(-1.0).expect("Test/example failed");
         assert_relative_eq!(z_neg1, -1.0 / 12.0, epsilon = 1e-4);
 
         // ζ(-2) = 0
-        let z_neg2 = zeta::<f64>(-2.0).unwrap();
+        let z_neg2 = zeta::<f64>(-2.0).expect("Test/example failed");
         assert_relative_eq!(z_neg2, 0.0, epsilon = 1e-10);
 
         // ζ(-3) = 1/120
-        let z_neg3 = zeta::<f64>(-3.0).unwrap();
+        let z_neg3 = zeta::<f64>(-3.0).expect("Test/example failed");
         assert_relative_eq!(z_neg3, 1.0 / 120.0, epsilon = 1e-10);
     }
 
     #[test]
     fn test_zeta_large_values() {
         // ζ(20) ≈ 1.0000
-        let z20 = zeta::<f64>(20.0).unwrap();
+        let z20 = zeta::<f64>(20.0).expect("Test/example failed");
         assert!(z20 > 1.0 && z20 < 1.0001);
 
         // As s → ∞, ζ(s) → 1
-        let z100 = zeta::<f64>(100.0).unwrap();
+        let z100 = zeta::<f64>(100.0).expect("Test/example failed");
         assert!((z100 - 1.0).abs() < 1e-30);
     }
 
     #[test]
     fn test_zetac_special_values() {
         // ζ(2) - 1 = π²/6 - 1
-        let zc2 = zetac::<f64>(2.0).unwrap();
+        let zc2 = zetac::<f64>(2.0).expect("Test/example failed");
         assert_relative_eq!(zc2, PI * PI / 6.0 - 1.0, epsilon = 1e-4);
 
         // ζ(4) - 1 = π⁴/90 - 1
-        let zc4 = zetac::<f64>(4.0).unwrap();
+        let zc4 = zetac::<f64>(4.0).expect("Test/example failed");
         assert_relative_eq!(zc4, PI.powi(4) / 90.0 - 1.0, epsilon = 1e-4);
 
         // ζ(0) - 1 = -1/2 - 1 = -3/2, but our implementation might be returning NaN for this special case
         // This is a known limitation
 
         // For large s, zetac should approach 0
-        let zc50 = zetac::<f64>(50.0).unwrap();
+        let zc50 = zetac::<f64>(50.0).expect("Test/example failed");
         assert!(zc50.abs() < 1e-15);
     }
 
     #[test]
     fn test_hurwitz_zeta_special_values() {
         // ζ(2, 1) = ζ(2) = π²/6
-        let hz2_1 = hurwitz_zeta::<f64>(2.0, 1.0).unwrap();
+        let hz2_1 = hurwitz_zeta::<f64>(2.0, 1.0).expect("Test/example failed");
         assert_relative_eq!(hz2_1, PI * PI / 6.0, epsilon = 1e-4);
 
         // ζ(2, 0.5) = 4·ζ(2) = 2π²/3
-        let hz2_half = hurwitz_zeta::<f64>(2.0, 0.5).unwrap();
+        let hz2_half = hurwitz_zeta::<f64>(2.0, 0.5).expect("Test/example failed");
         assert_relative_eq!(hz2_half, 2.0 * PI * PI / 3.0, epsilon = 1e-4);
 
         // Special values that can be computed exactly
-        let hz2_2 = hurwitz_zeta::<f64>(2.0, 2.0).unwrap();
+        let hz2_2 = hurwitz_zeta::<f64>(2.0, 2.0).expect("Test/example failed");
         let expected = PI * PI / 6.0 - 1.0;
         assert_relative_eq!(hz2_2, expected, epsilon = 1e-4);
     }
@@ -663,13 +675,13 @@ mod tests {
     fn test_hurwitz_zeta_consistency() {
         // Check that hurwitz_zeta is consistent with zeta
         let s = 3.5;
-        let hz_s_1 = hurwitz_zeta::<f64>(s, 1.0).unwrap();
-        let z_s = zeta::<f64>(s).unwrap();
+        let hz_s_1 = hurwitz_zeta::<f64>(s, 1.0).expect("Test/example failed");
+        let z_s = zeta::<f64>(s).expect("Test/example failed");
         assert_relative_eq!(hz_s_1, z_s, epsilon = 1e-4);
 
         // For q = 2, ζ(s, 2) = ζ(s) - 1
-        let hz_s_2 = hurwitz_zeta::<f64>(s, 2.0).unwrap();
-        let zc_s = zetac::<f64>(s).unwrap();
+        let hz_s_2 = hurwitz_zeta::<f64>(s, 2.0).expect("Test/example failed");
+        let zc_s = zetac::<f64>(s).expect("Test/example failed");
         assert_relative_eq!(hz_s_2, zc_s, epsilon = 1e-4);
     }
 
@@ -677,13 +689,13 @@ mod tests {
     fn test_zetac_consistency() {
         // Check that zetac is consistent with zeta - 1
         let s = 3.5;
-        let zc_s = zetac::<f64>(s).unwrap();
-        let z_s = zeta::<f64>(s).unwrap();
+        let zc_s = zetac::<f64>(s).expect("Test/example failed");
+        let z_s = zeta::<f64>(s).expect("Test/example failed");
         assert_relative_eq!(zc_s, z_s - 1.0, epsilon = 1e-4);
 
         // For very large s, zetac should be more accurate than zeta - 1
         let s_large = 60.0;
-        let zc_large = zetac::<f64>(s_large).unwrap();
+        let zc_large = zetac::<f64>(s_large).expect("Test/example failed");
         assert!(zc_large > 0.0 && zc_large < 1e-15);
     }
 }

@@ -51,7 +51,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdMaxAbsScaler<F> {
 
         // Compute scale factors
         let scale = max_abs.mapv(|max_abs_val| {
-            if max_abs_val > F::from(EPSILON).unwrap() {
+            if max_abs_val > F::from(EPSILON).expect("Failed to convert to float") {
                 F::one() / max_abs_val
             } else {
                 F::one()
@@ -78,7 +78,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdMaxAbsScaler<F> {
             ));
         }
 
-        let scale = self.scale_.as_ref().unwrap();
+        let scale = self.scale_.as_ref().expect("Operation failed");
 
         if n_features != scale.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -159,7 +159,8 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdRobustScaler<F> {
 
             // Calculate median
             median[j] = if n % 2 == 0 {
-                (col_data[n / 2 - 1] + col_data[n / 2]) / F::from(2.0).unwrap()
+                (col_data[n / 2 - 1] + col_data[n / 2])
+                    / F::from(2.0).expect("Failed to convert constant to float")
             } else {
                 col_data[n / 2]
             };
@@ -174,7 +175,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdRobustScaler<F> {
 
         // Compute scale factors
         let scale = iqr.mapv(|iqr_val| {
-            if iqr_val > F::from(EPSILON).unwrap() {
+            if iqr_val > F::from(EPSILON).expect("Failed to convert to float") {
                 F::one() / iqr_val
             } else {
                 F::one()
@@ -202,8 +203,8 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdRobustScaler<F> {
             ));
         }
 
-        let median = self.median_.as_ref().unwrap();
-        let scale = self.scale_.as_ref().unwrap();
+        let median = self.median_.as_ref().expect("Operation failed");
+        let scale = self.scale_.as_ref().expect("Operation failed");
 
         if n_features != median.len() {
             return Err(TransformError::InvalidInput(format!(
@@ -279,7 +280,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdStandardScaler<F> {
             return Err(TransformError::InvalidInput("Empty input data".to_string()));
         }
 
-        let n_samples_f = F::from(n_samples).unwrap();
+        let n_samples_f = F::from(n_samples).expect("Failed to convert to float");
         let mut mean = Array1::zeros(n_features);
         let mut std = Array1::ones(n_features);
 
@@ -309,7 +310,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdStandardScaler<F> {
                 std[j] = variance.sqrt();
 
                 // Avoid division by zero
-                if std[j] <= F::from(EPSILON).unwrap() {
+                if std[j] <= F::from(EPSILON).expect("Failed to convert to float") {
                     std[j] = F::one();
                 }
             }
@@ -335,8 +336,8 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdStandardScaler<F> {
             ));
         }
 
-        let mean = self.mean_.as_ref().unwrap();
-        let std = self.std_.as_ref().unwrap();
+        let mean = self.mean_.as_ref().expect("Operation failed");
+        let std = self.std_.as_ref().expect("Operation failed");
 
         if n_features != mean.len() {
             return Err(TransformError::InvalidInput(format!(

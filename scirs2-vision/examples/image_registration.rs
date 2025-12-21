@@ -358,7 +358,7 @@ fn create_synthetic_matches(_nummatches: usize) -> Vec<PointMatch> {
             1.0,
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     for _ in 0..(_nummatches * 8 / 10) {
         // 80% good _matches

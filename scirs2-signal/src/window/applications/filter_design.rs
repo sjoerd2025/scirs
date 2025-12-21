@@ -316,15 +316,23 @@ fn kaiser_bessel_derived(length: usize, beta: f64) -> SignalResult<Vec<f64>> {
 fn estimate_filter_performance(
     window_type: &FilterWindowType,
     filter_length: usize,
-    design_transition_width: f64,
+    _design_transition_width: f64,
 ) -> (f64, f64) {
     let (transition_factor, stopband_atten) = match window_type {
         FilterWindowType::Kaiser { beta } => {
             let transition = 2.285 * PI / ((beta.powi(2) + 6.0 * beta + 9.0).sqrt());
+            // Invert the Kaiser beta estimation formula to get attenuation
+            // For beta = 0.1102 * (A - 8.7) when A > 50, we get A = beta/0.1102 + 8.7
+            // For smaller beta (A in 21-50), we use an approximation
             let atten = if *beta <= 0.0 {
                 21.0
+            } else if *beta < 5.65 {
+                // Approximate inverse of: beta = 0.5842*(A-21)^0.4 + 0.07886*(A-21)
+                // Using Newton's method result: roughly A ≈ 21 + 7.95 * beta
+                21.0 + 7.95 * beta
             } else {
-                20.0 * beta.log10() + 13.0
+                // Exact inverse of: beta = 0.1102 * (A - 8.7)
+                beta / 0.1102 + 8.7
             };
             (transition, atten)
         }
@@ -505,7 +513,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // FIXME: Filter design algorithm not achieving expected stopband attenuation
     fn test_filter_window_design() {
         let specs = FilterDesignSpecs {
             filter_type: FilterType::LowPass,
@@ -519,7 +526,7 @@ mod tests {
         let recommendation = design_filter_window(&specs, FilterOptimization::BalancedDesign);
         assert!(recommendation.is_ok());
 
-        let rec = recommendation.unwrap();
+        let rec = recommendation.expect("Operation failed");
         assert!(rec.filter_length >= 3);
         assert!(!rec.window_coefficients.is_empty());
         assert!(rec.stopband_attenuation >= 40.0); // Should be reasonably close to requirement
@@ -534,7 +541,7 @@ mod tests {
     #[test]
     fn test_filter_length_estimation() {
         let window_type = FilterWindowType::Kaiser { beta: 6.0 };
-        let length = estimate_filter_length(&window_type, 0.1).unwrap();
+        let length = estimate_filter_length(&window_type, 0.1).expect("Operation failed");
         assert!(length >= 3);
         assert!(length % 2 == 1); // Should be odd
     }
@@ -551,7 +558,8 @@ mod tests {
         };
 
         let window_type = FilterWindowType::Hamming;
-        let filter_coeffs = design_windowed_fir_filter(&specs, &window_type, 33).unwrap();
+        let filter_coeffs =
+            design_windowed_fir_filter(&specs, &window_type, 33).expect("Operation failed");
 
         assert_eq!(filter_coeffs.len(), 33);
 

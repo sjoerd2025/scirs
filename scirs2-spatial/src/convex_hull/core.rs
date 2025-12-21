@@ -59,7 +59,7 @@ impl ConvexHull {
     /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     /// ```
     pub fn new(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         Self::new_with_algorithm(points, ConvexHullAlgorithm::default())
@@ -88,7 +88,7 @@ impl ConvexHull {
     /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-    /// let hull = ConvexHull::new_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
+    /// let hull = ConvexHull::new_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).expect("Operation failed");
     /// ```
     pub fn new_with_algorithm(
         points: &ArrayView2<'_, f64>,
@@ -153,7 +153,7 @@ impl ConvexHull {
     /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     ///
     /// // The hull vertices should be the corners, not the interior point
     /// // The number of vertices can vary depending on QHull implementation
@@ -206,7 +206,7 @@ impl ConvexHull {
     /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     ///
     /// // Get the vertex indices of the hull
     /// let vertices = hull.vertex_indices();
@@ -229,7 +229,7 @@ impl ConvexHull {
     /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     ///
     /// // For a 2D hull, examine the simplices
     /// for simplex in hull.simplices() {
@@ -254,7 +254,7 @@ impl ConvexHull {
     /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     ///
     /// assert_eq!(hull.ndim(), 2);
     /// ```
@@ -283,15 +283,15 @@ impl ConvexHull {
     /// use scirs2_core::ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     ///
     /// // Check a point inside the hull
     /// // Result may vary depending on QHull implementation and special case handling
-    /// let inside = hull.contains(&[0.25, 0.25]).unwrap();
+    /// let inside = hull.contains(&[0.25, 0.25]).expect("Operation failed");
     /// println!("Point [0.25, 0.25] inside: {}", inside);
     ///
     /// // Check a point outside the hull
-    /// assert!(!hull.contains(&[2.0, 2.0]).unwrap());
+    /// assert!(!hull.contains(&[2.0, 2.0]).expect("Operation failed"));
     /// ```
     pub fn contains<T: AsRef<[f64]>>(&self, point: T) -> SpatialResult<bool> {
         crate::convex_hull::properties::containment::check_point_containment(self, point)
@@ -318,9 +318,9 @@ impl ConvexHull {
     ///
     /// // Create a square with area 1
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     ///
-    /// let area = hull.volume().unwrap();
+    /// let area = hull.volume().expect("Operation failed");
     /// assert!((area - 1.0).abs() < 1e-10);
     /// ```
     pub fn volume(&self) -> SpatialResult<f64> {
@@ -351,10 +351,10 @@ impl ConvexHull {
     ///     [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0],
     ///     [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]
     /// ];
-    /// let hull = ConvexHull::new(&points.view()).unwrap();
+    /// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
     ///
     /// // Surface area of the cube should be 6 square units
-    /// let area = hull.area().unwrap();
+    /// let area = hull.area().expect("Operation failed");
     /// assert!((area - 6.0).abs() < 1e-10);
     /// ```
     pub fn area(&self) -> SpatialResult<f64> {

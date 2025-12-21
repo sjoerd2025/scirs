@@ -27,7 +27,11 @@ pub fn non_maximum_suppression(
     overlap_threshold: f64,
 ) -> NdimageResult<Vec<PatternMatch>> {
     // Sort matches by confidence in descending order
-    matches.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+    matches.sort_by(|a, b| {
+        b.confidence
+            .partial_cmp(&a.confidence)
+            .expect("Operation failed")
+    });
 
     let mut kept_matches = Vec::new();
 
@@ -390,7 +394,7 @@ mod tests {
             },
         ];
 
-        let filtered = non_maximum_suppression(matches, 0.3).unwrap();
+        let filtered = non_maximum_suppression(matches, 0.3).expect("Operation failed");
 
         // Should keep high confidence overlapping match and separate match
         assert_eq!(filtered.len(), 2);
@@ -402,16 +406,20 @@ mod tests {
     fn test_analyze_patch_for_feature() {
         let patch = Array2::<f64>::zeros((8, 8));
 
-        let edge_strength = analyze_patch_for_feature(&patch.view(), "edge").unwrap();
+        let edge_strength =
+            analyze_patch_for_feature(&patch.view(), "edge").expect("Operation failed");
         assert_eq!(edge_strength, 0.8);
 
-        let corner_strength = analyze_patch_for_feature(&patch.view(), "corner").unwrap();
+        let corner_strength =
+            analyze_patch_for_feature(&patch.view(), "corner").expect("Operation failed");
         assert_eq!(corner_strength, 0.6);
 
-        let texture_strength = analyze_patch_for_feature(&patch.view(), "texture").unwrap();
+        let texture_strength =
+            analyze_patch_for_feature(&patch.view(), "texture").expect("Operation failed");
         assert_eq!(texture_strength, 0.7);
 
-        let unknown_strength = analyze_patch_for_feature(&patch.view(), "unknown").unwrap();
+        let unknown_strength =
+            analyze_patch_for_feature(&patch.view(), "unknown").expect("Operation failed");
         assert_eq!(unknown_strength, 0.5);
     }
 

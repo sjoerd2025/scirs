@@ -62,7 +62,7 @@ fn test_storage_comparison() {
         data.push((i % 1000) as f32 / 100.0); // Various values
     }
 
-    let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();
+    let matrix = Array2::from_shape_vec((rows, cols), data).expect("Test: operation failed");
 
     // Test different quantization methods
     let (int8matrix, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);
@@ -98,7 +98,7 @@ fn test_storage_efficiency_int4() {
         data.push((i % 15) as f32 - 7.0); // Values between -7 and 7
     }
 
-    let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();
+    let matrix = Array2::from_shape_vec((rows, cols), data).expect("Test: operation failed");
 
     // Quantize with 8-bit
     let (quantized8, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);
@@ -126,11 +126,11 @@ fn test_float16matrix_operations() {
     let (x_q, x_params) = quantize_vector(&x.view(), 16, QuantizationMethod::Float16);
 
     // Test matrix multiplication
-    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).expect("Test: operation failed");
     let c = a.dot(&b);
 
     // Test matrix-vector multiplication
-    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).unwrap();
+    let y_q = quantized_matvec(&a_q, &a_params, &x_q, &x_params).expect("Test: operation failed");
     let y = a.dot(&x);
 
     // Check errors
@@ -155,7 +155,7 @@ fn test_bfloat16_vector_operations() {
     let (b_q, b_params) = quantize_vector(&b.view(), 16, QuantizationMethod::BFloat16);
 
     // Perform quantized dot product
-    let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).unwrap();
+    let dot_q = quantized_dot(&a_q, &a_params, &b_q, &b_params).expect("Test: operation failed");
 
     // Regular dot product for comparison
     let dot = a.dot(&b);
@@ -180,8 +180,10 @@ fn test_mixed_precision_operations() {
     let (x_bf16, x_bf16_params) = quantize_vector(&x.view(), 16, QuantizationMethod::BFloat16);
 
     // Test mixed precision operations (Float16 x BFloat16)
-    let c_mixed = quantized_matmul(&a_f16, &a_f16_params, &b_bf16, &b_bf16_params).unwrap();
-    let y_mixed = quantized_matvec(&a_f16, &a_f16_params, &x_bf16, &x_bf16_params).unwrap();
+    let c_mixed = quantized_matmul(&a_f16, &a_f16_params, &b_bf16, &b_bf16_params)
+        .expect("Test: operation failed");
+    let y_mixed = quantized_matvec(&a_f16, &a_f16_params, &x_bf16, &x_bf16_params)
+        .expect("Test: operation failed");
 
     // Regular operations for comparison
     let c = a.dot(&b);

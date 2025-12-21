@@ -420,10 +420,10 @@ mod tests {
 
     #[test]
     fn test_backend_context_creation() {
-        let cuda_context = BackendContext::new(&GpuBackend::Cuda).unwrap();
+        let cuda_context = BackendContext::new(&GpuBackend::Cuda).expect("Operation failed");
         assert!(cuda_context.is_valid());
 
-        let cpu_context = BackendContext::new(&GpuBackend::CpuFallback).unwrap();
+        let cpu_context = BackendContext::new(&GpuBackend::CpuFallback).expect("Operation failed");
         assert!(cpu_context.is_valid());
     }
 }

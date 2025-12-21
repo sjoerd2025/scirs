@@ -56,7 +56,7 @@ pub struct AnovaResult<F> {
 ///
 /// // Perform one-way ANOVA
 /// let groups = [&group1.view(), &group2.view(), &group3.view()];
-/// let anova_result = one_way_anova(&groups).unwrap();
+/// let anova_result = one_way_anova(&groups).expect("Test: operation failed");
 ///
 /// println!("F-statistic: {}", anova_result.f_statistic);
 /// println!("p-value: {}", anova_result.p_value);
@@ -129,7 +129,7 @@ where
 
     // Calculate treatment sum of squares
     for (&group_mean, &groupsize) in group_means.iter().zip(groupsizes.iter()) {
-        let size_f = F::from(groupsize).unwrap();
+        let size_f = F::from(groupsize).expect("Failed to convert to float");
         ss_treatment = ss_treatment + size_f * (group_mean - grand_mean).powi(2);
     }
 
@@ -146,16 +146,16 @@ where
     let df_error = n_total - groups.len();
 
     // Mean squares
-    let ms_treatment = ss_treatment / F::from(df_treatment).unwrap();
-    let ms_error = ss_error / F::from(df_error).unwrap();
+    let ms_treatment = ss_treatment / F::from(df_treatment).expect("Failed to convert to float");
+    let ms_error = ss_error / F::from(df_error).expect("Failed to convert to float");
 
     // F-statistic
     let f_statistic = ms_treatment / ms_error;
 
     // Calculate p-value using F-distribution
     let f_dist = f(
-        F::from(df_treatment).unwrap(),
-        F::from(df_error).unwrap(),
+        F::from(df_treatment).expect("Failed to convert to float"),
+        F::from(df_error).expect("Failed to convert to float"),
         F::zero(),
         F::one(),
     )?;
@@ -201,11 +201,11 @@ where
 ///
 /// // Perform one-way ANOVA
 /// let groups = [&group1.view(), &group2.view(), &group3.view()];
-/// let anova_result = one_way_anova(&groups).unwrap();
+/// let anova_result = one_way_anova(&groups).expect("Test: operation failed");
 ///
 /// // If ANOVA shows significant differences, perform Tukey's HSD
 /// if anova_result.p_value < 0.05 {
-///     let tukey_results = tukey_hsd(&groups, 0.05).unwrap();
+///     let tukey_results = tukey_hsd(&groups, 0.05).expect("Test: operation failed");
 ///     
 ///     for (i, j, diff, p, sig) in tukey_results {
 ///         println!(
@@ -245,15 +245,15 @@ where
 
     for group in groups {
         group_means.push(mean(group)?);
-        groupsizes.push(F::from(group.len()).unwrap());
+        groupsizes.push(F::from(group.len()).expect("Test: operation failed"));
     }
 
     // Calculate the studentized range critical value
     // This is a simplification; in a real implementation, you would use a lookup table or function
     let critical_q = calculate_studentized_range_critical_value(
         alpha,
-        F::from(groups.len()).unwrap(),
-        F::from(anova_result.df_error).unwrap(),
+        F::from(groups.len()).expect("Test: operation failed"),
+        F::from(anova_result.df_error).expect("Failed to convert to float"),
     )?;
 
     let mut results = Vec::new();
@@ -265,7 +265,9 @@ where
             let mean_diff = (group_means[i] - group_means[j]).abs();
 
             // Calculate the standard error for this comparison
-            let harmonic_mean_n = (F::from(2.0).unwrap() * groupsizes[i] * groupsizes[j])
+            let harmonic_mean_n = (F::from(2.0).expect("Failed to convert constant to float")
+                * groupsizes[i]
+                * groupsizes[j])
                 / (groupsizes[i] + groupsizes[j]);
             let std_error = (anova_result.ms_error / harmonic_mean_n).sqrt();
 
@@ -276,8 +278,8 @@ where
             // Approximation for the studentized range distribution
             let p_value = calculate_studentized_range_p_value(
                 q_stat,
-                F::from(groups.len()).unwrap(),
-                F::from(anova_result.df_error).unwrap(),
+                F::from(groups.len()).expect("Test: operation failed"),
+                F::from(anova_result.df_error).expect("Failed to convert to float"),
             );
 
             // Determine if the difference is significant
@@ -327,9 +329,9 @@ fn calculate_studentized_range_critical_value<F: Float + NumCast>(
     ];
 
     // Convert parameters to f64 for easier comparison
-    let alpha_f64 = <f64 as NumCast>::from(alpha).unwrap();
-    let k_f64 = <f64 as NumCast>::from(k).unwrap();
-    let df_f64 = <f64 as NumCast>::from(df).unwrap();
+    let alpha_f64 = <f64 as NumCast>::from(alpha).expect("Test: operation failed");
+    let k_f64 = <f64 as NumCast>::from(k).expect("Test: operation failed");
+    let df_f64 = <f64 as NumCast>::from(df).expect("Test: operation failed");
 
     // Simple validation
     if alpha_f64 <= 0.0 || alpha_f64 >= 1.0 {
@@ -380,7 +382,7 @@ fn calculate_studentized_range_critical_value<F: Float + NumCast>(
     let k_index = k_f64 as usize - 2;
 
     // Return the critical value
-    Ok(F::from(table[df_index][k_index]).unwrap())
+    Ok(F::from(table[df_index][k_index]).expect("Failed to convert to float"))
 }
 
 /// Calculate the p-value for the studentized range distribution.
@@ -393,9 +395,9 @@ fn calculate_studentized_range_p_value<F: Float + NumCast>(q: F, k: F, df: F) ->
     // distribution can be approximated using the standard normal distribution
 
     // Convert to f64 for calculation
-    let q_f64 = <f64 as NumCast>::from(q).unwrap();
-    let k_f64 = <f64 as NumCast>::from(k).unwrap();
-    let df_f64 = <f64 as NumCast>::from(df).unwrap();
+    let q_f64 = <f64 as NumCast>::from(q).expect("Test: operation failed");
+    let k_f64 = <f64 as NumCast>::from(k).expect("Test: operation failed");
+    let df_f64 = <f64 as NumCast>::from(df).expect("Test: operation failed");
 
     // Adjustment factor based on the number of groups
     let adjustment = 0.7 + 0.1 * k_f64;
@@ -422,5 +424,5 @@ fn calculate_studentized_range_p_value<F: Float + NumCast>(q: F, k: F, df: F) ->
     let final_p = p_adjusted * df_adjustment;
 
     // Ensure p-value is in valid range [0,1]
-    F::from(final_p.clamp(0.0, 1.0)).unwrap()
+    F::from(final_p.clamp(0.0, 1.0)).expect("Test: operation failed")
 }

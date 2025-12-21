@@ -86,7 +86,7 @@ impl<
             }
 
             // Sort by distance and take k nearest
-            distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            distances.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("Operation failed"));
 
             for &(neighbor_idx, distance) in distances.iter().take(k) {
                 // Use similarity (inverse of distance) as edge weight
@@ -157,13 +157,15 @@ impl<
                     let degree_i = self.weighted_degree(i);
                     let degree_j = self.weighted_degree(j);
 
-                    let expected = degree_i * degree_j / (F::from(2.0).unwrap() * total_weight);
+                    let expected = degree_i * degree_j
+                        / (F::from(2.0).expect("Failed to convert constant to float")
+                            * total_weight);
                     modularity = modularity + edge_weight - expected;
                 }
             }
         }
 
-        modularity / (F::from(2.0).unwrap() * total_weight)
+        modularity / (F::from(2.0).expect("Failed to convert constant to float") * total_weight)
     }
 
     /// Get edge weight between two nodes
@@ -186,7 +188,7 @@ impl<
                 total = total + weight;
             }
         }
-        total / F::from(2.0).unwrap() // Divide by 2 because each edge is counted twice
+        total / F::from(2.0).expect("Failed to convert constant to float") // Divide by 2 because each edge is counted twice
     }
 }
 
@@ -220,11 +222,11 @@ impl<
 ///     1.0, 0.0, 0.0, 0.0,
 ///     1.0, 0.0, 0.0, 1.0,
 ///     0.0, 0.0, 1.0, 0.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // This would fail to compile due to trait constraint conflicts
-/// // let graph = Graph::from_adjacencymatrix(adjacency.view()).unwrap();
-/// // let communities = louvain(&graph, 1.0, 100).unwrap();
+/// // let graph = Graph::from_adjacencymatrix(adjacency.view()).expect("Operation failed");
+/// // let communities = louvain(&graph, 1.0, 100).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn louvain<F>(graph: &Graph<F>, resolution: f64, max_iterations: usize) -> Result<Array1<usize>>
@@ -319,7 +321,7 @@ where
     }
 
     let node_degree = graph.weighted_degree(node);
-    let resolution_f = F::from(resolution).unwrap();
+    let resolution_f = F::from(resolution).expect("Failed to convert to float");
 
     // Calculate connections within target _community
     let mut edges_to_target = F::zero();
@@ -341,10 +343,10 @@ where
     // Calculate modularity gain
     let gain_to = edges_to_target
         - resolution_f * node_degree * target_community_weight
-            / (F::from(2.0).unwrap() * total_weight);
+            / (F::from(2.0).expect("Failed to convert constant to float") * total_weight);
     let loss_from = edges_from_source
         - resolution_f * node_degree * (source_community_weight - node_degree)
-            / (F::from(2.0).unwrap() * total_weight);
+            / (F::from(2.0).expect("Failed to convert constant to float") * total_weight);
 
     gain_to - loss_from
 }
@@ -408,7 +410,7 @@ where
 {
     let n_nodes = graph.n_nodes;
     let mut labels: Array1<usize> = Array1::from_iter(0..n_nodes);
-    let tolerance_f = F::from(tolerance).unwrap();
+    let tolerance_f = F::from(tolerance).expect("Failed to convert to float");
 
     for _iteration in 0..max_iterations {
         let mut new_labels = labels.clone();
@@ -432,7 +434,7 @@ where
             // Choose label with highest weight
             if let Some((&best_label_, _)) = label_weights
                 .iter()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
             {
                 if best_label_ != labels[node] {
                     new_labels[node] = best_label_;
@@ -507,7 +509,7 @@ where
         // Find edge with highest betweenness
         if let Some((max_edge_, _)) = edge_betweenness
             .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).expect("Operation failed"))
         {
             // Remove the edge with highest betweenness
             remove_edge(&mut workinggraph, max_edge_.0, max_edge_.1);
@@ -594,7 +596,7 @@ where
     queue.push_back(source);
 
     while let Some(current) = queue.pop_front() {
-        let current_dist = distances[current].unwrap();
+        let current_dist = distances[current].expect("Operation failed");
 
         for &(neighbor_, _) in graph.neighbor_s(current) {
             if distances[neighbor_].is_none() {
@@ -850,9 +852,9 @@ mod tests {
     fn testgraph_from_adjacencymatrix() {
         let adjacency =
             Array2::from_shape_vec((3, 3), vec![0, 1, 0, 1, 0, 1, 0, 1, 0])
-                .unwrap();
+                .expect("Operation failed");
 
-        let graph = Graph::from_adjacencymatrix(adjacency.view()).unwrap();
+        let graph = Graph::from_adjacencymatrix(adjacency.view()).expect("Operation failed");
         assert_eq!(graph.n_nodes, 3);
         assert_eq!(graph.degree(0), 1);
         assert_eq!(graph.degree(1), 2);
@@ -870,10 +872,10 @@ mod tests {
                 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let graph = Graph::from_adjacencymatrix(adjacency.view()).unwrap();
-        let communities = louvain(&graph, 1.0, 100).unwrap();
+        let graph = Graph::from_adjacencymatrix(adjacency.view()).expect("Operation failed");
+        let communities = louvain(&graph, 1.0, 100).expect("Operation failed");
 
         // Nodes 0,1 should be in one community and nodes 2,3 in another
         assert_eq!(communities.len(), 4);
@@ -892,10 +894,10 @@ mod tests {
                 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
-        let graph = Graph::from_adjacencymatrix(adjacency.view()).unwrap();
-        let communities = label_propagation(&graph, 100, 1e-6).unwrap();
+        let graph = Graph::from_adjacencymatrix(adjacency.view()).expect("Operation failed");
+        let communities = label_propagation(&graph, 100, 1e-6).expect("Operation failed");
 
         assert_eq!(communities.len(), 4);
         // Should detect two communities
@@ -908,9 +910,9 @@ mod tests {
     #[test]
     fn test_knngraph_creation() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0, 0, 1, 1, 5, 5, 6, 6]).unwrap();
+            Array2::from_shape_vec((4, 2), vec![0, 0, 1, 1, 5, 5, 6, 6]).expect("Operation failed");
 
-        let graph = Graph::from_knngraph(data.view(), 2).unwrap();
+        let graph = Graph::from_knngraph(data.view(), 2).expect("Operation failed");
         assert_eq!(graph.n_nodes, 4);
 
         // Each node should have exactly 2 neighbor_s

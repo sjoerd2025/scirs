@@ -613,7 +613,8 @@ where
 
     // Try multiple perturbation sizes
     for sample in 0..n_samples {
-        let alpha = F::from(sample).unwrap() / F::from(n_samples - 1).unwrap();
+        let alpha = F::from(sample).expect("Failed to convert to float")
+            / F::from(n_samples - 1).expect("Failed to convert to float");
         let eps = eps_min * (F::one() - alpha) + eps_max * alpha;
 
         let pattern = detect_sparsity(&f, x, eps)?;
@@ -720,7 +721,7 @@ mod tests {
 
         // Test matrix-vector multiplication
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let y = jac.apply(x.view()).unwrap();
+        let y = jac.apply(x.view()).expect("Operation failed");
 
         // Should compute [2*1 - 1*2, -1*1 + 2*2 - 1*3, -1*2 + 2*3]
         assert!((y[0] - 0.0_f64).abs() < 1e-10);
@@ -747,7 +748,7 @@ mod tests {
 
         // Test CSR matrix-vector multiplication
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        let y = csr.apply(x.view()).unwrap();
+        let y = csr.apply(x.view()).expect("Operation failed");
 
         assert!((y[0] - 0.0_f64).abs() < 1e-10);
         assert!((y[1] - 0.0_f64).abs() < 1e-10);

@@ -10,6 +10,12 @@ use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::ODEMethod;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: IntegrateFloat>(value: f64) -> F {
+    F::from_f64(value).expect("Failed to convert constant to target float type")
+}
+
 /// BDF method for semi-explicit DAE systems
 ///
 /// Implements a specialized BDF method tailored for semi-explicit DAE systems
@@ -46,18 +52,18 @@ where
     // Initial step size
     let mut h = options.h0.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(0.01).unwrap() // 1% of interval
+        _span * const_f64::<F>(0.01) // 1% of interval
     });
 
     // Step limits
     let min_step = options.min_step.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        _span * const_f64::<F>(1e-6) // Very small relative to interval
     });
 
     let max_step = options.max_step.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(0.1).unwrap() // 10% of interval
+        _span * const_f64::<F>(0.1) // 10% of interval
     });
 
     // Maximum BDF order
@@ -87,42 +93,42 @@ where
     // Alpha coefficients (exclude α_0 = 1)
     let alpha_coeffs = [
         // Order 1 (Backward Euler)
-        vec![F::from_f64(-1.0).unwrap()],
+        vec![const_f64::<F>(-1.0)],
         // Order 2
         vec![
-            F::from_f64(-4.0 / 3.0).unwrap(),
-            F::from_f64(1.0 / 3.0).unwrap(),
+            F::from_f64(-4.0 / 3.0).expect("Failed to convert to float"),
+            F::from_f64(1.0 / 3.0).expect("Failed to convert to float"),
         ],
         // Order 3
         vec![
-            F::from_f64(-18.0 / 11.0).unwrap(),
-            F::from_f64(9.0 / 11.0).unwrap(),
-            F::from_f64(-2.0 / 11.0).unwrap(),
+            F::from_f64(-18.0 / 11.0).expect("Failed to convert to float"),
+            F::from_f64(9.0 / 11.0).expect("Failed to convert to float"),
+            F::from_f64(-2.0 / 11.0).expect("Failed to convert to float"),
         ],
         // Order 4
         vec![
-            F::from_f64(-48.0 / 25.0).unwrap(),
-            F::from_f64(36.0 / 25.0).unwrap(),
-            F::from_f64(-16.0 / 25.0).unwrap(),
-            F::from_f64(3.0 / 25.0).unwrap(),
+            F::from_f64(-48.0 / 25.0).expect("Failed to convert to float"),
+            F::from_f64(36.0 / 25.0).expect("Failed to convert to float"),
+            F::from_f64(-16.0 / 25.0).expect("Failed to convert to float"),
+            F::from_f64(3.0 / 25.0).expect("Failed to convert to float"),
         ],
         // Order 5
         vec![
-            F::from_f64(-300.0 / 137.0).unwrap(),
-            F::from_f64(300.0 / 137.0).unwrap(),
-            F::from_f64(-200.0 / 137.0).unwrap(),
-            F::from_f64(75.0 / 137.0).unwrap(),
-            F::from_f64(-12.0 / 137.0).unwrap(),
+            F::from_f64(-300.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(300.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(-200.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(75.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(-12.0 / 137.0).expect("Failed to convert to float"),
         ],
     ];
 
     // Beta coefficients (multiplier for the RHS function)
     let beta_coeffs = [
-        F::from_f64(1.0).unwrap(),          // Order 1
-        F::from_f64(2.0 / 3.0).unwrap(),    // Order 2
-        F::from_f64(6.0 / 11.0).unwrap(),   // Order 3
-        F::from_f64(12.0 / 25.0).unwrap(),  // Order 4
-        F::from_f64(60.0 / 137.0).unwrap(), // Order 5
+        const_f64::<F>(1.0),                                            // Order 1
+        F::from_f64(2.0 / 3.0).expect("Failed to convert to float"),    // Order 2
+        F::from_f64(6.0 / 11.0).expect("Failed to convert to float"),   // Order 3
+        F::from_f64(12.0 / 25.0).expect("Failed to convert to float"),  // Order 4
+        F::from_f64(60.0 / 137.0).expect("Failed to convert to float"), // Order 5
     ];
 
     // Current order (start with order 1 and build up)
@@ -162,7 +168,7 @@ where
             t_new,
             x_pred.view(),
             y_pred.view(),
-            F::from_f64(1e-8).unwrap(),
+            const_f64::<F>(1e-8),
         );
         n_jac_evals += 1;
 
@@ -239,14 +245,14 @@ where
                 t_new,
                 x_corr.view(),
                 y_corr.view(),
-                F::from_f64(1e-8).unwrap(),
+                const_f64::<F>(1e-8),
             );
             let f_y = compute_jacobian_y(
                 &f,
                 t_new,
                 x_corr.view(),
                 y_corr.view(),
-                F::from_f64(1e-8).unwrap(),
+                const_f64::<F>(1e-8),
             );
             n_jac_evals += 2;
 
@@ -265,7 +271,7 @@ where
                 t_new,
                 x_corr.view(),
                 y_corr.view(),
-                F::from_f64(1e-8).unwrap(),
+                const_f64::<F>(1e-8),
             );
             n_jac_evals += 1;
 
@@ -275,7 +281,7 @@ where
                 t_new,
                 x_corr.view(),
                 y_corr.view(),
-                F::from_f64(1e-8).unwrap(),
+                const_f64::<F>(1e-8),
             );
             n_jac_evals += 1;
 
@@ -334,7 +340,7 @@ where
                 Err(_e) => {
                     // If the linear solve fails, try with a smaller step
                     // and terminate this Newton iteration
-                    h *= F::from_f64(0.5).unwrap();
+                    h *= const_f64::<F>(0.5);
                     break;
                 }
             };
@@ -346,7 +352,7 @@ where
 
             // Apply the Newton step with damping if needed
             let mut alpha_damp = F::one();
-            let min_alpha = F::from_f64(0.1).unwrap();
+            let min_alpha = const_f64::<F>(0.1);
 
             // Damped Newton iteration to improve convergence
             while alpha_damp >= min_alpha {
@@ -390,13 +396,13 @@ where
                 }
 
                 // Reduce damping factor
-                alpha_damp *= F::from_f64(0.5).unwrap();
+                alpha_damp *= const_f64::<F>(0.5);
             }
 
             // If damping factor got too small, the Newton iteration is not converging
             if alpha_damp < min_alpha {
                 // Reduce step size and try again
-                h *= F::from_f64(0.5).unwrap();
+                h *= const_f64::<F>(0.5);
                 break;
             }
         }
@@ -404,7 +410,7 @@ where
         // Check for convergence of the Newton iteration
         if !converged {
             // If not converged, reduce step size and try again
-            h *= F::from_f64(0.5).unwrap();
+            h *= const_f64::<F>(0.5);
 
             // If step size gets too small, the problem might be too stiff
             if h < min_step {
@@ -431,32 +437,34 @@ where
             let scale = atol + rtol * x_corr[i].abs();
             error_norm_x += (error_x[i] / scale).powi(2);
         }
-        error_norm_x = (error_norm_x / F::from_usize(n_x).unwrap()).sqrt();
+        error_norm_x = (error_norm_x / F::from_usize(n_x).expect("Operation failed")).sqrt();
 
         let mut error_norm_y = F::zero();
         for i in 0..n_y {
             let scale = atol + rtol * y_corr[i].abs();
             error_norm_y += (error_y[i] / scale).powi(2);
         }
-        error_norm_y = (error_norm_y / F::from_usize(n_y).unwrap()).sqrt();
+        error_norm_y = (error_norm_y / F::from_usize(n_y).expect("Operation failed")).sqrt();
 
         // Take the maximum of the two error norms
         let error_norm = error_norm_x.max(error_norm_y);
 
         // Adjust the step size based on the error estimate
         let error_order = order as i32;
-        let safety = F::from_f64(0.9).unwrap(); // Safety factor
+        let safety = const_f64::<F>(0.9); // Safety factor
 
         // Calculate the optimal step size
         let h_new = if error_norm > F::zero() {
-            h * safety * (F::one() / error_norm).powf(F::one() / F::from_i32(error_order).unwrap())
+            h * safety
+                * (F::one() / error_norm)
+                    .powf(F::one() / F::from_i32(error_order).expect("Operation failed"))
         } else {
-            h * F::from_f64(2.0).unwrap() // Double the step size if error is 0
+            h * const_f64::<F>(2.0) // Double the step size if error is 0
         };
 
         // Limit step size increase and decrease
-        let max_increase = F::from_f64(2.0).unwrap();
-        let max_decrease = F::from_f64(0.1).unwrap();
+        let max_increase = const_f64::<F>(2.0);
+        let max_decrease = const_f64::<F>(0.1);
 
         let h_new = (h_new / h).max(max_decrease).min(max_increase) * h;
         let h_new = h_new.min(max_step).max(min_step);
@@ -549,18 +557,18 @@ where
     // Initial step size
     let mut h = options.h0.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(0.01).unwrap() // 1% of interval
+        _span * const_f64::<F>(0.01) // 1% of interval
     });
 
     // Step limits
     let min_step = options.min_step.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        _span * const_f64::<F>(1e-6) // Very small relative to interval
     });
 
     let max_step = options.max_step.unwrap_or_else(|| {
         let _span = t_span[1] - t_span[0];
-        _span * F::from_f64(0.1).unwrap() // 10% of interval
+        _span * const_f64::<F>(0.1) // 10% of interval
     });
 
     // Maximum BDF order
@@ -582,42 +590,42 @@ where
     // Alpha coefficients (exclude α_0 = 1)
     let alpha_coeffs = [
         // Order 1 (Backward Euler)
-        vec![F::from_f64(-1.0).unwrap()],
+        vec![const_f64::<F>(-1.0)],
         // Order 2
         vec![
-            F::from_f64(-4.0 / 3.0).unwrap(),
-            F::from_f64(1.0 / 3.0).unwrap(),
+            F::from_f64(-4.0 / 3.0).expect("Failed to convert to float"),
+            F::from_f64(1.0 / 3.0).expect("Failed to convert to float"),
         ],
         // Order 3
         vec![
-            F::from_f64(-18.0 / 11.0).unwrap(),
-            F::from_f64(9.0 / 11.0).unwrap(),
-            F::from_f64(-2.0 / 11.0).unwrap(),
+            F::from_f64(-18.0 / 11.0).expect("Failed to convert to float"),
+            F::from_f64(9.0 / 11.0).expect("Failed to convert to float"),
+            F::from_f64(-2.0 / 11.0).expect("Failed to convert to float"),
         ],
         // Order 4
         vec![
-            F::from_f64(-48.0 / 25.0).unwrap(),
-            F::from_f64(36.0 / 25.0).unwrap(),
-            F::from_f64(-16.0 / 25.0).unwrap(),
-            F::from_f64(3.0 / 25.0).unwrap(),
+            F::from_f64(-48.0 / 25.0).expect("Failed to convert to float"),
+            F::from_f64(36.0 / 25.0).expect("Failed to convert to float"),
+            F::from_f64(-16.0 / 25.0).expect("Failed to convert to float"),
+            F::from_f64(3.0 / 25.0).expect("Failed to convert to float"),
         ],
         // Order 5
         vec![
-            F::from_f64(-300.0 / 137.0).unwrap(),
-            F::from_f64(300.0 / 137.0).unwrap(),
-            F::from_f64(-200.0 / 137.0).unwrap(),
-            F::from_f64(75.0 / 137.0).unwrap(),
-            F::from_f64(-12.0 / 137.0).unwrap(),
+            F::from_f64(-300.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(300.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(-200.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(75.0 / 137.0).expect("Failed to convert to float"),
+            F::from_f64(-12.0 / 137.0).expect("Failed to convert to float"),
         ],
     ];
 
     // Beta coefficients (for derivative approximation)
     let beta_coeffs = [
-        F::from_f64(1.0).unwrap(),          // Order 1
-        F::from_f64(2.0 / 3.0).unwrap(),    // Order 2
-        F::from_f64(6.0 / 11.0).unwrap(),   // Order 3
-        F::from_f64(12.0 / 25.0).unwrap(),  // Order 4
-        F::from_f64(60.0 / 137.0).unwrap(), // Order 5
+        const_f64::<F>(1.0),                                            // Order 1
+        F::from_f64(2.0 / 3.0).expect("Failed to convert to float"),    // Order 2
+        F::from_f64(6.0 / 11.0).expect("Failed to convert to float"),   // Order 3
+        F::from_f64(12.0 / 25.0).expect("Failed to convert to float"),  // Order 4
+        F::from_f64(60.0 / 137.0).expect("Failed to convert to float"), // Order 5
     ];
 
     // Current order (start with order 1 and build up)
@@ -717,7 +725,7 @@ where
                 t_new,
                 y_corr.view(),
                 y_prime_corr.view(),
-                F::from_f64(1e-8).unwrap(),
+                const_f64::<F>(1e-8),
             );
 
             // Jacobian with respect to y'
@@ -726,7 +734,7 @@ where
                 t_new,
                 y_corr.view(),
                 y_prime_corr.view(),
-                F::from_f64(1e-8).unwrap(),
+                const_f64::<F>(1e-8),
             );
             n_jac_evals += 2;
 
@@ -756,7 +764,7 @@ where
                 Ok(dy) => dy,
                 Err(_e) => {
                     // If linear solve fails, reduce step size and try again
-                    h *= F::from_f64(0.5).unwrap();
+                    h *= const_f64::<F>(0.5);
                     break;
                 }
             };
@@ -764,7 +772,7 @@ where
 
             // Apply the Newton step with damping if needed
             let mut alpha_damp = F::one();
-            let min_alpha = F::from_f64(0.1).unwrap();
+            let min_alpha = const_f64::<F>(0.1);
 
             // Damped Newton iteration
             while alpha_damp >= min_alpha {
@@ -812,13 +820,13 @@ where
                 }
 
                 // Reduce damping factor
-                alpha_damp *= F::from_f64(0.5).unwrap();
+                alpha_damp *= const_f64::<F>(0.5);
             }
 
             // If damping factor got too small, the Newton iteration is not converging
             if alpha_damp < min_alpha {
                 // Reduce step size and try again
-                h *= F::from_f64(0.5).unwrap();
+                h *= const_f64::<F>(0.5);
                 break;
             }
         }
@@ -826,7 +834,7 @@ where
         // Check for convergence of the Newton iteration
         if !converged {
             // If not converged, reduce step size and try again
-            h *= F::from_f64(0.5).unwrap();
+            h *= const_f64::<F>(0.5);
 
             // If step size gets too small, the problem might be too stiff
             if h < min_step {
@@ -852,22 +860,24 @@ where
             let scale = atol + rtol * y_corr[i].abs();
             error_norm += (error[i] / scale).powi(2);
         }
-        error_norm = (error_norm / F::from_usize(n).unwrap()).sqrt();
+        error_norm = (error_norm / F::from_usize(n).expect("Operation failed")).sqrt();
 
         // Adjust the step size based on the error estimate
         let error_order = order as i32;
-        let safety = F::from_f64(0.9).unwrap(); // Safety factor
+        let safety = const_f64::<F>(0.9); // Safety factor
 
         // Calculate the optimal step size
         let h_new = if error_norm > F::zero() {
-            h * safety * (F::one() / error_norm).powf(F::one() / F::from_i32(error_order).unwrap())
+            h * safety
+                * (F::one() / error_norm)
+                    .powf(F::one() / F::from_i32(error_order).expect("Operation failed"))
         } else {
-            h * F::from_f64(2.0).unwrap() // Double the step size if error is 0
+            h * const_f64::<F>(2.0) // Double the step size if error is 0
         };
 
         // Limit step size increase and decrease
-        let max_increase = F::from_f64(2.0).unwrap();
-        let max_decrease = F::from_f64(0.1).unwrap();
+        let max_increase = const_f64::<F>(2.0);
+        let max_decrease = const_f64::<F>(0.1);
 
         let h_new = (h_new / h).max(max_decrease).min(max_increase) * h;
         let h_new = h_new.min(max_step).max(min_step);
@@ -997,7 +1007,7 @@ where
     let t_ratio = h / dt_recent;
 
     // Scale by order factor to improve prediction for higher orders
-    let scaling = F::from_f64(1.0 + 0.3 * order_to_use as f64).unwrap();
+    let scaling = F::from_f64(1.0 + 0.3 * order_to_use as f64).expect("Failed to convert to float");
 
     // Extrapolate
     for i in 0..n_x {
@@ -1277,7 +1287,7 @@ where
         }
 
         // Check for singularity
-        if a_copy[[k, k]].abs() < F::from_f64(1e-10).unwrap() {
+        if a_copy[[k, k]].abs() < const_f64::<F>(1e-10) {
             return Err(IntegrateError::ComputationError(format!(
                 "Matrix is singular at row {k}"
             )));
@@ -1294,7 +1304,7 @@ where
     }
 
     // Check the last pivot
-    if a_copy[[n - 1, n - 1]].abs() < F::from_f64(1e-10).unwrap() {
+    if a_copy[[n - 1, n - 1]].abs() < const_f64::<F>(1e-10) {
         return Err(IntegrateError::ComputationError(
             "Matrix is singular at the last row".to_string(),
         ));

@@ -45,7 +45,7 @@ fn test_simd_vs_scalar() {
         // SIMD timing
         let start = Instant::now();
         for _ in 0..1000 {
-            let _ = simd_euclidean_distance(&p1, &p2).unwrap();
+            let _ = simd_euclidean_distance(&p1, &p2).expect("Operation failed");
         }
         let simd_time = start.elapsed();
 
@@ -83,7 +83,7 @@ fn test_distance_matrix_performance() {
 
         // Parallel timing
         let start = Instant::now();
-        let _par_distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+        let _par_distances = parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
         let parallel_time = start.elapsed();
 
         let speedup = sequential_time.as_secs_f64() / parallel_time.as_secs_f64();
@@ -118,15 +118,18 @@ fn test_simd_batch_operations() {
         // Individual SIMD calls timing
         let start = Instant::now();
         for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
-            let _ = simd_euclidean_distance(row1.as_slice().unwrap(), row2.as_slice().unwrap())
-                .unwrap();
+            let _ = simd_euclidean_distance(
+                row1.as_slice().expect("Operation failed"),
+                row2.as_slice().expect("Operation failed"),
+            )
+            .expect("Operation failed");
         }
         let individual_time = start.elapsed();
 
         // Batch SIMD timing
         let start = Instant::now();
-        let _batch_distances =
-            simd_euclidean_distance_batch(&points1.view(), &points2.view()).unwrap();
+        let _batch_distances = simd_euclidean_distance_batch(&points1.view(), &points2.view())
+            .expect("Operation failed");
         let batch_time = start.elapsed();
 
         let speedup = individual_time.as_secs_f64() / batch_time.as_secs_f64();
@@ -155,7 +158,8 @@ fn test_knn_performance() {
     for &k in &[1, 5, 10, 20] {
         let start = Instant::now();
         let _indicesdistances =
-            simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean").unwrap();
+            simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean")
+                .expect("Operation failed");
         let time = start.elapsed();
 
         let queries_per_sec = query_points.nrows() as f64 / time.as_secs_f64();
@@ -183,13 +187,15 @@ fn test_spatial_structures() {
 
         // KDTree construction
         let start = Instant::now();
-        let kdtree = KDTree::new(&points).unwrap();
+        let kdtree = KDTree::new(&points).expect("Operation failed");
         let construction_time = start.elapsed();
 
         // Query timing
         let start = Instant::now();
         for query in query_points.outer_iter() {
-            let _ = kdtree.query(query.as_slice().unwrap(), 5).unwrap();
+            let _ = kdtree
+                .query(query.as_slice().expect("Operation failed"), 5)
+                .expect("Operation failed");
         }
         let query_time = start.elapsed();
 

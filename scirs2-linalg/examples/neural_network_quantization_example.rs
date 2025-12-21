@@ -62,7 +62,9 @@ fn create_example_network() -> Vec<SimpleLayer> {
     let mut weights1 = Array2::zeros((64, 32));
     for i in 0..weights1.dim().0 {
         for j in 0..weights1.dim().1 {
-            weights1[[i, j]] = Normal::new(0.0, std_dev1).unwrap().sample(&mut rng);
+            weights1[[i, j]] = Normal::new(0.0, std_dev1)
+                .expect("Operation failed")
+                .sample(&mut rng);
         }
     }
     let biases1 = Array2::zeros((64, 1));
@@ -72,13 +74,18 @@ fn create_example_network() -> Vec<SimpleLayer> {
     let mut weights2 = Array2::zeros((10, 64));
     for i in 0..weights2.dim().0 {
         for j in 0..weights2.dim().1 {
-            weights2[[i, j]] = Normal::new(0.0, std_dev2).unwrap().sample(&mut rng);
+            weights2[[i, j]] = Normal::new(0.0, std_dev2)
+                .expect("Operation failed")
+                .sample(&mut rng);
         }
     }
     let mut biases2 = Array2::zeros((10, 1));
     // Initialize biases with small values
     for i in 0..biases2.dim().0 {
-        biases2[[i, 0]] = 0.01 * Normal::new(0.0, 1.0).unwrap().sample(&mut rng);
+        biases2[[i, 0]] = 0.01
+            * Normal::new(0.0, 1.0)
+                .expect("Operation failed")
+                .sample(&mut rng);
     }
 
     // Return the network
@@ -104,7 +111,9 @@ fn create_test_input(_batchsize: usize, inputsize: usize) -> Array2<f32> {
 
     for i in 0.._batchsize {
         for j in 0..inputsize {
-            input[[i, j]] = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);
+            input[[i, j]] = Normal::new(0.0, 1.0)
+                .expect("Operation failed")
+                .sample(&mut rng);
         }
     }
 
@@ -163,14 +172,15 @@ fn quantize_network(
 
         // Quantize weights
         println!("  Weights shape: {:?}", layer.weights.dim());
-        let weights_params =
-            calibrate_matrix(&layer.weights.view(), bits, &weights_config).unwrap();
+        let weights_params = calibrate_matrix(&layer.weights.view(), bits, &weights_config)
+            .expect("Operation failed");
         let (quantized_weights, _) =
             quantize_matrix(&layer.weights.view(), bits, weights_params.method);
 
         // Quantize biases
         println!("  Biases shape: {:?}", layer.biases.dim());
-        let bias_params = calibrate_matrix(&layer.biases.view(), bits, &bias_config).unwrap();
+        let bias_params =
+            calibrate_matrix(&layer.biases.view(), bits, &bias_config).expect("Operation failed");
         let (quantized_biases, _) = quantize_matrix(&layer.biases.view(), bits, bias_params.method);
 
         // Save quantized weights and biases
@@ -212,7 +222,8 @@ fn run_network_quantized(
         symmetric: false,
         ..CalibrationConfig::default()
     };
-    let act_params = calibrate_matrix(&input.view(), 8, &activation_config).unwrap();
+    let act_params =
+        calibrate_matrix(&input.view(), 8, &activation_config).expect("Operation failed");
     let (q_input, q_input_params) = quantize_matrix(&input.view(), 8, act_params.method);
 
     // Perform quantized matrix multiplication for first layer
@@ -240,7 +251,8 @@ fn run_network_quantized(
         symmetric: false, // ReLU output is non-negative
         ..CalibrationConfig::default()
     };
-    let hidden_params = calibrate_matrix(&hidden_activated.view(), 8, &hidden_config).unwrap();
+    let hidden_params =
+        calibrate_matrix(&hidden_activated.view(), 8, &hidden_config).expect("Operation failed");
     let (q_hidden, q_hidden_params) =
         quantize_matrix(&hidden_activated.view(), 8, hidden_params.method);
 
@@ -360,13 +372,14 @@ fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
         };
 
         // Quantize weights
-        let weights_params =
-            calibrate_matrix(&layer.weights.view(), w_bits, &weights_config).unwrap();
+        let weights_params = calibrate_matrix(&layer.weights.view(), w_bits, &weights_config)
+            .expect("Operation failed");
         let quantized_weights =
             quantize_matrix(&layer.weights.view(), w_bits, weights_params.method);
 
         // Quantize biases (typically keep biases at higher precision)
-        let bias_params = calibrate_matrix(&layer.biases.view(), 8, &bias_config).unwrap();
+        let bias_params =
+            calibrate_matrix(&layer.biases.view(), 8, &bias_config).expect("Operation failed");
         let quantized_biases = quantize_matrix(&layer.biases.view(), 8, bias_params.method);
 
         quantized_layers.push((quantized_weights, quantized_biases));
@@ -390,7 +403,8 @@ fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
         symmetric: false,
         ..CalibrationConfig::default()
     };
-    let act_params = calibrate_matrix(&input.view(), a_bits0, &activation_config).unwrap();
+    let act_params =
+        calibrate_matrix(&input.view(), a_bits0, &activation_config).expect("Operation failed");
     let (q_input, q_input_params) = quantize_matrix(&input.view(), a_bits0, act_params.method);
 
     // First layer quantized matmul
@@ -416,8 +430,8 @@ fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
         symmetric: false,
         ..CalibrationConfig::default()
     };
-    let hidden_params =
-        calibrate_matrix(&hidden_activated.view(), a_bits1, &hidden_config).unwrap();
+    let hidden_params = calibrate_matrix(&hidden_activated.view(), a_bits1, &hidden_config)
+        .expect("Operation failed");
     let (q_hidden, q_hidden_params) =
         quantize_matrix(&hidden_activated.view(), a_bits1, hidden_params.method);
 

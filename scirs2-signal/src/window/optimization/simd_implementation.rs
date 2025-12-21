@@ -545,33 +545,38 @@ mod tests {
         let generator = SimdWindowGenerator::new();
 
         // Test Hann window
-        let hann = generator.hann_simd(64, true).unwrap();
+        let hann = generator.hann_simd(64, true).expect("Operation failed");
         assert_eq!(hann.len(), 64);
         assert!((hann[0] - 0.0).abs() < 1e-10);
         assert!((hann[hann.len() - 1] - 0.0).abs() < 1e-10);
 
         // Test Hamming window
-        let hamming = generator.hamming_simd(64, true).unwrap();
+        let hamming = generator.hamming_simd(64, true).expect("Operation failed");
         assert_eq!(hamming.len(), 64);
         assert!(hamming[0] > 0.0); // Non-zero endpoints
 
         // Test Blackman window
-        let blackman = generator.blackman_simd(64, true).unwrap();
+        let blackman = generator.blackman_simd(64, true).expect("Operation failed");
         assert_eq!(blackman.len(), 64);
 
         // Test Kaiser window
-        let kaiser = generator.kaiser_simd(64, 5.0, true).unwrap();
+        let kaiser = generator
+            .kaiser_simd(64, 5.0, true)
+            .expect("Operation failed");
         assert_eq!(kaiser.len(), 64);
 
         // Test Gaussian window
-        let gaussian = generator.gaussian_simd(64, 1.0, true).unwrap();
+        let gaussian = generator
+            .gaussian_simd(64, 1.0, true)
+            .expect("Operation failed");
         assert_eq!(gaussian.len(), 64);
     }
 
     #[test]
     fn test_batch_generation() {
         let lengths = vec![32, 64, 128, 256];
-        let windows = batch_generate_windows(BatchWindowType::Hann, &lengths, true).unwrap();
+        let windows = batch_generate_windows(BatchWindowType::Hann, &lengths, true)
+            .expect("Operation failed");
 
         assert_eq!(windows.len(), lengths.len());
         for (i, window) in windows.iter().enumerate() {
@@ -591,8 +596,10 @@ mod tests {
         let length = 64;
 
         // Compare Hann windows
-        let simd_hann = generator.hann_simd(length, true).unwrap();
-        let scalar_hann = scalar_generator.hann_simd(length, true).unwrap();
+        let simd_hann = generator.hann_simd(length, true).expect("Operation failed");
+        let scalar_hann = scalar_generator
+            .hann_simd(length, true)
+            .expect("Operation failed");
 
         for (simd_val, scalar_val) in simd_hann.iter().zip(scalar_hann.iter()) {
             assert!((simd_val - scalar_val).abs() < 1e-10);
@@ -600,7 +607,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_performance_benchmark() {
         let lengths = vec![64, 128];
         let result = benchmark_simd_performance(
@@ -608,7 +614,7 @@ mod tests {
             &lengths,
             10, // Small number for test
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert!(result.simd_duration.as_nanos() > 0);
         assert!(result.scalar_duration.as_nanos() > 0);
@@ -620,10 +626,10 @@ mod tests {
         let generator = SimdWindowGenerator::new();
 
         // Test very small windows
-        let small = generator.hann_simd(1, true).unwrap();
+        let small = generator.hann_simd(1, true).expect("Operation failed");
         assert_eq!(small, vec![1.0]);
 
-        let small2 = generator.hann_simd(2, true).unwrap();
+        let small2 = generator.hann_simd(2, true).expect("Operation failed");
         assert_eq!(small2.len(), 2);
     }
 }

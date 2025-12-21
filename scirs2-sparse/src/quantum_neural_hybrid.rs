@@ -768,7 +768,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    #[ignore] // Slow test - quantum neural hybrid initialization
+    #[ignore = "Slow test (~80s) - quantum neural hybrid initialization"]
     fn test_quantum_neural_hybrid_creation() {
         let config = QuantumNeuralConfig::default();
         let processor = QuantumNeuralHybridProcessor::new(config);
@@ -779,7 +779,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
+    #[ignore = "Slow test (>2min) - hybrid spmv computation"]
     fn test_hybrid_spmv() {
         let config = QuantumNeuralConfig::default();
         let mut processor = QuantumNeuralHybridProcessor::new(config);
@@ -793,7 +793,7 @@ mod tests {
 
         processor
             .hybrid_spmv(2, 2, &indptr, &indices, &data, &x, &mut y)
-            .unwrap();
+            .expect("Operation failed");
 
         // Results should be reasonable (exact values depend on hybrid strategy)
         assert!(y[0] > 2.0 && y[0] < 4.0);
@@ -801,7 +801,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Slow test - hybrid processor stats
+    #[ignore = "Slow test (~80s) - hybrid processor stats"]
     fn test_hybrid_stats() {
         let config = QuantumNeuralConfig::default();
         let processor = QuantumNeuralHybridProcessor::new(config);

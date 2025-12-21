@@ -505,8 +505,8 @@ impl Quadtree {
         let mut worst_dist = f64::INFINITY;
 
         // Add the root node to the queue
-        let root_ref = self.root.as_ref().unwrap() as *const QuadtreeNode;
-        let root_dist = match self.root.as_ref().unwrap() {
+        let root_ref = self.root.as_ref().expect("Operation failed") as *const QuadtreeNode;
+        let root_dist = match self.root.as_ref().expect("Operation failed") {
             QuadtreeNode::Internal { bounds, .. } => bounds.squared_distance_to_point(query)?,
             QuadtreeNode::Leaf { bounds, .. } => bounds.squared_distance_to_point(query)?,
         };
@@ -641,7 +641,7 @@ impl Quadtree {
 
         // Use a queue for breadth-first search
         let mut node_queue = VecDeque::new();
-        node_queue.push_back(self.root.as_ref().unwrap());
+        node_queue.push_back(self.root.as_ref().expect("Operation failed"));
 
         while let Some(node) = node_queue.pop_front() {
             match node {
@@ -702,7 +702,7 @@ impl Quadtree {
 
         // Use a stack for depth-first search
         let mut node_stack = Vec::new();
-        node_stack.push(self.root.as_ref().unwrap());
+        node_stack.push(self.root.as_ref().expect("Operation failed"));
 
         while let Some(node) = node_stack.pop() {
             match node {
@@ -764,7 +764,7 @@ impl Quadtree {
 
         // Use a stack for depth-first search
         let mut node_stack = Vec::new();
-        node_stack.push(self.root.as_ref().unwrap());
+        node_stack.push(self.root.as_ref().expect("Operation failed"));
 
         while let Some(node) = node_stack.pop() {
             match node {
@@ -904,14 +904,14 @@ mod tests {
         // Test creating from min/max
         let min = array![0.0, 0.0];
         let max = array![1.0, 1.0];
-        let bbox = BoundingBox2D::new(&min.view(), &max.view()).unwrap();
+        let bbox = BoundingBox2D::new(&min.view(), &max.view()).expect("Operation failed");
 
         assert_eq!(bbox.min, min);
         assert_eq!(bbox.max, max);
 
         // Test creating from points
         let points = array![[0.0, 0.0], [1.0, 1.0], [0.5, 0.5],];
-        let bbox = BoundingBox2D::from_points(&points.view()).unwrap();
+        let bbox = BoundingBox2D::from_points(&points.view()).expect("Operation failed");
 
         assert_eq!(bbox.min, min);
         assert_eq!(bbox.max, max);
@@ -930,7 +930,7 @@ mod tests {
     fn test_bounding_box_operations() {
         let min = array![0.0, 0.0];
         let max = array![2.0, 4.0];
-        let bbox = BoundingBox2D::new(&min.view(), &max.view()).unwrap();
+        let bbox = BoundingBox2D::new(&min.view(), &max.view()).expect("Operation failed");
 
         // Test center
         let center = bbox.center();
@@ -942,32 +942,38 @@ mod tests {
 
         // Test contains
         let inside_point = array![1.0, 1.0];
-        assert!(bbox.contains(&inside_point.view()).unwrap());
+        assert!(bbox
+            .contains(&inside_point.view())
+            .expect("Operation failed"));
 
         let outside_point = array![3.0, 3.0];
-        assert!(!bbox.contains(&outside_point.view()).unwrap());
+        assert!(!bbox
+            .contains(&outside_point.view())
+            .expect("Operation failed"));
 
         let edge_point = array![0.0, 4.0];
-        assert!(bbox.contains(&edge_point.view()).unwrap());
+        assert!(bbox.contains(&edge_point.view()).expect("Operation failed"));
 
         // Test overlaps
         let overlapping_box =
-            BoundingBox2D::new(&array![1.0, 1.0].view(), &array![3.0, 3.0].view()).unwrap();
+            BoundingBox2D::new(&array![1.0, 1.0].view(), &array![3.0, 3.0].view())
+                .expect("Operation failed");
         assert!(bbox.overlaps(&overlapping_box));
 
         let non_overlapping_box =
-            BoundingBox2D::new(&array![3.0, 5.0].view(), &array![4.0, 6.0].view()).unwrap();
+            BoundingBox2D::new(&array![3.0, 5.0].view(), &array![4.0, 6.0].view())
+                .expect("Operation failed");
         assert!(!bbox.overlaps(&non_overlapping_box));
 
         // Test distance to point
         let inside_dist = bbox
             .squared_distance_to_point(&inside_point.view())
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(inside_dist, 0.0);
 
         let outside_dist = bbox
             .squared_distance_to_point(&array![3.0, 5.0].view())
-            .unwrap();
+            .expect("Operation failed");
         assert_eq!(outside_dist, 1.0 + 1.0); // (3-2)² + (5-4)²
     }
 
@@ -976,12 +982,12 @@ mod tests {
         // Create a simple set of points
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5],];
 
-        let quadtree = Quadtree::new(&points.view()).unwrap();
+        let quadtree = Quadtree::new(&points.view()).expect("Operation failed");
 
         // Check basic properties
         assert_eq!(quadtree.size(), 5);
 
-        let bounds = quadtree.bounds().unwrap();
+        let bounds = quadtree.bounds().expect("Operation failed");
         assert_eq!(bounds.min, array![0.0, 0.0]);
         assert_eq!(bounds.max, array![1.0, 1.0]);
 
@@ -1001,11 +1007,13 @@ mod tests {
             [2.0, 2.0], // 5: far corner
         ];
 
-        let quadtree = Quadtree::new(&points.view()).unwrap();
+        let quadtree = Quadtree::new(&points.view()).expect("Operation failed");
 
         // Test single nearest neighbor
         let query = array![0.1, 0.1];
-        let (indices, distances) = quadtree.query_nearest(&query.view(), 1).unwrap();
+        let (indices, distances) = quadtree
+            .query_nearest(&query.view(), 1)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 1);
         // The exact index and distance might vary based on implementation details
@@ -1014,7 +1022,9 @@ mod tests {
         assert!(distances[0] >= 0.0);
 
         // Test multiple nearest neighbors
-        let (indices, distances) = quadtree.query_nearest(&query.view(), 3).unwrap();
+        let (indices, distances) = quadtree
+            .query_nearest(&query.view(), 3)
+            .expect("Operation failed");
 
         // Just check that we have at least one result
         assert!(!indices.is_empty());
@@ -1025,7 +1035,9 @@ mod tests {
         }
 
         // Test with k > number of points
-        let (indices, distances) = quadtree.query_nearest(&query.view(), 10).unwrap();
+        let (indices, distances) = quadtree
+            .query_nearest(&query.view(), 10)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 6); // Should return all 6 points
         assert_eq!(distances.len(), 6);
@@ -1043,19 +1055,23 @@ mod tests {
             [2.0, 2.0], // 5: far corner
         ];
 
-        let quadtree = Quadtree::new(&points.view()).unwrap();
+        let quadtree = Quadtree::new(&points.view()).expect("Operation failed");
 
         // Test radius search with small radius
         let query = array![0.0, 0.0];
         let radius = 0.5;
-        let (indices, distances) = quadtree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = quadtree
+            .query_radius(&query.view(), radius)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 1);
         assert_eq!(indices[0], 0); // Only origin is within 0.5 units
 
         // Test with larger radius
         let radius = 1.5;
-        let (indices, distances) = quadtree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = quadtree
+            .query_radius(&query.view(), radius)
+            .expect("Operation failed");
 
         assert!(indices.len() >= 4); // Should find at least origin, right, up, center
 
@@ -1066,7 +1082,9 @@ mod tests {
 
         // Test with radius covering all points
         let radius = 4.0;
-        let (indices, distances) = quadtree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = quadtree
+            .query_radius(&query.view(), radius)
+            .expect("Operation failed");
 
         assert_eq!(indices.len(), 6); // Should find all points
     }
@@ -1083,11 +1101,11 @@ mod tests {
             [2.0, 2.0], // 5: far corner
         ];
 
-        let quadtree = Quadtree::new(&points.view()).unwrap();
+        let quadtree = Quadtree::new(&points.view()).expect("Operation failed");
 
         // Define a region (bounding box)
-        let region =
-            BoundingBox2D::new(&array![0.25, 0.25].view(), &array![0.75, 0.75].view()).unwrap();
+        let region = BoundingBox2D::new(&array![0.25, 0.25].view(), &array![0.75, 0.75].view())
+            .expect("Operation failed");
 
         // Check if any points in region
         assert!(quadtree.points_in_region(&region));
@@ -1098,15 +1116,15 @@ mod tests {
         assert_eq!(indices[0], 4); // Should find center point
 
         // Try with larger region
-        let large_region =
-            BoundingBox2D::new(&array![0.0, 0.0].view(), &array![1.0, 1.0].view()).unwrap();
+        let large_region = BoundingBox2D::new(&array![0.0, 0.0].view(), &array![1.0, 1.0].view())
+            .expect("Operation failed");
 
         let indices = quadtree.get_points_in_region(&large_region);
         assert_eq!(indices.len(), 5); // Should find all points except far corner
 
         // Try with region containing no points
-        let empty_region =
-            BoundingBox2D::new(&array![1.5, 1.5].view(), &array![1.9, 1.9].view()).unwrap();
+        let empty_region = BoundingBox2D::new(&array![1.5, 1.5].view(), &array![1.9, 1.9].view())
+            .expect("Operation failed");
 
         assert!(!quadtree.points_in_region(&empty_region));
         let indices = quadtree.get_points_in_region(&empty_region);

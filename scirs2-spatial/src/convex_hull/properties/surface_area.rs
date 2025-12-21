@@ -34,8 +34,8 @@ use crate::error::SpatialResult;
 ///
 /// // 2D square with perimeter 4
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let perimeter = compute_surface_area(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let perimeter = compute_surface_area(&hull).expect("Operation failed");
 /// assert!((perimeter - 4.0).abs() < 1e-10);
 /// ```
 pub fn compute_surface_area(hull: &ConvexHull) -> SpatialResult<f64> {
@@ -123,8 +123,8 @@ fn compute_nd_surface_area(hull: &ConvexHull) -> SpatialResult<f64> {
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let (lower, upper, exact) = compute_surface_area_bounds(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let (lower, upper, exact) = compute_surface_area_bounds(&hull).expect("Operation failed");
 /// assert!(exact.is_some());
 /// assert!((exact.unwrap() - 4.0).abs() < 1e-10);
 /// ```
@@ -224,8 +224,8 @@ fn compute_geometric_surface_area_bounds(hull: &ConvexHull) -> SpatialResult<(f6
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let ratio = compute_surface_to_volume_ratio(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let ratio = compute_surface_to_volume_ratio(&hull).expect("Operation failed");
 /// assert!((ratio - 4.0).abs() < 1e-10); // Perimeter/Area = 4/1 = 4
 /// ```
 pub fn compute_surface_to_volume_ratio(hull: &ConvexHull) -> SpatialResult<f64> {
@@ -262,8 +262,8 @@ pub fn compute_surface_to_volume_ratio(hull: &ConvexHull) -> SpatialResult<f64> 
 ///
 /// // Circle-like shape should have high compactness
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
-/// let compactness = compute_compactness(&hull).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+/// let compactness = compute_compactness(&hull).expect("Operation failed");
 /// assert!(compactness > 0.7); // Square is fairly compact
 /// ```
 pub fn compute_compactness(hull: &ConvexHull) -> SpatialResult<f64> {
@@ -336,7 +336,7 @@ fn tgamma_approx(x: f64) -> f64 {
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-/// let hull = ConvexHull::new(&points.view()).unwrap();
+/// let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 /// assert!(is_surface_area_computation_reliable(&hull));
 /// ```
 pub fn is_surface_area_computation_reliable(hull: &ConvexHull) -> bool {
@@ -377,14 +377,14 @@ mod tests {
     fn test_compute_2d_surface_area() {
         // Unit square - perimeter should be 4
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let perimeter = compute_surface_area(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let perimeter = compute_surface_area(&hull).expect("Operation failed");
         assert!((perimeter - 4.0).abs() < 1e-10);
 
         // Triangle
         let points = arr2(&[[0.0, 0.0], [3.0, 0.0], [0.0, 4.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let perimeter = compute_surface_area(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let perimeter = compute_surface_area(&hull).expect("Operation failed");
         // Perimeter = 3 + 4 + 5 = 12
         assert!((perimeter - 12.0).abs() < 1e-10);
     }
@@ -393,27 +393,27 @@ mod tests {
     fn test_compute_1d_surface_area() {
         // Line segment - surface area is 0
         let points = arr2(&[[0.0], [3.0], [1.0], [2.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let surface_area = compute_surface_area(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let surface_area = compute_surface_area(&hull).expect("Operation failed");
         assert_eq!(surface_area, 0.0);
     }
 
     #[test]
     fn test_compute_surface_area_bounds() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let (lower, upper, exact) = compute_surface_area_bounds(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let (lower, upper, exact) = compute_surface_area_bounds(&hull).expect("Operation failed");
 
         assert!(exact.is_some());
-        assert!((exact.unwrap() - 4.0).abs() < 1e-10);
+        assert!((exact.expect("Operation failed") - 4.0).abs() < 1e-10);
         assert_eq!(lower, upper); // Should be exact for 2D
     }
 
     #[test]
     fn test_surface_to_volume_ratio() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let ratio = compute_surface_to_volume_ratio(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let ratio = compute_surface_to_volume_ratio(&hull).expect("Operation failed");
         // Perimeter/Area = 4/1 = 4
         assert!((ratio - 4.0).abs() < 1e-10);
     }
@@ -422,14 +422,14 @@ mod tests {
     fn test_compactness() {
         // Square
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let compactness = compute_compactness(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let compactness = compute_compactness(&hull).expect("Operation failed");
         assert!(compactness > 0.7 && compactness <= 1.0);
 
         // Triangle (less compact than square)
         let points = arr2(&[[0.0, 0.0], [2.0, 0.0], [0.0, 2.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let triangle_compactness = compute_compactness(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let triangle_compactness = compute_compactness(&hull).expect("Operation failed");
         assert!(triangle_compactness > 0.0 && triangle_compactness <= 1.0);
     }
 
@@ -437,7 +437,7 @@ mod tests {
     fn test_is_surface_area_computation_reliable() {
         // 2D case - should be reliable
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
         assert!(is_surface_area_computation_reliable(&hull));
 
         // 3D case - should be reliable
@@ -447,7 +447,7 @@ mod tests {
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0],
         ]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
         assert!(is_surface_area_computation_reliable(&hull));
     }
 
@@ -465,8 +465,8 @@ mod tests {
 
         // Valid 2D triangle (minimal valid case)
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
-        let surface_area = compute_surface_area(&hull).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
+        let surface_area = compute_surface_area(&hull).expect("Operation failed");
         // Perimeter of triangle with sides sqrt(2), 1, 1
         let expected_perimeter = 2.0 + (2.0_f64).sqrt();
         assert!((surface_area - expected_perimeter).abs() < 1e-10);

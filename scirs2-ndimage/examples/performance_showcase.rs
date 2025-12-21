@@ -65,7 +65,8 @@ where
 {
     let start = Instant::now();
 
-    let result = generic_filter(input, filterfn, &[3, 3], Some(BorderMode::Reflect), None).unwrap();
+    let result = generic_filter(input, filterfn, &[3, 3], Some(BorderMode::Reflect), None)
+        .expect("Operation failed");
 
     let duration = start.elapsed();
     let elements = input.len();

@@ -182,7 +182,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         let output_size = output.data().len();
 
         let mut jacobian = Array::zeros(IxDyn(&[output_size, input_size]));
-        let step = F::from(1e-8).unwrap();
+        let step = F::from(1e-8).expect("Failed to convert constant to float");
 
         for i in 0..input_size {
             // Create perturbed input
@@ -268,7 +268,7 @@ impl<F: Float> NumericalAnalyzer<F> {
             .iter()
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x);
-        Ok(sum_of_squares.sqrt().to_f64().unwrap())
+        Ok(sum_of_squares.sqrt().to_f64().expect("Operation failed"))
     }
 
     fn compute_one_norm(&self, matrix: &Array<F, IxDyn>) -> Result<f64, StabilityError> {
@@ -283,7 +283,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         let mut max_col_sum: f64 = 0.0;
         for j in 0..shape[1] {
             let col_sum: f64 = (0..shape[0])
-                .map(|i| matrix[[i, j]].abs().to_f64().unwrap())
+                .map(|i| matrix[[i, j]].abs().to_f64().expect("Operation failed"))
                 .sum();
             max_col_sum = max_col_sum.max(col_sum);
         }
@@ -303,7 +303,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         let mut max_row_sum: f64 = 0.0;
         for i in 0..shape[0] {
             let row_sum: f64 = (0..shape[1])
-                .map(|j| matrix[[i, j]].abs().to_f64().unwrap())
+                .map(|j| matrix[[i, j]].abs().to_f64().expect("Operation failed"))
                 .sum();
             max_row_sum = max_row_sum.max(row_sum);
         }
@@ -445,7 +445,13 @@ impl<F: Float> NumericalAnalyzer<F> {
 
         for j in 0..shape[1] {
             let column_norm: f64 = (0..shape[0])
-                .map(|i| jacobian[[i, j]].abs().to_f64().unwrap().powi(2))
+                .map(|i| {
+                    jacobian[[i, j]]
+                        .abs()
+                        .to_f64()
+                        .expect("Operation failed")
+                        .powi(2)
+                })
                 .sum::<f64>()
                 .sqrt();
             factors.push(column_norm);
@@ -642,7 +648,7 @@ impl<F: Float> NumericalAnalyzer<F> {
             .iter()
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x);
-        Ok(sum_of_squares.sqrt().to_f64().unwrap())
+        Ok(sum_of_squares.sqrt().to_f64().expect("Operation failed"))
     }
 
     fn generate_random_perturbation<'a>(
@@ -661,7 +667,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         magnitude: f64,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         let shape = input.shape();
-        let uncertainty_value = F::from(magnitude).unwrap();
+        let uncertainty_value = F::from(magnitude).expect("Failed to convert to float");
         let uncertainty_data = vec![uncertainty_value; input.data().len()];
         Ok(Tensor::from_vec(
             uncertainty_data,
@@ -691,7 +697,8 @@ impl<F: Float> NumericalAnalyzer<F> {
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Simplified - would compute actual standard deviation
         let shape = mean.shape();
-        let std_data = vec![F::from(0.1).unwrap(); mean.data().len()];
+        let std_data =
+            vec![F::from(0.1).expect("Failed to convert constant to float"); mean.data().len()];
         Ok(Tensor::from_vec(std_data, shape.to_vec(), mean.graph()))
     }
 
@@ -718,7 +725,10 @@ impl<F: Float> NumericalAnalyzer<F> {
             .zip(tensor2.data().iter())
             .map(|(&a, &b)| (a - b) * (a - b))
             .fold(F::zero(), |acc, x| acc + x);
-        Ok(sum_of_squared_diffs.sqrt().to_f64().unwrap())
+        Ok(sum_of_squared_diffs
+            .sqrt()
+            .to_f64()
+            .expect("Operation failed"))
     }
 
     fn estimate_critical_perturbation_size(

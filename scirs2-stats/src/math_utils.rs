@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn test_abs_f64_basic() {
         let data = vec![-3.0, -1.5, 0.0, 2.5, 5.0];
-        let result = abs_f64(&data).unwrap();
+        let result = abs_f64(&data).expect("Operation failed");
         let expected = vec![3.0, 1.5, 0.0, 2.5, 5.0];
         for (a, b) in result.iter().zip(expected.iter()) {
             assert_abs_diff_eq!(a, b, epsilon = 1e-10);
@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn test_abs_f32_basic() {
         let data = vec![-3.0f32, -1.5, 0.0, 2.5, 5.0];
-        let result = abs_f32(&data).unwrap();
+        let result = abs_f32(&data).expect("Operation failed");
         let expected = vec![3.0f32, 1.5, 0.0, 2.5, 5.0];
         for (a, b) in result.iter().zip(expected.iter()) {
             assert_abs_diff_eq!(a, b, epsilon = 1e-6);
@@ -263,7 +263,7 @@ mod tests {
     fn test_abs_f64_large() {
         // Test with large array to ensure SIMD path is used
         let data: Vec<f64> = (0..10000).map(|i| i as f64 - 5000.0).collect();
-        let result = abs_f64(&data).unwrap();
+        let result = abs_f64(&data).expect("Operation failed");
         for (i, &val) in result.iter().enumerate() {
             let expected = (data[i]).abs();
             assert_abs_diff_eq!(val, expected, epsilon = 1e-10);
@@ -273,7 +273,7 @@ mod tests {
     #[test]
     fn test_sign_f64_basic() {
         let data = vec![-3.0, -0.5, 0.0, 1.5, 5.0];
-        let result = sign_f64(&data).unwrap();
+        let result = sign_f64(&data).expect("Operation failed");
         let expected = vec![-1.0, -1.0, 0.0, 1.0, 1.0];
         for (a, b) in result.iter().zip(expected.iter()) {
             assert_abs_diff_eq!(a, b, epsilon = 1e-10);
@@ -283,7 +283,7 @@ mod tests {
     #[test]
     fn test_sign_f32_basic() {
         let data = vec![-3.0f32, -0.5, 0.0, 1.5, 5.0];
-        let result = sign_f32(&data).unwrap();
+        let result = sign_f32(&data).expect("Operation failed");
         let expected = vec![-1.0f32, -1.0, 0.0, 1.0, 1.0];
         for (a, b) in result.iter().zip(expected.iter()) {
             assert_abs_diff_eq!(a, b, epsilon = 1e-6);
@@ -294,7 +294,7 @@ mod tests {
     fn test_sign_f64_large() {
         // Test with large array to ensure SIMD path is used
         let data: Vec<f64> = (0..10000).map(|i| i as f64 - 5000.0).collect();
-        let result = sign_f64(&data).unwrap();
+        let result = sign_f64(&data).expect("Operation failed");
         for (i, &val) in result.iter().enumerate() {
             let expected = if data[i] > 0.0 {
                 1.0
@@ -346,14 +346,14 @@ mod tests {
     #[test]
     fn test_abs_all_positive() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let result = abs_f64(&data).unwrap();
+        let result = abs_f64(&data).expect("Operation failed");
         assert_eq!(result.to_vec(), data);
     }
 
     #[test]
     fn test_sign_all_positive() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let result = sign_f64(&data).unwrap();
+        let result = sign_f64(&data).expect("Operation failed");
         let expected = vec![1.0; 5];
         assert_eq!(result.to_vec(), expected);
     }
@@ -361,7 +361,7 @@ mod tests {
     #[test]
     fn test_sign_all_negative() {
         let data = vec![-1.0, -2.0, -3.0, -4.0, -5.0];
-        let result = sign_f64(&data).unwrap();
+        let result = sign_f64(&data).expect("Operation failed");
         let expected = vec![-1.0; 5];
         assert_eq!(result.to_vec(), expected);
     }
@@ -369,7 +369,7 @@ mod tests {
     #[test]
     fn test_sign_all_zero() {
         let data = vec![0.0; 100];
-        let result = sign_f64(&data).unwrap();
+        let result = sign_f64(&data).expect("Operation failed");
         let expected = vec![0.0; 100];
         assert_eq!(result.to_vec(), expected);
     }

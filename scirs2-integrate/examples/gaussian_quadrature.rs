@@ -12,7 +12,7 @@ fn main() {
     println!("Exact value: {}", 1.0 / 3.0);
 
     // Using 5-point Gauss-Legendre quadrature
-    let result = gauss_legendre(|x: f64| x * x, 0.0, 1.0, 5).unwrap();
+    let result = gauss_legendre(|x: f64| x * x, 0.0, 1.0, 5).expect("Operation failed");
     println!("5-point Gauss-Legendre: {result:.10}");
     println!("Absolute error: {:.1e}\n", (result - 1.0 / 3.0).abs());
 
@@ -23,7 +23,7 @@ fn main() {
 
     // Showing progression of accuracy with increasing points
     for n_points in [2, 3, 5, 10] {
-        let result = gauss_legendre(|x: f64| x.sin(), 0.0, PI, n_points).unwrap();
+        let result = gauss_legendre(|x: f64| x.sin(), 0.0, PI, n_points).expect("Operation failed");
         println!("{n_points}-point Gauss-Legendre: {result:.10}");
         println!("Absolute error: {:.1e}", (result - 2.0).abs());
     }
@@ -37,7 +37,8 @@ fn main() {
     println!("Reference value: {reference_value:.15}");
 
     for n_points in [10, 20, 50] {
-        let result = gauss_legendre(|x: f64| (x * x).sin(), 0.0, 10.0, n_points).unwrap();
+        let result =
+            gauss_legendre(|x: f64| (x * x).sin(), 0.0, 10.0, n_points).expect("Operation failed");
         println!("{n_points}-point Gauss-Legendre: {result:.15}");
         println!("Absolute error: {:.1e}", (result - reference_value).abs());
     }
@@ -46,7 +47,7 @@ fn main() {
     // Example 4: Manual usage of the GaussLegendreQuadrature struct
     println!("Example 4: Using GaussLegendreQuadrature struct directly");
 
-    let quad = GaussLegendreQuadrature::<f64>::new(10).unwrap();
+    let quad = GaussLegendreQuadrature::<f64>::new(10).expect("Operation failed");
     let result = quad.integrate(|x: f64| (x * x).exp() * x.cos(), -1.0, 1.0);
 
     println!("Nodes: {:?}", quad.nodes);
@@ -64,7 +65,7 @@ fn main() {
         &[(0.0, 1.0), (0.0, 1.0)],
         5,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("∫∫xy dxdy over [0,1]²:");
     println!("  Calculated: {result_2d:.10}");
@@ -79,7 +80,7 @@ fn main() {
         &[(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
         3,
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("∫∫∫xyz dxdydz over [0,1]³:");
     println!("  Calculated: {result_3d:.10}");

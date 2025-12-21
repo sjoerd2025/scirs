@@ -261,7 +261,7 @@ mod tests {
 
         let result = simd_weighted_sum(&weights, &arrays);
         assert!(result.is_ok());
-        let sum = result.unwrap();
+        let sum = result.expect("Operation failed");
         assert!(sum > 0.0);
     }
 
@@ -272,7 +272,7 @@ mod tests {
 
         let result = simd_circular_shift(&signal, shift);
         assert!(result.is_ok());
-        let shifted = result.unwrap();
+        let shifted = result.expect("Operation failed");
         assert_eq!(shifted.len(), signal.len());
         assert_eq!(shifted[0], signal[2]); // First element should be third original element
         assert_eq!(shifted[1], signal[3]); // Second element should be fourth original element
@@ -288,7 +288,7 @@ mod tests {
 
         let result = simd_average_unshifted_results(&results, &shifts);
         assert!(result.is_ok());
-        let averaged = result.unwrap();
+        let averaged = result.expect("Operation failed");
         assert_eq!(averaged.len(), 3);
     }
 
@@ -300,14 +300,14 @@ mod tests {
         // Test SIMD soft thresholding
         let result = simd_soft_threshold(&coeffs, threshold);
         assert!(result.is_ok());
-        let (thresholded, retention_rate) = result.unwrap();
+        let (thresholded, retention_rate) = result.expect("Operation failed");
         assert_eq!(thresholded.len(), coeffs.len());
         assert!(retention_rate >= 0.0 && retention_rate <= 1.0);
 
         // Test SIMD hard thresholding
         let result = simd_hard_threshold(&coeffs, threshold);
         assert!(result.is_ok());
-        let (thresholded, retention_rate) = result.unwrap();
+        let (thresholded, retention_rate) = result.expect("Operation failed");
         assert_eq!(thresholded.len(), coeffs.len());
         assert!(retention_rate >= 0.0 && retention_rate <= 1.0);
     }

@@ -932,7 +932,7 @@ impl AdvancedNativePlotter {
         }
 
         // Center the data
-        let mean = data.mean_axis(Axis(0)).unwrap();
+        let mean = data.mean_axis(Axis(0)).expect("Operation failed");
         let centered = data - &mean.insert_axis(Axis(0));
         
         // For simplicity, just take the first few dimensions with some processing

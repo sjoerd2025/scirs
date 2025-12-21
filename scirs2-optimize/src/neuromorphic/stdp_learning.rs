@@ -884,7 +884,7 @@ mod tests {
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let initial = Array1::from(vec![1.0, 1.0]);
 
-        let result = stdp_optimize(objective, &initial.view(), 100).unwrap();
+        let result = stdp_optimize(objective, &initial.view(), 100).expect("Operation failed");
 
         let final_obj = objective(&result.view());
         let initial_obj = objective(&initial.view());
@@ -902,7 +902,7 @@ mod tests {
             50,
             Some((vec![2, 4, 2], 3.0, 0.05)),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(result.len(), 2);
         let final_obj = objective(&result.view());

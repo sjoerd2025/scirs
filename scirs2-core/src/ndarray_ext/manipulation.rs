@@ -301,11 +301,11 @@ where
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 ///
 /// // Swap rows 0 and 2
-/// let swapped_rows = swap_axes_2d(a.view(), 0, 2, 0).unwrap();
+/// let swapped_rows = swap_axes_2d(a.view(), 0, 2, 0).expect("Operation failed");
 /// assert_eq!(swapped_rows, array![[7, 8, 9], [4, 5, 6], [1, 2, 3]]);
 ///
 /// // Swap columns 0 and 1
-/// let swapped_cols = swap_axes_2d(a.view(), 0, 1, 1).unwrap();
+/// let swapped_cols = swap_axes_2d(a.view(), 0, 1, 1).expect("Operation failed");
 /// assert_eq!(swapped_cols, array![[2, 1, 3], [5, 4, 6], [8, 7, 9]]);
 /// ```
 #[allow(dead_code)]
@@ -444,12 +444,12 @@ where
 /// let b = array![[5, 6], [7, 8]];
 ///
 /// // Concatenate along rows (vertically)
-/// let vertical = concatenate_2d(&[a.view(), b.view()], 0).unwrap();
+/// let vertical = concatenate_2d(&[a.view(), b.view()], 0).expect("Operation failed");
 /// assert_eq!(vertical.shape(), &[4, 2]);
 /// assert_eq!(vertical, array![[1, 2], [3, 4], [5, 6], [7, 8]]);
 ///
 /// // Concatenate along columns (horizontally)
-/// let horizontal = concatenate_2d(&[a.view(), b.view()], 1).unwrap();
+/// let horizontal = concatenate_2d(&[a.view(), b.view()], 1).expect("Operation failed");
 /// assert_eq!(horizontal.shape(), &[2, 4]);
 /// assert_eq!(horizontal, array![[1, 2, 5, 6], [3, 4, 7, 8]]);
 /// ```
@@ -550,7 +550,7 @@ where
 /// let b = array![4, 5, 6];
 /// let c = array![7, 8, 9];
 ///
-/// let stacked = vstack_1d(&[a.view(), b.view(), c.view()]).unwrap();
+/// let stacked = vstack_1d(&[a.view(), b.view(), c.view()]).expect("Operation failed");
 /// assert_eq!(stacked.shape(), &[3, 3]);
 /// assert_eq!(stacked, array![[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
 /// ```
@@ -605,7 +605,7 @@ where
 /// let a = array![1, 2, 3];
 /// let b = array![4, 5, 6];
 ///
-/// let stacked = hstack_1d(&[a.view(), b.view()]).unwrap();
+/// let stacked = hstack_1d(&[a.view(), b.view()]).expect("Operation failed");
 /// assert_eq!(stacked.shape(), &[3, 2]);
 /// assert_eq!(stacked, array![[1, 4], [2, 5], [3, 6]]);
 /// ```
@@ -662,12 +662,12 @@ where
 /// let b = array![[1], [2], [3]];  // 3x1 array (3 rows, 1 column)
 ///
 /// // Squeeze out the row dimension (axis 0) from a
-/// let squeezed_a = squeeze_2d(a.view(), 0).unwrap();
+/// let squeezed_a = squeeze_2d(a.view(), 0).expect("Operation failed");
 /// assert_eq!(squeezed_a.shape(), &[3]);
 /// assert_eq!(squeezed_a, array![1, 2, 3]);
 ///
 /// // Squeeze out the column dimension (axis 1) from b
-/// let squeezed_b = squeeze_2d(b.view(), 1).unwrap();
+/// let squeezed_b = squeeze_2d(b.view(), 1).expect("Operation failed");
 /// assert_eq!(squeezed_b.shape(), &[3]);
 /// assert_eq!(squeezed_b, array![1, 2, 3]);
 /// ```
@@ -729,7 +729,7 @@ where
 ///
 /// let x = array![1, 2, 3];
 /// let y = array![4, 5];
-/// let (x_grid, y_grid) = meshgrid(x.view(), y.view()).unwrap();
+/// let (x_grid, y_grid) = meshgrid(x.view(), y.view()).expect("Operation failed");
 /// assert_eq!(x_grid.shape(), &[2, 3]);
 /// assert_eq!(y_grid.shape(), &[2, 3]);
 /// assert_eq!(x_grid, array![[1, 2, 3], [1, 2, 3]]);
@@ -779,7 +779,7 @@ where
 /// use scirs2_core::ndarray_ext::manipulation::unique;
 ///
 /// let a = array![3, 1, 2, 2, 3, 4, 1];
-/// let result = unique(a.view()).unwrap();
+/// let result = unique(a.view()).expect("Operation failed");
 /// assert_eq!(result, array![1, 2, 3, 4]);
 /// ```
 #[allow(dead_code)]
@@ -822,15 +822,15 @@ where
 /// let a = array![[5, 2, 3], [4, 1, 6]];
 ///
 /// // Find indices of minimum values along axis 0 (columns)
-/// let result = argmin(a.view(), Some(0)).unwrap();
+/// let result = argmin(a.view(), Some(0)).expect("Operation failed");
 /// assert_eq!(result, array![1, 1, 0]); // The indices of min values in each column
 ///
 /// // Find indices of minimum values along axis 1 (rows)
-/// let result = argmin(a.view(), Some(1)).unwrap();
+/// let result = argmin(a.view(), Some(1)).expect("Operation failed");
 /// assert_eq!(result, array![1, 1]); // The indices of min values in each row
 ///
 /// // Find index of minimum value in flattened array
-/// let result = argmin(a.view(), None).unwrap();
+/// let result = argmin(a.view(), None).expect("Operation failed");
 /// assert_eq!(result[0], 4); // The index of the minimum value in the flattened array (row 1, col 1)
 /// ```
 #[allow(dead_code)]
@@ -936,7 +936,7 @@ where
 /// let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 ///
 /// // Find index of minimum value in flattened array (SIMD-accelerated)
-/// let result = argmin_simd(a.view(), None).unwrap();
+/// let result = argmin_simd(a.view(), None).expect("Operation failed");
 /// assert_eq!(result[0], 4); // Index of 1.0 in flattened array
 /// ```
 #[allow(dead_code)]
@@ -1066,15 +1066,15 @@ where
 /// let a = array![[5, 2, 3], [4, 1, 6]];
 ///
 /// // Find indices of maximum values along axis 0 (columns)
-/// let result = argmax(a.view(), Some(0)).unwrap();
+/// let result = argmax(a.view(), Some(0)).expect("Operation failed");
 /// assert_eq!(result, array![0, 0, 1]); // The indices of max values in each column
 ///
 /// // Find indices of maximum values along axis 1 (rows)
-/// let result = argmax(a.view(), Some(1)).unwrap();
+/// let result = argmax(a.view(), Some(1)).expect("Operation failed");
 /// assert_eq!(result, array![0, 2]); // The indices of max values in each row
 ///
 /// // Find index of maximum value in flattened array
-/// let result = argmax(a.view(), None).unwrap();
+/// let result = argmax(a.view(), None).expect("Operation failed");
 /// assert_eq!(result[0], 5); // The index of the maximum value in the flattened array (row 1, col 2)
 /// ```
 #[allow(dead_code)]
@@ -1180,7 +1180,7 @@ where
 /// let a = array![[5.0f32, 2.0, 3.0], [4.0, 1.0, 6.0]];
 ///
 /// // Find index of maximum value in flattened array (SIMD-accelerated)
-/// let result = argmax_simd(a.view(), None).unwrap();
+/// let result = argmax_simd(a.view(), None).expect("Operation failed");
 /// assert_eq!(result[0], 5); // Index of 6.0 in flattened array
 /// ```
 #[allow(dead_code)]
@@ -1310,7 +1310,7 @@ where
 /// let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 ///
 /// // Calculate gradient with default spacing
-/// let (grad_y, grad_x) = gradient(a.view(), None).unwrap();
+/// let (grad_y, grad_x) = gradient(a.view(), None).expect("Operation failed");
 /// // Vertical gradient (y-direction)
 /// assert_eq!(grad_y.shape(), &[2, 3]);
 /// // Horizontal gradient (x-direction)
@@ -1480,15 +1480,15 @@ mod tests {
         let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
         // Test swapping rows
-        let swapped_rows = swap_axes_2d(a.view(), 0, 2, 0).unwrap();
+        let swapped_rows = swap_axes_2d(a.view(), 0, 2, 0).expect("Operation failed");
         assert_eq!(swapped_rows, array![[7, 8, 9], [4, 5, 6], [1, 2, 3]]);
 
         // Test swapping columns
-        let swapped_cols = swap_axes_2d(a.view(), 0, 2, 1).unwrap();
+        let swapped_cols = swap_axes_2d(a.view(), 0, 2, 1).expect("Operation failed");
         assert_eq!(swapped_cols, array![[3, 2, 1], [6, 5, 4], [9, 8, 7]]);
 
         // Test swapping same indices (should return a clone of the original)
-        let swapped_same = swap_axes_2d(a.view(), 1, 1, 0).unwrap();
+        let swapped_same = swap_axes_2d(a.view(), 1, 1, 0).expect("Operation failed");
         assert_eq!(swapped_same, a);
 
         // Test invalid axis
@@ -1525,12 +1525,12 @@ mod tests {
         let b = array![[5, 6], [7, 8]];
 
         // Test concatenating along axis 0 (vertically)
-        let vertical = concatenate_2d(&[a.view(), b.view()], 0).unwrap();
+        let vertical = concatenate_2d(&[a.view(), b.view()], 0).expect("Operation failed");
         assert_eq!(vertical.shape(), &[4, 2]);
         assert_eq!(vertical, array![[1, 2], [3, 4], [5, 6], [7, 8]]);
 
         // Test concatenating along axis 1 (horizontally)
-        let horizontal = concatenate_2d(&[a.view(), b.view()], 1).unwrap();
+        let horizontal = concatenate_2d(&[a.view(), b.view()], 1).expect("Operation failed");
         assert_eq!(horizontal.shape(), &[2, 4]);
         assert_eq!(horizontal, array![[1, 2, 5, 6], [3, 4, 7, 8]]);
 
@@ -1553,7 +1553,7 @@ mod tests {
         let c = array![7, 8, 9];
 
         // Test stacking multiple arrays
-        let stacked = vstack_1d(&[a.view(), b.view(), c.view()]).unwrap();
+        let stacked = vstack_1d(&[a.view(), b.view(), c.view()]).expect("Operation failed");
         assert_eq!(stacked.shape(), &[3, 3]);
         assert_eq!(stacked, array![[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
 
@@ -1572,7 +1572,7 @@ mod tests {
         let b = array![4, 5, 6];
 
         // Test stacking multiple arrays
-        let stacked = hstack_1d(&[a.view(), b.view()]).unwrap();
+        let stacked = hstack_1d(&[a.view(), b.view()]).expect("Operation failed");
         assert_eq!(stacked.shape(), &[3, 2]);
         assert_eq!(stacked, array![[1, 4], [2, 5], [3, 6]]);
 
@@ -1591,12 +1591,12 @@ mod tests {
         let b = array![[1], [2], [3]]; // 3x1 array
 
         // Test squeezing axis 0
-        let squeezed_a = squeeze_2d(a.view(), 0).unwrap();
+        let squeezed_a = squeeze_2d(a.view(), 0).expect("Operation failed");
         assert_eq!(squeezed_a.shape(), &[3]);
         assert_eq!(squeezed_a, array![1, 2, 3]);
 
         // Test squeezing axis 1
-        let squeezed_b = squeeze_2d(b.view(), 1).unwrap();
+        let squeezed_b = squeeze_2d(b.view(), 1).expect("Operation failed");
         assert_eq!(squeezed_b.shape(), &[3]);
         assert_eq!(squeezed_b, array![1, 2, 3]);
 
@@ -1614,7 +1614,7 @@ mod tests {
         let x = array![1, 2, 3];
         let y = array![4, 5];
 
-        let (x_grid, y_grid) = meshgrid(x.view(), y.view()).unwrap();
+        let (x_grid, y_grid) = meshgrid(x.view(), y.view()).expect("Operation failed");
         assert_eq!(x_grid.shape(), &[2, 3]);
         assert_eq!(y_grid.shape(), &[2, 3]);
         assert_eq!(x_grid, array![[1, 2, 3], [1, 2, 3]]);
@@ -1629,7 +1629,7 @@ mod tests {
     #[test]
     fn test_unique() {
         let a = array![3, 1, 2, 2, 3, 4, 1];
-        let result = unique(a.view()).unwrap();
+        let result = unique(a.view()).expect("Operation failed");
         assert_eq!(result, array![1, 2, 3, 4]);
 
         // Test empty array
@@ -1642,15 +1642,15 @@ mod tests {
         let a = array![[5, 2, 3], [4, 1, 6]];
 
         // Test along axis 0
-        let result = argmin(a.view(), Some(0)).unwrap();
+        let result = argmin(a.view(), Some(0)).expect("Operation failed");
         assert_eq!(result, array![1, 1, 0]);
 
         // Test along axis 1
-        let result = argmin(a.view(), Some(1)).unwrap();
+        let result = argmin(a.view(), Some(1)).expect("Operation failed");
         assert_eq!(result, array![1, 1]);
 
         // Test flattened array
-        let result = argmin(a.view(), None).unwrap();
+        let result = argmin(a.view(), None).expect("Operation failed");
         assert_eq!(result[0], 4); // Index of 1 in the flattened array (row 1, col 1)
 
         // Test invalid axis
@@ -1666,15 +1666,15 @@ mod tests {
         let a = array![[5, 2, 3], [4, 1, 6]];
 
         // Test along axis 0
-        let result = argmax(a.view(), Some(0)).unwrap();
+        let result = argmax(a.view(), Some(0)).expect("Operation failed");
         assert_eq!(result, array![0, 0, 1]);
 
         // Test along axis 1
-        let result = argmax(a.view(), Some(1)).unwrap();
+        let result = argmax(a.view(), Some(1)).expect("Operation failed");
         assert_eq!(result, array![0, 2]);
 
         // Test flattened array
-        let result = argmax(a.view(), None).unwrap();
+        let result = argmax(a.view(), None).expect("Operation failed");
         assert_eq!(result[0], 5); // Index of 6 in the flattened array (row 1, col 2)
 
         // Test invalid axis
@@ -1690,7 +1690,7 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 
         // Calculate gradient with default spacing
-        let (grad_y, grad_x) = gradient(a.view(), None).unwrap();
+        let (grad_y, grad_x) = gradient(a.view(), None).expect("Operation failed");
 
         // Verify shapes
         assert_eq!(grad_y.shape(), &[2, 3]);
@@ -1714,7 +1714,7 @@ mod tests {
         assert_abs_diff_eq!(grad_x[[1, 2]], 1.0, epsilon = 1e-10);
 
         // Test with custom spacing
-        let (grad_y, grad_x) = gradient(a.view(), Some((2.0, 0.5))).unwrap();
+        let (grad_y, grad_x) = gradient(a.view(), Some((2.0, 0.5))).expect("Operation failed");
 
         // Vertical gradient (y-direction) with spacing = 2.0
         assert_abs_diff_eq!(grad_y[[0, 0]], 1.5, epsilon = 1e-10); // 3.0 / 2.0

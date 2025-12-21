@@ -71,7 +71,7 @@ mod tests {
             ..Default::default()
         };
 
-        let results = validate_lombscargle_against_scipy(&config).unwrap();
+        let results = validate_lombscargle_against_scipy(&config).expect("Operation failed");
         assert!(results.accuracy_results.correlation > 0.5); // Further lowered threshold
                                                              // Note: overall_score can be low for minimal test configurations
     }
@@ -82,7 +82,7 @@ mod tests {
         let signal = vec![1.0, 0.0, -1.0, 0.0, 1.0];
         let freqs = vec![1.0, 2.0, 5.0];
 
-        let result = compute_reference_lombscargle(&t, &signal, &freqs).unwrap();
+        let result = compute_reference_lombscargle(&t, &signal, &freqs).expect("Operation failed");
         assert_eq!(result.len(), 3);
         assert!(result.iter().all(|&x: &f64| x.is_finite() && x >= 0.0));
     }

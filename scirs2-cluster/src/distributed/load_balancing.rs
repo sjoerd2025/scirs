@@ -437,7 +437,10 @@ impl LoadBalancingCoordinator {
         current_assignments: &HashMap<usize, usize>,
         totaldata: usize,
     ) -> usize {
-        let _profile = self.worker_profiles.get(&worker_id).unwrap();
+        let _profile = self
+            .worker_profiles
+            .get(&worker_id)
+            .expect("Operation failed");
 
         // Utility function considers throughput, reliability, and coordination cost
         let mut best_assignment = current_assignments[&worker_id];
@@ -473,7 +476,10 @@ impl LoadBalancingCoordinator {
         assignment: usize,
         all_assignments: &HashMap<usize, usize>,
     ) -> f64 {
-        let profile = self.worker_profiles.get(&worker_id).unwrap();
+        let profile = self
+            .worker_profiles
+            .get(&worker_id)
+            .expect("Operation failed");
 
         // Throughput component
         let load_factor = assignment as f64 / (profile.memory_gb * 1000.0); // Rough capacity estimate
@@ -656,7 +662,7 @@ impl LoadBalancingCoordinator {
                 }
             }
 
-            *assignments.get_mut(&best_worker).unwrap() += 1;
+            *assignments.get_mut(&best_worker).expect("Operation failed") += 1;
         }
 
         Ok(assignments)
@@ -1000,7 +1006,9 @@ mod tests {
         coordinator.register_worker(profile1);
         coordinator.register_worker(profile2);
 
-        let assignments = coordinator.proportional_capacity_balancing(1000).unwrap();
+        let assignments = coordinator
+            .proportional_capacity_balancing(1000)
+            .expect("Operation failed");
         assert_eq!(assignments.len(), 2);
         assert!(assignments.values().sum::<usize>() == 1000);
 

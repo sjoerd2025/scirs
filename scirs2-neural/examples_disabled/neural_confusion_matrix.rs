@@ -165,7 +165,7 @@ fn main() -> Result<()> {
         // Store metrics
         epoch_history
             .get_mut("train_loss")
-            .unwrap()
+            .expect("Operation failed")
             .push(train_loss);
             .get_mut("val_accuracy")
             .push(val_accuracy);

@@ -185,7 +185,8 @@ mod tests {
 
     #[test]
     fn test_deep_embedded_clustering_placeholder() {
-        let data = Array2::from_shape_vec((8, 4), (0..32).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::from_shape_vec((8, 4), (0..32).map(|x| x as f64).collect())
+            .expect("Operation failed");
         let result = deep_embedded_clustering(data.view(), None);
         assert!(result.is_ok());
     }

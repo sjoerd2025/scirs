@@ -88,7 +88,7 @@ impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
 
     /// Calculate the centroid of this cluster
     fn centroid(&self) -> Array1<F> {
-        &self.sum_coords / F::from(self.size).unwrap()
+        &self.sum_coords / F::from(self.size).expect("Failed to convert to float")
     }
 
     /// Calculate Ward's distance to another cluster
@@ -97,8 +97,8 @@ impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
             return F::infinity();
         }
 
-        let n1 = F::from(self.size).unwrap();
-        let n2 = F::from(other.size).unwrap();
+        let n1 = F::from(self.size).expect("Failed to convert to float");
+        let n2 = F::from(other.size).expect("Failed to convert to float");
         let n_total = n1 + n2;
 
         // Calculate the increase in within-cluster sum of squares
@@ -140,9 +140,9 @@ impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
 ///     1.0, 0.0,
 ///     0.0, 1.0,
 ///     1.0, 1.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let linkage_matrix = optimized_ward_linkage(data.view(), Metric::Euclidean).unwrap();
+/// let linkage_matrix = optimized_ward_linkage(data.view(), Metric::Euclidean).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn optimized_ward_linkage<F>(
@@ -225,10 +225,11 @@ where
         let cluster2 = &clusters[cluster2_id];
 
         // Record the merge in the linkage matrix
-        linkage_matrix[[merge_step, 0]] = F::from(cluster1_id).unwrap();
-        linkage_matrix[[merge_step, 1]] = F::from(cluster2_id).unwrap();
+        linkage_matrix[[merge_step, 0]] = F::from(cluster1_id).expect("Failed to convert to float");
+        linkage_matrix[[merge_step, 1]] = F::from(cluster2_id).expect("Failed to convert to float");
         linkage_matrix[[merge_step, 2]] = min_distance;
-        linkage_matrix[[merge_step, 3]] = F::from(cluster1.size + cluster2.size).unwrap();
+        linkage_matrix[[merge_step, 3]] =
+            F::from(cluster1.size + cluster2.size).expect("Failed to convert to float");
 
         // Create the merged cluster
         let merged_cluster = cluster1.merge(cluster2, timestamp);
@@ -286,9 +287,9 @@ pub fn lance_williams_ward_update<F: Float + FromPrimitive>(
     size_j: usize,
     size_k: usize,
 ) -> F {
-    let ni = F::from(size_i).unwrap();
-    let nj = F::from(size_j).unwrap();
-    let nk = F::from(size_k).unwrap();
+    let ni = F::from(size_i).expect("Failed to convert to float");
+    let nj = F::from(size_j).expect("Failed to convert to float");
+    let nk = F::from(size_k).expect("Failed to convert to float");
     let nij = ni + nj;
 
     // Ward's Lance-Williams coefficients
@@ -351,10 +352,11 @@ mod tests {
 
     #[test]
     fn test_optimized_ward_simple() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
-        let linkage_matrix = optimized_ward_linkage(data.view(), Metric::Euclidean).unwrap();
+        let linkage_matrix =
+            optimized_ward_linkage(data.view(), Metric::Euclidean).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(linkage_matrix.shape(), &[3, 4]);
@@ -419,8 +421,8 @@ mod tests {
 
     #[test]
     fn test_memory_efficient_ward() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         // Should succeed with reasonable memory limit
         let result = memory_efficient_ward_linkage(data.view(), 100);
@@ -449,12 +451,13 @@ mod tests {
     #[test]
     fn test_optimized_ward_identical_points() {
         // Test edge case with identical points
-        let data = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+        let data = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 1.0, 1.0, 2.0, 2.0])
+            .expect("Operation failed");
 
         let result = optimized_ward_linkage(data.view(), Metric::Euclidean);
         assert!(result.is_ok());
 
-        let linkage_matrix = result.unwrap();
+        let linkage_matrix = result.expect("Operation failed");
         assert_eq!(linkage_matrix.shape(), &[2, 4]);
 
         // First merge should have distance 0 (identical points)

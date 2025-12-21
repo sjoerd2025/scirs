@@ -64,7 +64,11 @@ fn demonstrate_basic_memory_mapping() -> Result<(), Box<dyn std::error::Error>> 
     let array_view = mmap_array.as_array_view(&shape)?;
     println!("  🔍 Accessing random elements:");
     for i in [0, 100, 500, 999] {
-        println!("    Element {}: {}", i, array_view.as_slice().unwrap()[i]);
+        println!(
+            "    Element {}: {}",
+            i,
+            array_view.as_slice().expect("Operation failed")[i]
+        );
     }
 
     // Verify data integrity
@@ -116,7 +120,7 @@ fn demonstrate_large_dataset_handling() -> Result<(), Box<dyn std::error::Error>
     let array_view = mmap_array.as_array_view(&shape)?;
 
     println!("  🎯 Accessing specific regions:");
-    let slice = array_view.as_slice().unwrap();
+    let slice = array_view.as_slice().expect("Operation failed");
 
     // Sample different parts of the array
     let regions = [
@@ -158,7 +162,7 @@ fn demonstrate_mutable_memory_mapping() -> Result<(), Box<dyn std::error::Error>
     // Modify data directly in the memory-mapped file
     {
         let mut array_view = mmap_array.as_array_view_mut(&shape)?;
-        let slice = array_view.as_slice_mut().unwrap();
+        let slice = array_view.as_slice_mut().expect("Operation failed");
 
         // Create a pattern
         for i in 0..100 {
@@ -179,7 +183,7 @@ fn demonstrate_mutable_memory_mapping() -> Result<(), Box<dyn std::error::Error>
 
     // Verify changes by reading back
     let modified_data: scirs2_core::ndarray::ArrayD<f64> = read_mmap_array(&file_path)?;
-    let modified_slice = modified_data.as_slice().unwrap();
+    let modified_slice = modified_data.as_slice().expect("Operation failed");
 
     println!("  🔍 Verifying modifications:");
     let test_positions = [(0, 0), (1, 1), (50, 50), (99, 99)];

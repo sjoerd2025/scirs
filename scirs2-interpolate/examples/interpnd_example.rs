@@ -54,7 +54,7 @@ fn regular_grid_example() {
         InterpolationMethod::Linear,
         ExtrapolateMode::Extrapolate,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Test points for interpolation
     let test_points = Array2::from_shape_vec(
@@ -67,10 +67,12 @@ fn regular_grid_example() {
             2.5, 2.5, // Outside grid (extrapolation)
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Perform interpolation
-    let results = interp.__call__(&test_points.view()).unwrap();
+    let results = interp
+        .__call__(&test_points.view())
+        .expect("Test: operation failed");
 
     // Display results
     println!("\nInterpolation results:");
@@ -98,7 +100,7 @@ fn scattered_data_example() {
             0.7, 0.3, // Random point
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Create values at those points (z = x^2 + y^2)
     let values = Array1::from_vec(vec![
@@ -128,7 +130,7 @@ fn scattered_data_example() {
         ExtrapolateMode::Extrapolate,
         Some(ScatteredInterpolatorParams::IDW { power: 2.0 }),
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Create the interpolator with Nearest Neighbor
     let interp_nearest = make_interp_scattered(
@@ -138,7 +140,7 @@ fn scattered_data_example() {
         ExtrapolateMode::Extrapolate,
         None,
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Test points for interpolation
     let test_points = Array2::from_shape_vec(
@@ -149,11 +151,15 @@ fn scattered_data_example() {
             1.5, 1.5, // Outside points (extrapolation)
         ],
     )
-    .unwrap();
+    .expect("Test: operation failed");
 
     // Perform interpolation with both methods
-    let results_idw = interp_idw.__call__(&test_points.view()).unwrap();
-    let results_nearest = interp_nearest.__call__(&test_points.view()).unwrap();
+    let results_idw = interp_idw
+        .__call__(&test_points.view())
+        .expect("Test: operation failed");
+    let results_nearest = interp_nearest
+        .__call__(&test_points.view())
+        .expect("Test: operation failed");
 
     // Display results
     println!("\nInterpolation results:");
@@ -199,8 +205,8 @@ fn map_coordinates_example() {
     let new_grid = vec![x_new, y_new];
 
     // Map the old values to the new grid
-    let new_values =
-        map_coordinates(old_grid, old_values, new_grid, InterpolationMethod::Linear).unwrap();
+    let new_values = map_coordinates(old_grid, old_values, new_grid, InterpolationMethod::Linear)
+        .expect("Test: operation failed");
 
     // Display the new values
     println!("\nInterpolated grid values (5x5):");

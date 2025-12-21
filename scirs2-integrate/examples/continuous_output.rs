@@ -260,12 +260,12 @@ fn two_body_simulation() -> IntegrateResult<()> {
     let mut file = std::fs::File::create("two_body_radius.csv")
         .map_err(|e| scirs2_integrate::error::IntegrateError::ComputationError(e.to_string()))?;
 
-    writeln!(file, "t,radius").unwrap();
+    writeln!(file, "t,radius").expect("Operation failed");
     for i in 0..t_dense.len() {
         let x = values_dense[i][0];
         let y = values_dense[i][1];
         let r = (x * x + y * y).sqrt();
-        writeln!(file, "{},{}", t_dense[i], r).unwrap();
+        writeln!(file, "{},{}", t_dense[i], r).expect("Operation failed");
     }
 
     println!("Wrote radius data to two_body_radius.csv");
@@ -421,12 +421,12 @@ fn van_der_pol_simulation() -> IntegrateResult<()> {
     let mut phase_file = std::fs::File::create("van_der_pol_phase.csv")
         .map_err(|e| scirs2_integrate::error::IntegrateError::ComputationError(e.to_string()))?;
 
-    writeln!(phase_file, "x,y").unwrap();
+    writeln!(phase_file, "x,y").expect("Operation failed");
 
     // Use dense output with many points
     let (_, values) = cubic_solution.dense_output(2000)?;
     for v in values {
-        writeln!(phase_file, "{},{}", v[0], v[1]).unwrap();
+        writeln!(phase_file, "{},{}", v[0], v[1]).expect("Operation failed");
     }
 
     println!("Wrote phase plane data to van_der_pol_phase.csv");

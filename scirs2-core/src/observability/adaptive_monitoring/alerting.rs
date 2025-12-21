@@ -92,7 +92,7 @@ impl AlertingSystem {
                     "alert_{}",
                     SystemTime::now()
                         .duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap()
+                        .expect("Operation failed")
                         .as_millis()
                 ),
                 rule_name: rule.name.clone(),
@@ -196,7 +196,7 @@ impl AlertingSystem {
                     "alert_{}",
                     SystemTime::now()
                         .duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap()
+                        .expect("Operation failed")
                         .as_millis()
                 ),
                 rule_name: rule.name.clone(),

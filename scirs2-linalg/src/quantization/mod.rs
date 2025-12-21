@@ -47,7 +47,7 @@
 //! let (b_q, b_params) = quantize_matrix(&b.view(), 8, QuantizationMethod::Symmetric);
 //!
 //! // Perform quantized matrix multiplication
-//! let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).unwrap();
+//! let c_q = quantized_matmul(&a_q, &a_params, &b_q, &b_params).expect("Operation failed");
 //!
 //! // Regular matrix multiplication for comparison
 //! let c = a.dot(&b);

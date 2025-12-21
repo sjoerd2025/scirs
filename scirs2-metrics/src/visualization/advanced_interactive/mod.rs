@@ -94,11 +94,17 @@ impl std::fmt::Debug for InteractiveDashboard {
             .field("config", &self.config)
             .field(
                 "widgets",
-                &format!("{} widgets", self.widgets.read().unwrap().len()),
+                &format!(
+                    "{} widgets",
+                    self.widgets.read().expect("Operation failed").len()
+                ),
             )
             .field(
                 "data_sources",
-                &format!("{} data sources", self.data_sources.read().unwrap().len()),
+                &format!(
+                    "{} data sources",
+                    self.data_sources.read().expect("Operation failed").len()
+                ),
             )
             .field("event_system", &"<event_system>")
             .field("layout_manager", &"<layout_manager>")
@@ -257,17 +263,17 @@ impl InteractiveDashboard {
         // Add to widgets collection
         self.widgets
             .write()
-            .unwrap()
+            .expect("Operation failed")
             .insert(widget_id.clone(), widget);
 
         // Update layout
         self.layout_manager
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .add_widget(&widget_config)?;
 
         // Update view state
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Operation failed");
         state.view_state.visible_widgets.push(widget_id.clone());
         state.view_state.z_order.push(widget_id);
 
@@ -277,16 +283,19 @@ impl InteractiveDashboard {
     /// Remove widget from dashboard
     pub fn remove_widget(&self, widget_id: &str) -> Result<()> {
         // Remove from widgets collection
-        self.widgets.write().unwrap().remove(widget_id);
+        self.widgets
+            .write()
+            .expect("Operation failed")
+            .remove(widget_id);
 
         // Update layout
         self.layout_manager
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .remove_widget(widget_id)?;
 
         // Update view state
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Operation failed");
         state
             .view_state
             .visible_widgets
@@ -299,7 +308,10 @@ impl InteractiveDashboard {
     /// Register data source
     pub fn register_data_source(&self, source: Box<dyn DataSource + Send + Sync>) -> Result<()> {
         let source_id = source.id().to_string();
-        self.data_sources.write().unwrap().insert(source_id, source);
+        self.data_sources
+            .write()
+            .expect("Operation failed")
+            .insert(source_id, source);
         Ok(())
     }
 
@@ -319,7 +331,7 @@ impl InteractiveDashboard {
         // Queue event for processing
         self.event_system
             .lock()
-            .unwrap()
+            .expect("Operation failed")
             .queue_event(dashboard_event)?;
 
         Ok(())
@@ -327,7 +339,7 @@ impl InteractiveDashboard {
 
     /// Update dashboard state
     pub fn update_state(&self, updates: HashMap<String, Value>) -> Result<()> {
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.write().expect("Operation failed");
 
         for (key, value) in updates {
             state.custom_state.insert(key, value);
@@ -338,14 +350,14 @@ impl InteractiveDashboard {
 
     /// Render dashboard
     pub fn render(&self, context: &RenderContext) -> Result<()> {
-        let widgets = self.widgets.read().unwrap();
-        let renderer = self.renderer.lock().unwrap();
+        let widgets = self.widgets.read().expect("Operation failed");
+        let renderer = self.renderer.lock().expect("Operation failed");
 
         // Clear render target
         renderer.clear([0.0, 0.0, 0.0, 1.0])?;
 
         // Get visible widgets in z-order
-        let state = self.state.read().unwrap();
+        let state = self.state.read().expect("Operation failed");
         let mut visible_widgets: Vec<_> = state
             .view_state
             .z_order
@@ -373,10 +385,18 @@ impl InteractiveDashboard {
     /// Process real-time updates
     pub fn process_updates(&self) -> Result<()> {
         // Process events
-        let _responses = self.event_system.lock().unwrap().process_events()?;
+        let _responses = self
+            .event_system
+            .lock()
+            .expect("Operation failed")
+            .process_events()?;
 
         // Process data updates
-        let _update_requests = self.update_manager.lock().unwrap().process_updates()?;
+        let _update_requests = self
+            .update_manager
+            .lock()
+            .expect("Operation failed")
+            .process_updates()?;
 
         // Apply collaboration updates
         if self
@@ -385,7 +405,11 @@ impl InteractiveDashboard {
             .as_ref()
             .is_some_and(|c| c.enabled)
         {
-            let _resolved_operations = self.collaboration.lock().unwrap().resolve_conflicts()?;
+            let _resolved_operations = self
+                .collaboration
+                .lock()
+                .expect("Operation failed")
+                .resolve_conflicts()?;
         }
 
         Ok(())
@@ -398,7 +422,7 @@ impl InteractiveDashboard {
 
     /// Get current dashboard state
     pub fn state(&self) -> DashboardState {
-        self.state.read().unwrap().clone()
+        self.state.read().expect("Operation failed").clone()
     }
 
     /// Export dashboard configuration

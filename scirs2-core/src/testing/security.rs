@@ -1055,7 +1055,9 @@ mod tests {
     #[test]
     fn test_vulnerability_assessment() {
         let assessment = VulnerabilityAssessment::new(SecurityTestConfig::default());
-        let report = assessment.perform_security_audit().unwrap();
+        let report = assessment
+            .perform_security_audit()
+            .expect("Operation failed");
 
         assert!(report.total_tests > 0);
         assert!(report.passed_tests > 0);

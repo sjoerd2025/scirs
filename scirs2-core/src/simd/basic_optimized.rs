@@ -81,8 +81,8 @@ pub fn simd_add_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
             use std::arch::x86_64::*;
 
             // Get raw pointers for direct access (no bounds checking)
-            let a_ptr = a.as_slice().unwrap().as_ptr();
-            let b_ptr = b.as_slice().unwrap().as_ptr();
+            let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+            let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
             let result_ptr = result.as_mut_ptr();
 
             if is_x86_feature_detected!("avx512f") {
@@ -100,8 +100,8 @@ pub fn simd_add_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
     #[cfg(target_arch = "aarch64")]
     {
         unsafe {
-            let a_ptr = a.as_slice().unwrap().as_ptr();
-            let b_ptr = b.as_slice().unwrap().as_ptr();
+            let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+            let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
             let result_ptr = result.as_mut_ptr();
 
             if std::arch::is_aarch64_feature_detected!("neon") {
@@ -115,8 +115,8 @@ pub fn simd_add_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
     {
         unsafe {
-            let a_ptr = a.as_slice().unwrap().as_ptr();
-            let b_ptr = b.as_slice().unwrap().as_ptr();
+            let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+            let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
             let result_ptr = result.as_mut_ptr();
             scalar_add_f32_inner(a_ptr, b_ptr, result_ptr, len);
         }
@@ -431,8 +431,8 @@ pub fn simd_mul_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
         unsafe {
             use std::arch::x86_64::*;
 
-            let a_ptr = a.as_slice().unwrap().as_ptr();
-            let b_ptr = b.as_slice().unwrap().as_ptr();
+            let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+            let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
             let result_ptr = result.as_mut_ptr();
 
             if is_x86_feature_detected!("avx512f") {
@@ -450,8 +450,8 @@ pub fn simd_mul_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
     #[cfg(target_arch = "aarch64")]
     {
         unsafe {
-            let a_ptr = a.as_slice().unwrap().as_ptr();
-            let b_ptr = b.as_slice().unwrap().as_ptr();
+            let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+            let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
             let result_ptr = result.as_mut_ptr();
 
             if std::arch::is_aarch64_feature_detected!("neon") {
@@ -465,8 +465,8 @@ pub fn simd_mul_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
     {
         unsafe {
-            let a_ptr = a.as_slice().unwrap().as_ptr();
-            let b_ptr = b.as_slice().unwrap().as_ptr();
+            let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+            let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
             let result_ptr = result.as_mut_ptr();
             scalar_mul_f32_inner(a_ptr, b_ptr, result_ptr, len);
         }
@@ -758,8 +758,8 @@ pub fn simd_dot_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
     #[cfg(target_arch = "x86_64")]
     {
         unsafe {
-            let a_ptr = a.as_slice().unwrap().as_ptr();
-            let b_ptr = b.as_slice().unwrap().as_ptr();
+            let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+            let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
 
             if is_x86_feature_detected!("avx512f") {
                 return avx512_dot_f32_inner(a_ptr, b_ptr, len);
@@ -775,8 +775,8 @@ pub fn simd_dot_f32_ultra_optimized(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
 
     #[cfg(target_arch = "aarch64")]
     unsafe {
-        let a_ptr = a.as_slice().unwrap().as_ptr();
-        let b_ptr = b.as_slice().unwrap().as_ptr();
+        let a_ptr = a.as_slice().expect("Operation failed").as_ptr();
+        let b_ptr = b.as_slice().expect("Operation failed").as_ptr();
         return neon_dot_f32_inner(a_ptr, b_ptr, len);
     }
 
@@ -1113,8 +1113,8 @@ unsafe fn neon_dot_f32_inner(a: *const f32, b: *const f32, len: usize) -> f32 {
 
 #[inline(always)]
 fn scalar_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
-    let a_slice = a.as_slice().unwrap();
-    let b_slice = b.as_slice().unwrap();
+    let a_slice = a.as_slice().expect("Operation failed");
+    let b_slice = b.as_slice().expect("Operation failed");
 
     a_slice.iter().zip(b_slice.iter()).map(|(x, y)| x * y).sum()
 }
@@ -1186,7 +1186,7 @@ pub fn simd_sum_f32_ultra_optimized(input: &ArrayView1<f32>) -> f32 {
     #[cfg(target_arch = "x86_64")]
     {
         unsafe {
-            let ptr = input.as_slice().unwrap().as_ptr();
+            let ptr = input.as_slice().expect("Operation failed").as_ptr();
 
             if is_x86_feature_detected!("avx512f") {
                 return avx512_sum_f32_inner(ptr, len);
@@ -1202,7 +1202,7 @@ pub fn simd_sum_f32_ultra_optimized(input: &ArrayView1<f32>) -> f32 {
 
     #[cfg(target_arch = "aarch64")]
     unsafe {
-        let ptr = input.as_slice().unwrap().as_ptr();
+        let ptr = input.as_slice().expect("Operation failed").as_ptr();
         return neon_sum_f32_inner(ptr, len);
     }
 
@@ -1499,7 +1499,7 @@ unsafe fn neon_sum_f32_inner(ptr: *const f32, len: usize) -> f32 {
 
 #[inline(always)]
 fn scalar_sum_f32(input: &ArrayView1<f32>) -> f32 {
-    let slice = input.as_slice().unwrap();
+    let slice = input.as_slice().expect("Operation failed");
     slice.iter().sum()
 }
 

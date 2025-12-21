@@ -66,7 +66,7 @@ where
     // Start with random initial vector
     let mut rng = scirs2_core::random::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).expect("Operation failed");
     }
     
     // Normalize initial vector
@@ -210,7 +210,7 @@ where
     // Start with random initial vector
     let mut rng = scirs2_core::random::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).expect("Operation failed");
     }
     
     // Normalize initial vector
@@ -502,13 +502,13 @@ mod tests {
             [0.0, 1.0, 2.0]
         ];
         
-        let sparse = sparse_from_ndarray(&dense.view(), 1e-12).unwrap();
+        let sparse = sparse_from_ndarray(&dense.view(), 1e-12).expect("Operation failed");
         
         // Find largest eigenvalue
         let result = sparse_lanczos_eigen(&sparse, 1, "largest", 50, 1e-8);
         assert!(result.is_ok());
         
-        let (eigenvals_eigenvecs) = result.unwrap();
+        let (eigenvals_eigenvecs) = result.expect("Operation failed");
         assert_eq!(eigenvals.len(), 1);
         
         // The largest eigenvalue should be approximately 5.14
@@ -525,13 +525,13 @@ mod tests {
             [0.0, 1.0, 3.0]
         ];
         
-        let sparse = sparse_from_ndarray(&dense.view(), 1e-12).unwrap();
+        let sparse = sparse_from_ndarray(&dense.view(), 1e-12).expect("Operation failed");
         
         // Find eigenvalues in range [2.0, 4.0]
         let result = sparse_eigen_range(&sparse, (2.0, 4.0), 50, 1e-8);
         assert!(result.is_ok());
         
-        let (eigenvals, eigenvecs) = result.unwrap();
+        let (eigenvals, eigenvecs) = result.expect("Operation failed");
         assert!(eigenvals.len() > 0);
         assert_eq!(eigenvecs.nrows(), 3);
         assert_eq!(eigenvecs.ncols(), eigenvals.len());

@@ -76,17 +76,17 @@ where
     ///     0.0, 1.0,
     ///     1.0, 0.0,
     ///     1.0, 1.0,
-    /// ]).unwrap();
+    /// ]).expect("Operation failed");
     ///
     /// // Function values: f(x,y) = x^2 + y^2
     /// let values = array![0.0, 1.0, 1.0, 2.0];
     ///
     /// // Create the interpolator
-    /// let tps = ThinPlateSpline::<f64>::new(&points.view(), &values.view(), 0.0).unwrap();
+    /// let tps = ThinPlateSpline::<f64>::new(&points.view(), &values.view(), 0.0).expect("Operation failed");
     ///
     /// // Interpolate at a new point
-    /// let new_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
-    /// let result = tps.evaluate(&new_point.view()).unwrap();
+    /// let new_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).expect("Operation failed");
+    /// let result = tps.evaluate(&new_point.view()).expect("Operation failed");
     /// // The thin-plate spline interpolation may not match exactly due to numerical issues
     /// // For this example, we check that the result is reasonable (between 0 and 2)
     /// assert!(result[0] > 0.0 && result[0] < 2.0, "Result should be reasonable");
@@ -198,15 +198,15 @@ where
         // Solve the system using scirs2-linalg
         let coeffs_full = {
             use scirs2_linalg::solve;
-            let a_f64 = a.mapv(|x| x.to_f64().unwrap());
-            let b_f64 = b.mapv(|x| x.to_f64().unwrap());
+            let a_f64 = a.mapv(|x| x.to_f64().expect("Operation failed"));
+            let b_f64 = b.mapv(|x| x.to_f64().expect("Operation failed"));
             match solve(&a_f64.view(), &b_f64.view(), None) {
-                Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),
+                Ok(solution) => solution.mapv(|x| T::from_f64(x).expect("Operation failed")),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
                     use scirs2_linalg::lstsq;
                     match lstsq(&a_f64.view(), &b_f64.view(), None) {
-                        Ok(result) => result.x.mapv(|x| T::from_f64(x).unwrap()),
+                        Ok(result) => result.x.mapv(|x| T::from_f64(x).expect("Operation failed")),
                         Err(_) => {
                             return Err(InterpolateError::LinalgError(
                                 "failed to solve linear system".to_string(),
@@ -369,20 +369,20 @@ mod tests {
     #[test]
     fn test_thinplate_exact_fit() {
         // Create 2D scattered data
-        let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]).unwrap();
+        let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])
+            .expect("Operation failed");
 
         // Function values: f(x,y) = x^2 + y^2
         let values = array![0.0, 1.0, 1.0, 2.0];
 
         let tps = ThinPlateSpline::new(&points.view(), &values.view(), 0.0);
         assert!(tps.is_ok());
-        let tps = tps.unwrap();
+        let tps = tps.expect("Operation failed");
 
         // Test that we can evaluate at the original points
         let result = tps.evaluate(&points.view());
         assert!(result.is_ok());
-        let interpolated = result.unwrap();
+        let interpolated = result.expect("Operation failed");
 
         // Check exact fit at the data points
         for i in 0..values.len() {
@@ -403,7 +403,7 @@ mod tests {
             (5, 2),
             vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.5, 0.5],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Function values with noise: f(x,y) = x^2 + y^2 + noise
         let values = array![0.0, 1.0, 1.0, 2.0, 0.6]; // 0.5 + 0.1 noise
@@ -414,12 +414,16 @@ mod tests {
         assert!(tps_exact.is_ok());
         assert!(tps_smooth.is_ok());
 
-        let tps_exact = tps_exact.unwrap();
-        let tps_smooth = tps_smooth.unwrap();
+        let tps_exact = tps_exact.expect("Operation failed");
+        let tps_smooth = tps_smooth.expect("Operation failed");
 
         // Test evaluation at original points
-        let _result_exact = tps_exact.evaluate(&points.view()).unwrap();
-        let result_smooth = tps_smooth.evaluate(&points.view()).unwrap();
+        let _result_exact = tps_exact
+            .evaluate(&points.view())
+            .expect("Operation failed");
+        let result_smooth = tps_smooth
+            .evaluate(&points.view())
+            .expect("Operation failed");
 
         // With smoothing, the fit shouldn't be exact, but should still be reasonable
         for i in 0..values.len() {

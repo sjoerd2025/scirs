@@ -74,14 +74,14 @@ impl SPEA2 {
         for (i, other) in population.iter().enumerate() {
             if i != index {
                 let dist = self.euclidean_distance(
-                    current.objectives.as_slice().unwrap(),
-                    other.objectives.as_slice().unwrap(),
+                    current.objectives.as_slice().expect("Operation failed"),
+                    other.objectives.as_slice().expect("Operation failed"),
                 );
                 distances.push(dist);
             }
         }
 
-        distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        distances.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
         distances
             .get(k.min(distances.len() - 1))
             .copied()

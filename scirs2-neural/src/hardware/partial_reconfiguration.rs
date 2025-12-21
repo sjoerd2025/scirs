@@ -108,14 +108,14 @@ impl DPRManager {
     }
     /// Define a partial reconfiguration region
     pub fn define_region(&self, region: PartialRegion) -> Result<()> {
-        let mut regions = self.regions.lock().unwrap();
+        let mut regions = self.regions.lock().expect("Operation failed");
         // Validate region coordinates and resources
         self.validate_region(&region)?;
         regions.insert(region.id, region);
         Ok(())
     /// Load a partial bitstream into the registry
     pub fn load_bitstream(&self, bitstream: PartialBitstream) -> Result<()> {
-        let mut bitstreams = self.bitstreams.lock().unwrap();
+        let mut bitstreams = self.bitstreams.lock().expect("Operation failed");
         // Validate bitstream compatibility
         self.validate_bitstream(&bitstream)?;
         bitstreams.insert(bitstream.module_name.clone(), bitstream);
@@ -123,7 +123,7 @@ impl DPRManager {
     pub fn reconfigure_region(&self, region_id: usize, modulename: &str) -> Result<()> {
         let start_time = std::time::Instant::now();
         // Get region and bitstream
-        let bitstreams = self.bitstreams.lock().unwrap();
+        let bitstreams = self.bitstreams.lock().expect("Operation failed");
         let region = regions.get_mut(&region_id).ok_or_else(|| {
             crate::error::NeuralError::InvalidArgument(format!("Region {} not found", region_id))
         })?;
@@ -153,7 +153,7 @@ impl DPRManager {
         // Perform actual reconfiguration
         let result = self.perform_reconfiguration(region_id, bitstream);
         // Update region state
-        let region = regions.get_mut(&region_id).unwrap();
+        let region = regions.get_mut(&region_id).expect("Operation failed");
         match result {
             Ok(_) => {
                 region.state = ReconfigurationState::Active;
@@ -168,10 +168,10 @@ impl DPRManager {
                     success: true,
                     error_message: None,
                 };
-                let mut history = self.reconfig_history.lock().unwrap();
+                let mut history = self.reconfig_history.lock().expect("Operation failed");
                 history.push(event);
                 // Update metrics
-                let mut metrics = self.metrics.lock().unwrap();
+                let mut metrics = self.metrics.lock().expect("Operation failed");
                 metrics.total_reconfigurations += 1;
                 metrics.successful_reconfigurations += 1;
                 metrics.total_reconfig_time_us += start_time.elapsed().as_micros() as u64;
@@ -203,11 +203,11 @@ impl DPRManager {
                 success: true,
                 error_message: None,
             };
-            let mut history = self.reconfig_history.lock().unwrap();
+            let mut history = self.reconfig_history.lock().expect("Operation failed");
             history.push(event);
     /// Get optimal module placement for a set of kernels
     pub fn get_optimal_placement(&self, kernels: &[FPGAKernel]) -> Result<Vec<PlacementDecision>> {
-        let regions = self.regions.lock().unwrap();
+        let regions = self.regions.lock().expect("Operation failed");
         let mut placements = Vec::new();
         // Simple greedy placement algorithm
         for kernel in kernels {
@@ -305,10 +305,10 @@ impl DPRManager {
         dsp_util.max(bram_util).max(lut_util)
     /// Get DPR statistics
     pub fn get_statistics(&self) -> DPRMetrics {
-        self.metrics.lock().unwrap().clone()
+        self.metrics.lock().expect("Operation failed").clone()
     /// Get reconfiguration history
     pub fn get_history(&self) -> Vec<ReconfigurationEvent> {
-        self.reconfig_history.lock().unwrap().clone()
+        self.reconfig_history.lock().expect("Operation failed").clone()
 /// Reconfiguration event for history tracking
 pub struct ReconfigurationEvent {
     /// Event timestamp
@@ -369,7 +369,7 @@ mod tests {
             power_budget: 20.0,
             bitstream_path: None,
         };
-        FPGADevice::new(config).unwrap()
+        FPGADevice::new(config).expect("Operation failed")
     #[test]
     fn test_dpr_manager_creation() {
         let fpga = create_test_fpga();
@@ -393,7 +393,7 @@ mod tests {
         assert!(dpr_manager.define_region(region).is_ok());
     fn test_bitstream_loading() {
         // First define a region
-        dpr_manager.define_region(region).unwrap();
+        dpr_manager.define_region(region).expect("Operation failed");
         let bitstream = PartialBitstream {
             module_name: "test_module".to_string(),
             target_region: 0,

@@ -11,7 +11,7 @@ mod tests {
         let b = array![[9.0_f32, 8.0, 7.0], [6.0, 5.0, 4.0], [3.0, 2.0, 1.0]];
 
         // Compute with extended precision
-        let c = extended_matmul::<_, f64>(&a.view(), &b.view()).unwrap();
+        let c = extended_matmul::<_, f64>(&a.view(), &b.view()).expect("Test: operation failed");
 
         // Compute with standard precision for comparison
         let c_standard = a.dot(&b);
@@ -32,7 +32,7 @@ mod tests {
         let x = array![1.0_f32, 2.0, 3.0];
 
         // Compute with extended precision
-        let y = extended_matvec::<_, f64>(&a.view(), &x.view()).unwrap();
+        let y = extended_matvec::<_, f64>(&a.view(), &x.view()).expect("Test: operation failed");
 
         // Compute with standard precision for comparison
         let y_standard = a.dot(&x);
@@ -50,7 +50,7 @@ mod tests {
         let b = array![6.0_f32, 6.0, 8.0];
 
         // Solve the system with extended precision
-        let x = extended_solve::<_, f64>(&a.view(), &b.view()).unwrap();
+        let x = extended_solve::<_, f64>(&a.view(), &b.view()).expect("Test: operation failed");
 
         // Verify A*x ≈ b
         let ax = a.dot(&x);

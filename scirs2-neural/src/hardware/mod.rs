@@ -228,7 +228,7 @@ impl KernelFusion {
                 // Try to extend the fusion group
                 while i < kernels.len()
                     && fusion_group.len() < self.max_fusion_depth
-                    && self.can_fuse(fusion_group.last().unwrap(), &kernels[i])
+                    && self.can_fuse(fusion_group.last().expect("Operation failed"), &kernels[i])
                 {
                     fusion_group.push(kernels[i].clone());
                     i += 1;
@@ -319,7 +319,7 @@ mod tests {
                 name: "relu".to_string(),
                 operation_type: OperationType::ElementWise(ElementWiseOp::ReLU),
         ];
-        let fused = fusion.optimize_kernels(kernels).unwrap();
+        let fused = fusion.optimize_kernels(kernels).expect("Operation failed");
         assert_eq!(fused.len(), 1);
         assert_eq!(fused[0].kernels.len(), 2);
         assert_eq!(fused[0].fusion_type, FusionType::ElementWise);

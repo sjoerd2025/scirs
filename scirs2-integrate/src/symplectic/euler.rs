@@ -171,10 +171,10 @@ mod tests {
         let dt = 0.1;
 
         // Single step with Symplectic Euler A
-        let (q1_a, p1_a) = symplectic_euler_a(&system, t0, &q0, &p0, dt).unwrap();
+        let (q1_a, p1_a) = symplectic_euler_a(&system, t0, &q0, &p0, dt).expect("Operation failed");
 
         // Single step with Symplectic Euler B
-        let (q1_b, p1_b) = symplectic_euler_b(&system, t0, &q0, &p0, dt).unwrap();
+        let (q1_b, p1_b) = symplectic_euler_b(&system, t0, &q0, &p0, dt).expect("Operation failed");
 
         // For this particular initial condition and harmonic oscillator:
         // A: q1 = 1.0, p1 = -0.1
@@ -207,7 +207,9 @@ mod tests {
 
         // Integrate for multiple steps
         let integrator = SymplecticEulerA::new();
-        let result = integrator.integrate(&system, t0, tf, dt, q0, p0).unwrap();
+        let result = integrator
+            .integrate(&system, t0, tf, dt, q0, p0)
+            .expect("Operation failed");
 
         // Energy should be conserved to within a small error
         // First-order methods will have linear drift, but it should still be small

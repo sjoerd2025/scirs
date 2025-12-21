@@ -57,14 +57,14 @@ struct KdNode<F: Float + ordered_float::FloatCore> {
 ///     0.0, 1.0,
 ///     1.0, 1.0,
 ///     0.5, 0.5,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Build KD-tree
-/// let kdtree = KdTree::new(points).unwrap();
+/// let kdtree = KdTree::new(points).expect("Operation failed");
 ///
 /// // Find the nearest neighbor to point (0.6, 0.6)
 /// let query = vec![0.6, 0.6];
-/// let (idx, distance) = kdtree.nearest_neighbor(&query).unwrap();
+/// let (idx, distance) = kdtree.nearest_neighbor(&query).expect("Operation failed");
 ///
 /// // idx should be 4 (the point at (0.5, 0.5))
 /// assert_eq!(idx, 4);
@@ -289,7 +289,12 @@ where
         let mut best_idx = 0;
 
         // Start recursive search
-        self.search_nearest(self.root.unwrap(), query, &mut best_dist, &mut best_idx);
+        self.search_nearest(
+            self.root.expect("Operation failed"),
+            query,
+            &mut best_dist,
+            &mut best_idx,
+        );
 
         Ok((best_idx, best_dist))
     }
@@ -342,7 +347,7 @@ where
         let mut heap: BinaryHeap<(OrderedFloat<F>, usize)> = BinaryHeap::with_capacity(k + 1);
 
         // Start recursive search
-        self.search_k_nearest(self.root.unwrap(), query, k, &mut heap);
+        self.search_k_nearest(self.root.expect("Operation failed"), query, k, &mut heap);
 
         // Convert heap to sorted vector
         let mut results: Vec<(usize, F)> = heap
@@ -402,7 +407,12 @@ where
         let mut results = Vec::new();
 
         // Start recursive search
-        self.search_radius(self.root.unwrap(), query, radius, &mut results);
+        self.search_radius(
+            self.root.expect("Operation failed"),
+            query,
+            radius,
+            &mut results,
+        );
 
         // Sort by distance
         results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
@@ -774,7 +784,7 @@ where
 
         // Start recursive search with adaptive radius
         self.search_k_nearest_optimized(
-            self.root.unwrap(),
+            self.root.expect("Operation failed"),
             query,
             k,
             &mut heap,
@@ -981,7 +991,7 @@ mod tests {
         // Create a simple 2D dataset
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]]);
 
-        let kdtree = KdTree::new(points).unwrap();
+        let kdtree = KdTree::new(points).expect("Operation failed");
 
         // Check tree properties
         assert_eq!(kdtree.len(), 5);
@@ -994,23 +1004,23 @@ mod tests {
         // Create a simple 2D dataset
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]]);
 
-        let kdtree = KdTree::new(points).unwrap();
+        let kdtree = KdTree::new(points).expect("Operation failed");
 
         // Test exact matches
         for i in 0..5 {
             let point = kdtree.points().row(i).to_vec();
-            let (idx, dist) = kdtree.nearest_neighbor(&point).unwrap();
+            let (idx, dist) = kdtree.nearest_neighbor(&point).expect("Operation failed");
             assert_eq!(idx, i);
             assert!(dist < 1e-10);
         }
 
         // Test near matches
         let query = vec![0.6, 0.6];
-        let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = kdtree.nearest_neighbor(&query).expect("Operation failed");
         assert_eq!(idx, 4); // Should be closest to (0.5, 0.5)
 
         let query = vec![0.9, 0.1];
-        let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();
+        let (idx, _) = kdtree.nearest_neighbor(&query).expect("Operation failed");
         assert_eq!(idx, 1); // Should be closest to (1.0, 0.0)
     }
 
@@ -1019,13 +1029,15 @@ mod tests {
         // Create a simple 2D dataset
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]]);
 
-        let kdtree = KdTree::new(points).unwrap();
+        let kdtree = KdTree::new(points).expect("Operation failed");
 
         // Test at point (0.6, 0.6)
         let query = vec![0.6, 0.6];
 
         // Get 3 nearest neighbors
-        let neighbors = kdtree.k_nearest_neighbors(&query, 3).unwrap();
+        let neighbors = kdtree
+            .k_nearest_neighbors(&query, 3)
+            .expect("Operation failed");
 
         // Should be (0.5, 0.5), (1.0, 1.0), (1.0, 0.0) or (0.0, 1.0)
         assert_eq!(neighbors.len(), 3);
@@ -1037,13 +1049,15 @@ mod tests {
         // Create a simple 2D dataset
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]]);
 
-        let kdtree = KdTree::new(points).unwrap();
+        let kdtree = KdTree::new(points).expect("Operation failed");
 
         // Test at point (0.0, 0.0) with radius 0.7
         let query = vec![0.0, 0.0];
         let radius = 0.7;
 
-        let results = kdtree.points_within_radius(&query, radius).unwrap();
+        let results = kdtree
+            .points_within_radius(&query, radius)
+            .expect("Operation failed");
 
         // With PartialOrd, the results are different than with Ord
         // Now checking that we get valid results rather than expecting exactly 2

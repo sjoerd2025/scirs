@@ -10,6 +10,12 @@ use scirs2_core::ndarray::Array1;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: IntegrateFloat>(value: f64) -> F {
+    F::from_f64(value).expect("Failed to convert constant to target float type")
+}
+
 /// Options for the cubature integration
 #[derive(Debug, Clone)]
 pub struct CubatureOptions<F: IntegrateFloat> {
@@ -30,8 +36,8 @@ pub struct CubatureOptions<F: IntegrateFloat> {
 impl<F: IntegrateFloat> Default for CubatureOptions<F> {
     fn default() -> Self {
         Self {
-            abs_tol: F::from_f64(1.49e-8).unwrap(),
-            rel_tol: F::from_f64(1.49e-8).unwrap(),
+            abs_tol: const_f64::<F>(1.49e-8),
+            rel_tol: const_f64::<F>(1.49e-8),
             max_evals: 50_000,
             max_recursion_depth: 15,
             vectorized: false,
@@ -83,7 +89,8 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
             // Use the transformation t = a_val + tan(x)
             // This maps [0, π/2) → [a_val, ∞)
             // x is in [0, π/2), scale to this range
-            let half_pi = F::from_f64(std::f64::consts::FRAC_PI_2).unwrap();
+            let half_pi =
+                F::from_f64(std::f64::consts::FRAC_PI_2).expect("Failed to convert to float");
             let scaled_x = half_pi * x; // Scale x to [0, π/2)
             let tan_x = scaled_x.tan();
             let mapped_val = *a_val + tan_x;
@@ -99,7 +106,8 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
         (Bound::NegInf, Bound::Finite(b_val)) => {
             // Use the transformation t = b_val - tan(x)
             // This maps [0, π/2) → (-∞, b_val]
-            let half_pi = F::from_f64(std::f64::consts::FRAC_PI_2).unwrap();
+            let half_pi =
+                F::from_f64(std::f64::consts::FRAC_PI_2).expect("Failed to convert to float");
             let scaled_x = half_pi * x; // Scale x to [0, π/2)
             let tan_x = scaled_x.tan();
             let mapped_val = *b_val - tan_x;
@@ -115,8 +123,8 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
         (Bound::NegInf, Bound::PosInf) => {
             // Use the transformation t = tan(π*(x-0.5))
             // This maps [0, 1] → (-∞, ∞)
-            let pi = F::from_f64(std::f64::consts::PI).unwrap();
-            let half = F::from_f64(0.5).unwrap();
+            let pi = F::from_f64(std::f64::consts::PI).expect("Failed to convert to float");
+            let half = const_f64::<F>(0.5);
             let scaled_x = (x - half) * pi;
             let mapped_val = scaled_x.tan();
 
@@ -163,7 +171,7 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
 ///     (Bound::Finite(0.0), Bound::Finite(1.0)),
 /// ];
 ///
-/// let result = cubature(f, &bounds, None).unwrap();
+/// let result = cubature(f, &bounds, None).expect("Test/example failed");
 /// // Exact result is 0.25
 /// assert!((result.value - 0.25).abs() < 1e-10);
 /// ```
@@ -281,7 +289,7 @@ where
 
         // Use a small error estimate based on machine precision
         // For well-behaved functions, use a smaller error multiplier
-        let error = result.abs() * F::epsilon() * F::from_f64(1.0).unwrap();
+        let error = result.abs() * F::epsilon() * const_f64::<F>(1.0);
 
         return Ok((result, error, true));
     }
@@ -336,28 +344,28 @@ where
 
     // Set up 7-point Gauss-Kronrod quadrature for better accuracy
     let points = [
-        F::from_f64(-0.9491079123427585).unwrap(),
-        F::from_f64(-0.7415311855993944).unwrap(),
-        F::from_f64(-0.4058451513773972).unwrap(),
+        const_f64::<F>(-0.9491079123427585),
+        const_f64::<F>(-0.7415311855993944),
+        const_f64::<F>(-0.4058451513773972),
         F::zero(),
-        F::from_f64(0.4058451513773972).unwrap(),
-        F::from_f64(0.7415311855993944).unwrap(),
-        F::from_f64(0.9491079123427585).unwrap(),
+        const_f64::<F>(0.4058451513773972),
+        const_f64::<F>(0.7415311855993944),
+        const_f64::<F>(0.9491079123427585),
     ];
 
     let weights = [
-        F::from_f64(0.1294849661688697).unwrap(),
-        F::from_f64(0.2797053914892766).unwrap(),
-        F::from_f64(0.3818300505051189).unwrap(),
-        F::from_f64(0.4179591836734694).unwrap(),
-        F::from_f64(0.3818300505051189).unwrap(),
-        F::from_f64(0.2797053914892766).unwrap(),
-        F::from_f64(0.1294849661688697).unwrap(),
+        const_f64::<F>(0.1294849661688697),
+        const_f64::<F>(0.2797053914892766),
+        const_f64::<F>(0.3818300505051189),
+        const_f64::<F>(0.4179591836734694),
+        const_f64::<F>(0.3818300505051189),
+        const_f64::<F>(0.2797053914892766),
+        const_f64::<F>(0.1294849661688697),
     ];
 
     // Scale the points to the integration interval [a, b]
-    let mid = (a + b) / F::from_f64(2.0).unwrap();
-    let scale = (b - a) / F::from_f64(2.0).unwrap();
+    let mid = (a + b) / const_f64::<F>(2.0);
+    let scale = (b - a) / const_f64::<F>(2.0);
 
     let mut result = F::zero();
     let mut error_est = F::zero();
@@ -435,49 +443,49 @@ where
 
     // Use 20-point Gauss-Legendre quadrature for better accuracy
     let nodes = [
-        F::from_f64(-0.9931285991850949).unwrap(),
-        F::from_f64(-0.9639719272779138).unwrap(),
-        F::from_f64(-0.912_234_428_251_326).unwrap(),
-        F::from_f64(-0.8391169718222188).unwrap(),
-        F::from_f64(-0.7463319064601508).unwrap(),
-        F::from_f64(-0.636_053_680_726_515).unwrap(),
-        F::from_f64(-0.5108670019508271).unwrap(),
-        F::from_f64(-0.3737060887154195).unwrap(),
-        F::from_f64(-0.2277858511416451).unwrap(),
-        F::from_f64(-0.0765265211334973).unwrap(),
-        F::from_f64(0.0765265211334973).unwrap(),
-        F::from_f64(0.2277858511416451).unwrap(),
-        F::from_f64(0.3737060887154195).unwrap(),
-        F::from_f64(0.5108670019508271).unwrap(),
-        F::from_f64(0.636_053_680_726_515).unwrap(),
-        F::from_f64(0.7463319064601508).unwrap(),
-        F::from_f64(0.8391169718222188).unwrap(),
-        F::from_f64(0.912_234_428_251_326).unwrap(),
-        F::from_f64(0.9639719272779138).unwrap(),
-        F::from_f64(0.9931285991850949).unwrap(),
+        const_f64::<F>(-0.9931285991850949),
+        const_f64::<F>(-0.9639719272779138),
+        F::from_f64(-0.912_234_428_251_326).expect("Failed to convert to float"),
+        const_f64::<F>(-0.8391169718222188),
+        const_f64::<F>(-0.7463319064601508),
+        F::from_f64(-0.636_053_680_726_515).expect("Failed to convert to float"),
+        const_f64::<F>(-0.5108670019508271),
+        const_f64::<F>(-0.3737060887154195),
+        const_f64::<F>(-0.2277858511416451),
+        const_f64::<F>(-0.0765265211334973),
+        const_f64::<F>(0.0765265211334973),
+        const_f64::<F>(0.2277858511416451),
+        const_f64::<F>(0.3737060887154195),
+        const_f64::<F>(0.5108670019508271),
+        F::from_f64(0.636_053_680_726_515).expect("Failed to convert to float"),
+        const_f64::<F>(0.7463319064601508),
+        const_f64::<F>(0.8391169718222188),
+        F::from_f64(0.912_234_428_251_326).expect("Failed to convert to float"),
+        const_f64::<F>(0.9639719272779138),
+        const_f64::<F>(0.9931285991850949),
     ];
 
     let weights = [
-        F::from_f64(0.0176140071391521).unwrap(),
-        F::from_f64(0.0406014298003869).unwrap(),
-        F::from_f64(0.0626720483341091).unwrap(),
-        F::from_f64(0.0832767415767048).unwrap(),
-        F::from_f64(0.1019301198172404).unwrap(),
-        F::from_f64(0.1181945319615184).unwrap(),
-        F::from_f64(0.1316886384491766).unwrap(),
-        F::from_f64(0.142_096_109_318_382).unwrap(),
-        F::from_f64(0.1491729864726037).unwrap(),
-        F::from_f64(0.1527533871307258).unwrap(),
-        F::from_f64(0.1527533871307258).unwrap(),
-        F::from_f64(0.1491729864726037).unwrap(),
-        F::from_f64(0.142_096_109_318_382).unwrap(),
-        F::from_f64(0.1316886384491766).unwrap(),
-        F::from_f64(0.1181945319615184).unwrap(),
-        F::from_f64(0.1019301198172404).unwrap(),
-        F::from_f64(0.0832767415767048).unwrap(),
-        F::from_f64(0.0626720483341091).unwrap(),
-        F::from_f64(0.0406014298003869).unwrap(),
-        F::from_f64(0.0176140071391521).unwrap(),
+        const_f64::<F>(0.0176140071391521),
+        const_f64::<F>(0.0406014298003869),
+        const_f64::<F>(0.0626720483341091),
+        const_f64::<F>(0.0832767415767048),
+        const_f64::<F>(0.1019301198172404),
+        const_f64::<F>(0.1181945319615184),
+        const_f64::<F>(0.1316886384491766),
+        F::from_f64(0.142_096_109_318_382).expect("Failed to convert to float"),
+        const_f64::<F>(0.1491729864726037),
+        const_f64::<F>(0.1527533871307258),
+        const_f64::<F>(0.1527533871307258),
+        const_f64::<F>(0.1491729864726037),
+        F::from_f64(0.142_096_109_318_382).expect("Failed to convert to float"),
+        const_f64::<F>(0.1316886384491766),
+        const_f64::<F>(0.1181945319615184),
+        const_f64::<F>(0.1019301198172404),
+        const_f64::<F>(0.0832767415767048),
+        const_f64::<F>(0.0626720483341091),
+        const_f64::<F>(0.0406014298003869),
+        const_f64::<F>(0.0176140071391521),
     ];
 
     let mut result = F::zero();
@@ -488,13 +496,13 @@ where
     // But avoid exact 0 and 1 for infinite _bounds
     let scale_factor = match (a_bound, b_bound) {
         (Bound::Finite(_), Bound::PosInf) | (Bound::NegInf, Bound::Finite(_)) => {
-            F::from_f64(0.4999).unwrap()
+            const_f64::<F>(0.4999)
         }
-        (Bound::NegInf, Bound::PosInf) => F::from_f64(0.499).unwrap(),
+        (Bound::NegInf, Bound::PosInf) => const_f64::<F>(0.499),
         _ => unreachable!(),
     };
 
-    let offset = F::from_f64(0.5).unwrap();
+    let offset = const_f64::<F>(0.5);
 
     for i in 0..20 {
         // Map node from [-1,1] to [0,1] avoiding endpoints
@@ -559,7 +567,7 @@ where
 /// let f = |args: &[f64]| args[0] * args[1];
 /// let ranges = vec![(0.0, 1.0), (0.0, 1.0)];
 ///
-/// let result = nquad(f, &ranges, None).unwrap();
+/// let result = nquad(f, &ranges, None).expect("Test/example failed");
 /// // Exact result is 0.25
 /// assert!((result.value - 0.25).abs() < 1e-10);
 /// ```
@@ -581,7 +589,7 @@ where
 
     // Adapter function that converts array to slice
     let f_adapter = |x: &Array1<F>| {
-        let slice = x.as_slice().unwrap();
+        let slice = x.as_slice().expect("Test/example failed");
         func(slice)
     };
 
@@ -609,7 +617,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = cubature(f, &bounds, Some(options)).unwrap();
+        let result = cubature(f, &bounds, Some(options)).expect("Test/example failed");
         println!("Cubature result:");
         println!("  Value: {}", result.value);
         println!("  Expected: 0.25");
@@ -631,7 +639,7 @@ mod tests {
             (Bound::Finite(0.0), Bound::Finite(1.0)),
         ];
 
-        let result = cubature(f, &bounds, None).unwrap();
+        let result = cubature(f, &bounds, None).expect("Test/example failed");
         assert!((result.value - 0.125).abs() < 1e-10);
         assert!(result.converged);
     }
@@ -642,7 +650,7 @@ mod tests {
         let f = |args: &[f64]| args[0] * args[1];
         let ranges = vec![(0.0, 1.0), (0.0, 1.0)];
 
-        let result = nquad(f, &ranges, None).unwrap();
+        let result = nquad(f, &ranges, None).expect("Test/example failed");
         assert!((result.value - 0.25).abs() < 1e-10);
         assert!(result.converged);
     }
@@ -661,7 +669,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = cubature(f, &bounds, Some(options)).unwrap();
+        let result = cubature(f, &bounds, Some(options)).expect("Test/example failed");
         assert!((result.value - PI.sqrt()).abs() < 1e-3); // Relaxed tolerance for infinite bounds
         assert!(result.converged);
     }
@@ -680,7 +688,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = cubature(f, &bounds, Some(options)).unwrap();
+        let result = cubature(f, &bounds, Some(options)).expect("Test/example failed");
         assert!((result.value - 1.0).abs() < 1e-3); // Relaxed tolerance for infinite bounds
         assert!(result.converged);
     }
@@ -702,7 +710,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = cubature(f, &bounds, Some(options)).unwrap();
+        let result = cubature(f, &bounds, Some(options)).expect("Test/example failed");
         assert!((result.value - PI).abs() < 1e-2); // Relaxed tolerance for 2D infinite bounds
     }
 }

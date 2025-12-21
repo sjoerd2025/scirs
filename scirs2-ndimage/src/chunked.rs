@@ -118,7 +118,7 @@ where
                 .map(|position| {
                     let chunk = extract_chunk(input, &position)?;
                     let result = {
-                        let mut proc = processor_mutex.lock().unwrap();
+                        let mut proc = processor_mutex.lock().expect("Operation failed");
                         proc.process_chunk(chunk.view(), &position)?
                     };
                     Ok((result, position))
@@ -510,7 +510,8 @@ mod tests {
             parallel: false,
         };
 
-        let result = process_chunked(&input.view(), &mut processor, &config).unwrap();
+        let result =
+            process_chunked(&input.view(), &mut processor, &config).expect("Operation failed");
 
         assert_eq!(result.shape(), input.shape());
         assert_eq!(result, input);

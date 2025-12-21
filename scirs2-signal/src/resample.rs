@@ -30,7 +30,7 @@ use std::fmt::Debug;
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 ///
 /// // Resample by a factor of 2/1 (double the sampling rate)
-/// let resampled = resample(&signal, 2, 1, None).unwrap();
+/// let resampled = resample(&signal, 2, 1, None).expect("Operation failed");
 ///
 /// // Result should be approximately twice as long
 /// assert_eq!(resampled.len(), signal.len() * 2);
@@ -180,7 +180,7 @@ where
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 ///
 /// // Upsample by a factor of 2
-/// let upsampled = upsample(&signal, 2).unwrap();
+/// let upsampled = upsample(&signal, 2).expect("Operation failed");
 ///
 /// // Result should be approximately twice as long
 /// assert_eq!(upsampled.len(), signal.len() * 2);
@@ -233,7 +233,7 @@ where
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 ///
 /// // Downsample by a factor of 2
-/// let downsampled = downsample(&signal, 2).unwrap();
+/// let downsampled = downsample(&signal, 2).expect("Operation failed");
 ///
 /// // Result should be approximately half as long
 /// assert_eq!(downsampled.len(), (signal.len() + 1) / 2);
@@ -286,7 +286,7 @@ where
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 ///
 /// // Resample to 150 points
-/// let resampled = resample_poly(&signal, 150).unwrap();
+/// let resampled = resample_poly(&signal, 150).expect("Operation failed");
 ///
 /// assert_eq!(resampled.len(), 150);
 /// ```
@@ -391,7 +391,7 @@ mod tests {
     fn test_resample_identity() {
         // Resampling with up=1, down=1 should return the original signal
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let resampled = resample(&signal, 1, 1, None).unwrap();
+        let resampled = resample(&signal, 1, 1, None).expect("Operation failed");
 
         assert_eq!(resampled.len(), signal.len());
         for (x, y) in signal.iter().zip(resampled.iter()) {
@@ -403,7 +403,7 @@ mod tests {
     fn test_upsample() {
         // Simple upsampling test
         let signal = vec![1.0, 2.0, 3.0, 4.0];
-        let upsampled = upsample(&signal, 2).unwrap();
+        let upsampled = upsample(&signal, 2).expect("Operation failed");
 
         // Should be approximately twice as long
         assert!(upsampled.len() >= signal.len() * 2 - 2);
@@ -420,7 +420,7 @@ mod tests {
     fn test_downsample() {
         // Simple downsampling test
         let signal: Vec<f64> = (0..100).map(|i| (i as f64 * 0.1).sin()).collect();
-        let downsampled = downsample(&signal, 2).unwrap();
+        let downsampled = downsample(&signal, 2).expect("Operation failed");
 
         // Should be approximately half as long
         assert!(downsampled.len() >= signal.len() / 2 - 1);
@@ -435,11 +435,11 @@ mod tests {
         let signal: Vec<f64> = (0..100).map(|i| (i as f64 * 0.1).sin()).collect();
 
         // Resample to 150 points
-        let resampled = resample_poly(&signal, 150).unwrap();
+        let resampled = resample_poly(&signal, 150).expect("Operation failed");
         assert_eq!(resampled.len(), 150);
 
         // Resample to 50 points
-        let resampled = resample_poly(&signal, 50).unwrap();
+        let resampled = resample_poly(&signal, 50).expect("Operation failed");
         assert_eq!(resampled.len(), 50);
     }
 

@@ -139,7 +139,7 @@ fn create_pyramid(_image: &Array2<f32>, num_levels: usize, scalefactor: f32) -> 
     let mut pyramid = vec![_image.clone()];
 
     for _level in 1..num_levels {
-        let prev_level = pyramid.last().unwrap();
+        let prev_level = pyramid.last().expect("Operation failed");
         let (prev_h, prev_w) = prev_level.dim();
 
         let new_h = ((prev_h as f32) / scalefactor).round() as usize;

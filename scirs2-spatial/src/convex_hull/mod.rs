@@ -25,18 +25,18 @@
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 //!
 //! // Compute convex hull (automatic algorithm selection)
-//! let hull = ConvexHull::new(&points.view()).unwrap();
+//! let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 //!
 //! // Or use the convenience function
-//! let hull_vertices = convex_hull(&points.view()).unwrap();
+//! let hull_vertices = convex_hull(&points.view()).expect("Operation failed");
 //!
 //! // Access hull properties
 //! println!("Hull vertices: {:?}", hull.vertices());
-//! println!("Hull volume: {}", hull.volume().unwrap());
-//! println!("Hull surface area: {}", hull.area().unwrap());
+//! println!("Hull volume: {}", hull.volume().expect("Operation failed"));
+//! println!("Hull surface area: {}", hull.area().expect("Operation failed"));
 //!
 //! // Test point containment
-//! let is_inside = hull.contains(&[0.25, 0.25]).unwrap();
+//! let is_inside = hull.contains(&[0.25, 0.25]).expect("Operation failed");
 //! println!("Point inside: {}", is_inside);
 //! ```
 //!
@@ -48,10 +48,10 @@
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
 //!
 //! // Use specific algorithm
-//! let hull = ConvexHull::new_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
+//! let hull = ConvexHull::new_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).expect("Operation failed");
 //!
 //! // Or use convenience function
-//! let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::JarvisMarch).unwrap();
+//! let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::JarvisMarch).expect("Operation failed");
 //! ```
 //!
 //! ## Comprehensive Analysis
@@ -60,10 +60,10 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-//! let hull = ConvexHull::new(&points.view()).unwrap();
+//! let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 //!
 //! // Get comprehensive analysis
-//! let analysis = analyze_hull(&hull).unwrap();
+//! let analysis = analyze_hull(&hull).expect("Operation failed");
 //! println!("Hull Analysis: {:#?}", analysis);
 //! ```
 //!
@@ -158,7 +158,7 @@ pub use properties::{
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-/// let hull_vertices = convex_hull(&points.view()).unwrap();
+/// let hull_vertices = convex_hull(&points.view()).expect("Operation failed");
 ///
 /// // The hull vertices should be the corners, not the interior point
 /// assert!(hull_vertices.nrows() >= 3);
@@ -193,7 +193,7 @@ pub fn convex_hull(
 /// use scirs2_core::ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-/// let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
+/// let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).expect("Operation failed");
 /// assert!(hull_vertices.nrows() >= 3);
 /// ```
 #[allow(dead_code)]
@@ -293,14 +293,14 @@ pub mod advanced {
         // Check that all original points are either hull vertices or inside the hull
         for i in 0..original_points.nrows() {
             let point = original_points.row(i);
-            let point_slice = point.as_slice().unwrap();
+            let point_slice = point.as_slice().expect("Operation failed");
 
             // Check if this point is a hull vertex
             let is_vertex = hull.vertex_indices().iter().any(|&idx| {
                 let vertex = hull.points.row(idx);
                 vertex
                     .as_slice()
-                    .unwrap()
+                    .expect("Operation failed")
                     .iter()
                     .zip(point_slice.iter())
                     .all(|(a, b)| (a - b).abs() < 1e-10)
@@ -359,7 +359,7 @@ mod tests {
             [0.5, 0.5], // Interior point
         ]);
 
-        let hull_vertices = convex_hull(&points.view()).unwrap();
+        let hull_vertices = convex_hull(&points.view()).expect("Operation failed");
 
         // The hull should have vertices in 2D
         assert!(hull_vertices.nrows() >= 3); // At least 3 for triangular hull
@@ -377,13 +377,15 @@ mod tests {
 
         // Test with Graham scan
         let hull_vertices =
-            convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
+            convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan)
+                .expect("Operation failed");
         assert_eq!(hull_vertices.nrows(), 3); // Should exclude interior point
         assert_eq!(hull_vertices.ncols(), 2);
 
         // Test with Jarvis march
         let hull_vertices =
-            convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::JarvisMarch).unwrap();
+            convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::JarvisMarch)
+                .expect("Operation failed");
         assert_eq!(hull_vertices.nrows(), 3); // Should exclude interior point
         assert_eq!(hull_vertices.ncols(), 2);
     }
@@ -394,7 +396,7 @@ mod tests {
         // as the original monolithic implementation would have
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
         let vertices = hull.vertices();
         let vertex_indices = hull.vertex_indices();
         let simplices = hull.simplices();
@@ -405,14 +407,14 @@ mod tests {
         assert!(!simplices.is_empty());
 
         // Check volume (area) and surface area (perimeter)
-        let volume = hull.volume().unwrap();
-        let area = hull.area().unwrap();
+        let volume = hull.volume().expect("Operation failed");
+        let area = hull.area().expect("Operation failed");
         assert!((volume - 1.0).abs() < 1e-10); // Unit square area
         assert!((area - 4.0).abs() < 1e-10); // Unit square perimeter
 
         // Check containment
-        assert!(hull.contains([0.5, 0.5]).unwrap()); // Center should be inside
-        assert!(!hull.contains([2.0, 2.0]).unwrap()); // Far point should be outside
+        assert!(hull.contains([0.5, 0.5]).expect("Operation failed")); // Center should be inside
+        assert!(!hull.contains([2.0, 2.0]).expect("Operation failed")); // Far point should be outside
     }
 
     #[test]
@@ -424,7 +426,7 @@ mod tests {
 
         // Valid hull but invalid point dimensionality for containment
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
         let result = hull.contains([0.5, 0.5, 0.5]);
         assert!(result.is_err());
     }
@@ -439,19 +441,19 @@ mod tests {
             [0.5, 0.5, 0.5], // Interior point
         ]);
 
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
         assert_eq!(hull.ndim(), 3);
         assert!(hull.vertex_indices().len() >= 4); // At least tetrahedron vertices
 
         // Interior point should be inside
-        assert!(hull.contains([0.25, 0.25, 0.25]).unwrap());
+        assert!(hull.contains([0.25, 0.25, 0.25]).expect("Operation failed"));
         // Far point should be outside
-        assert!(!hull.contains([2.0, 2.0, 2.0]).unwrap());
+        assert!(!hull.contains([2.0, 2.0, 2.0]).expect("Operation failed"));
 
         // Volume and surface area should be positive
-        let volume = hull.volume().unwrap();
-        let surface_area = hull.area().unwrap();
+        let volume = hull.volume().expect("Operation failed");
+        let surface_area = hull.area().expect("Operation failed");
         assert!(volume > 0.0);
         assert!(surface_area > 0.0);
     }
@@ -459,15 +461,15 @@ mod tests {
     #[test]
     fn test_analysis_functions() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let hull = ConvexHull::new(&points.view()).unwrap();
+        let hull = ConvexHull::new(&points.view()).expect("Operation failed");
 
-        let analysis = analyze_hull(&hull).unwrap();
+        let analysis = analyze_hull(&hull).expect("Operation failed");
         assert_eq!(analysis.ndim, 2);
         assert_eq!(analysis.num_vertices, 4);
         assert!((analysis.volume - 1.0).abs() < 1e-10);
         assert!((analysis.surface_area - 4.0).abs() < 1e-10);
 
-        let stats = get_hull_statistics(&hull).unwrap();
+        let stats = get_hull_statistics(&hull).expect("Operation failed");
         assert_eq!(stats.num_input_points, 4);
         assert_eq!(stats.num_hull_vertices, 4);
         assert_eq!(stats.hull_vertex_fraction, 1.0); // All points are vertices

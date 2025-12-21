@@ -31,14 +31,14 @@ fn main() {
 
     // Standard FFT
     let start = Instant::now();
-    let standard_fft = fft(&signal, None).unwrap();
+    let standard_fft = fft(&signal, None).expect("Operation failed");
     let standard_time = start.elapsed();
     println!("Standard FFT time: {standard_time:?}");
 
     // SIMD-accelerated FFT (if available)
     if simd_available {
         let start = Instant::now();
-        let simd_fft = fft_simd(&signal, None).unwrap();
+        let simd_fft = fft_simd(&signal, None).expect("Operation failed");
         let simd_time = start.elapsed();
         println!("SIMD-accelerated FFT time: {simd_time:?}");
 
@@ -57,7 +57,7 @@ fn main() {
 
     // Adaptive FFT (automatically selects the best implementation)
     let start = Instant::now();
-    let _adaptive_fft = fft_adaptive(&signal, None).unwrap();
+    let _adaptive_fft = fft_adaptive(&signal, None).expect("Operation failed");
     let adaptive_time = start.elapsed();
     println!("Adaptive FFT time: {adaptive_time:?}");
 
@@ -83,20 +83,20 @@ fn benchmark_performance() {
 
         // Standard FFT
         let start = Instant::now();
-        let _ = fft(&signal, None).unwrap();
+        let _ = fft(&signal, None).expect("Operation failed");
         let standard_time = start.elapsed();
         println!("  Standard FFT time: {standard_time:?}");
 
         // Adaptive FFT
         let start = Instant::now();
-        let _ = fft_adaptive(&signal, None).unwrap();
+        let _ = fft_adaptive(&signal, None).expect("Operation failed");
         let adaptive_time = start.elapsed();
         println!("  Adaptive FFT time: {adaptive_time:?}");
 
         if simd_support_available() {
             // SIMD FFT
             let start = Instant::now();
-            let _ = fft_simd(&signal, None).unwrap();
+            let _ = fft_simd(&signal, None).expect("Operation failed");
             let simd_time = start.elapsed();
             println!("  SIMD FFT time: {simd_time:?}");
 
@@ -107,13 +107,13 @@ fn benchmark_performance() {
 
         // FFT with plan caching (first run)
         let start = Instant::now();
-        let _ = fft(&signal, None).unwrap();
+        let _ = fft(&signal, None).expect("Operation failed");
         let plan_time_first = start.elapsed();
         println!("  FFT with plan (first run): {plan_time_first:?}");
 
         // FFT with plan caching (second run - should be faster due to cache)
         let start = Instant::now();
-        let _ = fft(&signal, None).unwrap();
+        let _ = fft(&signal, None).expect("Operation failed");
         let plan_time_second = start.elapsed();
         println!("  FFT with plan (cached): {plan_time_second:?}");
     }

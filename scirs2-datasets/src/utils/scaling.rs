@@ -23,7 +23,7 @@ use statrs::statistics::Statistics;
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::normalize;
 ///
-/// let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("Operation failed");
 /// normalize(&mut data);
 /// // data is now normalized with zero mean and unit variance for each feature
 /// ```
@@ -68,7 +68,7 @@ pub fn normalize(data: &mut Array2<f64>) {
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::min_max_scale;
 ///
-/// let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap();
+/// let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).expect("Operation failed");
 /// min_max_scale(&mut data, (0.0, 1.0));
 /// // Features are now scaled to [0, 1] range
 /// ```
@@ -110,7 +110,7 @@ pub fn min_max_scale(_data: &mut Array2<f64>, featurerange: (f64, f64)) {
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_datasets::utils::robust_scale;
 ///
-/// let mut data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 100.0, 500.0]).unwrap();
+/// let mut data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 100.0, 500.0]).expect("Operation failed");
 /// robust_scale(&mut data);
 /// // Features are now robustly scaled using median and IQR
 /// ```
@@ -118,7 +118,7 @@ pub fn min_max_scale(_data: &mut Array2<f64>, featurerange: (f64, f64)) {
 pub fn robust_scale(data: &mut Array2<f64>) {
     for j in 0..data.ncols() {
         let mut column_values: Vec<f64> = data.column(j).to_vec();
-        column_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        column_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let n = column_values.len();
         if n == 0 {
@@ -218,7 +218,8 @@ mod tests {
 
     #[test]
     fn test_normalize() {
-        let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .expect("Operation failed");
         normalize(&mut data);
 
         // Check that each column has approximately zero mean
@@ -231,7 +232,8 @@ mod tests {
 
     #[test]
     fn test_normalize_constant_values() {
-        let mut data = Array2::from_shape_vec((3, 1), vec![5.0, 5.0, 5.0]).unwrap();
+        let mut data =
+            Array2::from_shape_vec((3, 1), vec![5.0, 5.0, 5.0]).expect("Operation failed");
         normalize(&mut data);
 
         // Constant values should remain unchanged (avoid division by zero)
@@ -242,8 +244,8 @@ mod tests {
 
     #[test]
     fn test_min_max_scale() {
-        let mut data =
-            Array2::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap();
+        let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0])
+            .expect("Operation failed");
         min_max_scale(&mut data, (0.0, 1.0));
 
         // Check that values are scaled to [0, 1]
@@ -262,7 +264,8 @@ mod tests {
 
     #[test]
     fn test_min_max_scale_custom_range() {
-        let mut data = Array2::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
+        let mut data =
+            Array2::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).expect("Operation failed");
         min_max_scale(&mut data, (-1.0, 1.0));
 
         // Check that values are scaled to [-1, 1]
@@ -273,7 +276,8 @@ mod tests {
 
     #[test]
     fn test_min_max_scale_constant_values() {
-        let mut data = Array2::from_shape_vec((3, 1), vec![5.0, 5.0, 5.0]).unwrap();
+        let mut data =
+            Array2::from_shape_vec((3, 1), vec![5.0, 5.0, 5.0]).expect("Operation failed");
         min_max_scale(&mut data, (0.0, 1.0));
 
         // All values should be 0.5 (middle of range) when all values are the same
@@ -288,7 +292,7 @@ mod tests {
             (5, 2),
             vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 100.0, 500.0],
         )
-        .unwrap(); // Last row has outliers
+        .expect("Failed to get slice"); // Last row has outliers
 
         robust_scale(&mut data);
 
@@ -312,7 +316,8 @@ mod tests {
 
     #[test]
     fn test_robust_scale_constant_values() {
-        let mut data = Array2::from_shape_vec((3, 1), vec![5.0, 5.0, 5.0]).unwrap();
+        let mut data =
+            Array2::from_shape_vec((3, 1), vec![5.0, 5.0, 5.0]).expect("Operation failed");
         robust_scale(&mut data);
 
         // With constant values, robust scaling should center around 0 (median subtraction)
@@ -328,7 +333,7 @@ mod tests {
             (5, 1),
             vec![1.0, 2.0, 3.0, 4.0, 100.0], // 100.0 is an outlier
         )
-        .unwrap();
+        .expect("Failed to get slice");
         let mut data_standard = data_robust.clone();
 
         // Apply different scaling methods
@@ -391,7 +396,7 @@ mod tests {
         // Test a complete scaling pipeline
         let mut data1 =
             Array2::from_shape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0])
-                .unwrap();
+                .expect("Failed to get slice");
         let mut data2 = data1.clone();
         let mut data3 = data1.clone();
 

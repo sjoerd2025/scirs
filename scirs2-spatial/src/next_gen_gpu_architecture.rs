@@ -997,7 +997,11 @@ impl PhotonicAccelerator {
         }
 
         // Sort by intensity and return top peaks
-        peaks.sort_by(|&a, &b| intensities[b].partial_cmp(&intensities[a]).unwrap());
+        peaks.sort_by(|&a, &b| {
+            intensities[b]
+                .partial_cmp(&intensities[a])
+                .expect("Operation failed")
+        });
         peaks.truncate(10); // Top 10 peaks
 
         peaks
@@ -1046,7 +1050,7 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        let distance_matrix = result.unwrap();
+        let distance_matrix = result.expect("Operation failed");
         assert_eq!(distance_matrix.shape(), &[4, 4]);
 
         // Check Hermitian property
@@ -1074,7 +1078,7 @@ mod tests {
         let result = processor.quantum_clustering(&points.view(), 2).await;
         assert!(result.is_ok());
 
-        let (centroids, assignments) = result.unwrap();
+        let (centroids, assignments) = result.expect("Operation failed");
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(assignments.len(), 6);
 
@@ -1095,7 +1099,7 @@ mod tests {
         let result = photonic.optical_clustering(&points.view(), 2).await;
         assert!(result.is_ok());
 
-        let (centroids, assignments) = result.unwrap();
+        let (centroids, assignments) = result.expect("Operation failed");
         assert_eq!(centroids.nrows(), 2);
         assert_eq!(assignments.len(), 4);
     }

@@ -21,7 +21,7 @@ fn main() {
             2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0, 100.0, 500.0, // Outlier
         ],
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Original dataset:");
     print_data_summary(&data, "Original");
@@ -47,25 +47,27 @@ fn main() {
 
     // Demonstrate Polynomial Features
     println!("=== Polynomial Feature Generation ==============");
-    let smalldata = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0]).unwrap();
+    let smalldata = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0])
+        .expect("Operation failed");
 
     println!("Small dataset for polynomial demonstration:");
     print_data_matrix(&smalldata, &["x1", "x2"]);
 
-    let poly_with_bias = polynomial_features(&smalldata, 2, true).unwrap();
+    let poly_with_bias = polynomial_features(&smalldata, 2, true).expect("Operation failed");
     println!("Polynomial features (degree=2, with bias):");
     print_data_matrix(&poly_with_bias, &["1", "x1", "x2", "x1²", "x1*x2", "x2²"]);
 
-    let poly_no_bias = polynomial_features(&smalldata, 2, false).unwrap();
+    let poly_no_bias = polynomial_features(&smalldata, 2, false).expect("Operation failed");
     println!("Polynomial features (degree=2, no bias):");
     print_data_matrix(&poly_no_bias, &["x1", "x2", "x1²", "x1*x2", "x2²"]);
     println!();
 
     // Demonstrate Statistical Feature Extraction
     println!("=== Statistical Feature Extraction =============");
-    let statsdata = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+    let statsdata =
+        Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).expect("Operation failed");
 
-    let stats_features = statistical_features(&statsdata).unwrap();
+    let stats_features = statistical_features(&statsdata).expect("Operation failed");
     println!("Statistical features for data [1, 2, 3, 4, 5]:");
     println!("(Each sample gets the same global statistics)");
     print_statistical_features(stats_features.row(0).to_owned());
@@ -73,12 +75,13 @@ fn main() {
 
     // Demonstrate Binning/Discretization
     println!("=== Feature Binning/Discretization =============");
-    let binningdata =
-        Array2::from_shape_vec((8, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+    let binningdata = Array2::from_shape_vec((8, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+        .expect("Operation failed");
 
     println!("Original data for binning: [1, 2, 3, 4, 5, 6, 7, 8]");
 
-    let uniform_binned = create_binned_features(&binningdata, 3, BinningStrategy::Uniform).unwrap();
+    let uniform_binned = create_binned_features(&binningdata, 3, BinningStrategy::Uniform)
+        .expect("Operation failed");
     println!(
         "Uniform binning (3 bins): {:?}",
         uniform_binned
@@ -88,8 +91,8 @@ fn main() {
             .collect::<Vec<_>>()
     );
 
-    let quantile_binned =
-        create_binned_features(&binningdata, 4, BinningStrategy::Quantile).unwrap();
+    let quantile_binned = create_binned_features(&binningdata, 4, BinningStrategy::Quantile)
+        .expect("Operation failed");
     println!(
         "Quantile binning (4 bins): {:?}",
         quantile_binned
@@ -102,7 +105,7 @@ fn main() {
 
     // Demonstrate Feature Extraction Pipeline
     println!("=== Complete Feature Extraction Pipeline =======");
-    let iris = load_iris().unwrap();
+    let iris = load_iris().expect("Operation failed");
     println!(
         "Using Iris dataset ({} samples, {} features)",
         iris.n_samples(),
@@ -115,13 +118,14 @@ fn main() {
     println!("Step 1: Applied robust scaling");
 
     // Step 2: Generate polynomial features (degree 2)
-    let poly_iris = polynomial_features(&scaled_iris, 2, false).unwrap();
+    let poly_iris = polynomial_features(&scaled_iris, 2, false).expect("Operation failed");
     println!("Step 2: Generated polynomial features");
     println!("  Original features: {}", scaled_iris.ncols());
     println!("  Polynomial features: {}", poly_iris.ncols());
 
     // Step 3: Create binned features for non-linearity
-    let binned_iris = create_binned_features(&scaled_iris, 5, BinningStrategy::Quantile).unwrap();
+    let binned_iris = create_binned_features(&scaled_iris, 5, BinningStrategy::Quantile)
+        .expect("Operation failed");
     println!("Step 3: Created binned features");
     println!("  Binned features: {}", binned_iris.ncols());
 
@@ -132,7 +136,7 @@ fn main() {
             .slice(scirs2_core::ndarray::s![0..20, ..])
             .to_owned(),
     )
-    .unwrap();
+    .expect("Operation failed");
     println!("Step 4: Extracted statistical features (from first 20 samples)");
     println!("  Statistical features: {}", stats_iris.ncols());
     println!();
@@ -143,7 +147,7 @@ fn main() {
         (5, 1),
         vec![1.0, 2.0, 3.0, 4.0, 100.0], // 100.0 is a severe outlier
     )
-    .unwrap();
+    .expect("Operation failed");
 
     println!("Original data with outlier: [1, 2, 3, 4, 100]");
 

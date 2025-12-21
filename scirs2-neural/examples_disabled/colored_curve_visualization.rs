@@ -31,7 +31,7 @@ fn main() {
     let y_true_array = Array1::from(y_true.clone());
     let y_score_array = Array1::from(y_score.clone());
     // Create ROC curve
-    let roc = ROCCurve::new(&y_true_array.view(), &y_score_array.view()).unwrap();
+    let roc = ROCCurve::new(&y_true_array.view(), &y_score_array.view()).expect("Operation failed");
     // Enable color options
     let color_options = ColorOptions {
         enabled: true,
@@ -61,7 +61,7 @@ fn main() {
         let base = 0.4 + 0.3 * (i as f64 / 4.0);
         let noise = 0.07 * rng.sample::<f64>(StandardNormal);
     // Create learning curve
-    let learning_curve = LearningCurve::new(train_sizes, train_scores, val_scores).unwrap();
+    let learning_curve = LearningCurve::new(train_sizes, train_scores, val_scores).expect("Operation failed");
     // Plot learning curve with color
     let learning_plot = learning_curve.to_ascii_with_options(
         Some("Neural Network Training"),

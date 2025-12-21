@@ -202,7 +202,7 @@ impl PPO {
                     policy_loss += loss1.max(loss2);
                 // Value loss
                 let values = self.actor_critic.critic.predict_batch(&batch_states)?;
-                let value_loss = (&values - &batch_returns).mapv(|x| x * x).mean().unwrap();
+                let value_loss = (&values - &batch_returns).mapv(|x| x * x).mean().expect("Operation failed");
                 // Entropy loss - encourage exploration
                 let mut entropy_loss = 0.0;
                     let entropy = self.compute_policy_entropy(&state)?;
@@ -293,21 +293,21 @@ mod tests {
     use super::*;
     #[test]
     fn test_actor_critic_creation() {
-        let ac = ActorCritic::new(4, 2, vec![32, 32], false, 0.001, 0.001, 0.99).unwrap();
+        let ac = ActorCritic::new(4, 2, vec![32, 32], false, 0.001, 0.001, 0.99).expect("Operation failed");
         let state = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-        let action = ac.get_action(&state.view()).unwrap();
+        let action = ac.get_action(&state.view()).expect("Operation failed");
         assert_eq!(action.len(), 2);
-        let value = ac.get_value(&state.view()).unwrap();
+        let value = ac.get_value(&state.view()).expect("Operation failed");
         assert!(value.is_finite());
     fn test_a2c_creation() {
-        let a2c = A2C::new(4, 2, vec![32], false, 0.001, 0.001, 0.99, 0.01, 0.5).unwrap();
+        let a2c = A2C::new(4, 2, vec![32], false, 0.001, 0.001, 0.99, 0.01, 0.5).expect("Operation failed");
         assert_eq!(a2c.entropy_coef, 0.01);
         assert_eq!(a2c.value_loss_coef, 0.5);
     fn test_ppo_creation() {
-        let ppo = PPO::new(4, 2, vec![32], true, 0.001, 0.001, 0.99, 0.2, 0.01, 0.5).unwrap();
+        let ppo = PPO::new(4, 2, vec![32], true, 0.001, 0.001, 0.99, 0.2, 0.01, 0.5).expect("Operation failed");
         assert_eq!(ppo.clip_epsilon, 0.2);
         assert_eq!(ppo.num_epochs, 4);
     fn test_sac_creation() {
-        let sac = SAC::new(4, 2, vec![32], 0.001, 0.001, 0.99, 0.2, 0.005).unwrap();
+        let sac = SAC::new(4, 2, vec![32], 0.001, 0.001, 0.99, 0.2, 0.005).expect("Operation failed");
         assert_eq!(sac.alpha, 0.2);
         assert_eq!(sac.tau, 0.005);

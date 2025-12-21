@@ -402,6 +402,6 @@ mod tests {
         );
 
         assert!(example_with_output.expected_output.is_some());
-        assert_eq!(example_with_output.expected_output.unwrap(), "4");
+        assert_eq!(example_with_output.expected_output.expect("Operation failed"), "4");
     }
 }

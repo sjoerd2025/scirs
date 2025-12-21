@@ -23,7 +23,7 @@ impl MLFrameworkConverter for SafeTensorsConverter {
                 serde_json::json!({
                     "shape": tensor.metadata.shape,
                     "dtype": format!("{:?}", tensor.metadata.dtype),
-                    "data": tensor.data.as_slice().unwrap().to_vec(),
+                    "data": tensor.data.as_slice().expect("Operation failed").to_vec(),
                 }),
             );
         }
@@ -74,7 +74,7 @@ impl MLFrameworkConverter for SafeTensorsConverter {
         let tensor_data = serde_json::json!({
             "shape": tensor.metadata.shape,
             "dtype": format!("{:?}", tensor.metadata.dtype),
-            "data": tensor.data.as_slice().unwrap().to_vec(),
+            "data": tensor.data.as_slice().expect("Operation failed").to_vec(),
         });
 
         let file = File::create(path).map_err(IoError::Io)?;

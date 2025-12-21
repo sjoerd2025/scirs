@@ -70,7 +70,7 @@ fn describe_py(py: Python, data: &Bound<'_, PyArray1<f64>>) -> PyResult<Py<PyAny
         return Err(PyRuntimeError::new_err("Empty array provided"));
     }
 
-    let slice = arr.as_slice().unwrap();
+    let slice = arr.as_slice().expect("Operation failed");
 
     // Optimized mean calculation
     let mut sum0 = 0.0f64;
@@ -173,7 +173,7 @@ fn mean_py(data: &Bound<'_, PyArray1<f64>>) -> PyResult<f64> {
         return Err(PyRuntimeError::new_err("Empty array provided"));
     }
 
-    let slice = arr.as_slice().unwrap();
+    let slice = arr.as_slice().expect("Operation failed");
 
     // Use 4 independent accumulators to maximize instruction-level parallelism
     let mut sum0 = 0.0f64;
@@ -219,7 +219,7 @@ fn std_py(data: &Bound<'_, PyArray1<f64>>, ddof: usize) -> PyResult<f64> {
         return Err(PyRuntimeError::new_err("Not enough data points for given ddof"));
     }
 
-    let slice = arr.as_slice().unwrap();
+    let slice = arr.as_slice().expect("Operation failed");
 
     // Pass 1: Calculate mean with 4 independent accumulators
     let mut sum0 = 0.0f64;
@@ -291,7 +291,7 @@ fn var_py(data: &Bound<'_, PyArray1<f64>>, ddof: usize) -> PyResult<f64> {
         return Err(PyRuntimeError::new_err("Not enough data points for given ddof"));
     }
 
-    let slice = arr.as_slice().unwrap();
+    let slice = arr.as_slice().expect("Operation failed");
 
     // Pass 1: Calculate mean with 4 independent accumulators
     let mut sum0 = 0.0f64;
@@ -717,7 +717,7 @@ fn mode_py(data: &Bound<'_, PyArray1<f64>>) -> PyResult<f64> {
     // For continuous data, use a simple approach: find the most common rounded value
     // This is a simplified version; real mode for continuous data uses KDE
     let mut values: Vec<f64> = arr.iter().copied().collect();
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Find mode using histogram-like approach
     let mut max_count = 0;

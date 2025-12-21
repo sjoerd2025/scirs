@@ -813,7 +813,7 @@ mod tests {
             advanced_simd_convolution_2d(input.view(), kernel.view(), BoundaryMode::Constant);
         assert!(result.is_ok());
 
-        let output = result.unwrap();
+        let output = result.expect("Operation failed");
         assert_eq!(output.dim(), input.dim());
     }
 
@@ -832,7 +832,7 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let output = result.unwrap();
+        let output = result.expect("Operation failed");
         assert_eq!(output.dim(), input.dim());
     }
 
@@ -843,7 +843,7 @@ mod tests {
         let result = advanced_simd_median_filter(input.view(), (3, 3), BoundaryMode::Nearest);
         assert!(result.is_ok());
 
-        let output = result.unwrap();
+        let output = result.expect("Operation failed");
         assert_eq!(output.dim(), input.dim());
     }
 

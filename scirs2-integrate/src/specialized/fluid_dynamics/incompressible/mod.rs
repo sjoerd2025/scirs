@@ -28,7 +28,7 @@
 //! let initial_state = initialization::lid_driven_cavity(64, 64, 1.0);
 //!
 //! // Solve
-//! let results = solver.solve_2d(initial_state, 1.0, 10).unwrap();
+//! let results = solver.solve_2d(initial_state, 1.0, 10).expect("Operation failed");
 //! ```
 
 pub mod boundary_handling;
@@ -127,7 +127,8 @@ mod tests {
             FluidBoundaryCondition::NoSlip,
         );
 
-        boundary_handling::apply_boundary_conditions_2d(&mut u, &mut v, bc_x, bc_y).unwrap();
+        boundary_handling::apply_boundary_conditions_2d(&mut u, &mut v, bc_x, bc_y)
+            .expect("Operation failed");
 
         // Check that boundaries are zero for no-slip condition
         for i in 0..5 {
@@ -168,7 +169,7 @@ mod tests {
         let mut state = initialization::lid_driven_cavity(16, 16, 1.0);
 
         let initial_time = state.time;
-        solver.step(&mut state).unwrap();
+        solver.step(&mut state).expect("Operation failed");
 
         // Check that time was advanced
         assert!((state.time - initial_time - 0.001).abs() < 1e-10);

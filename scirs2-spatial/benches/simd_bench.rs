@@ -33,12 +33,12 @@ fn simd_vs_scalar_benchmark(c: &mut Criterion) {
 
         // SIMD version
         group.bench_function(format!("simd_euclidean_{size}"), |b| {
-            b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap()))
+            b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).expect("Operation failed")))
         });
 
         // SIMD Manhattan
         group.bench_function(format!("simd_manhattan_{size}"), |b| {
-            b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap()))
+            b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).expect("Operation failed")))
         });
     }
 
@@ -73,7 +73,8 @@ fn parallel_vs_sequential_benchmark(c: &mut Criterion) {
         // Parallel version
         group.bench_function(format!("parallel_pdist_{size}"), |b| {
             b.iter(|| {
-                let distances = parallel_pdist(&points.view(), "euclidean").unwrap();
+                let distances =
+                    parallel_pdist(&points.view(), "euclidean").expect("Operation failed");
                 black_box(distances.sum())
             })
         });
@@ -120,7 +121,7 @@ fn architecture_detection(c: &mut Criterion) {
     let p2 = vec![2.0, 3.0, 4.0, 5.0];
 
     group.bench_function("simd_detection_test", |b| {
-        b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap()))
+        b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).expect("Operation failed")))
     });
 
     group.finish();

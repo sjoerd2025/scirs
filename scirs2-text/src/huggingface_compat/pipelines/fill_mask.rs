@@ -104,7 +104,7 @@ impl FillMaskPipeline {
         }
 
         // Sort by score and return top candidates
-        candidates.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        candidates.sort_by(|a, b| b.score.partial_cmp(&a.score).expect("Operation failed"));
         Ok(candidates.into_iter().take(5).collect())
     }
 }

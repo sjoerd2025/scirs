@@ -248,7 +248,7 @@ pub fn denoise_wiener_1d(signal: &Array1<f64>, config: &WienerConfig) -> SignalR
     // Pad to power of 2 for efficient FFT
     let padded_size = n.next_power_of_two();
     let mut padded_signal = vec![0.0; padded_size];
-    padded_signal[..n].copy_from_slice(signal.as_slice().unwrap());
+    padded_signal[..n].copy_from_slice(signal.as_slice().expect("Operation failed"));
 
     // Convert to complex for FFT
     let complex_signal: Vec<_> = padded_signal
@@ -335,7 +335,7 @@ pub fn denoise_adaptive_lms(
     // LMS adaptation
     for i in filter_length..n {
         // Extract input vector
-        let input = &signal.as_slice().unwrap()[i - filter_length..i];
+        let input = &signal.as_slice().expect("Operation failed")[i - filter_length..i];
 
         // Compute filter output
         let output: f64 = weights.iter().zip(input.iter()).map(|(w, x)| w * x).sum();
@@ -446,7 +446,7 @@ pub fn denoise_median_1d(signal: &Array1<f64>, window_size: usize) -> SignalResu
         let end = (i + half_window + 1).min(n);
 
         let mut window: Vec<f64> = signal.slice(s![start..end]).to_vec();
-        window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        window.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         denoised[i] = window[window.len() / 2];
     }
@@ -516,7 +516,7 @@ mod tests {
         let config = NonLocalMeansConfig::default();
         let result = denoise_non_local_means_1d(&signal, &config);
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.len(), signal.len());
     }
 
@@ -526,7 +526,7 @@ mod tests {
         let config = TotalVariationConfig::default();
         let result = denoise_total_variation_1d(&signal, &config);
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.len(), signal.len());
     }
 
@@ -536,7 +536,7 @@ mod tests {
         let config = BilateralConfig::default();
         let result = denoise_bilateral_1d(&signal, &config);
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.len(), signal.len());
     }
 
@@ -546,7 +546,7 @@ mod tests {
         let config = WienerConfig::default();
         let result = denoise_wiener_1d(&signal, &config);
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.len(), signal.len());
     }
 
@@ -559,7 +559,7 @@ mod tests {
         };
         let result = denoise_adaptive_lms(&signal, &config);
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.len(), signal.len());
     }
 
@@ -570,7 +570,7 @@ mod tests {
         let config = GuidedFilterConfig::default();
         let result = denoise_guided_filter_1d(&signal, &guide, &config);
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.len(), signal.len());
     }
 
@@ -579,7 +579,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 10.0, 3.0, 2.0, 1.0]);
         let result = denoise_median_1d(&signal, 3);
         assert!(result.is_ok());
-        let denoised = result.unwrap();
+        let denoised = result.expect("Operation failed");
         assert_eq!(denoised.len(), signal.len());
         // Median filter should reduce the spike
         assert!(denoised[1] < signal[1]);

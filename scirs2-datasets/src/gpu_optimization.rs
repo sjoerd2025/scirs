@@ -844,11 +844,11 @@ impl AdvancedGpuOptimizer {
                     .into_iter()
                     .map(|_| match distribution {
                         "normal" => {
-                            let normal = Normal::new(0.0, 1.0).unwrap();
+                            let normal = Normal::new(0.0, 1.0).expect("Operation failed");
                             normal.sample(&mut local_rng)
                         }
                         "uniform" => {
-                            let uniform = Uniform::new(0.0, 1.0).unwrap();
+                            let uniform = Uniform::new(0.0, 1.0).expect("Operation failed");
                             uniform.sample(&mut local_rng)
                         }
                         _ => local_rng.random::<f64>(),
@@ -1649,7 +1649,7 @@ mod tests {
         let optimizer = AdvancedGpuOptimizer::new();
         let result = optimizer.execute_advanced_cpu_generation(10, 10, "normal");
         assert!(result.is_ok());
-        let matrix = result.unwrap();
+        let matrix = result.expect("Operation failed");
         assert_eq!(matrix.shape(), &[10, 10]);
     }
 }

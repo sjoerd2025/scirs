@@ -101,10 +101,11 @@ pub(crate) fn parallel_hierarchical_clustering<
 
         // Update the linkage matrix
         // [cluster1, cluster2, distance, size]
-        linkage_matrix[[i, 0]] = F::from_usize(cluster1).unwrap();
-        linkage_matrix[[i, 1]] = F::from_usize(cluster2).unwrap();
+        linkage_matrix[[i, 0]] = F::from_usize(cluster1).expect("Operation failed");
+        linkage_matrix[[i, 1]] = F::from_usize(cluster2).expect("Operation failed");
         linkage_matrix[[i, 2]] = min_dist;
-        linkage_matrix[[i, 3]] = F::from_usize(clusters[new_cluster_id].size).unwrap();
+        linkage_matrix[[i, 3]] =
+            F::from_usize(clusters[new_cluster_id].size).expect("Operation failed");
     }
 
     Ok(linkage_matrix)
@@ -173,13 +174,13 @@ fn parallel_find_closestclusters<
                     cluster_i,
                     cluster_i,
                     cluster_j,
-                    centroids.unwrap(),
+                    centroids.expect("Operation failed"),
                 )),
                 LinkageMethod::Median => Ok(median_linkage(
                     cluster_i,
                     cluster_i,
                     cluster_j,
-                    centroids.unwrap(),
+                    centroids.expect("Operation failed"),
                 )),
                 LinkageMethod::Weighted => parallel_weighted_linkage(
                     &clusters[cluster_i],
@@ -294,7 +295,7 @@ pub(crate) fn parallel_average_linkage<F: Float + FromPrimitive + Send + Sync>(
     if total_count == 0 {
         Ok(F::infinity())
     } else {
-        Ok(total_sum / F::from_usize(total_count).unwrap())
+        Ok(total_sum / F::from_usize(total_count).expect("Operation failed"))
     }
 }
 
@@ -305,8 +306,8 @@ pub(crate) fn parallel_ward_linkage<F: Float + FromPrimitive + Send + Sync + std
     distances: &Array1<F>,
     n_samples: usize,
 ) -> Result<F> {
-    let size1 = F::from_usize(cluster1.size).unwrap();
-    let size2 = F::from_usize(cluster2.size).unwrap();
+    let size1 = F::from_usize(cluster1.size).expect("Operation failed");
+    let size2 = F::from_usize(cluster2.size).expect("Operation failed");
 
     let results: Result<Vec<F>> = cluster1
         .members
@@ -401,7 +402,7 @@ mod tests {
         let distances = Array1::from(vec![1.0, 2.0, 3.0, 1.5, 2.5, 1.8]);
 
         let result = parallel_single_linkage(&cluster1, &cluster2, &distances, 4);
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -418,7 +419,7 @@ mod tests {
         let distances = Array1::from(vec![1.0, 2.0, 3.0, 1.5, 2.5, 1.8]);
 
         let result = parallel_complete_linkage(&cluster1, &cluster2, &distances, 4);
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 
     #[test]
@@ -435,6 +436,6 @@ mod tests {
         let distances = Array1::from(vec![1.0, 2.0, 3.0, 1.5, 2.5, 1.8]);
 
         let result = parallel_average_linkage(&cluster1, &cluster2, &distances, 4);
-        assert!(result.unwrap() >= 0.0);
+        assert!(result.expect("Operation failed") >= 0.0);
     }
 }

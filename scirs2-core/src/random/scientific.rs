@@ -45,7 +45,7 @@ pub struct StandardNormal;
 
 impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        Normal::new(0.0, 1.0).unwrap().sample(rng)
+        Normal::new(0.0, 1.0).expect("Operation failed").sample(rng)
     }
 }
 
@@ -55,7 +55,9 @@ pub struct StandardUniform;
 
 impl Distribution<f64> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        Uniform::new(0.0, 1.0).unwrap().sample(rng)
+        Uniform::new(0.0, 1.0)
+            .expect("Operation failed")
+            .sample(rng)
     }
 }
 
@@ -213,10 +215,10 @@ impl MonteCarloSampler {
         } else {
             let mut rng = seeded_rng(self.base_seed);
             let samples1: Vec<f64> = (0..count)
-                .map(|_| rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+                .map(|_| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")))
                 .collect();
             let samples2: Vec<f64> = (0..count)
-                .map(|_| rng.sample(Uniform::new(0.0, 1.0).unwrap()))
+                .map(|_| rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")))
                 .collect();
             (samples1, samples2)
         }
@@ -235,7 +237,7 @@ impl MonteCarloSampler {
                 let stratum_end = (i + 1) as f64 / strata as f64;
 
                 for _ in 0..samples_per_stratum {
-                    let u = rng.sample(Uniform::new(0.0, 1.0).unwrap());
+                    let u = rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed"));
                     let sample = stratum_start + u * (stratum_end - stratum_start);
                     all_samples.push(sample);
                 }
@@ -392,7 +394,7 @@ pub mod ab_testing {
         let mut group_b = Vec::new();
 
         for item in data {
-            if rng.sample(Uniform::new(0.0, 1.0).unwrap()) < split_ratio {
+            if rng.sample(Uniform::new(0.0, 1.0).expect("Operation failed")) < split_ratio {
                 group_a.push(item.clone());
             } else {
                 group_b.push(item.clone());

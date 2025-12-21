@@ -458,7 +458,7 @@ fn benchmark_iir_filtering(
     let (b, a) = butter(4, 0.3, "lowpass")?;
 
     benchmark_operation(name, size, config, || {
-        filtfilt(&b, &a, &signal.to_vec()).unwrap()
+        filtfilt(&b, &a, &signal.to_vec()).expect("Operation failed")
     })
 }
 
@@ -473,7 +473,7 @@ fn benchmark_zero_phase_filtering(
     let (b, a) = butter(4, 0.3, "low")?;
 
     benchmark_operation(name, size, config, || {
-        filtfilt(&b, &a, signal.as_slice().unwrap()).unwrap()
+        filtfilt(&b, &a, signal.as_slice().expect("Operation failed")).expect("Operation failed")
     })
 }
 
@@ -487,14 +487,14 @@ fn benchmark_periodogram(
 
     benchmark_operation(name, size, config, || {
         periodogram(
-            signal.as_slice().unwrap(),
+            signal.as_slice().expect("Operation failed"),
             None,
             Some("hann"),
             None,
             None,
             None,
         )
-        .unwrap()
+        .expect("Operation failed")
     })
 }
 
@@ -509,7 +509,7 @@ fn benchmark_welch_method(
 
     benchmark_operation(name, size, config, || {
         welch(
-            signal.as_slice().unwrap(),
+            signal.as_slice().expect("Operation failed"),
             None,
             Some("hann"),
             Some(nperseg),
@@ -518,7 +518,7 @@ fn benchmark_welch_method(
             Some("constant"),
             None,
         )
-        .unwrap()
+        .expect("Operation failed")
     })
 }
 
@@ -533,7 +533,7 @@ fn benchmark_spectrogram(
 
     benchmark_operation(name, size, config, || {
         spectrogram(
-            signal.as_slice().unwrap(),
+            signal.as_slice().expect("Operation failed"),
             None,
             Some("hann"),
             Some(nperseg),
@@ -543,7 +543,7 @@ fn benchmark_spectrogram(
             Some("psd"),
             Some("constant"),
         )
-        .unwrap()
+        .expect("Operation failed")
     })
 }
 
@@ -562,8 +562,8 @@ fn benchmark_lombscargle(
 
     benchmark_operation(name, size, config, || {
         lombscargle(
-            times.as_slice().unwrap(),
-            signal.as_slice().unwrap(),
+            times.as_slice().expect("Operation failed"),
+            signal.as_slice().expect("Operation failed"),
             None,
             Some("standard"),
             Some(true),
@@ -571,7 +571,7 @@ fn benchmark_lombscargle(
             Some(1.0),
             None,
         )
-        .unwrap()
+        .expect("Operation failed")
     })
 }
 
@@ -585,11 +585,11 @@ fn benchmark_dwt(
 
     benchmark_operation(name, size, config, || {
         dwt_decompose(
-            signal.as_slice().unwrap(),
+            signal.as_slice().expect("Operation failed"),
             Wavelet::DB(4),
             Some("symmetric"),
         )
-        .unwrap()
+        .expect("Operation failed")
     })
 }
 
@@ -604,11 +604,11 @@ fn benchmark_cwt(
 
     benchmark_operation(name, size, config, || {
         cwt(
-            signal.as_slice().unwrap(),
+            signal.as_slice().expect("Operation failed"),
             |points, scale| morlet(points, 6.0, scale),
             &scales,
         )
-        .unwrap()
+        .expect("Operation failed")
     })
 }
 
@@ -688,8 +688,8 @@ fn benchmark_memory_optimized_filter(
     // Warmup
     for _ in 0..config.warmup_iterations {
         let _ = memory_optimized_fir_filter(
-            input_file.to_str().unwrap(),
-            output_file.to_str().unwrap(),
+            input_file.to_str().expect("Operation failed"),
+            output_file.to_str().expect("Operation failed"),
             &coeffs,
             &memory_config,
         )?;
@@ -699,8 +699,8 @@ fn benchmark_memory_optimized_filter(
     for _ in 0..config.iterations {
         let start = Instant::now();
         let _result = memory_optimized_fir_filter(
-            input_file.to_str().unwrap(),
-            output_file.to_str().unwrap(),
+            input_file.to_str().expect("Operation failed"),
+            output_file.to_str().expect("Operation failed"),
             &coeffs,
             &memory_config,
         )?;
@@ -733,7 +733,7 @@ fn benchmark_simd_vs_scalar(
     };
 
     benchmark_operation(name, size, config, || {
-        simd_optimized_convolution(&signal.view(), &kernel.view(), &simd_config).unwrap()
+        simd_optimized_convolution(&signal.view(), &kernel.view(), &simd_config).expect("Operation failed")
     })
 }
 
@@ -770,13 +770,13 @@ fn benchmark_audio_processing_workflow(
 
         // Typical audio processing workflow:
         // 1. High-pass filter to remove DC
-        let (hp_b, hp_a) = butter(2, 0.01, "highpass").unwrap();
-        let filtered = Array1::from_vec(filtfilt(&hp_b, &hp_a, &signal.to_vec()).unwrap());
+        let (hp_b, hp_a) = butter(2, 0.01, "highpass").expect("Operation failed");
+        let filtered = Array1::from_vec(filtfilt(&hp_b, &hp_a, &signal.to_vec()).expect("Operation failed"));
 
         // 2. Compute spectrogram
         let nperseg = 1024.min(size / 4);
         let (_, _, spec) = spectrogram(
-            filtered.as_slice().unwrap(),
+            filtered.as_slice().expect("Operation failed"),
             None,
             Some("hann"),
             Some(nperseg),
@@ -786,7 +786,7 @@ fn benchmark_audio_processing_workflow(
             Some("psd"),
             Some("constant"),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // 3. Feature extraction (simplified)
         let mean_power = spec
@@ -812,8 +812,8 @@ fn benchmark_biomedical_workflow(
         // Biomedical signal processing workflow:
         // 1. Bandpass filter
         let (bp_b, bp_a) =
-            butter_bandpass_bandstop(4, 0.5, 100.0, crate::filter::FilterType::Bandpass).unwrap();
-        let filtered = Array1::from_vec(filtfilt(&bp_b, &bp_a, &signal.to_vec()).unwrap());
+            butter_bandpass_bandstop(4, 0.5, 100.0, crate::filter::FilterType::Bandpass).expect("Operation failed");
+        let filtered = Array1::from_vec(filtfilt(&bp_b, &bp_a, &signal.to_vec()).expect("Operation failed"));
 
         // 2. Artifact removal (simplified)
         let threshold = filtered.std(0.0);
@@ -1116,7 +1116,7 @@ fn generate_benchmark_summary(_results: &[BenchmarkResult], totaltime: f64) -> B
 
     // Find top performers (highest throughput)
     let mut sorted_by_throughput = results.to_vec();
-    sorted_by_throughput.sort_by(|a, b| b.throughput.partial_cmp(&a.throughput).unwrap());
+    sorted_by_throughput.sort_by(|a, b| b.throughput.partial_cmp(&a.throughput).expect("Operation failed"));
     let top_performers = sorted_by_throughput
         .iter()
         .take(5)
@@ -1128,7 +1128,7 @@ fn generate_benchmark_summary(_results: &[BenchmarkResult], totaltime: f64) -> B
     sorted_by_efficiency.sort_by(|a, b| {
         let eff_a = a.throughput / a.signal_size as f64;
         let eff_b = b.throughput / b.signal_size as f64;
-        eff_a.partial_cmp(&eff_b).unwrap()
+        eff_a.partial_cmp(&eff_b).expect("Operation failed")
     });
     let optimization_candidates = sorted_by_efficiency
         .iter()
@@ -1292,7 +1292,6 @@ pub fn run_quick_benchmark() -> SignalResult<()> {
 mod tests {
     #[allow(unused_imports)]
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_config_default() {
         let config = BenchmarkConfig::default();
         assert!(!config.signal_sizes.is_empty());

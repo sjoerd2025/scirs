@@ -35,13 +35,13 @@
 //!
 //! // Create the model
 //! let vocabulary = (0..10000).map(|i| format!("token_{}", i)).collect();
-//! let mut transformer = TransformerModel::new(config, vocabulary).unwrap();
+//! let mut transformer = TransformerModel::new(config, vocabulary).expect("Operation failed");
 //!
 //! // Example input sequences (string tokens)
 //! let src_tokens = vec!["token_1".to_string(), "token_2".to_string(), "token_3".to_string()];
 //!
 //! // Encode the tokens
-//! let output = transformer.encode_tokens(&src_tokens).unwrap();
+//! let output = transformer.encode_tokens(&src_tokens).expect("Operation failed");
 //! println!("Model output shape: {:?}", output.shape());
 //! ```
 //!
@@ -55,11 +55,11 @@
 //!
 //! let d_model = 512;
 //! let nheads = 8;
-//! let mut attention = MultiHeadAttention::new(d_model, nheads).unwrap();
+//! let mut attention = MultiHeadAttention::new(d_model, nheads).expect("Operation failed");
 //!
 //! // Create dummy input (batch_size=2, seqlen=10, d_model=512)
 //! let input = Array2::zeros((10, 512));
-//! let output = attention.forward(input.view(), input.view(), input.view(), None).unwrap();
+//! let output = attention.forward(input.view(), input.view(), input.view(), None).expect("Operation failed");
 //! ```
 //!
 //! ### Positional Encoding
@@ -75,7 +75,7 @@
 //! // Apply positional encoding to embeddings
 //! let seqlen = 20;
 //! let embeddings = Array2::<f64>::zeros((seqlen, d_model));
-//! let positional_encodings = pos_encoding.get_encoding(seqlen).unwrap();
+//! let positional_encodings = pos_encoding.get_encoding(seqlen).expect("Operation failed");
 //! println!("Embeddings shape: {:?}", embeddings.shape());
 //! println!("Positional encodings shape: {:?}", positional_encodings.shape());
 //! ```
@@ -95,9 +95,9 @@
 //!     ..Default::default()
 //! };
 //!
-//! let encoder = TransformerEncoder::new(config).unwrap();
+//! let encoder = TransformerEncoder::new(config).expect("Operation failed");
 //! let input = Array2::zeros((50, 256)); // (seqlen, d_model)
-//! let encoded = encoder.encode(input.view(), None).unwrap();
+//! let encoded = encoder.encode(input.view(), None).expect("Operation failed");
 //! ```
 //!
 //! ## Advanced Usage
@@ -108,7 +108,7 @@
 //! use scirs2_text::transformer::MultiHeadAttention;
 //! use scirs2_core::ndarray::Array2;
 //!
-//! let mut attention = MultiHeadAttention::new(512, 8).unwrap();
+//! let mut attention = MultiHeadAttention::new(512, 8).expect("Operation failed");
 //!
 //! // Create attention mask for autoregressive generation
 //! let seqlen = 10;
@@ -122,7 +122,7 @@
 //! let query = Array2::zeros((seqlen, 512));
 //! let key = Array2::zeros((seqlen, 512));
 //! let value = Array2::zeros((seqlen, 512));
-//! let output = attention.forward(query.view(), key.view(), value.view(), Some(mask.view())).unwrap();
+//! let output = attention.forward(query.view(), key.view(), value.view(), Some(mask.view())).expect("Operation failed");
 //! ```
 //!
 //! ### Layer-wise Learning Rate Decay
@@ -133,7 +133,7 @@
 //! # let config = TransformerConfig::default();
 //! # let vocabulary: Vec<String> = (0..config.vocab_size).map(|i| format!("token_{}", i)).collect();
 //! // Apply different learning rates to different layers  
-//! let mut model = TransformerModel::new(config, vocabulary).unwrap();
+//! let mut model = TransformerModel::new(config, vocabulary).expect("Operation failed");
 //!
 //! // Typically: deeper layers get smaller learning rates
 //! let base_lr = 1e-4;
@@ -1130,7 +1130,7 @@ mod tests {
     #[test]
     fn test_positional_encoding() {
         let pos_enc = PositionalEncoding::new(10, 4);
-        let encoding = pos_enc.get_encoding(5).unwrap();
+        let encoding = pos_enc.get_encoding(5).expect("Operation failed");
         assert_eq!(encoding.shape(), &[5, 4]);
 
         // Test that positions are different
@@ -1144,14 +1144,14 @@ mod tests {
 
     #[test]
     fn test_multi_head_attention() {
-        let mha = MultiHeadAttention::new(8, 2).unwrap();
+        let mha = MultiHeadAttention::new(8, 2).expect("Operation failed");
         let seqlen = 4;
         let d_model = 8;
 
         let input = Array2::ones((seqlen, d_model));
         let output = mha
             .forward(input.view(), input.view(), input.view(), None)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(output.shape(), &[seqlen, d_model]);
     }
@@ -1166,9 +1166,11 @@ mod tests {
             ..Default::default()
         };
 
-        let encoder = TransformerEncoder::new(config).unwrap();
+        let encoder = TransformerEncoder::new(config).expect("Operation failed");
         let input = Array2::ones((4, 8));
-        let output = encoder.encode(input.view(), None).unwrap();
+        let output = encoder
+            .encode(input.view(), None)
+            .expect("Operation failed");
 
         assert_eq!(output.shape(), &[4, 8]);
     }

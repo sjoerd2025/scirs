@@ -72,12 +72,13 @@ fn test_grayscale_conversion_with_test_image() {
     let dynamic_img = DynamicImage::ImageRgb8(img);
 
     // Test with default weights
-    let result = rgb_to_grayscale(&dynamic_img, None).unwrap();
+    let result = rgb_to_grayscale(&dynamic_img, None).expect("Operation failed");
     assert_eq!(result.width(), 2);
     assert_eq!(result.height(), 2);
 
     // Test with custom weights
-    let custom_result = rgb_to_grayscale(&dynamic_img, Some([0.3, 0.4, 0.3])).unwrap();
+    let custom_result =
+        rgb_to_grayscale(&dynamic_img, Some([0.3, 0.4, 0.3])).expect("Operation failed");
     assert_eq!(custom_result.width(), 2);
     assert_eq!(custom_result.height(), 2);
 }
@@ -95,7 +96,7 @@ fn test_binary_threshold_with_test_image() {
     let dynamic_img = DynamicImage::ImageRgb8(img);
 
     // Test binary thresholding
-    let result = threshold_binary(&dynamic_img, 0.5).unwrap(); // 0.5 = 127.5 in [0,255]
+    let result = threshold_binary(&dynamic_img, 0.5).expect("Operation failed"); // 0.5 = 127.5 in [0,255]
 
     // Only the pixel at (1,0) should be above threshold
     assert_eq!(result.get_pixel(0, 0)[0], 0);

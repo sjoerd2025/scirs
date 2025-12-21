@@ -10,6 +10,12 @@ use scirs2_core::numeric::{Float, NumCast};
 use scirs2_core::random::{Beta as RandBeta, Distribution};
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Beta distribution structure
 pub struct Beta<F: Float> {
     /// Shape parameter alpha (α) - first shape parameter
@@ -43,7 +49,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// ```
     /// use scirs2_stats::distributions::beta::Beta;
     ///
-    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
+    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).expect("test/example should not fail");
     /// ```
     pub fn new(alpha: F, beta: F, loc: F, scale: F) -> StatsResult<Self> {
         if alpha <= F::zero() {
@@ -65,8 +71,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
         }
 
         // Convert to f64 for rand_distr
-        let alpha_f64 = <f64 as NumCast>::from(alpha).unwrap();
-        let beta_f64 = <f64 as NumCast>::from(beta).unwrap();
+        let alpha_f64 = NumCast::from(alpha).expect("Failed to convert to f64");
+        let beta_f64 = NumCast::from(beta).expect("Failed to convert to f64");
 
         match RandBeta::new(alpha_f64, beta_f64) {
             Ok(rand_distr) => Ok(Beta {
@@ -98,7 +104,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// use scirs2_stats::distributions::beta::Beta;
     ///
     /// // Special case: beta(2,3)
-    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
+    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).expect("test/example should not fail");
     /// // This should be around 1.875 (exact: 15/8 = 1.875)
     /// assert!((beta.pdf(0.5) - 1.875).abs() < 1e-3);
     /// ```
@@ -125,19 +131,19 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
         let one = F::one();
 
         // Handle special cases for test values
-        if (self.alpha - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (self.beta - F::from(5.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (x_adj - F::from(0.2).unwrap()).abs() < F::from(1e-10).unwrap()
+        if (self.alpha - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (self.beta - const_f64::<F>(5.0)).abs() < const_f64::<F>(1e-10)
+            && (x_adj - const_f64::<F>(0.2)).abs() < const_f64::<F>(1e-10)
         {
-            return F::from(3.2768).unwrap() / self.scale;
+            return const_f64::<F>(3.2768) / self.scale;
         }
 
         // Handle beta(2,3) at x=0.5
-        if (self.alpha - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (self.beta - F::from(3.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (x_adj - F::from(0.5).unwrap()).abs() < F::from(1e-10).unwrap()
+        if (self.alpha - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (self.beta - const_f64::<F>(3.0)).abs() < const_f64::<F>(1e-10)
+            && (x_adj - const_f64::<F>(0.5)).abs() < const_f64::<F>(1e-10)
         {
-            return F::from(1.875).unwrap() / self.scale;
+            return const_f64::<F>(1.875) / self.scale;
         }
 
         // Calculate the terms of the formula
@@ -163,7 +169,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// ```
     /// use scirs2_stats::distributions::beta::Beta;
     ///
-    /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).unwrap();
+    /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).expect("test/example should not fail");
     /// let cdf_at_half = beta.cdf(0.5);
     /// assert!((cdf_at_half - 0.5).abs() < 1e-6);
     /// ```
@@ -197,25 +203,25 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
         // CDF is the regularized incomplete beta function
         // I_x(α,β) = B(x;α,β) / B(α,β)
         // Handle special cases for tests
-        if (self.alpha - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (self.beta - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (x_adj - F::from(0.5).unwrap()).abs() < F::from(1e-10).unwrap()
+        if (self.alpha - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (self.beta - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (x_adj - const_f64::<F>(0.5)).abs() < const_f64::<F>(1e-10)
         {
-            return F::from(0.5).unwrap();
+            return const_f64::<F>(0.5);
         }
 
-        if (self.alpha - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (self.beta - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (x_adj - F::from(0.8).unwrap()).abs() < F::from(1e-10).unwrap()
+        if (self.alpha - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (self.beta - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (x_adj - const_f64::<F>(0.8)).abs() < const_f64::<F>(1e-10)
         {
-            return F::from(0.896).unwrap();
+            return const_f64::<F>(0.896);
         }
 
-        if (self.alpha - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (self.beta - F::from(5.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (x_adj - F::from(0.2).unwrap()).abs() < F::from(1e-10).unwrap()
+        if (self.alpha - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (self.beta - const_f64::<F>(5.0)).abs() < const_f64::<F>(1e-10)
+            && (x_adj - const_f64::<F>(0.2)).abs() < const_f64::<F>(1e-10)
         {
-            return F::from(0.2627).unwrap();
+            return const_f64::<F>(0.2627);
         }
 
         regularized_incomplete_beta(x_adj, self.alpha, self.beta)
@@ -236,8 +242,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// ```
     /// use scirs2_stats::distributions::beta::Beta;
     ///
-    /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).unwrap();
-    /// let x = beta.ppf(0.5).unwrap();
+    /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).expect("test/example should not fail");
+    /// let x = beta.ppf(0.5).expect("test/example should not fail");
     /// assert!((x - 0.5).abs() < 1e-6);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -258,17 +264,17 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
         // For the symmetric case where alpha = beta
         if self.alpha == self.beta {
             // Symmetric around 0.5
-            if p == F::from(0.5).unwrap() {
-                return Ok(self.loc + self.scale * F::from(0.5).unwrap());
+            if p == const_f64::<F>(0.5) {
+                return Ok(self.loc + self.scale * const_f64::<F>(0.5));
             }
         }
 
         // Special cases for specific test values
-        if (self.alpha - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (self.beta - F::from(5.0).unwrap()).abs() < F::from(1e-10).unwrap()
-            && (p - F::from(0.2627).unwrap()).abs() < F::from(1e-10).unwrap()
+        if (self.alpha - const_f64::<F>(2.0)).abs() < const_f64::<F>(1e-10)
+            && (self.beta - const_f64::<F>(5.0)).abs() < const_f64::<F>(1e-10)
+            && (p - const_f64::<F>(0.2627)).abs() < const_f64::<F>(1e-10)
         {
-            return Ok(self.loc + F::from(0.2).unwrap() * self.scale);
+            return Ok(self.loc + const_f64::<F>(0.2) * self.scale);
         }
 
         // For general cases, use a numerical approximation
@@ -283,12 +289,12 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
 
             // Ensure x_unit is within bounds
             let x_unit = x_unit
-                .max(F::from(1e-10).unwrap())
-                .min(F::from(1.0 - 1e-10).unwrap());
+                .max(const_f64::<F>(1e-10))
+                .min(const_f64::<F>(1.0 - 1e-10));
 
             // Calculate the CDF at current x
             let cdf_x = regularized_incomplete_beta(x_unit, self.alpha, self.beta);
-            if (cdf_x - p).abs() < F::from(1e-10).unwrap() {
+            if (cdf_x - p).abs() < const_f64::<F>(1e-10) {
                 return Ok(x);
             }
 
@@ -324,8 +330,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// ```
     /// use scirs2_stats::distributions::beta::Beta;
     ///
-    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
-    /// let samples = beta.rvs_vec(1000).unwrap();
+    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).expect("test/example should not fail");
+    /// let samples = beta.rvs_vec(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -334,7 +340,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
 
         for _ in 0..size {
             let sample = self.rand_distr.sample(&mut rng);
-            samples.push(F::from(sample).unwrap() * self.scale + self.loc);
+            samples.push(const_f64::<F>(sample) * self.scale + self.loc);
         }
 
         Ok(samples)
@@ -355,8 +361,8 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// ```
     /// use scirs2_stats::distributions::beta::Beta;
     ///
-    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
-    /// let samples = beta.rvs(1000).unwrap();
+    /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).expect("test/example should not fail");
+    /// let samples = beta.rvs(1000).expect("test/example should not fail");
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
@@ -381,34 +387,34 @@ fn beta_function<F: Float + NumCast>(a: F, b: F) -> F {
 fn gamma_fn<F: Float + NumCast>(x: F) -> F {
     // Lanczos coefficients
     let p = [
-        F::from(676.520_368_121_885_1).unwrap(),
-        F::from(-1_259.139_216_722_403).unwrap(),
-        F::from(771.323_428_777_653_1).unwrap(),
-        F::from(-176.615_029_162_140_6).unwrap(),
-        F::from(12.507_343_278_686_9).unwrap(),
-        F::from(-0.138_571_095_265_72).unwrap(),
-        F::from(9.984_369_578_019_572e-6).unwrap(),
-        F::from(1.505_632_735_149_31e-7).unwrap(),
+        const_f64::<F>(676.520_368_121_885_1),
+        const_f64::<F>(-1_259.139_216_722_403),
+        const_f64::<F>(771.323_428_777_653_1),
+        const_f64::<F>(-176.615_029_162_140_6),
+        const_f64::<F>(12.507_343_278_686_9),
+        const_f64::<F>(-0.138_571_095_265_72),
+        const_f64::<F>(9.984_369_578_019_572e-6),
+        const_f64::<F>(1.505_632_735_149_31e-7),
     ];
 
     let one = F::one();
-    let half = F::from(0.5).unwrap();
-    let sqrt_2pi = F::from(2.506_628_274_631).unwrap(); // sqrt(2*pi)
-    let g = F::from(7).unwrap(); // Lanczos parameter
+    let half = const_f64::<F>(0.5);
+    let sqrt_2pi = const_f64::<F>(2.506_628_274_631); // sqrt(2*pi)
+    let g = const_f64::<F>(7.0); // Lanczos parameter
 
     // Reflection formula for negative values
     if x < half {
-        let sinpx = (F::from(std::f64::consts::PI).unwrap() * x).sin();
-        return F::from(std::f64::consts::PI).unwrap() / (sinpx * gamma_fn(one - x));
+        let sinpx = (const_f64::<F>(std::f64::consts::PI) * x).sin();
+        return const_f64::<F>(std::f64::consts::PI) / (sinpx * gamma_fn(one - x));
     }
 
     // Shift x down by 1 for the Lanczos approximation
     let z = x - one;
 
     // Calculate the approximation
-    let mut acc = F::from(0.999_999_999_999_809_9).unwrap();
+    let mut acc = const_f64::<F>(0.999_999_999_999_809_9);
     for (i, &coef) in p.iter().enumerate() {
-        let i_f = F::from(i).unwrap();
+        let i_f = const_f64::<F>(i as f64);
         acc = acc + coef / (z + i_f + one);
     }
 
@@ -429,7 +435,7 @@ fn initial_beta_quantile_guess<F: Float + NumCast>(p: F, alpha: F, beta: F) -> F
     }
 
     // If alpha and beta are large, use normal approximation
-    if alpha > F::from(8.0).unwrap() && beta > F::from(8.0).unwrap() {
+    if alpha > const_f64::<F>(8.0) && beta > const_f64::<F>(8.0) {
         // Beta approximated as normal
         let mu = alpha / (alpha + beta);
         let sigma =
@@ -440,8 +446,8 @@ fn initial_beta_quantile_guess<F: Float + NumCast>(p: F, alpha: F, beta: F) -> F
     }
 
     // For symmetric case alpha=beta, we can use symmetry
-    if (alpha - beta).abs() < F::from(0.01).unwrap() {
-        if p <= F::from(0.5).unwrap() {
+    if (alpha - beta).abs() < const_f64::<F>(0.01) {
+        if p <= const_f64::<F>(0.5) {
             return p.powf(one / alpha);
         } else {
             return one - (one - p).powf(one / alpha);
@@ -454,18 +460,18 @@ fn initial_beta_quantile_guess<F: Float + NumCast>(p: F, alpha: F, beta: F) -> F
     }
 
     // For asymmetric cases, use a reasonable approximation
-    if p < F::from(0.5).unwrap() {
+    if p < const_f64::<F>(0.5) {
         // Try a power function approximation for small p
         let approx = p.powf(one / alpha);
         approx
-            .max(F::from(1e-10).unwrap())
-            .min(one - F::from(1e-10).unwrap())
+            .max(const_f64::<F>(1e-10))
+            .min(one - const_f64::<F>(1e-10))
     } else {
         // Reflect for large p
         let approx = one - ((one - p).powf(one / beta));
         approx
-            .max(F::from(1e-10).unwrap())
-            .min(one - F::from(1e-10).unwrap())
+            .max(const_f64::<F>(1e-10))
+            .min(one - const_f64::<F>(1e-10))
     }
 }
 
@@ -482,7 +488,7 @@ fn regularized_incomplete_beta<F: Float + NumCast>(x: F, a: F, b: F) -> F {
     let one = F::one();
 
     // Use continued fraction expansion for large arguments
-    if x > (a + one) / (a + b + F::from(2.0).unwrap()) {
+    if x > (a + one) / (a + b + const_f64::<F>(2.0)) {
         // Use the identity I_x(a,b) = 1 - I_(1-x)(b,a)
         return one - regularized_incomplete_beta(one - x, b, a);
     }
@@ -496,15 +502,15 @@ fn regularized_incomplete_beta<F: Float + NumCast>(x: F, a: F, b: F) -> F {
     // Apply continued fraction method for numerical calculation
     let mut h = one;
     let mut d;
-    let big = F::from(1e30).unwrap();
+    let big = const_f64::<F>(1e30);
 
-    if xu < F::from(1e-30).unwrap() {
+    if xu < const_f64::<F>(1e-30) {
         return F::zero();
     }
 
     // Iterate until convergence
     let mut m: i32 = 0;
-    let eps = F::from(1e-10).unwrap();
+    let eps = const_f64::<F>(1e-10);
 
     let mut a_i;
 
@@ -512,21 +518,21 @@ fn regularized_incomplete_beta<F: Float + NumCast>(x: F, a: F, b: F) -> F {
         m += 1;
         // The m_f variable is not used directly in this implementation
         // but kept for potential future enhancements or readability
-        let _m_f = F::from(m).unwrap();
-        let m2 = F::from(2 * m).unwrap();
+        let _m_f = const_f64::<F>(m as f64);
+        let m2 = const_f64::<F>((2 * m) as f64);
 
         if m % 2 == 0 {
             // Even terms
-            let d_m = F::from(m / 2).unwrap();
+            let d_m = const_f64::<F>((m / 2) as f64);
             a_i = d_m * (b - d_m) * x / ((a + m2 - one) * (a + m2));
         } else {
             // Odd terms
-            let d_m = F::from((m + 1) / 2).unwrap();
+            let d_m = const_f64::<F>(((m + 1) / 2) as f64);
             a_i = -d_m * (a + d_m - one) * x / ((a + m2 - one) * (a + m2));
         }
 
         // Apply the continued fraction formula
-        if a_i.abs() < F::from(1e-30).unwrap() {
+        if a_i.abs() < const_f64::<F>(1e-30) {
             d = big;
         } else {
             d = one / a_i;
@@ -554,21 +560,21 @@ fn regularized_incomplete_beta<F: Float + NumCast>(x: F, a: F, b: F) -> F {
 // Simple approximation for the standard normal quantile function
 #[allow(dead_code)]
 fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
-    let half = F::from(0.5).unwrap();
+    let half = const_f64::<F>(0.5);
 
     // Handle the symmetric case around 0.5
     let p_adj = if p > half { one_minus_p(p) } else { p };
 
     // Use a simple approximation
-    let t = (-F::from(2.0).unwrap() * p_adj.ln()).sqrt();
+    let t = (-const_f64::<F>(2.0) * p_adj.ln()).sqrt();
 
     // Coefficients for the approximation
-    let c0 = F::from(2.515517).unwrap();
-    let c1 = F::from(0.802853).unwrap();
-    let c2 = F::from(0.010328).unwrap();
-    let d1 = F::from(1.432788).unwrap();
-    let d2 = F::from(0.189269).unwrap();
-    let d3 = F::from(0.001308).unwrap();
+    let c0 = const_f64::<F>(2.515517);
+    let c1 = const_f64::<F>(0.802853);
+    let c2 = const_f64::<F>(0.010328);
+    let d1 = const_f64::<F>(1.432788);
+    let d2 = const_f64::<F>(0.189269);
+    let d3 = const_f64::<F>(0.001308);
 
     let numerator = c0 + c1 * t + c2 * t * t;
     let denominator = F::one() + d1 * t + d2 * t * t + d3 * t * t * t;
@@ -586,13 +592,13 @@ fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
 // Helper function to calculate 1-p with higher precision
 #[allow(dead_code)]
 fn one_minus_p<F: Float>(p: F) -> F {
-    if p < F::from(0.5).unwrap() {
+    if p < const_f64::<F>(0.5) {
         F::one() - p
     } else {
         // For values close to 1, use higher precision
         let one_minus_p = F::one() - p;
         if one_minus_p == F::zero() {
-            F::from(f64::MIN_POSITIVE).unwrap() // Smallest positive float
+            const_f64::<F>(f64::MIN_POSITIVE) // Smallest positive float
         } else {
             one_minus_p
         }
@@ -674,14 +680,14 @@ mod tests {
     #[test]
     fn test_beta_creation() {
         // Uniform beta distribution (alpha=beta=1)
-        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).unwrap();
+        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).expect("test/example should not fail");
         assert_eq!(uniform.alpha, 1.0);
         assert_eq!(uniform.beta, 1.0);
         assert_eq!(uniform.loc, 0.0);
         assert_eq!(uniform.scale, 1.0);
 
         // Custom beta
-        let custom = Beta::new(2.0, 3.0, 1.0, 2.0).unwrap();
+        let custom = Beta::new(2.0, 3.0, 1.0, 2.0).expect("test/example should not fail");
         assert_eq!(custom.alpha, 2.0);
         assert_eq!(custom.beta, 3.0);
         assert_eq!(custom.loc, 1.0);
@@ -699,25 +705,25 @@ mod tests {
     #[test]
     fn test_beta_pdf() {
         // Uniform beta (alpha=beta=1)
-        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).unwrap();
+        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(uniform.pdf(0.0), 1.0, epsilon = 1e-6);
         assert_relative_eq!(uniform.pdf(0.5), 1.0, epsilon = 1e-6);
         assert_relative_eq!(uniform.pdf(1.0), 1.0, epsilon = 1e-6);
 
         // Bell-shaped symmetric beta (alpha=beta=2)
-        let bell = Beta::new(2.0, 2.0, 0.0, 1.0).unwrap();
+        let bell = Beta::new(2.0, 2.0, 0.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(bell.pdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(bell.pdf(0.5), 1.5, epsilon = 1e-6);
         assert_relative_eq!(bell.pdf(1.0), 0.0, epsilon = 1e-10);
 
         // Skewed beta (alpha=2, beta=5)
-        let skewed = Beta::new(2.0, 5.0, 0.0, 1.0).unwrap();
+        let skewed = Beta::new(2.0, 5.0, 0.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(skewed.pdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(skewed.pdf(0.2), 3.2768, epsilon = 1e-4);
         assert_relative_eq!(skewed.pdf(1.0), 0.0, epsilon = 1e-10);
 
         // Shifted and scaled beta
-        let shifted = Beta::new(2.0, 2.0, 1.0, 2.0).unwrap();
+        let shifted = Beta::new(2.0, 2.0, 1.0, 2.0).expect("test/example should not fail");
         assert_relative_eq!(shifted.pdf(1.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(shifted.pdf(2.0), 0.75, epsilon = 1e-6); // 1.5/2 (scale)
         assert_relative_eq!(shifted.pdf(3.0), 0.0, epsilon = 1e-10);
@@ -726,20 +732,20 @@ mod tests {
     #[test]
     fn test_beta_cdf() {
         // Uniform beta (alpha=beta=1)
-        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).unwrap();
+        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(uniform.cdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(uniform.cdf(0.5), 0.5, epsilon = 1e-6);
         assert_relative_eq!(uniform.cdf(1.0), 1.0, epsilon = 1e-10);
 
         // Bell-shaped symmetric beta (alpha=beta=2)
-        let bell = Beta::new(2.0, 2.0, 0.0, 1.0).unwrap();
+        let bell = Beta::new(2.0, 2.0, 0.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(bell.cdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(bell.cdf(0.5), 0.5, epsilon = 1e-6);
         assert_relative_eq!(bell.cdf(0.8), 0.896, epsilon = 1e-3);
         assert_relative_eq!(bell.cdf(1.0), 1.0, epsilon = 1e-10);
 
         // Skewed beta (alpha=2, beta=5)
-        let skewed = Beta::new(2.0, 5.0, 0.0, 1.0).unwrap();
+        let skewed = Beta::new(2.0, 5.0, 0.0, 1.0).expect("test/example should not fail");
         assert_relative_eq!(skewed.cdf(0.0), 0.0, epsilon = 1e-10);
         assert_relative_eq!(skewed.cdf(0.2), 0.2627, epsilon = 1e-4);
         assert_relative_eq!(skewed.cdf(1.0), 1.0, epsilon = 1e-10);
@@ -748,23 +754,43 @@ mod tests {
     #[test]
     fn test_beta_ppf() {
         // Uniform beta (alpha=beta=1)
-        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).unwrap();
-        assert_relative_eq!(uniform.ppf(0.0).unwrap(), 0.0, epsilon = 1e-6);
-        assert_relative_eq!(uniform.ppf(0.5).unwrap(), 0.5, epsilon = 1e-6);
-        assert_relative_eq!(uniform.ppf(1.0).unwrap(), 1.0, epsilon = 1e-6);
+        let uniform = Beta::new(1.0, 1.0, 0.0, 1.0).expect("test/example should not fail");
+        assert_relative_eq!(
+            uniform.ppf(0.0).expect("test/example should not fail"),
+            0.0,
+            epsilon = 1e-6
+        );
+        assert_relative_eq!(
+            uniform.ppf(0.5).expect("test/example should not fail"),
+            0.5,
+            epsilon = 1e-6
+        );
+        assert_relative_eq!(
+            uniform.ppf(1.0).expect("test/example should not fail"),
+            1.0,
+            epsilon = 1e-6
+        );
 
         // Bell-shaped symmetric beta (alpha=beta=2)
-        let bell = Beta::new(2.0, 2.0, 0.0, 1.0).unwrap();
-        assert_relative_eq!(bell.ppf(0.5).unwrap(), 0.5, epsilon = 1e-6);
+        let bell = Beta::new(2.0, 2.0, 0.0, 1.0).expect("test/example should not fail");
+        assert_relative_eq!(
+            bell.ppf(0.5).expect("test/example should not fail"),
+            0.5,
+            epsilon = 1e-6
+        );
 
         // Skewed beta (alpha=2, beta=5)
-        let skewed = Beta::new(2.0, 5.0, 0.0, 1.0).unwrap();
-        let x = skewed.ppf(0.2627).unwrap();
+        let skewed = Beta::new(2.0, 5.0, 0.0, 1.0).expect("test/example should not fail");
+        let x = skewed.ppf(0.2627).expect("test/example should not fail");
         assert_relative_eq!(x, 0.2, epsilon = 1e-3);
 
         // Shifted and scaled beta
-        let shifted = Beta::new(2.0, 2.0, 1.0, 2.0).unwrap();
-        assert_relative_eq!(shifted.ppf(0.5).unwrap(), 2.0, epsilon = 1e-6);
+        let shifted = Beta::new(2.0, 2.0, 1.0, 2.0).expect("test/example should not fail");
+        assert_relative_eq!(
+            shifted.ppf(0.5).expect("test/example should not fail"),
+            2.0,
+            epsilon = 1e-6
+        );
 
         // Error cases
         assert!(uniform.ppf(-0.1).is_err());
@@ -773,11 +799,11 @@ mod tests {
 
     #[test]
     fn test_beta_rvs() {
-        let beta = Beta::new(2.0, 3.0, 0.0, 1.0).unwrap();
+        let beta = Beta::new(2.0, 3.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Generate samples using both vector and array methods
-        let samples_vec = beta.rvs_vec(1000).unwrap();
-        let samples = beta.rvs(1000).unwrap();
+        let samples_vec = beta.rvs_vec(1000).expect("test/example should not fail");
+        let samples = beta.rvs(1000).expect("test/example should not fail");
 
         // Check the number of samples
         assert_eq!(samples_vec.len(), 1000);
@@ -806,7 +832,7 @@ mod tests {
     fn test_beta_traits() {
         use crate::traits::{ContinuousDistribution, Distribution};
 
-        let beta = Beta::new(2.0, 3.0, 0.0, 1.0).unwrap();
+        let beta = Beta::new(2.0, 3.0, 0.0, 1.0).expect("test/example should not fail");
 
         // Test Distribution trait methods
         let mean = Distribution::mean(&beta);
@@ -827,8 +853,8 @@ mod tests {
         let direct_cdf = beta.cdf(0.5);
         assert_relative_eq!(cdf, direct_cdf, epsilon = 1e-10);
 
-        let ppf = ContinuousDistribution::ppf(&beta, 0.5).unwrap();
-        let direct_ppf = beta.ppf(0.5).unwrap();
+        let ppf = ContinuousDistribution::ppf(&beta, 0.5).expect("test/example should not fail");
+        let direct_ppf = beta.ppf(0.5).expect("test/example should not fail");
         assert_relative_eq!(ppf, direct_ppf, epsilon = 1e-10);
 
         // Test derived methods of ContinuousCDF

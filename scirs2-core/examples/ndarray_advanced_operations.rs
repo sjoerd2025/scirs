@@ -27,7 +27,7 @@ fn main() {
     let x = array![1, 2, 3];
     let y = array![4, 5];
 
-    let (x_grid, y_grid) = meshgrid(x.view(), y.view()).unwrap();
+    let (x_grid, y_grid) = meshgrid(x.view(), y.view()).expect("Operation failed");
     println!("Input x-coordinates:");
     println!("{x}");
     println!("\nInput y-coordinates:");
@@ -43,7 +43,7 @@ fn main() {
     println!("Input array with duplicates:");
     println!("{b}");
 
-    let unique_values = unique(b.view()).unwrap();
+    let unique_values = unique(b.view()).expect("Operation failed");
     println!("\nUnique values (sorted):");
     println!("{unique_values}");
 
@@ -54,28 +54,28 @@ fn main() {
     println!("{c}");
 
     // argmin examples
-    let min_indices_cols = argmin(c.view(), Some(0)).unwrap();
+    let min_indices_cols = argmin(c.view(), Some(0)).expect("Operation failed");
     println!("\nIndices of minimum values in each column:");
     println!("{min_indices_cols}");
 
-    let min_indices_rows = argmin(c.view(), Some(1)).unwrap();
+    let min_indices_rows = argmin(c.view(), Some(1)).expect("Operation failed");
     println!("\nIndices of minimum values in each row:");
     println!("{min_indices_rows}");
 
-    let min_index = argmin(c.view(), None).unwrap();
+    let min_index = argmin(c.view(), None).expect("Operation failed");
     println!("\nIndex of overall minimum value (flattened):");
     println!("{}", min_index[0]);
 
     // argmax examples
-    let max_indices_cols = argmax(c.view(), Some(0)).unwrap();
+    let max_indices_cols = argmax(c.view(), Some(0)).expect("Operation failed");
     println!("\nIndices of maximum values in each column:");
     println!("{max_indices_cols}");
 
-    let max_indices_rows = argmax(c.view(), Some(1)).unwrap();
+    let max_indices_rows = argmax(c.view(), Some(1)).expect("Operation failed");
     println!("\nIndices of maximum values in each row:");
     println!("{max_indices_rows}");
 
-    let max_index = argmax(c.view(), None).unwrap();
+    let max_index = argmax(c.view(), None).expect("Operation failed");
     println!("\nIndex of overall maximum value (flattened):");
     println!("{}", max_index[0]);
 
@@ -85,14 +85,14 @@ fn main() {
     println!("Input array:");
     println!("{a}");
 
-    let (grad_y, grad_x) = gradient(a.view(), None).unwrap();
+    let (grad_y, grad_x) = gradient(a.view(), None).expect("Operation failed");
     println!("\nGradient in y-direction (rows):");
     println!("{grad_y}");
     println!("\nGradient in x-direction (columns):");
     println!("{grad_x}");
 
     // With custom spacing
-    let (grad_y, grad_x) = gradient(a.view(), Some((2.0, 0.5))).unwrap();
+    let (grad_y, grad_x) = gradient(a.view(), Some((2.0, 0.5))).expect("Operation failed");
     println!("\nGradient with custom spacing (dy=2.0, dx=0.5):");
     println!("Gradient in y-direction (rows):");
     println!("{grad_y}");
@@ -141,7 +141,7 @@ fn main() {
     println!("{img}");
 
     // Calculate gradient
-    let (grad_y, grad_x) = gradient(img.view(), None).unwrap();
+    let (grad_y, grad_x) = gradient(img.view(), None).expect("Operation failed");
 
     println!("\nGradient in y-direction:");
     println!("{grad_y}");
@@ -163,7 +163,7 @@ fn main() {
     println!("{magnitude}");
 
     // Find locations of strongest edges
-    let max_val_idx = argmax(magnitude.view(), None).unwrap()[0];
+    let max_val_idx = argmax(magnitude.view(), None).expect("Operation failed")[0];
     let rows = magnitude.shape()[1];
     let edge_row = max_val_idx / rows;
     let edge_col = max_val_idx % rows;

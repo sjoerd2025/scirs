@@ -122,7 +122,7 @@ fn global_buffer_pool_example() {
     let f32_pool = pool.get_pool::<f32>();
 
     // Acquire a buffer
-    let mut buffer = f32_pool.lock().unwrap().acquire_vec(5);
+    let mut buffer = f32_pool.lock().expect("Operation failed").acquire_vec(5);
 
     // Fill the buffer
     for (i, elem) in buffer.iter_mut().enumerate() {
@@ -132,7 +132,10 @@ fn global_buffer_pool_example() {
     println!("Buffer from global pool: {:?}", buffer);
 
     // Release the buffer
-    f32_pool.lock().unwrap().release_vec(buffer);
+    f32_pool
+        .lock()
+        .expect("Operation failed")
+        .release_vec(buffer);
     println!("Buffer released back to the global pool");
 }
 

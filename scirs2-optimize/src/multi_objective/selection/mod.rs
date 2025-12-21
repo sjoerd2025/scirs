@@ -157,7 +157,7 @@ impl SelectionOperator for TruncationSelection {
             a.rank.cmp(&b.rank).then(
                 b.crowding_distance
                     .partial_cmp(&a.crowding_distance)
-                    .unwrap(),
+                    .expect("Operation failed"),
             )
         });
 

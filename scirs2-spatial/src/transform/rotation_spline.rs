@@ -6,6 +6,13 @@
 use crate::error::{SpatialError, SpatialResult};
 use crate::transform::{Rotation, Slerp};
 use scirs2_core::ndarray::{array, Array1};
+use scirs2_core::numeric::{Float, FromPrimitive};
+
+/// Helper to convert f64 constants to generic Float type
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
 
 // Helper function to create an array from values
 #[allow(dead_code)]
@@ -38,15 +45,15 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// // Create some rotations
 /// let rotations = vec![
 ///     Rotation::identity(),
-///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap(),
-///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed"),
+///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
 /// ];
 ///
 /// // Create times at which these rotations occur
 /// let times = vec![0.0, 0.5, 1.0];
 ///
 /// // Create a rotation spline
-/// let spline = RotationSpline::new(&rotations, &times).unwrap();
+/// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 ///
 /// // Get the interpolated rotation at t=0.25 (between the first two rotations)
 /// let rot_25 = spline.interpolate(0.25);
@@ -87,11 +94,11 @@ impl RotationSpline {
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed"),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
     /// ];
     /// let times = vec![0.0, 1.0, 2.0];
-    /// let spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     /// ```
     pub fn new(rotations: &[Rotation], times: &[f64]) -> SpatialResult<Self> {
         if rotations.is_empty() {
@@ -154,14 +161,14 @@ impl RotationSpline {
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed"),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
     /// ];
     /// let times = vec![0.0, 1.0, 2.0];
-    /// let mut spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let mut spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// // Set the interpolation type to cubic (natural cubic spline)
-    /// spline.set_interpolation_type("cubic").unwrap();
+    /// spline.set_interpolation_type("cubic").expect("Test/example failed");
     /// ```
     pub fn set_interpolation_type(&mut self, _interptype: &str) -> SpatialResult<()> {
         match _interptype.to_lowercase().as_str() {
@@ -338,11 +345,11 @@ impl RotationSpline {
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed"),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
     /// ];
     /// let times = vec![0.0, 1.0, 2.0];
-    /// let spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// // Interpolate at t=0.5 (halfway between the first two rotations)
     /// let rot_half = spline.interpolate(0.5);
@@ -382,8 +389,8 @@ impl RotationSpline {
         let normalized_t = (t - t0) / (t1 - t0);
 
         // Create a Slerp between the two rotations
-        let slerp =
-            Slerp::new(self.rotations[idx].clone(), self.rotations[idx + 1].clone()).unwrap();
+        let slerp = Slerp::new(self.rotations[idx].clone(), self.rotations[idx + 1].clone())
+            .expect("Test/example failed");
 
         slerp.interpolate(normalized_t)
     }
@@ -410,7 +417,7 @@ impl RotationSpline {
         let rotvec1 = rot1.as_rotvec();
 
         // Get velocities
-        let velocities = self.velocities.as_ref().unwrap();
+        let velocities = self.velocities.as_ref().expect("Test/example failed");
         let vel0 = &velocities[idx];
         let vel1 = &velocities[idx + 1];
 
@@ -433,7 +440,7 @@ impl RotationSpline {
         result = &result + &(vel1 * dt * h11);
 
         // Convert back to rotation
-        Rotation::from_rotvec(&result.view()).unwrap()
+        Rotation::from_rotvec(&result.view()).expect("Operation failed")
     }
 
     /// Get the times at which the rotations are defined
@@ -453,7 +460,7 @@ impl RotationSpline {
     ///     Rotation::identity(),
     /// ];
     /// let times = vec![0.0, 1.0];
-    /// let spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// let retrieved_times = spline.times();
     /// assert_eq!(retrieved_times, &vec![0.0, 1.0]);
@@ -479,7 +486,7 @@ impl RotationSpline {
     ///     Rotation::identity(),
     /// ];
     /// let times = vec![0.0, 1.0];
-    /// let spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// let retrieved_rotations = spline.rotations();
     /// assert_eq!(retrieved_rotations.len(), 2);
@@ -507,10 +514,10 @@ impl RotationSpline {
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
     /// ];
     /// let times = vec![0.0, 1.0];
-    /// let spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// // Generate 5 samples from the spline
     /// let (sample_times, sample_rotations) = spline.sample(5);
@@ -559,12 +566,12 @@ impl RotationSpline {
     ///
     /// let key_rots = vec![
     ///     Rotation::identity(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").expect("Operation failed"),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
     /// ];
     /// let keytimes = vec![0.0, 1.0, 2.0];
     ///
-    /// let spline = RotationSpline::from_key_rotations(&key_rots, &keytimes).unwrap();
+    /// let spline = RotationSpline::from_key_rotations(&key_rots, &keytimes).expect("Test/example failed");
     /// ```
     pub fn from_key_rotations(_key_rots: &[Rotation], keytimes: &[f64]) -> SpatialResult<Self> {
         Self::new(_key_rots, keytimes)
@@ -587,7 +594,7 @@ impl RotationSpline {
     ///     Rotation::identity(),
     /// ];
     /// let times = vec![0.0, 1.0];
-    /// let spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// assert_eq!(spline.interpolation_type(), "slerp");
     /// ```
@@ -614,10 +621,10 @@ impl RotationSpline {
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
     /// ];
     /// let times = vec![0.0, 1.0];
-    /// let spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// // Calculate angular velocity at t=0.5
     /// let velocity = spline.angular_velocity(0.5);
@@ -677,7 +684,7 @@ impl RotationSpline {
 
         // However, we need to transform this to the frame at time t
         // First interpolate to get the rotation at time t
-        let slerp = Slerp::new(r0.clone(), r1.clone()).unwrap();
+        let slerp = Slerp::new(r0.clone(), r1.clone()).expect("Test/example failed");
         let rot_t = slerp.interpolate(normalized_t);
 
         // The angular velocity in the global frame is the axis scaled by angular rate
@@ -711,7 +718,7 @@ impl RotationSpline {
         let rotvec1 = rot1.as_rotvec();
 
         // Get velocities
-        let velocities = self.velocities.as_ref().unwrap();
+        let velocities = self.velocities.as_ref().expect("Test/example failed");
         let vel0 = &velocities[idx];
         let vel1 = &velocities[idx + 1];
 
@@ -751,14 +758,14 @@ impl RotationSpline {
     ///
     /// let rotations = vec![
     ///     Rotation::identity(),
-    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+    ///     Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
     ///     Rotation::identity(),
     /// ];
     /// let times = vec![0.0, 1.0, 2.0];
-    /// let mut spline = RotationSpline::new(&rotations, &times).unwrap();
+    /// let mut spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
     ///
     /// // Set to cubic interpolation for non-zero acceleration
-    /// spline.set_interpolation_type("cubic").unwrap();
+    /// spline.set_interpolation_type("cubic").expect("Test/example failed");
     ///
     /// // Calculate angular acceleration at t=0.5
     /// let acceleration = spline.angular_acceleration(0.5);
@@ -811,7 +818,7 @@ impl RotationSpline {
         let rotvec1 = rot1.as_rotvec();
 
         // Get velocities
-        let velocities = self.velocities.as_ref().unwrap();
+        let velocities = self.velocities.as_ref().expect("Test/example failed");
         let vel0 = &velocities[idx];
         let vel1 = &velocities[idx + 1];
 
@@ -842,12 +849,12 @@ mod tests {
     fn test_rotation_spline_creation() {
         let rotations = vec![
             Rotation::identity(),
-            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed"),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0, 2.0];
 
-        let spline = RotationSpline::new(&rotations, &times).unwrap();
+        let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         assert_eq!(spline.rotations().len(), 3);
         assert_eq!(spline.times().len(), 3);
@@ -858,12 +865,12 @@ mod tests {
     fn test_rotation_spline_interpolation_endpoints() {
         let rotations = vec![
             Rotation::identity(),
-            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed"),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0, 2.0];
 
-        let spline = RotationSpline::new(&rotations, &times).unwrap();
+        let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         // Test at endpoints
         let interp_start = spline.interpolate(0.0);
@@ -885,12 +892,12 @@ mod tests {
     fn test_rotation_spline_interpolation_midpoints() {
         let rotations = vec![
             Rotation::identity(),
-            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed"),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0, 2.0];
 
-        let spline = RotationSpline::new(&rotations, &times).unwrap();
+        let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         // Test at midpoints
         let interp_mid1 = spline.interpolate(0.5);
@@ -900,8 +907,12 @@ mod tests {
         let test_point = array![1.0, 0.0, 0.0];
 
         // Verify interpolation results
-        let rotated_mid1 = interp_mid1.apply(&test_point.view()).unwrap();
-        let rotated_mid2 = interp_mid2.apply(&test_point.view()).unwrap();
+        let rotated_mid1 = interp_mid1
+            .apply(&test_point.view())
+            .expect("Test/example failed");
+        let rotated_mid2 = interp_mid2
+            .apply(&test_point.view())
+            .expect("Test/example failed");
 
         // At t=0.5 (between identity and 90-degree rotation), should be approximately 45 degrees
         assert_relative_eq!(rotated_mid1[0], 2.0_f64.sqrt() / 2.0, epsilon = 1e-3);
@@ -918,11 +929,11 @@ mod tests {
     fn test_rotation_spline_sampling() {
         let rotations = vec![
             Rotation::identity(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0];
 
-        let spline = RotationSpline::new(&rotations, &times).unwrap();
+        let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         // Sample 5 points
         let (sample_times, sample_rotations) = spline.sample(5);
@@ -942,20 +953,20 @@ mod tests {
 
         // At t=0.0, should be identity
         let rot0 = &sample_rotations[0];
-        let rotated0 = rot0.apply(&point.view()).unwrap();
+        let rotated0 = rot0.apply(&point.view()).expect("Test/example failed");
         assert_relative_eq!(rotated0[0], 1.0, epsilon = 1e-10);
         assert_relative_eq!(rotated0[1], 0.0, epsilon = 1e-10);
 
         // At t=0.5, should be 90-degree rotation
         let rot2 = &sample_rotations[2];
-        let rotated2 = rot2.apply(&point.view()).unwrap();
+        let rotated2 = rot2.apply(&point.view()).expect("Test/example failed");
         assert_relative_eq!(rotated2[0], 0.0, epsilon = 1e-3);
         assert_relative_eq!(rotated2[1], 1.0, epsilon = 1e-3);
         assert_relative_eq!(rotated2[2], 0.0, epsilon = 1e-3);
 
         // At t=1.0, should be 180-degree rotation
         let rot4 = &sample_rotations[4];
-        let rotated4 = rot4.apply(&point.view()).unwrap();
+        let rotated4 = rot4.apply(&point.view()).expect("Test/example failed");
         assert_relative_eq!(rotated4[0], -1.0, epsilon = 1e-10);
         assert_relative_eq!(rotated4[1], 0.0, epsilon = 1e-10);
         assert_relative_eq!(rotated4[2], 0.0, epsilon = 1e-10);
@@ -993,7 +1004,7 @@ mod tests {
         // Invalid interpolation type
         let rotations = vec![Rotation::identity(), Rotation::identity()];
         let times = vec![0.0, 1.0];
-        let mut spline = RotationSpline::new(&rotations, &times).unwrap();
+        let mut spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
         let result = spline.set_interpolation_type("invalid");
         assert!(result.is_err());
     }
@@ -1002,25 +1013,29 @@ mod tests {
     fn test_interpolation_types() {
         let rotations = vec![
             Rotation::identity(),
-            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed"),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0, 2.0];
 
-        let mut spline = RotationSpline::new(&rotations, &times).unwrap();
+        let mut spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         // Default should be slerp
         assert_eq!(spline.interpolation_type(), "slerp");
 
         // Change to cubic
-        spline.set_interpolation_type("cubic").unwrap();
+        spline
+            .set_interpolation_type("cubic")
+            .expect("Test/example failed");
         assert_eq!(spline.interpolation_type(), "cubic");
 
         // Check that velocities are computed
         assert!(spline.velocities.is_some());
 
         // Change back to slerp
-        spline.set_interpolation_type("slerp").unwrap();
+        spline
+            .set_interpolation_type("slerp")
+            .expect("Test/example failed");
         assert_eq!(spline.interpolation_type(), "slerp");
 
         // Velocities should be cleared
@@ -1031,14 +1046,14 @@ mod tests {
     fn test_angular_velocity() {
         let rotations = vec![
             Rotation::identity(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0];
 
-        let spline = RotationSpline::new(&rotations, &times).unwrap();
+        let spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         // Angular velocity should be constant for slerp
-        let velocity = spline.angular_velocity(0.5).unwrap();
+        let velocity = spline.angular_velocity(0.5).expect("Test/example failed");
 
         // For a rotation from identity to 180 degrees around z-axis over 1 second,
         // the angular velocity should be approximately [0, 0, π]
@@ -1047,8 +1062,8 @@ mod tests {
         assert_relative_eq!(velocity[2], PI, epsilon = 1e-3);
 
         // Velocity should be the same at any point in the segment
-        let velocity_25 = spline.angular_velocity(0.25).unwrap();
-        let velocity_75 = spline.angular_velocity(0.75).unwrap();
+        let velocity_25 = spline.angular_velocity(0.25).expect("Test/example failed");
+        let velocity_75 = spline.angular_velocity(0.75).expect("Test/example failed");
 
         assert_relative_eq!(velocity_25[0], velocity[0], epsilon = 1e-10);
         assert_relative_eq!(velocity_25[1], velocity[1], epsilon = 1e-10);
@@ -1063,15 +1078,17 @@ mod tests {
     fn test_cubic_interpolation() {
         let rotations = vec![
             Rotation::identity(),
-            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed"),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0, 2.0];
 
-        let mut spline = RotationSpline::new(&rotations, &times).unwrap();
+        let mut spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         // Set to cubic interpolation
-        spline.set_interpolation_type("cubic").unwrap();
+        spline
+            .set_interpolation_type("cubic")
+            .expect("Test/example failed");
 
         // Test at endpoints, should match original rotations
         let rot_0 = spline.interpolate(0.0);
@@ -1081,20 +1098,32 @@ mod tests {
         let test_point = array![1.0, 0.0, 0.0];
 
         // Check that endpoints match original rotations
-        let rotated_0 = rot_0.apply(&test_point.view()).unwrap();
-        let expected_0 = rotations[0].apply(&test_point.view()).unwrap();
+        let rotated_0 = rot_0
+            .apply(&test_point.view())
+            .expect("Test/example failed");
+        let expected_0 = rotations[0]
+            .apply(&test_point.view())
+            .expect("Test/example failed");
         assert_relative_eq!(rotated_0[0], expected_0[0], epsilon = 1e-10);
         assert_relative_eq!(rotated_0[1], expected_0[1], epsilon = 1e-10);
         assert_relative_eq!(rotated_0[2], expected_0[2], epsilon = 1e-10);
 
-        let rotated_1 = rot_1.apply(&test_point.view()).unwrap();
-        let expected_1 = rotations[1].apply(&test_point.view()).unwrap();
+        let rotated_1 = rot_1
+            .apply(&test_point.view())
+            .expect("Test/example failed");
+        let expected_1 = rotations[1]
+            .apply(&test_point.view())
+            .expect("Test/example failed");
         assert_relative_eq!(rotated_1[0], expected_1[0], epsilon = 1e-10);
         assert_relative_eq!(rotated_1[1], expected_1[1], epsilon = 1e-10);
         assert_relative_eq!(rotated_1[2], expected_1[2], epsilon = 1e-10);
 
-        let rotated_2 = rot_2.apply(&test_point.view()).unwrap();
-        let expected_2 = rotations[2].apply(&test_point.view()).unwrap();
+        let rotated_2 = rot_2
+            .apply(&test_point.view())
+            .expect("Test/example failed");
+        let expected_2 = rotations[2]
+            .apply(&test_point.view())
+            .expect("Test/example failed");
         assert_relative_eq!(rotated_2[0], expected_2[0], epsilon = 1e-10);
         assert_relative_eq!(rotated_2[1], expected_2[1], epsilon = 1e-10);
         assert_relative_eq!(rotated_2[2], expected_2[2], epsilon = 1e-10);
@@ -1105,8 +1134,12 @@ mod tests {
         let rot_15 = spline.interpolate(1.5);
 
         // Verify that interpolated rotations are valid
-        let rotated_05 = rot_05.apply(&test_point.view()).unwrap();
-        let rotated_15 = rot_15.apply(&test_point.view()).unwrap();
+        let rotated_05 = rot_05
+            .apply(&test_point.view())
+            .expect("Test/example failed");
+        let rotated_15 = rot_15
+            .apply(&test_point.view())
+            .expect("Test/example failed");
 
         // Check that the results are normalized
         let norm_05 = (rotated_05.dot(&rotated_05)).sqrt();
@@ -1119,12 +1152,12 @@ mod tests {
     fn test_angular_acceleration() {
         let rotations = vec![
             Rotation::identity(),
-            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").unwrap(),
-            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").unwrap(),
+            rotation_from_euler(0.0, 0.0, PI / 2.0, "xyz").expect("Operation failed"),
+            Rotation::from_euler(&array![0.0, 0.0, PI].view(), "xyz").expect("Operation failed"),
         ];
         let times = vec![0.0, 1.0, 2.0];
 
-        let mut spline = RotationSpline::new(&rotations, &times).unwrap();
+        let mut spline = RotationSpline::new(&rotations, &times).expect("Test/example failed");
 
         // Slerp should have zero acceleration
         let accel_slerp = spline.angular_acceleration(0.5);
@@ -1133,7 +1166,9 @@ mod tests {
         assert_relative_eq!(accel_slerp[2], 0.0, epsilon = 1e-10);
 
         // Set to cubic interpolation
-        spline.set_interpolation_type("cubic").unwrap();
+        spline
+            .set_interpolation_type("cubic")
+            .expect("Test/example failed");
 
         // Cubic should have non-zero acceleration
         let _accel_cubic = spline.angular_acceleration(0.5);
@@ -1144,17 +1179,20 @@ mod tests {
             Rotation::identity(),
             {
                 let angles = array![PI / 2.0, 0.0, 0.0];
-                Rotation::from_euler(&angles.view(), "xyz").unwrap()
+                Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed")
             },
             {
                 let angles = array![PI / 2.0, PI / 2.0, 0.0];
-                Rotation::from_euler(&angles.view(), "xyz").unwrap()
+                Rotation::from_euler(&angles.view(), "xyz").expect("Operation failed")
             },
         ];
         let complex_times = vec![0.0, 1.0, 2.0];
 
-        let mut complex_spline = RotationSpline::new(&complex_rotations, &complex_times).unwrap();
-        complex_spline.set_interpolation_type("cubic").unwrap();
+        let mut complex_spline =
+            RotationSpline::new(&complex_rotations, &complex_times).expect("Test/example failed");
+        complex_spline
+            .set_interpolation_type("cubic")
+            .expect("Test/example failed");
 
         let complex_accel = complex_spline.angular_acceleration(0.5);
 

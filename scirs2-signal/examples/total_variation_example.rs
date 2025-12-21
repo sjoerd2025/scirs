@@ -33,8 +33,10 @@ fn main() {
     // Apply TV denoising with different parameters
     let weight = 0.5; // Regularization parameter
 
-    let denoised_standard = tv_denoise_1d(&noisy_signal, weight, &standard_config).unwrap();
-    let denoised_anisotropic = tv_denoise_1d(&noisy_signal, weight, &anisotropic_config).unwrap();
+    let denoised_standard =
+        tv_denoise_1d(&noisy_signal, weight, &standard_config).expect("Test: operation failed");
+    let denoised_anisotropic =
+        tv_denoise_1d(&noisy_signal, weight, &anisotropic_config).expect("Test: operation failed");
 
     // Calculate SNR improvement
     let input_snr = calculate_snr(&clean_signal, &noisy_signal);
@@ -69,9 +71,10 @@ fn main() {
     // Apply TV denoising to the noisy image
     let image_weight = 0.3;
 
-    let denoised_image = tv_denoise_2d(&noisy_image, image_weight, &standard_config).unwrap();
-    let denoised_aniso_image =
-        tv_denoise_2d(&noisy_image, image_weight, &anisotropic_config).unwrap();
+    let denoised_image = tv_denoise_2d(&noisy_image, image_weight, &standard_config)
+        .expect("Test: operation failed");
+    let denoised_aniso_image = tv_denoise_2d(&noisy_image, image_weight, &anisotropic_config)
+        .expect("Test: operation failed");
 
     // Calculate image SNR
     let image_input_snr = calculate_image_snr(&clean_image, &noisy_image);
@@ -102,8 +105,10 @@ fn main() {
     println!("\n3. TV with Bregman Iterations for Detail Preservation");
 
     // Apply TV with Bregman iterations
-    let bregman_1d = tv_bregman_1d(&noisy_signal, weight, 3, &standard_config).unwrap();
-    let bregman_2d = tv_bregman_2d(&noisy_image, image_weight, 3, &standard_config).unwrap();
+    let bregman_1d =
+        tv_bregman_1d(&noisy_signal, weight, 3, &standard_config).expect("Test: operation failed");
+    let bregman_2d = tv_bregman_2d(&noisy_image, image_weight, 3, &standard_config)
+        .expect("Test: operation failed");
 
     // Calculate SNR
     let bregman_1d_snr = calculate_snr(&clean_signal, &bregman_1d);
@@ -130,10 +135,10 @@ fn main() {
     println!("\n4. Color Image Total Variation Denoising");
 
     // Apply TV to color image
-    let denoised_color_sep =
-        tv_denoise_color(&noisy_color_image, 0.2, &standard_config, false).unwrap();
-    let denoised_color_vec =
-        tv_denoise_color(&noisy_color_image, 0.2, &standard_config, true).unwrap();
+    let denoised_color_sep = tv_denoise_color(&noisy_color_image, 0.2, &standard_config, false)
+        .expect("Test: operation failed");
+    let denoised_color_vec = tv_denoise_color(&noisy_color_image, 0.2, &standard_config, true)
+        .expect("Test: operation failed");
 
     // Calculate SNR
     let color_input_snr = calculate_color_snr(&clean_color_image, &noisy_color_image);
@@ -191,7 +196,8 @@ fn main() {
     let (original_image, corrupted_image) = generate_inpainting_image();
 
     // Apply TV inpainting
-    let inpainted_image = tv_inpaint(&corrupted_image, 0.1, &standard_config).unwrap();
+    let inpainted_image =
+        tv_inpaint(&corrupted_image, 0.1, &standard_config).expect("Test: operation failed");
 
     // Calculate recovery quality
     let inpaint_input_psnr = calculate_inpaint_psnr(&original_image, &corrupted_image);
@@ -222,7 +228,8 @@ fn main() {
 
     println!("   Testing different regularization weights:");
     for &w in &weights {
-        let denoised = tv_denoise_2d(&noisy_image, w, &standard_config).unwrap();
+        let denoised =
+            tv_denoise_2d(&noisy_image, w, &standard_config).expect("Test: operation failed");
         let snr = calculate_image_snr(&clean_image, &denoised);
 
         println!("     Weight {:.1}: SNR = {:.2} dB", w, snr);

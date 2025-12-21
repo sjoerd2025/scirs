@@ -1144,7 +1144,7 @@ mod tests {
             Detection::new(BoundingBox::new(50.0, 50.0, 25.0, 35.0, 0.8, 1)),
         ];
 
-        let tracks = tracker.update(detections).unwrap();
+        let tracks = tracker.update(detections).expect("Operation failed");
         assert_eq!(tracks.len(), 0); // No confirmed tracks yet (tentative)
 
         // Update again with similar detections
@@ -1153,7 +1153,7 @@ mod tests {
             Detection::new(BoundingBox::new(52.0, 52.0, 25.0, 35.0, 0.8, 1)),
         ];
 
-        let _tracks = tracker.update(detections2).unwrap();
+        let _tracks = tracker.update(detections2).expect("Operation failed");
         // After several updates, tracks should become confirmed
     }
 
@@ -1162,7 +1162,9 @@ mod tests {
         let extractor = AppearanceExtractor::new(128);
         let bbox = BoundingBox::new(10.0, 10.0, 20.0, 30.0, 1.0, 0);
 
-        let feature = extractor.extract_synthetic_feature(&bbox).unwrap();
+        let feature = extractor
+            .extract_synthetic_feature(&bbox)
+            .expect("Operation failed");
         assert_eq!(feature.len(), 128);
 
         // Feature should be normalized
@@ -1177,7 +1179,7 @@ mod tests {
         // Create a simple 2x2 cost matrix
         let costmatrix = scirs2_core::ndarray::arr2(&[[0.1, 0.9], [0.8, 0.2]]);
 
-        let assignments = associator.solve(&costmatrix).unwrap();
+        let assignments = associator.solve(&costmatrix).expect("Operation failed");
         assert!(!assignments.is_empty());
 
         // Should prefer low-cost assignments

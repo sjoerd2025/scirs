@@ -64,8 +64,8 @@ impl<F: Float> StepLR<F> {
     pub fn default_decay(initial_lr: F) -> Self {
         Self::new(
             initial_lr,
-            30,                    // step_size = 30 epochs
-            F::from(0.1).unwrap(), // gamma = 0.1 (reduce by 10x)
+            30,                                                         // step_size = 30 epochs
+            F::from(0.1).expect("Failed to convert constant to float"), // gamma = 0.1 (reduce by 10x)
         )
     }
 
@@ -79,8 +79,8 @@ impl<F: Float> StepLR<F> {
     pub fn for_fine_tuning(initial_lr: F) -> Self {
         Self::new(
             initial_lr,
-            10,                    // step_size = 10 epochs (more frequent)
-            F::from(0.5).unwrap(), // gamma = 0.5 (reduce by 2x, more conservative)
+            10, // step_size = 10 epochs (more frequent)
+            F::from(0.5).expect("Failed to convert constant to float"), // gamma = 0.5 (reduce by 2x, more conservative)
         )
     }
 
@@ -94,8 +94,8 @@ impl<F: Float> StepLR<F> {
     pub fn aggressive_decay(initial_lr: F) -> Self {
         Self::new(
             initial_lr,
-            20,                     // step_size = 20 epochs
-            F::from(0.01).unwrap(), // gamma = 0.01 (reduce by 100x)
+            20,                                                          // step_size = 20 epochs
+            F::from(0.01).expect("Failed to convert constant to float"), // gamma = 0.01 (reduce by 100x)
         )
     }
 
@@ -130,7 +130,9 @@ impl<F: Float> LRScheduler<F> for StepLR<F> {
             self.initial_lr
         } else {
             // Calculate gamma^num_decays
-            let decay_factor = self.gamma.powf(F::from(num_decays).unwrap());
+            let decay_factor = self
+                .gamma
+                .powf(F::from(num_decays).expect("Failed to convert to float"));
             self.initial_lr * decay_factor
         }
     }

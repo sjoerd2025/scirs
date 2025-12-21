@@ -176,7 +176,7 @@ where
 
         for i in 0..self.nrows {
             for j in 0..self.ncols {
-                result[i] += self.get(i, j).unwrap() * x[j];
+                result[i] += self.get(i, j).expect("Operation failed") * x[j];
             }
         }
 
@@ -196,7 +196,7 @@ where
 
         for j in 0..self.ncols {
             for i in 0..self.nrows {
-                result[j] += self.get(i, j).unwrap() * x[i];
+                result[j] += self.get(i, j).expect("Operation failed") * x[i];
             }
         }
 
@@ -215,7 +215,8 @@ mod tests {
         let first_col = array![1.0, 2.0, 3.0];
         let last_row = array![3.0, 4.0, 5.0];
 
-        let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();
+        let hankel =
+            HankelMatrix::new(first_col.view(), last_row.view()).expect("Operation failed");
 
         assert_eq!(hankel.nrows(), 3);
         assert_eq!(hankel.ncols(), 3);
@@ -226,22 +227,22 @@ mod tests {
         // [2 3 4]
         // [3 4 5]
 
-        assert_relative_eq!(hankel.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(hankel.get(0, 1).unwrap(), 2.0);
-        assert_relative_eq!(hankel.get(0, 2).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(1, 0).unwrap(), 2.0);
-        assert_relative_eq!(hankel.get(1, 1).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(1, 2).unwrap(), 4.0);
-        assert_relative_eq!(hankel.get(2, 0).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(2, 1).unwrap(), 4.0);
-        assert_relative_eq!(hankel.get(2, 2).unwrap(), 5.0);
+        assert_relative_eq!(hankel.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(hankel.get(0, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(hankel.get(0, 2).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(1, 0).expect("Operation failed"), 2.0);
+        assert_relative_eq!(hankel.get(1, 1).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(1, 2).expect("Operation failed"), 4.0);
+        assert_relative_eq!(hankel.get(2, 0).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(2, 1).expect("Operation failed"), 4.0);
+        assert_relative_eq!(hankel.get(2, 2).expect("Operation failed"), 5.0);
     }
 
     #[test]
     fn test_hankel_from_sequence() {
         let sequence = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let hankel = HankelMatrix::from_sequence(sequence.view(), 3, 3).unwrap();
+        let hankel = HankelMatrix::from_sequence(sequence.view(), 3, 3).expect("Operation failed");
 
         assert_eq!(hankel.nrows(), 3);
         assert_eq!(hankel.ncols(), 3);
@@ -252,15 +253,15 @@ mod tests {
         // [2 3 4]
         // [3 4 5]
 
-        assert_relative_eq!(hankel.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(hankel.get(0, 1).unwrap(), 2.0);
-        assert_relative_eq!(hankel.get(0, 2).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(1, 0).unwrap(), 2.0);
-        assert_relative_eq!(hankel.get(1, 1).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(1, 2).unwrap(), 4.0);
-        assert_relative_eq!(hankel.get(2, 0).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(2, 1).unwrap(), 4.0);
-        assert_relative_eq!(hankel.get(2, 2).unwrap(), 5.0);
+        assert_relative_eq!(hankel.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(hankel.get(0, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(hankel.get(0, 2).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(1, 0).expect("Operation failed"), 2.0);
+        assert_relative_eq!(hankel.get(1, 1).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(1, 2).expect("Operation failed"), 4.0);
+        assert_relative_eq!(hankel.get(2, 0).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(2, 1).expect("Operation failed"), 4.0);
+        assert_relative_eq!(hankel.get(2, 2).expect("Operation failed"), 5.0);
     }
 
     #[test]
@@ -269,7 +270,8 @@ mod tests {
         let first_col = array![1.0, 2.0, 3.0, 4.0];
         let last_row = array![4.0, 5.0, 6.0];
 
-        let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();
+        let hankel =
+            HankelMatrix::new(first_col.view(), last_row.view()).expect("Operation failed");
 
         assert_eq!(hankel.nrows(), 4);
         assert_eq!(hankel.ncols(), 3);
@@ -281,21 +283,21 @@ mod tests {
         // [3 4 5]
         // [4 5 6]
 
-        assert_relative_eq!(hankel.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(hankel.get(0, 1).unwrap(), 2.0);
-        assert_relative_eq!(hankel.get(0, 2).unwrap(), 3.0);
+        assert_relative_eq!(hankel.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(hankel.get(0, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(hankel.get(0, 2).expect("Operation failed"), 3.0);
 
-        assert_relative_eq!(hankel.get(1, 0).unwrap(), 2.0);
-        assert_relative_eq!(hankel.get(1, 1).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(1, 2).unwrap(), 4.0);
+        assert_relative_eq!(hankel.get(1, 0).expect("Operation failed"), 2.0);
+        assert_relative_eq!(hankel.get(1, 1).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(1, 2).expect("Operation failed"), 4.0);
 
-        assert_relative_eq!(hankel.get(2, 0).unwrap(), 3.0);
-        assert_relative_eq!(hankel.get(2, 1).unwrap(), 4.0);
-        assert_relative_eq!(hankel.get(2, 2).unwrap(), 5.0);
+        assert_relative_eq!(hankel.get(2, 0).expect("Operation failed"), 3.0);
+        assert_relative_eq!(hankel.get(2, 1).expect("Operation failed"), 4.0);
+        assert_relative_eq!(hankel.get(2, 2).expect("Operation failed"), 5.0);
 
-        assert_relative_eq!(hankel.get(3, 0).unwrap(), 4.0);
-        assert_relative_eq!(hankel.get(3, 1).unwrap(), 5.0);
-        assert_relative_eq!(hankel.get(3, 2).unwrap(), 6.0);
+        assert_relative_eq!(hankel.get(3, 0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(hankel.get(3, 1).expect("Operation failed"), 5.0);
+        assert_relative_eq!(hankel.get(3, 2).expect("Operation failed"), 6.0);
     }
 
     #[test]
@@ -303,7 +305,8 @@ mod tests {
         let first_col = array![1.0, 2.0, 3.0];
         let last_row = array![3.0, 4.0, 5.0];
 
-        let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();
+        let hankel =
+            HankelMatrix::new(first_col.view(), last_row.view()).expect("Operation failed");
 
         // Expected matrix:
         // [1 2 3]
@@ -311,7 +314,7 @@ mod tests {
         // [3 4 5]
 
         let x = array![1.0, 2.0, 3.0];
-        let y = hankel.matvec(&x.view()).unwrap();
+        let y = hankel.matvec(&x.view()).expect("Operation failed");
 
         // Expected result: [1*1 + 2*2 + 3*3, 2*1 + 3*2 + 4*3, 3*1 + 4*2 + 5*3]
         //                = [14, 20, 26]
@@ -326,7 +329,8 @@ mod tests {
         let first_col = array![1.0, 2.0, 3.0];
         let last_row = array![3.0, 4.0, 5.0];
 
-        let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();
+        let hankel =
+            HankelMatrix::new(first_col.view(), last_row.view()).expect("Operation failed");
 
         // Transpose of the matrix:
         // [1 2 3]
@@ -334,7 +338,9 @@ mod tests {
         // [3 4 5]
 
         let x = array![1.0, 2.0, 3.0];
-        let y = hankel.matvec_transpose(&x.view()).unwrap();
+        let y = hankel
+            .matvec_transpose(&x.view())
+            .expect("Operation failed");
 
         // Expected result: [1*1 + 2*2 + 3*3, 2*1 + 3*2 + 4*3, 3*1 + 4*2 + 5*3]
         //                = [14, 20, 26]
@@ -349,9 +355,10 @@ mod tests {
         let first_col = array![1.0, 2.0, 3.0];
         let last_row = array![3.0, 4.0, 5.0];
 
-        let hankel = HankelMatrix::new(first_col.view(), last_row.view()).unwrap();
+        let hankel =
+            HankelMatrix::new(first_col.view(), last_row.view()).expect("Operation failed");
 
-        let dense = hankel.to_dense().unwrap();
+        let dense = hankel.to_dense().expect("Operation failed");
 
         assert_eq!(dense.shape(), &[3, 3]);
 

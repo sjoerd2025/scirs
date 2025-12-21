@@ -396,7 +396,7 @@ mod tests {
 
         let result = parallel_filtfilt(&b, &a, &signal, None);
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.len(), signal.len());
     }
 
@@ -408,7 +408,7 @@ mod tests {
 
         let result = parallel_lfilter(&b, &a, &signal, None);
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.len(), signal.len());
     }
 
@@ -420,7 +420,7 @@ mod tests {
 
         let result = filter_direct(&b, &a, &signal);
         assert!(result.is_ok());
-        let filtered = result.unwrap();
+        let filtered = result.expect("Operation failed");
         assert_eq!(filtered.len(), signal.len());
     }
 
@@ -432,7 +432,7 @@ mod tests {
 
         let result = parallel_decimate_filter(&signal, &b, &a, 2, None);
         assert!(result.is_ok());
-        let decimated = result.unwrap();
+        let decimated = result.expect("Operation failed");
         assert_eq!(decimated.len(), 4); // Should be half the original length
     }
 }

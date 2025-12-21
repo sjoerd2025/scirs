@@ -436,8 +436,8 @@ impl GpuPerformanceProfiler {
         for (operation, times) in &self.operation_times {
             if !times.is_empty() {
                 let avg = times.iter().sum::<std::time::Duration>() / times.len() as u32;
-                let min = times.iter().min().unwrap();
-                let max = times.iter().max().unwrap();
+                let min = times.iter().min().expect("Operation failed");
+                let max = times.iter().max().expect("Operation failed");
 
                 let avg_ms = avg.as_secs_f64() * 1000.0;
                 let min_ms = min.as_secs_f64() * 1000.0;

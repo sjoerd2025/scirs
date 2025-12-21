@@ -40,7 +40,7 @@ mod tests {
 
         // Test that optimization runs without panicking
         assert!(result.is_ok());
-        let opt_result = result.unwrap();
+        let opt_result = result.expect("Operation failed");
 
         // Test that some improvement was made
         let initial_obj = quadratic_function(&initial_params.view());
@@ -60,7 +60,7 @@ mod tests {
             neuromorphic_optimize(quadratic_function, &initial_params.view(), Some(config));
 
         assert!(result.is_ok());
-        let opt_result = result.unwrap();
+        let opt_result = result.expect("Operation failed");
         assert!(opt_result.nit > 0);
     }
 }

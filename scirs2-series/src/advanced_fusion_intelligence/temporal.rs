@@ -681,9 +681,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiTimelineProcessor<F> {
         for i in 0..num_dimensions {
             let dimension = TemporalDimension {
                 dimension_id: i,
-                time_resolution: F::from_f64(0.001).unwrap(), // 1ms resolution
+                time_resolution: F::from_f64(0.001).expect("Test failed"), // 1ms resolution
                 causal_direction: CausalDirection::Forward,
-                branching_factor: F::from_f64(1.0).unwrap(),
+                branching_factor: F::from_f64(1.0).expect("Test failed"),
             };
             temporal_dimensions.push(dimension);
         }
@@ -735,12 +735,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiTimelineProcessor<F> {
 
         for (i, &value) in data.iter().enumerate() {
             // Simple anomaly detection based on statistical deviation
-            let expected_value = F::from_f64(0.5).unwrap(); // Placeholder
+            let expected_value = F::from_f64(0.5).expect("Test failed"); // Placeholder
             let deviation = (value - expected_value).abs();
-            let threshold = F::from_f64(2.0).unwrap();
+            let threshold = F::from_f64(2.0).expect("Test failed");
 
             if deviation > threshold {
-                anomalies.push(F::from_usize(i).unwrap());
+                anomalies.push(F::from_usize(i).expect("Operation failed"));
             }
         }
 
@@ -758,13 +758,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
             CausalDirection::Forward => {
                 // Forward temporal processing
                 for i in 1..processed.len() {
-                    processed[i] = processed[i] + processed[i - 1] * F::from_f64(0.1).unwrap();
+                    processed[i] =
+                        processed[i] + processed[i - 1] * F::from_f64(0.1).expect("Test failed");
                 }
             }
             CausalDirection::Backward => {
                 // Backward temporal processing
                 for i in (0..processed.len() - 1).rev() {
-                    processed[i] = processed[i] + processed[i + 1] * F::from_f64(0.1).unwrap();
+                    processed[i] =
+                        processed[i] + processed[i + 1] * F::from_f64(0.1).expect("Test failed");
                 }
             }
             CausalDirection::Bidirectional => {
@@ -772,7 +774,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
                 let forward = self.process_forward(&processed)?;
                 let backward = self.process_backward(&processed)?;
                 for i in 0..processed.len() {
-                    processed[i] = (forward[i] + backward[i]) / F::from_f64(2.0).unwrap();
+                    processed[i] =
+                        (forward[i] + backward[i]) / F::from_f64(2.0).expect("Test failed");
                 }
             }
             CausalDirection::NonCausal => {
@@ -787,7 +790,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
     fn process_forward(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut forward = data.clone();
         for i in 1..forward.len() {
-            forward[i] = forward[i] + forward[i - 1] * F::from_f64(0.05).unwrap();
+            forward[i] = forward[i] + forward[i - 1] * F::from_f64(0.05).expect("Test failed");
         }
         Ok(forward)
     }
@@ -796,7 +799,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalDimension<F> {
     fn process_backward(&self, data: &Array1<F>) -> Result<Array1<F>> {
         let mut backward = data.clone();
         for i in (0..backward.len() - 1).rev() {
-            backward[i] = backward[i] + backward[i + 1] * F::from_f64(0.05).unwrap();
+            backward[i] = backward[i] + backward[i + 1] * F::from_f64(0.05).expect("Test failed");
         }
         Ok(backward)
     }
@@ -813,8 +816,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
     pub fn new() -> Self {
         TimelineSynchronizer {
             synchronization_protocol: SynchronizationProtocol::GlobalClock,
-            temporal_alignment: F::from_f64(0.95).unwrap(),
-            causality_preservation: F::from_f64(0.9).unwrap(),
+            temporal_alignment: F::from_f64(0.95).expect("Test failed"),
+            causality_preservation: F::from_f64(0.9).expect("Test failed"),
         }
     }
 
@@ -848,7 +851,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
                     sum = sum + timeline[i];
                 }
             }
-            synchronized[i] = sum / F::from_usize(timelines.len()).unwrap();
+            synchronized[i] = sum / F::from_usize(timelines.len()).expect("Test failed");
         }
 
         Ok(synchronized)
@@ -867,7 +870,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
             for (j, timeline) in timelines.iter().enumerate() {
                 if i < timeline.len() {
                     // Weight by causal relevance (simplified)
-                    let causal_weight = F::from_f64(1.0).unwrap() / (F::from_usize(j + 1).unwrap());
+                    let causal_weight = F::from_f64(1.0).expect("Operation failed")
+                        / (F::from_usize(j + 1).expect("Operation failed"));
                     weighted_sum = weighted_sum + timeline[i] * causal_weight;
                     total_weight = total_weight + causal_weight;
                 }
@@ -893,14 +897,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
             for timeline in timelines {
                 if i < timeline.len() {
                     // Apply quantum phase factors
-                    let phase_factor =
-                        F::from_f64((i as f64 * std::f64::consts::PI / 4.0).cos()).unwrap();
+                    let phase_factor = F::from_f64((i as f64 * std::f64::consts::PI / 4.0).cos())
+                        .expect("Test failed");
                     entangled_state = entangled_state + timeline[i] * phase_factor;
                 }
             }
 
             // Normalize by square root of number of timelines (quantum normalization)
-            let normalization = F::from_usize(timelines.len()).unwrap().sqrt();
+            let normalization = F::from_usize(timelines.len())
+                .expect("Operation failed")
+                .sqrt();
             synchronized[i] = entangled_state / normalization;
         }
 
@@ -938,18 +944,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> TimelineSynchronizer<F> {
     /// Calculate coherence of a timeline
     fn calculate_timeline_coherence(&self, timeline: &Array1<F>) -> Result<F> {
         if timeline.len() < 2 {
-            return Ok(F::from_f64(1.0).unwrap());
+            return Ok(F::from_f64(1.0).expect("Operation failed"));
         }
 
         // Calculate coherence as inverse of variance
         let mean = timeline.iter().fold(F::zero(), |acc, &x| acc + x)
-            / F::from_usize(timeline.len()).unwrap();
+            / F::from_usize(timeline.len()).expect("Test failed");
         let variance = timeline
             .iter()
             .fold(F::zero(), |acc, &x| acc + (x - mean) * (x - mean))
-            / F::from_usize(timeline.len()).unwrap();
+            / F::from_usize(timeline.len()).expect("Test failed");
 
-        let coherence = F::from_f64(1.0).unwrap() / (F::from_f64(1.0).unwrap() + variance);
+        let coherence = F::from_f64(1.0).expect("Operation failed")
+            / (F::from_f64(1.0).expect("Operation failed") + variance);
         Ok(coherence)
     }
 }
@@ -992,9 +999,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> CausalStructureAnalyzer<F> {
         for (i, _) in data.iter().enumerate() {
             let intervention_effect = InterventionEffect {
                 intervention_target: i,
-                intervention_value: F::from_f64(1.0).unwrap(),
-                causal_effect: F::from_f64(0.5).unwrap(), // Simplified calculation
-                confidence_interval: (F::from_f64(0.3).unwrap(), F::from_f64(0.7).unwrap()),
+                intervention_value: F::from_f64(1.0).expect("Test failed"),
+                causal_effect: F::from_f64(0.5).expect("Test failed"), // Simplified calculation
+                confidence_interval: (
+                    F::from_f64(0.3).expect("Test failed"),
+                    F::from_f64(0.7).expect("Operation failed"),
+                ),
             };
             self.intervention_effects.push(intervention_effect);
         }
@@ -1066,9 +1076,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> CausalGraph<F> {
         let max_val = value1.max(value2);
 
         if max_val > F::zero() {
-            Ok(F::from_f64(1.0).unwrap() - diff / max_val)
+            Ok(F::from_f64(1.0).expect("Operation failed") - diff / max_val)
         } else {
-            Ok(F::from_f64(1.0).unwrap())
+            Ok(F::from_f64(1.0).expect("Operation failed"))
         }
     }
 }
@@ -1099,7 +1109,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> CounterfactualReasoning<F> {
                 query_id: i,
                 intervention: format!("set_var_{}_to_zero", i),
                 outcome: format!("observe_var_{}", i),
-                counterfactual_probability: F::from_f64(0.5).unwrap(),
+                counterfactual_probability: F::from_f64(0.5).expect("Test failed"),
             };
             self.counterfactual_queries.push(query);
 
@@ -1123,7 +1133,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ReasoningEngine<F> {
     pub fn new() -> Self {
         ReasoningEngine {
             reasoning_type: ReasoningType::Counterfactual,
-            inference_strength: F::from_f64(0.8).unwrap(),
+            inference_strength: F::from_f64(0.8).expect("Test failed"),
             uncertainty_handling: UncertaintyHandling::Bayesian,
         }
     }
@@ -1133,8 +1143,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> ReasoningEngine<F> {
         match self.reasoning_type {
             ReasoningType::Counterfactual => {
                 // Simple counterfactual adjustment
-                let adjustment =
-                    observed_value * F::from_f64(0.1).unwrap() * self.inference_strength;
+                let adjustment = observed_value
+                    * F::from_f64(0.1).expect("Operation failed")
+                    * self.inference_strength;
                 Ok(adjustment)
             }
             _ => Ok(F::zero()),
@@ -1206,8 +1217,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ParadoxDetection<F> {
             ],
             detection_algorithms: vec![DetectionAlgorithm {
                 algorithm_name: "causal_loop_detector".to_string(),
-                detection_sensitivity: F::from_f64(0.9).unwrap(),
-                false_positive_rate: F::from_f64(0.05).unwrap(),
+                detection_sensitivity: F::from_f64(0.9).expect("Test failed"),
+                false_positive_rate: F::from_f64(0.05).expect("Test failed"),
             }],
             severity_assessment: SeverityAssessment::new(),
         }
@@ -1220,7 +1231,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ParadoxDetection<F> {
         // Simple paradox detection based on causal violations
         for i in 1..data.len() {
             // Check for causal violations (effect before cause)
-            if data[i] > data[i - 1] * F::from_f64(2.0).unwrap() {
+            if data[i] > data[i - 1] * F::from_f64(2.0).expect("Operation failed") {
                 detected_paradoxes.push(i);
             }
         }
@@ -1241,13 +1252,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> SeverityAssessment<F> {
         SeverityAssessment {
             severity_metrics: vec![SeverityMetric {
                 metric_name: "temporal_disruption".to_string(),
-                severity_score: F::from_f64(0.5).unwrap(),
-                confidence: F::from_f64(0.8).unwrap(),
+                severity_score: F::from_f64(0.5).expect("Test failed"),
+                confidence: F::from_f64(0.8).expect("Test failed"),
             }],
             impact_analysis: ImpactAnalysis {
-                temporal_impact: F::from_f64(0.3).unwrap(),
-                causal_impact: F::from_f64(0.4).unwrap(),
-                information_impact: F::from_f64(0.2).unwrap(),
+                temporal_impact: F::from_f64(0.3).expect("Test failed"),
+                causal_impact: F::from_f64(0.4).expect("Test failed"),
+                information_impact: F::from_f64(0.2).expect("Test failed"),
             },
         }
     }
@@ -1259,8 +1270,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
         ResolutionStrategy {
             strategy_name: name,
             resolution_method: method,
-            success_probability: F::from_f64(0.8).unwrap(),
-            computational_cost: F::from_f64(0.5).unwrap(),
+            success_probability: F::from_f64(0.8).expect("Test failed"),
+            computational_cost: F::from_f64(0.5).expect("Test failed"),
         }
     }
 
@@ -1286,7 +1297,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
                 // Check consistency constraint
                 if consistent_data[i] < consistent_data[i - 1] {
                     // Adjust to maintain consistency
-                    consistent_data[i] = consistent_data[i - 1] * F::from_f64(1.01).unwrap();
+                    consistent_data[i] =
+                        consistent_data[i - 1] * F::from_f64(1.01).expect("Test failed");
                     adjusted = true;
                 }
             }
@@ -1307,11 +1319,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
         for value in many_worlds_data.iter_mut() {
             // Superposition of multiple world states
             let world_1 = *value;
-            let world_2 = *value * F::from_f64(1.1).unwrap();
-            let world_3 = *value * F::from_f64(0.9).unwrap();
+            let world_2 = *value * F::from_f64(1.1).expect("Test failed");
+            let world_3 = *value * F::from_f64(0.9).expect("Test failed");
 
             // Probabilistic combination
-            *value = (world_1 + world_2 + world_3) / F::from_f64(3.0).unwrap();
+            *value = (world_1 + world_2 + world_3) / F::from_f64(3.0).expect("Test failed");
         }
 
         Ok(many_worlds_data)
@@ -1323,8 +1335,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
 
         for (i, value) in superposition_data.iter_mut().enumerate() {
             // Quantum phase modulation
-            let phase = F::from_f64(i as f64 * std::f64::consts::PI / 4.0).unwrap();
-            let amplitude = F::from_f64(0.8).unwrap();
+            let phase = F::from_f64(i as f64 * std::f64::consts::PI / 4.0).expect("Test failed");
+            let amplitude = F::from_f64(0.8).expect("Test failed");
 
             *value = *value * amplitude * phase.cos();
         }
@@ -1341,9 +1353,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> ResolutionStrategy<F> {
         for _ in 0..5 {
             for i in 1..novikov_data.len() {
                 // Ensure causal ordering
-                if novikov_data[i] > novikov_data[i - 1] * F::from_f64(1.5).unwrap() {
+                if novikov_data[i]
+                    > novikov_data[i - 1] * F::from_f64(1.5).expect("Operation failed")
+                {
                     // Reduce to maintain causal consistency
-                    novikov_data[i] = novikov_data[i - 1] * F::from_f64(1.2).unwrap();
+                    novikov_data[i] = novikov_data[i - 1] * F::from_f64(1.2).expect("Test failed");
                 }
             }
         }
@@ -1364,13 +1378,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsistencyMaintenance<F> {
         ConsistencyMaintenance {
             consistency_checks: vec![ConsistencyCheck {
                 check_name: "causal_ordering".to_string(),
-                consistency_level: F::from_f64(0.9).unwrap(),
-                violation_tolerance: F::from_f64(0.1).unwrap(),
+                consistency_level: F::from_f64(0.9).expect("Test failed"),
+                violation_tolerance: F::from_f64(0.1).expect("Test failed"),
             }],
             repair_mechanisms: vec![RepairMechanism {
                 mechanism_name: "gradient_smoothing".to_string(),
-                repair_strength: F::from_f64(0.8).unwrap(),
-                side_effects: F::from_f64(0.1).unwrap(),
+                repair_strength: F::from_f64(0.8).expect("Test failed"),
+                side_effects: F::from_f64(0.1).expect("Test failed"),
             }],
         }
     }
@@ -1399,7 +1413,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsistencyMaintenance<F> {
                 // Check causal ordering consistency
                 for i in 1..data.len() {
                     let ratio = data[i] / data[i - 1];
-                    if ratio > F::from_f64(2.0).unwrap() {
+                    if ratio > F::from_f64(2.0).expect("Operation failed") {
                         // Arbitrary threshold
                         return Ok(false);
                     }
@@ -1424,11 +1438,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> RepairMechanism<F> {
                     let gradient_right = repaired_data[i + 1] - repaired_data[i];
 
                     // Smooth large gradient changes
-                    if (gradient_right - gradient_left).abs() > F::from_f64(1.0).unwrap() {
+                    if (gradient_right - gradient_left).abs()
+                        > F::from_f64(1.0).expect("Operation failed")
+                    {
                         let smoothed_value = (repaired_data[i - 1] + repaired_data[i + 1])
-                            / F::from_f64(2.0).unwrap();
+                            / F::from_f64(2.0).expect("Test failed");
                         repaired_data[i] = repaired_data[i]
-                            * (F::from_f64(1.0).unwrap() - self.repair_strength)
+                            * (F::from_f64(1.0).expect("Operation failed") - self.repair_strength)
                             + smoothed_value * self.repair_strength;
                     }
                 }
@@ -1484,7 +1500,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpacetimeModel<F> {
     pub fn new() -> Self {
         SpacetimeModel {
             dimensions: 4, // 3 spatial + 1 temporal
-            curvature: F::from_f64(0.01).unwrap(),
+            curvature: F::from_f64(0.01).expect("Test failed"),
             topology: TopologyType::Minkowski,
             metric_signature: vec![1, -1, -1, -1], // Minkowski signature
         }
@@ -1514,7 +1530,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> DimensionalAnalysis<F> {
 
         // Apply dimensional scaling
         let dimension_factor =
-            F::from_usize(self.spatial_dimensions + self.temporal_dimensions).unwrap();
+            F::from_usize(self.spatial_dimensions + self.temporal_dimensions).expect("Test failed");
         dimensional_data.mapv_inplace(|x| x / dimension_factor.sqrt());
 
         Ok(dimensional_data)
@@ -1532,14 +1548,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetricTensor<F> {
     pub fn new() -> Self {
         // 4x4 Minkowski metric tensor
         let mut tensor_components = vec![vec![F::zero(); 4]; 4];
-        tensor_components[0][0] = F::from_f64(1.0).unwrap(); // time-time
-        tensor_components[1][1] = F::from_f64(-1.0).unwrap(); // x-x
-        tensor_components[2][2] = F::from_f64(-1.0).unwrap(); // y-y
-        tensor_components[3][3] = F::from_f64(-1.0).unwrap(); // z-z
+        tensor_components[0][0] = F::from_f64(1.0).expect("Test failed"); // time-time
+        tensor_components[1][1] = F::from_f64(-1.0).expect("Test failed"); // x-x
+        tensor_components[2][2] = F::from_f64(-1.0).expect("Test failed"); // y-y
+        tensor_components[3][3] = F::from_f64(-1.0).expect("Test failed"); // z-z
 
         MetricTensor {
             tensor_components,
-            determinant: F::from_f64(-1.0).unwrap(),
+            determinant: F::from_f64(-1.0).expect("Test failed"),
             signature: vec![1, -1, -1, -1],
             curvature_scalar: F::zero(),
         }
@@ -1554,7 +1570,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetricTensor<F> {
             let metric_component = if i < self.tensor_components.len() {
                 self.tensor_components[i % 4][i % 4]
             } else {
-                F::from_f64(1.0).unwrap()
+                F::from_f64(1.0).expect("Operation failed")
             };
 
             *value = *value * metric_component;

@@ -594,7 +594,7 @@ mod tests {
 
     #[test]
     fn test_precision_context() {
-        let ctx = PrecisionContext::new(512).unwrap();
+        let ctx = PrecisionContext::new(512).expect("Operation failed");
         assert_eq!(ctx.precision(), 512);
 
         let pi = ctx.pi();
@@ -610,16 +610,16 @@ mod tests {
         let ctx = PrecisionContext::default();
 
         // Test Γ(1) = 1
-        let gamma_1 = gamma::gamma_ap(1.0, &ctx).unwrap();
+        let gamma_1 = gamma::gamma_ap(1.0, &ctx).expect("Operation failed");
         assert_relative_eq!(to_f64(&gamma_1), 1.0, epsilon = 1e-15);
 
         // Test Γ(0.5) = √π
-        let gamma_half = gamma::gamma_ap(0.5, &ctx).unwrap();
+        let gamma_half = gamma::gamma_ap(0.5, &ctx).expect("Operation failed");
         let sqrt_pi = std::f64::consts::PI.sqrt();
         assert_relative_eq!(to_f64(&gamma_half), sqrt_pi, epsilon = 1e-15);
 
         // Test Γ(5) = 4! = 24
-        let gamma_5 = gamma::gamma_ap(5.0, &ctx).unwrap();
+        let gamma_5 = gamma::gamma_ap(5.0, &ctx).expect("Operation failed");
         assert_relative_eq!(to_f64(&gamma_5), 24.0, epsilon = 1e-13);
     }
 
@@ -628,11 +628,11 @@ mod tests {
         let ctx = PrecisionContext::default();
 
         // Test J_0(0) = 1
-        let j0_0 = bessel::bessel_j_ap(0, 0.0, &ctx).unwrap();
+        let j0_0 = bessel::bessel_j_ap(0, 0.0, &ctx).expect("Operation failed");
         assert_relative_eq!(to_f64(&j0_0), 1.0, epsilon = 1e-15);
 
         // Test J_1(0) = 0
-        let j1_0 = bessel::bessel_j_ap(1, 0.0, &ctx).unwrap();
+        let j1_0 = bessel::bessel_j_ap(1, 0.0, &ctx).expect("Operation failed");
         assert_relative_eq!(to_f64(&j1_0), 0.0, epsilon = 1e-15);
     }
 
@@ -641,17 +641,17 @@ mod tests {
         let ctx = PrecisionContext::default();
 
         // Test erf(0) = 0
-        let erf_0 = error_function::erf_ap(0.0, &ctx).unwrap();
+        let erf_0 = error_function::erf_ap(0.0, &ctx).expect("Operation failed");
         assert_relative_eq!(to_f64(&erf_0), 0.0, epsilon = 1e-15);
 
         // Test erfc(0) = 1
-        let erfc_0 = error_function::erfc_ap(0.0, &ctx).unwrap();
+        let erfc_0 = error_function::erfc_ap(0.0, &ctx).expect("Operation failed");
         assert_relative_eq!(to_f64(&erfc_0), 1.0, epsilon = 1e-15);
 
         // Test erf(x) + erfc(x) = 1
         let x = 1.5;
-        let erf_x = error_function::erf_ap(x, &ctx).unwrap();
-        let erfc_x = error_function::erfc_ap(x, &ctx).unwrap();
+        let erf_x = error_function::erf_ap(x, &ctx).expect("Operation failed");
+        let erfc_x = error_function::erfc_ap(x, &ctx).expect("Operation failed");
         let sum = to_f64(&erf_x) + to_f64(&erfc_x);
         assert_relative_eq!(sum, 1.0, epsilon = 1e-15);
     }
@@ -659,7 +659,7 @@ mod tests {
     #[test]
     fn test_high_precision() {
         // Test with 1024-bit precision
-        let ctx = PrecisionContext::new(1024).unwrap();
+        let ctx = PrecisionContext::new(1024).expect("Operation failed");
 
         // Compute π with high precision
         let pi = ctx.pi();

@@ -167,7 +167,7 @@ impl NetCDFFile {
     /// use scirs2_io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
-    /// let nc = NetCDFFile::open("data.nc", None).unwrap();
+    /// let nc = NetCDFFile::open("data.nc", None).expect("Operation failed");
     ///
     /// // List the dimensions
     /// println!("Dimensions: {:?}", nc.dimensions());
@@ -861,7 +861,10 @@ impl NetCDFFile {
     pub fn read_array(&self, name: &str) -> Result<ArrayD<f64>> {
         if self.hdf5_backend.is_some() {
             // For HDF5 backend, directly read the dataset
-            self.hdf5_backend.as_ref().unwrap().read_dataset(name)
+            self.hdf5_backend
+                .as_ref()
+                .expect("Operation failed")
+                .read_dataset(name)
         } else {
             // Fall back to read_variable for Classic format
             self.read_variable::<f64>(name)
@@ -1007,62 +1010,109 @@ mod tests {
 
     #[test]
     fn test_create_netcdf() {
-        let file = NetCDFFile::create("test.nc").unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_create_netcdf_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
+        let file = NetCDFFile::create(test_path).expect("Operation failed");
         assert_eq!(file.mode, "w");
-        assert_eq!(file.path, "test.nc");
+        assert_eq!(file.path, test_path);
         assert!(file.dimensions.is_empty());
         assert!(file.variables.is_empty());
         assert!(file.attributes.is_empty());
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
     fn test_add_dimension() {
-        let mut file = NetCDFFile::create("test.nc").unwrap();
-        file.create_dimension("time", Some(10)).unwrap();
-        file.create_dimension("lat", Some(180)).unwrap();
-        file.create_dimension("lon", Some(360)).unwrap();
-        file.create_dimension("unlimited", None).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_add_dimension_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
+        let mut file = NetCDFFile::create(test_path).expect("Operation failed");
+        file.create_dimension("time", Some(10))
+            .expect("Operation failed");
+        file.create_dimension("lat", Some(180))
+            .expect("Operation failed");
+        file.create_dimension("lon", Some(360))
+            .expect("Operation failed");
+        file.create_dimension("unlimited", None)
+            .expect("Operation failed");
 
         assert_eq!(file.dimensions.len(), 4);
-        assert_eq!(*file.dimensions.get("time").unwrap(), Some(10));
-        assert_eq!(*file.dimensions.get("lat").unwrap(), Some(180));
-        assert_eq!(*file.dimensions.get("lon").unwrap(), Some(360));
-        assert_eq!(*file.dimensions.get("unlimited").unwrap(), None);
+        assert_eq!(
+            *file.dimensions.get("time").expect("Operation failed"),
+            Some(10)
+        );
+        assert_eq!(
+            *file.dimensions.get("lat").expect("Operation failed"),
+            Some(180)
+        );
+        assert_eq!(
+            *file.dimensions.get("lon").expect("Operation failed"),
+            Some(360)
+        );
+        assert_eq!(
+            *file.dimensions.get("unlimited").expect("Operation failed"),
+            None
+        );
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
     fn test_add_variable() {
-        let mut file = NetCDFFile::create("test.nc").unwrap();
-        file.create_dimension("time", Some(10)).unwrap();
-        file.create_dimension("lat", Some(180)).unwrap();
-        file.create_dimension("lon", Some(360)).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_add_variable_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
+        let mut file = NetCDFFile::create(test_path).expect("Operation failed");
+        file.create_dimension("time", Some(10))
+            .expect("Operation failed");
+        file.create_dimension("lat", Some(180))
+            .expect("Operation failed");
+        file.create_dimension("lon", Some(360))
+            .expect("Operation failed");
 
         file.create_variable(
             "temperature",
             NetCDFDataType::Float,
             &["time", "lat", "lon"],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(file.variables.len(), 1);
         assert!(file.variables.contains_key("temperature"));
 
-        let var_info = file.variables.get("temperature").unwrap();
+        let var_info = file.variables.get("temperature").expect("Operation failed");
         assert_eq!(var_info.name, "temperature");
         assert_eq!(var_info.data_type, NetCDFDataType::Float);
         assert_eq!(var_info.dimensions, vec!["time", "lat", "lon"]);
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
     fn test_attributes() {
-        let mut file = NetCDFFile::create("test.nc").unwrap();
-        file.create_dimension("x", Some(10)).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_attributes_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
+        let mut file = NetCDFFile::create(test_path).expect("Operation failed");
+        file.create_dimension("x", Some(10))
+            .expect("Operation failed");
         file.create_variable("data", NetCDFDataType::Double, &["x"])
-            .unwrap();
+            .expect("Operation failed");
 
         // Test global attributes
-        file.add_global_attribute("title", "Test Dataset").unwrap();
-        file.add_global_attribute("author", "SciRS2 Test").unwrap();
+        file.add_global_attribute("title", "Test Dataset")
+            .expect("Operation failed");
+        file.add_global_attribute("author", "SciRS2 Test")
+            .expect("Operation failed");
 
         let global_attrs = file.global_attributes();
         assert!(global_attrs.contains_key("title"));
@@ -1072,37 +1122,53 @@ mod tests {
 
         // Test variable attributes
         file.add_variable_attribute("data", "units", "meters")
-            .unwrap();
+            .expect("Operation failed");
         file.add_variable_attribute("data", "long_name", "measurement data")
-            .unwrap();
+            .expect("Operation failed");
 
-        let (dtype, dims, var_attrs) = file.variable_info("data").unwrap();
+        let (dtype, dims, var_attrs) = file.variable_info("data").expect("Operation failed");
         assert_eq!(dtype, NetCDFDataType::Double);
         assert_eq!(dims, vec!["x"]);
         assert!(var_attrs.contains_key("units"));
         assert!(var_attrs.contains_key("long_name"));
         assert_eq!(var_attrs["units"], "meters");
         assert_eq!(var_attrs["long_name"], "measurement data");
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
     fn test_read_write_variable() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_read_write_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
         // Test writing functionality
-        let mut file = NetCDFFile::create("test.nc").unwrap();
-        file.create_dimension("x", Some(3)).unwrap();
-        file.create_dimension("y", Some(2)).unwrap();
+        let mut file = NetCDFFile::create(test_path).expect("Operation failed");
+        file.create_dimension("x", Some(3))
+            .expect("Operation failed");
+        file.create_dimension("y", Some(2))
+            .expect("Operation failed");
         file.create_variable("data", NetCDFDataType::Float, &["x", "y"])
-            .unwrap();
+            .expect("Operation failed");
 
         // Test writing data (placeholder implementation just validates)
         let data = Array2::<f32>::zeros((3, 2));
-        file.write_variable("data", &data).unwrap();
+        file.write_variable("data", &data)
+            .expect("Operation failed");
+
+        drop(file);
+        let _ = std::fs::remove_file(&test_file);
 
         // Since this is a placeholder implementation that doesn't persist,
         // we can't test actual reading from a written file.
         // Instead, test reading functionality with a mock setup by creating
         // a file in write mode and then changing its mode
-        let mut read_test_file = NetCDFFile::create("test_read.nc").unwrap();
+        let read_test_file_path = temp_dir.join(format!("test_read_{}.nc", std::process::id()));
+        let read_test_path = read_test_file_path.to_str().unwrap();
+
+        let mut read_test_file = NetCDFFile::create(read_test_path).expect("Operation failed");
 
         // Change mode to read for testing
         read_test_file.mode = "r".to_string();
@@ -1121,39 +1187,65 @@ mod tests {
         );
 
         // Now test reading
-        let read_data: ArrayD<f32> = read_test_file.read_variable("data").unwrap();
+        let read_data: ArrayD<f32> = read_test_file
+            .read_variable("data")
+            .expect("Operation failed");
         assert_eq!(read_data.shape(), &[3, 2]);
+
+        drop(read_test_file);
+        let _ = std::fs::remove_file(read_test_file_path);
     }
 
     #[test]
     fn test_netcdf4_format_creation() {
-        let file =
-            NetCDFFile::create_with_format("test_netcdf4.nc", NetCDFFormat::NetCDF4).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_netcdf4_format_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
+        let file = NetCDFFile::create_with_format(test_path, NetCDFFormat::NetCDF4)
+            .expect("Operation failed");
         assert_eq!(file.format(), NetCDFFormat::NetCDF4);
         assert!(file.has_hdf5_backend());
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
-    #[ignore]
     fn test_netcdf_format_differences() {
-        let classic =
-            NetCDFFile::create_with_format("test_classic.nc", NetCDFFormat::Classic).unwrap();
-        let netcdf4 =
-            NetCDFFile::create_with_format("test_netcdf4.nc", NetCDFFormat::NetCDF4).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let classic_file = temp_dir.join(format!("test_classic_{}.nc", std::process::id()));
+        let netcdf4_file = temp_dir.join(format!("test_netcdf4_{}.nc", std::process::id()));
+        let classic_path = classic_file.to_str().unwrap();
+        let netcdf4_path = netcdf4_file.to_str().unwrap();
+
+        let classic = NetCDFFile::create_with_format(classic_path, NetCDFFormat::Classic)
+            .expect("Operation failed");
+        let netcdf4 = NetCDFFile::create_with_format(netcdf4_path, NetCDFFormat::NetCDF4)
+            .expect("Operation failed");
 
         assert_eq!(classic.format(), NetCDFFormat::Classic);
         assert_eq!(netcdf4.format(), NetCDFFormat::NetCDF4);
 
         assert!(!classic.has_hdf5_backend());
         assert!(netcdf4.has_hdf5_backend());
+
+        drop(classic);
+        drop(netcdf4);
+        let _ = std::fs::remove_file(classic_file);
+        let _ = std::fs::remove_file(netcdf4_file);
     }
 
     #[test]
     fn test_netcdf4_write_array() {
         use scirs2_core::ndarray::array;
 
-        let mut file =
-            NetCDFFile::create_with_format("test_netcdf4_array.nc", NetCDFFormat::NetCDF4).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_netcdf4_array_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
+        let mut file = NetCDFFile::create_with_format(test_path, NetCDFFormat::NetCDF4)
+            .expect("Operation failed");
 
         let data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let result = file.write_array("test_data", &data, &["x", "y"]);
@@ -1167,12 +1259,19 @@ mod tests {
 
         // Check that variable was auto-created
         assert!(file.variables().contains(&"test_data".to_string()));
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
     fn test_netcdf4_convenience_functions() {
         use scirs2_core::ndarray::array;
         use std::collections::HashMap;
+
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_convenience_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
 
         let mut datasets = HashMap::new();
         datasets.insert(
@@ -1186,16 +1285,22 @@ mod tests {
         let mut global_attrs = HashMap::new();
         global_attrs.insert("title".to_string(), "Test Data".to_string());
 
-        let result = create_netcdf4_with_data("test_convenience.nc", datasets, global_attrs);
+        let result = create_netcdf4_with_data(test_path, datasets, global_attrs);
         assert!(result.is_ok());
+
+        let _ = std::fs::remove_file(test_file);
     }
 
     #[test]
     fn test_classic_netcdf_write_array_error() {
         use scirs2_core::ndarray::array;
 
-        let mut file =
-            NetCDFFile::create_with_format("test_classic_error.nc", NetCDFFormat::Classic).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join(format!("test_classic_error_{}.nc", std::process::id()));
+        let test_path = test_file.to_str().unwrap();
+
+        let mut file = NetCDFFile::create_with_format(test_path, NetCDFFormat::Classic)
+            .expect("Operation failed");
 
         let data = array![[1.0, 2.0], [3.0, 4.0]];
         let result = file.write_array("test_data", &data, &["x", "y"]);
@@ -1206,5 +1311,8 @@ mod tests {
             .unwrap_err()
             .to_string()
             .contains("only supported for NetCDF4"));
+
+        drop(file);
+        let _ = std::fs::remove_file(test_file);
     }
 }

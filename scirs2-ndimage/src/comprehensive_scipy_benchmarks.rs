@@ -406,8 +406,11 @@ impl SciPyBenchmarkSuite {
         match operation {
             BenchmarkOperation::GaussianFilter => crate::filters::gaussian_filter_chunked(
                 &input_data,
-                &[T::from_f64(1.0).unwrap(), T::from_f64(1.0).unwrap()],
-                Some(T::from_f64(4.0).unwrap()),
+                &[
+                    T::from_f64(1.0).expect("Operation failed"),
+                    T::from_f64(1.0).expect("Operation failed"),
+                ],
+                Some(T::from_f64(4.0).expect("Operation failed")),
                 BorderMode::Reflect,
                 None,
             ),
@@ -663,8 +666,8 @@ if __name__ == "__main__":
         array_len: usize,
     ) -> PerformanceMetrics {
         let avg_time = timings.iter().sum::<Duration>() / timings.len() as u32;
-        let min_time = *timings.iter().min().unwrap();
-        let max_time = *timings.iter().max().unwrap();
+        let min_time = *timings.iter().min().expect("Operation failed");
+        let max_time = *timings.iter().max().expect("Operation failed");
 
         // Calculate standard deviation
         let mean_nanos = avg_time.as_nanos() as f64;
@@ -950,7 +953,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmarkconfig_creation() {
         let config = BenchmarkConfig::default();
         assert!(!config.array_sizes.is_empty());
@@ -958,7 +960,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_benchmark_suite_creation() {
         let config = BenchmarkConfig::default();
         let result = SciPyBenchmarkSuite::new(config);

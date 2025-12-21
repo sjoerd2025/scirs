@@ -75,9 +75,9 @@ impl<F: IntegrateFloat> Default for MultirateOptions<F> {
                 macro_steps: 4,
                 micro_steps: 10,
             },
-            macro_step: F::from(0.01).unwrap(),
-            rtol: F::from(1e-6).unwrap(),
-            atol: F::from(1e-9).unwrap(),
+            macro_step: F::from(0.01).expect("Failed to convert constant to float"),
+            rtol: F::from(1e-6).expect("Failed to convert constant to float"),
+            atol: F::from(1e-9).expect("Failed to convert constant to float"),
             max_steps: 10000,
             timescale_ratio: None,
         }
@@ -102,12 +102,12 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
         let current_macro_step = options.macro_step;
         let current_micro_step = match &options.method {
             MultirateMethod::ExplicitMRK { micro_steps, .. } => {
-                current_macro_step / F::from(*micro_steps).unwrap()
+                current_macro_step / F::from(*micro_steps).expect("Failed to convert to float")
             }
             MultirateMethod::IMEX { micro_steps, .. } => {
-                current_macro_step / F::from(*micro_steps).unwrap()
+                current_macro_step / F::from(*micro_steps).expect("Failed to convert to float")
             }
-            _ => current_macro_step / F::from(10).unwrap(),
+            _ => current_macro_step / F::from(10).expect("Failed to convert constant to float"),
         };
 
         Self {
@@ -254,7 +254,7 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
     where
         S: MultirateSystem<F>,
     {
-        let dt_micro = dt / F::from(micro_steps).unwrap();
+        let dt_micro = dt / F::from(micro_steps).expect("Failed to convert to float");
 
         // RK4 step for _slow component (large step)
         let k1_slow = system.slow_rhs(t, y_slow, y_fast);
@@ -267,14 +267,20 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
             // RK4 micro step for _fast component
             let k1_fast = system.fast_rhs(t_micro, y_slow, y_fast_current.view());
             let k2_fast = system.fast_rhs(
-                t_micro + dt_micro / F::from(2).unwrap(),
+                t_micro + dt_micro / F::from(2).expect("Failed to convert constant to float"),
                 y_slow,
-                (y_fast_current.clone() + k1_fast.clone() * dt_micro / F::from(2).unwrap()).view(),
+                (y_fast_current.clone()
+                    + k1_fast.clone() * dt_micro
+                        / F::from(2).expect("Failed to convert constant to float"))
+                .view(),
             );
             let k3_fast = system.fast_rhs(
-                t_micro + dt_micro / F::from(2).unwrap(),
+                t_micro + dt_micro / F::from(2).expect("Failed to convert constant to float"),
                 y_slow,
-                (y_fast_current.clone() + k2_fast.clone() * dt_micro / F::from(2).unwrap()).view(),
+                (y_fast_current.clone()
+                    + k2_fast.clone() * dt_micro
+                        / F::from(2).expect("Failed to convert constant to float"))
+                .view(),
             );
             let k4_fast = system.fast_rhs(
                 t_micro + dt_micro,
@@ -282,18 +288,24 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
                 (y_fast_current.clone() + k3_fast.clone() * dt_micro).view(),
             );
 
-            let two = F::from(2).unwrap();
-            let six = F::from(6).unwrap();
+            let two = F::from(2).expect("Failed to convert constant to float");
+            let six = F::from(6).expect("Failed to convert constant to float");
             let rk_sum = k1_fast.clone() + &k2_fast * two + &k3_fast * two + k4_fast.clone();
             y_fast_current = y_fast_current + &rk_sum * (dt_micro / six);
             t_micro += dt_micro;
         }
 
         // Complete _slow step using final _fast state
-        let k2_slow = system.slow_rhs(t + dt / F::from(2).unwrap(), y_slow, y_fast_current.view());
+        let k2_slow = system.slow_rhs(
+            t + dt / F::from(2).expect("Failed to convert constant to float"),
+            y_slow,
+            y_fast_current.view(),
+        );
         let k3_slow = system.slow_rhs(
-            t + dt / F::from(2).unwrap(),
-            (y_slow.to_owned() + k1_slow.clone() * dt / F::from(2).unwrap()).view(),
+            t + dt / F::from(2).expect("Failed to convert constant to float"),
+            (y_slow.to_owned()
+                + k1_slow.clone() * dt / F::from(2).expect("Failed to convert constant to float"))
+            .view(),
             y_fast_current.view(),
         );
         let k4_slow = system.slow_rhs(
@@ -302,8 +314,8 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
             y_fast_current.view(),
         );
 
-        let two = F::from(2).unwrap();
-        let six = F::from(6).unwrap();
+        let two = F::from(2).expect("Failed to convert constant to float");
+        let six = F::from(6).expect("Failed to convert constant to float");
         let rk_sum_slow = k1_slow.clone() + &k2_slow * two + &k3_slow * two + k4_slow.clone();
         let new_y_slow = y_slow.to_owned() + &rk_sum_slow * (dt / six);
 
@@ -343,7 +355,7 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
     {
         // First solve _fast subsystem to quasi-steady state
         let mut y_fast_current = y_fast.to_owned();
-        let dt_fast = dt / F::from(100).unwrap(); // Very small steps for _fast system
+        let dt_fast = dt / F::from(100).expect("Failed to convert constant to float"); // Very small steps for _fast system
 
         // Fast relaxation phase
         for _ in 0..50 {
@@ -398,7 +410,7 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
 
             Ok((y_slow_ext, y_fast_ext))
         } else {
-            Ok(solutions.into_iter().next().unwrap())
+            Ok(solutions.into_iter().next().expect("Operation failed"))
         }
     }
 }
@@ -508,7 +520,9 @@ mod tests {
         // Initial conditions: [x_slow, v_slow, x_fast, v_fast]
         let y0 = Array1::from_vec(vec![1.0, 0.0, 0.1, 0.0]);
 
-        let result = solver.solve(system, [0.0, 1.0], y0.clone()).unwrap();
+        let result = solver
+            .solve(system, [0.0, 1.0], y0.clone())
+            .expect("Operation failed");
 
         // Check that solution was computed
         assert!(result.t.len() > 1);
@@ -516,7 +530,7 @@ mod tests {
         assert_eq!(result.y[0].len(), 4);
 
         // Check that fast and slow components behave appropriately
-        let final_state = result.y.last().unwrap();
+        let final_state = result.y.last().expect("Operation failed");
 
         // Fast oscillator should still be oscillating (non-zero velocity)
         let fast_velocity: f64 = final_state[3];
@@ -550,7 +564,9 @@ mod tests {
         let mut solver = MultirateSolver::new(options);
         let y0 = Array1::from_vec(vec![1.0, 0.0, 0.1, 0.0]);
 
-        let result = solver.solve(system, [0.0, 0.5], y0).unwrap();
+        let result = solver
+            .solve(system, [0.0, 0.5], y0)
+            .expect("Operation failed");
 
         assert!(result.t.len() > 1);
         assert!(result.n_steps > 0);
@@ -579,7 +595,9 @@ mod tests {
         let mut solver = MultirateSolver::new(options);
         let y0 = Array1::from_vec(vec![0.5, 0.0, 0.2, 0.1]);
 
-        let result = solver.solve(system, [0.0, 0.2], y0).unwrap();
+        let result = solver
+            .solve(system, [0.0, 0.2], y0)
+            .expect("Operation failed");
 
         assert!(result.t.len() > 1);
         assert!(result.n_steps > 0);

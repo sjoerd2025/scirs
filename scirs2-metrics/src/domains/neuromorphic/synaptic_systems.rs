@@ -315,7 +315,7 @@ impl<F: Float> PlasticityState<F> {
     /// Update plasticity state
     pub fn update(&mut self, dt: Duration) {
         // Decay eligibility trace
-        let decay_factor = F::from((-dt.as_secs_f64() / 0.1).exp()).unwrap();
+        let decay_factor = F::from((-dt.as_secs_f64() / 0.1).exp()).expect("Operation failed");
         self.eligibility_trace = self.eligibility_trace * decay_factor;
 
         // Update LTP/LTD levels
@@ -326,9 +326,11 @@ impl<F: Float> PlasticityState<F> {
     /// Apply spike-timing dependent plasticity
     pub fn apply_stdp(&mut self, spike_time_diff: Duration, is_ltp: bool) {
         if is_ltp {
-            self.ltp_level = self.ltp_level + F::from(0.1).unwrap();
+            self.ltp_level =
+                self.ltp_level + F::from(0.1).expect("Failed to convert constant to float");
         } else {
-            self.ltd_level = self.ltd_level + F::from(0.05).unwrap();
+            self.ltd_level =
+                self.ltd_level + F::from(0.05).expect("Failed to convert constant to float");
         }
         self.last_spike_diff = spike_time_diff;
     }
@@ -340,7 +342,7 @@ impl<F: Float> ShortTermDynamics<F> {
         Self {
             facilitation: F::one(),
             depression: F::one(),
-            utilization: F::from(0.5).unwrap(),
+            utilization: F::from(0.5).expect("Failed to convert constant to float"),
             tau_facilitation: Duration::from_millis(100),
             tau_depression: Duration::from_millis(500),
         }
@@ -349,13 +351,13 @@ impl<F: Float> ShortTermDynamics<F> {
     /// Update short-term dynamics
     pub fn update(&mut self, dt: Duration) {
         // Facilitation decay
-        let f_decay =
-            F::from((-dt.as_secs_f64() / self.tau_facilitation.as_secs_f64()).exp()).unwrap();
+        let f_decay = F::from((-dt.as_secs_f64() / self.tau_facilitation.as_secs_f64()).exp())
+            .expect("Operation failed");
         self.facilitation = self.facilitation * f_decay + (F::one() - f_decay);
 
         // Depression recovery
-        let d_decay =
-            F::from((-dt.as_secs_f64() / self.tau_depression.as_secs_f64()).exp()).unwrap();
+        let d_decay = F::from((-dt.as_secs_f64() / self.tau_depression.as_secs_f64()).exp())
+            .expect("Operation failed");
         self.depression = self.depression * d_decay + (F::one() - d_decay);
     }
 
@@ -393,12 +395,12 @@ impl<F: Float> STDPWindow<F> {
             // LTP case
             let tau = self.curve_parameters.tau_ltp.as_secs_f64();
             let amplitude = self.curve_parameters.a_ltp;
-            amplitude * F::from((-time_diff.as_secs_f64() / tau).exp()).unwrap()
+            amplitude * F::from((-time_diff.as_secs_f64() / tau).exp()).expect("Operation failed")
         } else if !is_ltp && time_diff <= self.ltd_window {
             // LTD case
             let tau = self.curve_parameters.tau_ltd.as_secs_f64();
             let amplitude = self.curve_parameters.a_ltd;
-            -amplitude * F::from((-time_diff.as_secs_f64() / tau).exp()).unwrap()
+            -amplitude * F::from((-time_diff.as_secs_f64() / tau).exp()).expect("Operation failed")
         } else {
             F::zero()
         }
@@ -409,8 +411,8 @@ impl<F: Float> STDPCurveParameters<F> {
     /// Create default STDP parameters
     pub fn default() -> Self {
         Self {
-            a_ltp: F::from(0.1).unwrap(),
-            a_ltd: F::from(0.05).unwrap(),
+            a_ltp: F::from(0.1).expect("Failed to convert constant to float"),
+            a_ltd: F::from(0.05).expect("Failed to convert constant to float"),
             tau_ltp: Duration::from_millis(20),
             tau_ltd: Duration::from_millis(20),
             asymmetry: F::one(),
@@ -477,11 +479,13 @@ impl<F: Float + std::iter::Sum> HomeostaticController<F> {
     /// Update homeostatic control
     pub fn update(&mut self, dt: Duration, activity: &[F]) -> crate::error::Result<()> {
         // Calculate current firing rate
-        self.current_rate = activity.iter().cloned().sum::<F>() / F::from(activity.len()).unwrap();
+        self.current_rate = activity.iter().cloned().sum::<F>()
+            / F::from(activity.len()).expect("Operation failed");
 
         // Update scaling factor based on difference from target
         let error = self.target_rate - self.current_rate;
-        let adaptation_rate = F::from(dt.as_secs_f64() / self.time_constant.as_secs_f64()).unwrap();
+        let adaptation_rate =
+            F::from(dt.as_secs_f64() / self.time_constant.as_secs_f64()).expect("Operation failed");
 
         match self.control_mode {
             HomeostaticMode::SynapticScaling => {
@@ -489,8 +493,10 @@ impl<F: Float + std::iter::Sum> HomeostaticController<F> {
             }
             HomeostaticMode::IntrinsicExcitability => {
                 // Adjust intrinsic excitability
-                self.scaling_factor =
-                    self.scaling_factor + adaptation_rate * error * F::from(0.1).unwrap();
+                self.scaling_factor = self.scaling_factor
+                    + adaptation_rate
+                        * error
+                        * F::from(0.1).expect("Failed to convert constant to float");
             }
             _ => {
                 // Default scaling
@@ -520,8 +526,8 @@ impl<F: Float + std::iter::Sum> MetaplasticityState<F> {
 
     /// Update metaplasticity state
     pub fn update(&mut self, network_activity: &[F]) {
-        let avg_activity =
-            network_activity.iter().cloned().sum::<F>() / F::from(network_activity.len()).unwrap();
+        let avg_activity = network_activity.iter().cloned().sum::<F>()
+            / F::from(network_activity.len()).expect("Operation failed");
         self.activity_history.push_back(avg_activity);
 
         // Keep bounded
@@ -538,11 +544,13 @@ impl<F: Float + std::iter::Sum> MetaplasticityState<F> {
                 .take(10)
                 .cloned()
                 .sum::<F>()
-                / F::from(10).unwrap();
-            self.threshold_modulation =
-                F::one() + (recent_avg - F::from(0.5).unwrap()) * F::from(0.1).unwrap();
-            self.learning_rate_modulation =
-                F::one() + (recent_avg - F::from(0.5).unwrap()) * F::from(0.05).unwrap();
+                / F::from(10).expect("Failed to convert constant to float");
+            self.threshold_modulation = F::one()
+                + (recent_avg - F::from(0.5).expect("Failed to convert constant to float"))
+                    * F::from(0.1).expect("Failed to convert constant to float");
+            self.learning_rate_modulation = F::one()
+                + (recent_avg - F::from(0.5).expect("Failed to convert constant to float"))
+                    * F::from(0.05).expect("Failed to convert constant to float");
         }
     }
 }
@@ -551,8 +559,8 @@ impl<F: Float> LearningRateScheduler<F> {
     /// Create new learning rate scheduler
     pub fn new() -> Self {
         Self {
-            base_rate: F::from(0.01).unwrap(),
-            current_rate: F::from(0.01).unwrap(),
+            base_rate: F::from(0.01).expect("Failed to convert constant to float"),
+            current_rate: F::from(0.01).expect("Failed to convert constant to float"),
             policy: SchedulingPolicy::Constant,
             performance_metrics: VecDeque::new(),
         }
@@ -565,8 +573,11 @@ impl<F: Float> LearningRateScheduler<F> {
                 // No change
             }
             SchedulingPolicy::ExponentialDecay { decay_rate } => {
-                let decay_factor =
-                    F::from((-decay_rate.to_f64().unwrap() * dt.as_secs_f64()).exp()).unwrap();
+                let decay_factor = F::from(
+                    (-decay_rate.to_f64().expect("Failed to convert to float") * dt.as_secs_f64())
+                        .exp(),
+                )
+                .expect("Operation failed");
                 self.current_rate = self.current_rate * decay_factor;
             }
             SchedulingPolicy::PerformanceBased { patience, factor } => {
@@ -578,9 +589,10 @@ impl<F: Float> LearningRateScheduler<F> {
                         .take(*patience)
                         .cloned()
                         .collect::<Vec<_>>();
-                    let is_plateau = recent
-                        .windows(2)
-                        .all(|w| (w[1] - w[0]).abs() < F::from(0.001).unwrap());
+                    let is_plateau = recent.windows(2).all(|w| {
+                        (w[1] - w[0]).abs()
+                            < F::from(0.001).expect("Failed to convert constant to float")
+                    });
                     if is_plateau {
                         self.current_rate = self.current_rate * *factor;
                     }

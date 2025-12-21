@@ -8,7 +8,7 @@ fn main() {
     let input = arr1(&[1.0, 2.0, 3.0]);
     println!("Input: {:?}", input);
     let softmax = Softmax::new(0);
-    let output = softmax.forward(&input.clone().into_dyn()).unwrap();
+    let output = softmax.forward(&input.clone().into_dyn()).expect("Operation failed");
     println!("Softmax output: {:?}", output);
     // Verify that output sums to 1
     let sum: f64 = output.sum();
@@ -20,7 +20,7 @@ fn main() {
     println!("Input 2D:\n{:?}", input_2d);
     // Apply softmax along axis 1 (row-wise)
     let softmax_2d = Softmax::new(1);
-    let output_2d = softmax_2d.forward(&input_2d.clone().into_dyn()).unwrap();
+    let output_2d = softmax_2d.forward(&input_2d.clone().into_dyn()).expect("Operation failed");
     println!("Softmax output 2D:\n{:?}", output_2d);
     // Verify each row sums to 1
     for i in 0..output_2d.shape()[0] {
@@ -31,8 +31,8 @@ fn main() {
     // Test case 3: Gradient computation
     println!("\nTest case 3: Gradient computation");
     let grad_output = arr1(&[0.1, 0.2, 0.3]).into_dyn();
-    let forward_output = softmax.forward(&input.clone().into_dyn()).unwrap();
-    let grad_input = softmax.backward(&grad_output, &forward_output).unwrap();
+    let forward_output = softmax.forward(&input.clone().into_dyn()).expect("Operation failed");
+    let grad_input = softmax.backward(&grad_output, &forward_output).expect("Operation failed");
     println!("Gradient input: {:?}", grad_input);
     println!("\nAll tests passed!");
 }

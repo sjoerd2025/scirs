@@ -444,7 +444,7 @@ impl<X, Y> BatchEvaluator<X, Y> {
 ///     "accuracy",
 ///     5,
 ///     Some(42)
-/// ).unwrap();
+/// ).expect("Operation failed");
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
@@ -655,25 +655,33 @@ mod tests {
         let mut metrics1 = HashMap::new();
         metrics1.insert("accuracy".to_string(), 0.85);
         metrics1.insert("error".to_string(), 0.15);
-        report.add_results("model1", "dataset1", metrics1).unwrap();
+        report
+            .add_results("model1", "dataset1", metrics1)
+            .expect("Operation failed");
 
         // Add results for model2 on dataset1
         let mut metrics2 = HashMap::new();
         metrics2.insert("accuracy".to_string(), 0.80);
         metrics2.insert("error".to_string(), 0.20);
-        report.add_results("model2", "dataset1", metrics2).unwrap();
+        report
+            .add_results("model2", "dataset1", metrics2)
+            .expect("Operation failed");
 
         // Add results for model1 on dataset2
         let mut metrics3 = HashMap::new();
         metrics3.insert("accuracy".to_string(), 0.75);
         metrics3.insert("error".to_string(), 0.25);
-        report.add_results("model1", "dataset2", metrics3).unwrap();
+        report
+            .add_results("model1", "dataset2", metrics3)
+            .expect("Operation failed");
 
         // Add results for model2 on dataset2
         let mut metrics4 = HashMap::new();
         metrics4.insert("accuracy".to_string(), 0.70);
         metrics4.insert("error".to_string(), 0.30);
-        report.add_results("model2", "dataset2", metrics4).unwrap();
+        report
+            .add_results("model2", "dataset2", metrics4)
+            .expect("Operation failed");
 
         // Check get_result
         assert_eq!(
@@ -715,7 +723,7 @@ mod tests {
         datasets.insert("dataset2".to_string(), (vec![0.0], vec![1.0]));
 
         // Evaluate all models on all datasets
-        let report = evaluator.evaluate_all(&datasets).unwrap();
+        let report = evaluator.evaluate_all(&datasets).expect("Operation failed");
 
         // Check results
         assert_eq!(

@@ -398,7 +398,8 @@ mod tests {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let indices = vec![0, 1, 0, 1];
         let indptr = vec![0, 2, 4];
-        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2)).unwrap();
+        let matrix = CsrArray::new(data.into(), indices.into(), indptr.into(), (2, 2))
+            .expect("Operation failed");
 
         let vector = Array1::from_vec(vec![1.0, 2.0]);
 
@@ -435,7 +436,7 @@ mod tests {
         #[cfg(feature = "gpu")]
         let device = scirs2_core::gpu::GpuDevice::new(GpuBackend::Cpu, 0);
         #[cfg(not(feature = "gpu"))]
-        let device = GpuDevice::new(GpuBackend::Cpu).unwrap();
+        let device = GpuDevice::new(GpuBackend::Cpu).expect("Operation failed");
 
         let kernel = SpMVKernel::new(&device, [1, 1, 1]);
         assert!(kernel.is_ok());
@@ -448,10 +449,10 @@ mod tests {
             let buffer = GpuBuffer {
                 data: vec![1.0, 2.0, 3.0, 4.0],
             };
-            let host_data = buffer.to_host().unwrap();
+            let host_data = buffer.to_host().expect("Operation failed");
             assert_eq!(host_data, vec![1.0, 2.0, 3.0, 4.0]);
 
-            let range_data = buffer.to_host_range(1..3).unwrap();
+            let range_data = buffer.to_host_range(1..3).expect("Operation failed");
             assert_eq!(range_data, vec![2.0, 3.0]);
         }
     }

@@ -94,7 +94,7 @@ mod tests {
         let transform = PerspectiveTransform::new([2.0, 1.0, 3.0, 0.0, 1.0, 5.0, 0.0, 0.0, 1.0]);
 
         // Get its inverse
-        let inverse = transform.inverse().unwrap();
+        let inverse = transform.inverse().expect("Operation failed");
 
         // Transform a point and then transform it back
         let point = (10.0, 20.0);
@@ -107,7 +107,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_transform_points_simd() {
         let transform = PerspectiveTransform::new([2.0, 0.0, 1.0, 0.0, 2.0, 2.0, 0.0, 0.0, 1.0]);
 
@@ -131,7 +130,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_bilinear_interpolate_simd() {
         // Create a simple test image
         let mut img = RgbImage::new(4, 4);
@@ -167,7 +165,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "timeout"]
     fn test_warp_perspective_simd() {
         // Create a simple test image with a pattern
         let width = 50;
@@ -190,10 +187,11 @@ mod tests {
         let transform = PerspectiveTransform::identity();
 
         // Test both regular and SIMD versions
-        let regular_result =
-            warp_perspective(&src, &transform, None, None, BorderMode::default()).unwrap();
+        let regular_result = warp_perspective(&src, &transform, None, None, BorderMode::default())
+            .expect("Operation failed");
         let simd_result =
-            warp_perspective_simd(&src, &transform, None, None, BorderMode::default()).unwrap();
+            warp_perspective_simd(&src, &transform, None, None, BorderMode::default())
+                .expect("Operation failed");
 
         // Results should be very similar (allowing for minor floating-point differences)
         assert_eq!(regular_result.width(), simd_result.width());

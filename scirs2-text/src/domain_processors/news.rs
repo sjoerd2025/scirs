@@ -17,12 +17,12 @@ impl NewsTextProcessor {
     /// Create new news text processor
     pub fn new(config: DomainProcessorConfig) -> Self {
         // Headline patterns
-        let headline_regex =
-            Regex::new(r"^[A-Z][^.!?]*[.!?]?$").unwrap_or_else(|_| Regex::new(r"[A-Z]").unwrap());
+        let headline_regex = Regex::new(r"^[A-Z][^.!?]*[.!?]?$")
+            .unwrap_or_else(|_| Regex::new(r"[A-Z]").expect("Operation failed"));
 
         // Dateline patterns
         let dateline_regex = Regex::new(r"\b[A-Z]{2,}(?:\s+[A-Z]{2,})*\s*-")
-            .unwrap_or_else(|_| Regex::new(r"-").unwrap());
+            .unwrap_or_else(|_| Regex::new(r"-").expect("Operation failed"));
 
         Self {
             config,

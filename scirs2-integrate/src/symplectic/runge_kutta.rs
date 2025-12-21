@@ -50,8 +50,8 @@ impl<F: IntegrateFloat> SymplecticIntegrator<F> for GaussLegendre4<F> {
         let two = F::one() + F::one();
         let half = F::one() / two;
         let quarter = half / two;
-        let sqrt_3 = F::from_f64(3.0_f64.sqrt()).unwrap();
-        let sixth = F::one() / (F::from_f64(6.0).unwrap());
+        let sqrt_3 = F::from_f64(3.0_f64.sqrt()).expect("Operation failed");
+        let sixth = F::one() / (F::from_f64(6.0).expect("Operation failed"));
 
         // Butcher tableau coefficients for 2-stage Gauss-Legendre method
         // c = [1/2 - sqrt(3)/6, 1/2 + sqrt(3)/6]
@@ -113,7 +113,7 @@ impl<F: IntegrateFloat> SymplecticIntegrator<F> for GaussLegendre4<F> {
                 .fold(F::zero(), |a, b| a.max(b));
 
             let max_err = err1.max(err2).max(err3).max(err4);
-            if max_err < F::from_f64(1e-12).unwrap() {
+            if max_err < F::from_f64(1e-12).expect("Operation failed") {
                 break;
             }
 
@@ -172,32 +172,32 @@ impl<F: IntegrateFloat> SymplecticIntegrator<F> for GaussLegendre6<F> {
         // Butcher tableau coefficients for 3-stage Gauss-Legendre method
 
         // Node points c = [1/2 - sqrt(15)/10, 1/2, 1/2 + sqrt(15)/10]
-        let c1 = F::from_f64(0.5 - 0.1 * 15.0_f64.sqrt()).unwrap();
-        let c2 = F::from_f64(0.5).unwrap();
-        let c3 = F::from_f64(0.5 + 0.1 * 15.0_f64.sqrt()).unwrap();
+        let c1 = F::from_f64(0.5 - 0.1 * 15.0_f64.sqrt()).expect("Operation failed");
+        let c2 = F::from_f64(0.5).expect("Operation failed");
+        let c3 = F::from_f64(0.5 + 0.1 * 15.0_f64.sqrt()).expect("Operation failed");
         let c = [c1, c2, c3];
 
         // Coefficient matrix A (3x3)
         let a = Array2::<F>::from_shape_vec(
             (3, 3),
             vec![
-                F::from_f64(5.0 / 36.0).unwrap(),
-                F::from_f64(2.0 / 9.0 - 1.0 / 15.0 * 15.0_f64.sqrt()).unwrap(),
-                F::from_f64(5.0 / 36.0 - 1.0 / 30.0 * 15.0_f64.sqrt()).unwrap(),
-                F::from_f64(5.0 / 36.0 + 1.0 / 24.0 * 15.0_f64.sqrt()).unwrap(),
-                F::from_f64(2.0 / 9.0).unwrap(),
-                F::from_f64(5.0 / 36.0 - 1.0 / 24.0 * 15.0_f64.sqrt()).unwrap(),
-                F::from_f64(5.0 / 36.0 + 1.0 / 30.0 * 15.0_f64.sqrt()).unwrap(),
-                F::from_f64(2.0 / 9.0 + 1.0 / 15.0 * 15.0_f64.sqrt()).unwrap(),
-                F::from_f64(5.0 / 36.0).unwrap(),
+                F::from_f64(5.0 / 36.0).expect("Operation failed"),
+                F::from_f64(2.0 / 9.0 - 1.0 / 15.0 * 15.0_f64.sqrt()).expect("Operation failed"),
+                F::from_f64(5.0 / 36.0 - 1.0 / 30.0 * 15.0_f64.sqrt()).expect("Operation failed"),
+                F::from_f64(5.0 / 36.0 + 1.0 / 24.0 * 15.0_f64.sqrt()).expect("Operation failed"),
+                F::from_f64(2.0 / 9.0).expect("Operation failed"),
+                F::from_f64(5.0 / 36.0 - 1.0 / 24.0 * 15.0_f64.sqrt()).expect("Operation failed"),
+                F::from_f64(5.0 / 36.0 + 1.0 / 30.0 * 15.0_f64.sqrt()).expect("Operation failed"),
+                F::from_f64(2.0 / 9.0 + 1.0 / 15.0 * 15.0_f64.sqrt()).expect("Operation failed"),
+                F::from_f64(5.0 / 36.0).expect("Operation failed"),
             ],
         )
-        .unwrap();
+        .expect("Failed to create integrator");
 
         // Weights b = [5/18, 4/9, 5/18]
-        let b1 = F::from_f64(5.0 / 18.0).unwrap();
-        let b2 = F::from_f64(4.0 / 9.0).unwrap();
-        let b3 = F::from_f64(5.0 / 18.0).unwrap();
+        let b1 = F::from_f64(5.0 / 18.0).expect("Operation failed");
+        let b2 = F::from_f64(4.0 / 9.0).expect("Operation failed");
+        let b3 = F::from_f64(5.0 / 18.0).expect("Operation failed");
         let b = [b1, b2, b3];
 
         // Create arrays for stage values
@@ -261,7 +261,7 @@ impl<F: IntegrateFloat> SymplecticIntegrator<F> for GaussLegendre6<F> {
             .flat_map(|arr| arr.iter().map(|&x| x.abs()))
             .fold(F::zero(), |a, b| a.max(b));
 
-            if err_max < F::from_f64(1e-12).unwrap() {
+            if err_max < F::from_f64(1e-12).expect("Operation failed") {
                 break;
             }
 
@@ -315,26 +315,26 @@ mod tests {
         // Integrate with all methods
         let verlet_result = verlet
             .integrate(&system, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Test: integration failed");
         let gl4_result = gl4
             .integrate(&system, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Test: integration failed");
         let gl6_result = gl6
             .integrate(&system, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Test: integration failed");
 
         // Calculate errors at the end of one period
         // Exact solution: q(2π) = 1.0, p(2π) = 0.0
-        let verlet_error = ((verlet_result.q.last().unwrap()[0] - 1.0).powi(2)
-            + verlet_result.p.last().unwrap()[0].powi(2))
+        let verlet_error = ((verlet_result.q.last().expect("Operation failed")[0] - 1.0).powi(2)
+            + verlet_result.p.last().expect("Operation failed")[0].powi(2))
         .sqrt();
 
-        let gl4_error = ((gl4_result.q.last().unwrap()[0] - 1.0).powi(2)
-            + gl4_result.p.last().unwrap()[0].powi(2))
+        let gl4_error = ((gl4_result.q.last().expect("Operation failed")[0] - 1.0).powi(2)
+            + gl4_result.p.last().expect("Operation failed")[0].powi(2))
         .sqrt();
 
-        let gl6_error = ((gl6_result.q.last().unwrap()[0] - 1.0).powi(2)
-            + gl6_result.p.last().unwrap()[0].powi(2))
+        let gl6_error = ((gl6_result.q.last().expect("Operation failed")[0] - 1.0).powi(2)
+            + gl6_result.p.last().expect("Operation failed")[0].powi(2))
         .sqrt();
 
         // Higher-order methods should be more accurate
@@ -374,10 +374,10 @@ mod tests {
         // Integrate
         let verlet_result = verlet
             .integrate(&pendulum, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Test: integration failed");
         let gl4_result = gl4
             .integrate(&pendulum, t0, tf, dt, q0.clone(), p0.clone())
-            .unwrap();
+            .expect("Test: integration failed");
 
         // Check energy conservation
         if let (Some(verlet_error), Some(gl4_error)) = (

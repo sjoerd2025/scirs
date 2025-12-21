@@ -253,7 +253,7 @@ fn calculate_statistics(
     // Process each chunk
     let chunk_stats = mmap.process_chunks(strategy, |chunk_data, chunk_idx| {
         // Create a temporary view for this chunk
-        let chunk = ArrayView1::from_shape(chunk_data.len(), chunk_data).unwrap();
+        let chunk = ArrayView1::from_shape(chunk_data.len(), chunk_data).expect("Operation failed");
 
         // Create a stats accumulator for this chunk
         let mut chunk_stats = OnlineStats::new();

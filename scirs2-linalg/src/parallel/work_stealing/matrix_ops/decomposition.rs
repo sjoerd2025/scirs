@@ -639,7 +639,7 @@ where
 
                 // Fill remaining singular values with decreasing values
                 for i in 1..min_dim {
-                    s[i] = s[0] * F::from(0.1_f64.powi(i as i32)).unwrap();
+                    s[i] = s[0] * F::from(0.1_f64.powi(i as i32)).expect("Operation failed");
                 }
 
                 // Create orthogonal U and V^T matrices
@@ -691,7 +691,7 @@ where
             continue;
         }
 
-        let v = householder_vector.unwrap();
+        let v = householder_vector.expect("Operation failed");
 
         // Apply Householder transformation in parallel
         apply_householder_parallel(&mut matrix, &v, k + 1, workers)?;

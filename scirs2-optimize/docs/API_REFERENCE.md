@@ -792,7 +792,7 @@ Enable parallel features for better performance:
 
 ```toml
 [dependencies]
-scirs2_optimize = { version = "0.1.0-rc.3", features = ["parallel"] }
+scirs2_optimize = { version = "0.1.0-rc.4", features = ["parallel"] }
 ```
 
 ```rust

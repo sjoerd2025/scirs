@@ -638,7 +638,7 @@ mod tests {
     #[test]
     fn test_type_converter() {
         let data = Array2::<f32>::ones((10, 5));
-        let result = TypeConverter::f32_to_f64_simd(&data.view()).unwrap();
+        let result = TypeConverter::f32_to_f64_simd(&data.view()).expect("Operation failed");
         assert_eq!(result.shape(), &[10, 5]);
         assert!((result[(0, 0)] - 1.0).abs() < 1e-10);
     }
@@ -646,7 +646,7 @@ mod tests {
     #[test]
     fn test_robust_stats() {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]); // With outlier
-        let (median, mad) = StatUtils::robust_stats(&data.view()).unwrap();
+        let (median, mad) = StatUtils::robust_stats(&data.view()).expect("Operation failed");
         assert!((median - 3.5).abs() < 1e-10);
         assert!(mad > 0.0);
     }
@@ -654,20 +654,20 @@ mod tests {
     #[test]
     fn test_outlier_detection() {
         let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]);
-        let outliers = StatUtils::detect_outliers_iqr(&data.view(), 1.5).unwrap();
+        let outliers = StatUtils::detect_outliers_iqr(&data.view(), 1.5).expect("Operation failed");
         assert_eq!(outliers.len(), 6);
         assert!(outliers[5]); // 100.0 should be detected as outlier
     }
 
     #[test]
     fn test_data_quality_score() {
-        let good_data =
-            Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
-        let quality = StatUtils::data_quality_score(&good_data.view()).unwrap();
+        let good_data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect())
+            .expect("Operation failed");
+        let quality = StatUtils::data_quality_score(&good_data.view()).expect("Operation failed");
         assert!(quality > 0.5); // Should have reasonable quality
 
         let bad_data = Array2::from_elem((10, 3), f64::NAN);
-        let quality = StatUtils::data_quality_score(&bad_data.view()).unwrap();
+        let quality = StatUtils::data_quality_score(&bad_data.view()).expect("Operation failed");
         assert!(quality < 0.5); // Should have poor quality due to NaN values
     }
 

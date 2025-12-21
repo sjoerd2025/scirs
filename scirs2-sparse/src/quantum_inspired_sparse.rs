@@ -1000,12 +1000,15 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // Slow test - quantum processor initialization
     fn test_quantum_sparse_processor_creation() {
-        let config = QuantumSparseConfig::default();
+        // Use much smaller qubit count for testing to avoid 2^32 state allocation
+        let config = QuantumSparseConfig {
+            qubit_count: 8, // 2^8 = 256 states instead of 2^32 = 4B states
+            ..Default::default()
+        };
         let processor = QuantumSparseProcessor::new(config);
 
-        assert_eq!(processor.config.qubit_count, 32);
+        assert_eq!(processor.config.qubit_count, 8);
         assert_eq!(
             processor.config.strategy as u8,
             QuantumStrategy::Superposition as u8
@@ -1030,7 +1033,7 @@ mod tests {
 
         processor
             .quantum_spmv(2, &indptr, &indices, &data, &x, &mut y)
-            .unwrap();
+            .expect("Operation failed");
 
         // Results should be approximately [3.0, 3.0] with quantum effects
         assert!(y[0] > 2.0 && y[0] < 4.0);
@@ -1038,9 +1041,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Slow test - quantum processor stats
     fn test_quantum_processor_stats() {
-        let config = QuantumSparseConfig::default();
+        // Use much smaller qubit count for testing to avoid 2^32 state allocation
+        let config = QuantumSparseConfig {
+            qubit_count: 8, // 2^8 = 256 states instead of 2^32 = 4B states
+            ..Default::default()
+        };
         let processor = QuantumSparseProcessor::new(config);
         let stats = processor.get_stats();
 

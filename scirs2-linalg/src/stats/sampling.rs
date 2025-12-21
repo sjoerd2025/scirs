@@ -487,13 +487,16 @@ mod tests {
         let mean = array![0.0, 0.0];
         let cov = array![[1.0, 0.0], [0.0, 1.0]];
 
-        let samples = sample_multivariate_normal(&mean.view(), &cov.view(), 100, Some(42)).unwrap();
+        let samples = sample_multivariate_normal(&mean.view(), &cov.view(), 100, Some(42))
+            .expect("Operation failed");
 
         assert_eq!(samples.dim(), (100, 2));
         assert!(samples.iter().all(|&x| x.is_finite()));
 
         // Check that sample mean is approximately correct
-        let sample_mean = samples.mean_axis(scirs2_core::ndarray::Axis(0)).unwrap();
+        let sample_mean = samples
+            .mean_axis(scirs2_core::ndarray::Axis(0))
+            .expect("Operation failed");
         assert_abs_diff_eq!(sample_mean[0], 0.0, epsilon = 0.5);
         assert_abs_diff_eq!(sample_mean[1], 0.0, epsilon = 0.5);
     }
@@ -502,7 +505,8 @@ mod tests {
     fn test_bootstrap_sample() {
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0],];
 
-        let bootstrap_samples = bootstrap_sample(&data.view(), 10, Some(2), Some(42)).unwrap();
+        let bootstrap_samples =
+            bootstrap_sample(&data.view(), 10, Some(2), Some(42)).expect("Operation failed");
 
         assert_eq!(bootstrap_samples.len(), 10);
         for sample in &bootstrap_samples {
@@ -515,7 +519,8 @@ mod tests {
     fn test_permutation_sample() {
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0],];
 
-        let permuted_samples = permutation_sample(&data.view(), 5, Some(42)).unwrap();
+        let permuted_samples =
+            permutation_sample(&data.view(), 5, Some(42)).expect("Operation failed");
 
         assert_eq!(permuted_samples.len(), 5);
         for sample in &permuted_samples {
@@ -530,8 +535,8 @@ mod tests {
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
         let col_cov = array![[1.0, 0.0], [0.0, 1.0]];
 
-        let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();
-        let samples = samplematrix_normal_multiple(&params, 5, Some(42)).unwrap();
+        let params = MatrixNormalParams::new(mean, row_cov, col_cov).expect("Operation failed");
+        let samples = samplematrix_normal_multiple(&params, 5, Some(42)).expect("Operation failed");
 
         assert_eq!(samples.len(), 5);
         for sample in &samples {

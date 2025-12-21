@@ -50,7 +50,7 @@
 //!                      0.003, -0.012, 0.018, -0.006, 0.009, 0.002, -0.008, 0.014, -0.004, 0.011,
 //!                      0.007, -0.009, 0.013, -0.003, 0.006]; // Return series
 //!
-//! let result = model.fit(&returns).unwrap();
+//! let result = model.fit(&returns).expect("Operation failed");
 //! println!("APARCH Parameters: {:?}", result.parameters);
 //! println!("Power parameter (δ): {}", result.parameters.delta);
 //! ```
@@ -65,7 +65,7 @@
 //!                      0.003, -0.012, 0.018, -0.006, 0.009, 0.002, -0.008, 0.014, -0.004, 0.011,
 //!                      0.007, -0.009, 0.013, -0.003, 0.006];
 //!
-//! let result = model.fit(&returns).unwrap();
+//! let result = model.fit(&returns).expect("Operation failed");
 //!
 //! // Interpret the power parameter
 //! let delta = result.parameters.delta;
@@ -186,7 +186,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
     ///
     /// let mut model = AparchModel::<f64>::new();
     /// let returns = array![0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004];
-    /// let result = model.fit(&returns).unwrap();
+    /// let result = model.fit(&returns).expect("Operation failed");
     ///
     /// assert!(result.parameters.delta > 0.0);
     /// assert!(result.parameters.gamma > -1.0 && result.parameters.gamma < 1.0);
@@ -203,19 +203,20 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
         let n = returns.len();
 
         // Initialize parameters with typical values for financial data
-        let omega = F::from(0.00001).unwrap(); // Small positive constant
-        let alpha = F::from(0.05).unwrap(); // Magnitude effect
-        let beta = F::from(0.90).unwrap(); // High persistence
-        let gamma = F::from(0.1).unwrap(); // Asymmetry parameter
-        let delta = F::from(2.0).unwrap(); // Power parameter (GARCH specification)
+        let omega = F::from(0.00001).expect("Failed to convert constant to float"); // Small positive constant
+        let alpha = F::from(0.05).expect("Failed to convert constant to float"); // Magnitude effect
+        let beta = F::from(0.90).expect("Failed to convert constant to float"); // High persistence
+        let gamma = F::from(0.1).expect("Failed to convert constant to float"); // Asymmetry parameter
+        let delta = F::from(2.0).expect("Failed to convert constant to float"); // Power parameter (GARCH specification)
 
         // Calculate mean and center the returns
-        let mean = returns.sum() / F::from(n).unwrap();
+        let mean = returns.sum() / F::from(n).expect("Failed to convert to float");
         let centered_returns: Array1<F> = returns.mapv(|x| x - mean);
 
         // Initialize conditional standard deviation with sample standard deviation
-        let initial_std =
-            (centered_returns.mapv(|x| x.powi(2)).sum() / F::from(n - 1).unwrap()).sqrt();
+        let initial_std = (centered_returns.mapv(|x| x.powi(2)).sum()
+            / F::from(n - 1).expect("Failed to convert to float"))
+        .sqrt();
         let mut conditional_std = Array1::zeros(n);
         conditional_std[0] = initial_std;
 
@@ -236,15 +237,16 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             };
 
             // Apply power transformation
-            let innovation_power = if delta == F::from(2.0).unwrap() {
-                // For δ = 2, use squared terms (standard GARCH case)
-                sign_adjustment.powi(2)
-            } else {
-                // For general δ, use power function
-                sign_adjustment.powf(delta)
-            };
+            let innovation_power =
+                if delta == F::from(2.0).expect("Failed to convert constant to float") {
+                    // For δ = 2, use squared terms (standard GARCH case)
+                    sign_adjustment.powi(2)
+                } else {
+                    // For general δ, use power function
+                    sign_adjustment.powf(delta)
+                };
 
-            let std_power = if delta == F::from(2.0).unwrap() {
+            let std_power = if delta == F::from(2.0).expect("Failed to convert constant to float") {
                 // For δ = 2, variance specification
                 lagged_std.powi(2)
             } else {
@@ -256,15 +258,19 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             let new_std_power = omega + alpha * innovation_power + beta * std_power;
 
             // Convert back to standard deviation
-            conditional_std[i] = if delta == F::from(2.0).unwrap() {
-                // For δ = 2, take square root
-                new_std_power.sqrt().max(F::from(1e-8).unwrap()) // Ensure positivity
-            } else {
-                // For general δ, take δ-th root
-                new_std_power
-                    .powf(F::one() / delta)
-                    .max(F::from(1e-8).unwrap())
-            };
+            conditional_std[i] =
+                if delta == F::from(2.0).expect("Failed to convert constant to float") {
+                    // For δ = 2, take square root
+                    new_std_power
+                        .sqrt()
+                        .max(F::from(1e-8).expect("Failed to convert constant to float"))
+                // Ensure positivity
+                } else {
+                    // For general δ, take δ-th root
+                    new_std_power
+                        .powf(F::one() / delta)
+                        .max(F::from(1e-8).expect("Failed to convert constant to float"))
+                };
         }
 
         // Calculate conditional variance from standard deviation
@@ -279,14 +285,17 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
 
         // Calculate log-likelihood for normal distribution
         let mut log_likelihood = F::zero();
-        let ln_2pi = F::from(2.0 * std::f64::consts::PI).unwrap().ln();
+        let ln_2pi = F::from(2.0 * std::f64::consts::PI)
+            .expect("Failed to convert to float")
+            .ln();
 
         for i in 0..n {
             let std_dev = conditional_std[i];
             if std_dev > F::zero() {
-                let term = -F::from(0.5).unwrap()
+                let term = -F::from(0.5).expect("Failed to convert constant to float")
                     * (ln_2pi
-                        + F::from(2.0).unwrap() * std_dev.ln()
+                        + F::from(2.0).expect("Failed to convert constant to float")
+                            * std_dev.ln()
                         + centered_returns[i].powi(2) / std_dev.powi(2));
                 log_likelihood = log_likelihood + term;
             }
@@ -302,10 +311,12 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
         };
 
         // Calculate information criteria
-        let k = F::from(5).unwrap(); // Number of parameters (ω, α, β, γ, δ)
-        let n_f = F::from(n).unwrap();
-        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0).unwrap() * k;
-        let bic = -F::from(2.0).unwrap() * log_likelihood + k * n_f.ln();
+        let k = F::from(5).expect("Failed to convert constant to float"); // Number of parameters (ω, α, β, γ, δ)
+        let n_f = F::from(n).expect("Failed to convert to float");
+        let aic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + F::from(2.0).expect("Failed to convert constant to float") * k;
+        let bic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + k * n_f.ln();
 
         // Update model state
         self.fitted = true;
@@ -380,14 +391,18 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             let delta = p.delta;
             let gamma = p.gamma;
 
-            if (delta - F::from(2.0).unwrap()).abs() < F::from(0.1).unwrap() {
-                if gamma.abs() < F::from(0.01).unwrap() {
+            if (delta - F::from(2.0).expect("Failed to convert constant to float")).abs()
+                < F::from(0.1).expect("Failed to convert constant to float")
+            {
+                if gamma.abs() < F::from(0.01).expect("Failed to convert constant to float") {
                     "Standard GARCH".to_string()
                 } else {
                     "GJR-GARCH (Threshold GARCH)".to_string()
                 }
-            } else if (delta - F::one()).abs() < F::from(0.1).unwrap() {
-                if gamma.abs() < F::from(0.01).unwrap() {
+            } else if (delta - F::one()).abs()
+                < F::from(0.1).expect("Failed to convert constant to float")
+            {
+                if gamma.abs() < F::from(0.01).expect("Failed to convert constant to float") {
                     "AVGARCH (Absolute Value GARCH)".to_string()
                 } else {
                     "TARCH (Threshold ARCH)".to_string()
@@ -407,7 +422,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
     pub fn has_asymmetric_effects(&self) -> Option<bool> {
         self.parameters
             .as_ref()
-            .map(|p| p.gamma.abs() > F::from(0.01).unwrap())
+            .map(|p| p.gamma.abs() > F::from(0.01).expect("Failed to convert constant to float"))
     }
 
     /// Get the asymmetry parameter
@@ -476,7 +491,7 @@ mod tests {
         let result = model.fit(&returns);
         assert!(result.is_ok());
 
-        let result = result.unwrap();
+        let result = result.expect("Operation failed");
         assert!(result.parameters.omega > 0.0);
         assert!(result.parameters.alpha > 0.0);
         assert!(result.parameters.beta > 0.0);
@@ -493,7 +508,7 @@ mod tests {
             0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
         ]);
 
-        model.fit(&returns).unwrap();
+        model.fit(&returns).expect("Operation failed");
 
         let classification = model.classify_model();
         assert!(classification.is_some());
@@ -506,11 +521,11 @@ mod tests {
 
         let delta = model.power_parameter();
         assert!(delta.is_some());
-        assert_eq!(delta.unwrap(), 2.0); // Fixed at 2.0 in this implementation
+        assert_eq!(delta.expect("Operation failed"), 2.0); // Fixed at 2.0 in this implementation
 
         let persistence = model.persistence();
         assert!(persistence.is_some());
-        assert!(persistence.unwrap() > 0.0);
+        assert!(persistence.expect("Operation failed") > 0.0);
 
         let is_stationary = model.is_likely_stationary();
         assert!(is_stationary == Some(true));
@@ -523,10 +538,10 @@ mod tests {
             0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
         ]);
 
-        let result = model.fit(&returns).unwrap();
+        let result = model.fit(&returns).expect("Operation failed");
 
         // Check that conditional variance is square of conditional std
-        let variance_from_std = model.get_conditional_variance().unwrap();
+        let variance_from_std = model.get_conditional_variance().expect("Operation failed");
         let variance_direct = result.conditional_variance;
 
         for i in 0..variance_from_std.len() {
@@ -557,7 +572,7 @@ mod tests {
         let returns = arr1(&[
             0.01, -0.02, 0.015, -0.008, 0.012, 0.005, -0.003, 0.007, -0.001, 0.004,
         ]);
-        fitted_model.fit(&returns).unwrap();
+        fitted_model.fit(&returns).expect("Operation failed");
 
         assert!(fitted_model.get_parameters().is_some());
         assert!(fitted_model.get_conditional_std().is_some());
@@ -579,9 +594,9 @@ mod tests {
             0.002, -0.007, 0.011, 0.003, -0.004, 0.008, -0.002, 0.006,
         ]);
 
-        model.fit(&returns).unwrap();
+        model.fit(&returns).expect("Operation failed");
 
-        let classification = model.classify_model().unwrap();
+        let classification = model.classify_model().expect("Operation failed");
         // With δ = 2.0 and γ > 0, should be classified as GJR-GARCH or Standard GARCH
         assert!(classification.contains("GARCH"));
     }

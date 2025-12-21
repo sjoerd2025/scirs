@@ -358,8 +358,8 @@ impl<F: IntegrateFloat> Tape<F> {
                     *self.nodes[*a].gradient.borrow_mut() += grad / self.nodes[*a].value;
                 }
                 Operation::Sqrt(a) => {
-                    *self.nodes[*a].gradient.borrow_mut() +=
-                        grad / (F::from(2.0).unwrap() * node.value);
+                    *self.nodes[*a].gradient.borrow_mut() += grad
+                        / (F::from(2.0).expect("Failed to convert constant to float") * node.value);
                 }
                 Operation::PowGeneral(a, b) => {
                     // d/da(a^b) = b * a^(b-1)
@@ -562,7 +562,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
         }
 
         let mut hessian = Array2::zeros((self.nvars, self.nvars));
-        let eps = F::from(1e-8).unwrap();
+        let eps = F::from(1e-8).expect("Failed to convert constant to float");
 
         // Compute Hessian using finite differences of gradients
         for j in 0..self.nvars {
@@ -582,7 +582,8 @@ impl<F: IntegrateFloat> ReverseAD<F> {
         // Make Hessian symmetric (average upper and lower triangular parts)
         for i in 0..self.nvars {
             for j in (i + 1)..self.nvars {
-                let avg = (hessian[[i, j]] + hessian[[j, i]]) / F::from(2.0).unwrap();
+                let avg = (hessian[[i, j]] + hessian[[j, i]])
+                    / F::from(2.0).expect("Failed to convert constant to float");
                 hessian[[i, j]] = avg;
                 hessian[[j, i]] = avg;
             }
@@ -627,7 +628,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
         }
 
         // Use forward mode for efficient JVP computation
-        let eps = F::from(1e-8).unwrap();
+        let eps = F::from(1e-8).expect("Failed to convert constant to float");
         let x_perturbed = &x + &(v.to_owned() * eps);
 
         let mut tape = Tape::new();
@@ -747,7 +748,7 @@ mod tests {
         };
 
         let x = Array1::from_vec(vec![3.0, 4.0]);
-        let grad = reverse_gradient(f, x.view()).unwrap();
+        let grad = reverse_gradient(f, x.view()).expect("Operation failed");
 
         // Gradient should be [2x, 2y] = [6, 8]
         assert!((grad[0] - 6.0).abs() < 1e-10);
@@ -765,7 +766,7 @@ mod tests {
         };
 
         let x = Array1::from_vec(vec![2.0, 3.0]);
-        let jac = reverse_jacobian(f, x.view()).unwrap();
+        let jac = reverse_jacobian(f, x.view()).expect("Operation failed");
 
         // Jacobian should be:
         // [[2x, 0 ],

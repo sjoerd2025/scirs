@@ -1105,7 +1105,7 @@ impl HDF5File {
             return Err(IoError::FormatError("Invalid dataset path".to_string()));
         }
 
-        let dataset_name = parts.last().unwrap();
+        let dataset_name = parts.last().expect("Operation failed");
         let mut current_group = &mut self.root;
 
         // Navigate to the parent group, creating groups as needed
@@ -1171,7 +1171,7 @@ impl HDF5File {
             return Err(IoError::FormatError("Invalid dataset path".to_string()));
         }
 
-        let dataset_name = parts.last().unwrap();
+        let dataset_name = parts.last().expect("Operation failed");
         let mut current_group = &self.root;
 
         // Navigate to the parent group
@@ -1259,8 +1259,11 @@ impl HDF5File {
                 }
             }
             // Write file
-            std::fs::write(&sidecar, serde_json::to_vec(&obj).unwrap())
-                .map_err(|e| IoError::FormatError(format!("Failed to persist mock HDF5: {e}")))?;
+            std::fs::write(
+                &sidecar,
+                serde_json::to_vec(&obj).expect("Operation failed"),
+            )
+            .map_err(|e| IoError::FormatError(format!("Failed to persist mock HDF5: {e}")))?;
         }
 
         Ok(())
@@ -1273,7 +1276,7 @@ impl HDF5File {
             return Err(IoError::FormatError("Invalid dataset path".to_string()));
         }
 
-        let dataset_name = parts.last().unwrap();
+        let dataset_name = parts.last().expect("Operation failed");
         let mut current_group = &self.root;
 
         // Navigate to the parent group
@@ -1698,9 +1701,8 @@ mod legacy_tests {
     }
 
     #[test]
-    #[ignore]
     fn test_hdf5_file_creation() {
-        let file = HDF5File::create("test.h5").unwrap();
+        let file = HDF5File::create("test.h5").expect("Operation failed");
         assert_eq!(file.mode, FileMode::Create);
         assert_eq!(file.root.name, "/");
     }

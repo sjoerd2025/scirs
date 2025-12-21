@@ -110,7 +110,7 @@ fn generate_testvolume(width: usize, height: usize, depth: usize) -> Vec<f64> {
 #[allow(dead_code)]
 fn frequency_domain_filter_3d(volume: &[f64], shape: &[usize], filtertype: &str) -> Vec<f64> {
     // Step 1: Compute the N-dimensional FFT of the volume
-    let spectrum = fftn_adaptive(volume, Some(shape), None, None).unwrap();
+    let spectrum = fftn_adaptive(volume, Some(shape), None, None).expect("Operation failed");
 
     // Step 2: Create a frequency domain filter
     let mut filter = vec![Complex64::new(0.0, 0.0); volume.len()];
@@ -211,7 +211,7 @@ fn frequency_domain_filter_3d(volume: &[f64], shape: &[usize], filtertype: &str)
 
     // Step 4: Compute the inverse N-dimensional FFT
     let filteredvolume_complex =
-        ifftn_adaptive(&filtered_spectrum, Some(shape), None, None).unwrap();
+        ifftn_adaptive(&filtered_spectrum, Some(shape), None, None).expect("Operation failed");
 
     // Step 5: Extract real part (the filtered volume)
     let filteredvolume: Vec<f64> = filteredvolume_complex.iter().map(|c| c.re).collect();

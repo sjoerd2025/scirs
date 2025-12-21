@@ -833,15 +833,19 @@ mod tests {
         let debug_event = LogEvent::new("Debug message".to_string(), EventClass::Debug);
 
         // Error events should have more generous limits
-        let error_decision = limiter.should_allow(&error_event).unwrap();
+        let error_decision = limiter
+            .should_allow(&error_event)
+            .expect("Operation failed");
         assert!(matches!(error_decision, RateLimitDecision::Allow));
 
         // Debug events should have tighter limits
-        let debug_decision = limiter.should_allow(&debug_event).unwrap();
+        let debug_decision = limiter
+            .should_allow(&debug_event)
+            .expect("Operation failed");
         assert!(matches!(debug_decision, RateLimitDecision::Allow)); // First one should be allowed
 
         // Stats should be updated
-        let stats = limiter.get_stats().unwrap();
+        let stats = limiter.get_stats().expect("Operation failed");
         assert_eq!(stats.total_events, 2);
         assert_eq!(stats.allowed_events, 2);
     }
@@ -878,7 +882,9 @@ mod tests {
 
         // Critical events should always be allowed, regardless of rate limiting
         for _ in 0..1000 {
-            let decision = limiter.should_allow(&critical_event).unwrap();
+            let decision = limiter
+                .should_allow(&critical_event)
+                .expect("Operation failed");
             assert!(matches!(decision, RateLimitDecision::Allow));
         }
     }

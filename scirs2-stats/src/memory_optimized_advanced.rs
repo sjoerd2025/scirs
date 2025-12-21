@@ -64,7 +64,7 @@ impl AdaptiveMemoryManager {
 
     /// Get optimal chunk size based on current memory usage and data size
     pub fn get_optimal_chunksize(&self, datasize: usize, elementsize: usize) -> usize {
-        let current_usage = *self.current_usage.lock().unwrap();
+        let current_usage = *self.current_usage.lock().expect("Operation failed");
         let available_memory = self
             .constraints
             .max_memory_bytes
@@ -83,7 +83,7 @@ impl AdaptiveMemoryManager {
 
     /// Record memory usage for an operation
     pub fn record_operation(&self, metrics: OperationMetrics) {
-        let mut history = self.operation_history.lock().unwrap();
+        let mut history = self.operation_history.lock().expect("Operation failed");
 
         // Keep only recent operations
         if history.len() >= 100 {
@@ -93,15 +93,15 @@ impl AdaptiveMemoryManager {
         history.push_back(metrics.clone());
 
         // Update peak usage
-        let mut peak = self.peak_usage.lock().unwrap();
+        let mut peak = self.peak_usage.lock().expect("Operation failed");
         *peak = (*peak).max(metrics.memory_used);
     }
 
     /// Get memory usage statistics
     pub fn get_statistics(&self) -> MemoryStatistics {
-        let current_usage = *self.current_usage.lock().unwrap();
-        let peak_usage = *self.peak_usage.lock().unwrap();
-        let history = self.operation_history.lock().unwrap();
+        let current_usage = *self.current_usage.lock().expect("Operation failed");
+        let peak_usage = *self.peak_usage.lock().expect("Operation failed");
+        let history = self.operation_history.lock().expect("Operation failed");
 
         let avg_memory_per_op = if !history.is_empty() {
             history.iter().map(|m| m.memory_used).sum::<usize>() / history.len()
@@ -315,7 +315,7 @@ where
 
     // Compute covariance matrix
     let mut cov_matrix = Array2::<F>::zeros((n_vars, n_vars));
-    let n_f = F::from(total_obs).unwrap();
+    let n_f = F::from(total_obs).expect("Failed to convert to float");
 
     for i in 0..n_vars {
         for j in 0..n_vars {
@@ -358,7 +358,8 @@ where
     let mut means = Array1::<F>::zeros(n_vars);
     for i in 0..n_vars {
         let column = data.column(i);
-        means[i] = column.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n_obs).unwrap();
+        means[i] = column.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(n_obs).expect("Failed to convert to float");
     }
 
     // Estimate memory for centered data
@@ -452,7 +453,7 @@ where
             let row = chunk.row(i);
 
             // Update mean
-            let n_f = F::from(n_samples_).unwrap();
+            let n_f = F::from(n_samples_).expect("Failed to convert to float");
             for j in 0..n_features {
                 let delta = row[j] - running_mean[j];
                 running_mean[j] = running_mean[j] + delta / n_f;
@@ -463,9 +464,10 @@ where
                 for j in 0..n_features {
                     for k in j..n_features {
                         let prod = (row[j] - running_mean[j]) * (row[k] - running_mean[k]);
-                        running_cov[[j, k]] =
-                            running_cov[[j, k]] * F::from(n_samples_ - 1).unwrap() / n_f
-                                + prod / n_f;
+                        running_cov[[j, k]] = running_cov[[j, k]]
+                            * F::from(n_samples_ - 1).expect("Failed to convert to float")
+                            / n_f
+                            + prod / n_f;
                         if j != k {
                             running_cov[[k, j]] = running_cov[[j, k]];
                         }
@@ -553,10 +555,10 @@ where
     let q75_idx = (values.len() as f64 * 0.75) as usize;
     let q25_idx = (values.len() as f64 * 0.25) as usize;
     let iqr = values[q75_idx] - values[q25_idx];
-    let h = F::from(2.0).unwrap() * iqr
+    let h = F::from(2.0).expect("Failed to convert constant to float") * iqr
         / F::from(total_count as f64)
-            .unwrap()
-            .powf(F::from(1.0 / 3.0).unwrap());
+            .expect("Operation failed")
+            .powf(F::from(1.0 / 3.0).expect("Failed to convert to float"));
     let n_bins = if h > F::zero() {
         ((max_val - min_val) / h)
             .to_usize()
@@ -567,13 +569,13 @@ where
         50 // Default
     };
 
-    let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
+    let bin_width = (max_val - min_val) / F::from(n_bins).expect("Failed to convert to float");
     let mut bin_edges = Array1::<F>::zeros(n_bins + 1);
     let mut counts = Array1::<usize>::zeros(n_bins);
 
     // Set bin edges
     for i in 0..=n_bins {
-        bin_edges[i] = min_val + F::from(i).unwrap() * bin_width;
+        bin_edges[i] = min_val + F::from(i).expect("Failed to convert to float") * bin_width;
     }
 
     // Second pass would count values into bins (simplified here)
@@ -747,10 +749,10 @@ where
         let ni_prev = self.positions[i - 1];
         let ni_next = self.positions[i + 1];
 
-        let d_f = F::from(d).unwrap();
-        let ni_f = F::from(ni).unwrap();
-        let ni_prev_f = F::from(ni_prev).unwrap();
-        let ni_next_f = F::from(ni_next).unwrap();
+        let d_f = F::from(d).expect("Failed to convert to float");
+        let ni_f = F::from(ni).expect("Failed to convert to float");
+        let ni_prev_f = F::from(ni_prev).expect("Failed to convert to float");
+        let ni_next_f = F::from(ni_next).expect("Failed to convert to float");
 
         let a = d_f / (ni_next_f - ni_prev_f);
         let b1 = (ni_f - ni_prev_f + d_f) * (qi_next - qi) / (ni_next_f - ni_f);
@@ -765,13 +767,13 @@ where
             let qi = self.markers[i];
             let ni_next = self.positions[i + 1];
             let ni = self.positions[i];
-            qi + (qi_next - qi) * F::from(d / (ni_next - ni)).unwrap()
+            qi + (qi_next - qi) * F::from(d / (ni_next - ni)).expect("Operation failed")
         } else {
             let qi = self.markers[i];
             let qi_prev = self.markers[i - 1];
             let ni = self.positions[i];
             let ni_prev = self.positions[i - 1];
-            qi + (qi_prev - qi) * F::from(-d / (ni - ni_prev)).unwrap()
+            qi + (qi_prev - qi) * F::from(-d / (ni - ni_prev)).expect("Operation failed")
         }
     }
 
@@ -923,7 +925,7 @@ where
 
         // Make diagonal 1
         let pivot = aug[[i, i]];
-        if pivot.abs() < F::from(1e-12).unwrap() {
+        if pivot.abs() < F::from(1e-12).expect("Failed to convert constant to float") {
             return Err(StatsError::ComputationError(
                 "Matrix is singular".to_string(),
             ));
@@ -1044,7 +1046,7 @@ where
 {
     let (n_obs, n_vars) = data.dim();
     let mut cov_matrix = Array2::<F>::zeros((n_vars, n_vars));
-    let n_f = F::from(n_obs - 1).unwrap(); // Sample covariance
+    let n_f = F::from(n_obs - 1).expect("Failed to convert to float"); // Sample covariance
 
     for i in 0..n_vars {
         for j in i..n_vars {
@@ -1123,7 +1125,9 @@ where
             // Check convergence
             let mut converged = true;
             for i in 0..n {
-                if (new_v[i] - v[i]).abs() > F::from(1e-6).unwrap() {
+                if (new_v[i] - v[i]).abs()
+                    > F::from(1e-6).expect("Failed to convert constant to float")
+                {
                     converged = false;
                     break;
                 }
@@ -1263,7 +1267,8 @@ where
                     .iter()
                     .map(|&x| x * x)
                     .fold(F::zero(), |acc, x| acc + x);
-                explained_variance[k] = variance / F::from(batch.nrows()).unwrap();
+                explained_variance[k] =
+                    variance / F::from(batch.nrows()).expect("Operation failed");
             }
         }
 
@@ -1339,7 +1344,8 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let result = cache_oblivious_matrix_mult(&a.view(), &b.view(), 2).unwrap();
+        let result =
+            cache_oblivious_matrix_mult(&a.view(), &b.view(), 2).expect("Operation failed");
 
         // Expected: [[19, 22], [43, 50]]
         assert!((result[[0, 0]] - 19.0).abs() < 1e-10);

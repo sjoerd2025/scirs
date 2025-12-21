@@ -99,7 +99,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Wishart
             ));
         }
 
-        let min_dof = F::from(p).unwrap() - F::one();
+        let min_dof = F::from(p).expect("Failed to convert to float") - F::one();
         if dof <= min_dof {
             return Err(LinalgError::InvalidInputError(format!(
                 "Degrees of freedom must be > {min_dof}, got {dof:?}"
@@ -164,12 +164,18 @@ where
     let quad_form = v_inv.dot(&temp2).diag().sum();
 
     // Compute the normalizing constant
-    let log_2pi = F::from(2.0 * PI).unwrap().ln();
-    let normalizer = -F::from(m * n).unwrap() * F::from(0.5).unwrap() * log_2pi
-        - F::from(n).unwrap() * F::from(0.5).unwrap() * log_det_u
-        - F::from(m).unwrap() * F::from(0.5).unwrap() * log_det_v;
+    let log_2pi = F::from(2.0 * PI).expect("Failed to convert to float").ln();
+    let normalizer = -F::from(m * n).expect("Failed to convert to float")
+        * F::from(0.5).expect("Failed to convert constant to float")
+        * log_2pi
+        - F::from(n).expect("Failed to convert to float")
+            * F::from(0.5).expect("Failed to convert constant to float")
+            * log_det_u
+        - F::from(m).expect("Failed to convert to float")
+            * F::from(0.5).expect("Failed to convert constant to float")
+            * log_det_v;
 
-    Ok(normalizer - F::from(0.5).unwrap() * quad_form)
+    Ok(normalizer - F::from(0.5).expect("Failed to convert constant to float") * quad_form)
 }
 
 /// Compute the log probability density function for a Wishart distribution
@@ -225,16 +231,25 @@ where
 
     // Compute the log normalizing constant
     let log_gamma_p = multivariate_log_gamma(params.dof, p)?;
-    let log_2 = F::from(2.0).unwrap().ln();
+    let log_2 = F::from(2.0)
+        .expect("Failed to convert constant to float")
+        .ln();
 
-    let log_normalizer = params.dof * F::from(p).unwrap() * F::from(0.5).unwrap() * log_2
-        + F::from(0.25).unwrap() * F::from(p * (p - 1)).unwrap() * F::from(PI).unwrap().ln()
+    let log_normalizer = params.dof
+        * F::from(p).expect("Failed to convert to float")
+        * F::from(0.5).expect("Failed to convert constant to float")
+        * log_2
+        + F::from(0.25).expect("Failed to convert constant to float")
+            * F::from(p * (p - 1)).expect("Operation failed")
+            * F::from(PI).expect("Failed to convert to float").ln()
         + log_gamma_p
-        + params.dof * F::from(0.5).unwrap() * log_det_v;
+        + params.dof * F::from(0.5).expect("Failed to convert constant to float") * log_det_v;
 
     // Compute the main term
-    let main_term = (params.dof - F::from(p + 1).unwrap()) * F::from(0.5).unwrap() * log_det_x
-        - F::from(0.5).unwrap() * trace_term;
+    let main_term = (params.dof - F::from(p + 1).expect("Failed to convert to float"))
+        * F::from(0.5).expect("Failed to convert constant to float")
+        * log_det_x
+        - F::from(0.5).expect("Failed to convert constant to float") * trace_term;
 
     Ok(main_term - log_normalizer)
 }
@@ -331,7 +346,8 @@ where
         for j in 0..=i {
             if i == j {
                 // Diagonal: Chi-distributed (approximated as |N(0,1)| * sqrt(nu-i))
-                let chi_approx = z[[i, j]].abs() * (params.dof - F::from(i).unwrap()).sqrt();
+                let chi_approx = z[[i, j]].abs()
+                    * (params.dof - F::from(i).expect("Failed to convert to float")).sqrt();
                 a[[i, j]] = chi_approx;
             } else {
                 // Off-diagonal: standard normal
@@ -358,15 +374,20 @@ fn multivariate_log_gamma<F>(x: F, p: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + std::fmt::Debug + scirs2_core::numeric::FromPrimitive,
 {
-    let log_pi = F::from(PI).unwrap().ln();
-    let mut result = F::from(p * (p - 1)).unwrap() * F::from(0.25).unwrap() * log_pi;
+    let log_pi = F::from(PI).expect("Failed to convert to float").ln();
+    let mut result = F::from(p * (p - 1)).expect("Operation failed")
+        * F::from(0.25).expect("Failed to convert constant to float")
+        * log_pi;
 
     for j in 1..=p {
-        let arg = x + (F::one() - F::from(j).unwrap()) * F::from(0.5).unwrap();
+        let arg = x
+            + (F::one() - F::from(j).expect("Failed to convert to float"))
+                * F::from(0.5).expect("Failed to convert constant to float");
         // Use log-gamma approximation (Stirling's formula for large values)
         let log_gamma_approx = if arg > F::one() {
-            (arg - F::from(0.5).unwrap()) * arg.ln() - arg
-                + F::from(0.5).unwrap() * F::from(2.0 * PI).unwrap().ln()
+            (arg - F::from(0.5).expect("Failed to convert constant to float")) * arg.ln() - arg
+                + F::from(0.5).expect("Failed to convert constant to float")
+                    * F::from(2.0 * PI).expect("Failed to convert to float").ln()
         } else {
             F::zero() // Simplified for small values
         };
@@ -388,7 +409,7 @@ mod tests {
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
         let col_cov = array![[2.0, 0.0], [0.0, 2.0]];
 
-        let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();
+        let params = MatrixNormalParams::new(mean, row_cov, col_cov).expect("Operation failed");
         assert_eq!(params.mean.dim(), (2, 2));
         assert_eq!(params.row_cov.dim(), (2, 2));
         assert_eq!(params.col_cov.dim(), (2, 2));
@@ -399,7 +420,7 @@ mod tests {
         let scale = array![[2.0, 0.0], [0.0, 2.0]];
         let dof = 3.0;
 
-        let params = WishartParams::new(scale, dof).unwrap();
+        let params = WishartParams::new(scale, dof).expect("Operation failed");
         assert_abs_diff_eq!(params.dof, 3.0, epsilon = 1e-10);
         assert_eq!(params.scale.dim(), (2, 2));
     }
@@ -411,8 +432,8 @@ mod tests {
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
         let col_cov = array![[1.0, 0.0], [0.0, 1.0]];
 
-        let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();
-        let logpdf = matrix_normal_logpdf(&x.view(), &params).unwrap();
+        let params = MatrixNormalParams::new(mean, row_cov, col_cov).expect("Operation failed");
+        let logpdf = matrix_normal_logpdf(&x.view(), &params).expect("Operation failed");
 
         // Should be a finite value for valid inputs
         assert!(logpdf.is_finite());
@@ -424,8 +445,8 @@ mod tests {
         let row_cov = array![[1.0, 0.0], [0.0, 1.0]];
         let col_cov = array![[1.0, 0.0], [0.0, 1.0]];
 
-        let params = MatrixNormalParams::new(mean, row_cov, col_cov).unwrap();
-        let sample = samplematrix_normal(&params, Some(42)).unwrap();
+        let params = MatrixNormalParams::new(mean, row_cov, col_cov).expect("Operation failed");
+        let sample = samplematrix_normal(&params, Some(42)).expect("Operation failed");
 
         assert_eq!(sample.dim(), (2, 2));
         assert!(sample.iter().all(|&x| x.is_finite()));
@@ -460,7 +481,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Inverse
             )));
         }
 
-        let p = F::from(scale.nrows()).unwrap();
+        let p = F::from(scale.nrows()).expect("Operation failed");
         if dof <= p - F::one() {
             return Err(LinalgError::InvalidInputError(format!(
                 "Degrees of freedom must be > dimension - 1, got dof = {} for dimension {}",
@@ -504,7 +525,7 @@ where
         + Sync
         + scirs2_core::ndarray::ScalarOperand,
 {
-    let p = F::from(x.nrows()).unwrap();
+    let p = F::from(x.nrows()).expect("Operation failed");
     let nu = params.dof;
 
     // Compute log determinant of X
@@ -531,23 +552,26 @@ where
     let trace_psi_x_inv = (0..psi_x_inv.nrows()).map(|i| psi_x_inv[[i, i]]).sum::<F>();
 
     // Compute normalization constant
-    let half = F::from(0.5).unwrap();
-    let two = F::from(2.0).unwrap();
-    let pi = F::from(PI).unwrap();
+    let half = F::from(0.5).expect("Failed to convert constant to float");
+    let two = F::from(2.0).expect("Failed to convert constant to float");
+    let pi = F::from(PI).expect("Failed to convert to float");
 
     // Log normalization: nu/2 * log|Ψ| - nu*p/2 * log(2) - p(p-1)/4 * log(π) - log Γ_p(ν/2)
     let log_norm = half * nu * log_det_psi
         - half * nu * p * two.ln()
-        - F::from(0.25).unwrap() * p * (p - F::one()) * pi.ln();
+        - F::from(0.25).expect("Failed to convert constant to float")
+            * p
+            * (p - F::one())
+            * pi.ln();
 
     // For simplicity, we approximate the multivariate gamma function using Stirling's approximation
     // This is not exact but gives a reasonable approximation for moderate dimensions
     let mut log_gamma_p = F::zero();
-    for j in 0..p.to_usize().unwrap() {
-        let arg = half * (nu - F::from(j).unwrap());
+    for j in 0..p.to_usize().expect("Operation failed") {
+        let arg = half * (nu - F::from(j).expect("Failed to convert to float"));
         if arg > F::one() {
             // Stirling's approximation: ln Γ(x) ≈ (x - 0.5) ln(x) - x + 0.5 ln(2π)
-            let ln_2pi = F::from(2.0 * PI).unwrap().ln();
+            let ln_2pi = F::from(2.0 * PI).expect("Failed to convert to float").ln();
             log_gamma_p += (arg - half) * arg.ln() - arg + half * ln_2pi;
         }
     }
@@ -655,10 +679,10 @@ where
     let log_det_v = det(&params.scale_v.view(), None)?.ln();
 
     // Compute normalization constant (approximated)
-    let half = F::from(0.5).unwrap();
-    let pi = F::from(PI).unwrap();
-    let n_f = F::from(n).unwrap();
-    let p_f = F::from(p).unwrap();
+    let half = F::from(0.5).expect("Failed to convert constant to float");
+    let pi = F::from(PI).expect("Failed to convert to float");
+    let n_f = F::from(n).expect("Failed to convert to float");
+    let p_f = F::from(p).expect("Failed to convert to float");
 
     // Log normalization is complex for matrix t-distribution
     // This is a simplified approximation
@@ -681,7 +705,7 @@ mod extended_tests {
         let scale = array![[2.0, 0.5], [0.5, 1.0]];
         let dof = 5.0;
 
-        let params = InverseWishartParams::new(scale, dof).unwrap();
+        let params = InverseWishartParams::new(scale, dof).expect("Operation failed");
         assert_eq!(params.dof, 5.0);
 
         // Test invalid degrees of freedom
@@ -696,7 +720,7 @@ mod extended_tests {
         let scale_v = array![[1.0, 0.0], [0.0, 1.0]];
         let dof = 3.0;
 
-        let params = MatrixTParams::new(location, scale_u, scale_v, dof).unwrap();
+        let params = MatrixTParams::new(location, scale_u, scale_v, dof).expect("Operation failed");
         assert_eq!(params.dof, 3.0);
 
         // Test invalid degrees of freedom
@@ -713,9 +737,9 @@ mod extended_tests {
     fn test_inverse_wishart_logpdf() {
         let x = array![[2.0, 0.5], [0.5, 1.5]];
         let scale = array![[1.0, 0.0], [0.0, 1.0]];
-        let params = InverseWishartParams::new(scale, 5.0).unwrap();
+        let params = InverseWishartParams::new(scale, 5.0).expect("Operation failed");
 
-        let logpdf = inverse_wishart_logpdf(&x.view(), &params).unwrap();
+        let logpdf = inverse_wishart_logpdf(&x.view(), &params).expect("Operation failed");
         assert!(logpdf.is_finite());
     }
 
@@ -725,9 +749,9 @@ mod extended_tests {
         let location = array![[0.0, 0.0], [0.0, 0.0]];
         let scale_u = array![[1.0, 0.0], [0.0, 1.0]];
         let scale_v = array![[1.0, 0.0], [0.0, 1.0]];
-        let params = MatrixTParams::new(location, scale_u, scale_v, 3.0).unwrap();
+        let params = MatrixTParams::new(location, scale_u, scale_v, 3.0).expect("Operation failed");
 
-        let logpdf = matrix_t_logpdf(&x.view(), &params).unwrap();
+        let logpdf = matrix_t_logpdf(&x.view(), &params).expect("Operation failed");
         assert!(logpdf.is_finite());
     }
 }

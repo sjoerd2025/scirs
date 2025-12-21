@@ -166,8 +166,8 @@ where
     /// * Result containing the confusion matrix
     fn get_matrix(&self) -> Result<Array2<f64>> {
         if self.y_true.is_some() && self.y_pred.is_some() {
-            let y_true = self.y_true.unwrap();
-            let y_pred = self.y_pred.unwrap();
+            let y_true = self.y_true.expect("Operation failed");
+            let y_pred = self.y_pred.expect("Operation failed");
 
             // Calculate confusion matrix
             let (cm, _labels) = confusion_matrix(y_true, y_pred, None)?;

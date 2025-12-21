@@ -238,7 +238,7 @@ where
 
     // Apply the sine function
     let sin_ufunc = SinUFunc;
-    sin_ufunc.apply(&[_array], &mut result).unwrap();
+    sin_ufunc.apply(&[_array], &mut result).expect("Operation failed");
 
     result
 }
@@ -278,7 +278,7 @@ where
 
     // Apply the cosine function
     let cos_ufunc = CosUFunc;
-    cos_ufunc.apply(&[_array], &mut result).unwrap();
+    cos_ufunc.apply(&[_array], &mut result).expect("Operation failed");
 
     result
 }
@@ -317,7 +317,7 @@ where
 
     // Apply the tangent function
     let tan_ufunc = TanUFunc;
-    tan_ufunc.apply(&[_array], &mut result).unwrap();
+    tan_ufunc.apply(&[_array], &mut result).expect("Operation failed");
 
     result
 }
@@ -356,7 +356,7 @@ where
 
     // Apply the exponential function
     let exp_ufunc = ExpUFunc;
-    exp_ufunc.apply(&[_array], &mut result).unwrap();
+    exp_ufunc.apply(&[_array], &mut result).expect("Operation failed");
 
     result
 }
@@ -395,7 +395,7 @@ where
 
     // Apply the natural logarithm function
     let log_ufunc = LogUFunc;
-    log_ufunc.apply(&[_array], &mut result).unwrap();
+    log_ufunc.apply(&[_array], &mut result).expect("Operation failed");
 
     result
 }
@@ -433,7 +433,7 @@ where
 
     // Apply the square root function
     let sqrt_ufunc = SqrtUFunc;
-    sqrt_ufunc.apply(&[_array], &mut result).unwrap();
+    sqrt_ufunc.apply(&[_array], &mut result).expect("Operation failed");
 
     result
 }
@@ -471,7 +471,7 @@ where
 
     // Apply the absolute value function
     let abs_ufunc = AbsUFunc;
-    abs_ufunc.apply(&[_array], &mut result).unwrap();
+    abs_ufunc.apply(&[_array], &mut result).expect("Operation failed");
 
     result
 }

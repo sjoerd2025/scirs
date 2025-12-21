@@ -63,7 +63,7 @@ where
         let mut f16_data = Array2::zeros(shape);
         for (i, &val) in matrix.iter().enumerate() {
             let val_f32: f32 = val.as_();
-            f16_data.as_slice_mut().unwrap()[i] = f16::from_f32(val_f32);
+            f16_data.as_slice_mut().expect("Operation failed")[i] = f16::from_f32(val_f32);
         }
 
         // Create parameters - scale and zero_point aren't really used for float16
@@ -86,7 +86,7 @@ where
         let mut bf16_data = Array2::zeros(shape);
         for (i, &val) in matrix.iter().enumerate() {
             let val_f32: f32 = val.as_();
-            bf16_data.as_slice_mut().unwrap()[i] = bf16::from_f32(val_f32);
+            bf16_data.as_slice_mut().expect("Operation failed")[i] = bf16::from_f32(val_f32);
         }
 
         // Create parameters - scale and zero_point aren't really used for bfloat16
@@ -184,17 +184,17 @@ where
             let mut packed_data = Array2::zeros((shape.0, shape.1.div_ceil(2)));
 
             for i in 0..num_elements {
-                let val_f32: f32 = matrix.as_slice().unwrap()[i].as_();
+                let val_f32: f32 = matrix.as_slice().expect("Operation failed")[i].as_();
                 // Clamp to -8 to 7 range for 4-bit signed integer
                 let q_val = ((val_f32 / scale).round() as i8).clamp(-8, 7);
 
                 let byte_idx = i / 2;
                 if i % 2 == 0 {
                     // Store in upper 4 bits
-                    packed_data.as_slice_mut().unwrap()[byte_idx] = q_val << 4;
+                    packed_data.as_slice_mut().expect("Operation failed")[byte_idx] = q_val << 4;
                 } else {
                     // Store in lower 4 bits, OR with existing upper bits
-                    packed_data.as_slice_mut().unwrap()[byte_idx] |= q_val & 0x0F;
+                    packed_data.as_slice_mut().expect("Operation failed")[byte_idx] |= q_val & 0x0F;
                 }
             }
 
@@ -202,7 +202,9 @@ where
             let packedshape = (shape.0, shape.1.div_ceil(2));
 
             // Use toshape instead of intoshape (deprecated)
-            let packed_reshaped = packed_data.into_shape_with_order(packedshape).unwrap();
+            let packed_reshaped = packed_data
+                .into_shape_with_order(packedshape)
+                .expect("Operation failed");
             (
                 QuantizedMatrix::new_i8(packed_reshaped, shape, QuantizedDataType::Int4),
                 params,
@@ -215,7 +217,7 @@ where
             let mut packed_data = Array2::zeros((shape.0, shape.1.div_ceil(2)));
 
             for i in 0..num_elements {
-                let val_f32: f32 = matrix.as_slice().unwrap()[i].as_();
+                let val_f32: f32 = matrix.as_slice().expect("Operation failed")[i].as_();
                 // Scale to 0-15 range for 4-bit unsigned
                 let ival = ((val_f32 - min_val) / scale).round() as i32;
                 let q_val = (ival.clamp(0, 15) & 0x0F) as i8;
@@ -223,10 +225,10 @@ where
                 let byte_idx = i / 2;
                 if i % 2 == 0 {
                     // Store in upper 4 bits
-                    packed_data.as_slice_mut().unwrap()[byte_idx] = q_val << 4;
+                    packed_data.as_slice_mut().expect("Operation failed")[byte_idx] = q_val << 4;
                 } else {
                     // Store in lower 4 bits, OR with existing upper bits
-                    packed_data.as_slice_mut().unwrap()[byte_idx] |= q_val & 0x0F;
+                    packed_data.as_slice_mut().expect("Operation failed")[byte_idx] |= q_val & 0x0F;
                 }
             }
 
@@ -234,7 +236,9 @@ where
             let packedshape = (shape.0, shape.1.div_ceil(2));
 
             // Use toshape instead of intoshape (deprecated)
-            let packed_reshaped = packed_data.into_shape_with_order(packedshape).unwrap();
+            let packed_reshaped = packed_data
+                .into_shape_with_order(packedshape)
+                .expect("Operation failed");
             (
                 QuantizedMatrix::new_i8(packed_reshaped, shape, QuantizedDataType::UInt4),
                 params,
@@ -248,7 +252,7 @@ where
                     for (i, &val) in matrix.iter().enumerate() {
                         let val_f32: f32 = val.as_();
                         let q_val = ((val_f32 - min_val) / scale).round() as i8;
-                        quantized.as_slice_mut().unwrap()[i] = q_val;
+                        quantized.as_slice_mut().expect("Operation failed")[i] = q_val;
                     }
                     quantized
                 }
@@ -257,7 +261,7 @@ where
                     for (i, &val) in matrix.iter().enumerate() {
                         let val_f32: f32 = val.as_();
                         let q_val = (val_f32 / scale).round() as i8;
-                        quantized.as_slice_mut().unwrap()[i] = q_val;
+                        quantized.as_slice_mut().expect("Operation failed")[i] = q_val;
                     }
                     quantized
                 }
@@ -266,7 +270,7 @@ where
                     for (i, &val) in matrix.iter().enumerate() {
                         let val_f32: f32 = val.as_();
                         let q_val = ((val_f32 / scale) + zero_point as f32).round() as i8;
-                        quantized.as_slice_mut().unwrap()[i] = q_val;
+                        quantized.as_slice_mut().expect("Operation failed")[i] = q_val;
                     }
                     quantized
                 }
@@ -275,7 +279,7 @@ where
                     for (i, &val) in matrix.iter().enumerate() {
                         let val_f32: f32 = val.as_();
                         let q_val = ((val_f32 - min_val) / scale).round() as i8;
-                        quantized.as_slice_mut().unwrap()[i] = q_val;
+                        quantized.as_slice_mut().expect("Operation failed")[i] = q_val;
                     }
                     quantized
                 }
@@ -465,13 +469,13 @@ pub fn dequantize_matrix(quantized: &QuantizedMatrix, params: &QuantizationParam
         QuantizedData2D::Float16(data) => {
             // For Float16, just convert directly to f32
             for (i, &val) in data.iter().enumerate() {
-                dequantized.as_slice_mut().unwrap()[i] = val.to_f32();
+                dequantized.as_slice_mut().expect("Operation failed")[i] = val.to_f32();
             }
         }
         QuantizedData2D::BFloat16(data) => {
             // For BFloat16, just convert directly to f32
             for (i, &val) in data.iter().enumerate() {
-                dequantized.as_slice_mut().unwrap()[i] = val.to_f32();
+                dequantized.as_slice_mut().expect("Operation failed")[i] = val.to_f32();
             }
         }
         // Integer-based quantization
@@ -548,25 +552,25 @@ pub fn dequantize_matrix(quantized: &QuantizedMatrix, params: &QuantizationParam
                         QuantizationMethod::Uniform => {
                             for (i, &q_val) in data.iter().enumerate() {
                                 let val = params.min_val + (q_val as f32 * params.scale);
-                                dequantized.as_slice_mut().unwrap()[i] = val;
+                                dequantized.as_slice_mut().expect("Operation failed")[i] = val;
                             }
                         }
                         QuantizationMethod::Symmetric => {
                             for (i, &q_val) in data.iter().enumerate() {
                                 let val = q_val as f32 * params.scale;
-                                dequantized.as_slice_mut().unwrap()[i] = val;
+                                dequantized.as_slice_mut().expect("Operation failed")[i] = val;
                             }
                         }
                         QuantizationMethod::Affine => {
                             for (i, &q_val) in data.iter().enumerate() {
                                 let val = params.scale * (q_val as f32 - params.zero_point as f32);
-                                dequantized.as_slice_mut().unwrap()[i] = val;
+                                dequantized.as_slice_mut().expect("Operation failed")[i] = val;
                             }
                         }
                         QuantizationMethod::PowerOfTwo => {
                             for (i, &q_val) in data.iter().enumerate() {
                                 let val = params.min_val + (q_val as f32 * params.scale);
-                                dequantized.as_slice_mut().unwrap()[i] = val;
+                                dequantized.as_slice_mut().expect("Operation failed")[i] = val;
                             }
                         }
                         _ => unreachable!(), // Other methods are handled above
@@ -957,7 +961,8 @@ where
     // Convert back to original type
     let mut result = Array2::zeros(matrix.dim());
     for (i, &val) in dequantized.iter().enumerate() {
-        result.as_slice_mut().unwrap()[i] = F::from_f32(val).unwrap();
+        result.as_slice_mut().expect("Operation failed")[i] =
+            F::from_f32(val).expect("Operation failed");
     }
 
     result
@@ -993,7 +998,7 @@ where
     // Convert back to original type
     let mut result = Array1::zeros(vector.dim());
     for (i, &val) in dequantized.iter().enumerate() {
-        result[i] = F::from_f32(val).unwrap();
+        result[i] = F::from_f32(val).expect("Operation failed");
     }
 
     result

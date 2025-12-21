@@ -16,7 +16,10 @@ fn main() {
 
     // Create a temporary file path
     let file_path = get_temp_file_path("example");
-    println!("Using temporary file: {}", file_path.to_str().unwrap());
+    println!(
+        "Using temporary file: {}",
+        file_path.to_str().expect("Operation failed")
+    );
 
     // Example 1: Creating and using a small chunked quantized matrix
     println!("\n--- Example 1: Small Matrix Operations ---");
@@ -47,9 +50,9 @@ fn example_smallmatrix(file_path: &Path) {
         &matrix.view(),
         8,
         QuantizationMethod::Symmetric,
-        file_path.to_str().unwrap(),
+        file_path.to_str().expect("Operation failed"),
     )
-    .unwrap()
+    .expect("Operation failed")
     .symmetric()
     .positive_definite();
 
@@ -59,7 +62,7 @@ fn example_smallmatrix(file_path: &Path) {
 
     // Apply the matrix to the vector
     println!("Applying matrix to vector...");
-    let y = chunked.apply(&x.view()).unwrap();
+    let y = chunked.apply(&x.view()).expect("Operation failed");
     println!("Result vector: {:?}", y);
 
     // Compare with direct multiplication
@@ -93,9 +96,9 @@ fn example_mediummatrix(file_path: &Path) {
         &matrix.view(),
         8,
         QuantizationMethod::Symmetric,
-        file_path.to_str().unwrap(),
+        file_path.to_str().expect("Operation failed"),
     )
-    .unwrap()
+    .expect("Operation failed")
     .symmetric()
     .positive_definite();
 
@@ -111,7 +114,7 @@ fn example_mediummatrix(file_path: &Path) {
     let start = Instant::now();
     let x = chunked
         .solve_conjugate_gradient(&b, 1000, 1e-6, true)
-        .unwrap();
+        .expect("Operation failed");
     let elapsed = start.elapsed();
     println!("Solution found in {:.2?}", elapsed);
 
@@ -152,9 +155,9 @@ fn example_largematrix_performance(file_path: &Path) {
         &matrix.view(),
         8,
         QuantizationMethod::Symmetric,
-        file_path_8bit.to_str().unwrap(),
+        file_path_8bit.to_str().expect("Operation failed"),
     )
-    .unwrap()
+    .expect("Operation failed")
     .symmetric()
     .positive_definite();
     println!("8-bit quantization took {:.2?}", start.elapsed());
@@ -166,9 +169,9 @@ fn example_largematrix_performance(file_path: &Path) {
         &matrix.view(),
         4,
         QuantizationMethod::Symmetric,
-        file_path_4bit.to_str().unwrap(),
+        file_path_4bit.to_str().expect("Operation failed"),
     )
-    .unwrap()
+    .expect("Operation failed")
     .symmetric()
     .positive_definite();
     println!("4-bit quantization took {:.2?}", start.elapsed());
@@ -185,7 +188,7 @@ fn example_largematrix_performance(file_path: &Path) {
     let start = Instant::now();
     let x_8bit = chunked_8bit
         .solve_conjugate_gradient(&b, 1000, 1e-6, true)
-        .unwrap();
+        .expect("Operation failed");
     let elapsed_8bit = start.elapsed();
     println!("Solution found in {:.2?}", elapsed_8bit);
 
@@ -200,7 +203,7 @@ fn example_largematrix_performance(file_path: &Path) {
     let start = Instant::now();
     let x_4bit = chunked_4bit
         .solve_conjugate_gradient(&b, 1000, 1e-6, true)
-        .unwrap();
+        .expect("Operation failed");
     let elapsed_4bit = start.elapsed();
     println!("Solution found in {:.2?}", elapsed_4bit);
 

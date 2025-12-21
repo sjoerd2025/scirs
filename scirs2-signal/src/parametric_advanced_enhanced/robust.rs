@@ -420,7 +420,7 @@ mod tests {
         }
 
         // If successful, verify basic properties
-        let robust_result = result.unwrap();
+        let robust_result = result.expect("Operation failed");
         assert_eq!(robust_result.ar_coeffs.len(), 2); // AR(1) has 2 coefficients (constant + AR1)
         assert_eq!(robust_result.ma_coeffs.len(), 1); // MA(0) has 1 coefficient (constant)
         assert!(robust_result.robust_scale > 0.0);
@@ -438,7 +438,7 @@ mod tests {
         let result = weighted_burg_method(&signal, &weights, 2);
         assert!(result.is_ok());
 
-        let (ar_coeffs, variance) = result.unwrap();
+        let (ar_coeffs, variance) = result.expect("Operation failed");
         assert_eq!(ar_coeffs.len(), 3);
         assert!(variance > 0.0);
         assert_eq!(ar_coeffs[0], 1.0);

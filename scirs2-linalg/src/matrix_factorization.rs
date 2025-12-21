@@ -52,7 +52,7 @@ use crate::error::{LinalgError, LinalgResult};
 ///     [7.0_f64, 8.0_f64, 9.0_f64]
 /// ];
 ///
-/// let (w, h) = nmf(&a.view(), 2, 100, 1e-4_f64).unwrap();
+/// let (w, h) = nmf(&a.view(), 2, 100, 1e-4_f64).expect("Operation failed");
 ///
 /// // w is a 3x2 non-negative matrix
 /// assert_eq!(w.shape(), &[3, 2]);
@@ -87,7 +87,7 @@ where
 {
     // Validate inputs
     check_2d(a, "a")?;
-    check_positive(F::from(rank).unwrap(), "rank")?;
+    check_positive(F::from(rank).expect("Operation failed"), "rank")?;
 
     let (m, n) = (a.nrows(), a.ncols());
 
@@ -110,7 +110,7 @@ where
     }
 
     // Initialize W and H with random non-negative values
-    let epsilon = F::from(1e-5).unwrap();
+    let epsilon = F::from(1e-5).expect("Operation failed");
     let mut w = Array2::<F>::zeros((m, rank));
     let mut h = Array2::<F>::zeros((rank, n));
 
@@ -118,13 +118,13 @@ where
     let mut rng = scirs2_core::random::rng();
     for i in 0..m {
         for j in 0..rank {
-            w[[i, j]] = F::from(rng.random::<f64>()).unwrap() + epsilon;
+            w[[i, j]] = F::from(rng.random::<f64>()).expect("Operation failed") + epsilon;
         }
     }
 
     for i in 0..rank {
         for j in 0..n {
-            h[[i, j]] = F::from(rng.random::<f64>()).unwrap() + epsilon;
+            h[[i, j]] = F::from(rng.random::<f64>()).expect("Operation failed") + epsilon;
         }
     }
 
@@ -221,7 +221,7 @@ where
 /// ];
 ///
 /// // Select 2 representative columns
-/// let (c, z) = interpolative_decomposition(&a.view(), 2, "qr").unwrap();
+/// let (c, z) = interpolative_decomposition(&a.view(), 2, "qr").expect("Operation failed");
 ///
 /// // C should have 3 rows and k=2 columns
 /// assert_eq!(c.shape(), &[3, 2]);
@@ -644,7 +644,7 @@ where
             // Sketch the matrix for faster SVD
             let mut rng = scirs2_core::random::rng();
             let omega = Array2::<F>::from_shape_fn((n, k + 5), |_| {
-                F::from(rng.random::<f64>() * 2.0 - 1.0).unwrap()
+                F::from(rng.random::<f64>() * 2.0 - 1.0).expect("Operation failed")
             });
 
             let y = a.dot(&omega);
@@ -711,7 +711,7 @@ where
 
             // Sample columns with replacement based on leverage scores
             for _ in 0..c_samples {
-                let rand_val = F::from(rng.random::<f64>()).unwrap();
+                let rand_val = F::from(rng.random::<f64>()).expect("Operation failed");
                 let mut cumsum = F::zero();
                 let mut selected = 0;
 
@@ -728,7 +728,7 @@ where
 
             // Sample rows with replacement based on leverage scores
             for _ in 0..r_samples {
-                let rand_val = F::from(rng.random::<f64>()).unwrap();
+                let rand_val = F::from(rng.random::<f64>()).expect("Operation failed");
                 let mut cumsum = F::zero();
                 let mut selected = 0;
 
@@ -748,14 +748,16 @@ where
             let mut r = Array2::<F>::zeros((r_samples, n));
 
             for (c_idx, &col) in col_indices.iter().enumerate() {
-                let scale = F::one() / (F::from(c_samples).unwrap() * col_leverage[col]).sqrt();
+                let scale = F::one()
+                    / (F::from(c_samples).expect("Operation failed") * col_leverage[col]).sqrt();
                 for i in 0..m {
                     c[[i, c_idx]] = a[[i, col]] * scale;
                 }
             }
 
             for (r_idx, &row) in row_indices.iter().enumerate() {
-                let scale = F::one() / (F::from(r_samples).unwrap() * row_leverage[row]).sqrt();
+                let scale = F::one()
+                    / (F::from(r_samples).expect("Operation failed") * row_leverage[row]).sqrt();
                 for j in 0..n {
                     r[[r_idx, j]] = a[[row, j]] * scale;
                 }
@@ -833,7 +835,7 @@ where
 ///     [7.0_f64, 8.0_f64, 9.0_f64]
 /// ]; // This matrix has rank 2
 ///
-/// let (q, r, p) = rank_revealing_qr(&a.view(), 1e-10_f64).unwrap();
+/// let (q, r, p) = rank_revealing_qr(&a.view(), 1e-10_f64).expect("Operation failed");
 ///
 /// // Check dimensions
 /// assert_eq!(q.shape(), &[3, 3]);
@@ -982,7 +984,8 @@ where
 
                     // r_col = r_col - 2 * v * (v^T * r_col)
                     for i in k..m {
-                        r[[i, j]] -= F::from(2.0).unwrap() * v[i - k] * dot_product;
+                        r[[i, j]] -=
+                            F::from(2.0).expect("Operation failed") * v[i - k] * dot_product;
                     }
                 }
 
@@ -1003,7 +1006,8 @@ where
 
                     // q_row = q_row - 2 * (q_row * v) * v^T
                     for j in k..m {
-                        q[[i, j]] -= F::from(2.0).unwrap() * dot_product * v[j - k];
+                        q[[i, j]] -=
+                            F::from(2.0).expect("Operation failed") * dot_product * v[j - k];
                     }
                 }
             }
@@ -1050,7 +1054,7 @@ where
 ///     [7.0_f64, 8.0_f64, 9.0_f64]
 /// ]; // Rank-deficient matrix
 ///
-/// let (u, t, v) = utv_decomposition(&a.view(), "urv", 1e-10_f64).unwrap();
+/// let (u, t, v) = utv_decomposition(&a.view(), "urv", 1e-10_f64).expect("Operation failed");
 ///
 /// // Check dimensions
 /// assert_eq!(u.shape(), &[3, 3]);
@@ -1214,7 +1218,7 @@ mod tests {
         // A simple matrix for testing
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let (w, h) = nmf(&a.view(), 2, 100, 1e-4).unwrap();
+        let (w, h) = nmf(&a.view(), 2, 100, 1e-4).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(w.shape(), &[3, 2]);
@@ -1280,7 +1284,8 @@ mod tests {
         ];
 
         // Test with uniform sampling
-        let (c, u, r) = cur_decomposition(&a.view(), 2, Some(2), Some(2), "uniform").unwrap();
+        let (c, u, r) =
+            cur_decomposition(&a.view(), 2, Some(2), Some(2), "uniform").expect("Operation failed");
 
         // Check dimensions
         assert_eq!(c.shape(), &[3, 2]);
@@ -1303,7 +1308,7 @@ mod tests {
         // A rank-deficient matrix
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]; // This matrix has rank 2
 
-        let (q, r, p) = rank_revealing_qr(&a.view(), 1e-10).unwrap();
+        let (q, r, p) = rank_revealing_qr(&a.view(), 1e-10).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(q.shape(), &[3, 3]);
@@ -1356,7 +1361,7 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]; // This matrix has rank 2
 
         // Test URV variant
-        let (u, t, v) = utv_decomposition(&a.view(), "urv", 1e-10).unwrap();
+        let (u, t, v) = utv_decomposition(&a.view(), "urv", 1e-10).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(u.shape(), &[3, 3]);

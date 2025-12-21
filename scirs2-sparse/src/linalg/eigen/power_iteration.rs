@@ -77,7 +77,7 @@ where
 /// let data = vec![2.0, 1.0, 2.0, 3.0];
 /// let indices = vec![0, 0, 1, 2];
 /// let indptr = vec![0, 1, 3, 4];
-/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
 ///
 /// // Configure options
 /// let options = PowerIterationOptions {
@@ -87,7 +87,7 @@ where
 /// };
 ///
 /// // Compute the largest eigenvalue and eigenvector
-/// let result = power_iteration(&matrix, &options, None).unwrap();
+/// let result = power_iteration(&matrix, &options, None).expect("Operation failed");
 ///
 /// // Check the result
 /// println!("Eigenvalue: {}", result.eigenvalues[0]);
@@ -170,7 +170,7 @@ where
 
             // Check for convergence
             let diff = (lambda - prev_lambda).abs();
-            if diff < T::from(options.tol).unwrap() {
+            if diff < T::from(options.tol).expect("Operation failed") {
                 converged = true;
                 break;
             }
@@ -194,7 +194,7 @@ where
 
             // Check for convergence
             let diff = (lambda - prev_lambda).abs();
-            if diff < T::from(options.tol).unwrap() {
+            if diff < T::from(options.tol).expect("Operation failed") {
                 converged = true;
                 break;
             }
@@ -246,10 +246,10 @@ mod tests {
         let data = vec![2.0, 1.0, 2.0];
         let indices = vec![0, 0, 1]; // Column indices: row 0 has col 0, row 1 has cols 0,1
         let indptr = vec![0, 1, 3]; // Row 0 has 1 element, row 1 has 2 elements
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let options = PowerIterationOptions::default();
-        let result = power_iteration(&matrix, &options, None).unwrap();
+        let result = power_iteration(&matrix, &options, None).expect("Operation failed");
 
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 1);
@@ -263,11 +263,12 @@ mod tests {
         let data = vec![4.0, 1.0, 3.0];
         let indptr = vec![0, 1, 3];
         let indices = vec![0, 0, 1];
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let initial_guess = Array1::from_vec(vec![1.0, 1.0]);
         let options = PowerIterationOptions::default();
-        let result = power_iteration(&matrix, &options, Some(initial_guess.view())).unwrap();
+        let result = power_iteration(&matrix, &options, Some(initial_guess.view()))
+            .expect("Operation failed");
 
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 1);
@@ -279,14 +280,14 @@ mod tests {
         let data = vec![5.0, 2.0, 4.0];
         let indptr = vec![0, 1, 3];
         let indices = vec![0, 0, 1];
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let options = PowerIterationOptions {
             max_iter: 50,
             tol: 1e-10,
             normalize: true,
         };
-        let result = power_iteration(&matrix, &options, None).unwrap();
+        let result = power_iteration(&matrix, &options, None).expect("Operation failed");
 
         assert!(result.converged);
         assert!(result.iterations <= 50);

@@ -29,7 +29,7 @@ pub type IndicesResult = Result<(Array<usize, Ix1>, Array<usize, Ix1>), &'static
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
 /// let indices = array![0, 2];
-/// let result = take_2d(a.view(), indices.view(), 1).unwrap();
+/// let result = take_2d(a.view(), indices.view(), 1).expect("Operation failed");
 /// assert_eq!(result.shape(), &[2, 2]);
 /// assert_eq!(result[[0, 0]], 1);
 /// assert_eq!(result[[0, 1]], 3);
@@ -105,7 +105,7 @@ where
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
 /// let mask = array![[true, false, true], [false, true, false]];
-/// let result = boolean_mask_2d(a.view(), mask.view()).unwrap();
+/// let result = boolean_mask_2d(a.view(), mask.view()).expect("Operation failed");
 /// assert_eq!(result.len(), 3);
 /// assert_eq!(result[0], 1);
 /// assert_eq!(result[1], 3);
@@ -161,7 +161,7 @@ where
 ///
 /// let a = array![1, 2, 3, 4, 5];
 /// let mask = array![true, false, true, false, true];
-/// let result = boolean_mask_1d(a.view(), mask.view()).unwrap();
+/// let result = boolean_mask_1d(a.view(), mask.view()).expect("Operation failed");
 /// assert_eq!(result.len(), 3);
 /// assert_eq!(result[0], 1);
 /// assert_eq!(result[1], 3);
@@ -217,7 +217,7 @@ where
 ///
 /// let a = array![10, 20, 30, 40, 50];
 /// let indices = array![0, 2, 4];
-/// let result = take_1d(a.view(), indices.view()).unwrap();
+/// let result = take_1d(a.view(), indices.view()).expect("Operation failed");
 /// assert_eq!(result.len(), 3);
 /// assert_eq!(result[0], 10);
 /// assert_eq!(result[1], 30);
@@ -272,7 +272,7 @@ where
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 /// let row_indices = array![0, 1, 2];
 /// let col_indices = array![0, 1, 2];
-/// let result = fancy_index_2d(a.view(), row_indices.view(), col_indices.view()).unwrap();
+/// let result = fancy_index_2d(a.view(), row_indices.view(), col_indices.view()).expect("Operation failed");
 /// assert_eq!(result.len(), 3);
 /// assert_eq!(result[0], 1);
 /// assert_eq!(result[1], 5);
@@ -341,20 +341,20 @@ where
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 ///
 /// // Main diagonal
-/// let main_diag = diagonal(a.view(), 0).unwrap();
+/// let main_diag = diagonal(a.view(), 0).expect("Operation failed");
 /// assert_eq!(main_diag.len(), 3);
 /// assert_eq!(main_diag[0], 1);
 /// assert_eq!(main_diag[1], 5);
 /// assert_eq!(main_diag[2], 9);
 ///
 /// // Upper diagonal
-/// let upper_diag = diagonal(a.view(), 1).unwrap();
+/// let upper_diag = diagonal(a.view(), 1).expect("Operation failed");
 /// assert_eq!(upper_diag.len(), 2);
 /// assert_eq!(upper_diag[0], 2);
 /// assert_eq!(upper_diag[1], 6);
 ///
 /// // Lower diagonal
-/// let lower_diag = diagonal(a.view(), -1).unwrap();
+/// let lower_diag = diagonal(a.view(), -1).expect("Operation failed");
 /// assert_eq!(lower_diag.len(), 2);
 /// assert_eq!(lower_diag[0], 4);
 /// assert_eq!(lower_diag[1], 8);
@@ -414,7 +414,7 @@ where
 /// use scirs2_core::ndarray_ext::indexing::where_1d;
 ///
 /// let a = array![1, 2, 3, 4, 5];
-/// let result = where_1d(a.view(), |&x| x > 3).unwrap();
+/// let result = where_1d(a.view(), |&x| x > 3).expect("Operation failed");
 /// assert_eq!(result.len(), 2);
 /// assert_eq!(result[0], 4);
 /// assert_eq!(result[1], 5);
@@ -450,7 +450,7 @@ where
 /// use scirs2_core::ndarray_ext::indexing::where_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6]];
-/// let result = where_2d(a.view(), |&x| x > 3).unwrap();
+/// let result = where_2d(a.view(), |&x| x > 3).expect("Operation failed");
 /// assert_eq!(result.len(), 3);
 /// assert_eq!(result[0], 4);
 /// assert_eq!(result[1], 5);
@@ -487,7 +487,7 @@ where
 /// use scirs2_core::ndarray_ext::indexing::indices_where_1d;
 ///
 /// let a = array![10, 20, 30, 40, 50];
-/// let result = indices_where_1d(a.view(), |&x| x > 30).unwrap();
+/// let result = indices_where_1d(a.view(), |&x| x > 30).expect("Operation failed");
 /// assert_eq!(result.len(), 2);
 /// assert_eq!(result[0], 3);
 /// assert_eq!(result[1], 4);
@@ -532,7 +532,7 @@ where
 /// use scirs2_core::ndarray_ext::indexing::indices_where_2d;
 ///
 /// let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-/// let (rows, cols) = indices_where_2d(a.view(), |&x| x > 5).unwrap();
+/// let (rows, cols) = indices_where_2d(a.view(), |&x| x > 5).expect("Operation failed");
 /// assert_eq!(rows.len(), 4);
 /// assert_eq!(cols.len(), 4);
 /// // The indices correspond to elements: 6, 7, 8, 9
@@ -584,7 +584,7 @@ where
 /// let indices = array![0, 2];
 ///
 /// // Take rows 0 and 2
-/// let result = take_along_axis(a.view(), indices.view(), 0).unwrap();
+/// let result = take_along_axis(a.view(), indices.view(), 0).expect("Operation failed");
 /// assert_eq!(result.shape(), &[2, 3]);
 /// assert_eq!(result[[0, 0]], 1);
 /// assert_eq!(result[[0, 1]], 2);
@@ -615,7 +615,7 @@ mod tests {
         let a = array![1, 2, 3, 4, 5];
         let mask = array![true, false, true, false, true];
 
-        let result = boolean_mask_1d(a.view(), mask.view()).unwrap();
+        let result = boolean_mask_1d(a.view(), mask.view()).expect("Operation failed");
         assert_eq!(result.len(), 3);
         assert_eq!(result[0], 1);
         assert_eq!(result[1], 3);
@@ -627,7 +627,7 @@ mod tests {
         let a = array![[1, 2, 3], [4, 5, 6]];
         let mask = array![[true, false, true], [false, true, false]];
 
-        let result = boolean_mask_2d(a.view(), mask.view()).unwrap();
+        let result = boolean_mask_2d(a.view(), mask.view()).expect("Operation failed");
         assert_eq!(result.len(), 3);
         assert_eq!(result[0], 1);
         assert_eq!(result[1], 3);
@@ -639,7 +639,7 @@ mod tests {
         let a = array![10, 20, 30, 40, 50];
         let indices = array![0, 2, 4];
 
-        let result = take_1d(a.view(), indices.view()).unwrap();
+        let result = take_1d(a.view(), indices.view()).expect("Operation failed");
         assert_eq!(result.len(), 3);
         assert_eq!(result[0], 10);
         assert_eq!(result[1], 30);
@@ -652,7 +652,7 @@ mod tests {
         let indices = array![0, 2];
 
         // Take along axis 0 (rows)
-        let result = take_2d(a.view(), indices.view(), 0).unwrap();
+        let result = take_2d(a.view(), indices.view(), 0).expect("Operation failed");
         assert_eq!(result.shape(), &[2, 3]);
         assert_eq!(result[[0, 0]], 1);
         assert_eq!(result[[0, 1]], 2);
@@ -662,7 +662,7 @@ mod tests {
         assert_eq!(result[[1, 2]], 9);
 
         // Take along axis 1 (columns)
-        let result = take_2d(a.view(), indices.view(), 1).unwrap();
+        let result = take_2d(a.view(), indices.view(), 1).expect("Operation failed");
         assert_eq!(result.shape(), &[3, 2]);
         assert_eq!(result[[0, 0]], 1);
         assert_eq!(result[[0, 1]], 3);
@@ -678,7 +678,8 @@ mod tests {
         let row_indices = array![0, 2];
         let col_indices = array![0, 1];
 
-        let result = fancy_index_2d(a.view(), row_indices.view(), col_indices.view()).unwrap();
+        let result = fancy_index_2d(a.view(), row_indices.view(), col_indices.view())
+            .expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], 1);
         assert_eq!(result[1], 8);
@@ -689,20 +690,20 @@ mod tests {
         let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
         // Main diagonal
-        let main_diag = diagonal(a.view(), 0).unwrap();
+        let main_diag = diagonal(a.view(), 0).expect("Operation failed");
         assert_eq!(main_diag.len(), 3);
         assert_eq!(main_diag[0], 1);
         assert_eq!(main_diag[1], 5);
         assert_eq!(main_diag[2], 9);
 
         // Upper diagonal
-        let upper_diag = diagonal(a.view(), 1).unwrap();
+        let upper_diag = diagonal(a.view(), 1).expect("Operation failed");
         assert_eq!(upper_diag.len(), 2);
         assert_eq!(upper_diag[0], 2);
         assert_eq!(upper_diag[1], 6);
 
         // Lower diagonal
-        let lower_diag = diagonal(a.view(), -1).unwrap();
+        let lower_diag = diagonal(a.view(), -1).expect("Operation failed");
         assert_eq!(lower_diag.len(), 2);
         assert_eq!(lower_diag[0], 4);
         assert_eq!(lower_diag[1], 8);
@@ -712,7 +713,7 @@ mod tests {
     fn test_where_1d() {
         let a = array![1, 2, 3, 4, 5];
 
-        let result = where_1d(a.view(), |&x| x > 3).unwrap();
+        let result = where_1d(a.view(), |&x| x > 3).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], 4);
         assert_eq!(result[1], 5);
@@ -722,7 +723,7 @@ mod tests {
     fn test_where_2d() {
         let a = array![[1, 2, 3], [4, 5, 6]];
 
-        let result = where_2d(a.view(), |&x| x > 3).unwrap();
+        let result = where_2d(a.view(), |&x| x > 3).expect("Operation failed");
         assert_eq!(result.len(), 3);
         assert_eq!(result[0], 4);
         assert_eq!(result[1], 5);
@@ -733,7 +734,7 @@ mod tests {
     fn test_indices_where_1d() {
         let a = array![10, 20, 30, 40, 50];
 
-        let result = indices_where_1d(a.view(), |&x| x > 30).unwrap();
+        let result = indices_where_1d(a.view(), |&x| x > 30).expect("Operation failed");
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], 3);
         assert_eq!(result[1], 4);
@@ -743,7 +744,7 @@ mod tests {
     fn test_indices_where_2d() {
         let a = array![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
 
-        let (rows, cols) = indices_where_2d(a.view(), |&x| x > 5).unwrap();
+        let (rows, cols) = indices_where_2d(a.view(), |&x| x > 5).expect("Operation failed");
         assert_eq!(rows.len(), 4);
         assert_eq!(cols.len(), 4);
 
@@ -759,7 +760,7 @@ mod tests {
         let indices = array![0, 2];
 
         // Test along axis 0 (rows)
-        let result = take_along_axis(a.view(), indices.view(), 0).unwrap();
+        let result = take_along_axis(a.view(), indices.view(), 0).expect("Operation failed");
         assert_eq!(result.shape(), &[2, 3]);
         assert_eq!(result[[0, 0]], 1);
         assert_eq!(result[[0, 1]], 2);

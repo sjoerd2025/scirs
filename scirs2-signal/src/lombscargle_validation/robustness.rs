@@ -167,7 +167,7 @@ pub fn test_numerical_precision_limits(tolerance: f64) -> SignalResult<f64> {
 
     // Test 3: Mixed precision scenarios
     let mut mixed_t = vec![0.0, 1e-10, 1e-5, 1.0, 1e5, 1e10];
-    mixed_t.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    mixed_t.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
     let mixed_signal: Vec<f64> = mixed_t.iter().map(|&ti| ti.sin()).collect();
 
     let result_mixed = lombscargle(
@@ -475,7 +475,7 @@ pub fn test_sparse_sampling(implementation: &str) -> SignalResult<SingleTestResu
             if let Some((peak_idx, &peak_power)) = power
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             {
                 let peak_freq = freqs[peak_idx];
                 let freq_error = (peak_freq - f_signal).abs() / f_signal;
@@ -566,7 +566,7 @@ pub fn test_signal_with_outliers(implementation: &str) -> SignalResult<SingleTes
             if let Some((peak_idx, &peak_power)) = power
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
             {
                 let peak_freq = freqs[peak_idx];
                 let freq_error = (peak_freq - f_signal).abs() / f_signal;

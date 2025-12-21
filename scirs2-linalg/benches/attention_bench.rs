@@ -37,7 +37,7 @@ fn attention_benchmark(c: &mut Criterion) {
                             None,
                             scale,
                         )
-                        .unwrap(),
+                        .expect("Operation failed"),
                     )
                 })
             },
@@ -51,7 +51,8 @@ fn attention_benchmark(c: &mut Criterion) {
                 b_.iter(|| {
                     let scale = 1.0 / f32::sqrt(d_model as f32);
                     black_box(
-                        causal_attention(&query.view(), &key.view(), &value.view(), scale).unwrap(),
+                        causal_attention(&query.view(), &key.view(), &value.view(), scale)
+                            .expect("Operation failed"),
                     )
                 })
             },
@@ -70,7 +71,7 @@ fn attention_benchmark(c: &mut Criterion) {
                         scale,
                         16, // Block size
                     )
-                    .unwrap(),
+                    .expect("Operation failed"),
                 )
             })
         });
@@ -83,7 +84,8 @@ fn attention_benchmark(c: &mut Criterion) {
                 b_.iter(|| {
                     let scale = 1.0 / f32::sqrt(d_model as f32);
                     black_box(
-                        linear_attention(&query.view(), &key.view(), &value.view(), scale).unwrap(),
+                        linear_attention(&query.view(), &key.view(), &value.view(), scale)
+                            .expect("Operation failed"),
                     )
                 })
             },
@@ -123,7 +125,7 @@ fn attention_benchmark(c: &mut Criterion) {
                             None,
                             &config,
                         )
-                        .unwrap(),
+                        .expect("Operation failed"),
                     )
                 })
             },

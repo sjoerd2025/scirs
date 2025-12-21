@@ -36,10 +36,10 @@ use std::f64::consts::PI;
 ///     1.0, 0.0, 4.0, 2.0,
 ///     2.0, 4.0, 0.0, 1.0,
 ///     3.0, 2.0, 1.0, 0.0
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let mut optimizer = QuantumSpatialOptimizer::new(3);
-/// let tour = optimizer.solve_tsp(&distance_matrix).unwrap();
+/// let tour = optimizer.solve_tsp(&distance_matrix).expect("Operation failed");
 /// println!("Optimal tour: {:?}", tour);
 /// ```
 #[derive(Debug, Clone)]
@@ -561,14 +561,14 @@ mod tests {
     fn test_simple_tsp() {
         let distance_matrix =
             Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 2.0, 1.0, 0.0, 1.5, 2.0, 1.5, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         let mut optimizer = QuantumSpatialOptimizer::new(2).with_max_iterations(10);
 
         let result = optimizer.solve_tsp(&distance_matrix);
         assert!(result.is_ok());
 
-        let tour = result.unwrap();
+        let tour = result.expect("Operation failed");
         assert_eq!(tour.len(), 3);
 
         // Check that all cities are included
@@ -583,8 +583,8 @@ mod tests {
 
     #[test]
     fn test_invalid_distance_matrix() {
-        let distance_matrix =
-            Array2::from_shape_vec((2, 3), vec![0.0, 1.0, 2.0, 1.0, 0.0, 1.5]).unwrap();
+        let distance_matrix = Array2::from_shape_vec((2, 3), vec![0.0, 1.0, 2.0, 1.0, 0.0, 1.5])
+            .expect("Operation failed");
 
         let mut optimizer = QuantumSpatialOptimizer::new(1);
         let result = optimizer.solve_tsp(&distance_matrix);
@@ -593,16 +593,18 @@ mod tests {
 
     #[test]
     fn test_qap_solving() {
-        let flow_matrix = Array2::from_shape_vec((2, 2), vec![0.0, 3.0, 2.0, 0.0]).unwrap();
+        let flow_matrix =
+            Array2::from_shape_vec((2, 2), vec![0.0, 3.0, 2.0, 0.0]).expect("Operation failed");
 
-        let distance_matrix = Array2::from_shape_vec((2, 2), vec![0.0, 5.0, 5.0, 0.0]).unwrap();
+        let distance_matrix =
+            Array2::from_shape_vec((2, 2), vec![0.0, 5.0, 5.0, 0.0]).expect("Operation failed");
 
         let mut optimizer = QuantumSpatialOptimizer::new(1).with_max_iterations(5);
 
         let result = optimizer.solve_qap(&flow_matrix, &distance_matrix);
         assert!(result.is_ok());
 
-        let assignment = result.unwrap();
+        let assignment = result.expect("Operation failed");
         assert_eq!(assignment.len(), 2);
     }
 
@@ -610,11 +612,13 @@ mod tests {
     fn test_cost_history_tracking() {
         let distance_matrix =
             Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 2.0, 1.0, 0.0, 1.5, 2.0, 1.5, 0.0])
-                .unwrap();
+                .expect("Operation failed");
 
         let mut optimizer = QuantumSpatialOptimizer::new(1).with_max_iterations(5);
 
-        optimizer.solve_tsp(&distance_matrix).unwrap();
+        optimizer
+            .solve_tsp(&distance_matrix)
+            .expect("Operation failed");
         assert!(!optimizer.cost_history().is_empty());
         assert!(optimizer.cost_history().len() <= 5);
     }

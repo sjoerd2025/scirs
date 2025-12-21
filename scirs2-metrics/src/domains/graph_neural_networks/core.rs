@@ -133,8 +133,14 @@ impl GraphStructure {
             if self.edge_weights.is_none() {
                 self.edge_weights = Some(HashMap::new());
             }
-            self.edge_weights.as_mut().unwrap().insert((from, to), w);
-            self.edge_weights.as_mut().unwrap().insert((to, from), w);
+            self.edge_weights
+                .as_mut()
+                .expect("Operation failed")
+                .insert((from, to), w);
+            self.edge_weights
+                .as_mut()
+                .expect("Operation failed")
+                .insert((to, from), w);
         }
     }
 

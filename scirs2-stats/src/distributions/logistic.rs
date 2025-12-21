@@ -39,7 +39,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// ```
     pub fn new(loc: F, scale: F) -> StatsResult<Self> {
         // Validate parameters
@@ -81,7 +81,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let pdf_at_zero = logistic.pdf(0.0);
     /// assert!((pdf_at_zero - 0.25).abs() < 1e-7);
     /// ```
@@ -108,7 +108,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let cdf_at_zero = logistic.cdf(0.0);
     /// assert!((cdf_at_zero - 0.5).abs() < 1e-7);
     /// ```
@@ -134,8 +134,8 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
-    /// let x = logistic.ppf(0.75).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
+    /// let x = logistic.ppf(0.75).expect("Operation failed");
     /// assert!((x - 1.0986123).abs() < 1e-6);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
@@ -173,8 +173,8 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
-    /// let samples = logistic.rvs(10).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
+    /// let samples = logistic.rvs(10).expect("Operation failed");
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
@@ -189,7 +189,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
                 u = self.rand_distr.sample(&mut rng);
             }
 
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             // Apply inverse CDF transform
             let sample = match self.ppf(u_f) {
@@ -207,7 +207,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
                 u = self.rand_distr.sample(&mut rng);
             }
 
-            let u_f = F::from(u).unwrap();
+            let u_f = F::from(u).expect("Failed to convert to float");
 
             let sample = match self.ppf(u_f) {
                 Ok(s) => s,
@@ -231,7 +231,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(2.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(2.0f64, 1.0).expect("Operation failed");
     /// let mean = logistic.mean();
     /// assert_eq!(mean, 2.0);
     /// ```
@@ -251,15 +251,15 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let variance = logistic.var();
     /// assert!((variance - 3.28986).abs() < 1e-5);
     /// ```
     pub fn var(&self) -> F {
         // Variance = (π^2/3) * scale^2
-        let pi = F::from(std::f64::consts::PI).unwrap();
+        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
         let pi_squared = pi * pi;
-        let one_third = F::from(1.0 / 3.0).unwrap();
+        let one_third = F::from(1.0 / 3.0).expect("Failed to convert to float");
 
         pi_squared * one_third * self.scale * self.scale
     }
@@ -275,7 +275,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let std_dev = logistic.std();
     /// assert!((std_dev - 1.81379).abs() < 1e-5);
     /// ```
@@ -295,7 +295,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(2.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(2.0f64, 1.0).expect("Operation failed");
     /// let median = logistic.median();
     /// assert_eq!(median, 2.0);
     /// ```
@@ -315,7 +315,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(2.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(2.0f64, 1.0).expect("Operation failed");
     /// let mode = logistic.mode();
     /// assert_eq!(mode, 2.0);
     /// ```
@@ -335,7 +335,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let skewness = logistic.skewness();
     /// assert_eq!(skewness, 0.0);
     /// ```
@@ -355,13 +355,13 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let kurtosis = logistic.kurtosis();
     /// assert!((kurtosis - 1.2).abs() < 1e-7);
     /// ```
     pub fn kurtosis(&self) -> F {
         // Excess kurtosis = 1.2
-        F::from(1.2).unwrap()
+        F::from(1.2).expect("Failed to convert constant to float")
     }
 
     /// Calculate the entropy of the distribution
@@ -375,13 +375,13 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let entropy = logistic.entropy();
     /// assert!((entropy - 2.0).abs() < 1e-7);
     /// ```
     pub fn entropy(&self) -> F {
         // Entropy = 2 + ln(scale)
-        let two = F::from(2.0).unwrap();
+        let two = F::from(2.0).expect("Failed to convert constant to float");
         two + self.scale.ln()
     }
 
@@ -396,13 +396,13 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// ```
     /// use scirs2_stats::distributions::logistic::Logistic;
     ///
-    /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
+    /// let logistic = Logistic::new(0.0f64, 1.0).expect("Operation failed");
     /// let iqr = logistic.iqr();
     /// assert!((iqr - 2.1972245) < 1e-6);
     /// ```
     pub fn iqr(&self) -> F {
         // IQR = scale * ln(3) ≈ scale * 2.1972245...
-        let three = F::from(3.0).unwrap();
+        let three = F::from(3.0).expect("Failed to convert constant to float");
         self.scale * three.ln()
     }
 }
@@ -426,7 +426,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
 /// ```
 /// use scirs2_stats::distributions::logistic;
 ///
-/// let l = logistic::logistic(0.0f64, 1.0).unwrap();
+/// let l = logistic::logistic(0.0f64, 1.0).expect("Operation failed");
 /// let pdf_at_zero = l.pdf(0.0);
 /// assert!((pdf_at_zero - 0.25).abs() < 1e-7);
 /// ```
@@ -453,12 +453,12 @@ mod tests {
     #[test]
     fn test_logistic_creation() {
         // Standard Logistic (loc=0, scale=1)
-        let logistic = Logistic::new(0.0, 1.0).unwrap();
+        let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
         assert_eq!(logistic.loc, 0.0);
         assert_eq!(logistic.scale, 1.0);
 
         // Custom Logistic
-        let custom = Logistic::new(-2.0, 0.5).unwrap();
+        let custom = Logistic::new(-2.0, 0.5).expect("Operation failed");
         assert_eq!(custom.loc, -2.0);
         assert_eq!(custom.scale, 0.5);
 
@@ -470,7 +470,7 @@ mod tests {
     #[test]
     fn test_logistic_pdf() {
         // Standard Logistic (loc=0, scale=1)
-        let logistic = Logistic::new(0.0, 1.0).unwrap();
+        let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
 
         // PDF at x = 0 should be 1/4 = 0.25
         let pdf_at_zero = logistic.pdf(0.0);
@@ -485,7 +485,7 @@ mod tests {
         assert_relative_eq!(pdf_at_neg_one, pdf_at_one, epsilon = 1e-10);
 
         // Custom Logistic with loc=-2, scale=0.5
-        let custom = Logistic::new(-2.0, 0.5).unwrap();
+        let custom = Logistic::new(-2.0, 0.5).expect("Operation failed");
 
         // PDF at x = -2 should be 1/(4*0.5) = 0.5
         let pdf_at_loc = custom.pdf(-2.0);
@@ -495,7 +495,7 @@ mod tests {
     #[test]
     fn test_logistic_cdf() {
         // Standard Logistic (loc=0, scale=1)
-        let logistic = Logistic::new(0.0, 1.0).unwrap();
+        let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
 
         // CDF at x = 0 should be 0.5
         let cdf_at_zero = logistic.cdf(0.0);
@@ -510,7 +510,7 @@ mod tests {
         assert_relative_eq!(cdf_at_neg_one, 0.2689414, epsilon = 1e-7);
 
         // Custom Logistic with loc=-2, scale=0.5
-        let custom = Logistic::new(-2.0, 0.5).unwrap();
+        let custom = Logistic::new(-2.0, 0.5).expect("Operation failed");
 
         // CDF at x = -2 should be 0.5
         let cdf_at_loc = custom.cdf(-2.0);
@@ -524,29 +524,29 @@ mod tests {
     #[test]
     fn test_logistic_ppf() {
         // Standard Logistic (loc=0, scale=1)
-        let logistic = Logistic::new(0.0, 1.0).unwrap();
+        let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
 
         // PPF at p = 0.5 should be 0
-        let ppf_at_half = logistic.ppf(0.5).unwrap();
+        let ppf_at_half = logistic.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half, 0.0, epsilon = 1e-10);
 
         // PPF at p = 0.75 should be ln(3) ≈ 1.0986123
-        let ppf_at_75 = logistic.ppf(0.75).unwrap();
+        let ppf_at_75 = logistic.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(ppf_at_75, 1.0986123, epsilon = 1e-6);
 
         // PPF at p = 0.25 should be -ln(3) ≈ -1.0986123
-        let ppf_at_25 = logistic.ppf(0.25).unwrap();
+        let ppf_at_25 = logistic.ppf(0.25).expect("Operation failed");
         assert_relative_eq!(ppf_at_25, -1.0986123, epsilon = 1e-6);
 
         // Custom Logistic with loc=-2, scale=0.5
-        let custom = Logistic::new(-2.0, 0.5).unwrap();
+        let custom = Logistic::new(-2.0, 0.5).expect("Operation failed");
 
         // PPF at p = 0.5 should be -2.0
-        let ppf_at_half_custom = custom.ppf(0.5).unwrap();
+        let ppf_at_half_custom = custom.ppf(0.5).expect("Operation failed");
         assert_relative_eq!(ppf_at_half_custom, -2.0, epsilon = 1e-10);
 
         // PPF at p = 0.75 should be -2.0 + 0.5*ln(3) ≈ -2.0 + 0.5493062 ≈ -1.4506938
-        let ppf_at_75_custom = custom.ppf(0.75).unwrap();
+        let ppf_at_75_custom = custom.ppf(0.75).expect("Operation failed");
         assert_relative_eq!(ppf_at_75_custom, -1.4506938, epsilon = 1e-6);
 
         // Error cases
@@ -557,7 +557,7 @@ mod tests {
     #[test]
     fn test_logistic_properties() {
         // Standard Logistic (loc=0, scale=1)
-        let logistic = Logistic::new(0.0, 1.0).unwrap();
+        let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
 
         // Mean = loc = 0
         let mean = logistic.mean();
@@ -596,7 +596,7 @@ mod tests {
         assert_relative_eq!(iqr, 1.0986123, epsilon = 1e-6);
 
         // Custom Logistic with loc=-2, scale=0.5
-        let custom = Logistic::new(-2.0, 0.5).unwrap();
+        let custom = Logistic::new(-2.0, 0.5).expect("Operation failed");
 
         // Mean = loc = -2
         let mean_custom = custom.mean();
@@ -613,10 +613,10 @@ mod tests {
 
     #[test]
     fn test_logistic_rvs() {
-        let logistic = Logistic::new(0.0, 1.0).unwrap();
+        let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
 
         // Generate samples
-        let samples = logistic.rvs(100).unwrap();
+        let samples = logistic.rvs(100).expect("Operation failed");
 
         // Check the number of samples
         assert_eq!(samples.len(), 100);
@@ -632,12 +632,12 @@ mod tests {
     #[test]
     fn test_logistic_inverse_cdf() {
         // Test that cdf(ppf(p)) == p and ppf(cdf(x)) == x
-        let logistic = Logistic::new(0.0, 1.0).unwrap();
+        let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
 
         // Test various probability values
         let probabilities = [0.1, 0.25, 0.5, 0.75, 0.9];
         for &p in &probabilities {
-            let x = logistic.ppf(p).unwrap();
+            let x = logistic.ppf(p).expect("Operation failed");
             let p_back = logistic.cdf(x);
             assert_relative_eq!(p_back, p, epsilon = 1e-7);
         }
@@ -646,7 +646,7 @@ mod tests {
         let x_values = [-3.0, -1.0, 0.0, 1.0, 3.0];
         for &x in &x_values {
             let p = logistic.cdf(x);
-            let x_back = logistic.ppf(p).unwrap();
+            let x_back = logistic.ppf(p).expect("Operation failed");
             assert_relative_eq!(x_back, x, epsilon = 1e-7);
         }
     }

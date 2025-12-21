@@ -39,7 +39,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> MetricEnsemble<F
             base_metrics: HashMap::new(),
             weights: HashMap::new(),
             aggregation_strategy: EnsembleAggregation::WeightedAverage,
-            consensus_threshold: F::from(0.7).unwrap(),
+            consensus_threshold: F::from(0.7).expect("Failed to convert constant to float"),
         }
     }
 
@@ -124,7 +124,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> MetricEnsemble<F
         let len = values.len();
 
         if len.is_multiple_of(2) {
-            (values[len / 2 - 1] + values[len / 2]) / F::from(2.0).unwrap()
+            (values[len / 2 - 1] + values[len / 2])
+                / F::from(2.0).expect("Failed to convert constant to float")
         } else {
             values[len / 2]
         }
@@ -142,9 +143,10 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> MetricEnsemble<F
             return F::one();
         }
 
-        let mean = values.iter().cloned().sum::<F>() / F::from(values.len()).unwrap();
+        let mean =
+            values.iter().cloned().sum::<F>() / F::from(values.len()).expect("Operation failed");
         let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>()
-            / F::from(values.len()).unwrap();
+            / F::from(values.len()).expect("Operation failed");
 
         // Higher consensus when variance is low
         F::one() / (F::one() + variance)

@@ -773,7 +773,7 @@ mod tests {
                 sum += *value;
                 Ok(())
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(sum, 6);
     }
@@ -833,7 +833,19 @@ mod tests {
 
         let grouped = utils::group_by_category(&collection);
         assert_eq!(grouped.len(), 2); // Scalar and String categories
-        assert_eq!(grouped.get(&TypeCategory::Scalar).unwrap().len(), 2);
-        assert_eq!(grouped.get(&TypeCategory::String).unwrap().len(), 1);
+        assert_eq!(
+            grouped
+                .get(&TypeCategory::Scalar)
+                .expect("Operation failed")
+                .len(),
+            2
+        );
+        assert_eq!(
+            grouped
+                .get(&TypeCategory::String)
+                .expect("Operation failed")
+                .len(),
+            1
+        );
     }
 }

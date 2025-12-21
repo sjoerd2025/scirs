@@ -75,7 +75,7 @@ fn bench_cpu_sparse_fft(c: &mut Criterion) {
                         black_box(Some(SparseFFTAlgorithm::Sublinear)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -91,7 +91,7 @@ fn bench_cpu_sparse_fft(c: &mut Criterion) {
                         black_box(Some(SparseFFTAlgorithm::CompressedSensing)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -129,7 +129,7 @@ fn bench_gpu_sparse_fft(c: &mut Criterion) {
                                 black_box(Some(SparseFFTAlgorithm::Sublinear)),
                                 black_box(None),
                             )
-                            .unwrap()
+                            .expect("Operation failed")
                         })
                     },
                 );
@@ -146,7 +146,7 @@ fn bench_gpu_sparse_fft(c: &mut Criterion) {
                                 black_box(Some(SparseFFTAlgorithm::CompressedSensing)),
                                 black_box(None),
                             )
-                            .unwrap()
+                            .expect("Operation failed")
                         })
                     },
                 );
@@ -178,7 +178,7 @@ fn bench_multi_gpu_sparse_fft(c: &mut Criterion) {
                         black_box(Some(SparseFFTAlgorithm::Sublinear)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -209,7 +209,7 @@ fn bench_specialized_hardware(c: &mut Criterion) {
             |b, signal| {
                 b.iter(|| {
                     specialized_hardware_sparse_fft(black_box(signal), black_box(config.clone()))
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
@@ -237,7 +237,7 @@ fn bench_sparsity_scaling(c: &mut Criterion) {
                     black_box(Some(SparseFFTAlgorithm::Sublinear)),
                     black_box(None),
                 )
-                .unwrap()
+                .expect("Operation failed")
             })
         });
 
@@ -253,7 +253,7 @@ fn bench_sparsity_scaling(c: &mut Criterion) {
                         black_box(Some(SparseFFTAlgorithm::Sublinear)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -272,7 +272,7 @@ fn bench_sparsity_scaling(c: &mut Criterion) {
             |b, signal| {
                 b.iter(|| {
                     specialized_hardware_sparse_fft(black_box(signal), black_box(config.clone()))
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
@@ -310,7 +310,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
                         black_box(Some(*algorithm)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -327,7 +327,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
                         black_box(Some(*algorithm)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -346,7 +346,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
             |b, signal| {
                 b.iter(|| {
                     specialized_hardware_sparse_fft(black_box(signal), black_box(config.clone()))
-                        .unwrap()
+                        .expect("Operation failed")
                 })
             },
         );
@@ -377,7 +377,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                         black_box(Some(SparseFFTAlgorithm::Sublinear)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );
@@ -394,7 +394,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                         black_box(Some(SparseFFTAlgorithm::Sublinear)),
                         black_box(None),
                     )
-                    .unwrap()
+                    .expect("Operation failed")
                 })
             },
         );

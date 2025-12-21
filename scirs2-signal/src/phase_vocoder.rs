@@ -81,7 +81,7 @@ impl Default for PhaseVocoderConfig {
 /// config.time_stretch = 2.0;
 ///
 /// // Apply phase vocoder
-/// let result = phase_vocoder(&signal, &config).unwrap();
+/// let result = phase_vocoder(&signal, &config).expect("Operation failed");
 ///
 /// // Basic verification - function should succeed
 /// assert!(result.len() > 0);
@@ -720,7 +720,7 @@ mod tests {
         };
 
         // Just test that the function runs without errors
-        let result = phase_vocoder(&signal, &config).unwrap();
+        let result = phase_vocoder(&signal, &config).expect("Operation failed");
 
         // Since the phase vocoder algorithm's specific output length can vary with
         // different implementations, window sizes, etc., we just check that we got some output
@@ -734,7 +734,7 @@ mod tests {
     fn test_create_window() {
         // Test Hann window
         let n = 11;
-        let hann = create_window("hann", n).unwrap();
+        let hann = create_window("hann", n).expect("Operation failed");
 
         // Check that window has correct length
         assert_eq!(hann.len(), n);
@@ -758,7 +758,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let factor = 2.0;
 
-        let upsampled = resample(&signal, factor).unwrap();
+        let upsampled = resample(&signal, factor).expect("Operation failed");
 
         // Check length
         assert_eq!(upsampled.len(), 10);
@@ -779,7 +779,7 @@ mod tests {
 
         // Test downsampling
         let factor = 0.5;
-        let downsampled = resample(&signal, factor).unwrap();
+        let downsampled = resample(&signal, factor).expect("Operation failed");
 
         // Check length
         assert_eq!(downsampled.len(), 3);

@@ -652,7 +652,7 @@ mod tests {
             norm: 2.0_f64.sqrt(),
         };
 
-        let bundled = hv1.bundle(&hv2).unwrap();
+        let bundled = hv1.bundle(&hv2).expect("Operation failed");
         assert_eq!(bundled.dimension, 10);
         assert_eq!(bundled.sparse_data.len(), 3); // indices 0, 1, 2
 
@@ -676,7 +676,7 @@ mod tests {
             norm: 2.0_f64.sqrt(),
         };
 
-        let bound = hv1.bind(&hv2).unwrap();
+        let bound = hv1.bind(&hv2).expect("Operation failed");
         assert_eq!(bound.dimension, 10);
         assert!(!bound.sparse_data.is_empty());
         assert!(bound.norm > 0.0);
@@ -783,7 +783,7 @@ mod tests {
         let hv3 = Hypervector::random(100, 0.1);
 
         let vectors = vec![hv1, hv2, hv3];
-        let bundled = bundle_multiple(&vectors).unwrap();
+        let bundled = bundle_multiple(&vectors).expect("Operation failed");
 
         assert_eq!(bundled.dimension, 100);
         assert!(bundled.norm > 0.0);
@@ -797,7 +797,7 @@ mod tests {
         let hv2 = Hypervector::random(100, 0.1);
 
         let vectors = vec![hv1, hv2];
-        let centroid_hv = centroid(&vectors).unwrap();
+        let centroid_hv = centroid(&vectors).expect("Operation failed");
 
         assert_eq!(centroid_hv.dimension, 100);
         assert!(centroid_hv.norm > 0.0);

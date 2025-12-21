@@ -283,14 +283,14 @@ impl InteractiveParameterExplorer {
                 }
                 Err(_) => {
                     // If evaluation fails, take smaller step
-                    currentparams = exploration_points.last().unwrap().clone();
+                    currentparams = exploration_points.last().expect("Operation failed").clone();
                     break;
                 }
             }
 
             // Convergence check
             if iteration > 0 {
-                let current_response = response_values.last().unwrap();
+                let current_response = response_values.last().expect("Operation failed");
                 let prev_response = &response_values[response_values.len() - 2];
 
                 let response_change = current_response

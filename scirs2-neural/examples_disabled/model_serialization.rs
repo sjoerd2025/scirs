@@ -200,7 +200,7 @@ impl NeuralNetwork {
         let mut inputs = Vec::with_capacity(self.layers.len());
         inputs.push(x.clone());
         for i in 0..self.layers.len() - 1 {
-            inputs.push(self.layers[i].a.as_ref().unwrap().clone());
+            inputs.push(self.layers[i].a.as_ref().expect("Operation failed").clone());
         // Backward pass through all layers
         for i in (0..self.layers.len()).rev() {
             grad = self.layers[i].backward(&inputs[i], &grad, learning_rate);

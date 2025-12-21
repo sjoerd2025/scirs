@@ -37,13 +37,13 @@ use scirs2_core::ndarray::Array2;
 /// }
 ///
 /// // Decompose with wavelet transform
-/// let mut decomposition = dwt2d_decompose(&data, Wavelet::DB(4), None).unwrap();
+/// let mut decomposition = dwt2d_decompose(&data, Wavelet::DB(4), None).expect("Operation failed");
 ///
 /// // Apply hard thresholding to detail coefficients
 /// threshold_dwt2d(&mut decomposition, 1.0, ThresholdMethod::Hard);
 ///
 /// // Reconstruct the denoised image
-/// let denoised = dwt2d_reconstruct(&decomposition, Wavelet::DB(4), None).unwrap();
+/// let denoised = dwt2d_reconstruct(&decomposition, Wavelet::DB(4), None).expect("Operation failed");
 /// ```
 pub fn threshold_dwt2d(decomposition: &mut Dwt2dResult, threshold: f64, method: ThresholdMethod) {
     // Apply SIMD-optimized thresholding to detail coefficients
@@ -106,14 +106,14 @@ pub fn threshold_dwt2d(decomposition: &mut Dwt2dResult, threshold: f64, method: 
 /// }
 ///
 /// // Multi-level decomposition (3 levels)
-/// let mut coeffs = wavedec2(&data, Wavelet::Haar, 3, None).unwrap();
+/// let mut coeffs = wavedec2(&data, Wavelet::Haar, 3, None).expect("Operation failed");
 ///
 /// // Apply different thresholds for each level (higher thresholds for finer details)
 /// let thresholds = vec![5.0, 10.0, 15.0];
 /// threshold_wavedec2(&mut coeffs, &thresholds, ThresholdMethod::Soft);
 ///
 /// // Reconstruct from thresholded coefficients
-/// let result = waverec2(&coeffs, Wavelet::Haar, None).unwrap();
+/// let result = waverec2(&coeffs, Wavelet::Haar, None).expect("Operation failed");
 /// ```
 pub fn threshold_wavedec2(coeffs: &mut [Dwt2dResult], threshold: &[f64], method: ThresholdMethod) {
     for (i, level) in coeffs.iter_mut().enumerate() {
@@ -224,7 +224,7 @@ pub fn apply_adaptive_thresholding(data: &mut Array2<f64>, threshold: f64, metho
 ///     }
 /// }
 ///
-/// let decomp = dwt2d_decompose(&noisy_image, Wavelet::DB(4), None).unwrap();
+/// let decomp = dwt2d_decompose(&noisy_image, Wavelet::DB(4), None).expect("Operation failed");
 /// let noise_std = estimate_noise_variance(&decomp);
 /// ```
 pub fn estimate_noise_variance(decomp: &Dwt2dResult) -> f64 {
@@ -237,7 +237,7 @@ pub fn estimate_noise_variance(decomp: &Dwt2dResult) -> f64 {
     }
 
     // Sort coefficients for median calculation
-    hh_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    hh_coeffs.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     // Calculate median
     let median = if hh_coeffs.len() % 2 == 0 {
@@ -275,7 +275,7 @@ pub fn estimate_noise_variance(decomp: &Dwt2dResult) -> f64 {
 ///
 /// // Create test data
 /// let data = Array2::from_shape_fn((8, 8), |(i, j)| (i * j) as f64);
-/// let original = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+/// let original = dwt2d_decompose(&data, Wavelet::Haar, None).expect("Operation failed");
 /// let mut compressed = original.clone();
 ///
 /// // Apply thresholding

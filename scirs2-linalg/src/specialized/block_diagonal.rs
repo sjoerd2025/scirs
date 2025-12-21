@@ -335,7 +335,7 @@ mod tests {
         let block3 = array![[9.0]];
 
         let blocks = vec![block1, block2, block3];
-        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).expect("Operation failed");
 
         assert_eq!(bdmatrix.size, 5);
         assert_eq!(bdmatrix.num_blocks(), 3);
@@ -349,17 +349,17 @@ mod tests {
         let block1 = array![[1.0, 2.0], [3.0, 4.0]];
         let block2 = array![[5.0]];
         let blocks = vec![block1, block2];
-        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).expect("Operation failed");
 
-        assert_eq!(bdmatrix.get(0, 0).unwrap(), 1.0);
-        assert_eq!(bdmatrix.get(0, 1).unwrap(), 2.0);
-        assert_eq!(bdmatrix.get(1, 0).unwrap(), 3.0);
-        assert_eq!(bdmatrix.get(1, 1).unwrap(), 4.0);
-        assert_eq!(bdmatrix.get(2, 2).unwrap(), 5.0);
+        assert_eq!(bdmatrix.get(0, 0).expect("Operation failed"), 1.0);
+        assert_eq!(bdmatrix.get(0, 1).expect("Operation failed"), 2.0);
+        assert_eq!(bdmatrix.get(1, 0).expect("Operation failed"), 3.0);
+        assert_eq!(bdmatrix.get(1, 1).expect("Operation failed"), 4.0);
+        assert_eq!(bdmatrix.get(2, 2).expect("Operation failed"), 5.0);
 
         // Off-diagonal elements should be zero
-        assert_eq!(bdmatrix.get(0, 2).unwrap(), 0.0);
-        assert_eq!(bdmatrix.get(2, 0).unwrap(), 0.0);
+        assert_eq!(bdmatrix.get(0, 2).expect("Operation failed"), 0.0);
+        assert_eq!(bdmatrix.get(2, 0).expect("Operation failed"), 0.0);
     }
 
     #[test]
@@ -367,10 +367,10 @@ mod tests {
         let block1 = array![[2.0, 0.0], [0.0, 3.0]];
         let block2 = array![[4.0]];
         let blocks = vec![block1, block2];
-        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).expect("Operation failed");
 
         let x = array![1.0, 2.0, 3.0];
-        let result = bdmatrix.matvec(&x.view()).unwrap();
+        let result = bdmatrix.matvec(&x.view()).expect("Operation failed");
 
         // Expected: [2*1, 3*2, 4*3] = [2, 6, 12]
         assert_eq!(result, array![2.0, 6.0, 12.0]);
@@ -381,9 +381,9 @@ mod tests {
         let block1 = array![[2.0, 0.0], [0.0, 3.0]];
         let block2 = array![[4.0]];
         let blocks = vec![block1, block2];
-        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).expect("Operation failed");
 
-        let det = bdmatrix.determinant().unwrap();
+        let det = bdmatrix.determinant().expect("Operation failed");
         // Expected: det(block1) * det(block2) = 6 * 4 = 24
         assert!((det - 24.0).abs() < 1e-10);
     }
@@ -393,9 +393,9 @@ mod tests {
         let block1 = array![[1.0, 2.0], [3.0, 4.0]];
         let block2 = array![[5.0]];
         let blocks = vec![block1, block2];
-        let bdmatrix = BlockDiagonalMatrix::new(blocks).unwrap();
+        let bdmatrix = BlockDiagonalMatrix::new(blocks).expect("Operation failed");
 
-        let dense = bdmatrix.to_dense().unwrap();
+        let dense = bdmatrix.to_dense().expect("Operation failed");
         let expected = array![[1.0, 2.0, 0.0], [3.0, 4.0, 0.0], [0.0, 0.0, 5.0]];
 
         assert_eq!(dense, expected);

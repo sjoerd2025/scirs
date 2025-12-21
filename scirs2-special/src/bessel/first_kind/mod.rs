@@ -19,6 +19,12 @@ use crate::gamma::gamma;
 use scirs2_core::numeric::{Float, FromPrimitive};
 use std::fmt::Debug;
 
+/// Helper to convert f64 constants to generic Float type with better error messages
+#[inline(always)]
+fn const_f64<F: Float + FromPrimitive>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type - this indicates an incompatible numeric type")
+}
+
 /// Bessel function of the first kind of order 0 with enhanced numerical stability.
 ///
 /// This implementation provides improved handling of:
@@ -56,48 +62,48 @@ pub fn j0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let abs_x = x.abs();
 
     // Use known reference values for specific test points
-    if abs_x == F::from(0.5).unwrap() {
-        return F::from(0.938_469_807_240_813).unwrap();
+    if abs_x == const_f64::<F>(0.5) {
+        return const_f64::<F>(0.938_469_807_240_813);
     }
-    if abs_x == F::from(1.0).unwrap() {
-        return F::from(constants::lookup::j0::AT_1).unwrap();
+    if abs_x == const_f64::<F>(1.0) {
+        return const_f64::<F>(constants::lookup::j0::AT_1);
     }
-    if abs_x == F::from(2.0).unwrap() {
-        return F::from(constants::lookup::j0::AT_2).unwrap();
+    if abs_x == const_f64::<F>(2.0) {
+        return const_f64::<F>(constants::lookup::j0::AT_2);
     }
     // First zero of J₀
-    if (abs_x - F::from(2.404825557695773).unwrap()).abs() < F::from(1e-12).unwrap() {
-        return F::from(-9.586882554906229e-17).unwrap();
+    if (abs_x - const_f64::<F>(2.404825557695773)).abs() < const_f64::<F>(1e-12) {
+        return const_f64::<F>(-9.586882554906229e-17);
     }
-    if abs_x == F::from(5.0).unwrap() {
-        return F::from(constants::lookup::j0::AT_5).unwrap();
+    if abs_x == const_f64::<F>(5.0) {
+        return const_f64::<F>(constants::lookup::j0::AT_5);
     }
-    if abs_x == F::from(10.0).unwrap() {
-        return F::from(constants::lookup::j0::AT_10).unwrap();
+    if abs_x == const_f64::<F>(10.0) {
+        return const_f64::<F>(constants::lookup::j0::AT_10);
     }
 
     // For very small arguments, use series expansion
-    if abs_x < F::from(0.1).unwrap() {
+    if abs_x < const_f64::<F>(0.1) {
         // J₀(x) ≈ 1 - x²/4 + x⁴/64 - x⁶/2304 + ...
         let x2 = abs_x * abs_x;
         let x4 = x2 * x2;
         let x6 = x4 * x2;
-        return F::one() - x2 / F::from(4.0).unwrap() + x4 / F::from(64.0).unwrap()
-            - x6 / F::from(2304.0).unwrap();
+        return F::one() - x2 / const_f64::<F>(4.0) + x4 / const_f64::<F>(64.0)
+            - x6 / const_f64::<F>(2304.0);
     }
 
     // For large arguments, use asymptotic expansion
-    if abs_x > F::from(8.0).unwrap() {
-        let z = abs_x - F::from(constants::f64::PI_4).unwrap();
+    if abs_x > const_f64::<F>(8.0) {
+        let z = abs_x - const_f64::<F>(constants::f64::PI_4);
         let sqrt_2_over_pi_x =
-            (F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * abs_x)).sqrt();
+            (const_f64::<F>(2.0) / (const_f64::<F>(constants::f64::PI) * abs_x)).sqrt();
         return sqrt_2_over_pi_x * z.cos();
     }
 
     // For moderate arguments, use a simplified rational approximation
     // This is a placeholder - for production use, implement proper Chebyshev or rational approximation
     let x2 = abs_x * abs_x;
-    F::one() - x2 / F::from(4.0).unwrap() + x2 * x2 / F::from(64.0).unwrap()
+    F::one() - x2 / const_f64::<F>(4.0) + x2 * x2 / const_f64::<F>(64.0)
 }
 
 /// Enhanced asymptotic approximation for J0 with very large arguments.
@@ -105,36 +111,36 @@ pub fn j0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 #[allow(dead_code)]
 fn enhanced_asymptotic_j0<F: Float + FromPrimitive>(x: F) -> F {
     let abs_x = x.abs();
-    let theta = abs_x - F::from(constants::f64::PI_4).unwrap();
+    let theta = abs_x - const_f64::<F>(constants::f64::PI_4);
 
     // Compute amplitude factor with higher precision
-    let one_over_sqrt_pi_x = F::from(constants::f64::ONE_OVER_SQRT_PI).unwrap() / abs_x.sqrt();
+    let one_over_sqrt_pi_x = const_f64::<F>(constants::f64::ONE_OVER_SQRT_PI) / abs_x.sqrt();
 
     // Use more terms of the asymptotic series for better accuracy
     let mut p = F::one();
-    let mut q = F::from(-0.125).unwrap() / abs_x;
+    let mut q = const_f64::<F>(-0.125) / abs_x;
 
-    if abs_x > F::from(100.0).unwrap() {
+    if abs_x > const_f64::<F>(100.0) {
         // For extremely large x, just use the leading term
-        return one_over_sqrt_pi_x * p * theta.cos() * F::from(constants::f64::SQRT_2).unwrap();
+        return one_over_sqrt_pi_x * p * theta.cos() * const_f64::<F>(constants::f64::SQRT_2);
     }
 
     // Add correction terms for better accuracy
-    let z = F::from(8.0).unwrap() * abs_x;
+    let z = const_f64::<F>(8.0) * abs_x;
     let z2 = z * z; // Used in calculating asymptotic approximation terms
 
     // Calculate more terms in the asymptotic series
     // P polynomial for the asymptotic form
-    p = p - F::from(9.0).unwrap() / z2 + F::from(225.0).unwrap() / (z2 * z2)
-        - F::from(11025.0).unwrap() / (z2 * z2 * z2);
+    p = p - const_f64::<F>(9.0) / z2 + const_f64::<F>(225.0) / (z2 * z2)
+        - const_f64::<F>(11025.0) / (z2 * z2 * z2);
 
     // Q polynomial for the asymptotic form
-    q = q + F::from(15.0).unwrap() / z2 - F::from(735.0).unwrap() / (z2 * z2)
-        + F::from(51975.0).unwrap() / (z2 * z2 * z2);
+    q = q + const_f64::<F>(15.0) / z2 - const_f64::<F>(735.0) / (z2 * z2)
+        + const_f64::<F>(51975.0) / (z2 * z2 * z2);
 
     // Combine with the phase term
     one_over_sqrt_pi_x
-        * F::from(constants::f64::SQRT_2).unwrap()
+        * const_f64::<F>(constants::f64::SQRT_2)
         * (p * theta.cos() - q * theta.sin())
 }
 
@@ -181,80 +187,80 @@ pub fn j1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     };
 
     // Use known reference values for specific test points
-    if abs_x == F::from(0.5).unwrap() {
-        return sign * F::from(0.2422684576748739).unwrap();
+    if abs_x == const_f64::<F>(0.5) {
+        return sign * const_f64::<F>(0.2422684576748739);
     }
-    if abs_x == F::from(1.0).unwrap() {
-        return sign * F::from(constants::lookup::j1::AT_1).unwrap();
+    if abs_x == const_f64::<F>(1.0) {
+        return sign * const_f64::<F>(constants::lookup::j1::AT_1);
     }
-    if abs_x == F::from(2.0).unwrap() {
-        return sign * F::from(constants::lookup::j1::AT_2).unwrap();
+    if abs_x == const_f64::<F>(2.0) {
+        return sign * const_f64::<F>(constants::lookup::j1::AT_2);
     }
-    if abs_x == F::from(5.0).unwrap() {
-        return sign * F::from(constants::lookup::j1::AT_5).unwrap();
+    if abs_x == const_f64::<F>(5.0) {
+        return sign * const_f64::<F>(constants::lookup::j1::AT_5);
     }
-    if abs_x == F::from(10.0).unwrap() {
-        return sign * F::from(constants::lookup::j1::AT_10).unwrap();
+    if abs_x == const_f64::<F>(10.0) {
+        return sign * const_f64::<F>(constants::lookup::j1::AT_10);
     }
 
     // For very small arguments, use series expansion
-    if abs_x < F::from(0.1).unwrap() {
+    if abs_x < const_f64::<F>(0.1) {
         // J₁(x) ≈ x/2 - x³/16 + x⁵/384 - ...
         let x2 = abs_x * abs_x;
         let x4 = x2 * x2;
         return sign
-            * (abs_x / F::from(2.0).unwrap() - abs_x * x2 / F::from(16.0).unwrap()
-                + abs_x * x4 / F::from(384.0).unwrap());
+            * (abs_x / const_f64::<F>(2.0) - abs_x * x2 / const_f64::<F>(16.0)
+                + abs_x * x4 / const_f64::<F>(384.0));
     }
 
     // For large arguments, use asymptotic expansion
-    if abs_x > F::from(8.0).unwrap() {
-        let z = abs_x - F::from(3.0 * constants::f64::PI_4).unwrap();
+    if abs_x > const_f64::<F>(8.0) {
+        let z = abs_x - const_f64::<F>(3.0 * constants::f64::PI_4);
         let sqrt_2_over_pi_x =
-            (F::from(2.0).unwrap() / (F::from(constants::f64::PI).unwrap() * abs_x)).sqrt();
+            (const_f64::<F>(2.0) / (const_f64::<F>(constants::f64::PI) * abs_x)).sqrt();
         return sign * sqrt_2_over_pi_x * z.cos();
     }
 
     // For moderate arguments, use a simplified approximation
     // This is a placeholder - for production use, implement proper approximation
     let x2 = abs_x * abs_x;
-    sign * (abs_x / F::from(2.0).unwrap() - abs_x * x2 / F::from(16.0).unwrap())
+    sign * (abs_x / const_f64::<F>(2.0) - abs_x * x2 / const_f64::<F>(16.0))
 }
 
 /// Enhanced asymptotic approximation for J1 with very large arguments.
 /// Provides better accuracy compared to the standard formula.
 #[allow(dead_code)]
 fn enhanced_asymptotic_j1<F: Float + FromPrimitive>(x: F) -> F {
-    let theta = x - F::from(3.0 * constants::f64::PI_4).unwrap();
+    let theta = x - const_f64::<F>(3.0 * constants::f64::PI_4);
 
     // Compute amplitude factor with higher precision
-    let one_over_sqrt_pi_x = F::from(constants::f64::ONE_OVER_SQRT_PI).unwrap() / x.sqrt();
+    let one_over_sqrt_pi_x = const_f64::<F>(constants::f64::ONE_OVER_SQRT_PI) / x.sqrt();
 
     // Use more terms of the asymptotic series for better accuracy
     let mut p = F::one();
-    let mut q = F::from(0.375).unwrap() / x;
+    let mut q = const_f64::<F>(0.375) / x;
 
-    if x > F::from(100.0).unwrap() {
+    if x > const_f64::<F>(100.0) {
         // For extremely large x, just use the leading term
-        return one_over_sqrt_pi_x * p * theta.cos() * F::from(constants::f64::SQRT_2).unwrap();
+        return one_over_sqrt_pi_x * p * theta.cos() * const_f64::<F>(constants::f64::SQRT_2);
     }
 
     // Add correction terms for better accuracy
-    let z = F::from(8.0).unwrap() * x;
+    let z = const_f64::<F>(8.0) * x;
     let z2 = z * z;
 
     // Calculate more terms in the asymptotic series
     // P polynomial for the asymptotic form
-    p = p - F::from(15.0).unwrap() / z2 + F::from(735.0).unwrap() / (z2 * z2)
-        - F::from(67725.0).unwrap() / (z2 * z2 * z2);
+    p = p - const_f64::<F>(15.0) / z2 + const_f64::<F>(735.0) / (z2 * z2)
+        - const_f64::<F>(67725.0) / (z2 * z2 * z2);
 
     // Q polynomial for the asymptotic form
-    q = q - F::from(63.0).unwrap() / z2 + F::from(3465.0).unwrap() / (z2 * z2)
-        - F::from(360855.0).unwrap() / (z2 * z2 * z2);
+    q = q - const_f64::<F>(63.0) / z2 + const_f64::<F>(3465.0) / (z2 * z2)
+        - const_f64::<F>(360855.0) / (z2 * z2 * z2);
 
     // Combine with the phase term
     one_over_sqrt_pi_x
-        * F::from(constants::f64::SQRT_2).unwrap()
+        * const_f64::<F>(constants::f64::SQRT_2)
         * (p * theta.cos() - q * theta.sin())
 }
 
@@ -311,22 +317,22 @@ pub fn jn<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(n: i32, x: F) 
     let abs_x = x.abs();
 
     // For large x, use asymptotic expansion
-    if abs_x > F::from(n as f64 * 2.0).unwrap() && abs_x > F::from(25.0).unwrap() {
+    if abs_x > const_f64::<F>(n as f64 * 2.0) && abs_x > const_f64::<F>(25.0) {
         return enhanced_asymptotic_jn(n, x);
     }
 
     // For small x, use series expansion
-    if abs_x < F::from(0.1).unwrap() && n > 2 {
+    if abs_x < const_f64::<F>(0.1) && n > 2 {
         // For small arguments, compute using the series definition
         // Jₙ(x) = (x/2)^n/n! * Σ[k=0..∞] (-1)^k (x/2)^(2k)/(k! (n+k)!)
 
         // Compute (x/2)^n/n! carefully to avoid overflow/underflow
-        let half_x = abs_x / F::from(2.0).unwrap();
-        let log_term = F::from(n as f64).unwrap() * half_x.ln() - log_factorial::<F>(n);
+        let half_x = abs_x / const_f64::<F>(2.0);
+        let log_term = const_f64::<F>(n as f64) * half_x.ln() - log_factorial::<F>(n);
 
         // Only compute if it won't underflow/overflow
-        if log_term < F::from(constants::f64::LN_MAX).unwrap()
-            && log_term > F::from(constants::f64::LN_MIN).unwrap()
+        if log_term < const_f64::<F>(constants::f64::LN_MAX)
+            && log_term > const_f64::<F>(constants::f64::LN_MIN)
         {
             let prefactor = log_term.exp();
 
@@ -335,10 +341,10 @@ pub fn jn<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(n: i32, x: F) 
             let x2 = -half_x * half_x;
 
             for k in 1..=50 {
-                term = term * x2 / (F::from(k).unwrap() * F::from(n + k).unwrap());
+                term = term * x2 / (const_f64::<F>(k as f64) * const_f64::<F>((n + k) as f64));
                 sum += term;
 
-                if term.abs() < F::from(1e-15).unwrap() * sum.abs() {
+                if term.abs() < const_f64::<F>(1e-15) * sum.abs() {
                     break;
                 }
             }
@@ -360,7 +366,7 @@ pub fn jn<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(n: i32, x: F) 
 
     // Forward recurrence to compute J_n
     for k in 2..=n {
-        let k_f = F::from(k - 1).unwrap(); // k-1 because we're computing J_k from J_{k-1}
+        let k_f = const_f64::<F>((k - 1) as f64); // k-1 because we're computing J_k from J_{k-1}
         let j_next = (k_f + k_f) / abs_x * j_curr - j_prev;
         j_prev = j_curr;
         j_curr = j_next;
@@ -421,7 +427,7 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 
     let abs_x = x.abs();
     let abs_v = v.abs();
-    let v_f64 = v.to_f64().unwrap();
+    let v_f64 = v.to_f64().expect("Failed to convert Float to f64");
 
     // Integer orders - use optimized implementation
     if v_f64.fract() == 0.0 && (0.0..=100.0).contains(&v_f64) {
@@ -429,22 +435,27 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
     }
 
     // For large x or large negative order, use asymptotic expansion
-    if abs_x > F::from(max(30.0, abs_v.to_f64().unwrap() * 2.0)).unwrap() {
+    if abs_x
+        > const_f64::<F>(max(
+            30.0,
+            abs_v.to_f64().expect("Failed to convert abs_v to f64") * 2.0,
+        ))
+    {
         return enhanced_asymptotic_jv(v, x);
     }
 
     // For small x and large v, use series representation
-    if abs_x < F::from(0.1).unwrap() && abs_v > F::from(1.0).unwrap() {
+    if abs_x < const_f64::<F>(0.1) && abs_v > const_f64::<F>(1.0) {
         // Series representation for small x
         // Jᵥ(x) = (x/2)^v/Γ(v+1) * Σ[k=0..∞] (-1)^k (x/2)^(2k)/(k! Γ(v+k+1))
 
         // Compute (x/2)^v/Γ(v+1) carefully
-        let half_x = abs_x / F::from(2.0).unwrap();
+        let half_x = abs_x / const_f64::<F>(2.0);
         let log_term = v * half_x.ln() - gamma(v + F::one()).ln();
 
         // Only compute if it won't underflow/overflow
-        if log_term < F::from(constants::f64::LN_MAX).unwrap()
-            && log_term > F::from(constants::f64::LN_MIN).unwrap()
+        if log_term < const_f64::<F>(constants::f64::LN_MAX)
+            && log_term > const_f64::<F>(constants::f64::LN_MIN)
         {
             let prefactor = log_term.exp();
 
@@ -453,11 +464,11 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
             let x2 = -half_x * half_x;
 
             for k in 1..=100 {
-                let k_f = F::from(k).unwrap();
+                let k_f = const_f64::<F>(k as f64);
                 term = term * x2 / (k_f * (v + k_f));
                 sum += term;
 
-                if term.abs() < F::from(1e-15).unwrap() * sum.abs() {
+                if term.abs() < const_f64::<F>(1e-15) * sum.abs() {
                     break;
                 }
             }
@@ -504,11 +515,11 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
     // where ₀F₁ is the confluent hypergeometric limit function
 
     // Compute using series expansion directly
-    let half_x = abs_x / F::from(2.0).unwrap();
+    let half_x = abs_x / const_f64::<F>(2.0);
     let log_prefactor = v * half_x.ln() - gamma(v + F::one()).ln();
 
-    if log_prefactor > F::from(constants::f64::LN_MIN).unwrap()
-        && log_prefactor < F::from(constants::f64::LN_MAX).unwrap()
+    if log_prefactor > const_f64::<F>(constants::f64::LN_MIN)
+        && log_prefactor < const_f64::<F>(constants::f64::LN_MAX)
     {
         let prefactor = log_prefactor.exp();
 
@@ -518,12 +529,12 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
         let neg_x2_over_4 = -half_x * half_x;
 
         for k in 1..=100 {
-            let k_f = F::from(k).unwrap();
+            let k_f = const_f64::<F>(k as f64);
             // term *= (-x²/4) / (k * (v+k))
             term = term * neg_x2_over_4 / (k_f * (v + k_f));
             sum += term;
 
-            if term.abs() < F::from(1e-15).unwrap() * sum.abs() {
+            if term.abs() < const_f64::<F>(1e-15) * sum.abs() {
                 break;
             }
         }
@@ -534,7 +545,7 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
         if x.is_sign_negative() {
             // For non-integer v, J_v(-x) is complex in general
             // For real part, we use: Re[J_v(-x)] = cos(πv) J_v(x)
-            let cos_pi_v = (F::from(constants::f64::PI).unwrap() * v).cos();
+            let cos_pi_v = (const_f64::<F>(constants::f64::PI) * v).cos();
             return result * cos_pi_v;
         }
 
@@ -550,29 +561,29 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 #[allow(dead_code)]
 fn enhanced_asymptotic_jv<F: Float + FromPrimitive>(v: F, x: F) -> F {
     let abs_x = x.abs();
-    let v_f64 = v.to_f64().unwrap();
+    let v_f64 = v.to_f64().expect("Failed to convert Float to f64");
 
     // Calculate the phase with high precision
     let phase_adjustment =
-        v * F::from(constants::f64::PI_2).unwrap() + F::from(constants::f64::PI_4).unwrap();
+        v * const_f64::<F>(constants::f64::PI_2) + const_f64::<F>(constants::f64::PI_4);
     let theta = abs_x - phase_adjustment;
 
     // Compute amplitude factor with higher precision
-    let one_over_sqrt_pi_x = F::from(constants::f64::ONE_OVER_SQRT_PI).unwrap() / abs_x.sqrt();
+    let one_over_sqrt_pi_x = const_f64::<F>(constants::f64::ONE_OVER_SQRT_PI) / abs_x.sqrt();
 
     // Calculate asymptotic series terms
-    let mu = F::from(4.0).unwrap() * v * v;
+    let mu = const_f64::<F>(4.0) * v * v;
     let muminus_1 = mu - F::one();
 
     // For extremely large x, use leading term only
-    if abs_x > F::from(100.0).unwrap() {
-        let result = one_over_sqrt_pi_x * F::from(constants::f64::SQRT_2).unwrap() * theta.cos();
+    if abs_x > const_f64::<F>(100.0) {
+        let result = one_over_sqrt_pi_x * const_f64::<F>(constants::f64::SQRT_2) * theta.cos();
 
         // Apply sign adjustment for negative x
         if x.is_sign_negative() && v_f64.fract() != 0.0 {
             // For non-integer v, the result becomes complex
             // We only return the real part here
-            let cos_pi_v = (F::from(constants::f64::PI).unwrap() * v).cos();
+            let cos_pi_v = (const_f64::<F>(constants::f64::PI) * v).cos();
             return result * cos_pi_v;
         } else if x.is_sign_negative() && (v_f64 as i32) % 2 != 0 {
             return -result;
@@ -585,18 +596,17 @@ fn enhanced_asymptotic_jv<F: Float + FromPrimitive>(v: F, x: F) -> F {
     // Using abs_x directly for calculations
 
     // Calculate higher-order correction terms
-    let term1 = muminus_1 / (F::from(8.0).unwrap() * abs_x);
+    let term1 = muminus_1 / (const_f64::<F>(8.0) * abs_x);
     let term2 =
-        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) / (F::from(128.0).unwrap() * abs_x * abs_x);
-    let term3 =
-        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) * (muminus_1 - F::from(24.0).unwrap())
-            / (F::from(3072.0).unwrap() * abs_x * abs_x * abs_x);
+        muminus_1 * (muminus_1 - const_f64::<F>(8.0)) / (const_f64::<F>(128.0) * abs_x * abs_x);
+    let term3 = muminus_1 * (muminus_1 - const_f64::<F>(8.0)) * (muminus_1 - const_f64::<F>(24.0))
+        / (const_f64::<F>(3072.0) * abs_x * abs_x * abs_x);
 
     // Combine all terms
     let p = F::one() + term1 + term2 + term3;
 
     // Result with enhanced precision
-    let result = one_over_sqrt_pi_x * F::from(constants::f64::SQRT_2).unwrap() * p * theta.cos();
+    let result = one_over_sqrt_pi_x * const_f64::<F>(constants::f64::SQRT_2) * p * theta.cos();
 
     // Handle sign for negative x
     if x.is_sign_negative() {
@@ -609,7 +619,7 @@ fn enhanced_asymptotic_jv<F: Float + FromPrimitive>(v: F, x: F) -> F {
         } else {
             // Non-integer order - complex result
             // Return real part: cos(πv) * J_v(|x|)
-            let cos_pi_v = (F::from(constants::f64::PI).unwrap() * v).cos();
+            let cos_pi_v = (const_f64::<F>(constants::f64::PI) * v).cos();
             return result * cos_pi_v;
         }
     }
@@ -637,7 +647,7 @@ fn log_factorial<F: Float + FromPrimitive>(n: i32) -> F {
 
     let mut result = F::zero();
     for i in 2..=n {
-        result = result + F::from(i as f64).unwrap().ln();
+        result = result + const_f64::<F>(i as f64).ln();
     }
 
     result
@@ -648,27 +658,27 @@ fn log_factorial<F: Float + FromPrimitive>(n: i32) -> F {
 #[allow(dead_code)]
 fn enhanced_asymptotic_jn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
     let abs_x = x.abs();
-    let n_f = F::from(n).unwrap();
+    let n_f = const_f64::<F>(n as f64);
 
     // Calculate the phase with high precision
-    let theta = abs_x
-        - (n_f * F::from(constants::f64::PI_2).unwrap() + F::from(constants::f64::PI_4).unwrap());
+    let theta =
+        abs_x - (n_f * const_f64::<F>(constants::f64::PI_2) + const_f64::<F>(constants::f64::PI_4));
 
     // Compute amplitude factor with higher precision
-    let one_over_sqrt_pi_x = F::from(constants::f64::ONE_OVER_SQRT_PI).unwrap() / abs_x.sqrt();
+    let one_over_sqrt_pi_x = const_f64::<F>(constants::f64::ONE_OVER_SQRT_PI) / abs_x.sqrt();
 
     // Calculate leading terms of asymptotic expansion
-    let mu = F::from(4.0).unwrap() * n_f * n_f;
+    let mu = const_f64::<F>(4.0) * n_f * n_f;
     let muminus_1 = mu - F::one();
 
     // Enhanced formula for large x and moderate to large n
-    let term_1 = muminus_1 / (F::from(8.0).unwrap() * abs_x);
+    let term_1 = muminus_1 / (const_f64::<F>(8.0) * abs_x);
     let term_2 =
-        muminus_1 * (muminus_1 - F::from(8.0).unwrap()) / (F::from(128.0).unwrap() * abs_x * abs_x);
+        muminus_1 * (muminus_1 - const_f64::<F>(8.0)) / (const_f64::<F>(128.0) * abs_x * abs_x);
 
     // Result with enhanced precision
     let ampl = F::one() + term_1 + term_2;
-    let result = one_over_sqrt_pi_x * F::from(constants::f64::SQRT_2).unwrap() * ampl * theta.cos();
+    let result = one_over_sqrt_pi_x * const_f64::<F>(constants::f64::SQRT_2) * ampl * theta.cos();
 
     // For negative x, adjust the sign
     if x.is_sign_negative() && n % 2 != 0 {

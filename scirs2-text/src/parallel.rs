@@ -121,7 +121,7 @@ impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
 
                 match self.vectorizer.transform_batch(chunk) {
                     Ok(chunk_vectors) => {
-                        let mut result = result.lock().unwrap();
+                        let mut result = result.lock().expect("Operation failed");
 
                         for (i, row) in chunk_vectors.rows().into_iter().enumerate() {
                             if start_idx + i < n_samples {
@@ -130,13 +130,13 @@ impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
                         }
                     }
                     Err(e) => {
-                        let mut errors = errors.lock().unwrap();
+                        let mut errors = errors.lock().expect("Operation failed");
                         errors.push(e);
                     }
                 }
             });
 
-        let errors = errors.lock().unwrap();
+        let errors = errors.lock().expect("Operation failed");
         if !errors.is_empty() {
             return Err(errors[0].clone());
         }
@@ -220,7 +220,7 @@ impl ParallelTextProcessor {
 
                 // Update progress periodically
                 if i % update_interval == 0 || i == total - 1 {
-                    let mut progress = progress.lock().unwrap();
+                    let mut progress = progress.lock().expect("Operation failed");
                     progress.push(i + 1);
                 }
 
@@ -307,7 +307,7 @@ impl ParallelCorpusProcessor {
             // Check for errors
             for result in &indexed_results {
                 if let Err(e) = result {
-                    let mut errors = errors.lock().unwrap();
+                    let mut errors = errors.lock().expect("Operation failed");
                     errors.push(e.clone());
                     return Err(e.clone());
                 }
@@ -318,14 +318,14 @@ impl ParallelCorpusProcessor {
                 indexed_results.into_iter().filter_map(|r| r.ok()).collect();
             sorted_results.sort_by_key(|(idx_, _)| *idx_);
 
-            let mut results_guard = results.lock().unwrap();
+            let mut results_guard = results.lock().expect("Operation failed");
             for (_, batch_results) in sorted_results {
                 results_guard.extend(batch_results);
             }
         }
 
         // Check for errors
-        let errors = errors.lock().unwrap();
+        let errors = errors.lock().expect("Operation failed");
         if !errors.is_empty() {
             return Err(errors[0].clone());
         }
@@ -382,13 +382,13 @@ impl ParallelCorpusProcessor {
         // Check for errors
         for result in &indexed_results {
             if let Err(e) = result {
-                let mut errors = errors.lock().unwrap();
+                let mut errors = errors.lock().expect("Operation failed");
                 errors.push(e.clone());
             }
         }
 
         // Check for errors
-        let errors = errors.lock().unwrap();
+        let errors = errors.lock().expect("Operation failed");
         if !errors.is_empty() {
             return Err(errors[0].clone());
         }
@@ -452,10 +452,12 @@ mod tests {
         let mut vectorizer = TfidfVectorizer::default();
         let texts = create_testtexts();
 
-        vectorizer.fit(&texts).unwrap();
+        vectorizer.fit(&texts).expect("Operation failed");
         let parallel_vectorizer = ParallelVectorizer::new(vectorizer);
 
-        let vectors = parallel_vectorizer.transform(&texts).unwrap();
+        let vectors = parallel_vectorizer
+            .transform(&texts)
+            .expect("Operation failed");
 
         assert_eq!(vectors.nrows(), texts.len());
         assert!(vectors.ncols() > 0);
@@ -478,7 +480,7 @@ mod tests {
 
         let (word_counts, progress) = processor
             .process_with_progress(&texts, |text| text.split_whitespace().count(), 2)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(word_counts, vec![5, 4, 6, 2, 6]);
         assert!(!progress.is_empty());
@@ -497,7 +499,7 @@ mod tests {
                     .collect();
                 Ok(counts)
             })
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(result, vec![5, 4, 6, 2, 6]);
     }

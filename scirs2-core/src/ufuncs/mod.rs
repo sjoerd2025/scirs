@@ -190,7 +190,7 @@ pub mod math {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::PI() / T::from(180.0).unwrap())
+        array.mapv(|x| x * T::PI() / T::from(180.0).expect("Operation failed"))
     }
 
     /// Convert radians to degrees element-wise for a 1D array
@@ -198,7 +198,7 @@ pub mod math {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::from(180.0).unwrap() / T::PI())
+        array.mapv(|x| x * T::from(180.0).expect("Operation failed") / T::PI())
     }
 
     /// Apply sign function element-wise to a 1D array
@@ -404,7 +404,7 @@ pub mod math2d {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::PI() / T::from(180.0).unwrap())
+        array.mapv(|x| x * T::PI() / T::from(180.0).expect("Operation failed"))
     }
 
     /// Convert radians to degrees element-wise for a 2D array
@@ -412,7 +412,7 @@ pub mod math2d {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::from(180.0).unwrap() / T::PI())
+        array.mapv(|x| x * T::from(180.0).expect("Operation failed") / T::PI())
     }
 
     /// Apply sign function element-wise to a 2D array
@@ -747,7 +747,7 @@ pub mod reduction2d {
                     0 => {
                         // Mean along rows (result has length cols)
                         let mut result = Array::<T, Ix1>::default(cols);
-                        let n = T::from_usize(rows).unwrap();
+                        let n = T::from_usize(rows).expect("Operation failed");
 
                         for j in 0..cols {
                             let mut sum = T::zero();
@@ -762,7 +762,7 @@ pub mod reduction2d {
                     1 => {
                         // Mean along columns (result has length rows)
                         let mut result = Array::<T, Ix1>::default(rows);
-                        let n = T::from_usize(cols).unwrap();
+                        let n = T::from_usize(cols).expect("Operation failed");
 
                         for i in 0..rows {
                             let mut sum = T::zero();
@@ -780,7 +780,7 @@ pub mod reduction2d {
             None => {
                 // Mean over all elements
                 let (rows, cols) = (array.shape()[0], array.shape()[1]);
-                let n = T::from_usize(rows * cols).unwrap();
+                let n = T::from_usize(rows * cols).expect("Operation failed");
                 let mut sum = T::zero();
 
                 for val in array.iter() {
@@ -814,7 +814,7 @@ pub mod reduction2d {
                         // Variance along rows (result has length cols)
                         let means = mean(array, Some(0));
                         let mut result = Array::<T, Ix1>::default(cols);
-                        let n = T::from_usize(rows).unwrap();
+                        let n = T::from_usize(rows).expect("Operation failed");
 
                         for j in 0..cols {
                             let mut sum_sq_diff = T::zero();
@@ -831,7 +831,7 @@ pub mod reduction2d {
                         // Variance along columns (result has length rows)
                         let means = mean(array, Some(1));
                         let mut result = Array::<T, Ix1>::default(rows);
-                        let n = T::from_usize(cols).unwrap();
+                        let n = T::from_usize(cols).expect("Operation failed");
 
                         for i in 0..rows {
                             let mut sum_sq_diff = T::zero();
@@ -850,7 +850,7 @@ pub mod reduction2d {
             None => {
                 // Variance over all elements
                 let (rows, cols) = (array.shape()[0], array.shape()[1]);
-                let n = T::from_usize(rows * cols).unwrap();
+                let n = T::from_usize(rows * cols).expect("Operation failed");
 
                 // Compute the mean
                 let mean_val = mean(array, None)[0].clone();
@@ -1040,10 +1040,10 @@ mod tests {
         let a = array![1.0, 2.0, 3.0];
         let b = array![4.0, 5.0, 6.0];
 
-        let result = binary::add(&a.view(), &b.view()).unwrap();
+        let result = binary::add(&a.view(), &b.view()).expect("Operation failed");
         assert_eq!(result, array![5.0, 7.0, 9.0]);
 
-        let result = binary::multiply(&a.view(), &b.view()).unwrap();
+        let result = binary::multiply(&a.view(), &b.view()).expect("Operation failed");
         assert_eq!(result, array![4.0, 10.0, 18.0]);
     }
 
@@ -1052,10 +1052,10 @@ mod tests {
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![10.0, 20.0, 30.0];
 
-        let result = binary2d::add(&a.view(), &b.view()).unwrap();
+        let result = binary2d::add(&a.view(), &b.view()).expect("Operation failed");
         assert_eq!(result, array![[11.0, 22.0, 33.0], [14.0, 25.0, 36.0]]);
 
-        let result = binary2d::multiply(&a.view(), &b.view()).unwrap();
+        let result = binary2d::multiply(&a.view(), &b.view()).expect("Operation failed");
         assert_eq!(result, array![[10.0, 40.0, 90.0], [40.0, 100.0, 180.0]]);
     }
 

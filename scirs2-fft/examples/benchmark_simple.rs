@@ -27,19 +27,19 @@ fn main() {
 
         // Benchmark FFT
         let start = Instant::now();
-        let _ = fft(&complex_signal, None).unwrap();
+        let _ = fft(&complex_signal, None).expect("Operation failed");
         let fft_time = start.elapsed();
         println!("  FFT:  {fft_time:?}");
 
         // Benchmark RFFT
         let start = Instant::now();
-        let _ = rfft(&signal, None).unwrap();
+        let _ = rfft(&signal, None).expect("Operation failed");
         let rfft_time = start.elapsed();
         println!("  RFFT: {rfft_time:?}");
 
         // Benchmark FrFT
         let start = Instant::now();
-        let _ = frft(&signal, 0.5, None).unwrap();
+        let _ = frft(&signal, 0.5, None).expect("Operation failed");
         let frft_time = start.elapsed();
         println!("  FrFT: {frft_time:?}");
     }
@@ -61,7 +61,7 @@ fn main() {
     // Regular FFT
     let signal_copy = complex_signal.clone();
     let start = Instant::now();
-    let _ = fft(&signal_copy, None).unwrap();
+    let _ = fft(&signal_copy, None).expect("Operation failed");
     let regular_time = start.elapsed();
     println!("Regular FFT: {regular_time:?}");
 
@@ -74,7 +74,7 @@ fn main() {
         FftMode::Forward,
         false,
     )
-    .unwrap();
+    .expect("Operation failed");
     let inplace_time = start.elapsed();
     println!("In-place FFT: {inplace_time:?}");
 

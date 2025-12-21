@@ -16,6 +16,12 @@ use crate::ode::utils::stiffness::StiffnessDetectionConfig;
 use crate::IntegrateFloat;
 use scirs2_core::ndarray::{Array1, Array2, ArrayView1};
 
+/// Helper to convert f64 constants to generic Float type with better error messages
+#[inline(always)]
+fn const_f64<F: IntegrateFloat>(value: f64) -> F {
+    F::from_f64(value).expect("Failed to convert constant to target float type - this indicates an incompatible numeric type")
+}
+
 /// Enhanced LSODA method state information
 struct EnhancedLsodaState<F: IntegrateFloat> {
     /// Current time
@@ -128,12 +134,12 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
             AdaptiveMethodType::Explicit | AdaptiveMethodType::Adams => {
                 // When switching to Adams, be more conservative with step size
                 if self.rejected_steps > 2 {
-                    self.h *= F::from_f64(0.5).unwrap();
+                    self.h *= const_f64::<F>(0.5);
                 }
             }
             AdaptiveMethodType::RungeKutta => {
                 // RK methods - reset step size to be conservative
-                self.h *= F::from_f64(0.8).unwrap();
+                self.h *= const_f64::<F>(0.8);
             }
         }
 
@@ -181,7 +187,7 @@ where
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
-        _span * F::from_f64(1e-10).unwrap() // Minimal step size
+        _span * const_f64::<F>(1e-10) // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -272,7 +278,7 @@ where
                             state.switch_method(AdaptiveMethodType::Implicit)?;
 
                             // Reduce step size
-                            state.h *= F::from_f64(0.5).unwrap();
+                            state.h *= const_f64::<F>(0.5);
                             if state.h < min_step {
                                 return Err(IntegrateError::ConvergenceError(
                                     "Step size too small after method switch".to_string(),
@@ -289,7 +295,7 @@ where
                             state.switch_method(AdaptiveMethodType::Explicit)?;
 
                             // Reduce step size for stability
-                            state.h *= F::from_f64(0.5).unwrap();
+                            state.h *= const_f64::<F>(0.5);
                             if state.h < min_step {
                                 return Err(IntegrateError::ConvergenceError(
                                     "Step size too small after method switch".to_string(),
@@ -351,114 +357,111 @@ where
         // Order 1 (Euler)
         vec![F::one()],
         // Order 2
-        vec![
-            F::from_f64(3.0 / 2.0).unwrap(),
-            F::from_f64(-1.0 / 2.0).unwrap(),
-        ],
+        vec![const_f64::<F>(3.0 / 2.0), const_f64::<F>(-1.0 / 2.0)],
         // Order 3
         vec![
-            F::from_f64(23.0 / 12.0).unwrap(),
-            F::from_f64(-16.0 / 12.0).unwrap(),
-            F::from_f64(5.0 / 12.0).unwrap(),
+            const_f64::<F>(23.0 / 12.0),
+            const_f64::<F>(-16.0 / 12.0),
+            const_f64::<F>(5.0 / 12.0),
         ],
         // Order 4
         vec![
-            F::from_f64(55.0 / 24.0).unwrap(),
-            F::from_f64(-59.0 / 24.0).unwrap(),
-            F::from_f64(37.0 / 24.0).unwrap(),
-            F::from_f64(-9.0 / 24.0).unwrap(),
+            const_f64::<F>(55.0 / 24.0),
+            const_f64::<F>(-59.0 / 24.0),
+            const_f64::<F>(37.0 / 24.0),
+            const_f64::<F>(-9.0 / 24.0),
         ],
         // Order 5
         vec![
-            F::from_f64(1901.0 / 720.0).unwrap(),
-            F::from_f64(-2774.0 / 720.0).unwrap(),
-            F::from_f64(2616.0 / 720.0).unwrap(),
-            F::from_f64(-1274.0 / 720.0).unwrap(),
-            F::from_f64(251.0 / 720.0).unwrap(),
+            const_f64::<F>(1901.0 / 720.0),
+            const_f64::<F>(-2774.0 / 720.0),
+            const_f64::<F>(2616.0 / 720.0),
+            const_f64::<F>(-1274.0 / 720.0),
+            const_f64::<F>(251.0 / 720.0),
         ],
         // Order 6
         vec![
-            F::from_f64(4277.0 / 1440.0).unwrap(),
-            F::from_f64(-7923.0 / 1440.0).unwrap(),
-            F::from_f64(9982.0 / 1440.0).unwrap(),
-            F::from_f64(-7298.0 / 1440.0).unwrap(),
-            F::from_f64(2877.0 / 1440.0).unwrap(),
-            F::from_f64(-475.0 / 1440.0).unwrap(),
+            const_f64::<F>(4277.0 / 1440.0),
+            const_f64::<F>(-7923.0 / 1440.0),
+            const_f64::<F>(9982.0 / 1440.0),
+            const_f64::<F>(-7298.0 / 1440.0),
+            const_f64::<F>(2877.0 / 1440.0),
+            const_f64::<F>(-475.0 / 1440.0),
         ],
         // Order 7
         vec![
-            F::from_f64(198721.0 / 60480.0).unwrap(),
-            F::from_f64(-447288.0 / 60480.0).unwrap(),
-            F::from_f64(705549.0 / 60480.0).unwrap(),
-            F::from_f64(-688256.0 / 60480.0).unwrap(),
-            F::from_f64(407139.0 / 60480.0).unwrap(),
-            F::from_f64(-134472.0 / 60480.0).unwrap(),
-            F::from_f64(19087.0 / 60480.0).unwrap(),
+            const_f64::<F>(198721.0 / 60480.0),
+            const_f64::<F>(-447288.0 / 60480.0),
+            const_f64::<F>(705549.0 / 60480.0),
+            const_f64::<F>(-688256.0 / 60480.0),
+            const_f64::<F>(407139.0 / 60480.0),
+            const_f64::<F>(-134472.0 / 60480.0),
+            const_f64::<F>(19087.0 / 60480.0),
         ],
         // Order 8+
         vec![
-            F::from_f64(434241.0 / 120960.0).unwrap(),
-            F::from_f64(-1152169.0 / 120960.0).unwrap(),
-            F::from_f64(2183877.0 / 120960.0).unwrap(),
-            F::from_f64(-2664477.0 / 120960.0).unwrap(),
-            F::from_f64(2102243.0 / 120960.0).unwrap(),
-            F::from_f64(-1041723.0 / 120960.0).unwrap(),
-            F::from_f64(295767.0 / 120960.0).unwrap(),
-            F::from_f64(-36799.0 / 120960.0).unwrap(),
+            const_f64::<F>(434241.0 / 120960.0),
+            const_f64::<F>(-1152169.0 / 120960.0),
+            const_f64::<F>(2183877.0 / 120960.0),
+            const_f64::<F>(-2664477.0 / 120960.0),
+            const_f64::<F>(2102243.0 / 120960.0),
+            const_f64::<F>(-1041723.0 / 120960.0),
+            const_f64::<F>(295767.0 / 120960.0),
+            const_f64::<F>(-36799.0 / 120960.0),
         ],
         // Order 9
         vec![
-            F::from_f64(14097247.0 / 3628800.0).unwrap(),
-            F::from_f64(-43125206.0 / 3628800.0).unwrap(),
-            F::from_f64(95476786.0 / 3628800.0).unwrap(),
-            F::from_f64(-139855262.0 / 3628800.0).unwrap(),
-            F::from_f64(137968480.0 / 3628800.0).unwrap(),
-            F::from_f64(-91172642.0 / 3628800.0).unwrap(),
-            F::from_f64(38833486.0 / 3628800.0).unwrap(),
-            F::from_f64(-9664106.0 / 3628800.0).unwrap(),
-            F::from_f64(1070017.0 / 3628800.0).unwrap(),
+            const_f64::<F>(14097247.0 / 3628800.0),
+            const_f64::<F>(-43125206.0 / 3628800.0),
+            const_f64::<F>(95476786.0 / 3628800.0),
+            const_f64::<F>(-139855262.0 / 3628800.0),
+            const_f64::<F>(137968480.0 / 3628800.0),
+            const_f64::<F>(-91172642.0 / 3628800.0),
+            const_f64::<F>(38833486.0 / 3628800.0),
+            const_f64::<F>(-9664106.0 / 3628800.0),
+            const_f64::<F>(1070017.0 / 3628800.0),
         ],
         // Order 10
         vec![
-            F::from_f64(30277247.0 / 7257600.0).unwrap(),
-            F::from_f64(-104995189.0 / 7257600.0).unwrap(),
-            F::from_f64(265932680.0 / 7257600.0).unwrap(),
-            F::from_f64(-454661776.0 / 7257600.0).unwrap(),
-            F::from_f64(538363838.0 / 7257600.0).unwrap(),
-            F::from_f64(-444772162.0 / 7257600.0).unwrap(),
-            F::from_f64(252618224.0 / 7257600.0).unwrap(),
-            F::from_f64(-94307320.0 / 7257600.0).unwrap(),
-            F::from_f64(20884811.0 / 7257600.0).unwrap(),
-            F::from_f64(-2082753.0 / 7257600.0).unwrap(),
+            const_f64::<F>(30277247.0 / 7257600.0),
+            const_f64::<F>(-104995189.0 / 7257600.0),
+            const_f64::<F>(265932680.0 / 7257600.0),
+            const_f64::<F>(-454661776.0 / 7257600.0),
+            const_f64::<F>(538363838.0 / 7257600.0),
+            const_f64::<F>(-444772162.0 / 7257600.0),
+            const_f64::<F>(252618224.0 / 7257600.0),
+            const_f64::<F>(-94307320.0 / 7257600.0),
+            const_f64::<F>(20884811.0 / 7257600.0),
+            const_f64::<F>(-2082753.0 / 7257600.0),
         ],
         // Order 11
         vec![
-            F::from_f64(35256204767.0 / 7983360000.0).unwrap(),
-            F::from_f64(-134336876800.0 / 7983360000.0).unwrap(),
-            F::from_f64(385146025457.0 / 7983360000.0).unwrap(),
-            F::from_f64(-754734083733.0 / 7983360000.0).unwrap(),
-            F::from_f64(1045594573504.0 / 7983360000.0).unwrap(),
-            F::from_f64(-1029725952608.0 / 7983360000.0).unwrap(),
-            F::from_f64(717313887930.0 / 7983360000.0).unwrap(),
-            F::from_f64(-344156361067.0 / 7983360000.0).unwrap(),
-            F::from_f64(109301088672.0 / 7983360000.0).unwrap(),
-            F::from_f64(-21157613775.0 / 7983360000.0).unwrap(),
-            F::from_f64(1832380165.0 / 7983360000.0).unwrap(),
+            const_f64::<F>(35256204767.0 / 7983360000.0),
+            const_f64::<F>(-134336876800.0 / 7983360000.0),
+            const_f64::<F>(385146025457.0 / 7983360000.0),
+            const_f64::<F>(-754734083733.0 / 7983360000.0),
+            const_f64::<F>(1045594573504.0 / 7983360000.0),
+            const_f64::<F>(-1029725952608.0 / 7983360000.0),
+            const_f64::<F>(717313887930.0 / 7983360000.0),
+            const_f64::<F>(-344156361067.0 / 7983360000.0),
+            const_f64::<F>(109301088672.0 / 7983360000.0),
+            const_f64::<F>(-21157613775.0 / 7983360000.0),
+            const_f64::<F>(1832380165.0 / 7983360000.0),
         ],
         // Order 12
         vec![
-            F::from_f64(77737505967.0 / 16876492800.0).unwrap(),
-            F::from_f64(-328202700680.0 / 16876492800.0).unwrap(),
-            F::from_f64(1074851727475.0 / 16876492800.0).unwrap(),
-            F::from_f64(-2459572352768.0 / 16876492800.0).unwrap(),
-            F::from_f64(4013465151807.0 / 16876492800.0).unwrap(),
-            F::from_f64(-4774671405984.0 / 16876492800.0).unwrap(),
-            F::from_f64(4127030565077.0 / 16876492800.0).unwrap(),
-            F::from_f64(-2538584431976.0 / 16876492800.0).unwrap(),
-            F::from_f64(1077984741336.0 / 16876492800.0).unwrap(),
-            F::from_f64(-295501032385.0 / 16876492800.0).unwrap(),
-            F::from_f64(48902348238.0 / 16876492800.0).unwrap(),
-            F::from_f64(-3525779602.0 / 16876492800.0).unwrap(),
+            const_f64::<F>(77737505967.0 / 16876492800.0),
+            const_f64::<F>(-328202700680.0 / 16876492800.0),
+            const_f64::<F>(1074851727475.0 / 16876492800.0),
+            const_f64::<F>(-2459572352768.0 / 16876492800.0),
+            const_f64::<F>(4013465151807.0 / 16876492800.0),
+            const_f64::<F>(-4774671405984.0 / 16876492800.0),
+            const_f64::<F>(4127030565077.0 / 16876492800.0),
+            const_f64::<F>(-2538584431976.0 / 16876492800.0),
+            const_f64::<F>(1077984741336.0 / 16876492800.0),
+            const_f64::<F>(-295501032385.0 / 16876492800.0),
+            const_f64::<F>(48902348238.0 / 16876492800.0),
+            const_f64::<F>(-3525779602.0 / 16876492800.0),
         ],
     ];
 
@@ -468,22 +471,19 @@ where
         // Order 1 (Backward Euler)
         vec![F::one()],
         // Order 2 (Trapezoidal)
-        vec![
-            F::from_f64(1.0 / 2.0).unwrap(),
-            F::from_f64(1.0 / 2.0).unwrap(),
-        ],
+        vec![const_f64::<F>(1.0 / 2.0), const_f64::<F>(1.0 / 2.0)],
         // Order 3
         vec![
-            F::from_f64(5.0 / 12.0).unwrap(),
-            F::from_f64(8.0 / 12.0).unwrap(),
-            F::from_f64(-1.0 / 12.0).unwrap(),
+            const_f64::<F>(5.0 / 12.0),
+            const_f64::<F>(8.0 / 12.0),
+            const_f64::<F>(-1.0 / 12.0),
         ],
         // Order 4
         vec![
-            F::from_f64(9.0 / 24.0).unwrap(),
-            F::from_f64(19.0 / 24.0).unwrap(),
-            F::from_f64(-5.0 / 24.0).unwrap(),
-            F::from_f64(1.0 / 24.0).unwrap(),
+            const_f64::<F>(9.0 / 24.0),
+            const_f64::<F>(19.0 / 24.0),
+            const_f64::<F>(-5.0 / 24.0),
+            const_f64::<F>(1.0 / 24.0),
         ],
         // Orders 5-12 (truncated for brevity - would include full coefficients)
         // First few orders are the most commonly used
@@ -581,17 +581,17 @@ where
     let error = scaled_norm(&(&y_corr - &y_pred), &state.tol_scale);
 
     // Step size adjustment factor based on error
-    let err_order = F::from_usize(order + 1).unwrap(); // Error order is one higher than method order
+    let err_order = F::from_usize(order + 1).expect("Failed to convert order to Float type"); // Error order is one higher than method order
     let err_factor = if error > F::zero() {
-        F::from_f64(0.9).unwrap() * (F::one() / error).powf(F::one() / err_order)
+        const_f64::<F>(0.9) * (F::one() / error).powf(F::one() / err_order)
     } else {
-        F::from_f64(5.0).unwrap() // Max increase if error is zero
+        const_f64::<F>(5.0) // Max increase if error is zero
     };
 
     // Safety factor and limits for step size adjustment
-    let safety = F::from_f64(0.9).unwrap();
-    let factor_max = F::from_f64(5.0).unwrap();
-    let factor_min = F::from_f64(0.2).unwrap();
+    let safety = const_f64::<F>(0.9);
+    let factor_max = const_f64::<F>(5.0);
+    let factor_min = const_f64::<F>(0.2);
     let factor = safety * err_factor.min(factor_max).max(factor_min);
 
     // Check if step is acceptable
@@ -609,7 +609,7 @@ where
         // Order adaptation
         if order < 12 && error < opts.rtol && state.dy_history.len() >= order {
             state.adaptive_state.order = (state.adaptive_state.order + 1).min(12);
-        } else if order > 1 && error > F::from_f64(0.5).unwrap() {
+        } else if order > 1 && error > const_f64::<F>(0.5) {
             state.adaptive_state.order = (state.adaptive_state.order - 1).max(1);
         }
 
@@ -627,7 +627,7 @@ where
         state.adaptive_state.record_step(error);
 
         // If error is very large, this might indicate stiffness
-        if error > F::from_f64(10.0).unwrap() {
+        if error > const_f64::<F>(10.0) {
             return Err(IntegrateError::ConvergenceError(
                 "Problem appears stiff - consider using BDF method".to_string(),
             ));
@@ -652,36 +652,36 @@ where
     // Coefficients for BDF methods of different orders
     let bdf_coefs: [Vec<F>; 5] = [
         // BDF1 (Implicit Euler): y_{n+1} - y_n = h * f(t_{n+1}, y_{n+1})
-        vec![F::one(), F::from_f64(-1.0).unwrap()],
+        vec![F::one(), const_f64::<F>(-1.0)],
         // BDF2: 3/2 * y_{n+1} - 2 * y_n + 1/2 * y_{n-1} = h * f(t_{n+1}, y_{n+1})
         vec![
-            F::from_f64(3.0 / 2.0).unwrap(),
-            F::from_f64(-2.0).unwrap(),
-            F::from_f64(1.0 / 2.0).unwrap(),
+            const_f64::<F>(3.0 / 2.0),
+            const_f64::<F>(-2.0),
+            const_f64::<F>(1.0 / 2.0),
         ],
         // BDF3
         vec![
-            F::from_f64(11.0 / 6.0).unwrap(),
-            F::from_f64(-3.0).unwrap(),
-            F::from_f64(3.0 / 2.0).unwrap(),
-            F::from_f64(-1.0 / 3.0).unwrap(),
+            const_f64::<F>(11.0 / 6.0),
+            const_f64::<F>(-3.0),
+            const_f64::<F>(3.0 / 2.0),
+            const_f64::<F>(-1.0 / 3.0),
         ],
         // BDF4
         vec![
-            F::from_f64(25.0 / 12.0).unwrap(),
-            F::from_f64(-4.0).unwrap(),
-            F::from_f64(3.0).unwrap(),
-            F::from_f64(-4.0 / 3.0).unwrap(),
-            F::from_f64(1.0 / 4.0).unwrap(),
+            const_f64::<F>(25.0 / 12.0),
+            const_f64::<F>(-4.0),
+            const_f64::<F>(3.0),
+            const_f64::<F>(-4.0 / 3.0),
+            const_f64::<F>(1.0 / 4.0),
         ],
         // BDF5
         vec![
-            F::from_f64(137.0 / 60.0).unwrap(),
-            F::from_f64(-5.0).unwrap(),
-            F::from_f64(5.0).unwrap(),
-            F::from_f64(-10.0 / 3.0).unwrap(),
-            F::from_f64(5.0 / 4.0).unwrap(),
-            F::from_f64(-1.0 / 5.0).unwrap(),
+            const_f64::<F>(137.0 / 60.0),
+            const_f64::<F>(-5.0),
+            const_f64::<F>(5.0),
+            const_f64::<F>(-10.0 / 3.0),
+            const_f64::<F>(5.0 / 4.0),
+            const_f64::<F>(-1.0 / 5.0),
         ],
     ];
 
@@ -698,7 +698,7 @@ where
 
         // Newton's method for solving the implicit equation
         let max_newton_iters = 10;
-        let newton_tol = F::from_f64(1e-8).unwrap();
+        let newton_tol = const_f64::<F>(1e-8);
         let mut y_next = y_pred.clone();
         let mut converged = false;
         let mut iter_count = 0;
@@ -721,7 +721,7 @@ where
             }
 
             // Compute or reuse Jacobian
-            let eps = F::from_f64(1e-8).unwrap();
+            let eps = const_f64::<F>(1e-8);
             let n_dim = y_next.len();
 
             // Create approximate Jacobian using finite differences if needed
@@ -748,7 +748,10 @@ where
                 jac
             } else {
                 // Reuse previous Jacobian
-                state.jacobian.clone().unwrap()
+                state
+                    .jacobian
+                    .clone()
+                    .expect("Jacobian should exist when not computing new one")
             };
 
             // Solve the linear system J*delta_y = residual
@@ -759,7 +762,7 @@ where
                 Ok(delta) => delta,
                 Err(_) => {
                     // Nearly singular, reduce step size and try again
-                    state.h *= F::from_f64(0.5).unwrap();
+                    state.h *= const_f64::<F>(0.5);
                     return Ok(false);
                 }
             };
@@ -780,10 +783,10 @@ where
 
         if !converged {
             // Newton iteration failed, reduce step size
-            state.h *= F::from_f64(0.5).unwrap();
+            state.h *= const_f64::<F>(0.5);
 
             // If we've reduced step size too much, the problem might be non-stiff
-            if state.h < opts.min_step.unwrap_or(F::from_f64(1e-10).unwrap()) {
+            if state.h < opts.min_step.unwrap_or(const_f64::<F>(1e-10)) {
                 return Err(IntegrateError::ConvergenceError(
                     "BDF1 failed to converge - problem might be non-stiff".to_string(),
                 ));
@@ -828,7 +831,7 @@ where
 
     // Newton's method for solving the BDF equation
     let max_newton_iters = 10;
-    let newton_tol = F::from_f64(1e-8).unwrap();
+    let newton_tol = const_f64::<F>(1e-8);
     let mut y_next = y_pred.clone();
     let mut converged = false;
     let mut iter_count = 0;
@@ -864,7 +867,7 @@ where
         }
 
         // Compute or reuse Jacobian
-        let eps = F::from_f64(1e-8).unwrap();
+        let eps = const_f64::<F>(1e-8);
         let n_dim = y_next.len();
 
         // Create approximate Jacobian using finite differences if needed
@@ -891,7 +894,10 @@ where
             jac
         } else {
             // Reuse previous Jacobian
-            state.jacobian.clone().unwrap()
+            state
+                .jacobian
+                .clone()
+                .expect("Jacobian should exist when not computing new one")
         };
 
         // Solve the linear system J*delta_y = residual
@@ -902,7 +908,7 @@ where
             Ok(delta) => delta,
             Err(_) => {
                 // Nearly singular, reduce step size and try again
-                state.h *= F::from_f64(0.5).unwrap();
+                state.h *= const_f64::<F>(0.5);
                 return Ok(false);
             }
         };
@@ -923,7 +929,7 @@ where
 
     if !converged {
         // Newton iteration failed, reduce step size
-        state.h *= F::from_f64(0.5).unwrap();
+        state.h *= const_f64::<F>(0.5);
 
         // If the problem is consistently difficult to solve, it might not be stiff
         if iter_count >= max_newton_iters - 1 {
@@ -938,7 +944,7 @@ where
         }
 
         // If we've reduced step size too much, the problem might not be stiff
-        if state.h < opts.min_step.unwrap_or(F::from_f64(1e-10).unwrap()) {
+        if state.h < opts.min_step.unwrap_or(const_f64::<F>(1e-10)) {
             return Err(IntegrateError::ConvergenceError(
                 "BDF failed to converge - problem might be non-stiff".to_string(),
             ));
@@ -960,7 +966,7 @@ where
     // Step size and order adaptation based on convergence rate
     if iter_count <= 2 {
         // Converged quickly - can increase step size
-        state.h *= F::from_f64(1.1).unwrap();
+        state.h *= const_f64::<F>(1.1);
 
         // Maybe increase order if convergence is very good
         if state.adaptive_state.order < 5 && state.y_history.len() >= state.adaptive_state.order {
@@ -968,7 +974,7 @@ where
         }
     } else if iter_count >= 8 {
         // Converged slowly - reduce step size
-        state.h *= F::from_f64(0.8).unwrap();
+        state.h *= const_f64::<F>(0.8);
 
         // Decrease order if we're struggling
         if state.adaptive_state.order > 1 {

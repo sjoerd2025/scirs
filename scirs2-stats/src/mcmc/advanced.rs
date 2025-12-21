@@ -325,7 +325,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
                 .temperatures
                 .iter()
                 .enumerate()
-                .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .min_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Operation failed"))
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
@@ -670,7 +670,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         let (n_samples_, dim) = samples.dim();
 
         // Compute means
-        let means = samples.mean_axis(Axis(0)).unwrap();
+        let means = samples.mean_axis(Axis(0)).expect("Operation failed");
 
         // Compute variances
         let mut variances = Array1::zeros(dim);

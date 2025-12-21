@@ -39,7 +39,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Final accuracy: {:.4}", training_metrics.accuracy);
     println!(
         "Final loss: {:.4}",
-        training_metrics.loss_history.last().unwrap()
+        training_metrics
+            .loss_history
+            .last()
+            .expect("Operation failed")
     );
 
     // Plot loss history

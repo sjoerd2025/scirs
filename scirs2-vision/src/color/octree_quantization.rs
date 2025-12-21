@@ -57,7 +57,7 @@ impl OctreeNode {
 
             self.children[index]
                 .as_mut()
-                .unwrap()
+                .expect("Operation failed")
                 .add_color(r, g, b, level + 1);
 
             // Update this node's sums
@@ -199,7 +199,7 @@ impl OctreeQuantizer {
                     let min_node = nodes
                         .into_iter()
                         .min_by_key(|node| node.pixel_count)
-                        .unwrap();
+                        .expect("Operation failed");
 
                     min_node.merge_to_leaf();
                     break;
@@ -272,7 +272,7 @@ fn color_distance_squared(r1: u8, g1: u8, b1: u8, r2: u8, g2: u8, b2: u8) -> u32
 /// }
 ///
 /// let dynamic_img = DynamicImage::ImageRgb8(img);
-/// let quantized = octree_quantize(&dynamic_img, 8).unwrap();
+/// let quantized = octree_quantize(&dynamic_img, 8).expect("Operation failed");
 /// assert_eq!(quantized.width(), 4);
 /// assert_eq!(quantized.height(), 4);
 /// ```
@@ -402,7 +402,7 @@ mod tests {
         let result = octree_quantize(&img, 16);
         assert!(result.is_ok());
 
-        let quantized = result.unwrap();
+        let quantized = result.expect("Operation failed");
         assert_eq!(quantized.width(), 10);
         assert_eq!(quantized.height(), 10);
     }

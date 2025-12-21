@@ -488,7 +488,7 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_sgd(grad_func, x0, data_provider, options).unwrap();
+        let result = minimize_sgd(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // Should converge to zero
         assert!(result.success || result.fun < 1e-4);
@@ -511,7 +511,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_svrg(grad_func, x0, data_provider, options).unwrap();
+        let result =
+            minimize_svrg(grad_func, x0, data_provider, options).expect("Operation failed");
 
         // SVRG should converge faster than regular SGD
         assert!(result.success || result.fun < 1e-4);
@@ -532,7 +533,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = minimize_mini_batch_sgd(grad_func, x0, data_provider, options).unwrap();
+        let result = minimize_mini_batch_sgd(grad_func, x0, data_provider, options)
+            .expect("Operation failed");
 
         // Should converge with Polyak averaging
         assert!(result.success || result.fun < 1e-3);

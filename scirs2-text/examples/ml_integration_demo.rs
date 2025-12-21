@@ -142,7 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let feature_means = train_features
         .features
         .mean_axis(scirs2_core::ndarray::Axis(0))
-        .unwrap();
+        .expect("Operation failed");
     let feature_stds = train_features
         .features
         .std_axis(scirs2_core::ndarray::Axis(0), 0.0);

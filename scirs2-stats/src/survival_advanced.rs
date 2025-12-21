@@ -750,25 +750,35 @@ where
         // Simplified Cox model fitting (would use proper partial likelihood)
         let coefficients = Array1::zeros(n_features);
         let hazard_ratios = coefficients.mapv(|x: F| x.exp());
-        let standard_errors = Array1::ones(n_features) * F::from(0.1).unwrap();
-        let p_values = Array1::from_elem(n_features, F::from(0.05).unwrap());
+        let standard_errors =
+            Array1::ones(n_features) * F::from(0.1).expect("Failed to convert constant to float");
+        let p_values = Array1::from_elem(
+            n_features,
+            F::from(0.05).expect("Failed to convert constant to float"),
+        );
         let confidence_intervals = Array2::zeros((n_features, 2));
 
         // Baseline hazard estimation
         let unique_times = self.get_unique_event_times(durations, events)?;
         let baseline_hazard = BaselineHazardEstimate {
             times: unique_times.clone(),
-            hazard: Array1::from_elem(unique_times.len(), F::from(0.1).unwrap()),
+            hazard: Array1::from_elem(
+                unique_times.len(),
+                F::from(0.1).expect("Failed to convert constant to float"),
+            ),
             cumulative_hazard: Array1::from_shape_fn(unique_times.len(), |i| {
-                F::from(i).unwrap() * F::from(0.1).unwrap()
+                F::from(i).expect("Failed to convert to float")
+                    * F::from(0.1).expect("Failed to convert constant to float")
             }),
             survival_function: Array1::from_shape_fn(unique_times.len(), |i| {
-                (-F::from(i).unwrap() * F::from(0.1).unwrap()).exp()
+                (-F::from(i).expect("Failed to convert to float")
+                    * F::from(0.1).expect("Failed to convert constant to float"))
+                .exp()
             }),
         };
 
-        let concordance_index = F::from(0.75).unwrap();
-        let log_likelihood = F::from(-100.0).unwrap();
+        let concordance_index = F::from(0.75).expect("Failed to convert constant to float");
+        let log_likelihood = F::from(-100.0).expect("Failed to convert constant to float");
 
         let cox_model = CoxModel {
             coefficients,
@@ -798,7 +808,9 @@ where
             .collect();
 
         event_times.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        event_times.dedup_by(|a, b| (*a - *b).abs() < F::from(1e-10).unwrap());
+        event_times.dedup_by(|a, b| {
+            (*a - *b).abs() < F::from(1e-10).expect("Failed to convert constant to float")
+        });
 
         Ok(Array1::from_vec(event_times))
     }
@@ -816,13 +828,16 @@ where
         // Simplified AFT model (would use proper maximum likelihood)
         let coefficients = Array1::zeros(n_features);
         let scale_parameter = F::one();
-        let shape_parameter = Some(F::from(2.0).unwrap());
-        let log_likelihood = F::from(-200.0).unwrap();
-        let aic = -F::from(2.0).unwrap() * log_likelihood
-            + F::from(2.0).unwrap() * F::from(n_features + 1).unwrap();
-        let bic = -F::from(2.0).unwrap() * log_likelihood
-            + F::from((n_features + 1) as f64).unwrap()
-                * F::from(durations.len() as f64).unwrap().ln();
+        let shape_parameter = Some(F::from(2.0).expect("Failed to convert constant to float"));
+        let log_likelihood = F::from(-200.0).expect("Failed to convert constant to float");
+        let aic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + F::from(2.0).expect("Failed to convert constant to float")
+                * F::from(n_features + 1).expect("Failed to convert to float");
+        let bic = -F::from(2.0).expect("Failed to convert constant to float") * log_likelihood
+            + F::from((n_features + 1) as f64).expect("Failed to convert to float")
+                * F::from(durations.len() as f64)
+                    .expect("Failed to convert to float")
+                    .ln();
         let residuals = Array1::zeros(durations.len());
 
         let aft_model = AFTModel {
@@ -848,10 +863,11 @@ where
         let n_features = covariates.ncols();
 
         // Simplified Random Forest (would implement proper tree growing)
-        let variable_importance =
-            Array1::from_shape_fn(n_features, |i| F::from(1.0 / (i + 1) as f64).unwrap());
-        let oob_error = F::from(0.15).unwrap();
-        let concordance_index = F::from(0.80).unwrap();
+        let variable_importance = Array1::from_shape_fn(n_features, |i| {
+            F::from(1.0 / (i + 1) as f64).expect("Failed to convert to float")
+        });
+        let oob_error = F::from(0.15).expect("Failed to convert constant to float");
+        let concordance_index = F::from(0.80).expect("Failed to convert constant to float");
         let feature_names: Vec<String> =
             (0..n_features).map(|i| format!("feature_{}", i)).collect();
         let tree_count = 100;
@@ -879,16 +895,21 @@ where
         let n_epochs = 100;
 
         let training_history = TrainingHistory {
-            loss: Array1::from_shape_fn(n_epochs, |i| F::from(1.0 / (i + 1) as f64).unwrap()),
-            concordance: Array1::from_shape_fn(n_epochs, |i| {
-                F::from(0.5 + 0.3 * i as f64 / n_epochs as f64).unwrap()
+            loss: Array1::from_shape_fn(n_epochs, |i| {
+                F::from(1.0 / (i + 1) as f64).expect("Failed to convert to float")
             }),
-            learning_rate: Array1::from_elem(n_epochs, F::from(0.001).unwrap()),
+            concordance: Array1::from_shape_fn(n_epochs, |i| {
+                F::from(0.5 + 0.3 * i as f64 / n_epochs as f64).expect("Failed to convert to float")
+            }),
+            learning_rate: Array1::from_elem(
+                n_epochs,
+                F::from(0.001).expect("Failed to convert constant to float"),
+            ),
             epochs: n_epochs,
         };
 
-        let concordance_index = F::from(0.85).unwrap();
-        let calibration_slope = F::from(0.95).unwrap();
+        let concordance_index = F::from(0.85).expect("Failed to convert constant to float");
+        let calibration_slope = F::from(0.95).expect("Failed to convert constant to float");
         let feature_attributions = Some(Array2::ones((durations.len(), covariates.ncols())));
 
         let deep_model = DeepSurvivalModel {
@@ -918,8 +939,12 @@ where
                 SurvivalModel::DeepSurvival(deep) => deep.concordance_index,
                 SurvivalModel::SVM(svm) => svm.concordance_index,
                 SurvivalModel::Bayesian(bayes) => bayes.model_evidence, // Use model_evidence as alternative metric
-                SurvivalModel::MultiState(ms) => F::from(0.5).unwrap(), // Default score for multi-state models
-                SurvivalModel::Ensemble(ensemble) => F::from(0.75).unwrap(), // Default score for ensemble models
+                SurvivalModel::MultiState(ms) => {
+                    F::from(0.5).expect("Failed to convert constant to float")
+                } // Default score for multi-state models
+                SurvivalModel::Ensemble(ensemble) => {
+                    F::from(0.75).expect("Failed to convert constant to float")
+                } // Default score for ensemble models
             };
             performance_scores.insert(model_name.clone(), score);
         }
@@ -953,37 +978,53 @@ where
         let n_models = models.len();
 
         // Simplified ensemble analysis
-        let ensemble_performance = F::from(0.85).unwrap();
+        let ensemble_performance = F::from(0.85).expect("Failed to convert constant to float");
 
         let diversity_analysis = DiversityAnalysis {
             pairwise_correlations: Array2::eye(n_models),
-            kappa_statistics: Array1::from_elem(n_models, F::from(0.7).unwrap()),
-            disagreement_measures: Array1::from_elem(n_models, F::from(0.3).unwrap()),
+            kappa_statistics: Array1::from_elem(
+                n_models,
+                F::from(0.7).expect("Failed to convert constant to float"),
+            ),
+            disagreement_measures: Array1::from_elem(
+                n_models,
+                F::from(0.3).expect("Failed to convert constant to float"),
+            ),
             bias_variance_decomposition: BiasVarianceDecomposition {
-                bias_squared: F::from(0.1).unwrap(),
-                variance: F::from(0.2).unwrap(),
-                noise: F::from(0.05).unwrap(),
-                ensemble_bias_squared: F::from(0.05).unwrap(),
-                ensemble_variance: F::from(0.1).unwrap(),
+                bias_squared: F::from(0.1).expect("Failed to convert constant to float"),
+                variance: F::from(0.2).expect("Failed to convert constant to float"),
+                noise: F::from(0.05).expect("Failed to convert constant to float"),
+                ensemble_bias_squared: F::from(0.05).expect("Failed to convert constant to float"),
+                ensemble_variance: F::from(0.1).expect("Failed to convert constant to float"),
             },
         };
 
         let weight_optimization = WeightOptimization {
-            optimal_weights: Array1::ones(n_models) / F::from(n_models).unwrap(),
+            optimal_weights: Array1::ones(n_models)
+                / F::from(n_models).expect("Failed to convert to float"),
             optimization_history: Array2::zeros((100, n_models)),
             convergence_info: OptimizationConvergence {
                 converged: true,
                 iterations: 50,
-                final_objective: F::from(-0.1).unwrap(),
-                gradient_norm: F::from(1e-6).unwrap(),
+                final_objective: F::from(-0.1).expect("Failed to convert constant to float"),
+                gradient_norm: F::from(1e-6).expect("Failed to convert constant to float"),
             },
         };
 
         let uncertainty_quantification = UncertaintyQuantification {
             prediction_intervals: Array2::zeros((10, 2)),
-            model_uncertainty: Array1::from_elem(10, F::from(0.1).unwrap()),
-            data_uncertainty: Array1::from_elem(10, F::from(0.05).unwrap()),
-            total_uncertainty: Array1::from_elem(10, F::from(0.15).unwrap()),
+            model_uncertainty: Array1::from_elem(
+                10,
+                F::from(0.1).expect("Failed to convert constant to float"),
+            ),
+            data_uncertainty: Array1::from_elem(
+                10,
+                F::from(0.05).expect("Failed to convert constant to float"),
+            ),
+            total_uncertainty: Array1::from_elem(
+                10,
+                F::from(0.15).expect("Failed to convert constant to float"),
+            ),
         };
 
         Ok(EnsembleResults {
@@ -1003,15 +1044,27 @@ where
         _config: &CausalSurvivalConfig<F>,
     ) -> StatsResult<CausalEffects<F>> {
         // Simplified causal analysis
-        let average_treatment_effect = F::from(0.15).unwrap();
-        let treatment_effect_ci = (F::from(0.05).unwrap(), F::from(0.25).unwrap());
+        let average_treatment_effect = F::from(0.15).expect("Failed to convert constant to float");
+        let treatment_effect_ci = (
+            F::from(0.05).expect("Failed to convert constant to float"),
+            F::from(0.25).expect("Failed to convert constant to float"),
+        );
         let conditional_effects =
             Some(Array1::from_elem(durations.len(), average_treatment_effect));
 
         let sensitivity_analysis = SensitivityAnalysis {
-            robustness_values: Array1::from_elem(5, F::from(0.8).unwrap()),
-            confounding_strength: Array1::from_elem(5, F::from(0.1).unwrap()),
-            e_values: Array1::from_elem(5, F::from(2.0).unwrap()),
+            robustness_values: Array1::from_elem(
+                5,
+                F::from(0.8).expect("Failed to convert constant to float"),
+            ),
+            confounding_strength: Array1::from_elem(
+                5,
+                F::from(0.1).expect("Failed to convert constant to float"),
+            ),
+            e_values: Array1::from_elem(
+                5,
+                F::from(2.0).expect("Failed to convert constant to float"),
+            ),
             bounds: Array2::zeros((5, 2)),
         };
 
@@ -1038,17 +1091,27 @@ where
         let n_times = 100;
 
         // Simplified competing risks analysis
-        let cause_specific_hazards = Array2::from_elem((n_times, n_events), F::from(0.1).unwrap());
-        let cumulative_incidence_functions =
-            Array2::from_elem((n_times, n_events), F::from(0.2).unwrap());
+        let cause_specific_hazards = Array2::from_elem(
+            (n_times, n_events),
+            F::from(0.1).expect("Failed to convert constant to float"),
+        );
+        let cumulative_incidence_functions = Array2::from_elem(
+            (n_times, n_events),
+            F::from(0.2).expect("Failed to convert constant to float"),
+        );
         let subdistribution_hazards = Some(Array2::from_elem(
             (n_times, n_events),
-            F::from(0.08).unwrap(),
+            F::from(0.08).expect("Failed to convert constant to float"),
         ));
         let net_survival = Array1::from_shape_fn(n_times, |i| {
-            (-F::from(i).unwrap() * F::from(0.01).unwrap()).exp()
+            (-F::from(i).expect("Failed to convert to float")
+                * F::from(0.01).expect("Failed to convert constant to float"))
+            .exp()
         });
-        let years_of_life_lost = Array1::from_elem(durations.len(), F::from(2.5).unwrap());
+        let years_of_life_lost = Array1::from_elem(
+            durations.len(),
+            F::from(2.5).expect("Failed to convert constant to float"),
+        );
 
         Ok(CompetingRisksResults {
             cause_specific_hazards,
@@ -1092,13 +1155,25 @@ where
         let n_times = time_points.len();
 
         // Simplified prediction (would use actual fitted model)
-        let risk_scores = Array1::from_elem(n_samples_, F::from(0.5).unwrap());
-        let survival_functions = Array2::from_elem((n_samples_, n_times), F::from(0.8).unwrap());
+        let risk_scores = Array1::from_elem(
+            n_samples_,
+            F::from(0.5).expect("Failed to convert constant to float"),
+        );
+        let survival_functions = Array2::from_elem(
+            (n_samples_, n_times),
+            F::from(0.8).expect("Failed to convert constant to float"),
+        );
         let time_points = time_points.to_owned();
         let hazard_ratios = Some(Array1::ones(n_samples_));
         let confidence_intervals = Some(Array3::zeros((n_samples_, n_times, 2)));
-        let median_survival_times = Array1::from_elem(n_samples_, F::from(5.0).unwrap());
-        let percentile_survival_times = Array2::from_elem((n_samples_, 3), F::from(3.0).unwrap());
+        let median_survival_times = Array1::from_elem(
+            n_samples_,
+            F::from(5.0).expect("Failed to convert constant to float"),
+        );
+        let percentile_survival_times = Array2::from_elem(
+            (n_samples_, 3),
+            F::from(3.0).expect("Failed to convert constant to float"),
+        );
 
         Ok(SurvivalPrediction {
             risk_scores,
@@ -1150,7 +1225,6 @@ mod tests {
     use scirs2_core::ndarray::array;
 
     #[test]
-    #[ignore = "timeout"]
     fn test_advanced_survival_analysis() {
         let config = AdvancedSurvivalConfig::default();
         let mut analyzer = AdvancedSurvivalAnalysis::new(config);
@@ -1162,7 +1236,7 @@ mod tests {
         let result = analyzer.fit(&durations.view(), &events.view(), &covariates.view());
         assert!(result.is_ok());
 
-        let results = result.unwrap();
+        let results = result.expect("Test result should be Ok");
         assert!(!results.fitted_models.is_empty());
         assert!(!results.recommendations.is_empty());
     }
@@ -1178,7 +1252,7 @@ mod tests {
         let prediction = analyzer.predict("model_0", &covariates.view(), &time_points.view());
         assert!(prediction.is_ok());
 
-        let pred = prediction.unwrap();
+        let pred = prediction.expect("Test prediction should be Ok");
         assert_eq!(pred.risk_scores.len(), 2);
         assert_eq!(pred.survival_functions.nrows(), 2);
         assert_eq!(pred.survival_functions.ncols(), 3);

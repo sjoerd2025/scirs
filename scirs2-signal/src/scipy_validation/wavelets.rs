@@ -269,7 +269,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 4.0];
         let result = reference_dwt_reconstruction(&signal, Wavelet::Haar, 2);
         assert!(result.is_ok());
-        let reconstructed = result.unwrap();
+        let reconstructed = result.expect("Operation failed");
         assert_eq!(reconstructed.len(), signal.len());
     }
 }

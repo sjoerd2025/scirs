@@ -44,13 +44,13 @@ type PreprocessingResult<F> = (Array2<F>, F, Array1<F>, Array1<F>);
 ///     3.0, 4.0, 5.0,
 ///     4.0, 5.0, 6.0,
 ///     5.0, 6.0, 7.0,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Target values
 /// let y = array![10.0, 15.0, 20.0, 25.0, 30.0];
 ///
 /// // Perform ridge regression with alpha=0.1
-/// let result = ridge_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).unwrap();
+/// let result = ridge_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).expect("Operation failed");
 ///
 /// // Check that we get some coefficients
 /// assert!(result.coefficients.len() > 0);
@@ -93,12 +93,13 @@ where
     let p_features = x.ncols();
 
     // Set default parameters
-    let alpha = alpha.unwrap_or_else(|| F::from(1.0).unwrap());
+    let alpha = alpha.unwrap_or_else(|| F::from(1.0).expect("Failed to convert constant to float"));
     let fit_intercept = fit_intercept.unwrap_or(true);
     let normalize = normalize.unwrap_or(false);
-    let tol = tol.unwrap_or_else(|| F::from(1e-4).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from(1e-4).expect("Failed to convert constant to float"));
     let max_iter = max_iter.unwrap_or(1000);
-    let conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
+    let conf_level =
+        conf_level.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     if alpha < F::zero() {
         return Err(StatsError::InvalidArgument(
@@ -181,10 +182,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients (approximate)
@@ -204,15 +206,17 @@ where
     // Calculate p-values (simplified)
     let p_values = t_values.mapv(|t| {
         let t_abs = crate::regression::utils::float_abs(t);
-        let df_f = F::from(df_residuals).unwrap();
+        let df_f = F::from(df_residuals).expect("Failed to convert to float");
         let ratio = t_abs / crate::regression::utils::float_sqrt(df_f + t_abs * t_abs);
         let one_minus_ratio = F::one() - ratio;
-        F::from(2.0).unwrap() * one_minus_ratio
+        F::from(2.0).expect("Failed to convert constant to float") * one_minus_ratio
     });
 
     // Calculate confidence intervals
     let mut conf_intervals = Array2::<F>::zeros((p, 2));
-    let z = norm_ppf(F::from(0.5).unwrap() * (F::one() + conf_level));
+    let z = norm_ppf(
+        F::from(0.5).expect("Failed to convert constant to float") * (F::one() + conf_level),
+    );
 
     for i in 0..p {
         let margin = std_errors[i] * z;
@@ -222,7 +226,8 @@ where
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity()
     };
@@ -294,7 +299,7 @@ where
 
     // Calculate y_mean if fitting _intercept
     let y_mean = if fit_intercept {
-        y.iter().cloned().sum::<F>() / F::from(n).unwrap()
+        y.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float")
     } else {
         F::zero()
     };
@@ -306,7 +311,8 @@ where
     if fit_intercept || normalize {
         for j in 0..p {
             let col = x.column(j);
-            let mean = col.iter().cloned().sum::<F>() / F::from(n).unwrap();
+            let mean =
+                col.iter().cloned().sum::<F>() / F::from(n).expect("Failed to convert to float");
             x_mean[j] = mean;
 
             if normalize {
@@ -314,7 +320,9 @@ where
                 for &val in col {
                     ss = ss + scirs2_core::numeric::Float::powi(val - mean, 2);
                 }
-                let std_dev = scirs2_core::numeric::Float::sqrt(ss / F::from(n).unwrap());
+                let std_dev = scirs2_core::numeric::Float::sqrt(
+                    ss / F::from(n).expect("Failed to convert to float"),
+                );
                 x_std[j] = if std_dev > F::epsilon() {
                     std_dev
                 } else {
@@ -423,7 +431,7 @@ where
         .iter()
         .map(|&r| scirs2_core::numeric::Float::powi(r, 2))
         .sum::<F>()
-        / F::from(df).unwrap();
+        / F::from(df).expect("Failed to convert to float");
 
     // Calculate X'X
     let xtx = x.t().dot(x);
@@ -492,13 +500,13 @@ where
 ///     8.0, 9.0, 0.8, 0.9, 1.0,
 ///     9.0, 10.0, 0.9, 1.0, 1.1,
 ///     10.0, 11.0, 1.0, 1.1, 1.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Target values depend only on first two variables
 /// let y = array![5.0, 8.0, 11.0, 14.0, 17.0, 20.0, 23.0, 26.0, 29.0, 32.0];
 ///
 /// // Perform lasso regression with alpha=0.1
-/// let result = lasso_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).unwrap();
+/// let result = lasso_regression(&x.view(), &y.view(), Some(0.1), None, None, None, None, None).expect("Operation failed");
 ///
 /// // Check that we got coefficients
 /// assert!(result.coefficients.len() > 0);
@@ -543,12 +551,13 @@ where
     let p_features = x.ncols();
 
     // Set default parameters
-    let alpha = alpha.unwrap_or_else(|| F::from(1.0).unwrap());
+    let alpha = alpha.unwrap_or_else(|| F::from(1.0).expect("Failed to convert constant to float"));
     let fit_intercept = fit_intercept.unwrap_or(true);
     let normalize = normalize.unwrap_or(false);
-    let tol = tol.unwrap_or_else(|| F::from(1e-4).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from(1e-4).expect("Failed to convert constant to float"));
     let max_iter = max_iter.unwrap_or(1000);
-    let conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
+    let conf_level =
+        conf_level.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     if alpha < F::zero() {
         return Err(StatsError::InvalidArgument(
@@ -674,10 +683,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients (approximate)
@@ -697,15 +707,17 @@ where
     // Calculate p-values (simplified)
     let p_values = t_values.mapv(|t| {
         let t_abs = crate::regression::utils::float_abs(t);
-        let df_f = F::from(df_residuals).unwrap();
+        let df_f = F::from(df_residuals).expect("Failed to convert to float");
         let ratio = t_abs / crate::regression::utils::float_sqrt(df_f + t_abs * t_abs);
         let one_minus_ratio = F::one() - ratio;
-        F::from(2.0).unwrap() * one_minus_ratio
+        F::from(2.0).expect("Failed to convert constant to float") * one_minus_ratio
     });
 
     // Calculate confidence intervals
     let mut conf_intervals = Array2::<F>::zeros((p, 2));
-    let z = norm_ppf(F::from(0.5).unwrap() * (F::one() + conf_level));
+    let z = norm_ppf(
+        F::from(0.5).expect("Failed to convert constant to float") * (F::one() + conf_level),
+    );
 
     for i in 0..p {
         let margin = std_errors[i] * z;
@@ -715,7 +727,8 @@ where
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity()
     };
@@ -767,7 +780,7 @@ where
         .iter()
         .map(|&r| scirs2_core::numeric::Float::powi(r, 2))
         .sum::<F>()
-        / F::from(df).unwrap();
+        / F::from(df).expect("Failed to convert to float");
 
     // Find non-zero coefficients
     let p = coefficients.len();
@@ -855,13 +868,13 @@ where
 ///     8.0, 9.0, 0.8, 0.9, 1.0,
 ///     9.0, 10.0, 0.9, 1.0, 1.1,
 ///     10.0, 11.0, 1.0, 1.1, 1.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Target values
 /// let y = array![5.0, 8.0, 11.0, 14.0, 17.0, 20.0, 23.0, 26.0, 29.0, 32.0];
 ///
 /// // Perform elastic net regression with alpha=0.1 and l1_ratio=0.5
-/// let result = elastic_net(&x.view(), &y.view(), Some(0.1), Some(0.5), None, None, None, None, None).unwrap();
+/// let result = elastic_net(&x.view(), &y.view(), Some(0.1), Some(0.5), None, None, None, None, None).expect("Operation failed");
 ///
 /// // Check that we got coefficients
 /// assert!(result.coefficients.len() > 0);
@@ -905,13 +918,15 @@ where
     let p_features = x.ncols();
 
     // Set default parameters
-    let alpha = alpha.unwrap_or_else(|| F::from(1.0).unwrap());
-    let l1_ratio = l1_ratio.unwrap_or_else(|| F::from(0.5).unwrap());
+    let alpha = alpha.unwrap_or_else(|| F::from(1.0).expect("Failed to convert constant to float"));
+    let l1_ratio =
+        l1_ratio.unwrap_or_else(|| F::from(0.5).expect("Failed to convert constant to float"));
     let fit_intercept = fit_intercept.unwrap_or(true);
     let normalize = normalize.unwrap_or(false);
-    let tol = tol.unwrap_or_else(|| F::from(1e-4).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from(1e-4).expect("Failed to convert constant to float"));
     let max_iter = max_iter.unwrap_or(1000);
-    let conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
+    let conf_level =
+        conf_level.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     if alpha < F::zero() {
         return Err(StatsError::InvalidArgument(
@@ -1076,10 +1091,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients (approximate)
@@ -1100,15 +1116,17 @@ where
     // Calculate p-values (simplified)
     let p_values = t_values.mapv(|t| {
         let t_abs = crate::regression::utils::float_abs(t);
-        let df_f = F::from(df_residuals).unwrap();
+        let df_f = F::from(df_residuals).expect("Failed to convert to float");
         let _ratio = t_abs / crate::regression::utils::float_sqrt(df_f + t_abs * t_abs);
         let one_minus_ratio = F::one() - _ratio;
-        F::from(2.0).unwrap() * one_minus_ratio
+        F::from(2.0).expect("Failed to convert constant to float") * one_minus_ratio
     });
 
     // Calculate confidence intervals
     let mut conf_intervals = Array2::<F>::zeros((p, 2));
-    let z = norm_ppf(F::from(0.5).unwrap() * (F::one() + conf_level));
+    let z = norm_ppf(
+        F::from(0.5).expect("Failed to convert constant to float") * (F::one() + conf_level),
+    );
 
     for i in 0..p {
         let margin = std_errors[i] * z;
@@ -1118,7 +1136,8 @@ where
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity()
     };
@@ -1171,7 +1190,7 @@ where
         .iter()
         .map(|&r| scirs2_core::numeric::Float::powi(r, 2))
         .sum::<F>()
-        / F::from(df).unwrap();
+        / F::from(df).expect("Failed to convert to float");
 
     // Find non-zero coefficients
     let p = coefficients.len();
@@ -1264,7 +1283,7 @@ where
 ///     8.0, 9.0, 10.0, 0.8, 0.9, 1.0,
 ///     9.0, 10.0, 11.0, 0.9, 1.0, 1.1,
 ///     10.0, 11.0, 12.0, 1.0, 1.1, 1.2,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// // Target values depend only on the first group (first 3 variables)
 /// let y = array![10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0];
@@ -1273,7 +1292,7 @@ where
 /// let groups = vec![0, 0, 0, 1, 1, 1];
 ///
 /// // Perform group lasso regression with alpha=0.1
-/// let result = group_lasso(&x.view(), &y.view(), &groups, Some(0.1), None, None, None, None, None).unwrap();
+/// let result = group_lasso(&x.view(), &y.view(), &groups, Some(0.1), None, None, None, None, None).expect("Operation failed");
 ///
 /// // Check that we got coefficients
 /// assert!(result.coefficients.len() > 0);
@@ -1327,12 +1346,13 @@ where
     let p_features = x.ncols();
 
     // Set default parameters
-    let alpha = alpha.unwrap_or_else(|| F::from(1.0).unwrap());
+    let alpha = alpha.unwrap_or_else(|| F::from(1.0).expect("Failed to convert constant to float"));
     let fit_intercept = fit_intercept.unwrap_or(true);
     let normalize = normalize.unwrap_or(false);
-    let tol = tol.unwrap_or_else(|| F::from(1e-4).unwrap());
+    let tol = tol.unwrap_or_else(|| F::from(1e-4).expect("Failed to convert constant to float"));
     let max_iter = max_iter.unwrap_or(1000);
-    let conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
+    let conf_level =
+        conf_level.unwrap_or_else(|| F::from(0.95).expect("Failed to convert constant to float"));
 
     if alpha < F::zero() {
         return Err(StatsError::InvalidArgument(
@@ -1393,7 +1413,7 @@ where
                 .slice(s![.., 1..])
                 .dot(&coefficients.slice(s![1..]));
             let r_sum: F = r.iter().cloned().sum();
-            coefficients[0] = r_sum / F::from(r.len()).unwrap();
+            coefficients[0] = r_sum / F::from(r.len()).expect("Operation failed");
         }
 
         // Update each group in turn
@@ -1537,10 +1557,11 @@ where
     // Calculate R-squared and adjusted R-squared
     let r_squared = ss_explained / ss_total;
     let adj_r_squared = F::one()
-        - (F::one() - r_squared) * F::from(n - 1).unwrap() / F::from(df_residuals).unwrap();
+        - (F::one() - r_squared) * F::from(n - 1).expect("Failed to convert to float")
+            / F::from(df_residuals).expect("Failed to convert to float");
 
     // Calculate mean squared error and residual standard error
-    let mse = ss_residual / F::from(df_residuals).unwrap();
+    let mse = ss_residual / F::from(df_residuals).expect("Failed to convert to float");
     let residual_std_error = scirs2_core::numeric::Float::sqrt(mse);
 
     // Calculate standard errors for coefficients (approximate)
@@ -1562,15 +1583,17 @@ where
     // Calculate p-values (simplified)
     let p_values = t_values.mapv(|t| {
         let t_abs = crate::regression::utils::float_abs(t);
-        let df_f = F::from(df_residuals).unwrap();
+        let df_f = F::from(df_residuals).expect("Failed to convert to float");
         let ratio = t_abs / crate::regression::utils::float_sqrt(df_f + t_abs * t_abs);
         let one_minus_ratio = F::one() - ratio;
-        F::from(2.0).unwrap() * one_minus_ratio
+        F::from(2.0).expect("Failed to convert constant to float") * one_minus_ratio
     });
 
     // Calculate confidence intervals
     let mut conf_intervals = Array2::<F>::zeros((p, 2));
-    let z = norm_ppf(F::from(0.5).unwrap() * (F::one() + conf_level));
+    let z = norm_ppf(
+        F::from(0.5).expect("Failed to convert constant to float") * (F::one() + conf_level),
+    );
 
     for i in 0..p {
         let margin = std_errors[i] * z;
@@ -1580,7 +1603,8 @@ where
 
     // Calculate F-statistic
     let f_statistic = if df_model > 0 && df_residuals > 0 {
-        (ss_explained / F::from(df_model).unwrap()) / (ss_residual / F::from(df_residuals).unwrap())
+        (ss_explained / F::from(df_model).expect("Failed to convert to float"))
+            / (ss_residual / F::from(df_residuals).expect("Failed to convert to float"))
     } else {
         F::infinity()
     };
@@ -1649,7 +1673,7 @@ where
     let mut converged = false;
 
     // Learning rate
-    let lr = F::from(0.01).unwrap();
+    let lr = F::from(0.01).expect("Failed to convert constant to float");
 
     while !converged && _iter < max_iter {
         let old_beta = beta.clone();
@@ -1708,7 +1732,7 @@ where
         .iter()
         .map(|&r| scirs2_core::numeric::Float::powi(r, 2))
         .sum::<F>()
-        / F::from(df).unwrap();
+        / F::from(df).expect("Failed to convert to float");
 
     // Find non-zero groups
     let p = coefficients.len();

@@ -615,7 +615,7 @@ mod tests {
             .with_progress_interval(10);
 
         let mut buffer = [0u8; 20];
-        let bytes_read = reader.read(&mut buffer).unwrap();
+        let bytes_read = reader.read(&mut buffer).expect("Operation failed");
 
         assert_eq!(bytes_read, 20);
         assert_eq!(reader.progress().bytes_transferred, 20);
@@ -634,30 +634,30 @@ mod tests {
             .with_progress_interval(25);
 
         let data = b"Test data for progress writer functionality.";
-        let bytes_written = writer.write(data).unwrap();
+        let bytes_written = writer.write(data).expect("Operation failed");
 
         assert_eq!(bytes_written, data.len());
         assert_eq!(writer.progress().bytes_transferred, data.len() as u64);
 
-        writer.flush().unwrap();
+        writer.flush().expect("Operation failed");
         assert_eq!(output, data);
     }
 
     #[test]
     fn test_chunked_reader() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_chunked.txt");
 
         // Create test file
         let test_data = b"This is test data for chunked reading. It should be read in chunks.";
-        std::fs::write(&file_path, test_data).unwrap();
+        std::fs::write(&file_path, test_data).expect("Operation failed");
 
-        let mut reader = ChunkedReader::new(&file_path, 10).unwrap();
+        let mut reader = ChunkedReader::new(&file_path, 10).expect("Operation failed");
         assert_eq!(reader.size(), test_data.len() as u64);
         assert!(!reader.is_eof());
 
         let mut all_data = Vec::new();
-        while let Some(chunk) = reader.read_chunk().unwrap() {
+        while let Some(chunk) = reader.read_chunk().expect("Operation failed") {
             all_data.extend_from_slice(&chunk);
         }
 
@@ -668,22 +668,22 @@ mod tests {
 
     #[test]
     fn test_chunked_writer() {
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Operation failed");
         let file_path = temp_dir.path().join("test_chunked_write.txt");
 
-        let mut writer = ChunkedWriter::new(&file_path, 20).unwrap();
+        let mut writer = ChunkedWriter::new(&file_path, 20).expect("Operation failed");
 
         let data1 = b"First chunk of data.";
         let data2 = b"Second chunk of data.";
 
-        writer.write_chunk(data1).unwrap();
-        writer.write_chunk(data2).unwrap();
+        writer.write_chunk(data1).expect("Operation failed");
+        writer.write_chunk(data2).expect("Operation failed");
 
-        let total_bytes = writer.finish().unwrap();
+        let total_bytes = writer.finish().expect("Operation failed");
         assert_eq!(total_bytes, (data1.len() + data2.len()) as u64);
 
         // Verify file contents
-        let file_contents = std::fs::read(&file_path).unwrap();
+        let file_contents = std::fs::read(&file_path).expect("Operation failed");
         let expected = [&data1[..], &data2[..]].concat();
         assert_eq!(file_contents, expected);
     }
@@ -709,7 +709,7 @@ mod tests {
             Some(input_data.len() as u64),
             Some(callback),
         )
-        .unwrap();
+        .expect("Operation failed");
 
         assert_eq!(copied, input_data.len() as u64);
         assert_eq!(output, input_data);
@@ -725,7 +725,7 @@ mod tests {
         let copied =
             async_copy_with_progress(input, &mut output, Some(input_data.len() as u64), None)
                 .await
-                .unwrap();
+                .expect("Operation failed");
 
         assert_eq!(copied, input_data.len() as u64);
         assert_eq!(output, input_data);

@@ -90,7 +90,7 @@ where
 /// let data = vec![2.0, 1.0, 2.0, 3.0];
 /// let indices = vec![0, 0, 1, 2];
 /// let indptr = vec![0, 1, 3, 4];
-/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).unwrap();
+/// let matrix = SymCsrMatrix::new(data, indptr, indices, (3, 3)).expect("Operation failed");
 ///
 /// // Configure options
 /// let options = LanczosOptions {
@@ -102,7 +102,7 @@ where
 /// };
 ///
 /// // Compute eigenvalues and eigenvectors
-/// let result = lanczos(&matrix, &options, None).unwrap();
+/// let result = lanczos(&matrix, &options, None).expect("Operation failed");
 ///
 /// // Check the result
 /// println!("Eigenvalues: {:?}", result.eigenvalues);
@@ -250,7 +250,7 @@ where
             let (eigvals, _) = solve_tridiagonal_eigenproblem(&alpha, &beta, numeigenvalues)?;
 
             // Check if the largest eigvals have converged (using beta as an error estimate)
-            if beta_j_next < T::from(options.tol).unwrap() * eigvals[0].abs() {
+            if beta_j_next < T::from(options.tol).expect("Operation failed") * eigvals[0].abs() {
                 converged = true;
                 break;
             }
@@ -406,7 +406,9 @@ where
             // Look for a small off-diagonal element
             let mut m = l;
             while m < n - 1 {
-                if e[m].abs() <= T::from(1e-12).unwrap() * (d[m].abs() + d[m + 1].abs()) {
+                if e[m].abs()
+                    <= T::from(1e-12).expect("Operation failed") * (d[m].abs() + d[m + 1].abs())
+                {
                     break;
                 }
                 m += 1;
@@ -424,7 +426,7 @@ where
                 ));
             }
 
-            let g = (d[l + 1] - d[l]) * T::from(0.5).unwrap() / e[l];
+            let g = (d[l + 1] - d[l]) * T::from(0.5).expect("Operation failed") / e[l];
             let r = (g * g + T::sparse_one()).sqrt();
             let mut g = d[m] - d[l] + e[l] / (g + if g >= T::sparse_zero() { r } else { -r });
 
@@ -548,9 +550,9 @@ where
         let det = a * b - c * c;
 
         // Calculate eigenvalues
-        let discriminant = (trace * trace - T::from(4.0).unwrap() * det).sqrt();
-        let lambda1 = (trace + discriminant) * T::from(0.5).unwrap();
-        let lambda2 = (trace - discriminant) * T::from(0.5).unwrap();
+        let discriminant = (trace * trace - T::from(4.0).expect("Operation failed") * det).sqrt();
+        let lambda1 = (trace + discriminant) * T::from(0.5).expect("Operation failed");
+        let lambda2 = (trace - discriminant) * T::from(0.5).expect("Operation failed");
 
         // Sort in descending order
         let (lambda1, lambda2) = if lambda1 >= lambda2 {
@@ -741,30 +743,37 @@ where
     // The equation is x³ + px² + qx + r = 0
 
     // Substitute x = y - p/3 to eliminate the quadratic term
-    let p_over_3 = p / T::from(3.0).unwrap();
-    let q_new = q - p * p / T::from(3.0).unwrap();
-    let r_new = r - p * q / T::from(3.0).unwrap()
-        + T::from(2.0).unwrap() * p * p * p / T::from(27.0).unwrap();
+    let p_over_3 = p / T::from(3.0).expect("Operation failed");
+    let q_new = q - p * p / T::from(3.0).expect("Operation failed");
+    let r_new = r - p * q / T::from(3.0).expect("Operation failed")
+        + T::from(2.0).expect("Operation failed") * p * p * p
+            / T::from(27.0).expect("Operation failed");
 
     // Now solve y³ + q_new * y + r_new = 0
-    let discriminant =
-        -(T::from(4.0).unwrap() * q_new * q_new * q_new + T::from(27.0).unwrap() * r_new * r_new);
+    let discriminant = -(T::from(4.0).expect("Operation failed") * q_new * q_new * q_new
+        + T::from(27.0).expect("Operation failed") * r_new * r_new);
 
     if discriminant > T::sparse_zero() {
         // Three real roots
-        let theta = ((T::from(3.0).unwrap() * r_new) / (T::from(2.0).unwrap() * q_new)
-            * (-T::from(3.0).unwrap() / q_new).sqrt())
+        let theta = ((T::from(3.0).expect("Operation failed") * r_new)
+            / (T::from(2.0).expect("Operation failed") * q_new)
+            * (-T::from(3.0).expect("Operation failed") / q_new).sqrt())
         .acos();
-        let sqrt_term = T::from(2.0).unwrap() * (-q_new / T::from(3.0).unwrap()).sqrt();
+        let sqrt_term = T::from(2.0).expect("Operation failed")
+            * (-q_new / T::from(3.0).expect("Operation failed")).sqrt();
 
-        let y1 = sqrt_term * (theta / T::from(3.0).unwrap()).cos();
+        let y1 = sqrt_term * (theta / T::from(3.0).expect("Operation failed")).cos();
         let y2 = sqrt_term
-            * ((theta + T::from(2.0).unwrap() * T::from(std::f64::consts::PI).unwrap())
-                / T::from(3.0).unwrap())
+            * ((theta
+                + T::from(2.0).expect("Operation failed")
+                    * T::from(std::f64::consts::PI).expect("Operation failed"))
+                / T::from(3.0).expect("Operation failed"))
             .cos();
         let y3 = sqrt_term
-            * ((theta + T::from(4.0).unwrap() * T::from(std::f64::consts::PI).unwrap())
-                / T::from(3.0).unwrap())
+            * ((theta
+                + T::from(4.0).expect("Operation failed")
+                    * T::from(std::f64::consts::PI).expect("Operation failed"))
+                / T::from(3.0).expect("Operation failed"))
             .cos();
 
         let x1 = y1 - p_over_3;
@@ -774,12 +783,13 @@ where
         Ok(vec![x1, x2, x3])
     } else {
         // One real root
-        let u = (-r_new / T::from(2.0).unwrap() + (discriminant / T::from(-108.0).unwrap()).sqrt())
-            .cbrt();
+        let u = (-r_new / T::from(2.0).expect("Operation failed")
+            + (discriminant / T::from(-108.0).expect("Operation failed")).sqrt())
+        .cbrt();
         let v = if SparseElement::is_zero(&u) {
             T::sparse_zero()
         } else {
-            -q_new / (T::from(3.0).unwrap() * u)
+            -q_new / (T::from(3.0).expect("Operation failed") * u)
         };
 
         let y = u + v;
@@ -801,7 +811,7 @@ mod tests {
         let data = vec![2.0, 1.0, 2.0]; // values: diag[0], [1,0], diag[1]
         let indptr = vec![0, 1, 3]; // row 0 has 1 element, row 1 has 2 elements
         let indices = vec![0, 0, 1]; // column indices
-        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).unwrap();
+        let matrix = SymCsrMatrix::new(data, indptr, indices, (2, 2)).expect("Operation failed");
 
         let options = LanczosOptions {
             max_iter: 100,
@@ -810,7 +820,7 @@ mod tests {
             numeigenvalues: 1,
             compute_eigenvectors: true,
         };
-        let result = lanczos(&matrix, &options, None).unwrap();
+        let result = lanczos(&matrix, &options, None).expect("Operation failed");
 
         assert!(result.converged);
         assert_eq!(result.eigenvalues.len(), 1);
@@ -823,7 +833,7 @@ mod tests {
         let alpha = vec![2.0, 3.0];
         let beta = vec![1.0];
         let (eigenvalues, _eigenvectors) =
-            solve_tridiagonal_eigenproblem(&alpha, &beta, 2).unwrap();
+            solve_tridiagonal_eigenproblem(&alpha, &beta, 2).expect("Operation failed");
 
         assert_eq!(eigenvalues.len(), 2);
         // Eigenvalues should be sorted in descending order
@@ -833,12 +843,12 @@ mod tests {
     #[test]
     fn test_solve_cubic() {
         // Test x³ - 6x² + 11x - 6 = 0, which has roots 1, 2, 3
-        let roots = solve_cubic(-6.0, 11.0, -6.0).unwrap();
+        let roots = solve_cubic(-6.0, 11.0, -6.0).expect("Operation failed");
         assert_eq!(roots.len(), 3);
 
         // Sort roots for comparison
         let mut sorted_roots = roots;
-        sorted_roots.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_roots.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         assert!((sorted_roots[0] - 1.0).abs() < 1e-10);
         assert!((sorted_roots[1] - 2.0).abs() < 1e-10);

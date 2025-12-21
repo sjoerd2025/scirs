@@ -80,7 +80,7 @@ pub struct RansacResult {
 impl PerspectiveTransform {
     /// Create a new perspective transformation matrix from raw data
     pub fn new(data: [f64; 9]) -> Self {
-        let matrix = Array2::from_shape_vec((3, 3), data.to_vec()).unwrap();
+        let matrix = Array2::from_shape_vec((3, 3), data.to_vec()).expect("Operation failed");
         Self { matrix }
     }
 
@@ -143,7 +143,7 @@ impl PerspectiveTransform {
         // Using power iteration method for simplicity
         let h = Self::find_smallest_eigenvector(&ata)?;
 
-        let matrix = Array2::from_shape_vec((3, 3), h.to_vec()).unwrap();
+        let matrix = Array2::from_shape_vec((3, 3), h.to_vec()).expect("Operation failed");
         Ok(Self { matrix })
     }
 

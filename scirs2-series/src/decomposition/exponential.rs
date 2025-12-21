@@ -30,7 +30,7 @@ use crate::error::{Result, TimeSeriesError};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
 /// let result = exponential_decomposition(&ts, 4, 0.2, 0.1, 0.3,
-///                                         DecompositionModel::Additive).unwrap();
+///                                         DecompositionModel::Additive).expect("Operation failed");
 /// println!("Trend: {:?}", result.trend);
 /// println!("Seasonal: {:?}", result.seasonal);
 /// println!("Residual: {:?}", result.residual);
@@ -61,9 +61,9 @@ where
         ));
     }
 
-    let alpha = F::from_f64(alpha).unwrap();
-    let beta = F::from_f64(beta).unwrap();
-    let gamma = F::from_f64(gamma).unwrap();
+    let alpha = F::from_f64(alpha).expect("Operation failed");
+    let beta = F::from_f64(beta).expect("Operation failed");
+    let gamma = F::from_f64(gamma).expect("Operation failed");
 
     let n = ts.len();
 
@@ -83,13 +83,13 @@ where
         for i in 1..min(n, 10) {
             sum = sum + (ts[i] - ts[i - 1]);
         }
-        trend[0] = sum / F::from_usize(min(n - 1, 9)).unwrap();
+        trend[0] = sum / F::from_usize(min(n - 1, 9)).expect("Operation failed");
     }
 
     // Initialize seasonal (average deviation from level for each season)
     for i in 0..min(period, n) {
         let pos = i % period;
-        let expected = level[0] + F::from_usize(i).unwrap() * trend[0];
+        let expected = level[0] + F::from_usize(i).expect("Operation failed") * trend[0];
         match model {
             DecompositionModel::Additive => {
                 seasonal[pos] = ts[i] - expected;
@@ -112,7 +112,7 @@ where
                 .iter()
                 .take(period)
                 .fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(period).unwrap();
+                / F::from_usize(period).expect("Operation failed");
             for i in 0..period {
                 seasonal[i] = seasonal[i] - mean;
             }
@@ -122,7 +122,7 @@ where
                 .iter()
                 .take(period)
                 .fold(F::zero(), |acc, &x| acc + x)
-                / F::from_usize(period).unwrap();
+                / F::from_usize(period).expect("Operation failed");
             if mean == F::zero() {
                 return Err(TimeSeriesError::DecompositionError(
                     "Division by zero normalizing multiplicative seasonal component".to_string(),

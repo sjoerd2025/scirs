@@ -28,7 +28,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
     pub fn new() -> Self {
         Self {
             n_samples: 1000,
-            perturbation_std: F::from(0.1).unwrap(),
+            perturbation_std: F::from(0.1).expect("Failed to convert constant to float"),
             random_seed: None,
         }
     }
@@ -165,7 +165,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
             }
 
             shap_values[i] = marginal_contributions.iter().cloned().sum::<F>()
-                / F::from(marginal_contributions.len()).unwrap();
+                / F::from(marginal_contributions.len()).expect("Operation failed");
         }
 
         let mut feature_importance = HashMap::new();
@@ -206,11 +206,15 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
             let feature_value = instance[i];
             let precision = self.test_anchor_precision(model, instance, i, original_prediction)?;
 
-            if precision > F::from(0.8).unwrap() {
+            if precision > F::from(0.8).expect("Failed to convert constant to float") {
                 let rule = AnchorRule {
                     feature_name: feature_name.clone(),
                     feature_index: i,
-                    condition: format!("{} = {:.3}", feature_name, feature_value.to_f64().unwrap()),
+                    condition: format!(
+                        "{} = {:.3}",
+                        feature_name,
+                        feature_value.to_f64().expect("Operation failed")
+                    ),
                     precision,
                     coverage: self.compute_anchor_coverage(instance, i)?,
                 };
@@ -257,18 +261,22 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
     fn generate_gaussian_noise(&self, sample_idx: usize, featureidx: usize) -> Result<F> {
         // Simplified Gaussian noise generation using Box-Muller transform
         let seed = self.random_seed.unwrap_or(0) + sample_idx as u64 + featureidx as u64;
-        let u1 = F::from((seed % 1000) as f64 / 1000.0).unwrap();
-        let u2 = F::from(((seed / 1000) % 1000) as f64 / 1000.0).unwrap();
+        let u1 = F::from((seed % 1000) as f64 / 1000.0).expect("Operation failed");
+        let u2 = F::from(((seed / 1000) % 1000) as f64 / 1000.0).expect("Operation failed");
 
-        let z = (-F::from(2.0).unwrap() * u1.ln()).sqrt()
-            * (F::from(2.0).unwrap() * F::from(std::f64::consts::PI).unwrap() * u2).cos();
+        let z = (-F::from(2.0).expect("Failed to convert constant to float") * u1.ln()).sqrt()
+            * (F::from(2.0).expect("Failed to convert constant to float")
+                * F::from(std::f64::consts::PI).expect("Failed to convert to float")
+                * u2)
+                .cos();
 
         Ok(z)
     }
 
     fn compute_sample_weights(&self, distances: &Array1<F>) -> Result<Array1<F>> {
         let mut weights = Array1::zeros(distances.len());
-        let kernel_width = self.perturbation_std * F::from(2.0).unwrap();
+        let kernel_width =
+            self.perturbation_std * F::from(2.0).expect("Failed to convert constant to float");
 
         for (i, &distance) in distances.iter().enumerate() {
             // RBF kernel weights
@@ -317,7 +325,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
     {
         let n_features = instance.len();
         let mut gradients = Array1::zeros(n_features);
-        let epsilon = F::from(1e-6).unwrap();
+        let epsilon = F::from(1e-6).expect("Failed to convert constant to float");
 
         let baseline_pred = model(&instance.insert_axis(Axis(0)).view())[0];
 
@@ -349,7 +357,8 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
     }
 
     fn compute_explanation_confidence(&self, values: &Array1<F>) -> Result<F> {
-        let variance = values.iter().map(|&x| x * x).sum::<F>() / F::from(values.len()).unwrap();
+        let variance = values.iter().map(|&x| x * x).sum::<F>()
+            / F::from(values.len()).expect("Operation failed");
 
         // Confidence based on magnitude of explanation
         Ok(F::one() / (F::one() + variance))
@@ -375,12 +384,17 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
             let _prediction = model(&test_instance.insert_axis(Axis(0)).view())[0];
 
             // Check if _prediction is similar to original (within some tolerance)
-            if (_prediction - original_prediction).abs() < F::from(0.1).unwrap() {
+            if (_prediction - original_prediction).abs()
+                < F::from(0.1).expect("Failed to convert constant to float")
+            {
                 correct_predictions += 1;
             }
         }
 
-        Ok(F::from(correct_predictions).unwrap() / F::from(n_tests).unwrap())
+        Ok(
+            F::from(correct_predictions).expect("Failed to convert to float")
+                / F::from(n_tests).expect("Failed to convert to float"),
+        )
     }
 
     fn generate_test_instance(
@@ -396,7 +410,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
                 test_instance[i] = instance[i];
             } else {
                 // Generate random value (simplified)
-                let noise = F::from((seed + i) as f64 * 0.01).unwrap();
+                let noise = F::from((seed + i) as f64 * 0.01).expect("Operation failed");
                 test_instance[i] = instance[i] + noise;
             }
         }
@@ -406,7 +420,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
 
     fn compute_anchor_coverage(&self, instance: &ArrayView1<F>, featureidx: usize) -> Result<F> {
         // Simplified coverage computation
-        Ok(F::from(0.5).unwrap())
+        Ok(F::from(0.5).expect("Failed to convert constant to float"))
     }
 
     fn compute_overall_precision(&self, rules: &[AnchorRule<F>]) -> Result<F> {
@@ -415,7 +429,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
         }
 
         let sum_precision: F = rules.iter().map(|r| r.precision).sum();
-        Ok(sum_precision / F::from(rules.len()).unwrap())
+        Ok(sum_precision / F::from(rules.len()).expect("Operation failed"))
     }
 
     fn compute_overall_coverage(&self, rules: &[AnchorRule<F>]) -> Result<F> {
@@ -424,7 +438,7 @@ impl<F: Float + scirs2_core::numeric::FromPrimitive + std::iter::Sum> LocalExpla
         }
 
         let sum_coverage: F = rules.iter().map(|r| r.coverage).sum();
-        Ok(sum_coverage / F::from(rules.len()).unwrap())
+        Ok(sum_coverage / F::from(rules.len()).expect("Operation failed"))
     }
 }
 
@@ -541,7 +555,7 @@ mod tests {
 
         let explanation = explainer
             .explain_gradient(&mock_model, &instance.view(), &feature_names)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(explanation.feature_importance.len(), 3);
         assert_eq!(explanation.method, "Gradient");
@@ -583,7 +597,7 @@ mod tests {
 
         let explanation = explainer
             .explain_anchors(&mock_model, &instance.view(), &feature_names)
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(explanation.instance, instance);
         assert!(explanation.overall_precision >= 0.0);
@@ -597,7 +611,7 @@ mod tests {
 
         let gradients = explainer
             .compute_numerical_gradients(&mock_model, &instance.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(gradients.len(), 3);
         // For our mock model (sum), all gradients should be approximately 1.0
@@ -616,7 +630,7 @@ mod tests {
         let instance = array![1.0, 2.0, 3.0];
         let (samples, distances) = explainer
             .generate_perturbed_samples(&instance.view())
-            .unwrap();
+            .expect("Operation failed");
 
         assert_eq!(samples.shape(), &[10, 3]);
         assert_eq!(distances.len(), 10);

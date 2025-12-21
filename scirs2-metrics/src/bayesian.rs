@@ -1157,7 +1157,9 @@ impl BayesianInformationCriteria {
         let mean_deviance = -2.0 * log_likelihoodsamples.mean_or(0.0);
 
         // Calculate deviance at posterior mean (simplified)
-        let posterior_mean_ll = log_likelihoodsamples.mean_axis(Axis(0)).unwrap();
+        let posterior_mean_ll = log_likelihoodsamples
+            .mean_axis(Axis(0))
+            .expect("Operation failed");
         let deviance_at_mean = -2.0 * posterior_mean_ll.sum();
 
         let p_dic = mean_deviance - deviance_at_mean;
@@ -1383,7 +1385,7 @@ impl CredibleIntervalCalculator {
 
         // Sort _samples for quantile calculation
         let mut sortedsamples = posterior_samples.to_vec();
-        sortedsamples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sortedsamples.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         let n = sortedsamples.len();
         let alpha = 1.0 - self.credible_level;
@@ -1644,7 +1646,7 @@ mod tests {
 
         let result = comparison
             .compare_models(&log_likelihood_a, &log_likelihood_b, None, None)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.bayes_factor > 0.0);
         assert!(result.evidence_a > result.evidence_b);
@@ -1661,7 +1663,7 @@ mod tests {
 
         let result = bic_calc
             .evaluate_model(&log_likelihoodsamples, 3, 10)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.waic > 0.0);
         assert!(result.loo_cv > 0.0);
@@ -1681,7 +1683,7 @@ mod tests {
 
         let result = ppc
             .check_model_adequacy(&observed_data, &posterior_samples)
-            .unwrap();
+            .expect("Operation failed");
 
         assert!(result.bayesian_p_value >= 0.0 && result.bayesian_p_value <= 1.0);
         assert!(result.tail_probability >= 0.0 && result.tail_probability <= 1.0);
@@ -1695,13 +1697,15 @@ mod tests {
     fn test_credible_interval_calculator() {
         let ci_calc = CredibleIntervalCalculator::new()
             .with_credible_level(0.95)
-            .unwrap()
+            .expect("Operation failed")
             .with_null_value(0.0);
 
         let posterior_samples =
             Array1::from_vec(vec![-0.5, -0.2, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5]);
 
-        let result = ci_calc.calculate_intervals(&posterior_samples).unwrap();
+        let result = ci_calc
+            .calculate_intervals(&posterior_samples)
+            .expect("Operation failed");
 
         assert!(result.lower_bound < result.upper_bound);
         assert!(result.credible_level == 0.95);
@@ -1723,11 +1727,13 @@ mod tests {
                 0.9, 1.9, 3.1, 3.9, 5.1, // Model 3
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         let modelscores = Array1::from_vec(vec![100.0, 102.0, 105.0]); // Information criteria
 
-        let result = bma.average_models(&predictions, &modelscores).unwrap();
+        let result = bma
+            .average_models(&predictions, &modelscores)
+            .expect("Operation failed");
 
         assert_eq!(result.averaged_prediction.len(), 5);
         assert_eq!(result.model_weights.len(), 3);
@@ -1766,7 +1772,7 @@ mod tests {
                 BayesianModelComparison::new().with_evidence_method(method);
             let evidence = comparison_with_method
                 .estimate_evidence(&log_likelihood, None)
-                .unwrap();
+                .expect("Operation failed");
             assert!(evidence.is_finite());
         }
     }

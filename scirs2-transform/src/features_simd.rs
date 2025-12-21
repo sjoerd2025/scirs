@@ -401,7 +401,7 @@ where
                 ));
             }
 
-            if lambda.abs() < F::from(1e-6).unwrap() {
+            if lambda.abs() < F::from(1e-6).expect("Failed to convert constant to float") {
                 // lambda ≈ 0: log transform
                 for i in 0..n {
                     result[i] = data[i].ln();
@@ -420,18 +420,21 @@ where
             for i in 0..n {
                 let x = data[i];
                 if x >= F::zero() {
-                    if lambda.abs() < F::from(1e-6).unwrap() {
+                    if lambda.abs() < F::from(1e-6).expect("Failed to convert constant to float") {
                         result[i] = x.ln() + F::one();
                     } else {
                         result[i] = ((x + F::one()).powf(lambda) - F::one()) / lambda;
                     }
                 } else {
-                    if (F::from(2.0).unwrap() - lambda).abs() < F::from(1e-6).unwrap() {
+                    if (F::from(2.0).expect("Failed to convert constant to float") - lambda).abs()
+                        < F::from(1e-6).expect("Failed to convert constant to float")
+                    {
                         result[i] = -((-x + F::one()).ln());
                     } else {
-                        result[i] = -((-x + F::one()).powf(F::from(2.0).unwrap() - lambda)
-                            - F::one())
-                            / (F::from(2.0).unwrap() - lambda);
+                        result[i] = -((-x + F::one()).powf(
+                            F::from(2.0).expect("Failed to convert constant to float") - lambda,
+                        ) - F::one())
+                            / (F::from(2.0).expect("Failed to convert constant to float") - lambda);
                     }
                 }
             }
@@ -467,10 +470,14 @@ where
     let mut result = Array1::zeros(n);
 
     // For common exponents, use optimized SIMD operations
-    if (exponent - F::from(2.0).unwrap()).abs() < F::from(1e-10).unwrap() {
+    if (exponent - F::from(2.0).expect("Failed to convert constant to float")).abs()
+        < F::from(1e-10).expect("Failed to convert constant to float")
+    {
         // Square using SIMD multiplication
         result = F::simd_mul(&data.view(), &data.view());
-    } else if (exponent - F::from(0.5).unwrap()).abs() < F::from(1e-10).unwrap() {
+    } else if (exponent - F::from(0.5).expect("Failed to convert constant to float")).abs()
+        < F::from(1e-10).expect("Failed to convert constant to float")
+    {
         // Square root using SIMD - check for non-negative values first
         for &val in data.iter() {
             if val < F::zero() {
@@ -480,14 +487,20 @@ where
             }
         }
         result = F::simd_sqrt(&data.view());
-    } else if (exponent - F::from(3.0).unwrap()).abs() < F::from(1e-10).unwrap() {
+    } else if (exponent - F::from(3.0).expect("Failed to convert constant to float")).abs()
+        < F::from(1e-10).expect("Failed to convert constant to float")
+    {
         // Cube: x^3 = x * x * x
         let squared = F::simd_mul(&data.view(), &data.view());
         result = F::simd_mul(&squared.view(), &data.view());
-    } else if (exponent - F::from(1.0).unwrap()).abs() < F::from(1e-10).unwrap() {
+    } else if (exponent - F::from(1.0).expect("Failed to convert constant to float")).abs()
+        < F::from(1e-10).expect("Failed to convert constant to float")
+    {
         // Identity: x^1 = x
         result = data.clone();
-    } else if (exponent - F::from(0.0).unwrap()).abs() < F::from(1e-10).unwrap() {
+    } else if (exponent - F::from(0.0).expect("Failed to convert constant to float")).abs()
+        < F::from(1e-10).expect("Failed to convert constant to float")
+    {
         // Constant: x^0 = 1
         result.fill(F::one());
     } else {

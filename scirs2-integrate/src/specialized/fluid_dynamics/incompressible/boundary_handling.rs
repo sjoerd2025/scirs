@@ -361,7 +361,7 @@ mod tests {
             FluidBoundaryCondition::NoSlip,
         );
 
-        apply_boundary_conditions_2d(&mut u, &mut v, bc_x, bc_y).unwrap();
+        apply_boundary_conditions_2d(&mut u, &mut v, bc_x, bc_y).expect("Operation failed");
 
         // Check that boundaries are zero
         for i in 0..5 {
@@ -384,7 +384,7 @@ mod tests {
         let mut pressure = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
         let original_interior = pressure[[2, 2]];
 
-        apply_pressure_boundary_conditions(&mut pressure).unwrap();
+        apply_pressure_boundary_conditions(&mut pressure).expect("Operation failed");
 
         // Check that interior values are unchanged
         assert_eq!(pressure[[2, 2]], original_interior);
@@ -411,7 +411,7 @@ mod tests {
             FluidBoundaryCondition::NoSlip,
         );
 
-        apply_boundary_conditions_2d(&mut u, &mut v, bc_x, bc_y).unwrap();
+        apply_boundary_conditions_2d(&mut u, &mut v, bc_x, bc_y).expect("Operation failed");
 
         // Check inflow boundary
         for j in 0..5 {

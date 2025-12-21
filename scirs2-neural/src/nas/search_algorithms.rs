@@ -37,7 +37,7 @@ impl SearchAlgorithm for RandomSearch {
         let mut rng = if let Some(seed) = self.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_rng(&mut rng()).unwrap()
+            StdRng::from_rng(&mut rng()).expect("Operation failed")
         };
         let mut proposals = Vec::with_capacity(n_proposals);
         for _ in 0..n_proposals {
@@ -103,7 +103,7 @@ impl SearchAlgorithm for EvolutionarySearch {
         elite_indices.sort_by(|&a, &b| {
             self.fitness_scores[b]
                 .partial_cmp(&self.fitness_scores[a])
-                .unwrap()
+                .expect("Operation failed")
         });
         for &idx in elite_indices.iter().take(self.elite_size.min(n_proposals)) {
             proposals.push(self.population[idx].clone());
@@ -139,7 +139,7 @@ impl SearchAlgorithm for EvolutionarySearch {
             indices.sort_by(|&a, &b| {
                 self.fitness_scores[b]
                     .partial_cmp(&self.fitness_scores[a])
-                    .unwrap()
+                    .expect("Operation failed")
             });
             let new_population: Vec<_> = indices
                 .iter()
@@ -190,7 +190,7 @@ impl ReinforcementSearch {
         // Initialize embedding weights
         let embedding_weights = Array2::random(
             (vocab_size, embedding_dim),
-            scirs2_core::random::Normal::new(0.0, 0.1).unwrap(),
+            scirs2_core::random::Normal::new(0.0, 0.1).expect("Operation failed"),
         );
         // Initialize RNN weights
         let rnn_weights = Array2::random(
@@ -213,7 +213,7 @@ impl ReinforcementSearch {
     fn generate_architecture_sequence(&mut self) -> Result<Vec<usize>> {
         if self.controller_network.is_none() {
             self.initialize_controller()?;
-        let network = self.controller_network.as_mut().unwrap();
+        let network = self.controller_network.as_mut().expect("Operation failed");
         let mut sequence = Vec::new();
         let mut log_probs = Vec::new();
         // Reset hidden state
@@ -223,7 +223,7 @@ impl ReinforcementSearch {
             // Max sequence length
             let input_token = if step == 0 {
                 0
-                *sequence.last().unwrap()
+                *sequence.last().expect("Operation failed")
             };
             // Forward pass through controller
             let (next_token, log_prob) = self.controller_forward_step(input_token)?;
@@ -386,7 +386,7 @@ impl DifferentiableSearch {
         // Initialize with small random values
         let alpha_normal = Array2::random(
             (num_edges, num_ops),
-            scirs2_core::random::Normal::new(0.0, 0.001).unwrap(),
+            scirs2_core::random::Normal::new(0.0, 0.001).expect("Operation failed"),
         let alpha_reduce = Array2::random(
         self.alpha_normal = Some(alpha_normal);
         self.alpha_reduce = Some(alpha_reduce);
@@ -410,7 +410,7 @@ impl DifferentiableSearch {
     ) -> Result<crate::nas::architecture_encoding::SequentialEncoding> {
         if self.alpha_normal.is_none() {
             self.initialize_alphas()?;
-        let alpha = self.alpha_normal.as_ref().unwrap();
+        let alpha = self.alpha_normal.as_ref().expect("Operation failed");
         // Sample operations for each edge
         for edge_idx in 0..alpha.nrows() {
             let logits = alpha.row(edge_idx).to_owned();
@@ -515,7 +515,7 @@ impl SearchAlgorithm for BayesianOptimization {
         let best_result = history.iter().max_by(|a, b| {
             let a_score = a.metrics.values().sum::<f64>() / a.metrics.len() as f64;
             let b_score = b.metrics.values().sum::<f64>() / b.metrics.len() as f64;
-            a_score.partial_cmp(&b_score).unwrap()
+            a_score.partial_cmp(&b_score).expect("Operation failed")
         if let Some(best) = best_result {
             // Generate proposals near the best architecture
                 let mutated = best.architecture.mutate(0.1)?;
@@ -530,7 +530,7 @@ mod tests {
     fn create_dummy_result() -> SearchResult {
         let encoding =
             crate::nas::architecture_encoding::SequentialEncoding::random(&mut rng())
-                .unwrap();
+                .expect("Operation failed");
         let mut metrics = EvaluationMetrics::new();
         metrics.insert("accuracy".to_string(), 0.95);
         SearchResult {
@@ -542,16 +542,16 @@ mod tests {
     #[test]
     fn test_random_search() {
         let search = RandomSearch::new();
-        let proposals = search.propose_architectures(&[], 5).unwrap();
+        let proposals = search.propose_architectures(&[], 5).expect("Operation failed");
         assert_eq!(proposals.len(), 5);
     fn test_evolutionary_search() {
         let mut search = EvolutionarySearch::new(10);
         // Test update
         let results = vec![create_dummy_result(); 5];
-        search.update(&results).unwrap();
+        search.update(&results).expect("Operation failed");
     fn test_reinforcement_search() {
         let mut search = ReinforcementSearch::new();
-        let proposals = search.propose_architectures(&[], 3).unwrap();
+        let proposals = search.propose_architectures(&[], 3).expect("Operation failed");
         assert_eq!(proposals.len(), 3);
         let results = vec![create_dummy_result(); 3];
         assert!(search.baseline.is_some());

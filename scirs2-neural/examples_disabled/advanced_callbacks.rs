@@ -57,7 +57,7 @@ fn calculate_mse<F: Float + Debug + ScalarOperand>(
     for i in 0..x.nrows() {
         let diff = predictions[[i, 0]] - y[[i, 0]];
         sum_squared_error = sum_squared_error + diff * diff;
-    Ok(sum_squared_error / F::from(x.nrows()).unwrap())
+    Ok(sum_squared_error / F::from(x.nrows()).expect("Operation failed"))
 #[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Advanced Learning Rate Scheduling and Early Stopping Example");

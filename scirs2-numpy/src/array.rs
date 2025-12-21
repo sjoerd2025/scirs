@@ -84,7 +84,7 @@ use crate::untyped_array::{PyUntypedArray, PyUntypedArrayMethods};
 /// use pyo3::Python;
 ///
 /// Python::attach(|py| {
-///     let pyarray = PyArray::arange(py, 0., 4., 1.).reshape([2, 2]).unwrap();
+///     let pyarray = PyArray::arange(py, 0., 4., 1.).reshape([2, 2]).expect("Operation failed");
 ///     let array = array![[3., 4.], [5., 6.]];
 ///
 ///     assert_eq!(
@@ -364,7 +364,7 @@ impl<T: Element, D: Dimension> PyArray<T, D> {
     /// Python::attach(|py| {
     ///     let pyarray = PyArray2::<usize>::zeros(py, [2, 2], true);
     ///
-    ///     assert_eq!(pyarray.readonly().as_slice().unwrap(), [0; 4]);
+    ///     assert_eq!(pyarray.readonly().as_slice().expect("Operation failed"), [0; 4]);
     /// });
     /// ```
     ///
@@ -468,16 +468,16 @@ impl<D: Dimension> PyArray<Py<PyAny>, D> {
     ///         Py::new(py, CustomElement {
     ///             foo: 1,
     ///             bar: 2.0,
-    ///         }).unwrap(),
+    ///         }).expect("Operation failed"),
     ///         Py::new(py, CustomElement {
     ///             foo: 3,
     ///             bar: 4.0,
-    ///         }).unwrap(),
+    ///         }).expect("Operation failed"),
     ///     ];
     ///
     ///     let pyarray = PyArray::from_owned_object_array(py, array);
     ///
-    ///     assert!(pyarray.readonly().as_array().get(0).unwrap().bind(py).is_instance_of::<CustomElement>());
+    ///     assert!(pyarray.readonly().as_array().get(0).expect("Operation failed").bind(py).is_instance_of::<CustomElement>());
     /// });
     /// ```
     pub fn from_owned_object_array<T>(py: Python<'_>, mut arr: Array<Py<T>, D>) -> Bound<'_, Self> {
@@ -507,7 +507,7 @@ impl<T: Element> PyArray<T, Ix1> {
     /// Python::attach(|py| {
     ///     let slice = &[1, 2, 3, 4, 5];
     ///     let pyarray = PyArray::from_slice(py, slice);
-    ///     assert_eq!(pyarray.readonly().as_slice().unwrap(), &[1, 2, 3, 4, 5]);
+    ///     assert_eq!(pyarray.readonly().as_slice().expect("Operation failed"), &[1, 2, 3, 4, 5]);
     /// });
     /// ```
     pub fn from_slice<'py>(py: Python<'py>, slice: &[T]) -> Bound<'py, Self> {
@@ -530,7 +530,7 @@ impl<T: Element> PyArray<T, Ix1> {
     /// Python::attach(|py| {
     ///     let vec = vec![1, 2, 3, 4, 5];
     ///     let pyarray = PyArray::from_vec(py, vec);
-    ///     assert_eq!(pyarray.readonly().as_slice().unwrap(), &[1, 2, 3, 4, 5]);
+    ///     assert_eq!(pyarray.readonly().as_slice().expect("Operation failed"), &[1, 2, 3, 4, 5]);
     /// });
     /// ```
     #[inline(always)]
@@ -551,7 +551,7 @@ impl<T: Element> PyArray<T, Ix1> {
     ///
     /// Python::attach(|py| {
     ///     let pyarray = PyArray::from_iter(py, "abcde".chars().map(u32::from));
-    ///     assert_eq!(pyarray.readonly().as_slice().unwrap(), &[97, 98, 99, 100, 101]);
+    ///     assert_eq!(pyarray.readonly().as_slice().expect("Operation failed"), &[97, 98, 99, 100, 101]);
     /// });
     /// ```
     pub fn from_iter<I>(py: Python<'_>, iter: I) -> Bound<'_, Self>
@@ -578,7 +578,7 @@ impl<T: Element> PyArray<T, Ix2> {
     ///
     /// Python::attach(|py| {
     ///     let vec2 = vec![vec![11, 12], vec![21, 22]];
-    ///     let pyarray = PyArray::from_vec2(py, &vec2).unwrap();
+    ///     let pyarray = PyArray::from_vec2(py, &vec2).expect("Operation failed");
     ///     assert_eq!(pyarray.readonly().as_array(), array![[11, 12], [21, 22]]);
     ///
     ///     let ragged_vec2 = vec![vec![11, 12], vec![21]];
@@ -622,7 +622,7 @@ impl<T: Element> PyArray<T, Ix3> {
     ///         vec![vec![111, 112], vec![121, 122]],
     ///         vec![vec![211, 212], vec![221, 222]],
     ///     ];
-    ///     let pyarray = PyArray::from_vec3(py, &vec3).unwrap();
+    ///     let pyarray = PyArray::from_vec3(py, &vec3).expect("Operation failed");
     ///     assert_eq!(
     ///         pyarray.readonly().as_array(),
     ///         array![[[111, 112], [121, 122]], [[211, 212], [221, 222]]]
@@ -677,10 +677,10 @@ impl<T: Element + AsPrimitive<f64>> PyArray<T, Ix1> {
     ///
     /// Python::attach(|py| {
     ///     let pyarray = PyArray::arange(py, 2.0, 4.0, 0.5);
-    ///     assert_eq!(pyarray.readonly().as_slice().unwrap(), &[2.0, 2.5, 3.0, 3.5]);
+    ///     assert_eq!(pyarray.readonly().as_slice().expect("Operation failed"), &[2.0, 2.5, 3.0, 3.5]);
     ///
     ///     let pyarray = PyArray::arange(py, -2, 4, 3);
-    ///     assert_eq!(pyarray.readonly().as_slice().unwrap(), &[-2, 1]);
+    ///     assert_eq!(pyarray.readonly().as_slice().expect("Operation failed"), &[-2, 1]);
     /// });
     /// ```
     ///
@@ -790,9 +790,9 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     /// use pyo3::Python;
     ///
     /// Python::attach(|py| {
-    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).unwrap();
+    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).expect("Operation failed");
     ///
-    ///     assert_eq!(unsafe { *pyarray.get([1, 0, 3]).unwrap() }, 11);
+    ///     assert_eq!(unsafe { *pyarray.get([1, 0, 3]).expect("Operation failed") }, 11);
     /// });
     /// ```
     unsafe fn get(&self, index: impl NpyIndex<Dim = D>) -> Option<&T>
@@ -817,13 +817,13 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     /// use pyo3::Python;
     ///
     /// Python::attach(|py| {
-    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).unwrap();
+    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).expect("Operation failed");
     ///
     ///     unsafe {
-    ///         *pyarray.get_mut([1, 0, 3]).unwrap() = 42;
+    ///         *pyarray.get_mut([1, 0, 3]).expect("Operation failed") = 42;
     ///     }
     ///
-    ///     assert_eq!(unsafe { *pyarray.get([1, 0, 3]).unwrap() }, 42);
+    ///     assert_eq!(unsafe { *pyarray.get([1, 0, 3]).expect("Operation failed") }, 42);
     /// });
     /// ```
     #[allow(clippy::mut_from_ref)]
@@ -852,7 +852,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     /// use pyo3::Python;
     ///
     /// Python::attach(|py| {
-    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).unwrap();
+    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).expect("Operation failed");
     ///
     ///     assert_eq!(unsafe { *pyarray.uget([1, 0, 3]) }, 11);
     /// });
@@ -913,7 +913,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     /// use pyo3::Python;
     ///
     /// Python::attach(|py| {
-    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).unwrap();
+    ///     let pyarray = PyArray::arange(py, 0, 16, 1).reshape([2, 2, 4]).expect("Operation failed");
     ///
     ///     assert_eq!(pyarray.get_owned([1, 0, 3]), Some(11));
     /// });
@@ -974,7 +974,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
         T: Element,
         D: Dimension,
     {
-        self.try_readonly().unwrap()
+        self.try_readonly().expect("Operation failed")
     }
 
     /// Get a mutable borrow of the NumPy array
@@ -998,7 +998,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
         T: Element,
         D: Dimension,
     {
-        self.try_readwrite().unwrap()
+        self.try_readwrite().expect("Operation failed")
     }
 
     /// Returns an [`ArrayView`] of the internal array.
@@ -1047,7 +1047,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     /// use pyo3::Python;
     ///
     /// Python::attach(|py| {
-    ///     let pyarray = PyArray::arange(py, 0, 4, 1).reshape([2, 2]).unwrap();
+    ///     let pyarray = PyArray::arange(py, 0, 4, 1).reshape([2, 2]).expect("Operation failed");
     ///
     ///     assert_eq!(
     ///         pyarray.to_owned_array(),
@@ -1076,7 +1076,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     ///
     ///     assert!(pyarray_f.copy_to(&pyarray_i).is_ok());
     ///
-    ///     assert_eq!(pyarray_i.readonly().as_slice().unwrap(), &[2, 3, 4]);
+    ///     assert_eq!(pyarray_i.readonly().as_slice().expect("Operation failed"), &[2, 3, 4]);
     /// });
     /// ```
     ///
@@ -1108,9 +1108,9 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     /// Python::attach(|py| {
     ///     let pyarray_f = PyArray::arange(py, 2.0, 5.0, 1.0);
     ///
-    ///     let pyarray_i = pyarray_f.cast_array::<i32>(false).unwrap();
+    ///     let pyarray_i = pyarray_f.cast_array::<i32>(false).expect("Operation failed");
     ///
-    ///     assert_eq!(pyarray_i.readonly().as_slice().unwrap(), &[2, 3, 4]);
+    ///     assert_eq!(pyarray_i.readonly().as_slice().expect("Operation failed"), &[2, 3, 4]);
     /// });
     /// ```
     ///
@@ -1136,7 +1136,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     /// Python::attach(|py| {
     ///     let array = array![[0, 1, 2], [3, 4, 5]].into_pyarray(py);
     ///
-    ///     let array = array.permute(Some([1, 0])).unwrap();
+    ///     let array = array.permute(Some([1, 0])).expect("Operation failed");
     ///
     ///     assert_eq!(array.readonly().as_array(), array![[0, 3], [1, 4], [2, 5]]);
     /// });
@@ -1172,7 +1172,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     ///
     /// Python::attach(|py| {
     ///     let array =
-    ///         PyArray::from_iter(py, 0..9).reshape_with_order([3, 3], NPY_ORDER::NPY_FORTRANORDER).unwrap();
+    ///         PyArray::from_iter(py, 0..9).reshape_with_order([3, 3], NPY_ORDER::NPY_FORTRANORDER).expect("Operation failed");
     ///
     ///     assert_eq!(array.readonly().as_array(), array![[0, 3, 6], [1, 4, 7], [2, 5, 8]]);
     ///     assert!(array.is_fortran_contiguous());
@@ -1224,7 +1224,7 @@ pub trait PyArrayMethods<'py, T, D>: PyUntypedArrayMethods<'py> {
     ///     assert_eq!(pyarray.shape(), [10, 10]);
     ///
     ///     unsafe {
-    ///         pyarray.resize((100, 100)).unwrap();
+    ///         pyarray.resize((100, 100)).expect("Operation failed");
     ///     }
     ///     assert_eq!(pyarray.shape(), [100, 100]);
     /// });
@@ -1667,7 +1667,7 @@ mod tests {
     fn test_dyn_to_owned_array() {
         Python::attach(|py| {
             let array = PyArray::from_vec2(py, &[vec![1, 2], vec![3, 4]])
-                .unwrap()
+                .expect("Operation failed")
                 .to_dyn()
                 .to_owned_array();
 

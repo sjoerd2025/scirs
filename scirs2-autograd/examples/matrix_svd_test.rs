@@ -18,9 +18,9 @@ fn main() {
         let (u, s, v) = svd(mat_tensor);
 
         println!("SVD result from autograd:");
-        let u_val = u.eval(g).unwrap();
-        let s_val = s.eval(g).unwrap();
-        let v_val = v.eval(g).unwrap();
+        let u_val = u.eval(g).expect("Operation failed");
+        let s_val = s.eval(g).expect("Operation failed");
+        let v_val = v.eval(g).expect("Operation failed");
 
         println!("U shape: {:?}", u_val.shape());
         println!("S shape: {:?}", s_val.shape());

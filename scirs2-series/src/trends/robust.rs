@@ -51,7 +51,7 @@ use crate::error::{Result, TimeSeriesError};
 /// };
 ///
 /// // Apply robust trend filter
-/// let trend = robust_trend_filter(&ts, &options).unwrap();
+/// let trend = robust_trend_filter(&ts, &options).expect("Operation failed");
 ///
 /// // The trend should have the same length as the input
 /// assert_eq!(trend.len(), ts.len());
@@ -108,19 +108,20 @@ where
     let n = abs_residuals.len();
     let median_idx = n / 2;
     let mad = if n.is_multiple_of(2) {
-        (abs_residuals[median_idx - 1] + abs_residuals[median_idx]) / F::from_f64(2.0).unwrap()
+        (abs_residuals[median_idx - 1] + abs_residuals[median_idx])
+            / F::from_f64(2.0).expect("Operation failed")
     } else {
         abs_residuals[median_idx]
     };
 
     // Use MAD to scale residuals (with consistency factor for normal distribution)
-    let mad_scale = mad / F::from_f64(0.6745).unwrap();
+    let mad_scale = mad / F::from_f64(0.6745).expect("Operation failed");
 
     // If MAD is zero, use a small positive value to avoid division by zero
-    let scale = if mad_scale > F::from_f64(1e-10).unwrap() {
+    let scale = if mad_scale > F::from_f64(1e-10).expect("Operation failed") {
         mad_scale
     } else {
-        F::from_f64(1e-10).unwrap()
+        F::from_f64(1e-10).expect("Operation failed")
     };
 
     let scaled_residuals: Vec<F> = residuals.iter().map(|&r| r.abs() / scale).collect();
@@ -148,9 +149,13 @@ where
                     }
                 }
                 WeightFunction::Andrews => {
-                    if scaled_u < F::from_f64(std::f64::consts::PI).unwrap() {
-                        let sin_val = (scaled_u * F::from_f64(std::f64::consts::PI).unwrap()).sin();
-                        sin_val / (scaled_u * F::from_f64(std::f64::consts::PI).unwrap())
+                    if scaled_u < F::from_f64(std::f64::consts::PI).expect("Operation failed") {
+                        let sin_val = (scaled_u
+                            * F::from_f64(std::f64::consts::PI).expect("Operation failed"))
+                        .sin();
+                        sin_val
+                            / (scaled_u
+                                * F::from_f64(std::f64::consts::PI).expect("Operation failed"))
                     } else {
                         F::zero()
                     }
@@ -170,10 +175,10 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     let n = ts.len();
-    let lambda = F::from_f64(options.lambda).unwrap();
+    let lambda = F::from_f64(options.lambda).expect("Operation failed");
     let max_iter = options.max_iter;
-    let tol = F::from_f64(options.tol).unwrap();
-    let tuning_parameter = F::from_f64(options.tuning_parameter).unwrap();
+    let tol = F::from_f64(options.tol).expect("Operation failed");
+    let tuning_parameter = F::from_f64(options.tuning_parameter).expect("Operation failed");
 
     // Create second-difference matrix (for Hodrick-Prescott)
     let d = super::create_difference_matrix::<F>(n, 2);
@@ -279,9 +284,9 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     let n = ts.len();
-    let lambda = F::from_f64(options.lambda).unwrap();
+    let lambda = F::from_f64(options.lambda).expect("Operation failed");
     let max_iter = options.max_iter;
-    let tol = F::from_f64(options.tol).unwrap();
+    let tol = F::from_f64(options.tol).expect("Operation failed");
     let order = options.order;
 
     // Create difference matrix of specified order
@@ -402,11 +407,11 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     let n = ts.len();
-    let lambda = F::from_f64(options.lambda).unwrap();
+    let lambda = F::from_f64(options.lambda).expect("Operation failed");
     let max_iter = options.max_iter;
-    let tol = F::from_f64(options.tol).unwrap();
+    let tol = F::from_f64(options.tol).expect("Operation failed");
     let order = options.order;
-    let tuning_parameter = F::from_f64(options.tuning_parameter).unwrap();
+    let tuning_parameter = F::from_f64(options.tuning_parameter).expect("Operation failed");
 
     // Create difference matrix of specified order
     let d = super::create_difference_matrix::<F>(n, order);

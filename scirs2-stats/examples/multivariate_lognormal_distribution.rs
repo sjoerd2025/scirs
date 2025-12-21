@@ -142,7 +142,7 @@ fn calculate_median(samples: &Array2<f64>, nsamples: usize) -> Array1<f64> {
 
     for j in 0..dim {
         let mut values: Vec<f64> = samples.column(j).to_vec();
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
         if nsamples.is_multiple_of(2) {
             // Even number of samples, take average of middle two

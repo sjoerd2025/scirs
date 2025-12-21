@@ -211,7 +211,7 @@ mod tests {
     fn test_circulant_creation() {
         let first_row = array![1.0, 2.0, 3.0, 4.0];
 
-        let circulant = CirculantMatrix::new(first_row.view()).unwrap();
+        let circulant = CirculantMatrix::new(first_row.view()).expect("Operation failed");
 
         assert_eq!(circulant.nrows(), 4);
         assert_eq!(circulant.ncols(), 4);
@@ -223,25 +223,25 @@ mod tests {
         // [3 4 1 2]
         // [2 3 4 1]
 
-        assert_relative_eq!(circulant.get(0, 0).unwrap(), 1.0);
-        assert_relative_eq!(circulant.get(0, 1).unwrap(), 2.0);
-        assert_relative_eq!(circulant.get(0, 2).unwrap(), 3.0);
-        assert_relative_eq!(circulant.get(0, 3).unwrap(), 4.0);
+        assert_relative_eq!(circulant.get(0, 0).expect("Operation failed"), 1.0);
+        assert_relative_eq!(circulant.get(0, 1).expect("Operation failed"), 2.0);
+        assert_relative_eq!(circulant.get(0, 2).expect("Operation failed"), 3.0);
+        assert_relative_eq!(circulant.get(0, 3).expect("Operation failed"), 4.0);
 
-        assert_relative_eq!(circulant.get(1, 0).unwrap(), 4.0);
-        assert_relative_eq!(circulant.get(1, 1).unwrap(), 1.0);
-        assert_relative_eq!(circulant.get(1, 2).unwrap(), 2.0);
-        assert_relative_eq!(circulant.get(1, 3).unwrap(), 3.0);
+        assert_relative_eq!(circulant.get(1, 0).expect("Operation failed"), 4.0);
+        assert_relative_eq!(circulant.get(1, 1).expect("Operation failed"), 1.0);
+        assert_relative_eq!(circulant.get(1, 2).expect("Operation failed"), 2.0);
+        assert_relative_eq!(circulant.get(1, 3).expect("Operation failed"), 3.0);
 
-        assert_relative_eq!(circulant.get(2, 0).unwrap(), 3.0);
-        assert_relative_eq!(circulant.get(2, 1).unwrap(), 4.0);
-        assert_relative_eq!(circulant.get(2, 2).unwrap(), 1.0);
-        assert_relative_eq!(circulant.get(2, 3).unwrap(), 2.0);
+        assert_relative_eq!(circulant.get(2, 0).expect("Operation failed"), 3.0);
+        assert_relative_eq!(circulant.get(2, 1).expect("Operation failed"), 4.0);
+        assert_relative_eq!(circulant.get(2, 2).expect("Operation failed"), 1.0);
+        assert_relative_eq!(circulant.get(2, 3).expect("Operation failed"), 2.0);
 
-        assert_relative_eq!(circulant.get(3, 0).unwrap(), 2.0);
-        assert_relative_eq!(circulant.get(3, 1).unwrap(), 3.0);
-        assert_relative_eq!(circulant.get(3, 2).unwrap(), 4.0);
-        assert_relative_eq!(circulant.get(3, 3).unwrap(), 1.0);
+        assert_relative_eq!(circulant.get(3, 0).expect("Operation failed"), 2.0);
+        assert_relative_eq!(circulant.get(3, 1).expect("Operation failed"), 3.0);
+        assert_relative_eq!(circulant.get(3, 2).expect("Operation failed"), 4.0);
+        assert_relative_eq!(circulant.get(3, 3).expect("Operation failed"), 1.0);
     }
 
     #[test]
@@ -249,7 +249,7 @@ mod tests {
         // Test circular convolution representation
         let kernel = array![5.0, 1.0, 2.0, 3.0];
 
-        let circulant = CirculantMatrix::from_kernel(kernel.view()).unwrap();
+        let circulant = CirculantMatrix::from_kernel(kernel.view()).expect("Operation failed");
 
         // For kernel [5, 1, 2, 3], the first row of the circulant matrix for convolution
         // should be [5, 3, 2, 1] (first element stays, rest are reversed)
@@ -264,7 +264,7 @@ mod tests {
     fn test_circulant_matvec() {
         let first_row = array![1.0, 2.0, 3.0, 4.0];
 
-        let circulant = CirculantMatrix::new(first_row.view()).unwrap();
+        let circulant = CirculantMatrix::new(first_row.view()).expect("Operation failed");
 
         // Expected matrix:
         // [1 2 3 4]
@@ -273,7 +273,7 @@ mod tests {
         // [2 3 4 1]
 
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let y = circulant.matvec(&x.view()).unwrap();
+        let y = circulant.matvec(&x.view()).expect("Operation failed");
 
         // Actual calculated result with current implementation:
         // = [30, 24, 22, 24]
@@ -288,7 +288,7 @@ mod tests {
     fn test_circulant_matvec_transpose() {
         let first_row = array![1.0, 2.0, 3.0, 4.0];
 
-        let circulant = CirculantMatrix::new(first_row.view()).unwrap();
+        let circulant = CirculantMatrix::new(first_row.view()).expect("Operation failed");
 
         // Transpose of circulant matrix:
         // [1 4 3 2]
@@ -297,7 +297,9 @@ mod tests {
         // [4 3 2 1]
 
         let x = array![1.0, 2.0, 3.0, 4.0];
-        let y = circulant.matvec_transpose(&x.view()).unwrap();
+        let y = circulant
+            .matvec_transpose(&x.view())
+            .expect("Operation failed");
 
         // Actual calculated result with current implementation:
         // = [30, 24, 22, 24]
@@ -312,9 +314,9 @@ mod tests {
     fn test_circulant_to_dense() {
         let first_row = array![1.0, 2.0, 3.0, 4.0];
 
-        let circulant = CirculantMatrix::new(first_row.view()).unwrap();
+        let circulant = CirculantMatrix::new(first_row.view()).expect("Operation failed");
 
-        let dense = circulant.to_dense().unwrap();
+        let dense = circulant.to_dense().expect("Operation failed");
 
         assert_eq!(dense.shape(), &[4, 4]);
 

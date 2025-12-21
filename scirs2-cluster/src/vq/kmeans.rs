@@ -30,7 +30,7 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
     fn default() -> Self {
         Self {
             max_iter: 300,
-            tol: F::from(1e-4).unwrap(),
+            tol: F::from(1e-4).expect("Failed to convert constant to float"),
             random_seed: None,
             n_init: 10,
             init_method: KMeansInit::KMeansPlusPlus,
@@ -68,9 +68,9 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
 ///     3.7, 4.2,
 ///     3.9, 3.9,
 ///     4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let (centroids, distortion) = kmeans(data.view(), 2, Some(20), Some(1e-5), Some(true), Some(42)).unwrap();
+/// let (centroids, distortion) = kmeans(data.view(), 2, Some(20), Some(1e-5), Some(true), Some(42)).expect("Operation failed");
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
@@ -87,7 +87,7 @@ where
 {
     let k = k_or_guess; // For now, just treat as number of clusters
     let max_iter = iter.unwrap_or(20);
-    let tol = thresh.unwrap_or(F::from(1e-5).unwrap());
+    let tol = thresh.unwrap_or(F::from(1e-5).expect("Failed to convert constant to float"));
     let _check_finite_flag = check_finite.unwrap_or(true);
 
     // Basic validation
@@ -157,9 +157,9 @@ where
 ///     3.7, 4.2,
 ///     3.9, 3.9,
 ///     4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
-/// let (centroids, labels) = kmeans_with_options(data.view(), 2, None).unwrap();
+/// let (centroids, labels) = kmeans_with_options(data.view(), 2, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn kmeans_with_options<F>(
@@ -218,7 +218,10 @@ where
         }
     }
 
-    Ok((bestcentroids.unwrap(), best_labels.unwrap()))
+    Ok((
+        bestcentroids.expect("Operation failed"),
+        best_labels.expect("Operation failed"),
+    ))
 }
 
 /// Calculate distortion (sum of squared distances to centroids)
@@ -308,7 +311,8 @@ where
             } else {
                 // Normalize by the number of points in the cluster
                 for j in 0..n_features {
-                    newcentroids[[i, j]] = newcentroids[[i, j]] / F::from(counts[i]).unwrap();
+                    newcentroids[[i, j]] = newcentroids[[i, j]]
+                        / F::from(counts[i]).expect("Failed to convert to float");
                 }
             }
         }
@@ -501,7 +505,7 @@ where
             weights.mapv_inplace(|w| w / sum_weights);
         } else {
             // If all weights are zero, use uniform distribution
-            weights.fill(F::from(1.0 / n_samples as f64).unwrap());
+            weights.fill(F::from(1.0 / n_samples as f64).expect("Failed to convert to float"));
         }
 
         // Convert weights to cumulative distribution
@@ -511,7 +515,7 @@ where
         }
 
         // Sample the next centroid based on the probability distribution
-        let rand_val = F::from(rng.random_range(0.0..1.0)).unwrap();
+        let rand_val = F::from(rng.random_range(0.0..1.0)).expect("Operation failed");
         let mut next_idx = 0;
 
         for j in 0..n_samples {
@@ -570,7 +574,7 @@ where
     let mut rng = scirs2_core::random::rng();
 
     // Hyperparameters for K-means||
-    let l = F::from(5.0).unwrap(); // Multiplication factor for oversampling
+    let l = F::from(5.0).expect("Failed to convert constant to float"); // Multiplication factor for oversampling
     let n_rounds = 8; // Number of rounds for parallel sampling
 
     // Centers is a weighted set of candidate centers
@@ -615,14 +619,14 @@ where
         }
 
         // Sample new centers proportional to their squared distance
-        let expected_new_centers = l * F::from(k).unwrap();
+        let expected_new_centers = l * F::from(k).expect("Failed to convert to float");
         let oversampling = F::min(expected_new_centers / potential, F::one());
 
         for sample_idx in 0..n_samples {
             let probability = min_distances[sample_idx] * min_distances[sample_idx] * oversampling;
 
             // Sample with probability proportional to distance^2
-            if F::from(rng.random_range(0.0..1.0)).unwrap() < probability {
+            if F::from(rng.random_range(0.0..1.0)).expect("Operation failed") < probability {
                 let mut new_center = Vec::with_capacity(n_features);
                 for j in 0..n_features {
                     new_center.push(data[[sample_idx, j]]);
@@ -651,7 +655,7 @@ where
             // Use regular k-means with weights to reduce to k centers
             let options = KMeansOptions {
                 max_iter: 100,
-                tol: F::from(1e-4).unwrap(),
+                tol: F::from(1e-4).expect("Failed to convert constant to float"),
                 random_seed,
                 n_init: 1,
                 init_method: KMeansInit::KMeansPlusPlus,
@@ -851,10 +855,10 @@ where
 ///     3.7, 4.2,
 ///     3.9, 3.9,
 ///     4.2, 4.1,
-/// ]).unwrap();
+/// ]).expect("Operation failed");
 ///
 /// let metric = Box::new(EuclideanDistance);
-/// let (centroids, labels) = kmeans_with_metric(data.view(), 2, metric, None).unwrap();
+/// let (centroids, labels) = kmeans_with_metric(data.view(), 2, metric, None).expect("Operation failed");
 /// ```
 #[allow(dead_code)]
 pub fn kmeans_with_metric<F>(
@@ -914,7 +918,10 @@ where
         }
     }
 
-    Ok((bestcentroids.unwrap(), best_labels.unwrap()))
+    Ok((
+        bestcentroids.expect("Operation failed"),
+        best_labels.expect("Operation failed"),
+    ))
 }
 
 /// Run a single k-means clustering iteration with custom distance metric
@@ -980,7 +987,8 @@ where
             } else {
                 // Normalize by the number of points in the cluster
                 for j in 0..n_features {
-                    newcentroids[[i, j]] = newcentroids[[i, j]] / F::from(counts[i]).unwrap();
+                    newcentroids[[i, j]] = newcentroids[[i, j]]
+                        / F::from(counts[i]).expect("Failed to convert to float");
                 }
             }
         }
@@ -1062,7 +1070,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run k-means with random initialization
         let options = KMeansOptions {
@@ -1073,7 +1081,7 @@ mod tests {
         let result = kmeans_with_options(data.view(), 2, Some(options));
         assert!(result.is_ok());
 
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -1091,7 +1099,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run k-means with k-means++ initialization
         let options = KMeansOptions {
@@ -1102,7 +1110,7 @@ mod tests {
         let result = kmeans_with_options(data.view(), 2, Some(options));
         assert!(result.is_ok());
 
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -1124,7 +1132,7 @@ mod tests {
                 5.0, 6.3, 5.4, 5.6, 4.7, 5.9, 5.2, 6.2,
             ],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Run k-means with k-means|| initialization
         let options = KMeansOptions {
@@ -1135,7 +1143,7 @@ mod tests {
         let result = kmeans_with_options(data.view(), 2, Some(options));
         assert!(result.is_ok());
 
-        let (centroids, labels) = result.unwrap();
+        let (centroids, labels) = result.expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -1165,7 +1173,7 @@ mod tests {
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
-        .unwrap();
+        .expect("Operation failed");
 
         // Test with all parameters
         let result = kmeans(
@@ -1178,7 +1186,7 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        let (centroids, distortion) = result.unwrap();
+        let (centroids, distortion) = result.expect("Operation failed");
 
         // Check dimensions
         assert_eq!(centroids.shape(), &[2, 2]);
@@ -1197,15 +1205,15 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        let (centroids2, distortion2) = result.unwrap();
+        let (centroids2, distortion2) = result.expect("Operation failed");
         assert_eq!(centroids2.shape(), &[2, 2]);
         assert!(distortion2 > 0.0);
     }
 
     #[test]
     fn test_scipy_kmeans_check_finite() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.5, 8.0, 8.0, 8.5, 8.5]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.5, 8.0, 8.0, 8.5, 8.5])
+            .expect("Operation failed");
 
         // Test with check_finite = true (should work with finite data)
         let result = kmeans(

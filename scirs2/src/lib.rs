@@ -70,14 +70,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.1.0-rc.3", features = ["linalg", "stats"] }
+//! scirs2 = { version = "0.1.0-rc.4", features = ["linalg", "stats"] }
 //! ```
 //!
 //! Or install all features:
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.1.0-rc.3", features = ["full"] }
+//! scirs2 = { version = "0.1.0-rc.4", features = ["full"] }
 //! ```
 //!
 //! ### Linear Algebra Example
@@ -234,7 +234,7 @@
 //! - **Deprecation Policy**: 2-release deprecation cycle
 //! - **Production Features**: Enterprise-grade error handling and diagnostics
 //!
-//! Current version: **0.1.0-rc.3** (Released December 17, 2025)
+//! Current version: **0.1.0-rc.4** (Released December 21, 2025)
 //!
 //! ## 🤝 Ecosystem Integration
 //!

@@ -207,7 +207,7 @@ where
                 // Only need to check upper triangular elements
                 // Compare with sufficient tolerance for floating point comparisons
                 let diff = (dense[i][j] - dense[j][i]).abs();
-                let epsilon = T::epsilon() * T::from(100.0).unwrap();
+                let epsilon = T::epsilon() * T::from(100.0).expect("Operation failed");
                 if diff > epsilon {
                     return false;
                 }
@@ -621,7 +621,7 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 2];
         let cols = vec![0, 0, 1, 1, 2];
 
-        let sym = SymCooMatrix::new(data, rows, cols, (3, 3)).unwrap();
+        let sym = SymCooMatrix::new(data, rows, cols, (3, 3)).expect("Operation failed");
 
         assert_eq!(sym.shape(), (3, 3));
         assert_eq!(sym.nnz_stored(), 5);
@@ -652,13 +652,13 @@ mod tests {
         let rows = vec![0, 0, 1, 1, 1, 2, 2];
         let cols = vec![0, 1, 0, 1, 2, 1, 2];
 
-        let coo = CooMatrix::new(data, rows, cols, (3, 3)).unwrap();
-        let sym = SymCooMatrix::from_coo(&coo).unwrap();
+        let coo = CooMatrix::new(data, rows, cols, (3, 3)).expect("Operation failed");
+        let sym = SymCooMatrix::from_coo(&coo).expect("Operation failed");
 
         assert_eq!(sym.shape(), (3, 3));
 
         // Convert back to standard COO
-        let coo2 = sym.to_coo().unwrap();
+        let coo2 = sym.to_coo().expect("Operation failed");
         let dense = coo2.to_dense();
 
         // Check the full matrix
@@ -680,13 +680,13 @@ mod tests {
         let rows = vec![0, 1, 1, 2, 2];
         let cols = vec![0, 0, 1, 1, 2];
 
-        let symmatrix = SymCooMatrix::new(data, rows, cols, (3, 3)).unwrap();
+        let symmatrix = SymCooMatrix::new(data, rows, cols, (3, 3)).expect("Operation failed");
         let sym_array = SymCooArray::new(symmatrix);
 
         assert_eq!(sym_array.inner().shape(), (3, 3));
 
         // Convert to standard COO array
-        let coo_array = sym_array.to_coo_array().unwrap();
+        let coo_array = sym_array.to_coo_array().expect("Operation failed");
 
         // Verify shape and values
         assert_eq!(coo_array.shape(), (3, 3));
@@ -709,7 +709,8 @@ mod tests {
         let cols = vec![0, 1, 2, 2, 0, 1, 1];
         let data = vec![2.0, 2.0, 3.0, 1.0, 1.0, 1.0, 3.0];
 
-        let sym_array = SymCooArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+        let sym_array = SymCooArray::from_triplets(&rows, &cols, &data, (3, 3), false)
+            .expect("Operation failed");
 
         assert_eq!(sym_array.shape(), (3, 3));
 
@@ -718,7 +719,8 @@ mod tests {
         let cols2 = vec![0, 1, 1, 2, 2, 0];
         let data2 = vec![2.0, 1.0, 2.0, 3.0, 1.0, 2.0]; // 1,0 element is 2.0 instead of 1.0
 
-        let sym_array2 = SymCooArray::from_triplets(&rows2, &cols2, &data2, (3, 3), true).unwrap();
+        let sym_array2 = SymCooArray::from_triplets(&rows2, &cols2, &data2, (3, 3), true)
+            .expect("Operation failed");
 
         // Should average the (1,0) and (0,1) elements to 1.5
         assert_eq!(sym_array2.inner().get(1, 0), 1.5);

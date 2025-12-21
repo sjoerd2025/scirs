@@ -218,8 +218,11 @@ impl SpikeSequence {
 
     /// Sort events by timestamp
     pub fn sort_by_time(&mut self) {
-        self.events
-            .sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
+        self.events.sort_by(|a, b| {
+            a.timestamp
+                .partial_cmp(&b.timestamp)
+                .expect("Operation failed")
+        });
     }
 
     /// Get events within a time window
@@ -352,7 +355,7 @@ mod tests {
         assert_eq!(sequence.len(), 2);
         assert!(!sequence.is_empty());
 
-        let time_span = sequence.time_span().unwrap();
+        let time_span = sequence.time_span().expect("Operation failed");
         assert_eq!(time_span.0, 100.0);
         assert_eq!(time_span.1, 105.0);
     }

@@ -19,13 +19,13 @@
 //!
 //! // Create a dense matrix and convert to sparse
 //! let dense_mat = array![[1.0, 0.0, 2.0], [0.0, 0.0, 3.0], [4.0, 5.0, 0.0]];
-//! let sparse_mat = sparse_from_ndarray(&dense_mat.view(), 1e-10).unwrap();
+//! let sparse_mat = sparse_from_ndarray(&dense_mat.view(), 1e-10).expect("Operation failed");
 //!
 //! // Create a dense vector
 //! let dense_vec = array![1.0, 2.0, 3.0];
 //!
 //! // Perform sparse-dense matrix-vector multiplication
-//! let result = sparse_dense_matvec(&sparse_mat, &dense_vec.view()).unwrap();
+//! let result = sparse_dense_matvec(&sparse_mat, &dense_vec.view()).expect("Operation failed");
 //! assert!(f64::abs(result[0] - 7.0) < 1e-10);
 //! assert!(f64::abs(result[1] - 9.0) < 1e-10);
 //! assert!(f64::abs(result[2] - 14.0) < 1e-10);
@@ -329,7 +329,8 @@ where
 
             // Compute dense_row * sparse_val for each dense row
             for (k, dense_row) in dense.axis_iter(Axis(0)).enumerate() {
-                col_sums.get_mut(&col).unwrap()[k] = col_sums[&col][k] + dense_row[i] * val;
+                col_sums.get_mut(&col).expect("Operation failed")[k] =
+                    col_sums[&col][k] + dense_row[i] * val;
             }
         }
     }
@@ -909,11 +910,11 @@ pub mod advanced {
 
                 if let Some(&val_ji) = elements.get(&(col, i)) {
                     let diff = (val_ij - val_ji).abs();
-                    let tolerance = T::epsilon() * T::from(100.0).unwrap();
+                    let tolerance = T::epsilon() * T::from(100.0).expect("Operation failed");
                     if diff > tolerance {
                         return false;
                     }
-                } else if val_ij.abs() > T::epsilon() * T::from(100.0).unwrap() {
+                } else if val_ij.abs() > T::epsilon() * T::from(100.0).expect("Operation failed") {
                     // Non-zero element has no symmetric counterpart
                     return false;
                 }
@@ -1013,7 +1014,7 @@ where
         advanced::adaptive_sparse_dense_solve(
             self,
             b,
-            T::epsilon() * T::from(1000.0).unwrap(),
+            T::epsilon() * T::from(1000.0).expect("Operation failed"),
             1000,
         )
     }
@@ -1053,7 +1054,7 @@ pub mod utils {
         // Analyze matrix sparsity
         let total_elements = matrix.len();
         let mut zero_count = 0;
-        let threshold = T::epsilon() * T::from(1000.0).unwrap();
+        let threshold = T::epsilon() * T::from(1000.0).expect("Operation failed");
 
         for &val in matrix.iter() {
             if val.abs() < threshold {
@@ -1120,7 +1121,7 @@ mod tests {
     fn test_sparse_from_ndarray() {
         let dense = array![[1.0, 0.0, 2.0], [0.0, 0.0, 3.0], [4.0, 5.0, 0.0]];
 
-        let sparse = sparse_from_ndarray(&dense.view(), 1e-10).unwrap();
+        let sparse = sparse_from_ndarray(&dense.view(), 1e-10).expect("Operation failed");
 
         // Check dimensions
         assert_eq!(sparse.shape(), (3, 3));
@@ -1141,10 +1142,10 @@ mod tests {
 
         let dense_b = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
-        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();
+        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).expect("Operation failed");
 
         // Sparse-dense multiplication
-        let result = sparse_dense_matmul(&sparse_a, &dense_b.view()).unwrap();
+        let result = sparse_dense_matmul(&sparse_a, &dense_b.view()).expect("Operation failed");
 
         // Expected result of A * B
         let expected = array![[11.0, 14.0], [15.0, 18.0], [19.0, 28.0]];
@@ -1163,10 +1164,10 @@ mod tests {
 
         let dense_b = array![[1.0, 0.0, 2.0], [0.0, 0.0, 3.0], [4.0, 5.0, 0.0]];
 
-        let sparse_b = sparse_from_ndarray(&dense_b.view(), 1e-10).unwrap();
+        let sparse_b = sparse_from_ndarray(&dense_b.view(), 1e-10).expect("Operation failed");
 
         // Dense-sparse multiplication
-        let result = dense_sparse_matmul(&dense_a.view(), &sparse_b).unwrap();
+        let result = dense_sparse_matmul(&dense_a.view(), &sparse_b).expect("Operation failed");
 
         // Manually compute the expected result by direct multiplication
         let expected = dense_a.dot(&dense_b);
@@ -1185,10 +1186,10 @@ mod tests {
 
         let vec_b = array![1.0, 2.0, 3.0];
 
-        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();
+        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).expect("Operation failed");
 
         // Sparse-dense matvec
-        let result = sparse_dense_matvec(&sparse_a, &vec_b.view()).unwrap();
+        let result = sparse_dense_matvec(&sparse_a, &vec_b.view()).expect("Operation failed");
 
         // Expected result of A * v
         let expected = array![7.0, 9.0, 14.0];
@@ -1205,10 +1206,10 @@ mod tests {
 
         let dense_b = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();
+        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).expect("Operation failed");
 
         // Sparse + dense
-        let result = sparse_dense_add(&sparse_a, &dense_b.view()).unwrap();
+        let result = sparse_dense_add(&sparse_a, &dense_b.view()).expect("Operation failed");
 
         // Expected result of A + B
         let expected = array![[2.0, 2.0, 5.0], [4.0, 5.0, 9.0], [11.0, 13.0, 9.0]];
@@ -1227,10 +1228,11 @@ mod tests {
 
         let dense_b = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
-        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();
+        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).expect("Operation failed");
 
         // Element-wise multiplication
-        let result = sparse_dense_elementwise_mul(&sparse_a, &dense_b.view()).unwrap();
+        let result =
+            sparse_dense_elementwise_mul(&sparse_a, &dense_b.view()).expect("Operation failed");
 
         // Convert to dense for comparison
         let result_dense = result.to_dense();
@@ -1250,10 +1252,10 @@ mod tests {
     fn test_sparse_transpose() {
         let dense_a = array![[1.0, 0.0, 2.0], [0.0, 0.0, 3.0], [4.0, 5.0, 0.0]];
 
-        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).unwrap();
+        let sparse_a = sparse_from_ndarray(&dense_a.view(), 1e-10).expect("Operation failed");
 
         // Transpose
-        let transposed = sparse_transpose(&sparse_a).unwrap();
+        let transposed = sparse_transpose(&sparse_a).expect("Operation failed");
 
         // Convert to dense for comparison
         let transposed_dense = transposed.to_dense();

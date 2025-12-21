@@ -120,7 +120,7 @@ impl PatternMemory {
         similar_patterns.sort_by(|a, b| {
             let sim_a = self.compute_similarity(fingerprint, &a.0);
             let sim_b = self.compute_similarity(fingerprint, &b.0);
-            sim_b.partial_cmp(&sim_a).unwrap()
+            sim_b.partial_cmp(&sim_a).expect("Operation failed")
         });
 
         similar_patterns

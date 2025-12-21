@@ -260,7 +260,7 @@ pub fn adaptive_model_selection(
     }
 
     // Sort candidates by score (lower is better for AIC/BIC)
-    model_candidates.sort_by(|a, b| a.score.partial_cmp(&b.score).unwrap());
+    model_candidates.sort_by(|a, b| a.score.partial_cmp(&b.score).expect("Operation failed"));
 
     if model_candidates.is_empty() {
         return Err(SignalError::ComputationError(
@@ -410,7 +410,7 @@ fn compute_ar_residuals(
 #[allow(dead_code)]
 fn compute_median_absolute_deviation(values: &Array1<f64>) -> f64 {
     let mut sorted_values: Vec<f64> = values.iter().copied().collect();
-    sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     let median = if sorted_values.len() % 2 == 0 {
         let mid = sorted_values.len() / 2;
@@ -420,7 +420,7 @@ fn compute_median_absolute_deviation(values: &Array1<f64>) -> f64 {
     };
 
     let mut deviations: Vec<f64> = sorted_values.iter().map(|&x| (x - median).abs()).collect();
-    deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    deviations.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
 
     if deviations.len() % 2 == 0 {
         let mid = deviations.len() / 2;
@@ -663,7 +663,7 @@ fn compute_autocorrelation(_data: &Array1<f64>, maxlag: usize) -> SignalResult<A
     let mut acf = Array1::zeros(max_lag + 1);
 
     // Compute mean
-    let mean = data.mean().unwrap();
+    let mean = data.mean().expect("Operation failed");
 
     // Compute variance
     let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
@@ -761,7 +761,7 @@ mod tests {
         let result = adaptive_model_selection(&signal, &config, &robust_config);
         assert!(result.is_ok());
 
-        let selection_result = result.unwrap();
+        let selection_result = result.expect("Operation failed");
 
         // Should prefer AR model (may not be exactly order 2 due to noise)
         assert!(matches!(selection_result.selected_model, ModelType::AR(_)));
@@ -787,7 +787,7 @@ mod tests {
         let result = estimate_ar_robust(&signal, 1, ARMethod::Burg, &robust_config);
 
         assert!(result.is_ok());
-        let (ar_coeffs_, variance) = result.unwrap();
+        let (ar_coeffs_, variance) = result.expect("Operation failed");
         assert!(ar_coeffs.len() == 2); // [1, a1]
         assert!(variance > 0.0);
     }

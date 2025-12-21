@@ -312,14 +312,14 @@ mod tests {
     fn test_sample_dataset_creation() {
         let result = create_sampledataset();
         assert!(result.is_ok());
-        let dataset = result.unwrap();
+        let dataset = result.expect("Operation failed");
         assert_eq!(dataset.n_samples(), 1000);
         assert_eq!(dataset.n_features(), 10);
     }
 
     #[test]
     fn test_advanced_analytics_integration() {
-        let dataset = create_sampledataset().unwrap();
+        let dataset = create_sampledataset().expect("Operation failed");
         let result = demonstrate_advanced_analytics(&dataset);
         assert!(result.is_ok());
     }
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_streaming_integration() {
-        let dataset = create_sampledataset().unwrap();
+        let dataset = create_sampledataset().expect("Operation failed");
         let result = demonstrate_adaptive_streaming(&dataset);
         assert!(result.is_ok());
     }

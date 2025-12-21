@@ -770,7 +770,7 @@ impl Default for AdvancedEnhancedSysIdConfig {
 /// }
 ///
 /// let config = AdvancedEnhancedSysIdConfig::default();
-/// let result = advanced_enhanced_system_identification(&input, &output, &config).unwrap();
+/// let result = advanced_enhanced_system_identification(&input, &output, &config).expect("Operation failed");
 ///
 /// assert!(result.base_result.validation.fit_percentage > 80.0);
 /// assert!(result.model_ensemble.models.len() > 0);
@@ -1246,8 +1246,8 @@ fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) ->
         ));
     }
 
-    check_finite(_input.as_slice().unwrap(), "_input")?;
-    check_finite(output.as_slice().unwrap(), "output")?;
+    check_finite(_input.as_slice().expect("Operation failed"), "_input")?;
+    check_finite(output.as_slice().expect("Operation failed"), "output")?;
 
     Ok(())
 }
@@ -1391,8 +1391,8 @@ fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<Model
     // Select best single model
     let best_model = _models
         .into_iter()
-        .max_by(|a, b| a.weight.partial_cmp(&b.weight).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.weight.partial_cmp(&b.weight).expect("Operation failed"))
+        .expect("Operation failed");
     build_model_ensemble(vec![best_model], &EnsembleConfig::default())
 }
 
@@ -1478,7 +1478,7 @@ mod tests {
         let result = advanced_enhanced_system_identification(&input, &output, &config);
 
         assert!(result.is_ok());
-        let id_result = result.unwrap();
+        let id_result = result.expect("Operation failed");
         assert!(id_result.model_ensemble.models.len() > 0);
         assert!(
             id_result
@@ -1497,7 +1497,7 @@ mod tests {
         let update = advanced_enhanced_real_time_identification(1.0, 0.8, &mut tracker, &config);
         assert!(update.is_ok());
 
-        let param_update = update.unwrap();
+        let param_update = update.expect("Operation failed");
         assert_eq!(
             param_update.new_parameters.len(),
             tracker.current_parameters.len()

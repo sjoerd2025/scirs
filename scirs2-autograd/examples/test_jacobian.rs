@@ -16,17 +16,26 @@ fn main() {
         let b = g.variable(b);
 
         // Check the actual arrays
-        println!("a array shape: {:?}", a.eval(g).unwrap().shape());
-        println!("b array shape: {:?}", b.eval(g).unwrap().shape());
+        println!(
+            "a array shape: {:?}",
+            a.eval(g).expect("Operation failed").shape()
+        );
+        println!(
+            "b array shape: {:?}",
+            b.eval(g).expect("Operation failed").shape()
+        );
 
         // c = a * b, shape should be 4x3
         let c = matmul(a, b);
-        println!("c array shape: {:?}", c.eval(g).unwrap().shape());
+        println!(
+            "c array shape: {:?}",
+            c.eval(g).expect("Operation failed").shape()
+        );
 
         println!("\nShape tensors:");
-        println!("a shape: {:?}", shape(a).eval(g).unwrap());
-        println!("b shape: {:?}", shape(b).eval(g).unwrap());
-        println!("c shape: {:?}", shape(c).eval(g).unwrap());
+        println!("a shape: {:?}", shape(a).eval(g).expect("Operation failed"));
+        println!("b shape: {:?}", shape(b).eval(g).expect("Operation failed"));
+        println!("c shape: {:?}", shape(c).eval(g).expect("Operation failed"));
 
         // Jacobian computation
         let j = jacobians(c, &[a, b], 4 * 3);
